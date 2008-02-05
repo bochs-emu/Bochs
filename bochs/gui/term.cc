@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: term.cc,v 1.38 2008-01-28 21:52:09 vruppert Exp $
+// $Id: term.cc,v 1.39 2008-02-05 22:57:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2000  MandrakeSoft S.A.
@@ -27,7 +27,7 @@
 
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
-// platforms that require a special tag on exported symbols, BX_PLUGGABLE 
+// platforms that require a special tag on exported symbols, BX_PLUGGABLE
 // is used to know when we are exporting symbols and when we are importing.
 #define BX_PLUGGABLE
 
@@ -125,10 +125,10 @@ do_scan(int key_event, int shift, int ctrl, int alt)
 		DEV_kbd_gen_scancode(BX_KEY_SHIFT_L|BX_KEY_RELEASED);
 }
 
-Bit32u 
+Bit32u
 bx_term_gui_c::get_sighandler_mask ()
 {
-  return 
+  return
     (1<<SIGHUP)
     | (1<<SIGINT)
     | (1<<SIGQUIT)
@@ -850,21 +850,21 @@ void bx_term_gui_c::sim_is_idle () {
 
   int      res;
   fd_set   readfds;
-  
-  struct timeval   timeout;   
+
+  struct timeval   timeout;
   timeout.tv_sec  = 0;
-  timeout.tv_usec = 1000; /* 1/1000 s */  
+  timeout.tv_usec = 1000; /* 1/1000 s */
 
   FD_ZERO(&readfds);
   FD_SET(0, &readfds); // Wait for input
 
   res = select(1, &readfds, NULL, NULL, &timeout);
-      
+
   switch(res)
     {
-    case -1: /* select() error - should not happen */ 
+    case -1: /* select() error - should not happen */
       // This can happen when we have a alarm running, lets return
-      // perror("sim_is_idle: select() failure\n"); 
+      // perror("sim_is_idle: select() failure\n");
       //fprintf (stderr,"Interrupted...\n");
       //handle_events();
       return;

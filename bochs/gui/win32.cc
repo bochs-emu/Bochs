@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32.cc,v 1.116 2008-01-29 17:16:14 vruppert Exp $
+// $Id: win32.cc,v 1.117 2008-02-05 22:57:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -29,7 +29,7 @@
 //  dross@pobox.com
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
-// platforms that require a special tag on exported symbols, BX_PLUGGABLE 
+// platforms that require a special tag on exported symbols, BX_PLUGGABLE
 // is used to know when we are exporting symbols and when we are importing.
 #define BX_PLUGGABLE
 
@@ -638,7 +638,7 @@ void bx_win32_gui_c::specific_init(int argc, char **argv, unsigned
   mouseCaptureMode = FALSE;
   mouseCaptureNew = FALSE;
   mouseToggleReq = FALSE;
-  
+
   mouse_buttons = GetSystemMetrics(SM_CMOUSEBUTTONS);
   BX_INFO(("Number of Mouse Buttons = %d", mouse_buttons));
   if (mouse_buttons == 2) {
@@ -646,7 +646,7 @@ void bx_win32_gui_c::specific_init(int argc, char **argv, unsigned
     szMouseDisable = "CTRL + Lbutton + Rbutton disables mouse";
     szMouseTooltip = "Enable mouse capture\nUse CTRL + Lbutton + Rbutton to release";
   }
-  
+
   // parse win32 specific options
   if (argc > 1) {
     for (i = 1; i < argc; i++) {
@@ -663,13 +663,13 @@ void bx_win32_gui_c::specific_init(int argc, char **argv, unsigned
       }
     }
   }
-  
+
   if (legacyF12) {
     szMouseEnable = "Press F12 to enable mouse ";
     szMouseDisable = "Press F12 to disable mouse";
     szMouseTooltip = "Enable mouse capture\nUse F12 to release";
   }
-  
+
   stInfo.hInstance = GetModuleHandle(NULL);
 
   UNUSED(headerbar_y);
@@ -956,7 +956,7 @@ void SetStatusText(int Num, const char *Text, bx_bool active)
   UpdateWindow(hwndSB);
 }
 
-void 
+void
 bx_win32_gui_c::statusbar_setitem(int element, bx_bool active)
 {
   if (element < 0) {
@@ -1899,7 +1899,7 @@ void bx_win32_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, 
     stretched_x *= 2;
     stretch_factor *= 2;
   }
-  
+
   bitmap_info->bmiHeader.biBitCount = bpp;
   if (bpp == 16)
   {

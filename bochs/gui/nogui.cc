@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: nogui.cc,v 1.25 2008-01-28 21:52:09 vruppert Exp $
+// $Id: nogui.cc,v 1.26 2008-02-05 22:57:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -27,7 +27,7 @@
 
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
-// platforms that require a special tag on exported symbols, BX_PLUGGABLE 
+// platforms that require a special tag on exported symbols, BX_PLUGGABLE
 // is used to know when we are exporting symbols and when we are importing.
 #define BX_PLUGGABLE
 

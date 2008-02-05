@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: instrument.h,v 1.21 2008-01-18 08:56:57 sshwarts Exp $
+// $Id: instrument.h,v 1.22 2008-02-05 22:57:42 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -94,11 +94,11 @@ public:
   bxInstrumentation(): valid(0), active(0) {}
 
   void set_cpu_id(unsigned cpu) { cpu_id = cpu; }
- 
+
   void activate() { active = 1; }
   void deactivate() { active = 0; }
   void toggle_active() { active = !active; }
-  bx_bool is_active() const { return active; } 
+  bx_bool is_active() const { return active; }
 
   void bx_instr_reset();
   void bx_instr_new_instruction();
@@ -137,10 +137,10 @@ extern bxInstrumentation *icpu;
 #  define BX_INSTR_NEW_INSTRUCTION(cpu_id) icpu[cpu_id].bx_instr_new_instruction()
 
 /* called from command line debugger */
-#  define BX_INSTR_DEBUG_PROMPT()        
-#  define BX_INSTR_START()               
-#  define BX_INSTR_STOP()                
-#  define BX_INSTR_PRINT()               
+#  define BX_INSTR_DEBUG_PROMPT()
+#  define BX_INSTR_START()
+#  define BX_INSTR_STOP()
+#  define BX_INSTR_PRINT()
 
 /* branch resoultion */
 #  define BX_INSTR_CNEAR_BRANCH_TAKEN(cpu_id, new_eip)       icpu[cpu_id].bx_instr_cnear_branch_taken(new_eip)
@@ -153,7 +153,7 @@ extern bxInstrumentation *icpu;
                        icpu[cpu_id].bx_instr_opcode(opcode, len, is32, is64)
 #  define BX_INSTR_FETCH_DECODE_COMPLETED(cpu_id, i) \
                        icpu[cpu_id].bx_instr_fetch_decode_completed(i)
-     
+
 /* prefix byte decoded */
 #  define BX_INSTR_PREFIX(cpu_id, prefix)  icpu[cpu_id].bx_instr_prefix(prefix)
 
@@ -192,7 +192,7 @@ extern bxInstrumentation *icpu;
 /* wrmsr callback */
 #  define BX_INSTR_WRMSR(cpu_id, addr, value)
 
-#else   
+#else
 
 /* simulation init, shutdown, reset */
 #  define BX_INSTR_INIT(cpu_id)
@@ -215,9 +215,9 @@ extern bxInstrumentation *icpu;
 #  define BX_INSTR_FAR_BRANCH(cpu_id, what, new_cs, new_eip)
 
 /* decoding completed */
-#  define BX_INSTR_OPCODE(cpu_id, opcode, len, is32, is64) 
+#  define BX_INSTR_OPCODE(cpu_id, opcode, len, is32, is64)
 #  define BX_INSTR_FETCH_DECODE_COMPLETED(cpu_id, i)
-     
+
 /* prefix byte decoded */
 #  define BX_INSTR_PREFIX(cpu_id, prefix)
 
@@ -241,7 +241,7 @@ extern bxInstrumentation *icpu;
 #  define BX_INSTR_LIN_ACCESS(cpu_id, lin, phy, len, rw)
 
 /* memory access */
-#  define BX_INSTR_MEM_CODE(cpu_id, linear, size)      
+#  define BX_INSTR_MEM_CODE(cpu_id, linear, size)
 #  define BX_INSTR_MEM_DATA(cpu_id, linear, size, rw)
 
 /* called from memory object */
@@ -257,4 +257,4 @@ extern bxInstrumentation *icpu;
 /* wrmsr callback */
 #  define BX_INSTR_WRMSR(cpu_id, addr, value)
 
-#endif  
+#endif

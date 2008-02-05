@@ -1,18 +1,18 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sdlkeys.h,v 1.2 2002-10-24 21:06:32 bdenney Exp $
+// $Id: sdlkeys.h,v 1.3 2008-02-05 22:57:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This file is simply a list of SDL key symbols taken from <SDL/SDL_keysym.h>.
 // The order in this file is not important.  In sdl.cc, DEF_SDL_KEY() is
 // defined as a macro and then it includes this file to fill in all the data in
 // its key mapping table.
-// 
+//
 // The symbols, such as SDLK_RETURN, are used for two purposes.  They
-// are converted into a string (by the # operator in processor), which is 
+// are converted into a string (by the # operator in processor), which is
 // compared to the host key name in the keymap file.  Also, the value of
 // the symbol is inserted into the key mapping table.  Then the value is
 // compared with the keysym field of each key up/down event as it arrives.
-// 
+//
 // If you get undefined symbol errors in this file, it must mean that
 // your SDL library version doesn't define those same SDLK_* symbols in
 // <SDL/SDL_keysym.h>.  You can't fix it with #ifdef SDLK_SYM because

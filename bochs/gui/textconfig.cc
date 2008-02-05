@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: textconfig.cc,v 1.67 2007-10-24 23:09:41 sshwarts Exp $
+// $Id: textconfig.cc,v 1.68 2008-02-05 22:57:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This is code for a text-mode configuration interface.  Note that this file
@@ -53,7 +53,7 @@ void bx_dbg_exit(int code);
 
 /******************************************************************/
 /* lots of code stolen from bximage.c */
-/* remove leading spaces, newline junk at end.  returns pointer to 
+/* remove leading spaces, newline junk at end.  returns pointer to
  cleaned string, which is between s0 and the null */
 char *
 clean_string(char *s0)
@@ -72,7 +72,7 @@ clean_string(char *s0)
 }
 
 /* returns 0 on success, -1 on failure.  The value goes into out. */
-int 
+int
 ask_uint(const char *prompt, const char *help, Bit32u min, Bit32u max, Bit32u the_default, Bit32u *out, int base)
 {
   Bit32u n = max + 1;
@@ -118,7 +118,7 @@ ask_uint(const char *prompt, const char *help, Bit32u min, Bit32u max, Bit32u th
 }
 
 // identical to ask_uint, but uses signed comparisons
-int 
+int
 ask_int(const char *prompt, const char *help, Bit32s min, Bit32s max, Bit32s the_default, Bit32s *out)
 {
   int n = max + 1;
@@ -152,7 +152,7 @@ ask_int(const char *prompt, const char *help, Bit32s min, Bit32s max, Bit32s the
   }
 }
 
-int 
+int
 ask_menu(const char *prompt, const char *help, int n_choices, const char *choice[], int the_default, int *out)
 {
   char buffer[1024];
@@ -189,7 +189,7 @@ ask_menu(const char *prompt, const char *help, int n_choices, const char *choice
   }
 }
 
-int 
+int
 ask_yn(const char *prompt, const char *help, Bit32u the_default, Bit32u *out)
 {
   char buffer[16];
@@ -408,11 +408,11 @@ int bx_config_interface(int menu)
         {
           Bit32u default_choice;
           switch (SIM->get_param_enum(BXPN_BOCHS_START)->get()) {
-            case BX_LOAD_START: 
+            case BX_LOAD_START:
               default_choice = 2; break;
-            case BX_EDIT_START: 
+            case BX_EDIT_START:
               default_choice = 3; break;
-            default: 
+            default:
               default_choice = 6; break;
           }
           if (ask_uint(startup_menu_prompt, "", 1, 7, default_choice, &choice, 10) < 0) return -1;
@@ -422,15 +422,15 @@ int bx_config_interface(int menu)
               SIM->reset_all_param();
               SIM->get_param_enum(BXPN_BOCHS_START)->set(BX_EDIT_START);
               break;
-            case 2: 
+            case 2:
               // Before reading a new configuration, reset every option to its
               // original state.
               SIM->reset_all_param();
               if (bx_read_rc(NULL) >= 0)
                 SIM->get_param_enum(BXPN_BOCHS_START)->set(BX_RUN_START);
               break;
-            case 3: 
-              bx_config_interface(BX_CI_START_OPTS); 
+            case 3:
+              bx_config_interface(BX_CI_START_OPTS);
               SIM->get_param_enum(BXPN_BOCHS_START)->set(BX_RUN_START);
               break;
             case 4: bx_write_rc(NULL); break;
@@ -482,7 +482,7 @@ int bx_config_interface(int menu)
           if (ask_uint(prompt, "", 1, BX_CI_RT_QUIT, BX_CI_RT_CONT, &choice, 10) < 0) return -1;
 #endif
           switch (choice) {
-            case BX_CI_RT_FLOPPYA: 
+            case BX_CI_RT_FLOPPYA:
               if (SIM->get_param_enum(BXPN_FLOPPYA_DEVTYPE)->get() != BX_FLOPPY_NONE) do_menu(BXPN_FLOPPYA);
               break;
             case BX_CI_RT_FLOPPYB:
@@ -674,7 +674,7 @@ config_interface_notify_callback(void *unused, BxEvent *event)
       fprintf(stderr, "  alwayscont - continue execution, and don't ask again.\n");
       fprintf(stderr, "               This affects only %s events from device %s\n", SIM->get_log_level_name (level), event->u.logmsg.prefix);
       fprintf(stderr, "  die        - stop execution now\n");
-      fprintf(stderr, "  abort      - dump core %s\n", 
+      fprintf(stderr, "  abort      - dump core %s\n",
 	  BX_HAVE_ABORT ? "" : "(Disabled)");
 #if BX_DEBUGGER
       fprintf(stderr, "  debug      - continue and return to bochs debugger\n");
@@ -686,7 +686,7 @@ config_interface_notify_callback(void *unused, BxEvent *event)
       int choice;
 ask:
       if (ask_menu("Choose one of the actions above: [%s] ", "",
-                   log_action_n_choices, log_action_ask_choices, 2, &choice) < 0) 
+                   log_action_n_choices, log_action_ask_choices, 2, &choice) < 0)
 	event->retcode = -1;
       // return 0 for continue, 1 for alwayscontinue, 2 for die, 3 for debug.
       if (!BX_HAVE_ABORT && choice==BX_LOG_ASK_CHOICE_DUMP_CORE) goto ask;
@@ -720,7 +720,7 @@ bx_param_num_c::text_print(FILE *fp)
   if (get_long_format()) {
     fprintf(fp, get_long_format(), get());
   } else {
-    const char *format = "%s: %d"; 
+    const char *format = "%s: %d";
     assert(base==10 || base==16);
     if (base==16) format = "%s: 0x%x";
     if (get_label()) {
@@ -737,7 +737,7 @@ bx_param_bool_c::text_print(FILE *fp)
   if (get_format()) {
     fprintf(fp, get_format(), get() ? "yes" : "no");
   } else {
-    const char *format = "%s: %s"; 
+    const char *format = "%s: %s";
     if (get_label()) {
       fprintf(fp, format, get_label(), get() ? "yes" : "no");
     } else {
@@ -755,7 +755,7 @@ bx_param_enum_c::text_print(FILE *fp)
   if (get_format()) {
     fprintf(fp, get_format(), choice);
   } else {
-    const char *format = "%s: %s"; 
+    const char *format = "%s: %s";
     if (get_label()) {
       fprintf(fp, format, get_label(), choice);
     } else {
@@ -812,7 +812,7 @@ bx_list_c::text_print(FILE *fp)
   }
 }
 
-int 
+int
 bx_param_num_c::text_ask(FILE *fpin, FILE *fpout)
 {
   fprintf(fpout, "\n");
@@ -834,7 +834,7 @@ bx_param_num_c::text_ask(FILE *fpin, FILE *fpout)
   return 0;
 }
 
-int 
+int
 bx_param_bool_c::text_ask(FILE *fpin, FILE *fpout)
 {
   fprintf(fpout, "\n");
@@ -859,7 +859,7 @@ bx_param_bool_c::text_ask(FILE *fpin, FILE *fpout)
   return 0;
 }
 
-int 
+int
 bx_param_enum_c::text_ask(FILE *fpin, FILE *fpout)
 {
   fprintf(fpout, "\n");
@@ -884,7 +884,7 @@ int parse_raw_bytes(char *dest, char *src, int destsize, char separator)
 {
   int i;
   unsigned int n;
-  for (i=0; i<destsize; i++) 
+  for (i=0; i<destsize; i++)
     dest[i] = 0;
   for (i=0; i<destsize; i++) {
     while (*src == separator)
@@ -901,7 +901,7 @@ int parse_raw_bytes(char *dest, char *src, int destsize, char separator)
   return 0;
 }
 
-int 
+int
 bx_param_string_c::text_ask(FILE *fpin, FILE *fpout)
 {
   fprintf(fpout, "\n");
@@ -937,7 +937,7 @@ bx_param_string_c::text_ask(FILE *fpin, FILE *fpout)
 	continue;
       }
     }
-    if (!equals(buffer)) 
+    if (!equals(buffer))
       set(buffer);
     return 0;
   }

@@ -53,7 +53,7 @@ static int pcidev_open(struct inode *inode, struct file *file)
 	for (idx = 0; idx < PCIDEV_COUNT_RESOURCES; idx++)
 		pcidev->mapped_mem[idx] = NULL;
 	init_timer(&pcidev->irq_timer);
-	pcidev->irq_timer.function = NULL; // no test irq signaling 
+	pcidev->irq_timer.function = NULL; // no test irq signaling
 out:
 	file->private_data = pcidev;
 	return 0;
@@ -88,7 +88,7 @@ out:
 
 #if (LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 0))
 // linux kernel 2.4
-typedef void irqreturn_t; 
+typedef void irqreturn_t;
 #define IRQ_NONE
 #endif
 
@@ -100,11 +100,11 @@ static irqreturn_t pcidev_irqhandler(int irq, void *dev_id, struct pt_regs *regs
 	read_lock(&tasklist_lock);
 	task = find_task_by_pid(pid);
 	if (task)
-		send_sig_info(SIGUSR1, (struct siginfo *)1, task); // XXX: should be converted to real-time signals 
+		send_sig_info(SIGUSR1, (struct siginfo *)1, task); // XXX: should be converted to real-time signals
 	read_unlock(&tasklist_lock);
-	return IRQ_NONE; 
-	/* 
-	 * we cannot possible say IRQ_HANDLED because we simply 
+	return IRQ_NONE;
+	/*
+	 * we cannot possible say IRQ_HANDLED because we simply
 	 * don't know yet... only bochs could tell
 	 */
 }
@@ -119,7 +119,7 @@ static void irq_test_timer(unsigned long data)
 	if (task)
 		send_sig_info(SIGUSR1, (struct siginfo *)1, task);
 	read_unlock(&tasklist_lock);
-	
+
 	//printk(KERN_INFO "irq_test_timer\n");
 	init_timer(&pcidev->irq_timer);
 	pcidev->irq_timer.data = data;
@@ -161,8 +161,8 @@ static int pcidev_ioctl(struct inode *inode, struct file *file, unsigned int cmd
 		if (pci_set_dma_mask(dev, 0xffffffff))
 			printk(KERN_WARNING "pcidev: only limited PCI busmaster DMA support.\n");
 		pci_set_master(dev);
-		printk(KERN_INFO "pcidev: device found at %x:%x.%d\n", 
-				dev->bus->number, PCI_SLOT(dev->devfn), 
+		printk(KERN_INFO "pcidev: device found at %x:%x.%d\n",
+				dev->bus->number, PCI_SLOT(dev->devfn),
 				PCI_FUNC(dev->devfn));
 		ret = pci_request_regions(dev, pcidev_name);
 		if (ret < 0)
@@ -189,8 +189,8 @@ static int pcidev_ioctl(struct inode *inode, struct file *file, unsigned int cmd
 		ret = 0;
 		break;
 	}
-	case PCIDEV_IOCTL_READ_CONFIG_BYTE: 
-	case PCIDEV_IOCTL_READ_CONFIG_WORD: 
+	case PCIDEV_IOCTL_READ_CONFIG_BYTE:
+	case PCIDEV_IOCTL_READ_CONFIG_WORD:
 	case PCIDEV_IOCTL_READ_CONFIG_DWORD: {
 		struct pcidev_io_struct *io;
 		unsigned long address, value;
@@ -218,8 +218,8 @@ static int pcidev_ioctl(struct inode *inode, struct file *file, unsigned int cmd
 		__put_user(value, &io->value);
 		break;
 	}
-	case PCIDEV_IOCTL_WRITE_CONFIG_BYTE: 
-	case PCIDEV_IOCTL_WRITE_CONFIG_WORD: 
+	case PCIDEV_IOCTL_WRITE_CONFIG_BYTE:
+	case PCIDEV_IOCTL_WRITE_CONFIG_WORD:
 	case PCIDEV_IOCTL_WRITE_CONFIG_DWORD: {
 		struct pcidev_io_struct *io;
 		unsigned long address, value;
@@ -232,7 +232,7 @@ static int pcidev_ioctl(struct inode *inode, struct file *file, unsigned int cmd
 		__get_user(value, &io->value);
 		/*
 		 * Next tests prevent the pcidev user from remapping
-		 * the PCI host device since this could cause great 
+		 * the PCI host device since this could cause great
 		 * trouble because we don't own those I/O resources.
 		 * If the pcidev wants to remap a device he needs to
 		 * emulate the mapping himself and not bother the host
@@ -247,7 +247,7 @@ static int pcidev_ioctl(struct inode *inode, struct file *file, unsigned int cmd
 			return -EIO;
 		}
 		if (PCI_BASE_ADDRESS_0 <= address && (address & ~3UL) <= PCI_BASE_ADDRESS_5) {
-			printk(KERN_WARNING "pcidev: now allowed to change base address %d\n", 
+			printk(KERN_WARNING "pcidev: now allowed to change base address %d\n",
 					(int)((address & ~3UL) - PCI_BASE_ADDRESS_0) / 4);
 			return -EIO;
 		}
@@ -315,12 +315,12 @@ static int pcidev_ioctl(struct inode *inode, struct file *file, unsigned int cmd
 		ret = 0;
 		break;
 	}
-	case PCIDEV_IOCTL_READ_IO_BYTE: 
-	case PCIDEV_IOCTL_READ_IO_WORD: 
+	case PCIDEV_IOCTL_READ_IO_BYTE:
+	case PCIDEV_IOCTL_READ_IO_WORD:
 	case PCIDEV_IOCTL_READ_IO_DWORD: {
 		/*
 		 * We should probably check access rights against
-		 * the PCI resource list... but who cares for a 
+		 * the PCI resource list... but who cares for a
 		 * security hole more or less :)
 		 */
 		struct pcidev_io_struct *io;
@@ -345,8 +345,8 @@ static int pcidev_ioctl(struct inode *inode, struct file *file, unsigned int cmd
 		ret = 0;
 		break;
 	}
-	case PCIDEV_IOCTL_WRITE_IO_BYTE: 
-	case PCIDEV_IOCTL_WRITE_IO_WORD: 
+	case PCIDEV_IOCTL_WRITE_IO_BYTE:
+	case PCIDEV_IOCTL_WRITE_IO_WORD:
 	case PCIDEV_IOCTL_WRITE_IO_DWORD: {
 		struct pcidev_io_struct *io;
 		unsigned long address, value;
@@ -370,8 +370,8 @@ static int pcidev_ioctl(struct inode *inode, struct file *file, unsigned int cmd
 		ret = 0;
 		break;
 	}
-	case PCIDEV_IOCTL_READ_MEM_BYTE: 
-	case PCIDEV_IOCTL_READ_MEM_WORD: 
+	case PCIDEV_IOCTL_READ_MEM_BYTE:
+	case PCIDEV_IOCTL_READ_MEM_WORD:
 	case PCIDEV_IOCTL_READ_MEM_DWORD: {
 		struct pcidev_io_struct *io;
 		unsigned long address, value = -1;
@@ -395,7 +395,7 @@ static int pcidev_ioctl(struct inode *inode, struct file *file, unsigned int cmd
 		ret = 0;
 		break;
 	}
-	case PCIDEV_IOCTL_WRITE_MEM_BYTE: 
+	case PCIDEV_IOCTL_WRITE_MEM_BYTE:
 	case PCIDEV_IOCTL_WRITE_MEM_WORD:
 	case PCIDEV_IOCTL_WRITE_MEM_DWORD: {
 		struct pcidev_io_struct *io;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32dialog.cc,v 1.61 2007-12-03 20:50:24 sshwarts Exp $
+// $Id: win32dialog.cc,v 1.62 2008-02-05 22:57:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #include "config.h"
@@ -71,7 +71,7 @@ BOOL CreateImage(HWND hDlg, int sectors, const char *filename)
                             "File exists", MB_YESNO);
     if (answer == IDYES)
       ret = SIM->create_disk_image (filename, sectors, 1);
-    else 
+    else
       return FALSE;
   }
   if (ret == -2) {

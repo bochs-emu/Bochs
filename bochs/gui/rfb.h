@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rfb.h,v 1.5 2007-10-24 23:08:37 sshwarts Exp $
+// $Id: rfb.h,v 1.6 2008-02-05 22:57:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -39,8 +39,8 @@ typedef Bit8s          S8;
 #define BX_RFB_PORT_MAX 5949
 
 
-// RFB Protocol definitions. 
-// Please refer to the specification document 
+// RFB Protocol definitions.
+// Please refer to the specification document
 // http://www.realvnc.com/docs/rfbproto.pdf
 
 typedef struct {
@@ -174,7 +174,7 @@ typedef struct {
 	U16 yPosition;
 } rfbPointerEventMessage;
 
-#define rfbPointerEventMessageSize (sizeof(rfbPointerEventMessage)) 
+#define rfbPointerEventMessageSize (sizeof(rfbPointerEventMessage))
 
 #define rfbButton1Mask 1
 #define rfbButton2Mask 2
@@ -222,36 +222,36 @@ typedef union {
 #define rfbEncodingZlibHex     8
 #define rfbEncodingTightOption00 0xffffff00  // to 0xffffffff except 0xffffff11 and 0xffffff21
 #define rfbEncodingTightOption01 0xffffff01
-#define rfbEncodingTightOption02 0xffffff02  
-#define rfbEncodingTightOption03 0xffffff03  
-#define rfbEncodingTightOption04 0xffffff04  
-#define rfbEncodingTightOption05 0xffffff05  
-#define rfbEncodingTightOption06 0xffffff06  
-#define rfbEncodingTightOption07 0xffffff07  
-#define rfbEncodingTightOption08 0xffffff08  
-#define rfbEncodingTightOption09 0xffffff09  
-#define rfbEncodingTightOption0a 0xffffff0a  
-#define rfbEncodingTightOption0b 0xffffff0b  
-#define rfbEncodingTightOption0c 0xffffff0c  
-#define rfbEncodingTightOption0d 0xffffff0d  
-#define rfbEncodingTightOption0e 0xffffff0e  
-#define rfbEncodingTightOption0f 0xffffff0f  
-#define rfbEncodingTightOption10 0xffffff10  
-#define rfbEncodingTightOption12 0xffffff12  
-#define rfbEncodingTightOption13 0xffffff13  
-#define rfbEncodingTightOption14 0xffffff14  
-#define rfbEncodingTightOption15 0xffffff15  
-#define rfbEncodingTightOption16 0xffffff16  
-#define rfbEncodingTightOption17 0xffffff17  
-#define rfbEncodingTightOption18 0xffffff18  
-#define rfbEncodingTightOption19 0xffffff19  
-#define rfbEncodingTightOption1a 0xffffff1a  
-#define rfbEncodingTightOption1b 0xffffff1b  
-#define rfbEncodingTightOption1c 0xffffff1c  
-#define rfbEncodingTightOption1d 0xffffff1d  
-#define rfbEncodingTightOption1e 0xffffff1e  
-#define rfbEncodingTightOption1f 0xffffff1f  
-#define rfbEncodingTightOption20 0xffffff20  
+#define rfbEncodingTightOption02 0xffffff02
+#define rfbEncodingTightOption03 0xffffff03
+#define rfbEncodingTightOption04 0xffffff04
+#define rfbEncodingTightOption05 0xffffff05
+#define rfbEncodingTightOption06 0xffffff06
+#define rfbEncodingTightOption07 0xffffff07
+#define rfbEncodingTightOption08 0xffffff08
+#define rfbEncodingTightOption09 0xffffff09
+#define rfbEncodingTightOption0a 0xffffff0a
+#define rfbEncodingTightOption0b 0xffffff0b
+#define rfbEncodingTightOption0c 0xffffff0c
+#define rfbEncodingTightOption0d 0xffffff0d
+#define rfbEncodingTightOption0e 0xffffff0e
+#define rfbEncodingTightOption0f 0xffffff0f
+#define rfbEncodingTightOption10 0xffffff10
+#define rfbEncodingTightOption12 0xffffff12
+#define rfbEncodingTightOption13 0xffffff13
+#define rfbEncodingTightOption14 0xffffff14
+#define rfbEncodingTightOption15 0xffffff15
+#define rfbEncodingTightOption16 0xffffff16
+#define rfbEncodingTightOption17 0xffffff17
+#define rfbEncodingTightOption18 0xffffff18
+#define rfbEncodingTightOption19 0xffffff19
+#define rfbEncodingTightOption1a 0xffffff1a
+#define rfbEncodingTightOption1b 0xffffff1b
+#define rfbEncodingTightOption1c 0xffffff1c
+#define rfbEncodingTightOption1d 0xffffff1d
+#define rfbEncodingTightOption1e 0xffffff1e
+#define rfbEncodingTightOption1f 0xffffff1f
+#define rfbEncodingTightOption20 0xffffff20
 
 typedef struct {
         U32 id;

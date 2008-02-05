@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: load32bitOShack.cc,v 1.24 2007-11-24 14:22:32 sshwarts Exp $
+// $Id: load32bitOShack.cc,v 1.25 2008-02-05 22:57:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -215,9 +215,9 @@ void bx_load_linux_hack(void)
   // BX_CPU(0)->cr0.val32 |= 0x01;
 
   BX_CPU(0)->SetCR0(BX_CPU(0)->cr0.val32 | 0x01);
- 
+
   // load esi with real_mode
-  BX_CPU(0)->gen_reg[BX_32BIT_REG_ESI].dword.erx = 0x90000; 
+  BX_CPU(0)->gen_reg[BX_32BIT_REG_ESI].dword.erx = 0x90000;
 
   // Set up initial GDT
   BX_CPU(0)->gdtr.limit = 0x400;

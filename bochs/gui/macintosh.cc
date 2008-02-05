@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: macintosh.cc,v 1.27 2008-01-26 00:00:29 vruppert Exp $
+// $Id: macintosh.cc,v 1.28 2008-02-05 22:57:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -30,7 +30,7 @@
 // with contributions from Tim Senecal
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
-// platforms that require a special tag on exported symbols, BX_PLUGGABLE 
+// platforms that require a special tag on exported symbols, BX_PLUGGABLE
 // is used to know when we are exporting symbols and when we are importing.
 #define BX_PLUGGABLE
 
@@ -100,7 +100,7 @@
 const RGBColor  black   = {0, 0, 0};
 const RGBColor  white   = {0xFFFF, 0xFFFF, 0xFFFF};
 const RGBColor  medGrey = {0xCCCC, 0xCCCC, 0xCCCC};
-const RGBColor  ltGrey  = {0xEEEE, 0xEEEE, 0xEEEE};                                        
+const RGBColor  ltGrey  = {0xEEEE, 0xEEEE, 0xEEEE};
 
 class bx_macintosh_gui_c : public bx_gui_c {
 public:
@@ -206,20 +206,20 @@ void FixWindow(void)
         wStruct = thing->strucRgn;
         wRgn = (Region *)*wStruct;
         wRect = wRgn->rgnBBox;
-        
+
         thing = (CWindowRecord *)toolwin;
         tStruct = thing->strucRgn;
         tRgn = (Region *)*tStruct;
         tRect = tRgn->rgnBBox;
-        
+
         if (wRect.left < 2)
         {
                 gLeft = gLeft + (2 - wRect.left);
         }
-        
+
         MinVal = tRect.bottom+2;
 //      MinVal = MinVal + GetMBarHeight();
-        
+
         if (wRect.top < MinVal)
         {
 //              gMinTop = gMinTop + (MinVal - wRect.top);
@@ -252,7 +252,7 @@ void CreateTile(void)
         OSErr     err;
         unsigned  long p_f;
         long      theRowBytes = ((((long) ( vga_bpp==24?32:(((vga_bpp+1)>>1)<<1) ) * ((long) (srcTileRect.right-srcTileRect.left)) + 31) >> 5) << 2);
-        
+
       //  if (SIM->get_param_bool(BXPN_PRIVATE_COLORMAP)->get())
       //  {
                 GetGWorld(&savePort, &saveDevice);
@@ -283,9 +283,9 @@ void CreateTile(void)
         p_f = k32ARGBPixelFormat;//k32BGRAPixelFormat;
        break;
     }
-  
+
     BX_ASSERT((gMyBuffer = (Ptr)malloc(theRowBytes * (srcTileRect.bottom - srcTileRect.top))) != NULL);
-    err = QTNewGWorldFromPtr(&gOffWorld, p_f, 
+    err = QTNewGWorldFromPtr(&gOffWorld, p_f,
       &srcTileRect, vga_bpp>8 ? NULL : gCTable, NULL, keepLocal, gMyBuffer, theRowBytes);
     if (err != noErr || gOffWorld == NULL)
       BX_PANIC(("mac: can't create gOffWorld; err=%hd", err));
@@ -293,9 +293,9 @@ void CreateTile(void)
     SetGWorld(gOffWorld, NULL);
     RGBForeColor(&black);
     RGBBackColor(&white);
-        
+
                 gTile = GetGWorldPixMap(gOffWorld);
-                
+
                 if (gTile != NULL)
                 {
                         NoPurgePixels(gTile);
@@ -306,13 +306,13 @@ void CreateTile(void)
         DisposeCTable(gCTable);
         gCTable = (**gTile).pmTable;
       }
-        
+
       (**gCTable).ctFlags |= 0x4000;   //use palette manager indexes
       CTabChanged(gCTable);
                 }
                 else
                         BX_PANIC(("mac: can't create gTile"));
-        
+
                 SetGWorld(savePort, saveDevice);
       /*  }
         else
@@ -327,9 +327,9 @@ void CreateTile(void)
 void CreateMenus(void)
 {
         Handle menu;
-        
+
   menu = GetNewMBar(rMBarID);   //  get our menus from resource
-  if (menu != nil) 
+  if (menu != nil)
   {
         SetMenuBar(menu);
         DisposeHandle(menu);
@@ -344,43 +344,43 @@ void CreateWindows(void)
 {
         int l, t, r, b;
         Rect winRect;
-        
+
         SetRect(&winRect, 0, 0, qd.screenBits.bounds.right, qd.screenBits.bounds.bottom);
         backdrop = NewWindow(NULL, &winRect, "\p", false, plainDBox, (WindowPtr)-1, false, 0);
-        
+
         width = 640;
         height = 480;
         gLeft = 4;
         gMinTop = 44;
         gMaxTop = 44 + gheaderbar_y;
-        
+
         l = (qd.screenBits.bounds.right - width)/2;
         r = l + width;
         t = (qd.screenBits.bounds.bottom - height)/2;
         b = t + height;
-        
+
         SetRect(&winRect, 0, 20, qd.screenBits.bounds.right, 22+gheaderbar_y);
         toolwin = NewCWindow(NULL, &winRect, "\pMacBochs 586", true, floatProc,
                 (WindowPtr)-1, false, 0);
         if (toolwin == NULL)
                 BX_PANIC(("mac: can't create tool window"));
         // Create a moveable tool window for the "headerbar"
-        
+
         SetRect(&winRect, l, t, r, b);
         fullwin = NewCWindow(NULL, &winRect, "\p", false, plainDBox, (WindowPtr)-1, false, 1);
-        
+
         SetRect(&winRect, gLeft, gMaxTop, gLeft+width, gMaxTop+height);
         win = NewCWindow(NULL, &winRect, "\pMacBochs 586", true, documentProc,
                 (WindowPtr)-1, true, 1);
         if (win == NULL)
                 BX_PANIC(("mac: can't create emulator window"));
-        
+
         FixWindow();
 
         hidden = fullwin;
-        
+
         HiliteWindow(win, true);
-        
+
         SetPort(win);
 }
 
@@ -402,42 +402,42 @@ void CreateWindows(void)
 
 void bx_macintosh_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsigned tileheight,
                                                                                  unsigned headerbar_y)
-{       
+{
         put("MGUI");
         InitToolbox();
-        
+
         //SouixWin = FrontWindow();
-        
+
         atexit(MacPanic);
-        
+
         gheaderbar_y = headerbar_y;
-        
+
         CreateKeyMap();
 
         gCTable = GetCTable(128);
   BX_ASSERT (gCTable != NULL);
-  CTabChanged(gCTable); //(*gCTable)->ctSeed = GetCTSeed(); 
+  CTabChanged(gCTable); //(*gCTable)->ctSeed = GetCTSeed();
         SetRect(&srcTextRect, 0, 0, FONT_WIDTH, FONT_HEIGHT);
         SetRect(&srcTileRect, 0, 0, tilewidth, tileheight);
-        
+
         CreateMenus();
         CreateVGAFont();
         CreateTile();
         CreateWindows();
-        
+
         GetMouse(&prevPt);
         SetEventMask(everyEvent);
-        
+
         SIOUXSettings.setupmenus = false;
         SIOUXSettings.autocloseonquit = true;
         SIOUXSettings.asktosaveonclose = false;
         SIOUXSettings.standalone = false;
-        
+
         UNUSED(argc);
         UNUSED(argv);
-        
+
         //HideWindow(SouixWin);
-        
+
 }
 
 // HandleKey()
@@ -449,28 +449,28 @@ BX_CPP_INLINE void HandleKey(EventRecord *event, Bit32u keyState)
   UInt32    key;
   UInt32    trans;
         static UInt32 transState = 0;
-        
+
         key = event->message & charCodeMask;
-        
+
         if (event->modifiers & cmdKey)
         {
                 HandleMenuChoice(MenuKey(key));
-        }       
+        }
 //      else if (FrontWindow() == SouixWin)
 //      {
 //              SIOUXHandleOneEvent(event);
 //      }
         else
-        {               
+        {
 /*                if (event->modifiers & shiftKey)
                         DEV_kbd_gen_scancode(BX_KEY_SHIFT_L | keyState);
                 if (event->modifiers & controlKey)
                         DEV_kbd_gen_scancode(BX_KEY_CTRL_L | keyState);
                 if (event->modifiers & optionKey)
                         DEV_kbd_gen_scancode(BX_KEY_ALT_L | keyState);*/
-                
+
                 key = (event->message & keyCodeMask) >> 8;
-                
+
                 trans = KeyTranslate(KCHR, key, &transState);
         if ((trans == BX_KEY_PRINT) && ((oldMods & optionKey) || (oldMods & rightOptionKey)))
           trans = BX_KEY_ALT_SYSREQ;
@@ -479,7 +479,7 @@ BX_CPP_INLINE void HandleKey(EventRecord *event, Bit32u keyState)
                 // KeyTranslate maps Mac virtual key codes to any type of character code
                 // you like (in this case, Bochs key codes). Much nicer than a huge switch
                 // statement!
-                
+
                 if (trans > 0)
                         DEV_kbd_gen_scancode(trans | keyState);
 
@@ -489,7 +489,7 @@ BX_CPP_INLINE void HandleKey(EventRecord *event, Bit32u keyState)
                         DEV_kbd_gen_scancode(BX_KEY_CTRL_L | BX_KEY_RELEASED);
                 if (event->modifiers & optionKey)
                         DEV_kbd_gen_scancode(BX_KEY_ALT_L | BX_KEY_RELEASED);*/
-        }               
+        }
 }
 
 // HandleToolClick()
@@ -501,7 +501,7 @@ BX_CPP_INLINE void HandleToolClick(Point where)
         unsigned i;
         int xorigin;
         Rect bounds;
-        
+
         SetPort(toolwin);
         GlobalToLocal(&where);
         for (i=0; i<toolPixMaps; i++)
@@ -554,39 +554,39 @@ void HandleMenuChoice(long menuChoice)
         Str255          daName;
         WindowRef       newWindow;
         DialogPtr       theDlog;
-        
+
         item = LoWord(menuChoice);
         menu = HiWord(menuChoice);
 
         switch(menu) {
                 case mApple:
-                        switch(item) 
+                        switch(item)
                         {
                                 case iAbout:
                                         theDlog = GetNewDialog(128, NULL, (WindowPtr)-1);
                                         ModalDialog(NULL, &i);
                                         DisposeDialog(theDlog);
                                         break;
-                                        
+
                                 default:
                                         GetMenuItemText(GetMenuHandle(mApple), item, daName);
                                         daRefNum = OpenDeskAcc( daName );
                                         break;
-                        }       
+                        }
                         break;
-                                        
+
                 case mFile:
-                        switch(item) 
+                        switch(item)
                         {
                                 case iQuit:
                                         BX_PANIC(("User terminated"));
                                         break;
-                                        
+
                                 default:
-                                        break;  
+                                        break;
                         }
                         break;
-                        
+
                 case mBochs:
                         switch(item)
                         {
@@ -642,13 +642,13 @@ void HandleMenuChoice(long menuChoice)
                                         bx_tool_pixmap[toolPixMaps-1].f();
                                         break;
                         }
-                                        
+
                 default:
-                        break;  
-                
+                        break;
+
         }
-        
-        HiliteMenu(0);  
+
+        HiliteMenu(0);
 }
 
 BX_CPP_INLINE void HandleClick(EventRecord *event)
@@ -656,9 +656,9 @@ BX_CPP_INLINE void HandleClick(EventRecord *event)
         short part;
         WindowPtr whichWindow;
         Rect dRect;
-        
+
         part = FindWindow(event->where, &whichWindow);
-        
+
         switch(part)
         {
                 case inContent:
@@ -685,30 +685,30 @@ BX_CPP_INLINE void HandleClick(EventRecord *event)
                                 SelectWindow(SouixWin);
                         }
                         break;
-                        
+
                 case inDrag:
                         dRect = qd.screenBits.bounds;
                         if (IsWindowVisible(toolwin))
                                 dRect.top = gMaxTop;
                         DragWindow(whichWindow, event->where, &dRect);
                         break;
-                        
+
                 case inMenuBar:
                         HandleMenuChoice(MenuSelect(event->where));
                         break;
         }
 }
 
-void UpdateWindow(WindowPtr window) 
+void UpdateWindow(WindowPtr window)
 {
         GrafPtr         oldPort;
         Rect                    box;
-        
+
         GetPort(&oldPort);
-        
+
         SetPort(window);
         BeginUpdate(window);
-        
+
         if (window == win)
         {
                 box = window->portRect;
@@ -754,39 +754,39 @@ void bx_macintosh_gui_c::handle_events(void)
                 {
                         case nullEvent:
                                 break;
-                                
+
                         case mouseDown:
                                 HandleClick(&event);
                                 break;
-                                
+
                         case mouseUp:
                                 if (event.modifiers & cmdKey)
                                         mouse_button_state &= ~0x02;
                                 else
                                         mouse_button_state &= ~0x01;
                                 break;
-                                
+
                         case keyDown:
                         case autoKey:
                                 oldMods1 = event.modifiers;
                                 HandleKey(&event, BX_KEY_PRESSED);
                                 break;
-                                
+
                         case keyUp:
                                 event.modifiers = oldMods1;
                                 HandleKey(&event, BX_KEY_RELEASED);
                                 break;
-                                
+
                         case updateEvt:
                                 if ((WindowPtr)event.message == SouixWin)
                                         SIOUXHandleOneEvent(&event);
                                 else
                                         UpdateWindow((WindowPtr)event.message);
                                 break;
-                                
+
                         case diskEvt:
                                 floppyA_handler();
-                                
+
                         default:
                                 break;
                 }
@@ -809,10 +809,10 @@ void bx_macintosh_gui_c::handle_events(void)
       DEV_kbd_gen_scancode(BX_KEY_CTRL_R | ((newMods & rightControlKey)?BX_KEY_PRESSED:BX_KEY_RELEASED));
     oldMods = newMods;
   }
-                
+
         GetPort(&oldport);
         SetPort(win);
-        
+
         GetMouse(&mousePt);
 
 
@@ -821,9 +821,9 @@ void bx_macintosh_gui_c::handle_events(void)
         {
                 dx = mousePt.h - prevPt.h;
                 dy = prevPt.v - mousePt.v;
-                
+
                 DEV_mouse_motion(dx, dy, mouse_button_state);
-                
+
                 if (!cursorVisible)
                 {
                         SetPt(&scrCenter, 320, 240);
@@ -834,7 +834,7 @@ void bx_macintosh_gui_c::handle_events(void)
         }
 
         prevPt = mousePt;
-        
+
         SetPort(oldport);
 }
 
@@ -859,10 +859,10 @@ void bx_macintosh_gui_c::flush(void)
 void bx_macintosh_gui_c::clear_screen(void)
 {
         SetPort(win);
-        
+
         RGBForeColor(&black);
         RGBBackColor(&white);
-        
+
         FillRect(&win->portRect, &qd.black);
 }
 
@@ -901,9 +901,9 @@ void bx_macintosh_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
         GrafPtr       oldPort;
         unsigned      nchars;
         OSErr         theError;
-        
+
         GetPort(&oldPort);
-        
+
         SetPort(win);
 
         //current cursor position
@@ -911,19 +911,19 @@ void bx_macintosh_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
 
         // Number of characters on screen, variable number of rows
         nchars = text_cols * text_rows;
-        
+
         for (i=0; i<nchars*2; i+=2)
         {
                 if ( i == cursori || i == previ || new_text[i] != old_text[i] || new_text[i+1] != old_text[i+1])
                 {
                         achar = new_text[i];
-                        
+
 //                      fgColor = (**gCTable).ctTable[new_text[i+1] & 0x0F].rgb;
 //                      bgColor = (**gCTable).ctTable[(new_text[i+1] & 0xF0) >> 4].rgb;
-                        
+
 //                      RGBForeColor(&fgColor);
 //                      RGBBackColor(&bgColor);
-                        
+
                         if (SIM->get_param_bool(BXPN_PRIVATE_COLORMAP)->get())
                         {
                                 PmForeColor(new_text[i+1] & 0x0F);
@@ -933,17 +933,17 @@ void bx_macintosh_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
                         {
                                 fgColor = (**gCTable).ctTable[new_text[i+1] & 0x0F].rgb;
                                 bgColor = (**gCTable).ctTable[(new_text[i+1] & 0xF0) >> 4].rgb;
-                        
+
                                 RGBForeColor(&fgColor);
                                 RGBBackColor(&bgColor);
                         }
-                        
+
                         x = ((i/2) % text_cols)*FONT_WIDTH;
                         y = ((i/2) / text_cols)*FONT_HEIGHT;
 
                         SetRect(&destRect, x, y,
                                 x+FONT_WIDTH, y+FONT_HEIGHT);
-                                
+
                         CopyBits( vgafont[achar], &WINBITMAP(win),
                                 &srcTextRect, &destRect, srcCopy, NULL);
   if ((theError = QDError()) != noErr)
@@ -953,13 +953,13 @@ void bx_macintosh_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
                         {
                                 InvertRect(&destRect);
                         }
-                        
+
                 }
         }
- 
+
 //previous cursor position
         previ = cursori;
-        
+
         SetPort(oldPort);
 }
 
@@ -989,7 +989,7 @@ bx_bool bx_macintosh_gui_c::palette_change(unsigned index, unsigned red, unsigne
         GDHandle  saveDevice;
         CGrafPtr  savePort;
   GrafPtr   oldPort;
-  
+
 /*  if (gOffWorld != NULL) //(SIM->get_param_bool(BXPN_PRIVATE_COLORMAP)->get())
   {
     GetGWorld(&savePort, &saveDevice);
@@ -1007,19 +1007,19 @@ bx_bool bx_macintosh_gui_c::palette_change(unsigned index, unsigned red, unsigne
         (**gCTable).ctTable[index].rgb.blue = (blue << 8);
 
         SetEntries(index, index, (**gCTable).ctTable);
-        
+
         CTabChanged(gCTable);
-        
+
     SetPort(oldPort);
   }
 /*  if (gOffWorld != NULL) //(SIM->get_param_bool(BXPN_PRIVATE_COLORMAP)->get())
     SetGWorld(savePort, saveDevice);*/
   if (SIM->get_param_bool(BXPN_PRIVATE_COLORMAP)->get())
   {
-        
+
                 thePal = NewPalette(index, gCTable, pmTolerant, 0x5000);
                 oldpal = GetPalette(win);
-        
+
                 SetPalette(win, thePal, false);
                 SetPalette(fullwin, thePal, false);
                 SetPalette(hidden, thePal, false);
@@ -1053,7 +1053,7 @@ void bx_macintosh_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned
         GrafPtr   oldPort;
 /*      GDHandle        saveDevice;
         CGrafPtr        savePort;
-        
+
         GetGWorld(&savePort, &saveDevice);
 
         SetGWorld(gOffWorld, NULL); */
@@ -1061,7 +1061,7 @@ void bx_macintosh_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned
         SetPort(win);
         destRect = srcTileRect;
         OffsetRect(&destRect, x0, y0);
-        
+
   //(**gTile).baseAddr = (Ptr)tile;
   if ((theBaseAddr = GetPixBaseAddr(gTile)) == NULL)
     BX_PANIC(("mac: gTile has NULL baseAddr (offscreen buffer purged)"));
@@ -1163,10 +1163,10 @@ unsigned bx_macintosh_gui_c::create_bitmap(const unsigned char *bmap, unsigned x
         unsigned i;
         unsigned char *data;
         long row_bytes, bytecount;
-        
+
         bx_cicn[numPixMaps] = GetCIcon(numPixMaps+128);
   BX_ASSERT(bx_cicn[numPixMaps]);
-        
+
         numPixMaps++;
 
         return(numPixMaps-1);
@@ -1187,7 +1187,7 @@ unsigned bx_macintosh_gui_c::create_bitmap(const unsigned char *bmap, unsigned x
 unsigned bx_macintosh_gui_c::headerbar_bitmap(unsigned bmap_id, unsigned alignment, void (*f)(void))
 {
         unsigned hb_index;
-        
+
         toolPixMaps++;
         hb_index = toolPixMaps-1;
 //      bx_tool_pixmap[hb_index].pm = bx_pixmap[bmap_id];
@@ -1222,7 +1222,7 @@ void bx_macintosh_gui_c::show_headerbar(void)
 {
         Rect    destRect;
         int             i, xorigin;
-        
+
         SetPort(toolwin);
         RGBForeColor(&medGrey);
         FillRect(&toolwin->portRect, &qd.black);
@@ -1232,11 +1232,11 @@ void bx_macintosh_gui_c::show_headerbar(void)
                         xorigin = bx_tool_pixmap[i].xorigin;
                 else
                         xorigin = toolwin->portRect.right - bx_tool_pixmap[i].xorigin;
-                        
+
                 SetRect(&destRect, xorigin, 0, xorigin+32, 32);
-                
+
                 //changed, simply plot the cicn for that button, in the prescribed rectangle
-                PlotCIcon(&destRect, bx_tool_pixmap[i].cicn);           
+                PlotCIcon(&destRect, bx_tool_pixmap[i].cicn);
         }
         RGBForeColor(&black);
 
@@ -1263,7 +1263,7 @@ void bx_macintosh_gui_c::replace_bitmap(unsigned hbar_id, unsigned bmap_id)
         show_headerbar();
 }
 
- 
+
 // ::EXIT()
 //
 // Called before bochs terminates, to allow for a graceful
@@ -1281,21 +1281,21 @@ void bx_macintosh_gui_c::snapshot_handler(void)
 {
         PicHandle ScreenShot;
         long val;
-        
+
         SetPort(win);
-        
+
         ScreenShot = OpenPicture(&win->portRect);
-        
+
         CopyBits(&win->portBits, &win->portBits, &win->portRect, &win->portRect, srcCopy, NULL);
-        
+
         ClosePicture();
-        
+
         val = ZeroScrap();
-        
+
         HLock((Handle)ScreenShot);
         PutScrap(GetHandleSize((Handle)ScreenShot), 'PICT', *ScreenShot);
         HUnlock((Handle)ScreenShot);
-        
+
         KillPicture(ScreenShot);
 }
 #endif
@@ -1307,7 +1307,7 @@ void bx_macintosh_gui_c::snapshot_handler(void)
 void UpdateRgn(RgnHandle rgn)
 {
         WindowPtr window;
-        
+
         window = FrontWindow();
         PaintBehind(window, rgn);
         CalcVisBehind(window, rgn);
@@ -1401,13 +1401,13 @@ void HideMenubar()
         RectRgn(mBarRgn, &mBarRect);
         UnionRgn(grayRgn, mBarRgn, grayRgn);
         UpdateRgn(mBarRgn);
-        
+
         cnrRgn = NewRgn();
         RectRgn(cnrRgn, &qd.screenBits.bounds);
         DiffRgn(cnrRgn, grayRgn, cnrRgn);
         UnionRgn(grayRgn, cnrRgn, grayRgn);
         UpdateRgn(mBarRgn);
-        
+
         HideWindow(win);
         ShowWindow(backdrop);
         SelectWindow(backdrop);
@@ -1428,13 +1428,13 @@ void ShowMenubar()
 {
         RgnHandle               grayRgn;
         GrafPtr         savePort;
-        
+
         grayRgn = LMGetGrayRgn();
         LMSetMBarHeight(gOldMBarHeight);
         DiffRgn(grayRgn, mBarRgn, grayRgn);
         DisposeRgn(mBarRgn);
         DrawMenuBar();
-        
+
         GetPort(&savePort);
         SetPort(LMGetWMgrPort());
         SetClip(cnrRgn);
@@ -1442,14 +1442,14 @@ void ShowMenubar()
         SetPort(savePort);
         DiffRgn(grayRgn, cnrRgn, grayRgn);
         DisposeRgn(cnrRgn);
-        
+
         HideWindow(backdrop);
         win = hidden;
         hidden = fullwin;
         HideWindow(hidden);
         ShowWindow(win);
         HiliteWindow(win, true);
-        
+
         menubarVisible = true;
         CheckItem(GetMenuHandle(mBochs), iMenuBar, true);
 }
@@ -1613,7 +1613,7 @@ void CreateKeyMap(void)
         KCHR = NewPtrClear(390);
         if (KCHR == NULL)
                 BX_PANIC(("mac: can't allocate memory for key map"));
-  
+
         BlockMove(KCHRHeader, KCHR, sizeof(KCHRHeader));
         BlockMove(KCHRTable, Ptr(KCHR + sizeof(KCHRHeader)), sizeof(KCHRTable));
 }
@@ -1627,7 +1627,7 @@ void CreateVGAFont(void)
         int i, x;
         unsigned char *fontData, curPixel;
         long row_bytes, bytecount;
-        
+
         for (i=0; i<256; i++)
         {
                 vgafont[i] = CreateBitMap(FONT_WIDTH, FONT_HEIGHT);
@@ -1653,7 +1653,7 @@ BitMap *CreateBitMap(unsigned width,  unsigned height)
 {
         BitMap  *bm;
         long    row_bytes;
-        
+
         row_bytes = (( width + 31) >> 5) << 2;
         bm = (BitMap *)calloc(1, sizeof(BitMap));
         if (bm == NULL)
@@ -1662,7 +1662,7 @@ BitMap *CreateBitMap(unsigned width,  unsigned height)
         bm->rowBytes = row_bytes;
         // Quickdraw allocates a new color table by default, but we want to
         // use one we created earlier.
-                
+
         return bm;
 }
 
@@ -1675,7 +1675,7 @@ PixMapHandle CreatePixMap(unsigned left, unsigned top, unsigned width,
 {
         PixMapHandle  pm;
         long          row_bytes;
-        
+
         row_bytes = (((long) depth * ((long) width) + 31) >> 5) << 2;
         pm = NewPixMap();
         if (pm == NULL)
@@ -1686,25 +1686,25 @@ PixMapHandle CreatePixMap(unsigned left, unsigned top, unsigned width,
         (**pm).bounds.bottom = top+height;
         (**pm).pixelSize = depth;
         (**pm).rowBytes = row_bytes | 0x8000;
-        
+
   DisposeCTable((**pm).pmTable);
   (**pm).pmTable = clut;
   // Quickdraw allocates a new color table by default, but we want to
   // use one we created earlier.
-        
+
         return pm;
 }
 
 unsigned char reverse_bitorder(unsigned char b)
 {
         unsigned char ret=0;
-        
+
         for (unsigned i=0; i<8; i++)
         {
                 ret |= (b & 0x01) << (7-i);
                 b >>= 1;
         }
-        
+
         return(ret);
 }
 

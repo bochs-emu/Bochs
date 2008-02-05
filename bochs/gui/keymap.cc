@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keymap.cc,v 1.21 2007-10-24 23:07:49 sshwarts Exp $
+// $Id: keymap.cc,v 1.22 2008-02-05 22:57:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002 MandrakeSoft S.A.
@@ -64,11 +64,11 @@ const char *bx_key_symbol[BX_KEY_NBKEYS] = {
   "BX_KEY_KP_DELETE",      "BX_KEY_KP_5",           "BX_KEY_UP",
   "BX_KEY_DOWN",           "BX_KEY_LEFT",           "BX_KEY_RIGHT",
   "BX_KEY_KP_ENTER",       "BX_KEY_KP_MULTIPLY",    "BX_KEY_KP_DIVIDE",
-  "BX_KEY_WIN_L",          "BX_KEY_WIN_R",          "BX_KEY_MENU",           
-  "BX_KEY_ALT_SYSREQ",     "BX_KEY_CTRL_BREAK",     "BX_KEY_INT_BACK",       
-  "BX_KEY_INT_FORWARD",    "BX_KEY_INT_STOP",       "BX_KEY_INT_MAIL",       
-  "BX_KEY_INT_SEARCH",     "BX_KEY_INT_FAV",        "BX_KEY_INT_HOME",       
-  "BX_KEY_POWER_MYCOMP",   "BX_KEY_POWER_CALC",     "BX_KEY_POWER_SLEEP",    
+  "BX_KEY_WIN_L",          "BX_KEY_WIN_R",          "BX_KEY_MENU",
+  "BX_KEY_ALT_SYSREQ",     "BX_KEY_CTRL_BREAK",     "BX_KEY_INT_BACK",
+  "BX_KEY_INT_FORWARD",    "BX_KEY_INT_STOP",       "BX_KEY_INT_MAIL",
+  "BX_KEY_INT_SEARCH",     "BX_KEY_INT_FAV",        "BX_KEY_INT_HOME",
+  "BX_KEY_POWER_MYCOMP",   "BX_KEY_POWER_CALC",     "BX_KEY_POWER_SLEEP",
   "BX_KEY_POWER_POWER",    "BX_KEY_POWER_WAKE",
 };
 
@@ -132,7 +132,7 @@ static Bit32s get_next_word(char *output)
   // find first nonspace
   while (*lineptr && isspace(*lineptr))
     lineptr++;
-  if (!*lineptr) 
+  if (!*lineptr)
     return -1;  // nothing but spaces until end of line
   if (*lineptr == '#')
     return -1;  // nothing but a comment
@@ -197,7 +197,7 @@ static Bit32s get_next_keymap_line (FILE *fp, char *bxsym, char *modsym, Bit32s 
 void bx_keymap_c::loadKeymap(Bit32u stringToSymbol(const char*), const char* filename)
 {
   FILE   *keymapFile;
-  char baseSym[256], modSym[256], hostSym[256]; 
+  char baseSym[256], modSym[256], hostSym[256];
   Bit32s ascii = 0;
   Bit32u baseKey, modKey, hostKey;
   struct stat status;
@@ -213,13 +213,13 @@ void bx_keymap_c::loadKeymap(Bit32u stringToSymbol(const char*), const char* fil
   if((keymapFile = fopen(filename,"r"))==NULL) {
     BX_PANIC(("Can not open keymap file '%s'.",filename));
   }
-    
+
   BX_INFO(("Loading keymap from '%s'",filename));
   init_parse();
 
   // Read keymap file one line at a time
   while(1) {
-    if (get_next_keymap_line (keymapFile, 
+    if (get_next_keymap_line (keymapFile,
           baseSym, modSym, &ascii, hostSym) < 0) { break; }
 
     // convert X_KEY_* symbols to values
@@ -244,7 +244,7 @@ void bx_keymap_c::loadKeymap(Bit32u stringToSymbol(const char*), const char* fil
 
     keymapTable=(BXKeyEntry*)realloc(keymapTable,(keymapCount+1) * sizeof(BXKeyEntry));
 
-    if (keymapTable==NULL) 
+    if (keymapTable==NULL)
       BX_PANIC(("Can not allocate memory for keymap table."));
 
     keymapTable[keymapCount].baseKey=baseKey;
@@ -268,7 +268,7 @@ Bit32u bx_keymap_c::convertStringToBXKey(const char* string)
       return i;
     }
   }
-  
+
   // Key is not known
   return BX_KEYMAP_UNKNOWN;
 }

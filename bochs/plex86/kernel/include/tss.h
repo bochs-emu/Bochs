@@ -22,7 +22,7 @@
 #ifndef __TSS_H__
 #define __TSS_H__
 
-typedef struct 
+typedef struct
 {
     Bit16u back, RESERVED0;      /* Backlink */
     Bit32u esp0;                 /* The CK stack pointer */

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: instrument.h,v 1.28 2008-01-18 09:38:54 sshwarts Exp $
+// $Id: instrument.h,v 1.29 2008-02-05 22:57:42 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -135,7 +135,7 @@ void bx_instr_wrmsr(unsigned cpu, unsigned addr, Bit64u value);
                        bx_instr_opcode(cpu_id, opcode, len, is32, is64)
 #  define BX_INSTR_FETCH_DECODE_COMPLETED(cpu_id, i) \
                        bx_instr_fetch_decode_completed(cpu_id, i)
-     
+
 /* prefix byte decoded */
 #  define BX_INSTR_PREFIX(cpu_id, prefix)  bx_instr_prefix(cpu_id, prefix)
 
@@ -176,7 +176,7 @@ void bx_instr_wrmsr(unsigned cpu, unsigned addr, Bit64u value);
 /* wrmsr callback */
 #  define BX_INSTR_WRMSR(cpu_id, addr, value)           bx_instr_wrmsr(cpu_id, addr, value)
 
-#else   
+#else
 
 /* simulation init, shutdown, reset */
 #  define BX_INSTR_INIT(cpu_id)
@@ -201,7 +201,7 @@ void bx_instr_wrmsr(unsigned cpu, unsigned addr, Bit64u value);
 /* decoding completed */
 #  define BX_INSTR_OPCODE(cpu_id, opcode, len, is32, is64)
 #  define BX_INSTR_FETCH_DECODE_COMPLETED(cpu_id, i)
-     
+
 /* prefix byte decoded */
 #  define BX_INSTR_PREFIX(cpu_id, prefix)
 
@@ -241,4 +241,4 @@ void bx_instr_wrmsr(unsigned cpu, unsigned addr, Bit64u value);
 /* wrmsr callback */
 #  define BX_INSTR_WRMSR(cpu_id, addr, value)
 
-#endif  
+#endif

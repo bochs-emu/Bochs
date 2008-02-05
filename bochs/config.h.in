@@ -26,7 +26,7 @@
 // according to your build environment.  For example, in config.h.in,
 // SIZEOF_UNSIGNED_CHAR is set to 0.  When configure produces config.h
 // it will change "0" to the detected value for your system.
-// 
+//
 // config.h contains ONLY preprocessor #defines and a few typedefs.
 // It must be included by both C and C++ files, so it must not
 // contain anything language dependent such as a class declaration.
@@ -67,7 +67,7 @@
 // such as tracing all system calls.
 #define BX_DEBUG_LINUX 0
 
-// adds support for the GNU readline library in the debugger command 
+// adds support for the GNU readline library in the debugger command
 // prompt.
 #define HAVE_LIBREADLINE 0
 #define HAVE_READLINE_HISTORY_H 0
@@ -190,7 +190,7 @@
 #define BX_MIN_IPS 200000
 
 // Minimum and maximum values for SMP quantum variable. Defines
-// how many instructions each CPU could execute execute in one 
+// how many instructions each CPU could execute execute in one
 // shot (one cpu_loop call)
 #define BX_SMP_QUANTUM_MIN  1
 #define BX_SMP_QUANTUM_MAX 16
@@ -355,15 +355,15 @@
 
 // add special export symbols for win32 DLL building.  The main code must
 // have __declspec(dllexport) on variables, functions, or classes that the
-// plugins can access.  The plugins should #define PLUGGABLE which will 
+// plugins can access.  The plugins should #define PLUGGABLE which will
 // activate the __declspec(dllimport) instead.
 #if defined(WIN32) || defined(__CYGWIN__)
 #  if BX_PLUGINS && defined(BX_PLUGGABLE)
 //   #warning I will import DLL symbols from Bochs main program.
-#    define BOCHSAPI __declspec(dllimport) 
+#    define BOCHSAPI __declspec(dllimport)
 #  elif BX_PLUGINS
 //   #warning I will export DLL symbols.
-#    define BOCHSAPI __declspec(dllexport) 
+#    define BOCHSAPI __declspec(dllexport)
 #  endif
 #endif
 #ifndef BOCHSAPI
@@ -524,9 +524,9 @@ typedef bx_address bx_lin_address;
 
 
 // create an unsigned integer type that is the same size as a pointer.
-// You can typecast a pointer to a bx_pr_equiv_t without losing any 
+// You can typecast a pointer to a bx_pr_equiv_t without losing any
 // bits (and without getting the compiler excited).  This is used in
-// the FPU emulation code, where pointers and integers are often 
+// the FPU emulation code, where pointers and integers are often
 // used interchangeably.
 #if SIZEOF_INT_P == 4
   typedef Bit32u bx_ptr_equiv_t;
@@ -600,12 +600,12 @@ typedef
 // inline functions in headers that are compiled with C compiler
 // (e.g. fpu code) are declared with BX_C_INLINE macro.  Note that
 // the word "inline" itself may now be redefined by the above #define.
-// Many compilers are known to work with "static inline".  If the 
+// Many compilers are known to work with "static inline".  If the
 // compiler can put the function inline, it does so and never creates
 // a symbol for the function.  If optimization is off, or inline is
 // defined to be empty, the static keyword causes the function to create
-// a symbol that's visible only to that .c file.  Each .c file that 
-// includes the header will produde another local version of the 
+// a symbol that's visible only to that .c file.  Each .c file that
+// includes the header will produde another local version of the
 // BX_C_INLINE function (not ideal).  However without "static" you can
 // duplicate symbol problems which are even worse.
 #define BX_C_INLINE static inline
@@ -692,7 +692,7 @@ typedef
 
 // Experimental host PCI device mapping
 #define BX_SUPPORT_PCIDEV 0
-	
+
 #if (BX_SUPPORT_PCIDEV && !BX_SUPPORT_PCI)
 #error To enable PCI host device mapping, you must also enable PCI
 #endif
@@ -845,7 +845,7 @@ typedef
 #define BX_HAVE_STRUCT_TIMEVAL 0
 
 // used in term gui
-#define BX_HAVE_COLOR_SET 0  
+#define BX_HAVE_COLOR_SET 0
 #define BX_HAVE_MVHLINE 0
 #define BX_HAVE_MVVLINE 0
 

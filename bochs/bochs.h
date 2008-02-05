@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.221 2008-01-21 21:36:54 sshwarts Exp $
+// $Id: bochs.h,v 1.222 2008-02-05 22:57:39 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -25,11 +25,11 @@
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 
 //
-// bochs.h is the master header file for all C++ code.  It includes all 
+// bochs.h is the master header file for all C++ code.  It includes all
 // the system header files needed by bochs, and also includes all the bochs
-// C++ header files.  Because bochs.h and the files that it includes has 
+// C++ header files.  Because bochs.h and the files that it includes has
 // structure and class definitions, it cannot be called from C code.
-// 
+//
 
 #ifndef BX_BOCHS_H
 #  define BX_BOCHS_H 1
@@ -106,7 +106,7 @@ extern "C" {
 }
 #endif
 
-#include "osdep.h"       /* platform dependent includes and defines */ 
+#include "osdep.h"       /* platform dependent includes and defines */
 #include "bx_debug/debug.h"
 #include "bxversion.h"
 
@@ -283,12 +283,12 @@ public:
 	void setio(class iofunctions *);
 	void setonoff(int loglev, int value) {
 	  assert (loglev >= 0 && loglev < N_LOGLEV);
-	  onoff[loglev] = value; 
+	  onoff[loglev] = value;
 	}
 	char *getprefix () { return prefix; }
 	int getonoff(int level) {
 	  assert (level>=0 && level<N_LOGLEV);
-	  return onoff[level]; 
+	  return onoff[level];
         }
 	static void set_default_action (int loglev, int action) {
 	  assert (loglev >= 0 && loglev < N_LOGLEV);
@@ -500,7 +500,7 @@ extern bx_bool bx_gui_sighandler;
 
 #define BX_KBD_XT_TYPE        0
 #define BX_KBD_AT_TYPE        1
-#define BX_KBD_MF_TYPE        2 
+#define BX_KBD_MF_TYPE        2
 
 #define BX_N_OPTROM_IMAGES 4
 #define BX_N_OPTRAM_IMAGES 4

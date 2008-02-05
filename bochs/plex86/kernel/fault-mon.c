@@ -31,7 +31,7 @@
 /* The monitor stack frame.  When an exception or interrupt occurrs
  * during the execution of either guest or monitor code, the following
  * values are pushed.
- * 
+ *
  * ss
  * esp
  * eflags    Values pushed by the CPU and interrupt stub.  To simplify

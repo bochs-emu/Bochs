@@ -164,6 +164,6 @@ AC_SUBST(CD_UP_ONE)
 AC_SUBST(CD_UP_TWO)
 
 AC_OUTPUT([
-Makefile 
+Makefile
 kernel/Makefile
 ])

@@ -17,10 +17,10 @@ r
 # For new values, 255 means "don't change".
 #
 # When deciding whether a program change is to be remapped, these
-# remappings are checked first to last, and the first applicable remap 
+# remappings are checked first to last, and the first applicable remap
 # is used.
 
-# This would map all bank changes to bank 0/0 
+# This would map all bank changes to bank 0/0
 # t 255 255 255	0 0 255
 # it's commented out, otherwise none of the below changes would
 # be checked, as this one matches anything.

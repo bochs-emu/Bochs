@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.cc,v 1.102 2007-10-24 23:07:30 sshwarts Exp $
+// $Id: gui.cc,v 1.103 2008-02-05 22:57:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -174,7 +174,7 @@ void bx_gui_c::init(int argc, char **argv, unsigned tilewidth, unsigned tileheig
                           BX_GRAVITY_LEFT, floppyB_handler);
   BX_GUI_THIS set_tooltip(BX_GUI_THIS floppyB_hbar_id, "Change floppy B: media");
 
-  // CDROM, 
+  // CDROM,
   // the harddrive object is not initialised yet,
   // so we just set the bitmap to ejected for now
   BX_GUI_THIS cdromD_hbar_id = headerbar_bitmap(BX_GUI_THIS cdromD_eject_bmap_id,
@@ -320,7 +320,7 @@ void bx_gui_c::cdromD_handler(void)
 {
   Bit32u handle = DEV_hd_get_first_cd_handle();
   if (BX_GUI_THIS dialog_caps & BX_GUI_DLG_CDROM) {
-    // instead of just toggling the status, call win32dialog to bring up 
+    // instead of just toggling the status, call win32dialog to bring up
     // a dialog asking what disk image you want to switch to.
     // This code handles the first cdrom only. The cdrom drives #2, #3 and
     // #4 are handled in the win32 runtime dialog.
@@ -640,7 +640,7 @@ void bx_gui_c::mouse_enabled_changed(bx_bool val)
 void bx_gui_c::init_signal_handlers()
 {
 #if BX_GUI_SIGHANDLER
-  if (bx_gui_sighandler) 
+  if (bx_gui_sighandler)
   {
     Bit32u mask = bx_gui->get_sighandler_mask ();
     for (Bit32u sig=0; sig<32; sig++)
@@ -665,7 +665,7 @@ void bx_gui_c::set_text_charbyte(Bit16u address, Bit8u data)
   BX_GUI_THIS char_changed[address >> 5] = 1;
   BX_GUI_THIS charmap_updated = 1;
 }
-  
+
 void bx_gui_c::beep_on(float frequency)
 {
   BX_INFO(("GUI Beep ON (frequency=%.2f)", frequency));

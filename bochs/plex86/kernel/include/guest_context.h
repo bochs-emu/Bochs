@@ -36,7 +36,7 @@ typedef struct {
   Bit32u  fs;
   Bit32u  ds;
   Bit32u  es;
- 
+
   Bit32u  edi;
   Bit32u  esi;
   Bit32u  ebp;
@@ -45,10 +45,10 @@ typedef struct {
   Bit32u  edx;
   Bit32u  ecx;
   Bit32u  eax;
- 
+
   Bit32u  vector;
   Bit32u  error;
- 
+
   Bit32u  eip;
   Bit32u  cs;
   eflags_t  eflags;

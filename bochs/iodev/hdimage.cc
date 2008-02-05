@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: hdimage.cc,v 1.14 2008-01-26 22:24:02 sshwarts Exp $
+// $Id: hdimage.cc,v 1.15 2008-02-05 22:57:42 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -734,7 +734,7 @@ ssize_t sparse_image_t::write (const void* buf, size_t count)
     }
 
     underlying_current_filepos = physical_offset + can_write;
- 
+
     total_written += can_write;
 
     position_page_offset += can_write;

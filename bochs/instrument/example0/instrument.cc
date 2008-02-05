@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: instrument.cc,v 1.20 2008-01-17 21:35:21 sshwarts Exp $
+// $Id: instrument.cc,v 1.21 2008-02-05 22:57:42 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -94,27 +94,27 @@ void bx_instr_new_instruction(unsigned cpu)
     unsigned length = i->opcode_size, n;
 
     bx_disassembler.disasm(i->is32, i->is64, 0, 0, i->opcode, disasm_tbuf);
- 
-    if(length != 0)	
+
+    if(length != 0)
     {
       fprintf(stderr, "----------------------------------------------------------\n");
       fprintf(stderr, "CPU: %d: %s\n", cpu, disasm_tbuf);
       fprintf(stderr, "LEN: %d\tPREFIXES: %d\tBYTES: ", length, i->nprefixes);
       for(n=0;n<length;n++) fprintf(stderr, "%02x", i->opcode[n]);
-      if(i->is_branch) 
+      if(i->is_branch)
       {
         fprintf(stderr, "\tBRANCH ");
 
-        if(i->is_taken) 
+        if(i->is_taken)
           fprintf(stderr, "TARGET " FMT_ADDRX " (TAKEN)", i->target_linear);
         else
           fprintf(stderr, "(NOT TAKEN)");
-      }   
+      }
       fprintf(stderr, "\n");
       for(n=0;n<i->num_data_accesses;n++)
       {
         fprintf(stderr, "MEM ACCESS[%u]: " FMT_ADDRX " (linear) 0x%08x (physical) %s SIZE: %d\n", n,
-                      i->data_access[n].laddr, 
+                      i->data_access[n].laddr,
                       i->data_access[n].paddr,
                       i->data_access[n].op == BX_READ ? "RD":"WR",
                       i->data_access[n].size);
@@ -141,7 +141,7 @@ static void branch_taken(unsigned cpu, bx_address new_eip)
   instruction[cpu].target_linear = laddr;
 }
 
-void bx_instr_cnear_branch_taken(unsigned cpu, bx_address new_eip) 
+void bx_instr_cnear_branch_taken(unsigned cpu, bx_address new_eip)
 {
   branch_taken(cpu, new_eip);
 }
@@ -168,11 +168,11 @@ void bx_instr_opcode(unsigned cpu, Bit8u *opcode, unsigned len, bx_bool is32, bx
 {
   if (!active) return;
 
-  for(unsigned i=0;i<len;i++) 
+  for(unsigned i=0;i<len;i++)
   {
     instruction[cpu].opcode[i] = opcode[i];
   }
-  
+
   instruction[cpu].is32 = is32;
   instruction[cpu].is64 = is64;
   instruction[cpu].opcode_size = len;
@@ -219,7 +219,7 @@ void bx_instr_mem_data(unsigned cpu, bx_address lin, unsigned size, unsigned rw)
 
   if(!active || !instruction[cpu].valid) return;
 
-  if (instruction[cpu].num_data_accesses >= MAX_DATA_ACCESSES) 
+  if (instruction[cpu].num_data_accesses >= MAX_DATA_ACCESSES)
   {
     return;
   }
@@ -229,7 +229,7 @@ void bx_instr_mem_data(unsigned cpu, bx_address lin, unsigned size, unsigned rw)
 
   // If linear translation doesn't exist, a paging exception will occur.
   // Invalidate physical address data for now.
-  if (!page_valid) 
+  if (!page_valid)
   {
     phy = 0;
   }

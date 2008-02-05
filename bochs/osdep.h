@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: osdep.h,v 1.27 2006-02-11 20:47:22 sshwarts Exp $
+// $Id: osdep.h,v 1.28 2008-02-05 22:57:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -28,12 +28,12 @@
 // osdep.h
 //
 // requires Bit32u/Bit64u from config.h, size_t from stdio.h
-// 
-// Operating system dependent includes and defines for Bochs.  These 
+//
+// Operating system dependent includes and defines for Bochs.  These
 // declarations can be included by C or C++., but they require definition of
 // size_t beforehand.  This makes it difficult to place them into either
 // config.h or bochs.h.  If in config.h, size_t is not always available yet.
-// If in bochs.h, they can't be included by C programs so they lose.  
+// If in bochs.h, they can't be included by C programs so they lose.
 //
 
 #ifndef BX_OSDEP_H
@@ -120,13 +120,13 @@ extern "C" {
 //////////////////////////////////////////////////////////////////////
 // Missing library functions.
 // These should work on any platform that needs them.
-// 
+//
 // A missing library function is renamed to a bx_* function, so that when
 // debugging and linking there's no confusion over which version is used.
-// Because of renaming, the bx_* replacement functions can be tested on 
+// Because of renaming, the bx_* replacement functions can be tested on
 // machines which have the real library function without duplicate symbols.
 //
-// If you're considering implementing a missing library function, note 
+// If you're considering implementing a missing library function, note
 // that it might be cleaner to conditionally disable the function call!
 //////////////////////////////////////////////////////////////////////
 

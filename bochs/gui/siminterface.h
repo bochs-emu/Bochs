@@ -1,13 +1,13 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.214 2007-10-24 23:09:13 sshwarts Exp $
+// $Id: siminterface.h,v 1.215 2008-02-05 22:57:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Intro to siminterface by Bryce Denney:
 //
 // Before I can describe what this file is for, I have to make the
 // distinction between a configuration interface (CI) and the VGA display
-// window (VGAW).  I will try to avoid the term 'GUI' because it is unclear 
-// if that means CI or VGAW, and because not all interfaces are graphical 
+// window (VGAW).  I will try to avoid the term 'GUI' because it is unclear
+// if that means CI or VGAW, and because not all interfaces are graphical
 // anyway.
 //
 // The traditional Bochs screen is a window with a large VGA display panel and
@@ -16,7 +16,7 @@
 // and platforms; each implementation is in a separate file under gui/*:
 // x.cc, win32.cc, beos.cc, macintosh.cc, etc.  The files gui.h and gui.cc
 // define the platform independent part of the VGAW, leaving about 15 methods
-// of the bx_gui_c class undefined.  The platform dependent file must 
+// of the bx_gui_c class undefined.  The platform dependent file must
 // implement the remaining 15 methods.
 //
 // The configuration interface is relatively new, started by Bryce Denney in
@@ -32,11 +32,11 @@
 // user interface part would take: stdin/stdout menus, a graphical application
 // with menus and dialogs running in a separate thread, or even a tiny web
 // server that you can connect to with a web browser.  As a result the
-// interface to the CI was designed so that the user interface of the CI 
+// interface to the CI was designed so that the user interface of the CI
 // could be replaced easily at compile time, or maybe even at runtime via
 // a plugin architecture.  To this end, we kept a clear separation between
 // the user interface code and the siminterface, the code that interfaces with
-// the simulator.  The same siminterface is used all the time, while 
+// the simulator.  The same siminterface is used all the time, while
 // different implementations of the CI can be switched in reasonably easily.
 // Only the CI code uses library specific graphics and I/O functions; the
 // siminterface deals in portable abstractions and callback functions.
@@ -330,9 +330,9 @@ typedef enum {
 //
 // sync event: Sometimes the simulator reaches a point where it needs
 // to ask the user how to proceed.  In this case, the simulator sends
-// a synchronous event because it requires a response before it can 
+// a synchronous event because it requires a response before it can
 // continue.  It builds an event structure, perhaps with type
-// BX_SYNC_EVT_ASK_PARAM, sends it to the user interface 
+// BX_SYNC_EVT_ASK_PARAM, sends it to the user interface
 // using the event handler function defined by set_notify_callback(),
 // and pauses the simulation.  The user interface asks the user the
 // question, and puts the answer into the BxEvent.retcode field.  The
@@ -386,7 +386,7 @@ typedef union {
 
 // Event type: BX_ASYNC_EVT_KEY
 //
-// A key event can be sent from the VGA window to the Bochs simulator.  
+// A key event can be sent from the VGA window to the Bochs simulator.
 // It is asynchronous.
 typedef struct {
   // what was pressed?  This is a BX_KEY_* value.  For key releases,
@@ -429,7 +429,7 @@ typedef struct {
 
 // Event type: BX_SYNC_EVT_ASK_PARAM
 // Synchronous event sent from the simulator to the CI.  This tells the
-// CI to ask the user to choose the value of a parameter.  The CI may 
+// CI to ask the user to choose the value of a parameter.  The CI may
 // need to discover the type of parameter so that it can use the right
 // kind of graphical display.  The BxParamEvent is used for these events
 // too.
@@ -438,7 +438,7 @@ typedef struct {
 // types.
 
 // Event type: BX_ASYNC_EVT_VALUE_CHANGED
-// 
+//
 // Asynchronous event sent from the simulator to the CI, telling it that
 // some value that it (hopefully) cares about has changed.  This isn't
 // being used yet, but a good example is in a debugger interface, you might
@@ -452,10 +452,10 @@ typedef struct {
 // Event type: BX_ASYNC_EVT_LOG_MSG   (unused)
 //
 // Asynchronous event from the simulator to the CI.  When a BX_PANIC,
-// BX_ERROR, BX_INFO, or BX_DEBUG is found in the simulator code, this 
+// BX_ERROR, BX_INFO, or BX_DEBUG is found in the simulator code, this
 // event type can be used to inform the CI of the condition.  There is
 // no point in sending messages to the CI that will not be displayed; these
-// would only slow the simulation.  So we will need some mechanism for 
+// would only slow the simulation.  So we will need some mechanism for
 // choosing what kinds of events will be delivered to the CI.  Normally,
 // you wouldn't want to look at the log unless something is going wrong.
 // At that point, you might want to open up a window to watch the debug
@@ -484,7 +484,7 @@ typedef struct {
 // This is a synchronous version of BX_ASYNC_EVT_LOG_MSG, which is used
 // when the "action=ask" setting is used.  If the simulator runs into a
 // panic, it sends a synchronous BX_SYNC_EVT_LOG_ASK to the CI to be
-// displayed.  The CI shows a dialog that asks if the user wants to 
+// displayed.  The CI shows a dialog that asks if the user wants to
 // continue, quit, etc. and sends the answer back to the simulator.
 // This event also uses BxLogMsgEvent.
 enum {
@@ -512,7 +512,7 @@ typedef struct {
 
 // Event type: BX_EVT_TOOLBAR
 // Asynchronous event from the VGAW to the simulator, sent when the user
-// clicks on a toolbar button.  This may one day become something more 
+// clicks on a toolbar button.  This may one day become something more
 // general, like a command event, but at the moment it's only needed for
 // the toolbar events.
 typedef struct {
@@ -556,7 +556,7 @@ typedef struct {
 // parameter can have.
 //
 // Also, some parameter classes support get/set callback functions to
-// allow arbitrary code to be executed when the parameter is get/set. 
+// allow arbitrary code to be executed when the parameter is get/set.
 // An example of where this is useful: if you disable the NE2K card,
 // the set() handler for that parameter can tell the user interface
 // that the NE2K's irq, I/O address, and mac address should be
@@ -1067,8 +1067,8 @@ BOCHSAPI extern const char *clock_sync_names[];
 #include <setjmp.h>
 
 enum ci_command_t { CI_START, CI_RUNTIME_CONFIG, CI_SHUTDOWN };
-enum ci_return_t { 
-  CI_OK,                  // normal return value 
+enum ci_return_t {
+  CI_OK,                  // normal return value
   CI_ERR_NO_TEXT_CONSOLE  // err: can't work because there's no text console
   };
 typedef int (*config_interface_callback_t)(void *userdata, ci_command_t command);
@@ -1112,10 +1112,10 @@ public:
   virtual int get_max_log_level() {return -1;}
 
   // exiting is somewhat complicated!  The preferred way to exit bochs is
-  // to call BX_EXIT(exitcode).  That is defined to call 
+  // to call BX_EXIT(exitcode).  That is defined to call
   // SIM->quit_sim(exitcode).  The quit_sim function first calls
   // the cleanup functions in bochs so that it can destroy windows
-  // and free up memory, then sends a notify message to the CI 
+  // and free up memory, then sends a notify message to the CI
   // telling it that bochs has stopped.
   virtual void quit_sim(int code) {}
 
@@ -1187,7 +1187,7 @@ public:
   virtual void debug_puts(const char *text) {}
 #endif
   virtual void register_configuration_interface(
-    const char* name, 
+    const char* name,
     config_interface_callback_t callback,
     void *userdata) {}
   virtual int configuration_interface(const char* name, ci_command_t command) {return -1; }

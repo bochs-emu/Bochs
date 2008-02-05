@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rfb.cc,v 1.54 2008-01-30 22:06:52 vruppert Exp $
+// $Id: rfb.cc,v 1.55 2008-02-05 22:57:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2000  Psyon.Org!
@@ -29,7 +29,7 @@
 
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
-// platforms that require a special tag on exported symbols, BX_PLUGGABLE 
+// platforms that require a special tag on exported symbols, BX_PLUGGABLE
 // is used to know when we are exporting symbols and when we are importing.
 #define BX_PLUGGABLE
 
@@ -238,7 +238,7 @@ void bx_rfb_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsi
     }
   }
 
-  rfbScreen = (char *)malloc(rfbWindowX * rfbWindowY); 
+  rfbScreen = (char *)malloc(rfbWindowX * rfbWindowY);
   memset(&rfbPalette, 0, sizeof(rfbPalette));
   rfbPalette[7] = (char)0xAD;
   rfbPalette[63] = (char)0xFF;
@@ -348,7 +348,7 @@ bool StopWinsock()
 }
 #endif
 
-void ServerThreadInit(void *indata) 
+void ServerThreadInit(void *indata)
 {
     SOCKET             sServer;
     SOCKET             sClient;
@@ -366,7 +366,7 @@ void ServerThreadInit(void *indata)
 #endif
 
     sServer = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-    if(sServer == -1) { 
+    if(sServer == -1) {
         BX_PANIC(( "could not create socket." ));
         goto end_of_thread;
     }
@@ -393,7 +393,7 @@ void ServerThreadInit(void *indata)
       break;
     }
     if (!port_ok) {
-      BX_PANIC (("RFB could not bind any port between %d and %d", 
+      BX_PANIC (("RFB could not bind any port between %d and %d",
         BX_RFB_PORT_MIN,
         BX_RFB_PORT_MAX));
       goto end_of_thread;
@@ -418,7 +418,7 @@ end_of_thread:
     return;
 }
 
-void HandleRfbClient(SOCKET sClient) 
+void HandleRfbClient(SOCKET sClient)
 {
     char rfbName[] = "Bochs-RFB";
     rfbProtocolVersionMessage pv;
@@ -430,9 +430,9 @@ void HandleRfbClient(SOCKET sClient)
     client_connected = true;
     setsockopt(sClient, IPPROTO_TCP, TCP_NODELAY, (const char *)&one, sizeof(one));
     BX_INFO(("accepted client connection."));
-    snprintf(pv , rfbProtocolVersionMessageSize, 
-              rfbProtocolVersionFormat, 
-              rfbServerProtocolMajorVersion, 
+    snprintf(pv , rfbProtocolVersionMessageSize,
+              rfbProtocolVersionFormat,
+              rfbServerProtocolMajorVersion,
               rfbServerProtocolMinorVersion);
 
     if(WriteExact(sClient, pv, rfbProtocolVersionMessageSize) < 0) {
@@ -444,7 +444,7 @@ void HandleRfbClient(SOCKET sClient)
         return;
     }
     pv[rfbProtocolVersionMessageSize-1]=0; // Drop last character
-    BX_INFO(("Client protocol version is '%s'", pv)); 
+    BX_INFO(("Client protocol version is '%s'", pv));
     // FIXME should check for version number
 
     auth = htonl(rfbSecurityNone);
@@ -489,7 +489,7 @@ void HandleRfbClient(SOCKET sClient)
             }
             return;
         }
-        
+
         switch(msgType) {
         case rfbSetPixelFormat:
             {
@@ -506,7 +506,7 @@ void HandleRfbClient(SOCKET sClient)
                 spf.pixelFormat.redShift = spf.pixelFormat.redShift;
                 spf.pixelFormat.greenShift = spf.pixelFormat.greenShift;
                 spf.pixelFormat.blueShift = spf.pixelFormat.blueShift;
-                
+
                 if (!PF_EQ(spf.pixelFormat, BGR233Format)) {
                     BX_ERROR(("client has wrong pixel format (%d %d %d %d %d %d %d %d %d)",
 			      spf.pixelFormat.bitsPerPixel,spf.pixelFormat.depth,spf.pixelFormat.trueColourFlag,
@@ -529,7 +529,7 @@ void HandleRfbClient(SOCKET sClient)
                 U32                    enc;
 
                 // free previously registered encodings
-                if (clientEncodings != NULL) { 
+                if (clientEncodings != NULL) {
                     delete [] clientEncodings;
                     clientEncodingsCount = 0;
                 }
@@ -563,7 +563,7 @@ void HandleRfbClient(SOCKET sClient)
                              found=1;
                              break;
                              }
-                        } 
+                        }
                     if (!found) BX_INFO(("%08x Unknown", clientEncodings[i]));
                     }
                 break;
@@ -604,7 +604,7 @@ void HandleRfbClient(SOCKET sClient)
                 break;
             }
         case rfbPointerEvent:
-            {    
+            {
                 rfbPointerEventMessage pe;
                 ReadExact(sClient, (char *)&pe, sizeof(rfbPointerEventMessage));
                 while(bKeyboardInUse);
@@ -947,7 +947,7 @@ unsigned bx_rfb_gui_c::create_bitmap(const unsigned char *bmap, unsigned xdim, u
     rfbBitmaps[rfbBitmapCount].xdim = xdim;
     rfbBitmaps[rfbBitmapCount].ydim = ydim;
     memcpy(rfbBitmaps[rfbBitmapCount].bmap, bmap, (xdim * ydim) / 8);
-    
+
     rfbBitmapCount++;
     return(rfbBitmapCount - 1);
 }
@@ -1079,7 +1079,7 @@ void bx_rfb_gui_c::exit(void)
     }
 
     // Clear supported encodings
-    if (clientEncodings != NULL) { 
+    if (clientEncodings != NULL) {
         delete [] clientEncodings;
         clientEncodingsCount = 0;
     }
@@ -1096,7 +1096,7 @@ void bx_rfb_gui_c::exit(void)
 int ReadExact(int sock, char *buf, int len)
 {
     int n;
- 
+
     while (len > 0) {
     n = recv(sock, buf, len, 0);
     if (n > 0) {
@@ -1118,10 +1118,10 @@ int ReadExact(int sock, char *buf, int len)
 int WriteExact(int sock, char *buf, int len)
 {
     int n;
-    
+
     while (len > 0) {
     n = send(sock, buf, len,0);
-        
+
     if (n > 0) {
         buf += n;
         len -= n;
@@ -1140,7 +1140,7 @@ void DrawBitmap(int x, int y, int width, int height, char *bmap, char color, boo
     int  i;
     unsigned char *newBits;
     char fgcolor, bgcolor;
-    char vgaPalette[] = {(char)0x00, //Black 
+    char vgaPalette[] = {(char)0x00, //Black
                          (char)0x01, //Dark Blue
                          (char)0x02, //Dark Green
                          (char)0x03, //Dark Cyan
@@ -1325,12 +1325,12 @@ void StartThread()
 #define XK_dead_circumflex  0xFE52
 #define XK_dead_tilde       0xFE53
 
-#define XK_BackSpace        0xFF08    
+#define XK_BackSpace        0xFF08
 #define XK_Tab              0xFF09
 #define XK_Linefeed         0xFF0A
 #define XK_Clear            0xFF0B
 #define XK_Return           0xFF0D
-#define XK_Pause            0xFF13    
+#define XK_Pause            0xFF13
 #define XK_Scroll_Lock      0xFF14
 #define XK_Sys_Req          0xFF15
 #define XK_Escape           0xFF1B
@@ -1338,28 +1338,28 @@ void StartThread()
 #define XK_Delete           0xFFFF
 
 #define XK_Home             0xFF50
-#define XK_Left             0xFF51    
-#define XK_Up               0xFF52    
+#define XK_Left             0xFF51
+#define XK_Up               0xFF52
 #define XK_Right            0xFF53
 #define XK_Down             0xFF54
 #define XK_Page_Up          0xFF55
 #define XK_Page_Down        0xFF56
-#define XK_End              0xFF57    
-#define XK_Begin            0xFF58    
+#define XK_End              0xFF57
+#define XK_Begin            0xFF58
 
-#define XK_Select           0xFF60    
+#define XK_Select           0xFF60
 #define XK_Print            0xFF61
-#define XK_Execute          0xFF62    
-#define XK_Insert           0xFF63    
+#define XK_Execute          0xFF62
+#define XK_Insert           0xFF63
 
-#define XK_Cancel           0xFF69    
+#define XK_Cancel           0xFF69
 #define XK_Help             0xFF6A
 #define XK_Break            0xFF6B
 #define XK_Num_Lock         0xFF7F
 
 #define XK_KP_Space         0xFF80
 #define XK_KP_Tab           0xFF89
-#define XK_KP_Enter         0xFF8D    
+#define XK_KP_Enter         0xFF8D
 
 #define XK_KP_Home          0xFF95
 #define XK_KP_Left          0xFF96
@@ -1377,7 +1377,7 @@ void StartThread()
 #define XK_KP_Equal         0xFFBD
 #define XK_KP_Multiply      0xFFAA
 #define XK_KP_Add           0xFFAB
-#define XK_KP_Separator     0xFFAC    
+#define XK_KP_Separator     0xFFAC
 #define XK_KP_Subtract      0xFFAD
 #define XK_KP_Decimal       0xFFAE
 #define XK_KP_Divide        0xFFAF
@@ -1424,13 +1424,13 @@ void StartThread()
 #define XK_F24              0xFFD5
 
 
-#define XK_Shift_L          0xFFE1    
-#define XK_Shift_R          0xFFE2    
-#define XK_Control_L        0xFFE3    
-#define XK_Control_R        0xFFE4    
-#define XK_Caps_Lock        0xFFE5    
-#define XK_Shift_Lock       0xFFE6    
-#define XK_Meta_L           0xFFE7    
+#define XK_Shift_L          0xFFE1
+#define XK_Shift_R          0xFFE2
+#define XK_Control_L        0xFFE3
+#define XK_Control_R        0xFFE4
+#define XK_Caps_Lock        0xFFE5
+#define XK_Shift_Lock       0xFFE6
+#define XK_Meta_L           0xFFE7
 #define XK_Meta_R           0xFFE8
 #define XK_Alt_L            0xFFE9
 #define XK_Alt_R            0xFFEA

@@ -1,10 +1,10 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: plugin.h,v 1.60 2007-10-24 23:28:50 sshwarts Exp $
+// $Id: plugin.h,v 1.61 2008-02-05 22:57:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This file provides macros and types needed for plugins.  It is based on
 // the plugin.h file from plex86, but with significant changes to make
-// it work in Bochs.  
+// it work in Bochs.
 // Plex86 is Copyright (C) 1999-2000  The plex86 developers team
 //
 /////////////////////////////////////////////////////////////////////////
@@ -308,7 +308,7 @@ BOCHSAPI extern void (* pluginVGARedrawArea)(unsigned x0, unsigned y0,
                  unsigned width, unsigned height);
 BOCHSAPI extern Bit8u (* pluginVGAMemRead)(Bit32u addr);
 BOCHSAPI extern void  (* pluginVGAMemWrite)(Bit32u addr, Bit8u value);
-BOCHSAPI extern void  (* pluginVGAGetTextSnapshot)(Bit8u **text_snapshot, 
+BOCHSAPI extern void  (* pluginVGAGetTextSnapshot)(Bit8u **text_snapshot,
 		          unsigned *txHeight, unsigned *txWidth);
 BOCHSAPI extern void  (* pluginVGARefresh)(void *);
 BOCHSAPI extern void  (* pluginVGASetUpdateInterval)(unsigned);
@@ -353,7 +353,7 @@ int plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[]);
 #define DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(mod) \
   int lib##mod##_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[]); \
   void lib##mod##_LTX_plugin_fini(void);
-  
+
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(harddrv)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(keyboard)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(busmouse)

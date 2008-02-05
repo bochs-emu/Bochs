@@ -20,7 +20,7 @@ to set all the bochsrc parameters.  At the time of release 2.0, there
 are still some bugs but it is pretty stable and usable.
 
 Bochs should be build with wxWindows 2.3.3 or later.  It will probably
-not compile with 2.2.x without some work.  wxWindows 2.3.3 includes 
+not compile with 2.2.x without some work.  wxWindows 2.3.3 includes
 a patch by Bryce Denney to allow us to get raw keycode data for several
 OSes.
 
@@ -28,7 +28,7 @@ On any UNIX platform with wxWindows installed, configure with
 --with-wx to enable the wxWindows display library.
 
 To build in MS VC++:
-- edit .conf.win32-vcpp and add "--with-wx" to the configure line. 
+- edit .conf.win32-vcpp and add "--with-wx" to the configure line.
   If you want different configure options from what you see, change them
   too.
 - in cygwin, do "sh .conf.win32-vcpp" to run configure
@@ -49,12 +49,12 @@ to include.  Use the samples that came with that version of wxwindows for
 reference.
 
 To do:
-- now that ParamDialog works, I may rewrite some of the other dialogs 
+- now that ParamDialog works, I may rewrite some of the other dialogs
   as subclasses of ParamDialog.  This would lead to more compact code,
   and fewer bugs.
 - configure time dialog
-  - need to think about dialog layout 
-  - setting of IPS (controls how much time the PIT associates with each 
+  - need to think about dialog layout
+  - setting of IPS (controls how much time the PIT associates with each
     instruction for purposes of sending timer interrupts).  How can we
     name this?  instructions per simulated second.
   - enable realtime pit, realtime pit settings (?)
@@ -96,7 +96,7 @@ Added some sketches.  I'm thinking that the control
 panel will be able to basically show one of these screens at a time.  When
 you first start you would see ChooseConfigScreen which chooses between the
 configurations that you have loaded recently (which it would remember
-by the pathname of their bochsrc).  Whether you choose an existing 
+by the pathname of their bochsrc).  Whether you choose an existing
 configuration to be loaded or a new one, when you click Ok you go to
 the first configuration screen, ConfigDiskScreen.
 
@@ -145,14 +145,14 @@ get the answer back to the simulator thread
 right now, this is working ok within the simulator thread using
 wxMutexGuiEnter/Leave.  Still I'm going to change it so that the
 siminterface.cc code builds an event structure and the gui code
-fills in the blank in the structure, instead of the stupid 
+fills in the blank in the structure, instead of the stupid
 notify_get_int_arg stuff.
 
 
 Starting and Killing Threads
 
 When a detachable (default) thread finishes (returns from its Entry()
-function), wxwindows frees the memory associated with that thread.  
+function), wxwindows frees the memory associated with that thread.
 Unless the thread is never going to end, it is potentially dangerous to have a
 pointer to it at all.  Even if you try to "check if it's alive" first, you may
 be dereferencing the pointer after it has already been deleted, leading to it
@@ -160,16 +160,16 @@ claiming to be alive when it's not, or a segfault.  To solve this, the approach
 used in the wxwindows threads example is to have code in the thread's OnExit()
 method remove the thread's pointer from the list of usable threads.  In
 addition, any references or changes to the list of threads is controlled by a
-critical section to ensure that it stays correct.  This post finally 
+critical section to ensure that it stays correct.  This post finally
 explained what I was seeing.
 
 +-----------------------
 | From: Pieter van der Meulen (pgmvdm@yahoo.com)
-|  Subject: Re: Thread Sample program - bug 
+|  Subject: Re: Thread Sample program - bug
 |  Newsgroups: comp.soft-sys.wxwindows
-|  Date: 2001-06-28 17:51:35 PST 
-| 
-| 
+|  Date: 2001-06-28 17:51:35 PST
+|
+|
 | At 06:24 PM 6/28/2001, you wrote:
 | >Hi,
 | >I have wxWindows 2.2.7 (wxMSW) installed.
@@ -190,41 +190,41 @@ explained what I was seeing.
 | ></code>
 | >The indecated line should probably rather have a
 | >m_threads[i]     rather than     m_threads[0] .
-| 
-| No, it should not, although it is not immediately obvious. When Delete() is 
-| called, the thread will eventually delete itself, but not before it calls 
-| MyThread::Exit(), which will remove itself from m_threads[] using 
-| wxArray::Remove(this). wxArray::Remove (RemoveAt) will compact the array to 
+|
+| No, it should not, although it is not immediately obvious. When Delete() is
+| called, the thread will eventually delete itself, but not before it calls
+| MyThread::Exit(), which will remove itself from m_threads[] using
+| wxArray::Remove(this). wxArray::Remove (RemoveAt) will compact the array to
 | remove the element, it is now size-1. After this wxThread::Delete() returns.
-| 
-| 
+|
+|
 | >I have have a further question to this:
 | >Does this mean that a detached thread created with new
 | >HAS to be deleted  manually ?  Or is this only in case it might still
 | >be running?
-| 
-| Firstly, you must create every detached thread using new since it will 
+|
+| Firstly, you must create every detached thread using new since it will
 | delete itself, literally calling delete this.
-| Calling wxThread::Delete() is a correct way to terminate a thread, but 
-| manually deleting (using delete) a detached wxThread object is not. 
-| wxThread::Delete() will ask the thread to exit, the thread should check for 
-| this in wxThread::Entry() regularly using wxThread::TestDestroy() and exit 
+| Calling wxThread::Delete() is a correct way to terminate a thread, but
+| manually deleting (using delete) a detached wxThread object is not.
+| wxThread::Delete() will ask the thread to exit, the thread should check for
+| this in wxThread::Entry() regularly using wxThread::TestDestroy() and exit
 | when asked to do so.
-| 
+|
 | >(In general I have a unsatisfied felling about when delete is
 | >neccessary and when not -- "I only know, it's not , if the class is
 | >derived from wxWindows")
-| 
-| For wxThreads: joinable threads must be deleted (when allocated on the 
-| heap), detached threads may never be deleted. For other classes, consult 
+|
+| For wxThreads: joinable threads must be deleted (when allocated on the
+| heap), detached threads may never be deleted. For other classes, consult
 | the documentation ;)
-| 
-| 
+|
+|
 | >Thanks for some feedback,
 | >Sebastian
-| 
+|
 | Regards,
-| 
+|
 | Pieter.
 +-----------------------
 
@@ -241,9 +241,9 @@ SOLUTION: compile with -pthread on every compile and link line.
 Suggested solution for putting sizers inside a scrolled window
 
 From: Thaddaeus Frogley (codemonkey_uk@users.sourceforge.net)
-Subject: RE: Using sizers inside of a scrolled window 
+Subject: RE: Using sizers inside of a scrolled window
 Newsgroups: comp.soft-sys.wxwindows
-Date: 2001-10-02 02:41:04 PST 
+Date: 2001-10-02 02:41:04 PST
 
 I have solved that same problem (scrolled windows / sizers) like so:
 
@@ -253,7 +253,7 @@ In the constructor for your wxFrame derived class,
 myScrolledWindow = new wxScrolledWindow(this, -1);
 
 //in the scolling window, create a panel
-myMainPanel = new wxPanel(myScrolledWindow, -1);        
+myMainPanel = new wxPanel(myScrolledWindow, -1);
 
 //place controls in the panel, laying them out with sizers
 
@@ -270,7 +270,7 @@ myScrolledWindow->SetScrollbars( 1, 1, size.GetWidth(), size.GetHeight() );
 
 //calculate the size of the window, and set it appropriately
 size.Set(size.GetWidth()+16,size.GetHeight()+16);
-        
+
 //Get the physical size of the display in pixels.
 int displaySizeX,displaySizeY;
 wxDisplaySize(&displaySizeX,&displaySizeY);
@@ -291,15 +291,15 @@ SetClientSize(size);
 How to make wxChoice as wide as the longest string in the choice box?
 
 From: Vadim Zeitlin (Vadim.zeitlin@dptmaths.ens-cachan.fr)
-Subject: Re: wxChoice 
+Subject: Re: wxChoice
 Newsgroups: comp.soft-sys.wxwindows
-Date: 2001-09-18 04:41:07 PST 
+Date: 2001-09-18 04:41:07 PST
 
 
 On Sat, 15 Sep 2001 15:39:45 +0200 Merlijn Blaauw <merlijn@student-kmt.hku.nl> wrote:
 
-MB> Also, I 
-MB> would like the widget's parent window to change size (width) to fit the 
+MB> Also, I
+MB> would like the widget's parent window to change size (width) to fit the
 MB> widget's new content aswell.
 
  You'll have to do it manually by calculating the length of the string you
@@ -314,13 +314,13 @@ VZ
 Hold on, this is even better!
 
 From: Yann Rouillard (Y.Rouillard@exeter.ac.uk)
-Subject: wxChoice and wxADJUST_MINSIZE 
+Subject: wxChoice and wxADJUST_MINSIZE
 Newsgroups: comp.soft-sys.wxwindows
-Date: 2002-07-18 08:28:31 PST 
+Date: 2002-07-18 08:28:31 PST
 
 I am trying to use a wxChoice widget in a little panel. The text length of
 the choices in the wxChoice can change so I used the wxADJUST_MINSIZE to
-have its width correctly set. 
+have its width correctly set.
 
 > the manual for wxSizer::Add() says:
 Finally, you can also specify wxADJUST_MINSIZE flag to make the minimal size of

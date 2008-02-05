@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////
-// $Id: wxdialog.h,v 1.69 2007-11-02 16:58:46 vruppert Exp $
+// $Id: wxdialog.h,v 1.70 2008-02-05 22:57:41 sshwarts Exp $
 ////////////////////////////////////////////////////////////////////
 //
 // wxWidgets dialogs for Bochs
@@ -45,7 +45,7 @@ wxChoice *makeLogOptionChoiceBox(wxWindow *parent, wxWindowID id, int evtype, bo
 
 ////////////////////////////////////////////////////////////////////
 // LogMsgAskDialog is a modal dialog box that shows the user a
-// simulation error message and asks if they want to continue or 
+// simulation error message and asks if they want to continue or
 // not.  It looks something like this:
 //
 // +----- PANIC ---------------------------------------------------+
@@ -69,8 +69,8 @@ class LogMsgAskDialog: public wxDialog
 {
 public:
   enum button_t {
-    CONT=0, DIE, DUMP, DEBUG, HELP, 
-    N_BUTTONS /* number of entries in enum */ 
+    CONT=0, DIE, DUMP, DEBUG, HELP,
+    N_BUTTONS /* number of entries in enum */
   };
 #define LOG_MSG_ASK_IDS \
   { ID_Continue, ID_Die, ID_DumpCore, ID_Debugger, wxHELP }
@@ -123,7 +123,7 @@ DECLARE_EVENT_TABLE()
 // +---------------------------------------------------------------+
 // To use this dialog:
 // After constructor, use AddRadio() to add radio buttons, SetFilename()
-// to fill in the disk image filename, SetCapacity() to set the capacity. 
+// to fill in the disk image filename, SetCapacity() to set the capacity.
 // Then call ShowModal() to display it.  Return value is wxID_OK or
 // wxID_CANCEL.  If you set a validation function, then it will be called when
 // ok is pressed, and will get a chance to veto the "Ok" if it returns false.
@@ -132,7 +132,7 @@ DECLARE_EVENT_TABLE()
 // unnecessary.
 //
 // Volker reminded me that I wasn't paying much attention to
-// the distinction between configuring the device (pre-boot) and 
+// the distinction between configuring the device (pre-boot) and
 // configuring the media which can be done anytime.  Here's a proposal
 // to fix that...  -Bryce
 // +-----Configure Floppy Drive A----------------------------------+
@@ -235,7 +235,7 @@ DECLARE_EVENT_TABLE()
 // |                                                         |
 // |                              [ Help ] [ Cancel ] [ Ok ] |
 // +-------------------------------------------------------+-+
-// 
+//
 class AdvancedLogOptionsDialog: public wxDialog
 {
 private:
@@ -378,7 +378,7 @@ struct AddParamContext {
 };
 
 
-class ParamDialog: public wxDialog 
+class ParamDialog: public wxDialog
 {
 private:
   void ShowHelp();
@@ -414,9 +414,9 @@ public:
   virtual void AddDefaultButtons();
   virtual void Init();  // called automatically by ShowModal()
   int ShowModal() {
-    Init(); 
+    Init();
     isShowing = true;
-    int ret = wxDialog::ShowModal(); 
+    int ret = wxDialog::ShowModal();
     isShowing = false;
     return ret;
   }
@@ -448,8 +448,8 @@ private:
 #define LOG_OPTS_N_CHOICES_NORMAL 4
 #define LOG_OPTS_N_CHOICES 5   // number of choices, including "no change"
 #define LOG_OPTS_NO_CHANGE 4   // index of "no change"
-// normally all choices are available for all event types. The exclude 
-// expression allows some choices to be eliminated if they don't make any 
+// normally all choices are available for all event types. The exclude
+// expression allows some choices to be eliminated if they don't make any
 // sense.  For example, it would be stupid to ignore a panic.
 #define LOG_OPTS_EXCLUDE(type,choice)  ( \
    /* can't die or ask, on debug or info events */   \
@@ -470,7 +470,7 @@ public:
 ////////////////////////////////////////////////////////////////////////////
 // CpuRegistersDialog
 ////////////////////////////////////////////////////////////////////////////
-// 
+//
 // this would display the current values of all CPU registers, possibly you can
 // enable different groups like debug, FPU, MMX registers.  Certainly if you
 // interrupt the simulation, these would be updated.  we could update
@@ -478,7 +478,7 @@ public:
 // integrated with wxwidgets, you could single step and update the cpu
 // registers, with regs that change marked in a different color.  Modeless
 // dialog.
-// 
+//
 // +--- CPU Registers ---------------------------------------+
 // |                                                         |
 // |  EAX 0x00000000   EIP    0xffff   LDTR 0x00000000       |
@@ -570,7 +570,7 @@ Everything else in here is a comment!
 
 
 ////////////////////////////////////////////////////////////////////////////
-// proposed dialogs, not implemented 
+// proposed dialogs, not implemented
 ////////////////////////////////////////////////////////////////////////////
 
 Here are some quick sketches of what different parts of the interface
@@ -695,7 +695,7 @@ CD-ROM button on the toolbar at runtime.
 ////////////////////////////////////////////////////////////////////////////
 // ChooseConfigDialog
 ////////////////////////////////////////////////////////////////////////////
-The idea is that you could choose from a set of configurations 
+The idea is that you could choose from a set of configurations
 (individual bochsrc files, basically).  When you first install
 Bochs, it would just have DLX Linux Demo, and Create New.
 As you create new configurations and save them, the list
@@ -754,7 +754,7 @@ let you go right to the configure screen for that disk drive.
 |          ++--++                                               |
 |                                                               |
 |          +-----+  C Drive                                     |
-|          |=====|  Hard Disk Image                     +----+  | 
+|          |=====|  Hard Disk Image                     +----+  |
 | [BOOT]   |    o|  C:\Bochs\Images\HD30meg.img         |Edit|  |
 |          +-----+                                      +----+  |
 |                                                               |
@@ -767,10 +767,10 @@ let you go right to the configure screen for that disk drive.
 +---------------------------------------------------------------+
 
 ////////////////////////////////////////////////////////////////////////////
-// KeymappingDialog      
+// KeymappingDialog
 ////////////////////////////////////////////////////////////////////////////
 more ambitious: create a button for each key on a standard keyboard, so that
-you can view/edit/load/save key mappings, produce any combination of keys 
+you can view/edit/load/save key mappings, produce any combination of keys
 (esp. ones that your OS or window manager won't allow)
 
 ////////////////////////////////////////////////////////////////////////////
@@ -791,41 +791,41 @@ complete.
 
 Suggestions from Greg Alexander:
 > I'm using O for radio buttons and [ ] for check boxes.
-> 
+>
 > ---------Basic Configure Timing Dialog--------
-> 
+>
 > Instructions per second:  [_________] (maybe have some default options
 >     and an "other")
-> 
+>
 > Select timing behavior desired:
-> 
+>
 > O Full Speed, Real Time
 >   (NOT Reproducible)
 > O Minimize CPU Use, Real Time
 > O Full speed, NOT Real Time
-> 
+>
 > [Advanced]
-> 
+>
 > -----------------------------------------------
 > The logic for the above would look like this:
 > All options get the New PIT.
 > Option 1 Gets you the Realtime PIT.
 > Option 2 Gets you the Slowdown Timer.
 > Option 3 Gets you neither.
-> 
+>
 > -------Advanced Configure Timing Dialog--------
-> 
+>
 > Instructions per second:  [_________]
-> 
+>
 > Select PIT Model:
 > O Old Model
 > O New Model
 > O Realtime PIT (not reproducible)
-> 
+>
 > Select Optional Realtime Hacks:
 > [ ] Slowdown Timer  Maxmult setting [_________]
 > [ ] Idle Hack (X Windows Only)
-> 
+>
 > ----------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////////
@@ -887,9 +887,9 @@ all the devices.
 
 Try #2 for the advanced event configuration dialog.
 It shows the selection of the default actions again
-at the top, with some explanation.  Then at bottom, you 
-can select a device in the list box and edit the settings 
-for that device individually.  It would be possible to 
+at the top, with some explanation.  Then at bottom, you
+can select a device in the list box and edit the settings
+for that device individually.  It would be possible to
 allow selection of multiple devices and then edit several
 devices at once.
 
@@ -943,7 +943,7 @@ devices at once.
 | +------------------------------------------------------+  |
 |                                [ Help ] [ Cancel ] [ Ok ] |
 +-----------------------------------------------------------+
-                                                           
+
 +---- Configure events -------------------------------------+
 |  __________    ____________                               |
 | | Default  \  | Per Device \                              |

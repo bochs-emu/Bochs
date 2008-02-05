@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: instrument.h,v 1.23 2008-01-18 08:56:57 sshwarts Exp $
+// $Id: instrument.h,v 1.24 2008-02-05 22:57:42 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -87,10 +87,10 @@ void bx_instr_mem_data(unsigned cpu, bx_address lin, unsigned size, unsigned rw)
 #  define BX_INSTR_NEW_INSTRUCTION(cpu_id) bx_instr_new_instruction(cpu_id)
 
 /* called from command line debugger */
-#  define BX_INSTR_DEBUG_PROMPT()        
-#  define BX_INSTR_START()               
-#  define BX_INSTR_STOP()                
-#  define BX_INSTR_PRINT()               
+#  define BX_INSTR_DEBUG_PROMPT()
+#  define BX_INSTR_START()
+#  define BX_INSTR_STOP()
+#  define BX_INSTR_PRINT()
 
 /* branch resoultion */
 #  define BX_INSTR_CNEAR_BRANCH_TAKEN(cpu_id, new_eip)       bx_instr_cnear_branch_taken(cpu_id, new_eip)
@@ -103,7 +103,7 @@ void bx_instr_mem_data(unsigned cpu, bx_address lin, unsigned size, unsigned rw)
                        bx_instr_opcode(cpu_id, opcode, len, is32, is64)
 #  define BX_INSTR_FETCH_DECODE_COMPLETED(cpu_id, i) \
                        bx_instr_fetch_decode_completed(cpu_id, i)
-     
+
 /* prefix byte decoded */
 #  define BX_INSTR_PREFIX(cpu_id, prefix)  bx_instr_prefix(cpu_id, prefix)
 
@@ -143,7 +143,7 @@ void bx_instr_mem_data(unsigned cpu, bx_address lin, unsigned size, unsigned rw)
 /* wrmsr callback */
 #  define BX_INSTR_WRMSR(cpu_id, addr, value)
 
-#else   
+#else
 
 /* simulation init, shutdown, reset */
 #  define BX_INSTR_INIT(cpu_id)
@@ -168,7 +168,7 @@ void bx_instr_mem_data(unsigned cpu, bx_address lin, unsigned size, unsigned rw)
 /* decoding completed */
 #  define BX_INSTR_OPCODE(cpu_id, opcode, len, is32, is64)
 #  define BX_INSTR_FETCH_DECODE_COMPLETED(cpu_id, i)
-     
+
 /* prefix byte decoded */
 #  define BX_INSTR_PREFIX(cpu_id, prefix)
 
@@ -192,7 +192,7 @@ void bx_instr_mem_data(unsigned cpu, bx_address lin, unsigned size, unsigned rw)
 #  define BX_INSTR_LIN_ACCESS(cpu_id, lin, phy, len, rw)
 
 /* memory access */
-#  define BX_INSTR_MEM_CODE(cpu_id, linear, size)      
+#  define BX_INSTR_MEM_CODE(cpu_id, linear, size)
 #  define BX_INSTR_MEM_DATA(cpu_id, linear, size, rw)
 
 /* called from memory object */
@@ -208,4 +208,4 @@ void bx_instr_mem_data(unsigned cpu, bx_address lin, unsigned size, unsigned rw)
 /* wrmsr callback */
 #  define BX_INSTR_WRMSR(cpu_id, addr, value)
 
-#endif  
+#endif

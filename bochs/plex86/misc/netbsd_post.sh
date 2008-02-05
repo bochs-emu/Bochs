@@ -6,7 +6,7 @@
 # Sample modload commandline:
 #
 #	modload -e plex86_lkmentry -p netbsd_post.sh plex86.o
-# 
+#
 if [ $# -ne 3 ]; then
     echo "$0 should only be called from modload(8) with 3 args"
     exit 1

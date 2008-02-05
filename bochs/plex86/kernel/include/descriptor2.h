@@ -24,7 +24,7 @@
 #define __DESCRIPTOR2_H__
 
 
-typedef struct 
+typedef struct
 {
     Bit16u   offset_low;
     selector_t selector;
@@ -57,7 +57,7 @@ typedef struct
     d.p = (P);\
 }
 
-typedef struct 
+typedef struct
 {
     Bit32u offset;
     Bit16u selector;

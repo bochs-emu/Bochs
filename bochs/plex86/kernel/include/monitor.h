@@ -42,7 +42,7 @@
 
 
 /* Method1: push event info (CPU pushes error code before) */
-typedef struct 
+typedef struct
 {
   Bit8u  pushl;    /* Always 0x68 == pushl            */
   Bit32u vector;   /* Interrupt vector number         */
@@ -51,7 +51,7 @@ typedef struct
 } __attribute__ ((packed)) idt_method1_t;
 
 /* Method2: push a dummy error first, then event info */
-typedef struct 
+typedef struct
 {
   Bit8u  pushla;   /* Always 0x68 == pushl            */
   Bit32u dummy;    /* Dummy error code                */
@@ -61,7 +61,7 @@ typedef struct
   Bit32u reloc;    /* Relative offset of destination  */
 } __attribute__ ((packed)) idt_method2_t;
 
-typedef union 
+typedef union
 {
   idt_method1_t m1;
   idt_method2_t m2;
@@ -499,7 +499,7 @@ typedef struct {
   Bit32u startOffset;
   Bit32u startOffsetPageAligned;
   unsigned nPages; /* Number of pages. */
-    
+
   /* A list of the Physical Page Indeces of the pages comprising the
    * kernel module.  A PPI is just the physical page address >> 12.
    */

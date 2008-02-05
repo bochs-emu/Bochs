@@ -193,7 +193,7 @@ hostInitMonitor(vm_t *vm)
    *  addresses to nexus structures as far as possible.  Instead, we use
    *  offsets relative to the monitor code/data segments.  As we update
    *  the base of these segments whenever the monitor migrates, the net
-   *  effect is that those *offsets* remain valid across nexus migration. 
+   *  effect is that those *offsets* remain valid across nexus migration.
    */
 
   /* Fill in the PDE flags.  The US bit is set to 1 (user access).
@@ -377,8 +377,8 @@ hostInitMonitor(vm_t *vm)
    *
    *  To create the identity map, we simply change the corresponding
    *  monitor page directory entry to point to this transition Page Table.
-   *  This happens transparently inside the host<-->guest transition code; 
-   *  both the guest/monitor code and the host side code never see this 
+   *  This happens transparently inside the host<-->guest transition code;
+   *  both the guest/monitor code and the host side code never see this
    *  transition page table entered into the page directory!
    *
    *  NOTE: We need to ensure that the nexus page table never spans the
@@ -394,7 +394,7 @@ hostInitMonitor(vm_t *vm)
 
   /*
    *  We need to be able to access the PDE in the monitor page directory
-   *  that corresponds to this linear address from both host and monitor 
+   *  that corresponds to this linear address from both host and monitor
    *  address spaces.
    */
   vm->host.addr.nexus->transition_pde_p_host = vm->host.addr.page_dir + pdi;
@@ -433,11 +433,11 @@ hostInitMonitor(vm_t *vm)
   pageTable->pte[pti].fields.P = 1;      /* present in memory   */
 
 
-  /* 
+  /*
    *  Setup the TSS for the monitor/guest environment.
    *
-   *  We don't need to set the pagedir in the TSS, because we don't 
-   *  actually jump to it anyway.  The TSS is just used to set the kernel 
+   *  We don't need to set the pagedir in the TSS, because we don't
+   *  actually jump to it anyway.  The TSS is just used to set the kernel
    *  stack and in a later stage, perhaps the I/O permission bitmap.
    */
 
@@ -497,7 +497,7 @@ hostInitMonitor(vm_t *vm)
   /* Hardware interrupts */
   for (i = 32; i < 256; i++)
       r |= hostInitIDTSlot(vm, i, IDT_INTERRUPT);
-  if (r!=0) 
+  if (r!=0)
       goto error;
 
 
@@ -553,11 +553,11 @@ hostInitGuestPhyMem(vm_t *vm)
     vm->pageInfo[i].tsc = 0;
     vm->pageInfo[i].attr.fields.allocated = 1;
     }
- 
+
   {
   Bit32u rom_page;
   unsigned npages;
- 
+
   /* Mark BIOS ROM area as ReadOnly */
   rom_page = 0xf0000 >> 12;
   npages = (1 + 0xfffff - 0xf0000) / 4096;
@@ -570,13 +570,13 @@ hostInitGuestPhyMem(vm_t *vm)
   for (i=0; i<npages; i++)
     vm->pageInfo[rom_page + i].attr.fields.RO = 1;
   }
- 
+
 #if 1
   /* Mark VGA framebuffer area as Memory Mapped IO */
   {
   Bit32u vga_page;
   unsigned npages;
- 
+
   vga_page = 0xa0000 >> 12;
   npages = (1 + 0xbffff - 0xa0000) / 4096;
   for (i=0; i<npages; i++)
@@ -693,11 +693,11 @@ hostOSPrint("hostMapMonPages: '%s' mapped at 0x%x .. 0x%x.\n",
 hostMapBlankPage(vm_t *vm, Bit32u *laddr_p, page_t *pageTable)
 {
   unsigned pti;
- 
+
   pti = (*laddr_p >> 12) & 0x3ff;
   if (pti > 1024)
     return;  /* This should not happen! */
- 
+
   /* Fill in the PTE flags */
   pageTable->pte[pti].fields.base = 0;
   pageTable->pte[pti].fields.avail = 0;
@@ -710,7 +710,7 @@ hostMapBlankPage(vm_t *vm, Bit32u *laddr_p, page_t *pageTable)
   pageTable->pte[pti].fields.US = 0;
   pageTable->pte[pti].fields.RW = 0;
   pageTable->pte[pti].fields.P = 0;
- 
+
   /*
    *  Advance linear address pointer, for the next set of pages
    *  to be mapped.
@@ -1425,7 +1425,7 @@ vm->vmState |= VMStateRegisteredPrintBuffer; /* For now. */
     goto error;
     }
   where++;
-  if (!hostOSGetAllocedMemPhyPages(pg->page_tbl, MON_PAGE_TABLES, 
+  if (!hostOSGetAllocedMemPhyPages(pg->page_tbl, MON_PAGE_TABLES,
            ad->page_tbl, 4096 * MON_PAGE_TABLES)) {
     goto error;
     }
@@ -1518,7 +1518,7 @@ vm->vmState |= VMStateRegisteredPrintBuffer; /* For now. */
     goto error;
     }
   where++;
-  if (!hostOSGetAllocedMemPhyPages(pg->idt_stubs, MON_IDT_STUBS_PAGES, 
+  if (!hostOSGetAllocedMemPhyPages(pg->idt_stubs, MON_IDT_STUBS_PAGES,
            ad->idt_stubs, MON_IDT_STUBS_SIZE)) {
     goto error;
     }
@@ -1683,9 +1683,9 @@ hostMapMonitor(vm_t *vm)
   vm->host.addr.page_dir[laddr >> 22] = vm->host.nexus_pde;
 
   /* CS/SS/TSS descriptors: Put at fixed GDT location for now. */
-  SET_DESCRIPTOR(gdt[monCsSel.fields.index], base, 0xfffff, 
+  SET_DESCRIPTOR(gdt[monCsSel.fields.index], base, 0xfffff,
                  D_PG, D_D32, D_AVL0, D_PRESENT, D_DPL0, D_CODE | D_READ)
-  SET_DESCRIPTOR(gdt[monSsSel.fields.index], base, 0xfffff, 
+  SET_DESCRIPTOR(gdt[monSsSel.fields.index], base, 0xfffff,
                  D_PG, D_D32, D_AVL0, D_PRESENT, D_DPL0, D_DATA | D_WRITE)
   SET_DESCRIPTOR(gdt[monTssSel.fields.index],
                  base + (Bit32u) vm->guest.addr.tss,

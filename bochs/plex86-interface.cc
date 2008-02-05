@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-//// $Id: plex86-interface.cc,v 1.10 2007-11-24 14:22:32 sshwarts Exp $
+//// $Id: plex86-interface.cc,v 1.11 2008-02-05 22:57:40 sshwarts Exp $
 ///////////////////////////////////////////////////////////////////////////
 ////
 ////  Copyright (C) 2002  Kevin P. Lawton
@@ -363,7 +363,7 @@ void copyBochsDescriptorToPlex86(descriptor_t *plex86Desc, bx_descriptor_t *boch
     plex86Desc->d_b = bochsDesc->u.segment.d_b;
     plex86Desc->g   = bochsDesc->u.segment.g;
     }
-  else if (bochsDesc->type == BX_SYS_SEGMENT_AVAIL_286_TSS || 
+  else if (bochsDesc->type == BX_SYS_SEGMENT_AVAIL_286_TSS ||
            bochsDesc->type == BX_SYS_SEGMENT_AVAIL_386_TSS ||
            bochsDesc->type == BX_SYS_SEGMENT_LDT)
   {

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wx.cc,v 1.92 2008-01-31 21:45:18 vruppert Exp $
+// $Id: wx.cc,v 1.93 2008-02-05 22:57:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxWidgets VGA display for Bochs.  wx.cc implements a custom
@@ -16,11 +16,11 @@
 //   that wxmain.cc does NOT include bochs.h.  All interactions
 //   between the CI and the simulator are through the siminterface
 //   object.
-// - wx.cc implements a VGA display screen using wxWidgets.  It is 
+// - wx.cc implements a VGA display screen using wxWidgets.  It is
 //   is the wxWidgets equivalent of x.cc, win32.cc, macos.cc, etc.
 //   wx.cc includes bochs.h and has access to all Bochs devices.
 //   The VGA panel accepts only paint, key, and mouse events.  As it
-//   receives events, it builds BxEvents and places them into a 
+//   receives events, it builds BxEvents and places them into a
 //   thread-safe BxEvent queue.  The simulation thread periodically
 //   processes events from the BxEvent queue (bx_wx_gui_c::handle_events)
 //   and notifies the appropriate emulated I/O device.
@@ -32,7 +32,7 @@
 //////////////////////////////////////////////////////////////
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
-// platforms that require a special tag on exported symbols, BX_PLUGGABLE 
+// platforms that require a special tag on exported symbols, BX_PLUGGABLE
 // is used to know when we are exporting symbols and when we are importing.
 #define BX_PLUGGABLE
 
@@ -138,7 +138,7 @@ END_EVENT_TABLE()
 MyPanel::MyPanel(wxWindow* parent, wxWindowID id, const wxPoint& pos, const wxSize& size, long style, const wxString& name)
   : wxPanel (parent, id, pos, size, style, name)
 {
-  wxLogDebug (wxT ("MyPanel constructor")); 
+  wxLogDebug (wxT ("MyPanel constructor"));
   refreshTimer.SetOwner (this);
   refreshTimer.Start (100);
   needRefresh = true;
@@ -244,7 +244,7 @@ void MyPanel::OnMouse(wxMouseEvent& event)
     return;
   }
 
-  if (!mouse_captured) 
+  if (!mouse_captured)
     return;  // mouse disabled, ignore the event
 
   // process buttons and motion together
@@ -282,7 +282,7 @@ void MyPanel::OnMouse(wxMouseEvent& event)
   // will move the cursor to (mouseSavedX, mouseSavedY).
 }
 
-void 
+void
 MyPanel::MyRefresh ()
 {
   IFDBG_VGA (wxLogDebug (wxT ("set needRefresh=true")));
@@ -312,7 +312,7 @@ void MyPanel::OnKeyUp(wxKeyEvent& event)
 
 
 /// copied right out of gui/x.cc
-static char 
+static char
 wxAsciiKey[0x5f] = {
   //  !"#$%&'
   BX_KEY_SPACE,
@@ -771,7 +771,7 @@ MyPanel::fillBxKeyEvent (wxKeyEvent& wxev, BxKeyEvent& bxev, bx_bool release)
   IFDBG_KEY (wxLogDebug (wxT ("fillBxKeyEvent. key code %ld", wxev.m_keyCode)));
   Bit32u key = wxev.m_keyCode;
   Bit32u bx_key;
-  
+
   if(key >= WXK_SPACE && key < WXK_DELETE) {
     bx_key = wxAsciiKey[key - WXK_SPACE];
   } else {
@@ -821,7 +821,7 @@ MyPanel::fillBxKeyEvent (wxKeyEvent& wxev, BxKeyEvent& bxev, bx_bool release)
     case WXK_NUMLOCK:              bx_key = BX_KEY_NUM_LOCK;     break;
     case WXK_SCROLL:               bx_key = BX_KEY_SCRL_LOCK;    break;
     case WXK_DECIMAL:              bx_key = BX_KEY_PERIOD;       break;
-    case WXK_SUBTRACT:             bx_key = BX_KEY_MINUS;        break; 
+    case WXK_SUBTRACT:             bx_key = BX_KEY_MINUS;        break;
     case WXK_ADD:                  bx_key = BX_KEY_EQUALS;       break;
     case WXK_MULTIPLY:             bx_key = BX_KEY_KP_MULTIPLY;  break;
     case WXK_DIVIDE:               bx_key = BX_KEY_KP_DIVIDE;    break;
@@ -1051,7 +1051,7 @@ void bx_wx_gui_c::handle_events(void)
   num_events = 0;
 }
 
-void 
+void
 bx_wx_gui_c::statusbar_setitem(int element, bx_bool active)
 {
 #if defined( __WXMSW__)
@@ -1116,8 +1116,8 @@ bx_wx_gui_c::clear_screen(void)
   thePanel->MyRefresh ();
 }
 
-static void 
-UpdateScreen(unsigned char *newBits, int x, int y, int width, int height) 
+static void
+UpdateScreen(unsigned char *newBits, int x, int y, int width, int height)
 {
   IFDBG_VGA(wxLogDebug (wxT ("MyPanel::UpdateScreen trying to get lock. wxScreen=%p", wxScreen)));
   wxCriticalSectionLocker lock(wxScreen_lock);
@@ -1147,7 +1147,7 @@ UpdateScreen(unsigned char *newBits, int x, int y, int width, int height)
   }
 }
 
-static void 
+static void
 DrawBochsBitmap(int x, int y, int width, int height, char *bmap, char color, int fontx, int fonty, bx_bool gfxchar)
 {
   static unsigned char newBits[9 * 32];
@@ -1503,7 +1503,7 @@ void bx_wx_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, uns
   wxScreen_lock.Leave ();
   IFDBG_VGA(wxLogDebug (wxT ("MyPanel::dimension_update gave up lock. wxScreen=%p", wxScreen)));
   // Note: give up wxScreen_lock before calling SetClientSize.  I did
-  // this because I was sometimes seeing thread deadlock in win32, apparantly 
+  // this because I was sometimes seeing thread deadlock in win32, apparantly
   // related to wxStreen_lock.  The wxWidgets GUI thread was sitting in OnPaint
   // trying to get the wxScreen_lock, and the simulation thread was stuck in some
   // native win32 function called by SetClientSize (below).  As with many
@@ -1630,7 +1630,7 @@ bx_wx_gui_c::get_clipboard_text(Bit8u **bytes, Bit32s *nbytes)
       *bytes = buf;
       *nbytes = len;
       ret = 1;
-      // buf will be freed in bx_keyb_c::paste_bytes or 
+      // buf will be freed in bx_keyb_c::paste_bytes or
       // bx_keyb_c::service_paste_buf, using delete [].
     } else {
       BX_ERROR (("paste: could not open wxWidgets clipboard"));

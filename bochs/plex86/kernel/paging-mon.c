@@ -461,7 +461,7 @@ mapGuestLinAddr(vm_t *vm, Bit32u guest_laddr, Bit32u *guest_ppi,
       guestPTbl[pti] = guestPTE;
       }
 #endif
-    
+
     *guest_ppi = A20PageIndex(vm, guestPTE.fields.base);
     }
   else {
@@ -622,7 +622,7 @@ return(MapLinEmulate);
         if (vm->guest.addr.guest_cpu->cr0.fields.wp==0) {
           /* If CR0.WP=0, then supervisor code can write to any page, */
           /* and permissions are effectively ignored. */
-          us = 1; 
+          us = 1;
           rw = 1;
           }
         else { /* CR0.WP==1 */
@@ -742,7 +742,7 @@ sanity_check_pdir(vm_t *vm, unsigned id, Bit32u guest_laddr)
   pageEntry_t *monPDE;
   Bit32u       pdi;
   unsigned     pt_index;
- 
+
   for (pdi=0; pdi<1024; pdi++) {
     monPDE = &vm->guest.addr.page_dir[pdi];
     if ( (pdi!=vm->mon_pdi) &&

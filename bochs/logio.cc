@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logio.cc,v 1.64 2008-01-01 18:12:31 sshwarts Exp $
+// $Id: logio.cc,v 1.65 2008-02-05 22:57:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -121,7 +121,7 @@ void iofunctions::init_log(FILE *fs)
 
   if(fs == stderr) {
     logfn = "/dev/stderr";
-  } else if(fs == stdout) { 
+  } else if(fs == stdout) {
     logfn = "/dev/stdout";
   } else {
     logfn = "(unknown)";
@@ -334,7 +334,7 @@ void logfunctions::put(const char *p)
   for(size_t i=1;i<len+1;i++) {
     tmpbuf[i]=p[i-1];
   }
-                
+
   switch(len) {
   case  1: tmpbuf[2]=' ';
   case  2: tmpbuf[3]=' ';
@@ -342,7 +342,7 @@ void logfunctions::put(const char *p)
   case  4: tmpbuf[5]=' ';
   default: tmpbuf[6]=']'; tmpbuf[7]='\0'; break;
   }
-        
+
   prefix=tmpbuf;
 }
 
@@ -362,9 +362,9 @@ void logfunctions::info(const char *fmt, ...)
 
   va_start(ap, fmt);
   this->logio->out(this->type,LOGLEV_INFO,this->prefix, fmt, ap);
-  if (onoff[LOGLEV_INFO] == ACT_ASK) 
+  if (onoff[LOGLEV_INFO] == ACT_ASK)
     ask(LOGLEV_INFO, this->prefix, fmt, ap);
-  if (onoff[LOGLEV_INFO] == ACT_FATAL) 
+  if (onoff[LOGLEV_INFO] == ACT_FATAL)
     fatal(this->prefix, fmt, ap, 1);
   va_end(ap);
 }
@@ -380,9 +380,9 @@ void logfunctions::error(const char *fmt, ...)
 
   va_start(ap, fmt);
   this->logio->out(this->type,LOGLEV_ERROR,this->prefix, fmt, ap);
-  if (onoff[LOGLEV_ERROR] == ACT_ASK) 
+  if (onoff[LOGLEV_ERROR] == ACT_ASK)
     ask(LOGLEV_ERROR, this->prefix, fmt, ap);
-  if (onoff[LOGLEV_ERROR] == ACT_FATAL) 
+  if (onoff[LOGLEV_ERROR] == ACT_FATAL)
     fatal(this->prefix, fmt, ap, 1);
   va_end(ap);
 }
@@ -405,9 +405,9 @@ void logfunctions::panic(const char *fmt, ...)
   va_end(ap);
   va_start(ap, fmt);
 
-  if (onoff[LOGLEV_PANIC] == ACT_ASK) 
+  if (onoff[LOGLEV_PANIC] == ACT_ASK)
     ask(LOGLEV_PANIC, this->prefix, fmt, ap);
-  if (onoff[LOGLEV_PANIC] == ACT_FATAL) 
+  if (onoff[LOGLEV_PANIC] == ACT_FATAL)
     fatal(this->prefix, fmt, ap, 1);
   va_end(ap);
 }
@@ -430,9 +430,9 @@ void logfunctions::pass(const char *fmt, ...)
   va_end(ap);
   va_start(ap, fmt);
 
-  if (onoff[LOGLEV_PASS] == ACT_ASK) 
+  if (onoff[LOGLEV_PASS] == ACT_ASK)
     ask(LOGLEV_PASS, this->prefix, fmt, ap);
-  if (onoff[LOGLEV_PASS] == ACT_FATAL) 
+  if (onoff[LOGLEV_PASS] == ACT_FATAL)
     fatal(this->prefix, fmt, ap, 101);
   va_end(ap);
 }
@@ -448,9 +448,9 @@ void logfunctions::ldebug(const char *fmt, ...)
 
   va_start(ap, fmt);
   this->logio->out(this->type,LOGLEV_DEBUG,this->prefix, fmt, ap);
-  if (onoff[LOGLEV_DEBUG] == ACT_ASK) 
+  if (onoff[LOGLEV_DEBUG] == ACT_ASK)
     ask(LOGLEV_DEBUG, this->prefix, fmt, ap);
-  if (onoff[LOGLEV_DEBUG] == ACT_FATAL) 
+  if (onoff[LOGLEV_DEBUG] == ACT_FATAL)
     fatal(this->prefix, fmt, ap, 1);
   va_end(ap);
 }
@@ -546,7 +546,7 @@ static void carbonFatalDialog(const char *error, const char *exposition)
   CFStringRef                   cfExposition;
   DialogItemIndex               index;
   AlertStdCFStringAlertParamRec alertParam = {0};
-  
+
   // Init libraries
   InitCursor();
   // Assemble dialog
@@ -555,7 +555,7 @@ static void carbonFatalDialog(const char *error, const char *exposition)
   {
     cfExposition = CFStringCreateWithCString(NULL, exposition, kCFStringEncodingASCII);
   }
-  else { 
+  else {
     cfExposition = NULL;
   }
   alertParam.version       = kStdCFStringAlertVersionOne;

@@ -13,7 +13,7 @@ Win95-under-Debian and a second form for FreeDOS-under-Debian.  In
 this case it would save time to fill in the host OS part, copy it a
 few times and fill out the guest OS part for each copy.
 
-To fill in a blank such as [__], replace the underlines and leave 
+To fill in a blank such as [__], replace the underlines and leave
 the brackets.  Example: [Sun Ultrasparc 10].  To fill in a
 multiple-choice, just put an X in the brackets.  Example: [X]
 Mail completed forms to bochs-testing@tlw.com.
@@ -28,7 +28,7 @@ What is your name?
 What is your email address?
 [__]
 
-Do you mind if your name and email address are placed on a testing results 
+Do you mind if your name and email address are placed on a testing results
 web page so that people with a similar setup can write to you?
    [ ] Ok, put it on a web page
    [ ] No, keep my address private.
@@ -36,7 +36,7 @@ web page so that people with a similar setup can write to you?
 What type of hardware are you using, e.g. 500MHz Intel Celeron.
 [__]
 
-What operating system are you using?  Please be specific, e.g. 
+What operating system are you using?  Please be specific, e.g.
 Redhat Linux 6.2 with 2.2.16 kernel.
 [__]
 
@@ -68,7 +68,7 @@ Did Bochs compile clean without any hacking?
   [ ] Yes
   [ ] No
 
-If you had to make changes to compile, please summarize the problems you 
+If you had to make changes to compile, please summarize the problems you
 had or include diffs.
 [__]
 
@@ -104,7 +104,7 @@ The remaining questions are about Bochs features that you may not have
 used.  If you tried out the feature, move the X to the "works" or
 "fails" column.
 
-                  Not       Works    
+                  Not       Works
 		  tested    ok      Fails   Comments?
 keyboard           [ ]      [ ]     [ ]     [__]
 floppy disk        [X]      [ ]     [ ]     [__]

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: plugin.cc,v 1.23 2007-10-24 23:28:40 sshwarts Exp $
+// $Id: plugin.cc,v 1.24 2008-02-05 22:57:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This file defines the plugin and plugin-device registration functions and
@@ -57,7 +57,7 @@ int (*pluginRegisterDefaultIOReadHandler)(void *thisPtr, ioReadHandler_t callbac
 int (*pluginRegisterDefaultIOWriteHandler)(void *thisPtr, ioWriteHandler_t callback,
                              const char *name, Bit8u mask) = 0;
 int (*pluginRegisterTimer)(void *this_ptr, void (*funct)(void *),
-                            Bit32u useconds, bx_bool continuous, 
+                            Bit32u useconds, bx_bool continuous,
 bx_bool active, const char* name) = 0;
                             void (*pluginActivateTimer)(unsigned id, Bit32u usec, bx_bool continuous) = 0;
 
@@ -77,8 +77,8 @@ plugin_t *current_plugin_context = NULL;
 /* Builtins declarations                                                */
 /************************************************************************/
 
-  static void  
-builtinRegisterIRQ(unsigned irq, const char* name) 
+  static void
+builtinRegisterIRQ(unsigned irq, const char* name)
 {
 #if 0
   pluginlog->panic("builtinRegisterIRQ called, no pic plugin loaded?");
@@ -87,7 +87,7 @@ builtinRegisterIRQ(unsigned irq, const char* name)
 #endif
 }
 
-  static void  
+  static void
 builtinUnregisterIRQ(unsigned irq, const char* name)
 {
 #if 0
@@ -227,7 +227,7 @@ builtinRegisterDefaultIOWriteHandler(void *thisPtr, ioWriteHandler_t callback,
 
   static int
 builtinRegisterTimer(void *this_ptr, void (*funct)(void *),
-                        Bit32u useconds, bx_bool continuous, 
+                        Bit32u useconds, bx_bool continuous,
                         bx_bool active, const char* name)
 {
   int id = bx_pc_system.register_timer (this_ptr, funct, useconds, continuous, active, name);
@@ -294,33 +294,33 @@ void
 plugin_init_one(plugin_t *plugin)
 {
         char *arg_ptr = plugin->args;
- 
+
         /* process the command line */
         plugin->argc = 0;
         while (plugin->argc < MAX_ARGC)
         {
             while (*arg_ptr && isspace (*arg_ptr))
                 arg_ptr++;
- 
+
             if (!*arg_ptr)
                 break;
             plugin->argv[plugin->argc++] = arg_ptr;
- 
+
             while (*arg_ptr && !isspace (*arg_ptr))
                 arg_ptr++;
- 
+
             if (!*arg_ptr)
                 break;
             *arg_ptr++ = '\0';
         }
- 
+
         /* initialize the plugin */
         if (plugin->plugin_init (plugin, plugin->type, plugin->argc, plugin->argv))
         {
             pluginlog->info("Plugin initialization failed for %s", plugin->name);
             plugin_abort();
         }
- 
+
         plugin->initialized = 1;
 }
 
@@ -387,7 +387,7 @@ void plugin_load(char *name, char *args, plugintype_t type)
     }
 
     sprintf(buf, PLUGIN_INIT_FMT_STRING, name);
-    plugin->plugin_init =  
+    plugin->plugin_init =
       (int  (*)(struct _plugin_t *, enum plugintype_t, int, char *[])) /* monster typecast */
       lt_dlsym (plugin->handle, buf);
     if (plugin->plugin_init == NULL) {
@@ -452,19 +452,19 @@ plugin_startup(void)
 
   pluginSetHRQHackCallback = builtinSetHRQHackCallback;
   pluginSetHRQ = builtinSetHRQ;
-  
+
   pluginRegisterIOReadHandler = builtinRegisterIOReadHandler;
   pluginRegisterIOWriteHandler = builtinRegisterIOWriteHandler;
-  
+
   pluginUnregisterIOReadHandler = builtinUnregisterIOReadHandler;
   pluginUnregisterIOWriteHandler = builtinUnregisterIOWriteHandler;
-  
+
   pluginRegisterIOReadHandlerRange = builtinRegisterIOReadHandlerRange;
   pluginRegisterIOWriteHandlerRange = builtinRegisterIOWriteHandlerRange;
 
   pluginUnregisterIOReadHandlerRange = builtinUnregisterIOReadHandlerRange;
   pluginUnregisterIOWriteHandlerRange = builtinUnregisterIOWriteHandlerRange;
-  
+
   pluginRegisterDefaultIOReadHandler = builtinRegisterDefaultIOReadHandler;
   pluginRegisterDefaultIOWriteHandler = builtinRegisterDefaultIOWriteHandler;
 
@@ -509,7 +509,7 @@ void pluginRegisterDeviceDevmodel(plugin_t *plugin, plugintype_t type, bx_devmod
       case PLUGTYPE_CORE:
         // Core devices are present whether or not we are using plugins, so
         // they are managed by the same code in iodev/devices.cc whether
-        // plugins are on or off.  
+        // plugins are on or off.
         free(device);
         return; // Do not add core devices to the devices list.
       case PLUGTYPE_OPTIONAL:
@@ -605,7 +605,7 @@ void bx_init_plugins()
     {
       pluginlog->info("init_dev of '%s' plugin device by virtual method",device->name);
       device->devmodel->init();
-    } 
+    }
 }
 
 /**************************************************************************/

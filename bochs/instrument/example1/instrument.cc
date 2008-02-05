@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: instrument.cc,v 1.15 2008-01-17 21:35:21 sshwarts Exp $
+// $Id: instrument.cc,v 1.16 2008-02-05 22:57:42 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -61,26 +61,26 @@ void bxInstrumentation::bx_instr_new_instruction()
     char disasm_tbuf[512];	// buffer for instruction disassembly
     unsigned length = opcode_size, n;
     bx_disassembler.disasm(is32, is64, 0, 0, opcode, disasm_tbuf);
-    if(length != 0)	
+    if(length != 0)
     {
       fprintf(stderr, "----------------------------------------------------------\n");
       fprintf(stderr, "CPU: %d: %s\n", cpu_id, disasm_tbuf);
       fprintf(stderr, "LEN: %d\tPREFIXES: %d\tBYTES: ", length, nprefixes);
       for(n=0;n<length;n++) fprintf(stderr, "%02x", opcode[n]);
-      if(is_branch) 
+      if(is_branch)
       {
         fprintf(stderr, "\tBRANCH ");
 
-        if(is_taken) 
+        if(is_taken)
           fprintf(stderr, "TARGET " FMT_ADDRX " (TAKEN)", target_linear);
         else
           fprintf(stderr, "(NOT TAKEN)");
-      }   
+      }
       fprintf(stderr, "\n");
       for(n=0;n < num_data_accesses;n++)
       {
         fprintf(stderr, "MEM ACCESS[%u]: " FMT_ADDRX " (linear) 0x%08x (physical) %s SIZE: %d\n", n,
-                      data_access[n].laddr, 
+                      data_access[n].laddr,
                       data_access[n].paddr,
                       data_access[n].op == BX_READ ? "RD":"WR",
                       data_access[n].size);
@@ -105,7 +105,7 @@ void bxInstrumentation::branch_taken(bx_address new_eip)
   target_linear = laddr;
 }
 
-void bxInstrumentation::bx_instr_cnear_branch_taken(bx_address new_eip) 
+void bxInstrumentation::bx_instr_cnear_branch_taken(bx_address new_eip)
 {
   branch_taken(new_eip);
 }
@@ -132,11 +132,11 @@ void bxInstrumentation::bx_instr_opcode(Bit8u *opcode_bytes, unsigned len, bx_bo
 {
   if (!active) return;
 
-  for(unsigned i=0;i<len;i++) 
+  for(unsigned i=0;i<len;i++)
   {
     opcode[i] = opcode_bytes[i];
   }
-  
+
   is32 = is32;
   is64 = is64;
   opcode_size = len;
@@ -144,7 +144,7 @@ void bxInstrumentation::bx_instr_opcode(Bit8u *opcode_bytes, unsigned len, bx_bo
 
 void bxInstrumentation::bx_instr_fetch_decode_completed(bxInstruction_c *i)
 {
-  if(active) valid = 1; 
+  if(active) valid = 1;
 }
 
 void bxInstrumentation::bx_instr_prefix(Bit8u prefix)
@@ -182,7 +182,7 @@ void bxInstrumentation::bx_instr_mem_data(bx_address lin, unsigned size, unsigne
 
   if(!active || !valid) return;
 
-  if (num_data_accesses >= MAX_DATA_ACCESSES) 
+  if (num_data_accesses >= MAX_DATA_ACCESSES)
   {
     return;
   }
@@ -192,7 +192,7 @@ void bxInstrumentation::bx_instr_mem_data(bx_address lin, unsigned size, unsigne
 
   // If linear translation doesn't exist, a paging exception will occur.
   // Invalidate physical address data for now.
-  if (!page_valid) 
+  if (!page_valid)
   {
     phy = 0;
   }

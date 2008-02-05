@@ -148,7 +148,7 @@ null_call:
   sidt  (HOST_IDT_INFO)(%ebx)
   sldt  (HOST_LDT_SEL)(%ebx)
   str   (HOST_TSS_SEL)(%ebx)
-  
+
   movl  %esp, (HOST_STACK_INFO)(%ebx)    /* Save host SS:ESP */
   movw  %ss,  (4+HOST_STACK_INFO)(%ebx)  /* for later restore */
 
@@ -320,7 +320,7 @@ __host_cs:
   popl %es
   popal
   popfl
-  ret 
+  ret
 
 .globl __nexus_end
 __nexus_end:

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: x.cc,v 1.110 2008-01-28 21:52:09 vruppert Exp $
+// $Id: x.cc,v 1.111 2008-02-05 22:57:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -28,7 +28,7 @@
 #define XK_TECHNICAL
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
-// platforms that require a special tag on exported symbols, BX_PLUGGABLE 
+// platforms that require a special tag on exported symbols, BX_PLUGGABLE
 // is used to know when we are exporting symbols and when we are importing.
 #define BX_PLUGGABLE
 
@@ -329,7 +329,7 @@ test_alloc_colors (Colormap cmap, Bit32u n_tries) {
   Bit32u i;
   color.flags = DoRed | DoGreen | DoBlue;
   for (i=0; i<n_tries; i++) {
-    // choose wierd color values that are unlikely to already be in the 
+    // choose wierd color values that are unlikely to already be in the
     // colormap.
     color.red   = ((i+41)%MAX_VGA_COLORS) << 8;
     color.green = ((i+42)%MAX_VGA_COLORS) << 8;
@@ -687,7 +687,7 @@ set_status_text(int element, const char *text, bx_bool active)
   }
 }
 
-  void 
+  void
 bx_x_gui_c::statusbar_setitem(int element, bx_bool active)
 {
   if (element < 0) {
@@ -1225,7 +1225,7 @@ void bx_x_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
           j++;
         }
 
-        vgafont[c]=XCreateBitmapFromData(bx_x_display, win, 
+        vgafont[c]=XCreateBitmapFromData(bx_x_display, win,
                         (const char*)cell, 9, font_height);
             if(vgafont[c] == None)
               BX_PANIC(("Can't create vga font [%d]", c));
@@ -1805,7 +1805,7 @@ bx_x_gui_c::exit(void)
 
   // Delete the font bitmaps
   for (int i=0; i<256; i++) {
-    //if (vgafont[i] != NULL) 
+    //if (vgafont[i] != NULL)
       XFreePixmap(bx_x_display,vgafont[i]);
   }
 
@@ -1902,16 +1902,16 @@ static Bit32u convertStringToXKeysym (const char *string)
  * - no more 100% CPU usage
  * contra:
  * - we're sleeping too long
- * - bochs still consumes ~10%-20% CPU time while executing an idle 
+ * - bochs still consumes ~10%-20% CPU time while executing an idle
  *   linux kernel
  * - this is an hack
  */
 
-/* XPeekEvent() with timeout 
+/* XPeekEvent() with timeout
  * (adopted from mozilla/gfx/src/xprint/xprintutil_printtofile.c#XNextEventTimeout())
  */
 static
-Bool XPeekEventTimeout( Display *display, XEvent *event_return, struct timeval *timeout ) 
+Bool XPeekEventTimeout( Display *display, XEvent *event_return, struct timeval *timeout )
 {
     int      res;
     fd_set   readfds;
@@ -1923,49 +1923,49 @@ Bool XPeekEventTimeout( Display *display, XEvent *event_return, struct timeval *
       XPeekEvent(display, event_return);
       return(True);
     }
-    
+
     FD_ZERO(&readfds);
     FD_SET(display_fd, &readfds);
 
-    /* Note/bug: In the case of internal X events (like used to trigger callbacks 
-     * registered by XpGetDocumentData()&co.) select() will return with "new info" 
-     * - but XNextEvent() below processes these _internal_ events silently - and 
+    /* Note/bug: In the case of internal X events (like used to trigger callbacks
+     * registered by XpGetDocumentData()&co.) select() will return with "new info"
+     * - but XNextEvent() below processes these _internal_ events silently - and
      * will block if there are no other non-internal events.
-     * The workaround here is to check with XEventsQueued() if there are non-internal 
-     * events queued - if not select() will be called again - unfortunately we use 
-     * the old timeout here instead of the "remaining" time... (this only would hurt 
+     * The workaround here is to check with XEventsQueued() if there are non-internal
+     * events queued - if not select() will be called again - unfortunately we use
+     * the old timeout here instead of the "remaining" time... (this only would hurt
      * if the timeout would be really long - but for current use with values below
      * 1/2 secs it does not hurt... =:-)
      */
     while( XEventsQueued(display, QueuedAfterFlush) == 0 )
     {
       res = select(display_fd+1, &readfds, NULL, NULL, timeout);
-    
+
       switch(res)
       {
-        case -1: /* select() error - should not happen */ 
-          if (errno == EINTR) 
+        case -1: /* select() error - should not happen */
+          if (errno == EINTR)
              break; // caused e.g. by alarm(3)
-          perror("XPeekEventTimeout: select() failure"); 
+          perror("XPeekEventTimeout: select() failure");
           return(False);
 
         case  0: /* timeout */
           return(False);
       }
     }
-    
-    XPeekEvent(display, event_return); 
+
+    XPeekEvent(display, event_return);
     return(True);
 }
 
 void bx_x_gui_c::sim_is_idle () {
   XEvent dummy;
-  struct timeval   timeout;   
+  struct timeval   timeout;
   timeout.tv_sec  = 0;
-  timeout.tv_usec = 1000; /* 1/1000 s */  
+  timeout.tv_usec = 1000; /* 1/1000 s */
   XPeekEventTimeout(bx_x_display, &dummy, &timeout);
 }
-#endif /* BX_USE_IDLE_HACK */  
+#endif /* BX_USE_IDLE_HACK */
 
 void bx_x_gui_c::beep_on(float frequency)
 {

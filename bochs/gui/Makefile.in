@@ -80,7 +80,7 @@ GUI_LINK_OPTS_SDL = `sdl-config --cflags --libs`
 GUI_LINK_OPTS_SVGA =  -lvga -lvgagl
 GUI_LINK_OPTS_BEOS = -lbe
 GUI_LINK_OPTS_RFB = @RFB_LIBS@
-GUI_LINK_OPTS_AMIGAOS = 
+GUI_LINK_OPTS_AMIGAOS =
 GUI_LINK_OPTS_WIN32 = -luser32 -lgdi32 -lcomdlg32 -lcomctl32
 GUI_LINK_OPTS_WIN32_VCPP = user32.lib gdi32.lib winmm.lib \
   comdlg32.lib comctl32.lib wsock32.lib
@@ -98,7 +98,7 @@ PLUGIN_OBJS = @GUI_PLUGIN_OBJS@
 # -------- end configurable options --------------------------
 #
 
-all: libgui.a 
+all: libgui.a
 
 plugins: $(PLUGIN_OBJS:@PLUGIN_LIBNAME_TRANSFORMATION@)
 
@@ -162,10 +162,10 @@ bx_%.dll: %.o
 bx_wx.dll: $(GUI_OBJS_WX) $(GUI_OBJS_WX_SUPPORT)
 	$(CXX) $(CXXFLAGS) -shared -o bx_wx.dll $(GUI_OBJS_WX) $(GUI_OBJS_WX_SUPPORT) $(WIN32_DLL_IMPORT_LIBRARY) `wx-config --libs` -luser32 -lgdi32 -lcomdlg32 -lcomctl32
 
-bx_sdl.dll: $(GUI_OBJS_SDL) 
+bx_sdl.dll: $(GUI_OBJS_SDL)
 	$(CXX) $(CXXFLAGS) -shared -o bx_sdl.dll $(GUI_OBJS_SDL) $(WIN32_DLL_IMPORT_LIBRARY) $(GUI_LINK_OPTS_SDL)
 
-bx_rfb.dll: $(GUI_OBJS_RFB) 
+bx_rfb.dll: $(GUI_OBJS_RFB)
 	$(CXX) $(CXXFLAGS) -shared -o bx_rfb.dll $(GUI_OBJS_RFB) $(WIN32_DLL_IMPORT_LIBRARY) $(GUI_LINK_OPTS_RFB)
 
 # no need to build DLLs for beos.o

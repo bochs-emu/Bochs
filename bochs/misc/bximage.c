@@ -1,6 +1,6 @@
 /*
  * misc/bximage.c
- * $Id: bximage.c,v 1.32 2006-06-16 07:29:33 vruppert Exp $
+ * $Id: bximage.c,v 1.33 2008-02-05 22:57:42 sshwarts Exp $
  *
  * Create empty hard disk or floppy disk images for bochs.
  *
@@ -41,7 +41,7 @@ typedef int (*WRITE_IMAGE_WIN32)(HANDLE, Bit64u);
 #endif
 
 char *EOF_ERR = "ERROR: End of input";
-char *rcsid = "$Id: bximage.c,v 1.32 2006-06-16 07:29:33 vruppert Exp $";
+char *rcsid = "$Id: bximage.c,v 1.33 2008-02-05 22:57:42 sshwarts Exp $";
 char *divider = "========================================================================";
 
 /* menu data for choosing floppy/hard disk */
@@ -109,7 +109,7 @@ int get_menu_index(char *arg, int n_choices, char *choice[])
   return -1;
 }
 
-/* remove leading spaces, newline junk at end.  returns pointer to 
+/* remove leading spaces, newline junk at end.  returns pointer to
  cleaned string, which is between s0 and the null */
 char *
 clean_string (char *s0)
@@ -128,7 +128,7 @@ clean_string (char *s0)
 }
 
 /* returns 0 on success, -1 on failure.  The value goes into out. */
-int 
+int
 ask_int (char *prompt, int min, int max, int the_default, int *out)
 {
   int n = max + 1;
@@ -158,7 +158,7 @@ ask_int (char *prompt, int min, int max, int the_default, int *out)
   }
 }
 
-int 
+int
 ask_menu (char *prompt, int n_choices, char *choice[], int the_default, int *out)
 {
   char buffer[1024];
@@ -192,7 +192,7 @@ ask_menu (char *prompt, int n_choices, char *choice[], int the_default, int *out
   }
 }
 
-int 
+int
 ask_yn (char *prompt, int the_default, int *out)
 {
   char buffer[16];
@@ -217,7 +217,7 @@ ask_yn (char *prompt, int the_default, int *out)
   }
 }
 
-int 
+int
 ask_string (char *prompt, char *the_default, char *out)
 {
   char buffer[1024];
@@ -287,7 +287,7 @@ void make_redolog_header(redolog_header_t *header, const char* type, Bit64u size
                 header->specific.catalog = htod32(entries);
                 header->specific.bitmap = htod32(bitmap_size);
                 header->specific.extent = htod32(extent_size);
-                
+
                 maxsize = (Bit64u)entries * (Bit64u)extent_size;
 
                 flip++;
@@ -300,7 +300,7 @@ void make_redolog_header(redolog_header_t *header, const char* type, Bit64u size
 }
 
 /* produce a flat image file */
-#ifdef WIN32 
+#ifdef WIN32
 int make_flat_image_win32(HANDLE hFile, Bit64u sec)
 {
   LARGE_INTEGER pos;
@@ -474,7 +474,7 @@ int make_image (Bit64u sec, char *filename, WRITE_IMAGE write_image)
 {
   FILE *fp;
   char buffer[1024];
- 
+
   // check if it exists before trashing someone's disk image
   fp = fopen (filename, "r");
   if (fp) {
@@ -510,7 +510,7 @@ int make_image (Bit64u sec, char *filename, WRITE_IMAGE write_image)
 
 void print_usage ()
 {
-  fprintf(stderr, 
+  fprintf(stderr,
     "Usage: bximage [options] [filename]\n\n"
     "Supported options:\n"
     "  -fd              create floppy image\n"
@@ -624,7 +624,7 @@ int main (int argc, char *argv[])
 #ifdef WIN32
   WRITE_IMAGE_WIN32 writefn_win32=NULL;
 #endif
- 
+
   if (!parse_cmdline (argc, argv))
     myexit(1);
 

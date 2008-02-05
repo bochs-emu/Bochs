@@ -1,4 +1,4 @@
-$Id: PARAM_TREE.txt,v 1.13 2007-09-28 19:51:36 sshwarts Exp $
+$Id: PARAM_TREE.txt,v 1.14 2008-02-05 22:57:39 sshwarts Exp $
 
 Starting from Bochs 2.3 the parameters are organized in a tree structure
 instead of a huge flat list. The parameter tree was required for implementing
@@ -101,7 +101,7 @@ keyboard_mouse
     type
     enabled
 
-boot_params          
+boot_params
   boot_drive1
   boot_drive2
   boot_drive3

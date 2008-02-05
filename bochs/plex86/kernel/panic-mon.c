@@ -35,7 +35,7 @@ extern int mon_vprint(vm_t *vm, char *fmt, va_list args);
 monpanic(vm_t *vm, char *fmt, ...)
 {
     monprint(vm, "plex86 panic: ");
-    if (fmt) 
+    if (fmt)
     {
         va_list args;
         va_start(args, fmt);

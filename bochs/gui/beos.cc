@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: beos.cc,v 1.30 2008-01-26 00:00:29 vruppert Exp $
+// $Id: beos.cc,v 1.31 2008-02-05 22:57:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -26,7 +26,7 @@
 
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
-// platforms that require a special tag on exported symbols, BX_PLUGGABLE 
+// platforms that require a special tag on exported symbols, BX_PLUGGABLE
 // is used to know when we are exporting symbols and when we are importing.
 #define BX_PLUGGABLE
 
@@ -82,7 +82,7 @@ class BochsView : public BView {
 private:
        BBitmap *backing_store;
        BView *backing_view;
-       
+
 public:
   BochsView(BRect frame, char *name);
   ~BochsView();
@@ -94,7 +94,7 @@ public:
   virtual  void  MouseUp(BPoint point);
   virtual  void  MouseMoved(BPoint point,
                             uint32 transit, const BMessage *message);
-  void DrawBitmap(const BBitmap *aBitmap, BPoint where);                                                 
+  void DrawBitmap(const BBitmap *aBitmap, BPoint where);
   void FillRect(BRect r, pattern p = B_SOLID_HIGH);
   void SetHighColor(uchar r, uchar g, uchar b, uchar a = 255);
   void SetLowColor(uchar r, uchar g, uchar b, uchar a = 255);
@@ -285,7 +285,7 @@ void bx_beos_gui_c::handle_events(void)
   if (aView) {
       unsigned long buttons;
       aView->LockLooper();
-      aView->GetMouse(&current, &buttons, false);    
+      aView->GetMouse(&current, &buttons, false);
       aView->UnlockLooper();
 
       Bit8u newstate = 0; //please note: 2nd and 3rd button are mapped the same
@@ -295,7 +295,7 @@ void bx_beos_gui_c::handle_events(void)
         newstate |= 0x02;
       if (buttons & B_TERTIARY_MOUSE_BUTTON)
         newstate |= 0x02;
-         
+
       if (current != previous || mouse_button_state != newstate) {
         int dx = (int)(current.x - previous.x) *2;
         int dy = -(int)((current.y - previous.y) *2);

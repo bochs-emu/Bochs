@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.179 2007-10-24 23:08:49 sshwarts Exp $
+// $Id: siminterface.cc,v 1.180 2008-02-05 22:57:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // See siminterface.h for description of the siminterface concept.
@@ -22,12 +22,12 @@ bx_list_c *root_param = NULL;
 // bx_real_sim_c class is a child of bx_simulator_interface_c, and it
 // implements all the methods.  The idea is that a gui needs to know only
 // definition of bx_simulator_interface to talk to Bochs.  The gui should
-// not need to include bochs.h.  
+// not need to include bochs.h.
 //
 // I made this separation to ensure that all guis use the siminterface to do
 // access bochs internals, instead of accessing things like
 // bx_keyboard.s.internal_buffer[4] (or whatever) directly. -Bryce
-// 
+//
 
 class bx_real_sim_c : public bx_simulator_interface_c {
   bxevent_handler bxevent_callback;
@@ -121,7 +121,7 @@ public:
   virtual void debug_puts (const char *cmd);
 #endif
   virtual void register_configuration_interface (
-    const char* name, 
+    const char* name,
     config_interface_callback_t callback,
     void *userdata);
   virtual int configuration_interface(const char* name, ci_command_t command);
@@ -197,7 +197,7 @@ static bx_param_c *find_param(const char *full_pname, const char *rest_of_pname,
   return find_param(full_pname, from, child);
 }
 
-bx_param_c *bx_real_sim_c::get_param(const char *pname, bx_param_c *base) 
+bx_param_c *bx_real_sim_c::get_param(const char *pname, bx_param_c *base)
 {
   if (base == NULL)
     base = root_param;
@@ -265,12 +265,12 @@ void bx_init_siminterface()
   siminterface_log = new logfunctions();
   siminterface_log->put("CTRL");
   siminterface_log->settype(CTRLLOG);
-  if (SIM == NULL) 
+  if (SIM == NULL)
     SIM = new bx_real_sim_c();
   if (root_param == NULL) {
     root_param = new bx_list_c(NULL,
       "bochs",
-      "list of top level bochs parameters", 
+      "list of top level bochs parameters",
       30);
   }
 }
@@ -283,7 +283,7 @@ bx_real_sim_c::bx_real_sim_c()
   ci_callback_data = NULL;
   is_sim_thread_func = NULL;
   debug_gui = 0;
-  
+
   enabled = 1;
   init_done = 0;
   quit_context = NULL;
@@ -492,7 +492,7 @@ int bx_real_sim_c::log_msg(const char *prefix, int level, const char *msg)
 }
 
 // Called by simulator whenever it needs the user to choose a new value
-// for a registered parameter.  Create a synchronous ASK_PARAM event, 
+// for a registered parameter.  Create a synchronous ASK_PARAM event,
 // send it to the CI, and wait for the response.  The CI will call the
 // set() method on the parameter if the user changes the value.
 int bx_real_sim_c::ask_param(bx_param_c *param)
@@ -552,7 +552,7 @@ int bx_real_sim_c::ask_yes_no(const char *title, const char *prompt, bx_bool the
 
 void bx_real_sim_c::periodic()
 {
-  // give the GUI a chance to do periodic things on the bochs thread. in 
+  // give the GUI a chance to do periodic things on the bochs thread. in
   // particular, notice if the thread has been asked to die.
   BxEvent tick;
   tick.type = BX_SYNC_EVT_TICK;
@@ -581,7 +581,7 @@ void bx_real_sim_c::periodic()
 // Otherwise, opens up the image and starts writing.  Returns -2 if
 // the image could not be opened, or -3 if there are failures during
 // write, e.g. disk full.
-// 
+//
 // wxWidgets: This may be called from the gui thread.
 int bx_real_sim_c::create_disk_image(const char *filename, int sectors, bx_bool overwrite)
 {
@@ -712,7 +712,7 @@ void bx_real_sim_c::debug_puts(const char *text)
 #endif
 
 void bx_real_sim_c::register_configuration_interface(
-  const char* name, 
+  const char* name,
   config_interface_callback_t callback,
   void *userdata)
 {
@@ -733,7 +733,7 @@ int bx_real_sim_c::configuration_interface(const char *ignore, ci_command_t comm
     BX_PANIC(("siminterface does not support loading one configuration interface and then calling another"));
     return -1;
   }
-  if (!strcmp(name, "wx")) 
+  if (!strcmp(name, "wx"))
     debug_gui = 1;
   else
     debug_gui = 0;
@@ -832,7 +832,7 @@ void bx_real_sim_c::init_save_restore()
   } else {
     list = new bx_list_c(root_param,
       "bochs",
-      "subtree for save/restore", 
+      "subtree for save/restore",
       30 + BX_MAX_SMP_THREADS_SUPPORTED);
   }
 }
@@ -1183,10 +1183,10 @@ bx_bool bx_real_sim_c::save_sr_param(FILE *fp, bx_param_c *node, const char *sr_
 const char* bx_param_c::default_text_format = NULL;
 
 bx_param_c::bx_param_c(Bit32u id, const char *param_name, const char *param_desc)
-  : bx_object_c(id), 
+  : bx_object_c(id),
     parent(NULL),
-    description(NULL), 
-    label(NULL), 
+    description(NULL),
+    label(NULL),
     ask_format(NULL),
     group_name(NULL)
 {
@@ -1203,8 +1203,8 @@ bx_param_c::bx_param_c(Bit32u id, const char *param_name, const char *param_desc
 bx_param_c::bx_param_c(Bit32u id, const char *param_name, const char *param_label, const char *param_desc)
   : bx_object_c(id),
     parent(NULL),
-    description(NULL), 
-    label(NULL), 
+    description(NULL),
+    label(NULL),
     ask_format(NULL),
     group_name(NULL)
 {
@@ -1291,7 +1291,7 @@ int bx_param_c::get_param_path(char *path_out, int maxlen)
 const char* bx_param_c::set_default_format(const char *f)
 {
   const char *old = default_text_format;
-  default_text_format = f; 
+  default_text_format = f;
   return old;
 }
 
@@ -1332,22 +1332,22 @@ Bit32u bx_param_num_c::default_base = BASE_DEC;
 Bit32u bx_param_num_c::set_default_base(Bit32u val)
 {
   Bit32u old = default_base;
-  default_base = val; 
+  default_base = val;
   return old;
 }
 
 void bx_param_num_c::set_handler(param_event_handler handler)
-{ 
-  this->handler = handler; 
+{
+  this->handler = handler;
   // now that there's a handler, call set once to run the handler immediately
   //set (get ());
 }
 
 void bx_param_num_c::set_sr_handlers(void *devptr, param_sr_handler save, param_sr_handler restore)
 {
-  this->sr_devptr = devptr; 
-  this->save_handler = save; 
-  this->restore_handler = restore; 
+  this->sr_devptr = devptr;
+  this->save_handler = save;
+  this->restore_handler = restore;
 }
 
 void bx_param_num_c::set_dependent_list(bx_list_c *l)
@@ -1396,7 +1396,7 @@ void bx_param_num_c::set_range(Bit64u min, Bit64u max)
 }
 
 void bx_param_num_c::set_initial_val(Bit64s initial_val)
-{ 
+{
   this->val.number = this->initial_val = initial_val;
 }
 
@@ -1601,7 +1601,7 @@ void bx_shadow_num_c::set(Bit64s newval)
   if (((newval < min) || (newval > max)) && (min != BX_MIN_BIT64S) && ((Bit64u)max != BX_MAX_BIT64U))
     BX_PANIC (("numerical parameter %s was set to " FMT_LL "d, which is out of range " FMT_LL "d to " FMT_LL "d", get_name (), newval, min, max));
   switch (varsize) {
-    case 8: 
+    case 8:
       tmp = *(val.p8bit) & ~(mask << lowbit);
       tmp |= (newval & mask) << lowbit;
       *(val.p8bit) = (Bit8s)tmp;
@@ -1621,7 +1621,7 @@ void bx_shadow_num_c::set(Bit64s newval)
       tmp |= (newval & mask) << lowbit;
       *(val.p64bit) = (Bit64s)tmp;
       break;
-    default: 
+    default:
       BX_PANIC(("unsupported varsize %d", varsize));
   }
   if (handler) {
@@ -1739,7 +1739,7 @@ bx_param_string_c::bx_param_string_c(bx_param_c *parent,
   : bx_param_c(SIM->gen_param_id(), name, label, description)
 {
   set_type(BXT_PARAM_STRING);
-  if (maxsize < 0) 
+  if (maxsize < 0)
     maxsize = strlen(initial_val) + 1;
   this->val = new char[maxsize];
   this->initial_val = new char[maxsize];
@@ -1783,14 +1783,14 @@ void bx_param_string_c::reset()
 
 void bx_param_string_c::set_handler(param_string_event_handler handler)
 {
-  this->handler = handler; 
+  this->handler = handler;
   // now that there's a handler, call set once to run the handler immediately
   //set (getptr ());
 }
 
 void bx_param_string_c::set_enable_handler(param_enable_handler handler)
-{ 
-  this->enable_handler = handler; 
+{
+  this->enable_handler = handler;
 }
 
 void bx_param_string_c::set_enabled(int en)

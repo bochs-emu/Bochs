@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sdl.cc,v 1.71 2008-01-28 21:52:09 vruppert Exp $
+// $Id: sdl.cc,v 1.72 2008-02-05 22:57:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -27,7 +27,7 @@
 #define _MULTI_THREAD
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
-// platforms that require a special tag on exported symbols, BX_PLUGGABLE 
+// platforms that require a special tag on exported symbols, BX_PLUGGABLE
 // is used to know when we are exporting symbols and when we are importing.
 #define BX_PLUGGABLE
 
@@ -282,7 +282,7 @@ void bx_sdl_gui_c::specific_init(
   for(i=0;i<256;i++)
     for(j=0;j<8;j++)
       menufont[i][j] = sdl_font8x8[i][j];
-  
+
   #ifdef __MORPHOS__
   if (!(PowerSDLBase=OpenLibrary("powersdl.library",0)))
   {
@@ -291,7 +291,7 @@ void bx_sdl_gui_c::specific_init(
     return;
   }
   #endif
-  
+
   flags = SDL_INIT_VIDEO;
 #if BX_SHOW_IPS
 #if  defined(__MINGW32__) || defined(_MSC_VER)
@@ -664,7 +664,7 @@ void bx_sdl_gui_c::graphics_tile_update(
   Uint32 *buf, disp;
   Uint32 *buf_row;
   int i,j;
-  
+
   if( sdl_screen )
   {
     disp = sdl_screen->pitch/4;
@@ -968,7 +968,7 @@ void bx_sdl_gui_c::handle_events(void)
 	  //fprintf (stderr, "ignore mouse event because sdl_grab is off\n");
 	  break;
 	}
-	if (just_warped 
+	if (just_warped
 	    && sdl_event.motion.x == half_res_x
 	    && sdl_event.motion.y == half_res_y) {
 	  // This event was generated as a side effect of the WarpMouse,
@@ -1074,7 +1074,7 @@ void bx_sdl_gui_c::handle_events(void)
 	  /* use mapping */
 	  BXKeyEntry *entry = bx_keymap.findHostKey (sdl_event.key.keysym.sym);
 	  if (!entry) {
-	    BX_ERROR(( "host key %d (0x%x) not mapped!", 
+	    BX_ERROR(( "host key %d (0x%x) not mapped!",
 		  (unsigned) sdl_event.key.keysym.sym,
 		  (unsigned) sdl_event.key.keysym.sym));
 	    break;
@@ -1101,7 +1101,7 @@ void bx_sdl_gui_c::handle_events(void)
             /* use mapping */
             BXKeyEntry *entry = bx_keymap.findHostKey (sdl_event.key.keysym.sym);
             if (!entry) {
-              BX_ERROR(( "host key %d (0x%x) not mapped!", 
+              BX_ERROR(( "host key %d (0x%x) not mapped!",
 		    (unsigned) sdl_event.key.keysym.sym,
 		    (unsigned) sdl_event.key.keysym.sym));
               break;
@@ -1567,7 +1567,7 @@ static Bit32u convertStringToSDLKey (const char *string)
   return BX_KEYMAP_UNKNOWN;
 }
 
-void 
+void
 bx_sdl_gui_c::set_display_mode (disp_mode_t newmode)
 {
   // if no mode change, do nothing.

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: osdep.cc,v 1.17 2006-08-07 17:59:15 vruppert Exp $
+// $Id: osdep.cc,v 1.18 2008-02-05 22:57:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -26,18 +26,18 @@
 
 //
 // osdep.cc
-// 
+//
 // Provide definition of library functions that are missing on various
 // systems.  The only reason this is a .cc file rather than a .c file
 // is so that it can include bochs.h.  Bochs.h includes all the required
-// system headers, with appropriate #ifdefs for different compilers and 
+// system headers, with appropriate #ifdefs for different compilers and
 // platforms.
 //
 
 #include "bochs.h"
 
 //////////////////////////////////////////////////////////////////////
-// Missing library functions.  These should work on any platform 
+// Missing library functions.  These should work on any platform
 // that needs them.
 //////////////////////////////////////////////////////////////////////
 
@@ -66,8 +66,8 @@ int bx_vsnprintf (char *s, size_t maxlen, const char *format, va_list arg)
 #endif /* !BX_HAVE_VSNPRINTF*/
 
 #if (!BX_HAVE_STRTOULL && !BX_HAVE_STRTOUQ)
-/* taken from glibc-2.2.2: strtod.c, and stripped down a lot.  There are 
-   still a few leftover references to decimal points and exponents, 
+/* taken from glibc-2.2.2: strtod.c, and stripped down a lot.  There are
+   still a few leftover references to decimal points and exponents,
    but it works for bases 10 and 16 */
 
 #define RETURN(val,end)							      \
@@ -175,7 +175,7 @@ bx_strtoull (const char *nptr, char **endptr, int baseignore)
   if (endptr)
     *endptr = (char *) cp;
 
-  if (dig_no == 0) 
+  if (dig_no == 0)
     return 0;
 
   for (p=start_of_digits; p!=cp; p++) {
@@ -215,11 +215,11 @@ int main (int argc, char **argv)
 char *bx_strdup(const char *str)
 {
 	char *temp;
-	
+
 	temp = (char*)malloc(strlen(str)+1);
 	sprintf(temp, "%s", str);
 	return temp;
-	
+
 	// Well, I'm sure this isn't how strdup is REALLY implemented,
 	// but it works...
 }
@@ -272,7 +272,7 @@ int fd_read(char *buffer, Bit32u offset, Bit32u bytes)
 {
 	OSErr err;
 	IOParam param;
-	
+
 	param.ioRefNum=-5; // Refnum of the floppy disk driver
 	param.ioVRefNum=1;
 	param.ioPosMode=fsFromStart;
@@ -287,7 +287,7 @@ int fd_write(char *buffer, Bit32u offset, Bit32u bytes)
 {
 	OSErr		err;
 	IOParam	param;
-	
+
 	param.ioRefNum=-5; // Refnum of the floppy disk driver
 	param.ioVRefNum=1;
 	param.ioPosMode=fsFromStart;
@@ -303,7 +303,7 @@ int fd_stat(struct stat *buf)
 	OSErr		err;
 	DrvSts	status;
 	int			result;
-	
+
 	result = 0;
 	err = DriveStatus(1, &status);
 	if (status.diskInPlace <1 || status.diskInPlace > 2)

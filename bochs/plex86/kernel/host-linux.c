@@ -252,9 +252,9 @@ init_module(void)
 
   /* Register /dev/misc/plex86 with devfs. */
 #ifdef CONFIG_DEVFS_FS
-  my_devfs_entry = devfs_register(NULL, "misc/plex86", 
-                                  DEVFS_FL_DEFAULT, 
-                                  plex_major, 0 /* minor mode*/, 
+  my_devfs_entry = devfs_register(NULL, "misc/plex86",
+                                  DEVFS_FL_DEFAULT,
+                                  plex_major, 0 /* minor mode*/,
                                   S_IFCHR | 0666, &plex86_fops,
                                   NULL /* "info" */);
   if (!my_devfs_entry)
@@ -333,7 +333,7 @@ plex86_open(struct inode *inode, struct file *filp)
   if ( (vm = hostOSAllocZeroedMem(sizeof(vm_t))) == NULL )
     return -ENOMEM;
   filp->private_data = vm;
-  
+
   /* Kernel independent device open code. */
   hostDeviceOpen(vm);
 
@@ -431,11 +431,11 @@ plex86_read_procmem(char *buf, char **start, off_t offset,
   int
 retrieveKernelModulePages(void)
 {
-  /* 
+  /*
    * Retrieve start address and size of this module.
    *
    * Note that with old kernels, we cannot access the module info (size),
-   * hence we rely on the fact that Linux lets at least one page of 
+   * hence we rely on the fact that Linux lets at least one page of
    * virtual address space unused after the end of the module.
    */
 #ifdef THIS_MODULE
@@ -476,10 +476,10 @@ retrieveKernelModulePages(void)
   unsigned
 retrievePhyPages(Bit32u *page, int max_pages, void *addr_v, unsigned size)
 {
-  /*  
+  /*
    * Grrr.  There doesn't seem to be an exported mechanism to retrieve
    * the physical pages underlying a vmalloc()'ed area.  We do it the
-   * hard way ... 
+   * hard way ...
    */
   pageEntry_t *host_pgd;
   Bit32u host_cr3;
@@ -698,7 +698,7 @@ hostOSModuleCountReset(vm_t *vm, void *inode, void *filp)
   while (MOD_IN_USE) {
     MOD_DEC_USE_COUNT;
     }
-    
+
   MOD_INC_USE_COUNT; /* bump back to 1 so release can decrement */
 #endif
 }

@@ -1,9 +1,9 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxdialog.cc,v 1.103 2007-11-02 16:58:46 vruppert Exp $
+// $Id: wxdialog.cc,v 1.104 2008-02-05 22:57:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
-// platforms that require a special tag on exported symbols, BX_PLUGGABLE 
+// platforms that require a special tag on exported symbols, BX_PLUGGABLE
 // is used to know when we are exporting symbols and when we are importing.
 #define BX_PLUGGABLE
 
@@ -49,8 +49,8 @@ wxSize normalTextSize (180, -1);  // width=200, height=default
 // LogMsgAskDialog implementation
 //////////////////////////////////////////////////////////////////////
 // Structure:
-//   vertSizer: 
-//    context text field, 
+//   vertSizer:
+//    context text field,
 //    message text field
 //    don't-ask checkbox
 //    buttonSizer:
@@ -75,7 +75,7 @@ LogMsgAskDialog::LogMsgAskDialog(
     wxWindow* parent,
     wxWindowID id,
     const wxString& title)
-  : wxDialog (parent, id, title, wxDefaultPosition, wxDefaultSize, 
+  : wxDialog (parent, id, title, wxDefaultPosition, wxDefaultSize,
     wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER)
 {
   for (int i=0; i<N_BUTTONS; i++) enabled[i] = TRUE;
@@ -155,7 +155,7 @@ void LogMsgAskDialog::ShowHelp()
 // FloppyConfigDialog implementation
 //////////////////////////////////////////////////////////////////////
 // Structure:
-//   vertSizer: 
+//   vertSizer:
 //     instructions
 //     radioSizer (vert):
 //       phys0
@@ -186,7 +186,7 @@ END_EVENT_TABLE()
 FloppyConfigDialog::FloppyConfigDialog(
     wxWindow* parent,
     wxWindowID id)
-  : wxDialog (parent, id, wxT(""), wxDefaultPosition, wxDefaultSize, 
+  : wxDialog (parent, id, wxT(""), wxDefaultPosition, wxDefaultSize,
     wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER)
 {
   validate = NULL;
@@ -288,7 +288,7 @@ int
 FloppyConfigDialog::GetRadio () {
   int i;
   for (i=0; i<n_rbtns; i++) {
-    if (rbtn[i]->GetValue()) 
+    if (rbtn[i]->GetValue())
       return i;
   }
   if (diskImageRadioBtn->GetValue()) {
@@ -316,7 +316,7 @@ void FloppyConfigDialog::SetFilename (wxString f) {
       return;  // leaving filename text field unchanged
     }
   }
-  filename->SetValue(f); 
+  filename->SetValue(f);
   diskImageRadioBtn->SetValue(TRUE);
 }
 
@@ -376,7 +376,7 @@ void FloppyConfigDialog::OnEvent(wxCommandEvent& event)
       EndModal(wxID_CANCEL);
       break;
     case wxID_HELP:
-      ShowHelp(); 
+      ShowHelp();
       break;
   }
 }
@@ -422,7 +422,7 @@ END_EVENT_TABLE()
 AdvancedLogOptionsDialog::AdvancedLogOptionsDialog(
     wxWindow* parent,
     wxWindowID id)
-  : wxDialog(parent, id, wxT(""), wxDefaultPosition, wxDefaultSize, 
+  : wxDialog(parent, id, wxT(""), wxDefaultPosition, wxDefaultSize,
     wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER)
 {
   //static int integers[LOG_OPTS_N_CHOICES_NORMAL] = {0, 1, 2, 3};
@@ -465,7 +465,7 @@ AdvancedLogOptionsDialog::AdvancedLogOptionsDialog(
     headerSizer->Add(text, 0, wxALIGN_LEFT);
   }
   // add rows of choice boxes, one for each device
-  int devmax = SIM->get_n_log_modules(); 
+  int devmax = SIM->get_n_log_modules();
   action = new wxChoice** [devmax];   // array of pointers
   for (int dev=0; dev<devmax; dev++) {
     if (strcmp(SIM->get_prefix(dev), "[     ]")) {
@@ -495,7 +495,7 @@ AdvancedLogOptionsDialog::AdvancedLogOptionsDialog(
   scrollWin->SetScrollbars(1, 1, size.GetWidth(), size.GetHeight());
 
   // now that we know the desired width of the panel, use it to set the
-  // width of the scrollWin.  I tried several things before arriving at 
+  // width of the scrollWin.  I tried several things before arriving at
   // a solution, and I'll list them for educational purposes.
   //
   // failure #1: this had no effect at all. sizer took precedence.
@@ -588,7 +588,7 @@ void AdvancedLogOptionsDialog::SetAction(int dev, int evtype, int act) {
 
 int AdvancedLogOptionsDialog::GetAction(int dev, int evtype) {
   if (action[dev] == NULL) return LOG_OPTS_NO_CHANGE;
-  int sel = action[dev][evtype]->GetSelection(); 
+  int sel = action[dev][evtype]->GetSelection();
   int *ptrToChoice = (int*)action[dev][evtype]->GetClientData(sel);
   wxASSERT(ptrToChoice != NULL);
   return *ptrToChoice;
@@ -607,7 +607,7 @@ void AdvancedLogOptionsDialog::OnEvent(wxCommandEvent& event)
       for (lev=0; lev<nlev; lev++) {
 	int action = SIM->get_default_log_action(lev);
 	int dev, ndev = SIM->get_n_log_modules();
-	for (dev=0; dev<ndev; dev++) 
+	for (dev=0; dev<ndev; dev++)
 	  SetAction(dev, lev, action);
       }
       break;
@@ -620,7 +620,7 @@ void AdvancedLogOptionsDialog::OnEvent(wxCommandEvent& event)
       EndModal(wxID_CANCEL);
       break;
     case wxID_HELP:
-      ShowHelp(); 
+      ShowHelp();
       break;
     default:
       event.Skip();
@@ -665,7 +665,7 @@ END_EVENT_TABLE()
 DebugLogDialog::DebugLogDialog(
     wxWindow* parent,
     wxWindowID id)
-  : wxDialog (parent, id, wxT(""), wxDefaultPosition, wxDefaultSize, 
+  : wxDialog (parent, id, wxT(""), wxDefaultPosition, wxDefaultSize,
     wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER)
 {
   lengthMax = DEBUG_LOG_DEFAULT_LENGTH_MAX;
@@ -673,7 +673,7 @@ DebugLogDialog::DebugLogDialog(
   SetTitle (DEBUG_LOG_TITLE);
   mainSizer = new wxBoxSizer (wxVERTICAL);
   log = new wxTextCtrl (this, -1, wxT(""),
-      wxDefaultPosition, wxSize(400, 300), 
+      wxDefaultPosition, wxSize(400, 300),
       wxTE_MULTILINE | wxTE_RICH | wxTE_READONLY);
   mainSizer->Add (log, 1, wxALL|wxGROW, 10);
   wxStaticText *text = new wxStaticText (this, -1, DEBUG_CMD_PROMPT);
@@ -684,8 +684,8 @@ DebugLogDialog::DebugLogDialog(
   mainSizer->Add (buttonSizer, 0, wxALIGN_RIGHT);
 
   // commandSizer contents
-  command = new wxTextCtrl (this, ID_DebugCommand, wxT(""), 
-      wxDefaultPosition, wxDefaultSize, 
+  command = new wxTextCtrl (this, ID_DebugCommand, wxT(""),
+      wxDefaultPosition, wxDefaultSize,
       wxTE_PROCESS_ENTER);
   commandSizer->Add (command, 1, wxGROW);
   wxButton *btn;
@@ -719,12 +719,12 @@ void DebugLogDialog::Execute(bool clear)
 
 void DebugLogDialog::CheckLogLength ()
 {
-  // truncate the text control periodically to avoid a 
+  // truncate the text control periodically to avoid a
   // serious memory leak.
   wxString str = log->GetValue ();
   Bit32u len = str.Length ();
   if (len > lengthMax + lengthTolerance) {
-    // Truncate the string.  Start from length - lengthMax, search 
+    // Truncate the string.  Start from length - lengthMax, search
     // forward until we find the first \n.
     for (int i = len - lengthMax; i<(int)(len-1); i++) {
       if (str.GetChar (i) == '\n') {
@@ -800,7 +800,7 @@ END_EVENT_TABLE()
 ParamDialog::ParamDialog(
     wxWindow* parent,
     wxWindowID id)
-  : wxDialog (parent, id, wxT(""), wxDefaultPosition, wxDefaultSize, 
+  : wxDialog (parent, id, wxT(""), wxDefaultPosition, wxDefaultSize,
     wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER)
 {
   idHash = new wxHashTable (wxKEY_INTEGER);
@@ -869,7 +869,7 @@ int ParamDialog::genId () {
   return ++_next_id;
 }
 
-bool ParamDialog::isGeneratedId (int id) { 
+bool ParamDialog::isGeneratedId (int id) {
   return (id >= ID_LAST_USER_DEFINED && id < _next_id);
 }
 
@@ -899,7 +899,7 @@ void ParamDialog::AddParam (bx_param_c *param, wxFlexGridSizer *sizer, bool plai
 void ParamDialog::AddParam (
     bx_param_c *param_generic,
     bool plain,
-    AddParamContext *context) 
+    AddParamContext *context)
 {
   AddParamContext defaultContext;
   if (context == NULL) {
@@ -911,11 +911,11 @@ void ParamDialog::AddParam (
   }
   wxASSERT (context->parent != NULL);
   wxASSERT (context->vertSizer != NULL);
-  if (param_generic == NULL) 
+  if (param_generic == NULL)
     return;  // param not registered, probably this option was not compiled in
   wxLogDebug(wxT("AddParam for param '%s'"), param_generic->get_name());
   if (context->gridSizer == NULL) {
-    // create a gridSizer if none exists yet.  add it to default vertSizer.  
+    // create a gridSizer if none exists yet.  add it to default vertSizer.
     context->gridSizer = new wxFlexGridSizer (3);
     context->vertSizer->Add (context->gridSizer);
   }
@@ -1027,7 +1027,7 @@ void ParamDialog::AddParam (
 	  if (isFilename) {
 	    // create Browse button
 	    pstr->browseButtonId = genId ();
-	    pstr->browseButton = new wxButton (context->parent, 
+	    pstr->browseButton = new wxButton (context->parent,
 		pstr->browseButtonId, BTNLABEL_BROWSE);
 	    sizer->Add (pstr->browseButton, 0, wxALL, 2);
 	    idHash->Put (pstr->browseButtonId, pstr);  // register under button id
@@ -1174,7 +1174,7 @@ bool ParamDialog::CopyGuiToParam()
           int i, p = 0;
           unsigned int n;
           strcpy(src, tmp.mb_str(wxConvUTF8));
-          for (i=0; i<stringp->get_maxsize(); i++) 
+          for (i=0; i<stringp->get_maxsize(); i++)
             buf[i] = 0;
           for (i=0; i<stringp->get_maxsize (); i++) {
             while (src[p] == stringp->get_separator ())
@@ -1490,7 +1490,7 @@ void ParamDialog::OnEvent(wxCommandEvent& event)
 	Show (FALSE);
       break;
     case wxID_HELP:
-      ShowHelp(); 
+      ShowHelp();
       break;
     default:
       event.Skip ();
@@ -1548,17 +1548,17 @@ CpuRegistersDialog::CpuRegistersDialog(
 
   // top level objects
   wxStaticBox *mainRegsBox = new wxStaticBox(this, -1, wxT("Basic Registers"));
-  wxStaticBoxSizer *mainRegsBoxSizer = 
+  wxStaticBoxSizer *mainRegsBoxSizer =
     new wxStaticBoxSizer(mainRegsBox, wxVERTICAL);
   mainSizer->Add(mainRegsBoxSizer, 0, wxALL|wxGROW, 10);
 
   wxStaticBox *flagsBox = new wxStaticBox(this, -1, wxT("EFLAGS Bits"));
-  wxStaticBoxSizer *flagsBoxSizer = 
+  wxStaticBoxSizer *flagsBoxSizer =
     new wxStaticBoxSizer(flagsBox, wxVERTICAL);
   mainSizer->Add(flagsBoxSizer, 0, wxALL|wxGROW, 10);
 
   wxStaticBox *otherBox = new wxStaticBox(this, -1, wxT("Other Registers"));
-  wxStaticBoxSizer *otherBoxSizer = 
+  wxStaticBoxSizer *otherBoxSizer =
     new wxStaticBoxSizer(otherBox, wxVERTICAL);
   mainSizer->Add(otherBoxSizer, 0, wxALL|wxGROW, 10);
 
@@ -1665,7 +1665,7 @@ CpuRegistersDialog::stateChanged (bool simRunning)
 #endif
 }
 
-void 
+void
 CpuRegistersDialog::CopyParamToGui ()
 {
   ParamDialog::CopyParamToGui ();
@@ -1675,7 +1675,7 @@ CpuRegistersDialog::CopyParamToGui ()
 }
 
 // How am I going to communicate with the debugger?
-// 
+//
 // The current model is that the debugger asks you for a command, and
 // blocks forever until you press return.  Then it interprets the command,
 // however long it takes, and returns to the input loop when the command
@@ -1691,17 +1691,17 @@ CpuRegistersDialog::CopyParamToGui ()
 // a long step or continue command.  This can be implemented by setting
 // bx_guard.interrupt_requested = 1, just like the SIGINT handler in
 // bx_debug/dbg_main.cc does.
-// 
+//
 // input loop model is good.  Create a debugger input loop, possibly in
 // siminterface.
-// in the simulation thread.  This loop waits for a command from the 
+// in the simulation thread.  This loop waits for a command from the
 // wxWidgets debugger
 //
 // For example, if you press the "Step" button 5
 // times, with each click it should call bx_dbg_stepN_command(1) in the
 // simulator thread.  When it returns, it goes back to
 //
-void 
+void
 CpuRegistersDialog::OnEvent(wxCommandEvent& event)
 {
   int id = event.GetId ();
@@ -1799,7 +1799,7 @@ int LogOptionsDialog::GetAction(int evtype) {
 // Unfortunately this step is necessary if you change the text of
 // a wxStaticText.  Otherwise the sizer that contains the text never realizes
 // that the size has changed, and the layout is never updated.  The
-// SetItemMinSize trick was reported on comp.soft-sys.wxwindows by 
+// SetItemMinSize trick was reported on comp.soft-sys.wxwindows by
 // Dirk Birnhardt.
 void ChangeStaticText (wxSizer *sizer, wxStaticText *win, wxString newtext)
 {
@@ -1833,7 +1833,7 @@ CreateImage (int harddisk, int sectors, const char *filename)
       wxT("File exists"), wxYES_NO | wxCENTER);
     if (answer == wxYES)
       ret = SIM->create_disk_image (filename, sectors, 1);
-    else 
+    else
       return false;  // wxNO
   }
   if (ret == -2) {
@@ -1853,7 +1853,7 @@ void SetTextCtrl(wxTextCtrl *ctrl, const char *format, int val) {
 int GetTextCtrlInt (wxTextCtrl *ctrl,
     bool *valid,
     bool complain,
-    wxString complaint) 
+    wxString complaint)
 {
   wxString tmp (ctrl->GetValue());
   char buf[1024];

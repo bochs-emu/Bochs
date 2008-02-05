@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: amigaos.cc,v 1.24 2008-01-26 00:00:29 vruppert Exp $
+// $Id: amigaos.cc,v 1.25 2008-02-05 22:57:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2000  MandrakeSoft S.A.
@@ -26,7 +26,7 @@
 
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
-// platforms that require a special tag on exported symbols, BX_PLUGGABLE 
+// platforms that require a special tag on exported symbols, BX_PLUGGABLE
 // is used to know when we are exporting symbols and when we are importing.
 #define BX_PLUGGABLE
 
@@ -80,7 +80,7 @@ MyInputHandler(void)
 		{
 			mouse_button_state |= 0x01;
 			DEV_mouse_motion(event->ie_position.ie_xy.ie_x, -event->ie_position.ie_xy.ie_y, mouse_button_state);
-			
+
 			return NULL;
 		}
 
@@ -169,7 +169,7 @@ open_screen(void)
 	struct DrawInfo *screen_drawinfo = NULL;
 
 	struct ScreenModeRequester *smr;
-		
+
 	static struct EmulLibEntry    GATEDispatcherFunc=
 	{
 		TRAP_LIB, 0, (void (*)(void))DispatcherFunc
@@ -219,7 +219,7 @@ open_screen(void)
 
 	//sprintf(scrmode, "%d", id);
 	//setenv("env:bochs/screenmode", scrmode, 1);
-			  
+
 
 	screen = OpenScreenTags(NULL,
 	  SA_Width, w,
@@ -314,14 +314,14 @@ open_screen(void)
 
 	 white = ObtainBestPen(window->WScreen->ViewPort.ColorMap, 0xffffffff, 0xffffffff, 0xffffffff, NULL);
 	 black = ObtainBestPen(window->WScreen->ViewPort.ColorMap, 0x00000000, 0x00000000, 0x00000000, NULL);
-		 
+
 }
 
   void
 bx_amigaos_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsigned tileheight,
 					 unsigned headerbar_y)
 {
-	  
+
 	x_tilesize = tilewidth;
 	y_tilesize = tileheight;
 
@@ -469,7 +469,7 @@ unsigned int fgcolor, bgcolor;
 			achar = new_text[i];
 			fgcolor = new_text[i+1] & 0x0F;
 			bgcolor = (new_text[i+1] & 0xF0) >> 4;
-			
+
 			if (i == cursori)    /*invert the cursor block*/
 		   	{
 				SetAPen(window->RPort, pmap[bgcolor]);
@@ -484,14 +484,14 @@ unsigned int fgcolor, bgcolor;
 
 			x = ((i/2) % text_cols)*window->RPort->TxWidth;
 			y = ((i/2) / text_cols)*window->RPort->TxHeight;
-		
+
 			Move(window->RPort, bx_borderleft + x, bx_bordertop + bx_headerbar_y + y + window->RPort->TxBaseline);
 			Text(window->RPort, &achar, 1);
 		}
 	}
 
 	previ = cursori;
-	
+
 }
 
   int
@@ -500,7 +500,7 @@ bx_amigaos_gui_c::get_clipboard_text(Bit8u **bytes, Bit32s *nbytes)
 	struct IFFHandle *iff = NULL;
 	long err = 0;
     struct ContextNode  *cn;
-    
+
 
 	if (!(iff = AllocIFF ()))
 	{
@@ -535,7 +535,7 @@ bx_amigaos_gui_c::get_clipboard_text(Bit8u **bytes, Bit32s *nbytes)
 		{
 			UBYTE readbuf[1024];
 			int len = 0;
-			
+
 			err = ParseIFF(iff, IFFPARSE_SCAN);
 			if(err == IFFERR_EOC) continue;
 			else if(err) break;
@@ -563,7 +563,7 @@ bx_amigaos_gui_c::get_clipboard_text(Bit8u **bytes, Bit32s *nbytes)
 	}
 
     freeiff(iff);
-	
+
 	return 1;
 }
 
@@ -625,7 +625,7 @@ bx_amigaos_gui_c::palette_change(unsigned index, unsigned red, unsigned green, u
 {
 
   Bit8u *ptr;
-					
+
   	ptr = (Bit8u *)(cmap+index);
 
   	ptr++; /*first 8bits are not defined in the XRGB8 entry*/
@@ -695,19 +695,19 @@ bx_amigaos_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, uns
 	if(xdiff != 0)
 	{
 		int i;
-		
+
 		for(i = 0; i < bx_headerbar_entries; i++)
 		{
 			if(bx_header_gadget[i]->LeftEdge + bx_header_gadget[i]->Width > bx_headernext_left)
 				bx_header_gadget[i]->LeftEdge -= xdiff;
 		}
-	
+
 		bx_xchanged = TRUE;
-	
+
 	}
 }
 
- 
+
 
   unsigned
 bx_amigaos_gui_c::create_bitmap(const unsigned char *bmap, unsigned xdim, unsigned ydim)
@@ -790,12 +790,12 @@ bx_amigaos_gui_c::headerbar_bitmap(unsigned bmap_id, unsigned alignment, void (*
 	return(bx_headerbar_entries - 1);
 }
 
- 
+
   void
 bx_amigaos_gui_c::show_headerbar(void)
 {
 	RemoveGList(window, bx_glistptr, bx_headerbar_entries);
-	
+
 	if (d > 8 || !SIM->get_param_bool(BXPN_FULLSCREEN)->get())
 		SetAPen(window->RPort, white);
 	else
@@ -804,7 +804,7 @@ bx_amigaos_gui_c::show_headerbar(void)
 
 	AddGList(window, bx_glistptr, ~0, bx_headerbar_entries, NULL);
 	RefreshGList(bx_glistptr, window, NULL, bx_headerbar_entries + 1);
-	
+
 	GT_RefreshWindow(window,NULL);
 }
 
@@ -825,7 +825,7 @@ bx_amigaos_gui_c::exit(void)
     RemoveGList(window, bx_glistptr, bx_headerbar_entries);
     FreeGadgets(bx_glistptr);
 	FreeVec(emptypointer);
-	
+
 	/*Release the pens*/
 		while (apen >= 0)
 	{
@@ -867,7 +867,7 @@ bx_amigaos_gui_c::exit(void)
 		DoIO((struct IORequest *)inputReqBlk);
 		CloseDevice((struct IORequest *)inputReqBlk);
 	}
-	
+
 	if(inputReqBlk)
 		DeleteIORequest((struct IORequest *)inputReqBlk);
 	if(inputHandler)

@@ -75,7 +75,7 @@ static void unregister_vm(vm_t *, struct proc *);
 static unsigned retrieve_phy_pages(Bit32u *, int, void *, unsigned, int);
 
 static struct cdevsw plex86dev = {
-	plex86_open, plex86_close, 
+	plex86_open, plex86_close,
 	(dev_type_read((*))) enodev, (dev_type_write((*))) enodev,
 	plex86_ioctl, (dev_type_stop((*))) enodev, 0,
 	seltrue, plex86_mmap, 0
@@ -117,14 +117,14 @@ plex86_lkmentry(struct lkm_table *lkmtp, int cmd, int ver)
 	DISPATCH(lkmtp, cmd, ver, plex86_handle, plex86_handle, plex86_handle)
 }
 
-static int 
+static int
 plex86_handle(struct lkm_table *lkmtp, int cmd)
 {
 	int error = 0;
-	
+
 	switch (cmd) {
 	case LKM_E_LOAD:
-		if (lkmexists(lkmtp)) 
+		if (lkmexists(lkmtp))
 			return EEXIST;
 		monitor_pages.startOffset = lkmtp->area;
     monitor_pages.startOffsetPageAligned =
@@ -150,13 +150,13 @@ plex86_handle(struct lkm_table *lkmtp, int cmd)
 		}
 
 		break;
-		
+
 	case LKM_E_UNLOAD:
 		if (plex86sc.sc_open != 0)
 			return EBUSY;
 		free(plex86_hashtbl, M_DEVBUF);
 		break;
-		
+
 	case LKM_E_STAT:
 		break;
 

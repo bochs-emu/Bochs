@@ -1,7 +1,7 @@
 # Bochs Keymap file
-# $Id: x11-pc-es.map,v 1.4 2002-09-25 08:00:24 bdenney Exp $
+# $Id: x11-pc-es.map,v 1.5 2008-02-05 22:57:41 sshwarts Exp $
 # Target: PC(x86) keyboard, ES keymap
-# Author: Vicente Hernando Ara 
+# Author: Vicente Hernando Ara
 #
 # The keymap file describes the layout of a keyboard, and how it translates
 # into Bochs key codes.
