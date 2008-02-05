@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.233 2008-02-01 09:42:25 sshwarts Exp $
+$Id: user.dbk,v 1.234 2008-02-05 22:33:34 sshwarts Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -33,9 +33,9 @@ This is the top level file for the Bochs Users Manual.
 <chapter id="introduction"><title>Introduction to Bochs</title>
 <section id="whatisbochs"><title>What is Bochs?</title>
 <para>
-Bochs is a program that simulates a complete Intel x86 computer.  It 
-can be configured to act like a <!--286,--> 386, 486, Pentium, Pentium II, 
-Pentium III, Pentium 4 or even like x86-64 CPU, including optional MMX, SSEx 
+Bochs is a program that simulates a complete Intel x86 computer.  It
+can be configured to act like a <!--286,--> 386, 486, Pentium, Pentium II,
+Pentium III, Pentium 4 or even like x86-64 CPU, including optional MMX, SSEx
 and 3DNow! instructions.
 Bochs interprets every instruction from power-up to reboot, and has
 device models for all of the standard PC peripherals: keyboard, mouse,
@@ -43,7 +43,7 @@ VGA card/monitor, disks, timer chips, network card, etc.  Because Bochs
 simulates the whole PC environment, the software running in the simulation
 "believes" it is running on a real machine.  This approach allows Bochs
 to run a wide variety of software with no modification, include most popular
-x86 operating systems: Windows 95/98/NT/2000/XP and Vista, all Linux flavors, 
+x86 operating systems: Windows 95/98/NT/2000/XP and Vista, all Linux flavors,
 all BSD flavors, and more.
 </para>
 
@@ -67,7 +67,7 @@ the downside of Bochs' approach is simulation performance.  To model the
 processor accurately, Bochs must run many instructions for every simulated x86
 instruction, and this makes the simulated machine many times slower than
 the physical machine.  Commercial PC emulators (VMware, Connectix, etc.) can
-achieve much high emulation speed using a technique called 
+achieve much high emulation speed using a technique called
 virtualization<footnote>
 <para>
 Virtualization takes advantage of simulating x86 instructions on an
@@ -103,7 +103,7 @@ operating system has not been written.
 <para>
 <!-- really more like Background or Bochs History, but maybe it doesn't need its own section unless it gets to 3 paras or so  -->
 
-Bochs was written by Kevin Lawton starting in 1994.  It began as a 
+Bochs was written by Kevin Lawton starting in 1994.  It began as a
 commercial product, which you could buy with source code for ...
 &NEEDHELP; <footnote>
 <para>
@@ -117,7 +117,7 @@ it and some more background information.
 (<ulink url="http://www.linux-mandrake.com/en/announce-bochs-20000323.php3">press release</ulink>)
 and made it open source under the GNU LGPL.
 
-<!-- 
+<!--
 we should make it clear that Kevin is not the primary maintainer of Bochs,
 but I want to get some more background.  Did he get hired by Mandrakesoft
 to do plex86 at the same time as Bochs was bought?  In his linux.com interview
@@ -146,17 +146,17 @@ counting any mirror website or CVS users.
 </para>
 
 <para>
-Bochs has many possible uses, and different people use it for different 
-things.  Many people use it to run applications in a second operating system 
-without needing two different computers or dual-booting.  Running 
+Bochs has many possible uses, and different people use it for different
+things.  Many people use it to run applications in a second operating system
+without needing two different computers or dual-booting.  Running
 Windows software on a non-x86 workstation or on an x86 Unix box are common
 uses.  Also, because every hardware instruction and every line of simulator
 code is accessible, Bochs is used extensively for debugging new operating
 systems.  If you were writing boot code for your home-brewed
 x86 operating system and it didn't work right, booting it in Bochs could
-give you great visibility into what is really going on.  The Bochs 
+give you great visibility into what is really going on.  The Bochs
 debugger lets you simulate quickly or slowly, pausing whenever you want
-to look at the contents of memory or the CPU registers.  Or, if you 
+to look at the contents of memory or the CPU registers.  Or, if you
 wanted to study which parts of a program take the most time, you could use
 Bochs to measure how often certain pieces of the code were executed.
 </para>
@@ -167,11 +167,11 @@ students used and modified it to learn how the PC hardware works.  As a final
 project the students had to add a new peripheral device, so they had to learn
 all about I/O ports, interrupts, and device drivers.  In industry, it is used
 to support legacy applications on modern hardware, and as a reference model
-when testing new x86-compatible hardware.  
+when testing new x86-compatible hardware.
 </para>
 
 <para>
-There may be as many uses of Bochs as there are users.  Do you want to run 
+There may be as many uses of Bochs as there are users.  Do you want to run
 your old DOS games?  Or learn how to program under GNU/Linux, without leaving your
 Windows desktop?  Or reverse engineer your printer driver?  You decide.
 </para>
@@ -185,43 +185,43 @@ Bochs is very useful for some applications, and not well suited to others.
 This section tries to answer the question, "Is Bochs right for me?"
 </para>
 
-<para>Bochs may or may not be right for you, depending on what it is you want to do.  
-Perhaps all you want to do is run one or two applications native to Microsoft Windows 
-on GNU/Linux, or vice-versa.  Perhaps your biggest concern is speed and performance.  
-Maybe you don't mind tweaking a few files here and there when you want another application 
-to work in that setting.  
-In cases where the objective is to simulate x86 hardware on an x86, Plex86, Wine, and 
+<para>Bochs may or may not be right for you, depending on what it is you want to do.
+Perhaps all you want to do is run one or two applications native to Microsoft Windows
+on GNU/Linux, or vice-versa.  Perhaps your biggest concern is speed and performance.
+Maybe you don't mind tweaking a few files here and there when you want another application
+to work in that setting.
+In cases where the objective is to simulate x86 hardware on an x86, Plex86, Wine, and
 VMware might be your best options.</para>
 
 <para>
-On the other hand, perhaps you have a vital application running on an older operating 
-system that only runs well on old hardware.  You are concerned that the life cycle of 
-this hardware is coming to an end, and your backup and restoration hardware and tools 
-no longer suffice for the amount of data that you have.  You need to transfer backup 
-disk images over a network, and want to use modern procedures for hardware maintenance.  
-Perhaps the application is important enough to run on a larger computer, such as a 
+On the other hand, perhaps you have a vital application running on an older operating
+system that only runs well on old hardware.  You are concerned that the life cycle of
+this hardware is coming to an end, and your backup and restoration hardware and tools
+no longer suffice for the amount of data that you have.  You need to transfer backup
+disk images over a network, and want to use modern procedures for hardware maintenance.
+Perhaps the application is important enough to run on a larger computer, such as a
 64-bit machine, or even a mainframe.  Bochs would be an excellent option in such a scenario.
 </para>
 
 <para>
-Perhaps your objective is to debug software or hardware drivers.  Bochs offers a controlled 
-environment that can better assist you in determining cause and effect relationships.  
-You can take snapshots that show you what is going on behind the scenes.  
-You can isolate the line that caused that crash.  You can have multiple 
-images and compare them under a microscope.  
+Perhaps your objective is to debug software or hardware drivers.  Bochs offers a controlled
+environment that can better assist you in determining cause and effect relationships.
+You can take snapshots that show you what is going on behind the scenes.
+You can isolate the line that caused that crash.  You can have multiple
+images and compare them under a microscope.
 In these situation, Bochs could save you time and resources.
 </para>
 
 <para>
-Information Technology changes faster than any other field.  
-It is very easy to forget transitional software that came and went.  
-But history is important to all fields, and to build on the future, 
-it is important to understand the past.  Computer programmers, however, 
-do not have the same advantage as an architect, who can, for example, 
-take a trip to Greece and touch a pillar.  Much of the history of Computer 
-Science is left on corroding floppies and malfunctioning hardware.  
-Bochs gives you the benefit of having one or more complete environments 
-where you can understand firsthand the behavior of operating systems and 
+Information Technology changes faster than any other field.
+It is very easy to forget transitional software that came and went.
+But history is important to all fields, and to build on the future,
+it is important to understand the past.  Computer programmers, however,
+do not have the same advantage as an architect, who can, for example,
+take a trip to Greece and touch a pillar.  Much of the history of Computer
+Science is left on corroding floppies and malfunctioning hardware.
+Bochs gives you the benefit of having one or more complete environments
+where you can understand firsthand the behavior of operating systems and
 programs.  This cannot be achieved with an "emulator" such as Wine.
 </para>
 
@@ -230,31 +230,31 @@ programs.  This cannot be achieved with an "emulator" such as Wine.
 <section id="will-it-work-for-me"><title>Will it work for me?</title>
 
 <para>
-Whether Bochs works for you depends on your host hardware, host operating 
-system, guest operating system, guest software, and your ability to work in 
-a command-line environment using documentation.  There is no gui or wizard 
-to help you through the setup process.  You do not get a recovery or installation 
-disk to assist you in the process of installing a guest operating system.  
+Whether Bochs works for you depends on your host hardware, host operating
+system, guest operating system, guest software, and your ability to work in
+a command-line environment using documentation.  There is no gui or wizard
+to help you through the setup process.  You do not get a recovery or installation
+disk to assist you in the process of installing a guest operating system.
 Bochs only provides you with the "virtual hardware", and it is up to you to do the rest.
 </para>
 
-<para>Bochs will run on Windows, GNU/Linux, FreeBSD, OpenBSD, or BeOS.  
-If you are running on x86 hardware, you have a range of choices.  
-Check the installation section for your host platform to see what options 
-Bochs supports on your platform.  If the most important factor is speed, 
+<para>Bochs will run on Windows, GNU/Linux, FreeBSD, OpenBSD, or BeOS.
+If you are running on x86 hardware, you have a range of choices.
+Check the installation section for your host platform to see what options
+Bochs supports on your platform.  If the most important factor is speed,
 you may want to try a virtualization product instead of Bochs (VMware, plex86).
 </para>
 
 <para>
 If you are using a non-x86 machine, then Bochs is one of the few choices for
-running x86 software.  Bochs has been known to work on Solaris (Sparc), 
+running x86 software.  Bochs has been known to work on Solaris (Sparc),
 GNU/Linux (PowerPC/Alpha), MacOS (PowerPC), IRIX (MIPS), BeOS (PowerPC), Digital
 Unix (Alpha), and AIX (PowerPC).
 </para>
 
 <para>
 You can also find more detailed testing information on the testing
-status page on the &bochswebsite;.  
+status page on the &bochswebsite;.
 <!-- DISABLED: testing status page has been removed because it was so out of
 date...  The testing status page tells which combinations of host platform and
 guest platform have been tried by other Bochs users. -->
@@ -370,7 +370,7 @@ currently work with.
     <entry>Yes</entry>
     <entry>Powerful command line debugger (optional) that lets you stop
     execution and examine registers and memory, set breakpoints, etc. Unfortunatelly
-    the debugger still lacks x86-64 support and almost unusable for debugging 
+    the debugger still lacks x86-64 support and almost unusable for debugging
     x86-64 workloads.
     </entry>
   </row>
@@ -709,7 +709,7 @@ code that displays the Bochs VGA screen and handles keyboard and mouse events.
      </question>
      <answer>
        <para>
-       Phonetically the same as the English word "box". It's just a play on the word "box", since techies like to call their machines a "Linux box", "Windows box", ... Bochs emulates a box inside a box. 
+       Phonetically the same as the English word "box". It's just a play on the word "box", since techies like to call their machines a "Linux box", "Windows box", ... Bochs emulates a box inside a box.
        </para>
      </answer>
   </qandaentry>
@@ -770,10 +770,10 @@ code that displays the Bochs VGA screen and handles keyboard and mouse events.
 
   <qandaentry>
      <question><para>
-     Why can't I use Bochs with my current Win95 installation? 
+     Why can't I use Bochs with my current Win95 installation?
      </para></question>
      <answer><para>
-     Think about this. If you had two different PC's, they would require different hardware drivers. So you may not be able to safely move a disk drive with Win95 on it, from one to the other. Bochs is no different. It emulates a certain set of hardware devices, and requires each OS be configured for those devices. 
+     Think about this. If you had two different PC's, they would require different hardware drivers. So you may not be able to safely move a disk drive with Win95 on it, from one to the other. Bochs is no different. It emulates a certain set of hardware devices, and requires each OS be configured for those devices.
      </para></answer>
   </qandaentry>
 
@@ -782,7 +782,7 @@ code that displays the Bochs VGA screen and handles keyboard and mouse events.
      Is there a developer's email list for Bochs?
      </para></question>
      <answer><para>
-     Yes.  For instructions on joining, refer to 
+     Yes.  For instructions on joining, refer to
      <xref linkend="mailinglist">.
      </para></answer>
   </qandaentry>
@@ -832,7 +832,7 @@ host operating system's CD-ROM data directly.
      </para></question>
      <answer><para>
      Yes.  Bochs contains a model of an NE2000 compatible network card.
-     Networking is not supported on all platforms.  See 
+     Networking is not supported on all platforms.  See
      <xref linkend="features"> for details.
      </para></answer>
   </qandaentry>
@@ -873,7 +873,7 @@ to mention, running DOOM, though at then-pathetic speeds.
      Question is put here
      </para></question>
      <answer><para>
-       Answer is put here. 
+       Answer is put here.
      </para></answer>
   </qandaentry>
 -->
@@ -950,7 +950,7 @@ On Windows, look for software called WinZip to unpack the TAR.
 This creates a directory called
 <filename>bochs-<replaceable>version</replaceable></filename> full of
 files.  This directory will be referred to as &bochsdir;.  Go into
-&bochsdir; and you are ready to compile.  Instructions for compiling 
+&bochsdir; and you are ready to compile.  Instructions for compiling
 Bochs are in the section, <link linkend="compiling">Compiling Bochs</link>.
 </para>
 
@@ -965,10 +965,10 @@ See the <link linkend="get-src-cvs">CVS instructions</link> for details.
 CVS, or Concurrent Version System, is a software development tool that helps
 to keep track of the different revisions of each file.  It is used by many
 open source (and commercial) projects to allow multiple developers to share
-their changes to the source code.  The Bochs source code and documentation 
+their changes to the source code.  The Bochs source code and documentation
 are available using CVS<footnote>
 <para>
-You can download CVS software and documentation from 
+You can download CVS software and documentation from
 <ulink url="http://www.cvshome.org">www.cvshome.org</ulink>.
 </para>
 </footnote>.
@@ -1121,7 +1121,7 @@ below.
         <entry>modified</entry>
         <entry>
         You have changed this file on your disk, so it no longer matches the
-        version on the server.  This is not a problem; it's just for your 
+        version on the server.  This is not a problem; it's just for your
         information.  If you want, you can discard your changes and
         get a fresh copy by deleting the file and running cvs update again.
         </entry>
@@ -1408,7 +1408,7 @@ check that it looks correct.
 <figure><title>Installing an RPM in Linux</title>
 <screen>
   user$ <command>su</command>
-  Password: 
+  Password:
   root# <command>ls -l bochs-1.2.1.i386.rpm</command>
   -rw-rw-r--    1 user     user      1877515 Sep 14 09:02 bochs-1.2.1.i386.rpm
   root# <command>rpm -i bochs-1.2.1.i386.rpm</command>
@@ -1434,7 +1434,7 @@ RPM installation can fail for a few reasons.  It will fail if you already
 have a Bochs package installed.  In this case, try upgrading the old package
 to the new package with <command>rpm --upgrade NAME.i386.rpm</command>.
 Another potential problem is missing RPM dependencies.  If you are getting
-errors about missing files or RPMs, then first you should try to 
+errors about missing files or RPMs, then first you should try to
 install the RPMs that provide the missing pieces.  If that cannot be done,
 download the source RPM and build a new binary RPM that is appropriate
 for your platform.  The command is <command>rpmbuild --rebuild
@@ -1446,7 +1446,7 @@ anyway, but if it is missing important pieces it may not run properly.
 <para>
 The Bochs RPM installs four new commands and associated manual pages: bochs,
 bochs-dlx, bximage and bxcommit.  First, let's try out the DLX Linux demo by typing
-<command>bochs-dlx</command>.  
+<command>bochs-dlx</command>.
 
 <screen>
   user$ bochs-dlx
@@ -1489,8 +1489,8 @@ DLX linux.
 <para>
 Booting is complete when you see "dlx login:" and a cursor.  At this login
 prompt, type "root".  On UNIX systems, root is the system admin user.
-There is no password for root on this sample disk image, so it lets you log 
-in without typing any password.  Now you should see a UNIX prompt, and you 
+There is no password for root on this sample disk image, so it lets you log
+in without typing any password.  Now you should see a UNIX prompt, and you
 can begin to type UNIX commands.
 </para>
 
@@ -1571,64 +1571,64 @@ This was contributed by Aard Vark in January 2003
 </para>
 <para>
 The MacOS X binary distribution is a mountable disk
-image (.dmg file). Once you've downloaded the binary 
+image (.dmg file). Once you've downloaded the binary
 distribution file, just double click
 on it to automatically unpack the archive and mount
-the volume on the desktop.  An icon will appear 
+the volume on the desktop.  An icon will appear
 exactly as if you'd inserted a CD-ROM
 or removable storage device, and a finder window
-containing the volume should automatically open.  
+containing the volume should automatically open.
 It is likely to have an odd name
 such as _dmg_top, but don't worry about that.
 </para>
 <para>
 Copy the Bochs-2.0 (or whatever version) folder from
-the disk image onto your hard disk.  Either Home or 
-Applications would be sensible places to put it.  
+the disk image onto your hard disk.  Either Home or
+Applications would be sensible places to put it.
 Because the disk image is mounted read only, you
 can't run the included dlxlinux guest OS until
-you've copied it to the hard disk.  
+you've copied it to the hard disk.
 </para>
 <para>
 Once you've installed the binaries, it's probably a
 good idea to drag the _dmg_top volume to trash to
-unmount it, so you don't get confused and try to 
+unmount it, so you don't get confused and try to
 run bochs from there.  Then open
 the bochs folder from wherever you installed it.
 </para>
 <para>
 The MacOS X version of bochs requires a terminal
-window to run. If you just double click on the Bochs 
-icon, you'll get an error message telling you to 
+window to run. If you just double click on the Bochs
+icon, you'll get an error message telling you to
 double click on "bochs.scpt" to start
 Bochs in a new terminal window.  You'll need to
-configure Bochs before you will get very far with 
+configure Bochs before you will get very far with
 the bochs.scpt in the top folder,
 so to try out bochs open the dlxlinux folder and
 double click on the bochs.scpt icon inside.
 </para>
 <para>
 This will open a new terminal window which will
-contain the Bochs startup messages, and a 
+contain the Bochs startup messages, and a
 configuration menu.  The default option is
 [5], which starts the simulation, so press enter to
-do so.  You will then get a new window containing 
+do so.  You will then get a new window containing
 the VGA display of the simulated
 machine.  The new window will probably appear behind
 the current terminal window, so either click on the
-bochs icon in the dock or the simulation window to 
+bochs icon in the dock or the simulation window to
 bring it to the front.  If you're quick
 enough you'll then see the VGA BIOS screen, then
-Linux  uncompresses and boots, and you get a login 
+Linux  uncompresses and boots, and you get a login
 prompt.  Type "root" and ENTER to log in to DLX Linux.
 </para>
 <para>
 Once you've finished playing with DLX Linux, just
-type "reboot" in the Bochs window to shut down the 
-DLX Linux operating system, and 
+type "reboot" in the Bochs window to shut down the
+DLX Linux operating system, and
 when it starts to reboot again press the "Power"
-button in the "MacBochs Hardware Controls" window 
-(it's the circle containing a vertical bar at the 
+button in the "MacBochs Hardware Controls" window
+(it's the circle containing a vertical bar at the
 far right - have a look at the Linux screenshots,
 since the Mac version doesn't seem to have
 descriptions or tool-tips).
@@ -1650,14 +1650,14 @@ linkend="downloading">Downloading Bochs</link> for details.  The top level
 directory of the source code will be referred to as &bochsdir;.  (&bochsdir;
 contains the files <filename>bochs.h</filename> and
 <filename>main.cc</filename> and subdirectories <filename>cpu</filename> and
-<filename>bios</filename>.) 
+<filename>bios</filename>.)
 </para>
 
 <para>
 The standard compile process has three basic steps:
 <command>configure</command>, <command>make</command>, and <command>make
 install</command>.  Each step is described in a separate section below.  The
-standard compile process is used on all Unix machines, MacOS X, BeOS, and 
+standard compile process is used on all Unix machines, MacOS X, BeOS, and
 Cygwin (win32).  There are separate instructions for <link
 linkend="compiling-win32">compiling for Win32 with Microsoft VC++</link>.
 </para>
@@ -1669,12 +1669,12 @@ There is a script called <command>configure</command> which tests your
 machine, C/C++ compiler and libraries to discover what settings should work on
 your system.  If you run <command>configure</command> with no arguments after
 it, defaults will be used for all settings.  To change the settings, you can
-run <command>configure</command> with options that override the 
+run <command>configure</command> with options that override the
 defaults.  You can get a list of valid configure options by typing
 <command>configure --help</command>.  One useful configure option is
 --prefix=<replaceable>directory</replaceable>, which sets the directory in
 which Bochs will be installed.  All the possible configure options are
-documented in a <link linkend="config-opts">later section</link>.  
+documented in a <link linkend="config-opts">later section</link>.
 
 
 </para>
@@ -1704,7 +1704,7 @@ syntax:
 
 <para>
 Once the configure script knows what options are selected,
-it creates a Makefile in every source code directory, and creates 
+it creates a Makefile in every source code directory, and creates
 <filename>$BOCHS/config.h</filename> with all the option values written
 as preprocessor #defines.  Now the sources are ready to compile.
 </para>
@@ -1722,7 +1722,7 @@ binary packages.
 <tip>
 <para>
 If a shortcut script is "almost right" for you, just edit it and then run it!
-If you run a shortcut script, you don't need to run configure manually.  
+If you run a shortcut script, you don't need to run configure manually.
 </para>
 </tip>
 
@@ -1731,7 +1731,7 @@ Run a shortcut script using Bourne shell, like this:
   sh .conf.win32-vcpp
 </screen>
 
-These <filename>.conf.<replaceable>platform</replaceable></filename> have 
+These <filename>.conf.<replaceable>platform</replaceable></filename> have
 been tested in recent Bochs versions:
 <screen>
   .conf.linux
@@ -1757,15 +1757,15 @@ used by many software projects that reads the &Makefile; in each source
 directory and follows the instructions that it finds there.  A &Makefile; tells
 which files depend on which other files, what commands to use to compile and
 link the code, and more.  After you have finished the configure step, just type
-<command>make</command> to build the source code.  
-</para> 
+<command>make</command> to build the source code.
+</para>
 
 <para>
 The reason that make is so popular is that it is smart about when to compile
 and when not to compile.  If you run make once, it compiles every file.  But
 when you run it again, it checks to see if any source files have been modified;
 if not, there's nothing to do!  For example, the &Makefile; says that
-<filename>main.o</filename> depends on <filename>main.cc</filename>.  Knowing 
+<filename>main.o</filename> depends on <filename>main.cc</filename>.  Knowing
 this, it will only compile <filename>main.cc</filename> if it is newer than
 <filename>main.o</filename>.
 </para>
@@ -1773,7 +1773,7 @@ this, it will only compile <filename>main.cc</filename> if it is newer than
 <para>
 Of course, make can only do the right thing if the &Makefile; lists all the
 dependencies correctly, so human error can sometimes lead make astray.
-If make refuses to build something that you think it should, or you 
+If make refuses to build something that you think it should, or you
 are getting strange compile errors, try doing <command>make all-clean</command>
 and then <command>make</command> again.  All-clean means to clean up
 the compiled files in every subdirectory, while <command>make clean</command>
@@ -1998,7 +1998,7 @@ In Bochs 1.3 and before, the X11 GUI was always the default.
     <row>
       <entry>--with-nogui</entry>
       <entry>No native GUI; just use blank stubs.  This is if you don't
-          care about having video output, but are just running tests. 
+          care about having video output, but are just running tests.
       </entry>
     </row>
     <row>
@@ -2097,7 +2097,7 @@ turn it off.
       <entry>no</entry>
       <entry>Enable NE2000 network card support.  This requires a
       low-level component to be written for each OS.  The NE2000
-      option is only supported on FreeBSD, OpenBSD, Linux, and Windows 
+      option is only supported on FreeBSD, OpenBSD, Linux, and Windows
       95/98/NT/2K.  When enabled and configured, the NE2000 device model can
       talk to any computer on the network EXCEPT FOR the local host.
       Exception: Under most circumstances, Bochs can talk to the local host
@@ -2281,7 +2281,7 @@ turn it off.
       <entry>
       Dave Poirier has written an experimental interface to the debugger
       using I/O ports, so that software running in the guest OS can access
-      features of the debugger.  You only want this option if you are 
+      features of the debugger.  You only want this option if you are
       developing guest OS code for use in Bochs.  In other words, most people
       don't.  Also, it should only be used with --enable-debugger.  See the
       <ulink url="http://bochs.sourceforge.net/doc/docbook/development/iodebug.html">
@@ -2510,7 +2510,7 @@ The standard compile uses the configure script, but the Windows platform
 cannot run the configure script natively.
 The current solution to this problem is that the Bochs
 configure script must be run on a different platform that does support
-shell scripts, with options that cause it to configure for a Win32 
+shell scripts, with options that cause it to configure for a Win32
 platform instead of the native one.  Many people have access to a UNIX
 machine that could run the configure script, or you can use Cygwin to
 run the configure script
@@ -2532,7 +2532,7 @@ in the Bochs source directory:
   sh .conf.win32-vcpp
   make win32_snap
 </screen>
-These commands will run the configure step, produce VC++ makefiles and 
+These commands will run the configure step, produce VC++ makefiles and
 workspace files, and pack it all into a .zip file in the directory above the
 source directory <footnote>
 <para>
@@ -2551,7 +2551,7 @@ find the workspace file called <filename>bochs.dsw</filename> and load it in
 VC++.  Choose <command>Project:Set Active Project</command> and be sure that
 "bochs" is selected.  Then choose <command>Build:Build bochs.exe</command>.
 This will build all the required libraries (iodev, cpu, etc.) and the auxiliary
-programs <filename>bximage.exe</filename>, <filename>bxcommit.exe</filename> 
+programs <filename>bximage.exe</filename>, <filename>bxcommit.exe</filename>
 and <filename>niclist.exe</filename>.
 </para>
 
@@ -2561,7 +2561,7 @@ workspaces come directly out of a ZIP file in
 <filename>build/win32/workspace.zip</filename>, and they are not controlled by
 the configure script.  When you compile with certain configure options (e.g.
 --with-sdl) you need to link with additional libraries.  For now you must
-add them to the VC++ workspace by hand.  In version 2.0, we have improved 
+add them to the VC++ workspace by hand.  In version 2.0, we have improved
 the situation considerably by adding #if...#endif around every optional file
 and including nearly every Bochs source file in the workspace.  This solves the
 problem of having to manually add source files to the workspace when you turn
@@ -2581,7 +2581,7 @@ An alternative way to compile is to run <filename>nmake.exe</filename> in an
 MS-DOS window.  Instead of using the workspace files, nmake uses the Bochs
 makefiles that are generated by configure.  The workspace file was new in
 version 1.3; before that, nmake was the only way to compile Bochs in VC++.
-Starting with version 1.4, the workspace is used to build the release 
+Starting with version 1.4, the workspace is used to build the release
 binaries.
 </para>
 
@@ -2651,7 +2651,7 @@ Optionally, you can use the configure shortcut script for MacOS X,
 If this script is close to what you need, just edit the script and then
 run it.  To use the configure shortcut script and compile, the commands
 are
-<screen> 
+<screen>
   sh .conf.macosx
   make
 </screen>
@@ -2810,10 +2810,10 @@ Here's the procedure:
 <section><title>Building an RPM on Linux</title>
 <para>
 RPM stands for "RedHat Package Manager."  An RPM is a compressed file
-containing files to be installed on your system.  Bochs 
+containing files to be installed on your system.  Bochs
 has a special shell script called <filename>make-rpm</filename> that helps
 to build an RPM of Bochs.  Start with a clean source directory.  Edit
-.conf.linux first if you want to adjust the configure options.  
+.conf.linux first if you want to adjust the configure options.
 Then, type:
 
 <screen>
@@ -2821,7 +2821,7 @@ Then, type:
 </screen>
 
 When this command completes, you should have a source RPM and a binary RPM of
-Bochs in the current directory.  The <command>tee</command> part of the 
+Bochs in the current directory.  The <command>tee</command> part of the
 command (optional) saves a transcript of the build process into /tmp/build.txt,
 which is very useful if anything goes wrong.  Instructions for installing an
 RPM are <link linkend="linuxrpm">here</link>.
@@ -2848,7 +2848,7 @@ what if configure fails?
 
 what if make fails?
 - try make dist-clean, and run configure and make again
-- use configure options to disable options.  For example, if errors in 
+- use configure options to disable options.  For example, if errors in
 fpu/fpu.cc, you could try --disable-fpu.
 - search for the error on the Bochs website (bug reports, patches)
 - if familiar with C++, many minor problems can be corrected
@@ -2970,7 +2970,7 @@ The format is very strict, so be sure to put the right number of spaces and
 use lowercase letters.  As you can see, most lines have a keyword telling what
 is being configured, followed by a colon, followed by a few
 <varname>variable</varname>=<varname>value</varname> pairs, separated by
-commas.  For very simple options, sometimes just a single value is needed.  
+commas.  For very simple options, sometimes just a single value is needed.
 The source and binary distributions come with a sample
 <filename>bochsrc</filename>, so you can just copy the sample file and edit the
 settings you need to change.
@@ -2997,7 +2997,7 @@ Starting with version 2.0, two environment variables have a built-in
 default value which is set at compile time.  $BXSHARE points to the
 "share" directory which is typically /usr/local/share/bochs on UNIX
 machines.  See the $(sharedir) variable in the Makefile for the exact
-value.  $BXSHARE is used by disk images to locate the directory where 
+value.  $BXSHARE is used by disk images to locate the directory where
 the BIOS images and keymaps can be found.  If $BXSHARE is not defined, Bochs
 will supply the default value.  Also, $LTDL_LIBRARY_PATH points to a list of
 directories (separated by colons if more than one) to search in for Bochs
@@ -3058,13 +3058,13 @@ For more information on SMP see <xref linkend="SMP">.
 <para><command>quantum</command></para>
 <para>
 Maximum amount of instructions allowed to execute by processor before
-returning control to another cpu. This option exists only in Bochs 
+returning control to another cpu. This option exists only in Bochs
 binary compiled with SMP support.
 </para>
 <para><command>reset-on-triple-fault</command></para>
 <para>
 Reset the CPU when triple fault occur (highly recommended) rather than PANIC.
-Remember that if you are trying to continue after triple fault the simulation 
+Remember that if you are trying to continue after triple fault the simulation
 will be completely bogus !
 </para>
 <para><command>ips</command></para>
@@ -3163,7 +3163,7 @@ Examples:
 </screen>
 This tells Bochs what VGA ROM BIOS to load (at 0xC0000).
 </para>
-<para>A VGA BIOS from Elpin Systems, Inc. as well as a free LGPL'd VGA BIOS 
+<para>A VGA BIOS from Elpin Systems, Inc. as well as a free LGPL'd VGA BIOS
 are provided in the source and binary distributions.</para>
 <note><para>
   Please check with the <link linkend="bochsopt-vga">vga option</link> to decide
@@ -3215,8 +3215,8 @@ Following floppy disk types are supported: 2_88, 1_44, 1_2, 720k, 360k, 320k, 18
 work with images, not with raw floppy drives).
 </para>
 <para>
-You can set the initial status of the media to <constant>ejected</constant> 
-or <constant>inserted</constant>.  Usually you will want to use 
+You can set the initial status of the media to <constant>ejected</constant>
+or <constant>inserted</constant>.  Usually you will want to use
 <constant>inserted</constant>.  In fact Bryce can't think of any reason
 to ever write <constant>ejected</constant> in your <filename>bochsrc</filename>.
 </para>
@@ -3254,7 +3254,7 @@ ata2-slave:  type=cdrom, path=iso.sample, status=inserted
 <para>
 
 This defines the type and characteristics of all attached ata devices:
-<table>   
+<table>
 <title>ata devices configuration options</title>
 <tgroup cols="3">
 <thead>
@@ -3267,10 +3267,10 @@ This defines the type and characteristics of all attached ata devices:
 <tbody>
 <row> <entry> type </entry> <entry> type of attached device </entry> <entry> [disk | cdrom] </entry> </row>
 <row> <entry> path  </entry> <entry> path of the image </entry> </row>
-<row> 
-  <entry> mode  </entry> 
-  <entry> image type, only valid for disks </entry> 
-  <entry> [flat | concat | external | dll | sparse | vmware3 | vmware4 | undoable | growing | volatile ]</entry> 
+<row>
+  <entry> mode  </entry>
+  <entry> image type, only valid for disks </entry>
+  <entry> [flat | concat | external | dll | sparse | vmware3 | vmware4 | undoable | growing | volatile ]</entry>
 </row>
 <row> <entry> cylinders </entry> <entry> only valid for disks </entry> </row>
 <row> <entry> heads </entry> <entry> only valid for disks </entry> </row>
@@ -3309,7 +3309,7 @@ disk images and modes the cylinders, heads, and spt are mandatory.
 </para>
 
 <para>
-The disk translation scheme 
+The disk translation scheme
 (implemented in legacy int13 BIOS functions, and used by
 older operating systems like MS-DOS), can be defined as:
 <itemizedlist>
@@ -3442,9 +3442,9 @@ Examples:
 
 <section id="bochsopt-displaylibrary"><title>display_library</title>
 <para>
-The display library is the code that displays the Bochs VGA screen.  Bochs 
-has a selection of about 10 different display library implementations for 
-different platforms.  If you run configure with multiple --with-* options, 
+The display library is the code that displays the Bochs VGA screen.  Bochs
+has a selection of about 10 different display library implementations for
+different platforms.  If you run configure with multiple --with-* options,
 the display_library option lets you choose which one you want to run with.
 If you do not use a display_library line, Bochs will choose a default for
 you.
@@ -3597,7 +3597,7 @@ doesn't endanger the simulation.  An example of an error  might be  if the
 emulated  software produces an illegal disk command.  Panic messages mean that
 Bochs cannot simulate correctly and should probably shut down.
 A panic can be a configuration problem (like a misspelled bochsrc line) or an
-emulation problem (like an unsupported video mode).  
+emulation problem (like an unsupported video mode).
 </para>
 
 
@@ -3688,7 +3688,7 @@ win32 platforms).
 <para>
 Example:
 <screen>
-  sb16: midimode=1, midi=/dev/midi00, wavemode=1, wave=/dev/dsp, 
+  sb16: midimode=1, midi=/dev/midi00, wavemode=1, wave=/dev/dsp,
         loglevel=2, log=sb16.log, dmatimer=600000
 </screen>
 <note><para>
@@ -3707,7 +3707,7 @@ are in the usual "property=value" format.
    On a Windows host this parameter is ignored when using output to the sound
    device.
    </para></listitem>
-   
+
    <listitem><para>
    midimode:
    <screen>
@@ -3718,13 +3718,13 @@ are in the usual "property=value" format.
        delta times, just command and data bytes).
    </screen>
    </para></listitem>
-   
+
    <listitem><para>
    wave: This is the device/file where wave output is stored.
    On a Windows host this parameter is ignored when using output to the sound
    device.
    </para></listitem>
-   
+
    <listitem><para>
    wavemode:
    <screen>
@@ -3740,7 +3740,7 @@ are in the usual "property=value" format.
    </para></listitem>
 
    <listitem><para>
-   loglevel: 
+   loglevel:
    <screen>
    0 = No log.
    1 = Resource changes, midi program and bank changes.
@@ -3826,9 +3826,9 @@ TO BE COMPLETED (see Greg's explanation in <ulink url="http://sourceforge.net/tr
 </para>
 <para><command>time0</command></para>
 <para>
-Specifies the start (boot) time of the virtual machine. Use a time 
-value as returned by the time(2) system call. If no time0 value is 
-set or if time0 equal to 1 (special case) or if time0 equal 'local', 
+Specifies the start (boot) time of the virtual machine. Use a time
+value as returned by the time(2) system call. If no time0 value is
+set or if time0 equal to 1 (special case) or if time0 equal 'local',
 the simulation will be started at the current local host time.
 If time0 equal to 2 (special case) or if time0 equal 'utc',
 the simulation will be started at the current utc time.
@@ -4001,7 +4001,7 @@ address), and you cannot use ff:ff:ff:ff:ff:ff because that's the broadcast
 address.  For the ethertap module, you must use fe:fd:00:00:00:01.  There may
 be other restrictions too.  To be safe, just use the b0:c4... address.
 
-ethmod: The ethmod value defines which low level OS specific module to be 
+ethmod: The ethmod value defines which low level OS specific module to be
 used to access physical ethernet interface. You can also specify a network
 simulator or a module with no input/output ("null"). See the table below for
 currently supported values.
@@ -4009,7 +4009,7 @@ currently supported values.
 ethdev: The ethdev value is the name of the network interface on your host
 platform.  On UNIX machines, you can get the name by running ifconfig.  On
 Windows machines, you must run niclist to get the name of the ethdev.
-Niclist source code is in misc/niclist.c and it is included in Windows 
+Niclist source code is in misc/niclist.c and it is included in Windows
 binary releases.
 
 script: The script value is optional, and is the name of a script that
@@ -4129,7 +4129,7 @@ Examples:
 </screen>
 This enables a remap of a physical localized keyboard to a
 virtualized U.S. keyboard, as the PC architecture expects.
-If enabled, the keymap file must be specified. Keyboard mapping is 
+If enabled, the keymap file must be specified. Keyboard mapping is
 available for X windows, SDL (Linux port) and wxWidgets (GTK port).
 For SDL you have to use keymaps designed for SDL, the wxWidgets GUI
 uses the keymaps for X windows.
@@ -4430,16 +4430,16 @@ Sound Blaster 16 emulation in the
 <section id="keymap"><title>How to write your own keymap table</title>
 <para>
 Christophe Bothamy wrote the keymapping code for Bochs, and provided this
-documentation for how to create new keymaps.  Keymapping was first 
+documentation for how to create new keymaps.  Keymapping was first
 implemented for X windows only, so there are many references to X-specific
-values in this section. In Bochs 2.0 keymapping is also available for SDL 
+values in this section. In Bochs 2.0 keymapping is also available for SDL
 (Linux port) and wxWidgets (wxGTK port).
 </para>
 <screen>
   The standard US Keyboard looks like this:
 
           -------------------------------------------
-  Top row Esc F1 F2 F3 F4 F5 F6 F7 F8 F9 F10 F11 F12 
+  Top row Esc F1 F2 F3 F4 F5 F6 F7 F8 F9 F10 F11 F12
           -------------------------------------------
   2nd row ` 1 2 3 4 5 6 7 8 9 0 - = \ Back
           -------------------------------------------
@@ -4451,12 +4451,12 @@ values in this section. In Bochs 2.0 keymapping is also available for SDL
           -------------------------------------------
   6rd row lCtrl lAlt Space rAlt rCtrl
           -------------------------------------------
-</screen>  
+</screen>
 
 <para>
 Each key of the US keyboard maps to a Bochs constant named
 BX_KEY_<replaceable>symbol</replaceable>. You can find the current list of
-BX_KEY_<replaceable>symbol</replaceable> in 
+BX_KEY_<replaceable>symbol</replaceable> in
 <link linkend="bx-key-table">the BX_KEY table</link>, below. Please note that
 there is only one BX_KEY_<replaceable>symbol</replaceable> for each physical
 key.
@@ -4465,14 +4465,14 @@ key.
 <para>
 Now, for each key of the US keyboard, look at which symbols you can type on your
 real keyboard. Each symbol maps to a X-windows
-XK_<replaceable>symbol</replaceable> constant.  In 
+XK_<replaceable>symbol</replaceable> constant.  In
 <filename>X11/keysymdef.h</filename>, you will find the list of all possible
 XK_<replaceable>symbol</replaceable> on your system.  Alternatively, you can
 use a small utility called "xev" that prints out the symbol names of a pressed
 key. Note that the symbol name given by xev does not contain the XK_ prefix.
 Don't forget to add a line for every symbol you can type on each key.  For the
 key BX_KEY_A, you can type both lowercase 'a' and uppercase 'A', so you would
-need two different entries. 
+need two different entries.
 </para>
 
 <para>
@@ -4483,7 +4483,7 @@ file containing one line for each symbol.  The first column tells what key or
 combination of keys can be used to produce a given symbol.  The second column
 is the ASCII equivalent for that symbol, or a special keyword (none, space,
 return, tab, backslash, or apostrophe).  The third column is the X windows
-keysym for that symbol.  
+keysym for that symbol.
 </para>
 
 
@@ -4667,12 +4667,12 @@ SourceForge
   - How to make feature requests?
 </screen>
 </para>
-    
+
 <section id="commandline"><title>Command line arguments</title>
 <para>
 The following table shows the arguments that can be used on the command line.
 For other arguments, see section <link linkend="bochsrc">bochsrc</link>.
-<table>   
+<table>
 <title>command line arguments</title>
 <tgroup cols="2">
 <thead>
@@ -4907,7 +4907,7 @@ Bochs Runtime Options
 15. Continue simulation
 16. Quit now
 
-Please choose one:  [15] 
+Please choose one:  [15]
 </screen>
 </para>
 <para>
@@ -5049,7 +5049,7 @@ config file.
     <title>Mouse behavior, enabling and disabling</title>
     <para>
       Refer to <xref linkend="headerbar"> for information on how to enable or
-      disable the mouse inside of Bochs at run-time. 
+      disable the mouse inside of Bochs at run-time.
     </para>
     <para>
       &FIXME; Mouse behavior
@@ -5278,7 +5278,7 @@ track values.
 
 
 <para>
-Option 2: Run <command>bximage</command> to create a disk image file.  
+Option 2: Run <command>bximage</command> to create a disk image file.
 You will be greeted with the following prompt:
 
 <screen>
@@ -5288,7 +5288,7 @@ You will be greeted with the following prompt:
 ========================================================================
 
 Do you want to create a floppy disk image or a hard disk image?
-Please type hd or fd. [hd] 
+Please type hd or fd. [hd]
 </screen>
 </para>
 
@@ -5301,26 +5301,26 @@ hd to create:
 
 <screen>
 What kind of image should I create?
-Please type flat, sparse or growing. [flat] 
+Please type flat, sparse or growing. [flat]
 </screen>
 </para>
 
 
 <para>
 We want to create a simple flat image, so accept the default
-by pressing <keycap>Enter</keycap>. Then, bximage will ask 
+by pressing <keycap>Enter</keycap>. Then, bximage will ask
 for the size of the disk image you want to create, in Megabytes:
 
 <screen>
 Enter the hard disk size in megabytes, between 1 and 32255
-[10] 
+[10]
 </screen>
 </para>
 
 
 <para>
 Enter the size of the hard disk you want to create, and press
-<keycap>Enter</keycap>. 
+<keycap>Enter</keycap>.
 Bochs will give you some information about the image it is creating, and
 ask you for a filename to use for the file it is creating.  I told it to
 use the default of 10 megabytes, and was given the following information
@@ -5337,7 +5337,7 @@ I will create a hard disk image with
   total size=9.84 megabytes
 
 What should I name the image?
-[c.img] 
+[c.img]
 </screen>
 </para>
 
@@ -5480,7 +5480,7 @@ The partition size reported by fdisk is okay, but mformat reports only 504 MB
 Mtools is a set of programs that can read, write, and format DOS disk images.
 There are links to the Mtools main page and a Win32 port of Mtools on the
 <ulink url="http://bochs.sourceforge.net/links.html">Bochs Links page</ulink>,
-under Resources.  
+under Resources.
 </para>
 <para>
 The mtools web site has a detailed manual.  If anyone wants to write
@@ -5516,13 +5516,13 @@ This section was contributed by Luca Cassioli and Stanislav Shwartsman
 </para>
 <para>
 I eventually found what all of you were looking for for a long time: a
-freeware, graphical, win32 compatible HardDisk image editor! It can 
+freeware, graphical, win32 compatible HardDisk image editor! It can
 handle a large variety of formats, but the one you need is VMWARE
 2.0 PLAIN DISK: you can import/export to/from Bochs images COMPLETE
-DIRECTORIES! 
+DIRECTORIES!
 </para>
 <para>
-You can find it at 
+You can find it at
 <ulink url="http://hp.vector.co.jp/authors/VA013937/editdisk/index_e.html">
 http://hp.vector.co.jp/authors/VA013937/editdisk/index_e.html</ulink>
 </para>
@@ -5533,48 +5533,48 @@ http://hp.vector.co.jp/authors/VA013937/editdisk/index_e.html</ulink>
 Ben Lunt wrote a set of utilities for Dos/Win32 to manipulate flat disk images.
 </para>
 <para>
-You can find it at 
+You can find it at
 <ulink url="http://www.frontiernet.net/~fys/mtools.htm">
 http://www.frontiernet.net/~fys/mtools.htm</ulink>
 </para>
 <para>
 These utilities includes :
 <itemizedlist>
-<listitem><para> 
-        BOCHSRC.EXE "Bochs Resource"  
+<listitem><para>
+        BOCHSRC.EXE "Bochs Resource"
         A utility to create/modify a Bochs resource file.
 </para></listitem>
-<listitem><para> 
-        MKDOSFS.EXE  "Make DOS FS" 
+<listitem><para>
+        MKDOSFS.EXE  "Make DOS FS"
         A utility to create a FAT disk image of specified size.
 </para></listitem>
-<listitem><para> 
+<listitem><para>
         MCOPYF.EXE  "Copy From"
         A utility to copy an existing file from a FAT disk image to the current
-        directory.  
+        directory.
 </para></listitem>
-<listitem><para> 
+<listitem><para>
         MDEL.EXE  "Delete file"
         A utility to delete an existing file from a FAT disk image.
 </para></listitem>
-<listitem><para> 
+<listitem><para>
         MDIREX.EXE  "Directory Extended"
         A utility to view a FAT disk images directory and FAT contents.
 </para></listitem>
-<listitem><para> 
+<listitem><para>
         MGETIMG.EXE  "Get Disk Image"
         A utility to create a disk image from a floppy (multiple formats).
 </para></listitem>
-<listitem><para> 
+<listitem><para>
         MBOOTCD.EXE  "Create a CDROM Image with boot options"
         Create a CDROM image capable of booting with only a ROOT and a single file.
 </para></listitem>
-<listitem><para> 
+<listitem><para>
         MGETCD.EXE  "Get Disk Image of Physical CD"
         A utility to create a disk image from a CD.
 </para></listitem>
-<listitem><para> 
-        MCDINFO.EXE  "Get CD Info"  
+<listitem><para>
+        MCDINFO.EXE  "Get CD Info"
         A utility to the info from a CD.  Not much yet, but a little.
 </para></listitem>
 </itemizedlist>
@@ -5646,7 +5646,7 @@ the files is to mount the disk image using the loop device.
 <para>
 This section was contributed by Volker Ruppert.
 <screen>
-Today I have made some tests with the loop device, because I want to exchange 
+Today I have made some tests with the loop device, because I want to exchange
 files with the bochs disk images.  This is what I found out:
 
 1.  Using Floppy images is easy, because there is no partition table:
@@ -5736,7 +5736,7 @@ md7
 <para>
 Bochs can now simulate an SMP machine when you use "--enable-smp" in the
 configure command.  SMP support was added by Bryce Denney, who
-was very interested in watching a multiprocessor operating system work 
+was very interested in watching a multiprocessor operating system work
 at a low level.  It should also be helpful to operating system developers
 who are writing SMP drivers, or just for users who want to test drive
 an SMP machine to see what it looks like.
@@ -5771,7 +5771,7 @@ processors, their IDs, interrupt sources, etc. Starting with Bochs 2.2.5 these
 structures are dynamicly created by Bochs.
 </para></listitem>
 <listitem><para> ACPI support is required to boot SMP system in most of modern
-operating systems. For example WinXP 64 bit require ACPI support even for 
+operating systems. For example WinXP 64 bit require ACPI support even for
 single processor configuration. Still not supported by Bochs. (FIXME)
 </para></listitem>
 </itemizedlist>
@@ -5792,8 +5792,8 @@ Knoppix 4.0.2 and WinNT 4.0 SMP.
 </para></listitem>
 
 <listitem><para>
-several parts of the APIC model which weren't needed before are not 
-implemented yet and cause a panic.  If you boot linux 2.4.3 for 
+several parts of the APIC model which weren't needed before are not
+implemented yet and cause a panic.  If you boot linux 2.4.3 for
 example, it says "panic: cluster model addressing not implemented".
 </para></listitem>
 
@@ -5816,10 +5816,10 @@ commands to set up an IP address, a network route, and a name server.
 </para>
 
 <para>
-When you have an <varname>ne2k</varname> line in your bochsrc file, Bochs 
+When you have an <varname>ne2k</varname> line in your bochsrc file, Bochs
 will emulate a network card called an NE2000.  Below are some examples of valid
 <varname>ne2k</varname> lines for various operating systems.  Choose the
-one that's closest to what you need, add it to your bochsrc file, and 
+one that's closest to what you need, add it to your bochsrc file, and
 edit the values if necessary.
 <screen>
   # sample for Mac OS X
@@ -5909,7 +5909,7 @@ to use the <command>vi</command> editor in this limited amount of space...
 
 
 <para>
-To configure a name 
+To configure a name
 server, set up <filename>/etc/resolv.conf</filename> with the IP address of
 your name server as shown.
 <screen>
@@ -5920,7 +5920,7 @@ your name server as shown.
 
 <section id="config-tuntap"><title>Configuring and using a tuntap network interface</title>
 <para>
-If you use linux (optionally FreeBSD and Solaris, not tested), 
+If you use linux (optionally FreeBSD and Solaris, not tested),
 you may want to access the network through a tuntap interface. The main
 advantage of this interface, is that the guest has access to the host. The guest can even
 have access to the whole network if the host routes or masquerades the guest requests.
@@ -5943,14 +5943,14 @@ through a tuntap interface and private IP network. We're going to see howto :
 From the <ulink url="http://www.kernel.org/pub/linux/kernel/people/marcelo/linux-2.4/Documentation/networking/tuntap.txt">
 tuntap.txt</ulink> file in the Linux kernel tree :
 <screen>
-  TUN/TAP provides packet reception and transmission for user space programs. 
-  It can be viewed as a simple Point-to-Point or Ethernet device, which 
-  instead of receiving packets from a physical media, receives them from 
-  user space program and instead of sending packets via physical media 
-  writes them to the user space program. 
+  TUN/TAP provides packet reception and transmission for user space programs.
+  It can be viewed as a simple Point-to-Point or Ethernet device, which
+  instead of receiving packets from a physical media, receives them from
+  user space program and instead of sending packets via physical media
+  writes them to the user space program.
 
   When a program opens /dev/net/tun, driver creates and registers corresponding
-  net device tunX or tapX. After a program closed above devices, driver will 
+  net device tunX or tapX. After a program closed above devices, driver will
   automatically delete tunXX or tapXX device and all routes corresponding to it.
 </screen>
 </para>
@@ -5958,22 +5958,22 @@ tuntap.txt</ulink> file in the Linux kernel tree :
 
 <section>
         <title>Set up the linux Kernel
-        <footnote><para>much of the information of the following section is taken from 
+        <footnote><para>much of the information of the following section is taken from
         <ulink url="http://maconlinux.org/lists/mol-general/August01/0056.html">
         this email from Samuel Rydh of the Mac-On-Linux list</ulink></para></footnote></title>
 <para>
 First make sure the tuntap module is included in the kernel :
 <itemizedlist>
-<listitem> 
-        <para>if you use a recent distribution, chances are that the needed modules are already build</para> 
+<listitem>
+        <para>if you use a recent distribution, chances are that the needed modules are already build</para>
         <para>Make sure that "Kernel module loader" - module auto-loading support is enabled in your kernel.</para>
         <para>Add following line to the /etc/modules.conf: <screen> alias char-major-10-200 tun </screen> </para>
         <para>Run: <screen> depmod -a</screen> The driver will be automatically loaded when application access /dev/net/tun.</para>
 </listitem>
-<listitem> 
+<listitem>
         <para>Otherwise, recompile the kernel, including the configuration option
         <screen> CONFIG_TUN (Network device support -> Universal TUN/TAP device driver support) </screen>
-        </para> 
+        </para>
 </listitem>
 </itemizedlist>
 <note>
@@ -5998,28 +5998,28 @@ Some of the other options in this group is probably also needed,
 </note>
 </para>
 </section> <!-- Set up the linux Kernel -->
- 
+
 <section>
         <title>Configure Bochs to use the tuntap interface</title>
-        <para>Make sure Bochs has ne2000 support. If you have to recompile Bochs, 
-                <command>--enable-ne2000</command> when running <command>./configure</command> 
+        <para>Make sure Bochs has ne2000 support. If you have to recompile Bochs,
+                <command>--enable-ne2000</command> when running <command>./configure</command>
                 (see <xref linkend="compiling">)
         </para>
         <para>edit your <replaceable>.bochsrc</replaceable> configuration file and add something like :
-                <screen>  ne2k: ioaddr=0x300, irq=9, mac=fe:fd:00:00:00:01, 
+                <screen>  ne2k: ioaddr=0x300, irq=9, mac=fe:fd:00:00:00:01,
                           ethmod=tuntap, ethdev=/dev/net/tun0, script=<replaceable>/path/to/tunconfig</replaceable>
                 </screen>
         </para>
         <para>
                 Since the tuntap interface cannot be configured until a process opens it,
-                Bochs may run a script file for you. In this case 
+                Bochs may run a script file for you. In this case
                 <replaceable>/path/to/tunconfig</replaceable> should be changed to match
                 the actual place where you'll create this script.
         </para>
 </section> <!-- Configure Bochs to use the tuntap interface -->
 
-<section> 
-<title>Set up the private network between the host and the guest </title> 
+<section>
+<title>Set up the private network between the host and the guest </title>
         <para>
         We'll set up a private network between the host and the guest with the following parameters:
         <screen>
@@ -6066,7 +6066,7 @@ Some of the other options in this group is probably also needed,
         </para>
 </section> <!-- Set up the private network between the host and the guest -->
 
-<section> 
+<section>
 <title>Set up the host to masquerade the guest network accesses</title>
         <para>
         We are going to set up standard masquerading configuration. Edit
@@ -6467,7 +6467,7 @@ Related links
 <listitem> <para> Instrumentation </para> </listitem>
 </itemizedlist>
 </para>
-</section> 
+</section>
 </section><!-- end: Using Bochs internal debugger -->
 
 <section id="debugging-with-gdb">
@@ -6533,14 +6533,14 @@ Hitting ^C works. Example:
 <section id="serial-port"><title>Using the serial port</title>
 <para>
         This section describes what is possible to do with Bochs serial port emulation.
-        These examples use dlxlinux disk image 
-        (downloaded from 
+        These examples use dlxlinux disk image
+        (downloaded from
         <ulink url="http://bochs.sourceforge.net/guestos/dlxlinux4.tar.gz">
         http://bochs.sourceforge.net/guestos/dlxlinux3.tar.gz</ulink>
         ) running as guest, on a debian x86 linux 2.4.19 host.
 </para>
 <para>
-        For the examples to work in dlxlinux, after you login as root, you will need to 
+        For the examples to work in dlxlinux, after you login as root, you will need to
         kill the running gpm, as it grabs the serial port.
 <screen>
 Welcome to DLX V1.0 (C) 1995-96 Erich Boehm
@@ -6581,14 +6581,14 @@ host$
         </section>
         <section><title>Interactivity : connecting to a virtual terminal</title>
         <para>
-        The second example shows how to connect to the guest OS, using a 
+        The second example shows how to connect to the guest OS, using a
         virtual terminal on the host OS.
         </para>
         <para>
-        First, you need to find an unused virtual terminal. Typically, 
-        X uses vt7; vt8 and up are unused. On my system, I can 
+        First, you need to find an unused virtual terminal. Typically,
+        X uses vt7; vt8 and up are unused. On my system, I can
         switch from X to vt9 by pressing ctrl-alt-f9 : this virtual
-        terminal is not used, the screen is all black. Pressing alt-f7 
+        terminal is not used, the screen is all black. Pressing alt-f7
         switches back to X.
         </para>
         <para>
@@ -6600,7 +6600,7 @@ com1: enabled=1, mode=term, dev=/dev/tty9
         The number must be set according to the terminal you want to use (here 9).
         </para>
         <para>
-        Now, launch dlxlinux. After you log in as root and kill gpm, 
+        Now, launch dlxlinux. After you log in as root and kill gpm,
         enter the following command:
         <screen>
 dlx:~# /sbin/agetty 38400 cua0
@@ -6611,7 +6611,7 @@ Welcome to DLX V1.0 (C) 1995-96 Erich Boehm
                     (C) 1995    Hannes Boehm
 
 
-dlx login: 
+dlx login:
 </screen>
         Note that dlxlinux is configured so you can not login as root from a
         serial port. If you want to login, you have to create a new user first.
@@ -6619,7 +6619,7 @@ dlx login:
         <para>
         Also, if you plan to use this feature, the best would be to deactivate
         gpm in /etc/rc.d/rc.local, and add a agetty line in /etc/inittab,
-        for example: 
+        for example:
 <screen>
 T0:1234:respawn:/bin/agetty 38400 cua0
 </screen>
@@ -6663,16 +6663,16 @@ Welcome to DLX V1.0 (C) 1995-96 Erich Boehm
                     (C) 1995    Hannes Boehm
 
 
-dlx login: 
+dlx login:
         </screen>
         The same comments as for example 2 apply here.
         </para>
         </section>
 </section>
 
-<section id="bios-tips"> 
+<section id="bios-tips">
 <title>BIOS Tips</title>
-        <section> 
+        <section>
         <title>Booting from CD-ROMs</title>
         <para>
 A bootable CD-ROM has a special layout that is detected by the
@@ -6763,7 +6763,7 @@ been defined in Bochs conf file.
 0x03 can not read cd - BRVD
 </screen>
 
-For this error, the cdrom support has not been compiled in Bochs, 
+For this error, the cdrom support has not been compiled in Bochs,
 or Bochs could not open the file or device. This is what you get if
 Bochs is not able to read the cd.
 </para>
@@ -6803,21 +6803,21 @@ definitely not happen.
 </para>
         </section>
 
-        <section id="bios-disk-translation"> 
+        <section id="bios-disk-translation">
         <title>Disk translation</title>
         <para>
-Since the beginning of the PC era, disks have grown in size by a factor of 10000. Due to 
+Since the beginning of the PC era, disks have grown in size by a factor of 10000. Due to
 differences between the ATA specification and BIOSes implementations, when disks reached
 critical sizes, it
 became necessary to translate the CHS geometry (cylinders, heads, sectors per track)
-between the BIOS (int 13h) and the ATA interface. Please refer to the 
-<ulink url="http://burks.brighton.ac.uk/burks/pcinfo/hardware/atafaq/atafq.htm">ATA-FAQ</ulink> 
-and 
-<ulink url="http://www.ata-atapi.com/hiwchs.htm">Hale Landis' document</ulink> 
+between the BIOS (int 13h) and the ATA interface. Please refer to the
+<ulink url="http://burks.brighton.ac.uk/burks/pcinfo/hardware/atafaq/atafq.htm">ATA-FAQ</ulink>
+and
+<ulink url="http://www.ata-atapi.com/hiwchs.htm">Hale Landis' document</ulink>
 for a complete discussion of the problem.
         </para>
         <para>
-Unfortunately, there has never been any standard on the translation algorithms. 
+Unfortunately, there has never been any standard on the translation algorithms.
         </para>
         <para>
 Bochs implements 4 well-known algorithms, selectable in the configuration file
@@ -6843,8 +6843,8 @@ in the "<command>ataX-xxxx: ..., translation='algorithm'</command>" section.
     PCHS:1024/16/63
     </entry>
     <entry>
-    no translation is done. The CHS received at the int13h interface 
-    is sent as is to the ATA interface. 
+    no translation is done. The CHS received at the int13h interface
+    is sent as is to the ATA interface.
     </entry>
   </row>
   <row>
@@ -6856,9 +6856,9 @@ in the "<command>ataX-xxxx: ..., translation='algorithm'</command>" section.
     </entry>
     <entry>
     a standard bitshift algorithm (named Extended-CHS)
-    is used to translate the CHS between 
-    the int13h interface 
-    and the ATA interface. The translation is acheived by 
+    is used to translate the CHS between
+    the int13h interface
+    and the ATA interface. The translation is acheived by
     multiplying/dividing the cylinder/head count by a power of 2
     (2, 4 or 8).
     (a factor of 16 could not be used because the
@@ -6882,15 +6882,15 @@ in the "<command>ataX-xxxx: ..., translation='algorithm'</command>" section.
     </entry>
     <entry>
     a revised bitshift algorithm (called Revised Extended-CHS)
-    is used to translate the CHS between 
-    the int13h interface 
+    is used to translate the CHS between
+    the int13h interface
     and the ATA interface. First the number of physical heads is forced to
     15, and the number of cylinders is adjusted accordingly.
-    Then, as in the simple extended CHS algorithm, the translation 
-    is acheived by 
+    Then, as in the simple extended CHS algorithm, the translation
+    is acheived by
     multiplying/dividing the cylinder/head count by a power of 2
     (2, 4, 8 or 16).
-    The head count being forced to 15, it can safely be multiplied by 16 
+    The head count being forced to 15, it can safely be multiplied by 16
     without crashing dos.
     Note that the number of sectors per track is not changed, so
     a lower spt value will lead to a lower maximum disk size.
@@ -6905,9 +6905,9 @@ in the "<command>ataX-xxxx: ..., translation='algorithm'</command>" section.
     </entry>
     <entry>
     a LBA-assisted algorithm
-    is used to translate the CHS between 
-    the int13h interface 
-    and the ATA interface. The translation is acheived by 
+    is used to translate the CHS between
+    the int13h interface
+    and the ATA interface. The translation is acheived by
     first computing the physical size of the disk (LBA=C*H*S).
     Then the sectors per track is forced to 63, and the head count
     to 255. Then the cylinder count is computed (C=LBA/(63*255))
@@ -6931,7 +6931,7 @@ in the "<command>ataX-xxxx: ..., translation='algorithm'</command>" section.
         <para>
 Setting a specific CHS translation should be done if you use a disk dump
 of an actual disk, or use a real disk as a block device. You need to
-know which geometry was used to format the disk, and which translation 
+know which geometry was used to format the disk, and which translation
 was used. You must not set the translation to 'auto'.
         </para>
 
@@ -6955,7 +6955,7 @@ Upward compatibility will be maintained.
 <note>
 <para>
 This translation applies only to int13h BIOS disk accesses. Older OSes (e.g. MS-DOS)
-tend to use them a lot.  On modern OSes, disk accesses through BIOS int13h are 
+tend to use them a lot.  On modern OSes, disk accesses through BIOS int13h are
 limited to boot loaders.
 The usual rules and tricks of the installed OS still apply (ie 1024 cylinders boot limit).
 </para>
@@ -7026,7 +7026,7 @@ Current limitations:
 <para>
 Interesting Facts:
 <itemizedlist>
-	<listitem> <para> You need a display driver capable of using the VESA BIOS for this to work 
+	<listitem> <para> You need a display driver capable of using the VESA BIOS for this to work
 	                  (a recent XFree86 will do, Windows 9x/NT/2K/XP probably will not work 'out of the box'. </para> </listitem>
 	<listitem> <para> Currently the VBE2 extension should be supported ok </para> </listitem>
 </itemizedlist>
@@ -7039,7 +7039,7 @@ Instructions for Win95/98:
 ==========================
 I can only confirm that SciTech finally made a VBE driver
 for Windows. It works out of the box, at least with win95
-as guest OS, provided you use Bochs 2.1 with the LGPL 
+as guest OS, provided you use Bochs 2.1 with the LGPL
 vgabios.
 
 Here is how I did it :
@@ -7098,10 +7098,10 @@ Bochs VBE Display Drivers for Windows NT/2000
 <section id="harddisk-modes"><title>Disk Image Modes</title>
 <para>
 Bochs can handle independent disk image format for each
-disk present on the ata interfaces. 
+disk present on the ata interfaces.
 
-The disk image type is selected in the configuration file 
-by the "mode" option of the ataX-xxx directives. 
+The disk image type is selected in the configuration file
+by the "mode" option of the ataX-xxx directives.
 Example:
 
 <screen>
@@ -7111,7 +7111,7 @@ ata0-master: type=disk, mode=flat, path=10M.sample, cylinders=306, heads=4, spt=
 
 <note>
 <para>
-If unspecified, the default "mode" is flat. 
+If unspecified, the default "mode" is flat.
 </para>
 </note>
 
@@ -7126,52 +7126,52 @@ If unspecified, the default "mode" is flat.
  </row>
 </thead>
 <tbody>
- <row> <entry> flat </entry> <entry> one file, flat layout </entry> 
-       <entry> 
+ <row> <entry> flat </entry> <entry> one file, flat layout </entry>
+       <entry>
        accessible with mtools or winimage-like tools
        </entry>
  </row>
- <row> <entry> concat </entry> <entry> multiple files, concatenated </entry> 
-       <entry> 
+ <row> <entry> concat </entry> <entry> multiple files, concatenated </entry>
+       <entry>
        mappable to contained partitions
        </entry>
  </row>
- <row> <entry> external </entry> <entry> accessed through an external C++ class </entry> 
-       <entry> 
+ <row> <entry> external </entry> <entry> accessed through an external C++ class </entry>
+       <entry>
        developer specific, needs a C++ class at compile time
        </entry>
  </row>
- <row> <entry> dll </entry> <entry> accessed through a DLL </entry> 
-       <entry> 
+ <row> <entry> dll </entry> <entry> accessed through a DLL </entry>
+       <entry>
        developer specific, windows only
        </entry>
  </row>
- <row> <entry> sparse </entry> <entry> up to 10 layers stackable files </entry> 
-       <entry> 
+ <row> <entry> sparse </entry> <entry> up to 10 layers stackable files </entry>
+       <entry>
        commitable, rollbackable, growing
        </entry>
  </row>
- <row> <entry> vmware3 </entry> <entry> vmware3 disk support </entry> 
-       <entry> 
+ <row> <entry> vmware3 </entry> <entry> vmware3 disk support </entry>
+       <entry>
        vmware version 3 compatibility
        </entry>
  </row>
- <row> <entry> vmware4 </entry> <entry> vmware4 disk support </entry> 
-       <entry> 
+ <row> <entry> vmware4 </entry> <entry> vmware4 disk support </entry>
+       <entry>
        vmware version 4 compatibility
        </entry>
  </row>
- <row> <entry> undoable </entry> <entry> flat file with a commitable redolog </entry> 
-       <entry> 
+ <row> <entry> undoable </entry> <entry> flat file with a commitable redolog </entry>
+       <entry>
        commitable, rollbackable
        </entry>
  </row>
- <row> <entry> growing </entry> <entry>  one growing file </entry> 
+ <row> <entry> growing </entry> <entry>  one growing file </entry>
        <entry> growing
        </entry>
  </row>
- <row> <entry> volatile </entry> <entry> flat file with a volatile redolog </entry> 
-       <entry> 
+ <row> <entry> volatile </entry> <entry> flat file with a volatile redolog </entry>
+       <entry>
        always rollbacked
        </entry>
  </row>
@@ -7195,7 +7195,7 @@ was set at compile time.
 <section><title>description</title>
 <para>
 In flat mode, all sectors of the harddisk are stored in one flat file,
-in lba order. 
+in lba order.
 </para>
 </section>
 <section><title>image creation</title>
@@ -7242,7 +7242,7 @@ On some host OSes, Bochs flat disk images are limited to 2GiB.
 <section><title>description</title>
 <para>
 In concat mode, all sectors of the harddisk are stored in several flat files,
-in lba order. 
+in lba order.
 </para>
 </section>
 <section><title>image creation</title>
@@ -7338,7 +7338,7 @@ No external tool support Sparse disk images yet.
   <section>
   <title>Space Saving</title>
   <para>
-    Create a sparse disk image using bximage.  Set size to eg 10GB.  
+    Create a sparse disk image using bximage.  Set size to eg 10GB.
     Only allocated space will be stored,
     so your drive image should be only about as large as the files stored on it.
   </para>
@@ -7356,9 +7356,9 @@ No external tool support Sparse disk images yet.
       </listitem>
       <listitem>
         <para>
-          Create a sparse disk image (of the same size) 
+          Create a sparse disk image (of the same size)
           and name it "c.img.1".  Point .bochsrc at "c.img.1"
-          "c.img.0" is visible, but all writes go to "c.img.1".  
+          "c.img.0" is visible, but all writes go to "c.img.1".
           After using bochs, you can simply delete
           "c.img.1" to undo changes and go back to a clean OS install.
         </para>
@@ -7379,11 +7379,11 @@ No external tool support Sparse disk images yet.
       </listitem>
       <listitem>
         <para>
-          Create a sparse disk image (of the same size) and name it "c.img.1".  
+          Create a sparse disk image (of the same size) and name it "c.img.1".
           Point .bochsrc at "c.img.1"
-          "c.img.0" is visible, but all writes go to "c.img.1".  
+          "c.img.0" is visible, but all writes go to "c.img.1".
           After using bochs, if you want to keep the
-          changes, use the (currently non-existant) merge utility 
+          changes, use the (currently non-existant) merge utility
           to make a single unified drive image.
         </para>
       </listitem>
@@ -7407,24 +7407,24 @@ No external tool support Sparse disk images yet.
       </listitem>
       <listitem>
         <para>
-          Create a sparse disk image (of the same size) and name it "www.img.1".  
+          Create a sparse disk image (of the same size) and name it "www.img.1".
           Make "wwww.img.0" a symlink to
           "base.img".  Point .bochsrc at "www.img.1". Using bochs, install a webserver.
         </para>
       </listitem>
       <listitem>
         <para>
-          Create a symlink to "base.img" called "db.img.0".  
+          Create a symlink to "base.img" called "db.img.0".
           Create a sparse disk image (of the same size)
-          and name it "db.img.1".  Point .bochsrc at "db.img.1".  
+          and name it "db.img.1".  Point .bochsrc at "db.img.1".
           Using bochs, install a database server.
         </para>
       </listitem>
     </itemizedlist>
 
     <para>
-     Now both a database server and webserver can be 
-     run in separate virtual machines, but they share the common OS image, 
+     Now both a database server and webserver can be
+     run in separate virtual machines, but they share the common OS image,
      saving drive space.
     </para>
   </section>
@@ -7451,7 +7451,7 @@ No external tool support Sparse disk images yet.
 <section><title>description</title>
 <para>
 Sharvil Nanavati has added vmware3/4 disk image support into Bochs
-for Net Integration Technologies, Inc. 
+for Net Integration Technologies, Inc.
 You should be able to use disk images created by vmware version 3 and 4.
 </para>
 </section>
@@ -7488,42 +7488,42 @@ Only vmware versions 3 and 4 disk image files are supported.
 </para>
 <section><title>description</title>
 <para>
-    Undoable disks are commitable/rollbackable disk images. 
+    Undoable disks are commitable/rollbackable disk images.
     An undoable disk is based on a read-only flat image
-    (see <xref linkend="harddisk-mode-flat">), associated with 
+    (see <xref linkend="harddisk-mode-flat">), associated with
     a growing redolog, that contains all changes (writes)
-    made to the flat image content. 
+    made to the flat image content.
 </para>
 <para>
     This redolog is dynamically created at runtime, if it does not
     previously exists.
 </para>
 <para>
-    All writes go to the redolog, reads are done from the 
+    All writes go to the redolog, reads are done from the
     redolog if previously written, or from the flat file
     otherwise.
 </para>
 <para>
     If unspecified with the "journal" option of the ataX-xxx directive,
-    the redolog file name is created by adding a ".redolog" 
+    the redolog file name is created by adding a ".redolog"
     suffix to the flat image name.
 </para>
 <para>
     File size of the redolog can grow up to the total disk
     size plus a small overhead due to internal data managment
-    (about 3% for a 32MiB disk, 
+    (about 3% for a 32MiB disk,
     less than 0.5% for a 2GiB disk).
 </para>
 <para>
-    After a run, the redolog will still be present, so the changes 
+    After a run, the redolog will still be present, so the changes
     are still visible the next time you run Bochs with this disk image.
 </para>
 <para>
-    After a run, the redolog can be committed (merged) 
+    After a run, the redolog can be committed (merged)
     to the flat image with the bxcommit utility.
 </para>
 <para>
-    After a run, the redolog can be rollbacked (discarded) 
+    After a run, the redolog can be rollbacked (discarded)
     by simply deleting the redolog file.
 </para>
 <note>
@@ -7598,18 +7598,18 @@ The flat disk images must be created with the bximage utility
 </para>
 <section><title>description</title>
     <para>
-    Growing disk images start as a small files, and 
-    grow whenever new data is written to them. 
+    Growing disk images start as a small files, and
+    grow whenever new data is written to them.
     </para>
     <para>
-    Once a sector is 
+    Once a sector is
     written in the growing file, subsequent writes to the same
     sector will happen in place.
     </para>
     <para>
     File size of Growing disk images can go up to the total disk
     size plus a small overhead due to internal data managment.
-    (about 3% for a 32MiB disk, 
+    (about 3% for a 32MiB disk,
     less than 0.5% for a 2GiB disk).
     </para>
 </section>
@@ -7623,7 +7623,7 @@ Be sure to enter "growing" when selecting the image type.
 <section><title>path</title>
 <para>
     The "path" option of the ataX-xxx directive in the configuration file
-    must be the growing image name. 
+    must be the growing image name.
 </para>
 </section>
 <section><title>external tools</title>
@@ -7633,7 +7633,7 @@ No external tool support Growing disk images yet.
 </section>
 <section><title>typical use</title>
 <para>
-Growing disk images can be used whenever you want to maximize disk space. 
+Growing disk images can be used whenever you want to maximize disk space.
 However, please note that Bochs will not check if enough disk space is available
 before writing new data. If no disk space is available, a panic will occur.
 </para>
@@ -7650,9 +7650,9 @@ before writing new data. If no disk space is available, a panic will occur.
 </para>
 <section><title>description</title>
 <para>
-    Volatile disks are always-rollbacked disk images. 
+    Volatile disks are always-rollbacked disk images.
     An volatile disk is based on a read-only flat image
-    (see <xref linkend="harddisk-mode-flat">), associated with 
+    (see <xref linkend="harddisk-mode-flat">), associated with
     a growing temporary redolog, that contains all changes (writes)
     made to the flat image content. All data written to
     the  disk image are lost at the end of the Bochs
@@ -7664,23 +7664,23 @@ before writing new data. If no disk space is available, a panic will occur.
     or just after it has been created (Unix).
 </para>
 <para>
-    All writes go to the redolog, reads are done from the 
+    All writes go to the redolog, reads are done from the
     redolog if previously written, or from the flat file
     otherwise.
 </para>
 <para>
     If unspecified with the "journal" option of the ataX-xxx directive,
-    the redolog file name is created by adding a ".redolog" 
+    the redolog file name is created by adding a ".redolog"
     suffix to the flat image name.
 </para>
 <para>
     File size of the redolog can grow up to the total disk
     size plus a small overhead due to internal data managment
-    (about 3% for a 32MiB disk, 
+    (about 3% for a 32MiB disk,
     less than 0.5% for a 2GiB disk).
 </para>
 <para>
-    After a run, the redolog is not any more present, so the changes 
+    After a run, the redolog is not any more present, so the changes
     are discarded.
 </para>
 <note>
@@ -7867,15 +7867,15 @@ For an example of the usage, refer to <xref linkend="diskimagehowto">.
 
 <section id="using-bxcommit"><title>Using the bxcommit tool</title>
 <para>
-This tool can commit redologs into flat images. 
+This tool can commit redologs into flat images.
 </para>
 <para>
-For now, only "undoable" redologs to flat image commits are supported. 
+For now, only "undoable" redologs to flat image commits are supported.
 <!--
-"z-undoable" redologs can also be used, but you have to manually 
+"z-undoable" redologs can also be used, but you have to manually
 decompress the gzipped flat file before using bxcommit.
 -->
-Sparse disk image commits may be added in the future. 
+Sparse disk image commits may be added in the future.
 </para>
 <para>
 This tool is completely interactive, and does not need any command line parameter.
@@ -7885,7 +7885,7 @@ to redolog file after it commits it.
 <para>
 Session example :
 <screen>
-$ ./bxcommit 
+$ ./bxcommit
 ========================================================================
                                bxcommit
               Undoable Disk Image Commit Tool for Bochs
@@ -7898,7 +7898,7 @@ What is the redolog name?
 [myfile.img.redolog] toapply.redolog
 
 Shall I remove the redolog afterwards?
-[yes] 
+[yes]
 </screen>
 </para>
 </section>
@@ -8169,7 +8169,7 @@ This has been contributed by Volker Ruppert.
 <section>
 <title>Installing GNU</title>
 <para>
-This has been contributed by Bruno Bonfils (asyd at debian-fr dot org) 
+This has been contributed by Bruno Bonfils (asyd at debian-fr dot org)
 </para>
 
 <section>
@@ -8183,11 +8183,11 @@ useful for some people who wants to try the GNU/Hurd.
 </para>
 </section>
 
-<section> 
+<section>
 <title>The testing box</title>
 <para>
 <screen>
-Debian (Sid) GNU/Linux 2.4.19 
+Debian (Sid) GNU/Linux 2.4.19
 
 ii  bochs          1.4.1.no.elpin IA-32 (x86) PC emulator
 ii  bochs-x        1.4.1.no.elpin Bochs binary with X interface.
@@ -8220,7 +8220,7 @@ can use any size without some problem.
 Use createdisk command like this :
 
 <screen>
-# createdisk gnu.img 112 
+# createdisk gnu.img 112
 
 Disk Geometry:
 C: 227
@@ -8255,13 +8255,13 @@ detach the /dev/loop1 using :
 <listitem>
 <para> Attach the partition</para>
 
-<para> 
+<para>
 First of all, you need to create a filesystem on the disk. Use the
 command losetup and -o &lt;offset&gt; option to attach /dev/loop1 on the first
 partition of an image disk. Offset is computed like this :
-</para> 
+</para>
 
-<para> 
+<para>
 offset = sector * block_size (512)
 
 <screen># losetup -o 32256 /dev/loop1 gnu.img</screen>
@@ -8307,7 +8307,7 @@ Download a GNU archive as indicated in the Hurd Installation Guide, and decompre
 <title>Bochs Configuration</title>
 
 <para>
-Copy default configuration (<replaceable>/usr/share/doc/bochs/examples/bochsrc.gz</replaceable> on debian) 
+Copy default configuration (<replaceable>/usr/share/doc/bochs/examples/bochsrc.gz</replaceable> on debian)
 on your home directory and edit it with your favorite editor (GNU Emacs, i hope ;).
 </para>
 
@@ -8355,9 +8355,9 @@ then launch the base servers.
 </para>
 
 <para>
-The default GNU Mach which is provided by the default GNU archive 
-contains some modules / drivers which are not needed in bochs 
-environment. If you use it, you'll probably have some kernel panic 
+The default GNU Mach which is provided by the default GNU archive
+contains some modules / drivers which are not needed in bochs
+environment. If you use it, you'll probably have some kernel panic
 while booting. Don't be afraid and just say alwayscont.
 </para>
 
@@ -8377,7 +8377,7 @@ document.
 <title> Final Step</title>
 
 <para>
-Create a grub floppy disk or use my floppy image 
+Create a grub floppy disk or use my floppy image
 <footnote>
 <para>
 Grub Floppy image : (coming soon)
@@ -8420,7 +8420,7 @@ Now, you can read the official GNU/Hurd Installation Guide
 
 <para>
 You can try to test networking between the GNU/Linux (host OS) and the GNU/Hurd.
-First of all, please read 
+First of all, please read
 <footnote>
 <para>
 <ulink url="http://www.geocrawler.com/archives/3/11758/2002/3/350/8049674/">new ethertap interface for linux, by Bryce Denney</ulink>
@@ -8484,11 +8484,11 @@ or any later version published by the Free Software Foundation.
           </section> <!-- GNU -->
 
           <section id="guest-dos"><title>DOS</title>
-<para>You must read the message regarding software licenses in 
+<para>You must read the message regarding software licenses in
 <xref linkend="thirdparty"> before you install or use MS-DOS, OS/2, DR-DOS, or any other DOS as a guest operating system in Bochs.</para>
 <section><title>Accessing your CDROM</title>
 <para>
-To access your CDROM in DOS, you must download an IDE CDROM driver.  
+To access your CDROM in DOS, you must download an IDE CDROM driver.
 Bochs emulates a very generic CDROM drive, and several drivers are known to
 work.  Others don't.  This section describes how to set up your
 <filename>config.sys</filename> and <filename>autoexec.bat</filename> to enable
@@ -9223,7 +9223,7 @@ to
 <section id="guest-winnt4">
         <title>Windows NT 4.0</title>
 <para>
-You must read the message regarding software licenses in 
+You must read the message regarding software licenses in
 <xref linkend="thirdparty"> before you install Windows NT 4.0 as a guest operating system in Bochs.
 </para>
 <para>
@@ -9240,8 +9240,8 @@ first reboot.
 <listitem>
 <para>
 to log in you must press ctrl-alt-del, and it is likely that the window manager
-will trap this key combination. You can either use the trick described in 
-<xref linkend="enter-special-keys"> or define a user short-cut 
+will trap this key combination. You can either use the trick described in
+<xref linkend="enter-special-keys"> or define a user short-cut
 (callable through the user short-cut gui button)
 in you configuration file, for example:
 <programlisting>
@@ -9314,7 +9314,7 @@ Create a disk image with <command>bximage</command>.
 Update your <filename>.bochsrc</filename> configuration file for the diskimage.
 </para></listitem>
 <listitem><para>
-Use <command>mtools</command> to partition and format the image; the 
+Use <command>mtools</command> to partition and format the image; the
 copy all the windows files to the image.
 </para></listitem>
 <listitem><para>
@@ -9377,7 +9377,7 @@ In this example, the Windows partition is on
 means that the disk image you would need to create in this instance would need to be
 at least that size if you plan to put all the files from your Windows
 partition there.
-</para>  
+</para>
 </section>
 
 <section><title>Cleaning Up Your MS Windows Partition</title>
@@ -9435,7 +9435,7 @@ section, the filesystem
 mounted on <emphasis>/share/SERVER1/c</emphasis> is from a Windows 2000 server.
 </para>
 
-<para>If your Windows 98 partition is not mounted, and it lives on 
+<para>If your Windows 98 partition is not mounted, and it lives on
 /dev/hda1, type the following as root:
 </para>
 
@@ -9455,7 +9455,7 @@ You should now see the Windows 98 partition's directories, to include <emphasis>
 <para>
 You are going to prepare two disk images,
 the primary hard disk image, and the backup image.  The backup image will save you from
-disaster when you make a change that makes your first image unusable.  This 
+disaster when you make a change that makes your first image unusable.  This
 backup image is not required, but it is highly recommended.  The primary disk image will
 be called <emphasis>c.img</emphasis>
 The backup image will be called
@@ -9488,9 +9488,9 @@ It is important to keep your guest OS image independent of your office files so 
 <section><title>Setting Up the Disk Image</title>
 <para>
 Once you have decided on the size of your hard disk image, follow
-the instructions in 
+the instructions in
 <xref linkend="diskimagehowto"> using the mtools method. Start by making a
-directory called ~/win98 . 
+directory called ~/win98 .
 </para>
 
 <programlisting>
@@ -9506,7 +9506,7 @@ Do you want to create a floppy disk image or a hard disk image?
 Please type hd or fd. [hd] hd
 
 What kind of image should I create?
-Please type flat, sparse or growing. [flat] 
+Please type flat, sparse or growing. [flat]
 
 Enter the hard disk size in megabytes, between 1 and 32255
 [10] 1
@@ -9527,7 +9527,7 @@ I wrote 1032192 bytes to c.img.
 
 The following line should appear in your bochsrc:
   ata0-master: type=disk, path="c.img", cylinders=2, heads=16, spt=63
-[david@domain]$  
+[david@domain]$
 </programlisting>
 
 <para>
@@ -9720,8 +9720,8 @@ Copy the cdimage to harddisk to increase speed.
 Create a disk image with <command>bximage</command>.
 </para></listitem>
 <listitem><para>
-Update your <filename>.bochsrc</filename> configuration file for the 
-diskimage and the cdimage. Make sure that to disable the 
+Update your <filename>.bochsrc</filename> configuration file for the
+diskimage and the cdimage. Make sure that to disable the
 <command>IPS</command> parameter for full speed, unless you really need
 it to slow down the boot prompts.
 </para></listitem>
@@ -9777,7 +9777,7 @@ Under Linux, insert your Windows 98 CD in your CD-ROM drive.  Make a directory c
 
 <para>
 Since you can select what components you want with MS Windows and which ones
-you do not, you have the option of having a slim installation that requires  
+you do not, you have the option of having a slim installation that requires
 less disk space.  The actual Windows portion can be as little as 150 megabytes.
 If you only plan to run Microsoft Word plus a couple of programs,
 one Gigabyte will be more than sufficient.</para>
@@ -9818,7 +9818,7 @@ Do you want to create a floppy disk image or a hard disk image?
 Please type hd or fd. [hd] hd
 
 What kind of image should I create?
-Please type flat, sparse or growing. [flat] 
+Please type flat, sparse or growing. [flat]
 
 Enter the hard disk size in megabytes, between 1 and 32255
 [10] 1000
@@ -9969,7 +9969,7 @@ A:\>fdisk
 </programlisting>
 
 <para>
-You will now be taken to a screen asking you if you would like to enable large disk support.  Type "Y" and press "Enter".  You will now see the following menu: 
+You will now be taken to a screen asking you if you would like to enable large disk support.  Type "Y" and press "Enter".  You will now see the following menu:
 </para>
 
 <programlisting>
@@ -10140,7 +10140,7 @@ use the undocumented <option>/nm</option> switch to bypass the hardware check:
 
 <para>
 Answer the question of the Windows 98 installer. You can either supply
-answers with the keyboard including the arrow keys, or activate the 
+answers with the keyboard including the arrow keys, or activate the
 mouse with the middle mouse button or <keysym>F12</keysym>.
 </para>
 
@@ -10163,7 +10163,7 @@ errors.
 </para>
 
 <para>
-If you want, you can create checkpoints of your harddisk image at 
+If you want, you can create checkpoints of your harddisk image at
 apropriate times (before a reboot, for example). Stop the simulation
 by clicking on the <command>Tool</command> icon, copy the image file,
 and continue by pressing return in the bochs terminal window.
@@ -10187,9 +10187,9 @@ some space.
         <title>Windows ME</title>
         <para>
 </para>
-        
+
                 <section><title>Installing Windows ME</title>
-<para>You must read the message regarding software licenses in 
+<para>You must read the message regarding software licenses in
 <xref linkend="thirdparty"> before you install Windows ME as a guest operating system in Bochs.</para>
 <para>
 This has been contributed by Sancho Roberto :
@@ -10203,7 +10203,7 @@ To: bochs-developers@lists.sourceforge.net
 Subject: [Bochs-developers] WinMe install tips
 Parts/Attachments:
 
-1) Install Win98 
+1) Install Win98
 
    My Windows Me is an update version, that is, it upgrades over Win98.
    So the first think I have to do is to install on a HD image a
@@ -10222,7 +10222,7 @@ Parts/Attachments:
      - I don't care about HW detection, etc. Just uncompressing
        the cab files to the WIN98 directory es enought for WinMe.
        (Note that Win98 is not functional and cannot boot)
-       
+
 2) Copy the WinMe install files to the HD
 
    In Win98.img, with mtools, I create a directory called WinMe.
@@ -10230,7 +10230,7 @@ Parts/Attachments:
    WinMe CD. Note that I copy the CD to my HD, and then with mtools
    from my HD to win98.img. I also delete then W98 directory.
 
-3) Create WinMe.img   
+3) Create WinMe.img
 
    Now, I created another blank HD called WinMe.img with 500MB.
    I format it and install MSDOS6 so I an boot using it.
@@ -10244,13 +10244,13 @@ Parts/Attachments:
 5) Running setup
 
    I start bochs: the C: drive is empty (it only contains the
-   MSDOS6 command.com, IO.SYS, etc). The D: drive has: 
+   MSDOS6 command.com, IO.SYS, etc). The D: drive has:
       D:\W98 - The "installed" Windows 98
       D:\WINME - Windows Me setup files
 
    I go to the WINME directory and run:
 
-      SETUP xxxx 
+      SETUP xxxx
 
    The description of the setup options can be found in the Microsoft Knowledge page as
    Q186111 - Description of the Windows 95, Windows 98, and Windows Me Setup Switches
@@ -10261,22 +10261,22 @@ Parts/Attachments:
    my comments.
 
    /m - bypass the playing of the Setup sound (.wav) files.
-        Not necessary as my Bochs has no sound device activated 
+        Not necessary as my Bochs has no sound device activated
 
    /nf - Do not prompt to remove the floppy disk from the drive
          Maybe not necessary. Just in case
 
-   /nh - This switch bypasses running the Hwinfo.exe program at 0 
+   /nh - This switch bypasses running the Hwinfo.exe program at 0
          percent files and RunOnce.
 
          If not present, freezes on HW detection
 
-   /ie - This switch bypasses the Windows 98 Startup Disk wizard screens. 
+   /ie - This switch bypasses the Windows 98 Startup Disk wizard screens.
          To speed things up - I allways can create a Statup disk latter
 
-   /iv - This switch bypasses displaying the Setup screens during 
+   /iv - This switch bypasses displaying the Setup screens during
          an upgrade within Windows.
-         To speed things up 
+         To speed things up
 
    /c - This switch bypasses running SMARTDrive.
         Maybe not necessary. Just in case
@@ -10287,28 +10287,28 @@ Parts/Attachments:
    /is - This switch causes Setup not to run ScanDisk.
          Very important as SCANDISK freezed bochs
 
-   /iq - If you use the /is switch to bypass ScanDisk or if ScanDisk 
-         does not complete successfully, Setup checks your drive for cross-linked files. 
+   /iq - If you use the /is switch to bypass ScanDisk or if ScanDisk
+         does not complete successfully, Setup checks your drive for cross-linked files.
          The /iq switch prevents Setup from doing this.
 
-         Very important. If not used, Setup stop the installation 
+         Very important. If not used, Setup stop the installation
          with a message "error found in C:, run scandisk and setup again"
          (or something like this). Of course, there is no errors in C:
          because is an empty, just formatted disk, but the WinMe setup
          thinks so. The only way to progress from this point is
          with this switch
 
-   /it - This switch bypasses checking for the presence of "dirty" or "deadly" 
-         terminate-and-stay-resident programs (TSRs) that are known to 
+   /it - This switch bypasses checking for the presence of "dirty" or "deadly"
+         terminate-and-stay-resident programs (TSRs) that are known to
          cause problems with Windows Setup.
          Maybe not necessary. Just in case
 
    /p b;g=3
 
-      b: This switch enables Prompt Before mode. It prompts 
-         you before a detection module is called so that you can 
-         step through each detection module manually and decide 
-         if you want to skip it. 
+      b: This switch enables Prompt Before mode. It prompts
+         you before a detection module is called so that you can
+         step through each detection module manually and decide
+         if you want to skip it.
 
          Very important. See bellow
 
@@ -10332,14 +10332,14 @@ Parts/Attachments:
    select type of instalation, etc.
 
    One way to solve this is to lower the vga_update_interval and
-   the keyboard_serial_delay. I lower the value until 
-      - I have a minimum response from keyboard and mouse (say 
+   the keyboard_serial_delay. I lower the value until
+      - I have a minimum response from keyboard and mouse (say
         1 second delay between keypress/mousemove and the
         screen update)
-      - I still pass the 150 MHz check 
-   
-   The values I used are    
-   
+      - I still pass the 150 MHz check
+
+   The values I used are
+
       vga_update_interval: 10000
       keyboard_serial_delay: 200
 
@@ -10357,19 +10357,19 @@ Parts/Attachments:
 7) Hardware nightmare
 
    At a given moment, you are prompted to detect the hardware.
-   There is a prompt for each type of device: Bus, keyboard, mouse, 
-   HD, CDROM, etc. 
+   There is a prompt for each type of device: Bus, keyboard, mouse,
+   HD, CDROM, etc.
 
    Say NO to everything.
 
    If you say YES, sometimes setup will detect your HW, but normaly
-   it will crash with GPF on COMMCTRL.DLL (setup crash, but bochs 
+   it will crash with GPF on COMMCTRL.DLL (setup crash, but bochs
    still alive. Nice!).
 
    If you sat CANCEL, setup will stay in this screen forever (ok, ok,
    I have just wait 10 hours).
 
-8) Configuring 
+8) Configuring
 
    Setup will configure you PC. You can set your timezone, etc.
 
@@ -10393,7 +10393,7 @@ Parts/Attachments:
    of the screen!
 
    Just for safe, I executed within WinMe msconfig.exe, and in the
-   advanced tab set the Disk Compatibility mode". Also, I've turned 
+   advanced tab set the Disk Compatibility mode". Also, I've turned
    of the menu and windows animations, to speed thinks up a bit. Also
    it may be a good idea to turn off scandisk on setup.
 
@@ -10404,8 +10404,8 @@ Parts/Attachments:
    Now you can comment out the ata0-slave line in the bochsrc.txt. WinMe.img
    contains a working WinMe.
 
-   NOTE: if you lower the IPS, WinMe will be unstable ... surelly 
-         a timing issue. But even if IPS is high, lowering 
+   NOTE: if you lower the IPS, WinMe will be unstable ... surelly
+         a timing issue. But even if IPS is high, lowering
          vga_update_interval and keyboard_serial_delay will help
          on getting an acceptable usability.
 
@@ -10419,11 +10419,11 @@ Some bugs i've found
 - If bochs is visible when it switchs from text mode to graphic mode,
   the size of the window is correct. But if Bochs is minimized when
   doing so, the size of the Bochs window is incorrect. It does not
-  take into account the height of the top banner (the one with the 
-  disk icons, mouse, snapshot, etc), so the botton of the screen 
+  take into account the height of the top banner (the one with the
+  disk icons, mouse, snapshot, etc), so the botton of the screen
   is clipped.
 - Dont expect to run WinMe at full speed unless you use your Pentium10 at 1500 GHz
-- (not a bug, but a comment) The splash screen when booting/shutdown 
+- (not a bug, but a comment) The splash screen when booting/shutdown
   WinMe is double height. I personally prefer to see the full image
   as it was time ago.
 </screen>
@@ -10433,7 +10433,7 @@ Some bugs i've found
 </section>
 <section id="guest-win2k">
         <title>Windows 2000</title>
-<para>You must read the message regarding software licenses in 
+<para>You must read the message regarding software licenses in
 <xref linkend="thirdparty"> before you install Windows 2000 as a guest operating system in Bochs.</para>
         <para>
         </para>
@@ -10441,16 +10441,16 @@ Some bugs i've found
 </section>
 <section id="guest-win2k-server">
 <title>Windows 2000 Server</title>
-<para>You must read the message regarding software licenses in 
+<para>You must read the message regarding software licenses in
 <xref linkend="thirdparty"> before you install Windows 2000 Server as a guest operating system in Bochs.</para>
 </section>
 
 <section id="guest-winxp">
         <title>Windows XP</title>
-<para>You must read the message regarding software licenses in 
+<para>You must read the message regarding software licenses in
 <xref linkend="thirdparty"> before you install Windows XP as a guest operating system in Bochs.</para>
         <para>
-        Windows XP has been reported to install from the cd, and run inside Bochs. 
+        Windows XP has been reported to install from the cd, and run inside Bochs.
         The only known issue is to set the IPS to, at least, a value of 10000000.
         </para>
 </section>
@@ -10468,11 +10468,11 @@ You must read the message regarding software licenses in
 </para>
 
 <para>
-Back in April and May of 2002, I did some work on Bochs 
+Back in April and May of 2002, I did some work on Bochs
 in order to get it to install and boot SCO's OpenServer 5.0.5 (OSR5).
 Since that time, I have had several e-mails asking about this error message
 or that.  The newsgroup posts done at the time had all of the information that I knew,
-so I pointed people there.  (I had not used Bochs since...) 
+so I pointed people there.  (I had not used Bochs since...)
 In February of 2003, I got another such e-mail.
 Since the sender indicated they were willing to pay me to get this going for them,
 I agreed to spend a few hours on it (for free, which is not common :-}).  Subsequently,
@@ -10480,7 +10480,7 @@ I decided to document this once and for all.  (I did not charge anyone anything,
 </para>
 
 <para>
-Note: These steps were originally used with Bochs 1.4.1 (or thereabouts, 
+Note: These steps were originally used with Bochs 1.4.1 (or thereabouts,
 since I was using CVS heavily at the time).  It is possible (likely) that later versions of Bochs
 are more tolerant/bug free, and this install may be abbreviated.  However, I have not tried
 to streamline it at all.
@@ -10522,7 +10522,7 @@ Do you want to create a floppy disk image or a hard disk image?
 Please type hd or fd. [hd] hd
 
 What kind of image should I create?
-Please type flat, sparse or growing. [flat] 
+Please type flat, sparse or growing. [flat]
 
 Enter the hard disk size in megabytes, between 1 and 32255
 [10] 2048
@@ -10619,7 +10619,7 @@ add whatever else is needed (one step at a time) after the initial install compl
 </para>
 
 <para>
-Let the install copy the files.  Go get lunch.  Take a nap.  Go have dinner... 
+Let the install copy the files.  Go get lunch.  Take a nap.  Go have dinner...
 This can take a LONG time.  On my Pentium 4 1.7GHz system, this
 step took just over eight hours!  (BTW, it was MUCH longer in version 1.4.1.  Great job, guys!)
 </para>
@@ -10643,9 +10643,9 @@ drivers have been linked out of the kernel.
 </para>
 
 <para>
-Before you configure the network card,  I'd strongly suggest getting the latest "nat" driver from SCO.  
-Version 5.0.5b of this driver, according to the SCO web site, "correct[s] possible system lockup 
-under high load due to internal buffer overflow."  The driver can be found 
+Before you configure the network card,  I'd strongly suggest getting the latest "nat" driver from SCO.
+Version 5.0.5b of this driver, according to the SCO web site, "correct[s] possible system lockup
+under high load due to internal buffer overflow."  The driver can be found
 <ulink url="ftp://ftp.caldera.com/pub/openserver5/drivers/OSR505/network/nat">here</ulink>.
 To get the Disk Image file into SCO, I downloaded the VOL.000.000 file to my linux box,
 and used tar to get it on to a floppy:
@@ -10658,26 +10658,26 @@ osr5-# cd /tmp
 osr5-# tar -xvf /dev/fd0135ds18
 </screen>
 You can then use 'custom' to install the driver from the image file.
-You will then want to use 'scoadmin network' to configure the network card.  Choose 
+You will then want to use 'scoadmin network' to configure the network card.  Choose
 the Novell NE2000 card, and set the parameters to match the ne2k: line in the .bochsrc file.
 DO NOT have OSR5 look for the card, as Bochs may likely crash. (It did in version 1.4.1.)
 </para>
 
 <para>
 You can also configure a printer, if you want.  Using the spoolpipe utility that I wrote
-(which can be found in Bochs' misc directory), you can print from OSR5 through the parallel 
+(which can be found in Bochs' misc directory), you can print from OSR5 through the parallel
 port, and you'll hardly notice
-that the printing is going through an extra layer of operating system!  
+that the printing is going through an extra layer of operating system!
 (You could also set up a printer using network printing, if the printer is not on the host machine...)
 </para>
 
 <para>
-Obviously, dont forget to apply the release supplements and other patches that are considered 
-"must haves" for OSR5: rs505a, oss600a, oss497b (others?).  
+Obviously, dont forget to apply the release supplements and other patches that are considered
+"must haves" for OSR5: rs505a, oss600a, oss497b (others?).
 </para>
 
 <para>
-That's about as far as I have got.  I played around with OSR5 within Bochs a bit, but I 
+That's about as far as I have got.  I played around with OSR5 within Bochs a bit, but I
 can by no means say that I did any kind of real testing, let alone exhaustive testing.
 </para>
 

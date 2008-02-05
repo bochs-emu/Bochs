@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu_load_store.cc,v 1.15 2007-12-26 18:39:15 sshwarts Exp $
+// $Id: fpu_load_store.cc,v 1.16 2008-02-05 22:33:34 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -40,7 +40,7 @@ void BX_CPU_C::FLD_STi(bxInstruction_c *i)
   if (! IS_TAG_EMPTY(-1))
   {
       BX_CPU_THIS_PTR FPU_stack_overflow();
-      return; 
+      return;
   }
 
   if (IS_TAG_EMPTY(i->rm()))
@@ -69,12 +69,12 @@ void BX_CPU_C::FLD_SINGLE_REAL(bxInstruction_c *i)
   if (! IS_TAG_EMPTY(-1))
   {
       BX_CPU_THIS_PTR FPU_stack_overflow();
-      return; 
+      return;
   }
 
   float32 load_reg = read_virtual_dword(i->seg(), RMAddr(i));
 
-  float_status_t status = 
+  float_status_t status =
      FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
 
   // convert to floatx80 format
@@ -100,12 +100,12 @@ void BX_CPU_C::FLD_DOUBLE_REAL(bxInstruction_c *i)
   if (! IS_TAG_EMPTY(-1))
   {
       BX_CPU_THIS_PTR FPU_stack_overflow();
-      return; 
+      return;
   }
 
   float64 load_reg = read_virtual_qword(i->seg(), RMAddr(i));
 
-  float_status_t status = 
+  float_status_t status =
      FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
 
   // convert to floatx80 format
@@ -131,7 +131,7 @@ void BX_CPU_C::FLD_EXTENDED_REAL(bxInstruction_c *i)
   if (! IS_TAG_EMPTY(-1))
   {
       BX_CPU_THIS_PTR FPU_stack_overflow();
-      return; 
+      return;
   }
 
   floatx80 result;
@@ -155,7 +155,7 @@ void BX_CPU_C::FILD_WORD_INTEGER(bxInstruction_c *i)
   if (! IS_TAG_EMPTY(-1))
   {
       BX_CPU_THIS_PTR FPU_stack_overflow();
-      return; 
+      return;
   }
 
   Bit16s load_reg = (Bit16s) read_virtual_word(i->seg(), RMAddr(i));
@@ -179,7 +179,7 @@ void BX_CPU_C::FILD_DWORD_INTEGER(bxInstruction_c *i)
   if (! IS_TAG_EMPTY(-1))
   {
       BX_CPU_THIS_PTR FPU_stack_overflow();
-      return; 
+      return;
   }
 
   Bit32s load_reg = (Bit32s) read_virtual_dword(i->seg(), RMAddr(i));
@@ -203,7 +203,7 @@ void BX_CPU_C::FILD_QWORD_INTEGER(bxInstruction_c *i)
   if (! IS_TAG_EMPTY(-1))
   {
       BX_CPU_THIS_PTR FPU_stack_overflow();
-      return; 
+      return;
   }
 
   Bit64s load_reg = (Bit64s) read_virtual_qword(i->seg(), RMAddr(i));
@@ -227,14 +227,14 @@ void BX_CPU_C::FBLD_PACKED_BCD(bxInstruction_c *i)
   if (! IS_TAG_EMPTY(-1))
   {
       BX_CPU_THIS_PTR FPU_stack_overflow();
-      return; 
+      return;
   }
 
   // read packed bcd from memory
   Bit64u lo8 = read_virtual_qword(i->seg(), RMAddr(i));
   Bit16u hi2 = read_virtual_word (i->seg(), RMAddr(i) + 8);
 
-  Bit64s scale = 1; 
+  Bit64s scale = 1;
   Bit64s val64 = 0;
 
   for (int n = 0; n < 16; n++)
@@ -300,7 +300,7 @@ void BX_CPU_C::FST_SINGLE_REAL(bxInstruction_c *i)
   }
   else
   {
-     float_status_t status = 
+     float_status_t status =
          FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
 
      save_reg = floatx80_to_float32(BX_READ_FPU_REG(0), status);
@@ -336,7 +336,7 @@ void BX_CPU_C::FST_DOUBLE_REAL(bxInstruction_c *i)
   }
   else
   {
-     float_status_t status = 
+     float_status_t status =
          FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
 
      save_reg = floatx80_to_float64(BX_READ_FPU_REG(0), status);
@@ -402,7 +402,7 @@ void BX_CPU_C::FIST_WORD_INTEGER(bxInstruction_c *i)
   }
   else
   {
-      float_status_t status = 
+      float_status_t status =
          FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
 
       save_reg = floatx80_to_int16(BX_READ_FPU_REG(0), status);
@@ -440,7 +440,7 @@ void BX_CPU_C::FIST_DWORD_INTEGER(bxInstruction_c *i)
   }
   else
   {
-     float_status_t status = 
+     float_status_t status =
          FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
 
      save_reg = floatx80_to_int32(BX_READ_FPU_REG(0), status);
@@ -476,7 +476,7 @@ void BX_CPU_C::FISTP_QWORD_INTEGER(bxInstruction_c *i)
   }
   else
   {
-     float_status_t status = 
+     float_status_t status =
          FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
 
      save_reg = floatx80_to_int64(BX_READ_FPU_REG(0), status);
@@ -497,9 +497,9 @@ void BX_CPU_C::FBSTP_PACKED_BCD(bxInstruction_c *i)
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
 
-  /* 
-   * The packed BCD integer indefinite encoding (FFFFC000000000000000H) 
-   * is stored in response to a masked floating-point invalid-operation 
+  /*
+   * The packed BCD integer indefinite encoding (FFFFC000000000000000H)
+   * is stored in response to a masked floating-point invalid-operation
    * exception.
    */
   Bit16u save_reg_hi = 0xFFFF;
@@ -516,20 +516,20 @@ void BX_CPU_C::FBSTP_PACKED_BCD(bxInstruction_c *i)
   }
   else
   {
-     float_status_t status = 
+     float_status_t status =
         FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
 
      Bit64s save_val = floatx80_to_int64(BX_READ_FPU_REG(0), status);
 
      int sign = (save_val < 0);
-     if (sign) 
+     if (sign)
         save_val = -save_val;
- 
+
      if (save_val > BX_CONST64(999999999999999999))
      {
         float_raise(status, float_flag_invalid);
      }
-     
+
      if (! (status.float_exception_flags & float_flag_invalid))
      {
         save_reg_hi = (sign) ? 0x8000 : 0;
@@ -580,7 +580,7 @@ void BX_CPU_C::FISTTP16(bxInstruction_c *i)
   }
   else
   {
-      float_status_t status = 
+      float_status_t status =
          FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
 
       save_reg = floatx80_to_int16_round_to_zero(BX_READ_FPU_REG(0), status);
@@ -616,7 +616,7 @@ void BX_CPU_C::FISTTP32(bxInstruction_c *i)
   }
   else
   {
-     float_status_t status = 
+     float_status_t status =
          FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
 
      save_reg = floatx80_to_int32_round_to_zero(BX_READ_FPU_REG(0), status);
@@ -652,7 +652,7 @@ void BX_CPU_C::FISTTP64(bxInstruction_c *i)
   }
   else
   {
-     float_status_t status = 
+     float_status_t status =
          FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
 
      save_reg = floatx80_to_int64_round_to_zero(BX_READ_FPU_REG(0), status);

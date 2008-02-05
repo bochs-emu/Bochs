@@ -1,14 +1,14 @@
 <!--
 ================================================================
 doc/docbook/include/defs.sgm
-$Id: defs.sgm,v 1.7 2004-08-24 12:23:35 vruppert Exp $
+$Id: defs.sgm,v 1.8 2008-02-05 22:33:34 sshwarts Exp $
 
 This file is included by all Bochs docbook files, so that the
 definitions can be used anywhere in the documentation.
 ================================================================
 -->
 
-<!-- 
+<!--
 Editing marks.  FIXME is just a reminder for somebody to come back and
 work on the section.  NEEDHELP means that the author doesn't have enough
 information to finish, and would like someone else to assist.

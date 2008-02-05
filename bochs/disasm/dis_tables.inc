@@ -37,7 +37,7 @@ static BxDisasmOpcodeTable_t BxDisasmGroupSSE_0f13[4] = {
   /* 66 */ { 0, &Ia_movlpd_Mq_Vpd },
   /* F2 */ { 0, &Ia_Invalid },
   /* F3 */ { 0, &Ia_Invalid }
-};                        
+};
 
 static BxDisasmOpcodeTable_t BxDisasmGroupSSE_0f14[4] = {
   /* -- */ { 0, &Ia_unpcklps_Vps_Wdq },
@@ -573,7 +573,7 @@ static BxDisasmOpcodeTable_t BxDisasmGrpOs64B_pextr[3] = {
 };
 
 static BxDisasmOpcodeTable_t BxDisasmGroupSSE_0f3a16[4] = {
-  /* -- */ { 0, &Ia_Invalid },         
+  /* -- */ { 0, &Ia_Invalid },
   /* 66 */ { GR64BIT(pextr) },          // SSE4
   /* F2 */ { 0, &Ia_Invalid },
   /* F3 */ { 0, &Ia_Invalid }
@@ -730,7 +730,7 @@ static BxDisasmOpcodeTable_t BxDisasmGroupSSE_0f59[4] = {
   /* 66 */ { 0, &Ia_mulpd_Vpd_Wpd },
   /* F2 */ { 0, &Ia_mulsd_Vsd_Wsd },
   /* F3 */ { 0, &Ia_mulss_Vss_Wss }
-};                   
+};
 
 static BxDisasmOpcodeTable_t BxDisasmGroupSSE_0f5a[4] = {
   /* -- */ { 0, &Ia_cvtps2pd_Vpd_Wps },
@@ -1287,7 +1287,7 @@ static BxDisasmOpcodeTable_t BxDisasmGroupSSE_0ff0[4] = {
   /* 66 */ { 0, &Ia_Invalid },
   /* F2 */ { 0, &Ia_lddqu_Vdq_Mdq },
   /* F3 */ { 0, &Ia_Invalid }
-};                        
+};
 
 static BxDisasmOpcodeTable_t BxDisasmGroupSSE_0ff1[4] = {
   /* -- */ { 0, &Ia_psllw_Pq_Qq   },
@@ -1481,7 +1481,7 @@ static BxDisasmOpcodeTable_t BxDisasmGroupG1EwIw[8] = {
   /* 5 */ { 0, &Ia_subw_Ew_Iw },
   /* 6 */ { 0, &Ia_xorw_Ew_Iw },
   /* 7 */ { 0, &Ia_cmpw_Ew_Iw }
-}; 
+};
 
 static BxDisasmOpcodeTable_t BxDisasmGroupG1EdId[8] = {
   /* 0 */ { 0, &Ia_addl_Ed_Id },
@@ -1492,7 +1492,7 @@ static BxDisasmOpcodeTable_t BxDisasmGroupG1EdId[8] = {
   /* 5 */ { 0, &Ia_subl_Ed_Id },
   /* 6 */ { 0, &Ia_xorl_Ed_Id },
   /* 7 */ { 0, &Ia_cmpl_Ed_Id }
-}; 
+};
 
 static BxDisasmOpcodeTable_t BxDisasmGroupG1EqId[8] = {
   /* 0 */ { 0, &Ia_addq_Eq_sId },
@@ -1503,10 +1503,10 @@ static BxDisasmOpcodeTable_t BxDisasmGroupG1EqId[8] = {
   /* 5 */ { 0, &Ia_subq_Eq_sId },
   /* 6 */ { 0, &Ia_xorq_Eq_sId },
   /* 7 */ { 0, &Ia_cmpq_Eq_sId }
-}; 
+};
 
 static BxDisasmOpcodeTable_t BxDisasmGroupG1EwIb[8] = {
-  /* 0 */ { 0, &Ia_addw_Ew_sIb },	// sign-extend byte 
+  /* 0 */ { 0, &Ia_addw_Ew_sIb },	// sign-extend byte
   /* 1 */ { 0, &Ia_orw_Ew_sIb  },
   /* 2 */ { 0, &Ia_adcw_Ew_sIb },
   /* 3 */ { 0, &Ia_sbbw_Ew_sIb },
@@ -1514,10 +1514,10 @@ static BxDisasmOpcodeTable_t BxDisasmGroupG1EwIb[8] = {
   /* 5 */ { 0, &Ia_subw_Ew_sIb },
   /* 6 */ { 0, &Ia_xorw_Ew_sIb },
   /* 7 */ { 0, &Ia_cmpw_Ew_sIb }
-}; 
+};
 
 static BxDisasmOpcodeTable_t BxDisasmGroupG1EdIb[8] = {
-  /* 0 */ { 0, &Ia_addl_Ed_sIb },	// sign-extend byte 
+  /* 0 */ { 0, &Ia_addl_Ed_sIb },	// sign-extend byte
   /* 1 */ { 0, &Ia_orl_Ed_sIb  },
   /* 2 */ { 0, &Ia_adcl_Ed_sIb },
   /* 3 */ { 0, &Ia_sbbl_Ed_sIb },
@@ -1525,10 +1525,10 @@ static BxDisasmOpcodeTable_t BxDisasmGroupG1EdIb[8] = {
   /* 5 */ { 0, &Ia_subl_Ed_sIb },
   /* 6 */ { 0, &Ia_xorl_Ed_sIb },
   /* 7 */ { 0, &Ia_cmpl_Ed_sIb }
-}; 
+};
 
 static BxDisasmOpcodeTable_t BxDisasmGroupG1EqIb[8] = {
-  /* 0 */ { 0, &Ia_addq_Eq_sIb },	// sign-extend byte 
+  /* 0 */ { 0, &Ia_addq_Eq_sIb },	// sign-extend byte
   /* 1 */ { 0, &Ia_orq_Eq_sIb  },
   /* 2 */ { 0, &Ia_adcq_Eq_sIb },
   /* 3 */ { 0, &Ia_sbbq_Eq_sIb },
@@ -1536,7 +1536,7 @@ static BxDisasmOpcodeTable_t BxDisasmGroupG1EqIb[8] = {
   /* 5 */ { 0, &Ia_subq_Eq_sIb },
   /* 6 */ { 0, &Ia_xorq_Eq_sIb },
   /* 7 */ { 0, &Ia_cmpq_Eq_sIb }
-}; 
+};
 
 static BxDisasmOpcodeTable_t BxDisasmGroupG2Eb[8] = {
   /* 0 */ { 0, &Ia_rolb_Eb_Ib },
@@ -1547,7 +1547,7 @@ static BxDisasmOpcodeTable_t BxDisasmGroupG2Eb[8] = {
   /* 5 */ { 0, &Ia_shrb_Eb_Ib },
   /* 6 */ { 0, &Ia_shlb_Eb_Ib },
   /* 7 */ { 0, &Ia_sarb_Eb_Ib }
-}; 
+};
 
 static BxDisasmOpcodeTable_t BxDisasmGroupG2EbI1[8] = {
   /* 0 */ { 0, &Ia_rolb_Eb_I1 },
@@ -1558,7 +1558,7 @@ static BxDisasmOpcodeTable_t BxDisasmGroupG2EbI1[8] = {
   /* 5 */ { 0, &Ia_shrb_Eb_I1 },
   /* 6 */ { 0, &Ia_shlb_Eb_I1 },
   /* 7 */ { 0, &Ia_sarb_Eb_I1 }
-}; 
+};
 
 static BxDisasmOpcodeTable_t BxDisasmGroupG2EbCL[8] = {
   /* 0 */ { 0, &Ia_rolb_Eb_CL },
@@ -1569,7 +1569,7 @@ static BxDisasmOpcodeTable_t BxDisasmGroupG2EbCL[8] = {
   /* 5 */ { 0, &Ia_shrb_Eb_CL },
   /* 6 */ { 0, &Ia_shlb_Eb_CL },
   /* 7 */ { 0, &Ia_sarb_Eb_CL }
-}; 
+};
 
 static BxDisasmOpcodeTable_t BxDisasmGroupG2Ew[8] = {
   /* 0 */ { 0, &Ia_rolw_Ew_Ib },
@@ -1580,7 +1580,7 @@ static BxDisasmOpcodeTable_t BxDisasmGroupG2Ew[8] = {
   /* 5 */ { 0, &Ia_shrw_Ew_Ib },
   /* 6 */ { 0, &Ia_shlw_Ew_Ib },
   /* 7 */ { 0, &Ia_sarw_Ew_Ib }
-}; 
+};
 
 static BxDisasmOpcodeTable_t BxDisasmGroupG2Ed[8] = {
   /* 0 */ { 0, &Ia_roll_Ed_Ib },
@@ -1591,7 +1591,7 @@ static BxDisasmOpcodeTable_t BxDisasmGroupG2Ed[8] = {
   /* 5 */ { 0, &Ia_shrl_Ed_Ib },
   /* 6 */ { 0, &Ia_shll_Ed_Ib },
   /* 7 */ { 0, &Ia_sarl_Ed_Ib }
-}; 
+};
 
 static BxDisasmOpcodeTable_t BxDisasmGroupG2Eq[8] = {
   /* 0 */ { 0, &Ia_rolq_Eq_Ib },
@@ -1602,7 +1602,7 @@ static BxDisasmOpcodeTable_t BxDisasmGroupG2Eq[8] = {
   /* 5 */ { 0, &Ia_shrq_Eq_Ib },
   /* 6 */ { 0, &Ia_shlq_Eq_Ib },
   /* 7 */ { 0, &Ia_sarq_Eq_Ib }
-}; 
+};
 
 static BxDisasmOpcodeTable_t BxDisasmGroupG2EwI1[8] = {
   /* 0 */ { 0, &Ia_rolw_Ew_I1 },
@@ -1613,7 +1613,7 @@ static BxDisasmOpcodeTable_t BxDisasmGroupG2EwI1[8] = {
   /* 5 */ { 0, &Ia_shrw_Ew_I1 },
   /* 6 */ { 0, &Ia_shlw_Ew_I1 },
   /* 7 */ { 0, &Ia_sarw_Ew_I1 }
-}; 
+};
 
 static BxDisasmOpcodeTable_t BxDisasmGroupG2EdI1[8] = {
   /* 0 */ { 0, &Ia_roll_Ed_I1 },
@@ -1624,7 +1624,7 @@ static BxDisasmOpcodeTable_t BxDisasmGroupG2EdI1[8] = {
   /* 5 */ { 0, &Ia_shrl_Ed_I1 },
   /* 6 */ { 0, &Ia_shll_Ed_I1 },
   /* 7 */ { 0, &Ia_sarl_Ed_I1 }
-}; 
+};
 
 static BxDisasmOpcodeTable_t BxDisasmGroupG2EqI1[8] = {
   /* 0 */ { 0, &Ia_rolq_Eq_I1 },
@@ -1635,7 +1635,7 @@ static BxDisasmOpcodeTable_t BxDisasmGroupG2EqI1[8] = {
   /* 5 */ { 0, &Ia_shrq_Eq_I1 },
   /* 6 */ { 0, &Ia_shlq_Eq_I1 },
   /* 7 */ { 0, &Ia_sarq_Eq_I1 }
-}; 
+};
 
 static BxDisasmOpcodeTable_t BxDisasmGroupG2EwCL[8] = {
   /* 0 */ { 0, &Ia_rolw_Ew_CL },
@@ -1646,7 +1646,7 @@ static BxDisasmOpcodeTable_t BxDisasmGroupG2EwCL[8] = {
   /* 5 */ { 0, &Ia_shrw_Ew_CL },
   /* 6 */ { 0, &Ia_shlw_Ew_CL },
   /* 7 */ { 0, &Ia_sarw_Ew_CL }
-}; 
+};
 
 static BxDisasmOpcodeTable_t BxDisasmGroupG2EdCL[8] = {
   /* 0 */ { 0, &Ia_roll_Ed_CL },
@@ -1657,7 +1657,7 @@ static BxDisasmOpcodeTable_t BxDisasmGroupG2EdCL[8] = {
   /* 5 */ { 0, &Ia_shrl_Ed_CL },
   /* 6 */ { 0, &Ia_shll_Ed_CL },
   /* 7 */ { 0, &Ia_sarl_Ed_CL }
-}; 
+};
 
 static BxDisasmOpcodeTable_t BxDisasmGroupG2EqCL[8] = {
   /* 0 */ { 0, &Ia_rolq_Eq_CL },
@@ -1668,7 +1668,7 @@ static BxDisasmOpcodeTable_t BxDisasmGroupG2EqCL[8] = {
   /* 5 */ { 0, &Ia_shrq_Eq_CL },
   /* 6 */ { 0, &Ia_shlq_Eq_CL },
   /* 7 */ { 0, &Ia_sarq_Eq_CL }
-}; 
+};
 
 static BxDisasmOpcodeTable_t BxDisasmGroupG3Eb[8] = {
   /* 0 */ { 0, &Ia_testb_Eb_Ib },
@@ -1679,7 +1679,7 @@ static BxDisasmOpcodeTable_t BxDisasmGroupG3Eb[8] = {
   /* 5 */ { 0, &Ia_imulb_AL_Eb },
   /* 6 */ { 0, &Ia_divb_AL_Eb  },
   /* 7 */ { 0, &Ia_idivb_AL_Eb }
-}; 
+};
 
 static BxDisasmOpcodeTable_t BxDisasmGroupG3Ew[8] = {
   /* 0 */ { 0, &Ia_testw_Ew_Iw },
@@ -1690,7 +1690,7 @@ static BxDisasmOpcodeTable_t BxDisasmGroupG3Ew[8] = {
   /* 5 */ { 0, &Ia_imulw_AX_Ew },
   /* 6 */ { 0, &Ia_divw_AX_Ew  },
   /* 7 */ { 0, &Ia_idivw_AX_Ew }
-}; 
+};
 
 static BxDisasmOpcodeTable_t BxDisasmGroupG3Ed[8] = {
   /* 0 */ { 0, &Ia_testl_Ed_Id  },
@@ -1701,7 +1701,7 @@ static BxDisasmOpcodeTable_t BxDisasmGroupG3Ed[8] = {
   /* 5 */ { 0, &Ia_imull_EAX_Ed },
   /* 6 */ { 0, &Ia_divl_EAX_Ed  },
   /* 7 */ { 0, &Ia_idivl_EAX_Ed }
-}; 
+};
 
 static BxDisasmOpcodeTable_t BxDisasmGroupG3Eq[8] = {
   /* 0 */ { 0, &Ia_testq_Eq_sId },
@@ -1712,7 +1712,7 @@ static BxDisasmOpcodeTable_t BxDisasmGroupG3Eq[8] = {
   /* 5 */ { 0, &Ia_imulq_RAX_Eq },
   /* 6 */ { 0, &Ia_divq_RAX_Eq  },
   /* 7 */ { 0, &Ia_idivq_RAX_Eq }
-}; 
+};
 
 static BxDisasmOpcodeTable_t BxDisasmGroupG4[8] = {
   /* 0 */ { 0, &Ia_incb_Eb },
@@ -1723,7 +1723,7 @@ static BxDisasmOpcodeTable_t BxDisasmGroupG4[8] = {
   /* 5 */ { 0, &Ia_Invalid },
   /* 6 */ { 0, &Ia_Invalid },
   /* 7 */ { 0, &Ia_Invalid }
-}; 
+};
 
 static BxDisasmOpcodeTable_t BxDisasmGroupG5w[8] = {
   /* 0 */ { 0, &Ia_incw_Ew  },
@@ -1734,7 +1734,7 @@ static BxDisasmOpcodeTable_t BxDisasmGroupG5w[8] = {
   /* 5 */ { 0, &Ia_ljmp_Mp  },
   /* 6 */ { 0, &Ia_pushw_Ew },
   /* 7 */ { 0, &Ia_Invalid  }
-}; 
+};
 
 static BxDisasmOpcodeTable_t BxDisasmGroupG5d[8] = {
   /* 0 */ { 0, &Ia_incl_Ed  },
@@ -1745,7 +1745,7 @@ static BxDisasmOpcodeTable_t BxDisasmGroupG5d[8] = {
   /* 5 */ { 0, &Ia_ljmp_Mp  },
   /* 6 */ { 0, &Ia_pushl_Ed },
   /* 7 */ { 0, &Ia_Invalid  }
-}; 
+};
 
 static BxDisasmOpcodeTable_t BxDisasmGroup64G5w[8] = {
   /* 0 */ { 0, &Ia_incw_Ew  },
@@ -1756,7 +1756,7 @@ static BxDisasmOpcodeTable_t BxDisasmGroup64G5w[8] = {
   /* 5 */ { 0, &Ia_ljmp_Mp  },
   /* 6 */ { 0, &Ia_pushw_Ew },
   /* 7 */ { 0, &Ia_Invalid  }
-}; 
+};
 
 static BxDisasmOpcodeTable_t BxDisasmGroup64G5d[8] = {
   /* 0 */ { 0, &Ia_incl_Ed  },
@@ -1767,7 +1767,7 @@ static BxDisasmOpcodeTable_t BxDisasmGroup64G5d[8] = {
   /* 5 */ { 0, &Ia_ljmp_Mp  },
   /* 6 */ { 0, &Ia_pushq_Eq },
   /* 7 */ { 0, &Ia_Invalid  }
-}; 
+};
 
 static BxDisasmOpcodeTable_t BxDisasmGroup64G5q[8] = {
   /* 0 */ { 0, &Ia_incq_Eq  },
@@ -1778,7 +1778,7 @@ static BxDisasmOpcodeTable_t BxDisasmGroup64G5q[8] = {
   /* 5 */ { 0, &Ia_ljmp_Mp  },
   /* 6 */ { 0, &Ia_pushq_Eq },
   /* 7 */ { 0, &Ia_Invalid  }
-}; 
+};
 
 static BxDisasmOpcodeTable_t BxDisasmGroupG6[8] = {
   /* 0 */ { 0, &Ia_sldt    },
@@ -1789,7 +1789,7 @@ static BxDisasmOpcodeTable_t BxDisasmGroupG6[8] = {
   /* 5 */ { 0, &Ia_verw    },
   /* 6 */ { 0, &Ia_Invalid },
   /* 7 */ { 0, &Ia_Invalid }
-}; 
+};
 
 static BxDisasmOpcodeTable_t BxDisasmGroupG7M[8] = {
   /* 0 */ { 0, &Ia_sgdt    },
@@ -1869,7 +1869,7 @@ static BxDisasmOpcodeTable_t BxDisasmGroupG8EwIb[8] = {
   /* 5 */ { 0, &Ia_btsw_Ew_Ib },
   /* 6 */ { 0, &Ia_btrw_Ew_Ib },
   /* 7 */ { 0, &Ia_btcw_Ew_Ib }
-}; 
+};
 
 static BxDisasmOpcodeTable_t BxDisasmGroupG8EdIb[8] = {
   /* 0 */ { 0, &Ia_Invalid },
@@ -1880,7 +1880,7 @@ static BxDisasmOpcodeTable_t BxDisasmGroupG8EdIb[8] = {
   /* 5 */ { 0, &Ia_btsl_Ed_Ib },
   /* 6 */ { 0, &Ia_btrl_Ed_Ib },
   /* 7 */ { 0, &Ia_btcl_Ed_Ib }
-}; 
+};
 
 static BxDisasmOpcodeTable_t BxDisasmGroupG8EqIb[8] = {
   /* 0 */ { 0, &Ia_Invalid },
@@ -1891,7 +1891,7 @@ static BxDisasmOpcodeTable_t BxDisasmGroupG8EqIb[8] = {
   /* 5 */ { 0, &Ia_btsq_Eq_Ib },
   /* 6 */ { 0, &Ia_btrq_Eq_Ib },
   /* 7 */ { 0, &Ia_btcq_Eq_Ib }
-}; 
+};
 
 /* VMX */
 static BxDisasmOpcodeTable_t BxDisasmGroupSSE_G9VMX6[4] = {
@@ -1961,11 +1961,11 @@ static BxDisasmOpcodeTable_t BxDisasmGroupG14[8] = {
   /* 4 */ { 0, &Ia_Invalid },
   /* 5 */ { 0, &Ia_Invalid },
   /* 6 */ { GRPSSE(G1406)  },
-  /* 7 */ { GRPSSE(G1407)  } 
+  /* 7 */ { GRPSSE(G1407)  }
 };
 
 static BxDisasmOpcodeTable_t BxDisasmGroupModCFLUSH[2] = {
-  /* R */ { 0, &Ia_sfence }, 
+  /* R */ { 0, &Ia_sfence },
   /* M */ { 0, &Ia_cflush }
 };
 
@@ -2253,7 +2253,7 @@ static BxDisasmOpcodeTable_t BxDisasm3DNowGroup[256] = {
   /* FD */ { 0, &Ia_Invalid },
   /* FE */ { 0, &Ia_Invalid },
   /* FF */ { 0, &Ia_Invalid }
-};                                
+};
 
 /* ************************************************************************ */
 /* FPU Opcodes */
@@ -2263,7 +2263,7 @@ static BxDisasmOpcodeTable_t BxDisasm3DNowGroup[256] = {
 // the modrm byte. (the first byte is D8-DF)
 
   // D8 (modrm is outside 00h - BFh) (mod != 11)
-static BxDisasmOpcodeTable_t BxDisasmFPGroupD8[8] = { 
+static BxDisasmOpcodeTable_t BxDisasmFPGroupD8[8] = {
   /* 0 */ { 0, &Ia_fadds_Md  },
   /* 1 */ { 0, &Ia_fmuls_Md  },
   /* 2 */ { 0, &Ia_fcoms_Md  },
@@ -2275,7 +2275,7 @@ static BxDisasmOpcodeTable_t BxDisasmFPGroupD8[8] = {
 };
 
   // D9 (modrm is outside 00h - BFh) (mod != 11)
-static BxDisasmOpcodeTable_t BxDisasmFPGroupD9[8] = { 
+static BxDisasmOpcodeTable_t BxDisasmFPGroupD9[8] = {
   /* 0 */ { 0, &Ia_flds_Md   },
   /* 1 */ { 0, &Ia_Invalid   },
   /* 2 */ { 0, &Ia_fsts_Md   },
@@ -2287,7 +2287,7 @@ static BxDisasmOpcodeTable_t BxDisasmFPGroupD9[8] = {
 };
 
   // DA (modrm is outside 00h - BFh) (mod != 11)
-static BxDisasmOpcodeTable_t BxDisasmFPGroupDA[8] = { 
+static BxDisasmOpcodeTable_t BxDisasmFPGroupDA[8] = {
   /* 0 */ { 0, &Ia_fiaddl_Md  },
   /* 1 */ { 0, &Ia_fimull_Md  },
   /* 2 */ { 0, &Ia_ficoml_Md  },
@@ -2299,7 +2299,7 @@ static BxDisasmOpcodeTable_t BxDisasmFPGroupDA[8] = {
 };
 
   // DB (modrm is outside 00h - BFh) (mod != 11)
-static BxDisasmOpcodeTable_t BxDisasmFPGroupDB[8] = { 
+static BxDisasmOpcodeTable_t BxDisasmFPGroupDB[8] = {
   /* 0 */ { 0, &Ia_fildl_Md   },
   /* 1 */ { 0, &Ia_fisttpl_Md },
   /* 2 */ { 0, &Ia_fistl_Md   },
@@ -2311,7 +2311,7 @@ static BxDisasmOpcodeTable_t BxDisasmFPGroupDB[8] = {
 };
 
   // DC (modrm is outside 00h - BFh) (mod != 11)
-static BxDisasmOpcodeTable_t BxDisasmFPGroupDC[8] = { 
+static BxDisasmOpcodeTable_t BxDisasmFPGroupDC[8] = {
   /* 0 */ { 0, &Ia_faddl_Mq  },
   /* 1 */ { 0, &Ia_fmull_Mq  },
   /* 2 */ { 0, &Ia_fcoml_Mq  },
@@ -2323,7 +2323,7 @@ static BxDisasmOpcodeTable_t BxDisasmFPGroupDC[8] = {
 };
 
   // DD (modrm is outside 00h - BFh) (mod != 11)
-static BxDisasmOpcodeTable_t BxDisasmFPGroupDD[8] = { 
+static BxDisasmOpcodeTable_t BxDisasmFPGroupDD[8] = {
   /* 0 */ { 0, &Ia_fldl_Mq    },
   /* 1 */ { 0, &Ia_fisttpq_Mq },
   /* 2 */ { 0, &Ia_fstl_Mq    },
@@ -2335,7 +2335,7 @@ static BxDisasmOpcodeTable_t BxDisasmFPGroupDD[8] = {
 };
 
   // DE (modrm is outside 00h - BFh) (mod != 11)
-static BxDisasmOpcodeTable_t BxDisasmFPGroupDE[8] = { 
+static BxDisasmOpcodeTable_t BxDisasmFPGroupDE[8] = {
   /* 0 */ { 0, &Ia_fiadds_Mw  },
   /* 1 */ { 0, &Ia_fimuls_Mw  },
   /* 2 */ { 0, &Ia_ficoms_Mw  },
@@ -2347,7 +2347,7 @@ static BxDisasmOpcodeTable_t BxDisasmFPGroupDE[8] = {
 };
 
   // DF (modrm is outside 00h - BFh) (mod != 11)
-static BxDisasmOpcodeTable_t BxDisasmFPGroupDF[8] = { 
+static BxDisasmOpcodeTable_t BxDisasmFPGroupDF[8] = {
   /* 0 */ { 0, &Ia_filds_Mw   },
   /* 1 */ { 0, &Ia_fisttps_Mw },
   /* 2 */ { 0, &Ia_fists_Mw   },
@@ -2358,8 +2358,8 @@ static BxDisasmOpcodeTable_t BxDisasmFPGroupDF[8] = {
   /* 7 */ { 0, &Ia_fistpq_Mq  }
 };
 
-// 512 entries for second byte of floating point instructions. (when mod==11b) 
-static BxDisasmOpcodeTable_t BxDisasmOpcodeInfoFP[512] = { 
+// 512 entries for second byte of floating point instructions. (when mod==11b)
+static BxDisasmOpcodeTable_t BxDisasmOpcodeInfoFP[512] = {
   // D8 (modrm is outside 00h - BFh) (mod == 11)
   /* D8 C0 */ { 0, &Ia_fadd_ST0_STi  },
   /* D8 C1 */ { 0, &Ia_fadd_ST0_STi  },
@@ -2425,7 +2425,7 @@ static BxDisasmOpcodeTable_t BxDisasmOpcodeInfoFP[512] = {
   /* D8 FD */ { 0, &Ia_fdivr_ST0_STi },
   /* D8 FE */ { 0, &Ia_fdivr_ST0_STi },
   /* D8 FF */ { 0, &Ia_fdivr_ST0_STi },
-  
+
   // D9 (modrm is outside 00h - BFh) (mod == 11)
   /* D9 C0 */ { 0, &Ia_fld_STi },
   /* D9 C1 */ { 0, &Ia_fld_STi },
@@ -2491,7 +2491,7 @@ static BxDisasmOpcodeTable_t BxDisasmOpcodeInfoFP[512] = {
   /* D9 FD */ { 0, &Ia_fscale  },
   /* D9 FE */ { 0, &Ia_fsin    },
   /* D9 FF */ { 0, &Ia_fcos    },
-                                  
+
   // DA (modrm is outside 00h - BFh) (mod == 11)
   /* DA C0 */ { 0, &Ia_fcmovb_ST0_STi  },
   /* DA C1 */ { 0, &Ia_fcmovb_ST0_STi  },

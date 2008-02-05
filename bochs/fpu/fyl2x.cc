@@ -21,7 +21,7 @@ these four paragraphs for those parts of this code that are retained.
 /*============================================================================
  * Written for Bochs (x86 achitecture simulator) by
  *            Stanislav Shwartsman [sshwarts at sourceforge net]
- * ==========================================================================*/ 
+ * ==========================================================================*/
 
 #define FLOAT128
 
@@ -37,7 +37,7 @@ static const float128 float128_one =
 static const float128 float128_two =
     packFloat128(BX_CONST64(0x4000000000000000), BX_CONST64(0x0000000000000000));
 
-static const float128 float128_ln2inv2 = 
+static const float128 float128_ln2inv2 =
     packFloat128(BX_CONST64(0x400071547652b82f), BX_CONST64(0xe1777d0ffda0d23a));
 
 #define SQRT2_HALF_SIG 	BX_CONST64(0xb504f333f9de6484)
@@ -151,10 +151,10 @@ invalid:
     int bSign = extractFloatx80Sign(b);
 
     int zSign = bSign ^ 1;
-     
+
     if (aExp == 0x7FFF) {
         if ((Bit64u) (aSig<<1)
-             || ((bExp == 0x7FFF) && (Bit64u) (bSig<<1))) 
+             || ((bExp == 0x7FFF) && (Bit64u) (bSig<<1)))
         {
             return propagateFloatx80NaN(a, b, status);
         }
@@ -171,7 +171,7 @@ invalid:
     {
         if ((Bit64u) (bSig<<1)) return propagateFloatx80NaN(a, b, status);
         if (aSign && (Bit64u)(aExp | aSig)) goto invalid;
-        if (aSig && (aExp == 0)) 
+        if (aSig && (aExp == 0))
             float_raise(status, float_flag_denormal);
         if (aExp < 0x3FFF) {
             return packFloatx80(zSign, 0x7FFF, BX_CONST64(0x8000000000000000));
@@ -198,7 +198,7 @@ invalid:
         float_raise(status, float_flag_denormal);
         normalizeFloatx80Subnormal(bSig, &bExp, &bSig);
     }
-    if (aExp == 0x3FFF && ((Bit64u) (aSig<<1) == 0)) 
+    if (aExp == 0x3FFF && ((Bit64u) (aSig<<1) == 0))
         return packFloatx80(bSign, 0, 0);
 
     float_raise(status, float_flag_inexact);
@@ -267,10 +267,10 @@ invalid:
     bExp = extractFloatx80Exp(b);
     bSign = extractFloatx80Sign(b);
     int zSign = aSign ^ bSign;
-     
+
     if (aExp == 0x7FFF) {
         if ((Bit64u) (aSig<<1)
-             || ((bExp == 0x7FFF) && (Bit64u) (bSig<<1))) 
+             || ((bExp == 0x7FFF) && (Bit64u) (bSig<<1)))
         {
             return propagateFloatx80NaN(a, b, status);
         }
@@ -285,7 +285,7 @@ invalid:
     }
     if (bExp == 0x7FFF)
     {
-        if ((Bit64u) (bSig<<1)) 
+        if ((Bit64u) (bSig<<1))
             return propagateFloatx80NaN(a, b, status);
 
         if (aExp == 0) {
@@ -311,7 +311,7 @@ invalid:
 
     float_raise(status, float_flag_inexact);
 
-    if (aSign && aExp >= 0x3FFF) 
+    if (aSign && aExp >= 0x3FFF)
         return a;
 
     if (aExp >= 0x3FFC) // big argument

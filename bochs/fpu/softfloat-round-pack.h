@@ -30,7 +30,7 @@ these four paragraphs for those parts of this code that are retained.
 /*============================================================================
  * Adapted for Bochs (x86 achitecture simulator) by
  *            Stanislav Shwartsman [sshwarts at sourceforge net]
- * ==========================================================================*/ 
+ * ==========================================================================*/
 
 #ifndef _SOFTFLOAT_ROUND_PACK_H_
 #define _SOFTFLOAT_ROUND_PACK_H_
@@ -186,7 +186,7 @@ void normalizeFloatx80Subnormal(Bit64u aSig, Bit32s *zExpPtr, Bit64u *zSigPtr);
 | Floating-Point Arithmetic.
 *----------------------------------------------------------------------------*/
 
-floatx80 roundAndPackFloatx80(int roundingPrecision, 
+floatx80 roundAndPackFloatx80(int roundingPrecision,
         int zSign, Bit32s zExp, Bit64u zSig0, Bit64u zSig1, float_status_t &status);
 
 /*----------------------------------------------------------------------------
@@ -198,7 +198,7 @@ floatx80 roundAndPackFloatx80(int roundingPrecision,
 | normalized.
 *----------------------------------------------------------------------------*/
 
-floatx80 normalizeRoundAndPackFloatx80(int roundingPrecision, 
+floatx80 normalizeRoundAndPackFloatx80(int roundingPrecision,
         int zSign, Bit32s zExp, Bit64u zSig0, Bit64u zSig1, float_status_t &status);
 
 #endif // FLOATX80

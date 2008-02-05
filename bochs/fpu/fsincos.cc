@@ -21,7 +21,7 @@ these four paragraphs for those parts of this code that are retained.
 /*============================================================================
  * Written for Bochs (x86 achitecture simulator) by
  *            Stanislav Shwartsman [sshwarts at sourceforge net]
- * ==========================================================================*/ 
+ * ==========================================================================*/
 
 #define FLOAT128
 
@@ -32,7 +32,7 @@ these four paragraphs for those parts of this code that are retained.
 
 static const floatx80 floatx80_one = packFloatx80(0, 0x3fff, BX_CONST64(0x8000000000000000));
 
-/* reduce trigonometric function argument using 128-bit precision 
+/* reduce trigonometric function argument using 128-bit precision
    M_PI approximation */
 static Bit64u argument_reduction_kernel(Bit64u aSig0, int Exp, Bit64u *zSig0, Bit64u *zSig1)
 {
@@ -74,7 +74,7 @@ static int reduce_trig_arg(int expDiff, int &zSign, Bit64u &aSig0, Bit64u &aSig1
     {
         int lt = lt128(term0, term1, aSig0, aSig1);
         int eq = eq128(aSig0, aSig1, term0, term1);
-              
+
         if ((eq && (q & 1)) || lt) {
             zSign = !zSign;
             ++q;
@@ -187,10 +187,10 @@ static floatx80 sincos_approximation(int neg, float128 r, Bit64u quotient, float
     }
 
     floatx80 result = float128_to_floatx80(r, status);
-    if (quotient & 0x2) 
+    if (quotient & 0x2)
         neg = ! neg;
 
-    if (neg) 
+    if (neg)
         floatx80_chs(result);
 
     return result;
@@ -224,7 +224,7 @@ int fsincos(floatx80 a, floatx80 *sin_a, floatx80 *cos_a, float_status_t &status
     int q = 0;
 
     // handle unsupported extended double-precision floating encodings
-    if (floatx80_is_unsupported(a)) 
+    if (floatx80_is_unsupported(a))
     {
         goto invalid;
     }
@@ -232,7 +232,7 @@ int fsincos(floatx80 a, floatx80 *sin_a, floatx80 *cos_a, float_status_t &status
     aSig0 = extractFloatx80Frac(a);
     aExp = extractFloatx80Exp(a);
     aSign = extractFloatx80Sign(a);
-     
+
     /* invalid argument */
     if (aExp == 0x7FFF) {
         if ((Bit64u) (aSig0<<1)) {
@@ -266,13 +266,13 @@ int fsincos(floatx80 a, floatx80 *sin_a, floatx80 *cos_a, float_status_t &status
 
         normalizeFloatx80Subnormal(aSig0, &aExp, &aSig0);
     }
-    
+
     zSign = aSign;
     zExp = EXP_BIAS;
     expDiff = aExp - zExp;
 
     /* argument is out-of-range */
-    if (expDiff >= 63) 
+    if (expDiff >= 63)
         return -1;
 
     float_raise(status, float_flag_inexact);
@@ -344,11 +344,11 @@ int ftan(floatx80 &a, float_status_t &status)
 {
     Bit64u aSig0, aSig1 = 0;
     Bit32s aExp, zExp, expDiff;
-    int aSign, zSign; 
+    int aSign, zSign;
     int q = 0;
 
     // handle unsupported extended double-precision floating encodings
-    if (floatx80_is_unsupported(a)) 
+    if (floatx80_is_unsupported(a))
     {
         goto invalid;
     }
@@ -356,7 +356,7 @@ int ftan(floatx80 &a, float_status_t &status)
     aSig0 = extractFloatx80Frac(a);
     aExp = extractFloatx80Exp(a);
     aSign = extractFloatx80Sign(a);
-     
+
     /* invalid argument */
     if (aExp == 0x7FFF) {
         if ((Bit64u) (aSig0<<1))
@@ -382,13 +382,13 @@ int ftan(floatx80 &a, float_status_t &status)
         }
         normalizeFloatx80Subnormal(aSig0, &aExp, &aSig0);
     }
-    
+
     zSign = aSign;
     zExp = EXP_BIAS;
     expDiff = aExp - zExp;
 
     /* argument is out-of-range */
-    if (expDiff >= 63) 
+    if (expDiff >= 63)
         return -1;
 
     float_raise(status, float_flag_inexact);

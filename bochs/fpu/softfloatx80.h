@@ -21,7 +21,7 @@ these four paragraphs for those parts of this code that are retained.
 /*============================================================================
  * Written for Bochs (x86 achitecture simulator) by
  *            Stanislav Shwartsman [sshwarts at sourceforge net]
- * ==========================================================================*/ 
+ * ==========================================================================*/
 
 #ifndef _SOFTFLOATX80_EXTENSIONS_H_
 #define _SOFTFLOATX80_EXTENSIONS_H_
@@ -75,19 +75,19 @@ int floatx80_compare_quiet(floatx80, floatx80, float_status_t &status);
 BX_CPP_INLINE floatx80& floatx80_abs(floatx80 &reg)
 {
     reg.exp &= 0x7FFF;
-    return reg;   
+    return reg;
 }
 
 /*-----------------------------------------------------------------------------
 | Changes the sign of the extended double-precision floating-point value 'a'.
-| The operation is performed according to the IEC/IEEE Standard for Binary 
+| The operation is performed according to the IEC/IEEE Standard for Binary
 | Floating-Point Arithmetic.
 *----------------------------------------------------------------------------*/
 
 BX_CPP_INLINE floatx80& floatx80_chs(floatx80 &reg)
 {
     reg.exp ^= 0x8000;
-    return reg;   
+    return reg;
 }
 
 /*-----------------------------------------------------------------------------

@@ -35,7 +35,7 @@ these four paragraphs for those parts of this code that are retained.
 /*============================================================================
  * Adapted for Bochs (x86 achitecture simulator) by
  *            Stanislav Shwartsman [sshwarts at sourceforge net]
- * ==========================================================================*/ 
+ * ==========================================================================*/
 
 #define int16_indefinite ((Bit16s)0x8000)
 #define int32_indefinite ((Bit32s)0x80000000)
@@ -157,7 +157,7 @@ BX_CPP_INLINE float32 commonNaNToFloat32(commonNaNT a)
 float32 propagateFloat32NaN(float32 a, float32 b, float_status_t &status);
 
 /*----------------------------------------------------------------------------
-| Takes single-precision floating-point NaN `a' and returns the appropriate 
+| Takes single-precision floating-point NaN `a' and returns the appropriate
 | NaN result.  If `a' is a signaling NaN, the invalid exception is raised.
 *----------------------------------------------------------------------------*/
 
@@ -276,7 +276,7 @@ BX_CPP_INLINE float64 commonNaNToFloat64(commonNaNT a)
 float64 propagateFloat64NaN(float64 a, float64 b, float_status_t &status);
 
 /*----------------------------------------------------------------------------
-| Takes double-precision floating-point NaN `a' and returns the appropriate 
+| Takes double-precision floating-point NaN `a' and returns the appropriate
 | NaN result.  If `a' is a signaling NaN, the invalid exception is raised.
 *----------------------------------------------------------------------------*/
 
@@ -417,8 +417,8 @@ BX_CPP_INLINE floatx80 commonNaNToFloatx80(commonNaNT a)
 floatx80 propagateFloatx80NaN(floatx80 a, floatx80 b, float_status_t &status);
 
 /*----------------------------------------------------------------------------
-| Takes extended double-precision floating-point  NaN  `a' and returns the 
-| appropriate NaN result. If `a' is a signaling NaN, the invalid exception 
+| Takes extended double-precision floating-point  NaN  `a' and returns the
+| appropriate NaN result. If `a' is a signaling NaN, the invalid exception
 | is raised.
 *----------------------------------------------------------------------------*/
 
@@ -513,7 +513,7 @@ BX_CPP_INLINE float128 packFloat128(int zSign, Bit32s zExp, Bit64u zSig0, Bit64u
 }
 
 /*----------------------------------------------------------------------------
-| Packs two 64-bit precision integers into into the quadruple-precision 
+| Packs two 64-bit precision integers into into the quadruple-precision
 | floating-point value, returning the result.
 *----------------------------------------------------------------------------*/
 

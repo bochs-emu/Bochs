@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: data_xfer16.cc,v 1.56 2008-01-29 17:13:06 sshwarts Exp $
+// $Id: data_xfer16.cc,v 1.57 2008-02-05 22:33:33 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -77,7 +77,7 @@ void BX_CPU_C::MOV_EwSwR(bxInstruction_c *i)
 
   Bit16u seg_reg = BX_CPU_THIS_PTR sregs[i->nnn()].selector.value;
 
-  if ( i->os32L() ) {
+  if (i->os32L()) {
     BX_WRITE_32BIT_REGZ(i->rm(), seg_reg);
   }
   else {

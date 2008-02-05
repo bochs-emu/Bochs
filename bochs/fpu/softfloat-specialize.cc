@@ -32,7 +32,7 @@ these four paragraphs for those parts of this code that are retained.
 /*============================================================================
  * Adapted for Bochs (x86 achitecture simulator) by
  *            Stanislav Shwartsman [sshwarts at sourceforge net]
- * ==========================================================================*/ 
+ * ==========================================================================*/
 
 #include "softfloat.h"
 #include "softfloat-specialize.h"
@@ -147,7 +147,7 @@ floatx80 propagateFloatx80NaN(floatx80 a, floatx80 b, float_status_t &status)
 /*----------------------------------------------------------------------------
 | The pattern for a default generated extended double-precision NaN.
 *----------------------------------------------------------------------------*/
-const floatx80 floatx80_default_nan = 
+const floatx80 floatx80_default_nan =
     packFloatx80(0, floatx80_default_nan_exp, floatx80_default_nan_fraction);
 
 #endif /* FLOATX80 */
@@ -189,7 +189,7 @@ float128 propagateFloat128NaN(float128 a, float128 b, float_status_t &status)
 /*----------------------------------------------------------------------------
 | The pattern for a default generated quadruple-precision NaN.
 *----------------------------------------------------------------------------*/
-const float128 float128_default_nan = 
+const float128 float128_default_nan =
     packFloat128(float128_default_nan_hi, float128_default_nan_lo);
 
 #endif /* FLOAT128 */

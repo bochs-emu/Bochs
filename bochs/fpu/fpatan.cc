@@ -21,7 +21,7 @@ these four paragraphs for those parts of this code that are retained.
 /*============================================================================
  * Written for Bochs (x86 achitecture simulator) by
  *            Stanislav Shwartsman [sshwarts at sourceforge net]
- * ==========================================================================*/ 
+ * ==========================================================================*/
 
 #define FLOAT128
 
@@ -31,16 +31,16 @@ these four paragraphs for those parts of this code that are retained.
 
 #define FPATAN_ARR_SIZE 11
 
-static const float128 float128_one = 
+static const float128 float128_one =
 	packFloat128(BX_CONST64(0x3fff000000000000), BX_CONST64(0x0000000000000000));
 static const float128 float128_sqrt3 =
 	packFloat128(BX_CONST64(0x3fffbb67ae8584ca), BX_CONST64(0xa73b25742d7078b8));
-static const floatx80 floatx80_pi  = 
+static const floatx80 floatx80_pi  =
 	packFloatx80(0, 0x4000, BX_CONST64(0xc90fdaa22168c235));
 
-static const float128 float128_pi2 = 
+static const float128 float128_pi2 =
 	packFloat128(BX_CONST64(0x3fff921fb54442d1), BX_CONST64(0x8469898CC5170416));
-static const float128 float128_pi4 = 
+static const float128 float128_pi4 =
 	packFloat128(BX_CONST64(0x3ffe921fb54442d1), BX_CONST64(0x8469898CC5170416));
 static const float128 float128_pi6 =
 	packFloat128(BX_CONST64(0x3ffe0c152382d736), BX_CONST64(0x58465BB32E0F580F));
@@ -123,7 +123,7 @@ static float128 poly_atan(float128 x1, float_status_t &status)
 //   atan(x) = PI/4 + atan( ----- )
 //                           x+1
 //
-//                           x * sqrt(3) - 1 
+//                           x * sqrt(3) - 1
 //   atan(x) = PI/6 + atan( ----------------- )
 //                             x + sqrt(3)
 //
@@ -150,7 +150,7 @@ floatx80 fpatan(floatx80 a, floatx80 b, float_status_t &status)
     int bSign = extractFloatx80Sign(b);
 
     int zSign = aSign ^ bSign;
-     
+
     if (bExp == 0x7FFF)
     {
         if ((Bit64u) (bSig<<1))
@@ -161,16 +161,16 @@ floatx80 fpatan(floatx80 a, floatx80 b, float_status_t &status)
                 return propagateFloatx80NaN(a, b, status);
 
             if (aSign) {   /* return 3PI/4 */
-                return roundAndPackFloatx80(80, bSign, 
+                return roundAndPackFloatx80(80, bSign,
                         FLOATX80_3PI4_EXP, FLOAT_3PI4_HI, FLOAT_3PI4_LO, status);
-            }                        
+            }
             else {         /* return  PI/4 */
-                return roundAndPackFloatx80(80, bSign, 
+                return roundAndPackFloatx80(80, bSign,
                         FLOATX80_PI4_EXP, FLOAT_PI_HI, FLOAT_PI_LO, status);
             }
         }
 
-        if (aSig && (aExp == 0)) 
+        if (aSig && (aExp == 0))
             float_raise(status, float_flag_denormal);
 
         /* return PI/2 */
@@ -178,10 +178,10 @@ floatx80 fpatan(floatx80 a, floatx80 b, float_status_t &status)
     }
     if (aExp == 0x7FFF)
     {
-        if ((Bit64u) (aSig<<1)) 
+        if ((Bit64u) (aSig<<1))
             return propagateFloatx80NaN(a, b, status);
 
-        if (bSig && (bExp == 0)) 
+        if (bSig && (bExp == 0))
             float_raise(status, float_flag_denormal);
 
 return_PI_or_ZERO:
@@ -216,7 +216,7 @@ return_PI_or_ZERO:
     /* |a| = |b| ==> return PI/4 */
     if (aSig == bSig && aExp == bExp)
         return roundAndPackFloatx80(80, bSign, FLOATX80_PI4_EXP, FLOAT_PI_HI, FLOAT_PI_LO, status);
-         
+
     /* ******************************** */
     /* using float128 for approximation */
     /* ******************************** */
@@ -242,7 +242,7 @@ return_PI_or_ZERO:
 
     if (x.hi >= BX_CONST64(0x3ffe800000000000))	// 3/4 < x < 1
     {
-        /* 
+        /*
         arctan(x) = arctan((x-1)/(x+1)) + pi/4
         */
         float128 t1 = float128_sub(x, float128_one, status);
@@ -253,9 +253,9 @@ return_PI_or_ZERO:
     else
     {
         /* argument correction */
-        if (xExp >= 0x3FFD)                     // 1/4 < x < 3/4 
-        {			                
-            /* 
+        if (xExp >= 0x3FFD)                     // 1/4 < x < 3/4
+        {
+            /*
             arctan(x) = arctan((x*sqrt(3)-1)/(x+sqrt(3))) + pi/6
             */
             float128 t1 = float128_mul(x, float128_sqrt3, status);

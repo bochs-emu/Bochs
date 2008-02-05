@@ -21,7 +21,7 @@ these four paragraphs for those parts of this code that are retained.
 /*============================================================================
  * Written for Bochs (x86 achitecture simulator) by
  *            Stanislav Shwartsman [sshwarts at sourceforge net]
- * ==========================================================================*/ 
+ * ==========================================================================*/
 
 #define FLOAT128
 
@@ -30,7 +30,7 @@ these four paragraphs for those parts of this code that are retained.
 
 static const floatx80 floatx80_negone  = packFloatx80(1, 0x3fff, BX_CONST64(0x8000000000000000));
 static const floatx80 floatx80_neghalf = packFloatx80(1, 0x3ffe, BX_CONST64(0x8000000000000000));
-static const float128 float128_ln2     = 
+static const float128 float128_ln2     =
     packFloat128(BX_CONST64(0x3ffe62e42fefa39e), BX_CONST64(0xf35793c7673007e6));
 
 #define LN2_SIG        BX_CONST64(0xb17217f7d1cf79ac)
@@ -78,7 +78,7 @@ static float128 poly_exp(float128 x, float_status_t &status)
     //          --  2k                     --  2k+1
     //          k=0                        k=0
     //
-    //    x                     
+    //    x
     //   e  - 1 ~ x * [ p(x) + x * q(x) ]
     //
 */
@@ -110,7 +110,7 @@ floatx80 f2xm1(floatx80 a, float_status_t &status)
     Bit64u zSig0, zSig1;
 
     // handle unsupported extended double-precision floating encodings
-    if (floatx80_is_unsupported(a)) 
+    if (floatx80_is_unsupported(a))
     {
         float_raise(status, float_flag_invalid);
         return floatx80_default_nan;
@@ -119,7 +119,7 @@ floatx80 f2xm1(floatx80 a, float_status_t &status)
     Bit64u aSig = extractFloatx80Frac(a);
     Bit32s aExp = extractFloatx80Exp(a);
     int aSign = extractFloatx80Sign(a);
-     
+
     if (aExp == 0x7FFF) {
         if ((Bit64u) (aSig<<1))
             return propagateFloatx80NaN(a, status);
@@ -158,7 +158,7 @@ floatx80 f2xm1(floatx80 a, float_status_t &status)
         x = poly_exp(x, status);
         return float128_to_floatx80(x, status);
     }
-    else 
+    else
     {
         if ((a.exp == 0xBFFF) && (! (aSig<<1)))
            return floatx80_neghalf;

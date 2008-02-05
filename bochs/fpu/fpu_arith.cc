@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu_arith.cc,v 1.10 2007-12-20 20:58:38 sshwarts Exp $
+// $Id: fpu_arith.cc,v 1.11 2008-02-05 22:33:34 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -34,7 +34,7 @@ float_status_t FPU_pre_exception_handling(Bit16u control_word)
   float_status_t status;
 
   int precision = control_word & FPU_CW_PC;
- 
+
   switch(precision)
   {
      case FPU_PR_32_BITS:
@@ -47,8 +47,8 @@ float_status_t FPU_pre_exception_handling(Bit16u control_word)
        status.float_rounding_precision = 80;
        break;
      default:
-    /* With the precision control bits set to 01 "(reserved)", a 
-       real CPU behaves as if the precision control bits were 
+    /* With the precision control bits set to 01 "(reserved)", a
+       real CPU behaves as if the precision control bits were
        set to 11 "80 bits" */
        status.float_rounding_precision = 80;
   }
@@ -78,7 +78,7 @@ void BX_CPU_C::FADD_ST0_STj(bxInstruction_c *i)
   floatx80 a = BX_READ_FPU_REG(0);
   floatx80 b = BX_READ_FPU_REG(i->rm());
 
-  float_status_t status = 
+  float_status_t status =
       FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
 
   floatx80 result = floatx80_add(a, b, status);
@@ -110,7 +110,7 @@ void BX_CPU_C::FADD_STi_ST0(bxInstruction_c *i)
   floatx80 a = BX_READ_FPU_REG(i->rm());
   floatx80 b = BX_READ_FPU_REG(0);
 
-  float_status_t status = 
+  float_status_t status =
 	FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
 
   floatx80 result = floatx80_add(a, b, status);
@@ -119,7 +119,7 @@ void BX_CPU_C::FADD_STi_ST0(bxInstruction_c *i)
       return;
 
   BX_WRITE_FPU_REG(result, i->rm());
-  if (pop_stack) 
+  if (pop_stack)
      BX_CPU_THIS_PTR the_i387.FPU_pop();
 #else
   BX_INFO(("FADD(P)_STi_ST0: required FPU, configure --enable-fpu"));
@@ -141,10 +141,10 @@ void BX_CPU_C::FADD_SINGLE_REAL(bxInstruction_c *i)
 
   float32 load_reg = read_virtual_dword(i->seg(), RMAddr(i));
 
-  float_status_t status = 
+  float_status_t status =
       FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
 
-  floatx80 result = floatx80_add(BX_READ_FPU_REG(0), 
+  floatx80 result = floatx80_add(BX_READ_FPU_REG(0),
 		float32_to_floatx80(load_reg, status), status);
 
   if (BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags))
@@ -171,10 +171,10 @@ void BX_CPU_C::FADD_DOUBLE_REAL(bxInstruction_c *i)
 
   float64 load_reg = read_virtual_qword(i->seg(), RMAddr(i));
 
-  float_status_t status = 
+  float_status_t status =
       FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
 
-  floatx80 result = floatx80_add(BX_READ_FPU_REG(0), 
+  floatx80 result = floatx80_add(BX_READ_FPU_REG(0),
 		float64_to_floatx80(load_reg, status), status);
 
   if (BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags))
@@ -204,7 +204,7 @@ void BX_CPU_C::FIADD_WORD_INTEGER(bxInstruction_c *i)
   floatx80 a = BX_READ_FPU_REG(0);
   floatx80 b = int32_to_floatx80((Bit32s)(load_reg));
 
-  float_status_t status = 
+  float_status_t status =
       FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
 
   floatx80 result = floatx80_add(a, b, status);
@@ -236,7 +236,7 @@ void BX_CPU_C::FIADD_DWORD_INTEGER(bxInstruction_c *i)
   floatx80 a = BX_READ_FPU_REG(0);
   floatx80 b = int32_to_floatx80(load_reg);
 
-  float_status_t status = 
+  float_status_t status =
       FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
 
   floatx80 result = floatx80_add(a, b, status);
@@ -266,7 +266,7 @@ void BX_CPU_C::FMUL_ST0_STj(bxInstruction_c *i)
   floatx80 a = BX_READ_FPU_REG(0);
   floatx80 b = BX_READ_FPU_REG(i->rm());
 
-  float_status_t status = 
+  float_status_t status =
 	FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
 
   floatx80 result = floatx80_mul(a, b, status);
@@ -298,7 +298,7 @@ void BX_CPU_C::FMUL_STi_ST0(bxInstruction_c *i)
   floatx80 a = BX_READ_FPU_REG(i->rm());
   floatx80 b = BX_READ_FPU_REG(0);
 
-  float_status_t status = 
+  float_status_t status =
 	FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
 
   floatx80 result = floatx80_mul(a, b, status);
@@ -307,7 +307,7 @@ void BX_CPU_C::FMUL_STi_ST0(bxInstruction_c *i)
       return;
 
   BX_WRITE_FPU_REG(result, i->rm());
-  if (pop_stack) 
+  if (pop_stack)
      BX_CPU_THIS_PTR the_i387.FPU_pop();
 #else
   BX_INFO(("FMUL(P)_STi_ST0: required FPU, configure --enable-fpu"));
@@ -329,10 +329,10 @@ void BX_CPU_C::FMUL_SINGLE_REAL(bxInstruction_c *i)
 
   float32 load_reg = read_virtual_dword(i->seg(), RMAddr(i));
 
-  float_status_t status = 
+  float_status_t status =
       FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
 
-  floatx80 result = floatx80_mul(BX_READ_FPU_REG(0), 
+  floatx80 result = floatx80_mul(BX_READ_FPU_REG(0),
 		float32_to_floatx80(load_reg, status), status);
 
   if (BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags))
@@ -359,10 +359,10 @@ void BX_CPU_C::FMUL_DOUBLE_REAL(bxInstruction_c *i)
 
   float64 load_reg = read_virtual_qword(i->seg(), RMAddr(i));
 
-  float_status_t status = 
+  float_status_t status =
       FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
 
-  floatx80 result = floatx80_mul(BX_READ_FPU_REG(0), 
+  floatx80 result = floatx80_mul(BX_READ_FPU_REG(0),
 		float64_to_floatx80(load_reg, status), status);
 
   if (BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags))
@@ -392,7 +392,7 @@ void BX_CPU_C::FIMUL_WORD_INTEGER(bxInstruction_c *i)
   floatx80 a = BX_READ_FPU_REG(0);
   floatx80 b = int32_to_floatx80((Bit32s)(load_reg));
 
-  float_status_t status = 
+  float_status_t status =
       FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
 
   floatx80 result = floatx80_mul(a, b, status);
@@ -424,7 +424,7 @@ void BX_CPU_C::FIMUL_DWORD_INTEGER(bxInstruction_c *i)
   floatx80 a = BX_READ_FPU_REG(0);
   floatx80 b = int32_to_floatx80(load_reg);
 
-  float_status_t status = 
+  float_status_t status =
       FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
 
   floatx80 result = floatx80_mul(a, b, status);
@@ -454,7 +454,7 @@ void BX_CPU_C::FSUB_ST0_STj(bxInstruction_c *i)
   floatx80 a = BX_READ_FPU_REG(0);
   floatx80 b = BX_READ_FPU_REG(i->rm());
 
-  float_status_t status = 
+  float_status_t status =
 	FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
 
   floatx80 result = floatx80_sub(a, b, status);
@@ -484,7 +484,7 @@ void BX_CPU_C::FSUBR_ST0_STj(bxInstruction_c *i)
   floatx80 a = BX_READ_FPU_REG(i->rm());
   floatx80 b = BX_READ_FPU_REG(0);
 
-  float_status_t status = 
+  float_status_t status =
 	FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
 
   floatx80 result = floatx80_sub(a, b, status);
@@ -516,7 +516,7 @@ void BX_CPU_C::FSUB_STi_ST0(bxInstruction_c *i)
   floatx80 a = BX_READ_FPU_REG(i->rm());
   floatx80 b = BX_READ_FPU_REG(0);
 
-  float_status_t status = 
+  float_status_t status =
 	FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
 
   floatx80 result = floatx80_sub(a, b, status);
@@ -526,7 +526,7 @@ void BX_CPU_C::FSUB_STi_ST0(bxInstruction_c *i)
 
   BX_WRITE_FPU_REG(result, i->rm());
 
-  if (pop_stack) 
+  if (pop_stack)
      BX_CPU_THIS_PTR the_i387.FPU_pop();
 #else
   BX_INFO(("FSUB(P)_STi_ST0: required FPU, configure --enable-fpu"));
@@ -551,7 +551,7 @@ void BX_CPU_C::FSUBR_STi_ST0(bxInstruction_c *i)
   floatx80 a = BX_READ_FPU_REG(0);
   floatx80 b = BX_READ_FPU_REG(i->rm());
 
-  float_status_t status = 
+  float_status_t status =
 	FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
 
   floatx80 result = floatx80_sub(a, b, status);
@@ -561,7 +561,7 @@ void BX_CPU_C::FSUBR_STi_ST0(bxInstruction_c *i)
 
   BX_WRITE_FPU_REG(result, i->rm());
 
-  if (pop_stack) 
+  if (pop_stack)
      BX_CPU_THIS_PTR the_i387.FPU_pop();
 #else
   BX_INFO(("FSUBR(P)_STi_ST0: required FPU, configure --enable-fpu"));
@@ -583,10 +583,10 @@ void BX_CPU_C::FSUB_SINGLE_REAL(bxInstruction_c *i)
 
   float32 load_reg = read_virtual_dword(i->seg(), RMAddr(i));
 
-  float_status_t status = 
+  float_status_t status =
       FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
 
-  floatx80 result = floatx80_sub(BX_READ_FPU_REG(0), 
+  floatx80 result = floatx80_sub(BX_READ_FPU_REG(0),
 		float32_to_floatx80(load_reg, status), status);
 
   if (BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags))
@@ -613,10 +613,10 @@ void BX_CPU_C::FSUBR_SINGLE_REAL(bxInstruction_c *i)
 
   float32 load_reg = read_virtual_dword(i->seg(), RMAddr(i));
 
-  float_status_t status = 
+  float_status_t status =
       FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
 
-  floatx80 result = floatx80_sub(float32_to_floatx80(load_reg, status), 
+  floatx80 result = floatx80_sub(float32_to_floatx80(load_reg, status),
 		BX_READ_FPU_REG(0), status);
 
   if (BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags))
@@ -643,10 +643,10 @@ void BX_CPU_C::FSUB_DOUBLE_REAL(bxInstruction_c *i)
 
   float64 load_reg = read_virtual_qword(i->seg(), RMAddr(i));
 
-  float_status_t status = 
+  float_status_t status =
       FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
 
-  floatx80 result = floatx80_sub(BX_READ_FPU_REG(0), 
+  floatx80 result = floatx80_sub(BX_READ_FPU_REG(0),
 		float64_to_floatx80(load_reg, status), status);
 
   if (BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags))
@@ -673,10 +673,10 @@ void BX_CPU_C::FSUBR_DOUBLE_REAL(bxInstruction_c *i)
 
   float64 load_reg = read_virtual_qword(i->seg(), RMAddr(i));
 
-  float_status_t status = 
+  float_status_t status =
       FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
 
-  floatx80 result = floatx80_sub(float64_to_floatx80(load_reg, status), 
+  floatx80 result = floatx80_sub(float64_to_floatx80(load_reg, status),
 		BX_READ_FPU_REG(0), status);
 
   if (BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags))
@@ -706,7 +706,7 @@ void BX_CPU_C::FISUB_WORD_INTEGER(bxInstruction_c *i)
   floatx80 a = BX_READ_FPU_REG(0);
   floatx80 b = int32_to_floatx80((Bit32s)(load_reg));
 
-  float_status_t status = 
+  float_status_t status =
       FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
 
   floatx80 result = floatx80_sub(a, b, status);
@@ -738,7 +738,7 @@ void BX_CPU_C::FISUBR_WORD_INTEGER(bxInstruction_c *i)
   floatx80 a = int32_to_floatx80((Bit32s)(load_reg));
   floatx80 b = BX_READ_FPU_REG(0);
 
-  float_status_t status = 
+  float_status_t status =
       FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
 
   floatx80 result = floatx80_sub(a, b, status);
@@ -770,10 +770,10 @@ void BX_CPU_C::FISUB_DWORD_INTEGER(bxInstruction_c *i)
   floatx80 a = BX_READ_FPU_REG(0);
   floatx80 b = int32_to_floatx80(load_reg);
 
-  float_status_t status = 
+  float_status_t status =
       FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
 
-  floatx80 result = floatx80_sub(BX_READ_FPU_REG(0), 
+  floatx80 result = floatx80_sub(BX_READ_FPU_REG(0),
 	      int32_to_floatx80(load_reg), status);
 
   if (BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags))
@@ -803,7 +803,7 @@ void BX_CPU_C::FISUBR_DWORD_INTEGER(bxInstruction_c *i)
   floatx80 a = int32_to_floatx80(load_reg);
   floatx80 b = BX_READ_FPU_REG(0);
 
-  float_status_t status = 
+  float_status_t status =
       FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
 
   floatx80 result = floatx80_sub(a, b, status);
@@ -833,7 +833,7 @@ void BX_CPU_C::FDIV_ST0_STj(bxInstruction_c *i)
   floatx80 a = BX_READ_FPU_REG(0);
   floatx80 b = BX_READ_FPU_REG(i->rm());
 
-  float_status_t status = 
+  float_status_t status =
 	FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
 
   floatx80 result = floatx80_div(a, b, status);
@@ -863,7 +863,7 @@ void BX_CPU_C::FDIVR_ST0_STj(bxInstruction_c *i)
   floatx80 a = BX_READ_FPU_REG(i->rm());
   floatx80 b = BX_READ_FPU_REG(0);
 
-  float_status_t status = 
+  float_status_t status =
 	FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
 
   floatx80 result = floatx80_div(a, b, status);
@@ -895,7 +895,7 @@ void BX_CPU_C::FDIV_STi_ST0(bxInstruction_c *i)
   floatx80 a = BX_READ_FPU_REG(i->rm());
   floatx80 b = BX_READ_FPU_REG(0);
 
-  float_status_t status = 
+  float_status_t status =
 	FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
 
   floatx80 result = floatx80_div(a, b, status);
@@ -904,7 +904,7 @@ void BX_CPU_C::FDIV_STi_ST0(bxInstruction_c *i)
       return;
 
   BX_WRITE_FPU_REG(result, i->rm());
-  if (pop_stack) 
+  if (pop_stack)
      BX_CPU_THIS_PTR the_i387.FPU_pop();
 #else
   BX_INFO(("FDIV(P)_STi_ST0: required FPU, configure --enable-fpu"));
@@ -929,7 +929,7 @@ void BX_CPU_C::FDIVR_STi_ST0(bxInstruction_c *i)
   floatx80 a = BX_READ_FPU_REG(0);
   floatx80 b = BX_READ_FPU_REG(i->rm());
 
-  float_status_t status = 
+  float_status_t status =
 	FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
 
   floatx80 result = floatx80_div(a, b, status);
@@ -938,7 +938,7 @@ void BX_CPU_C::FDIVR_STi_ST0(bxInstruction_c *i)
       return;
 
   BX_WRITE_FPU_REG(result, i->rm());
-  if (pop_stack) 
+  if (pop_stack)
      BX_CPU_THIS_PTR the_i387.FPU_pop();
 #else
   BX_INFO(("FDIVR(P)_STi_ST0: required FPU, configure --enable-fpu"));
@@ -960,10 +960,10 @@ void BX_CPU_C::FDIV_SINGLE_REAL(bxInstruction_c *i)
 
   float32 load_reg = read_virtual_dword(i->seg(), RMAddr(i));
 
-  float_status_t status = 
+  float_status_t status =
       FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
 
-  floatx80 result = floatx80_div(BX_READ_FPU_REG(0), 
+  floatx80 result = floatx80_div(BX_READ_FPU_REG(0),
 		float32_to_floatx80(load_reg, status), status);
 
   if (BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags))
@@ -990,10 +990,10 @@ void BX_CPU_C::FDIVR_SINGLE_REAL(bxInstruction_c *i)
 
   float32 load_reg = read_virtual_dword(i->seg(), RMAddr(i));
 
-  float_status_t status = 
+  float_status_t status =
       FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
 
-  floatx80 result = floatx80_div(float32_to_floatx80(load_reg, status), 
+  floatx80 result = floatx80_div(float32_to_floatx80(load_reg, status),
 		BX_READ_FPU_REG(0), status);
 
   if (BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags))
@@ -1020,10 +1020,10 @@ void BX_CPU_C::FDIV_DOUBLE_REAL(bxInstruction_c *i)
 
   float64 load_reg = read_virtual_qword(i->seg(), RMAddr(i));
 
-  float_status_t status = 
+  float_status_t status =
       FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
 
-  floatx80 result = floatx80_div(BX_READ_FPU_REG(0), 
+  floatx80 result = floatx80_div(BX_READ_FPU_REG(0),
 		float64_to_floatx80(load_reg, status), status);
 
   if (BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags))
@@ -1050,10 +1050,10 @@ void BX_CPU_C::FDIVR_DOUBLE_REAL(bxInstruction_c *i)
 
   float64 load_reg = read_virtual_qword(i->seg(), RMAddr(i));
 
-  float_status_t status = 
+  float_status_t status =
       FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
 
-  floatx80 result = floatx80_div(float64_to_floatx80(load_reg, status), 
+  floatx80 result = floatx80_div(float64_to_floatx80(load_reg, status),
 		BX_READ_FPU_REG(0), status);
 
   if (BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags))
@@ -1083,7 +1083,7 @@ void BX_CPU_C::FIDIV_WORD_INTEGER(bxInstruction_c *i)
   floatx80 a = BX_READ_FPU_REG(0);
   floatx80 b = int32_to_floatx80((Bit32s)(load_reg));
 
-  float_status_t status = 
+  float_status_t status =
       FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
 
   floatx80 result = floatx80_div(a, b, status);
@@ -1115,7 +1115,7 @@ void BX_CPU_C::FIDIVR_WORD_INTEGER(bxInstruction_c *i)
   floatx80 a = int32_to_floatx80((Bit32s)(load_reg));
   floatx80 b = BX_READ_FPU_REG(0);
 
-  float_status_t status = 
+  float_status_t status =
       FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
 
   floatx80 result = floatx80_div(a, b, status);
@@ -1147,7 +1147,7 @@ void BX_CPU_C::FIDIV_DWORD_INTEGER(bxInstruction_c *i)
   floatx80 a = BX_READ_FPU_REG(0);
   floatx80 b = int32_to_floatx80(load_reg);
 
-  float_status_t status = 
+  float_status_t status =
       FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
 
   floatx80 result = floatx80_div(a, b, status);
@@ -1179,7 +1179,7 @@ void BX_CPU_C::FIDIVR_DWORD_INTEGER(bxInstruction_c *i)
   floatx80 a = int32_to_floatx80(load_reg);
   floatx80 b = BX_READ_FPU_REG(0);
 
-  float_status_t status = 
+  float_status_t status =
       FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
 
   floatx80 result = floatx80_div(a, b, status);
@@ -1205,7 +1205,7 @@ void BX_CPU_C::FSQRT(bxInstruction_c *i)
      return;
   }
 
-  float_status_t status = 
+  float_status_t status =
       FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
 
   floatx80 result = floatx80_sqrt(BX_READ_FPU_REG(0), status);
@@ -1232,7 +1232,7 @@ void BX_CPU_C::FRNDINT(bxInstruction_c *i)
      return;
   }
 
-  float_status_t status = 
+  float_status_t status =
       FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
 
   floatx80 result = floatx80_round_to_int(BX_READ_FPU_REG(0), status);

@@ -1,4 +1,4 @@
-$Id: misc.txt,v 1.32 2005-03-28 08:56:06 vruppert Exp $
+$Id: misc.txt,v 1.33 2008-02-05 22:33:34 sshwarts Exp $
 
 This is a temporary place to paste in stuff that should go into the docs one
 day.  When it is transferred into docbook, let's remove it from misc.txt.
@@ -10,7 +10,7 @@ day.  When it is transferred into docbook, let's remove it from misc.txt.
 Date: Thu, 15 Nov 2001 13:31:34 -0800
 From: David Christy <davidc@davidc.biz>
 To: bryce@tlw.com
-Subject: usefull info for mounting 
+Subject: usefull info for mounting
 
 
 I didn't see this in the doc's so I thought you might like a
@@ -67,8 +67,8 @@ and may need significant hacking to make it work again.
 ------------------
 
 Changes by Bryce Denney 4/5/2001:
-I moved the contents of macutils.h into osdep.h, and macutils.c 
-into osdep.cc.  There are functions missing on other platforms too, 
+I moved the contents of macutils.h into osdep.h, and macutils.c
+into osdep.cc.  There are functions missing on other platforms too,
 so I wanted to bring them all into the same place.
 
 The original macintosh.txt follows.
@@ -310,7 +310,7 @@ login prompt.  You are now running DLX Linux in a window!
 <para>
 Bochs simulates every instruction of an x86 CPU, so it is very memory- and
 compute-intensive.  The speed of your real CPU will make a big difference in
-how fast the DLX Linux image boots.  On a 1GHz Pentium, the sample Linux 
+how fast the DLX Linux image boots.  On a 1GHz Pentium, the sample Linux
 image takes about 10 seconds to boot.
 </para>
 
@@ -362,15 +362,15 @@ From: Jeremy Wilkins <jeb at jeremywilkins.freeserve.co.uk>
 To: bochs-developers@lists.sourceforge.net
 Subject: [Bochs-developers] Odd network errors with NT4 Guest OS
 
-I'm having trouble transferring files over the network to the guest OS 
-(NT4 SP1). If I'm using SMB then the it errors out early on with a 
-session cancelled. The file is 36Mb (SP6). I've tried with various file 
+I'm having trouble transferring files over the network to the guest OS
+(NT4 SP1). If I'm using SMB then the it errors out early on with a
+session cancelled. The file is 36Mb (SP6). I've tried with various file
 sizes, 3Meg files work, 5 meg files do not.
 
-I've also tried shuffling the files over http with similar problems, 
+I've also tried shuffling the files over http with similar problems,
 small files are fine (can browse websites) but large files just error out.
 
-The system is a 1Ghz Windows XP SP1 box with bochs 2.02, guest OS is 
+The system is a 1Ghz Windows XP SP1 box with bochs 2.02, guest OS is
 allocated 64Mb of RAM and running Windows NT4 SP1.
 
 Any clues, anyone experiencing similar problems?
@@ -382,7 +382,7 @@ To: Jeremy Wilkins <jeb at jeremywilkins.freeserve.co.uk>
 Cc: bochs-developers@lists.sourceforge.net
 Subject: Re: [Bochs-developers] Odd network errors with NT4 Guest OS
 
-Did you try with a big IPS? start the guest clock applet and try to get 
+Did you try with a big IPS? start the guest clock applet and try to get
 a more or less accurate time, with 1 Ghz should be in the 50 000 000 range.
 IIRC NT timeout and abort before it send the whole packet.
 
@@ -392,13 +392,13 @@ From: Jeremy Wilkins <jeb at jeremywilkins.freeserve.co.uk>
 To: didier <dgautheron at magic.fr>, bochs-developers@lists.sourceforge.net
 Subject: Re: [Bochs-developers] Odd network errors with NT4 Guest OS
 
-Thanks, 60 000 000 seems to have done the trick (I can copy sp6 across 
+Thanks, 60 000 000 seems to have done the trick (I can copy sp6 across
 anyway). My original guess of 4000000 IPS was probably a bit low :)
 
 thanks again
 
 ------------------------------------------
-TAP under FreeBSD 
+TAP under FreeBSD
 
 Date: Fri, 14 Feb 2003 02:12:38 +0100
 From: Ronald Klop <ronald at echteman.nl>

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.110 2008-01-17 15:39:45 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.111 2008-02-05 22:33:33 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -168,7 +168,7 @@ int bx_dbg_main(void)
   dbg_cpu_list = (bx_list_c*) SIM->get_param("cpu0", SIM->get_bochs_root());
 
   // Open debugger log file if needed
-  if ((strlen(SIM->get_param_string(BXPN_DEBUGGER_LOG_FILENAME)->getptr()) > 0) 
+  if ((strlen(SIM->get_param_string(BXPN_DEBUGGER_LOG_FILENAME)->getptr()) > 0)
    && (strcmp(SIM->get_param_string(BXPN_DEBUGGER_LOG_FILENAME)->getptr(), "-") != 0)) {
     debugger_log = fopen(SIM->get_param_string(BXPN_DEBUGGER_LOG_FILENAME)->getptr(), "w");
     if (!debugger_log) {
@@ -467,7 +467,7 @@ void bx_dbg_exception(unsigned cpu, Bit8u vector, Bit16u error_code)
 {
   if (BX_CPU(dbg_cpu)->trace || bx_dbg.exceptions)
   {
-    dbg_printf("CPU %d: Exception 0x%02x occured (error_code=0x%04x)\n", 
+    dbg_printf("CPU %d: Exception 0x%02x occured (error_code=0x%04x)\n",
       cpu, vector, error_code);
   }
 }
@@ -476,7 +476,7 @@ void bx_dbg_interrupt(unsigned cpu, Bit8u vector, Bit16u error_code)
 {
   if (BX_CPU(dbg_cpu)->trace || bx_dbg.interrupts)
   {
-    dbg_printf("CPU %d: Interrupt 0x%02x occured (error_code=0x%04x)\n", 
+    dbg_printf("CPU %d: Interrupt 0x%02x occured (error_code=0x%04x)\n",
       cpu, vector, error_code);
   }
 }
@@ -758,14 +758,14 @@ void bx_dbg_quit_command(void)
 void bx_dbg_trace_command(bx_bool enable)
 {
   BX_CPU(dbg_cpu)->trace = enable;
-  dbg_printf("Tracing %s for %s\n", enable ? "enabled" : "disabled", 
+  dbg_printf("Tracing %s for %s\n", enable ? "enabled" : "disabled",
      BX_CPU(dbg_cpu)->name);
 }
 
 void bx_dbg_trace_reg_command(bx_bool enable)
 {
   BX_CPU(dbg_cpu)->trace_reg = enable;
-  dbg_printf("Register-Tracing %s for %s\n", enable ? "enabled" : "disabled", 
+  dbg_printf("Register-Tracing %s for %s\n", enable ? "enabled" : "disabled",
      BX_CPU(dbg_cpu)->name);
 }
 
@@ -942,7 +942,7 @@ void bx_dbg_modebp_command()
 {
   BX_CPU(dbg_cpu)->dbg_cpu_mode = BX_CPU(dbg_cpu)->get_cpu_mode();
   BX_CPU(dbg_cpu)->mode_break = !BX_CPU(dbg_cpu)->mode_break;
-  dbg_printf(" mode switch break %s\n", 
+  dbg_printf(" mode switch break %s\n",
     BX_CPU(dbg_cpu)->mode_break ? "enabled" : "disabled");
 }
 
@@ -1234,7 +1234,7 @@ void bx_dbg_show_param_command(char *param)
 }
 
 // return non zero to cause a stop
-int bx_dbg_show_symbolic(void) 
+int bx_dbg_show_symbolic(void)
 {
   static unsigned last_cpu_mode = 0;
   static bx_phy_address last_cr3 = 0;
@@ -1242,14 +1242,14 @@ int bx_dbg_show_symbolic(void)
   /* modes & address spaces */
   if (dbg_show_mask & BX_DBG_SHOW_MODE) {
     if(BX_CPU(dbg_cpu)->get_cpu_mode() != last_cpu_mode) {
-      dbg_printf (FMT_TICK ": switched from '%s' to '%s'\n", 
+      dbg_printf (FMT_TICK ": switched from '%s' to '%s'\n",
         bx_pc_system.time_ticks(),
         cpu_mode_string(last_cpu_mode),
         cpu_mode_string(BX_CPU(dbg_cpu)->get_cpu_mode()));
     }
 
     if(last_cr3 != BX_CPU(dbg_cpu)->cr3)
-      dbg_printf(FMT_TICK ": address space switched. CR3: 0x08x\n", 
+      dbg_printf(FMT_TICK ": address space switched. CR3: 0x08x\n",
         bx_pc_system.time_ticks(), BX_CPU(dbg_cpu)->cr3);
   }
 
@@ -1263,7 +1263,7 @@ int bx_dbg_show_symbolic(void)
       dbg_printf("\n");
     }
   }
-  
+
   if (dbg_show_mask & BX_DBG_SHOW_EXTINT) {
     if((BX_CPU(dbg_cpu)->show_flag & Flag_intsig) && !(BX_CPU(dbg_cpu)->show_flag & Flag_softint)) {
       dbg_printf(FMT_TICK ": exception (not softint) ", bx_pc_system.time_ticks());
@@ -1322,7 +1322,7 @@ void bx_dbg_print_stack_command(unsigned nwords)
     linear_sp = BX_CPU(dbg_cpu)->get_reg64(BX_64BIT_REG_RSP);
     len = 8;
   }
-  else 
+  else
 #endif
   {
     if (BX_CPU(dbg_cpu)->sregs[BX_SEG_REG_SS].cache.u.segment.d_b) {
@@ -1343,20 +1343,20 @@ void bx_dbg_print_stack_command(unsigned nwords)
     if (! bx_dbg_read_linear(dbg_cpu, linear_sp, len, buf)) break;
 #if BX_SUPPORT_X86_64
     if (len == 8) {
-      dbg_printf(" | STACK 0x%08x%08x [0x%08x:0x%08x]\n", 
+      dbg_printf(" | STACK 0x%08x%08x [0x%08x:0x%08x]\n",
         GET32H(linear_sp), GET32L(linear_sp),
-        (unsigned) conv_4xBit8u_to_Bit32u(buf+4), 
+        (unsigned) conv_4xBit8u_to_Bit32u(buf+4),
         (unsigned) conv_4xBit8u_to_Bit32u(buf));
     }
     else
 #endif
     {
       if (len == 4) {
-        dbg_printf(" | STACK 0x%08x [0x%08x]\n", 
+        dbg_printf(" | STACK 0x%08x [0x%08x]\n",
           (unsigned) linear_sp, (unsigned) conv_4xBit8u_to_Bit32u(buf));
       }
       else {
-        dbg_printf(" | STACK 0x%04x [0x%04x]\n", 
+        dbg_printf(" | STACK 0x%04x [0x%04x]\n",
           (unsigned) linear_sp, (unsigned) conv_4xBit8u_to_Bit32u(buf));
       }
     }
@@ -1452,7 +1452,7 @@ one_more:
     // cpu_loop exits so that another processor can be simulated
     // for a few cycles.  With a single processor, the quantum
     // setting should have no effect, although a low setting does
-    // lead to poor performance because cpu_loop is returning and 
+    // lead to poor performance because cpu_loop is returning and
     // getting called again, over and over.
 
 #define BX_DBG_DEFAULT_ICOUNT_QUANTUM 5
@@ -1495,7 +1495,7 @@ one_more:
         if (BX_CPU(cpu)->guard_found.icount > max_executed)
           max_executed = BX_CPU(cpu)->guard_found.icount;
       }
-      // potential deadlock if all processors are halted.  Then 
+      // potential deadlock if all processors are halted.  Then
       // max_executed will be 0, tick will be incremented by zero, and
       // there will never be a timed event to wake them up.  To avoid this,
       // always tick by a minimum of 1.
@@ -1574,7 +1574,7 @@ void bx_dbg_disassemble_current(int which_cpu, int print_time)
   {
     unsigned ilen = bx_disassemble.disasm(BX_CPU(which_cpu)->guard_found.is_32bit_code,
       BX_CPU(which_cpu)->guard_found.is_64bit_code,
-      BX_CPU(which_cpu)->get_segment_base(BX_SEG_REG_CS), 
+      BX_CPU(which_cpu)->get_segment_base(BX_SEG_REG_CS),
       BX_CPU(which_cpu)->guard_found.eip, bx_disasm_ibuf, bx_disasm_tbuf);
 
     // Note: it would be nice to display only the modified registers here, the easy
@@ -1590,18 +1590,18 @@ void bx_dbg_disassemble_current(int which_cpu, int print_time)
       dbg_printf("(%u) ", which_cpu);
 
     if (BX_CPU(which_cpu)->protected_mode()) {
-      dbg_printf("[0x%08x] %04x:" FMT_ADDRX " (%s): ", 
+      dbg_printf("[0x%08x] %04x:" FMT_ADDRX " (%s): ",
         phy, BX_CPU(which_cpu)->guard_found.cs,
         BX_CPU(which_cpu)->guard_found.eip,
-        bx_dbg_symbolic_address((BX_CPU(which_cpu)->cr3) >> 12, 
-           BX_CPU(which_cpu)->guard_found.eip, 
+        bx_dbg_symbolic_address((BX_CPU(which_cpu)->cr3) >> 12,
+           BX_CPU(which_cpu)->guard_found.eip,
            BX_CPU(which_cpu)->get_segment_base(BX_SEG_REG_CS)));
     }
     else { // Real & V86 mode
-      dbg_printf("[0x%08x] %04x:%04x (%s): ", 
+      dbg_printf("[0x%08x] %04x:%04x (%s): ",
         phy, BX_CPU(which_cpu)->guard_found.cs,
         (unsigned) BX_CPU(which_cpu)->guard_found.eip,
-        bx_dbg_symbolic_address_16bit(BX_CPU(which_cpu)->guard_found.eip, 
+        bx_dbg_symbolic_address_16bit(BX_CPU(which_cpu)->guard_found.eip,
           BX_CPU(which_cpu)->sregs[BX_SEG_REG_CS].selector.value));
     }
     dbg_printf("%-25s ; ", bx_disasm_tbuf);
@@ -2281,7 +2281,7 @@ void bx_dbg_examine_command(char *command, char *format, bx_bool format_passed,
           case 'u': dbg_printf("\t%u", (unsigned) data16); break;
           case 'o': dbg_printf("\t%o", (unsigned) data16); break;
             case 't': dbg_printf_binary("\t%s", data16, 16); break;
-          case 'c': 
+          case 'c':
             bx_print_char(data16>>8);
             bx_print_char(data16 & 0xff);
             break;
@@ -2310,7 +2310,7 @@ void bx_dbg_examine_command(char *command, char *format, bx_bool format_passed,
           case 'u': dbg_printf("\t%u", (unsigned) data32); break;
           case 'o': dbg_printf("\t%o", (unsigned) data32); break;
           case 't': dbg_printf_binary("\t%s", data32, 32); break;
-          case 'c': 
+          case 'c':
             bx_print_char(0xff & (data32>>24));
             bx_print_char(0xff & (data32>>16));
             bx_print_char(0xff & (data32>> 8));
@@ -2452,7 +2452,7 @@ void bx_dbg_query_command(const char *what)
 void bx_dbg_restore_command(const char *param_name, const char *restore_path)
 {
   const char *path = (restore_path == NULL) ? "." : restore_path;
-  dbg_printf("restoring param (%s) state from file (%s/%s)\n", 
+  dbg_printf("restoring param (%s) state from file (%s/%s)\n",
       param_name, path, param_name);
   if (! SIM->restore_bochs_param(SIM->get_bochs_root(), path, param_name)) {
     dbg_printf("Error: error occured during restore\n");
@@ -2602,7 +2602,7 @@ void bx_dbg_print_descriptor(unsigned char desc[8], int verbose)
   unsigned avl = (hi >> 20) & 0x01;
   unsigned base_is_jump_addr;
   if (s) {
-    // either a code or a data segment. bit 11 (type file MSB) then says 
+    // either a code or a data segment. bit 11 (type file MSB) then says
     // 0=data segment, 1=code seg
     if (type&8) {
       dbg_printf("Segment type: Code, %s%s%s\n",
@@ -2642,10 +2642,10 @@ void bx_dbg_print_descriptor(unsigned char desc[8], int verbose)
   // 32-bit trap gate, target=0010:c0108ec4, DPL=0, present=1
   // code segment, base=0000:00cfffff, length=0xffff
   if (s) {
-    // either a code or a data segment. bit 11 (type file MSB) then says 
+    // either a code or a data segment. bit 11 (type file MSB) then says
     // 0=data segment, 1=code seg
     if (type&8) {
-      dbg_printf("Code segment, linearaddr=%08x, limit=%05x %s, %s%s%s, %d-bit\n", 
+      dbg_printf("Code segment, linearaddr=%08x, limit=%05x %s, %s%s%s, %d-bit\n",
         base, limit, g ? "* 4Kbytes" : "bytes",
         (type&2)? "Execute/Read" : "Execute-Only",
         (type&4)? ", Conforming" : "",
@@ -2772,7 +2772,7 @@ void bx_dbg_info_ldt_command(unsigned from, unsigned to)
 
 /*form RB list*/
 static char* bx_dbg_ivt_desc(int intnum)
-{ 
+{
   char* ret = "";
   switch (intnum)
   { case 0x00 : ret = "DIVIDE ERROR"                        ; break;
@@ -2821,7 +2821,7 @@ static char* bx_dbg_ivt_desc(int intnum)
 }
 
 void bx_dbg_info_ivt_command(unsigned from, unsigned to)
-{ 
+{
   unsigned char buff[4];
   Bit16u seg;
   Bit16u off;
@@ -2829,9 +2829,9 @@ void bx_dbg_info_ivt_command(unsigned from, unsigned to)
   bx_dbg_global_sreg_t idtr;
 
   BX_CPU(dbg_cpu)->dbg_get_idtr(&idtr);
-  
+
   if (! BX_CPU(dbg_cpu)->protected_mode())
-  { 
+  {
     if (to == (unsigned) EMPTY_ARG) {
       to = from;
       if(from == (unsigned) EMPTY_ARG) { from = 0; to = 255; all = 1; }
@@ -2847,7 +2847,7 @@ void bx_dbg_info_ivt_command(unsigned from, unsigned to)
     }
 
     for (unsigned i = from; i <= to; i++)
-    { 
+    {
       BX_MEM(0)->dbg_fetch_mem(BX_CPU(dbg_cpu), idtr.base + i * 4, sizeof(buff), buff);
 #ifdef BX_LITTLE_ENDIAN
       seg = *(Bit16u*)(&buff[2]);
@@ -3117,8 +3117,8 @@ void bx_dbg_dump_table(void)
 
   printf("cr3: 0x08x\n", BX_CPU(dbg_cpu)->cr3);
 
-  lin = 0; 
-  phy = 0; 
+  lin = 0;
+  phy = 0;
 
   start_lin = 1;
   start_phy = 2;
@@ -3149,7 +3149,7 @@ void bx_dbg_dump_table(void)
 }
 
 void bx_dbg_print_help(void)
-{ 
+{
   dbg_printf("h|help - show list of debugger commands\n");
   dbg_printf("h|help command - show short command description\n");
   dbg_printf("-*- Debugger control -*-\n");
@@ -3378,7 +3378,7 @@ void bx_dbg_step_over_command()
 
   x86_insn insn = bx_disassemble.decode(BX_CPU(dbg_cpu)->guard_found.is_32bit_code,
       BX_CPU(dbg_cpu)->guard_found.is_64bit_code,
-      BX_CPU(dbg_cpu)->get_segment_base(BX_SEG_REG_CS), 
+      BX_CPU(dbg_cpu)->get_segment_base(BX_SEG_REG_CS),
       BX_CPU(dbg_cpu)->guard_found.eip, bx_disasm_ibuf, bx_disasm_tbuf);
 
   unsigned b1 = insn.b1;
@@ -3401,7 +3401,7 @@ void bx_dbg_step_over_command()
     case 0x7D:
     case 0x7E:
     case 0x7F:
-    
+
     // Jcc near
     case 0x180:
     case 0x181:
@@ -3460,9 +3460,9 @@ void bx_dbg_step_over_command()
     dbg_printf("bx_dbg_step_over_command:: Failed to set lbreakpoint !\n");
     return;
   }
-  
+
   bx_dbg_continue_command();
-  
+
   if (bx_dbg_del_lbreak (BpId))
     bx_dbg_breakpoint_changed();
 }

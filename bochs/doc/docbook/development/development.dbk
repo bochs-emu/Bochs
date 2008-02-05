@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/development/development.dbk
-$Id: development.dbk,v 1.26 2007-09-28 19:51:44 sshwarts Exp $
+$Id: development.dbk,v 1.27 2008-02-05 22:33:34 sshwarts Exp $
 
 This is the top level file for the Bochs Developers Manual.
 ================================================================
@@ -55,7 +55,7 @@ yourself.  The links below should help you get going.
 <listitem> <para> A free version of secure shell called OpenSSH is at <ulink url="http://www.openssh.org">www.openssh.org</ulink>. </para> </listitem>
 <listitem> <para> OpenSSH requires a library called OpenSSL from <ulink url="http://www.openssl.org">www.openssl.org</ulink>.  Be sure to install OpenSSL before trying to compile OpenSSH. </para> </listitem>
 </itemizedlist>
-</section> 
+</section>
 
 <section><title>ssh to cvs.sf.net</title>
 <para>
@@ -74,18 +74,18 @@ this step again, ever.
 
 <para>
 Replace <replaceable>sfusername</replaceable> with your Source Forge username,
-of course.  The first time, you will probably get a message like 
+of course.  The first time, you will probably get a message like
 <screen>
 The authenticity of host 'cvs.sf.net' can't be established.
 Are you sure you want to continue?</screen>
 
-Just type yes.  When it asks for a password, be sure to type your source 
+Just type yes.  When it asks for a password, be sure to type your source
 forge password.  If you have trouble logging in, be sure to use your SOURCE
 FORGE username and password in the ssh line, which isn't necessarily the same
 as your local username and password.  Add the "-v" option to ssh to see more
 information about what is failing.  If you have ssh version 2, it is possible
 that you might need to add "-1" to the ssh command to force it to use the
-version 1 protocol.  </para> </section> 
+version 1 protocol.  </para> </section>
 
 <section><title>Set CVS_RSH environment variable to ssh</title>
 <para>
@@ -117,7 +117,7 @@ overwrite it.
 <para>
 In the CVSROOT variable, replace <replaceable>sfusername</replaceable> with your SF username.  There's
 no need to add CVSROOT to your rc files because CVS will remember it
-after the checkout.  The -z3 (optional) just adds some compression to make 
+after the checkout.  The -z3 (optional) just adds some compression to make
 the checkout go faster.  Once all the files have been downloaded, you will
 have a Bochs directory which is checked out with write access!
 </para>
@@ -258,7 +258,7 @@ disassembler, tracer, instrumentation.
 
 <section id="directory-structure"><title>Directory Structure</title>
 <para>
-<table>   
+<table>
 <title>Directory structure</title>
 <tgroup cols="2">
 <thead>
@@ -446,7 +446,7 @@ method returns the parameter value.
 </para>
 <para>
 The table below shows all parameter types used by the Bochs configuration interface.
-<table>   
+<table>
 <title>Parameter types</title>
 <tgroup cols="2">
 <thead>
@@ -508,7 +508,7 @@ special parameter type, so they are saved as separate files.
 </para>
 <para>
 The table below shows the additional parameter types for save/restore.
-<table>   
+<table>
 <title>Save/restore parameter types</title>
 <tgroup cols="2">
 <thead>
@@ -569,8 +569,8 @@ All devices can uses these two save/restore specific methods:
 
 <section id="cmos-map"><title>Bochs's CMOS map</title>
 <para>
-In addition to the default CMOS RAM layout, the Bochs BIOS uses some additional 
-registers for harddisk parameters and the boot sequence. The following table 
+In addition to the default CMOS RAM layout, the Bochs BIOS uses some additional
+registers for harddisk parameters and the boot sequence. The following table
 shows all CMOS registers and their meaning.
 </para>
 <para>
@@ -710,7 +710,7 @@ Bochs, however, so you can find everything you need here.
 
 <para>
 SB16 Emulation has been tested with several soundcards and versions of Linux.  Please give
-Josef <ulink url="mailto:jdrexler@julian.uwo.ca">feedback</ulink> on 
+Josef <ulink url="mailto:jdrexler@julian.uwo.ca">feedback</ulink> on
 whether is does or doesn't work on your combination of software and hardware.
 </para>
 
@@ -758,8 +758,8 @@ respectively. A future version might have selectable output devices.
 </para>
 
 <para>
-A wavetable synthesizer on /dev/midi00 and a working /dev/dsp if you want real time music and sound, otherwise output to midi and wave files is also possible. 
-Optionally, you can use a software midi interpreter, such as the midid program from the DosEmu project instead of /dev/midi00. 
+A wavetable synthesizer on /dev/midi00 and a working /dev/dsp if you want real time music and sound, otherwise output to midi and wave files is also possible.
+Optionally, you can use a software midi interpreter, such as the midid program from the DosEmu project instead of /dev/midi00.
 </para>
 </section>
 
@@ -842,7 +842,7 @@ header files to get an idea about how these things really work.
 <section><title>Files</title>
 
 <para>
-The main include file is <emphasis>bochs.h</emphasis>. It has all definitions 
+The main include file is <emphasis>bochs.h</emphasis>. It has all definitions
 for the system-independent functions that the SB16 emulation uses, which
 are defined in <emphasis>sb16.h</emphasis>.
 </para>
@@ -854,7 +854,7 @@ to use that driver.
 </para>
 
 <para>
-To actually make the emulator use any specific driver, 
+To actually make the emulator use any specific driver,
 <emphasis>BX_SOUND_OUTPUT_C</emphasis> has to be set to the name of the respective
 output class.
 </para>
@@ -889,15 +889,15 @@ the emulator whenever output is necessary.
 </para></listitem>
 
 <listitem><para>
-<emphasis>bx_sound_OS_c</emphasis> is derived from 
-<emphasis>bx_sound_output_c</emphasis>. It contains the code to generate 
-output for the <emphasis>OS</emphasis> operating system. 
+<emphasis>bx_sound_OS_c</emphasis> is derived from
+<emphasis>bx_sound_output_c</emphasis>. It contains the code to generate
+output for the <emphasis>OS</emphasis> operating system.
 It is necessary to override all
 the methods defined in the base class, unless virtual functions
 are used. Note that this should remain an option, so try to
 override all methods, even if only as stubs. They should be
 declared <emphasis>virtual</emphasis> if and only if <emphasis>BX_USE_SOUND_VIRTUAL</emphasis>
-is defined, just as in the examples. 
+is defined, just as in the examples.
 The constructor should call the inherited constructor
 as usual, even though the current constructor does not do
 anything yet.
@@ -910,7 +910,7 @@ anything yet.
 <para>
 The following are the methods that the output class has to override.
 All but constructor and destructor have to return either
-<emphasis>BX_SOUND_OUTPUT_OK</emphasis> <emphasis>(0)</emphasis> if the function was successful, 
+<emphasis>BX_SOUND_OUTPUT_OK</emphasis> <emphasis>(0)</emphasis> if the function was successful,
 or <emphasis>BX_SOUND_OUTPUT_ERR</emphasis> <emphasis>(1)</emphasis> if not. If any of the initialization
 functions fail, output to that device is disabled until the emulator is restarted.
 </para>
@@ -928,17 +928,17 @@ Description of the parameter:
 
 <itemizedlist>
 <listitem><para>
-<emphasis>sb16</emphasis> is a pointer to the emulator class. 
+<emphasis>sb16</emphasis> is a pointer to the emulator class.
 This pointer can then be used to access for example the <emphasis>writelog</emphasis> function to generate
 sound-related log messages. Apart from that, no access to the emulator
 should be necessary.
 </para></listitem>
 
 <listitem><para>
-The constructor should <emphasis>not</emphasis> allocate the output devices. 
-This shouldn't be done until the actual output occurs; in either 
+The constructor should <emphasis>not</emphasis> allocate the output devices.
+This shouldn't be done until the actual output occurs; in either
 <emphasis>initmidioutput()</emphasis> or <emphasis>initwaveoutput()</emphasis>.
-Otherwise it would be impossible to have two copies of Bochs running 
+Otherwise it would be impossible to have two copies of Bochs running
 concurrently (if anybody ever wants to do this).
 </para></listitem>
 </itemizedlist>
@@ -990,7 +990,7 @@ before it is changed.
 
 <para>
 <emphasis>midiready()</emphasis> is called whenever the applications asks if the
-midi queue can accept more data. 
+midi queue can accept more data.
 </para>
 
 <para>
@@ -999,11 +999,11 @@ Return values:
 
 <itemizedlist>
 <listitem><para>
-<emphasis>BX_SOUND_OUTPUT_OK</emphasis> if the midi output device is ready.  
+<emphasis>BX_SOUND_OUTPUT_OK</emphasis> if the midi output device is ready.
 </para></listitem>
 
 <listitem><para>
-<emphasis>BX_SOUND_OUTPUT_ERR</emphasis> if it isn't ready.  
+<emphasis>BX_SOUND_OUTPUT_ERR</emphasis> if it isn't ready.
 </para></listitem>
 </itemizedlist>
 
@@ -1064,7 +1064,7 @@ Note, it might be <emphasis>NULL</emphasis> if length==0.
 <section><title>int closemidioutput()</title>
 
 <para>
-<emphasis>closemidioutput()</emphasis> is called before shutting down Bochs or 
+<emphasis>closemidioutput()</emphasis> is called before shutting down Bochs or
 when the
 emulator gets the <emphasis>stop_output</emphasis> command through the emulator port.
 After this, no more output will be necessary until <emphasis>openmidioutput()</emphasis>
@@ -1197,7 +1197,7 @@ of one sample.
 </itemizedlist>
 
 <para>
-<table>   
+<table>
 <title>format bits</title>
 <tgroup cols="2">
 <thead>
@@ -1217,7 +1217,7 @@ of one sample.
 </tgroup>
 </table>
 
-<table>   
+<table>
 <title>codecs</title>
 <tgroup cols="2">
 <thead>
@@ -1258,9 +1258,9 @@ is done or aborted.
 
 <para>
 It should return whether the output device is ready for another buffer
-of <emphasis>BX_SOUND_OUTPUT_WAVEPACKETSIZE</emphasis> bytes. 
+of <emphasis>BX_SOUND_OUTPUT_WAVEPACKETSIZE</emphasis> bytes.
 If <emphasis>BX_SOUND_OUTPUT_ERR</emphasis>
-is returned, the emulator waits about 1/(frequency * bytes per sample) seconds 
+is returned, the emulator waits about 1/(frequency * bytes per sample) seconds
 and then asks again. The DMA transfer is stalled during that time, but
 the application keeps running, until the output device becomes ready.
 </para>
@@ -1314,7 +1314,7 @@ the data stream. It will never be larger than <emphasis>BX_SB16_WAVEPACKETSIZE</
 <para>
 The order of bytes in the data stream is the same as that in the Wave file format:
 
-<table>   
+<table>
 <title>wave output types</title>
 <tgroup cols="2">
 <thead>
@@ -1383,7 +1383,7 @@ the future.
 
 <section id="harddisk-redologs"><title>Harddisk Images based on redologs</title>
 <para>
-This section describes how the three new disk images "undoable", "growing", and "volatile" are 
+This section describes how the three new disk images "undoable", "growing", and "volatile" are
 implemented in Bochs 2.1 :
 </para>
 <itemizedlist>
@@ -1406,12 +1406,12 @@ volatile -> flat file, plus hidden growing redolog
         Description
 </title>
 <para>
-The idea behind volatile and undoable disk images 
-is to have a flat file, associated with one redolog file. 
+The idea behind volatile and undoable disk images
+is to have a flat file, associated with one redolog file.
 </para>
 <para>
-Reading a sector is done from the redolog file if it contains 
-the sector, or from the flat file otherwise. 
+Reading a sector is done from the redolog file if it contains
+the sector, or from the flat file otherwise.
 </para>
 <para>
 Sectors written go to the redolog,
@@ -1426,7 +1426,7 @@ sectors are done in place. Redolog files can not shrink.
 The redolog is a growing file that can be created on the fly.
 </para>
 <para>
-Now, it turns out that if you only use a redolog without any 
+Now, it turns out that if you only use a redolog without any
 flat file, you get a "growing" disk image.
 </para>
 <para>
@@ -1442,7 +1442,7 @@ are implemented on top of a redolog class.
 
 <para>
 At the start of a redolog file, there is a header, so Bochs can check whether
-a file is consistent. 
+a file is consistent.
 This header could also be checked when we implement
 automatic type and size detection.
 </para>
@@ -1459,7 +1459,7 @@ of entries of the catalog, the extent, bitmap and disk size are stored.
 <para>
 In a redolog, the disk image is divided in a number of equal size "extents".
 Each extent is a collection of successive 512-bytes sectors of the disk image,
-preceeded by a n*512bytes bitmap. 
+preceeded by a n*512bytes bitmap.
 </para>
 
 <para>
@@ -1488,7 +1488,7 @@ to be reusable by other disk image types.
 </para>
 <para>
 The header length is 512 bytes. It contains :
-<table>   
+<table>
 <title>Generic header description</title>
 <tgroup cols="5">
 <thead>
@@ -1509,7 +1509,7 @@ The header length is 512 bytes. It contains :
 </tbody>
 </tgroup>
 </table>
-<table>   
+<table>
 <title>Redolog specific header description</title>
 <tgroup cols="5">
 <thead>
@@ -1558,7 +1558,7 @@ Each position is a Bit32u entity.
 </title>
 <para>
 The following tables shows what parameters are used when creating redologs or creating "growing" images :
-<table>   
+<table>
 <title>
         How number of entries in the catalog and number of blocks by extents are computed
 </title>
@@ -1699,20 +1699,20 @@ This constant is used in the catalog for an unwritten extent.
 <emphasis>redolog_t();</emphasis> instanciates a new redolog.
 </para>
 <para>
-<emphasis>int make_header (const char* type, Bit64u size);</emphasis> creates a header 
+<emphasis>int make_header (const char* type, Bit64u size);</emphasis> creates a header
 structure in memory, and sets its <emphasis>type</emphasis> and parameters based on the
 disk image <emphasis>size</emphasis>. Returns 0.
 </para>
 <para>
-<emphasis>int create (const char* filename, const char* type, Bit64u size);</emphasis> 
+<emphasis>int create (const char* filename, const char* type, Bit64u size);</emphasis>
 creates a new empty redolog file, with header and catalog, named <emphasis>filename</emphasis>
 of type <emphasis>type</emphasis> for a <emphasis>size</emphasis> bytes image.
 Returns 0 for OK or -1 if a problem occured.
 </para>
 <para>
 <emphasis>int create (int filedes, const char* type, Bit64u size);</emphasis>
-creates a new empty redolog file, with header and catalog, in a previously 
-opened file described by <emphasis>filedes</emphasis>, of type <emphasis>type</emphasis> 
+creates a new empty redolog file, with header and catalog, in a previously
+opened file described by <emphasis>filedes</emphasis>, of type <emphasis>type</emphasis>
 for a <emphasis>size</emphasis> bytes image.
 Returns 0 for OK or -1 if a problem occured.
 </para>
@@ -1745,13 +1745,13 @@ has not previously be written to the redolog.
 </para>
 <para>
 <emphasis>ssize_t write (const void* buf, size_t count);</emphasis>
-writes <emphasis>count</emphasis> bytes of data from <emphasis>buf</emphasis> 
+writes <emphasis>count</emphasis> bytes of data from <emphasis>buf</emphasis>
 to the redolog, at current logical offset.
 <emphasis>count</emphasis> must be 512.
 Returns the number of bytes written.
 </para>
 
-</section> 
+</section>
 
 </section> <!-- Redolog class description -->
 
@@ -1761,7 +1761,7 @@ Returns the number of bytes written.
 </title>
 <para>
 "volatile" and "undoable" disk images are easily implemented
-by instanciating a <emphasis>default_image_t</emphasis> object (flat image) 
+by instanciating a <emphasis>default_image_t</emphasis> object (flat image)
 and a <emphasis>redolog_t</emphasis> object (redolog).
 </para>
 <para>
@@ -1802,7 +1802,7 @@ undoable_image_t(Bit64u size, const char* redolog_name);
 </emphasis>
 instanciates a new <emphasis>undoable_image_t</emphasis>
 object. This disk image logical length is <emphasis>size</emphasis> bytes and
-the redolog filename is <emphasis>redolog_name</emphasis>. 
+the redolog filename is <emphasis>redolog_name</emphasis>.
 </para>
 
 <para>
@@ -1811,7 +1811,7 @@ int open (const char* pathname);
 </emphasis>
 opens the flat disk image <emphasis>pathname</emphasis>,
 as an undoable disk image. The associated redolog will
-be named <emphasis>pathname</emphasis> with a 
+be named <emphasis>pathname</emphasis> with a
 <emphasis>UNDOABLE_REDOLOG_EXTENSION</emphasis>
 suffix, unless set in the constructor.
 Returns 0 for OK or -1 if a problem occured.
@@ -1829,7 +1829,7 @@ closes the flat image and its redolog.
 off_t lseek (off_t offset, int whence);
 </emphasis>
 seeks at logical data position <emphasis>offset</emphasis> in
-the undoable disk image. 
+the undoable disk image.
 Only SEEK_SET is supported for <emphasis>whence</emphasis>.
 Returns -1 if a problem occured, or the current logical
 offset in the undoable disk image.
@@ -1839,7 +1839,7 @@ offset in the undoable disk image.
 <emphasis>
 ssize_t read (void* buf, size_t count);
 </emphasis>
-reads <emphasis>count</emphasis> bytes of data 
+reads <emphasis>count</emphasis> bytes of data
 from the undoable disk image, from current logical offset,
 and copies it into <emphasis>buf</emphasis>.
 <emphasis>count</emphasis> must be 512.
@@ -1853,7 +1853,7 @@ otherwise.
 <emphasis>
 ssize_t write (const void* buf, size_t count);
 </emphasis>
-writes <emphasis>count</emphasis> bytes of data from <emphasis>buf</emphasis> 
+writes <emphasis>count</emphasis> bytes of data from <emphasis>buf</emphasis>
 to the undoable disk image, at current logical offset.
 <emphasis>count</emphasis> must be 512.
 Returns the number of bytes written.
@@ -1871,8 +1871,8 @@ volatile_image_t(Bit64u size, const char* redolog_name);
 </emphasis>
 instanciates a new <emphasis>volatile_image_t</emphasis>
 object. This disk image logical length is <emphasis>size</emphasis> bytes and
-the redolog filename is <emphasis>redolog_name</emphasis> plus a 
-random suffix. 
+the redolog filename is <emphasis>redolog_name</emphasis> plus a
+random suffix.
 </para>
 
 <para>
@@ -1881,7 +1881,7 @@ int open (const char* pathname);
 </emphasis>
 opens the flat disk image <emphasis>pathname</emphasis>,
 as a volatile disk image. The associated redolog will
-be named <emphasis>pathname</emphasis> with a 
+be named <emphasis>pathname</emphasis> with a
 random suffix, unless set in the constructor.
 Returns 0 for OK or -1 if a problem occured.
 </para>
@@ -1899,7 +1899,7 @@ The redolog is deleted/lost after close is called.
 off_t lseek (off_t offset, int whence);
 </emphasis>
 seeks at logical data position <emphasis>offset</emphasis> in
-the volatile disk image. 
+the volatile disk image.
 Only SEEK_SET is supported for <emphasis>whence</emphasis>.
 Returns -1 if a problem occured, or the current logical offset in
 the volatile disk image.
@@ -1909,7 +1909,7 @@ the volatile disk image.
 <emphasis>
 ssize_t read (void* buf, size_t count);
 </emphasis>
-reads <emphasis>count</emphasis> bytes of data 
+reads <emphasis>count</emphasis> bytes of data
 from the volatile disk image, from current logical offset,
 and copies it into <emphasis>buf</emphasis>.
 <emphasis>count</emphasis> must be 512.
@@ -1923,7 +1923,7 @@ otherwise.
 <emphasis>
 ssize_t write (const void* buf, size_t count);
 </emphasis>
-writes <emphasis>count</emphasis> bytes of data from <emphasis>buf</emphasis> 
+writes <emphasis>count</emphasis> bytes of data from <emphasis>buf</emphasis>
 to the volatile disk image, at current logical offset.
 <emphasis>count</emphasis> must be 512.
 Returns the number of bytes written.
@@ -1963,7 +1963,7 @@ closes the growing disk image.
 off_t lseek (off_t offset, int whence);
 </emphasis>
 seeks at logical data position <emphasis>offset</emphasis> in
-the growable disk image. 
+the growable disk image.
 Only SEEK_SET is supported for <emphasis>whence</emphasis>.
 Returns -1 if a problem occured, or the current logical offset in
 the grwoing image.
@@ -1973,7 +1973,7 @@ the grwoing image.
 <emphasis>
 ssize_t read (void* buf, size_t count);
 </emphasis>
-reads <emphasis>count</emphasis> bytes of data 
+reads <emphasis>count</emphasis> bytes of data
 from the growing disk image, from current logical offset,
 and copies it into <emphasis>buf</emphasis>.
 <emphasis>count</emphasis> must be 512.
@@ -1986,7 +1986,7 @@ has not been previously written to the growing image.
 <emphasis>
 ssize_t write (const void* buf, size_t count);
 </emphasis>
-writes <emphasis>count</emphasis> bytes of data from <emphasis>buf</emphasis> 
+writes <emphasis>count</emphasis> bytes of data from <emphasis>buf</emphasis>
 to the growing disk image, at current logical offset.
 <emphasis>count</emphasis> must be 512.
 Returns the number of bytes written.
@@ -2015,7 +2015,7 @@ The function must be "static Bit32u (*)(const char *)" typed, and must return
 BX_KEYMAP_UNKNOWN if it can not translate the parameter string.
 
 What you have to do is :
-  - call once "void loadKeymap(Bit32u (*)(const char*))", 
+  - call once "void loadKeymap(Bit32u (*)(const char*))",
     providing your translation function, to load the keymap
   - call "Bit32u getBXKey(Bit32u)" that returns the BX_KEY_*
     constant, for each key you want to map.
@@ -2051,7 +2051,7 @@ as an example.
       </section>
 <section id="iodebug"><title>I/O Interface to Bochs Debugger</title>
 <para>
-This device was added by Dave Poirier (eks@void-core.2y.net). 
+This device was added by Dave Poirier (eks@void-core.2y.net).
 </para>
 <para>
 Compiling Bochs with iodebug support
@@ -2303,7 +2303,7 @@ These instructions require cygwin and MSVC++.
 <para>
 In Cygwin:
 <screen>
-  sh .conf.win32-vcpp         # runs configure 
+  sh .conf.win32-vcpp         # runs configure
   make win32_snap             # unzip workspace, make a win32 source ZIP
 </screen>
 Copy the source ZIP to a windows machine, if necessary.
@@ -2353,7 +2353,7 @@ Now make the NSIS installer package (the current script is known to work with NS
 <screen>
 cd build/win32/nsis
 </screen>
-Unzip the binary ZIP file into bochs-$VERSION (must match Makefile) and 
+Unzip the binary ZIP file into bochs-$VERSION (must match Makefile) and
 then run make.
 <screen>
 unzip ~/bochs-2.2.pre2.zip

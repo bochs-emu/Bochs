@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/documentation/documentation.dbk
-$Id: documentation.dbk,v 1.15 2004-11-24 16:52:39 vruppert Exp $
+$Id: documentation.dbk,v 1.16 2008-02-05 22:33:34 sshwarts Exp $
 
 This is the top level file for the Bochs Documentation Manual.
 ================================================================
@@ -43,7 +43,7 @@ The Bochs documentation is divided into three major divisions:
     Documentation Guide: Describes how the documentation is organized, and how to render it, and how to add to it.  This section is in the documentation guide.
     </para>
   </listitem>
-</itemizedlist>   
+</itemizedlist>
    </para>
 
 <para>
@@ -76,7 +76,7 @@ code to the rendered documentation on the web site, it will be pretty obvious
 what all the codes are doing.  HTML is very forgiving about breaking the syntax
 rules, such as not putting &lt;/h1&gt; at then end of an &lt;h1&gt; section.
 SGML is picky; if you forget that kind of thing in SGML, it will insist that
-you fix it.  
+you fix it.
 </para>
 
 <para>
@@ -143,8 +143,8 @@ anyone's system other than yours.
 </para>
 
 <para>
-There are over 300 tags defined in the latest version of docbook, so 
-we won't try to list them all here.  Once you get the idea, you can 
+There are over 300 tags defined in the latest version of docbook, so
+we won't try to list them all here.  Once you get the idea, you can
 either find examples in the rest of the documentation that do what you
 need, or look at Walsh and Muellner's
 <ulink url="http://www.docbook.org/tdg/en/html/docbook.html">DocBook: The Definitive Guide</ulink>
@@ -156,8 +156,8 @@ for more details.
 <section id="references"><title>References and Other Tutorials</title>
 
 <para>
-Docbook was created more than 10 years ago, but since 1999, Docbook has been 
-under the guidance of the DocBook Technical Committee at OASIS.  The 
+Docbook was created more than 10 years ago, but since 1999, Docbook has been
+under the guidance of the DocBook Technical Committee at OASIS.  The
 <ulink url="http://www.oasis-open.org/committees/docbook">OASIS website</ulink>
 distributes the official DocBook DTDs, and has pages on Docbook history,
 samples, tools, and runs a few docbook mailing lists.
@@ -187,7 +187,7 @@ HOWTO, also by Jorge Godoy</ulink>
 An article on lwn.net called <ulink
 url="http://lwn.net/2000/features/DocBook">Exploring SGML Docbook</ulink>
 focuses mostly on installation of tools from scratch: openjade, Norman Walsh's
-DSSSL stylesheets, and jade2tex.  If you can get the tools from RPMs or 
+DSSSL stylesheets, and jade2tex.  If you can get the tools from RPMs or
 whatever package your OS uses, use that instead.
 </para>
 
@@ -265,8 +265,8 @@ along with a hint on how to spell them.
 <chapter id="reading-writing"><title>Reading and Writing</title>
 
 <para>
-The DocBook source code -- user.dbk, for example -- is a plain text file that 
-can be directly edited and saved with any text editor such as emacs or vi.  
+The DocBook source code -- user.dbk, for example -- is a plain text file that
+can be directly edited and saved with any text editor such as emacs or vi.
 </para>
 
 <tip>
@@ -287,9 +287,9 @@ documentation.
 
 <tip>
 <para>
-The rendering process is one-way.  That is, the DocBook source files will be 
+The rendering process is one-way.  That is, the DocBook source files will be
 downloaded from CVS, edited, and uploaded to CVS as .dbk files.  Along the
-way, it will probably be necessary to render them into HTML, but only to 
+way, it will probably be necessary to render them into HTML, but only to
 check one's work or to post them as part of a web page.  (I hope I'm not the
 only person to spend nine minutes trying to figure out how to 'compile' HTML
 into DocBook format.)
@@ -317,7 +317,7 @@ Here is what the Linux Documentation Project says about jade:
 What does all this mean?
 For purposes of Bochs documentation, jade reads the docbook source file and
 writes out a HTML/PDF/PS file.  Bochs documentation is in SGML format, though
-apparantly jade can handle XML Docbooks as well.  DSSSL stands for 
+apparantly jade can handle XML Docbooks as well.  DSSSL stands for
 <quote>Document Style Semantics and Specification Language</quote>, and it
 tells jade how to translate the docbook tags into the target format.  DSSSL
 files are written in the Scheme programming language, which is a variant of
@@ -386,8 +386,8 @@ writer the package names that you used so that we can include it in the docs.
 
 <para>
 If you cannot get jade to work using packages, you need to find and install
-three things: the DocBook DTD version 4.1 from &OASIS;, the program 
-<ulink url="http://www.jclark.com/jade/">jade</ulink> 
+three things: the DocBook DTD version 4.1 from &OASIS;, the program
+<ulink url="http://www.jclark.com/jade/">jade</ulink>
 (or <ulink url="http://openjade.sourceforge.net/">openjade</ulink>), and the
 <ulink url="http://sourceforge.net/projects/docbook/">Docbook DSSSL
 stylesheets</ulink> for the formats that you want to render to.  The whole
@@ -434,7 +434,7 @@ one.
 <title>Using jade directly</title>
 <para>
 If you don't have docbook2<replaceable>format</replaceable> scripts, you
-can also run jade manually.  The command is long, so you may want to make 
+can also run jade manually.  The command is long, so you may want to make
 your own script or edit your copy of the makefile.  These commands assume that
 you installed Norman Walsh's DSSSL stylesheets in <varname>$DSSSL</varname>.
 To render the user's guide into HTML, type:
@@ -482,7 +482,7 @@ that the document conforms to all the rules of the DTD.
 A program called nsgmls, written by James Clark <email>jjc@jclark.com</email>,
 can validate an SGML document such as our docbook.  Although nsgmls can do many
 other things, this command will validate the docbook against the DTD which
-defines the syntax: 
+defines the syntax:
 <cmdsynopsis>
   <command>nsgmls</command>
   <arg choice="plain">-s</arg>
@@ -493,9 +493,9 @@ defines the syntax:
 <para>
 Nsgmls is part of SP, a "free object-oriented toolkit for SGML parsing and
 entity management" by James Clark <email>jjc@jclark.com</email>.  SP can be
-found at 
+found at
 <ulink url="http://www.jclark.com/sp">http://www.jclark.com/sp</ulink>.
-There is a complete man page for nsgmls 
+There is a complete man page for nsgmls
 <ulink url="http://www.jclark.com/sp/nsgmls.htm">here</ulink>.
 </para>
 

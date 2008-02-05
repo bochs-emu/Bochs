@@ -32,7 +32,7 @@ these four paragraphs for those parts of this code that are retained.
 /*============================================================================
  * Adapted for Bochs (x86 achitecture simulator) by
  *            Stanislav Shwartsman [sshwarts at sourceforge net]
- * ==========================================================================*/ 
+ * ==========================================================================*/
 
 #include "softfloat.h"
 #include "softfloat-round-pack.h"
@@ -134,7 +134,7 @@ float64 int64_to_float64(Bit64s a, float_status_t &status)
 | `a' to the 32-bit two's complement integer format.  The conversion is
 | performed according to the IEC/IEEE Standard for Binary Floating-Point
 | Arithmetic - which means in particular that the conversion is rounded
-| according to the current rounding mode.  If `a' is a NaN or the 
+| according to the current rounding mode.  If `a' is a NaN or the
 | conversion overflows the integer indefinite value is returned.
 *----------------------------------------------------------------------------*/
 
@@ -157,7 +157,7 @@ Bit32s float32_to_int32(float32 a, float_status_t &status)
 | `a' to the 32-bit two's complement integer format.  The conversion is
 | performed according to the IEC/IEEE Standard for Binary Floating-Point
 | Arithmetic, except that the conversion is always rounded toward zero.
-| If `a' is a NaN or the conversion overflows, the integer indefinite 
+| If `a' is a NaN or the conversion overflows, the integer indefinite
 | value is returned.
 *----------------------------------------------------------------------------*/
 
@@ -196,7 +196,7 @@ Bit32s float32_to_int32_round_to_zero(float32 a, float_status_t &status)
 | `a' to the 64-bit two's complement integer format.  The conversion is
 | performed according to the IEC/IEEE Standard for Binary Floating-Point
 | Arithmetic - which means in particular that the conversion is rounded
-| according to the current rounding mode. If `a' is a NaN or the 
+| according to the current rounding mode. If `a' is a NaN or the
 | conversion overflows, the integer indefinite value is returned.
 *----------------------------------------------------------------------------*/
 
@@ -769,7 +769,7 @@ int float32_eq(float32 a, float32 b, float_status_t &status)
     float_class_t aClass = float32_class(a);
     float_class_t bClass = float32_class(b);
 
-    if (aClass == float_NaN || bClass == float_NaN) 
+    if (aClass == float_NaN || bClass == float_NaN)
     {
         if (float32_is_signaling_nan(a) || float32_is_signaling_nan(b))
         {
@@ -778,7 +778,7 @@ int float32_eq(float32 a, float32 b, float_status_t &status)
         return 0;
     }
 
-    if (aClass == float_denormal || bClass == float_denormal) 
+    if (aClass == float_denormal || bClass == float_denormal)
     {
         float_raise(status, float_flag_denormal);
     }
@@ -803,7 +803,7 @@ int float32_le(float32 a, float32 b, float_status_t &status)
         return 0;
     }
 
-    if (aClass == float_denormal || bClass == float_denormal) 
+    if (aClass == float_denormal || bClass == float_denormal)
     {
         float_raise(status, float_flag_denormal);
     }
@@ -878,7 +878,7 @@ int float32_le_quiet(float32 a, float32 b, float_status_t &status)
     float_class_t aClass = float32_class(a);
     float_class_t bClass = float32_class(b);
 
-    if (aClass == float_NaN || bClass == float_NaN) 
+    if (aClass == float_NaN || bClass == float_NaN)
     {
         if (float32_is_signaling_nan(a) || float32_is_signaling_nan(b))
         {
@@ -887,7 +887,7 @@ int float32_le_quiet(float32 a, float32 b, float_status_t &status)
         return 0;
     }
 
-    if (aClass == float_denormal || bClass == float_denormal) 
+    if (aClass == float_denormal || bClass == float_denormal)
     {
         float_raise(status, float_flag_denormal);
     }
@@ -910,7 +910,7 @@ int float32_lt_quiet(float32 a, float32 b, float_status_t &status)
     float_class_t aClass = float32_class(a);
     float_class_t bClass = float32_class(b);
 
-    if (aClass == float_NaN || bClass == float_NaN) 
+    if (aClass == float_NaN || bClass == float_NaN)
     {
         if (float32_is_signaling_nan(a) || float32_is_signaling_nan(b))
         {
@@ -940,7 +940,7 @@ int float32_unordered(float32 a, float32 b, float_status_t &status)
     float_class_t aClass = float32_class(a);
     float_class_t bClass = float32_class(b);
 
-    if (aClass == float_NaN || bClass == float_NaN) 
+    if (aClass == float_NaN || bClass == float_NaN)
     {
         if (float32_is_signaling_nan(a) || float32_is_signaling_nan(b))
         {
@@ -949,7 +949,7 @@ int float32_unordered(float32 a, float32 b, float_status_t &status)
         return 1;
     }
 
-    if (aClass == float_denormal || bClass == float_denormal) 
+    if (aClass == float_denormal || bClass == float_denormal)
     {
         float_raise(status, float_flag_denormal);
     }
@@ -962,7 +962,7 @@ int float32_unordered(float32 a, float32 b, float_status_t &status)
 | 'float_relation_equal'  if the operands are equal, 'float_relation_less' if
 | the    value    'a'   is   less   than   the   corresponding   value   `b',
 | 'float_relation_greater' if the value 'a' is greater than the corresponding
-| value `b', or 'float_relation_unordered' otherwise. 
+| value `b', or 'float_relation_unordered' otherwise.
 *----------------------------------------------------------------------------*/
 
 int float32_compare(float32 a, float32 b, float_status_t &status)
@@ -975,7 +975,7 @@ int float32_compare(float32 a, float32 b, float_status_t &status)
         return float_relation_unordered;
     }
 
-    if (aClass == float_denormal || bClass == float_denormal) 
+    if (aClass == float_denormal || bClass == float_denormal)
     {
         float_raise(status, float_flag_denormal);
     }
@@ -986,7 +986,7 @@ int float32_compare(float32 a, float32 b, float_status_t &status)
     int bSign = extractFloat32Sign(b);
     if (aSign != bSign)
         return (aSign) ? float_relation_less : float_relation_greater;
-    
+
     if (aSign ^ (a < b)) return float_relation_less;
     return float_relation_greater;
 }
@@ -996,7 +996,7 @@ int float32_compare(float32 a, float32 b, float_status_t &status)
 | 'float_relation_equal'  if the operands are equal, 'float_relation_less' if
 | the    value    'a'   is   less   than   the   corresponding   value   `b',
 | 'float_relation_greater' if the value 'a' is greater than the corresponding
-| value `b', or 'float_relation_unordered' otherwise. Quiet NaNs do not cause 
+| value `b', or 'float_relation_unordered' otherwise. Quiet NaNs do not cause
 | an exception.
 *----------------------------------------------------------------------------*/
 
@@ -1005,7 +1005,7 @@ int float32_compare_quiet(float32 a, float32 b, float_status_t &status)
     float_class_t aClass = float32_class(a);
     float_class_t bClass = float32_class(b);
 
-    if (aClass == float_NaN || bClass == float_NaN) 
+    if (aClass == float_NaN || bClass == float_NaN)
     {
         if (float32_is_signaling_nan(a) || float32_is_signaling_nan(b))
         {
@@ -1014,7 +1014,7 @@ int float32_compare_quiet(float32 a, float32 b, float_status_t &status)
         return float_relation_unordered;
     }
 
-    if (aClass == float_denormal || bClass == float_denormal) 
+    if (aClass == float_denormal || bClass == float_denormal)
     {
         float_raise(status, float_flag_denormal);
     }
@@ -1023,7 +1023,7 @@ int float32_compare_quiet(float32 a, float32 b, float_status_t &status)
 
     int aSign = extractFloat32Sign(a);
     int bSign = extractFloat32Sign(b);
-    if (aSign != bSign) 
+    if (aSign != bSign)
         return (aSign) ? float_relation_less : float_relation_greater;
 
     if (aSign ^ (a < b)) return float_relation_less;
@@ -1035,7 +1035,7 @@ int float32_compare_quiet(float32 a, float32 b, float_status_t &status)
 | `a' to the 32-bit two's complement integer format.  The conversion is
 | performed according to the IEC/IEEE Standard for Binary Floating-Point
 | Arithmetic - which means in particular that the conversion is rounded
-| according to the current rounding mode. If `a' is a NaN or the 
+| according to the current rounding mode. If `a' is a NaN or the
 | conversion overflows, the integer indefinite value is returned.
 *----------------------------------------------------------------------------*/
 
@@ -1674,9 +1674,9 @@ float_class_t float64_class(float64 a)
 
        return float_NaN;
    }
-    
+
    if(aExp == 0) {
-       if (aSig == 0) 
+       if (aSig == 0)
            return float_zero;
        return float_denormal;
    }
@@ -1704,7 +1704,7 @@ int float64_eq(float64 a, float64 b, float_status_t &status)
         return 0;
     }
 
-    if (aClass == float_denormal || bClass == float_denormal) 
+    if (aClass == float_denormal || bClass == float_denormal)
     {
         float_raise(status, float_flag_denormal);
     }
@@ -1729,7 +1729,7 @@ int float64_le(float64 a, float64 b, float_status_t &status)
         return 0;
     }
 
-    if (aClass == float_denormal || bClass == float_denormal) 
+    if (aClass == float_denormal || bClass == float_denormal)
     {
         float_raise(status, float_flag_denormal);
     }
@@ -1756,7 +1756,7 @@ int float64_lt(float64 a, float64 b, float_status_t &status)
         return 0;
     }
 
-    if (aClass == float_denormal || bClass == float_denormal) 
+    if (aClass == float_denormal || bClass == float_denormal)
     {
         float_raise(status, float_flag_denormal);
     }
@@ -1784,7 +1784,7 @@ int float64_eq_signaling(float64 a, float64 b, float_status_t &status)
         return 0;
     }
 
-    if (aClass == float_denormal || bClass == float_denormal) 
+    if (aClass == float_denormal || bClass == float_denormal)
     {
         float_raise(status, float_flag_denormal);
     }
@@ -1813,7 +1813,7 @@ int float64_le_quiet(float64 a, float64 b, float_status_t &status)
         return 0;
     }
 
-    if (aClass == float_denormal || bClass == float_denormal) 
+    if (aClass == float_denormal || bClass == float_denormal)
     {
         float_raise(status, float_flag_denormal);
     }
@@ -1845,7 +1845,7 @@ int float64_lt_quiet(float64 a, float64 b, float_status_t &status)
         return 0;
     }
 
-    if (aClass == float_denormal || bClass == float_denormal) 
+    if (aClass == float_denormal || bClass == float_denormal)
     {
         float_raise(status, float_flag_denormal);
     }
@@ -1866,7 +1866,7 @@ int float64_unordered(float64 a, float64 b, float_status_t &status)
     float_class_t aClass = float64_class(a);
     float_class_t bClass = float64_class(b);
 
-    if (aClass == float_NaN || bClass == float_NaN) 
+    if (aClass == float_NaN || bClass == float_NaN)
     {
         if (float64_is_signaling_nan(a) || float64_is_signaling_nan(b))
         {
@@ -1875,7 +1875,7 @@ int float64_unordered(float64 a, float64 b, float_status_t &status)
         return 1;
     }
 
-    if (aClass == float_denormal || bClass == float_denormal) 
+    if (aClass == float_denormal || bClass == float_denormal)
     {
         float_raise(status, float_flag_denormal);
     }
@@ -1888,7 +1888,7 @@ int float64_unordered(float64 a, float64 b, float_status_t &status)
 | 'float_relation_equal'  if the operands are equal, 'float_relation_less' if
 | the    value    'a'   is   less   than   the   corresponding   value   `b',
 | 'float_relation_greater' if the value 'a' is greater than the corresponding
-| value `b', or 'float_relation_unordered' otherwise. 
+| value `b', or 'float_relation_unordered' otherwise.
 *----------------------------------------------------------------------------*/
 
 int float64_compare(float64 a, float64 b, float_status_t &status)
@@ -1901,7 +1901,7 @@ int float64_compare(float64 a, float64 b, float_status_t &status)
         return float_relation_unordered;
     }
 
-    if (aClass == float_denormal || bClass == float_denormal) 
+    if (aClass == float_denormal || bClass == float_denormal)
     {
         float_raise(status, float_flag_denormal);
     }
@@ -1922,7 +1922,7 @@ int float64_compare(float64 a, float64 b, float_status_t &status)
 | 'float_relation_equal'  if the operands are equal, 'float_relation_less' if
 | the    value    'a'   is   less   than   the   corresponding   value   `b',
 | 'float_relation_greater' if the value 'a' is greater than the corresponding
-| value `b', or 'float_relation_unordered' otherwise. Quiet NaNs do not cause 
+| value `b', or 'float_relation_unordered' otherwise. Quiet NaNs do not cause
 | an exception.
 *----------------------------------------------------------------------------*/
 
@@ -1931,16 +1931,16 @@ int float64_compare_quiet(float64 a, float64 b, float_status_t &status)
     float_class_t aClass = float64_class(a);
     float_class_t bClass = float64_class(b);
 
-    if (aClass == float_NaN || bClass == float_NaN) 
+    if (aClass == float_NaN || bClass == float_NaN)
     {
-        if (float64_is_signaling_nan(a) || float64_is_signaling_nan(b)) 
+        if (float64_is_signaling_nan(a) || float64_is_signaling_nan(b))
         {
             float_raise(status, float_flag_invalid);
         }
         return float_relation_unordered;
     }
 
-    if (aClass == float_denormal || bClass == float_denormal) 
+    if (aClass == float_denormal || bClass == float_denormal)
     {
         float_raise(status, float_flag_denormal);
     }
@@ -2048,7 +2048,7 @@ floatx80 float64_to_floatx80(float64 a, float_status_t &status)
 | point value `a' to the 32-bit two's complement integer format.  The
 | conversion is performed according to the IEC/IEEE Standard for Binary
 | Floating-Point Arithmetic - which means in particular that the conversion
-| is rounded according to the current rounding mode. If `a' is a NaN or the 
+| is rounded according to the current rounding mode. If `a' is a NaN or the
 | conversion overflows, the integer indefinite value is returned.
 *----------------------------------------------------------------------------*/
 
@@ -2077,7 +2077,7 @@ Bit32s floatx80_to_int32(floatx80 a, float_status_t &status)
 | point value `a' to the 32-bit two's complement integer format.  The
 | conversion is performed according to the IEC/IEEE Standard for Binary
 | Floating-Point Arithmetic, except that the conversion is always rounded
-| toward zero.  If `a' is a NaN or the conversion overflows, the integer 
+| toward zero.  If `a' is a NaN or the conversion overflows, the integer
 | indefinite value is returned.
 *----------------------------------------------------------------------------*/
 
@@ -2114,7 +2114,7 @@ Bit32s floatx80_to_int32_round_to_zero(floatx80 a, float_status_t &status)
         float_raise(status, float_flag_invalid);
         return (Bit32s)(int32_indefinite);
     }
-    if ((aSig<<shiftCount) != savedASig) 
+    if ((aSig<<shiftCount) != savedASig)
     {
         float_raise(status, float_flag_inexact);
     }
@@ -2126,7 +2126,7 @@ Bit32s floatx80_to_int32_round_to_zero(floatx80 a, float_status_t &status)
 | point value `a' to the 64-bit two's complement integer format.  The
 | conversion is performed according to the IEC/IEEE Standard for Binary
 | Floating-Point Arithmetic - which means in particular that the conversion
-| is rounded according to the current rounding mode. If `a' is a NaN or the 
+| is rounded according to the current rounding mode. If `a' is a NaN or the
 | conversion overflows, the integer indefinite value is returned.
 *----------------------------------------------------------------------------*/
 
@@ -2149,7 +2149,7 @@ Bit64s floatx80_to_int64(floatx80 a, float_status_t &status)
     int shiftCount = 0x403E - aExp;
     if (shiftCount <= 0)
     {
-        if (shiftCount) 
+        if (shiftCount)
         {
             float_raise(status, float_flag_invalid);
             return (Bit64s)(int64_indefinite);
@@ -2168,7 +2168,7 @@ Bit64s floatx80_to_int64(floatx80 a, float_status_t &status)
 | point value `a' to the 64-bit two's complement integer format.  The
 | conversion is performed according to the IEC/IEEE Standard for Binary
 | Floating-Point Arithmetic, except that the conversion is always rounded
-| toward zero.  If `a' is a NaN or the conversion overflows, the integer 
+| toward zero.  If `a' is a NaN or the conversion overflows, the integer
 | indefinite value is returned.
 *----------------------------------------------------------------------------*/
 
@@ -2311,7 +2311,7 @@ floatx80 floatx80_round_to_int(floatx80 a, float_status_t &status)
         aSign = extractFloatx80Sign(a);
         switch (get_float_rounding_mode(status)) {
          case float_round_nearest_even:
-            if ((aExp == 0x3FFE) && (Bit64u) (aSig<<1)) 
+            if ((aExp == 0x3FFE) && (Bit64u) (aSig<<1))
                 return packFloatx80(aSign, 0x3FFF, BX_CONST64(0x8000000000000000));
             break;
          case float_round_down:
@@ -2319,7 +2319,7 @@ floatx80 floatx80_round_to_int(floatx80 a, float_status_t &status)
                       packFloatx80(1, 0x3FFF, BX_CONST64(0x8000000000000000))
 		                : packFloatx80(0, 0, 0);
          case float_round_up:
-            return aSign ? 
+            return aSign ?
                       packFloatx80(1, 0, 0)
         		        : packFloatx80(0, 0x3FFF, BX_CONST64(0x8000000000000000));
         }
@@ -2375,7 +2375,7 @@ static floatx80 addFloatx80Sigs(floatx80 a, floatx80 b, int zSign, float_status_
 
     if (aExp == 0x7FFF) {
         if ((Bit64u) (aSig<<1)
-             || ((bExp == 0x7FFF) && (Bit64u) (bSig<<1))) 
+             || ((bExp == 0x7FFF) && (Bit64u) (bSig<<1)))
         {
             return propagateFloatx80NaN(a, b, status);
         }
@@ -2393,7 +2393,7 @@ static floatx80 addFloatx80Sigs(floatx80 a, floatx80 b, int zSign, float_status_
                 float_raise(status, float_flag_denormal);
                 normalizeFloatx80Subnormal(bSig, &bExp, &bSig);
             }
-            return roundAndPackFloatx80(get_float_rounding_precision(status), 
+            return roundAndPackFloatx80(get_float_rounding_precision(status),
                     zSign, bExp, bSig, 0, status);
         }
         float_raise(status, float_flag_denormal);
@@ -2401,7 +2401,7 @@ static floatx80 addFloatx80Sigs(floatx80 a, floatx80 b, int zSign, float_status_
     }
     if (bExp == 0) {
         if (bSig == 0)
-            return roundAndPackFloatx80(get_float_rounding_precision(status), 
+            return roundAndPackFloatx80(get_float_rounding_precision(status),
                     zSign, aExp, aSig, 0, status);
 
         float_raise(status, float_flag_denormal);
@@ -2429,7 +2429,7 @@ static floatx80 addFloatx80Sigs(floatx80 a, floatx80 b, int zSign, float_status_
     zExp++;
  roundAndPack:
     return
-        roundAndPackFloatx80(get_float_rounding_precision(status), 
+        roundAndPackFloatx80(get_float_rounding_precision(status),
             zSign, zExp, zSig0, zSig1, status);
 }
 
@@ -2514,7 +2514,7 @@ static floatx80 subFloatx80Sigs(floatx80 a, floatx80 b, int zSign, float_status_
     zExp = aExp;
  normalizeRoundAndPack:
     return
-        normalizeRoundAndPackFloatx80(get_float_rounding_precision(status), 
+        normalizeRoundAndPackFloatx80(get_float_rounding_precision(status),
             zSign, zExp, zSig0, zSig1, status);
 }
 
@@ -2582,7 +2582,7 @@ floatx80 floatx80_mul(floatx80 a, floatx80 b, float_status_t &status)
 
     if (aExp == 0x7FFF) {
         if ((Bit64u) (aSig<<1)
-             || ((bExp == 0x7FFF) && (Bit64u) (bSig<<1))) 
+             || ((bExp == 0x7FFF) && (Bit64u) (bSig<<1)))
         {
             return propagateFloatx80NaN(a, b, status);
         }
@@ -2620,7 +2620,7 @@ floatx80 floatx80_mul(floatx80 a, floatx80 b, float_status_t &status)
         --zExp;
     }
     return
-        roundAndPackFloatx80(get_float_rounding_precision(status), 
+        roundAndPackFloatx80(get_float_rounding_precision(status),
              zSign, zExp, zSig0, zSig1, status);
 }
 
@@ -2708,7 +2708,7 @@ floatx80 floatx80_div(floatx80 a, floatx80 b, float_status_t &status)
         zSig1 |= ((rem1 | rem2) != 0);
     }
     return
-        roundAndPackFloatx80(get_float_rounding_precision(status), 
+        roundAndPackFloatx80(get_float_rounding_precision(status),
             zSign, zExp, zSig0, zSig1, status);
 }
 
@@ -2782,7 +2782,7 @@ floatx80 floatx80_sqrt(floatx80 a, float_status_t &status)
     shortShift128Left(0, zSig1, 1, &zSig0, &zSig1);
     zSig0 |= doubleZSig0;
     return
-        roundAndPackFloatx80(get_float_rounding_precision(status), 
+        roundAndPackFloatx80(get_float_rounding_precision(status),
             0, zExp, zSig0, zSig1, status);
 }
 
@@ -2830,7 +2830,7 @@ floatx80 float128_to_floatx80(float128 a, float_status_t &status)
     int aSign = extractFloat128Sign(a);
 
     if (aExp == 0x7FFF) {
-        if (aSig0 | aSig1) 
+        if (aSig0 | aSig1)
             return commonNaNToFloatx80(float128ToCommonNaN(a, status));
 
         return packFloatx80(aSign, 0x7FFF, BX_CONST64(0x8000000000000000));
@@ -2849,8 +2849,8 @@ floatx80 float128_to_floatx80(float128 a, float_status_t &status)
 
 /*----------------------------------------------------------------------------
 | Returns the result of multiplying the extended double-precision floating-
-| point value `a' and quadruple-precision floating point value `b'. The 
-| operation is performed according to the IEC/IEEE Standard for Binary 
+| point value `a' and quadruple-precision floating point value `b'. The
+| operation is performed according to the IEC/IEEE Standard for Binary
 | Floating-Point Arithmetic.
 *----------------------------------------------------------------------------*/
 
@@ -2880,7 +2880,7 @@ floatx80 floatx80_mul(floatx80 a, float128 b, float_status_t &status)
 
     if (aExp == 0x7FFF) {
         if ((Bit64u) (aSig<<1)
-             || ((bExp == 0x7FFF) && (bSig0 | bSig1))) 
+             || ((bExp == 0x7FFF) && (bSig0 | bSig1)))
         {
             floatx80 r = commonNaNToFloatx80(float128ToCommonNaN(b, status));
             return propagateFloatx80NaN(a, r, status);
@@ -2925,7 +2925,7 @@ floatx80 floatx80_mul(floatx80 a, float128 b, float_status_t &status)
         --zExp;
     }
     return
-        roundAndPackFloatx80(get_float_rounding_precision(status), 
+        roundAndPackFloatx80(get_float_rounding_precision(status),
              zSign, zExp, zSig0, zSig1, status);
 }
 
@@ -2973,7 +2973,7 @@ static float128 addFloat128Sigs(float128 a, float128 b, int zSign, float_status_
     }
     else {
         if (aExp == 0x7FFF) {
-            if (aSig0 | aSig1 | bSig0 | bSig1) 
+            if (aSig0 | aSig1 | bSig0 | bSig1)
                 return propagateFloat128NaN(a, b, status);
 
             return a;

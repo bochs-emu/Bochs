@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: syntax.cc,v 1.12 2007-11-18 21:29:17 sshwarts Exp $
+// $Id: syntax.cc,v 1.13 2008-02-05 22:33:33 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #include <stdio.h>
@@ -54,13 +54,13 @@ static const char *intel_segment_name[8] = {
 };
 
 static const char *intel_index16[8] = {
-    "bx+si", 
-    "bx+di", 
-    "bp+si", 
-    "bp+di", 
-    "si", 
-    "di", 
-    "bp", 
+    "bx+si",
+    "bx+di",
+    "bp+si",
+    "bp+di",
+    "si",
+    "di",
+    "bp",
     "bx"
 };
 
@@ -112,13 +112,13 @@ static const char *att_segment_name[8] = {
 };
 
 static const char *att_index16[8] = {
-    "%bx, %si", 
-    "%bx, %di", 
-    "%bp, %si", 
-    "%bp, %di", 
-    "%si", 
-    "%di", 
-    "%bp", 
+    "%bx, %si",
+    "%bx, %di",
+    "%bp, %si",
+    "%bp, %di",
+    "%si",
+    "%di",
+    "%bp",
     "%bx"
 };
 
@@ -241,7 +241,7 @@ void disassembler::print_disassembly_intel(const x86_insn *insn, const BxDisasmO
 //////////////////
 // AT&T STYLE
 //////////////////
- 
+
 void disassembler::set_syntax_att()
 {
   intel_mode = 0;
@@ -269,11 +269,11 @@ void disassembler::print_disassembly_att(const x86_insn *insn, const BxDisasmOpc
   // print opcode
   dis_sprintf("%s ", entry->AttOpcode);
 
-  if (entry->Operand4) {                                         
+  if (entry->Operand4) {
     (this->*entry->Operand4)(insn);
     dis_sprintf(", ");
   }
-  if (entry->Operand3) {                                         
+  if (entry->Operand3) {
     (this->*entry->Operand3)(insn);
     dis_sprintf(", ");
   }

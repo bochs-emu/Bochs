@@ -1,6 +1,6 @@
 ###################################################################
 # doc/docbook/Makefile
-# $Id: Makefile.in,v 1.21 2007-04-22 17:11:12 vruppert Exp $
+# $Id: Makefile.in,v 1.22 2008-02-05 22:33:34 sshwarts Exp $
 #
 # Builds documentation in various formats from SGML source, and
 # allows easy update to the Bochs web site.
@@ -46,7 +46,7 @@ user/index.html: $(srcdir)/user/user.dbk
 
 documentation/index.html: $(srcdir)/documentation/documentation.dbk
 	-mkdir -p documentation
-	$(DOCBOOK2HTML) -o documentation $(srcdir)/documentation/documentation.dbk 
+	$(DOCBOOK2HTML) -o documentation $(srcdir)/documentation/documentation.dbk
 
 development/index.html: $(srcdir)/development/development.dbk
 	-mkdir -p development

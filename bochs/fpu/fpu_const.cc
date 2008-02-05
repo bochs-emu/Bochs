@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu_const.cc,v 1.8 2007-03-23 21:27:13 sshwarts Exp $
+// $Id: fpu_const.cc,v 1.9 2008-02-05 22:33:34 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -66,11 +66,11 @@ void BX_CPU_C::FLDL2T(bxInstruction_c *i)
   if (! IS_TAG_EMPTY(-1))
   {
       BX_CPU_THIS_PTR FPU_stack_overflow();
-      return; 
+      return;
   }
 
   BX_CPU_THIS_PTR the_i387.FPU_push();
-  BX_WRITE_FPU_REGISTER_AND_TAG(FPU_round_const(Const_L2T, 
+  BX_WRITE_FPU_REGISTER_AND_TAG(FPU_round_const(Const_L2T,
 	(FPU_CONTROL_WORD == FPU_RC_UP) ? 1 : 0), FPU_Tag_Valid, 0);
 #else
   BX_INFO(("FLDL2T: required FPU, configure --enable-fpu"));
@@ -87,11 +87,11 @@ void BX_CPU_C::FLDL2E(bxInstruction_c *i)
   if (! IS_TAG_EMPTY(-1))
   {
       BX_CPU_THIS_PTR FPU_stack_overflow();
-      return; 
+      return;
   }
 
   BX_CPU_THIS_PTR the_i387.FPU_push();
-  BX_WRITE_FPU_REGISTER_AND_TAG(FPU_round_const(Const_L2E, 
+  BX_WRITE_FPU_REGISTER_AND_TAG(FPU_round_const(Const_L2E,
 	DOWN_OR_CHOP() ? -1 : 0), FPU_Tag_Valid, 0);
 #else
   BX_INFO(("FLDL2E: required FPU, configure --enable-fpu"));
@@ -108,11 +108,11 @@ void BX_CPU_C::FLDPI(bxInstruction_c *i)
   if (! IS_TAG_EMPTY(-1))
   {
       BX_CPU_THIS_PTR FPU_stack_overflow();
-      return; 
+      return;
   }
 
   BX_CPU_THIS_PTR the_i387.FPU_push();
-  BX_WRITE_FPU_REGISTER_AND_TAG(FPU_round_const(Const_PI, 
+  BX_WRITE_FPU_REGISTER_AND_TAG(FPU_round_const(Const_PI,
 	DOWN_OR_CHOP() ? -1 : 0), FPU_Tag_Valid, 0);
 #else
   BX_INFO(("FLDPI: required FPU, configure --enable-fpu"));
@@ -129,11 +129,11 @@ void BX_CPU_C::FLDLG2(bxInstruction_c *i)
   if (! IS_TAG_EMPTY(-1))
   {
       BX_CPU_THIS_PTR FPU_stack_overflow();
-      return; 
+      return;
   }
 
   BX_CPU_THIS_PTR the_i387.FPU_push();
-  BX_WRITE_FPU_REGISTER_AND_TAG(FPU_round_const(Const_LG2, 
+  BX_WRITE_FPU_REGISTER_AND_TAG(FPU_round_const(Const_LG2,
 	DOWN_OR_CHOP() ? -1 : 0), FPU_Tag_Valid, 0);
 #else
   BX_INFO(("FLDLG2: required FPU, configure --enable-fpu"));
@@ -150,18 +150,18 @@ void BX_CPU_C::FLDLN2(bxInstruction_c *i)
   if (! IS_TAG_EMPTY(-1))
   {
       BX_CPU_THIS_PTR FPU_stack_overflow();
-      return; 
+      return;
   }
 
   BX_CPU_THIS_PTR the_i387.FPU_push();
-  BX_WRITE_FPU_REGISTER_AND_TAG(FPU_round_const(Const_LN2, 
+  BX_WRITE_FPU_REGISTER_AND_TAG(FPU_round_const(Const_LN2,
 	DOWN_OR_CHOP() ? -1 : 0), FPU_Tag_Valid, 0);
 #else
   BX_INFO(("FLDLN2: required FPU, configure --enable-fpu"));
 #endif
 }
 
-void BX_CPU_C::FLD1(bxInstruction_c *i) 
+void BX_CPU_C::FLD1(bxInstruction_c *i)
 {
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
@@ -171,7 +171,7 @@ void BX_CPU_C::FLD1(bxInstruction_c *i)
   if (! IS_TAG_EMPTY(-1))
   {
       BX_CPU_THIS_PTR FPU_stack_overflow();
-      return; 
+      return;
   }
 
   BX_CPU_THIS_PTR the_i387.FPU_push();
@@ -181,7 +181,7 @@ void BX_CPU_C::FLD1(bxInstruction_c *i)
 #endif
 }
 
-void BX_CPU_C::FLDZ(bxInstruction_c *i)                      
+void BX_CPU_C::FLDZ(bxInstruction_c *i)
 {
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
@@ -191,7 +191,7 @@ void BX_CPU_C::FLDZ(bxInstruction_c *i)
   if (! IS_TAG_EMPTY(-1))
   {
       BX_CPU_THIS_PTR FPU_stack_overflow();
-      return; 
+      return;
   }
 
   BX_CPU_THIS_PTR the_i387.FPU_push();

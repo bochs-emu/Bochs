@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: symbols.cc,v 1.7 2006-10-11 14:54:40 akrisak Exp $
+// $Id: symbols.cc,v 1.8 2008-02-05 22:33:33 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -193,7 +193,7 @@ symbol_entry_t* context_t::get_symbol_entry(const char *Symbol) const
   symbol_entry_t probe;
   probe.name=(char *)Symbol;
 
-  if (rsyms->empty ()) 
+  if (rsyms->empty ())
    return 0;
 
   set<symbol_entry_t*>::const_iterator iter;
@@ -231,7 +231,7 @@ char* bx_dbg_symbolic_address(Bit32u context, Bit32u eip, Bit32u base)
   static char buf[80];
 #if 0
   // bbd: I don't see why we shouldn't allow symbol lookups on
-  // segments with a nonzero base.  I need to trace user 
+  // segments with a nonzero base.  I need to trace user
   // processes in Linux, which have a base of 0xc0000000.
   if (base != 0) {
     snprintf (buf, 80, "non-zero base");
@@ -249,7 +249,7 @@ char* bx_dbg_symbolic_address(Bit32u context, Bit32u eip, Bit32u base)
     }
   }
   // full linear address not only eip (for nonzero based segments)
-  symbol_entry_t* entr = cntx->get_symbol_entry(base+eip); 
+  symbol_entry_t* entr = cntx->get_symbol_entry(base+eip);
   if (!entr) {
     snprintf (buf, 80, "no symbol");
     return buf;
@@ -269,7 +269,7 @@ char* bx_dbg_disasm_symbolic_address(Bit32u eip, Bit32u base)
   }
 
   // full linear address not only eip (for nonzero based segments)
-  symbol_entry_t* entr = cntx->get_symbol_entry(base+eip); 
+  symbol_entry_t* entr = cntx->get_symbol_entry(base+eip);
   if (!entr) {
     return 0;
   }
@@ -297,7 +297,7 @@ void bx_dbg_symbol_command(char* filename, bx_bool global, Bit32u offset)
   // Install symbols in correct context (page table)
   // The file format should be
   // address symbol (example '00002afe _StartLoseNT')
-  
+
   context_t* cntx = (global) ? context_t::get_context(0)
       : context_t::get_context((BX_CPU(dbg_cpu)->cr3) >> 12);
 
@@ -315,7 +315,7 @@ void bx_dbg_symbol_command(char* filename, bx_bool global, Bit32u offset)
   while (fgets(buf, 200, fp)) {
     // Parse
     char* sym_name = buf;
-    
+
     for (int i = 0; i < 200 && buf[i]; i++) {
       if (buf[i] == ' ') {
         buf[i] = '\0';

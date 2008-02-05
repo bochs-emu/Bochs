@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu.cc,v 1.32 2008-01-10 19:37:56 sshwarts Exp $
+// $Id: fpu.cc,v 1.33 2008-02-05 22:33:34 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -34,7 +34,7 @@
 
 
 #if BX_SUPPORT_FPU
-void BX_CPU_C::prepareFPU(bxInstruction_c *i, 
+void BX_CPU_C::prepareFPU(bxInstruction_c *i,
 	bx_bool check_pending_exceptions, bx_bool update_last_instruction)
 {
   if (BX_CPU_THIS_PTR cr0.get_EM() || BX_CPU_THIS_PTR cr0.get_TS())
@@ -143,7 +143,7 @@ int BX_CPU_C::fpu_save_environment(bxInstruction_c *i)
         if (i->os32L() || i->os64L())
         {
             Bit32u tmp;
-        
+
             tmp = 0xffff0000 | BX_CPU_THIS_PTR the_i387.get_control_word();
             write_virtual_dword(i->seg(), RMAddr(i), tmp);
             tmp = 0xffff0000 | BX_CPU_THIS_PTR the_i387.get_status_word();
@@ -183,8 +183,8 @@ int BX_CPU_C::fpu_save_environment(bxInstruction_c *i)
             write_virtual_word(i->seg(), RMAddr(i) + 0x0c, tmp);
 
             return 0x0e;
-        }       
-    }   
+        }
+    }
 }
 
 int BX_CPU_C::fpu_load_environment(bxInstruction_c *i)
@@ -551,7 +551,7 @@ void BX_CPU_C::print_state_FPU()
 #endif
     fprintf(stderr, "%sFPR%d(%c):        %.10f (raw 0x%04x:%08lx%08lx)\n",
           i==tos?"=>":"  ",
-          i, 
+          i,
           "v0s?"[BX_CPU_THIS_PTR the_i387.FPU_gettagi((i-tos)&7)],
           f, fp.exp & 0xffff, fp.fraction >> 32, fp.fraction & 0xffffffff);
   }

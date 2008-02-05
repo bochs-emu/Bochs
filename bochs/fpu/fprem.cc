@@ -21,7 +21,7 @@ these four paragraphs for those parts of this code that are retained.
 /*============================================================================
  * Written for Bochs (x86 achitecture simulator) by
  *            Stanislav Shwartsman [sshwarts at sourceforge net]
- * ==========================================================================*/ 
+ * ==========================================================================*/
 
 #include "softfloatx80.h"
 #include "softfloat-round-pack.h"
@@ -67,7 +67,7 @@ static floatx80 do_fprem(floatx80 a, floatx80 b, Bit64u &q, int rounding_mode, f
 
     if (aExp == 0x7FFF) {
         if ((Bit64u) (aSig0<<1)
-             || ((bExp == 0x7FFF) && (Bit64u) (bSig<<1))) 
+             || ((bExp == 0x7FFF) && (Bit64u) (bSig<<1)))
         {
             return propagateFloatx80NaN(a, b, status);
         }
@@ -105,7 +105,7 @@ static floatx80 do_fprem(floatx80 a, floatx80 b, Bit64u &q, int rounding_mode, f
 
         if (expDiff < 0) {
             if (expDiff < -1)
-               return (a.fraction & BX_CONST64(0x8000000000000000)) ? 
+               return (a.fraction & BX_CONST64(0x8000000000000000)) ?
                     packFloatx80(aSign, aExp, aSig0) : a;
             shift128Right(aSig0, 0, 1, &aSig0, &aSig1);
             expDiff = 0;
@@ -130,7 +130,7 @@ static floatx80 do_fprem(floatx80 a, floatx80 b, Bit64u &q, int rounding_mode, f
             {
                int lt = lt128(term0, term1, aSig0, aSig1);
                int eq = eq128(aSig0, aSig1, term0, term1);
-                
+
                if ((eq && (q & 1)) || lt) {
                   aSign = !aSign;
                   ++q;
@@ -157,9 +157,9 @@ floatx80 floatx80_ieee754_remainder(floatx80 a, floatx80 b, Bit64u &q, float_sta
 /*----------------------------------------------------------------------------
 | Returns the remainder of the extended double-precision floating-point value
 | `a' with  respect to  the corresponding value `b'. Unlike previous function
-| the  function  does not compute  the remainder  specified  in  the IEC/IEEE 
+| the  function  does not compute  the remainder  specified  in  the IEC/IEEE
 | Standard  for Binary  Floating-Point  Arithmetic.  This  function  operates
-| differently  from the  previous  function in  the way  that it  rounds  the 
+| differently  from the  previous  function in  the way  that it  rounds  the
 | quotient of 'a' divided by 'b' to an integer.
 *----------------------------------------------------------------------------*/
 

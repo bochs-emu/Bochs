@@ -1,10 +1,10 @@
 --- Bryce Denney <bryce@tlw.com> wrote:
 > Hi Michael,
-> 
+>
 > I added some flesh to the skeleton.  I tried to keep things in approximately
 > the order that brand new user might need the information.  It goes through
 > the process of:
-> 
+>
 > 1. Is this thing worth looking at?
 > 2. Ok, but will I be able to do X,Y,Z?
 > 3. Fine, I'll download it.  What should I download
@@ -15,14 +15,14 @@
 > 5. Now how do you change the settings, try a
 > different disk image, make a
 > disk, etc.  Who do I ask for help?
-> 
+>
 > If they get to #5, they are a bochs user.  And
 > eventually...
-> 
+>
 > 6. Hey, I added USB support to talk to my scanner,
 > anybody want to try it?
-> 
-> 
+>
+>
 
 
 Here's the outline that the docbooks are organized by, basically.
@@ -66,7 +66,7 @@ Bochs Users Guide
 	What to report if configure fails: Tar up config.* and send to
 	  bochs-testing@tlw.com
 	Make
-	What to try if make fails: turn off configure options, 
+	What to try if make fails: turn off configure options,
 	  look at SF bugs and patches section to see if it's a known
 	  problem, try to fix it yourself, if using CVS version try
 	  a release source file instead, fix it yourself

@@ -21,7 +21,7 @@ these four paragraphs for those parts of this code that are retained.
 /*============================================================================
  * Written for Bochs (x86 achitecture simulator) by
  *            Stanislav Shwartsman [sshwarts at sourceforge net]
- * ==========================================================================*/ 
+ * ==========================================================================*/
 
 #define FLOAT128
 
@@ -33,9 +33,9 @@ these four paragraphs for those parts of this code that are retained.
 //         0    1         2         3         4               n
 //
 //          --       2k                --        2k+1
-//   p(x) = >  C  * x           q(x) = >  C   * x        
+//   p(x) = >  C  * x           q(x) = >  C   * x
 //          --  2k                     --  2k+1
-//                                        
+//
 //   f(x) ~ [ p(x) + x * q(x) ]
 //
 
@@ -72,9 +72,9 @@ float128 EvalPoly(float128 x, float128 *arr, unsigned n, float_status_t &status)
 //         0    1         2         3         4               n
 //
 //          --       4k                --        4k+2
-//   p(x) = >  C  * x           q(x) = >  C   * x        
+//   p(x) = >  C  * x           q(x) = >  C   * x
 //          --  2k                     --  2k+1
-//                                        
+//
 //                    2
 //   f(x) ~ [ p(x) + x * q(x) ]
 //
@@ -92,9 +92,9 @@ float128 EvenPoly(float128 x, float128 *arr, unsigned n, float_status_t &status)
 //               0    1         2         3         4               n
 //
 //          --       4k                --        4k+2
-//   p(x) = >  C  * x           q(x) = >  C   * x        
+//   p(x) = >  C  * x           q(x) = >  C   * x
 //          --  2k                     --  2k+1
-//                                        
+//
 //                        2
 //   f(x) ~ x * [ p(x) + x * q(x) ]
 //

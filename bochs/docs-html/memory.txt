@@ -25,7 +25,7 @@ if (address_is_within_this_CPUs_local_APIC_area)
 	do_local_APIC_access();
 else if (address_is_within_an_I/O_APIC_area)
 	do_I/O_APIC_access();
-else if (address_is_within_a_PCI_device_area) 
+else if (address_is_within_a_PCI_device_area)
 	do_PCI_access();
 else if (address_is_within_RAM_area)
 	do_RAM_access();
@@ -34,7 +34,7 @@ else printf("Bogus address!\n");
 For an accesses originating from a PCI device (e.g. PCI bus masters), there
 is no access to any CPUs local APIC. It'd go like:
 
-if (address_is_within_an_I/O_APIC_area) 
+if (address_is_within_an_I/O_APIC_area)
 	do_I/O_APIC_access();
 else if (address_is_within_a_PCI_device_area)
 	do_PCI_access();

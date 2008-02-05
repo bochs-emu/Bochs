@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: resolve.cc,v 1.16 2007-11-14 22:49:51 sshwarts Exp $
+// $Id: resolve.cc,v 1.17 2008-02-05 22:33:33 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #include <stdio.h>
@@ -210,10 +210,10 @@ void disassembler::resolve32_mod0_rm4(const x86_insn *insn, unsigned mode)
     base = general_32bit_regname[insn->base];
   else
     disp32 = insn->displacement.displ32;
-  
+
   if (insn->index != 4)
     index = general_32bit_regname[insn->index];
-    
+
   print_memory_access(mode, seg, base, index, insn->scale, disp32);
 }
 
@@ -260,7 +260,7 @@ void disassembler::resolve64_mod1or2(const x86_insn *insn, unsigned mode)
   else
     seg = sreg_mod01or10_rm32[insn->rm];
 
-  print_memory_access(mode, seg, 
+  print_memory_access(mode, seg,
       general_64bit_regname[insn->rm], NULL, 0, (Bit32s) insn->displacement.displ32, 1);
 }
 
@@ -278,10 +278,10 @@ void disassembler::resolve64_mod0_rm4(const x86_insn *insn, unsigned mode)
     base = general_64bit_regname[insn->base];
   else
     disp32 = (Bit32s) insn->displacement.displ32;
-  
+
   if (insn->index != 4)
     index = general_64bit_regname[insn->index];
-    
+
   print_memory_access(mode, seg, base, index, insn->scale, disp32, 1);
 }
 
@@ -332,7 +332,7 @@ void disassembler::print_datasize(unsigned size)
   };
 }
 
-void disassembler::print_memory_access16(int datasize, 
+void disassembler::print_memory_access16(int datasize,
                 const char *seg, const char *index, Bit16u disp)
 {
   print_datasize(datasize);
@@ -367,13 +367,13 @@ void disassembler::print_memory_access16(int datasize,
   }
 }
 
-void disassembler::print_memory_access(int datasize, 
+void disassembler::print_memory_access(int datasize,
         const char *seg, const char *base, const char *index, int scale, Bit32s disp, bx_bool disp64)
 {
   print_datasize(datasize);
 
   scale = 1 << scale;
-  
+
   if (intel_mode)
   {
     if (base == NULL)
@@ -436,7 +436,7 @@ void disassembler::print_memory_access(int datasize,
         {
           if (disp != 0) {
             if (disp64) {
-              dis_sprintf("%s:[%s+%s*%d+0x%08x%08x]", seg, base, index, scale, 
+              dis_sprintf("%s:[%s+%s*%d+0x%08x%08x]", seg, base, index, scale,
                   GET32H(disp), GET32L(disp));
             }
             else {

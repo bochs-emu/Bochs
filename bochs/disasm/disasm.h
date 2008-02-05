@@ -106,12 +106,12 @@ struct BxDisasmOpcodeTable_t
 // branch hint attribute
 #define BRANCH_HINT 0x1000
 
-struct x86_insn 
+struct x86_insn
 {
 public:
   x86_insn(bx_bool is32, bx_bool is64);
 
-  bx_bool is_seg_override() const { 
+  bx_bool is_seg_override() const {
      return (seg_override != NO_SEG_OVERRIDE);
  }
 
@@ -291,60 +291,60 @@ private:
 
 public:
 
-/* 
+/*
  * Codes for Addressing Method:
  * ---------------------------
- * A  - Direct address. The instruction has no ModR/M byte; the address 
- *      of the operand is encoded in the instruction; and no base register, 
+ * A  - Direct address. The instruction has no ModR/M byte; the address
+ *      of the operand is encoded in the instruction; and no base register,
  *      index register, or scaling factor can be applied.
  * C  - The reg field of the ModR/M byte selects a control register.
  * D  - The reg field of the ModR/M byte selects a debug register.
- * E  - A ModR/M byte follows the opcode and specifies the operand. The 
- *      operand is either a general-purpose register or a memory address. 
+ * E  - A ModR/M byte follows the opcode and specifies the operand. The
+ *      operand is either a general-purpose register or a memory address.
  *      In case of the register operand, the R/M field of the ModR/M byte
  *      selects a general register.
  * F  - Flags Register.
  * G  - The reg field of the ModR/M byte selects a general register.
- * H  - A ModR/M byte follows the opcode and specifies the operand. The 
- *      operand is either a general-purpose register or a memory address. 
- *      In case of the register operand, the reg field of the ModR/M byte 
+ * H  - A ModR/M byte follows the opcode and specifies the operand. The
+ *      operand is either a general-purpose register or a memory address.
+ *      In case of the register operand, the reg field of the ModR/M byte
  *      selects a general register.
- * I  - Immediate data. The operand value is encoded in subsequent bytes of 
+ * I  - Immediate data. The operand value is encoded in subsequent bytes of
  *      the instruction.
- * J  - The instruction contains a relative offset to be added to the 
+ * J  - The instruction contains a relative offset to be added to the
  *      instruction pointer register.
  * M  - The ModR/M byte may refer only to memory.
- * N  - The R/M field of the ModR/M byte selects a packed-quadword  MMX 
+ * N  - The R/M field of the ModR/M byte selects a packed-quadword  MMX
         technology register.
- * O  - The instruction has no ModR/M byte; the offset of the operand is 
- *      coded as a word or double word (depending on address size attribute) 
- *      in the instruction. No base register, index register, or scaling 
+ * O  - The instruction has no ModR/M byte; the offset of the operand is
+ *      coded as a word or double word (depending on address size attribute)
+ *      in the instruction. No base register, index register, or scaling
  *      factor can be applied.
- * P  - The reg field of the ModR/M byte selects a packed quadword MMX 
+ * P  - The reg field of the ModR/M byte selects a packed quadword MMX
  *      technology register.
- * Q  - A ModR/M byte follows the opcode and specifies the operand. The 
- *      operand is either an MMX technology register or a memory address. 
- *      If it is a memory address, the address is computed from a segment 
- *      register and any of the following values: a base register, an 
+ * Q  - A ModR/M byte follows the opcode and specifies the operand. The
+ *      operand is either an MMX technology register or a memory address.
+ *      If it is a memory address, the address is computed from a segment
+ *      register and any of the following values: a base register, an
  *      index register, a scaling factor, and a displacement.
  * R  - The mod field of the ModR/M byte may refer only to a general register.
  * S  - The reg field of the ModR/M byte selects a segment register.
  * T  - The reg field of the ModR/M byte selects a test register.
  * U  - The R/M field of the ModR/M byte selects a 128-bit XMM register.
  * V  - The reg field of the ModR/M byte selects a 128-bit XMM register.
- * W  - A ModR/M byte follows the opcode and specifies the operand. The 
- *      operand is either a 128-bit XMM register or a memory address. If 
- *      it is a memory address, the address is computed from a segment 
+ * W  - A ModR/M byte follows the opcode and specifies the operand. The
+ *      operand is either a 128-bit XMM register or a memory address. If
+ *      it is a memory address, the address is computed from a segment
  *      register and any of the following values: a base register, an
  *      index register, a scaling factor, and a displacement.
  * X  - Memory addressed by the DS:rSI register pair.
  * Y  - Memory addressed by the ES:rDI register pair.
- */   
+ */
 
-/* 
+/*
  * Codes for Operand Type:
  * ----------------------
- * a  - Two one-word operands in memory or two double-word operands in 
+ * a  - Two one-word operands in memory or two double-word operands in
  *      memory, depending on operand-size attribute (used only by the BOUND
  *      instruction).
  * b  - Byte, regardless of operand-size attribute.

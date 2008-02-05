@@ -21,7 +21,7 @@ these four paragraphs for those parts of this code that are retained.
 /*============================================================================
  * Written for Bochs (x86 achitecture simulator) by
  *            Stanislav Shwartsman [sshwarts at sourceforge net]
- * ==========================================================================*/ 
+ * ==========================================================================*/
 
 #include "softfloatx80.h"
 #include "softfloat-round-pack.h"
@@ -32,7 +32,7 @@ these four paragraphs for those parts of this code that are retained.
 | point value `a' to the 16-bit two's complement integer format.  The
 | conversion is performed according to the IEC/IEEE Standard for Binary
 | Floating-Point Arithmetic - which means in particular that the conversion
-| is rounded according to the current rounding mode. If `a' is a NaN or the 
+| is rounded according to the current rounding mode. If `a' is a NaN or the
 | conversion overflows, the integer indefinite value is returned.
 *----------------------------------------------------------------------------*/
 
@@ -60,7 +60,7 @@ Bit16s floatx80_to_int16(floatx80 a, float_status_t &status)
 | point value `a' to the 16-bit two's complement integer format.  The
 | conversion is performed according to the IEC/IEEE Standard for Binary
 | Floating-Point Arithmetic, except that the conversion is always rounded
-| toward zero.  If `a' is a NaN or the conversion overflows, the integer 
+| toward zero.  If `a' is a NaN or the conversion overflows, the integer
 | indefinite value is returned.
 *----------------------------------------------------------------------------*/
 
@@ -86,7 +86,7 @@ Bit16s floatx80_to_int16_round_to_zero(floatx80 a, float_status_t &status)
 /*----------------------------------------------------------------------------
 | Separate the source extended double-precision floating point value `a'
 | into its exponent and significand, store the significant back to the
-| 'a' and return the exponent. The operation performed is a superset of 
+| 'a' and return the exponent. The operation performed is a superset of
 | the IEC/IEEE recommended logb(x) function.
 *----------------------------------------------------------------------------*/
 
@@ -104,7 +104,7 @@ floatx80 floatx80_extract(floatx80 &a, float_status_t &status)
     }
 
     if (aExp == 0x7FFF) {
-        if ((Bit64u) (aSig<<1)) 
+        if ((Bit64u) (aSig<<1))
         {
             a = propagateFloatx80NaN(a, status);
             return a;
@@ -128,10 +128,10 @@ floatx80 floatx80_extract(floatx80 &a, float_status_t &status)
 }
 
 /*----------------------------------------------------------------------------
-| Scales extended double-precision floating-point value in operand `a' by 
-| value `b'. The function truncates the value in the second operand 'b' to 
+| Scales extended double-precision floating-point value in operand `a' by
+| value `b'. The function truncates the value in the second operand 'b' to
 | an integral value and adds that value to the exponent of the operand 'a'.
-| The operation performed according to the IEC/IEEE Standard for Binary 
+| The operation performed according to the IEC/IEEE Standard for Binary
 | Floating-Point Arithmetic.
 *----------------------------------------------------------------------------*/
 
@@ -155,7 +155,7 @@ floatx80 floatx80_scale(floatx80 a, floatx80 b, float_status_t &status)
     int bSign = extractFloatx80Sign(b);
 
     if (aExp == 0x7FFF) {
-        if ((Bit64u) (aSig<<1) || ((bExp == 0x7FFF) && (Bit64u) (bSig<<1))) 
+        if ((Bit64u) (aSig<<1) || ((bExp == 0x7FFF) && (Bit64u) (bSig<<1)))
         {
             return propagateFloatx80NaN(a, b, status);
         }
@@ -190,9 +190,9 @@ floatx80 floatx80_scale(floatx80 a, floatx80 b, float_status_t &status)
         normalizeFloatx80Subnormal(bSig, &bExp, &bSig);
     }
 
-    if (bExp > 0x400E) {   
+    if (bExp > 0x400E) {
         /* generate appropriate overflow/underflow */
-        return roundAndPackFloatx80(80, aSign, 
+        return roundAndPackFloatx80(80, aSign,
                           bSign ? -0x3FFF : 0x7FFF, aSig, 0, status);
     }
     if (bExp < 0x3FFF) return a;
@@ -234,7 +234,7 @@ float_class_t floatx80_class(floatx80 a)
 
        return float_NaN;
    }
-    
+
    return float_normalized;
 }
 
@@ -243,7 +243,7 @@ float_class_t floatx80_class(floatx80 a)
 | 'float_relation_equal'  if the operands are equal, 'float_relation_less' if
 | the    value    'a'   is   less   than   the   corresponding   value   `b',
 | 'float_relation_greater' if the value 'a' is greater than the corresponding
-| value `b', or 'float_relation_unordered' otherwise. 
+| value `b', or 'float_relation_unordered' otherwise.
 *----------------------------------------------------------------------------*/
 
 int floatx80_compare(floatx80 a, floatx80 b, float_status_t &status)
@@ -257,7 +257,7 @@ int floatx80_compare(floatx80 a, floatx80 b, float_status_t &status)
         return float_relation_unordered;
     }
 
-    if (aClass == float_denormal || bClass == float_denormal) 
+    if (aClass == float_denormal || bClass == float_denormal)
     {
         float_raise(status, float_flag_denormal);
     }
@@ -277,7 +277,7 @@ int floatx80_compare(floatx80 a, floatx80 b, float_status_t &status)
     if (aSign != bSign)
         return (aSign) ? float_relation_less : float_relation_greater;
 
-    int less_than = 
+    int less_than =
 	aSign ? lt128(b.exp, b.fraction, a.exp, a.fraction)
 	      : lt128(a.exp, a.fraction, b.exp, b.fraction);
 
@@ -290,7 +290,7 @@ int floatx80_compare(floatx80 a, floatx80 b, float_status_t &status)
 | 'float_relation_equal'  if the operands are equal, 'float_relation_less' if
 | the    value    'a'   is   less   than   the   corresponding   value   `b',
 | 'float_relation_greater' if the value 'a' is greater than the corresponding
-| value `b', or 'float_relation_unordered' otherwise. Quiet NaNs do not cause 
+| value `b', or 'float_relation_unordered' otherwise. Quiet NaNs do not cause
 | an exception.
 *----------------------------------------------------------------------------*/
 
@@ -310,7 +310,7 @@ int floatx80_compare_quiet(floatx80 a, floatx80 b, float_status_t &status)
         return float_relation_unordered;
     }
 
-    if (aClass == float_denormal || bClass == float_denormal) 
+    if (aClass == float_denormal || bClass == float_denormal)
     {
         float_raise(status, float_flag_denormal);
     }
@@ -330,7 +330,7 @@ int floatx80_compare_quiet(floatx80 a, floatx80 b, float_status_t &status)
     if (aSign != bSign)
         return (aSign) ? float_relation_less : float_relation_greater;
 
-    int less_than = 
+    int less_than =
 	aSign ? lt128(b.exp, b.fraction, a.exp, a.fraction)
 	      : lt128(a.exp, a.fraction, b.exp, b.fraction);
 

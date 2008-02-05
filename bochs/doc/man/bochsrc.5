@@ -15,7 +15,7 @@ the current  directory  before running  Bochs or in your
 home directory.
 
 Starting with Bochs 1.3, you can use environment variables in
-the bochsrc file, for example: 
+the bochsrc file, for example:
 
   floppya: 1_44="$IMAGES/bootdisk.img", status=inserted
 
@@ -23,7 +23,7 @@ Starting with version 2.0, two environment variables have a built-in
 default value which is set at compile time.  $BXSHARE points to the
 "share" directory which is typically /usr/local/share/bochs on UNIX
 machines.  See the $(sharedir) variable in the Makefile for the exact
-value.  $BXSHARE is used by disk images to locate the directory where 
+value.  $BXSHARE is used by disk images to locate the directory where
 the BIOS images and keymaps can be found.  If $BXSHARE is not defined, Bochs
 will supply the default value.  Also, $LTDL_LIBRARY_PATH points to a list of
 directories (separated by colons if more than one) to search in for Bochs
@@ -48,8 +48,8 @@ allows you to change all the settings that control Bochs's behavior.
 There are two choices of configuration interface: a text mode version
 called "textconfig" and a graphical version called "wx".  The text
 mode version uses stdin/stdout and is always compiled in.  The graphical
-version is only available when you use "--with-wx" on the configure 
-command.  If you do not write a config_interface line, Bochs will 
+version is only available when you use "--with-wx" on the configure
+command.  If you do not write a config_interface line, Bochs will
 choose a default for you.
 
 .B NOTE:
@@ -61,14 +61,14 @@ Example:
 
 .TP
 .I "display_library:"
-The display library is the code that displays the Bochs VGA screen.  Bochs 
-has a selection of about 10 different display library implementations for 
-different platforms.  If you run configure with multiple --with-* options, 
+The display library is the code that displays the Bochs VGA screen.  Bochs
+has a selection of about 10 different display library implementations for
+different platforms.  If you run configure with multiple --with-* options,
 the display_library command lets you choose which one you want to run with.
 If you do not write a display_library line, Bochs will choose a default for
 you.
 
-The choices are: 
+The choices are:
   x           X windows interface, cross platform
   win32       native win32 libraries
   carbon      Carbon library (for MacOS X)
@@ -119,13 +119,13 @@ values different from 1.
 quantum:
 
 Maximum amount of instructions allowed to execute by processor before
-returning control to another cpu. This option exists only in Bochs 
+returning control to another cpu. This option exists only in Bochs
 binary compiled with SMP support.
 
 reset_on_triple_fault:
 
 Reset the CPU when triple fault occur (highly recommended) rather than
-PANIC. Remember that if you trying to continue after triple fault the 
+PANIC. Remember that if you trying to continue after triple fault the
 simulation will be completely bogus !
 
 ips:
@@ -162,7 +162,7 @@ Example:
 
 .TP
 .I "megs:"
-Set the number of Megabytes of physical memory you want to emulate. 
+Set the number of Megabytes of physical memory you want to emulate.
 The default is 32MB, most OS's won't need more than that.
 The maximum amount of memory supported is 2048Mb.
 
@@ -252,7 +252,7 @@ Examples:
 .I "ata\fR[\fB0-3\fR]\fI-master: \fPor \fIata\fR[\fB0-3\fR]\fI-slave:"
 
 This defines the type and characteristics of all attached ata devices:
-   type=       type of attached device [disk|cdrom] 
+   type=       type of attached device [disk|cdrom]
    path=       path of the image
    mode=       image mode [flat|concat|external|dll|sparse|vmware3|undoable|growing|volatile], only valid for disks
    cylinders=  only valid for disks
@@ -263,14 +263,14 @@ This defines the type and characteristics of all attached ata devices:
    translation=type of translation of the bios, only for disks [none|lba|large|rechs|auto]
    model=      string returned by identify device command
    journal=    optional filename of the redolog for undoable and volatile disks
-   
+
 Point this at a hard disk image file, cdrom iso file,
-or a physical cdrom device.  
-To create a hard disk image, try running bximage.  
-It will help you choose the size and then suggest a line that 
+or a physical cdrom device.
+To create a hard disk image, try running bximage.
+It will help you choose the size and then suggest a line that
 works with it.
 
-In UNIX it is possible to use a raw device as a Bochs hard disk, 
+In UNIX it is possible to use a raw device as a Bochs hard disk,
 but WE DON'T RECOMMEND IT.
 
 The path is always mandatory. Disk geometry autodetection works with images
@@ -283,7 +283,7 @@ The mode option defines how the disk image is handled. Disks can be defined as:
   - concat : multiple files layout
   - external : developer's specific, through a C++ class
   - dll : developer's specific, through a DLL
-  - sparse : stackable, commitable, rollbackable 
+  - sparse : stackable, commitable, rollbackable
   - vmware3 : vmware3 disk support
   - undoable : flat file with commitable redolog
   - growing : growing file
@@ -381,7 +381,7 @@ You may use those special tokens :
   %i : 8 hexadecimal digits of cpu0 current eip
   %e : 1 character event type ('i'nfo, 'd'ebug, 'p'anic, 'e'rror)
   %d : 5 characters string of the device, between brackets
- 
+
 Default : %t%e%d
 
 Examples:
@@ -453,7 +453,7 @@ ignore (do nothing). You should generally  set
 this  to  ignore,  unless  you are  trying  to
 diagnose a particular problem.
 
-.B NOTE: 
+.B NOTE:
 When  action=report,   Bochs   may  spit  out
 thousands of debug messages per second, which
 can impact performance and fill up your disk.
@@ -572,7 +572,7 @@ Approximate time in microseconds between attempts to paste
 characters to the keyboard controller. This leaves time for the
 guest os to deal with the flow of characters.  The ideal setting
 depends on how your operating system processes characters.  The
-default of 100000 usec (.1 seconds) was chosen because it works 
+default of 100000 usec (.1 seconds) was chosen because it works
 consistently in Windows.
 
 If your OS is losing characters during a paste, increase the paste
@@ -596,9 +596,9 @@ TO BE COMPLETED (see Greg explanation in feature request #536329)
 
 time0
 
-Specifies the start (boot) time of the virtual machine. Use a time 
-value as returned by the time(2) system call. If no time0 value is 
-set or if time0 equal to 1 (special case) or if time0 equal 'local', 
+Specifies the start (boot) time of the virtual machine. Use a time
+value as returned by the time(2) system call. If no time0 value is
+set or if time0 equal to 1 (special case) or if time0 equal 'local',
 the simulation will be started at the current local host time.
 If time0 equal to 2 (special case) or if time0 equal 'utc',
 the simulation will be started at the current utc time.
@@ -670,10 +670,10 @@ device ID of the PCI device you want to map within Bochs.
 .I "ne2k:"
 Defines the characteristics of an attached ne2000 isa card :
    ioaddr=IOADDR,
-   irq=IRQ, 
-   mac=MACADDR, 
-   ethmod=MODULE, 
-   ethdev=DEVICE, 
+   irq=IRQ,
+   mac=MACADDR,
+   ethmod=MODULE,
+   ethdev=DEVICE,
    script=SCRIPT
 
 .B PROPERTIES FOR ne2k:
@@ -745,8 +745,8 @@ If enabled, the keymap file must be specified.
 .TP
 .I "keyboard_type:"
 Type of emulated keyboard sent back  to the OS
-to a "keyboard identify"  command.  It must be 
-one of "xt", "at" or "mf". 
+to a "keyboard identify"  command.  It must be
+one of "xt", "at" or "mf".
 
 Example:
   keyboard_type: mf
