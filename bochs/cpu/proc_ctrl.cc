@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.198 2008-02-02 21:46:53 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.199 2008-02-07 18:28:50 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -917,7 +917,6 @@ void BX_CPU_C::LOADALL(bxInstruction_c *i)
 {
   Bit16u msw, tr, flags, ip, ldtr;
   Bit16u ds_raw, ss_raw, cs_raw, es_raw;
-  Bit16u di, si, bp, sp, bx, dx, cx, ax;
   Bit16u base_15_0, limit;
   Bit8u  base_23_16, access;
 
@@ -984,8 +983,7 @@ void BX_CPU_C::LOADALL(bxInstruction_c *i)
   write_flags(flags, 1, 1);
 
   /* IP */
-  BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, 0x81a, 2, &ip);
-  IP = ip;
+  BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, 0x81a, 2, &IP);
 
   /* LDTR */
   BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, 0x81c, 2, &ldtr);
@@ -1019,7 +1017,7 @@ void BX_CPU_C::LOADALL(bxInstruction_c *i)
     BX_CPU_THIS_PTR ldtr.cache.u.system.limit = limit;
 
     if (access == 0) {
-      BX_PANIC(("loadall: LDTR case access byte=0."));
+      BX_PANIC(("loadall: LDTR case access byte=0"));
     }
     if (BX_CPU_THIS_PTR ldtr.cache.valid==0) {
       BX_PANIC(("loadall: ldtr.valid=0"));
@@ -1157,37 +1155,14 @@ void BX_CPU_C::LOADALL(bxInstruction_c *i)
       (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.rpl));
 #endif
 
-  /* DI */
-  BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, 0x826, 2, &di);
-  DI = di;
-
-  /* SI */
-  BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, 0x828, 2, &si);
-  SI = si;
-
-  /* BP */
-  BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, 0x82a, 2, &bp);
-  BP = bp;
-
-  /* SP */
-  BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, 0x82c, 2, &sp);
-  SP = sp;
-
-  /* BX */
-  BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, 0x82e, 2, &bx);
-  BX = bx;
-
-  /* DX */
-  BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, 0x830, 2, &dx);
-  DX = dx;
-
-  /* CX */
-  BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, 0x832, 2, &cx);
-  CX = cx;
-
-  /* AX */
-  BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, 0x834, 2, &ax);
-  AX = ax;
+  BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, 0x826, 2, &DI);
+  BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, 0x828, 2, &SI);
+  BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, 0x82a, 2, &BP);
+  BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, 0x82c, 2, &SP);
+  BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, 0x82e, 2, &BX);
+  BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, 0x830, 2, &DX);
+  BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, 0x832, 2, &CX);
+  BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, 0x834, 2, &AX);
 
   /* GDTR */
   BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, 0x84e, 2, &base_15_0);
@@ -1196,11 +1171,6 @@ void BX_CPU_C::LOADALL(bxInstruction_c *i)
   BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, 0x852, 2, &limit);
   BX_CPU_THIS_PTR gdtr.base = (base_23_16 << 16) | base_15_0;
   BX_CPU_THIS_PTR gdtr.limit = limit;
-
-#if 0
-  if (access)
-      BX_INFO(("LOADALL: GDTR access bits not 0 (%02x)", (unsigned) access));
-#endif
 
   /* IDTR */
   BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, 0x85a, 2, &base_15_0);

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: svga.cc,v 1.14 2008-02-01 18:10:36 vruppert Exp $
+// $Id: svga.cc,v 1.15 2008-02-07 18:28:50 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  This library is free software; you can redistribute it and/or
@@ -19,7 +19,7 @@
 #define _MULTI_THREAD
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
-// platforms that require a special tag on exported symbols, BX_PLUGGABLE 
+// platforms that require a special tag on exported symbols, BX_PLUGGABLE
 // is used to know when we are exporting symbols and when we are importing.
 #define BX_PLUGGABLE
 
@@ -67,13 +67,13 @@ static unsigned prev_cursor_x=0;
 static unsigned prev_cursor_y=0;
 
 void keyboard_handler(int scancode, int press);
-void mouse_handler(int button, int dx, int dy, int dz, 
+void mouse_handler(int button, int dx, int dy, int dz,
 		    int drx, int dry, int drz);
 
 unsigned char reverse_byteorder(unsigned char b)
 {
     unsigned char ret = 0;
-    
+
     for (unsigned i=0;i<8;i++){
 	ret |= (b & 0x01) << (7 - i);
 	b >>= 1;
@@ -84,10 +84,10 @@ unsigned char reverse_byteorder(unsigned char b)
 void create_vga_font()
 {
     memcpy(vgafont, bx_vgafont, sizeof(bx_vgafont));
-    
+
     for (unsigned i=0;i< sizeof(bx_vgafont);i++) {
 	vgafont[i] = reverse_byteorder(vgafont[i]);
-    }    
+    }
 }
 
 bx_svga_gui_c::bx_svga_gui_c ()
@@ -111,16 +111,16 @@ void bx_svga_gui_c::specific_init(
     BX_PANIC (("Unable to initialize SVGAlib"));
     return;
   }
-  
+
   screen = gl_allocatecontext();
-  
+
   fontwidth = 8;
   fontheight = 16;
   dimension_update(640,400);
   create_vga_font();
   gl_setfont(fontwidth, fontheight, (void *)vgafont);
   gl_setwritemode(FONT_COMPRESSED);
-  
+
   keyboard_init();
   keyboard_seteventhandler((__keyboard_handler) keyboard_handler);
 
@@ -326,7 +326,7 @@ static Bit32u vga_to_bx_key(int key)
 
 	case SCANCODE_RIGHTSHIFT: return BX_KEY_SHIFT_R;
 	case SCANCODE_KEYPADMULTIPLY: return BX_KEY_KP_MULTIPLY;
-	
+
 	case SCANCODE_LEFTALT: return BX_KEY_ALT_L;
 	case SCANCODE_SPACE: return BX_KEY_SPACE;
 	case SCANCODE_CAPSLOCK: return BX_KEY_CAPS_LOCK;
@@ -344,7 +344,7 @@ static Bit32u vga_to_bx_key(int key)
 
 	case SCANCODE_NUMLOCK: return BX_KEY_NUM_LOCK;
 	case SCANCODE_SCROLLLOCK: return BX_KEY_SCRL_LOCK;
-	
+
 	case SCANCODE_KEYPAD7: return BX_KEY_KP_HOME;
 	case SCANCODE_KEYPAD8: return BX_KEY_KP_UP;
 	case SCANCODE_KEYPAD9: return BX_KEY_KP_PAGE_UP;
@@ -394,22 +394,22 @@ void keyboard_handler(int scancode, int press)
     if (scancode != SCANCODE_F12) {
 	int bx_key = vga_to_bx_key(scancode);
 	Bit32u key_state;
-		
+
 	if (press) {
 	    key_state = BX_KEY_PRESSED;
-	} else { 
+	} else {
 	    key_state = BX_KEY_RELEASED;
 	}
-	
+
 	DEV_kbd_gen_scancode(bx_key | key_state);
     } else {
 	BX_INFO(("F12 pressed"));
-	// show runtime options menu, which uses stdin/stdout	
+	// show runtime options menu, which uses stdin/stdout
 	SIM->configuration_interface (NULL, CI_RUNTIME_CONFIG);
     }
 }
 
-void mouse_handler(int button, int dx, int dy, int dz, 
+void mouse_handler(int button, int dx, int dy, int dz,
 		    int drx, int dry, int drz)
 {
   int buttons = 0;
@@ -456,15 +456,15 @@ bx_bool bx_svga_gui_c::palette_change(
 {
   if( index > 255 ) return 0;
 
-  // without VGA_CLUT8 extension we have only 6 bits for each r,g,b value   
+  // without VGA_CLUT8 extension we have only 6 bits for each r,g,b value
   if (!clut8 && (red > 63 || green > 63 || blue > 63)) {
 	red   = red >> 2;
 	green = green >> 2;
 	blue  = blue >> 2;
   }
-  
+
   vga_setpalette(index, red, green, blue);
-  
+
   return 1;
 }
 
@@ -494,7 +494,7 @@ void bx_svga_gui_c::dimension_update(
 
   if( (x == res_x) && (y == res_y )) return;
 
-  if (x == 640 && y == 480) { 
+  if (x == 640 && y == 480) {
     newmode = G640x480x256;
   } else if (x == 640 && y == 400) {
     newmode = G640x400x256;
@@ -503,18 +503,18 @@ void bx_svga_gui_c::dimension_update(
   } else if (x == 1024 && y == 768) {
     newmode = G1024x768x256;
   }
-  
+
   if (!vga_hasmode(newmode)) {
     newmode = G640x480x256; // trying "default" mode...
   }
-  
+
   vga_getpalvec(0, 256, save_vga_pal);
   if (vga_setmode(newmode) != 0)
   {
       LOG_THIS setonoff(LOGLEV_PANIC, ACT_FATAL);
       BX_PANIC (("Unable to set requested videomode: %ix%i", x, y));
   }
-  
+
   gl_setcontextvga(newmode);
   gl_getcontext(screen);
   gl_setcontextvgavirtual(newmode);
@@ -572,7 +572,7 @@ void bx_svga_gui_c::exit(void)
     mouse_close();
 }
 
-void 
+void
 bx_svga_gui_c::set_display_mode (disp_mode_t newmode)
 {
   // if no mode change, do nothing.
