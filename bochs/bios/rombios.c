@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.199 2008-01-24 21:57:22 sshwarts Exp $
+// $Id: rombios.c,v 1.200 2008-02-07 20:46:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -935,7 +935,7 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.199 $ $Date: 2008-01-24 21:57:22 $";
+static char bios_cvs_version_string[] = "$Revision: 1.200 $ $Date: 2008-02-07 20:46:08 $";
 
 #define BIOS_COPYRIGHT_STRING "(c) 2002 MandrakeSoft S.A. Written by Kevin Lawton & the Bochs team."
 
@@ -6615,7 +6615,7 @@ get_hd_geometry(drive, hd_cylinders, hd_heads, hd_sectors)
     hd_type = inb_cmos(0x12) & 0x0f;
     if (hd_type != 0x0f)
       BX_INFO(panic_msg_reg12h,1);
-    hd_type = inb_cmos(0x1a); // HD0: extended type
+    hd_type = inb_cmos(0x1a); // HD1: extended type
     if (hd_type != 47)
       BX_INFO(panic_msg_reg19h,0,0x1a);
     iobase = 0x24;
