@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.420 2008-02-02 21:46:50 sshwarts Exp $
+// $Id: cpu.h,v 1.421 2008-02-07 20:43:12 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2810,23 +2810,16 @@ public: // for now...
   BX_SMF void UndefinedOpcode(bxInstruction_c *);
   BX_SMF void BxError(bxInstruction_c *);
 
-  BX_SMF void BxResolve16Mod0Rm0(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void BxResolve16Mod0Rm1(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void BxResolve16Mod0Rm2(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void BxResolve16Mod0Rm3(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void BxResolve16Mod0Rm4(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void BxResolve16Mod0Rm5(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void BxResolve16Mod0Rm6(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void BxResolve16Mod0Rm7(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void BxResolve16Disp(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
-  BX_SMF void BxResolve16Mod1or2Rm0(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void BxResolve16Mod1or2Rm1(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void BxResolve16Mod1or2Rm2(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void BxResolve16Mod1or2Rm3(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void BxResolve16Mod1or2Rm4(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void BxResolve16Mod1or2Rm5(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void BxResolve16Mod1or2Rm6(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void BxResolve16Mod1or2Rm7(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void BxResolve16Rm0(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void BxResolve16Rm1(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void BxResolve16Rm2(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void BxResolve16Rm3(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void BxResolve16Rm4(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void BxResolve16Rm5(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void BxResolve16Rm6(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void BxResolve16Rm7(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
   BX_SMF void BxResolve32Disp(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void BxResolve32Base(bxInstruction_c *) BX_CPP_AttrRegparmN(1);

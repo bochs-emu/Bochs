@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.164 2008-02-04 21:28:53 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.165 2008-02-07 20:43:12 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -97,26 +97,15 @@ static const bx_bool BxOpcodeHasModrm32[512] = {
  *  presence or absence of the LOCK prefix.
  */
 
-static BxExecutePtr_tR Resolve16Mod0[8] = {
-  &BX_CPU_C::BxResolve16Mod0Rm0,
-  &BX_CPU_C::BxResolve16Mod0Rm1,
-  &BX_CPU_C::BxResolve16Mod0Rm2,
-  &BX_CPU_C::BxResolve16Mod0Rm3,
-  &BX_CPU_C::BxResolve16Mod0Rm4,
-  &BX_CPU_C::BxResolve16Mod0Rm5,
-  &BX_CPU_C::BxResolve16Mod0Rm6,
-  &BX_CPU_C::BxResolve16Mod0Rm7
-};
-
-static BxExecutePtr_tR Resolve16Mod1or2[8] = {
-  &BX_CPU_C::BxResolve16Mod1or2Rm0,
-  &BX_CPU_C::BxResolve16Mod1or2Rm1,
-  &BX_CPU_C::BxResolve16Mod1or2Rm2,
-  &BX_CPU_C::BxResolve16Mod1or2Rm3,
-  &BX_CPU_C::BxResolve16Mod1or2Rm4,
-  &BX_CPU_C::BxResolve16Mod1or2Rm5,
-  &BX_CPU_C::BxResolve16Mod1or2Rm6,
-  &BX_CPU_C::BxResolve16Mod1or2Rm7
+static BxExecutePtr_tR Resolve16Rm[8] = {
+  &BX_CPU_C::BxResolve16Rm0,
+  &BX_CPU_C::BxResolve16Rm1,
+  &BX_CPU_C::BxResolve16Rm2,
+  &BX_CPU_C::BxResolve16Rm3,
+  &BX_CPU_C::BxResolve16Rm4,
+  &BX_CPU_C::BxResolve16Rm5,
+  &BX_CPU_C::BxResolve16Rm6,
+  &BX_CPU_C::BxResolve16Rm7
 };
 
 // decoding instructions; accessing seg reg's by index
@@ -2699,10 +2688,11 @@ get_8bit_displ:
     else {
       // 16-bit addressing modes, mod==11b handled above
       if (mod == 0x00) { // mod == 00b
-        i->ResolveModrm = Resolve16Mod0[rm];
+        i->ResolveModrm = Resolve16Rm[rm];
         if (BX_NULL_SEG_REG(i->seg()))
           i->setSeg(sreg_mod00_rm16[rm]);
         if (rm == 0x06) {
+          i->ResolveModrm = &BX_CPU_C::BxResolve16Disp;
 get_16bit_displ:
           if ((ilen+1) < remain) {
             i->modRMForm.displ16u = FetchWORD(iptr);
@@ -2714,7 +2704,7 @@ get_16bit_displ:
         }
         goto modrm_done;
       }
-      i->ResolveModrm = Resolve16Mod1or2[rm];
+      i->ResolveModrm = Resolve16Rm[rm];
       if (BX_NULL_SEG_REG(i->seg()))
         i->setSeg(sreg_mod01or10_rm16[rm]);
       if (mod == 0x40) { // mod == 01b

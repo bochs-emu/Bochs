@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.206 2008-01-26 22:24:02 sshwarts Exp $
+// $Id: harddrv.cc,v 1.207 2008-02-07 20:43:13 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -174,7 +174,7 @@ void bx_hard_drive_c::init(void)
   char  ata_name[20];
   bx_list_c *base;
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.206 2008-01-26 22:24:02 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.207 2008-02-07 20:43:13 sshwarts Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     sprintf(ata_name, "ata.%d.resources", channel);
@@ -821,10 +821,9 @@ Bit32u bx_hard_drive_c::read(Bit32u address, unsigned io_len)
 
             quantumsMax =
               (BX_SELECTED_CONTROLLER(channel).buffer_size - BX_SELECTED_CONTROLLER(channel).buffer_index) / io_len;
-            if ( quantumsMax == 0)
+            if (quantumsMax == 0)
               BX_PANIC(("IO read(0x%04x): not enough space for read", address));
-            DEV_bulk_io_quantum_transferred() =
-                DEV_bulk_io_quantum_requested();
+            DEV_bulk_io_quantum_transferred() = DEV_bulk_io_quantum_requested();
             if (quantumsMax < DEV_bulk_io_quantum_transferred())
               DEV_bulk_io_quantum_transferred() = quantumsMax;
             transferLen = io_len * DEV_bulk_io_quantum_transferred();
