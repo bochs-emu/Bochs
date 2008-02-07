@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.223 2008-02-07 20:43:12 sshwarts Exp $
+// $Id: bochs.h,v 1.224 2008-02-07 21:08:55 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -248,57 +248,58 @@ void print_tree(bx_param_c *node, int level = 0);
 
 #define MAGIC_LOGNUM 0x12345678
 
-typedef class BOCHSAPI logfunctions {
-	char *prefix;
-	int type;
+typedef class BOCHSAPI logfunctions
+{
+  char *prefix;
+  int type;
 // values of onoff: 0=ignore, 1=report, 2=ask, 3=fatal
 #define ACT_IGNORE 0
 #define ACT_REPORT 1
 #define ACT_ASK    2
 #define ACT_FATAL  3
 #define N_ACT      4
-	int onoff[N_LOGLEV];
-	class iofunctions *logio;
-	// default log actions for all devices, declared and initialized
-	// in logio.cc.
-	BOCHSAPI_CYGONLY static int default_onoff[N_LOGLEV];
+  int onoff[N_LOGLEV];
+  class iofunctions *logio;
+  // default log actions for all devices, declared and initialized
+  // in logio.cc.
+  BOCHSAPI_CYGONLY static int default_onoff[N_LOGLEV];
 public:
-	logfunctions(void);
-	logfunctions(class iofunctions *);
-	~logfunctions(void);
+  logfunctions(void);
+  logfunctions(class iofunctions *);
+ ~logfunctions(void);
 
-	void info(const char *fmt, ...)   BX_CPP_AttrPrintf(2, 3);
-	void error(const char *fmt, ...)  BX_CPP_AttrPrintf(2, 3);
-	void panic(const char *fmt, ...)  BX_CPP_AttrPrintf(2, 3);
-	void pass(const char *fmt, ...)   BX_CPP_AttrPrintf(2, 3);
-	void ldebug(const char *fmt, ...) BX_CPP_AttrPrintf(2, 3);
-	void fatal (const char *prefix, const char *fmt, va_list ap, int exit_status);
+  void info(const char *fmt, ...)   BX_CPP_AttrPrintf(2, 3);
+  void error(const char *fmt, ...)  BX_CPP_AttrPrintf(2, 3);
+  void panic(const char *fmt, ...)  BX_CPP_AttrPrintf(2, 3);
+  void pass(const char *fmt, ...)   BX_CPP_AttrPrintf(2, 3);
+  void ldebug(const char *fmt, ...) BX_CPP_AttrPrintf(2, 3);
+  void fatal (const char *prefix, const char *fmt, va_list ap, int exit_status);
 #if BX_EXTERNAL_DEBUGGER
-	virtual void ask (int level, const char *prefix, const char *fmt, va_list ap);
+  virtual void ask (int level, const char *prefix, const char *fmt, va_list ap);
 #else
-	void ask (int level, const char *prefix, const char *fmt, va_list ap);
+  void ask (int level, const char *prefix, const char *fmt, va_list ap);
 #endif
-	void put(const char *);
-	void settype(int);
-	void setio(class iofunctions *);
-	void setonoff(int loglev, int value) {
-	  assert (loglev >= 0 && loglev < N_LOGLEV);
-	  onoff[loglev] = value;
-	}
-	char *getprefix () { return prefix; }
-	int getonoff(int level) {
-	  assert (level>=0 && level<N_LOGLEV);
-	  return onoff[level];
-        }
-	static void set_default_action (int loglev, int action) {
-	  assert (loglev >= 0 && loglev < N_LOGLEV);
-	  assert (action >= 0 && action < N_ACT);
-	  default_onoff[loglev] = action;
-	}
-	static int get_default_action (int loglev) {
-	  assert (loglev >= 0 && loglev < N_LOGLEV);
-	  return default_onoff[loglev];
-	}
+  void put(const char *);
+  void settype(int);
+  void setio(class iofunctions *);
+  void setonoff(int loglev, int value) {
+    assert (loglev >= 0 && loglev < N_LOGLEV);
+    onoff[loglev] = value;
+  }
+  char *getprefix () { return prefix; }
+  int getonoff(int level) {
+    assert (level>=0 && level<N_LOGLEV);
+    return onoff[level];
+  }
+  static void set_default_action (int loglev, int action) {
+    assert (loglev >= 0 && loglev < N_LOGLEV);
+    assert (action >= 0 && action < N_ACT);
+    default_onoff[loglev] = action;
+  }
+  static int get_default_action (int loglev) {
+    assert (loglev >= 0 && loglev < N_LOGLEV);
+    return default_onoff[loglev];
+  }
 } logfunc_t;
 
 #define BX_LOGPREFIX_SIZE 51
@@ -315,59 +316,58 @@ enum {
 };
 
 class BOCHSAPI iofunctions {
-	int magic;
-	char logprefix[BX_LOGPREFIX_SIZE];
-	FILE *logfd;
-	class logfunctions *log;
-	void init(void);
-	void flush(void);
+  int magic;
+  char logprefix[BX_LOGPREFIX_SIZE];
+  FILE *logfd;
+  class logfunctions *log;
+  void init(void);
+  void flush(void);
 
 // Log Class types
 public:
-	iofunctions(void);
-	iofunctions(FILE *);
-	iofunctions(int);
-	iofunctions(const char *);
-	~iofunctions(void);
+  iofunctions(void);
+  iofunctions(FILE *);
+  iofunctions(int);
+  iofunctions(const char *);
+ ~iofunctions(void);
 
-	void out(int facility, int level, const char *pre, const char *fmt, va_list ap);
+  void out(int facility, int level, const char *pre, const char *fmt, va_list ap);
 
-	void init_log(const char *fn);
-	void init_log(int fd);
-	void init_log(FILE *fs);
-	void exit_log();
-	void set_log_prefix(const char *prefix);
-	int get_n_logfns() { return n_logfn; }
-	logfunc_t *get_logfn(int index) { return logfn_list[index]; }
-	void add_logfn(logfunc_t *fn);
-	void remove_logfn(logfunc_t *fn);
-	void set_log_action(int loglevel, int action);
-	const char *getlevel(int i) {
-		static const char *loglevel[N_LOGLEV] = {
-			"DEBUG",
-			"INFO",
-			"ERROR",
-			"PANIC",
-			"PASS"
-		};
-                if (i>=0 && i<N_LOGLEV) return loglevel[i];
-                else return "?";
-	}
-	char *getaction(int i) {
-	   static const char *name[] = { "ignore", "report", "ask", "fatal" };
-	   assert (i>=ACT_IGNORE && i<N_ACT);
-	   return (char *) name[i];
-	}
+  void init_log(const char *fn);
+  void init_log(int fd);
+  void init_log(FILE *fs);
+  void exit_log();
+  void set_log_prefix(const char *prefix);
+  int get_n_logfns() { return n_logfn; }
+  logfunc_t *get_logfn(int index) { return logfn_list[index]; }
+  void add_logfn(logfunc_t *fn);
+  void remove_logfn(logfunc_t *fn);
+  void set_log_action(int loglevel, int action);
+  const char *getlevel(int i) {
+    static const char *loglevel[N_LOGLEV] = {
+      "DEBUG",
+      "INFO",
+      "ERROR",
+      "PANIC",
+      "PASS"
+    };
+    if (i>=0 && i<N_LOGLEV) return loglevel[i];
+    else return "?";
+  }
+  char *getaction(int i) {
+    static const char *name[] = { "ignore", "report", "ask", "fatal" };
+    assert (i>=ACT_IGNORE && i<N_ACT);
+    return (char *) name[i];
+  }
 
 protected:
-	int n_logfn;
+  int n_logfn;
 #define MAX_LOGFNS 128
-	logfunc_t *logfn_list[MAX_LOGFNS];
-	const char *logfn;
+  logfunc_t *logfn_list[MAX_LOGFNS];
+  const char *logfn;
 };
 
 typedef class BOCHSAPI iofunctions iofunc_t;
-
 
 #define SAFE_GET_IOFUNC() \
   ((io==NULL)? (io=new iofunc_t("/dev/stderr")) : io)
@@ -462,10 +462,10 @@ typedef struct {
   bx_bool linux_syscall;
 #endif
   void* record_io;
-  } bx_debug_t;
+} bx_debug_t;
 
 #define BX_ASSERT(x) do {if (!(x)) BX_PANIC(("failed assertion \"%s\" at %s:%d\n", #x, __FILE__, __LINE__));} while (0)
-void bx_signal_handler (int signum);
+void bx_signal_handler(int signum);
 int bx_atexit(void);
 BOCHSAPI extern bx_debug_t bx_dbg;
 
@@ -516,8 +516,6 @@ extern bx_bool bx_gui_sighandler;
 #endif
 
 void bx_center_print(FILE *file, const char *line, unsigned maxwidth);
-
-#define BX_USE_PS2_MOUSE 1
 
 #include "instrument.h"
 
@@ -596,13 +594,26 @@ void bx_center_print(FILE *file, const char *line, unsigned maxwidth);
                     (((Bit64u) ((Bit8u *)(hostPtr))[7])<<56);  \
 }
 
-// FIXME: implement as byte-byte copy
-#define CopyHostWordLittleEndian(hostAddrDst,  hostAddrSrc)  \
-    (* (Bit16u *)(hostAddrDst)) = (* (Bit16u *)(hostAddrSrc));
-#define CopyHostDWordLittleEndian(hostAddrDst,  hostAddrSrc) \
-    (* (Bit32u *)(hostAddrDst)) = (* (Bit32u *)(hostAddrSrc));
-#define CopyHostQWordLittleEndian(hostAddrDst,  hostAddrSrc) \
-    (* (Bit64u *)(hostAddrDst)) = (* (Bit64u *)(hostAddrSrc));
+#define CopyHostWordLittleEndian(hostAddrDst, hostAddrSrc) {   \
+    ((Bit8u *)(hostAddrDst))[0] = ((Bit8u *)(hostAddrSrc))[0]; \
+    ((Bit8u *)(hostAddrDst))[1] = ((Bit8u *)(hostAddrSrc))[1]; \
+}
+#define CopyHostDWordLittleEndian(hostAddrDst, hostAddrSrc) {  \
+    ((Bit8u *)(hostAddrDst))[0] = ((Bit8u *)(hostAddrSrc))[0]; \
+    ((Bit8u *)(hostAddrDst))[1] = ((Bit8u *)(hostAddrSrc))[1]; \
+    ((Bit8u *)(hostAddrDst))[2] = ((Bit8u *)(hostAddrSrc))[2]; \
+    ((Bit8u *)(hostAddrDst))[3] = ((Bit8u *)(hostAddrSrc))[3]; \
+}
+#define CopyHostQWordLittleEndian(hostAddrDst, hostAddrSrc) {  \
+    ((Bit8u *)(hostAddrDst))[0] = ((Bit8u *)(hostAddrSrc))[0]; \
+    ((Bit8u *)(hostAddrDst))[1] = ((Bit8u *)(hostAddrSrc))[1]; \
+    ((Bit8u *)(hostAddrDst))[2] = ((Bit8u *)(hostAddrSrc))[2]; \
+    ((Bit8u *)(hostAddrDst))[3] = ((Bit8u *)(hostAddrSrc))[3]; \
+    ((Bit8u *)(hostAddrDst))[4] = ((Bit8u *)(hostAddrSrc))[4]; \
+    ((Bit8u *)(hostAddrDst))[5] = ((Bit8u *)(hostAddrSrc))[5]; \
+    ((Bit8u *)(hostAddrDst))[6] = ((Bit8u *)(hostAddrSrc))[6]; \
+    ((Bit8u *)(hostAddrDst))[7] = ((Bit8u *)(hostAddrSrc))[7]; \
+}
 
 #endif
 
