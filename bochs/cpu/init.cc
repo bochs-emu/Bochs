@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.152 2008-02-02 21:46:51 sshwarts Exp $
+// $Id: init.cc,v 1.153 2008-02-11 20:52:10 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -866,7 +866,7 @@ void BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR in_smm = 0;
   BX_CPU_THIS_PTR nmi_disable = 0;
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
-  BX_CPU_THIS_PTR alignment_check = 0;
+  BX_CPU_THIS_PTR alignment_check_mask = LPF_MASK;
 #endif
 
   BX_CPU_THIS_PTR smbase = 0x30000;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: access.cc,v 1.90 2008-02-02 21:46:49 sshwarts Exp $
+// $Id: access.cc,v 1.91 2008-02-11 20:52:10 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -30,6 +30,13 @@
 #include "bochs.h"
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
+
+// The macro was made in order to optimize access alignment into TLB lookup - 
+// when aligment check is enabled a misaligned access will miss the TLB.
+// BX_CPU_THIS_PTR alignment_check_mask must be initialized to all'ones if
+// alignment check exception is enabled and LPF_MASK if not.
+#define AlignedAccessLPFOf(laddr, alignment_mask) \
+          ((laddr) & (LPF_MASK | (alignment_mask))) & (BX_CPU_THIS_PTR alignment_check_mask)
 
   void BX_CPP_AttrRegparmN(3)
 BX_CPU_C::write_virtual_checks(bx_segment_reg_t *seg, bx_address offset, unsigned length)
@@ -483,17 +490,9 @@ BX_CPU_C::write_virtual_word(unsigned s, bx_address offset, Bit16u data)
 accessOK:
     laddr = BX_CPU_THIS_PTR get_segment_base(s) + offset;
     BX_INSTR_MEM_DATA(BX_CPU_ID, laddr, 2, BX_WRITE);
-#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
-    if (BX_CPU_THIS_PTR alignment_check) {
-      if (laddr & 1) {
-        BX_ERROR(("write_virtual_word(): #AC misaligned access"));
-        exception(BX_AC_EXCEPTION, 0, 0);
-      }
-    }
-#endif
 #if BX_SupportGuest2HostTLB
     unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 1);
-    bx_address lpf = LPFOf(laddr);
+    bx_address lpf = AlignedAccessLPFOf(laddr, 1);
     bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
     if (tlbEntry->lpf == lpf) {
       // See if the TLB entry privilege level allows us write access
@@ -515,6 +514,14 @@ accessOK:
     if (! IsCanonical(laddr)) {
       BX_ERROR(("write_virtual_word(): canonical failure"));
       exception(int_number(seg), 0, 0);
+    }
+#endif
+#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
+    if (BX_CPU_THIS_PTR alignment_check()) {
+      if (laddr & 1) {
+        BX_ERROR(("write_virtual_word(): #AC misaligned access"));
+        exception(BX_AC_EXCEPTION, 0, 0);
+      }
     }
 #endif
     access_linear(laddr, 2, CPL, BX_WRITE, (void *) &data);
@@ -539,17 +546,9 @@ BX_CPU_C::write_virtual_dword(unsigned s, bx_address offset, Bit32u data)
 accessOK:
     laddr = BX_CPU_THIS_PTR get_segment_base(s) + offset;
     BX_INSTR_MEM_DATA(BX_CPU_ID, laddr, 4, BX_WRITE);
-#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
-    if (BX_CPU_THIS_PTR alignment_check) {
-      if (laddr & 3) {
-        BX_ERROR(("write_virtual_dword(): #AC misaligned access"));
-        exception(BX_AC_EXCEPTION, 0, 0);
-      }
-    }
-#endif
 #if BX_SupportGuest2HostTLB
     unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 3);
-    bx_address lpf = LPFOf(laddr);
+    bx_address lpf = AlignedAccessLPFOf(laddr, 3);
     bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
     if (tlbEntry->lpf == lpf) {
       // See if the TLB entry privilege level allows us write access
@@ -571,6 +570,14 @@ accessOK:
     if (! IsCanonical(laddr)) {
       BX_ERROR(("write_virtual_dword(): canonical failure"));
       exception(int_number(seg), 0, 0);
+    }
+#endif
+#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
+    if (BX_CPU_THIS_PTR alignment_check()) {
+      if (laddr & 3) {
+        BX_ERROR(("write_virtual_dword(): #AC misaligned access"));
+        exception(BX_AC_EXCEPTION, 0, 0);
+      }
     }
 #endif
     access_linear(laddr, 4, CPL, BX_WRITE, (void *) &data);
@@ -595,17 +602,9 @@ BX_CPU_C::write_virtual_qword(unsigned s, bx_address offset, Bit64u data)
 accessOK:
     laddr = BX_CPU_THIS_PTR get_segment_base(s) + offset;
     BX_INSTR_MEM_DATA(BX_CPU_ID, laddr, 8, BX_WRITE);
-#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
-    if (BX_CPU_THIS_PTR alignment_check) {
-      if (laddr & 7) {
-        BX_ERROR(("write_virtual_qword(): #AC misaligned access"));
-        exception(BX_AC_EXCEPTION, 0, 0);
-      }
-    }
-#endif
 #if BX_SupportGuest2HostTLB
     unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 7);
-    bx_address lpf = LPFOf(laddr);
+    bx_address lpf = AlignedAccessLPFOf(laddr, 7);
     bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
     if (tlbEntry->lpf == lpf) {
       // See if the TLB entry privilege level allows us write access
@@ -627,6 +626,14 @@ accessOK:
     if (! IsCanonical(laddr)) {
       BX_ERROR(("write_virtual_qword(): canonical failure"));
       exception(int_number(seg), 0, 0);
+    }
+#endif
+#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
+    if (BX_CPU_THIS_PTR alignment_check()) {
+      if (laddr & 7) {
+        BX_ERROR(("write_virtual_qword(): #AC misaligned access"));
+        exception(BX_AC_EXCEPTION, 0, 0);
+      }
     }
 #endif
     access_linear(laddr, 8, CPL, BX_WRITE, (void *) &data);
@@ -698,17 +705,9 @@ BX_CPU_C::read_virtual_word(unsigned s, bx_address offset)
 accessOK:
     laddr = BX_CPU_THIS_PTR get_segment_base(s) + offset;
     BX_INSTR_MEM_DATA(BX_CPU_ID, laddr, 2, BX_READ);
-#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
-    if (BX_CPU_THIS_PTR alignment_check) {
-      if (laddr & 1) {
-        BX_ERROR(("read_virtual_word(): #AC misaligned access"));
-        exception(BX_AC_EXCEPTION, 0, 0);
-      }
-    }
-#endif
 #if BX_SupportGuest2HostTLB
     unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 1);
-    bx_address lpf = LPFOf(laddr);
+    bx_address lpf = AlignedAccessLPFOf(laddr, 1);
     bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
     if (tlbEntry->lpf == lpf) {
       // See if the TLB entry privilege level allows us read access
@@ -727,6 +726,14 @@ accessOK:
     if (! IsCanonical(laddr)) {
       BX_ERROR(("read_virtual_word(): canonical failure"));
       exception(int_number(seg), 0, 0);
+    }
+#endif
+#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
+    if (BX_CPU_THIS_PTR alignment_check()) {
+      if (laddr & 1) {
+        BX_ERROR(("read_virtual_word(): #AC misaligned access"));
+        exception(BX_AC_EXCEPTION, 0, 0);
+      }
     }
 #endif
     access_linear(laddr, 2, CPL, BX_READ, (void *) &data);
@@ -752,17 +759,9 @@ BX_CPU_C::read_virtual_dword(unsigned s, bx_address offset)
 accessOK:
     laddr = BX_CPU_THIS_PTR get_segment_base(s) + offset;
     BX_INSTR_MEM_DATA(BX_CPU_ID, laddr, 4, BX_READ);
-#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
-    if (BX_CPU_THIS_PTR alignment_check) {
-      if (laddr & 3) {
-        BX_ERROR(("read_virtual_dword(): #AC misaligned access"));
-        exception(BX_AC_EXCEPTION, 0, 0);
-      }
-    }
-#endif
 #if BX_SupportGuest2HostTLB
     unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 3);
-    bx_address lpf = LPFOf(laddr);
+    bx_address lpf = AlignedAccessLPFOf(laddr, 3);
     bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
     if (tlbEntry->lpf == lpf) {
       // See if the TLB entry privilege level allows us read access
@@ -781,6 +780,14 @@ accessOK:
     if (! IsCanonical(laddr)) {
       BX_ERROR(("read_virtual_dword(): canonical failure"));
       exception(int_number(seg), 0, 0);
+    }
+#endif
+#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
+    if (BX_CPU_THIS_PTR alignment_check()) {
+      if (laddr & 3) {
+        BX_ERROR(("read_virtual_dword(): #AC misaligned access"));
+        exception(BX_AC_EXCEPTION, 0, 0);
+      }
     }
 #endif
     access_linear(laddr, 4, CPL, BX_READ, (void *) &data);
@@ -806,17 +813,9 @@ BX_CPU_C::read_virtual_qword(unsigned s, bx_address offset)
 accessOK:
     laddr = BX_CPU_THIS_PTR get_segment_base(s) + offset;
     BX_INSTR_MEM_DATA(BX_CPU_ID, laddr, 8, BX_READ);
-#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
-    if (BX_CPU_THIS_PTR alignment_check) {
-      if (laddr & 7) {
-        BX_ERROR(("read_virtual_qword(): #AC misaligned access"));
-        exception(BX_AC_EXCEPTION, 0, 0);
-      }
-    }
-#endif
 #if BX_SupportGuest2HostTLB
     unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 7);
-    bx_address lpf = LPFOf(laddr);
+    bx_address lpf = AlignedAccessLPFOf(laddr, 7);
     bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
     if (tlbEntry->lpf == lpf) {
       // See if the TLB entry privilege level allows us read access
@@ -835,6 +834,14 @@ accessOK:
     if (! IsCanonical(laddr)) {
       BX_ERROR(("read_virtual_qword(): canonical failure"));
       exception(int_number(seg), 0, 0);
+    }
+#endif
+#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
+    if (BX_CPU_THIS_PTR alignment_check()) {
+      if (laddr & 7) {
+        BX_ERROR(("read_virtual_qword(): #AC misaligned access"));
+        exception(BX_AC_EXCEPTION, 0, 0);
+      }
     }
 #endif
     access_linear(laddr, 8, CPL, BX_READ, (void *) &data);
@@ -917,17 +924,9 @@ BX_CPU_C::read_RMW_virtual_word(unsigned s, bx_address offset)
 accessOK:
     laddr = BX_CPU_THIS_PTR get_segment_base(s) + offset;
     BX_INSTR_MEM_DATA(BX_CPU_ID, laddr, 2, BX_RW);
-#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
-    if (BX_CPU_THIS_PTR alignment_check) {
-      if (laddr & 1) {
-        BX_ERROR(("read_RMW_virtual_word(): #AC misaligned access"));
-        exception(BX_AC_EXCEPTION, 0, 0);
-      }
-    }
-#endif
 #if BX_SupportGuest2HostTLB
     unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 1);
-    bx_address lpf = LPFOf(laddr);
+    bx_address lpf = AlignedAccessLPFOf(laddr, 1);
     bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
     if (tlbEntry->lpf == lpf) {
       // See if the TLB entry privilege level allows us write access
@@ -950,6 +949,14 @@ accessOK:
     if (! IsCanonical(laddr)) {
       BX_ERROR(("read_RMW_virtual_word(): canonical failure"));
       exception(int_number(seg), 0, 0);
+    }
+#endif
+#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
+    if (BX_CPU_THIS_PTR alignment_check()) {
+      if (laddr & 1) {
+        BX_ERROR(("read_RMW_virtual_word(): #AC misaligned access"));
+        exception(BX_AC_EXCEPTION, 0, 0);
+      }
     }
 #endif
     access_linear(laddr, 2, CPL, BX_RW, (void *) &data);
@@ -975,17 +982,9 @@ BX_CPU_C::read_RMW_virtual_dword(unsigned s, bx_address offset)
 accessOK:
     laddr = BX_CPU_THIS_PTR get_segment_base(s) + offset;
     BX_INSTR_MEM_DATA(BX_CPU_ID, laddr, 4, BX_RW);
-#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
-    if (BX_CPU_THIS_PTR alignment_check) {
-      if (laddr & 3) {
-        BX_ERROR(("read_RMW_virtual_dword(): #AC misaligned access"));
-        exception(BX_AC_EXCEPTION, 0, 0);
-      }
-    }
-#endif
 #if BX_SupportGuest2HostTLB
     unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 3);
-    bx_address lpf = LPFOf(laddr);
+    bx_address lpf = AlignedAccessLPFOf(laddr, 3);
     bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
     if (tlbEntry->lpf == lpf) {
       // See if the TLB entry privilege level allows us write access
@@ -1008,6 +1007,14 @@ accessOK:
     if (! IsCanonical(laddr)) {
       BX_ERROR(("read_RMW_virtual_dword(): canonical failure"));
       exception(int_number(seg), 0, 0);
+    }
+#endif
+#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
+    if (BX_CPU_THIS_PTR alignment_check()) {
+      if (laddr & 3) {
+        BX_ERROR(("read_RMW_virtual_dword(): #AC misaligned access"));
+        exception(BX_AC_EXCEPTION, 0, 0);
+      }
     }
 #endif
     access_linear(laddr, 4, CPL, BX_RW, (void *) &data);
@@ -1033,17 +1040,9 @@ BX_CPU_C::read_RMW_virtual_qword(unsigned s, bx_address offset)
 accessOK:
     laddr = BX_CPU_THIS_PTR get_segment_base(s) + offset;
     BX_INSTR_MEM_DATA(BX_CPU_ID, laddr, 8, BX_RW);
-#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
-    if (BX_CPU_THIS_PTR alignment_check) {
-      if (laddr & 7) {
-        BX_ERROR(("read_RMW_virtual_qword(): #AC misaligned access"));
-        exception(BX_AC_EXCEPTION, 0, 0);
-      }
-    }
-#endif
 #if BX_SupportGuest2HostTLB
     unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 7);
-    bx_address lpf = LPFOf(laddr);
+    bx_address lpf = AlignedAccessLPFOf(laddr, 7);
     bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
     if (tlbEntry->lpf == lpf) {
       // See if the TLB entry privilege level allows us write access
@@ -1066,6 +1065,14 @@ accessOK:
     if (! IsCanonical(laddr)) {
       BX_ERROR(("read_RMW_virtual_qword(): canonical failure"));
       exception(int_number(seg), 0, 0);
+    }
+#endif
+#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
+    if (BX_CPU_THIS_PTR alignment_check()) {
+      if (laddr & 7) {
+        BX_ERROR(("read_RMW_virtual_qword(): #AC misaligned access"));
+        exception(BX_AC_EXCEPTION, 0, 0);
+      }
     }
 #endif
     access_linear(laddr, 8, CPL, BX_RW, (void *) &data);
@@ -1301,17 +1308,9 @@ void BX_CPU_C::write_new_stack_word(bx_segment_reg_t *seg, bx_address offset, un
 accessOK:
     laddr = seg->cache.u.segment.base + offset;
     BX_INSTR_MEM_DATA(BX_CPU_ID, laddr, 2, BX_WRITE);
-#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
-    if (BX_CPU_THIS_PTR alignment_check) {
-      if (laddr & 1) {
-        BX_ERROR(("write_new_stack_word(): #AC misaligned access"));
-        exception(BX_AC_EXCEPTION, 0, 0);
-      }
-    }
-#endif
 #if BX_SupportGuest2HostTLB
     unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 1);
-    bx_address lpf = LPFOf(laddr);
+    bx_address lpf = AlignedAccessLPFOf(laddr, 1);
     bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
     if (tlbEntry->lpf == lpf) {
       // See if the TLB entry privilege level allows us write access
@@ -1326,6 +1325,14 @@ accessOK:
 #endif
         WriteHostWordToLittleEndian(hostAddr, data);
         return;
+      }
+    }
+#endif
+#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
+    if (BX_CPU_THIS_PTR alignment_check()) {
+      if (laddr & 1) {
+        BX_ERROR(("write_new_stack_word(): #AC misaligned access"));
+        exception(BX_AC_EXCEPTION, 0, 0);
       }
     }
 #endif
@@ -1352,17 +1359,9 @@ void BX_CPU_C::write_new_stack_dword(bx_segment_reg_t *seg, bx_address offset, u
 accessOK:
     laddr = seg->cache.u.segment.base + offset;
     BX_INSTR_MEM_DATA(BX_CPU_ID, laddr, 4, BX_WRITE);
-#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
-    if (BX_CPU_THIS_PTR alignment_check) {
-      if (laddr & 3) {
-        BX_ERROR(("write_new_stack_dword(): #AC misaligned access"));
-        exception(BX_AC_EXCEPTION, 0, 0);
-      }
-    }
-#endif
 #if BX_SupportGuest2HostTLB
     unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 3);
-    bx_address lpf = LPFOf(laddr);
+    bx_address lpf = AlignedAccessLPFOf(laddr, 3);
     bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
     if (tlbEntry->lpf == lpf) {
       // See if the TLB entry privilege level allows us write access
@@ -1377,6 +1376,14 @@ accessOK:
 #endif
         WriteHostDWordToLittleEndian(hostAddr, data);
         return;
+      }
+    }
+#endif
+#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
+    if (BX_CPU_THIS_PTR alignment_check()) {
+      if (laddr & 3) {
+        BX_ERROR(("write_new_stack_dword(): #AC misaligned access"));
+        exception(BX_AC_EXCEPTION, 0, 0);
       }
     }
 #endif
@@ -1396,42 +1403,43 @@ accessOK:
 #if BX_SUPPORT_X86_64
 void BX_CPU_C::write_new_stack_qword(bx_address laddr, unsigned curr_pl, Bit64u data)
 {
-  if (IsCanonical(laddr)) {
-    BX_INSTR_MEM_DATA(BX_CPU_ID, laddr, 8, BX_WRITE);
-#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
-    if (BX_CPU_THIS_PTR alignment_check) {
-      if (laddr & 7) {
-        BX_ERROR(("write_new_stack_qword(): #AC misaligned access"));
-        exception(BX_AC_EXCEPTION, 0, 0);
-      }
-    }
-#endif
+  BX_INSTR_MEM_DATA(BX_CPU_ID, laddr, 8, BX_WRITE);
 
 #if BX_SupportGuest2HostTLB
-    unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 7);
-    bx_address lpf = LPFOf(laddr);
-    bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
-    if (tlbEntry->lpf == lpf) {
-      // See if the TLB entry privilege level allows us write access
-      // from this CPL.
-      if (tlbEntry->accessBits & (0x10 << CPL)) {
-        bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
-        Bit32u pageOffset = PAGE_OFFSET(laddr);
-        BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr, tlbEntry->ppf | pageOffset, 8, BX_WRITE);
-        Bit64u *hostAddr = (Bit64u*) (hostPageAddr | pageOffset);
+  unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 7);
+  bx_address lpf = AlignedAccessLPFOf(laddr, 7);
+  bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
+  if (tlbEntry->lpf == lpf) {
+    // See if the TLB entry privilege level allows us write access
+    // from this CPL.
+    if (tlbEntry->accessBits & (0x10 << CPL)) {
+      bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
+      Bit32u pageOffset = PAGE_OFFSET(laddr);
+      BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr, tlbEntry->ppf | pageOffset, 8, BX_WRITE);
+      Bit64u *hostAddr = (Bit64u*) (hostPageAddr | pageOffset);
 #if BX_SUPPORT_ICACHE
-        pageWriteStampTable.decWriteStamp(tlbEntry->ppf);
+      pageWriteStampTable.decWriteStamp(tlbEntry->ppf);
 #endif
-        WriteHostQWordToLittleEndian(hostAddr, data);
-        return;
-      }
+      WriteHostQWordToLittleEndian(hostAddr, data);
+      return;
     }
-#endif
-    access_linear(laddr, 8, curr_pl, BX_WRITE, (void *) &data);
   }
-  else {
-    BX_ERROR(("write_new_stack_qword(): canonical failure 0x%08x:%08x", GET32H(laddr), GET32L(laddr)));
+#endif
+
+  if (! IsCanonical(laddr)) {
+    BX_ERROR(("write_new_stack_qword(): canonical failure"));
     exception(BX_SS_EXCEPTION, 0, 0);
   }
+
+#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
+  if (BX_CPU_THIS_PTR alignment_check()) {
+    if (laddr & 7) {
+      BX_ERROR(("write_new_stack_qword(): #AC misaligned access"));
+      exception(BX_AC_EXCEPTION, 0, 0);
+    }
+  }
+#endif
+
+  access_linear(laddr, 8, curr_pl, BX_WRITE, (void *) &data);
 }
 #endif

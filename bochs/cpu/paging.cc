@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.108 2008-02-02 21:46:53 sshwarts Exp $
+// $Id: paging.cc,v 1.109 2008-02-11 20:52:10 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -624,12 +624,9 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned curr_pl, un
 
   // note - we assume physical memory < 4gig so for brevity & speed, we'll use
   // 32 bit entries although cr3 is expanded to 64 bits.
-  bx_phy_address paddress, ppf, poffset;
+  bx_phy_address paddress, ppf, poffset = PAGE_OFFSET(laddr);
   bx_bool isWrite = (rw >= BX_WRITE); // write or r-m-w
-
   unsigned pl = (curr_pl == 3);
-
-  poffset = laddr & 0x00000fff; // physical offset
 
 #if BX_USE_TLB
   InstrTLB_Increment(tlbLookups);
@@ -1044,17 +1041,16 @@ bx_bool BX_CPU_C::dbg_xlate_linear2phy(bx_address laddr, bx_phy_address *phy)
     return 1;
   }
 
-  bx_address lpf = LPFOf(laddr); // linear page frame
-  bx_phy_address poffset = (bx_phy_address)(laddr & 0x00000fff); // physical offset
   bx_phy_address paddress;
 
   // see if page is in the TLB first
 #if BX_USE_TLB
+  bx_address lpf = LPFOf(laddr);
   unsigned TLB_index = BX_TLB_INDEX_OF(lpf, 0);
   bx_TLB_entry *tlbEntry  = &BX_CPU_THIS_PTR TLB.entry[TLB_index];
 
   if (tlbEntry->lpf == lpf) {
-    paddress = tlbEntry->ppf | poffset;
+    paddress = tlbEntry->ppf | PAGE_OFFSET(laddr);
     *phy = paddress;
     return 1;
   }

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.421 2008-02-07 20:43:12 sshwarts Exp $
+// $Id: cpu.h,v 1.422 2008-02-11 20:52:10 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -425,7 +425,7 @@ BOCHSAPI extern BX_CPU_C   bx_cpu;
 #define IMPLEMENT_EFLAG_ACCESSOR_AC(bitnum)                     \
   BX_CPP_INLINE void BX_CPU_C::clear_AC () {                    \
     BX_CPU_THIS_PTR eflags &= ~(1<<bitnum);                     \
-    BX_CPU_THIS_PTR alignment_check = 0;                        \
+    BX_CPU_THIS_PTR alignment_check_mask = LPF_MASK;            \
   }                                                             \
   BX_CPP_INLINE Bit32u BX_CPU_C::get_AC() {                     \
     return BX_CPU_THIS_PTR eflags & (1 << bitnum);              \
@@ -930,7 +930,7 @@ public: // for now...
   bx_bool  in_smm;
   bx_bool  nmi_disable;
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
-  bx_bool  alignment_check;
+  bx_address alignment_check_mask;
 #endif
 
 #if BX_DEBUGGER
@@ -953,11 +953,14 @@ public: // for now...
     bx_TLB_entry entry[BX_TLB_SIZE]  BX_CPP_AlignN(16);
   } TLB;
 
+
 #if BX_SUPPORT_X86_64
-#define LPFOf(laddr) ((laddr) & BX_CONST64(0xfffffffffffff000))
+  #define LPF_MASK BX_CONST64(0xfffffffffffff000)
 #else
-#define LPFOf(laddr) ((laddr) & 0xfffff000)
+  #define LPF_MASK 0xfffff000
 #endif
+
+#define LPFOf(laddr) ((laddr) & LPF_MASK)
 
 #endif  // #if BX_USE_TLB
 
@@ -3172,6 +3175,10 @@ public: // for now...
   BX_SMF BX_CPP_INLINE bx_bool long_mode(void);
   BX_SMF BX_CPP_INLINE unsigned get_cpu_mode(void);
 
+#if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
+  BX_SMF BX_CPP_INLINE bx_bool alignment_check(void);
+#endif
+
 #if BX_CPU_LEVEL >= 5
   BX_SMF Bit64u get_TSC();
   BX_SMF void   set_TSC(Bit32u tsc);
@@ -3374,6 +3381,15 @@ BX_CPP_INLINE unsigned BX_CPU_C::get_cpu_mode(void)
 {
   return (BX_CPU_THIS_PTR cpu_mode);
 }
+
+#if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
+
+BX_CPP_INLINE bx_bool BX_CPU_C::alignment_check(void)
+{
+  return (Bit32u)(BX_CPU_THIS_PTR alignment_check_mask) & 1;
+}
+
+#endif
 
 BOCHSAPI extern const bx_bool bx_parity_lookup[256];
 

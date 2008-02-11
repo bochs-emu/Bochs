@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.199 2008-02-07 18:28:50 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.200 2008-02-11 20:52:10 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1223,11 +1223,15 @@ void BX_CPU_C::handleCpuModeChange(void)
 void BX_CPU_C::handleAlignmentCheck(void)
 {
   if (CPL == 3 && BX_CPU_THIS_PTR cr0.get_AM() && BX_CPU_THIS_PTR get_AC()) {
-    BX_CPU_THIS_PTR alignment_check = 1;
+#if BX_SUPPORT_X86_64
+    BX_CPU_THIS_PTR alignment_check_mask = BX_CONST64(0xFFFFFFFFFFFFFFFF);
+#else
+    BX_CPU_THIS_PTR alignment_check_mask = 0xFFFFFFFF;
+#endif
     BX_INFO(("Enable alignment check (#AC exception)"));
   }
   else {
-    BX_CPU_THIS_PTR alignment_check = 0;
+    BX_CPU_THIS_PTR alignment_check_mask = LPF_MASK;
   }
 }
 #endif
@@ -2035,7 +2039,7 @@ void BX_CPU_C::SYSENTER(bxInstruction_c *i)
 #endif
 
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
-  BX_CPU_THIS_PTR alignment_check = 0; // CPL=0
+  BX_CPU_THIS_PTR alignment_check_mask = LPF_MASK; // CPL=0
 #endif
 
   parse_selector((BX_CPU_THIS_PTR msr.sysenter_cs_msr + 8) & BX_SELECTOR_RPL_MASK,
@@ -2178,7 +2182,7 @@ void BX_CPU_C::SYSCALL(bxInstruction_c *i)
 #endif
 
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
-    BX_CPU_THIS_PTR alignment_check = 0; // CPL=0
+    BX_CPU_THIS_PTR alignment_check_mask = LPF_MASK; // CPL=0
 #endif
 
     // set up SS segment, flat, 64-bit DPL=0
@@ -2230,7 +2234,7 @@ void BX_CPU_C::SYSCALL(bxInstruction_c *i)
 #endif
 
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
-    BX_CPU_THIS_PTR alignment_check = 0; // CPL=0
+    BX_CPU_THIS_PTR alignment_check_mask = LPF_MASK; // CPL=0
 #endif
 
     // set up SS segment, flat, 32-bit DPL=0
