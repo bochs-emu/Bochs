@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.422 2008-02-11 20:52:10 sshwarts Exp $
+// $Id: cpu.h,v 1.423 2008-02-12 22:41:39 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2260,6 +2260,13 @@ public: // for now...
   BX_SMF void INSERTQ_VdqUdqIbIb(bxInstruction_c *);
   BX_SMF void INSERTQ_VdqUdq(bxInstruction_c *);
   /* SSE4A */
+
+  /* XSAVE/XRSTOR extensions */
+  BX_SMF void XSAVE(bxInstruction_c *);
+  BX_SMF void XRSTOR(bxInstruction_c *);
+  BX_SMF void XGETBV(bxInstruction_c *);
+  BX_SMF void XSETBV(bxInstruction_c *);
+  /* XSAVE/XRSTOR extensions */
 
   /*** Duplicate SSE instructions ***/
   // Although in implementation, these instructions are aliased to the

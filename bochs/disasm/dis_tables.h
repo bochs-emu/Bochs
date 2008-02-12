@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dis_tables.h,v 1.32 2007-09-19 19:38:10 sshwarts Exp $
+// $Id: dis_tables.h,v 1.33 2008-02-12 22:41:39 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #ifndef _BX_DISASM_TABLES_
@@ -71,10 +71,10 @@
 #define  Gd &disassembler::Gd
 #define  Gq &disassembler::Gq
 
-#define  Hbd &disassembler::Hbd
-#define  Hwd &disassembler::Hwd
-#define   Hd &disassembler::Hd
-#define   Hq &disassembler::Hq
+#define Hbd &disassembler::Hbd
+#define Hwd &disassembler::Hwd
+#define  Hd &disassembler::Hd
+#define  Hq &disassembler::Hq
 
 #define  I1 &disassembler::I1
 #define  Ib &disassembler::Ib
@@ -119,10 +119,10 @@
 #define Wps &disassembler::Wps
 #define Wpd &disassembler::Wpd
 
-#define Ob  &disassembler::Ob
-#define Ow  &disassembler::Ow
-#define Od  &disassembler::Od
-#define Oq  &disassembler::Oq
+#define  Ob &disassembler::Ob
+#define  Ow &disassembler::Ow
+#define  Od &disassembler::Od
+#define  Oq &disassembler::Oq
 
 #define  Ma &disassembler::Ma
 #define  Mp &disassembler::Mp

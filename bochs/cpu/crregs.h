@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: crregs.h,v 1.5 2007-11-17 23:28:31 sshwarts Exp $
+// $Id: crregs.h,v 1.6 2008-02-12 22:41:39 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007 Stanislav Shwartsman
@@ -90,6 +90,9 @@ struct bx_cr4_t {
   IMPLEMENT_CRREG_ACCESSORS(PCE, 8);
   IMPLEMENT_CRREG_ACCESSORS(OSFXSR, 9);
   IMPLEMENT_CRREG_ACCESSORS(OSXMMEXCPT, 10);
+#if BX_SUPPORT_XSAVE
+  IMPLEMENT_CRREG_ACCESSORS(OSXSAVE, 18);
+#endif
 
   BX_CPP_INLINE Bit32u getRegister() { return val32; }
   BX_CPP_INLINE void setRegister(Bit32u val) { val32 = val; }

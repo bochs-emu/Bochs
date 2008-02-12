@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.h,v 1.52 2008-02-02 21:46:51 sshwarts Exp $
+// $Id: fetchdecode.h,v 1.53 2008-02-12 22:41:39 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005 Stanislav Shwartsman
@@ -3059,10 +3059,21 @@ static const BxOpcodeInfo_t opcodesGroupRmMONITOR[8] = {
   /* 7 */ { 0, &BX_CPU_C::BxError }
 };
 
+static const BxOpcodeInfo_t opcodesGroupRmXGETSET[8] = {
+  /* 0 */ { 0, &BX_CPU_C::XGETBV  },
+  /* 1 */ { 0, &BX_CPU_C::XSETBV  },
+  /* 2 */ { 0, &BX_CPU_C::BxError },
+  /* 3 */ { 0, &BX_CPU_C::BxError },
+  /* 4 */ { 0, &BX_CPU_C::BxError },
+  /* 5 */ { 0, &BX_CPU_C::BxError },
+  /* 6 */ { 0, &BX_CPU_C::BxError },
+  /* 7 */ { 0, &BX_CPU_C::BxError }
+};
+
 static const BxOpcodeInfo_t BxOpcodeInfoG7R[8] = {
   /* 0 */ { 0, &BX_CPU_C::BxError },
   /* 1 */ { BxRMGroup, NULL, opcodesGroupRmMONITOR },
-  /* 2 */ { 0, &BX_CPU_C::BxError },
+  /* 2 */ { BxRMGroup, NULL, opcodesGroupRmXGETSET },
   /* 3 */ { 0, &BX_CPU_C::BxError },
   /* 4 */ { 0, &BX_CPU_C::SMSW_Ew },
   /* 5 */ { 0, &BX_CPU_C::BxError },
@@ -3272,8 +3283,8 @@ static const BxOpcodeInfo_t BxOpcodeInfoG15M[8] = {
   /* 1 */ { 0, &BX_CPU_C::FXRSTOR },
   /* 2 */ { 0, &BX_CPU_C::LDMXCSR },
   /* 3 */ { 0, &BX_CPU_C::STMXCSR },
-  /* 4 */ { 0, &BX_CPU_C::BxError },
-  /* 5 */ { 0, &BX_CPU_C::BxError },
+  /* 4 */ { 0, &BX_CPU_C::XSAVE   },
+  /* 5 */ { 0, &BX_CPU_C::XRSTOR  },
   /* 6 */ { 0, &BX_CPU_C::BxError },
   /* 7 */ { 0, &BX_CPU_C::CLFLUSH }
 };

@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.361 2008-02-09 07:51:11 sshwarts Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.362 2008-02-12 22:41:37 sshwarts Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -1674,6 +1674,29 @@ AC_ARG_ENABLE(daz,
     fi
     ]
   )
+
+use_xsave=0
+AC_MSG_CHECKING(for XSAVE/XRSTOR support)
+AC_ARG_ENABLE(xsave,
+  [  --enable-xsave                    support for XSAVE/XRSTOR extensions],
+  [if test "$enableval" = yes; then
+    AC_MSG_RESULT(yes)
+    AC_DEFINE(BX_SUPPORT_XSAVE, 1)
+    use_xsave=1
+   elif test "$enableval" = no; then
+    AC_MSG_RESULT(no)
+    AC_DEFINE(BX_SUPPORT_XSAVE, 0)
+   fi
+   ],
+  [
+    AC_MSG_RESULT(no)
+    AC_DEFINE(BX_SUPPORT_XSAVE, 0)
+  ]
+  )
+
+if test "$support_sse" -lt 1 -a "$use_xsave" = 1; then
+  AC_MSG_ERROR([XSAVE requires SSE support!])
+fi
 
 AC_MSG_CHECKING(for alignment check support)
 AC_ARG_ENABLE(alignment-check,

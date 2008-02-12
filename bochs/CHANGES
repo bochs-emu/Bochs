@@ -1,3 +1,71 @@
+Changes after 2.3.6 release:
+
+Brief summary :
+
++ More optimizations in CPU code - 20% additional emulation speedup 
+  over 2.3.6 release!
+
+Detailed change log :
+
+- CPU
+  - Support of XSAVE/XRSTOR CPU extensions, to enable configure with
+        --enable-xsave option
+  - Fixed Bochs failure on RISC host machines with BxRepeatSpeedups
+    optimization enabled
+  - Minor bugfixes in CPU emulation (both ia32 and x86-64)
+  - Updated CPU instrumentation callbacks
+
+- System BIOS (Volker)
+  - Implemented LBA48 support (since BIOS functions are limited to 
+    32 bit, the max. disk size is now 2 TB)
+  - Added generation of SSDT ACPI table that contains definitions 
+    for available processors
+  - Added RTC device to ACPI DSDT table
+  - Added implementation of SMBIOS
+
+- I/O devices (Volker)
+  - VGA
+    - Implemented screen disable bit in sequencer register #1
+    - Implemented text mode cursor blinking
+
+- Configure and compile
+  - Removed --enable-magic-breakpoint configure option. The option is
+    automatically enabled  if Bochs internal debugger is compiled in.
+    It is still possible to turn on/off the feature through .bochsrc.
+  - Allow boot from network option in .bochsrc
+  - Added Bochs version info for Win32
+
+- SF patches applied
+ [1889851] Win32 version information FILEVERSION for bochs.exe by Sebastian
+ [1889042] rombios.c - fix comment by Sebastian
+ [1881500] bochsrc, allow boot: network by Sebastian
+ [1880755] Win32 version information for bochs.exe by Sebastian
+ [1880471] SMBIOS fix type 0 by Sebastian
+ [1878558] SMBIOS fixes by Sebastian
+ [1864692] SMBIOS support by Filip Navara
+ [1865105] Move bios_table_area_end to 0xcc00 by Sebastian
+ [1875414] Makefile.in - change make use by Sebastian
+ [1874276] Added instrumentation for sysenter/sysexit by Lluis
+ [1873221] TLB page flush: add logical address to instrumentation by Lluis
+ [1830626] lba32 support by Samuel Thibault
+ [1861839] Move option rom scan after floppy and hard drive post by Sebastian
+ [1838283] Early vga bios init by Sebastian
+ [1838272] rom_scan range parameter by Sebastian
+ [1864680] Save CPUID signature by Filip Navara
+
+- these S.F. bugs were closed
+ [1569256] bug in datasegment change in long mode
+ [1830662] ACPI: no DMI BIOS year, acpi=force is required
+ [1868806] VGA blink enable & screen disable
+ [1875721] Bit "Accessed" in LDT/GDT descriptors & #PF
+ [1874124] bx_Instruction_c::ilen() const
+ [1873488] bochs-2.3.6 make fails on dbg_main.cc  
+
+- these S.F. feature requests were implemented
+ [1847955] Version information for bochs(dbg).exe
+  [939797] SMBIOS support  
+
+-------------------------------------------------------------------------
 Changes in 2.3.6 (December 24, 2007):
 
 Brief summary :
@@ -63,6 +131,7 @@ Detailed change log :
     --cpu-level >= 4 (like in real hardware)
 
 - SF patches applied
+ [1491207] Trace Cache Speedup patch by Stanislav
  [1857149] Define some IPL values by Sebastian
  [1850183] Get memory access mode in BX_INSTR_LIN_READ by Lluis Vilanova
  [1841421] pic: keep slave_pic.INT and master_pic.IRQ_in bit 2 in sync by Russ Cox

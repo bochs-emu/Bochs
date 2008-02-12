@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.200 2008-02-11 20:52:10 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.201 2008-02-12 22:41:39 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1320,8 +1320,13 @@ bx_bool BX_CPU_C::SetCR4(Bit32u val_32)
   Bit32u oldCR4 = BX_CPU_THIS_PTR cr4.getRegister();
   Bit32u allowMask = 0;
 
-  // CR4 bit definitions from AMD Hammer manual:
-  //   [63-11] Reserved, Must be Zero
+  // CR4 bits definitions:
+  //   [31-19] Reserved, Must be Zero
+  //   [18]    OSXSAVE: Operating System XSAVE Support R/W
+  //   [17-15] Reserved, Must be Zero
+  //   [14]    SMXE: SMX Extensions R/W
+  //   [13]    VMXE: VMX Extensions R/W
+  //   [12-11] Reserved, Must be Zero
   //   [10]    OSXMMEXCPT: Operating System Unmasked Exception Support R/W
   //   [9]     OSFXSR: Operating System FXSAVE/FXRSTOR Support R/W
   //   [8]     PCE: Performance-Monitoring Counter Enable R/W
@@ -1353,7 +1358,7 @@ bx_bool BX_CPU_C::SetCR4(Bit32u val_32)
 #endif
 
 #if BX_CPU_LEVEL >= 5
-  // NOTE: exception 18 never appears in Bochs
+  // NOTE: exception 18 (#MC) never appears in Bochs
   allowMask |= (1<<6);   /* MCE */
 #endif
 
@@ -1368,6 +1373,10 @@ bx_bool BX_CPU_C::SetCR4(Bit32u val_32)
 
 #if BX_SUPPORT_SSE
   allowMask |= (1<<10);  /* OSXMMECPT */
+#endif
+
+#if BX_SUPPORT_XSAVE
+  allowMask |= (1<<18);  /* OSXSAVE */
 #endif
 
 #if BX_SUPPORT_X86_64

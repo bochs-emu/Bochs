@@ -34,11 +34,14 @@
 #define IA_SSE4_1           0x00004000        /* SSE4_1 instruction */
 #define IA_SSE4_2           0x00008000        /* SSE4_2 instruction */
 #define IA_SSE4A            0x00010000        /* SSE4A instruction */
-#define IA_SSE5             0x00020000        /* SSE5 instruction */
+#define IA_SSE5A            0x00020000        /* SSE5A instruction */
 #define IA_X86_64           0x00040000        /* x86-64 instruction */
 #define IA_SYSCALL_SYSRET   0x00080000        /* SYSCALL/SYSRET instruction */
 #define IA_SYSENTER_SYSEXIT 0x00100000        /* SYSENTER/SYSEXIT instruction */
 #define IA_VMX              0x00200000        /* VMX instruction */
+#define IA_SMX              0x00400000        /* SMX instruction */
+#define IA_SVM              0x00800000        /* SVM instruction */
+#define IA_XSAVE            0x01000000        /* XSAVE/XRSTOR extensions instruction */
 #define IA_UNDOCUMENTED     0x80000000        /* instruction undocumented */
 
 /* general purpose bit register */
