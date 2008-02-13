@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.424 2008-02-13 16:45:20 sshwarts Exp $
+// $Id: cpu.h,v 1.425 2008-02-13 22:25:24 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -552,7 +552,7 @@ typedef struct
 } bx_regs_msr_t;
 #endif
 
-#define MAX_STD_CPUID_FUNCTION 8
+#define MAX_STD_CPUID_FUNCTION 15
 #define MAX_EXT_CPUID_FUNCTION 8
 
 struct cpuid_function_t {

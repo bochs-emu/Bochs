@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: xsave.cc,v 1.3 2008-02-13 17:06:44 sshwarts Exp $
+// $Id: xsave.cc,v 1.4 2008-02-13 22:25:24 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008 Stanislav Shwartsman
@@ -31,10 +31,6 @@
 #define RAX EAX
 #define RDX EDX
 #endif
-
-// TODO:
-// 1. CPUID leaf, CPU function ECX[26], ECX[27]
-// 2. SSE #UD generation new way
 
 #if BX_SUPPORT_XSAVE
 void BX_CPU_C::prepareXSAVE(void)

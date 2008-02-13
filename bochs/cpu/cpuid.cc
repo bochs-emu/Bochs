@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpuid.cc,v 1.62 2008-02-13 16:45:20 sshwarts Exp $
+// $Id: cpuid.cc,v 1.63 2008-02-13 22:25:24 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007 Stanislav Shwartsman
@@ -255,7 +255,7 @@ Bit32u BX_CPU_C::get_std_cpuid_features()
 
 void BX_CPU_C::CPUID(bxInstruction_c *i)
 {
-  Bit32u function = EAX;
+  Bit32u function = EAX, subfunction = ECX;
 
 #if BX_CPU_LEVEL >= 4
   if(function < 0x80000000) {
@@ -270,6 +270,14 @@ void BX_CPU_C::CPUID(bxInstruction_c *i)
         // the CPUID feature flag for the APIC is set to 0.
         if ((BX_CPU_THIS_PTR msr.apicbase & 0x800) == 0)
           RDX &= ~(1<<9); // APIC on chip
+      }
+#endif
+#if BX_SUPPORT_XSAVE
+      if (function == 0xD && subfunction > 0) {
+        RAX = 0;
+        RBX = 0;
+        RCX = 0;
+        RDX = 0;
       }
 #endif
       return;
@@ -338,7 +346,11 @@ void BX_CPU_C::set_cpuid_defaults(void)
   cpuid->eax = 1;
 #else
   // for Pentium Pro, Pentium II, Pentium 4 processors
-  cpuid->eax = BX_SUPPORT_MONITOR_MWAIT ? 5 : 2;
+  cpuid->eax = 2;
+  if (BX_SUPPORT_MONITOR_MWAIT)
+    cpuid->eax = 0x5;
+  if (BX_SUPPORT_XSAVE)
+    cpuid->eax = 0xD;
 #endif
 
 #if BX_CPU_VENDOR_INTEL
@@ -488,6 +500,21 @@ void BX_CPU_C::set_cpuid_defaults(void)
   cpuid->eax = CACHE_LINE_SIZE;
   cpuid->ebx = CACHE_LINE_SIZE;
   cpuid->ecx = 3;
+  cpuid->edx = 0;
+#endif
+
+#if BX_SUPPORT_XSAVE
+  // ------------------------------------------------------
+  // CPUID function 0x0000000D
+  cpuid = &(BX_CPU_THIS_PTR cpuid_std_function[0xD]);
+
+  // EAX - XCR0 lower 32 bits
+  // EBX - Maximum size (in bytes) required by enabled features
+  // ECX - Maximum size (in bytes) required by CPU supported features
+  // EDX - XCR0 upper 32 bits
+  cpuid->eax = BX_CPU_THIS_PTR xcr0.getRegister();
+  cpuid->ebx = 512+64;
+  cpuid->ecx = 512+64;
   cpuid->edx = 0;
 #endif
 
