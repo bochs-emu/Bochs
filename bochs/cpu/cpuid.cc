@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpuid.cc,v 1.61 2008-02-02 21:46:50 sshwarts Exp $
+// $Id: cpuid.cc,v 1.62 2008-02-13 16:45:20 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007 Stanislav Shwartsman
@@ -137,36 +137,44 @@ Bit32u BX_CPU_C::get_extended_cpuid_features()
   // [18:15] reserved
   // [19:19] SSE4.1: SSE4.1 Instructions
   // [20:20] SSE4.2: SSE4.2 (SSE4E) Instructions
-  // [21:22] Reserved
-  // [23:23] POPCNT instruction support
-  // [31:21] reserved
+  // [21:22] X2APIC
+  // [22:22] Reserved
+  // [23:23] POPCNT instruction
+  // [25:24] reserved
+  // [26:26] XSAVE extensions support
+  // [27:27] OSXSAVE support
+  // [31:28] reserved
 
   Bit32u features = 0;
 
 #if BX_SUPPORT_SSE >= 3
-  features |= 0x1;      // support SSE3
+  features |= 0x1;               // support SSE3
 #endif
 #if BX_SUPPORT_MONITOR_MWAIT
-  features |= (1<<3);   // support MONITOR/MWAIT
+  features |= (1<<3);            // support MONITOR/MWAIT
 #endif
 #if (BX_SUPPORT_SSE >= 4) || (BX_SUPPORT_SSE >= 3 && BX_SUPPORT_SSE_EXTENSION > 0)
-  features |= (1<<9);   // support SSE3E
+  features |= (1<<9);            // support SSE3E
 #endif
 
 #if BX_SUPPORT_X86_64
-  features |= (1<<13);  // support CMPXCHG16B
+  features |= (1<<13);           // support CMPXCHG16B
 #endif
 
 #if BX_SUPPORT_SSE >= 4
-  features |= (1<<19);  // support SSE4.1
+  features |= (1<<19);           // support SSE4.1
 #endif
 
 #if (BX_SUPPORT_SSE >= 5) || (BX_SUPPORT_SSE >= 4 && BX_SUPPORT_SSE_EXTENSION > 0)
-  features |= (1<<20);  // support SSE4.2 (SSE4E)
+  features |= (1<<20);           // support SSE4.2 (SSE4E)
 #endif
 
 #if BX_SUPPORT_POPCNT || (BX_SUPPORT_SSE >= 5) || (BX_SUPPORT_SSE >= 4 && BX_SUPPORT_SSE_EXTENSION > 0)
-  features |= (1<<23);  // support POPCNT instruction
+  features |= (1<<23);           // support POPCNT instruction
+#endif
+
+#if BX_SUPPORT_XSAVE
+  features |= (1<<26) | (1<<27); // support XSAVE extensions
 #endif
 
   return features;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: crregs.h,v 1.6 2008-02-12 22:41:39 sshwarts Exp $
+// $Id: crregs.h,v 1.7 2008-02-13 16:45:20 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007 Stanislav Shwartsman
@@ -114,6 +114,27 @@ typedef struct bx_efer_t {
   bx_bool nxe;		// no-execute enable
   bx_bool ffxsr;	// fast FXSAVE/FXRSTOR
 } bx_efer_t;
+#endif
+
+#if BX_SUPPORT_XSAVE
+typedef struct xcr0_reg_t {
+  Bit32u  val32; // 32bit value of register
+
+#define BX_XR0_SUPPORT_BITS 0x3
+
+#define BX_XCR0_FPU_BIT   0
+#define BX_XCR0_FPU_MASK (1<<BX_XCR0_FPU_BIT)
+#define BX_XCR0_SSE_BIT   1
+#define BX_XCR0_FPU_MASK (1<<BX_XCR0_SSE_BIT)
+
+  IMPLEMENT_CRREG_ACCESSORS(FPU, BX_XCR0_FPU_BIT);
+#if BX_SUPPORT_SSE
+  IMPLEMENT_CRREG_ACCESSORS(SSE, BX_XCR0_SSE_BIT);
+#endif
+
+  BX_CPP_INLINE Bit32u getRegister() { return val32; }
+  BX_CPP_INLINE void setRegister(Bit32u val) { val32 = val; }
+} xcr0_t;
 #endif
 
 #undef IMPLEMENT_CRREG_ACCESSORS

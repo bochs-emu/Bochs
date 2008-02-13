@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.423 2008-02-12 22:41:39 sshwarts Exp $
+// $Id: cpu.h,v 1.424 2008-02-13 16:45:20 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -857,6 +857,10 @@ public: // for now...
 
 #if BX_SUPPORT_X86_64
   bx_efer_t efer;
+#endif
+
+#if BX_SUPPORT_XSAVE
+  xcr0_t xcr0;
 #endif
 
   /* SMM base register */
@@ -3212,6 +3216,11 @@ public: // for now...
   BX_SMF void prepareSSE(void);
   BX_SMF void check_exceptionsSSE(int);
   BX_SMF void print_state_SSE(void);
+  BX_SMF Bit16u unpack_FPU_TW(Bit16u tag_byte);
+#endif
+
+#if BX_SUPPORT_XSAVE
+  BX_SMF void prepareXSAVE(void);
 #endif
 
 #if BX_SUPPORT_MONITOR_MWAIT

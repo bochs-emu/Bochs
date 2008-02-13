@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.153 2008-02-11 20:52:10 sshwarts Exp $
+// $Id: init.cc,v 1.154 2008-02-13 16:45:20 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -357,6 +357,9 @@ void BX_CPU_C::register_state(void)
   BXRS_HEX_PARAM_FIELD(cpu, CR3, cr3);
 #if BX_CPU_LEVEL >= 4
   BXRS_HEX_PARAM_FIELD(cpu, CR4, cr4.val32);
+#endif
+#if BX_SUPPORT_XSAVE
+  BXRS_HEX_PARAM_FIELD(cpu, XCR0, xcr0.val32);
 #endif
 
   for(i=0; i<6; i++) {
@@ -890,6 +893,10 @@ void BX_CPU_C::reset(unsigned source)
 
 #if BX_CPU_LEVEL >= 4
   BX_CPU_THIS_PTR cr4.setRegister(0);
+#endif
+
+#if BX_SUPPORT_XSAVE
+  BX_CPU_THIS_PTR xcr0.setRegister(0x1);
 #endif
 
   // CR0/CR4 paging might be modified

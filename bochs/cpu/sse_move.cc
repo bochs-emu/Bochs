@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_move.cc,v 1.77 2008-02-02 21:46:53 sshwarts Exp $
+// $Id: sse_move.cc,v 1.78 2008-02-13 16:45:21 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -30,14 +30,14 @@
 
 void BX_CPU_C::prepareSSE(void)
 {
-  if(BX_CPU_THIS_PTR cr0.get_TS())
-    exception(BX_NM_EXCEPTION, 0, 0);
-
   if(BX_CPU_THIS_PTR cr0.get_EM())
     exception(BX_UD_EXCEPTION, 0, 0);
 
   if(! (BX_CPU_THIS_PTR cr4.get_OSFXSR()))
     exception(BX_UD_EXCEPTION, 0, 0);
+
+  if(BX_CPU_THIS_PTR cr0.get_TS())
+    exception(BX_NM_EXCEPTION, 0, 0);
 }
 
 #define BX_MXCSR_REGISTER (BX_CPU_THIS_PTR mxcsr.mxcsr)
@@ -50,6 +50,64 @@ void BX_CPU_C::print_state_SSE(void)
     BX_DEBUG(("XMM%02u: %08x%08x:%08x%08x\n", i,
        xmm.xmm32u(3), xmm.xmm32u(2), xmm.xmm32u(1), xmm.xmm32u(0)));
   }
+}
+
+Bit16u BX_CPU_C::unpack_FPU_TW(Bit16u tag_byte)
+{
+  Bit32u twd = 0;
+
+  /*                                 FTW
+   *
+   * Note that the original format for FTW can be recreated from the stored
+   * FTW valid bits and the stored 80-bit FP data (assuming the stored data
+   * was not the contents of MMX registers) using the following table:
+
+     | Exponent | Exponent | Fraction | J,M bits | FTW valid | x87 FTW |
+     |  all 1s  |  all 0s  |  all 0s  |          |           |         |
+     -------------------------------------------------------------------
+     |    0     |    0     |    0     |    0x    |     1     | S    10 |
+     |    0     |    0     |    0     |    1x    |     1     | V    00 |
+     -------------------------------------------------------------------
+     |    0     |    0     |    1     |    00    |     1     | S    10 |
+     |    0     |    0     |    1     |    10    |     1     | V    00 |
+     -------------------------------------------------------------------
+     |    0     |    1     |    0     |    0x    |     1     | S    10 |
+     |    0     |    1     |    0     |    1x    |     1     | S    10 |
+     -------------------------------------------------------------------
+     |    0     |    1     |    1     |    00    |     1     | Z    01 |
+     |    0     |    1     |    1     |    10    |     1     | S    10 |
+     -------------------------------------------------------------------
+     |    1     |    0     |    0     |    1x    |     1     | S    10 |
+     |    1     |    0     |    0     |    1x    |     1     | S    10 |
+     -------------------------------------------------------------------
+     |    1     |    0     |    1     |    00    |     1     | S    10 |
+     |    1     |    0     |    1     |    10    |     1     | S    10 |
+     -------------------------------------------------------------------
+     |        all combinations above             |     0     | E    11 |
+
+   *
+   * The J-bit is defined to be the 1-bit binary integer to the left of
+   * the decimal place in the significand.
+   *
+   * The M-bit is defined to be the most significant bit of the fractional
+   * portion of the significand (i.e., the bit immediately to the right of
+   * the decimal place). When the M-bit is the most significant bit of the
+   * fractional portion  of the significand, it must be  0 if the fraction
+   * is all 0's.
+   */
+
+  for(unsigned index = 7;index >= 0; index--, twd <<= 2, tag_byte <<= 1)
+  {
+      if(tag_byte & 0x80) {
+         const floatx80 &fpu_reg = BX_FPU_REG(index);
+         twd |= FPU_tagof(fpu_reg);
+      }
+      else {
+         twd |= FPU_Tag_Empty;
+      }
+  }
+
+  return (twd >> 2);
 }
 
 #endif
@@ -246,8 +304,8 @@ void BX_CPU_C::FXRSTOR(bxInstruction_c *i)
 
   read_virtual_dqword_aligned(i->seg(), RMAddr(i), (Bit8u *) &xmm);
 
-  BX_CPU_THIS_PTR the_i387.cwd = xmm.xmm16u(0);
-  BX_CPU_THIS_PTR the_i387.swd = xmm.xmm16u(1);
+  BX_CPU_THIS_PTR the_i387.cwd =  xmm.xmm16u(0);
+  BX_CPU_THIS_PTR the_i387.swd =  xmm.xmm16u(1);
   BX_CPU_THIS_PTR the_i387.tos = (xmm.xmm16u(1) >> 11) & 0x07;
 
   /* Restore x87 FPU Opcode */
@@ -256,9 +314,9 @@ void BX_CPU_C::FXRSTOR(bxInstruction_c *i)
 
   /* Restore x87 FPU IP */
 #if BX_SUPPORT_X86_64
-  if (i->os64L()) /* 64 bit operand size mode */
-  {
+  if (i->os64L()) {
     BX_CPU_THIS_PTR the_i387.fip = xmm.xmm64u(1);
+    BX_CPU_THIS_PTR the_i387.fcs = 0;
   }
   else
 #endif
@@ -267,15 +325,15 @@ void BX_CPU_C::FXRSTOR(bxInstruction_c *i)
     BX_CPU_THIS_PTR the_i387.fcs = xmm.xmm16u(5);
   }
 
-  Bit32u twd = 0, tag_byte = xmm.xmm16u(2);
+  Bit32u tag_byte = xmm.xmmubyte(4);
 
   /* Restore x87 FPU DP */
   read_virtual_dqword_aligned(i->seg(), RMAddr(i) + 16, (Bit8u *) &xmm);
 
 #if BX_SUPPORT_X86_64
-  if (i->os64L()) /* 64 bit operand size mode */
-  {
+  if (i->os64L()) {
     BX_CPU_THIS_PTR the_i387.fdp = xmm.xmm64u(0);
+    BX_CPU_THIS_PTR the_i387.fds = 0;
   }
   else
 #endif
@@ -303,58 +361,7 @@ void BX_CPU_C::FXRSTOR(bxInstruction_c *i)
     read_virtual_tword(i->seg(), RMAddr(i)+index*16+32, &(BX_FPU_REG(index)));
   }
 
-  /*                                 FTW
-   *
-   * Note that the original format for FTW can be recreated from the stored
-   * FTW valid bits and the stored 80-bit FP data (assuming the stored data
-   * was not the contents of MMX registers) using the following table:
-
-     | Exponent | Exponent | Fraction | J,M bits | FTW valid | x87 FTW |
-     |  all 1s  |  all 0s  |  all 0s  |          |           |         |
-     -------------------------------------------------------------------
-     |    0     |    0     |    0     |    0x    |     1     | S    10 |
-     |    0     |    0     |    0     |    1x    |     1     | V    00 |
-     -------------------------------------------------------------------
-     |    0     |    0     |    1     |    00    |     1     | S    10 |
-     |    0     |    0     |    1     |    10    |     1     | V    00 |
-     -------------------------------------------------------------------
-     |    0     |    1     |    0     |    0x    |     1     | S    10 |
-     |    0     |    1     |    0     |    1x    |     1     | S    10 |
-     -------------------------------------------------------------------
-     |    0     |    1     |    1     |    00    |     1     | Z    01 |
-     |    0     |    1     |    1     |    10    |     1     | S    10 |
-     -------------------------------------------------------------------
-     |    1     |    0     |    0     |    1x    |     1     | S    10 |
-     |    1     |    0     |    0     |    1x    |     1     | S    10 |
-     -------------------------------------------------------------------
-     |    1     |    0     |    1     |    00    |     1     | S    10 |
-     |    1     |    0     |    1     |    10    |     1     | S    10 |
-     -------------------------------------------------------------------
-     |        all combinations above             |     0     | E    11 |
-
-   *
-   * The J-bit is defined to be the 1-bit binary integer to the left of
-   * the decimal place in the significand.
-   *
-   * The M-bit is defined to be the most significant bit of the fractional
-   * portion of the significand (i.e., the bit immediately to the right of
-   * the decimal place). When the M-bit is the most significant bit of the
-   * fractional portion  of the significand, it must be  0 if the fraction
-   * is all 0's.
-   */
-
-  for(index = 7;index >= 0; index--, twd <<= 2, tag_byte <<= 1)
-  {
-      if(tag_byte & 0x80) {
-         const floatx80 &fpu_reg = BX_FPU_REG(index);
-         twd |= FPU_tagof(fpu_reg);
-      }
-      else {
-         twd |= FPU_Tag_Empty;
-      }
-  }
-
-  BX_CPU_THIS_PTR the_i387.twd = (twd >> 2);
+  BX_CPU_THIS_PTR the_i387.twd = unpack_FPU_TW(tag_byte);
 
 #if BX_SUPPORT_X86_64
   if (BX_CPU_THIS_PTR efer.ffxsr && CPL == 0 && Is64BitMode())
