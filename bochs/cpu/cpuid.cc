@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpuid.cc,v 1.63 2008-02-13 22:25:24 sshwarts Exp $
+// $Id: cpuid.cc,v 1.64 2008-02-13 22:42:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007 Stanislav Shwartsman
@@ -255,7 +255,10 @@ Bit32u BX_CPU_C::get_std_cpuid_features()
 
 void BX_CPU_C::CPUID(bxInstruction_c *i)
 {
-  Bit32u function = EAX, subfunction = ECX;
+  Bit32u function    = EAX;
+#if BX_SUPPORT_XSAVE
+  Bit32u subfunction = ECX;
+#endif
 
 #if BX_CPU_LEVEL >= 4
   if(function < 0x80000000) {
