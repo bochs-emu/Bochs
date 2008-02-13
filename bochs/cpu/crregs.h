@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: crregs.h,v 1.7 2008-02-13 16:45:20 sshwarts Exp $
+// $Id: crregs.h,v 1.8 2008-02-13 17:06:44 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007 Stanislav Shwartsman
@@ -120,12 +120,12 @@ typedef struct bx_efer_t {
 typedef struct xcr0_reg_t {
   Bit32u  val32; // 32bit value of register
 
-#define BX_XR0_SUPPORT_BITS 0x3
+#define BX_XCR0_SUPPORT_BITS 0x3
 
 #define BX_XCR0_FPU_BIT   0
 #define BX_XCR0_FPU_MASK (1<<BX_XCR0_FPU_BIT)
 #define BX_XCR0_SSE_BIT   1
-#define BX_XCR0_FPU_MASK (1<<BX_XCR0_SSE_BIT)
+#define BX_XCR0_SSE_MASK (1<<BX_XCR0_SSE_BIT)
 
   IMPLEMENT_CRREG_ACCESSORS(FPU, BX_XCR0_FPU_BIT);
 #if BX_SUPPORT_SSE

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_move.cc,v 1.78 2008-02-13 16:45:21 sshwarts Exp $
+// $Id: sse_move.cc,v 1.79 2008-02-13 17:06:44 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -39,8 +39,6 @@ void BX_CPU_C::prepareSSE(void)
   if(BX_CPU_THIS_PTR cr0.get_TS())
     exception(BX_NM_EXCEPTION, 0, 0);
 }
-
-#define BX_MXCSR_REGISTER (BX_CPU_THIS_PTR mxcsr.mxcsr)
 
 void BX_CPU_C::print_state_SSE(void)
 {

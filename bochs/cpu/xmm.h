@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: xmm.h,v 1.25 2008-02-02 21:46:54 sshwarts Exp $
+// $Id: xmm.h,v 1.26 2008-02-13 17:06:44 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -206,7 +206,8 @@ struct BOCHSAPI bx_mxcsr_t
          (BX_SUPPORT_MISALIGNED_SSE ? MXCSR_MISALIGNED_EXCEPTION_MASK : 0))
 
 #if defined(NEED_CPU_REG_SHORTCUTS)
-#define MXCSR (BX_CPU_THIS_PTR mxcsr)
+#define MXCSR             (BX_CPU_THIS_PTR mxcsr)
+#define BX_MXCSR_REGISTER (BX_CPU_THIS_PTR mxcsr.mxcsr)
 #endif
 
 /* INTEGER SATURATION */
