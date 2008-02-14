@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.165 2008-02-07 20:43:12 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.166 2008-02-14 18:59:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -392,15 +392,14 @@ static const BxOpcodeInfo_t BxOpcodeInfo32R[512*2] = {
   /* D6 /wr */ { 0, &BX_CPU_C::SALC },
   /* D7 /wr */ { 0, &BX_CPU_C::XLAT },
 #if BX_SUPPORT_FPU
-  //    by default we have here pointer to the group .. as if mod <> 11b
-  /* D8 /wr */ { BxFPGroup, NULL, BxOpcodeInfo_FPGroupD8 },
-  /* D9 /wr */ { BxFPGroup, NULL, BxOpcodeInfo_FPGroupD9 },
-  /* DA /wr */ { BxFPGroup, NULL, BxOpcodeInfo_FPGroupDA },
-  /* DB /wr */ { BxFPGroup, NULL, BxOpcodeInfo_FPGroupDB },
-  /* DC /wr */ { BxFPGroup, NULL, BxOpcodeInfo_FPGroupDC },
-  /* DD /wr */ { BxFPGroup, NULL, BxOpcodeInfo_FPGroupDD },
-  /* DE /wr */ { BxFPGroup, NULL, BxOpcodeInfo_FPGroupDE },
-  /* DF /wr */ { BxFPGroup, NULL, BxOpcodeInfo_FPGroupDF },
+  /* D8 /wr */ { BxFPEscape, NULL, BxOpcodeInfo_FloatingPoint },
+  /* D9 /wr */ { BxFPEscape, NULL, BxOpcodeInfo_FloatingPoint },
+  /* DA /wr */ { BxFPEscape, NULL, BxOpcodeInfo_FloatingPoint },
+  /* DB /wr */ { BxFPEscape, NULL, BxOpcodeInfo_FloatingPoint },
+  /* DC /wr */ { BxFPEscape, NULL, BxOpcodeInfo_FloatingPoint },
+  /* DD /wr */ { BxFPEscape, NULL, BxOpcodeInfo_FloatingPoint },
+  /* DE /wr */ { BxFPEscape, NULL, BxOpcodeInfo_FloatingPoint },
+  /* DF /wr */ { BxFPEscape, NULL, BxOpcodeInfo_FloatingPoint },
 #else
   /* D8 /wr */ { 0, &BX_CPU_C::FPU_ESC },
   /* D9 /wr */ { 0, &BX_CPU_C::FPU_ESC },
@@ -956,15 +955,14 @@ static const BxOpcodeInfo_t BxOpcodeInfo32R[512*2] = {
   /* D6 /dr */ { 0, &BX_CPU_C::SALC },
   /* D7 /dr */ { 0, &BX_CPU_C::XLAT },
 #if BX_SUPPORT_FPU
-  //    by default we have here pointer to the group .. as if mod <> 11b
-  /* D8 /dr */ { BxFPGroup, NULL, BxOpcodeInfo_FPGroupD8 },
-  /* D9 /dr */ { BxFPGroup, NULL, BxOpcodeInfo_FPGroupD9 },
-  /* DA /dr */ { BxFPGroup, NULL, BxOpcodeInfo_FPGroupDA },
-  /* DB /dr */ { BxFPGroup, NULL, BxOpcodeInfo_FPGroupDB },
-  /* DC /dr */ { BxFPGroup, NULL, BxOpcodeInfo_FPGroupDC },
-  /* DD /dr */ { BxFPGroup, NULL, BxOpcodeInfo_FPGroupDD },
-  /* DE /dr */ { BxFPGroup, NULL, BxOpcodeInfo_FPGroupDE },
-  /* DF /dr */ { BxFPGroup, NULL, BxOpcodeInfo_FPGroupDF },
+  /* D8 /dr */ { BxFPEscape, NULL, BxOpcodeInfo_FloatingPoint },
+  /* D9 /dr */ { BxFPEscape, NULL, BxOpcodeInfo_FloatingPoint },
+  /* DA /dr */ { BxFPEscape, NULL, BxOpcodeInfo_FloatingPoint },
+  /* DB /dr */ { BxFPEscape, NULL, BxOpcodeInfo_FloatingPoint },
+  /* DC /dr */ { BxFPEscape, NULL, BxOpcodeInfo_FloatingPoint },
+  /* DD /dr */ { BxFPEscape, NULL, BxOpcodeInfo_FloatingPoint },
+  /* DE /dr */ { BxFPEscape, NULL, BxOpcodeInfo_FloatingPoint },
+  /* DF /dr */ { BxFPEscape, NULL, BxOpcodeInfo_FloatingPoint },
 #else
   /* D8 /dr */ { 0, &BX_CPU_C::FPU_ESC },
   /* D9 /dr */ { 0, &BX_CPU_C::FPU_ESC },
@@ -1527,7 +1525,6 @@ static const BxOpcodeInfo_t BxOpcodeInfo32M[512*2] = {
   /* D6 /wm */ { 0, &BX_CPU_C::SALC },
   /* D7 /wm */ { 0, &BX_CPU_C::XLAT },
 #if BX_SUPPORT_FPU
-  //    by default we have here pointer to the group .. as if mod <> 11b
   /* D8 /wm */ { BxFPGroup, NULL, BxOpcodeInfo_FPGroupD8 },
   /* D9 /wm */ { BxFPGroup, NULL, BxOpcodeInfo_FPGroupD9 },
   /* DA /wm */ { BxFPGroup, NULL, BxOpcodeInfo_FPGroupDA },
@@ -2091,7 +2088,6 @@ static const BxOpcodeInfo_t BxOpcodeInfo32M[512*2] = {
   /* D6 /dm */ { 0, &BX_CPU_C::SALC },
   /* D7 /dm */ { 0, &BX_CPU_C::XLAT },
 #if BX_SUPPORT_FPU
-  //    by default we have here pointer to the group .. as if mod <> 11b
   /* D8 /dm */ { BxFPGroup, NULL, BxOpcodeInfo_FPGroupD8 },
   /* D9 /dm */ { BxFPGroup, NULL, BxOpcodeInfo_FPGroupD9 },
   /* DA /dm */ { BxFPGroup, NULL, BxOpcodeInfo_FPGroupDA },
@@ -2754,17 +2750,15 @@ modrm_done:
              break;
 #endif
          case BxPrefixSSE:
-             /* For SSE opcodes, look into another 4 entries table
+             /* For SSE opcodes look into another 4 entries table
                       with the opcode prefixes (NONE, 0x66, 0xF2, 0xF3) */
              OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[sse_prefix]);
              break;
 #if BX_SUPPORT_FPU
-         case BxFPGroup:
-             if (mod != 0xc0)  // mod != 11b
-                OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[nnn]);
-             else {
+         case BxFPEscape:
+             {
                 int index = (b1-0xD8)*64 + (0x3f & b2);
-                OpcodeInfoPtr = &(BxOpcodeInfo_FloatingPoint[index]);
+                OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[index]);
              }
              break;
 #endif

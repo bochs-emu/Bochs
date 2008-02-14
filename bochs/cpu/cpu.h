@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.425 2008-02-13 22:25:24 sshwarts Exp $
+// $Id: cpu.h,v 1.426 2008-02-14 18:59:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -3628,7 +3628,7 @@ IMPLEMENT_EFLAG_ACCESSOR   (TF,   8)
 #define BxGroupX            0x0070 // bits 6..4: opcode groups definition
 #define BxGroupN            0x0010 // Group encoding: 001
 #define BxPrefixSSE         0x0020 // Group encoding: 010
-#define BxFPGroup           0x0030 // Group encoding: 011
+#define BxFPEscape          0x0030 // Group encoding: 011
 #define BxRMGroup           0x0040 // Group encoding: 100
 #define Bx3ByteOpIndex      0x0050 // Group encoding: 101
 #define Bx3ByteOpTable      0x0060 // Group encoding: 110
@@ -3665,6 +3665,8 @@ IMPLEMENT_EFLAG_ACCESSOR   (TF,   8)
 #define BxGroup14         BxGroupN
 #define BxGroup15         BxGroupN
 #define BxGroup16         BxGroupN
+
+#define BxFPGroup         BxGroupN
 
 // <TAG-DEFINES-DECODE-END>
 
