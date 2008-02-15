@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logio.cc,v 1.66 2008-02-15 19:03:53 sshwarts Exp $
+// $Id: logio.cc,v 1.67 2008-02-15 22:05:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -161,7 +161,7 @@ void iofunctions::set_log_prefix(const char* prefix)
   strcpy(logprefix, prefix);
 }
 
-//  iofunctions::out( class, level, prefix, fmt, ap)
+//  iofunctions::out(class, level, prefix, fmt, ap)
 //  DO NOT nest out() from ::info() and the like.
 //    fmt and ap retained for direct printinf from iofunctions only!
 

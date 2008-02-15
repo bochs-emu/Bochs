@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: svga.cc,v 1.15 2008-02-07 18:28:50 sshwarts Exp $
+// $Id: svga.cc,v 1.16 2008-02-15 22:05:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  This library is free software; you can redistribute it and/or
@@ -105,7 +105,7 @@ void bx_svga_gui_c::specific_init(
   tilewidth = x_tilesize;
   tileheight = y_tilesize;
 
-  if(vga_init() != 0 )
+  if(vga_init() != 0)
   {
     LOG_THIS setonoff(LOGLEV_PANIC, ACT_FATAL);
     BX_PANIC (("Unable to initialize SVGAlib"));
@@ -454,7 +454,7 @@ bx_bool bx_svga_gui_c::palette_change(
     unsigned green,
     unsigned blue)
 {
-  if( index > 255 ) return 0;
+  if(index > 255) return 0;
 
   // without VGA_CLUT8 extension we have only 6 bits for each r,g,b value
   if (!clut8 && (red > 63 || green > 63 || blue > 63)) {
@@ -481,7 +481,7 @@ void bx_svga_gui_c::dimension_update(
   if (bpp > 8) {
     BX_PANIC(("%d bpp graphics mode not supported yet", bpp));
   }
-  if( fheight > 0 )
+  if(fheight > 0)
   {
     text_cols = x / fwidth;
     text_rows = y / fheight;
@@ -492,7 +492,7 @@ void bx_svga_gui_c::dimension_update(
     fontwidth = 8;
   }
 
-  if( (x == res_x) && (y == res_y )) return;
+  if ((x == res_x) && (y == res_y)) return;
 
   if (x == 640 && y == 480) {
     newmode = G640x480x256;

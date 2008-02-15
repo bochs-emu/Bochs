@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial.cc,v 1.80 2008-01-26 22:24:02 sshwarts Exp $
+// $Id: serial.cc,v 1.81 2008-02-15 22:05:43 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -23,14 +23,13 @@
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
-
+/////////////////////////////////////////////////////////////////////////
 
 // Peter Grehan (grehan@iprg.nokia.com) coded the original version of this
 // serial emulation. He implemented a single 8250, and allow terminal
 // input/output to stdout on FreeBSD.
 // The current version emulates up to 4 UART 16550A with FIFO. Terminal
 // input/output now works on some more platforms.
-
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
 // platforms that require a special tag on exported symbols, BX_PLUGGABLE
@@ -530,21 +529,18 @@ bx_serial_c::raise_interrupt(Bit8u port, int type)
   }
 }
 
-  // static IO port read callback handler
-  // redirects to non-static class handler to avoid virtual functions
+// static IO port read callback handler
+// redirects to non-static class handler to avoid virtual functions
 
-  Bit32u
-bx_serial_c::read_handler(void *this_ptr, Bit32u address, unsigned io_len)
+Bit32u bx_serial_c::read_handler(void *this_ptr, Bit32u address, unsigned io_len)
 {
 #if !BX_USE_SER_SMF
   bx_serial_c *class_ptr = (bx_serial_c *) this_ptr;
 
-  return( class_ptr->read(address, io_len) );
+  return class_ptr->read(address, io_len);
 }
 
-
-  Bit32u
-bx_serial_c::read(Bit32u address, unsigned io_len)
+Bit32u bx_serial_c::read(Bit32u address, unsigned io_len)
 {
 #else
   UNUSED(this_ptr);
@@ -1337,7 +1333,7 @@ bx_serial_c::rx_timer(void)
         int data;
         if ((data_ready = BX_SER_THIS s[port].raw->ready_receive())) {
           data = BX_SER_THIS s[port].raw->receive();
-          if (data < 0 ) {
+          if (data < 0) {
             data_ready = 0;
             switch (data) {
               case RAW_EVENT_BREAK:
@@ -1460,9 +1456,9 @@ bx_serial_c::serial_mouse_enq(int delta_x, int delta_y, int delta_z, unsigned bu
     return;
 
   // scale down the motion
-  if ( (delta_x < -1) || (delta_x > 1) )
+  if ((delta_x < -1) || (delta_x > 1))
     delta_x /= 2;
-  if ( (delta_y < -1) || (delta_y > 1) )
+  if ((delta_y < -1) || (delta_y > 1))
     delta_y /= 2;
 
   if(delta_x>127) delta_x=127;

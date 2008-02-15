@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pic.cc,v 1.48 2008-01-26 22:24:02 sshwarts Exp $
+// $Id: pic.cc,v 1.49 2008-02-15 22:05:43 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -23,7 +23,7 @@
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
-
+/////////////////////////////////////////////////////////////////////////
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
 // platforms that require a special tag on exported symbols, BX_PLUGGABLE
@@ -270,7 +270,7 @@ void bx_pic_c::write(Bit32u address, Bit32u value, unsigned io_len)
     case 0x20:
       if (value & 0x10) { /* initialization command 1 */
         BX_DEBUG(("master: init command 1 found"));
-        BX_DEBUG(("        requires 4 = %u", (unsigned) (value & 0x01) ));
+        BX_DEBUG(("        requires 4 = %u", (unsigned) (value & 0x01)));
         BX_DEBUG(("        cascade mode: [0=cascade,1=single] %u",
                   (unsigned) ((value & 0x02) >> 1)));
         BX_PIC_THIS s.master_pic.init.in_init = 1;
@@ -295,7 +295,7 @@ void bx_pic_c::write(Bit32u address, Bit32u value, unsigned io_len)
         return;
       }
 
-      if ( (value & 0x18) == 0x08 ) { /* OCW3 */
+      if ((value & 0x18) == 0x08) { /* OCW3 */
         Bit8u special_mask, poll, read_op;
 
         special_mask = (value & 0x60) >> 5;
@@ -445,7 +445,7 @@ void bx_pic_c::write(Bit32u address, Bit32u value, unsigned io_len)
       if (value & 0x10) { /* initialization command 1 */
         BX_DEBUG(("slave: init command 1 found"));
         BX_DEBUG(("       requires 4 = %u",
-            (unsigned) (value & 0x01) ));
+            (unsigned) (value & 0x01)));
         BX_DEBUG(("       cascade mode: [0=cascade,1=single] %u",
             (unsigned) ((value & 0x02) >> 1)));
         BX_PIC_THIS s.slave_pic.init.in_init = 1;
@@ -470,7 +470,7 @@ void bx_pic_c::write(Bit32u address, Bit32u value, unsigned io_len)
         return;
       }
 
-      if ( (value & 0x18) == 0x08 ) { /* OCW3 */
+      if ((value & 0x18) == 0x08) { /* OCW3 */
         Bit8u special_mask, poll, read_op;
 
         special_mask = (value & 0x60) >> 5;
@@ -721,13 +721,13 @@ void bx_pic_c::service_master_pic(void)
     isr = BX_PIC_THIS s.master_pic.isr;
     if (isr) {
       max_irq = highest_priority;
-      while ( (isr & (1 << max_irq)) == 0) {
+      while ((isr & (1 << max_irq)) == 0) {
         max_irq++;
         if(max_irq > 7)
           max_irq = 0;
       }
-      if (max_irq == highest_priority ) return; /* Highest priority interrupt in-service,
-                                                 * no other priorities allowed */
+      if (max_irq == highest_priority) return; /* Highest priority interrupt in-service,
+                                                * no other priorities allowed */
       if (max_irq > 7) BX_PANIC(("error in service_master_pic()"));
     }
     else
@@ -735,13 +735,13 @@ void bx_pic_c::service_master_pic(void)
   }
 
   /* now, see if there are any higher priority requests */
-  if ((unmasked_requests = (BX_PIC_THIS s.master_pic.irr & ~BX_PIC_THIS s.master_pic.imr)) ) {
+  if ((unmasked_requests = (BX_PIC_THIS s.master_pic.irr & ~BX_PIC_THIS s.master_pic.imr))) {
     irq = highest_priority;
     do {
       /* for special mode, since we're looking at all IRQ's, skip if
        * current IRQ is already in-service
        */
-      if ( ! (BX_PIC_THIS s.master_pic.special_mask && ((BX_PIC_THIS s.master_pic.isr >> irq) & 0x01)) ) {
+      if (! (BX_PIC_THIS s.master_pic.special_mask && ((BX_PIC_THIS s.master_pic.isr >> irq) & 0x01))) {
         if (unmasked_requests & (1 << irq)) {
           BX_DEBUG(("signalling IRQ(%u)", (unsigned) irq));
           BX_PIC_THIS s.master_pic.INT = 1;
@@ -782,13 +782,13 @@ void bx_pic_c::service_slave_pic(void)
     isr = BX_PIC_THIS s.slave_pic.isr;
     if (isr) {
       max_irq = highest_priority;
-      while ( (isr & (1 << max_irq)) == 0) {
+      while ((isr & (1 << max_irq)) == 0) {
         max_irq++;
         if(max_irq > 7)
           max_irq = 0;
       }
-      if (max_irq == highest_priority ) return; /* Highest priority interrupt in-service,
-                                                 * no other priorities allowed */
+      if (max_irq == highest_priority) return; /* Highest priority interrupt in-service,
+                                                * no other priorities allowed */
       if (max_irq > 7) BX_PANIC(("error in service_master_pic()"));
     }
     else
@@ -796,13 +796,13 @@ void bx_pic_c::service_slave_pic(void)
   }
 
   /* now, see if there are any higher priority requests */
-  if ((unmasked_requests = (BX_PIC_THIS s.slave_pic.irr & ~BX_PIC_THIS s.slave_pic.imr)) ) {
+  if ((unmasked_requests = (BX_PIC_THIS s.slave_pic.irr & ~BX_PIC_THIS s.slave_pic.imr))) {
     irq = highest_priority;
     do {
       /* for special mode, since we're looking at all IRQ's, skip if
        * current IRQ is already in-service
        */
-      if ( ! (BX_PIC_THIS s.slave_pic.special_mask && ((BX_PIC_THIS s.slave_pic.isr >> irq) & 0x01)) ) {
+      if (! (BX_PIC_THIS s.slave_pic.special_mask && ((BX_PIC_THIS s.slave_pic.isr >> irq) & 0x01))) {
         if (unmasked_requests & (1 << irq)) {
           BX_DEBUG(("slave: signalling IRQ(%u)", (unsigned) 8 + irq));
 

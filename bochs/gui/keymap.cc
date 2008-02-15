@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keymap.cc,v 1.22 2008-02-05 22:57:41 sshwarts Exp $
+// $Id: keymap.cc,v 1.23 2008-02-15 22:05:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002 MandrakeSoft S.A.
@@ -121,7 +121,7 @@ static void init_parse_line(char *line_to_parse)
   // chop off newline
   lineptr = (unsigned char *)line_to_parse;
   char *nl;
-  if( (nl = strchr(line_to_parse,'\n')) != NULL) {
+  if ((nl = strchr(line_to_parse,'\n')) != NULL) {
     *nl = 0;
   }
 }

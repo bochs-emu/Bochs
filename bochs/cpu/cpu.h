@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.427 2008-02-15 19:03:53 sshwarts Exp $
+// $Id: cpu.h,v 1.428 2008-02-15 22:05:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -941,13 +941,13 @@ public: // for now...
 #define ArithmeticalFlag(flag, lfMask, eflagsBitShift) \
   BX_SMF bx_bool get_##flag##Lazy(void); \
   BX_SMF bx_bool getB_##flag(void) { \
-    if ( (BX_CPU_THIS_PTR lf_flags_status & (lfMask)) == 0) \
+    if ((BX_CPU_THIS_PTR lf_flags_status & (lfMask)) == 0) \
       return (BX_CPU_THIS_PTR eflags >> eflagsBitShift) & 1; \
     else \
       return !!get_##flag##Lazy(); \
   } \
   BX_SMF bx_bool get_##flag(void) { \
-    if ( (BX_CPU_THIS_PTR lf_flags_status & (lfMask)) == 0) \
+    if ((BX_CPU_THIS_PTR lf_flags_status & (lfMask)) == 0) \
       return BX_CPU_THIS_PTR eflags & (lfMask); \
     else \
       return get_##flag##Lazy(); \
@@ -966,7 +966,7 @@ public: // for now...
     BX_CPU_THIS_PTR eflags |= (lfMask); \
   } \
   BX_SMF void force_##flag(void) { \
-    if ( (BX_CPU_THIS_PTR lf_flags_status & (lfMask)) != 0) { \
+    if ((BX_CPU_THIS_PTR lf_flags_status & (lfMask)) != 0) { \
       set_##flag(!!get_##flag##Lazy()); \
     } \
   }

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: x.cc,v 1.111 2008-02-05 22:57:41 sshwarts Exp $
+// $Id: x.cc,v 1.112 2008-02-15 22:05:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -291,10 +291,9 @@ Bit32u ascii_to_key_event[0x5f] = {
   BX_KEY_BACKSLASH,
   BX_KEY_RIGHT_BRACKET,
   BX_KEY_GRAVE
-  };
+};
 
 extern Bit8u graphics_snapshot[32 * 1024];
-
 
 static void create_internal_vga_font(void);
 static void xkeypress(KeySym keysym, int press_release);
@@ -349,11 +348,9 @@ test_alloc_colors (Colormap cmap, Bit32u n_tries) {
   return (n_allocated == n_tries);
 }
 
-bx_x_gui_c::bx_x_gui_c () {
-}
+bx_x_gui_c::bx_x_gui_c () {}
 
-  void
-bx_x_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsigned tileheight,
+void bx_x_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsigned tileheight,
                      unsigned headerbar_y)
 {
   unsigned i;
@@ -385,7 +382,7 @@ bx_x_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsigned ti
   progname = argv[0];
 
   /* connect to X server */
-  if ( (bx_x_display=XOpenDisplay(display_name)) == NULL )
+  if ((bx_x_display=XOpenDisplay(display_name)) == NULL)
   {
     BX_PANIC(("%s: cannot connect to X server %s",
         progname, XDisplayName(display_name)));
@@ -398,7 +395,6 @@ bx_x_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsigned ti
    * but would be settable from the command line or resource database.
    */
   x = y = 0;
-
 
   // Temporary values so we can create the window
   font_width = 8;
@@ -448,7 +444,7 @@ bx_x_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsigned ti
     if (XAllocColorCells(bx_x_display, default_cmap, False,
                          plane_masks_return, 0, col_vals, MAX_VGA_COLORS) == 0) {
       BX_PANIC(("XAllocColorCells returns error. Maybe your screen does not support a private colormap?"));
-      }
+    }
 
     win_attr.colormap = default_cmap;
     XChangeWindowAttributes(bx_x_display, win, CWColormap, &win_attr);
@@ -461,25 +457,24 @@ bx_x_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsigned ti
         color.red   = 0xffff;
         color.green = 0xffff;
         color.blue  = 0xffff;
-        }
+      }
       else {
         color.red   = 0;
         color.green = 0;
         color.blue  = 0;
-        }
-      XStoreColor(bx_x_display, default_cmap, &color);
       }
+      XStoreColor(bx_x_display, default_cmap, &color);
     }
+  }
 
   // convenience variables which hold the black & white color indeces
   black_pixel = col_vals[0];
   white_pixel = col_vals[15];
 
   BX_INFO(("font %u wide x %u high, display depth = %d",
-		(unsigned) font_width, (unsigned) font_height, default_depth));
+                (unsigned) font_width, (unsigned) font_height, default_depth));
 
   //select_visual();
-
 
   /* Get available icon sizes from Window manager */
 
@@ -551,8 +546,7 @@ bx_x_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsigned ti
   /* Select event types wanted */
   XSelectInput(bx_x_display, win, ExposureMask | KeyPressMask | KeyReleaseMask |
       ButtonPressMask | ButtonReleaseMask | StructureNotifyMask | PointerMotionMask |
-      EnterWindowMask | LeaveWindowMask );
-
+      EnterWindowMask | LeaveWindowMask);
 
   /* Create default Graphics Context */
   gc               = XCreateGC(bx_x_display, win, valuemask, &values);
@@ -577,14 +571,13 @@ bx_x_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsigned ti
   while (1) {
     XNextEvent(bx_x_display, &report);
     if (report.type == MapNotify) break;
-    }
+  }
   BX_DEBUG(("MapNotify found."));
 
   // Create the VGA font
   create_internal_vga_font();
 
-
-{
+  {
   char *imagedata;
 
   ximage = XCreateImage(bx_x_display, default_visual,
@@ -594,7 +587,7 @@ bx_x_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsigned ti
              NULL,                   // malloc() space after
              x_tilesize, y_tilesize, // x & y size of image
              32,                     // # bits of padding
-             0 );                    // bytes_per_line, let X11 calculate
+             0);                     // bytes_per_line, let X11 calculate
   if (!ximage)
     BX_PANIC(("vga: couldn't XCreateImage()"));
 
@@ -602,14 +595,14 @@ bx_x_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsigned ti
   imWide  = ximage->bytes_per_line;
   imBPP   = ximage->bits_per_pixel;
 
-  imagedata = (char *) malloc( (size_t) (ximage->bytes_per_line * y_tilesize) );
+  imagedata = (char *) malloc((size_t) (ximage->bytes_per_line * y_tilesize));
   if (!imagedata) BX_PANIC(("imagedata: malloc returned error"));
 
   ximage->data = imagedata;
 
   if (imBPP < imDepth) {
     BX_PANIC(("vga_x: bits_per_pixel < depth ?"));
-    }
+  }
 
   for (i=0; i<12; i++) bx_statusitem_active[i] = 0;
   switch (imBPP) {
@@ -629,15 +622,14 @@ bx_x_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsigned ti
   strcpy(bx_status_info_text, "CTRL + 3rd button enables mouse");
 
   x_init_done = true;
-}
+  }
 
   curr_background = 0;
   XSetBackground(bx_x_display, gc, col_vals[curr_background]);
   curr_foreground = 1;
   XSetForeground(bx_x_display, gc, col_vals[curr_foreground]);
-  //XGrabPointer( bx_x_display, win, True, 0, GrabModeAsync, GrabModeAsync,
-  //  win, None, CurrentTime );
-
+//XGrabPointer(bx_x_display, win, True, 0, GrabModeAsync, GrabModeAsync,
+//  win, None, CurrentTime);
 
   XFlush(bx_x_display);
 
@@ -655,8 +647,7 @@ bx_x_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsigned ti
   dialog_caps |= BX_GUI_DLG_USER;
 }
 
-  void
-set_status_text(int element, const char *text, bx_bool active)
+void set_status_text(int element, const char *text, bx_bool active)
 {
   int xleft, xsize, sb_ypos;
 
@@ -687,8 +678,7 @@ set_status_text(int element, const char *text, bx_bool active)
   }
 }
 
-  void
-bx_x_gui_c::statusbar_setitem(int element, bx_bool active)
+void bx_x_gui_c::statusbar_setitem(int element, bx_bool active)
 {
   if (element < 0) {
     for (unsigned i = 0; i < statusitem_count; i++) {
@@ -703,8 +693,7 @@ bx_x_gui_c::statusbar_setitem(int element, bx_bool active)
 // can change because of a gui event such as clicking on the mouse-enable
 // bitmap or pressing the middle button, or from the configuration interface.
 // In all those cases, setting the parameter value will get you here.
-  void
-bx_x_gui_c::mouse_enabled_changed_specific (bx_bool val)
+void bx_x_gui_c::mouse_enabled_changed_specific (bx_bool val)
 {
   BX_DEBUG (("mouse_enabled=%d, x11 specific code", val?1:0));
   if (val) {
@@ -726,8 +715,7 @@ bx_x_gui_c::mouse_enabled_changed_specific (bx_bool val)
 #endif
 }
 
-  void
-create_internal_vga_font(void)
+void create_internal_vga_font(void)
 {
   // Default values
   font_width=8;
@@ -741,8 +729,7 @@ create_internal_vga_font(void)
   }
 }
 
-  void
-bx_x_gui_c::handle_events(void)
+void bx_x_gui_c::handle_events(void)
 {
   XEvent report;
   XKeyEvent *key_event;
@@ -754,13 +741,11 @@ bx_x_gui_c::handle_events(void)
   bx_bool mouse_update;
   int y, height;
 
-
   XPointerMovedEvent *pointer_event;
   XEnterWindowEvent *enter_event;
   XLeaveWindowEvent *leave_event;
   XButtonEvent *button_event;
   XExposeEvent *expose_event;
-
 
   //current_x = -1;
   //current_y = -1;
@@ -777,8 +762,8 @@ bx_x_gui_c::handle_events(void)
       y = expose_event->y - BX_HEADER_BAR_Y;
       height = expose_event->height;
       if (y < 0) {
-	height += y;
-	y = 0;
+        height += y;
+        y = 0;
       }
 
       DEV_vga_redraw_area(
@@ -805,23 +790,23 @@ bx_x_gui_c::handle_events(void)
 
     case ButtonPress:
       button_event = (XButtonEvent *) &report;
-		BX_DEBUG(("xxx: buttonpress"));
+                BX_DEBUG(("xxx: buttonpress"));
       if (button_event->y < BX_HEADER_BAR_Y) {
-		BX_DEBUG(("xxx:   in headerbar"));
+                BX_DEBUG(("xxx:   in headerbar"));
         if (mouse_update) {
-		  BX_DEBUG(("xxx:   mouse_update=1"));
+                  BX_DEBUG(("xxx:   mouse_update=1"));
           send_keyboard_mouse_status();
           mouse_update = 0;
-          }
+        }
         prev_x = current_x = -1;
         prev_y = current_y = -1;
         headerbar_click(button_event->x, button_event->y);
         break;
-        }
+      }
       current_x = button_event->x;
       current_y = button_event->y;
       mouse_update = 1;
-	  BX_DEBUG(("xxx:   x,y=(%d,%d)", current_x, current_y));
+      BX_DEBUG(("xxx:   x,y=(%d,%d)", current_x, current_y));
       switch (button_event->button) {
         case Button1:
           mouse_button_state |= 0x01;
@@ -829,7 +814,7 @@ bx_x_gui_c::handle_events(void)
           mouse_update = 0;
           break;
         case Button2:
-	  if (CTRL_pressed) {
+          if (CTRL_pressed) {
             toggle_mouse_enable();
           } else {
             mouse_button_state |= 0x04;
@@ -842,7 +827,7 @@ bx_x_gui_c::handle_events(void)
           send_keyboard_mouse_status();
           mouse_update = 0;
           break;
-        }
+      }
       break;
 
     case ButtonRelease:
@@ -851,12 +836,12 @@ bx_x_gui_c::handle_events(void)
         if (mouse_update) {
           send_keyboard_mouse_status();
           mouse_update = 0;
-          }
+        }
         prev_x = current_x = -1;
         prev_y = current_y = -1;
         // ignore, in headerbar area
         break;
-        }
+      }
       current_x = button_event->x;
       current_y = button_event->y;
       mouse_update = 1;
@@ -886,7 +871,7 @@ bx_x_gui_c::handle_events(void)
           send_keyboard_mouse_status();
           mouse_update = 0;
           break;
-        }
+      }
       break;
 
     case KeyPress:
@@ -954,12 +939,10 @@ bx_x_gui_c::handle_events(void)
 #endif
 }
 
-
-  void
-send_keyboard_mouse_status(void)
+void send_keyboard_mouse_status(void)
 {
-	BX_DEBUG(("XXX: prev=(%d,%d) curr=(%d,%d)",
-			prev_x, prev_y, current_x, current_y));
+   BX_DEBUG(("XXX: prev=(%d,%d) curr=(%d,%d)",
+                        prev_x, prev_y, current_x, current_y));
 
   if (((prev_x!=-1) && (current_x!=-1) && (prev_y!=-1) && (current_y!=-1)) ||
      (current_z != 0)) {
@@ -975,37 +958,33 @@ send_keyboard_mouse_status(void)
     //if (warped) {
     //  prev_x = current_x = -1;
     //  prev_y = current_y = -1;
-    //  }
+    //}
     //else {
       prev_x = current_x;
       prev_y = current_y;
-    //  }
-    }
+    //}
+  }
   else {
-    if ( (current_x!=-1) && (current_y!=-1)) {
+    if ((current_x!=-1) && (current_y!=-1)) {
       prev_x = current_x;
       prev_y = current_y;
-      }
+    }
     else {
       prev_x = current_x = -1;
       prev_y = current_y = -1;
-      }
     }
+  }
 }
 
-  void
-bx_x_gui_c::flush(void)
+void bx_x_gui_c::flush(void)
 {
   if (bx_x_display)
     XFlush(bx_x_display);
 }
 
-
-  void
-xkeypress(KeySym keysym, int press_release)
+void xkeypress(KeySym keysym, int press_release)
 {
   Bit32u key_event;
-
 
   if ((keysym == XK_Control_L) || (keysym == XK_Control_R)) {
     CTRL_pressed = !press_release;
@@ -1019,7 +998,7 @@ xkeypress(KeySym keysym, int press_release)
     // are in consequtive order.
     if ((keysym >= XK_space) && (keysym <= XK_asciitilde)) {
       key_event = ascii_to_key_event[keysym - XK_space];
-      }
+    }
     else switch (keysym) {
       case XK_KP_1:
 #ifdef XK_KP_End
@@ -1153,20 +1132,20 @@ xkeypress(KeySym keysym, int press_release)
       case XK_Page_Down:   key_event = BX_KEY_PAGE_DOWN; break;
 
       default:
-        BX_ERROR(( "xkeypress(): keysym %x unhandled!", (unsigned) keysym ));
+        BX_ERROR(("xkeypress(): keysym %x unhandled!", (unsigned) keysym));
         return;
       break;
-      }
     }
+  }
   else {
-   /* use mapping */
-   BXKeyEntry *entry = bx_keymap.findHostKey (keysym);
-   if (!entry) {
-     BX_ERROR(( "xkeypress(): keysym %x unhandled!", (unsigned) keysym ));
-     return;
-   }
-   key_event = entry->baseKey;
- }
+    /* use mapping */
+    BXKeyEntry *entry = bx_keymap.findHostKey (keysym);
+    if (!entry) {
+      BX_ERROR(("xkeypress(): keysym %x unhandled!", (unsigned) keysym));
+      return;
+    }
+    key_event = entry->baseKey;
+  }
 
   if (press_release)
     key_event |= BX_KEY_RELEASED;
@@ -1174,12 +1153,10 @@ xkeypress(KeySym keysym, int press_release)
   DEV_kbd_gen_scancode(key_event);
 }
 
-
 void bx_x_gui_c::clear_screen(void)
 {
   XClearArea(bx_x_display, win, 0, bx_headerbar_y, dimension_x, dimension_y, 0);
 }
-
 
 void bx_x_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
                       unsigned long cursor_x, unsigned long cursor_y,
@@ -1250,7 +1227,7 @@ void bx_x_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
   }
 
   // first invalidate character at previous and new cursor location
-  if ( (prev_cursor_y < text_rows) && (prev_cursor_x < text_cols) ) {
+  if ((prev_cursor_y < text_rows) && (prev_cursor_x < text_cols)) {
     curs = prev_cursor_y * tm_info.line_offset + prev_cursor_x * 2;
     old_text[curs] = ~new_text[curs];
   }
@@ -1328,8 +1305,8 @@ void bx_x_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
         font_col = 0;
         cfwidth = font_width;
       }
-      if ( forceUpdate || (old_text[0] != new_text[0])
-          || (old_text[1] != new_text[1]) ) {
+      if (forceUpdate || (old_text[0] != new_text[0])
+          || (old_text[1] != new_text[1])) {
 
         cChar = new_text[0];
         new_foreground = new_text[1] & 0x0f;
@@ -1423,7 +1400,6 @@ int bx_x_gui_c::set_clipboard_text(char *text_snapshot, Bit32u len)
   return 1;
 }
 
-
 void bx_x_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
 {
   unsigned x, y, y_size;
@@ -1451,11 +1427,11 @@ void bx_x_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
               if (ximage->byte_order == LSBFirst) {
                 ximage->data[offset + 0] = b0;
                 ximage->data[offset + 1] = b1;
-                }
+              }
               else { // MSBFirst
                 ximage->data[offset + 0] = b1;
                 ximage->data[offset + 1] = b0;
-                }
+              }
               break;
             case 24: // 24 bits per pixel
               offset = imWide*y + 3*x;
@@ -1466,12 +1442,12 @@ void bx_x_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
                 ximage->data[offset + 0] = b0;
                 ximage->data[offset + 1] = b1;
                 ximage->data[offset + 2] = b2;
-                }
+              }
               else { // MSBFirst
                 ximage->data[offset + 0] = b2;
                 ximage->data[offset + 1] = b1;
                 ximage->data[offset + 2] = b0;
-                }
+              }
               break;
             case 32: // 32 bits per pixel
               offset = imWide*y + 4*x;
@@ -1484,33 +1460,32 @@ void bx_x_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
                 ximage->data[offset + 1] = b1;
                 ximage->data[offset + 2] = b2;
                 ximage->data[offset + 3] = b3;
-                }
+              }
               else { // MSBFirst
                 ximage->data[offset + 0] = b3;
                 ximage->data[offset + 1] = b2;
                 ximage->data[offset + 2] = b1;
                 ximage->data[offset + 3] = b0;
-                }
+              }
               break;
             default:
               BX_PANIC(("X_graphics_tile_update: bits_per_pixel %u not implemented",
                 (unsigned) imBPP));
               return;
-            }
           }
         }
+      }
       break;
     default:
       BX_PANIC(("X_graphics_tile_update: bits_per_pixel %u handled by new graphics API",
                 (unsigned) vga_bpp));
       return;
-    }
+  }
   XPutImage(bx_x_display, win, gc, ximage, 0, 0, x0, y0+bx_headerbar_y,
             x_tilesize, y_size);
 }
 
-  bx_svga_tileinfo_t *
-bx_x_gui_c::graphics_tile_info(bx_svga_tileinfo_t *info)
+bx_svga_tileinfo_t *bx_x_gui_c::graphics_tile_info(bx_svga_tileinfo_t *info)
 {
   if (!info) {
     info = (bx_svga_tileinfo_t *)malloc(sizeof(bx_svga_tileinfo_t));
@@ -1586,8 +1561,7 @@ bx_x_gui_c::graphics_tile_info(bx_svga_tileinfo_t *info)
   return info;
 }
 
-  Bit8u *
-bx_x_gui_c::graphics_tile_get(unsigned x0, unsigned y0,
+Bit8u *bx_x_gui_c::graphics_tile_get(unsigned x0, unsigned y0,
                           unsigned *w, unsigned *h)
 {
   if (x0+x_tilesize > dimension_x) {
@@ -1607,16 +1581,14 @@ bx_x_gui_c::graphics_tile_get(unsigned x0, unsigned y0,
   return (Bit8u *)ximage->data + ximage->xoffset*ximage->bits_per_pixel/8;
 }
 
-  void
-bx_x_gui_c::graphics_tile_update_in_place(unsigned x0, unsigned y0,
+void bx_x_gui_c::graphics_tile_update_in_place(unsigned x0, unsigned y0,
                                       unsigned w, unsigned h)
 {
   XPutImage(bx_x_display, win, gc, ximage, 0, 0,
             x0, y0+bx_headerbar_y, w, h);
 }
 
-  bx_bool
-bx_x_gui_c::palette_change(unsigned index, unsigned red, unsigned green, unsigned blue)
+bx_bool bx_x_gui_c::palette_change(unsigned index, unsigned red, unsigned green, unsigned blue)
 {
   // returns: 0=no screen update needed (color map change has direct effect)
   //          1=screen updated needed (redraw using current colormap)
@@ -1631,18 +1603,16 @@ bx_x_gui_c::palette_change(unsigned index, unsigned red, unsigned green, unsigne
     color.pixel = index;
     XStoreColor(bx_x_display, default_cmap, &color);
     return(0); // no screen update needed
-    }
+  }
   else {
     XAllocColor(bx_x_display, DefaultColormap(bx_x_display, bx_x_screen_num),
                 &color);
     col_vals[index] = color.pixel;
     return(1); // screen update needed
-    }
+  }
 }
 
-
-  void
-bx_x_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, unsigned fwidth, unsigned bpp)
+void bx_x_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, unsigned fwidth, unsigned bpp)
 {
   if ((bpp == 8) || (bpp == 15) || (bpp == 16) || (bpp == 24) || (bpp == 32)) {
     vga_bpp = bpp;
@@ -1655,25 +1625,23 @@ bx_x_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, unsigned 
     text_cols = x / font_width;
     text_rows = y / font_height;
   }
-  if ( (x != dimension_x) || (y != dimension_y) ) {
+  if ((x != dimension_x) || (y != dimension_y)) {
     XSizeHints hints;
     long supplied_return;
 
-    if ( XGetWMNormalHints(bx_x_display, win, &hints, &supplied_return) &&
-         supplied_return & PMaxSize ) {
+    if (XGetWMNormalHints(bx_x_display, win, &hints, &supplied_return) &&
+         supplied_return & PMaxSize) {
       hints.max_width = hints.min_width = x;
       hints.max_height = hints.min_height = y+bx_headerbar_y+bx_statusbar_y;
       XSetWMNormalHints(bx_x_display, win, &hints);
-      }
+    }
     XResizeWindow(bx_x_display, win, x, y+bx_headerbar_y+bx_statusbar_y);
     dimension_x = x;
     dimension_y = y;
   }
 }
 
-
-  void
-bx_x_gui_c::show_headerbar(void)
+void bx_x_gui_c::show_headerbar(void)
 {
   unsigned xorigin;
   int xleft, xright, sb_ypos;
@@ -1689,16 +1657,16 @@ bx_x_gui_c::show_headerbar(void)
     if (bx_headerbar_entry[i].alignment == BX_GRAVITY_LEFT) {
       xorigin = bx_headerbar_entry[i].xorigin;
       xleft += bx_headerbar_entry[i].xdim;
-      }
+    }
     else {
       xorigin = dimension_x - bx_headerbar_entry[i].xorigin;
       xright = xorigin;
-      }
+    }
     if (xright < xleft) break;
     XCopyPlane(bx_x_display, bx_headerbar_entry[i].bitmap, win, gc_headerbar,
       0,0, bx_headerbar_entry[i].xdim, bx_headerbar_entry[i].ydim,
               xorigin, 0, 1);
-    }
+  }
   for (unsigned i=0; i<12; i++) {
     xleft = bx_statusitem_pos[i];
     if (i > 0) {
@@ -1713,13 +1681,11 @@ bx_x_gui_c::show_headerbar(void)
   }
 }
 
-
-  unsigned
-bx_x_gui_c::create_bitmap(const unsigned char *bmap, unsigned xdim, unsigned ydim)
+unsigned bx_x_gui_c::create_bitmap(const unsigned char *bmap, unsigned xdim, unsigned ydim)
 {
   if (bx_bitmap_entries >= BX_MAX_PIXMAPS) {
     BX_PANIC(("x: too many pixmaps, increase BX_MAX_PIXMAPS"));
-    }
+  }
 
   bx_bitmaps[bx_bitmap_entries].bmap =
     XCreateBitmapFromData(bx_x_display, win, (const char *) bmap, xdim, ydim);
@@ -1727,18 +1693,16 @@ bx_x_gui_c::create_bitmap(const unsigned char *bmap, unsigned xdim, unsigned ydi
   bx_bitmaps[bx_bitmap_entries].ydim = ydim;
   if (!bx_bitmaps[bx_bitmap_entries].bmap) {
     BX_PANIC(("x: could not create bitmap"));
-    }
+  }
   bx_bitmap_entries++;
   return(bx_bitmap_entries-1); // return index as handle
 }
 
-
-  unsigned
-bx_x_gui_c::headerbar_bitmap(unsigned bmap_id, unsigned alignment, void (*f)(void))
+unsigned bx_x_gui_c::headerbar_bitmap(unsigned bmap_id, unsigned alignment, void (*f)(void))
 {
   unsigned hb_index;
 
-  if ( (bx_headerbar_entries+1) > BX_MAX_HEADERBAR_ENTRIES )
+  if ((bx_headerbar_entries+1) > BX_MAX_HEADERBAR_ENTRIES)
     BX_PANIC(("x: too many headerbar entries, increase BX_MAX_HEADERBAR_ENTRIES"));
 
   bx_headerbar_entries++;
@@ -1753,17 +1717,16 @@ bx_x_gui_c::headerbar_bitmap(unsigned bmap_id, unsigned alignment, void (*f)(voi
     bx_headerbar_entry[hb_index].xorigin = bx_bitmap_left_xorigin;
     bx_headerbar_entry[hb_index].yorigin = 0;
     bx_bitmap_left_xorigin += bx_bitmaps[bmap_id].xdim;
-    }
+  }
   else { // BX_GRAVITY_RIGHT
     bx_bitmap_right_xorigin += bx_bitmaps[bmap_id].xdim;
     bx_headerbar_entry[hb_index].xorigin = bx_bitmap_right_xorigin;
     bx_headerbar_entry[hb_index].yorigin = 0;
-    }
+  }
   return(hb_index);
 }
 
-  void
-bx_x_gui_c::replace_bitmap(unsigned hbar_id, unsigned bmap_id)
+void bx_x_gui_c::replace_bitmap(unsigned hbar_id, unsigned bmap_id)
 {
   unsigned xorigin;
 
@@ -1778,9 +1741,7 @@ bx_x_gui_c::replace_bitmap(unsigned hbar_id, unsigned bmap_id)
             xorigin, 0, 1);
 }
 
-
-  void
-headerbar_click(int x, int y)
+void headerbar_click(int x, int y)
 {
   int xorigin;
 
@@ -1791,87 +1752,87 @@ headerbar_click(int x, int y)
       xorigin = bx_headerbar_entry[i].xorigin;
     else
       xorigin = dimension_x - bx_headerbar_entry[i].xorigin;
-    if ( (x>=xorigin) && (x<(xorigin+int(bx_headerbar_entry[i].xdim))) ) {
+    if ((x>=xorigin) && (x<(xorigin+int(bx_headerbar_entry[i].xdim)))) {
       bx_headerbar_entry[i].f();
       return;
-      }
     }
+  }
 }
 
-  void
-bx_x_gui_c::exit(void)
+void bx_x_gui_c::exit(void)
 {
   if (!x_init_done) return;
 
   // Delete the font bitmaps
   for (int i=0; i<256; i++) {
     //if (vgafont[i] != NULL)
-      XFreePixmap(bx_x_display,vgafont[i]);
+    XFreePixmap(bx_x_display,vgafont[i]);
   }
 
   if (bx_x_display)
     XCloseDisplay (bx_x_display);
-  BX_INFO(("Exit."));
+
+  BX_INFO(("Exit"));
 }
 
 static void warp_cursor (int dx, int dy)
 {
-      if (SIM->get_param_bool(BXPN_MOUSE_ENABLED)->get() &&
-	  (warp_dx || warp_dy || dx || dy)
-	  ) {
-	    warp_dx = dx;
-	    warp_dy = dy;
-	    XWarpPointer(bx_x_display, None, None, 0, 0, 0, 0, dx, dy);
-      }
+  if (SIM->get_param_bool(BXPN_MOUSE_ENABLED)->get() &&
+     (warp_dx || warp_dy || dx || dy)
+     ) {
+     warp_dx = dx;
+     warp_dy = dy;
+     XWarpPointer(bx_x_display, None, None, 0, 0, 0, 0, dx, dy);
+  }
 }
 
-static void disable_cursor ()
+static void disable_cursor()
 {
-      static Cursor cursor;
-      static unsigned cursor_created = 0;
+  static Cursor cursor;
+  static unsigned cursor_created = 0;
 
-      static int shape_width = 16,
-	     shape_height = 16,
-	     mask_width = 16,
-	     mask_height = 16;
+  static int shape_width = 16,
+             shape_height = 16,
+             mask_width = 16,
+             mask_height = 16;
 
-      static Bit32u shape_bits[(16*16)/32] = {
-	    0x00000000, 0x00000000, 0x00000000, 0x00000000,
-	    0x00000000, 0x00000000, 0x00000000, 0x00000000,
-      };
-      static Bit32u mask_bits[(16*16)/32] = {
-	    0x00000000, 0x00000000, 0x00000000, 0x00000000,
-	    0x00000000, 0x00000000, 0x00000000, 0x00000000,
-      };
+  static Bit32u shape_bits[(16*16)/32] = {
+    0x00000000, 0x00000000, 0x00000000, 0x00000000,
+    0x00000000, 0x00000000, 0x00000000, 0x00000000,
+  };
+  static Bit32u mask_bits[(16*16)/32] = {
+    0x00000000, 0x00000000, 0x00000000, 0x00000000,
+    0x00000000, 0x00000000, 0x00000000, 0x00000000,
+  };
 
-      if (!cursor_created) {
-	    Pixmap shape, mask;
-	    XColor white, black;
-	    shape = XCreatePixmapFromBitmapData(bx_x_display,
-						RootWindow(bx_x_display,bx_x_screen_num),
-						(char*)shape_bits,
-						shape_width,
-						shape_height,
-						1, 0, 1);
-	    mask =  XCreatePixmapFromBitmapData(bx_x_display,
-						RootWindow(bx_x_display,bx_x_screen_num),
-						(char*)mask_bits,
-						mask_width,
-						mask_height,
-						1, 0, 1);
-	    XParseColor(bx_x_display, default_cmap, "black", &black);
-	    XParseColor(bx_x_display, default_cmap, "white", &white);
-	    cursor = XCreatePixmapCursor(bx_x_display, shape, mask,
-					 &white, &black, 1, 1);
-	    cursor_created = 1;
-      }
+  if (!cursor_created) {
+    Pixmap shape, mask;
+    XColor white, black;
+    shape = XCreatePixmapFromBitmapData(bx_x_display,
+                                        RootWindow(bx_x_display,bx_x_screen_num),
+                                        (char*)shape_bits,
+                                        shape_width,
+                                        shape_height,
+                                        1, 0, 1);
+    mask =  XCreatePixmapFromBitmapData(bx_x_display,
+                                        RootWindow(bx_x_display,bx_x_screen_num),
+                                        (char*)mask_bits,
+                                        mask_width,
+                                        mask_height,
+                                        1, 0, 1);
+    XParseColor(bx_x_display, default_cmap, "black", &black);
+    XParseColor(bx_x_display, default_cmap, "white", &white);
+    cursor = XCreatePixmapCursor(bx_x_display, shape, mask,
+                                         &white, &black, 1, 1);
+    cursor_created = 1;
+  }
 
-      XDefineCursor(bx_x_display, win, cursor);
+  XDefineCursor(bx_x_display, win, cursor);
 }
 
-static void enable_cursor ()
+static void enable_cursor()
 {
-      XUndefineCursor(bx_x_display, win);
+  XUndefineCursor(bx_x_display, win);
 }
 
 /* convertStringToXKeysym is a keymap callback
@@ -1882,14 +1843,14 @@ static void enable_cursor ()
  */
 static Bit32u convertStringToXKeysym (const char *string)
 {
-    if (strncmp ("XK_", string, 3) != 0)
-      return BX_KEYMAP_UNKNOWN;
-    KeySym keysym=XStringToKeysym(string+3);
+  if (strncmp ("XK_", string, 3) != 0)
+    return BX_KEYMAP_UNKNOWN;
+  KeySym keysym=XStringToKeysym(string+3);
 
-    // failure, return unknown
-    if(keysym==NoSymbol) return BX_KEYMAP_UNKNOWN;
+  // failure, return unknown
+  if(keysym==NoSymbol) return BX_KEYMAP_UNKNOWN;
 
-    return((Bit32u)keysym);
+  return((Bit32u)keysym);
 }
 
 #if BX_USE_IDLE_HACK
@@ -1911,38 +1872,38 @@ static Bit32u convertStringToXKeysym (const char *string)
  * (adopted from mozilla/gfx/src/xprint/xprintutil_printtofile.c#XNextEventTimeout())
  */
 static
-Bool XPeekEventTimeout( Display *display, XEvent *event_return, struct timeval *timeout )
+Bool XPeekEventTimeout(Display *display, XEvent *event_return, struct timeval *timeout)
 {
-    int      res;
-    fd_set   readfds;
-    int      display_fd = XConnectionNumber(display);
+  int    res;
+  fd_set readfds;
+  int    display_fd = XConnectionNumber(display);
 
-    /* small shortcut... */
-    if( timeout == NULL )
-    {
+  /* small shortcut... */
+  if(timeout == NULL)
+  {
       XPeekEvent(display, event_return);
       return(True);
-    }
+  }
 
-    FD_ZERO(&readfds);
-    FD_SET(display_fd, &readfds);
+  FD_ZERO(&readfds);
+  FD_SET(display_fd, &readfds);
 
-    /* Note/bug: In the case of internal X events (like used to trigger callbacks
-     * registered by XpGetDocumentData()&co.) select() will return with "new info"
-     * - but XNextEvent() below processes these _internal_ events silently - and
-     * will block if there are no other non-internal events.
-     * The workaround here is to check with XEventsQueued() if there are non-internal
-     * events queued - if not select() will be called again - unfortunately we use
-     * the old timeout here instead of the "remaining" time... (this only would hurt
-     * if the timeout would be really long - but for current use with values below
-     * 1/2 secs it does not hurt... =:-)
-     */
-    while( XEventsQueued(display, QueuedAfterFlush) == 0 )
+  /* Note/bug: In the case of internal X events (like used to trigger callbacks
+   * registered by XpGetDocumentData()&co.) select() will return with "new info"
+   * - but XNextEvent() below processes these _internal_ events silently - and
+   * will block if there are no other non-internal events.
+   * The workaround here is to check with XEventsQueued() if there are non-internal
+   * events queued - if not select() will be called again - unfortunately we use
+   * the old timeout here instead of the "remaining" time... (this only would hurt
+   * if the timeout would be really long - but for current use with values below
+   * 1/2 secs it does not hurt... =:-)
+   */
+  while(XEventsQueued(display, QueuedAfterFlush) == 0)
+  {
+    res = select(display_fd+1, &readfds, NULL, NULL, timeout);
+
+    switch(res)
     {
-      res = select(display_fd+1, &readfds, NULL, NULL, timeout);
-
-      switch(res)
-      {
         case -1: /* select() error - should not happen */
           if (errno == EINTR)
              break; // caused e.g. by alarm(3)
@@ -1951,14 +1912,15 @@ Bool XPeekEventTimeout( Display *display, XEvent *event_return, struct timeval *
 
         case  0: /* timeout */
           return(False);
-      }
     }
+  }
 
-    XPeekEvent(display, event_return);
-    return(True);
+  XPeekEvent(display, event_return);
+  return(True);
 }
 
-void bx_x_gui_c::sim_is_idle () {
+void bx_x_gui_c::sim_is_idle()
+{
   XEvent dummy;
   struct timeval   timeout;
   timeout.tv_sec  = 0;
@@ -1969,12 +1931,12 @@ void bx_x_gui_c::sim_is_idle () {
 
 void bx_x_gui_c::beep_on(float frequency)
 {
-  BX_INFO(( "X11 Beep ON (frequency=%.2f)",frequency));
+  BX_INFO(("X11 Beep ON (frequency=%.2f)",frequency));
 }
 
 void bx_x_gui_c::beep_off()
 {
-  BX_INFO(( "X11 Beep OFF"));
+  BX_INFO(("X11 Beep OFF"));
 }
 
 void bx_x_gui_c::get_capabilities(Bit16u *xres, Bit16u *yres, Bit16u *bpp)
@@ -2301,8 +2263,7 @@ int x11_string_dialog(bx_param_string_c *param)
   return control;
 }
 
-BxEvent *
-x11_notify_callback (void *unused, BxEvent *event)
+BxEvent *x11_notify_callback (void *unused, BxEvent *event)
 {
   int opts;
   bx_param_c *param;

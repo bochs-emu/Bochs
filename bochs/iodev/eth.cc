@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth.cc,v 1.25 2008-01-26 22:24:01 sshwarts Exp $
+// $Id: eth.cc,v 1.26 2008-02-15 22:05:42 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -168,19 +168,19 @@ extern "C" {
 #define LOG_THIS bx_devices.pluginNE2kDevice->
 
 // This is a utility script used for tuntap or ethertap
-int execute_script( char* scriptname, char* arg1 )
+int execute_script(char* scriptname, char* arg1)
 {
   int pid,status;
 
   if (!(pid=fork())) {
     char filename[BX_PATHNAME_LEN];
-    if ( scriptname[0]=='/' ) {
-      strcpy (filename, scriptname);
+    if (scriptname[0]=='/') {
+      strcpy(filename, scriptname);
     }
     else {
-      getcwd (filename, BX_PATHNAME_LEN);
-      strcat (filename, "/");
-      strcat (filename, scriptname);
+      getcwd(filename, BX_PATHNAME_LEN);
+      strcat(filename, "/");
+      strcat(filename, scriptname);
     }
 
     // execute the script

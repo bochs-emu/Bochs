@@ -1,10 +1,10 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: scsipt.h,v 1.4 2002-09-16 16:58:36 bdenney Exp $
+// $Id: scsipt.h,v 1.5 2008-02-15 22:05:43 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //
 // iodev/scsipt.h
-// $Id: scsipt.h,v 1.4 2002-09-16 16:58:36 bdenney Exp $
+// $Id: scsipt.h,v 1.5 2008-02-15 22:05:43 sshwarts Exp $
 //
 // This file was copied from ... ?
 //
@@ -128,7 +128,7 @@ typedef struct {
 /*
  * Standard IOCTL define
  */
-#define CTL_CODE( DevType, Function, Method, Access ) (                 \
+#define CTL_CODE(DevType, Function, Method, Access) (                   \
     ((DevType) << 16) | ((Access) << 14) | ((Function) << 2) | (Method) \
 )
 

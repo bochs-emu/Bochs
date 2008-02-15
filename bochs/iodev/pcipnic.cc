@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pcipnic.cc,v 1.26 2008-01-26 22:24:02 sshwarts Exp $
+// $Id: pcipnic.cc,v 1.27 2008-02-15 22:05:43 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003  Fen Systems Ltd.
@@ -18,6 +18,7 @@
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+/////////////////////////////////////////////////////////////////////////
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
 // platforms that require a special tag on exported symbols, BX_PLUGGABLE
@@ -211,19 +212,19 @@ Bit32u bx_pcipnic_c::read(Bit32u address, unsigned io_len)
   offset = address - BX_PNIC_THIS s.base_ioaddr;
 
   switch (offset) {
-  case PNIC_REG_STAT :
+  case PNIC_REG_STAT:
     val = BX_PNIC_THIS s.rStatus;
     break;
 
-  case PNIC_REG_LEN :
+  case PNIC_REG_LEN:
     val = BX_PNIC_THIS s.rLength;
     break;
 
-  case PNIC_REG_DATA :
-    if ( BX_PNIC_THIS s.rDataCursor >= BX_PNIC_THIS s.rLength )
+  case PNIC_REG_DATA:
+    if (BX_PNIC_THIS s.rDataCursor >= BX_PNIC_THIS s.rLength)
       BX_PANIC(("PNIC read at %u, beyond end of data register array",
 		BX_PNIC_THIS s.rDataCursor));
-    val = BX_PNIC_THIS s.rData[BX_PNIC_THIS s.rDataCursor ++];
+    val = BX_PNIC_THIS s.rData[BX_PNIC_THIS s.rDataCursor++];
     break;
 
   default :
@@ -260,24 +261,24 @@ void bx_pcipnic_c::write(Bit32u address, Bit32u value, unsigned io_len)
   offset = address - BX_PNIC_THIS s.base_ioaddr;
 
   switch (offset) {
-  case PNIC_REG_CMD :
+  case PNIC_REG_CMD:
     BX_PNIC_THIS s.rCmd = value;
     BX_PNIC_THIS exec_command();
     break;
 
-  case PNIC_REG_LEN :
-    if ( value > PNIC_DATA_SIZE )
+  case PNIC_REG_LEN:
+    if (value > PNIC_DATA_SIZE)
       BX_PANIC(("PNIC bad length %u written to length register, max is %u",
 		value, PNIC_DATA_SIZE));
     BX_PNIC_THIS s.rLength = value;
     BX_PNIC_THIS s.rDataCursor = 0;
     break;
 
-  case PNIC_REG_DATA :
-    if ( BX_PNIC_THIS s.rDataCursor >= BX_PNIC_THIS s.rLength )
+  case PNIC_REG_DATA:
+    if (BX_PNIC_THIS s.rDataCursor >= BX_PNIC_THIS s.rLength)
       BX_PANIC(("PNIC write at %u, beyond end of data register array",
 		BX_PNIC_THIS s.rDataCursor));
-    BX_PNIC_THIS s.rData[BX_PNIC_THIS s.rDataCursor ++] = value;
+    BX_PNIC_THIS s.rData[BX_PNIC_THIS s.rDataCursor++] = value;
     break;
 
   default:
@@ -427,37 +428,37 @@ void bx_pcipnic_c::exec_command(void)
   Bit16u status  = PNIC_STATUS_UNKNOWN_CMD;
   Bit16u olength = 0;
 
-  if ( ilength != BX_PNIC_THIS s.rDataCursor )
+  if (ilength != BX_PNIC_THIS s.rDataCursor)
     BX_PANIC(("PNIC command issued with incomplete data (should be %u, is %u)",
-	      ilength, BX_PNIC_THIS s.rDataCursor ));
+	      ilength, BX_PNIC_THIS s.rDataCursor));
 
-  switch ( command ) {
-  case PNIC_CMD_NOOP :
+  switch (command) {
+  case PNIC_CMD_NOOP:
     status = PNIC_STATUS_OK;
     break;
 
-  case PNIC_CMD_API_VER :
+  case PNIC_CMD_API_VER:
     Bit16u api_version;
 
     api_version = PNIC_API_VERSION;
     olength = sizeof(api_version);
-    memcpy ( data, &api_version, sizeof(api_version) );
+    memcpy (data, &api_version, sizeof(api_version));
     status = PNIC_STATUS_OK;
     break;
 
-  case PNIC_CMD_READ_MAC :
-    olength = sizeof ( BX_PNIC_THIS s.macaddr );
-    memcpy ( data, BX_PNIC_THIS s.macaddr, olength );
+  case PNIC_CMD_READ_MAC:
+    olength = sizeof (BX_PNIC_THIS s.macaddr);
+    memcpy (data, BX_PNIC_THIS s.macaddr, olength);
     status = PNIC_STATUS_OK;
     break;
 
-  case PNIC_CMD_RESET :
+  case PNIC_CMD_RESET:
     /* Flush the receive queue */
     BX_PNIC_THIS s.recvQueueLength = 0;
     status = PNIC_STATUS_OK;
     break;
 
-  case PNIC_CMD_XMIT :
+  case PNIC_CMD_XMIT:
     BX_PNIC_THIS ethdev->sendpkt(data, ilength);
     if (BX_PNIC_THIS s.irqEnabled) {
       set_irq_level(1);
@@ -465,35 +466,35 @@ void bx_pcipnic_c::exec_command(void)
     status = PNIC_STATUS_OK;
     break;
 
-  case PNIC_CMD_RECV :
-    if ( BX_PNIC_THIS s.recvQueueLength > 0 ) {
-      int idx = ( BX_PNIC_THIS s.recvIndex - BX_PNIC_THIS s.recvQueueLength
-		  + PNIC_RECV_RINGS ) % PNIC_RECV_RINGS;
+  case PNIC_CMD_RECV:
+    if (BX_PNIC_THIS s.recvQueueLength > 0) {
+      int idx = (BX_PNIC_THIS s.recvIndex - BX_PNIC_THIS s.recvQueueLength
+		  + PNIC_RECV_RINGS) % PNIC_RECV_RINGS;
       olength = BX_PNIC_THIS s.recvRingLength[idx];
-      memcpy ( data, BX_PNIC_THIS s.recvRing[idx], olength );
-      BX_PNIC_THIS s.recvQueueLength --;
+      memcpy (data, BX_PNIC_THIS s.recvRing[idx], olength);
+      BX_PNIC_THIS s.recvQueueLength--;
     }
-    if ( ! BX_PNIC_THIS s.recvQueueLength ) {
+    if (! BX_PNIC_THIS s.recvQueueLength) {
       set_irq_level(0);
     }
     status = PNIC_STATUS_OK;
     break;
 
-  case PNIC_CMD_RECV_QLEN :
+  case PNIC_CMD_RECV_QLEN:
     Bit16u qlen;
 
     qlen = BX_PNIC_THIS s.recvQueueLength;
     olength = sizeof(qlen);
-    memcpy ( data, &qlen, sizeof(qlen) );
+    memcpy (data, &qlen, sizeof(qlen));
     status = PNIC_STATUS_OK;
     break;
 
-  case PNIC_CMD_MASK_IRQ :
+  case PNIC_CMD_MASK_IRQ:
     Bit8u enabled;
 
     enabled = *((Bit8u*)data);
     BX_PNIC_THIS s.irqEnabled = enabled;
-    if ( enabled && BX_PNIC_THIS s.recvQueueLength ) {
+    if (enabled && BX_PNIC_THIS s.recvQueueLength) {
       set_irq_level(1);
     } else {
       set_irq_level(0);
@@ -501,16 +502,15 @@ void bx_pcipnic_c::exec_command(void)
     status = PNIC_STATUS_OK;
     break;
 
-  case PNIC_CMD_FORCE_IRQ :
+  case PNIC_CMD_FORCE_IRQ:
     set_irq_level(1);
     status = PNIC_STATUS_OK;
     break;
 
   default:
-    BX_ERROR(("Unknown PNIC command %x (data length %u)", command, ilength ));
+    BX_ERROR(("Unknown PNIC command %x (data length %u)", command, ilength));
     status = PNIC_STATUS_UNKNOWN_CMD;
     break;
-
   }
 
   // Set registers
@@ -518,7 +518,6 @@ void bx_pcipnic_c::exec_command(void)
   BX_PNIC_THIS s.rLength = olength;
   BX_PNIC_THIS s.rDataCursor = 0;
 }
-
 
 /*
  * Callback from the eth system driver when a frame has arrived
@@ -540,26 +539,26 @@ void bx_pcipnic_c::rx_handler(void *arg, const void *buf, unsigned len)
 void bx_pcipnic_c::rx_frame(const void *buf, unsigned io_len)
 {
   // Check packet length
-  if ( io_len > PNIC_DATA_SIZE ) {
-    BX_PANIC ( ( "PNIC receive: data size %u exceeded buffer size %u",
-		 io_len, PNIC_DATA_SIZE ) );
+  if (io_len > PNIC_DATA_SIZE) {
+    BX_PANIC(("PNIC receive: data size %u exceeded buffer size %u",
+       io_len, PNIC_DATA_SIZE));
     // Truncate if user continues
     io_len = PNIC_DATA_SIZE;
   }
   // Check receive ring is not full
-  if ( BX_PNIC_THIS s.recvQueueLength == PNIC_RECV_RINGS ) {
-    BX_ERROR ( ( "PNIC receive: receive ring full, discarding packet" ) );
+  if (BX_PNIC_THIS s.recvQueueLength == PNIC_RECV_RINGS) {
+    BX_ERROR(("PNIC receive: receive ring full, discarding packet"));
     return;
   }
   // Copy data to receive ring and record length
-  memcpy ( BX_PNIC_THIS s.recvRing[ BX_PNIC_THIS s.recvIndex ], buf, io_len );
-  BX_PNIC_THIS s.recvRingLength[ BX_PNIC_THIS s.recvIndex ] = io_len;
+  memcpy (BX_PNIC_THIS s.recvRing[BX_PNIC_THIS s.recvIndex], buf, io_len);
+  BX_PNIC_THIS s.recvRingLength[BX_PNIC_THIS s.recvIndex] = io_len;
   // Move to next ring entry
-  BX_PNIC_THIS s.recvIndex = ( BX_PNIC_THIS s.recvIndex + 1) % PNIC_RECV_RINGS;
-  BX_PNIC_THIS s.recvQueueLength ++;
+  BX_PNIC_THIS s.recvIndex = (BX_PNIC_THIS s.recvIndex + 1) % PNIC_RECV_RINGS;
+  BX_PNIC_THIS s.recvQueueLength++;
 
   // Generate interrupt if enabled
-  if ( BX_PNIC_THIS s.irqEnabled ) {
+  if (BX_PNIC_THIS s.irqEnabled) {
     set_irq_level(1);
   }
 }

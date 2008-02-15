@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.202 2008-02-15 19:03:53 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.203 2008-02-15 22:05:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -301,24 +301,24 @@ void BX_CPU_C::MOV_DdRd(bxInstruction_c *i)
         // Note: processor clears GD upon entering debug exception
         // handler, to allow access to the debug registers
       }
-      if ( (((val_32>>16) & 3)==2) ||
-           (((val_32>>20) & 3)==2) ||
-           (((val_32>>24) & 3)==2) ||
-           (((val_32>>28) & 3)==2)) {
+      if ((((val_32>>16) & 3)==2) ||
+          (((val_32>>20) & 3)==2) ||
+          (((val_32>>24) & 3)==2) ||
+          (((val_32>>28) & 3)==2)) {
         // IO breakpoints (10b) are not yet supported.
         BX_PANIC(("MOV_DdRd: write of %08x contains IO breakpoint", val_32));
       }
-      if ( (((val_32>>18) & 3)==2) ||
-           (((val_32>>22) & 3)==2) ||
-           (((val_32>>26) & 3)==2) ||
-           (((val_32>>30) & 3)==2)) {
+      if ((((val_32>>18) & 3)==2) ||
+          (((val_32>>22) & 3)==2) ||
+          (((val_32>>26) & 3)==2) ||
+          (((val_32>>30) & 3)==2)) {
         // LEN0..3 contains undefined length specifier (10b)
         BX_PANIC(("MOV_DdRd: write of %08x contains undefined LENx", val_32));
       }
-      if ( ((((val_32>>16) & 3)==0) && (((val_32>>18) & 3)!=0)) ||
-           ((((val_32>>20) & 3)==0) && (((val_32>>22) & 3)!=0)) ||
-           ((((val_32>>24) & 3)==0) && (((val_32>>26) & 3)!=0)) ||
-           ((((val_32>>28) & 3)==0) && (((val_32>>30) & 3)!=0)))
+      if (((((val_32>>16) & 3)==0) && (((val_32>>18) & 3)!=0)) ||
+          ((((val_32>>20) & 3)==0) && (((val_32>>22) & 3)!=0)) ||
+          ((((val_32>>24) & 3)==0) && (((val_32>>26) & 3)!=0)) ||
+          ((((val_32>>28) & 3)==0) && (((val_32>>30) & 3)!=0)))
       {
         // Instruction breakpoint with LENx not 00b (1-byte length)
         BX_PANIC(("MOV_DdRd: write of %08x, R/W=00b LEN!=00b", val_32));
@@ -486,28 +486,28 @@ void BX_CPU_C::MOV_DqRq(bxInstruction_c *i)
         // Note: processor clears GD upon entering debug exception
         // handler, to allow access to the debug registers
       }
-      if ( (((val_64>>16) & 3)==2) ||
-           (((val_64>>20) & 3)==2) ||
-           (((val_64>>24) & 3)==2) ||
-           (((val_64>>28) & 3)==2))
+      if ((((val_64>>16) & 3)==2) ||
+          (((val_64>>20) & 3)==2) ||
+          (((val_64>>24) & 3)==2) ||
+          (((val_64>>28) & 3)==2))
       {
         // IO breakpoints (10b) are not yet supported.
         BX_PANIC(("MOV_DqRq: write of %08x:%08x contains IO breakpoint",
           (Bit32u)(val_64 >> 32), (Bit32u)(val_64 & 0xFFFFFFFF)));
       }
-      if ( (((val_64>>18) & 3)==2) ||
-           (((val_64>>22) & 3)==2) ||
-           (((val_64>>26) & 3)==2) ||
-           (((val_64>>30) & 3)==2))
+      if ((((val_64>>18) & 3)==2) ||
+          (((val_64>>22) & 3)==2) ||
+          (((val_64>>26) & 3)==2) ||
+          (((val_64>>30) & 3)==2))
       {
         // LEN0..3 contains undefined length specifier (10b)
         BX_PANIC(("MOV_DqRq: write of %08x:%08x contains undefined LENx",
           (Bit32u)(val_64 >> 32), (Bit32u)(val_64 & 0xFFFFFFFF)));
       }
-      if ( ((((val_64>>16) & 3)==0) && (((val_64>>18) & 3)!=0)) ||
-           ((((val_64>>20) & 3)==0) && (((val_64>>22) & 3)!=0)) ||
-           ((((val_64>>24) & 3)==0) && (((val_64>>26) & 3)!=0)) ||
-           ((((val_64>>28) & 3)==0) && (((val_64>>30) & 3)!=0)))
+      if (((((val_64>>16) & 3)==0) && (((val_64>>18) & 3)!=0)) ||
+          ((((val_64>>20) & 3)==0) && (((val_64>>22) & 3)!=0)) ||
+          ((((val_64>>24) & 3)==0) && (((val_64>>26) & 3)!=0)) ||
+          ((((val_64>>28) & 3)==0) && (((val_64>>30) & 3)!=0)))
       {
         // Instruction breakpoint with LENx not 00b (1-byte length)
         BX_PANIC(("MOV_DqRq: write of %08x:%08x , R/W=00b LEN!=00b",

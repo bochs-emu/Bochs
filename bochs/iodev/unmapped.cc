@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: unmapped.cc,v 1.26 2008-01-29 17:34:52 sshwarts Exp $
+// $Id: unmapped.cc,v 1.27 2008-02-15 22:05:43 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -23,8 +23,8 @@
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+//
 /////////////////////////////////////////////////////////////////////////
-
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
 // platforms that require a special tag on exported symbols, BX_PLUGGABLE
@@ -263,7 +263,7 @@ void bx_unmapped_c::write(Bit32u address, Bit32u value, unsigned io_len)
 
     case 0xfedc:
       bx_dbg.debugger = (value > 0);
-      BX_DEBUG(( "DEBUGGER = %u", (unsigned) bx_dbg.debugger));
+      BX_DEBUG(("DEBUGGER = %u", (unsigned) bx_dbg.debugger));
       break;
 
     default:

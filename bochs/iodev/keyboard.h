@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.h,v 1.41 2008-01-26 22:24:02 sshwarts Exp $
+// $Id: keyboard.h,v 1.42 2008-02-15 22:05:43 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -24,10 +24,8 @@
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 
-
 #ifndef _PCKEY_H
 #define _PCKEY_H
-
 
 #define BX_KBD_ELEMENTS 16
 #define BX_MOUSE_BUFF_SIZE 48
@@ -69,14 +67,14 @@ private:
   BX_KEY_SMF Bit8u    get_kbd_enable(void);
   BX_KEY_SMF void     service_paste_buf ();
   BX_KEY_SMF void     create_mouse_packet(bool force_enq);
-  BX_KEY_SMF unsigned periodic( Bit32u   usec_delta );
+  BX_KEY_SMF unsigned periodic(Bit32u usec_delta);
 
 
   static Bit32u read_handler(void *this_ptr, Bit32u address, unsigned io_len);
   static void   write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len);
 #if !BX_USE_KEY_SMF
-  void     write(Bit32u   address, Bit32u   value, unsigned io_len);
-  Bit32u   read(Bit32u   address, unsigned io_len);
+  void write(Bit32u address, Bit32u value, unsigned io_len);
+  Bit32u read(Bit32u address, unsigned io_len);
 #endif
 
   struct {

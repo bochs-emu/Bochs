@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pit_wrap.h,v 1.27 2007-09-28 19:52:05 sshwarts Exp $
+// $Id: pit_wrap.h,v 1.28 2008-02-15 22:05:43 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -78,9 +78,9 @@ private:
   static void timer_handler(void *this_ptr);
   BX_PIT_SMF void handle_timer();
 
-  BX_PIT_SMF void  write_count_reg( Bit8u   value, unsigned timerid );
-  BX_PIT_SMF Bit8u read_counter( unsigned timerid );
-  BX_PIT_SMF void  latch( unsigned timerid );
+  BX_PIT_SMF void  write_count_reg(Bit8u value, unsigned timerid);
+  BX_PIT_SMF Bit8u read_counter(unsigned timerid);
+  BX_PIT_SMF void  latch(unsigned timerid);
   BX_PIT_SMF void  set_GATE(unsigned pit_id, unsigned value);
   BX_PIT_SMF void  start(unsigned timerid);
 

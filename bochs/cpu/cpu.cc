@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.206 2008-02-02 21:46:49 sshwarts Exp $
+// $Id: cpu.cc,v 1.207 2008-02-15 22:05:39 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -531,12 +531,12 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
   // will be processed on the next boundary.
   BX_CPU_THIS_PTR inhibit_mask = 0;
 
-  if ( !(BX_CPU_INTR ||
-         BX_CPU_THIS_PTR debug_trap ||
-         BX_HRQ ||
-         BX_CPU_THIS_PTR get_TF()
+  if (!(BX_CPU_INTR ||
+        BX_CPU_THIS_PTR debug_trap ||
+        BX_HRQ ||
+        BX_CPU_THIS_PTR get_TF()
 #if BX_X86_DEBUGGER
-         || (BX_CPU_THIS_PTR dr7 & 0xff)
+        || (BX_CPU_THIS_PTR dr7 & 0xff)
 #endif
         ))
     BX_CPU_THIS_PTR async_event = 0;

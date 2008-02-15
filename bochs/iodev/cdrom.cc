@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cdrom.cc,v 1.90 2008-01-26 22:24:00 sshwarts Exp $
+// $Id: cdrom.cc,v 1.91 2008-02-15 22:05:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -23,7 +23,7 @@
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
-
+/////////////////////////////////////////////////////////////////////////
 
 // These are the low-level CDROM functions which are called
 // from 'harddrv.cc'.  They effect the OS specific functionality
@@ -111,7 +111,7 @@ extern "C" {
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/ioctl.h>
-#if defined (__GNUC__) && ( __GNUC__ >= 4 )
+#if defined (__GNUC__) && (__GNUC__ >= 4)
 #include <sys/disk.h>
 #else
 #include <dev/disk.h>
@@ -136,37 +136,37 @@ extern "C" {
 // however there seems to be some dissagreement in
 // the definition of CDTOC.length
 struct _CDMSF {
-	u_char   minute;
-	u_char   second;
-	u_char   frame;
+        u_char   minute;
+        u_char   second;
+        u_char   frame;
 };
 
-#define MSF_TO_LBA(msf)		\
-	(((((msf).minute * 60UL) + (msf).second) * 75UL) + (msf).frame - 150)
+#define MSF_TO_LBA(msf)                \
+        (((((msf).minute * 60UL) + (msf).second) * 75UL) + (msf).frame - 150)
 
 struct _CDTOC_Desc {
-	u_char        session;
-	u_char        ctrl_adr;  /* typed to be machine and compiler independent */
-	u_char        tno;
-	u_char        point;
-	struct _CDMSF  address;
-	u_char        zero;
-	struct _CDMSF  p;
+        u_char        session;
+        u_char        ctrl_adr;  /* typed to be machine and compiler independent */
+        u_char        tno;
+        u_char        point;
+        struct _CDMSF address;
+        u_char        zero;
+        struct _CDMSF p;
 };
 
 struct _CDTOC {
-	u_short            length;  /* in native cpu endian */
-	u_char             first_session;
-	u_char             last_session;
-	struct _CDTOC_Desc  trackdesc[1];
+        u_short            length;  /* in native cpu endian */
+        u_char             first_session;
+        u_char             last_session;
+        struct _CDTOC_Desc trackdesc[1];
 };
 
-static kern_return_t FindEjectableCDMedia( io_iterator_t *mediaIterator, mach_port_t *masterPort );
-static kern_return_t GetDeviceFilePath( io_iterator_t mediaIterator, char *deviceFilePath, CFIndex maxPathSize );
-//int OpenDrive( const char *deviceFilePath );
-static struct _CDTOC * ReadTOC( const char * devpath );
+static kern_return_t FindEjectableCDMedia(io_iterator_t *mediaIterator, mach_port_t *masterPort);
+static kern_return_t GetDeviceFilePath(io_iterator_t mediaIterator, char *deviceFilePath, CFIndex maxPathSize);
+//int OpenDrive(const char *deviceFilePath);
+static struct _CDTOC *ReadTOC(const char *devpath);
 
-static char CDDevicePath[ MAXPATHLEN ];
+static char CDDevicePath[MAXPATHLEN];
 
 #define BX_CD_FRAMESIZE 2048
 #define CD_FRAMESIZE    2048
@@ -250,185 +250,176 @@ typedef struct _CDROM_TOC_SESSION_DATA {
 #include <stdio.h>
 
 #ifdef __APPLE__
-static kern_return_t FindEjectableCDMedia( io_iterator_t *mediaIterator,
-					   mach_port_t *masterPort )
+static kern_return_t FindEjectableCDMedia(io_iterator_t *mediaIterator,
+                                           mach_port_t *masterPort)
 {
-  kern_return_t     kernResult;
+  kern_return_t kernResult;
   CFMutableDictionaryRef     classesToMatch;
-  kernResult = IOMasterPort( bootstrap_port, masterPort );
-  if ( kernResult != KERN_SUCCESS )
-    {
-      fprintf ( stderr, "IOMasterPort returned %d\n", kernResult );
+  kernResult = IOMasterPort(bootstrap_port, masterPort);
+  if (kernResult != KERN_SUCCESS)
+  {
+      fprintf (stderr, "IOMasterPort returned %d\n", kernResult);
       return kernResult;
-    }
+  }
   // CD media are instances of class kIOCDMediaClass.
-  classesToMatch = IOServiceMatching( kIOCDMediaClass );
-  if ( classesToMatch == NULL )
-    fprintf ( stderr, "IOServiceMatching returned a NULL dictionary.\n" );
+  classesToMatch = IOServiceMatching(kIOCDMediaClass);
+  if (classesToMatch == NULL)
+    fprintf (stderr, "IOServiceMatching returned a NULL dictionary.\n");
   else
-    {
-      // Each IOMedia object has a property with key kIOMediaEjectableKey
-      // which is true if the media is indeed ejectable. So add property
-      // to CFDictionary for matching.
-      CFDictionarySetValue( classesToMatch,
-                            CFSTR( kIOMediaEjectableKey ), kCFBooleanTrue );
-    }
-  kernResult = IOServiceGetMatchingServices( *masterPort,
-                                             classesToMatch, mediaIterator );
-  if ( (kernResult != KERN_SUCCESS) || (*mediaIterator == NULL) )
-    fprintf( stderr, "No ejectable CD media found.\n kernResult = %d\n", kernResult );
+  {
+    // Each IOMedia object has a property with key kIOMediaEjectableKey
+    // which is true if the media is indeed ejectable. So add property
+    // to CFDictionary for matching.
+    CFDictionarySetValue(classesToMatch,
+                         CFSTR(kIOMediaEjectableKey), kCFBooleanTrue);
+  }
+  kernResult = IOServiceGetMatchingServices(*masterPort,
+                                             classesToMatch, mediaIterator);
+  if ((kernResult != KERN_SUCCESS) || (*mediaIterator == NULL))
+    fprintf(stderr, "No ejectable CD media found.\n kernResult = %d\n", kernResult);
 
   return kernResult;
 }
 
-
-static kern_return_t GetDeviceFilePath( io_iterator_t mediaIterator,
-					char *deviceFilePath, CFIndex maxPathSize )
+static kern_return_t GetDeviceFilePath(io_iterator_t mediaIterator,
+                                        char *deviceFilePath, CFIndex maxPathSize)
 {
   io_object_t nextMedia;
   kern_return_t kernResult = KERN_FAILURE;
-  nextMedia = IOIteratorNext( mediaIterator );
-  if ( nextMedia == NULL )
-    {
+  nextMedia = IOIteratorNext(mediaIterator);
+  if (nextMedia == NULL)
+  {
       *deviceFilePath = '\0';
-    }
+  }
   else
-    {
-      CFTypeRef    deviceFilePathAsCFString;
-      deviceFilePathAsCFString = IORegistryEntryCreateCFProperty(
-                                                                 nextMedia, CFSTR( kIOBSDNameKey ),
-                                                                 kCFAllocatorDefault, 0 );
+  {
+      CFTypeRef deviceFilePathAsCFString;
+      deviceFilePathAsCFString = IORegistryEntryCreateCFProperty(nextMedia, CFSTR(kIOBSDNameKey),
+                                                                 kCFAllocatorDefault, 0);
       *deviceFilePath = '\0';
-      if ( deviceFilePathAsCFString )
-        {
-          size_t devPathLength = strlen( _PATH_DEV );
-          strcpy( deviceFilePath, _PATH_DEV );
-          if ( CFStringGetCString( (const __CFString *) deviceFilePathAsCFString,
-                                   deviceFilePath + devPathLength,
-                                   maxPathSize - devPathLength,
-                                   kCFStringEncodingASCII ) )
-            {
-              // fprintf( stderr, "BSD path: %s\n", deviceFilePath );
+      if (deviceFilePathAsCFString)
+      {
+          size_t devPathLength = strlen(_PATH_DEV);
+          strcpy(deviceFilePath, _PATH_DEV);
+          if (CFStringGetCString((const __CFString *) deviceFilePathAsCFString,
+                                  deviceFilePath + devPathLength,
+                                  maxPathSize - devPathLength,
+                                  kCFStringEncodingASCII))
+          {
+              // fprintf(stderr, "BSD path: %s\n", deviceFilePath);
               kernResult = KERN_SUCCESS;
-            }
-          CFRelease( deviceFilePathAsCFString );
-        }
-    }
-  IOObjectRelease( nextMedia );
+          }
+          CFRelease(deviceFilePathAsCFString);
+      }
+  }
+
+  IOObjectRelease(nextMedia);
   return kernResult;
 }
 
-
-static int OpenDrive( const char *deviceFilePath )
+static int OpenDrive(const char *deviceFilePath)
 {
-
-  int fileDescriptor;
-
-  fileDescriptor = open( deviceFilePath, O_RDONLY );
-  if ( fileDescriptor == -1 )
-    fprintf( stderr, "Error %d opening device %s.\n", errno, deviceFilePath );
+  int fileDescriptor = open(deviceFilePath, O_RDONLY);
+  if (fileDescriptor == -1)
+    fprintf(stderr, "Error %d opening device %s.\n", errno, deviceFilePath);
   return fileDescriptor;
-
 }
 
-static struct _CDTOC * ReadTOC( const char * devpath ) {
-
+static struct _CDTOC * ReadTOC(const char *devpath)
+{
   struct _CDTOC * toc_p = NULL;
   io_iterator_t iterator = 0;
   io_registry_entry_t service = 0;
   CFDictionaryRef properties = 0;
   CFDataRef data = 0;
   mach_port_t port = 0;
-  char * devname;
+  char *devname;
 
-  if (( devname = strrchr( devpath, '/' )) != NULL ) {
+  if ((devname = strrchr(devpath, '/')) != NULL) {
     ++devname;
   }
   else {
     devname = (char *) devpath;
   }
 
-  if ( IOMasterPort(bootstrap_port, &port ) != KERN_SUCCESS ) {
-    fprintf( stderr, "IOMasterPort failed\n" );
+  if (IOMasterPort(bootstrap_port, &port) != KERN_SUCCESS) {
+    fprintf(stderr, "IOMasterPort failed\n");
     goto Exit;
   }
 
-  if ( IOServiceGetMatchingServices( port, IOBSDNameMatching( port, 0, devname ),
-				     &iterator ) != KERN_SUCCESS ) {
-    fprintf( stderr, "IOServiceGetMatchingServices failed\n" );
+  if (IOServiceGetMatchingServices(port, IOBSDNameMatching(port, 0, devname),
+                                  &iterator) != KERN_SUCCESS) {
+    fprintf(stderr, "IOServiceGetMatchingServices failed\n");
     goto Exit;
   }
 
-  service = IOIteratorNext( iterator );
+  service = IOIteratorNext(iterator);
 
-  IOObjectRelease( iterator );
+  IOObjectRelease(iterator);
 
   iterator = 0;
 
-  while ( service && !IOObjectConformsTo( service, "IOCDMedia" )) {
-    if ( IORegistryEntryGetParentIterator( service, kIOServicePlane,
-					   &iterator ) != KERN_SUCCESS ) {
-      fprintf( stderr, "IORegistryEntryGetParentIterator failed\n" );
+  while (service && !IOObjectConformsTo(service, "IOCDMedia")) {
+    if (IORegistryEntryGetParentIterator(service, kIOServicePlane,
+                                        &iterator) != KERN_SUCCESS)
+    {
+      fprintf(stderr, "IORegistryEntryGetParentIterator failed\n");
       goto Exit;
     }
 
-    IOObjectRelease( service );
-    service = IOIteratorNext( iterator );
-    IOObjectRelease( iterator );
-
+    IOObjectRelease(service);
+    service = IOIteratorNext(iterator);
+    IOObjectRelease(iterator);
   }
 
-  if ( service == NULL ) {
-    fprintf( stderr, "CD media not found\n" );
+  if (service == NULL) {
+    fprintf(stderr, "CD media not found\n");
     goto Exit;
   }
 
-  if ( IORegistryEntryCreateCFProperties( service, (__CFDictionary **) &properties,
-					  kCFAllocatorDefault,
-					  kNilOptions ) != KERN_SUCCESS ) {
-    fprintf( stderr, "IORegistryEntryGetParentIterator failed\n" );
+  if (IORegistryEntryCreateCFProperties(service, (__CFDictionary **) &properties,
+                                          kCFAllocatorDefault,
+                                          kNilOptions) != KERN_SUCCESS)
+  {
+    fprintf(stderr, "IORegistryEntryGetParentIterator failed\n");
     goto Exit;
   }
 
-  data = (CFDataRef) CFDictionaryGetValue( properties, CFSTR(kIOCDMediaTOCKey) );
-  if ( data == NULL ) {
-    fprintf( stderr, "CFDictionaryGetValue failed\n" );
+  data = (CFDataRef) CFDictionaryGetValue(properties, CFSTR(kIOCDMediaTOCKey));
+  if (data == NULL) {
+    fprintf(stderr, "CFDictionaryGetValue failed\n");
     goto Exit;
   }
   else {
-
     CFRange range;
     CFIndex buflen;
 
-    buflen = CFDataGetLength( data ) + 1;
-    range = CFRangeMake( 0, buflen );
-    toc_p = (struct _CDTOC *) malloc( buflen );
-    if ( toc_p == NULL ) {
-      fprintf( stderr, "Out of memory\n" );
+    buflen = CFDataGetLength(data) + 1;
+    range = CFRangeMake(0, buflen);
+    toc_p = (struct _CDTOC *) malloc(buflen);
+    if (toc_p == NULL) {
+      fprintf(stderr, "Out of memory\n");
       goto Exit;
     }
     else {
-      CFDataGetBytes( data, range, (unsigned char *) toc_p );
+      CFDataGetBytes(data, range, (unsigned char *) toc_p);
     }
 
     /*
-    fprintf( stderr, "Table of contents\n length %d first %d last %d\n",
-	    toc_p->length, toc_p->first_session, toc_p->last_session );
+    fprintf(stderr, "Table of contents\n length %d first %d last %d\n",
+            toc_p->length, toc_p->first_session, toc_p->last_session);
     */
 
-    CFRelease( properties );
-
+    CFRelease(properties);
   }
 
+Exit:
 
- Exit:
-
-  if ( service ) {
-    IOObjectRelease( service );
+  if (service) {
+    IOObjectRelease(service);
   }
 
   return toc_p;
-
 }
 #endif
 
@@ -436,76 +427,76 @@ static struct _CDTOC * ReadTOC( const char * devpath ) {
 
 bool ReadCDSector(unsigned int hid, unsigned int tid, unsigned int lun, unsigned long frame, unsigned char *buf, int bufsize)
 {
-	HANDLE hEventSRB;
-	SRB_ExecSCSICmd srb;
-	DWORD dwStatus;
+  HANDLE hEventSRB;
+  SRB_ExecSCSICmd srb;
+  DWORD dwStatus;
 
-	hEventSRB = CreateEvent(NULL, TRUE, FALSE, NULL);
-	
-	memset(&srb,0,sizeof(SRB_ExecSCSICmd));
-	srb.SRB_Cmd        = SC_EXEC_SCSI_CMD;
-	srb.SRB_HaId       = hid;
-	srb.SRB_Target     = tid;
- 	srb.SRB_Lun        = lun;
-	srb.SRB_Flags      = SRB_DIR_IN | SRB_EVENT_NOTIFY;
-	srb.SRB_SenseLen   = SENSE_LEN;
-	srb.SRB_PostProc   = hEventSRB;
-	srb.SRB_BufPointer = buf;
-	srb.SRB_BufLen     = bufsize;
-	srb.SRB_CDBLen     = 10;
-	srb.CDBByte[0]     = SCSI_READ10;
-	srb.CDBByte[2]     = (unsigned char) (frame>>24);
-	srb.CDBByte[3]     = (unsigned char) (frame>>16);
-	srb.CDBByte[4]     = (unsigned char) (frame>>8);
-	srb.CDBByte[5]     = (unsigned char) (frame);
-	srb.CDBByte[7]     = 0;
-	srb.CDBByte[8]     = 1; /* read 1 frames */
+  hEventSRB = CreateEvent(NULL, TRUE, FALSE, NULL);
+        
+  memset(&srb,0,sizeof(SRB_ExecSCSICmd));
+  srb.SRB_Cmd        = SC_EXEC_SCSI_CMD;
+  srb.SRB_HaId       = hid;
+  srb.SRB_Target     = tid;
+  srb.SRB_Lun        = lun;
+  srb.SRB_Flags      = SRB_DIR_IN | SRB_EVENT_NOTIFY;
+  srb.SRB_SenseLen   = SENSE_LEN;
+  srb.SRB_PostProc   = hEventSRB;
+  srb.SRB_BufPointer = buf;
+  srb.SRB_BufLen     = bufsize;
+  srb.SRB_CDBLen     = 10;
+  srb.CDBByte[0]     = SCSI_READ10;
+  srb.CDBByte[2]     = (unsigned char) (frame>>24);
+  srb.CDBByte[3]     = (unsigned char) (frame>>16);
+  srb.CDBByte[4]     = (unsigned char) (frame>>8);
+  srb.CDBByte[5]     = (unsigned char) (frame);
+  srb.CDBByte[7]     = 0;
+  srb.CDBByte[8]     = 1; /* read 1 frames */
 
-	ResetEvent(hEventSRB);
-	dwStatus = SendASPI32Command((SRB *)&srb);
-	if(dwStatus == SS_PENDING) {
-		WaitForSingleObject(hEventSRB, 100000);
-	}
-	CloseHandle(hEventSRB);
-	return (srb.SRB_TargStat == STATUS_GOOD);
+  ResetEvent(hEventSRB);
+  dwStatus = SendASPI32Command((SRB *)&srb);
+  if(dwStatus == SS_PENDING) {
+    WaitForSingleObject(hEventSRB, 100000);
+  }
+  CloseHandle(hEventSRB);
+  return (srb.SRB_TargStat == STATUS_GOOD);
 }
 
 int GetCDCapacity(unsigned int hid, unsigned int tid, unsigned int lun)
 {
-	HANDLE hEventSRB;
-	SRB_ExecSCSICmd srb;
-	DWORD dwStatus;
-	unsigned char buf[8];
+  HANDLE hEventSRB;
+  SRB_ExecSCSICmd srb;
+  DWORD dwStatus;
+  unsigned char buf[8];
 
-	hEventSRB = CreateEvent(NULL, TRUE, FALSE, NULL);
-	
-	memset(&buf, 0, sizeof(buf));
-	memset(&srb,0,sizeof(SRB_ExecSCSICmd));
-	srb.SRB_Cmd        = SC_EXEC_SCSI_CMD;
-	srb.SRB_HaId       = hid;
-	srb.SRB_Target     = tid;
- 	srb.SRB_Lun        = lun;
-	srb.SRB_Flags      = SRB_DIR_IN | SRB_EVENT_NOTIFY;
-	srb.SRB_SenseLen   = SENSE_LEN;
-	srb.SRB_PostProc   = hEventSRB;
-	srb.SRB_BufPointer = (unsigned char *)buf;
-	srb.SRB_BufLen     = 8;
-	srb.SRB_CDBLen     = 10;
-	srb.CDBByte[0]     = SCSI_READCDCAP;
-	srb.CDBByte[2]     = 0;
-	srb.CDBByte[3]     = 0;
-	srb.CDBByte[4]     = 0;
-	srb.CDBByte[5]     = 0;
-	srb.CDBByte[8]     = 0;
+  hEventSRB = CreateEvent(NULL, TRUE, FALSE, NULL);
+        
+  memset(&buf, 0, sizeof(buf));
+  memset(&srb,0,sizeof(SRB_ExecSCSICmd));
+  srb.SRB_Cmd        = SC_EXEC_SCSI_CMD;
+  srb.SRB_HaId       = hid;
+  srb.SRB_Target     = tid;
+  srb.SRB_Lun        = lun;
+  srb.SRB_Flags      = SRB_DIR_IN | SRB_EVENT_NOTIFY;
+  srb.SRB_SenseLen   = SENSE_LEN;
+  srb.SRB_PostProc   = hEventSRB;
+  srb.SRB_BufPointer = (unsigned char *)buf;
+  srb.SRB_BufLen     = 8;
+  srb.SRB_CDBLen     = 10;
+  srb.CDBByte[0]     = SCSI_READCDCAP;
+  srb.CDBByte[2]     = 0;
+  srb.CDBByte[3]     = 0;
+  srb.CDBByte[4]     = 0;
+  srb.CDBByte[5]     = 0;
+  srb.CDBByte[8]     = 0;
 
-	ResetEvent(hEventSRB);
-	dwStatus = SendASPI32Command((SRB *)&srb);
-	if(dwStatus == SS_PENDING) {
-		WaitForSingleObject(hEventSRB, 100000);
-	}
+  ResetEvent(hEventSRB);
+  dwStatus = SendASPI32Command((SRB *)&srb);
+  if(dwStatus == SS_PENDING) {
+    WaitForSingleObject(hEventSRB, 100000);
+  }
 
-	CloseHandle(hEventSRB);
-	return ((buf[0] << 24) + (buf[1] << 16) + (buf[2] << 8) + buf[3]) * ((buf[4] << 24) + (buf[5] << 16) + (buf[6] << 8) + buf[7]);
+  CloseHandle(hEventSRB);
+  return ((buf[0] << 24) + (buf[1] << 16) + (buf[2] << 8) + buf[3]) * ((buf[4] << 24) + (buf[5] << 16) + (buf[6] << 8) + buf[7]);
 }
 
 #endif
@@ -532,7 +523,7 @@ cdrom_interface::cdrom_interface(char *dev)
 
 void
 cdrom_interface::init(void) {
-  BX_DEBUG(("Init $Id: cdrom.cc,v 1.90 2008-01-26 22:24:00 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: cdrom.cc,v 1.91 2008-02-15 22:05:41 sshwarts Exp $"));
   BX_INFO(("file = '%s'",path));
 }
 
@@ -561,7 +552,7 @@ cdrom_interface::insert_cdrom(char *dev)
   BX_INFO (("load cdrom with path=%s", path));
 #ifdef WIN32
   char drive[256];
-  if ( (path[1] == ':') && (strlen(path) == 2) )
+  if ((path[1] == ':') && (strlen(path) == 2))
   {
     if(osinfo.dwPlatformId == VER_PLATFORM_WIN32_NT) {
       // Use direct device access under windows NT/2k/XP
@@ -592,9 +583,9 @@ cdrom_interface::insert_cdrom(char *dev)
     if (!hASPI) {
       hASPI = LoadLibrary("WNASPI32.DLL");
       if (hASPI) {
-        SendASPI32Command    = (DWORD(*)(LPSRB))GetProcAddress( hASPI, "SendASPI32Command" );
-        GetASPI32DLLVersion  = (DWORD(*)(void))GetProcAddress( hASPI, "GetASPI32DLLVersion" );
-        GetASPI32SupportInfo = (DWORD(*)(void))GetProcAddress( hASPI, "GetASPI32SupportInfo" );
+        SendASPI32Command    = (DWORD(*)(LPSRB))GetProcAddress(hASPI, "SendASPI32Command");
+        GetASPI32DLLVersion  = (DWORD(*)(void))GetProcAddress(hASPI, "GetASPI32DLLVersion");
+        GetASPI32SupportInfo = (DWORD(*)(void))GetProcAddress(hASPI, "GetASPI32SupportInfo");
         d = GetASPI32DLLVersion();
         BX_INFO(("WNASPI32.DLL version %d.%02d initialized", d & 0xff, (d >> 8) & 0xff));
       } else {
@@ -657,28 +648,27 @@ cdrom_interface::insert_cdrom(char *dev)
         io_iterator_t mediaIterator;
         kern_return_t kernResult;
 
-        BX_INFO(( "Insert CDROM" ));
+        BX_INFO(("Insert CDROM"));
 
-        kernResult = FindEjectableCDMedia( &mediaIterator, &masterPort );
-        if ( kernResult != KERN_SUCCESS ) {
-          BX_INFO (("Unable to find CDROM"));
+        kernResult = FindEjectableCDMedia(&mediaIterator, &masterPort);
+        if (kernResult != KERN_SUCCESS) {
+          BX_INFO(("Unable to find CDROM"));
           return 0;
         }
 
-        kernResult = GetDeviceFilePath( mediaIterator, CDDevicePath, sizeof( CDDevicePath ) );
-        if ( kernResult != KERN_SUCCESS ) {
-          BX_INFO (("Unable to get CDROM device file path" ));
+        kernResult = GetDeviceFilePath(mediaIterator, CDDevicePath, sizeof(CDDevicePath));
+        if (kernResult != KERN_SUCCESS) {
+          BX_INFO(("Unable to get CDROM device file path"));
           return 0;
         }
 
         // Here a cdrom was found so see if we can read from it.
         // At this point a failure will result in panic.
-        if ( strlen( CDDevicePath ) ) {
+        if (strlen(CDDevicePath)) {
           fd = open(CDDevicePath, O_RDONLY);
         }
       }
-      else
-      {
+      else {
         fd = open(path, O_RDONLY);
       }
 #else
@@ -686,7 +676,7 @@ cdrom_interface::insert_cdrom(char *dev)
       fd = open(path, O_RDONLY);
 #endif
     if (fd < 0) {
-       BX_ERROR(( "open cd failed for %s: %s", path, strerror(errno)));
+       BX_ERROR(("open cd failed for %s: %s", path, strerror(errno)));
        return 0;
     }
 #ifndef WIN32
@@ -718,11 +708,11 @@ cdrom_interface::start_cdrom()
   if (fd >= 0) {
 #if defined(__NetBSD__) || defined(__NetBSD_kernel__)
     if (ioctl (fd, CDIOCSTART) < 0)
-       BX_DEBUG(( "start_cdrom: start returns error: %s", strerror (errno) ));
+       BX_DEBUG(("start_cdrom: start returns error: %s", strerror (errno)));
     return 1;
 #else
-    BX_INFO(("start_cdrom: your OS is not supported yet."));
-    return 0; // OS not supported yet, return 0 always.
+    BX_INFO(("start_cdrom: your OS is not supported yet"));
+    return 0; // OS not supported yet, return 0 always
 #endif
   }
   return 0;
@@ -738,7 +728,7 @@ cdrom_interface::eject_cdrom()
 #if (defined(__OpenBSD__) || defined(__FreeBSD__) || defined(__FreeBSD_kernel__))
     (void) ioctl (fd, CDIOCALLOW);
     if (ioctl (fd, CDIOCEJECT) < 0)
-      BX_DEBUG(( "eject_cdrom: eject returns error." ));
+      BX_DEBUG(("eject_cdrom: eject returns error"));
 #endif
 
 #ifdef WIN32
@@ -1091,7 +1081,7 @@ cdrom_interface::read_toc(Bit8u* buf, int* length, bx_bool msf, int start_track,
 
 #if 1
   {
-  struct _CDTOC * toc = ReadTOC( CDDevicePath );
+  struct _CDTOC *toc = ReadTOC(CDDevicePath);
 
   if ((start_track > toc->last_session) && (start_track != 0xaa))
     return 0;
@@ -1153,18 +1143,16 @@ cdrom_interface::read_toc(Bit8u* buf, int* length, bx_bool msf, int start_track,
   return 1;
   }
 #else
-  BX_INFO(( "Read TOC - Not Implemented" ));
+  BX_INFO(("Read TOC - Not Implemented"));
   return 0;
 #endif
 #else
-  BX_INFO(("read_toc: your OS is not supported yet."));
+  BX_INFO(("read_toc: your OS is not supported yet"));
   return 0; // OS not supported yet, return 0 always.
 #endif
 }
 
-
-  Bit32u
-cdrom_interface::capacity()
+Bit32u cdrom_interface::capacity()
 {
   // Return CD-ROM capacity.  I believe you want to return
   // the number of blocks of capacity the actual media has.
@@ -1195,7 +1183,7 @@ cdrom_interface::capacity()
       BX_PANIC(("cdrom: capacity: file not open."));
     }
 
-    if( fstat(fd, &buf) != 0 )
+    if(fstat(fd, &buf) != 0)
       BX_PANIC(("cdrom: capacity: stat() failed."));
 
     return(buf.st_size);
@@ -1211,7 +1199,7 @@ cdrom_interface::capacity()
   if (ioctl(fd, DIOCGDINFO, &lp) < 0)
     BX_PANIC(("cdrom: ioctl(DIOCGDINFO) failed"));
 
-  BX_DEBUG(( "capacity: %u", lp.d_secperunit ));
+  BX_DEBUG(("capacity: %u", lp.d_secperunit));
   return(lp.d_secperunit);
   }
 #elif defined(__linux__)
@@ -1300,7 +1288,7 @@ cdrom_interface::capacity()
     if (rte.data[i].control & 4) {  /* data track */
       num_sectors = ntohl(rte.data[i + 1].addr.lba)
           - ntohl(rte.data[i].addr.lba);
-      BX_INFO(( "cdrom: Data track %d, length %d",
+      BX_INFO(("cdrom: Data track %d, length %d",
         rte.data[i].track, num_sectors));
       break;
       }
@@ -1330,7 +1318,7 @@ cdrom_interface::capacity()
         ULARGE_INTEGER FreeBytesForCaller;
         ULARGE_INTEGER TotalNumOfBytes;
         ULARGE_INTEGER TotalFreeBytes;
-        GetDiskFreeSpaceEx( path, &FreeBytesForCaller, &TotalNumOfBytes, &TotalFreeBytes);
+        GetDiskFreeSpaceEx(path, &FreeBytesForCaller, &TotalNumOfBytes, &TotalFreeBytes);
         return (Bit32u)(TotalNumOfBytes.QuadPart / 2048);
       }
     }
@@ -1345,17 +1333,17 @@ cdrom_interface::capacity()
   // Return CD-ROM capacity.  I believe you want to return
   // the number of bytes of capacity the actual media has.
 
-  BX_INFO(( "Capacity" ));
+  BX_INFO(("Capacity"));
 
-  struct _CDTOC * toc = ReadTOC( CDDevicePath );
+  struct _CDTOC *toc = ReadTOC(CDDevicePath);
 
-  if ( toc == NULL ) {
-    BX_PANIC(( "capacity: Failed to read toc" ));
+  if (toc == NULL) {
+    BX_PANIC(("capacity: Failed to read toc"));
   }
 
-  size_t toc_entries = ( toc->length - 2 ) / sizeof( struct _CDTOC_Desc );
+  size_t toc_entries = (toc->length - 2) / sizeof(struct _CDTOC_Desc);
 
-  BX_DEBUG(( "reading %d toc entries\n", toc_entries ));
+  BX_DEBUG(("reading %d toc entries\n", toc_entries));
 
   int start_sector = -1;
   int data_track = -1;
@@ -1364,32 +1352,32 @@ cdrom_interface::capacity()
   // get the address of the immediately previous (or following depending
   // on how you look at it).  The difference in the sector numbers
   // is returned as the sized of the data track.
-  for ( int i=toc_entries - 1; i>=0; i-- ) {
-    BX_DEBUG(( "session %d ctl_adr %d tno %d point %d lba %d z %d p lba %d\n",
+  for (int i=toc_entries - 1; i>=0; i--) {
+    BX_DEBUG(("session %d ctl_adr %d tno %d point %d lba %d z %d p lba %d\n",
              (int)toc->trackdesc[i].session,
              (int)toc->trackdesc[i].ctrl_adr,
              (int)toc->trackdesc[i].tno,
              (int)toc->trackdesc[i].point,
-             MSF_TO_LBA( toc->trackdesc[i].address ),
+             MSF_TO_LBA(toc->trackdesc[i].address),
              (int)toc->trackdesc[i].zero,
-             MSF_TO_LBA(toc->trackdesc[i].p )));
+             MSF_TO_LBA(toc->trackdesc[i].p)));
 
-    if ( start_sector != -1 ) {
+    if (start_sector != -1) {
       start_sector = MSF_TO_LBA(toc->trackdesc[i].p) - start_sector;
       break;
     }
 
     if ((toc->trackdesc[i].ctrl_adr >> 4) != 1) continue;
 
-    if ( toc->trackdesc[i].ctrl_adr & 0x04 ) {
+    if (toc->trackdesc[i].ctrl_adr & 0x04) {
       data_track = toc->trackdesc[i].point;
       start_sector = MSF_TO_LBA(toc->trackdesc[i].p);
     }
   }
 
-  free( toc );
+  free(toc);
 
-  if ( start_sector == -1 ) {
+  if (start_sector == -1) {
     start_sector = 0;
   }
 
@@ -1398,7 +1386,7 @@ cdrom_interface::capacity()
   return start_sector;
   }
 #else
-  BX_ERROR(( "capacity: your OS is not supported yet." ));
+  BX_ERROR(("capacity: your OS is not supported yet"));
   return(0);
 #endif
 }

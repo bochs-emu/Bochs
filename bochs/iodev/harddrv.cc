@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.207 2008-02-07 20:43:13 sshwarts Exp $
+// $Id: harddrv.cc,v 1.208 2008-02-15 22:05:42 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -23,12 +23,11 @@
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+/////////////////////////////////////////////////////////////////////////
 
 // Useful docs:
 // AT Attachment with Packet Interface
 // working draft by T13 at www.t13.org
-
-
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
 // platforms that require a special tag on exported symbols, BX_PLUGGABLE
@@ -174,7 +173,7 @@ void bx_hard_drive_c::init(void)
   char  ata_name[20];
   bx_list_c *base;
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.207 2008-02-07 20:43:13 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.208 2008-02-15 22:05:42 sshwarts Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     sprintf(ata_name, "ata.%d.resources", channel);
@@ -185,9 +184,10 @@ void bx_hard_drive_c::init(void)
       BX_HD_THIS channels[channel].irq = SIM->get_param_num("irq", base)->get();
 
       // Coherency check
-      if ( (BX_HD_THIS channels[channel].ioaddr1 == 0) ||
-           (BX_HD_THIS channels[channel].ioaddr2 == 0) ||
-           (BX_HD_THIS channels[channel].irq == 0) ) {
+      if ((BX_HD_THIS channels[channel].ioaddr1 == 0) ||
+          (BX_HD_THIS channels[channel].ioaddr2 == 0) ||
+          (BX_HD_THIS channels[channel].irq == 0))
+      {
         BX_PANIC(("incoherency for ata channel %d: io1=0x%x, io2=%x, irq=%d",
 	  channel,
 	  BX_HD_THIS channels[channel].ioaddr1,
@@ -288,7 +288,7 @@ void bx_hard_drive_c::init(void)
       }
 
       if (SIM->get_param_enum("type", base)->get() == BX_ATA_DEVICE_DISK) {
-        BX_DEBUG(( "Hard-Disk on target %d/%d",channel,device));
+        BX_DEBUG(("Hard-Disk on target %d/%d",channel,device));
         BX_HD_THIS channels[channel].drives[device].device_type = IDE_DISK;
         sprintf(sbtext, "HD:%d-%s", channel, device?"S":"M");
         BX_HD_THIS channels[channel].drives[device].statusbar_id =
@@ -450,7 +450,7 @@ void bx_hard_drive_c::init(void)
           BX_PANIC(("ata%d-%d image doesn't support geometry detection", channel, device));
         }
       } else if (SIM->get_param_enum("type", base)->get() == BX_ATA_DEVICE_CDROM) {
-        BX_DEBUG(( "CDROM on target %d/%d",channel,device));
+        BX_DEBUG(("CDROM on target %d/%d",channel,device));
         BX_HD_THIS channels[channel].drives[device].device_type = IDE_CDROM;
         BX_HD_THIS channels[channel].drives[device].cdrom.locked = 0;
         BX_HD_THIS channels[channel].drives[device].sense.sense_key = SENSE_NONE;
@@ -491,13 +491,13 @@ void bx_hard_drive_c::init(void)
 
         if (SIM->get_param_enum("status", base)->get() == BX_INSERTED) {
           if (BX_HD_THIS channels[channel].drives[device].cdrom.cd->insert_cdrom()) {
-            BX_INFO(( "Media present in CD-ROM drive"));
+            BX_INFO(("Media present in CD-ROM drive"));
             BX_HD_THIS channels[channel].drives[device].cdrom.ready = 1;
             Bit32u capacity = BX_HD_THIS channels[channel].drives[device].cdrom.cd->capacity();
             BX_HD_THIS channels[channel].drives[device].cdrom.capacity = capacity;
             BX_INFO(("Capacity is %d sectors (%.2f MB)", capacity, (float)capacity / 512.0));
           } else {
-            BX_INFO(( "Could not locate CD-ROM, continuing with media not present"));
+            BX_INFO(("Could not locate CD-ROM, continuing with media not present"));
             BX_HD_THIS channels[channel].drives[device].cdrom.ready = 0;
             SIM->get_param_enum("status", base)->set(BX_EJECTED);
           }
@@ -505,7 +505,7 @@ void bx_hard_drive_c::init(void)
         else
 #endif
         {
-          BX_INFO(( "Media not present in CD-ROM drive" ));
+          BX_INFO(("Media not present in CD-ROM drive"));
           BX_HD_THIS channels[channel].drives[device].cdrom.ready = 0;
         }
       }
@@ -640,8 +640,7 @@ void bx_hard_drive_c::init(void)
     BX_INFO(("Using boot sequence %s, %s, %s",
              SIM->get_param_enum(BXPN_BOOTDRIVE1)->get_selected(),
              SIM->get_param_enum(BXPN_BOOTDRIVE2)->get_selected(),
-             SIM->get_param_enum(BXPN_BOOTDRIVE3)->get_selected()
-	     ));
+             SIM->get_param_enum(BXPN_BOOTDRIVE3)->get_selected()));
     DEV_cmos_set_reg(0x3d, SIM->get_param_enum(BXPN_BOOTDRIVE1)->get() |
                            (SIM->get_param_enum(BXPN_BOOTDRIVE2)->get() << 4));
 
@@ -735,7 +734,7 @@ void bx_hard_drive_c::iolight_timer()
     for (unsigned device=0; device<2; device++) {
       if (BX_HD_THIS channels[channel].drives[device].iolight_counter > 0) {
         if (--BX_HD_THIS channels[channel].drives[device].iolight_counter)
-          bx_pc_system.activate_timer( BX_HD_THIS iolight_timer_index, 100000, 0 );
+          bx_pc_system.activate_timer(BX_HD_THIS iolight_timer_index, 100000, 0);
         else
           bx_gui->statusbar_setitem(BX_HD_THIS channels[channel].drives[device].statusbar_id, 0);
       }
@@ -941,7 +940,7 @@ Bit32u bx_hard_drive_c::read(Bit32u address, unsigned io_len)
                   if (!BX_SELECTED_DRIVE(channel).iolight_counter)
                     bx_gui->statusbar_setitem(BX_SELECTED_DRIVE(channel).statusbar_id, 1);
                   BX_SELECTED_DRIVE(channel).iolight_counter = 5;
-                  bx_pc_system.activate_timer( BX_HD_THIS iolight_timer_index, 100000, 0 );
+                  bx_pc_system.activate_timer(BX_HD_THIS iolight_timer_index, 100000, 0);
                   if (!BX_SELECTED_DRIVE(channel).cdrom.cd->read_block(BX_SELECTED_CONTROLLER(channel).buffer,
                                                                        BX_SELECTED_DRIVE(channel).cdrom.next_lba,
                                                                        BX_SELECTED_CONTROLLER(channel).buffer_size))
@@ -1289,7 +1288,7 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
 
             quantumsMax =
               (BX_SELECTED_CONTROLLER(channel).buffer_size - BX_SELECTED_CONTROLLER(channel).buffer_index) / io_len;
-            if ( quantumsMax == 0)
+            if (quantumsMax == 0)
               BX_PANIC(("IO write(0x%04x): not enough space for write", address));
             DEV_bulk_io_quantum_transferred() =
                 DEV_bulk_io_quantum_requested();
@@ -2039,7 +2038,7 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
       // b4: DRV
       // b3..0 HD3..HD0
       {
-        if ( (value & 0xa0) != 0xa0 ) // 1x1xxxxx
+        if ((value & 0xa0) != 0xa0) // 1x1xxxxx
           BX_DEBUG(("IO write 0x%04x (%02x): not 1x1xxxxxb", address, (unsigned) value));
         Bit32u drvsel = BX_HD_THIS channels[channel].drive_select = (value >> 4) & 0x01;
         WRITE_HEAD_NO(channel,value & 0xf);
@@ -2064,7 +2063,7 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
         BX_ERROR(("ata%d: command 0x%02x sent, controller BSY bit set", channel, value));
         break;
       }
-      if ( (value & 0xf0) == 0x10 )
+      if ((value & 0xf0) == 0x10)
         value = 0x10;
       BX_SELECTED_CONTROLLER(channel).status.err = 0;
       switch (value) {
@@ -3310,7 +3309,7 @@ unsigned bx_hard_drive_c::get_cd_media_status(Bit32u handle)
 
   Bit8u channel = handle / 2;
   Bit8u device  = handle % 2;
-  return( BX_HD_THIS channels[channel].drives[device].cdrom.ready );
+  return BX_HD_THIS channels[channel].drives[device].cdrom.ready;
 }
 
 unsigned bx_hard_drive_c::set_cd_media_status(Bit32u handle, unsigned status)
@@ -3318,7 +3317,7 @@ unsigned bx_hard_drive_c::set_cd_media_status(Bit32u handle, unsigned status)
   char ata_name[20];
 
   BX_DEBUG (("set_cd_media_status handle=%d status=%d", handle, status));
-  if ( handle >= BX_MAX_ATA_CHANNEL*2 ) return 0;
+  if (handle >= BX_MAX_ATA_CHANNEL*2) return 0;
 
   Bit8u channel = handle / 2;
   Bit8u device  = handle % 2;
@@ -3346,7 +3345,7 @@ unsigned bx_hard_drive_c::set_cd_media_status(Bit32u handle, unsigned status)
     // insert cdrom
 #ifdef LOWLEVEL_CDROM
     if (BX_HD_THIS channels[channel].drives[device].cdrom.cd->insert_cdrom(SIM->get_param_string("path", base)->getptr())) {
-      BX_INFO(( "Media present in CD-ROM drive"));
+      BX_INFO(("Media present in CD-ROM drive"));
       BX_HD_THIS channels[channel].drives[device].cdrom.ready = 1;
       Bit32u capacity = BX_HD_THIS channels[channel].drives[device].cdrom.cd->capacity();
       BX_HD_THIS channels[channel].drives[device].cdrom.capacity = capacity;
@@ -3360,7 +3359,7 @@ unsigned bx_hard_drive_c::set_cd_media_status(Bit32u handle, unsigned status)
     else
 #endif
     {
-      BX_INFO(( "Could not locate CD-ROM, continuing with media not present"));
+      BX_INFO(("Could not locate CD-ROM, continuing with media not present"));
       BX_HD_THIS channels[channel].drives[device].cdrom.ready = 0;
       SIM->get_param_enum("status", base)->set(BX_EJECTED);
     }
@@ -3398,7 +3397,7 @@ bx_bool bx_hard_drive_c::bmdma_read_sector(Bit8u channel, Bit8u *buffer, Bit32u 
       if (!BX_SELECTED_DRIVE(channel).iolight_counter)
         bx_gui->statusbar_setitem(BX_SELECTED_DRIVE(channel).statusbar_id, 1);
       BX_SELECTED_DRIVE(channel).iolight_counter = 5;
-      bx_pc_system.activate_timer( BX_HD_THIS iolight_timer_index, 100000, 0 );
+      bx_pc_system.activate_timer(BX_HD_THIS iolight_timer_index, 100000, 0);
       if (!BX_SELECTED_DRIVE(channel).cdrom.cd->read_block(buffer, BX_SELECTED_DRIVE(channel).cdrom.next_lba,
                                                            BX_SELECTED_CONTROLLER(channel).buffer_size))
       {

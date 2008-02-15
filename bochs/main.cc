@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.373 2008-02-15 19:03:53 sshwarts Exp $
+// $Id: main.cc,v 1.374 2008-02-15 22:05:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -185,7 +185,7 @@ static void carbonFatalDialog(const char *error, const char *exposition)
     cfExposition,       /* can be NULL */
     &alertParam,             /* can be NULL */
     &alertDialog);
-  RunStandardAlert( alertDialog, NULL, &index);
+  RunStandardAlert(alertDialog, NULL, &index);
   // Cleanup
   CFRelease(cfError);
   if(cfExposition != NULL) { CFRelease(cfExposition); }
@@ -429,7 +429,7 @@ int RedirectIOToConsole()
   // redirect unbuffered STDERR to the console
   lStdHandle = (long)GetStdHandle(STD_ERROR_HANDLE);
   hConHandle = _open_osfhandle(lStdHandle, _O_TEXT);
-  fp = _fdopen( hConHandle, "w" );
+  fp = _fdopen(hConHandle, "w");
   *stderr = *fp;
   setvbuf(stderr, NULL, _IONBF, 0);
   return 1;
@@ -654,7 +654,7 @@ int bx_init_main(int argc, char *argv[])
     // our plugins into true frameworks and bundles either
     mainBundle = CFBundleGetMainBundle();
     BX_ASSERT(mainBundle != NULL);
-    libDir = CFBundleCopyAuxiliaryExecutableURL( mainBundle, CFSTR("lib"));
+    libDir = CFBundleCopyAuxiliaryExecutableURL(mainBundle, CFSTR("lib"));
     BX_ASSERT(libDir != NULL);
     // translate this to a unix style full path
     if(!CFURLGetFileSystemRepresentation(libDir, true, (UInt8 *)libDirPath, MAXPATHLEN))

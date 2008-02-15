@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: beos.cc,v 1.31 2008-02-05 22:57:41 sshwarts Exp $
+// $Id: beos.cc,v 1.32 2008-02-15 22:05:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -62,9 +62,7 @@ IMPLEMENT_GUI_PLUGIN_CODE(beos)
 
 #define LOG_THIS theGui->
 
-#define PAD_NEAREST(n, quantum) (( ((n) + ((quantum) - 1)) / (n) ) * (n))
-
-
+#define PAD_NEAREST(n, quantum) ((((n) + ((quantum) - 1)) / (n)) * (n))
 
 class BochsApplication : public BApplication {
 public:
@@ -213,7 +211,7 @@ bx_beos_gui_c::specific_init(int argc, char **argv,
   put("BGUI");
 
   if (SIM->get_param_bool(BXPN_PRIVATE_COLORMAP)->get()) {
-    BX_INFO(( "BeOS: private_colormap option not handled yet."));
+    BX_INFO(("BeOS: private_colormap option not handled yet."));
   }
 
   x_tilesize = tilewidth;
@@ -241,8 +239,8 @@ BX_INFO(("font_height = %u", (unsigned) font_height));
   // XSetBackground(bx_x_display, gc, col_vals[curr_background]);
   curr_foreground = 1;
   // XSetForeground(bx_x_display, gc, col_vals[curr_foreground]);
-  //XGrabPointer( bx_x_display, win, True, 0, GrabModeAsync, GrabModeAsync,
-  //  win, None, CurrentTime );
+  //XGrabPointer(bx_x_display, win, True, 0, GrabModeAsync, GrabModeAsync,
+  //  win, None, CurrentTime);
   //XFlush(bx_x_display);
 
   myApplication = new BochsApplication();
@@ -277,7 +275,7 @@ void bx_beos_gui_c::handle_events(void)
 {
   Bit32u key;
 
-  while ( head != tail ) {
+  while (head != tail) {
     key = deq_key_event();
     DEV_kbd_gen_scancode(key);
   }
@@ -299,7 +297,7 @@ void bx_beos_gui_c::handle_events(void)
       if (current != previous || mouse_button_state != newstate) {
         int dx = (int)(current.x - previous.x) *2;
         int dy = -(int)((current.y - previous.y) *2);
-        DEV_mouse_motion( dx, dy, newstate);
+        DEV_mouse_motion(dx, dy, newstate);
         mouse_button_state = newstate;
         previous = current;
       }
@@ -334,10 +332,10 @@ void bx_beos_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
   nchars = text_cols * text_rows;
 
   // first draw over character at original block cursor location
-  if ( (prev_block_cursor_y*text_cols + prev_block_cursor_x) < nchars ) {
+  if ((prev_block_cursor_y*text_cols + prev_block_cursor_x) < nchars) {
     achar = new_text[(prev_block_cursor_y*text_cols + prev_block_cursor_x)*2];
     point.Set(prev_block_cursor_x*8, prev_block_cursor_y*16 + bx_headerbar_y);
-    aView->DrawBitmap(vgafont[achar], point );
+    aView->DrawBitmap(vgafont[achar], point);
   }
 
   for (i=0; i<nchars*2; i+=2) {
@@ -350,7 +348,7 @@ void bx_beos_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
       y = (i/2) / text_cols;
 
       point.Set(x*8, y*16 + bx_headerbar_y);
-      aView->DrawBitmap(vgafont[achar], point );
+      aView->DrawBitmap(vgafont[achar], point);
     }
   }
 
@@ -362,7 +360,7 @@ void bx_beos_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
     achar = new_text[(cursor_y*text_cols + cursor_x)*2];
     point.Set(cursor_x*8, cursor_y*16 + bx_headerbar_y);
     aView->set_inv_text_colors();
-    aView->DrawBitmap(vgafont[achar], point );
+    aView->DrawBitmap(vgafont[achar], point);
     aView->set_text_colors();
   }
 
@@ -841,7 +839,7 @@ void BochsView::KeyDown(const char *bytes, int32 numBytes)
 #if 0
       case B_FUNCTION_KEY: break;
         msg->FindInt32("key", &key);
-        switch ( key ) {
+        switch (key) {
           case B_F1_KEY: break;
           case B_F2_KEY: break;
           case B_F3_KEY: break;
@@ -888,7 +886,7 @@ void BochsView::KeyDown(const char *bytes, int32 numBytes)
         break;
 
       default:
-        if ( (byte >= 0x01) && (byte <= 0x1a) ) {
+        if ((byte >= 0x01) && (byte <= 0x1a)) {
           // If the above keys dont catch this case, synthesize a
           // Ctrl-A .. Ctrl-Z event
           byte -= 1;
@@ -1035,7 +1033,7 @@ unsigned bx_beos_gui_c::headerbar_bitmap(unsigned bmap_id, unsigned alignment,
 {
   unsigned hb_index;
 
-  if ( (bx_headerbar_entries+1) > BX_MAX_HEADERBAR_ENTRIES )
+  if ((bx_headerbar_entries+1) > BX_MAX_HEADERBAR_ENTRIES)
     BX_PANIC(("beos: too many headerbar entries, increase BX_MAX_HEADERBAR_ENTRIES"));
 
   bx_headerbar_entries++;
@@ -1092,7 +1090,7 @@ void bx_beos_gui_c::show_headerbar(void)
     else
       xorigin = dimension_x - bx_headerbar_entry[i].xorigin;
     origin.Set(xorigin, 0);
-    aView->DrawBitmap( bx_headerbar_entry[i].bitmap, origin );
+    aView->DrawBitmap(bx_headerbar_entry[i].bitmap, origin);
   }
   aView->set_text_colors();
   aWindow->Unlock();
@@ -1109,7 +1107,7 @@ void headerbar_click(int x, int y)
       xorigin = bx_headerbar_entry[i].xorigin;
     else
       xorigin = dimension_x - bx_headerbar_entry[i].xorigin;
-    if ( (x>=xorigin) && (x<(xorigin+int(bx_headerbar_entry[i].xdim))) ) {
+    if ((x>=xorigin) && (x<(xorigin+int(bx_headerbar_entry[i].xdim)))) {
       bx_headerbar_entry[i].f();
       return;
     }
@@ -1123,7 +1121,7 @@ void create_vga_font(void)
   unsigned char *data;
   BRect brect(0,0, 7,15);
 
-  BX_INFO(( "BeOS: creating VGA font from bitmaps" ));
+  BX_INFO(("BeOS: creating VGA font from bitmaps"));
 
   // VGA font is 8wide x 16high
   for (unsigned c=0; c<256; c++) {

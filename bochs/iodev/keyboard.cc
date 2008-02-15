@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.cc,v 1.132 2008-01-26 22:24:02 sshwarts Exp $
+// $Id: keyboard.cc,v 1.133 2008-02-15 22:05:42 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -23,7 +23,7 @@
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
-
+/////////////////////////////////////////////////////////////////////////
 
 // Now features proper implementation of keyboard opcodes 0xF4 to 0xF6
 // Silently ignores PS/2 keyboard extensions (0xF7 to 0xFD)
@@ -126,7 +126,7 @@ void bx_keyb_c::resetinternals(bx_bool powerup)
 
 void bx_keyb_c::init(void)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.132 2008-01-26 22:24:02 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.133 2008-02-15 22:05:42 sshwarts Exp $"));
   Bit32u   i;
 
   DEV_register_irq(1, "8042 Keyboard controller");
@@ -140,7 +140,7 @@ void bx_keyb_c::init(void)
                                       0x0060, "8042 Keyboard controller", 1);
   DEV_register_iowrite_handler(this, write_handler,
                                       0x0064, "8042 Keyboard controller", 1);
-  BX_KEY_THIS timer_handle = bx_pc_system.register_timer( this, timer_handler,
+  BX_KEY_THIS timer_handle = bx_pc_system.register_timer(this, timer_handler,
                                  SIM->get_param_num(BXPN_KBD_SERIAL_DELAY)->get(), 1, 1,
 				 "8042 Keyboard controller");
 
@@ -544,7 +544,7 @@ void bx_keyb_c::write(Bit32u address, Bit32u value, unsigned io_len)
             else if (BX_KEY_THIS s.kbd_controller.allow_irq1  && BX_KEY_THIS s.kbd_controller.outb)
               BX_KEY_THIS s.kbd_controller.irq1_requested = 1;
 
-            BX_DEBUG(( " allow_irq12 set to %u",
+            BX_DEBUG((" allow_irq12 set to %u",
               (unsigned) BX_KEY_THIS s.kbd_controller.allow_irq12));
             if (!scan_convert)
               BX_INFO(("keyboard: scan convert turned off"));
@@ -559,7 +559,7 @@ void bx_keyb_c::write(Bit32u address, Bit32u value, unsigned io_len)
             BX_SET_ENABLE_A20((value & 0x02) != 0);
             if (!(value & 0x01)) {
               BX_INFO(("write output port : processor reset requested!"));
-              bx_pc_system.Reset( BX_RESET_SOFTWARE);
+              bx_pc_system.Reset(BX_RESET_SOFTWARE);
             }
             break;
           case 0xd4: // Write to mouse
@@ -1086,14 +1086,14 @@ void bx_keyb_c::kbd_ctrl_to_kbd(Bit8u value)
 
   if (BX_KEY_THIS s.kbd_controller.expecting_scancodes_set) {
     BX_KEY_THIS s.kbd_controller.expecting_scancodes_set = 0;
-    if( value != 0 ) {
-      if( value<4 ) {
+    if(value != 0) {
+      if(value < 4) {
         BX_KEY_THIS s.kbd_controller.current_scancodes_set = (value-1);
         BX_INFO(("Switched to scancode set %d",
           (unsigned) BX_KEY_THIS s.kbd_controller.current_scancodes_set + 1));
         kbd_enQ(0xFA);
       } else {
-        BX_ERROR(("Received scancodes set out of range: %d", value ));
+        BX_ERROR(("Received scancodes set out of range: %d", value));
         kbd_enQ(0xFF); // send ERROR
       }
     } else {
@@ -1222,11 +1222,11 @@ unsigned bx_keyb_c::periodic(Bit32u usec_delta)
 {
 /*  static int multiple=0; */
   static unsigned count_before_paste=0;
-  Bit8u   retval;
+  Bit8u  retval;
 
-  UNUSED( usec_delta );
+  UNUSED(usec_delta);
 
-  if (BX_KEY_THIS s.kbd_controller.kbd_clock_enabled ) {
+  if (BX_KEY_THIS s.kbd_controller.kbd_clock_enabled) {
     if(++count_before_paste>=BX_KEY_THIS pastedelay) {
       // after the paste delay, consider adding moving more chars
       // from the paste buffer to the keyboard buffer.
@@ -1555,7 +1555,7 @@ void bx_keyb_c::create_mouse_packet(bool force_enq)
 
   b1 = (button_state & 0x0f) | 0x08; // bit3 always set
 
-  if ( (delta_x>=0) && (delta_x<=255) ) {
+  if ((delta_x>=0) && (delta_x<=255)) {
     b2 = (Bit8u) delta_x;
     BX_KEY_THIS s.mouse.delayed_dx-=delta_x;
   }
@@ -1574,7 +1574,7 @@ void bx_keyb_c::create_mouse_packet(bool force_enq)
     BX_KEY_THIS s.mouse.delayed_dx+=256;
   }
 
-  if ( (delta_y>=0) && (delta_y<=255) ) {
+  if ((delta_y>=0) && (delta_y<=255)) {
     b3 = (Bit8u) delta_y;
     BX_KEY_THIS s.mouse.delayed_dy-=delta_y;
   }
@@ -1654,7 +1654,7 @@ void bx_keyb_c::mouse_motion(int delta_x, int delta_y, int delta_z, unsigned but
 #endif
 
   // don't generate interrupts if we are in remote mode.
-  if ( BX_KEY_THIS s.mouse.mode == MOUSE_MODE_REMOTE)
+  if (BX_KEY_THIS s.mouse.mode == MOUSE_MODE_REMOTE)
     // is there any point in doing any work if we don't act on the result
     // so go home.
     return;
@@ -1677,7 +1677,7 @@ void bx_keyb_c::mouse_motion(int delta_x, int delta_y, int delta_z, unsigned but
     BX_DEBUG(("[mouse] Dx=%d Dy=%d Dz=%d", delta_x, delta_y, delta_z));
 #endif  /* ifdef VERBOSE_KBD_DEBUG */
 
-  if( (delta_x==0) && (delta_y==0) && (delta_z==0) && (BX_KEY_THIS s.mouse.button_status == (button_state & 0x7) ) ) {
+  if ((delta_x==0) && (delta_y==0) && (delta_z==0) && (BX_KEY_THIS s.mouse.button_status == (button_state & 0x7))) {
     BX_DEBUG(("Ignoring useless mouse_motion call:"));
     BX_DEBUG(("This should be fixed in the gui code."));
     return;

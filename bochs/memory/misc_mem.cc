@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: misc_mem.cc,v 1.109 2008-02-03 20:27:06 sshwarts Exp $
+// $Id: misc_mem.cc,v 1.110 2008-02-15 22:05:43 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -90,7 +90,7 @@ void BX_MEM_C::init_memory(Bit32u memsize)
 {
   unsigned idx;
 
-  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.109 2008-02-03 20:27:06 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.110 2008-02-15 22:05:43 sshwarts Exp $"));
 
   alloc_vector_aligned(memsize+ BIOSROMSZ + EXROMSIZE  + 4096, BX_MEM_VECTOR_ALIGN);
   BX_MEM_THIS len  = memsize;
@@ -187,13 +187,13 @@ void BX_MEM_C::load_ROM(const char *path, bx_phy_address romaddress, Bit8u type)
 
   if (*path == '\0') {
     if (type == 2) {
-      BX_PANIC(( "ROM: Optional ROM image undefined"));
+      BX_PANIC(("ROM: Optional ROM image undefined"));
     }
     else if (type == 1) {
-      BX_PANIC(( "ROM: VGA BIOS image undefined"));
+      BX_PANIC(("ROM: VGA BIOS image undefined"));
     }
     else {
-      BX_PANIC(( "ROM: System BIOS image undefined"));
+      BX_PANIC(("ROM: System BIOS image undefined"));
     }
     return;
   }
@@ -205,20 +205,20 @@ void BX_MEM_C::load_ROM(const char *path, bx_phy_address romaddress, Bit8u type)
            );
   if (fd < 0) {
     if (type < 2) {
-      BX_PANIC(( "ROM: couldn't open ROM image file '%s'.", path));
+      BX_PANIC(("ROM: couldn't open ROM image file '%s'.", path));
     }
     else {
-      BX_ERROR(( "ROM: couldn't open ROM image file '%s'.", path));
+      BX_ERROR(("ROM: couldn't open ROM image file '%s'.", path));
     }
     return;
   }
   ret = fstat(fd, &stat_buf);
   if (ret) {
     if (type < 2) {
-      BX_PANIC(( "ROM: couldn't stat ROM image file '%s'.", path));
+      BX_PANIC(("ROM: couldn't stat ROM image file '%s'.", path));
     }
     else {
-      BX_ERROR(( "ROM: couldn't stat ROM image file '%s'.", path));
+      BX_ERROR(("ROM: couldn't stat ROM image file '%s'.", path));
     }
     return;
   }
@@ -289,7 +289,7 @@ void BX_MEM_C::load_ROM(const char *path, bx_phy_address romaddress, Bit8u type)
   while (size > 0) {
     ret = read(fd, (bx_ptr_t) &BX_MEM_THIS rom[offset], size);
     if (ret <= 0) {
-      BX_PANIC(( "ROM: read failed on BIOS image: '%s'",path));
+      BX_PANIC(("ROM: read failed on BIOS image: '%s'",path));
     }
     size -= ret;
     offset += ret;
@@ -304,9 +304,9 @@ void BX_MEM_C::load_ROM(const char *path, bx_phy_address romaddress, Bit8u type)
     }
     if (checksum != 0) {
       if (type == 1) {
-        BX_PANIC(( "ROM: checksum error in VGABIOS image: '%s'", path));
+        BX_PANIC(("ROM: checksum error in VGABIOS image: '%s'", path));
       } else if (is_bochs_bios) {
-        BX_ERROR(( "ROM: checksum error in BIOS image: '%s'", path));
+        BX_ERROR(("ROM: checksum error in BIOS image: '%s'", path));
       }
     }
   }
@@ -323,7 +323,7 @@ void BX_MEM_C::load_RAM(const char *path, bx_phy_address ramaddress, Bit8u type)
   unsigned long size, offset;
 
   if (*path == '\0') {
-    BX_PANIC(( "RAM: Optional RAM image undefined"));
+    BX_PANIC(("RAM: Optional RAM image undefined"));
     return;
   }
   // read in RAM BIOS image file
@@ -333,12 +333,12 @@ void BX_MEM_C::load_RAM(const char *path, bx_phy_address ramaddress, Bit8u type)
 #endif
            );
   if (fd < 0) {
-    BX_PANIC(( "RAM: couldn't open RAM image file '%s'.", path));
+    BX_PANIC(("RAM: couldn't open RAM image file '%s'.", path));
     return;
   }
   ret = fstat(fd, &stat_buf);
   if (ret) {
-    BX_PANIC(( "RAM: couldn't stat RAM image file '%s'.", path));
+    BX_PANIC(("RAM: couldn't stat RAM image file '%s'.", path));
     return;
   }
 
@@ -348,7 +348,7 @@ void BX_MEM_C::load_RAM(const char *path, bx_phy_address ramaddress, Bit8u type)
   while (size > 0) {
     ret = read(fd, (bx_ptr_t) &BX_MEM_THIS vector[offset], size);
     if (ret <= 0) {
-      BX_PANIC(( "RAM: read failed on RAM image: '%s'",path));
+      BX_PANIC(("RAM: read failed on RAM image: '%s'",path));
     }
     size -= ret;
     offset += ret;
@@ -362,7 +362,7 @@ void BX_MEM_C::load_RAM(const char *path, bx_phy_address ramaddress, Bit8u type)
 #endif // #if BX_PROVIDE_CPU_MEMORY
 
 
-#if ( BX_DEBUGGER || BX_DISASM || BX_GDBSTUB)
+#if (BX_DEBUGGER || BX_DISASM || BX_GDBSTUB)
 bx_bool BX_MEM_C::dbg_fetch_mem(BX_CPU_C *cpu, bx_phy_address addr, unsigned len, Bit8u *buf)
 {
   bx_bool ret = 1;
@@ -576,7 +576,7 @@ Bit8u *BX_MEM_C::getHostMemAddr(BX_CPU_C *cpu, bx_phy_address a20Addr, unsigned 
       }
       else
       {
-        return( (Bit8u *) &BX_MEM_THIS rom[(a20Addr & EXROM_MASK) + BIOSROMSZ]);
+        return((Bit8u *) &BX_MEM_THIS rom[(a20Addr & EXROM_MASK) + BIOSROMSZ]);
       }
     }
     else if (a20Addr >= (bx_phy_address)~BIOS_MASK)

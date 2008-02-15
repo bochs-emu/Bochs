@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_tuntap.cc,v 1.27 2008-01-26 22:24:01 sshwarts Exp $
+// $Id: eth_tuntap.cc,v 1.28 2008-02-15 22:05:42 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -23,6 +23,8 @@
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+//
+/////////////////////////////////////////////////////////////////////////
 
 // eth_tuntap.cc  - TUN/TAP interface by Renzo Davoli <renzo@cs.unibo.it>
 
@@ -133,28 +135,28 @@ bx_tuntap_pktmover_c::bx_tuntap_pktmover_c(const char *netif,
 
   // check if the TUN/TAP devices is running, and turn on ARP.  This is based
   // on code from the Mac-On-Linux project. http://http://www.maconlinux.org/
-  int sock = socket( AF_INET, SOCK_DGRAM, 0 );
+  int sock = socket(AF_INET, SOCK_DGRAM, 0);
   if (sock < 0) {
     BX_PANIC (("socket creation: %s", strerror(errno)));
     return;
   }
   struct ifreq ifr;
-  memset( &ifr, 0, sizeof(ifr) );
-  strncpy( ifr.ifr_name, netif, sizeof(ifr.ifr_name) );
-  if( ioctl( sock, SIOCGIFFLAGS, &ifr ) < 0 ){
+  memset(&ifr, 0, sizeof(ifr));
+  strncpy(ifr.ifr_name, netif, sizeof(ifr.ifr_name));
+  if (ioctl(sock, SIOCGIFFLAGS, &ifr) < 0) {
     BX_PANIC (("SIOCGIFFLAGS on %s: %s", netif, strerror (errno)));
     close(sock);
     return;
   }
-  if( !(ifr.ifr_flags & IFF_RUNNING ) ){
+  if (!(ifr.ifr_flags & IFF_RUNNING)) {
     BX_PANIC (("%s device is not running", netif));
     close(sock);
     return;
   }
-  if( (ifr.ifr_flags & IFF_NOARP ) ){
+  if ((ifr.ifr_flags & IFF_NOARP)) {
     BX_INFO (("turn on ARP for %s device", netif));
     ifr.ifr_flags &= ~IFF_NOARP;
-    if( ioctl( sock, SIOCSIFFLAGS, &ifr ) < 0 ) {
+    if (ioctl(sock, SIOCSIFFLAGS, &ifr) < 0) {
       BX_PANIC (("SIOCSIFFLAGS: %s", strerror(errno)));
       close(sock);
       return;
@@ -168,28 +170,27 @@ bx_tuntap_pktmover_c::bx_tuntap_pktmover_c(const char *netif,
   strcpy(intname,netif);
   fd=tun_alloc(intname);
   if (fd < 0) {
-    BX_PANIC (("open failed on %s: %s", netif, strerror (errno)));
+    BX_PANIC(("open failed on %s: %s", netif, strerror (errno)));
     return;
   }
 
   /* set O_ASYNC flag so that we can poll with read() */
-  if ((flags = fcntl( fd, F_GETFL)) < 0) {
+  if ((flags = fcntl(fd, F_GETFL)) < 0) {
     BX_PANIC (("getflags on tun device: %s", strerror (errno)));
   }
   flags |= O_NONBLOCK;
-  if (fcntl( fd, F_SETFL, flags ) < 0) {
-    BX_PANIC (("set tun device flags: %s", strerror (errno)));
+  if (fcntl(fd, F_SETFL, flags) < 0) {
+    BX_PANIC(("set tun device flags: %s", strerror (errno)));
   }
 
-  BX_INFO (("eth_tuntap: opened %s device", netif));
+  BX_INFO(("eth_tuntap: opened %s device", netif));
 
   /* Execute the configuration script */
-  if((script != NULL)
-   &&(strcmp(script, "") != 0)
-   &&(strcmp(script, "none") != 0)) {
+  if((script != NULL) && (strcmp(script, "") != 0) && (strcmp(script, "none") != 0))
+  {
     if (execute_script(script, intname) < 0)
       BX_ERROR (("execute script '%s' on %s failed", script, intname));
-    }
+  }
 
   // Start the rx poll
   this->rx_timer_index =
@@ -228,8 +229,7 @@ bx_tuntap_pktmover_c::bx_tuntap_pktmover_c(const char *netif,
 #endif
 }
 
-void
-bx_tuntap_pktmover_c::sendpkt(void *buf, unsigned io_len)
+void bx_tuntap_pktmover_c::sendpkt(void *buf, unsigned io_len)
 {
 #ifdef __APPLE__	//FIXME
   unsigned int size = write (fd, (char*)buf+14, io_len-14);
@@ -359,7 +359,6 @@ void bx_tuntap_pktmover_c::rx_timer ()
   (*rxh)(rxarg, rxbuf, nbytes);
 }
 
-
 int tun_alloc(char *dev)
 {
   struct ifreq ifr;
@@ -369,10 +368,10 @@ int tun_alloc(char *dev)
   // split name into device:ifname if applicable, to allow for opening
   // persistent tuntap devices
   for (ifname = dev; *ifname; ifname++) {
-	  if (*ifname == ':') {
-		  *(ifname++) = '\0';
-		  break;
-	  }
+    if (*ifname == ':') {
+       *(ifname++) = '\0';
+        break;
+    }
   }
   if ((fd = open(dev, O_RDWR)) < 0)
     return -1;
@@ -393,7 +392,7 @@ int tun_alloc(char *dev)
   strncpy(dev, ifr.ifr_name, IFNAMSIZ);
   dev[IFNAMSIZ-1]=0;
 
-  ioctl( fd, TUNSETNOCSUM, 1 );
+  ioctl(fd, TUNSETNOCSUM, 1);
 #endif
 
   return fd;

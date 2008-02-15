@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: virt_timer.cc,v 1.36 2008-01-26 22:24:03 sshwarts Exp $
+// $Id: virt_timer.cc,v 1.37 2008-02-15 22:05:43 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -23,6 +23,7 @@
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+////////////////////////////////////////////////////////////////////////
 
 /////////////////////////////////////////////////////////////////////////
 //
@@ -127,8 +128,8 @@ bx_virt_timer_c bx_virt_timer;
 
 
 //Conversion between emulated useconds and optionally realtime ticks.
-#define TICKS_TO_USEC(a) ( ((a)*usec_per_second)/ticks_per_second )
-#define USEC_TO_TICKS(a) ( ((a)*ticks_per_second)/usec_per_second )
+#define TICKS_TO_USEC(a) (((a)*usec_per_second)/ticks_per_second)
+#define USEC_TO_TICKS(a) (((a)*ticks_per_second)/usec_per_second)
 
 bx_virt_timer_c::bx_virt_timer_c()
 {
@@ -390,8 +391,8 @@ void bx_virt_timer_c::setup(void)
 
 void bx_virt_timer_c::init(void)
 {
-  if ( (SIM->get_param_enum(BXPN_CLOCK_SYNC)->get()!=BX_CLOCK_SYNC_REALTIME)
-    && (SIM->get_param_enum(BXPN_CLOCK_SYNC)->get()!=BX_CLOCK_SYNC_BOTH) )
+  if ((SIM->get_param_enum(BXPN_CLOCK_SYNC)->get()!=BX_CLOCK_SYNC_REALTIME) &&
+      (SIM->get_param_enum(BXPN_CLOCK_SYNC)->get()!=BX_CLOCK_SYNC_BOTH))
     virtual_timers_realtime = 0;
   else
     virtual_timers_realtime = 1;

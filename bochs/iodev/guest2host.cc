@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: guest2host.cc,v 1.15 2006-03-07 18:16:40 sshwarts Exp $
+// $Id: guest2host.cc,v 1.16 2008-02-15 22:05:42 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -23,8 +23,7 @@
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
-
-
+/////////////////////////////////////////////////////////////////////////
 
 #include "iodev.h"
 #define LOG_THIS  bx_g2h.
@@ -50,7 +49,7 @@ bx_g2h_c::~bx_g2h_c()
 
 void bx_g2h_c::init(void)
 {
-  BX_DEBUG(("Init $Id: guest2host.cc,v 1.15 2006-03-07 18:16:40 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: guest2host.cc,v 1.16 2008-02-15 22:05:42 sshwarts Exp $"));
   // Reserve a dword port for this interface
   for (Bit32u addr=BX_G2H_PORT; addr<=(BX_G2H_PORT+3); addr++) {
     bx_devices.register_io_read_handler(&bx_g2h,
@@ -83,8 +82,8 @@ unsigned bx_g2h_c::acquire_channel(bx_g2h_callback_t f)
 
 unsigned bx_g2h_c::deacquire_channel(unsigned channel)
 {
-  if ( (channel >= BX_MAX_G2H_CHANNELS) ||
-       (bx_g2h.s.callback[channel].used==0) )
+  if ((channel >= BX_MAX_G2H_CHANNELS) ||
+      (bx_g2h.s.callback[channel].used==0))
   {
     BX_PANIC(("g2h: attempt to deacquire channel %u: not acquired", channel));
   }
@@ -119,7 +118,7 @@ void bx_g2h_c::outp_handler(void *this_ptr, Bit32u addr, Bit32u val32, unsigned 
   if (io_len != 4)
     BX_PANIC(("g2h: IO write not dword."));
 
-  if ( (bx_g2h.s.packet_count==0) && (val32!=BX_G2H_MAGIC) ) {
+  if ((bx_g2h.s.packet_count==0) && (val32!=BX_G2H_MAGIC)) {
     BX_INFO(("g2h: IO W: Not magic header."));
     return;
   }

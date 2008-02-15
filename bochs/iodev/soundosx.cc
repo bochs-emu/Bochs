@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: soundosx.cc,v 1.8 2008-01-26 22:24:02 sshwarts Exp $
+// $Id: soundosx.cc,v 1.9 2008-02-15 22:05:43 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 // This file (SOUNDOSX.CC) written and donated by Brian Huffman
@@ -126,14 +126,14 @@ int bx_sound_osx_c::openmidioutput(char *device)
     // Start playing
     AUGraphStart (MidiGraph);
 #endif
-    WRITELOG( WAVELOG(4), "openmidioutput(%s)", device);
+    WRITELOG(WAVELOG(4), "openmidioutput(%s)", device);
     MidiOpen = 1;
     return BX_SOUND_OUTPUT_OK;
 }
 
 int bx_sound_osx_c::sendmidicommand(int delta, int command, int length, Bit8u data[])
 {
-    WRITELOG( WAVELOG(5), "sendmidicommand(%i,%02x,%i)", delta, command, length);
+    WRITELOG(WAVELOG(5), "sendmidicommand(%i,%02x,%i)", delta, command, length);
     if (!MidiOpen) return BX_SOUND_OUTPUT_ERR;
 
 #ifdef BX_SOUND_OSX_use_converter
@@ -151,7 +151,7 @@ int bx_sound_osx_c::sendmidicommand(int delta, int command, int length, Bit8u da
 
 int bx_sound_osx_c::closemidioutput()
 {
-    WRITELOG( WAVELOG(4), "closemidioutput()");
+    WRITELOG(WAVELOG(4), "closemidioutput()");
     MidiOpen = 0;
 #ifdef BX_SOUND_OSX_use_converter
     AUGraphStop (MidiGraph);
@@ -176,7 +176,7 @@ int bx_sound_osx_c::openwaveoutput(char *device)
 {
     OSStatus err;
 
-    WRITELOG( WAVELOG(4), "openwaveoutput(%s)", device);
+    WRITELOG(WAVELOG(4), "openwaveoutput(%s)", device);
 
     // open the default output unit
 #ifdef BX_SOUND_OSX_use_quicktime
@@ -208,7 +208,7 @@ int bx_sound_osx_c::startwaveplayback(int frequency, int bits, int stereo, int f
     UInt32 formatSize = sizeof(AudioStreamBasicDescription);
 #endif
 
-    WRITELOG( WAVELOG(4), "startwaveplayback(%d, %d, %d, %x)", frequency, bits, stereo, format);
+    WRITELOG(WAVELOG(4), "startwaveplayback(%d, %d, %d, %x)", frequency, bits, stereo, format);
 
 #ifdef BX_SOUND_OSX_use_quicktime
     WaveInfo.samplePtr = NULL;
@@ -228,10 +228,10 @@ int bx_sound_osx_c::startwaveplayback(int frequency, int bits, int stereo, int f
 #endif
 
 #ifdef BX_SOUND_OSX_use_converter
-    if ( (frequency == oldfreq) &&
+    if ((frequency == oldfreq) &&
         (bits == oldbits) &&
         (stereo == oldstereo) &&
-        (format == oldformat) )
+        (format == oldformat))
         return BX_SOUND_OUTPUT_OK;    // nothing to do
 
     oldfreq = frequency;
@@ -299,7 +299,7 @@ int bx_sound_osx_c::sendwavepacket(int length, Bit8u data[])
     SndCommand mySndCommand;
 #endif
 
-    WRITELOG( WAVELOG(4), "sendwavepacket(%d, %p), head=%u", length, data, head);
+    WRITELOG(WAVELOG(4), "sendwavepacket(%d, %p), head=%u", length, data, head);
 
     // sanity check
     if ((!WaveOpen) || (head - tail >= BX_SOUND_OSX_NBUF))
@@ -380,7 +380,7 @@ OSStatus MyACInputProc (AudioConverterRef inAudioConverter,
 
 void bx_sound_osx_c::nextbuffer (int *outDataSize, void **outData)
 {
-    WRITELOG( WAVELOG(4), "nextbuffer(), tail=%u", tail);
+    WRITELOG(WAVELOG(4), "nextbuffer(), tail=%u", tail);
     if (head - tail <= 0) {
         *outData = NULL;
         *outDataSize = 0;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pc_system.cc,v 1.68 2007-11-01 18:03:48 sshwarts Exp $
+// $Id: pc_system.cc,v 1.69 2008-02-15 22:05:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -258,7 +258,7 @@ void bx_pc_system_c::register_state(void)
 // Bochs internal timer delivery framework features
 // ================================================
 
-int bx_pc_system_c::register_timer( void *this_ptr, void (*funct)(void *),
+int bx_pc_system_c::register_timer(void *this_ptr, void (*funct)(void *),
   Bit32u useconds, bx_bool continuous, bx_bool active, const char *id)
 {
   // Convert useconds to number of ticks.

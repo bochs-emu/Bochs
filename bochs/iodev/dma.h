@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dma.h,v 1.21 2007-09-28 19:51:59 sshwarts Exp $
+// $Id: dma.h,v 1.22 2008-02-15 22:05:42 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -64,8 +64,8 @@ private:
   static Bit32u read_handler(void *this_ptr, Bit32u address, unsigned io_len);
   static void   write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len);
 #if !BX_USE_DMA_SMF
-  Bit32u   read( Bit32u   address, unsigned io_len) BX_CPP_AttrRegparmN(2);
-  void     write(Bit32u   address, Bit32u   value, unsigned io_len) BX_CPP_AttrRegparmN(3);
+  Bit32u   read (Bit32u address, unsigned io_len) BX_CPP_AttrRegparmN(2);
+  void     write(Bit32u address, Bit32u   value, unsigned io_len) BX_CPP_AttrRegparmN(3);
 #endif
   BX_DMA_SMF void control_HRQ(bx_bool ma_sl);
   BX_DMA_SMF void reset_controller(unsigned num);

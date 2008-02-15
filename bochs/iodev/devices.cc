@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: devices.cc,v 1.119 2008-01-26 22:24:00 sshwarts Exp $
+// $Id: devices.cc,v 1.120 2008-02-15 22:05:42 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -122,7 +122,7 @@ void bx_devices_c::init(BX_MEM_C *newmem)
   unsigned i;
   const char def_name[] = "Default";
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.119 2008-01-26 22:24:00 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.120 2008-02-15 22:05:42 sshwarts Exp $"));
   mem = newmem;
 
   /* set no-default handlers, will be overwritten by the real default handler */
@@ -302,16 +302,16 @@ void bx_devices_c::init(BX_MEM_C *newmem)
 
   DEV_cmos_set_reg(0x15, (Bit8u) BASE_MEMORY_IN_K);
   DEV_cmos_set_reg(0x16, (Bit8u) (BASE_MEMORY_IN_K >> 8));
-  DEV_cmos_set_reg(0x17, (Bit8u) (extended_memory_in_k & 0xff) );
-  DEV_cmos_set_reg(0x18, (Bit8u) ((extended_memory_in_k >> 8) & 0xff) );
-  DEV_cmos_set_reg(0x30, (Bit8u) (extended_memory_in_k & 0xff) );
-  DEV_cmos_set_reg(0x31, (Bit8u) ((extended_memory_in_k >> 8) & 0xff) );
+  DEV_cmos_set_reg(0x17, (Bit8u) (extended_memory_in_k & 0xff));
+  DEV_cmos_set_reg(0x18, (Bit8u) ((extended_memory_in_k >> 8) & 0xff));
+  DEV_cmos_set_reg(0x30, (Bit8u) (extended_memory_in_k & 0xff));
+  DEV_cmos_set_reg(0x31, (Bit8u) ((extended_memory_in_k >> 8) & 0xff));
 
   Bit32u extended_memory_in_64k = mem->get_memory_in_k() > 16384 ? (mem->get_memory_in_k() - 16384) / 64 : 0;
   if (extended_memory_in_64k > 0xffff) extended_memory_in_64k = 0xffff;
 
-  DEV_cmos_set_reg(0x34, (Bit8u) (extended_memory_in_64k & 0xff) );
-  DEV_cmos_set_reg(0x35, (Bit8u) ((extended_memory_in_64k >> 8) & 0xff) );
+  DEV_cmos_set_reg(0x34, (Bit8u) (extended_memory_in_64k & 0xff));
+  DEV_cmos_set_reg(0x35, (Bit8u) ((extended_memory_in_64k >> 8) & 0xff));
 
   if (timer_handle != BX_NULL_TIMER_HANDLE) {
     timer_handle = bx_pc_system.register_timer(this, timer_handler,
@@ -467,7 +467,7 @@ void bx_devices_c::port92_write(Bit32u address, Bit32u value, unsigned io_len)
 
   BX_DEBUG(("port92h write of %02x partially supported!!!", (unsigned) value));
   BX_DEBUG(("A20: set_enable_a20() called"));
-  BX_SET_ENABLE_A20( (value & 0x02) >> 1 );
+  BX_SET_ENABLE_A20((value & 0x02) >> 1);
   BX_DEBUG(("A20: now %u", (unsigned) BX_GET_ENABLE_A20()));
   if (value & 0x01) { /* high speed reset */
     BX_INFO(("iowrite to port0x92 : reset resquested"));

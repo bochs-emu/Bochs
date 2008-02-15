@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: plugin.h,v 1.61 2008-02-05 22:57:40 sshwarts Exp $
+// $Id: plugin.h,v 1.62 2008-02-15 22:05:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This file provides macros and types needed for plugins.  It is based on
@@ -315,24 +315,24 @@ BOCHSAPI extern void  (* pluginVGASetUpdateInterval)(unsigned);
 BOCHSAPI extern Bit8u (* pluginVGAGetActlPaletteIdx)(Bit8u index);
 
 /* === Timer stuff === */
-BOCHSAPI extern int      (*pluginRegisterTimer)(void *this_ptr, void (*funct)(void *),
+BOCHSAPI extern int     (*pluginRegisterTimer)(void *this_ptr, void (*funct)(void *),
                              Bit32u useconds, bx_bool continuous,
                              bx_bool active, const char *name);
 
-BOCHSAPI extern void     (*pluginActivateTimer)(unsigned id, Bit32u usec, bx_bool continuous);
-BOCHSAPI extern void     (*pluginDeactivateTimer)(unsigned id);
+BOCHSAPI extern void    (*pluginActivateTimer)(unsigned id, Bit32u usec, bx_bool continuous);
+BOCHSAPI extern void    (*pluginDeactivateTimer)(unsigned id);
 
 /* === HRQ stuff === */
-BOCHSAPI extern void     (*pluginSetHRQ)(unsigned val);
-BOCHSAPI extern void     (*pluginSetHRQHackCallback)( void (*callback)(void) );
+BOCHSAPI extern void    (*pluginSetHRQ)(unsigned val);
+BOCHSAPI extern void    (*pluginSetHRQHackCallback)(void (*callback)(void));
 
 /* === PCI stuff === */
-BOCHSAPI extern bx_bool  (*pluginRegisterPCIDevice)(void *this_ptr,
+BOCHSAPI extern bx_bool (*pluginRegisterPCIDevice)(void *this_ptr,
                              Bit32u (*bx_pci_read_handler)(void *, Bit8u, unsigned),
                              void(*bx_pci_write_handler)(void *, Bit8u, Bit32u, unsigned),
                              Bit8u *devfunc, const char *name, const char *descr);
-BOCHSAPI extern Bit8u    (*pluginRd_memType)(Bit32u addr);
-BOCHSAPI extern Bit8u    (*pluginWr_memType)(Bit32u addr);
+BOCHSAPI extern Bit8u   (*pluginRd_memType)(Bit32u addr);
+BOCHSAPI extern Bit8u   (*pluginWr_memType)(Bit32u addr);
 
 void plugin_abort(void);
 
@@ -341,8 +341,8 @@ extern void bx_unload_plugin(const char *name);
 extern void bx_init_plugins(void);
 extern void bx_reset_plugins(unsigned);
 extern void bx_unload_plugins(void);
-extern void bx_plugins_register_state();
-extern void bx_plugins_after_restore_state();
+extern void bx_plugins_register_state(void);
+extern void bx_plugins_after_restore_state(void);
 
 // every plugin must define these, within the extern"C" block, so that
 // a non-mangled function symbol is available in the shared library.

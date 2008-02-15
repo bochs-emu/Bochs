@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxdialog.cc,v 1.104 2008-02-05 22:57:41 sshwarts Exp $
+// $Id: wxdialog.cc,v 1.105 2008-02-15 22:05:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
@@ -148,7 +148,7 @@ void LogMsgAskDialog::OnEvent(wxCommandEvent& event)
 
 void LogMsgAskDialog::ShowHelp()
 {
-  wxMessageBox(MSG_NO_HELP, MSG_NO_HELP_CAPTION, wxOK | wxICON_ERROR, this );
+  wxMessageBox(MSG_NO_HELP, MSG_NO_HELP_CAPTION, wxOK | wxICON_ERROR, this);
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -383,9 +383,8 @@ void FloppyConfigDialog::OnEvent(wxCommandEvent& event)
 
 void FloppyConfigDialog::ShowHelp()
 {
-  wxMessageBox(MSG_NO_HELP, MSG_NO_HELP_CAPTION, wxOK | wxICON_ERROR, this );
+  wxMessageBox(MSG_NO_HELP, MSG_NO_HELP_CAPTION, wxOK | wxICON_ERROR, this);
 }
-
 
 //////////////////////////////////////////////////////////////////////
 // AdvancedLogOptionsDialog implementation
@@ -629,9 +628,8 @@ void AdvancedLogOptionsDialog::OnEvent(wxCommandEvent& event)
 
 void AdvancedLogOptionsDialog::ShowHelp()
 {
-  wxMessageBox(MSG_NO_HELP, MSG_NO_HELP_CAPTION, wxOK | wxICON_ERROR, this );
+  wxMessageBox(MSG_NO_HELP, MSG_NO_HELP_CAPTION, wxOK | wxICON_ERROR, this);
 }
-
 
 #if BX_DEBUGGER
 //////////////////////////////////////////////////////////////////////
@@ -1153,18 +1151,18 @@ bool ParamDialog::CopyGuiToParam()
           n = GetTextCtrlInt(pstr->u.text, &valid, true, complaint);
         }
         if ((n < nump->get_min()) || (n > nump->get_max())) {
-          wxMessageBox(wxT("Numerical parameter out of range"), wxT("Error"), wxOK | wxICON_ERROR, this );
+          wxMessageBox(wxT("Numerical parameter out of range"), wxT("Error"), wxOK | wxICON_ERROR, this);
           return false;
         }
 	if (n != nump->get()) nump->set(n);
 	break;
-        }
+      }
       case BXT_PARAM_ENUM: {
         bx_param_enum_c *enump = (bx_param_enum_c*) pstr->param;
-	int value = pstr->u.choice->GetSelection () + enump->get_min ();
+	int value = pstr->u.choice->GetSelection () + enump->get_min();
 	if (value != enump->get ()) enump->set (value);
 	break;
-        }
+      }
       case BXT_PARAM_STRING: {
         bx_param_string_c *stringp = (bx_param_string_c*) pstr->param;
 	char buf[1024];
@@ -1185,7 +1183,7 @@ bool ParamDialog::CopyGuiToParam()
               buf[i] = n;
               p+=2;
             } else {
-              wxMessageBox(wxT("Illegal raw byte format"), wxT("Error"), wxOK | wxICON_ERROR, this );
+              wxMessageBox(wxT("Illegal raw byte format"), wxT("Error"), wxOK | wxICON_ERROR, this);
               return false;
             }
           }
@@ -1195,7 +1193,7 @@ bool ParamDialog::CopyGuiToParam()
 	buf[sizeof(buf)-1] = 0;
 	if (!stringp->equals (buf)) stringp->set (buf);
 	break;
-        }
+      }
       case BXT_LIST:
         break;
       default:
@@ -1497,9 +1495,9 @@ void ParamDialog::OnEvent(wxCommandEvent& event)
   }
 }
 
-void ParamDialog::ShowHelp ()
+void ParamDialog::ShowHelp()
 {
-  wxMessageBox(MSG_NO_HELP, MSG_NO_HELP_CAPTION, wxOK | wxICON_ERROR, this );
+  wxMessageBox(MSG_NO_HELP, MSG_NO_HELP_CAPTION, wxOK | wxICON_ERROR, this);
 }
 
 /////////////////////////////////////////////////////////////////
@@ -1616,8 +1614,7 @@ CpuRegistersDialog::CpuRegistersDialog(
   AddButton(ID_Close, BTNLABEL_CLOSE);
 }
 
-void
-CpuRegistersDialog::AddFlag(bx_param_c *param)
+void CpuRegistersDialog::AddFlag(bx_param_c *param)
 {
   if (param == NULL) {
     wxLogDebug(wxT("AddFlag on undefined param"));
@@ -1627,8 +1624,7 @@ CpuRegistersDialog::AddFlag(bx_param_c *param)
   flagptr[nflags++] = param;
 }
 
-void
-CpuRegistersDialog::Init()
+void CpuRegistersDialog::Init()
 {
   int i;
   for (i=0; i<CPU_REGS_MAX_FLAGS; i++) {
@@ -1655,8 +1651,7 @@ CpuRegistersDialog::Init()
   stateChanged(false);
 }
 
-void
-CpuRegistersDialog::stateChanged (bool simRunning)
+void CpuRegistersDialog::stateChanged (bool simRunning)
 {
 #if BX_DEBUGGER
   contButton->Enable (!simRunning);
@@ -1665,8 +1660,7 @@ CpuRegistersDialog::stateChanged (bool simRunning)
 #endif
 }
 
-void
-CpuRegistersDialog::CopyParamToGui ()
+void CpuRegistersDialog::CopyParamToGui ()
 {
   ParamDialog::CopyParamToGui ();
 #if BX_DEBUGGER
@@ -1701,8 +1695,7 @@ CpuRegistersDialog::CopyParamToGui ()
 // times, with each click it should call bx_dbg_stepN_command(1) in the
 // simulator thread.  When it returns, it goes back to
 //
-void
-CpuRegistersDialog::OnEvent(wxCommandEvent& event)
+void CpuRegistersDialog::OnEvent(wxCommandEvent& event)
 {
   int id = event.GetId ();
   switch (id) {
@@ -1766,7 +1759,8 @@ LogOptionsDialog::LogOptionsDialog(
   }
 }
 
-void LogOptionsDialog::SetAction(int evtype, int a) {
+void LogOptionsDialog::SetAction(int evtype, int a)
+{
   // find the choice whose client data matches "a".
   int *ptr;
   //wxLogDebug ("SetAction type=%d a=%d", evtype, a);
@@ -1784,7 +1778,8 @@ void LogOptionsDialog::SetAction(int evtype, int a) {
   wxLogDebug(wxT("SetAction type=%d a=%d not found"), evtype, a);
 }
 
-int LogOptionsDialog::GetAction(int evtype) {
+int LogOptionsDialog::GetAction(int evtype)
+{
   int sel = action[evtype]->GetSelection();
   int *ptrToChoice = (int*)action[evtype]->GetClientData(sel);
   wxASSERT(ptrToChoice != NULL);
@@ -1810,8 +1805,7 @@ void ChangeStaticText (wxSizer *sizer, wxStaticText *win, wxString newtext)
 
 // CreateImage produces a disk image.  It's in the utility function
 // area because it's used by both floppy and hard disk image creation.
-bool
-CreateImage (int harddisk, int sectors, const char *filename)
+bool CreateImage (int harddisk, int sectors, const char *filename)
 {
   if (sectors<1) {
     wxMessageBox(wxT("The disk size is invalid."), wxT("Invalid Size"), wxOK | wxICON_ERROR);
@@ -1844,7 +1838,8 @@ CreateImage (int harddisk, int sectors, const char *filename)
   return true;
 }
 
-void SetTextCtrl(wxTextCtrl *ctrl, const char *format, int val) {
+void SetTextCtrl(wxTextCtrl *ctrl, const char *format, int val)
+{
   wxString tmp;
   tmp.Printf(wxString(format, wxConvUTF8), val);
   ctrl->SetValue(tmp);
@@ -1865,13 +1860,14 @@ int GetTextCtrlInt (wxTextCtrl *ctrl,
   }
   if (valid) *valid = false;
   if (complain) {
-    wxMessageBox(complaint, wxT("Invalid"), wxOK | wxICON_ERROR );
+    wxMessageBox(complaint, wxT("Invalid"), wxOK | wxICON_ERROR);
     ctrl->SetFocus();
   }
   return -1;
 }
 
-bool BrowseTextCtrl(wxTextCtrl *text, wxString prompt, long style) {
+bool BrowseTextCtrl(wxTextCtrl *text, wxString prompt, long style)
+{
   // try to configure the dialog to show hidden files
   wxConfigBase::Get() ->Write(wxT("/wxWidgets/wxFileDialog/ShowHidden"), true);
   wxFileDialog *fdialog = new wxFileDialog (text->GetParent(), prompt, wxT(""), text->GetValue(), wxT("*.*"), style);

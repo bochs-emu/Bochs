@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.90 2008-01-26 22:24:02 sshwarts Exp $
+// $Id: iodev.h,v 1.91 2008-02-15 22:05:42 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -115,7 +115,7 @@ public:
 
 //////////////////////////////////////////////////////////////////////
 #define STUBFUNC(dev,method) \
-   pluginlog->panic("%s called in %s stub. you must not have loaded the %s plugin", #dev, #method, #dev )
+   pluginlog->panic("%s called in %s stub. you must not have loaded the %s plugin", #dev, #method, #dev)
 //////////////////////////////////////////////////////////////////////
 
 class BOCHSAPI bx_keyb_stub_c : public bx_devmodel_c {
@@ -405,13 +405,13 @@ public:
   bx_bool register_io_write_handler(void *this_ptr, bx_write_handler_t f,
                                     Bit32u addr, const char *name, Bit8u mask);
   bx_bool unregister_io_write_handler(void *this_ptr, bx_write_handler_t f,
-                                      Bit32u addr, Bit8u mask );
+                                      Bit32u addr, Bit8u mask);
   bx_bool register_io_read_handler_range(void *this_ptr, bx_read_handler_t f,
                                          Bit32u begin_addr, Bit32u end_addr,
                                          const char *name, Bit8u mask);
   bx_bool register_io_write_handler_range(void *this_ptr, bx_write_handler_t f,
                                           Bit32u begin_addr, Bit32u end_addr,
-                                          const char *name, Bit8u mask );
+                                          const char *name, Bit8u mask);
   bx_bool unregister_io_read_handler_range(void *this_ptr, bx_read_handler_t f,
                                            Bit32u begin, Bit32u end, Bit8u mask);
   bx_bool unregister_io_write_handler_range(void *this_ptr, bx_write_handler_t f,
@@ -598,8 +598,8 @@ private:
 
 #endif /* NO_DEVICE_INCLUDES */
 
-#if ( BX_PROVIDE_DEVICE_MODELS==1 )
-BOCHSAPI extern bx_devices_c   bx_devices;
+#if BX_PROVIDE_DEVICE_MODELS
+BOCHSAPI extern bx_devices_c bx_devices;
 #endif
 
 #endif /* IODEV_H */

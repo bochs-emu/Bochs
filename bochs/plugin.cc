@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: plugin.cc,v 1.24 2008-02-05 22:57:40 sshwarts Exp $
+// $Id: plugin.cc,v 1.25 2008-02-15 22:05:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This file defines the plugin and plugin-device registration functions and
@@ -34,7 +34,7 @@ void  (*pluginRegisterIRQ)(unsigned irq, const char* name) = 0;
 void  (*pluginUnregisterIRQ)(unsigned irq, const char* name) = 0;
 
 void (*pluginSetHRQ)(unsigned val) = 0;
-void (*pluginSetHRQHackCallback)( void (*callback)(void) ) = 0;
+void (*pluginSetHRQHackCallback)(void (*callback)(void)) = 0;
 
 int (*pluginRegisterIOReadHandler)(void *thisPtr, ioReadHandler_t callback,
                             unsigned base, const char *name, Bit8u mask) = 0;
@@ -108,7 +108,7 @@ builtinSetHRQ(unsigned val)
 }
 
   static void
-builtinSetHRQHackCallback( void (*callback)(void) )
+builtinSetHRQHackCallback(void (*callback)(void))
 {
 #if 0
   pluginlog->panic("builtinSetHRQHackCallback called, no plugin loaded?");
@@ -122,7 +122,7 @@ builtinRegisterIOReadHandler(void *thisPtr, ioReadHandler_t callback,
                             unsigned base, const char *name, Bit8u mask)
 {
   int ret;
-  BX_ASSERT (mask<8);
+  BX_ASSERT(mask<8);
   ret = bx_devices.register_io_read_handler (thisPtr, callback, base, name, mask);
   pluginlog->ldebug("plugin %s registered I/O read address at %04x", name, base);
   return ret;
@@ -133,7 +133,7 @@ builtinRegisterIOWriteHandler(void *thisPtr, ioWriteHandler_t callback,
                              unsigned base, const char *name, Bit8u mask)
 {
   int ret;
-  BX_ASSERT (mask<8);
+  BX_ASSERT(mask<8);
   ret = bx_devices.register_io_write_handler (thisPtr, callback, base, name, mask);
   pluginlog->ldebug("plugin %s registered I/O write address at %04x", name, base);
   return ret;
@@ -144,7 +144,7 @@ builtinUnregisterIOReadHandler(void *thisPtr, ioReadHandler_t callback,
                             unsigned base, Bit8u mask)
 {
   int ret;
-  BX_ASSERT (mask<8);
+  BX_ASSERT(mask<8);
   ret = bx_devices.unregister_io_read_handler (thisPtr, callback, base, mask);
   pluginlog->ldebug("plugin unregistered I/O read address at %04x", base);
   return ret;
@@ -155,7 +155,7 @@ builtinUnregisterIOWriteHandler(void *thisPtr, ioWriteHandler_t callback,
                              unsigned base, Bit8u mask)
 {
   int ret;
-  BX_ASSERT (mask<8);
+  BX_ASSERT(mask<8);
   ret = bx_devices.unregister_io_write_handler (thisPtr, callback, base, mask);
   pluginlog->ldebug("plugin unregistered I/O write address at %04x", base);
   return ret;
@@ -166,7 +166,7 @@ builtinRegisterIOReadHandlerRange(void *thisPtr, ioReadHandler_t callback,
                             unsigned base, unsigned end, const char *name, Bit8u mask)
 {
   int ret;
-  BX_ASSERT (mask<8);
+  BX_ASSERT(mask<8);
   ret = bx_devices.register_io_read_handler_range (thisPtr, callback, base, end, name, mask);
   pluginlog->ldebug("plugin %s registered I/O read addresses %04x to %04x", name, base, end);
   return ret;
@@ -177,7 +177,7 @@ builtinRegisterIOWriteHandlerRange(void *thisPtr, ioWriteHandler_t callback,
                              unsigned base, unsigned end, const char *name, Bit8u mask)
 {
   int ret;
-  BX_ASSERT (mask<8);
+  BX_ASSERT(mask<8);
   ret = bx_devices.register_io_write_handler_range (thisPtr, callback, base, end, name, mask);
   pluginlog->ldebug("plugin %s registered I/O write addresses %04x to %04x", name, base, end);
   return ret;
@@ -188,7 +188,7 @@ builtinUnregisterIOReadHandlerRange(void *thisPtr, ioReadHandler_t callback,
                             unsigned begin, unsigned end, Bit8u mask)
 {
   int ret;
-  BX_ASSERT (mask<8);
+  BX_ASSERT(mask<8);
   ret = bx_devices.unregister_io_read_handler_range (thisPtr, callback, begin, end, mask);
   pluginlog->ldebug("plugin unregistered I/O read addresses %04x to %04x", begin, end);
   return ret;
@@ -199,7 +199,7 @@ builtinUnregisterIOWriteHandlerRange(void *thisPtr, ioWriteHandler_t callback,
                              unsigned begin, unsigned end, Bit8u mask)
 {
   int ret;
-  BX_ASSERT (mask<8);
+  BX_ASSERT(mask<8);
   ret = bx_devices.unregister_io_write_handler_range (thisPtr, callback, begin, end, mask);
   pluginlog->ldebug("plugin unregistered I/O write addresses %04x to %04x", begin, end);
   return ret;
@@ -209,7 +209,7 @@ builtinUnregisterIOWriteHandlerRange(void *thisPtr, ioWriteHandler_t callback,
 builtinRegisterDefaultIOReadHandler(void *thisPtr, ioReadHandler_t callback,
                             const char *name, Bit8u mask)
 {
-  BX_ASSERT (mask<8);
+  BX_ASSERT(mask<8);
   bx_devices.register_default_io_read_handler (thisPtr, callback, name, mask);
   pluginlog->ldebug("plugin %s registered default I/O read ", name);
   return 0;
@@ -219,7 +219,7 @@ builtinRegisterDefaultIOReadHandler(void *thisPtr, ioReadHandler_t callback,
 builtinRegisterDefaultIOWriteHandler(void *thisPtr, ioWriteHandler_t callback,
                              const char *name, Bit8u mask)
 {
-  BX_ASSERT (mask<8);
+  BX_ASSERT(mask<8);
   bx_devices.register_default_io_write_handler (thisPtr, callback, name, mask);
   pluginlog->ldebug("plugin %s registered default I/O write ", name);
   return 0;
@@ -247,195 +247,181 @@ builtinActivateTimer(unsigned id, Bit32u usec, bx_bool continuous)
 /* Plugin initialization / deinitialization                             */
 /************************************************************************/
 
-  void
-plugin_init_all (void)
+void plugin_init_all (void)
 {
-    plugin_t *plugin;
+  plugin_t *plugin;
 
-    pluginlog->info("Initializing plugins");
+  pluginlog->info("Initializing plugins");
 
-    for (plugin = plugins; plugin; plugin = plugin->next)
+  for (plugin = plugins; plugin; plugin = plugin->next)
+  {
+    char *arg_ptr = plugin->args;
+
+    /* process the command line */
+    plugin->argc = 0;
+    while (plugin->argc < MAX_ARGC)
     {
-        char *arg_ptr = plugin->args;
+      while (*arg_ptr && isspace (*arg_ptr))
+        arg_ptr++;
 
-        /* process the command line */
-        plugin->argc = 0;
-        while (plugin->argc < MAX_ARGC)
-        {
-            while (*arg_ptr && isspace (*arg_ptr))
-                arg_ptr++;
+      if (!*arg_ptr) break;
+      plugin->argv[plugin->argc++] = arg_ptr;
 
-            if (!*arg_ptr)
-                break;
-            plugin->argv[plugin->argc++] = arg_ptr;
+      while (*arg_ptr && !isspace (*arg_ptr))
+        arg_ptr++;
 
-            while (*arg_ptr && !isspace (*arg_ptr))
-                arg_ptr++;
-
-            if (!*arg_ptr)
-                break;
-            *arg_ptr++ = '\0';
-        }
-
-        /* initialize the plugin */
-        if (plugin->plugin_init (plugin, plugin->type, plugin->argc, plugin->argv))
-        {
-            pluginlog->panic("Plugin initialization failed for %s", plugin->name);
-            plugin_abort();
-        }
-
-        plugin->initialized = 1;
+      if (!*arg_ptr) break;
+      *arg_ptr++ = '\0';
     }
 
-    return;
+    /* initialize the plugin */
+    if (plugin->plugin_init (plugin, plugin->type, plugin->argc, plugin->argv))
+    {
+      pluginlog->panic("Plugin initialization failed for %s", plugin->name);
+      plugin_abort();
+    }
+
+    plugin->initialized = 1;
+  }
 }
 
-void
-plugin_init_one(plugin_t *plugin)
+void plugin_init_one(plugin_t *plugin)
 {
-        char *arg_ptr = plugin->args;
+  char *arg_ptr = plugin->args;
 
-        /* process the command line */
-        plugin->argc = 0;
-        while (plugin->argc < MAX_ARGC)
-        {
-            while (*arg_ptr && isspace (*arg_ptr))
-                arg_ptr++;
+  /* process the command line */
+  plugin->argc = 0;
+  while (plugin->argc < MAX_ARGC)
+  {
+    while (*arg_ptr && isspace (*arg_ptr))
+      arg_ptr++;
 
-            if (!*arg_ptr)
-                break;
-            plugin->argv[plugin->argc++] = arg_ptr;
+    if (!*arg_ptr) break;
+    plugin->argv[plugin->argc++] = arg_ptr;
 
-            while (*arg_ptr && !isspace (*arg_ptr))
-                arg_ptr++;
+    while (*arg_ptr && !isspace (*arg_ptr))
+      arg_ptr++;
 
-            if (!*arg_ptr)
-                break;
-            *arg_ptr++ = '\0';
-        }
+    if (!*arg_ptr) break;
+    *arg_ptr++ = '\0';
+  }
 
-        /* initialize the plugin */
-        if (plugin->plugin_init (plugin, plugin->type, plugin->argc, plugin->argv))
-        {
-            pluginlog->info("Plugin initialization failed for %s", plugin->name);
-            plugin_abort();
-        }
+  /* initialize the plugin */
+  if (plugin->plugin_init (plugin, plugin->type, plugin->argc, plugin->argv))
+  {
+    pluginlog->info("Plugin initialization failed for %s", plugin->name);
+    plugin_abort();
+  }
 
-        plugin->initialized = 1;
+  plugin->initialized = 1;
 }
 
 
 plugin_t *plugin_unload(plugin_t *plugin)
 {
-    plugin_t *dead_plug;
+  plugin_t *dead_plug;
 
-    if (plugin->initialized)
-        plugin->plugin_fini();
+  if (plugin->initialized)
+      plugin->plugin_fini();
 
-    lt_dlclose(plugin->handle);
-    delete [] plugin->name;
+  lt_dlclose(plugin->handle);
+  delete [] plugin->name;
 
-    dead_plug = plugin;
-    plugin = plugin->next;
-    free(dead_plug);
+  dead_plug = plugin;
+  plugin = plugin->next;
+  free(dead_plug);
 
-    return plugin;
+  return plugin;
 }
-
 
 void plugin_fini_all (void)
 {
-    plugin_t *plugin;
+  plugin_t *plugin;
 
-    for (plugin = plugins; plugin; plugin = plugin_unload(plugin));
-
-    return;
+  for (plugin = plugins; plugin; plugin = plugin_unload(plugin));
 }
 
 void plugin_load(char *name, char *args, plugintype_t type)
 {
-    plugin_t *plugin;
+  plugin_t *plugin;
 
-    plugin = (plugin_t *)malloc (sizeof(plugin_t));
-    if (!plugin)
-    {
-      BX_PANIC(("malloc plugin_t failed"));
-    }
+  plugin = (plugin_t *)malloc (sizeof(plugin_t));
+  if (!plugin)
+  {
+    BX_PANIC(("malloc plugin_t failed"));
+  }
 
-    plugin->type = type;
-    plugin->name = name;
-    plugin->args = args;
-    plugin->initialized = 0;
+  plugin->type = type;
+  plugin->name = name;
+  plugin->args = args;
+  plugin->initialized = 0;
 
-    char plugin_filename[BX_PATHNAME_LEN], buf[BX_PATHNAME_LEN];
-    sprintf(buf, PLUGIN_FILENAME_FORMAT, name);
-    sprintf(plugin_filename, "%s%s", PLUGIN_PATH, buf);
+  char plugin_filename[BX_PATHNAME_LEN], buf[BX_PATHNAME_LEN];
+  sprintf(buf, PLUGIN_FILENAME_FORMAT, name);
+  sprintf(plugin_filename, "%s%s", PLUGIN_PATH, buf);
 
-    // Set context so that any devices that the plugin registers will
-    // be able to see which plugin created them.  The registration will
-    // be called from either dlopen (global constructors) or plugin_init.
-    BX_ASSERT (current_plugin_context == NULL);
-    current_plugin_context = plugin;
-    plugin->handle = lt_dlopen (plugin_filename);
-    BX_INFO (("lt_dlhandle is %p", plugin->handle));
-    if (!plugin->handle)
-    {
-      current_plugin_context = NULL;
-      BX_PANIC (("dlopen failed for module '%s': %s", name, lt_dlerror ()));
-      free (plugin);
-      return;
-    }
-
-    sprintf(buf, PLUGIN_INIT_FMT_STRING, name);
-    plugin->plugin_init =
-      (int  (*)(struct _plugin_t *, enum plugintype_t, int, char *[])) /* monster typecast */
-      lt_dlsym (plugin->handle, buf);
-    if (plugin->plugin_init == NULL) {
-        pluginlog->panic("could not find plugin_init: %s", lt_dlerror ());
-        plugin_abort ();
-    }
-
-    sprintf(buf, PLUGIN_FINI_FMT_STRING, name);
-    plugin->plugin_fini = (void (*)(void)) lt_dlsym (plugin->handle, buf);
-    if (plugin->plugin_init == NULL) {
-        pluginlog->panic("could not find plugin_fini: %s", lt_dlerror ());
-        plugin_abort ();
-    }
-    pluginlog->info("loaded plugin %s",plugin_filename);
-
-
-    /* Insert plugin at the _end_ of the plugin linked list. */
-    plugin->next = NULL;
-
-    if (!plugins)
-    {
-        /* Empty list, this become the first entry. */
-        plugins = plugin;
-    }
-    else
-    {
-        /* Non-empty list.  Add to end. */
-        plugin_t *temp = plugins;
-
-        while (temp->next)
-            temp = temp->next;
-
-        temp->next = plugin;
-    }
-
-    plugin_init_one(plugin);
-
-    // check that context didn't change.  This should only happen if we
-    // need a reentrant plugin_load.
-    BX_ASSERT (current_plugin_context == plugin);
+  // Set context so that any devices that the plugin registers will
+  // be able to see which plugin created them.  The registration will
+  // be called from either dlopen (global constructors) or plugin_init.
+  BX_ASSERT(current_plugin_context == NULL);
+  current_plugin_context = plugin;
+  plugin->handle = lt_dlopen (plugin_filename);
+  BX_INFO(("lt_dlhandle is %p", plugin->handle));
+  if (!plugin->handle)
+  {
     current_plugin_context = NULL;
-
+    BX_PANIC(("dlopen failed for module '%s': %s", name, lt_dlerror ()));
+    free (plugin);
     return;
+  }
+
+  sprintf(buf, PLUGIN_INIT_FMT_STRING, name);
+  plugin->plugin_init =
+      (int (*)(struct _plugin_t *, enum plugintype_t, int, char *[])) /* monster typecast */
+      lt_dlsym (plugin->handle, buf);
+  if (plugin->plugin_init == NULL) {
+    pluginlog->panic("could not find plugin_init: %s", lt_dlerror ());
+    plugin_abort ();
+  }
+
+  sprintf(buf, PLUGIN_FINI_FMT_STRING, name);
+  plugin->plugin_fini = (void (*)(void)) lt_dlsym (plugin->handle, buf);
+  if (plugin->plugin_init == NULL) {
+    pluginlog->panic("could not find plugin_fini: %s", lt_dlerror ());
+    plugin_abort();
+  }
+  pluginlog->info("loaded plugin %s",plugin_filename);
+
+  /* Insert plugin at the _end_ of the plugin linked list. */
+  plugin->next = NULL;
+
+  if (!plugins)
+  {
+    /* Empty list, this become the first entry. */
+    plugins = plugin;
+  }
+  else
+  {
+   /* Non-empty list.  Add to end. */
+   plugin_t *temp = plugins;
+
+   while (temp->next)
+      temp = temp->next;
+
+    temp->next = plugin;
+  }
+
+  plugin_init_one(plugin);
+
+  // check that context didn't change.  This should only happen if we
+  // need a reentrant plugin_load.
+  BX_ASSERT(current_plugin_context == plugin);
+  current_plugin_context = NULL;
 }
 
 void plugin_abort(void)
 {
-    pluginlog->panic("plugin load aborted");
+  pluginlog->panic("plugin load aborted");
 }
 
 #endif   /* end of #if BX_PLUGINS */
@@ -490,50 +476,48 @@ plugin_startup(void)
 
 void pluginRegisterDeviceDevmodel(plugin_t *plugin, plugintype_t type, bx_devmodel_c *devmodel, const char *name)
 {
-    device_t *device;
+  device_t *device;
 
-    device = (device_t *)malloc (sizeof (device_t));
-    if (!device)
-    {
-        pluginlog->panic("can't allocate device_t");
-    }
+  device = (device_t *)malloc (sizeof (device_t));
+  if (!device)
+  {
+    pluginlog->panic("can't allocate device_t");
+  }
 
-    device->name = name;
-    BX_ASSERT (devmodel != NULL);
-    device->devmodel = devmodel;
-    device->plugin = plugin;  // this can be NULL
-    device->next = NULL;
+  device->name = name;
+  BX_ASSERT(devmodel != NULL);
+  device->devmodel = devmodel;
+  device->plugin = plugin;  // this can be NULL
+  device->next = NULL;
 
-    // Don't add every kind of device to the list.
-    switch (type) {
-      case PLUGTYPE_CORE:
-        // Core devices are present whether or not we are using plugins, so
-        // they are managed by the same code in iodev/devices.cc whether
-        // plugins are on or off.
-        free(device);
-        return; // Do not add core devices to the devices list.
-      case PLUGTYPE_OPTIONAL:
-      case PLUGTYPE_USER:
-      default:
-        // The plugin system will manage optional and user devices only.
-        break;
-    }
+  // Don't add every kind of device to the list.
+  switch (type) {
+    case PLUGTYPE_CORE:
+      // Core devices are present whether or not we are using plugins, so
+      // they are managed by the same code in iodev/devices.cc whether
+      // plugins are on or off.
+      free(device);
+      return; // Do not add core devices to the devices list.
+    case PLUGTYPE_OPTIONAL:
+    case PLUGTYPE_USER:
+    default:
+      // The plugin system will manage optional and user devices only.
+      break;
+  }
 
-    if (!devices)
-    {
-        /* Empty list, this become the first entry. */
-        devices = device;
-    }
-    else
-    {
-        /* Non-empty list.  Add to end. */
-        device_t *temp = devices;
+  if (!devices) {
+    /* Empty list, this become the first entry. */
+    devices = device;
+  }
+  else {
+    /* Non-empty list.  Add to end. */
+    device_t *temp = devices;
 
-        while (temp->next)
-            temp = temp->next;
+    while (temp->next)
+      temp = temp->next;
 
-        temp->next = device;
-    }
+    temp->next = device;
+  }
 }
 
 /************************************************************************/
@@ -542,14 +526,14 @@ void pluginRegisterDeviceDevmodel(plugin_t *plugin, plugintype_t type, bx_devmod
 
 bx_bool pluginDevicePresent(char *name)
 {
-    device_t *device;
+  device_t *device;
 
-    for (device = devices; device; device = device->next)
-    {
-      if (strcmp(device->name,name)==0) return true;
-    }
+  for (device = devices; device; device = device->next)
+  {
+    if (strcmp(device->name,name)==0) return true;
+  }
 
-    return false;
+  return false;
 }
 
 #if BX_PLUGINS
@@ -592,20 +576,20 @@ void bx_unload_plugin(const char *name)
 
 void bx_init_plugins()
 {
-    device_t *device;
+  device_t *device;
 
-    // two loops
-    for (device = devices; device; device = device->next)
-    {
-      pluginlog->info("init_mem of '%s' plugin device by virtual method",device->name);
-      device->devmodel->init_mem(BX_MEM(0));
-    }
+  // two loops
+  for (device = devices; device; device = device->next)
+  {
+    pluginlog->info("init_mem of '%s' plugin device by virtual method",device->name);
+    device->devmodel->init_mem(BX_MEM(0));
+  }
 
-    for (device = devices; device; device = device->next)
-    {
-      pluginlog->info("init_dev of '%s' plugin device by virtual method",device->name);
-      device->devmodel->init();
-    }
+  for (device = devices; device; device = device->next)
+  {
+    pluginlog->info("init_dev of '%s' plugin device by virtual method",device->name);
+    device->devmodel->init();
+  }
 }
 
 /**************************************************************************/
@@ -614,12 +598,12 @@ void bx_init_plugins()
 
 void bx_reset_plugins(unsigned signal)
 {
-    device_t *device;
-    for (device = devices; device; device = device->next)
-    {
-      pluginlog->info("reset of '%s' plugin device by virtual method",device->name);
-      device->devmodel->reset(signal);
-    }
+  device_t *device;
+  for (device = devices; device; device = device->next)
+  {
+    pluginlog->info("reset of '%s' plugin device by virtual method",device->name);
+    device->devmodel->reset(signal);
+  }
 }
 
 /*******************************************************/
@@ -642,7 +626,7 @@ void bx_unload_plugins()
     next = device->next;
     free(device);
     device = next;
-  };
+  }
   devices = NULL;
 }
 
@@ -652,12 +636,12 @@ void bx_unload_plugins()
 
 void bx_plugins_register_state()
 {
-    device_t *device;
-    for (device = devices; device; device = device->next)
-    {
-      pluginlog->info("register state of '%s' plugin device by virtual method",device->name);
-      device->devmodel->register_state();
-    }
+  device_t *device;
+  for (device = devices; device; device = device->next)
+  {
+    pluginlog->info("register state of '%s' plugin device by virtual method",device->name);
+    device->devmodel->register_state();
+  }
 }
 
 /***************************************************************************/
@@ -666,11 +650,11 @@ void bx_plugins_register_state()
 
 void bx_plugins_after_restore_state()
 {
-    device_t *device;
-    for (device = devices; device; device = device->next)
-    {
-      device->devmodel->after_restore_state();
-    }
+  device_t *device;
+  for (device = devices; device; device = device->next)
+  {
+    device->devmodel->after_restore_state();
+  }
 }
 
 }

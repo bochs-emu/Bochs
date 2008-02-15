@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rfb.cc,v 1.55 2008-02-05 22:57:41 sshwarts Exp $
+// $Id: rfb.cc,v 1.56 2008-02-15 22:05:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2000  Psyon.Org!
@@ -360,18 +360,18 @@ void ServerThreadInit(void *indata)
 #ifdef WIN32
     SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_IDLE);
     if(!InitWinsock()) {
-        BX_PANIC(( "could not initialize winsock."));
+        BX_PANIC(("could not initialize winsock."));
         goto end_of_thread;
     }
 #endif
 
     sServer = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if(sServer == -1) {
-        BX_PANIC(( "could not create socket." ));
+        BX_PANIC(("could not create socket."));
         goto end_of_thread;
     }
     if (setsockopt(sServer, SOL_SOCKET, SO_REUSEADDR, (const char *)&one, sizeof(int)) == -1)  {
-        BX_PANIC(( "could not set socket option." ));
+        BX_PANIC(("could not set socket option."));
         goto end_of_thread;
     }
 
@@ -381,11 +381,11 @@ void ServerThreadInit(void *indata)
       sai.sin_port        = htons(rfbPort);
       BX_INFO (("Trying port %d", rfbPort));
       if(bind(sServer, (struct sockaddr *)&sai, sizeof(sai)) == -1) {
-          BX_INFO(( "Could not bind socket."));
+          BX_INFO(("Could not bind socket."));
           continue;
       }
       if(listen(sServer, SOMAXCONN) == -1) {
-          BX_INFO(( "Could not listen on socket."));
+          BX_INFO(("Could not listen on socket."));
           continue;
       }
       // success
@@ -722,7 +722,7 @@ void bx_rfb_gui_c::text_update(Bit8u *old_text, Bit8u *new_text, unsigned long c
   }
 
   // first invalidate character at previous and new cursor location
-  if ( (rfbCursorY < text_rows) && (rfbCursorX < text_cols) ) {
+  if ((rfbCursorY < text_rows) && (rfbCursorX < text_cols)) {
     curs = rfbCursorY * tm_info.line_offset + rfbCursorX * 2;
     old_text[curs] = ~new_text[curs];
   }
@@ -1730,7 +1730,7 @@ void rfbMouseMove(int x, int y, int bmask)
           xorigin = rfbHeaderbarBitmaps[i].xorigin;
         else
           xorigin = rfbWindowX - rfbHeaderbarBitmaps[i].xorigin;
-        if ( (x>=xorigin) && (x<(xorigin+int(rfbBitmaps[rfbHeaderbarBitmaps[i].index].xdim))) ) {
+        if ((x>=xorigin) && (x<(xorigin+int(rfbBitmaps[rfbHeaderbarBitmaps[i].index].xdim)))) {
           rfbHeaderbarBitmaps[i].f();
           return;
         }

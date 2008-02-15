@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: busmouse.cc,v 1.8 2008-01-26 22:24:00 sshwarts Exp $
+// $Id: busmouse.cc,v 1.9 2008-02-15 22:05:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -70,7 +70,7 @@ bx_busm_c::~bx_busm_c()
 
 void bx_busm_c::init(void)
 {
-  BX_DEBUG(("Init $Id: busmouse.cc,v 1.8 2008-01-26 22:24:00 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: busmouse.cc,v 1.9 2008-02-15 22:05:41 sshwarts Exp $"));
 
   DEV_register_irq(BUS_MOUSE_IRQ, "Bus Mouse");
 
@@ -275,9 +275,9 @@ void bx_busm_c::write(Bit32u address, Bit32u value, unsigned io_len)
 void bx_busm_c::bus_mouse_enq(int delta_x, int delta_y, int delta_z, unsigned button_state)
 {
   // scale down the motion
-  if ( (delta_x < -1) || (delta_x > 1) )
+  if ((delta_x < -1) || (delta_x > 1))
     delta_x /= 2;
-  if ( (delta_y < -1) || (delta_y > 1) )
+  if ((delta_y < -1) || (delta_y > 1))
     delta_y /= 2;
 
   if(delta_x>127) delta_x=127;

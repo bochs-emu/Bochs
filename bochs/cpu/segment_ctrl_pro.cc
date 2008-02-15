@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: segment_ctrl_pro.cc,v 1.81 2008-02-02 21:46:53 sshwarts Exp $
+// $Id: segment_ctrl_pro.cc,v 1.82 2008-02-15 22:05:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -114,11 +114,11 @@ BX_CPU_C::load_seg_reg(bx_segment_reg_t *seg, Bit16u new_value)
 
       return;
     }
-    else if ( (seg==&BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS]) ||
-              (seg==&BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES])
+    else if ((seg==&BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS]) ||
+             (seg==&BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES])
 #if BX_CPU_LEVEL >= 3
-           || (seg==&BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS]) ||
-              (seg==&BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS])
+          || (seg==&BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS]) ||
+             (seg==&BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS])
 #endif
             )
     {

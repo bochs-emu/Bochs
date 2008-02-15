@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_tap.cc,v 1.29 2008-01-26 22:24:01 sshwarts Exp $
+// $Id: eth_tap.cc,v 1.30 2008-02-15 22:05:42 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -175,28 +175,28 @@ bx_tap_pktmover_c::bx_tap_pktmover_c(const char *netif,
 #if defined(__linux__)
   // check if the TAP devices is running, and turn on ARP.  This is based
   // on code from the Mac-On-Linux project. http://http://www.maconlinux.org/
-  int sock = socket( AF_INET, SOCK_DGRAM, 0 );
+  int sock = socket(AF_INET, SOCK_DGRAM, 0);
   if (sock < 0) {
     BX_PANIC (("socket creation: %s", strerror(errno)));
     return;
   }
   struct ifreq ifr;
-  memset( &ifr, 0, sizeof(ifr) );
-  strncpy( ifr.ifr_name, netif, sizeof(ifr.ifr_name) );
-  if( ioctl( sock, SIOCGIFFLAGS, &ifr ) < 0 ){
-    BX_PANIC (("SIOCGIFFLAGS on %s: %s", netif, strerror (errno)));
+  memset(&ifr, 0, sizeof(ifr));
+  strncpy(ifr.ifr_name, netif, sizeof(ifr.ifr_name));
+  if(ioctl(sock, SIOCGIFFLAGS, &ifr) < 0) {
+    BX_PANIC (("SIOCGIFFLAGS on %s: %s", netif, strerror(errno)));
     close(sock);
     return;
   }
-  if( !(ifr.ifr_flags & IFF_RUNNING ) ){
+  if (!(ifr.ifr_flags & IFF_RUNNING)) {
     BX_PANIC (("%s device is not running", netif));
     close(sock);
     return;
   }
-  if( (ifr.ifr_flags & IFF_NOARP ) ){
-    BX_INFO (("turn on ARP for %s device", netif));
+  if ((ifr.ifr_flags & IFF_NOARP)){
+    BX_INFO(("turn on ARP for %s device", netif));
     ifr.ifr_flags &= ~IFF_NOARP;
-    if( ioctl( sock, SIOCSIFFLAGS, &ifr ) < 0 ) {
+    if (ioctl(sock, SIOCSIFFLAGS, &ifr) < 0) {
       BX_PANIC (("SIOCSIFFLAGS: %s", strerror(errno)));
       close(sock);
       return;
@@ -207,30 +207,29 @@ bx_tap_pktmover_c::bx_tap_pktmover_c(const char *netif,
 
   fd = open (filename, O_RDWR);
   if (fd < 0) {
-    BX_PANIC (("open failed on %s: %s", netif, strerror (errno)));
+    BX_PANIC(("open failed on %s: %s", netif, strerror(errno)));
     return;
   }
 
   /* set O_ASYNC flag so that we can poll with read() */
-  if ((flags = fcntl( fd, F_GETFL)) < 0) {
-    BX_PANIC (("getflags on tap device: %s", strerror (errno)));
+  if ((flags = fcntl(fd, F_GETFL)) < 0) {
+    BX_PANIC(("getflags on tap device: %s", strerror(errno)));
   }
   flags |= O_NONBLOCK;
-  if (fcntl( fd, F_SETFL, flags ) < 0) {
-    BX_PANIC (("set tap device flags: %s", strerror (errno)));
+  if (fcntl(fd, F_SETFL, flags) < 0) {
+    BX_PANIC(("set tap device flags: %s", strerror(errno)));
   }
 
-  BX_INFO (("eth_tap: opened %s device", netif));
+  BX_INFO(("eth_tap: opened %s device", netif));
 
   /* Execute the configuration script */
   char intname[IFNAMSIZ];
   strcpy(intname,netif);
-  if((script != NULL)
-   &&(strcmp(script, "") != 0)
-   &&(strcmp(script, "none") != 0)) {
+  if((script != NULL) && (strcmp(script, "") != 0) && (strcmp(script, "none") != 0))
+  {
     if (execute_script(script, intname) < 0)
-      BX_ERROR (("execute script '%s' on %s failed", script, intname));
-    }
+      BX_ERROR(("execute script '%s' on %s failed", script, intname));
+  }
 
   // Start the rx poll
   this->rx_timer_index =
@@ -269,8 +268,7 @@ bx_tap_pktmover_c::bx_tap_pktmover_c(const char *netif,
 #endif
 }
 
-void
-bx_tap_pktmover_c::sendpkt(void *buf, unsigned io_len)
+void bx_tap_pktmover_c::sendpkt(void *buf, unsigned io_len)
 {
   Bit8u txbuf[BX_PACKET_BUFSIZE];
   txbuf[0] = 0;
@@ -310,13 +308,13 @@ bx_tap_pktmover_c::sendpkt(void *buf, unsigned io_len)
 #endif
 }
 
-void bx_tap_pktmover_c::rx_timer_handler (void *this_ptr)
+void bx_tap_pktmover_c::rx_timer_handler(void *this_ptr)
 {
   bx_tap_pktmover_c *class_ptr = (bx_tap_pktmover_c *) this_ptr;
   class_ptr->rx_timer();
 }
 
-void bx_tap_pktmover_c::rx_timer ()
+void bx_tap_pktmover_c::rx_timer()
 {
   int nbytes;
   Bit8u buf[BX_PACKET_BUFSIZE];

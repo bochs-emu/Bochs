@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodebug.cc,v 1.24 2008-02-15 19:03:54 sshwarts Exp $
+// $Id: iodebug.cc,v 1.25 2008-02-15 22:05:42 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #include "bochs.h"
@@ -292,8 +292,8 @@ void bx_iodebug_c::add_range(Bit32u addr_start, Bit32u addr_end)
 {
   for(unsigned i=0;i<BX_IODEBUG_MAX_AREAS;i++)
   {
-    if( !bx_iodebug_s.monitored_mem_areas_start[i] &&
-        !bx_iodebug_s.monitored_mem_areas_end[i] )
+    if(!bx_iodebug_s.monitored_mem_areas_start[i] &&
+       !bx_iodebug_s.monitored_mem_areas_end[i])
     {
 	bx_iodebug_s.monitored_mem_areas_start[i] = addr_start;
 	bx_iodebug_s.monitored_mem_areas_end[i] = addr_end;

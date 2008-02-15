@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cmos.cc,v 1.63 2008-01-26 22:24:00 sshwarts Exp $
+// $Id: cmos.cc,v 1.64 2008-02-15 22:05:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -140,7 +140,7 @@ bx_cmos_c::~bx_cmos_c(void)
 
 void bx_cmos_c::init(void)
 {
-  BX_DEBUG(("Init $Id: cmos.cc,v 1.63 2008-01-26 22:24:00 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: cmos.cc,v 1.64 2008-02-15 22:05:41 sshwarts Exp $"));
   // CMOS RAM & RTC
 
   DEV_register_ioread_handler(this, read_handler, 0x0070, "CMOS RAM", 1);
@@ -519,11 +519,11 @@ void bx_cmos_c::write(Bit32u address, Bit32u value, unsigned io_len)
           unsigned prev_CRB;
           prev_CRB = BX_CMOS_THIS s.reg[REG_STAT_B];
           BX_CMOS_THIS s.reg[REG_STAT_B] = value;
-          if ( (prev_CRB & 0x02) != (value & 0x02) ) {
+          if ((prev_CRB & 0x02) != (value & 0x02)) {
             BX_CMOS_THIS s.rtc_mode_12hour = ((value & 0x02) == 0);
             update_clock();
           }
-          if ( (prev_CRB & 0x04) != (value & 0x04) ) {
+          if ((prev_CRB & 0x04) != (value & 0x04)) {
             BX_CMOS_THIS s.rtc_mode_binary = ((value & 0x04) != 0);
             update_clock();
           }

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.155 2008-02-05 22:57:41 sshwarts Exp $
+// $Id: wxmain.cc,v 1.156 2008-02-15 22:05:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWidgets frame, toolbar, menus, and dialogs.
@@ -31,10 +31,6 @@
 //   processes events from the BxEvent queue (bx_gui_c::handle_events)
 //   and notifies the appropriate emulated I/O device.
 //
-//////////////////////////////////////////////////////////////////////
-
-//////////////////////////////////////////////////////////////////////
-// includes
 //////////////////////////////////////////////////////////////////////
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
@@ -268,8 +264,7 @@ int MyApp::OnExit()
 }
 
 // these are only called when the simthread is not running.
-BxEvent *
-MyApp::DefaultCallback(void *thisptr, BxEvent *event)
+BxEvent *MyApp::DefaultCallback(void *thisptr, BxEvent *event)
 {
   wxLogDebug(wxT("DefaultCallback: event type %d"), event->type);
   event->retcode = -1;  // default return code
@@ -284,7 +279,7 @@ MyApp::DefaultCallback(void *thisptr, BxEvent *event)
         // gui closing down, do something simple and nongraphical.
         fprintf(stderr, "%s\n", (const char *)text.mb_str(wxConvUTF8));
       } else {
-        wxMessageBox(text, wxT("Error"), wxOK | wxICON_ERROR );
+        wxMessageBox(text, wxT("Error"), wxOK | wxICON_ERROR);
         // maybe I can make OnLogMsg display something that looks appropriate.
         // theFrame->OnLogMsg(event);
       }
@@ -680,7 +675,7 @@ void MyFrame::OnEditBoot(wxCommandEvent& WXUNUSED(event))
   }
   if (bootDevices == 0) {
     wxMessageBox(wxT("All the possible boot devices are disabled right now!\nYou must enable the first floppy drive, a hard drive, or a CD-ROM."),
-                 wxT("None enabled"), wxOK | wxICON_ERROR, this );
+                 wxT("None enabled"), wxOK | wxICON_ERROR, this);
     return;
   }
   ParamDialog dlg(this, -1);
@@ -833,7 +828,7 @@ void MyFrame::OnShowKeyboard(wxCommandEvent& WXUNUSED(event))
   if (list_size == 0) {
     // if params not initialized yet, then give up
     wxMessageBox(wxT("Cannot show the debugger window until the simulation has begun."),
-                 wxT("Sim not running"), wxOK | wxICON_ERROR, this );
+                 wxT("Sim not running"), wxOK | wxICON_ERROR, this);
     return;
   }
   if (showKbd == NULL) {
@@ -855,8 +850,7 @@ void MyFrame::OnDebugLog(wxCommandEvent& WXUNUSED(event))
   showDebugLog->Show(TRUE);
 }
 
-void
-MyFrame::DebugBreak()
+void MyFrame::DebugBreak()
 {
   if (debugCommand) {
     delete [] debugCommand;
@@ -867,16 +861,14 @@ MyFrame::DebugBreak()
   SIM->debug_break();
 }
 
-void
-MyFrame::DebugCommand(wxString cmd)
+void MyFrame::DebugCommand(wxString cmd)
 {
   char buf[1024];
   safeWxStrcpy(buf, cmd, sizeof(buf));
   DebugCommand(buf);
 }
 
-void
-MyFrame::DebugCommand(const char *cmd)
+void MyFrame::DebugCommand(const char *cmd)
 {
   wxLogDebug(wxT("debugger command: %s"), cmd);
   wxASSERT(showDebugLog != NULL);
@@ -913,7 +905,7 @@ void MyFrame::OnQuit(wxCommandEvent& event)
   bx_user_quit = 1;
   if (!sim_thread) {
     // no simulation thread is running. Just close the window.
-    Close( TRUE );
+    Close(TRUE);
   } else {
     SIM->set_notify_callback(&MyApp::DefaultCallback, this);
     // ask the simulator to stop.  When it stops it will close this frame.
@@ -927,7 +919,7 @@ void MyFrame::OnAbout(wxCommandEvent& WXUNUSED(event))
   wxString str(wxT("Bochs x86 Emulator version "));
   str += wxString(VER_STRING, wxConvUTF8);
   str += wxT(" (wxWidgets port)");
-  wxMessageBox(str, wxT("About Bochs"), wxOK | wxICON_INFORMATION, this );
+  wxMessageBox(str, wxT("About Bochs"), wxOK | wxICON_INFORMATION, this);
 }
 
 // update the menu items, status bar, etc.
@@ -1090,14 +1082,13 @@ void MyFrame::OnKillSim(wxCommandEvent& WXUNUSED(event))
   }
 }
 
-void
-MyFrame::OnSimThreadExit() {
+void MyFrame::OnSimThreadExit()
+{
   wxCriticalSectionLocker lock(sim_thread_lock);
   sim_thread = NULL;
 }
 
-int
-MyFrame::HandleAskParamString(bx_param_string_c *param)
+int MyFrame::HandleAskParamString(bx_param_string_c *param)
 {
   wxLogDebug(wxT("HandleAskParamString start"));
   bx_param_num_c *opt = param->get_options();
@@ -1159,8 +1150,7 @@ MyFrame::HandleAskParamString(bx_param_string_c *param)
 // Returns 1 if the user chose a value and the param was modified.
 // Returns 0 if the user cancelled.
 // Returns -1 if the gui doesn't know how to ask for that param.
-int
-MyFrame::HandleAskParam(BxEvent *event)
+int MyFrame::HandleAskParam(BxEvent *event)
 {
   wxASSERT(event->type == BX_SYNC_EVT_ASK_PARAM);
 
@@ -1183,7 +1173,7 @@ MyFrame::HandleAskParam(BxEvent *event)
         wxString msg;
         msg.Printf(wxT("ask param for parameter type %d is not implemented in wxWidgets"),
                    param->get_type());
-        wxMessageBox(msg, wxT("not implemented"), wxOK | wxICON_ERROR, this );
+        wxMessageBox(msg, wxT("not implemented"), wxOK | wxICON_ERROR, this);
         return -1;
       }
   }
@@ -1193,8 +1183,7 @@ MyFrame::HandleAskParam(BxEvent *event)
 // This is called from the wxWidgets GUI thread, when a Sim2CI event
 // is found.  (It got there via wxPostEvent in SiminterfaceCallback2, which is
 // executed in the simulator Thread.)
-void
-MyFrame::OnSim2CIEvent(wxCommandEvent& event)
+void MyFrame::OnSim2CIEvent(wxCommandEvent& event)
 {
   IFDBG_EVENT(wxLogDebug(wxT("received a bochs event in the GUI thread")));
   BxEvent *be = (BxEvent *) event.GetEventObject();
@@ -1260,7 +1249,8 @@ MyFrame::OnSim2CIEvent(wxCommandEvent& event)
     delete be;
 }
 
-void MyFrame::OnLogMsg(BxEvent *be) {
+void MyFrame::OnLogMsg(BxEvent *be)
+{
   wxLogDebug(wxT("log msg: level=%d, prefix='%s', msg='%s'"),
       be->u.logmsg.level,
       be->u.logmsg.prefix,
@@ -1294,8 +1284,7 @@ void MyFrame::OnLogMsg(BxEvent *be) {
     sim_thread->SendSyncResponse(be);  // only for case #2
 }
 
-bool
-MyFrame::editFloppyValidate(FloppyConfigDialog *dialog)
+bool MyFrame::editFloppyValidate(FloppyConfigDialog *dialog)
 {
   // haven't done anything with this 'feature'
   return true;
@@ -1364,7 +1353,7 @@ void MyFrame::editFirstCdrom()
   bx_param_c *firstcd = SIM->get_first_cdrom();
   if (!firstcd) {
     wxMessageBox(wxT("No CDROM drive is enabled.  Use Edit:ATA to set one up."),
-                 wxT("No CDROM"), wxOK | wxICON_ERROR, this );
+                 wxT("No CDROM"), wxOK | wxICON_ERROR, this);
     return;
   }
   ParamDialog dlg(this, -1);
@@ -1426,14 +1415,16 @@ void MyFrame::OnToolbarClick(wxCommandEvent& event)
 }
 
 // warning: This can be called from the simulator thread!!!
-bool MyFrame::WantRefresh() {
+bool MyFrame::WantRefresh()
+{
   bool anyShowing = false;
   if (showCpu!=NULL && showCpu->IsShowing()) anyShowing = true;
   if (showKbd!=NULL && showKbd->IsShowing()) anyShowing = true;
   return anyShowing;
 }
 
-void MyFrame::RefreshDialogs() {
+void MyFrame::RefreshDialogs()
+{
   if (showCpu!=NULL && showCpu->IsShowing()) showCpu->CopyParamToGui();
   if (showKbd!=NULL && showKbd->IsShowing()) showKbd->CopyParamToGui();
 }
@@ -1442,8 +1433,7 @@ void MyFrame::RefreshDialogs() {
 // Simulation Thread
 //////////////////////////////////////////////////////////////////////
 
-void *
-SimThread::Entry(void)
+void *SimThread::Entry(void)
 {
   // run all the rest of the Bochs simulator code.  This function will
   // run forever, unless a "kill_bochs_request" is issued.  The shutdown
@@ -1486,8 +1476,7 @@ SimThread::Entry(void)
   return NULL;
 }
 
-void
-SimThread::OnExit()
+void SimThread::OnExit()
 {
   // notify the MyFrame that the bochs thread has died.  I can't adjust
   // the sim_thread directly because it's private.
@@ -1504,8 +1493,7 @@ SimThread::OnExit()
 // function when it needs to contact the gui.  It will always be
 // called with a pointer to the SimThread as the first argument, and
 // it will be called from the simulator thread, not the GUI thread.
-BxEvent *
-SimThread::SiminterfaceCallback(void *thisptr, BxEvent *event)
+BxEvent *SimThread::SiminterfaceCallback(void *thisptr, BxEvent *event)
 {
   SimThread *me = (SimThread *)thisptr;
   // call the normal non-static method now that we know the this pointer.
@@ -1517,8 +1505,7 @@ SimThread::SiminterfaceCallback(void *thisptr, BxEvent *event)
 // thread safe.  Most events are handled by packaging up the event
 // in a wxEvent of some kind, and posting it to the GUI thread for
 // processing.
-BxEvent *
-SimThread::SiminterfaceCallback2(BxEvent *event)
+BxEvent *SimThread::SiminterfaceCallback2(BxEvent *event)
 {
   // wxLogDebug(wxT("SiminterfaceCallback with event type=%d"), (int)event->type);
   event->retcode = 0;  // default return code
@@ -1581,8 +1568,7 @@ SimThread::SiminterfaceCallback2(BxEvent *event)
   }
 }
 
-void
-SimThread::ClearSyncResponse()
+void SimThread::ClearSyncResponse()
 {
   wxCriticalSectionLocker lock(sim2gui_mailbox_lock);
   if (sim2gui_mailbox != NULL) {
@@ -1591,8 +1577,7 @@ SimThread::ClearSyncResponse()
   sim2gui_mailbox = NULL;
 }
 
-void
-SimThread::SendSyncResponse(BxEvent *event)
+void SimThread::SendSyncResponse(BxEvent *event)
 {
   wxCriticalSectionLocker lock(sim2gui_mailbox_lock);
   if (sim2gui_mailbox != NULL) {
@@ -1601,8 +1586,7 @@ SimThread::SendSyncResponse(BxEvent *event)
   sim2gui_mailbox = event;
 }
 
-BxEvent *
-SimThread::GetSyncResponse()
+BxEvent *SimThread::GetSyncResponse()
 {
   wxCriticalSectionLocker lock(sim2gui_mailbox_lock);
   BxEvent *event = sim2gui_mailbox;
@@ -1613,8 +1597,7 @@ SimThread::GetSyncResponse()
 ///////////////////////////////////////////////////////////////////
 // utility
 ///////////////////////////////////////////////////////////////////
-void
-safeWxStrcpy(char *dest, wxString src, int destlen)
+void safeWxStrcpy(char *dest, wxString src, int destlen)
 {
   wxString tmp(src);
   strncpy(dest, tmp.mb_str(wxConvUTF8), destlen);

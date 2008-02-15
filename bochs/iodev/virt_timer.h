@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: virt_timer.h,v 1.14 2007-09-28 19:52:08 sshwarts Exp $
+// $Id: virt_timer.h,v 1.15 2008-02-15 22:05:43 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -34,9 +34,7 @@
 
 #define BX_MAX_VIRTUAL_TIME (0x7fffffff)
 
-class bx_virt_timer_c : public logfunctions
-{
-
+class bx_virt_timer_c : public logfunctions {
 private:
 
   struct {
@@ -122,21 +120,21 @@ public:
 
   //Register a timer handler to go off after a given interval.
   //Register a timer handler to go off with a periodic interval.
-  int    register_timer( void *this_ptr, bx_timer_handler_t handler,
+  int  register_timer(void *this_ptr, bx_timer_handler_t handler,
                          Bit32u useconds,
                          bx_bool continuous, bx_bool active, const char *id);
 
   //unregister a previously registered timer.
   bx_bool unregisterTimer(unsigned timerID);
 
-  void   start_timers(void);
+  void start_timers(void);
 
   //activate a deactivated but registered timer.
-  void   activate_timer( unsigned timer_index, Bit32u useconds,
-                         bx_bool continuous );
+  void activate_timer(unsigned timer_index, Bit32u useconds,
+                         bx_bool continuous);
 
   //deactivate (but don't unregister) a currently registered timer.
-  void   deactivate_timer( unsigned timer_index );
+  void deactivate_timer(unsigned timer_index);
 
 
   //Timer handler passed to pc_system

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: soundlnx.cc,v 1.12 2008-01-26 22:24:02 sshwarts Exp $
+// $Id: soundlnx.cc,v 1.13 2008-02-15 22:05:43 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -23,9 +23,9 @@
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+/////////////////////////////////////////////////////////////////////////
 
 // This file (SOUNDLNX.CC) written and donated by Josef Drexler
-
 
 #define NO_DEVICE_INCLUDES
 #include "iodev.h"
@@ -69,17 +69,17 @@ int bx_sound_linux_c::midiready()
 
 int bx_sound_linux_c::openmidioutput(char *device)
 {
-  if ( (device == NULL) || (strlen(device) < 1) )
+  if ((device == NULL) || (strlen(device) < 1))
     return BX_SOUND_OUTPUT_ERR;
 
   midi = fopen(device,"w");
 
   if (midi == NULL)
-    {
-      WRITELOG( MIDILOG(2), "Couldn't open midi output device %s: %s.",
-		device, strerror(errno));
+  {
+      WRITELOG(MIDILOG(2), "Couldn't open midi output device %s: %s.",
+                device, strerror(errno));
       return BX_SOUND_OUTPUT_ERR;
-    }
+  }
 
   return BX_SOUND_OUTPUT_OK;
 }
@@ -88,7 +88,6 @@ int bx_sound_linux_c::openmidioutput(char *device)
 int bx_sound_linux_c::sendmidicommand(int delta, int command, int length, Bit8u data[])
 {
   UNUSED(delta);
-  //  BX_PANIC(("Sendmidicommand!!");
 
   fputc(command, midi);
   fwrite(data, 1, length, midi);
@@ -128,16 +127,16 @@ int bx_sound_linux_c::startwaveplayback(int frequency, int bits, int stereo, int
   int fmt, ret;
   int signeddata = format & 1;
 
-  if ( (wavedevice == NULL) || (strlen(wavedevice) < 1) )
+  if ((wavedevice == NULL) || (strlen(wavedevice) < 1))
     return BX_SOUND_OUTPUT_ERR;
 
   if (wave == -1)
     wave = open(wavedevice, O_WRONLY);
   else
-    if ( (frequency == oldfreq) &&
-	 (bits == oldbits) &&
-	 (stereo == oldstereo) &&
-	 (format == oldformat) )
+    if ((frequency == oldfreq) &&
+        (bits == oldbits) &&
+        (stereo == oldstereo) &&
+        (format == oldformat))
       return BX_SOUND_OUTPUT_OK;    // nothing to do
 
   oldfreq = frequency;
@@ -164,53 +163,51 @@ int bx_sound_linux_c::startwaveplayback(int frequency, int bits, int stereo, int
       // set frequency etc.
   ret = ioctl(wave, SNDCTL_DSP_RESET);
   if (ret != 0)
-    WRITELOG( WAVELOG(4), "ioctl(SNDCTL_DSP_RESET): %s", strerror(errno));
+    WRITELOG(WAVELOG(4), "ioctl(SNDCTL_DSP_RESET): %s", strerror(errno));
 
   /*
   ret = ioctl(wave, SNDCTL_DSP_SETFRAGMENT, &fragment);
   if (ret != 0)
-    WRITELOG( WAVELOG(4), "ioctl(SNDCTL_DSP_SETFRAGMENT, %d): %s",
-	      fragment, strerror(errno));
+    WRITELOG(WAVELOG(4), "ioctl(SNDCTL_DSP_SETFRAGMENT, %d): %s",
+             fragment, strerror(errno));
   */
 
   ret = ioctl(wave, SNDCTL_DSP_SETFMT, &fmt);
   if (ret != 0)   // abort if the format is unknown, to avoid playing noise
-    {
-      WRITELOG( WAVELOG(4), "ioctl(SNDCTL_DSP_SETFMT, %d): %s",
-		fmt, strerror(errno));
+  {
+      WRITELOG(WAVELOG(4), "ioctl(SNDCTL_DSP_SETFMT, %d): %s",
+               fmt, strerror(errno));
       return BX_SOUND_OUTPUT_ERR;
-    }
+  }
 
   ret = ioctl(wave, SNDCTL_DSP_STEREO, &stereo);
   if (ret != 0)
-    WRITELOG( WAVELOG(4), "ioctl(SNDCTL_DSP_STEREO, %d): %s",
-	      stereo, strerror(errno));
+    WRITELOG(WAVELOG(4), "ioctl(SNDCTL_DSP_STEREO, %d): %s",
+             stereo, strerror(errno));
 
   ret = ioctl(wave, SNDCTL_DSP_SPEED, &frequency);
   if (ret != 0)
-    WRITELOG( WAVELOG(4), "ioctl(SNDCTL_DSP_SPEED, %d): %s",
-	      frequency, strerror(errno));
+    WRITELOG(WAVELOG(4), "ioctl(SNDCTL_DSP_SPEED, %d): %s",
+             frequency, strerror(errno));
 
-  //  ioctl(wave, SNDCTL_DSP_GETBLKSIZE, &fragment);
-  //  WRITELOG( WAVELOG(4), "current output block size is %d", fragment);
+  // ioctl(wave, SNDCTL_DSP_GETBLKSIZE, &fragment);
+  // WRITELOG(WAVELOG(4), "current output block size is %d", fragment);
 
   return BX_SOUND_OUTPUT_OK;
 }
 
 int bx_sound_linux_c::sendwavepacket(int length, Bit8u data[])
 {
-  int ret;
-
-  ret = write(wave, data, length);
+  int ret = write(wave, data, length);
 
   return BX_SOUND_OUTPUT_OK;
 }
 
 int bx_sound_linux_c::stopwaveplayback()
 {
-  //  ioctl(wave, SNDCTL_DSP_SYNC);
-  //  close(wave);
-  //  wave = -1;
+  // ioctl(wave, SNDCTL_DSP_SYNC);
+  // close(wave);
+  // wave = -1;
 
   return BX_SOUND_OUTPUT_OK;
 }
@@ -221,10 +218,10 @@ int bx_sound_linux_c::closewaveoutput()
     delete(wavedevice);
 
   if (wave != -1)
-    {
+  {
       close(wave);
       wave = -1;
-    }
+  }
 
   wavedevice = NULL;
 

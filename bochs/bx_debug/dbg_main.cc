@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.112 2008-02-15 19:03:53 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.113 2008-02-15 22:05:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -375,8 +375,8 @@ void bx_get_command(void)
   }
 
   // look for first non-whitespace character
-  while (((*tmp_buf_ptr == ' ') || (*tmp_buf_ptr == '\t')) &&
-          (*tmp_buf_ptr != '\n') && (*tmp_buf_ptr != 0) )
+  while (((*tmp_buf_ptr == ' ')  || (*tmp_buf_ptr == '\t')) &&
+          (*tmp_buf_ptr != '\n') && (*tmp_buf_ptr != 0))
   {
     tmp_buf_ptr++;
   }

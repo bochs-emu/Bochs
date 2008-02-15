@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_packetmaker.cc,v 1.15 2008-01-26 22:24:01 sshwarts Exp $
+// $Id: eth_packetmaker.cc,v 1.16 2008-02-15 22:05:42 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
@@ -14,25 +14,27 @@
 
 #include "eth_packetmaker.h"
 
-
 bx_bool sendable(const eth_packet& outpacket) {
   //FINISH ME!
   return 0;
 }
 
-Bit32u eth_IPmaker::datalen(const eth_packet& outpacket) {
+Bit32u eth_IPmaker::datalen(const eth_packet& outpacket)
+{
   Bit32u out;
   out=((outpacket.buf[16]<<8)+outpacket.buf[17])-(4*(0xF & outpacket.buf[14]));
   return out;
 }
 
-const Bit8u * eth_IPmaker::datagram(const eth_packet& outpacket) {
-  const Bit8u * out;
+const Bit8u *eth_IPmaker::datagram(const eth_packet& outpacket)
+{
+  const Bit8u *out;
   out=outpacket.buf+14+(4*(0xF & outpacket.buf[14]));
   return out;
 }
 
-Bit32u eth_IPmaker::build_packet_header(Bit32u source, Bit32u dest, Bit8u protocol, Bit32u datalen) {
+Bit32u eth_IPmaker::build_packet_header(Bit32u source, Bit32u dest, Bit8u protocol, Bit32u datalen)
+{
   Bit32u temp;
   Bit32u i;
   memcpy(pending.buf,internal_mac,6);
@@ -73,49 +75,51 @@ Bit32u eth_IPmaker::build_packet_header(Bit32u source, Bit32u dest, Bit8u protoc
   return(34);
 }
 
-Bit8u eth_IPmaker::protocol(const eth_packet& outpacket) {
+Bit8u eth_IPmaker::protocol(const eth_packet& outpacket)
+{
   return (*(outpacket.buf+23) & 0xff);
 }
 
-Bit32u eth_IPmaker::source(const eth_packet& outpacket) {
-  Bit32u out;
-  out=0xFF & *(outpacket.buf+26);
+Bit32u eth_IPmaker::source(const eth_packet& outpacket)
+{
+  Bit32u out=0xFF & *(outpacket.buf+26);
   out=(out<<8) | (0xFF & *(outpacket.buf+27));
   out=(out<<8) | (0xFF & *(outpacket.buf+28));
   out=(out<<8) | (0xFF & *(outpacket.buf+29));
   return out;
 }
 
-Bit32u eth_IPmaker::destination(const eth_packet& outpacket) {
-  Bit32u out;
-  out=0xFF & *(outpacket.buf+30);
+Bit32u eth_IPmaker::destination(const eth_packet& outpacket)
+{
+  Bit32u out=0xFF & *(outpacket.buf+30);
   out=(out<<8) | (0xFF & *(outpacket.buf+31));
   out=(out<<8) | (0xFF & *(outpacket.buf+32));
   out=(out<<8) | (0xFF & *(outpacket.buf+33));
   return out;
 }
 
-void eth_IPmaker::init(void) {
+void eth_IPmaker::init(void)
+{
   is_pending=0;
 }
 
-void
-eth_ETHmaker::init(void) {
+void eth_ETHmaker::init(void)
+{
   arper.init();
 }
 
-bx_bool
-eth_ETHmaker::getpacket(eth_packet& inpacket) {
+bx_bool eth_ETHmaker::getpacket(eth_packet& inpacket)
+{
   return arper.getpacket(inpacket);
 }
 
-bx_bool
-eth_ETHmaker::ishandler(const eth_packet& outpacket) {
+bx_bool eth_ETHmaker::ishandler(const eth_packet& outpacket)
+{
   if((outpacket.len>=60) &&
      ( (!memcmp(outpacket.buf, external_mac, 6))
-       || (!memcmp(outpacket.buf, broadcast_macaddr, 6)) ) &&
+       || (!memcmp(outpacket.buf, broadcast_macaddr, 6))) &&
      ( (!memcmp(outpacket.buf+12, ethtype_arp, 2)) ||
-       (!memcmp(outpacket.buf+12, ethtype_ip, 2)) ) &&
+       (!memcmp(outpacket.buf+12, ethtype_ip, 2))) &&
      (outpacket.len<PACKET_BUF_SIZE)
      ) {
     return 1;
@@ -123,21 +127,19 @@ eth_ETHmaker::ishandler(const eth_packet& outpacket) {
   return 0;
 }
 
-bx_bool
-eth_ETHmaker::sendpacket(const eth_packet& outpacket) {
+bx_bool eth_ETHmaker::sendpacket(const eth_packet& outpacket)
+{
   return arper.sendpacket(outpacket);
 }
 
-
-
-void
-eth_ARPmaker::init(void) {
+void eth_ARPmaker::init(void)
+{
   is_pending=0;
   pending.len=0;
 }
 
-bx_bool
-eth_ARPmaker::getpacket(eth_packet& inpacket) {
+bx_bool eth_ARPmaker::getpacket(eth_packet& inpacket)
+{
   if(is_pending) {
     memcpy(inpacket.buf,pending.buf,pending.len);
     inpacket.len=pending.len;
@@ -147,8 +149,8 @@ eth_ARPmaker::getpacket(eth_packet& inpacket) {
   return 0;
 }
 
-bx_bool
-eth_ARPmaker::ishandler(const eth_packet& outpacket) {
+bx_bool eth_ARPmaker::ishandler(const eth_packet& outpacket)
+{
   if((outpacket.len>=60) &&
      (!memcmp(outpacket.buf+12, ethtype_arp, 2)) &&
      (outpacket.len<PACKET_BUF_SIZE) &&
@@ -161,8 +163,8 @@ eth_ARPmaker::ishandler(const eth_packet& outpacket) {
   return 0;
 }
 
-bx_bool
-eth_ARPmaker::sendpacket(const eth_packet& outpacket) {
+bx_bool eth_ARPmaker::sendpacket(const eth_packet& outpacket)
+{
   if(is_pending || !ishandler(outpacket)) {
     return 0;
   } else {

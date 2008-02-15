@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.cc,v 1.103 2008-02-05 22:57:41 sshwarts Exp $
+// $Id: gui.cc,v 1.104 2008-02-15 22:05:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -395,7 +395,7 @@ void bx_gui_c::copy_handler(void)
   Bit32u len;
   char *text_snapshot;
   if (make_text_snapshot (&text_snapshot, &len) < 0) {
-    BX_INFO(( "copy button failed, mode not implemented"));
+    BX_INFO(("copy button failed, mode not implemented"));
     return;
   }
   if (!BX_GUI_THIS set_clipboard_text(text_snapshot, len)) {
@@ -460,7 +460,7 @@ void bx_gui_c::snapshot_handler(void)
   char *text_snapshot;
   Bit32u len;
   if (make_text_snapshot (&text_snapshot, &len) < 0) {
-    BX_ERROR(( "snapshot button failed, mode not implemented"));
+    BX_ERROR(("snapshot button failed, mode not implemented"));
     return;
   }
   //FIXME

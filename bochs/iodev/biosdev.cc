@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: biosdev.cc,v 1.12 2008-01-26 22:24:00 sshwarts Exp $
+// $Id: biosdev.cc,v 1.13 2008-02-15 22:05:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -154,7 +154,7 @@ void bx_biosdev_c::write(Bit32u address, Bit32u value, unsigned io_len)
       BX_BIOS_THIS s.bios_message[BX_BIOS_THIS s.bios_message_i] =
         (Bit8u) value;
       BX_BIOS_THIS s.bios_message_i ++;
-      if ( BX_BIOS_THIS s.bios_message_i >= BX_BIOS_MESSAGE_SIZE ) {
+      if (BX_BIOS_THIS s.bios_message_i >= BX_BIOS_MESSAGE_SIZE) {
         BX_BIOS_THIS s.bios_message[ BX_BIOS_MESSAGE_SIZE - 1] = 0;
         BX_BIOS_THIS s.bios_message_i = 0;
         if (address==0x403)
@@ -201,7 +201,7 @@ void bx_biosdev_c::write(Bit32u address, Bit32u value, unsigned io_len)
       BX_BIOS_THIS s.vgabios_message[BX_BIOS_THIS s.vgabios_message_i] =
         (Bit8u) value;
       BX_BIOS_THIS s.vgabios_message_i ++;
-      if ( BX_BIOS_THIS s.vgabios_message_i >= BX_BIOS_MESSAGE_SIZE ) {
+      if (BX_BIOS_THIS s.vgabios_message_i >= BX_BIOS_MESSAGE_SIZE) {
         BX_BIOS_THIS s.vgabios_message[ BX_BIOS_MESSAGE_SIZE - 1] = 0;
         BX_BIOS_THIS s.vgabios_message_i = 0;
         if (address==0x503)

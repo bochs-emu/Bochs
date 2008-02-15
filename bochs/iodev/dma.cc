@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dma.cc,v 1.45 2008-01-26 22:24:01 sshwarts Exp $
+// $Id: dma.cc,v 1.46 2008-02-15 22:05:42 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -23,8 +23,7 @@
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
-
-
+/////////////////////////////////////////////////////////////////////////
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
 // platforms that require a special tag on exported symbols, BX_PLUGGABLE
@@ -123,7 +122,7 @@ unsigned bx_dma_c::get_TC(void)
 void bx_dma_c::init(void)
 {
   unsigned c, i, j;
-  BX_DEBUG(("Init $Id: dma.cc,v 1.45 2008-01-26 22:24:01 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: dma.cc,v 1.46 2008-02-15 22:05:42 sshwarts Exp $"));
 
   /* 8237 DMA controller */
 
@@ -379,7 +378,7 @@ bx_dma_c::write(Bit32u   address, Bit32u   value, unsigned io_len)
   Bit8u channel;
 
   if (io_len > 1) {
-    if ( (io_len == 2) && (address == 0x0b) ) {
+    if ((io_len == 2) && (address == 0x0b)) {
 #if BX_USE_DMA_SMF
       BX_DMA_THIS write_handler(NULL, address,   value & 0xff, 1);
       BX_DMA_THIS write_handler(NULL, address+1, value >> 8,   1);
@@ -617,11 +616,13 @@ void bx_dma_c::set_DRQ(unsigned channel, bx_bool val)
 
   BX_DMA_THIS s[ma_sl].status_reg |= (1 << (channel+4));
 
-  if ( (BX_DMA_THIS s[ma_sl].chan[channel].mode.mode_type != DMA_MODE_SINGLE) &&
-       (BX_DMA_THIS s[ma_sl].chan[channel].mode.mode_type != DMA_MODE_DEMAND) &&
-       (BX_DMA_THIS s[ma_sl].chan[channel].mode.mode_type != DMA_MODE_CASCADE) )
+  if ((BX_DMA_THIS s[ma_sl].chan[channel].mode.mode_type != DMA_MODE_SINGLE) &&
+      (BX_DMA_THIS s[ma_sl].chan[channel].mode.mode_type != DMA_MODE_DEMAND) &&
+      (BX_DMA_THIS s[ma_sl].chan[channel].mode.mode_type != DMA_MODE_CASCADE))
+  {
     BX_PANIC(("set_DRQ: mode_type(%02x) not handled",
       (unsigned) BX_DMA_THIS s[ma_sl].chan[channel].mode.mode_type));
+  }
 
   dma_base = (BX_DMA_THIS s[ma_sl].chan[channel].page_reg << 16) |
              (BX_DMA_THIS s[ma_sl].chan[channel].base_address << ma_sl);
@@ -630,7 +631,7 @@ void bx_dma_c::set_DRQ(unsigned channel, bx_bool val)
   } else {
     dma_roof = dma_base - (BX_DMA_THIS s[ma_sl].chan[channel].base_count << ma_sl);
   }
-  if ( (dma_base & (0x7fff0000 << ma_sl)) != (dma_roof & (0x7fff0000 << ma_sl)) ) {
+  if ((dma_base & (0x7fff0000 << ma_sl)) != (dma_roof & (0x7fff0000 << ma_sl))) {
     BX_INFO(("dma_base = %08x", (unsigned) dma_base));
     BX_INFO(("dma_base_count = %08x", (unsigned) BX_DMA_THIS s[ma_sl].chan[channel].base_count));
     BX_INFO(("dma_roof = %08x", (unsigned) dma_roof));
@@ -659,8 +660,8 @@ void bx_dma_c::control_HRQ(bx_bool ma_sl)
   }
   // find highest priority channel
   for (channel=0; channel<4; channel++) {
-    if ( (BX_DMA_THIS s[ma_sl].status_reg & (1 << (channel+4))) &&
-         (BX_DMA_THIS s[ma_sl].mask[channel]==0) ) {
+    if ((BX_DMA_THIS s[ma_sl].status_reg & (1 << (channel+4))) &&
+        (BX_DMA_THIS s[ma_sl].mask[channel]==0)) {
       if (ma_sl) {
         // assert Hold ReQuest line to CPU
         bx_pc_system.set_HRQ(1);
@@ -683,8 +684,8 @@ void bx_dma_c::raise_HLDA(void)
   BX_DMA_THIS HLDA = 1;
   // find highest priority channel
   for (channel=0; channel<4; channel++) {
-    if ( (BX_DMA_THIS s[1].status_reg & (1 << (channel+4))) &&
-         (BX_DMA_THIS s[1].mask[channel]==0) ) {
+    if ((BX_DMA_THIS s[1].status_reg & (1 << (channel+4))) &&
+        (BX_DMA_THIS s[1].mask[channel]==0)) {
       ma_sl = 1;
       break;
     }
@@ -692,8 +693,8 @@ void bx_dma_c::raise_HLDA(void)
   if (channel == 0) { // master cascade channel
     BX_DMA_THIS s[1].DACK[0] = 1;
     for (channel=0; channel<4; channel++) {
-      if ( (BX_DMA_THIS s[0].status_reg & (1 << (channel+4))) &&
-           (BX_DMA_THIS s[0].mask[channel]==0) ) {
+      if ((BX_DMA_THIS s[0].status_reg & (1 << (channel+4))) &&
+          (BX_DMA_THIS s[0].mask[channel]==0)) {
         ma_sl = 0;
         break;
       }

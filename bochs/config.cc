@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.131 2008-02-15 19:03:52 sshwarts Exp $
+// $Id: config.cc,v 1.132 2008-02-15 22:05:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1774,7 +1774,7 @@ static const char *get_builtin_variable(const char *varname)
         data[0] = 0;
         size = MAX_PATH;
         if (RegQueryValueEx(hkey, "", NULL, (LPDWORD)&type, (LPBYTE)data,
-                            (LPDWORD)&size ) == ERROR_SUCCESS) {
+                            (LPDWORD)&size) == ERROR_SUCCESS) {
           RegCloseKey(hkey);
           return data;
         } else {
@@ -3047,7 +3047,7 @@ static Bit32s parse_line_formatted(const char *context, int num_params, char *pa
   }
   else
   {
-    PARSE_ERR(( "%s: directive '%s' not understood", context, params[0]));
+    PARSE_ERR(("%s: directive '%s' not understood", context, params[0]));
   }
   return 0;
 }

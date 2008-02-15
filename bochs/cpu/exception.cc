@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.100 2008-02-02 21:46:50 sshwarts Exp $
+// $Id: exception.cc,v 1.101 2008-02-15 22:05:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -71,7 +71,7 @@ void BX_CPU_C::long_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error_code
   // interrupt vector must be within IDT table limits,
   // else #GP(vector number*16 + 2 + EXT)
   idtindex = vector*16;
-  if ( (idtindex + 15) > BX_CPU_THIS_PTR idtr.limit) {
+  if ((idtindex + 15) > BX_CPU_THIS_PTR idtr.limit) {
     BX_ERROR(("interrupt(long mode): vector > idtr.limit"));
     BX_ERROR(("IDT.limit = %04x", (unsigned) BX_CPU_THIS_PTR idtr.limit));
     BX_ERROR(("IDT.base  = %06x", (unsigned) BX_CPU_THIS_PTR idtr.base));
@@ -295,7 +295,7 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error
 
   // interrupt vector must be within IDT table limits,
   // else #GP(vector number*8 + 2 + EXT)
-  if ( (vector*8 + 7) > BX_CPU_THIS_PTR idtr.limit) {
+  if ((vector*8 + 7) > BX_CPU_THIS_PTR idtr.limit) {
     BX_DEBUG(("IDT.limit = %04x", (unsigned) BX_CPU_THIS_PTR idtr.limit));
     BX_DEBUG(("IDT.base  = %06x", (unsigned) BX_CPU_THIS_PTR idtr.base));
     BX_DEBUG(("interrupt vector must be within IDT table limits"));

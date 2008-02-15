@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: hdimage.cc,v 1.15 2008-02-05 22:57:42 sshwarts Exp $
+// $Id: hdimage.cc,v 1.16 2008-02-15 22:05:42 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -205,7 +205,7 @@ void concat_image_t::close()
 Bit64s concat_image_t::lseek(Bit64s offset, int whence)
 {
   if ((offset % 512) != 0)
-    BX_PANIC( ("lseek HD with offset not multiple of 512"));
+    BX_PANIC(("lseek HD with offset not multiple of 512"));
   BX_DEBUG(("concat_image_t.lseek(%d)", whence));
   // is this offset in this disk image?
   if (offset < thismin) {
@@ -252,7 +252,7 @@ ssize_t concat_image_t::read(void* buf, size_t count)
   // This can be supported pretty easily, but needs additional checks for
   // end of a partial image.
   if (!seek_was_last_op)
-    BX_PANIC( ("no seek before read"));
+    BX_PANIC(("no seek before read"));
   return ::read(fd, (char*) buf, count);
 }
 
@@ -263,7 +263,7 @@ ssize_t concat_image_t::write(const void* buf, size_t count)
   // This can be supported pretty easily, but needs additional checks for
   // end of a partial image.
   if (!seek_was_last_op)
-    BX_PANIC( ("no seek before write"));
+    BX_PANIC(("no seek before write"));
   return ::write(fd, (char*) buf, count);
 }
 
@@ -480,9 +480,9 @@ Bit64s sparse_image_t::lseek(Bit64s offset, int whence)
   //showpagetable(pagetable, header.numpages);
 
   if ((offset % 512) != 0)
-    BX_PANIC( ("lseek HD with offset not multiple of 512"));
+    BX_PANIC(("lseek HD with offset not multiple of 512"));
   if (whence != SEEK_SET)
-    BX_PANIC( ("lseek HD with whence not SEEK_SET"));
+    BX_PANIC(("lseek HD with whence not SEEK_SET"));
 
   BX_DEBUG(("sparse_image_t.lseek(%d)", whence));
 
@@ -1098,11 +1098,11 @@ Bit64u redolog_t::get_size()
 Bit64s redolog_t::lseek(Bit64s offset, int whence)
 {
   if ((offset % 512) != 0) {
-    BX_PANIC( ("redolog : lseek HD with offset not multiple of 512"));
+    BX_PANIC(("redolog : lseek HD with offset not multiple of 512"));
     return -1;
   }
   if (whence != SEEK_SET) {
-    BX_PANIC( ("redolog : lseek HD with whence not SEEK_SET"));
+    BX_PANIC(("redolog : lseek HD with whence not SEEK_SET"));
     return -1;
   }
   if (offset > (Bit64s)dtoh64(header.specific.disk))
@@ -1124,7 +1124,7 @@ ssize_t redolog_t::read(void* buf, size_t count)
   Bit64s bloc_offset, bitmap_offset;
 
   if (count != 512)
-    BX_PANIC( ("redolog : read HD with count not 512"));
+    BX_PANIC(("redolog : read HD with count not 512"));
 
   BX_DEBUG(("redolog : reading index %d, mapping to %d", extent_index, dtoh32(catalog[extent_index])));
 
@@ -1151,7 +1151,7 @@ ssize_t redolog_t::read(void* buf, size_t count)
     return 0;
   }
 
-  if ( ((bitmap[extent_offset/8] >> (extent_offset%8)) & 0x01) == 0x00 )
+  if (((bitmap[extent_offset/8] >> (extent_offset%8)) & 0x01) == 0x00)
   {
     BX_DEBUG(("read not in redolog"));
 
@@ -1172,7 +1172,7 @@ ssize_t redolog_t::write(const void* buf, size_t count)
   bx_bool update_catalog = 0;
 
   if (count != 512)
-    BX_PANIC( ("redolog : write HD with count not 512"));
+    BX_PANIC(("redolog : write HD with count not 512"));
 
   BX_DEBUG(("redolog : writing index %d, mapping to %d", extent_index, dtoh32(catalog[extent_index])));
   if (dtoh32(catalog[extent_index]) == REDOLOG_PAGE_NOT_ALLOCATED)
@@ -1233,7 +1233,7 @@ ssize_t redolog_t::write(const void* buf, size_t count)
   }
 
   // If bloc does not belong to extent yet
-  if ( ((bitmap[extent_offset/8] >> (extent_offset%8)) & 0x01) == 0x00 )
+  if (((bitmap[extent_offset/8] >> (extent_offset%8)) & 0x01) == 0x00)
   {
     bitmap[extent_offset/8] |= 1 << (extent_offset%8);
     ::lseek(fd, (off_t)bitmap_offset, SEEK_SET);
@@ -1326,15 +1326,15 @@ int undoable_image_t::open(const char* pathname)
 
   hd_size = ro_disk->hd_size;
   // if redolog name was set
-  if ( redolog_name != NULL) {
-    if ( strcmp(redolog_name, "") != 0 ) {
+  if (redolog_name != NULL) {
+    if (strcmp(redolog_name, "") != 0) {
       logname = (char*)malloc(strlen(redolog_name) + 1);
       strcpy(logname, redolog_name);
     }
   }
 
   // Otherwise we make up the redolog filename from the pathname
-  if ( logname == NULL) {
+  if (logname == NULL) {
     logname = (char*)malloc(strlen(pathname) + UNDOABLE_REDOLOG_EXTENSION_LENGTH + 1);
     sprintf(logname, "%s%s", pathname, UNDOABLE_REDOLOG_EXTENSION);
   }
@@ -1420,8 +1420,8 @@ int volatile_image_t::open(const char* pathname)
 
   hd_size = ro_disk->hd_size;
   // if redolog name was set
-  if ( redolog_name != NULL) {
-    if ( strcmp(redolog_name, "") != 0 ) {
+  if (redolog_name != NULL) {
+    if (strcmp(redolog_name, "") != 0) {
       logname = redolog_name;
     }
   }
@@ -1586,15 +1586,15 @@ int z_undoable_image_t::open(const char* pathname)
     return -1;
 
   // If redolog name was set
-  if ( redolog_name != NULL) {
-    if ( strcmp(redolog_name, "") != 0) {
+  if (redolog_name != NULL) {
+    if (strcmp(redolog_name, "") != 0) {
       logname = (char*)malloc(strlen(redolog_name) + 1);
       strcpy (logname, redolog_name);
     }
   }
 
   // Otherwise we make up the redolog filename from the pathname
-  if ( logname == NULL) {
+  if (logname == NULL) {
     logname = (char*)malloc(strlen(pathname) + UNDOABLE_REDOLOG_EXTENSION_LENGTH + 1);
     sprintf (logname, "%s%s", pathname, UNDOABLE_REDOLOG_EXTENSION);
   }
@@ -1677,7 +1677,7 @@ int z_volatile_image_t::open(const char* pathname)
 
   // if redolog name was set
   if (redolog_name != NULL) {
-    if (strcmp(redolog_name, "") !=0 ) {
+    if (strcmp(redolog_name, "") != 0) {
       logname = redolog_name;
     }
   }
