@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: resolve64.cc,v 1.17 2008-01-29 17:13:09 sshwarts Exp $
+// $Id: resolve64.cc,v 1.18 2008-02-15 19:03:54 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -31,17 +31,6 @@
 #define LOG_THIS BX_CPU_THIS_PTR
 
 #if BX_SUPPORT_X86_64
-
-  void  BX_CPP_AttrRegparmN(1)
-BX_CPU_C::BxResolve32Rip(bxInstruction_c *i)
-{
-  RMAddr(i) = EIP + i->displ32u();
-}
-  void  BX_CPP_AttrRegparmN(1)
-BX_CPU_C::BxResolve64Rip(bxInstruction_c *i)
-{
-  RMAddr(i) = RIP + (Bit32s) i->displ32u();
-}
 
   void  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::BxResolve64DispIndex(bxInstruction_c *i)

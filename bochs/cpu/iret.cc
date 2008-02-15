@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: iret.cc,v 1.27 2008-02-02 21:46:51 sshwarts Exp $
+// $Id: iret.cc,v 1.28 2008-02-15 19:03:53 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005 Stanislav Shwartsman
@@ -137,7 +137,7 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
   }
 
   /* CS on stack must be within stack limits, else #SS(0) */
-  if ( !can_pop(top_nbytes_same) ) {
+  if (!can_pop(top_nbytes_same)) {
     BX_ERROR(("iret: CS not within stack limits"));
     exception(BX_SS_EXCEPTION, 0, 0);
   }
@@ -238,7 +238,7 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
      */
 
     /* top 10/20 bytes on stack must be within limits else #SS(0) */
-    if ( !can_pop(top_nbytes_outer) ) {
+    if (!can_pop(top_nbytes_outer)) {
       BX_ERROR(("iret: top 10/20 bytes not within stack limits"));
       exception(BX_SS_EXCEPTION, 0, 0);
     }
@@ -247,7 +247,7 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
     raw_ss_selector = read_virtual_word(BX_SEG_REG_SS, temp_ESP + ss_offset);
 
     /* selector must be non-null, else #GP(0) */
-    if ( (raw_ss_selector & 0xfffc) == 0 ) {
+    if ((raw_ss_selector & 0xfffc) == 0) {
       BX_ERROR(("iret: SS selector null"));
       exception(BX_GP_EXCEPTION, 0, 0);
     }
@@ -386,7 +386,7 @@ BX_CPU_C::long_iret(bxInstruction_c *i)
   }
   else if (i->os32L()) {
     /* CS on stack must be within stack limits, else #SS(0) */
-    if ( !can_pop(12) ) {
+    if (!can_pop(12)) {
       BX_ERROR(("iret64: CS not within stack limits"));
       exception(BX_SS_EXCEPTION, 0, 0);
     }
@@ -401,7 +401,7 @@ BX_CPU_C::long_iret(bxInstruction_c *i)
   }
   else {
     /* CS on stack must be within stack limits, else #SS(0) */
-    if ( !can_pop(6) ) {
+    if (!can_pop(6)) {
       BX_ERROR(("iret64: CS not within stack limits"));
       exception(BX_SS_EXCEPTION, 0, 0);
     }

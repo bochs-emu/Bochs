@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: tasking.cc,v 1.46 2008-02-02 21:46:54 sshwarts Exp $
+// $Id: tasking.cc,v 1.47 2008-02-15 19:03:54 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -475,7 +475,7 @@ void BX_CPU_C::task_switch(bx_selector_t *tss_selector,
     exception(BX_TS_EXCEPTION, raw_ldt_selector & 0xfffc, 0);
   }
 
-  if ( (raw_ldt_selector & 0xfffc) != 0 ) {
+  if ((raw_ldt_selector & 0xfffc) != 0) {
     bx_bool good = fetch_raw_descriptor2(&ldt_selector, &dword1, &dword2);
     if (!good) {
       BX_ERROR(("task_switch(exception after commit point): bad LDT fetch"));
@@ -527,7 +527,7 @@ void BX_CPU_C::task_switch(bx_selector_t *tss_selector,
     //    load cache with new segment descriptor and set valid bit
 
     // CS
-    if ( (raw_cs_selector & 0xfffc) != 0 ) {
+    if ((raw_cs_selector & 0xfffc) != 0) {
       bx_bool good = fetch_raw_descriptor2(&cs_selector, &dword1, &dword2);
       if (!good) {
         BX_ERROR(("task_switch(exception after commit point): bad CS fetch"));
@@ -652,7 +652,7 @@ void BX_CPU_C::task_switch(bx_selector_t *tss_selector,
   //
   // Step 14: Begin execution of new task.
   //
-  BX_DEBUG(( "TASKING: LEAVE" ));
+  BX_DEBUG(("TASKING: LEAVE"));
 }
 
 void BX_CPU_C::task_switch_load_selector(bx_segment_reg_t *seg,

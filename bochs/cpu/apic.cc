@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.cc,v 1.106 2008-02-02 21:46:49 sshwarts Exp $
+// $Id: apic.cc,v 1.107 2008-02-15 19:03:53 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (c) 2002 Zwane Mwaikambo, Stanislav Shwartsman
@@ -526,9 +526,10 @@ void bx_local_apic_c::startup_msg(Bit32u vector)
 {
   if(cpu->debug_trap & BX_DEBUG_TRAP_SPECIAL) {
     cpu->debug_trap &= ~BX_DEBUG_TRAP_SPECIAL;
-    cpu->eip_reg.dword.eip = 0;
+    cpu->gen_reg[BX_32BIT_REG_EIP].dword.erx = 0;
     cpu->load_seg_reg(&cpu->sregs[BX_SEG_REG_CS], vector*0x100);
-    BX_INFO(("%s started up at %04X:%08X by APIC", cpu->name, vector*0x100, cpu->eip_reg.dword.eip));
+    BX_INFO(("%s started up at %04X:%08X by APIC",
+       cpu->name, vector*0x100, cpu->gen_reg[BX_32BIT_REG_EIP].dword.erx));
   } else {
     BX_INFO(("%s started up by APIC, but was not halted at the time", cpu->name));
   }

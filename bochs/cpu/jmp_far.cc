@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: jmp_far.cc,v 1.11 2008-01-29 17:13:07 sshwarts Exp $
+// $Id: jmp_far.cc,v 1.12 2008-02-15 19:03:53 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005 Stanislav Shwartsman
@@ -262,7 +262,7 @@ BX_CPU_C::jmp_call_gate64(bx_selector_t *gate_selector)
 
   Bit16u dest_selector = gate_descriptor.u.gate.dest_selector;
   // selector must not be null else #GP(0)
-  if ( (dest_selector & 0xfffc) == 0 ) {
+  if ((dest_selector & 0xfffc) == 0) {
     BX_ERROR(("call_gate64: selector in gate null"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }

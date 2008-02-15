@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: soft_int.cc,v 1.39 2008-02-02 21:46:53 sshwarts Exp $
+// $Id: soft_int.cc,v 1.40 2008-02-15 19:03:54 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -159,7 +159,7 @@ void BX_CPU_C::INT_Ib(bxInstruction_c *i)
   }
 
 #ifdef SHOW_EXIT_STATUS
-  if ( (vector == 0x21) && (AH == 0x4c) ) {
+  if ((vector == 0x21) && (AH == 0x4c)) {
     BX_INFO(("INT 21/4C called AL=0x%02x, BX=0x%04x", (unsigned) AL, (unsigned) BX));
   }
 #endif

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.130 2008-02-05 22:57:39 sshwarts Exp $
+// $Id: config.cc,v 1.131 2008-02-15 19:03:52 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1774,7 +1774,7 @@ static const char *get_builtin_variable(const char *varname)
         data[0] = 0;
         size = MAX_PATH;
         if (RegQueryValueEx(hkey, "", NULL, (LPDWORD)&type, (LPBYTE)data,
-                            (LPDWORD)&size ) == ERROR_SUCCESS ) {
+                            (LPDWORD)&size ) == ERROR_SUCCESS) {
           RegCloseKey(hkey);
           return data;
         } else {
@@ -1882,7 +1882,7 @@ static Bit32s parse_line_unformatted(const char *context, char *line)
   Bit32s retval = parse_line_formatted(context, num_params, &params[0]);
   for (i=0; i < MAX_PARAMS_LEN; i++)
   {
-    if ( params[i] != NULL )
+    if (params[i] != NULL)
     {
         free(params[i]);
         params[i] = NULL;
@@ -2259,7 +2259,7 @@ static Bit32s parse_line_formatted(const char *context, int num_params, char *pa
     if (SIM->get_param_bool("present", base)->get() == 1) {
       if (SIM->get_param_enum("type", base)->get() == BX_ATA_DEVICE_DISK) {
         if ((SIM->get_param_num("cylinders", base)->get() == 0) &&
-            (SIM->get_param_num("heads", base)->get() ==0 ) &&
+            (SIM->get_param_num("heads", base)->get() == 0) &&
             (SIM->get_param_num("spt", base)->get() == 0)) {
           PARSE_WARN(("%s: ataX-master/slave CHS set to 0/0/0 - autodetection enabled", context));
           // using heads = 16 and spt = 63 for autodetection (bximage defaults)
@@ -2723,13 +2723,13 @@ static Bit32s parse_line_formatted(const char *context, int num_params, char *pa
     }
     for (i=1; i<num_params; i++) {
       if (!strncmp(params[i], "vendor=", 7)) {
-        if ( (params[i][7] == '0') && (toupper(params[i][8]) == 'X') )
+        if ((params[i][7] == '0') && (toupper(params[i][8]) == 'X'))
           SIM->get_param_num(BXPN_PCIDEV_VENDOR)->set(strtoul(&params[i][7], NULL, 16));
         else
           SIM->get_param_num(BXPN_PCIDEV_VENDOR)->set(strtoul(&params[i][7], NULL, 10));
       }
       else if (!strncmp(params[i], "device=", 7)) {
-        if ( (params[i][7] == '0') && (toupper(params[i][8]) == 'X') )
+        if ((params[i][7] == '0') && (toupper(params[i][8]) == 'X'))
           SIM->get_param_num(BXPN_PCIDEV_DEVICE)->set(strtoul(&params[i][7], NULL, 16));
         else
           SIM->get_param_num(BXPN_PCIDEV_DEVICE)->set(strtoul(&params[i][7], NULL, 10));
@@ -2958,7 +2958,7 @@ static Bit32s parse_line_formatted(const char *context, int num_params, char *pa
       }
     }
   } else if (!strcmp(params[0], "load32bitOSImage")) {
-    if ( (num_params!=4) && (num_params!=5) ) {
+    if ((num_params!=4) && (num_params!=5)) {
       PARSE_ERR(("%s: load32bitOSImage directive: wrong # args.", context));
     }
     if (strncmp(params[1], "os=", 3)) {

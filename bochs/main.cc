@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.372 2008-02-05 22:57:40 sshwarts Exp $
+// $Id: main.cc,v 1.373 2008-02-15 19:03:53 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -91,7 +91,7 @@ Bit8u bx_cpu_count;
 
 #define LOG_THIS genlog->
 
-#if ( BX_PROVIDE_DEVICE_MODELS==1 )
+#if BX_PROVIDE_DEVICE_MODELS
 bx_pc_system_c bx_pc_system;
 #endif
 
@@ -129,29 +129,29 @@ void bx_print_header ()
 #if BX_WITH_CARBON
 /* Original code by Darrell Walisser - dwaliss1@purdue.edu */
 
-static void setupWorkingDirectory (char *path)
+static void setupWorkingDirectory(char *path)
 {
-    char parentdir[MAXPATHLEN];
-    char *c;
+  char parentdir[MAXPATHLEN];
+  char *c;
 
-    strncpy ( parentdir, path, MAXPATHLEN );
-    c = (char*) parentdir;
+  strncpy (parentdir, path, MAXPATHLEN);
+  c = (char*) parentdir;
 
-    while (*c != '\0')     /* go to end */
-        c++;
+  while (*c != '\0')     /* go to end */
+      c++;
 
-    while (*c != '/')      /* back up to parent */
-        c--;
+  while (*c != '/')      /* back up to parent */
+      c--;
 
-    *c = '\0';             /* cut off last part (binary name) */
+  *c = '\0';             /* cut off last part (binary name) */
 
-        /* chdir to the binary app's parent */
-        int n;
-        n = chdir (parentdir);
-        if (n) BX_PANIC (("failed to change dir to parent"));
-        /* chdir to the .app's parent */
-        n = chdir ("../../../");
-    if (n) BX_PANIC (("failed to change to ../../.."));
+  /* chdir to the binary app's parent */
+  int n;
+  n = chdir (parentdir);
+  if (n) BX_PANIC (("failed to change dir to parent"));
+  /* chdir to the .app's parent */
+  n = chdir ("../../../");
+  if (n) BX_PANIC (("failed to change to ../../.."));
 }
 
 /* Panic button to display fatal errors.
@@ -187,8 +187,8 @@ static void carbonFatalDialog(const char *error, const char *exposition)
     &alertDialog);
   RunStandardAlert( alertDialog, NULL, &index);
   // Cleanup
-  CFRelease( cfError );
-  if( cfExposition != NULL ) { CFRelease( cfExposition ); }
+  CFRelease(cfError);
+  if(cfExposition != NULL) { CFRelease(cfExposition); }
 }
 #endif
 
@@ -419,13 +419,13 @@ int RedirectIOToConsole()
   hConHandle = _open_osfhandle(lStdHandle, _O_TEXT);
   fp = _fdopen(hConHandle, "w");
   *stdout = *fp;
-  setvbuf( stdout, NULL, _IONBF, 0 );
+  setvbuf(stdout, NULL, _IONBF, 0);
   // redirect unbuffered STDIN to the console
   lStdHandle = (long)GetStdHandle(STD_INPUT_HANDLE);
   hConHandle = _open_osfhandle(lStdHandle, _O_TEXT);
   fp = _fdopen(hConHandle, "r");
   *stdin = *fp;
-  setvbuf( stdin, NULL, _IONBF, 0 );
+  setvbuf(stdin, NULL, _IONBF, 0);
   // redirect unbuffered STDERR to the console
   lStdHandle = (long)GetStdHandle(STD_ERROR_HANDLE);
   hConHandle = _open_osfhandle(lStdHandle, _O_TEXT);
@@ -1115,7 +1115,7 @@ void bx_init_hardware()
 #if !defined(__MINGW32__) && !defined(_MSC_VER)
   signal(SIGALRM, bx_signal_handler);
 #endif
-  alarm( 1 );
+  alarm(1);
 #endif
 }
 
@@ -1241,7 +1241,7 @@ void bx_signal_handler(int signum)
     }
 #if !defined(__MINGW32__) && !defined(_MSC_VER)
     signal(SIGALRM, bx_signal_handler);
-    alarm( 1 );
+    alarm(1);
 #endif
     return;
   }

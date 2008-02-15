@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.111 2008-02-05 22:33:33 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.112 2008-02-15 19:03:53 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -483,7 +483,7 @@ void bx_dbg_interrupt(unsigned cpu, Bit8u vector, Bit16u error_code)
 
 void bx_dbg_exit(int code)
 {
-  BX_DEBUG(("dbg: before exit" ));
+  BX_DEBUG(("dbg: before exit"));
   for (int cpu=0; cpu < BX_SMP_PROCESSORS; cpu++) {
     if (BX_CPU(cpu)) BX_CPU(cpu)->atexit();
   }
@@ -995,7 +995,7 @@ void bx_dbg_where_command()
     return;
   }
   Bit32u bp = BX_CPU(dbg_cpu)->get_reg32(BX_32BIT_REG_EBP);
-  Bit32u ip = BX_CPU(dbg_cpu)->get_ip();
+  Bit32u ip = BX_CPU(dbg_cpu)->get_instruction_pointer();
   dbg_printf("(%d) 0x%08x\n", 0, ip);
   for (int i = 1; i < 50; i++) {
     // Up
@@ -2361,31 +2361,31 @@ void bx_dbg_set_symbol_command(char *symbol, Bit32u val)
   bx_bool is_OK = false;
   symbol++; // get past '$'
 
-  if ( !strcmp(symbol, "eip") ) {
+  if (!strcmp(symbol, "eip")) {
     is_OK = BX_CPU(dbg_cpu)->dbg_set_reg(BX_DBG_REG_EIP, val);
   }
-  else if ( !strcmp(symbol, "eflags") ) {
+  else if (!strcmp(symbol, "eflags")) {
     is_OK = BX_CPU(dbg_cpu)->dbg_set_reg(BX_DBG_REG_EFLAGS, val);
   }
-  else if ( !strcmp(symbol, "cs") ) {
+  else if (!strcmp(symbol, "cs")) {
     is_OK = BX_CPU(dbg_cpu)->dbg_set_reg(BX_DBG_REG_CS, val);
   }
-  else if ( !strcmp(symbol, "ss") ) {
+  else if (!strcmp(symbol, "ss")) {
     is_OK = BX_CPU(dbg_cpu)->dbg_set_reg(BX_DBG_REG_SS, val);
   }
-  else if ( !strcmp(symbol, "ds") ) {
+  else if (!strcmp(symbol, "ds")) {
     is_OK = BX_CPU(dbg_cpu)->dbg_set_reg(BX_DBG_REG_DS, val);
   }
-  else if ( !strcmp(symbol, "es") ) {
+  else if (!strcmp(symbol, "es")) {
     is_OK = BX_CPU(dbg_cpu)->dbg_set_reg(BX_DBG_REG_ES, val);
   }
-  else if ( !strcmp(symbol, "fs") ) {
+  else if (!strcmp(symbol, "fs")) {
     is_OK = BX_CPU(dbg_cpu)->dbg_set_reg(BX_DBG_REG_FS, val);
   }
-  else if ( !strcmp(symbol, "gs") ) {
+  else if (!strcmp(symbol, "gs")) {
     is_OK = BX_CPU(dbg_cpu)->dbg_set_reg(BX_DBG_REG_GS, val);
   }
-  else if ( !strcmp(symbol, "cpu") ) {
+  else if (!strcmp(symbol, "cpu")) {
     if (val >= BX_SMP_PROCESSORS) {
       dbg_printf("invalid cpu id number %d\n", val);
       return;
@@ -2396,15 +2396,15 @@ void bx_dbg_set_symbol_command(char *symbol, Bit32u val)
     dbg_cpu = val;
     return;
   }
-  else if ( !strcmp(symbol, "synchronous_dma") ) {
+  else if (!strcmp(symbol, "synchronous_dma")) {
     bx_guard.async.dma = !val;
     return;
   }
-  else if ( !strcmp(symbol, "synchronous_irq") ) {
+  else if (!strcmp(symbol, "synchronous_irq")) {
     bx_guard.async.irq = !val;
     return;
   }
-  else if ( !strcmp(symbol, "event_reports") ) {
+  else if (!strcmp(symbol, "event_reports")) {
     bx_guard.report.irq   = val;
     bx_guard.report.a20   = val;
     bx_guard.report.io    = val;
@@ -2412,7 +2412,7 @@ void bx_dbg_set_symbol_command(char *symbol, Bit32u val)
     bx_guard.report.dma   = val;
     return;
   }
-  else if ( !strcmp(symbol, "auto_disassemble") ) {
+  else if (!strcmp(symbol, "auto_disassemble")) {
     bx_dbg_set_auto_disassemble(val != 0);
     return;
   }
@@ -2464,7 +2464,8 @@ void bx_dbg_restore_command(const char *param_name, const char *restore_path)
 
 void bx_dbg_disassemble_current(const char *format)
 {
-  Bit64u addr = bx_dbg_get_laddr(bx_dbg_get_selector_value(BX_DBG_SREG_CS), BX_CPU(dbg_cpu)->get_ip());
+  Bit64u addr = bx_dbg_get_laddr(bx_dbg_get_selector_value(BX_DBG_SREG_CS), 
+     BX_CPU(dbg_cpu)->get_instruction_pointer());
   bx_dbg_disassemble_command(format, addr, addr);
 }
 
@@ -2520,16 +2521,16 @@ void bx_dbg_disassemble_command(const char *format, Bit64u from, Bit64u to)
 void bx_dbg_instrument_command(const char *comm)
 {
 #if BX_INSTRUMENTATION
-  if ( !strcmp(comm, "start") ) {
+  if (!strcmp(comm, "start")) {
     BX_INSTR_START();
   }
-  else if ( !strcmp(comm, "stop") ) {
+  else if (!strcmp(comm, "stop")) {
     BX_INSTR_STOP();
   }
-  else if ( !strcmp(comm, "reset") ) {
+  else if (!strcmp(comm, "reset")) {
     BX_INSTR_RESET(dbg_cpu);
   }
-  else if ( !strcmp(comm, "print") ) {
+  else if (!strcmp(comm, "print")) {
     BX_INSTR_PRINT();
   }
   else {
@@ -3279,17 +3280,17 @@ Bit16u bx_dbg_get_selector_value(unsigned int seg_no)
 
 Bit16u bx_dbg_get_ip(void)
 {
-  return (BX_CPU(dbg_cpu)->get_ip() & 0xffff);
+  return BX_CPU(dbg_cpu)->get_ip();
 }
 
 Bit32u bx_dbg_get_eip(void)
 {
-  return (BX_CPU(dbg_cpu)->get_ip() & 0xffffffff);
+  return BX_CPU(dbg_cpu)->get_eip();
 }
 
 bx_address bx_dbg_get_instruction_pointer(void)
 {
-  return BX_CPU(dbg_cpu)->get_ip();
+  return BX_CPU(dbg_cpu)->get_instruction_pointer();
 }
 
 Bit32u bx_dbg_get_laddr(Bit16u sel, Bit32u ofs)

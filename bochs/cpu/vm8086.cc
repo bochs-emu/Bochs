@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vm8086.cc,v 1.38 2008-02-02 21:46:54 sshwarts Exp $
+// $Id: vm8086.cc,v 1.39 2008-02-15 19:03:54 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -75,7 +75,7 @@ void BX_CPU_C::stack_return_to_v86(Bit32u new_eip, Bit32u raw_cs_selector,
     temp_ESP = SP;
 
   // top 36 bytes of stack must be within stack limits, else #SS(0)
-  if ( !can_pop(36) ) {
+  if (!can_pop(36)) {
     BX_ERROR(("stack_return_to_v86: top 36 bytes not within limits"));
     exception(BX_SS_EXCEPTION, 0, 0);
   }
@@ -118,7 +118,7 @@ void BX_CPU_C::iret16_stack_return_from_v86(bxInstruction_c *i)
 
   Bit16u ip, cs_raw, flags16;
 
-  if( !can_pop(6) )
+  if(!can_pop(6))
   {
     BX_DEBUG(("iret16_stack_return_from_v86(): can't pop 6 bytes from the stack"));
     exception(BX_SS_EXCEPTION, 0, 0);
@@ -175,7 +175,7 @@ void BX_CPU_C::iret32_stack_return_from_v86(bxInstruction_c *i)
   change_mask |= (EFlagsIDMask | EFlagsACMask);  // ID/AC
 #endif
 
-  if( !can_pop(12) )
+  if(!can_pop(12))
   {
     BX_DEBUG(("iret32_stack_return_from_v86(): can't pop 12 bytes from the stack"));
     exception(BX_SS_EXCEPTION, 0, 0);

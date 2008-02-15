@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.201 2008-02-12 22:41:39 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.202 2008-02-15 19:03:53 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -304,21 +304,21 @@ void BX_CPU_C::MOV_DdRd(bxInstruction_c *i)
       if ( (((val_32>>16) & 3)==2) ||
            (((val_32>>20) & 3)==2) ||
            (((val_32>>24) & 3)==2) ||
-           (((val_32>>28) & 3)==2) ) {
+           (((val_32>>28) & 3)==2)) {
         // IO breakpoints (10b) are not yet supported.
         BX_PANIC(("MOV_DdRd: write of %08x contains IO breakpoint", val_32));
       }
       if ( (((val_32>>18) & 3)==2) ||
            (((val_32>>22) & 3)==2) ||
            (((val_32>>26) & 3)==2) ||
-           (((val_32>>30) & 3)==2) ) {
+           (((val_32>>30) & 3)==2)) {
         // LEN0..3 contains undefined length specifier (10b)
         BX_PANIC(("MOV_DdRd: write of %08x contains undefined LENx", val_32));
       }
       if ( ((((val_32>>16) & 3)==0) && (((val_32>>18) & 3)!=0)) ||
            ((((val_32>>20) & 3)==0) && (((val_32>>22) & 3)!=0)) ||
            ((((val_32>>24) & 3)==0) && (((val_32>>26) & 3)!=0)) ||
-           ((((val_32>>28) & 3)==0) && (((val_32>>30) & 3)!=0)) )
+           ((((val_32>>28) & 3)==0) && (((val_32>>30) & 3)!=0)))
       {
         // Instruction breakpoint with LENx not 00b (1-byte length)
         BX_PANIC(("MOV_DdRd: write of %08x, R/W=00b LEN!=00b", val_32));
@@ -489,7 +489,7 @@ void BX_CPU_C::MOV_DqRq(bxInstruction_c *i)
       if ( (((val_64>>16) & 3)==2) ||
            (((val_64>>20) & 3)==2) ||
            (((val_64>>24) & 3)==2) ||
-           (((val_64>>28) & 3)==2) )
+           (((val_64>>28) & 3)==2))
       {
         // IO breakpoints (10b) are not yet supported.
         BX_PANIC(("MOV_DqRq: write of %08x:%08x contains IO breakpoint",
@@ -498,7 +498,7 @@ void BX_CPU_C::MOV_DqRq(bxInstruction_c *i)
       if ( (((val_64>>18) & 3)==2) ||
            (((val_64>>22) & 3)==2) ||
            (((val_64>>26) & 3)==2) ||
-           (((val_64>>30) & 3)==2) )
+           (((val_64>>30) & 3)==2))
       {
         // LEN0..3 contains undefined length specifier (10b)
         BX_PANIC(("MOV_DqRq: write of %08x:%08x contains undefined LENx",
@@ -507,7 +507,7 @@ void BX_CPU_C::MOV_DqRq(bxInstruction_c *i)
       if ( ((((val_64>>16) & 3)==0) && (((val_64>>18) & 3)!=0)) ||
            ((((val_64>>20) & 3)==0) && (((val_64>>22) & 3)!=0)) ||
            ((((val_64>>24) & 3)==0) && (((val_64>>26) & 3)!=0)) ||
-           ((((val_64>>28) & 3)==0) && (((val_64>>30) & 3)!=0)) )
+           ((((val_64>>28) & 3)==0) && (((val_64>>30) & 3)!=0)))
       {
         // Instruction breakpoint with LENx not 00b (1-byte length)
         BX_PANIC(("MOV_DqRq: write of %08x:%08x , R/W=00b LEN!=00b",
@@ -1196,7 +1196,7 @@ void BX_CPU_C::handleCpuModeChange(void)
     }
     else {
       BX_CPU_THIS_PTR cpu_mode = BX_MODE_LONG_COMPAT;
-      if (BX_CPU_THIS_PTR eip_reg.dword.rip_upper != 0) {
+      if (BX_CPU_THIS_PTR gen_reg[BX_64BIT_REG_RIP].dword.hrx != 0) {
         BX_PANIC(("handleCpuModeChange: leaving long mode with RIP upper != 0 !"));
       }
     }
@@ -1281,7 +1281,7 @@ void BX_CPU_C::SetCR0(Bit32u val_32)
       exception(BX_GP_EXCEPTION, 0, 0);
     }
     if (BX_CPU_THIS_PTR efer.lma) {
-      if (BX_CPU_THIS_PTR eip_reg.dword.rip_upper != 0) {
+      if (BX_CPU_THIS_PTR gen_reg[BX_64BIT_REG_RIP].dword.hrx != 0) {
         BX_PANIC(("SetCR0: attempt to leave x86-64 LONG mode with RIP upper != 0 !!!"));
       }
       BX_CPU_THIS_PTR efer.lma = 0;

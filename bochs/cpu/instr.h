@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: instr.h,v 1.4 2008-02-04 21:28:53 sshwarts Exp $
+// $Id: instr.h,v 1.5 2008-02-15 19:03:53 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008 Stanislav Shwartsman
@@ -60,6 +60,7 @@ public:
     Bit8u  metaInfo1;
   } metaInfo;
 
+  // using 5-bit index for registers (16 regs in 64-bit and RIP)
   struct {
     //   (unused, keep for alignment)
     //   (will be used for SSE5 destination override later)
@@ -72,24 +73,24 @@ public:
     //   2...0 seg
     Bit8u  metaData6;
 
-    //   7...4 (unused)
-    //   3...0 nnn     (modrm)
+    //   7...5 (unused)
+    //   4...0 nnn     (modrm)
     Bit8u  metaData5;
 
-    //   7...4 (unused)
-    //   3...0 base            (sib)
+    //   7...5 (unused)
+    //   4...0 base            (sib)
     Bit8u  metaData4;
 
-    //   7...4 (unused)
-    //   3...0 index           (sib)
+    //   7...5 (unused)
+    //   4...0 index           (sib)
     Bit8u  metaData3;
 
     //   7...2 (unused)
     //   1...0 scale           (sib)
     Bit8u  metaData2;
 
-    //   7...4 (unused)
-    //   3...0 rm      (modrm)   // also used for opcodeReg()
+    //   7...5 (unused)
+    //   4...0 rm      (modrm)   // also used for opcodeReg()
     Bit8u  metaData1;
   } metaData;
 

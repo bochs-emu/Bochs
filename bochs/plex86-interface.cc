@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-//// $Id: plex86-interface.cc,v 1.11 2008-02-05 22:57:40 sshwarts Exp $
+//// $Id: plex86-interface.cc,v 1.12 2008-02-15 19:03:53 sshwarts Exp $
 ///////////////////////////////////////////////////////////////////////////
 ////
 ////  Copyright (C) 2002  Kevin P. Lawton
@@ -84,7 +84,7 @@ unsigned plex86CpuInfo(BX_CPU_C *cpu)
 
   if (plex86FD < 0) {
     // If the plex86 File Descriptor has not been opened yet.
-    if ( !openFD() ) {
+    if (!openFD()) {
       return(0); // Error.
     }
   }
@@ -96,7 +96,7 @@ unsigned plex86CpuInfo(BX_CPU_C *cpu)
   bochsCPUID.featureFlags.raw  = cpu->cpuidInfo.featureFlags;
 
   fprintf(stderr, "plex86: passing guest CPUID to plex86.\n");
-  if ( ioctl(plex86FD, PLEX86_CPUID, &bochsCPUID) ) {
+  if (ioctl(plex86FD, PLEX86_CPUID, &bochsCPUID)) {
     perror("ioctl CPUID: ");
     return(0); // Error.
   }
@@ -114,12 +114,12 @@ unsigned plex86TearDown(void)
       fprintf(stderr, "plex86:  FC[%u] = %u\n", f, faultCount[f]);
   }
 
-  if ( plex86FD < 0 ) {
+  if (plex86FD < 0) {
     fprintf(stderr, "plex86: plex86TearDown: FD not open.\n");
     return(0);
   }
 
-  if ( plex86State & Plex86StateMMapPhyMem ) {
+  if (plex86State & Plex86StateMMapPhyMem) {
     fprintf(stderr, "plex86: unmapping guest physical memory.\n");
   }
   plex86State &= ~Plex86StateMMapPhyMem;
@@ -157,7 +157,7 @@ unsigned plex86ExecuteInVM(BX_CPU_C *cpu)
   plex86IoctlExecute_t executeMsg;
   int ret;
 
-  if ( plex86State != Plex86StateReady ) {
+  if (plex86State != Plex86StateReady) {
     fprintf(stderr, "plex86: plex86ExecuteInVM: not in ready state (0x%x)\n",
             plex86State);
     BX_PANIC(("plex86ExecuteInVM: bailing"));
@@ -175,7 +175,7 @@ unsigned plex86ExecuteInVM(BX_CPU_C *cpu)
   plex86GuestCPU->eax = cpu->gen_reg[BX_32BIT_REG_EAX].dword.erx;
 
   plex86GuestCPU->eflags = cpu->eflags.val32;
-  plex86GuestCPU->eip = cpu->eip_reg.dword.eip;
+  plex86GuestCPU->eip = cpu->get_eip();
 
   // ES/CS/SS/DS/FS/GS
   for (unsigned s=0; s<6; s++) {
@@ -261,7 +261,7 @@ unsigned plex86ExecuteInVM(BX_CPU_C *cpu)
     }
   }
   else {
-    switch ( executeMsg.monitorState.request ) {
+    switch (executeMsg.monitorState.request) {
       case MonReqFlushPrintBuf:
         fprintf(stderr, "plex86: MonReqFlushPrintBuf:\n");
         fprintf(stderr, "::%s\n", plex86PrintBuffer);
@@ -302,7 +302,7 @@ void copyPlex86StateToBochs(BX_CPU_C *cpu)
   cpu->gen_reg[BX_32BIT_REG_EAX].dword.erx = plex86GuestCPU->eax;
 
   cpu->eflags.val32 = plex86GuestCPU->eflags;
-  cpu->eip_reg.dword.eip    = plex86GuestCPU->eip;
+  cpu->gen_reg[BX_32BIT_REG_EIP].dword.erx = plex86GuestCPU->eip;
 
   // Set fields used for exception processing.
   cpu->prev_rip = plex86GuestCPU->eip;
@@ -311,9 +311,9 @@ void copyPlex86StateToBochs(BX_CPU_C *cpu)
   for (unsigned s=0; s<6; s++) {
     cpu->sregs[s].selector.value = plex86GuestCPU->sreg[s].sel.raw;
     cpu->sregs[s].cache.valid    = plex86GuestCPU->sreg[s].valid;
-    if ( (cpu->sregs[s].selector.value & 0xfffc) == 0 ) {
+    if ((cpu->sregs[s].selector.value & 0xfffc) == 0) {
       /* Null selector. */
-      if ( cpu->sregs[s].cache.valid ) {
+      if (cpu->sregs[s].cache.valid) {
         plex86TearDown();
         BX_PANIC(("copyPlex86StateToBochs: null descriptor [%u] "
                   "with descriptor cache valid bit set.", s));
@@ -322,7 +322,7 @@ void copyPlex86StateToBochs(BX_CPU_C *cpu)
     }
     else {
       /* Non-null selector. */
-      if ( cpu->sregs[s].cache.valid==0 ) {
+      if (cpu->sregs[s].cache.valid==0) {
         plex86TearDown();
         BX_PANIC(("copyPlex86StateToBochs: non-null descriptor [%u] "
                   "with descriptor cache valid bit clear.", s));
@@ -404,7 +404,7 @@ unsigned plex86RegisterGuestMemory(Bit8u *vector, unsigned bytes)
 
   if (plex86FD < 0) {
     // If the plex86 File Descriptor has not been opened yet.
-    if ( !openFD() ) {
+    if (!openFD()) {
       return(0); // Error.
     }
   }
@@ -415,7 +415,7 @@ unsigned plex86RegisterGuestMemory(Bit8u *vector, unsigned bytes)
                     "is not a 4Meg increment.\n", bytes);
     return(0); // Error.
   }
-  if ( ((unsigned)vector) & 0xfff ) {
+  if (((unsigned)vector) & 0xfff) {
     // Memory vector must be page aligned.
     fprintf(stderr, "plex86: RegisterGuestMemory: vector not page aligned.");
     return(0); // Error.

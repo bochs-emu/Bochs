@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: load32bitOShack.cc,v 1.25 2008-02-05 22:57:40 sshwarts Exp $
+// $Id: load32bitOShack.cc,v 1.26 2008-02-15 19:03:53 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -138,7 +138,7 @@ static void bx_load_linux_setup_params(Bit32u initrd_start, Bit32u initrd_size)
   struct linux_setup_params *params =
          (struct linux_setup_params *) &mem->vector[0x00090000];
 
-  memset( params, '\0', sizeof(*params) );
+  memset(params, '\0', sizeof(*params));
 
   /* Video settings (standard VGA) */
   params->orig_x = 0;
@@ -180,34 +180,34 @@ void bx_load_linux_hack(void)
   bx_load_kernel_image(SIM->get_param_string(BXPN_LOAD32BITOS_PATH)->getptr(), 0x100000);
 
   // Load initial ramdisk image if requested
-  char * tmpPtr = SIM->get_param_string(BXPN_LOAD32BITOS_INITRD)->getptr();
-  if ( tmpPtr && tmpPtr[0] ) /* The initial value is "" and not NULL */
+  char *tmpPtr = SIM->get_param_string(BXPN_LOAD32BITOS_INITRD)->getptr();
+  if (tmpPtr && tmpPtr[0]) /* The initial value is "" and not NULL */
   {
     initrd_start = 0x00800000;  /* FIXME: load at top of memory */
-    initrd_size  = bx_load_kernel_image( tmpPtr, initrd_start );
+    initrd_size  = bx_load_kernel_image(tmpPtr, initrd_start);
   }
 
   // Setup Linux startup parameters buffer
-  bx_load_linux_setup_params( initrd_start, initrd_size );
+  bx_load_linux_setup_params(initrd_start, initrd_size);
 
   // Enable A20 line
-  BX_SET_ENABLE_A20( 1 );
+  BX_SET_ENABLE_A20(1);
 
   // Setup PICs the way Linux likes it
-  BX_OUTP( 0x20, 0x11, 1 );
-  BX_OUTP( 0xA0, 0x11, 1 );
-  BX_OUTP( 0x21, 0x20, 1 );
-  BX_OUTP( 0xA1, 0x28, 1 );
-  BX_OUTP( 0x21, 0x04, 1 );
-  BX_OUTP( 0xA1, 0x02, 1 );
-  BX_OUTP( 0x21, 0x01, 1 );
-  BX_OUTP( 0xA1, 0x01, 1 );
-  BX_OUTP( 0x21, 0xFF, 1 );
-  BX_OUTP( 0xA1, 0xFB, 1 );
+  BX_OUTP(0x20, 0x11, 1);
+  BX_OUTP(0xA0, 0x11, 1);
+  BX_OUTP(0x21, 0x20, 1);
+  BX_OUTP(0xA1, 0x28, 1);
+  BX_OUTP(0x21, 0x04, 1);
+  BX_OUTP(0xA1, 0x02, 1);
+  BX_OUTP(0x21, 0x01, 1);
+  BX_OUTP(0xA1, 0x01, 1);
+  BX_OUTP(0x21, 0xFF, 1);
+  BX_OUTP(0xA1, 0xFB, 1);
 
   // Disable interrupts and NMIs
-  BX_CPU(0)->clear_IF ();
-  BX_OUTP( 0x70, 0x80, 1 );
+  BX_CPU(0)->clear_IF();
+  BX_OUTP(0x70, 0x80, 1);
 
   // Enter protected mode
   // Fixed by george (kyriazis at nvidia.com)
@@ -224,7 +224,7 @@ void bx_load_linux_hack(void)
   BX_CPU(0)->gdtr.base  = 0x00090400;
 
   // Jump to protected mode entry point
-  BX_CPU(0)->jump_protected( NULL, 0x10, 0x00100000 );
+  BX_CPU(0)->jump_protected(NULL, 0x10, 0x100000);
 }
 
 void bx_load_null_kernel_hack(void)
@@ -235,7 +235,7 @@ void bx_load_null_kernel_hack(void)
   bx_load_kernel_image(SIM->get_param_string(BXPN_LOAD32BITOS_PATH)->getptr(), 0x100000);
 
   // EIP deltas
-  BX_CPU(0)->prev_rip = BX_CPU(0)->eip_reg.dword.eip = 0x00100000;
+  BX_CPU(0)->prev_rip = BX_CPU(0)->gen_reg[BX_32BIT_REG_EIP].dword.erx = 0x100000;
 
   // CS deltas
   BX_CPU(0)->sregs[BX_SEG_REG_CS].cache.u.segment.base = 0x00000000;
@@ -274,21 +274,21 @@ bx_load_kernel_image(char *path, Bit32u paddr)
 #endif
            );
   if (fd < 0) {
-    BX_INFO(( "load_kernel_image: couldn't open image file '%s'.", path ));
+    BX_INFO(("load_kernel_image: couldn't open image file '%s'.", path));
     BX_EXIT(1);
   }
   ret = fstat(fd, &stat_buf);
   if (ret) {
-    BX_INFO(( "load_kernel_image: couldn't stat image file '%s'.", path ));
+    BX_INFO(("load_kernel_image: couldn't stat image file '%s'.", path));
     BX_EXIT(1);
   }
 
-  size = (unsigned long)stat_buf.st_size;
+  size = (unsigned long) stat_buf.st_size;
   page_size = ((Bit32u)size + 0xfff) & ~0xfff;
 
   BX_MEM_C *mem = BX_MEM(0);
-  if ( (paddr + size) > mem->len ) {
-    BX_INFO(( "load_kernel_image: address range > physical memsize!" ));
+  if ((paddr + size) > mem->len) {
+    BX_INFO(("load_kernel_image: address range > physical memsize!"));
     BX_EXIT(1);
   }
 
@@ -296,7 +296,7 @@ bx_load_kernel_image(char *path, Bit32u paddr)
   while (size > 0) {
     ret = read(fd, (bx_ptr_t) &mem->vector[paddr + offset], size);
     if (ret <= 0) {
-      BX_INFO(( "load_kernel_image: read failed on image" ));
+      BX_INFO(("load_kernel_image: read failed on image"));
       BX_EXIT(1);
     }
     size -= ret;

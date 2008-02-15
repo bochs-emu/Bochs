@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gdbstub.cc,v 1.31 2008-02-05 22:57:39 sshwarts Exp $
+// $Id: gdbstub.cc,v 1.32 2008-02-15 19:03:53 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2006  The Bochs Project Team
@@ -454,11 +454,11 @@ static void debug_loop(void)
       case 'c':
       {
         char buf[255];
-        int new_eip;
+        Bit32u new_eip;
 
         if (buffer[1] != 0)
         {
-          new_eip = atoi(buffer + 1);
+          new_eip = (Bit32u) atoi(buffer + 1);
 
           BX_INFO(("continuing at %x", new_eip));
 
@@ -467,8 +467,7 @@ static void debug_loop(void)
           }
 
           saved_eip = EIP;
-
-          BX_CPU(0)->eip_reg.dword.eip = new_eip;
+          BX_CPU_THIS_PTR gen_reg[BX_32BIT_REG_EIP].dword.erx = new_eip;
         }
 
         stub_trace_flag = 0;
@@ -479,7 +478,7 @@ static void debug_loop(void)
         if (buffer[1] != 0)
         {
           bx_cpu.invalidate_prefetch_q();
-          BX_CPU_THIS_PTR eip_reg.dword.eip = saved_eip;
+          BX_CPU_THIS_PTR gen_reg[BX_32BIT_REG_EIP].dword.erx = saved_eip;
         }
 
         BX_INFO(("stopped with %x", last_stop_reason));

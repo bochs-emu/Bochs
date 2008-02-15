@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.426 2008-02-14 18:59:40 sshwarts Exp $
+// $Id: cpu.h,v 1.427 2008-02-15 19:03:53 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -83,6 +83,16 @@
 #define BX_64BIT_REG_R14 14
 #define BX_64BIT_REG_R15 15
 
+#if BX_SUPPORT_X86_64
+# define BX_GENERAL_REGISTERS 16
+#else
+# define BX_GENERAL_REGISTERS 8
+#endif
+
+#define BX_16BIT_REG_IP  BX_GENERAL_REGISTERS
+#define BX_32BIT_REG_EIP BX_GENERAL_REGISTERS
+#define BX_64BIT_REG_RIP BX_GENERAL_REGISTERS
+
 #if defined(NEED_CPU_REG_SHORTCUTS)
 
 /* WARNING:
@@ -113,7 +123,7 @@
 #define DI (BX_CPU_THIS_PTR gen_reg[7].word.rx)
 
 // access to 16 bit instruction pointer
-#define IP BX_CPU_THIS_PTR eip_reg.word.ip
+#define IP (BX_CPU_THIS_PTR gen_reg[BX_16BIT_REG_IP].word.rx)
 
 // accesss to 32 bit general registers
 #define EAX BX_CPU_THIS_PTR gen_reg[0].dword.erx
@@ -126,7 +136,7 @@
 #define EDI BX_CPU_THIS_PTR gen_reg[7].dword.erx
 
 // access to 32 bit instruction pointer
-#define EIP BX_CPU_THIS_PTR eip_reg.dword.eip
+#define EIP BX_CPU_THIS_PTR gen_reg[BX_32BIT_REG_EIP].dword.erx
 
 #if BX_SUPPORT_X86_64
 // accesss to 64 bit general registers
@@ -148,7 +158,7 @@
 #define R15 BX_CPU_THIS_PTR gen_reg[15].rrx
 
 // access to 64 bit instruction pointer
-#define RIP BX_CPU_THIS_PTR eip_reg.rip
+#define RIP BX_CPU_THIS_PTR gen_reg[BX_64BIT_REG_RIP].rrx
 
 // access to 64 bit MSR registers
 #define MSR_FSBASE  (BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.u.segment.base)
@@ -672,83 +682,12 @@ typedef struct {
 
 #endif  // #if BX_SUPPORT_X86_64
 
-// instruction pointer register
-#if BX_SUPPORT_X86_64
-
-#ifdef BX_BIG_ENDIAN
-typedef struct {
-  union {
-    struct {
-      Bit32u rip_upper;
-      Bit16u word_filler;
-      Bit16u ip;
-    } word;
-    Bit64u rip;
-    struct {
-      Bit32u rip_upper;  // hi 32 bits
-      Bit32u eip;        // lo 32 bits
-    } dword;
-  };
-} bx_eip_reg_t;
-#else
-typedef struct {
-  union {
-    struct {
-      Bit16u ip;
-      Bit16u word_filler;
-      Bit32u rip_upper;
-    } word;
-    Bit64u rip;
-    struct {
-      Bit32u eip;        // lo 32 bits
-      Bit32u rip_upper;  // hi 32 bits
-    } dword;
-  };
-} bx_eip_reg_t;
-#endif
-
-#else  // #if BX_SUPPORT_X86_64
-
-#ifdef BX_BIG_ENDIAN
-typedef struct {
-  union {
-    struct {
-      Bit32u eip;
-    } dword;
-    struct {
-      Bit16u word_filler;
-      Bit16u ip;
-    } word;
-  };
-} bx_eip_reg_t;
-#else
-typedef struct {
-  union {
-    struct {
-      Bit32u eip;
-    } dword;
-    struct {
-      Bit16u ip;
-      Bit16u word_filler;
-    } word;
-  };
-} bx_eip_reg_t;
-#endif
-
-#endif  // #if BX_SUPPORT_X86_64
-
 #if BX_SUPPORT_APIC
 #define BX_INCLUDE_LOCAL_APIC 1
 #include "apic.h"
 #endif
 
 class BX_MEM_C;
-
-#if BX_SUPPORT_X86_64
-# define BX_GENERAL_REGISTERS 16
-#else
-# define BX_GENERAL_REGISTERS 8
-#endif
 
 #if BX_SUPPORT_FPU
 #include "cpu/i387.h"
@@ -789,10 +728,8 @@ public: // for now...
   // esi: source index
   // edi: destination index
   // esp: stack pointer
+  // eip: instruction pointer
   bx_gen_reg_t gen_reg[BX_GENERAL_REGISTERS+1];
-
-  // instruction pointer
-  bx_eip_reg_t eip_reg;
 
   /* 31|30|29|28| 27|26|25|24| 23|22|21|20| 19|18|17|16
    * ==|==|=====| ==|==|==|==| ==|==|==|==| ==|==|==|==
@@ -2841,8 +2778,6 @@ public: // for now...
   BX_SMF void BxResolve32DispIndex(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
 #if BX_SUPPORT_X86_64
-  BX_SMF void BxResolve32Rip(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void BxResolve64Rip(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void BxResolve64Disp(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void BxResolve64Base(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void BxResolve64BaseIndex(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -3140,13 +3075,18 @@ public: // for now...
 
   BX_CPP_INLINE Bit8u get_CPL(void) { return (BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.rpl); }
 
+  BX_CPP_INLINE bx_address get_instruction_pointer(void);
+
+  BX_CPP_INLINE Bit32u get_eip(void);
+  BX_CPP_INLINE Bit16u get_ip(void);
+#if BX_SUPPORT_X86_64
+  BX_CPP_INLINE Bit64u get_rip(void);
+#endif
+
   BX_CPP_INLINE Bit8u get_reg8l(unsigned reg);
   BX_CPP_INLINE Bit8u get_reg8h(unsigned reg);
   BX_CPP_INLINE void  set_reg8l(unsigned reg, Bit8u val);
   BX_CPP_INLINE void  set_reg8h(unsigned reg, Bit8u val);
-
-  BX_CPP_INLINE bx_address get_ip(void);
-  BX_CPP_INLINE void       set_ip(bx_address ip);
 
   BX_CPP_INLINE Bit16u get_reg16(unsigned reg);
   BX_CPP_INLINE void   set_reg16(unsigned reg, Bit16u val);
@@ -3267,8 +3207,6 @@ BX_CPP_INLINE Bit32u BX_CPU_C::read_eflags(void)
    return BX_CPU_THIS_PTR force_flags();
 }
 
-#include <assert.h>
-
 BX_CPP_INLINE Bit8u BX_CPU_C::get_reg8l(unsigned reg)
 {
    assert(reg < BX_GENERAL_REGISTERS);
@@ -3294,24 +3232,31 @@ BX_CPP_INLINE void BX_CPU_C::set_reg8h(unsigned reg, Bit8u val)
 }
 
 #if BX_SUPPORT_X86_64
-BX_CPP_INLINE bx_address BX_CPU_C::get_ip(void)
+BX_CPP_INLINE bx_address BX_CPU_C::get_instruction_pointer(void)
 {
-   return (BX_CPU_THIS_PTR eip_reg.rip);
-}
-
-BX_CPP_INLINE void BX_CPU_C::set_ip(bx_address ip)
-{
-   BX_CPU_THIS_PTR eip_reg.rip = ip;
+   return BX_CPU_THIS_PTR get_rip();
 }
 #else
-BX_CPP_INLINE bx_address BX_CPU_C::get_ip(void)
+BX_CPP_INLINE bx_address BX_CPU_C::get_instruction_pointer(void)
 {
-   return (BX_CPU_THIS_PTR eip_reg.dword.eip);
+   return BX_CPU_THIS_PTR get_eip();
+}
+#endif
+
+BX_CPP_INLINE Bit16u BX_CPU_C::get_ip(void)
+{
+   return (BX_CPU_THIS_PTR gen_reg[BX_16BIT_REG_IP].word.rx);
 }
 
-BX_CPP_INLINE void BX_CPU_C::set_ip(bx_address ip)
+BX_CPP_INLINE Bit32u BX_CPU_C::get_eip(void)
 {
-   BX_CPU_THIS_PTR eip_reg.dword.eip = ip;
+   return (BX_CPU_THIS_PTR gen_reg[BX_32BIT_REG_EIP].dword.erx);
+}
+
+#if BX_SUPPORT_X86_64
+BX_CPP_INLINE Bit64u BX_CPU_C::get_rip(void)
+{
+   return (BX_CPU_THIS_PTR gen_reg[BX_64BIT_REG_RIP].rrx);
 }
 #endif
 

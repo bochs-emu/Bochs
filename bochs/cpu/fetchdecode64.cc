@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.173 2008-02-15 12:23:49 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.174 2008-02-15 19:03:53 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -3553,7 +3553,7 @@ fetch_b1:
           if (BX_NULL_SEG_REG(i->seg()))
             i->setSeg(BX_SEG_REG_DS);
           if ((rm & 0x7) == 5) {
-            i->ResolveModrm = &BX_CPU_C::BxResolve64Rip;
+            i->setSibBase(BX_64BIT_REG_RIP);
 get_32bit_displ:
             if ((ilen+3) < remain) {
               i->modRMForm.displ32u = FetchDWORD(iptr);
@@ -3629,7 +3629,7 @@ get_8bit_displ:
           if (BX_NULL_SEG_REG(i->seg()))
             i->setSeg(BX_SEG_REG_DS);
           if ((rm & 0x7) == 5) {
-            i->ResolveModrm = &BX_CPU_C::BxResolve32Rip;
+            i->setSibBase(BX_32BIT_REG_EIP);
             goto get_32bit_displ;
           }
           // mod==00b, rm!=4, rm!=5
@@ -3655,8 +3655,8 @@ get_8bit_displ:
         index = (sib & 0x7) | rex_x; sib >>= 3;
         scale =  sib;
         i->setSibBase(base);
-        i->metaData.metaData2 |= (index);
-        i->metaData.metaData2 |= (scale<<4);
+        i->setSibIndex(index);
+        i->setSibScale(scale);
         if (index == 4)
           i->ResolveModrm = &BX_CPU_C::BxResolve32Base;
         else

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: extdb.cc,v 1.24 2008-01-29 17:13:06 sshwarts Exp $
+// $Id: extdb.cc,v 1.25 2008-02-15 19:03:53 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #include "bochs.h"
@@ -30,8 +30,8 @@ void bx_external_debugger(BX_CPU_C *cpu)
        regs.debug_state = debug_step;
        break;
      case debug_skip:
-       if (cpu->eip_reg.dword.eip != regs.debug_eip ||
-           cpu->sregs[1].selector.value != regs.debug_cs) return;
+       if (cpu->get_instruction_pointer() != regs.debug_eip ||
+           cpu->sregs[BX_SEG_REG_CS].selector.value != regs.debug_cs) return;
        regs.debug_state = debug_step;
        break;
      }
@@ -53,7 +53,7 @@ void bx_external_debugger(BX_CPU_C *cpu)
      regs.r13 = cpu->gen_reg[13].rrx;
      regs.r14 = cpu->gen_reg[14].rrx;
      regs.r15 = cpu->gen_reg[15].rrx;
-     regs.rip = cpu->rip;
+     regs.rip = cpu->get_instruction_pointer();
 #else
      regs.rax = cpu->gen_reg[0].dword.erx;
      regs.rcx = cpu->gen_reg[1].dword.erx;
@@ -71,15 +71,15 @@ void bx_external_debugger(BX_CPU_C *cpu)
      regs.r13 = 0;
      regs.r14 = 0;
      regs.r15 = 0;
-     regs.rip = cpu->eip_reg.dword.eip;
+     regs.rip = cpu->get_instruction_pointer();
 #endif
      regs.rflags = cpu->read_eflags();
-     regs.es = cpu->sregs[0].selector.value;
-     regs.cs = cpu->sregs[1].selector.value;
-     regs.ss = cpu->sregs[2].selector.value;
-     regs.ds = cpu->sregs[3].selector.value;
-     regs.fs = cpu->sregs[4].selector.value;
-     regs.gs = cpu->sregs[5].selector.value;
+     regs.es = cpu->sregs[BX_SEG_REG_ES].selector.value;
+     regs.cs = cpu->sregs[BX_SEG_REG_CS].selector.value;
+     regs.ss = cpu->sregs[BX_SEG_REG_SS].selector.value;
+     regs.ds = cpu->sregs[BX_SEG_REG_DS].selector.value;
+     regs.fs = cpu->sregs[BX_SEG_REG_FS].selector.value;
+     regs.gs = cpu->sregs[BX_SEG_REG_GS].selector.value;
      regs.gdt.base = cpu->gdtr.base;
      regs.gdt.limit = cpu->gdtr.limit;
      regs.idt.base = cpu->idtr.base;

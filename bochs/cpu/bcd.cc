@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bcd.cc,v 1.22 2008-02-02 21:46:49 sshwarts Exp $
+// $Id: bcd.cc,v 1.23 2008-02-15 19:03:53 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -54,7 +54,7 @@ void BX_CPU_C::AAA(bxInstruction_c *)
 
   /* AAA affects the following flags: A,C */
 
-  if ( ((AL & 0x0f) > 9) || get_AF() )
+  if (((AL & 0x0f) > 9) || get_AF())
   {
     AX = AX + 0x106;
     assert_AF();
@@ -82,7 +82,7 @@ void BX_CPU_C::AAS(bxInstruction_c *)
 {
   /* AAS affects the following flags: A,C */
 
-  if ( ((AL & 0x0F) > 0x09) || get_AF() )
+  if (((AL & 0x0F) > 0x09) || get_AF())
   {
     AX = AX - 0x106;
     assert_AF();

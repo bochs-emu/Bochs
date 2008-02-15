@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.109 2008-02-11 20:52:10 sshwarts Exp $
+// $Id: paging.cc,v 1.110 2008-02-15 19:03:53 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -341,12 +341,12 @@ static unsigned priv_check[BX_PRIV_CHECK_SIZE];
 //       value, necessitating a TLB flush when CR0.WP changes.
 //
 //       The test is:
-//         OK = 0x1 << ( (W<<2) | CPL ) [W:1=write, 0=read]
+//         OK = 0x01 << ( (W<<2) | CPL ) [W:1=write, 0=read]
 //
 //       Thus for reads, it is:
-//         OK = 0x01 << (        CPL )
+//         OK = 0x01 << (          CPL )
 //       And for writes:
-//         OK = 0x10 << (        CPL )
+//         OK = 0x10 << (          CPL )
 //
 //     bit 15:       a Write from CPL=3 is OK
 //     bit 14:       a Write from CPL=2 is OK
@@ -431,7 +431,7 @@ BX_CPU_C::pagingCR0Changed(Bit32u oldCR0, Bit32u newCR0)
   // Modification of PG,PE flushes TLB cache according to docs.
   // Additionally, the TLB strategy is based on the current value of
   // WP, so if that changes we must also flush the TLB.
-  if ( (oldCR0 & 0x80010001) != (newCR0 & 0x80010001) )
+  if ((oldCR0 & 0x80010001) != (newCR0 & 0x80010001))
     TLB_flush(1); // 1 = Flush Global entries also.
 
   if (bx_dbg.paging)
@@ -1119,7 +1119,7 @@ void BX_CPU_C::access_linear(bx_address laddr, unsigned len, unsigned curr_pl, u
 
   if (BX_CPU_THIS_PTR cr0.get_PG()) {
     /* check for reference across multiple pages */
-    if ( (pageOffset + len) <= 4096 ) {
+    if ((pageOffset + len) <= 4096) {
       // Access within single page.
       BX_CPU_THIS_PTR address_xlation.paddress1 =
           dtranslate_linear(laddr, curr_pl, xlate_rw);
@@ -1211,7 +1211,7 @@ void BX_CPU_C::access_linear(bx_address laddr, unsigned len, unsigned curr_pl, u
   }
   else {
     // Paging off.
-    if ( (pageOffset + len) <= 4096 ) {
+    if ((pageOffset + len) <= 4096) {
       // Access within single page.
       BX_CPU_THIS_PTR address_xlation.paddress1 = (bx_phy_address) laddr;
       BX_CPU_THIS_PTR address_xlation.pages     = 1;
