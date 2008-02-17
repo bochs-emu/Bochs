@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.200 2008-02-07 20:46:08 sshwarts Exp $
+// $Id: rombios.c,v 1.201 2008-02-17 16:37:42 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -935,7 +935,7 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.200 $ $Date: 2008-02-07 20:46:08 $";
+static char bios_cvs_version_string[] = "$Revision: 1.201 $ $Date: 2008-02-17 16:37:42 $";
 
 #define BIOS_COPYRIGHT_STRING "(c) 2002 MandrakeSoft S.A. Written by Kevin Lawton & the Bochs team."
 
@@ -1515,17 +1515,16 @@ put_luint(action, val, width, neg)
   send(action, val - (nval * 10) + '0');
 }
 
-void put_str(action, s)
+void put_str(action, segment, offset)
   Bit16u action;
-  Bit8u *s;
+  Bit16u segment;
+  Bit16u offset;
 {
   Bit8u c;
-  if (!s)
-    s = "<NULL>";
 
-  while (c = read_byte(get_CS(), s)) {
+  while (c = read_byte(segment, offset)) {
     send(action, c);
-    s++;
+    offset++;
   }
 }
 
@@ -1534,7 +1533,7 @@ void put_str(action, s)
 //   A compact variable argument printf function.
 //
 //   Supports %[format_width][length]format
-//   where format can be x,X,u,d,s,c
+//   where format can be x,X,u,d,s,S,c
 //   and the optional length modifier is l (ell)
 //--------------------------------------------------------------------------
   void
@@ -1623,7 +1622,13 @@ bios_printf(action, s)
             put_int(action, arg, format_width, 0);
           }
         else if (c == 's') {
-          put_str(action, arg);
+          put_str(action, get_CS(), arg);
+          }
+        else if (c == 'S') {
+          hibyte = arg;
+          arg_ptr++;
+          arg = read_word(arg_seg, arg_ptr);
+          put_str(action, hibyte, arg);
           }
         else if (c == 'c') {
           send(action, arg);
@@ -1926,13 +1931,26 @@ Bit16u i; ipl_entry_t *e;
 static char drivetypes[][10]={"", "Floppy","Hard Disk","CD-Rom", "Network"};
 
 void
-print_boot_device(type)
-  Bit16u type;
+print_boot_device(e)
+  ipl_entry_t *e;
 {
+  Bit16u type;
+  char description[33];
+  Bit16u ss = get_SS();
+  type = e->type;
   /* NIC appears as type 0x80 */
   if (type == IPL_TYPE_BEV) type = 0x4;
   if (type == 0 || type > 0x4) BX_PANIC("Bad drive type\n");
-  printf("Booting from %s...\n", drivetypes[type]);
+  printf("Booting from %s", drivetypes[type]);
+  /* print product string if BEV */
+  if (type == 4 && e->description != 0) {
+    /* first 32 bytes are significant */
+    memcpyb(ss, &description, (Bit16u)(e->description >> 16), (Bit16u)(e->description & 0xffff), 32);
+    /* terminate string */
+    description[32] = 0;
+    printf(" [%S]", ss, description);
+  }
+  printf("...\n");
 }
 
 //--------------------------------------------------------------------------
@@ -1945,15 +1963,15 @@ print_boot_failure(type, reason)
 {
   if (type == 0 || type > 0x3) BX_PANIC("Bad drive type\n");
 
-  printf("Boot from %s failed", drivetypes[type]);
+  printf("Boot failed");
   if (type < 4) {
     /* Report the reason too */
-  if (reason==0)
-    printf(": not a bootable disk");
-  else
-    printf(": could not read the boot disk");
+    if (reason==0)
+      printf(": not a bootable disk");
+    else
+      printf(": could not read the boot disk");
   }
-  printf("\n");
+  printf("\n\n");
 }
 
 //--------------------------------------------------------------------------
@@ -7796,7 +7814,7 @@ Bit16u seq_nr;
 
   /* Do the loading, and set up vector as a far pointer to the boot
    * address, and bootdrv as the boot drive */
-  print_boot_device(e.type);
+  print_boot_device(&e);
 
   switch(e.type) {
   case IPL_TYPE_FLOPPY: /* FDD */
