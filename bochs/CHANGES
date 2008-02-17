@@ -35,7 +35,13 @@ Detailed change log :
   - Allow boot from network option in .bochsrc
   - Added Bochs version info for Win32
 
+- Display libraries
+  - implemented text mode character blinking in some guis
+
 - SF patches applied
+ [1859447] Pass segment:offset to put_str and introduce %S by Sebastian
+ [1889057] rombios.c - boot failure message by Sebastian
+ [1891469] rombios.c - print BEV product string by Sebastian
  [1889851] Win32 version information FILEVERSION for bochs.exe by Sebastian
  [1889042] rombios.c - fix comment by Sebastian
  [1881500] bochsrc, allow boot: network by Sebastian
