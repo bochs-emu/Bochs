@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios32.c,v 1.22 2008-01-27 17:57:26 sshwarts Exp $
+// $Id: rombios32.c,v 1.23 2008-02-27 01:41:01 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  32 bit Bochs BIOS init code
@@ -507,6 +507,15 @@ void smp_probe(void)
 #define PCI_MIN_GNT		0x3e	/* 8 bits */
 #define PCI_MAX_LAT		0x3f	/* 8 bits */
 
+#define PCI_VENDOR_ID_INTEL             0x8086
+#define PCI_DEVICE_ID_INTEL_82441       0x1237
+#define PCI_DEVICE_ID_INTEL_82371SB_0   0x7000
+#define PCI_DEVICE_ID_INTEL_82371SB_1   0x7010
+#define PCI_DEVICE_ID_INTEL_82371AB_3   0x7113
+
+#define PCI_VENDOR_ID_IBM               0x1014
+#define PCI_VENDOR_ID_APPLE             0x106b
+
 typedef struct PCIDevice {
     int bus;
     int devfn;
@@ -645,7 +654,7 @@ static void pci_bios_init_bridges(PCIDevice *d)
     vendor_id = pci_config_readw(d, PCI_VENDOR_ID);
     device_id = pci_config_readw(d, PCI_DEVICE_ID);
 
-    if (vendor_id == 0x8086 && device_id == 0x7000) {
+    if (vendor_id == PCI_VENDOR_ID_INTEL && device_id == PCI_DEVICE_ID_INTEL_82371SB_0) {
         int i, irq;
         uint8_t elcr[2];
 
@@ -664,7 +673,7 @@ static void pci_bios_init_bridges(PCIDevice *d)
         outb(0x4d1, elcr[1]);
         BX_INFO("PIIX3 init: elcr=%02x %02x\n",
                 elcr[0], elcr[1]);
-    } else if (vendor_id == 0x8086 && device_id == 0x1237) {
+    } else if (vendor_id == PCI_VENDOR_ID_INTEL && device_id == PCI_DEVICE_ID_INTEL_82441) {
         /* i440 PCI bridge */
         bios_shadow_init(d);
     }
@@ -725,7 +734,7 @@ static void pci_bios_init_device(PCIDevice *d)
             d->bus, d->devfn, vendor_id, device_id);
     switch(class) {
     case 0x0101:
-        if (vendor_id == 0x8086 && device_id == 0x7010) {
+        if (vendor_id == PCI_VENDOR_ID_INTEL && device_id == PCI_DEVICE_ID_INTEL_82371SB_1) {
             /* PIIX3 IDE */
             pci_config_writew(d, 0x40, 0x8000); // enable IDE0
             pci_config_writew(d, 0x42, 0x8000); // enable IDE1
@@ -746,7 +755,7 @@ static void pci_bios_init_device(PCIDevice *d)
         break;
     case 0x0800:
         /* PIC */
-        if (vendor_id == 0x1014) {
+        if (vendor_id == PCI_VENDOR_ID_IBM) {
             /* IBM */
             if (device_id == 0x0046 || device_id == 0xFFFF) {
                 /* MPIC & MPIC2 */
@@ -755,7 +764,7 @@ static void pci_bios_init_device(PCIDevice *d)
         }
         break;
     case 0xff00:
-        if (vendor_id == 0x0106b &&
+        if (vendor_id == PCI_VENDOR_ID_APPLE &&
             (device_id == 0x0017 || device_id == 0x0022)) {
             /* macio bridge */
             pci_set_io_region_addr(d, 0, 0x80800000);
@@ -798,7 +807,7 @@ static void pci_bios_init_device(PCIDevice *d)
         pci_config_writeb(d, PCI_INTERRUPT_LINE, pic_irq);
     }
 
-    if (vendor_id == 0x8086 && device_id == 0x7113) {
+    if (vendor_id == PCI_VENDOR_ID_INTEL && device_id == PCI_DEVICE_ID_INTEL_82371AB_3) {
         /* PIIX4 Power Management device (for ACPI) */
         pm_io_base = PM_IO_BASE;
         pci_config_writel(d, 0x40, pm_io_base | 1);
