@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dis_decode.cc,v 1.43 2008-02-05 22:33:33 sshwarts Exp $
+// $Id: dis_decode.cc,v 1.44 2008-02-29 03:02:03 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #include <stdio.h>
@@ -205,7 +205,7 @@ x86_insn disassembler::decode(bx_bool is_32, bx_bool is_64, bx_address base, bx_
   entry = opcode_table + insn.b1;
 
   // will require 3rd byte for 3-byte opcode
-  if (entry->Attr & _GRP3BTAB) b3 = fetch_byte();
+  if (entry->Attr & _GRP3BOP) b3 = fetch_byte();
 
   if (instruction_has_modrm[insn.b1])
   {
@@ -249,12 +249,8 @@ x86_insn disassembler::decode(bx_bool is_32, bx_bool is_64, bx_address base, bx_
          entry = &(BxDisasm3DNowGroup[peek_byte()]);
          break;
 
-       case _GRP3BTAB:
-         entry = &(OPCODE_TABLE(entry)[b3 >> 4]);
-         break;
-
        case _GRP3BOP:
-         entry = &(OPCODE_TABLE(entry)[b3 & 15]);
+         entry = &(OPCODE_TABLE(entry)[b3]);
          break;
 
        case _GRP64B:

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.428 2008-02-15 22:05:40 sshwarts Exp $
+// $Id: cpu.h,v 1.429 2008-02-29 03:02:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -183,8 +183,13 @@
 #define BX_READ_8BIT_REGx(index,ext) BX_READ_8BIT_REG(index)
 #endif
 
+#define BX_READ_8BIT_REGH(index) (BX_CPU_THIS_PTR gen_reg[index].word.byte.rh)
 #define BX_READ_16BIT_REG(index) (BX_CPU_THIS_PTR gen_reg[index].word.rx)
 #define BX_READ_32BIT_REG(index) (BX_CPU_THIS_PTR gen_reg[index].dword.erx)
+
+#define BX_WRITE_8BIT_REGH(index, val) {\
+  BX_CPU_THIS_PTR gen_reg[index].word.byte.rh = val; \
+}
 
 #define BX_WRITE_16BIT_REG(index, val) {\
   BX_CPU_THIS_PTR gen_reg[index].word.rx = val; \
@@ -3575,13 +3580,12 @@ IMPLEMENT_EFLAG_ACCESSOR   (TF,   8)
 #define BxPrefixSSE         0x0020 // Group encoding: 010
 #define BxFPEscape          0x0030 // Group encoding: 011
 #define BxRMGroup           0x0040 // Group encoding: 100
-#define Bx3ByteOpIndex      0x0050 // Group encoding: 101
-#define Bx3ByteOpTable      0x0060 // Group encoding: 110
+#define Bx3ByteOp           0x0050 // Group encoding: 101
+                                   // Group encoding: 110
                                    // Group encoding: 111
 
 #define BxLockable          0x0080 // bit  7
-#define Bx3ByteOpcode       0x0100 // bit  8
-#define BxRepeatable        0x0200 // bit  9
+#define BxRepeatable        0x0100 // bit  8
 
 #if BX_SUPPORT_TRACE_CACHE
   #define BxTraceEnd        0x1000 // bit 12

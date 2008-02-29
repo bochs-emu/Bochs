@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.174 2008-02-15 19:03:53 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.175 2008-02-29 03:02:03 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -498,13 +498,13 @@ static const BxOpcodeInfo_t BxOpcodeInfo64R[512*3] = {
   /* 0F 36 /wr */ { 0, &BX_CPU_C::BxError },
   /* 0F 37 /wr */ { 0, &BX_CPU_C::BxError },
 #if (BX_SUPPORT_SSE >= 4) || (BX_SUPPORT_SSE >= 3 && BX_SUPPORT_SSE_EXTENSION > 0)
-  /* 0F 38 /wr */ { Bx3ByteOpcode | Bx3ByteOpTable, NULL, BxOpcode3ByteTableA4 }, // 3-byte escape
+  /* 0F 38 /wr */ { Bx3ByteOp, NULL, BxOpcode3ByteTable0f38 }, // 3-byte escape
 #else
   /* 0F 38 /wr */ { 0, &BX_CPU_C::BxError },
 #endif
   /* 0F 39 /wr */ { 0, &BX_CPU_C::BxError },
 #if (BX_SUPPORT_SSE >= 4) || (BX_SUPPORT_SSE >= 3 && BX_SUPPORT_SSE_EXTENSION > 0)
-  /* 0F 3A /wr */ { Bx3ByteOpcode | Bx3ByteOpTable, NULL, BxOpcode3ByteTableA5 }, // 3-byte escape
+  /* 0F 3A /wr */ { Bx3ByteOp, NULL, BxOpcode3ByteTable0f3a }, // 3-byte escape
 #else
   /* 0F 3A /wr */ { 0, &BX_CPU_C::BxError },
 #endif
@@ -1026,13 +1026,13 @@ static const BxOpcodeInfo_t BxOpcodeInfo64R[512*3] = {
   /* 0F 36 /dr */ { 0, &BX_CPU_C::BxError },
   /* 0F 37 /dr */ { 0, &BX_CPU_C::BxError },
 #if (BX_SUPPORT_SSE >= 4) || (BX_SUPPORT_SSE >= 3 && BX_SUPPORT_SSE_EXTENSION > 0)
-  /* 0F 38 /dr */ { Bx3ByteOpcode | Bx3ByteOpTable, NULL, BxOpcode3ByteTableA4 }, // 3-byte escape
+  /* 0F 38 /dr */ { Bx3ByteOp, NULL, BxOpcode3ByteTable0f38 }, // 3-byte escape
 #else
   /* 0F 38 /dr */ { 0, &BX_CPU_C::BxError },
 #endif
   /* 0F 39 /dr */ { 0, &BX_CPU_C::BxError },
 #if (BX_SUPPORT_SSE >= 4) || (BX_SUPPORT_SSE >= 3 && BX_SUPPORT_SSE_EXTENSION > 0)
-  /* 0F 3A /dr */ { Bx3ByteOpcode | Bx3ByteOpTable, NULL, BxOpcode3ByteTableA5 }, // 3-byte escape
+  /* 0F 3A /dr */ { Bx3ByteOp, NULL, BxOpcode3ByteTable0f3a }, // 3-byte escape
 #else
   /* 0F 3A /dr */ { 0, &BX_CPU_C::BxError },
 #endif
@@ -1554,13 +1554,13 @@ static const BxOpcodeInfo_t BxOpcodeInfo64R[512*3] = {
   /* 0F 36 /qr */ { 0, &BX_CPU_C::BxError },
   /* 0F 37 /qr */ { 0, &BX_CPU_C::BxError },
 #if (BX_SUPPORT_SSE >= 4) || (BX_SUPPORT_SSE >= 3 && BX_SUPPORT_SSE_EXTENSION > 0)
-  /* 0F 38 /qr */ { Bx3ByteOpcode | Bx3ByteOpTable, NULL, BxOpcode3ByteTableA4 }, // 3-byte escape
+  /* 0F 38 /qr */ { Bx3ByteOp, NULL, BxOpcode3ByteTable0f38 }, // 3-byte escape
 #else
   /* 0F 38 /qr */ { 0, &BX_CPU_C::BxError },
 #endif
   /* 0F 39 /qr */ { 0, &BX_CPU_C::BxError },
 #if (BX_SUPPORT_SSE >= 4) || (BX_SUPPORT_SSE >= 3 && BX_SUPPORT_SSE_EXTENSION > 0)
-  /* 0F 3A /qr */ { Bx3ByteOpcode | Bx3ByteOpTable, NULL, BxOpcode3ByteTableA5 }, // 3-byte escape
+  /* 0F 3A /qr */ { Bx3ByteOp, NULL, BxOpcode3ByteTable0f3a }, // 3-byte escape
 #else
   /* 0F 3A /qr */ { 0, &BX_CPU_C::BxError },
 #endif
@@ -2088,13 +2088,13 @@ static const BxOpcodeInfo_t BxOpcodeInfo64M[512*3] = {
   /* 0F 36 /wm */ { 0, &BX_CPU_C::BxError },
   /* 0F 37 /wm */ { 0, &BX_CPU_C::BxError },
 #if (BX_SUPPORT_SSE >= 4) || (BX_SUPPORT_SSE >= 3 && BX_SUPPORT_SSE_EXTENSION > 0)
-  /* 0F 38 /wm */ { Bx3ByteOpcode | Bx3ByteOpTable, NULL, BxOpcode3ByteTableA4 }, // 3-byte escape
+  /* 0F 38 /wm */ { Bx3ByteOp, NULL, BxOpcode3ByteTable0f38 }, // 3-byte escape
 #else
   /* 0F 38 /wm */ { 0, &BX_CPU_C::BxError },
 #endif
   /* 0F 39 /wm */ { 0, &BX_CPU_C::BxError },
 #if (BX_SUPPORT_SSE >= 4) || (BX_SUPPORT_SSE >= 3 && BX_SUPPORT_SSE_EXTENSION > 0)
-  /* 0F 3A /wm */ { Bx3ByteOpcode | Bx3ByteOpTable, NULL, BxOpcode3ByteTableA5 }, // 3-byte escape
+  /* 0F 3A /wm */ { Bx3ByteOp, NULL, BxOpcode3ByteTable0f3a }, // 3-byte escape
 #else
   /* 0F 3A /wm */ { 0, &BX_CPU_C::BxError },
 #endif
@@ -2616,13 +2616,13 @@ static const BxOpcodeInfo_t BxOpcodeInfo64M[512*3] = {
   /* 0F 36 /dm */ { 0, &BX_CPU_C::BxError },
   /* 0F 37 /dm */ { 0, &BX_CPU_C::BxError },
 #if (BX_SUPPORT_SSE >= 4) || (BX_SUPPORT_SSE >= 3 && BX_SUPPORT_SSE_EXTENSION > 0)
-  /* 0F 38 /dm */ { Bx3ByteOpcode | Bx3ByteOpTable, NULL, BxOpcode3ByteTableA4 }, // 3-byte escape
+  /* 0F 38 /dm */ { Bx3ByteOp, NULL, BxOpcode3ByteTable0f38 }, // 3-byte escape
 #else
   /* 0F 38 /dm */ { 0, &BX_CPU_C::BxError },
 #endif
   /* 0F 39 /dm */ { 0, &BX_CPU_C::BxError },
 #if (BX_SUPPORT_SSE >= 4) || (BX_SUPPORT_SSE >= 3 && BX_SUPPORT_SSE_EXTENSION > 0)
-  /* 0F 3A /dm */ { Bx3ByteOpcode | Bx3ByteOpTable, NULL, BxOpcode3ByteTableA5 }, // 3-byte escape
+  /* 0F 3A /dm */ { Bx3ByteOp, NULL, BxOpcode3ByteTable0f3a }, // 3-byte escape
 #else
   /* 0F 3A /dm */ { 0, &BX_CPU_C::BxError },
 #endif
@@ -3144,13 +3144,13 @@ static const BxOpcodeInfo_t BxOpcodeInfo64M[512*3] = {
   /* 0F 36 /qm */ { 0, &BX_CPU_C::BxError },
   /* 0F 37 /qm */ { 0, &BX_CPU_C::BxError },
 #if (BX_SUPPORT_SSE >= 4) || (BX_SUPPORT_SSE >= 3 && BX_SUPPORT_SSE_EXTENSION > 0)
-  /* 0F 38 /qm */ { Bx3ByteOpcode | Bx3ByteOpTable, NULL, BxOpcode3ByteTableA4 }, // 3-byte escape
+  /* 0F 38 /qm */ { Bx3ByteOp, NULL, BxOpcode3ByteTable0f38 }, // 3-byte escape
 #else
   /* 0F 38 /qm */ { 0, &BX_CPU_C::BxError },
 #endif
   /* 0F 39 /qm */ { 0, &BX_CPU_C::BxError },
 #if (BX_SUPPORT_SSE >= 4) || (BX_SUPPORT_SSE >= 3 && BX_SUPPORT_SSE_EXTENSION > 0)
-  /* 0F 3A /qm */ { Bx3ByteOpcode | Bx3ByteOpTable, NULL, BxOpcode3ByteTableA5 }, // 3-byte escape
+  /* 0F 3A /qm */ { Bx3ByteOp, NULL, BxOpcode3ByteTable0f3a }, // 3-byte escape
 #else
   /* 0F 3A /qm */ { 0, &BX_CPU_C::BxError },
 #endif
@@ -3505,7 +3505,7 @@ fetch_b1:
 #if (BX_SUPPORT_SSE >= 4) || (BX_SUPPORT_SSE >= 3 && BX_SUPPORT_SSE_EXTENSION > 0)
     unsigned b3 = 0;
     // handle 3-byte escape
-    if (attr & Bx3ByteOpcode) {
+    if (attr & Bx3ByteOp) {
       if (ilen < remain) {
         ilen++;
         b3 = *iptr++;
@@ -3709,11 +3709,8 @@ modrm_done:
              OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[rm  & 0x7]);
              break;
 #if (BX_SUPPORT_SSE >= 4) || (BX_SUPPORT_SSE >= 3 && BX_SUPPORT_SSE_EXTENSION > 0)
-         case Bx3ByteOpTable:
-             OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[b3 >> 4]);
-             break;
-         case Bx3ByteOpIndex:
-             OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[b3 & 15]);
+         case Bx3ByteOp:
+             OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[b3]);
              break;
 #endif
          case BxPrefixSSE:

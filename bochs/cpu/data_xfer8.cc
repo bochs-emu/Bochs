@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: data_xfer8.cc,v 1.37 2008-01-29 17:13:06 sshwarts Exp $
+// $Id: data_xfer8.cc,v 1.38 2008-02-29 03:02:03 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -37,7 +37,7 @@ void BX_CPU_C::MOV_RLIb(bxInstruction_c *i)
 
 void BX_CPU_C::MOV_RHIb(bxInstruction_c *i)
 {
-  BX_CPU_THIS_PTR gen_reg[i->b1() & 0x03].word.byte.rh = i->Ib();
+  BX_WRITE_8BIT_REGH(i->b1() & 0x03, i->Ib());
 }
 
 void BX_CPU_C::MOV_EbGbM(bxInstruction_c *i)
