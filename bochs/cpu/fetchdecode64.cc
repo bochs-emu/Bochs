@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.175 2008-02-29 03:02:03 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.176 2008-02-29 05:39:39 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -3505,7 +3505,7 @@ fetch_b1:
 #if (BX_SUPPORT_SSE >= 4) || (BX_SUPPORT_SSE >= 3 && BX_SUPPORT_SSE_EXTENSION > 0)
     unsigned b3 = 0;
     // handle 3-byte escape
-    if (attr & Bx3ByteOp) {
+    if ((attr & BxGroupX) == Bx3ByteOp) {
       if (ilen < remain) {
         ilen++;
         b3 = *iptr++;

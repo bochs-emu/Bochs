@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dis_decode.cc,v 1.44 2008-02-29 03:02:03 sshwarts Exp $
+// $Id: dis_decode.cc,v 1.45 2008-02-29 05:39:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #include <stdio.h>
@@ -204,11 +204,12 @@ x86_insn disassembler::decode(bx_bool is_32, bx_bool is_64, bx_address base, bx_
 
   entry = opcode_table + insn.b1;
 
-  // will require 3rd byte for 3-byte opcode
-  if (entry->Attr & _GRP3BOP) b3 = fetch_byte();
-
   if (instruction_has_modrm[insn.b1])
   {
+    // will require 3rd byte for 3-byte opcode
+    if (entry->Attr == _GRP3BOP)
+      b3 = fetch_byte();
+
     decode_modrm(&insn);
   }
 
