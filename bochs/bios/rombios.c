@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.201 2008-02-17 16:37:42 vruppert Exp $
+// $Id: rombios.c,v 1.202 2008-03-02 19:24:54 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -175,6 +175,7 @@
 #define IPL_TABLE_ENTRIES    8
 #define IPL_COUNT_OFFSET     0x0080  /* u16: number of valid table entries */
 #define IPL_SEQUENCE_OFFSET  0x0082  /* u16: next boot device */
+#define IPL_BOOTFIRST_OFFSET 0x0084  /* u16: user selected device */
 #define IPL_SIZE             0xff
 #define IPL_TYPE_FLOPPY      0x01
 #define IPL_TYPE_HARDDISK    0x02
@@ -901,7 +902,10 @@ static void           keyboard_init();
 static void           keyboard_panic();
 static void           shutdown_status_panic();
 static void           nmi_handler_msg();
+static void           delay_ticks();
+static void           delay_ticks_and_check_for_keystroke();
 
+static void           interactive_bootkey();
 static void           print_bios_banner();
 static void           print_boot_device();
 static void           print_boot_failure();
@@ -935,7 +939,7 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.201 $ $Date: 2008-02-17 16:37:42 $";
+static char bios_cvs_version_string[] = "$Revision: 1.202 $ $Date: 2008-03-02 19:24:54 $";
 
 #define BIOS_COPYRIGHT_STRING "(c) 2002 MandrakeSoft S.A. Written by Kevin Lawton & the Bochs team."
 
@@ -1528,6 +1532,84 @@ void put_str(action, segment, offset)
   }
 }
 
+  void
+delay_ticks(ticks)
+  Bit16u ticks;
+{
+  long ticks_to_wait, delta;
+  Bit32u prev_ticks, t;
+
+   /*
+    * The 0:046c wraps around at 'midnight' according to a 18.2Hz clock.
+    * We also have to be careful about interrupt storms.
+    */
+ASM_START
+  pushf
+  sti
+ASM_END
+  ticks_to_wait = ticks;
+  prev_ticks = read_dword(0x0, 0x46c);
+  do
+  {
+ASM_START
+    hlt
+ASM_END
+    t = read_dword(0x0, 0x46c);
+    if (t > prev_ticks)
+    {
+      delta = t - prev_ticks;     /* The temp var is required or bcc screws up. */
+      ticks_to_wait -= delta;
+    }
+    else if (t < prev_ticks)
+    {
+      ticks_to_wait -= t;         /* wrapped */
+    }
+
+    prev_ticks = t;
+  } while (ticks_to_wait > 0);
+ASM_START
+  cli
+  popf
+ASM_END
+}
+
+  Bit8u
+check_for_keystroke()
+{
+ASM_START
+  mov  ax, #0x100
+  int  #0x16
+  jz   no_key
+  mov  al, #1
+  jmp  done
+no_key:
+  xor  al, al
+done:
+ASM_END
+}
+
+  Bit8u
+get_keystroke()
+{
+ASM_START
+  mov  ax, #0x0
+  int  #0x16
+  xchg ah, al
+ASM_END
+}
+
+  void
+delay_ticks_and_check_for_keystroke(ticks, count)
+  Bit16u ticks, count;
+{
+  Bit16u i;
+  for (i = 1; i <= count; i++) {
+    delay_ticks(ticks);
+    if (check_for_keystroke())
+      break;
+  }
+}
+
 //--------------------------------------------------------------------------
 // bios_printf()
 //   A compact variable argument printf function.
@@ -1874,6 +1956,7 @@ print_bios_banner()
 // http://www.phoenix.com/en/Customer+Services/White+Papers-Specs/pc+industry+specifications.htm
 //--------------------------------------------------------------------------
 
+static char drivetypes[][10]={"", "Floppy","Hard Disk","CD-Rom", "Network"};
 
 static void
 init_boot_vectors()
@@ -1884,6 +1967,9 @@ init_boot_vectors()
 
   /* Clear out the IPL table. */
   memsetb(IPL_SEG, IPL_TABLE_OFFSET, 0, IPL_SIZE);
+
+  /* User selected device not set */
+  write_word(IPL_SEG, IPL_BOOTFIRST_OFFSET, 0xFFFF);
 
   /* Floppy drive */
   e.type = IPL_TYPE_FLOPPY; e.flags = 0; e.vector = 0; e.description = 0; e.reserved = 0;
@@ -1922,13 +2008,84 @@ Bit16u i; ipl_entry_t *e;
   return 1;
 }
 
+#if BX_ELTORITO_BOOT
+  void
+interactive_bootkey()
+{
+  ipl_entry_t e;
+  Bit16u count;
+  char description[33];
+  Bit8u scan_code;
+  Bit8u i;
+  Bit16u ss = get_SS();
+  Bit16u valid_choice = 0;
+
+  while (check_for_keystroke())
+    get_keystroke();
+
+  printf("Press F12 for boot menu.\n\n");
+
+  delay_ticks_and_check_for_keystroke(11, 5); /* ~3 seconds */
+  if (check_for_keystroke())
+  {
+    scan_code = get_keystroke();
+    if (scan_code == 0x58) /* F12 */
+    {
+      while (check_for_keystroke())
+        get_keystroke();
+
+      printf("Select boot device:\n\n");
+
+      count = read_word(IPL_SEG, IPL_COUNT_OFFSET);
+      for (i = 0; i < count; i++)
+      {
+        memcpyb(ss, &e, IPL_SEG, IPL_TABLE_OFFSET + i * sizeof (e), sizeof (e));
+        printf("%d. ", i+1);
+        switch(e.type)
+        {
+          case IPL_TYPE_FLOPPY:
+          case IPL_TYPE_HARDDISK:
+          case IPL_TYPE_CDROM:
+            printf("%s\n", drivetypes[e.type]);
+            break;
+          case IPL_TYPE_BEV:
+            printf("%s", drivetypes[4]);
+            if (e.description != 0)
+            {
+              memcpyb(ss, &description, (Bit16u)(e.description >> 16), (Bit16u)(e.description & 0xffff), 32);
+              description[32] = 0;
+              printf(" [%S]", ss, description);
+           }
+           printf("\n");
+           break;
+        }
+      }
+
+      count++;
+      while (!valid_choice) {
+        scan_code = get_keystroke();
+        if (scan_code == 0x01 || scan_code == 0x58) /* ESC or F12 */
+        {
+          valid_choice = 1;
+        }
+        else if (scan_code <= count)
+        {
+          valid_choice = 1;
+          scan_code -= 1;
+          /* Set user selected device */
+          write_word(IPL_SEG, IPL_BOOTFIRST_OFFSET, scan_code);
+        }
+      }
+    printf("\n");
+    }
+  }
+}
+#endif // BX_ELTORITO_BOOT
 
 //--------------------------------------------------------------------------
 // print_boot_device
 //   displays the boot device
 //--------------------------------------------------------------------------
-
-static char drivetypes[][10]={"", "Floppy","Hard Disk","CD-Rom", "Network"};
 
 void
 print_boot_device(e)
@@ -7766,6 +7923,7 @@ Bit16u seq_nr;
   Bit16u bootseg;
   Bit16u bootip;
   Bit16u status;
+  Bit16u bootfirst;
 
   ipl_entry_t e;
 
@@ -7793,7 +7951,16 @@ Bit16u seq_nr;
   bootdev |= ((inb_cmos(0x38) & 0xf0) << 4);
   bootdev >>= 4 * seq_nr;
   bootdev &= 0xf;
-  if (bootdev == 0) BX_PANIC("No bootable device.\n");
+
+  /* Read user selected device */
+  bootfirst = read_word(IPL_SEG, IPL_BOOTFIRST_OFFSET);
+  if (bootfirst != 0xFFFF) {
+    bootdev = bootfirst;
+    /* User selected device not set */
+    write_word(IPL_SEG, IPL_BOOTFIRST_OFFSET, 0xFFFF);
+    /* Reset boot sequence */
+    write_word(IPL_SEG, IPL_SEQUENCE_OFFSET, 0xFFFF);
+  } else if (bootdev == 0) BX_PANIC("No bootable device.\n");
 
   /* Translate from CMOS runes to an IPL table offset by subtracting 1 */
   bootdev -= 1;
@@ -10374,6 +10541,10 @@ post_default_ints:
   mov  cx, #0xc800  ;; init option roms
   mov  ax, #0xe000
   call rom_scan
+
+#if BX_ELTORITO_BOOT
+  call _interactive_bootkey
+#endif // BX_ELTORITO_BOOT
 
   sti        ;; enable interrupts
   int  #0x19
