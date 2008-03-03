@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.208 2008-02-29 05:39:38 sshwarts Exp $
+// $Id: cpu.cc,v 1.209 2008-03-03 14:35:36 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -61,8 +61,6 @@
 
 void BX_CPU_C::cpu_loop(Bit32u max_instr_count)
 {
-  bxInstruction_c iStorage BX_CPP_AlignN(32);
-
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR break_point = 0;
   BX_CPU_THIS_PTR magic_break = 0;
@@ -123,11 +121,12 @@ no_async_event:
     }
 
 #if BX_SUPPORT_TRACE_CACHE == 0
+    bxInstruction_c iStorage BX_CPP_AlignN(32);
     // fetch and decode single instruction
     bxInstruction_c *i = fetchInstruction(&iStorage, eipBiased);
 #else
     unsigned length;
-    bxInstruction_c *i = fetchInstructionTrace(&iStorage, &length, eipBiased);
+    bxInstruction_c *i = fetchInstructionTrace(eipBiased, &length);
     Bit32u currPageWriteStamp = *(BX_CPU_THIS_PTR currPageWriteStampPtr);
 
     for(;;i++) {

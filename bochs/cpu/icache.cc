@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: icache.cc,v 1.5 2008-02-02 21:46:51 sshwarts Exp $
+// $Id: icache.cc,v 1.6 2008-03-03 14:35:36 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007 Stanislav Shwartsman
@@ -83,7 +83,7 @@ static Bit32u iCacheTraceLengh[BX_MAX_TRACE_LENGTH];
 
 #if BX_SUPPORT_TRACE_CACHE
 
-bxInstruction_c* BX_CPU_C::fetchInstructionTrace(bxInstruction_c *iStorage, unsigned *len, Bit32u eipBiased)
+bxInstruction_c* BX_CPU_C::fetchInstructionTrace(Bit32u eipBiased, unsigned *len)
 {
   bx_phy_address pAddr = BX_CPU_THIS_PTR pAddrA20Page + eipBiased;
   unsigned iCacheHash = BX_CPU_THIS_PTR iCache.hash(pAddr);
@@ -116,7 +116,7 @@ bxInstruction_c* BX_CPU_C::fetchInstructionTrace(bxInstruction_c *iStorage, unsi
 
   bxInstruction_c *i = trace->i;
 
-  for (unsigned n=0;n<BX_MAX_TRACE_LENGTH;n++,i++)
+  for (unsigned n=0;n<BX_MAX_TRACE_LENGTH;n++)
   {
 #if BX_SUPPORT_X86_64
     if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64)
@@ -136,10 +136,9 @@ bxInstruction_c* BX_CPU_C::fetchInstructionTrace(bxInstruction_c *iStorage, unsi
       // First instruction is boundary fetch, return iStorage and leave
       // the trace cache entry invalid (do not cache the instruction)
       trace->writeStamp = ICacheWriteStampInvalid;
-      boundaryFetch(fetchPtr, remainingInPage, iStorage);
-
-      *len = 1;
-      return iStorage;
+      trace->ilen = 1;
+      boundaryFetch(fetchPtr, remainingInPage, trace->i);
+      break;
     }
 
     // add instruction to the trace ...
@@ -148,22 +147,13 @@ bxInstruction_c* BX_CPU_C::fetchInstructionTrace(bxInstruction_c *iStorage, unsi
 
     // ... and continue to the next instruction
     remainingInPage -= iLen;
-    if (remainingInPage == 0) break;
+    if (i->getStopTraceAttr() || remainingInPage == 0) break;
     pAddr += iLen;
     fetchPtr += iLen;
-
-    if (i->getStopTraceAttr()) {
-#if BX_TRACE_CACHE_NO_SPECULATIVE_TRACING
-      unsigned b1 = i->b1() & 0x1f0;
-      if (b1 == 0x70 || b1 == 0x180) {    // JCC instruction
-        mergeTraces(trace, i+1, pAddr);
-      }
-#endif
-      break;
-    }
+    i++;
 
     // try to find a trace starting from current pAddr and merge
-    if (mergeTraces(trace, i+1, pAddr)) break;
+    if (mergeTraces(trace, i, pAddr)) break;
   }
 
   *len = trace->ilen;
@@ -230,7 +220,7 @@ bxInstruction_c* BX_CPU_C::fetchInstruction(bxInstruction_c *iStorage, Bit32u ei
   bx_phy_address pAddr = BX_CPU_THIS_PTR pAddrA20Page + eipBiased;
   unsigned iCacheHash = BX_CPU_THIS_PTR iCache.hash(pAddr);
   bxICacheEntry_c *cache_entry = &(BX_CPU_THIS_PTR iCache.entry[iCacheHash]);
-  i = &(cache_entry->i);
+  i = cache_entry->i;
 
   Bit32u pageWriteStamp = *(BX_CPU_THIS_PTR currPageWriteStampPtr);
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: icache.h,v 1.25 2008-02-02 21:46:51 sshwarts Exp $
+// $Id: icache.h,v 1.26 2008-03-03 14:35:36 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -129,7 +129,8 @@ struct bxICacheEntry_c
   Bit32u ilen;          // Trace length in instructions
   bxInstruction_c i[BX_MAX_TRACE_LENGTH];
 #else
-  bxInstruction_c i;
+  // ... define as array of 1 to simplify merge with trace cache code
+  bxInstruction_c i[1];
 #endif
 };
 

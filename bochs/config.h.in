@@ -733,10 +733,9 @@ typedef
 
 #define BX_SUPPORT_ICACHE 0
 #define BX_SUPPORT_TRACE_CACHE 0
-#define BX_TRACE_CACHE_NO_SPECULATIVE_TRACING 0 /* allow speculative tracing */
 
 #if (BX_SUPPORT_TRACE_CACHE && BX_SUPPORT_ICACHE==0)
-#error Trace cache optimizatin cannot be compiled without iCache!
+#error Trace cache optimization cannot be compiled without iCache!
 #endif
 
 // if 1, don't do gpf on MSRs that we don't implement
