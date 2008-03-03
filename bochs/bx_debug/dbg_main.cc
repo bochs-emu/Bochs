@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.113 2008-02-15 22:05:38 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.114 2008-03-03 10:49:54 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1533,14 +1533,27 @@ void bx_dbg_stepN_command(Bit32u count)
 
   // single CPU
   bx_guard.guard_for |= BX_DBG_GUARD_CTRL_C; // or Ctrl-C
+
+  // reset guard counters for all CPUs
+  int stop = 0;
+  for (unsigned cpu=0; cpu < BX_SMP_PROCESSORS; cpu++) {
+    BX_CPU(cpu)->guard_found.icount = 0;
+    BX_CPU(cpu)->guard_found.time_tick = bx_pc_system.time_ticks();
+  }
+
   // for now, step each CPU one instruction at a time
-  for (unsigned cycle=0; cycle < count; cycle++) {
+  for (unsigned cycle=0; !stop && cycle < count; cycle++) {
     for (unsigned cpu=0; cpu < BX_SMP_PROCESSORS; cpu++) {
       bx_guard.interrupt_requested = 0;
       BX_CPU(cpu)->guard_found.guard_found = 0;
-      BX_CPU(cpu)->guard_found.icount = 0;
-      BX_CPU(cpu)->guard_found.time_tick = bx_pc_system.time_ticks();
       BX_CPU(cpu)->cpu_loop(1);
+      // set stop flag if a guard found other than icount or halted
+      unsigned long found = BX_CPU(cpu)->guard_found.guard_found;
+      stop_reason_t reason = (stop_reason_t) BX_CPU(cpu)->stop_reason;
+      if (found)
+        stop = 1;
+      else if (reason != STOP_NO_REASON && reason != STOP_CPU_HALTED)
+        stop = 1;
     }
 #if BX_SUPPORT_SMP == 0
     // ticks are handled inside the cpu loop
