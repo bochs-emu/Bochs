@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: instr.h,v 1.5 2008-02-15 19:03:53 sshwarts Exp $
+// $Id: instr.h,v 1.6 2008-03-03 16:45:15 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008 Stanislav Shwartsman
@@ -40,10 +40,9 @@ public:
 #endif
 
   struct {
-    // 15...7  b1 (9bits of opcode; 1byte-op=0..255, 2byte-op=256..511
-    //            (leave this one on top so no mask is needed)
-    //  6...1  (unused - 6 bits)
-    //  0...0  stop trace (used with trace cache)
+    // 15..10  (unused)
+    //  9...9  stop trace (used with trace cache)
+    //  8...0  b1 (9bits of opcode; 1byte-op=0..255, 2byte-op=256..511
     Bit16u metaInfo3;
 
     //  7...4  (unused)
@@ -280,20 +279,20 @@ public:
 
 #if BX_SUPPORT_TRACE_CACHE
   BX_CPP_INLINE void setStopTraceAttr(void) {
-   metaInfo.metaInfo3 |= (1<<3);
+   metaInfo.metaInfo3 |= (1<<9);
   }
   BX_CPP_INLINE unsigned getStopTraceAttr(void) {
-    return metaInfo.metaInfo3 & (1<<3);
+    return metaInfo.metaInfo3 & (1<<9);
   }
 #endif
 
   // Note this is the highest field, and thus needs no masking.
   // DON'T PUT ANY FIELDS HIGHER THAN THIS ONE WITHOUT ADDING A MASK.
   BX_CPP_INLINE unsigned b1(void) {
-    return metaInfo.metaInfo3 >> 7;
+    return metaInfo.metaInfo3 & 0x1ff;
   }
   BX_CPP_INLINE void setB1(unsigned b1) {
-    metaInfo.metaInfo3 = (metaInfo.metaInfo3 & ~(0x1ff << 7)) | ((b1 & 0x1ff) << 7);
+    metaInfo.metaInfo3 = (metaInfo.metaInfo3 & ~0x1ff) | (b1 & 0x1ff);
   }
 };
 // <TAG-CLASS-INSTRUCTION-END>
