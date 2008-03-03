@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: icache.cc,v 1.7 2008-03-03 15:16:46 sshwarts Exp $
+// $Id: icache.cc,v 1.8 2008-03-03 15:34:03 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007 Stanislav Shwartsman
@@ -160,24 +160,24 @@ bxInstruction_c* BX_CPU_C::fetchInstructionTrace(Bit32u eipBiased, unsigned *len
   return trace->i;
 }
 
-bx_bool BX_CPU_C::mergeTraces(bxICacheEntry_c *trace, bxInstruction_c *i, bx_phy_address pAddr)
+bx_bool BX_CPU_C::mergeTraces(bxICacheEntry_c *entry, bxInstruction_c *i, bx_phy_address pAddr)
 {
   bxICacheEntry_c *e = &(BX_CPU_THIS_PTR iCache.entry[BX_CPU_THIS_PTR iCache.hash(pAddr)]);
 
-  if ((e->pAddr == pAddr) && (e->writeStamp == trace->writeStamp))
+  if ((e->pAddr == pAddr) && (e->writeStamp == entry->writeStamp))
   {
     // We are lucky - another trace hit !
     InstrICache_Increment(iCacheMergeTraces);
 
     // determine max amount of instruction to take from another trace
     unsigned max_length = e->ilen;
-    if (max_length + trace->ilen > BX_MAX_TRACE_LENGTH)
-        max_length = BX_MAX_TRACE_LENGTH - trace->ilen;
+    if (max_length + entry->ilen > BX_MAX_TRACE_LENGTH)
+        max_length = BX_MAX_TRACE_LENGTH - entry->ilen;
     if(max_length == 0) return 0;
 
     memcpy(i, e->i, sizeof(bxInstruction_c)*max_length);
-    trace->ilen += max_length;
-    BX_ASSERT(trace->ilen <= BX_MAX_TRACE_LENGTH);
+    entry->ilen += max_length;
+    BX_ASSERT(entry->ilen <= BX_MAX_TRACE_LENGTH);
 
     return 1;
   }

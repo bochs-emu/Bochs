@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.431 2008-03-03 15:16:46 sshwarts Exp $
+// $Id: cpu.h,v 1.432 2008-03-03 15:34:03 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -866,7 +866,7 @@ public: // for now...
   // Boundaries of current page, based on EIP
   bx_address eipPageBias;
   Bit32u     eipPageWindowSize;
-  Bit8u     *eipFetchPtr;
+  const Bit8u *eipFetchPtr;
   bx_phy_address pAddrA20Page; // Guest physical address of current instruction
                                // page with A20() already applied.
 #if BX_SUPPORT_ICACHE
