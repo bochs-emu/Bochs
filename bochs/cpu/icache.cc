@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: icache.cc,v 1.6 2008-03-03 14:35:36 sshwarts Exp $
+// $Id: icache.cc,v 1.7 2008-03-03 15:16:46 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007 Stanislav Shwartsman
@@ -111,7 +111,7 @@ bxInstruction_c* BX_CPU_C::fetchInstructionTrace(Bit32u eipBiased, unsigned *len
   InstrICache_Increment(iCacheMisses);
 
   unsigned remainingInPage = BX_CPU_THIS_PTR eipPageWindowSize - eipBiased;
-  Bit8u *fetchPtr = BX_CPU_THIS_PTR eipFetchPtr + eipBiased;
+  const Bit8u *fetchPtr = BX_CPU_THIS_PTR eipFetchPtr + eipBiased;
   unsigned ret;
 
   bxInstruction_c *i = trace->i;
@@ -245,7 +245,7 @@ bxInstruction_c* BX_CPU_C::fetchInstruction(bxInstruction_c *iStorage, Bit32u ei
   // is in the iCache. Or we're not compiling iCache support in, in which
   // case we always have an iCache miss.  :^)
   unsigned remainingInPage = BX_CPU_THIS_PTR eipPageWindowSize - eipBiased;
-  Bit8u *fetchPtr = BX_CPU_THIS_PTR eipFetchPtr + eipBiased;
+  const Bit8u *fetchPtr = BX_CPU_THIS_PTR eipFetchPtr + eipBiased;
 
 #if BX_SUPPORT_ICACHE
   // The entry will be marked valid if fetchdecode will succeed

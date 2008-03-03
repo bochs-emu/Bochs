@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.209 2008-03-03 14:35:36 sshwarts Exp $
+// $Id: cpu.cc,v 1.210 2008-03-03 15:16:46 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -616,7 +616,7 @@ void BX_CPU_C::prefetch(void)
 #endif
 }
 
-void BX_CPU_C::boundaryFetch(Bit8u *fetchPtr, unsigned remainingInPage, bxInstruction_c *i)
+void BX_CPU_C::boundaryFetch(const Bit8u *fetchPtr, unsigned remainingInPage, bxInstruction_c *i)
 {
   unsigned j;
   Bit8u fetchBuffer[16]; // Really only need 15

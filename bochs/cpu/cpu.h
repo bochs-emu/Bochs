@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.430 2008-03-03 14:35:36 sshwarts Exp $
+// $Id: cpu.h,v 1.431 2008-03-03 15:16:46 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2752,17 +2752,6 @@ public: // for now...
   BX_SMF void MONITOR(bxInstruction_c *);
   BX_SMF void MWAIT(bxInstruction_c *);
 
-  BX_SMF unsigned fetchDecode32(Bit8u *fetchPtr, bxInstruction_c *i, unsigned remainingInPage);
-#if BX_SUPPORT_X86_64
-  BX_SMF unsigned fetchDecode64(Bit8u *fetchPtr, bxInstruction_c *i, unsigned remainingInPage);
-#endif
-#if BX_SUPPORT_TRACE_CACHE
-  BX_SMF bxInstruction_c* fetchInstructionTrace(Bit32u eipBiased, unsigned *len);
-  BX_SMF bx_bool mergeTraces(bxICacheEntry_c *trace, bxInstruction_c *, bx_phy_address pAddr);
-  BX_SMF void instrumentTraces(void);
-#else
-  BX_SMF bxInstruction_c* fetchInstruction(bxInstruction_c *iStorage, Bit32u eipBiased);
-#endif
   BX_SMF void UndefinedOpcode(bxInstruction_c *);
   BX_SMF void BxError(bxInstruction_c *);
 
@@ -2817,7 +2806,18 @@ public: // for now...
   // now for some ancillary functions...
   BX_SMF void cpu_loop(Bit32u max_instr_count);
   BX_SMF unsigned handleAsyncEvent(void);
-  BX_SMF void boundaryFetch(Bit8u *fetchPtr, unsigned remainingInPage, bxInstruction_c *);
+  BX_SMF unsigned fetchDecode32(const Bit8u *fetchPtr, bxInstruction_c *i, unsigned remainingInPage);
+#if BX_SUPPORT_X86_64
+  BX_SMF unsigned fetchDecode64(const Bit8u *fetchPtr, bxInstruction_c *i, unsigned remainingInPage);
+#endif
+  BX_SMF void boundaryFetch(const Bit8u *fetchPtr, unsigned remainingInPage, bxInstruction_c *);
+#if BX_SUPPORT_TRACE_CACHE
+  BX_SMF bxInstruction_c* fetchInstructionTrace(Bit32u eipBiased, unsigned *len);
+  BX_SMF bx_bool mergeTraces(bxICacheEntry_c *trace, bxInstruction_c *, bx_phy_address pAddr);
+  BX_SMF void instrumentTraces(void);
+#else
+  BX_SMF bxInstruction_c* fetchInstruction(bxInstruction_c *iStorage, Bit32u eipBiased);
+#endif
   BX_SMF void prefetch(void);
   BX_SMF BX_CPP_INLINE void invalidate_prefetch_q(void)
   {

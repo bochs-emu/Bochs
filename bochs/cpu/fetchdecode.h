@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.h,v 1.54 2008-02-29 03:02:03 sshwarts Exp $
+// $Id: fetchdecode.h,v 1.55 2008-03-03 15:16:46 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005 Stanislav Shwartsman
@@ -36,14 +36,14 @@ typedef struct BxOpcodeInfo_t {
 // according to instruction prefixes)
 //
 
-BX_CPP_INLINE Bit16u FetchWORD(Bit8u *iptr)
+BX_CPP_INLINE Bit16u FetchWORD(const Bit8u *iptr)
 {
    Bit16u data;
    ReadHostWordFromLittleEndian(iptr, data);
    return data;
 }
 
-BX_CPP_INLINE Bit32u FetchDWORD(Bit8u *iptr)
+BX_CPP_INLINE Bit32u FetchDWORD(const Bit8u *iptr)
 {
    Bit32u data;
    ReadHostDWordFromLittleEndian(iptr, data);
@@ -51,7 +51,7 @@ BX_CPP_INLINE Bit32u FetchDWORD(Bit8u *iptr)
 }
 
 #if BX_SUPPORT_X86_64
-BX_CPP_INLINE Bit64u FetchQWORD(Bit8u *iptr)
+BX_CPP_INLINE Bit64u FetchQWORD(const Bit8u *iptr)
 {
    Bit64u data;
    ReadHostQWordFromLittleEndian(iptr, data);
