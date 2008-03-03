@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: icache.h,v 1.26 2008-03-03 14:35:36 sshwarts Exp $
+// $Id: icache.h,v 1.27 2008-03-03 16:22:31 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -149,6 +149,11 @@ public:
 
   BX_CPP_INLINE void purgeICacheEntries(void);
   BX_CPP_INLINE void flushICacheEntries(void);
+
+  BX_CPP_INLINE bxICacheEntry_c* get_entry(bx_phy_address pAddr)
+  {
+    return &(entry[hash(pAddr)]);
+  }
 };
 
 BX_CPP_INLINE void bxICache_c::flushICacheEntries(void)

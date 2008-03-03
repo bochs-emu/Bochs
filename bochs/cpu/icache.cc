@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: icache.cc,v 1.8 2008-03-03 15:34:03 sshwarts Exp $
+// $Id: icache.cc,v 1.9 2008-03-03 16:22:31 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007 Stanislav Shwartsman
@@ -86,8 +86,7 @@ static Bit32u iCacheTraceLengh[BX_MAX_TRACE_LENGTH];
 bxInstruction_c* BX_CPU_C::fetchInstructionTrace(Bit32u eipBiased, unsigned *len)
 {
   bx_phy_address pAddr = BX_CPU_THIS_PTR pAddrA20Page + eipBiased;
-  unsigned iCacheHash = BX_CPU_THIS_PTR iCache.hash(pAddr);
-  bxICacheEntry_c *trace = &(BX_CPU_THIS_PTR iCache.entry[iCacheHash]);
+  bxICacheEntry_c *trace = BX_CPU_THIS_PTR iCache.get_entry(pAddr);
   Bit32u pageWriteStamp = *(BX_CPU_THIS_PTR currPageWriteStampPtr);
 
   InstrICache_Increment(iCacheLookups);
@@ -162,7 +161,7 @@ bxInstruction_c* BX_CPU_C::fetchInstructionTrace(Bit32u eipBiased, unsigned *len
 
 bx_bool BX_CPU_C::mergeTraces(bxICacheEntry_c *entry, bxInstruction_c *i, bx_phy_address pAddr)
 {
-  bxICacheEntry_c *e = &(BX_CPU_THIS_PTR iCache.entry[BX_CPU_THIS_PTR iCache.hash(pAddr)]);
+  bxICacheEntry_c *e = BX_CPU_THIS_PTR iCache.get_entry(pAddr);
 
   if ((e->pAddr == pAddr) && (e->writeStamp == entry->writeStamp))
   {
@@ -218,8 +217,7 @@ bxInstruction_c* BX_CPU_C::fetchInstruction(bxInstruction_c *iStorage, Bit32u ei
 
 #if BX_SUPPORT_ICACHE
   bx_phy_address pAddr = BX_CPU_THIS_PTR pAddrA20Page + eipBiased;
-  unsigned iCacheHash = BX_CPU_THIS_PTR iCache.hash(pAddr);
-  bxICacheEntry_c *cache_entry = &(BX_CPU_THIS_PTR iCache.entry[iCacheHash]);
+  bxICacheEntry_c *cache_entry = BX_CPU_THIS_PTR iCache.get_entry(pAddr);
   i = cache_entry->i;
 
   Bit32u pageWriteStamp = *(BX_CPU_THIS_PTR currPageWriteStampPtr);
