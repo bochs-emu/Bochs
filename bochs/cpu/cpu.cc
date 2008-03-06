@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.210 2008-03-03 15:16:46 sshwarts Exp $
+// $Id: cpu.cc,v 1.211 2008-03-06 20:22:24 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -41,6 +41,35 @@
 #define RIP EIP
 #define RCX ECX
 #endif
+
+// ICACHE instrumentation code
+#if BX_SUPPORT_ICACHE
+
+#define InstrumentICACHE 0
+
+#if InstrumentICACHE
+static unsigned iCacheLookups=0;
+static unsigned iCacheMisses=0;
+
+#define InstrICache_StatsMask 0xffffff
+
+#define InstrICache_Stats() {\
+  if ((iCacheLookups & InstrICache_StatsMask) == 0) { \
+    BX_INFO(("ICACHE lookups: %u, misses: %u, hit rate = %6.2f%% ", \
+          iCacheLookups, \
+          iCacheMisses,  \
+          (iCacheLookups-iCacheMisses) * 100.0 / iCacheLookups)); \
+    iCacheLookups = iCacheMisses = 0; \
+  } \
+}
+#define InstrICache_Increment(v) (v)++
+
+#else
+#define InstrICache_Stats()
+#define InstrICache_Increment(v)
+#endif
+
+#endif // BX_SUPPORT_ICACHE
 
 // The CHECK_MAX_INSTRUCTIONS macro allows cpu_loop to execute a few
 // instructions and then return so that the other processors have a chance to
@@ -120,18 +149,42 @@ no_async_event:
       eipBiased = RIP + BX_CPU_THIS_PTR eipPageBias;
     }
 
-#if BX_SUPPORT_TRACE_CACHE == 0
-    bxInstruction_c iStorage BX_CPP_AlignN(32);
-    // fetch and decode single instruction
-    bxInstruction_c *i = fetchInstruction(&iStorage, eipBiased);
-#else
-    unsigned length;
-    bxInstruction_c *i = fetchInstructionTrace(eipBiased, &length);
+#if BX_SUPPORT_ICACHE
+    bx_phy_address pAddr = BX_CPU_THIS_PTR pAddrA20Page + eipBiased;
+    bxICacheEntry_c *entry = BX_CPU_THIS_PTR iCache.get_entry(pAddr);
     Bit32u currPageWriteStamp = *(BX_CPU_THIS_PTR currPageWriteStampPtr);
+    bxInstruction_c *i = entry->i;
+
+    InstrICache_Increment(iCacheLookups);
+    InstrICache_Stats();
+
+    if ((entry->pAddr == pAddr) &&
+        (entry->writeStamp == currPageWriteStamp))
+    {
+      // iCache hit. An instruction was found in the iCache.
+#if BX_INSTRUMENTATION
+      BX_INSTR_OPCODE(BX_CPU_ID, BX_CPU_THIS_PTR eipFetchPtr + eipBiased,
+         i->ilen(), BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b, Is64BitMode());
+#endif
+    }
+    else {
+      // iCache miss. No validated instruction with matching fetch parameters
+      // is in the iCache.
+      InstrICache_Increment(iCacheMisses);
+      serveICacheMiss(entry, eipBiased, pAddr);
+    }
+#else // BX_SUPPORT_ICACHE = 0
+    bxInstruction_c iStorage, *i = &iStorage;
+    unsigned remainingInPage = BX_CPU_THIS_PTR eipPageWindowSize - eipBiased;
+    const Bit8u *fetchPtr = BX_CPU_THIS_PTR eipFetchPtr + eipBiased;
+    fetchInstruction(i, fetchPtr, remainingInPage);
+#endif
+
+#if BX_SUPPORT_TRACE_CACHE
+    unsigned length = entry->ilen;
 
     for(;;i++) {
 #endif
-
       // An instruction will have been fetched using either the normal case,
       // or the boundary fetch (across pages), by this point.
       BX_INSTR_FETCH_DECODE_COMPLETED(BX_CPU_ID, i);
