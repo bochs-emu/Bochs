@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sdl.cc,v 1.73 2008-02-15 22:05:40 sshwarts Exp $
+// $Id: sdl.cc,v 1.74 2008-03-06 21:15:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -49,10 +49,10 @@
 
 class bx_sdl_gui_c : public bx_gui_c {
 public:
-  bx_sdl_gui_c (void);
+  bx_sdl_gui_c(void);
   DECLARE_GUI_VIRTUAL_METHODS()
   DECLARE_GUI_NEW_VIRTUAL_METHODS()
-  virtual void set_display_mode (disp_mode_t newmode);
+  virtual void set_display_mode(disp_mode_t newmode);
   virtual void statusbar_setitem(int element, bx_bool active);
 #if BX_SHOW_IPS
   virtual void show_ips(Bit32u ips_count);
@@ -698,8 +698,7 @@ void bx_sdl_gui_c::graphics_tile_update(Bit8u *snapshot,
   }
 }
 
-  bx_svga_tileinfo_t *
-bx_sdl_gui_c::graphics_tile_info(bx_svga_tileinfo_t *info)
+bx_svga_tileinfo_t *bx_sdl_gui_c::graphics_tile_info(bx_svga_tileinfo_t *info)
 {
   if (!info) {
     info = (bx_svga_tileinfo_t *)malloc(sizeof(bx_svga_tileinfo_t));
@@ -740,8 +739,7 @@ bx_sdl_gui_c::graphics_tile_info(bx_svga_tileinfo_t *info)
   return info;
 }
 
-  Bit8u *
-bx_sdl_gui_c::graphics_tile_get(unsigned x0, unsigned y0,
+Bit8u *bx_sdl_gui_c::graphics_tile_get(unsigned x0, unsigned y0,
                             unsigned *w, unsigned *h)
 {
   if (x0+tilewidth > res_x) {
@@ -770,8 +768,7 @@ bx_sdl_gui_c::graphics_tile_get(unsigned x0, unsigned y0,
   }
 }
 
-  void
-bx_sdl_gui_c::graphics_tile_update_in_place(unsigned x0, unsigned y0,
+void bx_sdl_gui_c::graphics_tile_update_in_place(unsigned x0, unsigned y0,
                                         unsigned w, unsigned h)
 {
 }
@@ -1360,7 +1357,6 @@ unsigned bx_sdl_gui_c::headerbar_bitmap(
   return hb_index;
 }
 
-
 void bx_sdl_gui_c::replace_bitmap(
     unsigned hbar_id,
     unsigned bmap_id)
@@ -1473,7 +1469,6 @@ void bx_sdl_gui_c::show_headerbar(void)
   }
 }
 
-
 void bx_sdl_gui_c::mouse_enabled_changed_specific (bx_bool val)
 {
   if(val == 1)
@@ -1551,8 +1546,7 @@ static Bit32u convertStringToSDLKey (const char *string)
   return BX_KEYMAP_UNKNOWN;
 }
 
-void
-bx_sdl_gui_c::set_display_mode (disp_mode_t newmode)
+void bx_sdl_gui_c::set_display_mode(disp_mode_t newmode)
 {
   // if no mode change, do nothing.
   if (disp_mode == newmode) return;

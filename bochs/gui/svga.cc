@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: svga.cc,v 1.16 2008-02-15 22:05:40 sshwarts Exp $
+// $Id: svga.cc,v 1.17 2008-03-06 21:15:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  This library is free software; you can redistribute it and/or
@@ -90,7 +90,7 @@ void create_vga_font()
     }
 }
 
-bx_svga_gui_c::bx_svga_gui_c ()
+bx_svga_gui_c::bx_svga_gui_c()
 {
   put("SVGA");
 }
@@ -230,23 +230,17 @@ void bx_svga_gui_c::text_update(
   prev_cursor_y = cursor_y;
 }
 
-  int
-bx_svga_gui_c::get_clipboard_text(Bit8u **bytes, Bit32s *nbytes)
+int bx_svga_gui_c::get_clipboard_text(Bit8u **bytes, Bit32s *nbytes)
 {
   return 0;
 }
 
-  int
-bx_svga_gui_c::set_clipboard_text(char *text_snapshot, Bit32u len)
+int bx_svga_gui_c::set_clipboard_text(char *text_snapshot, Bit32u len)
 {
   return 0;
 }
 
-
-void bx_svga_gui_c::graphics_tile_update(
-    Bit8u *snapshot,
-    unsigned x,
-    unsigned y)
+void bx_svga_gui_c::graphics_tile_update(Bit8u *snapshot, unsigned x, unsigned y)
 {
   if ((y + tileheight) > res_y) {
     gl_putbox(x, y, tilewidth, (res_y - y), snapshot);
@@ -543,13 +537,9 @@ unsigned bx_svga_gui_c::headerbar_bitmap(
   return 0;
 }
 
-
-void bx_svga_gui_c::replace_bitmap(
-    unsigned hbar_id,
-    unsigned bmap_id)
+void bx_svga_gui_c::replace_bitmap(unsigned hbar_id, unsigned bmap_id)
 {
 }
-
 
 void bx_svga_gui_c::show_headerbar(void)
 {
@@ -567,13 +557,12 @@ void headerbar_click(int x)
 
 void bx_svga_gui_c::exit(void)
 {
-    vga_setmode(TEXT);
-    keyboard_close();
-    mouse_close();
+  vga_setmode(TEXT);
+  keyboard_close();
+  mouse_close();
 }
 
-void
-bx_svga_gui_c::set_display_mode (disp_mode_t newmode)
+void bx_svga_gui_c::set_display_mode (disp_mode_t newmode)
 {
   // if no mode change, do nothing.
   if (disp_mode == newmode) return;

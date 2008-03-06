@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rfb.cc,v 1.56 2008-02-15 22:05:40 sshwarts Exp $
+// $Id: rfb.cc,v 1.57 2008-03-06 21:15:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2000  Psyon.Org!
@@ -662,7 +662,6 @@ void bx_rfb_gui_c::handle_events(void)
     rfbUpdateRegion.updated = false;
 }
 
-
 // ::FLUSH()
 //
 // Called periodically, requesting that the gui code flush all pending
@@ -672,7 +671,6 @@ void bx_rfb_gui_c::flush(void)
 {
 }
 
-
 // ::CLEAR_SCREEN()
 //
 // Called to request that the VGA region is cleared.  Don't
@@ -681,8 +679,6 @@ void bx_rfb_gui_c::clear_screen(void)
 {
     memset(&rfbScreen[rfbWindowX * rfbHeaderbarY], 0, rfbWindowX * rfbDimensionY);
 }
-
-
 
 // ::TEXT_UPDATE()
 //
@@ -782,18 +778,15 @@ void bx_rfb_gui_c::text_update(Bit8u *old_text, Bit8u *new_text, unsigned long c
   rfbCursorY = cursor_y;
 }
 
-  int
-bx_rfb_gui_c::get_clipboard_text(Bit8u **bytes, Bit32s *nbytes)
+int bx_rfb_gui_c::get_clipboard_text(Bit8u **bytes, Bit32s *nbytes)
 {
   return 0;
 }
 
-  int
-bx_rfb_gui_c::set_clipboard_text(char *text_snapshot, Bit32u len)
+int bx_rfb_gui_c::set_clipboard_text(char *text_snapshot, Bit32u len)
 {
   return 0;
 }
-
 
 // ::PALETTE_CHANGE()
 //
@@ -807,7 +800,6 @@ bx_bool bx_rfb_gui_c::palette_change(unsigned index, unsigned red, unsigned gree
     rfbPalette[index] = (((red * 7 + 127) / 255) << 0) | (((green * 7 + 127) / 255) << 3) | (((blue * 3 + 127) / 255) << 6);
     return(1);
 }
-
 
 // ::GRAPHICS_TILE_UPDATE()
 //
@@ -833,9 +825,7 @@ void bx_rfb_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
     rfbUpdateRegion.updated = true;
 }
 
-
-  bx_svga_tileinfo_t *
-bx_rfb_gui_c::graphics_tile_info(bx_svga_tileinfo_t *info)
+bx_svga_tileinfo_t *bx_rfb_gui_c::graphics_tile_info(bx_svga_tileinfo_t *info)
 {
   if (!info) {
     info = (bx_svga_tileinfo_t *)malloc(sizeof(bx_svga_tileinfo_t));
@@ -858,8 +848,7 @@ bx_rfb_gui_c::graphics_tile_info(bx_svga_tileinfo_t *info)
   return info;
 }
 
-  Bit8u *
-bx_rfb_gui_c::graphics_tile_get(unsigned x0, unsigned y0,
+Bit8u *bx_rfb_gui_c::graphics_tile_get(unsigned x0, unsigned y0,
                             unsigned *w, unsigned *h)
 {
   if (x0+rfbTileX > rfbDimensionX) {
@@ -879,8 +868,7 @@ bx_rfb_gui_c::graphics_tile_get(unsigned x0, unsigned y0,
   return (Bit8u *)rfbScreen + (rfbHeaderbarY + y0) * rfbWindowX + x0;
 }
 
-  void
-bx_rfb_gui_c::graphics_tile_update_in_place(unsigned x0, unsigned y0,
+void bx_rfb_gui_c::graphics_tile_update_in_place(unsigned x0, unsigned y0,
                                         unsigned w, unsigned h)
 {
   if(x0 < rfbUpdateRegion.x) rfbUpdateRegion.x = x0;
@@ -903,8 +891,7 @@ bx_rfb_gui_c::graphics_tile_update_in_place(unsigned x0, unsigned y0,
 // fwidth : new VGA character width in text mode
 // bpp : bits per pixel in graphics mode
 
-  void
-bx_rfb_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, unsigned fwidth, unsigned bpp)
+void bx_rfb_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, unsigned fwidth, unsigned bpp)
 {
   if (bpp > 8) {
     BX_PANIC(("%d bpp graphics mode not supported yet", bpp));
@@ -1739,13 +1726,11 @@ void rfbMouseMove(int x, int y, int bmask)
   }
 }
 
-  void
-bx_rfb_gui_c::mouse_enabled_changed_specific (bx_bool val)
+void bx_rfb_gui_c::mouse_enabled_changed_specific (bx_bool val)
 {
 }
 
-  void
-bx_rfb_gui_c::get_capabilities(Bit16u *xres, Bit16u *yres, Bit16u *bpp)
+void bx_rfb_gui_c::get_capabilities(Bit16u *xres, Bit16u *yres, Bit16u *bpp)
 {
   *xres = BX_RFB_MAX_XDIM;
   *yres = BX_RFB_MAX_YDIM;

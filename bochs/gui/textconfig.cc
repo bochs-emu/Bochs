@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: textconfig.cc,v 1.68 2008-02-05 22:57:41 sshwarts Exp $
+// $Id: textconfig.cc,v 1.69 2008-03-06 21:15:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This is code for a text-mode configuration interface.  Note that this file
@@ -55,8 +55,7 @@ void bx_dbg_exit(int code);
 /* lots of code stolen from bximage.c */
 /* remove leading spaces, newline junk at end.  returns pointer to
  cleaned string, which is between s0 and the null */
-char *
-clean_string(char *s0)
+char *clean_string(char *s0)
 {
   char *s = s0;
   char *ptr;
@@ -72,8 +71,7 @@ clean_string(char *s0)
 }
 
 /* returns 0 on success, -1 on failure.  The value goes into out. */
-int
-ask_uint(const char *prompt, const char *help, Bit32u min, Bit32u max, Bit32u the_default, Bit32u *out, int base)
+int ask_uint(const char *prompt, const char *help, Bit32u min, Bit32u max, Bit32u the_default, Bit32u *out, int base)
 {
   Bit32u n = max + 1;
   char buffer[1024];
@@ -118,8 +116,7 @@ ask_uint(const char *prompt, const char *help, Bit32u min, Bit32u max, Bit32u th
 }
 
 // identical to ask_uint, but uses signed comparisons
-int
-ask_int(const char *prompt, const char *help, Bit32s min, Bit32s max, Bit32s the_default, Bit32s *out)
+int ask_int(const char *prompt, const char *help, Bit32s min, Bit32s max, Bit32s the_default, Bit32s *out)
 {
   int n = max + 1;
   char buffer[1024];
@@ -152,8 +149,7 @@ ask_int(const char *prompt, const char *help, Bit32s min, Bit32s max, Bit32s the
   }
 }
 
-int
-ask_menu(const char *prompt, const char *help, int n_choices, const char *choice[], int the_default, int *out)
+int ask_menu(const char *prompt, const char *help, int n_choices, const char *choice[], int the_default, int *out)
 {
   char buffer[1024];
   char *clean;
@@ -189,8 +185,7 @@ ask_menu(const char *prompt, const char *help, int n_choices, const char *choice
   }
 }
 
-int
-ask_yn(const char *prompt, const char *help, Bit32u the_default, Bit32u *out)
+int ask_yn(const char *prompt, const char *help, Bit32u the_default, Bit32u *out)
 {
   char buffer[16];
   char *clean;
@@ -707,15 +702,15 @@ ask:
   assert(0); // switch statement should return
 }
 
-void bx_config_interface_init() {
+void bx_config_interface_init()
+{
   SIM->set_notify_callback(config_interface_notify_callback, NULL);
 }
 
 /////////////////////////////////////////////////////////////////////
 // implement the text_* methods for bx_param types.
 
-void
-bx_param_num_c::text_print(FILE *fp)
+void bx_param_num_c::text_print(FILE *fp)
 {
   if (get_long_format()) {
     fprintf(fp, get_long_format(), get());
@@ -731,8 +726,7 @@ bx_param_num_c::text_print(FILE *fp)
   }
 }
 
-void
-bx_param_bool_c::text_print(FILE *fp)
+void bx_param_bool_c::text_print(FILE *fp)
 {
   if (get_format()) {
     fprintf(fp, get_format(), get() ? "yes" : "no");
@@ -746,8 +740,7 @@ bx_param_bool_c::text_print(FILE *fp)
   }
 }
 
-void
-bx_param_enum_c::text_print(FILE *fp)
+void bx_param_enum_c::text_print(FILE *fp)
 {
   int n = get();
   assert(n >= min && n <= max);
@@ -764,8 +757,7 @@ bx_param_enum_c::text_print(FILE *fp)
   }
 }
 
-void
-bx_param_string_c::text_print(FILE *fp)
+void bx_param_string_c::text_print(FILE *fp)
 {
   char *value = getptr();
   int opts = options->get();
@@ -796,8 +788,7 @@ bx_param_string_c::text_print(FILE *fp)
   }
 }
 
-void
-bx_list_c::text_print(FILE *fp)
+void bx_list_c::text_print(FILE *fp)
 {
   fprintf(fp, "%s: ", get_name());
   for (int i=0; i<size; i++) {
@@ -812,8 +803,7 @@ bx_list_c::text_print(FILE *fp)
   }
 }
 
-int
-bx_param_num_c::text_ask(FILE *fpin, FILE *fpout)
+int bx_param_num_c::text_ask(FILE *fpin, FILE *fpout)
 {
   fprintf(fpout, "\n");
   int status;
@@ -834,8 +824,7 @@ bx_param_num_c::text_ask(FILE *fpin, FILE *fpout)
   return 0;
 }
 
-int
-bx_param_bool_c::text_ask(FILE *fpin, FILE *fpout)
+int bx_param_bool_c::text_ask(FILE *fpin, FILE *fpout)
 {
   fprintf(fpout, "\n");
   int status;
@@ -859,8 +848,7 @@ bx_param_bool_c::text_ask(FILE *fpin, FILE *fpout)
   return 0;
 }
 
-int
-bx_param_enum_c::text_ask(FILE *fpin, FILE *fpout)
+int bx_param_enum_c::text_ask(FILE *fpin, FILE *fpout)
 {
   fprintf(fpout, "\n");
   const char *prompt = get_ask_format();
@@ -901,8 +889,7 @@ int parse_raw_bytes(char *dest, char *src, int destsize, char separator)
   return 0;
 }
 
-int
-bx_param_string_c::text_ask(FILE *fpin, FILE *fpout)
+int bx_param_string_c::text_ask(FILE *fpin, FILE *fpout)
 {
   fprintf(fpout, "\n");
   int status;

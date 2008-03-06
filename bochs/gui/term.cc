@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: term.cc,v 1.39 2008-02-05 22:57:41 sshwarts Exp $
+// $Id: term.cc,v 1.40 2008-03-06 21:15:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2000  MandrakeSoft S.A.
@@ -44,15 +44,16 @@ extern "C" {
 
 class bx_term_gui_c : public bx_gui_c {
 public:
-  bx_term_gui_c (void) {}
+  bx_term_gui_c(void) {}
   DECLARE_GUI_VIRTUAL_METHODS()
 #if BX_USE_IDLE_HACK
   virtual void sim_is_idle(void);
 #endif
 
-  virtual Bit32u get_sighandler_mask ();
+  virtual Bit32u get_sighandler_mask();
+
   // called when registered signal arrives
-  virtual void sighandler (int sig);
+  virtual void sighandler(int sig);
 };
 
 // declare one instance of the gui object and call macro to insert the
@@ -95,54 +96,49 @@ static chtype vga_to_term[128] = {
   0xb0, ' ',  ' ',  ' ',  ' ',  0xb2, ' ',  ' '
 };
 
-static void
-do_scan(int key_event, int shift, int ctrl, int alt)
+static void do_scan(int key_event, int shift, int ctrl, int alt)
 {
-	/* XXX At some point, cache alt/ctrl/shift so only when the state
-		 changes do we simulate a press or release, to cut down on
-		 keyboard input to the simulated machine */
+  /* At some point, cache alt/ctrl/shift so only when the state
+     changes do we simulate a press or release, to cut down on
+     keyboard input to the simulated machine */
 
-	BX_DEBUG(("key_event %d/0x%x %s%s%s",
-		  key_event,key_event,
-		  shift?"(shift)":"",
-		  ctrl?"(ctrl)":"",
-		  alt?"(alt)":""));
-	if(shift)
-		DEV_kbd_gen_scancode(BX_KEY_SHIFT_L);
-	if(ctrl)
-		DEV_kbd_gen_scancode(BX_KEY_CTRL_L);
-	if(alt)
-		DEV_kbd_gen_scancode(BX_KEY_ALT_L);
-	DEV_kbd_gen_scancode(key_event);
-	key_event |= BX_KEY_RELEASED;
+  BX_DEBUG(("key_event %d/0x%x %s%s%s", key_event, key_event,
+                  shift ? "(shift)" : "",
+                  ctrl ? "(ctrl)" : "",
+                  alt ? "(alt)" : ""));
+  if(shift)
+    DEV_kbd_gen_scancode(BX_KEY_SHIFT_L);
+  if(ctrl)
+    DEV_kbd_gen_scancode(BX_KEY_CTRL_L);
+  if(alt)
+    DEV_kbd_gen_scancode(BX_KEY_ALT_L);
+  DEV_kbd_gen_scancode(key_event);
+  key_event |= BX_KEY_RELEASED;
 
-	DEV_kbd_gen_scancode(key_event);
-	if(alt)
-		DEV_kbd_gen_scancode(BX_KEY_ALT_L|BX_KEY_RELEASED);
-	if(ctrl)
-		DEV_kbd_gen_scancode(BX_KEY_CTRL_L|BX_KEY_RELEASED);
-	if(shift)
-		DEV_kbd_gen_scancode(BX_KEY_SHIFT_L|BX_KEY_RELEASED);
+  DEV_kbd_gen_scancode(key_event);
+  if(alt)
+    DEV_kbd_gen_scancode(BX_KEY_ALT_L|BX_KEY_RELEASED);
+  if(ctrl)
+    DEV_kbd_gen_scancode(BX_KEY_CTRL_L|BX_KEY_RELEASED);
+  if(shift)
+    DEV_kbd_gen_scancode(BX_KEY_SHIFT_L|BX_KEY_RELEASED);
 }
 
-Bit32u
-bx_term_gui_c::get_sighandler_mask ()
+Bit32u bx_term_gui_c::get_sighandler_mask()
 {
-  return
-    (1<<SIGHUP)
-    | (1<<SIGINT)
-    | (1<<SIGQUIT)
+  return (1<<SIGHUP)
+       | (1<<SIGINT)
+       | (1<<SIGQUIT)
 #ifdef SIGSTOP
-    | (1<<SIGSTOP)
+       | (1<<SIGSTOP)
 #endif
 #ifdef SIGTSTP
-    | (1<<SIGTSTP)
+       | (1<<SIGTSTP)
 #endif
-    | (1<<SIGTERM);
+       | (1<<SIGTERM);
 }
 
-void
-bx_term_gui_c::sighandler(int signo)
+void bx_term_gui_c::sighandler(int signo)
 {
   switch(signo) {
     case SIGINT:
@@ -183,249 +179,235 @@ bx_term_gui_c::sighandler(int signo)
 //     always assumes the width of the current VGA mode width, but
 //     it's height is defined by this parameter.
 
-	void
-bx_term_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsigned tileheight,
-	unsigned headerbar_y)
+void bx_term_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsigned tileheight, unsigned headerbar_y)
 {
-	put("TGUI");
-	UNUSED(argc);
-	UNUSED(argv);
-	UNUSED(tilewidth);
-	UNUSED(tileheight);
-	UNUSED(headerbar_y);
+  put("TGUI");
 
-	UNUSED(bochs_icon_bits);  // global variable
+  // the ask menu causes trouble
+  io->set_log_action(LOGLEV_PANIC, ACT_FATAL);
+  // logfile should be different from stderr, otherwise terminal mode
+  // really ends up having fun
+  if (!strcmp(SIM->get_param_string(BXPN_LOG_FILENAME)->getptr(), "-"))
+    BX_PANIC(("cannot log to stderr in term mode"));
 
-	// the ask menu causes trouble
-	io->set_log_action(LOGLEV_PANIC, ACT_FATAL);
-	// logfile should be different from stderr, otherwise terminal mode
-	// really ends up having fun
-	if (!strcmp(SIM->get_param_string(BXPN_LOG_FILENAME)->getptr(), "-"))
-	  BX_PANIC(("cannot log to stderr in term mode"));
-
-	initscr();
-	start_color();
-	cbreak();
-	curs_set(2);
-	keypad(stdscr,TRUE);
-	nodelay(stdscr, TRUE);
-	noecho();
+  initscr();
+  start_color();
+  cbreak();
+  curs_set(2);
+  keypad(stdscr,TRUE);
+  nodelay(stdscr, TRUE);
+  noecho();
 
 #if BX_HAVE_COLOR_SET
-	if (has_colors()) {
-		for (int i=0; i<COLORS; i++) {
-			for (int j=0; j<COLORS; j++) {
-				if ((i!=0)||(j!=0)) init_pair(i * COLORS + j, j, i);
-			}
-		}
-	}
+  if (has_colors()) {
+    for (int i=0; i<COLORS; i++) {
+      for (int j=0; j<COLORS; j++) {
+        if ((i!=0)||(j!=0)) init_pair(i * COLORS + j, j, i);
+      }
+    }
+  }
 #endif
 
   if (SIM->get_param_bool(BXPN_PRIVATE_COLORMAP)->get())
     BX_ERROR(("WARNING: private_colormap option ignored."));
+
   initialized = 1;
 }
 
-
-
-void
-do_char(int character,int alt)
+void do_char(int character, int alt)
 {
-	switch (character) {
-	// control keys
-	case   0x9: do_scan(BX_KEY_TAB,0,0,alt); break;
-	case   0xa: do_scan(BX_KEY_KP_ENTER,0,0,alt); break;
-	case   0xd: do_scan(BX_KEY_KP_DELETE,0,0,alt); break;
-	case   0x1: do_scan(BX_KEY_A,0,1,alt); break;
-	case   0x2: do_scan(BX_KEY_B,0,1,alt); break;
-	case   0x3: do_scan(BX_KEY_C,0,1,alt); break;
-	case   0x4: do_scan(BX_KEY_D,0,1,alt); break;
-	case   0x5: do_scan(BX_KEY_E,0,1,alt); break;
-	case   0x6: do_scan(BX_KEY_F,0,1,alt); break;
-	case   0x7: do_scan(BX_KEY_G,0,1,alt); break;
-	case   0x8: do_scan(BX_KEY_H,0,1,alt); break;
-	case   0xb: do_scan(BX_KEY_K,0,1,alt); break;
-	case   0xc: do_scan(BX_KEY_L,0,1,alt); break;
-	case   0xe: do_scan(BX_KEY_N,0,1,alt); break;
-	case   0xf: do_scan(BX_KEY_O,0,1,alt); break;
-	case  0x10: do_scan(BX_KEY_P,0,1,alt); break;
-	case  0x11: do_scan(BX_KEY_Q,0,1,alt); break;
-	case  0x12: do_scan(BX_KEY_R,0,1,alt); break;
-	case  0x13: do_scan(BX_KEY_S,0,1,alt); break;
-	case  0x14: do_scan(BX_KEY_T,0,1,alt); break;
-	case  0x15: do_scan(BX_KEY_U,0,1,alt); break;
-	case  0x16: do_scan(BX_KEY_V,0,1,alt); break;
-	case  0x17: do_scan(BX_KEY_W,0,1,alt); break;
-	case  0x18: do_scan(BX_KEY_X,0,1,alt); break;
-	case  0x19: do_scan(BX_KEY_Y,0,1,alt); break;
-	case  0x1a: do_scan(BX_KEY_Z,0,1,alt); break;
-	case  0x20: do_scan(BX_KEY_SPACE,0,0,alt); break;
-	case 0x107: do_scan(BX_KEY_BACKSPACE,0,0,alt); break;
-	case 0x102: do_scan(BX_KEY_DOWN,0,0,alt); break;
-	case 0x103: do_scan(BX_KEY_UP,0,0,alt); break;
-	case 0x104: do_scan(BX_KEY_LEFT,0,0,alt); break;
-	case 0x105: do_scan(BX_KEY_RIGHT,0,0,alt); break;
-	case 0x152: do_scan(BX_KEY_PAGE_DOWN,0,0,alt); break;
-	case 0x153: do_scan(BX_KEY_PAGE_UP,0,0,alt); break;
-	case 0x106: do_scan(BX_KEY_HOME,0,0,alt); break;
-	case 0x168: do_scan(BX_KEY_END,0,0,alt); break;
-	case 0x14b: do_scan(BX_KEY_INSERT,0,0,alt); break;
-	case 0x7f:  do_scan(BX_KEY_DELETE,0,0,alt); break;
-	case 0x1b:  do_scan(BX_KEY_ESC,0,0,alt); break;
-	case '!': do_scan(BX_KEY_1,1,0,alt); break;
-	case '\'': do_scan(BX_KEY_SINGLE_QUOTE,0,0,alt); break;
-	case '#': do_scan(BX_KEY_3,1,0,alt); break;
-	case '$': do_scan(BX_KEY_4,1,0,alt); break;
-	case '%': do_scan(BX_KEY_5,1,0,alt); break;
-	case '^': do_scan(BX_KEY_6,1,0,alt); break;
-	case '&': do_scan(BX_KEY_7,1,0,alt); break;
-	case '"': do_scan(BX_KEY_SINGLE_QUOTE,1,0,alt); break;
+  switch (character) {
+    // control keys
+    case   0x9: do_scan(BX_KEY_TAB,0,0,alt); break;
+    case   0xa: do_scan(BX_KEY_KP_ENTER,0,0,alt); break;
+    case   0xd: do_scan(BX_KEY_KP_DELETE,0,0,alt); break;
+    case   0x1: do_scan(BX_KEY_A,0,1,alt); break;
+    case   0x2: do_scan(BX_KEY_B,0,1,alt); break;
+    case   0x3: do_scan(BX_KEY_C,0,1,alt); break;
+    case   0x4: do_scan(BX_KEY_D,0,1,alt); break;
+    case   0x5: do_scan(BX_KEY_E,0,1,alt); break;
+    case   0x6: do_scan(BX_KEY_F,0,1,alt); break;
+    case   0x7: do_scan(BX_KEY_G,0,1,alt); break;
+    case   0x8: do_scan(BX_KEY_H,0,1,alt); break;
+    case   0xb: do_scan(BX_KEY_K,0,1,alt); break;
+    case   0xc: do_scan(BX_KEY_L,0,1,alt); break;
+    case   0xe: do_scan(BX_KEY_N,0,1,alt); break;
+    case   0xf: do_scan(BX_KEY_O,0,1,alt); break;
+    case  0x10: do_scan(BX_KEY_P,0,1,alt); break;
+    case  0x11: do_scan(BX_KEY_Q,0,1,alt); break;
+    case  0x12: do_scan(BX_KEY_R,0,1,alt); break;
+    case  0x13: do_scan(BX_KEY_S,0,1,alt); break;
+    case  0x14: do_scan(BX_KEY_T,0,1,alt); break;
+    case  0x15: do_scan(BX_KEY_U,0,1,alt); break;
+    case  0x16: do_scan(BX_KEY_V,0,1,alt); break;
+    case  0x17: do_scan(BX_KEY_W,0,1,alt); break;
+    case  0x18: do_scan(BX_KEY_X,0,1,alt); break;
+    case  0x19: do_scan(BX_KEY_Y,0,1,alt); break;
+    case  0x1a: do_scan(BX_KEY_Z,0,1,alt); break;
+    case  0x20: do_scan(BX_KEY_SPACE,0,0,alt); break;
+    case 0x107: do_scan(BX_KEY_BACKSPACE,0,0,alt); break;
+    case 0x102: do_scan(BX_KEY_DOWN,0,0,alt); break;
+    case 0x103: do_scan(BX_KEY_UP,0,0,alt); break;
+    case 0x104: do_scan(BX_KEY_LEFT,0,0,alt); break;
+    case 0x105: do_scan(BX_KEY_RIGHT,0,0,alt); break;
+    case 0x152: do_scan(BX_KEY_PAGE_DOWN,0,0,alt); break;
+    case 0x153: do_scan(BX_KEY_PAGE_UP,0,0,alt); break;
+    case 0x106: do_scan(BX_KEY_HOME,0,0,alt); break;
+    case 0x168: do_scan(BX_KEY_END,0,0,alt); break;
+    case 0x14b: do_scan(BX_KEY_INSERT,0,0,alt); break;
+    case 0x7f:  do_scan(BX_KEY_DELETE,0,0,alt); break;
+    case 0x1b:  do_scan(BX_KEY_ESC,0,0,alt); break;
+    case '!': do_scan(BX_KEY_1,1,0,alt); break;
+    case '\'': do_scan(BX_KEY_SINGLE_QUOTE,0,0,alt); break;
+    case '#': do_scan(BX_KEY_3,1,0,alt); break;
+    case '$': do_scan(BX_KEY_4,1,0,alt); break;
+    case '%': do_scan(BX_KEY_5,1,0,alt); break;
+    case '^': do_scan(BX_KEY_6,1,0,alt); break;
+    case '&': do_scan(BX_KEY_7,1,0,alt); break;
+    case '"': do_scan(BX_KEY_SINGLE_QUOTE,1,0,alt); break;
 
-	// ()*+,-./
-	case '(': do_scan(BX_KEY_9,1,0,alt); break;
-	case ')': do_scan(BX_KEY_0,1,0,alt); break;
-	case '*': do_scan(BX_KEY_8,1,0,alt); break;
-	case '+': do_scan(BX_KEY_EQUALS,1,0,alt); break;
-	case ',': do_scan(BX_KEY_COMMA,0,0,alt); break;
-	case '-': do_scan(BX_KEY_MINUS,0,0,alt); break;
-	case '.': do_scan(BX_KEY_PERIOD,0,0,alt); break;
-	case '/': do_scan(BX_KEY_SLASH,0,0,alt); break;
+    // ()*+,-./
+    case '(': do_scan(BX_KEY_9,1,0,alt); break;
+    case ')': do_scan(BX_KEY_0,1,0,alt); break;
+    case '*': do_scan(BX_KEY_8,1,0,alt); break;
+    case '+': do_scan(BX_KEY_EQUALS,1,0,alt); break;
+    case ',': do_scan(BX_KEY_COMMA,0,0,alt); break;
+    case '-': do_scan(BX_KEY_MINUS,0,0,alt); break;
+    case '.': do_scan(BX_KEY_PERIOD,0,0,alt); break;
+    case '/': do_scan(BX_KEY_SLASH,0,0,alt); break;
 
-	// 01234567
-	case '0': do_scan(BX_KEY_0,0,0,alt); break;
-	case '1': do_scan(BX_KEY_1,0,0,alt); break;
-	case '2': do_scan(BX_KEY_2,0,0,alt); break;
-	case '3': do_scan(BX_KEY_3,0,0,alt); break;
-	case '4': do_scan(BX_KEY_4,0,0,alt); break;
-	case '5': do_scan(BX_KEY_5,0,0,alt); break;
-	case '6': do_scan(BX_KEY_6,0,0,alt); break;
-	case '7': do_scan(BX_KEY_7,0,0,alt); break;
+    // 01234567
+    case '0': do_scan(BX_KEY_0,0,0,alt); break;
+    case '1': do_scan(BX_KEY_1,0,0,alt); break;
+    case '2': do_scan(BX_KEY_2,0,0,alt); break;
+    case '3': do_scan(BX_KEY_3,0,0,alt); break;
+    case '4': do_scan(BX_KEY_4,0,0,alt); break;
+    case '5': do_scan(BX_KEY_5,0,0,alt); break;
+    case '6': do_scan(BX_KEY_6,0,0,alt); break;
+    case '7': do_scan(BX_KEY_7,0,0,alt); break;
 
-	// 89:;<=>?
-	case '8': do_scan(BX_KEY_8,0,0,alt); break;
-	case '9': do_scan(BX_KEY_9,0,0,alt); break;
-	case ':': do_scan(BX_KEY_SEMICOLON,1,0,alt); break;
-	case ';': do_scan(BX_KEY_SEMICOLON,0,0,alt); break;
-	case '<': do_scan(BX_KEY_COMMA,1,0,alt); break;
-	case '=': do_scan(BX_KEY_EQUALS,0,0,alt); break;
-	case '>': do_scan(BX_KEY_PERIOD,1,0,alt); break;
-	case '?': do_scan(BX_KEY_SLASH,1,0,alt); break;
+    // 89:;<=>?
+    case '8': do_scan(BX_KEY_8,0,0,alt); break;
+    case '9': do_scan(BX_KEY_9,0,0,alt); break;
+    case ':': do_scan(BX_KEY_SEMICOLON,1,0,alt); break;
+    case ';': do_scan(BX_KEY_SEMICOLON,0,0,alt); break;
+    case '<': do_scan(BX_KEY_COMMA,1,0,alt); break;
+    case '=': do_scan(BX_KEY_EQUALS,0,0,alt); break;
+    case '>': do_scan(BX_KEY_PERIOD,1,0,alt); break;
+    case '?': do_scan(BX_KEY_SLASH,1,0,alt); break;
 
-	// @ABCDEFG
-	case '@': do_scan(BX_KEY_2,1,0,alt); break;
-	case 'A': do_scan(BX_KEY_A,1,0,alt); break;
-	case 'B': do_scan(BX_KEY_B,1,0,alt); break;
-	case 'C': do_scan(BX_KEY_C,1,0,alt); break;
-	case 'D': do_scan(BX_KEY_D,1,0,alt); break;
-	case 'E': do_scan(BX_KEY_E,1,0,alt); break;
-	case 'F': do_scan(BX_KEY_F,1,0,alt); break;
-	case 'G': do_scan(BX_KEY_G,1,0,alt); break;
+    // @ABCDEFG
+    case '@': do_scan(BX_KEY_2,1,0,alt); break;
+    case 'A': do_scan(BX_KEY_A,1,0,alt); break;
+    case 'B': do_scan(BX_KEY_B,1,0,alt); break;
+    case 'C': do_scan(BX_KEY_C,1,0,alt); break;
+    case 'D': do_scan(BX_KEY_D,1,0,alt); break;
+    case 'E': do_scan(BX_KEY_E,1,0,alt); break;
+    case 'F': do_scan(BX_KEY_F,1,0,alt); break;
+    case 'G': do_scan(BX_KEY_G,1,0,alt); break;
 
+    // HIJKLMNO
+    case 'H': do_scan(BX_KEY_H,1,0,alt); break;
+    case 'I': do_scan(BX_KEY_I,1,0,alt); break;
+    case 'J': do_scan(BX_KEY_J,1,0,alt); break;
+    case 'K': do_scan(BX_KEY_K,1,0,alt); break;
+    case 'L': do_scan(BX_KEY_L,1,0,alt); break;
+    case 'M': do_scan(BX_KEY_M,1,0,alt); break;
+    case 'N': do_scan(BX_KEY_N,1,0,alt); break;
+    case 'O': do_scan(BX_KEY_O,1,0,alt); break;
 
-	// HIJKLMNO
-	case 'H': do_scan(BX_KEY_H,1,0,alt); break;
-	case 'I': do_scan(BX_KEY_I,1,0,alt); break;
-	case 'J': do_scan(BX_KEY_J,1,0,alt); break;
-	case 'K': do_scan(BX_KEY_K,1,0,alt); break;
-	case 'L': do_scan(BX_KEY_L,1,0,alt); break;
-	case 'M': do_scan(BX_KEY_M,1,0,alt); break;
-	case 'N': do_scan(BX_KEY_N,1,0,alt); break;
-	case 'O': do_scan(BX_KEY_O,1,0,alt); break;
+    // PQRSTUVW
+    case 'P': do_scan(BX_KEY_P,1,0,alt); break;
+    case 'Q': do_scan(BX_KEY_Q,1,0,alt); break;
+    case 'R': do_scan(BX_KEY_R,1,0,alt); break;
+    case 'S': do_scan(BX_KEY_S,1,0,alt); break;
+    case 'T': do_scan(BX_KEY_T,1,0,alt); break;
+    case 'U': do_scan(BX_KEY_U,1,0,alt); break;
+    case 'V': do_scan(BX_KEY_V,1,0,alt); break;
+    case 'W': do_scan(BX_KEY_W,1,0,alt); break;
 
+    // XYZ[\]^_
+    case 'X': do_scan(BX_KEY_X,1,0,alt); break;
+    case 'Y': do_scan(BX_KEY_Y,1,0,alt); break;
+    case 'Z': do_scan(BX_KEY_Z,1,0,alt); break;
+    case '{': do_scan(BX_KEY_LEFT_BRACKET,1,0,alt); break;
+    case '|': do_scan(BX_KEY_BACKSLASH,1,0,alt); break;
+    case '}': do_scan(BX_KEY_RIGHT_BRACKET,1,0,alt); break;
+    case '_': do_scan(BX_KEY_MINUS,1,0,alt); break;
 
-	// PQRSTUVW
-	case 'P': do_scan(BX_KEY_P,1,0,alt); break;
-	case 'Q': do_scan(BX_KEY_Q,1,0,alt); break;
-	case 'R': do_scan(BX_KEY_R,1,0,alt); break;
-	case 'S': do_scan(BX_KEY_S,1,0,alt); break;
-	case 'T': do_scan(BX_KEY_T,1,0,alt); break;
-	case 'U': do_scan(BX_KEY_U,1,0,alt); break;
-	case 'V': do_scan(BX_KEY_V,1,0,alt); break;
-	case 'W': do_scan(BX_KEY_W,1,0,alt); break;
+    // `abcdefg
+    case '`': do_scan(BX_KEY_GRAVE,0,0,alt); break;
+    case 'a': do_scan(BX_KEY_A,0,0,alt); break;
+    case 'b': do_scan(BX_KEY_B,0,0,alt); break;
+    case 'c': do_scan(BX_KEY_C,0,0,alt); break;
+    case 'd': do_scan(BX_KEY_D,0,0,alt); break;
+    case 'e': do_scan(BX_KEY_E,0,0,alt); break;
+    case 'f': do_scan(BX_KEY_F,0,0,alt); break;
+    case 'g': do_scan(BX_KEY_G,0,0,alt); break;
 
-	// XYZ[\]^_
-	case 'X': do_scan(BX_KEY_X,1,0,alt); break;
-	case 'Y': do_scan(BX_KEY_Y,1,0,alt); break;
-	case 'Z': do_scan(BX_KEY_Z,1,0,alt); break;
-	case '{': do_scan(BX_KEY_LEFT_BRACKET,1,0,alt); break;
-	case '|': do_scan(BX_KEY_BACKSLASH,1,0,alt); break;
-	case '}': do_scan(BX_KEY_RIGHT_BRACKET,1,0,alt); break;
-	case '_': do_scan(BX_KEY_MINUS,1,0,alt); break;
+    // hijklmno
+    case 'h': do_scan(BX_KEY_H,0,0,alt); break;
+    case 'i': do_scan(BX_KEY_I,0,0,alt); break;
+    case 'j': do_scan(BX_KEY_J,0,0,alt); break;
+    case 'k': do_scan(BX_KEY_K,0,0,alt); break;
+    case 'l': do_scan(BX_KEY_L,0,0,alt); break;
+    case 'm': do_scan(BX_KEY_M,0,0,alt); break;
+    case 'n': do_scan(BX_KEY_N,0,0,alt); break;
+    case 'o': do_scan(BX_KEY_O,0,0,alt); break;
 
-	// `abcdefg
-	case '`': do_scan(BX_KEY_GRAVE,0,0,alt); break;
-	case 'a': do_scan(BX_KEY_A,0,0,alt); break;
-	case 'b': do_scan(BX_KEY_B,0,0,alt); break;
-	case 'c': do_scan(BX_KEY_C,0,0,alt); break;
-	case 'd': do_scan(BX_KEY_D,0,0,alt); break;
-	case 'e': do_scan(BX_KEY_E,0,0,alt); break;
-	case 'f': do_scan(BX_KEY_F,0,0,alt); break;
-	case 'g': do_scan(BX_KEY_G,0,0,alt); break;
+    // pqrstuvw
+    case 'p': do_scan(BX_KEY_P,0,0,alt); break;
+    case 'q': do_scan(BX_KEY_Q,0,0,alt); break;
+    case 'r': do_scan(BX_KEY_R,0,0,alt); break;
+    case 's': do_scan(BX_KEY_S,0,0,alt); break;
+    case 't': do_scan(BX_KEY_T,0,0,alt); break;
+    case 'u': do_scan(BX_KEY_U,0,0,alt); break;
+    case 'v': do_scan(BX_KEY_V,0,0,alt); break;
+    case 'w': do_scan(BX_KEY_W,0,0,alt); break;
 
-	// hijklmno
-	case 'h': do_scan(BX_KEY_H,0,0,alt); break;
-	case 'i': do_scan(BX_KEY_I,0,0,alt); break;
-	case 'j': do_scan(BX_KEY_J,0,0,alt); break;
-	case 'k': do_scan(BX_KEY_K,0,0,alt); break;
-	case 'l': do_scan(BX_KEY_L,0,0,alt); break;
-	case 'm': do_scan(BX_KEY_M,0,0,alt); break;
-	case 'n': do_scan(BX_KEY_N,0,0,alt); break;
-	case 'o': do_scan(BX_KEY_O,0,0,alt); break;
+    // xyz{|}~
+    case 'x': do_scan(BX_KEY_X,0,0,alt); break;
+    case 'y': do_scan(BX_KEY_Y,0,0,alt); break;
+    case 'z': do_scan(BX_KEY_Z,0,0,alt); break;
+    case '[': do_scan(BX_KEY_LEFT_BRACKET,0,0,alt); break;
+    case '\\': do_scan(BX_KEY_BACKSLASH,0,0,alt); break;
+    case ']': do_scan(BX_KEY_RIGHT_BRACKET,0,0,alt); break;
+    case '~': do_scan(BX_KEY_GRAVE,1,0,alt); break;
 
-	// pqrstuvw
-	case 'p': do_scan(BX_KEY_P,0,0,alt); break;
-	case 'q': do_scan(BX_KEY_Q,0,0,alt); break;
-	case 'r': do_scan(BX_KEY_R,0,0,alt); break;
-	case 's': do_scan(BX_KEY_S,0,0,alt); break;
-	case 't': do_scan(BX_KEY_T,0,0,alt); break;
-	case 'u': do_scan(BX_KEY_U,0,0,alt); break;
-	case 'v': do_scan(BX_KEY_V,0,0,alt); break;
-	case 'w': do_scan(BX_KEY_W,0,0,alt); break;
+    // function keys
+    case KEY_F(1): do_scan(BX_KEY_F1,0,0,alt); break;
+    case KEY_F(2): do_scan(BX_KEY_F2,0,0,alt); break;
+    case KEY_F(3): do_scan(BX_KEY_F3,0,0,alt); break;
+    case KEY_F(4): do_scan(BX_KEY_F4,0,0,alt); break;
+    case KEY_F(5): do_scan(BX_KEY_F5,0,0,alt); break;
+    case KEY_F(6): do_scan(BX_KEY_F6,0,0,alt); break;
+    case KEY_F(7): do_scan(BX_KEY_F7,0,0,alt); break;
+    case KEY_F(8): do_scan(BX_KEY_F8,0,0,alt); break;
+    case KEY_F(9): do_scan(BX_KEY_F9,0,0,alt); break;
+    case KEY_F(10): do_scan(BX_KEY_F10,0,0,alt); break;
+    case KEY_F(11): do_scan(BX_KEY_F11,0,0,alt); break;
+    case KEY_F(12): do_scan(BX_KEY_F12,0,0,alt); break;
 
-	// xyz{|}~
-	case 'x': do_scan(BX_KEY_X,0,0,alt); break;
-	case 'y': do_scan(BX_KEY_Y,0,0,alt); break;
-	case 'z': do_scan(BX_KEY_Z,0,0,alt); break;
-	case '[': do_scan(BX_KEY_LEFT_BRACKET,0,0,alt); break;
-	case '\\': do_scan(BX_KEY_BACKSLASH,0,0,alt); break;
-	case ']': do_scan(BX_KEY_RIGHT_BRACKET,0,0,alt); break;
-	case '~': do_scan(BX_KEY_GRAVE,1,0,alt); break;
+    // shifted function keys
+    case KEY_F(13): do_scan(BX_KEY_F1,1,0,alt); break;
+    case KEY_F(14): do_scan(BX_KEY_F2,1,0,alt); break;
+    case KEY_F(15): do_scan(BX_KEY_F3,1,0,alt); break;
+    case KEY_F(16): do_scan(BX_KEY_F4,1,0,alt); break;
+    case KEY_F(17): do_scan(BX_KEY_F5,1,0,alt); break;
+    case KEY_F(18): do_scan(BX_KEY_F6,1,0,alt); break;
+    case KEY_F(19): do_scan(BX_KEY_F7,1,0,alt); break;
+    case KEY_F(20): do_scan(BX_KEY_F8,1,0,alt); break;
 
-	// function keys
-	case KEY_F(1): do_scan(BX_KEY_F1,0,0,alt); break;
-	case KEY_F(2): do_scan(BX_KEY_F2,0,0,alt); break;
-	case KEY_F(3): do_scan(BX_KEY_F3,0,0,alt); break;
-	case KEY_F(4): do_scan(BX_KEY_F4,0,0,alt); break;
-	case KEY_F(5): do_scan(BX_KEY_F5,0,0,alt); break;
-	case KEY_F(6): do_scan(BX_KEY_F6,0,0,alt); break;
-	case KEY_F(7): do_scan(BX_KEY_F7,0,0,alt); break;
-	case KEY_F(8): do_scan(BX_KEY_F8,0,0,alt); break;
-	case KEY_F(9): do_scan(BX_KEY_F9,0,0,alt); break;
-	case KEY_F(10): do_scan(BX_KEY_F10,0,0,alt); break;
-	case KEY_F(11): do_scan(BX_KEY_F11,0,0,alt); break;
-	case KEY_F(12): do_scan(BX_KEY_F12,0,0,alt); break;
+    default:
+      if(character > 0x79) {
+         do_char(character - 0x80,1);
+         break;
+      }
 
-	// shifted function keys
-	case KEY_F(13): do_scan(BX_KEY_F1,1,0,alt); break;
-	case KEY_F(14): do_scan(BX_KEY_F2,1,0,alt); break;
-	case KEY_F(15): do_scan(BX_KEY_F3,1,0,alt); break;
-	case KEY_F(16): do_scan(BX_KEY_F4,1,0,alt); break;
-	case KEY_F(17): do_scan(BX_KEY_F5,1,0,alt); break;
-	case KEY_F(18): do_scan(BX_KEY_F6,1,0,alt); break;
-	case KEY_F(19): do_scan(BX_KEY_F7,1,0,alt); break;
-	case KEY_F(20): do_scan(BX_KEY_F8,1,0,alt); break;
-
-	default:
-		if(character > 0x79) {
-			do_char(character - 0x80,1);
-			break;
-		}
-
-		BX_INFO(("character unhandled: 0x%x",character));
-		break;
-	}
+      BX_INFO(("character unhandled: 0x%x",character));
+      break;
+  }
 }
-
 
 // ::HANDLE_EVENTS()
 //
@@ -433,38 +415,31 @@ do_char(int character,int alt)
 // the gui code can poll for keyboard, mouse, and other
 // relevant events.
 
-	void
-bx_term_gui_c::handle_events(void)
+void bx_term_gui_c::handle_events(void)
 {
-	int character;
-	while((character = getch()) != ERR) {
-		BX_DEBUG(("scancode(0x%x)",character));
-		do_char(character,0);
-	}
+  int character;
+  while((character = getch()) != ERR) {
+    BX_DEBUG(("scancode(0x%x)",character));
+    do_char(character,0);
+  }
 }
-
-
 
 // ::FLUSH()
 //
 // Called periodically, requesting that the gui code flush all pending
 // screen update requests.
 
-	void
-bx_term_gui_c::flush(void)
+void bx_term_gui_c::flush(void)
 {
-	if (initialized)
-	  refresh();
+  if (initialized) refresh();
 }
-
 
 // ::CLEAR_SCREEN()
 //
 // Called to request that the VGA region is cleared.  Don't
 // clear the area that defines the headerbar.
 
-	void
-bx_term_gui_c::clear_screen(void)
+void bx_term_gui_c::clear_screen(void)
 {
   clear();
 #if BX_HAVE_COLOR_SET
@@ -485,18 +460,14 @@ bx_term_gui_c::clear_screen(void)
   }
 }
 
-int
-get_color_pair(Bit8u vga_attr)
+int get_color_pair(Bit8u vga_attr)
 {
-	int term_attr;
-
-	term_attr = curses_color[vga_attr & 0x07];
-	term_attr |= (curses_color[(vga_attr & 0x70) >> 4] << 3);
-	return term_attr;
+  int term_attr = curses_color[vga_attr & 0x07];
+  term_attr |= (curses_color[(vga_attr & 0x70) >> 4] << 3);
+  return term_attr;
 }
 
-chtype
-get_term_char(Bit8u vga_char[])
+chtype get_term_char(Bit8u vga_char[])
 {
   int term_char;
 
@@ -562,6 +533,7 @@ get_term_char(Bit8u vga_char[])
         term_char = ' ';
       }
   }
+
   return term_char;
 }
 
@@ -585,8 +557,8 @@ get_term_char(Bit8u vga_char[])
 //           features in text mode (cursor shape, line offset,...)
 
 void bx_term_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
-	unsigned long cursor_x, unsigned long cursor_y,
-	bx_vga_tminfo_t tm_info)
+        unsigned long cursor_x, unsigned long cursor_y,
+        bx_vga_tminfo_t tm_info)
 {
   unsigned char *old_line, *new_line, *new_start;
   unsigned char cAttr;
@@ -653,18 +625,15 @@ void bx_term_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
   }
 }
 
-  int
-bx_term_gui_c::get_clipboard_text(Bit8u **bytes, Bit32s *nbytes)
+int bx_term_gui_c::get_clipboard_text(Bit8u **bytes, Bit32s *nbytes)
 {
   return 0;
 }
 
-  int
-bx_term_gui_c::set_clipboard_text(char *text_snapshot, Bit32u len)
+int bx_term_gui_c::set_clipboard_text(char *text_snapshot, Bit32u len)
 {
   return 0;
 }
-
 
 // ::PALETTE_CHANGE()
 //
@@ -673,12 +642,10 @@ bx_term_gui_c::set_clipboard_text(char *text_snapshot, Bit32u len)
 // returns: 0=no screen update needed (color map change has direct effect)
 //          1=screen updated needed (redraw using current colormap)
 
-	bx_bool
-bx_term_gui_c::palette_change(unsigned index, unsigned red, unsigned green, unsigned blue)
+bx_bool bx_term_gui_c::palette_change(unsigned index, unsigned red, unsigned green, unsigned blue)
 {
-	BX_DEBUG(("color pallete request (%d,%d,%d,%d) ignored",
-		  index,red,green,blue));
-	return(0);
+  BX_DEBUG(("color pallete request (%d,%d,%d,%d) ignored", index,red,green,blue));
+  return(0);
 }
 
 
@@ -697,15 +664,9 @@ bx_term_gui_c::palette_change(unsigned index, unsigned red, unsigned green, unsi
 // note: origin of tile and of window based on (0,0) being in the upper
 //       left of the window.
 
-	void
-bx_term_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
+void bx_term_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
 {
-	UNUSED(tile);
-	UNUSED(x0);
-	UNUSED(y0);
 }
-
-
 
 // ::DIMENSION_UPDATE()
 //
@@ -719,8 +680,7 @@ bx_term_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
 // fwidth : new VGA character width in text mode
 // bpp : bits per pixel in graphics mode
 
-	void
-bx_term_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, unsigned fwidth, unsigned bpp)
+void bx_term_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, unsigned fwidth, unsigned bpp)
 {
   if (bpp > 8) {
     BX_PANIC(("%d bpp graphics mode not supported", bpp));
@@ -747,7 +707,6 @@ bx_term_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, unsign
   }
 }
 
-
 // ::CREATE_BITMAP()
 //
 // Create a monochrome bitmap of size 'xdim' by 'ydim', which will
@@ -759,15 +718,10 @@ bx_term_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, unsign
 // xdim: x dimension of bitmap
 // ydim: y dimension of bitmap
 
-	unsigned
-bx_term_gui_c::create_bitmap(const unsigned char *bmap, unsigned xdim, unsigned ydim)
+unsigned bx_term_gui_c::create_bitmap(const unsigned char *bmap, unsigned xdim, unsigned ydim)
 {
-	UNUSED(bmap);
-	UNUSED(xdim);
-	UNUSED(ydim);
-	return(0);
+  return(0);
 }
-
 
 // ::HEADERBAR_BITMAP()
 //
@@ -783,26 +737,19 @@ bx_term_gui_c::create_bitmap(const unsigned char *bmap, unsigned xdim, unsigned 
 // f: a 'C' function pointer to callback when the mouse is clicked in
 //     the boundaries of this bitmap.
 
-	unsigned
-bx_term_gui_c::headerbar_bitmap(unsigned bmap_id, unsigned alignment, void (*f)(void))
+unsigned bx_term_gui_c::headerbar_bitmap(unsigned bmap_id, unsigned alignment, void (*f)(void))
 {
-	UNUSED(bmap_id);
-	UNUSED(alignment);
-	UNUSED(f);
-	return(0);
+  return(0);
 }
-
 
 // ::SHOW_HEADERBAR()
 //
 // Show (redraw) the current headerbar, which is composed of
 // currently installed bitmaps.
 
-	void
-bx_term_gui_c::show_headerbar(void)
+void bx_term_gui_c::show_headerbar(void)
 {
 }
-
 
 // ::REPLACE_BITMAP()
 //
@@ -817,41 +764,35 @@ bx_term_gui_c::show_headerbar(void)
 // hbar_id: headerbar slot ID
 // bmap_id: bitmap ID
 
-	void
-bx_term_gui_c::replace_bitmap(unsigned hbar_id, unsigned bmap_id)
+void bx_term_gui_c::replace_bitmap(unsigned hbar_id, unsigned bmap_id)
 {
-	UNUSED(hbar_id);
-	UNUSED(bmap_id);
 }
-
 
 // ::EXIT()
 //
 // Called before bochs terminates, to allow for a graceful
 // exit from the native GUI mechanism.
 
-	void
-bx_term_gui_c::exit(void)
+void bx_term_gui_c::exit(void)
 {
-	if (!initialized) return;
-	clear();
-	flush();
-	endwin();
-	BX_DEBUG(("exiting"));
+  if (!initialized) return;
+  clear();
+  flush();
+  endwin();
+  BX_DEBUG(("exiting"));
 }
 
-  void
-bx_term_gui_c::mouse_enabled_changed_specific (bx_bool val)
+void bx_term_gui_c::mouse_enabled_changed_specific(bx_bool val)
 {
 }
 
 #if BX_USE_IDLE_HACK
-void bx_term_gui_c::sim_is_idle () {
+void bx_term_gui_c::sim_is_idle()
+{
+  int    res;
+  fd_set readfds;
 
-  int      res;
-  fd_set   readfds;
-
-  struct timeval   timeout;
+  struct timeval timeout;
   timeout.tv_sec  = 0;
   timeout.tv_usec = 1000; /* 1/1000 s */
 
@@ -861,19 +802,16 @@ void bx_term_gui_c::sim_is_idle () {
   res = select(1, &readfds, NULL, NULL, &timeout);
 
   switch(res)
-    {
+  {
     case -1: /* select() error - should not happen */
       // This can happen when we have a alarm running, lets return
       // perror("sim_is_idle: select() failure\n");
-      //fprintf (stderr,"Interrupted...\n");
       //handle_events();
       return;
     case  0: /* timeout */
-      //      fprintf (stderr,"Timeout...\n");
       //handle_events();
       return;
-    }
-  //fprintf (stderr,"Input...\n");
+  }
   //handle_events();
 }
 #endif
