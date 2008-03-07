@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.202 2008-03-02 19:24:54 vruppert Exp $
+// $Id: rombios.c,v 1.203 2008-03-07 21:26:52 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -713,8 +713,8 @@ typedef struct {
   //     The EBDA structure should conform to
   //     http://www.frontiernet.net/~fys/rombios.htm document
   //     I made the ata and cdemu structs begin at 0x121 in the EBDA seg
-  // EBDA must be at most 768 bytes; it lives at 0x9fc00, and the boot
-  // device tables are at 0x9ff00 -- 0x9ffff
+  // EBDA must be at most 768 bytes; it lives at EBDA_SEG, and the boot
+  // device tables are at IPL_SEG
   typedef struct {
     unsigned char filler1[0x3D];
 
@@ -939,7 +939,7 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.202 $ $Date: 2008-03-02 19:24:54 $";
+static char bios_cvs_version_string[] = "$Revision: 1.203 $ $Date: 2008-03-07 21:26:52 $";
 
 #define BIOS_COPYRIGHT_STRING "(c) 2002 MandrakeSoft S.A. Written by Kevin Lawton & the Bochs team."
 
