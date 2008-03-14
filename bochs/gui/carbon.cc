@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: carbon.cc,v 1.38 2008-02-15 22:05:40 sshwarts Exp $
+// $Id: carbon.cc,v 1.39 2008-03-14 18:23:33 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1165,7 +1165,7 @@ void bx_carbon_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
   GrafPtr       winGrafPtr = GetWindowPort(win);
   OSErr         theError;
   Bit8u         *old_line, *new_line;
-  unsigned int  curs, hchars, offset, rows, x, xc, y, xc;
+  unsigned int  curs, hchars, offset, rows, x, xc, y, yc;
   bx_bool       forceUpdate = 0, blink_mode, blink_state;
   static unsigned prev_cursor_x=0;
   static unsigned prev_cursor_y=0;
@@ -1190,7 +1190,7 @@ void bx_carbon_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
     curs = prev_cursor_y * tm_info.line_offset + prev_cursor_x * 2;
     old_text[curs] = ~new_text[curs];
   }
-  if((tm_info.cs_start <= tm_info.cs_end) && (tm_info.cs_start < fontheight) &&
+  if((tm_info.cs_start <= tm_info.cs_end) && (tm_info.cs_start < font_height) &&
      (cursor_y < text_rows) && (cursor_x < text_cols)) {
     curs = cursor_y * tm_info.line_offset + cursor_x * 2;
     old_text[curs] = ~new_text[curs];
