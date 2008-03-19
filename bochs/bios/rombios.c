@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.203 2008-03-07 21:26:52 sshwarts Exp $
+// $Id: rombios.c,v 1.204 2008-03-19 22:48:55 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -939,7 +939,7 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.203 $ $Date: 2008-03-07 21:26:52 $";
+static char bios_cvs_version_string[] = "$Revision: 1.204 $ $Date: 2008-03-19 22:48:55 $";
 
 #define BIOS_COPYRIGHT_STRING "(c) 2002 MandrakeSoft S.A. Written by Kevin Lawton & the Bochs team."
 
@@ -4392,7 +4392,7 @@ BX_DEBUG_INT15("case default:\n");
       break;
     }
 }
-#endif
+#endif // BX_USE_PS2_MOUSE
 
 
 void set_e820_range(ES, DI, start, end, type)
@@ -9906,7 +9906,7 @@ pci_init_end:
   pop  bp
   pop  ds
   ret
-#endif // BX_ROMBIOS32
+#endif // !BX_ROMBIOS32
 #endif // BX_PCIBIOS
 
 #if BX_ROMBIOS32
@@ -10026,7 +10026,7 @@ rombios32_gdt:
   dw 0xffff, 0, 0x9300, 0x00cf ; 32 bit flat data segment (0x18)
   dw 0xffff, 0, 0x9b0f, 0x0000 ; 16 bit code segment base=0xf0000 limit=0xffff
   dw 0xffff, 0, 0x9300, 0x0000 ; 16 bit data segment base=0x0 limit=0xffff
-#endif
+#endif // BX_ROMBIOS32
 
 
 ; parallel port detection: base address in DX, index in BX, timeout in CL
