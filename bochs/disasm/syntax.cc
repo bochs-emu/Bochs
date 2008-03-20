@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: syntax.cc,v 1.13 2008-02-05 22:33:33 sshwarts Exp $
+// $Id: syntax.cc,v 1.14 2008-03-20 18:11:57 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #include <stdio.h>
@@ -112,10 +112,10 @@ static const char *att_segment_name[8] = {
 };
 
 static const char *att_index16[8] = {
-    "%bx, %si",
-    "%bx, %di",
-    "%bp, %si",
-    "%bp, %di",
+    "%bx,%si",
+    "%bx,%di",
+    "%bp,%si",
+    "%bp,%di",
     "%si",
     "%di",
     "%bp",
