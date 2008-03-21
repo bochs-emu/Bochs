@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.204 2008-03-19 22:48:55 sshwarts Exp $
+// $Id: rombios.c,v 1.205 2008-03-21 19:06:31 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -939,7 +939,7 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.204 $ $Date: 2008-03-19 22:48:55 $";
+static char bios_cvs_version_string[] = "$Revision: 1.205 $ $Date: 2008-03-21 19:06:31 $";
 
 #define BIOS_COPYRIGHT_STRING "(c) 2002 MandrakeSoft S.A. Written by Kevin Lawton & the Bochs team."
 
@@ -4494,6 +4494,7 @@ ASM_END
                     extended_memory_size <<= 8;
                     extended_memory_size |= inb_cmos(0x30);
                     extended_memory_size *= 1024;
+                    extended_memory_size += (1L * 1024 * 1024);
                 }
 
                 switch(regs.u.r16.bx)
