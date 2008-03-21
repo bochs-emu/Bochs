@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.h,v 1.55 2008-03-03 15:16:46 sshwarts Exp $
+// $Id: fetchdecode.h,v 1.56 2008-03-21 20:04:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005 Stanislav Shwartsman
@@ -1054,8 +1054,8 @@ static const BxOpcodeInfo_t BxOpcodeGroupSSE_0f2a[4] = {
 static const BxOpcodeInfo_t BxOpcodeGroupSSE_0f2bM[4] = {
   /* -- */ { 0, &BX_CPU_C::MOVNTPS_MpsVps },
   /* 66 */ { 0, &BX_CPU_C::MOVNTPD_MpdVpd },
-  /* F2 */ { 0, &BX_CPU_C::MOVNTSD_MsdVsd },    // SSE4A
-  /* F3 */ { 0, &BX_CPU_C::MOVNTSS_MssVss }     // SSE4A
+  /* F2 */ { 0, &BX_CPU_C::BxError },
+  /* F3 */ { 0, &BX_CPU_C::BxError }
 };
 
 static const BxOpcodeInfo_t BxOpcodeGroupSSE_0f2c[4] = {
@@ -1344,31 +1344,6 @@ static const BxOpcodeInfo_t BxOpcodeGroupSSE_0f76[4] = {
   /* -- */ { 0, &BX_CPU_C::PCMPEQD_PqQq   },
   /* 66 */ { 0, &BX_CPU_C::PCMPEQD_VdqWdq },
   /* F2 */ { 0, &BX_CPU_C::BxError },
-  /* F3 */ { 0, &BX_CPU_C::BxError }
-};
-
-static const BxOpcodeInfo_t opcodesGroupRmEXTRQ[8] = {
-  /* 0 */ { BxImmediate_IbIb, &BX_CPU_C::EXTRQ_VdqIbIb },       // SSE4A
-  /* 1 */ { 0, &BX_CPU_C::BxError },
-  /* 2 */ { 0, &BX_CPU_C::BxError },
-  /* 3 */ { 0, &BX_CPU_C::BxError },
-  /* 4 */ { 0, &BX_CPU_C::BxError },
-  /* 5 */ { 0, &BX_CPU_C::BxError },
-  /* 6 */ { 0, &BX_CPU_C::BxError },
-  /* 7 */ { 0, &BX_CPU_C::BxError }
-};
-
-static const BxOpcodeInfo_t BxOpcodeGroupSSE_0f78[4] = {
-  /* -- */ { 0, &BX_CPU_C::BxError },
-  /* 66 */ { BxRMGroup, NULL, opcodesGroupRmEXTRQ },            // SSE4A
-  /* F2 */ { BxImmediate_IbIb, &BX_CPU_C::INSERTQ_VdqUdqIbIb }, // SSE4A
-  /* F3 */ { 0, &BX_CPU_C::BxError }
-};
-
-static const BxOpcodeInfo_t BxOpcodeGroupSSE_0f79[4] = {
-  /* -- */ { 0, &BX_CPU_C::BxError },
-  /* 66 */ { 0, &BX_CPU_C::EXTRQ_VdqUdq },      // SSE4A
-  /* F2 */ { 0, &BX_CPU_C::INSERTQ_VdqUdq },    // SSE4A
   /* F3 */ { 0, &BX_CPU_C::BxError }
 };
 

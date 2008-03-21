@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.433 2008-03-06 20:22:24 sshwarts Exp $
+// $Id: cpu.h,v 1.434 2008-03-21 20:04:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2197,15 +2197,6 @@ public: // for now...
   BX_SMF void PCMPISTRI_VdqWdqIb(bxInstruction_c *);
   /* SSE4.2 */
 #endif
-
-  /* SSE4A */
-  BX_SMF void MOVNTSS_MssVss(bxInstruction_c *);
-  BX_SMF void MOVNTSD_MsdVsd(bxInstruction_c *);
-  BX_SMF void EXTRQ_VdqUdq(bxInstruction_c *);
-  BX_SMF void EXTRQ_VdqIbIb(bxInstruction_c *);
-  BX_SMF void INSERTQ_VdqUdqIbIb(bxInstruction_c *);
-  BX_SMF void INSERTQ_VdqUdq(bxInstruction_c *);
-  /* SSE4A */
 
   /* XSAVE/XRSTOR extensions */
   BX_SMF void XSAVE(bxInstruction_c *);
