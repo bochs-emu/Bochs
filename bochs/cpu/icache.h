@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: icache.h,v 1.28 2008-03-06 20:22:24 sshwarts Exp $
+// $Id: icache.h,v 1.29 2008-03-21 20:02:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -144,7 +144,7 @@ public:
   BX_CPP_INLINE unsigned hash(bx_phy_address pAddr) const
   {
     // A pretty dumb hash function for now.
-    return (pAddr + (pAddr>>4)) & (BxICacheEntries-1);
+    return (pAddr + (pAddr>>6)) & (BxICacheEntries-1);
   }
 
   BX_CPP_INLINE void purgeICacheEntries(void);
