@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: io.cc,v 1.53 2008-02-07 20:43:12 sshwarts Exp $
+// $Id: io.cc,v 1.54 2008-03-21 20:35:46 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -51,15 +51,11 @@ Bit32u BX_CPU_C::FastRepINSW(bxInstruction_c *i, bx_address dstOff, Bit16u port,
   Bit32u wordsFitDst;
   signed int pointerDelta;
   Bit8u *hostAddrDst;
+  unsigned count;
 
   bx_segment_reg_t *dstSegPtr = &BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES];
-
-  // Do segment checks for the 1st word.  We do not want to
-  // trip an exception beyond this, because the address would
-  // be incorrect.  After we know how many bytes we will directly
-  // transfer, we can do the full segment limit check ourselves
-  // without generating an exception.
-  write_virtual_checks(dstSegPtr, dstOff, 2);
+  if ((dstSegPtr->cache.valid & SegAccessWOK4G) != SegAccessWOK4G)
+    return 0;
 
   bx_address laddrDst = BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_ES) + dstOff;
   // check that the address is word aligned
@@ -103,40 +99,6 @@ Bit32u BX_CPU_C::FastRepINSW(bxInstruction_c *i, bx_address dstOff, Bit16u port,
 
   // If after all the restrictions, there is anything left to do...
   if (wordCount) {
-    Bit32u dstSegLimit = dstSegPtr->cache.u.segment.limit_scaled;
-    unsigned count;
-
-    // For 16-bit addressing mode, clamp the segment limits to 16bits
-    // so we don't have to worry about computations using si/di
-    // rolling over 16-bit boundaries.
-    if (!i->as32L()) {
-      if (dstSegLimit > 0xffff)
-          dstSegLimit = 0xffff;
-    }
-    // Before we copy memory, we need to make sure that the segments
-    // allow the accesses up to the given source and dest offset.  If
-    // the cache.valid bits have SegAccessWOK and ROK, we know that
-    // the cache is valid for those operations, and that the segments
-    // are non-expand down (thus we can make a simple limit check).
-    if (!(dstSegPtr->cache.valid & SegAccessWOK)) return 0;
-
-    if (BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64)
-    {
-      // Now make sure transfer will fit within the constraints of the
-      // segment boundaries, 0..limit for non expand-down.  We know
-      // wordCount >= 1 here.
-      if (BX_CPU_THIS_PTR get_DF()) {
-        // Counting downward
-        Bit32u minOffset = (wordCount-1) << 1;
-        if (dstOff < minOffset) return 0;
-      }
-      else {
-        // Counting upward
-        Bit32u dstMaxOffset = (dstSegLimit - (wordCount<<1)) + 1;
-        if (dstOff > dstMaxOffset) return 0;
-      }
-    }
-
     for (count=0; count<wordCount; ) {
       bx_devices.bulkIOQuantumsTransferred = 0;
       if (BX_CPU_THIS_PTR get_DF()==0) { // Only do accel for DF=0
@@ -147,7 +109,7 @@ Bit32u BX_CPU_C::FastRepINSW(bxInstruction_c *i, bx_address dstOff, Bit16u port,
         bx_devices.bulkIOQuantumsRequested = 0;
       Bit16u temp16 = BX_INP(port, 2);
       if (bx_devices.bulkIOQuantumsTransferred) {
-        hostAddrDst =  bx_devices.bulkIOHostAddr;
+        hostAddrDst = bx_devices.bulkIOHostAddr;
         count += bx_devices.bulkIOQuantumsTransferred;
       }
       else {
@@ -173,15 +135,11 @@ Bit32u BX_CPU_C::FastRepOUTSW(bxInstruction_c *i, unsigned srcSeg, bx_address sr
   Bit32u wordsFitSrc;
   signed int pointerDelta;
   Bit8u *hostAddrSrc;
+  unsigned count;
 
   bx_segment_reg_t *srcSegPtr = &BX_CPU_THIS_PTR sregs[srcSeg];
-
-  // Do segment checks for the 1st word.  We do not want to
-  // trip an exception beyond this, because the address would
-  // be incorrect.  After we know how many bytes we will directly
-  // transfer, we can do the full segment limit check ourselves
-  // without generating an exception.
-  read_virtual_checks(srcSegPtr, srcOff, 2);
+  if ((srcSegPtr->cache.valid & SegAccessROK4G) != SegAccessROK4G)
+    return 0;
 
   bx_address laddrSrc = BX_CPU_THIS_PTR get_segment_base(srcSeg) + srcOff;
   // check that the address is word aligned
@@ -225,41 +183,6 @@ Bit32u BX_CPU_C::FastRepOUTSW(bxInstruction_c *i, unsigned srcSeg, bx_address sr
 
   // If after all the restrictions, there is anything left to do...
   if (wordCount) {
-    Bit32u srcSegLimit = srcSegPtr->cache.u.segment.limit_scaled;
-    unsigned count;
-
-    // For 16-bit addressing mode, clamp the segment limits to 16bits
-    // so we don't have to worry about computations using si/di
-    // rolling over 16-bit boundaries.
-    if (!i->as32L()) {
-      if (srcSegLimit > 0xffff)
-          srcSegLimit = 0xffff;
-    }
-
-    // Before we copy memory, we need to make sure that the segments
-    // allow the accesses up to the given source and dest offset.  If
-    // the cache.valid bits have SegAccessWOK and ROK, we know that
-    // the cache is valid for those operations, and that the segments
-    // are non-expand down (thus we can make a simple limit check).
-    if ( !(srcSegPtr->cache.valid & SegAccessROK) ) return 0;
-
-    if (BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64)
-    {
-      // Now make sure transfer will fit within the constraints of the
-      // segment boundaries, 0..limit for non expand-down.  We know
-      // wordCount >= 1 here.
-      if (BX_CPU_THIS_PTR get_DF()) {
-        // Counting downward
-        Bit32u minOffset = (wordCount-1) << 1;
-        if (srcOff < minOffset) return 0;
-      }
-      else {
-        // Counting upward
-        Bit32u srcMaxOffset = (srcSegLimit - (wordCount<<1)) + 1;
-        if (srcOff > srcMaxOffset) return 0;
-      }
-    }
-
     for (count=0; count<wordCount; ) {
       bx_devices.bulkIOQuantumsTransferred = 0;
       if (BX_CPU_THIS_PTR get_DF()==0) { // Only do accel for DF=0
@@ -272,7 +195,7 @@ Bit32u BX_CPU_C::FastRepOUTSW(bxInstruction_c *i, unsigned srcSeg, bx_address sr
       ReadHostWordFromLittleEndian(hostAddrSrc, temp16);
       BX_OUTP(port, temp16, 2);
       if (bx_devices.bulkIOQuantumsTransferred) {
-        hostAddrSrc =  bx_devices.bulkIOHostAddr;
+        hostAddrSrc = bx_devices.bulkIOHostAddr;
         count += bx_devices.bulkIOQuantumsTransferred;
       }
       else {

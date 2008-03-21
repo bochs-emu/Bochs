@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: string.cc,v 1.53 2008-02-07 20:43:12 sshwarts Exp $
+// $Id: string.cc,v 1.54 2008-03-21 20:35:46 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -50,14 +50,13 @@ Bit32u BX_CPU_C::FastRepMOVSB(bxInstruction_c *i, unsigned srcSeg, bx_address sr
   Bit8u *hostAddrSrc, *hostAddrDst;
 
   bx_segment_reg_t *srcSegPtr = &BX_CPU_THIS_PTR sregs[srcSeg];
-  bx_segment_reg_t *dstSegPtr = &BX_CPU_THIS_PTR sregs[dstSeg];
+  if ((srcSegPtr->cache.valid & SegAccessROK4G) != SegAccessROK4G)
+    return 0;
 
-  // Do segment checks for the 1st byte. We do not want to
-  // trip an exception beyond this, because the address would
-  // be incorrect.  After we know how many bytes we will directly
-  // transfer, we can do the full segment limit check ourselves
-  // without generating an exception.
-  read_virtual_checks(srcSegPtr, srcOff, 1);
+  bx_segment_reg_t *dstSegPtr = &BX_CPU_THIS_PTR sregs[dstSeg];
+  if ((dstSegPtr->cache.valid & SegAccessWOK4G) != SegAccessWOK4G)
+    return 0;
+
   laddrSrc = BX_CPU_THIS_PTR get_segment_base(srcSeg) + srcOff;
 
 #if BX_SupportGuest2HostTLB
@@ -77,10 +76,8 @@ Bit32u BX_CPU_C::FastRepMOVSB(bxInstruction_c *i, unsigned srcSeg, bx_address sr
   hostAddrSrc = BX_CPU_THIS_PTR mem->getHostMemAddr(BX_CPU_THIS,
             A20ADDR(paddrSrc), BX_READ, DATA_ACCESS);
 #endif
-
   if (! hostAddrSrc) return 0;
 
-  write_virtual_checks(dstSegPtr, dstOff, 1);
   laddrDst = BX_CPU_THIS_PTR get_segment_base(dstSeg) + dstOff;
 
 #if BX_SupportGuest2HostTLB
@@ -100,7 +97,6 @@ Bit32u BX_CPU_C::FastRepMOVSB(bxInstruction_c *i, unsigned srcSeg, bx_address sr
   hostAddrDst = BX_CPU_THIS_PTR mem->getHostMemAddr(BX_CPU_THIS,
             A20ADDR(paddrDst), BX_WRITE, DATA_ACCESS);
 #endif
-
   if (! hostAddrDst) return 0;
 
   // See how many bytes can fit in the rest of this page.
@@ -128,53 +124,6 @@ Bit32u BX_CPU_C::FastRepMOVSB(bxInstruction_c *i, unsigned srcSeg, bx_address sr
 
   // If after all the restrictions, there is anything left to do...
   if (count) {
-    // Before we copy memory, we need to make sure that the segments
-    // allow the accesses up to the given source and dest offset.  If
-    // the cache.valid bits have SegAccessWOK and ROK, we know that
-    // the cache is valid for those operations, and that the segments
-    // are non expand-down (thus we can make a simple limit check).
-    if ( !(srcSegPtr->cache.valid & SegAccessROK) ||
-         !(dstSegPtr->cache.valid & SegAccessWOK) )
-    {
-      return 0;
-    }
-
-    if (BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64)
-    {
-      Bit32u srcSegLimit = srcSegPtr->cache.u.segment.limit_scaled;
-      Bit32u dstSegLimit = dstSegPtr->cache.u.segment.limit_scaled;
-
-      if (! i->as32L()) {
-        // For 16-bit addressing mode, clamp the segment limits to 16bits
-        // so we don't have to worry about computations using si/di
-        // rolling over 16-bit boundaries.
-        if (srcSegLimit > 0xffff)
-          srcSegLimit = 0xffff;
-        if (dstSegLimit > 0xffff)
-          dstSegLimit = 0xffff;
-      }
-
-      // Now make sure transfer will fit within the constraints of the
-      // segment boundaries, 0..limit for non expand-down.  We know
-      // count >= 1 here.
-      if (BX_CPU_THIS_PTR get_DF()) {
-        Bit32u minOffset = (count-1);
-        if (srcOff < minOffset)
-          return 0;
-        if (dstOff < minOffset)
-          return 0;
-      }
-      else {
-        // Counting upward.
-        Bit32u srcMaxOffset = (srcSegLimit - count) + 1;
-        Bit32u dstMaxOffset = (dstSegLimit - count) + 1;
-        if (srcOff > srcMaxOffset)
-          return 0;
-        if (dstOff > dstMaxOffset)
-          return 0;
-      }
-    }
-
     // Transfer data directly using host addresses
     for (unsigned j=0; j<count; j++) {
       * (Bit8u *) hostAddrDst = * (Bit8u *) hostAddrSrc;
@@ -196,14 +145,13 @@ Bit32u BX_CPU_C::FastRepMOVSW(bxInstruction_c *i, unsigned srcSeg, bx_address sr
   Bit8u *hostAddrSrc, *hostAddrDst;
 
   bx_segment_reg_t *srcSegPtr = &BX_CPU_THIS_PTR sregs[srcSeg];
-  bx_segment_reg_t *dstSegPtr = &BX_CPU_THIS_PTR sregs[dstSeg];
+  if ((srcSegPtr->cache.valid & SegAccessROK4G) != SegAccessROK4G)
+    return 0;
 
-  // Do segment checks for the 1st word.  We do not want to
-  // trip an exception beyond this, because the address would
-  // be incorrect.  After we know how many bytes we will directly
-  // transfer, we can do the full segment limit check ourselves
-  // without generating an exception.
-  read_virtual_checks(srcSegPtr, srcOff, 2);
+  bx_segment_reg_t *dstSegPtr = &BX_CPU_THIS_PTR sregs[dstSeg];
+  if ((dstSegPtr->cache.valid & SegAccessWOK4G) != SegAccessWOK4G)
+    return 0;
+
   laddrSrc = BX_CPU_THIS_PTR get_segment_base(srcSeg) + srcOff;
 
 #if BX_SupportGuest2HostTLB
@@ -223,10 +171,8 @@ Bit32u BX_CPU_C::FastRepMOVSW(bxInstruction_c *i, unsigned srcSeg, bx_address sr
   hostAddrSrc = BX_CPU_THIS_PTR mem->getHostMemAddr(BX_CPU_THIS,
             A20ADDR(paddrSrc), BX_READ, DATA_ACCESS);
 #endif
-
   if (! hostAddrSrc) return 0;
 
-  write_virtual_checks(dstSegPtr, dstOff, 2);
   laddrDst = BX_CPU_THIS_PTR get_segment_base(dstSeg) + dstOff;
 
 #if BX_SupportGuest2HostTLB
@@ -246,7 +192,6 @@ Bit32u BX_CPU_C::FastRepMOVSW(bxInstruction_c *i, unsigned srcSeg, bx_address sr
   hostAddrDst = BX_CPU_THIS_PTR mem->getHostMemAddr(BX_CPU_THIS,
             A20ADDR(paddrDst), BX_WRITE, DATA_ACCESS);
 #endif
-
   if (! hostAddrDst) return 0;
 
   // See how many words can fit in the rest of this page.
@@ -277,54 +222,6 @@ Bit32u BX_CPU_C::FastRepMOVSW(bxInstruction_c *i, unsigned srcSeg, bx_address sr
 
   // If after all the restrictions, there is anything left to do...
   if (count) {
-    // Before we copy memory, we need to make sure that the segments
-    // allow the accesses up to the given source and dest offset.  If
-    // the cache.valid bits have SegAccessWOK and ROK, we know that
-    // the cache is valid for those operations, and that the segments
-    // are non expand-down (thus we can make a simple limit check).
-    if ( !(srcSegPtr->cache.valid & SegAccessROK) ||
-         !(dstSegPtr->cache.valid & SegAccessWOK) )
-    {
-      return 0;
-    }
-
-    if (BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64)
-    {
-      Bit32u srcSegLimit = srcSegPtr->cache.u.segment.limit_scaled;
-      Bit32u dstSegLimit = dstSegPtr->cache.u.segment.limit_scaled;
-
-      if (! i->as32L()) {
-        // For 16-bit addressing mode, clamp the segment limits to 16bits
-        // so we don't have to worry about computations using si/di
-        // rolling over 16-bit boundaries.
-        if (srcSegLimit > 0xffff)
-          srcSegLimit = 0xffff;
-        if (dstSegLimit > 0xffff)
-          dstSegLimit = 0xffff;
-      }
-
-      // Now make sure transfer will fit within the constraints of the
-      // segment boundaries, 0..limit for non expand-down.  We know
-      // count >= 1 here.
-      if (BX_CPU_THIS_PTR get_DF()) {
-        // Counting downward.
-        Bit32u minOffset = (count-1) << 1;
-        if (srcOff < minOffset)
-          return 0;
-        if (dstOff < minOffset)
-          return 0;
-      }
-      else {
-        // Counting upward.
-        Bit32u srcMaxOffset = (srcSegLimit - (count<<1)) + 1;
-        Bit32u dstMaxOffset = (dstSegLimit - (count<<1)) + 1;
-        if (srcOff > srcMaxOffset)
-          return 0;
-        if (dstOff > dstMaxOffset)
-          return 0;
-      }
-    }
-
     // Transfer data directly using host addresses
     for (unsigned j=0; j<count; j++) {
       CopyHostWordLittleEndian(hostAddrDst, hostAddrSrc);
@@ -346,14 +243,13 @@ Bit32u BX_CPU_C::FastRepMOVSD(bxInstruction_c *i, unsigned srcSeg, bx_address sr
   Bit8u *hostAddrSrc, *hostAddrDst;
 
   bx_segment_reg_t *srcSegPtr = &BX_CPU_THIS_PTR sregs[srcSeg];
-  bx_segment_reg_t *dstSegPtr = &BX_CPU_THIS_PTR sregs[dstSeg];
+  if ((srcSegPtr->cache.valid & SegAccessROK4G) != SegAccessROK4G)
+    return 0;
 
-  // Do segment checks for the 1st dword.  We do not want to
-  // trip an exception beyond this, because the address would
-  // be incorrect.  After we know how many bytes we will directly
-  // transfer, we can do the full segment limit check ourselves
-  // without generating an exception.
-  read_virtual_checks(srcSegPtr, srcOff, 4);
+  bx_segment_reg_t *dstSegPtr = &BX_CPU_THIS_PTR sregs[dstSeg];
+  if ((dstSegPtr->cache.valid & SegAccessWOK4G) != SegAccessWOK4G)
+    return 0;
+
   laddrSrc = BX_CPU_THIS_PTR get_segment_base(srcSeg) + srcOff;
 
 #if BX_SupportGuest2HostTLB
@@ -373,10 +269,8 @@ Bit32u BX_CPU_C::FastRepMOVSD(bxInstruction_c *i, unsigned srcSeg, bx_address sr
   hostAddrSrc = BX_CPU_THIS_PTR mem->getHostMemAddr(BX_CPU_THIS,
             A20ADDR(paddrSrc), BX_READ, DATA_ACCESS);
 #endif
-
   if (! hostAddrSrc) return 0;
 
-  write_virtual_checks(dstSegPtr, dstOff, 4);
   laddrDst = BX_CPU_THIS_PTR get_segment_base(dstSeg) + dstOff;
 
 #if BX_SupportGuest2HostTLB
@@ -396,7 +290,6 @@ Bit32u BX_CPU_C::FastRepMOVSD(bxInstruction_c *i, unsigned srcSeg, bx_address sr
   hostAddrDst = BX_CPU_THIS_PTR mem->getHostMemAddr(BX_CPU_THIS,
             A20ADDR(paddrDst), BX_WRITE, DATA_ACCESS);
 #endif
-
   if (! hostAddrDst) return 0;
 
   // See how many dwords can fit in the rest of this page.
@@ -427,54 +320,6 @@ Bit32u BX_CPU_C::FastRepMOVSD(bxInstruction_c *i, unsigned srcSeg, bx_address sr
 
   // If after all the restrictions, there is anything left to do...
   if (count) {
-    // Before we copy memory, we need to make sure that the segments
-    // allow the accesses up to the given source and dest offset.  If
-    // the cache.valid bits have SegAccessWOK and ROK, we know that
-    // the cache is valid for those operations, and that the segments
-    // are non expand-down (thus we can make a simple limit check).
-    if ( !(srcSegPtr->cache.valid & SegAccessROK) ||
-         !(dstSegPtr->cache.valid & SegAccessWOK) )
-    {
-      return 0;
-    }
-
-    if (BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64)
-    {
-      Bit32u srcSegLimit = srcSegPtr->cache.u.segment.limit_scaled;
-      Bit32u dstSegLimit = dstSegPtr->cache.u.segment.limit_scaled;
-
-      if (! i->as32L()) {
-        // For 16-bit addressing mode, clamp the segment limits to 16bits
-        // so we don't have to worry about computations using si/di
-        // rolling over 16-bit boundaries.
-        if (srcSegLimit > 0xffff)
-          srcSegLimit = 0xffff;
-        if (dstSegLimit > 0xffff)
-          dstSegLimit = 0xffff;
-      }
-
-      // Now make sure transfer will fit within the constraints of the
-      // segment boundaries, 0..limit for non expand-down.  We know
-      // count >= 1 here.
-      if (BX_CPU_THIS_PTR get_DF()) {
-        // Counting downward.
-        Bit32u minOffset = (count-1) << 2;
-        if (srcOff < minOffset)
-          return 0;
-        if (dstOff < minOffset)
-          return 0;
-      }
-      else {
-        // Counting upward.
-        Bit32u srcMaxOffset = (srcSegLimit - (count<<2)) + 1;
-        Bit32u dstMaxOffset = (dstSegLimit - (count<<2)) + 1;
-        if (srcOff > srcMaxOffset)
-          return 0;
-        if (dstOff > dstMaxOffset)
-          return 0;
-      }
-    }
-
     // Transfer data directly using host addresses
     for (unsigned j=0; j<count; j++) {
       CopyHostDWordLittleEndian(hostAddrDst, hostAddrSrc);
@@ -496,8 +341,9 @@ Bit32u BX_CPU_C::FastRepSTOSB(bxInstruction_c *i, unsigned dstSeg, bx_address ds
   Bit8u *hostAddrDst;
 
   bx_segment_reg_t *dstSegPtr = &BX_CPU_THIS_PTR sregs[dstSeg];
+  if ((dstSegPtr->cache.valid & SegAccessWOK4G) != SegAccessWOK4G)
+    return 0;
 
-  write_virtual_checks(dstSegPtr, dstOff, 1);
   laddrDst = BX_CPU_THIS_PTR get_segment_base(dstSeg) + dstOff;
 
 #if BX_SupportGuest2HostTLB
@@ -517,7 +363,6 @@ Bit32u BX_CPU_C::FastRepSTOSB(bxInstruction_c *i, unsigned dstSeg, bx_address ds
   hostAddrDst = BX_CPU_THIS_PTR mem->getHostMemAddr(BX_CPU_THIS,
             A20ADDR(paddrDst), BX_WRITE, DATA_ACCESS);
 #endif
-
   if (! hostAddrDst) return 0;
 
   // See how many bytes can fit in the rest of this page.
@@ -541,41 +386,6 @@ Bit32u BX_CPU_C::FastRepSTOSB(bxInstruction_c *i, unsigned dstSeg, bx_address ds
 
   // If after all the restrictions, there is anything left to do...
   if (count) {
-    // Before we copy memory, we need to make sure that the segments
-    // allow the accesses up to the given source and dest offset.  If
-    // the cache.valid bits have SegAccessWOK and ROK, we know that
-    // the cache is valid for those operations, and that the segments
-    // are non expand-down (thus we can make a simple limit check).
-    if ( !(dstSegPtr->cache.valid & SegAccessWOK) ) return 0;
-
-    if (BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64)
-    {
-      Bit32u dstSegLimit = dstSegPtr->cache.u.segment.limit_scaled;
-
-      if (! i->as32L()) {
-        // For 16-bit addressing mode, clamp the segment limits to 16bits
-        // so we don't have to worry about computations using di
-        // rolling over 16-bit boundaries.
-        if (dstSegLimit > 0xffff)
-          dstSegLimit = 0xffff;
-      }
-
-      // Now make sure transfer will fit within the constraints of the
-      // segment boundaries, 0..limit for non expand-down.  We know
-      // count >= 1 here.
-      if (BX_CPU_THIS_PTR get_DF()) {
-        Bit32u minOffset = (count-1);
-        if (dstOff < minOffset)
-          return 0;
-      }
-      else {
-        // Counting upward.
-        Bit32u dstMaxOffset = (dstSegLimit - count) + 1;
-        if (dstOff > dstMaxOffset)
-          return 0;
-      }
-    }
-
     // Transfer data directly using host addresses
     for (unsigned j=0; j<count; j++) {
       * (Bit8u *) hostAddrDst = val;
@@ -596,8 +406,9 @@ Bit32u BX_CPU_C::FastRepSTOSW(bxInstruction_c *i, unsigned dstSeg, bx_address ds
   Bit8u *hostAddrDst;
 
   bx_segment_reg_t *dstSegPtr = &BX_CPU_THIS_PTR sregs[dstSeg];
+  if ((dstSegPtr->cache.valid & SegAccessWOK4G) != SegAccessWOK4G)
+    return 0;
 
-  write_virtual_checks(dstSegPtr, dstOff, 2);
   laddrDst = BX_CPU_THIS_PTR get_segment_base(dstSeg) + dstOff;
 
 #if BX_SupportGuest2HostTLB
@@ -617,7 +428,6 @@ Bit32u BX_CPU_C::FastRepSTOSW(bxInstruction_c *i, unsigned dstSeg, bx_address ds
   hostAddrDst = BX_CPU_THIS_PTR mem->getHostMemAddr(BX_CPU_THIS,
             A20ADDR(paddrDst), BX_WRITE, DATA_ACCESS);
 #endif
-
   if (! hostAddrDst) return 0;
 
   // See how many words can fit in the rest of this page.
@@ -643,42 +453,6 @@ Bit32u BX_CPU_C::FastRepSTOSW(bxInstruction_c *i, unsigned dstSeg, bx_address ds
 
   // If after all the restrictions, there is anything left to do...
   if (count) {
-    // Before we copy memory, we need to make sure that the segments
-    // allow the accesses up to the given source and dest offset.  If
-    // the cache.valid bits have SegAccessWOK and ROK, we know that
-    // the cache is valid for those operations, and that the segments
-    // are non expand-down (thus we can make a simple limit check).
-    if ( !(dstSegPtr->cache.valid & SegAccessWOK) ) return 0;
-
-    if (BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64)
-    {
-      Bit32u dstSegLimit = dstSegPtr->cache.u.segment.limit_scaled;
-
-      if (! i->as32L()) {
-        // For 16-bit addressing mode, clamp the segment limits to 16bits
-        // so we don't have to worry about computations using di
-        // rolling over 16-bit boundaries.
-        if (dstSegLimit > 0xffff)
-          dstSegLimit = 0xffff;
-      }
-
-      // Now make sure transfer will fit within the constraints of the
-      // segment boundaries, 0..limit for non expand-down.  We know
-      // count >= 1 here.
-      if (BX_CPU_THIS_PTR get_DF()) {
-        // Counting downward.
-        Bit32u minOffset = (count-1) << 1;
-        if (dstOff < minOffset)
-          return 0;
-      }
-      else {
-        // Counting upward.
-        Bit32u dstMaxOffset = (dstSegLimit - (count<<1)) + 1;
-        if (dstOff > dstMaxOffset)
-          return 0;
-      }
-    }
-
     // Transfer data directly using host addresses
     for (unsigned j=0; j<count; j++) {
       WriteHostWordToLittleEndian(hostAddrDst, val);
@@ -699,8 +473,9 @@ Bit32u BX_CPU_C::FastRepSTOSD(bxInstruction_c *i, unsigned dstSeg, bx_address ds
   Bit8u *hostAddrDst;
 
   bx_segment_reg_t *dstSegPtr = &BX_CPU_THIS_PTR sregs[dstSeg];
+  if ((dstSegPtr->cache.valid & SegAccessWOK4G) != SegAccessWOK4G)
+    return 0;
 
-  write_virtual_checks(dstSegPtr, dstOff, 4);
   laddrDst = BX_CPU_THIS_PTR get_segment_base(dstSeg) + dstOff;
 
 #if BX_SupportGuest2HostTLB
@@ -720,7 +495,6 @@ Bit32u BX_CPU_C::FastRepSTOSD(bxInstruction_c *i, unsigned dstSeg, bx_address ds
   hostAddrDst = BX_CPU_THIS_PTR mem->getHostMemAddr(BX_CPU_THIS,
             A20ADDR(paddrDst), BX_WRITE, DATA_ACCESS);
 #endif
-
   if (! hostAddrDst) return 0;
 
   // See how many dwords can fit in the rest of this page.
@@ -746,42 +520,6 @@ Bit32u BX_CPU_C::FastRepSTOSD(bxInstruction_c *i, unsigned dstSeg, bx_address ds
 
   // If after all the restrictions, there is anything left to do...
   if (count) {
-    // Before we copy memory, we need to make sure that the segments
-    // allow the accesses up to the given source and dest offset.  If
-    // the cache.valid bits have SegAccessWOK and ROK, we know that
-    // the cache is valid for those operations, and that the segments
-    // are non expand-down (thus we can make a simple limit check).
-    if ( !(dstSegPtr->cache.valid & SegAccessWOK) ) return 0;
-
-    if (BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64)
-    {
-      Bit32u dstSegLimit = dstSegPtr->cache.u.segment.limit_scaled;
-
-      if (! i->as32L()) {
-        // For 16-bit addressing mode, clamp the segment limits to 16bits
-        // so we don't have to worry about computations using di
-        // rolling over 16-bit boundaries.
-        if (dstSegLimit > 0xffff)
-          dstSegLimit = 0xffff;
-      }
-
-      // Now make sure transfer will fit within the constraints of the
-      // segment boundaries, 0..limit for non expand-down.  We know
-      // count >= 1 here.
-      if (BX_CPU_THIS_PTR get_DF()) {
-        // Counting downward.
-        Bit32u minOffset = (count-1) << 2;
-        if (dstOff < minOffset)
-          return 0;
-      }
-      else {
-        // Counting upward.
-        Bit32u dstMaxOffset = (dstSegLimit - (count<<2)) + 1;
-        if (dstOff > dstMaxOffset)
-          return 0;
-      }
-    }
-
     // Transfer data directly using host addresses
     for (unsigned j=0; j<count; j++) {
       WriteHostDWordToLittleEndian(hostAddrDst, val);
