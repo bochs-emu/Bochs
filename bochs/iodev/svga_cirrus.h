@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: svga_cirrus.h,v 1.13 2008-01-26 22:24:02 sshwarts Exp $
+// $Id: svga_cirrus.h,v 1.14 2008-03-22 22:26:03 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Copyright (c) 2004 Makoto Suzuki (suzu)
@@ -19,6 +19,8 @@
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+//
+/////////////////////////////////////////////////////////////////////////
 
 #if BX_SUPPORT_CLGD54XX
 
@@ -45,11 +47,12 @@
 // Size of internal cache memory for bitblt. (must be >= 256 and 4-byte aligned)
 #define CIRRUS_BLT_CACHESIZE (2048 * 4)
 
-#if BX_SUPPORT_PCI && BX_SUPPORT_CLGD54XX_PCI
+#if BX_SUPPORT_PCI
 #define CIRRUS_VIDEO_MEMORY_MB    4
 #else
 #define CIRRUS_VIDEO_MEMORY_MB    2
 #endif
+
 #define CIRRUS_VIDEO_MEMORY_KB    (CIRRUS_VIDEO_MEMORY_MB * 1024)
 #define CIRRUS_VIDEO_MEMORY_BYTES (CIRRUS_VIDEO_MEMORY_KB * 1024)
 
@@ -59,7 +62,7 @@ typedef void (*bx_cirrus_bitblt_rop_t)(
     int bltwidth,int bltheight);
 
 class bx_svga_cirrus_c : public bx_vga_c
-#if BX_SUPPORT_PCI && BX_SUPPORT_CLGD54XX_PCI
+#if BX_SUPPORT_PCI
   , public bx_pci_device_stub_c
 #endif
 {
@@ -80,7 +83,7 @@ public:
   virtual void register_state(void);
   virtual void after_restore_state(void);
 
-#if BX_SUPPORT_PCI && BX_SUPPORT_CLGD54XX_PCI
+#if BX_SUPPORT_PCI
   virtual Bit32u pci_read_handler(Bit8u address, unsigned io_len);
   virtual void   pci_write_handler(Bit8u address, Bit32u value, unsigned io_len);
 #endif
@@ -126,33 +129,35 @@ private:
   BX_CIRRUS_SMF void  svga_bitblt();
 
   BX_CIRRUS_SMF void  svga_colorexpand(Bit8u *dst,const Bit8u *src,int count,int pixelwidth);
+
 #if BX_USE_CIRRUS_SMF
   #define svga_colorexpand_8_static svga_colorexpand_8
   #define svga_colorexpand_16_static svga_colorexpand_16
   #define svga_colorexpand_24_static svga_colorexpand_24
   #define svga_colorexpand_32_static svga_colorexpand_32
-#else  // BX_USE_CIRRUS_SMF
+#else
   static void svga_colorexpand_8_static(void *this_ptr,Bit8u *dst,const Bit8u *src,int count);
   static void svga_colorexpand_16_static(void *this_ptr,Bit8u *dst,const Bit8u *src,int count);
   static void svga_colorexpand_24_static(void *this_ptr,Bit8u *dst,const Bit8u *src,int count);
   static void svga_colorexpand_32_static(void *this_ptr,Bit8u *dst,const Bit8u *src,int count);
-#endif // BX_USE_CIRRUS_SMF
-  BX_CIRRUS_SMF void  svga_colorexpand_8(Bit8u *dst,const Bit8u *src,int count);
-  BX_CIRRUS_SMF void  svga_colorexpand_16(Bit8u *dst,const Bit8u *src,int count);
-  BX_CIRRUS_SMF void  svga_colorexpand_24(Bit8u *dst,const Bit8u *src,int count);
-  BX_CIRRUS_SMF void  svga_colorexpand_32(Bit8u *dst,const Bit8u *src,int count);
+#endif
+
+  BX_CIRRUS_SMF void svga_colorexpand_8(Bit8u *dst,const Bit8u *src,int count);
+  BX_CIRRUS_SMF void svga_colorexpand_16(Bit8u *dst,const Bit8u *src,int count);
+  BX_CIRRUS_SMF void svga_colorexpand_24(Bit8u *dst,const Bit8u *src,int count);
+  BX_CIRRUS_SMF void svga_colorexpand_32(Bit8u *dst,const Bit8u *src,int count);
 
   BX_CIRRUS_SMF void svga_setup_bitblt_cputovideo(Bit32u dstaddr,Bit32u srcaddr);
   BX_CIRRUS_SMF void svga_setup_bitblt_videotocpu(Bit32u dstaddr,Bit32u srcaddr);
   BX_CIRRUS_SMF void svga_setup_bitblt_videotovideo(Bit32u dstaddr,Bit32u srcaddr);
 
-#if !BX_USE_CIRRUS_SMF
-  static void  svga_patterncopy_static(void *this_ptr);
-  static void  svga_simplebitblt_static(void *this_ptr);
-  static void  svga_solidfill_static(void *this_ptr);
-  static void  svga_patterncopy_memsrc_static(void *this_ptr);
-  static void  svga_simplebitblt_memsrc_static(void *this_ptr);
-  static void  svga_colorexpand_transp_memsrc_static(void *this_ptr);
+#if BX_USE_CIRRUS_SMF == 0
+  static void svga_patterncopy_static(void *this_ptr);
+  static void svga_simplebitblt_static(void *this_ptr);
+  static void svga_solidfill_static(void *this_ptr);
+  static void svga_patterncopy_memsrc_static(void *this_ptr);
+  static void svga_simplebitblt_memsrc_static(void *this_ptr);
+  static void svga_colorexpand_transp_memsrc_static(void *this_ptr);
 #else
   #define svga_patterncopy_static svga_patterncopy
   #define svga_simplebitblt_static svga_simplebitblt
@@ -160,7 +165,8 @@ private:
   #define svga_patterncopy_memsrc_static svga_patterncopy_memsrc
   #define svga_simplebitblt_memsrc_static svga_simplebitblt_memsrc
   #define svga_colorexpand_transp_memsrc_static svga_colorexpand_transp_memsrc
-#endif // !BX_USE_CIRRUS_SMF
+#endif
+
   BX_CIRRUS_SMF void svga_patterncopy();
   BX_CIRRUS_SMF void svga_simplebitblt();
   BX_CIRRUS_SMF void svga_solidfill();
@@ -206,7 +212,7 @@ private:
   Bit32u bank_base[2];
   Bit32u bank_limit[2];
   Bit8u *disp_ptr;
-#if BX_SUPPORT_PCI && BX_SUPPORT_CLGD54XX_PCI
+#if BX_SUPPORT_PCI
   bx_bool pci_enabled;
 #endif
 
@@ -227,7 +233,7 @@ private:
     void (*bitblt_ptr)();
 #else
     void (*bitblt_ptr)(void *this_ptr);
-#endif // BX_USE_CIRRUS_SMF
+#endif
     Bit8u *memsrc_ptr; // CPU -> video
     Bit8u *memsrc_endptr;
     int memsrc_needed;
@@ -252,16 +258,16 @@ private:
   bx_bool banking_granularity_is_16k() { return !!(control.reg[0x0B] & 0x20); }
   bx_bool banking_is_dual() { return !!(control.reg[0x0B] & 0x01); }
 
-#if BX_SUPPORT_PCI && BX_SUPPORT_CLGD54XX_PCI
+#if BX_SUPPORT_PCI
   BX_CIRRUS_SMF void svga_init_pcihandlers(void);
 
   BX_CIRRUS_SMF bx_bool cirrus_mem_read_handler(unsigned long addr, unsigned long len, void *data, void *param);
   BX_CIRRUS_SMF bx_bool cirrus_mem_write_handler(unsigned long addr, unsigned long len, void *data, void *param);
 
-  Bit8u pci_conf[256];
+  Bit8u  pci_conf[256];
   Bit32u pci_memaddr;
   Bit32u pci_mmioaddr;
-#endif // BX_SUPPORT_PCI && BX_SUPPORT_CLGD54XX_PCI
+#endif
 };
 
 #endif // BX_SUPPORT_CLGD54XX

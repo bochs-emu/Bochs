@@ -673,13 +673,6 @@ typedef
 // CLGD54XX emulation
 #define BX_SUPPORT_CLGD54XX 0
 
-// CLGD54XX PCI emulation
-#define BX_SUPPORT_CLGD54XX_PCI 0
-
-#if (BX_SUPPORT_CLGD54XX_PCI && !BX_SUPPORT_PCI)
-#error To enable CL-GD54xx PCI support, you must also enable PCI
-#endif
-
 // ACPI controller
 #define BX_SUPPORT_ACPI 0
 
