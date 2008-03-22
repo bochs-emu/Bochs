@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack16.cc,v 1.34 2008-02-02 21:46:53 sshwarts Exp $
+// $Id: stack16.cc,v 1.35 2008-03-22 21:29:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -35,42 +35,42 @@
 #define RSP ESP
 #endif
 
-void BX_CPU_C::PUSH_RX(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUSH_RX(bxInstruction_c *i)
 {
   push_16(BX_READ_16BIT_REG(i->opcodeReg()));
 }
 
-void BX_CPU_C::PUSH16_CS(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUSH16_CS(bxInstruction_c *i)
 {
   push_16(BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value);
 }
 
-void BX_CPU_C::PUSH16_DS(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUSH16_DS(bxInstruction_c *i)
 {
   push_16(BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.value);
 }
 
-void BX_CPU_C::PUSH16_ES(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUSH16_ES(bxInstruction_c *i)
 {
   push_16(BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.value);
 }
 
-void BX_CPU_C::PUSH16_FS(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUSH16_FS(bxInstruction_c *i)
 {
   push_16(BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].selector.value);
 }
 
-void BX_CPU_C::PUSH16_GS(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUSH16_GS(bxInstruction_c *i)
 {
   push_16(BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].selector.value);
 }
 
-void BX_CPU_C::PUSH16_SS(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUSH16_SS(bxInstruction_c *i)
 {
   push_16(BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value);
 }
 
-void BX_CPU_C::POP16_DS(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::POP16_DS(bxInstruction_c *i)
 {
   BX_CPU_THIS_PTR speculative_rsp = 1;
   BX_CPU_THIS_PTR prev_rsp = RSP;
@@ -81,7 +81,7 @@ void BX_CPU_C::POP16_DS(bxInstruction_c *i)
   BX_CPU_THIS_PTR speculative_rsp = 0;
 }
 
-void BX_CPU_C::POP16_ES(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::POP16_ES(bxInstruction_c *i)
 {
   BX_CPU_THIS_PTR speculative_rsp = 1;
   BX_CPU_THIS_PTR prev_rsp = RSP;
@@ -92,7 +92,7 @@ void BX_CPU_C::POP16_ES(bxInstruction_c *i)
   BX_CPU_THIS_PTR speculative_rsp = 0;
 }
 
-void BX_CPU_C::POP16_FS(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::POP16_FS(bxInstruction_c *i)
 {
   BX_CPU_THIS_PTR speculative_rsp = 1;
   BX_CPU_THIS_PTR prev_rsp = RSP;
@@ -103,7 +103,7 @@ void BX_CPU_C::POP16_FS(bxInstruction_c *i)
   BX_CPU_THIS_PTR speculative_rsp = 0;
 }
 
-void BX_CPU_C::POP16_GS(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::POP16_GS(bxInstruction_c *i)
 {
   BX_CPU_THIS_PTR speculative_rsp = 1;
   BX_CPU_THIS_PTR prev_rsp = RSP;
@@ -114,7 +114,7 @@ void BX_CPU_C::POP16_GS(bxInstruction_c *i)
   BX_CPU_THIS_PTR speculative_rsp = 0;
 }
 
-void BX_CPU_C::POP16_SS(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::POP16_SS(bxInstruction_c *i)
 {
   BX_CPU_THIS_PTR speculative_rsp = 1;
   BX_CPU_THIS_PTR prev_rsp = RSP;
@@ -133,12 +133,12 @@ void BX_CPU_C::POP16_SS(bxInstruction_c *i)
   BX_CPU_THIS_PTR async_event = 1;
 }
 
-void BX_CPU_C::POP_RX(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::POP_RX(bxInstruction_c *i)
 {
   BX_WRITE_16BIT_REG(i->opcodeReg(), pop_16());
 }
 
-void BX_CPU_C::POP_EwM(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::POP_EwM(bxInstruction_c *i)
 {
   BX_CPU_THIS_PTR speculative_rsp = 1;
   BX_CPU_THIS_PTR prev_rsp = RSP;
@@ -156,12 +156,12 @@ void BX_CPU_C::POP_EwM(bxInstruction_c *i)
   BX_CPU_THIS_PTR speculative_rsp = 0;
 }
 
-void BX_CPU_C::PUSH_Iw(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUSH_Iw(bxInstruction_c *i)
 {
   push_16(i->Iw());
 }
 
-void BX_CPU_C::PUSH_EwM(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUSH_EwM(bxInstruction_c *i)
 {
   BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
@@ -171,7 +171,7 @@ void BX_CPU_C::PUSH_EwM(bxInstruction_c *i)
 }
 
 #if BX_CPU_LEVEL >= 3
-void BX_CPU_C::PUSHAD16(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUSHAD16(bxInstruction_c *i)
 {
   Bit32u temp_ESP = ESP;
   Bit16u temp_SP  = SP;
@@ -202,7 +202,7 @@ void BX_CPU_C::PUSHAD16(bxInstruction_c *i)
   }
 }
 
-void BX_CPU_C::POPAD16(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::POPAD16(bxInstruction_c *i)
 {
   Bit16u di, si, bp, bx, dx, cx, ax;
 

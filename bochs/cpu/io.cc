@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: io.cc,v 1.54 2008-03-21 20:35:46 sshwarts Exp $
+// $Id: io.cc,v 1.55 2008-03-22 21:29:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -221,17 +221,17 @@ Bit32u BX_CPU_C::FastRepOUTSW(bxInstruction_c *i, unsigned srcSeg, bx_address sr
 // REP INS methods
 //
 
-void BX_CPU_C::REP_INSB_YbDX(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_INSB_YbDX(bxInstruction_c *i)
 {
   BX_CPU_THIS_PTR repeat(i, &BX_CPU_C::INSB_YbDX);
 }
 
-void BX_CPU_C::REP_INSW_YwDX(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_INSW_YwDX(bxInstruction_c *i)
 {
   BX_CPU_THIS_PTR repeat(i, &BX_CPU_C::INSW_YwDX);
 }
 
-void BX_CPU_C::REP_INSD_YdDX(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_INSD_YdDX(bxInstruction_c *i)
 {
   BX_CPU_THIS_PTR repeat(i, &BX_CPU_C::INSD_YdDX);
 }
@@ -240,7 +240,7 @@ void BX_CPU_C::REP_INSD_YdDX(bxInstruction_c *i)
 // INSB/INSW/INSD methods
 //
 
-void BX_CPU_C::INSB_YbDX(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::INSB_YbDX(bxInstruction_c *i)
 {
   Bit8u value8=0;
 
@@ -302,7 +302,7 @@ void BX_CPU_C::INSB_YbDX(bxInstruction_c *i)
 }
 
 // input word from port to string
-void BX_CPU_C::INSW_YwDX(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::INSW_YwDX(bxInstruction_c *i)
 {
   Bit16u value16=0;
 
@@ -401,7 +401,7 @@ doIncr:
 }
 
 // input doubleword from port to string
-void BX_CPU_C::INSD_YdDX(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::INSD_YdDX(bxInstruction_c *i)
 {
   if (! BX_CPU_THIS_PTR allow_io(DX, 4)) {
     BX_DEBUG(("INSD_YdDX: I/O access not allowed !"));
@@ -474,17 +474,17 @@ void BX_CPU_C::INSD_YdDX(bxInstruction_c *i)
 // REP OUTS methods
 //
 
-void BX_CPU_C::REP_OUTSB_DXXb(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_OUTSB_DXXb(bxInstruction_c *i)
 {
   BX_CPU_THIS_PTR repeat(i, &BX_CPU_C::OUTSB_DXXb);
 }
 
-void BX_CPU_C::REP_OUTSW_DXXw(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_OUTSW_DXXw(bxInstruction_c *i)
 {
   BX_CPU_THIS_PTR repeat(i, &BX_CPU_C::OUTSW_DXXw);
 }
 
-void BX_CPU_C::REP_OUTSD_DXXd(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_OUTSD_DXXd(bxInstruction_c *i)
 {
   BX_CPU_THIS_PTR repeat(i, &BX_CPU_C::OUTSD_DXXd);
 }
@@ -493,7 +493,7 @@ void BX_CPU_C::REP_OUTSD_DXXd(bxInstruction_c *i)
 // OUTSB/OUTSW/OUTSD methods
 //
 
-void BX_CPU_C::OUTSB_DXXb(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::OUTSB_DXXb(bxInstruction_c *i)
 {
   if (! BX_CPU_THIS_PTR allow_io(DX, 1)) {
     BX_DEBUG(("OUTSB_DXXb: I/O access not allowed !"));
@@ -547,7 +547,7 @@ void BX_CPU_C::OUTSB_DXXb(bxInstruction_c *i)
 }
 
 // output word string to port
-void BX_CPU_C::OUTSW_DXXw(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::OUTSW_DXXw(bxInstruction_c *i)
 {
   if (! BX_CPU_THIS_PTR allow_io(DX, 2)) {
     BX_DEBUG(("OUTSW_DXXw: I/O access not allowed !"));
@@ -633,7 +633,7 @@ void BX_CPU_C::OUTSW_DXXw(bxInstruction_c *i)
 }
 
 // output doubleword string to port
-void BX_CPU_C::OUTSD_DXXd(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::OUTSD_DXXd(bxInstruction_c *i)
 {
   if (! BX_CPU_THIS_PTR allow_io(DX, 4)) {
     BX_DEBUG(("OUTSD_DXXd: I/O access not allowed !"));
@@ -690,62 +690,62 @@ void BX_CPU_C::OUTSD_DXXd(bxInstruction_c *i)
 // non repeatable IN/OUT methods
 //
 
-void BX_CPU_C::IN_ALIb(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::IN_ALIb(bxInstruction_c *i)
 {
   AL = BX_CPU_THIS_PTR inp8(i->Ib());
 }
 
-void BX_CPU_C::IN_AXIb(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::IN_AXIb(bxInstruction_c *i)
 {
   AX = BX_CPU_THIS_PTR inp16(i->Ib());
 }
 
-void BX_CPU_C::IN_EAXIb(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::IN_EAXIb(bxInstruction_c *i)
 {
   RAX = BX_CPU_THIS_PTR inp32(i->Ib());
 }
 
-void BX_CPU_C::OUT_IbAL(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::OUT_IbAL(bxInstruction_c *i)
 {
   BX_CPU_THIS_PTR outp8(i->Ib(), AL);
 }
 
-void BX_CPU_C::OUT_IbAX(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::OUT_IbAX(bxInstruction_c *i)
 {
   BX_CPU_THIS_PTR outp16(i->Ib(), AX);
 }
 
-void BX_CPU_C::OUT_IbEAX(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::OUT_IbEAX(bxInstruction_c *i)
 {
   BX_CPU_THIS_PTR outp32(i->Ib(), EAX);
 }
 
-void BX_CPU_C::IN_ALDX(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::IN_ALDX(bxInstruction_c *i)
 {
   AL = BX_CPU_THIS_PTR inp8(DX);
 }
 
-void BX_CPU_C::IN_AXDX(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::IN_AXDX(bxInstruction_c *i)
 {
   AX = BX_CPU_THIS_PTR inp16(DX);
 }
 
-void BX_CPU_C::IN_EAXDX(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::IN_EAXDX(bxInstruction_c *i)
 {
   RAX = BX_CPU_THIS_PTR inp32(DX);
 }
 
-void BX_CPU_C::OUT_DXAL(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::OUT_DXAL(bxInstruction_c *i)
 {
   BX_CPU_THIS_PTR outp8(DX, AL);
 }
 
-void BX_CPU_C::OUT_DXAX(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::OUT_DXAX(bxInstruction_c *i)
 {
   BX_CPU_THIS_PTR outp16(DX, AX);
 }
 
-void BX_CPU_C::OUT_DXEAX(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::OUT_DXEAX(bxInstruction_c *i)
 {
   BX_CPU_THIS_PTR outp32(DX, EAX);
 }

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.h,v 1.56 2008-03-21 20:04:41 sshwarts Exp $
+// $Id: fetchdecode.h,v 1.57 2008-03-22 21:29:39 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005 Stanislav Shwartsman
@@ -26,7 +26,7 @@
 
 typedef struct BxOpcodeInfo_t {
   Bit16u         Attr;
-  BxExecutePtr_t ExecutePtr;
+  BxExecutePtr_tR ExecutePtr;
   const BxOpcodeInfo_t *AnotherArray;
 } BxOpcodeInfo_t;
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu.cc,v 1.33 2008-02-05 22:33:34 sshwarts Exp $
+// $Id: fpu.cc,v 1.34 2008-03-22 21:29:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -316,7 +316,7 @@ int BX_CPU_C::fpu_load_environment(bxInstruction_c *i)
 #endif
 
 /* D9 /5 */
-void BX_CPU_C::FLDCW(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLDCW(bxInstruction_c *i)
 {
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i, CHECK_PENDING_EXCEPTIONS, !UPDATE_LAST_OPCODE);
@@ -343,7 +343,7 @@ void BX_CPU_C::FLDCW(bxInstruction_c *i)
 }
 
 /* D9 /7 */
-void BX_CPU_C::FNSTCW(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::FNSTCW(bxInstruction_c *i)
 {
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i, !CHECK_PENDING_EXCEPTIONS, !UPDATE_LAST_OPCODE);
@@ -359,7 +359,7 @@ void BX_CPU_C::FNSTCW(bxInstruction_c *i)
 }
 
 /* DD /7 */
-void BX_CPU_C::FNSTSW(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::FNSTSW(bxInstruction_c *i)
 {
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i, !CHECK_PENDING_EXCEPTIONS, !UPDATE_LAST_OPCODE);
@@ -375,7 +375,7 @@ void BX_CPU_C::FNSTSW(bxInstruction_c *i)
 }
 
 /* DF E0 */
-void BX_CPU_C::FNSTSW_AX(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::FNSTSW_AX(bxInstruction_c *i)
 {
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i, !CHECK_PENDING_EXCEPTIONS, !UPDATE_LAST_OPCODE);
@@ -386,7 +386,7 @@ void BX_CPU_C::FNSTSW_AX(bxInstruction_c *i)
 }
 
 /* DD /4 */
-void BX_CPU_C::FRSTOR(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::FRSTOR(bxInstruction_c *i)
 {
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i, CHECK_PENDING_EXCEPTIONS, !UPDATE_LAST_OPCODE);
@@ -411,7 +411,7 @@ void BX_CPU_C::FRSTOR(bxInstruction_c *i)
 }
 
 /* DD /6 */
-void BX_CPU_C::FNSAVE(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::FNSAVE(bxInstruction_c *i)
 {
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i, !CHECK_PENDING_EXCEPTIONS, !UPDATE_LAST_OPCODE);
@@ -432,7 +432,7 @@ void BX_CPU_C::FNSAVE(bxInstruction_c *i)
 }
 
 /* 9B E2 */
-void BX_CPU_C::FNCLEX(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::FNCLEX(bxInstruction_c *i)
 {
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i, !CHECK_PENDING_EXCEPTIONS, !UPDATE_LAST_OPCODE);
@@ -448,7 +448,7 @@ void BX_CPU_C::FNCLEX(bxInstruction_c *i)
 }
 
 /* DB E3 */
-void BX_CPU_C::FNINIT(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::FNINIT(bxInstruction_c *i)
 {
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i, !CHECK_PENDING_EXCEPTIONS, !UPDATE_LAST_OPCODE);
@@ -459,7 +459,7 @@ void BX_CPU_C::FNINIT(bxInstruction_c *i)
 }
 
 /* D9 /4 */
-void BX_CPU_C::FLDENV(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLDENV(bxInstruction_c *i)
 {
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i, CHECK_PENDING_EXCEPTIONS, !UPDATE_LAST_OPCODE);
@@ -470,7 +470,7 @@ void BX_CPU_C::FLDENV(bxInstruction_c *i)
 }
 
 /* D9 /6 */
-void BX_CPU_C::FNSTENV(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::FNSTENV(bxInstruction_c *i)
 {
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i, !CHECK_PENDING_EXCEPTIONS, !UPDATE_LAST_OPCODE);
@@ -485,7 +485,7 @@ void BX_CPU_C::FNSTENV(bxInstruction_c *i)
 }
 
 /* D9 D0 */
-void BX_CPU_C::FNOP(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::FNOP(bxInstruction_c *i)
 {
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i, CHECK_PENDING_EXCEPTIONS, !UPDATE_LAST_OPCODE);
@@ -498,7 +498,7 @@ void BX_CPU_C::FNOP(bxInstruction_c *i)
 #endif
 }
 
-void BX_CPU_C::FPLEGACY(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::FPLEGACY(bxInstruction_c *i)
 {
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i, !CHECK_PENDING_EXCEPTIONS, !UPDATE_LAST_OPCODE);
@@ -515,7 +515,7 @@ void BX_CPU_C::FPLEGACY(bxInstruction_c *i)
 
 #include <math.h>
 
-void BX_CPU_C::print_state_FPU()
+void BX_CPU_C::print_state_FPU(void)
 {
   static double scale_factor = pow(2.0, -63.0);
 

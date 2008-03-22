@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer32.cc,v 1.67 2008-02-02 21:46:50 sshwarts Exp $
+// $Id: ctrl_xfer32.cc,v 1.68 2008-03-22 21:29:39 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -35,9 +35,26 @@
 #define RSP ESP
 #endif
 
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::branch_near32(Bit32u new_EIP)
+{
+  // check always, not only in protected mode
+  if (new_EIP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled)
+  {
+    BX_ERROR(("branch_near: offset outside of CS limits"));
+    exception(BX_GP_EXCEPTION, 0, 0);
+  }
+
+#if BX_SUPPORT_TRACE_CACHE && !defined(BX_TRACE_CACHE_NO_SPECULATIVE_TRACING)
+  // assert magic async_event to stop trace execution
+  BX_CPU_THIS_PTR async_event |= BX_ASYNC_EVENT_STOP_TRACE;
+#endif
+
+  EIP = new_EIP;
+}
+
 #if BX_CPU_LEVEL >= 3
 
-void BX_CPU_C::RETnear32_Iw(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::RETnear32_Iw(bxInstruction_c *i)
 {
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR show_flag |= Flag_ret;
@@ -59,7 +76,7 @@ void BX_CPU_C::RETnear32_Iw(bxInstruction_c *i)
   BX_INSTR_UCNEAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_RET, EIP);
 }
 
-void BX_CPU_C::RETnear32(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::RETnear32(bxInstruction_c *i)
 {
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR show_flag |= Flag_ret;
@@ -76,7 +93,7 @@ void BX_CPU_C::RETnear32(bxInstruction_c *i)
   BX_INSTR_UCNEAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_RET, EIP);
 }
 
-void BX_CPU_C::RETfar32_Iw(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::RETfar32_Iw(bxInstruction_c *i)
 {
   Bit32u eip, cs_raw;
 
@@ -114,7 +131,7 @@ done:
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, EIP);
 }
 
-void BX_CPU_C::RETfar32(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::RETfar32(bxInstruction_c *i)
 {
   Bit32u eip, cs_raw;
 
@@ -145,7 +162,7 @@ done:
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, EIP);
 }
 
-void BX_CPU_C::CALL_Jd(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::CALL_Jd(bxInstruction_c *i)
 {
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR show_flag |= Flag_call;
@@ -165,7 +182,7 @@ void BX_CPU_C::CALL_Jd(bxInstruction_c *i)
   BX_INSTR_UCNEAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_CALL, EIP);
 }
 
-void BX_CPU_C::CALL32_Ap(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::CALL32_Ap(bxInstruction_c *i)
 {
   Bit16u cs_raw;
   Bit32u disp32;
@@ -200,7 +217,7 @@ done:
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, EIP);
 }
 
-void BX_CPU_C::CALL_EdM(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::CALL_EdM(bxInstruction_c *i)
 {
   BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
@@ -222,7 +239,7 @@ void BX_CPU_C::CALL_EdM(bxInstruction_c *i)
   BX_INSTR_UCNEAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_CALL, EIP);
 }
 
-void BX_CPU_C::CALL_EdR(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::CALL_EdR(bxInstruction_c *i)
 {
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR show_flag |= Flag_call;
@@ -242,7 +259,7 @@ void BX_CPU_C::CALL_EdR(bxInstruction_c *i)
   BX_INSTR_UCNEAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_CALL, EIP);
 }
 
-void BX_CPU_C::CALL32_Ep(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::CALL32_Ep(bxInstruction_c *i)
 {
   Bit16u cs_raw;
   Bit32u op1_32;
@@ -280,7 +297,7 @@ done:
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, EIP);
 }
 
-void BX_CPU_C::JMP_Jd(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::JMP_Jd(bxInstruction_c *i)
 {
   Bit32u new_EIP = EIP + (Bit32s) i->Id();
 
@@ -295,7 +312,7 @@ void BX_CPU_C::JMP_Jd(bxInstruction_c *i)
   BX_INSTR_UCNEAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_JMP, new_EIP);
 }
 
-void BX_CPU_C::JO_Jd(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::JO_Jd(bxInstruction_c *i)
 {
   if (get_OF()) {
     Bit32u new_EIP = EIP + (Bit32s) i->Id();
@@ -307,7 +324,7 @@ void BX_CPU_C::JO_Jd(bxInstruction_c *i)
   BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
 }
 
-void BX_CPU_C::JNO_Jd(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::JNO_Jd(bxInstruction_c *i)
 {
   if (! get_OF()) {
     Bit32u new_EIP = EIP + (Bit32s) i->Id();
@@ -319,7 +336,7 @@ void BX_CPU_C::JNO_Jd(bxInstruction_c *i)
   BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
 }
 
-void BX_CPU_C::JB_Jd(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::JB_Jd(bxInstruction_c *i)
 {
   if (get_CF()) {
     Bit32u new_EIP = EIP + (Bit32s) i->Id();
@@ -331,7 +348,7 @@ void BX_CPU_C::JB_Jd(bxInstruction_c *i)
   BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
 }
 
-void BX_CPU_C::JNB_Jd(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::JNB_Jd(bxInstruction_c *i)
 {
   if (! get_CF()) {
     Bit32u new_EIP = EIP + (Bit32s) i->Id();
@@ -343,7 +360,7 @@ void BX_CPU_C::JNB_Jd(bxInstruction_c *i)
   BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
 }
 
-void BX_CPU_C::JZ_Jd(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::JZ_Jd(bxInstruction_c *i)
 {
   if (get_ZF()) {
     Bit32u new_EIP = EIP + (Bit32s) i->Id();
@@ -355,7 +372,7 @@ void BX_CPU_C::JZ_Jd(bxInstruction_c *i)
   BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
 }
 
-void BX_CPU_C::JNZ_Jd(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::JNZ_Jd(bxInstruction_c *i)
 {
   if (! get_ZF()) {
     Bit32u new_EIP = EIP + (Bit32s) i->Id();
@@ -367,7 +384,7 @@ void BX_CPU_C::JNZ_Jd(bxInstruction_c *i)
   BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
 }
 
-void BX_CPU_C::JBE_Jd(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::JBE_Jd(bxInstruction_c *i)
 {
   if (get_CF() || get_ZF()) {
     Bit32u new_EIP = EIP + (Bit32s) i->Id();
@@ -379,7 +396,7 @@ void BX_CPU_C::JBE_Jd(bxInstruction_c *i)
   BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
 }
 
-void BX_CPU_C::JNBE_Jd(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::JNBE_Jd(bxInstruction_c *i)
 {
   if (! (get_CF() || get_ZF())) {
     Bit32u new_EIP = EIP + (Bit32s) i->Id();
@@ -391,7 +408,7 @@ void BX_CPU_C::JNBE_Jd(bxInstruction_c *i)
   BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
 }
 
-void BX_CPU_C::JS_Jd(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::JS_Jd(bxInstruction_c *i)
 {
   if (get_SF()) {
     Bit32u new_EIP = EIP + (Bit32s) i->Id();
@@ -403,7 +420,7 @@ void BX_CPU_C::JS_Jd(bxInstruction_c *i)
   BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
 }
 
-void BX_CPU_C::JNS_Jd(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::JNS_Jd(bxInstruction_c *i)
 {
   if (! get_SF()) {
     Bit32u new_EIP = EIP + (Bit32s) i->Id();
@@ -415,7 +432,7 @@ void BX_CPU_C::JNS_Jd(bxInstruction_c *i)
   BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
 }
 
-void BX_CPU_C::JP_Jd(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::JP_Jd(bxInstruction_c *i)
 {
   if (get_PF()) {
     Bit32u new_EIP = EIP + (Bit32s) i->Id();
@@ -427,7 +444,7 @@ void BX_CPU_C::JP_Jd(bxInstruction_c *i)
   BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
 }
 
-void BX_CPU_C::JNP_Jd(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::JNP_Jd(bxInstruction_c *i)
 {
   if (! get_PF()) {
     Bit32u new_EIP = EIP + (Bit32s) i->Id();
@@ -439,7 +456,7 @@ void BX_CPU_C::JNP_Jd(bxInstruction_c *i)
   BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
 }
 
-void BX_CPU_C::JL_Jd(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::JL_Jd(bxInstruction_c *i)
 {
   if (getB_SF() != getB_OF()) {
     Bit32u new_EIP = EIP + (Bit32s) i->Id();
@@ -451,7 +468,7 @@ void BX_CPU_C::JL_Jd(bxInstruction_c *i)
   BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
 }
 
-void BX_CPU_C::JNL_Jd(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::JNL_Jd(bxInstruction_c *i)
 {
   if (getB_SF() == getB_OF()) {
     Bit32u new_EIP = EIP + (Bit32s) i->Id();
@@ -463,7 +480,7 @@ void BX_CPU_C::JNL_Jd(bxInstruction_c *i)
   BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
 }
 
-void BX_CPU_C::JLE_Jd(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::JLE_Jd(bxInstruction_c *i)
 {
   if (get_ZF() || (getB_SF() != getB_OF())) {
     Bit32u new_EIP = EIP + (Bit32s) i->Id();
@@ -475,7 +492,7 @@ void BX_CPU_C::JLE_Jd(bxInstruction_c *i)
   BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
 }
 
-void BX_CPU_C::JNLE_Jd(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::JNLE_Jd(bxInstruction_c *i)
 {
   if (! get_ZF() && (getB_SF() == getB_OF())) {
     Bit32u new_EIP = EIP + (Bit32s) i->Id();
@@ -489,7 +506,7 @@ void BX_CPU_C::JNLE_Jd(bxInstruction_c *i)
 #endif
 }
 
-void BX_CPU_C::JMP_Ap(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::JMP_Ap(bxInstruction_c *i)
 {
   Bit32u disp32;
   Bit16u cs_raw;
@@ -517,7 +534,7 @@ void BX_CPU_C::JMP_Ap(bxInstruction_c *i)
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, EIP);
 }
 
-void BX_CPU_C::JMP_EdM(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::JMP_EdM(bxInstruction_c *i)
 {
   BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
@@ -535,7 +552,7 @@ void BX_CPU_C::JMP_EdM(bxInstruction_c *i)
   BX_INSTR_UCNEAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_JMP, new_EIP);
 }
 
-void BX_CPU_C::JMP_EdR(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::JMP_EdR(bxInstruction_c *i)
 {
   Bit32u new_EIP = BX_READ_32BIT_REG(i->rm());
 
@@ -551,7 +568,7 @@ void BX_CPU_C::JMP_EdR(bxInstruction_c *i)
 }
 
 /* Far indirect jump */
-void BX_CPU_C::JMP32_Ep(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::JMP32_Ep(bxInstruction_c *i)
 {
   Bit16u cs_raw;
   Bit32u op1_32;
@@ -577,7 +594,7 @@ void BX_CPU_C::JMP32_Ep(bxInstruction_c *i)
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, EIP);
 }
 
-void BX_CPU_C::IRET32(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::IRET32(bxInstruction_c *i)
 {
   Bit32u eip, eflags32;
   Bit16u cs;

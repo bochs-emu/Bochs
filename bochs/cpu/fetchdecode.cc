@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.171 2008-03-21 20:04:41 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.172 2008-03-22 21:29:39 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2438,7 +2438,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo32M[512*2] = {
   /* 0F FF /dm */ { 0, &BX_CPU_C::BxError }
 };
 
-  unsigned
+  unsigned BX_CPP_AttrRegparmN(3)
 BX_CPU_C::fetchDecode32(const Bit8u *iptr, bxInstruction_c *i, unsigned remainingInPage)
 {
   // remain must be at least 1
@@ -2956,7 +2956,7 @@ modrm_done:
   return(1);
 }
 
-void BX_CPU_C::BxError(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::BxError(bxInstruction_c *i)
 {
   BX_DEBUG(("BxError: i with opcode=0x%x", i->b1()));
   BX_DEBUG(("modrm was 0x%02x, nnn was %u, rm was %u", i->modrm(), i->nnn(), i->rm()));

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.110 2008-02-15 19:03:53 sshwarts Exp $
+// $Id: paging.cc,v 1.111 2008-03-22 21:29:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -557,7 +557,7 @@ void BX_CPU_C::TLB_invlpg(bx_address laddr)
 #endif
 }
 
-void BX_CPU_C::INVLPG(bxInstruction_c* i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::INVLPG(bxInstruction_c* i)
 {
 #if BX_CPU_LEVEL >= 4
   invalidate_prefetch_q();

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_rcp.cc,v 1.17 2008-02-02 21:46:53 sshwarts Exp $
+// $Id: sse_rcp.cc,v 1.18 2008-03-22 21:29:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -344,7 +344,7 @@ static float32 approximate_rcp(float32 op)
  * Approximate reciprocals of packed single precision FP values from XMM2/MEM.
  * Possible floating point exceptions: -
  */
-void BX_CPU_C::RCPPS_VpsWps(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::RCPPS_VpsWps(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
@@ -378,7 +378,7 @@ void BX_CPU_C::RCPPS_VpsWps(bxInstruction_c *i)
  * Approximate reciprocal of scalar single precision FP value from XMM2/MEM32.
  * Possible floating point exceptions: -
  */
-void BX_CPU_C::RCPSS_VssWss(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::RCPSS_VssWss(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
@@ -728,7 +728,7 @@ static float32 approximate_rsqrt(float32 op)
  * from XMM2/MEM32.
  * Possible floating point exceptions: -
  */
-void BX_CPU_C::RSQRTSS_VssWss(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::RSQRTSS_VssWss(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
@@ -759,7 +759,7 @@ void BX_CPU_C::RSQRTSS_VssWss(bxInstruction_c *i)
  * from XMM2/MEM.
  * Possible floating point exceptions: -
  */
-void BX_CPU_C::RSQRTPS_VpsWps(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::RSQRTPS_VpsWps(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();

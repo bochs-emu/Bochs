@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer64.cc,v 1.63 2008-02-02 21:46:50 sshwarts Exp $
+// $Id: ctrl_xfer64.cc,v 1.64 2008-03-22 21:29:39 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -32,7 +32,24 @@
 
 #if BX_SUPPORT_X86_64
 
-void BX_CPU_C::RETnear64_Iw(bxInstruction_c *i)
+BX_CPP_INLINE void BX_CPP_AttrRegparmN(1) BX_CPU_C::branch_near64(bxInstruction_c *i)
+{
+  Bit64u new_RIP = RIP + (Bit32s) i->Id();
+
+  if (! IsCanonical(new_RIP)) {
+    BX_ERROR(("branch_near64: canonical RIP violation"));
+    exception(BX_GP_EXCEPTION, 0, 0);
+  }
+
+#if BX_SUPPORT_TRACE_CACHE && !defined(BX_TRACE_CACHE_NO_SPECULATIVE_TRACING)
+  // assert magic async_event to stop trace execution
+  BX_CPU_THIS_PTR async_event |= BX_ASYNC_EVENT_STOP_TRACE;
+#endif
+
+  RIP = new_RIP;
+}
+
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::RETnear64_Iw(bxInstruction_c *i)
 {
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR show_flag |= Flag_ret;
@@ -51,7 +68,7 @@ void BX_CPU_C::RETnear64_Iw(bxInstruction_c *i)
   BX_INSTR_UCNEAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_RET, RIP);
 }
 
-void BX_CPU_C::RETnear64(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::RETnear64(bxInstruction_c *i)
 {
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR show_flag |= Flag_ret;
@@ -70,7 +87,7 @@ void BX_CPU_C::RETnear64(bxInstruction_c *i)
   BX_INSTR_UCNEAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_RET, RIP);
 }
 
-void BX_CPU_C::RETfar64_Iw(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::RETfar64_Iw(bxInstruction_c *i)
 {
   invalidate_prefetch_q();
 
@@ -92,7 +109,7 @@ void BX_CPU_C::RETfar64_Iw(bxInstruction_c *i)
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, RIP);
 }
 
-void BX_CPU_C::RETfar64(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::RETfar64(bxInstruction_c *i)
 {
   invalidate_prefetch_q();
 
@@ -114,7 +131,7 @@ void BX_CPU_C::RETfar64(bxInstruction_c *i)
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, RIP);
 }
 
-void BX_CPU_C::CALL_Jq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::CALL_Jq(bxInstruction_c *i)
 {
   Bit64u new_RIP = RIP + (Bit32s) i->Id();
 
@@ -134,7 +151,7 @@ void BX_CPU_C::CALL_Jq(bxInstruction_c *i)
   BX_INSTR_UCNEAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_CALL, RIP);
 }
 
-void BX_CPU_C::CALL_EqM(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::CALL_EqM(bxInstruction_c *i)
 {
   BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
@@ -156,7 +173,7 @@ void BX_CPU_C::CALL_EqM(bxInstruction_c *i)
   BX_INSTR_UCNEAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_CALL, RIP);
 }
 
-void BX_CPU_C::CALL_EqR(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::CALL_EqR(bxInstruction_c *i)
 {
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR show_flag |= Flag_call;
@@ -176,7 +193,7 @@ void BX_CPU_C::CALL_EqR(bxInstruction_c *i)
   BX_INSTR_UCNEAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_CALL, RIP);
 }
 
-void BX_CPU_C::CALL64_Ep(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::CALL64_Ep(bxInstruction_c *i)
 {
   Bit16u cs_raw;
   Bit32u op1_32;
@@ -207,7 +224,7 @@ void BX_CPU_C::CALL64_Ep(bxInstruction_c *i)
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, RIP);
 }
 
-void BX_CPU_C::JMP_Jq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::JMP_Jq(bxInstruction_c *i)
 {
   Bit64u new_RIP = RIP + (Bit32s) i->Id();
 
@@ -221,7 +238,7 @@ void BX_CPU_C::JMP_Jq(bxInstruction_c *i)
   BX_INSTR_UCNEAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_JMP, RIP);
 }
 
-void BX_CPU_C::JO_Jq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::JO_Jq(bxInstruction_c *i)
 {
   if (get_OF()) {
     branch_near64(i);
@@ -231,7 +248,7 @@ void BX_CPU_C::JO_Jq(bxInstruction_c *i)
   BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
 }
 
-void BX_CPU_C::JNO_Jq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::JNO_Jq(bxInstruction_c *i)
 {
   if (! get_OF()) {
     branch_near64(i);
@@ -241,7 +258,7 @@ void BX_CPU_C::JNO_Jq(bxInstruction_c *i)
   BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
 }
 
-void BX_CPU_C::JB_Jq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::JB_Jq(bxInstruction_c *i)
 {
   if (get_CF()) {
     branch_near64(i);
@@ -251,7 +268,7 @@ void BX_CPU_C::JB_Jq(bxInstruction_c *i)
   BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
 }
 
-void BX_CPU_C::JNB_Jq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::JNB_Jq(bxInstruction_c *i)
 {
   if (! get_CF()) {
     branch_near64(i);
@@ -261,7 +278,7 @@ void BX_CPU_C::JNB_Jq(bxInstruction_c *i)
   BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
 }
 
-void BX_CPU_C::JZ_Jq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::JZ_Jq(bxInstruction_c *i)
 {
   if (get_ZF()) {
     branch_near64(i);
@@ -271,7 +288,7 @@ void BX_CPU_C::JZ_Jq(bxInstruction_c *i)
   BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
 }
 
-void BX_CPU_C::JNZ_Jq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::JNZ_Jq(bxInstruction_c *i)
 {
   if (! get_ZF()) {
     branch_near64(i);
@@ -281,7 +298,7 @@ void BX_CPU_C::JNZ_Jq(bxInstruction_c *i)
   BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
 }
 
-void BX_CPU_C::JBE_Jq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::JBE_Jq(bxInstruction_c *i)
 {
   if (get_CF() || get_ZF()) {
     branch_near64(i);
@@ -291,7 +308,7 @@ void BX_CPU_C::JBE_Jq(bxInstruction_c *i)
   BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
 }
 
-void BX_CPU_C::JNBE_Jq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::JNBE_Jq(bxInstruction_c *i)
 {
   if (! (get_CF() || get_ZF())) {
     branch_near64(i);
@@ -301,7 +318,7 @@ void BX_CPU_C::JNBE_Jq(bxInstruction_c *i)
   BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
 }
 
-void BX_CPU_C::JS_Jq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::JS_Jq(bxInstruction_c *i)
 {
   if (get_SF()) {
     branch_near64(i);
@@ -311,7 +328,7 @@ void BX_CPU_C::JS_Jq(bxInstruction_c *i)
   BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
 }
 
-void BX_CPU_C::JNS_Jq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::JNS_Jq(bxInstruction_c *i)
 {
   if (! get_SF()) {
     branch_near64(i);
@@ -321,7 +338,7 @@ void BX_CPU_C::JNS_Jq(bxInstruction_c *i)
   BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
 }
 
-void BX_CPU_C::JP_Jq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::JP_Jq(bxInstruction_c *i)
 {
   if (get_PF()) {
     branch_near64(i);
@@ -331,7 +348,7 @@ void BX_CPU_C::JP_Jq(bxInstruction_c *i)
   BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
 }
 
-void BX_CPU_C::JNP_Jq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::JNP_Jq(bxInstruction_c *i)
 {
   if (! get_PF()) {
     branch_near64(i);
@@ -341,7 +358,7 @@ void BX_CPU_C::JNP_Jq(bxInstruction_c *i)
   BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
 }
 
-void BX_CPU_C::JL_Jq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::JL_Jq(bxInstruction_c *i)
 {
   if (getB_SF() != getB_OF()) {
     branch_near64(i);
@@ -351,7 +368,7 @@ void BX_CPU_C::JL_Jq(bxInstruction_c *i)
   BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
 }
 
-void BX_CPU_C::JNL_Jq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::JNL_Jq(bxInstruction_c *i)
 {
   if (getB_SF() == getB_OF()) {
     branch_near64(i);
@@ -361,7 +378,7 @@ void BX_CPU_C::JNL_Jq(bxInstruction_c *i)
   BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
 }
 
-void BX_CPU_C::JLE_Jq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::JLE_Jq(bxInstruction_c *i)
 {
   if (get_ZF() || (getB_SF() != getB_OF())) {
     branch_near64(i);
@@ -371,7 +388,7 @@ void BX_CPU_C::JLE_Jq(bxInstruction_c *i)
   BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
 }
 
-void BX_CPU_C::JNLE_Jq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::JNLE_Jq(bxInstruction_c *i)
 {
   if (! get_ZF() && (getB_SF() == getB_OF())) {
     branch_near64(i);
@@ -381,7 +398,7 @@ void BX_CPU_C::JNLE_Jq(bxInstruction_c *i)
   BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
 }
 
-void BX_CPU_C::JMP_EqM(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::JMP_EqM(bxInstruction_c *i)
 {
   BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
@@ -397,7 +414,7 @@ void BX_CPU_C::JMP_EqM(bxInstruction_c *i)
   BX_INSTR_UCNEAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_JMP, RIP);
 }
 
-void BX_CPU_C::JMP_EqR(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::JMP_EqR(bxInstruction_c *i)
 {
   Bit64u op1_64 = BX_READ_64BIT_REG(i->rm());
 
@@ -412,7 +429,7 @@ void BX_CPU_C::JMP_EqR(bxInstruction_c *i)
 }
 
 /* Far indirect jump */
-void BX_CPU_C::JMP64_Ep(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::JMP64_Ep(bxInstruction_c *i)
 {
   Bit16u cs_raw;
   Bit32u op1_32;
@@ -432,7 +449,7 @@ void BX_CPU_C::JMP64_Ep(bxInstruction_c *i)
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, RIP);
 }
 
-void BX_CPU_C::IRET64(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::IRET64(bxInstruction_c *i)
 {
   invalidate_prefetch_q();
 
@@ -456,7 +473,7 @@ void BX_CPU_C::IRET64(bxInstruction_c *i)
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, RIP);
 }
 
-void BX_CPU_C::JCXZ64_Jb(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::JCXZ64_Jb(bxInstruction_c *i)
 {
   if (i->as64L()) {
     if (RCX == 0) {
@@ -486,7 +503,7 @@ void BX_CPU_C::JCXZ64_Jb(bxInstruction_c *i)
 // it is known that no exceptions can happen.
 //
 
-void BX_CPU_C::LOOPNE64_Jb(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOOPNE64_Jb(bxInstruction_c *i)
 {
   if (i->as64L()) {
     Bit64u count = RCX;
@@ -520,7 +537,7 @@ void BX_CPU_C::LOOPNE64_Jb(bxInstruction_c *i)
   }
 }
 
-void BX_CPU_C::LOOPE64_Jb(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOOPE64_Jb(bxInstruction_c *i)
 {
   if (i->as64L()) {
     Bit64u count = RCX;
@@ -554,7 +571,7 @@ void BX_CPU_C::LOOPE64_Jb(bxInstruction_c *i)
   }
 }
 
-void BX_CPU_C::LOOP64_Jb(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOOP64_Jb(bxInstruction_c *i)
 {
   if (i->as64L()) {
     Bit64u count = RCX;

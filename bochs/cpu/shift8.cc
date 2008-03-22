@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: shift8.cc,v 1.36 2008-02-02 21:46:53 sshwarts Exp $
+// $Id: shift8.cc,v 1.37 2008-03-22 21:29:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -30,7 +30,7 @@
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
-void BX_CPU_C::ROL_Eb(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROL_Eb(bxInstruction_c *i)
 {
   Bit8u op1_8, result_8;
   unsigned count;
@@ -82,7 +82,7 @@ void BX_CPU_C::ROL_Eb(bxInstruction_c *i)
   SET_FLAGS_OxxxxC(bit0 ^ bit7, bit0);
 }
 
-void BX_CPU_C::ROR_Eb(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROR_Eb(bxInstruction_c *i)
 {
   Bit8u op1_8, result_8;
   unsigned count;
@@ -135,7 +135,7 @@ void BX_CPU_C::ROR_Eb(bxInstruction_c *i)
   SET_FLAGS_OxxxxC(bit6 ^ bit7, bit7);
 }
 
-void BX_CPU_C::RCL_Eb(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::RCL_Eb(bxInstruction_c *i)
 {
   Bit8u op1_8, result_8;
   unsigned count;
@@ -181,7 +181,7 @@ void BX_CPU_C::RCL_Eb(bxInstruction_c *i)
   SET_FLAGS_OxxxxC(of, cf);
 }
 
-void BX_CPU_C::RCR_Eb(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::RCR_Eb(bxInstruction_c *i)
 {
   Bit8u op1_8, result_8;
   unsigned count;
@@ -222,7 +222,7 @@ void BX_CPU_C::RCR_Eb(bxInstruction_c *i)
   SET_FLAGS_OxxxxC(of, cf);
 }
 
-void BX_CPU_C::SHL_Eb(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHL_Eb(bxInstruction_c *i)
 {
   Bit8u op1_8, result_8;
   unsigned count;
@@ -268,7 +268,7 @@ void BX_CPU_C::SHL_Eb(bxInstruction_c *i)
   SET_FLAGS_OxxxxC(of, cf);
 }
 
-void BX_CPU_C::SHR_Eb(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHR_Eb(bxInstruction_c *i)
 {
   Bit8u op1_8, result_8;
   unsigned count;
@@ -312,7 +312,7 @@ void BX_CPU_C::SHR_Eb(bxInstruction_c *i)
   SET_FLAGS_OxxxxC(of, cf);
 }
 
-void BX_CPU_C::SAR_Eb(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::SAR_Eb(bxInstruction_c *i)
 {
   Bit8u op1_8, result_8;
   unsigned count, cf;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_string.cc,v 1.5 2008-02-02 21:46:53 sshwarts Exp $
+// $Id: sse_string.cc,v 1.6 2008-03-22 21:29:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007 Stanislav Shwartsman
@@ -292,7 +292,7 @@ static Bit16u aggregate(bx_bool BoolRes[16][16], unsigned len1, unsigned len2, B
 #if (BX_SUPPORT_SSE >= 4) || (BX_SUPPORT_SSE >= 3 && BX_SUPPORT_SSE_EXTENSION > 0)
 
 /* 66 0F 3A 60 */
-void BX_CPU_C::PCMPESTRM_VdqWdqIb(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::PCMPESTRM_VdqWdqIb(bxInstruction_c *i)
 {
 #if (BX_SUPPORT_SSE >= 5) || (BX_SUPPORT_SSE >= 4 && BX_SUPPORT_SSE_EXTENSION > 0)
   BX_CPU_THIS_PTR prepareSSE();
@@ -363,7 +363,7 @@ void BX_CPU_C::PCMPESTRM_VdqWdqIb(bxInstruction_c *i)
 }
 
 /* 66 0F 3A 61 */
-void BX_CPU_C::PCMPESTRI_VdqWdqIb(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::PCMPESTRI_VdqWdqIb(bxInstruction_c *i)
 {
 #if (BX_SUPPORT_SSE >= 5) || (BX_SUPPORT_SSE >= 4 && BX_SUPPORT_SSE_EXTENSION > 0)
   BX_CPU_THIS_PTR prepareSSE();
@@ -430,7 +430,7 @@ void BX_CPU_C::PCMPESTRI_VdqWdqIb(bxInstruction_c *i)
 }
 
 /* 66 0F 3A 62 */
-void BX_CPU_C::PCMPISTRM_VdqWdqIb(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::PCMPISTRM_VdqWdqIb(bxInstruction_c *i)
 {
 #if (BX_SUPPORT_SSE >= 5) || (BX_SUPPORT_SSE >= 4 && BX_SUPPORT_SSE_EXTENSION > 0)
   BX_CPU_THIS_PTR prepareSSE();
@@ -492,7 +492,7 @@ void BX_CPU_C::PCMPISTRM_VdqWdqIb(bxInstruction_c *i)
 }
 
 /* 66 0F 3A 63 */
-void BX_CPU_C::PCMPISTRI_VdqWdqIb(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::PCMPISTRI_VdqWdqIb(bxInstruction_c *i)
 {
 #if (BX_SUPPORT_SSE >= 5) || (BX_SUPPORT_SSE >= 4 && BX_SUPPORT_SSE_EXTENSION > 0)
   BX_CPU_THIS_PTR prepareSSE();

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: mult32.cc,v 1.27 2008-01-29 17:13:07 sshwarts Exp $
+// $Id: mult32.cc,v 1.28 2008-03-22 21:29:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -35,7 +35,7 @@
 #define RDX EDX
 #endif
 
-void BX_CPU_C::MUL_EAXEd(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::MUL_EAXEd(bxInstruction_c *i)
 {
   Bit32u op1_32, op2_32, product_32h, product_32l;
   Bit64u product_64;
@@ -68,7 +68,7 @@ void BX_CPU_C::MUL_EAXEd(bxInstruction_c *i)
   }
 }
 
-void BX_CPU_C::IMUL_EAXEd(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::IMUL_EAXEd(bxInstruction_c *i)
 {
   Bit32s op1_32, op2_32;
 
@@ -103,7 +103,7 @@ void BX_CPU_C::IMUL_EAXEd(bxInstruction_c *i)
   }
 }
 
-void BX_CPU_C::DIV_EAXEd(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::DIV_EAXEd(bxInstruction_c *i)
 {
   Bit32u op2_32, remainder_32, quotient_32l;
   Bit64u op1_64, quotient_64;
@@ -142,7 +142,7 @@ void BX_CPU_C::DIV_EAXEd(bxInstruction_c *i)
   RDX = remainder_32;
 }
 
-void BX_CPU_C::IDIV_EAXEd(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::IDIV_EAXEd(bxInstruction_c *i)
 {
   Bit32s op2_32, remainder_32, quotient_32l;
   Bit64s op1_64, quotient_64;
@@ -184,7 +184,7 @@ void BX_CPU_C::IDIV_EAXEd(bxInstruction_c *i)
   RDX = remainder_32;
 }
 
-void BX_CPU_C::IMUL_GdEdId(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::IMUL_GdEdId(bxInstruction_c *i)
 {
   Bit32s op2_32, op3_32;
 
@@ -217,7 +217,7 @@ void BX_CPU_C::IMUL_GdEdId(bxInstruction_c *i)
   }
 }
 
-void BX_CPU_C::IMUL_GdEd(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::IMUL_GdEd(bxInstruction_c *i)
 {
   Bit32s op1_32, op2_32;
 

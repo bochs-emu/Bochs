@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack64.cc,v 1.37 2008-02-02 21:46:54 sshwarts Exp $
+// $Id: stack64.cc,v 1.38 2008-03-22 21:29:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -32,7 +32,7 @@
 
 #if BX_SUPPORT_X86_64
 
-void BX_CPU_C::POP_EqM(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::POP_EqM(bxInstruction_c *i)
 {
   BX_CPU_THIS_PTR speculative_rsp = 1;
   BX_CPU_THIS_PTR prev_rsp = RSP;
@@ -51,27 +51,27 @@ void BX_CPU_C::POP_EqM(bxInstruction_c *i)
   BX_CPU_THIS_PTR speculative_rsp = 0;
 }
 
-void BX_CPU_C::PUSH_RRX(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUSH_RRX(bxInstruction_c *i)
 {
   push_64(BX_READ_64BIT_REG(i->opcodeReg()));
 }
 
-void BX_CPU_C::POP_RRX(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::POP_RRX(bxInstruction_c *i)
 {
   BX_WRITE_64BIT_REG(i->opcodeReg(), pop_64());
 }
 
-void BX_CPU_C::PUSH64_FS(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUSH64_FS(bxInstruction_c *i)
 {
   push_64(BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].selector.value);
 }
 
-void BX_CPU_C::PUSH64_GS(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUSH64_GS(bxInstruction_c *i)
 {
   push_64(BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].selector.value);
 }
 
-void BX_CPU_C::POP64_FS(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::POP64_FS(bxInstruction_c *i)
 {
   // this way is faster and RSP safe
   Bit64u fs = read_virtual_qword(BX_SEG_REG_SS, RSP);
@@ -79,7 +79,7 @@ void BX_CPU_C::POP64_FS(bxInstruction_c *i)
   RSP += 8;
 }
 
-void BX_CPU_C::POP64_GS(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::POP64_GS(bxInstruction_c *i)
 {
   // this way is faster and RSP safe
   Bit64u gs = read_virtual_qword(BX_SEG_REG_SS, RSP);
@@ -87,13 +87,13 @@ void BX_CPU_C::POP64_GS(bxInstruction_c *i)
   RSP += 8;
 }
 
-void BX_CPU_C::PUSH64_Id(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUSH64_Id(bxInstruction_c *i)
 {
   Bit64u imm64 = (Bit32s) i->Id();
   push_64(imm64);
 }
 
-void BX_CPU_C::PUSH_EqM(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUSH_EqM(bxInstruction_c *i)
 {
   BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
@@ -102,7 +102,7 @@ void BX_CPU_C::PUSH_EqM(bxInstruction_c *i)
   push_64(op1_64);
 }
 
-void BX_CPU_C::ENTER64_IwIb(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::ENTER64_IwIb(bxInstruction_c *i)
 {
   Bit8u level = i->Ib2();
   level &= 0x1F;
@@ -136,7 +136,7 @@ void BX_CPU_C::ENTER64_IwIb(bxInstruction_c *i)
   RSP -= i->Iw();
 }
 
-void BX_CPU_C::LEAVE64(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::LEAVE64(bxInstruction_c *i)
 {
   // restore frame pointer
   Bit64u temp64 = read_virtual_qword(BX_SEG_REG_SS, RBP);

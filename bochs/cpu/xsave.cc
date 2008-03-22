@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: xsave.cc,v 1.4 2008-02-13 22:25:24 sshwarts Exp $
+// $Id: xsave.cc,v 1.5 2008-03-22 21:29:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008 Stanislav Shwartsman
@@ -44,7 +44,7 @@ void BX_CPU_C::prepareXSAVE(void)
 #endif
 
 /* 0F AE /4 */
-void BX_CPU_C::XSAVE(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVE(bxInstruction_c *i)
 {
 #if BX_SUPPORT_XSAVE
   unsigned index;
@@ -175,7 +175,7 @@ void BX_CPU_C::XSAVE(bxInstruction_c *i)
 }
 
 /* 0F AE /5 */
-void BX_CPU_C::XRSTOR(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
 {
 #if BX_SUPPORT_XSAVE
   unsigned index;
@@ -313,7 +313,7 @@ void BX_CPU_C::XRSTOR(bxInstruction_c *i)
 }
 
 /* 0F 01 D0 */
-void BX_CPU_C::XGETBV(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::XGETBV(bxInstruction_c *i)
 {
 #if BX_SUPPORT_XSAVE
   if(! (BX_CPU_THIS_PTR cr4.get_OSXSAVE())) {
@@ -337,7 +337,7 @@ void BX_CPU_C::XGETBV(bxInstruction_c *i)
 }
 
 /* 0F 01 D1 */
-void BX_CPU_C::XSETBV(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::XSETBV(bxInstruction_c *i)
 {
 #if BX_SUPPORT_XSAVE
   if (real_mode() || v8086_mode()) {

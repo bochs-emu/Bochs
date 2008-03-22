@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu_compare.cc,v 1.12 2008-02-05 22:33:34 sshwarts Exp $
+// $Id: fpu_compare.cc,v 1.13 2008-03-22 21:29:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -78,7 +78,7 @@ void BX_CPU_C::write_eflags_fpu_compare(int float_relation)
 }
 #endif
 
-void BX_CPU_C::FCOM_STi(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::FCOM_STi(bxInstruction_c *i)
 {
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
@@ -118,7 +118,7 @@ void BX_CPU_C::FCOM_STi(bxInstruction_c *i)
 #endif
 }
 
-void BX_CPU_C::FCOMI_ST0_STj(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::FCOMI_ST0_STj(bxInstruction_c *i)
 {
 #if (BX_CPU_LEVEL >= 6) || (BX_CPU_LEVEL_HACKED >= 6)
   BX_CPU_THIS_PTR prepareFPU(i);
@@ -159,7 +159,7 @@ void BX_CPU_C::FCOMI_ST0_STj(bxInstruction_c *i)
 #endif
 }
 
-void BX_CPU_C::FUCOMI_ST0_STj(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::FUCOMI_ST0_STj(bxInstruction_c *i)
 {
 #if (BX_CPU_LEVEL >= 6) || (BX_CPU_LEVEL_HACKED >= 6)
   BX_CPU_THIS_PTR prepareFPU(i);
@@ -200,7 +200,7 @@ void BX_CPU_C::FUCOMI_ST0_STj(bxInstruction_c *i)
 #endif
 }
 
-void BX_CPU_C::FUCOM_STi(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::FUCOM_STi(bxInstruction_c *i)
 {
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
@@ -238,7 +238,7 @@ void BX_CPU_C::FUCOM_STi(bxInstruction_c *i)
 #endif
 }
 
-void BX_CPU_C::FCOM_SINGLE_REAL(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::FCOM_SINGLE_REAL(bxInstruction_c *i)
 {
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
@@ -281,7 +281,7 @@ void BX_CPU_C::FCOM_SINGLE_REAL(bxInstruction_c *i)
 #endif
 }
 
-void BX_CPU_C::FCOM_DOUBLE_REAL(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::FCOM_DOUBLE_REAL(bxInstruction_c *i)
 {
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
@@ -324,7 +324,7 @@ void BX_CPU_C::FCOM_DOUBLE_REAL(bxInstruction_c *i)
 #endif
 }
 
-void BX_CPU_C::FICOM_WORD_INTEGER(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::FICOM_WORD_INTEGER(bxInstruction_c *i)
 {
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
@@ -367,7 +367,7 @@ void BX_CPU_C::FICOM_WORD_INTEGER(bxInstruction_c *i)
 #endif
 }
 
-void BX_CPU_C::FICOM_DWORD_INTEGER(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::FICOM_DWORD_INTEGER(bxInstruction_c *i)
 {
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
@@ -411,7 +411,7 @@ void BX_CPU_C::FICOM_DWORD_INTEGER(bxInstruction_c *i)
 }
 
 /* DE D9 */
-void BX_CPU_C::FCOMPP(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::FCOMPP(bxInstruction_c *i)
 {
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
@@ -451,7 +451,7 @@ void BX_CPU_C::FCOMPP(bxInstruction_c *i)
 }
 
 /* DA E9 */
-void BX_CPU_C::FUCOMPP(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::FUCOMPP(bxInstruction_c *i)
 {
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
@@ -488,7 +488,7 @@ void BX_CPU_C::FUCOMPP(bxInstruction_c *i)
 #endif
 }
 
-void BX_CPU_C::FCMOV_ST0_STj(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::FCMOV_ST0_STj(bxInstruction_c *i)
 {
 #if (BX_CPU_LEVEL >= 6) || (BX_CPU_LEVEL_HACKED >= 6)
   BX_CPU_THIS_PTR prepareFPU(i);
@@ -527,7 +527,7 @@ void BX_CPU_C::FCMOV_ST0_STj(bxInstruction_c *i)
 }
 
 /* D9 E4 */
-void BX_CPU_C::FTST(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::FTST(bxInstruction_c *i)
 {
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
@@ -563,7 +563,7 @@ void BX_CPU_C::FTST(bxInstruction_c *i)
 }
 
 /* D9 E5 */
-void BX_CPU_C::FXAM(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::FXAM(bxInstruction_c *i)
 {
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);

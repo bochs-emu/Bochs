@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_move.cc,v 1.82 2008-03-21 20:04:42 sshwarts Exp $
+// $Id: sse_move.cc,v 1.83 2008-03-22 21:29:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -115,7 +115,7 @@ Bit16u BX_CPU_C::unpack_FPU_TW(Bit16u tag_byte)
 /* ************************************ */
 
 /* 0F AE Grp15 010 */
-void BX_CPU_C::LDMXCSR(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::LDMXCSR(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
@@ -134,7 +134,7 @@ void BX_CPU_C::LDMXCSR(bxInstruction_c *i)
 }
 
 /* 0F AE Grp15 011 */
-void BX_CPU_C::STMXCSR(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::STMXCSR(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
@@ -151,7 +151,7 @@ void BX_CPU_C::STMXCSR(bxInstruction_c *i)
 }
 
 /* 0F AE Grp15 000 */
-void BX_CPU_C::FXSAVE(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::FXSAVE(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
   unsigned index;
@@ -282,7 +282,7 @@ void BX_CPU_C::FXSAVE(bxInstruction_c *i)
 }
 
 /* 0F AE Grp15 001 */
-void BX_CPU_C::FXRSTOR(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::FXRSTOR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
   BxPackedXmmRegister xmm;
@@ -398,7 +398,7 @@ void BX_CPU_C::FXRSTOR(bxInstruction_c *i)
 /* MOVUPS:    0F 10 */
 /* MOVUPD: 66 0F 10 */
 /* MOVDQU: F3 0F 6F */
-void BX_CPU_C::MOVUPS_VpsWps(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVUPS_VpsWps(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
@@ -426,7 +426,7 @@ void BX_CPU_C::MOVUPS_VpsWps(bxInstruction_c *i)
 /* MOVUPS:    0F 11 */
 /* MOVUPD: 66 0F 11 */
 /* MOVDQU: F3 0F 7F */
-void BX_CPU_C::MOVUPS_WpsVps(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVUPS_WpsVps(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
@@ -451,7 +451,7 @@ void BX_CPU_C::MOVUPS_WpsVps(bxInstruction_c *i)
 /* MOVAPS:    0F 28 */
 /* MOVAPD: 66 0F 28 */
 /* MOVDQA: F3 0F 6F */
-void BX_CPU_C::MOVAPS_VpsWps(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVAPS_VpsWps(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
@@ -479,7 +479,7 @@ void BX_CPU_C::MOVAPS_VpsWps(bxInstruction_c *i)
 /* MOVAPS:    0F 29 */
 /* MOVAPD: 66 0F 29 */
 /* MOVDQA: F3 0F 7F */
-void BX_CPU_C::MOVAPS_WpsVps(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVAPS_WpsVps(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
@@ -502,7 +502,7 @@ void BX_CPU_C::MOVAPS_WpsVps(bxInstruction_c *i)
 }
 
 /* F3 0F 10 */
-void BX_CPU_C::MOVSS_VssWss(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSS_VssWss(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
@@ -534,7 +534,7 @@ void BX_CPU_C::MOVSS_VssWss(bxInstruction_c *i)
 }
 
 /* F3 0F 11 */
-void BX_CPU_C::MOVSS_WssVss(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSS_WssVss(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
@@ -560,7 +560,7 @@ void BX_CPU_C::MOVSS_WssVss(bxInstruction_c *i)
 }
 
 /* F2 0F 10 */
-void BX_CPU_C::MOVSD_VsdWsd(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSD_VsdWsd(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
@@ -591,7 +591,7 @@ void BX_CPU_C::MOVSD_VsdWsd(bxInstruction_c *i)
 }
 
 /* F2 0F 11 */
-void BX_CPU_C::MOVSD_WsdVsd(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSD_WsdVsd(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
@@ -618,7 +618,7 @@ void BX_CPU_C::MOVSD_WsdVsd(bxInstruction_c *i)
 
 /* MOVLPS:    0F 12 */
 /* MOVLPD: 66 0F 12 */
-void BX_CPU_C::MOVLPS_VpsMq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVLPS_VpsMq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
@@ -643,7 +643,7 @@ void BX_CPU_C::MOVLPS_VpsMq(bxInstruction_c *i)
 }
 
 /* F2 0F 12 */
-void BX_CPU_C::MOVDDUP_VpdWq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVDDUP_VpdWq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 3
   BX_CPU_THIS_PTR prepareSSE();
@@ -672,7 +672,7 @@ void BX_CPU_C::MOVDDUP_VpdWq(bxInstruction_c *i)
 }
 
 /* F3 0F 12 */
-void BX_CPU_C::MOVSLDUP_VpsWps(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSLDUP_VpsWps(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 3
   BX_CPU_THIS_PTR prepareSSE();
@@ -702,7 +702,7 @@ void BX_CPU_C::MOVSLDUP_VpsWps(bxInstruction_c *i)
 }
 
 /* F3 0F 16 */
-void BX_CPU_C::MOVSHDUP_VpsWps(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSHDUP_VpsWps(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 3
   BX_CPU_THIS_PTR prepareSSE();
@@ -733,7 +733,7 @@ void BX_CPU_C::MOVSHDUP_VpsWps(bxInstruction_c *i)
 
 /* MOVLPS:    0F 13 */
 /* MOVLPD: 66 0F 13 */
-void BX_CPU_C::MOVLPS_MqVps(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVLPS_MqVps(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
@@ -747,7 +747,7 @@ void BX_CPU_C::MOVLPS_MqVps(bxInstruction_c *i)
 
 /* MOVHPS:    0F 16 */
 /* MOVHPD: 66 0F 16 */
-void BX_CPU_C::MOVHPS_VpsMq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVHPS_VpsMq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
@@ -773,7 +773,7 @@ void BX_CPU_C::MOVHPS_VpsMq(bxInstruction_c *i)
 
 /* MOVHPS:    0F 17 */
 /* MOVHPD: 66 0F 17 */
-void BX_CPU_C::MOVHPS_MqVps(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVHPS_MqVps(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
@@ -786,7 +786,7 @@ void BX_CPU_C::MOVHPS_MqVps(bxInstruction_c *i)
 }
 
 /* F2 0F F0 */
-void BX_CPU_C::LDDQU_VdqMdq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::LDDQU_VdqMdq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 3
   BX_CPU_THIS_PTR prepareSSE();
@@ -804,7 +804,7 @@ void BX_CPU_C::LDDQU_VdqMdq(bxInstruction_c *i)
 }
 
 /* 66 0F F7 */
-void BX_CPU_C::MASKMOVDQU_VdqUdq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::MASKMOVDQU_VdqUdq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
@@ -846,7 +846,7 @@ void BX_CPU_C::MASKMOVDQU_VdqUdq(bxInstruction_c *i)
 }
 
 /* 0F 50 */
-void BX_CPU_C::MOVMSKPS_GdVRps(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVMSKPS_GdVRps(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
@@ -867,7 +867,7 @@ void BX_CPU_C::MOVMSKPS_GdVRps(bxInstruction_c *i)
 }
 
 /* 66 0F 50 */
-void BX_CPU_C::MOVMSKPD_GdVRpd(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVMSKPD_GdVRpd(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
@@ -886,7 +886,7 @@ void BX_CPU_C::MOVMSKPD_GdVRpd(bxInstruction_c *i)
 }
 
 /* 66 0F 6E */
-void BX_CPU_C::MOVD_VdqEd(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVD_VdqEd(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
@@ -918,7 +918,7 @@ void BX_CPU_C::MOVD_VdqEd(bxInstruction_c *i)
 #if BX_SUPPORT_X86_64
 
 /* 66 0F 6E */
-void BX_CPU_C::MOVQ_VdqEq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVQ_VdqEq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
@@ -950,7 +950,7 @@ void BX_CPU_C::MOVQ_VdqEq(bxInstruction_c *i)
 #endif
 
 /* 66 0F 7E */
-void BX_CPU_C::MOVD_EdVd(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVD_EdVd(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
@@ -975,7 +975,7 @@ void BX_CPU_C::MOVD_EdVd(bxInstruction_c *i)
 #if BX_SUPPORT_X86_64
 
 /* 66 0F 7E */
-void BX_CPU_C::MOVQ_EqVq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVQ_EqVq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
@@ -1000,7 +1000,7 @@ void BX_CPU_C::MOVQ_EqVq(bxInstruction_c *i)
 #endif
 
 /* F3 0F 7E */
-void BX_CPU_C::MOVQ_VqWq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVQ_VqWq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
@@ -1028,7 +1028,7 @@ void BX_CPU_C::MOVQ_VqWq(bxInstruction_c *i)
 }
 
 /* 66 0F D6 */
-void BX_CPU_C::MOVQ_WqVq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVQ_WqVq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
@@ -1052,7 +1052,7 @@ void BX_CPU_C::MOVQ_WqVq(bxInstruction_c *i)
 }
 
 /* F2 0F D6 */
-void BX_CPU_C::MOVDQ2Q_PqVRq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVDQ2Q_PqVRq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
@@ -1069,7 +1069,7 @@ void BX_CPU_C::MOVDQ2Q_PqVRq(bxInstruction_c *i)
 }
 
 /* F3 0F D6 */
-void BX_CPU_C::MOVQ2DQ_VdqQq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVQ2DQ_VdqQq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
@@ -1089,7 +1089,7 @@ void BX_CPU_C::MOVQ2DQ_VdqQq(bxInstruction_c *i)
 }
 
 /* 66 0F D7 */
-void BX_CPU_C::PMOVMSKB_GdUdq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVMSKB_GdUdq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
@@ -1128,7 +1128,7 @@ void BX_CPU_C::PMOVMSKB_GdUdq(bxInstruction_c *i)
 /* **************************** */
 
 /* 0F C3 */
-void BX_CPU_C::MOVNTI_MdGd(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVNTI_MdGd(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 2
   BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
@@ -1142,7 +1142,7 @@ void BX_CPU_C::MOVNTI_MdGd(bxInstruction_c *i)
 #if BX_SUPPORT_X86_64
 
 /* 0F C3 */
-void BX_CPU_C::MOVNTI_MqGq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVNTI_MqGq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 2
   BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
@@ -1158,7 +1158,7 @@ void BX_CPU_C::MOVNTI_MqGq(bxInstruction_c *i)
 /* MOVNTPS:    0F 2B */
 /* MOVNTPD: 66 0F 2B */
 /* MOVNTDQ: 66 0F E7 */
-void BX_CPU_C::MOVNTPS_MpsVps(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVNTPS_MpsVps(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
@@ -1177,7 +1177,7 @@ void BX_CPU_C::MOVNTPS_MpsVps(bxInstruction_c *i)
 #if (BX_SUPPORT_SSE >= 4) || (BX_SUPPORT_SSE >= 3 && BX_SUPPORT_SSE_EXTENSION > 0)
 
 /* 66 0F 38 20 */
-void BX_CPU_C::PMOVSXBW_VdqWq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVSXBW_VdqWq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 4
   BX_CPU_THIS_PTR prepareSSE();
@@ -1212,7 +1212,7 @@ void BX_CPU_C::PMOVSXBW_VdqWq(bxInstruction_c *i)
 }
 
 /* 66 0F 38 21 */
-void BX_CPU_C::PMOVSXBD_VdqWd(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVSXBD_VdqWd(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 4
   BX_CPU_THIS_PTR prepareSSE();
@@ -1243,7 +1243,7 @@ void BX_CPU_C::PMOVSXBD_VdqWd(bxInstruction_c *i)
 }
 
 /* 66 0F 38 22 */
-void BX_CPU_C::PMOVSXBQ_VdqWw(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVSXBQ_VdqWw(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 4
   BX_CPU_THIS_PTR prepareSSE();
@@ -1272,7 +1272,7 @@ void BX_CPU_C::PMOVSXBQ_VdqWw(bxInstruction_c *i)
 }
 
 /* 66 0F 38 23 */
-void BX_CPU_C::PMOVSXWD_VdqWq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVSXWD_VdqWq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 4
   BX_CPU_THIS_PTR prepareSSE();
@@ -1303,7 +1303,7 @@ void BX_CPU_C::PMOVSXWD_VdqWq(bxInstruction_c *i)
 }
 
 /* 66 0F 38 24 */
-void BX_CPU_C::PMOVSXWQ_VdqWd(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVSXWQ_VdqWd(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 4
   BX_CPU_THIS_PTR prepareSSE();
@@ -1332,7 +1332,7 @@ void BX_CPU_C::PMOVSXWQ_VdqWd(bxInstruction_c *i)
 }
 
 /* 66 0F 38 25 */
-void BX_CPU_C::PMOVSXDQ_VdqWq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVSXDQ_VdqWq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 4
   BX_CPU_THIS_PTR prepareSSE();
@@ -1361,7 +1361,7 @@ void BX_CPU_C::PMOVSXDQ_VdqWq(bxInstruction_c *i)
 }
 
 /* 66 0F 38 2A */
-void BX_CPU_C::MOVNTDQA_VdqMdq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVNTDQA_VdqMdq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 4
   /* source must be memory reference */
@@ -1388,7 +1388,7 @@ void BX_CPU_C::MOVNTDQA_VdqMdq(bxInstruction_c *i)
 }
 
 /* 66 0F 38 30 */
-void BX_CPU_C::PMOVZXBW_VdqWq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVZXBW_VdqWq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 4
   BX_CPU_THIS_PTR prepareSSE();
@@ -1423,7 +1423,7 @@ void BX_CPU_C::PMOVZXBW_VdqWq(bxInstruction_c *i)
 }
 
 /* 66 0F 38 31 */
-void BX_CPU_C::PMOVZXBD_VdqWd(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVZXBD_VdqWd(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 4
   BX_CPU_THIS_PTR prepareSSE();
@@ -1454,7 +1454,7 @@ void BX_CPU_C::PMOVZXBD_VdqWd(bxInstruction_c *i)
 }
 
 /* 66 0F 38 32 */
-void BX_CPU_C::PMOVZXBQ_VdqWw(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVZXBQ_VdqWw(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 4
   BX_CPU_THIS_PTR prepareSSE();
@@ -1483,7 +1483,7 @@ void BX_CPU_C::PMOVZXBQ_VdqWw(bxInstruction_c *i)
 }
 
 /* 66 0F 38 33 */
-void BX_CPU_C::PMOVZXWD_VdqWq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVZXWD_VdqWq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 4
   BX_CPU_THIS_PTR prepareSSE();
@@ -1514,7 +1514,7 @@ void BX_CPU_C::PMOVZXWD_VdqWq(bxInstruction_c *i)
 }
 
 /* 66 0F 38 34 */
-void BX_CPU_C::PMOVZXWQ_VdqWd(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVZXWQ_VdqWd(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 4
   BX_CPU_THIS_PTR prepareSSE();
@@ -1543,7 +1543,7 @@ void BX_CPU_C::PMOVZXWQ_VdqWd(bxInstruction_c *i)
 }
 
 /* 66 0F 38 35 */
-void BX_CPU_C::PMOVZXDQ_VdqWq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVZXDQ_VdqWq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 4
   BX_CPU_THIS_PTR prepareSSE();
@@ -1572,7 +1572,7 @@ void BX_CPU_C::PMOVZXDQ_VdqWq(bxInstruction_c *i)
 }
 
 /* 66 0F 3A 0F */
-void BX_CPU_C::PALIGNR_VdqWdqIb(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::PALIGNR_VdqWdqIb(bxInstruction_c *i)
 {
 #if (BX_SUPPORT_SSE >= 4) || (BX_SUPPORT_SSE >= 3 && BX_SUPPORT_SSE_EXTENSION > 0)
   BX_CPU_THIS_PTR prepareSSE();

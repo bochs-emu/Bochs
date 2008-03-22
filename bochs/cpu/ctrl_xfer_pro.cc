@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer_pro.cc,v 1.69 2008-03-22 10:42:09 sshwarts Exp $
+// $Id: ctrl_xfer_pro.cc,v 1.70 2008-03-22 21:29:39 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -122,24 +122,6 @@ BX_CPU_C::load_cs(bx_selector_t *selector, bx_descriptor_t *descriptor, Bit8u cp
   invalidate_prefetch_q();
 }
 
-  void BX_CPP_AttrRegparmN(1)
-BX_CPU_C::branch_near32(Bit32u new_EIP)
-{
-  // check always, not only in protected mode
-  if (new_EIP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled)
-  {
-    BX_ERROR(("branch_near: offset outside of CS limits"));
-    exception(BX_GP_EXCEPTION, 0, 0);
-  }
-
-#if BX_SUPPORT_TRACE_CACHE && !defined(BX_TRACE_CACHE_NO_SPECULATIVE_TRACING)
-  // assert magic async_event to stop trace execution
-  BX_CPU_THIS_PTR async_event |= BX_ASYNC_EVENT_STOP_TRACE;
-#endif
-
-  EIP = new_EIP;
-}
-
 void BX_CPU_C::branch_far32(bx_selector_t *selector,
            bx_descriptor_t *descriptor, Bit32u eip, Bit8u cpl)
 {
@@ -156,26 +138,6 @@ void BX_CPU_C::branch_far32(bx_selector_t *selector,
   /* Change the EIP value */
   EIP = eip;
 }
-
-#if BX_SUPPORT_X86_64
-  void BX_CPP_AttrRegparmN(1)
-BX_CPU_C::branch_near64(bxInstruction_c *i)
-{
-  Bit64u new_RIP = RIP + (Bit32s) i->Id();
-
-  if (! IsCanonical(new_RIP)) {
-    BX_ERROR(("branch_near64: canonical RIP violation"));
-    exception(BX_GP_EXCEPTION, 0, 0);
-  }
-
-#if BX_SUPPORT_TRACE_CACHE && !defined(BX_TRACE_CACHE_NO_SPECULATIVE_TRACING)
-  // assert magic async_event to stop trace execution
-  BX_CPU_THIS_PTR async_event |= BX_ASYNC_EVENT_STOP_TRACE;
-#endif
-
-  RIP = new_RIP;
-}
-#endif
 
 void BX_CPU_C::branch_far64(bx_selector_t *selector,
            bx_descriptor_t *descriptor, bx_address rip, Bit8u cpl)

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: access.cc,v 1.92 2008-02-12 06:47:03 sshwarts Exp $
+// $Id: access.cc,v 1.93 2008-03-22 21:29:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -316,8 +316,7 @@ BX_CPU_C::execute_virtual_checks(bx_segment_reg_t *seg, bx_address offset, unsig
   }
 }
 
-  const char * BX_CPP_AttrRegparmN(1)
-BX_CPU_C::strseg(bx_segment_reg_t *seg)
+const char *BX_CPU_C::strseg(bx_segment_reg_t *seg)
 {
   if (seg == &BX_CPU_THIS_PTR sregs[0]) return("ES");
   else if (seg == &BX_CPU_THIS_PTR sregs[1]) return("CS");

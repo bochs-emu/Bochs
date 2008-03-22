@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer8.cc,v 1.26 2008-02-02 21:46:50 sshwarts Exp $
+// $Id: ctrl_xfer8.cc,v 1.27 2008-03-22 21:29:39 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -30,7 +30,7 @@
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
-void BX_CPU_C::JCXZ_Jb(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::JCXZ_Jb(bxInstruction_c *i)
 {
   // it is impossible to get this instruction in long mode
   BX_ASSERT(i->as64L() == 0);
@@ -63,7 +63,7 @@ void BX_CPU_C::JCXZ_Jb(bxInstruction_c *i)
 // it is known that no exceptions can happen.
 //
 
-void BX_CPU_C::LOOPNE_Jb(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOOPNE_Jb(bxInstruction_c *i)
 {
   // it is impossible to get this instruction in long mode
   BX_ASSERT(i->as64L() == 0);
@@ -96,7 +96,7 @@ void BX_CPU_C::LOOPNE_Jb(bxInstruction_c *i)
      CX--;
 }
 
-void BX_CPU_C::LOOPE_Jb(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOOPE_Jb(bxInstruction_c *i)
 {
   // it is impossible to get this instruction in long mode
   BX_ASSERT(i->as64L() == 0);
@@ -129,7 +129,7 @@ void BX_CPU_C::LOOPE_Jb(bxInstruction_c *i)
      CX--;
 }
 
-void BX_CPU_C::LOOP_Jb(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOOP_Jb(bxInstruction_c *i)
 {
   // it is impossible to get this instruction in long mode
   BX_ASSERT(i->as64L() == 0);

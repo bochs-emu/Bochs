@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: protect_ctrl.cc,v 1.75 2008-02-13 16:45:20 sshwarts Exp $
+// $Id: protect_ctrl.cc,v 1.76 2008-03-22 21:29:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -30,7 +30,7 @@
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
-void BX_CPU_C::ARPL_EwGw(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::ARPL_EwGw(bxInstruction_c *i)
 {
   Bit16u op2_16, op1_16;
 
@@ -67,7 +67,7 @@ void BX_CPU_C::ARPL_EwGw(bxInstruction_c *i)
   }
 }
 
-void BX_CPU_C::LAR_GvEw(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::LAR_GvEw(bxInstruction_c *i)
 {
   /* for 16 bit operand size mode */
   Bit16u raw_selector;
@@ -169,7 +169,7 @@ void BX_CPU_C::LAR_GvEw(bxInstruction_c *i)
   }
 }
 
-void BX_CPU_C::LSL_GvEw(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::LSL_GvEw(bxInstruction_c *i)
 {
   /* for 16 bit operand size mode */
   Bit16u raw_selector;
@@ -258,7 +258,7 @@ lsl_ok:
   }
 }
 
-void BX_CPU_C::SLDT_Ew(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::SLDT_Ew(bxInstruction_c *i)
 {
   if (real_mode() || v8086_mode()) {
     BX_ERROR(("SLDT: not recognized in real or virtual-8086 mode"));
@@ -281,7 +281,7 @@ void BX_CPU_C::SLDT_Ew(bxInstruction_c *i)
   }
 }
 
-void BX_CPU_C::STR_Ew(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::STR_Ew(bxInstruction_c *i)
 {
   if (real_mode() || v8086_mode()) {
     BX_ERROR(("STR: not recognized in real or virtual-8086 mode"));
@@ -304,7 +304,7 @@ void BX_CPU_C::STR_Ew(bxInstruction_c *i)
   }
 }
 
-void BX_CPU_C::LLDT_Ew(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::LLDT_Ew(bxInstruction_c *i)
 {
   /* protected mode */
   bx_descriptor_t  descriptor;
@@ -383,7 +383,7 @@ void BX_CPU_C::LLDT_Ew(bxInstruction_c *i)
   BX_CPU_THIS_PTR ldtr.cache.valid = 1;
 }
 
-void BX_CPU_C::LTR_Ew(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::LTR_Ew(bxInstruction_c *i)
 {
   bx_descriptor_t descriptor;
   bx_selector_t selector;
@@ -477,7 +477,7 @@ void BX_CPU_C::LTR_Ew(bxInstruction_c *i)
   }
 }
 
-void BX_CPU_C::VERR_Ew(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::VERR_Ew(bxInstruction_c *i)
 {
   /* for 16 bit operand size mode */
   Bit16u raw_selector;
@@ -566,7 +566,7 @@ void BX_CPU_C::VERR_Ew(bxInstruction_c *i)
   }
 }
 
-void BX_CPU_C::VERW_Ew(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::VERW_Ew(bxInstruction_c *i)
 {
   /* for 16 bit operand size mode */
   Bit16u raw_selector;
@@ -637,7 +637,7 @@ void BX_CPU_C::VERW_Ew(bxInstruction_c *i)
   clear_ZF(); /* not accessible */
 }
 
-void BX_CPU_C::SGDT_Ms(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::SGDT_Ms(bxInstruction_c *i)
 {
   Bit16u limit_16 = BX_CPU_THIS_PTR gdtr.limit;
   Bit32u base_32  = (Bit32u) BX_CPU_THIS_PTR gdtr.base;
@@ -648,7 +648,7 @@ void BX_CPU_C::SGDT_Ms(bxInstruction_c *i)
   write_virtual_dword(i->seg(), RMAddr(i)+2, base_32);
 }
 
-void BX_CPU_C::SIDT_Ms(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::SIDT_Ms(bxInstruction_c *i)
 {
   Bit16u limit_16 = BX_CPU_THIS_PTR idtr.limit;
   Bit32u base_32  = (Bit32u) BX_CPU_THIS_PTR idtr.base;
@@ -659,7 +659,7 @@ void BX_CPU_C::SIDT_Ms(bxInstruction_c *i)
   write_virtual_dword(i->seg(), RMAddr(i)+2, base_32);
 }
 
-void BX_CPU_C::LGDT_Ms(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::LGDT_Ms(bxInstruction_c *i)
 {
   if (v8086_mode()) {
     BX_ERROR(("LGDT: not recognized in virtual-8086 mode"));
@@ -684,7 +684,7 @@ void BX_CPU_C::LGDT_Ms(bxInstruction_c *i)
   BX_CPU_THIS_PTR gdtr.base = base_32;
 }
 
-void BX_CPU_C::LIDT_Ms(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::LIDT_Ms(bxInstruction_c *i)
 {
   if (v8086_mode()) {
     BX_ERROR(("LIDT: not recognized in virtual-8086 mode"));
@@ -711,7 +711,7 @@ void BX_CPU_C::LIDT_Ms(bxInstruction_c *i)
 
 #if BX_SUPPORT_X86_64
 
-void BX_CPU_C::SGDT64_Ms(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::SGDT64_Ms(bxInstruction_c *i)
 {
   Bit16u limit_16 = BX_CPU_THIS_PTR gdtr.limit;
   Bit64u base_64  = BX_CPU_THIS_PTR gdtr.base;
@@ -722,7 +722,7 @@ void BX_CPU_C::SGDT64_Ms(bxInstruction_c *i)
   write_virtual_qword(i->seg(), RMAddr(i)+2, base_64);
 }
 
-void BX_CPU_C::SIDT64_Ms(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::SIDT64_Ms(bxInstruction_c *i)
 {
   Bit16u limit_16 = BX_CPU_THIS_PTR idtr.limit;
   Bit64u base_64  = BX_CPU_THIS_PTR idtr.base;
@@ -733,7 +733,7 @@ void BX_CPU_C::SIDT64_Ms(bxInstruction_c *i)
   write_virtual_qword(i->seg(), RMAddr(i)+2, base_64);
 }
 
-void BX_CPU_C::LGDT64_Ms(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::LGDT64_Ms(bxInstruction_c *i)
 {
   BX_ASSERT(protected_mode());
 
@@ -753,7 +753,7 @@ void BX_CPU_C::LGDT64_Ms(bxInstruction_c *i)
   BX_CPU_THIS_PTR gdtr.base = base_64;
 }
 
-void BX_CPU_C::LIDT64_Ms(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::LIDT64_Ms(bxInstruction_c *i)
 {
   BX_ASSERT(protected_mode());
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: soft_int.cc,v 1.40 2008-02-15 19:03:54 sshwarts Exp $
+// $Id: soft_int.cc,v 1.41 2008-03-22 21:29:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -39,7 +39,7 @@
 #define RSP ESP
 #endif
 
-void BX_CPU_C::BOUND_GwMa(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::BOUND_GwMa(bxInstruction_c *i)
 {
   Bit16s bound_min, bound_max;
   Bit16s op1_16 = BX_READ_16BIT_REG(i->nnn());
@@ -55,7 +55,7 @@ void BX_CPU_C::BOUND_GwMa(bxInstruction_c *i)
   }
 }
 
-void BX_CPU_C::BOUND_GdMa(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::BOUND_GdMa(bxInstruction_c *i)
 {
   Bit32s bound_min, bound_max;
   Bit32s op1_32 = BX_READ_32BIT_REG(i->nnn());
@@ -71,7 +71,7 @@ void BX_CPU_C::BOUND_GdMa(bxInstruction_c *i)
   }
 }
 
-void BX_CPU_C::INT1(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::INT1(bxInstruction_c *i)
 {
   // This is an undocumented instrucion (opcode 0xf1)
   // which is useful for an ICE system.
@@ -97,7 +97,7 @@ void BX_CPU_C::INT1(bxInstruction_c *i)
                       EIP);
 }
 
-void BX_CPU_C::INT3(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::INT3(bxInstruction_c *i)
 {
   // INT 3 is not IOPL sensitive
 
@@ -119,7 +119,7 @@ void BX_CPU_C::INT3(bxInstruction_c *i)
 }
 
 
-void BX_CPU_C::INT_Ib(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::INT_Ib(bxInstruction_c *i)
 {
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR show_flag |= Flag_softint;
@@ -175,7 +175,7 @@ done:
                       EIP);
 }
 
-void BX_CPU_C::INTO(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::INTO(bxInstruction_c *i)
 {
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR show_flag |= Flag_softint;

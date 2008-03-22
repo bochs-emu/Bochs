@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: mult64.cc,v 1.27 2008-02-02 21:46:53 sshwarts Exp $
+// $Id: mult64.cc,v 1.28 2008-03-22 21:29:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -206,7 +206,7 @@ void long_idiv(Bit128s *quotient,Bit64s *remainder,Bit128s *dividend,Bit64s divi
   }
 }
 
-void BX_CPU_C::MUL_RAXEq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::MUL_RAXEq(bxInstruction_c *i)
 {
   Bit64u op1_64, op2_64;
   Bit128u product_128;
@@ -241,7 +241,7 @@ void BX_CPU_C::MUL_RAXEq(bxInstruction_c *i)
   }
 }
 
-void BX_CPU_C::IMUL_RAXEq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::IMUL_RAXEq(bxInstruction_c *i)
 {
   Bit64s op1_64, op2_64;
   Bit128s product_128;
@@ -281,7 +281,7 @@ void BX_CPU_C::IMUL_RAXEq(bxInstruction_c *i)
   }
 }
 
-void BX_CPU_C::DIV_RAXEq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::DIV_RAXEq(bxInstruction_c *i)
 {
   Bit64u op2_64, remainder_64, quotient_64l;
   Bit128u op1_128, quotient_128;
@@ -322,7 +322,7 @@ void BX_CPU_C::DIV_RAXEq(bxInstruction_c *i)
   RDX = remainder_64;
 }
 
-void BX_CPU_C::IDIV_RAXEq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::IDIV_RAXEq(bxInstruction_c *i)
 {
   Bit64s op2_64, remainder_64, quotient_64l;
   Bit128s op1_128, quotient_128;
@@ -373,7 +373,7 @@ void BX_CPU_C::IDIV_RAXEq(bxInstruction_c *i)
   RDX = remainder_64;
 }
 
-void BX_CPU_C::IMUL_GqEqId(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::IMUL_GqEqId(bxInstruction_c *i)
 {
   Bit64s op2_64, op3_64;
   Bit128s product_128;
@@ -403,7 +403,7 @@ void BX_CPU_C::IMUL_GqEqId(bxInstruction_c *i)
   }
 }
 
-void BX_CPU_C::IMUL_GqEq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::IMUL_GqEq(bxInstruction_c *i)
 {
   Bit64s op1_64, op2_64;
   Bit128s product_128;

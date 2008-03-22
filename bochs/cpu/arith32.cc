@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith32.cc,v 1.74 2008-01-29 17:13:05 sshwarts Exp $
+// $Id: arith32.cc,v 1.75 2008-03-22 21:29:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -36,21 +36,21 @@
 #define RDX EDX
 #endif
 
-void BX_CPU_C::INC_ERX(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::INC_ERX(bxInstruction_c *i)
 {
   Bit32u erx = ++BX_READ_32BIT_REG(i->opcodeReg());
   SET_FLAGS_OSZAPC_INC_32(erx);
   BX_CLEAR_64BIT_HIGH(i->opcodeReg());
 }
 
-void BX_CPU_C::DEC_ERX(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::DEC_ERX(bxInstruction_c *i)
 {
   Bit32u erx = --BX_READ_32BIT_REG(i->opcodeReg());
   SET_FLAGS_OSZAPC_DEC_32(erx);
   BX_CLEAR_64BIT_HIGH(i->opcodeReg());
 }
 
-void BX_CPU_C::ADD_EdGdM(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::ADD_EdGdM(bxInstruction_c *i)
 {
   Bit32u op1_32, op2_32, sum_32;
 
@@ -64,7 +64,7 @@ void BX_CPU_C::ADD_EdGdM(bxInstruction_c *i)
   SET_FLAGS_OSZAPC_ADD_32(op1_32, op2_32, sum_32);
 }
 
-void BX_CPU_C::ADD_EdGdR(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::ADD_EdGdR(bxInstruction_c *i)
 {
   Bit32u op1_32, op2_32, sum_32;
 
@@ -76,7 +76,7 @@ void BX_CPU_C::ADD_EdGdR(bxInstruction_c *i)
   SET_FLAGS_OSZAPC_ADD_32(op1_32, op2_32, sum_32);
 }
 
-void BX_CPU_C::ADD_GdEdM(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::ADD_GdEdM(bxInstruction_c *i)
 {
   Bit32u op1_32, op2_32, sum_32;
 
@@ -91,7 +91,7 @@ void BX_CPU_C::ADD_GdEdM(bxInstruction_c *i)
   SET_FLAGS_OSZAPC_ADD_32(op1_32, op2_32, sum_32);
 }
 
-void BX_CPU_C::ADD_GdEdR(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::ADD_GdEdR(bxInstruction_c *i)
 {
   Bit32u op1_32, op2_32, sum_32;
 
@@ -104,7 +104,7 @@ void BX_CPU_C::ADD_GdEdR(bxInstruction_c *i)
   SET_FLAGS_OSZAPC_ADD_32(op1_32, op2_32, sum_32);
 }
 
-void BX_CPU_C::ADD_EAXId(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::ADD_EAXId(bxInstruction_c *i)
 {
   Bit32u op1_32, op2_32 = i->Id(), sum_32;
 
@@ -115,7 +115,7 @@ void BX_CPU_C::ADD_EAXId(bxInstruction_c *i)
   SET_FLAGS_OSZAPC_ADD_32(op1_32, op2_32, sum_32);
 }
 
-void BX_CPU_C::ADC_EdGdM(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::ADC_EdGdM(bxInstruction_c *i)
 {
   bx_bool temp_CF = getB_CF();
 
@@ -131,7 +131,7 @@ void BX_CPU_C::ADC_EdGdM(bxInstruction_c *i)
   SET_FLAGS_OSZAPC_32(op1_32, op2_32, sum_32, BX_INSTR_ADD_ADC32(temp_CF));
 }
 
-void BX_CPU_C::ADC_EdGdR(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::ADC_EdGdR(bxInstruction_c *i)
 {
   bx_bool temp_CF = getB_CF();
 
@@ -145,7 +145,7 @@ void BX_CPU_C::ADC_EdGdR(bxInstruction_c *i)
   SET_FLAGS_OSZAPC_32(op1_32, op2_32, sum_32, BX_INSTR_ADD_ADC32(temp_CF));
 }
 
-void BX_CPU_C::ADC_GdEdM(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::ADC_GdEdM(bxInstruction_c *i)
 {
   bx_bool temp_CF = getB_CF();
 
@@ -161,7 +161,7 @@ void BX_CPU_C::ADC_GdEdM(bxInstruction_c *i)
   SET_FLAGS_OSZAPC_32(op1_32, op2_32, sum_32, BX_INSTR_ADD_ADC32(temp_CF));
 }
 
-void BX_CPU_C::ADC_GdEdR(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::ADC_GdEdR(bxInstruction_c *i)
 {
   bx_bool temp_CF = getB_CF();
 
@@ -175,7 +175,7 @@ void BX_CPU_C::ADC_GdEdR(bxInstruction_c *i)
   SET_FLAGS_OSZAPC_32(op1_32, op2_32, sum_32, BX_INSTR_ADD_ADC32(temp_CF));
 }
 
-void BX_CPU_C::ADC_EAXId(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::ADC_EAXId(bxInstruction_c *i)
 {
   bx_bool temp_CF = getB_CF();
 
@@ -188,7 +188,7 @@ void BX_CPU_C::ADC_EAXId(bxInstruction_c *i)
   SET_FLAGS_OSZAPC_32(op1_32, op2_32, sum_32, BX_INSTR_ADD_ADC32(temp_CF));
 }
 
-void BX_CPU_C::SBB_EdGdM(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::SBB_EdGdM(bxInstruction_c *i)
 {
   bx_bool temp_CF = getB_CF();
 
@@ -204,7 +204,7 @@ void BX_CPU_C::SBB_EdGdM(bxInstruction_c *i)
   SET_FLAGS_OSZAPC_32(op1_32, op2_32, diff_32, BX_INSTR_SUB_SBB32(temp_CF));
 }
 
-void BX_CPU_C::SBB_EdGdR(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::SBB_EdGdR(bxInstruction_c *i)
 {
   bx_bool temp_CF = getB_CF();
 
@@ -218,7 +218,7 @@ void BX_CPU_C::SBB_EdGdR(bxInstruction_c *i)
   SET_FLAGS_OSZAPC_32(op1_32, op2_32, diff_32, BX_INSTR_SUB_SBB32(temp_CF));
 }
 
-void BX_CPU_C::SBB_GdEdM(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::SBB_GdEdM(bxInstruction_c *i)
 {
   bx_bool temp_CF = getB_CF();
 
@@ -234,7 +234,7 @@ void BX_CPU_C::SBB_GdEdM(bxInstruction_c *i)
   SET_FLAGS_OSZAPC_32(op1_32, op2_32, diff_32, BX_INSTR_SUB_SBB32(temp_CF));
 }
 
-void BX_CPU_C::SBB_GdEdR(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::SBB_GdEdR(bxInstruction_c *i)
 {
   bx_bool temp_CF = getB_CF();
 
@@ -248,7 +248,7 @@ void BX_CPU_C::SBB_GdEdR(bxInstruction_c *i)
   SET_FLAGS_OSZAPC_32(op1_32, op2_32, diff_32, BX_INSTR_SUB_SBB32(temp_CF));
 }
 
-void BX_CPU_C::SBB_EAXId(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::SBB_EAXId(bxInstruction_c *i)
 {
   bx_bool temp_CF = getB_CF();
 
@@ -262,7 +262,7 @@ void BX_CPU_C::SBB_EAXId(bxInstruction_c *i)
   SET_FLAGS_OSZAPC_32(op1_32, op2_32, diff_32, BX_INSTR_SUB_SBB32(temp_CF));
 }
 
-void BX_CPU_C::SBB_EdIdM(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::SBB_EdIdM(bxInstruction_c *i)
 {
   bx_bool temp_CF = getB_CF();
 
@@ -277,7 +277,7 @@ void BX_CPU_C::SBB_EdIdM(bxInstruction_c *i)
   SET_FLAGS_OSZAPC_32(op1_32, op2_32, diff_32, BX_INSTR_SUB_SBB32(temp_CF));
 }
 
-void BX_CPU_C::SBB_EdIdR(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::SBB_EdIdR(bxInstruction_c *i)
 {
   bx_bool temp_CF = getB_CF();
 
@@ -290,7 +290,7 @@ void BX_CPU_C::SBB_EdIdR(bxInstruction_c *i)
   SET_FLAGS_OSZAPC_32(op1_32, op2_32, diff_32, BX_INSTR_SUB_SBB32(temp_CF));
 }
 
-void BX_CPU_C::SUB_EdGdM(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::SUB_EdGdM(bxInstruction_c *i)
 {
   Bit32u op1_32, op2_32, diff_32;
 
@@ -304,7 +304,7 @@ void BX_CPU_C::SUB_EdGdM(bxInstruction_c *i)
   SET_FLAGS_OSZAPC_SUB_32(op1_32, op2_32, diff_32);
 }
 
-void BX_CPU_C::SUB_EdGdR(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::SUB_EdGdR(bxInstruction_c *i)
 {
   Bit32u op1_32, op2_32, diff_32;
 
@@ -316,7 +316,7 @@ void BX_CPU_C::SUB_EdGdR(bxInstruction_c *i)
   SET_FLAGS_OSZAPC_SUB_32(op1_32, op2_32, diff_32);
 }
 
-void BX_CPU_C::SUB_GdEdM(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::SUB_GdEdM(bxInstruction_c *i)
 {
   Bit32u op1_32, op2_32, diff_32;
 
@@ -330,7 +330,7 @@ void BX_CPU_C::SUB_GdEdM(bxInstruction_c *i)
   SET_FLAGS_OSZAPC_SUB_32(op1_32, op2_32, diff_32);
 }
 
-void BX_CPU_C::SUB_GdEdR(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::SUB_GdEdR(bxInstruction_c *i)
 {
   Bit32u op1_32, op2_32, diff_32;
 
@@ -342,7 +342,7 @@ void BX_CPU_C::SUB_GdEdR(bxInstruction_c *i)
   SET_FLAGS_OSZAPC_SUB_32(op1_32, op2_32, diff_32);
 }
 
-void BX_CPU_C::SUB_EAXId(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::SUB_EAXId(bxInstruction_c *i)
 {
   Bit32u op1_32, op2_32, diff_32;
 
@@ -354,7 +354,7 @@ void BX_CPU_C::SUB_EAXId(bxInstruction_c *i)
   SET_FLAGS_OSZAPC_SUB_32(op1_32, op2_32, diff_32);
 }
 
-void BX_CPU_C::CMP_EdGdM(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMP_EdGdM(bxInstruction_c *i)
 {
   Bit32u op1_32, op2_32, diff_32;
 
@@ -367,7 +367,7 @@ void BX_CPU_C::CMP_EdGdM(bxInstruction_c *i)
   SET_FLAGS_OSZAPC_SUB_32(op1_32, op2_32, diff_32);
 }
 
-void BX_CPU_C::CMP_EdGdR(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMP_EdGdR(bxInstruction_c *i)
 {
   Bit32u op1_32, op2_32, diff_32;
 
@@ -378,7 +378,7 @@ void BX_CPU_C::CMP_EdGdR(bxInstruction_c *i)
   SET_FLAGS_OSZAPC_SUB_32(op1_32, op2_32, diff_32);
 }
 
-void BX_CPU_C::CMP_GdEdM(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMP_GdEdM(bxInstruction_c *i)
 {
   Bit32u op1_32, op2_32, diff_32;
 
@@ -391,7 +391,7 @@ void BX_CPU_C::CMP_GdEdM(bxInstruction_c *i)
   SET_FLAGS_OSZAPC_SUB_32(op1_32, op2_32, diff_32);
 }
 
-void BX_CPU_C::CMP_GdEdR(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMP_GdEdR(bxInstruction_c *i)
 {
   Bit32u op1_32, op2_32, diff_32;
 
@@ -402,7 +402,7 @@ void BX_CPU_C::CMP_GdEdR(bxInstruction_c *i)
   SET_FLAGS_OSZAPC_SUB_32(op1_32, op2_32, diff_32);
 }
 
-void BX_CPU_C::CMP_EAXId(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMP_EAXId(bxInstruction_c *i)
 {
   Bit32u op1_32, op2_32, diff_32;
 
@@ -413,14 +413,14 @@ void BX_CPU_C::CMP_EAXId(bxInstruction_c *i)
   SET_FLAGS_OSZAPC_SUB_32(op1_32, op2_32, diff_32);
 }
 
-void BX_CPU_C::CWDE(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::CWDE(bxInstruction_c *i)
 {
   /* CWDE: no flags are effected */
   Bit32u tmp = (Bit16s) AX;
   RAX = tmp;
 }
 
-void BX_CPU_C::CDQ(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::CDQ(bxInstruction_c *i)
 {
   /* CDQ: no flags are affected */
   if (EAX & 0x80000000) {
@@ -444,19 +444,19 @@ void BX_CPU_C::CDQ(bxInstruction_c *i)
 //   {OF,B0} = CMPXCHG 8
 //   {OF,B1} = CMPXCHG 16|32
 
-void BX_CPU_C::CMPXCHG_XBTS(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPXCHG_XBTS(bxInstruction_c *i)
 {
   BX_INFO(("CMPXCHG_XBTS: Generate #UD exception"));
   UndefinedOpcode(i);
 }
 
-void BX_CPU_C::CMPXCHG_IBTS(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPXCHG_IBTS(bxInstruction_c *i)
 {
   BX_INFO(("CMPXCHG_IBTS: Generate #UD exception"));
   UndefinedOpcode(i);
 }
 
-void BX_CPU_C::XADD_EdGdM(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::XADD_EdGdM(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 4
   Bit32u op1_32, op2_32, sum_32;
@@ -484,7 +484,7 @@ void BX_CPU_C::XADD_EdGdM(bxInstruction_c *i)
 #endif
 }
 
-void BX_CPU_C::XADD_EdGdR(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::XADD_EdGdR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 4
   Bit32u op1_32, op2_32, sum_32;
@@ -513,7 +513,7 @@ void BX_CPU_C::XADD_EdGdR(bxInstruction_c *i)
 #endif
 }
 
-void BX_CPU_C::ADD_EdIdM(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::ADD_EdIdM(bxInstruction_c *i)
 {
   Bit32u op1_32, op2_32, sum_32;
 
@@ -527,7 +527,7 @@ void BX_CPU_C::ADD_EdIdM(bxInstruction_c *i)
   SET_FLAGS_OSZAPC_ADD_32(op1_32, op2_32, sum_32);
 }
 
-void BX_CPU_C::ADD_EdIdR(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::ADD_EdIdR(bxInstruction_c *i)
 {
   Bit32u op1_32, op2_32, sum_32;
 
@@ -540,7 +540,7 @@ void BX_CPU_C::ADD_EdIdR(bxInstruction_c *i)
   SET_FLAGS_OSZAPC_ADD_32(op1_32, op2_32, sum_32);
 }
 
-void BX_CPU_C::ADC_EdIdM(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::ADC_EdIdM(bxInstruction_c *i)
 {
   bx_bool temp_CF = getB_CF();
 
@@ -555,7 +555,7 @@ void BX_CPU_C::ADC_EdIdM(bxInstruction_c *i)
   SET_FLAGS_OSZAPC_32(op1_32, op2_32, sum_32, BX_INSTR_ADD_ADC32(temp_CF));
 }
 
-void BX_CPU_C::ADC_EdIdR(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::ADC_EdIdR(bxInstruction_c *i)
 {
   bx_bool temp_CF = getB_CF();
 
@@ -568,7 +568,7 @@ void BX_CPU_C::ADC_EdIdR(bxInstruction_c *i)
   SET_FLAGS_OSZAPC_32(op1_32, op2_32, sum_32, BX_INSTR_ADD_ADC32(temp_CF));
 }
 
-void BX_CPU_C::SUB_EdIdM(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::SUB_EdIdM(bxInstruction_c *i)
 {
   Bit32u op1_32, op2_32 = i->Id(), diff_32;
 
@@ -581,7 +581,7 @@ void BX_CPU_C::SUB_EdIdM(bxInstruction_c *i)
   SET_FLAGS_OSZAPC_SUB_32(op1_32, op2_32, diff_32);
 }
 
-void BX_CPU_C::SUB_EdIdR(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::SUB_EdIdR(bxInstruction_c *i)
 {
   Bit32u op1_32, op2_32 = i->Id(), diff_32;
 
@@ -592,7 +592,7 @@ void BX_CPU_C::SUB_EdIdR(bxInstruction_c *i)
   SET_FLAGS_OSZAPC_SUB_32(op1_32, op2_32, diff_32);
 }
 
-void BX_CPU_C::CMP_EdIdM(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMP_EdIdM(bxInstruction_c *i)
 {
   Bit32u op1_32, op2_32, diff_32;
 
@@ -605,7 +605,7 @@ void BX_CPU_C::CMP_EdIdM(bxInstruction_c *i)
   SET_FLAGS_OSZAPC_SUB_32(op1_32, op2_32, diff_32);
 }
 
-void BX_CPU_C::CMP_EdIdR(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMP_EdIdR(bxInstruction_c *i)
 {
   Bit32u op1_32, op2_32, diff_32;
 
@@ -616,7 +616,7 @@ void BX_CPU_C::CMP_EdIdR(bxInstruction_c *i)
   SET_FLAGS_OSZAPC_SUB_32(op1_32, op2_32, diff_32);
 }
 
-void BX_CPU_C::NEG_EdM(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::NEG_EdM(bxInstruction_c *i)
 {
   Bit32u op1_32;
 
@@ -629,7 +629,7 @@ void BX_CPU_C::NEG_EdM(bxInstruction_c *i)
   SET_FLAGS_OSZAPC_RESULT_32(op1_32, BX_INSTR_NEG32);
 }
 
-void BX_CPU_C::NEG_EdR(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::NEG_EdR(bxInstruction_c *i)
 {
   Bit32u op1_32 = BX_READ_32BIT_REG(i->rm());
   op1_32 = - (Bit32s)(op1_32);
@@ -638,7 +638,7 @@ void BX_CPU_C::NEG_EdR(bxInstruction_c *i)
   SET_FLAGS_OSZAPC_RESULT_32(op1_32, BX_INSTR_NEG32);
 }
 
-void BX_CPU_C::INC_EdM(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::INC_EdM(bxInstruction_c *i)
 {
   Bit32u op1_32;
 
@@ -651,7 +651,7 @@ void BX_CPU_C::INC_EdM(bxInstruction_c *i)
   SET_FLAGS_OSZAPC_INC_32(op1_32);
 }
 
-void BX_CPU_C::DEC_EdM(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::DEC_EdM(bxInstruction_c *i)
 {
   Bit32u op1_32;
 
@@ -664,7 +664,7 @@ void BX_CPU_C::DEC_EdM(bxInstruction_c *i)
   SET_FLAGS_OSZAPC_DEC_32(op1_32);
 }
 
-void BX_CPU_C::CMPXCHG_EdGdM(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPXCHG_EdGdM(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 4
   Bit32u op1_32, op2_32, diff_32;
@@ -690,7 +690,7 @@ void BX_CPU_C::CMPXCHG_EdGdM(bxInstruction_c *i)
 #endif
 }
 
-void BX_CPU_C::CMPXCHG_EdGdR(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPXCHG_EdGdR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 4
   Bit32u op1_32, op2_32, diff_32;
@@ -714,7 +714,7 @@ void BX_CPU_C::CMPXCHG_EdGdR(bxInstruction_c *i)
 #endif
 }
 
-void BX_CPU_C::CMPXCHG8B(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPXCHG8B(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
   Bit32u op1_64_lo, op1_64_hi, diff;

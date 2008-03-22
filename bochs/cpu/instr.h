@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: instr.h,v 1.6 2008-03-03 16:45:15 sshwarts Exp $
+// $Id: instr.h,v 1.7 2008-03-22 21:29:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008 Stanislav Shwartsman
@@ -24,6 +24,18 @@
 #ifndef BX_INSTR_H
 #  define BX_INSTR_H 1
 
+class bxInstruction_c;
+
+// <TAG-TYPE-EXECUTEPTR-START>
+#if BX_USE_CPU_SMF
+typedef void (*BxExecutePtr_t)(bxInstruction_c *);
+typedef void (BX_CPP_AttrRegparmN(1) *BxExecutePtr_tR)(bxInstruction_c *);
+#else
+typedef void (BX_CPU_C::*BxExecutePtr_t)(bxInstruction_c *);
+typedef void (BX_CPU_C::*BxExecutePtr_tR)(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+#endif
+// <TAG-TYPE-EXECUTEPTR-END>
+
 // <TAG-CLASS-INSTRUCTION-START>
 class bxInstruction_c {
 public:
@@ -31,13 +43,8 @@ public:
   // given the current state of the CPU and the instruction data,
   // and a function to execute the instruction after resolving
   // the memory address (if any).
-#if BX_USE_CPU_SMF
-  void (BX_CPP_AttrRegparmN(1) *ResolveModrm)(bxInstruction_c *);
-  void (*execute)(bxInstruction_c *);
-#else
-  void (BX_CPU_C::*ResolveModrm)(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  void (BX_CPU_C::*execute)(bxInstruction_c *);
-#endif
+  BxExecutePtr_tR ResolveModrm;
+  BxExecutePtr_tR execute;
 
   struct {
     // 15..10  (unused)
@@ -296,16 +303,5 @@ public:
   }
 };
 // <TAG-CLASS-INSTRUCTION-END>
-
-
-// <TAG-TYPE-EXECUTEPTR-START>
-#if BX_USE_CPU_SMF
-typedef void (*BxExecutePtr_t)(bxInstruction_c *);
-typedef void (BX_CPP_AttrRegparmN(1) *BxExecutePtr_tR)(bxInstruction_c *);
-#else
-typedef void (BX_CPU_C::*BxExecutePtr_t)(bxInstruction_c *);
-typedef void (BX_CPU_C::*BxExecutePtr_tR)(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-#endif
-// <TAG-TYPE-EXECUTEPTR-END>
 
 #endif

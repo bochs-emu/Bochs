@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.203 2008-02-15 22:05:40 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.204 2008-03-22 21:29:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -38,18 +38,18 @@
 #define RDX EDX
 #endif
 
-void BX_CPU_C::UndefinedOpcode(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::UndefinedOpcode(bxInstruction_c *i)
 {
   BX_DEBUG(("UndefinedOpcode: 0x%02x causes exception 6", (unsigned) i->b1()));
   exception(BX_UD_EXCEPTION, 0, 0);
 }
 
-void BX_CPU_C::NOP(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::NOP(bxInstruction_c *i)
 {
   // No operation.
 }
 
-void BX_CPU_C::PREFETCH(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::PREFETCH(bxInstruction_c *i)
 {
 #if BX_SUPPORT_3DNOW || BX_SUPPORT_SSE >= 1
   if (i->modC0()) {
@@ -97,7 +97,7 @@ void BX_CPU_C::shutdown(void)
   longjmp(BX_CPU_THIS_PTR jmp_buf_env, 1); // go back to main decode loop
 }
 
-void BX_CPU_C::HLT(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::HLT(bxInstruction_c *i)
 {
   if (!real_mode() && CPL!=0) {
     BX_DEBUG(("HLT: %s priveledge check failed, CPL=%d, generate #GP(0)",
@@ -129,7 +129,7 @@ void BX_CPU_C::HLT(bxInstruction_c *i)
 #endif
 }
 
-void BX_CPU_C::CLTS(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::CLTS(bxInstruction_c *i)
 {
   if (!real_mode() && CPL!=0) {
     BX_ERROR(("CLTS: priveledge check failed, generate #GP(0)"));
@@ -139,7 +139,7 @@ void BX_CPU_C::CLTS(bxInstruction_c *i)
   BX_CPU_THIS_PTR cr0.set_TS(0);
 }
 
-void BX_CPU_C::INVD(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::INVD(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 4
   if (!real_mode() && CPL!=0) {
@@ -162,7 +162,7 @@ void BX_CPU_C::INVD(bxInstruction_c *i)
 #endif
 }
 
-void BX_CPU_C::WBINVD(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::WBINVD(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 4
   if (!real_mode() && CPL!=0) {
@@ -185,7 +185,7 @@ void BX_CPU_C::WBINVD(bxInstruction_c *i)
 #endif
 }
 
-void BX_CPU_C::CLFLUSH(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::CLFLUSH(bxInstruction_c *i)
 {
 #if BX_SUPPORT_CLFLUSH
   bx_segment_reg_t *seg = &BX_CPU_THIS_PTR sregs[i->seg()];
@@ -219,7 +219,7 @@ void BX_CPU_C::CLFLUSH(bxInstruction_c *i)
 }
 
 #if BX_CPU_LEVEL >= 3
-void BX_CPU_C::MOV_DdRd(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_DdRd(bxInstruction_c *i)
 {
   if (!real_mode() && CPL!=0) {
     BX_ERROR(("MOV_DdRd: CPL!=0 not in real mode"));
@@ -343,7 +343,7 @@ void BX_CPU_C::MOV_DdRd(bxInstruction_c *i)
   }
 }
 
-void BX_CPU_C::MOV_RdDd(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RdDd(bxInstruction_c *i)
 {
   Bit32u val_32;
 
@@ -411,7 +411,7 @@ void BX_CPU_C::MOV_RdDd(bxInstruction_c *i)
 }
 
 #if BX_SUPPORT_X86_64
-void BX_CPU_C::MOV_DqRq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_DqRq(bxInstruction_c *i)
 {
   BX_ASSERT(protected_mode());
 
@@ -525,7 +525,7 @@ void BX_CPU_C::MOV_DqRq(bxInstruction_c *i)
   }
 }
 
-void BX_CPU_C::MOV_RqDq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RqDq(bxInstruction_c *i)
 {
   Bit64u val_64;
 
@@ -592,7 +592,7 @@ void BX_CPU_C::MOV_RqDq(bxInstruction_c *i)
 }
 #endif // #if BX_SUPPORT_X86_64
 
-void BX_CPU_C::MOV_CdRd(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CdRd(bxInstruction_c *i)
 {
   if (!real_mode() && CPL!=0) {
     BX_ERROR(("MOV_CdRd: CPL!=0 not in real mode"));
@@ -646,7 +646,7 @@ void BX_CPU_C::MOV_CdRd(bxInstruction_c *i)
   }
 }
 
-void BX_CPU_C::MOV_RdCd(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RdCd(bxInstruction_c *i)
 {
   // mov control register data to register
   Bit32u val_32;
@@ -699,7 +699,7 @@ void BX_CPU_C::MOV_RdCd(bxInstruction_c *i)
 }
 
 #if BX_SUPPORT_X86_64
-void BX_CPU_C::MOV_CqRq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CqRq(bxInstruction_c *i)
 {
   BX_ASSERT(protected_mode());
 
@@ -768,7 +768,7 @@ void BX_CPU_C::MOV_CqRq(bxInstruction_c *i)
   }
 }
 
-void BX_CPU_C::MOV_RqCq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RqCq(bxInstruction_c *i)
 {
   // mov control register data to register
   Bit64u val_64;
@@ -831,7 +831,7 @@ void BX_CPU_C::MOV_RqCq(bxInstruction_c *i)
 #endif // #if BX_CPU_LEVEL >= 3
 
 #if BX_CPU_LEVEL >= 2
-void BX_CPU_C::LMSW_Ew(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::LMSW_Ew(bxInstruction_c *i)
 {
   Bit16u msw;
   Bit32u cr0;
@@ -863,7 +863,7 @@ void BX_CPU_C::LMSW_Ew(bxInstruction_c *i)
   SetCR0(cr0);
 }
 
-void BX_CPU_C::SMSW_Ew(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::SMSW_Ew(bxInstruction_c *i)
 {
   Bit16u msw;
 
@@ -890,7 +890,7 @@ void BX_CPU_C::SMSW_Ew(bxInstruction_c *i)
 }
 #endif
 
-void BX_CPU_C::MOV_TdRd(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_TdRd(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL <= 4
   BX_PANIC(("MOV_TdRd: Still not implemented"));
@@ -901,7 +901,7 @@ void BX_CPU_C::MOV_TdRd(bxInstruction_c *i)
 #endif
 }
 
-void BX_CPU_C::MOV_RdTd(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RdTd(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL <= 4
   BX_PANIC(("MOV_RdTd: Still not implemented"));
@@ -913,7 +913,7 @@ void BX_CPU_C::MOV_RdTd(bxInstruction_c *i)
 }
 
 #if BX_CPU_LEVEL == 2
-void BX_CPU_C::LOADALL(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOADALL(bxInstruction_c *i)
 {
   Bit16u msw, tr, flags, ip, ldtr;
   Bit16u ds_raw, ss_raw, cs_raw, es_raw;
@@ -1403,7 +1403,7 @@ bx_bool BX_CPU_C::SetCR4(Bit32u val_32)
 }
 #endif
 
-void BX_CPU_C::RDPMC(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDPMC(bxInstruction_c *i)
 {
 /* We need to be Pentium with MMX or later */
 #if ((BX_CPU_LEVEL >= 6) || (BX_SUPPORT_MMX && BX_CPU_LEVEL == 5))
@@ -1445,12 +1445,12 @@ void BX_CPU_C::RDPMC(bxInstruction_c *i)
 }
 
 #if BX_CPU_LEVEL >= 5
-Bit64u BX_CPU_C::get_TSC ()
+Bit64u BX_CPU_C::get_TSC(void)
 {
   return bx_pc_system.time_ticks() - BX_CPU_THIS_PTR msr.tsc_last_reset;
 }
 
-void BX_CPU_C::set_TSC (Bit32u newval)
+void BX_CPU_C::set_TSC(Bit32u newval)
 {
   // compute the correct setting of tsc_last_reset so that a get_TSC()
   // will return newval
@@ -1462,7 +1462,7 @@ void BX_CPU_C::set_TSC (Bit32u newval)
 }
 #endif
 
-void BX_CPU_C::RDTSC(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDTSC(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
   bx_bool tsd = BX_CPU_THIS_PTR cr4.get_TSD();
@@ -1483,14 +1483,14 @@ void BX_CPU_C::RDTSC(bxInstruction_c *i)
 }
 
 #if BX_SUPPORT_X86_64
-void BX_CPU_C::RDTSCP(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDTSCP(bxInstruction_c *i)
 {
   RDTSC(i);
   RCX = MSR_TSC_AUX;
 }
 #endif
 
-void BX_CPU_C::RDMSR(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDMSR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
   if (!real_mode() && CPL!=0) {
@@ -1688,7 +1688,7 @@ void BX_CPU_C::RDMSR(bxInstruction_c *i)
 #endif
 }
 
-void BX_CPU_C::WRMSR(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRMSR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
   if (!real_mode() && CPL!=0) {
@@ -1905,7 +1905,7 @@ void BX_CPU_C::check_monitor(bx_phy_address begin_addr, unsigned len)
 }
 #endif
 
-void BX_CPU_C::MONITOR(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::MONITOR(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MONITOR_MWAIT
   // TODO: #UD when CPL > 0 and
@@ -1956,7 +1956,7 @@ void BX_CPU_C::MONITOR(bxInstruction_c *i)
 #endif
 }
 
-void BX_CPU_C::MWAIT(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::MWAIT(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MONITOR_MWAIT
   // TODO: #UD when CPL > 0 and
@@ -2010,7 +2010,7 @@ void BX_CPU_C::MWAIT(bxInstruction_c *i)
 #endif
 }
 
-void BX_CPU_C::SYSENTER(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSENTER(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SEP
   if (!protected_mode()) {
@@ -2077,7 +2077,7 @@ void BX_CPU_C::SYSENTER(bxInstruction_c *i)
 #endif
 }
 
-void BX_CPU_C::SYSEXIT(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSEXIT(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SEP
   if (!protected_mode()) {
@@ -2145,7 +2145,7 @@ void BX_CPU_C::SYSEXIT(bxInstruction_c *i)
 }
 
 #if BX_SUPPORT_X86_64
-void BX_CPU_C::SYSCALL(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSCALL(bxInstruction_c *i)
 {
   bx_address temp_RIP;
 
@@ -2273,7 +2273,7 @@ void BX_CPU_C::SYSCALL(bxInstruction_c *i)
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, RIP);
 }
 
-void BX_CPU_C::SYSRET(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSRET(bxInstruction_c *i)
 {
   bx_address temp_RIP;
 
@@ -2399,7 +2399,7 @@ void BX_CPU_C::SYSRET(bxInstruction_c *i)
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, RIP);
 }
 
-void BX_CPU_C::SWAPGS(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::SWAPGS(bxInstruction_c *i)
 {
   Bit64u temp_GS_base;
 
@@ -2525,7 +2525,7 @@ Bit32u BX_CPU_C::hwdebug_compare(bx_address laddr_0, unsigned size,
 #endif
 
 /*
-void BX_CPU_C::LFENCE(bxInstruction_c *i) {}
-void BX_CPU_C::MFENCE(bxInstruction_c *i) {}
-void BX_CPU_C::SFENCE(bxInstruction_c *i) {}
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::LFENCE(bxInstruction_c *i) {}
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::MFENCE(bxInstruction_c *i) {}
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::SFENCE(bxInstruction_c *i) {}
 */

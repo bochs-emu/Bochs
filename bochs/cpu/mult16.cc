@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: mult16.cc,v 1.28 2008-01-29 17:13:07 sshwarts Exp $
+// $Id: mult16.cc,v 1.29 2008-03-22 21:29:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -30,7 +30,7 @@
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
-void BX_CPU_C::MUL_AXEw(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::MUL_AXEw(bxInstruction_c *i)
 {
   Bit16u op1_16, op2_16;
 
@@ -61,7 +61,7 @@ void BX_CPU_C::MUL_AXEw(bxInstruction_c *i)
   }
 }
 
-void BX_CPU_C::IMUL_AXEw(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::IMUL_AXEw(bxInstruction_c *i)
 {
   Bit16s op1_16, op2_16;
 
@@ -96,7 +96,7 @@ void BX_CPU_C::IMUL_AXEw(bxInstruction_c *i)
   }
 }
 
-void BX_CPU_C::DIV_AXEw(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::DIV_AXEw(bxInstruction_c *i)
 {
   Bit16u op2_16, remainder_16, quotient_16l;
   Bit32u op1_32, quotient_32;
@@ -128,7 +128,7 @@ void BX_CPU_C::DIV_AXEw(bxInstruction_c *i)
   DX = remainder_16;
 }
 
-void BX_CPU_C::IDIV_AXEw(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::IDIV_AXEw(bxInstruction_c *i)
 {
   Bit16s op2_16, remainder_16, quotient_16l;
   Bit32s op1_32, quotient_32;
@@ -164,7 +164,7 @@ void BX_CPU_C::IDIV_AXEw(bxInstruction_c *i)
   DX = remainder_16;
 }
 
-void BX_CPU_C::IMUL_GwEwIw(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::IMUL_GwEwIw(bxInstruction_c *i)
 {
   Bit16s op2_16, op3_16;
 
@@ -197,7 +197,7 @@ void BX_CPU_C::IMUL_GwEwIw(bxInstruction_c *i)
   }
 }
 
-void BX_CPU_C::IMUL_GwEw(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::IMUL_GwEw(bxInstruction_c *i)
 {
   Bit16s op1_16, op2_16;
 

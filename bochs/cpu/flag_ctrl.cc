@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: flag_ctrl.cc,v 1.36 2008-02-02 21:46:51 sshwarts Exp $
+// $Id: flag_ctrl.cc,v 1.37 2008-03-22 21:29:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -35,7 +35,7 @@
 #define RSP ESP
 #endif
 
-void BX_CPU_C::SAHF(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::SAHF(bxInstruction_c *i)
 {
   set_SF((AH & 0x80) >> 7);
   set_ZF((AH & 0x40) >> 6);
@@ -44,22 +44,22 @@ void BX_CPU_C::SAHF(bxInstruction_c *i)
   set_PF((AH & 0x04) >> 2);
 }
 
-void BX_CPU_C::LAHF(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::LAHF(bxInstruction_c *i)
 {
   AH = read_flags() & 0xFF;
 }
 
-void BX_CPU_C::CLC(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::CLC(bxInstruction_c *i)
 {
   clear_CF();
 }
 
-void BX_CPU_C::STC(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::STC(bxInstruction_c *i)
 {
   assert_CF();
 }
 
-void BX_CPU_C::CLI(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::CLI(bxInstruction_c *i)
 {
   Bit32u IOPL = BX_CPU_THIS_PTR get_IOPL();
   Bit32u  cpl = CPL;
@@ -104,7 +104,7 @@ void BX_CPU_C::CLI(bxInstruction_c *i)
   BX_CPU_THIS_PTR clear_IF();
 }
 
-void BX_CPU_C::STI(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::STI(bxInstruction_c *i)
 {
   Bit32u IOPL = BX_CPU_THIS_PTR get_IOPL();
   Bit32u  cpl = CPL;
@@ -157,22 +157,22 @@ void BX_CPU_C::STI(bxInstruction_c *i)
   }
 }
 
-void BX_CPU_C::CLD(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::CLD(bxInstruction_c *i)
 {
   BX_CPU_THIS_PTR clear_DF();
 }
 
-void BX_CPU_C::STD(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::STD(bxInstruction_c *i)
 {
   BX_CPU_THIS_PTR assert_DF();
 }
 
-void BX_CPU_C::CMC(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMC(bxInstruction_c *i)
 {
   set_CF(! get_CF());
 }
 
-void BX_CPU_C::PUSHF_Fw(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUSHF_Fw(bxInstruction_c *i)
 {
   Bit16u flags = read_flags();
 
@@ -195,7 +195,7 @@ void BX_CPU_C::PUSHF_Fw(bxInstruction_c *i)
   push_16(flags);
 }
 
-void BX_CPU_C::POPF_Fw(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::POPF_Fw(bxInstruction_c *i)
 {
   // Build a mask of the following bits:
   // x,NT,IOPL,OF,DF,IF,TF,SF,ZF,x,AF,x,PF,x,CF
@@ -253,7 +253,7 @@ void BX_CPU_C::POPF_Fw(bxInstruction_c *i)
 
 #if BX_CPU_LEVEL >= 3
 
-void BX_CPU_C::PUSHF_Fd(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUSHF_Fd(bxInstruction_c *i)
 {
   if (v8086_mode() && (BX_CPU_THIS_PTR get_IOPL()<3)) {
     BX_DEBUG(("PUSHFD: #GP(0) in v8086 mode"));
@@ -264,7 +264,7 @@ void BX_CPU_C::PUSHF_Fd(bxInstruction_c *i)
   push_32(read_eflags() & 0x00fcffff);
 }
 
-void BX_CPU_C::POPF_Fd(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::POPF_Fd(bxInstruction_c *i)
 {
   // Build a mask of the following bits:
   // ID,VIP,VIF,AC,VM,RF,x,NT,IOPL,OF,DF,IF,TF,SF,ZF,x,AF,x,PF,x,CF
@@ -304,13 +304,13 @@ void BX_CPU_C::POPF_Fd(bxInstruction_c *i)
 }
 
 #if BX_SUPPORT_X86_64
-void BX_CPU_C::PUSHF_Fq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUSHF_Fq(bxInstruction_c *i)
 {
   // VM & RF flags cleared in image stored on the stack
   push_64(read_eflags() & 0x00fcffff);
 }
 
-void BX_CPU_C::POPF_Fq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::POPF_Fq(bxInstruction_c *i)
 {
   // Build a mask of the following bits:
   // ID,VIP,VIF,AC,VM,RF,x,NT,IOPL,OF,DF,IF,TF,SF,ZF,x,AF,x,PF,x,CF
@@ -334,7 +334,7 @@ void BX_CPU_C::POPF_Fq(bxInstruction_c *i)
 
 #endif  // BX_CPU_LEVEL >= 3
 
-void BX_CPU_C::SALC(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::SALC(bxInstruction_c *i)
 {
   if (get_CF()) {
     AL = 0xff;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: string.cc,v 1.54 2008-03-21 20:35:46 sshwarts Exp $
+// $Id: string.cc,v 1.55 2008-03-22 21:29:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -537,7 +537,7 @@ Bit32u BX_CPU_C::FastRepSTOSD(bxInstruction_c *i, unsigned dstSeg, bx_address ds
 // REP MOVS methods
 //
 
-void BX_CPU_C::REP_MOVSB_XbYb(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_MOVSB_XbYb(bxInstruction_c *i)
 {
 #if BX_SUPPORT_X86_64
   if (i->as64L())
@@ -550,7 +550,7 @@ void BX_CPU_C::REP_MOVSB_XbYb(bxInstruction_c *i)
     BX_CPU_THIS_PTR repeat(i, &BX_CPU_C::MOVSB16_XbYb);
 }
 
-void BX_CPU_C::REP_MOVSW_XwYw(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_MOVSW_XwYw(bxInstruction_c *i)
 {
 #if BX_SUPPORT_X86_64
   if (i->as64L())
@@ -563,7 +563,7 @@ void BX_CPU_C::REP_MOVSW_XwYw(bxInstruction_c *i)
     BX_CPU_THIS_PTR repeat(i, &BX_CPU_C::MOVSW16_XwYw);
 }
 
-void BX_CPU_C::REP_MOVSD_XdYd(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_MOVSD_XdYd(bxInstruction_c *i)
 {
 #if BX_SUPPORT_X86_64
   if (i->as64L())
@@ -577,7 +577,7 @@ void BX_CPU_C::REP_MOVSD_XdYd(bxInstruction_c *i)
 }
 
 #if BX_SUPPORT_X86_64
-void BX_CPU_C::REP_MOVSQ_XqYq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_MOVSQ_XqYq(bxInstruction_c *i)
 {
   if (i->as64L())
     BX_CPU_THIS_PTR repeat(i, &BX_CPU_C::MOVSQ64_XqYq);
@@ -591,7 +591,7 @@ void BX_CPU_C::REP_MOVSQ_XqYq(bxInstruction_c *i)
 //
 
 // 16 bit address size
-void BX_CPU_C::MOVSB16_XbYb(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSB16_XbYb(bxInstruction_c *i)
 {
   Bit8u temp8;
 
@@ -641,7 +641,7 @@ void BX_CPU_C::MOVSB16_XbYb(bxInstruction_c *i)
 }
 
 // 32 bit address size
-void BX_CPU_C::MOVSB32_XbYb(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSB32_XbYb(bxInstruction_c *i)
 {
   Bit8u temp8;
 
@@ -690,7 +690,7 @@ void BX_CPU_C::MOVSB32_XbYb(bxInstruction_c *i)
 
 #if BX_SUPPORT_X86_64
 // 64 bit address size
-void BX_CPU_C::MOVSB64_XbYb(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSB64_XbYb(bxInstruction_c *i)
 {
   Bit8u temp8;
 
@@ -717,7 +717,7 @@ void BX_CPU_C::MOVSB64_XbYb(bxInstruction_c *i)
 #endif
 
 /* 16 bit opsize mode, 16 bit address size */
-void BX_CPU_C::MOVSW16_XwYw(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSW16_XwYw(bxInstruction_c *i)
 {
   Bit16u temp16;
 
@@ -774,7 +774,7 @@ void BX_CPU_C::MOVSW16_XwYw(bxInstruction_c *i)
 }
 
 /* 16 bit opsize mode, 32 bit address size */
-void BX_CPU_C::MOVSW32_XwYw(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSW32_XwYw(bxInstruction_c *i)
 {
   Bit16u temp16;
 
@@ -800,7 +800,7 @@ void BX_CPU_C::MOVSW32_XwYw(bxInstruction_c *i)
 
 #if BX_SUPPORT_X86_64
 /* 16 bit opsize mode, 64 bit address size */
-void BX_CPU_C::MOVSW64_XwYw(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSW64_XwYw(bxInstruction_c *i)
 {
   Bit16u temp16;
 
@@ -825,7 +825,7 @@ void BX_CPU_C::MOVSW64_XwYw(bxInstruction_c *i)
 #endif
 
 /* 32 bit opsize mode, 16 bit address size */
-void BX_CPU_C::MOVSD16_XdYd(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSD16_XdYd(bxInstruction_c *i)
 {
   Bit32u temp32;
 
@@ -849,7 +849,7 @@ void BX_CPU_C::MOVSD16_XdYd(bxInstruction_c *i)
 }
 
 /* 32 bit opsize mode, 32 bit address size */
-void BX_CPU_C::MOVSD32_XdYd(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSD32_XdYd(bxInstruction_c *i)
 {
   Bit32u temp32;
 
@@ -907,7 +907,7 @@ void BX_CPU_C::MOVSD32_XdYd(bxInstruction_c *i)
 #if BX_SUPPORT_X86_64
 
 /* 32 bit opsize mode, 64 bit address size */
-void BX_CPU_C::MOVSD64_XdYd(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSD64_XdYd(bxInstruction_c *i)
 {
   Bit32u temp32;
 
@@ -931,7 +931,7 @@ void BX_CPU_C::MOVSD64_XdYd(bxInstruction_c *i)
 }
 
 /* 64 bit opsize mode, 32 bit address size */
-void BX_CPU_C::MOVSQ32_XqYq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSQ32_XqYq(bxInstruction_c *i)
 {
   Bit64u temp64;
 
@@ -956,7 +956,7 @@ void BX_CPU_C::MOVSQ32_XqYq(bxInstruction_c *i)
 }
 
 /* 64 bit opsize mode, 64 bit address size */
-void BX_CPU_C::MOVSQ64_XqYq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSQ64_XqYq(bxInstruction_c *i)
 {
   Bit64u temp64;
 
@@ -985,7 +985,7 @@ void BX_CPU_C::MOVSQ64_XqYq(bxInstruction_c *i)
 // REP CMPS methods
 //
 
-void BX_CPU_C::REP_CMPSB_XbYb(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_CMPSB_XbYb(bxInstruction_c *i)
 {
 #if BX_SUPPORT_X86_64
   if (i->as64L())
@@ -998,7 +998,7 @@ void BX_CPU_C::REP_CMPSB_XbYb(bxInstruction_c *i)
     BX_CPU_THIS_PTR repeat_ZFL(i, &BX_CPU_C::CMPSB16_XbYb);
 }
 
-void BX_CPU_C::REP_CMPSW_XwYw(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_CMPSW_XwYw(bxInstruction_c *i)
 {
 #if BX_SUPPORT_X86_64
   if (i->as64L())
@@ -1011,7 +1011,7 @@ void BX_CPU_C::REP_CMPSW_XwYw(bxInstruction_c *i)
     BX_CPU_THIS_PTR repeat_ZFL(i, &BX_CPU_C::CMPSW16_XwYw);
 }
 
-void BX_CPU_C::REP_CMPSD_XdYd(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_CMPSD_XdYd(bxInstruction_c *i)
 {
 #if BX_SUPPORT_X86_64
   if (i->as64L())
@@ -1025,7 +1025,7 @@ void BX_CPU_C::REP_CMPSD_XdYd(bxInstruction_c *i)
 }
 
 #if BX_SUPPORT_X86_64
-void BX_CPU_C::REP_CMPSQ_XqYq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_CMPSQ_XqYq(bxInstruction_c *i)
 {
   if (i->as64L())
     BX_CPU_THIS_PTR repeat_ZFL(i, &BX_CPU_C::CMPSQ64_XqYq);
@@ -1039,7 +1039,7 @@ void BX_CPU_C::REP_CMPSQ_XqYq(bxInstruction_c *i)
 //
 
 /* 16 bit address size */
-void BX_CPU_C::CMPSB16_XbYb(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPSB16_XbYb(bxInstruction_c *i)
 {
   Bit8u op1_8, op2_8, diff_8;
 
@@ -1067,7 +1067,7 @@ void BX_CPU_C::CMPSB16_XbYb(bxInstruction_c *i)
 }
 
 /* 32 bit address size */
-void BX_CPU_C::CMPSB32_XbYb(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPSB32_XbYb(bxInstruction_c *i)
 {
   Bit8u op1_8, op2_8, diff_8;
 
@@ -1097,7 +1097,7 @@ void BX_CPU_C::CMPSB32_XbYb(bxInstruction_c *i)
 
 #if BX_SUPPORT_X86_64
 /* 64 bit address size */
-void BX_CPU_C::CMPSB64_XbYb(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPSB64_XbYb(bxInstruction_c *i)
 {
   Bit8u op1_8, op2_8, diff_8;
 
@@ -1126,7 +1126,7 @@ void BX_CPU_C::CMPSB64_XbYb(bxInstruction_c *i)
 #endif
 
 /* 16 bit opsize mode, 16 bit address size */
-void BX_CPU_C::CMPSW16_XwYw(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPSW16_XwYw(bxInstruction_c *i)
 {
   Bit16u op1_16, op2_16, diff_16;
 
@@ -1154,7 +1154,7 @@ void BX_CPU_C::CMPSW16_XwYw(bxInstruction_c *i)
 }
 
 /* 16 bit opsize mode, 32 bit address size */
-void BX_CPU_C::CMPSW32_XwYw(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPSW32_XwYw(bxInstruction_c *i)
 {
   Bit16u op1_16, op2_16, diff_16;
 
@@ -1184,7 +1184,7 @@ void BX_CPU_C::CMPSW32_XwYw(bxInstruction_c *i)
 
 #if BX_SUPPORT_X86_64
 /* 16 bit opsize mode, 64 bit address size */
-void BX_CPU_C::CMPSW64_XwYw(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPSW64_XwYw(bxInstruction_c *i)
 {
   Bit16u op1_16, op2_16, diff_16;
 
@@ -1213,7 +1213,7 @@ void BX_CPU_C::CMPSW64_XwYw(bxInstruction_c *i)
 #endif
 
 /* 32 bit opsize mode, 16 bit address size */
-void BX_CPU_C::CMPSD16_XdYd(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPSD16_XdYd(bxInstruction_c *i)
 {
   Bit32u op1_32, op2_32, diff_32;
 
@@ -1241,7 +1241,7 @@ void BX_CPU_C::CMPSD16_XdYd(bxInstruction_c *i)
 }
 
 /* 32 bit opsize mode, 32 bit address size */
-void BX_CPU_C::CMPSD32_XdYd(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPSD32_XdYd(bxInstruction_c *i)
 {
   Bit32u op1_32, op2_32, diff_32;
 
@@ -1272,7 +1272,7 @@ void BX_CPU_C::CMPSD32_XdYd(bxInstruction_c *i)
 #if BX_SUPPORT_X86_64
 
 /* 32 bit opsize mode, 64 bit address size */
-void BX_CPU_C::CMPSD64_XdYd(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPSD64_XdYd(bxInstruction_c *i)
 {
   Bit32u op1_32, op2_32, diff_32;
 
@@ -1300,7 +1300,7 @@ void BX_CPU_C::CMPSD64_XdYd(bxInstruction_c *i)
 }
 
 /* 64 bit opsize mode, 32 bit address size */
-void BX_CPU_C::CMPSQ32_XqYq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPSQ32_XqYq(bxInstruction_c *i)
 {
   Bit64u op1_64, op2_64, diff_64;
 
@@ -1329,7 +1329,7 @@ void BX_CPU_C::CMPSQ32_XqYq(bxInstruction_c *i)
 }
 
 /* 64 bit opsize mode, 64 bit address size */
-void BX_CPU_C::CMPSQ64_XqYq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPSQ64_XqYq(bxInstruction_c *i)
 {
   Bit64u op1_64, op2_64, diff_64;
 
@@ -1362,7 +1362,7 @@ void BX_CPU_C::CMPSQ64_XqYq(bxInstruction_c *i)
 // REP SCAS methods
 //
 
-void BX_CPU_C::REP_SCASB_ALXb(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_SCASB_ALXb(bxInstruction_c *i)
 {
 #if BX_SUPPORT_X86_64
   if (i->as64L())
@@ -1375,7 +1375,7 @@ void BX_CPU_C::REP_SCASB_ALXb(bxInstruction_c *i)
     BX_CPU_THIS_PTR repeat_ZFL(i, &BX_CPU_C::SCASB16_ALXb);
 }
 
-void BX_CPU_C::REP_SCASW_AXXw(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_SCASW_AXXw(bxInstruction_c *i)
 {
 #if BX_SUPPORT_X86_64
   if (i->as64L())
@@ -1388,7 +1388,7 @@ void BX_CPU_C::REP_SCASW_AXXw(bxInstruction_c *i)
     BX_CPU_THIS_PTR repeat_ZFL(i, &BX_CPU_C::SCASW16_AXXw);
 }
 
-void BX_CPU_C::REP_SCASD_EAXXd(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_SCASD_EAXXd(bxInstruction_c *i)
 {
 #if BX_SUPPORT_X86_64
   if (i->as64L())
@@ -1402,7 +1402,7 @@ void BX_CPU_C::REP_SCASD_EAXXd(bxInstruction_c *i)
 }
 
 #if BX_SUPPORT_X86_64
-void BX_CPU_C::REP_SCASQ_RAXXq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_SCASQ_RAXXq(bxInstruction_c *i)
 {
   if (i->as64L())
     BX_CPU_THIS_PTR repeat_ZFL(i, &BX_CPU_C::SCASQ64_RAXXq);
@@ -1416,7 +1416,7 @@ void BX_CPU_C::REP_SCASQ_RAXXq(bxInstruction_c *i)
 //
 
 /* 16 bit address size */
-void BX_CPU_C::SCASB16_ALXb(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::SCASB16_ALXb(bxInstruction_c *i)
 {
   Bit8u op1_8 = AL, op2_8, diff_8;
 
@@ -1439,7 +1439,7 @@ void BX_CPU_C::SCASB16_ALXb(bxInstruction_c *i)
 }
 
 /* 32 bit address size */
-void BX_CPU_C::SCASB32_ALXb(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::SCASB32_ALXb(bxInstruction_c *i)
 {
   Bit8u op1_8 = AL, op2_8, diff_8;
 
@@ -1463,7 +1463,7 @@ void BX_CPU_C::SCASB32_ALXb(bxInstruction_c *i)
 
 #if BX_SUPPORT_X86_64
 /* 64 bit address size */
-void BX_CPU_C::SCASB64_ALXb(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::SCASB64_ALXb(bxInstruction_c *i)
 {
   Bit8u op1_8 = AL, op2_8, diff_8;
 
@@ -1487,7 +1487,7 @@ void BX_CPU_C::SCASB64_ALXb(bxInstruction_c *i)
 #endif
 
 /* 16 bit opsize mode, 16 bit address size */
-void BX_CPU_C::SCASW16_AXXw(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::SCASW16_AXXw(bxInstruction_c *i)
 {
   Bit16u op1_16 = AX, op2_16, diff_16;
 
@@ -1509,7 +1509,7 @@ void BX_CPU_C::SCASW16_AXXw(bxInstruction_c *i)
 }
 
 /* 16 bit opsize mode, 32 bit address size */
-void BX_CPU_C::SCASW32_AXXw(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::SCASW32_AXXw(bxInstruction_c *i)
 {
   Bit16u op1_16 = AX, op2_16, diff_16;
 
@@ -1533,7 +1533,7 @@ void BX_CPU_C::SCASW32_AXXw(bxInstruction_c *i)
 
 #if BX_SUPPORT_X86_64
 /* 16 bit opsize mode, 64 bit address size */
-void BX_CPU_C::SCASW64_AXXw(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::SCASW64_AXXw(bxInstruction_c *i)
 {
   Bit16u op1_16 = AX, op2_16, diff_16;
 
@@ -1556,7 +1556,7 @@ void BX_CPU_C::SCASW64_AXXw(bxInstruction_c *i)
 #endif
 
 /* 32 bit opsize mode, 16 bit address size */
-void BX_CPU_C::SCASD16_EAXXd(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::SCASD16_EAXXd(bxInstruction_c *i)
 {
   Bit32u op1_32 = EAX, op2_32, diff_32;
 
@@ -1578,7 +1578,7 @@ void BX_CPU_C::SCASD16_EAXXd(bxInstruction_c *i)
 }
 
 /* 32 bit opsize mode, 32 bit address size */
-void BX_CPU_C::SCASD32_EAXXd(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::SCASD32_EAXXd(bxInstruction_c *i)
 {
   Bit32u op1_32 = EAX, op2_32, diff_32;
 
@@ -1603,7 +1603,7 @@ void BX_CPU_C::SCASD32_EAXXd(bxInstruction_c *i)
 #if BX_SUPPORT_X86_64
 
 /* 32 bit opsize mode, 64 bit address size */
-void BX_CPU_C::SCASD64_EAXXd(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::SCASD64_EAXXd(bxInstruction_c *i)
 {
   Bit32u op1_32 = EAX, op2_32, diff_32;
 
@@ -1625,7 +1625,7 @@ void BX_CPU_C::SCASD64_EAXXd(bxInstruction_c *i)
 }
 
 /* 64 bit opsize mode, 32 bit address size */
-void BX_CPU_C::SCASQ32_RAXXq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::SCASQ32_RAXXq(bxInstruction_c *i)
 {
   Bit64u op1_64 = RAX, op2_64, diff_64;
 
@@ -1648,7 +1648,7 @@ void BX_CPU_C::SCASQ32_RAXXq(bxInstruction_c *i)
 }
 
 /* 64 bit opsize mode, 64 bit address size */
-void BX_CPU_C::SCASQ64_RAXXq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::SCASQ64_RAXXq(bxInstruction_c *i)
 {
   Bit64u op1_64 = RAX, op2_64, diff_64;
 
@@ -1675,7 +1675,7 @@ void BX_CPU_C::SCASQ64_RAXXq(bxInstruction_c *i)
 // REP STOS methods
 //
 
-void BX_CPU_C::REP_STOSB_YbAL(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_STOSB_YbAL(bxInstruction_c *i)
 {
 #if BX_SUPPORT_X86_64
   if (i->as64L())
@@ -1688,7 +1688,7 @@ void BX_CPU_C::REP_STOSB_YbAL(bxInstruction_c *i)
     BX_CPU_THIS_PTR repeat(i, &BX_CPU_C::STOSB16_YbAL);
 }
 
-void BX_CPU_C::REP_STOSW_YwAX(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_STOSW_YwAX(bxInstruction_c *i)
 {
 #if BX_SUPPORT_X86_64
   if (i->as64L())
@@ -1701,7 +1701,7 @@ void BX_CPU_C::REP_STOSW_YwAX(bxInstruction_c *i)
     BX_CPU_THIS_PTR repeat(i, &BX_CPU_C::STOSW16_YwAX);
 }
 
-void BX_CPU_C::REP_STOSD_YdEAX(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_STOSD_YdEAX(bxInstruction_c *i)
 {
 #if BX_SUPPORT_X86_64
   if (i->as64L())
@@ -1715,7 +1715,7 @@ void BX_CPU_C::REP_STOSD_YdEAX(bxInstruction_c *i)
 }
 
 #if BX_SUPPORT_X86_64
-void BX_CPU_C::REP_STOSQ_YqRAX(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_STOSQ_YqRAX(bxInstruction_c *i)
 {
   if (i->as64L())
     BX_CPU_THIS_PTR repeat(i, &BX_CPU_C::STOSQ64_YqRAX);
@@ -1729,7 +1729,7 @@ void BX_CPU_C::REP_STOSQ_YqRAX(bxInstruction_c *i)
 //
 
 // 16 bit address size
-void BX_CPU_C::STOSB16_YbAL(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::STOSB16_YbAL(bxInstruction_c *i)
 {
   Bit16u di = DI;
 
@@ -1746,7 +1746,7 @@ void BX_CPU_C::STOSB16_YbAL(bxInstruction_c *i)
 }
 
 // 32 bit address size
-void BX_CPU_C::STOSB32_YbAL(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::STOSB32_YbAL(bxInstruction_c *i)
 {
   Bit32u incr = 1;
   Bit32u edi = EDI;
@@ -1794,7 +1794,7 @@ void BX_CPU_C::STOSB32_YbAL(bxInstruction_c *i)
 
 #if BX_SUPPORT_X86_64
 // 64 bit address size
-void BX_CPU_C::STOSB64_YbAL(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::STOSB64_YbAL(bxInstruction_c *i)
 {
   Bit64u rdi = RDI;
 
@@ -1812,7 +1812,7 @@ void BX_CPU_C::STOSB64_YbAL(bxInstruction_c *i)
 #endif
 
 /* 16 bit opsize mode, 16 bit address size */
-void BX_CPU_C::STOSW16_YwAX(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::STOSW16_YwAX(bxInstruction_c *i)
 {
   Bit16u di = DI;
 
@@ -1829,7 +1829,7 @@ void BX_CPU_C::STOSW16_YwAX(bxInstruction_c *i)
 }
 
 /* 16 bit opsize mode, 32 bit address size */
-void BX_CPU_C::STOSW32_YwAX(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::STOSW32_YwAX(bxInstruction_c *i)
 {
   Bit32u edi = EDI;
 
@@ -1848,7 +1848,7 @@ void BX_CPU_C::STOSW32_YwAX(bxInstruction_c *i)
 
 #if BX_SUPPORT_X86_64
 /* 16 bit opsize mode, 32 bit address size */
-void BX_CPU_C::STOSW64_YwAX(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::STOSW64_YwAX(bxInstruction_c *i)
 {
   Bit64u rdi = RDI;
 
@@ -1866,7 +1866,7 @@ void BX_CPU_C::STOSW64_YwAX(bxInstruction_c *i)
 #endif
 
 /* 32 bit opsize mode, 16 bit address size */
-void BX_CPU_C::STOSD16_YdEAX(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::STOSD16_YdEAX(bxInstruction_c *i)
 {
   Bit16u di = DI;
 
@@ -1883,7 +1883,7 @@ void BX_CPU_C::STOSD16_YdEAX(bxInstruction_c *i)
 }
 
 /* 32 bit opsize mode, 32 bit address size */
-void BX_CPU_C::STOSD32_YdEAX(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::STOSD32_YdEAX(bxInstruction_c *i)
 {
   Bit32u edi = EDI;
 
@@ -1903,7 +1903,7 @@ void BX_CPU_C::STOSD32_YdEAX(bxInstruction_c *i)
 #if BX_SUPPORT_X86_64
 
 /* 32 bit opsize mode, 32 bit address size */
-void BX_CPU_C::STOSD64_YdEAX(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::STOSD64_YdEAX(bxInstruction_c *i)
 {
   Bit64u rdi = RDI;
 
@@ -1920,7 +1920,7 @@ void BX_CPU_C::STOSD64_YdEAX(bxInstruction_c *i)
 }
 
 /* 64 bit opsize mode, 32 bit address size */
-void BX_CPU_C::STOSQ32_YqRAX(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::STOSQ32_YqRAX(bxInstruction_c *i)
 {
   Bit32u edi = EDI;
 
@@ -1938,7 +1938,7 @@ void BX_CPU_C::STOSQ32_YqRAX(bxInstruction_c *i)
 }
 
 /* 64 bit opsize mode, 64 bit address size */
-void BX_CPU_C::STOSQ64_YqRAX(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::STOSQ64_YqRAX(bxInstruction_c *i)
 {
   Bit64u rdi = RDI;
 
@@ -1960,7 +1960,7 @@ void BX_CPU_C::STOSQ64_YqRAX(bxInstruction_c *i)
 // REP LODS methods
 //
 
-void BX_CPU_C::REP_LODSB_ALXb(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_LODSB_ALXb(bxInstruction_c *i)
 {
 #if BX_SUPPORT_X86_64
   if (i->as64L())
@@ -1973,7 +1973,7 @@ void BX_CPU_C::REP_LODSB_ALXb(bxInstruction_c *i)
     BX_CPU_THIS_PTR repeat(i, &BX_CPU_C::LODSB16_ALXb);
 }
 
-void BX_CPU_C::REP_LODSW_AXXw(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_LODSW_AXXw(bxInstruction_c *i)
 {
 #if BX_SUPPORT_X86_64
   if (i->as64L())
@@ -1986,7 +1986,7 @@ void BX_CPU_C::REP_LODSW_AXXw(bxInstruction_c *i)
     BX_CPU_THIS_PTR repeat(i, &BX_CPU_C::LODSW16_AXXw);
 }
 
-void BX_CPU_C::REP_LODSD_EAXXd(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_LODSD_EAXXd(bxInstruction_c *i)
 {
 #if BX_SUPPORT_X86_64
   if (i->as64L())
@@ -2000,7 +2000,7 @@ void BX_CPU_C::REP_LODSD_EAXXd(bxInstruction_c *i)
 }
 
 #if BX_SUPPORT_X86_64
-void BX_CPU_C::REP_LODSQ_RAXXq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_LODSQ_RAXXq(bxInstruction_c *i)
 {
   if (i->as64L())
     BX_CPU_THIS_PTR repeat(i, &BX_CPU_C::LODSQ64_RAXXq);
@@ -2014,7 +2014,7 @@ void BX_CPU_C::REP_LODSQ_RAXXq(bxInstruction_c *i)
 //
 
 /* 16 bit address size */
-void BX_CPU_C::LODSB16_ALXb(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::LODSB16_ALXb(bxInstruction_c *i)
 {
   Bit16u si = SI;
 
@@ -2031,7 +2031,7 @@ void BX_CPU_C::LODSB16_ALXb(bxInstruction_c *i)
 }
 
 /* 32 bit address size */
-void BX_CPU_C::LODSB32_ALXb(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::LODSB32_ALXb(bxInstruction_c *i)
 {
   Bit32u esi = ESI;
 
@@ -2050,7 +2050,7 @@ void BX_CPU_C::LODSB32_ALXb(bxInstruction_c *i)
 
 #if BX_SUPPORT_X86_64
 /* 64 bit address size */
-void BX_CPU_C::LODSB64_ALXb(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::LODSB64_ALXb(bxInstruction_c *i)
 {
   Bit64u rsi = RSI;
 
@@ -2068,7 +2068,7 @@ void BX_CPU_C::LODSB64_ALXb(bxInstruction_c *i)
 #endif
 
 /* 16 bit opsize mode, 16 bit address size */
-void BX_CPU_C::LODSW16_AXXw(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::LODSW16_AXXw(bxInstruction_c *i)
 {
   Bit16u si = SI;
 
@@ -2085,7 +2085,7 @@ void BX_CPU_C::LODSW16_AXXw(bxInstruction_c *i)
 }
 
 /* 16 bit opsize mode, 32 bit address size */
-void BX_CPU_C::LODSW32_AXXw(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::LODSW32_AXXw(bxInstruction_c *i)
 {
   Bit32u esi = ESI;
 
@@ -2104,7 +2104,7 @@ void BX_CPU_C::LODSW32_AXXw(bxInstruction_c *i)
 
 #if BX_SUPPORT_X86_64
 /* 16 bit opsize mode, 64 bit address size */
-void BX_CPU_C::LODSW64_AXXw(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::LODSW64_AXXw(bxInstruction_c *i)
 {
   Bit64u rsi = RSI;
 
@@ -2122,7 +2122,7 @@ void BX_CPU_C::LODSW64_AXXw(bxInstruction_c *i)
 #endif
 
 /* 32 bit opsize mode, 16 bit address size */
-void BX_CPU_C::LODSD16_EAXXd(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::LODSD16_EAXXd(bxInstruction_c *i)
 {
   Bit16u si = SI;
 
@@ -2139,7 +2139,7 @@ void BX_CPU_C::LODSD16_EAXXd(bxInstruction_c *i)
 }
 
 /* 32 bit opsize mode, 32 bit address size */
-void BX_CPU_C::LODSD32_EAXXd(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::LODSD32_EAXXd(bxInstruction_c *i)
 {
   Bit32u esi = ESI;
 
@@ -2159,7 +2159,7 @@ void BX_CPU_C::LODSD32_EAXXd(bxInstruction_c *i)
 #if BX_SUPPORT_X86_64
 
 /* 32 bit opsize mode, 64 bit address size */
-void BX_CPU_C::LODSD64_EAXXd(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::LODSD64_EAXXd(bxInstruction_c *i)
 {
   Bit64u rsi = RSI;
 
@@ -2176,7 +2176,7 @@ void BX_CPU_C::LODSD64_EAXXd(bxInstruction_c *i)
 }
 
 /* 64 bit opsize mode, 32 bit address size */
-void BX_CPU_C::LODSQ32_RAXXq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::LODSQ32_RAXXq(bxInstruction_c *i)
 {
   Bit32u esi = ESI;
 
@@ -2194,7 +2194,7 @@ void BX_CPU_C::LODSQ32_RAXXq(bxInstruction_c *i)
 }
 
 /* 64 bit opsize mode, 64 bit address size */
-void BX_CPU_C::LODSQ64_RAXXq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::LODSQ64_RAXXq(bxInstruction_c *i)
 {
   Bit64u rsi = RSI;
 

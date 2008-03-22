@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: 3dnow.cc,v 1.22 2008-02-02 21:46:49 sshwarts Exp $
+// $Id: 3dnow.cc,v 1.23 2008-03-22 21:29:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2002 Stanislav Shwartsman
@@ -36,13 +36,13 @@ static void prepare_softfloat_status_word(float_status_t &status, int rounding_m
   status.flush_underflow_to_zero = 0;
 }
 
-void BX_CPU_C::PFPNACC_PqQq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::PFPNACC_PqQq(bxInstruction_c *i)
 {
   BX_PANIC(("PFPNACC_PqQq: 3DNow! instruction still not implemented"));
 }
 
 /* 0F 0F /r 0C */
-void BX_CPU_C::PI2FW_PqQq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::PI2FW_PqQq(bxInstruction_c *i)
 {
   BxPackedMmxRegister result, op;
 
@@ -71,7 +71,7 @@ void BX_CPU_C::PI2FW_PqQq(bxInstruction_c *i)
 }
 
 /* 0F 0F /r 0D */
-void BX_CPU_C::PI2FD_PqQq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::PI2FD_PqQq(bxInstruction_c *i)
 {
   BxPackedMmxRegister result, op;
 
@@ -99,13 +99,13 @@ void BX_CPU_C::PI2FD_PqQq(bxInstruction_c *i)
   BX_WRITE_MMX_REG(i->nnn(), result);
 }
 
-void BX_CPU_C::PF2IW_PqQq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::PF2IW_PqQq(bxInstruction_c *i)
 {
   BX_PANIC(("PF2IW_PqQq: 3DNow! instruction still not implemented"));
 }
 
 /* 0F 0F /r 1D */
-void BX_CPU_C::PF2ID_PqQq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::PF2ID_PqQq(bxInstruction_c *i)
 {
   BxPackedMmxRegister result, op;
 
@@ -133,88 +133,88 @@ void BX_CPU_C::PF2ID_PqQq(bxInstruction_c *i)
   BX_WRITE_MMX_REG(i->nnn(), result);
 }
 
-void BX_CPU_C::PFNACC_PqQq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::PFNACC_PqQq(bxInstruction_c *i)
 {
   BX_PANIC(("PFNACC_PqQq: 3DNow! instruction still not implemented"));
 }
 
-void BX_CPU_C::PFCMPGE_PqQq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::PFCMPGE_PqQq(bxInstruction_c *i)
 {
   BX_PANIC(("PFCMPGE_PqQq: 3DNow! instruction still not implemented"));
 }
 
-void BX_CPU_C::PFMIN_PqQq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::PFMIN_PqQq(bxInstruction_c *i)
 {
   BX_PANIC(("PFMIN_PqQq: 3DNow! instruction still not implemented"));
 }
 
-void BX_CPU_C::PFRCP_PqQq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::PFRCP_PqQq(bxInstruction_c *i)
 {
   BX_PANIC(("PFRCP_PqQq: 3DNow! instruction still not implemented"));
 }
 
-void BX_CPU_C::PFRSQRT_PqQq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::PFRSQRT_PqQq(bxInstruction_c *i)
 {
   BX_PANIC(("PFRSQRT_PqQq: 3DNow! instruction still not implemented"));
 }
 
-void BX_CPU_C::PFSUB_PqQq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::PFSUB_PqQq(bxInstruction_c *i)
 {
   BX_PANIC(("PFSUB_PqQq: 3DNow! instruction still not implemented"));
 }
 
-void BX_CPU_C::PFADD_PqQq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::PFADD_PqQq(bxInstruction_c *i)
 {
   BX_PANIC(("PFADD_PqQq: 3DNow! instruction still not implemented"));
 }
 
-void BX_CPU_C::PFCMPGT_PqQq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::PFCMPGT_PqQq(bxInstruction_c *i)
 {
   BX_PANIC(("PFCMPGT_PqQq: 3DNow! instruction still not implemented"));
 }
 
-void BX_CPU_C::PFMAX_PqQq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::PFMAX_PqQq(bxInstruction_c *i)
 {
   BX_PANIC(("PFMAX_PqQq: 3DNow! instruction still not implemented"));
 }
 
-void BX_CPU_C::PFRCPIT1_PqQq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::PFRCPIT1_PqQq(bxInstruction_c *i)
 {
   BX_PANIC(("PFRCPIT1_PqQq: 3DNow! instruction still not implemented"));
 }
 
-void BX_CPU_C::PFRSQIT1_PqQq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::PFRSQIT1_PqQq(bxInstruction_c *i)
 {
   BX_PANIC(("PFRSQIT1_PqQq: 3DNow! instruction still not implemented"));
 }
 
-void BX_CPU_C::PFSUBR_PqQq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::PFSUBR_PqQq(bxInstruction_c *i)
 {
   BX_PANIC(("PFSUBR_PqQq: 3DNow! instruction still not implemented"));
 }
 
-void BX_CPU_C::PFACC_PqQq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::PFACC_PqQq(bxInstruction_c *i)
 {
   BX_PANIC(("PFACC_PqQq: 3DNow! instruction still not implemented"));
 }
 
-void BX_CPU_C::PFCMPEQ_PqQq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::PFCMPEQ_PqQq(bxInstruction_c *i)
 {
   BX_PANIC(("PFCMPEQ_PqQq: 3DNow! instruction still not implemented"));
 }
 
-void BX_CPU_C::PFMUL_PqQq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::PFMUL_PqQq(bxInstruction_c *i)
 {
   BX_PANIC(("PFMUL_PqQq: 3DNow! instruction still not implemented"));
 }
 
-void BX_CPU_C::PFRCPIT2_PqQq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::PFRCPIT2_PqQq(bxInstruction_c *i)
 {
   BX_PANIC(("PFRCPIT2_PqQq: 3DNow! instruction still not implemented"));
 }
 
 /* 0F 0F /r B7 */
-void BX_CPU_C::PMULHRW_PqQq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMULHRW_PqQq(bxInstruction_c *i)
 {
   BX_CPU_THIS_PTR prepareMMX();
 
@@ -245,7 +245,7 @@ void BX_CPU_C::PMULHRW_PqQq(bxInstruction_c *i)
 }
 
 /* 0F 0F /r BB */
-void BX_CPU_C::PSWAPD_PqQq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSWAPD_PqQq(bxInstruction_c *i)
 {
   BX_CPU_THIS_PTR prepareMMX();
 

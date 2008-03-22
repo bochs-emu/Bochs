@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack_pro.cc,v 1.39 2008-01-29 17:13:09 sshwarts Exp $
+// $Id: stack_pro.cc,v 1.40 2008-03-22 21:29:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -30,7 +30,7 @@
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
-void BX_CPU_C::push_16(Bit16u value16)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::push_16(Bit16u value16)
 {
   /* must use StackAddrSize, and either RSP, ESP or SP accordingly */
 #if BX_SUPPORT_X86_64
@@ -53,7 +53,7 @@ void BX_CPU_C::push_16(Bit16u value16)
 }
 
 /* push 32 bit operand */
-void BX_CPU_C::push_32(Bit32u value32)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::push_32(Bit32u value32)
 {
   /* must use StackAddrSize, and either RSP, ESP or SP accordingly */
 #if BX_SUPPORT_X86_64
@@ -77,7 +77,7 @@ void BX_CPU_C::push_32(Bit32u value32)
 
 /* push 64 bit operand */
 #if BX_SUPPORT_X86_64
-void BX_CPU_C::push_64(Bit64u value64)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::push_64(Bit64u value64)
 {
   BX_ASSERT(StackAddrSize64());
 
@@ -111,7 +111,7 @@ Bit16u BX_CPU_C::pop_16(void)
 }
 
 /* pop 32 bit operand from the stack */
-Bit32u BX_CPU_C::pop_32()
+Bit32u BX_CPU_C::pop_32(void)
 {
   Bit32u value32;
 
@@ -136,7 +136,7 @@ Bit32u BX_CPU_C::pop_32()
 
 /* pop 64 bit operand from the stack */
 #if BX_SUPPORT_X86_64
-Bit64u BX_CPU_C::pop_64()
+Bit64u BX_CPU_C::pop_64(void)
 {
   BX_ASSERT(StackAddrSize64());
 
@@ -233,7 +233,7 @@ BX_CPU_C::can_push(bx_descriptor_t *descriptor, Bit32u esp, Bit32u bytes)
   }
 }
 
-bx_bool BX_CPU_C::can_pop(Bit32u bytes)
+bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::can_pop(Bit32u bytes)
 {
   Bit32u temp_ESP, expand_down_limit;
 

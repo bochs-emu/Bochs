@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: shift16.cc,v 1.43 2008-02-02 21:46:53 sshwarts Exp $
+// $Id: shift16.cc,v 1.44 2008-03-22 21:29:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -30,7 +30,7 @@
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
-void BX_CPU_C::SHLD_EwGw(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHLD_EwGw(bxInstruction_c *i)
 {
   Bit16u op1_16, op2_16, result_16;
   Bit32u temp_32, result_32;
@@ -87,7 +87,7 @@ void BX_CPU_C::SHLD_EwGw(bxInstruction_c *i)
   SET_FLAGS_OxxxxC(of, cf);
 }
 
-void BX_CPU_C::SHRD_EwGw(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHRD_EwGw(bxInstruction_c *i)
 {
   Bit16u op1_16, op2_16, result_16;
   Bit32u temp_32, result_32;
@@ -143,7 +143,7 @@ void BX_CPU_C::SHRD_EwGw(bxInstruction_c *i)
   SET_FLAGS_OxxxxC(of, cf);
 }
 
-void BX_CPU_C::ROL_Ew(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROL_Ew(bxInstruction_c *i)
 {
   Bit16u op1_16, result_16;
   unsigned count;
@@ -192,7 +192,7 @@ void BX_CPU_C::ROL_Ew(bxInstruction_c *i)
   SET_FLAGS_OxxxxC(bit0 ^ bit15, bit0);
 }
 
-void BX_CPU_C::ROR_Ew(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROR_Ew(bxInstruction_c *i)
 {
   Bit16u op1_16, result_16;
   unsigned count;
@@ -241,7 +241,7 @@ void BX_CPU_C::ROR_Ew(bxInstruction_c *i)
   SET_FLAGS_OxxxxC(bit14 ^ bit15, bit15);
 }
 
-void BX_CPU_C::RCL_Ew(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::RCL_Ew(bxInstruction_c *i)
 {
   Bit16u op1_16, result_16;
   unsigned count;
@@ -290,7 +290,7 @@ void BX_CPU_C::RCL_Ew(bxInstruction_c *i)
   SET_FLAGS_OxxxxC(of, cf);
 }
 
-void BX_CPU_C::RCR_Ew(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::RCR_Ew(bxInstruction_c *i)
 {
   Bit16u op1_16, result_16;
   unsigned count;
@@ -331,7 +331,7 @@ void BX_CPU_C::RCR_Ew(bxInstruction_c *i)
   SET_FLAGS_OxxxxC(of, cf);
 }
 
-void BX_CPU_C::SHL_Ew(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHL_Ew(bxInstruction_c *i)
 {
   Bit16u op1_16, result_16;
   unsigned count;
@@ -377,7 +377,7 @@ void BX_CPU_C::SHL_Ew(bxInstruction_c *i)
   SET_FLAGS_OxxxxC(of, cf);
 }
 
-void BX_CPU_C::SHR_Ew(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHR_Ew(bxInstruction_c *i)
 {
   Bit16u op1_16, result_16;
   unsigned count;
@@ -421,7 +421,7 @@ void BX_CPU_C::SHR_Ew(bxInstruction_c *i)
   SET_FLAGS_OxxxxC(of, cf);
 }
 
-void BX_CPU_C::SAR_Ew(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::SAR_Ew(bxInstruction_c *i)
 {
   Bit16u op1_16, result_16;
   unsigned count, cf;

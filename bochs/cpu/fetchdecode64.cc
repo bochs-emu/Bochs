@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.178 2008-03-21 20:04:41 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.179 2008-03-22 21:29:39 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -3353,7 +3353,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo64M[512*3] = {
   /* 0F FF /qm */ { 0, &BX_CPU_C::BxError }
 };
 
-  unsigned
+  unsigned BX_CPP_AttrRegparmN(3)
 BX_CPU_C::fetchDecode64(const Bit8u *iptr, bxInstruction_c *i, unsigned remainingInPage)
 {
   // remain must be at least 1

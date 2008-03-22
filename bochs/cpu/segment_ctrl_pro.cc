@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: segment_ctrl_pro.cc,v 1.82 2008-02-15 22:05:40 sshwarts Exp $
+// $Id: segment_ctrl_pro.cc,v 1.83 2008-03-22 21:29:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -666,8 +666,7 @@ BX_CPU_C::load_ss(bx_selector_t *selector, bx_descriptor_t *descriptor, Bit8u cp
 }
 
 #if BX_CPU_LEVEL >= 2
-  void BX_CPP_AttrRegparmN(3)
-BX_CPU_C::fetch_raw_descriptor(const bx_selector_t *selector,
+void BX_CPU_C::fetch_raw_descriptor(const bx_selector_t *selector,
                         Bit32u *dword1, Bit32u *dword2, unsigned exception_no)
 {
   Bit32u index = selector->index;

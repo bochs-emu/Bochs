@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: shift64.cc,v 1.32 2008-02-02 21:46:53 sshwarts Exp $
+// $Id: shift64.cc,v 1.33 2008-03-22 21:29:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -32,7 +32,7 @@
 
 #if BX_SUPPORT_X86_64
 
-void BX_CPU_C::SHLD_EqGq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHLD_EqGq(bxInstruction_c *i)
 {
   Bit64u op1_64, op2_64, result_64;
   unsigned count;
@@ -76,7 +76,7 @@ void BX_CPU_C::SHLD_EqGq(bxInstruction_c *i)
   SET_FLAGS_OxxxxC(of, cf);
 }
 
-void BX_CPU_C::SHRD_EqGq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHRD_EqGq(bxInstruction_c *i)
 {
   Bit64u op1_64, op2_64, result_64;
   unsigned count;
@@ -120,7 +120,7 @@ void BX_CPU_C::SHRD_EqGq(bxInstruction_c *i)
   SET_FLAGS_OxxxxC(of, cf);
 }
 
-void BX_CPU_C::ROL_Eq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROL_Eq(bxInstruction_c *i)
 {
   Bit64u op1_64, result_64;
   unsigned count;
@@ -161,7 +161,7 @@ void BX_CPU_C::ROL_Eq(bxInstruction_c *i)
   SET_FLAGS_OxxxxC(bit0 ^ bit63, bit0);
 }
 
-void BX_CPU_C::ROR_Eq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROR_Eq(bxInstruction_c *i)
 {
   Bit64u op1_64, result_64;
   unsigned count;
@@ -202,7 +202,7 @@ void BX_CPU_C::ROR_Eq(bxInstruction_c *i)
   SET_FLAGS_OxxxxC(bit62 ^ bit63, bit63);
 }
 
-void BX_CPU_C::RCL_Eq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::RCL_Eq(bxInstruction_c *i)
 {
   Bit64u op1_64, result_64;
   unsigned count;
@@ -248,7 +248,7 @@ void BX_CPU_C::RCL_Eq(bxInstruction_c *i)
   SET_FLAGS_OxxxxC(of, cf);
 }
 
-void BX_CPU_C::RCR_Eq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::RCR_Eq(bxInstruction_c *i)
 {
   Bit64u op1_64, result_64;
   unsigned count;
@@ -294,7 +294,7 @@ void BX_CPU_C::RCR_Eq(bxInstruction_c *i)
   SET_FLAGS_OxxxxC(of, cf);
 }
 
-void BX_CPU_C::SHL_Eq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHL_Eq(bxInstruction_c *i)
 {
   Bit64u op1_64, result_64;
   unsigned count;
@@ -336,7 +336,7 @@ void BX_CPU_C::SHL_Eq(bxInstruction_c *i)
   SET_FLAGS_OxxxxC(of, cf);
 }
 
-void BX_CPU_C::SHR_Eq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHR_Eq(bxInstruction_c *i)
 {
   Bit64u op1_64, result_64;
   unsigned count;
@@ -380,7 +380,7 @@ void BX_CPU_C::SHR_Eq(bxInstruction_c *i)
   SET_FLAGS_OxxxxC(of, cf);
 }
 
-void BX_CPU_C::SAR_Eq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::SAR_Eq(bxInstruction_c *i)
 {
   Bit64u op1_64, result_64;
   unsigned count;

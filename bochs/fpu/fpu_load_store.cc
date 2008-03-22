@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu_load_store.cc,v 1.16 2008-02-05 22:33:34 sshwarts Exp $
+// $Id: fpu_load_store.cc,v 1.17 2008-03-22 21:29:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -30,7 +30,7 @@ extern float_status_t FPU_pre_exception_handling(Bit16u control_word);
 
 #include "softfloatx80.h"
 
-void BX_CPU_C::FLD_STi(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLD_STi(bxInstruction_c *i)
 {
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
@@ -59,7 +59,7 @@ void BX_CPU_C::FLD_STi(bxInstruction_c *i)
 #endif
 }
 
-void BX_CPU_C::FLD_SINGLE_REAL(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLD_SINGLE_REAL(bxInstruction_c *i)
 {
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
@@ -90,7 +90,7 @@ void BX_CPU_C::FLD_SINGLE_REAL(bxInstruction_c *i)
 #endif
 }
 
-void BX_CPU_C::FLD_DOUBLE_REAL(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLD_DOUBLE_REAL(bxInstruction_c *i)
 {
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
@@ -121,7 +121,7 @@ void BX_CPU_C::FLD_DOUBLE_REAL(bxInstruction_c *i)
 #endif
 }
 
-void BX_CPU_C::FLD_EXTENDED_REAL(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLD_EXTENDED_REAL(bxInstruction_c *i)
 {
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
@@ -145,7 +145,7 @@ void BX_CPU_C::FLD_EXTENDED_REAL(bxInstruction_c *i)
 }
 
 /* DF /0 */
-void BX_CPU_C::FILD_WORD_INTEGER(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::FILD_WORD_INTEGER(bxInstruction_c *i)
 {
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
@@ -169,7 +169,7 @@ void BX_CPU_C::FILD_WORD_INTEGER(bxInstruction_c *i)
 }
 
 /* DB /0 */
-void BX_CPU_C::FILD_DWORD_INTEGER(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::FILD_DWORD_INTEGER(bxInstruction_c *i)
 {
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
@@ -193,7 +193,7 @@ void BX_CPU_C::FILD_DWORD_INTEGER(bxInstruction_c *i)
 }
 
 /* DF /5 */
-void BX_CPU_C::FILD_QWORD_INTEGER(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::FILD_QWORD_INTEGER(bxInstruction_c *i)
 {
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
@@ -217,7 +217,7 @@ void BX_CPU_C::FILD_QWORD_INTEGER(bxInstruction_c *i)
 }
 
 /* DF /4 */
-void BX_CPU_C::FBLD_PACKED_BCD(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::FBLD_PACKED_BCD(bxInstruction_c *i)
 {
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
@@ -258,7 +258,7 @@ void BX_CPU_C::FBLD_PACKED_BCD(bxInstruction_c *i)
 #endif
 }
 
-void BX_CPU_C::FST_STi(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::FST_STi(bxInstruction_c *i)
 {
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
@@ -282,7 +282,7 @@ void BX_CPU_C::FST_STi(bxInstruction_c *i)
 #endif
 }
 
-void BX_CPU_C::FST_SINGLE_REAL(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::FST_SINGLE_REAL(bxInstruction_c *i)
 {
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
@@ -318,7 +318,7 @@ void BX_CPU_C::FST_SINGLE_REAL(bxInstruction_c *i)
 #endif
 }
 
-void BX_CPU_C::FST_DOUBLE_REAL(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::FST_DOUBLE_REAL(bxInstruction_c *i)
 {
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
@@ -355,7 +355,7 @@ void BX_CPU_C::FST_DOUBLE_REAL(bxInstruction_c *i)
 }
 
 /* DB /7 */
-void BX_CPU_C::FSTP_EXTENDED_REAL(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::FSTP_EXTENDED_REAL(bxInstruction_c *i)
 {
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
@@ -382,7 +382,7 @@ void BX_CPU_C::FSTP_EXTENDED_REAL(bxInstruction_c *i)
 #endif
 }
 
-void BX_CPU_C::FIST_WORD_INTEGER(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::FIST_WORD_INTEGER(bxInstruction_c *i)
 {
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
@@ -420,7 +420,7 @@ void BX_CPU_C::FIST_WORD_INTEGER(bxInstruction_c *i)
 #endif
 }
 
-void BX_CPU_C::FIST_DWORD_INTEGER(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::FIST_DWORD_INTEGER(bxInstruction_c *i)
 {
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
@@ -458,7 +458,7 @@ void BX_CPU_C::FIST_DWORD_INTEGER(bxInstruction_c *i)
 #endif
 }
 
-void BX_CPU_C::FISTP_QWORD_INTEGER(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::FISTP_QWORD_INTEGER(bxInstruction_c *i)
 {
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
@@ -492,7 +492,7 @@ void BX_CPU_C::FISTP_QWORD_INTEGER(bxInstruction_c *i)
 #endif
 }
 
-void BX_CPU_C::FBSTP_PACKED_BCD(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::FBSTP_PACKED_BCD(bxInstruction_c *i)
 {
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
@@ -562,7 +562,7 @@ void BX_CPU_C::FBSTP_PACKED_BCD(bxInstruction_c *i)
 }
 
 /* DF /1 */
-void BX_CPU_C::FISTTP16(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::FISTTP16(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 3
   BX_CPU_THIS_PTR prepareFPU(i);
@@ -598,7 +598,7 @@ void BX_CPU_C::FISTTP16(bxInstruction_c *i)
 }
 
 /* DB /1 */
-void BX_CPU_C::FISTTP32(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::FISTTP32(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 3
   BX_CPU_THIS_PTR prepareFPU(i);
@@ -634,7 +634,7 @@ void BX_CPU_C::FISTTP32(bxInstruction_c *i)
 }
 
 /* DD /1 */
-void BX_CPU_C::FISTTP64(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::FISTTP64(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 3
   BX_CPU_THIS_PTR prepareFPU(i);
