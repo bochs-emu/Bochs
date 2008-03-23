@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.101 2008-02-15 22:05:40 sshwarts Exp $
+// $Id: exception.cc,v 1.102 2008-03-23 21:24:05 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -249,13 +249,19 @@ void BX_CPU_C::long_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error_code
     // push flags onto stack
     // push current CS selector onto stack
     // push return offset onto stack
-    push_64(BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value);
-    push_64(old_RSP);
-    push_64(read_eflags());
-    push_64(BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value);
-    push_64(RIP);
-    if (is_error_code)
-      push_64(error_code);
+    write_new_stack_qword(RSP - 8,  cs_descriptor.dpl,
+         BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value);
+    write_new_stack_qword(RSP - 16, cs_descriptor.dpl, old_RSP);
+    write_new_stack_qword(RSP - 24, cs_descriptor.dpl, read_eflags());
+    write_new_stack_qword(RSP - 32,  cs_descriptor.dpl,
+         BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value);
+    write_new_stack_qword(RSP - 40, cs_descriptor.dpl, RIP);
+    RSP -= 40;
+
+    if (is_error_code) {
+      RSP -= 8;
+      write_new_stack_qword(RSP, cs_descriptor.dpl, error_code);
+    }
 
     // set the RPL field of CS to CPL
     branch_far64(&cs_selector, &cs_descriptor, gate_dest_offset, CPL);
