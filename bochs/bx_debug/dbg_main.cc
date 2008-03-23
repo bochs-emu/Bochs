@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.117 2008-03-23 21:39:01 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.118 2008-03-23 21:40:17 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -482,7 +482,7 @@ void bx_dbg_interrupt(unsigned cpu, Bit8u vector, Bit16u error_code)
 
 void bx_dbg_halt(unsigned cpu)
 {
-  dbg_printf("CPU %d: HALTED\n");
+  dbg_printf("CPU %d: HALTED\n", cpu);
 }
 
 void bx_dbg_exit(int code)
