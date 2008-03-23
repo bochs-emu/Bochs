@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.154 2008-02-13 16:45:20 sshwarts Exp $
+// $Id: init.cc,v 1.155 2008-03-23 20:18:24 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -381,13 +381,16 @@ void BX_CPU_C::register_state(void)
   }
 
 #if BX_CPU_LEVEL >= 2
-  BXRS_HEX_PARAM_FIELD(cpu, gdtr_base, gdtr.base);
-  BXRS_HEX_PARAM_FIELD(cpu, gdtr_limit, gdtr.limit);
-  BXRS_HEX_PARAM_FIELD(cpu, idtr_base, idtr.base);
-  BXRS_HEX_PARAM_FIELD(cpu, idtr_limit, idtr.limit);
+  bx_list_c *GDTR = new bx_list_c(cpu, "GDTR", 2);
+  BXRS_HEX_PARAM_FIELD(GDTR, base, gdtr.base);
+  BXRS_HEX_PARAM_FIELD(GDTR, limit, gdtr.limit);
+
+  bx_list_c *IDTR = new bx_list_c(cpu, "IDTR", 2);
+  BXRS_HEX_PARAM_FIELD(IDTR, base, idtr.base);
+  BXRS_HEX_PARAM_FIELD(IDTR, limit, idtr.limit);
 #endif
 
-  bx_list_c *LDTR = new bx_list_c (cpu, "LDTR", 7);
+  bx_list_c *LDTR = new bx_list_c(cpu, "LDTR", 7);
   BXRS_PARAM_SPECIAL16(LDTR, selector, param_save_handler, param_restore_handler);
   BXRS_HEX_PARAM_FIELD(LDTR, base,  ldtr.cache.u.system.base);
   BXRS_HEX_PARAM_FIELD(LDTR, limit, ldtr.cache.u.system.limit);
@@ -396,7 +399,7 @@ void BX_CPU_C::register_state(void)
   BXRS_PARAM_BOOL(LDTR, granularity, ldtr.cache.u.system.g);
   BXRS_PARAM_BOOL(LDTR, avl, ldtr.cache.u.system.avl);
 
-  bx_list_c *TR = new bx_list_c (cpu, "TR", 7);
+  bx_list_c *TR = new bx_list_c(cpu, "TR", 7);
   BXRS_PARAM_SPECIAL16(TR, selector, param_save_handler, param_restore_handler);
   BXRS_HEX_PARAM_FIELD(TR, base,  tr.cache.u.system.base);
   BXRS_HEX_PARAM_FIELD(TR, limit, tr.cache.u.system.limit);
@@ -874,14 +877,11 @@ void BX_CPU_C::reset(unsigned source)
 
   BX_CPU_THIS_PTR smbase = 0x30000;
 
-  BX_CPU_THIS_PTR cr0.setRegister(0);
+  BX_CPU_THIS_PTR cr0.setRegister(0x60000010);
   // handle reserved bits
 #if BX_CPU_LEVEL == 3
   // reserved bits all set to 1 on 386
   BX_CPU_THIS_PTR cr0.val32 |= 0x7ffffff0;
-#elif BX_CPU_LEVEL >= 4
-  // bit 4 is hardwired to 1 on all x86
-  BX_CPU_THIS_PTR cr0.val32 |= 0x00000010;
 #endif
 
 #if BX_CPU_LEVEL >= 3
