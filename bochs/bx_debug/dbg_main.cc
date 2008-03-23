@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.114 2008-03-03 10:49:54 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.115 2008-03-23 17:59:44 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -166,18 +166,17 @@ int bx_dbg_main(void)
   bx_debugger.next_bpoint_id = 1;
 
   dbg_cpu_list = (bx_list_c*) SIM->get_param("cpu0", SIM->get_bochs_root());
+  const char *debugger_log_filename = SIM->get_param_string(BXPN_DEBUGGER_LOG_FILENAME)->getptr();
 
   // Open debugger log file if needed
-  if ((strlen(SIM->get_param_string(BXPN_DEBUGGER_LOG_FILENAME)->getptr()) > 0)
-   && (strcmp(SIM->get_param_string(BXPN_DEBUGGER_LOG_FILENAME)->getptr(), "-") != 0)) {
-    debugger_log = fopen(SIM->get_param_string(BXPN_DEBUGGER_LOG_FILENAME)->getptr(), "w");
+  if (strlen(debugger_log_filename) > 0 && (strcmp(debugger_log_filename, "-") != 0))
+  {
+    debugger_log = fopen(debugger_log_filename, "w");
     if (!debugger_log) {
-      BX_PANIC(("Can not open debugger log file '%s'",
-        SIM->get_param_string(BXPN_DEBUGGER_LOG_FILENAME)->getptr()));
+      BX_PANIC(("Can not open debugger log file '%s'", debugger_log_filename));
     }
     else {
-      BX_INFO(("Using debugger log file %s",
-        SIM->get_param_string(BXPN_DEBUGGER_LOG_FILENAME)->getptr()));
+      BX_INFO(("Using debugger log file %s", debugger_log_filename));
     }
   }
 
@@ -505,9 +504,9 @@ void bx_dbg_print_sse_state(void)
   char param_name[20];
   for(unsigned i=0;i<BX_XMM_REGISTERS;i++) {
     sprintf(param_name, "SSE.xmm%02d_hi", i);
-    Bit64u hi = SIM->get_param_num(param_name, dbg_cpu_list)->get();
+    Bit64u hi = SIM->get_param_num(param_name, dbg_cpu_list)->get64();
     sprintf(param_name, "SSE.xmm%02d_lo", i);
-    Bit64u lo = SIM->get_param_num(param_name, dbg_cpu_list)->get();
+    Bit64u lo = SIM->get_param_num(param_name, dbg_cpu_list)->get64();
     dbg_printf("XMM[%02u]: %08x%08x:%08x%08x\n", i,
        GET32H(hi), GET32L(hi), GET32H(lo), GET32L(lo));
   }
@@ -522,7 +521,7 @@ void bx_dbg_print_mmx_state(void)
   char param_name[20];
   for(unsigned i=0;i<8;i++) {
     sprintf(param_name, "FPU.st%d.fraction", i);
-    Bit64u mmreg = SIM->get_param_num(param_name, dbg_cpu_list)->get();
+    Bit64u mmreg = SIM->get_param_num(param_name, dbg_cpu_list)->get64();
     dbg_printf("MM[%d]: %08x:%08x\n", i, GET32H(mmreg), GET32L(mmreg));
   }
 #else
@@ -564,8 +563,8 @@ void bx_dbg_info_flags(void)
 void bx_dbg_info_control_regs_command(void)
 {
   Bit32u cr0 = SIM->get_param_num("CR0", dbg_cpu_list)->get();
-  bx_address cr2 = SIM->get_param_num("CR2", dbg_cpu_list)->get();
-  bx_phy_address cr3 = SIM->get_param_num("CR3", dbg_cpu_list)->get();
+  bx_address cr2 = (bx_address) SIM->get_param_num("CR2", dbg_cpu_list)->get64();
+  bx_phy_address cr3 = (bx_phy_address) SIM->get_param_num("CR3", dbg_cpu_list)->get();
   dbg_printf("CR0=0x%08x\n", cr0);
   dbg_printf("    PG=paging=%d\n", (cr0>>31) & 1);
   dbg_printf("    CD=cache disable=%d\n", (cr0>>30) & 1);
@@ -2979,7 +2978,6 @@ void bx_dbg_info_pci()
   dbg_printf("PCI support is not compiled in\n");
 #endif
 }
-
 
 //
 // Reports from various events
