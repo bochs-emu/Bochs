@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.204 2008-03-22 21:29:41 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.205 2008-03-23 21:39:01 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -123,6 +123,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::HLT(bxInstruction_c *i)
   // is met.
 
   BX_INSTR_HLT(BX_CPU_ID);
+
+#if BX_DEBUGGER
+  bx_dbg_halt(BX_CPU_ID);
+#endif
 
 #if BX_USE_IDLE_HACK
   bx_gui->sim_is_idle();

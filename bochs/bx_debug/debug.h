@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debug.h,v 1.37 2008-02-05 22:33:33 sshwarts Exp $
+// $Id: debug.h,v 1.38 2008-03-23 21:39:01 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -293,6 +293,7 @@ void bx_dbg_calc_command(Bit64u value);
 void bx_dbg_dump_table(void);
 void bx_dbg_exception(unsigned cpu, Bit8u vector, Bit16u error_code);
 void bx_dbg_interrupt(unsigned cpu, Bit8u vector, Bit16u error_code);
+void bx_dbg_halt(unsigned cpu);
 
 // commands that work with Bochs param tree
 void bx_dbg_restore_command(const char *param_name, const char *path);
