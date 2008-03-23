@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.115 2008-03-23 17:59:44 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.116 2008-03-23 21:25:13 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1248,7 +1248,7 @@ int bx_dbg_show_symbolic(void)
     }
 
     if(last_cr3 != BX_CPU(dbg_cpu)->cr3)
-      dbg_printf(FMT_TICK ": address space switched. CR3: 0x08x\n",
+      dbg_printf(FMT_TICK ": address space switched. CR3: 0x%08x\n",
         bx_pc_system.time_ticks(), BX_CPU(dbg_cpu)->cr3);
   }
 
@@ -3127,7 +3127,7 @@ void bx_dbg_dump_table(void)
     return;
   }
 
-  printf("cr3: 0x08x\n", BX_CPU(dbg_cpu)->cr3);
+  printf("cr3: 0x%08x\n", BX_CPU(dbg_cpu)->cr3);
 
   lin = 0;
   phy = 0;
