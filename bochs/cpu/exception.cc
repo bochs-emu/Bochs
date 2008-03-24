@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.102 2008-03-23 21:24:05 sshwarts Exp $
+// $Id: exception.cc,v 1.103 2008-03-24 22:13:04 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -287,7 +287,7 @@ void BX_CPU_C::long_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error_code
 void BX_CPU_C::protected_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error_code, Bit16u error_code)
 {
   // protected mode interrupt
-  Bit32u  dword1, dword2;
+  Bit32u dword1, dword2;
   bx_descriptor_t gate_descriptor, cs_descriptor;
   bx_selector_t cs_selector;
 
@@ -452,7 +452,6 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error
       Bit32u ESP_for_cpl_x, old_EIP, old_ESP;
       bx_descriptor_t ss_descriptor;
       bx_selector_t   ss_selector;
-      int bytes;
       int is_v8086_mode = v8086_mode();
 
       BX_DEBUG(("interrupt(): INTERRUPT TO INNER PRIVILEGE"));
@@ -507,35 +506,6 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error
       // seg must be present, else #SS(SS selector + ext)
       if (! IS_PRESENT(ss_descriptor)) {
         BX_ERROR(("interrupt(): SS not present"));
-        exception(BX_SS_EXCEPTION, SS_for_cpl_x & 0xfffc, 0);
-      }
-
-      if (gate_descriptor.type>=14) {
-        // 386 int/trap gate
-        // new stack must have room for 20|24 bytes, else #SS(0)
-        if (is_error_code)
-          bytes = 24;
-        else
-          bytes = 20;
-        if (is_v8086_mode)
-          bytes += 16;
-      }
-      else {
-        // new stack must have room for 10|12 bytes, else #SS(0)
-        if (is_error_code)
-          bytes = 12;
-        else
-          bytes = 10;
-        if (is_v8086_mode) {
-          bytes += 8;
-          BX_PANIC(("interrupt: int/trap gate VM"));
-        }
-      }
-
-      // new stack must have enough room, else #SS(seg selector)
-      if (!can_push(&ss_descriptor, ESP_for_cpl_x, bytes))
-      {
-        BX_DEBUG(("interrupt(): new stack doesn't have room for %u bytes", (unsigned) bytes));
         exception(BX_SS_EXCEPTION, SS_for_cpl_x & 0xfffc, 0);
       }
 
@@ -666,34 +636,12 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error
     // INTERRUPT TO SAME PRIVILEGE LEVEL:
     if (IS_CODE_SEGMENT_CONFORMING(cs_descriptor.type) || cs_descriptor.dpl==CPL)
     {
-      int bytes;
-
       if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b)
         temp_ESP = ESP;
       else
         temp_ESP = SP;
 
       BX_DEBUG(("int_trap_gate286(): INTERRUPT TO SAME PRIVILEGE"));
-
-      // Current stack limits must allow pushing 6|8 bytes, else #SS(0)
-      if (gate_descriptor.type >= 14) { // 386 gate
-        if (is_error_code)
-          bytes = 16;
-        else
-          bytes = 12;
-      }
-      else { // 286 gate
-        if (is_error_code)
-          bytes = 8;
-        else
-          bytes = 6;
-      }
-
-      if (! can_push(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache, temp_ESP, bytes))
-      {
-        BX_DEBUG(("interrupt(): stack doesn't have room"));
-        exception(BX_SS_EXCEPTION, 0, 0);
-      }
 
       // EIP must be in CS limit else #GP(0)
       if (gate_dest_offset > cs_descriptor.u.segment.limit_scaled) {

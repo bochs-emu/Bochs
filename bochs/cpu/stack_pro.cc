@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack_pro.cc,v 1.40 2008-03-22 21:29:41 sshwarts Exp $
+// $Id: stack_pro.cc,v 1.41 2008-03-24 22:13:04 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -146,92 +146,6 @@ Bit64u BX_CPU_C::pop_64(void)
   return value64;
 }
 #endif
-
-  bx_bool BX_CPP_AttrRegparmN(3)
-BX_CPU_C::can_push(bx_descriptor_t *descriptor, Bit32u esp, Bit32u bytes)
-{
-#if BX_SUPPORT_X86_64
-  if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
-    return(1);
-  }
-#endif
-
-  // small stack compares against 16-bit SP
-  if (!descriptor->u.segment.d_b)
-    esp &= 0x0000ffff;
-
-  if (descriptor->valid==0) {
-    BX_ERROR(("can_push(): SS invalidated."));
-    return(0);
-  }
-
-  if (descriptor->p==0) {
-    BX_ERROR(("can_push(): descriptor not present"));
-    return(0);
-  }
-
-  if (IS_DATA_SEGMENT_EXPAND_DOWN(descriptor->type)) /* expand down segment */
-  {
-    Bit32u expand_down_limit;
-
-    if (descriptor->u.segment.d_b)
-      expand_down_limit = 0xffffffff;
-    else
-      expand_down_limit = 0x0000ffff;
-
-    if (esp==0) {
-      BX_PANIC(("can_push(): esp=0, wraparound?"));
-      return(0);
-    }
-
-    if (esp < bytes) {
-      BX_PANIC(("can_push(): expand-down: esp < N"));
-      return(0);
-    }
-    if ((esp - bytes) <= descriptor->u.segment.limit_scaled) {
-      BX_ERROR(("can_push(): expand-down: esp-N < limit"));
-      return(0);
-    }
-    if (esp > expand_down_limit) {
-      BX_ERROR(("can_push(): esp > expand-down-limit"));
-      return(0);
-    }
-    return(1);
-  }
-  else { /* normal (expand-up) segment */
-    if (descriptor->u.segment.limit_scaled==0) {
-      BX_PANIC(("can_push(): found limit of 0"));
-      return(0);
-    }
-
-    // Look at case where esp==0.  Possibly, it's an intentional wraparound
-    // If so, limit must be the maximum for the given stack size
-    if (esp==0) {
-      if (descriptor->u.segment.d_b && (descriptor->u.segment.limit_scaled==0xffffffff))
-        return(1);
-      if ((descriptor->u.segment.d_b==0) && (descriptor->u.segment.limit_scaled>=0xffff))
-        return(1);
-      BX_ERROR(("can_push(): esp=0, normal, wraparound? limit=%08x",
-        descriptor->u.segment.limit_scaled));
-      return(0);
-    }
-
-    if (!descriptor->u.segment.d_b) {
-      // Weird case for 16-bit SP.
-      esp = ((esp-bytes) & 0xffff) + bytes;
-    }
-    if (esp < bytes) {
-      BX_ERROR(("can_push(): expand-up: esp < N"));
-      return(0);
-    }
-    if ((esp-1) > descriptor->u.segment.limit_scaled) {
-      BX_ERROR(("can_push(): expand-up: SP > limit"));
-      return(0);
-    }
-    /* all checks pass */
-    return(1);
-  }
-}
 
 bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::can_pop(Bit32u bytes)
 {

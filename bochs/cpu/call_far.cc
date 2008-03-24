@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: call_far.cc,v 1.27 2008-02-15 19:03:53 sshwarts Exp $
+// $Id: call_far.cc,v 1.28 2008-03-24 22:13:03 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005 Stanislav Shwartsman
@@ -244,7 +244,6 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
           Bit32u ESP_for_cpl_x;
           bx_selector_t   ss_selector;
           bx_descriptor_t ss_descriptor;
-          unsigned room_needed;
           Bit16u   return_SS, return_CS;
           Bit32u   return_ESP, return_EIP;
           Bit16u   parameter_word[32];
@@ -299,27 +298,8 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
             exception(BX_SS_EXCEPTION, SS_for_cpl_x & 0xfffc, 0);
           }
 
-          if (cs_descriptor.u.segment.d_b)
-            // new stack must have room for parameters plus 16 bytes
-            room_needed = 16;
-          else
-            // new stack must have room for parameters plus 8 bytes
-            room_needed =  8;
-
           // get word count from call gate, mask to 5 bits
           unsigned param_count = gate_descriptor.u.gate.param_count & 0x1f;
-
-          if (gate_descriptor.type==BX_286_CALL_GATE)
-            room_needed += param_count*2;
-          else
-            room_needed += param_count*4;
-
-          // new stack must have room for parameters plus return info
-          //   else #SS(SS selector)
-          if (!can_push(&ss_descriptor, ESP_for_cpl_x, room_needed)) {
-            BX_ERROR(("call_protected: stack doesn't have room"));
-            exception(BX_SS_EXCEPTION, SS_for_cpl_x & 0xfffc, 0);
-          }
 
           // new eIP must be in code segment limit else #GP(0)
           if (new_EIP > cs_descriptor.u.segment.limit_scaled) {
