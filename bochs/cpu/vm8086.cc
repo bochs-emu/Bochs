@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vm8086.cc,v 1.39 2008-02-15 19:03:54 sshwarts Exp $
+// $Id: vm8086.cc,v 1.40 2008-03-24 22:35:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -46,11 +46,9 @@
 
 #if BX_CPU_LEVEL >= 3
 
-void BX_CPU_C::stack_return_to_v86(Bit32u new_eip, Bit32u raw_cs_selector,
-                              Bit32u flags32)
+void BX_CPU_C::stack_return_to_v86(Bit32u new_eip, Bit32u raw_cs_selector, Bit32u flags32)
 {
   Bit32u temp_ESP, new_esp;
-  bx_address esp_laddr;
   Bit16u raw_es_selector, raw_ds_selector, raw_fs_selector,
          raw_gs_selector, raw_ss_selector;
 
@@ -80,11 +78,9 @@ void BX_CPU_C::stack_return_to_v86(Bit32u new_eip, Bit32u raw_cs_selector,
     exception(BX_SS_EXCEPTION, 0, 0);
   }
 
-  esp_laddr = BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_ESP;
-
   // load SS:ESP from stack
-  new_esp = read_virtual_dword(BX_SEG_REG_SS, temp_ESP+12);
-  raw_ss_selector = read_virtual_word(BX_SEG_REG_SS, temp_ESP+16);
+  new_esp         = read_virtual_dword(BX_SEG_REG_SS, temp_ESP+12);
+  raw_ss_selector = read_virtual_word (BX_SEG_REG_SS, temp_ESP+16);
 
   // load ES,DS,FS,GS from stack
   raw_es_selector = read_virtual_word(BX_SEG_REG_SS, temp_ESP+20);
@@ -117,12 +113,6 @@ void BX_CPU_C::iret16_stack_return_from_v86(bxInstruction_c *i)
   }
 
   Bit16u ip, cs_raw, flags16;
-
-  if(!can_pop(6))
-  {
-    BX_DEBUG(("iret16_stack_return_from_v86(): can't pop 6 bytes from the stack"));
-    exception(BX_SS_EXCEPTION, 0, 0);
-  }
 
   ip      = pop_16();
   cs_raw  = pop_16();
@@ -174,12 +164,6 @@ void BX_CPU_C::iret32_stack_return_from_v86(bxInstruction_c *i)
 #if BX_CPU_LEVEL >= 4
   change_mask |= (EFlagsIDMask | EFlagsACMask);  // ID/AC
 #endif
-
-  if(!can_pop(12))
-  {
-    BX_DEBUG(("iret32_stack_return_from_v86(): can't pop 12 bytes from the stack"));
-    exception(BX_SS_EXCEPTION, 0, 0);
-  }
 
   eip     = pop_32();
   cs_raw  = pop_32();
