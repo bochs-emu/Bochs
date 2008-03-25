@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_move.cc,v 1.83 2008-03-22 21:29:41 sshwarts Exp $
+// $Id: sse_move.cc,v 1.84 2008-03-25 16:46:39 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -50,6 +50,9 @@ void BX_CPU_C::print_state_SSE(void)
   }
 }
 
+#endif
+
+#if BX_SUPPORT_FPU
 Bit16u BX_CPU_C::unpack_FPU_TW(Bit16u tag_byte)
 {
   Bit32u twd = 0;
@@ -107,7 +110,6 @@ Bit16u BX_CPU_C::unpack_FPU_TW(Bit16u tag_byte)
 
   return (twd >> 2);
 }
-
 #endif
 
 /* ************************************ */
