@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.374 2008-02-15 22:05:37 sshwarts Exp $
+// $Id: main.cc,v 1.375 2008-03-26 22:39:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1179,18 +1179,18 @@ int bx_atexit(void)
 
   BX_MEM(0)->cleanup_memory();
 
-#if BX_PROVIDE_DEVICE_MODELS==1
+#if BX_PROVIDE_DEVICE_MODELS
   bx_pc_system.exit();
 #endif
 
   // restore signal handling to defaults
-#if !BX_DEBUGGER
+#if BX_DEBUGGER == 0
   BX_INFO(("restoring default signal behavior"));
   signal(SIGINT, SIG_DFL);
 #endif
 
 #if BX_SHOW_IPS
-#ifndef __MINGW32__
+#if !defined(__MINGW32__) && !defined(_MSC_VER)
   signal(SIGALRM, SIG_DFL);
 #endif
 #endif
