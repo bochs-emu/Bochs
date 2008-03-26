@@ -413,6 +413,8 @@
 #if BX_64BIT_CONSTANTS_USE_LL
 // doesn't work on Microsoft Visual C++, maybe others
 #define BX_CONST64(x)  (x##LL)
+#elif defined(_MSC_VER)
+#define BX_CONST64(x)  (x##I64)
 #else
 #define BX_CONST64(x)  (x)
 #endif

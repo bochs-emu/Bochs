@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: acpi.cc,v 1.13 2008-01-26 22:24:00 sshwarts Exp $
+// $Id: acpi.cc,v 1.14 2008-03-26 16:25:05 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2006  Volker Ruppert
@@ -390,7 +390,7 @@ void bx_acpi_ctrl_c::write(Bit32u address, Bit32u value, unsigned io_len)
           if (pmsts & value & TMROF_EN) {
             // if TMRSTS is reset, then compute the new overflow time
             Bit64u d = muldiv64(bx_pc_system.time_usec(), PM_FREQ, 1000000);
-            BX_ACPI_THIS s.tmr_overflow_time = (d + 0x800000LL) & ~0x7fffffLL;
+            BX_ACPI_THIS s.tmr_overflow_time = (d + BX_CONST64(0x800000)) & ~BX_CONST64(0x7fffff);
           }
           BX_ACPI_THIS s.pmsts &= ~value;
           BX_ACPI_THIS pm_update_sci();

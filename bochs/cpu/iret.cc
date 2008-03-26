@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: iret.cc,v 1.28 2008-02-15 19:03:53 sshwarts Exp $
+// $Id: iret.cc,v 1.29 2008-03-26 16:25:05 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005 Stanislav Shwartsman
@@ -110,10 +110,9 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
   }
 
   /* NT = 0: INTERRUPT RETURN ON STACK -or STACK_RETURN_TO_V86 */
-  unsigned top_nbytes_same, top_nbytes_outer;
+  unsigned top_nbytes_same;
   Bit32u new_eip = 0, new_esp, temp_ESP, new_eflags = 0;
   Bit16u new_ip = 0, new_flags = 0;
-  Bit32u ss_offset;
 
   /* 16bit opsize  |   32bit opsize
    * ==============================
@@ -126,20 +125,10 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
    */
 
   if (i->os32L()) {
-    top_nbytes_same  = 12;
-    top_nbytes_outer = 20;
-    ss_offset = 16;
+    top_nbytes_same = 12;
   }
   else {
-    top_nbytes_same  = 6;
-    top_nbytes_outer = 10;
-    ss_offset = 8;
-  }
-
-  /* CS on stack must be within stack limits, else #SS(0) */
-  if (!can_pop(top_nbytes_same)) {
-    BX_ERROR(("iret: CS not within stack limits"));
-    exception(BX_SS_EXCEPTION, 0, 0);
+    top_nbytes_same = 6;
   }
 
   if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b)
@@ -148,9 +137,9 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
     temp_ESP = SP;
 
   if (i->os32L()) {
-    raw_cs_selector = read_virtual_word (BX_SEG_REG_SS, temp_ESP + 4);
-    new_eip         = read_virtual_dword(BX_SEG_REG_SS, temp_ESP + 0);
-    new_eflags      = read_virtual_dword(BX_SEG_REG_SS, temp_ESP + 8);
+    raw_cs_selector = (Bit16u) read_virtual_dword(BX_SEG_REG_SS, temp_ESP + 4);
+    new_eip         =          read_virtual_dword(BX_SEG_REG_SS, temp_ESP + 0);
+    new_eflags      =          read_virtual_dword(BX_SEG_REG_SS, temp_ESP + 8);
 
     // if VM=1 in flags image on stack then STACK_RETURN_TO_V86
     if (new_eflags & EFlagsVMMask) {
@@ -237,14 +226,13 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
      * IP     eSP+0  |   EIP    eSP+0
      */
 
-    /* top 10/20 bytes on stack must be within limits else #SS(0) */
-    if (!can_pop(top_nbytes_outer)) {
-      BX_ERROR(("iret: top 10/20 bytes not within stack limits"));
-      exception(BX_SS_EXCEPTION, 0, 0);
-    }
-
     /* examine return SS selector and associated descriptor */
-    raw_ss_selector = read_virtual_word(BX_SEG_REG_SS, temp_ESP + ss_offset);
+    if (i->os32L()) {
+      raw_ss_selector = (Bit16u) read_virtual_dword(BX_SEG_REG_SS, temp_ESP + 16);
+    }
+    else {
+      raw_ss_selector = read_virtual_word(BX_SEG_REG_SS, temp_ESP + 8);
+    }
 
     /* selector must be non-null, else #GP(0) */
     if ((raw_ss_selector & 0xfffc) == 0) {
@@ -349,7 +337,6 @@ BX_CPU_C::long_iret(bxInstruction_c *i)
   bx_descriptor_t cs_descriptor, ss_descriptor;
   Bit32u new_eflags;
   Bit64u new_rip, new_rsp, temp_RSP;
-  unsigned top_nbytes_outer, ss_offset;
 
   BX_DEBUG (("LONG MODE IRET"));
 
@@ -377,42 +364,22 @@ BX_CPU_C::long_iret(bxInstruction_c *i)
   unsigned top_nbytes_same = 0; /* stop compiler warnings */
 
   if (i->os64L()) {
-    raw_cs_selector = read_virtual_word (BX_SEG_REG_SS, temp_RSP +  8);
-    new_rip         = read_virtual_qword(BX_SEG_REG_SS, temp_RSP +  0);
+    raw_cs_selector = (Bit16u) read_virtual_qword(BX_SEG_REG_SS, temp_RSP +  8);
+    new_rip         =          read_virtual_qword(BX_SEG_REG_SS, temp_RSP +  0);
     new_eflags      = (Bit32u) read_virtual_qword(BX_SEG_REG_SS, temp_RSP + 16);
-
-    top_nbytes_outer = 40;
-    ss_offset = 32;
+    top_nbytes_same = 24;
   }
   else if (i->os32L()) {
-    /* CS on stack must be within stack limits, else #SS(0) */
-    if (!can_pop(12)) {
-      BX_ERROR(("iret64: CS not within stack limits"));
-      exception(BX_SS_EXCEPTION, 0, 0);
-    }
-
-    raw_cs_selector = read_virtual_word (BX_SEG_REG_SS, temp_RSP + 4);
+    raw_cs_selector = (Bit16u) read_virtual_dword(BX_SEG_REG_SS, temp_RSP + 4);
     new_rip         = (Bit64u) read_virtual_dword(BX_SEG_REG_SS, temp_RSP + 0);
-    new_eflags      = read_virtual_dword(BX_SEG_REG_SS, temp_RSP + 8);
-
-    top_nbytes_outer = 20;
+    new_eflags      =          read_virtual_dword(BX_SEG_REG_SS, temp_RSP + 8);
     top_nbytes_same = 12;
-    ss_offset = 16;
   }
   else {
-    /* CS on stack must be within stack limits, else #SS(0) */
-    if (!can_pop(6)) {
-      BX_ERROR(("iret64: CS not within stack limits"));
-      exception(BX_SS_EXCEPTION, 0, 0);
-    }
-
-    raw_cs_selector  = read_virtual_word(BX_SEG_REG_SS, temp_RSP + 2);
-    new_rip          = (Bit64u) read_virtual_word(BX_SEG_REG_SS, temp_RSP + 0);
-    new_eflags       = read_virtual_word(BX_SEG_REG_SS, temp_RSP + 4);
-
-    top_nbytes_outer = 10;
+    raw_cs_selector =          read_virtual_word(BX_SEG_REG_SS, temp_RSP + 2);
+    new_rip         = (Bit64u) read_virtual_word(BX_SEG_REG_SS, temp_RSP + 0);
+    new_eflags      =          read_virtual_word(BX_SEG_REG_SS, temp_RSP + 4);
     top_nbytes_same = 6;
-    ss_offset = 8;
   }
 
   // if VM=1 in flags image on stack then STACK_RETURN_TO_V86
@@ -482,14 +449,16 @@ BX_CPU_C::long_iret(bxInstruction_c *i)
      * EIP    eSP+0
      */
 
-    /* top 10/20 bytes on stack must be within limits else #SS(0) */
-    if (! can_pop(top_nbytes_outer)) {
-      BX_PANIC(("iret64: top bytes not within stack limits"));
-      exception(BX_SS_EXCEPTION, 0, 0);
-    }
-
     /* examine return SS selector and associated descriptor */
-    raw_ss_selector = read_virtual_word(BX_SEG_REG_SS, temp_RSP + ss_offset);
+    if (i->os64L()) {
+      raw_ss_selector = (Bit16u) read_virtual_qword(BX_SEG_REG_SS, temp_RSP + 32);
+    }
+    else if (i->os32L()) {
+      raw_ss_selector = (Bit16u) read_virtual_dword(BX_SEG_REG_SS, temp_RSP + 16);
+    }
+    else {
+      raw_ss_selector = read_virtual_word(BX_SEG_REG_SS, temp_RSP + 8);
+    }
 
     if ((raw_ss_selector & 0xfffc) == 0) {
       if (! IS_LONG64_SEGMENT(cs_descriptor) || (cs_selector.rpl == 3)) {
