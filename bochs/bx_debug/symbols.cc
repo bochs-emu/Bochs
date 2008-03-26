@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: symbols.cc,v 1.8 2008-02-05 22:33:33 sshwarts Exp $
+// $Id: symbols.cc,v 1.9 2008-03-26 22:39:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -125,20 +125,25 @@ struct lt_rsymbol_entry_t
 
 struct context_t
 {
+  typedef set<symbol_entry_t*,lt_symbol_entry_t>  sym_set_t;
+  typedef set<symbol_entry_t*,lt_rsymbol_entry_t> rsym_set_t;
+
   context_t (Bit32u);
-  ~context_t();
+ ~context_t();
+
   static context_t* get_context(Bit32u);
   symbol_entry_t* get_symbol_entry(Bit32u);
   symbol_entry_t* get_symbol_entry(const char *Symbol) const;
   void add_symbol(symbol_entry_t*);
-  const set<symbol_entry_t*,lt_symbol_entry_t>* get_all_symbols() const {return syms;}
-  const set<symbol_entry_t*,lt_rsymbol_entry_t>* get_all_rsymbols() const {return rsyms;}
+  const sym_set_t* get_all_symbols() const {return syms;}
+  const rsym_set_t* get_all_rsymbols() const {return rsyms;}
+
 private:
   static hash_map<int,context_t*>* map;
   // Forvard references (find name by address)
-  set<symbol_entry_t*,lt_symbol_entry_t>* syms;
+  sym_set_t* syms;
   // Reverse references (find address by name)
-  set<symbol_entry_t*,lt_rsymbol_entry_t>* rsyms;
+  rsym_set_t* rsyms;
   Bit32u id;
 };
 
@@ -147,25 +152,26 @@ hash_map<int,context_t*>* context_t::map = new hash_map<int,context_t*>;
 context_t::context_t (Bit32u _id)
 {
   id = _id;
-  syms = new set<symbol_entry_t*, lt_symbol_entry_t>;
-  rsyms = new set<symbol_entry_t*, lt_rsymbol_entry_t>;
+  syms = new sym_set_t;
+  rsyms = new rsym_set_t;
   (*map)[id] = this;
 }
 
 context_t::~context_t()
 {
- set<symbol_entry_t*>::iterator iter;
- if(syms) {
-  for(iter=syms->begin();iter!=syms->end();++iter)
-   if(*iter)
-    delete *iter;
- }
+  if(syms) {
+    sym_set_t::iterator iter;
+    for(iter=syms->begin();iter!=syms->end();++iter)
+    if(*iter)
+      delete *iter;
+  }
 
- if(rsyms) {
-  for(iter=rsyms->begin();iter!=rsyms->end();++iter)
-   if(*iter)
-    delete *iter;
- }
+  if(rsyms) {
+    rsym_set_t::iterator iter;
+    for(iter=rsyms->begin();iter!=rsyms->end();++iter)
+      if(*iter)
+        delete *iter;
+  }
 }
 
 context_t* context_t::get_context(Bit32u i)
@@ -179,7 +185,7 @@ symbol_entry_t* context_t::get_symbol_entry(Bit32u ip)
   probe.start = ip;
   // find the first symbol whose address is greater than ip.
   if (syms->empty ()) return 0;
-  set<symbol_entry_t*>::iterator iter = syms->upper_bound(&probe);
+  sym_set_t::iterator iter = syms->upper_bound(&probe);
 
   if (iter == syms->end()) { // No symbol found
     return 0;
@@ -193,13 +199,13 @@ symbol_entry_t* context_t::get_symbol_entry(const char *Symbol) const
   symbol_entry_t probe;
   probe.name=(char *)Symbol;
 
-  if (rsyms->empty ())
-   return 0;
+  if (rsyms->empty())
+    return 0;
 
-  set<symbol_entry_t*>::const_iterator iter;
+  rsym_set_t::const_iterator iter;
   iter=rsyms->find(&probe);
   if(iter==rsyms->end()) // No symbol found
-   return 0;
+    return 0;
   return *iter;
 }
 
@@ -211,19 +217,19 @@ void context_t::add_symbol(symbol_entry_t* sym)
 
 Bit32u bx_dbg_get_symbol_value(char *Symbol)
 {
- context_t* cntx = context_t::get_context(0);
- if(!cntx) // Context not found
-  return 0;
+  context_t* cntx = context_t::get_context(0);
+  if(!cntx) // Context not found
+    return 0;
 
- if (Symbol[0]=='\"') Symbol++;
- int len = strlen(Symbol);
- if (Symbol[len - 1] == '\"') Symbol[len - 1] = '\0';
+  if (Symbol[0]=='\"') Symbol++;
+  int len = strlen(Symbol);
+  if (Symbol[len - 1] == '\"') Symbol[len - 1] = '\0';
 
- symbol_entry_t* sym=cntx->get_symbol_entry(Symbol);
- if(!sym) // Symbol not found
-  return 0;
+  symbol_entry_t* sym=cntx->get_symbol_entry(Symbol);
+  if(!sym) // Symbol not found
+    return 0;
 
- return sym->start;
+  return sym->start;
 }
 
 char* bx_dbg_symbolic_address(Bit32u context, Bit32u eip, Bit32u base)
@@ -339,12 +345,12 @@ void bx_dbg_symbol_command(char* filename, bx_bool global, Bit32u offset)
 static bool bx_dbg_strprefix(const char *s1, const char *s2)
 {
   if(!s1 || !s2)
-   return false;
+    return false;
 
   size_t len=strlen(s1);
 
   if(len>strlen(s2))
-   return false;
+    return false;
   return strncmp(s1, s2, len)==0;
 }
 
@@ -353,67 +359,69 @@ void bx_dbg_info_symbols_command(char *Symbol)
   context_t* cntx = context_t::get_context(0);
 
   if(!cntx) {
-   dbg_printf ("Global context not available\n");
-   return;
+    dbg_printf ("Global context not available\n");
+    return;
   }
 
   if(Symbol) {
-   const set<symbol_entry_t*,lt_rsymbol_entry_t>* rsyms;
+    const context_t::rsym_set_t* rsyms;
 
-   rsyms=cntx->get_all_rsymbols();
-   if (rsyms->empty ()) {
-    dbg_printf ("Symbols not loaded\n");
-    return;
-   }
-   // remove leading and trailing quotas
-   if (Symbol[0]=='\"') Symbol++;
-   int len = strlen(Symbol);
-   if (Symbol[len - 1] == '\"') Symbol[len - 1] = '\0';
+    rsyms=cntx->get_all_rsymbols();
+    if (rsyms->empty ()) {
+      dbg_printf ("Symbols not loaded\n");
+      return;
+    }
+    // remove leading and trailing quotas
+    if (Symbol[0]=='\"') Symbol++;
+    int len = strlen(Symbol);
+    if (Symbol[len - 1] == '\"') Symbol[len - 1] = '\0';
 
-   symbol_entry_t probe;
-   probe.name=Symbol;
-   set<symbol_entry_t*>::const_iterator iter;
-   iter=rsyms->lower_bound(&probe);
+    symbol_entry_t probe;
+    probe.name=Symbol;
+    context_t::rsym_set_t::const_iterator iter;
+    iter=rsyms->lower_bound(&probe);
 
-   if(iter==rsyms->end() || !bx_dbg_strprefix(Symbol, (*iter)->name))
-    dbg_printf ("No symbols found\n");
-   else
-   for(;iter!=rsyms->end() && bx_dbg_strprefix(Symbol, (*iter)->name);++iter) {
-    dbg_printf ("%08x: %s\n", (*iter)->start, (*iter)->name);
-   }
+    if(iter==rsyms->end() || !bx_dbg_strprefix(Symbol, (*iter)->name))
+      dbg_printf ("No symbols found\n");
+    else {
+      for(;iter!=rsyms->end() && bx_dbg_strprefix(Symbol, (*iter)->name);++iter) {
+        dbg_printf ("%08x: %s\n", (*iter)->start, (*iter)->name);
+      }
+    }
   }
   else {
-   const set<symbol_entry_t*,lt_symbol_entry_t>* syms;
+    const context_t::sym_set_t* syms;
 
-   syms=cntx->get_all_symbols();
-   if (syms->empty ()) {
-    dbg_printf ("Symbols not loaded\n");
-    return;
-   }
+    syms=cntx->get_all_symbols();
+    if (syms->empty ()) {
+      dbg_printf ("Symbols not loaded\n");
+      return;
+    }
 
-   set<symbol_entry_t*>::const_iterator iter;
-   for(iter = syms->begin();iter!=syms->end();++iter) {
-    dbg_printf ("%08x: %s\n", (*iter)->start, (*iter)->name);
-   }
+    context_t::sym_set_t::const_iterator iter;
+    for(iter = syms->begin();iter!=syms->end();++iter) {
+      dbg_printf ("%08x: %s\n", (*iter)->start, (*iter)->name);
+    }
   }
 }
 
 int bx_dbg_lbreakpoint_symbol_command(char *Symbol)
 {
- context_t* cntx = context_t::get_context(0);
- if(!cntx) {
-  dbg_printf ("Global context not available\n");
-  return -1;
- }
- if (Symbol[0]=='\"') Symbol++;
- int len = strlen(Symbol);
- if (Symbol[len - 1] == '\"') Symbol[len - 1] = '\0';
+  context_t* cntx = context_t::get_context(0);
+  if(!cntx) {
+    dbg_printf ("Global context not available\n");
+    return -1;
+  }
+  if (Symbol[0]=='\"') Symbol++;
+  int len = strlen(Symbol);
+  if (Symbol[len - 1] == '\"') Symbol[len - 1] = '\0';
 
- const symbol_entry_t* sym=cntx->get_symbol_entry(Symbol);
- if(sym)
-  return bx_dbg_lbreakpoint_command(bkRegular, sym->start);
- dbg_printf ("Symbol not found\n");
- return -1;
+  const symbol_entry_t* sym=cntx->get_symbol_entry(Symbol);
+  if(sym)
+    return bx_dbg_lbreakpoint_command(bkRegular, sym->start);
+  dbg_printf ("Symbol not found\n");
+  return -1;
 }
+
 #endif
 #endif
