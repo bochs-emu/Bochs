@@ -2,8 +2,10 @@ Changes after 2.3.6 release:
 
 Brief summary :
 
-+ More optimizations in CPU code - 20% additional emulation speedup 
++ More optimizations in CPU code - above 20% additional emulation speedup 
   over 2.3.6 release!
+- Implemented LBA48 support
+- Many bugfixes in CPU emulation (both ia32 and x86-64)
 
 Detailed change log :
 
@@ -37,7 +39,7 @@ Detailed change log :
 
 - Display libraries
   - implemented text mode character blinking in some guis
- 
+
 - SF patches applied
  [1925568] PATCH: msvc compilation by Eugene Toder 
  [1913150] rombios.c - e820 cover full size if memory <= 16 mb by Alexander van Heukelum
