@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bit.cc,v 1.52 2008-03-22 21:29:39 sshwarts Exp $
+// $Id: bit.cc,v 1.53 2008-03-27 21:04:39 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -360,7 +360,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CRC32_GdEb(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_32BIT_REGZ(i->nnn(), BitReflect32(op2));
 #else
-  BX_INFO(("CRC32_GdEb: required SSE4_2 support, required SSE4.2, use --enable-sse and --enable-sse-extension options"));
+  BX_INFO(("CRC32_GdEb: required SSE4_2 support, use --enable-sse and --enable-sse-extension options"));
   UndefinedOpcode(i);
 #endif
 }
@@ -435,7 +435,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CRC32_GdEv(bxInstruction_c *i)
   BX_WRITE_32BIT_REGZ(i->nnn(), BitReflect32(op2));
 
 #else
-  BX_INFO(("CRC32_GdEv: required SSE4_2 support, required SSE4.2, use --enable-sse and --enable-sse-extension options"));
+  BX_INFO(("CRC32_GdEv: required SSE4_2 support, use --enable-sse and --enable-sse-extension options"));
   UndefinedOpcode(i);
 #endif
 }
