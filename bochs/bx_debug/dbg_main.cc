@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.118 2008-03-23 21:40:17 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.119 2008-03-28 12:51:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1232,9 +1232,18 @@ void bx_dbg_show_command(const char* arg)
 
 void bx_dbg_show_param_command(char *param)
 {
-  // remove leading and trailing quotas
   dbg_printf("show param name: <%s>\n", param);
-  print_tree(SIM->get_param(param, SIM->get_bochs_root()), 0);
+  bx_param_c *node = SIM->get_param(param, SIM->get_bochs_root());
+  if (node) {
+    print_tree(node, 0);
+  }
+  else {
+    node = SIM->get_param(param, dbg_cpu_list);
+    if (node)
+      print_tree(node, 0);
+    else
+      dbg_printf("can't find param <%s> in global or default CPU tree\n", param);
+  }
 }
 
 // return non zero to cause a stop
