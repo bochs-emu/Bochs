@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.173 2008-03-29 09:34:33 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.174 2008-03-29 09:58:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2616,7 +2616,7 @@ fetch_b1:
         if (mod == 0x00) { // mod == 00b
           if (BX_NULL_SEG_REG(i->seg())) i->setSeg(BX_SEG_REG_DS);
           if (rm == 5) {
-            i->setSibBase(BX_64BIT_REG_NIL);
+            i->setSibBase(BX_32BIT_REG_NIL);
 get_32bit_displ:
             if ((ilen+3) < remain) {
               i->modRMForm.displ32u = FetchDWORD(iptr);
@@ -2667,7 +2667,7 @@ get_8bit_displ:
           if (BX_NULL_SEG_REG(i->seg()))
             i->setSeg(sreg_mod0_base32[base]);
           if (base == 0x05) {
-            i->setSibBase(BX_64BIT_REG_NIL);
+            i->setSibBase(BX_32BIT_REG_NIL);
             goto get_32bit_displ;
           }
           // mod==00b, rm==4, base!=5
@@ -2728,42 +2728,41 @@ modrm_done:
       attr = BxOpcodeInfo32M[b1+offset].Attr;
     }
 
-    while(attr & BxGroupX)
-    {
-       Bit32u Group = attr & BxGroupX;
-       attr &= ~BxGroupX;
+    while(attr & BxGroupX) {
+      Bit32u Group = attr & BxGroupX;
+      attr &= ~BxGroupX;
 
-       switch(Group) {
-         case BxGroupN:
-           OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[nnn]);
-           break;
-         case BxRMGroup:
-           OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[rm]);
-           break;
+      switch(Group) {
+        case BxGroupN:
+          OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[nnn]);
+          break;
+        case BxRMGroup:
+          OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[rm]);
+          break;
 #if (BX_SUPPORT_SSE >= 4) || (BX_SUPPORT_SSE >= 3 && BX_SUPPORT_SSE_EXTENSION > 0)
-         case Bx3ByteOp:
-           OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[b3]);
-           break;
+        case Bx3ByteOp:
+          OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[b3]);
+          break;
 #endif
-         case BxPrefixSSE:
-           /* For SSE opcodes look into another 4 entries table
-                      with the opcode prefixes (NONE, 0x66, 0xF2, 0xF3) */
-           OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[sse_prefix]);
-           break;
+        case BxPrefixSSE:
+          /* For SSE opcodes look into another 4 entries table
+                     with the opcode prefixes (NONE, 0x66, 0xF2, 0xF3) */
+          OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[sse_prefix]);
+          break;
 #if BX_SUPPORT_FPU
-         case BxFPEscape:
-           {
-             int index = (b1-0xD8)*64 + (0x3f & b2);
-             OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[index]);
-           }
-           break;
+        case BxFPEscape:
+          {
+            int index = (b1-0xD8)*64 + (0x3f & b2);
+            OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[index]);
+          }
+          break;
 #endif
-         default:
-           BX_PANIC(("fetchdecode: Unknown opcode group"));
-       }
+        default:
+          BX_PANIC(("fetchdecode: Unknown opcode group"));
+      }
 
-       /* get additional attributes from group table */
-       attr |= OpcodeInfoPtr->Attr;
+      /* get additional attributes from group table */
+      attr |= OpcodeInfoPtr->Attr;
     }
 
     i->execute = OpcodeInfoPtr->ExecutePtr;

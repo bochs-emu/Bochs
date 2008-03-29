@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.180 2008-03-29 09:34:34 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.181 2008-03-29 09:58:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -3690,40 +3690,39 @@ modrm_done:
       attr = BxOpcodeInfo64M[b1+offset].Attr;
     }
 
-    while(attr & BxGroupX)
-    {
-       Bit32u Group = attr & BxGroupX;
-       attr &= ~BxGroupX;
+    while(attr & BxGroupX) {
+      Bit32u Group = attr & BxGroupX;
+      attr &= ~BxGroupX;
 
-       switch(Group) {
-         case BxGroupN:
-           OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[nnn & 0x7]);
-           break;
-         case BxRMGroup:
-           OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[rm  & 0x7]);
-           break;
+      switch(Group) {
+        case BxGroupN:
+          OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[nnn & 0x7]);
+          break;
+        case BxRMGroup:
+          OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[rm  & 0x7]);
+          break;
 #if (BX_SUPPORT_SSE >= 4) || (BX_SUPPORT_SSE >= 3 && BX_SUPPORT_SSE_EXTENSION > 0)
-         case Bx3ByteOp:
-           OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[b3]);
-           break;
+        case Bx3ByteOp:
+          OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[b3]);
+          break;
 #endif
-         case BxPrefixSSE:
-           /* For SSE opcodes look into another 4 entries table
-                      with the opcode prefixes (NONE, 0x66, 0xF2, 0xF3) */
-           OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[sse_prefix]);
-           break;
-         case BxFPEscape:
-           {
-             int index = (b1-0xD8)*64 + (0x3f & b2);
-             OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[index]);
-           }
-           break;
-         default:
-           BX_PANIC(("fetchdecode: Unknown opcode group"));
-       }
+        case BxPrefixSSE:
+          /* For SSE opcodes look into another 4 entries table
+                     with the opcode prefixes (NONE, 0x66, 0xF2, 0xF3) */
+          OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[sse_prefix]);
+          break;
+        case BxFPEscape:
+          {
+            int index = (b1-0xD8)*64 + (0x3f & b2);
+            OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[index]);
+          }
+          break;
+        default:
+          BX_PANIC(("fetchdecode: Unknown opcode group"));
+      }
 
-       /* get additional attributes from group table */
-       attr |= OpcodeInfoPtr->Attr;
+      /* get additional attributes from group table */
+      attr |= OpcodeInfoPtr->Attr;
     }
 
     i->execute = OpcodeInfoPtr->ExecutePtr;
