@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.208 2008-02-15 22:05:42 sshwarts Exp $
+// $Id: harddrv.cc,v 1.209 2008-03-29 17:44:13 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -173,7 +173,7 @@ void bx_hard_drive_c::init(void)
   char  ata_name[20];
   bx_list_c *base;
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.208 2008-02-15 22:05:42 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.209 2008-03-29 17:44:13 sshwarts Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     sprintf(ata_name, "ata.%d.resources", channel);
@@ -276,15 +276,13 @@ void bx_hard_drive_c::init(void)
       BX_HD_THIS channels[channel].drives[device].statusbar_id = -1;
       BX_HD_THIS channels[channel].drives[device].iolight_counter = 0;
       BX_HD_THIS channels[channel].drives[device].identify_set = 0;
-      if (!SIM->get_param_bool("present", base)->get()) {
-        continue;
-      }
+      if (!SIM->get_param_bool("present", base)->get()) continue;
 
       // Make model string
       strncpy((char*)BX_HD_THIS channels[channel].drives[device].model_no,
         SIM->get_param_string("model", base)->getptr(), 40);
       while (strlen((char *)BX_HD_THIS channels[channel].drives[device].model_no) < 40) {
-        strcat ((char*)BX_HD_THIS channels[channel].drives[device].model_no, " ");
+        strcat((char*)BX_HD_THIS channels[channel].drives[device].model_no, " ");
       }
 
       if (SIM->get_param_enum("type", base)->get() == BX_ATA_DEVICE_DISK) {
@@ -784,8 +782,8 @@ Bit32u bx_hard_drive_c::read(Bit32u address, unsigned io_len)
     else if ((address & 0xfff8) == BX_HD_THIS channels[channel].ioaddr2) {
       port = address - BX_HD_THIS channels[channel].ioaddr2 + 0x10;
       break;
-     }
-   }
+    }
+  }
 
   if (channel == BX_MAX_ATA_CHANNEL) {
     if ((address < 0x03f6) || (address > 0x03f7)) {
@@ -1115,11 +1113,9 @@ Bit32u bx_hard_drive_c::read(Bit32u address, unsigned io_len)
       // to detect the disks.... minix2 for example
       value8 = (!BX_ANY_IS_PRESENT(channel)) ? 0 : BX_SELECTED_CONTROLLER(channel).error_register;
       goto return_value8;
-      break;
     case 0x02: // hard disk sector count / interrupt reason 0x1f2
       value8 = (!BX_ANY_IS_PRESENT(channel)) ? 0 : BX_SELECTED_CONTROLLER(channel).sector_count;
       goto return_value8;
-      break;
     case 0x03: // sector number 0x1f3
       value8 = (!BX_ANY_IS_PRESENT(channel)) ? 0 : BX_SELECTED_CONTROLLER(channel).sector_no;
       goto return_value8;
@@ -1144,7 +1140,6 @@ Bit32u bx_hard_drive_c::read(Bit32u address, unsigned io_len)
                (BX_HD_THIS channels[channel].drive_select << 4) |
                (BX_SELECTED_CONTROLLER(channel).head_no << 0);
       goto return_value8;
-      break;
 
     case 0x07: // Hard Disk Status 0x1f7
     case 0x16: // Hard Disk Alternate Status 0x3f6
@@ -1172,7 +1167,6 @@ Bit32u bx_hard_drive_c::read(Bit32u address, unsigned io_len)
         DEV_pic_lower_irq(BX_HD_THIS channels[channel].irq);
       }
       goto return_value8;
-      break;
 
     case 0x17: // Hard Disk Address Register 0x3f7
       // Obsolete and unsupported register.  Not driven by hard
@@ -1182,12 +1176,11 @@ Bit32u bx_hard_drive_c::read(Bit32u address, unsigned io_len)
       // the combined value
       value8 = 0xff;
       goto return_value8;
-      break;
 
     default:
       BX_PANIC(("hard drive: io read to address %x unsupported",
         (unsigned) address));
-    }
+  }
 
   BX_PANIC(("hard drive: shouldnt get here!"));
   return(0);
@@ -1229,17 +1222,18 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
 
   Bit8u  channel = BX_MAX_ATA_CHANNEL;
   Bit32u port = 0xff; // undefined
+  int i;
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     if ((address & 0xfff8) == BX_HD_THIS channels[channel].ioaddr1) {
       port = address - BX_HD_THIS channels[channel].ioaddr1;
       break;
-      }
+    }
     else if ((address & 0xfff8) == BX_HD_THIS channels[channel].ioaddr2) {
       port = address - BX_HD_THIS channels[channel].ioaddr2 + 0x10;
       break;
-      }
     }
+  }
 
   if (channel == BX_MAX_ATA_CHANNEL) {
     if (address != 0x03f6) {
@@ -1657,7 +1651,6 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
 
                   // Vendor ID
                   const char* vendor_id = "BOCHS   ";
-                  int i;
                   for (i = 0; i < 8; i++)
                     BX_SELECTED_CONTROLLER(channel).buffer[8+i] = vendor_id[i];
 
@@ -1744,75 +1737,72 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
                 break;
 
               case 0x43: // read toc
-                {
-                  if (BX_SELECTED_DRIVE(channel).cdrom.ready) {
+                if (BX_SELECTED_DRIVE(channel).cdrom.ready) {
 #ifdef LOWLEVEL_CDROM
-                    bx_bool msf = (BX_SELECTED_CONTROLLER(channel).buffer[1] >> 1) & 1;
-                    Bit8u starting_track = BX_SELECTED_CONTROLLER(channel).buffer[6];
-                    int toc_length;
+                  bx_bool msf = (BX_SELECTED_CONTROLLER(channel).buffer[1] >> 1) & 1;
+                  Bit8u starting_track = BX_SELECTED_CONTROLLER(channel).buffer[6];
+                  int toc_length;
 #endif
-                    Bit16u alloc_length = read_16bit(BX_SELECTED_CONTROLLER(channel).buffer + 7);
-
-                    Bit8u format = (BX_SELECTED_CONTROLLER(channel).buffer[9] >> 6);
+                  Bit16u alloc_length = read_16bit(BX_SELECTED_CONTROLLER(channel).buffer + 7);
+                  Bit8u format = (BX_SELECTED_CONTROLLER(channel).buffer[9] >> 6);
 // Win32:  I just read the TOC using Win32's IOCTRL functions (Ben)
 #if defined(WIN32)
 #ifdef LOWLEVEL_CDROM
-                    switch (format) {
-                      case 2:
-                      case 3:
-                      case 4:
-                        if (msf != 1)
-                          BX_ERROR(("READ_TOC_EX: msf not set for format %i", format));
-                      case 0:
-                      case 1:
-                      case 5:
-                        if (!(BX_SELECTED_DRIVE(channel).cdrom.cd->read_toc(BX_SELECTED_CONTROLLER(channel).buffer,
-                                                                            &toc_length, msf, starting_track, format))) {
-                          atapi_cmd_error(channel, SENSE_ILLEGAL_REQUEST, ASC_INV_FIELD_IN_CMD_PACKET, 1);
-                          raise_interrupt(channel);
-                        } else {
-                          init_send_atapi_command(channel, atapi_command, toc_length, alloc_length);
-                          ready_to_send_atapi(channel);
-                        }
-                        break;
-                      default:
-                        BX_ERROR(("(READ TOC) format %d not supported", format));
+                  switch (format) {
+                    case 2:
+                    case 3:
+                    case 4:
+                      if (msf != 1)
+                        BX_ERROR(("READ_TOC_EX: msf not set for format %i", format));
+                    case 0:
+                    case 1:
+                    case 5:
+                      if (!(BX_SELECTED_DRIVE(channel).cdrom.cd->read_toc(BX_SELECTED_CONTROLLER(channel).buffer,
+                                                                          &toc_length, msf, starting_track, format))) {
                         atapi_cmd_error(channel, SENSE_ILLEGAL_REQUEST, ASC_INV_FIELD_IN_CMD_PACKET, 1);
                         raise_interrupt(channel);
-                    }
+                      } else {
+                        init_send_atapi_command(channel, atapi_command, toc_length, alloc_length);
+                        ready_to_send_atapi(channel);
+                      }
+                      break;
+                    default:
+                      BX_ERROR(("(READ TOC) format %d not supported", format));
+                      atapi_cmd_error(channel, SENSE_ILLEGAL_REQUEST, ASC_INV_FIELD_IN_CMD_PACKET, 1);
+                      raise_interrupt(channel);
+                  }
 #else
-                    BX_PANIC(("LOWLEVEL_CDROM not defined"));
+                  BX_PANIC(("LOWLEVEL_CDROM not defined"));
 #endif
 #else  // WIN32
-                    switch (format) {
-                      case 0:
-                      case 1:
-                      case 2:
+                  switch (format) {
+                    case 0:
+                    case 1:
+                    case 2:
 #ifdef LOWLEVEL_CDROM
-                        if (!(BX_SELECTED_DRIVE(channel).cdrom.cd->read_toc(BX_SELECTED_CONTROLLER(channel).buffer,
-                                                                            &toc_length, msf, starting_track, format))) {
-                          atapi_cmd_error(channel, SENSE_ILLEGAL_REQUEST, ASC_INV_FIELD_IN_CMD_PACKET, 1);
-                          raise_interrupt(channel);
-                        } else {
-                          init_send_atapi_command(channel, atapi_command, toc_length, alloc_length);
-                          ready_to_send_atapi(channel);
-                        }
-#else
-                        BX_PANIC(("LOWLEVEL_CDROM not defined"));
-#endif
-                        break;
-
-                      default:
-                        BX_ERROR(("(READ TOC) format %d not supported", format));
+                      if (!(BX_SELECTED_DRIVE(channel).cdrom.cd->read_toc(BX_SELECTED_CONTROLLER(channel).buffer,
+                                                                          &toc_length, msf, starting_track, format))) {
                         atapi_cmd_error(channel, SENSE_ILLEGAL_REQUEST, ASC_INV_FIELD_IN_CMD_PACKET, 1);
                         raise_interrupt(channel);
-                        break;
-                    }
-#endif  // WIN32
-                  } else {
-                    atapi_cmd_error(channel, SENSE_NOT_READY, ASC_MEDIUM_NOT_PRESENT, 1);
-                    raise_interrupt(channel);
+                      } else {
+                        init_send_atapi_command(channel, atapi_command, toc_length, alloc_length);
+                        ready_to_send_atapi(channel);
+                      }
+#else
+                      BX_PANIC(("LOWLEVEL_CDROM not defined"));
+#endif
+                      break;
+
+                    default:
+                      BX_ERROR(("(READ TOC) format %d not supported", format));
+                      atapi_cmd_error(channel, SENSE_ILLEGAL_REQUEST, ASC_INV_FIELD_IN_CMD_PACKET, 1);
+                      raise_interrupt(channel);
+                      break;
                   }
+#endif  // WIN32
+                } else {
+                  atapi_cmd_error(channel, SENSE_NOT_READY, ASC_MEDIUM_NOT_PRESENT, 1);
+                  raise_interrupt(channel);
                 }
                 break;
 
@@ -1900,15 +1890,13 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
                 break;
 
               case 0x1e: // prevent/allow medium removal
-                {
-                  if (BX_SELECTED_DRIVE(channel).cdrom.ready) {
-                    BX_SELECTED_DRIVE(channel).cdrom.locked = BX_SELECTED_CONTROLLER(channel).buffer[4] & 1;
-                    atapi_cmd_nop(channel);
-                  } else {
-                    atapi_cmd_error(channel, SENSE_NOT_READY, ASC_MEDIUM_NOT_PRESENT, 1);
-                  }
-                  raise_interrupt(channel);
+                if (BX_SELECTED_DRIVE(channel).cdrom.ready) {
+                  BX_SELECTED_DRIVE(channel).cdrom.locked = BX_SELECTED_CONTROLLER(channel).buffer[4] & 1;
+                  atapi_cmd_nop(channel);
+                } else {
+                  atapi_cmd_error(channel, SENSE_NOT_READY, ASC_MEDIUM_NOT_PRESENT, 1);
                 }
+                raise_interrupt(channel);
                 break;
 
               case 0x42: // read sub-channel
@@ -1955,11 +1943,9 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
                 break;
 
               case 0x51: // read disc info
-                {
-                  // no-op to keep the Linux CD-ROM driver happy
-                  atapi_cmd_error(channel, SENSE_ILLEGAL_REQUEST, ASC_INV_FIELD_IN_CMD_PACKET, 1);
-                  raise_interrupt(channel);
-                }
+                // no-op to keep the Linux CD-ROM driver happy
+                atapi_cmd_error(channel, SENSE_ILLEGAL_REQUEST, ASC_INV_FIELD_IN_CMD_PACKET, 1);
+                raise_interrupt(channel);
                 break;
 
               case 0x55: // mode select
@@ -2037,17 +2023,15 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
       //     b5 1
       // b4: DRV
       // b3..0 HD3..HD0
-      {
-        if ((value & 0xa0) != 0xa0) // 1x1xxxxx
-          BX_DEBUG(("IO write 0x%04x (%02x): not 1x1xxxxxb", address, (unsigned) value));
-        Bit32u drvsel = BX_HD_THIS channels[channel].drive_select = (value >> 4) & 0x01;
-        WRITE_HEAD_NO(channel,value & 0xf);
-        if (BX_SELECTED_CONTROLLER(channel).lba_mode == 0 && ((value >> 6) & 1) == 1)
-          BX_DEBUG(("enabling LBA mode"));
-        WRITE_LBA_MODE(channel,(value >> 6) & 1);
-        if (!BX_SELECTED_IS_PRESENT(channel)) {
-          BX_DEBUG(("ata%d: device set to %d which does not exist", channel, drvsel));
-        }
+      if ((value & 0xa0) != 0xa0) // 1x1xxxxx
+        BX_DEBUG(("IO write 0x%04x (%02x): not 1x1xxxxxb", address, (unsigned) value));
+      Bit32u drvsel = BX_HD_THIS channels[channel].drive_select = (value >> 4) & 0x01;
+      WRITE_HEAD_NO(channel,value & 0xf);
+      if (BX_SELECTED_CONTROLLER(channel).lba_mode == 0 && ((value >> 6) & 1) == 1)
+        BX_DEBUG(("enabling LBA mode"));
+      WRITE_LBA_MODE(channel,(value >> 6) & 1);
+      if (!BX_SELECTED_IS_PRESENT(channel)) {
+        BX_DEBUG(("ata%d: device set to %d which does not exist", channel, drvsel));
       }
       break;
 
@@ -2254,7 +2238,7 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
 
         case 0xec: // IDENTIFY DEVICE
           {
-            Bit16u i, temp16;
+            Bit16u temp16;
 
             if (bx_dbg.disk || (BX_SELECTED_IS_CD(channel) && bx_dbg.cdrom))
               BX_INFO(("Drive ID Command issued : 0xec "));
@@ -2398,7 +2382,7 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
         // ATAPI commands
         case 0xa1: // IDENTIFY PACKET DEVICE
           {
-            Bit16u i, temp16;
+            Bit16u temp16;
 
             if (BX_SELECTED_IS_CD(channel)) {
               BX_SELECTED_CONTROLLER(channel).current_command = value;
@@ -2556,7 +2540,6 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
           }
           break;
 
-
 	// List all the write operations that are defined in the ATA/ATAPI spec
 	// that we don't support.  Commands that are listed here will cause a
 	// BX_ERROR, which is non-fatal, and the command will be aborted.
@@ -2661,7 +2644,7 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
           DEV_pic_lower_irq(BX_HD_THIS channels[channel].irq);
         }
       } else if (BX_SELECTED_CONTROLLER(channel).reset_in_progress &&
-                 !BX_SELECTED_CONTROLLER(channel).control.reset) {
+                !BX_SELECTED_CONTROLLER(channel).control.reset) {
         // Clear BSY and DRDY
         BX_DEBUG(("Reset complete {%s}", BX_SELECTED_TYPE_STRING(channel)));
         for (int id = 0; id < 2; id++) {
@@ -2805,7 +2788,7 @@ void bx_hard_drive_c::identify_ATAPI_drive(Bit8u channel)
   BX_SELECTED_DRIVE(channel).id_drive[53] = 3; // words 64-70, 54-58 valid
 
   for (i = 54; i <= 62; i++)
-	BX_SELECTED_DRIVE(channel).id_drive[i] = 0;
+    BX_SELECTED_DRIVE(channel).id_drive[i] = 0;
 
   // copied from CFA540A
   BX_SELECTED_DRIVE(channel).id_drive[63] = 0x0103; // variable (DMA stuff)
@@ -2825,7 +2808,7 @@ void bx_hard_drive_c::identify_ATAPI_drive(Bit8u channel)
   BX_SELECTED_DRIVE(channel).id_drive[75] = 0;
 
   for (i = 76; i <= 79; i++)
-	BX_SELECTED_DRIVE(channel).id_drive[i] = 0;
+    BX_SELECTED_DRIVE(channel).id_drive[i] = 0;
 
   BX_SELECTED_DRIVE(channel).id_drive[80] = 0x1e; // supports up to ATA/ATAPI-4
   BX_SELECTED_DRIVE(channel).id_drive[81] = 0;
@@ -3249,25 +3232,29 @@ void bx_hard_drive_c::init_mode_sense_single(Bit8u channel, const void* src, int
   void BX_CPP_AttrRegparmN(1)
 bx_hard_drive_c::ready_to_send_atapi(Bit8u channel)
 {
-      raise_interrupt(channel);
+  raise_interrupt(channel);
 }
 
-void BX_CPP_AttrRegparmN(1)
+  void BX_CPP_AttrRegparmN(1)
 bx_hard_drive_c::raise_interrupt(Bit8u channel)
 {
-	BX_DEBUG(("raise_interrupt called, disable_irq = %02x", BX_SELECTED_CONTROLLER(channel).control.disable_irq));
-	if (!BX_SELECTED_CONTROLLER(channel).control.disable_irq) { BX_DEBUG(("raising interrupt")); } else { BX_DEBUG(("Not raising interrupt")); }
-      if (!BX_SELECTED_CONTROLLER(channel).control.disable_irq) {
-          Bit32u irq = BX_HD_THIS channels[channel].irq;
-          BX_DEBUG(("Raising interrupt %d {%s}", irq, BX_SELECTED_TYPE_STRING(channel)));
+  BX_DEBUG(("raise_interrupt called, disable_irq = %02x", BX_SELECTED_CONTROLLER(channel).control.disable_irq));
+  if (!BX_SELECTED_CONTROLLER(channel).control.disable_irq) {
+    BX_DEBUG(("raising interrupt"));
+  } else { 
+    BX_DEBUG(("Not raising interrupt"));
+  }
+  if (!BX_SELECTED_CONTROLLER(channel).control.disable_irq) {
+    Bit32u irq = BX_HD_THIS channels[channel].irq;
+    BX_DEBUG(("Raising interrupt %d {%s}", irq, BX_SELECTED_TYPE_STRING(channel)));
 #if BX_SUPPORT_PCI
-          DEV_ide_bmdma_set_irq(channel);
+    DEV_ide_bmdma_set_irq(channel);
 #endif
-          DEV_pic_raise_irq(irq);
-      } else {
-          if (bx_dbg.disk || (BX_SELECTED_IS_CD(channel) && bx_dbg.cdrom))
-              BX_INFO(("Interrupt masked {%s}", BX_SELECTED_TYPE_STRING(channel)));
-      }
+    DEV_pic_raise_irq(irq);
+  } else {
+    if (bx_dbg.disk || (BX_SELECTED_IS_CD(channel) && bx_dbg.cdrom))
+      BX_INFO(("Interrupt masked {%s}", BX_SELECTED_TYPE_STRING(channel)));
+  }
 }
 
 void bx_hard_drive_c::command_aborted(Bit8u channel, unsigned value)
@@ -3297,7 +3284,7 @@ Bit32u bx_hard_drive_c::get_device_handle(Bit8u channel, Bit8u device)
 Bit32u bx_hard_drive_c::get_first_cd_handle(void)
 {
   for (Bit8u channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
-    if (BX_DRIVE_IS_CD(channel,0)) return (channel*2);
+    if (BX_DRIVE_IS_CD(channel,0)) return  (channel*2);
     if (BX_DRIVE_IS_CD(channel,1)) return ((channel*2) + 1);
   }
   return BX_MAX_ATA_CHANNEL*2;
@@ -3501,6 +3488,7 @@ bx_bool bx_hard_drive_c::ide_read_sector(Bit8u channel, Bit8u *buffer, Bit32u bu
     increment_address(channel);
     bufptr += 512;
   } while (--sector_count > 0);
+
   return 1;
 }
 
@@ -3537,6 +3525,7 @@ bx_bool bx_hard_drive_c::ide_write_sector(Bit8u channel, Bit8u *buffer, Bit32u b
     increment_address(channel);
     bufptr += 512;
   } while (--sector_count > 0);
+
   return 1;
 }
 
@@ -3554,7 +3543,7 @@ void bx_hard_drive_c::lba48_transform(Bit8u channel, bx_bool lba48)
       BX_SELECTED_CONTROLLER(channel).num_sectors = 65536;
     else
       BX_SELECTED_CONTROLLER(channel).num_sectors = (BX_SELECTED_CONTROLLER(channel).hob.nsector << 8) |
-                                                    BX_SELECTED_CONTROLLER(channel).sector_count;
+                                                     BX_SELECTED_CONTROLLER(channel).sector_count;
   }
 }
 
