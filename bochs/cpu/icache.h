@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: icache.h,v 1.30 2008-03-29 21:01:25 sshwarts Exp $
+// $Id: icache.h,v 1.31 2008-03-29 21:03:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -52,11 +52,11 @@ class bxPageWriteStampTable
   // the physical page write stamp are valid.
   Bit32u *pageWriteStampTable;
 
-#define PHY_MEM_SIZE_IN_MB (1024*1024)
+#define PHY_MEM_PAGES (1024*1024)
 
 public:
   bxPageWriteStampTable() {
-    pageWriteStampTable = new Bit32u[PHY_MEM_SIZE_IN_MB];
+    pageWriteStampTable = new Bit32u[PHY_MEM_PAGES];
     resetWriteStamps();
   }
  ~bxPageWriteStampTable() { delete [] pageWriteStampTable; }
@@ -95,14 +95,14 @@ public:
 
 BX_CPP_INLINE void bxPageWriteStampTable::resetWriteStamps(void)
 {
-  for (Bit32u i=0; i<PHY_MEM_SIZE_IN_MB; i++) {
+  for (Bit32u i=0; i<PHY_MEM_PAGES; i++) {
     pageWriteStampTable[i] = ICacheWriteStampInvalid;
   }
 }
 
 BX_CPP_INLINE void bxPageWriteStampTable::purgeWriteStamps(void)
 {
-  for (Bit32u i=0; i<PHY_MEM_SIZE_IN_MB; i++) {
+  for (Bit32u i=0; i<PHY_MEM_PAGES; i++) {
     pageWriteStampTable[i] |= ICacheWriteStampStart;
   }
 }
