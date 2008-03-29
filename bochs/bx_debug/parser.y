@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: parser.y,v 1.24 2007-10-23 21:51:43 sshwarts Exp $
+// $Id: parser.y,v 1.25 2008-03-29 21:32:18 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 %{
@@ -343,17 +343,22 @@ watch_point_command:
     ;
 
 symbol_command:
-      BX_TOKEN_LOAD_SYMBOLS BX_TOKEN_STRING '\n' 
+      BX_TOKEN_LOAD_SYMBOLS BX_TOKEN_STRING '\n'
       {
         bx_dbg_symbol_command($2, 0, 0);
         free($1); free($2);
       }
-    | BX_TOKEN_LOAD_SYMBOLS BX_TOKEN_STRING BX_TOKEN_NUMERIC '\n' 
+    | BX_TOKEN_LOAD_SYMBOLS BX_TOKEN_STRING BX_TOKEN_NUMERIC '\n'
       {
         bx_dbg_symbol_command($2, 0, $3);
         free($1); free($2);
       }
-    | BX_TOKEN_LOAD_SYMBOLS BX_TOKEN_GLOBAL BX_TOKEN_STRING BX_TOKEN_NUMERIC '\n' 
+    | BX_TOKEN_LOAD_SYMBOLS BX_TOKEN_GLOBAL BX_TOKEN_STRING '\n'
+      {
+        bx_dbg_symbol_command($3, 1, 0);
+        free($1); free($2); free($3);
+      }
+    | BX_TOKEN_LOAD_SYMBOLS BX_TOKEN_GLOBAL BX_TOKEN_STRING BX_TOKEN_NUMERIC '\n'
       {
         bx_dbg_symbol_command($3, 1, $4);
         free($1); free($2); free($3);
@@ -929,7 +934,7 @@ help_command:
        }
      | BX_TOKEN_HELP BX_TOKEN_LOAD_SYMBOLS '\n'
        {
-         dbg_printf("load-symbols [global] <filename> [offset] - load symbols from file\n");
+         dbg_printf("ldsym [global] <filename> [offset] - load symbols from file\n");
          free($1);free($2);
        }
      | BX_TOKEN_HELP BX_TOKEN_LIST_SYMBOLS '\n'

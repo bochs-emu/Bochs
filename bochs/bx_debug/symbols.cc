@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: symbols.cc,v 1.9 2008-03-26 22:39:07 sshwarts Exp $
+// $Id: symbols.cc,v 1.10 2008-03-29 21:32:18 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -317,27 +317,43 @@ void bx_dbg_symbol_command(char* filename, bx_bool global, Bit32u offset)
     dbg_printf ("Could not open symbol file '%s'\n", filename);
     return;
   }
-  char buf[200];
-  while (fgets(buf, 200, fp)) {
-    // Parse
-    char* sym_name = buf;
 
-    for (int i = 0; i < 200 && buf[i]; i++) {
-      if (buf[i] == ' ') {
-        buf[i] = '\0';
-        sym_name = buf + i + 1;
-        break;
-      }
-    }
-    if (sym_name == buf) {
-      dbg_printf ("Syntax error '%s'\n", buf);
+  // C++/C# symbols can be long
+  char buf[512];
+  int  line_num = 1;
+
+  while (fgets(buf, sizeof(buf), fp)) {
+    // handle end of line (before error messages)
+    len = strlen(buf);
+    bool whole_line = (buf[len - 1] == '\n');
+    if (whole_line)
+      buf[len - 1] = 0;
+
+    // parse
+    char* sym_name;
+    Bit32u addr = strtoul(buf, &sym_name, 16);
+
+    if (!isspace(*sym_name)) {
+      if (*sym_name == 0)
+        dbg_printf("%s:%d: missing symbol name\n", filename, line_num);
+      else
+        dbg_printf("%s:%d: syntax error near '%s'\n", filename, line_num, sym_name);
       break;
     }
-    Bit32u addr = strtoul(buf, 0, 16);
-    if (sym_name[strlen(sym_name)-1] == '\n')
-      sym_name[strlen(sym_name)-1] = '\0';
+    ++sym_name;
+
     symbol_entry_t* sym = new symbol_entry_t(addr + offset, strdup(sym_name));
     cntx->add_symbol(sym);
+
+    // skip the rest of long line
+    while (!whole_line) {
+      if (!fgets(buf, sizeof(buf), fp))
+        break;
+      // actually, last line can end without newline, but then
+      // we'll just break at the next iteration because of EOF
+      whole_line = (buf[strlen(buf)-1] == '\n');
+    }
+    ++line_num;
   }
 }
 

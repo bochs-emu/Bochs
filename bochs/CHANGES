@@ -16,6 +16,7 @@ Detailed change log :
     optimization enabled
   - Minor bugfixes in CPU emulation (both ia32 and x86-64)
   - Updated CPU instrumentation callbacks
+  - A lot internal debugger fixes
 
 - System BIOS (Volker)
   - Implemented LBA48 support (since BIOS functions are limited to 

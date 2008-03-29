@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.119 2008-03-28 12:51:02 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.120 2008-03-29 21:32:18 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -3180,7 +3180,7 @@ void bx_dbg_print_help(void)
   dbg_printf("h|help command - show short command description\n");
   dbg_printf("-*- Debugger control -*-\n");
   dbg_printf("    help, q|quit|exit, set, instrument, show, trace, trace-reg,\n");
-  dbg_printf("    record, playback, load-symbols, slist\n");
+  dbg_printf("    record, playback, ldsym, slist\n");
   dbg_printf("-*- Execution control -*-\n");
   dbg_printf("    c|cont|continue, s|step|stepi, p|n|next, modebp\n");
   dbg_printf("-*- Breakpoint management -*-\n");

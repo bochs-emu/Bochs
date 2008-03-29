@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.234 2008-02-05 22:33:34 sshwarts Exp $
+$Id: user.dbk,v 1.235 2008-03-29 21:32:18 sshwarts Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -6428,7 +6428,7 @@ Remove write watch point from physical address <varname>address</varname>.
 
 Toggles CPU mode switch breakpoint.
 
-<screen>load-symbols [global] <varname>filename</varname> [<varname>offset</varname>]</screen>
+<screen>ldsym [global] <varname>filename</varname> [<varname>offset</varname>]</screen>
 
 Load symbols from file <varname>filename</varname>. If the global keyword is
 added, then the the symbols will be visible in all contexts for which

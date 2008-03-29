@@ -1,6 +1,6 @@
 %{
 /////////////////////////////////////////////////////////////////////////
-// $Id: lexer.l,v 1.22 2007-10-23 21:51:43 sshwarts Exp $
+// $Id: lexer.l,v 1.23 2008-03-29 21:32:18 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #include <stdlib.h>
@@ -127,7 +127,7 @@ unwatch         { bxlval.sval = strdup(bxtext); return(BX_TOKEN_UNWATCH); }
 read            { bxlval.sval = strdup(bxtext); return(BX_TOKEN_READ); }
 write           { bxlval.sval = strdup(bxtext); return(BX_TOKEN_WRITE); }
 show            { bxlval.sval = strdup(bxtext); return(BX_TOKEN_SHOW); }
-load-symbols    { bxlval.sval = strdup(bxtext); return(BX_TOKEN_LOAD_SYMBOLS); }
+ldsym           { bxlval.sval = strdup(bxtext); return(BX_TOKEN_LOAD_SYMBOLS); }
 symbols         { bxlval.sval = strdup(bxtext); return(BX_TOKEN_SYMBOLS); }
 slist           { bxlval.sval = strdup(bxtext); return(BX_TOKEN_LIST_SYMBOLS); }
 global          { bxlval.sval = strdup(bxtext); return(BX_TOKEN_GLOBAL); }
