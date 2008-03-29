@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vm8086.cc,v 1.41 2008-03-26 16:25:05 sshwarts Exp $
+// $Id: vm8086.cc,v 1.42 2008-03-29 18:18:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -174,8 +174,8 @@ void BX_CPU_C::v86_redirect_interrupt(Bit32u vector)
 {
   Bit16u temp_IP, temp_CS, temp_flags = read_flags();
 
-  access_linear(vector*4,     2, 0, BX_READ, &temp_IP);
-  access_linear(vector*4 + 2, 2, 0, BX_READ, &temp_CS);
+  access_read_linear(vector*4,     2, 0, BX_READ, &temp_IP);
+  access_read_linear(vector*4 + 2, 2, 0, BX_READ, &temp_CS);
 
   if (BX_CPU_THIS_PTR get_IOPL() < 3) {
     temp_flags |= EFlagsIOPLMask;

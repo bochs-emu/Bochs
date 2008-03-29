@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: iret.cc,v 1.29 2008-03-26 16:25:05 sshwarts Exp $
+// $Id: iret.cc,v 1.30 2008-03-29 18:18:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005 Stanislav Shwartsman
@@ -63,7 +63,7 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
     Bit32u base32 = (Bit32u) BX_CPU_THIS_PTR tr.cache.u.system.base;
 
     // examine back link selector in TSS addressed by current TR:
-    access_linear(base32, 2, 0, BX_READ, &raw_link_selector);
+    access_read_linear(base32, 2, 0, BX_READ, &raw_link_selector);
 
     // must specify global, else #TS(new TSS selector)
     parse_selector(raw_link_selector, &link_selector);

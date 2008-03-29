@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.103 2008-03-24 22:13:04 sshwarts Exp $
+// $Id: exception.cc,v 1.104 2008-03-29 18:18:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -83,9 +83,9 @@ void BX_CPU_C::long_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error_code
   // or task gate, else #GP(vector*16 + 2 + EXT)
   idtindex += BX_CPU_THIS_PTR idtr.base;
 
-  access_linear(idtindex,     4, 0, BX_READ, &dword1);
-  access_linear(idtindex + 4, 4, 0, BX_READ, &dword2);
-  access_linear(idtindex + 8, 4, 0, BX_READ, &dword3);
+  access_read_linear(idtindex,     4, 0, BX_READ, &dword1);
+  access_read_linear(idtindex + 4, 4, 0, BX_READ, &dword2);
+  access_read_linear(idtindex + 8, 4, 0, BX_READ, &dword3);
 
   parse_descriptor(dword1, dword2, &gate_descriptor);
 
@@ -311,9 +311,9 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error
 
   // descriptor AR byte must indicate interrupt gate, trap gate,
   // or task gate, else #GP(vector*8 + 2 + EXT)
-  access_linear(BX_CPU_THIS_PTR idtr.base + vector*8,     4, 0,
+  access_read_linear(BX_CPU_THIS_PTR idtr.base + vector*8,     4, 0,
       BX_READ, &dword1);
-  access_linear(BX_CPU_THIS_PTR idtr.base + vector*8 + 4, 4, 0,
+  access_read_linear(BX_CPU_THIS_PTR idtr.base + vector*8 + 4, 4, 0,
       BX_READ, &dword2);
 
   parse_descriptor(dword1, dword2, &gate_descriptor);
@@ -715,9 +715,9 @@ void BX_CPU_C::real_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error_code
   ip = EIP;
   push_16(ip);
 
-  access_linear(BX_CPU_THIS_PTR idtr.base + 4 * vector,     2, 0, BX_READ, &ip);
+  access_read_linear(BX_CPU_THIS_PTR idtr.base + 4 * vector,     2, 0, BX_READ, &ip);
   EIP = (Bit32u) ip;
-  access_linear(BX_CPU_THIS_PTR idtr.base + 4 * vector + 2, 2, 0, BX_READ, &cs_selector);
+  access_read_linear(BX_CPU_THIS_PTR idtr.base + 4 * vector + 2, 2, 0, BX_READ, &cs_selector);
   load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], cs_selector);
 
   /* INT affects the following flags: I,T */

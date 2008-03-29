@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: access.cc,v 1.93 2008-03-22 21:29:38 sshwarts Exp $
+// $Id: access.cc,v 1.94 2008-03-29 18:18:06 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -471,7 +471,7 @@ accessOK:
       exception(int_number(seg), 0, 0);
     }
 #endif
-    access_linear(laddr, 1, CPL, BX_WRITE, (void *) &data);
+    access_write_linear(laddr, 1, CPL, (void *) &data);
     return;
   }
 
@@ -527,7 +527,7 @@ accessOK:
       }
     }
 #endif
-    access_linear(laddr, 2, CPL, BX_WRITE, (void *) &data);
+    access_write_linear(laddr, 2, CPL, (void *) &data);
     return;
   }
 
@@ -583,7 +583,7 @@ accessOK:
       }
     }
 #endif
-    access_linear(laddr, 4, CPL, BX_WRITE, (void *) &data);
+    access_write_linear(laddr, 4, CPL, (void *) &data);
     return;
   }
 
@@ -639,7 +639,7 @@ accessOK:
       }
     }
 #endif
-    access_linear(laddr, 8, CPL, BX_WRITE, (void *) &data);
+    access_write_linear(laddr, 8, CPL, (void *) &data);
     return;
   }
 
@@ -685,7 +685,7 @@ accessOK:
       exception(int_number(seg), 0, 0);
     }
 #endif
-    access_linear(laddr, 1, CPL, BX_READ, (void *) &data);
+    access_read_linear(laddr, 1, CPL, BX_READ, (void *) &data);
     return data;
   }
 
@@ -739,7 +739,7 @@ accessOK:
       }
     }
 #endif
-    access_linear(laddr, 2, CPL, BX_READ, (void *) &data);
+    access_read_linear(laddr, 2, CPL, BX_READ, (void *) &data);
     return data;
   }
 
@@ -793,7 +793,7 @@ accessOK:
       }
     }
 #endif
-    access_linear(laddr, 4, CPL, BX_READ, (void *) &data);
+    access_read_linear(laddr, 4, CPL, BX_READ, (void *) &data);
     return data;
   }
 
@@ -847,7 +847,7 @@ accessOK:
       }
     }
 #endif
-    access_linear(laddr, 8, CPL, BX_READ, (void *) &data);
+    access_read_linear(laddr, 8, CPL, BX_READ, (void *) &data);
     return data;
   }
 
@@ -904,7 +904,7 @@ accessOK:
       exception(int_number(seg), 0, 0);
     }
 #endif
-    access_linear(laddr, 1, CPL, BX_RW, (void *) &data);
+    access_read_linear(laddr, 1, CPL, BX_RW, (void *) &data);
     return data;
   }
 
@@ -962,7 +962,7 @@ accessOK:
       }
     }
 #endif
-    access_linear(laddr, 2, CPL, BX_RW, (void *) &data);
+    access_read_linear(laddr, 2, CPL, BX_RW, (void *) &data);
     return data;
   }
 
@@ -1020,7 +1020,7 @@ accessOK:
       }
     }
 #endif
-    access_linear(laddr, 4, CPL, BX_RW, (void *) &data);
+    access_read_linear(laddr, 4, CPL, BX_RW, (void *) &data);
     return data;
   }
 
@@ -1078,7 +1078,7 @@ accessOK:
       }
     }
 #endif
-    access_linear(laddr, 8, CPL, BX_RW, (void *) &data);
+    access_read_linear(laddr, 8, CPL, BX_RW, (void *) &data);
     return data;
   }
 
@@ -1339,7 +1339,7 @@ accessOK:
       }
     }
 #endif
-    access_linear(laddr, 2, curr_pl, BX_WRITE, (void *) &data);
+    access_write_linear(laddr, 2, curr_pl, (void *) &data);
     return;
   }
 
@@ -1390,7 +1390,7 @@ accessOK:
       }
     }
 #endif
-    access_linear(laddr, 4, curr_pl, BX_WRITE, (void *) &data);
+    access_write_linear(laddr, 4, curr_pl, (void *) &data);
     return;
   }
 
@@ -1443,6 +1443,6 @@ void BX_CPU_C::write_new_stack_qword(bx_address laddr, unsigned curr_pl, Bit64u 
   }
 #endif
 
-  access_linear(laddr, 8, curr_pl, BX_WRITE, (void *) &data);
+  access_write_linear(laddr, 8, curr_pl, (void *) &data);
 }
 #endif

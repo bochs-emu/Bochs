@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: io_pro.cc,v 1.29 2008-02-15 22:05:40 sshwarts Exp $
+// $Id: io_pro.cc,v 1.30 2008-03-29 18:18:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -124,7 +124,7 @@ bx_bool BX_CPU_C::allow_io(Bit16u addr, unsigned len)
       return(0);
     }
 
-    access_linear(BX_CPU_THIS_PTR tr.cache.u.system.base + 102,
+    access_read_linear(BX_CPU_THIS_PTR tr.cache.u.system.base + 102,
                    2, 0, BX_READ, &io_base);
 
     if (io_base <= 103) {
@@ -138,7 +138,7 @@ bx_bool BX_CPU_C::allow_io(Bit16u addr, unsigned len)
       return(0);
     }
 
-    access_linear(BX_CPU_THIS_PTR tr.cache.u.system.base + io_base + addr/8,
+    access_read_linear(BX_CPU_THIS_PTR tr.cache.u.system.base + io_base + addr/8,
                    2, 0, BX_READ, &permission16);
 
     unsigned bit_index = addr & 0x07;
