@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.437 2008-03-25 16:46:39 sshwarts Exp $
+// $Id: cpu.h,v 1.438 2008-03-29 09:34:32 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -92,6 +92,10 @@
 #define BX_16BIT_REG_IP  BX_GENERAL_REGISTERS
 #define BX_32BIT_REG_EIP BX_GENERAL_REGISTERS
 #define BX_64BIT_REG_RIP BX_GENERAL_REGISTERS
+
+#define BX_16BIT_REG_NIL (BX_GENERAL_REGISTERS+1)
+#define BX_32BIT_REG_NIL (BX_GENERAL_REGISTERS+1)
+#define BX_64BIT_REG_NIL (BX_GENERAL_REGISTERS+1)
 
 #if defined(NEED_CPU_REG_SHORTCUTS)
 
@@ -725,16 +729,18 @@ public: // for now...
   cpuid_function_t cpuid_ext_function[MAX_EXT_CPUID_FUNCTION];
 
   // General register set
-  // eax: accumulator
-  // ebx: base
-  // ecx: count
-  // edx: data
-  // ebp: base pointer
-  // esi: source index
-  // edi: destination index
+  // rax: accumulator
+  // rbx: base
+  // rcx: count
+  // rdx: data
+  // rbp: base pointer
+  // rsi: source index
+  // rdi: destination index
   // esp: stack pointer
-  // eip: instruction pointer
-  bx_gen_reg_t gen_reg[BX_GENERAL_REGISTERS+1];
+  // r8..r15 x86-64 extended registers
+  // rip: instruction pointer
+  // nil: null register
+  bx_gen_reg_t gen_reg[BX_GENERAL_REGISTERS+2];
 
   /* 31|30|29|28| 27|26|25|24| 23|22|21|20| 19|18|17|16
    * ==|==|=====| ==|==|==|==| ==|==|==|==| ==|==|==|==
@@ -2757,17 +2763,13 @@ public: // for now...
   BX_SMF void BxResolve16Rm6(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void BxResolve16Rm7(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
-  BX_SMF void BxResolve32Disp(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void BxResolve32Base(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void BxResolve32BaseIndex(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void BxResolve32DispIndex(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
 #if BX_SUPPORT_X86_64
-  BX_SMF void BxResolve64Disp(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void BxResolve64Base(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void BxResolve64BaseIndex(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void BxResolve64DispIndex(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-#endif  // #if BX_SUPPORT_X86_64
+#endif
 // <TAG-CLASS-CPU-END>
 
 #if BX_DEBUGGER

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.179 2008-03-22 21:29:39 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.180 2008-03-29 09:34:34 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -3534,16 +3534,16 @@ fetch_b1:
 
     i->setModRM(b2);
     i->metaData.metaData1 = rm;
-    i->setSibBase(rm);            // initialize with rm to use BxResolve32Base
     i->metaData.metaData5 = nnn;
-
-    // initialize displ32 with zero to include cases with no diplacement
-    i->modRMForm.displ32u = 0;
 
     if (mod == 0xc0) { // mod == 11b
       i->assertModC0();
       goto modrm_done;
     }
+
+    i->setSibBase(rm);      // initialize with rm to use BxResolve32Base
+    // initialize displ32 with zero to include cases with no diplacement
+    i->modRMForm.displ32u = 0;
 
     if (i->as64L()) {
       // 64-bit addressing modes; note that mod==11b handled above
@@ -3604,10 +3604,7 @@ get_8bit_displ:
           if (BX_NULL_SEG_REG(i->seg()))
             i->setSeg(sreg_mod0_base32[base]);
           if ((base & 0x7) == 5) {
-            if (index == 4)
-              i->ResolveModrm = &BX_CPU_C::BxResolve64Disp;
-            else
-              i->ResolveModrm = &BX_CPU_C::BxResolve64DispIndex;
+            i->setSibBase(BX_64BIT_REG_NIL);
             goto get_32bit_displ;
           }
           // mod==00b, rm==4, base!=5
@@ -3665,10 +3662,7 @@ get_8bit_displ:
           if (BX_NULL_SEG_REG(i->seg()))
             i->setSeg(sreg_mod0_base32[base]);
           if ((base & 0x7) == 5) {
-            if (index == 4)
-              i->ResolveModrm = &BX_CPU_C::BxResolve32Disp;
-            else
-              i->ResolveModrm = &BX_CPU_C::BxResolve32DispIndex;
+            i->setSibBase(BX_32BIT_REG_NIL);
             goto get_32bit_displ;
           }
           // mod==00b, rm==4, base!=5
@@ -3703,29 +3697,29 @@ modrm_done:
 
        switch(Group) {
          case BxGroupN:
-             OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[nnn & 0x7]);
-             break;
+           OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[nnn & 0x7]);
+           break;
          case BxRMGroup:
-             OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[rm  & 0x7]);
-             break;
+           OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[rm  & 0x7]);
+           break;
 #if (BX_SUPPORT_SSE >= 4) || (BX_SUPPORT_SSE >= 3 && BX_SUPPORT_SSE_EXTENSION > 0)
          case Bx3ByteOp:
-             OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[b3]);
-             break;
+           OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[b3]);
+           break;
 #endif
          case BxPrefixSSE:
-             /* For SSE opcodes look into another 4 entries table
+           /* For SSE opcodes look into another 4 entries table
                       with the opcode prefixes (NONE, 0x66, 0xF2, 0xF3) */
-             OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[sse_prefix]);
-             break;
+           OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[sse_prefix]);
+           break;
          case BxFPEscape:
-             {
-                int index = (b1-0xD8)*64 + (0x3f & b2);
-                OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[index]);
-             }
-             break;
+           {
+             int index = (b1-0xD8)*64 + (0x3f & b2);
+             OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[index]);
+           }
+           break;
          default:
-             BX_PANIC(("fetchdecode: Unknown opcode group"));
+           BX_PANIC(("fetchdecode: Unknown opcode group"));
        }
 
        /* get additional attributes from group table */
