@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.439 2008-03-29 18:18:06 sshwarts Exp $
+// $Id: cpu.h,v 1.440 2008-03-29 18:44:13 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -3360,6 +3360,24 @@ BX_CPP_INLINE void BX_CPU_C::set_PF_base(Bit8u val)
   val = bx_parity_lookup[val]; // Always returns 0 or 1.
   BX_CPU_THIS_PTR eflags &= ~(1<<2);
   BX_CPU_THIS_PTR eflags |= val<<2;
+}
+
+//
+// inline simple lazy flags implementation methods
+//
+BX_CPP_INLINE bx_bool BX_CPU_C::get_ZFLazy(void)
+{
+  return (BX_CPU_THIS_PTR oszapc.result == 0);
+}
+
+BX_CPP_INLINE bx_bool BX_CPU_C::get_SFLazy(void)
+{
+  return (BX_CPU_THIS_PTR oszapc.result >> BX_LF_SIGN_BIT);
+}
+
+BX_CPP_INLINE bx_bool BX_CPU_C::get_PFLazy(void)
+{
+  return bx_parity_lookup[(Bit8u) BX_CPU_THIS_PTR oszapc.result];
 }
 
 // *******************
