@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.213 2008-03-29 21:01:23 sshwarts Exp $
+// $Id: cpu.cc,v 1.214 2008-03-29 21:51:42 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -151,14 +151,13 @@ no_async_event:
 #if BX_SUPPORT_ICACHE
     bx_phy_address pAddr = BX_CPU_THIS_PTR pAddrA20Page + eipBiased;
     bxICacheEntry_c *entry = BX_CPU_THIS_PTR iCache.get_entry(pAddr);
-    Bit32u currPageWriteStamp = *(BX_CPU_THIS_PTR currPageWriteStampPtr);
     bxInstruction_c *i = entry->i;
 
     InstrICache_Increment(iCacheLookups);
     InstrICache_Stats();
 
     if ((entry->pAddr == pAddr) &&
-        (entry->writeStamp == currPageWriteStamp))
+        (entry->writeStamp == *(BX_CPU_THIS_PTR currPageWriteStampPtr)))
     {
       // iCache hit. An instruction was found in the iCache.
 #if BX_INSTRUMENTATION
@@ -172,7 +171,7 @@ no_async_event:
       InstrICache_Increment(iCacheMisses);
       serveICacheMiss(entry, eipBiased, pAddr);
     }
-#else // BX_SUPPORT_ICACHE = 0
+#else
     bxInstruction_c iStorage, *i = &iStorage;
     unsigned remainingInPage = BX_CPU_THIS_PTR eipPageWindowSize - eipBiased;
     const Bit8u *fetchPtr = BX_CPU_THIS_PTR eipFetchPtr + eipBiased;
