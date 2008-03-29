@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.212 2008-03-22 21:29:39 sshwarts Exp $
+// $Id: cpu.cc,v 1.213 2008-03-29 21:01:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -224,9 +224,7 @@ no_async_event:
         break;
       }
 
-      // check for end of the trace and self modifying code
-      if ((--length == 0) || currPageWriteStamp != *(BX_CPU_THIS_PTR currPageWriteStampPtr))
-        goto no_async_event;
+      if (--length == 0) goto no_async_event;
     }
 #endif
   }  // while (1)
@@ -656,15 +654,9 @@ void BX_CPU_C::prefetch(void)
 #if BX_SUPPORT_ICACHE
   BX_CPU_THIS_PTR currPageWriteStampPtr = pageWriteStampTable.getPageWriteStampPtr(pAddr);
   Bit32u pageWriteStamp = *(BX_CPU_THIS_PTR currPageWriteStampPtr);
-  Bit32u fetchModeMask  = BX_CPU_THIS_PTR fetchModeMask;
-  if ((pageWriteStamp & ICacheFetchModeMask) != fetchModeMask)
-  {
-    // The current CPU mode does not match iCache entries for this
-    // physical page.
-    pageWriteStamp &= ICacheWriteStampMask; // Clear out old fetch mode bits.
-    pageWriteStamp |= fetchModeMask;        // Add in new ones.
-    pageWriteStampTable.setPageWriteStamp(pAddr, pageWriteStamp);
-  }
+  pageWriteStamp &= ~ICacheWriteStampFetchModeMask; // Clear out old fetch mode bits
+  pageWriteStamp |=  BX_CPU_THIS_PTR fetchModeMask; // And add new ones
+  pageWriteStampTable.setPageWriteStamp(pAddr, pageWriteStamp);
 #endif
 }
 

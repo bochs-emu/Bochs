@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: icache.cc,v 1.10 2008-03-06 20:22:24 sshwarts Exp $
+// $Id: icache.cc,v 1.11 2008-03-29 21:01:25 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007 Stanislav Shwartsman
@@ -72,6 +72,12 @@ void flushICaches(void)
 }
 
 #if BX_SUPPORT_TRACE_CACHE
+
+void stopTraceExecution(void)
+{
+  for (unsigned i=0; i<BX_SMP_PROCESSORS; i++)
+    BX_CPU(i)->async_event |= BX_ASYNC_EVENT_STOP_TRACE;
+}
 
 void BX_CPU_C::serveICacheMiss(bxICacheEntry_c *cache_entry, Bit32u eipBiased, bx_phy_address pAddr)
 {

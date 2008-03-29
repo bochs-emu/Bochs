@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.375 2008-03-26 22:39:38 sshwarts Exp $
+// $Id: main.cc,v 1.376 2008-03-29 21:01:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1031,10 +1031,6 @@ void bx_init_hardware()
   // set up memory and CPU objects
   bx_param_num_c *bxp_memsize = SIM->get_param_num(BXPN_MEM_SIZE);
   Bit32u memSize = bxp_memsize->get() * 1024*1024;
-
-#if BX_SUPPORT_ICACHE
-  pageWriteStampTable.alloc(memSize);
-#endif
 
   BX_MEM(0)->init_memory(memSize);
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.157 2008-03-29 09:34:35 sshwarts Exp $
+// $Id: init.cc,v 1.158 2008-03-29 21:01:25 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -765,6 +765,7 @@ void BX_CPU_C::reset(unsigned source)
 #if BX_SUPPORT_ICACHE
   BX_CPU_THIS_PTR updateFetchModeMask();
   flushICaches();
+  BX_CPU_THIS_PTR currPageWriteStampPtr = pageWriteStampTable.getPageWriteStampPtr(0xFFFFFFF0);
 #endif
 
   /* DS (Data Segment) and descriptor cache */

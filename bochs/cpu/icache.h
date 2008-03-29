@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: icache.h,v 1.29 2008-03-21 20:02:48 sshwarts Exp $
+// $Id: icache.h,v 1.30 2008-03-29 21:01:25 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -29,15 +29,20 @@
 #ifndef BX_ICACHE_H
 #define BX_ICACHE_H
 
+#if BX_SUPPORT_ICACHE
+
 #include <assert.h>
 
 // bit31: 1=CS is 32/64-bit, 0=CS is 16-bit.
 // bit30: 1=Long Mode, 0=not Long Mode.
-// Combination bit31=1 & bit30=1 is invalid.
-const Bit32u ICacheWriteStampInvalid = 0xffffffff;
-const Bit32u ICacheWriteStampStart   = 0x3fffffff;
-const Bit32u ICacheWriteStampMask    = 0x3fffffff;
-const Bit32u ICacheFetchModeMask     = ~ICacheWriteStampMask;
+// Combination bit31=1 & bit30=1 is invalid (data page)
+const Bit32u ICacheWriteStampInvalid  = 0xffffffff;
+const Bit32u ICacheWriteStampStart    = 0x3fffffff;
+const Bit32u ICacheWriteStampFetchModeMask = ~ICacheWriteStampStart;
+
+#if BX_SUPPORT_TRACE_CACHE
+extern void stopTraceExecution(void);
+#endif
 
 class bxPageWriteStampTable
 {
@@ -45,53 +50,43 @@ class bxPageWriteStampTable
   // Each time a write occurs to a physical page, a generation ID is
   // decremented. Only iCache entries which have write stamps matching
   // the physical page write stamp are valid.
-
   Bit32u *pageWriteStampTable;
-  Bit32u  memSizeInBytes;
+
+#define PHY_MEM_SIZE_IN_MB (1024*1024)
 
 public:
-  bxPageWriteStampTable(): pageWriteStampTable(NULL), memSizeInBytes(0) {}
-  bxPageWriteStampTable(Bit32u memSize) { alloc(memSize); }
- ~bxPageWriteStampTable() { delete [] pageWriteStampTable; }
-
-  BX_CPP_INLINE void alloc(Bit32u memSize)
-  {
-    if (memSizeInBytes > 0) {
-      delete [] pageWriteStampTable;
-    }
-    memSizeInBytes = memSize;
-    pageWriteStampTable = new Bit32u [memSizeInBytes>>12];
+  bxPageWriteStampTable() {
+    pageWriteStampTable = new Bit32u[PHY_MEM_SIZE_IN_MB];
     resetWriteStamps();
   }
+ ~bxPageWriteStampTable() { delete [] pageWriteStampTable; }
 
   BX_CPP_INLINE Bit32u getPageWriteStamp(bx_phy_address pAddr) const
   {
-    if (pAddr < memSizeInBytes)
-       return pageWriteStampTable[pAddr>>12];
-    else
-       return ICacheWriteStampInvalid;
+    return pageWriteStampTable[pAddr>>12];
   }
 
   BX_CPP_INLINE const Bit32u *getPageWriteStampPtr(bx_phy_address pAddr) const
   {
-    if (pAddr < memSizeInBytes)
-       return &pageWriteStampTable[pAddr>>12];
-    else
-       return &ICacheWriteStampInvalid;
+    return &pageWriteStampTable[pAddr>>12];
   }
 
   BX_CPP_INLINE void setPageWriteStamp(bx_phy_address pAddr, Bit32u pageWriteStamp)
   {
-    if (pAddr < memSizeInBytes)
-       pageWriteStampTable[pAddr>>12] = pageWriteStamp;
+    pageWriteStampTable[pAddr>>12] = pageWriteStamp;
   }
 
   BX_CPP_INLINE void decWriteStamp(bx_phy_address pAddr)
   {
-    assert(pAddr < memSizeInBytes);
+    pAddr >>= 12;
+#if BX_SUPPORT_TRACE_CACHE
+    if ((pageWriteStampTable[pAddr] & ICacheWriteStampFetchModeMask) != ICacheWriteStampFetchModeMask) {
+      stopTraceExecution(); // one of the CPUs running trace from this page
+    }
+#endif
     // Decrement page write stamp, so iCache entries with older stamps
     // are effectively invalidated.
-    pageWriteStampTable[pAddr >> 12]--;
+    pageWriteStampTable[pAddr]--;
   }
 
   BX_CPP_INLINE void resetWriteStamps(void);
@@ -100,15 +95,15 @@ public:
 
 BX_CPP_INLINE void bxPageWriteStampTable::resetWriteStamps(void)
 {
-  for (Bit32u i=0; i<(memSizeInBytes>>12); i++) {
+  for (Bit32u i=0; i<PHY_MEM_SIZE_IN_MB; i++) {
     pageWriteStampTable[i] = ICacheWriteStampInvalid;
   }
 }
 
 BX_CPP_INLINE void bxPageWriteStampTable::purgeWriteStamps(void)
 {
-  for (Bit32u i=0; i<(memSizeInBytes>>12); i++) {
-    pageWriteStampTable[i] |= ICacheWriteStampMask;
+  for (Bit32u i=0; i<PHY_MEM_SIZE_IN_MB; i++) {
+    pageWriteStampTable[i] |= ICacheWriteStampStart;
   }
 }
 
@@ -177,11 +172,13 @@ BX_CPP_INLINE void bxICache_c::purgeICacheEntries(void)
     if (e->writeStamp != pageWriteStamp)
       e->writeStamp = ICacheWriteStampInvalid;	// invalidate entry
     else
-      e->writeStamp |= ICacheWriteStampMask;
+      e->writeStamp |= ICacheWriteStampStart;
   }
 }
 
 extern void purgeICaches(void);
 extern void flushICaches(void);
+
+#endif // BX_SUPPORT_ICACHE
 
 #endif
