@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.209 2008-03-29 17:44:13 sshwarts Exp $
+// $Id: harddrv.cc,v 1.210 2008-03-30 08:32:57 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -173,7 +173,7 @@ void bx_hard_drive_c::init(void)
   char  ata_name[20];
   bx_list_c *base;
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.209 2008-03-29 17:44:13 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.210 2008-03-30 08:32:57 vruppert Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     sprintf(ata_name, "ata.%d.resources", channel);
@@ -2023,15 +2023,17 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
       //     b5 1
       // b4: DRV
       // b3..0 HD3..HD0
-      if ((value & 0xa0) != 0xa0) // 1x1xxxxx
-        BX_DEBUG(("IO write 0x%04x (%02x): not 1x1xxxxxb", address, (unsigned) value));
-      Bit32u drvsel = BX_HD_THIS channels[channel].drive_select = (value >> 4) & 0x01;
-      WRITE_HEAD_NO(channel,value & 0xf);
-      if (BX_SELECTED_CONTROLLER(channel).lba_mode == 0 && ((value >> 6) & 1) == 1)
-        BX_DEBUG(("enabling LBA mode"));
-      WRITE_LBA_MODE(channel,(value >> 6) & 1);
-      if (!BX_SELECTED_IS_PRESENT(channel)) {
-        BX_DEBUG(("ata%d: device set to %d which does not exist", channel, drvsel));
+      {
+        if ((value & 0xa0) != 0xa0) // 1x1xxxxx
+          BX_DEBUG(("IO write 0x%04x (%02x): not 1x1xxxxxb", address, (unsigned) value));
+        Bit32u drvsel = BX_HD_THIS channels[channel].drive_select = (value >> 4) & 0x01;
+        WRITE_HEAD_NO(channel,value & 0xf);
+        if (BX_SELECTED_CONTROLLER(channel).lba_mode == 0 && ((value >> 6) & 1) == 1)
+          BX_DEBUG(("enabling LBA mode"));
+        WRITE_LBA_MODE(channel,(value >> 6) & 1);
+        if (!BX_SELECTED_IS_PRESENT(channel)) {
+          BX_DEBUG(("ata%d: device set to %d which does not exist", channel, drvsel));
+        }
       }
       break;
 
