@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.235 2008-03-29 21:32:18 sshwarts Exp $
+$Id: user.dbk,v 1.236 2008-03-30 18:32:41 sshwarts Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -4197,6 +4197,19 @@ Example:
 This enables the "magic breakpoint" feature when using the debugger.
 The useless cpu instruction XCHG BX, BX causes Bochs to enter the
 debugger mode. This might be useful for software development.
+</para>
+</section>
+
+<section><title>debug_symbols</title>
+<para>
+Example:
+<screen>
+  debug_symbols: file=mysymbols.sym
+  debug_symbols: file=mysymbols.sym, offset=0x1000
+</screen>
+This loads symbols from the specified file for use in Bochs' internal debugger.
+Symbols are loaded into global context. This is equivalent to issuing ldsym
+debugger command at start up.
 </para>
 </section>
 
