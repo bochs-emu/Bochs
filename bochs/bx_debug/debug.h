@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debug.h,v 1.38 2008-03-23 21:39:01 sshwarts Exp $
+// $Id: debug.h,v 1.39 2008-03-30 14:32:14 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -303,7 +303,7 @@ int bx_dbg_show_symbolic(void);
 void bx_dbg_set_symbol_command(char *symbol, Bit32u val);
 char* bx_dbg_symbolic_address(Bit32u context, Bit32u eip, Bit32u base);
 char* bx_dbg_symbolic_address_16bit(Bit32u eip, Bit32u cs);
-void bx_dbg_symbol_command(char* filename, bx_bool global, Bit32u offset);
+int bx_dbg_symbol_command(char* filename, bx_bool global, Bit32u offset);
 void bx_dbg_info_symbols_command(char *Symbol);
 int bx_dbg_lbreakpoint_symbol_command(char *Symbol);
 Bit32u bx_dbg_get_symbol_value(char *Symbol);

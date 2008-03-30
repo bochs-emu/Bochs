@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.132 2008-02-15 22:05:37 sshwarts Exp $
+// $Id: config.cc,v 1.133 2008-03-30 14:32:13 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -47,8 +47,8 @@ int bochsrc_include_count = 0;
 extern bx_debug_t bx_dbg;
 
 static const char *get_builtin_variable(const char *varname);
-static Bit32s parse_line_unformatted(const char *context, char *line);
-static Bit32s parse_line_formatted(const char *context, int num_params, char *params[]);
+static int parse_line_unformatted(const char *context, char *line);
+static int parse_line_formatted(const char *context, int num_params, char *params[]);
 static int parse_bochsrc(const char *rcfile);
 static int get_floppy_type_from_image(const char *filename);
 
@@ -1661,7 +1661,7 @@ int bx_read_configuration(const char *rcfile)
   return 0;
 }
 
-int bx_parse_cmdline (int arg, int argc, char *argv[])
+int bx_parse_cmdline(int arg, int argc, char *argv[])
 {
   //if (arg < argc) BX_INFO (("parsing command line arguments"));
 
@@ -1792,7 +1792,7 @@ static const char *get_builtin_variable(const char *varname)
   }
 }
 
-static Bit32s parse_line_unformatted(const char *context, char *line)
+static int parse_line_unformatted(const char *context, char *line)
 {
 #define MAX_PARAMS_LEN 40
   char *ptr;
@@ -1979,7 +1979,39 @@ static Bit32s parse_log_options(const char *context, char *loglev, char *param1)
   return 0;
 }
 
-static Bit32s parse_line_formatted(const char *context, int num_params, char *params[])
+static int parse_debug_symbols(const char *context, char **params, int num_params)
+{
+#if BX_DEBUGGER
+  Bit32u offset = 0;
+  char*  filename = 0;
+
+  while (num_params > 0)
+  {
+    if (!strncmp(*params, "file=", 5)) {
+      filename = *params + 5;
+    }
+    else if (!strncmp(*params, "offset=", 7)) {
+      char* end;
+      offset = strtoul(*params + 7, &end, 0);
+      if (*end)
+        PARSE_ERR(("%s: debug_symbols: invalid parameter %s", context, *params));
+    }
+    else {
+      PARSE_ERR(("%s: debug_symbols: invalid parameter %s", context, *params));
+    }
+    params++; num_params--;
+  }
+
+  if (!filename)
+    PARSE_ERR(("%s: debug_symbols: missing file name", context));
+
+  if (bx_dbg_symbol_command(filename, 1, offset) < 0)
+    PARSE_ERR(("%s: debug_symbols: failed to load symbols from '%s'", context, filename));
+#endif
+  return 0;
+}
+
+static int parse_line_formatted(const char *context, int num_params, char *params[])
 {
   int i, slot, t;
   Bit8u idx;
@@ -2837,6 +2869,11 @@ static Bit32s parse_line_formatted(const char *context, int num_params, char *pa
 #else
     PARSE_ERR(("%s: Bochs is not compiled with internal debugger support", context));
 #endif
+  }
+  else if (!strcmp(params[0], "debug_symbols")) {
+    if (parse_debug_symbols(context, params + 1, num_params - 1) < 0) {
+      return -1;
+    }
   }
   else if (!strcmp(params[0], "print_timestamps")) {
     if (num_params != 2) {

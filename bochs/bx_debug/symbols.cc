@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: symbols.cc,v 1.10 2008-03-29 21:32:18 sshwarts Exp $
+// $Id: symbols.cc,v 1.11 2008-03-30 14:32:14 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -49,9 +49,10 @@ char* bx_dbg_symbolic_address_16bit(Bit32u eip, Bit32u cs)
   return bx_dbg_symbolic_address (0,0,0);
 }
 
-void bx_dbg_symbol_command(char* filename, bx_bool global, Bit32u offset)
+int bx_dbg_symbol_command(char* filename, bx_bool global, Bit32u offset)
 {
   dbg_printf(BX_HAVE_HASH_MAP_ERR);
+  return -1;
 }
 
 void bx_dbg_info_symbols_command(char *Symbol)
@@ -292,7 +293,7 @@ char* bx_dbg_symbolic_address_16bit(Bit32u eip, Bit32u cs)
   return bx_dbg_symbolic_address (0, eip+(cs<<4), 0);
 }
 
-void bx_dbg_symbol_command(char* filename, bx_bool global, Bit32u offset)
+int bx_dbg_symbol_command(char* filename, bx_bool global, Bit32u offset)
 {
   if (filename[0] == '"')
     filename++;
@@ -315,7 +316,7 @@ void bx_dbg_symbol_command(char* filename, bx_bool global, Bit32u offset)
   FILE* fp = fopen(filename, "rt"); // 't' is need for win32, unixes simply ignore it
   if (!fp) {
     dbg_printf ("Could not open symbol file '%s'\n", filename);
-    return;
+    return -1;
   }
 
   // C++/C# symbols can be long
@@ -338,7 +339,7 @@ void bx_dbg_symbol_command(char* filename, bx_bool global, Bit32u offset)
         dbg_printf("%s:%d: missing symbol name\n", filename, line_num);
       else
         dbg_printf("%s:%d: syntax error near '%s'\n", filename, line_num, sym_name);
-      break;
+      return -1;
     }
     ++sym_name;
 
@@ -355,6 +356,7 @@ void bx_dbg_symbol_command(char* filename, bx_bool global, Bit32u offset)
     }
     ++line_num;
   }
+  return 0;
 }
 
 // chack if s1 is prefix of s2
