@@ -5,7 +5,7 @@ Brief summary :
 + More optimizations in CPU code - above 20% additional emulation speedup 
   over 2.3.6 release!
 - Implemented LBA48 support
-- Many bugfixes in CPU emulation (both ia32 and x86-64)
+- Many fixes in CPU emulation and internal debugger
 
 Detailed change log :
 
@@ -16,7 +16,7 @@ Detailed change log :
     optimization enabled
   - Minor bugfixes in CPU emulation (both ia32 and x86-64)
   - Updated CPU instrumentation callbacks
-  - A lot internal debugger fixes
+  - A lot of fixes in Bochs internal debugger
 
 - System BIOS (Volker)
   - Implemented LBA48 support (since BIOS functions are limited to 
@@ -42,7 +42,8 @@ Detailed change log :
   - implemented text mode character blinking in some guis
 
 - SF patches applied
- [1925568] PATCH: msvc compilation by Eugene Toder 
+ [1928902] improvements to load-symbols by Eugene Toder
+ [1925568] PATCH: msvc compilation by Eugene Toder
  [1913150] rombios.c - e820 cover full size if memory <= 16 mb by Alexander van Heukelum
  [1919804] rombios.c - fix and add #ifdef comments by Sebastian
  [1909782] rombios.c - remove segment values from comment by Sebastian
