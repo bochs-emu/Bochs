@@ -726,6 +726,18 @@ i440fxsupport: enabled=1
 #magic_break: enabled=1
 
 #=======================================================================
+# DEBUG_SYMBOLS:
+# This loads symbols from the specified file for use in Bochs' internal
+# debugger. Symbols are loaded into global context. This is equivalent to
+# issuing ldsym debugger command at start up.
+#
+# Example:
+#   debug_symbols: file="kernel.sym"
+#   debug_symbols: file="kernel.sym", offset=0x80000000
+#=======================================================================
+#debug_symbols: file="kernel.sym"
+
+#=======================================================================
 # other stuff
 #=======================================================================
 #load32bitOSImage: os=nullkernel, path=../kernel.img, iolog=../vga_io.log
