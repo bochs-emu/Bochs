@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: instr.h,v 1.7 2008-03-22 21:29:40 sshwarts Exp $
+// $Id: instr.h,v 1.8 2008-03-31 17:33:34 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008 Stanislav Shwartsman
@@ -66,39 +66,17 @@ public:
     Bit8u  metaInfo1;
   } metaInfo;
 
-  // using 5-bit index for registers (16 regs in 64-bit and RIP)
-  struct {
-    //   (unused, keep for alignment)
-    //   (will be used for SSE5 destination override later)
-    Bit8u  metaData8;
+#define BX_INSTR_METADATA_SEG   0
+#define BX_INSTR_METADATA_DEST  1
+#define BX_INSTR_METADATA_NNN   2
+#define BX_INSTR_METADATA_RM    3
+#define BX_INSTR_METADATA_BASE  4
+#define BX_INSTR_METADATA_INDEX 5
+#define BX_INSTR_METADATA_SCALE 6
+#define BX_INSTR_METADATA_MODRM 7
 
-    //   7...0 modrm
-    Bit8u  metaData7;
-
-    //   7...3 (unused)
-    //   2...0 seg
-    Bit8u  metaData6;
-
-    //   7...5 (unused)
-    //   4...0 nnn     (modrm)
-    Bit8u  metaData5;
-
-    //   7...5 (unused)
-    //   4...0 base            (sib)
-    Bit8u  metaData4;
-
-    //   7...5 (unused)
-    //   4...0 index           (sib)
-    Bit8u  metaData3;
-
-    //   7...2 (unused)
-    //   1...0 scale           (sib)
-    Bit8u  metaData2;
-
-    //   7...5 (unused)
-    //   4...0 rm      (modrm)   // also used for opcodeReg()
-    Bit8u  metaData1;
-  } metaData;
+  // using 5-bit field for registers (16 regs in 64-bit, RIP, NIL)
+  Bit8u metaData[8];
 
   union {
     // Form (longest case): [opcode+modrm+sib/displacement32/immediate32]
@@ -134,20 +112,6 @@ public:
 #endif
   };
 
-  BX_CPP_INLINE void setOpcodeReg(unsigned opreg) {
-    // The opcodeReg form (low 3 bits of the opcode byte (extended
-    // by REX.B on x86-64) to be used with IxIxForm or IqForm.
-    metaData.metaData1 = opreg;
-  }
-  BX_CPP_INLINE unsigned opcodeReg() {
-    return metaData.metaData1;
-  }
-  BX_CPP_INLINE void setModRM(unsigned modrm) {
-    metaData.metaData7 = modrm;
-  }
-  BX_CPP_INLINE unsigned modrm() {
-    return metaData.metaData7;
-  }
   BX_CPP_INLINE unsigned modC0()
   {
     // This is a cheaper way to test for modRM instructions where
@@ -159,29 +123,49 @@ public:
   {
     return metaInfo.metaInfo1 |= (1<<2);
   }
+  BX_CPP_INLINE void setOpcodeReg(unsigned opreg) {
+    // The opcodeReg form (low 3 bits of the opcode byte (extended
+    // by REX.B on x86-64) to be used with IxIxForm or IqForm.
+    metaData[BX_INSTR_METADATA_RM] = opreg;
+  }
+  BX_CPP_INLINE unsigned opcodeReg() {
+    return metaData[BX_INSTR_METADATA_RM];
+  }
+  BX_CPP_INLINE void setModRM(unsigned modrm) {
+    metaData[BX_INSTR_METADATA_MODRM] = modrm;
+  }
+  BX_CPP_INLINE unsigned modrm() {
+    return metaData[BX_INSTR_METADATA_MODRM];
+  }
+  BX_CPP_INLINE void setNnn(unsigned nnn) {
+    metaData[BX_INSTR_METADATA_NNN] = nnn;
+  }
   BX_CPP_INLINE unsigned nnn() {
-    return metaData.metaData5;
+    return metaData[BX_INSTR_METADATA_NNN];
+  }
+  BX_CPP_INLINE void setRm(unsigned rm) {
+    metaData[BX_INSTR_METADATA_RM] = rm;
   }
   BX_CPP_INLINE unsigned rm() {
-    return metaData.metaData1;
+    return metaData[BX_INSTR_METADATA_RM];
   }
   BX_CPP_INLINE void setSibScale(unsigned scale) {
-    metaData.metaData2 = scale;
+    metaData[BX_INSTR_METADATA_SCALE] = scale;
   }
   BX_CPP_INLINE unsigned sibScale() {
-    return metaData.metaData2;
+    return metaData[BX_INSTR_METADATA_SCALE];
   }
   BX_CPP_INLINE void setSibIndex(unsigned index) {
-    metaData.metaData3 = index;
+    metaData[BX_INSTR_METADATA_INDEX] = index;
   }
   BX_CPP_INLINE unsigned sibIndex() {
-    return metaData.metaData3;
+    return metaData[BX_INSTR_METADATA_INDEX];
   }
   BX_CPP_INLINE void setSibBase(unsigned base) {
-    metaData.metaData4 = base;
+    metaData[BX_INSTR_METADATA_BASE] = base;
   }
   BX_CPP_INLINE unsigned sibBase() {
-    return metaData.metaData4;
+    return metaData[BX_INSTR_METADATA_BASE];
   }
   BX_CPP_INLINE Bit32u displ32u() { return modRMForm.displ32u; }
   BX_CPP_INLINE Bit16u displ16u() { return modRMForm.displ16u; }
@@ -204,13 +188,13 @@ public:
     metaInfo.metaInfo1 = (os32<<3) | (as32<<4) | (os64<<5) | (as64<<6);
     metaInfo.metaInfo2 = 0;
     metaInfo.metaInfo3 = 0;
-    metaData.metaData6 = BX_SEG_REG_NULL;
+    metaData[BX_INSTR_METADATA_SEG] = BX_SEG_REG_NULL;
   }
   BX_CPP_INLINE unsigned seg(void) {
-    return metaData.metaData6;
+    return metaData[BX_INSTR_METADATA_SEG];
   }
   BX_CPP_INLINE void setSeg(unsigned val) {
-    metaData.metaData6 = val;
+    metaData[BX_INSTR_METADATA_SEG] = val;
   }
 
   BX_CPP_INLINE unsigned os32L(void) {

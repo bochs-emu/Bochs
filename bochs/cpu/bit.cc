@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bit.cc,v 1.53 2008-03-27 21:04:39 sshwarts Exp $
+// $Id: bit.cc,v 1.54 2008-03-31 17:33:30 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -293,45 +293,43 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BSWAP_RRX(bxInstruction_c *i)
 
 #if (BX_SUPPORT_SSE >= 5) || (BX_SUPPORT_SSE >= 4 && BX_SUPPORT_SSE_EXTENSION > 0)
 // primitives for CRC32 usage
-static Bit8u BitReflect8(Bit8u val8)
+BX_CPP_INLINE Bit8u BitReflect8(Bit8u val8)
 {
-   return ((val8 & 0x80) >> 7) |
-          ((val8 & 0x40) >> 5) |
-          ((val8 & 0x20) >> 3) |
-          ((val8 & 0x10) >> 1) |
-          ((val8 & 0x08) << 1) |
-          ((val8 & 0x04) << 3) |
-          ((val8 & 0x02) << 5) |
-          ((val8 & 0x01) << 7);
+  return ((val8 & 0x80) >> 7) |
+         ((val8 & 0x40) >> 5) |
+         ((val8 & 0x20) >> 3) |
+         ((val8 & 0x10) >> 1) |
+         ((val8 & 0x08) << 1) |
+         ((val8 & 0x04) << 3) |
+         ((val8 & 0x02) << 5) |
+         ((val8 & 0x01) << 7);
 }
 
 BX_CPP_INLINE Bit16u BitReflect16(Bit16u val16)
 {
-   return ((Bit16u)(BitReflect8(val16 & 0xff)) << 8) | BitReflect8(val16 >> 8);
+  return ((Bit16u)(BitReflect8(val16 & 0xff)) << 8) | BitReflect8(val16 >> 8);
 }
 
 BX_CPP_INLINE Bit32u BitReflect32(Bit32u val32)
 {
-   return ((Bit32u)(BitReflect16(val32 & 0xffff)) << 16) | BitReflect16(val32 >> 16);
+  return ((Bit32u)(BitReflect16(val32 & 0xffff)) << 16) | BitReflect16(val32 >> 16);
 }
 
 static Bit32u mod2_64bit(Bit64u divisor, Bit64u dividend)
 {
-    Bit64u remainder = dividend >> 32;
+  Bit64u remainder = dividend >> 32;
 
-    for (int bitpos=31; bitpos>=0; bitpos--)
-    {
-	// copy one more bit from the dividend
-	remainder = (remainder << 1) | ((dividend >> bitpos) & 1);
+  for (int bitpos=31; bitpos>=0; bitpos--) {
+    // copy one more bit from the dividend
+    remainder = (remainder << 1) | ((dividend >> bitpos) & 1);
 
-	// if MSB is set, then XOR divisor and get new remainder
-	if (((remainder >> 32) & 1) == 1)
-	{
-	    remainder ^= divisor;
-	}
+    // if MSB is set, then XOR divisor and get new remainder
+    if (((remainder >> 32) & 1) == 1) {
+      remainder ^= divisor;
     }
+  }
 
-    return remainder;
+  return remainder;
 }
 #endif // (BX_SUPPORT_SSE >= 5) || (BX_SUPPORT_SSE >= 4 && BX_SUPPORT_SSE_EXTENSION > 0)
 

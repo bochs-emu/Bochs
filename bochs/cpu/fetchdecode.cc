@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.174 2008-03-29 09:58:23 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.175 2008-03-31 17:33:30 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2597,8 +2597,8 @@ fetch_b1:
       mod = 0xc0;
 
     i->setModRM(b2);
-    i->metaData.metaData1 = rm;
-    i->metaData.metaData5 = nnn;
+    i->setRm(rm);
+    i->setNnn(nnn);
 
     if (mod == 0xc0) { // mod == 11b
       i->assertModC0();
