@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.441 2008-03-29 21:01:24 sshwarts Exp $
+// $Id: cpu.h,v 1.442 2008-03-31 18:53:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -3194,90 +3194,90 @@ BX_CPP_INLINE void BX_CPU_C::updateFetchModeMask(void)
 BX_CPP_INLINE bx_address BX_CPU_C::get_segment_base(unsigned seg)
 {
 #if BX_SUPPORT_X86_64
-   if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
-     if (seg < BX_SEG_REG_FS)
-       return 0;
-     else
-       return BX_CPU_THIS_PTR sregs[seg].cache.u.segment.base;
-   }
+  if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
+    if (seg < BX_SEG_REG_FS)
+      return 0;
+    else
+      return BX_CPU_THIS_PTR sregs[seg].cache.u.segment.base;
+  }
 #endif
-   return (Bit32u)(BX_CPU_THIS_PTR sregs[seg].cache.u.segment.base);
+  return (Bit32u)(BX_CPU_THIS_PTR sregs[seg].cache.u.segment.base);
 }
 
 BX_CPP_INLINE Bit32u BX_CPU_C::read_eflags(void)
 {
-   return BX_CPU_THIS_PTR force_flags();
+  return BX_CPU_THIS_PTR force_flags();
 }
 
 BX_CPP_INLINE Bit8u BX_CPU_C::get_reg8l(unsigned reg)
 {
-   assert(reg < BX_GENERAL_REGISTERS);
-   return (BX_CPU_THIS_PTR gen_reg[reg].word.byte.rl);
+  assert(reg < BX_GENERAL_REGISTERS);
+  return (BX_CPU_THIS_PTR gen_reg[reg].word.byte.rl);
 }
 
 BX_CPP_INLINE void BX_CPU_C::set_reg8l(unsigned reg, Bit8u val)
 {
-   assert(reg < BX_GENERAL_REGISTERS);
-   BX_CPU_THIS_PTR gen_reg[reg].word.byte.rl = val;
+  assert(reg < BX_GENERAL_REGISTERS);
+  BX_CPU_THIS_PTR gen_reg[reg].word.byte.rl = val;
 }
 
 BX_CPP_INLINE Bit8u BX_CPU_C::get_reg8h(unsigned reg)
 {
-   assert(reg < BX_GENERAL_REGISTERS);
-   return (BX_CPU_THIS_PTR gen_reg[reg].word.byte.rh);
+  assert(reg < BX_GENERAL_REGISTERS);
+  return (BX_CPU_THIS_PTR gen_reg[reg].word.byte.rh);
 }
 
 BX_CPP_INLINE void BX_CPU_C::set_reg8h(unsigned reg, Bit8u val)
 {
-   assert(reg < BX_GENERAL_REGISTERS);
-   BX_CPU_THIS_PTR gen_reg[reg].word.byte.rh = val;
+  assert(reg < BX_GENERAL_REGISTERS);
+  BX_CPU_THIS_PTR gen_reg[reg].word.byte.rh = val;
 }
 
 #if BX_SUPPORT_X86_64
 BX_CPP_INLINE bx_address BX_CPU_C::get_instruction_pointer(void)
 {
-   return BX_CPU_THIS_PTR get_rip();
+  return BX_CPU_THIS_PTR get_rip();
 }
 #else
 BX_CPP_INLINE bx_address BX_CPU_C::get_instruction_pointer(void)
 {
-   return BX_CPU_THIS_PTR get_eip();
+  return BX_CPU_THIS_PTR get_eip();
 }
 #endif
 
 BX_CPP_INLINE Bit16u BX_CPU_C::get_ip(void)
 {
-   return (BX_CPU_THIS_PTR gen_reg[BX_16BIT_REG_IP].word.rx);
+  return (BX_CPU_THIS_PTR gen_reg[BX_16BIT_REG_IP].word.rx);
 }
 
 BX_CPP_INLINE Bit32u BX_CPU_C::get_eip(void)
 {
-   return (BX_CPU_THIS_PTR gen_reg[BX_32BIT_REG_EIP].dword.erx);
+  return (BX_CPU_THIS_PTR gen_reg[BX_32BIT_REG_EIP].dword.erx);
 }
 
 #if BX_SUPPORT_X86_64
 BX_CPP_INLINE Bit64u BX_CPU_C::get_rip(void)
 {
-   return (BX_CPU_THIS_PTR gen_reg[BX_64BIT_REG_RIP].rrx);
+  return (BX_CPU_THIS_PTR gen_reg[BX_64BIT_REG_RIP].rrx);
 }
 #endif
 
 BX_CPP_INLINE Bit16u BX_CPU_C::get_reg16(unsigned reg)
 {
-   assert(reg < BX_GENERAL_REGISTERS);
-   return (BX_CPU_THIS_PTR gen_reg[reg].word.rx);
+  assert(reg < BX_GENERAL_REGISTERS);
+  return (BX_CPU_THIS_PTR gen_reg[reg].word.rx);
 }
 
 BX_CPP_INLINE void BX_CPU_C::set_reg16(unsigned reg, Bit16u val)
 {
-   assert(reg < BX_GENERAL_REGISTERS);
-   BX_CPU_THIS_PTR gen_reg[reg].word.rx = val;
+  assert(reg < BX_GENERAL_REGISTERS);
+  BX_CPU_THIS_PTR gen_reg[reg].word.rx = val;
 }
 
 BX_CPP_INLINE Bit32u BX_CPU_C::get_reg32(unsigned reg)
 {
-   assert(reg < BX_GENERAL_REGISTERS);
-   return (BX_CPU_THIS_PTR gen_reg[reg].dword.erx);
+  assert(reg < BX_GENERAL_REGISTERS);
+  return (BX_CPU_THIS_PTR gen_reg[reg].dword.erx);
 }
 
 BX_CPP_INLINE void BX_CPU_C::set_reg32(unsigned reg, Bit32u val)
@@ -3599,11 +3599,10 @@ IMPLEMENT_EFLAG_ACCESSOR   (TF,   8)
                                    // Group encoding: 110
                                    // Group encoding: 111
 
-#define BxLockable          0x0080 // bit  7
-#define BxRepeatable        0x0100 // bit  8
+#define BxLockable          0x0080 // bit 7
 
 #if BX_SUPPORT_TRACE_CACHE
-  #define BxTraceEnd        0x1000 // bit 12
+  #define BxTraceEnd        0x0100 // bit 8
 #else
   #define BxTraceEnd        0
 #endif

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.113 2008-03-29 21:12:11 sshwarts Exp $
+// $Id: paging.cc,v 1.114 2008-03-31 18:53:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -38,7 +38,6 @@
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
-#if 0
 // X86 Registers Which Affect Paging:
 // ==================================
 //
@@ -281,8 +280,6 @@
 //
 // - Pentium+ processors have separate TLB's for data and instruction caches
 // - Pentium Pro+ processors maintain separate 4K and 4M TLBs.
-
-#endif
 
 #define BX_INVALID_TLB_ENTRY 0xffffffff
 
