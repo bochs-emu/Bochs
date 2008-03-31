@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_move.cc,v 1.84 2008-03-25 16:46:39 sshwarts Exp $
+// $Id: sse_move.cc,v 1.85 2008-03-31 20:56:27 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -260,7 +260,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FXSAVE(bxInstruction_c *i)
   }
 
 #if BX_SUPPORT_X86_64
-  if (BX_CPU_THIS_PTR efer.ffxsr && CPL == 0 && Is64BitMode())
+  if (BX_CPU_THIS_PTR efer.get_FFXSR() && CPL == 0 && Is64BitMode())
     return; // skip saving of the XMM state
 #endif
 
@@ -364,7 +364,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FXRSTOR(bxInstruction_c *i)
   BX_CPU_THIS_PTR the_i387.twd = unpack_FPU_TW(tag_byte);
 
 #if BX_SUPPORT_X86_64
-  if (BX_CPU_THIS_PTR efer.ffxsr && CPL == 0 && Is64BitMode())
+  if (BX_CPU_THIS_PTR efer.get_FFXSR() && CPL == 0 && Is64BitMode())
     return; // skip restore of the XMM state
 #endif
 

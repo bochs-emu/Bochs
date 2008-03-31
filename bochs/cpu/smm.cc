@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: smm.cc,v 1.34 2008-03-22 21:29:41 sshwarts Exp $
+// $Id: smm.cc,v 1.35 2008-03-31 20:56:27 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2006 Stanislav Shwartsman
@@ -141,10 +141,8 @@ void BX_CPU_C::enter_system_management_mode(void)
   BX_CPU_THIS_PTR cr4.setRegister(0);
 #endif
 
-  // EFER.LME = 0, EFER.LME = 0
 #if BX_SUPPORT_X86_64
-  BX_CPU_THIS_PTR efer.lme = 0;
-  BX_CPU_THIS_PTR efer.lma = 0;
+  BX_CPU_THIS_PTR efer.setRegister(0);
 #endif
 
   parse_selector(BX_CPU_THIS_PTR smbase >> 4,
@@ -255,14 +253,14 @@ void BX_CPU_C::smram_save_state(Bit32u *saved_state)
   // --- Debug and Control Registers --- //
   SMRAM_FIELD(saved_state, SMRAM_OFFSET_DR6) = BX_CPU_THIS_PTR dr6;
   SMRAM_FIELD(saved_state, SMRAM_OFFSET_DR7) = BX_CPU_THIS_PTR dr7;
-  SMRAM_FIELD(saved_state, SMRAM_OFFSET_CR0) = BX_CPU_THIS_PTR cr0.val32;
+  SMRAM_FIELD(saved_state, SMRAM_OFFSET_CR0) = BX_CPU_THIS_PTR cr0.getRegister();
   SMRAM_FIELD(saved_state, SMRAM_OFFSET_CR3) = BX_CPU_THIS_PTR cr3;
   SMRAM_FIELD(saved_state, SMRAM_OFFSET_CR4) = BX_CPU_THIS_PTR cr4.getRegister();
   /* base+0x7f44 to base+0x7f04 is reserved */
   SMRAM_FIELD(saved_state, SMRAM_SMBASE_OFFSET)   = BX_CPU_THIS_PTR smbase;
   SMRAM_FIELD(saved_state, SMRAM_SMM_REVISION_ID) = SMM_REVISION_ID;
   /* base+0x7ef8 to base+0x7ed8 is reserved */
-  SMRAM_FIELD(saved_state, SMRAM_OFFSET_EFER) = BX_CPU_THIS_PTR get_EFER();
+  SMRAM_FIELD(saved_state, SMRAM_OFFSET_EFER) = BX_CPU_THIS_PTR efer.getRegister();
   /* base+0x7ecc is reserved */
   /* base+0x7ec8 is I/O Instruction Restart, Auto-Halt Restart and NMI Mask */
   /* base+0x7ec4 is reserved */
@@ -362,26 +360,27 @@ bx_bool BX_CPU_C::smram_restore_state(const Bit32u *saved_state)
     return 0;
   }
 
-  BX_CPU_THIS_PTR efer.sce   = (temp_efer >> 0)  & 1;
-  BX_CPU_THIS_PTR efer.lme   = (temp_efer >> 8)  & 1;
-  BX_CPU_THIS_PTR efer.lma   = (temp_efer >> 10) & 1;
-  BX_CPU_THIS_PTR efer.nxe   = (temp_efer >> 11) & 1;
-  BX_CPU_THIS_PTR efer.ffxsr = (temp_efer >> 14) & 1;
+  if (temp_efer & ~BX_EFER_SUPPORTED_BITS) {
+    BX_PANIC(("SMM restore: Attemp to set EFER reserved bits: 0x%08x !", temp_efer));
+    return 0;
+  }
 
-  if (BX_CPU_THIS_PTR efer.lma) {
+  BX_CPU_THIS_PTR efer.setRegister(temp_efer & BX_EFER_SUPPORTED_BITS);
+
+  if (BX_CPU_THIS_PTR efer.get_LMA()) {
     if (temp_eflags & EFlagsVMMask) {
       BX_PANIC(("SMM restore: If EFER.LMA = 1 => RFLAGS.VM=0 !"));
       return 0;
     }
 
-    if (!BX_CPU_THIS_PTR cr4.get_PAE() || !pg || !pe || !BX_CPU_THIS_PTR efer.lme) {
+    if (!BX_CPU_THIS_PTR cr4.get_PAE() || !pg || !pe || !BX_CPU_THIS_PTR efer.get_LME()) {
       BX_PANIC(("SMM restore: If EFER.LMA = 1 <=> CR4.PAE, CR0.PG, CR0.PE, EFER.LME=1 !"));
       return 0;
     }
   }
 
-  if (BX_CPU_THIS_PTR cr4.get_PAE() && pg && pe && BX_CPU_THIS_PTR efer.lme) {
-    if (! BX_CPU_THIS_PTR efer.lma) {
+  if (BX_CPU_THIS_PTR cr4.get_PAE() && pg && pe && BX_CPU_THIS_PTR efer.get_LME()) {
+    if (! BX_CPU_THIS_PTR efer.get_LMA()) {
       BX_PANIC(("SMM restore: If EFER.LMA = 1 <=> CR4.PAE, CR0.PG, CR0.PE, EFER.LME=1 !"));
       return 0;
     }
@@ -534,7 +533,7 @@ bx_bool BX_CPU_C::smram_restore_state(const Bit32u *saved_state)
 
 void BX_CPU_C::smram_save_state(Bit32u *saved_state)
 {
-  SMRAM_FIELD(saved_state, SMRAM_OFFSET_CR0) = BX_CPU_THIS_PTR cr0.val32;
+  SMRAM_FIELD(saved_state, SMRAM_OFFSET_CR0) = BX_CPU_THIS_PTR cr0.getRegister();
   SMRAM_FIELD(saved_state, SMRAM_OFFSET_CR3) = BX_CPU_THIS_PTR cr3;
   SMRAM_FIELD(saved_state, SMRAM_OFFSET_EFLAGS) = read_eflags();
   SMRAM_FIELD(saved_state, SMRAM_OFFSET_EIP) = EIP;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: extdb.cc,v 1.25 2008-02-15 19:03:53 sshwarts Exp $
+// $Id: extdb.cc,v 1.26 2008-03-31 20:56:27 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #include "bochs.h"
@@ -85,7 +85,7 @@ void bx_external_debugger(BX_CPU_C *cpu)
      regs.idt.base = cpu->idtr.base;
      regs.idt.limit = cpu->idtr.limit;
      regs.ldt = cpu->ldtr.selector.value;
-     regs.cr0 = cpu->cr0.val32;
+     regs.cr0 = cpu->cr0.getRegister();
      regs.cr1 = cpu->cr1;
      regs.cr2 = cpu->cr2;
      regs.cr3 = cpu->cr3;
@@ -95,7 +95,7 @@ void bx_external_debugger(BX_CPU_C *cpu)
      regs.fsbase = cpu->sregs[BX_SEG_REG_FS].cache.u.segment.base;
      regs.gsbase = cpu->sregs[BX_SEG_REG_GS].cache.u.segment.base;
 #if BX_SUPPORT_X86_64
-     regs.efer = cpu->get_EFER();
+     regs.efer = cpu->efer.getRegister();
 #else
      regs.efer = 0;
 #endif

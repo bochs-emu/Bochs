@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: crregs.h,v 1.8 2008-02-13 17:06:44 sshwarts Exp $
+// $Id: crregs.h,v 1.9 2008-03-31 20:56:27 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007 Stanislav Shwartsman
@@ -106,21 +106,30 @@ struct bx_cr4_t {
 #endif
 
 #if BX_SUPPORT_X86_64
-typedef struct bx_efer_t {
-  // x86-64 EFER bits
-  bx_bool sce;		// system call extensions
-  bx_bool lme;		// long mode enable
-  bx_bool lma;		// long mode active
-  bx_bool nxe;		// no-execute enable
-  bx_bool ffxsr;	// fast FXSAVE/FXRSTOR
-} bx_efer_t;
+
+struct bx_efer_t {
+  Bit32u val32; // 32bit value of register
+
+  IMPLEMENT_CRREG_ACCESSORS(SCE,    0);
+  IMPLEMENT_CRREG_ACCESSORS(LME,    8);
+  IMPLEMENT_CRREG_ACCESSORS(LMA,   10);
+  IMPLEMENT_CRREG_ACCESSORS(NXE,   11);
+  IMPLEMENT_CRREG_ACCESSORS(FFXSR, 14);
+
+  BX_CPP_INLINE Bit32u getRegister() { return val32; }
+  BX_CPP_INLINE void setRegister(Bit32u val) { val32 = val; }
+};
+
+#define BX_EFER_LMA_MASK 10
+#define BX_EFER_SUPPORTED_BITS 0x00004d01
+
 #endif
 
 #if BX_SUPPORT_XSAVE
-typedef struct xcr0_reg_t {
+struct xcr0_t {
   Bit32u  val32; // 32bit value of register
 
-#define BX_XCR0_SUPPORT_BITS 0x3
+#define BX_XCR0_SUPPORTED_BITS 0x3
 
 #define BX_XCR0_FPU_BIT   0
 #define BX_XCR0_FPU_MASK (1<<BX_XCR0_FPU_BIT)
@@ -134,7 +143,7 @@ typedef struct xcr0_reg_t {
 
   BX_CPP_INLINE Bit32u getRegister() { return val32; }
   BX_CPP_INLINE void setRegister(Bit32u val) { val32 = val; }
-} xcr0_t;
+};
 #endif
 
 #undef IMPLEMENT_CRREG_ACCESSORS

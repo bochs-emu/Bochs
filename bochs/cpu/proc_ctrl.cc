@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.205 2008-03-23 21:39:01 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.206 2008-03-31 20:56:27 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -674,7 +674,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RdCd(bxInstruction_c *i)
 
   switch (i->nnn()) {
     case 0: // CR0 (MSW)
-      val_32 = BX_CPU_THIS_PTR cr0.val32;
+      val_32 = BX_CPU_THIS_PTR cr0.getRegister();
       break;
     case 2: /* CR2 */
       BX_DEBUG(("MOV_RdCd: reading CR2"));
@@ -799,7 +799,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RqCq(bxInstruction_c *i)
 
   switch (i->nnn()) {
     case 0: // CR0 (MSW)
-      val_64 = BX_CPU_THIS_PTR cr0.val32;
+      val_64 = BX_CPU_THIS_PTR cr0.getRegister();
       break;
     case 2: /* CR2 */
       BX_DEBUG(("MOV_RqCq: read of CR2"));
@@ -863,7 +863,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LMSW_Ew(bxInstruction_c *i)
     msw |= 0x0001; // adjust PE bit to current value of 1
 
   msw &= 0x000f; // LMSW only affects last 4 flags
-  cr0 = (BX_CPU_THIS_PTR cr0.val32 & 0xfffffff0) | msw;
+  cr0 = (BX_CPU_THIS_PTR cr0.getRegister() & 0xfffffff0) | msw;
   SetCR0(cr0);
 }
 
@@ -873,9 +873,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SMSW_Ew(bxInstruction_c *i)
 
 #if BX_CPU_LEVEL == 2
   msw  = 0xfff0; /* 80286 init value */
-  msw |= BX_CPU_THIS_PTR cr0.val32 & 0x000f;
+  msw |= BX_CPU_THIS_PTR cr0.getRegister() & 0x000f;
 #else /* 386+ */
-  msw  = BX_CPU_THIS_PTR cr0.val32 & 0xffff;
+  msw  = BX_CPU_THIS_PTR cr0.getRegister() & 0xffff;
 #endif
 
   if (i->modC0()) {
@@ -1191,7 +1191,7 @@ void BX_CPU_C::handleCpuModeChange(void)
   unsigned mode = BX_CPU_THIS_PTR cpu_mode;
 
 #if BX_SUPPORT_X86_64
-  if (BX_CPU_THIS_PTR efer.lma) {
+  if (BX_CPU_THIS_PTR efer.get_LMA()) {
     if (! BX_CPU_THIS_PTR cr0.get_PE()) {
       BX_PANIC(("change_cpu_mode: EFER.LMA is set when CR0.PE=0 !"));
     }
@@ -1261,13 +1261,13 @@ void BX_CPU_C::SetCR0(Bit32u val_32)
 
   // from either MOV_CdRd() or debug functions
   // protection checks made already or forcing from debug
-  Bit32u oldCR0 = BX_CPU_THIS_PTR cr0.val32;
+  Bit32u oldCR0 = BX_CPU_THIS_PTR cr0.getRegister();
 
 #if BX_SUPPORT_X86_64
   bx_bool prev_pg = BX_CPU_THIS_PTR cr0.get_PG();
 
   if (prev_pg==0 && pg) {
-    if (BX_CPU_THIS_PTR efer.lme) {
+    if (BX_CPU_THIS_PTR efer.get_LME()) {
       if (!BX_CPU_THIS_PTR cr4.get_PAE()) {
         BX_ERROR(("SetCR0: attempt to enter x86-64 long mode without enabling CR4.PAE !"));
         exception(BX_GP_EXCEPTION, 0, 0);
@@ -1276,7 +1276,7 @@ void BX_CPU_C::SetCR0(Bit32u val_32)
         BX_ERROR(("SetCR0: attempt to enter x86-64 long mode with CS.L !"));
         exception(BX_GP_EXCEPTION, 0, 0);
       }
-      BX_CPU_THIS_PTR efer.lma = 1;
+      BX_CPU_THIS_PTR efer.set_LMA(1);
     }
   }
   else if (prev_pg==1 && ! pg) {
@@ -1284,11 +1284,11 @@ void BX_CPU_C::SetCR0(Bit32u val_32)
       BX_ERROR(("SetCR0: attempt to leave 64 bit mode directly to legacy mode !"));
       exception(BX_GP_EXCEPTION, 0, 0);
     }
-    if (BX_CPU_THIS_PTR efer.lma) {
+    if (BX_CPU_THIS_PTR efer.get_LMA()) {
       if (BX_CPU_THIS_PTR gen_reg[BX_64BIT_REG_RIP].dword.hrx != 0) {
         BX_PANIC(("SetCR0: attempt to leave x86-64 LONG mode with RIP upper != 0 !!!"));
       }
-      BX_CPU_THIS_PTR efer.lma = 0;
+      BX_CPU_THIS_PTR efer.set_LMA(0);
     }
   }
 #endif  // #if BX_SUPPORT_X86_64
@@ -1305,7 +1305,7 @@ void BX_CPU_C::SetCR0(Bit32u val_32)
 #else
 #error "SetCR0: implement reserved bits behaviour for this CPU_LEVEL"
 #endif
-  BX_CPU_THIS_PTR cr0.val32 = val_32;
+  BX_CPU_THIS_PTR cr0.setRegister(val_32);
 
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
   handleAlignmentCheck();
@@ -1385,7 +1385,7 @@ bx_bool BX_CPU_C::SetCR4(Bit32u val_32)
 
 #if BX_SUPPORT_X86_64
   // need to GP(0) if LMA=1 and PAE=1->0
-  if ((BX_CPU_THIS_PTR efer.lma)
+  if ((BX_CPU_THIS_PTR efer.get_LMA())
       && (!(val_32 >> 5) & 1)
       && (BX_CPU_THIS_PTR cr4.get_PAE()))
   {
@@ -1630,7 +1630,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDMSR(bxInstruction_c *i)
 
 #if BX_SUPPORT_X86_64
     case BX_MSR_EFER:
-      RAX = (Bit64u) BX_CPU_THIS_PTR get_EFER();
+      RAX = BX_CPU_THIS_PTR efer.getRegister();
       RDX = 0;
       return;
 
@@ -1827,16 +1827,15 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRMSR(bxInstruction_c *i)
 #if BX_SUPPORT_X86_64
     case BX_MSR_EFER:
       // #GP(0) if changing EFER.LME when cr0.pg = 1
-      if ((BX_CPU_THIS_PTR efer.lme != ((EAX >> 8) & 1)) &&
+      if ((BX_CPU_THIS_PTR efer.get_LME() != ((EAX >> 8) & 1)) &&
            BX_CPU_THIS_PTR cr0.get_PG())
       {
         BX_ERROR(("WRMSR: attempt to change LME when CR0.PG=1"));
         exception(BX_GP_EXCEPTION, 0, 0);
       }
-      BX_CPU_THIS_PTR efer.sce   = (EAX >> 0)  & 1;
-      BX_CPU_THIS_PTR efer.lme   = (EAX >> 8)  & 1;
-      BX_CPU_THIS_PTR efer.nxe   = (EAX >> 11) & 1;
-      BX_CPU_THIS_PTR efer.ffxsr = (EAX >> 14) & 1;
+
+      BX_CPU_THIS_PTR efer.setRegister((EAX & BX_EFER_SUPPORTED_BITS & ~BX_EFER_LMA_MASK)
+              | (BX_CPU_THIS_PTR efer.val32 & BX_EFER_LMA_MASK)); // keep LMA untouched
       return;
 
     case BX_MSR_STAR:
@@ -2155,13 +2154,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSCALL(bxInstruction_c *i)
 
   BX_DEBUG(("Execute SYSCALL instruction"));
 
-  if (!BX_CPU_THIS_PTR efer.sce) {
+  if (!BX_CPU_THIS_PTR efer.get_SCE()) {
     exception(BX_UD_EXCEPTION, 0, 0);
   }
 
   invalidate_prefetch_q();
 
-  if (BX_CPU_THIS_PTR efer.lma)
+  if (BX_CPU_THIS_PTR efer.get_LMA())
   {
     RCX = RIP;
     R11 = read_eflags() & ~(EFlagsRFMask);
@@ -2283,7 +2282,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSRET(bxInstruction_c *i)
 
   BX_DEBUG(("Execute SYSRET instruction"));
 
-  if (!BX_CPU_THIS_PTR efer.sce) {
+  if (!BX_CPU_THIS_PTR efer.get_SCE()) {
     exception(BX_UD_EXCEPTION, 0, 0);
   }
 

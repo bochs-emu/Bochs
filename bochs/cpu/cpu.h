@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.442 2008-03-31 18:53:08 sshwarts Exp $
+// $Id: cpu.h,v 1.443 2008-03-31 20:56:27 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -904,7 +904,7 @@ public: // for now...
 #if BX_USE_TLB
 
   struct {
-    bx_TLB_entry entry[BX_TLB_SIZE]  BX_CPP_AlignN(16);
+    bx_TLB_entry entry[BX_TLB_SIZE] BX_CPP_AlignN(16);
   } TLB;
 
 
@@ -3101,10 +3101,6 @@ public: // for now...
 
   BX_CPP_INLINE bx_address get_segment_base(unsigned seg);
 
-#if BX_SUPPORT_X86_64
-  BX_CPP_INLINE Bit32u get_EFER(void);
-#endif
-
   DECLARE_EFLAG_ACCESSOR   (ID,  21)
   DECLARE_EFLAG_ACCESSOR   (VIP, 20)
   DECLARE_EFLAG_ACCESSOR   (VIF, 19)
@@ -3300,17 +3296,6 @@ BX_CPP_INLINE void BX_CPU_C::set_reg64(unsigned reg, Bit64u val)
 }
 #endif
 
-#if BX_SUPPORT_X86_64
-BX_CPP_INLINE Bit32u BX_CPU_C::get_EFER(void)
-{
-   return (BX_CPU_THIS_PTR efer.sce   <<  0) |
-          (BX_CPU_THIS_PTR efer.lme   <<  8) |
-          (BX_CPU_THIS_PTR efer.lma   << 10) |
-          (BX_CPU_THIS_PTR efer.nxe   << 11) |
-          (BX_CPU_THIS_PTR efer.ffxsr << 14);
-}
-#endif
-
 BX_CPP_INLINE bx_bool BX_CPU_C::real_mode(void)
 {
   return (BX_CPU_THIS_PTR cpu_mode == BX_MODE_IA32_REAL);
@@ -3334,7 +3319,7 @@ BX_CPP_INLINE bx_bool BX_CPU_C::protected_mode(void)
 BX_CPP_INLINE bx_bool BX_CPU_C::long_mode(void)
 {
 #if BX_SUPPORT_X86_64
-  return BX_CPU_THIS_PTR efer.lma;
+  return BX_CPU_THIS_PTR efer.get_LMA();
 #else
   return 0;
 #endif
