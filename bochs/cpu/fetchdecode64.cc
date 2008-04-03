@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.183 2008-03-31 18:53:08 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.184 2008-04-03 17:56:58 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -3542,6 +3542,7 @@ fetch_b1:
     }
 
     i->setSibBase(rm);      // initialize with rm to use BxResolve32Base
+    i->setSibIndex(BX_NIL_REGISTER);
     // initialize displ32 with zero to include cases with no diplacement
     i->modRMForm.displ32u = 0;
 
@@ -3593,18 +3594,20 @@ get_8bit_displ:
         base  = (sib & 0x7) | rex_b; sib >>= 3;
         index = (sib & 0x7) | rex_x; sib >>= 3;
         scale =  sib;
-        i->setSibIndex(index);
         i->setSibScale(scale);
         i->setSibBase(base);
-        if (index == 4)
+        if (index == 4) {
           i->ResolveModrm = &BX_CPU_C::BxResolve64Base;
-        else
+        }
+        else {
           i->ResolveModrm = &BX_CPU_C::BxResolve64BaseIndex;
+          i->setSibIndex(index);
+        }
         if (mod == 0x00) { // mod==00b, rm==4
           if (BX_NULL_SEG_REG(i->seg()))
             i->setSeg(sreg_mod0_base32[base]);
           if ((base & 0x7) == 5) {
-            i->setSibBase(BX_64BIT_REG_NIL);
+            i->setSibBase(BX_NIL_REGISTER);
             goto get_32bit_displ;
           }
           // mod==00b, rm==4, base!=5
@@ -3652,17 +3655,19 @@ get_8bit_displ:
         index = (sib & 0x7) | rex_x; sib >>= 3;
         scale =  sib;
         i->setSibBase(base);
-        i->setSibIndex(index);
         i->setSibScale(scale);
-        if (index == 4)
+        if (index == 4) {
           i->ResolveModrm = &BX_CPU_C::BxResolve32Base;
-        else
+        }
+        else {
           i->ResolveModrm = &BX_CPU_C::BxResolve32BaseIndex;
+          i->setSibIndex(index);
+        }
         if (mod == 0x00) { // mod==00b, rm==4
           if (BX_NULL_SEG_REG(i->seg()))
             i->setSeg(sreg_mod0_base32[base]);
           if ((base & 0x7) == 5) {
-            i->setSibBase(BX_32BIT_REG_NIL);
+            i->setSibBase(BX_NIL_REGISTER);
             goto get_32bit_displ;
           }
           // mod==00b, rm==4, base!=5

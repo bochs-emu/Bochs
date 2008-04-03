@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack64.cc,v 1.38 2008-03-22 21:29:41 sshwarts Exp $
+// $Id: stack64.cc,v 1.39 2008-04-03 17:56:59 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -42,10 +42,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::POP_EqM(bxInstruction_c *i)
   // Note: there is one little weirdism here.  It is possible to use
   // RSP in the modrm addressing. If used, the value of RSP after the
   // pop is used to calculate the address.
-  //if (i->rm()==4 && i->sibBase()==4) {
-    // call method on BX_CPU_C object
-    BX_CPU_CALL_METHODR (i->ResolveModrm, (i));
-  //}
+  BX_CPU_CALL_METHODR (i->ResolveModrm, (i));
+
   write_virtual_qword(i->seg(), RMAddr(i), val64);
 
   BX_CPU_THIS_PTR speculative_rsp = 0;

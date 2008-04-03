@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.443 2008-03-31 20:56:27 sshwarts Exp $
+// $Id: cpu.h,v 1.444 2008-04-03 17:56:57 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -93,9 +93,7 @@
 #define BX_32BIT_REG_EIP BX_GENERAL_REGISTERS
 #define BX_64BIT_REG_RIP BX_GENERAL_REGISTERS
 
-#define BX_16BIT_REG_NIL (BX_GENERAL_REGISTERS+1)
-#define BX_32BIT_REG_NIL (BX_GENERAL_REGISTERS+1)
-#define BX_64BIT_REG_NIL (BX_GENERAL_REGISTERS+1)
+#define BX_NIL_REGISTER (BX_GENERAL_REGISTERS+1)
 
 #if defined(NEED_CPU_REG_SHORTCUTS)
 
@@ -3167,6 +3165,9 @@ public: // for now...
 #endif
 };
 
+// Can be used as LHS or RHS.
+#define RMAddr(i)  (BX_CPU_THIS_PTR address_xlation.rm_addr)
+
 #if BX_SUPPORT_ICACHE
 
 BX_CPP_INLINE void BX_CPU_C::updateFetchModeMask(void)
@@ -3617,9 +3618,6 @@ IMPLEMENT_EFLAG_ACCESSOR   (TF,   8)
 #define BxFPGroup         BxGroupN
 
 // <TAG-DEFINES-DECODE-END>
-
-// Can be used as LHS or RHS.
-#define RMAddr(i)  (BX_CPU_THIS_PTR address_xlation.rm_addr)
 
 #define setEFlagsOSZAPC(flags32) {                                      \
   BX_CPU_THIS_PTR eflags = (BX_CPU_THIS_PTR eflags & ~EFlagsOSZAPCMask) \

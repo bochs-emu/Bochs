@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bit.cc,v 1.54 2008-03-31 17:33:30 sshwarts Exp $
+// $Id: bit.cc,v 1.55 2008-04-03 17:56:55 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -370,8 +370,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CRC32_GdEv(bxInstruction_c *i)
   Bit32u op2 = BX_READ_32BIT_REG(i->nnn());
   op2 = BitReflect32(op2);
 
-  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-
 #if BX_SUPPORT_X86_64
   if (i->os64L())   /* 64 bit operand size */
   {
@@ -381,6 +379,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CRC32_GdEv(bxInstruction_c *i)
       op1 = BX_READ_64BIT_REG(i->rm());
     }
     else {
+      BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
       op1 = read_virtual_qword(i->seg(), RMAddr(i));
     }
 
@@ -404,6 +403,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CRC32_GdEv(bxInstruction_c *i)
         op1 = BX_READ_32BIT_REG(i->rm());
       }
       else {
+        BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
         op1 = read_virtual_dword(i->seg(), RMAddr(i));
       }
 
@@ -419,6 +419,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CRC32_GdEv(bxInstruction_c *i)
         op1 = BX_READ_16BIT_REG(i->rm());
       }
       else {
+        BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
         op1 = read_virtual_word(i->seg(), RMAddr(i));
       }
 

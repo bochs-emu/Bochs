@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.160 2008-03-31 20:56:27 sshwarts Exp $
+// $Id: init.cc,v 1.161 2008-04-03 17:56:59 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -702,7 +702,7 @@ void BX_CPU_C::reset(unsigned source)
 #endif
 
   // initialize NIL register
-  BX_WRITE_32BIT_REGZ(BX_32BIT_REG_NIL, 0);
+  BX_WRITE_32BIT_REGZ(BX_NIL_REGISTER, 0);
 
   // status and control flags register set
   BX_CPU_THIS_PTR setEFlags(0x2); // Bit1 is always set

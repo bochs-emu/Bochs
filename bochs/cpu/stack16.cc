@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack16.cc,v 1.35 2008-03-22 21:29:41 sshwarts Exp $
+// $Id: stack16.cc,v 1.36 2008-04-03 17:56:59 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -148,9 +148,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::POP_EwM(bxInstruction_c *i)
   // Note: there is one little weirdism here.  It is possible to use
   // SP in the modrm addressing. If used, the value of SP after the
   // pop is used to calculate the address.
-  //if (i->rm()==4 && i->sibBase()==4) {
-    BX_CPU_CALL_METHODR (i->ResolveModrm, (i));
-  //}
+  BX_CPU_CALL_METHODR (i->ResolveModrm, (i));
+
   write_virtual_word(i->seg(), RMAddr(i), val16);
 
   BX_CPU_THIS_PTR speculative_rsp = 0;
