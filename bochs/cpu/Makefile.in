@@ -53,12 +53,11 @@ OBJS = \
 	init.o \
 	cpu.o \
 	icache.o \
-	resolve32.o \
+	resolve.o \
 	fetchdecode.o \
 	access.o \
 	shift16.o \
 	logical16.o \
-	resolve16.o \
 	ctrl_xfer32.o \
 	ctrl_xfer16.o \
 	mmx.o \
@@ -125,7 +124,6 @@ OBJS64 = \
 	fetchdecode64.o \
 	logical64.o \
 	mult64.o \
-	resolve64.o \
 	shift64.o \
 	bit64.o \
 	stack64.o
@@ -624,33 +622,6 @@ proc_ctrl.o: proc_ctrl.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../config.h ../fpu/tag_w.h ../fpu/status_w.h ../fpu/control_w.h \
   ../cpu/xmm.h
 protect_ctrl.o: protect_ctrl.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
-  ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
-  ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
-  ../extplugin.h ../gui/gui.h ../gui/textconfig.h ../config.h \
-  ../gui/keymap.h ../instrument/stubs/instrument.h cpu.h instr.h \
-  ../cpu/lazy_flags.h ../disasm/disasm.h ../config.h \
-  crregs.h descriptor.h icache.h apic.h ../cpu/i387.h ../fpu/softfloat.h \
-  ../config.h ../fpu/tag_w.h ../fpu/status_w.h ../fpu/control_w.h \
-  ../cpu/xmm.h
-resolve16.o: resolve16.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
-  ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
-  ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
-  ../extplugin.h ../gui/gui.h ../gui/textconfig.h ../config.h \
-  ../gui/keymap.h ../instrument/stubs/instrument.h cpu.h instr.h \
-  ../cpu/lazy_flags.h ../disasm/disasm.h ../config.h \
-  crregs.h descriptor.h icache.h apic.h ../cpu/i387.h ../fpu/softfloat.h \
-  ../config.h ../fpu/tag_w.h ../fpu/status_w.h ../fpu/control_w.h \
-  ../cpu/xmm.h
-resolve32.o: resolve32.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
-  ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
-  ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
-  ../extplugin.h ../gui/gui.h ../gui/textconfig.h ../config.h \
-  ../gui/keymap.h ../instrument/stubs/instrument.h cpu.h instr.h \
-  ../cpu/lazy_flags.h ../disasm/disasm.h ../config.h \
-  crregs.h descriptor.h icache.h apic.h ../cpu/i387.h ../fpu/softfloat.h \
-  ../config.h ../fpu/tag_w.h ../fpu/status_w.h ../fpu/control_w.h \
-  ../cpu/xmm.h
-resolve64.o: resolve64.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
   ../extplugin.h ../gui/gui.h ../gui/textconfig.h ../config.h \

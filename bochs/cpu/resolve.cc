@@ -1,14 +1,9 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: resolve16.cc,v 1.15 2008-02-07 20:43:12 sshwarts Exp $
+// $Id: resolve.cc,v 1.1 2008-04-03 17:44:33 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001  MandrakeSoft S.A.
-//
-//    MandrakeSoft S.A.
-//    43, rue d'Aboukir
-//    75002 Paris - France
-//    http://www.linux-mandrake.com/
-//    http://www.mandrakesoft.com/
+//   Copyright (c) 2008 Stanislav Shwartsman
+//          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -23,12 +18,17 @@
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+//
 /////////////////////////////////////////////////////////////////////////
 
 #define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
+
+//
+// 16 bit address size
+//
 
   void  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::BxResolve16Disp(bxInstruction_c *i)
@@ -76,3 +76,35 @@ BX_CPU_C::BxResolve16Rm7(bxInstruction_c *i)
 {
   RMAddr(i) = (Bit16u) (BX + (Bit16s) i->displ16u());
 }
+
+//
+// 32 bit address size
+//
+
+  void  BX_CPP_AttrRegparmN(1)
+BX_CPU_C::BxResolve32Base(bxInstruction_c *i)
+{
+  RMAddr(i) = BX_READ_32BIT_REG(i->sibBase()) + i->displ32u();
+}
+  void  BX_CPP_AttrRegparmN(1)
+BX_CPU_C::BxResolve32BaseIndex(bxInstruction_c *i)
+{
+  RMAddr(i) = BX_READ_32BIT_REG(i->sibBase()) + (BX_READ_32BIT_REG(i->sibIndex()) << i->sibScale()) + i->displ32u();
+}
+
+//
+// 64 bit address size
+//
+
+#if BX_SUPPORT_X86_64
+  void  BX_CPP_AttrRegparmN(1)
+BX_CPU_C::BxResolve64Base(bxInstruction_c *i)
+{
+  RMAddr(i) = BX_READ_64BIT_REG(i->sibBase()) + (Bit32s) i->displ32u();
+}
+  void  BX_CPP_AttrRegparmN(1)
+BX_CPU_C::BxResolve64BaseIndex(bxInstruction_c *i)
+{
+  RMAddr(i) = BX_READ_64BIT_REG(i->sibBase()) + (BX_READ_64BIT_REG(i->sibIndex()) << i->sibScale()) + (Bit32s) i->displ32u();
+}
+#endif
