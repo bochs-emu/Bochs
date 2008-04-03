@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.206 2008-03-31 20:56:27 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.207 2008-04-03 18:59:10 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1700,7 +1700,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRMSR(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
-  BX_INSTR_WRMSR(BX_CPU_ID, ECX, ((Bit64u) EDX << 32) + EAX);
+  Bit64u val64 = ((Bit64u) EDX << 32) + EAX;
+
+  BX_INSTR_WRMSR(BX_CPU_ID, ECX, val64);
 
   /* ECX has the MSR to write to */
   switch(ECX) {
@@ -1743,13 +1745,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRMSR(bxInstruction_c *i)
       return;
 
     case BX_MSR_MTRRFIX64K_00000:
-      BX_CPU_THIS_PTR msr.mtrrfix64k_00000 = ((Bit64u) EDX << 32) + EAX;
+      BX_CPU_THIS_PTR msr.mtrrfix64k_00000 = val64;
       return;
     case BX_MSR_MTRRFIX16K_80000:
-      BX_CPU_THIS_PTR msr.mtrrfix16k_80000 = ((Bit64u) EDX << 32) + EAX;
+      BX_CPU_THIS_PTR msr.mtrrfix16k_80000 = val64;
       return;
     case BX_MSR_MTRRFIX16K_A0000:
-      BX_CPU_THIS_PTR msr.mtrrfix16k_a0000 = ((Bit64u) EDX << 32) + EAX;
+      BX_CPU_THIS_PTR msr.mtrrfix16k_a0000 = val64;
       return;
 
     case BX_MSR_MTRRFIX4K_C0000:
@@ -1760,11 +1762,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRMSR(bxInstruction_c *i)
     case BX_MSR_MTRRFIX4K_E8000:
     case BX_MSR_MTRRFIX4K_F0000:
     case BX_MSR_MTRRFIX4K_F8000:
-      BX_CPU_THIS_PTR msr.mtrrfix4k[ECX - BX_MSR_MTRRFIX4K_C0000] = ((Bit64u) EDX << 32) + EAX;
+      BX_CPU_THIS_PTR msr.mtrrfix4k[ECX - BX_MSR_MTRRFIX4K_C0000] = val64;
       return;
 
     case BX_MSR_PAT:
-      BX_CPU_THIS_PTR msr.pat = ((Bit64u) EDX << 32) + EAX;
+      BX_CPU_THIS_PTR msr.pat = val64;
       return;
 
     case BX_MSR_MTRR_DEFTYPE:
@@ -1828,7 +1830,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRMSR(bxInstruction_c *i)
     case BX_MSR_EFER:
       // #GP(0) if changing EFER.LME when cr0.pg = 1
       if ((BX_CPU_THIS_PTR efer.get_LME() != ((EAX >> 8) & 1)) &&
-           BX_CPU_THIS_PTR cr0.get_PG())
+           BX_CPU_THIS_PTR  cr0.get_PG())
       {
         BX_ERROR(("WRMSR: attempt to change LME when CR0.PG=1"));
         exception(BX_GP_EXCEPTION, 0, 0);
@@ -1839,31 +1841,31 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRMSR(bxInstruction_c *i)
       return;
 
     case BX_MSR_STAR:
-      MSR_STAR   = ((Bit64u) EDX << 32) + EAX;
+      MSR_STAR   = val64;
       return;
 
     case BX_MSR_LSTAR:
-      MSR_LSTAR  = ((Bit64u) EDX << 32) + EAX;
+      MSR_LSTAR  = val64;
       return;
 
     case BX_MSR_CSTAR:
-      MSR_CSTAR  = ((Bit64u) EDX << 32) + EAX;
+      MSR_CSTAR  = val64;
       return;
 
     case BX_MSR_FMASK:
-      MSR_FMASK  = ((Bit64u) EDX << 32) + EAX;
+      MSR_FMASK  = val64;
       return;
 
     case BX_MSR_FSBASE:
-      MSR_FSBASE = ((Bit64u) EDX << 32) + EAX;
+      MSR_FSBASE = val64;
       return;
 
     case BX_MSR_GSBASE:
-      MSR_GSBASE = ((Bit64u) EDX << 32) + EAX;
+      MSR_GSBASE = val64;
       return;
 
     case BX_MSR_KERNELGSBASE:
-      MSR_KERNELGSBASE = ((Bit64u) EDX << 32) + EAX;
+      MSR_KERNELGSBASE = val64;
       return;
 
     case BX_MSR_TSC_AUX:
