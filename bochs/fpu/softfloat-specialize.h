@@ -123,6 +123,16 @@ BX_CPP_INLINE int float32_is_signaling_nan(float32 a)
 }
 
 /*----------------------------------------------------------------------------
+| Convert float32 denormals to zero
+*----------------------------------------------------------------------------*/
+
+BX_CPP_INLINE float32 float32_denormal_to_zero(float32 op)
+{
+  if (float32_class(op) == float_denormal) op &= ((Bit32u)(1) << 31);
+  return op;
+}
+
+/*----------------------------------------------------------------------------
 | Returns the result of converting the single-precision floating-point NaN
 | `a' to the canonical NaN format.  If `a' is a signaling NaN, the invalid
 | exception is raised.
@@ -239,6 +249,16 @@ BX_CPP_INLINE int float64_is_nan(float64 a)
 BX_CPP_INLINE int float64_is_signaling_nan(float64 a)
 {
     return (((a>>51) & 0xFFF) == 0xFFE) && (a & BX_CONST64(0x0007FFFFFFFFFFFF));
+}
+
+/*----------------------------------------------------------------------------
+| Convert float64 denormals to zero
+*----------------------------------------------------------------------------*/
+
+BX_CPP_INLINE float64 float64_denormal_to_zero(float64 op)
+{
+  if (float64_class(op) == float_denormal) op &= ((Bit64u)(1) << 63);
+  return op;
 }
 
 /*----------------------------------------------------------------------------
