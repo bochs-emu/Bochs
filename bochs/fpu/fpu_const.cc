@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu_const.cc,v 1.10 2008-03-22 21:29:41 sshwarts Exp $
+// $Id: fpu_const.cc,v 1.11 2008-04-04 21:05:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -21,12 +21,10 @@
 //
 /////////////////////////////////////////////////////////////////////////
 
-
 #define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"
 #include "cpu/cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
-
 
 #if BX_SUPPORT_FPU
 
@@ -53,8 +51,6 @@ BX_CPP_INLINE floatx80 FPU_round_const(const floatx80 &a, int adj)
   result.fraction += adj;
   return result;
 }
-
-#endif
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLDL2T(bxInstruction_c *i)
 {
@@ -200,3 +196,5 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLDZ(bxInstruction_c *i)
   BX_INFO(("FLDZ: required FPU, configure --enable-fpu"));
 #endif
 }
+
+#endif

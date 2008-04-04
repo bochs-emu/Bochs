@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu_misc.cc,v 1.12 2008-03-22 21:29:41 sshwarts Exp $
+// $Id: fpu_misc.cc,v 1.13 2008-04-04 21:05:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -21,11 +21,12 @@
 //
 /////////////////////////////////////////////////////////////////////////
 
-
 #define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"
 #include "cpu/cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
+
+#if BX_SUPPORT_FPU
 
 #include "softfloatx80.h"
 
@@ -170,3 +171,5 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FFREEP_STi(bxInstruction_c *i)
   BX_INFO(("FFREEP_STi: required FPU, configure --enable-fpu"));
 #endif
 }
+
+#endif

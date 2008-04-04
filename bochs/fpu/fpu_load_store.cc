@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu_load_store.cc,v 1.17 2008-03-22 21:29:41 sshwarts Exp $
+// $Id: fpu_load_store.cc,v 1.18 2008-04-04 21:05:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -25,6 +25,8 @@
 #include "bochs.h"
 #include "cpu/cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
+
+#if BX_SUPPORT_FPU
 
 extern float_status_t FPU_pre_exception_handling(Bit16u control_word);
 
@@ -668,3 +670,5 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FISTTP64(bxInstruction_c *i)
   UndefinedOpcode(i);
 #endif
 }
+
+#endif

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu.cc,v 1.34 2008-03-22 21:29:41 sshwarts Exp $
+// $Id: fpu.cc,v 1.35 2008-04-04 21:05:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -313,7 +313,6 @@ int BX_CPU_C::fpu_load_environment(bxInstruction_c *i)
 
     return offset;
 }
-#endif
 
 /* D9 /5 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLDCW(bxInstruction_c *i)
@@ -510,6 +509,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FPLEGACY(bxInstruction_c *i)
 #endif
 }
 
+#endif
 
 #if BX_SUPPORT_FPU
 

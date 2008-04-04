@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu_compare.cc,v 1.13 2008-03-22 21:29:41 sshwarts Exp $
+// $Id: fpu_compare.cc,v 1.14 2008-04-04 21:05:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -26,9 +26,9 @@
 #include "cpu/cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
-extern float_status_t FPU_pre_exception_handling(Bit16u control_word);
-
 #if BX_SUPPORT_FPU
+
+extern float_status_t FPU_pre_exception_handling(Bit16u control_word);
 
 #include "softfloatx80.h"
 
@@ -50,7 +50,6 @@ static int status_word_flags_fpu_compare(int float_relation)
 
   return (-1);	// should never get here
 }
-#endif
 
 #if BX_SUPPORT_FPU || BX_SUPPORT_SSE >= 1
 void BX_CPU_C::write_eflags_fpu_compare(int float_relation)
@@ -626,3 +625,5 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FXAM(bxInstruction_c *i)
   BX_INFO(("FXAM: required FPU, configure --enable-fpu"));
 #endif
 }
+
+#endif

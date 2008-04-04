@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu_trans.cc,v 1.13 2008-03-22 21:29:41 sshwarts Exp $
+// $Id: fpu_trans.cc,v 1.14 2008-04-04 21:05:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -21,11 +21,12 @@
 //
 /////////////////////////////////////////////////////////////////////////
 
-
 #define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"
 #include "cpu/cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
+
+#if BX_SUPPORT_FPU
 
 #include "softfloatx80.h"
 #include "softfloat-specialize.h"
@@ -472,3 +473,5 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FCOS(bxInstruction_c *i)
   BX_INFO(("FCOS: required FPU, configure --enable-fpu"));
 #endif
 }
+
+#endif
