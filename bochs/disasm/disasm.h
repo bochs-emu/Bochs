@@ -42,6 +42,8 @@
 #define IA_SMX              0x00400000        /* SMX instruction */
 #define IA_SVM              0x00800000        /* SVM instruction */
 #define IA_XSAVE            0x01000000        /* XSAVE/XRSTOR extensions instruction */
+#define IA_AES              0x02000000        /* AES instruction */
+#define IA_AVX              0x04000000        /* AVX instruction */
 #define IA_UNDOCUMENTED     0x80000000        /* instruction undocumented */
 
 /* general purpose bit register */
