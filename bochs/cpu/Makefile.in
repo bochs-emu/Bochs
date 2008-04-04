@@ -423,7 +423,7 @@ fetchdecode.o: fetchdecode.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../cpu/lazy_flags.h ../disasm/disasm.h ../config.h \
   crregs.h descriptor.h icache.h apic.h ../cpu/i387.h ../fpu/softfloat.h \
   ../config.h ../fpu/tag_w.h ../fpu/status_w.h ../fpu/control_w.h \
-  ../cpu/xmm.h fetchdecode.h
+  ../cpu/xmm.h fetchdecode.h ia_opcodes.h
 fetchdecode64.o: fetchdecode64.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
@@ -432,7 +432,7 @@ fetchdecode64.o: fetchdecode64.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../cpu/lazy_flags.h ../disasm/disasm.h ../config.h \
   crregs.h descriptor.h icache.h apic.h ../cpu/i387.h ../fpu/softfloat.h \
   ../config.h ../fpu/tag_w.h ../fpu/status_w.h ../fpu/control_w.h \
-  ../cpu/xmm.h fetchdecode.h
+  ../cpu/xmm.h fetchdecode.h ia_opcodes.h
 flag_ctrl.o: flag_ctrl.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \

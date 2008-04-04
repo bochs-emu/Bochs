@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith8.cc,v 1.55 2008-03-22 21:29:39 sshwarts Exp $
+// $Id: arith8.cc,v 1.56 2008-04-04 22:39:45 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -106,7 +106,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ADC_EbGbM(bxInstruction_c *i)
   sum = op1 + op2 + temp_CF;
   write_RMW_virtual_byte(sum);
 
-  SET_FLAGS_OSZAPC_8(op1, op2, sum, BX_INSTR_ADD_ADC8(temp_CF));
+  SET_FLAGS_OSZAPC_8(op1, op2, sum, BX_LF_INSTR_ADD_ADC8(temp_CF));
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::ADC_EbGbR(bxInstruction_c *i)
@@ -119,7 +119,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ADC_EbGbR(bxInstruction_c *i)
   sum = op1 + op2 + temp_CF;
   BX_WRITE_8BIT_REGx(i->rm(), i->extend8bitL(), sum);
 
-  SET_FLAGS_OSZAPC_8(op1, op2, sum, BX_INSTR_ADD_ADC8(temp_CF));
+  SET_FLAGS_OSZAPC_8(op1, op2, sum, BX_LF_INSTR_ADD_ADC8(temp_CF));
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::ADC_GbEbM(bxInstruction_c *i)
@@ -134,7 +134,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ADC_GbEbM(bxInstruction_c *i)
   sum = op1 + op2 + temp_CF;
   BX_WRITE_8BIT_REGx(i->nnn(), i->extend8bitL(), sum);
 
-  SET_FLAGS_OSZAPC_8(op1, op2, sum, BX_INSTR_ADD_ADC8(temp_CF));
+  SET_FLAGS_OSZAPC_8(op1, op2, sum, BX_LF_INSTR_ADD_ADC8(temp_CF));
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::ADC_GbEbR(bxInstruction_c *i)
@@ -147,7 +147,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ADC_GbEbR(bxInstruction_c *i)
   sum = op1 + op2 + temp_CF;
   BX_WRITE_8BIT_REGx(i->nnn(), i->extend8bitL(), sum);
 
-  SET_FLAGS_OSZAPC_8(op1, op2, sum, BX_INSTR_ADD_ADC8(temp_CF));
+  SET_FLAGS_OSZAPC_8(op1, op2, sum, BX_LF_INSTR_ADD_ADC8(temp_CF));
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::ADC_ALIb(bxInstruction_c *i)
@@ -160,7 +160,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ADC_ALIb(bxInstruction_c *i)
   sum = op1 + op2 + temp_CF;
   AL = sum;
 
-  SET_FLAGS_OSZAPC_8(op1, op2, sum, BX_INSTR_ADD_ADC8(temp_CF));
+  SET_FLAGS_OSZAPC_8(op1, op2, sum, BX_LF_INSTR_ADD_ADC8(temp_CF));
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::SBB_EbGbM(bxInstruction_c *i)
@@ -175,7 +175,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SBB_EbGbM(bxInstruction_c *i)
   diff_8 = op1_8 - (op2_8 + temp_CF);
   write_RMW_virtual_byte(diff_8);
 
-  SET_FLAGS_OSZAPC_8(op1_8, op2_8, diff_8, BX_INSTR_SUB_SBB8(temp_CF));
+  SET_FLAGS_OSZAPC_8(op1_8, op2_8, diff_8, BX_LF_INSTR_SUB_SBB8(temp_CF));
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::SBB_EbGbR(bxInstruction_c *i)
@@ -188,7 +188,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SBB_EbGbR(bxInstruction_c *i)
   diff_8 = op1_8 - (op2_8 + temp_CF);
   BX_WRITE_8BIT_REGx(i->rm(), i->extend8bitL(), diff_8);
 
-  SET_FLAGS_OSZAPC_8(op1_8, op2_8, diff_8, BX_INSTR_SUB_SBB8(temp_CF));
+  SET_FLAGS_OSZAPC_8(op1_8, op2_8, diff_8, BX_LF_INSTR_SUB_SBB8(temp_CF));
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::SBB_GbEbM(bxInstruction_c *i)
@@ -203,7 +203,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SBB_GbEbM(bxInstruction_c *i)
   diff_8 = op1_8 - (op2_8 + temp_CF);
   BX_WRITE_8BIT_REGx(i->nnn(), i->extend8bitL(), diff_8);
 
-  SET_FLAGS_OSZAPC_8(op1_8, op2_8, diff_8, BX_INSTR_SUB_SBB8(temp_CF));
+  SET_FLAGS_OSZAPC_8(op1_8, op2_8, diff_8, BX_LF_INSTR_SUB_SBB8(temp_CF));
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::SBB_GbEbR(bxInstruction_c *i)
@@ -216,7 +216,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SBB_GbEbR(bxInstruction_c *i)
   diff_8 = op1_8 - (op2_8 + temp_CF);
   BX_WRITE_8BIT_REGx(i->nnn(), i->extend8bitL(), diff_8);
 
-  SET_FLAGS_OSZAPC_8(op1_8, op2_8, diff_8, BX_INSTR_SUB_SBB8(temp_CF));
+  SET_FLAGS_OSZAPC_8(op1_8, op2_8, diff_8, BX_LF_INSTR_SUB_SBB8(temp_CF));
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::SBB_ALIb(bxInstruction_c *i)
@@ -229,7 +229,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SBB_ALIb(bxInstruction_c *i)
   diff_8 = op1_8 - (op2_8 + temp_CF);
   AL = diff_8;
 
-  SET_FLAGS_OSZAPC_8(op1_8, op2_8, diff_8, BX_INSTR_SUB_SBB8(temp_CF));
+  SET_FLAGS_OSZAPC_8(op1_8, op2_8, diff_8, BX_LF_INSTR_SUB_SBB8(temp_CF));
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::SBB_EbIbM(bxInstruction_c *i)
@@ -243,7 +243,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SBB_EbIbM(bxInstruction_c *i)
   diff_8 = op1_8 - (op2_8 + temp_CF);
   write_RMW_virtual_byte(diff_8);
 
-  SET_FLAGS_OSZAPC_8(op1_8, op2_8, diff_8, BX_INSTR_SUB_SBB8(temp_CF));
+  SET_FLAGS_OSZAPC_8(op1_8, op2_8, diff_8, BX_LF_INSTR_SUB_SBB8(temp_CF));
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::SBB_EbIbR(bxInstruction_c *i)
@@ -255,7 +255,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SBB_EbIbR(bxInstruction_c *i)
   diff_8 = op1_8 - (op2_8 + temp_CF);
   BX_WRITE_8BIT_REGx(i->rm(), i->extend8bitL(), diff_8);
 
-  SET_FLAGS_OSZAPC_8(op1_8, op2_8, diff_8, BX_INSTR_SUB_SBB8(temp_CF));
+  SET_FLAGS_OSZAPC_8(op1_8, op2_8, diff_8, BX_LF_INSTR_SUB_SBB8(temp_CF));
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::SUB_EbGbM(bxInstruction_c *i)
@@ -473,7 +473,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ADC_EbIbM(bxInstruction_c *i)
   sum = op1 + op2 + temp_CF;
   write_RMW_virtual_byte(sum);
 
-  SET_FLAGS_OSZAPC_8(op1, op2, sum, BX_INSTR_ADD_ADC8(temp_CF));
+  SET_FLAGS_OSZAPC_8(op1, op2, sum, BX_LF_INSTR_ADD_ADC8(temp_CF));
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::ADC_EbIbR(bxInstruction_c *i)
@@ -485,7 +485,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ADC_EbIbR(bxInstruction_c *i)
   sum = op1 + op2 + temp_CF;
   BX_WRITE_8BIT_REGx(i->rm(), i->extend8bitL(), sum);
 
-  SET_FLAGS_OSZAPC_8(op1, op2, sum, BX_INSTR_ADD_ADC8(temp_CF));
+  SET_FLAGS_OSZAPC_8(op1, op2, sum, BX_LF_INSTR_ADD_ADC8(temp_CF));
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::SUB_EbIbM(bxInstruction_c *i)
@@ -544,7 +544,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::NEG_EbM(bxInstruction_c *i)
   op1_8 = - (Bit8s)(op1_8);
   write_RMW_virtual_byte(op1_8);
 
-  SET_FLAGS_OSZAPC_RESULT_8(op1_8, BX_INSTR_NEG8);
+  SET_FLAGS_OSZAPC_RESULT_8(op1_8, BX_LF_INSTR_NEG8);
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::NEG_EbR(bxInstruction_c *i)
@@ -553,7 +553,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::NEG_EbR(bxInstruction_c *i)
   op1_8 = - (Bit8s)(op1_8);
   BX_WRITE_8BIT_REGx(i->rm(), i->extend8bitL(), op1_8);
 
-  SET_FLAGS_OSZAPC_RESULT_8(op1_8, BX_INSTR_NEG8);
+  SET_FLAGS_OSZAPC_RESULT_8(op1_8, BX_LF_INSTR_NEG8);
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::INC_EbM(bxInstruction_c *i)

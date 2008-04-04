@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.444 2008-04-03 17:56:57 sshwarts Exp $
+// $Id: cpu.h,v 1.445 2008-04-04 22:39:45 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1910,6 +1910,10 @@ public: // for now...
   /* SSE */
 
   /* SSE */
+  BX_SMF void ANDPS_VpsWps(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void ORPS_VpsWps(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void XORPS_VpsWps(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void ANDNPS_VpsWps(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void MOVUPS_VpsWps(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void MOVSS_VssWss(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void MOVUPS_WpsVps(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -1977,7 +1981,7 @@ public: // for now...
   BX_SMF void CVTTSD2SI_GdWsd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void CVTPD2PI_PqWpd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void CVTSD2SI_GdWsd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void UCOMISD_VsdWsd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);            	
+  BX_SMF void UCOMISD_VsdWsd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void COMISD_VpdWpd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void MOVMSKPD_GdVRpd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void SQRTPD_VpdWpd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -2042,11 +2046,9 @@ public: // for now...
   BX_SMF void PSUBUSB_VdqWdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void PSUBUSW_VdqWdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void PMINUB_VdqWdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void ANDPS_VpsWps(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void PADDUSB_VdqWdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void PADDUSW_VdqWdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void PMAXUB_VdqWdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void ANDNPS_VpsWps(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void PAVGB_VdqWdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void PSRAW_VdqWdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void PSRAD_VdqWdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -2059,11 +2061,9 @@ public: // for now...
   BX_SMF void PSUBSB_VdqWdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void PSUBSW_VdqWdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void PMINSW_VdqWdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void ORPS_VpsWps(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void PADDSB_VdqWdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void PADDSW_VdqWdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void PMAXSW_VdqWdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void XORPS_VpsWps(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void PSLLW_VdqWdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void PSLLD_VdqWdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void PSLLQ_VdqWdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -2242,48 +2242,19 @@ public: // for now...
   BX_SMF void MOVHPD_MqVsd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void MOVNTPD_MdqVpd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void MOVNTDQ_MdqVdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-#else
-
-#if BX_SUPPORT_SSE >= 2
-  #define SSE2_ALIAS(i) i
-#else
-  #define SSE2_ALIAS(i) BxError
 #endif
 
-#define MOVUPD_VpdWpd    /* 66 0f 10 */ SSE2_ALIAS(MOVUPS_VpsWps)   /*  0f 10 */
-#define MOVUPD_WpdVpd    /* 66 0f 11 */ SSE2_ALIAS(MOVUPS_WpsVps)   /*  0f 11 */
-#define MOVAPD_VpdWpd    /* 66 0f 28 */ SSE2_ALIAS(MOVAPS_VpsWps)   /*  0f 28 */
-#define MOVAPD_WpdVpd    /* 66 0f 29 */ SSE2_ALIAS(MOVAPS_WpsVps)   /*  0f 29 */
-#define MOVDQU_VdqWdq    /* f3 0f 6f */ SSE2_ALIAS(MOVUPS_VpsWps)   /*  0f 10 */
-#define MOVDQU_WdqVdq    /* f3 0f 7f */ SSE2_ALIAS(MOVUPS_WpsVps)   /*  0f 11 */
-#define MOVDQA_VdqWdq    /* 66 0f 6f */ SSE2_ALIAS(MOVAPS_VpsWps)   /*  0f 28 */
-#define MOVDQA_WdqVdq    /* 66 0f 7f */ SSE2_ALIAS(MOVAPS_WpsVps)   /*  0f 29 */
+#if BX_SUPPORT_SSE >= 2
+  #define BX_SSE2_ALIAS(i) i
+#else
+  #define BX_SSE2_ALIAS(i) BX_CPU_C::BxError
+#endif
 
-#define PUNPCKLDQ_VdqWdq /* 66 0f 62 */ SSE2_ALIAS(UNPCKLPS_VpsWdq) /*  0f 14 */
-#define PUNPCKHDQ_VdqWdq /* 66 0f 6a */ SSE2_ALIAS(UNPCKHPS_VpsWdq) /*  0f 15 */
-
-#define PAND_VdqWdq      /* 66 0f db */ SSE2_ALIAS(ANDPS_VpsWps)    /*  0f 54 */
-#define PANDN_VdqWdq     /* 66 0f df */ SSE2_ALIAS(ANDNPS_VpsWps)   /*  0f 55 */
-#define POR_VdqWdq       /* 66 0f eb */ SSE2_ALIAS(ORPS_VpsWps)     /*  0f 56 */
-#define PXOR_VdqWdq      /* 66 0f ef */ SSE2_ALIAS(XORPS_VpsWps)    /*  0f 57 */
-
-#define ANDPD_VpdWpd     /* 66 0f 54 */ SSE2_ALIAS(ANDPS_VpsWps)    /*  0f 54 */
-#define ANDNPD_VpdWpd    /* 66 0f 55 */ SSE2_ALIAS(ANDNPS_VpsWps)   /*  0f 55 */
-#define ORPD_VpdWpd      /* 66 0f 56 */ SSE2_ALIAS(ORPS_VpsWps)     /*  0f 56 */
-#define XORPD_VpdWpd     /* 66 0f 57 */ SSE2_ALIAS(XORPS_VpsWps)    /*  0f 57 */
-
-#define MOVLPD_VsdMq     /* 66 0f 12 */ SSE2_ALIAS(MOVLPS_VpsMq)    /*  0f 12 */
-#define MOVLPD_MqVsd     /* 66 0f 13 */ SSE2_ALIAS(MOVLPS_MqVps)    /*  0f 13 */
-#define MOVHPD_VsdMq     /* 66 0f 16 */ SSE2_ALIAS(MOVHPS_VpsMq)    /*  0f 16 */
-#define MOVHPD_MqVsd     /* 66 0f 17 */ SSE2_ALIAS(MOVHPS_MqVps)    /*  0f 17 */
-
-#define MOVNTPD_MpdVpd   /* 66 0f 2b */ SSE2_ALIAS(MOVNTPS_MpsVps)  /*  0f 2b */
-#define MOVNTDQ_MdqVdq   /* 66 0f e7 */ SSE2_ALIAS(MOVNTPS_MpsVps)  /*  0f 2b */
-
-#define UNPCKLPD_VpdWdq  /* 66 0f 14 */ PUNPCKLQDQ_VdqWdq /* 66 0f 6c */
-#define UNPCKHPD_VpdWdq  /* 66 0f 15 */ PUNPCKHQDQ_VdqWdq /* 66 0f 6d */
-
-#endif  // #ifdef STAND_ALONE_DECODER
+#if BX_SUPPORT_3DNOW
+  #define BX_3DNOW_ALIAS(i) i
+#else
+  #define BX_3DNOW_ALIAS(i) BX_CPU_C::BxError
+#endif
 
   BX_SMF void CMPXCHG_XBTS(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void CMPXCHG_IBTS(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -3473,58 +3444,58 @@ BX_CPP_INLINE bx_bool BX_CPU_C::get_PFLazy(void)
 
 // transition to new lazy flags code
 #define SET_FLAGS_OSZAPC_LOGIC_8(result_8) \
-   SET_FLAGS_OSZAPC_RESULT_8((result_8), BX_INSTR_LOGIC8)
+   SET_FLAGS_OSZAPC_RESULT_8((result_8), BX_LF_INSTR_LOGIC8)
 #define SET_FLAGS_OSZAPC_LOGIC_16(result_16) \
-   SET_FLAGS_OSZAPC_RESULT_16((result_16), BX_INSTR_LOGIC16)
+   SET_FLAGS_OSZAPC_RESULT_16((result_16), BX_LF_INSTR_LOGIC16)
 #define SET_FLAGS_OSZAPC_LOGIC_32(result_32) \
-   SET_FLAGS_OSZAPC_RESULT_32((result_32), BX_INSTR_LOGIC32)
+   SET_FLAGS_OSZAPC_RESULT_32((result_32), BX_LF_INSTR_LOGIC32)
 #if BX_SUPPORT_X86_64
 #define SET_FLAGS_OSZAPC_LOGIC_64(result_64) \
-   SET_FLAGS_OSZAPC_RESULT_64((result_64), BX_INSTR_LOGIC64)
+   SET_FLAGS_OSZAPC_RESULT_64((result_64), BX_LF_INSTR_LOGIC64)
 #endif
 
 #define SET_FLAGS_OSZAPC_ADD_8(op1_8, op2_8, sum_8) \
-  SET_FLAGS_OSZAPC_8((op1_8), (op2_8), (sum_8), BX_INSTR_ADD8)
+  SET_FLAGS_OSZAPC_8((op1_8), (op2_8), (sum_8), BX_LF_INSTR_ADD8)
 #define SET_FLAGS_OSZAPC_ADD_16(op1_16, op2_16, sum_16) \
-  SET_FLAGS_OSZAPC_16((op1_16), (op2_16), (sum_16), BX_INSTR_ADD16)
+  SET_FLAGS_OSZAPC_16((op1_16), (op2_16), (sum_16), BX_LF_INSTR_ADD16)
 #define SET_FLAGS_OSZAPC_ADD_32(op1_32, op2_32, sum_32) \
-  SET_FLAGS_OSZAPC_32((op1_32), (op2_32), (sum_32), BX_INSTR_ADD32)
+  SET_FLAGS_OSZAPC_32((op1_32), (op2_32), (sum_32), BX_LF_INSTR_ADD32)
 #if BX_SUPPORT_X86_64
 #define SET_FLAGS_OSZAPC_ADD_64(op1_64, op2_64, sum_64) \
-  SET_FLAGS_OSZAPC_64((op1_64), (op2_64), (sum_64), BX_INSTR_ADD64)
+  SET_FLAGS_OSZAPC_64((op1_64), (op2_64), (sum_64), BX_LF_INSTR_ADD64)
 #endif
 
 #define SET_FLAGS_OSZAPC_SUB_8(op1_8, op2_8, diff_8) \
-  SET_FLAGS_OSZAPC_8((op1_8), (op2_8), (diff_8), BX_INSTR_SUB8)
+  SET_FLAGS_OSZAPC_8((op1_8), (op2_8), (diff_8), BX_LF_INSTR_SUB8)
 #define SET_FLAGS_OSZAPC_SUB_16(op1_16, op2_16, diff_16) \
-  SET_FLAGS_OSZAPC_16((op1_16), (op2_16), (diff_16), BX_INSTR_SUB16)
+  SET_FLAGS_OSZAPC_16((op1_16), (op2_16), (diff_16), BX_LF_INSTR_SUB16)
 #define SET_FLAGS_OSZAPC_SUB_32(op1_32, op2_32, diff_32) \
-  SET_FLAGS_OSZAPC_32((op1_32), (op2_32), (diff_32), BX_INSTR_SUB32)
+  SET_FLAGS_OSZAPC_32((op1_32), (op2_32), (diff_32), BX_LF_INSTR_SUB32)
 #if BX_SUPPORT_X86_64
 #define SET_FLAGS_OSZAPC_SUB_64(op1_64, op2_64, diff_64) \
-  SET_FLAGS_OSZAPC_64((op1_64), (op2_64), (diff_64), BX_INSTR_SUB64)
+  SET_FLAGS_OSZAPC_64((op1_64), (op2_64), (diff_64), BX_LF_INSTR_SUB64)
 #endif
 
 #define SET_FLAGS_OSZAPC_INC_8(result) \
-  SET_FLAGS_OSZAP_RESULT_SIZE(8, (result), BX_INSTR_INC8)
+  SET_FLAGS_OSZAP_RESULT_SIZE(8, (result), BX_LF_INSTR_INC8)
 #define SET_FLAGS_OSZAPC_INC_16(result) \
-  SET_FLAGS_OSZAP_RESULT_SIZE(16, (result), BX_INSTR_INC16)
+  SET_FLAGS_OSZAP_RESULT_SIZE(16, (result), BX_LF_INSTR_INC16)
 #define SET_FLAGS_OSZAPC_INC_32(result) \
-  SET_FLAGS_OSZAP_RESULT_SIZE(32, (result), BX_INSTR_INC32)
+  SET_FLAGS_OSZAP_RESULT_SIZE(32, (result), BX_LF_INSTR_INC32)
 #if BX_SUPPORT_X86_64
 #define SET_FLAGS_OSZAPC_INC_64(result) \
-  SET_FLAGS_OSZAP_RESULT_SIZE(64, (result), BX_INSTR_INC64)
+  SET_FLAGS_OSZAP_RESULT_SIZE(64, (result), BX_LF_INSTR_INC64)
 #endif
 
 #define SET_FLAGS_OSZAPC_DEC_8(result) \
-  SET_FLAGS_OSZAP_RESULT_SIZE(8, (result), BX_INSTR_DEC8)
+  SET_FLAGS_OSZAP_RESULT_SIZE(8, (result), BX_LF_INSTR_DEC8)
 #define SET_FLAGS_OSZAPC_DEC_16(result) \
-  SET_FLAGS_OSZAP_RESULT_SIZE(16, (result), BX_INSTR_DEC16)
+  SET_FLAGS_OSZAP_RESULT_SIZE(16, (result), BX_LF_INSTR_DEC16)
 #define SET_FLAGS_OSZAPC_DEC_32(result) \
-  SET_FLAGS_OSZAP_RESULT_SIZE(32, (result), BX_INSTR_DEC32)
+  SET_FLAGS_OSZAP_RESULT_SIZE(32, (result), BX_LF_INSTR_DEC32)
 #if BX_SUPPORT_X86_64
 #define SET_FLAGS_OSZAPC_DEC_64(result) \
-  SET_FLAGS_OSZAP_RESULT_SIZE(64, (result), BX_INSTR_DEC64)
+  SET_FLAGS_OSZAP_RESULT_SIZE(64, (result), BX_LF_INSTR_DEC64)
 #endif
 
 IMPLEMENT_EFLAG_ACCESSOR   (ID,  21)
