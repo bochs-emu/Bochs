@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.363 2008-03-22 22:26:02 sshwarts Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.364 2008-04-04 21:12:51 sshwarts Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -2867,26 +2867,6 @@ AC_ARG_ENABLE(save-restore,
   [  --enable-save-restore             enables save/restore (deprecated)],
   [AC_MSG_RESULT($enableval)
    AC_MSG_ERROR([DEPRECATED - save/restore feature is always enabled])
-  ],
-  [
-   AC_MSG_RESULT(no)
-  ])
-
-AC_MSG_CHECKING(whether to reset on triple fault (deprecated))
-AC_ARG_ENABLE(reset-on-triple-fault,
-  [  --enable-reset-on-triple-fault    reset when cpu detects a triple fault (deprecated)],
-  [AC_MSG_RESULT($enableval)
-   AC_MSG_ERROR([DEPRECATED - could be configured directly from .bochsrc instead])
-  ],
-  [
-   AC_MSG_RESULT(no)
-  ])
-
-AC_MSG_CHECKING(PNI support (deprecated))
-AC_ARG_ENABLE(--enable-pni,
-  [  --enable-pni                      PNI support (deprecated)],
-  [AC_MSG_RESULT($enableval)
-   AC_MSG_ERROR([DEPRECATED - use --enable-sse=3 instead])
   ],
   [
    AC_MSG_RESULT(no)
