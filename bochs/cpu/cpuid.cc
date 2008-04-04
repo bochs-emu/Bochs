@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpuid.cc,v 1.66 2008-03-22 21:29:39 sshwarts Exp $
+// $Id: cpuid.cc,v 1.67 2008-04-04 12:23:19 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007 Stanislav Shwartsman
@@ -122,28 +122,33 @@ Bit32u BX_CPU_C::get_cpu_version_information(void)
 Bit32u BX_CPU_C::get_extended_cpuid_features(void)
 {
   // [0:0]   SSE3: SSE3 Instructions
-  // [2:1]   reserved
+  // [1:1]   PCLMULQDQ Instruction support
+  // [2:2]   reserved
   // [3:3]   MONITOR/MWAIT support
   // [4:4]   DS-CPL: CPL qualified debug store
   // [5:5]   VMX: Virtual Machine Technology
-  // [6:6]   reserved
+  // [6:6]   SMX: Secure Virtual Machine Technology
   // [7:7]   EST: Enhanced Intel SpeedStep Technology
   // [8:8]   TM2: Thermal Monitor 2
   // [9:9]   SSE3E: SSE3E Instructions (Intel Core Duo 2 new instructions)
   // [10:10] CNXT-ID: L1 context ID
-  // [12:11] reserved
+  // [11:11] reserved
+  // [12:12] FMA Instructions support
   // [13:13] CMPXCHG16B: CMPXCHG16B instruction support
   // [14:14] xTPR update control
-  // [18:15] reserved
-  // [19:19] SSE4.1: SSE4.1 Instructions
-  // [20:20] SSE4.2: SSE4.2 (SSE4E) Instructions
+  // [17:15] reserved
+  // [18:18] DCA - Direct Cache Access
+  // [19:19] SSE4.1 Instructions
+  // [20:20] SSE4.2 Instructions
   // [21:22] X2APIC
   // [22:22] Reserved
   // [23:23] POPCNT instruction
-  // [25:24] reserved
+  // [24:24] reserved
+  // [25:25] AES Instructions
   // [26:26] XSAVE extensions support
   // [27:27] OSXSAVE support
-  // [31:28] reserved
+  // [28:28] AVX extensions support
+  // [31:29] reserved
 
   Bit32u features = 0;
 
@@ -400,22 +405,33 @@ void BX_CPU_C::set_cpuid_defaults(void)
 
   // ECX:       Extended Feature Flags
   //   [0:0]   SSE3: SSE3 Instructions
-  //   [2:1]   reserved
+  //   [1:1]   PCLMULQDQ Instruction support
+  //   [2:2]   reserved
   //   [3:3]   MONITOR/MWAIT support
   //   [4:4]   DS-CPL: CPL qualified debug store
   //   [5:5]   VMX: Virtual Machine Technology
-  //   [6:6]   reserved
+  //   [6:6]   SMX: Secure Virtual Machine Technology
   //   [7:7]   EST: Enhanced Intel SpeedStep Technology
   //   [8:8]   TM2: Thermal Monitor 2
   //   [9:9]   SSE3E: SSE3E Instructions (Intel Core Duo 2 new instructions)
   //   [10:10] CNXT-ID: L1 context ID
-  //   [12:11] reserved
+  //   [11:11] reserved
+  //   [12:12] FMA Instructions support
   //   [13:13] CMPXCHG16B: CMPXCHG16B instruction support
   //   [14:14] xTPR update control
-  //   [18:15] reserved
-  //   [19:19] SSE4.1: SSE4.1 Instructions
-  //   [20:20] SSE4.2: SSE4.2 (SSE4E) Instructions
-  //   [31:21] reserved
+  //   [17:15] reserved
+  //   [18:18] DCA - Direct Cache Access
+  //   [19:19] SSE4.1 Instructions
+  //   [20:20] SSE4.2 Instructions
+  //   [21:22] X2APIC
+  //   [22:22] Reserved
+  //   [23:23] POPCNT instruction
+  //   [24:24] reserved
+  //   [25:25] AES Instructions
+  //   [26:26] XSAVE extensions support
+  //   [27:27] OSXSAVE support
+  //   [28:28] AVX extensions support
+  //   [31:29] reserved
   cpuid->ecx = get_extended_cpuid_features();
 
   // EDX:       Feature Flags
