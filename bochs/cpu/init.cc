@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.161 2008-04-03 17:56:59 sshwarts Exp $
+// $Id: init.cc,v 1.162 2008-04-05 20:41:00 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -937,9 +937,7 @@ void BX_CPU_C::reset(unsigned source)
 
   BX_CPU_THIS_PTR EXT = 0;
 
-#if BX_USE_TLB
   TLB_init();
-#endif
 
   // invalidate the prefetch queue
   BX_CPU_THIS_PTR eipPageBias = 0;

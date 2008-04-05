@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.376 2008-03-29 21:01:23 sshwarts Exp $
+// $Id: main.cc,v 1.377 2008-04-05 20:41:00 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -977,7 +977,6 @@ void bx_init_hardware()
   BX_INFO(("  APIC support: %s",BX_SUPPORT_APIC?"yes":"no"));
   BX_INFO(("CPU configuration"));
   BX_INFO(("  level: %d",BX_CPU_LEVEL));
-  BX_INFO(("  TLB enabled: %s",BX_USE_TLB?"yes":"no"));
 #if BX_SUPPORT_SMP
   BX_INFO(("  SMP support: yes, quantum=%d", SIM->get_param_num(BXPN_SMP_QUANTUM)->get()));
 #else

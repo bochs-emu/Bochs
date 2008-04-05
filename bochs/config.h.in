@@ -108,31 +108,6 @@
 #define        SIGALRM         14
 #endif
 
-// Paging Options:
-// ---------------
-// Support Paging mechanism.
-//   0 = don't support paging at all (DOS & Minix don't require it)
-//   1 = support paging.  (Most other OS's require paging)
-// Use Translation Lookaside Buffer (TLB) for caching
-// paging translations.  This will make paging mode
-// more efficient.  If you're OS doesn't use paging,
-// then you won't need either.
-//   1 = Use a TLB for effiency
-//   0 = don't use a TLB, walk the page tables for every access
-// BX_TLB_SIZE: Number of entries in TLB
-// BX_TLB_INDEX_OF(lpf): This macro is passed the linear page frame
-//   (top 20 bits of the linear address.  It must map these bits to
-//   one of the TLB cache slots, given the size of BX_TLB_SIZE.
-//   There will be a many-to-one mapping to each TLB cache slot.
-//   When there are collisions, the old entry is overwritten with
-//   one for the newest access.
-
-#define BX_USE_TLB 1
-
-#define BX_TLB_SIZE 1024
-#define BX_TLB_MASK ((BX_TLB_SIZE-1) << 12)
-#define BX_TLB_INDEX_OF(lpf, len) ((((unsigned)(lpf) + (len)) & BX_TLB_MASK) >> 12)
-
 // Compile in support for DMA & FLOPPY IO.  You'll need this
 // if you plan to use the floppy drive emulation.  But if
 // you're environment doesn't require it, you can change

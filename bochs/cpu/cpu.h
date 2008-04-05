@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.447 2008-04-05 19:08:01 sshwarts Exp $
+// $Id: cpu.h,v 1.448 2008-04-05 20:41:00 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -588,7 +588,18 @@ struct cpuid_function_t {
 #include "icache.h"
 #endif
 
-#if BX_USE_TLB
+// BX_TLB_SIZE: Number of entries in TLB
+// BX_TLB_INDEX_OF(lpf): This macro is passed the linear page frame
+//   (top 20 bits of the linear address.  It must map these bits to
+//   one of the TLB cache slots, given the size of BX_TLB_SIZE.
+//   There will be a many-to-one mapping to each TLB cache slot.
+//   When there are collisions, the old entry is overwritten with
+//   one for the newest access.
+
+#define BX_TLB_SIZE 1024
+#define BX_TLB_MASK ((BX_TLB_SIZE-1) << 12)
+#define BX_TLB_INDEX_OF(lpf, len) ((((unsigned)(lpf) + (len)) & BX_TLB_MASK) >> 12)
+
 typedef bx_ptr_equiv_t bx_hostpageaddr_t;
 
 typedef struct {
@@ -597,7 +608,6 @@ typedef struct {
   Bit32u accessBits;  // Page Table Address for updating A & D bits
   bx_hostpageaddr_t hostPageAddr;
 } bx_TLB_entry;
-#endif
 
 // general purpose register
 #if BX_SUPPORT_X86_64
@@ -899,8 +909,6 @@ public: // for now...
   Bit8u trace;
 
   // for paging
-#if BX_USE_TLB
-
   struct {
     bx_TLB_entry entry[BX_TLB_SIZE] BX_CPP_AlignN(16);
   } TLB;
@@ -912,10 +920,7 @@ public: // for now...
   #define LPF_MASK 0xfffff000
 #endif
 
-#define LPFOf(laddr) ((laddr) & LPF_MASK)
-
-#endif  // #if BX_USE_TLB
-
+#define LPFOf(laddr)               ((laddr) & LPF_MASK)
 #define PAGE_OFFSET(laddr) ((Bit32u)(laddr) & 0xfff)
 
   // An instruction cache.  Each entry should be exactly 32 bytes, and
@@ -2899,10 +2904,7 @@ public: // for now...
 
   // linear address for translate_linear expected to be canonical !
   BX_SMF bx_phy_address translate_linear(bx_address laddr, unsigned curr_pl, unsigned rw, unsigned access_type);
-  BX_SMF BX_CPP_INLINE bx_phy_address itranslate_linear(bx_address laddr, unsigned curr_pl)
-  {
-    return translate_linear(laddr, curr_pl, BX_READ, CODE_ACCESS);
-  }
+
   BX_SMF BX_CPP_INLINE bx_phy_address dtranslate_linear(bx_address laddr, unsigned curr_pl, unsigned rw)
   {
     return translate_linear(laddr, curr_pl, rw, DATA_ACCESS);

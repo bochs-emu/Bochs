@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.215 2008-03-31 18:53:08 sshwarts Exp $
+// $Id: cpu.cc,v 1.216 2008-04-05 20:41:00 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -635,20 +635,36 @@ void BX_CPU_C::prefetch(void)
     }
   }
 
-  if (BX_CPU_THIS_PTR cr0.get_PG()) {
-    // aligned block guaranteed to be all in one page, same A20 address
-    pAddr = itranslate_linear(laddr, CPL);
-    pAddr = A20ADDR(pAddr);
-  }
-  else
-  {
-    pAddr = A20ADDR(laddr);
+  bx_address lpf = LPFOf(laddr);
+  unsigned TLB_index = BX_TLB_INDEX_OF(lpf, 0);
+  bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[TLB_index];
+  Bit8u *fetchPtr = 0;
+
+  if (tlbEntry->lpf == lpf) { // always have permissions for CODE access
+    pAddr = A20ADDR(tlbEntry->ppf | PAGE_OFFSET(laddr));
+#if BX_SupportGuest2HostTLB
+    fetchPtr = (Bit8u*) (tlbEntry->hostPageAddr);
+#endif
+  }  
+  else {
+    if (BX_CPU_THIS_PTR cr0.get_PG()) {
+      pAddr = translate_linear(laddr, CPL, BX_READ, CODE_ACCESS);
+      pAddr = A20ADDR(pAddr);
+    } 
+    else {
+      pAddr = A20ADDR(laddr);
+    }
   }
 
   BX_CPU_THIS_PTR pAddrA20Page = pAddr & 0xfffff000;
-  BX_CPU_THIS_PTR eipFetchPtr =
-    BX_CPU_THIS_PTR mem->getHostMemAddr(BX_CPU_THIS,
-          BX_CPU_THIS_PTR pAddrA20Page, BX_READ, CODE_ACCESS);
+
+  if (fetchPtr) {
+    BX_CPU_THIS_PTR eipFetchPtr = fetchPtr;
+  }
+  else {
+    BX_CPU_THIS_PTR eipFetchPtr = BX_CPU_THIS_PTR mem->getHostMemAddr(BX_CPU_THIS,
+        BX_CPU_THIS_PTR pAddrA20Page, BX_READ, CODE_ACCESS);
+  }
 
   // Sanity checks
   if (! BX_CPU_THIS_PTR eipFetchPtr) {

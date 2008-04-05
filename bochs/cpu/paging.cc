@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.115 2008-03-31 20:56:27 sshwarts Exp $
+// $Id: paging.cc,v 1.116 2008-04-05 20:41:00 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -472,10 +472,8 @@ void BX_CPU_C::TLB_init(void)
 {
   unsigned i, wp, us_combined, rw_combined, us_current, rw_current;
 
-#if BX_USE_TLB
   for (i=0; i<BX_TLB_SIZE; i++)
     BX_CPU_THIS_PTR TLB.entry[i].lpf = BX_INVALID_TLB_ENTRY;
-#endif
 
   //
   // Setup privilege check matrix.
@@ -519,7 +517,6 @@ void BX_CPU_C::TLB_flush(bx_bool invalidateGlobal)
     InstrTLB_Increment(tlbNonGlobalFlushes);
 #endif
 
-#if BX_USE_TLB
   for (unsigned i=0; i<BX_TLB_SIZE; i++) {
     // To be conscious of the native cache line usage, only
     // write to (invalidate) entries which need it.
@@ -534,16 +531,13 @@ void BX_CPU_C::TLB_flush(bx_bool invalidateGlobal)
       }
     }
   }
-#endif  // #if BX_USE_TLB
 }
 
 void BX_CPU_C::TLB_invlpg(bx_address laddr)
 {
-#if BX_USE_TLB
   unsigned TLB_index = BX_TLB_INDEX_OF(laddr, 0);
   BX_CPU_THIS_PTR TLB.entry[TLB_index].lpf = BX_INVALID_TLB_ENTRY;
   InstrTLB_Increment(tlbEntryFlushes); // A TLB entry flush occurred.
-#endif
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::INVLPG(bxInstruction_c* i)
@@ -556,14 +550,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INVLPG(bxInstruction_c* i)
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
-#if BX_USE_TLB
   BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
   bx_address laddr = BX_CPU_THIS_PTR get_segment_base(i->seg()) + RMAddr(i);
   BX_INSTR_TLB_CNTRL(BX_CPU_ID, BX_INSTR_INVLPG, laddr);
   TLB_invlpg(laddr);
   InstrTLB_Increment(tlbEntryInvlpg);
-#endif
-
 #else
   // not supported on < 486
   BX_INFO(("INVLPG: required i486, use --enable-cpu=4 option"));
@@ -617,7 +608,6 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned curr_pl, un
   bx_bool isWrite = (rw >= BX_WRITE); // write or r-m-w
   unsigned pl = (curr_pl == 3);
 
-#if BX_USE_TLB
   InstrTLB_Increment(tlbLookups);
   InstrTLB_Stats();
 
@@ -625,7 +615,8 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned curr_pl, un
   unsigned TLB_index = BX_TLB_INDEX_OF(lpf, 0);
   bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[TLB_index];
 
-  if (tlbEntry->lpf == lpf)
+  // already looked up TLB for code access
+  if (access_type != CODE_ACCESS && tlbEntry->lpf == lpf)
   {
     paddress   = tlbEntry->ppf | poffset;
     accessBits = tlbEntry->accessBits;
@@ -640,7 +631,6 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned curr_pl, un
   }
 
   InstrTLB_Increment(tlbMisses);
-#endif
 
 #if BX_SUPPORT_PAE
   if (BX_CPU_THIS_PTR cr4.get_PAE())
@@ -968,10 +958,8 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned curr_pl, un
   // Calculate physical memory address and fill in TLB cache entry
   paddress = ppf | poffset;
 
-#if BX_USE_TLB
   BX_CPU_THIS_PTR TLB.entry[TLB_index].lpf = lpf;
   BX_CPU_THIS_PTR TLB.entry[TLB_index].ppf = ppf;
-#endif
 
   // b3: Write User  OK
   // b2: Write Sys   OK
@@ -1001,7 +989,6 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned curr_pl, un
   accessBits |= combined_access & TLB_GlobalPage; // Global bit
 #endif
 
-#if BX_USE_TLB
 #if BX_SupportGuest2HostTLB
   // Attempt to get a host pointer to this physical page. Put that
   // pointer in the TLB cache. Note if the request is vetoed, NULL
@@ -1016,7 +1003,6 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned curr_pl, un
   }
 #endif
   BX_CPU_THIS_PTR TLB.entry[TLB_index].accessBits = accessBits;
-#endif
 
   return paddress;
 }
@@ -1033,7 +1019,6 @@ bx_bool BX_CPU_C::dbg_xlate_linear2phy(bx_address laddr, bx_phy_address *phy)
   bx_phy_address paddress;
 
   // see if page is in the TLB first
-#if BX_USE_TLB
   bx_address lpf = LPFOf(laddr);
   unsigned TLB_index = BX_TLB_INDEX_OF(lpf, 0);
   bx_TLB_entry *tlbEntry  = &BX_CPU_THIS_PTR TLB.entry[TLB_index];
@@ -1043,7 +1028,6 @@ bx_bool BX_CPU_C::dbg_xlate_linear2phy(bx_address laddr, bx_phy_address *phy)
     *phy = paddress;
     return 1;
   }
-#endif
 
   bx_phy_address pt_address = BX_CPU_THIS_PTR cr3_masked;
   bx_address offset_mask = 0xfff;
