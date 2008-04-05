@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: shift64.cc,v 1.34 2008-04-05 17:51:55 sshwarts Exp $
+// $Id: shift64.cc,v 1.35 2008-04-05 19:08:01 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -32,7 +32,7 @@
 
 #if BX_SUPPORT_X86_64
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHLD_EqGq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHLD_EqGqM(bxInstruction_c *i)
 {
   Bit64u op1_64, op2_64, result_64;
   unsigned count;
@@ -45,15 +45,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHLD_EqGq(bxInstruction_c *i)
 
   count &= 0x3f; // use only 6 LSB's
 
-  /* op1 is a register or memory reference */
-  if (i->modC0()) {
-    op1_64 = BX_READ_64BIT_REG(i->rm());
-  }
-  else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-    /* pointer, segment address pair */
-    op1_64 = read_RMW_virtual_qword(i->seg(), RMAddr(i));
-  }
+  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+
+  /* pointer, segment address pair */
+  op1_64 = read_RMW_virtual_qword(i->seg(), RMAddr(i));
 
   if (!count) return;
 
@@ -61,13 +56,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHLD_EqGq(bxInstruction_c *i)
 
   result_64 = (op1_64 << count) | (op2_64 >> (64 - count));
 
-  /* now write result back to destination */
-  if (i->modC0()) {
-    BX_WRITE_64BIT_REG(i->rm(), result_64);
-  }
-  else {
-    write_RMW_virtual_qword(result_64);
-  }
+  write_RMW_virtual_qword(result_64);
 
   SET_FLAGS_OSZAPC_LOGIC_64(result_64); /* handle SF, ZF and AF flags */
 
@@ -76,7 +65,36 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHLD_EqGq(bxInstruction_c *i)
   SET_FLAGS_OxxxxC(of, cf);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHRD_EqGq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHLD_EqGqR(bxInstruction_c *i)
+{
+  Bit64u op1_64, op2_64, result_64;
+  unsigned count;
+  unsigned cf, of;
+
+  if (i->b1() == 0xa4) // 0x1a4
+    count = i->Ib();
+  else // 0x1a5
+    count = CL;
+
+  count &= 0x3f; // use only 6 LSB's
+
+  if (!count) return;
+
+  op1_64 = BX_READ_64BIT_REG(i->rm());
+  op2_64 = BX_READ_64BIT_REG(i->nnn());
+
+  result_64 = (op1_64 << count) | (op2_64 >> (64 - count));
+
+  BX_WRITE_64BIT_REG(i->rm(), result_64);
+
+  SET_FLAGS_OSZAPC_LOGIC_64(result_64); /* handle SF, ZF and AF flags */
+
+  cf = (op1_64 >> (64 - count)) & 0x1;
+  of = cf ^ (result_64 >> 63); // of = cf ^ result63
+  SET_FLAGS_OxxxxC(of, cf);
+}
+
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHRD_EqGqM(bxInstruction_c *i)
 {
   Bit64u op1_64, op2_64, result_64;
   unsigned count;
@@ -89,15 +107,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHRD_EqGq(bxInstruction_c *i)
 
   count &= 0x3f; // use only 6 LSB's
 
-  /* op1 is a register or memory reference */
-  if (i->modC0()) {
-    op1_64 = BX_READ_64BIT_REG(i->rm());
-  }
-  else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-    /* pointer, segment address pair */
-    op1_64 = read_RMW_virtual_qword(i->seg(), RMAddr(i));
-  }
+  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+
+  /* pointer, segment address pair */
+  op1_64 = read_RMW_virtual_qword(i->seg(), RMAddr(i));
 
   if (!count) return;
 
@@ -105,13 +118,36 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHRD_EqGq(bxInstruction_c *i)
 
   result_64 = (op2_64 << (64 - count)) | (op1_64 >> count);
 
-  /* now write result back to destination */
-  if (i->modC0()) {
-    BX_WRITE_64BIT_REG(i->rm(), result_64);
-  }
-  else {
-    write_RMW_virtual_qword(result_64);
-  }
+  write_RMW_virtual_qword(result_64);
+
+  SET_FLAGS_OSZAPC_LOGIC_64(result_64); /* handle SF, ZF and AF flags */
+
+  cf = (op1_64 >> (count - 1)) & 0x1;
+  of = ((result_64 << 1) ^ result_64) >> 63; // of = result62 ^ result63
+  SET_FLAGS_OxxxxC(of, cf);
+}
+
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHRD_EqGqR(bxInstruction_c *i)
+{
+  Bit64u op1_64, op2_64, result_64;
+  unsigned count;
+  unsigned cf, of;
+
+  if (i->b1() == 0xac) // 0x1ac
+    count = i->Ib();
+  else // 0x1ad
+    count = CL;
+
+  count &= 0x3f; // use only 6 LSB's
+
+  if (!count) return;
+
+  op1_64 = BX_READ_64BIT_REG(i->rm());
+  op2_64 = BX_READ_64BIT_REG(i->nnn());
+
+  result_64 = (op2_64 << (64 - count)) | (op1_64 >> count);
+
+  BX_WRITE_64BIT_REG(i->rm(), result_64);
 
   SET_FLAGS_OSZAPC_LOGIC_64(result_64); /* handle SF, ZF and AF flags */
 

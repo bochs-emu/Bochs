@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: shift32.cc,v 1.43 2008-04-05 17:51:55 sshwarts Exp $
+// $Id: shift32.cc,v 1.44 2008-04-05 19:08:01 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -30,7 +30,7 @@
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHLD_EdGd(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHLD_EdGdM(bxInstruction_c *i)
 {
   Bit32u op1_32, op2_32, result_32;
   unsigned count;
@@ -43,15 +43,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHLD_EdGd(bxInstruction_c *i)
 
   count &= 0x1f; // use only 5 LSB's
 
-  /* op1 is a register or memory reference */
-  if (i->modC0()) {
-    op1_32 = BX_READ_32BIT_REG(i->rm());
-  }
-  else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-    /* pointer, segment address pair */
-    op1_32 = read_RMW_virtual_dword(i->seg(), RMAddr(i));
-  }
+  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+
+  /* pointer, segment address pair */
+  op1_32 = read_RMW_virtual_dword(i->seg(), RMAddr(i));
 
   if (!count) return;
 
@@ -59,13 +54,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHLD_EdGd(bxInstruction_c *i)
 
   result_32 = (op1_32 << count) | (op2_32 >> (32 - count));
 
-  /* now write result back to destination */
-  if (i->modC0()) {
-    BX_WRITE_32BIT_REGZ(i->rm(), result_32);
-  }
-  else {
-    write_RMW_virtual_dword(result_32);
-  }
+  write_RMW_virtual_dword(result_32);
 
   SET_FLAGS_OSZAPC_LOGIC_32(result_32); /* handle SF, ZF and AF flags */
 
@@ -74,7 +63,36 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHLD_EdGd(bxInstruction_c *i)
   SET_FLAGS_OxxxxC(of, cf);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHRD_EdGd(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHLD_EdGdR(bxInstruction_c *i)
+{
+  Bit32u op1_32, op2_32, result_32;
+  unsigned count;
+  unsigned of, cf;
+
+  if (i->b1() == 0xa4) // 0x1a4
+    count = i->Ib();
+  else // 0x1a5
+    count = CL;
+
+  count &= 0x1f; // use only 5 LSB's
+
+  if (!count) return;
+
+  op1_32 = BX_READ_32BIT_REG(i->rm());
+  op2_32 = BX_READ_32BIT_REG(i->nnn());
+
+  result_32 = (op1_32 << count) | (op2_32 >> (32 - count));
+
+  BX_WRITE_32BIT_REGZ(i->rm(), result_32);
+
+  SET_FLAGS_OSZAPC_LOGIC_32(result_32); /* handle SF, ZF and AF flags */
+
+  cf = (op1_32 >> (32 - count)) & 0x1;
+  of = cf ^ (result_32 >> 31); // of = cf ^ result31
+  SET_FLAGS_OxxxxC(of, cf);
+}
+
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHRD_EdGdM(bxInstruction_c *i)
 {
   Bit32u op1_32, op2_32, result_32;
   unsigned count;
@@ -87,15 +105,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHRD_EdGd(bxInstruction_c *i)
 
   count &= 0x1f; // use only 5 LSB's
 
-  /* op1 is a register or memory reference */
-  if (i->modC0()) {
-    op1_32 = BX_READ_32BIT_REG(i->rm());
-  }
-  else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-    /* pointer, segment address pair */
-    op1_32 = read_RMW_virtual_dword(i->seg(), RMAddr(i));
-  }
+  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+
+  /* pointer, segment address pair */
+  op1_32 = read_RMW_virtual_dword(i->seg(), RMAddr(i));
 
   if (!count) return;
 
@@ -103,13 +116,36 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHRD_EdGd(bxInstruction_c *i)
 
   result_32 = (op2_32 << (32 - count)) | (op1_32 >> count);
 
-  /* now write result back to destination */
-  if (i->modC0()) {
-    BX_WRITE_32BIT_REGZ(i->rm(), result_32);
-  }
-  else {
-    write_RMW_virtual_dword(result_32);
-  }
+  write_RMW_virtual_dword(result_32);
+
+  SET_FLAGS_OSZAPC_LOGIC_32(result_32); /* handle SF, ZF and AF flags */
+
+  cf = (op1_32 >> (count - 1)) & 0x1;
+  of = ((result_32 << 1) ^ result_32) >> 31; // of = result30 ^ result31
+  SET_FLAGS_OxxxxC(of, cf);
+}
+
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHRD_EdGdR(bxInstruction_c *i)
+{
+  Bit32u op1_32, op2_32, result_32;
+  unsigned count;
+  unsigned cf, of;
+
+  if (i->b1() == 0xac) // 0x1ac
+    count = i->Ib();
+  else // 0x1ad
+    count = CL;
+
+  count &= 0x1f; // use only 5 LSB's
+
+  if (!count) return;
+
+  op1_32 = BX_READ_32BIT_REG(i->rm());
+  op2_32 = BX_READ_32BIT_REG(i->nnn());
+
+  result_32 = (op2_32 << (32 - count)) | (op1_32 >> count);
+
+  BX_WRITE_32BIT_REGZ(i->rm(), result_32);
 
   SET_FLAGS_OSZAPC_LOGIC_32(result_32); /* handle SF, ZF and AF flags */
 

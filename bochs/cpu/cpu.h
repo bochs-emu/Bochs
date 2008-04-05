@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.446 2008-04-05 17:51:54 sshwarts Exp $
+// $Id: cpu.h,v 1.447 2008-04-05 19:08:01 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1339,10 +1339,14 @@ public: // for now...
 
   BX_SMF void CPUID(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
-  BX_SMF void SHRD_EwGw(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void SHRD_EdGd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void SHLD_EdGd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void SHLD_EwGw(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SHRD_EwGwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SHRD_EwGwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SHLD_EwGwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SHLD_EwGwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SHRD_EdGdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SHRD_EdGdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SHLD_EdGdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SHLD_EdGdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
   BX_SMF void BSF_GwEw(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void BSF_GdEd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -2544,8 +2548,11 @@ public: // for now...
   BX_SMF void MOV_RqCq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void MOV_RqDq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
-  BX_SMF void SHLD_EqGq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void SHRD_EqGq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SHLD_EqGqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SHLD_EqGqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SHRD_EqGqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SHRD_EqGqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
   BX_SMF void IMUL_GqEq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void IMUL_GqEqId(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 

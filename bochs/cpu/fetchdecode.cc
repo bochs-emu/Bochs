@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.179 2008-04-05 17:51:54 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.180 2008-04-05 19:08:01 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -654,16 +654,16 @@ static const BxOpcodeInfo_t BxOpcodeInfo32R[512*2] = {
   /* 0F A1 /wr */ { 0, BX_IA_POP16_FS },
   /* 0F A2 /wr */ { 0, BX_IA_CPUID },
   /* 0F A3 /wr */ { 0, BX_IA_BT_EwGwR },
-  /* 0F A4 /wr */ { BxImmediate_Ib, BX_IA_SHLD_EwGw },
-  /* 0F A5 /wr */ { 0,              BX_IA_SHLD_EwGw },
+  /* 0F A4 /wr */ { BxImmediate_Ib, BX_IA_SHLD_EwGwR },
+  /* 0F A5 /wr */ { 0,              BX_IA_SHLD_EwGwR },
   /* 0F A6 /wr */ { BxTraceEnd, BX_IA_CMPXCHG_XBTS }, // not implemented
   /* 0F A7 /wr */ { BxTraceEnd, BX_IA_CMPXCHG_IBTS }, // not implemented
   /* 0F A8 /wr */ { 0, BX_IA_PUSH16_GS },
   /* 0F A9 /wr */ { 0, BX_IA_POP16_GS },
   /* 0F AA /wr */ { BxTraceEnd, BX_IA_RSM },
   /* 0F AB /wr */ { 0, BX_IA_BTS_EwGwR },
-  /* 0F AC /wr */ { BxImmediate_Ib, BX_IA_SHRD_EwGw },
-  /* 0F AD /wr */ { 0,              BX_IA_SHRD_EwGw },
+  /* 0F AC /wr */ { BxImmediate_Ib, BX_IA_SHRD_EwGwR },
+  /* 0F AD /wr */ { 0,              BX_IA_SHRD_EwGwR },
   /* 0F AE /wr */ { BxGroup15, BX_IA_ERROR, BxOpcodeInfoG15R },
   /* 0F AF /wr */ { 0, BX_IA_IMUL_GwEw },
   /* 0F B0 /wr */ { 0, BX_IA_CMPXCHG_EbGbR },
@@ -1216,16 +1216,16 @@ static const BxOpcodeInfo_t BxOpcodeInfo32R[512*2] = {
   /* 0F A1 /dr */ { 0, BX_IA_POP32_FS },
   /* 0F A2 /dr */ { 0, BX_IA_CPUID },
   /* 0F A3 /dr */ { 0, BX_IA_BT_EdGdR },
-  /* 0F A4 /dr */ { BxImmediate_Ib, BX_IA_SHLD_EdGd },
-  /* 0F A5 /dr */ { 0,              BX_IA_SHLD_EdGd },
+  /* 0F A4 /dr */ { BxImmediate_Ib, BX_IA_SHLD_EdGdR },
+  /* 0F A5 /dr */ { 0,              BX_IA_SHLD_EdGdR },
   /* 0F A6 /dr */ { BxTraceEnd, BX_IA_CMPXCHG_XBTS }, // not implemented
   /* 0F A7 /dr */ { BxTraceEnd, BX_IA_CMPXCHG_IBTS }, // not implemented
   /* 0F A8 /dr */ { 0, BX_IA_PUSH32_GS },
   /* 0F A9 /dr */ { 0, BX_IA_POP32_GS },
   /* 0F AA /dr */ { BxTraceEnd, BX_IA_RSM },
   /* 0F AB /dr */ { 0, BX_IA_BTS_EdGdR },
-  /* 0F AC /dr */ { BxImmediate_Ib, BX_IA_SHRD_EdGd },
-  /* 0F AD /dr */ { 0,              BX_IA_SHRD_EdGd },
+  /* 0F AC /dr */ { BxImmediate_Ib, BX_IA_SHRD_EdGdR },
+  /* 0F AD /dr */ { 0,              BX_IA_SHRD_EdGdR },
   /* 0F AE /dr */ { BxGroup15, BX_IA_ERROR, BxOpcodeInfoG15R },
   /* 0F AF /dr */ { 0, BX_IA_IMUL_GdEd },
   /* 0F B0 /dr */ { 0, BX_IA_CMPXCHG_EbGbR },
@@ -1785,16 +1785,16 @@ static const BxOpcodeInfo_t BxOpcodeInfo32M[512*2] = {
   /* 0F A1 /wm */ { 0, BX_IA_POP16_FS },
   /* 0F A2 /wm */ { 0, BX_IA_CPUID },
   /* 0F A3 /wm */ { 0, BX_IA_BT_EwGwM },
-  /* 0F A4 /wm */ { BxImmediate_Ib, BX_IA_SHLD_EwGw },
-  /* 0F A5 /wm */ { 0,              BX_IA_SHLD_EwGw },
+  /* 0F A4 /wm */ { BxImmediate_Ib, BX_IA_SHLD_EwGwM },
+  /* 0F A5 /wm */ { 0,              BX_IA_SHLD_EwGwM },
   /* 0F A6 /wm */ { BxTraceEnd, BX_IA_CMPXCHG_XBTS }, // not implemented
   /* 0F A7 /wm */ { BxTraceEnd, BX_IA_CMPXCHG_IBTS }, // not implemented
   /* 0F A8 /wm */ { 0, BX_IA_PUSH16_GS },
   /* 0F A9 /wm */ { 0, BX_IA_POP16_GS },
   /* 0F AA /wm */ { BxTraceEnd, BX_IA_RSM },
   /* 0F AB /wm */ { BxLockable, BX_IA_BTS_EwGwM },
-  /* 0F AC /wm */ { BxImmediate_Ib, BX_IA_SHRD_EwGw },
-  /* 0F AD /wm */ { 0,              BX_IA_SHRD_EwGw },
+  /* 0F AC /wm */ { BxImmediate_Ib, BX_IA_SHRD_EwGwM },
+  /* 0F AD /wm */ { 0,              BX_IA_SHRD_EwGwM },
   /* 0F AE /wm */ { BxGroup15, BX_IA_ERROR, BxOpcodeInfoG15M },
   /* 0F AF /wm */ { 0, BX_IA_IMUL_GwEw },
   /* 0F B0 /wm */ { BxLockable, BX_IA_CMPXCHG_EbGbM },
@@ -2347,16 +2347,16 @@ static const BxOpcodeInfo_t BxOpcodeInfo32M[512*2] = {
   /* 0F A1 /dm */ { 0, BX_IA_POP32_FS },
   /* 0F A2 /dm */ { 0, BX_IA_CPUID },
   /* 0F A3 /dm */ { 0, BX_IA_BT_EdGdM },
-  /* 0F A4 /dm */ { BxImmediate_Ib, BX_IA_SHLD_EdGd },
-  /* 0F A5 /dm */ { 0,              BX_IA_SHLD_EdGd },
+  /* 0F A4 /dm */ { BxImmediate_Ib, BX_IA_SHLD_EdGdM },
+  /* 0F A5 /dm */ { 0,              BX_IA_SHLD_EdGdM },
   /* 0F A6 /dm */ { BxTraceEnd, BX_IA_CMPXCHG_XBTS }, // not implemented
   /* 0F A7 /dm */ { BxTraceEnd, BX_IA_CMPXCHG_IBTS }, // not implemented
   /* 0F A8 /dm */ { 0, BX_IA_PUSH32_GS },
   /* 0F A9 /dm */ { 0, BX_IA_POP32_GS },
   /* 0F AA /dm */ { BxTraceEnd, BX_IA_RSM },
   /* 0F AB /dm */ { BxLockable, BX_IA_BTS_EdGdM },
-  /* 0F AC /dm */ { BxImmediate_Ib, BX_IA_SHRD_EdGd },
-  /* 0F AD /dm */ { 0,              BX_IA_SHRD_EdGd },
+  /* 0F AC /dm */ { BxImmediate_Ib, BX_IA_SHRD_EdGdM },
+  /* 0F AD /dm */ { 0,              BX_IA_SHRD_EdGdM },
   /* 0F AE /dm */ { BxGroup15, BX_IA_ERROR, BxOpcodeInfoG15M },
   /* 0F AF /dm */ { 0, BX_IA_IMUL_GdEd },
   /* 0F B0 /dm */ { BxLockable, BX_IA_CMPXCHG_EbGbM },

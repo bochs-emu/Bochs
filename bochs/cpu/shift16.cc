@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: shift16.cc,v 1.45 2008-04-05 17:51:55 sshwarts Exp $
+// $Id: shift16.cc,v 1.46 2008-04-05 19:08:01 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -30,7 +30,7 @@
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHLD_EwGw(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHLD_EwGwM(bxInstruction_c *i)
 {
   Bit16u op1_16, op2_16, result_16;
   Bit32u temp_32, result_32;
@@ -45,15 +45,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHLD_EwGw(bxInstruction_c *i)
 
   count &= 0x1f; // use only 5 LSB's
 
-  /* op1 is a register or memory reference */
-  if (i->modC0()) {
-    op1_16 = BX_READ_16BIT_REG(i->rm());
-  }
-  else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-    /* pointer, segment address pair */
-    op1_16 = read_RMW_virtual_word(i->seg(), RMAddr(i));
-  }
+  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+
+  /* pointer, segment address pair */
+  op1_16 = read_RMW_virtual_word(i->seg(), RMAddr(i));
 
   if (!count) return;
 
@@ -70,15 +65,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHLD_EwGw(bxInstruction_c *i)
     result_32 |= (op1_16 << (count - 16));
   }
 
-  result_16 = result_32 >> 16;
+  result_16 = (Bit16u)(result_32 >> 16);
 
-  /* now write result back to destination */
-  if (i->modC0()) {
-    BX_WRITE_16BIT_REG(i->rm(), result_16);
-  }
-  else {
-    write_RMW_virtual_word(result_16);
-  }
+  write_RMW_virtual_word(result_16);
 
   SET_FLAGS_OSZAPC_LOGIC_16(result_16); /* handle SF, ZF and AF flags */
 
@@ -87,7 +76,49 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHLD_EwGw(bxInstruction_c *i)
   SET_FLAGS_OxxxxC(of, cf);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHRD_EwGw(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHLD_EwGwR(bxInstruction_c *i)
+{
+  Bit16u op1_16, op2_16, result_16;
+  Bit32u temp_32, result_32;
+  unsigned count;
+  unsigned of, cf;
+
+  /* op1:op2 << count.  result stored in op1 */
+  if (i->b1() == 0xa4) // 0x1a4
+    count = i->Ib();
+  else // 0x1a5
+    count = CL;
+
+  count &= 0x1f; // use only 5 LSB's
+
+  if (!count) return;
+
+  op1_16 = BX_READ_16BIT_REG(i->rm());
+  op2_16 = BX_READ_16BIT_REG(i->nnn());
+
+  /* count < 32, since only lower 5 bits used */
+  temp_32 = ((Bit32u)(op1_16) << 16) | (op2_16); // double formed by op1:op2
+  result_32 = temp_32 << count;
+
+  // hack to act like x86 SHLD when count > 16
+  if (count > 16) {
+    // when count > 16 actually shifting op1:op2:op2 << count,
+    // it is the same as shifting op2:op2 by count-16
+    result_32 |= (op1_16 << (count - 16));
+  }
+
+  result_16 = (Bit16u)(result_32 >> 16);
+
+  BX_WRITE_16BIT_REG(i->rm(), result_16);
+
+  SET_FLAGS_OSZAPC_LOGIC_16(result_16); /* handle SF, ZF and AF flags */
+
+  cf = (temp_32 >> (32 - count)) & 0x1;
+  of = cf ^ (result_16 >> 15); // of = cf ^ result15
+  SET_FLAGS_OxxxxC(of, cf);
+}
+
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHRD_EwGwM(bxInstruction_c *i)
 {
   Bit16u op1_16, op2_16, result_16;
   Bit32u temp_32, result_32;
@@ -101,15 +132,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHRD_EwGw(bxInstruction_c *i)
 
   count &= 0x1f; /* use only 5 LSB's */
 
-  /* op1 is a register or memory reference */
-  if (i->modC0()) {
-    op1_16 = BX_READ_16BIT_REG(i->rm());
-  }
-  else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-    /* pointer, segment address pair */
-    op1_16 = read_RMW_virtual_word(i->seg(), RMAddr(i));
-  }
+  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+
+  /* pointer, segment address pair */
+  op1_16 = read_RMW_virtual_word(i->seg(), RMAddr(i));
 
   if (!count) return;
 
@@ -126,15 +152,50 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHRD_EwGw(bxInstruction_c *i)
     result_32 |= (op1_16 << (32 - count));
   }
 
-  result_16 = result_32;
+  result_16 = (Bit16u) result_32;
 
-  /* now write result back to destination */
-  if (i->modC0()) {
-    BX_WRITE_16BIT_REG(i->rm(), result_16);
+  write_RMW_virtual_word(result_16);
+
+  SET_FLAGS_OSZAPC_LOGIC_16(result_16); /* handle SF, ZF and AF flags */
+
+  cf = (op1_16 >> (count - 1)) & 0x1;
+  of = ((result_16 << 1) ^ result_16) >> 15; // of = result14 ^ result15
+  SET_FLAGS_OxxxxC(of, cf);
+}
+
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHRD_EwGwR(bxInstruction_c *i)
+{
+  Bit16u op1_16, op2_16, result_16;
+  Bit32u temp_32, result_32;
+  unsigned count;
+  unsigned cf, of;
+
+  if (i->b1() == 0xac) // 0x1ac
+    count = i->Ib();
+  else // 0x1ad
+    count = CL;
+
+  count &= 0x1f; /* use only 5 LSB's */
+
+  if (!count) return;
+
+  op1_16 = BX_READ_16BIT_REG(i->rm());
+  op2_16 = BX_READ_16BIT_REG(i->nnn());
+
+  /* count < 32, since only lower 5 bits used */
+  temp_32 = (op2_16 << 16) | op1_16; // double formed by op2:op1
+  result_32 = temp_32 >> count;
+
+  // hack to act like x86 SHRD when count > 16
+  if (count > 16) {
+    // when count > 16 actually shifting op2:op2:op1 >> count,
+    // it is the same as shifting op2:op2 by count-16
+    result_32 |= (op1_16 << (32 - count));
   }
-  else {
-    write_RMW_virtual_word(result_16);
-  }
+
+  result_16 = (Bit16u) result_32;
+
+  BX_WRITE_16BIT_REG(i->rm(), result_16);
 
   SET_FLAGS_OSZAPC_LOGIC_16(result_16); /* handle SF, ZF and AF flags */
 
