@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: instr.h,v 1.9 2008-04-05 17:51:55 sshwarts Exp $
+// $Id: instr.h,v 1.10 2008-04-05 17:57:21 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008 Stanislav Shwartsman
@@ -45,10 +45,6 @@ public:
   // the memory address (if any).
   BxExecutePtr_tR ResolveModrm;
   BxExecutePtr_tR execute;
-
-#define BX_OPCODE_EXT_0x0F   1
-#define BX_OPCODE_EXT_0x0F38 2
-#define BX_OPCODE_EXT_0x0F3A 3
 
   struct {
     //  7...2 (unused)
