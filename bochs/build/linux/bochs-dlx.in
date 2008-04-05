@@ -110,8 +110,8 @@ $BOCHS -q
 echo
 echo ---------------------------------------------------------------
 echo The DLX Linux demo is over.  If you want to free up the disk 
-echo space in your account, remove the .bochsdlx directory in your
-echo home directory.  Example:
+echo space in your account, remove the .bochsdlx directory from
+echo your home directory.  Example:
 echo "   rm -rf ~/.bochsdlx"
 echo Please be careful with rm -rf because it can make a mess.
 echo ---------------------------------------------------------------
