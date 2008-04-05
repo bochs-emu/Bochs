@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.216 2008-04-05 20:41:00 sshwarts Exp $
+// $Id: cpu.cc,v 1.217 2008-04-05 20:49:21 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -619,9 +619,10 @@ void BX_CPU_C::prefetch(void)
   bx_address temp_rip = RIP;
   bx_address laddr = BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_CS) + temp_rip;
   bx_phy_address pAddr;
+  unsigned pageOffset = PAGE_OFFSET(laddr);
 
   // Calculate RIP at the beginning of the page.
-  BX_CPU_THIS_PTR eipPageBias = PAGE_OFFSET(laddr) - RIP;
+  BX_CPU_THIS_PTR eipPageBias = pageOffset - RIP;
   BX_CPU_THIS_PTR eipPageWindowSize = 4096;
 
   if (! Is64BitMode()) {
@@ -641,7 +642,7 @@ void BX_CPU_C::prefetch(void)
   Bit8u *fetchPtr = 0;
 
   if (tlbEntry->lpf == lpf) { // always have permissions for CODE access
-    pAddr = A20ADDR(tlbEntry->ppf | PAGE_OFFSET(laddr));
+    pAddr = A20ADDR(tlbEntry->ppf | pageOffset);
 #if BX_SupportGuest2HostTLB
     fetchPtr = (Bit8u*) (tlbEntry->hostPageAddr);
 #endif
