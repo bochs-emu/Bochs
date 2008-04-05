@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: icache.h,v 1.31 2008-03-29 21:03:38 sshwarts Exp $
+// $Id: icache.h,v 1.32 2008-04-05 17:51:55 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -30,8 +30,6 @@
 #define BX_ICACHE_H
 
 #if BX_SUPPORT_ICACHE
-
-#include <assert.h>
 
 // bit31: 1=CS is 32/64-bit, 0=CS is 16-bit.
 // bit30: 1=Long Mode, 0=not Long Mode.

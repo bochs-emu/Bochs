@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: access.cc,v 1.94 2008-03-29 18:18:06 sshwarts Exp $
+// $Id: access.cc,v 1.95 2008-04-05 17:51:53 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -318,12 +318,12 @@ BX_CPU_C::execute_virtual_checks(bx_segment_reg_t *seg, bx_address offset, unsig
 
 const char *BX_CPU_C::strseg(bx_segment_reg_t *seg)
 {
-  if (seg == &BX_CPU_THIS_PTR sregs[0]) return("ES");
-  else if (seg == &BX_CPU_THIS_PTR sregs[1]) return("CS");
-  else if (seg == &BX_CPU_THIS_PTR sregs[2]) return("SS");
-  else if (seg == &BX_CPU_THIS_PTR sregs[3]) return("DS");
-  else if (seg == &BX_CPU_THIS_PTR sregs[4]) return("FS");
-  else if (seg == &BX_CPU_THIS_PTR sregs[5]) return("GS");
+  if (seg == &BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES]) return("ES");
+  else if (seg == &BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS]) return("CS");
+  else if (seg == &BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS]) return("SS");
+  else if (seg == &BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS]) return("DS");
+  else if (seg == &BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS]) return("FS");
+  else if (seg == &BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS]) return("GS");
   else {
     BX_PANIC(("undefined segment passed to strseg()!"));
     return("??");
@@ -332,15 +332,23 @@ const char *BX_CPU_C::strseg(bx_segment_reg_t *seg)
 
 int BX_CPU_C::int_number(bx_segment_reg_t *seg)
 {
-  if (seg == &BX_CPU_THIS_PTR sregs[0]) return BX_GP_EXCEPTION;
-  if (seg == &BX_CPU_THIS_PTR sregs[1]) return BX_GP_EXCEPTION;
-  if (seg == &BX_CPU_THIS_PTR sregs[2]) return BX_SS_EXCEPTION;
-  if (seg == &BX_CPU_THIS_PTR sregs[3]) return BX_GP_EXCEPTION;
-  if (seg == &BX_CPU_THIS_PTR sregs[4]) return BX_GP_EXCEPTION;
-  if (seg == &BX_CPU_THIS_PTR sregs[5]) return BX_GP_EXCEPTION;
+  if (seg == &BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES]) return BX_GP_EXCEPTION;
+  if (seg == &BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS]) return BX_GP_EXCEPTION;
+  if (seg == &BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS]) return BX_SS_EXCEPTION;
+  if (seg == &BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS]) return BX_GP_EXCEPTION;
+  if (seg == &BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS]) return BX_GP_EXCEPTION;
+  if (seg == &BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS]) return BX_GP_EXCEPTION;
 
   // undefined segment, this must be a new stack segment
   return BX_SS_EXCEPTION;
+}
+
+int BX_CPU_C::int_number(unsigned s)
+{
+  if (s == BX_SEG_REG_SS)
+    return BX_SS_EXCEPTION;
+  else
+    return BX_GP_EXCEPTION;
 }
 
 #if BX_SupportGuest2HostTLB

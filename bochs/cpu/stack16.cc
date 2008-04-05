@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack16.cc,v 1.36 2008-04-03 17:56:59 sshwarts Exp $
+// $Id: stack16.cc,v 1.37 2008-04-05 17:51:55 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -239,3 +239,60 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::POPAD16(bxInstruction_c *i)
   AX = ax;
 }
 #endif
+
+bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::can_pop(Bit32u bytes)
+{
+  Bit32u temp_ESP, expand_down_limit;
+
+#if BX_SUPPORT_X86_64
+  if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
+    return(1);
+  }
+#endif
+
+  if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b) { /* Big bit set: use ESP */
+    temp_ESP = ESP;
+    expand_down_limit = 0xFFFFFFFF;
+  }
+  else { /* Big bit clear: use SP */
+    temp_ESP = SP;
+    expand_down_limit = 0xFFFF;
+  }
+
+  if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.valid==0) {
+    BX_ERROR(("can_pop(): SS invalidated"));
+    return(0); /* never gets here */
+  }
+
+  if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.p==0) {
+    BX_ERROR(("can_pop(): SS.p = 0"));
+    return(0);
+  }
+
+  if (IS_DATA_SEGMENT_EXPAND_DOWN(BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.type)) { /* expand down */
+    if (temp_ESP == expand_down_limit) {
+      BX_PANIC(("can_pop(): found SP=ffff"));
+      return(0);
+    }
+    if (((expand_down_limit - temp_ESP) + 1) >= bytes)
+      return(1);
+    return(0);
+  }
+  else { /* normal (expand-up) segment */
+    if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.limit_scaled==0) {
+      BX_ERROR(("can_pop(): SS.limit = 0"));
+      return(0);
+    }
+    if (temp_ESP == expand_down_limit) {
+      BX_ERROR(("can_pop(): found SP=ffff"));
+      return(0);
+    }
+    if (temp_ESP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.limit_scaled) {
+      BX_ERROR(("can_pop(): eSP > SS.limit"));
+      return(0);
+    }
+    if (((BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.limit_scaled - temp_ESP) + 1) >= bytes)
+      return(1);
+    return(0);
+  }
+}

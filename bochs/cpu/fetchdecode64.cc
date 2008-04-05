@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.185 2008-04-04 22:39:45 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.186 2008-04-05 17:51:55 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -3355,7 +3355,7 @@ BX_CPU_C::fetchDecode64(const Bit8u *iptr, bxInstruction_c *i, unsigned remainin
   // remain must be at least 1
   unsigned remain = (remainingInPage < 15) ? remainingInPage : 15;
 
-  unsigned b1, b2, ilen=0, attr, lock=0;
+  unsigned b1, b2, ilen=0, attr, lock=0, ia_opcode = 0;
   unsigned imm_mode, offset = 512, rex_r = 0, rex_x = 0, rex_b = 0;
   unsigned rm = 0, mod = 0, nnn = 0;
 #define SSE_PREFIX_NONE 0
@@ -3472,6 +3472,7 @@ fetch_b1:
       }
       return(0);
     case 0x0f: // 2 byte escape
+      i->setOpcodeExtension();
       if (ilen < remain) {
         ilen++;
         b1 = 0x100 | *iptr++;
@@ -3720,14 +3721,14 @@ modrm_done:
       attr |= OpcodeInfoPtr->Attr;
     }
 
-    i->execute = BxOpcodesTable[OpcodeInfoPtr->IA];
+    ia_opcode = OpcodeInfoPtr->IA;
   }
   else {
     // Opcode does not require a MODRM byte.
     // Note that a 2-byte opcode (0F XX) will jump to before
     // the if() above after fetching the 2nd byte, so this path is
     // taken in all cases if a modrm byte is NOT required.
-    i->execute = BxOpcodesTable[BxOpcodeInfo64R[b1+offset].IA];
+    ia_opcode = BxOpcodeInfo64R[b1+offset].IA;
     i->setOpcodeReg((b1 & 7) | rex_b);
   }
 
@@ -3737,7 +3738,7 @@ modrm_done:
     if (/*(mod == 0xc0) ||*/ !(attr & BxLockable)) {
       BX_INFO(("LOCK prefix unallowed (op1=0x%x, mod=%u, nnn=%u)", b1, mod, nnn));
       // replace execution function with undefined-opcode
-      i->execute = &BX_CPU_C::BxError;
+      ia_opcode = BX_IA_ERROR;
     }
   }
 
@@ -3860,8 +3861,10 @@ modrm_done:
 
 #if BX_SUPPORT_3DNOW
   if(b1 == 0x10f)
-     i->execute = BxOpcodesTable[Bx3DNowOpcodeInfo[i->modRMForm.Ib].IA];
+     ia_opcode = Bx3DNowOpcodeInfo[i->modRMForm.Ib].IA;
 #endif
+
+  i->execute = BxOpcodesTable[ia_opcode];
 
   if (BX_NULL_SEG_REG(i->seg()))
      i->setSeg(BX_SEG_REG_DS);

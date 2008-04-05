@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: instr.h,v 1.8 2008-03-31 17:33:34 sshwarts Exp $
+// $Id: instr.h,v 1.9 2008-04-05 17:51:55 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008 Stanislav Shwartsman
@@ -46,24 +46,31 @@ public:
   BxExecutePtr_tR ResolveModrm;
   BxExecutePtr_tR execute;
 
+#define BX_OPCODE_EXT_0x0F   1
+#define BX_OPCODE_EXT_0x0F38 2
+#define BX_OPCODE_EXT_0x0F3A 3
+
   struct {
-    // 15..10  (unused)
-    //  9...9  stop trace (used with trace cache)
-    //  8...0  b1 (9bits of opcode; 1byte-op=0..255, 2byte-op=256..511
-    Bit16u metaInfo3;
+    //  7...2 (unused)
+    //  1...1 stop trace (used with trace cache)
+    //  0...0 opcode extension: 0-none, 1-0x0f used
+    Bit8u metaInfo4;
 
-    //  7...4  (unused)
-    //  3...0  ilen (0..15)
-    Bit8u  metaInfo2;
+    //  7...0 b1 - opcode byte
+    Bit8u metaInfo3;
 
-    //  7...7  extend8bit
-    //  6...6  as64
-    //  5...5  os64
-    //  4...4  as32
-    //  3...3  os32
-    //  2...2  mod==c0 (modrm)
-    //  1...0  repUsed (0=none, 2=0xF2, 3=0xF3)
-    Bit8u  metaInfo1;
+    //  7...4 (unused)
+    //  3...0 ilen (0..15)
+    Bit8u metaInfo2;
+
+    //  7...7 extend8bit
+    //  6...6 as64
+    //  5...5 os64
+    //  4...4 as32
+    //  3...3 os32
+    //  2...2 mod==c0 (modrm)
+    //  1...0 repUsed (0=none, 2=0xF2, 3=0xF3)
+    Bit8u metaInfo1;
   } metaInfo;
 
 #define BX_INSTR_METADATA_SEG   0
@@ -186,8 +193,7 @@ public:
   BX_CPP_INLINE void init(unsigned os32, unsigned as32, unsigned os64, unsigned as64)
   {
     metaInfo.metaInfo1 = (os32<<3) | (as32<<4) | (os64<<5) | (as64<<6);
-    metaInfo.metaInfo2 = 0;
-    metaInfo.metaInfo3 = 0;
+    metaInfo.metaInfo4 = 0;
     metaData[BX_INSTR_METADATA_SEG] = BX_SEG_REG_NULL;
   }
   BX_CPP_INLINE unsigned seg(void) {
@@ -200,9 +206,6 @@ public:
   BX_CPP_INLINE unsigned os32L(void) {
     return metaInfo.metaInfo1 & (1<<3);
   }
-  BX_CPP_INLINE unsigned os32B(void) {
-    return (metaInfo.metaInfo1 >> 3) & 1;
-  }
   BX_CPP_INLINE void setOs32B(unsigned bit) {
     metaInfo.metaInfo1 = (metaInfo.metaInfo1 & ~(1<<3)) | (bit<<3);
   }
@@ -212,9 +215,6 @@ public:
 
   BX_CPP_INLINE unsigned as32L(void) {
     return metaInfo.metaInfo1 & (1<<4);
-  }
-  BX_CPP_INLINE unsigned as32B(void) {
-    return (metaInfo.metaInfo1 >> 4) & 1;
   }
   BX_CPP_INLINE void setAs32B(unsigned bit) {
     metaInfo.metaInfo1 = (metaInfo.metaInfo1 & ~(1<<4)) | (bit<<4);
@@ -268,23 +268,28 @@ public:
     metaInfo.metaInfo1 = (metaInfo.metaInfo1 & ~3) | (value);
   }
 
-#if BX_SUPPORT_TRACE_CACHE
-  BX_CPP_INLINE void setStopTraceAttr(void) {
-   metaInfo.metaInfo3 |= (1<<9);
-  }
-  BX_CPP_INLINE unsigned getStopTraceAttr(void) {
-    return metaInfo.metaInfo3 & (1<<9);
-  }
-#endif
-
-  // Note this is the highest field, and thus needs no masking.
-  // DON'T PUT ANY FIELDS HIGHER THAN THIS ONE WITHOUT ADDING A MASK.
   BX_CPP_INLINE unsigned b1(void) {
-    return metaInfo.metaInfo3 & 0x1ff;
+    return metaInfo.metaInfo3;
   }
   BX_CPP_INLINE void setB1(unsigned b1) {
-    metaInfo.metaInfo3 = (metaInfo.metaInfo3 & ~0x1ff) | (b1 & 0x1ff);
+    metaInfo.metaInfo3 = b1 & 0xff;
   }
+
+  BX_CPP_INLINE void setOpcodeExtension(void) {
+    metaInfo.metaInfo4 |= 1;
+  }
+  BX_CPP_INLINE unsigned hasOpcodeExtension(void) {
+    return metaInfo.metaInfo4 & 1;
+  }
+
+#if BX_SUPPORT_TRACE_CACHE
+  BX_CPP_INLINE void setStopTraceAttr(void) {
+   metaInfo.metaInfo4 |= (1<<1);
+  }
+  BX_CPP_INLINE unsigned getStopTraceAttr(void) {
+    return metaInfo.metaInfo4 & (1<<1);
+  }
+#endif
 };
 // <TAG-CLASS-INSTRUCTION-END>
 

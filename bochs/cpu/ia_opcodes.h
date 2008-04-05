@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ia_opcodes.h,v 1.1 2008-04-04 22:39:45 sshwarts Exp $
+// $Id: ia_opcodes.h,v 1.2 2008-04-05 17:51:55 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008 Stanislav Shwartsman
@@ -472,8 +472,10 @@ bx_define_opcode(BX_IA_POPCNT_GwEw, BX_CPU_C::POPCNT_GwEw)
 bx_define_opcode(BX_IA_POPF_Fd, BX_CPU_C::POPF_Fd)
 bx_define_opcode(BX_IA_POPF_Fw, BX_CPU_C::POPF_Fw)
 bx_define_opcode(BX_IA_PUSH_EdM, BX_CPU_C::PUSH_EdM)
+bx_define_opcode(BX_IA_PUSH_EdR, BX_CPU_C::PUSH_ERX)
 bx_define_opcode(BX_IA_PUSH_ERX, BX_CPU_C::PUSH_ERX)
 bx_define_opcode(BX_IA_PUSH_EwM, BX_CPU_C::PUSH_EwM)
+bx_define_opcode(BX_IA_PUSH_EwR, BX_CPU_C::PUSH_RX)
 bx_define_opcode(BX_IA_PUSH_Id, BX_CPU_C::PUSH_Id)
 bx_define_opcode(BX_IA_PUSH_Iw, BX_CPU_C::PUSH_Iw)
 bx_define_opcode(BX_IA_PUSH_RX, BX_CPU_C::PUSH_RX)
@@ -1466,6 +1468,7 @@ bx_define_opcode(BX_IA_CMOVLE_GqEqR, BX_CPU_C::CMOVLE_GqEqR)
 bx_define_opcode(BX_IA_CMOVNLE_GqEqR, BX_CPU_C::CMOVNLE_GqEqR)
 bx_define_opcode(BX_IA_MOV_RRXIq, BX_CPU_C::MOV_RRXIq)
 bx_define_opcode(BX_IA_PUSH_EqM, BX_CPU_C::PUSH_EqM)
+bx_define_opcode(BX_IA_PUSH_EqR, BX_CPU_C::PUSH_RRX)
 bx_define_opcode(BX_IA_PUSH_RRX, BX_CPU_C::PUSH_RRX)
 bx_define_opcode(BX_IA_POP_EqM, BX_CPU_C::POP_EqM)
 bx_define_opcode(BX_IA_POP_EqR, BX_CPU_C::POP_RRX)
