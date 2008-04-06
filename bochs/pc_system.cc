@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pc_system.cc,v 1.69 2008-02-15 22:05:38 sshwarts Exp $
+// $Id: pc_system.cc,v 1.70 2008-04-06 18:27:24 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -127,10 +127,9 @@ bx_pc_system_c::outp(Bit16u addr, Bit32u value, unsigned io_len)
   bx_devices.outp(addr, value, io_len);
 }
 
-#if BX_SUPPORT_A20
-
 void bx_pc_system_c::set_enable_a20(bx_bool value)
 {
+#if BX_SUPPORT_A20
   bx_bool old_enable_a20 = enable_a20;
 
   if (value) {
@@ -156,30 +155,23 @@ void bx_pc_system_c::set_enable_a20(bx_bool value)
   // they can potentially invalidate certain cache info based on
   // A20-line-applied physical addresses.
   if (old_enable_a20 != enable_a20) MemoryMappingChanged();
+#else
+  BX_DEBUG(("set_enable_a20: ignoring: BX_SUPPORT_A20 = 0"));
+#endif
 }
 
 bx_bool bx_pc_system_c::get_enable_a20(void)
 {
+#if BX_SUPPORT_A20
   if (bx_dbg.a20)
     BX_INFO(("A20: get() = %u", (unsigned) enable_a20));
 
   return enable_a20;
-}
-
 #else
-
-void bx_pc_system_c::set_enable_a20(bx_bool value)
-{
-  BX_DEBUG(("set_enable_a20: ignoring: SUPPORT_A20 = 0"));
-}
-
-bx_bool bx_pc_system_c::get_enable_a20(void)
-{
-  BX_DEBUG(("get_enable_a20: ignoring: SUPPORT_A20 = 0"));
+  BX_DEBUG(("get_enable_a20: ignoring: BX_SUPPORT_A20 = 0"));
   return 1;
+#endif
 }
-
-#endif  // #if BX_SUPPORT_A20
 
 void bx_pc_system_c::MemoryMappingChanged(void)
 {
