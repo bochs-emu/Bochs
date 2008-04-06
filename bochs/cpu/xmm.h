@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: xmm.h,v 1.26 2008-02-13 17:06:44 sshwarts Exp $
+// $Id: xmm.h,v 1.27 2008-04-06 13:56:22 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -206,50 +206,64 @@ struct BOCHSAPI bx_mxcsr_t
          (BX_SUPPORT_MISALIGNED_SSE ? MXCSR_MISALIGNED_EXCEPTION_MASK : 0))
 
 #if defined(NEED_CPU_REG_SHORTCUTS)
-#define MXCSR             (BX_CPU_THIS_PTR mxcsr)
-#define BX_MXCSR_REGISTER (BX_CPU_THIS_PTR mxcsr.mxcsr)
+  #define MXCSR             (BX_CPU_THIS_PTR mxcsr)
+  #define BX_MXCSR_REGISTER (BX_CPU_THIS_PTR mxcsr.mxcsr)
 #endif
+
+#endif // BX_SUPPORT_SSE
 
 /* INTEGER SATURATION */
 
 /*
-  SaturateWordSToByteS   converts   a signed 16-bit value to a
-  signed  8-bit  value. If the signed 16-bit value is less than -128, it
-  is  represented  by  the saturated value -128 (0x80). If it is greater
-  than 127, it is represented by the saturated value 127 (0x7F).
+ * SaturateWordSToByteS  converts  a  signed  16-bit  value  to a signed
+ * 8-bit value.  If  the signed 16-bit value is less than -128, it is 
+ * represented by the saturated value  -128  (0x80).  If it is  greater 
+ * than 127, it is represented by the saturated value 127 (0x7F).
 */
-Bit8s SaturateWordSToByteS(Bit16s value)
-BX_CPP_AttrRegparmN(1);
+BX_CPP_INLINE Bit8s BX_CPP_AttrRegparmN(1) SaturateWordSToByteS(Bit16s value)
+{
+  if(value < -128) return -128;
+  if(value >  127) return  127;
+  return (Bit8s) value;
+}
 
 /*
-  SaturateDwordSToWordS  converts  a  signed 32-bit value to a
-  signed  16-bit  value. If the signed 32-bit value is less than -32768,
-  it  is  represented  by  the saturated value -32768 (0x8000). If it is
-  greater  than  32767,  it  is represented by the saturated value 32767
-  (0x7FFF).
+ * SaturateDwordSToWordS  converts  a  signed  32-bit  value  to a signed
+ * 16-bit  value.  If  the signed 32-bit value is less than -32768, it is
+ * represented  by  the saturated value -32768 (0x8000). If it is greater
+ * than 32767, it is represented by the saturated value 32767 (0x7FFF).
 */
-Bit16s SaturateDwordSToWordS(Bit32s value)
-BX_CPP_AttrRegparmN(1);
+BX_CPP_INLINE Bit16s BX_CPP_AttrRegparmN(1) SaturateDwordSToWordS(Bit32s value)
+{
+  if(value < -32768) return -32768;
+  if(value >  32767) return  32767;
+  return (Bit16s) value;
+}
 
 /*
-  SaturateWordSToByteU  converts a signed 16-bit value to an
-  unsigned  8-bit value. If the signed 16-bit value is less than zero it
-  is  represented  by  the  saturated value zero (0x00).If it is greater
-  than 255 it is represented by the saturated value 255 (0xFF).
+ * SaturateWordSToByteU  converts  a  signed  16-bit value to an unsigned
+ * 8-bit  value.  If  the  signed  16-bit  value  is less than zero it is
+ * represented  by  the saturated value zero (0x00).If it is greater than
+ * 255 it is represented by the saturated value 255 (0xFF).
 */
-Bit8u SaturateWordSToByteU(Bit16s value)
-BX_CPP_AttrRegparmN(1);
+BX_CPP_INLINE Bit8u BX_CPP_AttrRegparmN(1) SaturateWordSToByteU(Bit16s value)
+{
+  if(value < 0) return 0;
+  if(value > 255) return 255;
+  return (Bit8u) value;
+}
 
 /*
-  SaturateDwordSToWordU  converts  a signed 32-bit value
-  to  an  unsigned  16-bit value. If the signed 32-bit value is less
-  than   zero,   it   is  represented  by  the saturated value 65535
-  (0x0000).  If  it  is greater  than  65535,  it  is represented by
-  the saturated value 65535 (0xFFFF).
+ * SaturateDwordSToWordU  converts  a  signed 32-bit value to an unsigned
+ * 16-bit  value.  If  the  signed  32-bit value is less than zero, it is
+ * represented  by  the  saturated  value zero (0x0000). If it is greater
+ * than  65535, it is represented by the saturated value 65535 (0xFFFF).
 */
-Bit16u SaturateDwordSToWordU(Bit32s value)
-BX_CPP_AttrRegparmN(1);
-
-#endif // BX_SUPPORT_SSE
+BX_CPP_INLINE Bit16u BX_CPP_AttrRegparmN(1) SaturateDwordSToWordU(Bit32s value)
+{
+  if(value < 0) return 0;
+  if(value > 65535) return 65535;
+  return (Bit16u) value;
+}
 
 #endif

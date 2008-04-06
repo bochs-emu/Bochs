@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_move.cc,v 1.85 2008-03-31 20:56:27 sshwarts Exp $
+// $Id: sse_move.cc,v 1.86 2008-04-06 13:56:22 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -30,10 +30,7 @@
 
 void BX_CPU_C::prepareSSE(void)
 {
-  if(BX_CPU_THIS_PTR cr0.get_EM())
-    exception(BX_UD_EXCEPTION, 0, 0);
-
-  if(! (BX_CPU_THIS_PTR cr4.get_OSFXSR()))
+  if(BX_CPU_THIS_PTR cr0.get_EM() || !BX_CPU_THIS_PTR cr4.get_OSFXSR())
     exception(BX_UD_EXCEPTION, 0, 0);
 
   if(BX_CPU_THIS_PTR cr0.get_TS())
