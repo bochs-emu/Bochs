@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_move.cc,v 1.86 2008-04-06 13:56:22 sshwarts Exp $
+// $Id: sse_move.cc,v 1.87 2008-04-06 18:00:20 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -27,15 +27,6 @@
 #define LOG_THIS BX_CPU_THIS_PTR
 
 #if BX_SUPPORT_SSE
-
-void BX_CPU_C::prepareSSE(void)
-{
-  if(BX_CPU_THIS_PTR cr0.get_EM() || !BX_CPU_THIS_PTR cr4.get_OSFXSR())
-    exception(BX_UD_EXCEPTION, 0, 0);
-
-  if(BX_CPU_THIS_PTR cr0.get_TS())
-    exception(BX_NM_EXCEPTION, 0, 0);
-}
 
 void BX_CPU_C::print_state_SSE(void)
 {

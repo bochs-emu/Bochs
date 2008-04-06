@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.448 2008-04-05 20:41:00 sshwarts Exp $
+// $Id: cpu.h,v 1.449 2008-04-06 18:00:20 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2988,7 +2988,7 @@ public: // for now...
 #endif
   BX_SMF Bit32u force_flags(void);
   BX_SMF Bit16u read_flags(void);
-  BX_SMF Bit32u read_eflags(void);
+  BX_SMF Bit32u read_eflags(void) { return BX_CPU_THIS_PTR force_flags(); }
 
   BX_SMF Bit8u   inp8(Bit16u addr) BX_CPP_AttrRegparmN(1);
   BX_SMF void    outp8(Bit16u addr, Bit8u value) BX_CPP_AttrRegparmN(2);
@@ -3058,10 +3058,10 @@ public: // for now...
 
   BX_CPP_INLINE bx_address get_instruction_pointer(void);
 
-  BX_CPP_INLINE Bit32u get_eip(void);
-  BX_CPP_INLINE Bit16u get_ip(void);
+  BX_CPP_INLINE Bit32u get_eip(void) { return (BX_CPU_THIS_PTR gen_reg[BX_32BIT_REG_EIP].dword.erx); }
+  BX_CPP_INLINE Bit16u get_ip (void) { return (BX_CPU_THIS_PTR gen_reg[BX_16BIT_REG_IP].word.rx); }
 #if BX_SUPPORT_X86_64
-  BX_CPP_INLINE Bit64u get_rip(void);
+  BX_CPP_INLINE Bit64u get_rip(void) { return (BX_CPU_THIS_PTR gen_reg[BX_64BIT_REG_RIP].rrx); }
 #endif
 
   BX_CPP_INLINE Bit8u get_reg8l(unsigned reg);
@@ -3146,6 +3146,28 @@ public: // for now...
 #endif
 };
 
+#if BX_SUPPORT_SSE
+BX_CPP_INLINE void BX_CPU_C::prepareSSE(void)
+{
+  if(BX_CPU_THIS_PTR cr0.get_EM() || !BX_CPU_THIS_PTR cr4.get_OSFXSR())
+    exception(BX_UD_EXCEPTION, 0, 0);
+
+  if(BX_CPU_THIS_PTR cr0.get_TS())
+    exception(BX_NM_EXCEPTION, 0, 0);
+}
+#endif
+
+#if BX_SUPPORT_XSAVE
+BX_CPP_INLINE void BX_CPU_C::prepareXSAVE(void)
+{
+  if(! (BX_CPU_THIS_PTR cr4.get_OSXSAVE()))
+    exception(BX_UD_EXCEPTION, 0, 0);
+
+  if(BX_CPU_THIS_PTR cr0.get_TS())
+    exception(BX_NM_EXCEPTION, 0, 0);
+}
+#endif
+
 // Can be used as LHS or RHS.
 #define RMAddr(i)  (BX_CPU_THIS_PTR address_xlation.rm_addr)
 
@@ -3186,11 +3208,6 @@ BX_CPP_INLINE bx_address BX_CPU_C::get_segment_base(unsigned seg)
   return (Bit32u)(BX_CPU_THIS_PTR sregs[seg].cache.u.segment.base);
 }
 
-BX_CPP_INLINE Bit32u BX_CPU_C::read_eflags(void)
-{
-  return BX_CPU_THIS_PTR force_flags();
-}
-
 BX_CPP_INLINE Bit8u BX_CPU_C::get_reg8l(unsigned reg)
 {
   assert(reg < BX_GENERAL_REGISTERS);
@@ -3224,23 +3241,6 @@ BX_CPP_INLINE bx_address BX_CPU_C::get_instruction_pointer(void)
 BX_CPP_INLINE bx_address BX_CPU_C::get_instruction_pointer(void)
 {
   return BX_CPU_THIS_PTR get_eip();
-}
-#endif
-
-BX_CPP_INLINE Bit16u BX_CPU_C::get_ip(void)
-{
-  return (BX_CPU_THIS_PTR gen_reg[BX_16BIT_REG_IP].word.rx);
-}
-
-BX_CPP_INLINE Bit32u BX_CPU_C::get_eip(void)
-{
-  return (BX_CPU_THIS_PTR gen_reg[BX_32BIT_REG_EIP].dword.erx);
-}
-
-#if BX_SUPPORT_X86_64
-BX_CPP_INLINE Bit64u BX_CPU_C::get_rip(void)
-{
-  return (BX_CPU_THIS_PTR gen_reg[BX_64BIT_REG_RIP].rrx);
 }
 #endif
 
@@ -3317,12 +3317,10 @@ BX_CPP_INLINE unsigned BX_CPU_C::get_cpu_mode(void)
 }
 
 #if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
-
 BX_CPP_INLINE bx_bool BX_CPU_C::alignment_check(void)
 {
   return (Bit32u)(BX_CPU_THIS_PTR alignment_check_mask) & 1;
 }
-
 #endif
 
 BOCHSAPI extern const bx_bool bx_parity_lookup[256];

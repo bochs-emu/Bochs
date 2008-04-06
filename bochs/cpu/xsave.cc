@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: xsave.cc,v 1.6 2008-03-31 20:56:27 sshwarts Exp $
+// $Id: xsave.cc,v 1.7 2008-04-06 18:00:20 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008 Stanislav Shwartsman
@@ -30,17 +30,6 @@
 #if BX_SUPPORT_X86_64==0
 #define RAX EAX
 #define RDX EDX
-#endif
-
-#if BX_SUPPORT_XSAVE
-void BX_CPU_C::prepareXSAVE(void)
-{
-  if(! (BX_CPU_THIS_PTR cr4.get_OSXSAVE()))
-    exception(BX_UD_EXCEPTION, 0, 0);
-
-  if(BX_CPU_THIS_PTR cr0.get_TS())
-    exception(BX_NM_EXCEPTION, 0, 0);
-}
 #endif
 
 /* 0F AE /4 */
