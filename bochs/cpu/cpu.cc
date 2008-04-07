@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.218 2008-04-07 18:39:16 sshwarts Exp $
+// $Id: cpu.cc,v 1.219 2008-04-07 19:00:30 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -805,7 +805,7 @@ bx_bool BX_CPU_C::dbg_check_begin_instr_bpoint(void)
 
   BX_CPU_THIS_PTR guard_found.cs  = cs;
   BX_CPU_THIS_PTR guard_found.eip = debug_eip;
-  BX_CPU_THIS_PTR guard_found.laddr = get_laddr(BX_SEG_REG_CS, debug_eip);
+  BX_CPU_THIS_PTR guard_found.laddr = BX_CPU_THIS_PTR get_laddr(BX_SEG_REG_CS, debug_eip);
   BX_CPU_THIS_PTR guard_found.is_32bit_code =
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b;
   BX_CPU_THIS_PTR guard_found.is_64bit_code = Is64BitMode();
@@ -905,7 +905,7 @@ bx_bool BX_CPU_C::dbg_check_end_instr_bpoint(void)
   BX_CPU_THIS_PTR guard_found.cs  =
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value;
   BX_CPU_THIS_PTR guard_found.eip = RIP;
-  BX_CPU_THIS_PTR guard_found.laddr = get_laddr(BX_SEG_REG_CS, RIP);
+  BX_CPU_THIS_PTR guard_found.laddr = BX_CPU_THIS_PTR get_laddr(BX_SEG_REG_CS, RIP);
   BX_CPU_THIS_PTR guard_found.is_32bit_code =
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b;
   BX_CPU_THIS_PTR guard_found.is_64bit_code = Is64BitMode();
