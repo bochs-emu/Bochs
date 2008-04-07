@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: crc.cc,v 1.1 2006-01-24 19:03:53 sshwarts Exp $
+// $Id: crc.cc,v 1.2 2008-04-07 18:48:11 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  I grabbed these CRC routines from the following source:
@@ -40,26 +40,26 @@ static Bit32u crc32_table[256];
 
 static void init_crc32(void)
 {
-        int i, j;
-        Bit32u c;
+  int i, j;
+  Bit32u c;
 
-        for (i = 0; i < 256; ++i) {
-                for (c = i << 24, j = 8; j > 0; --j)
-                        c = c & 0x80000000 ? (c << 1) ^ CRC32_POLY : (c << 1);
-                crc32_table[i] = c;
-        }
+  for (i = 0; i < 256; ++i) {
+    for (c = i << 24, j = 8; j > 0; --j)
+      c = c & 0x80000000 ? (c << 1) ^ CRC32_POLY : (c << 1);
+    crc32_table[i] = c;
+  }
 }
 
 Bit32u crc32(const Bit8u *buf, int len)
 {
-        const Bit8u *p;
-        Bit32u crc;
+  const Bit8u *p;
+  Bit32u crc;
 
-        if (!crc32_table[1])    /* if not already done, */
-                init_crc32();   /* build table */
+  if (!crc32_table[1])    /* if not already done, */
+    init_crc32();   /* build table */
 
-        crc = 0xffffffff;       /* preload shift register, per CRC-32 spec */
-        for (p = buf; len > 0; ++p, --len)
-                crc = (crc << 8) ^ crc32_table[(crc >> 24) ^ *p];
-        return ~crc;            /* transmit complement, per CRC-32 spec */
+  crc = 0xffffffff;       /* preload shift register, per CRC-32 spec */
+  for (p = buf; len > 0; ++p, --len)
+    crc = (crc << 8) ^ crc32_table[(crc >> 24) ^ *p];
+  return ~crc;            /* transmit complement, per CRC-32 spec */
 }
