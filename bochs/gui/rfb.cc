@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rfb.cc,v 1.57 2008-03-06 21:15:40 sshwarts Exp $
+// $Id: rfb.cc,v 1.58 2008-04-07 20:20:04 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2000  Psyon.Org!
@@ -170,7 +170,7 @@ static SOCKET sGlobal;
 static Bit32u clientEncodingsCount = 0;
 static Bit32u *clientEncodings = NULL;
 
-void ServerThreadInit(void *indata);
+void CDECL ServerThreadInit(void *indata);
 void HandleRfbClient(SOCKET sClient);
 int  ReadExact(int sock, char *buf, int len);
 int  WriteExact(int sock, char *buf, int len);
@@ -348,7 +348,7 @@ bool StopWinsock()
 }
 #endif
 
-void ServerThreadInit(void *indata)
+void CDECL ServerThreadInit(void *indata)
 {
     SOCKET             sServer;
     SOCKET             sClient;

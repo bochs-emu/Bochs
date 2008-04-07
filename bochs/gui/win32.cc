@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32.cc,v 1.118 2008-02-15 22:05:40 sshwarts Exp $
+// $Id: win32.cc,v 1.119 2008-04-07 20:20:04 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -206,7 +206,7 @@ sharedThreadInfo stInfo;
 
 LRESULT CALLBACK mainWndProc (HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK simWndProc (HWND, UINT, WPARAM, LPARAM);
-VOID UIThread(PVOID);
+VOID CDECL UIThread(PVOID);
 void SetStatusText(int Num, const char *Text, bx_bool active);
 void terminateEmul(int);
 void create_vga_font(void);
@@ -489,7 +489,6 @@ Bit32u win32_to_bx_key[2][0x100] =
 #if  defined(__MINGW32__) || defined(_MSC_VER)
   VOID CALLBACK MyTimer(HWND,UINT,UINT,DWORD);
   void alarm(int);
-  void bx_signal_handler(int);
 #endif
 
 static void processMouseXY(int x, int y, int z, int windows_state, int implied_state_change)
@@ -799,7 +798,7 @@ void resize_main_window()
 }
 
 // This thread controls the GUI window.
-VOID UIThread(PVOID pvoid)
+VOID CDECL UIThread(PVOID pvoid)
 {
   MSG msg;
   HDC hdc;

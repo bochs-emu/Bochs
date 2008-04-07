@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.377 2008-04-05 20:41:00 sshwarts Exp $
+// $Id: main.cc,v 1.378 2008-04-07 20:20:04 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -253,7 +253,7 @@ void print_tree(bx_param_c *node, int level)
 }
 #endif
 
-int bxmain () {
+int bxmain (void) {
 #ifdef HAVE_LOCALE_H
   // Initialize locale (for isprint() and other functions)
   setlocale (LC_ALL, "");
@@ -463,7 +463,7 @@ int WINAPI WinMain(
 #if !defined(__WXMSW__)
 // normal main function, presently in for all cases except for
 // wxWidgets under win32.
-int main (int argc, char *argv[])
+int CDECL main(int argc, char *argv[])
 {
   bx_startup_flags.argc = argc;
   bx_startup_flags.argv = argv;
@@ -480,7 +480,7 @@ int main (int argc, char *argv[])
 }
 #endif
 
-void print_usage()
+void print_usage(void)
 {
   fprintf(stderr,
     "Usage: bochs [flags] [bochsrc options]\n\n"
@@ -743,7 +743,7 @@ int bx_init_main(int argc, char *argv[])
   return 0;
 }
 
-bx_bool load_and_init_display_lib()
+bx_bool load_and_init_display_lib(void)
 {
   if (bx_gui != NULL) {
     // bx_gui has already been filled in.  This happens when you start
@@ -924,7 +924,7 @@ int bx_begin_simulation (int argc, char *argv[])
   return(0);
 }
 
-void bx_stop_simulation()
+void bx_stop_simulation(void)
 {
   // in wxWidgets, the whole simulator is running in a separate thread.
   // our only job is to end the thread as soon as possible, NOT to shut
@@ -1195,7 +1195,7 @@ int bx_atexit(void)
   return 0;
 }
 
-void bx_signal_handler(int signum)
+void CDECL bx_signal_handler(int signum)
 {
   // in a multithreaded environment, a signal such as SIGINT can be sent to all
   // threads.  This function is only intended to handle signals in the
