@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: memory.h,v 1.45 2008-02-03 20:27:06 sshwarts Exp $
+// $Id: memory.h,v 1.46 2008-04-07 18:39:17 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -95,9 +95,9 @@ public:
   BX_MEM_SMF void    disable_smram(void);
   BX_MEM_SMF bx_bool is_smram_accessible(void);
   BX_MEM_SMF void    readPhysicalPage(BX_CPU_C *cpu, bx_phy_address addr,
-                                      unsigned len, void *data) BX_CPP_AttrRegparmN(3);
+                                      unsigned len, void *data);
   BX_MEM_SMF void    writePhysicalPage(BX_CPU_C *cpu, bx_phy_address addr,
-                                       unsigned len, void *data) BX_CPP_AttrRegparmN(3);
+                                       unsigned len, void *data);
   BX_MEM_SMF void    load_ROM(const char *path, bx_phy_address romaddress, Bit8u type);
   BX_MEM_SMF void    load_RAM(const char *path, bx_phy_address romaddress, Bit8u type);
   BX_MEM_SMF Bit32u  get_memory_in_k(void);

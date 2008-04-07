@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: memory.cc,v 1.63 2008-02-03 20:27:05 sshwarts Exp $
+// $Id: memory.cc,v 1.64 2008-04-07 18:39:17 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -43,8 +43,7 @@
 // 0xf0000 - 0xfffff    Upper BIOS Area (64K)
 //
 
-  void BX_CPP_AttrRegparmN(3)
-BX_MEM_C::writePhysicalPage(BX_CPU_C *cpu, bx_phy_address addr, unsigned len, void *data)
+void BX_MEM_C::writePhysicalPage(BX_CPU_C *cpu, bx_phy_address addr, unsigned len, void *data)
 {
   Bit8u *data_ptr;
   bx_phy_address a20addr = A20ADDR(addr);
@@ -204,8 +203,7 @@ inc_one:
   }
 }
 
-  void BX_CPP_AttrRegparmN(3)
-BX_MEM_C::readPhysicalPage(BX_CPU_C *cpu, bx_phy_address addr, unsigned len, void *data)
+void BX_MEM_C::readPhysicalPage(BX_CPU_C *cpu, bx_phy_address addr, unsigned len, void *data)
 {
   Bit8u *data_ptr;
   bx_phy_address a20addr = A20ADDR(addr);

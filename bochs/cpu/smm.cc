@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: smm.cc,v 1.35 2008-03-31 20:56:27 sshwarts Exp $
+// $Id: smm.cc,v 1.36 2008-04-07 18:39:17 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2006 Stanislav Shwartsman
@@ -132,8 +132,6 @@ void BX_CPU_C::enter_system_management_mode(void)
   BX_CPU_THIS_PTR cr0.set_TS(0); // no task switch (bit 3)
   BX_CPU_THIS_PTR cr0.set_PG(0); // paging disabled (bit 31)
 
-  BX_CPU_THIS_PTR cpu_mode = BX_MODE_IA32_REAL;
-
   // paging mode was changed - flush TLB
   TLB_flush(1); // 1 = Flush Global entries also
 
@@ -168,8 +166,10 @@ void BX_CPU_C::enter_system_management_mode(void)
   BX_CPU_THIS_PTR updateFetchModeMask();
 #endif
 
+  handleCpuModeChange();
+
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
-  BX_CPU_THIS_PTR alignment_check_mask = LPF_MASK;
+  handleAlignmentCheck();
 #endif
 
   /* DS (Data Segment) and descriptor cache */

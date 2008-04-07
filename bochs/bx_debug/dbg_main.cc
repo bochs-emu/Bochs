@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.122 2008-04-05 21:41:31 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.123 2008-04-07 18:39:16 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -206,7 +206,7 @@ int bx_dbg_main(void)
     BX_CPU(i)->guard_found.cs = BX_CPU(i)->sregs[BX_SEG_REG_CS].selector.value;
     BX_CPU(i)->guard_found.eip = BX_CPU(i)->prev_rip;
     BX_CPU(i)->guard_found.laddr =
-      (BX_CPU(i)->get_segment_base(BX_SEG_REG_CS) + BX_CPU(i)->prev_rip);
+      BX_CPU(i)->get_laddr(BX_SEG_REG_CS, BX_CPU(i)->prev_rip);
     BX_CPU(i)->guard_found.is_32bit_code =
       (BX_CPU(i)->sregs[BX_SEG_REG_CS].cache.u.segment.d_b);
     BX_CPU(i)->guard_found.is_64bit_code =
@@ -3320,6 +3320,8 @@ bx_address bx_dbg_get_instruction_pointer(void)
 
 Bit32u bx_dbg_get_laddr(Bit16u sel, Bit32u ofs)
 {
+  Bit32u laddr;
+
   if (BX_CPU(dbg_cpu)->protected_mode()) {
     bx_descriptor_t descriptor;
     bx_selector_t selector;
@@ -3386,11 +3388,13 @@ Bit32u bx_dbg_get_laddr(Bit16u sel, Bit32u ofs)
         ofs, sel, lowaddr, highaddr);
     }
 
-    return descriptor.u.segment.base + ofs;
+    laddr = descriptor.u.segment.base + ofs;
   }
   else {
-    return sel * 16 + ofs;
+    laddr = sel * 16 + ofs;
   }
+
+  return laddr;
 }
 
 void bx_dbg_step_over_command()

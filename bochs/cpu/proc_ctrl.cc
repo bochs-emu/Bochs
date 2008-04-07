@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.208 2008-04-05 17:51:55 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.209 2008-04-07 18:39:17 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -202,7 +202,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CLFLUSH(bxInstruction_c *i)
     execute_virtual_checks(seg, RMAddr(i), 1);
   }
 
-  bx_address laddr = BX_CPU_THIS_PTR get_segment_base(i->seg()) + RMAddr(i);
+  bx_address laddr = BX_CPU_THIS_PTR get_laddr(i->seg(), RMAddr(i));
   bx_phy_address paddr;
 
   if (BX_CPU_THIS_PTR cr0.get_PG()) {
@@ -1118,6 +1118,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOADALL(bxInstruction_c *i)
   BX_CPU_THIS_PTR updateFetchModeMask();
 #endif
 
+  handleCpuModeChange();
+
   /* ES */
   BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, 0x824, 2, &es_raw);
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.value = es_raw;
@@ -1145,18 +1147,18 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOADALL(bxInstruction_c *i)
   }
 
 #if 0
-    BX_INFO(("cs.dpl = %02x", (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.dpl));
-    BX_INFO(("ss.dpl = %02x", (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.dpl));
-    BX_INFO(("BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].dpl = 0x%02x", (unsigned) BX_CPU_THIS_PTR ds.cache.dpl));
-    BX_INFO(("BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].dpl = 0x%02x", (unsigned) BX_CPU_THIS_PTR es.cache.dpl));
-    BX_INFO(("LOADALL: setting cs.selector.rpl to %u",
-      (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.rpl));
-    BX_INFO(("LOADALL: setting ss.selector.rpl to %u",
-      (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.rpl));
-    BX_INFO(("LOADALL: setting ds.selector.rpl to %u",
-      (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.rpl));
-    BX_INFO(("LOADALL: setting es.selector.rpl to %u",
-      (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.rpl));
+  BX_INFO(("cs.dpl = %02x", (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.dpl));
+  BX_INFO(("ss.dpl = %02x", (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.dpl));
+  BX_INFO(("BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].dpl = 0x%02x", (unsigned) BX_CPU_THIS_PTR ds.cache.dpl));
+  BX_INFO(("BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].dpl = 0x%02x", (unsigned) BX_CPU_THIS_PTR es.cache.dpl));
+  BX_INFO(("LOADALL: setting cs.selector.rpl to %u",
+    (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.rpl));
+  BX_INFO(("LOADALL: setting ss.selector.rpl to %u",
+    (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.rpl));
+  BX_INFO(("LOADALL: setting ds.selector.rpl to %u",
+    (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.rpl));
+  BX_INFO(("LOADALL: setting es.selector.rpl to %u",
+    (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.rpl));
 #endif
 
   BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, 0x826, 2, &DI);
@@ -1219,6 +1221,13 @@ void BX_CPU_C::handleCpuModeChange(void)
     }
   }
 
+#if BX_SUPPORT_X86_64
+  if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64)
+    BX_CPU_THIS_PTR laddr32b_mask = BX_CONST64(0xffffffffffffffff);
+  else
+    BX_CPU_THIS_PTR laddr32b_mask = BX_CONST64(0xffffffff);
+#endif
+
   if (mode != BX_CPU_THIS_PTR cpu_mode)
     BX_DEBUG(("%s activated", cpu_mode_string(BX_CPU_THIS_PTR cpu_mode)));
 }
@@ -1228,9 +1237,9 @@ void BX_CPU_C::handleAlignmentCheck(void)
 {
   if (CPL == 3 && BX_CPU_THIS_PTR cr0.get_AM() && BX_CPU_THIS_PTR get_AC()) {
 #if BX_SUPPORT_X86_64
-    BX_CPU_THIS_PTR alignment_check_mask = BX_CONST64(0xFFFFFFFFFFFFFFFF);
+    BX_CPU_THIS_PTR alignment_check_mask = BX_CONST64(0xffffffffffffffff);
 #else
-    BX_CPU_THIS_PTR alignment_check_mask = 0xFFFFFFFF;
+    BX_CPU_THIS_PTR alignment_check_mask = 0xffffffff;
 #endif
     BX_INFO(("Enable alignment check (#AC exception)"));
   }
@@ -1922,26 +1931,26 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MONITOR(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
-  bx_address addr, laddr;
+  bx_address offset, laddr;
   bx_phy_address paddr;
 
 #if BX_SUPPORT_X86_64
   if (i->as64L()) {
-     addr = RAX;
+     offset = RAX;
   }
   else
 #endif
   if (i->as32L()) {
-     laddr = EAX;
+     offset = EAX;
   }
   else {
-     addr =  AX;
+     offset =  AX;
   }
 
-  read_virtual_checks(&BX_CPU_THIS_PTR sregs[i->seg()], addr, 1);
+  read_virtual_checks(&BX_CPU_THIS_PTR sregs[i->seg()], offset, 1);
 
   // set MONITOR
-  laddr = BX_CPU_THIS_PTR get_segment_base(i->seg()) + addr;
+  laddr = BX_CPU_THIS_PTR get_laddr(i->seg(), offset);
 
   if (BX_CPU_THIS_PTR cr0.get_PG()) {
     paddr = dtranslate_linear(laddr, CPL, BX_READ);

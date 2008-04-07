@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.449 2008-04-06 18:00:20 sshwarts Exp $
+// $Id: cpu.h,v 1.450 2008-04-07 18:39:16 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -891,6 +891,9 @@ public: // for now...
   unsigned cpu_mode;
   bx_bool  in_smm;
   bx_bool  nmi_disable;
+#if BX_SUPPORT_X86_64
+  bx_address laddr32b_mask;
+#endif
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
   bx_address alignment_check_mask;
 #endif
@@ -3080,6 +3083,13 @@ public: // for now...
 
   BX_CPP_INLINE bx_address get_segment_base(unsigned seg);
 
+  // The linear address must be truncated to the 32-bit when CPU is not
+  // executing in long64 mode.  The function  must  be used  to compute
+  // linear address everywhere when a code is shared between long64 and
+  // legacy mode. For legacy mode only  just use Bit32u to store linear 
+  // address value.
+  BX_CPP_INLINE bx_address get_laddr(unsigned seg, bx_address offset);
+
   DECLARE_EFLAG_ACCESSOR   (ID,  21)
   DECLARE_EFLAG_ACCESSOR   (VIP, 20)
   DECLARE_EFLAG_ACCESSOR   (VIF, 19)
@@ -3198,14 +3208,20 @@ BX_CPP_INLINE void BX_CPU_C::updateFetchModeMask(void)
 BX_CPP_INLINE bx_address BX_CPU_C::get_segment_base(unsigned seg)
 {
 #if BX_SUPPORT_X86_64
-  if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
-    if (seg < BX_SEG_REG_FS)
-      return 0;
-    else
-      return BX_CPU_THIS_PTR sregs[seg].cache.u.segment.base;
+  if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64 && seg < BX_SEG_REG_FS) {
+    return 0;
   }
 #endif
-  return (Bit32u)(BX_CPU_THIS_PTR sregs[seg].cache.u.segment.base);
+  return BX_CPU_THIS_PTR sregs[seg].cache.u.segment.base;
+}
+
+BX_CPP_INLINE bx_address BX_CPU_C::get_laddr(unsigned seg, bx_address offset)
+{
+#if BX_SUPPORT_X86_64
+  return (get_segment_base(seg) + offset) & BX_CPU_THIS_PTR laddr32b_mask;
+#else
+  return (get_segment_base(seg) + offset);
+#endif
 }
 
 BX_CPP_INLINE Bit8u BX_CPU_C::get_reg8l(unsigned reg)

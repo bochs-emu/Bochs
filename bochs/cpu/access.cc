@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: access.cc,v 1.95 2008-04-05 17:51:53 sshwarts Exp $
+// $Id: access.cc,v 1.96 2008-04-07 18:39:16 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -451,7 +451,7 @@ BX_CPU_C::write_virtual_byte(unsigned s, bx_address offset, Bit8u data)
 
   if ((seg->cache.valid & SegAccessWOK4G) == SegAccessWOK4G) {
 accessOK:
-    laddr = BX_CPU_THIS_PTR get_segment_base(s) + offset;
+    laddr = BX_CPU_THIS_PTR get_laddr(s, offset);
     BX_INSTR_MEM_DATA(BX_CPU_ID, laddr, 1, BX_WRITE);
 #if BX_SupportGuest2HostTLB
     unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 0);
@@ -499,7 +499,7 @@ BX_CPU_C::write_virtual_word(unsigned s, bx_address offset, Bit16u data)
 
   if ((seg->cache.valid & SegAccessWOK4G) == SegAccessWOK4G) {
 accessOK:
-    laddr = BX_CPU_THIS_PTR get_segment_base(s) + offset;
+    laddr = BX_CPU_THIS_PTR get_laddr(s, offset);
     BX_INSTR_MEM_DATA(BX_CPU_ID, laddr, 2, BX_WRITE);
 #if BX_SupportGuest2HostTLB
     unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 1);
@@ -555,7 +555,7 @@ BX_CPU_C::write_virtual_dword(unsigned s, bx_address offset, Bit32u data)
 
   if ((seg->cache.valid & SegAccessWOK4G) == SegAccessWOK4G) {
 accessOK:
-    laddr = BX_CPU_THIS_PTR get_segment_base(s) + offset;
+    laddr = BX_CPU_THIS_PTR get_laddr(s, offset);
     BX_INSTR_MEM_DATA(BX_CPU_ID, laddr, 4, BX_WRITE);
 #if BX_SupportGuest2HostTLB
     unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 3);
@@ -611,7 +611,7 @@ BX_CPU_C::write_virtual_qword(unsigned s, bx_address offset, Bit64u data)
 
   if ((seg->cache.valid & SegAccessWOK4G) == SegAccessWOK4G) {
 accessOK:
-    laddr = BX_CPU_THIS_PTR get_segment_base(s) + offset;
+    laddr = BX_CPU_THIS_PTR get_laddr(s, offset);
     BX_INSTR_MEM_DATA(BX_CPU_ID, laddr, 8, BX_WRITE);
 #if BX_SupportGuest2HostTLB
     unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 7);
@@ -668,7 +668,7 @@ BX_CPU_C::read_virtual_byte(unsigned s, bx_address offset)
 
   if ((seg->cache.valid & SegAccessROK4G) == SegAccessROK4G) {
 accessOK:
-    laddr = BX_CPU_THIS_PTR get_segment_base(s) + offset;
+    laddr = BX_CPU_THIS_PTR get_laddr(s, offset);
     BX_INSTR_MEM_DATA(BX_CPU_ID, laddr, 1, BX_READ);
 #if BX_SupportGuest2HostTLB
     unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 0);
@@ -714,7 +714,7 @@ BX_CPU_C::read_virtual_word(unsigned s, bx_address offset)
 
   if ((seg->cache.valid & SegAccessROK4G) == SegAccessROK4G) {
 accessOK:
-    laddr = BX_CPU_THIS_PTR get_segment_base(s) + offset;
+    laddr = BX_CPU_THIS_PTR get_laddr(s, offset);
     BX_INSTR_MEM_DATA(BX_CPU_ID, laddr, 2, BX_READ);
 #if BX_SupportGuest2HostTLB
     unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 1);
@@ -768,7 +768,7 @@ BX_CPU_C::read_virtual_dword(unsigned s, bx_address offset)
 
   if ((seg->cache.valid & SegAccessROK4G) == SegAccessROK4G) {
 accessOK:
-    laddr = BX_CPU_THIS_PTR get_segment_base(s) + offset;
+    laddr = BX_CPU_THIS_PTR get_laddr(s, offset);
     BX_INSTR_MEM_DATA(BX_CPU_ID, laddr, 4, BX_READ);
 #if BX_SupportGuest2HostTLB
     unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 3);
@@ -822,7 +822,7 @@ BX_CPU_C::read_virtual_qword(unsigned s, bx_address offset)
 
   if ((seg->cache.valid & SegAccessROK4G) == SegAccessROK4G) {
 accessOK:
-    laddr = BX_CPU_THIS_PTR get_segment_base(s) + offset;
+    laddr = BX_CPU_THIS_PTR get_laddr(s, offset);
     BX_INSTR_MEM_DATA(BX_CPU_ID, laddr, 8, BX_READ);
 #if BX_SupportGuest2HostTLB
     unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 7);
@@ -881,7 +881,7 @@ BX_CPU_C::read_RMW_virtual_byte(unsigned s, bx_address offset)
 
   if ((seg->cache.valid & SegAccessWOK4G) == SegAccessWOK4G) {
 accessOK:
-    laddr = BX_CPU_THIS_PTR get_segment_base(s) + offset;
+    laddr = BX_CPU_THIS_PTR get_laddr(s, offset);
     BX_INSTR_MEM_DATA(BX_CPU_ID, laddr, 1, BX_RW);
 #if BX_SupportGuest2HostTLB
     unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 0);
@@ -933,7 +933,7 @@ BX_CPU_C::read_RMW_virtual_word(unsigned s, bx_address offset)
 
   if ((seg->cache.valid & SegAccessWOK4G) == SegAccessWOK4G) {
 accessOK:
-    laddr = BX_CPU_THIS_PTR get_segment_base(s) + offset;
+    laddr = BX_CPU_THIS_PTR get_laddr(s, offset);
     BX_INSTR_MEM_DATA(BX_CPU_ID, laddr, 2, BX_RW);
 #if BX_SupportGuest2HostTLB
     unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 1);
@@ -991,7 +991,7 @@ BX_CPU_C::read_RMW_virtual_dword(unsigned s, bx_address offset)
 
   if ((seg->cache.valid & SegAccessWOK4G) == SegAccessWOK4G) {
 accessOK:
-    laddr = BX_CPU_THIS_PTR get_segment_base(s) + offset;
+    laddr = BX_CPU_THIS_PTR get_laddr(s, offset);
     BX_INSTR_MEM_DATA(BX_CPU_ID, laddr, 4, BX_RW);
 #if BX_SupportGuest2HostTLB
     unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 3);
@@ -1049,7 +1049,7 @@ BX_CPU_C::read_RMW_virtual_qword(unsigned s, bx_address offset)
 
   if ((seg->cache.valid & SegAccessWOK4G) == SegAccessWOK4G) {
 accessOK:
-    laddr = BX_CPU_THIS_PTR get_segment_base(s) + offset;
+    laddr = BX_CPU_THIS_PTR get_laddr(s, offset);
     BX_INSTR_MEM_DATA(BX_CPU_ID, laddr, 8, BX_RW);
 #if BX_SupportGuest2HostTLB
     unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 7);
@@ -1251,7 +1251,7 @@ BX_CPU_C::read_virtual_dqword(unsigned s, bx_address offset, Bit8u *data)
 BX_CPU_C::read_virtual_dqword_aligned(unsigned s, bx_address offset, Bit8u *data)
 {
   // If double quadword access is unaligned, #GP(0).
-  bx_address laddr = BX_CPU_THIS_PTR get_segment_base(s) + offset;
+  bx_address laddr = BX_CPU_THIS_PTR get_laddr(s, offset);
   if (laddr & 0xf) {
     BX_DEBUG(("read_virtual_dqword_aligned: access not aligned to 16-byte"));
     exception(BX_GP_EXCEPTION, 0, 0);
@@ -1274,7 +1274,7 @@ BX_CPU_C::write_virtual_dqword(unsigned s, bx_address offset, Bit8u *data)
 BX_CPU_C::write_virtual_dqword_aligned(unsigned s, bx_address offset, Bit8u *data)
 {
   // If double quadword access is unaligned, #GP(0).
-  bx_address laddr = BX_CPU_THIS_PTR get_segment_base(s) + offset;
+  bx_address laddr = BX_CPU_THIS_PTR get_laddr(s, offset);
   if (laddr & 0xf) {
     BX_DEBUG(("write_virtual_dqword_aligned: access not aligned to 16-byte"));
     exception(BX_GP_EXCEPTION, 0, 0);
@@ -1311,13 +1311,13 @@ BX_CPU_C::write_virtual_tword(unsigned s, bx_address offset, floatx80 *data)
 // assuming the write happens in legacy mode
 void BX_CPU_C::write_new_stack_word(bx_segment_reg_t *seg, bx_address offset, unsigned curr_pl, Bit16u data)
 {
-  bx_address laddr;
+  Bit32u laddr;
 
   BX_ASSERT(BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64);
 
   if ((seg->cache.valid & SegAccessWOK4G) == SegAccessWOK4G) {
 accessOK:
-    laddr = seg->cache.u.segment.base + offset;
+    laddr = (Bit32u)(seg->cache.u.segment.base + offset);
     BX_INSTR_MEM_DATA(BX_CPU_ID, laddr, 2, BX_WRITE);
 #if BX_SupportGuest2HostTLB
     unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 1);
@@ -1362,13 +1362,13 @@ accessOK:
 // assuming the write happens in legacy mode
 void BX_CPU_C::write_new_stack_dword(bx_segment_reg_t *seg, bx_address offset, unsigned curr_pl, Bit32u data)
 {
-  bx_address laddr;
+  Bit32u laddr;
 
   BX_ASSERT(BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64);
 
   if ((seg->cache.valid & SegAccessWOK4G) == SegAccessWOK4G) {
 accessOK:
-    laddr = seg->cache.u.segment.base + offset;
+    laddr = (Bit32u)(seg->cache.u.segment.base + offset);
     BX_INSTR_MEM_DATA(BX_CPU_ID, laddr, 4, BX_WRITE);
 #if BX_SupportGuest2HostTLB
     unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 3);

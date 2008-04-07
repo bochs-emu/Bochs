@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debugstuff.cc,v 1.94 2008-03-31 20:56:27 sshwarts Exp $
+// $Id: debugstuff.cc,v 1.95 2008-04-07 18:39:16 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -47,7 +47,7 @@ void BX_CPU_C::debug_disasm_instruction(bx_address offset)
   static disassembler bx_disassemble;
   unsigned remainsInPage = 0x1000 - PAGE_OFFSET(offset);
 
-  bx_bool valid = dbg_xlate_linear2phy(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_CS) + offset, &phy_addr);
+  bx_bool valid = dbg_xlate_linear2phy(BX_CPU_THIS_PTR get_laddr(BX_SEG_REG_CS, offset), &phy_addr);
   if (valid && BX_CPU_THIS_PTR mem!=NULL) {
     BX_CPU_THIS_PTR mem->dbg_fetch_mem(BX_CPU_THIS, phy_addr, 16, instr_buf);
     unsigned isize = bx_disassemble.disasm(

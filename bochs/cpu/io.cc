@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: io.cc,v 1.55 2008-03-22 21:29:40 sshwarts Exp $
+// $Id: io.cc,v 1.56 2008-04-07 18:39:16 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -57,7 +57,7 @@ Bit32u BX_CPU_C::FastRepINSW(bxInstruction_c *i, bx_address dstOff, Bit16u port,
   if ((dstSegPtr->cache.valid & SegAccessWOK4G) != SegAccessWOK4G)
     return 0;
 
-  bx_address laddrDst = BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_ES) + dstOff;
+  bx_address laddrDst = BX_CPU_THIS_PTR get_laddr(BX_SEG_REG_ES, dstOff);
   // check that the address is word aligned
   if (laddrDst & 1) return 0;
 
@@ -141,7 +141,7 @@ Bit32u BX_CPU_C::FastRepOUTSW(bxInstruction_c *i, unsigned srcSeg, bx_address sr
   if ((srcSegPtr->cache.valid & SegAccessROK4G) != SegAccessROK4G)
     return 0;
 
-  bx_address laddrSrc = BX_CPU_THIS_PTR get_segment_base(srcSeg) + srcOff;
+  bx_address laddrSrc = BX_CPU_THIS_PTR get_laddr(srcSeg, srcOff);
   // check that the address is word aligned
   if (laddrSrc & 1) return 0;
 

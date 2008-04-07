@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: string.cc,v 1.55 2008-03-22 21:29:41 sshwarts Exp $
+// $Id: string.cc,v 1.56 2008-04-07 18:39:17 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -57,7 +57,7 @@ Bit32u BX_CPU_C::FastRepMOVSB(bxInstruction_c *i, unsigned srcSeg, bx_address sr
   if ((dstSegPtr->cache.valid & SegAccessWOK4G) != SegAccessWOK4G)
     return 0;
 
-  laddrSrc = BX_CPU_THIS_PTR get_segment_base(srcSeg) + srcOff;
+  laddrSrc = BX_CPU_THIS_PTR get_laddr(srcSeg, srcOff);
 
 #if BX_SupportGuest2HostTLB
   hostAddrSrc = v2h_read_byte(laddrSrc, CPL);
@@ -78,7 +78,7 @@ Bit32u BX_CPU_C::FastRepMOVSB(bxInstruction_c *i, unsigned srcSeg, bx_address sr
 #endif
   if (! hostAddrSrc) return 0;
 
-  laddrDst = BX_CPU_THIS_PTR get_segment_base(dstSeg) + dstOff;
+  laddrDst = BX_CPU_THIS_PTR get_laddr(dstSeg, dstOff);
 
 #if BX_SupportGuest2HostTLB
   hostAddrDst = v2h_write_byte(laddrDst, CPL);
@@ -152,7 +152,7 @@ Bit32u BX_CPU_C::FastRepMOVSW(bxInstruction_c *i, unsigned srcSeg, bx_address sr
   if ((dstSegPtr->cache.valid & SegAccessWOK4G) != SegAccessWOK4G)
     return 0;
 
-  laddrSrc = BX_CPU_THIS_PTR get_segment_base(srcSeg) + srcOff;
+  laddrSrc = BX_CPU_THIS_PTR get_laddr(srcSeg, srcOff);
 
 #if BX_SupportGuest2HostTLB
   hostAddrSrc = v2h_read_byte(laddrSrc, CPL);
@@ -173,7 +173,7 @@ Bit32u BX_CPU_C::FastRepMOVSW(bxInstruction_c *i, unsigned srcSeg, bx_address sr
 #endif
   if (! hostAddrSrc) return 0;
 
-  laddrDst = BX_CPU_THIS_PTR get_segment_base(dstSeg) + dstOff;
+  laddrDst = BX_CPU_THIS_PTR get_laddr(dstSeg, dstOff);
 
 #if BX_SupportGuest2HostTLB
   hostAddrDst = v2h_write_byte(laddrDst, CPL);
@@ -250,7 +250,7 @@ Bit32u BX_CPU_C::FastRepMOVSD(bxInstruction_c *i, unsigned srcSeg, bx_address sr
   if ((dstSegPtr->cache.valid & SegAccessWOK4G) != SegAccessWOK4G)
     return 0;
 
-  laddrSrc = BX_CPU_THIS_PTR get_segment_base(srcSeg) + srcOff;
+  laddrSrc = BX_CPU_THIS_PTR get_laddr(srcSeg, srcOff);
 
 #if BX_SupportGuest2HostTLB
   hostAddrSrc = v2h_read_byte(laddrSrc, CPL);
@@ -271,7 +271,7 @@ Bit32u BX_CPU_C::FastRepMOVSD(bxInstruction_c *i, unsigned srcSeg, bx_address sr
 #endif
   if (! hostAddrSrc) return 0;
 
-  laddrDst = BX_CPU_THIS_PTR get_segment_base(dstSeg) + dstOff;
+  laddrDst = BX_CPU_THIS_PTR get_laddr(dstSeg, dstOff);
 
 #if BX_SupportGuest2HostTLB
   hostAddrDst = v2h_write_byte(laddrDst, CPL);
@@ -344,7 +344,7 @@ Bit32u BX_CPU_C::FastRepSTOSB(bxInstruction_c *i, unsigned dstSeg, bx_address ds
   if ((dstSegPtr->cache.valid & SegAccessWOK4G) != SegAccessWOK4G)
     return 0;
 
-  laddrDst = BX_CPU_THIS_PTR get_segment_base(dstSeg) + dstOff;
+  laddrDst = BX_CPU_THIS_PTR get_laddr(dstSeg, dstOff);
 
 #if BX_SupportGuest2HostTLB
   hostAddrDst = v2h_write_byte(laddrDst, CPL);
@@ -409,7 +409,7 @@ Bit32u BX_CPU_C::FastRepSTOSW(bxInstruction_c *i, unsigned dstSeg, bx_address ds
   if ((dstSegPtr->cache.valid & SegAccessWOK4G) != SegAccessWOK4G)
     return 0;
 
-  laddrDst = BX_CPU_THIS_PTR get_segment_base(dstSeg) + dstOff;
+  laddrDst = BX_CPU_THIS_PTR get_laddr(dstSeg, dstOff);
 
 #if BX_SupportGuest2HostTLB
   hostAddrDst = v2h_write_byte(laddrDst, CPL);
@@ -476,7 +476,7 @@ Bit32u BX_CPU_C::FastRepSTOSD(bxInstruction_c *i, unsigned dstSeg, bx_address ds
   if ((dstSegPtr->cache.valid & SegAccessWOK4G) != SegAccessWOK4G)
     return 0;
 
-  laddrDst = BX_CPU_THIS_PTR get_segment_base(dstSeg) + dstOff;
+  laddrDst = BX_CPU_THIS_PTR get_laddr(dstSeg, dstOff);
 
 #if BX_SupportGuest2HostTLB
   hostAddrDst = v2h_write_byte(laddrDst, CPL);

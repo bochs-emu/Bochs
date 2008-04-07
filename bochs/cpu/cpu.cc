@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.217 2008-04-05 20:49:21 sshwarts Exp $
+// $Id: cpu.cc,v 1.218 2008-04-07 18:39:16 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -109,14 +109,11 @@ void BX_CPU_C::cpu_loop(Bit32u max_instr_count)
 #endif
   }
 
-#if BX_DEBUGGER
   // If the exception() routine has encountered a nasty fault scenario,
   // the debugger may request that control is returned to it so that
   // the situation may be examined.
-  if (bx_guard.interrupt_requested) {
-    BX_ERROR(("CPU_LOOP bx_guard.interrupt_requested=%d", bx_guard.interrupt_requested));
-    return;
-  }
+#if BX_DEBUGGER
+  if (bx_guard.interrupt_requested) return;
 #endif
 
   // We get here either by a normal function call, or by a longjmp
@@ -567,7 +564,7 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
   else {
     // only bother comparing if any breakpoints enabled
     if (BX_CPU_THIS_PTR dr7 & 0x000000ff) {
-      bx_address iaddr = BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_CS) + BX_CPU_THIS_PTR prev_rip;
+      bx_address iaddr = get_laddr(BX_SEG_REG_CS, BX_CPU_THIS_PTR prev_rip);
       Bit32u dr6_bits = hwdebug_compare(iaddr, 1, BX_HWDebugInstruction, BX_HWDebugInstruction);
       if (dr6_bits)
       {
@@ -617,7 +614,7 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
 void BX_CPU_C::prefetch(void)
 {
   bx_address temp_rip = RIP;
-  bx_address laddr = BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_CS) + temp_rip;
+  bx_address laddr = BX_CPU_THIS_PTR get_laddr(BX_SEG_REG_CS, temp_rip);
   bx_phy_address pAddr;
   unsigned pageOffset = PAGE_OFFSET(laddr);
 
@@ -808,8 +805,7 @@ bx_bool BX_CPU_C::dbg_check_begin_instr_bpoint(void)
 
   BX_CPU_THIS_PTR guard_found.cs  = cs;
   BX_CPU_THIS_PTR guard_found.eip = debug_eip;
-  BX_CPU_THIS_PTR guard_found.laddr =
-    BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_CS) + debug_eip;
+  BX_CPU_THIS_PTR guard_found.laddr = get_laddr(BX_SEG_REG_CS, debug_eip);
   BX_CPU_THIS_PTR guard_found.is_32bit_code =
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b;
   BX_CPU_THIS_PTR guard_found.is_64bit_code = Is64BitMode();
@@ -909,8 +905,7 @@ bx_bool BX_CPU_C::dbg_check_end_instr_bpoint(void)
   BX_CPU_THIS_PTR guard_found.cs  =
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value;
   BX_CPU_THIS_PTR guard_found.eip = RIP;
-  BX_CPU_THIS_PTR guard_found.laddr =
-    BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_CS) + RIP;
+  BX_CPU_THIS_PTR guard_found.laddr = get_laddr(BX_SEG_REG_CS, RIP);
   BX_CPU_THIS_PTR guard_found.is_32bit_code =
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b;
   BX_CPU_THIS_PTR guard_found.is_64bit_code = Is64BitMode();
