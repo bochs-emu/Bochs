@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.450 2008-04-07 18:39:16 sshwarts Exp $
+// $Id: cpu.h,v 1.451 2008-04-07 19:59:53 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -905,7 +905,6 @@ public: // for now...
   Bit8u stop_reason;
   Bit8u trace_reg;
   Bit8u mode_break;
-  bx_bool dbg_cpu_mode;  /* contains current mode */
   unsigned show_flag;
   bx_guard_found_t guard_found;
 #endif

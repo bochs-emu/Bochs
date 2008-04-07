@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.123 2008-04-07 18:39:16 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.124 2008-04-07 19:59:50 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -944,9 +944,8 @@ void bx_dbg_playback_command(char* path_quoted)
 // toggles mode switch breakpoint
 void bx_dbg_modebp_command()
 {
-  BX_CPU(dbg_cpu)->dbg_cpu_mode = BX_CPU(dbg_cpu)->get_cpu_mode();
   BX_CPU(dbg_cpu)->mode_break = !BX_CPU(dbg_cpu)->mode_break;
-  dbg_printf(" mode switch break %s\n",
+  dbg_printf("mode switch break %s\n",
     BX_CPU(dbg_cpu)->mode_break ? "enabled" : "disabled");
 }
 
