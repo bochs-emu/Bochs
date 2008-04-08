@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.451 2008-04-07 19:59:53 sshwarts Exp $
+// $Id: cpu.h,v 1.452 2008-04-08 05:36:30 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -3056,38 +3056,36 @@ public: // for now...
   BX_SMF BX_CPP_INLINE unsigned which_cpu(void) { return BX_CPU_THIS_PTR bx_cpuid; }
   BX_SMF BX_CPP_INLINE const bx_gen_reg_t *get_gen_regfile() { return BX_CPU_THIS_PTR gen_reg; }
 
-  BX_CPP_INLINE Bit8u get_CPL(void) { return (BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.rpl); }
+  BX_SMF BX_CPP_INLINE bx_address get_instruction_pointer(void);
 
-  BX_CPP_INLINE bx_address get_instruction_pointer(void);
-
-  BX_CPP_INLINE Bit32u get_eip(void) { return (BX_CPU_THIS_PTR gen_reg[BX_32BIT_REG_EIP].dword.erx); }
-  BX_CPP_INLINE Bit16u get_ip (void) { return (BX_CPU_THIS_PTR gen_reg[BX_16BIT_REG_IP].word.rx); }
+  BX_SMF BX_CPP_INLINE Bit32u get_eip(void) { return (BX_CPU_THIS_PTR gen_reg[BX_32BIT_REG_EIP].dword.erx); }
+  BX_SMF BX_CPP_INLINE Bit16u get_ip (void) { return (BX_CPU_THIS_PTR gen_reg[BX_16BIT_REG_IP].word.rx); }
 #if BX_SUPPORT_X86_64
-  BX_CPP_INLINE Bit64u get_rip(void) { return (BX_CPU_THIS_PTR gen_reg[BX_64BIT_REG_RIP].rrx); }
+  BX_SMF BX_CPP_INLINE Bit64u get_rip(void) { return (BX_CPU_THIS_PTR gen_reg[BX_64BIT_REG_RIP].rrx); }
 #endif
 
-  BX_CPP_INLINE Bit8u get_reg8l(unsigned reg);
-  BX_CPP_INLINE Bit8u get_reg8h(unsigned reg);
-  BX_CPP_INLINE void  set_reg8l(unsigned reg, Bit8u val);
-  BX_CPP_INLINE void  set_reg8h(unsigned reg, Bit8u val);
+  BX_SMF BX_CPP_INLINE Bit8u get_reg8l(unsigned reg);
+  BX_SMF BX_CPP_INLINE Bit8u get_reg8h(unsigned reg);
+  BX_SMF BX_CPP_INLINE void  set_reg8l(unsigned reg, Bit8u val);
+  BX_SMF BX_CPP_INLINE void  set_reg8h(unsigned reg, Bit8u val);
 
-  BX_CPP_INLINE Bit16u get_reg16(unsigned reg);
-  BX_CPP_INLINE void   set_reg16(unsigned reg, Bit16u val);
-  BX_CPP_INLINE Bit32u get_reg32(unsigned reg);
-  BX_CPP_INLINE void   set_reg32(unsigned reg, Bit32u val);
+  BX_SMF BX_CPP_INLINE Bit16u get_reg16(unsigned reg);
+  BX_SMF BX_CPP_INLINE void   set_reg16(unsigned reg, Bit16u val);
+  BX_SMF BX_CPP_INLINE Bit32u get_reg32(unsigned reg);
+  BX_SMF BX_CPP_INLINE void   set_reg32(unsigned reg, Bit32u val);
 #if BX_SUPPORT_X86_64
-  BX_CPP_INLINE Bit64u get_reg64(unsigned reg);
-  BX_CPP_INLINE void   set_reg64(unsigned reg, Bit64u val);
+  BX_SMF BX_CPP_INLINE Bit64u get_reg64(unsigned reg);
+  BX_SMF BX_CPP_INLINE void   set_reg64(unsigned reg, Bit64u val);
 #endif
 
-  BX_CPP_INLINE bx_address get_segment_base(unsigned seg);
+  BX_SMF bx_address get_segment_base(unsigned seg);
 
   // The linear address must be truncated to the 32-bit when CPU is not
   // executing in long64 mode.  The function  must  be used  to compute
   // linear address everywhere when a code is shared between long64 and
   // legacy mode. For legacy mode only  just use Bit32u to store linear 
   // address value.
-  BX_CPP_INLINE bx_address get_laddr(unsigned seg, bx_address offset);
+  BX_SMF bx_address get_laddr(unsigned seg, bx_address offset);
 
   DECLARE_EFLAG_ACCESSOR   (ID,  21)
   DECLARE_EFLAG_ACCESSOR   (VIP, 20)
