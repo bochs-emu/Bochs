@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios32.c,v 1.25 2008-03-26 16:21:46 sshwarts Exp $
+// $Id: rombios32.c,v 1.26 2008-04-08 16:41:18 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  32 bit Bochs BIOS init code
@@ -441,7 +441,8 @@ void ram_probe(void)
     ram_size = (cmos_readb(0x34) | (cmos_readb(0x35) << 8)) * 65536 +
         16 * 1024 * 1024;
   else
-    ram_size = (cmos_readb(0x17) | (cmos_readb(0x18) << 8)) * 1024;
+    ram_size = (cmos_readb(0x30) | (cmos_readb(0x31) << 8)) * 1024 +
+        1 * 1024 * 1024;
 #ifdef BX_USE_EBDA_TABLES
   ebda_cur_addr = ((*(uint16_t *)(0x40e)) << 4) + 0x380;
 #endif
@@ -1987,13 +1988,13 @@ void rombios32_init(void)
 
     smp_probe();
 
-    uuid_probe();
-
     pci_bios_init();
 
     if (bios_table_cur_addr != 0) {
 
         mptable_init();
+
+        uuid_probe();
 
         smbios_init();
 
