@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.104 2008-03-29 18:18:07 sshwarts Exp $
+// $Id: exception.cc,v 1.105 2008-04-08 17:58:56 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -62,7 +62,6 @@ static const bx_bool is_exception_OK[3][3] = {
 void BX_CPU_C::long_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error_code, Bit16u error_code)
 {
   // long mode interrupt
-  Bit64u idtindex;
   Bit32u dword1, dword2, dword3;
 
   bx_descriptor_t gate_descriptor, cs_descriptor;
@@ -70,8 +69,7 @@ void BX_CPU_C::long_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error_code
 
   // interrupt vector must be within IDT table limits,
   // else #GP(vector number*16 + 2 + EXT)
-  idtindex = vector*16;
-  if ((idtindex + 15) > BX_CPU_THIS_PTR idtr.limit) {
+  if ((vector*16 + 15) > BX_CPU_THIS_PTR idtr.limit) {
     BX_ERROR(("interrupt(long mode): vector > idtr.limit"));
     BX_ERROR(("IDT.limit = %04x", (unsigned) BX_CPU_THIS_PTR idtr.limit));
     BX_ERROR(("IDT.base  = %06x", (unsigned) BX_CPU_THIS_PTR idtr.base));
@@ -81,7 +79,7 @@ void BX_CPU_C::long_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error_code
 
   // descriptor AR byte must indicate interrupt gate, trap gate,
   // or task gate, else #GP(vector*16 + 2 + EXT)
-  idtindex += BX_CPU_THIS_PTR idtr.base;
+  Bit64u idtindex = BX_CPU_THIS_PTR idtr.base + vector*16;
 
   access_read_linear(idtindex,     4, 0, BX_READ, &dword1);
   access_read_linear(idtindex + 4, 4, 0, BX_READ, &dword2);
@@ -578,7 +576,7 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error
         // push long pointer to old stack onto new stack
         write_new_stack_word(&new_stack, temp_ESP-2,  cs_descriptor.dpl, old_SS);
         write_new_stack_word(&new_stack, temp_ESP-4,  cs_descriptor.dpl, (Bit16u) old_ESP);
-        write_new_stack_word(&new_stack, temp_ESP-6,  cs_descriptor.dpl, read_flags());
+        write_new_stack_word(&new_stack, temp_ESP-6,  cs_descriptor.dpl, (Bit16u) read_eflags());
         write_new_stack_word(&new_stack, temp_ESP-8,  cs_descriptor.dpl, old_CS);
         write_new_stack_word(&new_stack, temp_ESP-10, cs_descriptor.dpl, (Bit16u) old_EIP);
         temp_ESP -= 10;
@@ -660,7 +658,7 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error
           push_32(error_code);
       }
       else { // 286 gate
-        push_16(read_flags());
+        push_16((Bit16u) read_eflags());
         push_16(BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value);
         push_16(IP);
         if (is_error_code)
@@ -708,7 +706,7 @@ void BX_CPU_C::real_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error_code
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
-  push_16(read_flags());
+  push_16((Bit16u) read_eflags());
 
   cs_selector = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value;
   push_16(cs_selector);

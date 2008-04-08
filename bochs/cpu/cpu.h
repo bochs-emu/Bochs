@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.452 2008-04-08 05:36:30 sshwarts Exp $
+// $Id: cpu.h,v 1.453 2008-04-08 17:58:56 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2989,7 +2989,6 @@ public: // for now...
   BX_SMF void write_eflags_fpu_compare(int float_relation);
 #endif
   BX_SMF Bit32u force_flags(void);
-  BX_SMF Bit16u read_flags(void);
   BX_SMF Bit32u read_eflags(void) { return BX_CPU_THIS_PTR force_flags(); }
 
   BX_SMF Bit8u   inp8(Bit16u addr) BX_CPP_AttrRegparmN(1);
@@ -3205,8 +3204,8 @@ BX_CPP_INLINE void BX_CPU_C::updateFetchModeMask(void)
 BX_CPP_INLINE bx_address BX_CPU_C::get_segment_base(unsigned seg)
 {
 #if BX_SUPPORT_X86_64
-  if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64 && seg < BX_SEG_REG_FS) {
-    return 0;
+  if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
+    if (seg < BX_SEG_REG_FS) return 0;
   }
 #endif
   return BX_CPU_THIS_PTR sregs[seg].cache.u.segment.base;
