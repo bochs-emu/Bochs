@@ -185,8 +185,8 @@ bochs@EXE@: @IODEV_LIB_VAR@ @DEBUGGER_VAR@ \
            @DISASM_VAR@ @INSTRUMENT_VAR@ $(BX_OBJS) \
            $(SIMX86_OBJS) @FPU_VAR@ @GDBSTUB_VAR@ @PLUGIN_VAR@
 	@LINK@ @EXPORT_DYNAMIC@ $(BX_OBJS) $(SIMX86_OBJS) \
-		iodev/libiodev.a cpu/libcpu.a memory/libmemory.a gui/libgui.a \
-		@DEBUGGER_VAR@ @DISASM_VAR@ @INSTRUMENT_VAR@ @PLUGIN_VAR@ \
+		@IODEV_LIB_VAR@ @DEBUGGER_VAR@ cpu/libcpu.a memory/libmemory.a gui/libgui.a \
+		@DISASM_VAR@ @INSTRUMENT_VAR@ @PLUGIN_VAR@ \
 		@GDBSTUB_VAR@ @FPU_VAR@ \
 		@NONPLUGIN_GUI_LINK_OPTS@ \
 		$(MCH_LINK_FLAGS) \

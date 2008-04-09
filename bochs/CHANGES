@@ -14,9 +14,9 @@ Detailed change log :
         --enable-xsave option
   - Fixed Bochs failure on RISC host machines with BxRepeatSpeedups
     optimization enabled
-  - Minor bugfixes in CPU emulation (both ia32 and x86-64)
+  - Many bugfixes in CPU emulation (both ia32 and x86-64)
   - Updated CPU instrumentation callbacks
-  - A lot of fixes in Bochs internal debugger
+  - Many fixes in Bochs internal debugger
 
 - System BIOS (Volker)
   - Implemented LBA48 support (since BIOS functions are limited to 
@@ -42,6 +42,11 @@ Detailed change log :
   - implemented text mode character blinking in some guis
 
 - SF patches applied
+ [1938185] Fix link problem with --enable-debugger by Sebastian
+ [1938182] Makefile.in - use @IODEV_LIB_VAR@ by Sebastian
+ [1928945] fix for legacy rombios - e820 map and ACPI_DATA_SIZE by Sebastian
+ [1925578] rombios32.c - fix ram_size in ram_probe for low memory setup by Sebastian
+ [1908921] rombios32.c - move uuid_probe() call by Sebastian
  [1928902] improvements to load-symbols by Eugene Toder
  [1925568] PATCH: msvc compilation by Eugene Toder
  [1913150] rombios.c - e820 cover full size if memory <= 16 mb by Alexander van Heukelum
@@ -71,15 +76,17 @@ Detailed change log :
  [1864680] Save CPUID signature by Filip Navara
 
 - these S.F. bugs were closed
+ [1936132] Link problem with --enable-debugger & --enable-disasm
+ [1934477] Linear address wrap is not working
  [1424984] virtual machine freezes in Bochs 2.2.6
  [1902928] with debugger cpu_loop leaves CPU with unstable state
- [1898929] Bochs VESA BIOS violates specs (banks == 1)  
+ [1898929] Bochs VESA BIOS violates specs (banks == 1)
  [1569256] bug in datasegment change in long mode
  [1830662] ACPI: no DMI BIOS year, acpi=force is required
  [1868806] VGA blink enable & screen disable
  [1875721] Bit "Accessed" in LDT/GDT descriptors & #PF
  [1874124] bx_Instruction_c::ilen() const
- [1873488] bochs-2.3.6 make fails on dbg_main.cc  
+ [1873488] bochs-2.3.6 make fails on dbg_main.cc
 
 - these S.F. feature requests were implemented
  [1847955] Version information for bochs(dbg).exe
