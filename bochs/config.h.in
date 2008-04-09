@@ -328,6 +328,17 @@
 // for wxWidgets only.
 #define BX_USE_TEXTCONFIG 1
 
+// A certain functions must NOT be fastcall even if compiled with fastcall
+// option, and those are callbacks from Windows which are defined either 
+// as cdecl or stdcall. The entry point main() also has to remain cdecl.
+#ifndef CDECL
+#if defined(_MSC_VER)
+  #define CDECL __cdecl
+#else
+  #define CDECL
+#endif
+#endif
+
 // add special export symbols for win32 DLL building.  The main code must
 // have __declspec(dllexport) on variables, functions, or classes that the
 // plugins can access.  The plugins should #define PLUGGABLE which will
