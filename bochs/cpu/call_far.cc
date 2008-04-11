@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: call_far.cc,v 1.29 2008-04-11 18:35:47 sshwarts Exp $
+// $Id: call_far.cc,v 1.30 2008-04-11 21:40:36 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005 Stanislav Shwartsman
@@ -496,14 +496,15 @@ BX_CPU_C::call_gate64(bx_selector_t *gate_selector)
     // get new RSP for new privilege level from TSS
     get_RSP_from_TSS(cs_descriptor.dpl, &RSP_for_cpl_x);
 
-    if (! IsCanonical(RSP_for_cpl_x)) {
-      BX_ERROR(("call_gate64: canonical address failure %08x%08x",
-         GET32H(RSP_for_cpl_x), GET32L(RSP_for_cpl_x)));
-      exception(BX_GP_EXCEPTION, 0, 0);
-    }
-
     Bit64u old_SS  = BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value;
     Bit64u old_RSP = RSP;
+
+    if (! IsCanonical(RSP_for_cpl_x)) {
+      // #SS(selector) when changing priviledge level
+      BX_ERROR(("call_gate64: canonical address failure %08x%08x",
+         GET32H(RSP_for_cpl_x), GET32L(RSP_for_cpl_x)));
+      exception(BX_GP_EXCEPTION, old_SS & 0xfffc, 0);
+    }
 
     // push old stack long pointer onto new stack
     write_new_stack_qword(RSP_for_cpl_x -  8, cs_descriptor.dpl, old_SS);

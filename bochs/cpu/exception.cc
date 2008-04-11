@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.105 2008-04-08 17:58:56 sshwarts Exp $
+// $Id: exception.cc,v 1.106 2008-04-11 21:40:36 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -160,8 +160,7 @@ void BX_CPU_C::long_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error_code
 
   // if code segment is non-conforming and DPL < CPL then
   // INTERRUPT TO INNER PRIVILEGE:
-  if ((IS_CODE_SEGMENT_NON_CONFORMING(cs_descriptor.type)
-                        && cs_descriptor.dpl<CPL) || (ist != 0))
+  if (IS_CODE_SEGMENT_NON_CONFORMING(cs_descriptor.type) && cs_descriptor.dpl<CPL)
   {
     Bit64u RSP_for_cpl_x;
 
@@ -178,16 +177,17 @@ void BX_CPU_C::long_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error_code
 
     RSP_for_cpl_x &= BX_CONST64(0xfffffffffffffff0);
 
-    if (! IsCanonical(RSP_for_cpl_x)) {
-      BX_ERROR(("interrupt(long mode): canonical address failure %08x%08x",
-         GET32H(RSP_for_cpl_x), GET32L(RSP_for_cpl_x)));
-      exception(BX_GP_EXCEPTION, 0, 0);
-    }
-
     Bit64u old_CS  = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value;
     Bit64u old_RIP = RIP;
     Bit64u old_SS  = BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value;
     Bit64u old_RSP = RSP;
+
+    if (! IsCanonical(RSP_for_cpl_x)) {
+      // #SS(selector) when changing priviledge level
+      BX_ERROR(("interrupt(long mode): canonical address failure %08x%08x",
+         GET32H(RSP_for_cpl_x), GET32L(RSP_for_cpl_x)));
+      exception(BX_GP_EXCEPTION, old_SS & 0xfffc, 0);
+    }
 
     // push old stack long pointer onto new stack
     write_new_stack_qword(RSP_for_cpl_x -  8, cs_descriptor.dpl, old_SS);
