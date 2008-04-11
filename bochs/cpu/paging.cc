@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.117 2008-04-07 18:39:16 sshwarts Exp $
+// $Id: paging.cc,v 1.118 2008-04-11 14:30:15 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -669,7 +669,7 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned curr_pl, un
         }
       }
       if (pml4 & BX_CONST64(0x000fffff00000000)) {
-        BX_PANIC(("PML4: Only 32 bit physical address space is emulated !"));
+        BX_PANIC(("PML4 0x%08x%08x: Only 32 bit physical address space is emulated !", GET32H(pml4), GET32L(pml4)));
       }
 
       if (!(pml4 & 0x20)) {
@@ -709,7 +709,7 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned curr_pl, un
     }
 #endif
     if (pdpe & BX_CONST64(0x000fffff00000000)) {
-      BX_PANIC(("PAE PDPE: Only 32 bit physical address space is emulated !"));
+      BX_PANIC(("PAE PDPE 0x%08x%08x: Only 32 bit physical address space is emulated !", GET32H(pdpe), GET32L(pdpe)));
     }
 
     bx_phy_address pde_addr = (bx_phy_address)((pdpe & BX_CONST64(0x000ffffffffff000))
@@ -734,7 +734,7 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned curr_pl, un
     }
 #endif
     if (pde & BX_CONST64(0x000fffff00000000)) {
-      BX_PANIC(("PAE PDE: Only 32 bit physical address space is emulated !"));
+      BX_PANIC(("PAE PDE 0x%08x%08x: Only 32 bit physical address space is emulated !", GET32H(pde), GET32L(pde)));
     }
 
     // Ignore CR4.PSE in PAE mode
@@ -802,7 +802,7 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned curr_pl, un
       }
 #endif
       if (pte & BX_CONST64(0x000fffff00000000)) {
-        BX_PANIC(("PAE PTE: Only 32 bit physical address space is emulated !"));
+        BX_PANIC(("PAE PTE 0x%08x%08x: Only 32 bit physical address space is emulated !", GET32H(pte), GET32L(pte)));
       }
 
       combined_access = (pde & pte) & 0x06; // U/S and R/W
