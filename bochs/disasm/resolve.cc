@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: resolve.cc,v 1.17 2008-02-05 22:33:33 sshwarts Exp $
+// $Id: resolve.cc,v 1.18 2008-04-11 17:54:21 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #include <stdio.h>
@@ -380,7 +380,11 @@ void disassembler::print_memory_access(int datasize,
     {
       if (index == NULL)
       {
-        dis_sprintf("%s:0x%x", seg, (unsigned) disp);
+        if (disp64) {
+          dis_sprintf("%s:0x%08x%08x", seg, GET32H(disp), GET32L(disp));
+        } else {
+          dis_sprintf("%s:0x%x", seg, (unsigned) disp);
+        }
       }
       else
       {
@@ -470,7 +474,7 @@ void disassembler::print_memory_access(int datasize,
       if (index == NULL)
       {
         if (disp64) {
-          dis_sprintf("%s:0x%x", seg, GET32H(disp), GET32L(disp));
+          dis_sprintf("%s:0x%08x%08x", seg, GET32H(disp), GET32L(disp));
         } else {
           dis_sprintf("%s:0x%x", seg, (unsigned) disp);
         }
