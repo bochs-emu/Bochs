@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ia_opcodes.h,v 1.3 2008-04-05 19:08:01 sshwarts Exp $
+// $Id: ia_opcodes.h,v 1.4 2008-04-12 10:08:43 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008 Stanislav Shwartsman
@@ -248,8 +248,10 @@ bx_define_opcode(BX_IA_CWD, BX_CPU_C::CWD)
 bx_define_opcode(BX_IA_CWDE, BX_CPU_C::CWDE)
 bx_define_opcode(BX_IA_DEC_EbM, BX_CPU_C::DEC_EbM)
 bx_define_opcode(BX_IA_DEC_EbR, BX_CPU_C::DEC_EbR)
+bx_define_opcode(BX_IA_DEC_EdR, BX_CPU_C::DEC_ERX)
 bx_define_opcode(BX_IA_DEC_EdM, BX_CPU_C::DEC_EdM)
 bx_define_opcode(BX_IA_DEC_ERX, BX_CPU_C::DEC_ERX)
+bx_define_opcode(BX_IA_DEC_EwR, BX_CPU_C::DEC_RX)
 bx_define_opcode(BX_IA_DEC_EwM, BX_CPU_C::DEC_EwM)
 bx_define_opcode(BX_IA_DEC_RX, BX_CPU_C::DEC_RX)
 bx_define_opcode(BX_IA_DIV_ALEb, BX_CPU_C::DIV_ALEb)
@@ -276,8 +278,10 @@ bx_define_opcode(BX_IA_IN_EAXDX, BX_CPU_C::IN_EAXDX)
 bx_define_opcode(BX_IA_IN_EAXIb, BX_CPU_C::IN_EAXIb)
 bx_define_opcode(BX_IA_INC_EbM, BX_CPU_C::INC_EbM)
 bx_define_opcode(BX_IA_INC_EbR, BX_CPU_C::INC_EbR)
+bx_define_opcode(BX_IA_INC_EdR, BX_CPU_C::INC_ERX)
 bx_define_opcode(BX_IA_INC_EdM, BX_CPU_C::INC_EdM)
 bx_define_opcode(BX_IA_INC_ERX, BX_CPU_C::INC_ERX)
+bx_define_opcode(BX_IA_INC_EwR, BX_CPU_C::INC_RX)
 bx_define_opcode(BX_IA_INC_EwM, BX_CPU_C::INC_EwM)
 bx_define_opcode(BX_IA_INC_RX, BX_CPU_C::INC_RX)
 bx_define_opcode(BX_IA_INT_Ib, BX_CPU_C::INT_Ib)

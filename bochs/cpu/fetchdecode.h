@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.h,v 1.59 2008-04-05 17:51:55 sshwarts Exp $
+// $Id: fetchdecode.h,v 1.60 2008-04-12 10:08:43 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005 Stanislav Shwartsman
@@ -3172,8 +3172,8 @@ static const BxOpcodeInfo_t BxOpcodeInfoG5wM[8] = {
 
 static const BxOpcodeInfo_t BxOpcodeInfoG5wR[8] = {
   // attributes defined in main area
-  /* 0 */ { 0, BX_IA_INC_RX },  // DEC_EwR
-  /* 1 */ { 0, BX_IA_DEC_RX },  // DEC_EwR
+  /* 0 */ { 0, BX_IA_INC_EwR },
+  /* 1 */ { 0, BX_IA_DEC_EwR },
   /* 2 */ { BxTraceEnd, BX_IA_CALL_EwR },
   /* 3 */ { 0, BX_IA_ERROR }, // CALL16_Ep
   /* 4 */ { BxTraceEnd, BX_IA_JMP_EwR  },
@@ -3196,8 +3196,8 @@ static const BxOpcodeInfo_t BxOpcodeInfoG5dM[8] = {
 
 static const BxOpcodeInfo_t BxOpcodeInfoG5dR[8] = {
   // attributes defined in main area
-  /* 0 */ { 0, BX_IA_INC_ERX },  // INC_EdR
-  /* 1 */ { 0, BX_IA_DEC_ERX },  // DEC_EdR
+  /* 0 */ { 0, BX_IA_INC_EdR },
+  /* 1 */ { 0, BX_IA_DEC_EdR },
   /* 2 */ { BxTraceEnd, BX_IA_CALL_EdR },
   /* 3 */ { 0, BX_IA_ERROR },  // CALL32_Ep
   /* 4 */ { BxTraceEnd, BX_IA_JMP_EdR  },
@@ -3219,8 +3219,8 @@ static const BxOpcodeInfo_t BxOpcodeInfo64G5wM[8] = {
 };
 
 static const BxOpcodeInfo_t BxOpcodeInfo64G5wR[8] = {
-  /* 0 */ { 0, BX_IA_INC_RX },  // INC_EwR
-  /* 1 */ { 0, BX_IA_DEC_RX },  // DEC_EwR
+  /* 0 */ { 0, BX_IA_INC_EwR },
+  /* 1 */ { 0, BX_IA_DEC_EwR },
   /* 2 */ { BxTraceEnd, BX_IA_CALL_EqR },
   /* 3 */ { 0, BX_IA_ERROR }, // CALL16_Ep
   /* 4 */ { BxTraceEnd, BX_IA_JMP_EqR  },
@@ -3241,8 +3241,8 @@ static const BxOpcodeInfo_t BxOpcodeInfo64G5dM[8] = {
 };
 
 static const BxOpcodeInfo_t BxOpcodeInfo64G5dR[8] = {
-  /* 0 */ { 0, BX_IA_INC_ERX },  // INC_EdR
-  /* 1 */ { 0, BX_IA_DEC_ERX },  // DEC_EdR
+  /* 0 */ { 0, BX_IA_INC_EdR },
+  /* 1 */ { 0, BX_IA_DEC_EdR },
   /* 2 */ { BxTraceEnd, BX_IA_CALL_EqR },
   /* 3 */ { 0, BX_IA_ERROR },  // CALL32_Ep
   /* 4 */ { BxTraceEnd, BX_IA_JMP_EqR  },
@@ -3255,9 +3255,9 @@ static const BxOpcodeInfo_t BxOpcodeInfo64G5qM[8] = {
   /* 0 */ { BxLockable, BX_IA_INC_EqM },
   /* 1 */ { BxLockable, BX_IA_DEC_EqM },
   /* 2 */ { BxTraceEnd, BX_IA_CALL_EqM },
-  /* 3 */ { BxTraceEnd, BX_IA_CALL64_Ep },
+  /* 3 */ { BxTraceEnd, BX_IA_CALL64_Ep }, // TODO: 64-bit offset for Intel
   /* 4 */ { BxTraceEnd, BX_IA_JMP_EqM },
-  /* 5 */ { BxTraceEnd, BX_IA_JMP64_Ep },
+  /* 5 */ { BxTraceEnd, BX_IA_JMP64_Ep },  // TODO: 64-bit offset for Intel
   /* 6 */ { 0, BX_IA_PUSH_EqM },
   /* 7 */ { 0, BX_IA_ERROR }
 };
