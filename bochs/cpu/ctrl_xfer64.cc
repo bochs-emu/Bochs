@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer64.cc,v 1.64 2008-03-22 21:29:39 sshwarts Exp $
+// $Id: ctrl_xfer64.cc,v 1.65 2008-04-13 20:57:49 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -196,7 +196,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CALL_EqR(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::CALL64_Ep(bxInstruction_c *i)
 {
   Bit16u cs_raw;
-  Bit32u op1_32;
+  Bit64u op1_64;
 
   invalidate_prefetch_q();
 
@@ -207,7 +207,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CALL64_Ep(bxInstruction_c *i)
   BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
   /* pointer, segment address pair */
-  op1_32 = read_virtual_dword(i->seg(), RMAddr(i));
+  op1_64 = read_virtual_qword(i->seg(), RMAddr(i));
   cs_raw = read_virtual_word (i->seg(), RMAddr(i)+8);
 
   BX_ASSERT(protected_mode());
@@ -216,7 +216,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CALL64_Ep(bxInstruction_c *i)
   BX_CPU_THIS_PTR prev_rsp = RSP;
 
   // call_protected is not RSP safe
-  call_protected(i, cs_raw, op1_32);
+  call_protected(i, cs_raw, op1_64);
 
   BX_CPU_THIS_PTR speculative_rsp = 0;
 
@@ -432,18 +432,18 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::JMP_EqR(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::JMP64_Ep(bxInstruction_c *i)
 {
   Bit16u cs_raw;
-  Bit32u op1_32;
+  Bit32u op1_64;
 
   invalidate_prefetch_q();
 
   BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  op1_32 = read_virtual_dword(i->seg(), RMAddr(i));
-  cs_raw = read_virtual_word (i->seg(), RMAddr(i)+4);
+  op1_64 = read_virtual_qword(i->seg(), RMAddr(i));
+  cs_raw = read_virtual_word (i->seg(), RMAddr(i)+8);
 
   BX_ASSERT(protected_mode());
 
-  jump_protected(i, cs_raw, op1_32);
+  jump_protected(i, cs_raw, op1_64);
 
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_JMP,
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, RIP);
