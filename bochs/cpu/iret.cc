@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: iret.cc,v 1.30 2008-03-29 18:18:07 sshwarts Exp $
+// $Id: iret.cc,v 1.31 2008-04-14 21:48:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005 Stanislav Shwartsman
@@ -382,11 +382,8 @@ BX_CPU_C::long_iret(bxInstruction_c *i)
     top_nbytes_same = 6;
   }
 
-  // if VM=1 in flags image on stack then STACK_RETURN_TO_V86
-  if (new_eflags & EFlagsVMMask) {
-    BX_PANIC(("iret64: no V86 mode in x86-64 LONG mode"));
-    new_eflags &= ~EFlagsVMMask;
-  }
+  // ignore VM flag in long mode
+  new_eflags &= ~EFlagsVMMask;
 
   parse_selector(raw_cs_selector, &cs_selector);
 

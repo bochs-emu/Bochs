@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.106 2008-04-11 21:40:36 sshwarts Exp $
+// $Id: exception.cc,v 1.107 2008-04-14 21:48:34 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -917,9 +917,7 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code, bx_bool is_INT)
       break;
 #if BX_CPU_LEVEL >= 4
     case BX_AC_EXCEPTION: // alignment check
-      BX_PANIC(("exception(): alignment-check, vector 17 not implemented"));
       push_error = 1;
-      error_code = 0;
       exception_class = BX_EXCEPTION_CLASS_FAULT;
       exception_type  = BX_ET_BENIGN;
       break;

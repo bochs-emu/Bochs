@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: instr.h,v 1.10 2008-04-05 17:57:21 sshwarts Exp $
+// $Id: instr.h,v 1.11 2008-04-14 21:48:35 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008 Stanislav Shwartsman
@@ -288,5 +288,7 @@ public:
 #endif
 };
 // <TAG-CLASS-INSTRUCTION-END>
+
+extern BxExecutePtr_tR BxOpcodesTable[];
 
 #endif
