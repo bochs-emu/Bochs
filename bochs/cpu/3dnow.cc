@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: 3dnow.cc,v 1.23 2008-03-22 21:29:38 sshwarts Exp $
+// $Id: 3dnow.cc,v 1.24 2008-04-14 16:50:27 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2002 Stanislav Shwartsman
@@ -28,7 +28,7 @@
 
 #if BX_SUPPORT_3DNOW
 
-static void prepare_softfloat_status_word(float_status_t &status, int rounding_mode)
+BX_CPP_INLINE void prepare_softfloat_status_word(float_status_t &status, int rounding_mode)
 {
   status.float_exception_flags = 0; // clear exceptions before execution
   status.float_nan_handling_mode = float_first_operand_nan;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_pfp.cc,v 1.43 2008-04-04 20:03:27 sshwarts Exp $
+// $Id: sse_pfp.cc,v 1.44 2008-04-14 16:50:27 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -44,7 +44,7 @@ void BX_CPU_C::check_exceptionsSSE(int exceptions_flags)
   }
 }
 
-static void mxcsr_to_softfloat_status_word(float_status_t &status, bx_mxcsr_t mxcsr)
+BX_CPP_INLINE void mxcsr_to_softfloat_status_word(float_status_t &status, bx_mxcsr_t mxcsr)
 {
   status.float_exception_flags = 0; // clear exceptions before execution
   status.float_nan_handling_mode = float_first_operand_nan;
