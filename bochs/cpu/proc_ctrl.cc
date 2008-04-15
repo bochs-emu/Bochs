@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.210 2008-04-07 19:59:53 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.211 2008-04-15 14:41:50 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -36,6 +36,7 @@
 #define RAX EAX
 #define RCX ECX
 #define RDX EDX
+#define RIP EIP
 #endif
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::UndefinedOpcode(bxInstruction_c *i)
@@ -2049,6 +2050,19 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSENTER(bxInstruction_c *i)
   BX_CPU_THIS_PTR clear_IF();
   BX_CPU_THIS_PTR clear_RF();
 
+#if BX_SUPPORT_X86_64
+  if (long_mode()) {
+    if (!IsCanonical(BX_CPU_THIS_PTR msr.sysenter_eip_msr)) {
+      BX_ERROR(("SYSENTER with non-canonical SYSENTER_EIP_MSR !"));
+      exception(BX_GP_EXCEPTION, 0, 0);
+    }
+    if (!IsCanonical(BX_CPU_THIS_PTR msr.sysenter_esp_msr)) {
+      BX_ERROR(("SYSENTER with non-canonical SYSENTER_ESP_MSR !"));
+      exception(BX_SS_EXCEPTION, 0, 0);
+    }
+  }
+#endif
+
   parse_selector(BX_CPU_THIS_PTR msr.sysenter_cs_msr & BX_SELECTOR_RPL_MASK,
                        &BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector);
 
@@ -2061,8 +2075,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSENTER(bxInstruction_c *i)
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit        = 0xFFFF;     // segment limit
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled = 0xFFFFFFFF; // scaled segment limit
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.g            = 1;          // 4k granularity
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b          = 1;          // 32-bit mode
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.avl          = 0;          // available for use by system
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b          = !long_mode();
+#if BX_SUPPORT_X86_64
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.l            =  long_mode();
+#endif
 
 #if BX_SUPPORT_ICACHE
   BX_CPU_THIS_PTR updateFetchModeMask();
@@ -2086,12 +2103,24 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSENTER(bxInstruction_c *i)
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.g            = 1;          // 4k granularity
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b          = 1;          // 32-bit mode
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.avl          = 0;          // available for use by system
+#if BX_SUPPORT_X86_64
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.l            = 0;
+#endif
 
-  ESP = BX_CPU_THIS_PTR msr.sysenter_esp_msr;
-  EIP = BX_CPU_THIS_PTR msr.sysenter_eip_msr;
+#if BX_SUPPORT_X86_64
+  if (long_mode()) {
+    RSP = BX_CPU_THIS_PTR msr.sysenter_esp_msr;
+    RIP = BX_CPU_THIS_PTR msr.sysenter_eip_msr;
+  }
+  else
+#endif
+  {
+    ESP = (Bit32u) BX_CPU_THIS_PTR msr.sysenter_esp_msr;
+    EIP = (Bit32u) BX_CPU_THIS_PTR msr.sysenter_eip_msr;
+  }
 
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_SYSENTER,
-                      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, EIP);
+                      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, RIP);
 #else
   BX_INFO(("SYSENTER: use --enable-sep to enable SYSENTER/SYSEXIT support"));
   UndefinedOpcode (i);
@@ -2101,35 +2130,75 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSENTER(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSEXIT(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SEP
-  if (!protected_mode()) {
-    BX_ERROR(("SYSEXIT not from protected mode !"));
+  if (!protected_mode() || CPL != 0) {
+    BX_ERROR(("SYSEXIT not from protected mode with CPL=0 !"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
   if ((BX_CPU_THIS_PTR msr.sysenter_cs_msr & BX_SELECTOR_RPL_MASK) == 0) {
     BX_ERROR(("SYSEXIT with zero sysenter_cs_msr !"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
-  if (CPL != 0) {
-    BX_ERROR(("SYSEXIT at non-zero cpl %u !", CPL));
-    exception(BX_GP_EXCEPTION, 0, 0);
+
+#if BX_SUPPORT_X86_64
+  if (i->os64L()) {
+    if (!IsCanonical(RDX)) {
+      BX_ERROR(("SYSEXIT with non-canonical RDX (RIP) pointer !"));
+      exception(BX_GP_EXCEPTION, 0, 0);
+    }
+    if (!IsCanonical(RCX)) {
+      BX_ERROR(("SYSEXIT with non-canonical RCX (RSP) pointer !"));
+      exception(BX_SS_EXCEPTION, 0, 0);
+    }
   }
+#endif
 
   invalidate_prefetch_q();
 
-  parse_selector((BX_CPU_THIS_PTR msr.sysenter_cs_msr + 16) | 3,
-                       &BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector);
+#if BX_SUPPORT_X86_64
+  if (i->os64L()) {
+    parse_selector(((BX_CPU_THIS_PTR msr.sysenter_cs_msr + 32) & BX_SELECTOR_RPL_MASK) | 3,
+            &BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector);
 
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.valid   = 1;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.p       = 1;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.dpl     = 3;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.segment = 1;  /* data/code segment */
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.type    = BX_CODE_EXEC_READ_ACCESSED;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.base         = 0;           // base address
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit        = 0xFFFF;      // segment limit
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled = 0xFFFFFFFF;  // scaled segment limit
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.g            = 1;           // 4k granularity
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b          = 1;           // 32-bit mode
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.avl          = 0;           // available for use by system
+    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.valid   = 1;
+    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.p       = 1;
+    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.dpl     = 3;
+    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.segment = 1;  /* data/code segment */
+    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.type    = BX_CODE_EXEC_READ_ACCESSED;
+    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.base         = 0;           // base address
+    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit        = 0xFFFF;      // segment limit
+    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled = 0xFFFFFFFF;  // scaled segment limit
+    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.g            = 1;           // 4k granularity
+    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.avl          = 0;           // available for use by system
+    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b          = 0;
+    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.l            = 1;
+
+    RSP = RCX;
+    RIP = RDX;
+  }
+  else
+#endif
+  {
+    parse_selector(((BX_CPU_THIS_PTR msr.sysenter_cs_msr + 16) & BX_SELECTOR_RPL_MASK) | 3,
+            &BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector);
+
+    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.valid   = 1;
+    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.p       = 1;
+    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.dpl     = 3;
+    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.segment = 1;  /* data/code segment */
+    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.type    = BX_CODE_EXEC_READ_ACCESSED;
+    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.base         = 0;           // base address
+    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit        = 0xFFFF;      // segment limit
+    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled = 0xFFFFFFFF;  // scaled segment limit
+    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.g            = 1;           // 4k granularity
+    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.avl          = 0;           // available for use by system
+    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b          = 1;
+#if BX_SUPPORT_X86_64
+    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.l            = 0;
+#endif
+
+    ESP = ECX;
+    EIP = EDX;
+  }
 
 #if BX_SUPPORT_ICACHE
   BX_CPU_THIS_PTR updateFetchModeMask();
@@ -2139,8 +2208,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSEXIT(bxInstruction_c *i)
   handleAlignmentCheck(); // CPL was modified
 #endif
 
-  parse_selector((BX_CPU_THIS_PTR msr.sysenter_cs_msr + 24) | 3,
-                       &BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector);
+  parse_selector(((BX_CPU_THIS_PTR msr.sysenter_cs_msr + (i->os64L() ? 40:24)) & BX_SELECTOR_RPL_MASK) | 3,
+            &BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector);
 
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.valid    = 1;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.p        = 1;
@@ -2153,12 +2222,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSEXIT(bxInstruction_c *i)
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.g            = 1;           // 4k granularity
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b          = 1;           // 32-bit mode
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.avl          = 0;           // available for use by system
-
-  ESP = ECX;
-  EIP = EDX;
+#if BX_SUPPORT_X86_64
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.l            = 0;
+#endif
 
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_SYSEXIT,
-                      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, EIP);
+                      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, RIP);
 #else
   BX_INFO(("SYSEXIT: use --enable-sep to enable SYSENTER/SYSEXIT support"));
   UndefinedOpcode (i);
@@ -2178,7 +2247,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSCALL(bxInstruction_c *i)
 
   invalidate_prefetch_q();
 
-  if (BX_CPU_THIS_PTR efer.get_LMA())
+  if (long_mode())
   {
     RCX = RIP;
     R11 = read_eflags() & ~(EFlagsRFMask);
@@ -2304,10 +2373,17 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSRET(bxInstruction_c *i)
     exception(BX_UD_EXCEPTION, 0, 0);
   }
 
-  if(real_mode() || CPL != 0) {
+  if(!protected_mode() || CPL != 0) {
     BX_ERROR(("SYSRET: priveledge check failed, generate #GP(0)"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
+
+#if BX_SUPPORT_X86_64
+  if (!IsCanonical(RCX)) {
+    BX_ERROR(("SYSRET: canonical failure for RCX (RIP)"));
+    exception(BX_GP_EXCEPTION, 0, 0);
+  }
+#endif
 
   invalidate_prefetch_q();
 
@@ -2315,7 +2391,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSRET(bxInstruction_c *i)
   {
     if (i->os64L()) {
       // Return to 64-bit mode, set up CS segment, flat, 64-bit DPL=3
-      parse_selector(((MSR_STAR >> 48) + 16) | 3,
+      parse_selector((((MSR_STAR >> 48) + 16) & BX_SELECTOR_RPL_MASK) | 3,
                        &BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector);
 
       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.valid   = 1;
@@ -2363,7 +2439,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSRET(bxInstruction_c *i)
 #endif
 
     // SS base, limit, attributes unchanged
-    parse_selector((MSR_STAR >> 48) + 8,
+    parse_selector((Bit16u)((MSR_STAR >> 48) + 8),
                        &BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector);
 
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.valid   = 1;
@@ -2401,7 +2477,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSRET(bxInstruction_c *i)
 #endif
 
     // SS base, limit, attributes unchanged
-    parse_selector((MSR_STAR >> 48) + 8,
+    parse_selector((Bit16u)((MSR_STAR >> 48) + 8),
                      &BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector);
 
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.valid   = 1;

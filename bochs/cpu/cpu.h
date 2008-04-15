@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.453 2008-04-08 17:58:56 sshwarts Exp $
+// $Id: cpu.h,v 1.454 2008-04-15 14:41:49 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -551,8 +551,8 @@ typedef struct
   // SYSENTER/SYSEXIT instruction msr's
 #if BX_SUPPORT_SEP
   Bit32u sysenter_cs_msr;
-  Bit32u sysenter_esp_msr;
-  Bit32u sysenter_eip_msr;
+  bx_address sysenter_esp_msr;
+  bx_address sysenter_eip_msr;
 #endif
 
 #if BX_SUPPORT_MTRR
