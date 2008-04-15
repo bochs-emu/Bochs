@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.164 2008-04-07 19:59:53 sshwarts Exp $
+// $Id: init.cc,v 1.165 2008-04-15 21:27:57 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -657,7 +657,7 @@ void BX_CPU_C::after_restore_state(void)
 
 BX_CPU_C::~BX_CPU_C()
 {
-  BX_INSTR_SHUTDOWN(BX_CPU_ID);
+  BX_INSTR_EXIT(BX_CPU_ID);
   BX_DEBUG(("Exit."));
 }
 
