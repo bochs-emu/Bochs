@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: instrument.h,v 1.30 2008-03-03 15:09:30 sshwarts Exp $
+// $Id: instrument.h,v 1.31 2008-04-15 21:27:11 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -59,7 +59,7 @@ class bxInstruction_c;
 // called from the CPU core
 
 void bx_instr_init(unsigned cpu);
-void bx_instr_shutdown(unsigned cpu);
+void bx_instr_exit(unsigned cpu);
 void bx_instr_reset(unsigned cpu);
 void bx_instr_hlt(unsigned cpu);
 void bx_instr_mwait(unsigned cpu, bx_phy_address addr, unsigned len, Bit32u flags);
@@ -109,12 +109,12 @@ void bx_instr_wrmsr(unsigned cpu, unsigned addr, Bit64u value);
 
 /* simulation init, shutdown, reset */
 #  define BX_INSTR_INIT(cpu_id)            bx_instr_init(cpu_id)
-#  define BX_INSTR_SHUTDOWN(cpu_id)        bx_instr_shutdown(cpu_id)
+#  define BX_INSTR_EXIT(cpu_id)            bx_instr_exit(cpu_id)
 #  define BX_INSTR_RESET(cpu_id)           bx_instr_reset(cpu_id)
 #  define BX_INSTR_HLT(cpu_id)             bx_instr_hlt(cpu_id)
 
 #  define BX_INSTR_MWAIT(cpu_id, addr, len, flags) \
-                       bx_instr_hlt(cpu_id, addr, len, flags)
+                       bx_instr_mwait(cpu_id, addr, len, flags)
 
 #  define BX_INSTR_NEW_INSTRUCTION(cpu_id) bx_instr_new_instruction(cpu_id)
 
@@ -174,13 +174,13 @@ void bx_instr_wrmsr(unsigned cpu, unsigned addr, Bit64u value);
 #  define BX_INSTR_OUTP2(addr, len, val)        bx_instr_outp2(addr, len, val)
 
 /* wrmsr callback */
-#  define BX_INSTR_WRMSR(cpu_id, addr, value)           bx_instr_wrmsr(cpu_id, addr, value)
+#  define BX_INSTR_WRMSR(cpu_id, addr, value)   bx_instr_wrmsr(cpu_id, addr, value)
 
 #else
 
 /* simulation init, shutdown, reset */
 #  define BX_INSTR_INIT(cpu_id)
-#  define BX_INSTR_SHUTDOWN(cpu_id)
+#  define BX_INSTR_EXIT(cpu_id)
 #  define BX_INSTR_RESET(cpu_id)
 #  define BX_INSTR_HLT(cpu_id)
 #  define BX_INSTR_MWAIT(cpu_id, addr, len, flags)

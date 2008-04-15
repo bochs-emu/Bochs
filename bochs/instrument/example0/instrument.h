@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: instrument.h,v 1.25 2008-03-03 15:09:30 sshwarts Exp $
+// $Id: instrument.h,v 1.26 2008-04-15 21:27:11 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -80,7 +80,7 @@ void bx_instr_mem_data(unsigned cpu, bx_address lin, unsigned size, unsigned rw)
 
 /* simulation init, shutdown, reset */
 #  define BX_INSTR_INIT(cpu_id)            bx_instr_init(cpu_id)
-#  define BX_INSTR_SHUTDOWN(cpu_id)
+#  define BX_INSTR_EXIT(cpu_id)
 #  define BX_INSTR_RESET(cpu_id)           bx_instr_reset(cpu_id)
 #  define BX_INSTR_HLT(cpu_id)
 #  define BX_INSTR_MWAIT(cpu_id, addr, len, flags)
@@ -147,7 +147,7 @@ void bx_instr_mem_data(unsigned cpu, bx_address lin, unsigned size, unsigned rw)
 
 /* simulation init, shutdown, reset */
 #  define BX_INSTR_INIT(cpu_id)
-#  define BX_INSTR_SHUTDOWN(cpu_id)
+#  define BX_INSTR_EXIT(cpu_id)
 #  define BX_INSTR_RESET(cpu_id)
 #  define BX_INSTR_HLT(cpu_id)
 #  define BX_INSTR_MWAIT(cpu_id, addr, len, flags)
