@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.454 2008-04-15 14:41:49 sshwarts Exp $
+// $Id: cpu.h,v 1.455 2008-04-15 17:22:11 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -872,7 +872,7 @@ public: // for now...
 
   // for exceptions
   jmp_buf jmp_buf_env;
-  Bit8u curr_exception[2];
+  Bit8u curr_exception;
 
   bx_segment_reg_t save_cs;
   bx_segment_reg_t save_ss;
