@@ -76,6 +76,9 @@ Detailed change log :
  [1864680] Save CPUID signature by Filip Navara
 
 - these S.F. bugs were closed
+ [1940714] SYSENTER/SYSEXIT doesn't work in long mode
+ [1422342] SYSRET errors
+ [1923803] legacy rombios - e820 map and ACPI_DATA_SIZE
  [1936132] Link problem with --enable-debugger & --enable-disasm
  [1934477] Linear address wrap is not working
  [1424984] virtual machine freezes in Bochs 2.2.6
@@ -89,8 +92,9 @@ Detailed change log :
  [1873488] bochs-2.3.6 make fails on dbg_main.cc
 
 - these S.F. feature requests were implemented
+ [1422769] SYSENTER/SYSEXIT support in x86-64 mode
  [1847955] Version information for bochs(dbg).exe
-  [939797] SMBIOS support  
+  [939797] SMBIOS support
 
 -------------------------------------------------------------------------
 Changes in 2.3.6 (December 24, 2007):
