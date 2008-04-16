@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: call_far.cc,v 1.30 2008-04-11 21:40:36 sshwarts Exp $
+// $Id: call_far.cc,v 1.31 2008-04-16 22:08:46 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005 Stanislav Shwartsman
@@ -503,7 +503,7 @@ BX_CPU_C::call_gate64(bx_selector_t *gate_selector)
       // #SS(selector) when changing priviledge level
       BX_ERROR(("call_gate64: canonical address failure %08x%08x",
          GET32H(RSP_for_cpl_x), GET32L(RSP_for_cpl_x)));
-      exception(BX_GP_EXCEPTION, old_SS & 0xfffc, 0);
+      exception(BX_SS_EXCEPTION, old_SS & 0xfffc, 0);
     }
 
     // push old stack long pointer onto new stack
@@ -537,7 +537,7 @@ BX_CPU_C::call_gate64(bx_selector_t *gate_selector)
     if (! IsCanonical(RSP)) {
       BX_ERROR(("call_gate64: canonical address failure %08x%08x",
          GET32H(RSP), GET32L(RSP)));
-      exception(BX_GP_EXCEPTION, 0, 0);
+      exception(BX_SS_EXCEPTION, 0, 0);
     }
 
     // push return address onto stack

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.108 2008-04-15 17:22:11 sshwarts Exp $
+// $Id: exception.cc,v 1.109 2008-04-16 22:08:46 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -186,7 +186,7 @@ void BX_CPU_C::long_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error_code
       // #SS(selector) when changing priviledge level
       BX_ERROR(("interrupt(long mode): canonical address failure %08x%08x",
          GET32H(RSP_for_cpl_x), GET32L(RSP_for_cpl_x)));
-      exception(BX_GP_EXCEPTION, old_SS & 0xfffc, 0);
+      exception(BX_SS_EXCEPTION, old_SS & 0xfffc, 0);
     }
 
     // push old stack long pointer onto new stack

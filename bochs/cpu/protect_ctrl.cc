@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: protect_ctrl.cc,v 1.78 2008-04-16 16:44:06 sshwarts Exp $
+// $Id: protect_ctrl.cc,v 1.79 2008-04-16 22:08:46 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -353,17 +353,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LLDT_Ew(bxInstruction_c *i)
   fetch_raw_descriptor(&selector, &dword1, &dword2, BX_GP_EXCEPTION);
   parse_descriptor(dword1, dword2, &descriptor);
 
-#if BX_SUPPORT_X86_64
-  if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
-    // set upper 32 bits of ldt base
-    Bit32u dword3;
-    access_read_linear(BX_CPU_THIS_PTR gdtr.base + selector.index*8 + 8, 4, 0, BX_READ, &dword3);
-    descriptor.u.system.base |= ((Bit64u)dword3 << 32);
-    BX_INFO(("64 bit LDT base = 0x%08x%08x",
-       GET32H(descriptor.u.system.base), GET32L(descriptor.u.system.base)));
-  }
-#endif
-
   /* if selector doesn't point to an LDT descriptor #GP(selector) */
   if (descriptor.valid == 0 || descriptor.segment ||
          descriptor.type != BX_SYS_SEGMENT_LDT)
@@ -377,6 +366,21 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LLDT_Ew(bxInstruction_c *i)
     BX_ERROR(("LLDT: LDT descriptor not present!"));
     exception(BX_NP_EXCEPTION, raw_selector & 0xfffc, 0);
   }
+
+#if BX_SUPPORT_X86_64
+  if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
+    // set upper 32 bits of ldt base
+    Bit32u dword3;
+    access_read_linear(BX_CPU_THIS_PTR gdtr.base + selector.index*8 + 8, 4, 0, BX_READ, &dword3);
+    descriptor.u.system.base |= ((Bit64u)dword3 << 32);
+    BX_INFO(("64 bit LDT base = 0x%08x%08x",
+       GET32H(descriptor.u.system.base), GET32L(descriptor.u.system.base)));
+    if (!IsCanonical(descriptor.u.system.base)) {
+      BX_ERROR(("LLDT: non-canonical LDT descriptor base!"));
+      exception(BX_GP_EXCEPTION, raw_selector & 0xfffc, 0);
+    }
+  }
+#endif
 
   BX_CPU_THIS_PTR ldtr.selector = selector;
   BX_CPU_THIS_PTR ldtr.cache = descriptor;
@@ -429,17 +433,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LTR_Ew(bxInstruction_c *i)
   fetch_raw_descriptor(&selector, &dword1, &dword2, BX_GP_EXCEPTION);
   parse_descriptor(dword1, dword2, &descriptor);
 
-#if BX_SUPPORT_X86_64
-  if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
-    // set upper 32 bits of tss base
-    Bit32u dword3;
-    access_read_linear(BX_CPU_THIS_PTR gdtr.base + selector.index*8 + 8, 4, 0, BX_READ, &dword3);
-    descriptor.u.system.base |= ((Bit64u)dword3 << 32);
-    BX_DEBUG(("64 bit TSS base = 0x%08x%08x",
-       GET32H(descriptor.u.system.base), GET32L(descriptor.u.system.base)));
-  }
-#endif
-
   /* #GP(selector) if object is not a TSS or is already busy */
   if (descriptor.valid==0 || descriptor.segment ||
          (descriptor.type!=BX_SYS_SEGMENT_AVAIL_286_TSS &&
@@ -461,6 +454,21 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LTR_Ew(bxInstruction_c *i)
     BX_ERROR(("LTR: TSS descriptor not present!"));
     exception(BX_NP_EXCEPTION, raw_selector & 0xfffc, 0);
   }
+
+#if BX_SUPPORT_X86_64
+  if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
+    // set upper 32 bits of tss base
+    Bit32u dword3;
+    access_read_linear(BX_CPU_THIS_PTR gdtr.base + selector.index*8 + 8, 4, 0, BX_READ, &dword3);
+    descriptor.u.system.base |= ((Bit64u)dword3 << 32);
+    BX_DEBUG(("64 bit TSS base = 0x%08x%08x",
+       GET32H(descriptor.u.system.base), GET32L(descriptor.u.system.base)));
+    if (!IsCanonical(descriptor.u.system.base)) {
+      BX_ERROR(("LTR: non-canonical TSS descriptor base!"));
+      exception(BX_GP_EXCEPTION, raw_selector & 0xfffc, 0);
+    }
+  }
+#endif
 
   BX_CPU_THIS_PTR tr.selector = selector;
   BX_CPU_THIS_PTR tr.cache    = descriptor;
