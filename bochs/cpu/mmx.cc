@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: mmx.cc,v 1.77 2008-04-16 05:41:43 sshwarts Exp $
+// $Id: mmx.cc,v 1.78 2008-04-16 05:45:45 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2002 Stanislav Shwartsman
@@ -2452,11 +2452,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MASKMOVQ_PqPRq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_3DNOW || BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareMMX();
-
-  if (i->modC0()) {
-    BX_ERROR(("MASKMOVQ_PqPRq: must be register operand!"));
-    UndefinedOpcode(i);
-  }
 
   bx_address rdi;
   BxPackedMmxRegister op = BX_READ_MMX_REG(i->nnn()), tmp,
