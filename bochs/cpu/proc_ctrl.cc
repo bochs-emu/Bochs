@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.212 2008-04-15 21:29:18 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.213 2008-04-16 16:44:05 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -52,20 +52,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::NOP(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PREFETCH(bxInstruction_c *i)
 {
-#if BX_SUPPORT_3DNOW || BX_SUPPORT_SSE >= 1
-  if (i->modC0()) {
-    BX_ERROR(("PREFETCH: use of register is undefined opcode"));
-    UndefinedOpcode(i);
-  }
-
 #if BX_INSTRUMENTATION
   BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
   BX_INSTR_PREFETCH_HINT(BX_CPU_ID, i->nnn(), i->seg(), RMAddr(i));
-#endif
-
-#else
-  BX_INFO(("PREFETCH: required SSE or 3DNOW support"));
-  UndefinedOpcode(i);
 #endif
 }
 
@@ -758,7 +747,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CqRq(bxInstruction_c *i)
       //  any reserved bit of CR4
       BX_DEBUG(("MOV_CqRq: write to CR4 of %08x:%08x",
           (Bit32u)(val_64 >> 32), (Bit32u)(val_64 & 0xFFFFFFFF)));
-      if (! SetCR4((Bit32u) val_64))
+      if (! SetCR4(val_64))
         exception(BX_GP_EXCEPTION, 0, 0);
       break;
 #if BX_SUPPORT_APIC
@@ -1340,7 +1329,7 @@ void BX_CPU_C::SetCR0(Bit32u val_32)
 }
 
 #if BX_CPU_LEVEL >= 4
-bx_bool BX_CPU_C::SetCR4(Bit32u val_32)
+bx_bool BX_CPU_C::SetCR4(bx_address val)
 {
   Bit32u oldCR4 = BX_CPU_THIS_PTR cr4.getRegister();
   Bit32u allowMask = 0;
@@ -1406,23 +1395,22 @@ bx_bool BX_CPU_C::SetCR4(Bit32u val_32)
 
 #if BX_SUPPORT_X86_64
   // need to GP(0) if LMA=1 and PAE=1->0
-  if ((BX_CPU_THIS_PTR efer.get_LMA())
-      && (!(val_32 >> 5) & 1)
-      && (BX_CPU_THIS_PTR cr4.get_PAE()))
-  {
-    BX_ERROR(("SetCR4: attempt to change PAE when EFER.LMA=1"));
-    return 0;
+  if (BX_CPU_THIS_PTR efer.get_LMA()) {
+    if(!(val & (1<<5)) && BX_CPU_THIS_PTR cr4.get_PAE()) {
+      BX_ERROR(("SetCR4: attempt to change PAE when EFER.LMA=1"));
+      return 0;
+    }
   }
 #endif
 
   // Need to GPF if trying to set undefined bits.
-  if (val_32 & ~allowMask) {
-    BX_ERROR(("#GP(0): SetCR4: Write of 0x%08x not supported (allowMask=0x%x)", val_32, allowMask));
+  if (val & ~allowMask) {
+    BX_ERROR(("#GP(0): SetCR4: Write of 0x%08x not supported (allowMask=0x%x)", val, allowMask));
     return 0;
   }
 
-  val_32 &= allowMask; // Screen out unsupported bits. (not needed, for good measure)
-  BX_CPU_THIS_PTR cr4.setRegister(val_32);
+  val &= allowMask; // Screen out unsupported bits. (not needed, for good measure)
+  BX_CPU_THIS_PTR cr4.setRegister(val);
   pagingCR4Changed(oldCR4, BX_CPU_THIS_PTR cr4.getRegister());
   return 1;
 }
@@ -1671,8 +1659,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDMSR(bxInstruction_c *i)
       return;
 
     case BX_MSR_FMASK:
-      RAX = MSR_FMASK & 0xffffffff;
-      RDX = MSR_FMASK >> 32;
+      RAX = MSR_FMASK;
+      RDX = 0;
       return;
 
     case BX_MSR_FSBASE:
@@ -1734,10 +1722,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRMSR(bxInstruction_c *i)
       return;
     }
     case BX_MSR_SYSENTER_ESP:
-      BX_CPU_THIS_PTR msr.sysenter_esp_msr = EAX;
+      BX_CPU_THIS_PTR msr.sysenter_esp_msr = val64;
       return;
     case BX_MSR_SYSENTER_EIP:
-      BX_CPU_THIS_PTR msr.sysenter_eip_msr = EAX;
+      BX_CPU_THIS_PTR msr.sysenter_eip_msr = val64;
       return;
 #endif
 
@@ -1762,7 +1750,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRMSR(bxInstruction_c *i)
     case BX_MSR_MTRRPHYSMASK6:
     case BX_MSR_MTRRPHYSBASE7:
     case BX_MSR_MTRRPHYSMASK7:
-      BX_CPU_THIS_PTR msr.mtrrphys[ECX - BX_MSR_MTRRPHYSBASE0] = ((Bit64u) EDX << 32) + EAX;
+      BX_CPU_THIS_PTR msr.mtrrphys[ECX - BX_MSR_MTRRPHYSBASE0] = val64;
       return;
 
     case BX_MSR_MTRRFIX64K_00000:
@@ -1849,6 +1837,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRMSR(bxInstruction_c *i)
 
 #if BX_SUPPORT_X86_64
     case BX_MSR_EFER:
+      if (val64 & ~BX_EFER_SUPPORTED_BITS) {
+        BX_ERROR(("WRMSR: attempt to set reserved bits of EFER MSR !"));
+        exception(BX_GP_EXCEPTION, 0, 0);
+      }
+
       // #GP(0) if changing EFER.LME when cr0.pg = 1
       if ((BX_CPU_THIS_PTR efer.get_LME() != ((EAX >> 8) & 1)) &&
            BX_CPU_THIS_PTR  cr0.get_PG())
@@ -1866,22 +1859,38 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRMSR(bxInstruction_c *i)
       return;
 
     case BX_MSR_LSTAR:
+      if (! IsCanonical(val64)) {
+        BX_ERROR(("WRMSR: attempt to write non-canonical value to MSR_LSTAR !"));
+        exception(BX_GP_EXCEPTION, 0, 0);
+      }
       MSR_LSTAR  = val64;
       return;
 
     case BX_MSR_CSTAR:
+      if (! IsCanonical(val64)) {
+        BX_ERROR(("WRMSR: attempt to write non-canonical value to MSR_CSTAR !"));
+        exception(BX_GP_EXCEPTION, 0, 0);
+      }
       MSR_CSTAR  = val64;
       return;
 
     case BX_MSR_FMASK:
-      MSR_FMASK  = val64;
+      MSR_FMASK  = (Bit32u) val64;
       return;
 
     case BX_MSR_FSBASE:
+      if (! IsCanonical(val64)) {
+        BX_ERROR(("WRMSR: attempt to write non-canonical value to MSR_FSBASE !"));
+        exception(BX_GP_EXCEPTION, 0, 0);
+      }
       MSR_FSBASE = val64;
       return;
 
     case BX_MSR_GSBASE:
+      if (! IsCanonical(val64)) {
+        BX_ERROR(("WRMSR: attempt to write non-canonical value to MSR_GSBASE !"));
+        exception(BX_GP_EXCEPTION, 0, 0);
+      }
       MSR_GSBASE = val64;
       return;
 

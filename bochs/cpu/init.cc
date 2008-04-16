@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.165 2008-04-15 21:27:57 sshwarts Exp $
+// $Id: init.cc,v 1.166 2008-04-16 16:44:05 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -905,7 +905,7 @@ void BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR msr.star  = 0;
   BX_CPU_THIS_PTR msr.lstar = 0;
   BX_CPU_THIS_PTR msr.cstar = 0;
-  BX_CPU_THIS_PTR msr.fmask = 0;
+  BX_CPU_THIS_PTR msr.fmask = 0x00020200;
   BX_CPU_THIS_PTR msr.kernelgsbase = 0;
   BX_CPU_THIS_PTR msr.tsc_aux = 0;
 #endif

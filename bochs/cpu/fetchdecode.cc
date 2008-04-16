@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.183 2008-04-16 05:56:55 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.184 2008-04-16 16:44:04 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -496,8 +496,17 @@ static const BxOpcodeInfo_t BxOpcodeInfo32R[512*2] = {
   /* 0F 15 /wr */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0f15 },
   /* 0F 16 /wr */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0f16 },
   /* 0F 17 /wr */ { 0, BX_IA_ERROR },  // MOHLPS/PD SSE group
-  /* 0F 18 /wr */ { 0, BX_IA_PREFETCH }, // opcode group G16, PREFETCH hints
-#if BX_CPU_LEVEL < 6
+#if BX_CPU_LEVEL >= 6
+  /* 0F 18 /wr */ { 0, BX_IA_NOP },    // PREFETCH HINT
+  /* 0F 19 /wr */ { 0, BX_IA_NOP },    // multi-byte NOP
+  /* 0F 1A /wr */ { 0, BX_IA_NOP },    // multi-byte NOP
+  /* 0F 1B /wr */ { 0, BX_IA_NOP },    // multi-byte NOP
+  /* 0F 1C /wr */ { 0, BX_IA_NOP },    // multi-byte NOP
+  /* 0F 1D /wr */ { 0, BX_IA_NOP },    // multi-byte NOP
+  /* 0F 1E /wr */ { 0, BX_IA_NOP },    // multi-byte NOP
+  /* 0F 1F /wr */ { 0, BX_IA_NOP },    // multi-byte NOP
+#else
+  /* 0F 18 /wr */ { 0, BX_IA_ERROR },
   /* 0F 19 /wr */ { 0, BX_IA_ERROR },
   /* 0F 1A /wr */ { 0, BX_IA_ERROR },
   /* 0F 1B /wr */ { 0, BX_IA_ERROR },
@@ -505,14 +514,6 @@ static const BxOpcodeInfo_t BxOpcodeInfo32R[512*2] = {
   /* 0F 1D /wr */ { 0, BX_IA_ERROR },
   /* 0F 1E /wr */ { 0, BX_IA_ERROR },
   /* 0F 1F /wr */ { 0, BX_IA_ERROR },
-#else
-  /* 0F 19 /wr */ { 0, BX_IA_NOP },      // multi-byte NOP
-  /* 0F 1A /wr */ { 0, BX_IA_NOP },      // multi-byte NOP
-  /* 0F 1B /wr */ { 0, BX_IA_NOP },      // multi-byte NOP
-  /* 0F 1C /wr */ { 0, BX_IA_NOP },      // multi-byte NOP
-  /* 0F 1D /wr */ { 0, BX_IA_NOP },      // multi-byte NOP
-  /* 0F 1E /wr */ { 0, BX_IA_NOP },      // multi-byte NOP
-  /* 0F 1F /wr */ { 0, BX_IA_NOP },      // multi-byte NOP
 #endif
   /* 0F 20 /wr */ { 0, BX_IA_MOV_RdCd },
   /* 0F 21 /wr */ { 0, BX_IA_MOV_RdDd },
@@ -1058,8 +1059,17 @@ static const BxOpcodeInfo_t BxOpcodeInfo32R[512*2] = {
   /* 0F 15 /dr */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0f15 },
   /* 0F 16 /dr */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0f16 },
   /* 0F 17 /dr */ { 0, BX_IA_ERROR },  // MOHLPS/PD SSE group
-  /* 0F 18 /dr */ { 0, BX_IA_PREFETCH }, // opcode group G16, PREFETCH hints
-#if BX_CPU_LEVEL < 6
+#if BX_CPU_LEVEL >= 6
+  /* 0F 18 /dr */ { 0, BX_IA_NOP },    // PREFETCH HINT
+  /* 0F 19 /dr */ { 0, BX_IA_NOP },    // multi-byte NOP
+  /* 0F 1A /dr */ { 0, BX_IA_NOP },    // multi-byte NOP
+  /* 0F 1B /dr */ { 0, BX_IA_NOP },    // multi-byte NOP
+  /* 0F 1C /dr */ { 0, BX_IA_NOP },    // multi-byte NOP
+  /* 0F 1D /dr */ { 0, BX_IA_NOP },    // multi-byte NOP
+  /* 0F 1E /dr */ { 0, BX_IA_NOP },    // multi-byte NOP
+  /* 0F 1F /dr */ { 0, BX_IA_NOP },    // multi-byte NOP
+#else
+  /* 0F 18 /dr */ { 0, BX_IA_ERROR },
   /* 0F 19 /dr */ { 0, BX_IA_ERROR },
   /* 0F 1A /dr */ { 0, BX_IA_ERROR },
   /* 0F 1B /dr */ { 0, BX_IA_ERROR },
@@ -1067,14 +1077,6 @@ static const BxOpcodeInfo_t BxOpcodeInfo32R[512*2] = {
   /* 0F 1D /dr */ { 0, BX_IA_ERROR },
   /* 0F 1E /dr */ { 0, BX_IA_ERROR },
   /* 0F 1F /dr */ { 0, BX_IA_ERROR },
-#else
-  /* 0F 19 /dr */ { 0, BX_IA_NOP },      // multi-byte NOP
-  /* 0F 1A /dr */ { 0, BX_IA_NOP },      // multi-byte NOP
-  /* 0F 1B /dr */ { 0, BX_IA_NOP },      // multi-byte NOP
-  /* 0F 1C /dr */ { 0, BX_IA_NOP },      // multi-byte NOP
-  /* 0F 1D /dr */ { 0, BX_IA_NOP },      // multi-byte NOP
-  /* 0F 1E /dr */ { 0, BX_IA_NOP },      // multi-byte NOP
-  /* 0F 1F /dr */ { 0, BX_IA_NOP },      // multi-byte NOP
 #endif
   /* 0F 20 /dr */ { 0, BX_IA_MOV_RdCd },
   /* 0F 21 /dr */ { 0, BX_IA_MOV_RdDd },
@@ -1627,16 +1629,8 @@ static const BxOpcodeInfo_t BxOpcodeInfo32M[512*2] = {
   /* 0F 15 /wm */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0f15 },
   /* 0F 16 /wm */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0f16 },
   /* 0F 17 /wm */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0f17M },
+# if BX_CPU_LEVEL >= 6
   /* 0F 18 /wm */ { 0, BX_IA_PREFETCH }, // opcode group G16, PREFETCH hints
-#if BX_CPU_LEVEL < 6
-  /* 0F 19 /wm */ { 0, BX_IA_ERROR },
-  /* 0F 1A /wm */ { 0, BX_IA_ERROR },
-  /* 0F 1B /wm */ { 0, BX_IA_ERROR },
-  /* 0F 1C /wm */ { 0, BX_IA_ERROR },
-  /* 0F 1D /wm */ { 0, BX_IA_ERROR },
-  /* 0F 1E /wm */ { 0, BX_IA_ERROR },
-  /* 0F 1F /wm */ { 0, BX_IA_ERROR },
-#else
   /* 0F 19 /wm */ { 0, BX_IA_NOP },      // multi-byte NOP
   /* 0F 1A /wm */ { 0, BX_IA_NOP },      // multi-byte NOP
   /* 0F 1B /wm */ { 0, BX_IA_NOP },      // multi-byte NOP
@@ -1644,6 +1638,15 @@ static const BxOpcodeInfo_t BxOpcodeInfo32M[512*2] = {
   /* 0F 1D /wm */ { 0, BX_IA_NOP },      // multi-byte NOP
   /* 0F 1E /wm */ { 0, BX_IA_NOP },      // multi-byte NOP
   /* 0F 1F /wm */ { 0, BX_IA_NOP },      // multi-byte NOP
+#else
+  /* 0F 18 /wm */ { 0, BX_IA_ERROR },
+  /* 0F 19 /wm */ { 0, BX_IA_ERROR },
+  /* 0F 1A /wm */ { 0, BX_IA_ERROR },
+  /* 0F 1B /wm */ { 0, BX_IA_ERROR },
+  /* 0F 1C /wm */ { 0, BX_IA_ERROR },
+  /* 0F 1D /wm */ { 0, BX_IA_ERROR },
+  /* 0F 1E /wm */ { 0, BX_IA_ERROR },
+  /* 0F 1F /wm */ { 0, BX_IA_ERROR },
 #endif
   /* 0F 20 /wm */ { 0, BX_IA_MOV_RdCd },
   /* 0F 21 /wm */ { 0, BX_IA_MOV_RdDd },
@@ -2189,16 +2192,8 @@ static const BxOpcodeInfo_t BxOpcodeInfo32M[512*2] = {
   /* 0F 15 /dm */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0f15 },
   /* 0F 16 /dm */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0f16 },
   /* 0F 17 /dm */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0f17M },
+# if BX_CPU_LEVEL >= 6
   /* 0F 18 /dm */ { 0, BX_IA_PREFETCH }, // opcode group G16, PREFETCH hints
-#if BX_CPU_LEVEL < 6
-  /* 0F 19 /dm */ { 0, BX_IA_ERROR },
-  /* 0F 1A /dm */ { 0, BX_IA_ERROR },
-  /* 0F 1B /dm */ { 0, BX_IA_ERROR },
-  /* 0F 1C /dm */ { 0, BX_IA_ERROR },
-  /* 0F 1D /dm */ { 0, BX_IA_ERROR },
-  /* 0F 1E /dm */ { 0, BX_IA_ERROR },
-  /* 0F 1F /dm */ { 0, BX_IA_ERROR },
-#else
   /* 0F 19 /dm */ { 0, BX_IA_NOP },      // multi-byte NOP
   /* 0F 1A /dm */ { 0, BX_IA_NOP },      // multi-byte NOP
   /* 0F 1B /dm */ { 0, BX_IA_NOP },      // multi-byte NOP
@@ -2206,6 +2201,15 @@ static const BxOpcodeInfo_t BxOpcodeInfo32M[512*2] = {
   /* 0F 1D /dm */ { 0, BX_IA_NOP },      // multi-byte NOP
   /* 0F 1E /dm */ { 0, BX_IA_NOP },      // multi-byte NOP
   /* 0F 1F /dm */ { 0, BX_IA_NOP },      // multi-byte NOP
+#else
+  /* 0F 18 /dm */ { 0, BX_IA_ERROR },
+  /* 0F 19 /dm */ { 0, BX_IA_ERROR },
+  /* 0F 1A /dm */ { 0, BX_IA_ERROR },
+  /* 0F 1B /dm */ { 0, BX_IA_ERROR },
+  /* 0F 1C /dm */ { 0, BX_IA_ERROR },
+  /* 0F 1D /dm */ { 0, BX_IA_ERROR },
+  /* 0F 1E /dm */ { 0, BX_IA_ERROR },
+  /* 0F 1F /dm */ { 0, BX_IA_ERROR },
 #endif
   /* 0F 20 /dm */ { 0, BX_IA_MOV_RdCd },
   /* 0F 21 /dm */ { 0, BX_IA_MOV_RdDd },

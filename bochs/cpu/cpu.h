@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.455 2008-04-15 17:22:11 sshwarts Exp $
+// $Id: cpu.h,v 1.456 2008-04-16 16:44:04 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -536,7 +536,7 @@ typedef struct
   Bit64u star;
   Bit64u lstar;
   Bit64u cstar;
-  Bit64u fmask;
+  Bit32u fmask;
   Bit64u kernelgsbase;
   Bit32u tsc_aux;
 #endif
@@ -2938,7 +2938,7 @@ public: // for now...
   BX_SMF void SetCR0(Bit32u val_32);
   BX_SMF void CR3_change(bx_phy_address value) BX_CPP_AttrRegparmN(1);
 #if BX_CPU_LEVEL >= 4
-  BX_SMF bx_bool SetCR4(Bit32u val_32);
+  BX_SMF bx_bool SetCR4(bx_address val_32);
 #endif
   BX_SMF void pagingCR0Changed(Bit32u oldCR0, Bit32u newCR0) BX_CPP_AttrRegparmN(2);
   BX_SMF void pagingCR4Changed(Bit32u oldCR4, Bit32u newCR4) BX_CPP_AttrRegparmN(2);

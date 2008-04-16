@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: protect_ctrl.cc,v 1.77 2008-03-29 18:18:07 sshwarts Exp $
+// $Id: protect_ctrl.cc,v 1.78 2008-04-16 16:44:06 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -468,6 +468,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LTR_Ew(bxInstruction_c *i)
   // tr.cache.type should not have busy bit, or it would not get
   // through the conditions above.
   BX_ASSERT((BX_CPU_THIS_PTR tr.cache.type & 2) == 0);
+  BX_CPU_THIS_PTR tr.cache.type |= 2; // mark as busy
 
   /* mark as busy */
   if (!(dword2 & 0x0200)) {

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: io.cc,v 1.56 2008-04-07 18:39:16 sshwarts Exp $
+// $Id: io.cc,v 1.57 2008-04-16 16:44:05 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -224,16 +224,31 @@ Bit32u BX_CPU_C::FastRepOUTSW(bxInstruction_c *i, unsigned srcSeg, bx_address sr
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_INSB_YbDX(bxInstruction_c *i)
 {
   BX_CPU_THIS_PTR repeat(i, &BX_CPU_C::INSB_YbDX);
+#if BX_SUPPORT_X86_64
+  if (i->as32L()) {
+    BX_CLEAR_64BIT_HIGH(BX_64BIT_REG_RDI); // always clear upper part of RDI
+  }
+#endif
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_INSW_YwDX(bxInstruction_c *i)
 {
   BX_CPU_THIS_PTR repeat(i, &BX_CPU_C::INSW_YwDX);
+#if BX_SUPPORT_X86_64
+  if (i->as32L()) {
+    BX_CLEAR_64BIT_HIGH(BX_64BIT_REG_RDI); // always clear upper part of RDI
+  }
+#endif
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_INSD_YdDX(bxInstruction_c *i)
 {
   BX_CPU_THIS_PTR repeat(i, &BX_CPU_C::INSD_YdDX);
+#if BX_SUPPORT_X86_64
+  if (i->as32L()) {
+    BX_CLEAR_64BIT_HIGH(BX_64BIT_REG_RDI); // always clear upper part of RDI
+  }
+#endif
 }
 
 //
@@ -477,16 +492,31 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INSD_YdDX(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_OUTSB_DXXb(bxInstruction_c *i)
 {
   BX_CPU_THIS_PTR repeat(i, &BX_CPU_C::OUTSB_DXXb);
+#if BX_SUPPORT_X86_64
+  if (i->as32L()) {
+    BX_CLEAR_64BIT_HIGH(BX_64BIT_REG_RSI); // always clear upper part of RSI
+  }
+#endif
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_OUTSW_DXXw(bxInstruction_c *i)
 {
   BX_CPU_THIS_PTR repeat(i, &BX_CPU_C::OUTSW_DXXw);
+#if BX_SUPPORT_X86_64
+  if (i->as32L()) {
+    BX_CLEAR_64BIT_HIGH(BX_64BIT_REG_RSI); // always clear upper part of RSI
+  }
+#endif
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_OUTSD_DXXd(bxInstruction_c *i)
 {
   BX_CPU_THIS_PTR repeat(i, &BX_CPU_C::OUTSD_DXXd);
+#if BX_SUPPORT_X86_64
+  if (i->as32L()) {
+    BX_CLEAR_64BIT_HIGH(BX_64BIT_REG_RSI); // always clear upper part of RSI
+  }
+#endif
 }
 
 //

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.220 2008-04-07 19:59:52 sshwarts Exp $
+// $Id: cpu.cc,v 1.221 2008-04-16 16:44:04 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -244,12 +244,12 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::repeat(bxInstruction_c *i, BxExecutePtr_tR
       }
       if (RCX == 0) return;
 
-      BX_TICK1_IF_SINGLE_PROCESSOR();
-
 #if BX_DEBUGGER == 0
       if (BX_CPU_THIS_PTR async_event)
 #endif
         break; // exit always if debugger enabled
+
+      BX_TICK1_IF_SINGLE_PROCESSOR();
     }
   }
   else
@@ -263,12 +263,12 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::repeat(bxInstruction_c *i, BxExecutePtr_tR
       }
       if (ECX == 0) return;
 
-      BX_TICK1_IF_SINGLE_PROCESSOR();
-
 #if BX_DEBUGGER == 0
       if (BX_CPU_THIS_PTR async_event)
 #endif
         break; // exit always if debugger enabled
+
+      BX_TICK1_IF_SINGLE_PROCESSOR();
     }
   }
   else  // 16bit addrsize
@@ -281,12 +281,12 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::repeat(bxInstruction_c *i, BxExecutePtr_tR
       }
       if (CX == 0) return;
 
-      BX_TICK1_IF_SINGLE_PROCESSOR();
-
 #if BX_DEBUGGER == 0
       if (BX_CPU_THIS_PTR async_event)
 #endif
         break; // exit always if debugger enabled
+
+      BX_TICK1_IF_SINGLE_PROCESSOR();
     }
   }
 
@@ -320,12 +320,12 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::repeat_ZFL(bxInstruction_c *i, BxExecutePt
       if (rep==2 && get_ZF()!=0) return;
       if (RCX == 0) return;
 
-      BX_TICK1_IF_SINGLE_PROCESSOR();
-
 #if BX_DEBUGGER == 0
       if (BX_CPU_THIS_PTR async_event)
 #endif
         break; // exit always if debugger enabled
+
+      BX_TICK1_IF_SINGLE_PROCESSOR();
     }
   }
   else
@@ -341,12 +341,12 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::repeat_ZFL(bxInstruction_c *i, BxExecutePt
       if (rep==2 && get_ZF()!=0) return;
       if (ECX == 0) return;
 
-      BX_TICK1_IF_SINGLE_PROCESSOR();
-
 #if BX_DEBUGGER == 0
       if (BX_CPU_THIS_PTR async_event)
 #endif
         break; // exit always if debugger enabled
+
+      BX_TICK1_IF_SINGLE_PROCESSOR();
     }
   }
   else  // 16bit addrsize
@@ -361,12 +361,12 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::repeat_ZFL(bxInstruction_c *i, BxExecutePt
       if (rep==2 && get_ZF()!=0) return;
       if (CX == 0) return;
 
-      BX_TICK1_IF_SINGLE_PROCESSOR();
-
 #if BX_DEBUGGER == 0
       if (BX_CPU_THIS_PTR async_event)
 #endif
         break; // exit always if debugger enabled
+
+      BX_TICK1_IF_SINGLE_PROCESSOR();
     }
   }
 
@@ -638,11 +638,13 @@ void BX_CPU_C::prefetch(void)
   bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[TLB_index];
   Bit8u *fetchPtr = 0;
 
-  if (tlbEntry->lpf == lpf) { // always have permissions for CODE access
-    pAddr = A20ADDR(tlbEntry->ppf | pageOffset);
+  if (tlbEntry->lpf == lpf) {
+    if (tlbEntry->accessBits & (0x01 << CPL)) {
+      pAddr = A20ADDR(tlbEntry->ppf | pageOffset);
 #if BX_SupportGuest2HostTLB
-    fetchPtr = (Bit8u*) (tlbEntry->hostPageAddr);
+      fetchPtr = (Bit8u*) (tlbEntry->hostPageAddr);
 #endif
+    }
   }  
   else {
     if (BX_CPU_THIS_PTR cr0.get_PG()) {

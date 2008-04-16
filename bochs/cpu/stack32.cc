@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack32.cc,v 1.50 2008-04-03 17:56:59 sshwarts Exp $
+// $Id: stack32.cc,v 1.51 2008-04-16 16:44:06 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -353,51 +353,20 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ENTER32_IwIb(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::LEAVE(bxInstruction_c *i)
 {
-  Bit32u temp_EBP;
-
-#if BX_CPU_LEVEL >= 3
-  if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b)
-    temp_EBP = EBP;
-  else
-#endif
-    temp_EBP = BP;
-
-  if (protected_mode()) {
-    if (IS_DATA_SEGMENT_EXPAND_DOWN(BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.type)) {
-      if (temp_EBP <= BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.limit_scaled) {
-        BX_PANIC(("LEAVE: BP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].limit"));
-        exception(BX_SS_EXCEPTION, 0, 0);
-      }
-    }
-    else { /* normal */
-      if (temp_EBP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.limit_scaled) {
-        BX_PANIC(("LEAVE: BP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].limit"));
-        exception(BX_SS_EXCEPTION, 0, 0);
-      }
-    }
-  }
-
   BX_CPU_THIS_PTR speculative_rsp = 1;
   BX_CPU_THIS_PTR prev_rsp = RSP;
 
   // delete frame
-#if BX_CPU_LEVEL >= 3
   if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b)
     ESP = EBP;
   else
-#endif
      SP = BP;
 
   // restore frame pointer
-#if BX_CPU_LEVEL >= 3
-  if (i->os32L()) {
+  if (i->os32L())
     EBP = pop_32();
-  }
   else
-#endif
-  {
     BP = pop_16();
-  }
 
   BX_CPU_THIS_PTR speculative_rsp = 0;
 }

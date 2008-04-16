@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.190 2008-04-16 05:56:55 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.191 2008-04-16 16:44:05 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -466,14 +466,14 @@ static const BxOpcodeInfo_t BxOpcodeInfo64R[512*3] = {
   /* 0F 15 /wr */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0f15 },
   /* 0F 16 /wr */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0f16 },
   /* 0F 17 /wr */ { 0, BX_IA_ERROR },  // MOHLPS/PD SSE group
-  /* 0F 18 /wr */ { 0, BX_IA_PREFETCH }, // opcode group G16, PREFETCH hints
-  /* 0F 19 /wr */ { 0, BX_IA_NOP },      // multi-byte NOP
-  /* 0F 1A /wr */ { 0, BX_IA_NOP },      // multi-byte NOP
-  /* 0F 1B /wr */ { 0, BX_IA_NOP },      // multi-byte NOP
-  /* 0F 1C /wr */ { 0, BX_IA_NOP },      // multi-byte NOP
-  /* 0F 1D /wr */ { 0, BX_IA_NOP },      // multi-byte NOP
-  /* 0F 1E /wr */ { 0, BX_IA_NOP },      // multi-byte NOP
-  /* 0F 1F /wr */ { 0, BX_IA_NOP },      // multi-byte NOP
+  /* 0F 18 /wr */ { 0, BX_IA_NOP },    // PREFETCH HINT
+  /* 0F 19 /wr */ { 0, BX_IA_NOP },    // multi-byte NOP
+  /* 0F 1A /wr */ { 0, BX_IA_NOP },    // multi-byte NOP
+  /* 0F 1B /wr */ { 0, BX_IA_NOP },    // multi-byte NOP
+  /* 0F 1C /wr */ { 0, BX_IA_NOP },    // multi-byte NOP
+  /* 0F 1D /wr */ { 0, BX_IA_NOP },    // multi-byte NOP
+  /* 0F 1E /wr */ { 0, BX_IA_NOP },    // multi-byte NOP
+  /* 0F 1F /wr */ { 0, BX_IA_NOP },    // multi-byte NOP
   /* 0F 20 /wr */ { 0, BX_IA_MOV_RqCq },
   /* 0F 21 /wr */ { 0, BX_IA_MOV_RqDq },
   /* 0F 22 /wr */ { BxTraceEnd, BX_IA_MOV_CqRq },
@@ -993,14 +993,14 @@ static const BxOpcodeInfo_t BxOpcodeInfo64R[512*3] = {
   /* 0F 15 /dr */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0f15 },
   /* 0F 16 /dr */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0f16 },
   /* 0F 17 /dr */ { 0, BX_IA_ERROR },  // MOHLPS/PD SSE group
-  /* 0F 18 /dr */ { 0, BX_IA_PREFETCH }, // opcode group G16, PREFETCH hints
-  /* 0F 19 /dr */ { 0, BX_IA_NOP },      // multi-byte NOP
-  /* 0F 1A /dr */ { 0, BX_IA_NOP },      // multi-byte NOP
-  /* 0F 1B /dr */ { 0, BX_IA_NOP },      // multi-byte NOP
-  /* 0F 1C /dr */ { 0, BX_IA_NOP },      // multi-byte NOP
-  /* 0F 1D /dr */ { 0, BX_IA_NOP },      // multi-byte NOP
-  /* 0F 1E /dr */ { 0, BX_IA_NOP },      // multi-byte NOP
-  /* 0F 1F /dr */ { 0, BX_IA_NOP },      // multi-byte NOP
+  /* 0F 18 /dr */ { 0, BX_IA_NOP },    // PREFETCH HINT
+  /* 0F 19 /dr */ { 0, BX_IA_NOP },    // multi-byte NOP
+  /* 0F 1A /dr */ { 0, BX_IA_NOP },    // multi-byte NOP
+  /* 0F 1B /dr */ { 0, BX_IA_NOP },    // multi-byte NOP
+  /* 0F 1C /dr */ { 0, BX_IA_NOP },    // multi-byte NOP
+  /* 0F 1D /dr */ { 0, BX_IA_NOP },    // multi-byte NOP
+  /* 0F 1E /dr */ { 0, BX_IA_NOP },    // multi-byte NOP
+  /* 0F 1F /dr */ { 0, BX_IA_NOP },    // multi-byte NOP
   /* 0F 20 /dr */ { 0, BX_IA_MOV_RqCq },
   /* 0F 21 /dr */ { 0, BX_IA_MOV_RqDq },
   /* 0F 22 /dr */ { BxTraceEnd, BX_IA_MOV_CqRq },
@@ -1520,14 +1520,14 @@ static const BxOpcodeInfo_t BxOpcodeInfo64R[512*3] = {
   /* 0F 15 /qr */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0f15 },
   /* 0F 16 /qr */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0f16 },
   /* 0F 17 /qr */ { 0, BX_IA_ERROR },  // MOHLPS/PD SSE group
-  /* 0F 18 /qr */ { 0, BX_IA_PREFETCH }, // opcode group G16, PREFETCH hints
-  /* 0F 19 /qr */ { 0, BX_IA_NOP },      // multi-byte NOP
-  /* 0F 1A /qr */ { 0, BX_IA_NOP },      // multi-byte NOP
-  /* 0F 1B /qr */ { 0, BX_IA_NOP },      // multi-byte NOP
-  /* 0F 1C /qr */ { 0, BX_IA_NOP },      // multi-byte NOP
-  /* 0F 1D /qr */ { 0, BX_IA_NOP },      // multi-byte NOP
-  /* 0F 1E /qr */ { 0, BX_IA_NOP },      // multi-byte NOP
-  /* 0F 1F /qr */ { 0, BX_IA_NOP },      // multi-byte NOP
+  /* 0F 18 /qr */ { 0, BX_IA_NOP },    // PREFETCH HINT
+  /* 0F 19 /qr */ { 0, BX_IA_NOP },    // multi-byte NOP
+  /* 0F 1A /qr */ { 0, BX_IA_NOP },    // multi-byte NOP
+  /* 0F 1B /qr */ { 0, BX_IA_NOP },    // multi-byte NOP
+  /* 0F 1C /qr */ { 0, BX_IA_NOP },    // multi-byte NOP
+  /* 0F 1D /qr */ { 0, BX_IA_NOP },    // multi-byte NOP
+  /* 0F 1E /qr */ { 0, BX_IA_NOP },    // multi-byte NOP
+  /* 0F 1F /qr */ { 0, BX_IA_NOP },    // multi-byte NOP
   /* 0F 20 /qr */ { 0, BX_IA_MOV_RqCq },
   /* 0F 21 /qr */ { 0, BX_IA_MOV_RqDq },
   /* 0F 22 /qr */ { BxTraceEnd, BX_IA_MOV_CqRq },
