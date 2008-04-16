@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.126 2008-04-11 21:59:47 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.127 2008-04-16 16:42:00 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -464,10 +464,39 @@ void bx_debug_break()
 
 void bx_dbg_exception(unsigned cpu, Bit8u vector, Bit16u error_code)
 {
+  static const char *exception[] = {
+     "(#DZ) divide by zero",
+     "(#DB) debug break",
+     "(#NMI)",
+     "(#BP) breakpoint match",
+     "(#OF) overflow",
+     "(#BR) boundary check",
+     "(#UD) undefined opcode",
+     "(#NM) device not available",
+     "(#DF) double fault",
+     "(#CO) coprocessor overrun",
+     "(#TS) invalid TSS",
+     "(#NP) segment not present",
+     "(#SS) stack fault",
+     "(#GP) general protection fault",
+     "(#PG) page fault",
+     "(#RESERVED)",
+     "(#MF) floating point error",
+     "(#AC) alignment check",
+     "(#MC) machine check",
+     "(#XM) SIMD floating point exception",
+  };
+
   if (BX_CPU(dbg_cpu)->trace || bx_dbg.exceptions)
   {
-    dbg_printf("CPU %d: Exception 0x%02x occured (error_code=0x%04x)\n",
-      cpu, vector, error_code);
+    if (vector <= BX_XM_EXCEPTION) {
+      dbg_printf("CPU %d: Exception 0x%02x - %s occured (error_code=0x%04x)\n",
+        cpu, vector, exception[vector], error_code);
+    }
+    else {
+      dbg_printf("CPU %d: Exception 0x%02x occured (error_code=0x%04x)\n",
+        cpu, vector, error_code);
+    }
   }
 }
 
@@ -545,8 +574,7 @@ void bx_dbg_print_fpu_state(void)
 
 void bx_dbg_info_flags(void)
 {
-  dbg_printf("IOPL=%1u %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s\n",
-    BX_CPU(dbg_cpu)->get_IOPL(),
+  dbg_printf("%s %s %s %s %s %s %s IOPL=%1u %s %s %s %s %s %s %s %s %s\n",
     BX_CPU(dbg_cpu)->get_ID() ? "ID" : "id",
     BX_CPU(dbg_cpu)->get_VIP() ? "VIP" : "vip",
     BX_CPU(dbg_cpu)->get_VIF() ? "VIF" : "vif",
@@ -554,6 +582,7 @@ void bx_dbg_info_flags(void)
     BX_CPU(dbg_cpu)->get_VM() ? "VM" : "vm",
     BX_CPU(dbg_cpu)->get_RF() ? "RF" : "rf",
     BX_CPU(dbg_cpu)->get_NT() ? "NT" : "nt",
+    BX_CPU(dbg_cpu)->get_IOPL(),
     BX_CPU(dbg_cpu)->get_OF() ? "OF" : "of",
     BX_CPU(dbg_cpu)->get_DF() ? "DF" : "df",
     BX_CPU(dbg_cpu)->get_IF() ? "IF" : "if",
