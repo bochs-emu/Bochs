@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.128 2008-04-16 21:49:46 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.129 2008-04-16 22:28:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -465,7 +465,7 @@ void bx_debug_break()
 void bx_dbg_exception(unsigned cpu, Bit8u vector, Bit16u error_code)
 {
   static const char *exception[] = {
-     "(#DZ) divide by zero",
+     "(#DE) divide by zero",
      "(#DB) debug break",
      "(#NMI)",
      "(#BP) breakpoint match",
