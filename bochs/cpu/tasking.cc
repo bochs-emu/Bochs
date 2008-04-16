@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: tasking.cc,v 1.49 2008-04-08 17:58:56 sshwarts Exp $
+// $Id: tasking.cc,v 1.50 2008-04-16 22:22:10 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -705,7 +705,9 @@ void BX_CPU_C::get_SS_ESP_from_TSS(unsigned pl, Bit16u *ss, Bit32u *esp)
   if (BX_CPU_THIS_PTR tr.cache.valid==0)
     BX_PANIC(("get_SS_ESP_from_TSS: TR.cache invalid"));
 
-  if (BX_CPU_THIS_PTR tr.cache.type==BX_SYS_SEGMENT_AVAIL_386_TSS) {
+  if (BX_CPU_THIS_PTR tr.cache.type==BX_SYS_SEGMENT_AVAIL_386_TSS ||
+      BX_CPU_THIS_PTR tr.cache.type==BX_SYS_SEGMENT_BUSY_386_TSS)
+  {
     // 32-bit TSS
     Bit32u TSSstackaddr = 8*pl + 4;
     if ((TSSstackaddr+7) > BX_CPU_THIS_PTR tr.cache.u.system.limit_scaled) {
@@ -717,7 +719,9 @@ void BX_CPU_C::get_SS_ESP_from_TSS(unsigned pl, Bit16u *ss, Bit32u *esp)
     access_read_linear(BX_CPU_THIS_PTR tr.cache.u.system.base +
       TSSstackaddr,   4, 0, BX_READ, esp);
   }
-  else if (BX_CPU_THIS_PTR tr.cache.type==BX_SYS_SEGMENT_AVAIL_286_TSS) {
+  else if (BX_CPU_THIS_PTR tr.cache.type==BX_SYS_SEGMENT_AVAIL_286_TSS ||
+           BX_CPU_THIS_PTR tr.cache.type==BX_SYS_SEGMENT_BUSY_286_TSS)
+  {
     // 16-bit TSS
     Bit16u temp16;
     Bit32u TSSstackaddr = 4*pl + 2;
