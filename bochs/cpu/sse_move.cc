@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_move.cc,v 1.87 2008-04-06 18:00:20 sshwarts Exp $
+// $Id: sse_move.cc,v 1.88 2008-04-16 05:41:43 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -827,7 +827,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MASKMOVDQU_VdqUdq(bxInstruction_c *i)
   }
 
   /* and write result back to the memory */
-  write_virtual_dqword(BX_SEG_REG_DS, rdi, (Bit8u *) &temp);
+  write_virtual_dqword(i->seg(), rdi, (Bit8u *) &temp);
 
 #else
   BX_INFO(("MASKMOVDQU_VdqUdq: required SSE2, use --enable-sse option"));

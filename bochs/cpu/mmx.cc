@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: mmx.cc,v 1.76 2008-04-06 13:56:22 sshwarts Exp $
+// $Id: mmx.cc,v 1.77 2008-04-16 05:41:43 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2002 Stanislav Shwartsman
@@ -2453,6 +2453,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MASKMOVQ_PqPRq(bxInstruction_c *i)
 #if BX_SUPPORT_3DNOW || BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareMMX();
 
+  if (i->modC0()) {
+    BX_ERROR(("MASKMOVQ_PqPRq: must be register operand!"));
+    UndefinedOpcode(i);
+  }
+
   bx_address rdi;
   BxPackedMmxRegister op = BX_READ_MMX_REG(i->nnn()), tmp,
     mask = BX_READ_MMX_REG(i->rm());
@@ -2473,7 +2478,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MASKMOVQ_PqPRq(bxInstruction_c *i)
   if (MMXUQ(mask) == 0) return;
 
   /* do read-modify-write for efficiency */
-  MMXUQ(tmp) = read_RMW_virtual_qword(BX_SEG_REG_DS, rdi);
+  MMXUQ(tmp) = read_RMW_virtual_qword(i->seg(), rdi);
 
   if(MMXUB0(mask) & 0x80) MMXUB0(tmp) = MMXUB0(op);
   if(MMXUB1(mask) & 0x80) MMXUB1(tmp) = MMXUB1(op);
