@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.189 2008-04-16 05:41:42 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.190 2008-04-16 05:56:55 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -697,7 +697,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo64R[512*3] = {
   /* 0F F4 /wr */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0ff4 },
   /* 0F F5 /wr */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0ff5 },
   /* 0F F6 /wr */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0ff6 },
-  /* 0F F7 /wr */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0ff7 },
+  /* 0F F7 /wr */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0ff7R },
   /* 0F F8 /wr */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0ff8 },
   /* 0F F9 /wr */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0ff9 },
   /* 0F FA /wr */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0ffa },
@@ -1224,7 +1224,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo64R[512*3] = {
   /* 0F F4 /dr */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0ff4 },
   /* 0F F5 /dr */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0ff5 },
   /* 0F F6 /dr */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0ff6 },
-  /* 0F F7 /dr */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0ff7 },
+  /* 0F F7 /dr */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0ff7R },
   /* 0F F8 /dr */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0ff8 },
   /* 0F F9 /dr */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0ff9 },
   /* 0F FA /dr */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0ffa },
@@ -1751,7 +1751,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo64R[512*3] = {
   /* 0F F4 /qr */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0ff4 },
   /* 0F F5 /qr */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0ff5 },
   /* 0F F6 /qr */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0ff6 },
-  /* 0F F7 /qr */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0ff7 },
+  /* 0F F7 /qr */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0ff7R },
   /* 0F F8 /qr */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0ff8 },
   /* 0F F9 /qr */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0ff9 },
   /* 0F FA /qr */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0ffa },
@@ -2284,7 +2284,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo64M[512*3] = {
   /* 0F F4 /wm */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0ff4 },
   /* 0F F5 /wm */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0ff5 },
   /* 0F F6 /wm */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0ff6 },
-  /* 0F F7 /wm */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0ff7 },
+  /* 0F F7 /wm */ { 0, BX_IA_ERROR }, // MASKMOV SSE group
   /* 0F F8 /wm */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0ff8 },
   /* 0F F9 /wm */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0ff9 },
   /* 0F FA /wm */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0ffa },
@@ -2811,7 +2811,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo64M[512*3] = {
   /* 0F F4 /dm */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0ff4 },
   /* 0F F5 /dm */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0ff5 },
   /* 0F F6 /dm */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0ff6 },
-  /* 0F F7 /dm */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0ff7 },
+  /* 0F F7 /dm */ { 0, BX_IA_ERROR }, // MASKMOV SSE group
   /* 0F F8 /dm */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0ff8 },
   /* 0F F9 /dm */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0ff9 },
   /* 0F FA /dm */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0ffa },
@@ -3338,7 +3338,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo64M[512*3] = {
   /* 0F F4 /qm */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0ff4 },
   /* 0F F5 /qm */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0ff5 },
   /* 0F F6 /qm */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0ff6 },
-  /* 0F F7 /qm */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0ff7 },
+  /* 0F F7 /qm */ { 0, BX_IA_ERROR }, // MASKMOV SSE group
   /* 0F F8 /qm */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0ff8 },
   /* 0F F9 /qm */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0ff9 },
   /* 0F FA /qm */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0ffa },
