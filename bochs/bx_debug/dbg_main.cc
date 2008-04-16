@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.127 2008-04-16 16:42:00 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.128 2008-04-16 21:49:46 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -479,7 +479,7 @@ void bx_dbg_exception(unsigned cpu, Bit8u vector, Bit16u error_code)
      "(#NP) segment not present",
      "(#SS) stack fault",
      "(#GP) general protection fault",
-     "(#PG) page fault",
+     "(#PF) page fault",
      "(#RESERVED)",
      "(#MF) floating point error",
      "(#AC) alignment check",
