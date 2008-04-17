@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dma.cc,v 1.46 2008-02-15 22:05:42 sshwarts Exp $
+// $Id: dma.cc,v 1.47 2008-04-17 14:39:32 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -122,7 +122,7 @@ unsigned bx_dma_c::get_TC(void)
 void bx_dma_c::init(void)
 {
   unsigned c, i, j;
-  BX_DEBUG(("Init $Id: dma.cc,v 1.46 2008-02-15 22:05:42 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: dma.cc,v 1.47 2008-04-17 14:39:32 sshwarts Exp $"));
 
   /* 8237 DMA controller */
 
@@ -759,7 +759,7 @@ void bx_dma_c::raise_HLDA(void)
       else
         BX_PANIC(("no dmaWrite handler for channel %u.", channel));
 
-      DEV_MEM_WRITE_PHYSICAL(phy_addr, 2, &data_word);
+      DEV_MEM_WRITE_PHYSICAL(phy_addr, 2, (Bit8u*) &data_word);
 
       BX_DBG_DMA_REPORT(phy_addr, 2, BX_WRITE, data_word);
     }
@@ -776,7 +776,7 @@ void bx_dma_c::raise_HLDA(void)
       BX_DBG_DMA_REPORT(phy_addr, 1, BX_READ, data_byte);
     }
     else {
-      DEV_MEM_READ_PHYSICAL(phy_addr, 2, &data_word);
+      DEV_MEM_READ_PHYSICAL(phy_addr, 2, (Bit8u*) &data_word);
 
       if (BX_DMA_THIS h[channel].dmaRead16)
         BX_DMA_THIS h[channel].dmaRead16(&data_word);

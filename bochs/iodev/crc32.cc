@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: crc32.cc,v 1.4 2001-10-03 13:10:38 bdenney Exp $
+// $Id: crc32.cc,v 1.5 2008-04-17 14:39:32 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 /* CRC-32 calculator
@@ -12,7 +12,8 @@ CRC_Generator::CRC_Generator() {
 	init();
 }
 
-void CRC_Generator::init(void) {
+void CRC_Generator::init(void)
+{
   Bit32u POLYNOMIAL = 0x04c11db7;
   int i;
 
@@ -25,7 +26,8 @@ void CRC_Generator::init(void) {
   }
 }
 
-Bit32u CRC_Generator::reflect(Bit32u ref, Bit8u ch) {
+Bit32u CRC_Generator::reflect(Bit32u ref, Bit8u ch)
+{
   Bit32u value(0);
   int i;
 
@@ -37,7 +39,8 @@ Bit32u CRC_Generator::reflect(Bit32u ref, Bit8u ch) {
   return value;
 }
 
-Bit32u CRC_Generator::get_CRC(Bit8u * buf, Bit32u buflen) {
+Bit32u CRC_Generator::get_CRC(Bit8u * buf, Bit32u buflen)
+{
   Bit32u ulCRC(0xFFFFFFFF);
   Bit32u len(buflen);
   Bit8u * buffer=(Bit8u *) buf;

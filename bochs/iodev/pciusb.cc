@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pciusb.cc,v 1.62 2008-01-26 22:24:02 sshwarts Exp $
+// $Id: pciusb.cc,v 1.63 2008-04-17 14:39:32 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -734,7 +734,7 @@ void bx_pciusb_c::usb_timer(void)
     Bit32u item, address, lastvertaddr = 0, queue_num = 0;
     Bit32u frame, frm_addr = BX_USB_THIS hub[0].usb_frame_base.frame_base +
                                 (BX_USB_THIS hub[0].usb_frame_num.frame_num << 2);
-    DEV_MEM_READ_PHYSICAL(frm_addr, 4, &frame);
+    DEV_MEM_READ_PHYSICAL(frm_addr, 4, (Bit8u*) &frame);
     if ((frame & 1) == 0) {
       stack[stk].next = (frame & ~0xF);
       stack[stk].d = 0;
@@ -754,14 +754,14 @@ void bx_pciusb_c::usb_timer(void)
           lastvertaddr = address + 4;
           // get HORZ slot
           stk++;
-          DEV_MEM_READ_PHYSICAL(address, 4, &item);
+          DEV_MEM_READ_PHYSICAL(address, 4, (Bit8u*) &item);
           stack[stk].next = item & ~0xF;
           stack[stk].d = HC_HORZ;
           stack[stk].q = (item & 0x0002) ? 1 : 0;
           stack[stk].t = (item & 0x0001) ? 1 : 0;
           // get VERT slot
           stk++;
-          DEV_MEM_READ_PHYSICAL(lastvertaddr, 4, &item);
+          DEV_MEM_READ_PHYSICAL(lastvertaddr, 4, (Bit8u*) &item);
           stack[stk].next = item & ~0xF;
           stack[stk].d = HC_VERT;
           stack[stk].q = (item & 0x0002) ? 1 : 0;
@@ -772,7 +772,7 @@ void bx_pciusb_c::usb_timer(void)
           queue_num++;
         } else {  // else is a TD
           address = stack[stk].next;
-          DEV_MEM_READ_PHYSICAL(address, 32, &td);
+          DEV_MEM_READ_PHYSICAL(address, 32, (Bit8u*) &td);
           bx_bool spd = (td.dword1 & (1<<29)) ? 1 : 0;
           stack[stk].next = td.dword0 & ~0xF;
           bx_bool depthbreadth = (td.dword0 & 0x0004) ? 1 : 0;     // 1 = depth first, 0 = breadth first
@@ -792,10 +792,10 @@ void bx_pciusb_c::usb_timer(void)
               }
               if (td.dword1 & (1<<22)) stalled = 1;
 
-              DEV_MEM_WRITE_PHYSICAL(address+4, 4, &td.dword1);  // write back the status
+              DEV_MEM_WRITE_PHYSICAL(address+4, 4, (Bit8u*) &td.dword1);  // write back the status
               // copy pointer for next queue item, in to vert queue head
               if ((stk > 0) && !shortpacket && (stack[stk].d == HC_VERT))
-                DEV_MEM_WRITE_PHYSICAL(lastvertaddr, 4, &td.dword0);
+                DEV_MEM_WRITE_PHYSICAL(lastvertaddr, 4, (Bit8u*) &td.dword0);
             }
           }
 

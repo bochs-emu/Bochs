@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.91 2008-02-15 22:05:42 sshwarts Exp $
+// $Id: iodev.h,v 1.92 2008-04-17 14:39:32 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -25,6 +25,8 @@
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+//
+/////////////////////////////////////////////////////////////////////////
 
 #ifndef IODEV_H
 #define IODEV_H
@@ -45,7 +47,6 @@
 #define BX_MAX_IRQS 16
 #define BX_NO_IRQ  -1
 
-
 class bx_pit_c;
 #if BX_SUPPORT_APIC
 class bx_ioapic_c;
@@ -57,10 +58,8 @@ class bx_iodebug_c;
 class bx_g2h_c;
 #endif
 
-
 typedef Bit32u (*bx_read_handler_t)(void *, Bit32u, unsigned);
 typedef void   (*bx_write_handler_t)(void *, Bit32u, Bit32u, unsigned);
-
 
 #if BX_USE_DEV_SMF
 #  define BX_DEV_SMF  static
@@ -283,7 +282,7 @@ public:
   {
     STUBFUNC(pci, register_pci_handlers); return 0;
   }
-  virtual bx_bool is_pci_device (const char *name) {
+  virtual bx_bool is_pci_device(const char *name) {
     return 0;
   }
   virtual bx_bool pci_set_base_mem(void *this_ptr, memory_handler_t f1, memory_handler_t f2,
@@ -299,12 +298,8 @@ public:
     return 0;
   }
 
-  virtual Bit8u rd_memType (Bit32u addr) {
-    return 0;
-  }
-  virtual Bit8u wr_memType (Bit32u addr) {
-    return 0;
-  }
+  virtual Bit8u rd_memType(Bit32u addr) { return 0; }
+  virtual Bit8u wr_memType(Bit32u addr) { return 0; }
   virtual void print_i440fx_state(void) {}
 };
 
@@ -354,12 +349,8 @@ public:
     STUBFUNC(pciusb, usb_key_enq);
     return 0;
   }
-  virtual bx_bool usb_keyboard_connected() {
-    return 0;
-  }
-  virtual bx_bool usb_mouse_connected() {
-    return 0;
-  }
+  virtual bx_bool usb_keyboard_connected() { return 0; }
+  virtual bx_bool usb_mouse_connected() { return 0; }
 };
 #endif
 
@@ -533,15 +524,36 @@ private:
   static void   default_write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len);
 
   int timer_handle;
-  bx_bool is_serial_enabled ();
-  bx_bool is_usb_enabled ();
-  bx_bool is_parallel_enabled ();
+  bx_bool is_serial_enabled();
+  bx_bool is_usb_enabled();
+  bx_bool is_parallel_enabled();
 };
 
-#define DEV_MEM_READ_PHYSICAL(phy_addr, len, ptr) \
-  BX_MEM(0)->readPhysicalPage(NULL, phy_addr, len, ptr)
-#define DEV_MEM_WRITE_PHYSICAL(phy_addr, len, ptr) \
-  BX_MEM(0)->writePhysicalPage(NULL, phy_addr, len, ptr)
+// memory stub has an assumption that there are no memory accesses splitting 4K page
+BX_CPP_INLINE void DEV_MEM_READ_PHYSICAL(bx_phy_address phy_addr, unsigned len, Bit8u *ptr)
+{
+  while(len > 0) { 
+    unsigned remainingInPage = 0x1000 - (phy_addr & 0xfff);
+    if (len < remainingInPage) remainingInPage = len;
+    BX_MEM(0)->readPhysicalPage(NULL, phy_addr, remainingInPage, ptr);
+    ptr += remainingInPage;
+    phy_addr += remainingInPage;
+    len -= remainingInPage;
+  }
+}
+
+// memory stub has an assumption that there are no memory accesses splitting 4K page
+BX_CPP_INLINE void DEV_MEM_WRITE_PHYSICAL(bx_phy_address phy_addr, unsigned len, Bit8u *ptr)
+{
+  while(len > 0) { 
+    unsigned remainingInPage = 0x1000 - (phy_addr & 0xfff);
+    if (len < remainingInPage) remainingInPage = len;
+    BX_MEM(0)->writePhysicalPage(NULL, phy_addr, remainingInPage, ptr);
+    ptr += remainingInPage;
+    phy_addr += remainingInPage;
+    len -= remainingInPage;
+  }
+}
 
 #ifndef NO_DEVICE_INCLUDES
 

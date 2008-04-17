@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.210 2008-03-30 08:32:57 vruppert Exp $
+// $Id: harddrv.cc,v 1.211 2008-04-17 14:39:32 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -173,7 +173,7 @@ void bx_hard_drive_c::init(void)
   char  ata_name[20];
   bx_list_c *base;
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.210 2008-03-30 08:32:57 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.211 2008-04-17 14:39:32 sshwarts Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     sprintf(ata_name, "ata.%d.resources", channel);
@@ -815,9 +815,7 @@ Bit32u bx_hard_drive_c::read(Bit32u address, unsigned io_len)
 #if BX_SupportRepeatSpeedups
           if (DEV_bulk_io_quantum_requested()) {
             unsigned transferLen, quantumsMax;
-
-            quantumsMax =
-              (BX_SELECTED_CONTROLLER(channel).buffer_size - BX_SELECTED_CONTROLLER(channel).buffer_index) / io_len;
+            quantumsMax = (BX_SELECTED_CONTROLLER(channel).buffer_size - BX_SELECTED_CONTROLLER(channel).buffer_index) / io_len;
             if (quantumsMax == 0)
               BX_PANIC(("IO read(0x%04x): not enough space for read", address));
             DEV_bulk_io_quantum_transferred() = DEV_bulk_io_quantum_requested();
@@ -825,8 +823,7 @@ Bit32u bx_hard_drive_c::read(Bit32u address, unsigned io_len)
               DEV_bulk_io_quantum_transferred() = quantumsMax;
             transferLen = io_len * DEV_bulk_io_quantum_transferred();
             memcpy((Bit8u*) DEV_bulk_io_host_addr(),
-              &BX_SELECTED_CONTROLLER(channel).buffer[BX_SELECTED_CONTROLLER(channel).buffer_index],
-              transferLen);
+              &BX_SELECTED_CONTROLLER(channel).buffer[BX_SELECTED_CONTROLLER(channel).buffer_index], transferLen);
             DEV_bulk_io_host_addr() += transferLen;
             BX_SELECTED_CONTROLLER(channel).buffer_index += transferLen;
             value32 = 0; // Value returned not important;
@@ -1279,20 +1276,15 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
 #if BX_SupportRepeatSpeedups
           if (DEV_bulk_io_quantum_requested()) {
             unsigned transferLen, quantumsMax;
-
-            quantumsMax =
-              (BX_SELECTED_CONTROLLER(channel).buffer_size - BX_SELECTED_CONTROLLER(channel).buffer_index) / io_len;
+            quantumsMax = (BX_SELECTED_CONTROLLER(channel).buffer_size - BX_SELECTED_CONTROLLER(channel).buffer_index) / io_len;
             if (quantumsMax == 0)
               BX_PANIC(("IO write(0x%04x): not enough space for write", address));
-            DEV_bulk_io_quantum_transferred() =
-                DEV_bulk_io_quantum_requested();
+            DEV_bulk_io_quantum_transferred() = DEV_bulk_io_quantum_requested();
             if (quantumsMax < DEV_bulk_io_quantum_transferred())
               DEV_bulk_io_quantum_transferred() = quantumsMax;
             transferLen = io_len * DEV_bulk_io_quantum_transferred();
-            memcpy(
-              &BX_SELECTED_CONTROLLER(channel).buffer[BX_SELECTED_CONTROLLER(channel).buffer_index],
-              (Bit8u*) DEV_bulk_io_host_addr(),
-              transferLen);
+            memcpy(&BX_SELECTED_CONTROLLER(channel).buffer[BX_SELECTED_CONTROLLER(channel).buffer_index],
+              (Bit8u*) DEV_bulk_io_host_addr(), transferLen);
             DEV_bulk_io_host_addr() += transferLen;
             BX_SELECTED_CONTROLLER(channel).buffer_index += transferLen;
           }

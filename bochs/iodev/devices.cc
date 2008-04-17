@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: devices.cc,v 1.120 2008-02-15 22:05:42 sshwarts Exp $
+// $Id: devices.cc,v 1.121 2008-04-17 14:39:32 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -25,6 +25,8 @@
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+//
+/////////////////////////////////////////////////////////////////////////
 
 
 #include "bochs.h"
@@ -122,7 +124,7 @@ void bx_devices_c::init(BX_MEM_C *newmem)
   unsigned i;
   const char def_name[] = "Default";
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.120 2008-02-15 22:05:42 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.121 2008-04-17 14:39:32 sshwarts Exp $"));
   mem = newmem;
 
   /* set no-default handlers, will be overwritten by the real default handler */
@@ -985,7 +987,7 @@ bx_devices_c::outp(Bit16u addr, Bit32u value, unsigned io_len)
   }
 }
 
-bx_bool bx_devices_c::is_serial_enabled()
+bx_bool bx_devices_c::is_serial_enabled(void)
 {
   char pname[24];
 
@@ -997,7 +999,7 @@ bx_bool bx_devices_c::is_serial_enabled()
   return false;
 }
 
-bx_bool bx_devices_c::is_usb_enabled()
+bx_bool bx_devices_c::is_usb_enabled(void)
 {
   char pname[20];
 
@@ -1009,7 +1011,7 @@ bx_bool bx_devices_c::is_usb_enabled()
   return false;
 }
 
-bx_bool bx_devices_c::is_parallel_enabled()
+bx_bool bx_devices_c::is_parallel_enabled(void)
 {
   char pname[26];
 
@@ -1023,11 +1025,10 @@ bx_bool bx_devices_c::is_parallel_enabled()
 
 void bx_pci_device_stub_c::register_pci_state(bx_list_c *list, Bit8u *pci_conf)
 {
-  unsigned i;
   char name[6];
 
   bx_list_c *pci = new bx_list_c(list, "pci_conf", 256);
-  for (i=0; i<256; i++) {
+  for (unsigned i=0; i<256; i++) {
     sprintf(name, "0x%02x", i);
     new bx_shadow_num_c(pci, name, &pci_conf[i], BASE_HEX);
   }
