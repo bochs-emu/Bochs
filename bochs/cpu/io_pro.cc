@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: io_pro.cc,v 1.30 2008-03-29 18:18:07 sshwarts Exp $
+// $Id: io_pro.cc,v 1.31 2008-04-17 14:22:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -113,9 +113,10 @@ bx_bool BX_CPU_C::allow_io(Bit16u addr, unsigned len)
   if (BX_CPU_THIS_PTR cr0.get_PE() && (BX_CPU_THIS_PTR get_VM() || (CPL>BX_CPU_THIS_PTR get_IOPL())))
   {
     if (BX_CPU_THIS_PTR tr.cache.valid==0 ||
-        BX_CPU_THIS_PTR tr.cache.type != BX_SYS_SEGMENT_AVAIL_386_TSS)
+       (BX_CPU_THIS_PTR tr.cache.type != BX_SYS_SEGMENT_AVAIL_386_TSS &&
+        BX_CPU_THIS_PTR tr.cache.type != BX_SYS_SEGMENT_BUSY_386_TSS))
     {
-      BX_ERROR(("allow_io(): TR doesn't point to a valid 32bit TSS"));
+      BX_ERROR(("allow_io(): TR doesn't point to a valid 32bit TSS, TR.TYPE=%u", BX_CPU_THIS_PTR tr.cache.type));
       return(0);
     }
 
