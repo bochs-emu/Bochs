@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: load32bitOShack.cc,v 1.27 2008-04-17 20:20:43 sshwarts Exp $
+// $Id: load32bitOShack.cc,v 1.28 2008-04-17 20:45:00 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -136,7 +136,7 @@ static void bx_load_linux_setup_params(Bit32u initrd_start, Bit32u initrd_size)
 {
   BX_MEM_C *mem = BX_MEM(0);
   struct linux_setup_params *params =
-         (struct linux_setup_params *) &mem->vector[0x00090000];
+         (struct linux_setup_params *) mem->get_vector(0x00090000);
 
   memset(params, '\0', sizeof(*params));
 
@@ -294,7 +294,7 @@ bx_load_kernel_image(char *path, Bit32u paddr)
 
   offset = 0;
   while (size > 0) {
-    ret = read(fd, (bx_ptr_t) &mem->vector[paddr + offset], size);
+    ret = read(fd, (bx_ptr_t) mem->get_vector(paddr + offset), size);
     if (ret <= 0) {
       BX_INFO(("load_kernel_image: read failed on image"));
       BX_EXIT(1);

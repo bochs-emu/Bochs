@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.129 2008-04-16 22:28:07 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.130 2008-04-17 20:45:00 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2967,7 +2967,7 @@ void bx_dbg_info_tss_command(void)
 
   bx_phy_address paddr = 0;
   BX_CPU(dbg_cpu)->dbg_xlate_linear2phy(laddr, &paddr);
-  bx_dbg_print_tss(BX_MEM(0)->vector+paddr, len);
+  bx_dbg_print_tss(BX_MEM(0)->vector(paddr), len);
 }
 
 /*
