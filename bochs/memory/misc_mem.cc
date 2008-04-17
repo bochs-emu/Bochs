@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: misc_mem.cc,v 1.111 2008-04-17 14:39:33 sshwarts Exp $
+// $Id: misc_mem.cc,v 1.112 2008-04-17 20:20:43 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -47,7 +47,6 @@ BX_MEM_C::BX_MEM_C()
   vector = NULL;
   actual_vector = NULL;
   len    = 0;
-  megabytes = 0;
 
   memory_handlers = NULL;
 }
@@ -76,7 +75,7 @@ void BX_MEM_C::init_memory(Bit32u memsize)
 {
   unsigned idx;
 
-  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.111 2008-04-17 14:39:33 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.112 2008-04-17 20:20:43 sshwarts Exp $"));
 
   if (BX_MEM_THIS actual_vector != NULL) {
     BX_INFO (("freeing existing memory vector"));
@@ -89,7 +88,6 @@ void BX_MEM_C::init_memory(Bit32u memsize)
 	BX_MEM_THIS actual_vector, BX_MEM_THIS vector));
 
   BX_MEM_THIS len  = memsize;
-  BX_MEM_THIS megabytes = memsize / (1024*1024);
   BX_MEM_THIS memory_handlers = new struct memory_handler_struct *[4096];
   BX_MEM_THIS rom = &BX_MEM_THIS vector[memsize];
   BX_MEM_THIS bogus = &BX_MEM_THIS vector[memsize + BIOSROMSZ + EXROMSIZE];
@@ -98,8 +96,7 @@ void BX_MEM_C::init_memory(Bit32u memsize)
   BX_MEM_THIS dbg_dirty_pages = new Bit8u[pages];
   memset(BX_MEM_THIS dbg_dirty_pages, 0, pages);
 #endif
-  memset(BX_MEM_THIS rom, 0xff, BIOSROMSZ + EXROMSIZE);
-  memset(BX_MEM_THIS bogus, 0xff, 4096);
+  memset(BX_MEM_THIS rom, 0xff, BIOSROMSZ + EXROMSIZE + 4096);
   for (idx = 0; idx < 4096; idx++)
     BX_MEM_THIS memory_handlers[idx] = NULL;
   for (idx = 0; idx < 65; idx++)
@@ -111,7 +108,7 @@ void BX_MEM_C::init_memory(Bit32u memsize)
 
   // accept only memory size which is multiply of 1M
   BX_ASSERT((BX_MEM_THIS len & 0xfffff) == 0);
-  BX_INFO(("%.2fMB", (float)(BX_MEM_THIS megabytes)));
+  BX_INFO(("%.2fMB", (float)(BX_MEM_THIS len / (1024.0*1024.0))));
 
 #if BX_SUPPORT_MONITOR_MWAIT
   BX_MEM_THIS monitor_active = new bx_bool[BX_SMP_PROCESSORS];
@@ -529,8 +526,8 @@ Bit8u *BX_MEM_C::getHostMemAddr(BX_CPU_C *cpu, bx_phy_address a20Addr, unsigned 
 
 #if BX_SUPPORT_MONITOR_MWAIT
   if (BX_MEM_THIS is_monitor(a20Addr & ~0xfff, 0x1000)) {
-     // Vetoed! Write monitored page !
-     if (op != BX_READ) return(NULL);
+    // Vetoed! Write monitored page !
+    if (op != BX_READ) return(NULL);
   }
 #endif
 
@@ -555,8 +552,7 @@ Bit8u *BX_MEM_C::getHostMemAddr(BX_CPU_C *cpu, bx_phy_address a20Addr, unsigned 
           {
             return (Bit8u *) &BX_MEM_THIS rom[a20Addr & BIOS_MASK];
           }
-          else
-          {
+          else {
             return (Bit8u *) &BX_MEM_THIS rom[(a20Addr & EXROM_MASK) + BIOSROMSZ];
           }
           break;
@@ -577,8 +573,7 @@ Bit8u *BX_MEM_C::getHostMemAddr(BX_CPU_C *cpu, bx_phy_address a20Addr, unsigned 
       {
         return (Bit8u *) &BX_MEM_THIS rom[a20Addr & BIOS_MASK];
       }
-      else
-      {
+      else {
         return((Bit8u *) &BX_MEM_THIS rom[(a20Addr & EXROM_MASK) + BIOSROMSZ]);
       }
     }
@@ -601,6 +596,7 @@ Bit8u *BX_MEM_C::getHostMemAddr(BX_CPU_C *cpu, bx_phy_address a20Addr, unsigned 
       return(NULL); // Vetoed!  Mem mapped IO (VGA)
     else if (a20Addr >= (bx_phy_address)~BIOS_MASK)
       return(NULL); // Vetoed!  ROMs
+
 #if BX_SUPPORT_PCI
     else if (BX_MEM_THIS pci_enabled && ((a20Addr & 0xfffc0000) == 0x000c0000))
     {
@@ -615,8 +611,7 @@ Bit8u *BX_MEM_C::getHostMemAddr(BX_CPU_C *cpu, bx_phy_address a20Addr, unsigned 
       if ((a20Addr & 0xfffc0000) != 0x000c0000) {
         retAddr = BX_MEM_THIS get_vector(a20Addr);
       }
-      else
-      {
+      else {
         return(NULL);  // Vetoed!  ROMs
       }
     }
