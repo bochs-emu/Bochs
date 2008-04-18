@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.456 2008-04-16 16:44:04 sshwarts Exp $
+// $Id: cpu.h,v 1.457 2008-04-18 18:32:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -3115,7 +3115,7 @@ public: // for now...
 
 #if BX_CPU_LEVEL >= 5
   BX_SMF Bit64u get_TSC();
-  BX_SMF void   set_TSC(Bit32u tsc);
+  BX_SMF void   set_TSC(bx_address tsc);
 #endif
 
 #if BX_SUPPORT_FPU

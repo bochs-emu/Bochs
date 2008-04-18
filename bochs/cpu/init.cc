@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.166 2008-04-16 16:44:05 sshwarts Exp $
+// $Id: init.cc,v 1.167 2008-04-18 18:32:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -507,8 +507,9 @@ void BX_CPU_C::register_state(void)
   local_apic.register_state(cpu);
 #endif
 
+  BXRS_HEX_PARAM_SIMPLE32(cpu, async_event);
+
   BXRS_PARAM_BOOL(cpu, EXT, EXT);
-  BXRS_PARAM_BOOL(cpu, async_event, async_event);
   BXRS_PARAM_BOOL(cpu, INTR, INTR);
   BXRS_PARAM_BOOL(cpu, smi_pending, smi_pending);
   BXRS_PARAM_BOOL(cpu, nmi_pending, nmi_pending);

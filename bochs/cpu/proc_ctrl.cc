@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.213 2008-04-16 16:44:05 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.214 2008-04-18 18:32:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1332,7 +1332,7 @@ void BX_CPU_C::SetCR0(Bit32u val_32)
 bx_bool BX_CPU_C::SetCR4(bx_address val)
 {
   Bit32u oldCR4 = BX_CPU_THIS_PTR cr4.getRegister();
-  Bit32u allowMask = 0;
+  bx_address allowMask = 0;
 
   // CR4 bits definitions:
   //   [31-19] Reserved, Must be Zero
@@ -1409,7 +1409,6 @@ bx_bool BX_CPU_C::SetCR4(bx_address val)
     return 0;
   }
 
-  val &= allowMask; // Screen out unsupported bits. (not needed, for good measure)
   BX_CPU_THIS_PTR cr4.setRegister(val);
   pagingCR4Changed(oldCR4, BX_CPU_THIS_PTR cr4.getRegister());
   return 1;
@@ -1458,28 +1457,26 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDPMC(bxInstruction_c *i)
 }
 
 #if BX_CPU_LEVEL >= 5
-Bit64u BX_CPU_C::get_TSC(void)
+BX_CPP_INLINE Bit64u BX_CPU_C::get_TSC(void)
 {
   return bx_pc_system.time_ticks() - BX_CPU_THIS_PTR msr.tsc_last_reset;
 }
 
-void BX_CPU_C::set_TSC(Bit32u newval)
+void BX_CPU_C::set_TSC(Bit64u newval)
 {
   // compute the correct setting of tsc_last_reset so that a get_TSC()
   // will return newval
-  BX_CPU_THIS_PTR msr.tsc_last_reset =
-            bx_pc_system.time_ticks() - (Bit64u) newval;
+  BX_CPU_THIS_PTR msr.tsc_last_reset = bx_pc_system.time_ticks() - newval;
 
   // verify
-  BX_ASSERT (get_TSC() == (Bit64u) newval);
+  BX_ASSERT (get_TSC() == newval);
 }
 #endif
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDTSC(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
-  bx_bool tsd = BX_CPU_THIS_PTR cr4.get_TSD();
-  if ((tsd==0) || (tsd==1 && CPL==0)) {
+  if (! BX_CPU_THIS_PTR cr4.get_TSD() || CPL==0) {
     // return ticks
     Bit64u ticks = BX_CPU_THIS_PTR get_TSC();
     RAX = (Bit32u) (ticks & 0xffffffff);
@@ -1805,8 +1802,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRMSR(bxInstruction_c *i)
 #endif  /* BX_CPU_LEVEL == 5 */
 
     case BX_MSR_TSC:
-      BX_CPU_THIS_PTR set_TSC(EAX); /* ignore the high 32bits */
-      BX_INFO(("WRMSR: wrote 0x%08x to MSR_TSC", EAX));
+      BX_CPU_THIS_PTR set_TSC(val64);
+      BX_INFO(("WRMSR: wrote 0x%08x%08x to MSR_TSC", EDX, EAX));
       return;
 
     /* MSR_APICBASE
