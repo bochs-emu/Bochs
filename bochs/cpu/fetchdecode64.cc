@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.192 2008-04-16 21:35:43 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.193 2008-04-18 13:11:52 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -375,8 +375,8 @@ static const BxOpcodeInfo_t BxOpcodeInfo64R[512*3] = {
   /* BF /wr */ { BxImmediate_Iw, BX_IA_MOV_RXIw },
   /* C0 /wr */ { BxGroup2 | BxImmediate_Ib, BX_IA_ERROR, BxOpcodeInfoG2Eb },
   /* C1 /wr */ { BxGroup2 | BxImmediate_Ib, BX_IA_ERROR, BxOpcodeInfoG2Ew },
-  /* C2 /wr */ { BxImmediate_Iw | BxTraceEnd, BX_IA_RETnear16_Iw },
-  /* C3 /wr */ { BxTraceEnd,                  BX_IA_RETnear16 },
+  /* C2 /wr */ { BxImmediate_Iw | BxTraceEnd, BX_IA_RETnear64_Iw },
+  /* C3 /wr */ { BxTraceEnd,                  BX_IA_RETnear64 },
   /* C4 /wr */ { 0, BX_IA_ERROR },
   /* C5 /wr */ { 0, BX_IA_ERROR },
   /* C6 /wr */ { BxImmediate_Ib, BX_IA_MOV_EbIbR },
@@ -1962,8 +1962,8 @@ static const BxOpcodeInfo_t BxOpcodeInfo64M[512*3] = {
   /* BF /wm */ { BxImmediate_Iw, BX_IA_MOV_RXIw },
   /* C0 /wm */ { BxGroup2 | BxImmediate_Ib, BX_IA_ERROR, BxOpcodeInfoG2Eb },
   /* C1 /wm */ { BxGroup2 | BxImmediate_Ib, BX_IA_ERROR, BxOpcodeInfoG2Ew },
-  /* C2 /wm */ { BxImmediate_Iw | BxTraceEnd, BX_IA_RETnear16_Iw },
-  /* C3 /wm */ { BxTraceEnd,                  BX_IA_RETnear16 },
+  /* C2 /wm */ { BxImmediate_Iw | BxTraceEnd, BX_IA_RETnear64_Iw },
+  /* C3 /wm */ { BxTraceEnd,                  BX_IA_RETnear64 },
   /* C4 /wm */ { 0, BX_IA_ERROR },
   /* C5 /wm */ { 0, BX_IA_ERROR },
   /* C6 /wm */ { BxImmediate_Ib, BX_IA_MOV_EbIbM },
