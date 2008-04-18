@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.109 2008-04-16 22:08:46 sshwarts Exp $
+// $Id: exception.cc,v 1.110 2008-04-18 10:19:33 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -356,7 +356,7 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error
     // must specify global in the local/global bit,
     //      else #GP(TSS selector)
     if (tss_selector.ti) {
-      BX_PANIC(("interrupt: tss_selector.ti=1"));
+      BX_ERROR(("interrupt: tss_selector.ti=1 from gate descriptor - #GP(tss_selector)"));
       exception(BX_GP_EXCEPTION, raw_tss_selector & 0xfffc, 0);
     }
 
@@ -368,11 +368,14 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error
     // AR byte must specify available TSS,
     //   else #GP(TSS selector)
     if (tss_descriptor.valid==0 || tss_descriptor.segment) {
-      BX_ERROR(("exception: TSS selector points to bad TSS"));
+      BX_ERROR(("exception: TSS selector points to invalid or bad TSS - #GP(tss_selector)"));
       exception(BX_GP_EXCEPTION, raw_tss_selector & 0xfffc, 0);
     }
-    if (tss_descriptor.type!=9 && tss_descriptor.type!=1) {
-      BX_ERROR(("exception: TSS selector points to bad TSS"));
+
+    if (tss_descriptor.type!=BX_SYS_SEGMENT_AVAIL_286_TSS &&
+        tss_descriptor.type!=BX_SYS_SEGMENT_AVAIL_386_TSS)
+    {
+      BX_ERROR(("exception: TSS selector points to bad TSS - #GP(tss_selector)"));
       exception(BX_GP_EXCEPTION, raw_tss_selector & 0xfffc, 0);
     }
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: segment_ctrl_pro.cc,v 1.84 2008-03-29 18:18:07 sshwarts Exp $
+// $Id: segment_ctrl_pro.cc,v 1.85 2008-04-18 10:19:33 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -578,16 +578,6 @@ BX_CPU_C::parse_descriptor(Bit32u dword1, Bit32u dword2, bx_descriptor_t *temp)
         temp->valid    = 0;
         break;
 
-      case BX_SYS_SEGMENT_AVAIL_286_TSS:
-      case BX_SYS_SEGMENT_BUSY_286_TSS:
-        temp->u.system.base  = (dword1 >> 16) | ((dword2 & 0xff) << 16);
-        temp->u.system.limit = (dword1 & 0xffff);
-        temp->u.system.limit_scaled = temp->u.system.limit;
-        temp->u.system.g     = 0;
-        temp->u.system.avl   = 0;
-        temp->valid       = 1;
-        break;
-
       case BX_286_CALL_GATE:
       case BX_286_INTERRUPT_GATE:
       case BX_286_TRAP_GATE:
@@ -615,10 +605,12 @@ BX_CPU_C::parse_descriptor(Bit32u dword1, Bit32u dword2, bx_descriptor_t *temp)
         break;
 
       case BX_SYS_SEGMENT_LDT:
+      case BX_SYS_SEGMENT_AVAIL_286_TSS:
+      case BX_SYS_SEGMENT_BUSY_286_TSS:
       case BX_SYS_SEGMENT_AVAIL_386_TSS:
       case BX_SYS_SEGMENT_BUSY_386_TSS:
         temp->u.system.base  = (dword1 >> 16) |
-                           ((dword2 & 0xff) << 16) | (dword2 & 0xff000000);
+                              ((dword2 & 0xff) << 16) | (dword2 & 0xff000000);
         temp->u.system.limit = (dword1 & 0x0000ffff)  | (dword2 & 0x000f0000);
         temp->u.system.g     = (dword2 & 0x00800000) > 0;
         temp->u.system.avl   = (dword2 & 0x00100000) > 0;
