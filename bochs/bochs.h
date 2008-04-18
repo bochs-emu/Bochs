@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.225 2008-04-07 20:20:04 sshwarts Exp $
+// $Id: bochs.h,v 1.226 2008-04-18 16:47:45 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -151,6 +151,11 @@ void print_tree(bx_param_c *node, int level = 0);
   BXRS_PARAM_SPECIAL(parent, name, BX_MAX_BIT16U, save_handler, restore_handler)
 #define BXRS_PARAM_SPECIAL8(parent, name, save_handler, restore_handler) \
   BXRS_PARAM_SPECIAL(parent, name, BX_MAX_BIT8U,  save_handler, restore_handler)
+
+#define BXRS_HEX_PARAM_SIMPLE32(parent, name) \
+  new bx_shadow_num_c(parent, #name, (Bit32u*)&(name), BASE_HEX)
+#define BXRS_HEX_PARAM_SIMPLE64(parent, name) \
+  new bx_shadow_num_c(parent, #name, (Bit64u*)&(name), BASE_HEX)
 
 #define BXRS_HEX_PARAM_SIMPLE(parent, name) \
   new bx_shadow_num_c(parent, #name, &(name), BASE_HEX)
