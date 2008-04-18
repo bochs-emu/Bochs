@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.457 2008-04-18 18:32:40 sshwarts Exp $
+// $Id: cpu.h,v 1.458 2008-04-18 18:37:29 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -407,11 +407,11 @@ BOCHSAPI extern BX_CPU_C   bx_cpu;
 // The macro is used once for each flag bit
 // Do not use for arithmetic flags !
 #define DECLARE_EFLAG_ACCESSOR(name,bitnum)                     \
-  BX_CPP_INLINE void    assert_##name ();                       \
-  BX_CPP_INLINE void    clear_##name ();                        \
-  BX_CPP_INLINE Bit32u  get_##name ();                          \
-  BX_CPP_INLINE bx_bool getB_##name ();                         \
-  BX_CPP_INLINE void    set_##name (bx_bool val);               \
+  BX_SMF BX_CPP_INLINE void    assert_##name ();                \
+  BX_SMF BX_CPP_INLINE void    clear_##name ();                 \
+  BX_SMF BX_CPP_INLINE Bit32u  get_##name ();                   \
+  BX_SMF BX_CPP_INLINE bx_bool getB_##name ();                  \
+  BX_SMF BX_CPP_INLINE void    set_##name (bx_bool val);        \
 
 #define IMPLEMENT_EFLAG_ACCESSOR(name,bitnum)                   \
   BX_CPP_INLINE void BX_CPU_C::assert_##name () {               \
@@ -434,10 +434,10 @@ BOCHSAPI extern BX_CPU_C   bx_cpu;
 #if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
 
 #define DECLARE_EFLAG_ACCESSOR_AC(bitnum)                       \
-  BX_CPP_INLINE void    clear_AC();                             \
-  BX_CPP_INLINE Bit32u  get_AC();                               \
-  BX_CPP_INLINE bx_bool getB_AC();                              \
-  BX_CPP_INLINE void    set_AC(bx_bool val);                    \
+  BX_SMF BX_CPP_INLINE void    clear_AC();                      \
+  BX_SMF BX_CPP_INLINE Bit32u  get_AC();                        \
+  BX_SMF BX_CPP_INLINE bx_bool getB_AC();                       \
+  BX_SMF BX_CPP_INLINE void    set_AC(bx_bool val);             \
 
 #define IMPLEMENT_EFLAG_ACCESSOR_AC(bitnum)                     \
   BX_CPP_INLINE void BX_CPU_C::clear_AC () {                    \
@@ -459,11 +459,11 @@ BOCHSAPI extern BX_CPU_C   bx_cpu;
 #endif
 
 #define DECLARE_EFLAG_ACCESSOR_VM(bitnum)                       \
-  BX_CPP_INLINE void    assert_VM();                            \
-  BX_CPP_INLINE void    clear_VM();                             \
-  BX_CPP_INLINE Bit32u  get_VM();                               \
-  BX_CPP_INLINE bx_bool getB_VM();                              \
-  BX_CPP_INLINE void    set_VM(bx_bool val);
+  BX_SMF BX_CPP_INLINE void    assert_VM();                     \
+  BX_SMF BX_CPP_INLINE void    clear_VM();                      \
+  BX_SMF BX_CPP_INLINE Bit32u  get_VM();                        \
+  BX_SMF BX_CPP_INLINE bx_bool getB_VM();                       \
+  BX_SMF BX_CPP_INLINE void    set_VM(bx_bool val);
 
 #define IMPLEMENT_EFLAG_ACCESSOR_VM(bitnum)                     \
   BX_CPP_INLINE Bit32u  BX_CPU_C::get_VM() {                    \
@@ -487,8 +487,8 @@ BOCHSAPI extern BX_CPU_C   bx_cpu;
   }
 
 #define DECLARE_EFLAG_ACCESSOR_IOPL(bitnum)                     \
-  BX_CPP_INLINE void set_IOPL(Bit32u val);                      \
-  BX_CPP_INLINE Bit32u  get_IOPL(void);
+  BX_SMF BX_CPP_INLINE void set_IOPL(Bit32u val);               \
+  BX_SMF BX_CPP_INLINE Bit32u  get_IOPL(void);                  
 
 #define IMPLEMENT_EFLAG_ACCESSOR_IOPL(bitnum)                   \
   BX_CPP_INLINE void BX_CPU_C::set_IOPL(Bit32u val) {           \
@@ -3115,7 +3115,7 @@ public: // for now...
 
 #if BX_CPU_LEVEL >= 5
   BX_SMF Bit64u get_TSC();
-  BX_SMF void   set_TSC(bx_address tsc);
+  BX_SMF void   set_TSC(Bit64u tsc);
 #endif
 
 #if BX_SUPPORT_FPU
