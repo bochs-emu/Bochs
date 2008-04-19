@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.459 2008-04-19 13:21:21 sshwarts Exp $
+// $Id: cpu.h,v 1.460 2008-04-19 22:29:43 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2936,10 +2936,10 @@ public: // for now...
   BX_SMF bx_bool smram_restore_state(const Bit32u *smm_saved_state);
   BX_SMF int  int_number(bx_segment_reg_t *seg);
   BX_SMF int  int_number(unsigned s);
-  BX_SMF void SetCR0(Bit32u val_32);
+  BX_SMF void SetCR0(Bit32u val_32) BX_CPP_AttrRegparmN(1);
   BX_SMF void CR3_change(bx_phy_address value) BX_CPP_AttrRegparmN(1);
 #if BX_CPU_LEVEL >= 4
-  BX_SMF bx_bool SetCR4(bx_address val_32);
+  BX_SMF bx_bool SetCR4(bx_address val) BX_CPP_AttrRegparmN(1);
 #endif
   BX_SMF void pagingCR0Changed(Bit32u oldCR0, Bit32u newCR0) BX_CPP_AttrRegparmN(2);
   BX_SMF void pagingCR4Changed(Bit32u oldCR4, Bit32u newCR4) BX_CPP_AttrRegparmN(2);

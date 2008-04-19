@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: segment_ctrl_pro.cc,v 1.86 2008-04-19 20:00:28 sshwarts Exp $
+// $Id: segment_ctrl_pro.cc,v 1.87 2008-04-19 22:29:44 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -264,7 +264,7 @@ void BX_CPU_C::loadSRegLMNominal(unsigned segI, unsigned selector, unsigned dpl)
 }
 #endif
 
-void BX_CPU_C::validate_seg_reg(unsigned seg)
+BX_CPP_INLINE void BX_CPU_C::validate_seg_reg(unsigned seg)
 {
   /*
      FOR (seg = ES, DS, FS, GS)

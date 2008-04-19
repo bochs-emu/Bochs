@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: icache.h,v 1.32 2008-04-05 17:51:55 sshwarts Exp $
+// $Id: icache.h,v 1.33 2008-04-19 22:29:44 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -79,12 +79,16 @@ public:
     pAddr >>= 12;
 #if BX_SUPPORT_TRACE_CACHE
     if ((pageWriteStampTable[pAddr] & ICacheWriteStampFetchModeMask) != ICacheWriteStampFetchModeMask) {
-      stopTraceExecution(); // one of the CPUs running trace from this page
+      // Decrement page write stamp, so iCache entries with older stamps are
+      // effectively invalidated.
+      pageWriteStampTable[pAddr]--;
+      stopTraceExecution(); // one of the CPUs might be running trace from this page
     }
-#endif
-    // Decrement page write stamp, so iCache entries with older stamps
-    // are effectively invalidated.
+#else
+    // Decrement page write stamp, so iCache entries with older stamps are
+    // effectively invalidated.
     pageWriteStampTable[pAddr]--;
+#endif
   }
 
   BX_CPP_INLINE void resetWriteStamps(void);

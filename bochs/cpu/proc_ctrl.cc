@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.214 2008-04-18 18:32:40 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.215 2008-04-19 22:29:44 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1250,7 +1250,7 @@ void BX_CPU_C::handleAlignmentCheck(void)
 }
 #endif
 
-void BX_CPU_C::SetCR0(Bit32u val_32)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::SetCR0(Bit32u val_32)
 {
   bx_bool pe = val_32 & 0x01;
   bx_bool nw = (val_32 >> 29) & 0x01;
@@ -1329,7 +1329,7 @@ void BX_CPU_C::SetCR0(Bit32u val_32)
 }
 
 #if BX_CPU_LEVEL >= 4
-bx_bool BX_CPU_C::SetCR4(bx_address val)
+bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::SetCR4(bx_address val)
 {
   Bit32u oldCR4 = BX_CPU_THIS_PTR cr4.getRegister();
   bx_address allowMask = 0;
