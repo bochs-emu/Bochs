@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: instrument.h,v 1.32 2008-04-19 10:12:09 sshwarts Exp $
+// $Id: instrument.h,v 1.33 2008-04-19 11:08:06 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -97,7 +97,7 @@ void bx_instr_outp(Bit16u addr, unsigned len);
 void bx_instr_inp2(Bit16u addr, unsigned len, unsigned val);
 void bx_instr_outp2(Bit16u addr, unsigned len, unsigned val);
 
-void bx_instr_mem_data(unsigned cpu, unsigned seg, bx_address offset, unsigned len, unsigned rw);
+void bx_instr_mem_data_access(unsigned cpu, unsigned seg, bx_address offset, unsigned len, unsigned rw);
 void bx_instr_lin_access(unsigned cpu, bx_address lin, bx_address phy, unsigned len, unsigned rw);
 
 void bx_instr_phy_write(unsigned cpu, bx_address addr, unsigned len);
@@ -143,26 +143,26 @@ void bx_instr_wrmsr(unsigned cpu, unsigned addr, Bit64u value);
 #  define BX_INSTR_HWINTERRUPT(cpu_id, vector, cs, eip) bx_instr_hwinterrupt(cpu_id, vector, cs, eip)
 
 /* TLB/CACHE control instruction executed */
-#  define BX_INSTR_CLFLUSH(cpu_id, laddr, paddr)        bx_instr_clflush(cpu_id, laddr, paddr)
-#  define BX_INSTR_CACHE_CNTRL(cpu_id, what)            bx_instr_cache_cntrl(cpu_id, what)
-#  define BX_INSTR_TLB_CNTRL(cpu_id, what, new_cr3)     bx_instr_tlb_cntrl(cpu_id, what, new_cr3)
+#  define BX_INSTR_CLFLUSH(cpu_id, laddr, paddr)    bx_instr_clflush(cpu_id, laddr, paddr)
+#  define BX_INSTR_CACHE_CNTRL(cpu_id, what)        bx_instr_cache_cntrl(cpu_id, what)
+#  define BX_INSTR_TLB_CNTRL(cpu_id, what, new_cr3) bx_instr_tlb_cntrl(cpu_id, what, new_cr3)
 #  define BX_INSTR_PREFETCH_HINT(cpu_id, what, seg, offset) \
                        bx_instr_prefetch_hint(cpu_id, what, seg, offset)
 
 /* execution */
-#  define BX_INSTR_BEFORE_EXECUTION(cpu_id, i)          bx_instr_before_execution(cpu_id, i)
-#  define BX_INSTR_AFTER_EXECUTION(cpu_id, i)           bx_instr_after_execution(cpu_id, i)
-#  define BX_INSTR_REPEAT_ITERATION(cpu_id, i)          bx_instr_repeat_iteration(cpu_id, i)
+#  define BX_INSTR_BEFORE_EXECUTION(cpu_id, i)  bx_instr_before_execution(cpu_id, i)
+#  define BX_INSTR_AFTER_EXECUTION(cpu_id, i)   bx_instr_after_execution(cpu_id, i)
+#  define BX_INSTR_REPEAT_ITERATION(cpu_id, i)  bx_instr_repeat_iteration(cpu_id, i)
 
 /* memory access */
 #  define BX_INSTR_LIN_ACCESS(cpu_id, lin, phy, len, rw)  bx_instr_lin_access(cpu_id, lin, phy, len, rw)
 
 /* memory access */
-#  define BX_INSTR_MEM_DATA_ACCESS(cpu_id, seg, offset, len, rw)   bx_instr_mem_data(cpu_id, seg, offset, len, rw)
+#  define BX_INSTR_MEM_DATA_ACCESS(cpu_id, seg, offset, len, rw) bx_instr_mem_data_access(cpu_id, seg, offset, len, rw)
 
 /* called from memory object */
-#  define BX_INSTR_PHY_WRITE(cpu_id, addr, len)         bx_instr_phy_write(cpu_id, addr, len)
-#  define BX_INSTR_PHY_READ(cpu_id, addr, len)          bx_instr_phy_read(cpu_id, addr, len)
+#  define BX_INSTR_PHY_WRITE(cpu_id, addr, len) bx_instr_phy_write(cpu_id, addr, len)
+#  define BX_INSTR_PHY_READ(cpu_id, addr, len)  bx_instr_phy_read(cpu_id, addr, len)
 
 /* feedback from device units */
 #  define BX_INSTR_INP(addr, len)               bx_instr_inp(addr, len)
