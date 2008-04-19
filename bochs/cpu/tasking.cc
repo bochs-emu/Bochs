@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: tasking.cc,v 1.50 2008-04-16 22:22:10 sshwarts Exp $
+// $Id: tasking.cc,v 1.51 2008-04-19 11:08:39 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -357,9 +357,9 @@ void BX_CPU_C::task_switch(bx_selector_t *tss_selector,
   if (source == BX_TASK_FROM_JUMP || source == BX_TASK_FROM_CALL_OR_INT)
   {
     // set the new task's busy bit
-    bx_address laddr = BX_CPU_THIS_PTR gdtr.base + (tss_selector->index<<3) + 4;
+    Bit32u laddr = (Bit32u)(BX_CPU_THIS_PTR gdtr.base) + (tss_selector->index<<3) + 4;
     access_read_linear(laddr, 4, 0, BX_READ, &dword2);
-    dword2 |= 0x00000200;
+    dword2 |= 0x200;
     access_write_linear(laddr, 4, 0, &dword2);
   }
 
@@ -371,7 +371,7 @@ void BX_CPU_C::task_switch(bx_selector_t *tss_selector,
     // Bit is cleared
     Bit32u laddr = (Bit32u) BX_CPU_THIS_PTR gdtr.base + (BX_CPU_THIS_PTR tr.selector.index<<3) + 4;
     access_read_linear(laddr, 4, 0, BX_READ, &temp32);
-    temp32 &= ~0x00000200;
+    temp32 &= ~0x200;
     access_write_linear(laddr, 4, 0, &temp32);
   }
 
@@ -389,9 +389,7 @@ void BX_CPU_C::task_switch(bx_selector_t *tss_selector,
 
   BX_CPU_THIS_PTR tr.selector = *tss_selector;
   BX_CPU_THIS_PTR tr.cache    = *tss_descriptor;
-  // Reset the busy-flag, because all functions expect non-busy types in
-  // tr.cache. From Peter Lammich <peterl@sourceforge.net>.
-  BX_CPU_THIS_PTR tr.cache.type &= ~2;
+  BX_CPU_THIS_PTR tr.cache.type |= 2; // mark TSS in TR as busy
 
   // Step 8: Set TS flag in the CR0 image stored in the new task TSS.
   BX_CPU_THIS_PTR cr0.set_TS(1);
