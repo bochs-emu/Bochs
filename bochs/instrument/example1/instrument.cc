@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: instrument.cc,v 1.17 2008-03-03 15:09:30 sshwarts Exp $
+// $Id: instrument.cc,v 1.18 2008-04-19 10:12:09 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -98,7 +98,7 @@ void bxInstrumentation::branch_taken(bx_address new_eip)
   if (!active || !valid) return;
 
   // find linear address
-  bx_address laddr = BX_CPU(cpu_id)->get_segment_base(BX_SEG_REG_CS) + new_eip;
+  bx_address laddr = BX_CPU(cpu_id)->get_laddr(BX_SEG_REG_CS, new_eip);
 
   is_branch = 1;
   is_taken = 1;
@@ -176,7 +176,7 @@ void bxInstrumentation::bx_instr_hwinterrupt(unsigned vector, Bit16u cs, bx_addr
   }
 }
 
-void bxInstrumentation::bx_instr_mem_data(bx_address lin, unsigned size, unsigned rw)
+void bxInstrumentation::bx_instr_mem_data_access(unsigned seg, bx_address offset, unsigned len, unsigned rw)
 {
   bx_phy_address phy;
 
@@ -187,6 +187,7 @@ void bxInstrumentation::bx_instr_mem_data(bx_address lin, unsigned size, unsigne
     return;
   }
 
+  bx_address lin = BX_CPU(cpu_id)->get_laddr(seg, offset);
   bx_bool page_valid = BX_CPU(cpu_id)->dbg_xlate_linear2phy(lin, &phy);
   phy = A20ADDR(phy);
 
@@ -200,6 +201,6 @@ void bxInstrumentation::bx_instr_mem_data(bx_address lin, unsigned size, unsigne
   data_access[num_data_accesses].laddr = lin;
   data_access[num_data_accesses].paddr = phy;
   data_access[num_data_accesses].op    = rw;
-  data_access[num_data_accesses].size  = size;
+  data_access[num_data_accesses].size  = len;
   num_data_accesses++;
 }

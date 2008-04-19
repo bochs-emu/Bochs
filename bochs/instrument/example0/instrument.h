@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: instrument.h,v 1.26 2008-04-15 21:27:11 sshwarts Exp $
+// $Id: instrument.h,v 1.27 2008-04-19 10:12:09 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -76,7 +76,7 @@ void bx_instr_interrupt(unsigned cpu, unsigned vector);
 void bx_instr_exception(unsigned cpu, unsigned vector);
 void bx_instr_hwinterrupt(unsigned cpu, unsigned vector, Bit16u cs, bx_address eip);
 
-void bx_instr_mem_data(unsigned cpu, bx_address lin, unsigned size, unsigned rw);
+void bx_instr_mem_data_access(unsigned cpu, unsigned seg, bx_address offset, unsigned len, unsigned rw);
 
 /* simulation init, shutdown, reset */
 #  define BX_INSTR_INIT(cpu_id)            bx_instr_init(cpu_id)
@@ -127,8 +127,8 @@ void bx_instr_mem_data(unsigned cpu, bx_address lin, unsigned size, unsigned rw)
 #  define BX_INSTR_LIN_ACCESS(cpu_id, lin, phy, len, rw)
 
 /* memory access */
-#  define BX_INSTR_MEM_CODE(cpu_id, linear, size)
-#  define BX_INSTR_MEM_DATA(cpu_id, linear, size, rw)  bx_instr_mem_data(cpu_id, linear, size, rw)
+#  define BX_INSTR_MEM_DATA_ACCESS(cpu_id, seg, offset, len, rw) \
+                bx_instr_mem_data_access(cpu_id, seg, offset, len, rw)
 
 /* called from memory object */
 #  define BX_INSTR_PHY_WRITE(cpu_id, addr, len)
@@ -192,8 +192,7 @@ void bx_instr_mem_data(unsigned cpu, bx_address lin, unsigned size, unsigned rw)
 #  define BX_INSTR_LIN_ACCESS(cpu_id, lin, phy, len, rw)
 
 /* memory access */
-#  define BX_INSTR_MEM_CODE(cpu_id, linear, size)
-#  define BX_INSTR_MEM_DATA(cpu_id, linear, size, rw)
+#  define BX_INSTR_MEM_DATA_ACCESS(cpu_id, seg, offset, len, rw)
 
 /* called from memory object */
 #  define BX_INSTR_PHY_WRITE(cpu_id, addr, len)

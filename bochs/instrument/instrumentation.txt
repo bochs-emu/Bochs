@@ -200,12 +200,15 @@ Currently  the  callback is not supported when repeat-speedups optimization is
 enabled.
 
 
-	void bx_instr_mem_data(unsigned cpu, bx_address linear, unsigned len, unsigned rw);
+	void bx_instr_mem_data_access(unsigned cpu, unsigned seg, bx_address offset, unsigned len, unsigned rw);
 
-The  callback is called each time, when Bochs simulator executes linear memory
-access.  In  contrast  to  previous  callback it will be called even if memory
-access  fails  because  of  any reason (for example protection failure or page
-fault).
+The  callback is called each time, when Bochs simulator executes segment based
+linear memory access. In contrast to previous  callback it will be called even
+if memory access fails  because of  any reason (for example segment protection
+failure or page fault).
+
+The callback will not be called for  system memory accesses like sys desriptor
+tables reads/writes or new stack pushes during far call or exception.
 
 
 	void bx_instr_phy_read(unsigned cpu, bx_address addr, unsigned len);
@@ -228,6 +231,16 @@ Known problems:
 
 2. BX_INSTR_MEM_DATA doesn't work when repeat-speedups feature is enabled.
 
+3. BX_INSTR_OPCODE doesn't work with trace cache optimization enabled
+
+Feature requests:
+
+1. BX_INSTR_CNEAR_BRANCH_NOT_TAKEN callback should have an additional 
+   'not taken' new_EIP parameter.
+
+2. BX_INSTR_SMI, BX_INSTR_NMI, BX_INSTR_SIPI and other external events
+   callbacks
+
 3.
 
 While using Bochs as a reference model for simulations, the simulator needs
@@ -241,15 +254,3 @@ BX_INSTR_MEM_DATA()   hook  because  it  does  not  get  called  for  these
 instructions.  Should  this  be  changed along with some other instructions
 that exhibit this?
 							Brian Slechta
-
-5. BX_INSTR_OPCODE doesn't work with trace cache optimization enabled
-
-Feature requests:
-
-1. BX_INSTR_CNEAR_BRANCH_NOT_TAKEN callback should have an additional 
-   'not taken' new_EIP parameter.
-
-2. X86-64 support
-
-3. BX_INSTR_SMI, BX_INSTR_NMI, BX_INSTR_SIPI and other external events
-   callbacks
