@@ -1,6 +1,6 @@
 %{
 /////////////////////////////////////////////////////////////////////////
-// $Id: lexer.l,v 1.24 2008-03-30 05:45:42 sshwarts Exp $
+// $Id: lexer.l,v 1.25 2008-04-19 13:21:21 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #include <stdlib.h>
@@ -113,6 +113,7 @@ stop            { bxlval.sval = strdup(bxtext); return(BX_TOKEN_STOP); }
 doit            { bxlval.sval = strdup(bxtext); return(BX_TOKEN_DOIT); }
 trace           { bxlval.sval = strdup(bxtext); return(BX_TOKEN_TRACE); }
 trace-reg   	{ bxlval.sval = strdup(bxtext); return(BX_TOKEN_TRACEREG); }
+trace-mem   	{ bxlval.sval = strdup(bxtext); return(BX_TOKEN_TRACEMEM); }
 switch-mode	{ bxlval.sval = strdup(bxtext); return(BX_TOKEN_SWITCH_MODE); }
 size		{ bxlval.sval = strdup(bxtext); return(BX_TOKEN_SIZE); }
 ptime           { bxlval.sval = strdup(bxtext); return(BX_TOKEN_PTIME); }

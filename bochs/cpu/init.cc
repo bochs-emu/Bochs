@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.167 2008-04-18 18:32:40 sshwarts Exp $
+// $Id: init.cc,v 1.168 2008-04-19 13:21:22 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -949,6 +949,7 @@ void BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR stop_reason = STOP_NO_REASON;
   BX_CPU_THIS_PTR magic_break = 0;
   BX_CPU_THIS_PTR trace_reg = 0;
+  BX_CPU_THIS_PTR trace_mem = 0;
 #endif
 
   BX_CPU_THIS_PTR trace = 0;

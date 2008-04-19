@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: smm.cc,v 1.36 2008-04-07 18:39:17 sshwarts Exp $
+// $Id: smm.cc,v 1.37 2008-04-19 13:21:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2006 Stanislav Shwartsman
@@ -87,6 +87,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RSM(bxInstruction_c *i)
   for(n=0;n<SMM_SAVE_STATE_MAP_SIZE;n++) {
     base -= 4;
     BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, base, 4, &saved_state[n]);
+    BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, base, 4, BX_READ, (Bit8u*)(&saved_state[n]));
   }
   BX_CPU_THIS_PTR in_smm = 0;
 
@@ -120,6 +121,7 @@ void BX_CPU_C::enter_system_management_mode(void)
   for(n=0;n<SMM_SAVE_STATE_MAP_SIZE;n++) {
     base -= 4;
     BX_CPU_THIS_PTR mem->writePhysicalPage(BX_CPU_THIS, base, 4, &saved_state[n]);
+    BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, base, 4, BX_WRITE, (Bit8u*)(&saved_state[n]));
   }
 
   BX_CPU_THIS_PTR setEFlags(0x2); // Bit1 is always set

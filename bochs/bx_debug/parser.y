@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: parser.y,v 1.25 2008-03-29 21:32:18 sshwarts Exp $
+// $Id: parser.y,v 1.26 2008-04-19 13:21:21 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 %{
@@ -85,6 +85,7 @@
 %token <sval> BX_TOKEN_CRC
 %token <sval> BX_TOKEN_TRACE
 %token <sval> BX_TOKEN_TRACEREG
+%token <sval> BX_TOKEN_TRACEMEM
 %token <sval> BX_TOKEN_SWITCH_MODE
 %token <sval> BX_TOKEN_SIZE
 %token <sval> BX_TOKEN_PTIME
@@ -161,6 +162,7 @@ command:
     | crc_command
     | trace_command
     | trace_reg_command
+    | trace_mem_command
     | ptime_command
     | timebp_command
     | record_command
@@ -280,6 +282,14 @@ trace_reg_command:
       BX_TOKEN_TRACEREG BX_TOKEN_TOGGLE_ON_OFF '\n'
       {
           bx_dbg_trace_reg_command($2);
+          free($1);
+      }
+    ;
+
+trace_mem_command:
+      BX_TOKEN_TRACEMEM BX_TOKEN_TOGGLE_ON_OFF '\n'
+      {
+          bx_dbg_trace_mem_command($2);
           free($1);
       }
     ;
@@ -892,6 +902,12 @@ help_command:
        {
          dbg_printf("trace-reg on  - print all registers before every executed instruction\n");
          dbg_printf("trace-reg off - disable registers state tracing\n");
+         free($1);free($2);
+       }
+     | BX_TOKEN_HELP BX_TOKEN_TRACEMEM '\n'
+       {
+         dbg_printf("trace-mem on  - print all memory accesses occured during instruction execution\n");
+         dbg_printf("trace-mem off - disable memory accesses tracing\n");
          free($1);free($2);
        }
      | BX_TOKEN_HELP BX_TOKEN_RESTORE '\n'

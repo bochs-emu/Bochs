@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.458 2008-04-18 18:37:29 sshwarts Exp $
+// $Id: cpu.h,v 1.459 2008-04-19 13:21:21 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -350,17 +350,17 @@ extern const char* cpu_state_string(Bit32u debug_trap);
 #endif
 
 #if BX_SUPPORT_X86_64
-#define Is64BitMode()       (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64)
+  #define Is64BitMode()       (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64)
 #else
-#define Is64BitMode()       (0)
+  #define Is64BitMode()       (0)
 #endif
 
 #define StackAddrSize64() Is64BitMode()
 
 #if BX_SUPPORT_APIC
-#define BX_CPU_INTR  (BX_CPU_THIS_PTR INTR || BX_CPU_THIS_PTR local_apic.INTR)
+  #define BX_CPU_INTR  (BX_CPU_THIS_PTR INTR || BX_CPU_THIS_PTR local_apic.INTR)
 #else
-#define BX_CPU_INTR  (BX_CPU_THIS_PTR INTR)
+  #define BX_CPU_INTR  (BX_CPU_THIS_PTR INTR)
 #endif
 
 #define CACHE_LINE_SIZE 64
@@ -903,8 +903,9 @@ public: // for now...
   Bit8u break_point;
   Bit8u magic_break;
   Bit8u stop_reason;
-  Bit8u trace_reg;
-  Bit8u mode_break;
+  bx_bool trace_reg;
+  bx_bool trace_mem;
+  bx_bool mode_break;
   unsigned show_flag;
   bx_guard_found_t guard_found;
 #endif

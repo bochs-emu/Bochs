@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.131 2008-04-17 20:48:52 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.132 2008-04-19 13:21:21 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -514,6 +514,62 @@ void bx_dbg_halt(unsigned cpu)
   dbg_printf("CPU %d: HALTED\n", cpu);
 }
 
+void bx_dbg_lin_memory_access(unsigned cpu, bx_address lin, bx_phy_address phy, unsigned len, unsigned pl, unsigned rw, Bit8u *data)
+{
+  if (! BX_CPU(dbg_cpu)->trace_mem)
+    return;
+
+  dbg_printf("[CPU%d %s]: LIN 0x" FMT_ADDRX " PHY 0x%08x (len=%d, pl=%d)",
+     cpu, 
+     (rw == BX_READ) ? "RD" : (rw == BX_WRITE) ? "WR" : "??",
+     lin, phy,
+     len, pl);
+
+  if (len == 1) {
+     dbg_printf(": 0x%02X", (unsigned)(*data));
+  }
+  else if (len == 2) {
+     dbg_printf(": 0x%04X", *(Bit16u*)(data));
+  }
+  else if (len == 4) {
+     dbg_printf(": 0x%08X", *(Bit32u*)(data));
+  }
+  else if (len == 8) {
+     Bit64u data64 = * (Bit64u*)(data);
+     dbg_printf(": 0x%08X 0x%08X", GET32H(data64), GET32L(data64));
+  }
+
+  dbg_printf("\n");
+}
+
+void bx_dbg_phy_memory_access(unsigned cpu, bx_phy_address phy, unsigned len, unsigned rw, Bit8u *data)
+{
+  if (! BX_CPU(dbg_cpu)->trace_mem)
+    return;
+
+  dbg_printf("[CPU%d]: PHY %s 0x%08x (len=%d)",
+     cpu, 
+     (rw == BX_READ) ? "RD" : (rw == BX_WRITE) ? "WR" : "??",
+     phy,
+     len);
+
+  if (len == 1) {
+     dbg_printf(": 0x%02X", (unsigned)(*data));
+  }
+  else if (len == 2) {
+     dbg_printf(": 0x%04X", *(Bit16u*)(data));
+  }
+  else if (len == 4) {
+     dbg_printf(": 0x%08X", *(Bit32u*)(data));
+  }
+  else if (len == 8) {
+     Bit64u data64 = * (Bit64u*)(data);
+     dbg_printf(": 0x%08X 0x%08X", GET32H(data64), GET32L(data64));
+  }
+
+  dbg_printf("\n");
+}
+
 void bx_dbg_exit(int code)
 {
   BX_DEBUG(("dbg: before exit"));
@@ -799,6 +855,13 @@ void bx_dbg_trace_reg_command(bx_bool enable)
 {
   BX_CPU(dbg_cpu)->trace_reg = enable;
   dbg_printf("Register-Tracing %s for %s\n", enable ? "enabled" : "disabled",
+     BX_CPU(dbg_cpu)->name);
+}
+
+void bx_dbg_trace_mem_command(bx_bool enable)
+{
+  BX_CPU(dbg_cpu)->trace_mem = enable;
+  dbg_printf("Memory-Tracing %s for %s\n", enable ? "enabled" : "disabled",
      BX_CPU(dbg_cpu)->name);
 }
 

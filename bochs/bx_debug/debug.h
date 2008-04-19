@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debug.h,v 1.39 2008-03-30 14:32:14 sshwarts Exp $
+// $Id: debug.h,v 1.40 2008-04-19 13:21:21 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -223,6 +223,7 @@ Bit32u bx_dbg_get_laddr(Bit16u sel, Bit32u ofs);
 void bx_dbg_step_over_command(void);
 void bx_dbg_trace_command(bx_bool enable);
 void bx_dbg_trace_reg_command(bx_bool enable);
+void bx_dbg_trace_mem_command(bx_bool enable);
 void bx_dbg_ptime_command(void);
 void bx_dbg_timebp_command(bx_bool absolute, Bit64u time);
 #define MAX_CONCURRENT_BPS 5
@@ -291,9 +292,15 @@ void bx_dbg_info_pci(void);
 void bx_dbg_print_help(void);
 void bx_dbg_calc_command(Bit64u value);
 void bx_dbg_dump_table(void);
+
+// callbacks from CPU
 void bx_dbg_exception(unsigned cpu, Bit8u vector, Bit16u error_code);
 void bx_dbg_interrupt(unsigned cpu, Bit8u vector, Bit16u error_code);
 void bx_dbg_halt(unsigned cpu);
+
+// memory trace callbacks from CPU, len=1,2,4 or 8
+void bx_dbg_lin_memory_access(unsigned cpu, bx_address lin, bx_phy_address phy, unsigned len, unsigned pl, unsigned rw, Bit8u *data);
+void bx_dbg_phy_memory_access(unsigned cpu, bx_phy_address phy, unsigned len, unsigned rw, Bit8u *data);
 
 // commands that work with Bochs param tree
 void bx_dbg_restore_command(const char *param_name, const char *path);

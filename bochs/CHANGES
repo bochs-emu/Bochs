@@ -5,6 +5,7 @@ Brief summary :
 + More optimizations in CPU code - above 20% additional emulation speedup 
   over 2.3.6 release!
 - Implemented LBA48 support
+- Added memory access tracing for Bochs internal debugger
 - Many fixes in CPU emulation and internal debugger
 
 Detailed change log :
@@ -16,7 +17,11 @@ Detailed change log :
     optimization enabled
   - Many bugfixes in CPU emulation (both ia32 and x86-64)
   - Updated CPU instrumentation callbacks
-  - Many fixes in Bochs internal debugger
+
+- Bochs Internal Debugger and Disassembler
+  - Added memory access tracing for Bochs internal debugger, enable
+    by typing 'trace-mem on' in debugger command line
+  - Many bug fixes in Bochs internal debugger and disassembler
 
 - System BIOS (Volker)
   - Implemented LBA48 support (since BIOS functions are limited to 

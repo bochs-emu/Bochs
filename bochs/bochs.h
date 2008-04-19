@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.226 2008-04-18 16:47:45 sshwarts Exp $
+// $Id: bochs.h,v 1.227 2008-04-19 13:21:21 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -240,15 +240,21 @@ void print_tree(bx_param_c *node, int level = 0);
         if (bx_guard.report.io) bx_dbg_io_report(port, size, op, val)
 #  define BX_DBG_UCMEM_REPORT(addr, size, op, val) \
         if (bx_guard.report.ucmem) bx_dbg_ucmem_report(addr, size, op, val)
+#  define BX_DBG_LIN_MEMORY_ACCESS(cpu, lin, phy, len, pl, rw, data) \
+        bx_dbg_lin_memory_access(cpu, lin, phy, len, pl, rw, data)
+#  define BX_DBG_PHY_MEMORY_ACCESS(cpu, phy, len, rw, data) \
+        bx_dbg_phy_memory_access(cpu, phy, len, rw, data)
 #else  // #if BX_DEBUGGER
 // debugger not compiled in, use empty stubs
 #  define BX_DBG_ASYNC_INTR 1
 #  define BX_DBG_ASYNC_DMA  1
-#  define BX_DBG_DMA_REPORT(addr, len, what, val)
-#  define BX_DBG_IAC_REPORT(vector, irq)
-#  define BX_DBG_A20_REPORT(val)
-#  define BX_DBG_IO_REPORT(addr, size, op, val)
-#  define BX_DBG_UCMEM_REPORT(addr, size, op, val)
+#  define BX_DBG_DMA_REPORT(addr, len, what, val)                    /* empty */
+#  define BX_DBG_IAC_REPORT(vector, irq)                             /* empty */
+#  define BX_DBG_A20_REPORT(val)                                     /* empty */
+#  define BX_DBG_IO_REPORT(addr, size, op, val)                      /* empty */
+#  define BX_DBG_UCMEM_REPORT(addr, size, op, val)                   /* empty */
+#  define BX_DBG_LIN_MEMORY_ACCESS(cpu, lin, phy, len, pl, rw, data) /* empty */
+#  define BX_DBG_PHY_MEMORY_ACCESS(cpu, phy, len, rw, data)          /* empty */
 #endif  // #if BX_DEBUGGER
 
 #define MAGIC_LOGNUM 0x12345678
