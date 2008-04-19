@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.134 2008-04-19 20:01:09 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.135 2008-04-19 20:11:30 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -198,12 +198,6 @@ int bx_dbg_main(void)
     signal(SIGINT, bx_debug_ctrlc_handler);
     BX_INFO(("set SIGINT handler to bx_debug_ctrlc_handler"));
   }
-
-  if (SIM->get_param_bool(BXPN_LOAD_FLAG)->get()) {
-    bx_dbg_load_command(SIM->get_param_string(BXPN_LOAD_PATH)->getptr());
-  }
-
-  BX_CPU(dbg_cpu)->trace = 1;
 
   // Print disassembly of the first instruction...  you wouldn't think it
   // would have to be so hard.  First initialize guard_found, since it is used
@@ -518,34 +512,6 @@ void bx_dbg_interrupt(unsigned cpu, Bit8u vector, Bit16u error_code)
 void bx_dbg_halt(unsigned cpu)
 {
   dbg_printf("CPU %d: HALTED\n", cpu);
-  Bit16u reg = BX_CPU(dbg_cpu)->get_reg16(BX_16BIT_REG_BX);
-  if (reg == 0xdead) {
-     dbg_printf("\n\n\n");
-     dbg_printf("----------------------------------\n");
-     dbg_printf("       ! TEST FAILED (0x%04x) !   \n", reg);
-     dbg_printf("----------------------------------\n");
-     dbg_printf("\n\n\n");
-  }
-  else {
-     if ((reg & 0xfff0) == 0xace0) {
-        dbg_printf("\n\n\n");
-        dbg_printf("----------------------------------\n");
-        dbg_printf("       ! TEST PASSED (0x%04x) !   \n", reg);
-        dbg_printf("----------------------------------\n");
-        dbg_printf("\n\n\n");
-     }
-     else {
-        dbg_printf("\n\n\n");
-        dbg_printf("----------------------------------\n");
-        dbg_printf("NOT SELF TEST (0x%04x)            \n", reg);
-        dbg_printf("----------------------------------\n");
-        bx_dbg_info_registers_command(BX_INFO_GENERAL_PURPOSE_REGS);
-        dbg_printf("----------------------------------\n");
-        bx_dbg_info_segment_regs_command();
-        dbg_printf("----------------------------------\n");
-     }
-  }
-  exit(1);
 }
 
 void bx_dbg_lin_memory_access(unsigned cpu, bx_address lin, bx_phy_address phy, unsigned len, unsigned pl, unsigned rw, Bit8u *data)
@@ -1710,9 +1676,6 @@ void bx_dbg_stepN_command(Bit32u count)
   bx_dbg_print_guard_results();
 }
 
-static unsigned bytes;
-static unsigned bytes_length;
-
 void bx_dbg_disassemble_current(int which_cpu, int print_time)
 {
   bx_phy_address phy;
@@ -1767,15 +1730,8 @@ void bx_dbg_disassemble_current(int which_cpu, int print_time)
     dbg_printf("%-25s ; ", bx_disasm_tbuf);
     for (unsigned j=0; j<ilen; j++) {
       dbg_printf("%02x", (unsigned) bx_disasm_ibuf[j]);
-      bytes += bx_disasm_ibuf[j];
     }
     dbg_printf("\n");
-    if (bytes != 0) bytes_length = bytes = 0;
-    else bytes_length++;
-    if (bytes_length > 10) {
-       dbg_printf("\n\n\nNULL instruction retired 10 times in a row\n\n\n");
-       exit(1);
-    }
   }
 }
 
@@ -2615,96 +2571,6 @@ void bx_dbg_query_command(const char *what)
   else {
     dbg_printf("Error: Query '%s' not understood.\n", what);
   }
-}
-
-void bx_dbg_load_command(const char *path_)
-{
-  char path[255], *tracedir = getenv("TRACEDIR");
-  sprintf(path, "%s/%s/%s.32.obj", tracedir ? tracedir : ".", path_, path_);
-  FILE *f = fopen(path, "r");
-  if (f == NULL) {
-    sprintf(path, "%s/%s", tracedir ? tracedir : ".", path_);
-    f = fopen(path, "r");
-    if (f == NULL) {
-      dbg_printf("can't open file (%s)\n", path);
-      exit(1);
-    }
-  }
-
-  char str[256];
-  Bit64u address = 0;
-  unsigned v1, v2, v3, v4, line = 0, ignore = 0;
-  bx_phy_address origin = 0;
-
-  while(1) {
-     line++;
-     if (fgets(str, 255, f) == NULL) break;
-     if (!strncmp(str, "/eof", 4)) break;
-     if (str[0] == '/') {
-        if (strncmp(str, "/origin ", 8) != 0) {
-          dbg_printf("%d: can't parse /origin command\n", line);
-          exit(1);
-        }
-        address = strtoull(str+8, NULL, 16);
-        address *= 4;
-        if (GET32H(address) != 0) {
-          dbg_printf("%d(%d): 64 bit address detected !\n", line, strlen(str));
-//        exit(1);
-          ignore = 1;
-        }
-        else {
-          ignore = 0;
-        }
-        origin = (Bit32u) address;
-        dbg_printf("/origin: 0x%08x (0x%08x) %s\n", v1, origin, ignore ? " - ignored" : "");
-        if (! ((origin & 0xfff80000) != 0x00080000 || (origin <= 0x0009ffff))) {
-          dbg_printf("WARNING %d(1): ROM access 0x%08x\n", line, origin);
-        }
-     }
-     else {
-        int cnt = sscanf(str, "%x %x %x %x", &v1, &v2, &v3, &v4);
-        if (cnt < 1 || cnt > 4) {
-          dbg_printf("%d(1): can't parse values at address 0x%08x\n", line, origin);
-          exit(1);
-        }
-
-        if (ignore) continue;
-
-        if (cnt >= 1) {
-          if (!BX_MEM(0)->dbg_set_mem(origin, 4, (Bit8u *)(&v1))) {
-            dbg_printf("%d(1): can't set pmem at address 0x%08x\n", line, origin);
-            exit(1);
-          }
-          origin += 4;
-        }
-
-        if (cnt >= 2) {
-          if (!BX_MEM(0)->dbg_set_mem(origin, 4, (Bit8u *)(&v2))) {
-            dbg_printf("%d(2): can't set pmem at address 0x%08x\n", line, origin);
-            exit(1);
-          }
-          origin += 4;
-        }
-
-        if (cnt >= 3) {
-          if (!BX_MEM(0)->dbg_set_mem(origin, 4, (Bit8u *)(&v3))) {
-            dbg_printf("%d(3): can't set pmem at address 0x%08x\n", line, origin);
-            exit(1);
-          }
-          origin += 4;
-        }
-
-        if (cnt >= 4) {
-          if (!BX_MEM(0)->dbg_set_mem(origin, 4, (Bit8u *)(&v4))) {
-            dbg_printf("%d(4): can't set pmem at address 0x%08x\n", line, origin);
-            exit(1);
-          }
-          origin += 4;
-        }
-     }
-  }
-
-  fclose(f);
 }
 
 void bx_dbg_restore_command(const char *param_name, const char *restore_path)
