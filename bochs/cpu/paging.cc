@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.119 2008-04-19 13:21:23 sshwarts Exp $
+// $Id: paging.cc,v 1.120 2008-04-19 14:13:43 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1181,7 +1181,7 @@ void BX_CPU_C::access_write_linear(bx_address laddr, unsigned len, unsigned curr
       BX_CPU_THIS_PTR address_xlation.pages     = 1;
       BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr, (bx_phy_address) laddr, len, BX_WRITE);
       BX_DBG_LIN_MEMORY_ACCESS(BX_CPU_ID, laddr, (bx_phy_address) laddr, len,
-                          curr_pl, BX_WRITE, (Bit8u*) &data);
+                          curr_pl, BX_WRITE, (Bit8u*) data);
 
 #if BX_SupportGuest2HostTLB
       unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 0);
@@ -1229,7 +1229,7 @@ void BX_CPU_C::access_write_linear(bx_address laddr, unsigned len, unsigned curr
       BX_DBG_LIN_MEMORY_ACCESS(BX_CPU_ID, laddr,
           BX_CPU_THIS_PTR address_xlation.paddress1,
           BX_CPU_THIS_PTR address_xlation.len1, curr_pl,
-          BX_WRITE, (Bit8u*) &data);
+          BX_WRITE, (Bit8u*) data);
       BX_CPU_THIS_PTR mem->writePhysicalPage(BX_CPU_THIS,
           BX_CPU_THIS_PTR address_xlation.paddress1,
           BX_CPU_THIS_PTR address_xlation.len1, data);
@@ -1294,7 +1294,7 @@ void BX_CPU_C::access_read_linear(bx_address laddr, unsigned len, unsigned curr_
           BX_CPU_THIS_PTR address_xlation.paddress1, len, xlate_rw);
       BX_DBG_LIN_MEMORY_ACCESS(BX_CPU_ID, laddr,
           BX_CPU_THIS_PTR address_xlation.paddress1, len, curr_pl,
-          BX_READ, (Bit8u*) &data);
+          BX_READ, (Bit8u*) data);
     }
     else {
       // access across 2 pages
@@ -1317,7 +1317,7 @@ void BX_CPU_C::access_read_linear(bx_address laddr, unsigned len, unsigned curr_
       BX_DBG_LIN_MEMORY_ACCESS(BX_CPU_ID, laddr,
           BX_CPU_THIS_PTR address_xlation.paddress1,
           BX_CPU_THIS_PTR address_xlation.len1, curr_pl,
-          BX_READ, (Bit8u*) &data);
+          BX_READ, (Bit8u*) data);
       BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, BX_CPU_THIS_PTR address_xlation.paddress2,
           BX_CPU_THIS_PTR address_xlation.len2,
           ((Bit8u*)data) + BX_CPU_THIS_PTR address_xlation.len1);
@@ -1367,7 +1367,7 @@ void BX_CPU_C::access_read_linear(bx_address laddr, unsigned len, unsigned curr_
       if (tlbEntry->lpf == lpf) {
         BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, (bx_phy_address) laddr, len, data);
         BX_DBG_LIN_MEMORY_ACCESS(BX_CPU_ID, laddr, (bx_phy_address) laddr, len,
-                          curr_pl, BX_READ, (Bit8u*) &data);
+                          curr_pl, BX_READ, (Bit8u*) data);
         return;
       }
       // We haven't seen this page, or it's been bumped before.
@@ -1398,7 +1398,7 @@ void BX_CPU_C::access_read_linear(bx_address laddr, unsigned len, unsigned curr_
 
       BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, (bx_phy_address) laddr, len, data);
       BX_DBG_LIN_MEMORY_ACCESS(BX_CPU_ID, laddr, (bx_phy_address) laddr, len,
-                          curr_pl, BX_READ, (Bit8u*) &data);
+                          curr_pl, BX_READ, (Bit8u*) data);
     }
     else {
       // Access spans two pages.
@@ -1420,7 +1420,7 @@ void BX_CPU_C::access_read_linear(bx_address laddr, unsigned len, unsigned curr_
       BX_DBG_LIN_MEMORY_ACCESS(BX_CPU_ID, laddr,
           BX_CPU_THIS_PTR address_xlation.paddress1,
           BX_CPU_THIS_PTR address_xlation.len1, curr_pl,
-          BX_READ, (Bit8u*) &data);
+          BX_READ, (Bit8u*) data);
       BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS,
           BX_CPU_THIS_PTR address_xlation.paddress2,
           BX_CPU_THIS_PTR address_xlation.len2,
