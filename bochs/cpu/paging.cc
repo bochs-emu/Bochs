@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.120 2008-04-19 14:13:43 sshwarts Exp $
+// $Id: paging.cc,v 1.121 2008-04-19 20:00:28 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -591,8 +591,8 @@ void BX_CPU_C::page_fault(unsigned fault, bx_address laddr, unsigned user, unsig
   exception(BX_PF_EXCEPTION, error_code, 0);
 }
 
-#define PAGING_PML4_RESERVED_BITS 0x00000180    /* bits 7,8 */
-#define PAGING_PDPE_RESERVED_BITS 0x00000180    /* bits 7,8 - we not support 1G paging */
+#define PAGING_PML4_RESERVED_BITS BX_CONST64(0x00000080)    /* bits 7 */
+#define PAGING_PDPE_RESERVED_BITS BX_CONST64(0x00000080)    /* bits 7 - we not support 1G paging */
 
 #define PAGE_DIRECTORY_NX_BIT (BX_CONST64(0x8000000000000000))
 
@@ -630,6 +630,12 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned curr_pl, un
     // generate an exception if one is warranted.
   }
 
+#if BX_SUPPORT_X86_64
+  BX_DEBUG(("page walk for address 0x%08x:%08x", GET32H(laddr), GET32L(laddr)));
+#else
+  BX_DEBUG(("page walk for address 0x%08x", laddr));
+#endif
+
   InstrTLB_Increment(tlbMisses);
 
 #if BX_SUPPORT_PAE
@@ -643,8 +649,7 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned curr_pl, un
     unsigned nx_fault = 0;
 
 #if BX_SUPPORT_X86_64
-    if (long_mode())
-    {
+    if (long_mode()) {
       // Get PML4 entry
       bx_phy_address pml4_addr = (bx_phy_address)(BX_CPU_THIS_PTR cr3_masked |
                   ((laddr & BX_CONST64(0x0000ff8000000000)) >> 36));
@@ -656,7 +661,7 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned curr_pl, un
         page_fault(ERROR_NOT_PRESENT, laddr, pl, isWrite, access_type);
       }
       if (pml4 & PAGING_PML4_RESERVED_BITS) {
-        BX_DEBUG(("PML4: reserved bit is set"));
+        BX_DEBUG(("PML4: reserved bit is set PML4=%08x:%08x", GET32H(pml4), GET32L(pml4)));
         page_fault(ERROR_RESERVED | ERROR_PROTECTION, laddr, pl, isWrite, access_type);
       }
       if (pml4 & PAGE_DIRECTORY_NX_BIT) {
@@ -696,7 +701,7 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned curr_pl, un
       page_fault(ERROR_NOT_PRESENT, laddr, pl, isWrite, access_type);
     }
     if (pdpe & PAGING_PDPE_RESERVED_BITS) {
-      BX_DEBUG(("PAE PDPE: reserved bit is set"));
+      BX_DEBUG(("PAE PDPE: reserved bit is set: PDPE=%08x:%08x", GET32H(pdpe), GET32L(pdpe)));
       page_fault(ERROR_RESERVED | ERROR_PROTECTION, laddr, pl, isWrite, access_type);
     }
 #if BX_SUPPORT_X86_64

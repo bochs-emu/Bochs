@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: jmp_far.cc,v 1.12 2008-02-15 19:03:53 sshwarts Exp $
+// $Id: jmp_far.cc,v 1.13 2008-04-19 20:00:28 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005 Stanislav Shwartsman
@@ -71,6 +71,29 @@ BX_CPU_C::jump_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
       exception(BX_GP_EXCEPTION, cs_raw & 0xfffc, 0);
     }
 
+#if BX_SUPPORT_X86_64
+    if (long_mode()) {
+      if (descriptor.type != BX_386_CALL_GATE) {
+        BX_ERROR(("jump_protected: gate type %u unsupported in long mode", (unsigned) descriptor.type));
+        exception(BX_GP_EXCEPTION, cs_raw & 0xfffc, 0);
+      }
+    }
+    else
+#endif
+    {
+      switch (descriptor.type) {
+        case BX_SYS_SEGMENT_AVAIL_286_TSS:
+        case BX_SYS_SEGMENT_AVAIL_386_TSS:
+        case BX_286_CALL_GATE:
+        case BX_386_CALL_GATE:
+        case BX_TASK_GATE:
+          break;
+        default:
+          BX_ERROR(("jump_protected: gate type %u unsupported", (unsigned) descriptor.type));
+         exception(BX_GP_EXCEPTION, cs_raw & 0xfffc, 0);
+      }
+    }
+
     // task gate must be present else #NP(gate selector)
     if (! IS_PRESENT(descriptor)) {
       BX_ERROR(("jump_protected: call gate.p == 0"));
@@ -79,14 +102,8 @@ BX_CPU_C::jump_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
 
 #if BX_SUPPORT_X86_64
     if (long_mode()) {
-      if (descriptor.type != BX_386_CALL_GATE) {
-        BX_ERROR(("jump_protected: gate type %u unsupported in long mode", (unsigned) descriptor.type));
-        exception(BX_GP_EXCEPTION, cs_raw & 0xfffc, 0);
-      }
-      else {
-        jmp_call_gate64(&selector);
-        return;
-      }
+      jmp_call_gate64(&selector);
+      return;
     }
 #endif
 
@@ -121,8 +138,8 @@ BX_CPU_C::jump_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
         jmp_call_gate32(&descriptor);
         return;
 
-      default:
-        BX_ERROR(("jump_protected: gate type %u unsupported", (unsigned) descriptor.type));
+      default: // can't get here
+        BX_PANIC(("jump_protected: gate type %u unsupported", (unsigned) descriptor.type));
         exception(BX_GP_EXCEPTION, cs_raw & 0xfffc, 0);
     }
   }
@@ -255,7 +272,7 @@ BX_CPU_C::jmp_call_gate64(bx_selector_t *gate_selector)
   bx_descriptor_t cs_descriptor;
   bx_descriptor_t gate_descriptor;
 
-  BX_DEBUG(("jump_protected: jump to CALL GATE 64"));
+  BX_DEBUG(("jmp_call_gate64: jump to CALL GATE 64"));
 
   fetch_raw_descriptor64(gate_selector, &dword1, &dword2, &dword3, BX_GP_EXCEPTION);
   parse_descriptor(dword1, dword2, &gate_descriptor);
@@ -263,7 +280,7 @@ BX_CPU_C::jmp_call_gate64(bx_selector_t *gate_selector)
   Bit16u dest_selector = gate_descriptor.u.gate.dest_selector;
   // selector must not be null else #GP(0)
   if ((dest_selector & 0xfffc) == 0) {
-    BX_ERROR(("call_gate64: selector in gate null"));
+    BX_ERROR(("jmp_call_gate64: selector in gate null"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
@@ -282,7 +299,7 @@ BX_CPU_C::jmp_call_gate64(bx_selector_t *gate_selector)
   if (cs_descriptor.valid==0 || cs_descriptor.segment==0 ||
       IS_DATA_SEGMENT(cs_descriptor.type))
   {
-    BX_ERROR(("jump_protected: not code segment in call gate 64"));
+    BX_ERROR(("jmp_call_gate64: not code segment in call gate 64"));
     exception(BX_GP_EXCEPTION, dest_selector & 0xfffc, 0);
   }
 
@@ -290,7 +307,7 @@ BX_CPU_C::jmp_call_gate64(bx_selector_t *gate_selector)
   // to 64-bit code segments, else #GP(selector)
   if (! IS_LONG64_SEGMENT(cs_descriptor) || cs_descriptor.u.segment.d_b)
   {
-    BX_ERROR(("jump_protected: not 64-bit code segment in call gate 64"));
+    BX_ERROR(("jmp_call_gate64: not 64-bit code segment in call gate 64"));
     exception(BX_GP_EXCEPTION, dest_selector & 0xfffc, 0);
   }
 

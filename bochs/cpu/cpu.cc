@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.223 2008-04-18 13:51:09 sshwarts Exp $
+// $Id: cpu.cc,v 1.224 2008-04-19 20:00:28 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -705,26 +705,29 @@ void BX_CPU_C::boundaryFetch(const Bit8u *fetchPtr, unsigned remainingInPage, bx
   // all the associated info is updated.
   RIP += remainingInPage;
   prefetch();
+
+  unsigned fetchBufferLimit = 15;
   if (BX_CPU_THIS_PTR eipPageWindowSize < 15) {
-    BX_PANIC(("fetch_decode: small window size after prefetch"));
+    BX_DEBUG(("fetch_decode: small window size after prefetch - %d bytes", BX_CPU_THIS_PTR eipPageWindowSize));
+    fetchBufferLimit = BX_CPU_THIS_PTR eipPageWindowSize;
   }
 
   // We can fetch straight from the 0th byte, which is eipFetchPtr;
   fetchPtr = BX_CPU_THIS_PTR eipFetchPtr;
 
   // read leftover bytes in next page
-  for (; j<15; j++) {
+  for (; j<fetchBufferLimit; j++) {
     fetchBuffer[j] = *fetchPtr++;
   }
 #if BX_SUPPORT_X86_64
   if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64)
-    ret = fetchDecode64(fetchBuffer, i, 15);
+    ret = fetchDecode64(fetchBuffer, i, fetchBufferLimit);
   else
 #endif
-    ret = fetchDecode32(fetchBuffer, i, 15);
+    ret = fetchDecode32(fetchBuffer, i, fetchBufferLimit);
 
   if (ret==0) {
-    BX_INFO(("fetchDecode #GP(0): too many instruction prefixes"));
+    BX_INFO(("fetchDecode #GP(0): failed to complete instruction decoding"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 

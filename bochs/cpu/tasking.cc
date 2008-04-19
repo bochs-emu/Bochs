@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: tasking.cc,v 1.52 2008-04-19 14:13:43 sshwarts Exp $
+// $Id: tasking.cc,v 1.53 2008-04-19 20:00:28 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -216,74 +216,7 @@ void BX_CPU_C::task_switch(bx_selector_t *tss_selector,
 
   // Privilege and busy checks done in CALL, JUMP, INT, IRET
 
-  // STEP 3: The new-task state is loaded from the TSS
-
-  if (tss_descriptor->type <= 3) {
-    access_read_linear(Bit32u(nbase32 + 14), 2, 0, BX_READ, &temp16);
-      newEIP = temp16; // zero out upper word
-    access_read_linear(Bit32u(nbase32 + 16), 2, 0, BX_READ, &temp16);
-      newEFLAGS = temp16;
-
-    // incoming TSS is 16bit:
-    //   - upper word of general registers is set to 0xFFFF
-    //   - upper word of eflags is zero'd
-    //   - FS, GS are zero'd
-    //   - upper word of eIP is zero'd
-    access_read_linear(Bit32u(nbase32 + 18), 2, 0, BX_READ, &temp16);
-      newEAX = 0xffff0000 | temp16;
-    access_read_linear(Bit32u(nbase32 + 20), 2, 0, BX_READ, &temp16);
-      newECX = 0xffff0000 | temp16;
-    access_read_linear(Bit32u(nbase32 + 22), 2, 0, BX_READ, &temp16);
-      newEDX = 0xffff0000 | temp16;
-    access_read_linear(Bit32u(nbase32 + 24), 2, 0, BX_READ, &temp16);
-      newEBX = 0xffff0000 | temp16;
-    access_read_linear(Bit32u(nbase32 + 26), 2, 0, BX_READ, &temp16);
-      newESP = 0xffff0000 | temp16;
-    access_read_linear(Bit32u(nbase32 + 28), 2, 0, BX_READ, &temp16);
-      newEBP = 0xffff0000 | temp16;
-    access_read_linear(Bit32u(nbase32 + 30), 2, 0, BX_READ, &temp16);
-      newESI = 0xffff0000 | temp16;
-    access_read_linear(Bit32u(nbase32 + 32), 2, 0, BX_READ, &temp16);
-      newEDI = 0xffff0000 | temp16;
-
-    access_read_linear(Bit32u(nbase32 + 34), 2, 0, BX_READ, &raw_es_selector);
-    access_read_linear(Bit32u(nbase32 + 36), 2, 0, BX_READ, &raw_cs_selector);
-    access_read_linear(Bit32u(nbase32 + 38), 2, 0, BX_READ, &raw_ss_selector);
-    access_read_linear(Bit32u(nbase32 + 40), 2, 0, BX_READ, &raw_ds_selector);
-    access_read_linear(Bit32u(nbase32 + 42), 2, 0, BX_READ, &raw_ldt_selector);
-
-    raw_fs_selector = 0; // use a NULL selector
-    raw_gs_selector = 0; // use a NULL selector
-    // No CR3 change for 286 task switch
-    newCR3 = 0;   // keep compiler happy (not used)
-    trap_word = 0; // keep compiler happy (not used)
-  }
-  else {
-    if (BX_CPU_THIS_PTR cr0.get_PG())
-      access_read_linear(Bit32u(nbase32 + 0x1c), 4, 0, BX_READ, &newCR3);
-    else
-      newCR3 = 0;   // keep compiler happy (not used)
-    access_read_linear(Bit32u(nbase32 + 0x20), 4, 0, BX_READ, &newEIP);
-    access_read_linear(Bit32u(nbase32 + 0x24), 4, 0, BX_READ, &newEFLAGS);
-    access_read_linear(Bit32u(nbase32 + 0x28), 4, 0, BX_READ, &newEAX);
-    access_read_linear(Bit32u(nbase32 + 0x2c), 4, 0, BX_READ, &newECX);
-    access_read_linear(Bit32u(nbase32 + 0x30), 4, 0, BX_READ, &newEDX);
-    access_read_linear(Bit32u(nbase32 + 0x34), 4, 0, BX_READ, &newEBX);
-    access_read_linear(Bit32u(nbase32 + 0x38), 4, 0, BX_READ, &newESP);
-    access_read_linear(Bit32u(nbase32 + 0x3c), 4, 0, BX_READ, &newEBP);
-    access_read_linear(Bit32u(nbase32 + 0x40), 4, 0, BX_READ, &newESI);
-    access_read_linear(Bit32u(nbase32 + 0x44), 4, 0, BX_READ, &newEDI);
-    access_read_linear(Bit32u(nbase32 + 0x48), 2, 0, BX_READ, &raw_es_selector);
-    access_read_linear(Bit32u(nbase32 + 0x4c), 2, 0, BX_READ, &raw_cs_selector);
-    access_read_linear(Bit32u(nbase32 + 0x50), 2, 0, BX_READ, &raw_ss_selector);
-    access_read_linear(Bit32u(nbase32 + 0x54), 2, 0, BX_READ, &raw_ds_selector);
-    access_read_linear(Bit32u(nbase32 + 0x58), 2, 0, BX_READ, &raw_fs_selector);
-    access_read_linear(Bit32u(nbase32 + 0x5c), 2, 0, BX_READ, &raw_gs_selector);
-    access_read_linear(Bit32u(nbase32 + 0x60), 2, 0, BX_READ, &raw_ldt_selector);
-    access_read_linear(Bit32u(nbase32 + 0x64), 2, 0, BX_READ, &trap_word);
-  }
-
-  // STEP 4: Save the current task state in the TSS. Up to this point,
+  // STEP 3: Save the current task state in the TSS. Up to this point,
   //         any exception that occurs aborts the task switch without
   //         changing the processor state.
 
@@ -349,6 +282,73 @@ void BX_CPU_C::task_switch(bx_selector_t *tss_selector,
     // set to selector of old task's TSS
     temp16 = BX_CPU_THIS_PTR tr.selector.value;
     access_write_linear(nbase32, 2, 0, &temp16);
+  }
+
+  // STEP 4: The new-task state is loaded from the TSS
+
+  if (tss_descriptor->type <= 3) {
+    access_read_linear(Bit32u(nbase32 + 14), 2, 0, BX_READ, &temp16);
+      newEIP = temp16; // zero out upper word
+    access_read_linear(Bit32u(nbase32 + 16), 2, 0, BX_READ, &temp16);
+      newEFLAGS = temp16;
+
+    // incoming TSS is 16bit:
+    //   - upper word of general registers is set to 0xFFFF
+    //   - upper word of eflags is zero'd
+    //   - FS, GS are zero'd
+    //   - upper word of eIP is zero'd
+    access_read_linear(Bit32u(nbase32 + 18), 2, 0, BX_READ, &temp16);
+      newEAX = 0xffff0000 | temp16;
+    access_read_linear(Bit32u(nbase32 + 20), 2, 0, BX_READ, &temp16);
+      newECX = 0xffff0000 | temp16;
+    access_read_linear(Bit32u(nbase32 + 22), 2, 0, BX_READ, &temp16);
+      newEDX = 0xffff0000 | temp16;
+    access_read_linear(Bit32u(nbase32 + 24), 2, 0, BX_READ, &temp16);
+      newEBX = 0xffff0000 | temp16;
+    access_read_linear(Bit32u(nbase32 + 26), 2, 0, BX_READ, &temp16);
+      newESP = 0xffff0000 | temp16;
+    access_read_linear(Bit32u(nbase32 + 28), 2, 0, BX_READ, &temp16);
+      newEBP = 0xffff0000 | temp16;
+    access_read_linear(Bit32u(nbase32 + 30), 2, 0, BX_READ, &temp16);
+      newESI = 0xffff0000 | temp16;
+    access_read_linear(Bit32u(nbase32 + 32), 2, 0, BX_READ, &temp16);
+      newEDI = 0xffff0000 | temp16;
+
+    access_read_linear(Bit32u(nbase32 + 34), 2, 0, BX_READ, &raw_es_selector);
+    access_read_linear(Bit32u(nbase32 + 36), 2, 0, BX_READ, &raw_cs_selector);
+    access_read_linear(Bit32u(nbase32 + 38), 2, 0, BX_READ, &raw_ss_selector);
+    access_read_linear(Bit32u(nbase32 + 40), 2, 0, BX_READ, &raw_ds_selector);
+    access_read_linear(Bit32u(nbase32 + 42), 2, 0, BX_READ, &raw_ldt_selector);
+
+    raw_fs_selector = 0; // use a NULL selector
+    raw_gs_selector = 0; // use a NULL selector
+    // No CR3 change for 286 task switch
+    newCR3 = 0;   // keep compiler happy (not used)
+    trap_word = 0; // keep compiler happy (not used)
+  }
+  else {
+    if (BX_CPU_THIS_PTR cr0.get_PG())
+      access_read_linear(Bit32u(nbase32 + 0x1c), 4, 0, BX_READ, &newCR3);
+    else
+      newCR3 = 0;   // keep compiler happy (not used)
+    access_read_linear(Bit32u(nbase32 + 0x20), 4, 0, BX_READ, &newEIP);
+    access_read_linear(Bit32u(nbase32 + 0x24), 4, 0, BX_READ, &newEFLAGS);
+    access_read_linear(Bit32u(nbase32 + 0x28), 4, 0, BX_READ, &newEAX);
+    access_read_linear(Bit32u(nbase32 + 0x2c), 4, 0, BX_READ, &newECX);
+    access_read_linear(Bit32u(nbase32 + 0x30), 4, 0, BX_READ, &newEDX);
+    access_read_linear(Bit32u(nbase32 + 0x34), 4, 0, BX_READ, &newEBX);
+    access_read_linear(Bit32u(nbase32 + 0x38), 4, 0, BX_READ, &newESP);
+    access_read_linear(Bit32u(nbase32 + 0x3c), 4, 0, BX_READ, &newEBP);
+    access_read_linear(Bit32u(nbase32 + 0x40), 4, 0, BX_READ, &newESI);
+    access_read_linear(Bit32u(nbase32 + 0x44), 4, 0, BX_READ, &newEDI);
+    access_read_linear(Bit32u(nbase32 + 0x48), 2, 0, BX_READ, &raw_es_selector);
+    access_read_linear(Bit32u(nbase32 + 0x4c), 2, 0, BX_READ, &raw_cs_selector);
+    access_read_linear(Bit32u(nbase32 + 0x50), 2, 0, BX_READ, &raw_ss_selector);
+    access_read_linear(Bit32u(nbase32 + 0x54), 2, 0, BX_READ, &raw_ds_selector);
+    access_read_linear(Bit32u(nbase32 + 0x58), 2, 0, BX_READ, &raw_fs_selector);
+    access_read_linear(Bit32u(nbase32 + 0x5c), 2, 0, BX_READ, &raw_gs_selector);
+    access_read_linear(Bit32u(nbase32 + 0x60), 2, 0, BX_READ, &raw_ldt_selector);
+    access_read_linear(Bit32u(nbase32 + 0x64), 2, 0, BX_READ, &trap_word);
   }
 
   // Step 5: If CALL, interrupt, or JMP, set busy flag in new task's

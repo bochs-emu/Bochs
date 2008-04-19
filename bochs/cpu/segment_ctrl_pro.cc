@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: segment_ctrl_pro.cc,v 1.85 2008-04-18 10:19:33 sshwarts Exp $
+// $Id: segment_ctrl_pro.cc,v 1.86 2008-04-19 20:00:28 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -659,6 +659,7 @@ void BX_CPU_C::fetch_raw_descriptor(const bx_selector_t *selector,
 {
   Bit32u index = selector->index;
   bx_address offset;
+  Bit64u raw_descriptor;
 
   if (selector->ti == 0) { /* GDT */
     if ((index*8 + 7) > BX_CPU_THIS_PTR gdtr.limit) {
@@ -681,8 +682,10 @@ void BX_CPU_C::fetch_raw_descriptor(const bx_selector_t *selector,
     offset = BX_CPU_THIS_PTR ldtr.cache.u.system.base + index*8;
   }
 
-  access_read_linear(offset,     4, 0, BX_READ, dword1);
-  access_read_linear(offset + 4, 4, 0, BX_READ, dword2);
+  access_read_linear(offset, 8, 0, BX_READ, &raw_descriptor);
+
+  *dword1 = GET32L(raw_descriptor);
+  *dword2 = GET32H(raw_descriptor);
 }
 
   bx_bool BX_CPP_AttrRegparmN(3)
@@ -690,6 +693,7 @@ BX_CPU_C::fetch_raw_descriptor2(const bx_selector_t *selector, Bit32u *dword1, B
 {
   Bit32u index = selector->index;
   bx_address offset;
+  Bit64u raw_descriptor;
 
   if (selector->ti == 0) { /* GDT */
     if ((index*8 + 7) > BX_CPU_THIS_PTR gdtr.limit)
@@ -706,8 +710,10 @@ BX_CPU_C::fetch_raw_descriptor2(const bx_selector_t *selector, Bit32u *dword1, B
     offset = BX_CPU_THIS_PTR ldtr.cache.u.system.base + index*8;
   }
 
-  access_read_linear(offset,     4, 0, BX_READ, dword1);
-  access_read_linear(offset + 4, 4, 0, BX_READ, dword2);
+  access_read_linear(offset, 8, 0, BX_READ, &raw_descriptor);
+
+  *dword1 = GET32L(raw_descriptor);
+  *dword2 = GET32H(raw_descriptor);
 
   return 1;
 }
@@ -717,8 +723,8 @@ void BX_CPU_C::fetch_raw_descriptor64(const bx_selector_t *selector,
            Bit32u *dword1, Bit32u *dword2, Bit32u *dword3, unsigned exception_no)
 {
   Bit32u index = selector->index;
-  Bit32u dword4;
   bx_address offset;
+  Bit64u raw_descriptor1, raw_descriptor2;
 
   if (selector->ti == 0) { /* GDT */
     if ((index*8 + 15) > BX_CPU_THIS_PTR gdtr.limit) {
@@ -741,15 +747,17 @@ void BX_CPU_C::fetch_raw_descriptor64(const bx_selector_t *selector,
     offset = BX_CPU_THIS_PTR ldtr.cache.u.system.base + index*8;
   }
 
-  access_read_linear(offset,      4, 0, BX_READ,  dword1);
-  access_read_linear(offset +  4, 4, 0, BX_READ,  dword2);
-  access_read_linear(offset +  8, 4, 0, BX_READ,  dword3);
-  access_read_linear(offset + 12, 4, 0, BX_READ, &dword4);
+  access_read_linear(offset,      8, 0, BX_READ, &raw_descriptor1);
+  access_read_linear(offset +  8, 8, 0, BX_READ, &raw_descriptor2);
 
-  if (dword4 != 0) {
+  if (GET32H(raw_descriptor2) != 0) {
     BX_ERROR(("fetch_raw_descriptor64: extended attributes DWORD4 != 0"));
     exception(BX_GP_EXCEPTION, selector->value & 0xfffc, 0);
   }
+
+  *dword1 = GET32L(raw_descriptor1);
+  *dword2 = GET32H(raw_descriptor1);
+  *dword3 = GET32L(raw_descriptor2);
 }
 #endif
 
