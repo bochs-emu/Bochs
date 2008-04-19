@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debug.h,v 1.40 2008-04-19 13:21:21 sshwarts Exp $
+// $Id: debug.h,v 1.41 2008-04-19 20:01:09 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -304,6 +304,7 @@ void bx_dbg_phy_memory_access(unsigned cpu, bx_phy_address phy, unsigned len, un
 
 // commands that work with Bochs param tree
 void bx_dbg_restore_command(const char *param_name, const char *path);
+void bx_dbg_load_command(const char *path);
 void bx_dbg_show_param_command(char *param);
 
 int bx_dbg_show_symbolic(void);
