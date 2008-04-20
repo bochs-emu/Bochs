@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_pfp.cc,v 1.44 2008-04-14 16:50:27 sshwarts Exp $
+// $Id: sse_pfp.cc,v 1.45 2008-04-20 13:32:42 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -3063,7 +3063,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROUNDPS_VpsWpsIb(bxInstruction_c *i)
   }
 
   for (unsigned j=0; j < 4; j++) {
-      if (float32_is_nan(op.xmm32u(0)))
+      if (float32_is_nan(op.xmm32u(j)))
           result.xmm32u(j) = propagateFloat32NaN(op.xmm32u(j), status_word);
       else
           result.xmm32u(j) = float32_to_int32(op.xmm32u(j), status_word);
@@ -3113,7 +3113,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROUNDPD_VpdWpdIb(bxInstruction_c *i)
   }
 
   for (unsigned j=0; j < 2; j++) {
-      if (float64_is_nan(op.xmm64u(0)))
+      if (float64_is_nan(op.xmm64u(j)))
           result.xmm64u(j) = propagateFloat64NaN(op.xmm64u(j), status_word);
       else
           result.xmm64u(j) = float64_to_int64(op.xmm64u(j), status_word);
