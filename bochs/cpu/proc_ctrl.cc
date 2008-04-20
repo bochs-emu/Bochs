@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.215 2008-04-19 22:29:44 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.216 2008-04-20 18:10:32 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1286,6 +1286,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SetCR0(Bit32u val_32)
         BX_ERROR(("SetCR0: attempt to enter x86-64 long mode with CS.L !"));
         exception(BX_GP_EXCEPTION, 0, 0);
       }
+      if (BX_CPU_THIS_PTR tr.cache.type <= 3) {
+        BX_ERROR(("SetCR0: attempt to enter x86-64 long mode with TSS286 in TR !"));
+        exception(BX_GP_EXCEPTION, 0, 0);
+      }
       BX_CPU_THIS_PTR efer.set_LMA(1);
     }
   }
@@ -2129,6 +2133,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSENTER(bxInstruction_c *i)
     EIP = (Bit32u) BX_CPU_THIS_PTR msr.sysenter_eip_msr;
   }
 
+  handleCpuModeChange();
+
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_SYSENTER,
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, RIP);
 #else
@@ -2235,6 +2241,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSEXIT(bxInstruction_c *i)
 #if BX_SUPPORT_X86_64
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.l            = 0;
 #endif
+
+  handleCpuModeChange();
 
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_SYSEXIT,
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, RIP);
@@ -2369,6 +2377,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSCALL(bxInstruction_c *i)
     RIP = temp_RIP;
   }
 
+  handleCpuModeChange();
+
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_SYSCALL,
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, RIP);
 }
@@ -2499,6 +2509,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSRET(bxInstruction_c *i)
     BX_CPU_THIS_PTR assert_IF();
     temp_RIP = ECX;
   }
+
+  handleCpuModeChange();
 
   RIP = temp_RIP;
 

@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer_pro.cc,v 1.71 2008-03-31 20:56:27 sshwarts Exp $
+// $Id: ctrl_xfer_pro.cc,v 1.72 2008-04-20 18:10:32 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -50,10 +50,9 @@ void BX_CPU_C::check_cs(bx_descriptor_t *descriptor, Bit16u cs_raw, Bit8u check_
 #if BX_SUPPORT_X86_64
   if (descriptor->u.segment.l) {
     if (! BX_CPU_THIS_PTR efer.get_LMA()) {
-      BX_PANIC(("check_cs(0x%04x): attempt to jump to long mode without enabling EFER.LMA !", cs_raw));
+      BX_ERROR(("check_cs(0x%04x): attempt to jump to long mode without enabling EFER.LMA !", cs_raw));
     }
-
-    if (descriptor->u.segment.d_b) {
+    else if (descriptor->u.segment.d_b) {
       BX_ERROR(("check_cs(0x%04x): Both L and D bits enabled for segment descriptor !", cs_raw));
       exception(BX_GP_EXCEPTION, cs_raw & 0xfffc, 0);
     }
@@ -102,7 +101,7 @@ BX_CPU_C::load_cs(bx_selector_t *selector, bx_descriptor_t *descriptor, Bit8u cp
     (0xfffc & BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value) | cpl;
 
 #if BX_SUPPORT_X86_64
-  if (BX_CPU_THIS_PTR efer.get_LMA()) {
+  if (long_mode()) {
     if (descriptor->u.segment.l) {
       loadSRegLMNominal(BX_SEG_REG_CS, selector->value, cpl);
     }
@@ -143,7 +142,7 @@ void BX_CPU_C::branch_far64(bx_selector_t *selector,
            bx_descriptor_t *descriptor, bx_address rip, Bit8u cpl)
 {
 #if BX_SUPPORT_X86_64
-  if (descriptor->u.segment.l) {
+  if (long_mode() && descriptor->u.segment.l) {
     if (! IsCanonical(rip)) {
       BX_ERROR(("branch_far: canonical RIP violation"));
       exception(BX_GP_EXCEPTION, 0, 0);
