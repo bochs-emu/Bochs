@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.135 2008-04-19 20:11:30 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.136 2008-04-20 09:20:56 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -911,7 +911,7 @@ void bx_dbg_timebp_command(bx_bool absolute, Bit64u time)
           dbg_printf("Time breakpoint not inserted (duplicate)\n");
           return;
         } else if (abs_time < timebp_queue[i]) {
-          for (int j = timebp_queue_size; j >= i; j++)
+          for (int j = timebp_queue_size; j >= i; j--)
             timebp_queue[j+1] = timebp_queue[j];
           timebp_queue[i] = abs_time;
           goto inserted;
