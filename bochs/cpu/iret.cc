@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: iret.cc,v 1.31 2008-04-14 21:48:37 sshwarts Exp $
+// $Id: iret.cc,v 1.32 2008-04-20 21:44:13 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005 Stanislav Shwartsman
@@ -56,7 +56,7 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
     if (BX_CPU_THIS_PTR get_VM())
       BX_PANIC(("iret_protected: VM sholdn't be set here !"));
 
-    //BX_INFO(("IRET: nested task return"));
+    BX_DEBUG(("IRET: nested task return"));
 
     if (BX_CPU_THIS_PTR tr.cache.valid==0)
       BX_PANIC(("IRET: TR not valid"));
@@ -137,9 +137,9 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
     temp_ESP = SP;
 
   if (i->os32L()) {
+    new_eflags      =          read_virtual_dword(BX_SEG_REG_SS, temp_ESP + 8);
     raw_cs_selector = (Bit16u) read_virtual_dword(BX_SEG_REG_SS, temp_ESP + 4);
     new_eip         =          read_virtual_dword(BX_SEG_REG_SS, temp_ESP + 0);
-    new_eflags      =          read_virtual_dword(BX_SEG_REG_SS, temp_ESP + 8);
 
     // if VM=1 in flags image on stack then STACK_RETURN_TO_V86
     if (new_eflags & EFlagsVMMask) {
@@ -151,9 +151,9 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
     }
   }
   else {
+    new_flags       = read_virtual_word(BX_SEG_REG_SS, temp_ESP + 4);
     raw_cs_selector = read_virtual_word(BX_SEG_REG_SS, temp_ESP + 2);
     new_ip          = read_virtual_word(BX_SEG_REG_SS, temp_ESP + 0);
-    new_flags       = read_virtual_word(BX_SEG_REG_SS, temp_ESP + 4);
   }
 
   parse_selector(raw_cs_selector, &cs_selector);
@@ -364,21 +364,21 @@ BX_CPU_C::long_iret(bxInstruction_c *i)
   unsigned top_nbytes_same = 0; /* stop compiler warnings */
 
   if (i->os64L()) {
+    new_eflags      = (Bit32u) read_virtual_qword(BX_SEG_REG_SS, temp_RSP + 16);
     raw_cs_selector = (Bit16u) read_virtual_qword(BX_SEG_REG_SS, temp_RSP +  8);
     new_rip         =          read_virtual_qword(BX_SEG_REG_SS, temp_RSP +  0);
-    new_eflags      = (Bit32u) read_virtual_qword(BX_SEG_REG_SS, temp_RSP + 16);
     top_nbytes_same = 24;
   }
   else if (i->os32L()) {
+    new_eflags      =          read_virtual_dword(BX_SEG_REG_SS, temp_RSP + 8);
     raw_cs_selector = (Bit16u) read_virtual_dword(BX_SEG_REG_SS, temp_RSP + 4);
     new_rip         = (Bit64u) read_virtual_dword(BX_SEG_REG_SS, temp_RSP + 0);
-    new_eflags      =          read_virtual_dword(BX_SEG_REG_SS, temp_RSP + 8);
     top_nbytes_same = 12;
   }
   else {
+    new_eflags      =          read_virtual_word(BX_SEG_REG_SS, temp_RSP + 4);
     raw_cs_selector =          read_virtual_word(BX_SEG_REG_SS, temp_RSP + 2);
     new_rip         = (Bit64u) read_virtual_word(BX_SEG_REG_SS, temp_RSP + 0);
-    new_eflags      =          read_virtual_word(BX_SEG_REG_SS, temp_RSP + 4);
     top_nbytes_same = 6;
   }
 

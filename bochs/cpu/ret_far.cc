@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: ret_far.cc,v 1.15 2008-03-26 16:25:05 sshwarts Exp $
+// $Id: ret_far.cc,v 1.16 2008-04-20 21:44:13 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005 Stanislav Shwartsman
@@ -140,6 +140,8 @@ BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
     /* + 4:     parm 1  | + 8:     parm 1 | +16:     parm 1 */
     /* + 2:     CS      | + 4:         CS | + 8:         CS */
     /* + 0:     IP      | + 0:        EIP | + 0:        RIP */
+
+    BX_DEBUG(("return_protected: return to OUTER PRIVILEGE LEVEL"));
 
 #if BX_SUPPORT_X86_64
     if (i->os64L()) {

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer32.cc,v 1.68 2008-03-22 21:29:39 sshwarts Exp $
+// $Id: ctrl_xfer32.cc,v 1.69 2008-04-20 21:44:13 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -95,8 +95,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RETnear32(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::RETfar32_Iw(bxInstruction_c *i)
 {
-  Bit32u eip, cs_raw;
-
   invalidate_prefetch_q();
 
 #if BX_DEBUGGER
@@ -113,10 +111,17 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RETfar32_Iw(bxInstruction_c *i)
     goto done;
   }
 
-  eip    = pop_32();
-  cs_raw = pop_32();
+  Bit32u eip = pop_32();
 
-  load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], (Bit16u) cs_raw);
+  // CS.LIMIT in real/v8086 mode is 0xffff
+  if (eip > 0xffff) {
+    BX_ERROR(("RETfar32_Iw: instruction pointer not within code segment limits"));
+    exception(BX_GP_EXCEPTION, 0, 0);
+  }
+
+  Bit16u cs_raw = (Bit16u) pop_32(); /* 32bit pop, MSW discarded */
+
+  load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], cs_raw);
   EIP = eip;
 
   if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b)
@@ -133,8 +138,6 @@ done:
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::RETfar32(bxInstruction_c *i)
 {
-  Bit32u eip, cs_raw;
-
   invalidate_prefetch_q();
 
 #if BX_DEBUGGER
@@ -149,10 +152,17 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RETfar32(bxInstruction_c *i)
     goto done;
   }
 
-  eip    = pop_32();
-  cs_raw = pop_32(); /* 32bit pop, MSW discarded */
+  Bit32u eip = pop_32();
 
-  load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], (Bit16u) cs_raw);
+  // CS.LIMIT in real/v8086 mode is 0xffff
+  if (eip > 0xffff) {
+    BX_ERROR(("RETfar32: instruction pointer not within code segment limits"));
+    exception(BX_GP_EXCEPTION, 0, 0);
+  }
+
+  Bit16u cs_raw = (Bit16u) pop_32(); /* 32bit pop, MSW discarded */
+
+  load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], cs_raw);
   EIP = eip;
 
 done:
@@ -202,6 +212,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CALL32_Ap(bxInstruction_c *i)
   if (protected_mode()) {
     BX_CPU_THIS_PTR call_protected(i, cs_raw, disp32);
     goto done;
+  }
+
+  // CS.LIMIT in real/v8086 mode is 0xffff
+  if (disp32 > 0xffff) {
+    BX_ERROR(("CALL32_Ap: instruction pointer not within code segment limits"));
+    exception(BX_GP_EXCEPTION, 0, 0);
   }
 
   push_32(BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value);
@@ -284,11 +300,17 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CALL32_Ep(bxInstruction_c *i)
     goto done;
   }
 
+  // CS.LIMIT in real/v8086 mode is 0xffff
+  if (op1_32 > 0xffff) {
+    BX_ERROR(("CALL32_Ep: instruction pointer not within code segment limits"));
+    exception(BX_GP_EXCEPTION, 0, 0);
+  }
+
   push_32(BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value);
   push_32(EIP);
 
-  EIP = op1_32;
   load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], cs_raw);
+  EIP = op1_32;
 
 done:
   BX_CPU_THIS_PTR speculative_rsp = 0;
@@ -524,12 +546,19 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::JMP_Ap(bxInstruction_c *i)
   // jump_protected doesn't affect RSP so it is RSP safe
   if (protected_mode()) {
     BX_CPU_THIS_PTR jump_protected(i, cs_raw, disp32);
-  }
-  else {
-    load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], cs_raw);
-    EIP = disp32;
+    goto done;
   }
 
+  // CS.LIMIT in real/v8086 mode is 0xffff
+  if (disp32 > 0xffff) {
+    BX_ERROR(("JMP_Ap: instruction pointer not within code segment limits"));
+    exception(BX_GP_EXCEPTION, 0, 0);
+  }
+
+  load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], cs_raw);
+  EIP = disp32;
+
+done:
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_JMP,
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, EIP);
 }
@@ -584,21 +613,25 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::JMP32_Ep(bxInstruction_c *i)
   // jump_protected doesn't affect RSP so it is RSP safe
   if (protected_mode()) {
     BX_CPU_THIS_PTR jump_protected(i, cs_raw, op1_32);
-  }
-  else {
-    load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], cs_raw);
-    EIP = op1_32;
+    goto done;
   }
 
+  // CS.LIMIT in real/v8086 mode is 0xffff
+  if (op1_32 > 0xffff) {
+    BX_ERROR(("JMP32_Ep: instruction pointer not within code segment limits"));
+    exception(BX_GP_EXCEPTION, 0, 0);
+  }
+
+  load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], cs_raw);
+  EIP = op1_32;
+
+done:
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_JMP,
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, EIP);
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::IRET32(bxInstruction_c *i)
 {
-  Bit32u eip, eflags32;
-  Bit16u cs;
-
   invalidate_prefetch_q();
 
 #if BX_DEBUGGER
@@ -621,18 +654,18 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::IRET32(bxInstruction_c *i)
     goto done;
   }
 
-  eip = pop_32();
+ Bit32u eip = pop_32();
 
-  // CS.LIMIT in real mode is 0xffff
+  // CS.LIMIT in real/v8086 mode is 0xffff
   if (eip > 0xffff) {
-    BX_ERROR(("IRETD: instruction pointer not within code segment limits"));
+    BX_ERROR(("IRET32: instruction pointer not within code segment limits"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
-  cs       = pop_32() & 0xffff;
-  eflags32 = pop_32();
+  Bit16u cs       = (Bit16u) pop_32();
+  Bit32u eflags32 =          pop_32();
 
-  load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], (Bit16u) cs);
+  load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], cs);
   EIP = eip;
   writeEFlags(eflags32, 0x00257fd5); // VIF, VIP, VM unchanged
 
