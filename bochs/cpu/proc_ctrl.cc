@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.216 2008-04-20 18:10:32 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.217 2008-04-20 18:17:14 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2099,6 +2099,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSENTER(bxInstruction_c *i)
   BX_CPU_THIS_PTR updateFetchModeMask();
 #endif
 
+#if BX_SUPPORT_X86_64
+  handleCpuModeChange(); // mode change could happen only when in long_mode()
+#endif
+
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
   BX_CPU_THIS_PTR alignment_check_mask = LPF_MASK; // CPL=0
 #endif
@@ -2132,8 +2136,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSENTER(bxInstruction_c *i)
     ESP = (Bit32u) BX_CPU_THIS_PTR msr.sysenter_esp_msr;
     EIP = (Bit32u) BX_CPU_THIS_PTR msr.sysenter_eip_msr;
   }
-
-  handleCpuModeChange();
 
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_SYSENTER,
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, RIP);
@@ -2220,6 +2222,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSEXIT(bxInstruction_c *i)
   BX_CPU_THIS_PTR updateFetchModeMask();
 #endif
 
+#if BX_SUPPORT_X86_64
+  handleCpuModeChange(); // mode change could happen only when in long_mode()
+#endif
+
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
   handleAlignmentCheck(); // CPL was modified
 #endif
@@ -2241,8 +2247,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSEXIT(bxInstruction_c *i)
 #if BX_SUPPORT_X86_64
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.l            = 0;
 #endif
-
-  handleCpuModeChange();
 
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_SYSEXIT,
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, RIP);
@@ -2297,6 +2301,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSCALL(bxInstruction_c *i)
 #if BX_SUPPORT_ICACHE
     BX_CPU_THIS_PTR updateFetchModeMask();
 #endif
+
+    handleCpuModeChange(); // mode change could only happen when in long_mode()
 
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
     BX_CPU_THIS_PTR alignment_check_mask = LPF_MASK; // CPL=0
@@ -2377,8 +2383,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSCALL(bxInstruction_c *i)
     RIP = temp_RIP;
   }
 
-  handleCpuModeChange();
-
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_SYSCALL,
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, RIP);
 }
@@ -2453,6 +2457,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSRET(bxInstruction_c *i)
 #if BX_SUPPORT_ICACHE
     BX_CPU_THIS_PTR updateFetchModeMask();
 #endif
+
+    handleCpuModeChange(); // mode change could only happen when in long64 mode
 
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
     handleAlignmentCheck(); // CPL was modified
