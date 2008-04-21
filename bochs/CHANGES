@@ -2,8 +2,9 @@ Changes after 2.3.6 release:
 
 Brief summary :
 
-+ More optimizations in CPU code - above 20% additional emulation speedup 
++ More optimizations in CPU code - above 25% emulation speedup
   over 2.3.6 release!
+
 - Implemented LBA48 support
 - Added memory access tracing for Bochs internal debugger
 - Many fixes in CPU emulation and internal debugger
@@ -47,6 +48,7 @@ Detailed change log :
   - implemented text mode character blinking in some guis
 
 - SF patches applied
+ [1921733] support for LBA48 by Robert Millan
  [1938185] Fix link problem with --enable-debugger by Sebastian
  [1938182] Makefile.in - use @IODEV_LIB_VAR@ by Sebastian
  [1928945] fix for legacy rombios - e820 map and ACPI_DATA_SIZE by Sebastian
