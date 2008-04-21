@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer32.cc,v 1.69 2008-04-20 21:44:13 sshwarts Exp $
+// $Id: ctrl_xfer32.cc,v 1.70 2008-04-21 14:17:04 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -113,8 +113,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RETfar32_Iw(bxInstruction_c *i)
 
   Bit32u eip = pop_32();
 
-  // CS.LIMIT in real/v8086 mode is 0xffff
-  if (eip > 0xffff) {
+  // CS.LIMIT can't change when in real/v8086 mode
+  if (eip > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled) {
     BX_ERROR(("RETfar32_Iw: instruction pointer not within code segment limits"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
@@ -154,8 +154,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RETfar32(bxInstruction_c *i)
 
   Bit32u eip = pop_32();
 
-  // CS.LIMIT in real/v8086 mode is 0xffff
-  if (eip > 0xffff) {
+  // CS.LIMIT can't change when in real/v8086 mode
+  if (eip > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled) {
     BX_ERROR(("RETfar32: instruction pointer not within code segment limits"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
@@ -214,8 +214,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CALL32_Ap(bxInstruction_c *i)
     goto done;
   }
 
-  // CS.LIMIT in real/v8086 mode is 0xffff
-  if (disp32 > 0xffff) {
+  // CS.LIMIT can't change when in real/v8086 mode
+  if (disp32 > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled) {
     BX_ERROR(("CALL32_Ap: instruction pointer not within code segment limits"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
@@ -300,8 +300,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CALL32_Ep(bxInstruction_c *i)
     goto done;
   }
 
-  // CS.LIMIT in real/v8086 mode is 0xffff
-  if (op1_32 > 0xffff) {
+  // CS.LIMIT can't change when in real/v8086 mode
+  if (op1_32 > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled) {
     BX_ERROR(("CALL32_Ep: instruction pointer not within code segment limits"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
@@ -549,8 +549,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::JMP_Ap(bxInstruction_c *i)
     goto done;
   }
 
-  // CS.LIMIT in real/v8086 mode is 0xffff
-  if (disp32 > 0xffff) {
+  // CS.LIMIT can't change when in real/v8086 mode
+  if (disp32 > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled) {
     BX_ERROR(("JMP_Ap: instruction pointer not within code segment limits"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
@@ -616,8 +616,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::JMP32_Ep(bxInstruction_c *i)
     goto done;
   }
 
-  // CS.LIMIT in real/v8086 mode is 0xffff
-  if (op1_32 > 0xffff) {
+  // CS.LIMIT can't change when in real/v8086 mode
+  if (op1_32 > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled) {
     BX_ERROR(("JMP32_Ep: instruction pointer not within code segment limits"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
@@ -654,10 +654,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::IRET32(bxInstruction_c *i)
     goto done;
   }
 
- Bit32u eip = pop_32();
+  Bit32u eip = pop_32();
 
-  // CS.LIMIT in real/v8086 mode is 0xffff
-  if (eip > 0xffff) {
+  // CS.LIMIT can't change when in real/v8086 mode
+  if (eip > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled) {
     BX_ERROR(("IRET32: instruction pointer not within code segment limits"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }

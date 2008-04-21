@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.h,v 1.62 2008-04-16 05:56:55 sshwarts Exp $
+// $Id: fetchdecode.h,v 1.63 2008-04-21 14:17:04 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005 Stanislav Shwartsman
@@ -117,14 +117,14 @@ static const BxOpcodeInfo_t BxOpcodeInfo_FPGroupDA[8] = {
 
   // DB (modrm is outside 00h - BFh) (mod != 11)
 static const BxOpcodeInfo_t BxOpcodeInfo_FPGroupDB[8] = {
-  /* 0 */ { 0, BX_IA_FILD_DWORD_INTEGER  },
-  /* 1 */ { 0, BX_IA_FISTTP32            },
-  /* 2 */ { 0, BX_IA_FIST_DWORD_INTEGER  },
-  /* 3 */ { 0, BX_IA_FIST_DWORD_INTEGER  },	// FISTP_DWORD_INTEGER
-  /* 4 */ { 0, BX_IA_ERROR               },
-  /* 5 */ { 0, BX_IA_FLD_EXTENDED_REAL   },
-  /* 6 */ { 0, BX_IA_ERROR               },
-  /* 7 */ { 0, BX_IA_FSTP_EXTENDED_REAL  }
+  /* 0 */ { 0, BX_IA_FILD_DWORD_INTEGER },
+  /* 1 */ { 0, BX_IA_FISTTP32           },
+  /* 2 */ { 0, BX_IA_FIST_DWORD_INTEGER },
+  /* 3 */ { 0, BX_IA_FIST_DWORD_INTEGER },	// FISTP_DWORD_INTEGER
+  /* 4 */ { 0, BX_IA_ERROR              },
+  /* 5 */ { 0, BX_IA_FLD_EXTENDED_REAL  },
+  /* 6 */ { 0, BX_IA_ERROR              },
+  /* 7 */ { 0, BX_IA_FSTP_EXTENDED_REAL }
 };
 
   // DC (modrm is outside 00h - BFh) (mod != 11)
@@ -202,14 +202,14 @@ static const BxOpcodeInfo_t BxOpcodeInfo_FloatingPoint[512] = {
   /* D8 D5 */ { 0, BX_IA_FCOM_STi      },
   /* D8 D6 */ { 0, BX_IA_FCOM_STi      },
   /* D8 D7 */ { 0, BX_IA_FCOM_STi      },
-  /* D8 D8 */ { 0, BX_IA_FCOM_STi      },	// FCOMP
-  /* D8 D9 */ { 0, BX_IA_FCOM_STi      },	// FCOMP
-  /* D8 DA */ { 0, BX_IA_FCOM_STi      },	// FCOMP
-  /* D8 DB */ { 0, BX_IA_FCOM_STi      },	// FCOMP
-  /* D8 DC */ { 0, BX_IA_FCOM_STi      },	// FCOMP
-  /* D8 DD */ { 0, BX_IA_FCOM_STi      },	// FCOMP
-  /* D8 DE */ { 0, BX_IA_FCOM_STi      },	// FCOMP
-  /* D8 DF */ { 0, BX_IA_FCOM_STi      },	// FCOMP
+  /* D8 D8 */ { 0, BX_IA_FCOM_STi      },	// FCOMP_STi
+  /* D8 D9 */ { 0, BX_IA_FCOM_STi      },	// FCOMP_STi
+  /* D8 DA */ { 0, BX_IA_FCOM_STi      },	// FCOMP_STi
+  /* D8 DB */ { 0, BX_IA_FCOM_STi      },	// FCOMP_STi
+  /* D8 DC */ { 0, BX_IA_FCOM_STi      },	// FCOMP_STi
+  /* D8 DD */ { 0, BX_IA_FCOM_STi      },	// FCOMP_STi
+  /* D8 DE */ { 0, BX_IA_FCOM_STi      },	// FCOMP_STi
+  /* D8 DF */ { 0, BX_IA_FCOM_STi      },	// FCOMP_STi
   /* D8 E0 */ { 0, BX_IA_FSUB_ST0_STj  },
   /* D8 E1 */ { 0, BX_IA_FSUB_ST0_STj  },
   /* D8 E2 */ { 0, BX_IA_FSUB_ST0_STj  },
@@ -261,53 +261,53 @@ static const BxOpcodeInfo_t BxOpcodeInfo_FloatingPoint[512] = {
   /* D9 CE */ { 0, BX_IA_FXCH_STi },
   /* D9 CF */ { 0, BX_IA_FXCH_STi },
   /* D9 D0 */ { 0, BX_IA_FNOP     },
-  /* D9 D1 */ { 0, BX_IA_ERROR  },
-  /* D9 D2 */ { 0, BX_IA_ERROR  },
-  /* D9 D3 */ { 0, BX_IA_ERROR  },
-  /* D9 D4 */ { 0, BX_IA_ERROR  },
-  /* D9 D5 */ { 0, BX_IA_ERROR  },
-  /* D9 D6 */ { 0, BX_IA_ERROR  },
-  /* D9 D7 */ { 0, BX_IA_ERROR  },
-  /* D9 D8 */ { 0, BX_IA_ERROR  },
-  /* D9 D9 */ { 0, BX_IA_ERROR  },
-  /* D9 DA */ { 0, BX_IA_ERROR  },
-  /* D9 DB */ { 0, BX_IA_ERROR  },
-  /* D9 DC */ { 0, BX_IA_ERROR  },
-  /* D9 DD */ { 0, BX_IA_ERROR  },
-  /* D9 DE */ { 0, BX_IA_ERROR  },
-  /* D9 DF */ { 0, BX_IA_ERROR  },
-  /* D9 E0 */ { 0, BX_IA_FCHS     },
-  /* D9 E1 */ { 0, BX_IA_FABS     },
-  /* D9 E2 */ { 0, BX_IA_ERROR  },
-  /* D9 E3 */ { 0, BX_IA_ERROR  },
-  /* D9 E4 */ { 0, BX_IA_FTST     },
-  /* D9 E5 */ { 0, BX_IA_FXAM     },
-  /* D9 E6 */ { 0, BX_IA_ERROR    },
-  /* D9 E7 */ { 0, BX_IA_ERROR    },
-  /* D9 E8 */ { 0, BX_IA_FLD1     },
-  /* D9 E9 */ { 0, BX_IA_FLDL2T   },
-  /* D9 EA */ { 0, BX_IA_FLDL2E   },
-  /* D9 EB */ { 0, BX_IA_FLDPI    },
-  /* D9 EC */ { 0, BX_IA_FLDLG2   },
-  /* D9 ED */ { 0, BX_IA_FLDLN2   },
-  /* D9 EE */ { 0, BX_IA_FLDZ     },
-  /* D9 EF */ { 0, BX_IA_ERROR    },
-  /* D9 F0 */ { 0, BX_IA_F2XM1    },
-  /* D9 F1 */ { 0, BX_IA_FYL2X    },
-  /* D9 F2 */ { 0, BX_IA_FPTAN    },
-  /* D9 F3 */ { 0, BX_IA_FPATAN   },
-  /* D9 F4 */ { 0, BX_IA_FXTRACT  },
-  /* D9 F5 */ { 0, BX_IA_FPREM1   },
-  /* D9 F6 */ { 0, BX_IA_FDECSTP  },
-  /* D9 F7 */ { 0, BX_IA_FINCSTP  },
-  /* D9 F8 */ { 0, BX_IA_FPREM    },
-  /* D9 F9 */ { 0, BX_IA_FYL2XP1  },
-  /* D9 FA */ { 0, BX_IA_FSQRT    },
-  /* D9 FB */ { 0, BX_IA_FSINCOS  },
-  /* D9 FC */ { 0, BX_IA_FRNDINT  },
-  /* D9 FD */ { 0, BX_IA_FSCALE   },
-  /* D9 FE */ { 0, BX_IA_FSIN     },
-  /* D9 FF */ { 0, BX_IA_FCOS     },
+  /* D9 D1 */ { 0, BX_IA_ERROR },
+  /* D9 D2 */ { 0, BX_IA_ERROR },
+  /* D9 D3 */ { 0, BX_IA_ERROR },
+  /* D9 D4 */ { 0, BX_IA_ERROR },
+  /* D9 D5 */ { 0, BX_IA_ERROR },
+  /* D9 D6 */ { 0, BX_IA_ERROR },
+  /* D9 D7 */ { 0, BX_IA_ERROR },
+  /* D9 D8 */ { 0, BX_IA_FST_STi },	// FSTP_STi, undocumented
+  /* D9 D9 */ { 0, BX_IA_FST_STi },	// FSTP_STi, undocumented
+  /* D9 DA */ { 0, BX_IA_FST_STi },	// FSTP_STi, undocumented
+  /* D9 DB */ { 0, BX_IA_FST_STi },	// FSTP_STi, undocumented
+  /* D9 DC */ { 0, BX_IA_FST_STi },	// FSTP_STi, undocumented
+  /* D9 DD */ { 0, BX_IA_FST_STi },	// FSTP_STi, undocumented
+  /* D9 DE */ { 0, BX_IA_FST_STi },	// FSTP_STi, undocumented
+  /* D9 DF */ { 0, BX_IA_FST_STi },	// FSTP_STi, undocumented
+  /* D9 E0 */ { 0, BX_IA_FCHS  },
+  /* D9 E1 */ { 0, BX_IA_FABS  },
+  /* D9 E2 */ { 0, BX_IA_ERROR },
+  /* D9 E3 */ { 0, BX_IA_ERROR },
+  /* D9 E4 */ { 0, BX_IA_FTST    },
+  /* D9 E5 */ { 0, BX_IA_FXAM    },
+  /* D9 E6 */ { 0, BX_IA_ERROR   },
+  /* D9 E7 */ { 0, BX_IA_ERROR   },
+  /* D9 E8 */ { 0, BX_IA_FLD1    },
+  /* D9 E9 */ { 0, BX_IA_FLDL2T  },
+  /* D9 EA */ { 0, BX_IA_FLDL2E  },
+  /* D9 EB */ { 0, BX_IA_FLDPI   },
+  /* D9 EC */ { 0, BX_IA_FLDLG2  },
+  /* D9 ED */ { 0, BX_IA_FLDLN2  },
+  /* D9 EE */ { 0, BX_IA_FLDZ    },
+  /* D9 EF */ { 0, BX_IA_ERROR   },
+  /* D9 F0 */ { 0, BX_IA_F2XM1   },
+  /* D9 F1 */ { 0, BX_IA_FYL2X   },
+  /* D9 F2 */ { 0, BX_IA_FPTAN   },
+  /* D9 F3 */ { 0, BX_IA_FPATAN  },
+  /* D9 F4 */ { 0, BX_IA_FXTRACT },
+  /* D9 F5 */ { 0, BX_IA_FPREM1  },
+  /* D9 F6 */ { 0, BX_IA_FDECSTP },
+  /* D9 F7 */ { 0, BX_IA_FINCSTP },
+  /* D9 F8 */ { 0, BX_IA_FPREM   },
+  /* D9 F9 */ { 0, BX_IA_FYL2XP1 },
+  /* D9 FA */ { 0, BX_IA_FSQRT   },
+  /* D9 FB */ { 0, BX_IA_FSINCOS },
+  /* D9 FC */ { 0, BX_IA_FRNDINT },
+  /* D9 FD */ { 0, BX_IA_FSCALE  },
+  /* D9 FE */ { 0, BX_IA_FSIN    },
+  /* D9 FF */ { 0, BX_IA_FCOS    },
 
   // DA (modrm is outside 00h - BFh) (mod == 11)
   /* DA C0 */ { 0, BX_IA_FCMOV_ST0_STj },
@@ -408,14 +408,14 @@ static const BxOpcodeInfo_t BxOpcodeInfo_FloatingPoint[512] = {
   /* DB DD */ { 0, BX_IA_FCMOV_ST0_STj },
   /* DB DE */ { 0, BX_IA_FCMOV_ST0_STj },
   /* DB DF */ { 0, BX_IA_FCMOV_ST0_STj },
-  /* DB E0 */ { 0, BX_IA_FPLEGACY      },     // feni  (287 only)
-  /* DB E1 */ { 0, BX_IA_FPLEGACY      },     // fdisi (287 only)
-  /* DB E2 */ { 0, BX_IA_FNCLEX        },
-  /* DB E3 */ { 0, BX_IA_FNINIT        },
-  /* DB E4 */ { 0, BX_IA_FPLEGACY      },     // fsetpm (287 only)
-  /* DB E5 */ { 0, BX_IA_ERROR        },
-  /* DB E6 */ { 0, BX_IA_ERROR        },
-  /* DB E7 */ { 0, BX_IA_ERROR        },
+  /* DB E0 */ { 0, BX_IA_FPLEGACY },      // feni  (287 only)
+  /* DB E1 */ { 0, BX_IA_FPLEGACY },      // fdisi (287 only)
+  /* DB E2 */ { 0, BX_IA_FNCLEX   },
+  /* DB E3 */ { 0, BX_IA_FNINIT   },
+  /* DB E4 */ { 0, BX_IA_FPLEGACY },      // fsetpm (287 only)
+  /* DB E5 */ { 0, BX_IA_ERROR    },
+  /* DB E6 */ { 0, BX_IA_ERROR    },
+  /* DB E7 */ { 0, BX_IA_ERROR    },
   /* DB E8 */ { 0, BX_IA_FUCOMI_ST0_STj },
   /* DB E9 */ { 0, BX_IA_FUCOMI_ST0_STj },
   /* DB EA */ { 0, BX_IA_FUCOMI_ST0_STj },
@@ -458,22 +458,22 @@ static const BxOpcodeInfo_t BxOpcodeInfo_FloatingPoint[512] = {
   /* DC CD */ { 0, BX_IA_FMUL_STi_ST0 },
   /* DC CE */ { 0, BX_IA_FMUL_STi_ST0 },
   /* DC CF */ { 0, BX_IA_FMUL_STi_ST0 },
-  /* DC D0 */ { 0, BX_IA_ERROR },
-  /* DC D1 */ { 0, BX_IA_ERROR },
-  /* DC D2 */ { 0, BX_IA_ERROR },
-  /* DC D3 */ { 0, BX_IA_ERROR },
-  /* DC D4 */ { 0, BX_IA_ERROR },
-  /* DC D5 */ { 0, BX_IA_ERROR },
-  /* DC D6 */ { 0, BX_IA_ERROR },
-  /* DC D7 */ { 0, BX_IA_ERROR },
-  /* DC D8 */ { 0, BX_IA_ERROR },
-  /* DC D9 */ { 0, BX_IA_ERROR },
-  /* DC DA */ { 0, BX_IA_ERROR },
-  /* DC DB */ { 0, BX_IA_ERROR },
-  /* DC DC */ { 0, BX_IA_ERROR },
-  /* DC DD */ { 0, BX_IA_ERROR },
-  /* DC DE */ { 0, BX_IA_ERROR },
-  /* DC DF */ { 0, BX_IA_ERROR },
+  /* D8 D0 */ { 0, BX_IA_FCOM_STi     },        // undocumented
+  /* D8 D1 */ { 0, BX_IA_FCOM_STi     },        // undocumented
+  /* D8 D2 */ { 0, BX_IA_FCOM_STi     },        // undocumented
+  /* D8 D3 */ { 0, BX_IA_FCOM_STi     },        // undocumented
+  /* D8 D4 */ { 0, BX_IA_FCOM_STi     },        // undocumented
+  /* D8 D5 */ { 0, BX_IA_FCOM_STi     },        // undocumented
+  /* D8 D6 */ { 0, BX_IA_FCOM_STi     },        // undocumented
+  /* D8 D7 */ { 0, BX_IA_FCOM_STi     },        // undocumented
+  /* D8 D8 */ { 0, BX_IA_FCOM_STi     },	// undocumented, FCOMP_STi
+  /* D8 D9 */ { 0, BX_IA_FCOM_STi     },	// undocumented, FCOMP_STi
+  /* D8 DA */ { 0, BX_IA_FCOM_STi     },	// undocumented, FCOMP_STi
+  /* D8 DB */ { 0, BX_IA_FCOM_STi     },	// undocumented, FCOMP_STi
+  /* D8 DC */ { 0, BX_IA_FCOM_STi     },	// undocumented, FCOMP_STi
+  /* D8 DD */ { 0, BX_IA_FCOM_STi     },	// undocumented, FCOMP_STi
+  /* D8 DE */ { 0, BX_IA_FCOM_STi     },	// undocumented, FCOMP_STi
+  /* D8 DF */ { 0, BX_IA_FCOM_STi     },	// undocumented, FCOMP_STi
   /* DC E0 */ { 0, BX_IA_FSUBR_STi_ST0 },
   /* DC E1 */ { 0, BX_IA_FSUBR_STi_ST0 },
   /* DC E2 */ { 0, BX_IA_FSUBR_STi_ST0 },
@@ -516,30 +516,30 @@ static const BxOpcodeInfo_t BxOpcodeInfo_FloatingPoint[512] = {
   /* DD C5 */ { 0, BX_IA_FFREE_STi },
   /* DD C6 */ { 0, BX_IA_FFREE_STi },
   /* DD C7 */ { 0, BX_IA_FFREE_STi },
-  /* DD C8 */ { 0, BX_IA_ERROR   },
-  /* DD C9 */ { 0, BX_IA_ERROR   },
-  /* DD CA */ { 0, BX_IA_ERROR   },
-  /* DD CB */ { 0, BX_IA_ERROR   },
-  /* DD CC */ { 0, BX_IA_ERROR   },
-  /* DD CD */ { 0, BX_IA_ERROR   },
-  /* DD CE */ { 0, BX_IA_ERROR   },
-  /* DD CF */ { 0, BX_IA_ERROR   },
-  /* DD D0 */ { 0, BX_IA_FST_STi   },
-  /* DD D1 */ { 0, BX_IA_FST_STi   },
-  /* DD D2 */ { 0, BX_IA_FST_STi   },
-  /* DD D3 */ { 0, BX_IA_FST_STi   },
-  /* DD D4 */ { 0, BX_IA_FST_STi   },
-  /* DD D5 */ { 0, BX_IA_FST_STi   },
-  /* DD D6 */ { 0, BX_IA_FST_STi   },
-  /* DD D7 */ { 0, BX_IA_FST_STi   },
-  /* DD D8 */ { 0, BX_IA_FST_STi   },	// FSTP_STi
-  /* DD D9 */ { 0, BX_IA_FST_STi   },	// FSTP_STi
-  /* DD DA */ { 0, BX_IA_FST_STi   },	// FSTP_STi
-  /* DD DB */ { 0, BX_IA_FST_STi   },	// FSTP_STi
-  /* DD DC */ { 0, BX_IA_FST_STi   },	// FSTP_STi
-  /* DD DD */ { 0, BX_IA_FST_STi   },	// FSTP_STi
-  /* DD DE */ { 0, BX_IA_FST_STi   },	// FSTP_STi
-  /* DD DF */ { 0, BX_IA_FST_STi   },	// FSTP_STi
+  /* DD C8 */ { 0, BX_IA_FXCH_STi },    // undocumented
+  /* DD C9 */ { 0, BX_IA_FXCH_STi },    // undocumented
+  /* DD CA */ { 0, BX_IA_FXCH_STi },    // undocumented
+  /* DD CB */ { 0, BX_IA_FXCH_STi },    // undocumented
+  /* DD CC */ { 0, BX_IA_FXCH_STi },    // undocumented
+  /* DD CD */ { 0, BX_IA_FXCH_STi },    // undocumented
+  /* DD CE */ { 0, BX_IA_FXCH_STi },    // undocumented
+  /* DD CF */ { 0, BX_IA_FXCH_STi },    // undocumented
+  /* DD D0 */ { 0, BX_IA_FST_STi },
+  /* DD D1 */ { 0, BX_IA_FST_STi },
+  /* DD D2 */ { 0, BX_IA_FST_STi },
+  /* DD D3 */ { 0, BX_IA_FST_STi },
+  /* DD D4 */ { 0, BX_IA_FST_STi },
+  /* DD D5 */ { 0, BX_IA_FST_STi },
+  /* DD D6 */ { 0, BX_IA_FST_STi },
+  /* DD D7 */ { 0, BX_IA_FST_STi },
+  /* DD D8 */ { 0, BX_IA_FST_STi },	// FSTP_STi
+  /* DD D9 */ { 0, BX_IA_FST_STi },	// FSTP_STi
+  /* DD DA */ { 0, BX_IA_FST_STi },	// FSTP_STi
+  /* DD DB */ { 0, BX_IA_FST_STi },	// FSTP_STi
+  /* DD DC */ { 0, BX_IA_FST_STi },	// FSTP_STi
+  /* DD DD */ { 0, BX_IA_FST_STi },	// FSTP_STi
+  /* DD DE */ { 0, BX_IA_FST_STi },	// FSTP_STi
+  /* DD DF */ { 0, BX_IA_FST_STi },	// FSTP_STi
   /* DD E0 */ { 0, BX_IA_FUCOM_STi },
   /* DD E1 */ { 0, BX_IA_FUCOM_STi },
   /* DD E2 */ { 0, BX_IA_FUCOM_STi },
@@ -548,14 +548,14 @@ static const BxOpcodeInfo_t BxOpcodeInfo_FloatingPoint[512] = {
   /* DD E5 */ { 0, BX_IA_FUCOM_STi },
   /* DD E6 */ { 0, BX_IA_FUCOM_STi },
   /* DD E7 */ { 0, BX_IA_FUCOM_STi },
-  /* DD E8 */ { 0, BX_IA_FUCOM_STi },	// FUCOMP
-  /* DD E9 */ { 0, BX_IA_FUCOM_STi },	// FUCOMP
-  /* DD EA */ { 0, BX_IA_FUCOM_STi },	// FUCOMP
-  /* DD EB */ { 0, BX_IA_FUCOM_STi },	// FUCOMP
-  /* DD EC */ { 0, BX_IA_FUCOM_STi },	// FUCOMP
-  /* DD ED */ { 0, BX_IA_FUCOM_STi },	// FUCOMP
-  /* DD EE */ { 0, BX_IA_FUCOM_STi },	// FUCOMP
-  /* DD EF */ { 0, BX_IA_FUCOM_STi },	// FUCOMP
+  /* DD E8 */ { 0, BX_IA_FUCOM_STi },	// FUCOMP_STi
+  /* DD E9 */ { 0, BX_IA_FUCOM_STi },	// FUCOMP_STi
+  /* DD EA */ { 0, BX_IA_FUCOM_STi },	// FUCOMP_STi
+  /* DD EB */ { 0, BX_IA_FUCOM_STi },	// FUCOMP_STi
+  /* DD EC */ { 0, BX_IA_FUCOM_STi },	// FUCOMP_STi
+  /* DD ED */ { 0, BX_IA_FUCOM_STi },	// FUCOMP_STi
+  /* DD EE */ { 0, BX_IA_FUCOM_STi },	// FUCOMP_STi
+  /* DD EF */ { 0, BX_IA_FUCOM_STi },	// FUCOMP_STi
   /* DD F0 */ { 0, BX_IA_ERROR },
   /* DD F1 */ { 0, BX_IA_ERROR },
   /* DD F2 */ { 0, BX_IA_ERROR },
@@ -591,22 +591,22 @@ static const BxOpcodeInfo_t BxOpcodeInfo_FloatingPoint[512] = {
   /* DE CD */ { 0, BX_IA_FMUL_STi_ST0 },
   /* DE CE */ { 0, BX_IA_FMUL_STi_ST0 },
   /* DE CF */ { 0, BX_IA_FMUL_STi_ST0 },
-  /* DE D0 */ { 0, BX_IA_ERROR },
-  /* DE D1 */ { 0, BX_IA_ERROR },
-  /* DE D2 */ { 0, BX_IA_ERROR },
-  /* DE D3 */ { 0, BX_IA_ERROR },
-  /* DE D4 */ { 0, BX_IA_ERROR },
-  /* DE D5 */ { 0, BX_IA_ERROR },
-  /* DE D6 */ { 0, BX_IA_ERROR },
-  /* DE D7 */ { 0, BX_IA_ERROR },
-  /* DE D8 */ { 0, BX_IA_ERROR },
-  /* DE D9 */ { 0, BX_IA_FCOMPP  },
-  /* DE DA */ { 0, BX_IA_ERROR },
-  /* DE DB */ { 0, BX_IA_ERROR },
-  /* DE DC */ { 0, BX_IA_ERROR },
-  /* DE DD */ { 0, BX_IA_ERROR },
-  /* DE DE */ { 0, BX_IA_ERROR },
-  /* DE DF */ { 0, BX_IA_ERROR },
+  /* DE D0 */ { 0, BX_IA_FCOM_STi     },	// FCOMP_STi, undocumented, special FPSTACK pop case
+  /* DE D1 */ { 0, BX_IA_FCOM_STi     },	// FCOMP_STi, undocumented, special FPSTACK pop case
+  /* DE D2 */ { 0, BX_IA_FCOM_STi     },	// FCOMP_STi, undocumented, special FPSTACK pop case
+  /* DE D3 */ { 0, BX_IA_FCOM_STi     },	// FCOMP_STi, undocumented, special FPSTACK pop case
+  /* DE D4 */ { 0, BX_IA_FCOM_STi     },	// FCOMP_STi, undocumented, special FPSTACK pop case
+  /* DE D5 */ { 0, BX_IA_FCOM_STi     },	// FCOMP_STi, undocumented, special FPSTACK pop case
+  /* DE D6 */ { 0, BX_IA_FCOM_STi     },	// FCOMP_STi, undocumented, special FPSTACK pop case
+  /* DE D7 */ { 0, BX_IA_FCOM_STi     },	// FCOMP_STi, undocumented, special FPSTACK pop case
+  /* DE D8 */ { 0, BX_IA_ERROR  },
+  /* DE D9 */ { 0, BX_IA_FCOMPP },
+  /* DE DA */ { 0, BX_IA_ERROR  },
+  /* DE DB */ { 0, BX_IA_ERROR  },
+  /* DE DC */ { 0, BX_IA_ERROR  },
+  /* DE DD */ { 0, BX_IA_ERROR  },
+  /* DE DE */ { 0, BX_IA_ERROR  },
+  /* DE DF */ { 0, BX_IA_ERROR  },
   /* DE E0 */ { 0, BX_IA_FSUBR_STi_ST0 },
   /* DE E1 */ { 0, BX_IA_FSUBR_STi_ST0 },
   /* DE E2 */ { 0, BX_IA_FSUBR_STi_ST0 },
@@ -649,30 +649,30 @@ static const BxOpcodeInfo_t BxOpcodeInfo_FloatingPoint[512] = {
   /* DF C5 */ { 0, BX_IA_FFREEP_STi },
   /* DF C6 */ { 0, BX_IA_FFREEP_STi },
   /* DF C7 */ { 0, BX_IA_FFREEP_STi },
-  /* DF C8 */ { 0, BX_IA_ERROR },
-  /* DF C9 */ { 0, BX_IA_ERROR },
-  /* DF CA */ { 0, BX_IA_ERROR },
-  /* DF CB */ { 0, BX_IA_ERROR },
-  /* DF CC */ { 0, BX_IA_ERROR },
-  /* DF CD */ { 0, BX_IA_ERROR },
-  /* DF CE */ { 0, BX_IA_ERROR },
-  /* DF CF */ { 0, BX_IA_ERROR },
-  /* DF D0 */ { 0, BX_IA_ERROR },
-  /* DF D1 */ { 0, BX_IA_ERROR },
-  /* DF D2 */ { 0, BX_IA_ERROR },
-  /* DF D3 */ { 0, BX_IA_ERROR },
-  /* DF D4 */ { 0, BX_IA_ERROR },
-  /* DF D5 */ { 0, BX_IA_ERROR },
-  /* DF D6 */ { 0, BX_IA_ERROR },
-  /* DF D7 */ { 0, BX_IA_ERROR },
-  /* DF D8 */ { 0, BX_IA_ERROR },
-  /* DF D9 */ { 0, BX_IA_ERROR },
-  /* DF DA */ { 0, BX_IA_ERROR },
-  /* DF DB */ { 0, BX_IA_ERROR },
-  /* DF DC */ { 0, BX_IA_ERROR },
-  /* DF DD */ { 0, BX_IA_ERROR },
-  /* DF DE */ { 0, BX_IA_ERROR },
-  /* DF DF */ { 0, BX_IA_ERROR },
+  /* DF C8 */ { 0, BX_IA_FXCH_STi },    // undocumented
+  /* DF C9 */ { 0, BX_IA_FXCH_STi },    // undocumented
+  /* DF CA */ { 0, BX_IA_FXCH_STi },    // undocumented
+  /* DF CB */ { 0, BX_IA_FXCH_STi },    // undocumented
+  /* DF CC */ { 0, BX_IA_FXCH_STi },    // undocumented
+  /* DF CD */ { 0, BX_IA_FXCH_STi },    // undocumented
+  /* DF CE */ { 0, BX_IA_FXCH_STi },    // undocumented
+  /* DF CF */ { 0, BX_IA_FXCH_STi },    // undocumented
+  /* DF D0 */ { 0, BX_IA_FST_STi },	// FSTP_STi, undocumented, special FPSTACK pop case
+  /* DF D1 */ { 0, BX_IA_FST_STi },	// FSTP_STi, undocumented, special FPSTACK pop case
+  /* DF D2 */ { 0, BX_IA_FST_STi },	// FSTP_STi, undocumented, special FPSTACK pop case
+  /* DF D3 */ { 0, BX_IA_FST_STi },	// FSTP_STi, undocumented, special FPSTACK pop case
+  /* DF D4 */ { 0, BX_IA_FST_STi },	// FSTP_STi, undocumented, special FPSTACK pop case
+  /* DF D5 */ { 0, BX_IA_FST_STi },	// FSTP_STi, undocumented, special FPSTACK pop case
+  /* DF D6 */ { 0, BX_IA_FST_STi },	// FSTP_STi, undocumented, special FPSTACK pop case
+  /* DF D7 */ { 0, BX_IA_FST_STi },	// FSTP_STi, undocumented, special FPSTACK pop case
+  /* DF D8 */ { 0, BX_IA_FST_STi },	// FSTP_STi, undocumented
+  /* DF D9 */ { 0, BX_IA_FST_STi },	// FSTP_STi, undocumented
+  /* DF DA */ { 0, BX_IA_FST_STi },	// FSTP_STi, undocumented
+  /* DF DB */ { 0, BX_IA_FST_STi },	// FSTP_STi, undocumented
+  /* DF DC */ { 0, BX_IA_FST_STi },	// FSTP_STi, undocumented
+  /* DF DD */ { 0, BX_IA_FST_STi },	// FSTP_STi, undocumented
+  /* DF DE */ { 0, BX_IA_FST_STi },	// FSTP_STi, undocumented
+  /* DF DF */ { 0, BX_IA_FST_STi },	// FSTP_STi, undocumented
   /* DF E0 */ { 0, BX_IA_FNSTSW_AX },
   /* DF E1 */ { 0, BX_IA_ERROR },
   /* DF E2 */ { 0, BX_IA_ERROR },
