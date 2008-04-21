@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.206 2008-04-08 16:41:18 sshwarts Exp $
+// $Id: rombios.c,v 1.207 2008-04-21 14:22:01 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -666,7 +666,8 @@ typedef struct {
     chs_t  lchs;         // Logical CHS
     chs_t  pchs;         // Physical CHS
 
-    Bit32u sectors;      // Total sectors count
+    Bit32u sectors_low;  // Total sectors count
+    Bit32u sectors_high;
     } ata_device_t;
 
   typedef struct {
@@ -939,7 +940,7 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.206 $ $Date: 2008-04-08 16:41:18 $";
+static char bios_cvs_version_string[] = "$Revision: 1.207 $ $Date: 2008-04-21 14:22:01 $";
 
 #define BIOS_COPYRIGHT_STRING "(c) 2002 MandrakeSoft S.A. Written by Kevin Lawton & the Bochs team."
 
@@ -2372,7 +2373,8 @@ void ata_init( )
     write_word(ebda_seg,&EbdaData->ata.devices[device].pchs.cylinders,0);
     write_word(ebda_seg,&EbdaData->ata.devices[device].pchs.spt,0);
 
-    write_dword(ebda_seg,&EbdaData->ata.devices[device].sectors,0L);
+    write_dword(ebda_seg,&EbdaData->ata.devices[device].sectors_low,0L);
+    write_dword(ebda_seg,&EbdaData->ata.devices[device].sectors_high,0L);
     }
 
   // hdidmap  and cdidmap init.
@@ -2534,7 +2536,7 @@ void ata_detect( )
 
     // Now we send a IDENTIFY command to ATA device
     if(type == ATA_TYPE_ATA) {
-      Bit32u sectors;
+      Bit32u sectors_low, sectors_high;
       Bit16u cylinders, heads, spt, blksize;
       Bit8u  translation, removable, mode;
 
@@ -2542,7 +2544,7 @@ void ata_detect( )
       write_byte(ebda_seg,&EbdaData->ata.devices[device].device,ATA_DEVICE_HD);
       write_byte(ebda_seg,&EbdaData->ata.devices[device].mode, ATA_MODE_PIO16);
 
-      if (ata_cmd_data_in(device,ATA_CMD_IDENTIFY_DEVICE, 1, 0, 0, 0, 0L, get_SS(),buffer) !=0 )
+      if (ata_cmd_data_in(device,ATA_CMD_IDENTIFY_DEVICE, 1, 0, 0, 0, 0L, 0L, get_SS(),buffer) !=0 )
         BX_PANIC("ata-detect: Failed to detect ATA device\n");
 
       removable = (read_byte(get_SS(),buffer+0) & 0x80) ? 1 : 0;
@@ -2553,7 +2555,13 @@ void ata_detect( )
       heads     = read_word(get_SS(),buffer+(3*2)); // word 3
       spt       = read_word(get_SS(),buffer+(6*2)); // word 6
 
-      sectors   = read_dword(get_SS(),buffer+(60*2)); // word 60 and word 61
+      if (read_word(get_SS(),buffer+(83*2)) & (1 << 10)) { // word 83 - lba48 support
+        sectors_low  = read_dword(get_SS(),buffer+(100*2)); // word 100 and word 101
+        sectors_high = read_dword(get_SS(),buffer+(102*2)); // word 102 and word 103
+      } else {
+        sectors_low = read_dword(get_SS(),buffer+(60*2)); // word 60 and word 61
+        sectors_high = 0;
+      }
 
       write_byte(ebda_seg,&EbdaData->ata.devices[device].device,ATA_DEVICE_HD);
       write_byte(ebda_seg,&EbdaData->ata.devices[device].removable, removable);
@@ -2562,7 +2570,8 @@ void ata_detect( )
       write_word(ebda_seg,&EbdaData->ata.devices[device].pchs.heads, heads);
       write_word(ebda_seg,&EbdaData->ata.devices[device].pchs.cylinders, cylinders);
       write_word(ebda_seg,&EbdaData->ata.devices[device].pchs.spt, spt);
-      write_dword(ebda_seg,&EbdaData->ata.devices[device].sectors, sectors);
+      write_dword(ebda_seg,&EbdaData->ata.devices[device].sectors_low, sectors_low);
+      write_dword(ebda_seg,&EbdaData->ata.devices[device].sectors_high, sectors_high);
       BX_INFO("ata%d-%d: PCHS=%u/%d/%d translation=", channel, slave,cylinders, heads, spt);
 
       translation = inb_cmos(0x39 + channel/2);
@@ -2590,14 +2599,14 @@ void ata_detect( )
           break;
         case ATA_TRANSLATION_LBA:
           spt = 63;
-          sectors /= 63;
-          heads = sectors / 1024;
+          sectors_low /= 63;
+          heads = sectors_low / 1024;
           if (heads>128) heads = 255;
           else if (heads>64) heads = 128;
           else if (heads>32) heads = 64;
           else if (heads>16) heads = 32;
           else heads=16;
-          cylinders = sectors / heads;
+          cylinders = sectors_low / heads;
           break;
         case ATA_TRANSLATION_RECHS:
           // Take care not to overflow
@@ -2640,7 +2649,7 @@ void ata_detect( )
       write_byte(ebda_seg,&EbdaData->ata.devices[device].device,ATA_DEVICE_CDROM);
       write_byte(ebda_seg,&EbdaData->ata.devices[device].mode, ATA_MODE_PIO16);
 
-      if (ata_cmd_data_in(device,ATA_CMD_IDENTIFY_DEVICE_PACKET, 1, 0, 0, 0, 0L, get_SS(),buffer) != 0)
+      if (ata_cmd_data_in(device,ATA_CMD_IDENTIFY_DEVICE_PACKET, 1, 0, 0, 0, 0L, 0L, get_SS(),buffer) != 0)
         BX_PANIC("ata-detect: Failed to detect ATAPI device\n");
 
       type      = read_byte(get_SS(),buffer+1) & 0x1f;
@@ -2665,8 +2674,8 @@ void ata_detect( )
 
       switch (type) {
         case ATA_TYPE_ATA:
-          sizeinmb = read_dword(ebda_seg,&EbdaData->ata.devices[device].sectors);
-          sizeinmb >>= 11;
+          sizeinmb = (read_dword(ebda_seg,&EbdaData->ata.devices[device].sectors_high) << 21)
+            | (read_dword(ebda_seg,&EbdaData->ata.devices[device].sectors_low) >> 11);
         case ATA_TYPE_ATAPI:
           // Read ATA/ATAPI version
           ataversion=((Bit16u)(read_byte(get_SS(),buffer+161))<<8)|read_byte(get_SS(),buffer+160);
@@ -2803,9 +2812,9 @@ Bit16u ata_cmd_non_data()
       // 5 : more sectors to read/verify
       // 6 : no sectors left to write
       // 7 : more sectors to write
-Bit16u ata_cmd_data_in(device, command, count, cylinder, head, sector, lba, segment, offset)
+Bit16u ata_cmd_data_in(device, command, count, cylinder, head, sector, lba_low, lba_high, segment, offset)
 Bit16u device, command, count, cylinder, head, sector, segment, offset;
-Bit32u lba;
+Bit32u lba_low, lba_high;
 {
   Bit16u ebda_seg=read_word(0x0040,0x000E);
   Bit16u iobase1, iobase2, blksize;
@@ -2834,19 +2843,19 @@ Bit32u lba;
 
   // sector will be 0 only on lba access. Convert to lba-chs
   if (sector == 0) {
-    if ((count >= 1 << 8) || (lba + count >= 1UL << 28)) {
+    if ((count >= 1 << 8) || lba_high || (lba_low + count >= 1UL << 28)) {
       outb(iobase1 + ATA_CB_FR, 0x00);
       outb(iobase1 + ATA_CB_SC, (count >> 8) & 0xff);
-      outb(iobase1 + ATA_CB_SN, lba >> 24);
-      outb(iobase1 + ATA_CB_CL, 0);
-      outb(iobase1 + ATA_CB_CH, 0);
+      outb(iobase1 + ATA_CB_SN, lba_low >> 24);
+      outb(iobase1 + ATA_CB_CL, lba_high & 0xff);
+      outb(iobase1 + ATA_CB_CH, lba_high >> 8);
       command |= 0x04;
       count &= (1UL << 8) - 1;
-      lba &= (1UL << 24) - 1;
+      lba_low &= (1UL << 24) - 1;
       }
-    sector = (Bit16u) (lba & 0x000000ffL);
-    cylinder = (Bit16u) ((lba>>8) & 0x0000ffffL);
-    head = ((Bit16u) ((lba>>24) & 0x0000000fL)) | ATA_CB_DH_LBA;
+    sector = (Bit16u) (lba_low & 0x000000ffL);
+    cylinder = (Bit16u) ((lba_low>>8) & 0x0000ffffL);
+    head = ((Bit16u) ((lba_low>>24) & 0x0000000fL)) | ATA_CB_DH_LBA;
   }
 
   outb(iobase1 + ATA_CB_FR, 0x00);
@@ -2954,9 +2963,9 @@ ASM_END
       // 5 : more sectors to read/verify
       // 6 : no sectors left to write
       // 7 : more sectors to write
-Bit16u ata_cmd_data_out(device, command, count, cylinder, head, sector, lba, segment, offset)
+Bit16u ata_cmd_data_out(device, command, count, cylinder, head, sector, lba_low, lba_high, segment, offset)
 Bit16u device, command, count, cylinder, head, sector, segment, offset;
-Bit32u lba;
+Bit32u lba_low, lba_high;
 {
   Bit16u ebda_seg=read_word(0x0040,0x000E);
   Bit16u iobase1, iobase2, blksize;
@@ -2985,19 +2994,19 @@ Bit32u lba;
 
   // sector will be 0 only on lba access. Convert to lba-chs
   if (sector == 0) {
-    if ((count >= 1 << 8) || (lba + count >= 1UL << 28)) {
+    if ((count >= 1 << 8) || lba_high || (lba_low + count >= 1UL << 28)) {
       outb(iobase1 + ATA_CB_FR, 0x00);
       outb(iobase1 + ATA_CB_SC, (count >> 8) & 0xff);
-      outb(iobase1 + ATA_CB_SN, lba >> 24);
-      outb(iobase1 + ATA_CB_CL, 0);
-      outb(iobase1 + ATA_CB_CH, 0);
+      outb(iobase1 + ATA_CB_SN, lba_low >> 24);
+      outb(iobase1 + ATA_CB_CL, lba_high & 0xff);
+      outb(iobase1 + ATA_CB_CH, lba_high >> 8);
       command |= 0x04;
       count &= (1UL << 8) - 1;
-      lba &= (1UL << 24) - 1;
+      lba_low &= (1UL << 24) - 1;
       }
-    sector = (Bit16u) (lba & 0x000000ffL);
-    cylinder = (Bit16u) ((lba>>8) & 0x0000ffffL);
-    head = ((Bit16u) ((lba>>24) & 0x0000000fL)) | ATA_CB_DH_LBA;
+    sector = (Bit16u) (lba_low & 0x000000ffL);
+    cylinder = (Bit16u) ((lba_low>>8) & 0x0000ffffL);
+    head = ((Bit16u) ((lba_low>>24) & 0x0000000fL)) | ATA_CB_DH_LBA;
   }
 
   outb(iobase1 + ATA_CB_FR, 0x00);
@@ -3474,9 +3483,9 @@ ok:
   BX_DEBUG_ATA("sectors=%u\n", sectors);
   if (block_len == 2048)
     sectors <<= 2; /* # of sectors in 512-byte "soft" sector */
-  if (sectors != read_dword(ebda_seg,&EbdaData->ata.devices[device].sectors))
+  if (sectors != read_dword(ebda_seg,&EbdaData->ata.devices[device].sectors_low))
     printf("%dMB medium detected\n", sectors>>(20-9));
-  write_dword(ebda_seg,&EbdaData->ata.devices[device].sectors, sectors);
+  write_dword(ebda_seg,&EbdaData->ata.devices[device].sectors_low, sectors);
   return 0;
 }
 
@@ -5163,7 +5172,7 @@ BX_DEBUG_INT74("int74_function: make_farcall=1\n");
 int13_harddisk(EHAX, DS, ES, DI, SI, BP, ELDX, BX, DX, CX, AX, IP, CS, FLAGS)
   Bit16u EHAX, DS, ES, DI, SI, BP, ELDX, BX, DX, CX, AX, IP, CS, FLAGS;
 {
-  Bit32u lba;
+  Bit32u lba_low, lba_high;
   Bit16u ebda_seg=read_word(0x0040,0x000E);
   Bit16u cylinder, head, sector;
   Bit16u segment, offset;
@@ -5242,14 +5251,15 @@ int13_harddisk(EHAX, DS, ES, DI, SI, BP, ELDX, BX, DX, CX, AX, IP, CS, FLAGS)
 
       // if needed, translate lchs to lba, and execute command
       if ( (nph != nlh) || (npspt != nlspt)) {
-        lba = ((((Bit32u)cylinder * (Bit32u)nlh) + (Bit32u)head) * (Bit32u)nlspt) + (Bit32u)sector - 1;
+        lba_low = ((((Bit32u)cylinder * (Bit32u)nlh) + (Bit32u)head) * (Bit32u)nlspt) + (Bit32u)sector - 1;
+        lba_high = 0;
         sector = 0; // this forces the command to be lba
         }
 
       if ( GET_AH() == 0x02 )
-        status=ata_cmd_data_in(device, ATA_CMD_READ_SECTORS, count, cylinder, head, sector, lba, segment, offset);
+        status=ata_cmd_data_in(device, ATA_CMD_READ_SECTORS, count, cylinder, head, sector, lba_low, lba_high, segment, offset);
       else
-        status=ata_cmd_data_out(device, ATA_CMD_WRITE_SECTORS, count, cylinder, head, sector, lba, segment, offset);
+        status=ata_cmd_data_out(device, ATA_CMD_WRITE_SECTORS, count, cylinder, head, sector, lba_low, lba_high, segment, offset);
 
       // Set nb of sector transferred
       SET_AL(read_word(ebda_seg, &EbdaData->ata.trsfsectors));
@@ -5311,9 +5321,9 @@ int13_harddisk(EHAX, DS, ES, DI, SI, BP, ELDX, BX, DX, CX, AX, IP, CS, FLAGS)
       nlspt = read_word(ebda_seg, &EbdaData->ata.devices[device].lchs.spt);
 
       // Compute sector count seen by int13
-      lba = (Bit32u)(nlc - 1) * (Bit32u)nlh * (Bit32u)nlspt;
-      CX = lba >> 16;
-      DX = lba & 0xffff;
+      lba_low = (Bit32u)(nlc - 1) * (Bit32u)nlh * (Bit32u)nlspt;
+      CX = lba_low >> 16;
+      DX = lba_low & 0xffff;
 
       SET_AH(3);  // hard disk accessible
       goto int13_success_noah;
@@ -5335,16 +5345,17 @@ int13_harddisk(EHAX, DS, ES, DI, SI, BP, ELDX, BX, DX, CX, AX, IP, CS, FLAGS)
       segment=read_word(DS, SI+(Bit16u)&Int13Ext->segment);
       offset=read_word(DS, SI+(Bit16u)&Int13Ext->offset);
 
-      // Can't use 64 bits lba
-      lba=read_dword(DS, SI+(Bit16u)&Int13Ext->lba2);
-      if (lba != 0L) {
-        BX_PANIC("int13_harddisk: function %02x. Can't use 64bits lba\n",GET_AH());
+      // Get 32 msb lba and check
+      lba_high=read_dword(DS, SI+(Bit16u)&Int13Ext->lba2);
+      if (lba_high > read_dword(ebda_seg, &EbdaData->ata.devices[device].sectors_high) ) {
+        BX_INFO("int13_harddisk: function %02x. LBA out of range\n",GET_AH());
         goto int13_fail;
         }
 
-      // Get 32 bits lba and check
-      lba=read_dword(DS, SI+(Bit16u)&Int13Ext->lba1);
-      if (lba >= read_dword(ebda_seg, &EbdaData->ata.devices[device].sectors) ) {
+      // Get 32 lsb lba and check
+      lba_low=read_dword(DS, SI+(Bit16u)&Int13Ext->lba1);
+      if (lba_high == read_dword(ebda_seg, &EbdaData->ata.devices[device].sectors_high)
+          && lba_low >= read_dword(ebda_seg, &EbdaData->ata.devices[device].sectors_low) ) {
         BX_INFO("int13_harddisk: function %02x. LBA out of range\n",GET_AH());
         goto int13_fail;
         }
@@ -5355,9 +5366,9 @@ int13_harddisk(EHAX, DS, ES, DI, SI, BP, ELDX, BX, DX, CX, AX, IP, CS, FLAGS)
 
       // Execute the command
       if ( GET_AH() == 0x42 )
-        status=ata_cmd_data_in(device, ATA_CMD_READ_SECTORS, count, 0, 0, 0, lba, segment, offset);
+        status=ata_cmd_data_in(device, ATA_CMD_READ_SECTORS, count, 0, 0, 0, lba_low, lba_high, segment, offset);
       else
-        status=ata_cmd_data_out(device, ATA_CMD_WRITE_SECTORS, count, 0, 0, 0, lba, segment, offset);
+        status=ata_cmd_data_out(device, ATA_CMD_WRITE_SECTORS, count, 0, 0, 0, lba_low, lba_high, segment, offset);
 
       count=read_word(ebda_seg, &EbdaData->ata.trsfsectors);
       write_word(DS, SI+(Bit16u)&Int13Ext->count, count);
@@ -5395,11 +5406,12 @@ int13_harddisk(EHAX, DS, ES, DI, SI, BP, ELDX, BX, DX, CX, AX, IP, CS, FLAGS)
         npc     = read_word(ebda_seg, &EbdaData->ata.devices[device].pchs.cylinders);
         nph     = read_word(ebda_seg, &EbdaData->ata.devices[device].pchs.heads);
         npspt   = read_word(ebda_seg, &EbdaData->ata.devices[device].pchs.spt);
-        lba     = read_dword(ebda_seg, &EbdaData->ata.devices[device].sectors);
+        lba_low = read_dword(ebda_seg, &EbdaData->ata.devices[device].sectors_low);
+        lba_high = read_dword(ebda_seg, &EbdaData->ata.devices[device].sectors_high);
         blksize = read_word(ebda_seg, &EbdaData->ata.devices[device].blksize);
 
         write_word(DS, SI+(Bit16u)&Int13DPT->size, 0x1a);
-        if ((lba/npspt)/nph > 0x3fff)
+        if (lba_high || (lba_low/npspt)/nph > 0x3fff)
         {
           write_word(DS, SI+(Bit16u)&Int13DPT->infos, 0x00); // geometry is invalid
           write_dword(DS, SI+(Bit16u)&Int13DPT->cylinders, 0x3fff);
@@ -5411,8 +5423,8 @@ int13_harddisk(EHAX, DS, ES, DI, SI, BP, ELDX, BX, DX, CX, AX, IP, CS, FLAGS)
         }
         write_dword(DS, SI+(Bit16u)&Int13DPT->heads, (Bit32u)nph);
         write_dword(DS, SI+(Bit16u)&Int13DPT->spt, (Bit32u)npspt);
-        write_dword(DS, SI+(Bit16u)&Int13DPT->sector_count1, lba);  // FIXME should be Bit64
-        write_dword(DS, SI+(Bit16u)&Int13DPT->sector_count2, 0L);
+        write_dword(DS, SI+(Bit16u)&Int13DPT->sector_count1, lba_low);
+        write_dword(DS, SI+(Bit16u)&Int13DPT->sector_count2, lba_high);
         write_word(DS, SI+(Bit16u)&Int13DPT->blksize, blksize);
         }
 
