@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu_load_store.cc,v 1.18 2008-04-04 21:05:37 sshwarts Exp $
+// $Id: fpu_load_store.cc,v 1.19 2008-04-21 14:15:56 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -266,6 +266,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FST_STi(bxInstruction_c *i)
   BX_CPU_THIS_PTR prepareFPU(i);
 
   int pop_stack = i->nnn() & 1;
+  // handle special case of FSTP opcode @ 0xDF 0xD0..D7
+  if (i->b1() == 0xdf)
+    pop_stack = 1;
 
   int st0_tag = BX_CPU_THIS_PTR the_i387.FPU_gettagi(0);
   if (st0_tag == FPU_Tag_Empty)

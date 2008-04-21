@@ -2473,14 +2473,14 @@ static BxDisasmOpcodeTable_t BxDisasmOpcodeInfoFP[512] = {
   /* D9 D5 */ { 0, &Ia_Invalid },
   /* D9 D6 */ { 0, &Ia_Invalid },
   /* D9 D7 */ { 0, &Ia_Invalid },
-  /* D9 D8 */ { 0, &Ia_Invalid },
-  /* D9 D9 */ { 0, &Ia_Invalid },
-  /* D9 DA */ { 0, &Ia_Invalid },
-  /* D9 DB */ { 0, &Ia_Invalid },
-  /* D9 DC */ { 0, &Ia_Invalid },
-  /* D9 DD */ { 0, &Ia_Invalid },
-  /* D9 DE */ { 0, &Ia_Invalid },
-  /* D9 DF */ { 0, &Ia_Invalid },
+  /* D9 D8 */ { 0, &Ia_fstp_STi }, // undocumented
+  /* D9 D9 */ { 0, &Ia_fstp_STi }, // undocumented
+  /* D9 DA */ { 0, &Ia_fstp_STi }, // undocumented
+  /* D9 DB */ { 0, &Ia_fstp_STi }, // undocumented
+  /* D9 DC */ { 0, &Ia_fstp_STi }, // undocumented
+  /* D9 DD */ { 0, &Ia_fstp_STi }, // undocumented
+  /* D9 DE */ { 0, &Ia_fstp_STi }, // undocumented
+  /* D9 DF */ { 0, &Ia_fstp_STi }, // undocumented
   /* D9 E0 */ { 0, &Ia_fchs    },
   /* D9 E1 */ { 0, &Ia_fabs    },
   /* D9 E2 */ { 0, &Ia_Invalid },
@@ -2663,22 +2663,22 @@ static BxDisasmOpcodeTable_t BxDisasmOpcodeInfoFP[512] = {
   /* DC CD */ { 0, &Ia_fmul_STi_ST0 },
   /* DC CE */ { 0, &Ia_fmul_STi_ST0 },
   /* DC CF */ { 0, &Ia_fmul_STi_ST0 },
-  /* DC D0 */ { 0, &Ia_Invalid },
-  /* DC D1 */ { 0, &Ia_Invalid },
-  /* DC D2 */ { 0, &Ia_Invalid },
-  /* DC D3 */ { 0, &Ia_Invalid },
-  /* DC D4 */ { 0, &Ia_Invalid },
-  /* DC D5 */ { 0, &Ia_Invalid },
-  /* DC D6 */ { 0, &Ia_Invalid },
-  /* DC D7 */ { 0, &Ia_Invalid },
-  /* DC D8 */ { 0, &Ia_Invalid },
-  /* DC D9 */ { 0, &Ia_Invalid },
-  /* DC DA */ { 0, &Ia_Invalid },
-  /* DC DB */ { 0, &Ia_Invalid },
-  /* DC DC */ { 0, &Ia_Invalid },
-  /* DC DD */ { 0, &Ia_Invalid },
-  /* DC DE */ { 0, &Ia_Invalid },
-  /* DC DF */ { 0, &Ia_Invalid },
+  /* DC D0 */ { 0, &Ia_fcom_STi     }, // undocumented
+  /* DC D1 */ { 0, &Ia_fcom_STi     }, // undocumented
+  /* DC D2 */ { 0, &Ia_fcom_STi     }, // undocumented
+  /* DC D3 */ { 0, &Ia_fcom_STi     }, // undocumented
+  /* DC D4 */ { 0, &Ia_fcom_STi     }, // undocumented
+  /* DC D5 */ { 0, &Ia_fcom_STi     }, // undocumented
+  /* DC D6 */ { 0, &Ia_fcom_STi     }, // undocumented
+  /* DC D7 */ { 0, &Ia_fcom_STi     }, // undocumented
+  /* DC D8 */ { 0, &Ia_fcomp_STi    }, // undocumented
+  /* DC D9 */ { 0, &Ia_fcomp_STi    }, // undocumented
+  /* DC DA */ { 0, &Ia_fcomp_STi    }, // undocumented
+  /* DC DB */ { 0, &Ia_fcomp_STi    }, // undocumented
+  /* DC DC */ { 0, &Ia_fcomp_STi    }, // undocumented
+  /* DC DD */ { 0, &Ia_fcomp_STi    }, // undocumented
+  /* DC DE */ { 0, &Ia_fcomp_STi    }, // undocumented
+  /* DC DF */ { 0, &Ia_fcomp_STi    }, // undocumented
   /* DC E0 */ { 0, &Ia_fsubr_STi_ST0 },
   /* DC E1 */ { 0, &Ia_fsubr_STi_ST0 },
   /* DC E2 */ { 0, &Ia_fsubr_STi_ST0 },
@@ -2713,46 +2713,46 @@ static BxDisasmOpcodeTable_t BxDisasmOpcodeInfoFP[512] = {
   /* DC FF */ { 0, &Ia_fdiv_STi_ST0  },
 
   // DD (modrm is outside 00h - BFh) (mod == 11)
-  /* DD C0 */ { 0, &Ia_ffree_STi  },
-  /* DD C1 */ { 0, &Ia_ffree_STi  },
-  /* DD C2 */ { 0, &Ia_ffree_STi  },
-  /* DD C3 */ { 0, &Ia_ffree_STi  },
-  /* DD C4 */ { 0, &Ia_ffree_STi  },
-  /* DD C5 */ { 0, &Ia_ffree_STi  },
-  /* DD C6 */ { 0, &Ia_ffree_STi  },
-  /* DD C7 */ { 0, &Ia_ffree_STi  },
-  /* DD C8 */ { 0, &Ia_Invalid    },
-  /* DD C9 */ { 0, &Ia_Invalid    },
-  /* DD CA */ { 0, &Ia_Invalid    },
-  /* DD CB */ { 0, &Ia_Invalid    },
-  /* DD CC */ { 0, &Ia_Invalid    },
-  /* DD CD */ { 0, &Ia_Invalid    },
-  /* DD CE */ { 0, &Ia_Invalid    },
-  /* DD CF */ { 0, &Ia_Invalid    },
-  /* DD D0 */ { 0, &Ia_fst_STi    },
-  /* DD D1 */ { 0, &Ia_fst_STi    },
-  /* DD D2 */ { 0, &Ia_fst_STi    },
-  /* DD D3 */ { 0, &Ia_fst_STi    },
-  /* DD D4 */ { 0, &Ia_fst_STi    },
-  /* DD D5 */ { 0, &Ia_fst_STi    },
-  /* DD D6 */ { 0, &Ia_fst_STi    },
-  /* DD D7 */ { 0, &Ia_fst_STi    },
-  /* DD D8 */ { 0, &Ia_fstp_STi   },
-  /* DD D9 */ { 0, &Ia_fstp_STi   },
-  /* DD DA */ { 0, &Ia_fstp_STi   },
-  /* DD DB */ { 0, &Ia_fstp_STi   },
-  /* DD DC */ { 0, &Ia_fstp_STi   },
-  /* DD DD */ { 0, &Ia_fstp_STi   },
-  /* DD DE */ { 0, &Ia_fstp_STi   },
-  /* DD DF */ { 0, &Ia_fstp_STi   },
-  /* DD E0 */ { 0, &Ia_fucom_STi  },
-  /* DD E1 */ { 0, &Ia_fucom_STi  },
-  /* DD E2 */ { 0, &Ia_fucom_STi  },
-  /* DD E3 */ { 0, &Ia_fucom_STi  },
-  /* DD E4 */ { 0, &Ia_fucom_STi  },
-  /* DD E5 */ { 0, &Ia_fucom_STi  },
-  /* DD E6 */ { 0, &Ia_fucom_STi  },
-  /* DD E7 */ { 0, &Ia_fucom_STi  },
+  /* DD C0 */ { 0, &Ia_ffree_STi },
+  /* DD C1 */ { 0, &Ia_ffree_STi },
+  /* DD C2 */ { 0, &Ia_ffree_STi },
+  /* DD C3 */ { 0, &Ia_ffree_STi },
+  /* DD C4 */ { 0, &Ia_ffree_STi },
+  /* DD C5 */ { 0, &Ia_ffree_STi },
+  /* DD C6 */ { 0, &Ia_ffree_STi },
+  /* DD C7 */ { 0, &Ia_ffree_STi },
+  /* DD C8 */ { 0, &Ia_fxch      }, // undocumented
+  /* DD C9 */ { 0, &Ia_fxch      }, // undocumented
+  /* DD CA */ { 0, &Ia_fxch      }, // undocumented
+  /* DD CB */ { 0, &Ia_fxch      }, // undocumented
+  /* DD CC */ { 0, &Ia_fxch      }, // undocumented
+  /* DD CD */ { 0, &Ia_fxch      }, // undocumented
+  /* DD CE */ { 0, &Ia_fxch      }, // undocumented
+  /* DD CF */ { 0, &Ia_fxch      }, // undocumented
+  /* DD D0 */ { 0, &Ia_fst_STi   },
+  /* DD D1 */ { 0, &Ia_fst_STi   },
+  /* DD D2 */ { 0, &Ia_fst_STi   },
+  /* DD D3 */ { 0, &Ia_fst_STi   },
+  /* DD D4 */ { 0, &Ia_fst_STi   },
+  /* DD D5 */ { 0, &Ia_fst_STi   },
+  /* DD D6 */ { 0, &Ia_fst_STi   },
+  /* DD D7 */ { 0, &Ia_fst_STi   },
+  /* DD D8 */ { 0, &Ia_fstp_STi  },
+  /* DD D9 */ { 0, &Ia_fstp_STi  },
+  /* DD DA */ { 0, &Ia_fstp_STi  },
+  /* DD DB */ { 0, &Ia_fstp_STi  },
+  /* DD DC */ { 0, &Ia_fstp_STi  },
+  /* DD DD */ { 0, &Ia_fstp_STi  },
+  /* DD DE */ { 0, &Ia_fstp_STi  },
+  /* DD DF */ { 0, &Ia_fstp_STi  },
+  /* DD E0 */ { 0, &Ia_fucom_STi },
+  /* DD E1 */ { 0, &Ia_fucom_STi },
+  /* DD E2 */ { 0, &Ia_fucom_STi },
+  /* DD E3 */ { 0, &Ia_fucom_STi },
+  /* DD E4 */ { 0, &Ia_fucom_STi },
+  /* DD E5 */ { 0, &Ia_fucom_STi },
+  /* DD E6 */ { 0, &Ia_fucom_STi },
+  /* DD E7 */ { 0, &Ia_fucom_STi },
   /* DD E8 */ { 0, &Ia_fucomp_STi },
   /* DD E9 */ { 0, &Ia_fucomp_STi },
   /* DD EA */ { 0, &Ia_fucomp_STi },
@@ -2795,14 +2795,14 @@ static BxDisasmOpcodeTable_t BxDisasmOpcodeInfoFP[512] = {
   /* DE CD */ { 0, &Ia_fmulp_STi_ST0 },
   /* DE CE */ { 0, &Ia_fmulp_STi_ST0 },
   /* DE CF */ { 0, &Ia_fmulp_STi_ST0 },
-  /* DE D0 */ { 0, &Ia_Invalid },
-  /* DE D1 */ { 0, &Ia_Invalid },
-  /* DE D2 */ { 0, &Ia_Invalid },
-  /* DE D3 */ { 0, &Ia_Invalid },
-  /* DE D4 */ { 0, &Ia_Invalid },
-  /* DE D5 */ { 0, &Ia_Invalid },
-  /* DE D6 */ { 0, &Ia_Invalid },
-  /* DE D7 */ { 0, &Ia_Invalid },
+  /* DE D0 */ { 0, &Ia_fcomp_STi }, // undocumented
+  /* DE D1 */ { 0, &Ia_fcomp_STi }, // undocumented
+  /* DE D2 */ { 0, &Ia_fcomp_STi }, // undocumented
+  /* DE D3 */ { 0, &Ia_fcomp_STi }, // undocumented
+  /* DE D4 */ { 0, &Ia_fcomp_STi }, // undocumented
+  /* DE D5 */ { 0, &Ia_fcomp_STi }, // undocumented
+  /* DE D6 */ { 0, &Ia_fcomp_STi }, // undocumented
+  /* DE D7 */ { 0, &Ia_fcomp_STi }, // undocumented
   /* DE D8 */ { 0, &Ia_Invalid },
   /* DE D9 */ { 0, &Ia_fcompp  },
   /* DE DA */ { 0, &Ia_Invalid },
@@ -2853,30 +2853,30 @@ static BxDisasmOpcodeTable_t BxDisasmOpcodeInfoFP[512] = {
   /* DF C5 */ { 0, &Ia_ffreep_STi },
   /* DF C6 */ { 0, &Ia_ffreep_STi },
   /* DF C7 */ { 0, &Ia_ffreep_STi },
-  /* DF C8 */ { 0, &Ia_Invalid },
-  /* DF C9 */ { 0, &Ia_Invalid },
-  /* DF CA */ { 0, &Ia_Invalid },
-  /* DF CB */ { 0, &Ia_Invalid },
-  /* DF CC */ { 0, &Ia_Invalid },
-  /* DF CD */ { 0, &Ia_Invalid },
-  /* DF CE */ { 0, &Ia_Invalid },
-  /* DF CF */ { 0, &Ia_Invalid },
-  /* DF D0 */ { 0, &Ia_Invalid },
-  /* DF D1 */ { 0, &Ia_Invalid },
-  /* DF D2 */ { 0, &Ia_Invalid },
-  /* DF D3 */ { 0, &Ia_Invalid },
-  /* DF D4 */ { 0, &Ia_Invalid },
-  /* DF D5 */ { 0, &Ia_Invalid },
-  /* DF D6 */ { 0, &Ia_Invalid },
-  /* DF D7 */ { 0, &Ia_Invalid },
-  /* DF D8 */ { 0, &Ia_Invalid },
-  /* DF D9 */ { 0, &Ia_Invalid },
-  /* DF DA */ { 0, &Ia_Invalid },
-  /* DF DB */ { 0, &Ia_Invalid },
-  /* DF DC */ { 0, &Ia_Invalid },
-  /* DF DD */ { 0, &Ia_Invalid },
-  /* DF DE */ { 0, &Ia_Invalid },
-  /* DF DF */ { 0, &Ia_Invalid },
+  /* DF C8 */ { 0, &Ia_fxch     }, // undocumented
+  /* DF C9 */ { 0, &Ia_fxch     }, // undocumented
+  /* DF CA */ { 0, &Ia_fxch     }, // undocumented
+  /* DF CB */ { 0, &Ia_fxch     }, // undocumented
+  /* DF CC */ { 0, &Ia_fxch     }, // undocumented
+  /* DF CD */ { 0, &Ia_fxch     }, // undocumented
+  /* DF CE */ { 0, &Ia_fxch     }, // undocumented
+  /* DF CF */ { 0, &Ia_fxch     }, // undocumented
+  /* DF D0 */ { 0, &Ia_fstp_STi }, // undocumented
+  /* DF D1 */ { 0, &Ia_fstp_STi }, // undocumented
+  /* DF D2 */ { 0, &Ia_fstp_STi }, // undocumented
+  /* DF D3 */ { 0, &Ia_fstp_STi }, // undocumented
+  /* DF D4 */ { 0, &Ia_fstp_STi }, // undocumented
+  /* DF D5 */ { 0, &Ia_fstp_STi }, // undocumented
+  /* DF D6 */ { 0, &Ia_fstp_STi }, // undocumented
+  /* DF D7 */ { 0, &Ia_fstp_STi }, // undocumented
+  /* DF D8 */ { 0, &Ia_fstp_STi }, // undocumented
+  /* DF D9 */ { 0, &Ia_fstp_STi }, // undocumented
+  /* DF DA */ { 0, &Ia_fstp_STi }, // undocumented
+  /* DF DB */ { 0, &Ia_fstp_STi }, // undocumented
+  /* DF DC */ { 0, &Ia_fstp_STi }, // undocumented
+  /* DF DD */ { 0, &Ia_fstp_STi }, // undocumented
+  /* DF DE */ { 0, &Ia_fstp_STi }, // undocumented
+  /* DF DF */ { 0, &Ia_fstp_STi }, // undocumented
   /* DF E0 */ { 0, &Ia_fnstsw_AX },
   /* DF E1 */ { 0, &Ia_Invalid },
   /* DF E2 */ { 0, &Ia_Invalid },

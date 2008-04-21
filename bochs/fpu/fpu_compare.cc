@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu_compare.cc,v 1.14 2008-04-04 21:05:37 sshwarts Exp $
+// $Id: fpu_compare.cc,v 1.15 2008-04-21 14:15:56 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -83,6 +83,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FCOM_STi(bxInstruction_c *i)
   BX_CPU_THIS_PTR prepareFPU(i);
 
   int pop_stack = i->nnn() & 1;
+  // handle special case of FSTP opcode @ 0xDE 0xD0..D7
+  if (i->b1() == 0xde)
+    pop_stack = 1;
 
   clear_C1();
 
