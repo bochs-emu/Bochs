@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: xsave.cc,v 1.8 2008-04-07 18:39:17 sshwarts Exp $
+// $Id: xsave.cc,v 1.9 2008-04-21 19:55:04 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008 Stanislav Shwartsman
@@ -45,7 +45,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVE(bxInstruction_c *i)
 
   BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  bx_address laddr = get_linear(i->seg(), RMAddr(i));
+  bx_address laddr = get_laddr(i->seg(), RMAddr(i));
 
   if (laddr & 0x3f) {
     BX_ERROR(("XSAVE: access not aligned to 64-byte"));
@@ -176,7 +176,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
 
   BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  bx_address laddr = get_linear(i->seg(), RMAddr(i));
+  bx_address laddr = get_laddr(i->seg(), RMAddr(i));
 
   if (laddr & 0x3f) {
     BX_ERROR(("XRSTOR: access not aligned to 64-byte"));
