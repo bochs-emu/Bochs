@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.365 2008-04-05 19:21:52 sshwarts Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.366 2008-04-21 19:57:07 sshwarts Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -1633,12 +1633,14 @@ else
   AC_DEFINE(BX_SUPPORT_SSE,  0)
 fi
 
+support_sse_extensions=0
 AC_MSG_CHECKING(for SSE extensions support)
 AC_ARG_ENABLE(sse-extension,
   [  --enable-sse-extension            support for SSE extensions],
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
     AC_DEFINE(BX_SUPPORT_SSE_EXTENSION, 1)
+    support_sse_extensions=1
    elif test "$enableval" = no; then
     AC_MSG_RESULT(no)
     AC_DEFINE(BX_SUPPORT_SSE_EXTENSION, 0)
@@ -1768,9 +1770,14 @@ AC_ARG_ENABLE(popcnt,
    fi
    ],
   [
-    AC_MSG_RESULT(no)
-    AC_DEFINE(BX_SUPPORT_POPCNT, 0)
-  ]
+    if test "$support_sse" -ge 4 -a "$support_sse_extensions" = 1; then
+      AC_MSG_RESULT(yes)
+      AC_DEFINE(BX_SUPPORT_POPCNT, 1)
+    else
+      AC_MSG_RESULT(no)
+      AC_DEFINE(BX_SUPPORT_POPCNT, 0)
+    fi
+    ]
   )
 
 AC_MSG_CHECKING(for MONITOR/MWAIT instructions support (experimental))

@@ -38,6 +38,8 @@ Detailed change log :
     - Implemented text mode cursor blinking
 
 - Configure and compile
+  - Fixed configure bug with enabling of POPCNT instruction, POPCNT
+    instruction should be enabled by default when SSE4.2 is enabled.
   - Removed --enable-magic-breakpoint configure option. The option is
     automatically enabled  if Bochs internal debugger is compiled in.
     It is still possible to turn on/off the feature through .bochsrc.
