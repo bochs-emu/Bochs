@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.121 2008-04-19 20:00:28 sshwarts Exp $
+// $Id: paging.cc,v 1.122 2008-04-21 20:17:45 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -387,8 +387,6 @@ static unsigned tlbLookups=0;
 static unsigned tlbMisses=0;
 static unsigned tlbGlobalFlushes=0;
 static unsigned tlbNonGlobalFlushes=0;
-static unsigned tlbEntryFlushes=0;
-static unsigned tlbEntryInvlpg=0;
 
 #define InstrTLB_StatsMask 0xfffff
 
@@ -525,10 +523,7 @@ void BX_CPU_C::TLB_flush(bx_bool invalidateGlobal)
 #if BX_SUPPORT_GLOBAL_PAGES
       if (invalidateGlobal || !(tlbEntry->accessBits & TLB_GlobalPage))
 #endif
-      {
         tlbEntry->lpf = BX_INVALID_TLB_ENTRY;
-        InstrTLB_Increment(tlbEntryFlushes); // A TLB entry flush occurred.
-      }
     }
   }
 }
@@ -537,7 +532,6 @@ void BX_CPU_C::TLB_invlpg(bx_address laddr)
 {
   unsigned TLB_index = BX_TLB_INDEX_OF(laddr, 0);
   BX_CPU_THIS_PTR TLB.entry[TLB_index].lpf = BX_INVALID_TLB_ENTRY;
-  InstrTLB_Increment(tlbEntryFlushes); // A TLB entry flush occurred.
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::INVLPG(bxInstruction_c* i)
@@ -554,7 +548,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INVLPG(bxInstruction_c* i)
   bx_address laddr = BX_CPU_THIS_PTR get_laddr(i->seg(), RMAddr(i));
   BX_INSTR_TLB_CNTRL(BX_CPU_ID, BX_INSTR_INVLPG, laddr);
   TLB_invlpg(laddr);
-  InstrTLB_Increment(tlbEntryInvlpg);
 #else
   // not supported on < 486
   BX_INFO(("INVLPG: required i486, use --enable-cpu=4 option"));
@@ -943,9 +936,8 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned curr_pl, un
       ppf = pte & 0xfffff000;
 
 #if BX_SUPPORT_GLOBAL_PAGES
-      if (BX_CPU_THIS_PTR cr4.get_PGE()) {
+      if (BX_CPU_THIS_PTR cr4.get_PGE())
         combined_access |= (pte & TLB_GlobalPage); // G
-      }
 #endif
 
       priv_index =
@@ -978,8 +970,8 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned curr_pl, un
   // Calculate physical memory address and fill in TLB cache entry
   paddress = ppf | poffset;
 
-  BX_CPU_THIS_PTR TLB.entry[TLB_index].lpf = lpf;
-  BX_CPU_THIS_PTR TLB.entry[TLB_index].ppf = ppf;
+  tlbEntry->lpf = lpf;
+  tlbEntry->ppf = ppf;
 
   // b3: Write User  OK
   // b2: Write Sys   OK
@@ -988,8 +980,7 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned curr_pl, un
   if (combined_access & 4) { // User
     // User priv; read from {user,sys} OK.
     accessBits = (TLB_ReadUserOK | TLB_ReadSysOK);
-    if (isWrite)  // Current operation is a write (Dirty bit updated)
-    {
+    if (isWrite) { // Current operation is a write (Dirty bit updated)
       if (combined_access & 2) {
          // R/W access from {user,sys} OK.
         accessBits |= (TLB_WriteUserOK | TLB_WriteSysOK);
@@ -1013,16 +1004,15 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned curr_pl, un
   // Attempt to get a host pointer to this physical page. Put that
   // pointer in the TLB cache. Note if the request is vetoed, NULL
   // will be returned, and it's OK to OR zero in anyways.
-  BX_CPU_THIS_PTR TLB.entry[TLB_index].hostPageAddr =
-    (bx_hostpageaddr_t) BX_CPU_THIS_PTR mem->getHostMemAddr(BX_CPU_THIS,
+  tlbEntry->hostPageAddr = (bx_hostpageaddr_t) BX_CPU_THIS_PTR mem->getHostMemAddr(BX_CPU_THIS,
        A20ADDR(ppf), rw, access_type);
 
-  if (BX_CPU_THIS_PTR TLB.entry[TLB_index].hostPageAddr) {
+  if (tlbEntry->hostPageAddr) {
     // All access allowed also via direct pointer
     accessBits |= (accessBits & 0xff00) >> 8;
   }
 #endif
-  BX_CPU_THIS_PTR TLB.entry[TLB_index].accessBits = accessBits;
+  tlbEntry->accessBits = accessBits;
 
   return paddress;
 }
