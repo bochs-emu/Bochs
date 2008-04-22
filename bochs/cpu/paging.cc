@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.122 2008-04-21 20:17:45 sshwarts Exp $
+// $Id: paging.cc,v 1.123 2008-04-22 22:05:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -880,6 +880,10 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned curr_pl, un
     {
       // Note: when the PSE and PAE flags in CR4 are set, the
       //       processor generates a PF if the reserved bits are not zero.
+
+      if (pde & 0x0001e000) {
+        BX_PANIC(("PSE PDE 0x%08x: Only 32 bit physical address space is emulated !", pde));
+      }
 
       // Combined access is just access from the pde (no pte involved).
       combined_access = pde & 0x06; // U/S and R/W

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: protect_ctrl.cc,v 1.79 2008-04-16 22:08:46 sshwarts Exp $
+// $Id: protect_ctrl.cc,v 1.80 2008-04-22 22:05:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -133,15 +133,20 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LAR_GvEw(bxInstruction_c *i)
     else {
       BX_WRITE_16BIT_REG(i->nnn(), dword2 & 0xff00);
     }
-    return;
   }
   else { /* system or gate segment */
     switch (descriptor.type) {
       case BX_SYS_SEGMENT_AVAIL_286_TSS:
-      case BX_SYS_SEGMENT_LDT:
       case BX_SYS_SEGMENT_BUSY_286_TSS:
       case BX_286_CALL_GATE:
       case BX_TASK_GATE:
+        if (long_mode()) {
+          BX_DEBUG(("LAR: descriptor type in not accepted in long mode"));
+          clear_ZF();
+          return;
+        }
+        /* fall through */
+      case BX_SYS_SEGMENT_LDT:
 #if BX_CPU_LEVEL >= 3
       case BX_SYS_SEGMENT_AVAIL_386_TSS:
       case BX_SYS_SEGMENT_BUSY_386_TSS:
@@ -149,7 +154,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LAR_GvEw(bxInstruction_c *i)
 #endif
         break;
       default: /* rest not accepted types to LAR */
-        BX_DEBUG(("lar(): not accepted type"));
+        BX_DEBUG(("LAR: not accepted descriptor type"));
         clear_ZF();
         return;
     }
@@ -213,17 +218,22 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LSL_GvEw(bxInstruction_c *i)
     switch (type) {
       case BX_SYS_SEGMENT_AVAIL_286_TSS:
       case BX_SYS_SEGMENT_BUSY_286_TSS:
+        if (long_mode()) {
+          clear_ZF();
+          return;
+        }
+        /* fall through */
       case BX_SYS_SEGMENT_LDT:
       case BX_SYS_SEGMENT_AVAIL_386_TSS:
       case BX_SYS_SEGMENT_BUSY_386_TSS:
-        limit32 = (dword1 & 0x0000ffff) | (dword2 & 0x000f0000);
-        if (dword2 & 0x00800000)
-          limit32 = (limit32 << 12) | 0x00000fff;
         if ((descriptor_dpl<CPL) || (descriptor_dpl<selector.rpl)) {
           clear_ZF();
           return;
         }
-        goto lsl_ok;
+        limit32 = (dword1 & 0x0000ffff) | (dword2 & 0x000f0000);
+        if (dword2 & 0x00800000)
+          limit32 = (limit32 << 12) | 0x00000fff;
+        break;
       default:
         clear_ZF();
         return;
@@ -233,19 +243,15 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LSL_GvEw(bxInstruction_c *i)
     limit32 = (dword1 & 0x0000ffff) | (dword2 & 0x000f0000);
     if (dword2 & 0x00800000)
       limit32 = (limit32 << 12) | 0x00000fff;
-    if ((dword2 & 0x00000c00) == 0x00000c00) {
-      // conforming code segment, no check done
-      goto lsl_ok;
+    if ((dword2 & 0x00000c00) != 0x00000c00) {
+      // non-conforming code segment
+      if ((descriptor_dpl<CPL) || (descriptor_dpl<selector.rpl)) {
+        clear_ZF();
+        return;
+      }
     }
-
-    if ((descriptor_dpl<CPL) || (descriptor_dpl<selector.rpl)) {
-      clear_ZF();
-      return;
-    }
-    goto lsl_ok;
   }
 
-lsl_ok:
   /* all checks pass, limit32 is now byte granular, write to op1 */
   assert_ZF();
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: tasking.cc,v 1.53 2008-04-19 20:00:28 sshwarts Exp $
+// $Id: tasking.cc,v 1.54 2008-04-22 22:05:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -160,7 +160,6 @@ void BX_CPU_C::task_switch(bx_selector_t *tss_selector,
 
   // Gather info about old TSS
   if (BX_CPU_THIS_PTR tr.cache.type <= 3) {
-    // sanity check type: cannot have busy bit
     old_TSS_max = 43;
   }
   else {
