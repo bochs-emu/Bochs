@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack16.cc,v 1.37 2008-04-05 17:51:55 sshwarts Exp $
+// $Id: stack16.cc,v 1.38 2008-04-23 17:25:21 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -177,26 +177,26 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUSHAD16(bxInstruction_c *i)
 
   if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b)
   {
-    write_virtual_word(BX_SEG_REG_SS, (Bit32u) (temp_ESP -  2), AX);
-    write_virtual_word(BX_SEG_REG_SS, (Bit32u) (temp_ESP -  4), CX);
-    write_virtual_word(BX_SEG_REG_SS, (Bit32u) (temp_ESP -  6), DX);
-    write_virtual_word(BX_SEG_REG_SS, (Bit32u) (temp_ESP -  8), BX);
-    write_virtual_word(BX_SEG_REG_SS, (Bit32u) (temp_ESP - 10), temp_SP);
-    write_virtual_word(BX_SEG_REG_SS, (Bit32u) (temp_ESP - 12), BP);
-    write_virtual_word(BX_SEG_REG_SS, (Bit32u) (temp_ESP - 14), SI);
-    write_virtual_word(BX_SEG_REG_SS, (Bit32u) (temp_ESP - 16), DI);
+    write_virtual_word(BX_SEG_REG_SS, (Bit32u)(temp_ESP -  2), AX);
+    write_virtual_word(BX_SEG_REG_SS, (Bit32u)(temp_ESP -  4), CX);
+    write_virtual_word(BX_SEG_REG_SS, (Bit32u)(temp_ESP -  6), DX);
+    write_virtual_word(BX_SEG_REG_SS, (Bit32u)(temp_ESP -  8), BX);
+    write_virtual_word(BX_SEG_REG_SS, (Bit32u)(temp_ESP - 10), temp_SP);
+    write_virtual_word(BX_SEG_REG_SS, (Bit32u)(temp_ESP - 12), BP);
+    write_virtual_word(BX_SEG_REG_SS, (Bit32u)(temp_ESP - 14), SI);
+    write_virtual_word(BX_SEG_REG_SS, (Bit32u)(temp_ESP - 16), DI);
     ESP -= 16;
   }
   else
   {
-    write_virtual_word(BX_SEG_REG_SS, (Bit16u) (temp_SP -  2), AX);
-    write_virtual_word(BX_SEG_REG_SS, (Bit16u) (temp_SP -  4), CX);
-    write_virtual_word(BX_SEG_REG_SS, (Bit16u) (temp_SP -  6), DX);
-    write_virtual_word(BX_SEG_REG_SS, (Bit16u) (temp_SP -  8), BX);
-    write_virtual_word(BX_SEG_REG_SS, (Bit16u) (temp_SP - 10), temp_SP);
-    write_virtual_word(BX_SEG_REG_SS, (Bit16u) (temp_SP - 12), BP);
-    write_virtual_word(BX_SEG_REG_SS, (Bit16u) (temp_SP - 14), SI);
-    write_virtual_word(BX_SEG_REG_SS, (Bit16u) (temp_SP - 16), DI);
+    write_virtual_word(BX_SEG_REG_SS, (Bit16u)(temp_SP -  2), AX);
+    write_virtual_word(BX_SEG_REG_SS, (Bit16u)(temp_SP -  4), CX);
+    write_virtual_word(BX_SEG_REG_SS, (Bit16u)(temp_SP -  6), DX);
+    write_virtual_word(BX_SEG_REG_SS, (Bit16u)(temp_SP -  8), BX);
+    write_virtual_word(BX_SEG_REG_SS, (Bit16u)(temp_SP - 10), temp_SP);
+    write_virtual_word(BX_SEG_REG_SS, (Bit16u)(temp_SP - 12), BP);
+    write_virtual_word(BX_SEG_REG_SS, (Bit16u)(temp_SP - 14), SI);
+    write_virtual_word(BX_SEG_REG_SS, (Bit16u)(temp_SP - 16), DI);
     SP -= 16;
   }
 }
@@ -208,25 +208,25 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::POPAD16(bxInstruction_c *i)
   if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b)
   {
     Bit32u temp_ESP = ESP;
-    di = read_virtual_word(BX_SEG_REG_SS, (Bit32u) (temp_ESP +  0));
-    si = read_virtual_word(BX_SEG_REG_SS, (Bit32u) (temp_ESP +  2));
-    bp = read_virtual_word(BX_SEG_REG_SS, (Bit32u) (temp_ESP +  4));
-    bx = read_virtual_word(BX_SEG_REG_SS, (Bit32u) (temp_ESP +  8));
-    dx = read_virtual_word(BX_SEG_REG_SS, (Bit32u) (temp_ESP + 10));
-    cx = read_virtual_word(BX_SEG_REG_SS, (Bit32u) (temp_ESP + 12));
-    ax = read_virtual_word(BX_SEG_REG_SS, (Bit32u) (temp_ESP + 14));
+    di = read_virtual_word(BX_SEG_REG_SS, (Bit32u)(temp_ESP +  0));
+    si = read_virtual_word(BX_SEG_REG_SS, (Bit32u)(temp_ESP +  2));
+    bp = read_virtual_word(BX_SEG_REG_SS, (Bit32u)(temp_ESP +  4));
+    bx = read_virtual_word(BX_SEG_REG_SS, (Bit32u)(temp_ESP +  8));
+    dx = read_virtual_word(BX_SEG_REG_SS, (Bit32u)(temp_ESP + 10));
+    cx = read_virtual_word(BX_SEG_REG_SS, (Bit32u)(temp_ESP + 12));
+    ax = read_virtual_word(BX_SEG_REG_SS, (Bit32u)(temp_ESP + 14));
     ESP += 16;
   }
   else
   {
     Bit16u temp_SP = SP;
-    di = read_virtual_word(BX_SEG_REG_SS, (Bit16u) (temp_SP +  0));
-    si = read_virtual_word(BX_SEG_REG_SS, (Bit16u) (temp_SP +  2));
-    bp = read_virtual_word(BX_SEG_REG_SS, (Bit16u) (temp_SP +  4));
-    bx = read_virtual_word(BX_SEG_REG_SS, (Bit16u) (temp_SP +  8));
-    dx = read_virtual_word(BX_SEG_REG_SS, (Bit16u) (temp_SP + 10));
-    cx = read_virtual_word(BX_SEG_REG_SS, (Bit16u) (temp_SP + 12));
-    ax = read_virtual_word(BX_SEG_REG_SS, (Bit16u) (temp_SP + 14));
+    di = read_virtual_word(BX_SEG_REG_SS, (Bit16u)(temp_SP +  0));
+    si = read_virtual_word(BX_SEG_REG_SS, (Bit16u)(temp_SP +  2));
+    bp = read_virtual_word(BX_SEG_REG_SS, (Bit16u)(temp_SP +  4));
+    bx = read_virtual_word(BX_SEG_REG_SS, (Bit16u)(temp_SP +  8));
+    dx = read_virtual_word(BX_SEG_REG_SS, (Bit16u)(temp_SP + 10));
+    cx = read_virtual_word(BX_SEG_REG_SS, (Bit16u)(temp_SP + 12));
+    ax = read_virtual_word(BX_SEG_REG_SS, (Bit16u)(temp_SP + 14));
     SP += 16;
   }
 
@@ -239,60 +239,3 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::POPAD16(bxInstruction_c *i)
   AX = ax;
 }
 #endif
-
-bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::can_pop(Bit32u bytes)
-{
-  Bit32u temp_ESP, expand_down_limit;
-
-#if BX_SUPPORT_X86_64
-  if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
-    return(1);
-  }
-#endif
-
-  if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b) { /* Big bit set: use ESP */
-    temp_ESP = ESP;
-    expand_down_limit = 0xFFFFFFFF;
-  }
-  else { /* Big bit clear: use SP */
-    temp_ESP = SP;
-    expand_down_limit = 0xFFFF;
-  }
-
-  if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.valid==0) {
-    BX_ERROR(("can_pop(): SS invalidated"));
-    return(0); /* never gets here */
-  }
-
-  if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.p==0) {
-    BX_ERROR(("can_pop(): SS.p = 0"));
-    return(0);
-  }
-
-  if (IS_DATA_SEGMENT_EXPAND_DOWN(BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.type)) { /* expand down */
-    if (temp_ESP == expand_down_limit) {
-      BX_PANIC(("can_pop(): found SP=ffff"));
-      return(0);
-    }
-    if (((expand_down_limit - temp_ESP) + 1) >= bytes)
-      return(1);
-    return(0);
-  }
-  else { /* normal (expand-up) segment */
-    if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.limit_scaled==0) {
-      BX_ERROR(("can_pop(): SS.limit = 0"));
-      return(0);
-    }
-    if (temp_ESP == expand_down_limit) {
-      BX_ERROR(("can_pop(): found SP=ffff"));
-      return(0);
-    }
-    if (temp_ESP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.limit_scaled) {
-      BX_ERROR(("can_pop(): eSP > SS.limit"));
-      return(0);
-    }
-    if (((BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.limit_scaled - temp_ESP) + 1) >= bytes)
-      return(1);
-    return(0);
-  }
-}

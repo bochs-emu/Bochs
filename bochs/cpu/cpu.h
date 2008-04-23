@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.460 2008-04-19 22:29:43 sshwarts Exp $
+// $Id: cpu.h,v 1.461 2008-04-23 17:25:21 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -3030,7 +3030,6 @@ public: // for now...
   BX_SMF void    push_64(Bit64u value64) BX_CPP_AttrRegparmN(1);
   BX_SMF Bit64u  pop_64(void);
 #endif
-  BX_SMF bx_bool can_pop(Bit32u bytes) BX_CPP_AttrRegparmN(1);
   BX_SMF void    sanity_checks(void);
   BX_SMF void    assert_checks(void);
   BX_SMF void    enter_system_management_mode(void);
