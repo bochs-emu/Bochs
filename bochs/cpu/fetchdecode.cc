@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.184 2008-04-16 16:44:04 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.185 2008-04-24 21:52:27 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -384,8 +384,8 @@ static const BxOpcodeInfo_t BxOpcodeInfo32R[512*2] = {
   /* C3 /wr */ { BxTraceEnd,                  BX_IA_RETnear16 },
   /* C4 /wr */ { 0, BX_IA_ERROR }, // LES
   /* C5 /wr */ { 0, BX_IA_ERROR }, // LDS
-  /* C6 /wr */ { BxImmediate_Ib, BX_IA_MOV_EbIbR },
-  /* C7 /wr */ { BxImmediate_Iw, BX_IA_MOV_EwIwR },
+  /* C6 /wr */ { BxGroup11, BX_IA_ERROR, BxOpcodeInfoG11EbR },
+  /* C7 /wr */ { BxGroup11, BX_IA_ERROR, BxOpcodeInfoG11EwR },
   /* C8 /wr */ { BxImmediate_IwIb, BX_IA_ENTER16_IwIb },
   /* C9 /wr */ { 0, BX_IA_LEAVE },
   /* CA /wr */ { BxImmediate_Iw | BxTraceEnd, BX_IA_RETfar16_Iw },
@@ -947,8 +947,8 @@ static const BxOpcodeInfo_t BxOpcodeInfo32R[512*2] = {
   /* C3 /dr */ { BxTraceEnd,                  BX_IA_RETnear32 },
   /* C4 /dr */ { 0, BX_IA_ERROR }, // LES
   /* C5 /dr */ { 0, BX_IA_ERROR }, // LDS
-  /* C6 /dr */ { BxImmediate_Ib, BX_IA_MOV_EbIbR },
-  /* C7 /dr */ { BxImmediate_Id, BX_IA_MOV_EdIdR },
+  /* C6 /dr */ { BxGroup11, BX_IA_ERROR, BxOpcodeInfoG11EbR },
+  /* C7 /dr */ { BxGroup11, BX_IA_ERROR, BxOpcodeInfoG11EdR },
   /* C8 /dr */ { BxImmediate_IwIb, BX_IA_ENTER32_IwIb },
   /* C9 /dr */ { 0, BX_IA_LEAVE },
   /* CA /dr */ { BxImmediate_Iw | BxTraceEnd, BX_IA_RETfar32_Iw },
@@ -1517,8 +1517,8 @@ static const BxOpcodeInfo_t BxOpcodeInfo32M[512*2] = {
   /* C3 /wm */ { BxTraceEnd,                  BX_IA_RETnear16 },
   /* C4 /wm */ { 0, BX_IA_LES_GwMp },
   /* C5 /wm */ { 0, BX_IA_LDS_GwMp },
-  /* C6 /wm */ { BxImmediate_Ib, BX_IA_MOV_EbIbM },
-  /* C7 /wm */ { BxImmediate_Iw, BX_IA_MOV_EwIwM },
+  /* C6 /wm */ { BxGroup11, BX_IA_ERROR, BxOpcodeInfoG11EbM },
+  /* C7 /wm */ { BxGroup11, BX_IA_ERROR, BxOpcodeInfoG11EwM },
   /* C8 /wm */ { BxImmediate_IwIb, BX_IA_ENTER16_IwIb },
   /* C9 /wm */ { 0, BX_IA_LEAVE },
   /* CA /wm */ { BxImmediate_Iw | BxTraceEnd, BX_IA_RETfar16_Iw },
@@ -2080,8 +2080,8 @@ static const BxOpcodeInfo_t BxOpcodeInfo32M[512*2] = {
   /* C3 /dm */ { BxTraceEnd,                  BX_IA_RETnear32 },
   /* C4 /dm */ { 0, BX_IA_LES_GdMp },
   /* C5 /dm */ { 0, BX_IA_LDS_GdMp },
-  /* C6 /dm */ { BxImmediate_Ib, BX_IA_MOV_EbIbM },
-  /* C7 /dm */ { BxImmediate_Id, BX_IA_MOV_EdIdM },
+  /* C6 /dm */ { BxGroup11, BX_IA_ERROR, BxOpcodeInfoG11EbM },
+  /* C7 /dm */ { BxGroup11, BX_IA_ERROR, BxOpcodeInfoG11EdM },
   /* C8 /dm */ { BxImmediate_IwIb, BX_IA_ENTER32_IwIb },
   /* C9 /dm */ { 0, BX_IA_LEAVE },
   /* CA /dm */ { BxImmediate_Iw | BxTraceEnd, BX_IA_RETfar32_Iw },
