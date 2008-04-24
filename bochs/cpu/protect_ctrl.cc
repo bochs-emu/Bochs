@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: protect_ctrl.cc,v 1.81 2008-04-24 19:34:01 sshwarts Exp $
+// $Id: protect_ctrl.cc,v 1.82 2008-04-24 22:41:46 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -658,8 +658,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SGDT_Ms(bxInstruction_c *i)
 
   BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  write_virtual_dword(i->seg(), RMAddr(i)+2, base_32);
   write_virtual_word(i->seg(), RMAddr(i), limit_16);
+  write_virtual_dword(i->seg(), RMAddr(i)+2, base_32);
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::SIDT_Ms(bxInstruction_c *i)
@@ -734,8 +734,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SGDT64_Ms(bxInstruction_c *i)
 
   BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  write_virtual_qword(i->seg(), RMAddr(i)+2, base_64);
   write_virtual_word (i->seg(), RMAddr(i), limit_16);
+  write_virtual_qword(i->seg(), RMAddr(i)+2, base_64);
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::SIDT64_Ms(bxInstruction_c *i)
@@ -747,8 +747,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SIDT64_Ms(bxInstruction_c *i)
 
   BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  write_virtual_qword(i->seg(), RMAddr(i)+2, base_64);
   write_virtual_word(i->seg(), RMAddr(i), limit_16);
+  write_virtual_qword(i->seg(), RMAddr(i)+2, base_64);
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::LGDT64_Ms(bxInstruction_c *i)
