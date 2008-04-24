@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: segment_ctrl_pro.cc,v 1.87 2008-04-19 22:29:44 sshwarts Exp $
+// $Id: segment_ctrl_pro.cc,v 1.88 2008-04-24 20:52:27 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -631,13 +631,12 @@ BX_CPU_C::parse_descriptor(Bit32u dword1, Bit32u dword2, bx_descriptor_t *temp)
   void BX_CPP_AttrRegparmN(3)
 BX_CPU_C::load_ss(bx_selector_t *selector, bx_descriptor_t *descriptor, Bit8u cpl)
 {
+  // Add cpl to the selector value.
+  selector->value = (0xfffc & selector->value) | cpl;
+
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector = *selector;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache = *descriptor;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.rpl = cpl;
-
-  // Add cpl to the selector value.
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value =
-    (0xfffc & BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value) | cpl;
 
 #if BX_SUPPORT_X86_64
   if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
@@ -671,8 +670,8 @@ void BX_CPU_C::fetch_raw_descriptor(const bx_selector_t *selector,
   }
   else { /* LDT */
     if (BX_CPU_THIS_PTR ldtr.cache.valid==0) {
-      BX_PANIC(("fetch_raw_descriptor: LDTR.valid=0"));
-      debug(BX_CPU_THIS_PTR prev_rip);
+      BX_ERROR(("fetch_raw_descriptor: LDTR.valid=0"));
+      exception(exception_no, selector->value & 0xfffc, 0);
     }
     if ((index*8 + 7) > BX_CPU_THIS_PTR ldtr.cache.u.system.limit_scaled) {
       BX_ERROR(("fetch_raw_descriptor: LDT: index (%x)%x > limit (%x)",
@@ -702,7 +701,7 @@ BX_CPU_C::fetch_raw_descriptor2(const bx_selector_t *selector, Bit32u *dword1, B
   }
   else { /* LDT */
     if (BX_CPU_THIS_PTR ldtr.cache.valid==0) {
-      BX_PANIC(("fetch_raw_descriptor2: LDTR.valid=0"));
+      BX_ERROR(("fetch_raw_descriptor2: LDTR.valid=0"));
       return 0;
     }
     if ((index*8 + 7) > BX_CPU_THIS_PTR ldtr.cache.u.system.limit_scaled)
@@ -736,8 +735,8 @@ void BX_CPU_C::fetch_raw_descriptor64(const bx_selector_t *selector,
   }
   else { /* LDT */
     if (BX_CPU_THIS_PTR ldtr.cache.valid==0) {
-      BX_PANIC(("fetch_raw_descriptor: LDTR.valid=0"));
-      debug(BX_CPU_THIS_PTR prev_rip);
+      BX_ERROR(("fetch_raw_descriptor: LDTR.valid=0"));
+      exception(exception_no, selector->value & 0xfffc, 0);
     }
     if ((index*8 + 15) > BX_CPU_THIS_PTR ldtr.cache.u.system.limit_scaled) {
       BX_ERROR(("fetch_raw_descriptor64: LDT: index (%x)%x > limit (%x)",

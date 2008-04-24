@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: iret.cc,v 1.32 2008-04-20 21:44:13 sshwarts Exp $
+// $Id: iret.cc,v 1.33 2008-04-24 20:52:27 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005 Stanislav Shwartsman
@@ -279,14 +279,14 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
     }
 
     if (i->os32L()) {
-      new_eip    = read_virtual_dword(BX_SEG_REG_SS, temp_ESP +  0);
-      new_eflags = read_virtual_dword(BX_SEG_REG_SS, temp_ESP +  8);
       new_esp    = read_virtual_dword(BX_SEG_REG_SS, temp_ESP + 12);
+      new_eflags = read_virtual_dword(BX_SEG_REG_SS, temp_ESP +  8);
+      new_eip    = read_virtual_dword(BX_SEG_REG_SS, temp_ESP +  0);
     }
     else {
-      new_eip    = read_virtual_word(BX_SEG_REG_SS, temp_ESP + 0);
-      new_eflags = read_virtual_word(BX_SEG_REG_SS, temp_ESP + 4);
       new_esp    = read_virtual_word(BX_SEG_REG_SS, temp_ESP + 6);
+      new_eflags = read_virtual_word(BX_SEG_REG_SS, temp_ESP + 4);
+      new_eip    = read_virtual_word(BX_SEG_REG_SS, temp_ESP + 0);
     }
 
     Bit8u prev_cpl = CPL; /* previous CPL */
