@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer32.cc,v 1.70 2008-04-21 14:17:04 sshwarts Exp $
+// $Id: ctrl_xfer32.cc,v 1.71 2008-04-24 21:59:42 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -102,6 +102,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RETfar32_Iw(bxInstruction_c *i)
 #endif
 
   Bit16u imm16 = i->Iw();
+  Bit16u cs_raw;
+  Bit32u eip;
 
   BX_CPU_THIS_PTR speculative_rsp = 1;
   BX_CPU_THIS_PTR prev_rsp = RSP;
@@ -111,7 +113,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RETfar32_Iw(bxInstruction_c *i)
     goto done;
   }
 
-  Bit32u eip = pop_32();
+  eip = pop_32();
 
   // CS.LIMIT can't change when in real/v8086 mode
   if (eip > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled) {
@@ -119,7 +121,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RETfar32_Iw(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
-  Bit16u cs_raw = (Bit16u) pop_32(); /* 32bit pop, MSW discarded */
+  cs_raw = (Bit16u) pop_32(); /* 32bit pop, MSW discarded */
 
   load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], cs_raw);
   EIP = eip;
@@ -138,6 +140,8 @@ done:
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::RETfar32(bxInstruction_c *i)
 {
+  Bit32u eip;
+
   invalidate_prefetch_q();
 
 #if BX_DEBUGGER
@@ -152,7 +156,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RETfar32(bxInstruction_c *i)
     goto done;
   }
 
-  Bit32u eip = pop_32();
+  eip = pop_32();
 
   // CS.LIMIT can't change when in real/v8086 mode
   if (eip > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled) {
@@ -632,6 +636,9 @@ done:
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::IRET32(bxInstruction_c *i)
 {
+  Bit32u eip, eflags32;
+  Bit16u cs_raw;
+
   invalidate_prefetch_q();
 
 #if BX_DEBUGGER
@@ -654,7 +661,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::IRET32(bxInstruction_c *i)
     goto done;
   }
 
-  Bit32u eip = pop_32();
+  eip = pop_32();
 
   // CS.LIMIT can't change when in real/v8086 mode
   if (eip > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled) {
@@ -662,10 +669,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::IRET32(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
-  Bit16u cs       = (Bit16u) pop_32();
-  Bit32u eflags32 =          pop_32();
+  cs_raw   = (Bit16u) pop_32();
+  eflags32 =          pop_32();
 
-  load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], cs);
+  load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], cs_raw);
   EIP = eip;
   writeEFlags(eflags32, 0x00257fd5); // VIF, VIP, VM unchanged
 
