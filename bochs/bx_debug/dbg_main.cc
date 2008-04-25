@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.137 2008-04-25 19:27:18 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.138 2008-04-25 21:08:58 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2864,7 +2864,7 @@ void bx_dbg_info_gdt_command(unsigned from, unsigned to)
     if(from == (unsigned) EMPTY_ARG) { from = 0; to = 0xffff; all = 1; }
   }
   if (from > 0xffff || to > 0xffff) {
-    dbg_printf("IDT entry should be [0-65535], 'info gdt' command malformed\n");
+    dbg_printf("GDT entry should be [0-65535], 'info gdt' command malformed\n");
     return;
   }
   if (from > to) {
@@ -2892,7 +2892,40 @@ void bx_dbg_info_gdt_command(unsigned from, unsigned to)
 
 void bx_dbg_info_ldt_command(unsigned from, unsigned to)
 {
-  dbg_printf("Local Descriptor Table output not implemented\n");
+  bx_address ldtr_base = SIM->get_param_num("LDTR.base", dbg_cpu_list)->get64();
+  Bit32u ldtr_limit = SIM->get_param_num("LDTR.limit", dbg_cpu_list)->get();
+
+  bx_bool all = 0;
+
+  if (to == (unsigned) EMPTY_ARG) {
+    to = from;
+    if(from == (unsigned) EMPTY_ARG) { from = 0; to = 0xffff; all = 1; }
+  }
+  if (from > 0xffff || to > 0xffff) {
+    dbg_printf("LDT entry should be [0-65535], 'info ldt' command malformed\n");
+    return;
+  }
+  if (from > to) {
+    unsigned temp = from;
+    from = to;
+    to = temp;
+  }
+
+  dbg_printf("Local Descriptor Table (base=0x" FMT_ADDRX ", limit=%d):\n", ldtr_base, ldtr_limit);
+  for (unsigned n = from; n<=to; n++) {
+    Bit8u entry[8];
+    if (8*n + 7 > ldtr_limit) break;
+    if (bx_dbg_read_linear(dbg_cpu, ldtr_base + 8*n, 8, entry)) {
+      dbg_printf("LDT[0x%02x]=", n);
+      bx_dbg_print_descriptor(entry, 0);
+    }
+    else {
+      dbg_printf("error: LDTR+8*%d points to invalid linear address 0x " FMT_ADDRX "\n",
+        n, ldtr_base);
+    }
+  }
+  if (all)
+    dbg_printf("You can list individual entries with 'info ldt [NUM]' or groups with 'info ldt [NUM] [NUM]'\n");
 }
 
 /*form RB list*/
