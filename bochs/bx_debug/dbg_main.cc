@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.136 2008-04-20 09:20:56 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.137 2008-04-25 19:27:18 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -550,7 +550,7 @@ void bx_dbg_phy_memory_access(unsigned cpu, bx_phy_address phy, unsigned len, un
   if (! BX_CPU(dbg_cpu)->trace_mem)
     return;
 
-  dbg_printf("[CPU%d]: PHY %s 0x%08x (len=%d)",
+  dbg_printf("[CPU%d %s]: PHY 0x%08x (len=%d)",
      cpu, 
      (rw == BX_READ) ? "RD" : (rw == BX_WRITE) ? "WR" : "??",
      phy,
