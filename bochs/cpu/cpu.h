@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.462 2008-04-24 21:52:27 sshwarts Exp $
+// $Id: cpu.h,v 1.463 2008-04-25 20:08:22 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -721,6 +721,8 @@ struct monitor_addr_t {
       monitor_begin(0xffffffff), monitor_end(0xffffffff) {}
     monitor_addr_t(bx_phy_address addr, unsigned len):
       monitor_begin(addr), monitor_end(addr+len) {}
+
+    void reset_monitor(void) { monitor_begin = monitor_end = 0xffffffff; }
 };
 #endif
 

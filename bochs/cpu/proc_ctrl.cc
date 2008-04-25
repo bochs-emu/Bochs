@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.219 2008-04-25 11:39:51 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.220 2008-04-25 20:08:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2012,7 +2012,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MWAIT(bxInstruction_c *i)
 
   // Do not enter optimized state if MONITOR wasn't properly set
   if (BX_CPU_THIS_PTR monitor.monitor_begin == BX_CPU_THIS_PTR monitor.monitor_end) {
-    BX_ERROR(("MWAIT: incorrect MONITOR settings"));
+    BX_DEBUG(("MWAIT: incorrect MONITOR settings"));
     return;
   }
 
