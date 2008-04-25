@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: access.cc,v 1.98 2008-04-19 13:21:21 sshwarts Exp $
+// $Id: access.cc,v 1.99 2008-04-25 12:44:16 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1416,7 +1416,7 @@ accessOK:
     }
 #endif
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
-    if (BX_CPU_THIS_PTR alignment_check()) {
+    if (BX_CPU_THIS_PTR alignment_check() && curr_pl == 3) {
       if (laddr & 1) {
         BX_ERROR(("write_new_stack_word(): #AC misaligned access"));
         exception(BX_AC_EXCEPTION, 0, 0);
@@ -1468,7 +1468,7 @@ accessOK:
     }
 #endif
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
-    if (BX_CPU_THIS_PTR alignment_check()) {
+    if (BX_CPU_THIS_PTR alignment_check() && curr_pl == 3) {
       if (laddr & 3) {
         BX_ERROR(("write_new_stack_dword(): #AC misaligned access"));
         exception(BX_AC_EXCEPTION, 0, 0);
@@ -1520,7 +1520,7 @@ void BX_CPU_C::write_new_stack_qword(bx_address laddr, unsigned curr_pl, Bit64u 
   }
 
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
-  if (BX_CPU_THIS_PTR alignment_check()) {
+  if (BX_CPU_THIS_PTR alignment_check() && curr_pl == 3) {
     if (laddr & 7) {
       BX_ERROR(("write_new_stack_qword(): #AC misaligned access"));
       exception(BX_AC_EXCEPTION, 0, 0);
