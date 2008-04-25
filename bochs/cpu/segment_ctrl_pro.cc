@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: segment_ctrl_pro.cc,v 1.88 2008-04-24 20:52:27 sshwarts Exp $
+// $Id: segment_ctrl_pro.cc,v 1.89 2008-04-25 21:21:46 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -488,14 +488,10 @@ bx_bool BX_CPU_C::set_segment_ar_data(bx_segment_reg_t *seg,
     d->u.segment.base  = base;
     d->u.segment.limit = limit;
 
-    if (d->u.segment.g) {
-      if (IS_DATA_SEGMENT(d->type) && IS_DATA_SEGMENT_EXPAND_DOWN(d->type))
-        d->u.segment.limit_scaled = (d->u.segment.limit << 12);
-      else
-        d->u.segment.limit_scaled = (d->u.segment.limit << 12) | 0x0fff;
-    }
+    if (d->u.segment.g)
+      d->u.segment.limit_scaled = (d->u.segment.limit << 12) | 0x0fff;
     else
-      d->u.segment.limit_scaled = d->u.segment.limit;
+      d->u.segment.limit_scaled = (d->u.segment.limit);
 
     d->valid = 1;
   }
@@ -547,7 +543,6 @@ BX_CPU_C::parse_descriptor(Bit32u dword1, Bit32u dword2, bx_descriptor_t *temp)
     temp->u.segment.limit      = (dword1 & 0xffff);
     temp->u.segment.base       = (dword1 >> 16) | ((dword2 & 0xFF) << 16);
 
-#if BX_CPU_LEVEL >= 3
     temp->u.segment.limit     |= (dword2 & 0x000F0000);
     temp->u.segment.g          = (dword2 & 0x00800000) > 0;
     temp->u.segment.d_b        = (dword2 & 0x00400000) > 0;
@@ -557,15 +552,10 @@ BX_CPU_C::parse_descriptor(Bit32u dword1, Bit32u dword2, bx_descriptor_t *temp)
     temp->u.segment.avl        = (dword2 & 0x00100000) > 0;
     temp->u.segment.base      |= (dword2 & 0xFF000000);
 
-    if (temp->u.segment.g) {
-      if (IS_DATA_SEGMENT(temp->type) && IS_DATA_SEGMENT_EXPAND_DOWN(temp->type))
-        temp->u.segment.limit_scaled = (temp->u.segment.limit << 12);
-      else
-        temp->u.segment.limit_scaled = (temp->u.segment.limit << 12) | 0x0fff;
-      }
+    if (temp->u.segment.g)
+      temp->u.segment.limit_scaled = (temp->u.segment.limit << 12) | 0x0fff;
     else
-#endif
-      temp->u.segment.limit_scaled = temp->u.segment.limit;
+      temp->u.segment.limit_scaled = (temp->u.segment.limit);
 
     temp->valid    = 1;
   }
@@ -663,7 +653,7 @@ void BX_CPU_C::fetch_raw_descriptor(const bx_selector_t *selector,
   if (selector->ti == 0) { /* GDT */
     if ((index*8 + 7) > BX_CPU_THIS_PTR gdtr.limit) {
       BX_ERROR(("fetch_raw_descriptor: GDT: index (%x)%x > limit (%x)",
-          index*8 + 7, index, BX_CPU_THIS_PTR gdtr.limit));
+         index*8 + 7, index, BX_CPU_THIS_PTR gdtr.limit));
       exception(exception_no, selector->value & 0xfffc, 0);
     }
     offset = BX_CPU_THIS_PTR gdtr.base + index*8;
@@ -675,7 +665,7 @@ void BX_CPU_C::fetch_raw_descriptor(const bx_selector_t *selector,
     }
     if ((index*8 + 7) > BX_CPU_THIS_PTR ldtr.cache.u.system.limit_scaled) {
       BX_ERROR(("fetch_raw_descriptor: LDT: index (%x)%x > limit (%x)",
-          index*8 + 7, index, BX_CPU_THIS_PTR ldtr.cache.u.system.limit_scaled));
+         index*8 + 7, index, BX_CPU_THIS_PTR ldtr.cache.u.system.limit_scaled));
       exception(exception_no, selector->value & 0xfffc, 0);
     }
     offset = BX_CPU_THIS_PTR ldtr.cache.u.system.base + index*8;
@@ -728,7 +718,7 @@ void BX_CPU_C::fetch_raw_descriptor64(const bx_selector_t *selector,
   if (selector->ti == 0) { /* GDT */
     if ((index*8 + 15) > BX_CPU_THIS_PTR gdtr.limit) {
       BX_ERROR(("fetch_raw_descriptor64: GDT: index (%x)%x > limit (%x)",
-          index*8 + 15, index, BX_CPU_THIS_PTR gdtr.limit));
+         index*8 + 15, index, BX_CPU_THIS_PTR gdtr.limit));
       exception(exception_no, selector->value & 0xfffc, 0);
     }
     offset = BX_CPU_THIS_PTR gdtr.base + index*8;
@@ -740,7 +730,7 @@ void BX_CPU_C::fetch_raw_descriptor64(const bx_selector_t *selector,
     }
     if ((index*8 + 15) > BX_CPU_THIS_PTR ldtr.cache.u.system.limit_scaled) {
       BX_ERROR(("fetch_raw_descriptor64: LDT: index (%x)%x > limit (%x)",
-          index*8 + 15, index, BX_CPU_THIS_PTR ldtr.cache.u.system.limit_scaled));
+         index*8 + 15, index, BX_CPU_THIS_PTR ldtr.cache.u.system.limit_scaled));
       exception(exception_no, selector->value & 0xfffc, 0);
     }
     offset = BX_CPU_THIS_PTR ldtr.cache.u.system.base + index*8;

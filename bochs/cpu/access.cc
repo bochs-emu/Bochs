@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: access.cc,v 1.99 2008-04-25 12:44:16 sshwarts Exp $
+// $Id: access.cc,v 1.100 2008-04-25 21:21:46 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -113,6 +113,8 @@ BX_CPU_C::write_virtual_checks(bx_segment_reg_t *seg, bx_address offset, unsigne
           BX_ERROR(("write_virtual_checks(): write beyond limit, r/w ED"));
           exception(int_number(seg), 0, 0);
         }
+        if (seg->cache.u.segment.limit_scaled == 0)
+          seg->cache.valid |= SegAccess4G | SegAccessROK | SegAccessWOK;
         break;
     }
 
@@ -196,6 +198,8 @@ BX_CPU_C::read_virtual_checks(bx_segment_reg_t *seg, bx_address offset, unsigned
           BX_ERROR(("read_virtual_checks(): read beyond limit ED"));
           exception(int_number(seg), 0, 0);
         }
+        if (seg->cache.u.segment.limit_scaled == 0)
+          seg->cache.valid |= SegAccess4G | SegAccessROK;
         break;
 
       case 8: case 9: /* execute only */
@@ -294,6 +298,8 @@ BX_CPU_C::execute_virtual_checks(bx_segment_reg_t *seg, bx_address offset, unsig
           BX_ERROR(("execute_virtual_checks(): read beyond limit ED"));
           exception(int_number(seg), 0, 0);
         }
+        if (seg->cache.u.segment.limit_scaled == 0)
+          seg->cache.valid |= SegAccess4G | SegAccessROK;
         break;
     }
     return;

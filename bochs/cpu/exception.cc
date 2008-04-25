@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.112 2008-04-21 21:29:43 sshwarts Exp $
+// $Id: exception.cc,v 1.113 2008-04-25 21:21:46 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -295,7 +295,6 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error
 
   Bit16u gate_dest_selector;
   Bit32u gate_dest_offset;
-  Bit32u temp_ESP;
 
   // interrupt vector must be within IDT table limits,
   // else #GP(vector number*8 + 2 + EXT)
@@ -530,75 +529,131 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error
       new_stack.selector.value = (0xfffc & new_stack.selector.value) |
         new_stack.selector.rpl;
 
-      if (ss_descriptor.u.segment.d_b)
-        temp_ESP = ESP_for_cpl_x;
-      else
-        temp_ESP = (Bit16u) ESP_for_cpl_x;
+      if (ss_descriptor.u.segment.d_b) {
+        Bit32u temp_ESP = ESP_for_cpl_x;
 
-      if (is_v8086_mode)
-      {
+        if (is_v8086_mode)
+        {
+          if (gate_descriptor.type>=14) { // 386 int/trap gate
+            write_new_stack_dword(&new_stack, temp_ESP-4,  cs_descriptor.dpl,
+                BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].selector.value);
+            write_new_stack_dword(&new_stack, temp_ESP-8,  cs_descriptor.dpl,
+                BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].selector.value);
+            write_new_stack_dword(&new_stack, temp_ESP-12, cs_descriptor.dpl,
+                BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.value);
+            write_new_stack_dword(&new_stack, temp_ESP-16, cs_descriptor.dpl,
+                BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.value);
+            temp_ESP -= 16;
+          }
+          else {
+            write_new_stack_word(&new_stack, temp_ESP-2, cs_descriptor.dpl,
+                BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].selector.value);
+            write_new_stack_word(&new_stack, temp_ESP-4, cs_descriptor.dpl,
+                BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].selector.value);
+            write_new_stack_word(&new_stack, temp_ESP-6, cs_descriptor.dpl,
+                BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.value);
+            write_new_stack_word(&new_stack, temp_ESP-8, cs_descriptor.dpl,
+                BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.value);
+            temp_ESP -= 8;
+          }
+        }
+
         if (gate_descriptor.type>=14) { // 386 int/trap gate
-          write_new_stack_dword(&new_stack, temp_ESP-4,  cs_descriptor.dpl,
-              BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].selector.value);
-          write_new_stack_dword(&new_stack, temp_ESP-8,  cs_descriptor.dpl,
-              BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].selector.value);
-          write_new_stack_dword(&new_stack, temp_ESP-12, cs_descriptor.dpl,
-              BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.value);
-          write_new_stack_dword(&new_stack, temp_ESP-16, cs_descriptor.dpl,
-              BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.value);
-          temp_ESP -= 16;
+          // push long pointer to old stack onto new stack
+          write_new_stack_dword(&new_stack, temp_ESP-4,  cs_descriptor.dpl, old_SS);
+          write_new_stack_dword(&new_stack, temp_ESP-8,  cs_descriptor.dpl, old_ESP);
+          write_new_stack_dword(&new_stack, temp_ESP-12, cs_descriptor.dpl, read_eflags());
+          write_new_stack_dword(&new_stack, temp_ESP-16, cs_descriptor.dpl, old_CS);
+          write_new_stack_dword(&new_stack, temp_ESP-20, cs_descriptor.dpl, old_EIP);
+          temp_ESP -= 20;
+
+          if (is_error_code) {
+            temp_ESP -= 4;
+            write_new_stack_dword(&new_stack, temp_ESP, cs_descriptor.dpl, error_code);
+          }
         }
-        else {
-          write_new_stack_word(&new_stack, temp_ESP-2, cs_descriptor.dpl,
-              BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].selector.value);
-          write_new_stack_word(&new_stack, temp_ESP-4, cs_descriptor.dpl,
-              BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].selector.value);
-          write_new_stack_word(&new_stack, temp_ESP-6, cs_descriptor.dpl,
-              BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.value);
-          write_new_stack_word(&new_stack, temp_ESP-8, cs_descriptor.dpl,
-              BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.value);
-          temp_ESP -= 8;
+        else {                          // 286 int/trap gate
+          // push long pointer to old stack onto new stack
+          write_new_stack_word(&new_stack, temp_ESP-2,  cs_descriptor.dpl, old_SS);
+          write_new_stack_word(&new_stack, temp_ESP-4,  cs_descriptor.dpl, (Bit16u) old_ESP);
+          write_new_stack_word(&new_stack, temp_ESP-6,  cs_descriptor.dpl, (Bit16u) read_eflags());
+          write_new_stack_word(&new_stack, temp_ESP-8,  cs_descriptor.dpl, old_CS);
+          write_new_stack_word(&new_stack, temp_ESP-10, cs_descriptor.dpl, (Bit16u) old_EIP);
+          temp_ESP -= 10;
+
+          if (is_error_code) {
+            temp_ESP -= 2;
+            write_new_stack_word(&new_stack, temp_ESP, cs_descriptor.dpl, error_code);
+          }
         }
+
+        ESP = temp_ESP;
+      }
+      else {
+        Bit16u temp_SP = (Bit16u) ESP_for_cpl_x;
+
+        if (is_v8086_mode)
+        {
+          if (gate_descriptor.type>=14) { // 386 int/trap gate
+            write_new_stack_dword(&new_stack, (Bit16u)(temp_SP-4),  cs_descriptor.dpl,
+                BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].selector.value);
+            write_new_stack_dword(&new_stack, (Bit16u)(temp_SP-8),  cs_descriptor.dpl,
+                BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].selector.value);
+            write_new_stack_dword(&new_stack, (Bit16u)(temp_SP-12), cs_descriptor.dpl,
+                BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.value);
+            write_new_stack_dword(&new_stack, (Bit16u)(temp_SP-16), cs_descriptor.dpl,
+                BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.value);
+            temp_SP -= 16;
+          }
+          else {
+            write_new_stack_word(&new_stack, (Bit16u)(temp_SP-2), cs_descriptor.dpl,
+                BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].selector.value);
+            write_new_stack_word(&new_stack, (Bit16u)(temp_SP-4), cs_descriptor.dpl,
+                BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].selector.value);
+            write_new_stack_word(&new_stack, (Bit16u)(temp_SP-6), cs_descriptor.dpl,
+                BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.value);
+            write_new_stack_word(&new_stack, (Bit16u)(temp_SP-8), cs_descriptor.dpl,
+                BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.value);
+            temp_SP -= 8;
+          }
+        }
+
+        if (gate_descriptor.type>=14) { // 386 int/trap gate
+          // push long pointer to old stack onto new stack
+          write_new_stack_dword(&new_stack, (Bit16u)(temp_SP-4),  cs_descriptor.dpl, old_SS);
+          write_new_stack_dword(&new_stack, (Bit16u)(temp_SP-8),  cs_descriptor.dpl, old_ESP);
+          write_new_stack_dword(&new_stack, (Bit16u)(temp_SP-12), cs_descriptor.dpl, read_eflags());
+          write_new_stack_dword(&new_stack, (Bit16u)(temp_SP-16), cs_descriptor.dpl, old_CS);
+          write_new_stack_dword(&new_stack, (Bit16u)(temp_SP-20), cs_descriptor.dpl, old_EIP);
+          temp_SP -= 20;
+
+          if (is_error_code) {
+            temp_SP -= 4;
+            write_new_stack_dword(&new_stack, temp_SP, cs_descriptor.dpl, error_code);
+          }
+        }
+        else {                          // 286 int/trap gate
+          // push long pointer to old stack onto new stack
+          write_new_stack_word(&new_stack, (Bit16u)(temp_SP-2),  cs_descriptor.dpl, old_SS);
+          write_new_stack_word(&new_stack, (Bit16u)(temp_SP-4),  cs_descriptor.dpl, (Bit16u) old_ESP);
+          write_new_stack_word(&new_stack, (Bit16u)(temp_SP-6),  cs_descriptor.dpl, (Bit16u) read_eflags());
+          write_new_stack_word(&new_stack, (Bit16u)(temp_SP-8),  cs_descriptor.dpl, old_CS);
+          write_new_stack_word(&new_stack, (Bit16u)(temp_SP-10), cs_descriptor.dpl, (Bit16u) old_EIP);
+          temp_SP -= 10;
+
+          if (is_error_code) {
+            temp_SP -= 2;
+            write_new_stack_word(&new_stack, temp_SP, cs_descriptor.dpl, error_code);
+          }
+        }
+
+        SP = temp_SP;
       }
 
-      if (gate_descriptor.type>=14) { // 386 int/trap gate
-        // push long pointer to old stack onto new stack
-        write_new_stack_dword(&new_stack, temp_ESP-4,  cs_descriptor.dpl, old_SS);
-        write_new_stack_dword(&new_stack, temp_ESP-8,  cs_descriptor.dpl, old_ESP);
-        write_new_stack_dword(&new_stack, temp_ESP-12, cs_descriptor.dpl, read_eflags());
-        write_new_stack_dword(&new_stack, temp_ESP-16, cs_descriptor.dpl, old_CS);
-        write_new_stack_dword(&new_stack, temp_ESP-20, cs_descriptor.dpl, old_EIP);
-        temp_ESP -= 20;
-
-        if (is_error_code) {
-          temp_ESP -= 4;
-          write_new_stack_dword(&new_stack, temp_ESP, cs_descriptor.dpl, error_code);
-        }
-      }
-      else {                          // 286 int/trap gate
-        // push long pointer to old stack onto new stack
-        write_new_stack_word(&new_stack, temp_ESP-2,  cs_descriptor.dpl, old_SS);
-        write_new_stack_word(&new_stack, temp_ESP-4,  cs_descriptor.dpl, (Bit16u) old_ESP);
-        write_new_stack_word(&new_stack, temp_ESP-6,  cs_descriptor.dpl, (Bit16u) read_eflags());
-        write_new_stack_word(&new_stack, temp_ESP-8,  cs_descriptor.dpl, old_CS);
-        write_new_stack_word(&new_stack, temp_ESP-10, cs_descriptor.dpl, (Bit16u) old_EIP);
-        temp_ESP -= 10;
-
-        if (is_error_code) {
-          temp_ESP -= 2;
-          write_new_stack_word(&new_stack, temp_ESP, cs_descriptor.dpl, error_code);
-        }
-      }
-
-      // load new SS:SP values from TSS
+      // load new SS:eSP values from TSS
       load_ss(&ss_selector, &ss_descriptor, cs_descriptor.dpl);
 
-      if (ss_descriptor.u.segment.d_b)
-        ESP = temp_ESP;
-      else
-         SP = (Bit16u) temp_ESP;
-
-      // load new CS:IP values from gate
+      // load new CS:eIP values from gate
       // set CPL to new code segment DPL
       // set RPL of CS to CPL
       load_cs(&cs_selector, &cs_descriptor, cs_descriptor.dpl);
