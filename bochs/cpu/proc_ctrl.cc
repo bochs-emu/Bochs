@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.218 2008-04-20 21:44:13 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.219 2008-04-25 11:39:51 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1896,6 +1896,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRMSR(bxInstruction_c *i)
       return;
 
     case BX_MSR_KERNELGSBASE:
+      if (! IsCanonical(val64)) {
+        BX_ERROR(("WRMSR: attempt to write non-canonical value to MSR_KERNELGSBASE !"));
+        exception(BX_GP_EXCEPTION, 0, 0);
+      }
       MSR_KERNELGSBASE = val64;
       return;
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: tasking.cc,v 1.54 2008-04-22 22:05:38 sshwarts Exp $
+// $Id: tasking.cc,v 1.55 2008-04-25 11:39:51 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -184,6 +184,11 @@ void BX_CPU_C::task_switch(bx_selector_t *tss_selector,
   {
     BX_ERROR(("task_switch(): new TSS limit < %d", new_TSS_max));
     exception(BX_TS_EXCEPTION, tss_selector->value & 0xfffc, 0);
+  }
+
+  if (old_TSS_limit < old_TSS_max) {
+    BX_ERROR(("task_switch(): old TSS limit < %d", old_TSS_max));
+    exception(BX_TS_EXCEPTION, BX_CPU_THIS_PTR tr.selector.value & 0xfffc, 0);
   }
 
   if (obase32 == nbase32) {
