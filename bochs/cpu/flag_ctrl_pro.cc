@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: flag_ctrl_pro.cc,v 1.33 2008-04-08 17:58:56 sshwarts Exp $
+// $Id: flag_ctrl_pro.cc,v 1.34 2008-04-25 08:19:36 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -41,12 +41,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::setEFlags(Bit32u val)
   }
 #endif
 
+  BX_CPU_THIS_PTR eflags = val;
+  BX_CPU_THIS_PTR lf_flags_status = 0; // OSZAPC flags are known.
+
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
   handleAlignmentCheck();
 #endif
-
-  BX_CPU_THIS_PTR eflags = val;
-  BX_CPU_THIS_PTR lf_flags_status = 0; // OSZAPC flags are known.
 
   handleCpuModeChange(); // VM flag might be changed
 }
