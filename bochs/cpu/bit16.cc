@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bit16.cc,v 1.8 2008-03-22 21:29:39 sshwarts Exp $
+// $Id: bit16.cc,v 1.9 2008-04-25 07:40:50 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -110,6 +110,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BT_EwGwM(bxInstruction_c *i)
   index = op2_16 & 0x0f;
   displacement32 = ((Bit16s) (op2_16&0xfff0)) / 16;
   op1_addr = RMAddr(i) + 2 * displacement32;
+  if (! i->as32L())
+    op1_addr = (Bit16u) op1_addr;
+#if BX_SUPPORT_X86_64
+  else if (! i->as64L())
+    op1_addr = (Bit32u) op1_addr;
+#endif
 
   /* pointer, segment address pair */
   op1_16 = read_virtual_word(i->seg(), op1_addr);
@@ -140,6 +146,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BTS_EwGwM(bxInstruction_c *i)
   index = op2_16 & 0x0f;
   displacement32 = ((Bit16s) (op2_16 & 0xfff0)) / 16;
   op1_addr = RMAddr(i) + 2 * displacement32;
+  if (! i->as32L())
+    op1_addr = (Bit16u) op1_addr;
+#if BX_SUPPORT_X86_64
+  else if (! i->as64L())
+    op1_addr = (Bit32u) op1_addr;
+#endif
 
   /* pointer, segment address pair */
   op1_16 = read_RMW_virtual_word(i->seg(), op1_addr);
@@ -176,6 +188,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BTR_EwGwM(bxInstruction_c *i)
   index = op2_16 & 0x0f;
   displacement32 = ((Bit16s) (op2_16&0xfff0)) / 16;
   op1_addr = RMAddr(i) + 2 * displacement32;
+  if (! i->as32L())
+    op1_addr = (Bit16u) op1_addr;
+#if BX_SUPPORT_X86_64
+  else if (! i->as64L())
+    op1_addr = (Bit32u) op1_addr;
+#endif
 
   /* pointer, segment address pair */
   op1_16 = read_RMW_virtual_word(i->seg(), op1_addr);
@@ -214,8 +232,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BTC_EwGwM(bxInstruction_c *i)
   index_16 = op2_16 & 0x0f;
   displacement16 = ((Bit16s) (op2_16 & 0xfff0)) / 16;
   op1_addr = RMAddr(i) + 2 * displacement16;
-  op1_16 = read_RMW_virtual_word(i->seg(), op1_addr);
+  if (! i->as32L())
+    op1_addr = (Bit16u) op1_addr;
+#if BX_SUPPORT_X86_64
+  else if (! i->as64L())
+    op1_addr = (Bit32u) op1_addr;
+#endif
 
+  op1_16 = read_RMW_virtual_word(i->seg(), op1_addr);
   bx_bool temp_CF = (op1_16 >> index_16) & 0x01;
   op1_16 ^= (((Bit16u) 1) << index_16);  /* toggle bit */
   write_RMW_virtual_word(op1_16);

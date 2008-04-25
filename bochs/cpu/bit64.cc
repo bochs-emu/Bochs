@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bit64.cc,v 1.10 2008-03-22 21:29:39 sshwarts Exp $
+// $Id: bit64.cc,v 1.11 2008-04-25 07:40:51 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -111,6 +111,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BT_EqGqM(bxInstruction_c *i)
   index = op2_64 & 0x3f;
   displacement64 = ((Bit64s) (op2_64 & BX_CONST64(0xffffffffffffffc0))) / 64;
   op1_addr = RMAddr(i) + 8 * displacement64;
+  if (! i->as64L())
+    op1_addr = (Bit32u) op1_addr;
 
   /* pointer, segment address pair */
   op1_64 = read_virtual_qword(i->seg(), op1_addr);
@@ -141,6 +143,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BTS_EqGqM(bxInstruction_c *i)
   index = op2_64 & 0x3f;
   displacement64 = ((Bit64s) (op2_64 & BX_CONST64(0xffffffffffffffc0))) / 64;
   op1_addr = RMAddr(i) + 8 * displacement64;
+  if (! i->as64L())
+    op1_addr = (Bit32u) op1_addr;
 
   /* pointer, segment address pair */
   op1_64 = read_RMW_virtual_qword(i->seg(), op1_addr);
@@ -177,13 +181,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BTR_EqGqM(bxInstruction_c *i)
   index = op2_64 & 0x3f;
   displacement64 = ((Bit64s) (op2_64 & BX_CONST64(0xffffffffffffffc0))) / 64;
   op1_addr = RMAddr(i) + 8 * displacement64;
+  if (! i->as64L())
+    op1_addr = (Bit32u) op1_addr;
 
   /* pointer, segment address pair */
   op1_64 = read_RMW_virtual_qword(i->seg(), op1_addr);
-
   bx_bool temp_cf = (op1_64 >> index) & 0x01;
   op1_64 &= ~(((Bit64u) 1) << index);
-
   /* now write back to destination */
   write_RMW_virtual_qword(op1_64);
 
@@ -217,8 +221,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BTC_EqGqM(bxInstruction_c *i)
   index = op2_64 & 0x3f;
   displacement64 = ((Bit64s) (op2_64 & BX_CONST64(0xffffffffffffffc0))) / 64;
   op1_addr = RMAddr(i) + 8 * displacement64;
-  op1_64 = read_RMW_virtual_qword(i->seg(), op1_addr);
+  if (! i->as64L())
+    op1_addr = (Bit32u) op1_addr;
 
+  op1_64 = read_RMW_virtual_qword(i->seg(), op1_addr);
   bx_bool temp_CF = (op1_64 >> index) & 0x01;
   op1_64 ^= (((Bit64u) 1) << index);  /* toggle bit */
   set_CF(temp_CF);
