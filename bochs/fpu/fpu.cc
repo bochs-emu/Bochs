@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu.cc,v 1.36 2008-04-26 12:14:58 sshwarts Exp $
+// $Id: fpu.cc,v 1.37 2008-04-26 20:24:20 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -31,7 +31,6 @@
 
 #define UPDATE_LAST_OPCODE       1
 #define CHECK_PENDING_EXCEPTIONS 1
-
 
 #if BX_SUPPORT_FPU
 void BX_CPU_C::prepareFPU(bxInstruction_c *i,
@@ -297,6 +296,9 @@ int BX_CPU_C::fpu_load_environment(bxInstruction_c *i)
         }
     }
 
+    /* always set bit 6 - reserved */
+    BX_CPU_THIS_PTR the_i387.cwd |= 0x0040;
+
     /* check for unmasked exceptions */
     if (FPU_PARTIAL_STATUS & ~FPU_CONTROL_WORD & FPU_CW_Exceptions_Mask)
     {
@@ -321,7 +323,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLDCW(bxInstruction_c *i)
   BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
   Bit16u cwd = read_virtual_word(i->seg(), RMAddr(i));
-  FPU_CONTROL_WORD = cwd;
+  FPU_CONTROL_WORD = cwd | 0x0040; // bit 6 is reserved - always set
 
   /* check for unmasked exceptions */
   if (FPU_PARTIAL_STATUS & ~FPU_CONTROL_WORD & FPU_CW_Exceptions_Mask)
@@ -461,6 +463,17 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLDENV(bxInstruction_c *i)
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i, CHECK_PENDING_EXCEPTIONS, !UPDATE_LAST_OPCODE);
   fpu_load_environment(i);
+
+  /* read all registers in stack order */
+  for(int n=0;n<8;n++)
+  {
+     // update tag only if it is not empty
+     if (! IS_TAG_EMPTY(n))
+     {
+         int tag = FPU_tagof(BX_READ_FPU_REG(n));
+         BX_CPU_THIS_PTR the_i387.FPU_settagi(tag, n);
+     }
+  }
 #else
   BX_INFO(("FLDENV: required FPU, configure --enable-fpu"));
 #endif
