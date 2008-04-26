@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: parser.y,v 1.27 2008-04-26 18:50:32 sshwarts Exp $
+// $Id: parser.y,v 1.28 2008-04-26 18:58:26 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 %{
@@ -1014,7 +1014,7 @@ help_command:
          dbg_printf("sse|xmm - print SSE state (same as 'info sse')\n");
          free($1);free($2);
        }
-     | BX_TOKEN_HELP BX_TOKEN_SREG '\n'
+     | BX_TOKEN_HELP BX_TOKEN_SEGMENT_REGS '\n'
        {
          dbg_printf("sreg - show segment registers (same as 'info sreg')\n");
          free($1);free($2);
