@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu_load_store.cc,v 1.20 2008-04-26 19:38:53 sshwarts Exp $
+// $Id: fpu_load_store.cc,v 1.21 2008-04-26 19:56:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -137,12 +137,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLD_EXTENDED_REAL(bxInstruction_c *i)
   }
 
   BX_CPU_THIS_PTR the_i387.FPU_push();
-printf("FLD_EXTENDED_REAL1= tag word =%04x!\n", FPU_TAG_WORD);
-printf("tag of result: %d\n", FPU_tagof(result));
-printf("result: %04x %llx\n", result.exp, result.fraction);
 
   BX_WRITE_FPU_REG(result, 0);
-printf("FLD_EXTENDED_REAL2= tag word =%04x!\n", FPU_TAG_WORD);
 #else
   BX_INFO(("FLD_EXTENDED_REAL: required FPU, configure --enable-fpu"));
 #endif
