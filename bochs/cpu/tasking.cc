@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: tasking.cc,v 1.55 2008-04-25 11:39:51 sshwarts Exp $
+// $Id: tasking.cc,v 1.56 2008-04-26 10:20:15 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -518,6 +518,56 @@ void BX_CPU_C::task_switch(bx_selector_t *tss_selector,
   }
   else {
 
+    // SS
+    if ((raw_ss_selector & 0xfffc) != 0)
+    {
+      bx_bool good = fetch_raw_descriptor2(&ss_selector, &dword1, &dword2);
+      if (!good) {
+        BX_ERROR(("task_switch(exception after commit point): bad SS fetch"));
+        exception(BX_TS_EXCEPTION, raw_ss_selector & 0xfffc, 0);
+      }
+
+      parse_descriptor(dword1, dword2, &ss_descriptor);
+      // SS selector must be within its descriptor table limits else #TS(SS)
+      // SS descriptor AR byte must must indicate writable data segment,
+      // else #TS(SS)
+      if (ss_descriptor.valid==0 || ss_descriptor.segment==0 ||
+           IS_CODE_SEGMENT(ss_descriptor.type) ||
+          !IS_DATA_SEGMENT_WRITEABLE(ss_descriptor.type))
+      {
+        BX_ERROR(("task_switch(exception after commit point): SS not valid or writeable segment"));
+        exception(BX_TS_EXCEPTION, raw_ss_selector & 0xfffc, 0);
+      }
+
+      //
+      // Stack segment is present in memory, else #SS(new stack segment)
+      //
+      if (! IS_PRESENT(ss_descriptor)) {
+        BX_ERROR(("task_switch(exception after commit point): SS not present"));
+        exception(BX_SS_EXCEPTION, raw_ss_selector & 0xfffc, 0);
+      }
+
+      // Stack segment DPL matches CS.RPL, else #TS(new stack segment)
+      if (ss_descriptor.dpl != cs_selector.rpl) {
+        BX_ERROR(("task_switch(exception after commit point): SS.rpl != CS.RPL"));
+        exception(BX_TS_EXCEPTION, raw_ss_selector & 0xfffc, 0);
+      }
+
+      // Stack segment DPL matches selector RPL, else #TS(new stack segment)
+      if (ss_descriptor.dpl != ss_selector.rpl) {
+        BX_ERROR(("task_switch(exception after commit point): SS.dpl != SS.rpl"));
+        exception(BX_TS_EXCEPTION, raw_ss_selector & 0xfffc, 0);
+      }
+
+      // All checks pass, fill in shadow cache
+      BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache = ss_descriptor;
+    }
+    else {
+      // SS selector is valid, else #TS(new stack segment)
+      BX_ERROR(("task_switch(exception after commit point): SS NULL"));
+      exception(BX_TS_EXCEPTION, raw_ss_selector & 0xfffc, 0);
+    }
+
     // if new selector is not null then perform following checks:
     //    index must be within its descriptor table limits else #TS(selector)
     //    AR byte must indicate data or readable code else #TS(selector)
@@ -584,56 +634,6 @@ void BX_CPU_C::task_switch(bx_selector_t *tss_selector,
     handleAlignmentCheck(); // task switch, CPL was modified
 #endif
 
-    // SS
-    if ((raw_ss_selector & 0xfffc) != 0)
-    {
-      bx_bool good = fetch_raw_descriptor2(&ss_selector, &dword1, &dword2);
-      if (!good) {
-        BX_ERROR(("task_switch(exception after commit point): bad SS fetch"));
-        exception(BX_TS_EXCEPTION, raw_ss_selector & 0xfffc, 0);
-      }
-
-      parse_descriptor(dword1, dword2, &ss_descriptor);
-      // SS selector must be within its descriptor table limits else #TS(SS)
-      // SS descriptor AR byte must must indicate writable data segment,
-      // else #TS(SS)
-      if (ss_descriptor.valid==0 || ss_descriptor.segment==0 ||
-           IS_CODE_SEGMENT(ss_descriptor.type) ||
-          !IS_DATA_SEGMENT_WRITEABLE(ss_descriptor.type))
-      {
-        BX_ERROR(("task_switch(exception after commit point): SS not valid or writeable segment"));
-        exception(BX_TS_EXCEPTION, raw_ss_selector & 0xfffc, 0);
-      }
-
-      //
-      // Stack segment is present in memory, else #SS(new stack segment)
-      //
-      if (! IS_PRESENT(ss_descriptor)) {
-        BX_ERROR(("task_switch(exception after commit point): SS not present"));
-        exception(BX_SS_EXCEPTION, raw_ss_selector & 0xfffc, 0);
-      }
-
-      // Stack segment DPL matches CS.RPL, else #TS(new stack segment)
-      if (ss_descriptor.dpl != cs_selector.rpl) {
-        BX_ERROR(("task_switch(exception after commit point): SS.rpl != CS.RPL"));
-        exception(BX_TS_EXCEPTION, raw_ss_selector & 0xfffc, 0);
-      }
-
-      // Stack segment DPL matches selector RPL, else #TS(new stack segment)
-      if (ss_descriptor.dpl != ss_selector.rpl) {
-        BX_ERROR(("task_switch(exception after commit point): SS.dpl != SS.rpl"));
-        exception(BX_TS_EXCEPTION, raw_ss_selector & 0xfffc, 0);
-      }
-
-      // All checks pass, fill in shadow cache
-      BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache = ss_descriptor;
-    }
-    else {
-      // SS selector is valid, else #TS(new stack segment)
-      BX_ERROR(("task_switch(exception after commit point): SS NULL"));
-      exception(BX_TS_EXCEPTION, raw_ss_selector & 0xfffc, 0);
-    }
-
     task_switch_load_selector(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS],
         &ds_selector, raw_ds_selector, cs_selector.rpl);
     task_switch_load_selector(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES],
@@ -644,7 +644,7 @@ void BX_CPU_C::task_switch(bx_selector_t *tss_selector,
         &gs_selector, raw_gs_selector, cs_selector.rpl);
   }
 
-  if ((tss_descriptor->type>=9) && (trap_word & 0x0001)) {
+  if ((tss_descriptor->type>=9) && (trap_word & 0x1)) {
     BX_CPU_THIS_PTR debug_trap |= 0x00008000; // BT flag in DR6
     BX_CPU_THIS_PTR async_event = 1; // so processor knows to check
     BX_INFO(("task_switch: T bit set in new TSS"));
