@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: segment_ctrl_pro.cc,v 1.89 2008-04-25 21:21:46 sshwarts Exp $
+// $Id: segment_ctrl_pro.cc,v 1.90 2008-04-26 19:41:28 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -739,8 +739,8 @@ void BX_CPU_C::fetch_raw_descriptor64(const bx_selector_t *selector,
   access_read_linear(offset,      8, 0, BX_READ, &raw_descriptor1);
   access_read_linear(offset +  8, 8, 0, BX_READ, &raw_descriptor2);
 
-  if (GET32H(raw_descriptor2) != 0) {
-    BX_ERROR(("fetch_raw_descriptor64: extended attributes DWORD4 != 0"));
+  if (raw_descriptor2 & BX_CONST64(0x00001F0000000000)) {
+    BX_ERROR(("fetch_raw_descriptor64: extended attributes DWORD4 TYPE != 0"));
     exception(BX_GP_EXCEPTION, selector->value & 0xfffc, 0);
   }
 

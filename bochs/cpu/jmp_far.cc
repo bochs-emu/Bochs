@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: jmp_far.cc,v 1.13 2008-04-19 20:00:28 sshwarts Exp $
+// $Id: jmp_far.cc,v 1.14 2008-04-26 19:41:28 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005 Stanislav Shwartsman
@@ -175,7 +175,9 @@ BX_CPU_C::jmp_task_gate(bx_descriptor_t *gate_descriptor)
     BX_ERROR(("jump_protected: TSS selector points to bad TSS"));
     exception(BX_GP_EXCEPTION, raw_tss_selector & 0xfffc, 0);
   }
-  if (tss_descriptor.type!=9 && tss_descriptor.type!=1) {
+  if (tss_descriptor.type!=BX_SYS_SEGMENT_AVAIL_286_TSS &&
+      tss_descriptor.type!=BX_SYS_SEGMENT_AVAIL_386_TSS)
+  {
     BX_ERROR(("jump_protected: TSS selector points to bad TSS"));
     exception(BX_GP_EXCEPTION, raw_tss_selector & 0xfffc, 0);
   }
