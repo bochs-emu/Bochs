@@ -1,6 +1,6 @@
 %{
 /////////////////////////////////////////////////////////////////////////
-// $Id: lexer.l,v 1.25 2008-04-19 13:21:21 sshwarts Exp $
+// $Id: lexer.l,v 1.26 2008-04-26 18:50:32 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #include <stdlib.h>
@@ -61,8 +61,7 @@ blist           { bxlval.sval = strdup(bxtext); return(BX_TOKEN_LIST_BREAK); }
 vb|vbreak       { bxlval.sval = strdup(bxtext); return(BX_TOKEN_VBREAKPOINT); }
 lb|lbreak       { bxlval.sval = strdup(bxtext); return(BX_TOKEN_LBREAKPOINT); }
 break           |
-b               |
-pb              |
+b|pb            |
 pbreak          { bxlval.sval = strdup(bxtext); return(BX_TOKEN_PBREAKPOINT); }
 info            { bxlval.sval = strdup(bxtext); return(BX_TOKEN_INFO); }
 cr		|
@@ -70,12 +69,12 @@ creg		|
 cregs		{ bxlval.sval = strdup(bxtext); return(BX_TOKEN_CONTROL_REGS); }
 sreg		|
 sregs		{ bxlval.sval = strdup(bxtext); return(BX_TOKEN_SEGMENT_REGS); }
-r		|
-reg		|
+r|reg		|
 regs		|
 registers       { bxlval.sval = strdup(bxtext); return(BX_TOKEN_REGISTERS); }
-fpu             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_FPU); }
-sse             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_SSE); }
+fp|fpu          { bxlval.sval = strdup(bxtext); return(BX_TOKEN_FPU); }
+sse             |
+xmm             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_SSE); }
 mmx             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_MMX); }
 cpu             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_CPU); }
 all             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_ALL); }
