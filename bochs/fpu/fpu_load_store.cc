@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu_load_store.cc,v 1.19 2008-04-21 14:15:56 sshwarts Exp $
+// $Id: fpu_load_store.cc,v 1.20 2008-04-26 19:38:53 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -66,15 +66,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLD_SINGLE_REAL(bxInstruction_c *i)
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
 
+  float32 load_reg = read_virtual_dword(i->seg(), RMAddr(i));
+
   clear_C1();
 
-  if (! IS_TAG_EMPTY(-1))
-  {
+  if (! IS_TAG_EMPTY(-1)) {
       BX_CPU_THIS_PTR FPU_stack_overflow();
       return;
   }
-
-  float32 load_reg = read_virtual_dword(i->seg(), RMAddr(i));
 
   float_status_t status =
      FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
@@ -97,15 +96,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLD_DOUBLE_REAL(bxInstruction_c *i)
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
 
+  float64 load_reg = read_virtual_qword(i->seg(), RMAddr(i));
+
   clear_C1();
 
-  if (! IS_TAG_EMPTY(-1))
-  {
+  if (! IS_TAG_EMPTY(-1)) {
       BX_CPU_THIS_PTR FPU_stack_overflow();
       return;
   }
-
-  float64 load_reg = read_virtual_qword(i->seg(), RMAddr(i));
 
   float_status_t status =
      FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
@@ -128,19 +126,23 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLD_EXTENDED_REAL(bxInstruction_c *i)
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
 
+  floatx80 result;
+  read_virtual_tword(i->seg(), RMAddr(i), &result);
+
   clear_C1();
 
-  if (! IS_TAG_EMPTY(-1))
-  {
+  if (! IS_TAG_EMPTY(-1)) {
       BX_CPU_THIS_PTR FPU_stack_overflow();
       return;
   }
 
-  floatx80 result;
-  read_virtual_tword(i->seg(), RMAddr(i), &result);
-
   BX_CPU_THIS_PTR the_i387.FPU_push();
+printf("FLD_EXTENDED_REAL1= tag word =%04x!\n", FPU_TAG_WORD);
+printf("tag of result: %d\n", FPU_tagof(result));
+printf("result: %04x %llx\n", result.exp, result.fraction);
+
   BX_WRITE_FPU_REG(result, 0);
+printf("FLD_EXTENDED_REAL2= tag word =%04x!\n", FPU_TAG_WORD);
 #else
   BX_INFO(("FLD_EXTENDED_REAL: required FPU, configure --enable-fpu"));
 #endif
@@ -152,17 +154,16 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FILD_WORD_INTEGER(bxInstruction_c *i)
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
 
+  Bit16s load_reg = (Bit16s) read_virtual_word(i->seg(), RMAddr(i));
+
   clear_C1();
 
-  if (! IS_TAG_EMPTY(-1))
-  {
+  if (! IS_TAG_EMPTY(-1)) {
       BX_CPU_THIS_PTR FPU_stack_overflow();
       return;
   }
 
-  Bit16s load_reg = (Bit16s) read_virtual_word(i->seg(), RMAddr(i));
   floatx80 result = int32_to_floatx80((Bit32s) load_reg);
-
   BX_CPU_THIS_PTR the_i387.FPU_push();
   BX_WRITE_FPU_REG(result, 0);
 #else
@@ -176,17 +177,16 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FILD_DWORD_INTEGER(bxInstruction_c *i)
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
 
+  Bit32s load_reg = (Bit32s) read_virtual_dword(i->seg(), RMAddr(i));
+
   clear_C1();
 
-  if (! IS_TAG_EMPTY(-1))
-  {
+  if (! IS_TAG_EMPTY(-1)) {
       BX_CPU_THIS_PTR FPU_stack_overflow();
       return;
   }
 
-  Bit32s load_reg = (Bit32s) read_virtual_dword(i->seg(), RMAddr(i));
   floatx80 result = int32_to_floatx80(load_reg);
-
   BX_CPU_THIS_PTR the_i387.FPU_push();
   BX_WRITE_FPU_REG(result, 0);
 #else
@@ -200,17 +200,16 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FILD_QWORD_INTEGER(bxInstruction_c *i)
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
 
+  Bit64s load_reg = (Bit64s) read_virtual_qword(i->seg(), RMAddr(i));
+
   clear_C1();
 
-  if (! IS_TAG_EMPTY(-1))
-  {
+  if (! IS_TAG_EMPTY(-1)) {
       BX_CPU_THIS_PTR FPU_stack_overflow();
       return;
   }
 
-  Bit64s load_reg = (Bit64s) read_virtual_qword(i->seg(), RMAddr(i));
   floatx80 result = int64_to_floatx80(load_reg);
-
   BX_CPU_THIS_PTR the_i387.FPU_push();
   BX_WRITE_FPU_REG(result, 0);
 #else
@@ -224,6 +223,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FBLD_PACKED_BCD(bxInstruction_c *i)
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
 
+  // read packed bcd from memory
+  Bit16u hi2 = read_virtual_word (i->seg(), RMAddr(i) + 8);
+  Bit64u lo8 = read_virtual_qword(i->seg(), RMAddr(i));
+
   clear_C1();
 
   if (! IS_TAG_EMPTY(-1))
@@ -232,10 +235,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FBLD_PACKED_BCD(bxInstruction_c *i)
       return;
   }
 
-  // read packed bcd from memory
-  Bit64u lo8 = read_virtual_qword(i->seg(), RMAddr(i));
-  Bit16u hi2 = read_virtual_word (i->seg(), RMAddr(i) + 8);
-
+  // convert packed BCD to 64-bit integer
   Bit64s scale = 1;
   Bit64s val64 = 0;
 

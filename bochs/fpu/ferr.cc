@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ferr.cc,v 1.9 2008-02-05 22:33:34 sshwarts Exp $
+// $Id: ferr.cc,v 1.10 2008-04-26 19:38:53 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -35,8 +35,8 @@ void BX_CPU_C::FPU_stack_overflow(void)
   /* The masked response */
   if (BX_CPU_THIS_PTR the_i387.is_IA_masked())
   {
-      BX_CPU_THIS_PTR the_i387.FPU_push();
-      BX_WRITE_FPU_REGISTER_AND_TAG(floatx80_default_nan, FPU_Tag_Special, 0);
+    BX_CPU_THIS_PTR the_i387.FPU_push();
+    BX_WRITE_FPU_REGISTER_AND_TAG(floatx80_default_nan, FPU_Tag_Special, 0);
   }
   FPU_exception(FPU_EX_Stack_Overflow);
 }
@@ -46,15 +46,15 @@ void BX_CPU_C::FPU_stack_underflow(int stnr, int pop_stack)
   /* The masked response */
   if (BX_CPU_THIS_PTR the_i387.is_IA_masked())
   {
-     BX_WRITE_FPU_REGISTER_AND_TAG(floatx80_default_nan, FPU_Tag_Special, stnr);
-     if (pop_stack)
-          BX_CPU_THIS_PTR the_i387.FPU_pop();
+    BX_WRITE_FPU_REGISTER_AND_TAG(floatx80_default_nan, FPU_Tag_Special, stnr);
+    if (pop_stack)
+        BX_CPU_THIS_PTR the_i387.FPU_pop();
   }
   FPU_exception(FPU_EX_Stack_Underflow);
 }
 
 /* Returns 1 if unmasked exception occured */
-int BX_CPU_C::FPU_exception(int exception)
+bx_bool BX_CPU_C::FPU_exception(int exception)
 {
   int unmasked = 0;
 
@@ -67,16 +67,17 @@ int BX_CPU_C::FPU_exception(int exception)
   /* Set summary bits iff exception isn't masked */
   if (FPU_PARTIAL_STATUS & ~FPU_CONTROL_WORD & FPU_CW_Exceptions_Mask)
   {
-      FPU_PARTIAL_STATUS |= (FPU_SW_Summary | FPU_SW_Backward);
-      unmasked = 1;
+    FPU_PARTIAL_STATUS |= (FPU_SW_Summary | FPU_SW_Backward);
+    unmasked = 1;
   }
 
   if (exception & (FPU_SW_Stack_Fault | FPU_EX_Precision))
   {
-      if (! (exception & FPU_SW_C1))
-        /* This bit distinguishes over- from underflow for a stack fault,
-             and roundup from round-down for precision loss. */
-        FPU_PARTIAL_STATUS &= ~FPU_SW_C1;
+    if (! (exception & FPU_SW_C1)) {
+      /* This bit distinguishes over- from underflow for a stack fault,
+           and roundup from round-down for precision loss. */
+      FPU_PARTIAL_STATUS &= ~FPU_SW_C1;
+    }
   }
 
   return unmasked;

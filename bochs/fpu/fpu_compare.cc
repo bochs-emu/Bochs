@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu_compare.cc,v 1.15 2008-04-21 14:15:56 sshwarts Exp $
+// $Id: fpu_compare.cc,v 1.16 2008-04-26 19:38:53 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -247,6 +247,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FCOM_SINGLE_REAL(bxInstruction_c *i)
 
   int pop_stack = i->nnn() & 1;
 
+  float32 load_reg = read_virtual_dword(i->seg(), RMAddr(i));
+
   clear_C1();
 
   if (IS_TAG_EMPTY(0))
@@ -262,8 +264,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FCOM_SINGLE_REAL(bxInstruction_c *i)
       }
       return;
   }
-
-  float32 load_reg = read_virtual_dword(i->seg(), RMAddr(i));
 
   float_status_t status =
       FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
@@ -290,6 +290,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FCOM_DOUBLE_REAL(bxInstruction_c *i)
 
   int pop_stack = i->nnn() & 1;
 
+  float64 load_reg = read_virtual_qword(i->seg(), RMAddr(i));
+
   clear_C1();
 
   if (IS_TAG_EMPTY(0))
@@ -305,8 +307,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FCOM_DOUBLE_REAL(bxInstruction_c *i)
       }
       return;
   }
-
-  float64 load_reg = read_virtual_qword(i->seg(), RMAddr(i));
 
   float_status_t status =
       FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
@@ -333,6 +333,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FICOM_WORD_INTEGER(bxInstruction_c *i)
 
   int pop_stack = i->nnn() & 1;
 
+  Bit16s load_reg = (Bit16s) read_virtual_word(i->seg(), RMAddr(i));
+
   clear_C1();
 
   if (IS_TAG_EMPTY(0))
@@ -348,8 +350,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FICOM_WORD_INTEGER(bxInstruction_c *i)
       }
       return;
   }
-
-  Bit16s load_reg = (Bit16s) read_virtual_word(i->seg(), RMAddr(i));
 
   float_status_t status =
       FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
@@ -376,6 +376,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FICOM_DWORD_INTEGER(bxInstruction_c *i)
 
   int pop_stack = i->nnn() & 1;
 
+  Bit32s load_reg = (Bit32s) read_virtual_dword(i->seg(), RMAddr(i));
+
   clear_C1();
 
   if (IS_TAG_EMPTY(0))
@@ -391,8 +393,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FICOM_DWORD_INTEGER(bxInstruction_c *i)
       }
       return;
   }
-
-  Bit32s load_reg = (Bit32s) read_virtual_dword(i->seg(), RMAddr(i));
 
   float_status_t status =
       FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());

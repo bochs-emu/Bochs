@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu_arith.cc,v 1.13 2008-04-04 21:05:37 sshwarts Exp $
+// $Id: fpu_arith.cc,v 1.14 2008-04-26 19:38:53 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -129,15 +129,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FADD_SINGLE_REAL(bxInstruction_c *i)
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
 
+  float32 load_reg = read_virtual_dword(i->seg(), RMAddr(i));
+
   clear_C1();
 
-  if (IS_TAG_EMPTY(0))
-  {
+  if (IS_TAG_EMPTY(0)) {
      BX_CPU_THIS_PTR FPU_stack_underflow(0);
      return;
   }
-
-  float32 load_reg = read_virtual_dword(i->seg(), RMAddr(i));
 
   float_status_t status =
       FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
@@ -159,15 +158,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FADD_DOUBLE_REAL(bxInstruction_c *i)
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
 
+  float64 load_reg = read_virtual_qword(i->seg(), RMAddr(i));
+
   clear_C1();
 
-  if (IS_TAG_EMPTY(0))
-  {
+  if (IS_TAG_EMPTY(0)) {
      BX_CPU_THIS_PTR FPU_stack_underflow(0);
      return;
   }
-
-  float64 load_reg = read_virtual_qword(i->seg(), RMAddr(i));
 
   float_status_t status =
       FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
@@ -189,15 +187,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FIADD_WORD_INTEGER(bxInstruction_c *i)
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
 
+  Bit16s load_reg = (Bit16s) read_virtual_word(i->seg(), RMAddr(i));
+
   clear_C1();
 
-  if (IS_TAG_EMPTY(0))
-  {
+  if (IS_TAG_EMPTY(0)) {
      BX_CPU_THIS_PTR FPU_stack_underflow(0);
      return;
   }
-
-  Bit16s load_reg = (Bit16s) read_virtual_word(i->seg(), RMAddr(i));
 
   floatx80 a = BX_READ_FPU_REG(0);
   floatx80 b = int32_to_floatx80((Bit32s)(load_reg));
@@ -221,15 +218,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FIADD_DWORD_INTEGER(bxInstruction_c *i)
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
 
+  Bit32s load_reg = (Bit32s) read_virtual_dword(i->seg(), RMAddr(i));
+
   clear_C1();
 
-  if (IS_TAG_EMPTY(0))
-  {
+  if (IS_TAG_EMPTY(0)) {
      BX_CPU_THIS_PTR FPU_stack_underflow(0);
      return;
   }
-
-  Bit32s load_reg = (Bit32s) read_virtual_dword(i->seg(), RMAddr(i));
 
   floatx80 a = BX_READ_FPU_REG(0);
   floatx80 b = int32_to_floatx80(load_reg);
@@ -317,15 +313,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FMUL_SINGLE_REAL(bxInstruction_c *i)
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
 
+  float32 load_reg = read_virtual_dword(i->seg(), RMAddr(i));
+
   clear_C1();
 
-  if (IS_TAG_EMPTY(0))
-  {
+  if (IS_TAG_EMPTY(0)) {
      BX_CPU_THIS_PTR FPU_stack_underflow(0);
      return;
   }
-
-  float32 load_reg = read_virtual_dword(i->seg(), RMAddr(i));
 
   float_status_t status =
       FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
@@ -347,15 +342,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FMUL_DOUBLE_REAL(bxInstruction_c *i)
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
 
+  float64 load_reg = read_virtual_qword(i->seg(), RMAddr(i));
+
   clear_C1();
 
-  if (IS_TAG_EMPTY(0))
-  {
+  if (IS_TAG_EMPTY(0)) {
      BX_CPU_THIS_PTR FPU_stack_underflow(0);
      return;
   }
-
-  float64 load_reg = read_virtual_qword(i->seg(), RMAddr(i));
 
   float_status_t status =
       FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
@@ -377,15 +371,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FIMUL_WORD_INTEGER(bxInstruction_c *i)
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
 
+  Bit16s load_reg = (Bit16s) read_virtual_word(i->seg(), RMAddr(i));
+
   clear_C1();
 
-  if (IS_TAG_EMPTY(0))
-  {
+  if (IS_TAG_EMPTY(0)) {
      BX_CPU_THIS_PTR FPU_stack_underflow(0);
      return;
   }
-
-  Bit16s load_reg = (Bit16s) read_virtual_word(i->seg(), RMAddr(i));
 
   floatx80 a = BX_READ_FPU_REG(0);
   floatx80 b = int32_to_floatx80((Bit32s)(load_reg));
@@ -409,15 +402,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FIMUL_DWORD_INTEGER(bxInstruction_c *i)
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
 
+  Bit32s load_reg = (Bit32s) read_virtual_dword(i->seg(), RMAddr(i));
+
   clear_C1();
 
-  if (IS_TAG_EMPTY(0))
-  {
+  if (IS_TAG_EMPTY(0)) {
      BX_CPU_THIS_PTR FPU_stack_underflow(0);
      return;
   }
-
-  Bit32s load_reg = (Bit32s) read_virtual_dword(i->seg(), RMAddr(i));
 
   floatx80 a = BX_READ_FPU_REG(0);
   floatx80 b = int32_to_floatx80(load_reg);
@@ -571,15 +563,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FSUB_SINGLE_REAL(bxInstruction_c *i)
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
 
+  float32 load_reg = read_virtual_dword(i->seg(), RMAddr(i));
+
   clear_C1();
 
-  if (IS_TAG_EMPTY(0))
-  {
+  if (IS_TAG_EMPTY(0)) {
      BX_CPU_THIS_PTR FPU_stack_underflow(0);
      return;
   }
-
-  float32 load_reg = read_virtual_dword(i->seg(), RMAddr(i));
 
   float_status_t status =
       FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
@@ -601,15 +592,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FSUBR_SINGLE_REAL(bxInstruction_c *i)
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
 
+  float32 load_reg = read_virtual_dword(i->seg(), RMAddr(i));
+
   clear_C1();
 
-  if (IS_TAG_EMPTY(0))
-  {
+  if (IS_TAG_EMPTY(0)) {
      BX_CPU_THIS_PTR FPU_stack_underflow(0);
      return;
   }
-
-  float32 load_reg = read_virtual_dword(i->seg(), RMAddr(i));
 
   float_status_t status =
       FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
@@ -631,15 +621,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FSUB_DOUBLE_REAL(bxInstruction_c *i)
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
 
+  float64 load_reg = read_virtual_qword(i->seg(), RMAddr(i));
+
   clear_C1();
 
-  if (IS_TAG_EMPTY(0))
-  {
+  if (IS_TAG_EMPTY(0)) {
      BX_CPU_THIS_PTR FPU_stack_underflow(0);
      return;
   }
-
-  float64 load_reg = read_virtual_qword(i->seg(), RMAddr(i));
 
   float_status_t status =
       FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
@@ -661,15 +650,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FSUBR_DOUBLE_REAL(bxInstruction_c *i)
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
 
+  float64 load_reg = read_virtual_qword(i->seg(), RMAddr(i));
+
   clear_C1();
 
-  if (IS_TAG_EMPTY(0))
-  {
+  if (IS_TAG_EMPTY(0)) {
      BX_CPU_THIS_PTR FPU_stack_underflow(0);
      return;
   }
-
-  float64 load_reg = read_virtual_qword(i->seg(), RMAddr(i));
 
   float_status_t status =
       FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
@@ -691,15 +679,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FISUB_WORD_INTEGER(bxInstruction_c *i)
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
 
+  Bit16s load_reg = (Bit16s) read_virtual_word(i->seg(), RMAddr(i));
+
   clear_C1();
 
-  if (IS_TAG_EMPTY(0))
-  {
+  if (IS_TAG_EMPTY(0)) {
      BX_CPU_THIS_PTR FPU_stack_underflow(0);
      return;
   }
-
-  Bit16s load_reg = (Bit16s) read_virtual_word(i->seg(), RMAddr(i));
 
   floatx80 a = BX_READ_FPU_REG(0);
   floatx80 b = int32_to_floatx80((Bit32s)(load_reg));
@@ -723,15 +710,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FISUBR_WORD_INTEGER(bxInstruction_c *i)
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
 
+  Bit16s load_reg = (Bit16s) read_virtual_word(i->seg(), RMAddr(i));
+
   clear_C1();
 
-  if (IS_TAG_EMPTY(0))
-  {
+  if (IS_TAG_EMPTY(0)) {
      BX_CPU_THIS_PTR FPU_stack_underflow(0);
      return;
   }
-
-  Bit16s load_reg = (Bit16s) read_virtual_word(i->seg(), RMAddr(i));
 
   floatx80 a = int32_to_floatx80((Bit32s)(load_reg));
   floatx80 b = BX_READ_FPU_REG(0);
@@ -755,15 +741,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FISUB_DWORD_INTEGER(bxInstruction_c *i)
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
 
+  Bit32s load_reg = (Bit32s) read_virtual_dword(i->seg(), RMAddr(i));
+
   clear_C1();
 
-  if (IS_TAG_EMPTY(0))
-  {
+  if (IS_TAG_EMPTY(0)) {
      BX_CPU_THIS_PTR FPU_stack_underflow(0);
      return;
   }
-
-  Bit32s load_reg = (Bit32s) read_virtual_dword(i->seg(), RMAddr(i));
 
   floatx80 a = BX_READ_FPU_REG(0);
   floatx80 b = int32_to_floatx80(load_reg);
@@ -788,15 +773,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FISUBR_DWORD_INTEGER(bxInstruction_c *i)
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
 
+  Bit32s load_reg = (Bit32s) read_virtual_dword(i->seg(), RMAddr(i));
+
   clear_C1();
 
-  if (IS_TAG_EMPTY(0))
-  {
+  if (IS_TAG_EMPTY(0)) {
      BX_CPU_THIS_PTR FPU_stack_underflow(0);
      return;
   }
-
-  Bit32s load_reg = (Bit32s) read_virtual_dword(i->seg(), RMAddr(i));
 
   floatx80 a = int32_to_floatx80(load_reg);
   floatx80 b = BX_READ_FPU_REG(0);
@@ -948,15 +932,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FDIV_SINGLE_REAL(bxInstruction_c *i)
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
 
+  float32 load_reg = read_virtual_dword(i->seg(), RMAddr(i));
+
   clear_C1();
 
-  if (IS_TAG_EMPTY(0))
-  {
+  if (IS_TAG_EMPTY(0)) {
      BX_CPU_THIS_PTR FPU_stack_underflow(0);
      return;
   }
-
-  float32 load_reg = read_virtual_dword(i->seg(), RMAddr(i));
 
   float_status_t status =
       FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
@@ -978,15 +961,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FDIVR_SINGLE_REAL(bxInstruction_c *i)
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
 
+  float32 load_reg = read_virtual_dword(i->seg(), RMAddr(i));
+
   clear_C1();
 
-  if (IS_TAG_EMPTY(0))
-  {
+  if (IS_TAG_EMPTY(0)) {
      BX_CPU_THIS_PTR FPU_stack_underflow(0);
      return;
   }
-
-  float32 load_reg = read_virtual_dword(i->seg(), RMAddr(i));
 
   float_status_t status =
       FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
@@ -1008,15 +990,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FDIV_DOUBLE_REAL(bxInstruction_c *i)
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
 
+  float64 load_reg = read_virtual_qword(i->seg(), RMAddr(i));
+
   clear_C1();
 
-  if (IS_TAG_EMPTY(0))
-  {
+  if (IS_TAG_EMPTY(0)) {
      BX_CPU_THIS_PTR FPU_stack_underflow(0);
      return;
   }
-
-  float64 load_reg = read_virtual_qword(i->seg(), RMAddr(i));
 
   float_status_t status =
       FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
@@ -1038,15 +1019,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FDIVR_DOUBLE_REAL(bxInstruction_c *i)
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
 
+  float64 load_reg = read_virtual_qword(i->seg(), RMAddr(i));
+
   clear_C1();
 
-  if (IS_TAG_EMPTY(0))
-  {
+  if (IS_TAG_EMPTY(0)) {
      BX_CPU_THIS_PTR FPU_stack_underflow(0);
      return;
   }
-
-  float64 load_reg = read_virtual_qword(i->seg(), RMAddr(i));
 
   float_status_t status =
       FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
@@ -1068,15 +1048,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FIDIV_WORD_INTEGER(bxInstruction_c *i)
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
 
+  Bit16s load_reg = (Bit16s) read_virtual_word(i->seg(), RMAddr(i));
+
   clear_C1();
 
-  if (IS_TAG_EMPTY(0))
-  {
+  if (IS_TAG_EMPTY(0)) {
      BX_CPU_THIS_PTR FPU_stack_underflow(0);
      return;
   }
-
-  Bit16s load_reg = (Bit16s) read_virtual_word(i->seg(), RMAddr(i));
 
   floatx80 a = BX_READ_FPU_REG(0);
   floatx80 b = int32_to_floatx80((Bit32s)(load_reg));
@@ -1100,15 +1079,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FIDIVR_WORD_INTEGER(bxInstruction_c *i)
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
 
+  Bit16s load_reg = (Bit16s) read_virtual_word(i->seg(), RMAddr(i));
+
   clear_C1();
 
-  if (IS_TAG_EMPTY(0))
-  {
+  if (IS_TAG_EMPTY(0)) {
      BX_CPU_THIS_PTR FPU_stack_underflow(0);
      return;
   }
-
-  Bit16s load_reg = (Bit16s) read_virtual_word(i->seg(), RMAddr(i));
 
   floatx80 a = int32_to_floatx80((Bit32s)(load_reg));
   floatx80 b = BX_READ_FPU_REG(0);
@@ -1132,15 +1110,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FIDIV_DWORD_INTEGER(bxInstruction_c *i)
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
 
+  Bit32s load_reg = (Bit32s) read_virtual_dword(i->seg(), RMAddr(i));
+
   clear_C1();
 
-  if (IS_TAG_EMPTY(0))
-  {
+  if (IS_TAG_EMPTY(0)) {
      BX_CPU_THIS_PTR FPU_stack_underflow(0);
      return;
   }
-
-  Bit32s load_reg = (Bit32s) read_virtual_dword(i->seg(), RMAddr(i));
 
   floatx80 a = BX_READ_FPU_REG(0);
   floatx80 b = int32_to_floatx80(load_reg);
@@ -1164,15 +1141,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FIDIVR_DWORD_INTEGER(bxInstruction_c *i)
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
 
+  Bit32s load_reg = (Bit32s) read_virtual_dword(i->seg(), RMAddr(i));
+
   clear_C1();
 
-  if (IS_TAG_EMPTY(0))
-  {
+  if (IS_TAG_EMPTY(0)) {
      BX_CPU_THIS_PTR FPU_stack_underflow(0);
      return;
   }
-
-  Bit32s load_reg = (Bit32s) read_virtual_dword(i->seg(), RMAddr(i));
 
   floatx80 a = int32_to_floatx80(load_reg);
   floatx80 b = BX_READ_FPU_REG(0);
