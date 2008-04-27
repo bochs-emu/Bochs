@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: i387.h,v 1.35 2008-02-02 21:46:51 sshwarts Exp $
+// $Id: i387.h,v 1.36 2008-04-27 19:48:58 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2004 Stanislav Shwartsman
@@ -129,7 +129,7 @@ BX_CPP_INLINE void i387_t::FPU_pop(void)
 BX_CPP_INLINE void i387_t::FPU_save_regi(floatx80 reg, int tag, int stnr)
 {
   st_space[(stnr+tos) & 7] = reg;
-  FPU_settagi(tag, stnr);
+ FPU_settagi(tag, stnr);
 }
 
 #include <string.h>

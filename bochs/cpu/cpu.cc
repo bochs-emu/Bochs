@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.224 2008-04-19 20:00:28 sshwarts Exp $
+// $Id: cpu.cc,v 1.225 2008-04-27 19:48:57 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -395,7 +395,7 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
         // interrupt ends the HALT condition
 #if BX_SUPPORT_MONITOR_MWAIT
         if (BX_CPU_THIS_PTR debug_trap & BX_DEBUG_TRAP_MWAIT)
-          BX_CPU_THIS_PTR mem->clear_monitor(BX_CPU_THIS_PTR bx_cpuid);
+          BX_MEM(0)->clear_monitor(BX_CPU_THIS_PTR bx_cpuid);
 #endif
         BX_CPU_THIS_PTR debug_trap = 0; // clear traps for after resume
         BX_CPU_THIS_PTR inhibit_mask = 0; // clear inhibits for after resume
@@ -660,13 +660,13 @@ void BX_CPU_C::prefetch(void)
     BX_CPU_THIS_PTR eipFetchPtr = fetchPtr;
   }
   else {
-    BX_CPU_THIS_PTR eipFetchPtr = BX_CPU_THIS_PTR mem->getHostMemAddr(BX_CPU_THIS,
+    BX_CPU_THIS_PTR eipFetchPtr = BX_MEM(0)->getHostMemAddr(BX_CPU_THIS,
         BX_CPU_THIS_PTR pAddrA20Page, BX_READ, CODE_ACCESS);
   }
 
   // Sanity checks
   if (! BX_CPU_THIS_PTR eipFetchPtr) {
-    if (pAddr >= BX_CPU_THIS_PTR mem->len) {
+    if (pAddr >= BX_MEM(0)->len) {
       BX_PANIC(("prefetch: running in bogus memory, pAddr=0x%08x", pAddr));
     }
     else {

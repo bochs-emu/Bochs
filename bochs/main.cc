@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.378 2008-04-07 20:20:04 sshwarts Exp $
+// $Id: main.cc,v 1.379 2008-04-27 19:48:57 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1059,7 +1059,7 @@ void bx_init_hardware()
     BX_MEM(0)->load_RAM(SIM->get_param_string(BXPN_OPTRAM4_PATH)->getptr(), SIM->get_param_num(BXPN_OPTRAM4_ADDRESS)->get(), 2);
 
 #if BX_SUPPORT_SMP == 0
-  BX_CPU(0)->initialize(BX_MEM(0));
+  BX_CPU(0)->initialize();
   BX_CPU(0)->sanity_checks();
   BX_CPU(0)->register_state();
   BX_INSTR_INIT(0);
@@ -1068,7 +1068,7 @@ void bx_init_hardware()
 
   for (unsigned i=0; i<BX_SMP_PROCESSORS; i++) {
     BX_CPU(i) = new BX_CPU_C(i);
-    BX_CPU(i)->initialize(BX_MEM(0));  // assign local apic id in 'initialize' method
+    BX_CPU(i)->initialize();  // assign local apic id in 'initialize' method
     BX_CPU(i)->sanity_checks();
     BX_CPU(i)->register_state();
     BX_INSTR_INIT(i);

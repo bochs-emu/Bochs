@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.220 2008-04-25 20:08:23 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.221 2008-04-27 19:49:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -927,7 +927,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOADALL(bxInstruction_c *i)
 
   BX_PANIC(("LOADALL: handle CR0.val32"));
   /* MSW */
-  BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, 0x806, 2, &msw);
+  BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x806, 2, &msw);
   BX_CPU_THIS_PTR cr0.set_PE(msw & 0x01); msw >>= 1;
   BX_CPU_THIS_PTR cr0.set_MP(msw & 0x01); msw >>= 1;
   BX_CPU_THIS_PTR cr0.set_EM(msw & 0x01); msw >>= 1;
@@ -937,15 +937,15 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOADALL(bxInstruction_c *i)
     BX_PANIC(("LOADALL set PE, MP, EM or TS bits in MSW!"));
 
   /* TR */
-  BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, 0x816, 2, &tr);
+  BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x816, 2, &tr);
   BX_CPU_THIS_PTR tr.selector.value = tr;
   BX_CPU_THIS_PTR tr.selector.rpl   = (tr & 0x03); tr >>= 2;
   BX_CPU_THIS_PTR tr.selector.ti    = (tr & 0x01); tr >>= 1;
   BX_CPU_THIS_PTR tr.selector.index = tr;
-  BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, 0x860, 2, &base_15_0);
-  BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, 0x862, 1, &base_23_16);
-  BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, 0x863, 1, &access);
-  BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, 0x864, 2, &limit);
+  BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x860, 2, &base_15_0);
+  BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x862, 1, &base_23_16);
+  BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x863, 1, &access);
+  BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x864, 2, &limit);
 
   BX_CPU_THIS_PTR tr.cache.valid =
   BX_CPU_THIS_PTR tr.cache.p           = (access & 0x80) >> 7;
@@ -977,14 +977,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOADALL(bxInstruction_c *i)
   }
 
   /* FLAGS */
-  BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, 0x818, 2, &flags);
+  BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x818, 2, &flags);
   write_flags(flags, 1, 1);
 
   /* IP */
-  BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, 0x81a, 2, &IP);
+  BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x81a, 2, &IP);
 
   /* LDTR */
-  BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, 0x81c, 2, &ldtr);
+  BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x81c, 2, &ldtr);
   BX_CPU_THIS_PTR ldtr.selector.value = ldtr;
   BX_CPU_THIS_PTR ldtr.selector.rpl   = (ldtr & 0x03); ldtr >>= 2;
   BX_CPU_THIS_PTR ldtr.selector.ti    = (ldtr & 0x01); ldtr >>= 1;
@@ -1002,10 +1002,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOADALL(bxInstruction_c *i)
     BX_CPU_THIS_PTR ldtr.selector.ti    = 0;
   }
   else {
-    BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, 0x854, 2, &base_15_0);
-    BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, 0x856, 1, &base_23_16);
-    BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, 0x857, 1, &access);
-    BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, 0x858, 2, &limit);
+    BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x854, 2, &base_15_0);
+    BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x856, 1, &base_23_16);
+    BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x857, 1, &access);
+    BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x858, 2, &limit);
     BX_CPU_THIS_PTR ldtr.cache.valid      =
     BX_CPU_THIS_PTR ldtr.cache.p          = access >> 7;
     BX_CPU_THIS_PTR ldtr.cache.dpl        = (access >> 5) & 0x03;
@@ -1030,15 +1030,15 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOADALL(bxInstruction_c *i)
   }
 
   /* DS */
-  BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, 0x81e, 2, &ds_raw);
+  BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x81e, 2, &ds_raw);
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.value = ds_raw;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.rpl   = (ds_raw & 0x03);  ds_raw >>= 2;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.ti    = (ds_raw & 0x01);  ds_raw >>= 1;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.index = ds_raw;
-  BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, 0x848, 2, &base_15_0);
-  BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, 0x84a, 1, &base_23_16);
-  BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, 0x84b, 1, &access);
-  BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, 0x84c, 2, &limit);
+  BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x848, 2, &base_15_0);
+  BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x84a, 1, &base_23_16);
+  BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x84b, 1, &access);
+  BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x84c, 2, &limit);
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.u.segment.base = (base_23_16 << 16) | base_15_0;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.u.segment.limit = limit;
   set_ar_byte(BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache, access);
@@ -1056,15 +1056,15 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOADALL(bxInstruction_c *i)
   }
 
   /* SS */
-  BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, 0x820, 2, &ss_raw);
+  BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x820, 2, &ss_raw);
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value = ss_raw;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.rpl   = (ss_raw & 0x03); ss_raw >>= 2;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.ti    = (ss_raw & 0x01); ss_raw >>= 1;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.index = ss_raw;
-  BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, 0x842, 2, &base_15_0);
-  BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, 0x844, 1, &base_23_16);
-  BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, 0x845, 1, &access);
-  BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, 0x846, 2, &limit);
+  BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x842, 2, &base_15_0);
+  BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x844, 1, &base_23_16);
+  BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x845, 1, &access);
+  BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x846, 2, &limit);
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.base = (base_23_16 << 16) | base_15_0;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.limit = limit;
   set_ar_byte(BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache, access);
@@ -1082,16 +1082,16 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOADALL(bxInstruction_c *i)
   }
 
   /* CS */
-  BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, 0x822, 2, &cs_raw);
+  BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x822, 2, &cs_raw);
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value = cs_raw;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.rpl   = (cs_raw & 0x03); cs_raw >>= 2;
 
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.ti    = (cs_raw & 0x01); cs_raw >>= 1;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.index = cs_raw;
-  BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, 0x83c, 2, &base_15_0);
-  BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, 0x83e, 1, &base_23_16);
-  BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, 0x83f, 1, &access);
-  BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, 0x840, 2, &limit);
+  BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x83c, 2, &base_15_0);
+  BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x83e, 1, &base_23_16);
+  BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x83f, 1, &access);
+  BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x840, 2, &limit);
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.base = (base_23_16 << 16) | base_15_0;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit = limit;
   set_ar_byte(BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache, access);
@@ -1115,15 +1115,15 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOADALL(bxInstruction_c *i)
   handleCpuModeChange();
 
   /* ES */
-  BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, 0x824, 2, &es_raw);
+  BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x824, 2, &es_raw);
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.value = es_raw;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.rpl   = (es_raw & 0x03); es_raw >>= 2;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.ti    = (es_raw & 0x01); es_raw >>= 1;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.index = es_raw;
-  BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, 0x836, 2, &base_15_0);
-  BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, 0x838, 1, &base_23_16);
-  BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, 0x839, 1, &access);
-  BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, 0x83a, 2, &limit);
+  BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x836, 2, &base_15_0);
+  BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x838, 1, &base_23_16);
+  BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x839, 1, &access);
+  BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x83a, 2, &limit);
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.u.segment.base = (base_23_16 << 16) | base_15_0;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.u.segment.limit = limit;
   set_ar_byte(BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache, access);
@@ -1155,28 +1155,28 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOADALL(bxInstruction_c *i)
     (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.rpl));
 #endif
 
-  BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, 0x826, 2, &DI);
-  BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, 0x828, 2, &SI);
-  BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, 0x82a, 2, &BP);
-  BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, 0x82c, 2, &SP);
-  BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, 0x82e, 2, &BX);
-  BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, 0x830, 2, &DX);
-  BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, 0x832, 2, &CX);
-  BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, 0x834, 2, &AX);
+  BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x826, 2, &DI);
+  BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x828, 2, &SI);
+  BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x82a, 2, &BP);
+  BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x82c, 2, &SP);
+  BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x82e, 2, &BX);
+  BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x830, 2, &DX);
+  BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x832, 2, &CX);
+  BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x834, 2, &AX);
 
   /* GDTR */
-  BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, 0x84e, 2, &base_15_0);
-  BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, 0x850, 1, &base_23_16);
-  BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, 0x851, 1, &access);
-  BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, 0x852, 2, &limit);
+  BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x84e, 2, &base_15_0);
+  BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x850, 1, &base_23_16);
+  BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x851, 1, &access);
+  BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x852, 2, &limit);
   BX_CPU_THIS_PTR gdtr.base = (base_23_16 << 16) | base_15_0;
   BX_CPU_THIS_PTR gdtr.limit = limit;
 
   /* IDTR */
-  BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, 0x85a, 2, &base_15_0);
-  BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, 0x85c, 1, &base_23_16);
-  BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, 0x85d, 1, &access);
-  BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, 0x85e, 2, &limit);
+  BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x85a, 2, &base_15_0);
+  BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x85c, 1, &base_23_16);
+  BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x85d, 1, &access);
+  BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x85e, 2, &limit);
   BX_CPU_THIS_PTR idtr.base = (base_23_16 << 16) | base_15_0;
   BX_CPU_THIS_PTR idtr.limit = limit;
 }
@@ -1940,7 +1940,7 @@ void BX_CPU_C::check_monitor(bx_phy_address begin_addr, unsigned len)
     BX_ASSERT(BX_CPU_THIS_PTR debug_trap & BX_DEBUG_TRAP_MWAIT);
     BX_CPU_THIS_PTR debug_trap &= ~BX_DEBUG_TRAP_SPECIAL;
     // clear monitor
-    BX_CPU_THIS_PTR mem->clear_monitor(BX_CPU_THIS_PTR bx_cpuid);
+    BX_MEM(0)->clear_monitor(BX_CPU_THIS_PTR bx_cpuid);
  }
 }
 #endif
@@ -2020,7 +2020,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MWAIT(bxInstruction_c *i)
   if ((BX_CPU_THIS_PTR monitor.monitor_end & ~0xfff) != (BX_CPU_THIS_PTR monitor.monitor_begin & ~0xfff))
     bx_pc_system.invlpg(BX_CPU_THIS_PTR monitor.monitor_end);
   BX_DEBUG(("MWAIT for phys_addr=%08x", BX_CPU_THIS_PTR monitor.monitor_begin));
-  BX_CPU_THIS_PTR mem->set_monitor(BX_CPU_THIS_PTR bx_cpuid);
+  BX_MEM(0)->set_monitor(BX_CPU_THIS_PTR bx_cpuid);
 
   // stops instruction execution and places the processor in a optimized
   // state.  Events that cause exit from MWAIT state are:

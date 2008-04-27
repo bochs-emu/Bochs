@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.168 2008-04-19 13:21:22 sshwarts Exp $
+// $Id: init.cc,v 1.169 2008-04-27 19:48:58 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -150,7 +150,7 @@ static Bit64s cpu_param_handler(bx_param_c *param, int set, Bit64s val)
 
 #endif
 
-void BX_CPU_C::initialize(BX_MEM_C *addrspace)
+void BX_CPU_C::initialize(void)
 {
   // BX_CPU_C constructor
   BX_CPU_THIS_PTR set_INTR (0);
@@ -163,8 +163,6 @@ void BX_CPU_C::initialize(BX_MEM_C *addrspace)
   // in SMP mode, the prefix of the CPU will be changed to [CPUn] in
   // bx_local_apic_c::set_id as soon as the apic ID is assigned.
   sprintf(name, "CPU %d", BX_CPU_ID);
-
-  mem = addrspace;
 
 #if BX_WITH_WX
   register_wx_state();

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.464 2008-04-26 19:41:28 sshwarts Exp $
+// $Id: cpu.h,v 1.465 2008-04-27 19:48:58 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -704,8 +704,6 @@ typedef struct {
 #include "apic.h"
 #endif
 
-class BX_MEM_C;
-
 #if BX_SUPPORT_FPU
 #include "cpu/i387.h"
 #include "cpu/xmm.h"
@@ -840,9 +838,6 @@ public: // for now...
 #if BX_SUPPORT_MONITOR_MWAIT
   monitor_addr_t monitor;
 #endif
-
-  // pointer to the address space that this processor uses.
-  BX_MEM_C *mem;
 
 #if BX_SUPPORT_APIC
   bx_local_apic_c local_apic;
@@ -1008,7 +1003,7 @@ public: // for now...
 #else
   ~BX_CPU_C();
 #endif
-  void initialize(BX_MEM_C *addrspace);
+  void initialize(void);
   void after_restore_state(void);
   void register_state(void);
 #if BX_WITH_WX

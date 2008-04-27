@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: string.cc,v 1.57 2008-04-16 16:44:06 sshwarts Exp $
+// $Id: string.cc,v 1.58 2008-04-27 19:49:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -73,7 +73,7 @@ Bit32u BX_CPU_C::FastRepMOVSB(bxInstruction_c *i, unsigned srcSeg, bx_address sr
 
   // If we want to write directly into the physical memory array,
   // we need the A20 address.
-  hostAddrSrc = BX_CPU_THIS_PTR mem->getHostMemAddr(BX_CPU_THIS,
+  hostAddrSrc = BX_MEM(0)->getHostMemAddr(BX_CPU_THIS,
             A20ADDR(paddrSrc), BX_READ, DATA_ACCESS);
 #endif
   if (! hostAddrSrc) return 0;
@@ -94,7 +94,7 @@ Bit32u BX_CPU_C::FastRepMOVSB(bxInstruction_c *i, unsigned srcSeg, bx_address sr
 
   // If we want to write directly into the physical memory array,
   // we need the A20 address.
-  hostAddrDst = BX_CPU_THIS_PTR mem->getHostMemAddr(BX_CPU_THIS,
+  hostAddrDst = BX_MEM(0)->getHostMemAddr(BX_CPU_THIS,
             A20ADDR(paddrDst), BX_WRITE, DATA_ACCESS);
 #endif
   if (! hostAddrDst) return 0;
@@ -168,7 +168,7 @@ Bit32u BX_CPU_C::FastRepMOVSW(bxInstruction_c *i, unsigned srcSeg, bx_address sr
 
   // If we want to write directly into the physical memory array,
   // we need the A20 address.
-  hostAddrSrc = BX_CPU_THIS_PTR mem->getHostMemAddr(BX_CPU_THIS,
+  hostAddrSrc = BX_MEM(0)->getHostMemAddr(BX_CPU_THIS,
             A20ADDR(paddrSrc), BX_READ, DATA_ACCESS);
 #endif
   if (! hostAddrSrc) return 0;
@@ -189,7 +189,7 @@ Bit32u BX_CPU_C::FastRepMOVSW(bxInstruction_c *i, unsigned srcSeg, bx_address sr
 
   // If we want to write directly into the physical memory array,
   // we need the A20 address.
-  hostAddrDst = BX_CPU_THIS_PTR mem->getHostMemAddr(BX_CPU_THIS,
+  hostAddrDst = BX_MEM(0)->getHostMemAddr(BX_CPU_THIS,
             A20ADDR(paddrDst), BX_WRITE, DATA_ACCESS);
 #endif
   if (! hostAddrDst) return 0;
@@ -266,7 +266,7 @@ Bit32u BX_CPU_C::FastRepMOVSD(bxInstruction_c *i, unsigned srcSeg, bx_address sr
 
   // If we want to write directly into the physical memory array,
   // we need the A20 address.
-  hostAddrSrc = BX_CPU_THIS_PTR mem->getHostMemAddr(BX_CPU_THIS,
+  hostAddrSrc = BX_MEM(0)->getHostMemAddr(BX_CPU_THIS,
             A20ADDR(paddrSrc), BX_READ, DATA_ACCESS);
 #endif
   if (! hostAddrSrc) return 0;
@@ -287,7 +287,7 @@ Bit32u BX_CPU_C::FastRepMOVSD(bxInstruction_c *i, unsigned srcSeg, bx_address sr
 
   // If we want to write directly into the physical memory array,
   // we need the A20 address.
-  hostAddrDst = BX_CPU_THIS_PTR mem->getHostMemAddr(BX_CPU_THIS,
+  hostAddrDst = BX_MEM(0)->getHostMemAddr(BX_CPU_THIS,
             A20ADDR(paddrDst), BX_WRITE, DATA_ACCESS);
 #endif
   if (! hostAddrDst) return 0;
@@ -360,7 +360,7 @@ Bit32u BX_CPU_C::FastRepSTOSB(bxInstruction_c *i, unsigned dstSeg, bx_address ds
 
   // If we want to write directly into the physical memory array,
   // we need the A20 address.
-  hostAddrDst = BX_CPU_THIS_PTR mem->getHostMemAddr(BX_CPU_THIS,
+  hostAddrDst = BX_MEM(0)->getHostMemAddr(BX_CPU_THIS,
             A20ADDR(paddrDst), BX_WRITE, DATA_ACCESS);
 #endif
   if (! hostAddrDst) return 0;
@@ -425,7 +425,7 @@ Bit32u BX_CPU_C::FastRepSTOSW(bxInstruction_c *i, unsigned dstSeg, bx_address ds
 
   // If we want to write directly into the physical memory array,
   // we need the A20 address.
-  hostAddrDst = BX_CPU_THIS_PTR mem->getHostMemAddr(BX_CPU_THIS,
+  hostAddrDst = BX_MEM(0)->getHostMemAddr(BX_CPU_THIS,
             A20ADDR(paddrDst), BX_WRITE, DATA_ACCESS);
 #endif
   if (! hostAddrDst) return 0;
@@ -492,7 +492,7 @@ Bit32u BX_CPU_C::FastRepSTOSD(bxInstruction_c *i, unsigned dstSeg, bx_address ds
 
   // If we want to write directly into the physical memory array,
   // we need the A20 address.
-  hostAddrDst = BX_CPU_THIS_PTR mem->getHostMemAddr(BX_CPU_THIS,
+  hostAddrDst = BX_MEM(0)->getHostMemAddr(BX_CPU_THIS,
             A20ADDR(paddrDst), BX_WRITE, DATA_ACCESS);
 #endif
   if (! hostAddrDst) return 0;
