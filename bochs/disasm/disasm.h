@@ -263,7 +263,7 @@ private:
   };
 
   void dis_putc(char symbol);
-  void dis_sprintf(char *fmt, ...);
+  void dis_sprintf(const char *fmt, ...);
   void decode_modrm(x86_insn *insn);
 
   void resolve16_mod0   (const x86_insn *insn, unsigned mode);

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dis_decode.cc,v 1.45 2008-02-29 05:39:40 sshwarts Exp $
+// $Id: dis_decode.cc,v 1.46 2008-04-27 19:47:12 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #include <stdio.h>
@@ -329,7 +329,7 @@ x86_insn disassembler::decode(bx_bool is_32, bx_bool is_64, bx_address base, bx_
   return insn;
 }
 
-void disassembler::dis_sprintf(char *fmt, ...)
+void disassembler::dis_sprintf(const char *fmt, ...)
 {
   va_list ap;
 
