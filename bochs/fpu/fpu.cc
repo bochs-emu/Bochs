@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu.cc,v 1.37 2008-04-26 20:24:20 sshwarts Exp $
+// $Id: fpu.cc,v 1.38 2008-04-27 20:43:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -391,18 +391,15 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FRSTOR(bxInstruction_c *i)
   BX_CPU_THIS_PTR prepareFPU(i, CHECK_PENDING_EXCEPTIONS, !UPDATE_LAST_OPCODE);
 
   int offset = fpu_load_environment(i);
+  floatx80 tmp;
 
-  /* read all registers in stack order. */
+  /* read all registers in stack order */
   for(int n=0;n<8;n++)
   {
-     floatx80 tmp;
-
-     // read register only if its tag is not empty
-     if (! IS_TAG_EMPTY(n))
-     {
-         read_virtual_tword(i->seg(), RMAddr(i) + offset + n*10, &tmp);
-         BX_WRITE_FPU_REG(tmp, n);
-     }
+     read_virtual_tword(i->seg(), RMAddr(i) + offset + n*10, &tmp);
+     // update tag only if it is not empty
+     BX_WRITE_FPU_REGISTER_AND_TAG(tmp,
+              IS_TAG_EMPTY(n) ? FPU_Tag_Empty : FPU_tagof(tmp), n);
   }
 #else
   BX_INFO(("FRSTOR: required FPU, configure --enable-fpu"));
