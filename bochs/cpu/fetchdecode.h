@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.h,v 1.64 2008-04-24 21:52:27 sshwarts Exp $
+// $Id: fetchdecode.h,v 1.65 2008-04-28 18:18:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005 Stanislav Shwartsman
@@ -3328,7 +3328,7 @@ static const BxOpcodeInfo_t BxOpcodeInfoG7R[8] = {
   /* 1 */ { BxRMGroup, BX_IA_ERROR, opcodesGroupRmMONITOR },
   /* 2 */ { BxRMGroup, BX_IA_ERROR, opcodesGroupRmXGETSET },
   /* 3 */ { 0, BX_IA_ERROR },
-  /* 4 */ { 0, BX_IA_SMSW_Ew },
+  /* 4 */ { 0, BX_IA_SMSW_EwR },
   /* 5 */ { 0, BX_IA_ERROR },
   /* 6 */ { BxTraceEnd, BX_IA_LMSW_Ew },
   /* 7 */ { 0, BX_IA_ERROR }
@@ -3340,7 +3340,7 @@ static const BxOpcodeInfo_t BxOpcodeInfoG7M[8] = {
   /* 1 */ { 0, BX_IA_SIDT_Ms },
   /* 2 */ { BxTraceEnd, BX_IA_LGDT_Ms },
   /* 3 */ { BxTraceEnd, BX_IA_LIDT_Ms },
-  /* 4 */ { 0, BX_IA_SMSW_Ew },
+  /* 4 */ { 0, BX_IA_SMSW_EwM },
   /* 5 */ { 0, BX_IA_ERROR },
   /* 6 */ { BxTraceEnd, BX_IA_LMSW_Ew },
   /* 7 */ { BxTraceEnd, BX_IA_INVLPG }
@@ -3363,7 +3363,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo64G7R[8] = {
   /* 1 */ { BxRMGroup, BX_IA_ERROR, opcodesGroupRmMONITOR },
   /* 2 */ { 0, BX_IA_ERROR },
   /* 3 */ { 0, BX_IA_ERROR },
-  /* 4 */ { 0, BX_IA_SMSW_Ew },
+  /* 4 */ { 0, BX_IA_SMSW_EwR },
   /* 5 */ { 0, BX_IA_ERROR },
   /* 6 */ { BxTraceEnd, BX_IA_LMSW_Ew },
   /* 7 */ { BxRMGroup, BX_IA_ERROR, opcodesGroup64RmINVLPG }
@@ -3374,7 +3374,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo64G7M[8] = {
   /* 1 */ { 0, BX_IA_SIDT64_Ms },
   /* 2 */ { BxTraceEnd, BX_IA_LGDT64_Ms },
   /* 3 */ { BxTraceEnd, BX_IA_LIDT64_Ms },
-  /* 4 */ { 0, BX_IA_SMSW_Ew },
+  /* 4 */ { 0, BX_IA_SMSW_EwM },
   /* 5 */ { 0, BX_IA_ERROR },
   /* 6 */ { BxTraceEnd, BX_IA_LMSW_Ew },
   /* 7 */ { BxTraceEnd, BX_IA_INVLPG  }

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: resolve.cc,v 1.1 2008-04-03 17:44:33 sshwarts Exp $
+// $Id: resolve.cc,v 1.2 2008-04-28 18:18:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008 Stanislav Shwartsman
@@ -84,12 +84,12 @@ BX_CPU_C::BxResolve16Rm7(bxInstruction_c *i)
   void  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::BxResolve32Base(bxInstruction_c *i)
 {
-  RMAddr(i) = BX_READ_32BIT_REG(i->sibBase()) + i->displ32u();
+  RMAddr(i) = (Bit32u) (BX_READ_32BIT_REG(i->sibBase()) + i->displ32u());
 }
   void  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::BxResolve32BaseIndex(bxInstruction_c *i)
 {
-  RMAddr(i) = BX_READ_32BIT_REG(i->sibBase()) + (BX_READ_32BIT_REG(i->sibIndex()) << i->sibScale()) + i->displ32u();
+  RMAddr(i) = (Bit32u) (BX_READ_32BIT_REG(i->sibBase()) + (BX_READ_32BIT_REG(i->sibIndex()) << i->sibScale()) + i->displ32u());
 }
 
 //

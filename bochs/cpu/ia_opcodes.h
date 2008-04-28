@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ia_opcodes.h,v 1.4 2008-04-12 10:08:43 sshwarts Exp $
+// $Id: ia_opcodes.h,v 1.5 2008-04-28 18:18:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008 Stanislav Shwartsman
@@ -618,7 +618,8 @@ bx_define_opcode(BX_IA_SHRD_EwGwR, BX_CPU_C::SHRD_EwGwR)
 bx_define_opcode(BX_IA_SHRD_EwGwM, BX_CPU_C::SHRD_EwGwM)
 bx_define_opcode(BX_IA_SIDT_Ms, BX_CPU_C::SIDT_Ms)
 bx_define_opcode(BX_IA_SLDT_Ew, BX_CPU_C::SLDT_Ew)
-bx_define_opcode(BX_IA_SMSW_Ew, BX_CPU_C::SMSW_Ew)
+bx_define_opcode(BX_IA_SMSW_EwR, BX_CPU_C::SMSW_EwR)
+bx_define_opcode(BX_IA_SMSW_EwM, BX_CPU_C::SMSW_EwM)
 bx_define_opcode(BX_IA_STC, BX_CPU_C::STC)
 bx_define_opcode(BX_IA_STD, BX_CPU_C::STD)
 bx_define_opcode(BX_IA_STI, BX_CPU_C::STI)

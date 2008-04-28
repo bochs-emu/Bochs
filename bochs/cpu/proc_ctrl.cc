@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.221 2008-04-27 19:49:02 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.222 2008-04-28 18:18:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -861,30 +861,22 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LMSW_Ew(bxInstruction_c *i)
   SetCR0(cr0);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::SMSW_Ew(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::SMSW_EwR(bxInstruction_c *i)
 {
-  Bit16u msw;
-
-#if BX_CPU_LEVEL == 2
-  msw  = 0xfff0; /* 80286 init value */
-  msw |= BX_CPU_THIS_PTR cr0.getRegister() & 0x000f;
-#else /* 386+ */
-  msw  = BX_CPU_THIS_PTR cr0.getRegister() & 0xffff;
-#endif
-
-  if (i->modC0()) {
-    if (i->os32L()) {
-      BX_WRITE_32BIT_REGZ(i->rm(), msw);  // zeros out high 16bits
-    }
-    else {
-      BX_WRITE_16BIT_REG(i->rm(), msw);
-    }
+  if (i->os32L()) {
+    BX_WRITE_32BIT_REGZ(i->rm(), BX_CPU_THIS_PTR cr0.getRegister());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-    /* pointer, segment address pair */
-    write_virtual_word(i->seg(), RMAddr(i), msw);
+    BX_WRITE_16BIT_REG(i->rm(), BX_CPU_THIS_PTR cr0.getRegister() & 0xffff);
   }
+}
+
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::SMSW_EwM(bxInstruction_c *i)
+{
+  Bit16u msw  = BX_CPU_THIS_PTR cr0.getRegister() & 0xffff;
+  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  /* pointer, segment address pair */
+  write_virtual_word(i->seg(), RMAddr(i), msw);
 }
 #endif
 
