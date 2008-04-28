@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: tasking.cc,v 1.56 2008-04-26 10:20:15 sshwarts Exp $
+// $Id: tasking.cc,v 1.57 2008-04-28 18:14:50 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -66,33 +66,33 @@
   // ======================
   // 386 Task State Segment
   // ======================
-  // |31            16|15                    0|
-  // |I/O Map Base    |000000000000000000000|T| 64  static
-  // |0000000000000000| LDT                   | 60  static
-  // |0000000000000000| GS selector           | 5c  dynamic
-  // |0000000000000000| FS selector           | 58  dynamic
-  // |0000000000000000| DS selector           | 54  dynamic
-  // |0000000000000000| SS selector           | 50  dynamic
-  // |0000000000000000| CS selector           | 4c  dynamic
-  // |0000000000000000| ES selector           | 48  dynamic
-  // |                EDI                     | 44  dynamic
-  // |                ESI                     | 40  dynamic
-  // |                EBP                     | 3c  dynamic
-  // |                ESP                     | 38  dynamic
-  // |                EBX                     | 34  dynamic
-  // |                EDX                     | 30  dynamic
-  // |                ECX                     | 2c  dynamic
-  // |                EAX                     | 28  dynamic
-  // |                EFLAGS                  | 24  dynamic
-  // |                EIP (entry point)       | 20  dynamic
-  // |           CR3 (PDPR)                   | 1c  static
-  // |000000000000000 | SS for CPL 2          | 18  static
-  // |           ESP for CPL 2                | 14  static
-  // |000000000000000 | SS for CPL 1          | 10  static
-  // |           ESP for CPL 1                | 0c  static
-  // |000000000000000 | SS for CPL 0          | 08  static
-  // |           ESP for CPL 0                | 04  static
-  // |000000000000000 | back link to prev TSS | 00  dynamic (updated only when return expected)
+  // |31            16|15                    0| hex dec
+  // |I/O Map Base    |000000000000000000000|T| 64  100 static
+  // |0000000000000000| LDT                   | 60  96  static
+  // |0000000000000000| GS selector           | 5c  92  dynamic
+  // |0000000000000000| FS selector           | 58  88  dynamic
+  // |0000000000000000| DS selector           | 54  84  dynamic
+  // |0000000000000000| SS selector           | 50  80  dynamic
+  // |0000000000000000| CS selector           | 4c  76  dynamic
+  // |0000000000000000| ES selector           | 48  72  dynamic
+  // |                EDI                     | 44  68  dynamic
+  // |                ESI                     | 40  64  dynamic
+  // |                EBP                     | 3c  60  dynamic
+  // |                ESP                     | 38  56  dynamic
+  // |                EBX                     | 34  52  dynamic
+  // |                EDX                     | 30  48  dynamic
+  // |                ECX                     | 2c  44  dynamic
+  // |                EAX                     | 28  40  dynamic
+  // |                EFLAGS                  | 24  36  dynamic
+  // |                EIP (entry point)       | 20  32  dynamic
+  // |           CR3 (PDPR)                   | 1c  28  static
+  // |000000000000000 | SS for CPL 2          | 18  24  static
+  // |           ESP for CPL 2                | 14  20  static
+  // |000000000000000 | SS for CPL 1          | 10  16  static
+  // |           ESP for CPL 1                | 0c  12  static
+  // |000000000000000 | SS for CPL 0          | 08  08  static
+  // |           ESP for CPL 0                | 04  04  static
+  // |000000000000000 | back link to prev TSS | 00  00  dynamic (updated only when return expected)
 
 
   // ==================================================
@@ -160,17 +160,17 @@ void BX_CPU_C::task_switch(bx_selector_t *tss_selector,
 
   // Gather info about old TSS
   if (BX_CPU_THIS_PTR tr.cache.type <= 3) {
-    old_TSS_max = 43;
+    old_TSS_max = 0x29;
   }
   else {
-    old_TSS_max = 103;
+    old_TSS_max = 0x5F;
   }
   // Gather info about new TSS
   if (tss_descriptor->type <= 3) { // {1,3}
-    new_TSS_max = 43;
+    new_TSS_max = 0x2B;
   }
   else { // tss_descriptor->type = {9,11}
-    new_TSS_max = 103;
+    new_TSS_max = 0x67;
   }
 
   obase32 = (Bit32u) BX_CPU_THIS_PTR tr.cache.u.system.base;        // old TSS.base
