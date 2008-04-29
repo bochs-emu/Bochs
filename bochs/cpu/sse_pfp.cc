@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_pfp.cc,v 1.46 2008-04-20 14:10:44 sshwarts Exp $
+// $Id: sse_pfp.cc,v 1.47 2008-04-29 21:47:16 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -85,16 +85,17 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTPI2PS_VpsQq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
-  BX_CPU_THIS_PTR prepareFPU2MMX();
 
   BxPackedMmxRegister op;
   BxPackedXmmRegister result;
 
   /* op is a register or memory reference */
   if (i->modC0()) {
+    BX_CPU_THIS_PTR prepareFPU2MMX();
     op = BX_READ_MMX_REG(i->rm());
   }
   else {
+    // do not cause transition to MMX state if no MMX register touched
     BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     MMXUQ(op) = read_virtual_qword(i->seg(), RMAddr(i));
@@ -123,16 +124,17 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTPI2PD_VpdQq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
-  BX_CPU_THIS_PTR prepareFPU2MMX();
 
   BxPackedMmxRegister op;
   BxPackedXmmRegister result;
 
   /* op is a register or memory reference */
   if (i->modC0()) {
+    BX_CPU_THIS_PTR prepareFPU2MMX();
     op = BX_READ_MMX_REG(i->rm());
   }
   else {
+    // do not cause transition to MMX state if no MMX register touched
     BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     MMXUQ(op) = read_virtual_qword(i->seg(), RMAddr(i));
