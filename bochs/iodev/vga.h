@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.h,v 1.60 2008-01-26 22:24:03 sshwarts Exp $
+// $Id: vga.h,v 1.61 2008-04-29 22:14:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -138,18 +138,18 @@ public:
   virtual ~bx_vga_c();
   virtual void   init(void);
   virtual void   reset(unsigned type);
-  BX_VGA_SMF bx_bool mem_read_handler(unsigned long addr, unsigned long len, void *data, void *param);
-  BX_VGA_SMF bx_bool mem_write_handler(unsigned long addr, unsigned long len, void *data, void *param);
-  virtual Bit8u  mem_read(Bit32u addr);
-  virtual void   mem_write(Bit32u addr, Bit8u value);
+  BX_VGA_SMF bx_bool mem_read_handler(bx_phy_address addr, unsigned len, void *data, void *param);
+  BX_VGA_SMF bx_bool mem_write_handler(bx_phy_address addr, unsigned len, void *data, void *param);
+  virtual Bit8u  mem_read(bx_phy_address addr);
+  virtual void   mem_write(bx_phy_address addr, Bit8u value);
   virtual void   trigger_timer(void *this_ptr);
   virtual void   dump_status(void);
   virtual void   register_state(void);
   virtual void   after_restore_state(void);
 
 #if BX_SUPPORT_VBE
-  BX_VGA_SMF Bit8u  vbe_mem_read(Bit32u addr) BX_CPP_AttrRegparmN(1);
-  BX_VGA_SMF void   vbe_mem_write(Bit32u addr, Bit8u value) BX_CPP_AttrRegparmN(2);
+  BX_VGA_SMF Bit8u  vbe_mem_read(bx_phy_address addr) BX_CPP_AttrRegparmN(1);
+  BX_VGA_SMF void   vbe_mem_write(bx_phy_address addr, Bit8u value) BX_CPP_AttrRegparmN(2);
 #endif
 
   virtual void   redraw_area(unsigned x0, unsigned y0,

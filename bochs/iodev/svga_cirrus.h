@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: svga_cirrus.h,v 1.14 2008-03-22 22:26:03 sshwarts Exp $
+// $Id: svga_cirrus.h,v 1.15 2008-04-29 22:14:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Copyright (c) 2004 Makoto Suzuki (suzu)
@@ -74,8 +74,8 @@ public:
   virtual void reset(unsigned type);
   virtual void redraw_area(unsigned x0, unsigned y0,
                            unsigned width, unsigned height);
-  virtual Bit8u mem_read(Bit32u addr);
-  virtual void mem_write(Bit32u addr, Bit8u value);
+  virtual Bit8u mem_read(bx_phy_address addr);
+  virtual void mem_write(bx_phy_address addr, Bit8u value);
   virtual void get_text_snapshot(Bit8u **text_snapshot,
                                  unsigned *txHeight, unsigned *txWidth);
   virtual void trigger_timer(void *this_ptr);
@@ -94,7 +94,7 @@ private:
 #if !BX_USE_CIRRUS_SMF
   Bit32u svga_read(Bit32u address, unsigned io_len);
   void   svga_write(Bit32u address, Bit32u value, unsigned io_len);
-#endif // !BX_USE_CIRRUS_SMF
+#endif
   BX_CIRRUS_SMF void mem_write_mode4and5_8bpp(Bit8u mode, Bit32u offset, Bit8u value);
   BX_CIRRUS_SMF void mem_write_mode4and5_16bpp(Bit8u mode, Bit32u offset, Bit8u value);
 
@@ -261,8 +261,8 @@ private:
 #if BX_SUPPORT_PCI
   BX_CIRRUS_SMF void svga_init_pcihandlers(void);
 
-  BX_CIRRUS_SMF bx_bool cirrus_mem_read_handler(unsigned long addr, unsigned long len, void *data, void *param);
-  BX_CIRRUS_SMF bx_bool cirrus_mem_write_handler(unsigned long addr, unsigned long len, void *data, void *param);
+  BX_CIRRUS_SMF bx_bool cirrus_mem_read_handler(bx_phy_address addr, unsigned len, void *data, void *param);
+  BX_CIRRUS_SMF bx_bool cirrus_mem_write_handler(bx_phy_address addr, unsigned len, void *data, void *param);
 
   Bit8u  pci_conf[256];
   Bit32u pci_memaddr;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pcidev.cc,v 1.14 2008-01-26 22:24:02 sshwarts Exp $
+// $Id: pcidev.cc,v 1.15 2008-04-29 22:14:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 /*
@@ -79,77 +79,77 @@ static void pcidev_sighandler(int param)
   DEV_pci_set_irq(pcidev->devfunc, pcidev->intpin, 1);
 }
 
-static bx_bool pcidev_mem_read_handler(unsigned long addr, unsigned long len, void *data, void *param)
+static bx_bool pcidev_mem_read_handler(bx_phy_address addr, unsigned len, void *data, void *param)
 {
-	struct region_struct *region = (struct region_struct *)param;
-	bx_pcidev_c *pcidev = region->pcidev;
-	int fd = pcidev->pcidev_fd;
-	int ret = -1;
+    struct region_struct *region = (struct region_struct *)param;
+    bx_pcidev_c *pcidev = region->pcidev;
+    int fd = pcidev->pcidev_fd;
+    int ret = -1;
 
-	if (fd == -1)
-		return false; /* we failed to handle the request, so let a default handler do it for us */
+    if (fd == -1)
+        return false; /* we failed to handle the request, so let a default handler do it for us */
 
-	BX_INFO(("Reading I/O memory at 0x%08x", (unsigned)addr));
-	struct pcidev_io_struct io;
-	io.address = addr + region->host_start - region->start;
-	switch(len) {
-		case 1:
-			ret = ioctl(fd, PCIDEV_IOCTL_READ_MEM_BYTE, &io);
-			*(Bit8u *)data = io.value;
-			break;
-		case 2:
-			ret = ioctl(fd, PCIDEV_IOCTL_READ_MEM_WORD, &io);
-			*(Bit16u *)data = io.value;
-			break;
-		case 4:
-			ret = ioctl(fd, PCIDEV_IOCTL_READ_MEM_DWORD, &io);
-			*(Bit32u *)data = io.value;
-			break;
-		default:
-			BX_ERROR(("Unsupported pcidev read mem operation"));
-			break;
-	}
-	if (ret == -1) {
-		BX_ERROR(("pcidev read mem error"));
-	}
-	return true; // ok, we handled the request
+    BX_INFO(("Reading I/O memory at 0x%08x", (unsigned)addr));
+    struct pcidev_io_struct io;
+    io.address = addr + region->host_start - region->start;
+    switch(len) {
+        case 1:
+            ret = ioctl(fd, PCIDEV_IOCTL_READ_MEM_BYTE, &io);
+            *(Bit8u *)data = io.value;
+            break;
+        case 2:
+            ret = ioctl(fd, PCIDEV_IOCTL_READ_MEM_WORD, &io);
+            *(Bit16u *)data = io.value;
+            break;
+        case 4:
+            ret = ioctl(fd, PCIDEV_IOCTL_READ_MEM_DWORD, &io);
+            *(Bit32u *)data = io.value;
+            break;
+        default:
+            BX_ERROR(("Unsupported pcidev read mem operation"));
+            break;
+    }
+    if (ret == -1) {
+        BX_ERROR(("pcidev read mem error"));
+    }
+    return true; // ok, we handled the request
 }
 
 
-static bx_bool pcidev_mem_write_handler(unsigned long addr, unsigned long len, void *data, void *param)
+static bx_bool pcidev_mem_write_handler(bx_phy_address addr, unsigned len, void *data, void *param)
 {
-	struct region_struct *region = (struct region_struct *)param;
-	bx_pcidev_c *pcidev = region->pcidev;
-	int fd = pcidev->pcidev_fd;
-	int ret = -1;
+    struct region_struct *region = (struct region_struct *)param;
+    bx_pcidev_c *pcidev = region->pcidev;
+    int fd = pcidev->pcidev_fd;
+    int ret = -1;
 
-	if (fd == -1)
-		return false; /* we failed to handle the request, so let a default handler do it for us */
+    if (fd == -1)
+        return false; /* we failed to handle the request, so let a default handler do it for us */
 
-	BX_INFO(("Writing I/O memory at 0x%08x", (unsigned)addr));
-	struct pcidev_io_struct io;
-	io.address = addr + region->host_start - region->start;
-	switch(len) {
-		case 1:
-			io.value = *(Bit8u *)data;
-			ret = ioctl(fd, PCIDEV_IOCTL_WRITE_MEM_BYTE, &io);
-			break;
-		case 2:
-			io.value = *(Bit16u *)data;
-			ret = ioctl(fd, PCIDEV_IOCTL_WRITE_MEM_WORD, &io);
-			break;
-		case 4:
-			io.value = *(Bit32u *)data;
-			ret = ioctl(fd, PCIDEV_IOCTL_WRITE_MEM_DWORD, &io);
-			break;
-		default:
-			BX_ERROR(("Unsupported pcidev write mem operation"));
-			break;
-	}
-	if (ret == -1) {
-		BX_ERROR(("pcidev write mem error"));
-	}
-	return true;
+    BX_INFO(("Writing I/O memory at 0x%08x", (unsigned)addr));
+    struct pcidev_io_struct io;
+    io.address = addr + region->host_start - region->start;
+    switch(len) {
+        case 1:
+            io.value = *(Bit8u *)data;
+            ret = ioctl(fd, PCIDEV_IOCTL_WRITE_MEM_BYTE, &io);
+            break;
+        case 2:
+            io.value = *(Bit16u *)data;
+            ret = ioctl(fd, PCIDEV_IOCTL_WRITE_MEM_WORD, &io);
+            break;
+        case 4:
+            io.value = *(Bit32u *)data;
+            ret = ioctl(fd, PCIDEV_IOCTL_WRITE_MEM_DWORD, &io);
+            break;
+        default:
+            BX_ERROR(("Unsupported pcidev write mem operation"));
+            break;
+    }
+    if (ret == -1) {
+        BX_ERROR(("pcidev write mem error"));
+    }
+    return true;
 }
 
 
@@ -195,7 +195,7 @@ void bx_pcidev_c::init(void)
     return;
   }
   BX_INFO(("vendor: %04x; device: %04x @ host %04x:%04x.%d", vendor, device,
-	(unsigned)find.bus, (unsigned)find.device, (unsigned)find.func));
+    (unsigned)find.bus, (unsigned)find.device, (unsigned)find.func));
 
   BX_PCIDEV_THIS devfunc = 0x00;
   DEV_register_pci_handlers(this, &BX_PCIDEV_THIS devfunc, BX_PLUGIN_PCIDEV,
@@ -293,7 +293,6 @@ Bit32u bx_pcidev_c::pci_read_handler(Bit8u address, unsigned io_len)
 
   return io.value;
 }
-
 
 // pci configuration space write callback handler
 void bx_pcidev_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len)
@@ -408,7 +407,7 @@ Bit32u bx_pcidev_c::read_handler(void *param, Bit32u address, unsigned io_len)
 
 Bit32u bx_pcidev_c::read(void *param, Bit32u address, unsigned io_len)
 {
-#endif  // !BX_USE_PCIDEV_SMF
+#endif
   struct region_struct *region = (struct region_struct *)param;
   int ret = -1;
 
@@ -420,19 +419,19 @@ Bit32u bx_pcidev_c::read(void *param, Bit32u address, unsigned io_len)
   // here we map the io address
   io.address = address + region->host_start - region->start;
   switch(io_len) {
-	case 1:
-  		ret = ioctl(fd, PCIDEV_IOCTL_READ_IO_BYTE, &io);
-		break;
-	case 2:
-  		ret = ioctl(fd, PCIDEV_IOCTL_READ_IO_WORD, &io);
-		break;
-	case 4:
-  		ret = ioctl(fd, PCIDEV_IOCTL_READ_IO_DWORD, &io);
-		break;
+    case 1:
+          ret = ioctl(fd, PCIDEV_IOCTL_READ_IO_BYTE, &io);
+        break;
+    case 2:
+          ret = ioctl(fd, PCIDEV_IOCTL_READ_IO_WORD, &io);
+        break;
+    case 4:
+          ret = ioctl(fd, PCIDEV_IOCTL_READ_IO_DWORD, &io);
+        break;
   }
   if (ret == -1) {
-	BX_ERROR(("pcidev read I/O error"));
-  	io.value = 0xffffffff;
+    BX_ERROR(("pcidev read I/O error"));
+    io.value = 0xffffffff;
   }
 
   return io.value;
@@ -447,9 +446,7 @@ void bx_pcidev_c::write_handler(void *param, Bit32u address, Bit32u value, unsig
 
 void bx_pcidev_c::write(void *param, Bit32u address, Bit32u value, unsigned io_len)
 {
-#else
-  //UNUSED(this_ptr);
-#endif  // !BX_USE_PCIDEV_SMF
+#endif
   struct region_struct *region = (struct region_struct *)param;
   int ret = -1;
 

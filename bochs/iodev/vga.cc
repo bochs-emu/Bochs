@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.151 2008-02-15 22:05:43 sshwarts Exp $
+// $Id: vga.cc,v 1.152 2008-04-29 22:14:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -140,7 +140,7 @@ void bx_vga_c::init(void)
   BX_VGA_THIS extension_checked = 0;
 #if !BX_SUPPORT_CLGD54XX
   BX_VGA_THIS init_iohandlers(read_handler,write_handler);
-#endif // !BX_SUPPORT_CLGD54XX
+#endif
 
   DEV_register_memory_handlers(theVga, mem_read_handler, mem_write_handler,
                                0xa0000, 0xbffff);
@@ -2199,11 +2199,9 @@ void bx_vga_c::update(void)
   }
 }
 
-bx_bool bx_vga_c::mem_read_handler(unsigned long addr, unsigned long len,
-                           void *data, void *param)
+bx_bool bx_vga_c::mem_read_handler(bx_phy_address addr, unsigned len, void *data, void *param)
 {
   Bit8u *data_ptr;
-
 #ifdef BX_LITTLE_ENDIAN
   data_ptr = (Bit8u *) data;
 #else // BX_BIG_ENDIAN
@@ -2221,7 +2219,7 @@ bx_bool bx_vga_c::mem_read_handler(unsigned long addr, unsigned long len,
   return 1;
 }
 
-Bit8u bx_vga_c::mem_read(Bit32u addr)
+Bit8u bx_vga_c::mem_read(bx_phy_address addr)
 {
   Bit32u offset;
   Bit8u *plane0, *plane1, *plane2, *plane3;
@@ -2230,11 +2228,11 @@ Bit8u bx_vga_c::mem_read(Bit32u addr)
   // if in a vbe enabled mode, read from the vbe_memory
   if ((BX_VGA_THIS s.vbe_enabled) && (BX_VGA_THIS s.vbe_bpp != VBE_DISPI_BPP_4))
   {
-        return vbe_mem_read(addr);
+    return vbe_mem_read(addr);
   }
   else if (addr >= VBE_DISPI_LFB_PHYSICAL_ADDRESS)
   {
-        return 0xff;
+    return 0xff;
   }
 #endif
 
@@ -2337,11 +2335,9 @@ Bit8u bx_vga_c::mem_read(Bit32u addr)
   }
 }
 
-bx_bool bx_vga_c::mem_write_handler(unsigned long addr, unsigned long len,
-                            void *data, void *param)
+bx_bool bx_vga_c::mem_write_handler(bx_phy_address addr, unsigned len, void *data, void *param)
 {
   Bit8u *data_ptr;
-
 #ifdef BX_LITTLE_ENDIAN
   data_ptr = (Bit8u *) data;
 #else // BX_BIG_ENDIAN
@@ -2359,7 +2355,7 @@ bx_bool bx_vga_c::mem_write_handler(unsigned long addr, unsigned long len,
   return 1;
 }
 
-void bx_vga_c::mem_write(Bit32u addr, Bit8u value)
+void bx_vga_c::mem_write(bx_phy_address addr, Bit8u value)
 {
   Bit32u offset;
   Bit8u new_val[4];
@@ -2951,7 +2947,7 @@ void bx_vga_c::redraw_area(unsigned x0, unsigned y0, unsigned width,
 
 #if BX_SUPPORT_VBE
   Bit8u  BX_CPP_AttrRegparmN(1)
-bx_vga_c::vbe_mem_read(Bit32u addr)
+bx_vga_c::vbe_mem_read(bx_phy_address addr)
 {
   Bit32u offset;
 
@@ -2974,7 +2970,7 @@ bx_vga_c::vbe_mem_read(Bit32u addr)
 }
 
   void BX_CPP_AttrRegparmN(2)
-bx_vga_c::vbe_mem_write(Bit32u addr, Bit8u value)
+bx_vga_c::vbe_mem_write(bx_phy_address addr, Bit8u value)
 {
   Bit32u offset;
   unsigned x_tileno, y_tileno;
@@ -3067,78 +3063,55 @@ Bit32u bx_vga_c::vbe_read(Bit32u address, unsigned io_len)
     switch (BX_VGA_THIS s.vbe_curindex)
     {
       case VBE_DISPI_INDEX_ID: // Display Interface ID check
-      {
         return BX_VGA_THIS s.vbe_cur_dispi;
-      } break;
 
       case VBE_DISPI_INDEX_XRES: // x resolution
-      {
         if (BX_VGA_THIS s.vbe_get_capabilities) {
           return BX_VGA_THIS s.vbe_max_xres;
         } else {
           return BX_VGA_THIS s.vbe_xres;
         }
-      } break;
 
       case VBE_DISPI_INDEX_YRES: // y resolution
-      {
         if (BX_VGA_THIS s.vbe_get_capabilities) {
           return BX_VGA_THIS s.vbe_max_yres;
         } else {
           return BX_VGA_THIS s.vbe_yres;
         }
-      } break;
 
       case VBE_DISPI_INDEX_BPP: // bpp
-      {
         if (BX_VGA_THIS s.vbe_get_capabilities) {
           return BX_VGA_THIS s.vbe_max_bpp;
         } else {
           return BX_VGA_THIS s.vbe_bpp;
         }
-      } break;
 
       case VBE_DISPI_INDEX_ENABLE: // vbe enabled
-      {
         retval = BX_VGA_THIS s.vbe_enabled;
 	if (BX_VGA_THIS s.vbe_get_capabilities)
           retval |= VBE_DISPI_GETCAPS;
 	if (BX_VGA_THIS s.vbe_8bit_dac)
           retval |= VBE_DISPI_8BIT_DAC;
         return retval;
-      } break;
 
       case VBE_DISPI_INDEX_BANK: // current bank
-      {
         return BX_VGA_THIS s.vbe_bank;
-      } break;
 
       case VBE_DISPI_INDEX_X_OFFSET:
-      {
       	return BX_VGA_THIS s.vbe_offset_x;
-      } break;
 
       case VBE_DISPI_INDEX_Y_OFFSET:
-      {
       	return BX_VGA_THIS s.vbe_offset_y;
-      } break;
 
       case VBE_DISPI_INDEX_VIRT_WIDTH:
-      {
       	return BX_VGA_THIS s.vbe_virtual_xres;
-      	
-      } break;
 
       case VBE_DISPI_INDEX_VIRT_HEIGHT:
-      {
       	return BX_VGA_THIS s.vbe_virtual_yres;      	
-      } break;
-
 
       default:
-      {
         BX_PANIC(("VBE unknown data read index 0x%x",BX_VGA_THIS s.vbe_curindex));
-      } break;
+        break;
     }
   }
   BX_PANIC(("VBE_read shouldn't reach this"));

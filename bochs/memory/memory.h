@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: memory.h,v 1.48 2008-04-17 20:20:43 sshwarts Exp $
+// $Id: memory.h,v 1.49 2008-04-29 22:14:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -48,7 +48,7 @@ class BX_CPU_C;
 #define BIOS_MASK (BIOSROMSZ-1)
 #define EXROM_MASK (EXROMSIZE-1)
 
-typedef bx_bool (*memory_handler_t)(unsigned long addr, unsigned long len, void *data, void *param);
+typedef bx_bool (*memory_handler_t)(bx_phy_address addr, unsigned len, void *data, void *param);
 
 struct memory_handler_struct {
 	struct memory_handler_struct *next;

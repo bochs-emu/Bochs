@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: svga_cirrus.cc,v 1.43 2008-03-22 22:26:03 sshwarts Exp $
+// $Id: svga_cirrus.cc,v 1.44 2008-04-29 22:14:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Copyright (c) 2004 Makoto Suzuki (suzu)
@@ -536,11 +536,10 @@ void bx_svga_cirrus_c::mem_write_mode4and5_16bpp(Bit8u mode, Bit32u offset, Bit8
 }
 
 #if BX_SUPPORT_PCI
-bx_bool bx_svga_cirrus_c::cirrus_mem_read_handler(unsigned long addr, unsigned long len,
+bx_bool bx_svga_cirrus_c::cirrus_mem_read_handler(bx_phy_address addr, unsigned len,
                                         void *data, void *param)
 {
   Bit8u *data_ptr;
-
 #ifdef BX_LITTLE_ENDIAN
   data_ptr = (Bit8u *) data;
 #else // BX_BIG_ENDIAN
@@ -559,7 +558,7 @@ bx_bool bx_svga_cirrus_c::cirrus_mem_read_handler(unsigned long addr, unsigned l
 }
 #endif
 
-Bit8u bx_svga_cirrus_c::mem_read(Bit32u addr)
+Bit8u bx_svga_cirrus_c::mem_read(bx_phy_address addr)
 {
   if ((BX_CIRRUS_THIS sequencer.reg[0x07] & 0x01) == CIRRUS_SR7_BPP_VGA) {
     return BX_CIRRUS_THIS bx_vga_c::mem_read(addr);
@@ -665,11 +664,10 @@ Bit8u bx_svga_cirrus_c::mem_read(Bit32u addr)
 }
 
 #if BX_SUPPORT_PCI
-bx_bool bx_svga_cirrus_c::cirrus_mem_write_handler(unsigned long addr, unsigned long len,
+bx_bool bx_svga_cirrus_c::cirrus_mem_write_handler(bx_phy_address addr, unsigned len,
                                          void *data, void *param)
 {
   Bit8u *data_ptr;
-
 #ifdef BX_LITTLE_ENDIAN
   data_ptr = (Bit8u *) data;
 #else // BX_BIG_ENDIAN
@@ -688,7 +686,7 @@ bx_bool bx_svga_cirrus_c::cirrus_mem_write_handler(unsigned long addr, unsigned 
 }
 #endif
 
-void bx_svga_cirrus_c::mem_write(Bit32u addr, Bit8u value)
+void bx_svga_cirrus_c::mem_write(bx_phy_address addr, Bit8u value)
 {
   if ((BX_CIRRUS_THIS sequencer.reg[0x07] & 0x01) == CIRRUS_SR7_BPP_VGA) {
     BX_CIRRUS_THIS bx_vga_c::mem_write(addr,value);
