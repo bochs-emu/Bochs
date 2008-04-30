@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.466 2008-04-28 18:18:08 sshwarts Exp $
+// $Id: cpu.h,v 1.467 2008-04-30 21:32:33 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -3593,6 +3593,7 @@ IMPLEMENT_EFLAG_ACCESSOR   (TF,   8)
 #endif
 
 #define BxGroup1          BxGroupN
+#define BxGroup1A         BxGroupN
 #define BxGroup2          BxGroupN
 #define BxGroup3          BxGroupN
 #define BxGroup4          BxGroupN
