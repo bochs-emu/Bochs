@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack16.cc,v 1.38 2008-04-23 17:25:21 sshwarts Exp $
+// $Id: stack16.cc,v 1.39 2008-04-30 20:41:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -203,7 +203,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUSHAD16(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::POPAD16(bxInstruction_c *i)
 {
-  Bit16u di, si, bp, bx, dx, cx, ax;
+  Bit16u di, si, bp, bx, dx, cx, ax, dummy;
 
   if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b)
   {
@@ -211,6 +211,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::POPAD16(bxInstruction_c *i)
     di = read_virtual_word(BX_SEG_REG_SS, (Bit32u)(temp_ESP +  0));
     si = read_virtual_word(BX_SEG_REG_SS, (Bit32u)(temp_ESP +  2));
     bp = read_virtual_word(BX_SEG_REG_SS, (Bit32u)(temp_ESP +  4));
+    dummy = read_virtual_word(BX_SEG_REG_SS, (Bit32u)(temp_ESP +  6));
     bx = read_virtual_word(BX_SEG_REG_SS, (Bit32u)(temp_ESP +  8));
     dx = read_virtual_word(BX_SEG_REG_SS, (Bit32u)(temp_ESP + 10));
     cx = read_virtual_word(BX_SEG_REG_SS, (Bit32u)(temp_ESP + 12));
@@ -223,6 +224,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::POPAD16(bxInstruction_c *i)
     di = read_virtual_word(BX_SEG_REG_SS, (Bit16u)(temp_SP +  0));
     si = read_virtual_word(BX_SEG_REG_SS, (Bit16u)(temp_SP +  2));
     bp = read_virtual_word(BX_SEG_REG_SS, (Bit16u)(temp_SP +  4));
+    dummy = read_virtual_word(BX_SEG_REG_SS, (Bit16u)(temp_SP +  6));
     bx = read_virtual_word(BX_SEG_REG_SS, (Bit16u)(temp_SP +  8));
     dx = read_virtual_word(BX_SEG_REG_SS, (Bit16u)(temp_SP + 10));
     cx = read_virtual_word(BX_SEG_REG_SS, (Bit16u)(temp_SP + 12));
