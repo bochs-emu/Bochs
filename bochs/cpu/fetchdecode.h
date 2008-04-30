@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.h,v 1.65 2008-04-28 18:18:08 sshwarts Exp $
+// $Id: fetchdecode.h,v 1.66 2008-04-30 21:07:12 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005 Stanislav Shwartsman
@@ -1444,7 +1444,7 @@ static const BxOpcodeInfo_t BxOpcodeGroupSSE_0fc4[4] = {
   /* F3 */ { 0, BX_IA_ERROR }
 };
 
-static const BxOpcodeInfo_t BxOpcodeGroupSSE_0fc5[4] = {
+static const BxOpcodeInfo_t BxOpcodeGroupSSE_0fc5R[4] = {
   /* -- */ { BxImmediate_Ib, BX_IA_PEXTRW_GdPqIb   },
   /* 66 */ { BxImmediate_Ib, BX_IA_PEXTRW_GdUdqIb },
   /* F2 */ { 0, BX_IA_ERROR },
@@ -3298,7 +3298,7 @@ static const BxOpcodeInfo_t BxOpcodeInfoG6[8] = {
 // ----------------------------------------------------
 //  MOD <> 11  7   --- |     INVLPG      |   INVLPG
 //  MOD == 11  7    0  |      #UD        |   SWAPGS
-//  MOD == 11  7    1  |      #UD        |   RDTSCP
+//  MOD == 11  7    1  |     RDTSCP      |   RDTSCP
 //  MOD == 11  7   2-7 |      #UD        |    #UD
 
 static const BxOpcodeInfo_t opcodesGroupRmMONITOR[8] = {
@@ -3323,6 +3323,19 @@ static const BxOpcodeInfo_t opcodesGroupRmXGETSET[8] = {
   /* 7 */ { 0, BX_IA_ERROR }
 };
 
+#if BX_SUPPORT_X86_64
+static const BxOpcodeInfo_t opcodesGroupRmINVLPG[8] = {
+  /* 0 */ { 0, BX_IA_ERROR },
+  /* 1 */ { 0, BX_IA_RDTSCP },
+  /* 2 */ { 0, BX_IA_ERROR },
+  /* 3 */ { 0, BX_IA_ERROR },
+  /* 4 */ { 0, BX_IA_ERROR },
+  /* 5 */ { 0, BX_IA_ERROR },
+  /* 6 */ { 0, BX_IA_ERROR },
+  /* 7 */ { 0, BX_IA_ERROR }
+};
+#endif
+
 static const BxOpcodeInfo_t BxOpcodeInfoG7R[8] = {
   /* 0 */ { 0, BX_IA_ERROR },
   /* 1 */ { BxRMGroup, BX_IA_ERROR, opcodesGroupRmMONITOR },
@@ -3331,7 +3344,11 @@ static const BxOpcodeInfo_t BxOpcodeInfoG7R[8] = {
   /* 4 */ { 0, BX_IA_SMSW_EwR },
   /* 5 */ { 0, BX_IA_ERROR },
   /* 6 */ { BxTraceEnd, BX_IA_LMSW_Ew },
+#if BX_SUPPORT_X86_64
+  /* 7 */ { BxRMGroup, BX_IA_ERROR, opcodesGroupRmINVLPG }
+#else
   /* 7 */ { 0, BX_IA_ERROR }
+#endif
 };
 
 static const BxOpcodeInfo_t BxOpcodeInfoG7M[8] = {
