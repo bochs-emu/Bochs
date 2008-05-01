@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: misc_mem.cc,v 1.112 2008-04-17 20:20:43 sshwarts Exp $
+// $Id: misc_mem.cc,v 1.113 2008-05-01 20:28:36 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -34,6 +34,7 @@
 #define LOG_THIS BX_MEM(0)->
 
 #define BX_MEM_VECTOR_ALIGN 4096
+#define BX_MEM_HANDLERS     4096 /* one per megabyte */
 
 #if BX_PROVIDE_CPU_MEMORY
 
@@ -75,7 +76,7 @@ void BX_MEM_C::init_memory(Bit32u memsize)
 {
   unsigned idx;
 
-  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.112 2008-04-17 20:20:43 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.113 2008-05-01 20:28:36 sshwarts Exp $"));
 
   if (BX_MEM_THIS actual_vector != NULL) {
     BX_INFO (("freeing existing memory vector"));
@@ -88,7 +89,7 @@ void BX_MEM_C::init_memory(Bit32u memsize)
 	BX_MEM_THIS actual_vector, BX_MEM_THIS vector));
 
   BX_MEM_THIS len  = memsize;
-  BX_MEM_THIS memory_handlers = new struct memory_handler_struct *[4096];
+  BX_MEM_THIS memory_handlers = new struct memory_handler_struct *[BX_MEM_HANDLERS];
   BX_MEM_THIS rom = &BX_MEM_THIS vector[memsize];
   BX_MEM_THIS bogus = &BX_MEM_THIS vector[memsize + BIOSROMSZ + EXROMSIZE];
 #if BX_DEBUGGER
@@ -97,7 +98,7 @@ void BX_MEM_C::init_memory(Bit32u memsize)
   memset(BX_MEM_THIS dbg_dirty_pages, 0, pages);
 #endif
   memset(BX_MEM_THIS rom, 0xff, BIOSROMSZ + EXROMSIZE + 4096);
-  for (idx = 0; idx < 4096; idx++)
+  for (idx = 0; idx < BX_MEM_HANDLERS; idx++)
     BX_MEM_THIS memory_handlers[idx] = NULL;
   for (idx = 0; idx < 65; idx++)
     BX_MEM_THIS rom_present[idx] = 0;
@@ -146,7 +147,7 @@ void BX_MEM_C::cleanup_memory()
     BX_MEM_THIS actual_vector = NULL;
     BX_MEM_THIS vector = NULL;
     if (BX_MEM_THIS memory_handlers != NULL) {
-      for (idx = 0; idx < 4096; idx++) {
+      for (idx = 0; idx < BX_MEM_HANDLERS; idx++) {
         struct memory_handler_struct *memory_handler = BX_MEM_THIS memory_handlers[idx];
         struct memory_handler_struct *prev = NULL;
         while (memory_handler) {

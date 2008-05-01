@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: memory.h,v 1.50 2008-05-01 20:08:37 sshwarts Exp $
+// $Id: memory.h,v 1.51 2008-05-01 20:28:36 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -76,7 +76,9 @@ private:
   Bit32u   n_monitors;
 #endif
 
+  Bit32u  len;
   Bit8u   *actual_vector;
+  Bit8u   *vector;   // aligned correctly
   Bit8u   *rom;      // 512k BIOS rom space + 128k expansion rom space
   Bit8u   *bogus;    // 4k for unexisting memory
 
@@ -85,12 +87,10 @@ public:
   Bit8u   *dbg_dirty_pages;
 #endif
 
-  Bit32u  len;
-  Bit8u   *vector;   // aligned correctly
-
   BX_MEM_C();
  ~BX_MEM_C();
 
+  BX_MEM_SMF Bit8u*  get_vector(void);
   BX_MEM_SMF Bit8u*  get_vector(bx_phy_address addr);
   BX_MEM_SMF void    init_memory(Bit32u memsize);
   BX_MEM_SMF void    cleanup_memory(void);
@@ -132,6 +132,11 @@ public:
 #if BX_PROVIDE_CPU_MEMORY
 BOCHSAPI extern BX_MEM_C bx_mem;
 #endif
+
+BX_CPP_INLINE Bit8u* BX_MEM_C::get_vector(void)
+{
+  return (BX_MEM_THIS vector);
+}
 
 BX_CPP_INLINE Bit8u* BX_MEM_C::get_vector(bx_phy_address addr)
 {
