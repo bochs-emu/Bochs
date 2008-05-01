@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodebug.cc,v 1.25 2008-02-15 22:05:42 sshwarts Exp $
+// $Id: iodebug.cc,v 1.26 2008-05-01 20:46:58 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #include "bochs.h"
@@ -11,13 +11,14 @@
 
 bx_iodebug_c bx_iodebug;
 
-  struct bx_iodebug_s_type {
-    bx_bool enabled;
-    unsigned register_select;
-    Bit32u registers[2];
-    Bit32u monitored_mem_areas_start[BX_IODEBUG_MAX_AREAS];
-    Bit32u monitored_mem_areas_end[BX_IODEBUG_MAX_AREAS];
-  } bx_iodebug_s;
+struct bx_iodebug_s_type {
+  bx_bool enabled;
+  unsigned register_select;
+  Bit32u registers[2];
+  bx_phy_address monitored_mem_areas_start[BX_IODEBUG_MAX_AREAS];
+  bx_phy_address monitored_mem_areas_end[BX_IODEBUG_MAX_AREAS];
+} bx_iodebug_s;
+
 
 bx_iodebug_c::bx_iodebug_c()
 {
@@ -60,11 +61,11 @@ void bx_iodebug_c::write_handler(void *this_ptr, Bit32u addr, Bit32u dvalue, uns
 
 void bx_iodebug_c::write(Bit32u addr, Bit32u dvalue, unsigned io_len)
 {
-//  fprintf(stderr, "IODEBUG addr: %4x\tdvalue: %8x\tio_len: %8x\n", (unsigned) addr, (unsigned) dvalue, io_len);
+//fprintf(stderr, "IODEBUG addr: %4x\tdvalue: %8x\tio_len: %8x\n", (unsigned) addr, (unsigned) dvalue, io_len);
 
   if (addr == 0x8A01)
   {
-      bx_iodebug_s.registers[bx_iodebug_s.register_select] =
+    bx_iodebug_s.registers[bx_iodebug_s.register_select] =
         (bx_iodebug_s.registers[bx_iodebug_s.register_select] << 16) +
 	(dvalue & 0xFFFF);
   }
@@ -141,7 +142,7 @@ void bx_iodebug_c::write(Bit32u addr, Bit32u dvalue, unsigned io_len)
 
 
 // Static function
-void bx_iodebug_c::mem_write(BX_CPU_C *cpu, Bit32u addr, unsigned len, void *data)
+void bx_iodebug_c::mem_write(BX_CPU_C *cpu, bx_phy_address addr, unsigned len, void *data)
 {
   if(! bx_iodebug_s.enabled) return;
 
@@ -204,7 +205,7 @@ void bx_iodebug_c::mem_write(BX_CPU_C *cpu, Bit32u addr, unsigned len, void *dat
   }
 }
 
-void bx_iodebug_c::mem_read(BX_CPU_C *cpu, Bit32u addr, unsigned len, void *data)
+void bx_iodebug_c::mem_read(BX_CPU_C *cpu, bx_phy_address addr, unsigned len, void *data)
 {
   if(! bx_iodebug_s.enabled) return;
 
@@ -267,12 +268,12 @@ void bx_iodebug_c::mem_read(BX_CPU_C *cpu, Bit32u addr, unsigned len, void *data
   }
 }
 
-unsigned bx_iodebug_c::range_test(Bit32u addr, unsigned len)
+unsigned bx_iodebug_c::range_test(bx_phy_address addr, unsigned len)
 {
   for(unsigned i=0;i<BX_IODEBUG_MAX_AREAS;i++)
   {
-    if((bx_iodebug_s.monitored_mem_areas_start[i]!=0) ||
-       (bx_iodebug_s.monitored_mem_areas_end[i]!=0))
+    if(bx_iodebug_s.monitored_mem_areas_start[i] != 0 ||
+       bx_iodebug_s.monitored_mem_areas_end[i] != 0)
     {
       if((Bit32u)(addr+len-1) < bx_iodebug_s.monitored_mem_areas_start[i])
         continue;
@@ -287,8 +288,7 @@ unsigned bx_iodebug_c::range_test(Bit32u addr, unsigned len)
   return(0);
 }
 
-
-void bx_iodebug_c::add_range(Bit32u addr_start, Bit32u addr_end)
+void bx_iodebug_c::add_range(bx_phy_address addr_start, bx_phy_address addr_end)
 {
   for(unsigned i=0;i<BX_IODEBUG_MAX_AREAS;i++)
   {
@@ -301,7 +301,7 @@ void bx_iodebug_c::add_range(Bit32u addr_start, Bit32u addr_end)
 	return;
     }
   }
-//  fprintf(stderr, "IODEBUG unable to register memory range, all slots taken\n");
+//fprintf(stderr, "IODEBUG unable to register memory range, all slots taken\n");
 }
 
 #endif /* if BX_SUPPORT_IODEBUG */

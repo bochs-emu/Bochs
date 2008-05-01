@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodebug.h,v 1.10 2008-02-15 22:05:42 sshwarts Exp $
+// $Id: iodebug.h,v 1.11 2008-05-01 20:46:58 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 #ifndef _BX_IODEBUG_H
@@ -17,16 +17,16 @@ public:
   virtual ~bx_iodebug_c() {}
   virtual void init(void);
   virtual void reset (unsigned type) {}
-  static void mem_write(BX_CPU_C *cpu, Bit32u addr, unsigned len, void *data);
-  static void mem_read (BX_CPU_C *cpu, Bit32u addr, unsigned len, void *data);
+  static void mem_write(BX_CPU_C *cpu, bx_phy_address addr, unsigned len, void *data);
+  static void mem_read(BX_CPU_C *cpu, bx_phy_addressu addr, unsigned len, void *data);
 
 private:
   static Bit32u read_handler(void *this_ptr, Bit32u address, unsigned io_len);
   static void write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len);
   Bit32u read(Bit32u addr, unsigned io_len);
   void write(Bit32u addr, Bit32u dvalue, unsigned io_len);
-  static unsigned range_test(Bit32u addr, unsigned len);
-  static void add_range(Bit32u addr_start, Bit32u addr_end);
+  static unsigned range_test(bx_phy_address addr, unsigned len);
+  static void add_range(bx_phy_address addr_start, bx_phy_address addr_end);
 };
 
 extern bx_iodebug_c bx_iodebug;
