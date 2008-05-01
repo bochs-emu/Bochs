@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: extdb.cc,v 1.28 2008-04-29 05:12:21 sshwarts Exp $
+// $Id: extdb.cc,v 1.29 2008-05-01 20:08:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #include "bochs.h"
@@ -109,7 +109,7 @@ void bx_external_debugger(BX_CPU_C *cpu)
      }
      if (debug_loaded == 2) {
        DEV_vga_refresh();
-       call_debugger(&regs,BX_MEM(0)->vector,BX_MEM(0)->len);
+       call_debugger(&regs,BX_MEM(0)->vector,BX_MEM(0)->get_memory_len());
      }
 }
 

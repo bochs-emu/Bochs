@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci_ide.cc,v 1.31 2008-01-26 22:24:02 sshwarts Exp $
+// $Id: pci_ide.cc,v 1.32 2008-05-01 20:08:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -239,7 +239,7 @@ void bx_pci_ide_c::timer()
   Bit8u channel;
   Bit32u size, sector_size = 0;
   struct {
-    Bit32u addr;
+    bx_phy_address addr;
     Bit32u size;
   } prd;
 

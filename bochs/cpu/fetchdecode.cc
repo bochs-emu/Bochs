@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.187 2008-04-30 21:32:33 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.188 2008-05-01 20:08:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -101,15 +101,26 @@ static const bx_bool BxOpcodeHasModrm32[512] = {
  *  presence or absence of the LOCK prefix.
  */
 
-static BxExecutePtr_tR Resolve16Rm[8] = {
-  &BX_CPU_C::BxResolve16Rm0,
-  &BX_CPU_C::BxResolve16Rm1,
-  &BX_CPU_C::BxResolve16Rm2,
-  &BX_CPU_C::BxResolve16Rm3,
-  &BX_CPU_C::BxResolve16Rm4,
-  &BX_CPU_C::BxResolve16Rm5,
-  &BX_CPU_C::BxResolve16Rm6,
-  &BX_CPU_C::BxResolve16Rm7
+static unsigned Resolve16BaseReg[8] = {
+  BX_16BIT_REG_BX,
+  BX_16BIT_REG_BX,
+  BX_16BIT_REG_BP,
+  BX_16BIT_REG_BP,
+  BX_16BIT_REG_SI,
+  BX_16BIT_REG_DI,
+  BX_16BIT_REG_BP,
+  BX_16BIT_REG_BX
+};
+
+static unsigned Resolve16IndexReg[8] = {
+  BX_16BIT_REG_SI,
+  BX_16BIT_REG_DI,
+  BX_16BIT_REG_SI,
+  BX_16BIT_REG_DI,
+  BX_NIL_REGISTER,
+  BX_NIL_REGISTER,
+  BX_NIL_REGISTER,
+  BX_NIL_REGISTER
 };
 
 // decoding instructions; accessing seg reg's by index
@@ -2691,7 +2702,9 @@ get_8bit_displ:
     }
     else {
       // 16-bit addressing modes, mod==11b handled above
-      i->ResolveModrm = Resolve16Rm[rm];
+      i->ResolveModrm = &BX_CPU_C::BxResolve16BaseIndex;
+      i->setSibBase(Resolve16BaseReg[rm]);
+      i->setSibIndex(Resolve16IndexReg[rm]);
       if (mod == 0x00) { // mod == 00b
         if (BX_NULL_SEG_REG(i->seg()))
           i->setSeg(sreg_mod00_rm16[rm]);

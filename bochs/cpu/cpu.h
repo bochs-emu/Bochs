@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.467 2008-04-30 21:32:33 sshwarts Exp $
+// $Id: cpu.h,v 1.468 2008-05-01 20:08:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2737,19 +2737,9 @@ public: // for now...
   BX_SMF void BxError(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
   BX_SMF void BxResolve16Disp(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-
-  BX_SMF void BxResolve16Rm0(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void BxResolve16Rm1(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void BxResolve16Rm2(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void BxResolve16Rm3(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void BxResolve16Rm4(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void BxResolve16Rm5(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void BxResolve16Rm6(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void BxResolve16Rm7(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-
+  BX_SMF void BxResolve16BaseIndex(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void BxResolve32Base(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void BxResolve32BaseIndex(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-
 #if BX_SUPPORT_X86_64
   BX_SMF void BxResolve64Base(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void BxResolve64BaseIndex(bxInstruction_c *) BX_CPP_AttrRegparmN(1);

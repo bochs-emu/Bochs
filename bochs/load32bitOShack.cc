@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: load32bitOShack.cc,v 1.29 2008-04-29 22:14:23 sshwarts Exp $
+// $Id: load32bitOShack.cc,v 1.30 2008-05-01 20:08:36 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -151,7 +151,7 @@ static void bx_load_linux_setup_params(Bit32u initrd_start, Bit32u initrd_size)
   params->orig_video_ega_bx = 3;
 
   /* Memory size (total mem - 1MB, in KB) */
-  params->memory_size_ext = (BX_MEM(0)->len/(1024*1024) - 1) * 1024;
+  params->memory_size_ext = (BX_MEM(0)->get_memory_len()/(1024*1024) - 1) * 1024;
 
   /* Boot parameters */
   params->loader_type = 1;
@@ -285,7 +285,7 @@ bx_load_kernel_image(char *path, Bit32u paddr)
   size = (unsigned long) stat_buf.st_size;
   page_size = ((Bit32u)size + 0xfff) & ~0xfff;
 
-  if ((paddr + size) > BX_MEM(0)->len) {
+  if ((paddr + size) > BX_MEM(0)->get_memory_len()) {
     BX_INFO(("load_kernel_image: address range > physical memsize!"));
     BX_EXIT(1);
   }

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: memory.h,v 1.49 2008-04-29 22:14:23 sshwarts Exp $
+// $Id: memory.h,v 1.50 2008-05-01 20:08:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -76,15 +76,17 @@ private:
   Bit32u   n_monitors;
 #endif
 
-public:
   Bit8u   *actual_vector;
-  Bit8u   *vector;   // aligned correctly
-  Bit32u  len;
   Bit8u   *rom;      // 512k BIOS rom space + 128k expansion rom space
   Bit8u   *bogus;    // 4k for unexisting memory
+
+public:
 #if BX_DEBUGGER
   Bit8u   *dbg_dirty_pages;
 #endif
+
+  Bit32u  len;
+  Bit8u   *vector;   // aligned correctly
 
   BX_MEM_C();
  ~BX_MEM_C();
@@ -115,12 +117,13 @@ public:
   BX_MEM_SMF bx_bool unregisterMemoryHandlers(memory_handler_t read_handler, memory_handler_t write_handler,
 		  bx_phy_address begin_addr, bx_phy_address end_addr);
   BX_MEM_SMF Bit32u  get_num_allocated_pages(void);
+  BX_MEM_SMF Bit32u  get_memory_len(void);
 
 #if BX_SUPPORT_MONITOR_MWAIT
-  void    set_monitor(unsigned cpu);
-  void    clear_monitor(unsigned cpu);
-  bx_bool is_monitor(bx_phy_address begin_addr, unsigned len);
-  void    check_monitor(bx_phy_address addr, unsigned len);
+  BX_MEM_SMF void    set_monitor(unsigned cpu);
+  BX_MEM_SMF void    clear_monitor(unsigned cpu);
+  BX_MEM_SMF bx_bool is_monitor(bx_phy_address begin_addr, unsigned len);
+  BX_MEM_SMF void    check_monitor(bx_phy_address addr, unsigned len);
 #endif
 
   BX_MEM_SMF void register_state(void);
@@ -133,6 +136,11 @@ BOCHSAPI extern BX_MEM_C bx_mem;
 BX_CPP_INLINE Bit8u* BX_MEM_C::get_vector(bx_phy_address addr)
 {
   return (BX_MEM_THIS vector + addr);
+}
+
+BX_CPP_INLINE Bit32u BX_MEM_C::get_memory_len(void)
+{
+  return(BX_MEM_THIS len);
 }
 
 BX_CPP_INLINE Bit32u BX_MEM_C::get_memory_in_k(void)
