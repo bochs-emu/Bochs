@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: parser.y,v 1.28 2008-04-26 18:58:26 sshwarts Exp $
+// $Id: parser.y,v 1.29 2008-05-01 19:10:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 %{
@@ -55,7 +55,6 @@
 %token <sval> BX_TOKEN_FPU
 %token <sval> BX_TOKEN_SSE
 %token <sval> BX_TOKEN_MMX
-%token <sval> BX_TOKEN_ALL
 %token <sval> BX_TOKEN_IDT
 %token <sval> BX_TOKEN_IVT
 %token <sval> BX_TOKEN_GDT
@@ -149,6 +148,7 @@ command:
     | mmx_regs_command
     | sse_regs_command
     | segment_regs_command
+    | control_regs_command
     | blist_command
     | slist_command
     | delete_command
@@ -527,27 +527,6 @@ info_command:
         bx_dbg_info_bpoints_command();
         free($1); free($2);
       }
-    | BX_TOKEN_INFO BX_TOKEN_REGISTERS '\n'
-      {
-        bx_dbg_info_registers_command(BX_INFO_GENERAL_PURPOSE_REGS);
-        free($1); free($2);
-      }
-    | BX_TOKEN_INFO BX_TOKEN_FPU '\n'
-      {
-        bx_dbg_info_registers_command(BX_INFO_FPU_REGS);
-        free($1); free($2);
-      }
-    | BX_TOKEN_INFO BX_TOKEN_MMX '\n'
-      {
-        bx_dbg_info_registers_command(BX_INFO_MMX_REGS);
-        free($1); free($2);
-      }
-    | BX_TOKEN_INFO BX_TOKEN_SSE '\n'
-      {
-        bx_dbg_info_registers_command(BX_INFO_SSE_REGS);
-        free($1); free($2);
-      }
-    | BX_TOKEN_INFO BX_TOKEN_ALL '\n'
     | BX_TOKEN_INFO BX_TOKEN_CPU '\n'
       {
         bx_dbg_info_registers_command(BX_INFO_GENERAL_PURPOSE_REGS | BX_INFO_FPU_REGS | BX_INFO_SSE_REGS);
@@ -607,16 +586,6 @@ info_command:
       {
         bx_dbg_info_symbols_command($3);
         free($1); free($2); free($3);
-      }
-    | BX_TOKEN_INFO BX_TOKEN_CONTROL_REGS '\n'
-      {
-        bx_dbg_info_control_regs_command();
-        free($1); free($2);
-      }
-    | BX_TOKEN_INFO BX_TOKEN_SEGMENT_REGS '\n'
-      {
-        bx_dbg_info_segment_regs_command();
-        free($1); free($2);
       }
     | BX_TOKEN_INFO BX_TOKEN_NE2000 '\n'
       {
@@ -690,6 +659,14 @@ segment_regs_command:
       BX_TOKEN_SEGMENT_REGS '\n'
       {
         bx_dbg_info_segment_regs_command();
+        free($1);
+      }
+    ;
+
+control_regs_command:
+      BX_TOKEN_CONTROL_REGS '\n'
+      {
+        bx_dbg_info_control_regs_command();
         free($1);
       }
     ;
@@ -1001,22 +978,27 @@ help_command:
        }
      | BX_TOKEN_HELP BX_TOKEN_FPU '\n'
        {
-         dbg_printf("fp|fpu| - print FPU state (same as 'info fpu')\n");
+         dbg_printf("fp|fpu| - print FPU state\n");
          free($1);free($2);
        }
      | BX_TOKEN_HELP BX_TOKEN_MMX '\n'
        {
-         dbg_printf("mmx - print MMX state (same as 'info mmx')\n");
+         dbg_printf("mmx - print MMX state\n");
          free($1);free($2);
        }
      | BX_TOKEN_HELP BX_TOKEN_SSE '\n'
        {
-         dbg_printf("sse|xmm - print SSE state (same as 'info sse')\n");
+         dbg_printf("sse|xmm - print SSE state\n");
          free($1);free($2);
        }
      | BX_TOKEN_HELP BX_TOKEN_SEGMENT_REGS '\n'
        {
-         dbg_printf("sreg - show segment registers (same as 'info sreg')\n");
+         dbg_printf("sreg - show segment registers\n");
+         free($1);free($2);
+       }
+     | BX_TOKEN_HELP BX_TOKEN_CONTROL_REGS '\n'
+       {
+         dbg_printf("creg - show control registers\n");
          free($1);free($2);
        }
      | BX_TOKEN_HELP BX_TOKEN_SETPMEM '\n'
@@ -1089,18 +1071,11 @@ help_command:
        {
          dbg_printf("info break - show information about current breakpoint status\n");
          dbg_printf("info dirty - show physical pages dirtied (written to) since last display\n");
-         dbg_printf("info r|reg|regs|registers - list of CPU integer registers and their contents\n");
-         dbg_printf("info cpu - list of CPU registers and their contents\n");
-         dbg_printf("info fpu - list of FPU registers and their contents\n");
-         dbg_printf("info mmx - list of MMX registers and their contents\n");
-         dbg_printf("info sse - list of SSE registers and their contents\n");
          dbg_printf("info idt - show interrupt descriptor table\n");
          dbg_printf("info ivt - show interrupt vector table\n");
          dbg_printf("info gdt - show global descriptor table\n");
          dbg_printf("info tss - show current task state segment\n");
          dbg_printf("info tab - show page tables\n");
-         dbg_printf("info creg - show control registers\n");
-         dbg_printf("info sreg - show segment registers\n");
          dbg_printf("info eflags - show decoded EFLAGS register\n");
          dbg_printf("info symbols [string] - list symbols whose prefix is string\n");
          dbg_printf("info pic - show PICs registers\n");
