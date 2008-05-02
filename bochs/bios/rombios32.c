@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios32.c,v 1.27 2008-05-02 08:41:46 sshwarts Exp $
+// $Id: rombios32.c,v 1.28 2008-05-02 18:37:47 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  32 bit Bochs BIOS init code
@@ -1424,8 +1424,8 @@ void acpi_bios_init(void)
     fadt->pm1_evt_len = 4;
     fadt->pm1_cnt_len = 2;
     fadt->pm_tmr_len = 4;
-    fadt->plvl2_lat = cpu_to_le16(50);
-    fadt->plvl3_lat = cpu_to_le16(50);
+    fadt->plvl2_lat = cpu_to_le16(0xfff); // C2 state not supported
+    fadt->plvl3_lat = cpu_to_le16(0xfff); // C3 state not supported
     /* WBINVD + PROC_C1 + PWR_BUTTON + SLP_BUTTON + FIX_RTC */
     fadt->flags = cpu_to_le32((1 << 0) | (1 << 2) | (1 << 4) | (1 << 5) | (1 << 6));
     acpi_build_table_header((struct acpi_table_header *)fadt, "FACP",
