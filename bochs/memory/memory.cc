@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: memory.cc,v 1.66 2008-05-01 20:46:00 sshwarts Exp $
+// $Id: memory.cc,v 1.67 2008-05-02 23:18:51 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -144,62 +144,71 @@ mem_write:
     data_ptr = (Bit8u *) data + (len - 1);
 #endif
 
-write_one:
     if ((a20addr & 0xfff80000) != 0x00080000 || (a20addr <= 0x0009ffff))
     {
-      // addr *not* in range 000A0000 .. 000FFFFF
-      *(BX_MEM_THIS get_vector(a20addr)) = *data_ptr;
-      BX_DBG_DIRTY_PAGE(a20addr >> 12);
+      while(1) {
+        // addr *not* in range 000A0000 .. 000FFFFF
+        *(BX_MEM_THIS get_vector(a20addr)) = *data_ptr;
+        BX_DBG_DIRTY_PAGE(a20addr >> 12);
+        if (len == 1) return;
+        len--;
+        a20addr++;
+#ifdef BX_LITTLE_ENDIAN
+        data_ptr++;
+#else // BX_BIG_ENDIAN
+        data_ptr--;
+#endif
+      }
+    }
+
+    // addr must be in range 000A0000 .. 000FFFFF
+
+    for(unsigned i=0; i<len; i++) {
+
+      // SMMRAM
+      if (a20addr <= 0x000bffff) {
+        // devices are not allowed to access SMMRAM under VGA memory
+        if (cpu) {
+          *(BX_MEM_THIS get_vector(a20addr)) = *data_ptr;
+          BX_DBG_DIRTY_PAGE(a20addr >> 12);
+        }
+        goto inc_one;
+      }
+
+      // adapter ROM     C0000 .. DFFFF
+      // ROM BIOS memory E0000 .. FFFFF
+#if BX_SUPPORT_PCI == 0
+      // ignore write to ROM
+#else
+      // Write Based on 440fx Programming
+      if (BX_MEM_THIS pci_enabled && ((a20addr & 0xfffc0000) == 0x000c0000))
+      {
+        switch (DEV_pci_wr_memtype(a20addr)) {
+          case 0x1:   // Writes to ShadowRAM
+            BX_DEBUG(("Writing to ShadowRAM: address %08x, data %02x", (unsigned) a20addr, *data_ptr));
+            *(BX_MEM_THIS get_vector(a20addr)) = *data_ptr;
+            BX_DBG_DIRTY_PAGE(a20addr >> 12);
+            break;
+
+          case 0x0:   // Writes to ROM, Inhibit
+            BX_DEBUG(("Write to ROM ignored: address %08x, data %02x", (unsigned) a20addr, *data_ptr));
+            break;
+
+          default:
+            BX_PANIC(("writePhysicalPage: default case"));
+        }
+      }
+#endif
+
 inc_one:
-      if (len == 1) return;
-      len--;
       a20addr++;
 #ifdef BX_LITTLE_ENDIAN
       data_ptr++;
 #else // BX_BIG_ENDIAN
       data_ptr--;
 #endif
-      goto write_one;
+
     }
-
-    // addr must be in range 000A0000 .. 000FFFFF
-
-    // SMMRAM
-    if (a20addr <= 0x000bffff) {
-      // devices are not allowed to access SMMRAM under VGA memory
-      if (cpu) {
-        *(BX_MEM_THIS get_vector(a20addr)) = *data_ptr;
-        BX_DBG_DIRTY_PAGE(a20addr >> 12);
-      }
-      goto inc_one;
-    }
-
-    // adapter ROM     C0000 .. DFFFF
-    // ROM BIOS memory E0000 .. FFFFF
-#if BX_SUPPORT_PCI == 0
-    // ignore write to ROM
-#else
-    // Write Based on 440fx Programming
-    if (BX_MEM_THIS pci_enabled && ((a20addr & 0xfffc0000) == 0x000c0000))
-    {
-      switch (DEV_pci_wr_memtype(a20addr)) {
-        case 0x1:   // Writes to ShadowRAM
-          BX_DEBUG(("Writing to ShadowRAM: address %08x, data %02x", (unsigned) a20addr, *data_ptr));
-          *(BX_MEM_THIS get_vector(a20addr)) = *data_ptr;
-          BX_DBG_DIRTY_PAGE(a20addr >> 12);
-          goto inc_one;
-
-        case 0x0:   // Writes to ROM, Inhibit
-          BX_DEBUG(("Write to ROM ignored: address %08x, data %02x", (unsigned) a20addr, *data_ptr));
-          goto inc_one;
-
-        default:
-          BX_PANIC(("writePhysicalPage: default case"));
-          goto inc_one;
-      }
-    }
-#endif
-    goto inc_one;
   }
   else {
     // access outside limits of physical memory, ignore
@@ -295,65 +304,74 @@ mem_read:
     data_ptr = (Bit8u *) data + (len - 1);
 #endif
 
-read_one:
     if ((a20addr & 0xfff80000) != 0x00080000 || (a20addr <= 0x0009ffff))
     {
-      // addr *not* in range 00080000 .. 000FFFFF
-      *data_ptr = *(BX_MEM_THIS get_vector(a20addr));
+      while(1) {
+        // addr *not* in range 00080000 .. 000FFFFF
+        *data_ptr = *(BX_MEM_THIS get_vector(a20addr));
+        if (len == 1) return;
+        len--;
+        a20addr++;
+#ifdef BX_LITTLE_ENDIAN
+        data_ptr++;
+#else // BX_BIG_ENDIAN
+        data_ptr--;
+#endif
+      }
+    }
+
+    // addr must be in range 000A0000 .. 000FFFFF
+
+    for (unsigned i=0; i<len; i++) {
+
+      // SMMRAM
+      if (a20addr <= 0x000bffff) {
+        // devices are not allowed to access SMMRAM under VGA memory
+        if (cpu) *data_ptr = *(BX_MEM_THIS get_vector(a20addr));
+        goto inc_one;
+      }
+
+#if BX_SUPPORT_PCI
+      if (BX_MEM_THIS pci_enabled && ((a20addr & 0xfffc0000) == 0x000c0000))
+      {
+        switch (DEV_pci_rd_memtype(a20addr)) {
+          case 0x0:  // Read from ROM
+            if ((a20addr & 0xfffe0000) == 0x000e0000) {
+              *data_ptr = BX_MEM_THIS rom[a20addr & BIOS_MASK];
+            }
+            else {
+              *data_ptr = BX_MEM_THIS rom[(a20addr & EXROM_MASK) + BIOSROMSZ];
+            }
+            break;
+          case 0x1:  // Read from ShadowRAM
+            *data_ptr = *(BX_MEM_THIS get_vector(a20addr));
+            break;
+          default:
+            BX_PANIC(("readPhysicalPage: default case"));
+        }
+      }
+      else
+#endif  // #if BX_SUPPORT_PCI
+      {
+        if ((a20addr & 0xfffc0000) != 0x000c0000) {
+          *data_ptr = *(BX_MEM_THIS get_vector(a20addr));
+        }
+        else if ((a20addr & 0xfffe0000) == 0x000e0000) {
+          *data_ptr = BX_MEM_THIS rom[a20addr & BIOS_MASK];
+        }
+        else {
+          *data_ptr = BX_MEM_THIS rom[(a20addr & EXROM_MASK) + BIOSROMSZ];
+        }
+      }
+
 inc_one:
-      if (len == 1) return;
-      len--;
       a20addr++;
 #ifdef BX_LITTLE_ENDIAN
       data_ptr++;
 #else // BX_BIG_ENDIAN
       data_ptr--;
 #endif
-      goto read_one;
-    }
 
-    // addr must be in range 000A0000 .. 000FFFFF
-
-    // SMMRAM
-    if (a20addr <= 0x000bffff) {
-      // devices are not allowed to access SMMRAM under VGA memory
-      if (cpu) *data_ptr = *(BX_MEM_THIS get_vector(a20addr));
-      goto inc_one;
-    }
-
-#if BX_SUPPORT_PCI
-    if (BX_MEM_THIS pci_enabled && ((a20addr & 0xfffc0000) == 0x000c0000))
-    {
-      switch (DEV_pci_rd_memtype(a20addr)) {
-        case 0x0:  // Read from ROM
-          if ((a20addr & 0xfffe0000) == 0x000e0000) {
-            *data_ptr = BX_MEM_THIS rom[a20addr & BIOS_MASK];
-          }
-          else {
-            *data_ptr = BX_MEM_THIS rom[(a20addr & EXROM_MASK) + BIOSROMSZ];
-          }
-          goto inc_one;
-        case 0x1:  // Read from ShadowRAM
-          *data_ptr = *(BX_MEM_THIS get_vector(a20addr));
-          goto inc_one;
-        default:
-          BX_PANIC(("readPhysicalPage: default case"));
-      }
-      goto inc_one;
-    }
-    else
-#endif  // #if BX_SUPPORT_PCI
-    {
-      if ((a20addr & 0xfffc0000) != 0x000c0000) {
-        *data_ptr = *(BX_MEM_THIS get_vector(a20addr));
-      }
-      else if ((a20addr & 0xfffe0000) == 0x000e0000) {
-        *data_ptr = BX_MEM_THIS rom[a20addr & BIOS_MASK];
-      }
-      else {
-        *data_ptr = BX_MEM_THIS rom[(a20addr & EXROM_MASK) + BIOSROMSZ];
-      }
-      goto inc_one;
     }
   }
   else
