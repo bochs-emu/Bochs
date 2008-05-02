@@ -50,6 +50,7 @@ Detailed change log :
   - implemented text mode character blinking in some guis
 
 - SF patches applied
+ [1956366] Do not announce C2 & C3 cpu power state support by Igor Lvovsky
  [1921733] support for LBA48 by Robert Millan
  [1938185] Fix link problem with --enable-debugger by Sebastian
  [1938182] Makefile.in - use @IODEV_LIB_VAR@ by Sebastian
@@ -85,6 +86,7 @@ Detailed change log :
  [1864680] Save CPUID signature by Filip Navara
 
 - these S.F. bugs were closed
+ [1952548] String to char * warnings
  [1940714] SYSENTER/SYSEXIT doesn't work in long mode
  [1422342] SYSRET errors
  [1923803] legacy rombios - e820 map and ACPI_DATA_SIZE
