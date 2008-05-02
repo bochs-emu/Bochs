@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios32.c,v 1.26 2008-04-08 16:41:18 sshwarts Exp $
+// $Id: rombios32.c,v 1.27 2008-05-02 08:41:46 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  32 bit Bochs BIOS init code
@@ -443,10 +443,11 @@ void ram_probe(void)
   else
     ram_size = (cmos_readb(0x30) | (cmos_readb(0x31) << 8)) * 1024 +
         1 * 1024 * 1024;
+  BX_INFO("ram_size=0x%08lx\n", ram_size);
 #ifdef BX_USE_EBDA_TABLES
   ebda_cur_addr = ((*(uint16_t *)(0x40e)) << 4) + 0x380;
+  BX_INFO("ebda_cur_addr: 0x%08lx\n", ebda_cur_addr);
 #endif
-  BX_INFO("ram_size=0x%08lx\n", ram_size);
 }
 
 /****************************************************/
@@ -1424,7 +1425,6 @@ void acpi_bios_init(void)
     fadt->pm1_cnt_len = 2;
     fadt->pm_tmr_len = 4;
     fadt->plvl2_lat = cpu_to_le16(50);
-    fadt->plvl3_lat = cpu_to_le16(50);
     fadt->plvl3_lat = cpu_to_le16(50);
     /* WBINVD + PROC_C1 + PWR_BUTTON + SLP_BUTTON + FIX_RTC */
     fadt->flags = cpu_to_le32((1 << 0) | (1 << 2) | (1 << 4) | (1 << 5) | (1 << 6));
