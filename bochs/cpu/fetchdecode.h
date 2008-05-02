@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.h,v 1.67 2008-04-30 21:32:33 sshwarts Exp $
+// $Id: fetchdecode.h,v 1.68 2008-05-02 22:47:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005 Stanislav Shwartsman
@@ -3080,29 +3080,53 @@ static const BxOpcodeInfo_t BxOpcodeInfoG2Ew[8] = {
   /* 7 */ { 0, BX_IA_SAR_Ew }
 };
 
-static const BxOpcodeInfo_t BxOpcodeInfoG2Ed[8] = {
+static const BxOpcodeInfo_t BxOpcodeInfoG2EdM[8] = {
   // attributes defined in main area
-  /* 0 */ { 0, BX_IA_ROL_Ed },
-  /* 1 */ { 0, BX_IA_ROR_Ed },
-  /* 2 */ { 0, BX_IA_RCL_Ed },
-  /* 3 */ { 0, BX_IA_RCR_Ed },
-  /* 4 */ { 0, BX_IA_SHL_Ed },
-  /* 5 */ { 0, BX_IA_SHR_Ed },
-  /* 6 */ { 0, BX_IA_SHL_Ed },
-  /* 7 */ { 0, BX_IA_SAR_Ed }
+  /* 0 */ { 0, BX_IA_ROL_EdM },
+  /* 1 */ { 0, BX_IA_ROR_EdM },
+  /* 2 */ { 0, BX_IA_RCL_EdM },
+  /* 3 */ { 0, BX_IA_RCR_EdM },
+  /* 4 */ { 0, BX_IA_SHL_EdM },
+  /* 5 */ { 0, BX_IA_SHR_EdM },
+  /* 6 */ { 0, BX_IA_SHL_EdM },
+  /* 7 */ { 0, BX_IA_SAR_EdM }
+};
+
+static const BxOpcodeInfo_t BxOpcodeInfoG2EdR[8] = {
+  // attributes defined in main area
+  /* 0 */ { 0, BX_IA_ROL_EdR },
+  /* 1 */ { 0, BX_IA_ROR_EdR },
+  /* 2 */ { 0, BX_IA_RCL_EdR },
+  /* 3 */ { 0, BX_IA_RCR_EdR },
+  /* 4 */ { 0, BX_IA_SHL_EdR },
+  /* 5 */ { 0, BX_IA_SHR_EdR },
+  /* 6 */ { 0, BX_IA_SHL_EdR },
+  /* 7 */ { 0, BX_IA_SAR_EdR }
 };
 
 #if BX_SUPPORT_X86_64
-static const BxOpcodeInfo_t BxOpcodeInfo64G2Eq[8] = {
+static const BxOpcodeInfo_t BxOpcodeInfo64G2EqM[8] = {
   // attributes defined in main area
-  /* 0 */ { 0, BX_IA_ROL_Eq },
-  /* 1 */ { 0, BX_IA_ROR_Eq },
-  /* 2 */ { 0, BX_IA_RCL_Eq },
-  /* 3 */ { 0, BX_IA_RCR_Eq },
-  /* 4 */ { 0, BX_IA_SHL_Eq },
-  /* 5 */ { 0, BX_IA_SHR_Eq },
-  /* 6 */ { 0, BX_IA_SHL_Eq },
-  /* 7 */ { 0, BX_IA_SAR_Eq }
+  /* 0 */ { 0, BX_IA_ROL_EqM },
+  /* 1 */ { 0, BX_IA_ROR_EqM },
+  /* 2 */ { 0, BX_IA_RCL_EqM },
+  /* 3 */ { 0, BX_IA_RCR_EqM },
+  /* 4 */ { 0, BX_IA_SHL_EqM },
+  /* 5 */ { 0, BX_IA_SHR_EqM },
+  /* 6 */ { 0, BX_IA_SHL_EqM },
+  /* 7 */ { 0, BX_IA_SAR_EqM }
+};
+
+static const BxOpcodeInfo_t BxOpcodeInfo64G2EqR[8] = {
+  // attributes defined in main area
+  /* 0 */ { 0, BX_IA_ROL_EqR },
+  /* 1 */ { 0, BX_IA_ROR_EqR },
+  /* 2 */ { 0, BX_IA_RCL_EqR },
+  /* 3 */ { 0, BX_IA_RCR_EqR },
+  /* 4 */ { 0, BX_IA_SHL_EqR },
+  /* 5 */ { 0, BX_IA_SHR_EqR },
+  /* 6 */ { 0, BX_IA_SHL_EqR },
+  /* 7 */ { 0, BX_IA_SAR_EqR }
 };
 #endif
 

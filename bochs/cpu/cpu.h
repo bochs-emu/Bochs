@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.468 2008-05-01 20:08:37 sshwarts Exp $
+// $Id: cpu.h,v 1.469 2008-05-02 22:47:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -605,7 +605,7 @@ typedef bx_ptr_equiv_t bx_hostpageaddr_t;
 typedef struct {
   bx_address lpf;     // linear page frame
   bx_phy_address ppf; // physical page frame
-  Bit32u accessBits;  // Page Table Address for updating A & D bits
+  Bit32u accessBits;
   bx_hostpageaddr_t hostPageAddr;
 } bx_TLB_entry;
 
@@ -1607,20 +1607,29 @@ public: // for now...
   BX_SMF void SHR_Eb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void SAR_Eb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
-  BX_SMF void ROL_Ed(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void ROL_Ew(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void ROR_Ed(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void ROR_Ew(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void RCL_Ed(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void RCL_Ew(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void RCR_Ed(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void RCR_Ew(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void SHL_Ed(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void SHL_Ew(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void SHR_Ed(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void SHR_Ew(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void SAR_Ed(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void SAR_Ew(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void ROL_EdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void ROR_EdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void RCL_EdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void RCR_EdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SHL_EdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SHR_EdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SAR_EdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void ROL_EdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void ROR_EdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void RCL_EdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void RCR_EdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SHL_EdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SHR_EdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SAR_EdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
   BX_SMF void TEST_EbIbM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void TEST_EwIwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -2599,13 +2608,21 @@ public: // for now...
 
   BX_SMF void BSWAP_RRX(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
-  BX_SMF void ROL_Eq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void ROR_Eq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void RCL_Eq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void RCR_Eq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void SHL_Eq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void SHR_Eq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void SAR_Eq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void ROL_EqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void ROR_EqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void RCL_EqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void RCR_EqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SHL_EqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SHR_EqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SAR_EqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void ROL_EqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void ROR_EqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void RCL_EqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void RCR_EqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SHL_EqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SHR_EqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SAR_EqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
   BX_SMF void NOT_EqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void NEG_EqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);

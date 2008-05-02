@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.188 2008-05-01 20:08:37 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.189 2008-05-02 22:47:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -953,7 +953,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo32R[512*2] = {
   /* BE /dr */ { BxImmediate_Id, BX_IA_MOV_ERXId },
   /* BF /dr */ { BxImmediate_Id, BX_IA_MOV_ERXId },
   /* C0 /dr */ { BxGroup2 | BxImmediate_Ib, BX_IA_ERROR, BxOpcodeInfoG2Eb },
-  /* C1 /dr */ { BxGroup2 | BxImmediate_Ib, BX_IA_ERROR, BxOpcodeInfoG2Ed },
+  /* C1 /dr */ { BxGroup2 | BxImmediate_Ib, BX_IA_ERROR, BxOpcodeInfoG2EdR },
   /* C2 /dr */ { BxImmediate_Iw | BxTraceEnd, BX_IA_RETnear32_Iw },
   /* C3 /dr */ { BxTraceEnd,                  BX_IA_RETnear32 },
   /* C4 /dr */ { 0, BX_IA_ERROR }, // LES
@@ -969,9 +969,9 @@ static const BxOpcodeInfo_t BxOpcodeInfo32R[512*2] = {
   /* CE /dr */ { BxTraceEnd, BX_IA_INTO },
   /* CF /dr */ { BxTraceEnd, BX_IA_IRET32 },
   /* D0 /dr */ { BxGroup2 | BxImmediate_I1, BX_IA_ERROR, BxOpcodeInfoG2Eb },
-  /* D1 /dr */ { BxGroup2 | BxImmediate_I1, BX_IA_ERROR, BxOpcodeInfoG2Ed },
+  /* D1 /dr */ { BxGroup2 | BxImmediate_I1, BX_IA_ERROR, BxOpcodeInfoG2EdR },
   /* D2 /dr */ { BxGroup2, BX_IA_ERROR, BxOpcodeInfoG2Eb },
-  /* D3 /dr */ { BxGroup2, BX_IA_ERROR, BxOpcodeInfoG2Ed },
+  /* D3 /dr */ { BxGroup2, BX_IA_ERROR, BxOpcodeInfoG2EdR },
   /* D4 /dr */ { BxImmediate_Ib, BX_IA_AAM },
   /* D5 /dr */ { BxImmediate_Ib, BX_IA_AAD },
   /* D6 /dr */ { 0, BX_IA_SALC },
@@ -2086,7 +2086,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo32M[512*2] = {
   /* BE /dm */ { BxImmediate_Id, BX_IA_MOV_ERXId },
   /* BF /dm */ { BxImmediate_Id, BX_IA_MOV_ERXId },
   /* C0 /dm */ { BxGroup2 | BxImmediate_Ib, BX_IA_ERROR, BxOpcodeInfoG2Eb },
-  /* C1 /dm */ { BxGroup2 | BxImmediate_Ib, BX_IA_ERROR, BxOpcodeInfoG2Ed },
+  /* C1 /dm */ { BxGroup2 | BxImmediate_Ib, BX_IA_ERROR, BxOpcodeInfoG2EdM },
   /* C2 /dm */ { BxImmediate_Iw | BxTraceEnd, BX_IA_RETnear32_Iw },
   /* C3 /dm */ { BxTraceEnd,                  BX_IA_RETnear32 },
   /* C4 /dm */ { 0, BX_IA_LES_GdMp },
@@ -2102,9 +2102,9 @@ static const BxOpcodeInfo_t BxOpcodeInfo32M[512*2] = {
   /* CE /dm */ { BxTraceEnd, BX_IA_INTO },
   /* CF /dm */ { BxTraceEnd, BX_IA_IRET32 },
   /* D0 /dm */ { BxGroup2 | BxImmediate_I1, BX_IA_ERROR, BxOpcodeInfoG2Eb },
-  /* D1 /dm */ { BxGroup2 | BxImmediate_I1, BX_IA_ERROR, BxOpcodeInfoG2Ed },
+  /* D1 /dm */ { BxGroup2 | BxImmediate_I1, BX_IA_ERROR, BxOpcodeInfoG2EdM },
   /* D2 /dm */ { BxGroup2, BX_IA_ERROR, BxOpcodeInfoG2Eb },
-  /* D3 /dm */ { BxGroup2, BX_IA_ERROR, BxOpcodeInfoG2Ed },
+  /* D3 /dm */ { BxGroup2, BX_IA_ERROR, BxOpcodeInfoG2EdM },
   /* D4 /dm */ { BxImmediate_Ib, BX_IA_AAM },
   /* D5 /dm */ { BxImmediate_Ib, BX_IA_AAD },
   /* D6 /dm */ { 0, BX_IA_SALC },

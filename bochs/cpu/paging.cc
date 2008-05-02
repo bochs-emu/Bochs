@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.125 2008-04-27 19:49:02 sshwarts Exp $
+// $Id: paging.cc,v 1.126 2008-05-02 22:47:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -564,7 +564,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INVLPG(bxInstruction_c* i)
   BX_INSTR_TLB_CNTRL(BX_CPU_ID, BX_INSTR_INVLPG, laddr);
   TLB_invlpg(laddr);
 #else
-  // not supported on < 486
   BX_INFO(("INVLPG: required i486, use --enable-cpu=4 option"));
   UndefinedOpcode(i);
 #endif
