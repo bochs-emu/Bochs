@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: parser.y,v 1.29 2008-05-01 19:10:07 sshwarts Exp $
+// $Id: parser.y,v 1.30 2008-05-03 21:32:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 %{
@@ -648,7 +648,7 @@ mmx_regs_command:
     ;
 
 sse_regs_command:
-      BX_TOKEN_MMX '\n'
+      BX_TOKEN_SSE '\n'
       {
         bx_dbg_info_registers_command(BX_INFO_SSE_REGS);
         free($1);

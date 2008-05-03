@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.140 2008-05-01 19:10:04 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.141 2008-05-03 21:32:01 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -484,7 +484,7 @@ void bx_dbg_exception(unsigned cpu, Bit8u vector, Bit16u error_code)
      "(#MF) floating point error",
      "(#AC) alignment check",
      "(#MC) machine check",
-     "(#XM) SIMD floating point exception",
+     "(#XF) SIMD floating point exception",
   };
 
   if (BX_CPU(dbg_cpu)->trace || bx_dbg.exceptions)
