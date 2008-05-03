@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: descriptor.h,v 1.21 2007-12-10 19:08:13 sshwarts Exp $
+// $Id: descriptor.h,v 1.22 2008-05-03 17:33:30 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007 Stanislav Shwartsman
@@ -40,13 +40,11 @@ typedef struct { /* bx_selector_t */
 typedef struct
 {
 
-#define SegValidCache   (0x1)
-#define SegAccessROK    (0x2)
-#define SegAccessWOK    (0x4)
-#define SegAccess4G     (0x8)
-
-#define SegAccessROK4G  (SegAccessROK|SegAccess4G)
-#define SegAccessWOK4G  (SegAccessWOK|SegAccess4G)
+#define SegValidCache  (0x01)
+#define SegAccessROK   (0x02)
+#define SegAccessWOK   (0x04)
+#define SegAccessROK4G (0x08)
+#define SegAccessWOK4G (0x10)
 
   unsigned valid;        // Holds above values, Or'd together.  Used to
                          // hold only 0 or 1.

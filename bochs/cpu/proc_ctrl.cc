@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.222 2008-04-28 18:18:08 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.223 2008-05-03 17:33:30 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -191,7 +191,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CLFLUSH(bxInstruction_c *i)
   BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
   // check if we could access the memory segment
-  if ((seg->cache.valid & SegAccessROK4G) != SegAccessROK4G)
+  if (!(seg->cache.valid & SegAccessROK4G))
   {
     execute_virtual_checks(seg, RMAddr(i), 1);
   }

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: access.cc,v 1.102 2008-05-01 05:11:19 sshwarts Exp $
+// $Id: access.cc,v 1.103 2008-05-03 17:33:30 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -55,7 +55,7 @@ BX_CPU_C::write_virtual_checks(bx_segment_reg_t *seg, bx_address offset, unsigne
       exception(int_number(seg), 0, 0);
     }
     // Mark cache as being OK type for succeeding reads/writes
-    seg->cache.valid |= SegAccessROK | SegAccessWOK | SegAccess4G;
+    seg->cache.valid |= SegAccessROK | SegAccessWOK | SegAccessROK4G | SegAccessWOK4G;
     return;
   }
 #endif
@@ -98,7 +98,7 @@ BX_CPU_C::write_virtual_checks(bx_segment_reg_t *seg, bx_address offset, unsigne
           seg->cache.valid |= SegAccessROK | SegAccessWOK;
 
           if (seg->cache.u.segment.limit_scaled == 0xffffffff)
-            seg->cache.valid |= SegAccess4G;
+            seg->cache.valid |= SegAccessROK4G | SegAccessWOK4G;;
         }
         break;
 
@@ -114,7 +114,7 @@ BX_CPU_C::write_virtual_checks(bx_segment_reg_t *seg, bx_address offset, unsigne
           exception(int_number(seg), 0, 0);
         }
         if (seg->cache.u.segment.limit_scaled == 0)
-          seg->cache.valid |= SegAccess4G | SegAccessROK | SegAccessWOK;
+          seg->cache.valid |= SegAccessROK | SegAccessWOK | SegAccessROK4G | SegAccessWOK4G;
         break;
     }
 
@@ -138,7 +138,7 @@ BX_CPU_C::write_virtual_checks(bx_segment_reg_t *seg, bx_address offset, unsigne
       seg->cache.valid |= SegAccessROK | SegAccessWOK;
 
       if (seg->cache.u.segment.limit_scaled == 0xffffffff)
-        seg->cache.valid |= SegAccess4G;
+        seg->cache.valid |= SegAccessROK4G | SegAccessWOK4G;
     }
   }
 }
@@ -156,7 +156,7 @@ BX_CPU_C::read_virtual_checks(bx_segment_reg_t *seg, bx_address offset, unsigned
       exception(int_number(seg), 0, 0);
     }
     // Mark cache as being OK type for succeeding reads/writes
-    seg->cache.valid |= SegAccessROK | SegAccessWOK | SegAccess4G;
+    seg->cache.valid |= SegAccessROK | SegAccessWOK | SegAccessROK4G | SegAccessWOK4G;
     return;
   }
 #endif
@@ -187,7 +187,7 @@ BX_CPU_C::read_virtual_checks(bx_segment_reg_t *seg, bx_address offset, unsigned
           // write checks; similar code.
           seg->cache.valid |= SegAccessROK;
           if (seg->cache.u.segment.limit_scaled == 0xffffffff)
-            seg->cache.valid |= SegAccess4G;
+            seg->cache.valid |= SegAccessROK4G;
         }
         break;
 
@@ -204,7 +204,7 @@ BX_CPU_C::read_virtual_checks(bx_segment_reg_t *seg, bx_address offset, unsigned
           exception(int_number(seg), 0, 0);
         }
         if (seg->cache.u.segment.limit_scaled == 0)
-          seg->cache.valid |= SegAccess4G | SegAccessROK;
+          seg->cache.valid |= SegAccessROK | SegAccessROK4G;
         break;
 
       case 8: case 9: /* execute only */
@@ -233,7 +233,7 @@ BX_CPU_C::read_virtual_checks(bx_segment_reg_t *seg, bx_address offset, unsigned
       seg->cache.valid |= SegAccessROK | SegAccessWOK;
 
       if (seg->cache.u.segment.limit_scaled == 0xffffffff)
-        seg->cache.valid |= SegAccess4G;
+        seg->cache.valid |= SegAccessROK4G | SegAccessWOK4G;
     }
   }
 }
@@ -251,7 +251,7 @@ BX_CPU_C::execute_virtual_checks(bx_segment_reg_t *seg, bx_address offset, unsig
       exception(int_number(seg), 0, 0);
     }
     // Mark cache as being OK type for succeeding reads/writes
-    seg->cache.valid |= SegAccessROK | SegAccessWOK | SegAccess4G;
+    seg->cache.valid |= SegAccessROK | SegAccessWOK | SegAccessROK4G | SegAccessWOK4G;
     return;
   }
 #endif
@@ -282,7 +282,7 @@ BX_CPU_C::execute_virtual_checks(bx_segment_reg_t *seg, bx_address offset, unsig
           // write checks; similar code.
           seg->cache.valid |= SegAccessROK;
           if (seg->cache.u.segment.limit_scaled == 0xffffffff)
-            seg->cache.valid |= SegAccess4G;
+            seg->cache.valid |= SegAccessROK4G;
         }
         break;
 
@@ -309,7 +309,7 @@ BX_CPU_C::execute_virtual_checks(bx_segment_reg_t *seg, bx_address offset, unsig
           exception(int_number(seg), 0, 0);
         }
         if (seg->cache.u.segment.limit_scaled == 0)
-          seg->cache.valid |= SegAccess4G | SegAccessROK;
+          seg->cache.valid |= SegAccessROK | SegAccessROK4G;
         break;
     }
     return;
@@ -332,7 +332,7 @@ BX_CPU_C::execute_virtual_checks(bx_segment_reg_t *seg, bx_address offset, unsig
       seg->cache.valid |= SegAccessROK | SegAccessWOK;
 
       if (seg->cache.u.segment.limit_scaled == 0xffffffff)
-        seg->cache.valid |= SegAccess4G;
+        seg->cache.valid |= SegAccessROK4G | SegAccessWOK4G;
     }
   }
 }
@@ -471,7 +471,7 @@ BX_CPU_C::write_virtual_byte(unsigned s, bx_address offset, Bit8u data)
   bx_segment_reg_t *seg = &BX_CPU_THIS_PTR sregs[s];
   BX_INSTR_MEM_DATA_ACCESS(BX_CPU_ID, s, offset, 1, BX_WRITE);
 
-  if ((seg->cache.valid & SegAccessWOK4G) == SegAccessWOK4G) {
+  if (seg->cache.valid & SegAccessWOK4G) {
 accessOK:
     laddr = BX_CPU_THIS_PTR get_laddr(s, offset);
 #if BX_SupportGuest2HostTLB
@@ -521,7 +521,7 @@ BX_CPU_C::write_virtual_word(unsigned s, bx_address offset, Bit16u data)
   bx_segment_reg_t *seg = &BX_CPU_THIS_PTR sregs[s];
   BX_INSTR_MEM_DATA_ACCESS(BX_CPU_ID, s, offset, 2, BX_WRITE);
 
-  if ((seg->cache.valid & SegAccessWOK4G) == SegAccessWOK4G) {
+  if (seg->cache.valid & SegAccessWOK4G) {
 accessOK:
     laddr = BX_CPU_THIS_PTR get_laddr(s, offset);
 #if BX_SupportGuest2HostTLB
@@ -579,7 +579,7 @@ BX_CPU_C::write_virtual_dword(unsigned s, bx_address offset, Bit32u data)
   bx_segment_reg_t *seg = &BX_CPU_THIS_PTR sregs[s];
   BX_INSTR_MEM_DATA_ACCESS(BX_CPU_ID, s, offset, 4, BX_WRITE);
 
-  if ((seg->cache.valid & SegAccessWOK4G) == SegAccessWOK4G) {
+  if (seg->cache.valid & SegAccessWOK4G) {
 accessOK:
     laddr = BX_CPU_THIS_PTR get_laddr(s, offset);
 #if BX_SupportGuest2HostTLB
@@ -637,7 +637,7 @@ BX_CPU_C::write_virtual_qword(unsigned s, bx_address offset, Bit64u data)
   bx_segment_reg_t *seg = &BX_CPU_THIS_PTR sregs[s];
   BX_INSTR_MEM_DATA_ACCESS(BX_CPU_ID, s, offset, 8, BX_WRITE);
 
-  if ((seg->cache.valid & SegAccessWOK4G) == SegAccessWOK4G) {
+  if (seg->cache.valid & SegAccessWOK4G) {
 accessOK:
     laddr = BX_CPU_THIS_PTR get_laddr(s, offset);
 #if BX_SupportGuest2HostTLB
@@ -696,7 +696,7 @@ BX_CPU_C::read_virtual_byte(unsigned s, bx_address offset)
   Bit8u data;
   BX_INSTR_MEM_DATA_ACCESS(BX_CPU_ID, s, offset, 1, BX_READ);
 
-  if ((seg->cache.valid & SegAccessROK4G) == SegAccessROK4G) {
+  if (seg->cache.valid & SegAccessROK4G) {
 accessOK:
     laddr = BX_CPU_THIS_PTR get_laddr(s, offset);
 #if BX_SupportGuest2HostTLB
@@ -744,7 +744,7 @@ BX_CPU_C::read_virtual_word(unsigned s, bx_address offset)
   Bit16u data;
   BX_INSTR_MEM_DATA_ACCESS(BX_CPU_ID, s, offset, 2, BX_READ);
 
-  if ((seg->cache.valid & SegAccessROK4G) == SegAccessROK4G) {
+  if (seg->cache.valid & SegAccessROK4G) {
 accessOK:
     laddr = BX_CPU_THIS_PTR get_laddr(s, offset);
 #if BX_SupportGuest2HostTLB
@@ -800,7 +800,7 @@ BX_CPU_C::read_virtual_dword(unsigned s, bx_address offset)
   Bit32u data;
   BX_INSTR_MEM_DATA_ACCESS(BX_CPU_ID, s, offset, 4, BX_READ);
 
-  if ((seg->cache.valid & SegAccessROK4G) == SegAccessROK4G) {
+  if (seg->cache.valid & SegAccessROK4G) {
 accessOK:
     laddr = BX_CPU_THIS_PTR get_laddr(s, offset);
 #if BX_SupportGuest2HostTLB
@@ -856,7 +856,7 @@ BX_CPU_C::read_virtual_qword(unsigned s, bx_address offset)
   Bit64u data;
   BX_INSTR_MEM_DATA_ACCESS(BX_CPU_ID, s, offset, 8, BX_READ);
 
-  if ((seg->cache.valid & SegAccessROK4G) == SegAccessROK4G) {
+  if (seg->cache.valid & SegAccessROK4G) {
 accessOK:
     laddr = BX_CPU_THIS_PTR get_laddr(s, offset);
 #if BX_SupportGuest2HostTLB
@@ -917,7 +917,7 @@ BX_CPU_C::read_RMW_virtual_byte(unsigned s, bx_address offset)
   Bit8u data;
   BX_INSTR_MEM_DATA_ACCESS(BX_CPU_ID, s, offset, 1, BX_RW);
 
-  if ((seg->cache.valid & SegAccessWOK4G) == SegAccessWOK4G) {
+  if (seg->cache.valid & SegAccessWOK4G) {
 accessOK:
     laddr = BX_CPU_THIS_PTR get_laddr(s, offset);
 #if BX_SupportGuest2HostTLB
@@ -971,7 +971,7 @@ BX_CPU_C::read_RMW_virtual_word(unsigned s, bx_address offset)
   Bit16u data;
   BX_INSTR_MEM_DATA_ACCESS(BX_CPU_ID, s, offset, 2, BX_RW);
 
-  if ((seg->cache.valid & SegAccessWOK4G) == SegAccessWOK4G) {
+  if (seg->cache.valid & SegAccessWOK4G) {
 accessOK:
     laddr = BX_CPU_THIS_PTR get_laddr(s, offset);
 #if BX_SupportGuest2HostTLB
@@ -1031,7 +1031,7 @@ BX_CPU_C::read_RMW_virtual_dword(unsigned s, bx_address offset)
   Bit32u data;
   BX_INSTR_MEM_DATA_ACCESS(BX_CPU_ID, s, offset, 4, BX_RW);
 
-  if ((seg->cache.valid & SegAccessWOK4G) == SegAccessWOK4G) {
+  if (seg->cache.valid & SegAccessWOK4G) {
 accessOK:
     laddr = BX_CPU_THIS_PTR get_laddr(s, offset);
 #if BX_SupportGuest2HostTLB
@@ -1091,7 +1091,7 @@ BX_CPU_C::read_RMW_virtual_qword(unsigned s, bx_address offset)
   Bit64u data;
   BX_INSTR_MEM_DATA_ACCESS(BX_CPU_ID, s, offset, 8, BX_RW);
 
-  if ((seg->cache.valid & SegAccessWOK4G) == SegAccessWOK4G) {
+  if (seg->cache.valid & SegAccessWOK4G) {
 accessOK:
     laddr = BX_CPU_THIS_PTR get_laddr(s, offset);
 #if BX_SupportGuest2HostTLB
@@ -1411,7 +1411,7 @@ void BX_CPU_C::write_new_stack_word(bx_segment_reg_t *seg, bx_address offset, un
 
   BX_ASSERT(BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64);
 
-  if ((seg->cache.valid & SegAccessWOK4G) == SegAccessWOK4G) {
+  if (seg->cache.valid & SegAccessWOK4G) {
 accessOK:
     laddr = (Bit32u)(seg->cache.u.segment.base + offset);
 #if BX_SupportGuest2HostTLB
@@ -1463,7 +1463,7 @@ void BX_CPU_C::write_new_stack_dword(bx_segment_reg_t *seg, bx_address offset, u
 
   BX_ASSERT(BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64);
 
-  if ((seg->cache.valid & SegAccessWOK4G) == SegAccessWOK4G) {
+  if (seg->cache.valid & SegAccessWOK4G) {
 accessOK:
     laddr = (Bit32u)(seg->cache.u.segment.base + offset);
 #if BX_SupportGuest2HostTLB

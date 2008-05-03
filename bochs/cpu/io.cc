@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: io.cc,v 1.58 2008-04-27 19:49:02 sshwarts Exp $
+// $Id: io.cc,v 1.59 2008-05-03 17:33:30 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -54,7 +54,7 @@ Bit32u BX_CPU_C::FastRepINSW(bxInstruction_c *i, bx_address dstOff, Bit16u port,
   unsigned count;
 
   bx_segment_reg_t *dstSegPtr = &BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES];
-  if ((dstSegPtr->cache.valid & SegAccessWOK4G) != SegAccessWOK4G)
+  if (!(dstSegPtr->cache.valid & SegAccessWOK4G))
     return 0;
 
   bx_address laddrDst = BX_CPU_THIS_PTR get_laddr(BX_SEG_REG_ES, dstOff);
@@ -138,7 +138,7 @@ Bit32u BX_CPU_C::FastRepOUTSW(bxInstruction_c *i, unsigned srcSeg, bx_address sr
   unsigned count;
 
   bx_segment_reg_t *srcSegPtr = &BX_CPU_THIS_PTR sregs[srcSeg];
-  if ((srcSegPtr->cache.valid & SegAccessROK4G) != SegAccessROK4G)
+  if (!(srcSegPtr->cache.valid & SegAccessROK4G))
     return 0;
 
   bx_address laddrSrc = BX_CPU_THIS_PTR get_laddr(srcSeg, srcOff);
