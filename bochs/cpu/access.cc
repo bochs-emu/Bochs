@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: access.cc,v 1.103 2008-05-03 17:33:30 sshwarts Exp $
+// $Id: access.cc,v 1.104 2008-05-03 17:35:11 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -98,7 +98,7 @@ BX_CPU_C::write_virtual_checks(bx_segment_reg_t *seg, bx_address offset, unsigne
           seg->cache.valid |= SegAccessROK | SegAccessWOK;
 
           if (seg->cache.u.segment.limit_scaled == 0xffffffff)
-            seg->cache.valid |= SegAccessROK4G | SegAccessWOK4G;;
+            seg->cache.valid |= SegAccessROK4G | SegAccessWOK4G;
         }
         break;
 
