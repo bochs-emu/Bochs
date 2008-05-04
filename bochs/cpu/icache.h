@@ -1,14 +1,9 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: icache.h,v 1.34 2008-05-04 05:37:36 sshwarts Exp $
+// $Id: icache.h,v 1.35 2008-05-04 15:07:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001  MandrakeSoft S.A.
-//
-//    MandrakeSoft S.A.
-//    43, rue d'Aboukir
-//    75002 Paris - France
-//    http://www.linux-mandrake.com/
-//    http://www.mandrakesoft.com/
+//   Copyright (c) 2007 Stanislav Shwartsman
+//          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public

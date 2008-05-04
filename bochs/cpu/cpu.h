@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.469 2008-05-02 22:47:07 sshwarts Exp $
+// $Id: cpu.h,v 1.470 2008-05-04 15:07:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -3374,9 +3374,9 @@ BX_CPP_INLINE bx_bool BX_CPU_C::get_PFLazy(void)
 
 /* op1, op2, result */
 #define SET_FLAGS_OSZAPC_SIZE(size, lf_op1, lf_op2, lf_result, ins) { \
-  BX_CPU_THIS_PTR oszapc.op1_##size = (lf_op1); \
-  BX_CPU_THIS_PTR oszapc.op2_##size = (lf_op2); \
-  BX_CPU_THIS_PTR oszapc.result = (Bit##size##s)(lf_result); \
+  BX_CPU_THIS_PTR oszapc.op1    = (bx_address)(Bit##size##s)(lf_op1); \
+  BX_CPU_THIS_PTR oszapc.op2    = (bx_address)(Bit##size##s)(lf_op2); \
+  BX_CPU_THIS_PTR oszapc.result = (bx_address)(Bit##size##s)(lf_result); \
   BX_CPU_THIS_PTR oszapc.instr = (ins); \
   BX_CPU_THIS_PTR lf_flags_status = EFlagsOSZAPCMask; \
 }
@@ -3394,7 +3394,7 @@ BX_CPP_INLINE bx_bool BX_CPU_C::get_PFLazy(void)
 
 /* op1 and result only */
 #define SET_FLAGS_OSZAPC_S1_SIZE(size, lf_op1, lf_result, ins) { \
-  BX_CPU_THIS_PTR oszapc.op1_##size = (lf_op1); \
+  BX_CPU_THIS_PTR oszapc.op1    = (bx_address)(Bit##size##s)(lf_op1); \
   BX_CPU_THIS_PTR oszapc.result = (Bit##size##s)(lf_result); \
   BX_CPU_THIS_PTR oszapc.instr = (ins); \
   BX_CPU_THIS_PTR lf_flags_status = EFlagsOSZAPCMask; \
@@ -3413,7 +3413,7 @@ BX_CPP_INLINE bx_bool BX_CPU_C::get_PFLazy(void)
 
 /* op2 and result only */
 #define SET_FLAGS_OSZAPC_S2_SIZE(size, lf_op2, lf_result, ins) { \
-  BX_CPU_THIS_PTR oszapc.op2_##size = (lf_op2); \
+  BX_CPU_THIS_PTR oszapc.op2    = (bx_address)(Bit##size##s)(lf_op2); \
   BX_CPU_THIS_PTR oszapc.result = (Bit##size##s)(lf_result); \
   BX_CPU_THIS_PTR oszapc.instr = (ins); \
   BX_CPU_THIS_PTR lf_flags_status = EFlagsOSZAPCMask; \
