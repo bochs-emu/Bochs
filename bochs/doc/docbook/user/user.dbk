@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.236 2008-03-30 18:32:41 sshwarts Exp $
+$Id: user.dbk,v 1.237 2008-05-04 09:29:44 vruppert Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -4161,8 +4161,6 @@ Examples:
 This defines the keyboard shortcut to be sent when you press the "user" button
 in the <link linkend="headerbar">headerbar</link>. The shortcut string is a
 combination of maximum 3 key names (listed below) separated with a '-' character.
-The old-style syntax (without the '-') still works for the key combinations
-supported in Bochs 2.2.1.
 </para>
 <para>
 Valid key names:
@@ -4170,7 +4168,7 @@ Valid key names:
 <para>
 "alt", "bksl", "bksp", "ctrl", "del", "down", "end", "enter", "esc",
 "f1", ... "f12", "home", "ins", "left", "menu", "minus", "pgdwn", "pgup", "plus",
-"right", "shift", "space", "tab", "up", "win" and "print".
+"right", "shift", "space", "tab", "up", "win", "print" and "power".
 </para>
 </section>
 

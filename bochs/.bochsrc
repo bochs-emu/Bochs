@@ -661,13 +661,11 @@ keyboard_mapping: enabled=0, map=
 # USER_SHORTCUT:
 # This defines the keyboard shortcut to be sent when you press the "user"
 # button in the headerbar. The shortcut string is a combination of maximum
-# 3 key names (listed below) separated with a '-' character. The old-style
-# syntax (without the '-') still works for the key combinations supported
-# in Bochs 2.2.1.
+# 3 key names (listed below) separated with a '-' character.
 # Valid key names:
 # "alt", "bksl", "bksp", "ctrl", "del", "down", "end", "enter", "esc",
 # "f1", ... "f12", "home", "ins", "left", "menu", "minus", "pgdwn", "pgup",
-# "plus", "right", "shift", "space", "tab", "up", "win" and "print".
+# "plus", "right", "shift", "space", "tab", "up", "win", "print" and "power".
 #
 # Example:
 #   user_shortcut: keys=ctrl-alt-del

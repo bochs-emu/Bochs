@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.cc,v 1.104 2008-02-15 22:05:40 sshwarts Exp $
+// $Id: gui.cc,v 1.105 2008-05-04 09:29:45 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -51,7 +51,7 @@ bx_gui_c *bx_gui = NULL;
 #define LOG_THIS BX_GUI_THIS
 
 #define BX_KEY_UNKNOWN 0x7fffffff
-#define N_USER_KEYS 36
+#define N_USER_KEYS 37
 
 typedef struct {
   const char *key;
@@ -95,7 +95,8 @@ static user_key_t user_keys[N_USER_KEYS] =
   { "tab",   BX_KEY_TAB },
   { "up",    BX_KEY_UP },
   { "win",   BX_KEY_WIN_L },
-  { "print", BX_KEY_PRINT }
+  { "print", BX_KEY_PRINT },
+  { "power", BX_KEY_POWER_POWER }
 };
 
 bx_gui_c::bx_gui_c(void)
@@ -552,39 +553,8 @@ void bx_gui_c::userbutton_handler(void)
         ptr = strtok(NULL, "-");
       }
     } else {
-      while ((ptr[0]) && (len < 3)) {
-        if (!strncmp(ptr, "alt", 3)) {
-          shortcut[len++] = BX_KEY_ALT_L;
-          ptr += 3;
-        } else if (!strncmp(ptr, "ctrl", 4)) {
-          shortcut[len++] = BX_KEY_CTRL_L;
-          ptr += 4;
-        } else if (!strncmp(ptr, "del", 3)) {
-          shortcut[len++] = BX_KEY_DELETE;
-          ptr += 3;
-        } else if (!strncmp(ptr, "esc", 3)) {
-          shortcut[len++] = BX_KEY_ESC;
-          ptr += 3;
-        } else if (!strncmp(ptr, "f1", 2)) {
-          shortcut[len++] = BX_KEY_F1;
-          ptr += 2;
-        } else if (!strncmp(ptr, "f4", 2)) {
-          shortcut[len++] = BX_KEY_F4;
-          ptr += 2;
-        } else if (!strncmp(ptr, "tab", 3)) {
-          shortcut[len++] = BX_KEY_TAB;
-          ptr += 3;
-        } else if (!strncmp(ptr, "win", 3)) {
-          shortcut[len++] = BX_KEY_WIN_L;
-          ptr += 3;
-        } else if (!strncmp(ptr, "bksp", 4)) {
-          shortcut[len++] = BX_KEY_BACKSPACE;
-          ptr += 4;
-        } else {
-          BX_ERROR(("Unknown shortcut %s ignored", user_shortcut));
-          return;
-        }
-      }
+      BX_ERROR(("Unknown shortcut %s ignored", user_shortcut));
+      return;
     }
     i = 0;
     while (i < len) {
