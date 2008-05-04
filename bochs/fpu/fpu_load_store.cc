@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu_load_store.cc,v 1.21 2008-04-26 19:56:48 sshwarts Exp $
+// $Id: fpu_load_store.cc,v 1.22 2008-05-04 21:22:42 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -41,14 +41,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLD_STi(bxInstruction_c *i)
 
   if (! IS_TAG_EMPTY(-1))
   {
-      BX_CPU_THIS_PTR FPU_stack_overflow();
-      return;
+    BX_CPU_THIS_PTR FPU_stack_overflow();
+    return;
   }
 
   if (IS_TAG_EMPTY(i->rm()))
   {
-     BX_CPU_THIS_PTR FPU_stack_underflow(0);
-     return;
+    BX_CPU_THIS_PTR FPU_stack_underflow(0);
+    return;
   }
 
   int sti_tag = BX_CPU_THIS_PTR the_i387.FPU_gettagi(i->rm());
@@ -71,8 +71,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLD_SINGLE_REAL(bxInstruction_c *i)
   clear_C1();
 
   if (! IS_TAG_EMPTY(-1)) {
-      BX_CPU_THIS_PTR FPU_stack_overflow();
-      return;
+    BX_CPU_THIS_PTR FPU_stack_overflow();
+    return;
   }
 
   float_status_t status =
@@ -82,7 +82,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLD_SINGLE_REAL(bxInstruction_c *i)
   floatx80 result = float32_to_floatx80(load_reg, status);
 
   if (BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags))
-     return;
+    return;
 
   BX_CPU_THIS_PTR the_i387.FPU_push();
   BX_WRITE_FPU_REG(result, 0);
@@ -101,8 +101,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLD_DOUBLE_REAL(bxInstruction_c *i)
   clear_C1();
 
   if (! IS_TAG_EMPTY(-1)) {
-      BX_CPU_THIS_PTR FPU_stack_overflow();
-      return;
+    BX_CPU_THIS_PTR FPU_stack_overflow();
+    return;
   }
 
   float_status_t status =
@@ -112,7 +112,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLD_DOUBLE_REAL(bxInstruction_c *i)
   floatx80 result = float64_to_floatx80(load_reg, status);
 
   if (BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags))
-     return;
+    return;
 
   BX_CPU_THIS_PTR the_i387.FPU_push();
   BX_WRITE_FPU_REG(result, 0);
@@ -132,8 +132,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLD_EXTENDED_REAL(bxInstruction_c *i)
   clear_C1();
 
   if (! IS_TAG_EMPTY(-1)) {
-      BX_CPU_THIS_PTR FPU_stack_overflow();
-      return;
+    BX_CPU_THIS_PTR FPU_stack_overflow();
+    return;
   }
 
   BX_CPU_THIS_PTR the_i387.FPU_push();
@@ -155,8 +155,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FILD_WORD_INTEGER(bxInstruction_c *i)
   clear_C1();
 
   if (! IS_TAG_EMPTY(-1)) {
-      BX_CPU_THIS_PTR FPU_stack_overflow();
-      return;
+    BX_CPU_THIS_PTR FPU_stack_overflow();
+    return;
   }
 
   floatx80 result = int32_to_floatx80((Bit32s) load_reg);
@@ -178,8 +178,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FILD_DWORD_INTEGER(bxInstruction_c *i)
   clear_C1();
 
   if (! IS_TAG_EMPTY(-1)) {
-      BX_CPU_THIS_PTR FPU_stack_overflow();
-      return;
+    BX_CPU_THIS_PTR FPU_stack_overflow();
+    return;
   }
 
   floatx80 result = int32_to_floatx80(load_reg);
@@ -201,8 +201,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FILD_QWORD_INTEGER(bxInstruction_c *i)
   clear_C1();
 
   if (! IS_TAG_EMPTY(-1)) {
-      BX_CPU_THIS_PTR FPU_stack_overflow();
-      return;
+    BX_CPU_THIS_PTR FPU_stack_overflow();
+    return;
   }
 
   floatx80 result = int64_to_floatx80(load_reg);
@@ -227,8 +227,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FBLD_PACKED_BCD(bxInstruction_c *i)
 
   if (! IS_TAG_EMPTY(-1))
   {
-      BX_CPU_THIS_PTR FPU_stack_overflow();
-      return;
+    BX_CPU_THIS_PTR FPU_stack_overflow();
+    return;
   }
 
   // convert packed BCD to 64-bit integer
@@ -237,13 +237,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FBLD_PACKED_BCD(bxInstruction_c *i)
 
   for (int n = 0; n < 16; n++)
   {
-    val64 += (lo8 & 0x0F) * scale;
+    val64 += (lo8 & 0x0f) * scale;
     lo8 >>= 4;
     scale *= 10;
   }
 
-  val64 += (hi2 & 0x0F) * scale;
-  val64 += ((hi2>>4) & 0x0F) * scale * 10;
+  val64 += (hi2 & 0x0f) * scale;
+  val64 += ((hi2>>4) & 0x0f) * scale * 10;
 
   floatx80 result = int64_to_floatx80(val64);
   if (hi2 & 0x8000)	// set negative
@@ -269,8 +269,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FST_STi(bxInstruction_c *i)
   int st0_tag = BX_CPU_THIS_PTR the_i387.FPU_gettagi(0);
   if (st0_tag == FPU_Tag_Empty)
   {
-     BX_CPU_THIS_PTR FPU_stack_underflow(i->rm(), pop_stack);
-     return;
+    BX_CPU_THIS_PTR FPU_stack_underflow(i->rm(), pop_stack);
+    return;
   }
 
   floatx80 st0_reg = BX_READ_FPU_REG(0);
@@ -403,12 +403,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FIST_WORD_INTEGER(bxInstruction_c *i)
   }
   else
   {
-      float_status_t status =
+     float_status_t status =
          FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
 
-      save_reg = floatx80_to_int16(BX_READ_FPU_REG(0), status);
+     save_reg = floatx80_to_int16(BX_READ_FPU_REG(0), status);
 
-      if (BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags))
+     if (BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags))
         return;
   }
 
@@ -520,9 +520,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FBSTP_PACKED_BCD(bxInstruction_c *i)
      float_status_t status =
         FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
 
-     Bit64s save_val = floatx80_to_int64(BX_READ_FPU_REG(0), status);
+     floatx80 reg = BX_READ_FPU_REG(0);
 
-     int sign = (save_val < 0);
+     Bit64s save_val = floatx80_to_int64(reg, status);
+
+     int sign = (reg.exp & 0x8000) != 0;
      if (sign)
         save_val = -save_val;
 
@@ -581,12 +583,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FISTTP16(bxInstruction_c *i)
   }
   else
   {
-      float_status_t status =
+     float_status_t status =
          FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
 
-      save_reg = floatx80_to_int16_round_to_zero(BX_READ_FPU_REG(0), status);
+     save_reg = floatx80_to_int16_round_to_zero(BX_READ_FPU_REG(0), status);
 
-      if (BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags))
+     if (BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags))
         return;
   }
 
