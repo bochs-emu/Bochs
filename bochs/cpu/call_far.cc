@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: call_far.cc,v 1.32 2008-04-19 20:00:28 sshwarts Exp $
+// $Id: call_far.cc,v 1.33 2008-05-04 21:51:52 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005 Stanislav Shwartsman
@@ -577,13 +577,6 @@ BX_CPU_C::call_gate64(bx_selector_t *gate_selector)
   else
   {
     BX_DEBUG(("CALL GATE TO SAME PRIVILEGE"));
-
-    // make sure that push CS:RIP will not fail
-    if (! IsCanonical(RSP)) {
-      BX_ERROR(("call_gate64: canonical address failure %08x%08x",
-         GET32H(RSP), GET32L(RSP)));
-      exception(BX_SS_EXCEPTION, 0, 0);
-    }
 
     // push return address onto stack
     push_64(old_CS);
