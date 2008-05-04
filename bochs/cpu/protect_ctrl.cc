@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: protect_ctrl.cc,v 1.82 2008-04-24 22:41:46 sshwarts Exp $
+// $Id: protect_ctrl.cc,v 1.83 2008-05-04 21:25:16 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -317,6 +317,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LLDT_Ew(bxInstruction_c *i)
   bx_selector_t    selector;
   Bit16u raw_selector;
   Bit32u dword1, dword2;
+#if BX_SUPPORT_X86_64
+  Bit32u dword3 = 0;
+#endif
 
   if (real_mode() || v8086_mode()) {
     BX_ERROR(("LLDT: not recognized in real or virtual-8086 mode"));
@@ -355,8 +358,16 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LLDT_Ew(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, raw_selector & 0xfffc, 0);
   }
 
-  /* fetch 2 dwords of descriptor; call handles out of limits checks */
-  fetch_raw_descriptor(&selector, &dword1, &dword2, BX_GP_EXCEPTION);
+  /* fetch descriptor; call handles out of limits checks */
+#if BX_SUPPORT_X86_64
+  if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
+    fetch_raw_descriptor64(&selector, &dword1, &dword2, &dword3, BX_GP_EXCEPTION);
+  }
+#endif
+  else {
+    fetch_raw_descriptor(&selector, &dword1, &dword2, BX_GP_EXCEPTION);
+  }
+
   parse_descriptor(dword1, dword2, &descriptor);
 
   /* if selector doesn't point to an LDT descriptor #GP(selector) */
@@ -374,17 +385,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LLDT_Ew(bxInstruction_c *i)
   }
 
 #if BX_SUPPORT_X86_64
-  if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
-    // set upper 32 bits of ldt base
-    Bit32u dword3;
-    access_read_linear(BX_CPU_THIS_PTR gdtr.base + selector.index*8 + 8, 4, 0, BX_READ, &dword3);
-    descriptor.u.system.base |= ((Bit64u)dword3 << 32);
-    BX_INFO(("64 bit LDT base = 0x%08x%08x",
-       GET32H(descriptor.u.system.base), GET32L(descriptor.u.system.base)));
-    if (!IsCanonical(descriptor.u.system.base)) {
-      BX_ERROR(("LLDT: non-canonical LDT descriptor base!"));
-      exception(BX_GP_EXCEPTION, raw_selector & 0xfffc, 0);
-    }
+  descriptor.u.system.base |= ((Bit64u)(dword3) << 32);
+  BX_DEBUG(("64 bit LDT base = 0x%08x%08x",
+     GET32H(descriptor.u.system.base), GET32L(descriptor.u.system.base)));
+  if (!IsCanonical(descriptor.u.system.base)) {
+    BX_ERROR(("LLDT: non-canonical LDT descriptor base!"));
+    exception(BX_GP_EXCEPTION, raw_selector & 0xfffc, 0);
   }
 #endif
 
@@ -399,6 +405,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LTR_Ew(bxInstruction_c *i)
   bx_selector_t selector;
   Bit16u raw_selector;
   Bit32u dword1, dword2;
+#if BX_SUPPORT_X86_64
+  Bit32u dword3 = 0;
+#endif
 
   if (real_mode() || v8086_mode()) {
     BX_ERROR(("LTR: not recognized in real or virtual-8086 mode"));
@@ -435,8 +444,16 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LTR_Ew(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, raw_selector & 0xfffc, 0);
   }
 
-  /* fetch 2 dwords of descriptor; call handles out of limits checks */
-  fetch_raw_descriptor(&selector, &dword1, &dword2, BX_GP_EXCEPTION);
+  /* fetch descriptor; call handles out of limits checks */
+#if BX_SUPPORT_X86_64
+  if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
+    fetch_raw_descriptor64(&selector, &dword1, &dword2, &dword3, BX_GP_EXCEPTION);
+  }
+#endif
+  else {
+    fetch_raw_descriptor(&selector, &dword1, &dword2, BX_GP_EXCEPTION);
+  }
+
   parse_descriptor(dword1, dword2, &descriptor);
 
   /* #GP(selector) if object is not a TSS or is already busy */
@@ -462,17 +479,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LTR_Ew(bxInstruction_c *i)
   }
 
 #if BX_SUPPORT_X86_64
-  if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
-    // set upper 32 bits of tss base
-    Bit32u dword3;
-    access_read_linear(BX_CPU_THIS_PTR gdtr.base + selector.index*8 + 8, 4, 0, BX_READ, &dword3);
-    descriptor.u.system.base |= ((Bit64u)dword3 << 32);
-    BX_DEBUG(("64 bit TSS base = 0x%08x%08x",
-       GET32H(descriptor.u.system.base), GET32L(descriptor.u.system.base)));
-    if (!IsCanonical(descriptor.u.system.base)) {
-      BX_ERROR(("LTR: non-canonical TSS descriptor base!"));
-      exception(BX_GP_EXCEPTION, raw_selector & 0xfffc, 0);
-    }
+  descriptor.u.system.base |= ((Bit64u)(dword3) << 32);
+  BX_DEBUG(("64 bit TSS base = 0x%08x%08x",
+     GET32H(descriptor.u.system.base), GET32L(descriptor.u.system.base)));
+  if (!IsCanonical(descriptor.u.system.base)) {
+    BX_ERROR(("LTR: non-canonical TSS descriptor base!"));
+    exception(BX_GP_EXCEPTION, raw_selector & 0xfffc, 0);
   }
 #endif
 

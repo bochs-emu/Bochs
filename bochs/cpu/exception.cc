@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.113 2008-04-25 21:21:46 sshwarts Exp $
+// $Id: exception.cc,v 1.114 2008-05-04 21:25:16 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -62,7 +62,7 @@ static const bx_bool is_exception_OK[3][3] = {
 void BX_CPU_C::long_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error_code, Bit16u error_code)
 {
   // long mode interrupt
-  Bit32u dword1, dword2, dword3;
+  Bit64u tmp1, tmp2;
 
   bx_descriptor_t gate_descriptor, cs_descriptor;
   bx_selector_t cs_selector;
@@ -70,20 +70,21 @@ void BX_CPU_C::long_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error_code
   // interrupt vector must be within IDT table limits,
   // else #GP(vector number*16 + 2 + EXT)
   if ((vector*16 + 15) > BX_CPU_THIS_PTR idtr.limit) {
-    BX_ERROR(("interrupt(long mode): vector > idtr.limit"));
-    BX_ERROR(("IDT.limit = %04x", (unsigned) BX_CPU_THIS_PTR idtr.limit));
-    BX_ERROR(("IDT.base  = %06x", (unsigned) BX_CPU_THIS_PTR idtr.base));
-    BX_ERROR(("interrupt vector must be within IDT table limits"));
+    BX_ERROR(("interrupt(long mode): vector must be within IDT table limits, IDT.limit = 0x%x", BX_CPU_THIS_PTR idtr.limit));
     exception(BX_GP_EXCEPTION, vector*16 + 2, 0);
   }
 
-  // descriptor AR byte must indicate interrupt gate, trap gate,
-  // or task gate, else #GP(vector*16 + 2 + EXT)
-  Bit64u idtindex = BX_CPU_THIS_PTR idtr.base + vector*16;
+  access_read_linear(BX_CPU_THIS_PTR idtr.base + vector*16,     8, 0, BX_READ, &tmp1);
+  access_read_linear(BX_CPU_THIS_PTR idtr.base + vector*16 + 8, 8, 0, BX_READ, &tmp2);
 
-  access_read_linear(idtindex,     4, 0, BX_READ, &dword1);
-  access_read_linear(idtindex + 4, 4, 0, BX_READ, &dword2);
-  access_read_linear(idtindex + 8, 4, 0, BX_READ, &dword3);
+  if (tmp2 & BX_CONST64(0x00001F0000000000)) {
+    BX_ERROR(("interrupt(long mode): IDT entry extended attributes DWORD4 TYPE != 0"));
+    exception(BX_GP_EXCEPTION, vector*16 + 2, 0);
+  }
+
+  Bit32u dword1 = GET32L(tmp1);
+  Bit32u dword2 = GET32H(tmp1);
+  Bit32u dword3 = GET32L(tmp2);
 
   parse_descriptor(dword1, dword2, &gate_descriptor);
 
@@ -93,6 +94,8 @@ void BX_CPU_C::long_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error_code
     exception(BX_GP_EXCEPTION, vector*16 + 2, 0);
   }
 
+  // descriptor AR byte must indicate interrupt gate, trap gate,
+  // or task gate, else #GP(vector*16 + 2 + EXT)
   if (gate_descriptor.type != BX_386_INTERRUPT_GATE &&
       gate_descriptor.type != BX_386_TRAP_GATE)
   {
@@ -149,7 +152,7 @@ void BX_CPU_C::long_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error_code
   if (! IS_LONG64_SEGMENT(cs_descriptor) || cs_descriptor.u.segment.d_b)
   {
     BX_ERROR(("interrupt(long mode): must be 64 bit segment"));
-    exception(BX_GP_EXCEPTION, vector, 0);
+    exception(BX_GP_EXCEPTION, cs_selector.value & 0xfffc, 0);
   }
 
   // segment must be present, else #NP(selector + EXT)
@@ -299,10 +302,7 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error
   // interrupt vector must be within IDT table limits,
   // else #GP(vector number*8 + 2 + EXT)
   if ((vector*8 + 7) > BX_CPU_THIS_PTR idtr.limit) {
-    BX_DEBUG(("IDT.limit = %04x", (unsigned) BX_CPU_THIS_PTR idtr.limit));
-    BX_DEBUG(("IDT.base  = %06x", (unsigned) BX_CPU_THIS_PTR idtr.base));
-    BX_DEBUG(("interrupt vector must be within IDT table limits"));
-    BX_DEBUG(("interrupt(): vector > idtr.limit"));
+    BX_DEBUG(("interrupt(): vector must be within IDT table limits, IDT.limit = 0x%x", BX_CPU_THIS_PTR idtr.limit));
     exception(BX_GP_EXCEPTION, vector*8 + 2, 0);
   }
 

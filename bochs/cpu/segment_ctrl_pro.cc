@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: segment_ctrl_pro.cc,v 1.90 2008-04-26 19:41:28 sshwarts Exp $
+// $Id: segment_ctrl_pro.cc,v 1.91 2008-05-04 21:25:16 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -231,6 +231,7 @@ BX_CPU_C::load_seg_reg(bx_segment_reg_t *seg, Bit16u new_value)
   }
 
   /* Do not modify segment limit and AR bytes when in real mode */
+  /* Support for big real mode */
   if (real_mode()) return;
 
   seg->cache.dpl = 3; /* we are in v8086 mode */
@@ -254,9 +255,6 @@ void BX_CPU_C::loadSRegLMNominal(unsigned segI, unsigned selector, unsigned dpl)
   // Load a segment register in long-mode with nominal values,
   // so descriptor cache values are compatible with existing checks.
   seg->cache.u.segment.base = 0;
-  // I doubt we need limit_scaled.  If we do, it should be
-  // of type bx_addr and be maxed to 64bits, not 32.
-  seg->cache.u.segment.limit_scaled = 0xffffffff;
   seg->cache.valid = 1;
   seg->cache.dpl = dpl;
 
@@ -637,9 +635,8 @@ BX_CPU_C::load_ss(bx_selector_t *selector, bx_descriptor_t *descriptor, Bit8u cp
   if ((BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value & 0xfffc) == 0)
     BX_PANIC(("load_ss(): null selector passed"));
 
-  if (!BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.valid) {
+  if (!BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.valid)
     BX_PANIC(("load_ss(): invalid selector/descriptor passed."));
-  }
 }
 
 #if BX_CPU_LEVEL >= 2
