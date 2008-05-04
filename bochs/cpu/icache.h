@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: icache.h,v 1.33 2008-04-19 22:29:44 sshwarts Exp $
+// $Id: icache.h,v 1.34 2008-05-04 05:37:36 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -111,10 +111,11 @@ BX_CPP_INLINE void bxPageWriteStampTable::purgeWriteStamps(void)
 
 extern bxPageWriteStampTable pageWriteStampTable;
 
-#define BxICacheEntries (32 * 1024)  // Must be a power of 2.
+#define BxICacheEntries (64 * 1024)  // Must be a power of 2.
+#define BxICacheMemPool (384 * 1024)
 
 #if BX_SUPPORT_TRACE_CACHE
-  #define BX_MAX_TRACE_LENGTH 15
+  #define BX_MAX_TRACE_LENGTH 32
 #endif
 
 struct bxICacheEntry_c
@@ -124,7 +125,7 @@ struct bxICacheEntry_c
                         // decrements this value
 #if BX_SUPPORT_TRACE_CACHE
   Bit32u ilen;          // Trace length in instructions
-  bxInstruction_c i[BX_MAX_TRACE_LENGTH];
+  bxInstruction_c *i;
 #else
   // ... define as array of 1 to simplify merge with trace cache code
   bxInstruction_c i[1];
@@ -134,6 +135,10 @@ struct bxICacheEntry_c
 class BOCHSAPI bxICache_c {
 public:
   bxICacheEntry_c entry[BxICacheEntries];
+#if BX_SUPPORT_TRACE_CACHE
+  bxInstruction_c  pool[BxICacheMemPool];
+  Bit32u mempool;
+#endif
 
 public:
   bxICache_c() { flushICacheEntries(); }
@@ -141,8 +146,19 @@ public:
   BX_CPP_INLINE unsigned hash(bx_phy_address pAddr) const
   {
     // A pretty dumb hash function for now.
-    return (pAddr + (pAddr>>6)) & (BxICacheEntries-1);
+    return (pAddr + (pAddr << 2) + (pAddr>>6)) & (BxICacheEntries-1);
   }
+
+#if BX_SUPPORT_TRACE_CACHE
+  BX_CPP_INLINE void alloc_trace(bxICacheEntry_c *e)
+  {
+    if (mempool + BX_MAX_TRACE_LENGTH > BxICacheMemPool) flushICacheEntries();
+    e->i = &pool[mempool];
+    e->ilen = 0;
+  }
+
+  BX_CPP_INLINE void commit_trace(unsigned len) { mempool += len; }
+#endif
 
   BX_CPP_INLINE void purgeICacheEntries(void);
   BX_CPP_INLINE void flushICacheEntries(void);
@@ -151,31 +167,25 @@ public:
   {
     return &(entry[hash(pAddr)]);
   }
+
 };
 
 BX_CPP_INLINE void bxICache_c::flushICacheEntries(void)
 {
-    bxICacheEntry_c* e = entry;
-    for (unsigned i=0; i<BxICacheEntries; i++, e++) {
-      e->writeStamp = ICacheWriteStampInvalid;
-    }
+  bxICacheEntry_c* e = entry;
+  for (unsigned i=0; i<BxICacheEntries; i++, e++) {
+    e->writeStamp = ICacheWriteStampInvalid;
+  }
+#if BX_SUPPORT_TRACE_CACHE
+  mempool = 0;
+#endif
 }
 
+// Since the write stamps may overflow if we always simply decrese them,
+// this function has to be called often enough that we can reset them.
 BX_CPP_INLINE void bxICache_c::purgeICacheEntries(void)
 {
-  bxICacheEntry_c* e = entry;
-
-  // Since the write stamps may overflow if we always simply decrese them,
-  // this function has to be called often enough that we can reset them
-  // (without invalidating the cache).
-  for (unsigned i=0;i<BxICacheEntries;i++,e++)
-  {
-    Bit32u pageWriteStamp = pageWriteStampTable.getPageWriteStamp(e->pAddr);
-    if (e->writeStamp != pageWriteStamp)
-      e->writeStamp = ICacheWriteStampInvalid;	// invalidate entry
-    else
-      e->writeStamp |= ICacheWriteStampStart;
-  }
+  flushICacheEntries();
 }
 
 extern void purgeICaches(void);

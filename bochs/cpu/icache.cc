@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: icache.cc,v 1.11 2008-03-29 21:01:25 sshwarts Exp $
+// $Id: icache.cc,v 1.12 2008-05-04 05:37:36 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007 Stanislav Shwartsman
@@ -81,11 +81,12 @@ void stopTraceExecution(void)
 
 void BX_CPU_C::serveICacheMiss(bxICacheEntry_c *cache_entry, Bit32u eipBiased, bx_phy_address pAddr)
 {
+  BX_CPU_THIS_PTR iCache.alloc_trace(cache_entry);
+
   // Cache miss. We weren't so lucky, but let's be optimistic - try to build 
   // trace from incoming instruction bytes stream !
   cache_entry->pAddr = pAddr;
   cache_entry->writeStamp = *(BX_CPU_THIS_PTR currPageWriteStampPtr);
-  cache_entry->ilen = 0;
 
   unsigned remainingInPage = BX_CPU_THIS_PTR eipPageWindowSize - eipBiased;
   const Bit8u *fetchPtr = BX_CPU_THIS_PTR eipFetchPtr + eipBiased;
@@ -115,7 +116,7 @@ void BX_CPU_C::serveICacheMiss(bxICacheEntry_c *cache_entry, Bit32u eipBiased, b
       cache_entry->writeStamp = ICacheWriteStampInvalid;
       cache_entry->ilen = 1;
       boundaryFetch(fetchPtr, remainingInPage, i);
-      break;
+      return;
     }
 
     // add instruction to the trace
@@ -132,6 +133,8 @@ void BX_CPU_C::serveICacheMiss(bxICacheEntry_c *cache_entry, Bit32u eipBiased, b
     // try to find a trace starting from current pAddr and merge
     if (mergeTraces(cache_entry, i, pAddr)) break;
   }
+
+  BX_CPU_THIS_PTR iCache.commit_trace(cache_entry->ilen);
 }
 
 bx_bool BX_CPU_C::mergeTraces(bxICacheEntry_c *entry, bxInstruction_c *i, bx_phy_address pAddr)

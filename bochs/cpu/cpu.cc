@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.226 2008-05-01 20:08:37 sshwarts Exp $
+// $Id: cpu.cc,v 1.227 2008-05-04 05:37:36 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -167,6 +167,7 @@ no_async_event:
       // is in the iCache.
       InstrICache_Increment(iCacheMisses);
       serveICacheMiss(entry, eipBiased, pAddr);
+      i = entry->i;
     }
 #else
     bxInstruction_c iStorage, *i = &iStorage;
