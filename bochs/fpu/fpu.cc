@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu.cc,v 1.39 2008-04-30 20:41:15 sshwarts Exp $
+// $Id: fpu.cc,v 1.40 2008-05-05 21:23:33 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -84,6 +84,15 @@ void BX_CPU_C::FPU_check_pending_exceptions(void)
 
 int BX_CPU_C::fpu_save_environment(bxInstruction_c *i)
 {
+    /* read all registers in stack order and update x87 tag word */
+    for(int n=0;n<8;n++) {
+       // update tag only if it is not empty
+       if (! IS_TAG_EMPTY(n)) {
+           int tag = FPU_tagof(BX_READ_FPU_REG(n));
+           BX_CPU_THIS_PTR the_i387.FPU_settagi(tag, n);
+       }
+    }
+
     BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
     if (protected_mode())  /* Protected Mode */
@@ -296,8 +305,9 @@ int BX_CPU_C::fpu_load_environment(bxInstruction_c *i)
         }
     }
 
-    /* always set bit 6 - reserved */
-    BX_CPU_THIS_PTR the_i387.cwd |= 0x0040;
+    /* always set bit 6 as '1 */
+    BX_CPU_THIS_PTR the_i387.cwd =
+       (BX_CPU_THIS_PTR the_i387.cwd & ~FPU_CW_Reserved_Bits) | 0x0040;
 
     /* check for unmasked exceptions */
     if (FPU_PARTIAL_STATUS & ~FPU_CONTROL_WORD & FPU_CW_Exceptions_Mask)
@@ -323,7 +333,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLDCW(bxInstruction_c *i)
   BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
   Bit16u cwd = read_virtual_word(i->seg(), RMAddr(i));
-  FPU_CONTROL_WORD = cwd | 0x0040; // bit 6 is reserved - always set
+  FPU_CONTROL_WORD = (cwd & ~FPU_CW_Reserved_Bits) | 0x0040; // bit 6 is reserved as '1
 
   /* check for unmasked exceptions */
   if (FPU_PARTIAL_STATUS & ~FPU_CONTROL_WORD & FPU_CW_Exceptions_Mask)
@@ -461,12 +471,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLDENV(bxInstruction_c *i)
   BX_CPU_THIS_PTR prepareFPU(i, CHECK_PENDING_EXCEPTIONS, !UPDATE_LAST_OPCODE);
   fpu_load_environment(i);
 
-  /* read all registers in stack order */
-  for(int n=0;n<8;n++)
-  {
+  /* read all registers in stack order and update x87 tag word */
+  for(int n=0;n<8;n++) {
      // update tag only if it is not empty
-     if (! IS_TAG_EMPTY(n))
-     {
+     if (! IS_TAG_EMPTY(n)) {
          int tag = FPU_tagof(BX_READ_FPU_REG(n));
          BX_CPU_THIS_PTR the_i387.FPU_settagi(tag, n);
      }
@@ -526,13 +534,43 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FPLEGACY(bxInstruction_c *i)
 void BX_CPU_C::print_state_FPU(void)
 {
   static double scale_factor = pow(2.0, -63.0);
+  static char* cw_round_control[] = {
+    "NEAREST", "DOWN", "UP", "CHOP"
+  };
+  static char* cw_precision_control[] = {
+    "32", "RES", "64", "80"
+  };
 
   Bit32u reg;
   reg = BX_CPU_THIS_PTR the_i387.get_control_word();
-  fprintf(stderr, "control word: 0x%04x\n", reg);
+  fprintf(stderr, "control word: 0x%04x: ", reg);
+  fprintf(stderr, "%s RC_%s PC_%s %s %s %s %s %s %s\n",
+    (reg & FPU_CW_Inf) ? "INF" : "inf",
+    (cw_round_control[(reg & FPU_CW_RC) >> 10]),
+    (cw_precision_control[(reg & FPU_CW_PC) >> 8]),
+    (reg & FPU_CW_Precision) ? "PM" : "pm",
+    (reg & FPU_CW_Underflow) ? "UM" : "um",
+    (reg & FPU_CW_Overflow)  ? "OM" : "om",
+    (reg & FPU_CW_Zero_Div)  ? "ZM" : "zm",
+    (reg & FPU_CW_Denormal)  ? "DM" : "dm",
+    (reg & FPU_CW_Invalid)   ? "IM" : "im");
+
   reg = BX_CPU_THIS_PTR the_i387.get_status_word();
-  fprintf(stderr, "status  word: 0x%04x\n", reg);
-  fprintf(stderr, "        TOS : %d\n", FPU_TOS&7);
+  fprintf(stderr, "status  word: 0x%04x: ", reg);
+  fprintf(stderr, "%s %s TOS%d %s %s %s %s %s %s %s %s %s %s %s\n",
+    (reg & FPU_SW_Backward) ? "B" : "b",
+    (reg & FPU_SW_C3) ? "C3" : "c3", (FPU_TOS&7),
+    (reg & FPU_SW_C2) ? "C2" : "c2",
+    (reg & FPU_SW_C1) ? "C1" : "c1",
+    (reg & FPU_SW_C0) ? "C0" : "c0",
+    (reg & FPU_SW_Summary) ? "ES" : "es",
+    (reg & FPU_SW_Stack_Fault) ? "SF" : "sf",
+    (reg & FPU_SW_Precision) ? "PE" : "pe",
+    (reg & FPU_SW_Underflow) ? "UE" : "ue",
+    (reg & FPU_SW_Overflow) ? "OE" : "oe",
+    (reg & FPU_SW_Zero_Div) ? "ZE" : "ze",
+    (reg & FPU_SW_Denormal_Op) ? "DE" : "de",
+    (reg & FPU_SW_Invalid) ? "IE" : "ie");
   reg = BX_CPU_THIS_PTR the_i387.get_tag_word();
   fprintf(stderr, "tag word:     0x%04x\n", reg);
   reg = BX_CPU_THIS_PTR the_i387.foo;

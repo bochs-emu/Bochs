@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: control_w.h,v 1.8 2007-03-23 21:27:12 sshwarts Exp $
+// $Id: control_w.h,v 1.9 2008-05-05 21:23:33 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2004 Stanislav Shwartsman
@@ -26,6 +26,10 @@
 /* ************ */
 /* Control Word */
 /* ************ */
+
+#define FPU_CW_Reserved_Bits    (0xe0c0)  /* reserved bits */
+
+#define FPU_CW_Inf		(0x1000)  /* infinity control, legacy */
 
 #define FPU_CW_RC		(0x0C00)  /* rounding control */
 #define FPU_CW_PC		(0x0300)  /* precision control */
