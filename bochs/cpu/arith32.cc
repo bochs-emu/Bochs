@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith32.cc,v 1.76 2008-04-04 22:39:45 sshwarts Exp $
+// $Id: arith32.cc,v 1.77 2008-05-05 21:48:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -717,29 +717,25 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPXCHG_EdGdR(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPXCHG8B(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
-  Bit32u op1_64_lo, op1_64_hi, diff;
+  Bit64u op1_64, op2_64;
 
   BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
   // check write permission for following write
-  op1_64_lo = read_RMW_virtual_dword(i->seg(), RMAddr(i));
-  op1_64_hi = read_RMW_virtual_dword(i->seg(), RMAddr(i) + 4);
+  op1_64 = read_RMW_virtual_qword(i->seg(), RMAddr(i));
+  op2_64 = ((Bit64u) EDX << 32) | EAX;
 
-  diff  = EAX - op1_64_lo;
-  diff |= EDX - op1_64_hi;
-
-  if (diff == 0) {  // if accumulator == dest
-    // dest <-- src
-    write_RMW_virtual_dword(ECX);
-    // write permissions already checked by read_RMW_virtual_dword
-    write_virtual_dword(i->seg(), RMAddr(i), EBX);
+  if (op1_64 == op2_64) {  // if accumulator == dest
+    // dest <-- src (ECX:EBX)
+    op2_64 = ((Bit64u) ECX << 32) | EBX;
+    write_RMW_virtual_dword(op2_64);
     assert_ZF();
   }
   else {
-    clear_ZF();
     // accumulator <-- dest
-    RAX = op1_64_lo;
-    RDX = op1_64_hi;
+    RAX = GET32L(op1_64);
+    RDX = GET32H(op1_64);
+    clear_ZF();
   }
 
 #else

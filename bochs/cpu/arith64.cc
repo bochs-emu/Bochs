@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith64.cc,v 1.51 2008-04-04 22:39:45 sshwarts Exp $
+// $Id: arith64.cc,v 1.52 2008-05-05 21:48:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -718,7 +718,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPXCHG16B(bxInstruction_c *i)
   diff |= RDX - op1_64_hi;
 
   if (diff == 0) {  // if accumulator == dest
-    // dest <-- src
+    // dest <-- src (RCX:RBX)
     write_RMW_virtual_qword(RCX);
     // write permissions already checked by read_RMW_virtual_qword
     write_virtual_qword(i->seg(), RMAddr(i), RBX);

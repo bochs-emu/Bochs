@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.224 2008-05-04 21:25:16 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.225 2008-05-05 21:48:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1702,7 +1702,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRMSR(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
-  Bit64u val64 = ((Bit64u) EDX << 32) + EAX;
+  Bit64u val64 = ((Bit64u) EDX << 32) | EAX;
 
   BX_INSTR_WRMSR(BX_CPU_ID, ECX, val64);
 
