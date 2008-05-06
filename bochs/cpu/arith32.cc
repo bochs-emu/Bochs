@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith32.cc,v 1.77 2008-05-05 21:48:07 sshwarts Exp $
+// $Id: arith32.cc,v 1.78 2008-05-06 05:06:32 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -728,7 +728,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPXCHG8B(bxInstruction_c *i)
   if (op1_64 == op2_64) {  // if accumulator == dest
     // dest <-- src (ECX:EBX)
     op2_64 = ((Bit64u) ECX << 32) | EBX;
-    write_RMW_virtual_dword(op2_64);
+    write_RMW_virtual_qword(op2_64);
     assert_ZF();
   }
   else {
