@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: call_far.cc,v 1.33 2008-05-04 21:51:52 sshwarts Exp $
+// $Id: call_far.cc,v 1.34 2008-05-07 16:45:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005 Stanislav Shwartsman
@@ -318,12 +318,6 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
           // get word count from call gate, mask to 5 bits
           unsigned param_count = gate_descriptor.u.gate.param_count & 0x1f;
 
-          // new eIP must be in code segment limit else #GP(0)
-          if (new_EIP > cs_descriptor.u.segment.limit_scaled) {
-            BX_ERROR(("call_protected: EIP not within CS limits"));
-            exception(BX_GP_EXCEPTION, 0, 0);
-          }
-
           // save return SS:eSP to be pushed on new stack
           return_SS = BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value;
           if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b)
@@ -428,6 +422,12 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
             }
 
             SP = temp_SP;
+          }
+
+          // new eIP must be in code segment limit else #GP(0)
+          if (new_EIP > cs_descriptor.u.segment.limit_scaled) {
+            BX_ERROR(("call_protected: EIP not within CS limits"));
+            exception(BX_GP_EXCEPTION, 0, 0);
           }
 
           /* load SS descriptor */
