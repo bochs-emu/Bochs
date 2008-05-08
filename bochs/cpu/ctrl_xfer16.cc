@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer16.cc,v 1.54 2008-03-22 21:29:39 sshwarts Exp $
+// $Id: ctrl_xfer16.cc,v 1.55 2008-05-08 21:04:03 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -48,7 +48,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RETnear16_Iw(bxInstruction_c *i)
 
   if (return_IP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled)
   {
-    BX_ERROR(("retnear_iw: IP > limit"));
+    BX_ERROR(("RETnear16_Iw: IP > limit"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
@@ -79,7 +79,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RETnear16(bxInstruction_c *i)
 
   if (return_IP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled)
   {
-    BX_ERROR(("retnear: IP > limit"));
+    BX_ERROR(("RETnear16: IP > limit"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 

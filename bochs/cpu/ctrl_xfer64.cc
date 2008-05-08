@@ -1,5 +1,5 @@
-/////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer64.cc,v 1.65 2008-04-13 20:57:49 sshwarts Exp $
+////////c/////////////////////////////////////////////////////////////////
+// $Id: ctrl_xfer64.cc,v 1.66 2008-05-08 21:04:03 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -77,7 +77,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RETnear64(bxInstruction_c *i)
   Bit64u return_RIP = read_virtual_qword(BX_SEG_REG_SS, RSP);
 
   if (! IsCanonical(return_RIP)) {
-    BX_ERROR(("RETnear64_Iw: canonical RIP violation"));
+    BX_ERROR(("RETnear64: canonical RIP violation %08x%08x", GET32H(return_RIP), GET32L(return_RIP)));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
