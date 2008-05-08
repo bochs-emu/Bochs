@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack64.cc,v 1.39 2008-04-03 17:56:59 sshwarts Exp $
+// $Id: stack64.cc,v 1.40 2008-05-08 18:02:21 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -115,10 +115,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ENTER64_IwIb(bxInstruction_c *i)
   if (level > 0) {
     /* do level-1 times */
     while (--level) {
-      Bit64u temp64;
-
       RBP -= 8;
-      temp64 = read_virtual_qword(BX_SEG_REG_SS, RBP);
+      Bit64u temp64 = read_virtual_qword(BX_SEG_REG_SS, RBP);
       RSP -= 8;
       write_virtual_qword(BX_SEG_REG_SS, RSP, temp64);
     } /* while (--level) */
@@ -128,10 +126,16 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ENTER64_IwIb(bxInstruction_c *i)
     write_virtual_qword(BX_SEG_REG_SS, RSP, frame_ptr64);
   } /* if (level > 0) ... */
 
-  BX_CPU_THIS_PTR speculative_rsp = 0;
+  RSP -= i->Iw();
+
+  // ENTER finishes with memory write check on the final stack pointer
+  // the memory is touched but no write actually occurs
+  // emulate it by doing RMW read access from SS:RSP
+  read_RMW_virtual_qword(BX_SEG_REG_SS, RSP);
 
   RBP = frame_ptr64;
-  RSP -= i->Iw();
+
+  BX_CPU_THIS_PTR speculative_rsp = 0;
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::LEAVE64(bxInstruction_c *i)

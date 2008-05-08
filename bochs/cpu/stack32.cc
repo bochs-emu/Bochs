@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack32.cc,v 1.52 2008-04-30 20:41:40 sshwarts Exp $
+// $Id: stack32.cc,v 1.53 2008-05-08 18:02:21 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -240,67 +240,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::POPAD32(bxInstruction_c *i)
   EAX = eax;
 }
 
-#if BX_CPU_LEVEL >= 2
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::ENTER16_IwIb(bxInstruction_c *i)
-{
-  unsigned ss32 = BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b;
-
-  Bit16u imm16 = i->Iw();
-  Bit8u level = i->Ib2();
-  level &= 0x1F;
-
-  BX_CPU_THIS_PTR speculative_rsp = 1;
-  BX_CPU_THIS_PTR prev_rsp = RSP;
-
-  Bit32u ebp; // Use temp copy in case of exception.
-  push_16(BP);
-
-  Bit32u frame_ptr32 = ESP;
-
-  if (ss32) {
-    ebp = EBP;
-  }
-  else {
-    ebp = BP;
-  }
-
-  if (level > 0) {
-    /* do level-1 times */
-    while (--level) {
-      Bit16u temp16;
-
-      if (ss32) {
-        ebp -= 2;
-        temp16 = read_virtual_word(BX_SEG_REG_SS, ebp);
-      }
-      else { /* 16bit stacksize */
-        ebp -= 2;
-        ebp &= 0xffff;
-        temp16 = read_virtual_word(BX_SEG_REG_SS, ebp);
-      }
-      push_16(temp16);
-    }
-
-    /* push(frame pointer) */
-    push_16((Bit16u)frame_ptr32);
-  }
-
-  BX_CPU_THIS_PTR speculative_rsp = 0;
-
-  if (ss32) {
-    EBP = frame_ptr32;
-    ESP -= imm16;
-  }
-  else {
-    BP = (Bit16u) frame_ptr32;
-    SP -= imm16;
-  }
-}
-
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::ENTER32_IwIb(bxInstruction_c *i)
 {
-  unsigned ss32 = BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b;
-
   Bit16u imm16 = i->Iw();
   Bit8u level = i->Ib2();
   level &= 0x1F;
@@ -308,49 +249,57 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ENTER32_IwIb(bxInstruction_c *i)
   BX_CPU_THIS_PTR speculative_rsp = 1;
   BX_CPU_THIS_PTR prev_rsp = RSP;
 
-  Bit32u ebp; // Use temp copy in case of exception.
   push_32(EBP);
-
   Bit32u frame_ptr32 = ESP;
 
-  if (ss32) {
-    ebp = EBP;
-  }
-  else {
-    ebp = BP;
-  }
+  if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b) {
+    Bit32u ebp = EBP;  // Use temp copy for case of exception.
 
-  if (level > 0) {
-    /* do level-1 times */
-    while (--level) {
-      Bit32u temp32;
+    if (level > 0) {
+      /* do level-1 times */
+      while (--level) {
+        ebp -= 4;
+        Bit32u temp32 = read_virtual_dword(BX_SEG_REG_SS, ebp);
+        push_32(temp32);
+      }
 
-      if (ss32) {
-        ebp -= 4;
-        temp32 = read_virtual_dword(BX_SEG_REG_SS, ebp);
-      }
-      else { /* 16bit stacksize */
-        ebp -= 4;
-        ebp &= 0xffff;
-        temp32 = read_virtual_dword(BX_SEG_REG_SS, ebp);
-      }
-      push_32(temp32);
+      /* push(frame pointer) */
+      push_32(frame_ptr32);
     }
 
-    /* push(frame pointer) */
-    push_32(frame_ptr32);
-  }
-
-  BX_CPU_THIS_PTR speculative_rsp = 0;
-
-  if (ss32) {
-    EBP = frame_ptr32;
     ESP -= imm16;
+
+    // ENTER finishes with memory write check on the final stack pointer
+    // the memory is touched but no write actually occurs
+    // emulate it by doing RMW read access from SS:ESP
+    read_RMW_virtual_dword(BX_SEG_REG_SS, ESP);
   }
   else {
-    BP = (Bit16u) frame_ptr32;
+    Bit16u bp = BP;
+
+    if (level > 0) {
+      /* do level-1 times */
+      while (--level) {
+        bp -= 4;
+        Bit32u temp32 = read_virtual_dword(BX_SEG_REG_SS, bp);
+        push_32(temp32);
+      }
+
+      /* push(frame pointer) */
+      push_32(frame_ptr32);
+    }
+
     SP -= imm16;
+
+    // ENTER finishes with memory write check on the final stack pointer
+    // the memory is touched but no write actually occurs
+    // emulate it by doing RMW read access from SS:SP
+    read_RMW_virtual_dword(BX_SEG_REG_SS, SP);
   }
+
+  EBP = frame_ptr32;
+
+  BX_CPU_THIS_PTR speculative_rsp = 0;
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::LEAVE(bxInstruction_c *i)
@@ -372,4 +321,3 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LEAVE(bxInstruction_c *i)
 
   BX_CPU_THIS_PTR speculative_rsp = 0;
 }
-#endif

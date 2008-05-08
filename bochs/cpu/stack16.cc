@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack16.cc,v 1.39 2008-04-30 20:41:40 sshwarts Exp $
+// $Id: stack16.cc,v 1.40 2008-05-08 18:02:21 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -169,7 +169,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUSH_EwM(bxInstruction_c *i)
   push_16(op1_16);
 }
 
-#if BX_CPU_LEVEL >= 3
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUSHAD16(bxInstruction_c *i)
 {
   Bit32u temp_ESP = ESP;
@@ -240,4 +239,67 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::POPAD16(bxInstruction_c *i)
   CX = cx;
   AX = ax;
 }
-#endif
+
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::ENTER16_IwIb(bxInstruction_c *i)
+{
+  Bit16u imm16 = i->Iw();
+  Bit8u level = i->Ib2();
+  level &= 0x1F;
+
+  BX_CPU_THIS_PTR speculative_rsp = 1;
+  BX_CPU_THIS_PTR prev_rsp = RSP;
+
+  push_16(BP);
+  Bit16u frame_ptr16 = SP;
+
+  if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b) {
+    Bit32u ebp = EBP; // Use temp copy for case of exception.
+
+    if (level > 0) {
+      /* do level-1 times */
+      while (--level) {
+        ebp -= 2;
+        Bit16u temp16 = read_virtual_word(BX_SEG_REG_SS, ebp);
+        push_16(temp16);
+      }
+
+      /* push(frame pointer) */
+      push_16(frame_ptr16);
+    }
+
+    ESP -= imm16;
+
+    // ENTER finishes with memory write check on the final stack pointer
+    // the memory is touched but no write actually occurs
+    // emulate it by doing RMW read access from SS:ESP
+    read_RMW_virtual_word(BX_SEG_REG_SS, ESP);
+
+    BP = frame_ptr16;
+  }
+  else {
+    Bit16u bp = BP;
+
+    if (level > 0) {
+      /* do level-1 times */
+      while (--level) {
+        bp -= 2;
+        Bit16u temp16 = read_virtual_word(BX_SEG_REG_SS, bp);
+        push_16(temp16);
+      }
+
+      /* push(frame pointer) */
+      push_16(frame_ptr16);
+    }
+
+    SP -= imm16;
+
+    // ENTER finishes with memory write check on the final stack pointer
+    // the memory is touched but no write actually occurs
+    // emulate it by doing RMW read access from SS:SP
+    read_RMW_virtual_word(BX_SEG_REG_SS, SP);
+  }
+
+  BP = frame_ptr16;
+
+  BX_CPU_THIS_PTR speculative_rsp = 0;
+}
