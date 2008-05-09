@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.471 2008-05-06 19:45:17 sshwarts Exp $
+// $Id: cpu.h,v 1.472 2008-05-09 18:09:03 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -569,8 +569,8 @@ typedef struct
 } bx_regs_msr_t;
 #endif
 
-#define MAX_STD_CPUID_FUNCTION 15
-#define MAX_EXT_CPUID_FUNCTION 8
+#define MAX_STD_CPUID_FUNCTION 14
+#define MAX_EXT_CPUID_FUNCTION 9
 
 struct cpuid_function_t {
   Bit32u eax;
@@ -2958,8 +2958,7 @@ public: // for now...
 
   BX_SMF void jump_protected(bxInstruction_c *, Bit16u cs, bx_address disp) BX_CPP_AttrRegparmN(3);
   BX_SMF void jmp_task_gate(bx_descriptor_t *gate_descriptor) BX_CPP_AttrRegparmN(1);
-  BX_SMF void jmp_call_gate16(bx_descriptor_t *gate_descriptor) BX_CPP_AttrRegparmN(1);
-  BX_SMF void jmp_call_gate32(bx_descriptor_t *gate_descriptor) BX_CPP_AttrRegparmN(1);
+  BX_SMF void jmp_call_gate(bx_descriptor_t *gate_descriptor) BX_CPP_AttrRegparmN(1);
 #if BX_SUPPORT_X86_64
   BX_SMF void jmp_call_gate64(bx_selector_t *selector) BX_CPP_AttrRegparmN(1);
 #endif

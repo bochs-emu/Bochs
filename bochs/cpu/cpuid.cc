@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpuid.cc,v 1.67 2008-04-04 12:23:19 sshwarts Exp $
+// $Id: cpuid.cc,v 1.68 2008-05-09 18:09:04 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007 Stanislav Shwartsman
@@ -299,7 +299,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CPUID(bxInstruction_c *i)
       RCX = BX_CPU_THIS_PTR cpuid_ext_function[function].ecx;
       RDX = BX_CPU_THIS_PTR cpuid_ext_function[function].edx;
 #if BX_SUPPORT_APIC
-      if (EAX == 1) {
+      if (function == 1) {
         // if MSR_APICBASE APIC Global Enable bit has been cleared,
         // the CPUID feature flag for the APIC is set to 0.
         if ((BX_CPU_THIS_PTR msr.apicbase & 0x800) == 0)
@@ -710,7 +710,7 @@ void BX_CPU_C::set_cpuid_defaults(void)
 
   // ------------------------------------------------------
   // CPUID function 0x00000007
-  cpuid = &(BX_CPU_THIS_PTR cpuid_std_function[7]);
+  cpuid = &(BX_CPU_THIS_PTR cpuid_ext_function[7]);
 
   cpuid->eax = 0;
   cpuid->ebx = 0;
