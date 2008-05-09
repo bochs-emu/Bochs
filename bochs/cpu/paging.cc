@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.126 2008-05-02 22:47:07 sshwarts Exp $
+// $Id: paging.cc,v 1.127 2008-05-09 22:33:36 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -449,8 +449,8 @@ BX_CPU_C::pagingCR4Changed(Bit32u oldCR4, Bit32u newCR4)
 BX_CPU_C::CR3_change(bx_phy_address value)
 {
   if (bx_dbg.paging) {
-    BX_INFO(("CR3_change(): flush TLB cache"));
-    BX_INFO(("Page Directory Base %08x", (unsigned) value));
+    BX_DEBUG(("CR3_change(): flush TLB cache"));
+    BX_DEBUG(("Page Directory Base: 0x" FMT_PHY_ADDRX, value));
   }
 
   // flush TLB even if value does not change
@@ -657,11 +657,7 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned curr_pl, un
     // generate an exception if one is warranted.
   }
 
-#if BX_SUPPORT_X86_64
-  BX_DEBUG(("page walk for address 0x%08x:%08x", GET32H(laddr), GET32L(laddr)));
-#else
-  BX_DEBUG(("page walk for address 0x%08x", laddr));
-#endif
+  BX_DEBUG(("page walk for address 0x" FMT_LIN_ADDRX, laddr));
 
   InstrTLB_Increment(tlbMisses);
 

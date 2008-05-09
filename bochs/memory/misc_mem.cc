@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: misc_mem.cc,v 1.113 2008-05-01 20:28:36 sshwarts Exp $
+// $Id: misc_mem.cc,v 1.114 2008-05-09 22:33:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -76,7 +76,7 @@ void BX_MEM_C::init_memory(Bit32u memsize)
 {
   unsigned idx;
 
-  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.113 2008-05-01 20:28:36 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.114 2008-05-09 22:33:37 sshwarts Exp $"));
 
   if (BX_MEM_THIS actual_vector != NULL) {
     BX_INFO (("freeing existing memory vector"));
@@ -637,7 +637,7 @@ BX_MEM_C::registerMemoryHandlers(void *param, memory_handler_t read_handler,
     return 0;
   if (!read_handler || !write_handler)
     return 0;
-  BX_INFO(("Register memory access handlers: %08x-%08x", begin_addr, end_addr));
+  BX_INFO(("Register memory access handlers: 0x" FMT_PHY_ADDRX " - 0x" FMT_PHY_ADDRX, begin_addr, end_addr));
   for (unsigned page_idx = begin_addr >> 20; page_idx <= end_addr >> 20; page_idx++) {
     struct memory_handler_struct *memory_handler = new struct memory_handler_struct;
     memory_handler->next = BX_MEM_THIS memory_handlers[page_idx];
@@ -656,7 +656,7 @@ BX_MEM_C::unregisterMemoryHandlers(memory_handler_t read_handler, memory_handler
 		bx_phy_address begin_addr, bx_phy_address end_addr)
 {
   bx_bool ret = 1;
-  BX_INFO(("Memory access handlers unregistered: %08x-%08x", begin_addr, end_addr));
+  BX_INFO(("Memory access handlers unregistered: 0x" FMT_PHY_ADDRX " - 0x" FMT_PHY_ADDRX, begin_addr, end_addr));
   for (unsigned page_idx = begin_addr >> 20; page_idx <= end_addr >> 20; page_idx++) {
     struct memory_handler_struct *memory_handler = BX_MEM_THIS memory_handlers[page_idx];
     struct memory_handler_struct *prev = NULL;

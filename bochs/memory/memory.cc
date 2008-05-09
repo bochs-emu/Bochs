@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: memory.cc,v 1.67 2008-05-02 23:18:51 sshwarts Exp $
+// $Id: memory.cc,v 1.68 2008-05-09 22:33:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -52,7 +52,7 @@ void BX_MEM_C::writePhysicalPage(BX_CPU_C *cpu, bx_phy_address addr, unsigned le
 
   // Note: accesses should always be contained within a single page now
   if ((addr>>12) != ((addr+len-1)>>12)) {
-    BX_PANIC(("writePhysicalPage: cross page access at address 0x%08x, len=%d", addr, len));
+    BX_PANIC(("writePhysicalPage: cross page access at address 0x" FMT_PHY_ADDRX ", len=%d", addr, len));
   }
 
 #if BX_SUPPORT_MONITOR_MWAIT
@@ -185,13 +185,13 @@ mem_write:
       {
         switch (DEV_pci_wr_memtype(a20addr)) {
           case 0x1:   // Writes to ShadowRAM
-            BX_DEBUG(("Writing to ShadowRAM: address %08x, data %02x", (unsigned) a20addr, *data_ptr));
+            BX_DEBUG(("Writing to ShadowRAM: address 0x" FMT_PHY_ADDRX ", data %02x", a20addr, *data_ptr));
             *(BX_MEM_THIS get_vector(a20addr)) = *data_ptr;
             BX_DBG_DIRTY_PAGE(a20addr >> 12);
             break;
 
           case 0x0:   // Writes to ROM, Inhibit
-            BX_DEBUG(("Write to ROM ignored: address %08x, data %02x", (unsigned) a20addr, *data_ptr));
+            BX_DEBUG(("Write to ROM ignored: address 0x" FMT_PHY_ADDRX ", data %02x", a20addr, *data_ptr));
             break;
 
           default:
@@ -212,7 +212,7 @@ inc_one:
   }
   else {
     // access outside limits of physical memory, ignore
-    BX_DEBUG(("Write outside the limits of physical memory (0x%08x) (ignore)", a20addr));
+    BX_DEBUG(("Write outside the limits of physical memory (0x"FMT_PHY_ADDRX") (ignore)", a20addr));
   }
 }
 
@@ -224,7 +224,7 @@ void BX_MEM_C::readPhysicalPage(BX_CPU_C *cpu, bx_phy_address addr, unsigned len
 
   // Note: accesses should always be contained within a single page now
   if ((addr>>12) != ((addr+len-1)>>12)) {
-    BX_PANIC(("readPhysicalPage: cross page access at address 0x%08x, len=%d", addr, len));
+    BX_PANIC(("readPhysicalPage: cross page access at address 0x" FMT_PHY_ADDRX ", len=%d", addr, len));
   }
 
   if (cpu != NULL) {

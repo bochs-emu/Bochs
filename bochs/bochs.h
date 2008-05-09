@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.227 2008-04-19 13:21:21 sshwarts Exp $
+// $Id: bochs.h,v 1.228 2008-05-09 22:33:36 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -415,6 +415,9 @@ BOCHSAPI extern logfunc_t *genlog;
 #else
 #define FMT_ADDRX FMT_ADDRX32
 #endif
+
+#define FMT_PHY_ADDRX FMT_ADDRX32
+#define FMT_LIN_ADDRX FMT_ADDRX
 
 #if BX_GDBSTUB
 // defines for GDB stub

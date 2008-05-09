@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.226 2008-05-09 08:28:00 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.227 2008-05-09 22:33:36 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -618,11 +618,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CdRd(bxInstruction_c *i)
       SetCR0(val_32);
       break;
     case 2: /* CR2 */
-      BX_DEBUG(("MOV_CdRd:CR2 = %08x", (unsigned) val_32));
+      BX_DEBUG(("MOV_CdRd:CR2 = %08x", val_32));
       BX_CPU_THIS_PTR cr2 = val_32;
       break;
     case 3: // CR3
-      BX_DEBUG(("MOV_CdRd:CR3 = %08x", (unsigned) val_32));
+      BX_DEBUG(("MOV_CdRd:CR3 = %08x", val_32));
       // Reserved bits take on value of MOV instruction
       CR3_change(val_32);
       BX_INSTR_TLB_CNTRL(BX_CPU_ID, BX_INSTR_MOV_CR3, val_32);
@@ -728,13 +728,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CqRq(bxInstruction_c *i)
       SetCR0((Bit32u) val_64);
       break;
     case 2: /* CR2 */
-      BX_DEBUG(("MOV_CqRq: write to CR2 of %08x:%08x",
-          (Bit32u)(val_64 >> 32), (Bit32u)(val_64 & 0xFFFFFFFF)));
+      BX_DEBUG(("MOV_CqRq: write to CR2 of %08x:%08x", GET32H(val_64), GET32L(val_64)));
       BX_CPU_THIS_PTR cr2 = val_64;
       break;
     case 3: // CR3
-      BX_DEBUG(("MOV_CqRq: write to CR3 of %08x:%08x",
-          (Bit32u)(val_64 >> 32), (Bit32u)(val_64 & 0xFFFFFFFF)));
+      BX_DEBUG(("MOV_CqRq: write to CR3 of %08x:%08x", GET32H(val_64), GET32L(val_64)));
       if (val_64 & BX_CONST64(0xffffffff00000000)) {
           BX_PANIC(("CR3 write: Only 32 bit physical address space is emulated !"));
       }
@@ -745,8 +743,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CqRq(bxInstruction_c *i)
     case 4: // CR4
       //  Protected mode: #GP(0) if attempt to write a 1 to
       //  any reserved bit of CR4
-      BX_DEBUG(("MOV_CqRq: write to CR4 of %08x:%08x",
-          (Bit32u)(val_64 >> 32), (Bit32u)(val_64 & 0xFFFFFFFF)));
+      BX_DEBUG(("MOV_CqRq: write to CR4 of %08x:%08x", GET32H(val_64), GET32L(val_64)));
       if (! SetCR4(val_64))
         exception(BX_GP_EXCEPTION, 0, 0);
       break;
@@ -2023,7 +2020,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MWAIT(bxInstruction_c *i)
   bx_pc_system.invlpg(BX_CPU_THIS_PTR monitor.monitor_begin);
   if ((BX_CPU_THIS_PTR monitor.monitor_end & ~0xfff) != (BX_CPU_THIS_PTR monitor.monitor_begin & ~0xfff))
     bx_pc_system.invlpg(BX_CPU_THIS_PTR monitor.monitor_end);
-  BX_DEBUG(("MWAIT for phys_addr=%08x", BX_CPU_THIS_PTR monitor.monitor_begin));
+  BX_DEBUG(("MWAIT for phys_addr=" FMT_PHY_ADDRX, BX_CPU_THIS_PTR monitor.monitor_begin));
   BX_MEM(0)->set_monitor(BX_CPU_THIS_PTR bx_cpuid);
 
   // stops instruction execution and places the processor in a optimized

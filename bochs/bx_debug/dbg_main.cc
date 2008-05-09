@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.141 2008-05-03 21:32:01 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.142 2008-05-09 22:33:36 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -519,7 +519,7 @@ void bx_dbg_lin_memory_access(unsigned cpu, bx_address lin, bx_phy_address phy, 
   if (! BX_CPU(dbg_cpu)->trace_mem)
     return;
 
-  dbg_printf("[CPU%d %s]: LIN 0x" FMT_ADDRX " PHY 0x%08x (len=%d, pl=%d)",
+  dbg_printf("[CPU%d %s]: LIN 0x" FMT_ADDRX " PHY 0x" FMT_PHY_ADDRX " (len=%d, pl=%d)",
      cpu, 
      (rw == BX_READ) ? "RD" : (rw == BX_WRITE) ? "WR" : "??",
      lin, phy,
@@ -550,7 +550,7 @@ void bx_dbg_phy_memory_access(unsigned cpu, bx_phy_address phy, unsigned len, un
   if (! BX_CPU(dbg_cpu)->trace_mem)
     return;
 
-  dbg_printf("[CPU%d %s]: PHY 0x%08x (len=%d)",
+  dbg_printf("[CPU%d %s]: PHY 0x " FMT_PHY_ADDRX " (len=%d)",
      cpu, 
      (rw == BX_READ) ? "RD" : (rw == BX_WRITE) ? "WR" : "??",
      phy,
@@ -660,7 +660,7 @@ void bx_dbg_info_control_regs_command(void)
 {
   Bit32u cr0 = SIM->get_param_num("CR0", dbg_cpu_list)->get();
   bx_address cr2 = (bx_address) SIM->get_param_num("CR2", dbg_cpu_list)->get64();
-  bx_phy_address cr3 = (bx_phy_address) SIM->get_param_num("CR3", dbg_cpu_list)->get();
+  bx_phy_address cr3 = (bx_phy_address) SIM->get_param_num("CR3", dbg_cpu_list)->get64();
   dbg_printf("CR0=0x%08x\n", cr0);
   dbg_printf("    PG=paging=%d\n", (cr0>>31) & 1);
   dbg_printf("    CD=cache disable=%d\n", (cr0>>30) & 1);
@@ -674,7 +674,7 @@ void bx_dbg_info_control_regs_command(void)
   dbg_printf("    MP=monitor coprocessor=%d\n", (cr0>>1) & 1);
   dbg_printf("    PE=protection enable=%d\n", (cr0>>0) & 1);
   dbg_printf("CR2=page fault linear address=0x" FMT_ADDRX "\n", cr2);
-  dbg_printf("CR3=0x%08x\n", cr3);
+  dbg_printf("CR3=0x " FMT_PHY_ADDRX "\n", cr3);
   dbg_printf("    PCD=page-level cache disable=%d\n", (cr3>>4) & 1);
   dbg_printf("    PWT=page-level writes transparent=%d\n", (cr3>>3) & 1);
 #if BX_CPU_LEVEL >= 4
@@ -1061,7 +1061,7 @@ next_page:
   paddr_valid = BX_CPU(which_cpu)->dbg_xlate_linear2phy(laddr, &paddr);
   if (paddr_valid) {
     if (! BX_MEM(0)->dbg_fetch_mem(BX_CPU(which_cpu), paddr, read_len, buf)) {
-      dbg_printf("bx_dbg_read_linear: physical memory read error (phy=0x%08x, lin=0x" FMT_ADDRX ")\n", paddr, laddr);
+      dbg_printf("bx_dbg_read_linear: physical memory read error (phy=0x" FMT_PHY_ADDRX ", lin=0x" FMT_ADDRX ")\n", paddr, laddr);
       return 0;
     }
   }
@@ -1173,7 +1173,7 @@ void bx_dbg_xlate_address(bx_lin_address laddr)
 
   bx_bool paddr_valid = BX_CPU(dbg_cpu)->dbg_xlate_linear2phy(laddr, &paddr);
   if (paddr_valid) {
-    dbg_printf("linear page 0x" FMT_ADDRX " maps to physical page 0x%08x\n", laddr, paddr);
+    dbg_printf("linear page 0x" FMT_ADDRX " maps to physical page 0x" FMT_PHY_ADDRX "\n", laddr, paddr);
   }
   else {
     dbg_printf("physical address not available for linear 0x" FMT_ADDRX "\n", laddr);
@@ -1359,7 +1359,7 @@ int bx_dbg_show_symbolic(void)
     }
 
     if(last_cr3 != BX_CPU(dbg_cpu)->cr3)
-      dbg_printf(FMT_TICK ": address space switched. CR3: 0x%08x\n",
+      dbg_printf(FMT_TICK ": address space switched. CR3: 0x" FMT_PHY_ADDRX "\n",
         bx_pc_system.time_ticks(), BX_CPU(dbg_cpu)->cr3);
   }
 
@@ -1406,7 +1406,7 @@ int bx_dbg_show_symbolic(void)
         BX_CPU(dbg_cpu)->guard_found.laddr);
       if (!valid) dbg_printf(" phys not valid");
       else {
-        dbg_printf(" (phy: 0x%08x) %s", phy,
+        dbg_printf(" (phy: 0x" FMT_PHY_ADDRX ") %s", phy,
           bx_dbg_symbolic_address(BX_CPU(dbg_cpu)->cr3,
               BX_CPU(dbg_cpu)->guard_found.eip,
               BX_CPU(dbg_cpu)->guard_found.laddr - BX_CPU(dbg_cpu)->guard_found.eip));
@@ -1489,17 +1489,17 @@ void bx_dbg_watch(int read, bx_phy_address address)
     for (i = 0; i < num_read_watchpoints; i++) {
       Bit8u buf[2];
       if (BX_MEM(0)->dbg_fetch_mem(BX_CPU(dbg_cpu), read_watchpoint[i], 2, buf))
-        dbg_printf("read   %08x   (%04x)\n",
+        dbg_printf("read   0x"FMT_PHY_ADDRX"   (%04x)\n",
             read_watchpoint[i], (int)buf[0] | ((int)buf[1] << 8));
       else
-        dbg_printf("read   %08x   (read error)\n", read_watchpoint[i]);
+        dbg_printf("read   0x"FMT_PHY_ADDRX"   (read error)\n", read_watchpoint[i]);
     }
     for (i = 0; i < num_write_watchpoints; i++) {
       Bit8u buf[2];
       if (BX_MEM(0)->dbg_fetch_mem(BX_CPU(dbg_cpu), write_watchpoint[i], 2, buf))
-        dbg_printf("write  %08x   (%04x)\n", write_watchpoint[i], (int)buf[0] | ((int)buf[1] << 8));
+        dbg_printf("write  0x"FMT_PHY_ADDRX"   (%04x)\n", write_watchpoint[i], (int)buf[0] | ((int)buf[1] << 8));
       else
-        dbg_printf("write  %08x   (read error)\n", write_watchpoint[i]);
+        dbg_printf("write  0x"FMT_PHY_ADDRX"   (read error)\n", write_watchpoint[i]);
     }
   } else {
     if (read) {
@@ -1508,14 +1508,14 @@ void bx_dbg_watch(int read, bx_phy_address address)
         return;
       }
       read_watchpoint[num_read_watchpoints++] = address;
-      dbg_printf("Read watchpoint at 0x%08x inserted\n", address);
+      dbg_printf("Read watchpoint at 0x" FMT_PHY_ADDRX " inserted\n", address);
     } else {
       if (num_write_watchpoints == MAX_WRITE_WATCHPOINTS) {
         dbg_printf("Too many write watchpoints\n");
         return;
       }
       write_watchpoint[num_write_watchpoints++] = address;
-      dbg_printf("Write watchpoint at 0x%08x inserted\n", address);
+      dbg_printf("Write watchpoint at 0x" FMT_PHY_ADDRX " inserted\n", address);
     }
   }
 }
@@ -1713,7 +1713,7 @@ void bx_dbg_disassemble_current(int which_cpu, int print_time)
       dbg_printf("(%u) ", which_cpu);
 
     if (BX_CPU(which_cpu)->protected_mode()) {
-      dbg_printf("[0x%08x] %04x:" FMT_ADDRX " (%s): ",
+      dbg_printf("[0x"FMT_PHY_ADDRX"] %04x:" FMT_ADDRX " (%s): ",
         phy, BX_CPU(which_cpu)->guard_found.cs,
         BX_CPU(which_cpu)->guard_found.eip,
         bx_dbg_symbolic_address((BX_CPU(which_cpu)->cr3) >> 12,
@@ -1721,7 +1721,7 @@ void bx_dbg_disassemble_current(int which_cpu, int print_time)
            BX_CPU(which_cpu)->get_segment_base(BX_SEG_REG_CS)));
     }
     else { // Real & V86 mode
-      dbg_printf("[0x%08x] %04x:%04x (%s): ",
+      dbg_printf("[0x"FMT_PHY_ADDRX"] %04x:%04x (%s): ",
         phy, BX_CPU(which_cpu)->guard_found.cs,
         (unsigned) BX_CPU(which_cpu)->guard_found.eip,
         bx_dbg_symbolic_address_16bit(BX_CPU(which_cpu)->guard_found.eip,
@@ -1779,10 +1779,10 @@ void bx_dbg_print_guard_results(void)
         dbg_printf("(%u) Caught time breakpoint\n", cpu);
         break;
     case STOP_READ_WATCH_POINT:
-        dbg_printf("(%u) Caught read watch point at %08X\n", cpu, BX_CPU(cpu)->watchpoint);
+        dbg_printf("(%u) Caught read watch point at 0x" FMT_PHY_ADDRX "\n", cpu, BX_CPU(cpu)->watchpoint);
         break;
     case STOP_WRITE_WATCH_POINT:
-        dbg_printf("(%u) Caught write watch point at %08X\n", cpu, BX_CPU(cpu)->watchpoint);
+        dbg_printf("(%u) Caught write watch point at 0x" FMT_PHY_ADDRX "\n", cpu, BX_CPU(cpu)->watchpoint);
         break;
     case STOP_MAGIC_BREAK_POINT:
         dbg_printf("(%u) Magic breakpoint\n", cpu);
@@ -1799,7 +1799,7 @@ void bx_dbg_print_guard_results(void)
     if (bx_debugger.auto_disassemble) {
       if (cpu==0) {
         // print this only once
-        dbg_printf("Next at t=" FMT_LL "d\n", bx_pc_system.time_ticks ());
+        dbg_printf("Next at t=" FMT_LL "d\n", bx_pc_system.time_ticks());
       }
       bx_dbg_disassemble_current(cpu, 0);  // one cpu, don't print time
     }
@@ -2102,7 +2102,7 @@ void bx_dbg_info_bpoints_command(void)
     dbg_printf("pbreakpoint    ");
     dbg_printf("keep ");
     dbg_printf(bx_guard.iaddr.phy[i].enabled?"y   ":"n   ");
-    dbg_printf("0x%08x\n", bx_guard.iaddr.phy[i].addr);
+    dbg_printf("0x"FMT_PHY_ADDRX"\n", bx_guard.iaddr.phy[i].addr);
   }
 #endif
 }
@@ -2770,14 +2770,14 @@ void bx_dbg_print_descriptor(unsigned char desc[8], int verbose)
     // either a code or a data segment. bit 11 (type file MSB) then says
     // 0=data segment, 1=code seg
     if (type&8) {
-      dbg_printf("Code segment, linearaddr=%08x, limit=%05x %s, %s%s%s, %d-bit\n",
+      dbg_printf("Code segment, laddr=%08x, limit=%05x %s, %s%s%s, %d-bit\n",
         base, limit, g ? "* 4Kbytes" : "bytes",
         (type&2)? "Execute/Read" : "Execute-Only",
         (type&4)? ", Conforming" : "",
         (type&1)? ", Accessed" : "",
         d_b ? 32 : 16);
     } else {
-      dbg_printf("Data segment, linearaddr=%08x, limit=%05x %s, %s%s%s\n",
+      dbg_printf("Data segment, laddr=%08x, limit=%05x %s, %s%s%s\n",
         base, limit, g ? "* 4Kbytes" : "bytes",
         (type&2)? "Read/Write" : "Read-Only",
         (type&4)? ", Expand-down" : "",
@@ -3272,7 +3272,7 @@ void bx_dbg_dump_table(void)
     return;
   }
 
-  printf("cr3: 0x%08x\n", BX_CPU(dbg_cpu)->cr3);
+  printf("cr3: 0x"FMT_PHY_ADDRX"\n", BX_CPU(dbg_cpu)->cr3);
 
   lin = 0;
   phy = 0;
@@ -3284,14 +3284,14 @@ void bx_dbg_dump_table(void)
     if(valid) {
       if((lin - start_lin) != (phy - start_phy)) {
         if(start_lin != 1)
-          dbg_printf("0x%08x-0x%08x -> 0x%08x-0x%08x\n",
+          dbg_printf("0x%08x-0x%08x -> 0x"FMT_PHY_ADDRX"-0x"FMT_PHY_ADDRX"\n",
             start_lin, lin - 1, start_phy, start_phy + (lin-1-start_lin));
         start_lin = lin;
         start_phy = phy;
       }
     } else {
       if(start_lin != 1)
-        dbg_printf("0x%08x-0x%08x -> 0x%08x-0x%08x\n",
+        dbg_printf("0x%08x-0x%08x -> 0x"FMT_PHY_ADDRX"-0x"FMT_PHY_ADDRX"\n",
           start_lin, lin - 1, start_phy, start_phy + (lin-1-start_lin));
       start_lin = 1;
       start_phy = 2;
@@ -3301,7 +3301,7 @@ void bx_dbg_dump_table(void)
     lin += 0x1000;
   }
   if(start_lin != 1)
-    dbg_printf("0x%08x-0x%08x -> 0x%08x-0x%08x\n",
+    dbg_printf("0x%08x-0x%08x -> 0x"FMT_PHY_ADDRX"-0x"FMT_PHY_ADDRX"\n",
          start_lin, 0xffffffff, start_phy, start_phy + (0xffffffff-start_lin));
 }
 
