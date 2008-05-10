@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu_trans.cc,v 1.15 2008-05-10 09:17:24 sshwarts Exp $
+// $Id: fpu_trans.cc,v 1.16 2008-05-10 10:15:01 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -98,15 +98,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FPTAN(bxInstruction_c *i)
   clear_C1();
   clear_C2();
 
-  unsigned fp_stack_fault = 0;
-  if (IS_TAG_EMPTY(0)) fp_stack_fault |= FPU_EX_Stack_Underflow;
-
-  if (! IS_TAG_EMPTY(-1))
-     fp_stack_fault |= FPU_EX_Stack_Overflow;
-
-  if (fp_stack_fault)
+  if (IS_TAG_EMPTY(0) || ! IS_TAG_EMPTY(-1))
   {
-     BX_CPU_THIS_PTR FPU_exception(fp_stack_fault);
+     if(IS_TAG_EMPTY(0))
+       BX_CPU_THIS_PTR FPU_exception(FPU_EX_Stack_Underflow);
+     else
+       BX_CPU_THIS_PTR FPU_exception(FPU_EX_Stack_Overflow);
 
      /* The masked response */
      if (BX_CPU_THIS_PTR the_i387.is_IA_masked())
@@ -190,15 +187,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FXTRACT(bxInstruction_c *i)
 
   clear_C1();
 
-  unsigned fp_stack_fault = 0;
-  if (IS_TAG_EMPTY(0)) fp_stack_fault |= FPU_EX_Stack_Underflow;
-
-  if (! IS_TAG_EMPTY(-1))
-     fp_stack_fault |= FPU_EX_Stack_Overflow;
-
-  if (fp_stack_fault)
+  if (IS_TAG_EMPTY(0) || ! IS_TAG_EMPTY(-1))
   {
-     BX_CPU_THIS_PTR FPU_exception(fp_stack_fault);
+     if(IS_TAG_EMPTY(0))
+       BX_CPU_THIS_PTR FPU_exception(FPU_EX_Stack_Underflow);
+     else
+       BX_CPU_THIS_PTR FPU_exception(FPU_EX_Stack_Overflow);
 
      /* The masked response */
      if (BX_CPU_THIS_PTR the_i387.is_IA_masked())
@@ -352,15 +346,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FSINCOS(bxInstruction_c *i)
   clear_C1();
   clear_C2();
 
-  unsigned fp_stack_fault = 0;
-  if (IS_TAG_EMPTY(0)) fp_stack_fault |= FPU_EX_Stack_Underflow;
-
-  if (! IS_TAG_EMPTY(-1))
-     fp_stack_fault |= FPU_EX_Stack_Overflow;
-
-  if (fp_stack_fault)
+  if (IS_TAG_EMPTY(0) || ! IS_TAG_EMPTY(-1))
   {
-     BX_CPU_THIS_PTR FPU_exception(fp_stack_fault);
+     if(IS_TAG_EMPTY(0))
+       BX_CPU_THIS_PTR FPU_exception(FPU_EX_Stack_Underflow);
+     else
+       BX_CPU_THIS_PTR FPU_exception(FPU_EX_Stack_Overflow);
 
      /* The masked response */
      if (BX_CPU_THIS_PTR the_i387.is_IA_masked())
