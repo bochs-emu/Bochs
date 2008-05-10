@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: misc_mem.cc,v 1.114 2008-05-09 22:33:37 sshwarts Exp $
+// $Id: misc_mem.cc,v 1.115 2008-05-10 21:36:55 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -34,7 +34,7 @@
 #define LOG_THIS BX_MEM(0)->
 
 #define BX_MEM_VECTOR_ALIGN 4096
-#define BX_MEM_HANDLERS     4096 /* one per megabyte */
+#define BX_MEM_HANDLERS   ((BX_CONST64(1) << BX_PHY_ADDRESS_WIDTH) >> 20) /* one per megabyte */
 
 #if BX_PROVIDE_CPU_MEMORY
 
@@ -76,7 +76,7 @@ void BX_MEM_C::init_memory(Bit32u memsize)
 {
   unsigned idx;
 
-  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.114 2008-05-09 22:33:37 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.115 2008-05-10 21:36:55 sshwarts Exp $"));
 
   if (BX_MEM_THIS actual_vector != NULL) {
     BX_INFO (("freeing existing memory vector"));
