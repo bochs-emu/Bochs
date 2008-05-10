@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.228 2008-05-09 22:33:36 sshwarts Exp $
+// $Id: bochs.h,v 1.229 2008-05-10 18:04:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -393,6 +393,8 @@ typedef class BOCHSAPI iofunctions iofunc_t;
 #define BX_PANIC(x) (LOG_THIS panic) x
 #define BX_PASS(x) (LOG_THIS pass) x
 
+#define BX_ASSERT(x)
+
 #else
 
 #define BX_INFO(x)  (LOG_THIS info) x
@@ -400,6 +402,8 @@ typedef class BOCHSAPI iofunctions iofunc_t;
 #define BX_ERROR(x) (LOG_THIS error) x
 #define BX_PANIC(x) (LOG_THIS panic) x
 #define BX_PASS(x) (LOG_THIS pass) x
+
+#define BX_ASSERT(x) do {if (!(x)) BX_PANIC(("failed assertion \"%s\" at %s:%d\n", #x, __FILE__, __LINE__));} while (0)
 
 #endif
 
@@ -478,11 +482,9 @@ typedef struct {
   void* record_io;
 } bx_debug_t;
 
-#define BX_ASSERT(x) do {if (!(x)) BX_PANIC(("failed assertion \"%s\" at %s:%d\n", #x, __FILE__, __LINE__));} while (0)
 void CDECL bx_signal_handler(int signum);
 int bx_atexit(void);
 BOCHSAPI extern bx_debug_t bx_dbg;
-
 
 // memory access type (read/write/rw)
 #define BX_READ         0
