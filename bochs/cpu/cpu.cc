@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.228 2008-05-09 22:33:36 sshwarts Exp $
+// $Id: cpu.cc,v 1.229 2008-05-10 15:02:42 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -623,7 +623,16 @@ void BX_CPU_C::prefetch(void)
   BX_CPU_THIS_PTR eipPageBias = pageOffset - RIP;
   BX_CPU_THIS_PTR eipPageWindowSize = 4096;
 
-  if (! Is64BitMode()) {
+#if BX_SUPPORT_X86_64
+  if (Is64BitMode()) {
+    if (! IsCanonical(RIP)) {
+      BX_ERROR(("prefetch: #GP(0): RIP crossed canonical boundary"));
+      exception(BX_GP_EXCEPTION, 0, 0);
+    }
+  }
+  else
+#endif
+  {
     Bit32u temp_limit = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled;
     if (((Bit32u) temp_rip) > temp_limit) {
       BX_ERROR(("prefetch: EIP [%08x] > CS.limit [%08x]", (Bit32u) temp_rip, temp_limit));
@@ -691,7 +700,7 @@ void BX_CPU_C::boundaryFetch(const Bit8u *fetchPtr, unsigned remainingInPage, bx
   unsigned ret;
 
   if (remainingInPage >= 15) {
-    BX_INFO(("fetchDecode #GP(0): too many instruction prefixes"));
+    BX_ERROR(("boundaryFetch #GP(0): too many instruction prefixes"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
@@ -709,7 +718,7 @@ void BX_CPU_C::boundaryFetch(const Bit8u *fetchPtr, unsigned remainingInPage, bx
 
   unsigned fetchBufferLimit = 15;
   if (BX_CPU_THIS_PTR eipPageWindowSize < 15) {
-    BX_DEBUG(("fetch_decode: small window size after prefetch - %d bytes", BX_CPU_THIS_PTR eipPageWindowSize));
+    BX_DEBUG(("boundaryFetch: small window size after prefetch - %d bytes", BX_CPU_THIS_PTR eipPageWindowSize));
     fetchBufferLimit = BX_CPU_THIS_PTR eipPageWindowSize;
   }
 
@@ -728,7 +737,7 @@ void BX_CPU_C::boundaryFetch(const Bit8u *fetchPtr, unsigned remainingInPage, bx
     ret = fetchDecode32(fetchBuffer, i, fetchBufferLimit);
 
   if (ret==0) {
-    BX_INFO(("fetchDecode #GP(0): failed to complete instruction decoding"));
+    BX_INFO(("boundaryFetch #GP(0): failed to complete instruction decoding"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
