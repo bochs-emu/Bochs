@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: mmx.cc,v 1.78 2008-04-16 05:45:45 sshwarts Exp $
+// $Id: mmx.cc,v 1.79 2008-05-10 18:10:52 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2002 Stanislav Shwartsman
@@ -995,7 +995,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVQ_PqEq(bxInstruction_c *i)
   else {
     BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    MMXUQ(op) = read_virtual_qword(i->seg(), RMAddr(i));
+    MMXUQ(op) = read_virtual_qword_64(i->seg(), RMAddr(i));
   }
 
   /* now write result back to destination */
@@ -1209,7 +1209,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVQ_EqPq(bxInstruction_c *i)
   else {
     BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    write_virtual_qword(i->seg(), RMAddr(i), MMXUQ(op));
+    write_virtual_qword_64(i->seg(), RMAddr(i), MMXUQ(op));
   }
 }
 

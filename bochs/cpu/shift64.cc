@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: shift64.cc,v 1.36 2008-05-02 22:47:07 sshwarts Exp $
+// $Id: shift64.cc,v 1.37 2008-05-10 18:10:53 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -41,7 +41,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHLD_EqGqM(bxInstruction_c *i)
   BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
   /* pointer, segment address pair */
-  op1_64 = read_RMW_virtual_qword(i->seg(), RMAddr(i));
+  op1_64 = read_RMW_virtual_qword_64(i->seg(), RMAddr(i));
 
   if (i->b1() == 0xa4) // 0x1a4
     count = i->Ib();
@@ -101,7 +101,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHRD_EqGqM(bxInstruction_c *i)
   BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
   /* pointer, segment address pair */
-  op1_64 = read_RMW_virtual_qword(i->seg(), RMAddr(i));
+  op1_64 = read_RMW_virtual_qword_64(i->seg(), RMAddr(i));
 
   if (i->b1() == 0xac) // 0x1ac
     count = i->Ib();
@@ -161,7 +161,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROL_EqM(bxInstruction_c *i)
   BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
   /* pointer, segment address pair */
-  op1_64 = read_RMW_virtual_qword(i->seg(), RMAddr(i));
+  op1_64 = read_RMW_virtual_qword_64(i->seg(), RMAddr(i));
 
   if (i->b1() == 0xd3)
     count = CL;
@@ -214,7 +214,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROR_EqM(bxInstruction_c *i)
   BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
   /* pointer, segment address pair */
-  op1_64 = read_RMW_virtual_qword(i->seg(), RMAddr(i));
+  op1_64 = read_RMW_virtual_qword_64(i->seg(), RMAddr(i));
 
   if (i->b1() == 0xd3)
     count = CL;
@@ -267,7 +267,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RCL_EqM(bxInstruction_c *i)
   BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
   /* pointer, segment address pair */
-  op1_64 = read_RMW_virtual_qword(i->seg(), RMAddr(i));
+  op1_64 = read_RMW_virtual_qword_64(i->seg(), RMAddr(i));
 
   if (i->b1() == 0xd3)
     count = CL;
@@ -332,7 +332,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RCR_EqM(bxInstruction_c *i)
   BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
   /* pointer, segment address pair */
-  op1_64 = read_RMW_virtual_qword(i->seg(), RMAddr(i));
+  op1_64 = read_RMW_virtual_qword_64(i->seg(), RMAddr(i));
 
   if (i->b1() == 0xd3)
     count = CL;
@@ -397,7 +397,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHL_EqM(bxInstruction_c *i)
   BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
   /* pointer, segment address pair */
-  op1_64 = read_RMW_virtual_qword(i->seg(), RMAddr(i));
+  op1_64 = read_RMW_virtual_qword_64(i->seg(), RMAddr(i));
 
   if (i->b1() == 0xd3)
     count = CL;
@@ -452,7 +452,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHR_EqM(bxInstruction_c *i)
   BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
   /* pointer, segment address pair */
-  op1_64 = read_RMW_virtual_qword(i->seg(), RMAddr(i));
+  op1_64 = read_RMW_virtual_qword_64(i->seg(), RMAddr(i));
 
   if (i->b1() == 0xd3)
     count = CL;
@@ -510,7 +510,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SAR_EqM(bxInstruction_c *i)
   BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
   /* pointer, segment address pair */
-  op1_64 = read_RMW_virtual_qword(i->seg(), RMAddr(i));
+  op1_64 = read_RMW_virtual_qword_64(i->seg(), RMAddr(i));
 
   if (i->b1() == 0xd3)
     count = CL;

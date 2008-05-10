@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: ret_far.cc,v 1.17 2008-04-23 17:25:21 sshwarts Exp $
+// $Id: ret_far.cc,v 1.18 2008-05-10 18:10:53 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005 Stanislav Shwartsman
@@ -62,8 +62,8 @@ BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
 
 #if BX_SUPPORT_X86_64
   if (i->os64L()) {
-    raw_cs_selector = (Bit16u) read_virtual_qword(BX_SEG_REG_SS, temp_RSP + 8);
-    return_RIP      =          read_virtual_qword(BX_SEG_REG_SS, temp_RSP);
+    raw_cs_selector = (Bit16u) read_virtual_qword_64(BX_SEG_REG_SS, temp_RSP + 8);
+    return_RIP      =          read_virtual_qword_64(BX_SEG_REG_SS, temp_RSP);
     stack_param_offset = 16;
   }
   else
@@ -139,8 +139,8 @@ BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
 
 #if BX_SUPPORT_X86_64
     if (i->os64L()) {
-      raw_ss_selector = read_virtual_word (BX_SEG_REG_SS, temp_RSP + 24 + pop_bytes);
-      return_RSP      = read_virtual_qword(BX_SEG_REG_SS, temp_RSP + 16 + pop_bytes);
+      raw_ss_selector = read_virtual_word_64 (BX_SEG_REG_SS, temp_RSP + 24 + pop_bytes);
+      return_RSP      = read_virtual_qword_64(BX_SEG_REG_SS, temp_RSP + 16 + pop_bytes);
     }
     else
 #endif

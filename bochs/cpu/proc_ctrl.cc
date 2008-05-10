@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.228 2008-05-10 13:34:47 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.229 2008-05-10 18:10:53 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1203,13 +1203,6 @@ void BX_CPU_C::handleCpuModeChange(void)
       BX_CPU_THIS_PTR cpu_mode = BX_MODE_IA32_REAL;
     }
   }
-
-#if BX_SUPPORT_X86_64
-  if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64)
-    BX_CPU_THIS_PTR laddr32b_mask = BX_CONST64(0xffffffffffffffff);
-  else
-    BX_CPU_THIS_PTR laddr32b_mask = BX_CONST64(0xffffffff);
-#endif
 
   if (mode != BX_CPU_THIS_PTR cpu_mode) {
     BX_DEBUG(("%s activated", cpu_mode_string(BX_CPU_THIS_PTR cpu_mode)));

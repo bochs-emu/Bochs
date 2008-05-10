@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: protect_ctrl.cc,v 1.83 2008-05-04 21:25:16 sshwarts Exp $
+// $Id: protect_ctrl.cc,v 1.84 2008-05-10 18:10:53 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -739,34 +739,28 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LIDT_Ms(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::SGDT64_Ms(bxInstruction_c *i)
 {
-  BX_ASSERT(BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64);
-
   Bit16u limit_16 = BX_CPU_THIS_PTR gdtr.limit;
   Bit64u base_64  = BX_CPU_THIS_PTR gdtr.base;
 
   BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  write_virtual_word (i->seg(), RMAddr(i), limit_16);
-  write_virtual_qword(i->seg(), RMAddr(i)+2, base_64);
+  write_virtual_word_64(i->seg(), RMAddr(i), limit_16);
+  write_virtual_qword_64(i->seg(), RMAddr(i)+2, base_64);
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::SIDT64_Ms(bxInstruction_c *i)
 {
-  BX_ASSERT(BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64);
-
   Bit16u limit_16 = BX_CPU_THIS_PTR idtr.limit;
   Bit64u base_64  = BX_CPU_THIS_PTR idtr.base;
 
   BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  write_virtual_word(i->seg(), RMAddr(i), limit_16);
-  write_virtual_qword(i->seg(), RMAddr(i)+2, base_64);
+  write_virtual_word_64(i->seg(), RMAddr(i), limit_16);
+  write_virtual_qword_64(i->seg(), RMAddr(i)+2, base_64);
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::LGDT64_Ms(bxInstruction_c *i)
 {
-  BX_ASSERT(BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64);
-
   if (CPL!=0) {
     BX_ERROR(("LGDT64_Ms: CPL != 0 in long mode"));
     exception(BX_GP_EXCEPTION, 0, 0);
@@ -776,12 +770,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LGDT64_Ms(bxInstruction_c *i)
 
   BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  Bit64u base_64 = read_virtual_qword(i->seg(), RMAddr(i) + 2);
+  Bit64u base_64 = read_virtual_qword_64(i->seg(), RMAddr(i) + 2);
   if (! IsCanonical(base_64)) {
     BX_ERROR(("LGDT64_Ms: loaded base64 address is not in canonical form!"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
-  Bit16u limit_16 = read_virtual_word(i->seg(), RMAddr(i));
+  Bit16u limit_16 = read_virtual_word_64(i->seg(), RMAddr(i));
 
   BX_CPU_THIS_PTR gdtr.limit = limit_16;
   BX_CPU_THIS_PTR gdtr.base = base_64;
@@ -789,8 +783,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LGDT64_Ms(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::LIDT64_Ms(bxInstruction_c *i)
 {
-  BX_ASSERT(BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64);
-
   if (CPL != 0) {
     BX_ERROR(("LIDT64_Ms: CPL != 0 in long mode"));
     exception(BX_GP_EXCEPTION, 0, 0);
@@ -800,12 +792,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LIDT64_Ms(bxInstruction_c *i)
 
   BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  Bit64u base_64 = read_virtual_qword(i->seg(), RMAddr(i) + 2);
+  Bit64u base_64 = read_virtual_qword_64(i->seg(), RMAddr(i) + 2);
   if (! IsCanonical(base_64)) {
     BX_ERROR(("LIDT64_Ms: loaded base64 address is not in canonical form!"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
-  Bit16u limit_16 = read_virtual_word(i->seg(), RMAddr(i));
+  Bit16u limit_16 = read_virtual_word_64(i->seg(), RMAddr(i));
 
   BX_CPU_THIS_PTR idtr.limit = limit_16;
   BX_CPU_THIS_PTR idtr.base = base_64;

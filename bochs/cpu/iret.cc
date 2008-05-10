@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: iret.cc,v 1.34 2008-05-06 19:45:17 sshwarts Exp $
+// $Id: iret.cc,v 1.35 2008-05-10 18:10:52 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005 Stanislav Shwartsman
@@ -363,13 +363,16 @@ BX_CPU_C::long_iret(bxInstruction_c *i)
 
   unsigned top_nbytes_same = 0; /* stop compiler warnings */
 
+#if BX_SUPPORT_X86_64
   if (i->os64L()) {
-    new_eflags      = (Bit32u) read_virtual_qword(BX_SEG_REG_SS, temp_RSP + 16);
-    raw_cs_selector = (Bit16u) read_virtual_qword(BX_SEG_REG_SS, temp_RSP +  8);
-    new_rip         =          read_virtual_qword(BX_SEG_REG_SS, temp_RSP +  0);
+    new_eflags      = (Bit32u) read_virtual_qword_64(BX_SEG_REG_SS, temp_RSP + 16);
+    raw_cs_selector = (Bit16u) read_virtual_qword_64(BX_SEG_REG_SS, temp_RSP +  8);
+    new_rip         =          read_virtual_qword_64(BX_SEG_REG_SS, temp_RSP +  0);
     top_nbytes_same = 24;
   }
-  else if (i->os32L()) {
+  else
+#endif
+  if (i->os32L()) {
     new_eflags      =          read_virtual_dword(BX_SEG_REG_SS, temp_RSP + 8);
     raw_cs_selector = (Bit16u) read_virtual_dword(BX_SEG_REG_SS, temp_RSP + 4);
     new_rip         = (Bit64u) read_virtual_dword(BX_SEG_REG_SS, temp_RSP + 0);
@@ -447,14 +450,19 @@ BX_CPU_C::long_iret(bxInstruction_c *i)
      */
 
     /* examine return SS selector and associated descriptor */
+#if BX_SUPPORT_X86_64
     if (i->os64L()) {
-      raw_ss_selector = (Bit16u) read_virtual_qword(BX_SEG_REG_SS, temp_RSP + 32);
+      raw_ss_selector = (Bit16u) read_virtual_qword_64(BX_SEG_REG_SS, temp_RSP + 32);
     }
-    else if (i->os32L()) {
-      raw_ss_selector = (Bit16u) read_virtual_dword(BX_SEG_REG_SS, temp_RSP + 16);
-    }
-    else {
-      raw_ss_selector = read_virtual_word(BX_SEG_REG_SS, temp_RSP + 8);
+    else
+#endif
+    {
+      if (i->os32L()) {
+        raw_ss_selector = (Bit16u) read_virtual_dword(BX_SEG_REG_SS, temp_RSP + 16);
+      }
+      else {
+        raw_ss_selector = read_virtual_word(BX_SEG_REG_SS, temp_RSP + 8);
+      }
     }
 
     if ((raw_ss_selector & 0xfffc) == 0) {
@@ -502,14 +510,19 @@ BX_CPU_C::long_iret(bxInstruction_c *i)
       }
     }
 
+#if BX_SUPPORT_X86_64
     if (i->os64L()) {
-      new_rsp = read_virtual_qword(BX_SEG_REG_SS, temp_RSP + 24);
+      new_rsp = read_virtual_qword_64(BX_SEG_REG_SS, temp_RSP + 24);
     }
-    else if (i->os32L()) {
-      new_rsp = (Bit64u) read_virtual_dword(BX_SEG_REG_SS, temp_RSP + 12);
-    }
-    else {
-      new_rsp = (Bit64u) read_virtual_word(BX_SEG_REG_SS, temp_RSP + 6);
+    else
+#endif
+    {
+      if (i->os32L()) {
+        new_rsp = (Bit64u) read_virtual_dword(BX_SEG_REG_SS, temp_RSP + 12);
+      }
+      else {
+        new_rsp = (Bit64u) read_virtual_word(BX_SEG_REG_SS, temp_RSP + 6);
+      }
     }
 
     Bit8u prev_cpl = CPL; /* previous CPL */

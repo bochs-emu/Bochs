@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_pfp.cc,v 1.47 2008-04-29 21:47:16 sshwarts Exp $
+// $Id: sse_pfp.cc,v 1.48 2008-05-10 18:10:53 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -176,7 +176,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTSI2SD_VsdEd(bxInstruction_c *i)
     else {
       BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
       /* pointer, segment address pair */
-      op = read_virtual_qword(i->seg(), RMAddr(i));
+      op = read_virtual_qword_64(i->seg(), RMAddr(i));
     }
 
     result = int64_to_float64(op, status_word);
@@ -235,7 +235,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTSI2SS_VssEd(bxInstruction_c *i)
     else {
       BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
       /* pointer, segment address pair */
-      op = read_virtual_qword(i->seg(), RMAddr(i));
+      op = read_virtual_qword_64(i->seg(), RMAddr(i));
     }
 
     result = int64_to_float32(op, status_word);

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack.h,v 1.1 2008-04-05 17:51:55 sshwarts Exp $
+// $Id: stack.h,v 1.2 2008-05-10 18:10:53 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007 Stanislav Shwartsman
@@ -30,7 +30,7 @@ BX_CPU_C::push_16(Bit16u value16)
   /* must use StackAddrSize, and either RSP, ESP or SP accordingly */
 #if BX_SUPPORT_X86_64
   if (StackAddrSize64()) {
-    write_virtual_word(BX_SEG_REG_SS, RSP-2, value16);
+    write_virtual_word_64(BX_SEG_REG_SS, RSP-2, value16);
     RSP -= 2;
   }
   else
@@ -52,7 +52,7 @@ BX_CPU_C::push_32(Bit32u value32)
   /* must use StackAddrSize, and either RSP, ESP or SP accordingly */
 #if BX_SUPPORT_X86_64
   if (StackAddrSize64()) {
-    write_virtual_dword(BX_SEG_REG_SS, RSP-4, value32);
+    write_virtual_dword_64(BX_SEG_REG_SS, RSP-4, value32);
     RSP -= 4;
   }
   else
@@ -73,7 +73,7 @@ BX_CPU_C::push_32(Bit32u value32)
   BX_CPP_INLINE void BX_CPP_AttrRegparmN(1)
 BX_CPU_C::push_64(Bit64u value64)
 {
-  write_virtual_qword(BX_SEG_REG_SS, RSP-8, value64);
+  write_virtual_qword_64(BX_SEG_REG_SS, RSP-8, value64);
   RSP -= 8;
 }
 #endif
@@ -85,7 +85,7 @@ BX_CPP_INLINE Bit16u BX_CPU_C::pop_16(void)
 
 #if BX_SUPPORT_X86_64
   if (StackAddrSize64()) {
-    value16 = read_virtual_word(BX_SEG_REG_SS, RSP);
+    value16 = read_virtual_word_64(BX_SEG_REG_SS, RSP);
     RSP += 2;
   }
   else
@@ -109,7 +109,7 @@ BX_CPP_INLINE Bit32u BX_CPU_C::pop_32(void)
 
 #if BX_SUPPORT_X86_64
   if (StackAddrSize64()) {
-    value32 = read_virtual_dword(BX_SEG_REG_SS, RSP);
+    value32 = read_virtual_dword_64(BX_SEG_REG_SS, RSP);
     RSP += 4;
   }
   else
@@ -130,7 +130,7 @@ BX_CPP_INLINE Bit32u BX_CPU_C::pop_32(void)
 #if BX_SUPPORT_X86_64
 BX_CPP_INLINE Bit64u BX_CPU_C::pop_64(void)
 {
-  Bit64u value64 = read_virtual_qword(BX_SEG_REG_SS, RSP);
+  Bit64u value64 = read_virtual_qword_64(BX_SEG_REG_SS, RSP);
   RSP += 8;
 
   return value64;

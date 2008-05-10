@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: access.cc,v 1.105 2008-05-07 16:45:07 sshwarts Exp $
+// $Id: access.cc,v 1.106 2008-05-10 18:10:52 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -36,10 +36,10 @@
 // BX_CPU_THIS_PTR alignment_check_mask must be initialized to all'ones if
 // alignment check exception is enabled and LPF_MASK if not.
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
-#define AlignedAccessLPFOf(laddr, alignment_mask) \
+  #define AlignedAccessLPFOf(laddr, alignment_mask) \
           ((laddr) & (LPF_MASK | (alignment_mask))) & (BX_CPU_THIS_PTR alignment_check_mask)
 #else
-#define AlignedAccessLPFOf(laddr, alignment_mask) LPFOf(laddr)
+  #define AlignedAccessLPFOf(laddr, alignment_mask) LPFOf(laddr)
 #endif
 
   void BX_CPP_AttrRegparmN(3)
@@ -1501,48 +1501,3 @@ accessOK:
   write_virtual_checks(seg, offset, 4);
   goto accessOK;
 }
-
-// assuming the write happens in 64-bit mode
-#if BX_SUPPORT_X86_64
-void BX_CPU_C::write_new_stack_qword(bx_address laddr, unsigned curr_pl, Bit64u data)
-{
-#if BX_SupportGuest2HostTLB
-  unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 7);
-  bx_address lpf = AlignedAccessLPFOf(laddr, 7);
-  bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
-  if (tlbEntry->lpf == lpf) {
-    // See if the TLB entry privilege level allows us write access
-    // from this CPL.
-    if (tlbEntry->accessBits & (0x10 << CPL)) {
-      bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
-      Bit32u pageOffset = PAGE_OFFSET(laddr);
-      BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr, tlbEntry->ppf | pageOffset, 8, BX_WRITE);
-      BX_DBG_LIN_MEMORY_ACCESS(BX_CPU_ID, laddr,
-          tlbEntry->ppf | pageOffset, 8, curr_pl, BX_WRITE, (Bit8u*) &data);
-      Bit64u *hostAddr = (Bit64u*) (hostPageAddr | pageOffset);
-#if BX_SUPPORT_ICACHE
-      pageWriteStampTable.decWriteStamp(tlbEntry->ppf);
-#endif
-      WriteHostQWordToLittleEndian(hostAddr, data);
-      return;
-    }
-  }
-#endif
-
-  if (! IsCanonical(laddr)) {
-    BX_ERROR(("write_new_stack_qword(): canonical failure"));
-    exception(BX_SS_EXCEPTION, 0, 0);
-  }
-
-#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
-  if (BX_CPU_THIS_PTR alignment_check() && curr_pl == 3) {
-    if (laddr & 7) {
-      BX_ERROR(("write_new_stack_qword(): #AC misaligned access"));
-      exception(BX_AC_EXCEPTION, 0, 0);
-    }
-  }
-#endif
-
-  access_write_linear(laddr, 8, curr_pl, (void *) &data);
-}
-#endif

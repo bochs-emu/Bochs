@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse.cc,v 1.57 2008-03-22 21:29:41 sshwarts Exp $
+// $Id: sse.cc,v 1.58 2008-05-10 18:10:53 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -1280,7 +1280,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PEXTRD_HdUdqIb(bxInstruction_c *i)
      else {
        BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
        /* pointer, segment address pair */
-       write_virtual_qword(i->seg(), RMAddr(i), result);
+       write_virtual_qword_64(i->seg(), RMAddr(i), result);
      }
   }
   else
@@ -1413,7 +1413,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PINSRD_VdqEdIb(bxInstruction_c *i)
     else {
       BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
       /* pointer, segment address pair */
-      op2 = read_virtual_qword(i->seg(), RMAddr(i));
+      op2 = read_virtual_qword_64(i->seg(), RMAddr(i));
     }
 
     op1.xmm64u(i->Ib() & 1) = op2;

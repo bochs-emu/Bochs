@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.473 2008-05-10 13:34:47 sshwarts Exp $
+// $Id: cpu.h,v 1.474 2008-05-10 18:10:52 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -888,9 +888,6 @@ public: // for now...
   unsigned cpu_mode;
   bx_bool  in_smm;
   bx_bool  nmi_disable;
-#if BX_SUPPORT_X86_64
-  bx_address laddr32b_mask;
-#endif
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
   bx_address alignment_check_mask;
 #endif
@@ -2834,9 +2831,7 @@ public: // for now...
   BX_SMF void write_new_stack_word(bx_segment_reg_t *seg, bx_address offset, unsigned curr_pl, Bit16u data);
   BX_SMF void write_new_stack_dword(bx_segment_reg_t *seg, bx_address offset, unsigned curr_pl, Bit32u data);
 #if BX_SUPPORT_X86_64
-  // write of qword to new stack could happen only in 64-bit mode
-  // (so stack segment is not relavant)
-  BX_SMF void write_new_stack_qword(bx_address offset, unsigned curr_pl, Bit64u data);
+  BX_SMF void write_new_stack_qword(Bit64u offset, unsigned curr_pl, Bit64u data);
 #endif
 
 #if BX_SUPPORT_MISALIGNED_SSE
@@ -2862,6 +2857,21 @@ public: // for now...
   BX_SMF void write_RMW_virtual_word(Bit16u val16) BX_CPP_AttrRegparmN(1);
   BX_SMF void write_RMW_virtual_dword(Bit32u val32) BX_CPP_AttrRegparmN(1);
   BX_SMF void write_RMW_virtual_qword(Bit64u val64) BX_CPP_AttrRegparmN(1);
+
+#if BX_SUPPORT_X86_64
+  BX_SMF void write_virtual_byte_64(unsigned seg, Bit64u offset, Bit8u data) BX_CPP_AttrRegparmN(3);
+  BX_SMF void write_virtual_word_64(unsigned seg, Bit64u offset, Bit16u data) BX_CPP_AttrRegparmN(3);
+  BX_SMF void write_virtual_dword_64(unsigned seg, Bit64u offset, Bit32u data) BX_CPP_AttrRegparmN(3);
+  BX_SMF void write_virtual_qword_64(unsigned seg, Bit64u offset, Bit64u data) BX_CPP_AttrRegparmN(3);
+  BX_SMF Bit8u read_virtual_byte_64(unsigned seg, Bit64u offset) BX_CPP_AttrRegparmN(2);
+  BX_SMF Bit16u read_virtual_word_64(unsigned seg, Bit64u offset) BX_CPP_AttrRegparmN(2);
+  BX_SMF Bit32u read_virtual_dword_64(unsigned seg, Bit64u offset) BX_CPP_AttrRegparmN(2);
+  BX_SMF Bit64u read_virtual_qword_64(unsigned seg, Bit64u offset) BX_CPP_AttrRegparmN(2);
+  BX_SMF Bit8u read_RMW_virtual_byte_64(unsigned seg, Bit64u offset) BX_CPP_AttrRegparmN(2);
+  BX_SMF Bit16u read_RMW_virtual_word_64(unsigned seg, Bit64u offset) BX_CPP_AttrRegparmN(2);
+  BX_SMF Bit32u read_RMW_virtual_dword_64(unsigned seg, Bit64u offset) BX_CPP_AttrRegparmN(2);
+  BX_SMF Bit64u read_RMW_virtual_qword_64(unsigned seg, Bit64u offset) BX_CPP_AttrRegparmN(2);
+#endif
 
 #if BX_SupportGuest2HostTLB
   BX_SMF Bit8u* v2h_read_byte(bx_address laddr, unsigned curr_pl) BX_CPP_AttrRegparmN(2);
@@ -3091,6 +3101,11 @@ public: // for now...
   // address value.
   BX_SMF bx_address get_laddr(unsigned seg, bx_address offset);
 
+  BX_SMF Bit32u get_laddr32(unsigned seg, Bit32u offset);
+#if BX_SUPPORT_X86_64
+  BX_SMF Bit64u get_laddr64(unsigned seg, Bit64u offset);
+#endif
+
   DECLARE_EFLAG_ACCESSOR   (ID,  21)
   DECLARE_EFLAG_ACCESSOR   (VIP, 20)
   DECLARE_EFLAG_ACCESSOR   (VIF, 19)
@@ -3217,13 +3232,29 @@ BX_CPP_INLINE bx_address BX_CPU_C::get_segment_base(unsigned seg)
   return BX_CPU_THIS_PTR sregs[seg].cache.u.segment.base;
 }
 
+BX_CPP_INLINE Bit32u BX_CPU_C::get_laddr32(unsigned seg, Bit32u offset)
+{
+  return (Bit32u) BX_CPU_THIS_PTR sregs[seg].cache.u.segment.base + offset;
+}
+
+#if BX_SUPPORT_X86_64
+BX_CPP_INLINE Bit64u BX_CPU_C::get_laddr64(unsigned seg, Bit64u offset)
+{
+  if (seg < BX_SEG_REG_FS)
+    return offset;
+  else
+    return BX_CPU_THIS_PTR sregs[seg].cache.u.segment.base + offset;
+}
+#endif
+
 BX_CPP_INLINE bx_address BX_CPU_C::get_laddr(unsigned seg, bx_address offset)
 {
 #if BX_SUPPORT_X86_64
-  return (get_segment_base(seg) + offset) & BX_CPU_THIS_PTR laddr32b_mask;
-#else
-  return (get_segment_base(seg) + offset);
+  if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
+    return get_laddr64(seg, offset);
+  }
 #endif
+  return get_laddr32(seg, (Bit32u) offset);
 }
 
 BX_CPP_INLINE Bit8u BX_CPU_C::get_reg8l(unsigned reg)
