@@ -130,7 +130,7 @@ BX_INCDIRS = -I. -I$(srcdir)/. -I@INSTRUMENT_DIR@ -I$(srcdir)/@INSTRUMENT_DIR@
 #all install uninstall: config.h#
 #        for subdir in $(SUBDIRS); do #
 #          echo making $@ in $$subdir; #
-#          (cd $$subdir && $(MAKE) $(MDEFINES) $@) || exit 1; #
+#          ($(MAKE) -C $$subdir $(MDEFINES) $@) || exit 1; #
 #        done#
 
 
@@ -223,8 +223,8 @@ bochs@EXE@: @IODEV_LIB_VAR@ @DEBUGGER_VAR@ \
 	touch .win32_dll_plugin_target
 
 bochs_plugins:
-	cd gui && $(MAKE) plugins
-	cd iodev && $(MAKE) plugins
+	$(MAKE) -C gui plugins
+	$(MAKE) -C iodev plugins
 
 bximage@EXE@: misc/bximage.o
 	@LINK_CONSOLE@ $(BXIMAGE_LINK_OPTS) misc/bximage.o
@@ -248,44 +248,28 @@ misc/niclist.o: $(srcdir)/misc/niclist.c
 $(BX_OBJS): $(BX_INCLUDES)
 
 iodev/libiodev.a::
-	cd iodev @COMMAND_SEPARATOR@
-	$(MAKE) $(MDEFINES) libiodev.a
-	@CD_UP_ONE@
+	$(MAKE) -C iodev $(MDEFINES) libiodev.a
 
 bx_debug/libdebug.a::
-	cd bx_debug @COMMAND_SEPARATOR@
-	$(MAKE) $(MDEFINES) libdebug.a
-	@CD_UP_ONE@
+	$(MAKE) -C bx_debug $(MDEFINES) libdebug.a
 
 cpu/libcpu.a::
-	cd cpu @COMMAND_SEPARATOR@
-	$(MAKE) $(MDEFINES) libcpu.a
-	@CD_UP_ONE@
+	$(MAKE) -C cpu $(MDEFINES) libcpu.a
 
 memory/libmemory.a::
-	cd memory @COMMAND_SEPARATOR@
-	$(MAKE) $(MDEFINES) libmemory.a
-	@CD_UP_ONE@
+	$(MAKE) -C memory $(MDEFINES) libmemory.a
 
 gui/libgui.a::
-	cd gui @COMMAND_SEPARATOR@
-	$(MAKE) $(MDEFINES) libgui.a
-	@CD_UP_ONE@
+	$(MAKE) -C gui $(MDEFINES) libgui.a
 
 disasm/libdisasm.a::
-	cd disasm @COMMAND_SEPARATOR@
-	$(MAKE) $(MDEFINES) libdisasm.a
-	@CD_UP_ONE@
+	$(MAKE) -C disasm $(MDEFINES) libdisasm.a
 
 @INSTRUMENT_DIR@/libinstrument.a::
-	cd @INSTRUMENT_DIR@ @COMMAND_SEPARATOR@
-	$(MAKE) $(MDEFINES) libinstrument.a
-	@CD_UP_TWO@
+	$(MAKE) -C @INSTRUMENT_DIR@ $(MDEFINES) libinstrument.a
 
 fpu/libfpu.a::
-	cd fpu @COMMAND_SEPARATOR@
-	$(MAKE) $(MDEFINES) libfpu.a
-	@CD_UP_ONE@
+	$(MAKE) -C fpu $(MDEFINES) libfpu.a
 
 libbochs.a:
 	-rm -f libbochs.a
@@ -476,33 +460,15 @@ local-dist-clean: clean
 	@RMCOMMAND@ ltdlconf.h
 
 all-clean: clean
-	cd iodev @COMMAND_SEPARATOR@
-	$(MAKE) clean
-	@CD_UP_ONE@
-	cd bx_debug @COMMAND_SEPARATOR@
-	$(MAKE) clean
-	@CD_UP_ONE@
-	cd cpu @COMMAND_SEPARATOR@
-	$(MAKE) clean
-	@CD_UP_ONE@
-	cd memory @COMMAND_SEPARATOR@
-	$(MAKE) clean
-	@CD_UP_ONE@
-	cd gui @COMMAND_SEPARATOR@
-	$(MAKE) clean
-	@CD_UP_ONE@
-	cd disasm @COMMAND_SEPARATOR@
-	$(MAKE) clean
-	@CD_UP_ONE@
-	cd @INSTRUMENT_DIR@ @COMMAND_SEPARATOR@
-	$(MAKE) clean
-	@CD_UP_TWO@
-	cd misc @COMMAND_SEPARATOR@
-	$(MAKE) clean
-	@CD_UP_ONE@
-	cd fpu @COMMAND_SEPARATOR@
-	$(MAKE) clean
-	@CD_UP_ONE@
+	$(MAKE) -C iodev clean
+	$(MAKE) -C bx_debug clean
+	$(MAKE) -C cpu clean
+	$(MAKE) -C memory clean
+	$(MAKE) -C gui clean
+	$(MAKE) -C disasm clean
+	$(MAKE) -C @INSTRUMENT_DIR@ clean
+	$(MAKE) -C misc clean
+	$(MAKE) -C fpu clean
 	cd doc/docbook @COMMAND_SEPARATOR@
 	$(MAKE) clean
 	@CD_UP_TWO@
@@ -511,36 +477,16 @@ all-clean: clean
 	@CD_UP_THREE@
 
 dist-clean: local-dist-clean
-	cd iodev @COMMAND_SEPARATOR@
-	$(MAKE) dist-clean
-	@CD_UP_ONE@
-	cd bx_debug @COMMAND_SEPARATOR@
-	$(MAKE) dist-clean
-	@CD_UP_ONE@
-	cd bios @COMMAND_SEPARATOR@
-	$(MAKE) dist-clean
-	@CD_UP_ONE@
-	cd cpu @COMMAND_SEPARATOR@
-	$(MAKE) dist-clean
-	@CD_UP_ONE@
-	cd memory @COMMAND_SEPARATOR@
-	$(MAKE) dist-clean
-	@CD_UP_ONE@
-	cd gui @COMMAND_SEPARATOR@
-	$(MAKE) dist-clean
-	@CD_UP_ONE@
-	cd disasm @COMMAND_SEPARATOR@
-	$(MAKE) dist-clean
-	@CD_UP_ONE@
-	cd @INSTRUMENT_DIR@ @COMMAND_SEPARATOR@
-	$(MAKE) dist-clean
-	@CD_UP_TWO@
-	cd misc @COMMAND_SEPARATOR@
-	$(MAKE) dist-clean
-	@CD_UP_ONE@
-	cd fpu @COMMAND_SEPARATOR@
-	$(MAKE) dist-clean
-	@CD_UP_ONE@
+	$(MAKE) -C iodev dist-clean
+	$(MAKE) -C bx_debug dist-clean
+	$(MAKE) -C bios dist-clean
+	$(MAKE) -C cpu dist-clean
+	$(MAKE) -C memory dist-clean
+	$(MAKE) -C gui dist-clean
+	$(MAKE) -C disasm dist-clean
+	$(MAKE) -C @INSTRUMENT_DIR@ dist-clean
+	$(MAKE) -C misc dist-clean
+	$(MAKE) -C fpu dist-clean
 	cd doc/docbook @COMMAND_SEPARATOR@
 	$(MAKE) dist-clean
 	@CD_UP_TWO@
