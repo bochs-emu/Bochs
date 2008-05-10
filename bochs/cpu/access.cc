@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: access.cc,v 1.106 2008-05-10 18:10:52 sshwarts Exp $
+// $Id: access.cc,v 1.107 2008-05-10 20:35:03 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1399,7 +1399,7 @@ BX_CPU_C::write_virtual_tword(unsigned s, bx_address offset, floatx80 *data)
 //
 
 // assuming the write happens in legacy mode
-void BX_CPU_C::write_new_stack_word(bx_segment_reg_t *seg, bx_address offset, unsigned curr_pl, Bit16u data)
+void BX_CPU_C::write_new_stack_word_32(bx_segment_reg_t *seg, bx_address offset, unsigned curr_pl, Bit16u data)
 {
   Bit32u laddr;
 
@@ -1451,7 +1451,7 @@ accessOK:
 }
 
 // assuming the write happens in legacy mode
-void BX_CPU_C::write_new_stack_dword(bx_segment_reg_t *seg, bx_address offset, unsigned curr_pl, Bit32u data)
+void BX_CPU_C::write_new_stack_dword_32(bx_segment_reg_t *seg, bx_address offset, unsigned curr_pl, Bit32u data)
 {
   Bit32u laddr;
 

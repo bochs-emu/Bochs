@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.229 2008-05-10 15:02:42 sshwarts Exp $
+// $Id: cpu.cc,v 1.230 2008-05-10 20:35:03 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -664,7 +664,7 @@ void BX_CPU_C::prefetch(void)
     }
   }
 
-  BX_CPU_THIS_PTR pAddrA20Page = pAddr & 0xfffff000;
+  BX_CPU_THIS_PTR pAddrA20Page = LPFOf(pAddr);
 
   if (fetchPtr) {
     BX_CPU_THIS_PTR eipFetchPtr = fetchPtr;

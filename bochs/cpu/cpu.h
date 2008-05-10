@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.474 2008-05-10 18:10:52 sshwarts Exp $
+// $Id: cpu.h,v 1.475 2008-05-10 20:35:03 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2828,10 +2828,10 @@ public: // for now...
   BX_SMF void read_virtual_tword(unsigned seg, bx_address offset, floatx80 *data) BX_CPP_AttrRegparmN(3);
 #endif
   // write of word/dword to new stack could happen only in legacy mode
-  BX_SMF void write_new_stack_word(bx_segment_reg_t *seg, bx_address offset, unsigned curr_pl, Bit16u data);
-  BX_SMF void write_new_stack_dword(bx_segment_reg_t *seg, bx_address offset, unsigned curr_pl, Bit32u data);
+  BX_SMF void write_new_stack_word_32(bx_segment_reg_t *seg, bx_address offset, unsigned curr_pl, Bit16u data);
+  BX_SMF void write_new_stack_dword_32(bx_segment_reg_t *seg, bx_address offset, unsigned curr_pl, Bit32u data);
 #if BX_SUPPORT_X86_64
-  BX_SMF void write_new_stack_qword(Bit64u offset, unsigned curr_pl, Bit64u data);
+  BX_SMF void write_new_stack_qword_64(Bit64u offset, unsigned curr_pl, Bit64u data);
 #endif
 
 #if BX_SUPPORT_MISALIGNED_SSE

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: access64.cc,v 1.1 2008-05-10 18:10:52 sshwarts Exp $
+// $Id: access64.cc,v 1.2 2008-05-10 20:35:03 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008 Stanislav Shwartsman
@@ -612,7 +612,7 @@ BX_CPU_C::read_RMW_virtual_qword_64(unsigned s, Bit64u offset)
   return data;
 }
 
-void BX_CPU_C::write_new_stack_qword(Bit64u laddr, unsigned curr_pl, Bit64u data)
+void BX_CPU_C::write_new_stack_qword_64(Bit64u laddr, unsigned curr_pl, Bit64u data)
 {
   BX_ASSERT(BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64);
 
