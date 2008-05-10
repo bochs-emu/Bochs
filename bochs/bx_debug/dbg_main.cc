@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.142 2008-05-09 22:33:36 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.143 2008-05-10 20:33:39 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -550,7 +550,7 @@ void bx_dbg_phy_memory_access(unsigned cpu, bx_phy_address phy, unsigned len, un
   if (! BX_CPU(dbg_cpu)->trace_mem)
     return;
 
-  dbg_printf("[CPU%d %s]: PHY 0x " FMT_PHY_ADDRX " (len=%d)",
+  dbg_printf("[CPU%d %s]: PHY 0x" FMT_PHY_ADDRX " (len=%d)",
      cpu, 
      (rw == BX_READ) ? "RD" : (rw == BX_WRITE) ? "WR" : "??",
      phy,
@@ -674,7 +674,7 @@ void bx_dbg_info_control_regs_command(void)
   dbg_printf("    MP=monitor coprocessor=%d\n", (cr0>>1) & 1);
   dbg_printf("    PE=protection enable=%d\n", (cr0>>0) & 1);
   dbg_printf("CR2=page fault linear address=0x" FMT_ADDRX "\n", cr2);
-  dbg_printf("CR3=0x " FMT_PHY_ADDRX "\n", cr3);
+  dbg_printf("CR3=0x" FMT_PHY_ADDRX "\n", cr3);
   dbg_printf("    PCD=page-level cache disable=%d\n", (cr3>>4) & 1);
   dbg_printf("    PWT=page-level writes transparent=%d\n", (cr3>>3) & 1);
 #if BX_CPU_LEVEL >= 4
@@ -2882,7 +2882,7 @@ void bx_dbg_info_gdt_command(unsigned from, unsigned to)
       bx_dbg_print_descriptor(entry, 0);
     }
     else {
-      dbg_printf("error: GDTR+8*%d points to invalid linear address 0x " FMT_ADDRX "\n",
+      dbg_printf("error: GDTR+8*%d points to invalid linear address 0x" FMT_ADDRX "\n",
         n, gdtr.base);
     }
   }
@@ -2920,7 +2920,7 @@ void bx_dbg_info_ldt_command(unsigned from, unsigned to)
       bx_dbg_print_descriptor(entry, 0);
     }
     else {
-      dbg_printf("error: LDTR+8*%d points to invalid linear address 0x " FMT_ADDRX "\n",
+      dbg_printf("error: LDTR+8*%d points to invalid linear address 0x" FMT_ADDRX "\n",
         n, ldtr_base);
     }
   }
