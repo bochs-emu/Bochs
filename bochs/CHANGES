@@ -1,10 +1,9 @@
-Changes after 2.3.6 release:
+Changes for coming 2.3.7 release:
 
 Brief summary :
 
-+ More optimizations in CPU code - above 25% emulation speedup
-  over 2.3.6 release!
-
++ More optimizations in CPU code - Bochs 2.3.7 is more than 2x faster
+  than Bochs 2.3.5 build !
 - Implemented LBA48 support
 - Added memory access tracing for Bochs internal debugger
 - Many fixes in CPU emulation and internal debugger
@@ -16,7 +15,8 @@ Detailed change log :
         --enable-xsave option
   - Fixed Bochs failure on RISC host machines with BxRepeatSpeedups
     optimization enabled
-  - Many bugfixes in CPU emulation (both ia32 and x86-64)
+  - Implemented SYSENTER/SYSEXIT instructions in long mode
+  - More than 100 bugfixes in CPU emulation correctness (both x86 and x86-64)
   - Updated CPU instrumentation callbacks
 
 - Bochs Internal Debugger and Disassembler
@@ -25,9 +25,9 @@ Detailed change log :
   - Many bug fixes in Bochs internal debugger and disassembler
 
 - System BIOS (Volker)
-  - Implemented LBA48 support (since BIOS functions are limited to 
+  - Implemented LBA48 support (since BIOS functions are limited to
     32 bit, the max. disk size is now 2 TB)
-  - Added generation of SSDT ACPI table that contains definitions 
+  - Added generation of SSDT ACPI table that contains definitions
     for available processors
   - Added RTC device to ACPI DSDT table
   - Added implementation of SMBIOS
