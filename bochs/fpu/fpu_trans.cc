@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu_trans.cc,v 1.14 2008-04-04 21:05:37 sshwarts Exp $
+// $Id: fpu_trans.cc,v 1.15 2008-05-10 09:17:24 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -41,19 +41,18 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::F2XM1(bxInstruction_c *i)
 
   clear_C1();
 
-  if (IS_TAG_EMPTY(0))
-  {
+  if (IS_TAG_EMPTY(0)) {
      BX_CPU_THIS_PTR FPU_stack_underflow(0);
      return;
   }
 
   float_status_t status =
-	FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word() | FPU_PR_80_BITS);
+     FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word() | FPU_PR_80_BITS);
 
   floatx80 result = f2xm1(BX_READ_FPU_REG(0), status);
 
   if (BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags))
-      return;
+     return;
 
   BX_WRITE_FPU_REG(result, 0);
 #else
@@ -76,12 +75,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FYL2X(bxInstruction_c *i)
   }
 
   float_status_t status =
-	FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word() | FPU_PR_80_BITS);
+     FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word() | FPU_PR_80_BITS);
 
   floatx80 result = fyl2x(BX_READ_FPU_REG(0), BX_READ_FPU_REG(1), status);
 
   if (BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags))
-      return;
+     return;
 
   BX_CPU_THIS_PTR the_i387.FPU_pop();
   BX_WRITE_FPU_REG(result, 0);
@@ -99,47 +98,53 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FPTAN(bxInstruction_c *i)
   clear_C1();
   clear_C2();
 
-  if (! IS_TAG_EMPTY(-1) || IS_TAG_EMPTY(0))
+  unsigned fp_stack_fault = 0;
+  if (IS_TAG_EMPTY(0)) fp_stack_fault |= FPU_EX_Stack_Underflow;
+
+  if (! IS_TAG_EMPTY(-1))
+     fp_stack_fault |= FPU_EX_Stack_Overflow;
+
+  if (fp_stack_fault)
   {
-      BX_CPU_THIS_PTR FPU_exception(FPU_EX_Stack_Overflow);
+     BX_CPU_THIS_PTR FPU_exception(fp_stack_fault);
 
-      /* The masked response */
-      if (BX_CPU_THIS_PTR the_i387.is_IA_masked())
-      {
-          BX_WRITE_FPU_REGISTER_AND_TAG(floatx80_default_nan, FPU_Tag_Special, 0);
-          BX_CPU_THIS_PTR the_i387.FPU_push();
-          BX_WRITE_FPU_REGISTER_AND_TAG(floatx80_default_nan, FPU_Tag_Special, 0);
-      }
+     /* The masked response */
+     if (BX_CPU_THIS_PTR the_i387.is_IA_masked())
+     {
+         BX_WRITE_FPU_REGISTER_AND_TAG(floatx80_default_nan, FPU_Tag_Special, 0);
+         BX_CPU_THIS_PTR the_i387.FPU_push();
+         BX_WRITE_FPU_REGISTER_AND_TAG(floatx80_default_nan, FPU_Tag_Special, 0);
+     }
 
-      return;
+     return;
   }
 
   extern const floatx80 Const_1;
 
   float_status_t status =
-	FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word() | FPU_PR_80_BITS);
+     FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word() | FPU_PR_80_BITS);
 
   floatx80 y = BX_READ_FPU_REG(0);
   if (ftan(y, status) == -1)
   {
-      FPU_PARTIAL_STATUS |= FPU_SW_C2;
-      return;
+     FPU_PARTIAL_STATUS |= FPU_SW_C2;
+     return;
   }
 
   if (floatx80_is_nan(y))
   {
-      if (! BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags))
-      {
-          BX_WRITE_FPU_REGISTER_AND_TAG(y, FPU_Tag_Special, 0);
-          BX_CPU_THIS_PTR the_i387.FPU_push();
-          BX_WRITE_FPU_REGISTER_AND_TAG(y, FPU_Tag_Special, 0);
-      }
+     if (! BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags))
+     {
+         BX_WRITE_FPU_REGISTER_AND_TAG(y, FPU_Tag_Special, 0);
+         BX_CPU_THIS_PTR the_i387.FPU_push();
+         BX_WRITE_FPU_REGISTER_AND_TAG(y, FPU_Tag_Special, 0);
+     }
 
-      return;
+     return;
   }
 
   if (BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags))
-      return;
+     return;
 
   BX_WRITE_FPU_REG(y, 0);
   BX_CPU_THIS_PTR the_i387.FPU_push();
@@ -163,12 +168,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FPATAN(bxInstruction_c *i)
   }
 
   float_status_t status =
-	FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word() | FPU_PR_80_BITS);
+     FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word() | FPU_PR_80_BITS);
 
   floatx80 result = fpatan(BX_READ_FPU_REG(0), BX_READ_FPU_REG(1), status);
 
   if (BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags))
-      return;
+     return;
 
   BX_CPU_THIS_PTR the_i387.FPU_pop();
   BX_WRITE_FPU_REG(result, 0);
@@ -185,33 +190,39 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FXTRACT(bxInstruction_c *i)
 
   clear_C1();
 
-  if (! IS_TAG_EMPTY(-1) || IS_TAG_EMPTY(0))
+  unsigned fp_stack_fault = 0;
+  if (IS_TAG_EMPTY(0)) fp_stack_fault |= FPU_EX_Stack_Underflow;
+
+  if (! IS_TAG_EMPTY(-1))
+     fp_stack_fault |= FPU_EX_Stack_Overflow;
+
+  if (fp_stack_fault)
   {
-      BX_CPU_THIS_PTR FPU_exception(FPU_EX_Stack_Overflow);
+     BX_CPU_THIS_PTR FPU_exception(fp_stack_fault);
 
-      /* The masked response */
-      if (BX_CPU_THIS_PTR the_i387.is_IA_masked())
-      {
-          BX_WRITE_FPU_REGISTER_AND_TAG(floatx80_default_nan, FPU_Tag_Special, 0);
-          BX_CPU_THIS_PTR the_i387.FPU_push();
-          BX_WRITE_FPU_REGISTER_AND_TAG(floatx80_default_nan, FPU_Tag_Special, 0);
-      }
+     /* The masked response */
+     if (BX_CPU_THIS_PTR the_i387.is_IA_masked())
+     {
+         BX_WRITE_FPU_REGISTER_AND_TAG(floatx80_default_nan, FPU_Tag_Special, 0);
+         BX_CPU_THIS_PTR the_i387.FPU_push();
+         BX_WRITE_FPU_REGISTER_AND_TAG(floatx80_default_nan, FPU_Tag_Special, 0);
+     }
 
-      return;
+     return;
   }
 
   float_status_t status =
-      FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
+     FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
 
   floatx80 a = BX_READ_FPU_REG(0);
   floatx80 b = floatx80_extract(a, status);
 
   if (BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags))
-      return;
+     return;
 
-  BX_WRITE_FPU_REG(b, 0);	// exponent
+  BX_WRITE_FPU_REG(b, 0);     // exponent
   BX_CPU_THIS_PTR the_i387.FPU_push();
-  BX_WRITE_FPU_REG(a, 0);	// fraction
+  BX_WRITE_FPU_REG(a, 0);     // fraction
 #else
   BX_INFO(("FXTRACT: required FPU, configure --enable-fpu"));
 #endif
@@ -232,7 +243,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FPREM1(bxInstruction_c *i)
   }
 
   float_status_t status =
-	FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
+     FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
 
   Bit64u quotient;
 
@@ -242,15 +253,15 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FPREM1(bxInstruction_c *i)
   floatx80 result = floatx80_ieee754_remainder(a, b, quotient, status);
 
   if (BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags))
-      return;
+     return;
 
   int cc = 0;
   if (quotient == (Bit64u) -1) cc = FPU_SW_C2;
   else
   {
-      if (quotient & 1) cc |= FPU_SW_C1;
-      if (quotient & 2) cc |= FPU_SW_C3;
-      if (quotient & 4) cc |= FPU_SW_C0;
+     if (quotient & 1) cc |= FPU_SW_C1;
+     if (quotient & 2) cc |= FPU_SW_C3;
+     if (quotient & 4) cc |= FPU_SW_C0;
   }
   setcc(cc);
 
@@ -275,7 +286,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FPREM(bxInstruction_c *i)
   }
 
   float_status_t status =
-	FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
+     FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
 
   Bit64u quotient;
 
@@ -285,15 +296,15 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FPREM(bxInstruction_c *i)
   floatx80 result = floatx80_remainder(a, b, quotient, status);
 
   if (BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags))
-      return;
+     return;
 
   int cc = 0;
   if (quotient == (Bit64u) -1) cc = FPU_SW_C2;
   else
   {
-      if (quotient & 1) cc |= FPU_SW_C1;
-      if (quotient & 2) cc |= FPU_SW_C3;
-      if (quotient & 4) cc |= FPU_SW_C0;
+     if (quotient & 1) cc |= FPU_SW_C1;
+     if (quotient & 2) cc |= FPU_SW_C3;
+     if (quotient & 4) cc |= FPU_SW_C0;
   }
   setcc(cc);
 
@@ -318,12 +329,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FYL2XP1(bxInstruction_c *i)
   }
 
   float_status_t status =
-	FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word() | FPU_PR_80_BITS);
+     FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word() | FPU_PR_80_BITS);
 
   floatx80 result = fyl2xp1(BX_READ_FPU_REG(0), BX_READ_FPU_REG(1), status);
 
   if (BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags))
-      return;
+     return;
 
   BX_CPU_THIS_PTR the_i387.FPU_pop();
   BX_WRITE_FPU_REG(result, 0);
@@ -341,34 +352,40 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FSINCOS(bxInstruction_c *i)
   clear_C1();
   clear_C2();
 
-  if (! IS_TAG_EMPTY(-1) || IS_TAG_EMPTY(0))
+  unsigned fp_stack_fault = 0;
+  if (IS_TAG_EMPTY(0)) fp_stack_fault |= FPU_EX_Stack_Underflow;
+
+  if (! IS_TAG_EMPTY(-1))
+     fp_stack_fault |= FPU_EX_Stack_Overflow;
+
+  if (fp_stack_fault)
   {
-      BX_CPU_THIS_PTR FPU_exception(FPU_EX_Stack_Overflow);
+     BX_CPU_THIS_PTR FPU_exception(fp_stack_fault);
 
-      /* The masked response */
-      if (BX_CPU_THIS_PTR the_i387.is_IA_masked())
-      {
-          BX_WRITE_FPU_REGISTER_AND_TAG(floatx80_default_nan, FPU_Tag_Special, 0);
-          BX_CPU_THIS_PTR the_i387.FPU_push();
-          BX_WRITE_FPU_REGISTER_AND_TAG(floatx80_default_nan, FPU_Tag_Special, 0);
-      }
+     /* The masked response */
+     if (BX_CPU_THIS_PTR the_i387.is_IA_masked())
+     {
+         BX_WRITE_FPU_REGISTER_AND_TAG(floatx80_default_nan, FPU_Tag_Special, 0);
+         BX_CPU_THIS_PTR the_i387.FPU_push();
+         BX_WRITE_FPU_REGISTER_AND_TAG(floatx80_default_nan, FPU_Tag_Special, 0);
+     }
 
-      return;
+     return;
   }
 
   float_status_t status =
-	FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word() | FPU_PR_80_BITS);
+     FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word() | FPU_PR_80_BITS);
 
   floatx80 y = BX_READ_FPU_REG(0);
   floatx80 sin_y, cos_y;
   if (fsincos(y, &sin_y, &cos_y, status) == -1)
   {
-      FPU_PARTIAL_STATUS |= FPU_SW_C2;
-      return;
+     FPU_PARTIAL_STATUS |= FPU_SW_C2;
+     return;
   }
 
   if (BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags))
-      return;
+     return;
 
   BX_WRITE_FPU_REG(sin_y, 0);
   BX_CPU_THIS_PTR the_i387.FPU_push();
@@ -393,7 +410,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FSCALE(bxInstruction_c *i)
   }
 
   float_status_t status =
-	FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
+     FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
 
   floatx80 result = floatx80_scale(BX_READ_FPU_REG(0), BX_READ_FPU_REG(1), status);
 
@@ -415,24 +432,23 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FSIN(bxInstruction_c *i)
   clear_C1();
   clear_C2();
 
-  if (IS_TAG_EMPTY(0))
-  {
+  if (IS_TAG_EMPTY(0)) {
      BX_CPU_THIS_PTR FPU_stack_underflow(0);
      return;
   }
 
   float_status_t status =
-	FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word() | FPU_PR_80_BITS);
+     FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word() | FPU_PR_80_BITS);
 
   floatx80 y = BX_READ_FPU_REG(0);
   if (fsin(y, status) == -1)
   {
-      FPU_PARTIAL_STATUS |= FPU_SW_C2;
-      return;
+     FPU_PARTIAL_STATUS |= FPU_SW_C2;
+     return;
   }
 
   if (BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags))
-      return;
+     return;
 
   BX_WRITE_FPU_REG(y, 0);
 #else
@@ -449,24 +465,23 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FCOS(bxInstruction_c *i)
   clear_C1();
   clear_C2();
 
-  if (IS_TAG_EMPTY(0))
-  {
+  if (IS_TAG_EMPTY(0)) {
      BX_CPU_THIS_PTR FPU_stack_underflow(0);
      return;
   }
 
   float_status_t status =
-	FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word() | FPU_PR_80_BITS);
+     FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word() | FPU_PR_80_BITS);
 
   floatx80 y = BX_READ_FPU_REG(0);
   if (fcos(y, status) == -1)
   {
-      FPU_PARTIAL_STATUS |= FPU_SW_C2;
-      return;
+     FPU_PARTIAL_STATUS |= FPU_SW_C2;
+     return;
   }
 
   if (BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags))
-      return;
+     return;
 
   BX_WRITE_FPU_REG(y, 0);
 #else

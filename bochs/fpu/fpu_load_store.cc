@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu_load_store.cc,v 1.22 2008-05-04 21:22:42 sshwarts Exp $
+// $Id: fpu_load_store.cc,v 1.23 2008-05-10 09:17:24 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -266,6 +266,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FST_STi(bxInstruction_c *i)
   if (i->b1() == 0xdf)
     pop_stack = 1;
 
+  clear_C1();
+
   int st0_tag = BX_CPU_THIS_PTR the_i387.FPU_gettagi(0);
   if (st0_tag == FPU_Tag_Empty)
   {
@@ -287,6 +289,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FST_SINGLE_REAL(bxInstruction_c *i)
 {
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
+
+  clear_C1();
 
   float32 save_reg = float32_default_nan; /* The masked response */
 
@@ -324,6 +328,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FST_DOUBLE_REAL(bxInstruction_c *i)
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
 
+  clear_C1();
+
   float64 save_reg = float64_default_nan; /* The masked response */
 
   int pop_stack = i->nnn() & 1;
@@ -360,6 +366,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FSTP_EXTENDED_REAL(bxInstruction_c *i)
 {
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
+
+  clear_C1();
 
   floatx80 save_reg = floatx80_default_nan; /* The masked response */
 
