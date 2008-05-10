@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu.cc,v 1.40 2008-05-05 21:23:33 sshwarts Exp $
+// $Id: fpu.cc,v 1.41 2008-05-10 13:34:01 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -588,6 +588,8 @@ void BX_CPU_C::print_state_FPU(void)
   int tos = FPU_TOS & 7;
   for (int i=0; i<8; i++) {
     const floatx80 &fp = BX_FPU_REG(i);
+    unsigned tag = BX_CPU_THIS_PTR the_i387.FPU_gettagi((i-tos)&7);
+    if (tag != FPU_Tag_Empty) tag = FPU_tagof(fp);
     double f = pow(2.0, ((0x7fff & fp.exp) - 0x3fff));
     if (fp.exp & 0x8000) f = -f;
 #ifdef _MSC_VER
@@ -595,10 +597,9 @@ void BX_CPU_C::print_state_FPU(void)
 #else
     f *= fp.fraction*scale_factor;
 #endif
-    fprintf(stderr, "%sFPR%d(%c):        raw 0x%04x:%08lx%08lx (%.10f)\n",
-          i==tos?"=>":"  ",
-          i,
-          "v0se"[BX_CPU_THIS_PTR the_i387.FPU_gettagi((i-tos)&7)],
+    fprintf(stderr, "%sFP%d ST%d(%c):        raw 0x%04x:%08lx%08lx (%.10f)\n",
+          i==tos?"=>":"  ", (i-tos)&7, i,
+          "v0se"[tag],
           fp.exp & 0xffff, GET32H(fp.fraction), GET32L(fp.fraction),
           f);
   }

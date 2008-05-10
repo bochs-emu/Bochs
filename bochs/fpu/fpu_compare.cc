@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu_compare.cc,v 1.16 2008-04-26 19:38:53 sshwarts Exp $
+// $Id: fpu_compare.cc,v 1.17 2008-05-10 13:34:01 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -495,10 +495,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FCMOV_ST0_STj(bxInstruction_c *i)
 #if (BX_CPU_LEVEL >= 6) || (BX_CPU_LEVEL_HACKED >= 6)
   BX_CPU_THIS_PTR prepareFPU(i);
 
-  int st0_tag = BX_CPU_THIS_PTR the_i387.FPU_gettagi(0);
-  int sti_tag = BX_CPU_THIS_PTR the_i387.FPU_gettagi(i->rm());
-
-  if (st0_tag == FPU_Tag_Empty || sti_tag == FPU_Tag_Empty)
+  if (IS_TAG_EMPTY(0) || IS_TAG_EMPTY(i->rm()))
   {
      BX_CPU_THIS_PTR FPU_stack_underflow(0);
      return;
@@ -520,7 +517,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FCMOV_ST0_STj(bxInstruction_c *i)
      condition = !condition;
 
   if (condition)
-     BX_WRITE_FPU_REGISTER_AND_TAG(sti_reg, sti_tag, 0);
+     BX_WRITE_FPU_REG(sti_reg, 0);
 
 #else
   BX_INFO(("FCMOV_ST0_STj: required P6 FPU, configure --enable-fpu, cpu-level=6"));

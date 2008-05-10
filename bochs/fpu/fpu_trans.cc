@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu_trans.cc,v 1.16 2008-05-10 10:15:01 sshwarts Exp $
+// $Id: fpu_trans.cc,v 1.17 2008-05-10 13:34:01 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -108,9 +108,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FPTAN(bxInstruction_c *i)
      /* The masked response */
      if (BX_CPU_THIS_PTR the_i387.is_IA_masked())
      {
-         BX_WRITE_FPU_REGISTER_AND_TAG(floatx80_default_nan, FPU_Tag_Special, 0);
+         BX_WRITE_FPU_REG(floatx80_default_nan, 0);
          BX_CPU_THIS_PTR the_i387.FPU_push();
-         BX_WRITE_FPU_REGISTER_AND_TAG(floatx80_default_nan, FPU_Tag_Special, 0);
+         BX_WRITE_FPU_REG(floatx80_default_nan, 0);
      }
 
      return;
@@ -132,9 +132,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FPTAN(bxInstruction_c *i)
   {
      if (! BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags))
      {
-         BX_WRITE_FPU_REGISTER_AND_TAG(y, FPU_Tag_Special, 0);
+         BX_WRITE_FPU_REG(y, 0);
          BX_CPU_THIS_PTR the_i387.FPU_push();
-         BX_WRITE_FPU_REGISTER_AND_TAG(y, FPU_Tag_Special, 0);
+         BX_WRITE_FPU_REG(y, 0);
      }
 
      return;
@@ -145,7 +145,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FPTAN(bxInstruction_c *i)
 
   BX_WRITE_FPU_REG(y, 0);
   BX_CPU_THIS_PTR the_i387.FPU_push();
-  BX_WRITE_FPU_REGISTER_AND_TAG(Const_1, FPU_Tag_Valid, 0);
+  BX_WRITE_FPU_REG(Const_1, 0);
 #else
   BX_INFO(("FPTAN: required FPU, configure --enable-fpu"));
 #endif
@@ -197,9 +197,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FXTRACT(bxInstruction_c *i)
      /* The masked response */
      if (BX_CPU_THIS_PTR the_i387.is_IA_masked())
      {
-         BX_WRITE_FPU_REGISTER_AND_TAG(floatx80_default_nan, FPU_Tag_Special, 0);
+         BX_WRITE_FPU_REG(floatx80_default_nan, 0);
          BX_CPU_THIS_PTR the_i387.FPU_push();
-         BX_WRITE_FPU_REGISTER_AND_TAG(floatx80_default_nan, FPU_Tag_Special, 0);
+         BX_WRITE_FPU_REG(floatx80_default_nan, 0);
      }
 
      return;
@@ -356,9 +356,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FSINCOS(bxInstruction_c *i)
      /* The masked response */
      if (BX_CPU_THIS_PTR the_i387.is_IA_masked())
      {
-         BX_WRITE_FPU_REGISTER_AND_TAG(floatx80_default_nan, FPU_Tag_Special, 0);
+         BX_WRITE_FPU_REG(floatx80_default_nan, 0);
          BX_CPU_THIS_PTR the_i387.FPU_push();
-         BX_WRITE_FPU_REGISTER_AND_TAG(floatx80_default_nan, FPU_Tag_Special, 0);
+         BX_WRITE_FPU_REG(floatx80_default_nan, 0);
      }
 
      return;

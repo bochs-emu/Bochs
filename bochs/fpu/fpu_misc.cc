@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu_misc.cc,v 1.13 2008-04-04 21:05:37 sshwarts Exp $
+// $Id: fpu_misc.cc,v 1.14 2008-05-10 13:34:01 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -52,21 +52,16 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FXCH_STi(bxInstruction_c *i)
       {
 	  /* Masked response */
           if (st0_tag == FPU_Tag_Empty)
-          {
               st0_reg = floatx80_default_nan;
-              st0_tag = FPU_Tag_Special;
-          }
+
           if (sti_tag == FPU_Tag_Empty)
-          {
               sti_reg = floatx80_default_nan;
-              sti_tag = FPU_Tag_Special;
-          }
       }
       else return;
   }
 
-  BX_WRITE_FPU_REGISTER_AND_TAG(st0_reg, st0_tag, i->rm());
-  BX_WRITE_FPU_REGISTER_AND_TAG(sti_reg, sti_tag, 0);
+  BX_WRITE_FPU_REG(st0_reg, i->rm());
+  BX_WRITE_FPU_REG(sti_reg, 0);
 #else
   BX_INFO(("FXCH_STi: required FPU, configure --enable-fpu"));
 #endif
@@ -78,9 +73,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FCHS(bxInstruction_c *i)
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
 
-  int st0_tag = BX_CPU_THIS_PTR the_i387.FPU_gettagi(0);
-  if (st0_tag == FPU_Tag_Empty)
-  {
+  if (IS_TAG_EMPTY(0)) {
       BX_CPU_THIS_PTR FPU_stack_underflow(0);
       return;
   }
@@ -88,7 +81,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FCHS(bxInstruction_c *i)
   clear_C1();
 
   floatx80 st0_reg = BX_READ_FPU_REG(0);
-  BX_WRITE_FPU_REGISTER_AND_TAG(floatx80_chs(st0_reg), st0_tag, 0);
+  BX_WRITE_FPU_REG(floatx80_chs(st0_reg), 0);
 #else
   BX_INFO(("FCHS: required FPU, configure --enable-fpu"));
 #endif
@@ -100,9 +93,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FABS(bxInstruction_c *i)
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
 
-  int st0_tag = BX_CPU_THIS_PTR the_i387.FPU_gettagi(0);
-  if (st0_tag == FPU_Tag_Empty)
-  {
+  if (IS_TAG_EMPTY(0)) {
       BX_CPU_THIS_PTR FPU_stack_underflow(0);
       return;
   }
@@ -110,7 +101,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FABS(bxInstruction_c *i)
   clear_C1();
 
   floatx80 st0_reg = BX_READ_FPU_REG(0);
-  BX_WRITE_FPU_REGISTER_AND_TAG(floatx80_abs(st0_reg), st0_tag, 0);
+  BX_WRITE_FPU_REG(floatx80_abs(st0_reg), 0);
 #else
   BX_INFO(("FABS: required FPU, configure --enable-fpu"));
 #endif
