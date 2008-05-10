@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.127 2008-05-09 22:33:36 sshwarts Exp $
+// $Id: paging.cc,v 1.128 2008-05-10 22:11:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1101,9 +1101,11 @@ bx_bool BX_CPU_C::dbg_xlate_linear2phy(bx_address laddr, bx_phy_address *phy)
       Bit64u pte;
       pt_address += 8 * ((laddr >> (12 + 9*level)) & 511);
       BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, pt_address, 8, &pte);
-      if (!(pte & 1))
+      if(!(pte & 1))
 	goto page_fault;
-      pt_address = (bx_phy_address)(pte & BX_CONST64(0x000ffffffffff000));
+      if ((pte & BX_PHY_ADDRESS_MASK & BX_CONST64(0x000fffffffffffff)))
+	goto page_fault;
+      pt_address = bx_phy_address(pte & BX_CONST64(0x000ffffffffff000));
       if (level == 1 && (pte & 0x80)) { // PSE page
 	offset_mask = 0x1fffff;
 	break;
