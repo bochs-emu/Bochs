@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_move.cc,v 1.88 2008-04-16 05:41:43 sshwarts Exp $
+// $Id: sse_move.cc,v 1.89 2008-05-10 13:34:47 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -41,6 +41,22 @@ void BX_CPU_C::print_state_SSE(void)
 #endif
 
 #if BX_SUPPORT_FPU
+Bit8u BX_CPU_C::pack_FPU_TW(Bit16u twd)
+{
+  Bit8u tag_byte = 0;
+
+  if((twd & 0x0003) != 0x0003) tag_byte |= 0x01;
+  if((twd & 0x000c) != 0x000c) tag_byte |= 0x02;
+  if((twd & 0x0030) != 0x0030) tag_byte |= 0x04;
+  if((twd & 0x00c0) != 0x00c0) tag_byte |= 0x08;
+  if((twd & 0x0300) != 0x0300) tag_byte |= 0x10;
+  if((twd & 0x0c00) != 0x0c00) tag_byte |= 0x20;
+  if((twd & 0x3000) != 0x3000) tag_byte |= 0x40;
+  if((twd & 0xc000) != 0xc000) tag_byte |= 0x80;
+
+  return tag_byte;
+}
+
 Bit16u BX_CPU_C::unpack_FPU_TW(Bit16u tag_byte)
 {
   Bit32u twd = 0;
@@ -158,20 +174,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FXSAVE(bxInstruction_c *i)
 #endif
 
   xmm.xmm16u(0) = BX_CPU_THIS_PTR the_i387.get_control_word();
-  xmm.xmm16u(1) = BX_CPU_THIS_PTR the_i387.get_status_word ();
-
-  Bit16u twd = BX_CPU_THIS_PTR the_i387.get_tag_word(), tag_byte = 0;
-
-  if((twd & 0x0003) != 0x0003) tag_byte |= 0x01;
-  if((twd & 0x000c) != 0x000c) tag_byte |= 0x02;
-  if((twd & 0x0030) != 0x0030) tag_byte |= 0x04;
-  if((twd & 0x00c0) != 0x00c0) tag_byte |= 0x08;
-  if((twd & 0x0300) != 0x0300) tag_byte |= 0x10;
-  if((twd & 0x0c00) != 0x0c00) tag_byte |= 0x20;
-  if((twd & 0x3000) != 0x3000) tag_byte |= 0x40;
-  if((twd & 0xc000) != 0xc000) tag_byte |= 0x80;
-
-  xmm.xmm16u(2) = tag_byte;
+  xmm.xmm16u(1) = BX_CPU_THIS_PTR the_i387.get_status_word();
+  xmm.xmm16u(2) = pack_FPU_TW(BX_CPU_THIS_PTR the_i387.get_tag_word());
 
   /* x87 FPU Opcode (16 bits) */
   /* The lower 11 bits contain the FPU opcode, upper 5 bits are reserved */
