@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse.cc,v 1.58 2008-05-10 18:10:53 sshwarts Exp $
+// $Id: sse.cc,v 1.59 2008-05-10 22:20:05 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -584,9 +584,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BLENDVPS_VpsWps(bxInstruction_c *i)
   }
 
   if (mask.xmm32u(0) & 0x80000000) op1.xmm32u(0) = op2.xmm32u(0);
-  if (mask.xmm32u(1) & 0x80000000) op1.xmm32u(0) = op2.xmm32u(0);
-  if (mask.xmm32u(2) & 0x80000000) op1.xmm32u(0) = op2.xmm32u(0);
-  if (mask.xmm32u(3) & 0x80000000) op1.xmm32u(0) = op2.xmm32u(0);
+  if (mask.xmm32u(1) & 0x80000000) op1.xmm32u(1) = op2.xmm32u(1);
+  if (mask.xmm32u(2) & 0x80000000) op1.xmm32u(2) = op2.xmm32u(2);
+  if (mask.xmm32u(3) & 0x80000000) op1.xmm32u(3) = op2.xmm32u(3);
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), op1);
@@ -616,7 +616,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BLENDVPD_VpdWpd(bxInstruction_c *i)
   }
 
   if (mask.xmm32u(1) & 0x80000000) op1.xmm64u(0) = op2.xmm64u(0);
-  if (mask.xmm32u(3) & 0x80000000) op1.xmm64u(0) = op2.xmm64u(0);
+  if (mask.xmm32u(3) & 0x80000000) op1.xmm64u(1) = op2.xmm64u(1);
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), op1);
