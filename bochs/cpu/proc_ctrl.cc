@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.229 2008-05-10 18:10:53 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.230 2008-05-11 19:36:06 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -624,7 +624,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CdRd(bxInstruction_c *i)
     case 3: // CR3
       BX_DEBUG(("MOV_CdRd:CR3 = %08x", val_32));
       // Reserved bits take on value of MOV instruction
-      CR3_change(val_32);
+      SetCR3(val_32);
       BX_INSTR_TLB_CNTRL(BX_CPU_ID, BX_INSTR_MOV_CR3, val_32);
       break;
     case 4: // CR4
@@ -676,7 +676,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RdCd(bxInstruction_c *i)
       break;
     case 3: // CR3
       BX_DEBUG(("MOV_RdCd: reading CR3"));
-      val_32 = BX_CPU_THIS_PTR cr3;
+      val_32 = (Bit32u) BX_CPU_THIS_PTR cr3;
       break;
     case 4: // CR4
 #if BX_CPU_LEVEL < 4
@@ -733,16 +733,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CqRq(bxInstruction_c *i)
       break;
     case 3: // CR3
       BX_DEBUG(("MOV_CqRq: write to CR3 of %08x:%08x", GET32H(val_64), GET32L(val_64)));
-      if (val_64 & BX_CONST64(0xffffffff00000000)) {
-          BX_PANIC(("CR3 write: Only 32 bit physical address space is emulated !"));
-      }
       // Reserved bits take on value of MOV instruction
-      CR3_change((bx_phy_address) val_64);
+      SetCR3(val_64);
       BX_INSTR_TLB_CNTRL(BX_CPU_ID, BX_INSTR_MOV_CR3, val_64);
       break;
     case 4: // CR4
-      //  Protected mode: #GP(0) if attempt to write a 1 to
-      //  any reserved bit of CR4
+      // Protected mode: #GP(0) if attempt to write a 1 to
+      // any reserved bit of CR4
       BX_DEBUG(("MOV_CqRq: write to CR4 of %08x:%08x", GET32H(val_64), GET32L(val_64)));
       if (! SetCR4(val_64))
         exception(BX_GP_EXCEPTION, 0, 0);
@@ -1817,9 +1814,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRMSR(bxInstruction_c *i)
       if (BX_CPU_THIS_PTR msr.apicbase & 0x800) {
         BX_INFO(("WRMSR: wrote %08x:%08x to MSR_APICBASE", EDX, EAX));
         BX_CPU_THIS_PTR msr.apicbase = EAX; /* ignore the high 32bits */
+#if BX_PHY_ADDRESS_WIDTH == 32
         if (EDX != 0) {
             BX_PANIC(("MSR_APICBASE: Only 32 bit physical address space is emulated !"));
         }
+#endif
         BX_CPU_THIS_PTR local_apic.set_base(BX_CPU_THIS_PTR msr.apicbase);
         // TLB flush is required for emulation correctness
         TLB_flush(1);  // don't care about performance of apic relocation

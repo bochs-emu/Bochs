@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: smm.cc,v 1.38 2008-04-27 19:49:02 sshwarts Exp $
+// $Id: smm.cc,v 1.39 2008-05-11 19:36:06 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2006 Stanislav Shwartsman
@@ -395,7 +395,7 @@ bx_bool BX_CPU_C::smram_restore_state(const Bit32u *saved_state)
   setEFlags(temp_eflags);
 
   bx_phy_address temp_cr3 = SMRAM_FIELD(saved_state, SMRAM_OFFSET_CR3);
-  CR3_change(temp_cr3);
+  SetCR3(temp_cr3);
 
   RAX = SMRAM_FIELD64(saved_state, SMRAM_OFFSET_RAX_HI32, SMRAM_OFFSET_RAX_LO32);
   RBX = SMRAM_FIELD64(saved_state, SMRAM_OFFSET_RBX_HI32, SMRAM_OFFSET_RBX_LO32);
@@ -658,7 +658,7 @@ bx_bool BX_CPU_C::smram_restore_state(const Bit32u *saved_state)
   }
 
   SetCR0(temp_cr0);
-  CR3_change(temp_cr3);
+  SetCR3(temp_cr3);
   setEFlags(temp_eflags);
 
 #if BX_CPU_LEVEL >= 4

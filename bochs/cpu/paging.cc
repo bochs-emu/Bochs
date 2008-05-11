@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.128 2008-05-10 22:11:48 sshwarts Exp $
+// $Id: paging.cc,v 1.129 2008-05-11 19:36:06 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -409,8 +409,12 @@ static unsigned tlbNonGlobalFlushes=0;
 #define InstrTLB_Increment(v)
 #endif
 
-// ==============================================================
+#define BX_PHY_ADDRESS_MASK ((((Bit64u)(1)) << BX_PHY_ADDRESS_WIDTH) - 1)
 
+#define BX_PHY_ADDRESS_RESERVED_BITS \
+      (~BX_PHY_ADDRESS_MASK & BX_CONST64(0xfffffffffffff))
+
+// ==============================================================
 
   void BX_CPP_AttrRegparmN(2)
 BX_CPU_C::pagingCR0Changed(Bit32u oldCR0, Bit32u newCR0)
@@ -446,22 +450,36 @@ BX_CPU_C::pagingCR4Changed(Bit32u oldCR4, Bit32u newCR4)
 }
 
   void BX_CPP_AttrRegparmN(1)
-BX_CPU_C::CR3_change(bx_phy_address value)
+BX_CPU_C::SetCR3(bx_address val)
 {
   if (bx_dbg.paging) {
-    BX_DEBUG(("CR3_change(): flush TLB cache"));
-    BX_DEBUG(("Page Directory Base: 0x" FMT_PHY_ADDRX, value));
+    BX_DEBUG(("SetCR3(): flush TLB cache"));
+    BX_DEBUG(("Page Directory Base: 0x" FMT_PHY_ADDRX, val));
   }
 
   // flush TLB even if value does not change
   TLB_flush(0); // 0 = Don't flush Global entries.
-  BX_CPU_THIS_PTR cr3 = value;
+
 #if BX_SUPPORT_PAE
-  if (BX_CPU_THIS_PTR cr4.get_PAE() && !long_mode())
-    BX_CPU_THIS_PTR cr3_masked = value & 0xffffffe0;
+  if (BX_CPU_THIS_PTR cr4.get_PAE() && !long_mode()) {
+    BX_CPU_THIS_PTR cr3_masked = val & 0xffffffe0;
+    BX_CPU_THIS_PTR cr3        = val & 0xffffffff;
+  }
   else
 #endif
-    BX_CPU_THIS_PTR cr3_masked = value & BX_CONST64(0x000ffffffffff000);
+  {
+#if BX_PHY_ADDRESS_WIDTH == 32
+    if (val & BX_CONST64(0x000fffff00000000)) {
+      BX_PANIC(("SetCR3() 0x%08x%08x: Only 32 bit physical address space is emulated !", GET32H(val), GET32L(val)));
+    }
+#endif
+    if (val & BX_PHY_ADDRESS_RESERVED_BITS) {
+      BX_ERROR(("SetCR3(): Attempt to write to reserved bits of CR3"));
+      exception(BX_GP_EXCEPTION, 0, 0);
+    }
+    BX_CPU_THIS_PTR cr3_masked = val & BX_CONST64(0x000ffffffffff000);
+    BX_CPU_THIS_PTR cr3        = val;
+  }
 }
 
 // Called to initialize the TLB upon startup.
@@ -598,27 +616,23 @@ void BX_CPU_C::page_fault(unsigned fault, bx_address laddr, unsigned user, unsig
   exception(BX_PF_EXCEPTION, error_code, 0);
 }
 
-#define BX_PHY_ADDRESS_MASK ~((((Bit64u)(1)) << BX_PHY_ADDRESS_WIDTH) - 1)
-
 /* PAE PML4: bits [51 .. physical address width], [7] */
 #define PAGING_PAE_PML4_RESERVED_BITS \
-    (BX_PHY_ADDRESS_MASK & BX_CONST64(0x000FFFFFFFFFFFFF) | BX_CONST64(0x00000080))
+    (BX_PHY_ADDRESS_RESERVED_BITS | BX_CONST64(0x00000080))
 
 /* PAE PDPE: bits [51 .. physical address width], [7] - not support 1G paging */
 #define PAGING_PAE_PDPE_RESERVED_BITS \
-    (BX_PHY_ADDRESS_MASK & BX_CONST64(0x000FFFFFFFFFFFFF) | BX_CONST64(0x00000080))
+    (BX_PHY_ADDRESS_RESERVED_BITS | BX_CONST64(0x00000080))
 
 /* PAE PDE: bits [51 .. physical address width] */
-#define PAGING_PAE_PDE_RESERVED_BITS \
-    (BX_PHY_ADDRESS_MASK & BX_CONST64(0x000FFFFFFFFFFFFF))
+#define PAGING_PAE_PDE_RESERVED_BITS (BX_PHY_ADDRESS_RESERVED_BITS)
 
 /* PAE PDE4M: bits [51 .. physical address width], [20:13] */
 #define PAGING_PAE_PDE4M_RESERVED_BITS \
     (PAGING_PAE_PDE_RESERVED_BITS | BX_CONST64(0x001FE000))
 
 /* PAE PTE: bits [51 .. physical address width] */
-#define PAGING_PAE_PTE_RESERVED_BITS \
-    (BX_PHY_ADDRESS_MASK & BX_CONST64(0x000FFFFFFFFFFFFF))
+#define PAGING_PAE_PTE_RESERVED_BITS (BX_PHY_ADDRESS_RESERVED_BITS)
 
 
 #define PAGE_DIRECTORY_NX_BIT (BX_CONST64(0x8000000000000000))
@@ -683,9 +697,11 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned curr_pl, un
         BX_DEBUG(("PML4: entry not present"));
         page_fault(ERROR_NOT_PRESENT, laddr, pl, isWrite, access_type);
       }
+#if BX_PHY_ADDRESS_WIDTH == 32
       if (pml4 & BX_CONST64(0x000fffff00000000)) {
         BX_PANIC(("PML4 0x%08x%08x: Only 32 bit physical address space is emulated !", GET32H(pml4), GET32L(pml4)));
       }
+#endif
       if (pml4 & PAGING_PAE_PML4_RESERVED_BITS) {
         BX_DEBUG(("PML4: reserved bit is set PML4=%08x:%08x", GET32H(pml4), GET32L(pml4)));
         page_fault(ERROR_RESERVED | ERROR_PROTECTION, laddr, pl, isWrite, access_type);
@@ -723,9 +739,11 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned curr_pl, un
       BX_DEBUG(("PAE PDPE: entry not present"));
       page_fault(ERROR_NOT_PRESENT, laddr, pl, isWrite, access_type);
     }
+#if BX_PHY_ADDRESS_WIDTH == 32
     if (pdpe & BX_CONST64(0x000fffff00000000)) {
       BX_PANIC(("PAE PDPE 0x%08x%08x: Only 32 bit physical address space is emulated !", GET32H(pdpe), GET32L(pdpe)));
     }
+#endif
     if (pdpe & PAGING_PAE_PDPE_RESERVED_BITS) {
       BX_DEBUG(("PAE PDPE: reserved bit is set: PDPE=%08x:%08x", GET32H(pdpe), GET32L(pdpe)));
       page_fault(ERROR_RESERVED | ERROR_PROTECTION, laddr, pl, isWrite, access_type);
@@ -752,9 +770,11 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned curr_pl, un
       BX_DEBUG(("PAE PDE: entry not present"));
       page_fault(ERROR_NOT_PRESENT, laddr, pl, isWrite, access_type);
     }
+#if BX_PHY_ADDRESS_WIDTH == 32
     if (pde & BX_CONST64(0x000fffff00000000)) {
       BX_PANIC(("PAE PDE 0x%08x%08x: Only 32 bit physical address space is emulated !", GET32H(pde), GET32L(pde)));
     }
+#endif
     if (pde & PAGING_PAE_PDE_RESERVED_BITS) {
       BX_DEBUG(("PAE PDE: reserved bit is set PDE=%08x:%08x", GET32H(pde), GET32L(pde)));
       page_fault(ERROR_RESERVED | ERROR_PROTECTION, laddr, pl, isWrite, access_type);
@@ -833,9 +853,11 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned curr_pl, un
         BX_DEBUG(("PAE PTE: entry not present"));
         page_fault(ERROR_NOT_PRESENT, laddr, pl, isWrite, access_type);
       }
+#if BX_PHY_ADDRESS_WIDTH == 32
       if (pte & BX_CONST64(0x000fffff00000000)) {
         BX_PANIC(("PAE PTE 0x%08x%08x: Only 32 bit physical address space is emulated !", GET32H(pte), GET32L(pte)));
       }
+#endif
       if (pte & PAGING_PAE_PTE_RESERVED_BITS) {
         BX_DEBUG(("PAE PTE: reserved bit is set PTE=%08x:%08x", GET32H(pte), GET32L(pte)));
         page_fault(ERROR_RESERVED | ERROR_PROTECTION, laddr, pl, isWrite, access_type);
@@ -923,11 +945,11 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned curr_pl, un
     {
       // Note: when the PSE and PAE flags in CR4 are set, the
       //       processor generates a PF if the reserved bits are not zero.
-
+#if BX_PHY_ADDRESS_WIDTH == 32
       if (pde & 0x0001e000) {
         BX_PANIC(("PSE PDE 0x%08x: Only 32 bit physical address space is emulated !", pde));
       }
-
+#endif
       // Combined access is just access from the pde (no pte involved).
       combined_access = pde & 0x06; // U/S and R/W
 
@@ -1103,7 +1125,7 @@ bx_bool BX_CPU_C::dbg_xlate_linear2phy(bx_address laddr, bx_phy_address *phy)
       BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, pt_address, 8, &pte);
       if(!(pte & 1))
 	goto page_fault;
-      if ((pte & BX_PHY_ADDRESS_MASK & BX_CONST64(0x000fffffffffffff)))
+      if (pte & BX_PHY_ADDRESS_RESERVED_BITS)
 	goto page_fault;
       pt_address = bx_phy_address(pte & BX_CONST64(0x000ffffffffff000));
       if (level == 1 && (pte & 0x80)) { // PSE page

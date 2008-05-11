@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.169 2008-04-27 19:48:58 sshwarts Exp $
+// $Id: init.cc,v 1.170 2008-05-11 19:36:06 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -646,7 +646,7 @@ Bit64s BX_CPU_C::param_restore(bx_param_c *param, Bit64s val)
 void BX_CPU_C::after_restore_state(void)
 {
   SetCR0(cr0.val32);
-  CR3_change(cr3);
+  SetCR3(cr3);
   TLB_flush(1);
   assert_checks();
   invalidate_prefetch_q();

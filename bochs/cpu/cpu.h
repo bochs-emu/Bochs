@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.475 2008-05-10 20:35:03 sshwarts Exp $
+// $Id: cpu.h,v 1.476 2008-05-11 19:36:06 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -805,7 +805,7 @@ public: // for now...
   bx_cr0_t       cr0;
   Bit32u         cr1;
   bx_address     cr2;
-  bx_phy_address cr3, cr3_masked;
+  bx_address     cr3, cr3_masked;
 #if BX_CPU_LEVEL >= 4
   bx_cr4_t       cr4;
 #endif
@@ -2952,7 +2952,7 @@ public: // for now...
   BX_SMF int  int_number(bx_segment_reg_t *seg);
   BX_SMF int  int_number(unsigned s);
   BX_SMF void SetCR0(Bit32u val_32) BX_CPP_AttrRegparmN(1);
-  BX_SMF void CR3_change(bx_phy_address value) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SetCR3(bx_address value) BX_CPP_AttrRegparmN(1);
 #if BX_CPU_LEVEL >= 4
   BX_SMF bx_bool SetCR4(bx_address val) BX_CPP_AttrRegparmN(1);
 #endif
