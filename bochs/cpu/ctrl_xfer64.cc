@@ -1,5 +1,5 @@
 ////////c/////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer64.cc,v 1.67 2008-05-10 18:10:52 sshwarts Exp $
+// $Id: ctrl_xfer64.cc,v 1.68 2008-05-11 20:46:11 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -195,9 +195,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CALL_EqR(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::CALL64_Ep(bxInstruction_c *i)
 {
-  Bit16u cs_raw;
-  Bit64u op1_64;
-
   invalidate_prefetch_q();
 
 #if BX_DEBUGGER
@@ -207,8 +204,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CALL64_Ep(bxInstruction_c *i)
   BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
   /* pointer, segment address pair */
-  op1_64 = read_virtual_qword_64(i->seg(), RMAddr(i));
-  cs_raw = read_virtual_word_64(i->seg(), RMAddr(i)+8);
+  Bit64u op1_64 = read_virtual_qword_64(i->seg(), RMAddr(i));
+  Bit16u cs_raw = read_virtual_word_64(i->seg(), RMAddr(i)+8);
 
   BX_ASSERT(protected_mode());
 
@@ -431,15 +428,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::JMP_EqR(bxInstruction_c *i)
 /* Far indirect jump */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::JMP64_Ep(bxInstruction_c *i)
 {
-  Bit16u cs_raw;
-  Bit32u op1_64;
-
   invalidate_prefetch_q();
 
   BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  op1_64 = read_virtual_qword_64(i->seg(), RMAddr(i));
-  cs_raw = read_virtual_word_64(i->seg(), RMAddr(i)+8);
+  Bit64u op1_64 = read_virtual_qword_64(i->seg(), RMAddr(i));
+  Bit16u cs_raw = read_virtual_word_64(i->seg(), RMAddr(i)+8);
 
   BX_ASSERT(protected_mode());
 
