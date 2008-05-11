@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: x.cc,v 1.112 2008-02-15 22:05:40 sshwarts Exp $
+// $Id: x.cc,v 1.113 2008-05-11 09:50:02 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -644,7 +644,7 @@ void bx_x_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsign
   }
 
   new_gfx_api = 1;
-  dialog_caps |= BX_GUI_DLG_USER;
+  dialog_caps |= (BX_GUI_DLG_USER | BX_GUI_DLG_SNAPSHOT);
 }
 
 void set_status_text(int element, const char *text, bx_bool active)
@@ -2129,11 +2129,18 @@ int x11_string_dialog(bx_param_string_c *param)
   KeySym key;
   int valid = 0, control = 0, oldctrl = -1;
   int done, i;
+  unsigned int len, max, pos = 0;
   unsigned long black_pixel, white_pixel;
-  char editstr[24], name[80], text[10], value[24];
+  char editstr[26], name[80], text[10], value[BX_PATHNAME_LEN];
 
-  strcpy(name, param->get_name());
+  if (param->get_label() != NULL) {
+    strcpy(name, param->get_label());
+  } else {
+    strcpy(name, param->get_name());
+  }
   strcpy(value, param->getptr());
+  len = strlen(value);
+  max = param->get_maxsize();
   hint.flags = PPosition | PSize | PMinSize | PMaxSize;
   hint.x = 100;
   hint.y = 100;
@@ -2169,7 +2176,13 @@ int x11_string_dialog(bx_param_string_c *param)
     switch (xevent.type) {
       case Expose:
         if (xevent.xexpose.count == 0) {
-          sprintf(editstr, "%s%s", value, "_ ");
+          if (len < 25) {
+            sprintf(editstr, "%s%s", value, "_ ");
+          } else {
+            strncpy(editstr, value+pos, 24);
+            editstr[24] = 0;
+            strcat(editstr, "_");
+          }
           XDrawRectangle(xevent.xexpose.display, dialog, gc, 45, 20, 160, 20);
           XDrawImageString(xevent.xexpose.display, dialog, gc, 49, 34, editstr, strlen(editstr));
           x11_create_button(xevent.xexpose.display, dialog,
@@ -2222,12 +2235,15 @@ int x11_string_dialog(bx_param_string_c *param)
             control = 1;
             done = 1;
           } else if (key == XK_BackSpace) {
-            if (strlen(value) > 0) {
-              value[strlen(value)-1] = 0;
+            if (len > 0) {
+              value[--len] = 0;
+              if (pos > 0) pos--;
               oldctrl = -1;
             }
-          } else if ((i == 1) && (strlen(value) < 20)) {
+          } else if ((i == 1) && (len < max)) {
             strcat(value, text);
+            len = strlen(value);
+            if (len > 24) pos++;
             oldctrl = -1;
           }
         }
@@ -2243,13 +2259,25 @@ int x11_string_dialog(bx_param_string_c *param)
       if (oldctrl > 0) {
         XDrawRectangle(bx_x_display, dialog, gc_inv, oldctrl==1?53:128, 58, 69, 24);
       } else if (oldctrl == 0) {
-        sprintf(editstr, "%s%s", value, " ");
+        if (len < 25) {
+          sprintf(editstr, "%s%s", value, " ");
+        } else {
+          strncpy(editstr, value+pos, 24);
+          editstr[24] = 0;
+          strcat(editstr, " ");
+        }
         XDrawImageString(bx_x_display, dialog, gc, 49, 34, editstr, strlen(editstr));
       }
       if (control > 0) {
         XDrawRectangle(bx_x_display, dialog, gc, control==1?53:128, 58, 69, 24);
       } else {
-        sprintf(editstr, "%s%s", value, "_ ");
+        if (len < 25) {
+          sprintf(editstr, "%s%s", value, "_ ");
+        } else {
+          strncpy(editstr, value+pos, 24);
+          editstr[24] = 0;
+          strcat(editstr, "_");
+        }
         XDrawImageString(bx_x_display, dialog, gc, 49, 34, editstr, strlen(editstr));
       }
       oldctrl = control;
@@ -2280,6 +2308,9 @@ BxEvent *x11_notify_callback (void *unused, BxEvent *event)
         sparam = (bx_param_string_c *)param;
         opts = sparam->get_options()->get();
         if ((opts & sparam->IS_FILENAME) == 0) {
+          event->retcode = x11_string_dialog(sparam);
+          return event;
+        } else if (opts & sparam->SAVE_FILE_DIALOG) {
           event->retcode = x11_string_dialog(sparam);
           return event;
         }
