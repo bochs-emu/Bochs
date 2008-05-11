@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.129 2008-05-11 19:36:06 sshwarts Exp $
+// $Id: paging.cc,v 1.130 2008-05-11 19:58:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -462,8 +462,8 @@ BX_CPU_C::SetCR3(bx_address val)
 
 #if BX_SUPPORT_PAE
   if (BX_CPU_THIS_PTR cr4.get_PAE() && !long_mode()) {
+    // when not in long mode cr3 could be only 32-bit
     BX_CPU_THIS_PTR cr3_masked = val & 0xffffffe0;
-    BX_CPU_THIS_PTR cr3        = val & 0xffffffff;
   }
   else
 #endif
@@ -478,8 +478,9 @@ BX_CPU_C::SetCR3(bx_address val)
       exception(BX_GP_EXCEPTION, 0, 0);
     }
     BX_CPU_THIS_PTR cr3_masked = val & BX_CONST64(0x000ffffffffff000);
-    BX_CPU_THIS_PTR cr3        = val;
   }
+
+  BX_CPU_THIS_PTR cr3 = val;
 }
 
 // Called to initialize the TLB upon startup.

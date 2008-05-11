@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.476 2008-05-11 19:36:06 sshwarts Exp $
+// $Id: cpu.h,v 1.477 2008-05-11 19:58:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -805,7 +805,8 @@ public: // for now...
   bx_cr0_t       cr0;
   Bit32u         cr1;
   bx_address     cr2;
-  bx_address     cr3, cr3_masked;
+  bx_address     cr3;
+  bx_phy_address cr3_masked;
 #if BX_CPU_LEVEL >= 4
   bx_cr4_t       cr4;
 #endif
