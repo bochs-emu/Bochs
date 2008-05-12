@@ -61,7 +61,7 @@
 #display_library: win32, options="legacyF12" # use F12 to toggle mouse
 #display_library: win32, options="windebug" # use experimental debugger gui
 #display_library: wx
-#display_library: x
+#display_library: x, options="hideIPS" # disable IPS output in status bar
 
 #=======================================================================
 # ROMIMAGE:
@@ -74,7 +74,7 @@
 # location of the BIOS.
 # The usage of external large BIOS images (up to 512k) at memory top is
 # now supported, but we still recommend to use the BIOS distributed with
-# Bochs. Now the start address can be calculated from image size.
+# Bochs. The start address optional, since it can be calculated from image size.
 #=======================================================================
 romimage: file=$BXSHARE/BIOS-bochs-latest 
 #romimage: file=mybios.bin, address=0xfff80000 # 512k at memory top
