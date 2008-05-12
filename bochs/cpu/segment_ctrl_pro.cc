@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: segment_ctrl_pro.cc,v 1.92 2008-05-06 19:45:17 sshwarts Exp $
+// $Id: segment_ctrl_pro.cc,v 1.93 2008-05-12 19:19:03 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -739,7 +739,7 @@ void BX_CPU_C::fetch_raw_descriptor64(const bx_selector_t *selector,
   }
   else { /* LDT */
     if (BX_CPU_THIS_PTR ldtr.cache.valid==0) {
-      BX_ERROR(("fetch_raw_descriptor: LDTR.valid=0"));
+      BX_ERROR(("fetch_raw_descriptor64: LDTR.valid=0"));
       exception(exception_no, selector->value & 0xfffc, 0);
     }
     if ((index*8 + 15) > BX_CPU_THIS_PTR ldtr.cache.u.system.limit_scaled) {
@@ -753,7 +753,7 @@ void BX_CPU_C::fetch_raw_descriptor64(const bx_selector_t *selector,
   access_read_linear(offset,      8, 0, BX_READ, &raw_descriptor1);
   access_read_linear(offset +  8, 8, 0, BX_READ, &raw_descriptor2);
 
-  if (raw_descriptor2 & BX_CONST64(0x00001F0000000000)) {
+  if (raw_descriptor2 & BX_CONST64(0x00001f0000000000)) {
     BX_ERROR(("fetch_raw_descriptor64: extended attributes DWORD4 TYPE != 0"));
     exception(BX_GP_EXCEPTION, selector->value & 0xfffc, 0);
   }

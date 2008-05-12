@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: access.cc,v 1.107 2008-05-10 20:35:03 sshwarts Exp $
+// $Id: access.cc,v 1.108 2008-05-12 19:19:03 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1343,7 +1343,7 @@ BX_CPU_C::read_virtual_dqword_aligned(unsigned s, bx_address offset, Bit8u *data
   // If double quadword access is unaligned, #GP(0).
   bx_address laddr = BX_CPU_THIS_PTR get_laddr(s, offset);
   if (laddr & 0xf) {
-    BX_DEBUG(("read_virtual_dqword_aligned: access not aligned to 16-byte"));
+    BX_DEBUG(("read_virtual_dqword_aligned(): access not aligned to 16-byte"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
@@ -1366,7 +1366,7 @@ BX_CPU_C::write_virtual_dqword_aligned(unsigned s, bx_address offset, Bit8u *dat
   // If double quadword access is unaligned, #GP(0).
   bx_address laddr = BX_CPU_THIS_PTR get_laddr(s, offset);
   if (laddr & 0xf) {
-    BX_DEBUG(("write_virtual_dqword_aligned: access not aligned to 16-byte"));
+    BX_DEBUG(("write_virtual_dqword_aligned(): access not aligned to 16-byte"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
@@ -1433,7 +1433,7 @@ accessOK:
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
     if (BX_CPU_THIS_PTR alignment_check() && curr_pl == 3) {
       if (laddr & 1) {
-        BX_ERROR(("write_new_stack_word(): #AC misaligned access"));
+        BX_ERROR(("write_new_stack_word_32(): #AC misaligned access"));
         exception(BX_AC_EXCEPTION, 0, 0);
       }
     }
@@ -1485,7 +1485,7 @@ accessOK:
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
     if (BX_CPU_THIS_PTR alignment_check() && curr_pl == 3) {
       if (laddr & 3) {
-        BX_ERROR(("write_new_stack_dword(): #AC misaligned access"));
+        BX_ERROR(("write_new_stack_dword_32(): #AC misaligned access"));
         exception(BX_AC_EXCEPTION, 0, 0);
       }
     }

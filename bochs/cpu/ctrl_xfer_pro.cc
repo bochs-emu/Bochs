@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer_pro.cc,v 1.72 2008-04-20 18:10:32 sshwarts Exp $
+// $Id: ctrl_xfer_pro.cc,v 1.73 2008-05-12 19:19:03 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -62,20 +62,23 @@ void BX_CPU_C::check_cs(bx_descriptor_t *descriptor, Bit16u cs_raw, Bit8u check_
   // if non-conforming, code segment descriptor DPL must = CPL else #GP(selector)
   if (IS_CODE_SEGMENT_NON_CONFORMING(descriptor->type)) {
     if (descriptor->dpl != check_cpl) {
-      BX_ERROR(("check_cs(0x%04x): non-conforming code seg descriptor dpl != cpl", cs_raw));
+      BX_ERROR(("check_cs(0x%04x): non-conforming code seg descriptor dpl != cpl, dpl=%d, cpl=%d",
+         cs_raw, descriptor->dpl, check_cpl));
       exception(BX_GP_EXCEPTION, cs_raw & 0xfffc, 0);
     }
 
     /* RPL of destination selector must be <= CPL else #GP(selector) */
     if (check_rpl > check_cpl) {
-      BX_ERROR(("check_cs(0x%04x): non-conforming code seg selector rpl > cpl", cs_raw));
+      BX_ERROR(("check_cs(0x%04x): non-conforming code seg selector rpl > cpl, rpl=%d, cpl=%d",
+         cs_raw, check_rpl, check_cpl));
       exception(BX_GP_EXCEPTION, cs_raw & 0xfffc, 0);
     }
   }
   // if conforming, then code segment descriptor DPL must <= CPL else #GP(selector)
   else {
     if (descriptor->dpl > check_cpl) {
-      BX_ERROR(("check_cs(0x%04x): conforming code seg descriptor dpl > cpl", cs_raw));
+      BX_ERROR(("check_cs(0x%04x): conforming code seg descriptor dpl > cpl, dpl=%d, cpl=%d",
+         cs_raw, descriptor->dpl, check_cpl));
       exception(BX_GP_EXCEPTION, cs_raw & 0xfffc, 0);
     }
   }
