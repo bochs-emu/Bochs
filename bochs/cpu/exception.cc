@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.115 2008-05-10 20:35:03 sshwarts Exp $
+// $Id: exception.cc,v 1.116 2008-05-15 20:10:00 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -825,13 +825,13 @@ void BX_CPU_C::interrupt(Bit8u vector, bx_bool is_INT, bx_bool is_error_code, Bi
 
 // vector:     0..255: vector in IDT
 // error_code: if exception generates and error, push this error code
-void BX_CPU_C::exception(unsigned vector, Bit16u error_code, bx_bool is_INT)
+// trap:       override exception class to TRAP
+void BX_CPU_C::exception(unsigned vector, Bit16u error_code, bx_bool trap)
 {
   unsigned exception_type = 0, exception_class = BX_EXCEPTION_CLASS_FAULT;
   bx_bool push_error = 0;
 
   invalidate_prefetch_q();
-  UNUSED(is_INT);
   BX_INSTR_EXCEPTION(BX_CPU_ID, vector);
 
 #if BX_DEBUGGER
@@ -886,7 +886,7 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code, bx_bool is_INT)
       // General detect condition      - FAULT
       // Single-step                   - TRAP
       // Task-switch                   - TRAP
-      exception_class = BX_EXCEPTION_CLASS_TRAP; // FIXME !
+      exception_class = BX_EXCEPTION_CLASS_FAULT;
       exception_type  = BX_ET_BENIGN;
       break;
     case 2:               // NMI
@@ -994,14 +994,19 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code, bx_bool is_INT)
       break;
   }
 
-  if (exception_class == BX_EXCEPTION_CLASS_FAULT)
-  {
-    // restore RIP/RSP to value before error occurred
-    RIP = BX_CPU_THIS_PTR prev_rip;
-    if (BX_CPU_THIS_PTR speculative_rsp)
-      RSP = BX_CPU_THIS_PTR prev_rsp;
+  if (trap) {
+    exception_class = BX_EXCEPTION_CLASS_TRAP;
+  }
+  else {
+    if (exception_class == BX_EXCEPTION_CLASS_FAULT)
+    {
+      // restore RIP/RSP to value before error occurred
+      RIP = BX_CPU_THIS_PTR prev_rip;
+      if (BX_CPU_THIS_PTR speculative_rsp)
+        RSP = BX_CPU_THIS_PTR prev_rsp;
 
-    if (vector != BX_DB_EXCEPTION) BX_CPU_THIS_PTR assert_RF();
+      if (vector != BX_DB_EXCEPTION) BX_CPU_THIS_PTR assert_RF();
+    }
   }
 
   if (exception_type != BX_ET_PAGE_FAULT) {
