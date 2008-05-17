@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer_pro.cc,v 1.73 2008-05-12 19:19:03 sshwarts Exp $
+// $Id: ctrl_xfer_pro.cc,v 1.74 2008-05-17 19:30:55 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -93,15 +93,13 @@ void BX_CPU_C::check_cs(bx_descriptor_t *descriptor, Bit16u cs_raw, Bit8u check_
   void BX_CPP_AttrRegparmN(3)
 BX_CPU_C::load_cs(bx_selector_t *selector, bx_descriptor_t *descriptor, Bit8u cpl)
 {
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector = *selector;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache    = *descriptor;
+  // Add cpl to the selector value.
+  selector->value = (0xfffc & selector->value) | cpl;
 
-  /* caller may request different CPL then in selector */
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector = *selector;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache = *descriptor;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.rpl = cpl;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.valid  = 1;
-  // Add cpl to the selector value.
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value =
-    (0xfffc & BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value) | cpl;
 
 #if BX_SUPPORT_X86_64
   if (long_mode()) {
