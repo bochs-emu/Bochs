@@ -7,6 +7,7 @@ Brief summary :
 - Implemented LBA48 support
 - Added memory access tracing for Bochs internal debugger
 - Many fixes in CPU emulation and internal debugger
+  - MenuetOS64 floppy images booting perfect again !
 
 Detailed change log :
 
@@ -17,6 +18,7 @@ Detailed change log :
     optimization enabled
   - Implemented SYSENTER/SYSEXIT instructions in long mode
   - More than 100 bugfixes in CPU emulation correctness (both x86 and x86-64)
+    - MenuetOS64 floppy images booting perfect again !
   - Updated CPU instrumentation callbacks
 
 - Bochs Internal Debugger and Disassembler
@@ -86,6 +88,9 @@ Detailed change log :
  [1864680] Save CPUID signature by Filip Navara
 
 - these S.F. bugs were closed
+ [1755652] graphics: MenuetOS64 shows black screen
+ [1782207] Windows Installer malfunction, Host=Linux, Guest=Win98SE
+ [1697762] OS/2 Warp Install Failed
  [1952548] String to char * warnings
  [1940714] SYSENTER/SYSEXIT doesn't work in long mode
  [1422342] SYSRET errors
