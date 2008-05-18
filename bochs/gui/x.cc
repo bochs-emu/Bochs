@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: x.cc,v 1.114 2008-05-12 18:46:46 vruppert Exp $
+// $Id: x.cc,v 1.115 2008-05-18 08:52:48 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -659,7 +659,7 @@ void bx_x_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsign
   }
 
   new_gfx_api = 1;
-  dialog_caps |= (BX_GUI_DLG_USER | BX_GUI_DLG_SNAPSHOT);
+  dialog_caps |= (BX_GUI_DLG_USER | BX_GUI_DLG_SNAPSHOT | BX_GUI_DLG_CDROM);
 }
 
 void set_status_text(int element, const char *text, bx_bool active)
@@ -2172,26 +2172,37 @@ int x11_ask_dialog(BxEvent *event)
   return retcode;
 }
 
-int x11_string_dialog(bx_param_string_c *param)
+int x11_string_dialog(bx_param_string_c *param, bx_param_enum_c *param2)
 {
   x11_dialog_t xdlg;
-  x11_control_t xctl_edit, xbtn_ok, xbtn_cancel;
+  x11_control_t xctl_edit, xbtn_ok, xbtn_cancel, xbtn_status;
   XEvent xevent;
   KeySym key;
-  int valid = 0, control = 0, oldctrl = -1;
-  int done, i;
+  int valid = 0, control = 0, oldctrl = -1, num_ctrls;
+  int done, h, i, ok_button, status = 0;
   unsigned int len, max, pos = 0;
   char editstr[26], name[80], text[10], value[BX_PATHNAME_LEN];
 
-  if (param->get_label() != NULL) {
-    strcpy(name, param->get_label());
+  if (param2 != NULL) {
+    strcpy(name, "First CD-ROM image/device");
+    status = (param2->get() == BX_INSERTED);
+    h = 110;
+    ok_button = 2;
+    num_ctrls = 4;
   } else {
-    strcpy(name, param->get_name());
+    if (param->get_label() != NULL) {
+      strcpy(name, param->get_label());
+    } else {
+      strcpy(name, param->get_name());
+    }
+    h = 90;
+    ok_button = 1;
+    num_ctrls = 3;
   }
   strcpy(value, param->getptr());
   len = strlen(value);
   max = param->get_maxsize();
-  x11_create_dialog(&xdlg, name, 250, 90);
+  x11_create_dialog(&xdlg, name, 250, h);
   done = 0;
   while (!done) {
     XNextEvent(bx_x_display, &xevent);
@@ -2201,16 +2212,27 @@ int x11_string_dialog(bx_param_string_c *param)
           if (len < 25) {
             sprintf(editstr, "%s%s", value, "_ ");
           } else {
+            pos = len - 24;
             strncpy(editstr, value+pos, 24);
             editstr[24] = 0;
             strcat(editstr, "_");
           }
           x11_create_button(&xctl_edit, xevent.xexpose.display, &xdlg, 45, 20, 160, 20,
                             editstr);
-          x11_create_button(&xbtn_ok, xevent.xexpose.display, &xdlg, 55, 60, 65, 20,
+          x11_create_button(&xbtn_ok, xevent.xexpose.display, &xdlg, 55, h - 30, 65, 20,
                             "OK");
-          x11_create_button(&xbtn_cancel, xevent.xexpose.display, &xdlg, 130, 60, 65, 20,
+          x11_create_button(&xbtn_cancel, xevent.xexpose.display, &xdlg, 130, h - 30, 65, 20,
                             "Cancel");
+          if (param2 != NULL) {
+            if (status == 1) {
+              strcpy(text, "X");
+            } else {
+              strcpy(text, " ");
+            }
+            x11_create_button(&xbtn_status, xevent.xexpose.display, &xdlg, 45, 50, 15, 16,
+                              text);
+            XDrawImageString(bx_x_display, xdlg.dialog, xdlg.gc, 70, 62, "Inserted", 8);
+          }
           oldctrl = control - 1;
           if (oldctrl < 0) oldctrl = 1;
         }
@@ -2220,18 +2242,28 @@ int x11_string_dialog(bx_param_string_c *param)
           if (x11_test_control(&xctl_edit, &xevent.xbutton)) {
             control = 0;
             valid = 1;
-          } else if (x11_test_control(&xbtn_ok, &xevent.xbutton)) {
+          } else if (x11_test_control(&xbtn_status, &xevent.xbutton)) {
             control = 1;
             valid = 1;
+            status ^= 1;
+            if (status == 1) {
+              strcpy(text, "X");
+            } else {
+              strcpy(text, " ");
+            }
+            XDrawImageString(bx_x_display, xdlg.dialog, xdlg.gc, 49, 64, text, 1);
+          } else if (x11_test_control(&xbtn_ok, &xevent.xbutton)) {
+            control = ok_button;
+            valid = 1;
           } else if (x11_test_control(&xbtn_cancel, &xevent.xbutton)) {
-            control = 2;
+            control = num_ctrls - 1;
             valid = 1;
           }
         }
         break;
       case ButtonRelease:
         if ((xevent.xbutton.button == Button1) && (valid == 1)) {
-          if (control > 0) {
+          if (control >= ok_button) {
             done = 1;
           }
         }
@@ -2240,17 +2272,13 @@ int x11_string_dialog(bx_param_string_c *param)
         i = XLookupString((XKeyEvent *)&xevent, text, 10, &key, 0);
         if (key == XK_Tab) {
           control++;
-          if (control == 3) control = 0;
+          if (control >= num_ctrls) control = 0;
         } else if (key == XK_Escape) {
-          control = 2;
+          control = num_ctrls - 1;
           done = 1;
-        } else if (control > 0) {
-          if ((key == XK_space) || (key == XK_Return)) {
-            done = 1;
-          }
-        } else {
+        } else if (control == 0) {
           if (key == XK_Return) {
-            control = 1;
+            control = ok_button;
             done = 1;
           } else if (key == XK_BackSpace) {
             if (len > 0) {
@@ -2263,6 +2291,23 @@ int x11_string_dialog(bx_param_string_c *param)
             len = strlen(value);
             if (len > 24) pos++;
             oldctrl = -1;
+          }
+        } else if (control >= ok_button) {
+          if ((key == XK_space) || (key == XK_Return)) {
+            done = 1;
+          }
+        } else {
+          if (key == XK_space) {
+            status ^= 1;
+            if (status == 1) {
+              strcpy(text, "X");
+            } else {
+              strcpy(text, " ");
+            }
+            XDrawImageString(bx_x_display, xdlg.dialog, xdlg.gc, 49, 64, text, 1);
+          } else if (key == XK_Return) {
+            control = ok_button;
+            done = 1;
           }
         }
         break;
@@ -2277,8 +2322,10 @@ int x11_string_dialog(bx_param_string_c *param)
         break;
     }
     if (control != oldctrl) {
-      if (oldctrl > 0) {
-        XDrawRectangle(bx_x_display, xdlg.dialog, xdlg.gc_inv, oldctrl==1?53:128, 58, 69, 24);
+      if (oldctrl >= ok_button) {
+        XDrawRectangle(bx_x_display, xdlg.dialog, xdlg.gc_inv, oldctrl==ok_button?53:128, h - 32, 69, 24);
+      } else if (oldctrl == 1) {
+        XDrawRectangle(bx_x_display, xdlg.dialog, xdlg.gc_inv, 43, 48, 19, 20);
       } else if (oldctrl == 0) {
         if (len < 25) {
           sprintf(editstr, "%s%s", value, " ");
@@ -2289,9 +2336,11 @@ int x11_string_dialog(bx_param_string_c *param)
         }
         XDrawImageString(bx_x_display, xdlg.dialog, xdlg.gc, 49, 34, editstr, strlen(editstr));
       }
-      if (control > 0) {
-        XDrawRectangle(bx_x_display, xdlg.dialog, xdlg.gc, control==1?53:128, 58, 69, 24);
-      } else {
+      if (control >= ok_button) {
+        XDrawRectangle(bx_x_display, xdlg.dialog, xdlg.gc, control==ok_button?53:128, h - 32, 69, 24);
+      } else if (control == 1) {
+        XDrawRectangle(bx_x_display, xdlg.dialog, xdlg.gc, 43, 48, 19, 20);
+      } else if (control == 0) {
         if (len < 25) {
           sprintf(editstr, "%s%s", value, "_ ");
         } else {
@@ -2304,8 +2353,23 @@ int x11_string_dialog(bx_param_string_c *param)
       oldctrl = control;
     }
   }
-  if (control == 1) param->set(value);
-  if (control == 2) control = -1;
+  if (control == ok_button) {
+    if (param2 != NULL) {
+      if (status == 1) {
+        if (len > 0) {
+          param2->set(BX_INSERTED);
+          param->set(value);
+        } else {
+          param2->set(BX_EJECTED);
+        }
+      } else {
+        param2->set(BX_EJECTED);
+      }
+    } else {
+      param->set(value);
+    }
+  }
+  if (control == (num_ctrls - 1)) control = -1;
   XFreeGC(bx_x_display, xdlg.gc);
   XFreeGC(bx_x_display, xdlg.gc_inv);
   XDestroyWindow(bx_x_display, xdlg.dialog);
@@ -2317,6 +2381,8 @@ BxEvent *x11_notify_callback (void *unused, BxEvent *event)
   int opts;
   bx_param_c *param;
   bx_param_string_c *sparam;
+  bx_param_enum_c *eparam;
+  bx_list_c *list;
 
   switch (event->type)
   {
@@ -2329,12 +2395,18 @@ BxEvent *x11_notify_callback (void *unused, BxEvent *event)
         sparam = (bx_param_string_c *)param;
         opts = sparam->get_options()->get();
         if ((opts & sparam->IS_FILENAME) == 0) {
-          event->retcode = x11_string_dialog(sparam);
+          event->retcode = x11_string_dialog(sparam, NULL);
           return event;
         } else if (opts & sparam->SAVE_FILE_DIALOG) {
-          event->retcode = x11_string_dialog(sparam);
+          event->retcode = x11_string_dialog(sparam, NULL);
           return event;
         }
+      } else if (param->get_type() == BXT_LIST) {
+        list = (bx_list_c *)param;
+        sparam = (bx_param_string_c *)list->get_by_name("path");
+        eparam = (bx_param_enum_c *)list->get_by_name("status");
+        event->retcode = x11_string_dialog(sparam, eparam);
+        return event;
       }
     case BX_SYNC_EVT_TICK: // called periodically by siminterface.
     case BX_ASYNC_EVT_REFRESH: // called when some bx_param_c parameters have changed.
