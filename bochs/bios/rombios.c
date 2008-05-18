@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.207 2008-04-21 14:22:01 sshwarts Exp $
+// $Id: rombios.c,v 1.208 2008-05-18 11:37:57 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -940,7 +940,7 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.207 $ $Date: 2008-04-21 14:22:01 $";
+static char bios_cvs_version_string[] = "$Revision: 1.208 $ $Date: 2008-05-18 11:37:57 $";
 
 #define BIOS_COPYRIGHT_STRING "(c) 2002 MandrakeSoft S.A. Written by Kevin Lawton & the Bochs team."
 
@@ -9621,10 +9621,10 @@ pci_routing_table_structure:
   db 0x08 ;; PCI interrupt router DevFunc
   dw 0x0000 ;; PCI exclusive IRQs
   dw 0x8086 ;; compatible PCI interrupt router vendor ID
-  dw 0x7000 ;; compatible PCI interrupt router device ID
+  dw 0x122e ;; compatible PCI interrupt router device ID
   dw 0,0 ;; Miniport data
   db 0,0,0,0,0,0,0,0,0,0,0 ;; reserved
-  db 0x07 ;; checksum
+  db 0x37 ;; checksum
 pci_routing_table_structure_start:
   ;; first slot entry PCI-to-ISA (embedded)
   db 0 ;; pci bus number
