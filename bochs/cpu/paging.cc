@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.131 2008-05-12 19:19:03 sshwarts Exp $
+// $Id: paging.cc,v 1.132 2008-05-19 18:10:32 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -269,9 +269,6 @@
 //
 // - Processor running at CPL=0,1,2 maps to U/S=0
 //   Processor running at CPL=3     maps to U/S=1
-//
-// - Pentium+ processors have separate TLB's for data and instruction caches
-// - Pentium Pro+ processors maintain separate 4K and 4M TLBs.
 
 #define BX_INVALID_TLB_ENTRY 0xffffffff
 
@@ -617,13 +614,13 @@ void BX_CPU_C::page_fault(unsigned fault, bx_address laddr, unsigned user, unsig
   exception(BX_PF_EXCEPTION, error_code, 0);
 }
 
-/* PAE PML4: bits [51 .. physical address width], [7] */
+/* PAE PML4: bits [51 .. physical address width], [7] - support 1G paging */
 #define PAGING_PAE_PML4_RESERVED_BITS \
-    (BX_PHY_ADDRESS_RESERVED_BITS | BX_CONST64(0x00000080))
+    (BX_PHY_ADDRESS_RESERVED_BITS/* | BX_CONST64(0x80)*/)
 
-/* PAE PDPE: bits [51 .. physical address width], [7] - not support 1G paging */
+/* PAE PDPE: bits [51 .. physical address width], [7] - support 1G paging */
 #define PAGING_PAE_PDPE_RESERVED_BITS \
-    (BX_PHY_ADDRESS_RESERVED_BITS | BX_CONST64(0x00000080))
+    (BX_PHY_ADDRESS_RESERVED_BITS/* | BX_CONST64(0x80)*/)
 
 /* PAE PDE: bits [51 .. physical address width] */
 #define PAGING_PAE_PDE_RESERVED_BITS (BX_PHY_ADDRESS_RESERVED_BITS)
@@ -635,8 +632,282 @@ void BX_CPU_C::page_fault(unsigned fault, bx_address laddr, unsigned user, unsig
 /* PAE PTE: bits [51 .. physical address width] */
 #define PAGING_PAE_PTE_RESERVED_BITS (BX_PHY_ADDRESS_RESERVED_BITS)
 
-
 #define PAGE_DIRECTORY_NX_BIT (BX_CONST64(0x8000000000000000))
+
+// Translate a linear address to a physical address in PAE paging mode
+bx_phy_address BX_CPU_C::translate_linear_PAE(bx_address laddr, Bit32u &combined_access, unsigned curr_pl, unsigned rw, unsigned access_type)
+{
+  bx_phy_address pdpe_addr, ppf;
+  Bit64u pdpe, pde, pte;
+#if BX_SUPPORT_X86_64
+  Bit64u pml4, pml4_addr;
+#endif
+  unsigned priv_index, nx_fault = 0;
+  bx_bool isWrite = (rw >= BX_WRITE); // write or r-m-w
+  unsigned pl = (curr_pl == 3);
+
+  combined_access = 0;
+
+#if BX_SUPPORT_X86_64
+  if (long_mode()) {
+    // Get PML4 entry
+    pml4_addr = (bx_phy_address)(BX_CPU_THIS_PTR cr3_masked |
+               ((laddr & BX_CONST64(0x0000ff8000000000)) >> 36));
+    BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, pml4_addr, 8, &pml4);
+    BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pml4_addr, 8, BX_READ, (Bit8u*)(&pml4));
+
+    if (!(pml4 & 0x1)) {
+      BX_DEBUG(("PML4: entry not present"));
+      page_fault(ERROR_NOT_PRESENT, laddr, pl, isWrite, access_type);
+    }
+#if BX_PHY_ADDRESS_WIDTH == 32
+    if (pml4 & BX_CONST64(0x000fffff00000000)) {
+      BX_PANIC(("PML4 0x%08x%08x: Only 32 bit physical address space is emulated !", GET32H(pml4), GET32L(pml4)));
+    }
+#endif
+    if (pml4 & PAGING_PAE_PML4_RESERVED_BITS) {
+      BX_DEBUG(("PML4: reserved bit is set PML4=%08x:%08x", GET32H(pml4), GET32L(pml4)));
+      page_fault(ERROR_RESERVED | ERROR_PROTECTION, laddr, pl, isWrite, access_type);
+    }
+    if (pml4 & PAGE_DIRECTORY_NX_BIT) {
+      if (! BX_CPU_THIS_PTR efer.get_NXE()) {
+        BX_DEBUG(("PML4: NX bit set when EFER.NXE is disabled"));
+        page_fault(ERROR_RESERVED | ERROR_PROTECTION, laddr, pl, isWrite, access_type);
+      }
+      if (access_type == CODE_ACCESS) {
+        BX_DEBUG(("PML4: non-executable page fault occured"));
+        nx_fault = 1;
+      }
+    }
+
+    pdpe_addr = (bx_phy_address)((pml4 & BX_CONST64(0x000ffffffffff000)) |
+                               ((laddr & BX_CONST64(0x0000007fc0000000)) >> 27));
+  }
+  else
+#endif
+  {
+    pdpe_addr = (bx_phy_address) (BX_CPU_THIS_PTR cr3_masked | ((laddr & 0xc0000000) >> 27));
+  }
+
+  BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, pdpe_addr, 8, &pdpe);
+  BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pdpe_addr, 8, BX_READ, (Bit8u*)(&pdpe));
+
+  if (!(pdpe & 0x1)) {
+    BX_DEBUG(("PAE PDPE: entry not present"));
+    page_fault(ERROR_NOT_PRESENT, laddr, pl, isWrite, access_type);
+  }
+#if BX_PHY_ADDRESS_WIDTH == 32
+  if (pdpe & BX_CONST64(0x000fffff00000000)) {
+    BX_PANIC(("PAE PDPE 0x%08x%08x: Only 32 bit physical address space is emulated !", GET32H(pdpe), GET32L(pdpe)));
+  }
+#endif
+  if (pdpe & PAGING_PAE_PDPE_RESERVED_BITS) {
+    BX_DEBUG(("PAE PDPE: reserved bit is set: PDPE=%08x:%08x", GET32H(pdpe), GET32L(pdpe)));
+    page_fault(ERROR_RESERVED | ERROR_PROTECTION, laddr, pl, isWrite, access_type);
+  }
+#if BX_SUPPORT_X86_64
+  if (pdpe & PAGE_DIRECTORY_NX_BIT) {
+    if (! BX_CPU_THIS_PTR efer.get_NXE()) {
+      BX_DEBUG(("PDPE: NX bit set when EFER.NXE is disabled"));
+      page_fault(ERROR_RESERVED | ERROR_PROTECTION, laddr, pl, isWrite, access_type);
+    }
+    if (access_type == CODE_ACCESS) {
+      BX_DEBUG(("PDPE: non-executable page fault occured"));
+      nx_fault = 1;
+    }
+  }
+#endif
+  bx_phy_address pde_addr = (bx_phy_address)((pdpe & BX_CONST64(0x000ffffffffff000))
+                         | ((laddr & 0x3fe00000) >> 18));
+
+  BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, pde_addr, 8, &pde);
+  BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pde_addr, 8, BX_READ, (Bit8u*)(&pde));
+
+  if (!(pde & 0x1)) {
+    BX_DEBUG(("PAE PDE: entry not present"));
+    page_fault(ERROR_NOT_PRESENT, laddr, pl, isWrite, access_type);
+  }
+#if BX_PHY_ADDRESS_WIDTH == 32
+  if (pde & BX_CONST64(0x000fffff00000000)) {
+    BX_PANIC(("PAE PDE 0x%08x%08x: Only 32 bit physical address space is emulated !", GET32H(pde), GET32L(pde)));
+  }
+#endif
+  if (pde & PAGING_PAE_PDE_RESERVED_BITS) {
+    BX_DEBUG(("PAE PDE: reserved bit is set PDE=%08x:%08x", GET32H(pde), GET32L(pde)));
+    page_fault(ERROR_RESERVED | ERROR_PROTECTION, laddr, pl, isWrite, access_type);
+  }
+#if BX_SUPPORT_X86_64
+  if (pde & PAGE_DIRECTORY_NX_BIT) {
+    if (! BX_CPU_THIS_PTR efer.get_NXE()) {
+      BX_DEBUG(("PDE: NX bit set when EFER.NXE is disabled"));
+      page_fault(ERROR_RESERVED | ERROR_PROTECTION, laddr, pl, isWrite, access_type);
+    }
+    if (access_type == CODE_ACCESS) {
+      BX_DEBUG(("PDE: non-executable page fault occured"));
+      nx_fault = 1;
+    }
+  }
+#endif
+
+  // Ignore CR4.PSE in PAE mode
+  if (pde & 0x80) {
+    if (pde & PAGING_PAE_PDE4M_RESERVED_BITS) {
+      BX_DEBUG(("PAE PDE4M: reserved bit is set PDE=%08x:%08x", GET32H(pde), GET32L(pde)));
+      page_fault(ERROR_RESERVED | ERROR_PROTECTION, laddr, pl, isWrite, access_type);
+    }
+
+    // Combined access is just access from the pde (no pte involved).
+    combined_access = (pde) & 0x06; // U/S and R/W
+#if BX_SUPPORT_X86_64
+    if (long_mode()) {
+      combined_access &= (pml4 & pdpe) & 0x06;
+    }
+#endif
+
+#if BX_SUPPORT_GLOBAL_PAGES
+    if (BX_CPU_THIS_PTR cr4.get_PGE())
+      combined_access |= (pde & TLB_GlobalPage); // G
+#endif
+
+    priv_index =
+#if BX_CPU_LEVEL >= 4
+      (BX_CPU_THIS_PTR cr0.get_WP() << 4) |  // bit 4
+#endif
+      (pl<<3) |                              // bit 3
+      (combined_access & 0x06) |             // bit 2,1
+      (isWrite);                             // bit 0
+
+    if (!priv_check[priv_index] || nx_fault)
+      page_fault(ERROR_PROTECTION, laddr, pl, isWrite, access_type);
+
+#if BX_SUPPORT_X86_64
+    if (long_mode()) {
+      // Update PML4 A bit if needed.
+      if (!(pml4 & 0x20)) {
+        pml4 |= 0x20;
+        BX_MEM(0)->writePhysicalPage(BX_CPU_THIS, pml4_addr, 8, &pml4);
+        BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pml4_addr, 8, BX_WRITE, (Bit8u*)(&pml4));
+      }
+    }
+#endif
+
+    // Update PDPE A bit if needed.
+    if (!(pdpe & 0x20)) {
+      pdpe |= 0x20;
+      BX_MEM(0)->writePhysicalPage(BX_CPU_THIS, pdpe_addr, 8, &pdpe);
+      BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pdpe_addr, 8, BX_WRITE, (Bit8u*)(&pdpe));
+    }
+
+    // Update PDE A/D bits if needed.
+    if (((pde & 0x20)==0) || (isWrite && ((pde & 0x40)==0))) {
+      pde |= (0x20 | (isWrite<<6)); // Update A and possibly D bits
+      BX_MEM(0)->writePhysicalPage(BX_CPU_THIS, pde_addr, 8, &pde);
+      BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pde_addr, 8, BX_WRITE, (Bit8u*)(&pde));
+    }
+
+    // Make up the physical page frame address.
+    ppf = (bx_phy_address)((pde & BX_CONST64(0x000fffffffe00000)) | (laddr & 0x001ff000));
+
+    return ppf;
+  }
+
+  // 4k pages, Get page table entry
+  bx_phy_address pte_addr = (bx_phy_address)((pde & BX_CONST64(0x000ffffffffff000)) |
+                           ((laddr & 0x001ff000) >> 9));
+  
+  BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, pte_addr, 8, &pte);
+  BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pte_addr, 8, BX_READ, (Bit8u*)(&pte));
+
+  if (!(pte & 0x1)) {
+    BX_DEBUG(("PAE PTE: entry not present"));
+    page_fault(ERROR_NOT_PRESENT, laddr, pl, isWrite, access_type);
+  }
+#if BX_PHY_ADDRESS_WIDTH == 32
+  if (pte & BX_CONST64(0x000fffff00000000)) {
+    BX_PANIC(("PAE PTE 0x%08x%08x: Only 32 bit physical address space is emulated !", GET32H(pte), GET32L(pte)));
+  }
+#endif
+  if (pte & PAGING_PAE_PTE_RESERVED_BITS) {
+    BX_DEBUG(("PAE PTE: reserved bit is set PTE=%08x:%08x", GET32H(pte), GET32L(pte)));
+    page_fault(ERROR_RESERVED | ERROR_PROTECTION, laddr, pl, isWrite, access_type);
+  }
+#if BX_SUPPORT_X86_64
+  if (pte & PAGE_DIRECTORY_NX_BIT) {
+    if (! BX_CPU_THIS_PTR efer.get_NXE()) {
+      BX_DEBUG(("PTE: NX bit set when EFER.NXE is disabled"));
+      page_fault(ERROR_RESERVED | ERROR_PROTECTION, laddr, pl, isWrite, access_type);
+    }
+    if (access_type == CODE_ACCESS) {
+      BX_DEBUG(("PTE: non-executable page fault occured"));
+      nx_fault = 1;
+    }
+  }
+#endif
+
+  combined_access = (pde & pte) & 0x06; // U/S and R/W
+#if BX_SUPPORT_X86_64
+  if (long_mode()) {
+    combined_access &= (pml4 & pdpe) & 0x06;
+  }
+#endif
+
+#if BX_SUPPORT_GLOBAL_PAGES
+  if (BX_CPU_THIS_PTR cr4.get_PGE())
+    combined_access |= (pte & TLB_GlobalPage); // G
+#endif
+
+  priv_index =
+#if BX_CPU_LEVEL >= 4
+   (BX_CPU_THIS_PTR cr0.get_WP() << 4) |  // bit 4
+#endif
+   (pl<<3) |                              // bit 3
+   (combined_access & 0x06) |             // bit 2,1
+   (isWrite);                             // bit 0
+
+  if (!priv_check[priv_index] || nx_fault)
+    page_fault(ERROR_PROTECTION, laddr, pl, isWrite, access_type);
+
+#if BX_SUPPORT_X86_64
+    if (long_mode()) {
+      // Update PML4 A bit if needed.
+      if (!(pml4 & 0x20)) {
+        pml4 |= 0x20;
+        BX_MEM(0)->writePhysicalPage(BX_CPU_THIS, pml4_addr, 8, &pml4);
+        BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pml4_addr, 8, BX_WRITE, (Bit8u*)(&pml4));
+      }
+    }
+#endif
+
+  // Update PDPE A bit if needed.
+  if (!(pdpe & 0x20)) {
+    pdpe |= 0x20;
+    BX_MEM(0)->writePhysicalPage(BX_CPU_THIS, pdpe_addr, 8, &pdpe);
+    BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pdpe_addr, 8, BX_WRITE, (Bit8u*)(&pdpe));
+  }
+
+  // Update PDE A bit if needed.
+  if (!(pde & 0x20)) {
+    pde |= 0x20;
+    BX_MEM(0)->writePhysicalPage(BX_CPU_THIS, pde_addr, 8, &pde);
+    BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pde_addr, 8, BX_WRITE, (Bit8u*)(&pde));
+  }
+
+  // Update PTE A/D bits if needed.
+  if (((pte & 0x20)==0) || (isWrite && ((pte & 0x40)==0))) {
+    pte |= (0x20 | (isWrite<<6)); // Update A and possibly D bits
+    BX_MEM(0)->writePhysicalPage(BX_CPU_THIS, pte_addr, 8, &pte);
+    BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pte_addr, 8, BX_WRITE, (Bit8u*)(&pte));
+  }
+
+  // Make up the physical page frame address.
+  ppf = (bx_phy_address)(pte & BX_CONST64(0x000ffffffffff000));
+
+  return ppf;
+}
+
+/* PSE PDE4M: bits [21:17] */
+#define PAGING_PSE_PDE4M_RESERVED_BITS \
+    (BX_PHY_ADDRESS_RESERVED_BITS | BX_CONST64(0x003E0000))
 
 // Translate a linear address to a physical address
 bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned curr_pl, unsigned rw, unsigned access_type)
@@ -664,7 +935,7 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned curr_pl, un
     accessBits = tlbEntry->accessBits;
 
     if (accessBits & (0x0100 << ((isWrite<<2) | curr_pl)))
-      return(paddress);
+      return paddress;
 
     // The current access does not have permission according to the info
     // in our TLB cache entry.  Re-walk the page tables, in case there is
@@ -679,250 +950,7 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned curr_pl, un
 #if BX_SUPPORT_PAE
   if (BX_CPU_THIS_PTR cr4.get_PAE())
   {
-    bx_phy_address pdpe_addr;
-    Bit64u pdpe, pde, pte;
-#if BX_SUPPORT_X86_64
-    Bit64u pml4;
-#endif
-    unsigned nx_fault = 0;
-
-#if BX_SUPPORT_X86_64
-    if (long_mode()) {
-      // Get PML4 entry
-      bx_phy_address pml4_addr = (bx_phy_address)(BX_CPU_THIS_PTR cr3_masked |
-                  ((laddr & BX_CONST64(0x0000ff8000000000)) >> 36));
-      BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, pml4_addr, 8, &pml4);
-      BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pml4_addr, 8, BX_READ, (Bit8u*)(&pml4));
-
-      if (!(pml4 & 0x01)) {
-        BX_DEBUG(("PML4: entry not present"));
-        page_fault(ERROR_NOT_PRESENT, laddr, pl, isWrite, access_type);
-      }
-#if BX_PHY_ADDRESS_WIDTH == 32
-      if (pml4 & BX_CONST64(0x000fffff00000000)) {
-        BX_PANIC(("PML4 0x%08x%08x: Only 32 bit physical address space is emulated !", GET32H(pml4), GET32L(pml4)));
-      }
-#endif
-      if (pml4 & PAGING_PAE_PML4_RESERVED_BITS) {
-        BX_DEBUG(("PML4: reserved bit is set PML4=%08x:%08x", GET32H(pml4), GET32L(pml4)));
-        page_fault(ERROR_RESERVED | ERROR_PROTECTION, laddr, pl, isWrite, access_type);
-      }
-      if (pml4 & PAGE_DIRECTORY_NX_BIT) {
-        if (! BX_CPU_THIS_PTR efer.get_NXE()) {
-          BX_DEBUG(("PML4: NX bit set when EFER.NXE is disabled"));
-          page_fault(ERROR_RESERVED | ERROR_PROTECTION, laddr, pl, isWrite, access_type);
-        }
-        if (access_type == CODE_ACCESS) {
-          BX_DEBUG(("PML4: non-executable page fault occured"));
-          nx_fault = 1;
-        }
-      }
-
-      if (!(pml4 & 0x20)) {
-        pml4 |= 0x20;
-        BX_MEM(0)->writePhysicalPage(BX_CPU_THIS, pml4_addr, 8, &pml4);
-        BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pml4_addr, 8, BX_WRITE, (Bit8u*)(&pml4));
-      }
-
-      pdpe_addr = (bx_phy_address)((pml4 & BX_CONST64(0x000ffffffffff000)) |
-                                 ((laddr & BX_CONST64(0x0000007fc0000000)) >> 27));
-    }
-    else
-#endif
-    {
-      pdpe_addr = (bx_phy_address) (BX_CPU_THIS_PTR cr3_masked | ((laddr & 0xc0000000) >> 27));
-    }
-
-    BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, pdpe_addr, 8, &pdpe);
-    BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pdpe_addr, 8, BX_READ, (Bit8u*)(&pdpe));
-
-    if (!(pdpe & 0x01)) {
-      BX_DEBUG(("PAE PDPE: entry not present"));
-      page_fault(ERROR_NOT_PRESENT, laddr, pl, isWrite, access_type);
-    }
-#if BX_PHY_ADDRESS_WIDTH == 32
-    if (pdpe & BX_CONST64(0x000fffff00000000)) {
-      BX_PANIC(("PAE PDPE 0x%08x%08x: Only 32 bit physical address space is emulated !", GET32H(pdpe), GET32L(pdpe)));
-    }
-#endif
-    if (pdpe & PAGING_PAE_PDPE_RESERVED_BITS) {
-      BX_DEBUG(("PAE PDPE: reserved bit is set: PDPE=%08x:%08x", GET32H(pdpe), GET32L(pdpe)));
-      page_fault(ERROR_RESERVED | ERROR_PROTECTION, laddr, pl, isWrite, access_type);
-    }
-#if BX_SUPPORT_X86_64
-    if (pdpe & PAGE_DIRECTORY_NX_BIT) {
-      if (! BX_CPU_THIS_PTR efer.get_NXE()) {
-        BX_DEBUG(("PDPE: NX bit set when EFER.NXE is disabled"));
-        page_fault(ERROR_RESERVED | ERROR_PROTECTION, laddr, pl, isWrite, access_type);
-      }
-      if (access_type == CODE_ACCESS) {
-        BX_DEBUG(("PDPE: non-executable page fault occured"));
-        nx_fault = 1;
-      }
-    }
-#endif
-    bx_phy_address pde_addr = (bx_phy_address)((pdpe & BX_CONST64(0x000ffffffffff000))
-                          | ((laddr & 0x3fe00000) >> 18));
-
-    BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, pde_addr, 8, &pde);
-    BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pde_addr, 8, BX_READ, (Bit8u*)(&pde));
-
-    if (!(pde & 0x01)) {
-      BX_DEBUG(("PAE PDE: entry not present"));
-      page_fault(ERROR_NOT_PRESENT, laddr, pl, isWrite, access_type);
-    }
-#if BX_PHY_ADDRESS_WIDTH == 32
-    if (pde & BX_CONST64(0x000fffff00000000)) {
-      BX_PANIC(("PAE PDE 0x%08x%08x: Only 32 bit physical address space is emulated !", GET32H(pde), GET32L(pde)));
-    }
-#endif
-    if (pde & PAGING_PAE_PDE_RESERVED_BITS) {
-      BX_DEBUG(("PAE PDE: reserved bit is set PDE=%08x:%08x", GET32H(pde), GET32L(pde)));
-      page_fault(ERROR_RESERVED | ERROR_PROTECTION, laddr, pl, isWrite, access_type);
-    }
-#if BX_SUPPORT_X86_64
-    if (pde & PAGE_DIRECTORY_NX_BIT) {
-      if (! BX_CPU_THIS_PTR efer.get_NXE()) {
-        BX_DEBUG(("PDE: NX bit set when EFER.NXE is disabled"));
-        page_fault(ERROR_RESERVED | ERROR_PROTECTION, laddr, pl, isWrite, access_type);
-      }
-      if (access_type == CODE_ACCESS) {
-        BX_DEBUG(("PDE: non-executable page fault occured"));
-        nx_fault = 1;
-      }
-    }
-#endif
-
-    // Ignore CR4.PSE in PAE mode
-    if (pde & 0x80) {
-
-      if (pde & PAGING_PAE_PDE4M_RESERVED_BITS) {
-        BX_DEBUG(("PAE PDE4M: reserved bit is set PDE=%08x:%08x", GET32H(pde), GET32L(pde)));
-        page_fault(ERROR_RESERVED | ERROR_PROTECTION, laddr, pl, isWrite, access_type);
-      }
-
-      // Combined access is just access from the pde (no pte involved).
-      combined_access = (pde) & 0x06; // U/S and R/W
-#if BX_SUPPORT_X86_64
-      if (long_mode()) {
-        combined_access &= (pml4 & pdpe) & 0x06;
-      }
-#endif
-
-#if BX_SUPPORT_GLOBAL_PAGES
-      if (BX_CPU_THIS_PTR cr4.get_PGE())
-        combined_access |= (pde & TLB_GlobalPage); // G
-#endif
-
-      priv_index =
-#if BX_CPU_LEVEL >= 4
-        (BX_CPU_THIS_PTR cr0.get_WP() << 4) |  // bit 4
-#endif
-        (pl<<3) |                              // bit 3
-        (combined_access & 0x06) |             // bit 2,1
-        (isWrite);                             // bit 0
-
-      if (!priv_check[priv_index] || nx_fault)
-         page_fault(ERROR_PROTECTION, laddr, pl, isWrite, access_type);
-
-      // Update PDPE A bit if needed.
-      if (!(pdpe & 0x20)) {
-        pdpe |= 0x20;
-        BX_MEM(0)->writePhysicalPage(BX_CPU_THIS, pdpe_addr, 8, &pdpe);
-        BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pdpe_addr, 8, BX_WRITE, (Bit8u*)(&pdpe));
-      }
-
-      // Update PDE A/D bits if needed.
-      if (((pde & 0x20)==0) || (isWrite && ((pde & 0x40)==0))) {
-        pde |= (0x20 | (isWrite<<6)); // Update A and possibly D bits
-        BX_MEM(0)->writePhysicalPage(BX_CPU_THIS, pde_addr, 8, &pde);
-        BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pde_addr, 8, BX_WRITE, (Bit8u*)(&pde));
-      }
-
-      // Make up the physical page frame address.
-      ppf = (bx_phy_address)((pde & BX_CONST64(0x000fffffffe00000)) | (laddr & 0x001ff000));
-    }
-    else {
-      // 4k pages, Get page table entry
-      bx_phy_address pte_addr = (bx_phy_address)((pde & BX_CONST64(0x000ffffffffff000)) |
-                             ((laddr & 0x001ff000) >> 9));
-
-      BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, pte_addr, 8, &pte);
-      BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pte_addr, 8, BX_READ, (Bit8u*)(&pte));
-
-      if (!(pte & 0x01)) {
-        BX_DEBUG(("PAE PTE: entry not present"));
-        page_fault(ERROR_NOT_PRESENT, laddr, pl, isWrite, access_type);
-      }
-#if BX_PHY_ADDRESS_WIDTH == 32
-      if (pte & BX_CONST64(0x000fffff00000000)) {
-        BX_PANIC(("PAE PTE 0x%08x%08x: Only 32 bit physical address space is emulated !", GET32H(pte), GET32L(pte)));
-      }
-#endif
-      if (pte & PAGING_PAE_PTE_RESERVED_BITS) {
-        BX_DEBUG(("PAE PTE: reserved bit is set PTE=%08x:%08x", GET32H(pte), GET32L(pte)));
-        page_fault(ERROR_RESERVED | ERROR_PROTECTION, laddr, pl, isWrite, access_type);
-      }
-#if BX_SUPPORT_X86_64
-      if (pte & PAGE_DIRECTORY_NX_BIT) {
-        if (! BX_CPU_THIS_PTR efer.get_NXE()) {
-          BX_DEBUG(("PTE: NX bit set when EFER.NXE is disabled"));
-          page_fault(ERROR_RESERVED | ERROR_PROTECTION, laddr, pl, isWrite, access_type);
-        }
-        if (access_type == CODE_ACCESS) {
-          BX_DEBUG(("PTE: non-executable page fault occured"));
-          nx_fault = 1;
-        }
-      }
-#endif
-
-      combined_access = (pde & pte) & 0x06; // U/S and R/W
-#if BX_SUPPORT_X86_64
-      if (long_mode()) {
-        combined_access &= (pml4 & pdpe) & 0x06;
-      }
-#endif
-
-#if BX_SUPPORT_GLOBAL_PAGES
-      if (BX_CPU_THIS_PTR cr4.get_PGE())
-        combined_access |= (pte & TLB_GlobalPage); // G
-#endif
-
-      priv_index =
-#if BX_CPU_LEVEL >= 4
-        (BX_CPU_THIS_PTR cr0.get_WP() << 4) |  // bit 4
-#endif
-        (pl<<3) |                              // bit 3
-        (combined_access & 0x06) |             // bit 2,1
-        (isWrite);                             // bit 0
-
-      if (!priv_check[priv_index] || nx_fault)
-        page_fault(ERROR_PROTECTION, laddr, pl, isWrite, access_type);
-
-      // Update PDPE A bit if needed.
-      if (!(pdpe & 0x20)) {
-        pdpe |= 0x20;
-        BX_MEM(0)->writePhysicalPage(BX_CPU_THIS, pdpe_addr, 8, &pdpe);
-        BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pdpe_addr, 8, BX_WRITE, (Bit8u*)(&pdpe));
-      }
-
-      // Update PDE A bit if needed.
-      if (!(pde & 0x20)) {
-        pde |= 0x20;
-        BX_MEM(0)->writePhysicalPage(BX_CPU_THIS, pde_addr, 8, &pde);
-        BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pde_addr, 8, BX_WRITE, (Bit8u*)(&pde));
-      }
-
-      // Update PTE A/D bits if needed.
-      if (((pte & 0x20)==0) || (isWrite && ((pte & 0x40)==0))) {
-        pte |= (0x20 | (isWrite<<6)); // Update A and possibly D bits
-        BX_MEM(0)->writePhysicalPage(BX_CPU_THIS, pte_addr, 8, &pte);
-        BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pte_addr, 8, BX_WRITE, (Bit8u*)(&pte));
-      }
-
-      // Make up the physical page frame address.
-      ppf = (bx_phy_address)(pte & BX_CONST64(0x000ffffffffff000));
-    }
+    ppf = translate_linear_PAE(laddr, combined_access, curr_pl, rw, access_type);
   }
   else
 #endif  // #if BX_SUPPORT_PAE
@@ -931,24 +959,29 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned curr_pl, un
     Bit32u pde, pte;
 
     bx_phy_address pde_addr = (bx_phy_address) (BX_CPU_THIS_PTR cr3_masked |
-                           ((laddr & 0xffc00000) >> 20));
+                             ((laddr & 0xffc00000) >> 20));
 
     BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, pde_addr, 4, &pde);
     BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pde_addr, 4, BX_READ, (Bit8u*)(&pde));
 
-    if (!(pde & 0x01)) {
+    if (!(pde & 0x1)) {
       BX_DEBUG(("PDE: entry not present"));
       page_fault(ERROR_NOT_PRESENT, laddr, pl, isWrite, access_type);
     }
 
 #if BX_SUPPORT_LARGE_PAGES
-    if ((pde & 0x80) && (BX_CPU_THIS_PTR cr4.get_PSE()))
+    if ((pde & 0x80) && BX_CPU_THIS_PTR cr4.get_PSE())
     {
       // Note: when the PSE and PAE flags in CR4 are set, the
       //       processor generates a PF if the reserved bits are not zero.
+      if (pde & PAGING_PSE_PDE4M_RESERVED_BITS) {
+        BX_DEBUG(("PSE PDE4M: reserved bit is set: PDE=0x%08x", pde));
+        page_fault(ERROR_RESERVED | ERROR_PROTECTION, laddr, pl, isWrite, access_type);
+      }
+
 #if BX_PHY_ADDRESS_WIDTH == 32
       if (pde & 0x0001e000) {
-        BX_PANIC(("PSE PDE 0x%08x: Only 32 bit physical address space is emulated !", pde));
+        BX_PANIC(("PSE PDE4M 0x%08x: Only 32 bit physical address space is emulated !", pde));
       }
 #endif
       // Combined access is just access from the pde (no pte involved).
@@ -989,7 +1022,7 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned curr_pl, un
       BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, pte_addr, 4, &pte);
       BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pte_addr, 4, BX_READ, (Bit8u*)(&pte));
 
-      if (!(pte & 0x01)) {
+      if (!(pte & 0x1)) {
         BX_DEBUG(("PTE: entry not present"));
         page_fault(ERROR_NOT_PRESENT, laddr, pl, isWrite, access_type);
       }
