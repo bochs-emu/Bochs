@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.231 2008-05-11 20:46:11 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.232 2008-05-19 19:59:29 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -219,6 +219,15 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CLFLUSH(bxInstruction_c *i)
 #if BX_CPU_LEVEL >= 3
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_DdRd(bxInstruction_c *i)
 {
+#if BX_CPU_LEVEL >= 4
+  if (BX_CPU_THIS_PTR cr4.get_DE()) {
+    if ((i->nnn() & 0xE) == 4) {
+      BX_ERROR(("MOV_DdRd: access to DR4/DR5 causes #UD"));
+      UndefinedOpcode(i);
+    }
+  }
+#endif
+
   if (!real_mode() && CPL!=0) {
     BX_ERROR(("MOV_DdRd: CPL!=0 not in real mode"));
     exception(BX_GP_EXCEPTION, 0, 0);
@@ -255,16 +264,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_DdRd(bxInstruction_c *i)
       break;
 
     case 4: // DR4
-      // DR4 aliased to DR6 by default.  With Debug Extensions on,
+      // DR4 aliased to DR6 by default. With Debug Extensions on,
       // access to DR4 causes #UD
-#if BX_CPU_LEVEL >= 4
-      if (BX_CPU_THIS_PTR cr4.get_DE()) {
-        // Debug extensions CR4.DE is ON
-        BX_INFO(("MOV_DdRd: access to DR4 causes #UD"));
-        UndefinedOpcode(i);
-      }
-#endif
-      // Fall through to DR6 case
     case 6: // DR6
 #if BX_CPU_LEVEL <= 4
       // On 386/486 bit12 is settable
@@ -278,16 +279,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_DdRd(bxInstruction_c *i)
       break;
 
     case 5: // DR5
-      // DR5 aliased to DR7 by default.  With Debug Extensions on,
+      // DR5 aliased to DR7 by default. With Debug Extensions on,
       // access to DR5 causes #UD
-#if BX_CPU_LEVEL >= 4
-      if (BX_CPU_THIS_PTR cr4.get_DE()) {
-        // Debug extensions CR4.DE is ON
-        BX_INFO(("MOV_DdRd: access to DR5 causes #UD"));
-        UndefinedOpcode(i);
-      }
-#endif
-      // Fall through to DR7 case
     case 7: // DR7
       // Note: 486+ ignore GE and LE flags.  On the 386, exact
       // data breakpoint matching does not occur unless it is enabled
@@ -345,6 +338,15 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RdDd(bxInstruction_c *i)
 {
   Bit32u val_32;
 
+#if BX_CPU_LEVEL >= 4
+  if (BX_CPU_THIS_PTR cr4.get_DE()) {
+    if ((i->nnn() & 0xE) == 4) {
+      BX_ERROR(("MOV_RdDd: access to DR4/DR5 causes #UD"));
+      UndefinedOpcode(i);
+    }
+  }
+#endif
+
   if (!real_mode() && CPL!=0) {
     BX_ERROR(("MOV_RdDd: CPL!=0 not in real mode"));
     exception(BX_GP_EXCEPTION, 0, 0);
@@ -371,31 +373,15 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RdDd(bxInstruction_c *i)
       break;
 
     case 4: // DR4
-      // DR4 aliased to DR6 by default.  With Debug Extensions on,
+      // DR4 aliased to DR6 by default. With Debug Extensions ON,
       // access to DR4 causes #UD
-#if BX_CPU_LEVEL >= 4
-      if (BX_CPU_THIS_PTR cr4.get_DE()) {
-        // Debug extensions CR4.DE is ON
-        BX_INFO(("MOV_RdDd: access to DR4 causes #UD"));
-        UndefinedOpcode(i);
-      }
-#endif
-      // Fall through to DR6 case
     case 6: // DR6
       val_32 = BX_CPU_THIS_PTR dr6;
       break;
 
     case 5: // DR5
-      // DR5 aliased to DR7 by default.  With Debug Extensions on,
+      // DR5 aliased to DR7 by default. With Debug Extensions ON,
       // access to DR5 causes #UD
-#if BX_CPU_LEVEL >= 4
-      if (BX_CPU_THIS_PTR cr4.get_DE()) {
-        // Debug extensions CR4.DE is ON
-        BX_INFO(("MOV_RdDd: access to DR5 causes #UD"));
-        UndefinedOpcode(i);
-      }
-#endif
-      // Fall through to DR7 case
     case 7: // DR7
       val_32 = BX_CPU_THIS_PTR dr7;
       break;
@@ -411,13 +397,18 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RdDd(bxInstruction_c *i)
 #if BX_SUPPORT_X86_64
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_DqRq(bxInstruction_c *i)
 {
-  BX_ASSERT(protected_mode());
-
   /* NOTES:
    *   64bit operands always used
    *   r/m field specifies general register
    *   reg field specifies which special register
    */
+
+  if (BX_CPU_THIS_PTR cr4.get_DE()) {
+    if ((i->nnn() & 0xE) == 4) {
+      BX_ERROR(("MOV_DqRq: access to DR4/DR5 causes #UD"));
+      UndefinedOpcode(i);
+    }
+  }
 
   /* #GP(0) if CPL is not 0 */
   if (CPL != 0) {
@@ -450,14 +441,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_DqRq(bxInstruction_c *i)
       break;
 
     case 4: // DR4
-      // DR4 aliased to DR6 by default.  With Debug Extensions on,
+      // DR4 aliased to DR6 by default. With Debug Extensions ON,
       // access to DR4 causes #UD
-      if (BX_CPU_THIS_PTR cr4.get_DE()) {
-        // Debug extensions CR4.DE is ON
-        BX_INFO(("MOV_DqRq: access to DR4 causes #UD"));
-        UndefinedOpcode(i);
-      }
-      // Fall through to DR6 case
     case 6: // DR6
       // On Pentium+, bit12 is always zero
       BX_CPU_THIS_PTR dr6 = (BX_CPU_THIS_PTR dr6 & 0xffff0ff0) |
@@ -465,14 +450,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_DqRq(bxInstruction_c *i)
       break;
 
     case 5: // DR5
-      // DR5 aliased to DR7 by default.  With Debug Extensions on,
+      // DR5 aliased to DR7 by default. With Debug Extensions ON,
       // access to DR5 causes #UD
-      if (BX_CPU_THIS_PTR cr4.get_DE()) {
-        // Debug extensions CR4.DE is ON
-        BX_INFO(("MOV_DqRq: access to DR5 causes #UD"));
-        UndefinedOpcode(i);
-      }
-      // Fall through to DR7 case
     case 7: // DR7
       // Note: 486+ ignore GE and LE flags.  On the 386, exact
       // data breakpoint matching does not occur unless it is enabled
@@ -527,7 +506,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RqDq(bxInstruction_c *i)
 {
   Bit64u val_64;
 
-  BX_ASSERT(protected_mode());
+  if (BX_CPU_THIS_PTR cr4.get_DE()) {
+    if ((i->nnn() & 0xE) == 4) {
+      BX_ERROR(("MOV_DqRq: access to DR4/DR5 causes #UD"));
+      UndefinedOpcode(i);
+    }
+  }
 
   /* #GP(0) if CPL is not 0 */
   if (CPL != 0) {
@@ -556,27 +540,15 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RqDq(bxInstruction_c *i)
       break;
 
     case 4: // DR4
-      // DR4 aliased to DR6 by default.  With Debug Extensions on,
+      // DR4 aliased to DR6 by default. With Debug Extensions ON,
       // access to DR4 causes #UD
-      if (BX_CPU_THIS_PTR cr4.get_DE()) {
-        // Debug extensions CR4.DE is ON
-        BX_INFO(("MOV_RqDq: access to DR4 causes #UD"));
-        UndefinedOpcode(i);
-      }
-      // Fall through to DR6 case
     case 6: // DR6
       val_64 = BX_CPU_THIS_PTR dr6;
       break;
 
     case 5: // DR5
-      // DR5 aliased to DR7 by default.  With Debug Extensions on,
+      // DR5 aliased to DR7 by default. With Debug Extensions ON,
       // access to DR5 causes #UD
-      if (BX_CPU_THIS_PTR cr4.get_DE()) {
-        // Debug extensions CR4.DE is ON
-        BX_INFO(("MOV_RqDq: access to DR5 causes #UD"));
-        UndefinedOpcode(i);
-      }
-      // Fall through to DR7 case
     case 7: // DR7
       val_64 = BX_CPU_THIS_PTR dr7;
       break;
@@ -850,7 +822,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LMSW_Ew(bxInstruction_c *i)
   if (BX_CPU_THIS_PTR cr0.get_PE())
     msw |= 0x0001; // adjust PE bit to current value of 1
 
-  msw &= 0x000f; // LMSW only affects last 4 flags
+  msw &= 0xf; // LMSW only affects last 4 flags
   cr0 = (BX_CPU_THIS_PTR cr0.getRegister() & 0xfffffff0) | msw;
   SetCR0(cr0);
 }
