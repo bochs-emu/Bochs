@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu.cc,v 1.41 2008-05-10 13:34:01 sshwarts Exp $
+// $Id: fpu.cc,v 1.42 2008-05-19 20:00:42 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -542,19 +542,6 @@ void BX_CPU_C::print_state_FPU(void)
   };
 
   Bit32u reg;
-  reg = BX_CPU_THIS_PTR the_i387.get_control_word();
-  fprintf(stderr, "control word: 0x%04x: ", reg);
-  fprintf(stderr, "%s RC_%s PC_%s %s %s %s %s %s %s\n",
-    (reg & FPU_CW_Inf) ? "INF" : "inf",
-    (cw_round_control[(reg & FPU_CW_RC) >> 10]),
-    (cw_precision_control[(reg & FPU_CW_PC) >> 8]),
-    (reg & FPU_CW_Precision) ? "PM" : "pm",
-    (reg & FPU_CW_Underflow) ? "UM" : "um",
-    (reg & FPU_CW_Overflow)  ? "OM" : "om",
-    (reg & FPU_CW_Zero_Div)  ? "ZM" : "zm",
-    (reg & FPU_CW_Denormal)  ? "DM" : "dm",
-    (reg & FPU_CW_Invalid)   ? "IM" : "im");
-
   reg = BX_CPU_THIS_PTR the_i387.get_status_word();
   fprintf(stderr, "status  word: 0x%04x: ", reg);
   fprintf(stderr, "%s %s TOS%d %s %s %s %s %s %s %s %s %s %s %s\n",
@@ -571,6 +558,20 @@ void BX_CPU_C::print_state_FPU(void)
     (reg & FPU_SW_Zero_Div) ? "ZE" : "ze",
     (reg & FPU_SW_Denormal_Op) ? "DE" : "de",
     (reg & FPU_SW_Invalid) ? "IE" : "ie");
+
+  reg = BX_CPU_THIS_PTR the_i387.get_control_word();
+  fprintf(stderr, "control word: 0x%04x: ", reg);
+  fprintf(stderr, "%s RC_%s PC_%s %s %s %s %s %s %s\n",
+    (reg & FPU_CW_Inf) ? "INF" : "inf",
+    (cw_round_control[(reg & FPU_CW_RC) >> 10]),
+    (cw_precision_control[(reg & FPU_CW_PC) >> 8]),
+    (reg & FPU_CW_Precision) ? "PM" : "pm",
+    (reg & FPU_CW_Underflow) ? "UM" : "um",
+    (reg & FPU_CW_Overflow)  ? "OM" : "om",
+    (reg & FPU_CW_Zero_Div)  ? "ZM" : "zm",
+    (reg & FPU_CW_Denormal)  ? "DM" : "dm",
+    (reg & FPU_CW_Invalid)   ? "IM" : "im");
+
   reg = BX_CPU_THIS_PTR the_i387.get_tag_word();
   fprintf(stderr, "tag word:     0x%04x\n", reg);
   reg = BX_CPU_THIS_PTR the_i387.foo;
@@ -598,7 +599,7 @@ void BX_CPU_C::print_state_FPU(void)
     f *= fp.fraction*scale_factor;
 #endif
     fprintf(stderr, "%sFP%d ST%d(%c):        raw 0x%04x:%08lx%08lx (%.10f)\n",
-          i==tos?"=>":"  ", (i-tos)&7, i,
+          i==tos?"=>":"  ", i, (i-tos)&7,
           "v0se"[tag],
           fp.exp & 0xffff, GET32H(fp.fraction), GET32L(fp.fraction),
           f);
