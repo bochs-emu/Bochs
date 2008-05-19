@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.132 2008-05-19 18:10:32 sshwarts Exp $
+// $Id: paging.cc,v 1.133 2008-05-19 20:05:03 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -602,8 +602,6 @@ void BX_CPU_C::page_fault(unsigned fault, bx_address laddr, unsigned user, unsig
 #endif
   BX_CPU_THIS_PTR cr2 = laddr;
 
-  TLB_invlpg(laddr); // Invalidate TLB entry
-
 #if BX_SUPPORT_X86_64
   BX_DEBUG(("page fault for address %08x%08x @ %08x%08x",
              GET32H(laddr), GET32L(laddr), GET32H(RIP), GET32L(RIP)));
@@ -640,7 +638,7 @@ bx_phy_address BX_CPU_C::translate_linear_PAE(bx_address laddr, Bit32u &combined
   bx_phy_address pdpe_addr, ppf;
   Bit64u pdpe, pde, pte;
 #if BX_SUPPORT_X86_64
-  Bit64u pml4, pml4_addr;
+  Bit64u pml4, pml4_addr = 0;
 #endif
   unsigned priv_index, nx_fault = 0;
   bx_bool isWrite = (rw >= BX_WRITE); // write or r-m-w
