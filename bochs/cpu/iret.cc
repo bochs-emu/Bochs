@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: iret.cc,v 1.35 2008-05-10 18:10:52 sshwarts Exp $
+// $Id: iret.cc,v 1.36 2008-05-20 22:15:16 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005 Stanislav Shwartsman
@@ -307,7 +307,7 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
     if (prev_cpl == 0)
       changeMask |= EFlagsVIPMask | EFlagsVIFMask | EFlagsIOPLMask;
 
-    if (cs_descriptor.u.segment.d_b)
+    if (! cs_descriptor.u.segment.d_b) // 16 bit
       changeMask &= 0xffff;
 
     // IF only changed if (prev_CPL <= EFLAGS.IOPL)
@@ -453,15 +453,18 @@ BX_CPU_C::long_iret(bxInstruction_c *i)
 #if BX_SUPPORT_X86_64
     if (i->os64L()) {
       raw_ss_selector = (Bit16u) read_virtual_qword_64(BX_SEG_REG_SS, temp_RSP + 32);
+      new_rsp         =          read_virtual_qword_64(BX_SEG_REG_SS, temp_RSP + 24);
     }
     else
 #endif
     {
       if (i->os32L()) {
         raw_ss_selector = (Bit16u) read_virtual_dword(BX_SEG_REG_SS, temp_RSP + 16);
+        new_rsp         = (Bit64u) read_virtual_dword(BX_SEG_REG_SS, temp_RSP + 12);
       }
       else {
-        raw_ss_selector = read_virtual_word(BX_SEG_REG_SS, temp_RSP + 8);
+        raw_ss_selector =          read_virtual_word(BX_SEG_REG_SS, temp_RSP + 8);
+        new_rsp         = (Bit64u) read_virtual_word(BX_SEG_REG_SS, temp_RSP + 6);
       }
     }
 
@@ -510,21 +513,6 @@ BX_CPU_C::long_iret(bxInstruction_c *i)
       }
     }
 
-#if BX_SUPPORT_X86_64
-    if (i->os64L()) {
-      new_rsp = read_virtual_qword_64(BX_SEG_REG_SS, temp_RSP + 24);
-    }
-    else
-#endif
-    {
-      if (i->os32L()) {
-        new_rsp = (Bit64u) read_virtual_dword(BX_SEG_REG_SS, temp_RSP + 12);
-      }
-      else {
-        new_rsp = (Bit64u) read_virtual_word(BX_SEG_REG_SS, temp_RSP + 6);
-      }
-    }
-
     Bit8u prev_cpl = CPL; /* previous CPL */
 
     /* set CPL to the RPL of the return CS selector */
@@ -538,7 +526,7 @@ BX_CPU_C::long_iret(bxInstruction_c *i)
     if (prev_cpl == 0)
       changeMask |= EFlagsVIPMask | EFlagsVIFMask | EFlagsIOPLMask;
 
-    if (cs_descriptor.u.segment.d_b)
+    if (! cs_descriptor.u.segment.d_b) // 16 bit
       changeMask &= 0xffff;
 
     // IF only changed if (prev_CPL <= EFLAGS.IOPL)
