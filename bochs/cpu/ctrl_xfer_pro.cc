@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer_pro.cc,v 1.74 2008-05-17 19:30:55 sshwarts Exp $
+// $Id: ctrl_xfer_pro.cc,v 1.75 2008-05-21 21:38:58 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -127,7 +127,7 @@ void BX_CPU_C::branch_far32(bx_selector_t *selector,
 {
   /* instruction pointer must be in code segment limit else #GP(0) */
   if (eip > descriptor->u.segment.limit_scaled) {
-    BX_ERROR(("branch_far: EIP > limit"));
+    BX_ERROR(("branch_far32: EIP > limit"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
@@ -145,7 +145,7 @@ void BX_CPU_C::branch_far64(bx_selector_t *selector,
 #if BX_SUPPORT_X86_64
   if (long_mode() && descriptor->u.segment.l) {
     if (! IsCanonical(rip)) {
-      BX_ERROR(("branch_far: canonical RIP violation"));
+      BX_ERROR(("branch_far64: canonical RIP violation"));
       exception(BX_GP_EXCEPTION, 0, 0);
     }
   }
@@ -154,7 +154,7 @@ void BX_CPU_C::branch_far64(bx_selector_t *selector,
   {
     /* instruction pointer must be in code segment limit else #GP(0) */
     if (rip > descriptor->u.segment.limit_scaled) {
-      BX_ERROR(("branch_far: RIP > limit"));
+      BX_ERROR(("branch_far64: RIP > limit"));
       exception(BX_GP_EXCEPTION, 0, 0);
     }
   }

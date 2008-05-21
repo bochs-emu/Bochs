@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.116 2008-05-15 20:10:00 sshwarts Exp $
+// $Id: exception.cc,v 1.117 2008-05-21 21:38:59 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -240,7 +240,7 @@ void BX_CPU_C::long_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error_code
 
     // check selector and descriptor for new stack in current TSS
     if (ist > 0) {
-      BX_DEBUG(("interrupt(long mode): trap to IST, vector = %d\n",ist));
+      BX_DEBUG(("interrupt(long mode): trap to IST, vector = %d", ist));
       get_RSP_from_TSS(ist+3, &RSP);
     }
 

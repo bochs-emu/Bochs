@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.133 2008-05-19 20:05:03 sshwarts Exp $
+// $Id: paging.cc,v 1.134 2008-05-21 21:38:59 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -552,6 +552,8 @@ void BX_CPU_C::TLB_flush(bx_bool invalidateGlobal)
 
 void BX_CPU_C::TLB_invlpg(bx_address laddr)
 {
+  BX_DEBUG(("TLB_invlpg(0x"FMT_ADDRX"): invalidate TLB entry", laddr));
+
   unsigned TLB_index = BX_TLB_INDEX_OF(laddr, 0);
   bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[TLB_index];
   if (tlbEntry->lpf == LPFOf(laddr)) {
