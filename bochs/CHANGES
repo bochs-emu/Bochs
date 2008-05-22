@@ -4,7 +4,7 @@ Brief summary :
 
 + More optimizations in CPU code - Bochs 2.3.7 is more than 2x faster
   than Bochs 2.3.5 build !
-- Implemented LBA48 support
+- Implemented LBA48 support in BIOS
 - Added memory access tracing for Bochs internal debugger
 - Many fixes in CPU emulation and internal debugger
   - MenuetOS64 floppy images booting perfect again !
@@ -27,8 +27,7 @@ Detailed change log :
   - Many bug fixes in Bochs internal debugger and disassembler
 
 - System BIOS (Volker)
-  - Implemented LBA48 support (since BIOS functions are limited to
-    32 bit, the max. disk size is now 2 TB)
+  - Implemented LBA48 support
   - Added generation of SSDT ACPI table that contains definitions
     for available processors
   - Added RTC device to ACPI DSDT table
@@ -38,6 +37,9 @@ Detailed change log :
   - VGA
     - Implemented screen disable bit in sequencer register #1
     - Implemented text mode cursor blinking
+  - Serial
+    - new serial modes 'pipe-server' and 'pipe-client' for win32
+    - new serial mode 'socket-server'
 
 - Configure and compile
   - Fixed configure bug with enabling of POPCNT instruction, POPCNT
@@ -50,8 +52,10 @@ Detailed change log :
 
 - Display libraries
   - implemented text mode character blinking in some guis
+  - improved 'x' gui runtime dialogs
 
 - SF patches applied
+ [1928848] "pipe" mode for serial port (win32 only) by Eugene Toder
  [1956366] Do not announce C2 & C3 cpu power state support by Igor Lvovsky
  [1921733] support for LBA48 by Robert Millan
  [1938185] Fix link problem with --enable-debugger by Sebastian
