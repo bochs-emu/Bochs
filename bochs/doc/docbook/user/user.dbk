@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.238 2008-05-12 18:46:46 vruppert Exp $
+$Id: user.dbk,v 1.239 2008-05-22 08:13:21 vruppert Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -3646,7 +3646,10 @@ Examples:
   com1: enabled=1, mode=term, dev=/dev/ttyp9
   com2: enabled=1, mode=file, dev=serial.out
   com3: enabled=1, mode=raw, dev=com1
-  com3: enabled=1, mode=socket, dev=localhost:8888
+  com3: enabled=1, mode=socket-client, dev=localhost:8888
+  com3: enabled=1, mode=socket-server, dev=localhost:8888
+  com4: enabled=1, mode=pipe-client, dev=\\.\pipe\mypipe
+  com4: enabled=1, mode=pipe-server, dev=\\.\pipe\mypipe
 </screen>
   This defines a serial port (UART type 16550A).
 </para>
@@ -3661,11 +3664,23 @@ Examples:
   will all go to the other window.
 </para>
 <para>
+  When using socket* and pipe* (win32 only) modes Bochs becomes either
+  socket/named pipe client or server. In client mode it connects to an already
+  running server (if connection fails Bochs treats com port as not connected).
+  In server mode it opens socket/named pipe and waits until a client application
+  connects to it before starting simulation. This mode is useful for remote
+  debugging (e.g. with gdb's "target remote host:port" command or windbg's command
+  line option -k com:pipe,port=\\.\pipe\pipename).
+
+  Note: 'socket' is a shorthand for 'socket-client', 'pipe' for 'pipe-client'.
+  Socket modes use simple TCP communication, pipe modes use duplex byte mode pipes.
+</para>
+<para>
   Other serial modes are 'null' (no input/output), 'file' (output to a file
   specified as the 'dev' parameter), 'raw' (use the real serial port - under
   construction for win32), 'mouse' (standard serial mouse - requires
   <link linkend="bochsopt-mouse">mouse option</link> setting 'type=serial'
-  or 'type=serial_wheel') and 'socket' (connect a networking socket).
+  or 'type=serial_wheel').
 </para>
 </section>
 

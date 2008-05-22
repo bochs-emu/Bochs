@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial.cc,v 1.81 2008-02-15 22:05:43 sshwarts Exp $
+// $Id: serial.cc,v 1.82 2008-05-22 08:13:22 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -41,6 +41,11 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h>
+#define closesocket(s)    close(s)
+#else
+#ifndef FILE_FLAG_FIRST_PIPE_INSTANCE
+#define FILE_FLAG_FIRST_PIPE_INSTANCE 0
+#endif
 #endif
 
 #if USE_RAW_SERIAL
@@ -104,7 +109,13 @@ bx_serial_c::~bx_serial_c(void)
 #endif
           break;
         case BX_SER_MODE_SOCKET:
-          if (BX_SER_THIS s[i].socket_id >= 0) ::close(BX_SER_THIS s[i].socket_id);
+          if (BX_SER_THIS s[i].socket_id >= 0) closesocket(BX_SER_THIS s[i].socket_id);
+          break;
+        case BX_SER_MODE_PIPE:
+#ifdef WIN32
+          if (BX_SER_THIS s[i].pipe)
+            CloseHandle(BX_SER_THIS s[i].pipe);
+#endif
           break;
       }
     }
@@ -295,16 +306,17 @@ bx_serial_c::init(void)
         BX_SER_THIS s[i].io_mode = BX_SER_MODE_MOUSE;
         BX_SER_THIS mouse_port = i;
         BX_SER_THIS mouse_type = SIM->get_param_enum(BXPN_MOUSE_TYPE)->get();
-      } else if (!strcmp(mode, "socket")) {
+      } else if (!strncmp(mode, "socket", 6)) {
         BX_SER_THIS s[i].io_mode = BX_SER_MODE_SOCKET;
         struct sockaddr_in  sin;
         struct hostent      *hp;
         char                host[BX_PATHNAME_LEN];
         int                 port;
         int                 socket;
+        bx_bool             server = !strcmp(mode, "socket-server");
 
 #if defined(WIN32)
-        static bool winsock_init = false;
+        static bx_bool winsock_init = false;
         if (!winsock_init) {
           WORD wVersionRequested;
           WSADATA wsaData;
@@ -339,19 +351,81 @@ bx_serial_c::init(void)
         sin.sin_port = htons (port);
 
         socket = ::socket (AF_INET, SOCK_STREAM, 0);
-        if (socket < 0) {
+        if (socket < 0)
           BX_PANIC(("com%d: socket() failed",i+1));
-        }
 
-        if (::connect (socket, (sockaddr *) &sin, sizeof (sin)) < 0) {
+        // server mode
+        if (server) {
+          if (::bind (socket, (sockaddr *) &sin, sizeof (sin)) < 0 ||
+              ::listen (socket, SOMAXCONN) < 0) {
+            closesocket(socket);
+            socket = -1;
+            BX_PANIC(("com%d: bind() or listen() failed (host:%s, port:%d)",i+1, host, port));
+          }
+          else {
+            BX_INFO(("com%d: waiting for client to connect (host:%s, port:%d)",i+1, host, port));
+            int client;
+            if ((client = ::accept (socket, NULL, 0)) < 0)
+              BX_PANIC(("com%d: accept() failed (host:%s, port:%d)",i+1, host, port));
+            closesocket(socket);
+            socket = client;
+          }
+        }
+        // client mode
+        else if (::connect (socket, (sockaddr *) &sin, sizeof (sin)) < 0) {
+          closesocket(socket);
           socket = -1;
           BX_INFO(("com%d: connect() failed (host:%s, port:%d)",i+1, host, port));
-        } else {
-          BX_INFO(("com%d - inet - socket_id: %d, ip:%s, port:%d", i+1, socket, host, port));
         }
+
         BX_SER_THIS s[i].socket_id = socket;
+        if (socket > 0)
+          BX_INFO(("com%d - inet %s - socket_id: %d, ip:%s, port:%d",
+            i+1, server ? "server" : "client", socket, host, port));
+      } else if (!strncmp(mode, "pipe", 4)) {
+        if (strlen(dev) > 0) {
+          bx_bool server = !strcmp(mode, "pipe-server");
+#ifdef WIN32
+          HANDLE pipe;
+
+          BX_SER_THIS s[i].io_mode = BX_SER_MODE_PIPE;
+
+          // server mode
+          if (server) {
+            pipe = CreateNamedPipe( dev,
+                PIPE_ACCESS_DUPLEX | FILE_FLAG_FIRST_PIPE_INSTANCE,
+                PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_WAIT,
+                1, 4096, 4096, 0, NULL);
+
+            if (pipe == INVALID_HANDLE_VALUE)
+              BX_PANIC(("com%d: CreateNamedPipe(%s) failed", i+1, dev));
+
+            BX_INFO(("com%d: waiting for client to connect to %s", i+1, dev));
+            if (!ConnectNamedPipe(pipe, NULL) && GetLastError() != ERROR_PIPE_CONNECTED)
+            {
+              CloseHandle(pipe);
+              pipe = INVALID_HANDLE_VALUE;
+              BX_PANIC(("com%d: ConnectNamedPipe(%s) failed", i+1, dev));
+            }
+          }
+          // client mode
+          else {
+            pipe = CreateFile( dev,
+               GENERIC_READ | GENERIC_WRITE, 
+               0, NULL, OPEN_EXISTING, 0, NULL);
+
+            if (pipe == INVALID_HANDLE_VALUE)
+              BX_INFO(("com%d: failed to open pipe %s", i+1, dev));
+          }
+
+          if (pipe != INVALID_HANDLE_VALUE)
+            BX_SER_THIS s[i].pipe = pipe;
+#else
+          BX_PANIC(("support for serial mode '%s' not available", mode));
+#endif
+        }
       } else if (strcmp(mode, "null")) {
-        BX_PANIC(("unknown serial i/o mode"));
+        BX_PANIC(("unknown serial i/o mode '%s'", mode));
       }
       // simulate device connected
       if (BX_SER_THIS s[i].io_mode != BX_SER_MODE_RAW) {
@@ -1230,6 +1304,14 @@ bx_serial_c::tx_timer(void)
                   (bx_ptr_t) & BX_SER_THIS s[port].tsrbuffer, 1);
 #endif
       }
+      case BX_SER_MODE_PIPE:
+#ifdef WIN32
+        if (BX_SER_THIS s[port].pipe) {
+          DWORD written;
+          WriteFile(BX_SER_THIS s[port].pipe, (bx_ptr_t)& BX_SER_THIS s[port].tsrbuffer, 1, &written, NULL);
+        }
+#endif
+        break;
     }
   }
 
@@ -1387,6 +1469,17 @@ bx_serial_c::rx_timer(void)
           BX_SER_THIS mouse_internal_buffer.num_elements--;
           data_ready = 1;
         }
+        break;
+      case BX_SER_MODE_PIPE:
+#ifdef WIN32
+        DWORD avail = 0;
+        if (BX_SER_THIS s[port].pipe &&
+            PeekNamedPipe(BX_SER_THIS s[port].pipe, NULL, 0, NULL, &avail, NULL) &&
+            avail > 0) {
+          ReadFile(BX_SER_THIS s[port].pipe, &chbuf, 1, &avail, NULL);
+          data_ready = 1;
+        }
+#endif
         break;
     }
     if (data_ready) {

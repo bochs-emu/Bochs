@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.133 2008-03-30 14:32:13 sshwarts Exp $
+// $Id: config.cc,v 1.134 2008-05-22 08:13:21 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1253,10 +1253,15 @@ void bx_init_options()
   static const char *serial_mode_list[] = {
     "null",
     "file",
+    "pipe",
+    "pipe-client",
+    "pipe-server",
     "term",
     "raw",
     "mouse",
     "socket",
+    "socket-client",
+    "socket-server",
     NULL
   };
 
@@ -1273,7 +1278,7 @@ void bx_init_options()
     enabled = new bx_param_bool_c(menu, "enabled", label, descr,
       (i==0)?1 : 0);  // only enable the first by default
     sprintf(label, "I/O mode of the serial device for COM%d", i+1);
-    sprintf(descr, "The mode can be one these: 'null', 'file', 'term', 'raw', 'mouse', 'socket'");
+    sprintf(descr, "The mode can be one these: 'null', 'file', 'pipe', 'term', 'raw', 'mouse', 'socket'");
     mode = new bx_param_enum_c(menu, "mode", label, descr,
       serial_mode_list, 0, 0);
     mode->set_ask_format("Choose I/O mode of the serial device [%s] ");

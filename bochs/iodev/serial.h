@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial.h,v 1.33 2008-01-26 22:24:02 sshwarts Exp $
+// $Id: serial.h,v 1.34 2008-05-22 08:13:22 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -75,6 +75,7 @@ extern "C" {
 #define BX_SER_MODE_RAW   3
 #define BX_SER_MODE_MOUSE 4
 #define BX_SER_MODE_SOCKET 5
+#define BX_SER_MODE_PIPE  6
 
 enum {
   BX_SER_INT_IER,
@@ -119,6 +120,9 @@ typedef struct {
   int tty_id;
   int socket_id;
   FILE *output;
+#ifdef WIN32
+  HANDLE pipe;
+#endif
 
 #if USE_RAW_SERIAL
   serial_raw* raw;
