@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.230 2008-05-10 20:39:53 sshwarts Exp $
+// $Id: bochs.h,v 1.231 2008-05-23 14:04:42 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -455,17 +455,9 @@ typedef struct {
   bx_bool a20;
   bx_bool interrupts;
   bx_bool exceptions;
-  bx_bool unsupported;
-  bx_bool temp;
-  bx_bool reset;
   bx_bool debugger;
   bx_bool mouse;
   bx_bool io;
-  bx_bool xms;
-  bx_bool v8086;
-  bx_bool paging;
-  bx_bool creg;
-  bx_bool dreg;
   bx_bool dma;
   bx_bool unsupported_io;
   bx_bool serial;

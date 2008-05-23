@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.144 2008-05-19 19:11:24 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.145 2008-05-23 14:04:43 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1255,17 +1255,9 @@ void bx_dbg_show_command(const char* arg)
       bx_dbg.a20 = 1;
       bx_dbg.interrupts = 1;
       bx_dbg.exceptions = 1;
-      bx_dbg.unsupported = 1;
-      bx_dbg.temp = 1;
-      bx_dbg.reset = 1;
       bx_dbg.mouse = 1;
       bx_dbg.io = 1;
       bx_dbg.debugger = 1;
-      bx_dbg.xms = 1;
-      bx_dbg.v8086 = 1;
-      bx_dbg.paging = 1;
-      bx_dbg.creg = 1;
-      bx_dbg.dreg = 1;
       bx_dbg.dma = 1;
       bx_dbg.unsupported_io = 1;
       /* bx_dbg.record_io = 1; this is a pointer .. somewhere */
@@ -1283,17 +1275,9 @@ void bx_dbg_show_command(const char* arg)
       bx_dbg.a20 = 0;
       bx_dbg.interrupts = 0;
       bx_dbg.exceptions = 0;
-      bx_dbg.unsupported = 0;
-      bx_dbg.temp = 0;
-      bx_dbg.reset = 0;
       bx_dbg.mouse = 0;
       bx_dbg.io = 0;
       bx_dbg.debugger = 0;
-      bx_dbg.xms = 0;
-      bx_dbg.v8086 = 0;
-      bx_dbg.paging = 0;
-      bx_dbg.creg = 0;
-      bx_dbg.dreg = 0;
       bx_dbg.dma = 0;
       bx_dbg.unsupported_io = 0;
       /* bx_dbg.record_io = 0; this is a pointer .. somewhere */

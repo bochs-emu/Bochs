@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.134 2008-05-21 21:38:59 sshwarts Exp $
+// $Id: paging.cc,v 1.135 2008-05-23 14:04:45 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -421,9 +421,6 @@ BX_CPU_C::pagingCR0Changed(Bit32u oldCR0, Bit32u newCR0)
   // WP, so if that changes we must also flush the TLB.
   if ((oldCR0 & 0x80010001) != (newCR0 & 0x80010001))
     TLB_flush(1); // 1 = Flush Global entries also.
-
-  if (bx_dbg.paging)
-    BX_INFO(("pagingCR0Changed: (0x%x -> 0x%x)", oldCR0, newCR0));
 }
 
   void BX_CPP_AttrRegparmN(2)
@@ -432,9 +429,6 @@ BX_CPU_C::pagingCR4Changed(Bit32u oldCR4, Bit32u newCR4)
   // Modification of PGE,PAE,PSE flushes TLB cache according to docs.
   if ((oldCR4 & 0x000000b0) != (newCR4 & 0x000000b0))
     TLB_flush(1); // 1 = Flush Global entries also.
-
-  if (bx_dbg.paging)
-    BX_INFO(("pagingCR4Changed: (0x%x -> 0x%x)", oldCR4, newCR4));
 
 #if BX_SUPPORT_PAE
   if ((oldCR4 & 0x00000020) != (newCR4 & 0x00000020)) {
@@ -449,11 +443,6 @@ BX_CPU_C::pagingCR4Changed(Bit32u oldCR4, Bit32u newCR4)
   void BX_CPP_AttrRegparmN(1)
 BX_CPU_C::SetCR3(bx_address val)
 {
-  if (bx_dbg.paging) {
-    BX_DEBUG(("SetCR3(): flush TLB cache"));
-    BX_DEBUG(("Page Directory Base: 0x" FMT_PHY_ADDRX, val));
-  }
-
   // flush TLB even if value does not change
   TLB_flush(0); // 0 = Don't flush Global entries.
 
