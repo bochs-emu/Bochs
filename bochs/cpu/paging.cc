@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.136 2008-05-23 17:49:46 sshwarts Exp $
+// $Id: paging.cc,v 1.137 2008-05-23 17:58:42 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1103,7 +1103,7 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned curr_pl, un
   if (tlbEntry->hostPageAddr) {
     // All access allowed also via direct pointer
 #if BX_X86_DEBUGGER
-    if (! hwbreakpoint_check(laddr, len, xlate_rw))
+    if (! hwbreakpoint_check(laddr))
 #endif
       accessBits |= (accessBits & 0xff00) >> 8;
   }
