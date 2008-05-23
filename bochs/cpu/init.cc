@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.170 2008-05-11 19:36:06 sshwarts Exp $
+// $Id: init.cc,v 1.171 2008-05-23 17:49:46 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -201,10 +201,10 @@ void BX_CPU_C::register_wx_state(void)
       DEFPARAM_NORMAL(ESI, ESI);
       DEFPARAM_NORMAL(EDI, EDI);
       DEFPARAM_NORMAL(EIP, EIP);
-      DEFPARAM_NORMAL(DR0, dr0);
-      DEFPARAM_NORMAL(DR1, dr1);
-      DEFPARAM_NORMAL(DR2, dr2);
-      DEFPARAM_NORMAL(DR3, dr3);
+      DEFPARAM_NORMAL(DR0, dr[0]);
+      DEFPARAM_NORMAL(DR1, dr[1]);
+      DEFPARAM_NORMAL(DR2, dr[2]);
+      DEFPARAM_NORMAL(DR3, dr[3]);
       DEFPARAM_NORMAL(DR6, dr6);
       DEFPARAM_NORMAL(DR7, dr7);
       DEFPARAM_NORMAL(CR0, cr0.val32);
@@ -343,10 +343,10 @@ void BX_CPU_C::register_state(void)
   BXRS_PARAM_SPECIAL32(cpu, EFLAGS,
          param_save_handler, param_restore_handler);
 #if BX_CPU_LEVEL >= 3
-  BXRS_HEX_PARAM_FIELD(cpu, DR0, dr0);
-  BXRS_HEX_PARAM_FIELD(cpu, DR1, dr1);
-  BXRS_HEX_PARAM_FIELD(cpu, DR2, dr2);
-  BXRS_HEX_PARAM_FIELD(cpu, DR3, dr3);
+  BXRS_HEX_PARAM_FIELD(cpu, DR0, dr[0]);
+  BXRS_HEX_PARAM_FIELD(cpu, DR1, dr[1]);
+  BXRS_HEX_PARAM_FIELD(cpu, DR2, dr[2]);
+  BXRS_HEX_PARAM_FIELD(cpu, DR3, dr[3]);
   BXRS_HEX_PARAM_FIELD(cpu, DR6, dr6);
   BXRS_HEX_PARAM_FIELD(cpu, DR7, dr7);
 #endif
@@ -836,10 +836,10 @@ void BX_CPU_C::reset(unsigned source)
 
   // DR0 - DR7 (Debug Registers)
 #if BX_CPU_LEVEL >= 3
-  BX_CPU_THIS_PTR dr0 = 0;   /* undefined */
-  BX_CPU_THIS_PTR dr1 = 0;   /* undefined */
-  BX_CPU_THIS_PTR dr2 = 0;   /* undefined */
-  BX_CPU_THIS_PTR dr3 = 0;   /* undefined */
+  BX_CPU_THIS_PTR dr[0] = 0;   /* undefined */
+  BX_CPU_THIS_PTR dr[1] = 0;   /* undefined */
+  BX_CPU_THIS_PTR dr[2] = 0;   /* undefined */
+  BX_CPU_THIS_PTR dr[3] = 0;   /* undefined */
 #endif
 
   BX_CPU_THIS_PTR dr7 = 0x00000400;

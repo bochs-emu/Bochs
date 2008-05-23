@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.232 2008-05-19 19:59:29 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.233 2008-05-23 17:49:46 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -251,16 +251,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_DdRd(bxInstruction_c *i)
 
   switch (i->nnn()) {
     case 0: // DR0
-      BX_CPU_THIS_PTR dr0 = val_32;
-      break;
     case 1: // DR1
-      BX_CPU_THIS_PTR dr1 = val_32;
-      break;
     case 2: // DR2
-      BX_CPU_THIS_PTR dr2 = val_32;
-      break;
     case 3: // DR3
-      BX_CPU_THIS_PTR dr3 = val_32;
+      TLB_invlpg(val_32);
+      BX_CPU_THIS_PTR dr[i->nnn()] = val_32;
       break;
 
     case 4: // DR4
@@ -360,16 +355,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RdDd(bxInstruction_c *i)
 
   switch (i->nnn()) {
     case 0: // DR0
-      val_32 = (Bit32u) BX_CPU_THIS_PTR dr0;
-      break;
     case 1: // DR1
-      val_32 = (Bit32u) BX_CPU_THIS_PTR dr1;
-      break;
     case 2: // DR2
-      val_32 = (Bit32u) BX_CPU_THIS_PTR dr2;
-      break;
     case 3: // DR3
-      val_32 = (Bit32u) BX_CPU_THIS_PTR dr3;
+      val_32 = BX_CPU_THIS_PTR dr[i->nnn()];
       break;
 
     case 4: // DR4
@@ -428,16 +417,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_DqRq(bxInstruction_c *i)
 
   switch (i->nnn()) {
     case 0: // DR0
-      BX_CPU_THIS_PTR dr0 = val_64;
-      break;
     case 1: // DR1
-      BX_CPU_THIS_PTR dr1 = val_64;
-      break;
     case 2: // DR2
-      BX_CPU_THIS_PTR dr2 = val_64;
-      break;
     case 3: // DR3
-      BX_CPU_THIS_PTR dr3 = val_64;
+      TLB_invlpg(val_64);
+      BX_CPU_THIS_PTR dr[i->nnn()] = val_64;
       break;
 
     case 4: // DR4
@@ -527,16 +511,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RqDq(bxInstruction_c *i)
 
   switch (i->nnn()) {
     case 0: // DR0
-      val_64 = BX_CPU_THIS_PTR dr0;
-      break;
     case 1: // DR1
-      val_64 = BX_CPU_THIS_PTR dr1;
-      break;
     case 2: // DR2
-      val_64 = BX_CPU_THIS_PTR dr2;
-      break;
     case 3: // DR3
-      val_64 = BX_CPU_THIS_PTR dr3;
+      val_64 = BX_CPU_THIS_PTR dr[i->nnn()];
       break;
 
     case 4: // DR4
@@ -2509,6 +2487,18 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SWAPGS(bxInstruction_c *i)
 #endif
 
 #if BX_X86_DEBUGGER
+bx_bool BX_CPU_C::hwbreakpoint_check(bx_address laddr)
+{
+  laddr = LPFOf(laddr);
+
+  for (int i=0;i<4;i++) {
+    if (laddr == LPFOf(BX_CPU_THIS_PTR dr[i]))
+      return 1;
+  }
+
+  return 0;
+}
+
 void BX_CPU_C::hwbreakpoint_match(bx_address laddr, unsigned len, unsigned rw)
 {
   if (BX_CPU_THIS_PTR dr7 & 0x000000ff) {
@@ -2544,10 +2534,10 @@ Bit32u BX_CPU_C::hwdebug_compare(bx_address laddr_0, unsigned size,
   Bit32u len2 = (dr7>>26) & 3;
   Bit32u len3 = (dr7>>30) & 3;
 
-  bx_address dr0 = (BX_CPU_THIS_PTR dr0) & ~(alignment_mask[len0]);
-  bx_address dr1 = (BX_CPU_THIS_PTR dr1) & ~(alignment_mask[len1]);
-  bx_address dr2 = (BX_CPU_THIS_PTR dr2) & ~(alignment_mask[len2]);
-  bx_address dr3 = (BX_CPU_THIS_PTR dr3) & ~(alignment_mask[len3]);
+  bx_address dr0 = (BX_CPU_THIS_PTR dr[0]) & ~(alignment_mask[len0]);
+  bx_address dr1 = (BX_CPU_THIS_PTR dr[1]) & ~(alignment_mask[len1]);
+  bx_address dr2 = (BX_CPU_THIS_PTR dr[2]) & ~(alignment_mask[len2]);
+  bx_address dr3 = (BX_CPU_THIS_PTR dr[3]) & ~(alignment_mask[len3]);
 
   bx_address dr0_n = dr0 + len0;
   bx_address dr1_n = dr1 + len1;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.479 2008-05-19 18:10:32 sshwarts Exp $
+// $Id: cpu.h,v 1.480 2008-05-23 17:49:46 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -790,10 +790,7 @@ public: // for now...
 
   /* debug registers DR0-DR7 */
 #if BX_CPU_LEVEL >= 3
-  bx_address dr0;
-  bx_address dr1;
-  bx_address dr2;
-  bx_address dr3;
+  bx_address dr[4]; /* DR0-DR3 */
   Bit32u     dr6;
   Bit32u     dr7;
 #endif
@@ -3057,8 +3054,9 @@ public: // for now...
 
 #if BX_X86_DEBUGGER
   // x86 hardware debug support
-  BX_SMF void   hwbreakpoint_match(bx_address laddr, unsigned len, unsigned rw);
-  BX_SMF Bit32u hwdebug_compare(bx_address laddr, unsigned len,
+  BX_SMF bx_bool hwbreakpoint_check(bx_address laddr);
+  BX_SMF void    hwbreakpoint_match(bx_address laddr, unsigned len, unsigned rw);
+  BX_SMF Bit32u  hwdebug_compare(bx_address laddr, unsigned len,
                                  unsigned opa, unsigned opb);
 #endif
 
