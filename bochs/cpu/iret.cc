@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: iret.cc,v 1.36 2008-05-20 22:15:16 sshwarts Exp $
+// $Id: iret.cc,v 1.37 2008-05-23 13:46:52 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005 Stanislav Shwartsman
@@ -289,26 +289,24 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
       new_eip    = read_virtual_word(BX_SEG_REG_SS, temp_ESP + 0);
     }
 
-    Bit8u prev_cpl = CPL; /* previous CPL */
-
-    /* load CS:EIP from stack */
-    /* load the CS-cache with CS descriptor */
-    /* set CPL to the RPL of the return CS selector */
-    branch_far32(&cs_selector, &cs_descriptor, new_eip, cs_selector.rpl);
-
     // ID,VIP,VIF,AC,VM,RF,x,NT,IOPL,OF,DF,IF,TF,SF,ZF,x,AF,x,PF,x,CF
     Bit32u changeMask = EFlagsOSZAPCMask | EFlagsTFMask |
                             EFlagsDFMask | EFlagsNTMask | EFlagsRFMask;
 #if BX_CPU_LEVEL >= 4
     changeMask |= (EFlagsIDMask | EFlagsACMask);  // ID/AC
 #endif
-    if (prev_cpl <= BX_CPU_THIS_PTR get_IOPL())
+    if (CPL <= BX_CPU_THIS_PTR get_IOPL())
       changeMask |= EFlagsIFMask;
-    if (prev_cpl == 0)
+    if (CPL == 0)
       changeMask |= EFlagsVIPMask | EFlagsVIFMask | EFlagsIOPLMask;
 
-    if (! cs_descriptor.u.segment.d_b) // 16 bit
+    if (! i->os32L()) // 16 bit
       changeMask &= 0xffff;
+
+    /* load CS:EIP from stack */
+    /* load the CS-cache with CS descriptor */
+    /* set CPL to the RPL of the return CS selector */
+    branch_far32(&cs_selector, &cs_descriptor, new_eip, cs_selector.rpl);
 
     // IF only changed if (prev_CPL <= EFLAGS.IOPL)
     // VIF, VIP, IOPL only changed if prev_CPL == 0
@@ -428,6 +426,9 @@ BX_CPU_C::long_iret(bxInstruction_c *i)
     if (CPL == 0)
       changeMask |= EFlagsVIPMask | EFlagsVIFMask | EFlagsIOPLMask;
 
+    if (! i->os32L()) // 16 bit
+      changeMask &= 0xffff;
+
     // IF only changed if (CPL <= EFLAGS.IOPL)
     // VIF, VIP, IOPL only changed if CPL == 0
     // VM unaffected
@@ -515,9 +516,6 @@ BX_CPU_C::long_iret(bxInstruction_c *i)
 
     Bit8u prev_cpl = CPL; /* previous CPL */
 
-    /* set CPL to the RPL of the return CS selector */
-    branch_far64(&cs_selector, &cs_descriptor, new_rip, cs_selector.rpl);
-
     // ID,VIP,VIF,AC,VM,RF,x,NT,IOPL,OF,DF,IF,TF,SF,ZF,x,AF,x,PF,x,CF
     Bit32u changeMask = EFlagsOSZAPCMask | EFlagsTFMask | EFlagsDFMask |
                             EFlagsNTMask | EFlagsRFMask | EFlagsIDMask | EFlagsACMask;
@@ -526,8 +524,11 @@ BX_CPU_C::long_iret(bxInstruction_c *i)
     if (prev_cpl == 0)
       changeMask |= EFlagsVIPMask | EFlagsVIFMask | EFlagsIOPLMask;
 
-    if (! cs_descriptor.u.segment.d_b) // 16 bit
+    if (! i->os32L()) // 16 bit
       changeMask &= 0xffff;
+
+    /* set CPL to the RPL of the return CS selector */
+    branch_far64(&cs_selector, &cs_descriptor, new_rip, cs_selector.rpl);
 
     // IF only changed if (prev_CPL <= EFLAGS.IOPL)
     // VIF, VIP, IOPL only changed if prev_CPL == 0
