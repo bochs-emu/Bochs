@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: mult64.cc,v 1.29 2008-05-10 18:10:53 sshwarts Exp $
+// $Id: mult64.cc,v 1.30 2008-05-24 10:26:03 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -344,12 +344,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::IDIV_RAXEq(bxInstruction_c *i)
     exception(BX_DE_EXCEPTION, 0, 0);
   }
 
-  /* check MIN_INT divided by -1 case */
-  if (op2_64 == -1)
-  {
-    if ((op1_128.hi == (Bit64s) BX_CONST64(0x8000000000000000)) && (!op1_128.lo))
-      exception(BX_DE_EXCEPTION, 0, 0);
-  }
+  /* check MIN_INT case */
+  if ((op1_128.hi == (Bit64s) BX_CONST64(0x8000000000000000)) && (!op1_128.lo))
+    exception(BX_DE_EXCEPTION, 0, 0);
 
   // quotient_128 = op1_128 / op2_64;
   // remainder_64 = (Bit64s) (op1_128 % op2_64);

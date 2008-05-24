@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: mult8.cc,v 1.28 2008-03-22 21:29:40 sshwarts Exp $
+// $Id: mult8.cc,v 1.29 2008-05-24 10:26:03 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -151,8 +151,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::IDIV_ALEb(bxInstruction_c *i)
   if (op2 == 0)
     exception(BX_DE_EXCEPTION, 0, 0);
 
-  /* check MIN_INT divided by -1 case */
-  if ((op1 == ((Bit16s)0x8000)) && (op2 == -1))
+  /* check MIN_INT case */
+  if (op1 == ((Bit16s)0x8000))
     exception(BX_DE_EXCEPTION, 0, 0);
 
   quotient_16 = op1 / op2;
