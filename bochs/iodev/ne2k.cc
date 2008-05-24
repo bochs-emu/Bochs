@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ne2k.cc,v 1.97 2008-02-15 22:05:43 sshwarts Exp $
+// $Id: ne2k.cc,v 1.98 2008-05-24 06:53:05 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -907,6 +907,15 @@ void bx_ne2k_c::page1_write(Bit32u offset, Bit32u value, unsigned io_len)
   case 0x5:
   case 0x6:
     BX_NE2K_THIS s.physaddr[offset - 1] = value;
+    if (offset == 6) {
+      BX_INFO(("Physical address set to %02x:%02x:%02x:%02x:%02x:%02x",
+               BX_NE2K_THIS s.physaddr[0],
+               BX_NE2K_THIS s.physaddr[1],
+               BX_NE2K_THIS s.physaddr[2],
+               BX_NE2K_THIS s.physaddr[3],
+               BX_NE2K_THIS s.physaddr[4],
+               BX_NE2K_THIS s.physaddr[5]));
+    }
     break;
 
   case 0x7:  // CURR
@@ -1400,13 +1409,14 @@ void bx_ne2k_c::rx_frame(const void *buf, unsigned io_len)
 void bx_ne2k_c::init(void)
 {
   char devname[16];
+  Bit8u macaddr[6];
   bx_list_c *base;
 
-  BX_DEBUG(("Init $Id: ne2k.cc,v 1.97 2008-02-15 22:05:43 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: ne2k.cc,v 1.98 2008-05-24 06:53:05 vruppert Exp $"));
 
   // Read in values from config interface
   base = (bx_list_c*) SIM->get_param(BXPN_NE2K);
-  memcpy(BX_NE2K_THIS s.physaddr, SIM->get_param_string("macaddr", base)->getptr(), 6);
+  memcpy(macaddr, SIM->get_param_string("macaddr", base)->getptr(), 6);
   BX_NE2K_THIS s.pci_enabled = 0;
   strcpy(devname, "NE2000 NIC");
 
@@ -1472,36 +1482,30 @@ void bx_ne2k_c::init(void)
     BX_INFO(("port 0x%x/32 irq %d mac %02x:%02x:%02x:%02x:%02x:%02x",
              BX_NE2K_THIS s.base_address,
              BX_NE2K_THIS s.base_irq,
-             BX_NE2K_THIS s.physaddr[0],
-             BX_NE2K_THIS s.physaddr[1],
-             BX_NE2K_THIS s.physaddr[2],
-             BX_NE2K_THIS s.physaddr[3],
-             BX_NE2K_THIS s.physaddr[4],
-             BX_NE2K_THIS s.physaddr[5]));
+             macaddr[0], macaddr[1],
+             macaddr[2], macaddr[3],
+             macaddr[4], macaddr[5]));
   } else {
     BX_INFO(("%s initialized mac %02x:%02x:%02x:%02x:%02x:%02x",
              devname,
-             BX_NE2K_THIS s.physaddr[0],
-             BX_NE2K_THIS s.physaddr[1],
-             BX_NE2K_THIS s.physaddr[2],
-             BX_NE2K_THIS s.physaddr[3],
-             BX_NE2K_THIS s.physaddr[4],
-             BX_NE2K_THIS s.physaddr[5]));
+             macaddr[0], macaddr[1],
+             macaddr[2], macaddr[3],
+             macaddr[4], macaddr[5]));
   }
 
   // Initialise the mac address area by doubling the physical address
-  BX_NE2K_THIS s.macaddr[0]  = BX_NE2K_THIS s.physaddr[0];
-  BX_NE2K_THIS s.macaddr[1]  = BX_NE2K_THIS s.physaddr[0];
-  BX_NE2K_THIS s.macaddr[2]  = BX_NE2K_THIS s.physaddr[1];
-  BX_NE2K_THIS s.macaddr[3]  = BX_NE2K_THIS s.physaddr[1];
-  BX_NE2K_THIS s.macaddr[4]  = BX_NE2K_THIS s.physaddr[2];
-  BX_NE2K_THIS s.macaddr[5]  = BX_NE2K_THIS s.physaddr[2];
-  BX_NE2K_THIS s.macaddr[6]  = BX_NE2K_THIS s.physaddr[3];
-  BX_NE2K_THIS s.macaddr[7]  = BX_NE2K_THIS s.physaddr[3];
-  BX_NE2K_THIS s.macaddr[8]  = BX_NE2K_THIS s.physaddr[4];
-  BX_NE2K_THIS s.macaddr[9]  = BX_NE2K_THIS s.physaddr[4];
-  BX_NE2K_THIS s.macaddr[10] = BX_NE2K_THIS s.physaddr[5];
-  BX_NE2K_THIS s.macaddr[11] = BX_NE2K_THIS s.physaddr[5];
+  BX_NE2K_THIS s.macaddr[0]  = macaddr[0];
+  BX_NE2K_THIS s.macaddr[1]  = macaddr[0];
+  BX_NE2K_THIS s.macaddr[2]  = macaddr[1];
+  BX_NE2K_THIS s.macaddr[3]  = macaddr[1];
+  BX_NE2K_THIS s.macaddr[4]  = macaddr[2];
+  BX_NE2K_THIS s.macaddr[5]  = macaddr[2];
+  BX_NE2K_THIS s.macaddr[6]  = macaddr[3];
+  BX_NE2K_THIS s.macaddr[7]  = macaddr[3];
+  BX_NE2K_THIS s.macaddr[8]  = macaddr[4];
+  BX_NE2K_THIS s.macaddr[9]  = macaddr[4];
+  BX_NE2K_THIS s.macaddr[10] = macaddr[5];
+  BX_NE2K_THIS s.macaddr[11] = macaddr[5];
 
   // ne2k signature
   for (int i = 12; i < 32; i++)
