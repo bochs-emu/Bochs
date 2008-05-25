@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.134 2008-05-22 08:13:21 vruppert Exp $
+// $Id: config.cc,v 1.135 2008-05-25 06:25:44 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -136,7 +136,19 @@ static Bit64s bx_param_handler(bx_param_c *param, int set, Bit64s val)
           val = get_floppy_type_from_image(SIM->get_param_string(BXPN_FLOPPYA_PATH)->getptr());
           SIM->get_param_enum(BXPN_FLOPPYA_TYPE)->set(val);
         } else if (!SIM->get_init_done()) {
-          SIM->get_param_enum(BXPN_FLOPPYA_DEVTYPE)->set(val);
+          switch (val) {
+            case BX_FLOPPY_1_2:
+            case BX_FLOPPY_1_44:
+            case BX_FLOPPY_2_88:
+              device = val;
+              break;
+            case BX_FLOPPY_720K:
+              device = BX_FLOPPY_1_44;
+              break;
+            default:
+              device = BX_FLOPPY_1_2;
+          }
+          SIM->get_param_enum(BXPN_FLOPPYA_DEVTYPE)->set(device);
         }
       }
     } else if (!strcmp(pname, BXPN_FLOPPYB_TYPE)) {
@@ -145,7 +157,19 @@ static Bit64s bx_param_handler(bx_param_c *param, int set, Bit64s val)
           val = get_floppy_type_from_image(SIM->get_param_string(BXPN_FLOPPYB_PATH)->getptr());
           SIM->get_param_enum(BXPN_FLOPPYB_TYPE)->set(val);
         } else if (!SIM->get_init_done()) {
-          SIM->get_param_enum(BXPN_FLOPPYB_DEVTYPE)->set(val);
+          switch (val) {
+            case BX_FLOPPY_1_2:
+            case BX_FLOPPY_1_44:
+            case BX_FLOPPY_2_88:
+              device = val;
+              break;
+            case BX_FLOPPY_720K:
+              device = BX_FLOPPY_1_44;
+              break;
+            default:
+              device = BX_FLOPPY_1_2;
+          }
+          SIM->get_param_enum(BXPN_FLOPPYB_DEVTYPE)->set(device);
         }
       }
     } else if (!strcmp(pname, BXPN_FLOPPYA_STATUS)) {
