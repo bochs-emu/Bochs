@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: x.cc,v 1.115 2008-05-18 08:52:48 vruppert Exp $
+// $Id: x.cc,v 1.116 2008-05-25 12:28:27 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -2376,6 +2376,130 @@ int x11_string_dialog(bx_param_string_c *param, bx_param_enum_c *param2)
   return control;
 }
 
+int x11_yesno_dialog(bx_param_bool_c *param)
+{
+  x11_dialog_t xdlg;
+  x11_control_t xbtn_yes, xbtn_no;
+  XEvent xevent;
+  KeySym key;
+  int button_x[2], size_x, size_y;
+  int valid = 0, oldctrl = -1;
+  int control, done, i, ypos;
+  unsigned int cpos1, cpos2, len, maxlen, lines;
+  char name[80], text[10], message[512];
+
+  if (param->get_label() != NULL) {
+    strcpy(name, param->get_label());
+  } else {
+    strcpy(name, param->get_name());
+  }
+  strcpy(message, param->get_description());
+  cpos1 = 0;
+  cpos2 = 0;
+  ypos = 34;
+  lines = 0;
+  maxlen = 0;
+  while (cpos2 < strlen(message)) {
+    lines++;
+    while ((cpos2 < strlen(message)) && (message[cpos2] != 0x0a)) cpos2++;
+    len = cpos2 - cpos1;
+    if (len > maxlen) maxlen = len;
+    cpos1 = cpos2 + 1;
+    cpos2++;
+  }
+  if (maxlen < 36) {
+    size_x = 250;
+    button_x[0] = 55;
+    button_x[1] = 130;
+  } else {
+    size_x = 10 + maxlen * 7;
+    button_x[0] = (size_x / 2) - 70;
+    button_x[1] = (size_x / 2) + 5;
+  }
+  if (lines < 3) {
+    size_y = 90;
+  } else {
+    size_y = 60 + lines * 15;
+  }
+  control = 1 - param->get();
+  x11_create_dialog(&xdlg, name, size_x, size_y);
+  done = 0;
+  while (!done) {
+    XNextEvent(bx_x_display, &xevent);
+    switch (xevent.type) {
+      case Expose:
+        if (xevent.xexpose.count == 0) {
+          cpos1 = 0;
+          cpos2 = 0;
+          ypos = 34;
+          while (cpos2 < strlen(message)) {
+            while ((cpos2 < strlen(message)) && (message[cpos2] != 0x0a)) cpos2++;
+            len = cpos2 - cpos1;
+            XDrawImageString(bx_x_display, xdlg.dialog,
+                             xdlg.gc, 20, ypos, message+cpos1, len);
+            cpos1 = cpos2 + 1;
+            cpos2++;
+            ypos += 15;
+          }
+          x11_create_button(&xbtn_yes, xevent.xexpose.display, &xdlg, button_x[0], size_y - 30, 65, 20,
+                            "Yes");
+          x11_create_button(&xbtn_no, xevent.xexpose.display, &xdlg, button_x[1], size_y - 30, 65, 20,
+                            "No");
+          oldctrl = control - 1;
+          if (oldctrl < 0) oldctrl = 1;
+        }
+        break;
+      case ButtonPress:
+        if (xevent.xbutton.button == Button1) {
+          if (x11_test_control(&xbtn_yes, &xevent.xbutton)) {
+            control = 0;
+            valid = 1;
+          } else if (x11_test_control(&xbtn_no, &xevent.xbutton)) {
+            control = 1;
+            valid = 1;
+          }
+        }
+        break;
+      case ButtonRelease:
+        if ((xevent.xbutton.button == Button1) && (valid == 1)) {
+          done = 1;
+        }
+        break;
+      case KeyPress:
+        i = XLookupString((XKeyEvent *)&xevent, text, 10, &key, 0);
+        if (key == XK_Tab) {
+          control++;
+          if (control > 1) control = 0;
+        } else if (key == XK_Escape) {
+          control = 1;
+          done = 1;
+        } else if ((key == XK_space) || (key == XK_Return)) {
+          done = 1;
+        }
+        break;
+      case ClientMessage:
+        if (!strcmp(XGetAtomName(bx_x_display, xevent.xclient.message_type), "WM_PROTOCOLS")) {
+          control = 1;
+          done = 1;
+        }
+        break;
+      case LeaveNotify:
+        valid = 0;
+        break;
+    }
+    if (control != oldctrl) {
+      XDrawRectangle(bx_x_display, xdlg.dialog, xdlg.gc_inv, button_x[oldctrl] - 2, size_y - 32, 69, 24);
+      XDrawRectangle(bx_x_display, xdlg.dialog, xdlg.gc, button_x[control] - 2, size_y - 32, 69, 24);
+      oldctrl = control;
+    }
+  }
+  param->set(1 - control);
+  XFreeGC(bx_x_display, xdlg.gc);
+  XFreeGC(bx_x_display, xdlg.gc_inv);
+  XDestroyWindow(bx_x_display, xdlg.dialog);
+  return control;
+}
+
 BxEvent *x11_notify_callback (void *unused, BxEvent *event)
 {
   int opts;
@@ -2397,7 +2521,8 @@ BxEvent *x11_notify_callback (void *unused, BxEvent *event)
         if ((opts & sparam->IS_FILENAME) == 0) {
           event->retcode = x11_string_dialog(sparam, NULL);
           return event;
-        } else if (opts & sparam->SAVE_FILE_DIALOG) {
+        } else if ((opts & sparam->SAVE_FILE_DIALOG) ||
+                   (opts & sparam->SELECT_FOLDER_DLG)) {
           event->retcode = x11_string_dialog(sparam, NULL);
           return event;
         }
@@ -2406,6 +2531,9 @@ BxEvent *x11_notify_callback (void *unused, BxEvent *event)
         sparam = (bx_param_string_c *)list->get_by_name("path");
         eparam = (bx_param_enum_c *)list->get_by_name("status");
         event->retcode = x11_string_dialog(sparam, eparam);
+        return event;
+      } else if (param->get_type() == BXT_PARAM_BOOL) {
+        event->retcode = x11_yesno_dialog((bx_param_bool_c *)param);
         return event;
       }
     case BX_SYNC_EVT_TICK: // called periodically by siminterface.
