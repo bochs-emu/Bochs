@@ -476,6 +476,42 @@ static BxDisasmOpcodeTable_t BxDisasmGroupSSE_0f3841[4] = {
   /* F3 */ { 0, &Ia_Invalid }
 };
 
+static BxDisasmOpcodeTable_t BxDisasmGroupSSE_0f38db[4] = {
+  /* -- */ { 0, &Ia_Invalid },
+  /* 66 */ { 0, &Ia_aesimc_Vdq_Wdq },   // AES
+  /* F2 */ { 0, &Ia_Invalid },
+  /* F3 */ { 0, &Ia_Invalid }
+};
+
+static BxDisasmOpcodeTable_t BxDisasmGroupSSE_0f38dc[4] = {
+  /* -- */ { 0, &Ia_Invalid },
+  /* 66 */ { 0, &Ia_aesenc_Vdq_Wdq },   // AES
+  /* F2 */ { 0, &Ia_Invalid },
+  /* F3 */ { 0, &Ia_Invalid }
+};
+
+static BxDisasmOpcodeTable_t BxDisasmGroupSSE_0f38dd[4] = {
+  /* -- */ { 0, &Ia_Invalid },          // AES
+  /* 66 */ { 0, &Ia_aesenclast_Vdq_Wdq },
+  /* F2 */ { 0, &Ia_Invalid },
+  /* F3 */ { 0, &Ia_Invalid }
+};
+
+static BxDisasmOpcodeTable_t BxDisasmGroupSSE_0f38de[4] = {
+  /* -- */ { 0, &Ia_Invalid },
+  /* 66 */ { 0, &Ia_aesdec_Vdq_Wdq  },  // AES
+  /* F2 */ { 0, &Ia_Invalid },
+  /* F3 */ { 0, &Ia_Invalid }
+};
+
+
+static BxDisasmOpcodeTable_t BxDisasmGroupSSE_0f38df[4] = {
+  /* -- */ { 0, &Ia_Invalid },          // AES
+  /* 66 */ { 0, &Ia_aesdeclast_Vdq_Wdq },
+  /* F2 */ { 0, &Ia_Invalid },
+  /* F3 */ { 0, &Ia_Invalid }
+};
+
 static BxDisasmOpcodeTable_t BxDisasmGroupSSE_0f38f0[4] = {
   /* -- */ { 0, &Ia_Invalid },
   /* 66 */ { 0, &Ia_Invalid },
@@ -658,6 +694,13 @@ static BxDisasmOpcodeTable_t BxDisasmGroupSSE_0f3a62[4] = {
 static BxDisasmOpcodeTable_t BxDisasmGroupSSE_0f3a63[4] = {
   /* -- */ { 0, &Ia_Invalid },          // SSE4.2
   /* 66 */ { 0, &Ia_pcmpistri_Vdq_Wdq_Ib },
+  /* F2 */ { 0, &Ia_Invalid },
+  /* F3 */ { 0, &Ia_Invalid }
+};
+
+static BxDisasmOpcodeTable_t BxDisasmGroupSSE_0f3adf[4] = {
+  /* -- */ { 0, &Ia_Invalid },            // AES
+  /* 66 */ { 0, &Ia_aeskeygenassist_Vdq_Wdq_Ib },
   /* F2 */ { 0, &Ia_Invalid },
   /* F3 */ { 0, &Ia_Invalid }
 };
@@ -3194,11 +3237,11 @@ static BxDisasmOpcodeTable_t BxDisasm3ByteOpTable0f38[256] = {
   /* D8 */ { 0, &Ia_Invalid },
   /* D9 */ { 0, &Ia_Invalid },
   /* DA */ { 0, &Ia_Invalid },
-  /* DB */ { 0, &Ia_Invalid },
-  /* DC */ { 0, &Ia_Invalid },
-  /* DD */ { 0, &Ia_Invalid },
-  /* DE */ { 0, &Ia_Invalid },
-  /* DF */ { 0, &Ia_Invalid },
+  /* DB */ { GRPSSE(0f38db) },
+  /* DC */ { GRPSSE(0f38dc) },
+  /* DD */ { GRPSSE(0f38dd) },
+  /* DE */ { GRPSSE(0f38de) },
+  /* DF */ { GRPSSE(0f38df) },
   /* E0 */ { 0, &Ia_Invalid },
   /* E1 */ { 0, &Ia_Invalid },
   /* E2 */ { 0, &Ia_Invalid },
@@ -3459,7 +3502,7 @@ static BxDisasmOpcodeTable_t BxDisasm3ByteOpTable0f3a[256] = {
   /* DC */ { 0, &Ia_Invalid },
   /* DD */ { 0, &Ia_Invalid },
   /* DE */ { 0, &Ia_Invalid },
-  /* DF */ { 0, &Ia_Invalid },
+  /* DF */ { GRPSSE(0f3adf) },
   /* E0 */ { 0, &Ia_Invalid },
   /* E1 */ { 0, &Ia_Invalid },
   /* E2 */ { 0, &Ia_Invalid },

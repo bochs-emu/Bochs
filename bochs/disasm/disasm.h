@@ -18,32 +18,32 @@
 /* Instruction set attributes */
 #define IA_386              0x00000000        /* 386 instruction */
 #define IA_486              0x00000001        /* 486 new instruction */
-#define IA_PENTIUM          0x00000002        /* Pentium+ mew instruction */
+#define IA_PENTIUM          0x00000002        /* Pentium new instruction */
 #define IA_P6               0x00000004        /* P6 new instruction */
-#define IA_LEGACY           0x00000008        /* legacy instruction */
-#define IA_X87              0x00000010        /* FPU (X87) instruction */
-#define IA_MMX              0x00000020        /* MMX instruction */
-#define IA_3DNOW            0x00000040        /* 3DNow! instruction */
-#define IA_3DNOW_EXT        0x00000080        /* 3DNow! extensions */
-#define IA_MONITOR_MWAIT    0x00000100        /* MONITOR/MWAIT instruction */
-#define IA_CLFLUSH          0x00000200        /* CLFLUSH instruction */
-#define IA_SSE              0x00000400        /* SSE  instruction */
-#define IA_SSE2             0x00000800        /* SSE2 instruction */
-#define IA_SSE3             0x00001000        /* SSE3 instruction */
-#define IA_SSE3E            0x00002000        /* SSE3E instruction */
-#define IA_SSE4_1           0x00004000        /* SSE4_1 instruction */
-#define IA_SSE4_2           0x00008000        /* SSE4_2 instruction */
-#define IA_SSE4A            0x00010000        /* SSE4A instruction */
-#define IA_SSE5A            0x00020000        /* SSE5A instruction */
-#define IA_X86_64           0x00040000        /* x86-64 instruction */
-#define IA_SYSCALL_SYSRET   0x00080000        /* SYSCALL/SYSRET instruction */
-#define IA_SYSENTER_SYSEXIT 0x00100000        /* SYSENTER/SYSEXIT instruction */
-#define IA_VMX              0x00200000        /* VMX instruction */
-#define IA_SMX              0x00400000        /* SMX instruction */
-#define IA_SVM              0x00800000        /* SVM instruction */
-#define IA_XSAVE            0x01000000        /* XSAVE/XRSTOR extensions instruction */
-#define IA_AES              0x02000000        /* AES instruction */
-#define IA_AVX              0x04000000        /* AVX instruction */
+#define IA_X87              0x00000008        /* FPU (X87) instruction */
+#define IA_MMX              0x00000010        /* MMX instruction */
+#define IA_3DNOW            0x00000020        /* 3DNow! instruction */
+#define IA_3DNOW_EXT        0x00000040        /* 3DNow! extensions */
+#define IA_MONITOR_MWAIT    0x00000080        /* MONITOR/MWAIT instruction */
+#define IA_CLFLUSH          0x00000100        /* CLFLUSH instruction */
+#define IA_SSE              0x00000200        /* SSE  instruction */
+#define IA_SSE2             0x00000400        /* SSE2 instruction */
+#define IA_SSE3             0x00000800        /* SSE3 instruction */
+#define IA_SSE3E            0x00001000        /* SSE3E instruction */
+#define IA_SSE4_1           0x00002000        /* SSE4_1 instruction */
+#define IA_SSE4_2           0x00004000        /* SSE4_2 instruction */
+#define IA_SSE4A            0x00008000        /* SSE4A instruction */
+#define IA_SSE5A            0x00010000        /* SSE5A instruction */
+#define IA_X86_64           0x00020000        /* x86-64 instruction */
+#define IA_SYSCALL_SYSRET   0x00040000        /* SYSCALL/SYSRET instruction */
+#define IA_SYSENTER_SYSEXIT 0x00080000        /* SYSENTER/SYSEXIT instruction */
+#define IA_VMX              0x00100000        /* VMX instruction */
+#define IA_SMX              0x00200000        /* SMX instruction */
+#define IA_SVM              0x00400000        /* SVM instruction */
+#define IA_XSAVE            0x00800000        /* XSAVE/XRSTOR extensions instruction */
+#define IA_AES              0x01000000        /* AES instruction */
+#define IA_AVX              0x02000000        /* AVX instruction */
+#define IA_LEGACY           0x40000000        /* legacy instruction */
 #define IA_UNDOCUMENTED     0x80000000        /* instruction undocumented */
 
 /* general purpose bit register */
