@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: jmp_far.cc,v 1.15 2008-05-09 18:09:04 sshwarts Exp $
+// $Id: jmp_far.cc,v 1.16 2008-05-25 15:53:29 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005 Stanislav Shwartsman
@@ -244,7 +244,7 @@ BX_CPU_C::jmp_call_gate64(bx_selector_t *gate_selector)
 
   BX_DEBUG(("jmp_call_gate64: jump to CALL GATE 64"));
 
-  fetch_raw_descriptor64(gate_selector, &dword1, &dword2, &dword3, BX_GP_EXCEPTION);
+  fetch_raw_descriptor_64(gate_selector, &dword1, &dword2, &dword3, BX_GP_EXCEPTION);
   parse_descriptor(dword1, dword2, &gate_descriptor);
 
   Bit16u dest_selector = gate_descriptor.u.gate.dest_selector;

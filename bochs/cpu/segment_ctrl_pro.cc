@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: segment_ctrl_pro.cc,v 1.93 2008-05-12 19:19:03 sshwarts Exp $
+// $Id: segment_ctrl_pro.cc,v 1.94 2008-05-25 15:53:29 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -722,7 +722,7 @@ BX_CPU_C::fetch_raw_descriptor2(const bx_selector_t *selector, Bit32u *dword1, B
 }
 
 #if BX_SUPPORT_X86_64
-void BX_CPU_C::fetch_raw_descriptor64(const bx_selector_t *selector,
+void BX_CPU_C::fetch_raw_descriptor_64(const bx_selector_t *selector,
            Bit32u *dword1, Bit32u *dword2, Bit32u *dword3, unsigned exception_no)
 {
   Bit32u index = selector->index;
@@ -731,7 +731,7 @@ void BX_CPU_C::fetch_raw_descriptor64(const bx_selector_t *selector,
 
   if (selector->ti == 0) { /* GDT */
     if ((index*8 + 15) > BX_CPU_THIS_PTR gdtr.limit) {
-      BX_ERROR(("fetch_raw_descriptor64: GDT: index (%x)%x > limit (%x)",
+      BX_ERROR(("fetch_raw_descriptor_64: GDT: index (%x)%x > limit (%x)",
          index*8 + 15, index, BX_CPU_THIS_PTR gdtr.limit));
       exception(exception_no, selector->value & 0xfffc, 0);
     }
@@ -739,11 +739,11 @@ void BX_CPU_C::fetch_raw_descriptor64(const bx_selector_t *selector,
   }
   else { /* LDT */
     if (BX_CPU_THIS_PTR ldtr.cache.valid==0) {
-      BX_ERROR(("fetch_raw_descriptor64: LDTR.valid=0"));
+      BX_ERROR(("fetch_raw_descriptor_64: LDTR.valid=0"));
       exception(exception_no, selector->value & 0xfffc, 0);
     }
     if ((index*8 + 15) > BX_CPU_THIS_PTR ldtr.cache.u.system.limit_scaled) {
-      BX_ERROR(("fetch_raw_descriptor64: LDT: index (%x)%x > limit (%x)",
+      BX_ERROR(("fetch_raw_descriptor_64: LDT: index (%x)%x > limit (%x)",
          index*8 + 15, index, BX_CPU_THIS_PTR ldtr.cache.u.system.limit_scaled));
       exception(exception_no, selector->value & 0xfffc, 0);
     }
@@ -754,13 +754,50 @@ void BX_CPU_C::fetch_raw_descriptor64(const bx_selector_t *selector,
   access_read_linear(offset +  8, 8, 0, BX_READ, &raw_descriptor2);
 
   if (raw_descriptor2 & BX_CONST64(0x00001f0000000000)) {
-    BX_ERROR(("fetch_raw_descriptor64: extended attributes DWORD4 TYPE != 0"));
+    BX_ERROR(("fetch_raw_descriptor_64: extended attributes DWORD4 TYPE != 0"));
     exception(BX_GP_EXCEPTION, selector->value & 0xfffc, 0);
   }
 
   *dword1 = GET32L(raw_descriptor1);
   *dword2 = GET32H(raw_descriptor1);
   *dword3 = GET32L(raw_descriptor2);
+}
+
+bx_bool BX_CPU_C::fetch_raw_descriptor2_64(const bx_selector_t *selector,
+           Bit32u *dword1, Bit32u *dword2, Bit32u *dword3)
+{
+  Bit32u index = selector->index;
+  bx_address offset;
+  Bit64u raw_descriptor1, raw_descriptor2;
+
+  if (selector->ti == 0) { /* GDT */
+    if ((index*8 + 15) > BX_CPU_THIS_PTR gdtr.limit) {
+      return 0;
+    }
+    offset = BX_CPU_THIS_PTR gdtr.base + index*8;
+  }
+  else { /* LDT */
+    if (BX_CPU_THIS_PTR ldtr.cache.valid==0) {
+      BX_ERROR(("fetch_raw_descriptor2_64: LDTR.valid=0"));
+      return 0;
+    }
+    if ((index*8 + 15) > BX_CPU_THIS_PTR ldtr.cache.u.system.limit_scaled)
+      return 0;
+
+    offset = BX_CPU_THIS_PTR ldtr.cache.u.system.base + index*8;
+  }
+
+  access_read_linear(offset,      8, 0, BX_READ, &raw_descriptor1);
+  access_read_linear(offset +  8, 8, 0, BX_READ, &raw_descriptor2);
+
+  if (raw_descriptor2 & BX_CONST64(0x00001f0000000000))
+    return 0;
+
+  *dword1 = GET32L(raw_descriptor1);
+  *dword2 = GET32H(raw_descriptor1);
+  *dword3 = GET32L(raw_descriptor2);
+
+  return 1;
 }
 #endif
 

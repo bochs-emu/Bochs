@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: protect_ctrl.cc,v 1.84 2008-05-10 18:10:53 sshwarts Exp $
+// $Id: protect_ctrl.cc,v 1.85 2008-05-25 15:53:29 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -74,6 +74,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LAR_GvEw(bxInstruction_c *i)
   bx_descriptor_t descriptor;
   bx_selector_t selector;
   Bit32u dword1, dword2;
+#if BX_SUPPORT_X86_64
+  Bit32u dword3;
+#endif
 
   if (real_mode() || v8086_mode()) {
     BX_ERROR(("LAR: not recognized in real or virtual-8086 mode"));
@@ -97,10 +100,20 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LAR_GvEw(bxInstruction_c *i)
 
   parse_selector(raw_selector, &selector);
 
-  if (!fetch_raw_descriptor2(&selector, &dword1, &dword2)) {
-    /* not within descriptor table */
-    clear_ZF();
-    return;
+#if BX_SUPPORT_X86_64
+  if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
+    if (!fetch_raw_descriptor2_64(&selector, &dword1, &dword2, &dword3)) {
+      clear_ZF();
+      return;
+    }
+  }
+  else
+#endif
+  {
+    if (!fetch_raw_descriptor2(&selector, &dword1, &dword2)) {
+      clear_ZF();
+      return;
+    }
   }
 
   parse_descriptor(dword1, dword2, &descriptor);
@@ -181,7 +194,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LSL_GvEw(bxInstruction_c *i)
   Bit32u limit32;
   bx_selector_t selector;
   Bit32u dword1, dword2;
-  Bit32u descriptor_dpl;
+#if BX_SUPPORT_X86_64
+  Bit32u dword3;
+#endif
 
   if (real_mode() || v8086_mode()) {
     BX_ERROR(("LSL: not recognized in real or virtual-8086 mode"));
@@ -205,13 +220,23 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LSL_GvEw(bxInstruction_c *i)
 
   parse_selector(raw_selector, &selector);
 
-  if (!fetch_raw_descriptor2(&selector, &dword1, &dword2)) {
-    /* not within descriptor table */
-    clear_ZF();
-    return;
+#if BX_SUPPORT_X86_64
+  if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
+    if (!fetch_raw_descriptor2_64(&selector, &dword1, &dword2, &dword3)) {
+      clear_ZF();
+      return;
+    }
+  }
+  else
+#endif
+  {
+    if (!fetch_raw_descriptor2(&selector, &dword1, &dword2)) {
+      clear_ZF();
+      return;
+    }
   }
 
-  descriptor_dpl = (dword2 >> 13) & 0x03;
+  Bit32u descriptor_dpl = (dword2 >> 13) & 0x03;
 
   if ((dword2 & 0x00001000) == 0) { // system segment
     Bit32u type = (dword2 >> 8) & 0x0000000f;
@@ -361,10 +386,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LLDT_Ew(bxInstruction_c *i)
   /* fetch descriptor; call handles out of limits checks */
 #if BX_SUPPORT_X86_64
   if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
-    fetch_raw_descriptor64(&selector, &dword1, &dword2, &dword3, BX_GP_EXCEPTION);
+    fetch_raw_descriptor_64(&selector, &dword1, &dword2, &dword3, BX_GP_EXCEPTION);
   }
+  else
 #endif
-  else {
+  {
     fetch_raw_descriptor(&selector, &dword1, &dword2, BX_GP_EXCEPTION);
   }
 
@@ -447,10 +473,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LTR_Ew(bxInstruction_c *i)
   /* fetch descriptor; call handles out of limits checks */
 #if BX_SUPPORT_X86_64
   if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
-    fetch_raw_descriptor64(&selector, &dword1, &dword2, &dword3, BX_GP_EXCEPTION);
+    fetch_raw_descriptor_64(&selector, &dword1, &dword2, &dword3, BX_GP_EXCEPTION);
   }
+  else
 #endif
-  else {
+  {
     fetch_raw_descriptor(&selector, &dword1, &dword2, BX_GP_EXCEPTION);
   }
 
