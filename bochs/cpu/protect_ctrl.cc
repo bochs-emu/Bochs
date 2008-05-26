@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: protect_ctrl.cc,v 1.86 2008-05-26 21:46:38 sshwarts Exp $
+// $Id: protect_ctrl.cc,v 1.87 2008-05-26 21:51:46 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -74,9 +74,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LAR_GvEw(bxInstruction_c *i)
   bx_descriptor_t descriptor;
   bx_selector_t selector;
   Bit32u dword1, dword2;
-#if BX_SUPPORT_X86_64
-  Bit32u dword3;
-#endif
 
   if (real_mode() || v8086_mode()) {
     BX_ERROR(("LAR: not recognized in real or virtual-8086 mode"));
@@ -185,9 +182,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LSL_GvEw(bxInstruction_c *i)
   Bit32u limit32;
   bx_selector_t selector;
   Bit32u dword1, dword2;
-#if BX_SUPPORT_X86_64
-  Bit32u dword3;
-#endif
 
   if (real_mode() || v8086_mode()) {
     BX_ERROR(("LSL: not recognized in real or virtual-8086 mode"));
