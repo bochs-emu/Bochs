@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: io_pro.cc,v 1.32 2008-05-19 20:01:23 sshwarts Exp $
+// $Id: io_pro.cc,v 1.33 2008-05-26 18:02:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -133,7 +133,7 @@ bx_bool BX_CPU_C::allow_io(Bit16u addr, unsigned len)
       return(0);
     }
 */
-    if ((Bit32s) (addr/8) >= (Bit32s) (BX_CPU_THIS_PTR tr.cache.u.system.limit_scaled - io_base)) {
+    if ((io_base + addr/8) >= BX_CPU_THIS_PTR tr.cache.u.system.limit_scaled) {
       BX_ERROR(("allow_io(): IO addr %x (len %d) outside TSS IO permission map (base=%x, limit=%x) #GP(0)",
         addr, len, io_base, BX_CPU_THIS_PTR tr.cache.u.system.limit_scaled));
       return(0);
