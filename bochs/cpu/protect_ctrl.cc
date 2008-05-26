@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: protect_ctrl.cc,v 1.85 2008-05-25 15:53:29 sshwarts Exp $
+// $Id: protect_ctrl.cc,v 1.86 2008-05-26 21:46:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -100,25 +100,16 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LAR_GvEw(bxInstruction_c *i)
 
   parse_selector(raw_selector, &selector);
 
-#if BX_SUPPORT_X86_64
-  if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
-    if (!fetch_raw_descriptor2_64(&selector, &dword1, &dword2, &dword3)) {
-      clear_ZF();
-      return;
-    }
-  }
-  else
-#endif
-  {
-    if (!fetch_raw_descriptor2(&selector, &dword1, &dword2)) {
-      clear_ZF();
-      return;
-    }
+  if (!fetch_raw_descriptor2(&selector, &dword1, &dword2)) {
+    BX_DEBUG(("LAR: failed to fetch descriptor"));
+    clear_ZF();
+    return;
   }
 
   parse_descriptor(dword1, dword2, &descriptor);
 
   if (descriptor.valid==0) {
+    BX_DEBUG(("LAR: descriptor not valid"));
     clear_ZF();
     return;
   }
@@ -220,20 +211,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LSL_GvEw(bxInstruction_c *i)
 
   parse_selector(raw_selector, &selector);
 
-#if BX_SUPPORT_X86_64
-  if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
-    if (!fetch_raw_descriptor2_64(&selector, &dword1, &dword2, &dword3)) {
-      clear_ZF();
-      return;
-    }
-  }
-  else
-#endif
-  {
-    if (!fetch_raw_descriptor2(&selector, &dword1, &dword2)) {
-      clear_ZF();
-      return;
-    }
+  if (!fetch_raw_descriptor2(&selector, &dword1, &dword2)) {
+    clear_ZF();
+    return;
   }
 
   Bit32u descriptor_dpl = (dword2 >> 13) & 0x03;

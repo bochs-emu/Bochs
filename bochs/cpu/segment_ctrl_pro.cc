@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: segment_ctrl_pro.cc,v 1.94 2008-05-25 15:53:29 sshwarts Exp $
+// $Id: segment_ctrl_pro.cc,v 1.95 2008-05-26 21:46:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -207,19 +207,16 @@ BX_CPU_C::load_seg_reg(bx_segment_reg_t *seg, Bit16u new_value)
   seg->cache.u.segment.base = new_value << 4;
   seg->cache.segment = 1; /* regular segment */
   seg->cache.p = 1; /* present */
+  seg->cache.type = BX_DATA_READ_WRITE_ACCESSED;
 
   if (seg == &BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS]) {
-    seg->cache.type = BX_CODE_EXEC_READ_ACCESSED;
+    invalidate_prefetch_q();
 #if BX_SUPPORT_ICACHE
     BX_CPU_THIS_PTR updateFetchModeMask();
 #endif
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
     handleAlignmentCheck(); // CPL was modified
 #endif
-    invalidate_prefetch_q();
-  }
-  else {
-    seg->cache.type = BX_DATA_READ_WRITE_ACCESSED;
   }
 
   /* Do not modify segment limit and AR bytes when in real mode */
@@ -731,7 +728,7 @@ void BX_CPU_C::fetch_raw_descriptor_64(const bx_selector_t *selector,
 
   if (selector->ti == 0) { /* GDT */
     if ((index*8 + 15) > BX_CPU_THIS_PTR gdtr.limit) {
-      BX_ERROR(("fetch_raw_descriptor_64: GDT: index (%x)%x > limit (%x)",
+      BX_ERROR(("fetch_raw_descriptor64: GDT: index (%x)%x > limit (%x)",
          index*8 + 15, index, BX_CPU_THIS_PTR gdtr.limit));
       exception(exception_no, selector->value & 0xfffc, 0);
     }
@@ -739,11 +736,11 @@ void BX_CPU_C::fetch_raw_descriptor_64(const bx_selector_t *selector,
   }
   else { /* LDT */
     if (BX_CPU_THIS_PTR ldtr.cache.valid==0) {
-      BX_ERROR(("fetch_raw_descriptor_64: LDTR.valid=0"));
+      BX_ERROR(("fetch_raw_descriptor64: LDTR.valid=0"));
       exception(exception_no, selector->value & 0xfffc, 0);
     }
     if ((index*8 + 15) > BX_CPU_THIS_PTR ldtr.cache.u.system.limit_scaled) {
-      BX_ERROR(("fetch_raw_descriptor_64: LDT: index (%x)%x > limit (%x)",
+      BX_ERROR(("fetch_raw_descriptor64: LDT: index (%x)%x > limit (%x)",
          index*8 + 15, index, BX_CPU_THIS_PTR ldtr.cache.u.system.limit_scaled));
       exception(exception_no, selector->value & 0xfffc, 0);
     }
@@ -754,50 +751,13 @@ void BX_CPU_C::fetch_raw_descriptor_64(const bx_selector_t *selector,
   access_read_linear(offset +  8, 8, 0, BX_READ, &raw_descriptor2);
 
   if (raw_descriptor2 & BX_CONST64(0x00001f0000000000)) {
-    BX_ERROR(("fetch_raw_descriptor_64: extended attributes DWORD4 TYPE != 0"));
+    BX_ERROR(("fetch_raw_descriptor64: extended attributes DWORD4 TYPE != 0"));
     exception(BX_GP_EXCEPTION, selector->value & 0xfffc, 0);
   }
 
   *dword1 = GET32L(raw_descriptor1);
   *dword2 = GET32H(raw_descriptor1);
   *dword3 = GET32L(raw_descriptor2);
-}
-
-bx_bool BX_CPU_C::fetch_raw_descriptor2_64(const bx_selector_t *selector,
-           Bit32u *dword1, Bit32u *dword2, Bit32u *dword3)
-{
-  Bit32u index = selector->index;
-  bx_address offset;
-  Bit64u raw_descriptor1, raw_descriptor2;
-
-  if (selector->ti == 0) { /* GDT */
-    if ((index*8 + 15) > BX_CPU_THIS_PTR gdtr.limit) {
-      return 0;
-    }
-    offset = BX_CPU_THIS_PTR gdtr.base + index*8;
-  }
-  else { /* LDT */
-    if (BX_CPU_THIS_PTR ldtr.cache.valid==0) {
-      BX_ERROR(("fetch_raw_descriptor2_64: LDTR.valid=0"));
-      return 0;
-    }
-    if ((index*8 + 15) > BX_CPU_THIS_PTR ldtr.cache.u.system.limit_scaled)
-      return 0;
-
-    offset = BX_CPU_THIS_PTR ldtr.cache.u.system.base + index*8;
-  }
-
-  access_read_linear(offset,      8, 0, BX_READ, &raw_descriptor1);
-  access_read_linear(offset +  8, 8, 0, BX_READ, &raw_descriptor2);
-
-  if (raw_descriptor2 & BX_CONST64(0x00001f0000000000))
-    return 0;
-
-  *dword1 = GET32L(raw_descriptor1);
-  *dword2 = GET32H(raw_descriptor1);
-  *dword3 = GET32L(raw_descriptor2);
-
-  return 1;
 }
 #endif
 

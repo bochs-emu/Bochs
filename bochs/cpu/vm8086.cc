@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vm8086.cc,v 1.44 2008-04-24 20:52:27 sshwarts Exp $
+// $Id: vm8086.cc,v 1.45 2008-05-26 21:46:39 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -211,7 +211,7 @@ void BX_CPU_C::init_v8086_mode(void)
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.p       = 1;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.dpl     = 3;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.segment = 1;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.type    = BX_CODE_EXEC_READ_ACCESSED;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.type    = BX_DATA_READ_WRITE_ACCESSED;
 
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.base =
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value << 4;
