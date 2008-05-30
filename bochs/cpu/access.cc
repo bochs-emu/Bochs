@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: access.cc,v 1.109 2008-05-26 21:46:37 sshwarts Exp $
+// $Id: access.cc,v 1.110 2008-05-30 21:14:49 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -251,7 +251,7 @@ BX_CPU_C::execute_virtual_checks(bx_segment_reg_t *seg, bx_address offset, unsig
       break;
 
     default:
-      BX_PANIC(("write_virtual_checks(): unknown descriptor type=%d", seg->cache.type));
+      BX_PANIC(("execute_virtual_checks(): unknown descriptor type=%d", seg->cache.type));
   }
 }
 
