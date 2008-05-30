@@ -90,6 +90,11 @@ For any information on qemu, visit the website http://fabrice.bellard.free.fr/qe
 
 History
 -------
+vgabios-0.6b : May 30 2008
+  - Volker
+    . added PCI data structure for the Cirrus VGABIOS images
+    . minor bugfixes in biossums utility, VBE support and makefile
+
 vgabios-0.6a : Aug 19 2006
   - Volker
     . added minimal support for the video parameter table (VPT)
@@ -133,12 +138,12 @@ vgabios-0.5a : Mar 07 2005
 vgabios-0.4c : Nov 06 2003
   - Christophe
     . fix font problem on initial screen of NT4 Loader
-
+    
 vgabios-0.4b : Nov 04 2003
   - Volker
     . fix offset of character tables
     . optimizations of CRT controller accesses
-    . VBE i/o registers changed to 0x01CE/CF
+    . VBE i/o registers changed to 0x01CE/CF 
       (suggestion from Daniel Gimpelevich)
     . "noclear" flag stored in BIOS area
     . fix character height returned by get_font_info function

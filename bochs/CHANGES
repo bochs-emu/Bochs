@@ -8,6 +8,7 @@ Brief summary :
 - Added memory access tracing for Bochs internal debugger
 - Many fixes in CPU emulation and internal debugger
   - MenuetOS64 floppy images booting perfect again !
+- updated LGPL'd VGABIOS to version 0.6b
 
 Detailed change log :
 
