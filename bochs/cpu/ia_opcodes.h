@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ia_opcodes.h,v 1.6 2008-05-02 22:47:07 sshwarts Exp $
+// $Id: ia_opcodes.h,v 1.7 2008-05-30 20:35:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008 Stanislav Shwartsman
@@ -1245,6 +1245,14 @@ bx_define_opcode(BX_IA_XRSTOR, BX_CPU_C::XRSTOR)
 bx_define_opcode(BX_IA_XSAVE, BX_CPU_C::XSAVE)
 bx_define_opcode(BX_IA_XSETBV, BX_CPU_C::XSETBV)
 bx_define_opcode(BX_IA_XGETBV, BX_CPU_C::XGETBV)
+
+// AES instructions
+bx_define_opcode(BX_IA_AESIMC_VdqWdq, BX_CPU_C::AESIMC_VdqWdq)
+bx_define_opcode(BX_IA_AESENC_VdqWdq, BX_CPU_C::AESENC_VdqWdq)
+bx_define_opcode(BX_IA_AESENCLAST_VdqWdq, BX_CPU_C::AESENCLAST_VdqWdq)
+bx_define_opcode(BX_IA_AESDEC_VdqWdq, BX_CPU_C::AESDEC_VdqWdq)
+bx_define_opcode(BX_IA_AESDECLAST_VdqWdq, BX_CPU_C::AESDECLAST_VdqWdq)
+bx_define_opcode(BX_IA_AESKEYGENASSIST_VdqWdqIb, BX_CPU_C::AESKEYGENASSIST_VdqWdqIb)
 
 #if BX_SUPPORT_X86_64
 bx_define_opcode(BX_IA_ADD_GqEqM, BX_CPU_C::ADD_GqEqM)

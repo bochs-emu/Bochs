@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.h,v 1.68 2008-05-02 22:47:07 sshwarts Exp $
+// $Id: fetchdecode.h,v 1.69 2008-05-30 20:35:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005 Stanislav Shwartsman
@@ -2181,6 +2181,42 @@ static const BxOpcodeInfo_t BxOpcodeGroupSSE_0f3841[4] = {
   /* F3 */ { 0, BX_IA_ERROR }
 };
 
+static const BxOpcodeInfo_t BxOpcodeGroupSSE_0f38db[4] = {
+  /* -- */ { 0, BX_IA_ERROR },
+  /* 66 */ { 0, BX_IA_AESIMC_VdqWdq },     // AES
+  /* F2 */ { 0, BX_IA_ERROR },
+  /* F3 */ { 0, BX_IA_ERROR }
+};
+
+static const BxOpcodeInfo_t BxOpcodeGroupSSE_0f38dc[4] = {
+  /* -- */ { 0, BX_IA_ERROR },
+  /* 66 */ { 0, BX_IA_AESENC_VdqWdq },     // AES
+  /* F2 */ { 0, BX_IA_ERROR },
+  /* F3 */ { 0, BX_IA_ERROR }
+};
+
+static const BxOpcodeInfo_t BxOpcodeGroupSSE_0f38dd[4] = {
+  /* -- */ { 0, BX_IA_ERROR },
+  /* 66 */ { 0, BX_IA_AESENCLAST_VdqWdq }, // AES
+  /* F2 */ { 0, BX_IA_ERROR },
+  /* F3 */ { 0, BX_IA_ERROR }
+};
+
+static const BxOpcodeInfo_t BxOpcodeGroupSSE_0f38de[4] = {
+  /* -- */ { 0, BX_IA_ERROR },
+  /* 66 */ { 0, BX_IA_AESDEC_VdqWdq  },    // AES
+  /* F2 */ { 0, BX_IA_ERROR },
+  /* F3 */ { 0, BX_IA_ERROR }
+};
+
+
+static const BxOpcodeInfo_t BxOpcodeGroupSSE_0f38df[4] = {
+  /* -- */ { 0, BX_IA_ERROR },
+  /* 66 */ { 0, BX_IA_AESDECLAST_VdqWdq }, // AES
+  /* F2 */ { 0, BX_IA_ERROR },
+  /* F3 */ { 0, BX_IA_ERROR }
+};
+
 static const BxOpcodeInfo_t BxOpcodeGroupSSE_0f38f0[4] = {
   /* -- */ { 0, BX_IA_ERROR },
   /* 66 */ { 0, BX_IA_ERROR },
@@ -2345,6 +2381,13 @@ static const BxOpcodeInfo_t BxOpcodeGroupSSE_0f3a62[4] = {
 static const BxOpcodeInfo_t BxOpcodeGroupSSE_0f3a63[4] = {
   /* -- */ { 0, BX_IA_ERROR },
   /* 66 */ { 0, BX_IA_PCMPISTRI_VdqWdqIb },
+  /* F2 */ { 0, BX_IA_ERROR },
+  /* F3 */ { 0, BX_IA_ERROR }
+};
+
+static const BxOpcodeInfo_t BxOpcodeGroupSSE_0f3adf[4] = {
+  /* -- */ { 0, BX_IA_ERROR },            // AES
+  /* 66 */ { 0, BX_IA_AESKEYGENASSIST_VdqWdqIb },
   /* F2 */ { 0, BX_IA_ERROR },
   /* F3 */ { 0, BX_IA_ERROR }
 };
@@ -2572,11 +2615,11 @@ static const BxOpcodeInfo_t BxOpcode3ByteTable0f38[256] = {
   /* D8 */ { 0, BX_IA_ERROR },
   /* D9 */ { 0, BX_IA_ERROR },
   /* DA */ { 0, BX_IA_ERROR },
-  /* DB */ { 0, BX_IA_ERROR },
-  /* DC */ { 0, BX_IA_ERROR },
-  /* DD */ { 0, BX_IA_ERROR },
-  /* DE */ { 0, BX_IA_ERROR },
-  /* DF */ { 0, BX_IA_ERROR },
+  /* DB */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0f38db },
+  /* DC */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0f38dc },
+  /* DD */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0f38dd },
+  /* DE */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0f38de },
+  /* DF */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0f38df },
   /* E0 */ { 0, BX_IA_ERROR },
   /* E1 */ { 0, BX_IA_ERROR },
   /* E2 */ { 0, BX_IA_ERROR },
@@ -2838,7 +2881,7 @@ static const BxOpcodeInfo_t BxOpcode3ByteTable0f3a[256] = {
   /* DC */ { 0, BX_IA_ERROR },
   /* DD */ { 0, BX_IA_ERROR },
   /* DE */ { 0, BX_IA_ERROR },
-  /* DF */ { 0, BX_IA_ERROR },
+  /* DF */ { BxImmediate_Ib | BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0f3adf },
   /* E0 */ { 0, BX_IA_ERROR },
   /* E1 */ { 0, BX_IA_ERROR },
   /* E2 */ { 0, BX_IA_ERROR },

@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.366 2008-04-21 19:57:07 sshwarts Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.367 2008-05-30 20:35:05 sshwarts Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -1695,6 +1695,29 @@ AC_ARG_ENABLE(xsave,
 
 if test "$support_sse" -lt 1 -a "$use_xsave" = 1; then
   AC_MSG_ERROR([XSAVE requires SSE support!])
+fi
+
+use_aes=0
+AC_MSG_CHECKING(for AES instructions support)
+AC_ARG_ENABLE(aes,
+  [  --enable-aes                      support for AES instructions],
+  [if test "$enableval" = yes; then
+    AC_MSG_RESULT(yes)
+    AC_DEFINE(BX_SUPPORT_AES, 1)
+    use_aes=1
+   elif test "$enableval" = no; then
+    AC_MSG_RESULT(no)
+    AC_DEFINE(BX_SUPPORT_AES, 0)
+   fi
+   ],
+  [
+    AC_MSG_RESULT(no)
+    AC_DEFINE(BX_SUPPORT_AES, 0)
+  ]
+  )
+
+if test "$support_sse" -lt 1 -a "$use_aes" = 1; then
+  AC_MSG_ERROR([AES requires SSE support!])
 fi
 
 AC_MSG_CHECKING(for alignment check support)

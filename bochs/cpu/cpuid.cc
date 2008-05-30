@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpuid.cc,v 1.68 2008-05-09 18:09:04 sshwarts Exp $
+// $Id: cpuid.cc,v 1.69 2008-05-30 20:35:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007 Stanislav Shwartsman
@@ -176,6 +176,10 @@ Bit32u BX_CPU_C::get_extended_cpuid_features(void)
 
 #if BX_SUPPORT_POPCNT || (BX_SUPPORT_SSE >= 5) || (BX_SUPPORT_SSE >= 4 && BX_SUPPORT_SSE_EXTENSION > 0)
   features |= (1<<23);           // support POPCNT instruction
+#endif
+
+#if BX_SUPPORT_AES
+  features |= (1<<25);           // support AES instructions
 #endif
 
 #if BX_SUPPORT_XSAVE

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.482 2008-05-26 21:46:37 sshwarts Exp $
+// $Id: cpu.h,v 1.483 2008-05-30 20:35:06 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2224,6 +2224,15 @@ public: // for now...
   BX_SMF void XGETBV(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void XSETBV(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   /* XSAVE/XRSTOR extensions */
+
+  /* AES instructions */
+  BX_SMF void AESIMC_VdqWdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void AESENC_VdqWdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void AESENCLAST_VdqWdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void AESDEC_VdqWdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void AESDECLAST_VdqWdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void AESKEYGENASSIST_VdqWdqIb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  /* AES instructions */
 
   /*** Duplicate SSE instructions ***/
   // Although in implementation, these instructions are aliased to the

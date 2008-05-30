@@ -6,6 +6,7 @@ Brief summary :
   than Bochs 2.3.5 build !
 - Implemented LBA48 support in BIOS
 - Added memory access tracing for Bochs internal debugger
+- Implemented Intel(R) XSAVE/XRSTOR and AES instruction set extensions
 - Many fixes in CPU emulation and internal debugger
   - MenuetOS64 floppy images booting perfect again !
 - updated LGPL'd VGABIOS to version 0.6b
@@ -15,6 +16,8 @@ Detailed change log :
 - CPU
   - Support of XSAVE/XRSTOR CPU extensions, to enable configure with
         --enable-xsave option
+  - Support of AES CPU extensions, to enable configure with
+        --enable-aes option
   - Fixed Bochs failure on RISC host machines with BxRepeatSpeedups
     optimization enabled
   - Implemented SYSENTER/SYSEXIT instructions in long mode
@@ -57,6 +60,7 @@ Detailed change log :
 
 - SF patches applied
  [1928848] "pipe" mode for serial port (win32 only) by Eugene Toder
+ [1956843] Set the compatible pci interrupt router back to PIIX by Sebastian
  [1956366] Do not announce C2 & C3 cpu power state support by Igor Lvovsky
  [1921733] support for LBA48 by Robert Millan
  [1938185] Fix link problem with --enable-debugger by Sebastian
@@ -93,6 +97,7 @@ Detailed change log :
  [1864680] Save CPUID signature by Filip Navara
 
 - these S.F. bugs were closed
+ [1744820] info gdt and info idt shows the entire tables
  [1755652] graphics: MenuetOS64 shows black screen
  [1782207] Windows Installer malfunction, Host=Linux, Guest=Win98SE
  [1697762] OS/2 Warp Install Failed
