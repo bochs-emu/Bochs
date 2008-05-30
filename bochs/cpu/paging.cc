@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.137 2008-05-23 17:58:42 sshwarts Exp $
+// $Id: paging.cc,v 1.138 2008-05-30 12:14:00 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -270,7 +270,11 @@
 // - Processor running at CPL=0,1,2 maps to U/S=0
 //   Processor running at CPL=3     maps to U/S=1
 
-#define BX_INVALID_TLB_ENTRY 0xffffffff
+#if BX_SUPPORT_X86_64
+  #define BX_INVALID_TLB_ENTRY BX_CONST64(0xffffffffffffffff)
+#else
+  #define BX_INVALID_TLB_ENTRY 0xffffffff
+#endif
 
 #if BX_CPU_LEVEL >= 4
 #  define BX_PRIV_CHECK_SIZE 32
@@ -755,7 +759,7 @@ bx_phy_address BX_CPU_C::translate_linear_PAE(bx_address laddr, Bit32u &combined
 
 #if BX_SUPPORT_GLOBAL_PAGES
     if (BX_CPU_THIS_PTR cr4.get_PGE())
-      combined_access |= (pde & TLB_GlobalPage); // G
+      combined_access |= (pde & 0x100); // G
 #endif
 
     priv_index =
@@ -842,7 +846,7 @@ bx_phy_address BX_CPU_C::translate_linear_PAE(bx_address laddr, Bit32u &combined
 
 #if BX_SUPPORT_GLOBAL_PAGES
   if (BX_CPU_THIS_PTR cr4.get_PGE())
-    combined_access |= (pte & TLB_GlobalPage); // G
+    combined_access |= (pte & 0x100); // G
 #endif
 
   priv_index =
@@ -978,7 +982,7 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned curr_pl, un
 
 #if BX_SUPPORT_GLOBAL_PAGES
       if (BX_CPU_THIS_PTR cr4.get_PGE())
-        combined_access |= pde & TLB_GlobalPage; // {G}
+        combined_access |= pde & 0x100; // {G}
 #endif
 
       priv_index =
@@ -1027,7 +1031,7 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned curr_pl, un
 
 #if BX_SUPPORT_GLOBAL_PAGES
       if (BX_CPU_THIS_PTR cr4.get_PGE())
-        combined_access |= (pte & TLB_GlobalPage); // G
+        combined_access |= (pte & 0x100); // G
 #endif
 
       priv_index =
@@ -1090,7 +1094,8 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned curr_pl, un
     }
   }
 #if BX_SUPPORT_GLOBAL_PAGES
-  accessBits |= combined_access & TLB_GlobalPage; // Global bit
+  if (combined_access & 0x100) // Global bit
+    accessBits |= TLB_GlobalPage;
 #endif
 
 #if BX_SupportGuest2HostTLB
