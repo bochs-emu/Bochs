@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.239 2008-05-22 08:13:21 vruppert Exp $
+$Id: user.dbk,v 1.240 2008-05-30 21:00:05 sshwarts Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -3097,7 +3097,8 @@ speed.</para></footnote>.
   </row>
 </thead>
   <tbody>
-<row><entry>2.3.6</entry><entry>2.6Ghz</entry><entry>Intel Core 2 Duo with WinXP/g++ 3.4 </entry><entry> 33 to 37 MIPS</entry></row>
+<row><entry>2.3.7</entry><entry>2.6Ghz</entry><entry>Intel Core 2 Q9770 with WinXP/g++ 3.4 </entry><entry> 50 to 55 MIPS</entry></row>
+<row><entry>2.3.7</entry><entry>2.6Ghz</entry><entry>Intel Core 2 Duo with WinXP/g++ 3.4 </entry><entry> 38 to 43 MIPS</entry></row>
 <row><entry>2.2.6</entry><entry>2.6Ghz</entry><entry>Intel Core 2 Duo with WinXP/g++ 3.4 </entry><entry> 21 to 25 MIPS</entry></row>
 <row><entry>2.2.6</entry><entry>2.1Ghz</entry><entry>Athlon XP with Linux 2.6/g++ 3.4 </entry><entry> 12 to 15 MIPS</entry></row>
 <row><entry>2.0.1</entry><entry>1.6Ghz</entry><entry>Intel P4 with Win2000/g++ 3.3 </entry><entry> 5 to  7 MIPS</entry></row>
