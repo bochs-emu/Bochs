@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debug.h,v 1.43 2008-05-31 20:59:38 sshwarts Exp $
+// $Id: debug.h,v 1.44 2008-05-31 21:07:30 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -303,7 +303,7 @@ void bx_dbg_lin_memory_access(unsigned cpu, bx_address lin, bx_phy_address phy, 
 void bx_dbg_phy_memory_access(unsigned cpu, bx_phy_address phy, unsigned len, unsigned rw, Bit8u *data);
 
 // check memory access for watchpoints
-void bx_dbg_check_memory_access_watchpoints(unsigned cpu, bx_phy_address phy, unsigned len, unsigned rw)
+void bx_dbg_check_memory_access_watchpoints(unsigned cpu, bx_phy_address phy, unsigned len, unsigned rw);
 
 // commands that work with Bochs param tree
 void bx_dbg_restore_command(const char *param_name, const char *path);

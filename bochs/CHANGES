@@ -97,6 +97,7 @@ Detailed change log :
  [1864680] Save CPUID signature by Filip Navara
 
 - these S.F. bugs were closed
+  [666433] physical read/write breakpoint sometimes fails
  [1744820] info gdt and info idt shows the entire tables
  [1755652] graphics: MenuetOS64 shows black screen
  [1782207] Windows Installer malfunction, Host=Linux, Guest=Win98SE

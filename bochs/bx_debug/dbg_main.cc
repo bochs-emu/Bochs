@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.147 2008-05-31 20:59:38 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.148 2008-05-31 21:07:30 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -115,11 +115,13 @@ static Bit8u bx_disasm_ibuf[32];
 static char  bx_disasm_tbuf[512];
 
 // watchpoints
+#define MAX_WRITE_WATCHPOINTS 16
+#define MAX_READ_WATCHPOINTS 16
 static unsigned num_write_watchpoints = 0;
 static unsigned num_read_watchpoints = 0;
 static bx_phy_address write_watchpoint[MAX_WRITE_WATCHPOINTS];
 static bx_phy_address read_watchpoint[MAX_READ_WATCHPOINTS];
-static bx_bool watchpoint_continue = 0;
+bx_bool watchpoint_continue = 0;
 
 #define DBG_PRINTF_BUFFER_LEN 1024
 
@@ -549,7 +551,7 @@ void bx_dbg_check_memory_access_watchpoints(unsigned cpu, bx_phy_address phy, un
 
 void bx_dbg_lin_memory_access(unsigned cpu, bx_address lin, bx_phy_address phy, unsigned len, unsigned pl, unsigned rw, Bit8u *data)
 {
-  bx_dbg_check_memory_access_watchpoints(cpu, phy. len, rw);
+  bx_dbg_check_memory_access_watchpoints(cpu, phy, len, rw);
 
   if (! BX_CPU(cpu)->trace_mem)
     return;
@@ -582,7 +584,7 @@ void bx_dbg_lin_memory_access(unsigned cpu, bx_address lin, bx_phy_address phy, 
 
 void bx_dbg_phy_memory_access(unsigned cpu, bx_phy_address phy, unsigned len, unsigned rw, Bit8u *data)
 {
-  bx_dbg_check_memory_access_watchpoints(cpu, phy. len, rw);
+  bx_dbg_check_memory_access_watchpoints(cpu, phy, len, rw);
 
   if (! BX_CPU(cpu)->trace_mem)
     return;
