@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.146 2008-05-23 17:49:44 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.147 2008-05-31 20:59:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -113,6 +113,13 @@ static struct {
 static disassembler bx_disassemble;
 static Bit8u bx_disasm_ibuf[32];
 static char  bx_disasm_tbuf[512];
+
+// watchpoints
+static unsigned num_write_watchpoints = 0;
+static unsigned num_read_watchpoints = 0;
+static bx_phy_address write_watchpoint[MAX_WRITE_WATCHPOINTS];
+static bx_phy_address read_watchpoint[MAX_READ_WATCHPOINTS];
+static bx_bool watchpoint_continue = 0;
 
 #define DBG_PRINTF_BUFFER_LEN 1024
 
@@ -514,9 +521,37 @@ void bx_dbg_halt(unsigned cpu)
   dbg_printf("CPU %d: HALTED\n", cpu);
 }
 
+void bx_dbg_check_memory_access_watchpoints(unsigned cpu, bx_phy_address phy, unsigned len, unsigned rw)
+{
+  if (rw == BX_WRITE) {
+    // Check for physical write watch points
+    // TODO: Each breakpoint should have an associated CPU#
+    for (unsigned i = 0; i < num_write_watchpoints; i++) {
+      if (write_watchpoint[i] <= phy && write_watchpoint[i] + len > phy) {
+        BX_CPU(cpu)->watchpoint  = phy;
+        BX_CPU(cpu)->break_point = BREAK_POINT_WRITE;
+        break;
+      }
+    }
+  }
+  else {
+    // Check for physical read watch points
+    // TODO: Each breakpoint should have an associated CPU#
+    for (unsigned i = 0; i < num_read_watchpoints; i++) {
+      if (read_watchpoint[i] <= phy && read_watchpoint[i] + len > phy) {
+        BX_CPU(cpu)->watchpoint  = phy;
+        BX_CPU(cpu)->break_point = BREAK_POINT_READ;
+        break;
+      }
+    }
+  }
+}
+
 void bx_dbg_lin_memory_access(unsigned cpu, bx_address lin, bx_phy_address phy, unsigned len, unsigned pl, unsigned rw, Bit8u *data)
 {
-  if (! BX_CPU(dbg_cpu)->trace_mem)
+  bx_dbg_check_memory_access_watchpoints(cpu, phy. len, rw);
+
+  if (! BX_CPU(cpu)->trace_mem)
     return;
 
   dbg_printf("[CPU%d %s]: LIN 0x" FMT_ADDRX " PHY 0x" FMT_PHY_ADDRX " (len=%d, pl=%d)",
@@ -547,7 +582,9 @@ void bx_dbg_lin_memory_access(unsigned cpu, bx_address lin, bx_phy_address phy, 
 
 void bx_dbg_phy_memory_access(unsigned cpu, bx_phy_address phy, unsigned len, unsigned rw, Bit8u *data)
 {
-  if (! BX_CPU(dbg_cpu)->trace_mem)
+  bx_dbg_check_memory_access_watchpoints(cpu, phy. len, rw);
+
+  if (! BX_CPU(cpu)->trace_mem)
     return;
 
   dbg_printf("[CPU%d %s]: PHY 0x" FMT_PHY_ADDRX " (len=%d)",
@@ -1458,12 +1495,6 @@ void bx_dbg_print_stack_command(unsigned nwords)
     linear_sp += len;
   }
 }
-
-unsigned num_write_watchpoints = 0;
-unsigned num_read_watchpoints = 0;
-bx_phy_address write_watchpoint[MAX_WRITE_WATCHPOINTS];
-bx_phy_address read_watchpoint[MAX_READ_WATCHPOINTS];
-bx_bool watchpoint_continue = 0;
 
 void bx_dbg_watch(int read, bx_phy_address address)
 {

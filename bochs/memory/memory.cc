@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: memory.cc,v 1.68 2008-05-09 22:33:37 sshwarts Exp $
+// $Id: memory.cc,v 1.69 2008-05-31 20:59:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -65,18 +65,6 @@ void BX_MEM_C::writePhysicalPage(BX_CPU_C *cpu, bx_phy_address addr, unsigned le
 #endif
 
     BX_INSTR_PHY_WRITE(cpu->which_cpu(), a20addr, len);
-
-#if BX_DEBUGGER
-    // (mch) Check for physical write break points, TODO
-    // (bbd) Each breakpoint should have an associated CPU#, TODO
-    for (unsigned i = 0; i < num_write_watchpoints; i++) {
-      if (write_watchpoint[i] == a20addr) {
-        cpu->watchpoint  = a20addr;
-        cpu->break_point = BREAK_POINT_WRITE;
-        break;
-      }
-    }
-#endif
 
 #if BX_SUPPORT_APIC
     bx_generic_apic_c *local_apic = &cpu->local_apic;
@@ -233,18 +221,6 @@ void BX_MEM_C::readPhysicalPage(BX_CPU_C *cpu, bx_phy_address addr, unsigned len
 #endif
 
     BX_INSTR_PHY_READ(cpu->which_cpu(), a20addr, len);
-
-#if BX_DEBUGGER
-    // (mch) Check for physical read break points, TODO
-    // (bbd) Each breakpoint should have an associated CPU#, TODO
-    for (unsigned i = 0; i < num_read_watchpoints; i++) {
-      if (read_watchpoint[i] == a20addr) {
-         cpu->watchpoint  = a20addr;
-         cpu->break_point = BREAK_POINT_READ;
-         break;
-      }
-    }
-#endif
 
 #if BX_SUPPORT_APIC
     bx_generic_apic_c *local_apic = &cpu->local_apic;

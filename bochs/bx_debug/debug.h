@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debug.h,v 1.42 2008-04-19 20:11:30 sshwarts Exp $
+// $Id: debug.h,v 1.43 2008-05-31 20:59:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -302,6 +302,9 @@ void bx_dbg_halt(unsigned cpu);
 void bx_dbg_lin_memory_access(unsigned cpu, bx_address lin, bx_phy_address phy, unsigned len, unsigned pl, unsigned rw, Bit8u *data);
 void bx_dbg_phy_memory_access(unsigned cpu, bx_phy_address phy, unsigned len, unsigned rw, Bit8u *data);
 
+// check memory access for watchpoints
+void bx_dbg_check_memory_access_watchpoints(unsigned cpu, bx_phy_address phy, unsigned len, unsigned rw)
+
 // commands that work with Bochs param tree
 void bx_dbg_restore_command(const char *param_name, const char *path);
 void bx_dbg_show_param_command(char *param);
@@ -323,26 +326,18 @@ char* bx_dbg_disasm_symbolic_address(Bit32u eip, Bit32u base);
 // the rest for C++
 #ifdef __cplusplus
 
-// Read/write watchpoint hack
-#define MAX_WRITE_WATCHPOINTS 16
-#define MAX_READ_WATCHPOINTS 16
-extern unsigned num_write_watchpoints;
-extern bx_phy_address write_watchpoint[MAX_WRITE_WATCHPOINTS];
-extern unsigned num_read_watchpoints;
-extern bx_phy_address read_watchpoint[MAX_READ_WATCHPOINTS];
-
 typedef enum {
-      STOP_NO_REASON = 0,
-      STOP_TIME_BREAK_POINT,
-      STOP_READ_WATCH_POINT,
-      STOP_WRITE_WATCH_POINT,
-      STOP_MAGIC_BREAK_POINT,
-      STOP_MODE_BREAK_POINT,
-      STOP_CPU_HALTED
+  STOP_NO_REASON = 0,
+  STOP_TIME_BREAK_POINT,
+  STOP_READ_WATCH_POINT,
+  STOP_WRITE_WATCH_POINT,
+  STOP_MAGIC_BREAK_POINT,
+  STOP_MODE_BREAK_POINT,
+  STOP_CPU_HALTED
 } stop_reason_t;
 
 typedef enum {
-      BREAK_POINT_MAGIC, BREAK_POINT_READ, BREAK_POINT_WRITE, BREAK_POINT_TIME
+  BREAK_POINT_MAGIC, BREAK_POINT_READ, BREAK_POINT_WRITE, BREAK_POINT_TIME
 } break_point_t;
 
 #define BX_DBG_REG_EIP          10
@@ -365,7 +360,7 @@ void bx_debug_break(void);
 
 void bx_dbg_exit(int code);
 #if BX_DBG_EXTENSIONS
-  int bx_dbg_extensions(char *command);
+    int bx_dbg_extensions(char *command);
 #else
 #define bx_dbg_extensions(command) 0
 #endif
