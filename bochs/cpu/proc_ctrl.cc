@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.235 2008-05-31 09:26:28 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.236 2008-05-31 21:17:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -460,15 +460,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_DqRq(bxInstruction_c *i)
       {
         // IO breakpoints (10b) are not yet supported.
         BX_PANIC(("MOV_DqRq: write of %08x:%08x contains IO breakpoint",
-          (Bit32u)(val_64 >> 32), (Bit32u)(val_64 & 0xFFFFFFFF)));
-      }
-      if ((((val_64>>18) & 3)==2) ||
-          (((val_64>>22) & 3)==2) ||
-          (((val_64>>26) & 3)==2) ||
-          (((val_64>>30) & 3)==2))
-      {
-        // LEN0..3 contains undefined length specifier (10b)
-        BX_PANIC(("MOV_DqRq: write of %08x:%08x contains undefined LENx",
           (Bit32u)(val_64 >> 32), (Bit32u)(val_64 & 0xFFFFFFFF)));
       }
       if (((((val_64>>16) & 3)==0) && (((val_64>>18) & 3)!=0)) ||
@@ -2536,8 +2527,8 @@ Bit32u BX_CPU_C::hwdebug_compare(bx_address laddr_0, unsigned size,
   bx_bool ibpoint_found = 0;
   bx_address laddr_n = laddr_0 + (size - 1);
   static bx_address alignment_mask[4] =
-    // 00b=1  01b=2  10b=undef  11b=4
-    {  0x0,   0x1,   0x7,       0x3   };
+    // 00b=1  01b=2  10b=undef(8)  11b=4
+    {  0x0,   0x1,   0x7,          0x3   };
 
   Bit32u len0 = (dr7>>18) & 3;
   Bit32u len1 = (dr7>>22) & 3;
