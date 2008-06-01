@@ -97,6 +97,7 @@ Detailed change log :
  [1864680] Save CPUID signature by Filip Navara
 
 - these S.F. bugs were closed
+ [1976171] Keyboard missing break code for enter (0x9C)
   [666433] physical read/write breakpoint sometimes fails
  [1744820] info gdt and info idt shows the entire tables
  [1755652] graphics: MenuetOS64 shows black screen
