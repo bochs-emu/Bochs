@@ -223,8 +223,12 @@ bochs@EXE@: @IODEV_LIB_VAR@ @DEBUGGER_VAR@ \
 	touch .win32_dll_plugin_target
 
 bochs_plugins:
-	$(MAKE) -C gui plugins
-	$(MAKE) -C iodev plugins
+	cd gui @COMMAND_SEPARATOR@
+	$(MAKE) plugins
+	@CD_UP_ONE@
+	cd iodev @COMMAND_SEPARATOR@
+	$(MAKE) plugins
+	@CD_UP_ONE@
 
 bximage@EXE@: misc/bximage.o
 	@LINK_CONSOLE@ $(BXIMAGE_LINK_OPTS) misc/bximage.o
@@ -247,29 +251,46 @@ misc/niclist.o: $(srcdir)/misc/niclist.c
 
 $(BX_OBJS): $(BX_INCLUDES)
 
+# cannot use -C option to be compatible with Microsoft nmake
 iodev/libiodev.a::
-	$(MAKE) -C iodev $(MDEFINES) libiodev.a
+	cd iodev @COMMAND_SEPARATOR@
+	$(MAKE) $(MDEFINES) libiodev.a
+	@CD_UP_ONE@
 
 bx_debug/libdebug.a::
-	$(MAKE) -C bx_debug $(MDEFINES) libdebug.a
+	cd bx_debug @COMMAND_SEPARATOR@
+	$(MAKE) $(MDEFINES) libdebug.a
+	@CD_UP_ONE@
 
 cpu/libcpu.a::
-	$(MAKE) -C cpu $(MDEFINES) libcpu.a
+	cd cpu @COMMAND_SEPARATOR@
+	$(MAKE) $(MDEFINES) libcpu.a
+	@CD_UP_ONE@
 
 memory/libmemory.a::
-	$(MAKE) -C memory $(MDEFINES) libmemory.a
+	cd memory @COMMAND_SEPARATOR@
+	$(MAKE) $(MDEFINES) libmemory.a
+	@CD_UP_ONE@
 
 gui/libgui.a::
-	$(MAKE) -C gui $(MDEFINES) libgui.a
+	cd gui @COMMAND_SEPARATOR@
+	$(MAKE) $(MDEFINES) libgui.a
+	@CD_UP_ONE@
 
 disasm/libdisasm.a::
-	$(MAKE) -C disasm $(MDEFINES) libdisasm.a
+	cd disasm @COMMAND_SEPARATOR@
+	$(MAKE) $(MDEFINES) libdisasm.a
+	@CD_UP_ONE@
 
 @INSTRUMENT_DIR@/libinstrument.a::
-	$(MAKE) -C @INSTRUMENT_DIR@ $(MDEFINES) libinstrument.a
+	cd @INSTRUMENT_DIR@ @COMMAND_SEPARATOR@
+	$(MAKE) $(MDEFINES) libinstrument.a
+	@CD_UP_TWO@
 
 fpu/libfpu.a::
-	$(MAKE) -C fpu $(MDEFINES) libfpu.a
+	cd fpu @COMMAND_SEPARATOR@
+	$(MAKE) $(MDEFINES) libfpu.a
+	@CD_UP_ONE@
 
 libbochs.a:
 	-rm -f libbochs.a
@@ -359,13 +380,13 @@ install_doc::
 
 
 build_docbook::
-	$(MAKE) -C doc/docbook
+	cd doc/docbook; make
 
 dl_docbook::
-	$(MAKE) -C doc/docbook dl_docs
+	cd doc/docbook; make dl_docs
 
 install_docbook: build_docbook
-	$(MAKE) -C doc/docbook install
+	cd doc/docbook; make install
 
 install_man::
 	-mkdir -p $(DESTDIR)$(man1dir)
@@ -460,15 +481,33 @@ local-dist-clean: clean
 	@RMCOMMAND@ ltdlconf.h
 
 all-clean: clean
-	$(MAKE) -C iodev clean
-	$(MAKE) -C bx_debug clean
-	$(MAKE) -C cpu clean
-	$(MAKE) -C memory clean
-	$(MAKE) -C gui clean
-	$(MAKE) -C disasm clean
-	$(MAKE) -C @INSTRUMENT_DIR@ clean
-	$(MAKE) -C misc clean
-	$(MAKE) -C fpu clean
+	cd iodev @COMMAND_SEPARATOR@
+	$(MAKE) clean
+	@CD_UP_ONE@
+	cd bx_debug @COMMAND_SEPARATOR@
+	$(MAKE) clean
+	@CD_UP_ONE@
+	cd cpu @COMMAND_SEPARATOR@
+	$(MAKE) clean
+	@CD_UP_ONE@
+	cd memory @COMMAND_SEPARATOR@
+	$(MAKE) clean
+	@CD_UP_ONE@
+	cd gui @COMMAND_SEPARATOR@
+	$(MAKE) clean
+	@CD_UP_ONE@
+	cd disasm @COMMAND_SEPARATOR@
+	$(MAKE) clean
+	@CD_UP_ONE@
+	cd @INSTRUMENT_DIR@ @COMMAND_SEPARATOR@
+	$(MAKE) clean
+	@CD_UP_TWO@
+	cd misc @COMMAND_SEPARATOR@
+	$(MAKE) clean
+	@CD_UP_ONE@
+	cd fpu @COMMAND_SEPARATOR@
+	$(MAKE) clean
+	@CD_UP_ONE@
 	cd doc/docbook @COMMAND_SEPARATOR@
 	$(MAKE) clean
 	@CD_UP_TWO@
@@ -477,16 +516,36 @@ all-clean: clean
 	@CD_UP_THREE@
 
 dist-clean: local-dist-clean
-	$(MAKE) -C iodev dist-clean
-	$(MAKE) -C bx_debug dist-clean
-	$(MAKE) -C bios dist-clean
-	$(MAKE) -C cpu dist-clean
-	$(MAKE) -C memory dist-clean
-	$(MAKE) -C gui dist-clean
-	$(MAKE) -C disasm dist-clean
-	$(MAKE) -C @INSTRUMENT_DIR@ dist-clean
-	$(MAKE) -C misc dist-clean
-	$(MAKE) -C fpu dist-clean
+	cd iodev @COMMAND_SEPARATOR@
+	$(MAKE) dist-clean
+	@CD_UP_ONE@
+	cd bx_debug @COMMAND_SEPARATOR@
+	$(MAKE) dist-clean
+	@CD_UP_ONE@
+	cd bios @COMMAND_SEPARATOR@
+	$(MAKE) dist-clean
+	@CD_UP_ONE@
+	cd cpu @COMMAND_SEPARATOR@
+	$(MAKE) dist-clean
+	@CD_UP_ONE@
+	cd memory @COMMAND_SEPARATOR@
+	$(MAKE) dist-clean
+	@CD_UP_ONE@
+	cd gui @COMMAND_SEPARATOR@
+	$(MAKE) dist-clean
+	@CD_UP_ONE@
+	cd disasm @COMMAND_SEPARATOR@
+	$(MAKE) dist-clean
+	@CD_UP_ONE@
+	cd @INSTRUMENT_DIR@ @COMMAND_SEPARATOR@
+	$(MAKE) dist-clean
+	@CD_UP_TWO@
+	cd misc @COMMAND_SEPARATOR@
+	$(MAKE) dist-clean
+	@CD_UP_ONE@
+	cd fpu @COMMAND_SEPARATOR@
+	$(MAKE) dist-clean
+	@CD_UP_ONE@
 	cd doc/docbook @COMMAND_SEPARATOR@
 	$(MAKE) dist-clean
 	@CD_UP_TWO@
