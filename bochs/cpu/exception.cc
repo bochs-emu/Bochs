@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.117 2008-05-21 21:38:59 sshwarts Exp $
+// $Id: exception.cc,v 1.118 2008-06-02 19:50:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1008,6 +1008,10 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code, bx_bool trap)
       if (vector != BX_DB_EXCEPTION) BX_CPU_THIS_PTR assert_RF();
     }
   }
+
+  // clear GD flag in the DR7 prior entering debug exception handler
+  if (vector == BX_DB_EXCEPTION)
+    BX_CPU_THIS_PTR dr7 &= ~0x00002000;
 
   if (exception_type != BX_ET_PAGE_FAULT) {
     // Page faults have different format

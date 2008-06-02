@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.237 2008-06-02 18:41:08 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.238 2008-06-02 19:50:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -234,6 +234,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_DdRd(bxInstruction_c *i)
   }
 #endif
 
+  // Note: processor clears GD upon entering debug exception
+  // handler, to allow access to the debug registers
+  if (BX_CPU_THIS_PTR dr7 & 0x2000) { // GD bit set
+    BX_ERROR(("MOV_DdRd: DR7 GD bit is set"));
+    BX_CPU_THIS_PTR dr6 |= 0x2000;
+    exception(BX_DB_EXCEPTION, 0, 0);
+  }
+
   if (!real_mode() && CPL!=0) {
     BX_ERROR(("MOV_DdRd: CPL!=0 not in real mode"));
     exception(BX_GP_EXCEPTION, 0, 0);
@@ -288,11 +296,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_DdRd(bxInstruction_c *i)
       // by setting the LE and/or GE flags.
 
       // Some sanity checks...
-      if (val_32 & 0x00002000) {
-        BX_INFO(("MOV_DdRd: GD bit not supported yet"));
-        // Note: processor clears GD upon entering debug exception
-        // handler, to allow access to the debug registers
-      }
       if ((((val_32>>16) & 3)==2) ||
           (((val_32>>20) & 3)==2) ||
           (((val_32>>24) & 3)==2) ||
@@ -330,7 +333,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_DdRd(bxInstruction_c *i)
       break;
 
     default:
-      BX_ERROR(("MOV_DdRd: #UD - control register index out of range"));
+      BX_ERROR(("MOV_DdRd: #UD - register index out of range"));
       UndefinedOpcode(i);
   }
 }
@@ -347,6 +350,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RdDd(bxInstruction_c *i)
     }
   }
 #endif
+
+  // Note: processor clears GD upon entering debug exception
+  // handler, to allow access to the debug registers
+  if (BX_CPU_THIS_PTR dr7 & 0x2000) { // GD bit set
+    BX_ERROR(("MOV_RdDd: DR7 GD bit is set"));
+    BX_CPU_THIS_PTR dr6 |= 0x2000;
+    exception(BX_DB_EXCEPTION, 0, 0);
+  }
 
   if (!real_mode() && CPL!=0) {
     BX_ERROR(("MOV_RdDd: CPL!=0 not in real mode"));
@@ -382,7 +393,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RdDd(bxInstruction_c *i)
       break;
 
     default:
-      BX_ERROR(("MOV_RdDd: #UD - control register index out of range"));
+      BX_ERROR(("MOV_RdDd: #UD - register index out of range"));
       UndefinedOpcode(i);
   }
 
@@ -403,6 +414,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_DqRq(bxInstruction_c *i)
       BX_ERROR(("MOV_DqRq: access to DR4/DR5 causes #UD"));
       UndefinedOpcode(i);
     }
+  }
+
+  // Note: processor clears GD upon entering debug exception
+  // handler, to allow access to the debug registers
+  if (BX_CPU_THIS_PTR dr7 & 0x2000) { // GD bit set
+    BX_ERROR(("MOV_DqRq: DR7 GD bit is set"));
+    BX_CPU_THIS_PTR dr6 |= 0x2000;
+    exception(BX_DB_EXCEPTION, 0, 0);
   }
 
   /* #GP(0) if CPL is not 0 */
@@ -448,11 +467,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_DqRq(bxInstruction_c *i)
       // by setting the LE and/or GE flags.
 
       // Some sanity checks...
-      if (val_64 & 0x00002000) {
-        BX_PANIC(("MOV_DqRq: GD bit not supported yet"));
-        // Note: processor clears GD upon entering debug exception
-        // handler, to allow access to the debug registers
-      }
       if ((((val_64>>16) & 3)==2) ||
           (((val_64>>20) & 3)==2) ||
           (((val_64>>24) & 3)==2) ||
@@ -478,7 +492,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_DqRq(bxInstruction_c *i)
       break;
 
     default:
-      BX_ERROR(("MOV_DqRq: #UD - control register index out of range"));
+      BX_ERROR(("MOV_DqRq: #UD - register index out of range"));
       UndefinedOpcode(i);
   }
 }
@@ -489,9 +503,17 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RqDq(bxInstruction_c *i)
 
   if (BX_CPU_THIS_PTR cr4.get_DE()) {
     if ((i->nnn() & 0xE) == 4) {
-      BX_ERROR(("MOV_DqRq: access to DR4/DR5 causes #UD"));
+      BX_ERROR(("MOV_RqDq: access to DR4/DR5 causes #UD"));
       UndefinedOpcode(i);
     }
+  }
+
+  // Note: processor clears GD upon entering debug exception
+  // handler, to allow access to the debug registers
+  if (BX_CPU_THIS_PTR dr7 & 0x2000) { // GD bit set
+    BX_ERROR(("MOV_RqDq: DR7 GD bit is set"));
+    BX_CPU_THIS_PTR dr6 |= 0x2000;
+    exception(BX_DB_EXCEPTION, 0, 0);
   }
 
   /* #GP(0) if CPL is not 0 */
@@ -529,7 +551,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RqDq(bxInstruction_c *i)
       break;
 
     default:
-      BX_ERROR(("MOV_DqRq: #UD - control register index out of range"));
+      BX_ERROR(("MOV_RqDq: #UD - register index out of range"));
       UndefinedOpcode(i);
   }
 
