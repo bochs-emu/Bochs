@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.208 2008-05-18 11:37:57 vruppert Exp $
+// $Id: rombios.c,v 1.209 2008-06-02 20:08:10 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -940,7 +940,7 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.208 $ $Date: 2008-05-18 11:37:57 $";
+static char bios_cvs_version_string[] = "$Revision: 1.209 $ $Date: 2008-06-02 20:08:10 $";
 
 #define BIOS_COPYRIGHT_STRING "(c) 2002 MandrakeSoft S.A. Written by Kevin Lawton & the Bochs team."
 
@@ -9048,7 +9048,10 @@ ebda_post:
 ;--------------------
 ; relocated here because the primary POST area isnt big enough.
 eoi_jmp_post:
-  call eoi_both_pics
+  mov   al, #0x20
+  out   #0xA0, al ;; slave  PIC EOI
+  mov   al, #0x20
+  out   #0x20, al ;; master PIC EOI
 
   xor ax, ax
   mov ds, ax
