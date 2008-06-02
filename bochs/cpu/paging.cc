@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.139 2008-05-30 16:58:47 sshwarts Exp $
+// $Id: paging.cc,v 1.140 2008-06-02 18:41:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1278,24 +1278,31 @@ void BX_CPU_C::access_write_linear(bx_address laddr, unsigned len, unsigned curr
                           curr_pl, BX_WRITE, (Bit8u*) data);
 
 #if BX_SupportGuest2HostTLB
-      unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 0);
-      bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
-      bx_address lpf = LPFOf(laddr);
+      // do not replace to the TLB if there is a breakpoint defined
+      // in the same page
+#if BX_X86_DEBUGGER
+      if (! hwbreakpoint_check(laddr))
+#endif
+      {
+        unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 0);
+        bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
+        bx_address lpf = LPFOf(laddr);
+      
+        if (tlbEntry->lpf != lpf) {
+          // We haven't seen this page, or it's been bumped before.
 
-      if (tlbEntry->lpf != lpf) {
-        // We haven't seen this page, or it's been bumped before.
+          // Request a direct write pointer so we can do either R or W.
+          bx_hostpageaddr_t hostPageAddr = (bx_hostpageaddr_t)
+            BX_MEM(0)->getHostMemAddr(BX_CPU_THIS, A20ADDR(lpf), BX_WRITE, DATA_ACCESS);
 
-        // Request a direct write pointer so we can do either R or W.
-        bx_hostpageaddr_t hostPageAddr = (bx_hostpageaddr_t)
-          BX_MEM(0)->getHostMemAddr(BX_CPU_THIS, A20ADDR(lpf), BX_WRITE, DATA_ACCESS);
-
-        if (hostPageAddr) {
-          tlbEntry->lpf = lpf;
-          tlbEntry->ppf = (bx_phy_address) lpf;
-          tlbEntry->hostPageAddr = hostPageAddr;
-          // Got direct write pointer OK.  Mark for any operation to succeed.
-          tlbEntry->accessBits = (TLB_ReadSysOK | TLB_ReadUserOK | TLB_WriteSysOK | TLB_WriteUserOK |
+          if (hostPageAddr) {
+            tlbEntry->lpf = lpf;
+            tlbEntry->ppf = (bx_phy_address) lpf;
+            tlbEntry->hostPageAddr = hostPageAddr;
+            // Got direct write pointer OK.  Mark for any operation to succeed.
+            tlbEntry->accessBits = (TLB_ReadSysOK | TLB_ReadUserOK | TLB_WriteSysOK | TLB_WriteUserOK |
                TLB_ReadSysPtrOK | TLB_ReadUserPtrOK | TLB_WriteSysPtrOK | TLB_WriteUserPtrOK);
+          }
         }
       }
 #endif
@@ -1442,36 +1449,43 @@ void BX_CPU_C::access_read_linear(bx_address laddr, unsigned len, unsigned curr_
       BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr, (bx_phy_address) laddr, len, xlate_rw);
 
 #if BX_SupportGuest2HostTLB
-      unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 0);
-      bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
-      bx_address lpf = LPFOf(laddr);
+      // do not replace to the TLB if there is a breakpoint defined
+      // in the same page
+#if BX_X86_DEBUGGER
+      if (! hwbreakpoint_check(laddr))
+#endif
+      {
+        unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 0);
+        bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
+        bx_address lpf = LPFOf(laddr);
 
-      if (tlbEntry->lpf != lpf) {
-        // We haven't seen this page, or it's been bumped before.
+        if (tlbEntry->lpf != lpf) {
+          // We haven't seen this page, or it's been bumped before.
 
-        // Request a direct write pointer so we can do either R or W.
-        bx_hostpageaddr_t hostPageAddr = (bx_hostpageaddr_t)
-          BX_MEM(0)->getHostMemAddr(BX_CPU_THIS, A20ADDR(lpf), BX_WRITE, DATA_ACCESS);
-
-        if (hostPageAddr) {
-          tlbEntry->lpf = lpf;
-          tlbEntry->ppf = (bx_phy_address) lpf;
-          tlbEntry->hostPageAddr = hostPageAddr;
-          // Got direct write pointer OK.  Mark for any operation to succeed.
-          tlbEntry->accessBits = (TLB_ReadSysOK | TLB_ReadUserOK | TLB_WriteSysOK | TLB_WriteUserOK |
-               TLB_ReadSysPtrOK | TLB_ReadUserPtrOK | TLB_WriteSysPtrOK | TLB_WriteUserPtrOK);
-        }
-        else {
-          // Direct write vetoed.  Try requesting only direct reads.
-          hostPageAddr = (bx_hostpageaddr_t) BX_MEM(0)->getHostMemAddr(BX_CPU_THIS,
-             A20ADDR(lpf), BX_READ, DATA_ACCESS);
+          // Request a direct write pointer so we can do either R or W.
+          bx_hostpageaddr_t hostPageAddr = (bx_hostpageaddr_t)
+            BX_MEM(0)->getHostMemAddr(BX_CPU_THIS, A20ADDR(lpf), BX_WRITE, DATA_ACCESS);
 
           if (hostPageAddr) {
             tlbEntry->lpf = lpf;
             tlbEntry->ppf = (bx_phy_address) lpf;
             tlbEntry->hostPageAddr = hostPageAddr;
             // Got direct write pointer OK.  Mark for any operation to succeed.
-            tlbEntry->accessBits = (TLB_ReadSysOK | TLB_ReadUserOK | TLB_ReadSysPtrOK | TLB_ReadUserPtrOK);
+            tlbEntry->accessBits = (TLB_ReadSysOK | TLB_ReadUserOK | TLB_WriteSysOK | TLB_WriteUserOK |
+               TLB_ReadSysPtrOK | TLB_ReadUserPtrOK | TLB_WriteSysPtrOK | TLB_WriteUserPtrOK);
+          }
+          else {
+            // Direct write vetoed.  Try requesting only direct reads.
+            hostPageAddr = (bx_hostpageaddr_t) BX_MEM(0)->getHostMemAddr(BX_CPU_THIS,
+               A20ADDR(lpf), BX_READ, DATA_ACCESS);
+
+            if (hostPageAddr) {
+              tlbEntry->lpf = lpf;
+              tlbEntry->ppf = (bx_phy_address) lpf;
+              tlbEntry->hostPageAddr = hostPageAddr;
+              // Got direct write pointer OK.  Mark for any operation to succeed.
+              tlbEntry->accessBits = (TLB_ReadSysOK | TLB_ReadUserOK | TLB_ReadSysPtrOK | TLB_ReadUserPtrOK);
+            }
           }
         }
       }

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.236 2008-05-31 21:17:02 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.237 2008-06-02 18:41:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2524,88 +2524,56 @@ Bit32u BX_CPU_C::hwdebug_compare(bx_address laddr_0, unsigned size,
   // Support x86 hardware debug facilities (DR0..DR7)
   Bit32u dr7 = BX_CPU_THIS_PTR dr7;
 
-  bx_bool ibpoint_found = 0;
-  bx_address laddr_n = laddr_0 + (size - 1);
   static bx_address alignment_mask[4] =
     // 00b=1  01b=2  10b=undef(8)  11b=4
     {  0x0,   0x1,   0x7,          0x3   };
 
-  Bit32u len0 = (dr7>>18) & 3;
-  Bit32u len1 = (dr7>>22) & 3;
-  Bit32u len2 = (dr7>>26) & 3;
-  Bit32u len3 = (dr7>>30) & 3;
+  bx_address laddr_n = laddr_0 + (size - 1);
+  bx_address dr[4], dr_n[4];
+  Bit32u dr_op[4], len[4];
+  bx_bool ibpoint_found_n[4], ibpoint_found = 0;
 
-  bx_address dr0 = (BX_CPU_THIS_PTR dr[0]) & ~(alignment_mask[len0]);
-  bx_address dr1 = (BX_CPU_THIS_PTR dr[1]) & ~(alignment_mask[len1]);
-  bx_address dr2 = (BX_CPU_THIS_PTR dr[2]) & ~(alignment_mask[len2]);
-  bx_address dr3 = (BX_CPU_THIS_PTR dr[3]) & ~(alignment_mask[len3]);
+  len[0] = (dr7>>18) & 3;
+  len[1] = (dr7>>22) & 3;
+  len[2] = (dr7>>26) & 3;
+  len[3] = (dr7>>30) & 3;
 
-  bx_address dr0_n = dr0 + len0;
-  bx_address dr1_n = dr1 + len1;
-  bx_address dr2_n = dr2 + len2;
-  bx_address dr3_n = dr3 + len3;
+  dr_op[0] = (dr7>>16) & 3;
+  dr_op[1] = (dr7>>20) & 3;
+  dr_op[2] = (dr7>>24) & 3;
+  dr_op[3] = (dr7>>28) & 3;
 
-  Bit32u dr0_op = (dr7>>16) & 3;
-  Bit32u dr1_op = (dr7>>20) & 3;
-  Bit32u dr2_op = (dr7>>24) & 3;
-  Bit32u dr3_op = (dr7>>28) & 3;
+  for (unsigned i=0;i<4;i++) {
+    dr[i]   = BX_CPU_THIS_PTR dr[i] & ~alignment_mask[len[i]];
+    dr_n[i] = dr[i] + alignment_mask[len[i]];
+    ibpoint_found_n[i] = 0;
 
-  // See if this instruction address matches any breakpoints
-  if ((dr7 & 0x00000003)) {
-    if ((dr0_op==opa || dr0_op==opb) &&
-         (laddr_0 <= dr0_n) &&
-         (laddr_n >= dr0))
-      ibpoint_found = 1;
-  }
-  if ((dr7 & 0x0000000c)) {
-    if ((dr1_op==opa || dr1_op==opb) &&
-         (laddr_0 <= dr1_n) &&
-         (laddr_n >= dr1))
-      ibpoint_found = 1;
-  }
-  if ((dr7 & 0x00000030)) {
-    if ((dr2_op==opa || dr2_op==opb) &&
-         (laddr_0 <= dr2_n) &&
-         (laddr_n >= dr2))
-      ibpoint_found = 1;
-  }
-  if ((dr7 & 0x000000c0)) {
-    if ((dr3_op==opa || dr3_op==opb) &&
-         (laddr_0 <= dr3_n) &&
-         (laddr_n >= dr3))
-      ibpoint_found = 1;
+    // See if this instruction address matches any breakpoints
+    if (dr7 & (3 << i*2)) {
+      if ((dr_op[i]==opa || dr_op[i]==opb) &&
+           (laddr_0 <= dr_n[i]) &&
+           (laddr_n >= dr[i])) {
+        ibpoint_found_n[i] = 1;
+        ibpoint_found = 1;
+      }
+    }
   }
 
   // If *any* enabled breakpoints matched, then we need to
   // set status bits for *all* breakpoints, even disabled ones,
   // as long as they meet the other breakpoint criteria.
-  // This code is similar to that above, only without the
-  // breakpoint enabled check.  Seems weird to duplicate effort,
-  // but its more efficient to do it this way.
+  // dr6_mask is the return value.  These bits represent the bits
+  // to be OR'd into DR6 as a result of the debug event.
+  Bit32u dr6_mask = 0;
+
   if (ibpoint_found) {
-    // dr6_mask is the return value.  These bits represent the bits to
-    // be OR'd into DR6 as a result of the debug event.
-    Bit32u dr6_mask=0;
-    if ((dr0_op==opa || dr0_op==opb) &&
-         (laddr_0 <= dr0_n) &&
-         (laddr_n >= dr0))
-      dr6_mask |= 0x01;
-    if ((dr1_op==opa || dr1_op==opb) &&
-         (laddr_0 <= dr1_n) &&
-         (laddr_n >= dr1))
-      dr6_mask |= 0x02;
-    if ((dr2_op==opa || dr2_op==opb) &&
-         (laddr_0 <= dr2_n) &&
-         (laddr_n >= dr2))
-      dr6_mask |= 0x04;
-    if ((dr3_op==opa || dr3_op==opb) &&
-         (laddr_0 <= dr3_n) &&
-         (laddr_n >= dr3))
-      dr6_mask |= 0x08;
-    return(dr6_mask);
+    if (ibpoint_found_n[0]) dr6_mask |= 0x1;
+    if (ibpoint_found_n[1]) dr6_mask |= 0x2;
+    if (ibpoint_found_n[2]) dr6_mask |= 0x4;
+    if (ibpoint_found_n[3]) dr6_mask |= 0x8;
   }
 
-  return(0);
+  return dr6_mask;
 }
 #endif
 
