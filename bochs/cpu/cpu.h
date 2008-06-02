@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.483 2008-05-30 20:35:06 sshwarts Exp $
+// $Id: cpu.h,v 1.484 2008-06-02 20:11:03 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -3592,7 +3592,7 @@ IMPLEMENT_EFLAG_ACCESSOR   (TF,   8)
 // For decoding...
 //
 
-// If the Immediate bit is set, the lowest 3 bits of the attribute
+// If the BxImmediate mask is set, the lowest 4 bits of the attribute
 // specify which kinds of immediate data a required by instruction.
 
 #define BxImmediate         0x000f // bits 3..0: any immediate
