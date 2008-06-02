@@ -59,6 +59,7 @@ Detailed change log :
   - improved 'x' gui runtime dialogs
 
 - SF patches applied
+ [1980833] Fix shutdown status code 5h handler by Kevin O'Connor
  [1928848] "pipe" mode for serial port (win32 only) by Eugene Toder
  [1956843] Set the compatible pci interrupt router back to PIIX by Sebastian
  [1956366] Do not announce C2 & C3 cpu power state support by Igor Lvovsky
