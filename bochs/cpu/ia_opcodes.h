@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ia_opcodes.h,v 1.7 2008-05-30 20:35:08 sshwarts Exp $
+// $Id: ia_opcodes.h,v 1.8 2008-06-04 16:27:42 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008 Stanislav Shwartsman
@@ -888,10 +888,10 @@ bx_define_opcode(BX_IA_PSLLQ_PqIb, BX_CPU_C::PSLLQ_PqIb)
 
 bx_define_opcode(BX_IA_FEMMS, BX_3DNOW_ALIAS(BX_CPU_C::EMMS))
 #if BX_SUPPORT_3DNOW
-bx_define_opcode(BX_IA_PF2ID_PqQq, BX_CPU_C::PF2ID_PqQq)
+bx_define_opcode(IA_PF2ID_PqQq, BX_CPU_C::PF2ID_PqQq)
 bx_define_opcode(BX_IA_PF2IW_PqQq, BX_CPU_C::PF2IW_PqQq)
 bx_define_opcode(BX_IA_PFACC_PqQq, BX_CPU_C::PFACC_PqQq)
-bx_define_opcode(BX_IA_PFADD_PqQq, BX_CPU_C::BX_PFADD_PqQq)
+bx_define_opcode(BX_IA_PFADD_PqQq, BX_CPU_C::PFADD_PqQq)
 bx_define_opcode(BX_IA_PFCMPEQ_PqQq, BX_CPU_C::PFCMPEQ_PqQq)
 bx_define_opcode(BX_IA_PFCMPGE_PqQq, BX_CPU_C::PFCMPGE_PqQq)
 bx_define_opcode(BX_IA_PFCMPGT_PqQq, BX_CPU_C::PFCMPGT_PqQq)
