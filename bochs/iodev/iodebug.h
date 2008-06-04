@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodebug.h,v 1.11 2008-05-01 20:46:58 sshwarts Exp $
+// $Id: iodebug.h,v 1.12 2008-06-04 16:28:16 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 #ifndef _BX_IODEBUG_H
@@ -18,7 +18,7 @@ public:
   virtual void init(void);
   virtual void reset (unsigned type) {}
   static void mem_write(BX_CPU_C *cpu, bx_phy_address addr, unsigned len, void *data);
-  static void mem_read(BX_CPU_C *cpu, bx_phy_addressu addr, unsigned len, void *data);
+  static void mem_read(BX_CPU_C *cpu, bx_phy_address addr, unsigned len, void *data);
 
 private:
   static Bit32u read_handler(void *this_ptr, Bit32u address, unsigned io_len);
