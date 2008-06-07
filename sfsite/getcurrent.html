@@ -7,7 +7,37 @@
  <!--content starts here-->
  <img src="images/logo.gif" alt="A Window, Tux, and the BSD Daemon" width="160" height="175" align="right">
 
- <BR><font face="arial, helvetica" color="#1e029a" size="4"><b>Latest release:</b> Bochs 2.3.6</font><BR><BR>
+ <BR><font face="arial, helvetica" color="#1e029a" size="4"><b>Latest release:</b> Bochs 2.3.7</font><BR><BR>
+
+Version 2.3.7 is an intermediate (bugfix+) release. It includes a lot of bugfixes
+and a few new features.<BR>
+Here is a brief summary of changes :
+<ul>
+<li> More optimizations in CPU code - <b>Bochs 2.3.7 is more than 2x faster than Bochs 2.3.5 build !</b>
+<li> Implemented LBA48 support in BIOS
+<li> Added memory access tracing for Bochs internal debugger
+<li> Implemented Intel(R) XSAVE/XRSTOR and AES instruction set extensions
+<li> Many fixes in CPU emulation and internal debugger. MenuetOS64 floppy images booting perfect again !
+<li> updated LGPL'd VGABIOS to version 0.6b
+</ul>
+
+The binary packages for Linux and Windows are built with these featues :
+<ul>
+<li> x86-64 emulation with all optimizations enabled
+<li> devices: ACPI, NE2000, PCI, SB16 and USB
+<li> video: Bochs VBE and Cirrus SVGA
+<li> Linux display libraries: nogui, rfb, sdl, term, x
+<li> Windows display libraries: nogui, rfb, win32
+</ul>
+
+<BR/>
+<a href="http://bochs.cvs.sourceforge.net/bochs/bochs/CHANGES?view=markup&content-type=text/vnd.viewcvs-markup&revision=REL_2_3_7_FINAL">
+Details on what has changed since version 2.3.6
+</a>
+
+<BR/><BR/>
+
+ <BR><font face="arial, helvetica" color="#1e029a" size="4"><b>Previous release:</b> Bochs 2.3.6</font><BR><BR>
 
 Version 2.3.6 is an intermediate (bugfix+) release. It includes a lot of bugfixes
 and a few new features.<BR>
@@ -22,38 +52,9 @@ for providing patches and ideas that made the speedup possible!<br>
 <li>Bochs benchmarking support
 <li>Added emulation of Intel SSE4.2 instruction set
 </ul>
-
-The binary packages for Linux and Windows are built with these featues :
-<ul>
-<li> x86-64 emulation with all optimizations enabled
-<li> devices: ACPI, NE2000, PCI, SB16 and USB
-<li> video: Bochs VBE and Cirrus SVGA
-<li> Linux display libraries: nogui, rfb, sdl, term, x
-<li> Windows display libraries: nogui, rfb, win32
-</ul>
-
 <BR/>
 <a href="http://bochs.cvs.sourceforge.net/bochs/bochs/CHANGES?view=markup&content-type=text/vnd.viewcvs-markup&revision=REL_2_3_6_FINAL">
 Details on what has changed since version 2.3.5
-</a>
-
-<BR/><BR/>
-
- <BR><font face="arial, helvetica" color="#1e029a" size="4"><b>Previous release:</b> Bochs 2.3.5</font><BR><BR>
-
-About a year after the last stable one we have a new intermediate (bugfix+) release.
-Here is the list of changes since version 2.3:
-<ul>
-<li> Critical problems fixed for x86-64 support in CPU and Bochs internal debugger
-<li> ACPI support
-<li> The release compiled with x86-64 and ACPI
-<li> Hard disk emulation supports ATA-6 (LBA48 addressing, UDMA modes)
-<li> Added emulation of Intel SSE4.1 instruction set
-<li> Lots of bugfixes
-</ul>
-<BR/>
-<a href="http://bochs.cvs.sourceforge.net/bochs/bochs/CHANGES?view=markup&content-type=text/vnd.viewcvs-markup&revision=REL_2_3_5_FINAL">
-Details on what has changed since version 2.3
 </a>
 
 
