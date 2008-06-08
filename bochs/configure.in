@@ -2,18 +2,18 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.368 2008-06-03 16:11:20 vruppert Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.369 2008-06-08 10:33:06 vruppert Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
 dnl // Put Bochs version information right here so that it gets substituted
 dnl // into all the right places.
-VERSION="2.3.7"
-VER_STRING="2.3.7"
+VERSION="2.3.7.cvs"
+VER_STRING="2.3.7.cvs"
 dnl // WIN_VER_STRING format is "a, b, c, d"
 dnl // d should be 0 for release and 1 for cvs version
-WIN_VER_STRING="2, 3, 7, 0"
-REL_STRING="Build from CVS snapshot, on June 3, 2008"
+WIN_VER_STRING="2, 3, 7, 1"
+REL_STRING="Build from CVS snapshot, after release 2.3.7"
 
 changequote(<<, >>)
 changequote([, ])
