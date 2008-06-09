@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.148 2008-05-31 21:07:30 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.149 2008-06-09 23:00:43 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2948,49 +2948,49 @@ void bx_dbg_info_ldt_command(unsigned from, unsigned to)
 /*form RB list*/
 static char* bx_dbg_ivt_desc(int intnum)
 {
-  char* ret = "";
-  switch (intnum)
-  { case 0x00 : ret = "DIVIDE ERROR"                        ; break;
-    case 0x01 : ret = "SINGLE STEP"                         ; break;
-    case 0x02 : ret = "NON-MASKABLE INTERRUPT"              ; break;
-    case 0x03 : ret = "BREAKPOINT"                          ; break;
-    case 0x04 : ret = "INT0 DETECTED OVERFLOW"              ; break;
-    case 0x05 : ret = "BOUND RANGE EXCEED"                  ; break;
-    case 0x06 : ret = "INVALID OPCODE"                      ; break;
-    case 0x07 : ret = "PROCESSOR EXTENSION NOT AVAILABLE"   ; break;
-    case 0x08 : ret = "IRQ0 - SYSTEM TIMER"                 ; break;
-    case 0x09 : ret = "IRQ1 - KEYBOARD DATA READY"          ; break;
-    case 0x0a : ret = "IRQ2 - LPT2"                         ; break;
-    case 0x0b : ret = "IRQ3 - COM2"                         ; break;
-    case 0x0c : ret = "IRQ4 - COM1"                         ; break;
-    case 0x0d : ret = "IRQ5 - FIXED DISK"                   ; break;
-    case 0x0e : ret = "IRQ6 - DISKETTE CONTROLLER"          ; break;
-    case 0x0f : ret = "IRQ7 - PARALLEL PRINTER"             ; break;
-    case 0x10 : ret = "VIDEO"                               ; break;
-    case 0x11 : ret = "GET EQUIPMENT LIST"                  ; break;
-    case 0x12 : ret = "GET MEMORY SIZE"                     ; break;
-    case 0x13 : ret = "DISK"                                ; break;
-    case 0x14 : ret = "SERIAL"                              ; break;
-    case 0x15 : ret = "SYSTEM"                              ; break;
-    case 0x16 : ret = "KEYBOARD"                            ; break;
-    case 0x17 : ret = "PRINTER"                             ; break;
-    case 0x18 : ret = "CASETTE BASIC"                       ; break;
-    case 0x19 : ret = "BOOTSTRAP LOADER"                    ; break;
-    case 0x1a : ret = "TIME"                                ; break;
-    case 0x1b : ret = "KEYBOARD - CONTROL-BREAK HANDLER"    ; break;
-    case 0x1c : ret = "TIME - SYSTEM TIMER TICK"            ; break;
-    case 0x1d : ret = "SYSTEM DATA - VIDEO PARAMETER TABLES"; break;
-    case 0x1e : ret = "SYSTEM DATA - DISKETTE PARAMETERS"   ; break;
-    case 0x1f : ret = "SYSTEM DATA - 8x8 GRAPHICS FONT"     ; break;
-    case 0x70 : ret = "IRQ8 - CMOS REAL-TIME CLOCK"         ; break;
-    case 0x71 : ret = "IRQ9 - REDIRECTED TO INT 0A BY BIOS" ; break;
-    case 0x72 : ret = "IRQ10 - RESERVED"                    ; break;
-    case 0x73 : ret = "IRQ11 - RESERVED"                    ; break;
-    case 0x74 : ret = "IRQ12 - POINTING DEVICE"             ; break;
-    case 0x75 : ret = "IRQ13 - MATH COPROCESSOR EXCEPTION"  ; break;
-    case 0x76 : ret = "IRQ14 - HARD DISK CONTROLLER OPERATION COMPLETE"; break;
-    case 0x77 : ret = "IRQ15 - SECONDARY IDE CONTROLLER OPERATION COMPLETE"; break;
-    default   : ret = ""                                    ; break;
+  const char* ret;
+  switch (intnum) {
+    case 0x00: ret = "DIVIDE ERROR"                        ; break;
+    case 0x01: ret = "SINGLE STEP"                         ; break;
+    case 0x02: ret = "NON-MASKABLE INTERRUPT"              ; break;
+    case 0x03: ret = "BREAKPOINT"                          ; break;
+    case 0x04: ret = "INT0 DETECTED OVERFLOW"              ; break;
+    case 0x05: ret = "BOUND RANGE EXCEED"                  ; break;
+    case 0x06: ret = "INVALID OPCODE"                      ; break;
+    case 0x07: ret = "PROCESSOR EXTENSION NOT AVAILABLE"   ; break;
+    case 0x08: ret = "IRQ0 - SYSTEM TIMER"                 ; break;
+    case 0x09: ret = "IRQ1 - KEYBOARD DATA READY"          ; break;
+    case 0x0a: ret = "IRQ2 - LPT2"                         ; break;
+    case 0x0b: ret = "IRQ3 - COM2"                         ; break;
+    case 0x0c: ret = "IRQ4 - COM1"                         ; break;
+    case 0x0d: ret = "IRQ5 - FIXED DISK"                   ; break;
+    case 0x0e: ret = "IRQ6 - DISKETTE CONTROLLER"          ; break;
+    case 0x0f: ret = "IRQ7 - PARALLEL PRINTER"             ; break;
+    case 0x10: ret = "VIDEO"                               ; break;
+    case 0x11: ret = "GET EQUIPMENT LIST"                  ; break;
+    case 0x12: ret = "GET MEMORY SIZE"                     ; break;
+    case 0x13: ret = "DISK"                                ; break;
+    case 0x14: ret = "SERIAL"                              ; break;
+    case 0x15: ret = "SYSTEM"                              ; break;
+    case 0x16: ret = "KEYBOARD"                            ; break;
+    case 0x17: ret = "PRINTER"                             ; break;
+    case 0x18: ret = "CASETTE BASIC"                       ; break;
+    case 0x19: ret = "BOOTSTRAP LOADER"                    ; break;
+    case 0x1a: ret = "TIME"                                ; break;
+    case 0x1b: ret = "KEYBOARD - CONTROL-BREAK HANDLER"    ; break;
+    case 0x1c: ret = "TIME - SYSTEM TIMER TICK"            ; break;
+    case 0x1d: ret = "SYSTEM DATA - VIDEO PARAMETER TABLES"; break;
+    case 0x1e: ret = "SYSTEM DATA - DISKETTE PARAMETERS"   ; break;
+    case 0x1f: ret = "SYSTEM DATA - 8x8 GRAPHICS FONT"     ; break;
+    case 0x70: ret = "IRQ8 - CMOS REAL-TIME CLOCK"         ; break;
+    case 0x71: ret = "IRQ9 - REDIRECTED TO INT 0A BY BIOS" ; break;
+    case 0x72: ret = "IRQ10 - RESERVED"                    ; break;
+    case 0x73: ret = "IRQ11 - RESERVED"                    ; break;
+    case 0x74: ret = "IRQ12 - POINTING DEVICE"             ; break;
+    case 0x75: ret = "IRQ13 - MATH COPROCESSOR EXCEPTION"  ; break;
+    case 0x76: ret = "IRQ14 - HARD DISK CONTROLLER OPERATION COMPLETE"; break;
+    case 0x77: ret = "IRQ15 - SECONDARY IDE CONTROLLER OPERATION COMPLETE"; break;
+    default  : ret = ""                                    ; break;
   }
   return ret;
 }
