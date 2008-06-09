@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.189 2008-05-02 22:47:07 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.190 2008-06-09 19:35:59 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2487,6 +2487,14 @@ fetch_b1:
   ilen++;
 
   switch (b1) {
+    case 0x0f: // 2-byte escape
+      i->setOpcodeExtension();
+      if (ilen < remain) {
+        ilen++;
+        b1 = 0x100 | *iptr++;
+        break;
+      }
+      return(0);
     case 0x66: // OpSize
       BX_INSTR_PREFIX(BX_CPU_ID, b1);
       os_32 = !is_32;
@@ -2567,14 +2575,6 @@ fetch_b1:
       lock = 1;
       if (ilen < remain) {
         goto fetch_b1;
-      }
-      return(0);
-    case 0x0f: // 2-byte escape
-      i->setOpcodeExtension();
-      if (ilen < remain) {
-        ilen++;
-        b1 = 0x100 | *iptr++;
-        break;
       }
       return(0);
     default:
@@ -2956,16 +2956,15 @@ modrm_done:
      ia_opcode = Bx3DNowOpcodeInfo[i->modRMForm.Ib].IA;
 #endif
 
-  i->execute = BxOpcodesTable[ia_opcode];
-
   if (BX_NULL_SEG_REG(i->seg()))
      i->setSeg(BX_SEG_REG_DS);
 
 #if BX_SUPPORT_TRACE_CACHE
-  if ((attr & BxTraceEnd) ||
-        (i->execute == &BX_CPU_C::BxError)) i->setStopTraceAttr();
+  if ((attr & BxTraceEnd) || ia_opcode == BX_IA_ERROR)
+     i->setStopTraceAttr();
 #endif
 
+  i->execute = BxOpcodesTable[ia_opcode];
   i->setB1(b1);
   i->setILen(ilen);
 

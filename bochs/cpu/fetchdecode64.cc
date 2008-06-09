@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.198 2008-05-08 21:34:22 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.199 2008-06-09 19:35:59 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -3376,26 +3376,6 @@ fetch_b1:
   ilen++;
 
   switch (b1) {
-    case 0x66: // OpSize
-      BX_INSTR_PREFIX(BX_CPU_ID, b1);
-      rex_prefix = 0;
-      if(!sse_prefix) sse_prefix = SSE_PREFIX_66;
-      if (!i->os64L()) {
-        i->setOs32B(0);
-        offset = 0;
-      }
-      if (ilen < remain) {
-        goto fetch_b1;
-      }
-      return(0);
-    case 0x67: // AddrSize
-      BX_INSTR_PREFIX(BX_CPU_ID, b1);
-      rex_prefix = 0;
-      i->setAs64B(0);
-      if (ilen < remain) {
-        goto fetch_b1;
-      }
-      return(0);
     case 0x40:
     case 0x41:
     case 0x42:
@@ -3418,6 +3398,14 @@ fetch_b1:
         goto fetch_b1;
       }
       return(0);
+    case 0x0f: // 2 byte escape
+      i->setOpcodeExtension();
+      if (ilen < remain) {
+        ilen++;
+        b1 = 0x100 | *iptr++;
+        break;
+      }
+      return(0);
     case 0xf2: // REPNE/REPNZ
       BX_INSTR_PREFIX(BX_CPU_ID, b1);
       rex_prefix = 0;
@@ -3432,6 +3420,24 @@ fetch_b1:
       rex_prefix = 0;
       sse_prefix = SSE_PREFIX_F3;
       i->setRepUsed(b1 & 3);
+      if (ilen < remain) {
+        goto fetch_b1;
+      }
+      return(0);
+    case 0x66: // OpSize
+      BX_INSTR_PREFIX(BX_CPU_ID, b1);
+      rex_prefix = 0;
+      if(!sse_prefix) sse_prefix = SSE_PREFIX_66;
+      i->setOs32B(0);
+      offset = 0;
+      if (ilen < remain) {
+        goto fetch_b1;
+      }
+      return(0);
+    case 0x67: // AddrSize
+      BX_INSTR_PREFIX(BX_CPU_ID, b1);
+      rex_prefix = 0;
+      i->setAs64B(0);
       if (ilen < remain) {
         goto fetch_b1;
       }
@@ -3469,14 +3475,6 @@ fetch_b1:
       lock = 1;
       if (ilen < remain) {
         goto fetch_b1;
-      }
-      return(0);
-    case 0x0f: // 2 byte escape
-      i->setOpcodeExtension();
-      if (ilen < remain) {
-        ilen++;
-        b1 = 0x100 | *iptr++;
-        break;
       }
       return(0);
     default:
@@ -3864,16 +3862,15 @@ modrm_done:
      ia_opcode = Bx3DNowOpcodeInfo[i->modRMForm.Ib].IA;
 #endif
 
-  i->execute = BxOpcodesTable[ia_opcode];
-
   if (BX_NULL_SEG_REG(i->seg()))
      i->setSeg(BX_SEG_REG_DS);
 
 #if BX_SUPPORT_TRACE_CACHE
-  if ((attr & BxTraceEnd) ||
-        (i->execute == &BX_CPU_C::BxError)) i->setStopTraceAttr();
+  if ((attr & BxTraceEnd) || ia_opcode == BX_IA_ERROR)
+     i->setStopTraceAttr();
 #endif
 
+  i->execute = BxOpcodesTable[ia_opcode];
   i->setB1(b1);
   i->setILen(ilen);
 
