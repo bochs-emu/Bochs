@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/development/development.dbk
-$Id: development.dbk,v 1.27 2008-02-05 22:33:34 sshwarts Exp $
+$Id: development.dbk,v 1.28 2008-06-10 21:41:27 vruppert Exp $
 
 This is the top level file for the Bochs Developers Manual.
 ================================================================
@@ -2396,13 +2396,13 @@ This produces two rpm files in the current directory.  Test and upload.
 </section>
 <section><title>Uploading files and creating a file release on SF</title>
 <para>
-When you are ready with creating release packages you have to upload them to SF
-using anonymous FTP using this location:
+When you are ready with creating release packages you have to upload them to SF.
+Using the SF webupload feature is the easiest way to do this.
 <screen>
-upload.sourceforge.net/incoming
+https://frs.sourceforge.net/webupload
 </screen>
 Note that you cannot modify or delete files after uploading them. If you don't do
-anything with the uploaded files, they will be deleted by SF after 24 hours.
+anything with the uploaded files, they will be deleted by SF after 7 to 14 days.
 </para>
 <para>
 To create or edit a file release you have to log in to the <command>Admin</command>
