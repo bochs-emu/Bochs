@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.190 2008-06-09 19:35:59 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.191 2008-06-11 20:58:28 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2513,59 +2513,28 @@ fetch_b1:
       }
       return(0);
     case 0xf2: // REPNE/REPNZ
-      BX_INSTR_PREFIX(BX_CPU_ID, b1);
-      sse_prefix = SSE_PREFIX_F2;
-      i->setRepUsed(b1 & 3);
-      if (ilen < remain) {
-        goto fetch_b1;
-      }
-      return(0);
     case 0xf3: // REP/REPE/REPZ
       BX_INSTR_PREFIX(BX_CPU_ID, b1);
-      sse_prefix = SSE_PREFIX_F3;
+      sse_prefix = b1 & 0xf;
       i->setRepUsed(b1 & 3);
-      if (ilen < remain) {
-        goto fetch_b1;
-      }
-      return(0);
-    case 0x2e: // CS:
-      BX_INSTR_PREFIX(BX_CPU_ID, b1);
-      i->setSeg(BX_SEG_REG_CS);
       if (ilen < remain) {
         goto fetch_b1;
       }
       return(0);
     case 0x26: // ES:
-      BX_INSTR_PREFIX(BX_CPU_ID, b1);
-      i->setSeg(BX_SEG_REG_ES);
-      if (ilen < remain) {
-        goto fetch_b1;
-      }
-      return(0);
+    case 0x2e: // CS:
     case 0x36: // SS:
-      BX_INSTR_PREFIX(BX_CPU_ID, b1);
-      i->setSeg(BX_SEG_REG_SS);
-      if (ilen < remain) {
-        goto fetch_b1;
-      }
-      return(0);
     case 0x3e: // DS:
       BX_INSTR_PREFIX(BX_CPU_ID, b1);
-      i->setSeg(BX_SEG_REG_DS);
+      i->setSeg((b1 >> 3) & 3);
       if (ilen < remain) {
         goto fetch_b1;
       }
       return(0);
     case 0x64: // FS:
-      BX_INSTR_PREFIX(BX_CPU_ID, b1);
-      i->setSeg(BX_SEG_REG_FS);
-      if (ilen < remain) {
-        goto fetch_b1;
-      }
-      return(0);
     case 0x65: // GS:
       BX_INSTR_PREFIX(BX_CPU_ID, b1);
-      i->setSeg(BX_SEG_REG_GS);
+      i->setSeg(b1 & 0xf);
       if (ilen < remain) {
         goto fetch_b1;
       }
