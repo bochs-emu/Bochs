@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.93 2008-06-11 20:59:50 sshwarts Exp $
+// $Id: iodev.h,v 1.94 2008-06-11 21:10:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -533,7 +533,7 @@ private:
 BX_CPP_INLINE void DEV_MEM_READ_PHYSICAL(bx_phy_address phy_addr, unsigned len, Bit8u *ptr)
 {
   unsigned remainingInPage = 0x1000 - (phy_addr & 0xfff);
-  if (len < remainingInPage) {
+  if (len <= remainingInPage) {
     BX_MEM(0)->readPhysicalPage(NULL, phy_addr, len, ptr);
   }
   else {
@@ -561,7 +561,7 @@ BX_CPP_INLINE void DEV_MEM_READ_PHYSICAL_BLOCK(bx_phy_address phy_addr, unsigned
 BX_CPP_INLINE void DEV_MEM_WRITE_PHYSICAL(bx_phy_address phy_addr, unsigned len, Bit8u *ptr)
 {
   unsigned remainingInPage = 0x1000 - (phy_addr & 0xfff);
-  if (len < remainingInPage) {
+  if (len <= remainingInPage) {
     BX_MEM(0)->writePhysicalPage(NULL, phy_addr, len, ptr);
   }
   else {
