@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pciusb.cc,v 1.63 2008-04-17 14:39:32 sshwarts Exp $
+// $Id: pciusb.cc,v 1.64 2008-06-11 20:59:50 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -931,7 +931,7 @@ bx_bool bx_pciusb_c::DoTransfer(Bit32u address, Bit32u queue_num, struct TD *td)
       case USB_TOKEN_OUT:
       case USB_TOKEN_SETUP:
         if (maxlen > 0) {
-          DEV_MEM_READ_PHYSICAL(td->dword3, maxlen, device_buffer);
+          DEV_MEM_READ_PHYSICAL_BLOCK(td->dword3, maxlen, device_buffer);
         }
         ret = dev->handle_packet(&BX_USB_THIS usb_packet);
         len = maxlen;
@@ -945,7 +945,7 @@ bx_bool bx_pciusb_c::DoTransfer(Bit32u address, Bit32u queue_num, struct TD *td)
             ret = USB_RET_BABBLE;
           }
           if (len > 0) {
-            DEV_MEM_WRITE_PHYSICAL(td->dword3, len, device_buffer);
+            DEV_MEM_WRITE_PHYSICAL_BLOCK(td->dword3, len, device_buffer);
           }
         } else {
           len = 0;
