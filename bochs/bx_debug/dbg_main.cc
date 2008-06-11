@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.149 2008-06-09 23:00:43 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.150 2008-06-11 20:29:30 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2946,7 +2946,7 @@ void bx_dbg_info_ldt_command(unsigned from, unsigned to)
 }
 
 /*form RB list*/
-static char* bx_dbg_ivt_desc(int intnum)
+static const char* bx_dbg_ivt_desc(int intnum)
 {
   const char* ret;
   switch (intnum) {
