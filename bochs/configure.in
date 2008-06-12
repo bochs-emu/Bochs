@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.369 2008-06-08 10:33:06 vruppert Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.370 2008-06-12 21:02:54 sshwarts Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -1434,6 +1434,27 @@ AC_ARG_ENABLE(logging,
     ]
   )
 
+AC_MSG_CHECKING(enable assert checks)
+AC_ARG_ENABLE(assert-checks,
+  [  --enable-assert-checks            enable BX_ASSERT checks],
+  [if test "$enableval" = yes; then
+    AC_MSG_RESULT(yes)
+    AC_DEFINE(BX_ASSERT_ENABLE, 1)
+   else
+    AC_MSG_RESULT(no)
+    AC_DEFINE(BX_ASSERT_ENABLE, 0)
+   fi],
+  [
+    if test "$bx_debugger" = 1; then
+      AC_MSG_RESULT(yes)
+      AC_DEFINE(BX_ASSERT_ENABLE, 1)
+    else
+      AC_MSG_RESULT(no)
+      AC_DEFINE(BX_ASSERT_ENABLE, 0)
+    fi
+    ]
+  )
+
 AC_MSG_CHECKING(for raw serial support)
 AC_ARG_ENABLE(raw-serial,
   [  --enable-raw-serial               use raw serial port access],
@@ -1530,6 +1551,9 @@ AC_ARG_ENABLE(vme,
     if test "$bx_cpu_level" -ge 5; then
       AC_MSG_RESULT(yes)
       AC_DEFINE(BX_SUPPORT_VME, 1)
+    else
+      AC_MSG_RESULT(no)
+      AC_DEFINE(BX_SUPPORT_VME, 0)
     fi
     ]
   )
@@ -1551,6 +1575,9 @@ AC_ARG_ENABLE(mmx,
     if test "$bx_cpu_level" -ge 5; then
       AC_MSG_RESULT(yes)
       AC_DEFINE(BX_SUPPORT_MMX, 1)
+    else
+      AC_MSG_RESULT(no)
+      AC_DEFINE(BX_SUPPORT_MMX, 0)
     fi
     ]
   )
@@ -1829,10 +1856,8 @@ AC_ARG_ENABLE(x86-debugger,
    elif test "$enableval" = no; then
     AC_MSG_RESULT(no)
     AC_DEFINE(BX_X86_DEBUGGER, 0)
-   else
-    AC_MSG_RESULT(yes)
-    AC_DEFINE(BX_X86_DEBUGGER, 1)
-   fi],
+   fi
+   ],
   [
     AC_MSG_RESULT(no)
     AC_DEFINE(BX_X86_DEBUGGER, 0)

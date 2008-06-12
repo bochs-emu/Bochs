@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.231 2008-05-23 14:04:42 sshwarts Exp $
+// $Id: bochs.h,v 1.232 2008-06-12 21:02:53 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -403,7 +403,11 @@ typedef class BOCHSAPI iofunctions iofunc_t;
 #define BX_PANIC(x) (LOG_THIS panic) x
 #define BX_PASS(x) (LOG_THIS pass) x
 
-#define BX_ASSERT(x) do {if (!(x)) BX_PANIC(("failed assertion \"%s\" at %s:%d\n", #x, __FILE__, __LINE__));} while (0)
+#if BX_ASSERT_ENABLE
+  #define BX_ASSERT(x) do {if (!(x)) BX_PANIC(("failed assertion \"%s\" at %s:%d\n", #x, __FILE__, __LINE__));} while (0)
+#else
+  #define BX_ASSERT(x)
+#endif
 
 #endif
 
