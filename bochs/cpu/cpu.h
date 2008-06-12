@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.484 2008-06-02 20:11:03 sshwarts Exp $
+// $Id: cpu.h,v 1.485 2008-06-12 16:40:52 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2799,7 +2799,7 @@ public: // for now...
 #if BX_SUPPORT_X86_64
   BX_SMF unsigned fetchDecode64(const Bit8u *fetchPtr, bxInstruction_c *i, unsigned remainingInPage) BX_CPP_AttrRegparmN(3);
 #endif
-  BX_SMF bx_bool fetchInstruction(bxInstruction_c *iStorage, const Bit8u *fetchPtr, unsigned remainingInPage);
+  BX_SMF bx_bool fetchInstruction(bxInstruction_c *iStorage, Bit32u eipBiased);
   BX_SMF void boundaryFetch(const Bit8u *fetchPtr, unsigned remainingInPage, bxInstruction_c *);
 #if BX_SUPPORT_ICACHE
   BX_SMF void serveICacheMiss(bxICacheEntry_c *entry, Bit32u eipBiased, bx_phy_address pAddr);

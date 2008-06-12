@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.230 2008-05-10 20:35:03 sshwarts Exp $
+// $Id: cpu.cc,v 1.231 2008-06-12 16:40:52 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -171,9 +171,7 @@ no_async_event:
     }
 #else
     bxInstruction_c iStorage, *i = &iStorage;
-    unsigned remainingInPage = BX_CPU_THIS_PTR eipPageWindowSize - eipBiased;
-    const Bit8u *fetchPtr = BX_CPU_THIS_PTR eipFetchPtr + eipBiased;
-    fetchInstruction(i, fetchPtr, remainingInPage);
+    fetchInstruction(i, eipBiased);
 #endif
 
 #if BX_SUPPORT_TRACE_CACHE

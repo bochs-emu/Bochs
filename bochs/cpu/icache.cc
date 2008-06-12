@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: icache.cc,v 1.12 2008-05-04 05:37:36 sshwarts Exp $
+// $Id: icache.cc,v 1.13 2008-06-12 16:40:53 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007 Stanislav Shwartsman
@@ -26,8 +26,10 @@
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
-bx_bool BX_CPU_C::fetchInstruction(bxInstruction_c *iStorage, const Bit8u *fetchPtr, unsigned remainingInPage)
+bx_bool BX_CPU_C::fetchInstruction(bxInstruction_c *iStorage, Bit32u eipBiased)
 {
+  unsigned remainingInPage = BX_CPU_THIS_PTR eipPageWindowSize - eipBiased;
+  const Bit8u *fetchPtr = BX_CPU_THIS_PTR eipFetchPtr + eipBiased;
   unsigned ret;
 
 #if BX_SUPPORT_X86_64
@@ -163,13 +165,10 @@ bx_bool BX_CPU_C::mergeTraces(bxICacheEntry_c *entry, bxInstruction_c *i, bx_phy
 
 void BX_CPU_C::serveICacheMiss(bxICacheEntry_c *cache_entry, Bit32u eipBiased, bx_phy_address pAddr)
 {
-  unsigned remainingInPage = BX_CPU_THIS_PTR eipPageWindowSize - eipBiased;
-  const Bit8u *fetchPtr = BX_CPU_THIS_PTR eipFetchPtr + eipBiased;
-      
   // The entry will be marked valid if fetchdecode will succeed
   cache_entry->writeStamp = ICacheWriteStampInvalid;
 
-  if (fetchInstruction(cache_entry->i, fetchPtr, remainingInPage)) {
+  if (fetchInstruction(cache_entry->i, eipBiased)) {
     cache_entry->pAddr = pAddr;
     cache_entry->writeStamp = *(BX_CPU_THIS_PTR currPageWriteStampPtr);
   }
