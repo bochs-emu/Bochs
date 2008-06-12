@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: io.cc,v 1.59 2008-05-03 17:33:30 sshwarts Exp $
+// $Id: io.cc,v 1.60 2008-06-12 19:14:39 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -268,12 +268,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INSB_YbDX(bxInstruction_c *i)
   if (i->as64L()) {
     // Write a zero to memory, to trigger any segment or page
     // faults before reading from IO port.
-    write_virtual_byte(BX_SEG_REG_ES, RDI, value8);
+    write_virtual_byte_64(BX_SEG_REG_ES, RDI, value8);
 
     value8 = BX_INP(DX, 1);
 
     /* no seg override possible */
-    write_virtual_byte(BX_SEG_REG_ES, RDI, value8);
+    write_virtual_byte_64(BX_SEG_REG_ES, RDI, value8);
 
     if (BX_CPU_THIS_PTR get_DF())
       RDI--;
@@ -299,15 +299,15 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INSB_YbDX(bxInstruction_c *i)
       RDI = EDI + 1;
     }
   }
-  else {
+  else { // 16-bit address size
     // Write a zero to memory, to trigger any segment or page
     // faults before reading from IO port.
-    write_virtual_byte(BX_SEG_REG_ES, DI, value8);
+    write_virtual_byte_32(BX_SEG_REG_ES, DI, value8);
 
     value8 = BX_INP(DX, 1);
 
     /* no seg override possible */
-    write_virtual_byte(BX_SEG_REG_ES, DI, value8);
+    write_virtual_byte_32(BX_SEG_REG_ES, DI, value8);
 
     if (BX_CPU_THIS_PTR get_DF())
       DI--;
@@ -327,12 +327,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INSW_YwDX(bxInstruction_c *i)
 
     // Write a zero to memory, to trigger any segment or page
     // faults before reading from IO port.
-    write_virtual_word(BX_SEG_REG_ES, rdi, value16);
+    write_virtual_word_64(BX_SEG_REG_ES, rdi, value16);
 
     value16 = BX_INP(DX, 2);
 
     /* no seg override allowed */
-    write_virtual_word(BX_SEG_REG_ES, rdi, value16);
+    write_virtual_word_64(BX_SEG_REG_ES, rdi, value16);
 
     if (BX_CPU_THIS_PTR get_DF())
       rdi -= 2;
@@ -429,12 +429,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INSD_YdDX(bxInstruction_c *i)
 
     // Write a zero to memory, to trigger any segment or page
     // faults before reading from IO port.
-    write_virtual_dword(BX_SEG_REG_ES, rdi, 0);
+    write_virtual_dword_64(BX_SEG_REG_ES, rdi, 0);
 
     Bit32u value32 = BX_INP(DX, 4);
 
     /* no seg override allowed */
-    write_virtual_dword(BX_SEG_REG_ES, rdi, value32);
+    write_virtual_dword_64(BX_SEG_REG_ES, rdi, value32);
 
     if (BX_CPU_THIS_PTR get_DF())
       rdi -= 4;
@@ -464,17 +464,17 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INSD_YdDX(bxInstruction_c *i)
 
     RDI = edi;
   }
-  else {
+  else { // 16-bit address size
     Bit16u di = DI;
 
     // Write a zero to memory, to trigger any segment or page
     // faults before reading from IO port.
-    write_virtual_dword(BX_SEG_REG_ES, di, 0);
+    write_virtual_dword_32(BX_SEG_REG_ES, di, 0);
 
     Bit32u value32 = BX_INP(DX, 4);
 
     /* no seg override allowed */
-    write_virtual_dword(BX_SEG_REG_ES, di, value32);
+    write_virtual_dword_32(BX_SEG_REG_ES, di, value32);
 
     if (BX_CPU_THIS_PTR get_DF())
       di -= 4;
@@ -536,7 +536,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::OUTSB_DXXb(bxInstruction_c *i)
   if (i->as64L()) {
     Bit64u rsi = RSI;
 
-    value8 = read_virtual_byte(i->seg(), rsi);
+    value8 = read_virtual_byte_64(i->seg(), rsi);
     BX_OUTP(DX, value8, 1);
 
     if (BX_CPU_THIS_PTR get_DF())
@@ -561,10 +561,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::OUTSB_DXXb(bxInstruction_c *i)
 
     RSI = esi;
   }
-  else {
+  else { // address size 16-bit
     Bit16u si = SI;
 
-    value8 = read_virtual_byte(i->seg(), si);
+    value8 = read_virtual_byte_32(i->seg(), si);
     BX_OUTP(DX, value8, 1);
 
     if (BX_CPU_THIS_PTR get_DF())
@@ -590,7 +590,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::OUTSW_DXXw(bxInstruction_c *i)
   if (i->as64L()) {
     Bit64u rsi = RSI;
 
-    value16 = read_virtual_word(i->seg(), rsi);
+    value16 = read_virtual_word_64(i->seg(), rsi);
     BX_OUTP(DX, value16, 2);
 
     if (BX_CPU_THIS_PTR get_DF())
@@ -676,7 +676,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::OUTSD_DXXd(bxInstruction_c *i)
   if (i->as64L()) {
     Bit64u rsi = RSI;
 
-    value32 = read_virtual_dword(i->seg(), rsi);
+    value32 = read_virtual_dword_64(i->seg(), rsi);
     BX_OUTP(DX, value32, 4);
 
     if (BX_CPU_THIS_PTR get_DF())
@@ -701,10 +701,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::OUTSD_DXXd(bxInstruction_c *i)
 
     RSI = esi;
   }
-  else {
+  else { // address size 16-bit
     Bit16u si = SI;
 
-    value32 = read_virtual_dword(i->seg(), si);
+    value32 = read_virtual_dword_32(i->seg(), si);
     BX_OUTP(DX, value32, 4);
 
     if (BX_CPU_THIS_PTR get_DF())

@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: call_far.cc,v 1.37 2008-05-25 15:53:29 sshwarts Exp $
+// $Id: call_far.cc,v 1.38 2008-06-12 19:14:39 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005 Stanislav Shwartsman
@@ -334,12 +334,12 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
 
           if (gate_descriptor.type==BX_286_CALL_GATE) {
             for (unsigned i=0; i<param_count; i++) {
-              parameter_word[i] = read_virtual_word(BX_SEG_REG_SS, return_ESP + i*2);
+              parameter_word[i] = read_virtual_word_32(BX_SEG_REG_SS, return_ESP + i*2);
             }
           }
           else {
             for (unsigned i=0; i<param_count; i++) {
-              parameter_dword[i] = read_virtual_dword(BX_SEG_REG_SS, return_ESP + i*4);
+              parameter_dword[i] = read_virtual_dword_32(BX_SEG_REG_SS, return_ESP + i*4);
             }
           }
 

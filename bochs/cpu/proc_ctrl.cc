@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.238 2008-06-02 19:50:40 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.239 2008-06-12 19:14:39 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1939,7 +1939,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MONITOR(bxInstruction_c *i)
      offset =  AX;
   }
 
-  read_virtual_checks(&BX_CPU_THIS_PTR sregs[i->seg()], offset, 1);
+  // check if we could access the memory segment
+  if (!(seg->cache.valid & SegAccessROK4G)) {
+    read_virtual_checks(&BX_CPU_THIS_PTR sregs[i->seg()], offset, 1);
+  }
 
   // set MONITOR
   laddr = BX_CPU_THIS_PTR get_laddr(i->seg(), offset);

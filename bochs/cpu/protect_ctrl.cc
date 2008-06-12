@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: protect_ctrl.cc,v 1.87 2008-05-26 21:51:46 sshwarts Exp $
+// $Id: protect_ctrl.cc,v 1.88 2008-06-12 19:14:39 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -671,8 +671,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SGDT_Ms(bxInstruction_c *i)
 
   BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  write_virtual_word(i->seg(), RMAddr(i), limit_16);
-  write_virtual_dword(i->seg(), RMAddr(i)+2, base_32);
+  write_virtual_word_32(i->seg(), RMAddr(i), limit_16);
+  write_virtual_dword_32(i->seg(), RMAddr(i)+2, base_32);
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::SIDT_Ms(bxInstruction_c *i)
@@ -682,8 +682,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SIDT_Ms(bxInstruction_c *i)
 
   BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  write_virtual_word(i->seg(), RMAddr(i), limit_16);
-  write_virtual_dword(i->seg(), RMAddr(i)+2, base_32);
+  write_virtual_word_32(i->seg(), RMAddr(i), limit_16);
+  write_virtual_dword_32(i->seg(), RMAddr(i)+2, base_32);
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::LGDT_Ms(bxInstruction_c *i)
@@ -702,8 +702,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LGDT_Ms(bxInstruction_c *i)
 
   BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  Bit16u limit_16 = read_virtual_word(i->seg(), RMAddr(i));
-  Bit32u base_32 = read_virtual_dword(i->seg(), RMAddr(i) + 2);
+  Bit16u limit_16 = read_virtual_word_32(i->seg(), RMAddr(i));
+  Bit32u base_32 = read_virtual_dword_32(i->seg(), RMAddr(i) + 2);
 
   if (i->os32L() == 0) base_32 &= 0x00ffffff; /* ignore upper 8 bits */
 
@@ -727,8 +727,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LIDT_Ms(bxInstruction_c *i)
 
   BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  Bit32u base_32 = read_virtual_dword(i->seg(), RMAddr(i) + 2);
-  Bit16u limit_16 = read_virtual_word(i->seg(), RMAddr(i));
+  Bit32u base_32 = read_virtual_dword_32(i->seg(), RMAddr(i) + 2);
+  Bit16u limit_16 = read_virtual_word_32(i->seg(), RMAddr(i));
 
   if (i->os32L() == 0) base_32 &= 0x00ffffff; /* ignore upper 8 bits */
 

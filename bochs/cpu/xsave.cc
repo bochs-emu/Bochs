@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: xsave.cc,v 1.10 2008-05-10 13:34:47 sshwarts Exp $
+// $Id: xsave.cc,v 1.11 2008-06-12 19:14:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008 Stanislav Shwartsman
@@ -237,20 +237,23 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
       /* load i387 register file */
       for(index=0; index < 8; index++)
       {
-        read_virtual_tword(i->seg(), RMAddr(i)+index*16+32, &(BX_FPU_REG(index)));
+        floatx80 reg;
+        reg.fraction = read_virtual_qword(i->seg(), RMAddr(i)+index*16+32);
+        reg.exp      = read_virtual_word (i->seg(), RMAddr(i)+index*16+40);
+        BX_FPU_REG(index) = reg;
       }
 
       /* Restore floating point tag word - see desription for FXRSTOR instruction */
       BX_CPU_THIS_PTR the_i387.twd = unpack_FPU_TW(tag_byte);
     }
     else {
-       // initialize FPU with reset values
-       BX_CPU_THIS_PTR the_i387.init();
+      // initialize FPU with reset values
+      BX_CPU_THIS_PTR the_i387.init();
 
-       for (index=0;index<8;index++) {
-         BX_CPU_THIS_PTR the_i387.st_space[index].exp      = 0;
-         BX_CPU_THIS_PTR the_i387.st_space[index].fraction = 0;
-       }
+      for (index=0;index<8;index++) {
+        floatx80 reg = { 0, 0 };
+        BX_FPU_REG(index) = reg;
+      }
     }
   }
 

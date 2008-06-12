@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_move.cc,v 1.90 2008-05-10 18:10:53 sshwarts Exp $
+// $Id: sse_move.cc,v 1.91 2008-06-12 19:14:39 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -350,7 +350,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FXRSTOR(bxInstruction_c *i)
   /* load i387 register file */
   for(index=0; index < 8; index++)
   {
-    read_virtual_tword(i->seg(), RMAddr(i)+index*16+32, &(BX_FPU_REG(index)));
+    floatx80 reg;
+    reg.fraction = read_virtual_qword(i->seg(), RMAddr(i)+index*16+32);
+    reg.exp      = read_virtual_word (i->seg(), RMAddr(i)+index*16+40);
+    BX_FPU_REG(index) = reg;
   }
 
   BX_CPU_THIS_PTR the_i387.twd = unpack_FPU_TW(tag_byte);

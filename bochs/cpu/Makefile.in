@@ -56,6 +56,7 @@ OBJS = \
 	resolve.o \
 	fetchdecode.o \
 	access.o \
+	access32.o \
 	shift16.o \
 	logical16.o \
 	ctrl_xfer32.o \
@@ -167,6 +168,14 @@ dist-clean: clean
   ../cpu/i387.h ../fpu/softfloat.h ../config.h ../fpu/tag_w.h \
   ../fpu/status_w.h ../fpu/control_w.h ../cpu/xmm.h stack.h
 access.o: access.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
+  ../config.h ../osdep.h ../bxversion.h ../gui/siminterface.h \
+  ../memory/memory.h ../pc_system.h ../plugin.h ../extplugin.h \
+  ../gui/gui.h ../gui/textconfig.h ../config.h ../gui/keymap.h \
+  ../instrument/stubs/instrument.h cpu.h ../disasm/disasm.h ../config.h \
+  crregs.h descriptor.h instr.h lazy_flags.h icache.h apic.h \
+  ../cpu/i387.h ../fpu/softfloat.h ../config.h ../fpu/tag_w.h \
+  ../fpu/status_w.h ../fpu/control_w.h ../cpu/xmm.h stack.h
+access32.o: access32.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../config.h ../osdep.h ../bxversion.h ../gui/siminterface.h \
   ../memory/memory.h ../pc_system.h ../plugin.h ../extplugin.h \
   ../gui/gui.h ../gui/textconfig.h ../config.h ../gui/keymap.h \

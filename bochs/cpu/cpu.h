@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.485 2008-06-12 16:40:52 sshwarts Exp $
+// $Id: cpu.h,v 1.486 2008-06-12 19:14:39 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2813,32 +2813,45 @@ public: // for now...
     BX_CPU_THIS_PTR eipPageWindowSize = 0;
   }
 
-  BX_SMF void write_virtual_checks(bx_segment_reg_t *seg, bx_address offset, unsigned len) BX_CPP_AttrRegparmN(3);
-  BX_SMF void read_virtual_checks(bx_segment_reg_t *seg, bx_address offset, unsigned len) BX_CPP_AttrRegparmN(3);
-  BX_SMF void execute_virtual_checks(bx_segment_reg_t *seg, bx_address offset, unsigned len) BX_CPP_AttrRegparmN(3);
-  BX_SMF void write_virtual_byte(unsigned seg, bx_address offset, Bit8u data) BX_CPP_AttrRegparmN(3);
-  BX_SMF void write_virtual_word(unsigned seg, bx_address offset, Bit16u data) BX_CPP_AttrRegparmN(3);
-  BX_SMF void write_virtual_dword(unsigned seg, bx_address offset, Bit32u data) BX_CPP_AttrRegparmN(3);
-  BX_SMF void write_virtual_qword(unsigned seg, bx_address offset, Bit64u data) BX_CPP_AttrRegparmN(3);
-  BX_SMF void write_virtual_dqword(unsigned s, bx_address off, Bit8u *data) BX_CPP_AttrRegparmN(3);
-  BX_SMF void write_virtual_dqword_aligned(unsigned s, bx_address off, Bit8u *data) BX_CPP_AttrRegparmN(3);
-#if BX_SUPPORT_FPU
-  BX_SMF void write_virtual_tword(unsigned seg, bx_address offset, floatx80 *data) BX_CPP_AttrRegparmN(3);
-#endif
-  BX_SMF Bit8u read_virtual_byte(unsigned seg, bx_address offset) BX_CPP_AttrRegparmN(2);
-  BX_SMF Bit16u read_virtual_word(unsigned seg, bx_address offset) BX_CPP_AttrRegparmN(2);
-  BX_SMF Bit32u read_virtual_dword(unsigned seg, bx_address offset) BX_CPP_AttrRegparmN(2);
-  BX_SMF Bit64u read_virtual_qword(unsigned seg, bx_address offset) BX_CPP_AttrRegparmN(2);
-  BX_SMF void read_virtual_dqword(unsigned s, bx_address off, Bit8u *data) BX_CPP_AttrRegparmN(3);
-  BX_SMF void read_virtual_dqword_aligned(unsigned s, bx_address off, Bit8u *data) BX_CPP_AttrRegparmN(3);
-#if BX_SUPPORT_FPU
-  BX_SMF void read_virtual_tword(unsigned seg, bx_address offset, floatx80 *data) BX_CPP_AttrRegparmN(3);
-#endif
-  // write of word/dword to new stack could happen only in legacy mode
-  BX_SMF void write_new_stack_word_32(bx_segment_reg_t *seg, bx_address offset, unsigned curr_pl, Bit16u data);
-  BX_SMF void write_new_stack_dword_32(bx_segment_reg_t *seg, bx_address offset, unsigned curr_pl, Bit32u data);
+  BX_SMF void write_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned len) BX_CPP_AttrRegparmN(3);
+  BX_SMF void read_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned len) BX_CPP_AttrRegparmN(3);
+  BX_SMF void execute_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned len) BX_CPP_AttrRegparmN(3);
+
+  BX_SMF Bit8u read_virtual_byte_32(unsigned seg, Bit32u offset) BX_CPP_AttrRegparmN(2);
+  BX_SMF Bit16u read_virtual_word_32(unsigned seg, Bit32u offset) BX_CPP_AttrRegparmN(2);
+  BX_SMF Bit32u read_virtual_dword_32(unsigned seg, Bit32u offset) BX_CPP_AttrRegparmN(2);
+  BX_SMF Bit64u read_virtual_qword_32(unsigned seg, Bit32u offset) BX_CPP_AttrRegparmN(2);
+
+  BX_SMF void write_virtual_byte_32(unsigned seg, Bit32u offset, Bit8u data) BX_CPP_AttrRegparmN(3);
+  BX_SMF void write_virtual_word_32(unsigned seg, Bit32u offset, Bit16u data) BX_CPP_AttrRegparmN(3);
+  BX_SMF void write_virtual_dword_32(unsigned seg, Bit32u offset, Bit32u data) BX_CPP_AttrRegparmN(3);
+  BX_SMF void write_virtual_qword_32(unsigned seg, Bit32u offset, Bit64u data) BX_CPP_AttrRegparmN(3);
+
+  BX_SMF Bit8u read_RMW_virtual_byte_32(unsigned seg, Bit32u offset) BX_CPP_AttrRegparmN(2);
+  BX_SMF Bit16u read_RMW_virtual_word_32(unsigned seg, Bit32u offset) BX_CPP_AttrRegparmN(2);
+  BX_SMF Bit32u read_RMW_virtual_dword_32(unsigned seg, Bit32u offset) BX_CPP_AttrRegparmN(2);
+  BX_SMF Bit64u read_RMW_virtual_qword_32(unsigned seg, Bit32u offset) BX_CPP_AttrRegparmN(2);
+
+  BX_SMF void write_RMW_virtual_byte(Bit8u val8) BX_CPP_AttrRegparmN(1);
+  BX_SMF void write_RMW_virtual_word(Bit16u val16) BX_CPP_AttrRegparmN(1);
+  BX_SMF void write_RMW_virtual_dword(Bit32u val32) BX_CPP_AttrRegparmN(1);
+  BX_SMF void write_RMW_virtual_qword(Bit64u val64) BX_CPP_AttrRegparmN(1);
+
 #if BX_SUPPORT_X86_64
-  BX_SMF void write_new_stack_qword_64(Bit64u offset, unsigned curr_pl, Bit64u data);
+  BX_SMF void write_virtual_byte_64(unsigned seg, Bit64u offset, Bit8u data) BX_CPP_AttrRegparmN(3);
+  BX_SMF void write_virtual_word_64(unsigned seg, Bit64u offset, Bit16u data) BX_CPP_AttrRegparmN(3);
+  BX_SMF void write_virtual_dword_64(unsigned seg, Bit64u offset, Bit32u data) BX_CPP_AttrRegparmN(3);
+  BX_SMF void write_virtual_qword_64(unsigned seg, Bit64u offset, Bit64u data) BX_CPP_AttrRegparmN(3);
+
+  BX_SMF Bit8u read_virtual_byte_64(unsigned seg, Bit64u offset) BX_CPP_AttrRegparmN(2);
+  BX_SMF Bit16u read_virtual_word_64(unsigned seg, Bit64u offset) BX_CPP_AttrRegparmN(2);
+  BX_SMF Bit32u read_virtual_dword_64(unsigned seg, Bit64u offset) BX_CPP_AttrRegparmN(2);
+  BX_SMF Bit64u read_virtual_qword_64(unsigned seg, Bit64u offset) BX_CPP_AttrRegparmN(2);
+
+  BX_SMF Bit8u read_RMW_virtual_byte_64(unsigned seg, Bit64u offset) BX_CPP_AttrRegparmN(2);
+  BX_SMF Bit16u read_RMW_virtual_word_64(unsigned seg, Bit64u offset) BX_CPP_AttrRegparmN(2);
+  BX_SMF Bit32u read_RMW_virtual_dword_64(unsigned seg, Bit64u offset) BX_CPP_AttrRegparmN(2);
+  BX_SMF Bit64u read_RMW_virtual_qword_64(unsigned seg, Bit64u offset) BX_CPP_AttrRegparmN(2);
 #endif
 
 #if BX_SUPPORT_MISALIGNED_SSE
@@ -2856,29 +2869,81 @@ public: // for now...
 
 #endif
 
-  BX_SMF Bit8u read_RMW_virtual_byte(unsigned seg, bx_address offset) BX_CPP_AttrRegparmN(2);
-  BX_SMF Bit16u read_RMW_virtual_word(unsigned seg, bx_address offset) BX_CPP_AttrRegparmN(2);
-  BX_SMF Bit32u read_RMW_virtual_dword(unsigned seg, bx_address offset) BX_CPP_AttrRegparmN(2);
-  BX_SMF Bit64u read_RMW_virtual_qword(unsigned seg, bx_address offset) BX_CPP_AttrRegparmN(2);
-  BX_SMF void write_RMW_virtual_byte(Bit8u val8) BX_CPP_AttrRegparmN(1);
-  BX_SMF void write_RMW_virtual_word(Bit16u val16) BX_CPP_AttrRegparmN(1);
-  BX_SMF void write_RMW_virtual_dword(Bit32u val32) BX_CPP_AttrRegparmN(1);
-  BX_SMF void write_RMW_virtual_qword(Bit64u val64) BX_CPP_AttrRegparmN(1);
+  BX_SMF void read_virtual_dqword(unsigned s, bx_address off, Bit8u *data) BX_CPP_AttrRegparmN(3);
+  BX_SMF void read_virtual_dqword_aligned(unsigned s, bx_address off, Bit8u *data) BX_CPP_AttrRegparmN(3);
 
+  BX_SMF void write_virtual_dqword(unsigned s, bx_address off, Bit8u *data) BX_CPP_AttrRegparmN(3);
+  BX_SMF void write_virtual_dqword_aligned(unsigned s, bx_address off, Bit8u *data) BX_CPP_AttrRegparmN(3);
+
+  // write of word/dword to new stack could happen only in legacy mode
+  BX_SMF void write_new_stack_word_32(bx_segment_reg_t *seg, Bit32u offset, unsigned curr_pl, Bit16u data);
+  BX_SMF void write_new_stack_dword_32(bx_segment_reg_t *seg, Bit32u offset, unsigned curr_pl, Bit32u data);
 #if BX_SUPPORT_X86_64
-  BX_SMF void write_virtual_byte_64(unsigned seg, Bit64u offset, Bit8u data) BX_CPP_AttrRegparmN(3);
-  BX_SMF void write_virtual_word_64(unsigned seg, Bit64u offset, Bit16u data) BX_CPP_AttrRegparmN(3);
-  BX_SMF void write_virtual_dword_64(unsigned seg, Bit64u offset, Bit32u data) BX_CPP_AttrRegparmN(3);
-  BX_SMF void write_virtual_qword_64(unsigned seg, Bit64u offset, Bit64u data) BX_CPP_AttrRegparmN(3);
-  BX_SMF Bit8u read_virtual_byte_64(unsigned seg, Bit64u offset) BX_CPP_AttrRegparmN(2);
-  BX_SMF Bit16u read_virtual_word_64(unsigned seg, Bit64u offset) BX_CPP_AttrRegparmN(2);
-  BX_SMF Bit32u read_virtual_dword_64(unsigned seg, Bit64u offset) BX_CPP_AttrRegparmN(2);
-  BX_SMF Bit64u read_virtual_qword_64(unsigned seg, Bit64u offset) BX_CPP_AttrRegparmN(2);
-  BX_SMF Bit8u read_RMW_virtual_byte_64(unsigned seg, Bit64u offset) BX_CPP_AttrRegparmN(2);
-  BX_SMF Bit16u read_RMW_virtual_word_64(unsigned seg, Bit64u offset) BX_CPP_AttrRegparmN(2);
-  BX_SMF Bit32u read_RMW_virtual_dword_64(unsigned seg, Bit64u offset) BX_CPP_AttrRegparmN(2);
-  BX_SMF Bit64u read_RMW_virtual_qword_64(unsigned seg, Bit64u offset) BX_CPP_AttrRegparmN(2);
+  BX_SMF void write_new_stack_qword_64(Bit64u offset, unsigned curr_pl, Bit64u data);
 #endif
+
+// write
+#define write_virtual_byte(seg, offset, data)     \
+  (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) ? \
+      write_virtual_byte_64(seg, offset, data) :  \
+      write_virtual_byte_32(seg, offset, data)
+
+#define write_virtual_word(seg, offset, data)     \
+  (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) ? \
+      write_virtual_word_64(seg, offset, data) :  \
+      write_virtual_word_32(seg, offset, data)
+
+#define write_virtual_dword(seg, offset, data)    \
+  (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) ? \
+      write_virtual_dword_64(seg, offset, data) : \
+      write_virtual_dword_32(seg, offset, data)
+
+#define write_virtual_qword(seg, offset, data)    \
+  (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) ? \
+      write_virtual_qword_64(seg, offset, data) : \
+      write_virtual_qword_32(seg, offset, data)
+
+// read
+#define read_virtual_byte(seg, offset)            \
+  (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) ? \
+      read_virtual_byte_64(seg, offset) :         \
+      read_virtual_byte_32(seg, offset)
+
+#define read_virtual_word(seg, offset)            \
+  (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) ? \
+      read_virtual_word_64(seg, offset) :         \
+      read_virtual_word_32(seg, offset)
+
+#define read_virtual_dword(seg, offset)           \
+  (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) ? \
+      read_virtual_dword_64(seg, offset) :        \
+      read_virtual_dword_32(seg, offset)
+
+#define read_virtual_qword(seg, offset)           \
+  (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) ? \
+      read_virtual_qword_64(seg, offset) :        \
+      read_virtual_qword_32(seg, offset)
+
+// RMW
+#define read_RMW_virtual_byte(seg, offset)        \
+  (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) ? \
+      read_RMW_virtual_byte_64(seg, offset) :     \
+      read_RMW_virtual_byte_32(seg, offset)
+
+#define read_RMW_virtual_word(seg, offset)        \
+  (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) ? \
+      read_RMW_virtual_word_64(seg, offset) :     \
+      read_RMW_virtual_word_32(seg, offset)
+
+#define read_RMW_virtual_dword(seg, offset)       \
+  (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) ? \
+      read_RMW_virtual_dword_64(seg, offset) :    \
+      read_RMW_virtual_dword_32(seg, offset)
+
+#define read_RMW_virtual_qword(seg, offset)       \
+  (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) ? \
+      read_RMW_virtual_qword_64(seg, offset) :    \
+      read_RMW_virtual_qword_32(seg, offset)
 
 #if BX_SupportGuest2HostTLB
   BX_SMF Bit8u* v2h_read_byte(bx_address laddr, unsigned curr_pl) BX_CPP_AttrRegparmN(2);

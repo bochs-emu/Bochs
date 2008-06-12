@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vm8086.cc,v 1.45 2008-05-26 21:46:39 sshwarts Exp $
+// $Id: vm8086.cc,v 1.46 2008-06-12 19:14:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -73,14 +73,14 @@ void BX_CPU_C::stack_return_to_v86(Bit32u new_eip, Bit32u raw_cs_selector, Bit32
     temp_ESP = SP;
 
   // load SS:ESP from stack
-  new_esp         =          read_virtual_dword(BX_SEG_REG_SS, temp_ESP+12);
-  raw_ss_selector = (Bit16u) read_virtual_dword(BX_SEG_REG_SS, temp_ESP+16);
+  new_esp         =          read_virtual_dword_32(BX_SEG_REG_SS, temp_ESP+12);
+  raw_ss_selector = (Bit16u) read_virtual_dword_32(BX_SEG_REG_SS, temp_ESP+16);
 
   // load ES,DS,FS,GS from stack
-  raw_es_selector = (Bit16u) read_virtual_dword(BX_SEG_REG_SS, temp_ESP+20);
-  raw_ds_selector = (Bit16u) read_virtual_dword(BX_SEG_REG_SS, temp_ESP+24);
-  raw_fs_selector = (Bit16u) read_virtual_dword(BX_SEG_REG_SS, temp_ESP+28);
-  raw_gs_selector = (Bit16u) read_virtual_dword(BX_SEG_REG_SS, temp_ESP+32);
+  raw_es_selector = (Bit16u) read_virtual_dword_32(BX_SEG_REG_SS, temp_ESP+20);
+  raw_ds_selector = (Bit16u) read_virtual_dword_32(BX_SEG_REG_SS, temp_ESP+24);
+  raw_fs_selector = (Bit16u) read_virtual_dword_32(BX_SEG_REG_SS, temp_ESP+28);
+  raw_gs_selector = (Bit16u) read_virtual_dword_32(BX_SEG_REG_SS, temp_ESP+32);
 
   writeEFlags(flags32, EFlagsValidMask);
 

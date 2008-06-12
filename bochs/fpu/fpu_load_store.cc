@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu_load_store.cc,v 1.24 2008-05-10 13:34:01 sshwarts Exp $
+// $Id: fpu_load_store.cc,v 1.25 2008-06-12 19:14:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -126,7 +126,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLD_EXTENDED_REAL(bxInstruction_c *i)
   BX_CPU_THIS_PTR prepareFPU(i);
 
   floatx80 result;
-  read_virtual_tword(i->seg(), RMAddr(i), &result);
+  result.fraction = read_virtual_qword(i->seg(), RMAddr(i));
+  result.exp      = read_virtual_word (i->seg(), RMAddr(i)+8);
 
   clear_C1();
 
@@ -380,7 +381,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FSTP_EXTENDED_REAL(bxInstruction_c *i)
      save_reg = BX_READ_FPU_REG(0);
   }
 
-  write_virtual_tword(i->seg(), RMAddr(i), &save_reg);
+  write_virtual_qword(i->seg(), RMAddr(i),     save_reg.fraction);
+  write_virtual_word (i->seg(), RMAddr(i) + 8, save_reg.exp);
 
   BX_CPU_THIS_PTR the_i387.FPU_pop();
 #else

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack.h,v 1.2 2008-05-10 18:10:53 sshwarts Exp $
+// $Id: stack.h,v 1.3 2008-06-12 19:14:39 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007 Stanislav Shwartsman
@@ -36,12 +36,12 @@ BX_CPU_C::push_16(Bit16u value16)
   else
 #endif
   if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b) { /* StackAddrSize = 32 */
-    write_virtual_word(BX_SEG_REG_SS, (Bit32u) (ESP-2), value16);
+    write_virtual_word_32(BX_SEG_REG_SS, (Bit32u) (ESP-2), value16);
     ESP -= 2;
   }
   else
   {
-    write_virtual_word(BX_SEG_REG_SS, (Bit16u) (SP-2), value16);
+    write_virtual_word_32(BX_SEG_REG_SS, (Bit16u) (SP-2), value16);
     SP -= 2;
   }
 }
@@ -58,12 +58,12 @@ BX_CPU_C::push_32(Bit32u value32)
   else
 #endif
   if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b) { /* StackAddrSize = 32 */
-    write_virtual_dword(BX_SEG_REG_SS, (Bit32u) (ESP-4), value32);
+    write_virtual_dword_32(BX_SEG_REG_SS, (Bit32u) (ESP-4), value32);
     ESP -= 4;
   }
   else
   {
-    write_virtual_dword(BX_SEG_REG_SS, (Bit16u) (SP-4), value32);
+    write_virtual_dword_32(BX_SEG_REG_SS, (Bit16u) (SP-4), value32);
     SP -= 4;
   }
 }
@@ -91,11 +91,11 @@ BX_CPP_INLINE Bit16u BX_CPU_C::pop_16(void)
   else
 #endif
   if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b) {
-    value16 = read_virtual_word(BX_SEG_REG_SS, ESP);
+    value16 = read_virtual_word_32(BX_SEG_REG_SS, ESP);
     ESP += 2;
   }
   else {
-    value16 = read_virtual_word(BX_SEG_REG_SS, SP);
+    value16 = read_virtual_word_32(BX_SEG_REG_SS, SP);
     SP += 2;
   }
 
@@ -115,11 +115,11 @@ BX_CPP_INLINE Bit32u BX_CPU_C::pop_32(void)
   else
 #endif
   if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b) {
-    value32 = read_virtual_dword(BX_SEG_REG_SS, ESP);
+    value32 = read_virtual_dword_32(BX_SEG_REG_SS, ESP);
     ESP += 4;
   }
   else {
-    value32 = read_virtual_dword(BX_SEG_REG_SS, SP);
+    value32 = read_virtual_dword_32(BX_SEG_REG_SS, SP);
     SP += 4;
   }
 

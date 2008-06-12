@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: io_pro.cc,v 1.33 2008-05-26 18:02:07 sshwarts Exp $
+// $Id: io_pro.cc,v 1.34 2008-06-12 19:14:39 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -127,12 +127,7 @@ bx_bool BX_CPU_C::allow_io(Bit16u addr, unsigned len)
 
     access_read_linear(BX_CPU_THIS_PTR tr.cache.u.system.base + 102,
                    2, 0, BX_READ, &io_base);
-/*
-    if (io_base <= 103) {
-      BX_ERROR(("allow_io(): TR:io_base (%u) <= 103", io_base));
-      return(0);
-    }
-*/
+
     if ((io_base + addr/8) >= BX_CPU_THIS_PTR tr.cache.u.system.limit_scaled) {
       BX_ERROR(("allow_io(): IO addr %x (len %d) outside TSS IO permission map (base=%x, limit=%x) #GP(0)",
         addr, len, io_base, BX_CPU_THIS_PTR tr.cache.u.system.limit_scaled));

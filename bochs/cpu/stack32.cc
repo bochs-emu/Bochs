@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack32.cc,v 1.53 2008-05-08 18:02:21 sshwarts Exp $
+// $Id: stack32.cc,v 1.54 2008-06-12 19:14:39 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -176,26 +176,26 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUSHAD32(bxInstruction_c *i)
 
   if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b)
   {
-    write_virtual_dword(BX_SEG_REG_SS, (Bit32u) (temp_ESP -  4), EAX);
-    write_virtual_dword(BX_SEG_REG_SS, (Bit32u) (temp_ESP -  8), ECX);
-    write_virtual_dword(BX_SEG_REG_SS, (Bit32u) (temp_ESP - 12), EDX);
-    write_virtual_dword(BX_SEG_REG_SS, (Bit32u) (temp_ESP - 16), EBX);
-    write_virtual_dword(BX_SEG_REG_SS, (Bit32u) (temp_ESP - 20), temp_ESP);
-    write_virtual_dword(BX_SEG_REG_SS, (Bit32u) (temp_ESP - 24), EBP);
-    write_virtual_dword(BX_SEG_REG_SS, (Bit32u) (temp_ESP - 28), ESI);
-    write_virtual_dword(BX_SEG_REG_SS, (Bit32u) (temp_ESP - 32), EDI);
+    write_virtual_dword_32(BX_SEG_REG_SS, (Bit32u) (temp_ESP -  4), EAX);
+    write_virtual_dword_32(BX_SEG_REG_SS, (Bit32u) (temp_ESP -  8), ECX);
+    write_virtual_dword_32(BX_SEG_REG_SS, (Bit32u) (temp_ESP - 12), EDX);
+    write_virtual_dword_32(BX_SEG_REG_SS, (Bit32u) (temp_ESP - 16), EBX);
+    write_virtual_dword_32(BX_SEG_REG_SS, (Bit32u) (temp_ESP - 20), temp_ESP);
+    write_virtual_dword_32(BX_SEG_REG_SS, (Bit32u) (temp_ESP - 24), EBP);
+    write_virtual_dword_32(BX_SEG_REG_SS, (Bit32u) (temp_ESP - 28), ESI);
+    write_virtual_dword_32(BX_SEG_REG_SS, (Bit32u) (temp_ESP - 32), EDI);
     ESP -= 32;
   }
   else
   {
-    write_virtual_dword(BX_SEG_REG_SS, (Bit16u) (temp_SP -  4), EAX);
-    write_virtual_dword(BX_SEG_REG_SS, (Bit16u) (temp_SP -  8), ECX);
-    write_virtual_dword(BX_SEG_REG_SS, (Bit16u) (temp_SP - 12), EDX);
-    write_virtual_dword(BX_SEG_REG_SS, (Bit16u) (temp_SP - 16), EBX);
-    write_virtual_dword(BX_SEG_REG_SS, (Bit16u) (temp_SP - 20), temp_ESP);
-    write_virtual_dword(BX_SEG_REG_SS, (Bit16u) (temp_SP - 24), EBP);
-    write_virtual_dword(BX_SEG_REG_SS, (Bit16u) (temp_SP - 28), ESI);
-    write_virtual_dword(BX_SEG_REG_SS, (Bit16u) (temp_SP - 32), EDI);
+    write_virtual_dword_32(BX_SEG_REG_SS, (Bit16u) (temp_SP -  4), EAX);
+    write_virtual_dword_32(BX_SEG_REG_SS, (Bit16u) (temp_SP -  8), ECX);
+    write_virtual_dword_32(BX_SEG_REG_SS, (Bit16u) (temp_SP - 12), EDX);
+    write_virtual_dword_32(BX_SEG_REG_SS, (Bit16u) (temp_SP - 16), EBX);
+    write_virtual_dword_32(BX_SEG_REG_SS, (Bit16u) (temp_SP - 20), temp_ESP);
+    write_virtual_dword_32(BX_SEG_REG_SS, (Bit16u) (temp_SP - 24), EBP);
+    write_virtual_dword_32(BX_SEG_REG_SS, (Bit16u) (temp_SP - 28), ESI);
+    write_virtual_dword_32(BX_SEG_REG_SS, (Bit16u) (temp_SP - 32), EDI);
     SP -= 32;
   }
 }
@@ -207,27 +207,27 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::POPAD32(bxInstruction_c *i)
   if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b)
   {
     Bit32u temp_ESP = ESP;
-    edi = read_virtual_dword(BX_SEG_REG_SS, (Bit32u) (temp_ESP +  0));
-    esi = read_virtual_dword(BX_SEG_REG_SS, (Bit32u) (temp_ESP +  4));
-    ebp = read_virtual_dword(BX_SEG_REG_SS, (Bit32u) (temp_ESP +  8));
-    dummy = read_virtual_dword(BX_SEG_REG_SS, (Bit32u) (temp_ESP + 12));
-    ebx = read_virtual_dword(BX_SEG_REG_SS, (Bit32u) (temp_ESP + 16));
-    edx = read_virtual_dword(BX_SEG_REG_SS, (Bit32u) (temp_ESP + 20));
-    ecx = read_virtual_dword(BX_SEG_REG_SS, (Bit32u) (temp_ESP + 24));
-    eax = read_virtual_dword(BX_SEG_REG_SS, (Bit32u) (temp_ESP + 28));
+    edi = read_virtual_dword_32(BX_SEG_REG_SS, (Bit32u) (temp_ESP +  0));
+    esi = read_virtual_dword_32(BX_SEG_REG_SS, (Bit32u) (temp_ESP +  4));
+    ebp = read_virtual_dword_32(BX_SEG_REG_SS, (Bit32u) (temp_ESP +  8));
+    dummy = read_virtual_dword_32(BX_SEG_REG_SS, (Bit32u) (temp_ESP + 12));
+    ebx = read_virtual_dword_32(BX_SEG_REG_SS, (Bit32u) (temp_ESP + 16));
+    edx = read_virtual_dword_32(BX_SEG_REG_SS, (Bit32u) (temp_ESP + 20));
+    ecx = read_virtual_dword_32(BX_SEG_REG_SS, (Bit32u) (temp_ESP + 24));
+    eax = read_virtual_dword_32(BX_SEG_REG_SS, (Bit32u) (temp_ESP + 28));
     ESP += 32;
   }
   else
   {
     Bit16u temp_SP = SP;
-    edi = read_virtual_dword(BX_SEG_REG_SS, (Bit16u) (temp_SP +  0));
-    esi = read_virtual_dword(BX_SEG_REG_SS, (Bit16u) (temp_SP +  4));
-    ebp = read_virtual_dword(BX_SEG_REG_SS, (Bit16u) (temp_SP +  8));
-    dummy = read_virtual_dword(BX_SEG_REG_SS, (Bit16u) (temp_SP + 12));
-    ebx = read_virtual_dword(BX_SEG_REG_SS, (Bit16u) (temp_SP + 16));
-    edx = read_virtual_dword(BX_SEG_REG_SS, (Bit16u) (temp_SP + 20));
-    ecx = read_virtual_dword(BX_SEG_REG_SS, (Bit16u) (temp_SP + 24));
-    eax = read_virtual_dword(BX_SEG_REG_SS, (Bit16u) (temp_SP + 28));
+    edi = read_virtual_dword_32(BX_SEG_REG_SS, (Bit16u) (temp_SP +  0));
+    esi = read_virtual_dword_32(BX_SEG_REG_SS, (Bit16u) (temp_SP +  4));
+    ebp = read_virtual_dword_32(BX_SEG_REG_SS, (Bit16u) (temp_SP +  8));
+    dummy = read_virtual_dword_32(BX_SEG_REG_SS, (Bit16u) (temp_SP + 12));
+    ebx = read_virtual_dword_32(BX_SEG_REG_SS, (Bit16u) (temp_SP + 16));
+    edx = read_virtual_dword_32(BX_SEG_REG_SS, (Bit16u) (temp_SP + 20));
+    ecx = read_virtual_dword_32(BX_SEG_REG_SS, (Bit16u) (temp_SP + 24));
+    eax = read_virtual_dword_32(BX_SEG_REG_SS, (Bit16u) (temp_SP + 28));
     SP += 32;
   }
 
@@ -259,7 +259,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ENTER32_IwIb(bxInstruction_c *i)
       /* do level-1 times */
       while (--level) {
         ebp -= 4;
-        Bit32u temp32 = read_virtual_dword(BX_SEG_REG_SS, ebp);
+        Bit32u temp32 = read_virtual_dword_32(BX_SEG_REG_SS, ebp);
         push_32(temp32);
       }
 
@@ -281,7 +281,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ENTER32_IwIb(bxInstruction_c *i)
       /* do level-1 times */
       while (--level) {
         bp -= 4;
-        Bit32u temp32 = read_virtual_dword(BX_SEG_REG_SS, bp);
+        Bit32u temp32 = read_virtual_dword_32(BX_SEG_REG_SS, bp);
         push_32(temp32);
       }
 
@@ -294,7 +294,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ENTER32_IwIb(bxInstruction_c *i)
     // ENTER finishes with memory write check on the final stack pointer
     // the memory is touched but no write actually occurs
     // emulate it by doing RMW read access from SS:SP
-    read_RMW_virtual_dword(BX_SEG_REG_SS, SP);
+    read_RMW_virtual_dword_32(BX_SEG_REG_SS, SP);
   }
 
   EBP = frame_ptr32;
