@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: access32.cc,v 1.1 2008-06-12 19:14:39 sshwarts Exp $
+// $Id: access32.cc,v 1.2 2008-06-12 20:41:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008 Stanislav Shwartsman
@@ -817,7 +817,7 @@ BX_CPU_C::write_RMW_virtual_qword(Bit64u val64)
     BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID,
         BX_CPU_THIS_PTR address_xlation.paddress1,
         BX_CPU_THIS_PTR address_xlation.len1, BX_WRITE,
-        ((Bit8u *) &val32) + (8 - BX_CPU_THIS_PTR address_xlation.len1));
+        ((Bit8u *) &val64) + (8 - BX_CPU_THIS_PTR address_xlation.len1));
     BX_MEM(0)->writePhysicalPage(BX_CPU_THIS,
         BX_CPU_THIS_PTR address_xlation.paddress2,
         BX_CPU_THIS_PTR address_xlation.len2,
