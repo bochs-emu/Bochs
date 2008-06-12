@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer8.cc,v 1.27 2008-03-22 21:29:39 sshwarts Exp $
+// $Id: ctrl_xfer8.cc,v 1.28 2008-06-12 20:27:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -44,7 +44,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::JCXZ_Jb(bxInstruction_c *i)
 
   if (temp_ECX == 0) {
     Bit32u new_EIP = EIP + (Bit32s) i->Id();
-    if (i->os32L()==0) new_EIP &= 0x0000ffff;
+    if (i->os32L()==0) new_EIP &= 0xffff;
     branch_near32(new_EIP);
     BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, new_EIP);
     return;
@@ -80,7 +80,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOOPNE_Jb(bxInstruction_c *i)
   count--;
   if ((count!=0) && (get_ZF()==0)) {
     Bit32u new_EIP = EIP + (Bit32s) i->Id();
-    if (i->os32L()==0) new_EIP &= 0x0000ffff;
+    if (i->os32L()==0) new_EIP &= 0xffff;
     branch_near32(new_EIP);
     BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, new_EIP);
   }
@@ -113,7 +113,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOOPE_Jb(bxInstruction_c *i)
   count--;
   if ((count!=0) && get_ZF()) {
     Bit32u new_EIP = EIP + (Bit32s) i->Id();
-    if (i->os32L()==0) new_EIP &= 0x0000ffff;
+    if (i->os32L()==0) new_EIP &= 0xffff;
     branch_near32(new_EIP);
     BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, new_EIP);
   }
@@ -146,7 +146,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOOP_Jb(bxInstruction_c *i)
   count--;
   if (count != 0) {
     Bit32u new_EIP = EIP + (Bit32s) i->Id();
-    if (i->os32L()==0) new_EIP &= 0x0000ffff;
+    if (i->os32L()==0) new_EIP &= 0xffff;
     branch_near32(new_EIP);
     BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, new_EIP);
   }

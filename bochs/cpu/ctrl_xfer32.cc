@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer32.cc,v 1.72 2008-04-30 16:31:07 sshwarts Exp $
+// $Id: ctrl_xfer32.cc,v 1.73 2008-06-12 20:27:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -40,7 +40,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::branch_near32(Bit32u new_EIP)
   // check always, not only in protected mode
   if (new_EIP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled)
   {
-    BX_ERROR(("branch_near: offset outside of CS limits"));
+    BX_ERROR(("branch_near32: offset outside of CS limits"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
@@ -65,7 +65,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RETnear32_Iw(bxInstruction_c *i)
 
   Bit16u imm16 = i->Iw();
   Bit32u return_EIP = pop_32();
-  branch_near32(return_EIP);
+  if (return_EIP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled)
+  {
+    BX_ERROR(("RETnear32_Iw: offset outside of CS limits"));
+    exception(BX_GP_EXCEPTION, 0, 0);
+  }
+  EIP = return_EIP;
+
   if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b)
     ESP += imm16;
   else
@@ -86,7 +92,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RETnear32(bxInstruction_c *i)
   BX_CPU_THIS_PTR prev_rsp = RSP;
 
   Bit32u return_EIP = pop_32();
-  branch_near32(return_EIP);
+  if (return_EIP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled)
+  {
+    BX_ERROR(("RETnear32: offset outside of CS limits"));
+    exception(BX_GP_EXCEPTION, 0, 0);
+  }
+  EIP = return_EIP;
 
   BX_CPU_THIS_PTR speculative_rsp = 0;
 
@@ -525,12 +536,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::JNLE_Jd(bxInstruction_c *i)
     Bit32u new_EIP = EIP + (Bit32s) i->Id();
     branch_near32(new_EIP);
     BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, new_EIP);
+    return;
   }
-#if BX_INSTRUMENTATION
-  else {
-    BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
-  }
-#endif
+
+  BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::JMP_Ap(bxInstruction_c *i)
