@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.486 2008-06-12 19:14:39 sshwarts Exp $
+// $Id: cpu.h,v 1.487 2008-06-12 20:12:25 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1079,12 +1079,18 @@ public: // for now...
   BX_SMF void PUSH_Id(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void PUSH_Iw(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
-  BX_SMF void INSB_YbDX(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void INSW_YwDX(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void INSD_YdDX(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void OUTSB_DXXb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void OUTSW_DXXw(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void OUTSD_DXXd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void INSB32_YbDX(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void INSB16_YbDX(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void INSW32_YwDX(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void INSW16_YwDX(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void INSD32_YdDX(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void INSD16_YdDX(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void OUTSB32_DXXb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void OUTSB16_DXXb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void OUTSW32_DXXw(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void OUTSW16_DXXw(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void OUTSD32_DXXd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void OUTSD16_DXXd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
   BX_SMF void REP_INSB_YbDX(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void REP_INSW_YwDX(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -2537,6 +2543,14 @@ public: // for now...
   BX_SMF void STOSQ64_YqRAX(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void MOVSQ32_XqYq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void MOVSQ64_XqYq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void INSB64_YbDX(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void INSW64_YwDX(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void INSD64_YdDX(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void OUTSB64_DXXb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void OUTSW64_DXXw(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void OUTSD64_DXXd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
   BX_SMF void CALL_Jq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void JMP_Jq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
