@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.150 2008-06-11 20:29:30 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.151 2008-06-12 21:00:25 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -520,7 +520,10 @@ void bx_dbg_interrupt(unsigned cpu, Bit8u vector, Bit16u error_code)
 
 void bx_dbg_halt(unsigned cpu)
 {
-  dbg_printf("CPU %d: HALTED\n", cpu);
+  if (BX_CPU(dbg_cpu)->trace)
+  {
+    dbg_printf("CPU %d: HALTED\n", cpu);
+  }
 }
 
 void bx_dbg_check_memory_access_watchpoints(unsigned cpu, bx_phy_address phy, unsigned len, unsigned rw)
