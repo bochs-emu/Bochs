@@ -16,7 +16,7 @@ few times and fill out the guest OS part for each copy.
 To fill in a blank such as [__], replace the underlines and leave
 the brackets.  Example: [Sun Ultrasparc 10].  To fill in a
 multiple-choice, just put an X in the brackets.  Example: [X]
-Mail completed forms to bochs-testing@tlw.com.
+Mail completed forms to bochs-developers@lists.sourceforge.net
 
 
 What is the date?
@@ -33,7 +33,7 @@ web page so that people with a similar setup can write to you?
    [ ] Ok, put it on a web page
    [ ] No, keep my address private.
 
-What type of hardware are you using, e.g. 500MHz Intel Celeron.
+What type of hardware are you using, e.g. 2400 MGz Intel Pentium 4.
 [__]
 
 What operating system are you using?  Please be specific, e.g.
@@ -41,7 +41,7 @@ Redhat Linux 6.2 with 2.2.16 kernel.
 [__]
 
 What version of bochs are you using?
-   [ ] compiled from version 2.1.1
+   [ ] compiled from version 2.3.7
    [ ] compiled from version [_____]
    [ ] I compiled it from the CVS sources from date: [__]
    [ ] other source distribution from URL: [__]
@@ -106,11 +106,13 @@ used.  If you tried out the feature, move the X to the "works" or
 
                   Not       Works
 		  tested    ok      Fails   Comments?
-keyboard           [ ]      [ ]     [ ]     [__]
+x86-64             [X]      [ ]     [ ]     [__]
+floating point     [X]      [ ]     [ ]     [__]
+SMP                [X]      [ ]     [ ]     [__]
+keyboard           [X]      [ ]     [ ]     [__]
 floppy disk        [X]      [ ]     [ ]     [__]
 raw floppy disk    [X]      [ ]     [ ]     [__]
 hard disk          [X]      [ ]     [ ]     [__]
-floating point     [X]      [ ]     [ ]     [__]
 mouse              [X]      [ ]     [ ]     [__]
 cdrom              [X]      [ ]     [ ]     [__]
 sb16               [X]      [ ]     [ ]     [__]
@@ -118,7 +120,10 @@ ne2000             [X]      [ ]     [ ]     [__]
 i440FX pci         [X]      [ ]     [ ]     [__]
 debugger           [X]      [ ]     [ ]     [__]
 external loader    [X]      [ ]     [ ]     [__]
+save/restore       [X]      [ ]     [ ]     [__]
 VGA                [X]      [ ]     [ ]     [__]
+Cirrus Logic SVGA  [X]      [ ]     [ ]     [__]
+USB                [X]      [ ]     [ ]     [__]
 
 Thank you for your contribution in the Bochs testing effort!  Please
-mail completed forms to bochs-testing@tlw.com.
+mail completed forms to bochs-developers@lists.sourceforge.net
