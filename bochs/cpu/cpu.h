@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.487 2008-06-12 20:12:25 sshwarts Exp $
+// $Id: cpu.h,v 1.488 2008-06-13 08:17:52 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -880,9 +880,6 @@ public: // for now...
   const Bit8u *eipFetchPtr;
   bx_phy_address pAddrA20Page; // Guest physical address of current instruction
                                // page with A20() already applied.
-#if BX_SUPPORT_ICACHE
-  const Bit32u *currPageWriteStampPtr;
-#endif
   unsigned cpu_mode;
   bx_bool  in_smm;
   bx_bool  nmi_disable;
@@ -924,6 +921,7 @@ public: // for now...
 #if BX_SUPPORT_ICACHE
   bxICache_c iCache BX_CPP_AlignN(32);
   Bit32u fetchModeMask;
+  const Bit32u *currPageWriteStampPtr;
   void updateFetchModeMask(void);
 #endif
 
@@ -2896,6 +2894,8 @@ public: // for now...
   BX_SMF void write_new_stack_qword_64(Bit64u offset, unsigned curr_pl, Bit64u data);
 #endif
 
+#if BX_SUPPORT_X86_64
+
 // write
 #define write_virtual_byte(seg, offset, data)     \
   (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) ? \
@@ -2958,6 +2958,40 @@ public: // for now...
   (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) ? \
       read_RMW_virtual_qword_64(seg, offset) :    \
       read_RMW_virtual_qword_32(seg, offset)
+
+#else
+
+// write
+#define write_virtual_byte(seg, offset, data)  \
+  write_virtual_byte_32(seg, offset, data)
+#define write_virtual_word(seg, offset, data)  \
+  write_virtual_word_32(seg, offset, data)
+#define write_virtual_dword(seg, offset, data) \
+  write_virtual_dword_32(seg, offset, data)
+#define write_virtual_qword(seg, offset, data) \
+  write_virtual_qword_32(seg, offset, data)
+
+// read
+#define read_virtual_byte(seg, offset)  \
+  read_virtual_byte_32(seg, offset)
+#define read_virtual_word(seg, offset)  \
+  read_virtual_word_32(seg, offset)
+#define read_virtual_dword(seg, offset) \
+  read_virtual_dword_32(seg, offset)
+#define read_virtual_qword(seg, offset) \
+  read_virtual_qword_32(seg, offset)
+
+// RMW
+#define read_RMW_virtual_byte(seg, offset)  \
+  read_RMW_virtual_byte_32(seg, offset)
+#define read_RMW_virtual_word(seg, offset)  \
+  read_RMW_virtual_word_32(seg, offset)
+#define read_RMW_virtual_dword(seg, offset) \
+  read_RMW_virtual_dword_32(seg, offset)
+#define read_RMW_virtual_qword(seg, offset) \
+  read_RMW_virtual_qword_32(seg, offset)
+
+#endif
 
 #if BX_SupportGuest2HostTLB
   BX_SMF Bit8u* v2h_read_byte(bx_address laddr, unsigned curr_pl) BX_CPP_AttrRegparmN(2);
