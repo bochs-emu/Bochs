@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: io_pro.cc,v 1.34 2008-06-12 19:14:39 sshwarts Exp $
+// $Id: io_pro.cc,v 1.35 2008-06-14 16:55:45 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -139,7 +139,7 @@ bx_bool BX_CPU_C::allow_io(Bit16u addr, unsigned len)
 
     unsigned bit_index = addr & 0x07;
     permission16 >>= bit_index;
-    for (unsigned i=0; i<len; i++) {
+    for (unsigned n=0; n<len; n++) {
       if (permission16 & 0x01)
         return(0);
       permission16 >>= 1;

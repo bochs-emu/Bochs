@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.239 2008-06-12 19:14:39 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.240 2008-06-14 16:55:45 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2568,17 +2568,17 @@ Bit32u BX_CPU_C::hwdebug_compare(bx_address laddr_0, unsigned size,
   dr_op[2] = (dr7>>24) & 3;
   dr_op[3] = (dr7>>28) & 3;
 
-  for (unsigned i=0;i<4;i++) {
-    dr[i]   = BX_CPU_THIS_PTR dr[i] & ~alignment_mask[len[i]];
-    dr_n[i] = dr[i] + alignment_mask[len[i]];
-    ibpoint_found_n[i] = 0;
+  for (unsigned n=0;n<4;n++) {
+    dr[n]   = BX_CPU_THIS_PTR dr[n] & ~alignment_mask[len[n]];
+    dr_n[n] = dr[n] + alignment_mask[len[n]];
+    ibpoint_found_n[n] = 0;
 
     // See if this instruction address matches any breakpoints
-    if (dr7 & (3 << i*2)) {
-      if ((dr_op[i]==opa || dr_op[i]==opb) &&
-           (laddr_0 <= dr_n[i]) &&
-           (laddr_n >= dr[i])) {
-        ibpoint_found_n[i] = 1;
+    if (dr7 & (3 << n*2)) {
+      if ((dr_op[n]==opa || dr_op[n]==opb) &&
+           (laddr_0 <= dr_n[n]) &&
+           (laddr_n >= dr[n])) {
+        ibpoint_found_n[n] = 1;
         ibpoint_found = 1;
       }
     }

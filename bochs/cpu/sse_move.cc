@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_move.cc,v 1.91 2008-06-12 19:14:39 sshwarts Exp $
+// $Id: sse_move.cc,v 1.92 2008-06-14 16:55:45 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -31,9 +31,9 @@
 void BX_CPU_C::print_state_SSE(void)
 {
   BX_DEBUG(("MXCSR: 0x%08x\n", BX_MXCSR_REGISTER));
-  for(unsigned i=0;i<BX_XMM_REGISTERS;i++) {
-    BxPackedXmmRegister xmm = BX_READ_XMM_REG(i);
-    BX_DEBUG(("XMM%02u: %08x%08x:%08x%08x\n", i,
+  for(unsigned n=0;n<BX_XMM_REGISTERS;n++) {
+    BxPackedXmmRegister xmm = BX_READ_XMM_REG(n);
+    BX_DEBUG(("XMM%02u: %08x%08x:%08x%08x\n", n,
        xmm.xmm32u(3), xmm.xmm32u(2), xmm.xmm32u(1), xmm.xmm32u(0)));
   }
 }

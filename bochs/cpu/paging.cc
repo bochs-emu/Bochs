@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.140 2008-06-02 18:41:08 sshwarts Exp $
+// $Id: paging.cc,v 1.141 2008-06-14 16:55:45 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -477,39 +477,39 @@ BX_CPU_C::SetCR3(bx_address val)
 // Unconditional initialization of all TLB entries.
 void BX_CPU_C::TLB_init(void)
 {
-  unsigned i, wp, us_combined, rw_combined, us_current, rw_current;
+  unsigned n, wp, us_combined, rw_combined, us_current, rw_current;
 
-  for (i=0; i<BX_TLB_SIZE; i++)
-    BX_CPU_THIS_PTR TLB.entry[i].lpf = BX_INVALID_TLB_ENTRY;
+  for (n=0; n<BX_TLB_SIZE; n++)
+    BX_CPU_THIS_PTR TLB.entry[n].lpf = BX_INVALID_TLB_ENTRY;
 
   //
   // Setup privilege check matrix.
   //
-  for (i=0; i<BX_PRIV_CHECK_SIZE; i++) {
-    wp          = (i & 0x10) >> 4;
-    us_current  = (i & 0x08) >> 3;
-    us_combined = (i & 0x04) >> 2;
-    rw_combined = (i & 0x02) >> 1;
-    rw_current  = (i & 0x01) >> 0;
+  for (n=0; n<BX_PRIV_CHECK_SIZE; n++) {
+    wp          = (n & 0x10) >> 4;
+    us_current  = (n & 0x08) >> 3;
+    us_combined = (n & 0x04) >> 2;
+    rw_combined = (n & 0x02) >> 1;
+    rw_current  = (n & 0x01) >> 0;
     if (wp) { // when write protect on
       if (us_current > us_combined) // user access, supervisor page
-        priv_check[i] = 0;
+        priv_check[n] = 0;
       else if (rw_current > rw_combined) // RW access, RO page
-        priv_check[i] = 0;
+        priv_check[n] = 0;
       else
-        priv_check[i] = 1;
+        priv_check[n] = 1;
     }
     else { // when write protect off
       if (us_current == 0) // Supervisor mode access, anything goes
-        priv_check[i] = 1;
+        priv_check[n] = 1;
       else {
         // user mode access
         if (us_combined == 0) // user access, supervisor Page
-          priv_check[i] = 0;
+          priv_check[n] = 0;
         else if (rw_current > rw_combined) // RW access, RO page
-          priv_check[i] = 0;
+          priv_check[n] = 0;
         else
-          priv_check[i] = 1;
+          priv_check[n] = 1;
       }
     }
   }

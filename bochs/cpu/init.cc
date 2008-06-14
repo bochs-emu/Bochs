@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.173 2008-05-30 21:10:37 sshwarts Exp $
+// $Id: init.cc,v 1.174 2008-06-14 16:55:45 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -298,7 +298,7 @@ void BX_CPU_C::register_wx_state(void)
 // save/restore functionality
 void BX_CPU_C::register_state(void)
 {
-  unsigned i;
+  unsigned n;
   char name[10];
 
   sprintf(name, "cpu%d", BX_CPU_ID);
@@ -360,8 +360,8 @@ void BX_CPU_C::register_state(void)
   BXRS_HEX_PARAM_FIELD(cpu, XCR0, xcr0.val32);
 #endif
 
-  for(i=0; i<6; i++) {
-    bx_segment_reg_t *segment = &BX_CPU_THIS_PTR sregs[i];
+  for(n=0; n<6; n++) {
+    bx_segment_reg_t *segment = &BX_CPU_THIS_PTR sregs[n];
     bx_list_c *sreg = new bx_list_c(cpu, strseg(segment), 9);
     BXRS_PARAM_SPECIAL16(sreg, selector,
            param_save_handler, param_restore_handler);
@@ -475,11 +475,11 @@ void BX_CPU_C::register_state(void)
   BXRS_HEX_PARAM_FIELD(fpu, fip, the_i387.fip);
   BXRS_HEX_PARAM_FIELD(fpu, fds, the_i387.fds);
   BXRS_HEX_PARAM_FIELD(fpu, fdp, the_i387.fdp);
-  for (i=0; i<8; i++) {
-    sprintf(name, "st%d", i);
+  for (n=0; n<8; n++) {
+    sprintf(name, "st%d", n);
     bx_list_c *STx = new bx_list_c(fpu, name, 8);
-    BXRS_HEX_PARAM_FIELD(STx, exp,      the_i387.st_space[i].exp);
-    BXRS_HEX_PARAM_FIELD(STx, fraction, the_i387.st_space[i].fraction);
+    BXRS_HEX_PARAM_FIELD(STx, exp,      the_i387.st_space[n].exp);
+    BXRS_HEX_PARAM_FIELD(STx, fraction, the_i387.st_space[n].fraction);
   }
   BXRS_DEC_PARAM_FIELD(fpu, tos, the_i387.tos);
 #endif
@@ -487,11 +487,11 @@ void BX_CPU_C::register_state(void)
 #if BX_SUPPORT_SSE
   bx_list_c *sse = new bx_list_c(cpu, "SSE", 2*BX_XMM_REGISTERS+1);
   BXRS_HEX_PARAM_FIELD(sse, mxcsr, mxcsr.mxcsr);
-  for (i=0; i<BX_XMM_REGISTERS; i++) {
-    sprintf(name, "xmm%02d_hi", i);
-    new bx_shadow_num_c(sse, name, &xmm[i].xmm64u(1), BASE_HEX);
-    sprintf(name, "xmm%02d_lo", i);
-    new bx_shadow_num_c(sse, name, &xmm[i].xmm64u(0), BASE_HEX);
+  for (n=0; n<BX_XMM_REGISTERS; n++) {
+    sprintf(name, "xmm%02d_hi", n);
+    new bx_shadow_num_c(sse, name, &xmm[n].xmm64u(1), BASE_HEX);
+    sprintf(name, "xmm%02d_lo", n);
+    new bx_shadow_num_c(sse, name, &xmm[n].xmm64u(0), BASE_HEX);
   }
 #endif
 
@@ -664,7 +664,7 @@ BX_CPU_C::~BX_CPU_C()
 
 void BX_CPU_C::reset(unsigned source)
 {
-  unsigned i;
+  unsigned n;
 
   if (source == BX_RESET_HARDWARE)
     BX_INFO(("cpu hardware reset"));
@@ -920,15 +920,15 @@ void BX_CPU_C::reset(unsigned source)
 #endif
 
 #if BX_SUPPORT_MTRR
-  for (i=0; i<16; i++)
-    BX_CPU_THIS_PTR msr.mtrrphys[i] = 0;
+  for (n=0; n<16; n++)
+    BX_CPU_THIS_PTR msr.mtrrphys[n] = 0;
 
   BX_CPU_THIS_PTR msr.mtrrfix64k_00000 = 0; // all fix range MTRRs undefined according to manual
   BX_CPU_THIS_PTR msr.mtrrfix16k_80000 = 0;
   BX_CPU_THIS_PTR msr.mtrrfix16k_a0000 = 0;
 
-  for (i=0; i<8; i++)
-    BX_CPU_THIS_PTR msr.mtrrfix4k[i] = 0;
+  for (n=0; n<8; n++)
+    BX_CPU_THIS_PTR msr.mtrrfix4k[n] = 0;
 
   BX_CPU_THIS_PTR msr.pat = BX_CONST64(0x0007040600070406);
   BX_CPU_THIS_PTR msr.mtrr_deftype = 0;
@@ -961,10 +961,10 @@ void BX_CPU_C::reset(unsigned source)
 
   // Reset XMM state
 #if BX_SUPPORT_SSE >= 1  // unchanged on #INIT
-  for(i=0; i<BX_XMM_REGISTERS; i++)
+  for(n=0; n<BX_XMM_REGISTERS; n++)
   {
-    BX_CPU_THIS_PTR xmm[i].xmm64u(0) = 0;
-    BX_CPU_THIS_PTR xmm[i].xmm64u(1) = 0;
+    BX_CPU_THIS_PTR xmm[n].xmm64u(0) = 0;
+    BX_CPU_THIS_PTR xmm[n].xmm64u(1) = 0;
   }
 
   BX_CPU_THIS_PTR mxcsr.mxcsr = MXCSR_RESET;
