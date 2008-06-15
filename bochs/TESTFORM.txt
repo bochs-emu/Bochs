@@ -1,5 +1,5 @@
 -------------------------------------------------------------
-BOCHS TESTING FORM Version 0.3
+BOCHS TESTING FORM Version 0.4
 -------------------------------------------------------------
 
 Because of the variety of platforms and configurations that Bochs
@@ -33,7 +33,7 @@ web page so that people with a similar setup can write to you?
    [ ] Ok, put it on a web page
    [ ] No, keep my address private.
 
-What type of hardware are you using, e.g. 2400 MGz Intel Pentium 4.
+What type of hardware are you using, e.g. 2400 MHz Intel Pentium 4.
 [__]
 
 What operating system are you using?  Please be specific, e.g.
