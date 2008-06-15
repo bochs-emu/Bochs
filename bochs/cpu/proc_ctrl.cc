@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.240 2008-06-14 16:55:45 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.241 2008-06-15 20:41:34 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1164,13 +1164,16 @@ void BX_CPU_C::handleCpuModeChange(void)
 #endif
   {
     if (BX_CPU_THIS_PTR cr0.get_PE()) {
-      if (BX_CPU_THIS_PTR get_VM())
+      if (BX_CPU_THIS_PTR get_VM()) {
         BX_CPU_THIS_PTR cpu_mode = BX_MODE_IA32_V8086;
+        BX_ASSERT(CPL == 3);
+      }
       else
         BX_CPU_THIS_PTR cpu_mode = BX_MODE_IA32_PROTECTED;
     }
     else {
       BX_CPU_THIS_PTR cpu_mode = BX_MODE_IA32_REAL;
+      BX_ASSERT(CPL == 0);
     }
   }
 
@@ -1520,7 +1523,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDMSR(bxInstruction_c *i)
       return;
     case BX_MSR_MTRRFIX16K_A0000:
       RAX = BX_CPU_THIS_PTR msr.mtrrfix16k_a0000 & 0xffffffff;
-      RAX = BX_CPU_THIS_PTR msr.mtrrfix16k_a0000 >> 32;
+      RDX = BX_CPU_THIS_PTR msr.mtrrfix16k_a0000 >> 32;
       return;
 
     case BX_MSR_MTRRFIX4K_C0000:
