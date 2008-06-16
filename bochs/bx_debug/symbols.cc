@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: symbols.cc,v 1.11 2008-03-30 14:32:14 sshwarts Exp $
+// $Id: symbols.cc,v 1.12 2008-06-16 17:09:52 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -95,6 +95,9 @@ char* bx_dbg_disasm_symbolic_address(Bit32u eip, Bit32u base)
 #endif
 
 using namespace std;
+#ifdef __GNUC__
+using namespace __gnu_cxx;
+#endif
 
 struct symbol_entry_t
 {
