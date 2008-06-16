@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.241 2008-06-15 20:41:34 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.242 2008-06-16 04:49:19 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1166,7 +1166,7 @@ void BX_CPU_C::handleCpuModeChange(void)
     if (BX_CPU_THIS_PTR cr0.get_PE()) {
       if (BX_CPU_THIS_PTR get_VM()) {
         BX_CPU_THIS_PTR cpu_mode = BX_MODE_IA32_V8086;
-        BX_ASSERT(CPL == 3);
+//      BX_ASSERT(CPL == 3);
       }
       else
         BX_CPU_THIS_PTR cpu_mode = BX_MODE_IA32_PROTECTED;
