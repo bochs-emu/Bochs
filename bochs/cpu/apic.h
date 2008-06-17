@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.h,v 1.37 2008-02-02 21:46:49 sshwarts Exp $
+// $Id: apic.h,v 1.38 2008-06-17 21:21:17 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (c) 2002 Zwane Mwaikambo, Stanislav Shwartsman
@@ -42,7 +42,7 @@ public:
   virtual ~bx_generic_apic_c() { }
   // init is called during RESET and when an INIT message is delivered
   virtual void init() { }
-  virtual void reset() { }
+  virtual void reset(unsigned type) {}
   bx_phy_address get_base(void) const { return base_addr; }
   void set_base(bx_phy_address newbase);
   void set_id(Bit8u newid);
@@ -143,7 +143,7 @@ public:
   bx_bool INTR;
   bx_local_apic_c(BX_CPU_C *cpu);
   virtual ~bx_local_apic_c() { }
-  virtual void reset(void);
+  virtual void reset(unsigned type);
   virtual void init(void);
   void set_id(Bit8u newid);   // redefine to set cpu->name
   virtual void write_aligned(bx_phy_address addr, Bit32u *data);
