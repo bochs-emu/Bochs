@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: mult64.cc,v 1.30 2008-05-24 10:26:03 sshwarts Exp $
+// $Id: mult64.cc,v 1.31 2008-06-17 20:23:16 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -274,8 +274,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::IMUL_RAXEq(bxInstruction_c *i)
    */
 
   SET_FLAGS_OSZAPC_LOGIC_64(product_128.lo);
-  if ((product_128.lo >= 0 && product_128.hi == 0) ||
-      (product_128.lo <  0 && product_128.hi == (Bit64s) BX_CONST64(0xffffffffffffffff)))
+  if (((Bit64s)(product_128.lo) >= 0 && product_128.hi == 0) ||
+      ((Bit64s)(product_128.lo) <  0 && product_128.hi == (Bit64s) BX_CONST64(0xffffffffffffffff)))
   {
     ASSERT_FLAGS_OxxxxC();
   }
@@ -393,8 +393,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::IMUL_GqEqId(bxInstruction_c *i)
   BX_WRITE_64BIT_REG(i->nnn(), product_128.lo);
 
   SET_FLAGS_OSZAPC_LOGIC_64(product_128.lo);
-  if ((product_128.lo >= 0 && product_128.hi == 0) ||
-      (product_128.lo <  0 && product_128.hi == (Bit64s) BX_CONST64(0xffffffffffffffff)))
+  if (((Bit64s)(product_128.lo) >= 0 && product_128.hi == 0) ||
+      ((Bit64s)(product_128.lo) <  0 && product_128.hi == (Bit64s) BX_CONST64(0xffffffffffffffff)))
   {
     ASSERT_FLAGS_OxxxxC();
   }
@@ -423,8 +423,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::IMUL_GqEq(bxInstruction_c *i)
   BX_WRITE_64BIT_REG(i->nnn(), product_128.lo);
 
   SET_FLAGS_OSZAPC_LOGIC_64(product_128.lo);
-  if ((product_128.lo >= 0 && product_128.hi == 0) ||
-      (product_128.lo <  0 && product_128.hi == (Bit64s) BX_CONST64(0xffffffffffffffff)))
+  if (((Bit64s)(product_128.lo) >= 0 && product_128.hi == 0) ||
+      ((Bit64s)(product_128.lo) <  0 && product_128.hi == (Bit64s) BX_CONST64(0xffffffffffffffff)))
   {
     ASSERT_FLAGS_OxxxxC();
   }

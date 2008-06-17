@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.cc,v 1.108 2008-05-09 22:33:36 sshwarts Exp $
+// $Id: apic.cc,v 1.109 2008-06-17 20:23:16 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (c) 2002 Zwane Mwaikambo, Stanislav Shwartsman
@@ -843,12 +843,13 @@ void  bx_local_apic_c::set_tpr(Bit8u priority)
 Bit8u bx_local_apic_c::get_apr(void)
 {
   Bit32u tpr  = (task_priority >> 4) & 0xf;
-  Bit32u isrv = (highest_priority_int(isr) >> 4) & 0xf;
-  Bit32u irrv = (highest_priority_int(irr) >> 4) & 0xf;
+  int first_isr = highest_priority_int(isr);
+  if (first_isr < 0) first_isr = 0;
+  int first_irr = highest_priority_int(irr);
+  if (first_irr < 0) first_irr = 0;
+  Bit32u isrv = (first_isr >> 4) & 0xf;
+  Bit32u irrv = (first_irr >> 4) & 0xf;
   Bit8u  apr;
-
-  if(isrv < 0) isrv = 0;
-  if(irrv < 0) irrv = 0;
 
   if((tpr >= irrv) && (tpr > isrv)) {
     apr = task_priority & 0xff;
