@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial.cc,v 1.82 2008-05-22 08:13:22 vruppert Exp $
+// $Id: serial.cc,v 1.83 2008-06-18 16:33:44 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -1536,7 +1536,7 @@ bx_serial_c::fifo_timer(void)
   void
 bx_serial_c::serial_mouse_enq(int delta_x, int delta_y, int delta_z, unsigned button_state)
 {
-  Bit8u b1, b2, b3, mouse_data[4];
+  Bit8u b1, b2, b3, mouse_data[5];
   int bytes, tail;
 
   if (BX_SER_THIS mouse_port == -1) {
