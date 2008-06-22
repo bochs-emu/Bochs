@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.200 2008-06-11 20:58:29 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.201 2008-06-22 03:45:54 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -408,7 +408,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo64R[512*3] = {
   /* E0 /wr */ { BxImmediate_BrOff8 | BxTraceEnd, BX_IA_LOOPNE64_Jb },
   /* E1 /wr */ { BxImmediate_BrOff8 | BxTraceEnd, BX_IA_LOOPE64_Jb },
   /* E2 /wr */ { BxImmediate_BrOff8 | BxTraceEnd, BX_IA_LOOP64_Jb },
-  /* E3 /wr */ { BxImmediate_BrOff8 | BxTraceEnd, BX_IA_JCXZ64_Jb },
+  /* E3 /wr */ { BxImmediate_BrOff8 | BxTraceEnd, BX_IA_JRCXZ_Jb },
   /* E4 /wr */ { BxImmediate_Ib, BX_IA_IN_ALIb },
   /* E5 /wr */ { BxImmediate_Ib, BX_IA_IN_AXIb },
   /* E6 /wr */ { BxImmediate_Ib, BX_IA_OUT_IbAL },
@@ -935,7 +935,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo64R[512*3] = {
   /* E0 /dr */ { BxImmediate_BrOff8 | BxTraceEnd, BX_IA_LOOPNE64_Jb },
   /* E1 /dr */ { BxImmediate_BrOff8 | BxTraceEnd, BX_IA_LOOPE64_Jb },
   /* E2 /dr */ { BxImmediate_BrOff8 | BxTraceEnd, BX_IA_LOOP64_Jb },
-  /* E3 /dr */ { BxImmediate_BrOff8 | BxTraceEnd, BX_IA_JCXZ64_Jb },
+  /* E3 /dr */ { BxImmediate_BrOff8 | BxTraceEnd, BX_IA_JRCXZ_Jb },
   /* E4 /dr */ { BxImmediate_Ib, BX_IA_IN_ALIb },
   /* E5 /dr */ { BxImmediate_Ib, BX_IA_IN_EAXIb },
   /* E6 /dr */ { BxImmediate_Ib, BX_IA_OUT_IbAL },
@@ -1462,7 +1462,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo64R[512*3] = {
   /* E0 /qr */ { BxImmediate_BrOff8 | BxTraceEnd, BX_IA_LOOPNE64_Jb },
   /* E1 /qr */ { BxImmediate_BrOff8 | BxTraceEnd, BX_IA_LOOPE64_Jb },
   /* E2 /qr */ { BxImmediate_BrOff8 | BxTraceEnd, BX_IA_LOOP64_Jb },
-  /* E3 /qr */ { BxImmediate_BrOff8 | BxTraceEnd, BX_IA_JCXZ64_Jb },
+  /* E3 /qr */ { BxImmediate_BrOff8 | BxTraceEnd, BX_IA_JRCXZ_Jb },
   /* E4 /qr */ { BxImmediate_Ib, BX_IA_IN_ALIb },
   /* E5 /qr */ { BxImmediate_Ib, BX_IA_IN_EAXIb },
   /* E6 /qr */ { BxImmediate_Ib, BX_IA_OUT_IbAL },
@@ -1995,7 +1995,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo64M[512*3] = {
   /* E0 /wm */ { BxImmediate_BrOff8 | BxTraceEnd, BX_IA_LOOPNE64_Jb },
   /* E1 /wm */ { BxImmediate_BrOff8 | BxTraceEnd, BX_IA_LOOPE64_Jb },
   /* E2 /wm */ { BxImmediate_BrOff8 | BxTraceEnd, BX_IA_LOOP64_Jb },
-  /* E3 /wm */ { BxImmediate_BrOff8 | BxTraceEnd, BX_IA_JCXZ64_Jb },
+  /* E3 /wm */ { BxImmediate_BrOff8 | BxTraceEnd, BX_IA_JRCXZ_Jb },
   /* E4 /wm */ { BxImmediate_Ib, BX_IA_IN_ALIb },
   /* E5 /wm */ { BxImmediate_Ib, BX_IA_IN_AXIb },
   /* E6 /wm */ { BxImmediate_Ib, BX_IA_OUT_IbAL },
@@ -2522,7 +2522,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo64M[512*3] = {
   /* E0 /dm */ { BxImmediate_BrOff8 | BxTraceEnd, BX_IA_LOOPNE64_Jb },
   /* E1 /dm */ { BxImmediate_BrOff8 | BxTraceEnd, BX_IA_LOOPE64_Jb },
   /* E2 /dm */ { BxImmediate_BrOff8 | BxTraceEnd, BX_IA_LOOP64_Jb },
-  /* E3 /dm */ { BxImmediate_BrOff8 | BxTraceEnd, BX_IA_JCXZ64_Jb },
+  /* E3 /dm */ { BxImmediate_BrOff8 | BxTraceEnd, BX_IA_JRCXZ_Jb },
   /* E4 /dm */ { BxImmediate_Ib, BX_IA_IN_ALIb },
   /* E5 /dm */ { BxImmediate_Ib, BX_IA_IN_EAXIb },
   /* E6 /dm */ { BxImmediate_Ib, BX_IA_OUT_IbAL },
@@ -3049,7 +3049,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo64M[512*3] = {
   /* E0 /qm */ { BxImmediate_BrOff8 | BxTraceEnd, BX_IA_LOOPNE64_Jb },
   /* E1 /qm */ { BxImmediate_BrOff8 | BxTraceEnd, BX_IA_LOOPE64_Jb },
   /* E2 /qm */ { BxImmediate_BrOff8 | BxTraceEnd, BX_IA_LOOP64_Jb },
-  /* E3 /qm */ { BxImmediate_BrOff8 | BxTraceEnd, BX_IA_JCXZ64_Jb },
+  /* E3 /qm */ { BxImmediate_BrOff8 | BxTraceEnd, BX_IA_JRCXZ_Jb },
   /* E4 /qm */ { BxImmediate_Ib, BX_IA_IN_ALIb },
   /* E5 /qm */ { BxImmediate_Ib, BX_IA_IN_EAXIb },
   /* E6 /qm */ { BxImmediate_Ib, BX_IA_OUT_IbAL },

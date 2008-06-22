@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: data_xfer8.cc,v 1.39 2008-03-22 21:29:39 sshwarts Exp $
+// $Id: data_xfer8.cc,v 1.40 2008-06-22 03:45:54 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -90,18 +90,18 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XLAT(bxInstruction_c *i)
 
 #if BX_SUPPORT_X86_64
   if (i->as64L()) {
-    offset = RBX + AL;
+    offset = RBX;
   }
   else
 #endif
   if (i->as32L()) {
-    offset = EBX + AL;
+    offset = EBX;
   }
   else {
-    offset =  BX + AL;
+    offset =  BX;
   }
 
-  AL = read_virtual_byte(i->seg(), offset);
+  AL = read_virtual_byte(i->seg(), offset + AL);
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::XCHG_EbGbM(bxInstruction_c *i)

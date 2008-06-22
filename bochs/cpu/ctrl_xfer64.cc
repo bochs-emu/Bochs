@@ -1,5 +1,5 @@
 ////////c/////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer64.cc,v 1.68 2008-05-11 20:46:11 sshwarts Exp $
+// $Id: ctrl_xfer64.cc,v 1.69 2008-06-22 03:45:53 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -41,12 +41,12 @@ BX_CPP_INLINE void BX_CPP_AttrRegparmN(1) BX_CPU_C::branch_near64(bxInstruction_
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
+  RIP = new_RIP;
+
 #if BX_SUPPORT_TRACE_CACHE && !defined(BX_TRACE_CACHE_NO_SPECULATIVE_TRACING)
   // assert magic async_event to stop trace execution
   BX_CPU_THIS_PTR async_event |= BX_ASYNC_EVENT_STOP_TRACE;
 #endif
-
-  RIP = new_RIP;
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::RETnear64_Iw(bxInstruction_c *i)
@@ -467,7 +467,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::IRET64(bxInstruction_c *i)
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, RIP);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::JCXZ64_Jb(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::JRCXZ_Jb(bxInstruction_c *i)
 {
   if (i->as64L()) {
     if (RCX == 0) {
@@ -493,7 +493,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::JCXZ64_Jb(bxInstruction_c *i)
 // because EIP was beyond CS segment limits) CPU state should restore the
 // state prior to instruction execution.
 //
-// The final point that we are not allowed to decrement ECX register before
+// The final point that we are not allowed to decrement RCX register before
 // it is known that no exceptions can happen.
 //
 

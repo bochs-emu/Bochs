@@ -89,7 +89,6 @@ OBJS = \
 	logical32.o \
 	arith16.o \
 	segment_ctrl.o \
-	ctrl_xfer8.o \
 	data_xfer16.o \
 	data_xfer32.o \
 	exception.o \
@@ -336,15 +335,6 @@ ctrl_xfer32.o: ctrl_xfer32.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../config.h ../fpu/tag_w.h ../fpu/status_w.h ../fpu/control_w.h \
   ../cpu/xmm.h stack.h
 ctrl_xfer64.o: ctrl_xfer64.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
-  ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
-  ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
-  ../extplugin.h ../gui/gui.h ../gui/textconfig.h ../config.h \
-  ../gui/keymap.h ../instrument/stubs/instrument.h cpu.h \
-  ../disasm/disasm.h ../config.h crregs.h descriptor.h instr.h \
-  lazy_flags.h icache.h apic.h ../cpu/i387.h ../fpu/softfloat.h \
-  ../config.h ../fpu/tag_w.h ../fpu/status_w.h ../fpu/control_w.h \
-  ../cpu/xmm.h stack.h
-ctrl_xfer8.o: ctrl_xfer8.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
   ../extplugin.h ../gui/gui.h ../gui/textconfig.h ../config.h \

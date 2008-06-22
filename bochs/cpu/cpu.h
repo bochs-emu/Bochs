@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.488 2008-06-13 08:17:52 sshwarts Exp $
+// $Id: cpu.h,v 1.489 2008-06-22 03:45:53 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1228,10 +1228,14 @@ public: // for now...
   BX_SMF void SALC(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void XLAT(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
-  BX_SMF void LOOPNE_Jb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void LOOPE_Jb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void LOOP_Jb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void LOOPNE16_Jb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void LOOPE16_Jb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void LOOP16_Jb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void LOOPNE32_Jb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void LOOPE32_Jb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void LOOP32_Jb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void JCXZ_Jb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void JECXZ_Jb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void IN_ALIb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void IN_AXIb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void IN_EAXIb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -2743,7 +2747,7 @@ public: // for now...
   BX_SMF void LOOPNE64_Jb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void LOOPE64_Jb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void LOOP64_Jb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void JCXZ64_Jb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void JRCXZ_Jb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
   BX_SMF void MOVQ_EqPq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void MOVQ_EqVq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -3000,6 +3004,7 @@ public: // for now...
   BX_SMF Bit8u* v2h_write(bx_address laddr, unsigned curr_pl, unsigned len) BX_CPP_AttrRegparmN(3);
 #endif
 
+  BX_SMF void branch_near16(Bit16u new_IP) BX_CPP_AttrRegparmN(1);
   BX_SMF void branch_near32(Bit32u new_EIP) BX_CPP_AttrRegparmN(1);
 #if BX_SUPPORT_X86_64
   BX_SMF void branch_near64(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
