@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.209 2008-06-02 20:08:10 sshwarts Exp $
+// $Id: rombios.c,v 1.210 2008-06-22 09:05:02 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -940,7 +940,7 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.209 $ $Date: 2008-06-02 20:08:10 $";
+static char bios_cvs_version_string[] = "$Revision: 1.210 $ $Date: 2008-06-22 09:05:02 $";
 
 #define BIOS_COPYRIGHT_STRING "(c) 2002 MandrakeSoft S.A. Written by Kevin Lawton & the Bochs team."
 
@@ -9053,10 +9053,27 @@ eoi_jmp_post:
   mov   al, #0x20
   out   #0x20, al ;; master PIC EOI
 
+jmp_post_0x467:
   xor ax, ax
   mov ds, ax
 
   jmp far ptr [0x467]
+
+iret_post_0x467:
+  xor ax, ax
+  mov ds, ax
+
+  mov sp, [0x467]
+  mov ss, [0x469]
+  iret
+
+retf_post_0x467:
+  xor ax, ax
+  mov ds, ax
+
+  mov sp, [0x467]
+  mov ss, [0x469]
+  retf
 
 
 ;--------------------
@@ -10291,8 +10308,20 @@ post:
   cmp al, #0x05
   je  eoi_jmp_post
 
+  ;; 0x0A = jmp via [0x40:0x67] jump
+  cmp al, #0x0a
+  je  jmp_post_0x467
+
+  ;; 0x0B = iret via [0x40:0x67]
+  cmp al, #0x0b
+  je  iret_post_0x467
+
+  ;; 0x0C = retf via [0x40:0x67]
+  cmp al, #0x0c
+  je  retf_post_0x467
+
   ;; Examine CMOS shutdown status.
-  ;;  0x01,0x02,0x03,0x04,0x06,0x07,0x08, 0x0a, 0x0b, 0x0c = Unimplemented shutdown status.
+  ;;  0x01,0x02,0x03,0x04,0x06,0x07,0x08 = Unimplemented shutdown status.
   push bx
   call _shutdown_status_panic
 
@@ -10529,12 +10558,12 @@ post_default_ints:
   ;;
   call floppy_drive_post
 
-#if BX_USE_ATADRV
-
   ;;
   ;; Hard Drive setup
   ;;
   call hard_drive_post
+
+#if BX_USE_ATADRV
 
   ;;
   ;; ATA/ATAPI driver setup
@@ -10542,12 +10571,6 @@ post_default_ints:
   call _ata_init
   call _ata_detect
   ;;
-#else // BX_USE_ATADRV
-
-  ;;
-  ;; Hard Drive setup
-  ;;
-  call hard_drive_post
 
 #endif // BX_USE_ATADRV
 
