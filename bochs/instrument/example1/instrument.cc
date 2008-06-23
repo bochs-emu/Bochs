@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: instrument.cc,v 1.18 2008-04-19 10:12:09 sshwarts Exp $
+// $Id: instrument.cc,v 1.19 2008-06-23 02:56:31 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -48,7 +48,7 @@ void bx_instr_init(unsigned cpu)
 void bxInstrumentation::bx_instr_reset()
 {
   valid = is_branch = 0;
-  nprefixes = num_data_accesses = 0;
+  num_data_accesses = 0;
   active = 1;
 }
 
@@ -65,7 +65,7 @@ void bxInstrumentation::bx_instr_new_instruction()
     {
       fprintf(stderr, "----------------------------------------------------------\n");
       fprintf(stderr, "CPU: %d: %s\n", cpu_id, disasm_tbuf);
-      fprintf(stderr, "LEN: %d\tPREFIXES: %d\tBYTES: ", length, nprefixes);
+      fprintf(stderr, "LEN: %d\tBYTES: ", length);
       for(n=0;n<length;n++) fprintf(stderr, "%02x", opcode[n]);
       if(is_branch)
       {
@@ -90,7 +90,7 @@ void bxInstrumentation::bx_instr_new_instruction()
   }
 
   valid = is_branch = 0;
-  nprefixes = num_data_accesses = 0;
+  num_data_accesses = 0;
 }
 
 void bxInstrumentation::branch_taken(bx_address new_eip)
@@ -140,16 +140,7 @@ void bxInstrumentation::bx_instr_opcode(const Bit8u *opcode_bytes, unsigned len,
   is32 = is32;
   is64 = is64;
   opcode_size = len;
-}
-
-void bxInstrumentation::bx_instr_fetch_decode_completed(bxInstruction_c *i)
-{
-  if(active) valid = 1;
-}
-
-void bxInstrumentation::bx_instr_prefix(Bit8u prefix)
-{
-  if(active) nprefixes++;
+  valid = 1;
 }
 
 void bxInstrumentation::bx_instr_interrupt(unsigned vector)

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.232 2008-06-14 16:55:44 sshwarts Exp $
+// $Id: cpu.cc,v 1.233 2008-06-23 02:56:30 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -156,11 +156,7 @@ no_async_event:
     if ((entry->pAddr == pAddr) &&
         (entry->writeStamp == *(BX_CPU_THIS_PTR currPageWriteStampPtr)))
     {
-      // iCache hit. An instruction was found in the iCache.
-#if BX_INSTRUMENTATION
-      BX_INSTR_OPCODE(BX_CPU_ID, BX_CPU_THIS_PTR eipFetchPtr + eipBiased,
-         i->ilen(), BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b, Is64BitMode());
-#endif
+      // iCache hit. An instruction was found in the iCache
     }
     else {
       // iCache miss. No validated instruction with matching fetch parameters
@@ -179,9 +175,11 @@ no_async_event:
 
     for(;;i++) {
 #endif
-      // An instruction will have been fetched using either the normal case,
-      // or the boundary fetch (across pages), by this point.
-      BX_INSTR_FETCH_DECODE_COMPLETED(BX_CPU_ID, i);
+
+#if BX_INSTRUMENTATION
+      BX_INSTR_OPCODE(BX_CPU_ID, BX_CPU_THIS_PTR eipFetchPtr + (RIP + BX_CPU_THIS_PTR eipPageBias),
+         i->ilen(), BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b, Is64BitMode());
+#endif
 
 #if BX_DEBUGGER || BX_EXTERNAL_DEBUGGER || BX_GDBSTUB
       if (dbg_instruction_prolog()) return;

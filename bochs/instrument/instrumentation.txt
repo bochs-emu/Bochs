@@ -96,13 +96,7 @@ The  callback  is  called  each  time,  when  Bochs  finishes  decoding of new
 instruction.  Through  this  callback  function  Bochs  could provide decoding
 information  of the instruction. The bxInstruction_c argument of the callbacks
 it  is  a  Bochs internal structure that holds all necessary information about
-currently executed instruction, such as sib/modrm bytes, execution pointer and
-etc.
-
-	void bx_instr_prefix(unsigned cpu, Bit8u prefix);
-
-These  callback  functions  are called by Bochs decoding stage each time, when
-any prefix byte was decoded.
+the instruction, such as sib/modrm bytes, operand, execution pointer and etc.
 
 
 	void bx_instr_interrupt(unsigned cpu, unsigned vector);

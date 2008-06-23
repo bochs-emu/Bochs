@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: instrument.h,v 1.25 2008-04-19 10:12:09 sshwarts Exp $
+// $Id: instrument.h,v 1.26 2008-06-23 02:56:31 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -72,7 +72,6 @@ public:
 
   /* decoding */
   unsigned opcode_size;
-  unsigned nprefixes;
   Bit8u    opcode[MAX_OPCODE_SIZE];
   bx_bool  is32, is64;
 
@@ -109,9 +108,6 @@ public:
   void bx_instr_far_branch(unsigned what, Bit16u new_cs, bx_address new_eip);
 
   void bx_instr_opcode(const Bit8u *opcode, unsigned len, bx_bool is32, bx_bool is64);
-  void bx_instr_fetch_decode_completed(bxInstruction_c *i);
-
-  void bx_instr_prefix(Bit8u prefix);
 
   void bx_instr_interrupt(unsigned vector);
   void bx_instr_exception(unsigned vector);
@@ -151,11 +147,7 @@ extern bxInstrumentation *icpu;
 /* decoding completed */
 #  define BX_INSTR_OPCODE(cpu_id, opcode, len, is32, is64) \
                        icpu[cpu_id].bx_instr_opcode(opcode, len, is32, is64)
-#  define BX_INSTR_FETCH_DECODE_COMPLETED(cpu_id, i) \
-                       icpu[cpu_id].bx_instr_fetch_decode_completed(i)
-
-/* prefix byte decoded */
-#  define BX_INSTR_PREFIX(cpu_id, prefix)  icpu[cpu_id].bx_instr_prefix(prefix)
+#  define BX_INSTR_FETCH_DECODE_COMPLETED(cpu_id, i)
 
 /* exceptional case and interrupt */
 #  define BX_INSTR_EXCEPTION(cpu_id, vector)            icpu[cpu_id].bx_instr_exception(vector)
@@ -217,9 +209,6 @@ extern bxInstrumentation *icpu;
 /* decoding completed */
 #  define BX_INSTR_OPCODE(cpu_id, opcode, len, is32, is64)
 #  define BX_INSTR_FETCH_DECODE_COMPLETED(cpu_id, i)
-
-/* prefix byte decoded */
-#  define BX_INSTR_PREFIX(cpu_id, prefix)
 
 /* exceptional case and interrupt */
 #  define BX_INSTR_EXCEPTION(cpu_id, vector)

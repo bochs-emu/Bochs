@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.242 2008-06-16 04:49:19 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.243 2008-06-23 02:56:31 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -596,19 +596,16 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CdRd(bxInstruction_c *i)
       SetCR3(val_32);
       BX_INSTR_TLB_CNTRL(BX_CPU_ID, BX_INSTR_MOV_CR3, val_32);
       break;
+#if BX_CPU_LEVEL > 3
     case 4: // CR4
-#if BX_CPU_LEVEL == 3
-      BX_PANIC(("MOV_CdRd: write to CR4 of 0x%08x on 386", val_32));
-      UndefinedOpcode(i);
-#else
       // Protected mode: #GP(0) if attempt to write a 1 to
       // any reserved bit of CR4
       if (! SetCR4(val_32))
         exception(BX_GP_EXCEPTION, 0, 0);
-#endif
       break;
+#endif
     default:
-      BX_ERROR(("MOV_CdRd: #UD - control register index out of range"));
+      BX_ERROR(("MOV_CdRd: #UD - control register %d index out of range", i->nnn()));
       UndefinedOpcode(i);
   }
 }
@@ -616,7 +613,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CdRd(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RdCd(bxInstruction_c *i)
 {
   // mov control register data to register
-  Bit32u val_32;
+  Bit32u val_32 = 0;
 
   if (!real_mode() && CPL!=0) {
     BX_ERROR(("MOV_RdCd: CPL!=0 not in real mode"));
@@ -649,16 +646,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RdCd(bxInstruction_c *i)
       break;
     case 4: // CR4
 #if BX_CPU_LEVEL < 4
-      val_32 = 0;
-      BX_INFO(("MOV_RdCd: read of CR4 causes #UD"));
-      UndefinedOpcode(i);
-#else
       BX_DEBUG(("MOV_RdCd: read of CR4"));
       val_32 = BX_CPU_THIS_PTR cr4.getRegister();
 #endif
       break;
     default:
-      BX_ERROR(("MOV_RdCd: #UD - control register index out of range"));
+      BX_ERROR(("MOV_RdCd: #UD - control register %d index out of range", i->nnn()));
       UndefinedOpcode(i);
   }
 
@@ -728,7 +721,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CqRq(bxInstruction_c *i)
       break;
 #endif
     default:
-      BX_ERROR(("MOV_CqRq: #UD - control register index out of range"));
+      BX_ERROR(("MOV_CqRq: #UD - control register %d index out of range", i->nnn()));
       UndefinedOpcode(i);
   }
 }
@@ -736,7 +729,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CqRq(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RqCq(bxInstruction_c *i)
 {
   // mov control register data to register
-  Bit64u val_64;
+  Bit64u val_64 = 0;
 
   BX_ASSERT(protected_mode());
 
@@ -785,7 +778,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RqCq(bxInstruction_c *i)
       break;
 #endif
     default:
-      BX_ERROR(("MOV_RqCq: #UD - control register index out of range"));
+      BX_ERROR(("MOV_RqCq: #UD - control register %d index out of range", i->nnn()));
       UndefinedOpcode(i);
   }
 
@@ -799,7 +792,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RqCq(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::LMSW_Ew(bxInstruction_c *i)
 {
   Bit16u msw;
-  Bit32u cr0;
 
   if (!real_mode() && CPL!=0) {
     BX_ERROR(("LMSW: CPL!=0 not in real mode"));
@@ -824,7 +816,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LMSW_Ew(bxInstruction_c *i)
     msw |= 0x0001; // adjust PE bit to current value of 1
 
   msw &= 0xf; // LMSW only affects last 4 flags
-  cr0 = (BX_CPU_THIS_PTR cr0.getRegister() & 0xfffffff0) | msw;
+  Bit32u cr0 = (BX_CPU_THIS_PTR cr0.getRegister() & 0xfffffff0) | msw;
   SetCR0(cr0);
 }
 
@@ -990,10 +982,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOADALL(bxInstruction_c *i)
 
   /* DS */
   BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x81e, 2, &ds_raw);
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.value = ds_raw;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.rpl   = (ds_raw & 0x03);  ds_raw >>= 2;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.ti    = (ds_raw & 0x01);  ds_raw >>= 1;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.index = ds_raw;
+  parse_selector(ds_raw, &BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector);
   BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x848, 2, &base_15_0);
   BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x84a, 1, &base_23_16);
   BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x84b, 1, &access);
@@ -1016,10 +1005,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOADALL(bxInstruction_c *i)
 
   /* SS */
   BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x820, 2, &ss_raw);
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value = ss_raw;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.rpl   = (ss_raw & 0x03); ss_raw >>= 2;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.ti    = (ss_raw & 0x01); ss_raw >>= 1;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.index = ss_raw;
+  parse_selector(ss_raw, &BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector);
   BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x842, 2, &base_15_0);
   BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x844, 1, &base_23_16);
   BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x845, 1, &access);
@@ -1042,11 +1028,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOADALL(bxInstruction_c *i)
 
   /* CS */
   BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x822, 2, &cs_raw);
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value = cs_raw;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.rpl   = (cs_raw & 0x03); cs_raw >>= 2;
-
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.ti    = (cs_raw & 0x01); cs_raw >>= 1;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.index = cs_raw;
+  parse_selector(cs_raw, &BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector);
   BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x83c, 2, &base_15_0);
   BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x83e, 1, &base_23_16);
   BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x83f, 1, &access);
@@ -1075,10 +1057,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOADALL(bxInstruction_c *i)
 
   /* ES */
   BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x824, 2, &es_raw);
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.value = es_raw;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.rpl   = (es_raw & 0x03); es_raw >>= 2;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.ti    = (es_raw & 0x01); es_raw >>= 1;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.index = es_raw;
+  parse_selector(es_raw, &BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector);
   BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x836, 2, &base_15_0);
   BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x838, 1, &base_23_16);
   BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x839, 1, &access);
@@ -1166,7 +1145,6 @@ void BX_CPU_C::handleCpuModeChange(void)
     if (BX_CPU_THIS_PTR cr0.get_PE()) {
       if (BX_CPU_THIS_PTR get_VM()) {
         BX_CPU_THIS_PTR cpu_mode = BX_MODE_IA32_V8086;
-//      BX_ASSERT(CPL == 3);
       }
       else
         BX_CPU_THIS_PTR cpu_mode = BX_MODE_IA32_PROTECTED;

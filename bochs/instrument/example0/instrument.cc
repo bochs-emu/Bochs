@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: instrument.cc,v 1.23 2008-04-19 10:12:09 sshwarts Exp $
+// $Id: instrument.cc,v 1.24 2008-06-23 02:56:31 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -46,7 +46,6 @@ static disassembler bx_disassembler;
 static struct instruction_t {
   bx_bool  valid;        // is current instruction valid
   unsigned opcode_size;
-  unsigned nprefixes;
   Bit8u    opcode[MAX_OPCODE_SIZE];
   bx_bool  is32, is64;
   unsigned num_data_accesses;
@@ -77,7 +76,6 @@ void bx_instr_init(unsigned cpu)
 void bx_instr_reset(unsigned cpu)
 {
   instruction[cpu].valid = 0;
-  instruction[cpu].nprefixes = 0;
   instruction[cpu].num_data_accesses = 0;
   instruction[cpu].is_branch = 0;
 }
@@ -99,7 +97,7 @@ void bx_instr_new_instruction(unsigned cpu)
     {
       fprintf(stderr, "----------------------------------------------------------\n");
       fprintf(stderr, "CPU: %d: %s\n", cpu, disasm_tbuf);
-      fprintf(stderr, "LEN: %d\tPREFIXES: %d\tBYTES: ", length, i->nprefixes);
+      fprintf(stderr, "LEN: %d\tBYTES: ", length);
       for(n=0;n<length;n++) fprintf(stderr, "%02x", i->opcode[n]);
       if(i->is_branch)
       {
@@ -124,7 +122,6 @@ void bx_instr_new_instruction(unsigned cpu)
   }
 
   instruction[cpu].valid = 0;
-  instruction[cpu].nprefixes = 0;
   instruction[cpu].num_data_accesses = 0;
   instruction[cpu].is_branch = 0;
 }
@@ -176,16 +173,7 @@ void bx_instr_opcode(unsigned cpu, const Bit8u *opcode, unsigned len, bx_bool is
   instruction[cpu].is32 = is32;
   instruction[cpu].is64 = is64;
   instruction[cpu].opcode_size = len;
-}
-
-void bx_instr_fetch_decode_completed(unsigned cpu, bxInstruction_c *i)
-{
-  if(active) instruction[cpu].valid = 1;
-}
-
-void bx_instr_prefix(unsigned cpu, Bit8u prefix)
-{
-  if(active) instruction[cpu].nprefixes++;
+  instruction[cpu].valid = 1;
 }
 
 void bx_instr_interrupt(unsigned cpu, unsigned vector)

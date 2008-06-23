@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: instrument.h,v 1.33 2008-04-19 11:08:06 sshwarts Exp $
+// $Id: instrument.h,v 1.34 2008-06-23 02:56:31 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -134,9 +134,6 @@ void bx_instr_wrmsr(unsigned cpu, unsigned addr, Bit64u value);
 #  define BX_INSTR_FETCH_DECODE_COMPLETED(cpu_id, i) \
                        bx_instr_fetch_decode_completed(cpu_id, i)
 
-/* prefix byte decoded */
-#  define BX_INSTR_PREFIX(cpu_id, prefix)  bx_instr_prefix(cpu_id, prefix)
-
 /* exceptional case and interrupt */
 #  define BX_INSTR_EXCEPTION(cpu_id, vector)            bx_instr_exception(cpu_id, vector)
 #  define BX_INSTR_INTERRUPT(cpu_id, vector)            bx_instr_interrupt(cpu_id, vector)
@@ -198,9 +195,6 @@ void bx_instr_wrmsr(unsigned cpu, unsigned addr, Bit64u value);
 /* decoding completed */
 #  define BX_INSTR_OPCODE(cpu_id, opcode, len, is32, is64)
 #  define BX_INSTR_FETCH_DECODE_COMPLETED(cpu_id, i)
-
-/* prefix byte decoded */
-#  define BX_INSTR_PREFIX(cpu_id, prefix)
 
 /* exceptional case and interrupt */
 #  define BX_INSTR_EXCEPTION(cpu_id, vector)

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.201 2008-06-22 03:45:54 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.202 2008-06-23 02:56:31 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -3392,7 +3392,6 @@ fetch_b1:
     case 0x4D:
     case 0x4E:
     case 0x4F:
-      BX_INSTR_PREFIX(BX_CPU_ID, b1);
       rex_prefix = b1;
       if (ilen < remain) {
         goto fetch_b1;
@@ -3408,7 +3407,6 @@ fetch_b1:
       return(0);
     case 0xf2: // REPNE/REPNZ
     case 0xf3: // REP/REPE/REPZ
-      BX_INSTR_PREFIX(BX_CPU_ID, b1);
       rex_prefix = 0;
       sse_prefix = b1 & 0xf;
       i->setRepUsed(b1 & 3);
@@ -3421,7 +3419,6 @@ fetch_b1:
     case 0x36: // SS:
     case 0x3e: // DS:
       /* ignore segment override prefix */
-      BX_INSTR_PREFIX(BX_CPU_ID, b1);
       rex_prefix = 0;
       if (ilen < remain) {
         goto fetch_b1;
@@ -3429,7 +3426,6 @@ fetch_b1:
       return(0);
     case 0x64: // FS:
     case 0x65: // GS:
-      BX_INSTR_PREFIX(BX_CPU_ID, b1);
       rex_prefix = 0;
       i->setSeg(b1 & 0xf);
       if (ilen < remain) {
@@ -3437,7 +3433,6 @@ fetch_b1:
       }
       return(0);
     case 0x66: // OpSize
-      BX_INSTR_PREFIX(BX_CPU_ID, b1);
       rex_prefix = 0;
       if(!sse_prefix) sse_prefix = SSE_PREFIX_66;
       i->setOs32B(0);
@@ -3447,7 +3442,6 @@ fetch_b1:
       }
       return(0);
     case 0x67: // AddrSize
-      BX_INSTR_PREFIX(BX_CPU_ID, b1);
       rex_prefix = 0;
       i->setAs64B(0);
       if (ilen < remain) {
@@ -3455,7 +3449,6 @@ fetch_b1:
       }
       return(0);
     case 0xf0: // LOCK:
-      BX_INSTR_PREFIX(BX_CPU_ID, b1);
       rex_prefix = 0;
       lock = 1;
       if (ilen < remain) {
@@ -3858,6 +3851,8 @@ modrm_done:
   i->execute = BxOpcodesTable[ia_opcode];
   i->setB1(b1);
   i->setILen(ilen);
+
+  BX_INSTR_FETCH_DECODE_COMPLETED(BX_CPU_ID, i);
 
   return(1);
 }
