@@ -1,5 +1,5 @@
 -------------------------------------------------------------
-BOCHS TESTING FORM Version 0.3
+BOCHS TESTING FORM Version 0.4
 -------------------------------------------------------------
 
 Because of the variety of platforms and configurations that Bochs
@@ -13,10 +13,10 @@ Win95-under-Debian and a second form for FreeDOS-under-Debian.  In
 this case it would save time to fill in the host OS part, copy it a
 few times and fill out the guest OS part for each copy.
 
-To fill in a blank such as [__], replace the underlines and leave 
+To fill in a blank such as [__], replace the underlines and leave
 the brackets.  Example: [Sun Ultrasparc 10].  To fill in a
 multiple-choice, just put an X in the brackets.  Example: [X]
-Mail completed forms to bochs-testing@tlw.com.
+Mail completed forms to bochs-developers@lists.sourceforge.net
 
 
 What is the date?
@@ -28,25 +28,21 @@ What is your name?
 What is your email address?
 [__]
 
-Do you mind if your name and email address are placed on a testing results 
+Do you mind if your name and email address are placed on a testing results
 web page so that people with a similar setup can write to you?
    [ ] Ok, put it on a web page
    [ ] No, keep my address private.
 
-What type of hardware are you using, e.g. 500MHz Intel Celeron.
+What type of hardware are you using, e.g. 2400 MHz Intel Pentium 4.
 [__]
 
-What operating system are you using?  Please be specific, e.g. 
+What operating system are you using?  Please be specific, e.g.
 Redhat Linux 6.2 with 2.2.16 kernel.
 [__]
 
 What version of bochs are you using?
-   [ ] compiled from version 1.0 (3/25/2000 snapshot)
-   [ ] compiled from version 1.1 (bugfix1)
-   [ ] compiled from version 1.1.1 (bugfix2)
-   [ ] compiled from version 1.1.2 (bugfix3)
-   [ ] compiled from version 1.2-pre1
-   [ ] compiled from version 1.2
+   [ ] compiled from version 2.3.7
+   [ ] compiled from version [_____]
    [ ] I compiled it from the CVS sources from date: [__]
    [ ] other source distribution from URL: [__]
    [ ] binary distribution from URL: [__]
@@ -72,7 +68,7 @@ Did Bochs compile clean without any hacking?
   [ ] Yes
   [ ] No
 
-If you had to make changes to compile, please summarize the problems you 
+If you had to make changes to compile, please summarize the problems you
 had or include diffs.
 [__]
 
@@ -108,12 +104,15 @@ The remaining questions are about Bochs features that you may not have
 used.  If you tried out the feature, move the X to the "works" or
 "fails" column.
 
-                  Not       Works    
+                  Not       Works
 		  tested    ok      Fails   Comments?
+x86-64             [X]      [ ]     [ ]     [__]
+floating point     [X]      [ ]     [ ]     [__]
+SMP                [X]      [ ]     [ ]     [__]
+keyboard           [X]      [ ]     [ ]     [__]
 floppy disk        [X]      [ ]     [ ]     [__]
 raw floppy disk    [X]      [ ]     [ ]     [__]
 hard disk          [X]      [ ]     [ ]     [__]
-floating point     [X]      [ ]     [ ]     [__]
 mouse              [X]      [ ]     [ ]     [__]
 cdrom              [X]      [ ]     [ ]     [__]
 sb16               [X]      [ ]     [ ]     [__]
@@ -121,7 +120,10 @@ ne2000             [X]      [ ]     [ ]     [__]
 i440FX pci         [X]      [ ]     [ ]     [__]
 debugger           [X]      [ ]     [ ]     [__]
 external loader    [X]      [ ]     [ ]     [__]
+save/restore       [X]      [ ]     [ ]     [__]
 VGA                [X]      [ ]     [ ]     [__]
+Cirrus Logic SVGA  [X]      [ ]     [ ]     [__]
+USB                [X]      [ ]     [ ]     [__]
 
 Thank you for your contribution in the Bochs testing effort!  Please
-mail completed forms to bochs-testing@tlw.com.
+mail completed forms to bochs-developers@lists.sourceforge.net
