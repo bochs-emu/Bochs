@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer16.cc,v 1.57 2008-06-22 03:45:53 sshwarts Exp $
+// $Id: ctrl_xfer16.cc,v 1.58 2008-06-23 15:58:21 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -110,7 +110,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RETnear16(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::RETfar16_Iw(bxInstruction_c *i)
 {
-  Bit16s imm16;
   Bit16u ip, cs_raw;
 
   invalidate_prefetch_q();
@@ -119,7 +118,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RETfar16_Iw(bxInstruction_c *i)
   BX_CPU_THIS_PTR show_flag |= Flag_ret;
 #endif
 
-  imm16 = i->Iw();
+  Bit16s imm16 = (Bit16s) i->Iw();
 
   BX_CPU_THIS_PTR speculative_rsp = 1;
   BX_CPU_THIS_PTR prev_rsp = RSP;
@@ -131,6 +130,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RETfar16_Iw(bxInstruction_c *i)
 
   ip     = pop_16();
   cs_raw = pop_16();
+
+  // CS.LIMIT can't change when in real/v8086 mode
+  if (ip > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled) {
+    BX_ERROR(("RETfar16_Iw: instruction pointer not within code segment limits"));
+    exception(BX_GP_EXCEPTION, 0, 0);
+  }
 
   load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], cs_raw);
   RIP = (Bit32u) ip;
@@ -169,6 +174,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RETfar16(bxInstruction_c *i)
   ip     = pop_16();
   cs_raw = pop_16();
 
+  // CS.LIMIT can't change when in real/v8086 mode
+  if (ip > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled) {
+    BX_ERROR(("RETfar16: instruction pointer not within code segment limits"));
+    exception(BX_GP_EXCEPTION, 0, 0);
+  }
+
   load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], cs_raw);
   RIP = (Bit32u) ip;
 
@@ -203,17 +214,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CALL_Jw(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::CALL16_Ap(bxInstruction_c *i)
 {
-  Bit16u cs_raw;
-  Bit16u disp16;
-
   invalidate_prefetch_q();
 
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR show_flag |= Flag_call;
 #endif
 
-  disp16 = i->Iw();
-  cs_raw = i->Iw2();
+  Bit16u disp16 = i->Iw();
+  Bit16u cs_raw = i->Iw2();
 
   BX_CPU_THIS_PTR speculative_rsp = 1;
   BX_CPU_THIS_PTR prev_rsp = RSP;
@@ -224,7 +232,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CALL16_Ap(bxInstruction_c *i)
   }
 
   push_16(BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value);
-  push_16((Bit16u) EIP);
+  push_16(IP);
+
+  // CS.LIMIT can't change when in real/v8086 mode
+  if (disp16 > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled) {
+    BX_ERROR(("CALL16_Ap: instruction pointer not within code segment limits"));
+    exception(BX_GP_EXCEPTION, 0, 0);
+  }
 
   load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], cs_raw);
   RIP = (Bit32u) disp16;
@@ -306,6 +320,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CALL16_Ep(bxInstruction_c *i)
   push_16(BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value);
   push_16(IP);
 
+  // CS.LIMIT can't change when in real/v8086 mode
+  if (op1_16 > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled) {
+    BX_ERROR(("CALL16_Ep: instruction pointer not within code segment limits"));
+    exception(BX_GP_EXCEPTION, 0, 0);
+  }
+
   load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], cs_raw);
   RIP = op1_16;
 
@@ -330,10 +350,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::JO_Jw(bxInstruction_c *i)
     Bit16u new_IP = (Bit16u)(IP + (Bit32s) i->Id());
     branch_near16(new_IP);
     BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, new_IP);
-    return;
   }
-
-  BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
+#if BX_INSTRUMENTATION
+  else {
+    BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
+  }
+#endif
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::JNO_Jw(bxInstruction_c *i)
@@ -342,10 +364,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::JNO_Jw(bxInstruction_c *i)
     Bit16u new_IP = (Bit16u)(IP + (Bit32s) i->Id());
     branch_near16(new_IP);
     BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, new_IP);
-    return;
   }
-
-  BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
+#if BX_INSTRUMENTATION
+  else {
+    BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
+  }
+#endif
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::JB_Jw(bxInstruction_c *i)
@@ -354,10 +378,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::JB_Jw(bxInstruction_c *i)
     Bit16u new_IP = (Bit16u)(IP + (Bit32s) i->Id());
     branch_near16(new_IP);
     BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, new_IP);
-    return;
   }
-
-  BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
+#if BX_INSTRUMENTATION
+  else {
+    BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
+  }
+#endif
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::JNB_Jw(bxInstruction_c *i)
@@ -366,10 +392,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::JNB_Jw(bxInstruction_c *i)
     Bit16u new_IP = (Bit16u)(IP + (Bit32s) i->Id());
     branch_near16(new_IP);
     BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, new_IP);
-    return;
   }
-
-  BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
+#if BX_INSTRUMENTATION
+  else {
+    BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
+  }
+#endif
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::JZ_Jw(bxInstruction_c *i)
@@ -378,10 +406,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::JZ_Jw(bxInstruction_c *i)
     Bit16u new_IP = (Bit16u)(IP + (Bit32s) i->Id());
     branch_near16(new_IP);
     BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, new_IP);
-    return;
   }
-
-  BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
+#if BX_INSTRUMENTATION
+  else {
+    BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
+  }
+#endif
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::JNZ_Jw(bxInstruction_c *i)
@@ -390,10 +420,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::JNZ_Jw(bxInstruction_c *i)
     Bit16u new_IP = (Bit16u)(IP + (Bit32s) i->Id());
     branch_near16(new_IP);
     BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, new_IP);
-    return;
   }
-
-  BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
+#if BX_INSTRUMENTATION
+  else {
+    BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
+  }
+#endif
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::JBE_Jw(bxInstruction_c *i)
@@ -402,10 +434,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::JBE_Jw(bxInstruction_c *i)
     Bit16u new_IP = (Bit16u)(IP + (Bit32s) i->Id());
     branch_near16(new_IP);
     BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, new_IP);
-    return;
   }
-
-  BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
+#if BX_INSTRUMENTATION
+  else {
+    BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
+  }
+#endif
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::JNBE_Jw(bxInstruction_c *i)
@@ -414,10 +448,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::JNBE_Jw(bxInstruction_c *i)
     Bit16u new_IP = (Bit16u)(IP + (Bit32s) i->Id());
     branch_near16(new_IP);
     BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, new_IP);
-    return;
   }
-
-  BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
+#if BX_INSTRUMENTATION
+  else {
+    BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
+  }
+#endif
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::JS_Jw(bxInstruction_c *i)
@@ -426,10 +462,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::JS_Jw(bxInstruction_c *i)
     Bit16u new_IP = (Bit16u)(IP + (Bit32s) i->Id());
     branch_near16(new_IP);
     BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, new_IP);
-    return;
   }
-
-  BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
+#if BX_INSTRUMENTATION
+  else {
+    BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
+  }
+#endif
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::JNS_Jw(bxInstruction_c *i)
@@ -438,10 +476,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::JNS_Jw(bxInstruction_c *i)
     Bit16u new_IP = (Bit16u)(IP + (Bit32s) i->Id());
     branch_near16(new_IP);
     BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, new_IP);
-    return;
   }
-
-  BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
+#if BX_INSTRUMENTATION
+  else {
+    BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
+  }
+#endif
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::JP_Jw(bxInstruction_c *i)
@@ -450,10 +490,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::JP_Jw(bxInstruction_c *i)
     Bit16u new_IP = (Bit16u)(IP + (Bit32s) i->Id());
     branch_near16(new_IP);
     BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, new_IP);
-    return;
   }
-
-  BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
+#if BX_INSTRUMENTATION
+  else {
+    BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
+  }
+#endif
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::JNP_Jw(bxInstruction_c *i)
@@ -462,10 +504,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::JNP_Jw(bxInstruction_c *i)
     Bit16u new_IP = (Bit16u)(IP + (Bit32s) i->Id());
     branch_near16(new_IP);
     BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, new_IP);
-    return;
   }
-
-  BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
+#if BX_INSTRUMENTATION
+  else {
+    BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
+  }
+#endif
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::JL_Jw(bxInstruction_c *i)
@@ -474,10 +518,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::JL_Jw(bxInstruction_c *i)
     Bit16u new_IP = (Bit16u)(IP + (Bit32s) i->Id());
     branch_near16(new_IP);
     BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, new_IP);
-    return;
   }
-
-  BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
+#if BX_INSTRUMENTATION
+  else {
+    BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
+  }
+#endif
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::JNL_Jw(bxInstruction_c *i)
@@ -486,10 +532,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::JNL_Jw(bxInstruction_c *i)
     Bit16u new_IP = (Bit16u)(IP + (Bit32s) i->Id());
     branch_near16(new_IP);
     BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, new_IP);
-    return;
   }
-
-  BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
+#if BX_INSTRUMENTATION
+  else {
+    BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
+  }
+#endif
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::JLE_Jw(bxInstruction_c *i)
@@ -498,10 +546,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::JLE_Jw(bxInstruction_c *i)
     Bit16u new_IP = (Bit16u)(IP + (Bit32s) i->Id());
     branch_near16(new_IP);
     BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, new_IP);
-    return;
   }
-
-  BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
+#if BX_INSTRUMENTATION
+  else {
+    BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
+  }
+#endif
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::JNLE_Jw(bxInstruction_c *i)
@@ -510,10 +560,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::JNLE_Jw(bxInstruction_c *i)
     Bit16u new_IP = (Bit16u)(IP + (Bit32s) i->Id());
     branch_near16(new_IP);
     BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, new_IP);
-    return;
   }
-
-  BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
+#if BX_INSTRUMENTATION
+  else {
+    BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
+  }
+#endif
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::JMP_EwM(bxInstruction_c *i)
@@ -552,10 +604,17 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::JMP16_Ep(bxInstruction_c *i)
     goto done;
   }
 
+  // CS.LIMIT can't change when in real/v8086 mode
+  if (op1_16 > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled) {
+    BX_ERROR(("JMP16_Ep: instruction pointer not within code segment limits"));
+    exception(BX_GP_EXCEPTION, 0, 0);
+  }
+
   load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], cs_raw);
   RIP = op1_16;
 
 done:
+
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_JMP,
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, EIP);
 }
@@ -587,8 +646,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::IRET16(bxInstruction_c *i)
   }
 
   ip     = pop_16();
-  cs_raw = pop_16();
+  cs_raw = pop_16(); // #SS has higher priority
   flags  = pop_16();
+
+  // CS.LIMIT can't change when in real/v8086 mode
+  if(ip > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled) {
+    BX_ERROR(("IRET16: instruction pointer not within code segment limits"));
+    exception(BX_GP_EXCEPTION, 0, 0);
+  }
 
   load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], cs_raw);
   RIP = (Bit32u) ip;
@@ -617,10 +682,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::JCXZ_Jb(bxInstruction_c *i)
     Bit16u new_IP = (Bit16u)(IP + (Bit32s) i->Id());
     branch_near16(new_IP);
     BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, new_IP);
-    return;
   }
-
-  BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
+#if BX_INSTRUMENTATION
+  else {
+    BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
+  }
+#endif
 }
 
 //
