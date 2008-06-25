@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: io.cc,v 1.61 2008-06-12 20:12:25 sshwarts Exp $
+// $Id: io.cc,v 1.62 2008-06-25 10:34:21 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -341,59 +341,25 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INSW16_YwDX(bxInstruction_c *i)
 {
   Bit16u value16=0;
   Bit16u di = DI;
-  unsigned incr = 2;
 
   if (! BX_CPU_THIS_PTR allow_io(DX, 2)) {
     BX_DEBUG(("INSW16_YwDX: I/O access not allowed !"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
-#if (BX_SupportRepeatSpeedups) && (BX_DEBUGGER == 0)
-  /* If conditions are right, we can transfer IO to physical memory
-   * in a batch, rather than one instruction at a time.
-   */
-  if (i->repUsedL() && !BX_CPU_THIS_PTR async_event)
-  {
-    Bit32u wordCount = CX;
-    BX_ASSERT(wordCount > 0);
-    wordCount = FastRepINSW(i, di, DX, wordCount);
-    if (wordCount) {
-      // Decrement the ticks count by the number of iterations, minus
-      // one, since the main cpu loop will decrement one.  Also,
-      // the count is predecremented before examined, so defintely
-      // don't roll it under zero.
-      BX_TICKN(wordCount-1);
-      CX -= (wordCount-1);
-      incr = wordCount << 1; // count * 2
-    }
-    else {
-      // Write a zero to memory, to trigger any segment or page
-      // faults before reading from IO port.
-      write_virtual_word_32(BX_SEG_REG_ES, di, value16);
+  // Write a zero to memory, to trigger any segment or page
+  // faults before reading from IO port.
+  write_virtual_word_32(BX_SEG_REG_ES, di, value16);
 
-      value16 = BX_INP(DX, 2);
+  value16 = BX_INP(DX, 2);
 
-      /* no seg override allowed */
-      write_virtual_word_32(BX_SEG_REG_ES, di, value16);
-    }
-  }
-  else
-#endif
-  {
-    // Write a zero to memory, to trigger any segment or page
-    // faults before reading from IO port.
-    write_virtual_word_32(BX_SEG_REG_ES, di, value16);
-
-    value16 = BX_INP(DX, 2);
-
-    /* no seg override allowed */
-    write_virtual_word_32(BX_SEG_REG_ES, di, value16);
-  }
+  /* no seg override allowed */
+  write_virtual_word_32(BX_SEG_REG_ES, di, value16);
 
   if (BX_CPU_THIS_PTR get_DF())
-    DI -= incr;
+    DI -= 2;
   else
-    DI += incr;
+    DI += 2;
 }
 
 // 16-bit operand size, 32-bit address size
@@ -703,40 +669,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::OUTSW16_DXXw(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
-  Bit16u value16;
-  Bit16u si = SI;
-  unsigned incr = 2;
-
-#if (BX_SupportRepeatSpeedups) && (BX_DEBUGGER == 0)
-  /* If conditions are right, we can transfer IO to physical memory
-   * in a batch, rather than one instruction at a time.
-   */
-  if (i->repUsedL() && !BX_CPU_THIS_PTR async_event) {
-    Bit32u wordCount = CX;
-    wordCount = FastRepOUTSW(i, i->seg(), si, DX, wordCount);
-    if (wordCount) {
-      // Decrement eCX.  Note, the main loop will decrement 1 also, so
-      // decrement by one less than expected, like the case above.
-      BX_TICKN(wordCount-1); // Main cpu loop also decrements one more.
-      CX -= (wordCount-1);
-      incr = wordCount << 1; // count * 2.
-    }
-    else {
-      value16 = read_virtual_word_32(i->seg(), si);
-      BX_OUTP(DX, value16, 2);
-    }
-  }
-  else
-#endif
-  {
-    value16 = read_virtual_word_32(i->seg(), si);
-    BX_OUTP(DX, value16, 2);
-  }
+  Bit16u value16 = read_virtual_word_32(i->seg(), SI);
+  BX_OUTP(DX, value16, 2);
 
   if (BX_CPU_THIS_PTR get_DF())
-    SI = SI - incr;
+    SI -= 2;
   else
-    SI = SI + incr;
+    SI += 2;
 }
 
 // 16-bit operand size, 32-bit address size

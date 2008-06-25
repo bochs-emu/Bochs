@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.202 2008-06-23 02:56:31 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.203 2008-06-25 10:34:20 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -3852,7 +3852,10 @@ modrm_done:
   i->setB1(b1);
   i->setILen(ilen);
 
+#if BX_INSTRUMENTATION
+  i->ia_opcode = ia_opcode;
   BX_INSTR_FETCH_DECODE_COMPLETED(BX_CPU_ID, i);
+#endif
 
   return(1);
 }

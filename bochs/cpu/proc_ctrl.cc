@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.245 2008-06-25 02:28:31 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.246 2008-06-25 10:34:21 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1923,7 +1923,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MONITOR(bxInstruction_c *i)
 
   // check if we could access the memory segment
   if (!(seg->cache.valid & SegAccessROK4G)) {
-    read_virtual_checks(&BX_CPU_THIS_PTR sregs[i->seg()], offset, 1);
+    if (! read_virtual_checks(&BX_CPU_THIS_PTR sregs[i->seg()], offset, 1))
+      exception(int_number(i->seg()), 0, 0);
   }
 
   // set MONITOR
