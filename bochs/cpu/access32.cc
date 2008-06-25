@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: access32.cc,v 1.2 2008-06-12 20:41:48 sshwarts Exp $
+// $Id: access32.cc,v 1.3 2008-06-25 02:28:31 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008 Stanislav Shwartsman
@@ -79,7 +79,9 @@ accessOK:
     if (offset <= seg->cache.u.segment.limit_scaled)
       goto accessOK;
   }
-  write_virtual_checks(seg, offset, 1);
+
+  if (!write_virtual_checks(seg, offset, 1))
+    exception(int_number(s), 0, 0);
   goto accessOK;
 }
 
@@ -133,7 +135,9 @@ accessOK:
     if (offset < seg->cache.u.segment.limit_scaled)
       goto accessOK;
   }
-  write_virtual_checks(seg, offset, 2);
+
+  if (!write_virtual_checks(seg, offset, 2))
+    exception(int_number(s), 0, 0);
   goto accessOK;
 }
 
@@ -187,7 +191,9 @@ accessOK:
     if (offset < (seg->cache.u.segment.limit_scaled-2))
       goto accessOK;
   }
-  write_virtual_checks(seg, offset, 4);
+
+  if (!write_virtual_checks(seg, offset, 4))
+    exception(int_number(s), 0, 0);
   goto accessOK;
 }
 
@@ -241,7 +247,9 @@ accessOK:
     if (offset <= (seg->cache.u.segment.limit_scaled-7))
       goto accessOK;
   }
-  write_virtual_checks(seg, offset, 8);
+
+  if (!write_virtual_checks(seg, offset, 8))
+    exception(int_number(s), 0, 0);
   goto accessOK;
 }
 
@@ -285,7 +293,9 @@ accessOK:
     if (offset <= seg->cache.u.segment.limit_scaled)
       goto accessOK;
   }
-  read_virtual_checks(seg, offset, 1);
+
+  if (!read_virtual_checks(seg, offset, 1))
+    exception(int_number(s), 0, 0);
   goto accessOK;
 }
 
@@ -337,7 +347,9 @@ accessOK:
     if (offset < seg->cache.u.segment.limit_scaled)
       goto accessOK;
   }
-  read_virtual_checks(seg, offset, 2);
+
+  if (!read_virtual_checks(seg, offset, 2))
+    exception(int_number(s), 0, 0);
   goto accessOK;
 }
 
@@ -389,7 +401,9 @@ accessOK:
     if (offset < (seg->cache.u.segment.limit_scaled-2))
       goto accessOK;
   }
-  read_virtual_checks(seg, offset, 4);
+
+  if (!read_virtual_checks(seg, offset, 4))
+    exception(int_number(s), 0, 0);
   goto accessOK;
 }
 
@@ -441,7 +455,9 @@ accessOK:
     if (offset <= (seg->cache.u.segment.limit_scaled-7))
       goto accessOK;
   }
-  read_virtual_checks(seg, offset, 8);
+
+  if (!read_virtual_checks(seg, offset, 8))
+    exception(int_number(s), 0, 0);
   goto accessOK;
 }
 
@@ -494,7 +510,9 @@ accessOK:
     if (offset <= seg->cache.u.segment.limit_scaled)
       goto accessOK;
   }
-  write_virtual_checks(seg, offset, 1);
+
+  if (!write_virtual_checks(seg, offset, 1))
+    exception(int_number(s), 0, 0);
   goto accessOK;
 }
 
@@ -550,7 +568,9 @@ accessOK:
     if (offset < seg->cache.u.segment.limit_scaled)
       goto accessOK;
   }
-  write_virtual_checks(seg, offset, 2);
+
+  if (!write_virtual_checks(seg, offset, 2))
+    exception(int_number(s), 0, 0);
   goto accessOK;
 }
 
@@ -606,7 +626,9 @@ accessOK:
     if (offset < (seg->cache.u.segment.limit_scaled-2))
       goto accessOK;
   }
-  write_virtual_checks(seg, offset, 4);
+
+  if (!write_virtual_checks(seg, offset, 4))
+    exception(int_number(s), 0, 0);
   goto accessOK;
 }
 
@@ -662,7 +684,9 @@ accessOK:
     if (offset <= (seg->cache.u.segment.limit_scaled-7))
       goto accessOK;
   }
-  write_virtual_checks(seg, offset, 8);
+
+  if (!write_virtual_checks(seg, offset, 8))
+    exception(int_number(s), 0, 0);
   goto accessOK;
 }
 
@@ -882,7 +906,10 @@ accessOK:
     if (offset < seg->cache.u.segment.limit_scaled)
       goto accessOK;
   }
-  write_virtual_checks(seg, offset, 2);
+
+  // add error code when segment violation occurs when pushing into new stack
+  if (!write_virtual_checks(seg, offset, 2))
+    exception(BX_SS_EXCEPTION, seg->selector.value & 0xfffc, 0);
   goto accessOK;
 }
 
@@ -934,6 +961,9 @@ accessOK:
     if (offset < (seg->cache.u.segment.limit_scaled-2))
       goto accessOK;
   }
-  write_virtual_checks(seg, offset, 4);
+
+  // add error code when segment violation occurs when pushing into new stack
+  if (!write_virtual_checks(seg, offset, 4))
+    exception(BX_SS_EXCEPTION, seg->selector.value & 0xfffc, 0);
   goto accessOK;
 }

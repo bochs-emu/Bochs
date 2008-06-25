@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.141 2008-06-14 16:55:45 sshwarts Exp $
+// $Id: paging.cc,v 1.142 2008-06-25 02:28:31 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -524,10 +524,10 @@ void BX_CPU_C::TLB_flush(bx_bool invalidateGlobal)
     InstrTLB_Increment(tlbNonGlobalFlushes);
 #endif
 
-  for (unsigned i=0; i<BX_TLB_SIZE; i++) {
+  for (unsigned n=0; n<BX_TLB_SIZE; n++) {
     // To be conscious of the native cache line usage, only
     // write to (invalidate) entries which need it.
-    bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[i];
+    bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[n];
     if (tlbEntry->lpf != BX_INVALID_TLB_ENTRY) {
 #if BX_SUPPORT_GLOBAL_PAGES
       if (invalidateGlobal || !(tlbEntry->accessBits & TLB_GlobalPage))

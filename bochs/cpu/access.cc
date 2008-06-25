@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: access.cc,v 1.111 2008-06-12 19:14:39 sshwarts Exp $
+// $Id: access.cc,v 1.112 2008-06-25 02:28:31 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -31,7 +31,7 @@
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
-  void BX_CPP_AttrRegparmN(3)
+  bx_bool BX_CPP_AttrRegparmN(3)
 BX_CPU_C::write_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned length)
 {
   Bit32u upper_limit;
@@ -40,18 +40,18 @@ BX_CPU_C::write_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned le
   if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
     // Mark cache as being OK type for succeeding reads/writes
     seg->cache.valid |= SegAccessROK | SegAccessWOK | SegAccessROK4G | SegAccessWOK4G;
-    return;
+    return 1;
   }
 #endif
 
   if (seg->cache.valid==0) {
     BX_DEBUG(("write_virtual_checks(): segment descriptor not valid"));
-    exception(int_number(seg), 0, 0);
+    return 0;
   }
 
   if (seg->cache.p == 0) { /* not present */
     BX_ERROR(("write_virtual_checks(): segment not present"));
-    exception(int_number(seg), 0, 0);
+    return 0;
   }
 
   switch (seg->cache.type) {
@@ -62,14 +62,14 @@ BX_CPU_C::write_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned le
     case 12: case 13: // execute only, conforming
     case 14: case 15: // execute/read-only, conforming
       BX_ERROR(("write_virtual_checks(): no write access to seg"));
-      exception(int_number(seg), 0, 0);
+      return 0;
 
     case 2: case 3: /* read/write */
       if (offset > (seg->cache.u.segment.limit_scaled - length + 1)
           || (length-1 > seg->cache.u.segment.limit_scaled))
       {
         BX_ERROR(("write_virtual_checks(): write beyond limit, r/w"));
-        exception(int_number(seg), 0, 0);
+        return 0;
       }
       if (seg->cache.u.segment.limit_scaled >= 7) {
         // Mark cache as being OK type for succeeding read/writes. The limit
@@ -95,16 +95,18 @@ BX_CPU_C::write_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned le
            (offset > upper_limit) || ((upper_limit - offset) < (length - 1)))
       {
         BX_ERROR(("write_virtual_checks(): write beyond limit, r/w ED"));
-        exception(int_number(seg), 0, 0);
+        return 0;
       }
       break;
 
     default:
       BX_PANIC(("write_virtual_checks(): unknown descriptor type=%d", seg->cache.type));
   }
+
+  return 1;
 }
 
-  void BX_CPP_AttrRegparmN(3)
+  bx_bool BX_CPP_AttrRegparmN(3)
 BX_CPU_C::read_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned length)
 {
   Bit32u upper_limit;
@@ -113,18 +115,18 @@ BX_CPU_C::read_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned len
   if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
     // Mark cache as being OK type for succeeding reads/writes
     seg->cache.valid |= SegAccessROK | SegAccessWOK | SegAccessROK4G | SegAccessWOK4G;
-    return;
+    return 1;
   }
 #endif
 
   if (seg->cache.valid==0) {
     BX_DEBUG(("read_virtual_checks(): segment descriptor not valid"));
-    exception(int_number(seg), 0, 0);
+    return 0;
   }
 
   if (seg->cache.p == 0) { /* not present */
     BX_ERROR(("read_virtual_checks(): segment not present"));
-    exception(int_number(seg), 0, 0);
+    return 0;
   }
 
   switch (seg->cache.type) {
@@ -136,7 +138,7 @@ BX_CPU_C::read_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned len
           || (length-1 > seg->cache.u.segment.limit_scaled))
       {
         BX_ERROR(("read_virtual_checks(): read beyond limit"));
-        exception(int_number(seg), 0, 0);
+        return 0;
       }
       if (seg->cache.u.segment.limit_scaled >= 7) {
         // Mark cache as being OK type for succeeding reads. See notes for
@@ -157,7 +159,7 @@ BX_CPU_C::read_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned len
            (offset > upper_limit) || ((upper_limit - offset) < (length - 1)))
       {
         BX_ERROR(("read_virtual_checks(): read beyond limit ED"));
-        exception(int_number(seg), 0, 0);
+        return 0;
       }
       break;
 
@@ -165,14 +167,16 @@ BX_CPU_C::read_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned len
     case 12: case 13: /* execute only, conforming */
       /* can't read or write an execute-only segment */
       BX_ERROR(("read_virtual_checks(): execute only"));
-      exception(int_number(seg), 0, 0);
+      return 0;
 
     default:
       BX_PANIC(("read_virtual_checks(): unknown descriptor type=%d", seg->cache.type));
   }
+
+  return 1;
 }
 
-  void BX_CPP_AttrRegparmN(3)
+  bx_bool BX_CPP_AttrRegparmN(3)
 BX_CPU_C::execute_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned length)
 {
   Bit32u upper_limit;
@@ -181,18 +185,18 @@ BX_CPU_C::execute_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned 
   if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
     // Mark cache as being OK type for succeeding reads/writes
     seg->cache.valid |= SegAccessROK | SegAccessWOK | SegAccessROK4G | SegAccessWOK4G;
-    return;
+    return 1;
   }
 #endif
 
   if (seg->cache.valid==0) {
     BX_DEBUG(("execute_virtual_checks(): segment descriptor not valid"));
-    exception(int_number(seg), 0, 0);
+    return 0;
   }
 
   if (seg->cache.p == 0) { /* not present */
     BX_ERROR(("execute_virtual_checks(): segment not present"));
-    exception(int_number(seg), 0, 0);
+    return 0;
   }
 
   switch (seg->cache.type) {
@@ -204,7 +208,7 @@ BX_CPU_C::execute_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned 
           || (length-1 > seg->cache.u.segment.limit_scaled))
       {
         BX_ERROR(("execute_virtual_checks(): read beyond limit"));
-        exception(int_number(seg), 0, 0);
+        return 0;
       }
       if (seg->cache.u.segment.limit_scaled >= 7) {
         // Mark cache as being OK type for succeeding reads. See notes for
@@ -221,7 +225,7 @@ BX_CPU_C::execute_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned 
           || (length-1 > seg->cache.u.segment.limit_scaled))
       {
         BX_ERROR(("execute_virtual_checks(): read beyond limit execute only"));
-        exception(int_number(seg), 0, 0);
+        return 0;
       }
       break;
  
@@ -235,13 +239,15 @@ BX_CPU_C::execute_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned 
            (offset > upper_limit) || ((upper_limit - offset) < (length - 1)))
       {
         BX_ERROR(("execute_virtual_checks(): read beyond limit ED"));
-        exception(int_number(seg), 0, 0);
+        return 0;
       }
       break;
 
     default:
       BX_PANIC(("execute_virtual_checks(): unknown descriptor type=%d", seg->cache.type));
   }
+
+  return 1;
 }
 
 const char *BX_CPU_C::strseg(bx_segment_reg_t *seg)
@@ -256,19 +262,6 @@ const char *BX_CPU_C::strseg(bx_segment_reg_t *seg)
     BX_PANIC(("undefined segment passed to strseg()!"));
     return("??");
   }
-}
-
-int BX_CPU_C::int_number(bx_segment_reg_t *seg)
-{
-  if (seg == &BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES]) return BX_GP_EXCEPTION;
-  if (seg == &BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS]) return BX_GP_EXCEPTION;
-  if (seg == &BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS]) return BX_SS_EXCEPTION;
-  if (seg == &BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS]) return BX_GP_EXCEPTION;
-  if (seg == &BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS]) return BX_GP_EXCEPTION;
-  if (seg == &BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS]) return BX_GP_EXCEPTION;
-
-  // undefined segment, this must be a new stack segment
-  return BX_SS_EXCEPTION;
 }
 
 int BX_CPU_C::int_number(unsigned s)

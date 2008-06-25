@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.244 2008-06-23 15:58:22 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.245 2008-06-25 02:28:31 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -192,14 +192,15 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CLFLUSH(bxInstruction_c *i)
 
   // check if we could access the memory segment
   if (!(seg->cache.valid & SegAccessROK4G)) {
-    execute_virtual_checks(seg, RMAddr(i), 1);
+    if (! execute_virtual_checks(seg, RMAddr(i), 1))
+      exception(int_number(i->seg()), 0, 0);
   }
 
   bx_address laddr = BX_CPU_THIS_PTR get_laddr(i->seg(), RMAddr(i));
 #if BX_SUPPORT_X86_64
   if (! IsCanonical(laddr)) {
     BX_ERROR(("CLFLUSH: non-canonical access !"));
-    exception(int_number(seg), 0, 0);
+    exception(int_number(i->seg()), 0, 0);
   }
 #endif
 

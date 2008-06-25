@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: access64.cc,v 1.5 2008-06-12 19:14:39 sshwarts Exp $
+// $Id: access64.cc,v 1.6 2008-06-25 02:28:31 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008 Stanislav Shwartsman
@@ -73,7 +73,7 @@ BX_CPU_C::write_virtual_byte_64(unsigned s, Bit64u offset, Bit8u data)
 
   if (! IsCanonical(laddr)) {
     BX_ERROR(("write_virtual_byte_64(): canonical failure"));
-    exception(int_number(seg), 0, 0);
+    exception(int_number(s), 0, 0);
   }
 
   access_write_linear(laddr, 1, CPL, (void *) &data);
@@ -113,7 +113,7 @@ BX_CPU_C::write_virtual_word_64(unsigned s, Bit64u offset, Bit16u data)
 
   if (! IsCanonical(laddr)) {
     BX_ERROR(("write_virtual_word_64(): canonical failure"));
-    exception(int_number(seg), 0, 0);
+    exception(int_number(s), 0, 0);
   }
 
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
@@ -162,7 +162,7 @@ BX_CPU_C::write_virtual_dword_64(unsigned s, Bit64u offset, Bit32u data)
 
   if (! IsCanonical(laddr)) {
     BX_ERROR(("write_virtual_dword_64(): canonical failure"));
-    exception(int_number(seg), 0, 0);
+    exception(int_number(s), 0, 0);
   }
 
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
@@ -211,7 +211,7 @@ BX_CPU_C::write_virtual_qword_64(unsigned s, Bit64u offset, Bit64u data)
 
   if (! IsCanonical(laddr)) {
     BX_ERROR(("write_virtual_qword_64(): canonical failure"));
-    exception(int_number(seg), 0, 0);
+    exception(int_number(s), 0, 0);
   }
 
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
@@ -258,7 +258,7 @@ BX_CPU_C::read_virtual_byte_64(unsigned s, Bit64u offset)
 
   if (! IsCanonical(laddr)) {
     BX_ERROR(("read_virtual_byte_64(): canonical failure"));
-    exception(int_number(seg), 0, 0);
+    exception(int_number(s), 0, 0);
   }
 
   access_read_linear(laddr, 1, CPL, BX_READ, (void *) &data);
@@ -297,7 +297,7 @@ BX_CPU_C::read_virtual_word_64(unsigned s, Bit64u offset)
 
   if (! IsCanonical(laddr)) {
     BX_ERROR(("read_virtual_word_64(): canonical failure"));
-    exception(int_number(seg), 0, 0);
+    exception(int_number(s), 0, 0);
   }
 
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
@@ -345,7 +345,7 @@ BX_CPU_C::read_virtual_dword_64(unsigned s, Bit64u offset)
 
   if (! IsCanonical(laddr)) {
     BX_ERROR(("read_virtual_dword_64(): canonical failure"));
-    exception(int_number(seg), 0, 0);
+    exception(int_number(s), 0, 0);
   }
 
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
@@ -393,7 +393,7 @@ BX_CPU_C::read_virtual_qword_64(unsigned s, Bit64u offset)
 
   if (! IsCanonical(laddr)) {
     BX_ERROR(("read_virtual_qword_64(): canonical failure"));
-    exception(int_number(seg), 0, 0);
+    exception(int_number(s), 0, 0);
   }
 
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
@@ -449,7 +449,7 @@ BX_CPU_C::read_RMW_virtual_byte_64(unsigned s, Bit64u offset)
 
   if (! IsCanonical(laddr)) {
     BX_ERROR(("read_RMW_virtual_byte_64(): canonical failure"));
-    exception(int_number(seg), 0, 0);
+    exception(int_number(s), 0, 0);
   }
 
   access_read_linear(laddr, 1, CPL, BX_RW, (void *) &data);
@@ -492,7 +492,7 @@ BX_CPU_C::read_RMW_virtual_word_64(unsigned s, Bit64u offset)
 
   if (! IsCanonical(laddr)) {
     BX_ERROR(("read_RMW_virtual_word_64(): canonical failure"));
-    exception(int_number(seg), 0, 0);
+    exception(int_number(s), 0, 0);
   }
 
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
@@ -544,7 +544,7 @@ BX_CPU_C::read_RMW_virtual_dword_64(unsigned s, Bit64u offset)
 
   if (! IsCanonical(laddr)) {
     BX_ERROR(("read_RMW_virtual_dword_64(): canonical failure"));
-    exception(int_number(seg), 0, 0);
+    exception(int_number(s), 0, 0);
   }
 
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
@@ -596,7 +596,7 @@ BX_CPU_C::read_RMW_virtual_qword_64(unsigned s, Bit64u offset)
 
   if (! IsCanonical(laddr)) {
     BX_ERROR(("read_RMW_virtual_qword_64(): canonical failure"));
-    exception(int_number(seg), 0, 0);
+    exception(int_number(s), 0, 0);
   }
 
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
