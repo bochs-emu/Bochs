@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pciusb.cc,v 1.64 2008-06-11 20:59:50 sshwarts Exp $
+// $Id: pciusb.cc,v 1.65 2008-06-29 06:53:20 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -373,9 +373,14 @@ void bx_pciusb_c::init_device(Bit8u port, const char *devname)
     if (BX_USB_THIS keybdev == NULL) {
       BX_USB_THIS keybdev = (usb_hid_device_t*)BX_USB_THIS hub[0].usb_port[port].device;
     }
-  } else if (!strncmp(devname, "disk:", 5)) {
-    type = USB_DEV_TYPE_DISK;
-    BX_USB_THIS hub[0].usb_port[port].device = new usb_msd_device_t();
+  } else if (!strncmp(devname, "disk", 4)) {
+    if ((strlen(devname) > 5) && (devname[4] == ':')) {
+      type = USB_DEV_TYPE_DISK;
+      BX_USB_THIS hub[0].usb_port[port].device = new usb_msd_device_t();
+    } else {
+      BX_PANIC(("USB device 'disk' needs a filename separated with a colon"));
+      return;
+    }
   } else {
     BX_PANIC(("unknown USB device: %s", devname));
     return;
