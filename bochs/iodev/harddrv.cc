@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.211 2008-04-17 14:39:32 sshwarts Exp $
+// $Id: harddrv.cc,v 1.212 2008-07-06 14:15:41 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -173,7 +173,7 @@ void bx_hard_drive_c::init(void)
   char  ata_name[20];
   bx_list_c *base;
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.211 2008-04-17 14:39:32 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.212 2008-07-06 14:15:41 vruppert Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     sprintf(ata_name, "ata.%d.resources", channel);
@@ -1712,9 +1712,7 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
                                                 transfer_length * BX_SELECTED_CONTROLLER(channel).buffer_size, 1);
                         BX_SELECTED_DRIVE(channel).cdrom.remaining_blocks = transfer_length;
                         BX_SELECTED_DRIVE(channel).cdrom.next_lba = lba;
-                        if (!BX_SELECTED_CONTROLLER(channel).packet_dma) {
-                          ready_to_send_atapi(channel);
-                        }
+                        ready_to_send_atapi(channel);
                         break;
                       default:
                         BX_ERROR(("Read CD: unknown format"));
@@ -1851,9 +1849,7 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
                                           transfer_length * 2048, 1);
                   BX_SELECTED_DRIVE(channel).cdrom.remaining_blocks = transfer_length;
                   BX_SELECTED_DRIVE(channel).cdrom.next_lba = lba;
-                  if (!BX_SELECTED_CONTROLLER(channel).packet_dma) {
-                    ready_to_send_atapi(channel);
-                  }
+                  ready_to_send_atapi(channel);
                 }
                 break;
 
@@ -3133,8 +3129,10 @@ void bx_hard_drive_c::init_send_atapi_command(Bit8u channel, Bit8u command, int 
     BX_SELECTED_CONTROLLER(channel).byte_count -= 1;
   }
 
-  if (BX_SELECTED_CONTROLLER(channel).byte_count == 0)
-    BX_PANIC(("ATAPI command with zero byte count"));
+  if (!BX_SELECTED_CONTROLLER(channel).packet_dma) {
+    if (BX_SELECTED_CONTROLLER(channel).byte_count == 0)
+      BX_PANIC(("ATAPI command 0x%02x with zero byte count", command));
+  }
 
   if (alloc_length < 0)
     BX_PANIC(("Allocation length < 0"));
@@ -3226,7 +3224,9 @@ void bx_hard_drive_c::init_mode_sense_single(Bit8u channel, const void* src, int
   void BX_CPP_AttrRegparmN(1)
 bx_hard_drive_c::ready_to_send_atapi(Bit8u channel)
 {
-  raise_interrupt(channel);
+  if (!BX_SELECTED_CONTROLLER(channel).packet_dma) {
+    raise_interrupt(channel);
+  }
 }
 
   void BX_CPP_AttrRegparmN(1)
@@ -3369,27 +3369,36 @@ bx_bool bx_hard_drive_c::bmdma_read_sector(Bit8u channel, Bit8u *buffer, Bit32u 
     }
   } else if (BX_SELECTED_CONTROLLER(channel).current_command == 0xA0) {
     if (BX_SELECTED_CONTROLLER(channel).packet_dma) {
-      *sector_size = BX_SELECTED_CONTROLLER(channel).buffer_size;
-      if (!BX_SELECTED_DRIVE(channel).cdrom.ready) {
-        BX_PANIC(("Read with CDROM not ready"));
-        return 0;
+      switch (BX_SELECTED_DRIVE(channel).atapi.command) {
+        case 0x28: // read (10)
+        case 0xa8: // read (12)
+        case 0xbe: // read cd
+          *sector_size = BX_SELECTED_CONTROLLER(channel).buffer_size;
+          if (!BX_SELECTED_DRIVE(channel).cdrom.ready) {
+            BX_PANIC(("Read with CDROM not ready"));
+            return 0;
+          }
+          /* set status bar conditions for device */
+          if (!BX_SELECTED_DRIVE(channel).iolight_counter)
+            bx_gui->statusbar_setitem(BX_SELECTED_DRIVE(channel).statusbar_id, 1);
+          BX_SELECTED_DRIVE(channel).iolight_counter = 5;
+          bx_pc_system.activate_timer(BX_HD_THIS iolight_timer_index, 100000, 0);
+          if (!BX_SELECTED_DRIVE(channel).cdrom.cd->read_block(buffer, BX_SELECTED_DRIVE(channel).cdrom.next_lba,
+                                                               BX_SELECTED_CONTROLLER(channel).buffer_size))
+          {
+            BX_PANIC(("CDROM: read block %d failed", BX_SELECTED_DRIVE(channel).cdrom.next_lba));
+            return 0;
+          }
+          BX_SELECTED_DRIVE(channel).cdrom.next_lba++;
+          BX_SELECTED_DRIVE(channel).cdrom.remaining_blocks--;
+          break;
+        default:
+          memcpy(buffer, BX_SELECTED_CONTROLLER(channel).buffer, *sector_size);
+          break;
       }
-      /* set status bar conditions for device */
-      if (!BX_SELECTED_DRIVE(channel).iolight_counter)
-        bx_gui->statusbar_setitem(BX_SELECTED_DRIVE(channel).statusbar_id, 1);
-      BX_SELECTED_DRIVE(channel).iolight_counter = 5;
-      bx_pc_system.activate_timer(BX_HD_THIS iolight_timer_index, 100000, 0);
-      if (!BX_SELECTED_DRIVE(channel).cdrom.cd->read_block(buffer, BX_SELECTED_DRIVE(channel).cdrom.next_lba,
-                                                           BX_SELECTED_CONTROLLER(channel).buffer_size))
-      {
-        BX_PANIC(("CDROM: read block %d failed", BX_SELECTED_DRIVE(channel).cdrom.next_lba));
-        return 0;
-      }
-      BX_SELECTED_DRIVE(channel).cdrom.next_lba++;
-      BX_SELECTED_DRIVE(channel).cdrom.remaining_blocks--;
     } else {
       BX_ERROR(("PACKET-DMA not active"));
-      command_aborted (channel, BX_SELECTED_CONTROLLER(channel).current_command);
+      command_aborted(channel, BX_SELECTED_CONTROLLER(channel).current_command);
       return 0;
     }
   } else {
