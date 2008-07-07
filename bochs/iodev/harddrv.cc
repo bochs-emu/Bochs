@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.212 2008-07-06 14:15:41 vruppert Exp $
+// $Id: harddrv.cc,v 1.213 2008-07-07 18:36:07 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -173,7 +173,7 @@ void bx_hard_drive_c::init(void)
   char  ata_name[20];
   bx_list_c *base;
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.212 2008-07-06 14:15:41 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.213 2008-07-07 18:36:07 vruppert Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     sprintf(ata_name, "ata.%d.resources", channel);
@@ -1467,10 +1467,16 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
                 }
                 break;
 
-              case 0x5a: // mode sense
+              case 0x1a: // mode sense (6)
+              case 0x5a: // mode sense (10)
                 {
-                  Bit16u alloc_length = read_16bit(BX_SELECTED_CONTROLLER(channel).buffer + 7);
+                  Bit16u alloc_length;
 
+                  if (atapi_command == 0x5a) {
+                    alloc_length = read_16bit(BX_SELECTED_CONTROLLER(channel).buffer + 7);
+                  } else {
+                    alloc_length = BX_SELECTED_CONTROLLER(channel).buffer[4];
+                  }
                   Bit8u PC = BX_SELECTED_CONTROLLER(channel).buffer[2] >> 6;
                   Bit8u PageCode = BX_SELECTED_CONTROLLER(channel).buffer[2] & 0x3f;
 
@@ -3200,14 +3206,10 @@ bx_hard_drive_c::atapi_cmd_nop(Bit8u channel)
 
 void bx_hard_drive_c::init_mode_sense_single(Bit8u channel, const void* src, int size)
 {
-  char ata_name[20];
-
   // Header
   BX_SELECTED_CONTROLLER(channel).buffer[0] = (size+6) >> 8;
   BX_SELECTED_CONTROLLER(channel).buffer[1] = (size+6) & 0xff;
-  sprintf(ata_name, "ata.%d.%s", channel, BX_HD_THIS channels[channel].drive_select?"slave":"master");
-  bx_list_c *base = (bx_list_c*) SIM->get_param(ata_name);
-  if (SIM->get_param_enum("status", base)->get() == BX_INSERTED)
+  if (BX_SELECTED_DRIVE(channel).cdrom.ready)
     BX_SELECTED_CONTROLLER(channel).buffer[2] = 0x12; // media present 120mm CD-ROM (CD-R) data/audio  door closed
   else
     BX_SELECTED_CONTROLLER(channel).buffer[2] = 0x70; // no media present
