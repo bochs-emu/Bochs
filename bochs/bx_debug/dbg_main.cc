@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.151 2008-06-12 21:00:25 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.152 2008-07-11 03:53:30 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2304,9 +2304,11 @@ void bx_dbg_examine_command(char *command, char *format, bx_bool format_passed,
       }
     }
 
-    // store current options as default
-    bx_debugger.default_display_format = display_format;
-    bx_debugger.default_unit_size      = unit_size;
+    if (format_passed) {
+      // store current options as default
+      bx_debugger.default_display_format = display_format;
+      bx_debugger.default_unit_size      = unit_size;
+    }
   }
 
   if ((display_format == 'i') || (display_format == 's')) {
