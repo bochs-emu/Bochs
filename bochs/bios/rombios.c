@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.210 2008-06-22 09:05:02 vruppert Exp $
+// $Id: rombios.c,v 1.211 2008-07-11 03:54:33 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -940,7 +940,7 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.210 $ $Date: 2008-06-22 09:05:02 $";
+static char bios_cvs_version_string[] = "$Revision: 1.211 $ $Date: 2008-07-11 03:54:33 $";
 
 #define BIOS_COPYRIGHT_STRING "(c) 2002 MandrakeSoft S.A. Written by Kevin Lawton & the Bochs team."
 
@@ -10249,11 +10249,6 @@ rom_scan_increment:
   xor  ax, ax   ;; Restore DS back to 0000:
   mov  ds, ax
   ret
-
-;; for 'C' strings and other data, insert them here with
-;; a the following hack:
-;; DATA_SEG_DEFS_HERE
-
 
 ;; the following area can be used to write dynamically generated tables
   .align 16
