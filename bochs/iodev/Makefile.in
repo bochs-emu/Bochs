@@ -111,6 +111,7 @@ OBJS_THAT_SUPPORT_OTHER_PLUGINS = \
 
 NONPLUGIN_OBJS = @IODEV_NON_PLUGIN_OBJS@
 PLUGIN_OBJS = @IODEV_PLUGIN_OBJS@
+SOUND_LINK_OPTS = @SOUND_LINK_OPTS@
 
 all: libiodev.a
 
@@ -149,7 +150,7 @@ libbx_pit.la: pit82c54.lo pit_wrap.lo
 	$(LIBTOOL) --mode=link $(CXX) -module pit82c54.lo pit_wrap.lo -o libbx_pit.la -rpath $(PLUGIN_PATH)
 
 libbx_sb16.la: sb16.lo $(SOUNDLOW_OBJS:.o=.lo)
-	$(LIBTOOL) --mode=link $(CXX) -module sb16.lo $(SOUNDLOW_OBJS:.o=.lo) -o libbx_sb16.la -rpath $(PLUGIN_PATH)
+	$(LIBTOOL) --mode=link $(CXX) -module sb16.lo $(SOUNDLOW_OBJS:.o=.lo) -o libbx_sb16.la -rpath $(PLUGIN_PATH) $(SOUND_LINK_OPTS)
 
 libbx_ne2k.la: ne2k.lo $(NETLOW_OBJS:.o=.lo)
 	$(LIBTOOL) --mode=link $(CXX) -module ne2k.lo $(NETLOW_OBJS:.o=.lo) -o libbx_ne2k.la -rpath $(PLUGIN_PATH)

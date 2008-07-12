@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sb16.cc,v 1.57 2008-02-15 22:05:43 sshwarts Exp $
+// $Id: sb16.cc,v 1.58 2008-07-12 15:20:18 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1340,17 +1340,14 @@ void bx_sb16_c::dsp_dmadone()
 {
   writelog(WAVELOG(4), "DMA transfer done, triggering IRQ");
 
-  if ((DSP.dma.output == 1) && (DSP.dma.mode != 2))
-  {
-      dsp_sendwavepacket();  // flush the output
+  if ((DSP.dma.output == 1) && (DSP.dma.mode != 2)) {
+    dsp_sendwavepacket();  // flush the output
 
-      if (BX_SB16_THIS wavemode == 1)
-      {
-         if (DSP.dma.mode != 2)
-           BX_SB16_OUTPUT->stopwaveplayback();  // don't stop if Auto-DMA
-      }
-      else if (BX_SB16_THIS wavemode == 2)
-       fflush(WAVEDATA);
+    if (BX_SB16_THIS wavemode == 1) {
+      BX_SB16_OUTPUT->stopwaveplayback();
+    } else {
+      fflush(WAVEDATA);
+    }
   }
 
   // generate the appropriate IRQ

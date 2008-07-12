@@ -248,6 +248,8 @@
 //    bx_sound_windows_c    Output for Windows midi and wave mappers
 //    bx_sound_output_c     Dummy functions, no output
 #define BX_SOUND_OUTPUT_C  bx_sound_output_c
+// limited ALSA support on Linux (PCM output only)
+#define BX_HAVE_ALSASOUND  0
 #endif
 
 #define USE_RAW_SERIAL 0

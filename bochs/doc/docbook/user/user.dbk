@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.241 2008-06-08 10:33:07 vruppert Exp $
+$Id: user.dbk,v 1.242 2008-07-12 15:20:18 vruppert Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -4246,17 +4246,9 @@ source. If you have a binary and all you want to know is what to put in your
 </para>
 
 <para>
-Sound Blaster 16 (SB16) emulation for Bochs was written and donated by
-Josef Drexler, who has a
-<ulink url="http://publish.uwo.ca/~jdrexler/bochs/">web page</ulink> on the topic.
-The entire set of his SB16 patches have been integrated into
-Bochs, however, so you can find everything you need here.
-</para>
-
-<para>
-SB16 Emulation has been tested with several soundcards and versions of Linux.  Please give
-Josef <ulink url="mailto:jdrexler@julian.uwo.ca">feedback</ulink> on
-whether is does or doesn't work on your combination of software and hardware.
+The original version of the Sound Blaster 16 (SB16) emulation for Bochs was
+written and donated by Josef Drexler. The entire set of his SB16 patches have
+been integrated into Bochs, however, so you can find everything you need here.
 </para>
 
 <section><title>How well does it work?</title>
@@ -4292,6 +4284,8 @@ midi can go to <filename class="devicefile">/dev/midi00</filename>, otherwise yo
 a midi interpreter. For example, the midid program from the DosEmu project would work.
 Wave output should go to <filename class="devicefile">/dev/dsp</filename>. These devices
 are assumed to be OSS devices, if they're not some of the ioctl's might fail.
+If ALSA is present on Linux, Bochs uses it's default PCM output device instead
+of the OSS device.
 </para>
 <para>
 On Windows, midi and (wave) output go to the midi mapper and the wave mapper,
@@ -4340,8 +4334,8 @@ The following are supported at the moment:
 </para>
 
 <programlisting>
-        bx_sound_linux_c    for output to /dev/dsp and /dev/midi00 on Linux
-                            (and maybe other OSes that use the OSS driver)
+        bx_sound_linux_c    for output to /dev/dsp and /dev/midi00 on Linux,
+                            FreeBSD and maybe other OSes that use the OSS driver.
         bx_sound_windows_c  for output to the midi and wave mapper of
                             Windows 3.1 and higher.
         bx_sound_output_c   for no output at all.
@@ -4360,8 +4354,6 @@ The source for the SB16CTRL program that is used to modify
 the runtime behaviour of the SB16 emulation is included in
 <filename class="directory">misc/sb16/</filename>. It is a C
 program that can be run from inside the emulation.
-<!-- You can compile it or download the
-<ulink url="http://publish.uwo.ca/~jdrexler/bochs/">executable</ulink>. -->
 </para>
 
 <para>
@@ -4445,7 +4437,7 @@ The command line can have any number of commands. However, if none are given,
 
 <section><title>Features planned for the future</title>
 <itemizedlist>
-<listitem><para>Port it to more OS's, but I can't do this myself.</para></listitem>
+<listitem><para>Port it to more OS's.</para></listitem>
 <listitem><para>Finish the OPL3 FM emulation by translating the music to midi data.</para></listitem>
 </itemizedlist>
 </section>

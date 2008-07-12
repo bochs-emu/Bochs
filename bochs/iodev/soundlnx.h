@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: soundlnx.h,v 1.7 2004-09-11 15:39:53 vruppert Exp $
+// $Id: soundlnx.h,v 1.8 2008-07-12 15:20:18 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -24,12 +24,18 @@
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 
-// This file (SOUNDLNX.H) written and donated by Josef Drexler
-
+// Josef Drexler coded the original version of the lowlevel sound support
+// for Linux using OSS. The current version also supports OSS on FreeBSD and
+// ALSA PCM output on Linux.
 
 #if (defined(linux) || defined(__FreeBSD__) || defined(__FreeBSD_kernel__))
 
-#define BX_SOUND_LINUX_BUFSIZE   BX_SOUND_OUTPUT_WAVEPACKETSIZE
+#define BX_SOUND_LINUX_BUFSIZE   BX_SOUND_OUTPUT_WAVEPACKETSIZE * 2
+
+#if BX_HAVE_ALSASOUND
+#define ALSA_PCM_NEW_HW_PARAMS_API
+#include <alsa/asoundlib.h>
+#endif
 
 class bx_sound_linux_c : public bx_sound_output_c {
 public:
@@ -55,13 +61,23 @@ public:
 #endif
 
 private:
+#if BX_HAVE_ALSASOUND
+  int alsa_pcm_open(int frequency, int bits, int stereo, int format);
+  int alsa_pcm_write();
+#endif
   bx_sb16_c *sb16;
   FILE *midi;
+#if BX_HAVE_ALSASOUND
+  snd_pcm_t *handle;
+  snd_pcm_uframes_t frames;
+  int dir, alsa_bufsize, audio_bufsize;
+  char *alsa_buffer;
+#else
   char *wavedevice;
   int wave;
-  int bufferpos;
+#endif
   Bit8u audio_buffer[BX_SOUND_LINUX_BUFSIZE];
   int oldfreq,oldbits,oldstereo,oldformat;
 };
 
-#endif  // defined(linux)
+#endif

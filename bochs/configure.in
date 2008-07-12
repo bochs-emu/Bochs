@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.371 2008-06-14 16:57:36 sshwarts Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.372 2008-07-12 15:20:18 vruppert Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -1906,6 +1906,9 @@ fi
 AC_SUBST(CDROM_OBJS)
 
 
+bx_have_alsa=0
+AC_CHECK_HEADER([alsa/asoundlib.h], [bx_have_alsa=1])
+
 AC_MSG_CHECKING(for Sound Blaster 16 support)
 SB16_OBJS=''
 SOUNDLOW_OBJS=''
@@ -1926,6 +1929,14 @@ AC_ARG_ENABLE(sb16,
        freebsd|linux)
          SOUNDLOW_OBJS='soundlnx.o'
          AC_DEFINE(BX_SOUND_OUTPUT_C, bx_sound_linux_c)
+         if test "$bx_have_alsa" = 1; then
+           AC_DEFINE(BX_HAVE_ALSASOUND, 1)
+           if test "$bx_plugins" = 1; then
+             SOUND_LINK_OPTS="$SOUND_LINK_OPTS -lasound"
+           else
+             DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS -lasound"
+           fi
+         fi
          AC_MSG_RESULT(linux)
          ;;
        win)
@@ -1934,24 +1945,32 @@ AC_ARG_ENABLE(sb16,
          AC_MSG_RESULT(win)
          case $target in
            *-pc-windows*)
-                 DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS winmm.lib"
-                 ;;
+             DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS winmm.lib"
+             ;;
            *)
-		 DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS -lwinmm"
-                 ;;
+             DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS -lwinmm"
+             ;;
          esac
          ;;
        osx)
          SOUNDLOW_OBJS='soundosx.o'
          AC_DEFINE(BX_SOUND_OUTPUT_C, bx_sound_osx_c)
          AC_MSG_RESULT(osx)
-		 DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS -framework AudioUnit -framework AudioToolbox"
+         DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS -framework AudioUnit -framework AudioToolbox"
          ;;
        yes)
          case "$target" in
            *-linux* | *-freebsd*)
              SOUNDLOW_OBJS='soundlnx.o'
              AC_DEFINE(BX_SOUND_OUTPUT_C, bx_sound_linux_c)
+             if test "$bx_have_alsa" = 1; then
+               AC_DEFINE(BX_HAVE_ALSASOUND, 1)
+               if test "$bx_plugins" = 1; then
+                 SOUND_LINK_OPTS="$SOUND_LINK_OPTS -lasound"
+               else
+                 DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS -lasound"
+               fi
+             fi
              AC_MSG_RESULT(linux)
              ;;
            *-pc-windows*)
@@ -1998,6 +2017,7 @@ AC_ARG_ENABLE(sb16,
   )
 AC_SUBST(SB16_OBJS)
 AC_SUBST(SOUNDLOW_OBJS)
+AC_SUBST(SOUND_LINK_OPTS)
 
 
 AC_MSG_CHECKING(for standard PC gameport support)
