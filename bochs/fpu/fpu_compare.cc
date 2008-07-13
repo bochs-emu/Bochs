@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu_compare.cc,v 1.17 2008-05-10 13:34:01 sshwarts Exp $
+// $Id: fpu_compare.cc,v 1.18 2008-07-13 15:35:10 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -157,7 +157,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FCOMI_ST0_STj(bxInstruction_c *i)
       BX_CPU_THIS_PTR the_i387.FPU_pop();
 #else
   BX_INFO(("FCOMI(P)_ST0_STj: required P6 FPU, configure --enable-fpu, cpu-level=6"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -198,7 +198,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FUCOMI_ST0_STj(bxInstruction_c *i)
       BX_CPU_THIS_PTR the_i387.FPU_pop();
 #else
   BX_INFO(("FUCOMI(P)_ST0_STj: required P6 FPU, configure --enable-fpu, cpu-level=6"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -521,7 +521,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FCMOV_ST0_STj(bxInstruction_c *i)
 
 #else
   BX_INFO(("FCMOV_ST0_STj: required P6 FPU, configure --enable-fpu, cpu-level=6"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 

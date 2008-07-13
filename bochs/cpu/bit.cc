@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bit.cc,v 1.56 2008-05-10 18:10:52 sshwarts Exp $
+// $Id: bit.cc,v 1.57 2008-07-13 15:35:09 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -262,7 +262,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BSWAP_ERX(bxInstruction_c *i)
   BX_WRITE_32BIT_REGZ(i->opcodeReg(), val32);
 #else
   BX_INFO(("BSWAP_ERX: required CPU >= 4, use --enable-cpu-level=4 option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -359,7 +359,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CRC32_GdEb(bxInstruction_c *i)
   BX_WRITE_32BIT_REGZ(i->nnn(), BitReflect32(op2));
 #else
   BX_INFO(("CRC32_GdEb: required SSE4_2 support, use --enable-sse and --enable-sse-extension options"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -435,7 +435,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CRC32_GdEv(bxInstruction_c *i)
 
 #else
   BX_INFO(("CRC32_GdEv: required SSE4_2 support, use --enable-sse and --enable-sse-extension options"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 

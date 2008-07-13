@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: mmx.cc,v 1.79 2008-05-10 18:10:52 sshwarts Exp $
+// $Id: mmx.cc,v 1.80 2008-07-13 15:35:09 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2002 Stanislav Shwartsman
@@ -91,7 +91,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSHUFB_PqQq(bxInstruction_c *i)
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else
   BX_INFO(("PSHUFB_PqQq: required SSE3E, use --enable-sse and --enable-sse-extension options"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -121,7 +121,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PHADDW_PqQq(bxInstruction_c *i)
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else
   BX_INFO(("PHADDW_PqQq: required SSE3E, use --enable-sse and --enable-sse-extension options"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -149,7 +149,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PHADDD_PqQq(bxInstruction_c *i)
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else
   BX_INFO(("PHADDD_PqQq: required SSE3E, use --enable-sse and --enable-sse-extension options"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -180,7 +180,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PHADDSW_PqQq(bxInstruction_c *i)
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else
   BX_INFO(("PHADDSW_PqQq: required SSE3E, use --enable-sse and --enable-sse-extension options"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -214,7 +214,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMADDUBSW_PqQq(bxInstruction_c *i)
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else
   BX_INFO(("PMADDUBSW_PqQq: required SSE3E, use --enable-sse and --enable-sse-extension options"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -245,7 +245,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PHSUBSW_PqQq(bxInstruction_c *i)
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else
   BX_INFO(("PHSUBSW_PqQq: required SSE3E, use --enable-sse and --enable-sse-extension options"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -275,7 +275,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PHSUBW_PqQq(bxInstruction_c *i)
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else
   BX_INFO(("PHSUBW_PqQq: required SSE3E, use --enable-sse and --enable-sse-extension options"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -303,7 +303,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PHSUBD_PqQq(bxInstruction_c *i)
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else
   BX_INFO(("PHSUBD_PqQq: required SSE3E, use --enable-sse and --enable-sse-extension options"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -333,7 +333,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSIGNB_PqQq(bxInstruction_c *i)
   BX_WRITE_MMX_REG(i->nnn(), op1);
 #else
   BX_INFO(("PSIGNB_PqQq: required SSE3E, use --enable-sse and --enable-sse-extension options"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -363,7 +363,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSIGNW_PqQq(bxInstruction_c *i)
   BX_WRITE_MMX_REG(i->nnn(), op1);
 #else
   BX_INFO(("PSIGNW_PqQq: required SSE3E, use --enable-sse and --enable-sse-extension options"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -395,7 +395,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSIGND_PqQq(bxInstruction_c *i)
   BX_WRITE_MMX_REG(i->nnn(), op1);
 #else
   BX_INFO(("PSIGND_PqQq: required SSE3E, use --enable-sse and --enable-sse-extension options"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -431,7 +431,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMULHRSW_PqQq(bxInstruction_c *i)
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else
   BX_INFO(("PMULHRSW_PqQq: required SSE3E, use --enable-sse and --enable-sse-extension options"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -465,7 +465,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PABSB_PqQq(bxInstruction_c *i)
   BX_WRITE_MMX_REG(i->nnn(), op);
 #else
   BX_INFO(("PABSB_PqQq: required SSE3E, use --enable-sse and --enable-sse-extension options"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -495,7 +495,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PABSW_PqQq(bxInstruction_c *i)
   BX_WRITE_MMX_REG(i->nnn(), op);
 #else
   BX_INFO(("PABSW_PqQq: required SSE3E, use --enable-sse and --enable-sse-extension options"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -523,7 +523,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PABSD_PqQq(bxInstruction_c *i)
   BX_WRITE_MMX_REG(i->nnn(), op);
 #else
   BX_INFO(("PABSD_PqQq: required SSE3E, use --enable-sse and --enable-sse-extension options"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -560,7 +560,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PALIGNR_PqQqIb(bxInstruction_c *i)
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else
   BX_INFO(("PALIGNR_PqQqIb: required SSE3E, use --enable-sse and --enable-sse-extension options"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -597,7 +597,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUNPCKLBW_PqQd(bxInstruction_c *i)
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else
   BX_INFO(("PUNPCKLBW_PqQd: required MMX, configure --enable-mmx"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -628,7 +628,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUNPCKLWD_PqQd(bxInstruction_c *i)
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else
   BX_INFO(("PUNPCKLWD_PqQd: required MMX, use --enable-mmx option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -656,7 +656,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUNPCKLDQ_PqQd(bxInstruction_c *i)
   BX_WRITE_MMX_REG(i->nnn(), op1);
 #else
   BX_INFO(("PUNPCKLDQ_PqQd: required MMX, use --enable-mmx option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -691,7 +691,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PACKSSWB_PqQq(bxInstruction_c *i)
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else
   BX_INFO(("PACKSSWB_PqQq: required MMX, use --enable-mmx option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -726,7 +726,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PCMPGTB_PqQq(bxInstruction_c *i)
   BX_WRITE_MMX_REG(i->nnn(), op1);
 #else
   BX_INFO(("PCMPGTB_PqQq: required MMX, use --enable-mmx option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -757,7 +757,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PCMPGTW_PqQq(bxInstruction_c *i)
   BX_WRITE_MMX_REG(i->nnn(), op1);
 #else
   BX_INFO(("PCMPGTW_PqQq: required MMX, use --enable-mmx option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -786,7 +786,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PCMPGTD_PqQq(bxInstruction_c *i)
   BX_WRITE_MMX_REG(i->nnn(), op1);
 #else
   BX_INFO(("PCMPGTD_PqQq: required MMX, use --enable-mmx option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -821,7 +821,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PACKUSWB_PqQq(bxInstruction_c *i)
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else
   BX_INFO(("PACKUSWB_PqQq: required MMX, use --enable-mmx option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -856,7 +856,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUNPCKHBW_PqQq(bxInstruction_c *i)
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else
   BX_INFO(("PUNPCKHBW_PqQq: required MMX, use --enable-mmx option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -887,7 +887,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUNPCKHWD_PqQq(bxInstruction_c *i)
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else
   BX_INFO(("PUNPCKHWD_PqQq: required MMX, use --enable-mmx option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -916,7 +916,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUNPCKHDQ_PqQq(bxInstruction_c *i)
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else
   BX_INFO(("PUNPCKHDQ_PqQq: required MMX, use --enable-mmx option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -947,7 +947,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PACKSSDW_PqQq(bxInstruction_c *i)
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else
   BX_INFO(("PACKSSDW_PqQq: required MMX, use --enable-mmx option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -975,7 +975,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVD_PqEd(bxInstruction_c *i)
   BX_WRITE_MMX_REG(i->nnn(), op);
 #else
   BX_INFO(("MOVD_PqEd: required MMX, use --enable-mmx option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -1026,7 +1026,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVQ_PqQq(bxInstruction_c *i)
   BX_WRITE_MMX_REG(i->nnn(), op);
 #else
   BX_INFO(("MOVQ_PqQq: required MMX, use --enable-mmx option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -1058,7 +1058,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSHUFW_PqQqIb(bxInstruction_c *i)
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else
   BX_INFO(("PSHUFW_PqQqIb: required SSE or 3DNOW, use --enable-sse or --enable-3dnow options"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -1093,7 +1093,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PCMPEQB_PqQq(bxInstruction_c *i)
   BX_WRITE_MMX_REG(i->nnn(), op1);
 #else
   BX_INFO(("PCMPEQB_PqQq: required MMX, use --enable-mmx option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -1124,7 +1124,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PCMPEQW_PqQq(bxInstruction_c *i)
   BX_WRITE_MMX_REG(i->nnn(), op1);
 #else
   BX_INFO(("PCMPEQW_PqQq: required MMX, use --enable-mmx option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -1153,7 +1153,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PCMPEQD_PqQq(bxInstruction_c *i)
   BX_WRITE_MMX_REG(i->nnn(), op1);
 #else
   BX_INFO(("PCMPEQD_PqQq: required MMX, use --enable-mmx option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -1165,7 +1165,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::EMMS(bxInstruction_c *i)
   FPU_TAG_WORD  = 0xffff;
 #else
   BX_INFO(("EMMS: required MMX, use --enable-mmx option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -1189,7 +1189,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVD_EdPd(bxInstruction_c *i)
 
 #else
   BX_INFO(("MOVD_EdPd: required MMX, use --enable-mmx option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -1234,7 +1234,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVQ_QqPq(bxInstruction_c *i)
   }
 #else
   BX_INFO(("MOVQ_QqPq: required MMX, use --enable-mmx option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -1263,7 +1263,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PINSRW_PqEwIb(bxInstruction_c *i)
   BX_WRITE_MMX_REG(i->nnn(), op1);
 #else
   BX_INFO(("PINSRW_PqEdIb: required SSE or 3DNOW, use --enable-sse or --enable-3dnow options"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -1279,7 +1279,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PEXTRW_GdPqIb(bxInstruction_c *i)
   BX_WRITE_32BIT_REGZ(i->nnn(), result);
 #else
   BX_INFO(("PEXTRW_GdPqIb: required SSE or 3DNOW, use --enable-sse or --enable-3dnow options"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -1316,7 +1316,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSRLW_PqQq(bxInstruction_c *i)
   BX_WRITE_MMX_REG(i->nnn(), op1);
 #else
   BX_INFO(("PSRLW_PqQq: required MMX, use --enable-mmx option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -1351,7 +1351,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSRLD_PqQq(bxInstruction_c *i)
   BX_WRITE_MMX_REG(i->nnn(), op1);
 #else
   BX_INFO(("PSRLD_PqQq: required MMX, use --enable-mmx option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -1384,7 +1384,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSRLQ_PqQq(bxInstruction_c *i)
   BX_WRITE_MMX_REG(i->nnn(), op1);
 #else
   BX_INFO(("PSRLQ_PqQq: required MMX, use --enable-mmx option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -1412,7 +1412,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PADDQ_PqQq(bxInstruction_c *i)
   BX_WRITE_MMX_REG(i->nnn(), op1);
 #else
   BX_INFO(("PADDQ_PqQq: required SSE2, use --enable-sse option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -1448,7 +1448,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMULLW_PqQq(bxInstruction_c *i)
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else
   BX_INFO(("PMULLW_PqQq: required MMX, use --enable-mmx option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -1475,7 +1475,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVMSKB_GdPRq(bxInstruction_c *i)
 
 #else
   BX_INFO(("PMOVMSKB_GdPRq: required SSE or 3DNOW, use --enable-sse or --enable-3dnow options"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -1512,7 +1512,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSUBUSB_PqQq(bxInstruction_c *i)
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else
   BX_INFO(("PSUBUSB_PqQq: required MMX, use --enable-mmx option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -1545,7 +1545,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSUBUSW_PqQq(bxInstruction_c *i)
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else
   BX_INFO(("PSUBUSW_PqQq: required MMX, use --enable-mmx option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -1580,7 +1580,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMINUB_PqQq(bxInstruction_c *i)
   BX_WRITE_MMX_REG(i->nnn(), op1);
 #else
   BX_INFO(("PMINUB_PqQq: required SSE or 3DNOW, use --enable-sse or --enable-3dnow options"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -1608,7 +1608,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PAND_PqQq(bxInstruction_c *i)
   BX_WRITE_MMX_REG(i->nnn(), op1);
 #else
   BX_INFO(("PAND_PqQq: required MMX, use --enable-mmx option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -1643,7 +1643,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PADDUSB_PqQq(bxInstruction_c *i)
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else
   BX_INFO(("PADDUSB_PqQq: required MMX, use --enable-mmx option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -1674,7 +1674,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PADDUSW_PqQq(bxInstruction_c *i)
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else
   BX_INFO(("PADDUSW_PqQq: required MMX, use --enable-mmx option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -1709,7 +1709,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMAXUB_PqQq(bxInstruction_c *i)
   BX_WRITE_MMX_REG(i->nnn(), op1);
 #else
   BX_INFO(("PMAXUB_PqQq: required SSE or 3DNOW, use --enable-sse or --enable-3dnow options"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -1737,7 +1737,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PANDN_PqQq(bxInstruction_c *i)
   BX_WRITE_MMX_REG(i->nnn(), op1);
 #else
   BX_INFO(("PANDN_PqQq: required MMX, use --enable-mmx option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -1772,7 +1772,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PAVGB_PqQq(bxInstruction_c *i)
   BX_WRITE_MMX_REG(i->nnn(), op1);
 #else
   BX_INFO(("PAVGB_PqQq: required SSE or 3DNOW, use --enable-sse or --enable-3dnow options"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -1820,7 +1820,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSRAW_PqQq(bxInstruction_c *i)
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else
   BX_INFO(("PSRAW_PqQq: required MMX, use --enable-mmx option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -1865,7 +1865,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSRAD_PqQq(bxInstruction_c *i)
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else
   BX_INFO(("PSRAD_PqQq: required MMX, use --enable-mmx option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -1896,7 +1896,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PAVGW_PqQq(bxInstruction_c *i)
   BX_WRITE_MMX_REG(i->nnn(), op1);
 #else
   BX_INFO(("PAVGW_PqQq: required SSE or 3DNOW, use --enable-sse or --enable-3dnow options"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -1932,7 +1932,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMULHUW_PqQq(bxInstruction_c *i)
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else
   BX_INFO(("PMULHUW_PqQq: required SSE or 3DNOW, use --enable-sse or --enable-3dnow options"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -1968,7 +1968,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMULHW_PqQq(bxInstruction_c *i)
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else
   BX_INFO(("PMULHW_PqQq: required MMX, use --enable-mmx option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -1982,7 +1982,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVNTQ_MqPq(bxInstruction_c *i)
   write_virtual_qword(i->seg(), RMAddr(i), MMXUQ(reg));
 #else
   BX_INFO(("MOVNTQ_MqPq: required SSE or 3DNOW, use --enable-sse or --enable-3dnow options"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -2017,7 +2017,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSUBSB_PqQq(bxInstruction_c *i)
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else
   BX_INFO(("PSUBSB_PqQq: required MMX, use --enable-mmx option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -2048,7 +2048,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSUBSW_PqQq(bxInstruction_c *i)
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else
   BX_INFO(("PSUBSW_PqQq: required MMX, use --enable-mmx option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -2079,7 +2079,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMINSW_PqQq(bxInstruction_c *i)
   BX_WRITE_MMX_REG(i->nnn(), op1);
 #else
   BX_INFO(("PMINSW_PqQq: required SSE or 3DNOW, use --enable-sse or --enable-3dnow options"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -2107,7 +2107,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::POR_PqQq(bxInstruction_c *i)
   BX_WRITE_MMX_REG(i->nnn(), op1);
 #else
   BX_INFO(("POR_PqQq: required MMX, use --enable-mmx option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -2142,7 +2142,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PADDSB_PqQq(bxInstruction_c *i)
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else
   BX_INFO(("PADDSB_PqQq: required MMX, use --enable-mmx option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -2173,7 +2173,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PADDSW_PqQq(bxInstruction_c *i)
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else
   BX_INFO(("PADDSW_PqQq: required MMX, use --enable-mmx option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -2204,7 +2204,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMAXSW_PqQq(bxInstruction_c *i)
   BX_WRITE_MMX_REG(i->nnn(), op1);
 #else
   BX_INFO(("PMAXSW_PqQq: required SSE or 3DNOW, use --enable-sse or --enable-3dnow options"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -2232,7 +2232,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PXOR_PqQq(bxInstruction_c *i)
   BX_WRITE_MMX_REG(i->nnn(), op1);
 #else
   BX_INFO(("PXOR_PqQq: required MMX, use --enable-mmx option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -2269,7 +2269,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSLLW_PqQq(bxInstruction_c *i)
   BX_WRITE_MMX_REG(i->nnn(), op1);
 #else
   BX_INFO(("PSLLW_PqQq: required MMX, use --enable-mmx option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -2304,7 +2304,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSLLD_PqQq(bxInstruction_c *i)
   BX_WRITE_MMX_REG(i->nnn(), op1);
 #else
   BX_INFO(("PSLLD_PqQq: required MMX, use --enable-mmx option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -2337,7 +2337,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSLLQ_PqQq(bxInstruction_c *i)
   BX_WRITE_MMX_REG(i->nnn(), op1);
 #else
   BX_INFO(("PSLLQ_PqQq: required MMX, use --enable-mmx option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -2365,7 +2365,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMULUDQ_PqQq(bxInstruction_c *i)
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else
   BX_INFO(("PMULUDQ_PqQq: required SSE2, use --enable-sse option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -2405,7 +2405,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMADDWD_PqQq(bxInstruction_c *i)
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else
   BX_INFO(("PMADDWD_PqQq: required MMX, use --enable-mmx option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -2443,7 +2443,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSADBW_PqQq(bxInstruction_c *i)
   BX_WRITE_MMX_REG(i->nnn(), op1);
 #else
   BX_INFO(("PSADBW_PqQq: required SSE or 3DNOW, use --enable-sse or --enable-3dnow options"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -2487,7 +2487,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MASKMOVQ_PqPRq(bxInstruction_c *i)
   write_RMW_virtual_qword(MMXUQ(tmp));
 #else
   BX_INFO(("MASKMOVQ_PqPRq: required SSE or 3DNOW, use --enable-sse or --enable-3dnow options"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -2522,7 +2522,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSUBB_PqQq(bxInstruction_c *i)
   BX_WRITE_MMX_REG(i->nnn(), op1);
 #else
   BX_INFO(("PSUBB_PqQq: required MMX, use --enable-mmx option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -2553,7 +2553,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSUBW_PqQq(bxInstruction_c *i)
   BX_WRITE_MMX_REG(i->nnn(), op1);
 #else
   BX_INFO(("PSUBW_PqQq: required MMX, use --enable-mmx option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -2582,7 +2582,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSUBD_PqQq(bxInstruction_c *i)
   BX_WRITE_MMX_REG(i->nnn(), op1);
 #else
   BX_INFO(("PSUBD_PqQq: required MMX, use --enable-mmx option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -2610,7 +2610,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSUBQ_PqQq(bxInstruction_c *i)
   BX_WRITE_MMX_REG(i->nnn(), op1);
 #else
   BX_INFO(("PSUBQ_PqQq: required SSE2, use --enable-sse option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -2645,7 +2645,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PADDB_PqQq(bxInstruction_c *i)
   BX_WRITE_MMX_REG(i->nnn(), op1);
 #else
   BX_INFO(("PADDB_PqQq: required MMX, use --enable-mmx option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -2676,7 +2676,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PADDW_PqQq(bxInstruction_c *i)
   BX_WRITE_MMX_REG(i->nnn(), op1);
 #else
   BX_INFO(("PADDW_PqQq: required MMX, use --enable-mmx option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -2705,7 +2705,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PADDD_PqQq(bxInstruction_c *i)
   BX_WRITE_MMX_REG(i->nnn(), op1);
 #else
   BX_INFO(("PADDD_PqQq: required MMX, use --enable-mmx option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -2731,7 +2731,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSRLW_PqIb(bxInstruction_c *i)
   BX_WRITE_MMX_REG(i->rm(), op);
 #else
   BX_INFO(("PSRLW_PqIb: required MMX, use --enable-mmx option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -2768,7 +2768,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSRAW_PqIb(bxInstruction_c *i)
   BX_WRITE_MMX_REG(i->rm(), result);
 #else
   BX_INFO(("PSRAW_PqIb: required MMX, use --enable-mmx option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -2794,7 +2794,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSLLW_PqIb(bxInstruction_c *i)
   BX_WRITE_MMX_REG(i->rm(), op);
 #else
   BX_INFO(("PSLLW_PqIb: required MMX, use --enable-mmx option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -2818,7 +2818,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSRLD_PqIb(bxInstruction_c *i)
   BX_WRITE_MMX_REG(i->rm(), op);
 #else
   BX_INFO(("PSRLD_PqIb: required MMX, use --enable-mmx option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -2852,7 +2852,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSRAD_PqIb(bxInstruction_c *i)
   BX_WRITE_MMX_REG(i->rm(), result);
 #else
   BX_INFO(("PSRAD_PqIb: required MMX, use --enable-mmx option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -2876,7 +2876,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSLLD_PqIb(bxInstruction_c *i)
   BX_WRITE_MMX_REG(i->rm(), op);
 #else
   BX_INFO(("PSLLD_PqIb: required MMX, use --enable-mmx option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -2900,7 +2900,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSRLQ_PqIb(bxInstruction_c *i)
   BX_WRITE_MMX_REG(i->rm(), op);
 #else
   BX_INFO(("PSRLQ_PqIb: required MMX, use --enable-mmx option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -2924,6 +2924,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSLLQ_PqIb(bxInstruction_c *i)
   BX_WRITE_MMX_REG(i->rm(), op);
 #else
   BX_INFO(("PSLLQ_PqIb: required MMX, use --enable-mmx option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }

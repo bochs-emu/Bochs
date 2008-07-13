@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith8.cc,v 1.57 2008-07-13 09:59:57 sshwarts Exp $
+// $Id: arith8.cc,v 1.58 2008-07-13 15:35:09 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -344,7 +344,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XADD_EbGbM(bxInstruction_c *i)
   SET_FLAGS_OSZAPC_ADD_8(op1, op2, sum);
 #else
   BX_INFO(("XADD_EbGb: not supported on < 80486"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -373,7 +373,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XADD_EbGbR(bxInstruction_c *i)
   SET_FLAGS_OSZAPC_ADD_8(op1, op2, sum);
 #else
   BX_INFO(("XADD_EbGb: not supported on < 80486"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -562,7 +562,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPXCHG_EbGbM(bxInstruction_c *i)
 
 #else
   BX_INFO(("CMPXCHG_EbGb: not supported for cpulevel <= 3"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -587,6 +587,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPXCHG_EbGbR(bxInstruction_c *i)
 
 #else
   BX_INFO(("CMPXCHG_EbGb: not supported for cpulevel <= 3"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }

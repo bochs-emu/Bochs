@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: smm.cc,v 1.40 2008-05-26 21:46:39 sshwarts Exp $
+// $Id: smm.cc,v 1.41 2008-07-13 15:35:09 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2006 Stanislav Shwartsman
@@ -69,7 +69,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RSM(bxInstruction_c *i)
   /* If we are not in System Management Mode, then #UD should be generated */
   if (! BX_CPU_THIS_PTR smm_mode()) {
     BX_INFO(("RSM not in System Management Mode !"));
-    UndefinedOpcode(i);
+    exception(BX_UD_EXCEPTION, 0, 0);
   }
 
   invalidate_prefetch_q();

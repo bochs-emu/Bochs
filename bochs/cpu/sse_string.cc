@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_string.cc,v 1.7 2008-04-18 14:15:58 sshwarts Exp $
+// $Id: sse_string.cc,v 1.8 2008-07-13 15:35:09 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007 Stanislav Shwartsman
@@ -357,7 +357,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PCMPESTRM_VdqWdqIb(bxInstruction_c *i)
   BX_WRITE_XMM_REG(0, result); /* store result XMM0 */
 #else
   BX_INFO(("PCMPESTRM_VdqWdqIb: required SSE4.2, use --enable-sse and --enable-sse-extension options"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -424,7 +424,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PCMPESTRI_VdqWdqIb(bxInstruction_c *i)
 
 #else
   BX_INFO(("PCMPESTRI_VdqWdqIb: required SSE4.2, use --enable-sse and --enable-sse-extension options"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -485,7 +485,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PCMPISTRM_VdqWdqIb(bxInstruction_c *i)
   BX_WRITE_XMM_REG(0, result); /* store result XMM0 */
 #else
   BX_INFO(("PCMPISTRM_VdqWdqIb: required SSE4.2, use --enable-sse and --enable-sse-extension options"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -543,7 +543,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PCMPISTRI_VdqWdqIb(bxInstruction_c *i)
 
 #else
   BX_INFO(("PCMPISTRI_VdqWdqIb: required SSE4.2, use --enable-sse and --enable-sse-extension options"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 

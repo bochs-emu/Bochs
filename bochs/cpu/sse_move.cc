@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_move.cc,v 1.92 2008-06-14 16:55:45 sshwarts Exp $
+// $Id: sse_move.cc,v 1.93 2008-07-13 15:35:09 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -135,7 +135,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LDMXCSR(bxInstruction_c *i)
   BX_MXCSR_REGISTER = new_mxcsr;
 #else
   BX_INFO(("LDMXCSR: required SSE, use --enable-sse option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -152,7 +152,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::STMXCSR(bxInstruction_c *i)
   write_virtual_dword(i->seg(), RMAddr(i), mxcsr);
 #else
   BX_INFO(("STMXCSR: required SSE, use --enable-sse option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -271,7 +271,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FXSAVE(bxInstruction_c *i)
   /* do not touch reserved fields */
 #else
   BX_INFO(("FXSAVE: required P6 support, use --enable-cpu-level=6 option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -382,7 +382,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FXRSTOR(bxInstruction_c *i)
 
 #else
   BX_INFO(("FXRSTOR: required P6 support, use --enable-cpu-level=6 option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -416,7 +416,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVUPS_VpsWps(bxInstruction_c *i)
   BX_WRITE_XMM_REG(i->nnn(), op);
 #else
   BX_INFO(("MOVUPS_VpsWps: required SSE, use --enable-sse option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -441,7 +441,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVUPS_WpsVps(bxInstruction_c *i)
   }
 #else
   BX_INFO(("MOVUPS_WpsVps: required SSE, use --enable-sse option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -469,7 +469,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVAPS_VpsWps(bxInstruction_c *i)
   BX_WRITE_XMM_REG(i->nnn(), op);
 #else
   BX_INFO(("MOVAPS_VpsWps: required SSE, use --enable-sse option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -494,7 +494,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVAPS_WpsVps(bxInstruction_c *i)
   }
 #else
   BX_INFO(("MOVAPS_WpsVps: required SSE, use --enable-sse option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -526,7 +526,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSS_VssWss(bxInstruction_c *i)
   BX_WRITE_XMM_REG(i->nnn(), op);
 #else
   BX_INFO(("MOVSS_VssWss: required SSE, use --enable-sse option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -552,7 +552,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSS_WssVss(bxInstruction_c *i)
   }
 #else
   BX_INFO(("MOVSS_WssVss: required SSE, use --enable-sse option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -583,7 +583,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSD_VsdWsd(bxInstruction_c *i)
   BX_WRITE_XMM_REG(i->nnn(), op);
 #else
   BX_INFO(("MOVSD_VsdWsd: required SSE2, use --enable-sse option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -609,7 +609,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSD_WsdVsd(bxInstruction_c *i)
   }
 #else
   BX_INFO(("MOVSD_WsdVsd: required SSE2, use --enable-sse option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -635,7 +635,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVLPS_VpsMq(bxInstruction_c *i)
   BX_WRITE_XMM_REG_LO_QWORD(i->nnn(), val64);
 #else
   BX_INFO(("MOVLPS_VpsMq: required SSE, use --enable-sse option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -664,7 +664,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVDDUP_VpdWq(bxInstruction_c *i)
   BX_WRITE_XMM_REG(i->nnn(), op);
 #else
   BX_INFO(("MOVDDUP_VpdWq: required SSE3, use --enable-sse option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -694,7 +694,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSLDUP_VpsWps(bxInstruction_c *i)
   BX_WRITE_XMM_REG(i->nnn(), result);
 #else
   BX_INFO(("MOVSLDUP_VpsWps: required SSE3, use --enable-sse option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -724,7 +724,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSHDUP_VpsWps(bxInstruction_c *i)
   BX_WRITE_XMM_REG(i->nnn(), result);
 #else
   BX_INFO(("MOVHLDUP_VpsWps: required SSE3, use --enable-sse option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -738,7 +738,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVLPS_MqVps(bxInstruction_c *i)
   write_virtual_qword(i->seg(), RMAddr(i), BX_XMM_REG_LO_QWORD(i->nnn()));
 #else
   BX_INFO(("MOVLPS_MqVps: required SSE, use --enable-sse option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -764,7 +764,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVHPS_VpsMq(bxInstruction_c *i)
   BX_WRITE_XMM_REG_HI_QWORD(i->nnn(), val64);
 #else
   BX_INFO(("MOVHPS_VpsMq: required SSE, use --enable-sse option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -778,7 +778,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVHPS_MqVps(bxInstruction_c *i)
   write_virtual_qword(i->seg(), RMAddr(i), BX_XMM_REG_HI_QWORD(i->nnn()));
 #else
   BX_INFO(("MOVHPS_MqVps: required SSE, use --enable-sse option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -796,7 +796,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LDDQU_VdqMdq(bxInstruction_c *i)
   BX_WRITE_XMM_REG(i->nnn(), op);
 #else
   BX_INFO(("LDDQU_VdqMdq: required SSE3, use --enable-sse option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -838,7 +838,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MASKMOVDQU_VdqUdq(bxInstruction_c *i)
 
 #else
   BX_INFO(("MASKMOVDQU_VdqUdq: required SSE2, use --enable-sse option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -859,7 +859,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVMSKPS_GdVRps(bxInstruction_c *i)
   BX_WRITE_32BIT_REGZ(i->rm(), val32);
 #else
   BX_INFO(("MOVMSKPS_GdVRps: required SSE, use --enable-sse option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -878,7 +878,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVMSKPD_GdVRpd(bxInstruction_c *i)
   BX_WRITE_32BIT_REGZ(i->rm(), val32);
 #else
   BX_INFO(("MOVMSKPD_GdVRpd: required SSE2, use --enable-sse option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -908,7 +908,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVD_VdqEd(bxInstruction_c *i)
   BX_WRITE_XMM_REG(i->nnn(), op1);
 #else
   BX_INFO(("MOVD_VdqEd: required SSE2, use --enable-sse option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -940,7 +940,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVQ_VdqEq(bxInstruction_c *i)
   BX_WRITE_XMM_REG(i->nnn(), op1);
 #else
   BX_INFO(("MOVQ_VdqEq: required SSE2, use --enable-sse option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -965,7 +965,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVD_EdVd(bxInstruction_c *i)
   }
 #else
   BX_INFO(("MOVD_EdVd: required SSE2, use --enable-sse option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -990,7 +990,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVQ_EqVq(bxInstruction_c *i)
   }
 #else
   BX_INFO(("MOVQ_EqVq: required SSE2, use --enable-sse option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -1020,7 +1020,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVQ_VqWq(bxInstruction_c *i)
   BX_WRITE_XMM_REG(i->nnn(), op);
 #else
   BX_INFO(("MOVQ_VqWq: required SSE2, use --enable-sse option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -1044,7 +1044,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVQ_WqVq(bxInstruction_c *i)
   }
 #else
   BX_INFO(("MOVQ_WqVq: required SSE2, use --enable-sse option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -1061,7 +1061,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVDQ2Q_PqVRq(bxInstruction_c *i)
   BX_WRITE_MMX_REG(i->rm(), mm);
 #else
   BX_INFO(("MOVDQ2Q_PqVRq: required SSE2, use --enable-sse option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -1081,7 +1081,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVQ2DQ_VdqQq(bxInstruction_c *i)
   BX_WRITE_XMM_REG(i->rm(), op);
 #else
   BX_INFO(("MOVQ2DQ_VdqQq: required SSE2, use --enable-sse option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -1116,7 +1116,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVMSKB_GdUdq(bxInstruction_c *i)
 
 #else
   BX_INFO(("PMOVMSKB_GdUdq: required SSE2, use --enable-sse option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -1132,7 +1132,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVNTI_MdGd(bxInstruction_c *i)
   write_virtual_dword(i->seg(), RMAddr(i), BX_READ_32BIT_REG(i->nnn()));
 #else
   BX_INFO(("MOVNTI_MdGd: required SSE2, use --enable-sse option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -1146,7 +1146,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVNTI_MqGq(bxInstruction_c *i)
   write_virtual_qword_64(i->seg(), RMAddr(i), BX_READ_64BIT_REG(i->nnn()));
 #else
   BX_INFO(("MOVNTI_MqGq: required SSE2, use --enable-sse option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -1163,7 +1163,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVNTPS_MpsVps(bxInstruction_c *i)
   write_virtual_dqword_aligned(i->seg(), RMAddr(i), (Bit8u *)(&BX_READ_XMM_REG(i->nnn())));
 #else
   BX_INFO(("MOVNTPS_MpsVps: required SSE, use --enable-sse option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -1204,7 +1204,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVSXBW_VdqWq(bxInstruction_c *i)
   BX_WRITE_XMM_REG(i->nnn(), result);
 #else
   BX_INFO(("PMOVSXBW_VdqWq: required SSE4, use --enable-sse option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -1235,7 +1235,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVSXBD_VdqWd(bxInstruction_c *i)
   BX_WRITE_XMM_REG(i->nnn(), result);
 #else
   BX_INFO(("PMOVSXBD_VdqWd: required SSE4, use --enable-sse option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -1264,7 +1264,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVSXBQ_VdqWw(bxInstruction_c *i)
   BX_WRITE_XMM_REG(i->nnn(), result);
 #else
   BX_INFO(("PMOVSXBQ_VdqWw: required SSE4, use --enable-sse option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -1295,7 +1295,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVSXWD_VdqWq(bxInstruction_c *i)
   BX_WRITE_XMM_REG(i->nnn(), result);
 #else
   BX_INFO(("PMOVSXWD_VdqWq: required SSE4, use --enable-sse option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -1324,7 +1324,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVSXWQ_VdqWd(bxInstruction_c *i)
   BX_WRITE_XMM_REG(i->nnn(), result);
 #else
   BX_INFO(("PMOVSXWQ_VdqWd: required SSE4, use --enable-sse option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -1353,7 +1353,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVSXDQ_VdqWq(bxInstruction_c *i)
   BX_WRITE_XMM_REG(i->nnn(), result);
 #else
   BX_INFO(("PMOVSXDQ_VdqWq: required SSE4, use --enable-sse option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -1364,7 +1364,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVNTDQA_VdqMdq(bxInstruction_c *i)
   /* source must be memory reference */
   if (i->modC0()) {
     BX_INFO(("MOVNTDQA_VdqMdq: must be memory reference"));
-    UndefinedOpcode(i);
+    exception(BX_UD_EXCEPTION, 0, 0);
   }
 
   BX_CPU_THIS_PTR prepareSSE();
@@ -1380,7 +1380,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVNTDQA_VdqMdq(bxInstruction_c *i)
 
 #else
   BX_INFO(("MOVNTDQA_VdqMdq: required SSE4, use --enable-sse option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -1415,7 +1415,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVZXBW_VdqWq(bxInstruction_c *i)
   BX_WRITE_XMM_REG(i->nnn(), result);
 #else
   BX_INFO(("PMOVZXBW_VdqWq: required SSE4, use --enable-sse option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -1446,7 +1446,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVZXBD_VdqWd(bxInstruction_c *i)
   BX_WRITE_XMM_REG(i->nnn(), result);
 #else
   BX_INFO(("PMOVZXBD_VdqWd: required SSE4, use --enable-sse option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -1475,7 +1475,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVZXBQ_VdqWw(bxInstruction_c *i)
   BX_WRITE_XMM_REG(i->nnn(), result);
 #else
   BX_INFO(("PMOVZXBQ_VdqWw: required SSE4, use --enable-sse option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -1506,7 +1506,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVZXWD_VdqWq(bxInstruction_c *i)
   BX_WRITE_XMM_REG(i->nnn(), result);
 #else
   BX_INFO(("PMOVZXWD_VdqWq: required SSE4, use --enable-sse option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -1535,7 +1535,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVZXWQ_VdqWd(bxInstruction_c *i)
   BX_WRITE_XMM_REG(i->nnn(), result);
 #else
   BX_INFO(("PMOVZXWQ_VdqWd: required SSE4, use --enable-sse option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -1564,7 +1564,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVZXDQ_VdqWq(bxInstruction_c *i)
   BX_WRITE_XMM_REG(i->nnn(), result);
 #else
   BX_INFO(("PMOVZXDQ_VdqWq: required SSE4, use --enable-sse option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -1627,7 +1627,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PALIGNR_VdqWdqIb(bxInstruction_c *i)
   BX_WRITE_XMM_REG(i->nnn(), result);
 #else
   BX_INFO(("PALIGNR_VdqWdqIb: required SSE3E, use --enable-sse and --enable-sse-extension options"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 

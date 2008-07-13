@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: xsave.cc,v 1.11 2008-06-12 19:14:40 sshwarts Exp $
+// $Id: xsave.cc,v 1.12 2008-07-13 15:35:09 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008 Stanislav Shwartsman
@@ -147,7 +147,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVE(bxInstruction_c *i)
   // skip header update for now, required to know if a CPU feature is in its initial state
 #else
   BX_INFO(("XSAVE: required XSAVE support, use --enable-xsave option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -288,7 +288,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
   }
 #else
   BX_INFO(("XRSTOR: required XSAVE support, use --enable-xsave option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -312,7 +312,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XGETBV(bxInstruction_c *i)
   RAX = BX_CPU_THIS_PTR xcr0.getRegister();
 #else
   BX_INFO(("XGETBV: required XSAVE support, use --enable-xsave option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -350,6 +350,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XSETBV(bxInstruction_c *i)
   BX_CPU_THIS_PTR xcr0.setRegister(EAX);
 #else
   BX_INFO(("XSETBV: required XSAVE support, use --enable-xsave option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }

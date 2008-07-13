@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: aes.cc,v 1.1 2008-05-30 20:37:52 sshwarts Exp $
+// $Id: aes.cc,v 1.2 2008-07-13 15:35:09 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008 Stanislav Shwartsman
@@ -312,7 +312,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::AESIMC_VdqWdq(bxInstruction_c *i)
   BX_WRITE_XMM_REG(i->nnn(), op);
 #else
   BX_INFO(("AESIMC_VdqWdq: required AES support, use --enable-aes option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -344,7 +344,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::AESENC_VdqWdq(bxInstruction_c *i)
   BX_WRITE_XMM_REG(i->nnn(), op1);
 #else
   BX_INFO(("AESENC_VdqWdq: required AES support, use --enable-aes option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -375,7 +375,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::AESENCLAST_VdqWdq(bxInstruction_c *i)
   BX_WRITE_XMM_REG(i->nnn(), op1);
 #else
   BX_INFO(("AESENCLAST_VdqWdq: required AES support, use --enable-aes option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -407,7 +407,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::AESDEC_VdqWdq(bxInstruction_c *i)
   BX_WRITE_XMM_REG(i->nnn(), op1);
 #else
   BX_INFO(("AESDEC_VdqWdq: required AES support, use --enable-aes option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -438,7 +438,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::AESDECLAST_VdqWdq(bxInstruction_c *i)
   BX_WRITE_XMM_REG(i->nnn(), op1);
 #else
   BX_INFO(("AESDECLAST_VdqWdq: required AES support, use --enable-aes option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -470,6 +470,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::AESKEYGENASSIST_VdqWdqIb(bxInstruction_c *
   BX_WRITE_XMM_REG(i->nnn(), result);
 #else
   BX_INFO(("AESKEYGENASSIST_VdqWdqIb: required AES support, use --enable-aes option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }

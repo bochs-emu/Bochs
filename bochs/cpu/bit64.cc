@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bit64.cc,v 1.12 2008-05-10 18:10:52 sshwarts Exp $
+// $Id: bit64.cc,v 1.13 2008-07-13 15:35:09 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -372,7 +372,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::POPCNT_GqEq(bxInstruction_c *i)
   BX_WRITE_64BIT_REG(i->nnn(), op1_64);
 #else
   BX_INFO(("POPCNT_GqEq: required POPCNT support, use --enable-popcnt option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 

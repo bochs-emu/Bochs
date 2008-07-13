@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith32.cc,v 1.79 2008-07-13 09:59:57 sshwarts Exp $
+// $Id: arith32.cc,v 1.80 2008-07-13 15:35:09 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -384,13 +384,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CDQ(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPXCHG_XBTS(bxInstruction_c *i)
 {
   BX_INFO(("CMPXCHG_XBTS: Generate #UD exception"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPXCHG_IBTS(bxInstruction_c *i)
 {
   BX_INFO(("CMPXCHG_IBTS: Generate #UD exception"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::XADD_EdGdM(bxInstruction_c *i)
@@ -417,7 +417,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XADD_EdGdM(bxInstruction_c *i)
   SET_FLAGS_OSZAPC_ADD_32(op1_32, op2_32, sum_32);
 #else
   BX_INFO (("XADD_EdGd not supported for cpulevel <= 3"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -446,7 +446,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XADD_EdGdR(bxInstruction_c *i)
   SET_FLAGS_OSZAPC_ADD_32(op1_32, op2_32, sum_32);
 #else
   BX_INFO (("XADD_EdGd not supported for cpulevel <= 3"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -623,7 +623,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPXCHG_EdGdM(bxInstruction_c *i)
   }
 #else
   BX_INFO(("CMPXCHG_EdGd: not supported for cpulevel <= 3"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -647,7 +647,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPXCHG_EdGdR(bxInstruction_c *i)
   }
 #else
   BX_INFO(("CMPXCHG_EdGd: not supported for cpulevel <= 3"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -677,6 +677,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPXCHG8B(bxInstruction_c *i)
 
 #else
   BX_INFO(("CMPXCHG8B: not supported for cpulevel <= 4"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }

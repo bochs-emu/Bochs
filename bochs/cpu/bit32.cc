@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bit32.cc,v 1.9 2008-07-13 10:44:34 sshwarts Exp $
+// $Id: bit32.cc,v 1.10 2008-07-13 15:35:09 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -392,7 +392,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::POPCNT_GdEd(bxInstruction_c *i)
   BX_WRITE_32BIT_REGZ(i->nnn(), op1_32);
 #else
   BX_INFO(("POPCNT_GdEd: required POPCNT support, use --enable-popcnt option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 

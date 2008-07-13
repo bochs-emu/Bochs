@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_rcp.cc,v 1.18 2008-03-22 21:29:41 sshwarts Exp $
+// $Id: sse_rcp.cc,v 1.19 2008-07-13 15:35:09 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -369,7 +369,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RCPPS_VpsWps(bxInstruction_c *i)
 
 #else
   BX_INFO(("RCPPS_VpsWps: required SSE, use --enable-sse option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -399,7 +399,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RCPSS_VssWss(bxInstruction_c *i)
 
 #else
   BX_INFO(("RCPSS_VssWss: required SSE, use --enable-sse option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -749,7 +749,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RSQRTSS_VssWss(bxInstruction_c *i)
 
 #else
   BX_INFO(("RSQRTSS_VssWss: required SSE, use --enable-sse option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -783,6 +783,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RSQRTPS_VpsWps(bxInstruction_c *i)
   BX_WRITE_XMM_REG(i->nnn(), op);
 #else
   BX_INFO(("RSQRTPS_VpsWps: required SSE, use --enable-sse option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }

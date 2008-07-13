@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.195 2008-07-13 09:59:57 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.196 2008-07-13 15:35:09 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2951,5 +2951,5 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BxError(bxInstruction_c *i)
   BX_DEBUG(("modrm was 0x%02x, nnn was %u, rm was %u", i->modrm(), i->nnn(), i->rm()));
   BX_DEBUG(("WARNING: Encountered an unknown instruction (signalling #UD)"));
 
-  BX_CPU_THIS_PTR UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 }

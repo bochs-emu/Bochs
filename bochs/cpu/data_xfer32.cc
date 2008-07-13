@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: data_xfer32.cc,v 1.56 2008-07-13 10:06:07 sshwarts Exp $
+// $Id: data_xfer32.cc,v 1.57 2008-07-13 15:35:09 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -207,7 +207,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVO_GdEdM(bxInstruction_c *i)
   BX_CLEAR_64BIT_HIGH(i->nnn()); // always clear upper part of the register
 #else
   BX_INFO(("CMOVO_GdEd: --enable-cpu-level=6 required"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -220,7 +220,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVO_GdEdR(bxInstruction_c *i)
   BX_CLEAR_64BIT_HIGH(i->nnn()); // always clear upper part of the register
 #else
   BX_INFO(("CMOVO_GdEd: --enable-cpu-level=6 required"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -237,7 +237,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVNO_GdEdM(bxInstruction_c *i)
   BX_CLEAR_64BIT_HIGH(i->nnn()); // always clear upper part of the register
 #else
   BX_INFO(("CMOVNO_GdEd: --enable-cpu-level=6 required"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -250,7 +250,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVNO_GdEdR(bxInstruction_c *i)
   BX_CLEAR_64BIT_HIGH(i->nnn()); // always clear upper part of the register
 #else
   BX_INFO(("CMOVNO_GdEd: --enable-cpu-level=6 required"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -267,7 +267,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVB_GdEdM(bxInstruction_c *i)
   BX_CLEAR_64BIT_HIGH(i->nnn()); // always clear upper part of the register
 #else
   BX_INFO(("CMOVB_GdEd: --enable-cpu-level=6 required"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -280,7 +280,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVB_GdEdR(bxInstruction_c *i)
   BX_CLEAR_64BIT_HIGH(i->nnn()); // always clear upper part of the register
 #else
   BX_INFO(("CMOVB_GdEd: --enable-cpu-level=6 required"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -297,7 +297,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVNB_GdEdM(bxInstruction_c *i)
   BX_CLEAR_64BIT_HIGH(i->nnn()); // always clear upper part of the register
 #else
   BX_INFO(("CMOVNB_GdEd: --enable-cpu-level=6 required"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -310,7 +310,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVNB_GdEdR(bxInstruction_c *i)
   BX_CLEAR_64BIT_HIGH(i->nnn()); // always clear upper part of the register
 #else
   BX_INFO(("CMOVNB_GdEd: --enable-cpu-level=6 required"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -327,7 +327,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVZ_GdEdM(bxInstruction_c *i)
   BX_CLEAR_64BIT_HIGH(i->nnn()); // always clear upper part of the register
 #else
   BX_INFO(("CMOVZ_GdEd: --enable-cpu-level=6 required"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -340,7 +340,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVZ_GdEdR(bxInstruction_c *i)
   BX_CLEAR_64BIT_HIGH(i->nnn()); // always clear upper part of the register
 #else
   BX_INFO(("CMOVZ_GdEd: --enable-cpu-level=6 required"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -357,7 +357,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVNZ_GdEdM(bxInstruction_c *i)
   BX_CLEAR_64BIT_HIGH(i->nnn()); // always clear upper part of the register
 #else
   BX_INFO(("CMOVNZ_GdEd: --enable-cpu-level=6 required"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -370,7 +370,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVNZ_GdEdR(bxInstruction_c *i)
   BX_CLEAR_64BIT_HIGH(i->nnn()); // always clear upper part of the register
 #else
   BX_INFO(("CMOVNZ_GdEd: --enable-cpu-level=6 required"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -387,7 +387,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVBE_GdEdM(bxInstruction_c *i)
   BX_CLEAR_64BIT_HIGH(i->nnn()); // always clear upper part of the register
 #else
   BX_INFO(("CMOVBE_GdEd: --enable-cpu-level=6 required"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -400,7 +400,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVBE_GdEdR(bxInstruction_c *i)
   BX_CLEAR_64BIT_HIGH(i->nnn()); // always clear upper part of the register
 #else
   BX_INFO(("CMOVBE_GdEd: --enable-cpu-level=6 required"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -417,7 +417,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVNBE_GdEdM(bxInstruction_c *i)
   BX_CLEAR_64BIT_HIGH(i->nnn()); // always clear upper part of the register
 #else
   BX_INFO(("CMOVNBE_GdEd: --enable-cpu-level=6 required"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -430,7 +430,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVNBE_GdEdR(bxInstruction_c *i)
   BX_CLEAR_64BIT_HIGH(i->nnn()); // always clear upper part of the register
 #else
   BX_INFO(("CMOVNBE_GdEd: --enable-cpu-level=6 required"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -447,7 +447,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVS_GdEdM(bxInstruction_c *i)
   BX_CLEAR_64BIT_HIGH(i->nnn()); // always clear upper part of the register
 #else
   BX_INFO(("CMOVS_GdEd: --enable-cpu-level=6 required"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -460,7 +460,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVS_GdEdR(bxInstruction_c *i)
   BX_CLEAR_64BIT_HIGH(i->nnn()); // always clear upper part of the register
 #else
   BX_INFO(("CMOVS_GdEd: --enable-cpu-level=6 required"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -477,7 +477,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVNS_GdEdM(bxInstruction_c *i)
   BX_CLEAR_64BIT_HIGH(i->nnn()); // always clear upper part of the register
 #else
   BX_INFO(("CMOVNS_GdEd: --enable-cpu-level=6 required"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -490,7 +490,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVNS_GdEdR(bxInstruction_c *i)
   BX_CLEAR_64BIT_HIGH(i->nnn()); // always clear upper part of the register
 #else
   BX_INFO(("CMOVNS_GdEd: --enable-cpu-level=6 required"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -507,7 +507,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVP_GdEdM(bxInstruction_c *i)
   BX_CLEAR_64BIT_HIGH(i->nnn()); // always clear upper part of the register
 #else
   BX_INFO(("CMOVP_GdEd: --enable-cpu-level=6 required"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -520,7 +520,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVP_GdEdR(bxInstruction_c *i)
   BX_CLEAR_64BIT_HIGH(i->nnn()); // always clear upper part of the register
 #else
   BX_INFO(("CMOVP_GdEd: --enable-cpu-level=6 required"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -537,7 +537,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVNP_GdEdM(bxInstruction_c *i)
   BX_CLEAR_64BIT_HIGH(i->nnn()); // always clear upper part of the register
 #else
   BX_INFO(("CMOVNP_GdEd: --enable-cpu-level=6 required"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -550,7 +550,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVNP_GdEdR(bxInstruction_c *i)
   BX_CLEAR_64BIT_HIGH(i->nnn()); // always clear upper part of the register
 #else
   BX_INFO(("CMOVNP_GdEd: --enable-cpu-level=6 required"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -567,7 +567,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVL_GdEdM(bxInstruction_c *i)
   BX_CLEAR_64BIT_HIGH(i->nnn()); // always clear upper part of the register
 #else
   BX_INFO(("CMOVL_GdEd: --enable-cpu-level=6 required"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -580,7 +580,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVL_GdEdR(bxInstruction_c *i)
   BX_CLEAR_64BIT_HIGH(i->nnn()); // always clear upper part of the register
 #else
   BX_INFO(("CMOVL_GdEd: --enable-cpu-level=6 required"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -597,7 +597,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVNL_GdEdM(bxInstruction_c *i)
   BX_CLEAR_64BIT_HIGH(i->nnn()); // always clear upper part of the register
 #else
   BX_INFO(("CMOVNL_GdEd: --enable-cpu-level=6 required"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -610,7 +610,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVNL_GdEdR(bxInstruction_c *i)
   BX_CLEAR_64BIT_HIGH(i->nnn()); // always clear upper part of the register
 #else
   BX_INFO(("CMOVNL_GdEd: --enable-cpu-level=6 required"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -627,7 +627,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVLE_GdEdM(bxInstruction_c *i)
   BX_CLEAR_64BIT_HIGH(i->nnn()); // always clear upper part of the register
 #else
   BX_INFO(("CMOVLE_GdEd: --enable-cpu-level=6 required"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -640,7 +640,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVLE_GdEdR(bxInstruction_c *i)
   BX_CLEAR_64BIT_HIGH(i->nnn()); // always clear upper part of the register
 #else
   BX_INFO(("CMOVLE_GdEd: --enable-cpu-level=6 required"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -657,7 +657,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVNLE_GdEdM(bxInstruction_c *i)
   BX_CLEAR_64BIT_HIGH(i->nnn()); // always clear upper part of the register
 #else
   BX_INFO(("CMOVNLE_GdEd: --enable-cpu-level=6 required"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -670,6 +670,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVNLE_GdEdR(bxInstruction_c *i)
   BX_CLEAR_64BIT_HIGH(i->nnn()); // always clear upper part of the register
 #else
   BX_INFO(("CMOVNLE_GdEd: --enable-cpu-level=6 required"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }

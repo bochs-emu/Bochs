@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.247 2008-07-13 10:44:34 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.248 2008-07-13 15:35:09 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -156,7 +156,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INVD(bxInstruction_c *i)
 
 #else
   BX_INFO(("INVD: required 486 support, use --enable-cpu-level=4 option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -179,7 +179,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::WBINVD(bxInstruction_c *i)
 
 #else
   BX_INFO(("WBINVD: required 486 support, use --enable-cpu-level=4 option"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -219,7 +219,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CLFLUSH(bxInstruction_c *i)
 
 #else
   BX_INFO(("CLFLUSH: not supported, enable with SSE2"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -230,7 +230,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_DdRd(bxInstruction_c *i)
   if (BX_CPU_THIS_PTR cr4.get_DE()) {
     if ((i->nnn() & 0xE) == 4) {
       BX_ERROR(("MOV_DdRd: access to DR4/DR5 causes #UD"));
-      UndefinedOpcode(i);
+      exception(BX_UD_EXCEPTION, 0, 0);
     }
   }
 #endif
@@ -335,7 +335,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_DdRd(bxInstruction_c *i)
 
     default:
       BX_ERROR(("MOV_DdRd: #UD - register index out of range"));
-      UndefinedOpcode(i);
+      exception(BX_UD_EXCEPTION, 0, 0);
   }
 }
 
@@ -347,7 +347,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RdDd(bxInstruction_c *i)
   if (BX_CPU_THIS_PTR cr4.get_DE()) {
     if ((i->nnn() & 0xE) == 4) {
       BX_ERROR(("MOV_RdDd: access to DR4/DR5 causes #UD"));
-      UndefinedOpcode(i);
+      exception(BX_UD_EXCEPTION, 0, 0);
     }
   }
 #endif
@@ -395,7 +395,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RdDd(bxInstruction_c *i)
 
     default:
       BX_ERROR(("MOV_RdDd: #UD - register index out of range"));
-      UndefinedOpcode(i);
+      exception(BX_UD_EXCEPTION, 0, 0);
   }
 
   BX_WRITE_32BIT_REGZ(i->rm(), val_32);
@@ -413,7 +413,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_DqRq(bxInstruction_c *i)
   if (BX_CPU_THIS_PTR cr4.get_DE()) {
     if ((i->nnn() & 0xE) == 4) {
       BX_ERROR(("MOV_DqRq: access to DR4/DR5 causes #UD"));
-      UndefinedOpcode(i);
+      exception(BX_UD_EXCEPTION, 0, 0);
     }
   }
 
@@ -494,7 +494,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_DqRq(bxInstruction_c *i)
 
     default:
       BX_ERROR(("MOV_DqRq: #UD - register index out of range"));
-      UndefinedOpcode(i);
+      exception(BX_UD_EXCEPTION, 0, 0);
   }
 }
 
@@ -505,7 +505,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RqDq(bxInstruction_c *i)
   if (BX_CPU_THIS_PTR cr4.get_DE()) {
     if ((i->nnn() & 0xE) == 4) {
       BX_ERROR(("MOV_RqDq: access to DR4/DR5 causes #UD"));
-      UndefinedOpcode(i);
+      exception(BX_UD_EXCEPTION, 0, 0);
     }
   }
 
@@ -553,7 +553,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RqDq(bxInstruction_c *i)
 
     default:
       BX_ERROR(("MOV_RqDq: #UD - register index out of range"));
-      UndefinedOpcode(i);
+      exception(BX_UD_EXCEPTION, 0, 0);
   }
 
   BX_WRITE_64BIT_REG(i->rm(), val_64);
@@ -607,7 +607,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CdRd(bxInstruction_c *i)
 #endif
     default:
       BX_ERROR(("MOV_CdRd: #UD - control register %d index out of range", i->nnn()));
-      UndefinedOpcode(i);
+      exception(BX_UD_EXCEPTION, 0, 0);
   }
 }
 
@@ -653,7 +653,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RdCd(bxInstruction_c *i)
       break;
     default:
       BX_ERROR(("MOV_RdCd: #UD - control register %d index out of range", i->nnn()));
-      UndefinedOpcode(i);
+      exception(BX_UD_EXCEPTION, 0, 0);
   }
 
   BX_WRITE_32BIT_REGZ(i->rm(), val_32);
@@ -723,7 +723,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CqRq(bxInstruction_c *i)
 #endif
     default:
       BX_ERROR(("MOV_CqRq: #UD - control register %d index out of range", i->nnn()));
-      UndefinedOpcode(i);
+      exception(BX_UD_EXCEPTION, 0, 0);
   }
 }
 
@@ -780,7 +780,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RqCq(bxInstruction_c *i)
 #endif
     default:
       BX_ERROR(("MOV_RqCq: #UD - control register %d index out of range", i->nnn()));
-      UndefinedOpcode(i);
+      exception(BX_UD_EXCEPTION, 0, 0);
   }
 
   BX_WRITE_64BIT_REG(i->rm(), val_64);
@@ -847,7 +847,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_TdRd(bxInstruction_c *i)
 #else
   // Pentium+ does not have TRx.  They were redesigned using the MSRs.
   BX_INFO(("MOV_TdRd: causes #UD"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -858,7 +858,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RdTd(bxInstruction_c *i)
 #else
   // Pentium+ does not have TRx.  They were redesigned using the MSRs.
   BX_INFO(("MOV_RdTd: causes #UD"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -1390,7 +1390,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDPMC(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 #else
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -1426,7 +1426,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDTSC(bxInstruction_c *i)
   }
 #else
   BX_INFO(("RDTSC: Pentium CPU required, use --enable-cpu=5"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -1630,7 +1630,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDMSR(bxInstruction_c *i)
   }
 #else
   BX_INFO(("RDMSR: Pentium CPU required, use --enable-cpu-level=5"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -1863,7 +1863,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRMSR(bxInstruction_c *i)
   }
 #else
   BX_INFO(("WRMSR: Pentium CPU required, use --enable-cpu-level=5"));
-  UndefinedOpcode(i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -1940,7 +1940,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MONITOR(bxInstruction_c *i)
 
 #else
   BX_INFO(("MONITOR: use --enable-monitor-mwait to enable MONITOR/MWAIT support"));
-  UndefinedOpcode (i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -1994,7 +1994,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MWAIT(bxInstruction_c *i)
 
 #else
   BX_INFO(("MWAIT: use --enable-monitor-mwait to enable MONITOR/MWAIT support"));
-  UndefinedOpcode (i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -2093,7 +2093,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSENTER(bxInstruction_c *i)
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, RIP);
 #else
   BX_INFO(("SYSENTER: use --enable-sep to enable SYSENTER/SYSEXIT support"));
-  UndefinedOpcode (i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -2204,7 +2204,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSEXIT(bxInstruction_c *i)
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, RIP);
 #else
   BX_INFO(("SYSEXIT: use --enable-sep to enable SYSENTER/SYSEXIT support"));
-  UndefinedOpcode (i);
+  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 

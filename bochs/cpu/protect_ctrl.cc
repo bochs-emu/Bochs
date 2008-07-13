@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: protect_ctrl.cc,v 1.88 2008-06-12 19:14:39 sshwarts Exp $
+// $Id: protect_ctrl.cc,v 1.89 2008-07-13 15:35:09 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -36,7 +36,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ARPL_EwGw(bxInstruction_c *i)
 
   if (real_mode() || v8086_mode()) {
     BX_DEBUG(("ARPL: not recognized in real or virtual-8086 mode"));
-    UndefinedOpcode(i);
+    exception(BX_UD_EXCEPTION, 0, 0);
   }
 
   /* op1_16 is a register or memory reference */
@@ -77,7 +77,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LAR_GvEw(bxInstruction_c *i)
 
   if (real_mode() || v8086_mode()) {
     BX_ERROR(("LAR: not recognized in real or virtual-8086 mode"));
-    UndefinedOpcode(i);
+    exception(BX_UD_EXCEPTION, 0, 0);
   }
 
   if (i->modC0()) {
@@ -185,7 +185,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LSL_GvEw(bxInstruction_c *i)
 
   if (real_mode() || v8086_mode()) {
     BX_ERROR(("LSL: not recognized in real or virtual-8086 mode"));
-    UndefinedOpcode(i);
+    exception(BX_UD_EXCEPTION, 0, 0);
   }
 
   if (i->modC0()) {
@@ -267,7 +267,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SLDT_Ew(bxInstruction_c *i)
 {
   if (real_mode() || v8086_mode()) {
     BX_ERROR(("SLDT: not recognized in real or virtual-8086 mode"));
-    UndefinedOpcode(i);
+    exception(BX_UD_EXCEPTION, 0, 0);
   }
 
   Bit16u val16 = BX_CPU_THIS_PTR ldtr.selector.value;
@@ -290,7 +290,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::STR_Ew(bxInstruction_c *i)
 {
   if (real_mode() || v8086_mode()) {
     BX_ERROR(("STR: not recognized in real or virtual-8086 mode"));
-    UndefinedOpcode(i);
+    exception(BX_UD_EXCEPTION, 0, 0);
   }
 
   Bit16u val16 = BX_CPU_THIS_PTR tr.selector.value;
@@ -322,7 +322,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LLDT_Ew(bxInstruction_c *i)
 
   if (real_mode() || v8086_mode()) {
     BX_ERROR(("LLDT: not recognized in real or virtual-8086 mode"));
-    UndefinedOpcode(i);
+    exception(BX_UD_EXCEPTION, 0, 0);
   }
 
   if (CPL != 0) {
@@ -411,7 +411,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LTR_Ew(bxInstruction_c *i)
 
   if (real_mode() || v8086_mode()) {
     BX_ERROR(("LTR: not recognized in real or virtual-8086 mode"));
-    UndefinedOpcode(i);
+    exception(BX_UD_EXCEPTION, 0, 0);
   }
 
   if (CPL != 0) {
@@ -514,7 +514,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VERR_Ew(bxInstruction_c *i)
 
   if (real_mode() || v8086_mode()) {
     BX_ERROR(("VERR: not recognized in real or virtual-8086 mode"));
-    UndefinedOpcode(i);
+    exception(BX_UD_EXCEPTION, 0, 0);
   }
 
   if (i->modC0()) {
@@ -603,7 +603,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VERW_Ew(bxInstruction_c *i)
 
   if (real_mode() || v8086_mode()) {
     BX_ERROR(("VERW: not recognized in real or virtual-8086 mode"));
-    UndefinedOpcode(i);
+    exception(BX_UD_EXCEPTION, 0, 0);
   }
 
   if (i->modC0()) {
