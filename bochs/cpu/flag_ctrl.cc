@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: flag_ctrl.cc,v 1.39 2008-07-13 10:44:34 sshwarts Exp $
+// $Id: flag_ctrl.cc,v 1.40 2008-07-13 14:01:09 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -63,7 +63,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CLI(bxInstruction_c *i)
 {
   Bit32u IOPL = BX_CPU_THIS_PTR get_IOPL();
 
-#if BX_CPU_LEVEL >= 2
   if (protected_mode())
   {
 #if BX_SUPPORT_VME
@@ -83,7 +82,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CLI(bxInstruction_c *i)
       }
     }
   }
-#if BX_CPU_LEVEL >= 3
   else if (v8086_mode())
   {
     if (IOPL != 3) {
@@ -97,8 +95,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CLI(bxInstruction_c *i)
       exception(BX_GP_EXCEPTION, 0, 0);
     }
   }
-#endif
-#endif
 
   BX_CPU_THIS_PTR clear_IF();
 }
@@ -107,7 +103,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::STI(bxInstruction_c *i)
 {
   Bit32u IOPL = BX_CPU_THIS_PTR get_IOPL();
 
-#if BX_CPU_LEVEL >= 2
   if (protected_mode())
   {
 #if BX_SUPPORT_VME
@@ -130,7 +125,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::STI(bxInstruction_c *i)
       exception(BX_GP_EXCEPTION, 0, 0);
     }
   }
-#if BX_CPU_LEVEL >= 3
   else if (v8086_mode())
   {
     if (IOPL != 3) {
@@ -145,8 +139,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::STI(bxInstruction_c *i)
       exception(BX_GP_EXCEPTION, 0, 0);
     }
   }
-#endif
-#endif
 
   if (!BX_CPU_THIS_PTR get_IF()) {
     BX_CPU_THIS_PTR assert_IF();
