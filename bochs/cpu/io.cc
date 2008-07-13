@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: io.cc,v 1.63 2008-07-13 13:24:36 sshwarts Exp $
+// $Id: io.cc,v 1.64 2008-07-13 13:32:15 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -333,10 +333,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INSW16_YwDX(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
-  Bit16u di = DI;
-
   // trigger any segment or page faults before reading from IO port
-  Bit16u value16 = read_RMW_virtual_word_32(BX_SEG_REG_ES, di);
+  Bit16u value16 = read_RMW_virtual_word_32(BX_SEG_REG_ES, DI);
 
   value16 = BX_INP(DX, 2);
 
@@ -414,21 +412,17 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INSW64_YwDX(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
-  Bit64u rdi = RDI;
-
   // trigger any segment or page faults before reading from IO port
-  Bit16u value16 = read_RMW_virtual_word_64(BX_SEG_REG_ES, rdi);
+  Bit16u value16 = read_RMW_virtual_word_64(BX_SEG_REG_ES, RDI);
 
   value16 = BX_INP(DX, 2);
 
   write_RMW_virtual_word(value16);
 
   if (BX_CPU_THIS_PTR get_DF())
-    rdi -= 2;
+    RDI -= 2;
   else
-    rdi += 2;
-
-  RDI = rdi;
+    RDI += 2;
 }
 
 #endif
@@ -458,21 +452,17 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INSD16_YdDX(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
-  Bit16u di = DI;
-
   // trigger any segment or page faults before reading from IO port
-  Bit32u value32 = read_RMW_virtual_dword_32(BX_SEG_REG_ES, di);
+  Bit32u value32 = read_RMW_virtual_dword_32(BX_SEG_REG_ES, DI);
 
   value32 = BX_INP(DX, 4);
 
   write_RMW_virtual_dword(value32);
 
   if (BX_CPU_THIS_PTR get_DF())
-    di -= 4;
+    DI -= 4;
   else
-    di += 4;
-
-  DI = di;
+    DI += 4;
 }
 
 // 32-bit operand size, 32-bit address size
@@ -483,21 +473,17 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INSD32_YdDX(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
-  Bit32u edi = EDI;
-
   // trigger any segment or page faults before reading from IO port
-  Bit32u value32 = read_RMW_virtual_dword_32(BX_SEG_REG_ES, edi);
+  Bit32u value32 = read_RMW_virtual_dword_32(BX_SEG_REG_ES, EDI);
 
   value32 = BX_INP(DX, 4);
 
   write_RMW_virtual_dword(value32);
 
   if (BX_CPU_THIS_PTR get_DF())
-    edi -= 4;
+    RDI = EDI - 4;
   else
-    edi += 4;
-
-  RDI = edi;
+    RDI = EDI + 4;
 }
 
 #if BX_SUPPORT_X86_64
@@ -510,21 +496,17 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INSD64_YdDX(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
-  Bit64u rdi = RDI;
-
   // trigger any segment or page faults before reading from IO port
-  Bit32u value32 = read_RMW_virtual_dword_64(BX_SEG_REG_ES, rdi);
+  Bit32u value32 = read_RMW_virtual_dword_64(BX_SEG_REG_ES, RDI);
 
   value32 = BX_INP(DX, 4);
 
   write_RMW_virtual_dword(value32);
 
   if (BX_CPU_THIS_PTR get_DF())
-    rdi -= 4;
+    RDI -= 4;
   else
-    rdi += 4;
-
-  RDI = rdi;
+    RDI += 4;
 }
 
 #endif
@@ -558,17 +540,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::OUTSB16_DXXb(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
-  Bit16u si = SI;
-
-  Bit8u value8 = read_virtual_byte_32(i->seg(), si);
+  Bit8u value8 = read_virtual_byte_32(i->seg(), SI);
   BX_OUTP(DX, value8, 1);
 
   if (BX_CPU_THIS_PTR get_DF())
-    si--;
+    SI--;
   else
-    si++;
-
-  SI = si;
+    SI++;
 }
 
 // 32-bit address size
@@ -579,17 +557,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::OUTSB32_DXXb(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
-  Bit32u esi = ESI;
-
-  Bit8u value8 = read_virtual_byte(i->seg(), esi);
+  Bit8u value8 = read_virtual_byte(i->seg(), ESI);
   BX_OUTP(DX, value8, 1);
 
   if (BX_CPU_THIS_PTR get_DF())
-    esi--;
+    RSI = ESI - 1;
   else
-    esi++;
-
-  RSI = esi;
+    RSI = ESI + 1;
 }
 
 #if BX_SUPPORT_X86_64
@@ -602,17 +576,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::OUTSB64_DXXb(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
-  Bit64u rsi = RSI;
-
-  Bit8u value8 = read_virtual_byte_64(i->seg(), rsi);
+  Bit8u value8 = read_virtual_byte_64(i->seg(), RSI);
   BX_OUTP(DX, value8, 1);
 
   if (BX_CPU_THIS_PTR get_DF())
-    rsi--;
+    RSI--;
   else
-    rsi++;
-
-  RSI = rsi;
+    RSI++;
 }
 
 #endif
@@ -705,17 +675,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::OUTSW64_DXXw(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
-  Bit64u rsi = RSI;
-
-  Bit16u value16 = read_virtual_word_64(i->seg(), rsi);
+  Bit16u value16 = read_virtual_word_64(i->seg(), RSI);
   BX_OUTP(DX, value16, 2);
 
   if (BX_CPU_THIS_PTR get_DF())
-    rsi -= 2;
+    RSI -= 2;
   else
-    rsi += 2;
-
-  RSI = rsi;
+    RSI += 2;
 }
 
 #endif
@@ -745,17 +711,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::OUTSD16_DXXd(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
-  Bit16u si = SI;
-
-  Bit32u value32 = read_virtual_dword_32(i->seg(), si);
+  Bit32u value32 = read_virtual_dword_32(i->seg(), SI);
   BX_OUTP(DX, value32, 4);
 
   if (BX_CPU_THIS_PTR get_DF())
-    si -= 4;
+    SI -= 4;
   else
-    si += 4;
-
-  SI = si;
+    SI += 4;
 }
 
 // 32-bit operand size, 32-bit address size
@@ -766,17 +728,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::OUTSD32_DXXd(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
-  Bit32u esi = ESI;
-
-  Bit32u value32 = read_virtual_dword(i->seg(), esi);
+  Bit32u value32 = read_virtual_dword(i->seg(), ESI);
   BX_OUTP(DX, value32, 4);
 
   if (BX_CPU_THIS_PTR get_DF())
-    esi -= 4;
+    RSI = ESI - 4;
   else
-    esi += 4;
-
-  RSI = esi;
+    RSI = ESI + 4;
 }
 
 #if BX_SUPPORT_X86_64
@@ -789,17 +747,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::OUTSD64_DXXd(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
-  Bit64u rsi = RSI;
-
-  Bit32u value32 = read_virtual_dword_64(i->seg(), rsi);
+  Bit32u value32 = read_virtual_dword_64(i->seg(), RSI);
   BX_OUTP(DX, value32, 4);
 
   if (BX_CPU_THIS_PTR get_DF())
-    rsi -= 4;
+    RSI -= 4;
   else
-    rsi += 4;
-
-  RSI = rsi;
+    RSI += 4;
 }
 
 #endif
