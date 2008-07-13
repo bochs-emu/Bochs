@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: access64.cc,v 1.7 2008-07-13 08:43:54 sshwarts Exp $
+// $Id: access64.cc,v 1.8 2008-07-13 11:19:21 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008 Stanislav Shwartsman
@@ -109,7 +109,7 @@ BX_CPU_C::write_virtual_word_64(unsigned s, Bit64u offset, Bit16u data)
   }
 #endif
 
-  if (! IsCanonical(laddr)) {
+  if (! IsCanonical(laddr) || ! IsCanonical(laddr+1)) {
     BX_ERROR(("write_virtual_word_64(): canonical failure"));
     exception(int_number(s), 0, 0);
   }
@@ -157,7 +157,7 @@ BX_CPU_C::write_virtual_dword_64(unsigned s, Bit64u offset, Bit32u data)
   }
 #endif
 
-  if (! IsCanonical(laddr)) {
+  if (! IsCanonical(laddr) || ! IsCanonical(laddr+3)) {
     BX_ERROR(("write_virtual_dword_64(): canonical failure"));
     exception(int_number(s), 0, 0);
   }
@@ -205,7 +205,7 @@ BX_CPU_C::write_virtual_qword_64(unsigned s, Bit64u offset, Bit64u data)
   }
 #endif
 
-  if (! IsCanonical(laddr)) {
+  if (! IsCanonical(laddr) || ! IsCanonical(laddr+7)) {
     BX_ERROR(("write_virtual_qword_64(): canonical failure"));
     exception(int_number(s), 0, 0);
   }
@@ -287,7 +287,7 @@ BX_CPU_C::read_virtual_word_64(unsigned s, Bit64u offset)
   }
 #endif
 
-  if (! IsCanonical(laddr)) {
+  if (! IsCanonical(laddr) || ! IsCanonical(laddr+1)) {
     BX_ERROR(("read_virtual_word_64(): canonical failure"));
     exception(int_number(s), 0, 0);
   }
@@ -333,7 +333,7 @@ BX_CPU_C::read_virtual_dword_64(unsigned s, Bit64u offset)
   }
 #endif
 
-  if (! IsCanonical(laddr)) {
+  if (! IsCanonical(laddr) || ! IsCanonical(laddr+3)) {
     BX_ERROR(("read_virtual_dword_64(): canonical failure"));
     exception(int_number(s), 0, 0);
   }
@@ -379,7 +379,7 @@ BX_CPU_C::read_virtual_qword_64(unsigned s, Bit64u offset)
   }
 #endif
 
-  if (! IsCanonical(laddr)) {
+  if (! IsCanonical(laddr) || ! IsCanonical(laddr+7)) {
     BX_ERROR(("read_virtual_qword_64(): canonical failure"));
     exception(int_number(s), 0, 0);
   }
@@ -474,7 +474,7 @@ BX_CPU_C::read_RMW_virtual_word_64(unsigned s, Bit64u offset)
   }
 #endif
 
-  if (! IsCanonical(laddr)) {
+  if (! IsCanonical(laddr) || ! IsCanonical(laddr+1)) {
     BX_ERROR(("read_RMW_virtual_word_64(): canonical failure"));
     exception(int_number(s), 0, 0);
   }
@@ -524,7 +524,7 @@ BX_CPU_C::read_RMW_virtual_dword_64(unsigned s, Bit64u offset)
   }
 #endif
 
-  if (! IsCanonical(laddr)) {
+  if (! IsCanonical(laddr) || ! IsCanonical(laddr+3)) {
     BX_ERROR(("read_RMW_virtual_dword_64(): canonical failure"));
     exception(int_number(s), 0, 0);
   }
@@ -574,7 +574,7 @@ BX_CPU_C::read_RMW_virtual_qword_64(unsigned s, Bit64u offset)
   }
 #endif
 
-  if (! IsCanonical(laddr)) {
+  if (! IsCanonical(laddr) || ! IsCanonical(laddr+7)) {
     BX_ERROR(("read_RMW_virtual_qword_64(): canonical failure"));
     exception(int_number(s), 0, 0);
   }
@@ -617,7 +617,7 @@ void BX_CPU_C::write_new_stack_qword_64(Bit64u laddr, unsigned curr_pl, Bit64u d
   }
 #endif
 
-  if (! IsCanonical(laddr)) {
+  if (! IsCanonical(laddr) || ! IsCanonical(laddr+7)) {
     BX_ERROR(("write_new_stack_qword_64(): canonical failure"));
     exception(BX_SS_EXCEPTION, 0, 0);
   }
