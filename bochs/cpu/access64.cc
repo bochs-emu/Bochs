@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: access64.cc,v 1.6 2008-06-25 02:28:31 sshwarts Exp $
+// $Id: access64.cc,v 1.7 2008-07-13 08:43:54 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008 Stanislav Shwartsman
@@ -44,7 +44,6 @@ BX_CPU_C::write_virtual_byte_64(unsigned s, Bit64u offset, Bit8u data)
 {
   BX_ASSERT(BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64);
 
-  bx_segment_reg_t *seg = &BX_CPU_THIS_PTR sregs[s];
   BX_INSTR_MEM_DATA_ACCESS(BX_CPU_ID, s, offset, 1, BX_WRITE);
 
   Bit64u laddr = BX_CPU_THIS_PTR get_laddr64(s, offset);
@@ -84,7 +83,6 @@ BX_CPU_C::write_virtual_word_64(unsigned s, Bit64u offset, Bit16u data)
 {
   BX_ASSERT(BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64);
 
-  bx_segment_reg_t *seg = &BX_CPU_THIS_PTR sregs[s];
   BX_INSTR_MEM_DATA_ACCESS(BX_CPU_ID, s, offset, 2, BX_WRITE);
 
   Bit64u laddr = BX_CPU_THIS_PTR get_laddr64(s, offset);
@@ -133,7 +131,6 @@ BX_CPU_C::write_virtual_dword_64(unsigned s, Bit64u offset, Bit32u data)
 {
   BX_ASSERT(BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64);
 
-  bx_segment_reg_t *seg = &BX_CPU_THIS_PTR sregs[s];
   BX_INSTR_MEM_DATA_ACCESS(BX_CPU_ID, s, offset, 4, BX_WRITE);
 
   Bit64u laddr = BX_CPU_THIS_PTR get_laddr64(s, offset);
@@ -182,7 +179,6 @@ BX_CPU_C::write_virtual_qword_64(unsigned s, Bit64u offset, Bit64u data)
 {
   BX_ASSERT(BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64);
 
-  bx_segment_reg_t *seg = &BX_CPU_THIS_PTR sregs[s];
   BX_INSTR_MEM_DATA_ACCESS(BX_CPU_ID, s, offset, 8, BX_WRITE);
 
   Bit64u laddr = BX_CPU_THIS_PTR get_laddr64(s, offset);
@@ -230,8 +226,6 @@ BX_CPU_C::write_virtual_qword_64(unsigned s, Bit64u offset, Bit64u data)
 BX_CPU_C::read_virtual_byte_64(unsigned s, Bit64u offset)
 {
   BX_ASSERT(BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64);
-
-  bx_segment_reg_t *seg = &BX_CPU_THIS_PTR sregs[s];
   Bit8u data;
   BX_INSTR_MEM_DATA_ACCESS(BX_CPU_ID, s, offset, 1, BX_READ);
 
@@ -269,8 +263,6 @@ BX_CPU_C::read_virtual_byte_64(unsigned s, Bit64u offset)
 BX_CPU_C::read_virtual_word_64(unsigned s, Bit64u offset)
 {
   BX_ASSERT(BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64);
-
-  bx_segment_reg_t *seg = &BX_CPU_THIS_PTR sregs[s];
   Bit16u data;
   BX_INSTR_MEM_DATA_ACCESS(BX_CPU_ID, s, offset, 2, BX_READ);
 
@@ -317,8 +309,6 @@ BX_CPU_C::read_virtual_word_64(unsigned s, Bit64u offset)
 BX_CPU_C::read_virtual_dword_64(unsigned s, Bit64u offset)
 {
   BX_ASSERT(BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64);
-
-  bx_segment_reg_t *seg = &BX_CPU_THIS_PTR sregs[s];
   Bit32u data;
   BX_INSTR_MEM_DATA_ACCESS(BX_CPU_ID, s, offset, 4, BX_READ);
 
@@ -365,8 +355,6 @@ BX_CPU_C::read_virtual_dword_64(unsigned s, Bit64u offset)
 BX_CPU_C::read_virtual_qword_64(unsigned s, Bit64u offset)
 {
   BX_ASSERT(BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64);
-
-  bx_segment_reg_t *seg = &BX_CPU_THIS_PTR sregs[s];
   Bit64u data;
   BX_INSTR_MEM_DATA_ACCESS(BX_CPU_ID, s, offset, 8, BX_READ);
 
@@ -417,8 +405,6 @@ BX_CPU_C::read_virtual_qword_64(unsigned s, Bit64u offset)
 BX_CPU_C::read_RMW_virtual_byte_64(unsigned s, Bit64u offset)
 {
   BX_ASSERT(BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64);
-
-  bx_segment_reg_t *seg = &BX_CPU_THIS_PTR sregs[s];
   Bit8u data;
   BX_INSTR_MEM_DATA_ACCESS(BX_CPU_ID, s, offset, 1, BX_RW);
 
@@ -460,8 +446,6 @@ BX_CPU_C::read_RMW_virtual_byte_64(unsigned s, Bit64u offset)
 BX_CPU_C::read_RMW_virtual_word_64(unsigned s, Bit64u offset)
 {
   BX_ASSERT(BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64);
-
-  bx_segment_reg_t *seg = &BX_CPU_THIS_PTR sregs[s];
   Bit16u data;
   BX_INSTR_MEM_DATA_ACCESS(BX_CPU_ID, s, offset, 2, BX_RW);
 
@@ -512,8 +496,6 @@ BX_CPU_C::read_RMW_virtual_word_64(unsigned s, Bit64u offset)
 BX_CPU_C::read_RMW_virtual_dword_64(unsigned s, Bit64u offset)
 {
   BX_ASSERT(BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64);
-
-  bx_segment_reg_t *seg = &BX_CPU_THIS_PTR sregs[s];
   Bit32u data;
   BX_INSTR_MEM_DATA_ACCESS(BX_CPU_ID, s, offset, 4, BX_RW);
 
@@ -564,8 +546,6 @@ BX_CPU_C::read_RMW_virtual_dword_64(unsigned s, Bit64u offset)
 BX_CPU_C::read_RMW_virtual_qword_64(unsigned s, Bit64u offset)
 {
   BX_ASSERT(BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64);
-
-  bx_segment_reg_t *seg = &BX_CPU_THIS_PTR sregs[s];
   Bit64u data;
   BX_INSTR_MEM_DATA_ACCESS(BX_CPU_ID, s, offset, 8, BX_RW);
 
