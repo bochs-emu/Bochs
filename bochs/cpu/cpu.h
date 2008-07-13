@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.491 2008-06-25 02:28:31 sshwarts Exp $
+// $Id: cpu.h,v 1.492 2008-07-13 09:59:57 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1469,15 +1469,6 @@ public: // for now...
   BX_SMF void XOR_EbGbM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void CMP_EbGbM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
-  BX_SMF void ADD_EbGbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void OR_EbGbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void ADC_EbGbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void SBB_EbGbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void AND_EbGbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void SUB_EbGbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void XOR_EbGbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void CMP_EbGbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-
   BX_SMF void ADD_EwIwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void OR_EwIwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void ADC_EwIwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -1523,15 +1514,6 @@ public: // for now...
   BX_SMF void XOR_EwGwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void CMP_EwGwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
-  BX_SMF void ADD_EwGwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void OR_EwGwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void ADC_EwGwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void SBB_EwGwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void AND_EwGwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void SUB_EwGwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void XOR_EwGwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void CMP_EwGwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-
   BX_SMF void ADD_EdGdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void OR_EdGdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void ADC_EdGdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -1540,15 +1522,6 @@ public: // for now...
   BX_SMF void SUB_EdGdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void XOR_EdGdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void CMP_EdGdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-
-  BX_SMF void ADD_EdGdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void OR_EdGdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void ADC_EdGdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void SBB_EdGdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void AND_EdGdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void SUB_EdGdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void XOR_EdGdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void CMP_EdGdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
   BX_SMF void ADD_GwEwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void OR_GwEwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -2459,15 +2432,6 @@ public: // for now...
   BX_SMF void XOR_EqGqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void CMP_EqGqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
-  BX_SMF void ADD_EqGqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void OR_EqGqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void ADC_EqGqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void SBB_EqGqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void AND_EqGqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void SUB_EqGqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void XOR_EqGqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void CMP_EqGqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-
   BX_SMF void ADD_EqIdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void OR_EqIdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void ADC_EqIdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -2675,8 +2639,10 @@ public: // for now...
 
   BX_SMF void CDQE(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void CQO(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
   BX_SMF void XADD_EqGqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void XADD_EqGqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
   BX_SMF void RETnear64_Iw(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void RETnear64(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void RETfar64_Iw(bxInstruction_c *) BX_CPP_AttrRegparmN(1);

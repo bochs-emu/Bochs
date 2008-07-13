@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.h,v 1.69 2008-05-30 20:35:07 sshwarts Exp $
+// $Id: fetchdecode.h,v 1.70 2008-07-13 09:59:58 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005 Stanislav Shwartsman
@@ -59,8 +59,13 @@ BX_CPP_INLINE Bit64u FetchQWORD(const Bit8u *iptr)
 }
 #endif
 
+struct bxIAOpcodeTable {
+  BxExecutePtr_tR execute;
+  Bit16u attr;
+};
+
 enum {
-#define bx_define_opcode(a, b) a,
+#define bx_define_opcode(a, b, c) a,
 #include "ia_opcodes.h"
    BX_IA_LAST
 };

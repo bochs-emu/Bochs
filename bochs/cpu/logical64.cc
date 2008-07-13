@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logical64.cc,v 1.28 2008-05-10 18:10:52 sshwarts Exp $
+// $Id: logical64.cc,v 1.29 2008-07-13 09:59:59 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -42,18 +42,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XOR_EqGqM(bxInstruction_c *i)
   op2_64 = BX_READ_64BIT_REG(i->nnn());
   op1_64 ^= op2_64;
   write_RMW_virtual_qword(op1_64);
-
-  SET_FLAGS_OSZAPC_LOGIC_64(op1_64);
-}
-
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::XOR_EqGqR(bxInstruction_c *i)
-{
-  Bit64u op1_64, op2_64;
-
-  op1_64 = BX_READ_64BIT_REG(i->rm());
-  op2_64 = BX_READ_64BIT_REG(i->nnn());
-  op1_64 ^= op2_64;
-  BX_WRITE_64BIT_REG(i->rm(), op1_64);
 
   SET_FLAGS_OSZAPC_LOGIC_64(op1_64);
 }
@@ -181,18 +169,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::OR_EqGqM(bxInstruction_c *i)
   SET_FLAGS_OSZAPC_LOGIC_64(op1_64);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::OR_EqGqR(bxInstruction_c *i)
-{
-  Bit64u op1_64, op2_64;
-
-  op1_64 = BX_READ_64BIT_REG(i->rm());
-  op2_64 = BX_READ_64BIT_REG(i->nnn());
-  op1_64 |= op2_64;
-  BX_WRITE_64BIT_REG(i->rm(), op1_64);
-
-  SET_FLAGS_OSZAPC_LOGIC_64(op1_64);
-}
-
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::OR_GqEqM(bxInstruction_c *i)
 {
   Bit64u op1_64, op2_64;
@@ -246,18 +222,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::AND_EqGqM(bxInstruction_c *i)
   op2_64 = BX_READ_64BIT_REG(i->nnn());
   op1_64 &= op2_64;
   write_RMW_virtual_qword(op1_64);
-
-  SET_FLAGS_OSZAPC_LOGIC_64(op1_64);
-}
-
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::AND_EqGqR(bxInstruction_c *i)
-{
-  Bit64u op1_64, op2_64;
-
-  op1_64 = BX_READ_64BIT_REG(i->rm());
-  op2_64 = BX_READ_64BIT_REG(i->nnn());
-  op1_64 &= op2_64;
-  BX_WRITE_64BIT_REG(i->rm(), op1_64);
 
   SET_FLAGS_OSZAPC_LOGIC_64(op1_64);
 }
