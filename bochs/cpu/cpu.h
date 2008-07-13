@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.493 2008-07-13 10:06:07 sshwarts Exp $
+// $Id: cpu.h,v 1.494 2008-07-13 14:22:43 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2961,9 +2961,7 @@ public: // for now...
 
 #if BX_SupportGuest2HostTLB
   BX_SMF Bit8u* v2h_read_byte(bx_address laddr, unsigned curr_pl) BX_CPP_AttrRegparmN(2);
-  BX_SMF Bit8u* v2h_read(bx_address laddr, unsigned curr_pl, unsigned len) BX_CPP_AttrRegparmN(3);
   BX_SMF Bit8u* v2h_write_byte(bx_address laddr, unsigned curr_pl) BX_CPP_AttrRegparmN(2);
-  BX_SMF Bit8u* v2h_write(bx_address laddr, unsigned curr_pl, unsigned len) BX_CPP_AttrRegparmN(3);
 #endif
 
   BX_SMF void branch_near16(Bit16u new_IP) BX_CPP_AttrRegparmN(1);

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: access.cc,v 1.112 2008-06-25 02:28:31 sshwarts Exp $
+// $Id: access.cc,v 1.113 2008-07-13 14:22:43 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -297,52 +297,6 @@ BX_CPU_C::v2h_read_byte(bx_address laddr, unsigned curr_pl)
 BX_CPU_C::v2h_write_byte(bx_address laddr, unsigned curr_pl)
 {
   unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 0);
-  bx_address lpf = LPFOf(laddr);
-  bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
-  if (tlbEntry->lpf == lpf)
-  {
-    // See if the TLB entry privilege level allows us write access
-    // from this CPL.
-    if (tlbEntry->accessBits & (0x10 << curr_pl)) {
-      bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
-      Bit32u pageOffset = PAGE_OFFSET(laddr);
-      Bit8u *hostAddr = (Bit8u*) (hostPageAddr | pageOffset);
-#if BX_SUPPORT_ICACHE
-      pageWriteStampTable.decWriteStamp(tlbEntry->ppf);
-#endif
-      return hostAddr;
-    }
-  }
-
-  return 0;
-}
-
-  Bit8u* BX_CPP_AttrRegparmN(3)
-BX_CPU_C::v2h_read(bx_address laddr, unsigned curr_pl, unsigned len)
-{
-  // Make sure access does not span 2 pages.
-  unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, len);
-  bx_address lpf = LPFOf(laddr);
-  bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
-  if (tlbEntry->lpf == lpf) {
-    // See if the TLB entry privilege level allows us read access
-    // from this CPL.
-    if (tlbEntry->accessBits & (1<<curr_pl)) { // Read this pl OK.
-      bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
-      Bit32u pageOffset = PAGE_OFFSET(laddr);
-      Bit8u *hostAddr = (Bit8u*) (hostPageAddr | pageOffset);
-      return hostAddr;
-    }
-  }
-
-  return 0;
-}
-
-  Bit8u* BX_CPP_AttrRegparmN(3)
-BX_CPU_C::v2h_write(bx_address laddr, unsigned curr_pl, unsigned len)
-{
-  // Make sure access does not span 2 pages.
-  unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, len);
   bx_address lpf = LPFOf(laddr);
   bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
   if (tlbEntry->lpf == lpf)
