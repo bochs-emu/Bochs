@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: io.cc,v 1.62 2008-06-25 10:34:21 sshwarts Exp $
+// $Id: io.cc,v 1.63 2008-07-13 13:24:36 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -241,21 +241,17 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_INSB_YbDX(bxInstruction_c *i)
 // 16-bit address size
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::INSB16_YbDX(bxInstruction_c *i)
 {
-  Bit8u value8=0;
-
   if (! BX_CPU_THIS_PTR allow_io(DX, 1)) {
     BX_DEBUG(("INSB_YbDX: I/O access not allowed !"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
-  // Write a zero to memory, to trigger any segment or page
-  // faults before reading from IO port.
-  write_virtual_byte_32(BX_SEG_REG_ES, DI, value8);
+  // trigger any segment or page faults before reading from IO port
+  Bit8u value8 = read_RMW_virtual_byte_32(BX_SEG_REG_ES, DI);
 
   value8 = BX_INP(DX, 1);
 
-  /* no seg override possible */
-  write_virtual_byte_32(BX_SEG_REG_ES, DI, value8);
+  write_RMW_virtual_byte(value8);
 
   if (BX_CPU_THIS_PTR get_DF())
     DI--;
@@ -266,21 +262,18 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INSB16_YbDX(bxInstruction_c *i)
 // 32-bit address size
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::INSB32_YbDX(bxInstruction_c *i)
 {
-  Bit8u value8=0;
-
   if (! BX_CPU_THIS_PTR allow_io(DX, 1)) {
     BX_DEBUG(("INSB_YbDX: I/O access not allowed !"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
-  // Write a zero to memory, to trigger any segment or page
-  // faults before reading from IO port.
-  write_virtual_byte(BX_SEG_REG_ES, EDI, value8);
+  // trigger any segment or page faults before reading from IO port
+  Bit8u value8 = read_RMW_virtual_byte_32(BX_SEG_REG_ES, EDI);
 
   value8 = BX_INP(DX, 1);
 
   /* no seg override possible */
-  write_virtual_byte(BX_SEG_REG_ES, EDI, value8);
+  write_RMW_virtual_byte(value8);
 
   if (BX_CPU_THIS_PTR get_DF()) {
     RDI = EDI - 1;
@@ -295,21 +288,17 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INSB32_YbDX(bxInstruction_c *i)
 // 64-bit address size
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::INSB64_YbDX(bxInstruction_c *i)
 {
-  Bit8u value8=0;
-
   if (! BX_CPU_THIS_PTR allow_io(DX, 1)) {
     BX_DEBUG(("INSB_YbDX: I/O access not allowed !"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
-  // Write a zero to memory, to trigger any segment or page
-  // faults before reading from IO port.
-  write_virtual_byte_64(BX_SEG_REG_ES, RDI, value8);
+  // trigger any segment or page faults before reading from IO port
+  Bit8u value8 = read_RMW_virtual_byte_64(BX_SEG_REG_ES, RDI);
 
   value8 = BX_INP(DX, 1);
 
-  /* no seg override possible */
-  write_virtual_byte_64(BX_SEG_REG_ES, RDI, value8);
+  write_RMW_virtual_byte(value8);
 
   if (BX_CPU_THIS_PTR get_DF())
     RDI--;
@@ -339,22 +328,19 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_INSW_YwDX(bxInstruction_c *i)
 // 16-bit operand size, 16-bit address size
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::INSW16_YwDX(bxInstruction_c *i)
 {
-  Bit16u value16=0;
-  Bit16u di = DI;
-
   if (! BX_CPU_THIS_PTR allow_io(DX, 2)) {
     BX_DEBUG(("INSW16_YwDX: I/O access not allowed !"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
-  // Write a zero to memory, to trigger any segment or page
-  // faults before reading from IO port.
-  write_virtual_word_32(BX_SEG_REG_ES, di, value16);
+  Bit16u di = DI;
+
+  // trigger any segment or page faults before reading from IO port
+  Bit16u value16 = read_RMW_virtual_word_32(BX_SEG_REG_ES, di);
 
   value16 = BX_INP(DX, 2);
 
-  /* no seg override allowed */
-  write_virtual_word_32(BX_SEG_REG_ES, di, value16);
+  write_RMW_virtual_word(value16);
 
   if (BX_CPU_THIS_PTR get_DF())
     DI -= 2;
@@ -393,27 +379,23 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INSW32_YwDX(bxInstruction_c *i)
       incr = wordCount << 1; // count * 2.
     }
     else {
-      // Write a zero to memory, to trigger any segment or page
-      // faults before reading from IO port.
-      write_virtual_word(BX_SEG_REG_ES, edi, value16);
+      // trigger any segment or page faults before reading from IO port
+      value16 = read_RMW_virtual_word_32(BX_SEG_REG_ES, edi);
 
       value16 = BX_INP(DX, 2);
 
-      /* no seg override allowed */
-      write_virtual_word(BX_SEG_REG_ES, edi, value16);
+      write_RMW_virtual_word(value16);
     }
   }
   else
 #endif
   {
-    // Write a zero to memory, to trigger any segment or page
-    // faults before reading from IO port.
-    write_virtual_word(BX_SEG_REG_ES, edi, value16);
+    // trigger any segment or page faults before reading from IO port
+    value16 = read_RMW_virtual_word_32(BX_SEG_REG_ES, edi);
 
     value16 = BX_INP(DX, 2);
 
-    /* no seg override allowed */
-    write_virtual_word(BX_SEG_REG_ES, edi, value16);
+    write_RMW_virtual_word(value16);
   }
 
   if (BX_CPU_THIS_PTR get_DF())
@@ -427,22 +409,19 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INSW32_YwDX(bxInstruction_c *i)
 // 16-bit operand size, 64-bit address size
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::INSW64_YwDX(bxInstruction_c *i)
 {
-  Bit16u value16=0;
-  Bit64u rdi = RDI;
-
   if (! BX_CPU_THIS_PTR allow_io(DX, 2)) {
     BX_DEBUG(("INSW64_YwDX: I/O access not allowed !"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
-  // Write a zero to memory, to trigger any segment or page
-  // faults before reading from IO port.
-  write_virtual_word_64(BX_SEG_REG_ES, rdi, value16);
+  Bit64u rdi = RDI;
+
+  // trigger any segment or page faults before reading from IO port
+  Bit16u value16 = read_RMW_virtual_word_64(BX_SEG_REG_ES, rdi);
 
   value16 = BX_INP(DX, 2);
 
-  /* no seg override allowed */
-  write_virtual_word_64(BX_SEG_REG_ES, rdi, value16);
+  write_RMW_virtual_word(value16);
 
   if (BX_CPU_THIS_PTR get_DF())
     rdi -= 2;
@@ -481,14 +460,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INSD16_YdDX(bxInstruction_c *i)
 
   Bit16u di = DI;
 
-  // Write a zero to memory, to trigger any segment or page
-  // faults before reading from IO port.
-  write_virtual_dword_32(BX_SEG_REG_ES, di, 0);
+  // trigger any segment or page faults before reading from IO port
+  Bit32u value32 = read_RMW_virtual_dword_32(BX_SEG_REG_ES, di);
 
-  Bit32u value32 = BX_INP(DX, 4);
+  value32 = BX_INP(DX, 4);
 
-  /* no seg override allowed */
-  write_virtual_dword_32(BX_SEG_REG_ES, di, value32);
+  write_RMW_virtual_dword(value32);
 
   if (BX_CPU_THIS_PTR get_DF())
     di -= 4;
@@ -508,14 +485,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INSD32_YdDX(bxInstruction_c *i)
 
   Bit32u edi = EDI;
 
-  // Write a zero to memory, to trigger any segment or page
-  // faults before reading from IO port.
-  write_virtual_dword(BX_SEG_REG_ES, edi, 0);
+  // trigger any segment or page faults before reading from IO port
+  Bit32u value32 = read_RMW_virtual_dword_32(BX_SEG_REG_ES, edi);
 
-  Bit32u value32 = BX_INP(DX, 4);
+  value32 = BX_INP(DX, 4);
 
-  /* no seg override allowed */
-  write_virtual_dword(BX_SEG_REG_ES, edi, value32);
+  write_RMW_virtual_dword(value32);
 
   if (BX_CPU_THIS_PTR get_DF())
     edi -= 4;
@@ -537,14 +512,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INSD64_YdDX(bxInstruction_c *i)
 
   Bit64u rdi = RDI;
 
-  // Write a zero to memory, to trigger any segment or page
-  // faults before reading from IO port.
-  write_virtual_dword_64(BX_SEG_REG_ES, rdi, 0);
+  // trigger any segment or page faults before reading from IO port
+  Bit32u value32 = read_RMW_virtual_dword_64(BX_SEG_REG_ES, rdi);
 
-  Bit32u value32 = BX_INP(DX, 4);
+  value32 = BX_INP(DX, 4);
 
-  /* no seg override allowed */
-  write_virtual_dword_64(BX_SEG_REG_ES, rdi, value32);
+  write_RMW_virtual_dword(value32);
 
   if (BX_CPU_THIS_PTR get_DF())
     rdi -= 4;

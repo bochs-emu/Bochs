@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: icache.h,v 1.36 2008-06-23 02:56:31 sshwarts Exp $
+// $Id: icache.h,v 1.37 2008-07-13 13:24:36 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007 Stanislav Shwartsman
@@ -34,7 +34,7 @@ const Bit32u ICacheWriteStampStart    = 0x3fffffff;
 const Bit32u ICacheWriteStampFetchModeMask = ~ICacheWriteStampStart;
 
 #if BX_SUPPORT_TRACE_CACHE
-extern void stopTraceExecution(void);
+extern void handleSMC(void);
 #endif
 
 class bxPageWriteStampTable
@@ -76,14 +76,12 @@ public:
     if ((pageWriteStampTable[pAddr] & ICacheWriteStampFetchModeMask) != ICacheWriteStampFetchModeMask) {
       // Decrement page write stamp, so iCache entries with older stamps are
       // effectively invalidated.
-      pageWriteStampTable[pAddr]--;
-      stopTraceExecution(); // one of the CPUs might be running trace from this page
+      handleSMC(); // one of the CPUs might be running trace from this page
     }
-#else
+#endif
     // Decrement page write stamp, so iCache entries with older stamps are
     // effectively invalidated.
     pageWriteStampTable[pAddr]--;
-#endif
   }
 
   BX_CPP_INLINE void resetWriteStamps(void);

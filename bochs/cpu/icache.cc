@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: icache.cc,v 1.13 2008-06-12 16:40:53 sshwarts Exp $
+// $Id: icache.cc,v 1.14 2008-07-13 13:24:36 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007 Stanislav Shwartsman
@@ -75,7 +75,7 @@ void flushICaches(void)
 
 #if BX_SUPPORT_TRACE_CACHE
 
-void stopTraceExecution(void)
+void handleSMC(void)
 {
   for (unsigned i=0; i<BX_SMP_PROCESSORS; i++)
     BX_CPU(i)->async_event |= BX_ASYNC_EVENT_STOP_TRACE;
