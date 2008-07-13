@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ia_opcodes.h,v 1.11 2008-07-13 09:59:59 sshwarts Exp $
+// $Id: ia_opcodes.h,v 1.12 2008-07-13 10:06:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008 Stanislav Shwartsman
@@ -372,16 +372,16 @@ bx_define_opcode(BX_IA_MOV_CdRd, BX_CPU_C::MOV_CdRd, 0)
 bx_define_opcode(BX_IA_MOV_DdRd, BX_CPU_C::MOV_DdRd, 0)
 bx_define_opcode(BX_IA_MOV_EAXOd, BX_CPU_C::MOV_EAXOd, 0)
 bx_define_opcode(BX_IA_MOV_EbGbM, BX_CPU_C::MOV_EbGbM, 0)
-bx_define_opcode(BX_IA_MOV_EbGbR, BX_CPU_C::MOV_EbGbR, 0)
+bx_define_opcode(BX_IA_MOV_EbGbR, BX_CPU_C::MOV_GbEbR, BxArithDstRM)
 bx_define_opcode(BX_IA_MOV_EbIbM, BX_CPU_C::MOV_EbIbM, 0)
 bx_define_opcode(BX_IA_MOV_EbIbR, BX_CPU_C::MOV_RLIb, 0)
 bx_define_opcode(BX_IA_MOV_EdGdM, BX_CPU_C::MOV_EdGdM, 0)
-bx_define_opcode(BX_IA_MOV_EdGdR, BX_CPU_C::MOV_EdGdR, 0)
+bx_define_opcode(BX_IA_MOV_EdGdR, BX_CPU_C::MOV_GdEdR, BxArithDstRM)
 bx_define_opcode(BX_IA_MOV_EdIdM, BX_CPU_C::MOV_EdIdM, 0)
 bx_define_opcode(BX_IA_MOV_EdIdR, BX_CPU_C::MOV_ERXId, 0)
 bx_define_opcode(BX_IA_MOV_ERXId, BX_CPU_C::MOV_ERXId, 0)
 bx_define_opcode(BX_IA_MOV_EwGwM, BX_CPU_C::MOV_EwGwM, 0)
-bx_define_opcode(BX_IA_MOV_EwGwR, BX_CPU_C::MOV_EwGwR, 0)
+bx_define_opcode(BX_IA_MOV_EwGwR, BX_CPU_C::MOV_GwEwR, BxArithDstRM)
 bx_define_opcode(BX_IA_MOV_EwIwM, BX_CPU_C::MOV_EwIwM, 0)
 bx_define_opcode(BX_IA_MOV_EwIwR, BX_CPU_C::MOV_RXIw, 0)
 bx_define_opcode(BX_IA_MOV_EwSwM, BX_CPU_C::MOV_EwSwM, 0)
@@ -1331,7 +1331,7 @@ bx_define_opcode(BX_IA_MOV_AXOq, BX_CPU_C::MOV_AXOq, 0)
 bx_define_opcode(BX_IA_MOV_OqAX, BX_CPU_C::MOV_OqAX, 0)
 bx_define_opcode(BX_IA_MOV_ALOq, BX_CPU_C::MOV_ALOq, 0)
 bx_define_opcode(BX_IA_MOV_OqAL, BX_CPU_C::MOV_OqAL, 0)
-bx_define_opcode(BX_IA_MOV_EqGqR, BX_CPU_C::MOV_EqGqR, 0)
+bx_define_opcode(BX_IA_MOV_EqGqR, BX_CPU_C::MOV_GqEqR, BxArithDstRM)
 bx_define_opcode(BX_IA_MOV_EqGqM, BX_CPU_C::MOV_EqGqM, 0)
 bx_define_opcode(BX_IA_MOV_GqEqR, BX_CPU_C::MOV_GqEqR, 0)
 bx_define_opcode(BX_IA_MOV_GqEqM, BX_CPU_C::MOV_GqEqM, 0)

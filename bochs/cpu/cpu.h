@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.492 2008-07-13 09:59:57 sshwarts Exp $
+// $Id: cpu.h,v 1.493 2008-07-13 10:06:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1117,11 +1117,8 @@ public: // for now...
   BX_SMF void XCHG_EdGdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
   BX_SMF void MOV_EbGbM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void MOV_EbGbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void MOV_EdGdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void MOV_EdGdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void MOV_EwGwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void MOV_EwGwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void MOV_GbEbM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void MOV_GbEbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void MOV_GdEdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -2468,7 +2465,6 @@ public: // for now...
   BX_SMF void MOV_ALOq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void MOV_OqAL(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
-  BX_SMF void MOV_EqGqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void MOV_EqGqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void MOV_GqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void MOV_GqEqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
