@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.248 2008-07-13 15:35:09 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.249 2008-07-13 15:36:57 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2580,9 +2580,3 @@ Bit32u BX_CPU_C::hwdebug_compare(bx_address laddr_0, unsigned size,
   return dr6_mask;
 }
 #endif
-
-/*
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::LFENCE(bxInstruction_c *i) {}
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::MFENCE(bxInstruction_c *i) {}
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::SFENCE(bxInstruction_c *i) {}
-*/
