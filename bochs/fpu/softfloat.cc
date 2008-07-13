@@ -1238,14 +1238,14 @@ float64 float64_round_to_int(float64 a, float_status_t &status)
         switch (get_float_rounding_mode(status)) {
          case float_round_nearest_even:
             if ((aExp == 0x3FE) && extractFloat64Frac(a)) {
-                return packFloat64(aSign, 0x3FF, 0);
+              return packFloat64(aSign, 0x3FF, 0);
             }
             break;
          case float_round_down:
             return aSign ? BX_CONST64(0xBFF0000000000000) : 0;
          case float_round_up:
             return
-            aSign ? BX_CONST64(0x8000000000000000) : BX_CONST64(0x3FF0000000000000);
+              aSign ? BX_CONST64(0x8000000000000000) : BX_CONST64(0x3FF0000000000000);
         }
         return packFloat64(aSign, 0, 0);
     }

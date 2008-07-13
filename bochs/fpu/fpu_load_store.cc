@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu_load_store.cc,v 1.25 2008-06-12 19:14:40 sshwarts Exp $
+// $Id: fpu_load_store.cc,v 1.26 2008-07-13 11:22:55 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -298,7 +298,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FST_SINGLE_REAL(bxInstruction_c *i)
   {
      BX_CPU_THIS_PTR FPU_exception(FPU_EX_Stack_Underflow);
 
-     if (! (BX_CPU_THIS_PTR the_i387.is_IA_masked()))
+     if (! BX_CPU_THIS_PTR the_i387.is_IA_masked())
         return;
   }
   else
@@ -336,7 +336,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FST_DOUBLE_REAL(bxInstruction_c *i)
   {
      BX_CPU_THIS_PTR FPU_exception(FPU_EX_Stack_Underflow);
 
-     if (! (BX_CPU_THIS_PTR the_i387.is_IA_masked()))
+     if (! BX_CPU_THIS_PTR the_i387.is_IA_masked())
         return;
   }
   else
@@ -373,7 +373,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FSTP_EXTENDED_REAL(bxInstruction_c *i)
   {
      BX_CPU_THIS_PTR FPU_exception(FPU_EX_Stack_Underflow);
 
-     if (! (BX_CPU_THIS_PTR the_i387.is_IA_masked()))
+     if (! BX_CPU_THIS_PTR the_i387.is_IA_masked())
         return;
   }
   else
@@ -405,7 +405,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FIST_WORD_INTEGER(bxInstruction_c *i)
   {
      BX_CPU_THIS_PTR FPU_exception(FPU_EX_Stack_Underflow);
 
-     if (! (BX_CPU_THIS_PTR the_i387.is_IA_masked()))
+     if (! BX_CPU_THIS_PTR the_i387.is_IA_masked())
         return;
   }
   else
@@ -443,7 +443,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FIST_DWORD_INTEGER(bxInstruction_c *i)
   {
      BX_CPU_THIS_PTR FPU_exception(FPU_EX_Stack_Underflow);
 
-     if (! (BX_CPU_THIS_PTR the_i387.is_IA_masked()))
+     if (! BX_CPU_THIS_PTR the_i387.is_IA_masked())
         return;
   }
   else
@@ -479,7 +479,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FISTP_QWORD_INTEGER(bxInstruction_c *i)
   {
      BX_CPU_THIS_PTR FPU_exception(FPU_EX_Stack_Underflow);
 
-     if (! (BX_CPU_THIS_PTR the_i387.is_IA_masked()))
+     if (! BX_CPU_THIS_PTR the_i387.is_IA_masked())
         return;
   }
   else
@@ -519,7 +519,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FBSTP_PACKED_BCD(bxInstruction_c *i)
   {
      BX_CPU_THIS_PTR FPU_exception(FPU_EX_Stack_Underflow);
 
-     if (! (BX_CPU_THIS_PTR the_i387.is_IA_masked()))
+     if (! BX_CPU_THIS_PTR the_i387.is_IA_masked())
         return;
   }
   else
@@ -585,7 +585,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FISTTP16(bxInstruction_c *i)
   {
      BX_CPU_THIS_PTR FPU_exception(FPU_EX_Stack_Underflow);
 
-     if (! (BX_CPU_THIS_PTR the_i387.is_IA_masked()))
+     if (! BX_CPU_THIS_PTR the_i387.is_IA_masked())
         return;
   }
   else
@@ -621,7 +621,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FISTTP32(bxInstruction_c *i)
   {
      BX_CPU_THIS_PTR FPU_exception(FPU_EX_Stack_Underflow);
 
-     if (! (BX_CPU_THIS_PTR the_i387.is_IA_masked()))
+     if (! BX_CPU_THIS_PTR the_i387.is_IA_masked())
         return;
   }
   else
@@ -657,7 +657,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FISTTP64(bxInstruction_c *i)
   {
      BX_CPU_THIS_PTR FPU_exception(FPU_EX_Stack_Underflow);
 
-     if (! (BX_CPU_THIS_PTR the_i387.is_IA_masked()))
+     if (! BX_CPU_THIS_PTR the_i387.is_IA_masked())
         return;
   }
   else
