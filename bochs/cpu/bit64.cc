@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bit64.cc,v 1.13 2008-07-13 15:35:09 sshwarts Exp $
+// $Id: bit64.cc,v 1.14 2008-07-13 15:52:55 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -49,20 +49,20 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BSF_GqEq(bxInstruction_c *i)
 
   if (op2_64 == 0) {
     assert_ZF(); /* op1_64 undefined */
-    return;
   }
+  else {
+    op1_64 = 0;
+    while ((op2_64 & 0x01) == 0) {
+      op1_64++;
+      op2_64 >>= 1;
+    }
 
-  op1_64 = 0;
-  while ((op2_64 & 0x01) == 0) {
-    op1_64++;
-    op2_64 >>= 1;
+    SET_FLAGS_OSZAPC_LOGIC_64(op1_64);
+    clear_ZF();
+
+    /* now write result back to destination */
+    BX_WRITE_64BIT_REG(i->nnn(), op1_64);
   }
-
-  SET_FLAGS_OSZAPC_LOGIC_64(op1_64);
-  clear_ZF();
-
-  /* now write result back to destination */
-  BX_WRITE_64BIT_REG(i->nnn(), op1_64);
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::BSR_GqEq(bxInstruction_c *i)
@@ -82,20 +82,20 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BSR_GqEq(bxInstruction_c *i)
 
   if (op2_64 == 0) {
     assert_ZF(); /* op1_64 undefined */
-    return;
   }
+  else {
+    op1_64 = 63;
+    while ((op2_64 & BX_CONST64(0x8000000000000000)) == 0) {
+      op1_64--;
+      op2_64 <<= 1;
+    }
 
-  op1_64 = 63;
-  while ((op2_64 & BX_CONST64(0x8000000000000000)) == 0) {
-    op1_64--;
-    op2_64 <<= 1;
+    SET_FLAGS_OSZAPC_LOGIC_64(op1_64);
+    clear_ZF();
+
+    /* now write result back to destination */
+    BX_WRITE_64BIT_REG(i->nnn(), op1_64);
   }
-
-  SET_FLAGS_OSZAPC_LOGIC_64(op1_64);
-  clear_ZF();
-
-  /* now write result back to destination */
-  BX_WRITE_64BIT_REG(i->nnn(), op1_64);
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::BT_EqGqM(bxInstruction_c *i)
