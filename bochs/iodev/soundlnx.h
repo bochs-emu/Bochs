@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: soundlnx.h,v 1.8 2008-07-12 15:20:18 vruppert Exp $
+// $Id: soundlnx.h,v 1.9 2008-07-13 15:37:19 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -68,14 +68,14 @@ private:
   bx_sb16_c *sb16;
   FILE *midi;
 #if BX_HAVE_ALSASOUND
+  bx_bool use_alsa_pcm;
   snd_pcm_t *handle;
   snd_pcm_uframes_t frames;
   int dir, alsa_bufsize, audio_bufsize;
   char *alsa_buffer;
-#else
+#endif
   char *wavedevice;
   int wave;
-#endif
   Bit8u audio_buffer[BX_SOUND_LINUX_BUFSIZE];
   int oldfreq,oldbits,oldstereo,oldformat;
 };

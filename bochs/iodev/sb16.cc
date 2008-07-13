@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sb16.cc,v 1.58 2008-07-12 15:20:18 vruppert Exp $
+// $Id: sb16.cc,v 1.59 2008-07-13 15:37:18 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1091,6 +1091,8 @@ void bx_sb16_c::dsp_datawrite(Bit32u value)
 // dsp_dma() initiates all kinds of dma transfers
 void bx_sb16_c::dsp_dma(Bit8u command, Bit8u mode, Bit16u length, Bit8u comp)
 {
+  int ret;
+
   // command: 8bit, 16bit, in/out, single/auto, fifo
   // mode: mono/stereo, signed/unsigned
   //   (for info on command and mode see sound blaster programmer's manual,
@@ -1153,25 +1155,24 @@ void bx_sb16_c::dsp_dma(Bit8u command, Bit8u mode, Bit16u length, Bit8u comp)
 
   DSP.dma.format = DSP.dma.issigned | ((comp & 7) << 1) | ((comp & 8) << 4);
 
-       // write the output to the device/file
-  if (DSP.dma.output == 1)
-  {
-     if (BX_SB16_THIS wavemode == 1)
-     {
-        if (DSP.outputinit == 0)
-        {
-           if (BX_SB16_OUTPUT->openwaveoutput(SIM->get_param_string(BXPN_SB16_WAVEFILE)->getptr()) != BX_SOUND_OUTPUT_OK)
-           {
-              BX_SB16_THIS wavemode = 0;
-              writelog(WAVELOG(2), "Error: Could not open wave output device.");
-           }
-           else
-              DSP.outputinit = 1;
-         }
-
-         if (DSP.outputinit == 1)
-           BX_SB16_OUTPUT->startwaveplayback(DSP.dma.samplerate, DSP.dma.bits, DSP.dma.stereo, DSP.dma.format);
-     }
+  // write the output to the device/file
+  if (DSP.dma.output == 1) {
+    if (BX_SB16_THIS wavemode == 1) {
+      if (DSP.outputinit == 0) {
+        ret = BX_SB16_OUTPUT->openwaveoutput(SIM->get_param_string(BXPN_SB16_WAVEFILE)->getptr());
+        if (ret != BX_SOUND_OUTPUT_OK) {
+          BX_SB16_THIS wavemode = 0;
+          writelog(WAVELOG(2), "Error: Could not open wave output device.");
+        } else {
+          DSP.outputinit = 1;
+          ret = BX_SB16_OUTPUT->startwaveplayback(DSP.dma.samplerate, DSP.dma.bits, DSP.dma.stereo, DSP.dma.format);
+          if (ret != BX_SOUND_OUTPUT_OK) {
+            BX_SB16_THIS wavemode = 0;
+            writelog(WAVELOG(2), "Error: Could not start wave playback.");
+          }
+        }
+      }
+    }
   }
 
   dsp_enabledma();
@@ -1345,7 +1346,7 @@ void bx_sb16_c::dsp_dmadone()
 
     if (BX_SB16_THIS wavemode == 1) {
       BX_SB16_OUTPUT->stopwaveplayback();
-    } else {
+    } else if (BX_SB16_THIS wavemode != 0) {
       fflush(WAVEDATA);
     }
   }

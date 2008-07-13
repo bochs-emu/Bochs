@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: soundlnx.cc,v 1.14 2008-07-12 15:20:18 vruppert Exp $
+// $Id: soundlnx.cc,v 1.15 2008-07-13 15:37:19 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -51,10 +51,9 @@ bx_sound_linux_c::bx_sound_linux_c(bx_sb16_c *sb16)
   midi = NULL;
 #if BX_HAVE_ALSASOUND
   alsa_buffer = NULL;
-#else
+#endif
   wavedevice = NULL;
   wave = -1;
-#endif
 }
 
 bx_sound_linux_c::~bx_sound_linux_c()
@@ -113,7 +112,12 @@ int bx_sound_linux_c::closemidioutput()
 
 int bx_sound_linux_c::openwaveoutput(char *device)
 {
-#if !BX_HAVE_ALSASOUND
+#if BX_HAVE_ALSASOUND
+  use_alsa_pcm = !strcmp(device, "alsa");
+  if (use_alsa_pcm) {
+    return BX_SOUND_OUTPUT_OK;
+  }
+#endif
   int length = strlen(device) + 1;
 
   if (wavedevice != NULL)
@@ -125,7 +129,6 @@ int bx_sound_linux_c::openwaveoutput(char *device)
     return BX_SOUND_OUTPUT_ERR;
 
   strncpy(wavedevice, device, length);
-#endif
 
   return BX_SOUND_OUTPUT_OK;
 }
@@ -207,14 +210,14 @@ int bx_sound_linux_c::alsa_pcm_open(int frequency, int bits, int stereo, int for
 
 int bx_sound_linux_c::startwaveplayback(int frequency, int bits, int stereo, int format)
 {
-#if !BX_HAVE_ALSASOUND
   int fmt, ret;
   int signeddata = format & 1;
-#endif
 
 #if BX_HAVE_ALSASOUND
-  return alsa_pcm_open(frequency, bits, stereo, format);
-#else
+  if (use_alsa_pcm) {
+    return alsa_pcm_open(frequency, bits, stereo, format);
+  }
+#endif
   if ((wavedevice == NULL) || (strlen(wavedevice) < 1))
     return BX_SOUND_OUTPUT_ERR;
 
@@ -282,7 +285,6 @@ int bx_sound_linux_c::startwaveplayback(int frequency, int bits, int stereo, int
 
   // ioctl(wave, SNDCTL_DSP_GETBLKSIZE, &fragment);
   // WRITELOG(WAVELOG(4), "current output block size is %d", fragment);
-#endif
 
   return BX_SOUND_OUTPUT_OK;
 }
@@ -322,19 +324,21 @@ int bx_sound_linux_c::alsa_pcm_write()
 int bx_sound_linux_c::sendwavepacket(int length, Bit8u data[])
 {
 #if BX_HAVE_ALSASOUND
-  if ((audio_bufsize+length) <= BX_SOUND_LINUX_BUFSIZE) {
-    memcpy(audio_buffer+audio_bufsize, data, length);
-    audio_bufsize += length;
-  } else {
-    WRITELOG(WAVELOG(3), "ALSA: audio buffer overflow");
-    return BX_SOUND_OUTPUT_ERR;
+  if (use_alsa_pcm) {
+    if ((audio_bufsize+length) <= BX_SOUND_LINUX_BUFSIZE) {
+      memcpy(audio_buffer+audio_bufsize, data, length);
+      audio_bufsize += length;
+    } else {
+      WRITELOG(WAVELOG(3), "ALSA: audio buffer overflow");
+      return BX_SOUND_OUTPUT_ERR;
+    }
+    if (audio_bufsize < alsa_bufsize) {
+      return BX_SOUND_OUTPUT_OK;
+    } else {
+      return alsa_pcm_write();
+    }
   }
-  if (audio_bufsize < alsa_bufsize) {
-    return BX_SOUND_OUTPUT_OK;
-  } else {
-    return alsa_pcm_write();
-  }
-#else
+#endif
   int ret = write(wave, data, length);
 
   if (ret == length) {
@@ -343,24 +347,22 @@ int bx_sound_linux_c::sendwavepacket(int length, Bit8u data[])
     WRITELOG(WAVELOG(3), "OSS: write error");
     return BX_SOUND_OUTPUT_ERR;
   }
-#endif
 }
 
 int bx_sound_linux_c::stopwaveplayback()
 {
 #if BX_HAVE_ALSASOUND
-  if (audio_bufsize > 0) {
+  if (use_alsa_pcm && (audio_bufsize > 0)) {
     if (audio_bufsize < alsa_bufsize) {
       memset(audio_buffer+audio_bufsize, 0, alsa_bufsize-audio_bufsize);
       audio_bufsize = alsa_bufsize;
     }
     alsa_pcm_write();
   }
-#else
+#endif
   // ioctl(wave, SNDCTL_DSP_SYNC);
   // close(wave);
   // wave = -1;
-#endif
 
   return BX_SOUND_OUTPUT_OK;
 }
@@ -368,12 +370,12 @@ int bx_sound_linux_c::stopwaveplayback()
 int bx_sound_linux_c::closewaveoutput()
 {
 #if BX_HAVE_ALSASOUND
-  if (handle != NULL) {
+  if (use_alsa_pcm && (handle != NULL)) {
     snd_pcm_drain(handle);
     snd_pcm_close(handle);
     handle = NULL;
   }
-#else
+#endif
   if (wavedevice != NULL)
     delete(wavedevice);
 
@@ -383,7 +385,6 @@ int bx_sound_linux_c::closewaveoutput()
       wave = -1;
   }
   wavedevice = NULL;
-#endif
 
   return BX_SOUND_OUTPUT_OK;
 }

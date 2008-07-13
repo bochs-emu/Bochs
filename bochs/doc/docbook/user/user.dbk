@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.242 2008-07-12 15:20:18 vruppert Exp $
+$Id: user.dbk,v 1.243 2008-07-13 15:37:18 vruppert Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -3744,7 +3744,8 @@ are in the usual "property=value" format.
    <listitem><para>
    wave: This is the device/file where wave output is stored.
    On a Windows host this parameter is ignored when using output to the sound
-   device.
+   device. On a Linux host with ALSA present and this parameter set to "alsa",
+   the default PCM output device will be used instead of an OSS device.
    </para></listitem>
 
    <listitem><para>
@@ -4284,8 +4285,8 @@ midi can go to <filename class="devicefile">/dev/midi00</filename>, otherwise yo
 a midi interpreter. For example, the midid program from the DosEmu project would work.
 Wave output should go to <filename class="devicefile">/dev/dsp</filename>. These devices
 are assumed to be OSS devices, if they're not some of the ioctl's might fail.
-If ALSA is present on Linux, Bochs uses it's default PCM output device instead
-of the OSS device.
+If ALSA is present on Linux and the wave device is set to <filename>alsa</filename>,
+Bochs uses it's default PCM output device instead of an OSS device.
 </para>
 <para>
 On Windows, midi and (wave) output go to the midi mapper and the wave mapper,
