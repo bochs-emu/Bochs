@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bit32.cc,v 1.8 2008-04-25 07:40:51 sshwarts Exp $
+// $Id: bit32.cc,v 1.9 2008-07-13 10:44:34 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -49,20 +49,20 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BSF_GdEd(bxInstruction_c *i)
 
   if (op2_32 == 0) {
     assert_ZF(); /* op1_32 undefined */
-    return;
   }
+  else {
+    op1_32 = 0;
+    while ((op2_32 & 0x01) == 0) {
+      op1_32++;
+      op2_32 >>= 1;
+    }
 
-  op1_32 = 0;
-  while ((op2_32 & 0x01) == 0) {
-    op1_32++;
-    op2_32 >>= 1;
+    SET_FLAGS_OSZAPC_LOGIC_32(op1_32);
+    clear_ZF();
+
+    /* now write result back to destination */
+    BX_WRITE_32BIT_REGZ(i->nnn(), op1_32);
   }
-
-  SET_FLAGS_OSZAPC_LOGIC_32(op1_32);
-  clear_ZF();
-
-  /* now write result back to destination */
-  BX_WRITE_32BIT_REGZ(i->nnn(), op1_32);
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::BSR_GdEd(bxInstruction_c *i)
@@ -82,20 +82,20 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BSR_GdEd(bxInstruction_c *i)
 
   if (op2_32 == 0) {
     assert_ZF(); /* op1_32 undefined */
-    return;
   }
+  else {
+    op1_32 = 31;
+    while ((op2_32 & 0x80000000) == 0) {
+      op1_32--;
+      op2_32 <<= 1;
+    }
 
-  op1_32 = 31;
-  while ((op2_32 & 0x80000000) == 0) {
-    op1_32--;
-    op2_32 <<= 1;
+    SET_FLAGS_OSZAPC_LOGIC_32(op1_32);
+    clear_ZF();
+
+    /* now write result back to destination */
+    BX_WRITE_32BIT_REGZ(i->nnn(), op1_32);
   }
-
-  SET_FLAGS_OSZAPC_LOGIC_32(op1_32);
-  clear_ZF();
-
-  /* now write result back to destination */
-  BX_WRITE_32BIT_REGZ(i->nnn(), op1_32);
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::BT_EdGdM(bxInstruction_c *i)

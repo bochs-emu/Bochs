@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: flag_ctrl.cc,v 1.38 2008-04-08 17:58:56 sshwarts Exp $
+// $Id: flag_ctrl.cc,v 1.39 2008-07-13 10:44:34 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -62,13 +62,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::STC(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::CLI(bxInstruction_c *i)
 {
   Bit32u IOPL = BX_CPU_THIS_PTR get_IOPL();
-  Bit32u  cpl = CPL;
 
 #if BX_CPU_LEVEL >= 2
   if (protected_mode())
   {
 #if BX_SUPPORT_VME
-    if (BX_CPU_THIS_PTR cr4.get_PVI() && (cpl == 3))
+    if (BX_CPU_THIS_PTR cr4.get_PVI() && (CPL == 3))
     {
       if (IOPL < 3) {
         BX_CPU_THIS_PTR clear_VIF();
@@ -78,7 +77,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CLI(bxInstruction_c *i)
     else
 #endif
     {
-      if (IOPL < cpl) {
+      if (IOPL < CPL) {
         BX_DEBUG(("CLI: IOPL < CPL in protected mode"));
         exception(BX_GP_EXCEPTION, 0, 0);
       }
@@ -107,7 +106,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CLI(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::STI(bxInstruction_c *i)
 {
   Bit32u IOPL = BX_CPU_THIS_PTR get_IOPL();
-  Bit32u  cpl = CPL;
 
 #if BX_CPU_LEVEL >= 2
   if (protected_mode())
@@ -115,7 +113,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::STI(bxInstruction_c *i)
 #if BX_SUPPORT_VME
     if (BX_CPU_THIS_PTR cr4.get_PVI())
     {
-      if (cpl == 3 && IOPL < 3) {
+      if (CPL == 3 && IOPL < 3) {
         if (! BX_CPU_THIS_PTR get_VIP())
         {
           BX_CPU_THIS_PTR assert_VIF();
@@ -127,7 +125,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::STI(bxInstruction_c *i)
       }
     }
 #endif
-    if (cpl > IOPL) {
+    if (CPL > IOPL) {
       BX_DEBUG(("STI: CPL > IOPL in protected mode"));
       exception(BX_GP_EXCEPTION, 0, 0);
     }

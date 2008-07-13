@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.246 2008-06-25 10:34:21 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.247 2008-07-13 10:44:34 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1453,24 +1453,24 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDMSR(bxInstruction_c *i)
     case BX_MSR_SYSENTER_CS:
       RAX = BX_CPU_THIS_PTR msr.sysenter_cs_msr;
       RDX = 0;
-      return;
+      break;
 
     case BX_MSR_SYSENTER_ESP:
       RAX = BX_CPU_THIS_PTR msr.sysenter_esp_msr;
       RDX = 0;
-      return;
+      break;
 
     case BX_MSR_SYSENTER_EIP:
       RAX = BX_CPU_THIS_PTR msr.sysenter_eip_msr;
       RDX = 0;
-      return;
+      break;
 #endif
 
 #if BX_SUPPORT_MTRR
     case BX_MSR_MTRRCAP:   // read only MSR
       RAX = 0x508;
       RDX = 0;
-      return;
+      break;
 
     case BX_MSR_MTRRPHYSBASE0:
     case BX_MSR_MTRRPHYSMASK0:
@@ -1490,20 +1490,20 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDMSR(bxInstruction_c *i)
     case BX_MSR_MTRRPHYSMASK7:
       RAX = BX_CPU_THIS_PTR msr.mtrrphys[ECX - BX_MSR_MTRRPHYSBASE0] & 0xffffffff;
       RDX = BX_CPU_THIS_PTR msr.mtrrphys[ECX - BX_MSR_MTRRPHYSBASE0] >> 32;
-      return;
+      break;
 
     case BX_MSR_MTRRFIX64K_00000:
       RAX = BX_CPU_THIS_PTR msr.mtrrfix64k_00000 & 0xffffffff;
       RDX = BX_CPU_THIS_PTR msr.mtrrfix64k_00000 >> 32;
-      return;
+      break;
     case BX_MSR_MTRRFIX16K_80000:
       RAX = BX_CPU_THIS_PTR msr.mtrrfix16k_80000 & 0xffffffff;
       RDX = BX_CPU_THIS_PTR msr.mtrrfix16k_80000 >> 32;
-      return;
+      break;
     case BX_MSR_MTRRFIX16K_A0000:
       RAX = BX_CPU_THIS_PTR msr.mtrrfix16k_a0000 & 0xffffffff;
       RDX = BX_CPU_THIS_PTR msr.mtrrfix16k_a0000 >> 32;
-      return;
+      break;
 
     case BX_MSR_MTRRFIX4K_C0000:
     case BX_MSR_MTRRFIX4K_C8000:
@@ -1515,17 +1515,17 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDMSR(bxInstruction_c *i)
     case BX_MSR_MTRRFIX4K_F8000:
       RAX = BX_CPU_THIS_PTR msr.mtrrfix4k[ECX - BX_MSR_MTRRFIX4K_C0000] & 0xffffffff;
       RDX = BX_CPU_THIS_PTR msr.mtrrfix4k[ECX - BX_MSR_MTRRFIX4K_C0000] >> 32;
-      return;
+      break;
 
     case BX_MSR_PAT:
       RAX = BX_CPU_THIS_PTR msr.pat & 0xffffffff;
       RDX = BX_CPU_THIS_PTR msr.pat >> 32;
-      return;
+      break;
 
     case BX_MSR_MTRR_DEFTYPE:
       RAX = BX_CPU_THIS_PTR msr.mtrr_deftype;
       RDX = 0;
-      return;
+      break;
 #endif
 
 #if BX_CPU_LEVEL == 5
@@ -1533,17 +1533,17 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDMSR(bxInstruction_c *i)
     case BX_MSR_P5_MC_ADDR:
     case BX_MSR_MC_TYPE:
       /* TODO */
-      return;
+      break;
 
     case BX_MSR_CESR:
       /* TODO */
-      return;
+      break;
 #else
     /* These are noops on i686... */
     case BX_MSR_P5_MC_ADDR:
     case BX_MSR_MC_TYPE:
       /* do nothing */
-      return;
+      break;
 
     /* ... And these cause an exception on i686 */
     case BX_MSR_CESR:
@@ -1554,7 +1554,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDMSR(bxInstruction_c *i)
 
     case BX_MSR_TSC:
       RDTSC(i);
-      return;
+      break;
 
     /* MSR_APICBASE
        0:7    Reserved
@@ -1569,54 +1569,54 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDMSR(bxInstruction_c *i)
       RAX = BX_CPU_THIS_PTR msr.apicbase;
       RDX = 0;
       BX_INFO(("RDMSR: Read %08x:%08x from MSR_APICBASE", EDX, EAX));
-      return;
+      break;
 #endif
 
 #if BX_SUPPORT_X86_64
     case BX_MSR_EFER:
       RAX = BX_CPU_THIS_PTR efer.getRegister();
       RDX = 0;
-      return;
+      break;
 
     case BX_MSR_STAR:
       RAX = MSR_STAR & 0xffffffff;
       RDX = MSR_STAR >> 32;
-      return;
+      break;
 
     case BX_MSR_LSTAR:
       RAX = MSR_LSTAR & 0xffffffff;
       RDX = MSR_LSTAR >> 32;
-      return;
+      break;
 
     case BX_MSR_CSTAR:
       RAX = MSR_CSTAR & 0xffffffff;
       RDX = MSR_CSTAR >> 32;
-      return;
+      break;
 
     case BX_MSR_FMASK:
       RAX = MSR_FMASK;
       RDX = 0;
-      return;
+      break;
 
     case BX_MSR_FSBASE:
       RAX = MSR_FSBASE & 0xffffffff;
       RDX = MSR_FSBASE >> 32;
-      return;
+      break;
 
     case BX_MSR_GSBASE:
       RAX = MSR_GSBASE & 0xffffffff;
       RDX = MSR_GSBASE >> 32;
-      return;
+      break;
 
     case BX_MSR_KERNELGSBASE:
       RAX = MSR_KERNELGSBASE & 0xffffffff;
       RDX = MSR_KERNELGSBASE >> 32;
-      return;
+      break;
 
     case BX_MSR_TSC_AUX:
       RAX = MSR_TSC_AUX;   // 32 bit MSR
       RDX = 0;
-      return;
+      break;
 #endif  // #if BX_SUPPORT_X86_64
 
     default:
@@ -1624,13 +1624,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDMSR(bxInstruction_c *i)
 #if BX_IGNORE_BAD_MSR
       RAX = 0;
       RDX = 0;
-      return;
+#else
+      exception(BX_GP_EXCEPTION, 0, 0);
 #endif
   }
-
-  exception(BX_GP_EXCEPTION, 0, 0);
-
-#else  /* BX_CPU_LEVEL >= 5 */
+#else
   BX_INFO(("RDMSR: Pentium CPU required, use --enable-cpu-level=5"));
   UndefinedOpcode(i);
 #endif
@@ -1652,10 +1650,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRMSR(bxInstruction_c *i)
   switch(ECX) {
 
 #if BX_SUPPORT_SEP
-    case BX_MSR_SYSENTER_CS: {
+    case BX_MSR_SYSENTER_CS:
       BX_CPU_THIS_PTR msr.sysenter_cs_msr  = EAX;
-      return;
-    }
+      break;
+
     case BX_MSR_SYSENTER_ESP:
 #if BX_SUPPORT_X86_64
       if (! IsCanonical(val64)) {
@@ -1664,7 +1662,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRMSR(bxInstruction_c *i)
       }
 #endif
       BX_CPU_THIS_PTR msr.sysenter_esp_msr = val64;
-      return;
+      break;
+
     case BX_MSR_SYSENTER_EIP:
 #if BX_SUPPORT_X86_64
       if (! IsCanonical(val64)) {
@@ -1673,7 +1672,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRMSR(bxInstruction_c *i)
       }
 #endif
       BX_CPU_THIS_PTR msr.sysenter_eip_msr = val64;
-      return;
+      break;
 #endif
 
 #if BX_SUPPORT_MTRR
@@ -1698,17 +1697,17 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRMSR(bxInstruction_c *i)
     case BX_MSR_MTRRPHYSBASE7:
     case BX_MSR_MTRRPHYSMASK7:
       BX_CPU_THIS_PTR msr.mtrrphys[ECX - BX_MSR_MTRRPHYSBASE0] = val64;
-      return;
+      break;
 
     case BX_MSR_MTRRFIX64K_00000:
       BX_CPU_THIS_PTR msr.mtrrfix64k_00000 = val64;
-      return;
+      break;
     case BX_MSR_MTRRFIX16K_80000:
       BX_CPU_THIS_PTR msr.mtrrfix16k_80000 = val64;
-      return;
+      break;
     case BX_MSR_MTRRFIX16K_A0000:
       BX_CPU_THIS_PTR msr.mtrrfix16k_a0000 = val64;
-      return;
+      break;
 
     case BX_MSR_MTRRFIX4K_C0000:
     case BX_MSR_MTRRFIX4K_C8000:
@@ -1719,15 +1718,15 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRMSR(bxInstruction_c *i)
     case BX_MSR_MTRRFIX4K_F0000:
     case BX_MSR_MTRRFIX4K_F8000:
       BX_CPU_THIS_PTR msr.mtrrfix4k[ECX - BX_MSR_MTRRFIX4K_C0000] = val64;
-      return;
+      break;
 
     case BX_MSR_PAT:
       BX_CPU_THIS_PTR msr.pat = val64;
-      return;
+      break;
 
     case BX_MSR_MTRR_DEFTYPE:
       BX_CPU_THIS_PTR msr.mtrr_deftype = EAX;
-      return;
+      break;
 #endif
 
 #if BX_CPU_LEVEL == 5
@@ -1736,13 +1735,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRMSR(bxInstruction_c *i)
     case BX_MSR_MC_TYPE:
     case BX_MSR_CESR:
       /* TODO */
-      return;
+      break;
 #else
     /* These are noops on i686... */
     case BX_MSR_P5_MC_ADDR:
     case BX_MSR_MC_TYPE:
       /* do nothing */
-      return;
+      break;
 
     /* ... And these cause an exception on i686 */
     case BX_MSR_CESR:
@@ -1754,7 +1753,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRMSR(bxInstruction_c *i)
     case BX_MSR_TSC:
       BX_CPU_THIS_PTR set_TSC(val64);
       BX_INFO(("WRMSR: wrote 0x%08x%08x to MSR_TSC", EDX, EAX));
-      return;
+      break;
 
     /* MSR_APICBASE
        0:7    Reserved
@@ -1781,7 +1780,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRMSR(bxInstruction_c *i)
       else {
         BX_INFO(("WRMSR: MSR_APICBASE APIC global enable bit cleared !"));
       }
-      return;
+      break;
 #endif
 
 #if BX_SUPPORT_X86_64
@@ -1801,31 +1800,31 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRMSR(bxInstruction_c *i)
 
       BX_CPU_THIS_PTR efer.setRegister((EAX & BX_EFER_SUPPORTED_BITS & ~BX_EFER_LMA_MASK)
               | (BX_CPU_THIS_PTR efer.val32 & BX_EFER_LMA_MASK)); // keep LMA untouched
-      return;
+      break;
 
     case BX_MSR_STAR:
-      MSR_STAR   = val64;
-      return;
+      MSR_STAR  = val64;
+      break;
 
     case BX_MSR_LSTAR:
       if (! IsCanonical(val64)) {
         BX_ERROR(("WRMSR: attempt to write non-canonical value to MSR_LSTAR !"));
         exception(BX_GP_EXCEPTION, 0, 0);
       }
-      MSR_LSTAR  = val64;
-      return;
+      MSR_LSTAR = val64;
+      break;
 
     case BX_MSR_CSTAR:
       if (! IsCanonical(val64)) {
         BX_ERROR(("WRMSR: attempt to write non-canonical value to MSR_CSTAR !"));
         exception(BX_GP_EXCEPTION, 0, 0);
       }
-      MSR_CSTAR  = val64;
-      return;
+      MSR_CSTAR = val64;
+      break;
 
     case BX_MSR_FMASK:
-      MSR_FMASK  = (Bit32u) val64;
-      return;
+      MSR_FMASK = (Bit32u) val64;
+      break;
 
     case BX_MSR_FSBASE:
       if (! IsCanonical(val64)) {
@@ -1833,7 +1832,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRMSR(bxInstruction_c *i)
         exception(BX_GP_EXCEPTION, 0, 0);
       }
       MSR_FSBASE = val64;
-      return;
+      break;
 
     case BX_MSR_GSBASE:
       if (! IsCanonical(val64)) {
@@ -1841,7 +1840,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRMSR(bxInstruction_c *i)
         exception(BX_GP_EXCEPTION, 0, 0);
       }
       MSR_GSBASE = val64;
-      return;
+      break;
 
     case BX_MSR_KERNELGSBASE:
       if (! IsCanonical(val64)) {
@@ -1849,23 +1848,20 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRMSR(bxInstruction_c *i)
         exception(BX_GP_EXCEPTION, 0, 0);
       }
       MSR_KERNELGSBASE = val64;
-      return;
+      break;
 
     case BX_MSR_TSC_AUX:
       MSR_TSC_AUX = EAX;
-      return;
+      break;
 #endif  // #if BX_SUPPORT_X86_64
 
     default:
       BX_ERROR(("WRMSR: Unknown register %#x", ECX));
-#if BX_IGNORE_BAD_MSR
-      return;
+#if BX_IGNORE_BAD_MSR == 0
+      exception(BX_GP_EXCEPTION, 0, 0);
 #endif
   }
-
-  exception(BX_GP_EXCEPTION, 0, 0);
-
-#else  /* BX_CPU_LEVEL >= 5 */
+#else
   BX_INFO(("WRMSR: Pentium CPU required, use --enable-cpu-level=5"));
   UndefinedOpcode(i);
 #endif

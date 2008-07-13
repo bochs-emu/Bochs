@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bit16.cc,v 1.9 2008-04-25 07:40:50 sshwarts Exp $
+// $Id: bit16.cc,v 1.10 2008-07-13 10:44:34 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -49,20 +49,20 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BSF_GwEw(bxInstruction_c *i)
 
   if (op2_16 == 0) {
     assert_ZF(); /* op1_16 undefined */
-    return;
   }
+  else {
+    op1_16 = 0;
+    while ((op2_16 & 0x01) == 0) {
+      op1_16++;
+      op2_16 >>= 1;
+    }
 
-  op1_16 = 0;
-  while ((op2_16 & 0x01) == 0) {
-    op1_16++;
-    op2_16 >>= 1;
+    SET_FLAGS_OSZAPC_LOGIC_16(op1_16);
+    clear_ZF();
+
+    /* now write result back to destination */
+    BX_WRITE_16BIT_REG(i->nnn(), op1_16);
   }
-
-  SET_FLAGS_OSZAPC_LOGIC_16(op1_16);
-  clear_ZF();
-
-  /* now write result back to destination */
-  BX_WRITE_16BIT_REG(i->nnn(), op1_16);
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::BSR_GwEw(bxInstruction_c *i)
@@ -82,20 +82,20 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BSR_GwEw(bxInstruction_c *i)
 
   if (op2_16 == 0) {
     assert_ZF(); /* op1_16 undefined */
-    return;
   }
+  else {
+    op1_16 = 15;
+    while ((op2_16 & 0x8000) == 0) {
+      op1_16--;
+      op2_16 <<= 1;
+    }
 
-  op1_16 = 15;
-  while ((op2_16 & 0x8000) == 0) {
-    op1_16--;
-    op2_16 <<= 1;
+    SET_FLAGS_OSZAPC_LOGIC_16(op1_16);
+    clear_ZF();
+
+    /* now write result back to destination */
+    BX_WRITE_16BIT_REG(i->nnn(), op1_16);
   }
-
-  SET_FLAGS_OSZAPC_LOGIC_16(op1_16);
-  clear_ZF();
-
-  /* now write result back to destination */
-  BX_WRITE_16BIT_REG(i->nnn(), op1_16);
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::BT_EwGwM(bxInstruction_c *i)
