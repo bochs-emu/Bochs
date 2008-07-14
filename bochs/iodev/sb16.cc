@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sb16.cc,v 1.59 2008-07-13 15:37:18 vruppert Exp $
+// $Id: sb16.cc,v 1.60 2008-07-14 17:44:55 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -80,7 +80,9 @@ bx_sb16_c::bx_sb16_c(void)
   dsp.timer_handle = BX_NULL_TIMER_HANDLE;
   opl.timer_handle = BX_NULL_TIMER_HANDLE;
   midimode = 0;
+  midifile = NULL;
   wavemode = 0;
+  wavefile = NULL;
   loglevel = 0;
 }
 
@@ -162,34 +164,6 @@ void bx_sb16_c::init(void)
     writelog(MIDILOG(2), "Couldn't initialize output devices. Output disabled.");
     BX_SB16_THIS midimode = 0;
     BX_SB16_THIS wavemode = 0;
-  }
-
-  if ((BX_SB16_THIS midimode == 2) ||
-      (BX_SB16_THIS midimode == 3))
-  {
-    MIDIDATA = fopen(SIM->get_param_string("midifile", base)->getptr(),"wb");
-    if (MIDIDATA == NULL)
-    {
-      writelog (MIDILOG(2), "Error opening file %s. Midimode disabled.",
-        SIM->get_param_string("midifile", base)->getptr());
-      BX_SB16_THIS midimode = 0;
-    }
-    else if (BX_SB16_THIS midimode == 2)
-      initmidifile();
-  }
-
-  if ((BX_SB16_THIS wavemode == 2) ||
-      (BX_SB16_THIS wavemode == 3))
-  {
-    WAVEDATA = fopen(SIM->get_param_string("wavefile", base)->getptr(),"wb");
-    if (WAVEDATA == NULL)
-    {
-      writelog (WAVELOG(2), "Error opening file %s. Wavemode disabled.",
-        SIM->get_param_string("wavefile", base)->getptr());
-      BX_SB16_THIS wavemode = 0;
-    }
-    else if (BX_SB16_THIS wavemode == 2)
-      initvocfile();
   }
 
   DSP.dma.chunk = new Bit8u[BX_SOUND_OUTPUT_WAVEPACKETSIZE];
@@ -1092,6 +1066,7 @@ void bx_sb16_c::dsp_datawrite(Bit32u value)
 void bx_sb16_c::dsp_dma(Bit8u command, Bit8u mode, Bit16u length, Bit8u comp)
 {
   int ret;
+  bx_list_c *base;
 
   // command: 8bit, 16bit, in/out, single/auto, fifo
   // mode: mono/stereo, signed/unsigned
@@ -1171,6 +1146,17 @@ void bx_sb16_c::dsp_dma(Bit8u command, Bit8u mode, Bit16u length, Bit8u comp)
             writelog(WAVELOG(2), "Error: Could not start wave playback.");
           }
         }
+      }
+    } else if ((BX_SB16_THIS wavemode == 2) ||
+               (BX_SB16_THIS wavemode == 3)) {
+      base = (bx_list_c*) SIM->get_param(BXPN_SB16);
+      WAVEDATA = fopen(SIM->get_param_string("wavefile", base)->getptr(),"wb");
+      if (WAVEDATA == NULL) {
+        writelog (WAVELOG(2), "Error opening file %s. Wavemode disabled.",
+          SIM->get_param_string("wavefile", base)->getptr());
+        BX_SB16_THIS wavemode = 0;
+      } else if (BX_SB16_THIS wavemode == 2) {
+        initvocfile();
       }
     }
   }
@@ -2897,29 +2883,40 @@ void bx_sb16_c::initmidifile()
 
 void bx_sb16_c::writemidicommand(int command, int length, Bit8u data[])
 {
+  bx_list_c *base;
   /* We need to determine the time elapsed since the last MIDI command */
   int deltatime = currentdeltatime();
 
   /* Initialize output device if necessary and not done yet */
-  if (BX_SB16_THIS midimode == 1)
-  {
-      if (MPU.outputinit != 1)
-      {
-         writelog(MIDILOG(4), "Initializing Midi output.");
-         if (BX_SB16_OUTPUT->openmidioutput(SIM->get_param_string(BXPN_SB16_MIDIFILE)->getptr()) == BX_SOUND_OUTPUT_OK)
-           MPU.outputinit = 1;
-         else
-           MPU.outputinit = 0;
-         if (MPU.outputinit != 1)
-         {
-             writelog(MIDILOG(2), "Error: Couldn't open midi output. Midi disabled.");
-             BX_SB16_THIS midimode = 0;
-         }
+  if (BX_SB16_THIS midimode == 1) {
+    if (MPU.outputinit != 1) {
+      writelog(MIDILOG(4), "Initializing Midi output.");
+      if (BX_SB16_OUTPUT->openmidioutput(SIM->get_param_string(BXPN_SB16_MIDIFILE)->getptr()) == BX_SOUND_OUTPUT_OK)
+        MPU.outputinit = 1;
+      else
+        MPU.outputinit = 0;
+      if (MPU.outputinit != 1) {
+        writelog(MIDILOG(2), "Error: Couldn't open midi output. Midi disabled.");
+        BX_SB16_THIS midimode = 0;
+        return;
       }
-      BX_SB16_OUTPUT->sendmidicommand(deltatime, command, length, data);
-      return;
+    }
+    BX_SB16_OUTPUT->sendmidicommand(deltatime, command, length, data);
+    return;
+  } else if ((BX_SB16_THIS midimode == 2) ||
+             (BX_SB16_THIS midimode == 3)) {
+    base = (bx_list_c*) SIM->get_param(BXPN_SB16);
+    MIDIDATA = fopen(SIM->get_param_string("midifile", base)->getptr(),"wb");
+    if (MIDIDATA == NULL) {
+      writelog (MIDILOG(2), "Error opening file %s. Midimode disabled.",
+        SIM->get_param_string("midifile", base)->getptr());
+      BX_SB16_THIS midimode = 0;
+    } else if (BX_SB16_THIS midimode == 2) {
+      initmidifile();
+    }
   }
-  else if (BX_SB16_THIS midimode < 2)
+
+  if (BX_SB16_THIS midimode < 2)
     return;
 
   if (BX_SB16_THIS midimode == 2)
