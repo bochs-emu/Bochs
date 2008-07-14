@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: protect_ctrl.cc,v 1.89 2008-07-13 15:35:09 sshwarts Exp $
+// $Id: protect_ctrl.cc,v 1.90 2008-07-14 14:46:45 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -578,18 +578,19 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VERR_Ew(bxInstruction_c *i)
     if ((descriptor.dpl<CPL) || (descriptor.dpl<selector.rpl)) {
       BX_DEBUG(("VERR: non-conforming code not withing priv level"));
       clear_ZF();  /* inaccessible */
-      return;
     }
-
-    assert_ZF(); /* accessible */
+    else {
+      assert_ZF(); /* accessible */
+    }
   }
   else { /* data segment */
     if ((descriptor.dpl<CPL) || (descriptor.dpl<selector.rpl)) {
       BX_DEBUG(("VERR: data seg not withing priv level"));
       clear_ZF(); /* not accessible */
-      return;
     }
-    assert_ZF(); /* accessible */
+    else {
+      assert_ZF(); /* accessible */
+    }
   }
 }
 
@@ -654,14 +655,15 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VERW_Ew(bxInstruction_c *i)
     if ((descriptor.dpl<CPL) || (descriptor.dpl<selector.rpl)) {
       BX_DEBUG(("VERW: writable data seg not within priv level"));
       clear_ZF(); /* not accessible */
-      return;
     }
-    assert_ZF();  /* accessible */
-    return;
+    else {
+      assert_ZF();  /* accessible */
+    }
   }
-
-  BX_DEBUG(("VERW: data seg not writable"));
-  clear_ZF(); /* not accessible */
+  else {
+    BX_DEBUG(("VERW: data seg not writable"));
+    clear_ZF(); /* not accessible */
+  }
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::SGDT_Ms(bxInstruction_c *i)
