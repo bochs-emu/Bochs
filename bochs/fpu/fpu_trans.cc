@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu_trans.cc,v 1.17 2008-05-10 13:34:01 sshwarts Exp $
+// $Id: fpu_trans.cc,v 1.18 2008-07-14 18:54:10 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -155,6 +155,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FPTAN(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::FPATAN(bxInstruction_c *i)
 {
 #if BX_SUPPORT_FPU
+  BX_CPU_THIS_PTR prepareFPU(i);
 
   clear_C1();
 
