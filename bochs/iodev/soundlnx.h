@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: soundlnx.h,v 1.9 2008-07-13 15:37:19 vruppert Exp $
+// $Id: soundlnx.h,v 1.10 2008-07-19 12:01:54 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -62,18 +62,29 @@ public:
 
 private:
 #if BX_HAVE_ALSASOUND
+  int alsa_seq_open(char *device);
+  int alsa_seq_output(int delta, int command, int length, Bit8u data[]);
   int alsa_pcm_open(int frequency, int bits, int stereo, int format);
   int alsa_pcm_write();
 #endif
   bx_sb16_c *sb16;
-  FILE *midi;
 #if BX_HAVE_ALSASOUND
+  bx_bool use_alsa_seq;
   bx_bool use_alsa_pcm;
-  snd_pcm_t *handle;
-  snd_pcm_uframes_t frames;
+  struct {
+    snd_seq_t *handle;
+    int client;
+    int queue;
+    int source_port;
+  } alsa_seq;
+  struct {
+    snd_pcm_t *handle;
+    snd_pcm_uframes_t frames;
+  } alsa_pcm;
   int dir, alsa_bufsize, audio_bufsize;
   char *alsa_buffer;
 #endif
+  FILE *midi;
   char *wavedevice;
   int wave;
   Bit8u audio_buffer[BX_SOUND_LINUX_BUFSIZE];

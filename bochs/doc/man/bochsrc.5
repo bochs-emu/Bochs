@@ -1,5 +1,5 @@
 .\"Document Author:  Timothy R. Butler   -   tbutler@uninetsolutions.com"
-.TH bochsrc 5 "12 May 2008" "bochsrc" "The Bochs Project"
+.TH bochsrc 5 "19 July 2008" "bochsrc" "The Bochs Project"
 .\"SKIP_SECTION"
 .SH NAME
 bochsrc \- Configuration file for Bochs.
@@ -544,13 +544,18 @@ value.  This  needs  a reasonably  correct   setting  for
 the  IPS  parameter of the CPU option.  It is possible to
 adjust the dmatimer at runtime.
 
-Example:
+Example for output to OSS:
   sb16: midimode=1, midi=/dev/midi00,
   wavemode=1, wave=/dev/dsp, loglevel=2,
   log=sb16.log, dmatimer=600000
 
+Example for output to ALSA:
+  sb16: midimode=1, midi=alsa:128:0,
+  wavemode=1, wave=alsa,
+  log=sb16.log, dmatimer=600000
+
 .B NOTE:
-The  example is  wrapped onto three  lines for
+The  examples are wrapped onto three  lines for
 formatting  reasons, but  it should all be  on
 one line in the actual bochsrc file.
 
