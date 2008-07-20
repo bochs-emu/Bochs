@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: soundlnx.h,v 1.10 2008-07-19 12:01:54 vruppert Exp $
+// $Id: soundlnx.h,v 1.11 2008-07-20 08:08:23 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -73,8 +73,6 @@ private:
   bx_bool use_alsa_pcm;
   struct {
     snd_seq_t *handle;
-    int client;
-    int queue;
     int source_port;
   } alsa_seq;
   struct {

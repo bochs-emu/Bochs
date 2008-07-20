@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: soundlnx.cc,v 1.16 2008-07-19 12:01:54 vruppert Exp $
+// $Id: soundlnx.cc,v 1.17 2008-07-20 08:08:23 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -106,8 +106,6 @@ int bx_sound_linux_c::alsa_seq_open(char *device)
     WRITELOG(MIDILOG(2), "Couldn't open ALSA sequencer for midi output");
     return BX_SOUND_OUTPUT_ERR;
   }
-  alsa_seq.queue = snd_seq_alloc_queue(alsa_seq.handle);
-  alsa_seq.client = snd_seq_client_id(alsa_seq.handle);
   ret = snd_seq_create_simple_port(alsa_seq.handle, NULL,
     SND_SEQ_PORT_CAP_WRITE |
     SND_SEQ_PORT_CAP_SUBS_WRITE |
@@ -123,7 +121,6 @@ int bx_sound_linux_c::alsa_seq_open(char *device)
     }
   }
   if (ret < 0) {
-    snd_seq_free_queue(alsa_seq.handle, alsa_seq.queue);
     snd_seq_close(alsa_seq.handle);
     return BX_SOUND_OUTPUT_ERR;
   } else {
@@ -215,7 +212,7 @@ int bx_sound_linux_c::alsa_seq_output(int delta, int command, int length, Bit8u 
       break;
     case 0xf0:
       WRITELOG(MIDILOG(3), "alsa_seq_output(): SYSEX not implemented, length=%d", length);
-      break;
+      return BX_SOUND_OUTPUT_ERR;
     default:
       WRITELOG(MIDILOG(3), "alsa_seq_output(): unknown command 0x%02x, length=%d", command, length);
       return BX_SOUND_OUTPUT_ERR;
@@ -248,7 +245,6 @@ int bx_sound_linux_c::closemidioutput()
 {
 #if BX_HAVE_ALSASOUND
   if ((use_alsa_seq) && (alsa_seq.handle != NULL)) {
-    snd_seq_free_queue(alsa_seq.handle, alsa_seq.queue);
     snd_seq_close(alsa_seq.handle);
     return BX_SOUND_OUTPUT_OK;
   }
