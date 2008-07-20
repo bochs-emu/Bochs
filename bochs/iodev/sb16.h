@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sb16.h,v 1.29 2008-01-26 22:24:02 sshwarts Exp $
+// $Id: sb16.h,v 1.30 2008-07-20 21:05:21 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -135,7 +135,6 @@ typedef struct {
   int opnum[4];     // operator numbers
   Bit16u freq;      // frequency (in a special code)
   Bit32u afreq;     // actual frequency in milli-Hertz (10^-3 Hz)
-  bx_bool freqch;   // byte of the frequency that has changed recently
   Bit8u midichan;   // assigned midi channel
   bx_bool needprogch;  // has the instrument changed
   Bit8u midinote;   // currently playing midi note

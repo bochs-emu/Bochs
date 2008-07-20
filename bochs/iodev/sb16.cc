@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sb16.cc,v 1.60 2008-07-14 17:44:55 vruppert Exp $
+// $Id: sb16.cc,v 1.61 2008-07-20 21:05:21 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -387,7 +387,6 @@ void bx_sb16_c::register_state(void)
     new bx_shadow_num_c(item, "opnum4", &OPL.chan[i].opnum[3]);
     new bx_shadow_num_c(item, "freq", &OPL.chan[i].freq);
     new bx_shadow_num_c(item, "afreq", &OPL.chan[i].afreq);
-    new bx_shadow_bool_c(item, "freqch", &OPL.chan[i].freqch);
     new bx_shadow_num_c(item, "midichan", &OPL.chan[i].midichan);
     new bx_shadow_bool_c(item, "needprogch", &OPL.chan[i].needprogch);
     new bx_shadow_num_c(item, "midinote", &OPL.chan[i].midinote);
@@ -2527,10 +2526,11 @@ break_here:
     case 0xa8:
       if (channum != -1)
       {
-         OPL.chan[channum].freq &= 0xff00;
-         OPL.chan[channum].freq |= value;
-         if ((OPL.chan[channum].freqch |= 1) == 3)
+         if (value != (Bit32u)(OPL.chan[channum].freq & 0xff)) {
+           OPL.chan[channum].freq &= 0xff00;
+           OPL.chan[channum].freq |= value;
            opl_setfreq(channum);
+         }
          break;
       }
       // else let default: catch it
@@ -2547,10 +2547,11 @@ break_here:
     case 0xb8:
       if (channum != -1)
       {
-         OPL.chan[channum].freq &= 0x00ff;
-         OPL.chan[channum].freq |= (value & 0x1f) << 8;
-         if ((OPL.chan[channum].freqch |= 2) == 3)
+         if ((value & 0x1f) != ((Bit32u)(OPL.chan[channum].freq >> 8) & 0x1f)) {
+           OPL.chan[channum].freq &= 0x00ff;
+           OPL.chan[channum].freq |= (value & 0x1f) << 8;
            opl_setfreq(channum);
+         }
          opl_keyonoff(channum, (value >> 5) & 1);
          break;
       }
@@ -2717,8 +2718,6 @@ void bx_sb16_c::opl_setfreq(int channel)
 {
   int block,fnum;
 
-  OPL.chan[channel].freqch = 0;
-
   // definition:
   // low-byte of freq:  8 bit F-Number, LSB's
   // high-byte of freq: [2 reserved][KEY-ON][3 block][2 F-Number MSB's]
@@ -2743,10 +2742,7 @@ void bx_sb16_c::opl_setfreq(int channel)
 
   // this is a bit messy to preserve accuracy as much as possible,
   // otherwise we might either lose precision, or the higher bits.
-  if (block < 16)
-    realfreq = ((freqbase >> 4) * fnum) >> (16 - block);
-  else
-    realfreq = (freqbase * fnum) >> (20 - block);
+  realfreq = ((freqbase >> 4) * fnum) >> (16 - block);
 
   OPL.chan[channel].afreq = realfreq;
 
@@ -2755,31 +2751,26 @@ void bx_sb16_c::opl_setfreq(int channel)
   int octave=0;          // 0: Octave from 523.2511 Hz; pos=higher, neg=lower
   int keynum=0;          // 0=C; 1=C#; 2=D; ...; 11=B
 
-  if (realfreq > 8175)      // 8.175 is smallest possible frequency
-  {
-      const Bit32u freqC = 523251;    // Midi note 72; "C": 523.251 Hz
-      Bit32u keyfreq;           // Frequency scaled to the octave from freqC to 2*freqC
+  if (realfreq > 8175) {    // 8.175 is smallest possible frequency
+    const Bit32u freqC = 523251;    // Midi note 72; "C": 523.251 Hz
+    Bit32u keyfreq;           // Frequency scaled to the octave from freqC to 2*freqC
 
-      if (realfreq > freqC)
-      {
-         while ((realfreq >> (++octave)) > freqC);
-         keyfreq = realfreq >> (--octave);
-      }
-      else
-      {
-         while ((realfreq << (++octave)) < freqC);
-         keyfreq = realfreq << (--octave);
-         octave = -octave;
-      }
+    if (realfreq > freqC) {
+      while ((realfreq >> (++octave)) > freqC);
+      keyfreq = realfreq >> (--octave);
+    } else {
+      while ((realfreq << (++octave)) < freqC);
+      keyfreq = realfreq << octave;
+      octave = -octave;
+    }
 
-      // this is a reasonable approximation for keyfreq /= 1.059463
-      // (that value is 2**(1/12), which is the difference between two keys)
-      while ((keyfreq -= ((keyfreq * 1000) / 17817)) > freqC)
-         keynum++;
-  }
-  else {
-      octave = -6;
-      keynum = 0;
+    // this is a reasonable approximation for keyfreq /= 1.059463
+    // (that value is 2**(1/12), which is the difference between two keys)
+    while ((keyfreq -= ((keyfreq * 1000) / 17817)) > freqC)
+      keynum++;
+  } else {
+    octave = -6;
+    keynum = 0;
   }
 
   OPL.chan[channel].midinote = (octave + 6) * 12 + keynum;
@@ -2792,6 +2783,7 @@ void bx_sb16_c::opl_setfreq(int channel)
 void bx_sb16_c::opl_keyonoff(int channel, bx_bool onoff)
 {
   int i;
+  Bit8u commandbytes[3];
 
   if (OPL.mode == fminit)
     return;
@@ -2800,20 +2792,18 @@ void bx_sb16_c::opl_keyonoff(int channel, bx_bool onoff)
   if (onoff == OPL.chan[channel].midion)
     return;
 
-  Bit8u commandbytes[3];
+  OPL.chan[channel].midion = onoff;
 
   // check if we have a midi channel, otherwise allocate one if possible
-  if (OPL.chan[channel].midichan == 0xff)
-  {
+  if (OPL.chan[channel].midichan == 0xff) {
     for (i=0; i<16; i++)
-       if (((OPL.midichannels >> i) & 1) != 0)
-       {
-           OPL.chan[channel].midichan = i;
-           OPL.midichannels &= ~(1 << i);     // mark channel as used
-           OPL.chan[channel].needprogch = 1;
-       }
-       if (OPL.chan[channel].midichan == 0xff)
-           return;
+      if (((OPL.midichannels >> i) & 1) != 0) {
+        OPL.chan[channel].midichan = i;
+        OPL.midichannels &= ~(1 << i); // mark channel as used
+        OPL.chan[channel].needprogch = 1;
+      }
+    if (OPL.chan[channel].midichan == 0xff)
+      return;
   }
 
   if (OPL.chan[channel].needprogch != 0)
@@ -2823,15 +2813,14 @@ void bx_sb16_c::opl_keyonoff(int channel, bx_bool onoff)
   commandbytes[1] = OPL.chan[channel].midinote;
   commandbytes[2] = 0;
 
-  if (onoff == 0)
+  if (onoff == 0) {
     commandbytes[0] |= 0x80;  // turn it off
-  else
-  {
-      commandbytes[0] |= 0x90;  // turn it on
-      commandbytes[1] = OPL.chan[channel].midivol;
+  } else {
+    commandbytes[0] |= 0x90;  // turn it on
+    commandbytes[2] = OPL.chan[channel].midivol;
   }
 
-  writemidicommand(commandbytes[1], 2, & (commandbytes[1]));
+  writemidicommand(commandbytes[0], 2, & (commandbytes[1]));
 }
 
 // setup a midi channel
