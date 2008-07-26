@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: devices.cc,v 1.121 2008-04-17 14:39:32 sshwarts Exp $
+// $Id: devices.cc,v 1.122 2008-07-26 08:02:27 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -78,35 +78,21 @@ void bx_devices_c::init_stubs()
 #if BX_SUPPORT_ACPI
   pluginACPIController = &stubACPIController;
 #endif
-#if BX_SUPPORT_PCIVGA
-    pluginPciVgaAdapter = NULL;
-#endif
-#if BX_SUPPORT_PCIDEV
-    pluginPciDevAdapter = NULL;
-#endif
 #if BX_SUPPORT_PCIUSB
     pluginPciUSBAdapter = &stubUsbAdapter;
-#endif
-#if BX_SUPPORT_PCIPNIC
-    pluginPciPNicAdapter = NULL;
 #endif
 #endif
   pit = NULL;
   pluginKeyboard = &stubKeyboard;
   pluginDmaDevice = &stubDma;
   pluginFloppyDevice = &stubFloppy;
-  pluginBiosDevice = NULL;
   pluginCmosDevice = &stubCmos;
   pluginSerialDevice = &stubSerial;
-  pluginParallelDevice = NULL;
   pluginUnmapped = NULL;
   pluginVgaDevice = &stubVga;
   pluginPicDevice = &stubPic;
   pluginHardDrive = &stubHardDrive;
-  pluginSB16Device = NULL;
   pluginNE2kDevice =&stubNE2k;
-  pluginExtFpuIrq = NULL;
-  pluginGameport = NULL;
   pluginSpeaker = &stubSpeaker;
 #if BX_SUPPORT_BUSMOUSE
   pluginBusMouse = &stubBusMouse;
@@ -124,7 +110,7 @@ void bx_devices_c::init(BX_MEM_C *newmem)
   unsigned i;
   const char def_name[] = "Default";
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.121 2008-04-17 14:39:32 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.122 2008-07-26 08:02:27 vruppert Exp $"));
   mem = newmem;
 
   /* set no-default handlers, will be overwritten by the real default handler */
@@ -166,14 +152,14 @@ void bx_devices_c::init(BX_MEM_C *newmem)
   // "by hand" in this file.  Basically, we're using core plugins when we
   // want to control the init order.
   //
-  // CB: UNMAPPED and BIOSDEV should maybe be optional
+  // CB: UNMAPPED should maybe be optional
   PLUG_load_plugin(unmapped, PLUGTYPE_CORE);
-  PLUG_load_plugin(biosdev, PLUGTYPE_CORE);
   PLUG_load_plugin(cmos, PLUGTYPE_CORE);
   PLUG_load_plugin(dma, PLUGTYPE_CORE);
   PLUG_load_plugin(pic, PLUGTYPE_CORE);
   PLUG_load_plugin(vga, PLUGTYPE_CORE);
   PLUG_load_plugin(floppy, PLUGTYPE_CORE);
+  PLUG_load_plugin(biosdev, PLUGTYPE_OPTIONAL);
   PLUG_load_plugin(harddrv, PLUGTYPE_OPTIONAL);
   PLUG_load_plugin(keyboard, PLUGTYPE_OPTIONAL);
 #if BX_SUPPORT_BUSMOUSE
@@ -243,9 +229,6 @@ void bx_devices_c::init(BX_MEM_C *newmem)
   ioapic = & bx_ioapic;
   ioapic->init ();
 #endif
-
-  // BIOS log
-  pluginBiosDevice->init ();
 
   // CMOS RAM & RTC
   pluginCmosDevice->init ();
@@ -344,7 +327,6 @@ void bx_devices_c::reset(unsigned type)
 #if BX_SUPPORT_APIC
   ioapic->reset(type);
 #endif
-  pluginBiosDevice->reset(type);
   pluginCmosDevice->reset(type);
   pluginDmaDevice->reset(type);
   pluginFloppyDevice->reset(type);
@@ -422,7 +404,6 @@ void bx_devices_c::exit()
   bx_slowdown_timer.exit();
 
   PLUG_unload_plugin(unmapped);
-  PLUG_unload_plugin(biosdev);
   PLUG_unload_plugin(cmos);
   PLUG_unload_plugin(dma);
   PLUG_unload_plugin(pic);

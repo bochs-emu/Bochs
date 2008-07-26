@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gameport.cc,v 1.15 2008-01-26 22:24:02 sshwarts Exp $
+// $Id: gameport.cc,v 1.16 2008-07-26 08:02:27 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003  MandrakeSoft S.A.
@@ -62,7 +62,6 @@ bx_gameport_c *theGameport = NULL;
 int libgameport_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
 {
   theGameport = new bx_gameport_c();
-  bx_devices.pluginGameport = theGameport;
   BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theGameport, BX_PLUGIN_GAMEPORT);
   return(0); // Success
 }

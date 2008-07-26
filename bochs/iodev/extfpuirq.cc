@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: extfpuirq.cc,v 1.9 2008-01-26 22:24:01 sshwarts Exp $
+// $Id: extfpuirq.cc,v 1.10 2008-07-26 08:02:27 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -42,7 +42,6 @@ bx_extfpuirq_c *theExternalFpuIrq = NULL;
 int libextfpuirq_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
 {
   theExternalFpuIrq = new bx_extfpuirq_c();
-  bx_devices.pluginExtFpuIrq = theExternalFpuIrq;
   BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theExternalFpuIrq, BX_PLUGIN_EXTFPUIRQ);
   return(0); // Success
 }

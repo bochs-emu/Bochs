@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sb16.cc,v 1.61 2008-07-20 21:05:21 vruppert Exp $
+// $Id: sb16.cc,v 1.62 2008-07-26 08:02:27 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -47,7 +47,6 @@ bx_sb16_c *theSB16Device = NULL;
 int libsb16_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
 {
   theSB16Device = new bx_sb16_c();
-  bx_devices.pluginSB16Device = theSB16Device;
   BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theSB16Device, BX_PLUGIN_SB16);
   return(0); // Success
 }

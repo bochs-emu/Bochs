@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: soundwin.cc,v 1.20 2008-02-15 22:05:43 sshwarts Exp $
+// $Id: soundwin.cc,v 1.21 2008-07-26 08:02:27 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -41,7 +41,7 @@
 
 #include "soundwin.h"
 
-#define LOG_THIS bx_devices.pluginSB16Device->
+#define LOG_THIS sb16->
 
 bx_sound_windows_c::bx_sound_windows_c(bx_sb16_c *sb16)
   :bx_sound_output_c(sb16)

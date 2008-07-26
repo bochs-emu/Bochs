@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: soundosx.cc,v 1.9 2008-02-15 22:05:43 sshwarts Exp $
+// $Id: soundosx.cc,v 1.10 2008-07-26 08:02:27 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 
 // This file (SOUNDOSX.CC) written and donated by Brian Huffman
@@ -20,7 +20,7 @@
 
 #if defined(macintosh) && BX_SUPPORT_SB16
 
-#define LOG_THIS bx_devices.pluginSB16Device->
+#define LOG_THIS sb16->
 
 #include "soundosx.h"
 

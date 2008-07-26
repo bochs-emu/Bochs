@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.94 2008-06-11 21:10:02 sshwarts Exp $
+// $Id: iodev.h,v 1.95 2008-07-26 08:02:27 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -417,7 +417,6 @@ public:
   static void timer_handler(void *);
   void timer(void);
 
-  bx_devmodel_c     *pluginBiosDevice;
 #if BX_SUPPORT_APIC
   bx_ioapic_c       *ioapic;
 #endif
@@ -427,9 +426,6 @@ public:
 #if BX_SUPPORT_ACPI
   bx_acpi_ctrl_stub_c *pluginACPIController;
 #endif
-  bx_devmodel_c     *pluginPciVgaAdapter;
-  bx_devmodel_c     *pluginPciDevAdapter;
-  bx_devmodel_c     *pluginPciPNicAdapter;
   bx_pit_c          *pit;
   bx_keyb_stub_c    *pluginKeyboard;
   bx_dma_stub_c     *pluginDmaDevice;
@@ -439,15 +435,11 @@ public:
 #if BX_SUPPORT_PCIUSB
   bx_pci_usb_stub_c *pluginPciUSBAdapter;
 #endif
-  bx_devmodel_c     *pluginParallelDevice;
   bx_devmodel_c     *pluginUnmapped;
   bx_vga_stub_c     *pluginVgaDevice;
   bx_pic_stub_c     *pluginPicDevice;
   bx_hard_drive_stub_c *pluginHardDrive;
-  bx_devmodel_c     *pluginSB16Device;
   bx_ne2k_stub_c    *pluginNE2kDevice;
-  bx_devmodel_c     *pluginExtFpuIrq;
-  bx_devmodel_c     *pluginGameport;
   bx_speaker_stub_c *pluginSpeaker;
 #if BX_SUPPORT_BUSMOUSE
   bx_busm_stub_c    *pluginBusMouse;
