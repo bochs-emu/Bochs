@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: memory.cc,v 1.69 2008-05-31 20:59:38 sshwarts Exp $
+// $Id: memory.cc,v 1.70 2008-07-26 14:44:26 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -105,22 +105,18 @@ mem_write:
     {
       if (len == 8) {
         WriteHostQWordToLittleEndian(BX_MEM_THIS get_vector(a20addr), *(Bit64u*)data);
-        BX_DBG_DIRTY_PAGE(a20addr >> 12);
         return;
       }
       if (len == 4) {
         WriteHostDWordToLittleEndian(BX_MEM_THIS get_vector(a20addr), *(Bit32u*)data);
-        BX_DBG_DIRTY_PAGE(a20addr >> 12);
         return;
       }
       if (len == 2) {
         WriteHostWordToLittleEndian(BX_MEM_THIS get_vector(a20addr), *(Bit16u*)data);
-        BX_DBG_DIRTY_PAGE(a20addr >> 12);
         return;
       }
       if (len == 1) {
         * (BX_MEM_THIS get_vector(a20addr)) = * (Bit8u *) data;
-        BX_DBG_DIRTY_PAGE(a20addr >> 12);
         return;
       }
       // len == other, just fall thru to special cases handling
@@ -137,7 +133,6 @@ mem_write:
       while(1) {
         // addr *not* in range 000A0000 .. 000FFFFF
         *(BX_MEM_THIS get_vector(a20addr)) = *data_ptr;
-        BX_DBG_DIRTY_PAGE(a20addr >> 12);
         if (len == 1) return;
         len--;
         a20addr++;
@@ -158,7 +153,6 @@ mem_write:
         // devices are not allowed to access SMMRAM under VGA memory
         if (cpu) {
           *(BX_MEM_THIS get_vector(a20addr)) = *data_ptr;
-          BX_DBG_DIRTY_PAGE(a20addr >> 12);
         }
         goto inc_one;
       }
@@ -175,7 +169,6 @@ mem_write:
           case 0x1:   // Writes to ShadowRAM
             BX_DEBUG(("Writing to ShadowRAM: address 0x" FMT_PHY_ADDRX ", data %02x", a20addr, *data_ptr));
             *(BX_MEM_THIS get_vector(a20addr)) = *data_ptr;
-            BX_DBG_DIRTY_PAGE(a20addr >> 12);
             break;
 
           case 0x0:   // Writes to ROM, Inhibit

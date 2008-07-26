@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: memory.h,v 1.51 2008-05-01 20:28:36 sshwarts Exp $
+// $Id: memory.h,v 1.52 2008-07-26 14:44:26 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -159,9 +159,7 @@ BX_CPP_INLINE Bit32u BX_MEM_C::get_num_allocated_pages(void)
 }
 
 #if BX_DEBUGGER
-#  define BX_DBG_DIRTY_PAGE(page) BX_MEM(0)->dbg_dirty_pages[page] = 1;
-#else
-#  define BX_DBG_DIRTY_PAGE(page)
+  #define BX_DBG_DIRTY_PAGE(page) BX_MEM(0)->dbg_dirty_pages[page] = 1;
 #endif
 
 #endif
