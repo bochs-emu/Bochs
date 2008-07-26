@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: access.cc,v 1.113 2008-07-13 14:22:43 sshwarts Exp $
+// $Id: access.cc,v 1.114 2008-07-26 14:19:06 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -71,7 +71,7 @@ BX_CPU_C::write_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned le
         BX_ERROR(("write_virtual_checks(): write beyond limit, r/w"));
         return 0;
       }
-      if (seg->cache.u.segment.limit_scaled >= 7) {
+      if (seg->cache.u.segment.limit_scaled >= 15) {
         // Mark cache as being OK type for succeeding read/writes. The limit
         // checks still needs to be done though, but is more simple. We
         // could probably also optimize that out with a flag for the case
@@ -140,7 +140,7 @@ BX_CPU_C::read_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned len
         BX_ERROR(("read_virtual_checks(): read beyond limit"));
         return 0;
       }
-      if (seg->cache.u.segment.limit_scaled >= 7) {
+      if (seg->cache.u.segment.limit_scaled >= 15) {
         // Mark cache as being OK type for succeeding reads. See notes for
         // write checks; similar code.
         seg->cache.valid |= SegAccessROK;
@@ -210,7 +210,7 @@ BX_CPU_C::execute_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned 
         BX_ERROR(("execute_virtual_checks(): read beyond limit"));
         return 0;
       }
-      if (seg->cache.u.segment.limit_scaled >= 7) {
+      if (seg->cache.u.segment.limit_scaled >= 15) {
         // Mark cache as being OK type for succeeding reads. See notes for
         // write checks; similar code.
         seg->cache.valid |= SegAccessROK;
@@ -318,43 +318,6 @@ BX_CPU_C::v2h_write_byte(bx_address laddr, unsigned curr_pl)
 }
 #endif   // BX_SupportGuest2HostTLB
 
-//
-// Some macro defs to make things cleaner for endian-ness issues.
-// The following routines access a double qword, ie 16-bytes.
-// For the moment, I redirect these to use the single qword routines
-// by splitting one access into two.
-//
-// Endian  Host byte order         Guest (x86) byte order
-// ======================================================
-// Little  0..7 8..15               0..7 8..15
-// Big    15..8 7...0               0..7 8..15
-//
-// Below are the host memory offsets to each of 2 single quadwords, which
-// are different across big an little endian machines.  The memory
-// accessing routines take care of the access endian issues when accessing
-// the physical memory image.
-//
-
-
-#ifdef BX_LITTLE_ENDIAN
-#  define Host1stDWordOffset 0
-#  define Host2ndDWordOffset 8
-#else
-#  define Host1stDWordOffset 8
-#  define Host2ndDWordOffset 0
-#endif
-
-
-  void BX_CPP_AttrRegparmN(3)
-BX_CPU_C::read_virtual_dqword(unsigned s, bx_address offset, Bit8u *data)
-{
-  // Read Double Quadword.
-  Bit64u *qwords = (Bit64u*) data;
-
-  qwords[0] = read_virtual_qword(s, offset+Host1stDWordOffset);
-  qwords[1] = read_virtual_qword(s, offset+Host2ndDWordOffset);
-}
-
   void BX_CPP_AttrRegparmN(3)
 BX_CPU_C::read_virtual_dqword_aligned(unsigned s, bx_address offset, Bit8u *data)
 {
@@ -365,17 +328,7 @@ BX_CPU_C::read_virtual_dqword_aligned(unsigned s, bx_address offset, Bit8u *data
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
-  read_virtual_dqword(s, offset, data);
-}
-
-  void BX_CPP_AttrRegparmN(3)
-BX_CPU_C::write_virtual_dqword(unsigned s, bx_address offset, Bit8u *data)
-{
-  // Write Double Quadword.
-  Bit64u *qwords = (Bit64u*) data;
-
-  write_virtual_qword(s, offset+Host1stDWordOffset, qwords[0]);
-  write_virtual_qword(s, offset+Host2ndDWordOffset, qwords[1]);
+  read_virtual_dqword(s, offset, (BxPackedXmmRegister*) data);
 }
 
   void BX_CPP_AttrRegparmN(3)

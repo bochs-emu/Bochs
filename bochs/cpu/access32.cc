@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: access32.cc,v 1.3 2008-06-25 02:28:31 sshwarts Exp $
+// $Id: access32.cc,v 1.4 2008-07-26 14:19:06 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008 Stanislav Shwartsman
@@ -253,6 +253,63 @@ accessOK:
   goto accessOK;
 }
 
+  void BX_CPP_AttrRegparmN(3)
+BX_CPU_C::write_virtual_dqword_32(unsigned s, Bit32u offset, const BxPackedXmmRegister *data)
+{
+  Bit32u laddr;
+  bx_segment_reg_t *seg = &BX_CPU_THIS_PTR sregs[s];
+  BX_INSTR_MEM_DATA_ACCESS(BX_CPU_ID, s, offset, 16, BX_WRITE);
+
+  BX_ASSERT(BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64);
+
+  if (seg->cache.valid & SegAccessWOK4G) {
+accessOK:
+    laddr = BX_CPU_THIS_PTR get_laddr32(s, offset);
+#if BX_SupportGuest2HostTLB
+    unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 15);
+    Bit32u lpf = AlignedAccessLPFOf32(laddr, 15);
+    bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
+    if (tlbEntry->lpf == lpf) {
+      // See if the TLB entry privilege level allows us write access
+      // from this CPL.
+      if (tlbEntry->accessBits & (0x10 << CPL)) {
+        bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
+        Bit32u pageOffset = PAGE_OFFSET(laddr);
+        BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr, tlbEntry->ppf | pageOffset, 16, BX_WRITE);
+        BX_DBG_LIN_MEMORY_ACCESS(BX_CPU_ID, laddr,
+            tlbEntry->ppf | pageOffset, 16, CPL, BX_WRITE, (Bit8u*) data);
+        Bit64u *hostAddr = (Bit64u*) (hostPageAddr | pageOffset);
+#if BX_SUPPORT_ICACHE
+        pageWriteStampTable.decWriteStamp(tlbEntry->ppf);
+#endif
+        WriteHostQWordToLittleEndian(hostAddr,   data->xmm64u(0));
+        WriteHostQWordToLittleEndian(hostAddr+1, data->xmm64u(1));
+        return;
+      }
+    }
+#endif
+#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
+    if (BX_CPU_THIS_PTR alignment_check()) {
+      if (laddr & 15) {
+        BX_ERROR(("write_virtual_dqword(): #AC misaligned access"));
+        exception(BX_AC_EXCEPTION, 0, 0);
+      }
+    }
+#endif
+    access_write_linear(laddr, 16, CPL, (void *) data);
+    return;
+  }
+
+  if (seg->cache.valid & SegAccessWOK) {
+    if (offset <= (seg->cache.u.segment.limit_scaled-15))
+      goto accessOK;
+  }
+
+  if (!write_virtual_checks(seg, offset, 16))
+    exception(int_number(s), 0, 0);
+  goto accessOK;
+}
+
   Bit8u BX_CPP_AttrRegparmN(2)
 BX_CPU_C::read_virtual_byte_32(unsigned s, Bit32u offset)
 {
@@ -460,6 +517,61 @@ accessOK:
     exception(int_number(s), 0, 0);
   goto accessOK;
 }
+
+  void BX_CPP_AttrRegparmN(3)
+BX_CPU_C::read_virtual_dqword_32(unsigned s, Bit32u offset, BxPackedXmmRegister *data)
+{
+  Bit32u laddr;
+  bx_segment_reg_t *seg = &BX_CPU_THIS_PTR sregs[s];
+  BX_INSTR_MEM_DATA_ACCESS(BX_CPU_ID, s, offset, 16, BX_READ);
+
+  BX_ASSERT(BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64);
+
+  if (seg->cache.valid & SegAccessROK4G) {
+accessOK:
+    laddr = BX_CPU_THIS_PTR get_laddr32(s, offset);
+#if BX_SupportGuest2HostTLB
+    unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 15);
+    Bit32u lpf = AlignedAccessLPFOf32(laddr, 15);
+    bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
+    if (tlbEntry->lpf == lpf) {
+      // See if the TLB entry privilege level allows us read access
+      // from this CPL.
+      if (tlbEntry->accessBits & (1<<CPL)) { // Read this pl OK.
+        bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
+        Bit32u pageOffset = PAGE_OFFSET(laddr);
+        BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr, tlbEntry->ppf | pageOffset, 16, BX_READ);
+        Bit64u *hostAddr = (Bit64u*) (hostPageAddr | pageOffset);
+        ReadHostQWordFromLittleEndian(hostAddr,   data->xmm64u(0));
+        ReadHostQWordFromLittleEndian(hostAddr+1, data->xmm64u(1));
+        BX_DBG_LIN_MEMORY_ACCESS(BX_CPU_ID, laddr,
+            tlbEntry->ppf | pageOffset, 16, CPL, BX_READ, (Bit8u*) data);
+        return;
+      }
+    }
+#endif
+#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
+    if (BX_CPU_THIS_PTR alignment_check()) {
+      if (laddr & 15) {
+        BX_ERROR(("read_virtual_dqword(): #AC misaligned access"));
+        exception(BX_AC_EXCEPTION, 0, 0);
+      }
+    }
+#endif
+    access_read_linear(laddr, 16, CPL, BX_READ, (void *) data);
+    return;
+  }
+
+  if (seg->cache.valid & SegAccessROK) {
+    if (offset <= (seg->cache.u.segment.limit_scaled-15))
+      goto accessOK;
+  }
+
+  if (!read_virtual_checks(seg, offset, 16))
+    exception(int_number(s), 0, 0);
+  goto accessOK;
+}
+
 
 //////////////////////////////////////////////////////////////
 // special Read-Modify-Write operations                     //

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: access64.cc,v 1.8 2008-07-13 11:19:21 sshwarts Exp $
+// $Id: access64.cc,v 1.9 2008-07-26 14:19:06 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008 Stanislav Shwartsman
@@ -222,6 +222,55 @@ BX_CPU_C::write_virtual_qword_64(unsigned s, Bit64u offset, Bit64u data)
   access_write_linear(laddr, 8, CPL, (void *) &data);
 }
 
+  void BX_CPP_AttrRegparmN(3)
+BX_CPU_C::write_virtual_dqword_64(unsigned s, Bit64u offset, const BxPackedXmmRegister *data)
+{
+  BX_ASSERT(BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64);
+
+  BX_INSTR_MEM_DATA_ACCESS(BX_CPU_ID, s, offset, 16, BX_WRITE);
+
+  Bit64u laddr = BX_CPU_THIS_PTR get_laddr64(s, offset);
+#if BX_SupportGuest2HostTLB
+  unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 15);
+  Bit64u lpf = AlignedAccessLPFOf64(laddr, 15);
+  bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
+  if (tlbEntry->lpf == lpf) {
+    // See if the TLB entry privilege level allows us write access
+    // from this CPL.
+    if (tlbEntry->accessBits & (0x10 << CPL)) {
+      bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
+      Bit32u pageOffset = PAGE_OFFSET(laddr);
+      BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr, tlbEntry->ppf | pageOffset, 16, BX_WRITE);
+      BX_DBG_LIN_MEMORY_ACCESS(BX_CPU_ID, laddr,
+          tlbEntry->ppf | pageOffset, 16, CPL, BX_WRITE, (Bit8u*) data);
+      Bit64u *hostAddr = (Bit64u*) (hostPageAddr | pageOffset);
+#if BX_SUPPORT_ICACHE
+      pageWriteStampTable.decWriteStamp(tlbEntry->ppf);
+#endif
+      WriteHostQWordToLittleEndian(hostAddr,   data->xmm64u(0));
+      WriteHostQWordToLittleEndian(hostAddr+1, data->xmm64u(1));
+      return;
+    }
+  }
+#endif
+
+  if (! IsCanonical(laddr) || ! IsCanonical(laddr+15)) {
+    BX_ERROR(("write_virtual_dqword_64(): canonical failure"));
+    exception(int_number(s), 0, 0);
+  }
+
+#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
+  if (BX_CPU_THIS_PTR alignment_check()) {
+    if (laddr & 15) {
+      BX_ERROR(("write_virtual_dqword_64(): #AC misaligned access"));
+      exception(BX_AC_EXCEPTION, 0, 0);
+    }
+  }
+#endif
+
+  access_write_linear(laddr, 16, CPL, (void *) data);
+}
+
   Bit8u BX_CPP_AttrRegparmN(2)
 BX_CPU_C::read_virtual_byte_64(unsigned s, Bit64u offset)
 {
@@ -394,6 +443,50 @@ BX_CPU_C::read_virtual_qword_64(unsigned s, Bit64u offset)
 #endif
   access_read_linear(laddr, 8, CPL, BX_READ, (void *) &data);
   return data;
+}
+
+  void BX_CPP_AttrRegparmN(3)
+BX_CPU_C::read_virtual_dqword_64(unsigned s, Bit64u offset, BxPackedXmmRegister *data)
+{
+  BX_ASSERT(BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64);
+  BX_INSTR_MEM_DATA_ACCESS(BX_CPU_ID, s, offset, 16, BX_READ);
+
+  Bit64u laddr = BX_CPU_THIS_PTR get_laddr64(s, offset);
+#if BX_SupportGuest2HostTLB
+  unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 15);
+  Bit64u lpf = AlignedAccessLPFOf64(laddr, 15);
+  bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
+  if (tlbEntry->lpf == lpf) {
+    // See if the TLB entry privilege level allows us read access
+    // from this CPL.
+    if (tlbEntry->accessBits & (1<<CPL)) { // Read this pl OK.
+      bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
+      Bit32u pageOffset = PAGE_OFFSET(laddr);
+      BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr, tlbEntry->ppf | pageOffset, 16, BX_READ);
+      Bit64u *hostAddr = (Bit64u*) (hostPageAddr | pageOffset);
+        ReadHostQWordFromLittleEndian(hostAddr,   data->xmm64u(0));
+        ReadHostQWordFromLittleEndian(hostAddr+1, data->xmm64u(1));
+        BX_DBG_LIN_MEMORY_ACCESS(BX_CPU_ID, laddr,
+            tlbEntry->ppf | pageOffset, 16, CPL, BX_READ, (Bit8u*) data);
+      return;
+    }
+  }
+#endif
+
+  if (! IsCanonical(laddr) || ! IsCanonical(laddr+15)) {
+    BX_ERROR(("read_virtual_dqword_64(): canonical failure"));
+    exception(int_number(s), 0, 0);
+  }
+
+#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
+  if (BX_CPU_THIS_PTR alignment_check()) {
+    if (laddr & 15) {
+      BX_ERROR(("read_virtual_dqword_64(): #AC misaligned access"));
+      exception(BX_AC_EXCEPTION, 0, 0);
+    }
+  }
+#endif
+  access_read_linear(laddr, 16, CPL, BX_READ, (void *) data);
 }
 
 //////////////////////////////////////////////////////////////

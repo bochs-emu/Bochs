@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.494 2008-07-13 14:22:43 sshwarts Exp $
+// $Id: cpu.h,v 1.495 2008-07-26 14:19:06 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2799,11 +2799,13 @@ public: // for now...
   BX_SMF Bit16u read_virtual_word_32(unsigned seg, Bit32u offset) BX_CPP_AttrRegparmN(2);
   BX_SMF Bit32u read_virtual_dword_32(unsigned seg, Bit32u offset) BX_CPP_AttrRegparmN(2);
   BX_SMF Bit64u read_virtual_qword_32(unsigned seg, Bit32u offset) BX_CPP_AttrRegparmN(2);
+  BX_SMF void read_virtual_dqword_32(unsigned seg, Bit32u off, BxPackedXmmRegister *data) BX_CPP_AttrRegparmN(3);
 
   BX_SMF void write_virtual_byte_32(unsigned seg, Bit32u offset, Bit8u data) BX_CPP_AttrRegparmN(3);
   BX_SMF void write_virtual_word_32(unsigned seg, Bit32u offset, Bit16u data) BX_CPP_AttrRegparmN(3);
   BX_SMF void write_virtual_dword_32(unsigned seg, Bit32u offset, Bit32u data) BX_CPP_AttrRegparmN(3);
   BX_SMF void write_virtual_qword_32(unsigned seg, Bit32u offset, Bit64u data) BX_CPP_AttrRegparmN(3);
+  BX_SMF void write_virtual_dqword_32(unsigned seg, Bit32u offset, const BxPackedXmmRegister *data) BX_CPP_AttrRegparmN(3);
 
   BX_SMF Bit8u read_RMW_virtual_byte_32(unsigned seg, Bit32u offset) BX_CPP_AttrRegparmN(2);
   BX_SMF Bit16u read_RMW_virtual_word_32(unsigned seg, Bit32u offset) BX_CPP_AttrRegparmN(2);
@@ -2820,11 +2822,13 @@ public: // for now...
   BX_SMF void write_virtual_word_64(unsigned seg, Bit64u offset, Bit16u data) BX_CPP_AttrRegparmN(3);
   BX_SMF void write_virtual_dword_64(unsigned seg, Bit64u offset, Bit32u data) BX_CPP_AttrRegparmN(3);
   BX_SMF void write_virtual_qword_64(unsigned seg, Bit64u offset, Bit64u data) BX_CPP_AttrRegparmN(3);
+  BX_SMF void write_virtual_dqword_64(unsigned seg, Bit64u offset, const BxPackedXmmRegister *data) BX_CPP_AttrRegparmN(3);
 
   BX_SMF Bit8u read_virtual_byte_64(unsigned seg, Bit64u offset) BX_CPP_AttrRegparmN(2);
   BX_SMF Bit16u read_virtual_word_64(unsigned seg, Bit64u offset) BX_CPP_AttrRegparmN(2);
   BX_SMF Bit32u read_virtual_dword_64(unsigned seg, Bit64u offset) BX_CPP_AttrRegparmN(2);
   BX_SMF Bit64u read_virtual_qword_64(unsigned seg, Bit64u offset) BX_CPP_AttrRegparmN(2);
+  BX_SMF void read_virtual_dqword_64(unsigned seg, Bit64u off, BxPackedXmmRegister *data) BX_CPP_AttrRegparmN(3);
 
   BX_SMF Bit8u read_RMW_virtual_byte_64(unsigned seg, Bit64u offset) BX_CPP_AttrRegparmN(2);
   BX_SMF Bit16u read_RMW_virtual_word_64(unsigned seg, Bit64u offset) BX_CPP_AttrRegparmN(2);
@@ -2835,10 +2839,12 @@ public: // for now...
 #if BX_SUPPORT_MISALIGNED_SSE
 
 #define readVirtualDQwordAligned(s, off, data)   \
-  if (! MXCSR.get_misaligned_exception_mask())   \
+  if (! MXCSR.get_misaligned_exception_mask()) { \
     read_virtual_dqword_aligned(s, off, data);   \
-  else                                           \
-    read_virtual_dqword(s, off, data);
+  }                                              \
+  else {                                         \
+    read_virtual_dqword(s, off, data);           \
+  }
 
 #else // BX_SUPPORT_MISALIGNED_SSE = 0
 
@@ -2847,10 +2853,7 @@ public: // for now...
 
 #endif
 
-  BX_SMF void read_virtual_dqword(unsigned s, bx_address off, Bit8u *data) BX_CPP_AttrRegparmN(3);
   BX_SMF void read_virtual_dqword_aligned(unsigned s, bx_address off, Bit8u *data) BX_CPP_AttrRegparmN(3);
-
-  BX_SMF void write_virtual_dqword(unsigned s, bx_address off, Bit8u *data) BX_CPP_AttrRegparmN(3);
   BX_SMF void write_virtual_dqword_aligned(unsigned s, bx_address off, Bit8u *data) BX_CPP_AttrRegparmN(3);
 
   // write of word/dword to new stack could happen only in legacy mode
@@ -2883,6 +2886,11 @@ public: // for now...
       write_virtual_qword_64(seg, offset, data) : \
       write_virtual_qword_32(seg, offset, data)
 
+#define write_virtual_dqword(seg, offset, data)   \
+  (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) ? \
+      write_virtual_dqword_64(seg, offset, (const BxPackedXmmRegister*)(data)) : \
+      write_virtual_dqword_32(seg, offset, (const BxPackedXmmRegister*)(data))
+
 // read
 #define read_virtual_byte(seg, offset)            \
   (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) ? \
@@ -2903,6 +2911,11 @@ public: // for now...
   (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) ? \
       read_virtual_qword_64(seg, offset) :        \
       read_virtual_qword_32(seg, offset)
+
+#define read_virtual_dqword(seg, offset, data)    \
+  (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) ? \
+      read_virtual_dqword_64(seg, offset, (BxPackedXmmRegister*)(data)) : \
+      read_virtual_dqword_32(seg, offset, (BxPackedXmmRegister*)(data))
 
 // RMW
 #define read_RMW_virtual_byte(seg, offset)        \
@@ -2936,6 +2949,8 @@ public: // for now...
   write_virtual_dword_32(seg, offset, data)
 #define write_virtual_qword(seg, offset, data) \
   write_virtual_qword_32(seg, offset, data)
+#define write_virtual_qword(seg, offset, data) \
+  write_virtual_dqword_32(seg, offset, (const BxPackedXmmRegister*)(data))
 
 // read
 #define read_virtual_byte(seg, offset)  \
@@ -2946,6 +2961,8 @@ public: // for now...
   read_virtual_dword_32(seg, offset)
 #define read_virtual_qword(seg, offset) \
   read_virtual_qword_32(seg, offset)
+#define read_virtual_dqword(seg, offset, data) \
+  read_virtual_dqword_32(seg, offset, (BxPackedXmmRegister*)(data))
 
 // RMW
 #define read_RMW_virtual_byte(seg, offset)  \

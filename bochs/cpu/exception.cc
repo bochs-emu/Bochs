@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.118 2008-06-02 19:50:40 sshwarts Exp $
+// $Id: exception.cc,v 1.119 2008-07-26 14:19:06 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -850,7 +850,7 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code, bx_bool trap)
   }
 
   if (BX_CPU_THIS_PTR errorno > 0) {
-    if (errno > 2 || BX_CPU_THIS_PTR curr_exception == BX_ET_DOUBLE_FAULT) {
+    if (BX_CPU_THIS_PTR errorno > 2 || BX_CPU_THIS_PTR curr_exception == BX_ET_DOUBLE_FAULT) {
       debug(BX_CPU_THIS_PTR prev_rip); // print debug information to the log
 #if BX_DEBUGGER
       // trap into debugger (similar as done when PANIC occured)
@@ -1025,18 +1025,13 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code, bx_bool trap)
   /* if we've already had 1st exception, see if 2nd causes a
    * Double Fault instead.  Otherwise, just record 1st exception
    */
-  if (BX_CPU_THIS_PTR errorno > 0) {
-    if (is_exception_OK[BX_CPU_THIS_PTR curr_exception][exception_type]) {
-      BX_CPU_THIS_PTR curr_exception = exception_type;
-    }
-    else {
+  if (BX_CPU_THIS_PTR errorno > 0 && exception_type != BX_ET_DOUBLE_FAULT) {
+    if (! is_exception_OK[BX_CPU_THIS_PTR curr_exception][exception_type]) {
       exception(BX_DF_EXCEPTION, 0, 0);
     }
   }
-  else {
-    BX_CPU_THIS_PTR curr_exception = exception_type;
-  }
 
+  BX_CPU_THIS_PTR curr_exception = exception_type;
   BX_CPU_THIS_PTR errorno++;
 
   if (real_mode()) {
