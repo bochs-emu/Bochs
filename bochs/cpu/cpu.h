@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.495 2008-07-26 14:19:06 sshwarts Exp $
+// $Id: cpu.h,v 1.496 2008-07-26 20:50:20 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2949,7 +2949,7 @@ public: // for now...
   write_virtual_dword_32(seg, offset, data)
 #define write_virtual_qword(seg, offset, data) \
   write_virtual_qword_32(seg, offset, data)
-#define write_virtual_qword(seg, offset, data) \
+#define write_virtual_dqword(seg, offset, data) \
   write_virtual_dqword_32(seg, offset, (const BxPackedXmmRegister*)(data))
 
 // read
