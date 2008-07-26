@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.153 2008-07-11 17:31:30 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.154 2008-07-26 14:20:24 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -581,6 +581,11 @@ void bx_dbg_lin_memory_access(unsigned cpu, bx_address lin, bx_phy_address phy, 
      Bit64u data64 = * (Bit64u*)(data);
      dbg_printf(": 0x%08X 0x%08X", GET32H(data64), GET32L(data64));
   }
+  else if (len == 16) {
+     const BxPackedXmmRegister *xmmdata = (const BxPackedXmmRegister*)(data);
+     dbg_printf(": 0x%08X 0x%08X 0x%08X 0x%08X",
+         xmmdata->xmm32u(3), xmmdata->xmm32u(2), xmmdata->xmm32u(1), xmmdata->xmm32u(0));
+  }
 
   dbg_printf("\n");
 }
@@ -613,6 +618,11 @@ void bx_dbg_phy_memory_access(unsigned cpu, bx_phy_address phy, unsigned len, un
   else if (len == 8) {
      Bit64u data64 = * (Bit64u*)(data);
      dbg_printf(": 0x%08X 0x%08X", GET32H(data64), GET32L(data64));
+  }
+  else if (len == 16) {
+     const BxPackedXmmRegister *xmmdata = (const BxPackedXmmRegister*)(data);
+     dbg_printf(": 0x%08X 0x%08X 0x%08X 0x%08X",
+         xmmdata->xmm32u(3), xmmdata->xmm32u(2), xmmdata->xmm32u(1), xmmdata->xmm32u(0));
   }
 
   dbg_printf("\n");
