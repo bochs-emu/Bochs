@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.211 2008-07-11 03:54:33 sshwarts Exp $
+// $Id: rombios.c,v 1.212 2008-07-27 08:06:22 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -940,7 +940,7 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.211 $ $Date: 2008-07-11 03:54:33 $";
+static char bios_cvs_version_string[] = "$Revision: 1.212 $ $Date: 2008-07-27 08:06:22 $";
 
 #define BIOS_COPYRIGHT_STRING "(c) 2002 MandrakeSoft S.A. Written by Kevin Lawton & the Bochs team."
 
@@ -2688,7 +2688,7 @@ void ata_detect( )
           for(i=0;i<20;i++){
             write_byte(get_SS(),model+(i*2),read_byte(get_SS(),buffer+(i*2)+54+1));
             write_byte(get_SS(),model+(i*2)+1,read_byte(get_SS(),buffer+(i*2)+54));
-            }
+          }
 
           // Reformat
           write_byte(get_SS(),model+40,0x00);
@@ -2696,7 +2696,13 @@ void ata_detect( )
             if(read_byte(get_SS(),model+i)==0x20)
               write_byte(get_SS(),model+i,0x00);
             else break;
+          }
+          if (i>36) {
+            write_byte(get_SS(),model+36,0x00);
+            for(i=35;i>32;i--){
+              write_byte(get_SS(),model+i,0x2E);
             }
+          }
           break;
         }
 

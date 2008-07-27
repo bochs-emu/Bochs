@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.213 2008-07-07 18:36:07 vruppert Exp $
+// $Id: harddrv.cc,v 1.214 2008-07-27 08:06:22 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -173,7 +173,7 @@ void bx_hard_drive_c::init(void)
   char  ata_name[20];
   bx_list_c *base;
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.213 2008-07-07 18:36:07 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.214 2008-07-27 08:06:22 vruppert Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     sprintf(ata_name, "ata.%d.resources", channel);
@@ -284,6 +284,7 @@ void bx_hard_drive_c::init(void)
       while (strlen((char *)BX_HD_THIS channels[channel].drives[device].model_no) < 40) {
         strcat((char*)BX_HD_THIS channels[channel].drives[device].model_no, " ");
       }
+      BX_HD_THIS channels[channel].drives[device].model_no[40] = 0;
 
       if (SIM->get_param_enum("type", base)->get() == BX_ATA_DEVICE_DISK) {
         BX_DEBUG(("Hard-Disk on target %d/%d",channel,device));

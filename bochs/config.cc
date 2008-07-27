@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.135 2008-05-25 06:25:44 vruppert Exp $
+// $Id: config.cc,v 1.136 2008-07-27 08:06:21 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1176,7 +1176,7 @@ void bx_init_options()
         "model",
         "Model name",
         "String returned by the 'identify device' command",
-        "Generic 1234", 40);
+        "Generic 1234", 41);
       model->set_ask_format("Enter new model name: [%s]");
 
       bx_param_enum_c *biosdetect = new bx_param_enum_c(menu,
