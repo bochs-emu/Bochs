@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sb16.cc,v 1.62 2008-07-26 08:02:27 vruppert Exp $
+// $Id: sb16.cc,v 1.63 2008-07-27 15:41:43 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -2225,19 +2225,23 @@ void bx_sb16_c::opl_entermode(bx_sb16_fm_mode newmode)
 // this is called whenever one of the timer elapses
 void bx_sb16_c::opl_timerevent()
 {
+  Bit16u mask;
+
   for (int i=0; i<4; i++) {
-    if ((OPL.tmask[i/2] & (1 << (i % 2))) != 0)
-    { // only running timers
-       if ((OPL.timer[i]--) == 0)
-       { // overflow occured, set flags accordingly
-           OPL.timer[i] = OPL.timerinit[i];      // reset the counter
-           if ((OPL.tmask[i/2] >> (6 - (i % 2))) == 0)  // set flags only if unmasked
-           {
-              writelog(WAVELOG(5), "OPL Timer Interrupt: Chip %d, Timer %d", i/2, 1 << (i % 2));
-              OPL.tflag[i/2] |= 1 << (6 - (i % 2));   // set the overflow flag
-              OPL.tflag[i/2] |= 1 << 7;             // set the IRQ flag
-           }
-       }
+    if ((OPL.tmask[i/2] & (1 << (i % 2))) != 0) { // only running timers
+      if ((i % 2) == 0) {
+        mask = 0xff;
+      } else {
+        mask = 0x3ff;
+      }
+      if (((OPL.timer[i]++) & mask) == 0) { // overflow occured, set flags accordingly
+        OPL.timer[i] = OPL.timerinit[i];      // reset the counter
+        if ((OPL.tmask[i/2] >> (6 - (i % 2))) == 0) { // set flags only if unmasked
+          writelog(MIDILOG(5), "OPL Timer Interrupt: Chip %d, Timer %d", i/2, 1 << (i % 2));
+          OPL.tflag[i/2] |= 1 << (6 - (i % 2));   // set the overflow flag
+          OPL.tflag[i/2] |= 1 << 7;             // set the IRQ flag
+        }
+      }
     }
   }
 }
@@ -2286,7 +2290,7 @@ void bx_sb16_c::opl_data(Bit32u value, int chipid)
          goto break_here;
       }
 
-      opernum += (index & 0x18) * 6;
+      opernum += ((index & 0x18) >> 3) * 6;
       if (opernum > 17)     // Operators 18+ have to be accessed on other address set
       {
          opernum = -1;
@@ -2336,9 +2340,10 @@ break_here:
 
     // the two timer counts
     case 0x02:
+      OPL.timerinit[chipid * 2] = OPL.timer[chipid * 2] = value;
+      break;
     case 0x03:
-      OPL.timerinit[(index - 2) + chipid * 2] =
-        OPL.timer[(index - 2) + chipid * 2] = value;
+      OPL.timerinit[chipid * 2 + 1] = OPL.timer[chipid * 2 + 1] = (value << 2);
       break;
 
     // if OPL2: timer masks
@@ -2656,7 +2661,7 @@ void bx_sb16_c::opl_settimermask(int value, int chipid)
     if ((value & 0x03) != 0)    // yes, it's different. Start or stop?
     {
        writelog(MIDILOG(5), "Starting timers");
-       bx_pc_system.activate_timer(OPL.timer_handle, 0, 1);
+       bx_pc_system.activate_timer(OPL.timer_handle, 80, 1);
        OPL.timer_running = 1;
     }
     else
