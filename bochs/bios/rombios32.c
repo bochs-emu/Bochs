@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios32.c,v 1.28 2008-05-02 18:37:47 sshwarts Exp $
+// $Id: rombios32.c,v 1.29 2008-07-30 15:13:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  32 bit Bochs BIOS init code
@@ -401,7 +401,7 @@ void uuid_probe(void)
     // check if backdoor port exists
     asm volatile ("outl %%eax, %%dx"
         : "=a" (eax), "=b" (ebx), "=c" (ecx), "=d" (edx)
-        : "a" (0x564d5868), "c" (0xa), "d" (0x5658));
+        : "a" (0x564d5868), "b" (0), "c" (0xa), "d" (0x5658));
     if (ebx == 0x564d5868) {
         uint32_t *uuid_ptr = (uint32_t *)bios_uuid;
         // get uuid
