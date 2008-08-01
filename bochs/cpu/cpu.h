@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.496 2008-07-26 20:50:20 sshwarts Exp $
+// $Id: cpu.h,v 1.497 2008-08-01 13:28:44 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -905,6 +905,12 @@ public: // for now...
     bx_TLB_entry entry[BX_TLB_SIZE] BX_CPP_AlignN(16);
   } TLB;
 
+#if BX_SUPPORT_PAE
+  struct {
+    bx_bool valid;
+    Bit64u entry[4];
+  } PDPE_CACHE;
+#endif
 
 #if BX_SUPPORT_X86_64
   #define LPF_MASK BX_CONST64(0xfffffffffffff000)
@@ -3024,7 +3030,9 @@ public: // for now...
 
   // linear address for translate_linear expected to be canonical !
   BX_SMF bx_phy_address translate_linear(bx_address laddr, unsigned curr_pl, unsigned rw, unsigned access_type);
+#if BX_SUPPORT_PAE
   BX_SMF bx_phy_address translate_linear_PAE(bx_address laddr, Bit32u &combined_access, unsigned curr_pl, unsigned rw, unsigned access_type);
+#endif
 
   BX_SMF BX_CPP_INLINE bx_phy_address dtranslate_linear(bx_address laddr, unsigned curr_pl, unsigned rw)
   {

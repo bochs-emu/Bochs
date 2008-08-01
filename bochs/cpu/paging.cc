@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.143 2008-07-13 15:35:09 sshwarts Exp $
+// $Id: paging.cc,v 1.144 2008-08-01 13:28:44 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -536,6 +536,10 @@ void BX_CPU_C::TLB_flush(bx_bool invalidateGlobal)
     }
   }
 
+#if BX_SUPPORT_PAE
+  BX_CPU_THIS_PTR PDPE_CACHE.valid = 0;
+#endif
+
 #if BX_SUPPORT_MONITOR_MWAIT
   // invalidating of the TLB might change translation for monitored page
   // and cause subsequent MWAIT instruction to wait forever
@@ -552,6 +556,10 @@ void BX_CPU_C::TLB_invlpg(bx_address laddr)
   if (tlbEntry->lpf == LPFOf(laddr)) {
     tlbEntry->lpf = BX_INVALID_TLB_ENTRY;
   }
+
+#if BX_SUPPORT_PAE
+  BX_CPU_THIS_PTR PDPE_CACHE.valid = 0;
+#endif
 
 #if BX_SUPPORT_MONITOR_MWAIT
   // invalidating of the TLB entry might change translation for monitored
@@ -627,6 +635,8 @@ void BX_CPU_C::page_fault(unsigned fault, bx_address laddr, unsigned user, unsig
 
 #define PAGE_DIRECTORY_NX_BIT (BX_CONST64(0x8000000000000000))
 
+#if BX_SUPPORT_PAE
+
 // Translate a linear address to a physical address in PAE paging mode
 bx_phy_address BX_CPU_C::translate_linear_PAE(bx_address laddr, Bit32u &combined_access, unsigned curr_pl, unsigned rw, unsigned access_type)
 {
@@ -675,15 +685,28 @@ bx_phy_address BX_CPU_C::translate_linear_PAE(bx_address laddr, Bit32u &combined
 
     pdpe_addr = (bx_phy_address)((pml4 & BX_CONST64(0x000ffffffffff000)) |
                                ((laddr & BX_CONST64(0x0000007fc0000000)) >> 27));
+
+    BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, pdpe_addr, 8, &pdpe);
+    BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pdpe_addr, 8, BX_READ, (Bit8u*)(&pdpe));
   }
   else
 #endif
   {
     pdpe_addr = (bx_phy_address) (BX_CPU_THIS_PTR cr3_masked | ((laddr & 0xc0000000) >> 27));
-  }
 
-  BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, pdpe_addr, 8, &pdpe);
-  BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pdpe_addr, 8, BX_READ, (Bit8u*)(&pdpe));
+    if (! BX_CPU_THIS_PTR PDPE_CACHE.valid) {
+      for (int n=0; n<4; n++) {
+        // read PDPE cache entry
+        pdpe_addr = (bx_phy_address) (BX_CPU_THIS_PTR cr3_masked | (n << 3));
+        BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, pdpe_addr, 8, &(BX_CPU_THIS_PTR PDPE_CACHE.entry[n]));
+        BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pdpe_addr, 8, 
+             BX_READ, (Bit8u*)(&BX_CPU_THIS_PTR PDPE_CACHE.entry[n]));
+      }
+      BX_CPU_THIS_PTR PDPE_CACHE.valid = 1;
+    }
+
+    pdpe = BX_CPU_THIS_PTR PDPE_CACHE.entry[(laddr >> 30) & 3];
+  }
 
   if (!(pdpe & 0x1)) {
     BX_DEBUG(("PAE PDPE: entry not present"));
@@ -897,6 +920,8 @@ bx_phy_address BX_CPU_C::translate_linear_PAE(bx_address laddr, Bit32u &combined
 
   return ppf;
 }
+
+#endif // BX_SUPPORT_PAE
 
 /* PSE PDE4M: bits [21:17] */
 #define PAGING_PSE_PDE4M_RESERVED_BITS \
