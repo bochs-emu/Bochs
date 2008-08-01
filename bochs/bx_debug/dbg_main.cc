@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.154 2008-07-26 14:20:24 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.155 2008-08-01 08:36:04 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1567,6 +1567,8 @@ void bx_dbg_unwatch(int read, bx_phy_address address)
 
 void bx_dbg_continue_command(void)
 {
+  int cpu;
+
   // continue executing, until a guard found
 
 one_more:
@@ -1574,6 +1576,12 @@ one_more:
   // I must guard for ICOUNT or one CPU could run forever without giving
   // the others a chance.
   bx_guard.guard_for |= BX_DBG_GUARD_CTRL_C; // stop on Ctrl-C
+
+  for (cpu=0; cpu < BX_SMP_PROCESSORS; cpu++) {
+    BX_CPU(cpu)->guard_found.guard_found = 0;
+    BX_CPU(cpu)->guard_found.icount = 0;
+    BX_CPU(cpu)->guard_found.time_tick = bx_pc_system.time_ticks();
+  }
 
   // update gui (disable continue command, enable stop command, etc.)
   sim_running->set(1);
@@ -1598,19 +1606,16 @@ one_more:
 #define BX_DBG_DEFAULT_ICOUNT_QUANTUM 5
 
     Bit32u quantum = (BX_SMP_PROCESSORS>1) ? BX_DBG_DEFAULT_ICOUNT_QUANTUM : 0;
-    int cpu;
+    Bit32u max_executed = 0;
     for (cpu=0; cpu < BX_SMP_PROCESSORS; cpu++) {
-      BX_CPU(cpu)->guard_found.guard_found = 0;
-      BX_CPU(cpu)->guard_found.icount = 0;
-      BX_CPU(cpu)->guard_found.time_tick = bx_pc_system.time_ticks();
+      Bit64u cpu_icount = BX_CPU(cpu)->guard_found.icount;
       BX_CPU(cpu)->cpu_loop(quantum);
+      Bit32u executed = BX_CPU(cpu)->guard_found.icount - cpu_icount;
+      if (executed > max_executed) max_executed = executed;
       // set stop flag if a guard found other than icount or halted
       unsigned long found = BX_CPU(cpu)->guard_found.guard_found;
       stop_reason_t reason = (stop_reason_t) BX_CPU(cpu)->stop_reason;
-      if (found) {
-        stop = 1;
-        which = cpu;
-      } else if (reason != STOP_NO_REASON && reason != STOP_CPU_HALTED) {
+      if (found || (reason != STOP_NO_REASON && reason != STOP_CPU_HALTED)) {
         stop = 1;
         which = cpu;
       }
@@ -1621,20 +1626,7 @@ one_more:
 
 #if BX_SUPPORT_SMP
     // increment time tick only after all processors have had their chance.
-    if (BX_SMP_PROCESSORS == 1) {
-      // all ticks are handled inside the cpu loop
-    }
-    else {
-      // We must tick by the number of instructions that were
-      // ACTUALLY executed, not the number that we asked it to
-      // execute.  Even this is tricky with SMP because one might
-      // have hit a breakpoint, while others executed the whole
-      // quantum.
-      Bit32u max_executed = 0;
-      for (cpu=0; cpu<BX_SMP_PROCESSORS; cpu++) {
-        if (BX_CPU(cpu)->guard_found.icount > max_executed)
-          max_executed = BX_CPU(cpu)->guard_found.icount;
-      }
+    if (BX_SMP_PROCESSORS > 1) {
       // potential deadlock if all processors are halted.  Then
       // max_executed will be 0, tick will be incremented by zero, and
       // there will never be a timed event to wake them up.  To avoid this,
@@ -1690,9 +1682,7 @@ void bx_dbg_stepN_command(Bit32u count)
       // set stop flag if a guard found other than icount or halted
       unsigned long found = BX_CPU(cpu)->guard_found.guard_found;
       stop_reason_t reason = (stop_reason_t) BX_CPU(cpu)->stop_reason;
-      if (found)
-        stop = 1;
-      else if (reason != STOP_NO_REASON && reason != STOP_CPU_HALTED)
+      if (found || (reason != STOP_NO_REASON && reason != STOP_CPU_HALTED))
         stop = 1;
     }
 #if BX_SUPPORT_SMP == 0
