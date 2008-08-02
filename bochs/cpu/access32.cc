@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: access32.cc,v 1.4 2008-07-26 14:19:06 sshwarts Exp $
+// $Id: access32.cc,v 1.5 2008-08-02 10:16:47 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008 Stanislav Shwartsman
@@ -25,17 +25,6 @@
 #include "bochs.h"
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
-
-// The macro was made in order to optimize access alignment into TLB lookup - 
-// when aligment check is enabled a misaligned access will miss the TLB.
-// BX_CPU_THIS_PTR alignment_check_mask must be initialized to all'ones if
-// alignment check exception is enabled and LPF_MASK if not.
-#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
-  #define AlignedAccessLPFOf32(laddr, alignment_mask) \
-          ((laddr) & (LPF_MASK | (alignment_mask))) & (BX_CPU_THIS_PTR alignment_check_mask)
-#else
-  #define AlignedAccessLPFOf32(laddr, alignment_mask) LPFOf(laddr)
-#endif
 
   void BX_CPP_AttrRegparmN(3)
 BX_CPU_C::write_virtual_byte_32(unsigned s, Bit32u offset, Bit8u data)
@@ -99,7 +88,7 @@ accessOK:
     laddr = BX_CPU_THIS_PTR get_laddr32(s, offset);
 #if BX_SupportGuest2HostTLB
     unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 1);
-    Bit32u lpf = AlignedAccessLPFOf32(laddr, 1);
+    Bit32u lpf = AlignedAccessLPFOf(laddr, 1) & (BX_CPU_THIS_PTR alignment_check_mask);
     bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
     if (tlbEntry->lpf == lpf) {
       // See if the TLB entry privilege level allows us write access
@@ -155,7 +144,7 @@ accessOK:
     laddr = BX_CPU_THIS_PTR get_laddr32(s, offset);
 #if BX_SupportGuest2HostTLB
     unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 3);
-    Bit32u lpf = AlignedAccessLPFOf32(laddr, 3);
+    Bit32u lpf = AlignedAccessLPFOf(laddr, 3) & (BX_CPU_THIS_PTR alignment_check_mask);
     bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
     if (tlbEntry->lpf == lpf) {
       // See if the TLB entry privilege level allows us write access
@@ -211,7 +200,7 @@ accessOK:
     laddr = BX_CPU_THIS_PTR get_laddr32(s, offset);
 #if BX_SupportGuest2HostTLB
     unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 7);
-    Bit32u lpf = AlignedAccessLPFOf32(laddr, 7);
+    Bit32u lpf = AlignedAccessLPFOf(laddr, 7) & (BX_CPU_THIS_PTR alignment_check_mask);
     bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
     if (tlbEntry->lpf == lpf) {
       // See if the TLB entry privilege level allows us write access
@@ -267,7 +256,7 @@ accessOK:
     laddr = BX_CPU_THIS_PTR get_laddr32(s, offset);
 #if BX_SupportGuest2HostTLB
     unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 15);
-    Bit32u lpf = AlignedAccessLPFOf32(laddr, 15);
+    Bit32u lpf = AlignedAccessLPFOf(laddr, 15) & (BX_CPU_THIS_PTR alignment_check_mask);
     bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
     if (tlbEntry->lpf == lpf) {
       // See if the TLB entry privilege level allows us write access
@@ -296,6 +285,59 @@ accessOK:
       }
     }
 #endif
+    access_write_linear(laddr, 16, CPL, (void *) data);
+    return;
+  }
+
+  if (seg->cache.valid & SegAccessWOK) {
+    if (offset <= (seg->cache.u.segment.limit_scaled-15))
+      goto accessOK;
+  }
+
+  if (!write_virtual_checks(seg, offset, 16))
+    exception(int_number(s), 0, 0);
+  goto accessOK;
+}
+
+  void BX_CPP_AttrRegparmN(3)
+BX_CPU_C::write_virtual_dqword_aligned_32(unsigned s, Bit32u offset, const BxPackedXmmRegister *data)
+{
+  Bit32u laddr;
+  bx_segment_reg_t *seg = &BX_CPU_THIS_PTR sregs[s];
+  BX_INSTR_MEM_DATA_ACCESS(BX_CPU_ID, s, offset, 16, BX_WRITE);
+
+  BX_ASSERT(BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64);
+
+  if (seg->cache.valid & SegAccessWOK4G) {
+accessOK:
+    laddr = BX_CPU_THIS_PTR get_laddr32(s, offset);
+#if BX_SupportGuest2HostTLB
+    unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 15);
+    Bit32u lpf = AlignedAccessLPFOf(laddr, 15);
+    bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
+    if (tlbEntry->lpf == lpf) {
+      // See if the TLB entry privilege level allows us write access
+      // from this CPL.
+      if (tlbEntry->accessBits & (0x10 << CPL)) {
+        bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
+        Bit32u pageOffset = PAGE_OFFSET(laddr);
+        BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr, tlbEntry->ppf | pageOffset, 16, BX_WRITE);
+        BX_DBG_LIN_MEMORY_ACCESS(BX_CPU_ID, laddr,
+            tlbEntry->ppf | pageOffset, 16, CPL, BX_WRITE, (Bit8u*) data);
+        Bit64u *hostAddr = (Bit64u*) (hostPageAddr | pageOffset);
+#if BX_SUPPORT_ICACHE
+        pageWriteStampTable.decWriteStamp(tlbEntry->ppf);
+#endif
+        WriteHostQWordToLittleEndian(hostAddr,   data->xmm64u(0));
+        WriteHostQWordToLittleEndian(hostAddr+1, data->xmm64u(1));
+        return;
+      }
+    }
+#endif
+    if (laddr & 15) {
+      BX_ERROR(("write_virtual_dqword_aligned(): #GP misaligned access"));
+      exception(BX_GP_EXCEPTION, 0, 0);
+    }
     access_write_linear(laddr, 16, CPL, (void *) data);
     return;
   }
@@ -371,7 +413,7 @@ accessOK:
     laddr = BX_CPU_THIS_PTR get_laddr32(s, offset);
 #if BX_SupportGuest2HostTLB
     unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 1);
-    Bit32u lpf = AlignedAccessLPFOf32(laddr, 1);
+    Bit32u lpf = AlignedAccessLPFOf(laddr, 1) & (BX_CPU_THIS_PTR alignment_check_mask);
     bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
     if (tlbEntry->lpf == lpf) {
       // See if the TLB entry privilege level allows us read access
@@ -425,7 +467,7 @@ accessOK:
     laddr = BX_CPU_THIS_PTR get_laddr32(s, offset);
 #if BX_SupportGuest2HostTLB
     unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 3);
-    Bit32u lpf = AlignedAccessLPFOf32(laddr, 3);
+    Bit32u lpf = AlignedAccessLPFOf(laddr, 3) & (BX_CPU_THIS_PTR alignment_check_mask);
     bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
     if (tlbEntry->lpf == lpf) {
       // See if the TLB entry privilege level allows us read access
@@ -479,7 +521,7 @@ accessOK:
     laddr = BX_CPU_THIS_PTR get_laddr32(s, offset);
 #if BX_SupportGuest2HostTLB
     unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 7);
-    Bit32u lpf = AlignedAccessLPFOf32(laddr, 7);
+    Bit32u lpf = AlignedAccessLPFOf(laddr, 7) & (BX_CPU_THIS_PTR alignment_check_mask);
     bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
     if (tlbEntry->lpf == lpf) {
       // See if the TLB entry privilege level allows us read access
@@ -532,7 +574,7 @@ accessOK:
     laddr = BX_CPU_THIS_PTR get_laddr32(s, offset);
 #if BX_SupportGuest2HostTLB
     unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 15);
-    Bit32u lpf = AlignedAccessLPFOf32(laddr, 15);
+    Bit32u lpf = AlignedAccessLPFOf(laddr, 15) & (BX_CPU_THIS_PTR alignment_check_mask);
     bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
     if (tlbEntry->lpf == lpf) {
       // See if the TLB entry privilege level allows us read access
@@ -572,6 +614,55 @@ accessOK:
   goto accessOK;
 }
 
+  void BX_CPP_AttrRegparmN(3)
+BX_CPU_C::read_virtual_dqword_aligned_32(unsigned s, Bit32u offset, BxPackedXmmRegister *data)
+{
+  Bit32u laddr;
+  bx_segment_reg_t *seg = &BX_CPU_THIS_PTR sregs[s];
+  BX_INSTR_MEM_DATA_ACCESS(BX_CPU_ID, s, offset, 16, BX_READ);
+
+  BX_ASSERT(BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64);
+
+  if (seg->cache.valid & SegAccessROK4G) {
+accessOK:
+    laddr = BX_CPU_THIS_PTR get_laddr32(s, offset);
+#if BX_SupportGuest2HostTLB
+    unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 15);
+    Bit32u lpf = AlignedAccessLPFOf(laddr, 15);
+    bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
+    if (tlbEntry->lpf == lpf) {
+      // See if the TLB entry privilege level allows us read access
+      // from this CPL.
+      if (tlbEntry->accessBits & (1<<CPL)) { // Read this pl OK.
+        bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
+        Bit32u pageOffset = PAGE_OFFSET(laddr);
+        BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr, tlbEntry->ppf | pageOffset, 16, BX_READ);
+        Bit64u *hostAddr = (Bit64u*) (hostPageAddr | pageOffset);
+        ReadHostQWordFromLittleEndian(hostAddr,   data->xmm64u(0));
+        ReadHostQWordFromLittleEndian(hostAddr+1, data->xmm64u(1));
+        BX_DBG_LIN_MEMORY_ACCESS(BX_CPU_ID, laddr,
+            tlbEntry->ppf | pageOffset, 16, CPL, BX_READ, (Bit8u*) data);
+        return;
+      }
+    }
+#endif
+    if (laddr & 15) {
+      BX_ERROR(("read_virtual_dqword_aligned(): #GP misaligned access"));
+      exception(BX_GP_EXCEPTION, 0, 0);
+    }
+    access_read_linear(laddr, 16, CPL, BX_READ, (void *) data);
+    return;
+  }
+
+  if (seg->cache.valid & SegAccessROK) {
+    if (offset <= (seg->cache.u.segment.limit_scaled-15))
+      goto accessOK;
+  }
+
+  if (!read_virtual_checks(seg, offset, 16))
+    exception(int_number(s), 0, 0);
+  goto accessOK;
+}
 
 //////////////////////////////////////////////////////////////
 // special Read-Modify-Write operations                     //
@@ -643,7 +734,7 @@ accessOK:
     laddr = BX_CPU_THIS_PTR get_laddr32(s, offset);
 #if BX_SupportGuest2HostTLB
     unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 1);
-    Bit32u lpf = AlignedAccessLPFOf32(laddr, 1);
+    Bit32u lpf = AlignedAccessLPFOf(laddr, 1) & (BX_CPU_THIS_PTR alignment_check_mask);
     bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
     if (tlbEntry->lpf == lpf) {
       // See if the TLB entry privilege level allows us write access
@@ -701,7 +792,7 @@ accessOK:
     laddr = BX_CPU_THIS_PTR get_laddr32(s, offset);
 #if BX_SupportGuest2HostTLB
     unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 3);
-    Bit32u lpf = AlignedAccessLPFOf32(laddr, 3);
+    Bit32u lpf = AlignedAccessLPFOf(laddr, 3) & (BX_CPU_THIS_PTR alignment_check_mask);
     bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
     if (tlbEntry->lpf == lpf) {
       // See if the TLB entry privilege level allows us write access
@@ -759,7 +850,7 @@ accessOK:
     laddr = BX_CPU_THIS_PTR get_laddr32(s, offset);
 #if BX_SupportGuest2HostTLB
     unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 7);
-    Bit32u lpf = AlignedAccessLPFOf32(laddr, 7);
+    Bit32u lpf = AlignedAccessLPFOf(laddr, 7) & (BX_CPU_THIS_PTR alignment_check_mask);
     bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
     if (tlbEntry->lpf == lpf) {
       // See if the TLB entry privilege level allows us write access
@@ -982,7 +1073,7 @@ accessOK:
     laddr = (Bit32u)(seg->cache.u.segment.base + offset);
 #if BX_SupportGuest2HostTLB
     unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 1);
-    Bit32u lpf = AlignedAccessLPFOf32(laddr, 1);
+    Bit32u lpf = AlignedAccessLPFOf(laddr, 1) & (BX_CPU_THIS_PTR alignment_check_mask);
     bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
     if (tlbEntry->lpf == lpf) {
       // See if the TLB entry privilege level allows us write access
@@ -1037,7 +1128,7 @@ accessOK:
     laddr = (Bit32u)(seg->cache.u.segment.base + offset);
 #if BX_SupportGuest2HostTLB
     unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 3);
-    Bit32u lpf = AlignedAccessLPFOf32(laddr, 3);
+    Bit32u lpf = AlignedAccessLPFOf(laddr, 3) & (BX_CPU_THIS_PTR alignment_check_mask);
     bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
     if (tlbEntry->lpf == lpf) {
       // See if the TLB entry privilege level allows us write access

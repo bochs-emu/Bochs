@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: access.cc,v 1.114 2008-07-26 14:19:06 sshwarts Exp $
+// $Id: access.cc,v 1.115 2008-08-02 10:16:46 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -317,29 +317,3 @@ BX_CPU_C::v2h_write_byte(bx_address laddr, unsigned curr_pl)
   return 0;
 }
 #endif   // BX_SupportGuest2HostTLB
-
-  void BX_CPP_AttrRegparmN(3)
-BX_CPU_C::read_virtual_dqword_aligned(unsigned s, bx_address offset, Bit8u *data)
-{
-  // If double quadword access is unaligned, #GP(0).
-  bx_address laddr = BX_CPU_THIS_PTR get_laddr(s, offset);
-  if (laddr & 0xf) {
-    BX_DEBUG(("read_virtual_dqword_aligned(): access not aligned to 16-byte"));
-    exception(BX_GP_EXCEPTION, 0, 0);
-  }
-
-  read_virtual_dqword(s, offset, (BxPackedXmmRegister*) data);
-}
-
-  void BX_CPP_AttrRegparmN(3)
-BX_CPU_C::write_virtual_dqword_aligned(unsigned s, bx_address offset, Bit8u *data)
-{
-  // If double quadword access is unaligned, #GP(0).
-  bx_address laddr = BX_CPU_THIS_PTR get_laddr(s, offset);
-  if (laddr & 0xf) {
-    BX_DEBUG(("write_virtual_dqword_aligned(): access not aligned to 16-byte"));
-    exception(BX_GP_EXCEPTION, 0, 0);
-  }
-
-  write_virtual_dqword(s, offset, data);
-}
