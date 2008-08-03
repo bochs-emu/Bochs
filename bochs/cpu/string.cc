@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: string.cc,v 1.62 2008-06-25 10:34:21 sshwarts Exp $
+// $Id: string.cc,v 1.63 2008-08-03 19:53:09 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -60,7 +60,7 @@ Bit32u BX_CPU_C::FastRepMOVSB(bxInstruction_c *i, unsigned srcSeg, bx_address sr
   laddrSrc = BX_CPU_THIS_PTR get_laddr(srcSeg, srcOff);
 
 #if BX_SupportGuest2HostTLB
-  hostAddrSrc = v2h_read_byte(laddrSrc, CPL);
+  hostAddrSrc = v2h_read_byte(laddrSrc, BX_CPU_THIS_PTR user_pl);
 #else
   bx_phy_address paddrSrc;
 
@@ -81,7 +81,7 @@ Bit32u BX_CPU_C::FastRepMOVSB(bxInstruction_c *i, unsigned srcSeg, bx_address sr
   laddrDst = BX_CPU_THIS_PTR get_laddr(dstSeg, dstOff);
 
 #if BX_SupportGuest2HostTLB
-  hostAddrDst = v2h_write_byte(laddrDst, CPL);
+  hostAddrDst = v2h_write_byte(laddrDst, BX_CPU_THIS_PTR user_pl);
 #else
   bx_phy_address paddrDst;
 
@@ -155,7 +155,7 @@ Bit32u BX_CPU_C::FastRepMOVSW(bxInstruction_c *i, unsigned srcSeg, bx_address sr
   laddrSrc = BX_CPU_THIS_PTR get_laddr(srcSeg, srcOff);
 
 #if BX_SupportGuest2HostTLB
-  hostAddrSrc = v2h_read_byte(laddrSrc, CPL);
+  hostAddrSrc = v2h_read_byte(laddrSrc, BX_CPU_THIS_PTR user_pl);
 #else
   bx_phy_address paddrSrc;
 
@@ -176,7 +176,7 @@ Bit32u BX_CPU_C::FastRepMOVSW(bxInstruction_c *i, unsigned srcSeg, bx_address sr
   laddrDst = BX_CPU_THIS_PTR get_laddr(dstSeg, dstOff);
 
 #if BX_SupportGuest2HostTLB
-  hostAddrDst = v2h_write_byte(laddrDst, CPL);
+  hostAddrDst = v2h_write_byte(laddrDst, BX_CPU_THIS_PTR user_pl);
 #else
   bx_phy_address paddrDst;
 
@@ -253,7 +253,7 @@ Bit32u BX_CPU_C::FastRepMOVSD(bxInstruction_c *i, unsigned srcSeg, bx_address sr
   laddrSrc = BX_CPU_THIS_PTR get_laddr(srcSeg, srcOff);
 
 #if BX_SupportGuest2HostTLB
-  hostAddrSrc = v2h_read_byte(laddrSrc, CPL);
+  hostAddrSrc = v2h_read_byte(laddrSrc, BX_CPU_THIS_PTR user_pl);
 #else
   bx_phy_address paddrSrc;
 
@@ -274,7 +274,7 @@ Bit32u BX_CPU_C::FastRepMOVSD(bxInstruction_c *i, unsigned srcSeg, bx_address sr
   laddrDst = BX_CPU_THIS_PTR get_laddr(dstSeg, dstOff);
 
 #if BX_SupportGuest2HostTLB
-  hostAddrDst = v2h_write_byte(laddrDst, CPL);
+  hostAddrDst = v2h_write_byte(laddrDst, BX_CPU_THIS_PTR user_pl);
 #else
   bx_phy_address paddrDst;
 
@@ -347,7 +347,7 @@ Bit32u BX_CPU_C::FastRepSTOSB(bxInstruction_c *i, unsigned dstSeg, bx_address ds
   laddrDst = BX_CPU_THIS_PTR get_laddr(dstSeg, dstOff);
 
 #if BX_SupportGuest2HostTLB
-  hostAddrDst = v2h_write_byte(laddrDst, CPL);
+  hostAddrDst = v2h_write_byte(laddrDst, BX_CPU_THIS_PTR user_pl);
 #else
   bx_phy_address paddrDst;
 
@@ -412,7 +412,7 @@ Bit32u BX_CPU_C::FastRepSTOSW(bxInstruction_c *i, unsigned dstSeg, bx_address ds
   laddrDst = BX_CPU_THIS_PTR get_laddr(dstSeg, dstOff);
 
 #if BX_SupportGuest2HostTLB
-  hostAddrDst = v2h_write_byte(laddrDst, CPL);
+  hostAddrDst = v2h_write_byte(laddrDst, BX_CPU_THIS_PTR user_pl);
 #else
   bx_phy_address paddrDst;
 
@@ -479,7 +479,7 @@ Bit32u BX_CPU_C::FastRepSTOSD(bxInstruction_c *i, unsigned dstSeg, bx_address ds
   laddrDst = BX_CPU_THIS_PTR get_laddr(dstSeg, dstOff);
 
 #if BX_SupportGuest2HostTLB
-  hostAddrDst = v2h_write_byte(laddrDst, CPL);
+  hostAddrDst = v2h_write_byte(laddrDst, BX_CPU_THIS_PTR user_pl);
 #else
   bx_phy_address paddrDst;
 

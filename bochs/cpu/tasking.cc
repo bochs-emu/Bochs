@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: tasking.cc,v 1.60 2008-07-13 14:01:09 sshwarts Exp $
+// $Id: tasking.cc,v 1.61 2008-08-03 19:53:09 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -624,9 +624,7 @@ void BX_CPU_C::task_switch(bx_selector_t *tss_selector,
       exception(BX_TS_EXCEPTION, raw_cs_selector & 0xfffc, 0);
     }
 
-#if BX_SUPPORT_ICACHE
-    BX_CPU_THIS_PTR updateFetchModeMask();
-#endif
+    updateFetchModeMask();
 
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
     handleAlignmentCheck(); // task switch, CPL was modified

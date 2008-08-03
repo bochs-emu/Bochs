@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: segment_ctrl_pro.cc,v 1.95 2008-05-26 21:46:38 sshwarts Exp $
+// $Id: segment_ctrl_pro.cc,v 1.96 2008-08-03 19:53:09 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -211,9 +211,7 @@ BX_CPU_C::load_seg_reg(bx_segment_reg_t *seg, Bit16u new_value)
 
   if (seg == &BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS]) {
     invalidate_prefetch_q();
-#if BX_SUPPORT_ICACHE
-    BX_CPU_THIS_PTR updateFetchModeMask();
-#endif
+    updateFetchModeMask();
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
     handleAlignmentCheck(); // CPL was modified
 #endif

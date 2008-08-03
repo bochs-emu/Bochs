@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.144 2008-08-01 13:28:44 sshwarts Exp $
+// $Id: paging.cc,v 1.145 2008-08-03 19:53:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -331,49 +331,39 @@ static unsigned priv_check[BX_PRIV_CHECK_SIZE];
 //       value, necessitating a TLB flush when CR0.WP changes.
 //
 //       The test is:
-//         OK = 0x01 << ( (W<<2) | CPL ) [W:1=write, 0=read]
+//         OK = 0x01 << ( (W<<2) | PL ) [W:1=write, 0=read; PL:1=user, 0=sys]
 //
 //       Thus for reads, it is:
-//         OK = 0x01 << (          CPL )
+//         OK = 0x01 << (          PL )
 //       And for writes:
-//         OK = 0x10 << (          CPL )
+//         OK = 0x04 << (          PL )
 //
-//     bit 15:       a Write from CPL=3 is OK
-//     bit 14:       a Write from CPL=2 is OK
-//     bit 13:       a Write from CPL=1 is OK
-//     bit 12:       a Write from CPL=0 is OK
-//
-//     bit 11:       a Read  from CPL=3 is OK
-//     bit 10:       a Read  from CPL=2 is OK
-//     bit  9:       a Read  from CPL=1 is OK
-//     bit  8:       a Read  from CPL=0 is OK
+//     bit 7:       a Write from user (CPL=3) is OK
+//     bit 6:       a Write from system is OK
+//     bit 5:       a Read  from user (CPL=3) is OK
+//     bit 4:       a Read  from system is OK
 //
 //       And the lowest bits are as above, except that they also indicate
 //       that hostPageAddr is valid, so we do not separately need to test
 //       that pointer against NULL.  These have smaller constants for us
 //       to be able to use smaller encodings in the trace generators.  Note
-//       that whenever bit n (n=0..7) is set, then also n+8 is set.
+//       that whenever bit n (n=0..4) is set, then also n+4 is set.
 //       (The opposite is of course not true)
 //
-//     bit  7:      a Write from CPL=3 is OK, hostPageAddr is valid
-//     bit  6:      a Write from CPL=2 is OK, hostPageAddr is valid
-//     bit  5:      a Write from CPL=1 is OK, hostPageAddr is valid
-//     bit  4:      a Write from CPL=0 is OK, hostPageAddr is valid
-//
-//     bit  3:      a Read  from CPL=3 is OK, hostPageAddr is valid
-//     bit  2:      a Read  from CPL=2 is OK, hostPageAddr is valid
-//     bit  1:      a Read  from CPL=1 is OK, hostPageAddr is valid
-//     bit  0:      a Read  from CPL=0 is OK, hostPageAddr is valid
+//     bit 3:      a Write from user (CPL=3) is OK, hostPageAddr is valid
+//     bit 2:      a Write from system is OK, hostPageAddr is valid
+//     bit 1:      a Read  from user (CPL=3) is OK, hostPageAddr is valid
+//     bit 0:      a Read  from system is OK, hostPageAddr is valid
 //
 
-#define TLB_WriteUserOK       0x8000
-#define TLB_WriteSysOK        0x7000
-#define TLB_ReadUserOK        0x0800
-#define TLB_ReadSysOK         0x0700
-#define TLB_WriteUserPtrOK    0x0080
-#define TLB_WriteSysPtrOK     0x0070
-#define TLB_ReadUserPtrOK     0x0008
-#define TLB_ReadSysPtrOK      0x0007
+#define TLB_WriteUserOK       0x80
+#define TLB_WriteSysOK        0x40
+#define TLB_ReadUserOK        0x20
+#define TLB_ReadSysOK         0x10
+#define TLB_WriteUserPtrOK    0x08
+#define TLB_WriteSysPtrOK     0x04
+#define TLB_ReadUserPtrOK     0x02
+#define TLB_ReadSysPtrOK      0x01
 
 #define TLB_GlobalPage        0x80000000
 
@@ -947,12 +937,11 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned curr_pl, un
   bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[TLB_index];
 
   // already looked up TLB for code access
-  if (access_type != CODE_ACCESS && tlbEntry->lpf == lpf)
+  if (tlbEntry->lpf == lpf)
   {
-    paddress   = tlbEntry->ppf | poffset;
-    accessBits = tlbEntry->accessBits;
+    paddress = tlbEntry->ppf | poffset;
 
-    if (accessBits & (0x0100 << ((isWrite<<2) | curr_pl)))
+    if (tlbEntry->accessBits & (0x10 << ((isWrite<<2) | pl)))
       return paddress;
 
     // The current access does not have permission according to the info
@@ -1135,7 +1124,7 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned curr_pl, un
 #if BX_X86_DEBUGGER
     if (! hwbreakpoint_check(laddr))
 #endif
-      accessBits |= (accessBits & 0xff00) >> 8;
+      accessBits |= (accessBits & 0xF0) >> 4;
   }
 #endif
   tlbEntry->accessBits = accessBits;

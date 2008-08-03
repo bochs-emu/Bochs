@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bit64.cc,v 1.14 2008-07-13 15:52:55 sshwarts Exp $
+// $Id: bit64.cc,v 1.15 2008-08-03 19:53:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -34,7 +34,6 @@
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::BSF_GqEq(bxInstruction_c *i)
 {
-  /* for 64 bit operand size mode */
   Bit64u op1_64, op2_64;
 
   /* op2_64 is a register or memory reference */
@@ -67,7 +66,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BSF_GqEq(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::BSR_GqEq(bxInstruction_c *i)
 {
-  /* for 64 bit operand size mode */
   Bit64u op1_64, op2_64;
 
   /* op2_64 is a register or memory reference */

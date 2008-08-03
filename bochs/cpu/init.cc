@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.174 2008-06-14 16:55:45 sshwarts Exp $
+// $Id: init.cc,v 1.175 2008-08-03 19:53:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -751,8 +751,8 @@ void BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.avl = 0;
 #endif
 
+  updateFetchModeMask();
 #if BX_SUPPORT_ICACHE
-  BX_CPU_THIS_PTR updateFetchModeMask();
   flushICaches();
 #endif
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: access.cc,v 1.115 2008-08-02 10:16:46 sshwarts Exp $
+// $Id: access.cc,v 1.116 2008-08-03 19:53:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -274,7 +274,7 @@ int BX_CPU_C::int_number(unsigned s)
 
 #if BX_SupportGuest2HostTLB
   Bit8u* BX_CPP_AttrRegparmN(2)
-BX_CPU_C::v2h_read_byte(bx_address laddr, unsigned curr_pl)
+BX_CPU_C::v2h_read_byte(bx_address laddr, bx_bool user)
 {
   unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 0);
   bx_address lpf = LPFOf(laddr);
@@ -282,7 +282,7 @@ BX_CPU_C::v2h_read_byte(bx_address laddr, unsigned curr_pl)
   if (tlbEntry->lpf == lpf) {
     // See if the TLB entry privilege level allows us read access
     // from this CPL.
-    if (tlbEntry->accessBits & (1<<curr_pl)) { // Read this pl OK.
+    if (tlbEntry->accessBits & (0x01 + user)) { // Read this pl OK.
       bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
       Bit32u pageOffset = PAGE_OFFSET(laddr);
       Bit8u *hostAddr = (Bit8u*) (hostPageAddr | pageOffset);
@@ -294,7 +294,7 @@ BX_CPU_C::v2h_read_byte(bx_address laddr, unsigned curr_pl)
 }
 
   Bit8u* BX_CPP_AttrRegparmN(2)
-BX_CPU_C::v2h_write_byte(bx_address laddr, unsigned curr_pl)
+BX_CPU_C::v2h_write_byte(bx_address laddr, bx_bool user)
 {
   unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 0);
   bx_address lpf = LPFOf(laddr);
@@ -303,7 +303,7 @@ BX_CPU_C::v2h_write_byte(bx_address laddr, unsigned curr_pl)
   {
     // See if the TLB entry privilege level allows us write access
     // from this CPL.
-    if (tlbEntry->accessBits & (0x10 << curr_pl)) {
+    if (tlbEntry->accessBits & (0x04 << user)) {
       bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
       Bit32u pageOffset = PAGE_OFFSET(laddr);
       Bit8u *hostAddr = (Bit8u*) (hostPageAddr | pageOffset);

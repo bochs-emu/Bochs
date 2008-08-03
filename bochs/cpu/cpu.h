@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.498 2008-08-02 10:16:47 sshwarts Exp $
+// $Id: cpu.h,v 1.499 2008-08-03 19:53:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -881,6 +881,7 @@ public: // for now...
   bx_phy_address pAddrA20Page; // Guest physical address of current instruction
                                // page with A20() already applied.
   unsigned cpu_mode;
+  bx_bool  user_pl;
   bx_bool  in_smm;
   bx_bool  nmi_disable;
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
@@ -930,7 +931,6 @@ public: // for now...
   bxICache_c iCache BX_CPP_AlignN(32);
   Bit32u fetchModeMask;
   const Bit32u *currPageWriteStampPtr;
-  BX_SMF void updateFetchModeMask(void);
 #endif
 
   struct {
@@ -2794,6 +2794,7 @@ public: // for now...
 #endif
 #endif
   BX_SMF void prefetch(void);
+  BX_SMF void updateFetchModeMask(void);
   BX_SMF BX_CPP_INLINE void invalidate_prefetch_q(void)
   {
     BX_CPU_THIS_PTR eipPageWindowSize = 0;
@@ -3001,8 +3002,8 @@ public: // for now...
 #endif
 
 #if BX_SupportGuest2HostTLB
-  BX_SMF Bit8u* v2h_read_byte(bx_address laddr, unsigned curr_pl) BX_CPP_AttrRegparmN(2);
-  BX_SMF Bit8u* v2h_write_byte(bx_address laddr, unsigned curr_pl) BX_CPP_AttrRegparmN(2);
+  BX_SMF Bit8u* v2h_read_byte(bx_address laddr, bx_bool user) BX_CPP_AttrRegparmN(2);
+  BX_SMF Bit8u* v2h_write_byte(bx_address laddr, bx_bool user) BX_CPP_AttrRegparmN(2);
 #endif
 
   BX_SMF void branch_near16(Bit16u new_IP) BX_CPP_AttrRegparmN(1);
@@ -3329,8 +3330,6 @@ BX_CPP_INLINE void BX_CPU_C::prepareXSAVE(void)
   #include "stack.h"
 #endif
 
-#if BX_SUPPORT_ICACHE
-
 BX_CPP_INLINE void BX_CPU_C::updateFetchModeMask(void)
 {
   BX_CPU_THIS_PTR fetchModeMask =
@@ -3338,9 +3337,10 @@ BX_CPP_INLINE void BX_CPU_C::updateFetchModeMask(void)
     ((BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64)<<30) |
 #endif
      (BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b << 31);
-}
 
-#endif
+  BX_CPU_THIS_PTR user_pl = // CPL == 3
+     (BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.rpl == 3);
+}
 
 #if BX_X86_DEBUGGER
 #define BX_HWDebugInstruction   0x00

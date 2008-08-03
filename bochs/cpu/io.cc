@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: io.cc,v 1.64 2008-07-13 13:32:15 sshwarts Exp $
+// $Id: io.cc,v 1.65 2008-08-03 19:53:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -62,7 +62,7 @@ Bit32u BX_CPU_C::FastRepINSW(bxInstruction_c *i, bx_address dstOff, Bit16u port,
   if (laddrDst & 1) return 0;
 
 #if BX_SupportGuest2HostTLB
-  hostAddrDst = v2h_write_byte(laddrDst, CPL);
+  hostAddrDst = v2h_write_byte(laddrDst, BX_CPU_THIS_PTR user_pl);
 #else
   bx_phy_address paddrDst;
 
@@ -146,7 +146,7 @@ Bit32u BX_CPU_C::FastRepOUTSW(bxInstruction_c *i, unsigned srcSeg, bx_address sr
   if (laddrSrc & 1) return 0;
 
 #if BX_SupportGuest2HostTLB
-  hostAddrSrc = v2h_read_byte(laddrSrc, CPL);
+  hostAddrSrc = v2h_read_byte(laddrSrc, BX_CPU_THIS_PTR user_pl);
 #else
   bx_phy_address paddrSrc;
 
