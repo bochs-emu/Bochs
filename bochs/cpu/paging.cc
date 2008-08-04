@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.146 2008-08-04 05:30:37 sshwarts Exp $
+// $Id: paging.cc,v 1.147 2008-08-04 14:46:28 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -687,9 +687,9 @@ bx_phy_address BX_CPU_C::translate_linear_PAE(bx_address laddr, Bit32u &combined
     if (! BX_CPU_THIS_PTR PDPE_CACHE.valid) {
       for (int n=0; n<4; n++) {
         // read PDPE cache entry
-        pdpe_addr = (bx_phy_address) (BX_CPU_THIS_PTR cr3_masked | (n << 3));
-        BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, pdpe_addr, 8, &(BX_CPU_THIS_PTR PDPE_CACHE.entry[n]));
-        BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pdpe_addr, 8, 
+        bx_phy_address entry_pdpe_addr = (bx_phy_address) (BX_CPU_THIS_PTR cr3_masked | (n << 3));
+        BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, entry_pdpe_addr, 8, &(BX_CPU_THIS_PTR PDPE_CACHE.entry[n]));
+        BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, entry_pdpe_addr, 8, 
              BX_READ, (Bit8u*)(&BX_CPU_THIS_PTR PDPE_CACHE.entry[n]));
       }
       BX_CPU_THIS_PTR PDPE_CACHE.valid = 1;
