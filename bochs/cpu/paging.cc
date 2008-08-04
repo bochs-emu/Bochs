@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.145 2008-08-03 19:53:08 sshwarts Exp $
+// $Id: paging.cc,v 1.146 2008-08-04 05:30:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -331,29 +331,29 @@ static unsigned priv_check[BX_PRIV_CHECK_SIZE];
 //       value, necessitating a TLB flush when CR0.WP changes.
 //
 //       The test is:
-//         OK = 0x01 << ( (W<<2) | PL ) [W:1=write, 0=read; PL:1=user, 0=sys]
-//
+//         OK = 1 << ( (W<<1) | U )   [W:1=write, 0=read, U:1=CPL3,0=CPL0-2]
+//       
 //       Thus for reads, it is:
-//         OK = 0x01 << (          PL )
+//         OK = 0x10 << (          U )
 //       And for writes:
-//         OK = 0x04 << (          PL )
+//         OK = 0x40 << (          U )
 //
-//     bit 7:       a Write from user (CPL=3) is OK
-//     bit 6:       a Write from system is OK
-//     bit 5:       a Read  from user (CPL=3) is OK
-//     bit 4:       a Read  from system is OK
+//     bit 7:       a Write from User   privilege is OK
+//     bit 6:       a Write from System privilege is OK
+//     bit 5:       a Read  from User   privilege is OK
+//     bit 4:       a Read  from System privilege is OK
 //
-//       And the lowest bits are as above, except that they also indicate
-//       that hostPageAddr is valid, so we do not separately need to test
+//       And the lowest 4 bits are as above, except that they also indicate
+//       that hostPageAddr is valid, so we do not separately need to test 
 //       that pointer against NULL.  These have smaller constants for us
 //       to be able to use smaller encodings in the trace generators.  Note
-//       that whenever bit n (n=0..4) is set, then also n+4 is set.
+//       that whenever bit n (n=0,1,2,3) is set, then also n+4 is set.
 //       (The opposite is of course not true)
 //
-//     bit 3:      a Write from user (CPL=3) is OK, hostPageAddr is valid
-//     bit 2:      a Write from system is OK, hostPageAddr is valid
-//     bit 1:      a Read  from user (CPL=3) is OK, hostPageAddr is valid
-//     bit 0:      a Read  from system is OK, hostPageAddr is valid
+//     bit 3:       a Write from User   privilege is OK, hostPageAddr is valid
+//     bit 2:       a Write from System privilege is OK, hostPageAddr is valid
+//     bit 1:       a Read  from User   privilege is OK, hostPageAddr is valid
+//     bit 0:       a Read  from System privilege is OK, hostPageAddr is valid
 //
 
 #define TLB_WriteUserOK       0x80
@@ -941,7 +941,7 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned curr_pl, un
   {
     paddress = tlbEntry->ppf | poffset;
 
-    if (tlbEntry->accessBits & (0x10 << ((isWrite<<2) | pl)))
+    if (tlbEntry->accessBits & (0x10 << ((isWrite<<1) | pl)))
       return paddress;
 
     // The current access does not have permission according to the info
