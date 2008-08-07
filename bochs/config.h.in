@@ -290,9 +290,11 @@
 // Enable only those you need. Recommend using only linear
 // breakpoints, unless you need others. Less supported means
 // slightly faster execution time.
-#define BX_DBG_MAX_VIR_BPOINTS 10
-#define BX_DBG_MAX_LIN_BPOINTS 10
-#define BX_DBG_MAX_PHY_BPOINTS 10
+#define BX_DBG_MAX_VIR_BPOINTS 16
+#define BX_DBG_MAX_LIN_BPOINTS 16
+#define BX_DBG_MAX_PHY_BPOINTS 16
+
+#define BX_DBG_MAX_WATCHPONTS  16
 
 // max file pathname size for debugger commands
 #define BX_MAX_PATH     256

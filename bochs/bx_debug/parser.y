@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: parser.y,v 1.30 2008-05-03 21:32:02 sshwarts Exp $
+// $Id: parser.y,v 1.31 2008-08-07 21:09:30 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 %{
@@ -329,30 +329,25 @@ watch_point_command:
           bx_dbg_watch(-1, 0);
           free($1);
       }
-    | BX_TOKEN_UNWATCH '\n'
-      {
-          bx_dbg_unwatch(-1, 0);
-          free($1);
-      }
     | BX_TOKEN_WATCH BX_TOKEN_READ BX_TOKEN_NUMERIC '\n'
       {
-          bx_dbg_watch(1, $3);
-          free($1); free($2);
-      }
-    | BX_TOKEN_UNWATCH BX_TOKEN_READ BX_TOKEN_NUMERIC '\n'
-      {
-          bx_dbg_unwatch(1, $3);
+          bx_dbg_watch(0, $3); /* BX_READ */
           free($1); free($2);
       }
     | BX_TOKEN_WATCH BX_TOKEN_WRITE BX_TOKEN_NUMERIC '\n'
-          {
-          bx_dbg_watch(0, $3);
+      {
+          bx_dbg_watch(1, $3); /* BX_WRITE */
           free($1); free($2);
       }
-    | BX_TOKEN_UNWATCH BX_TOKEN_WRITE BX_TOKEN_NUMERIC '\n'
+    | BX_TOKEN_UNWATCH '\n'
       {
-          bx_dbg_unwatch(0, $3);
-          free($1); free($2);
+          bx_dbg_unwatch(-1);
+          free($1);
+      }
+    | BX_TOKEN_UNWATCH BX_TOKEN_NUMERIC '\n'
+      {
+          bx_dbg_unwatch($2);
+          free($1);
       }
     ;
 
@@ -1026,9 +1021,8 @@ help_command:
        }
      | BX_TOKEN_HELP BX_TOKEN_UNWATCH '\n'
        {
-         dbg_printf("unwatch - remove all watch points\n");
-         dbg_printf("unwatch read addr - remove a read watch point at physical address addr\n");
-         dbg_printf("unwatch write addr - remove a write watch point at physical address addr\n");
+         dbg_printf("unwatch        - remove all watch points\n");
+         dbg_printf("unwatch handle - remove a watch point\n");
          free($1);free($2);
        }
      | BX_TOKEN_HELP BX_TOKEN_EXAMINE '\n'

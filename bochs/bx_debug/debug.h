@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debug.h,v 1.45 2008-08-01 08:36:04 sshwarts Exp $
+// $Id: debug.h,v 1.46 2008-08-07 21:09:29 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -238,8 +238,9 @@ void bx_dbg_print_string_command(bx_address addr);
 void bx_dbg_xlate_address(bx_lin_address address);
 void bx_dbg_show_command(const char*);
 void bx_dbg_print_stack_command(unsigned nwords);
-void bx_dbg_watch(int read, bx_phy_address address);
-void bx_dbg_unwatch(int read, bx_phy_address address);
+extern bx_bool watchpoint_continue;
+void bx_dbg_watch(int type, bx_phy_address address);
+void bx_dbg_unwatch(int handle);
 void bx_dbg_continue_command(void);
 void bx_dbg_stepN_command(Bit32u count);
 void bx_dbg_set_auto_disassemble(bx_bool enable);
@@ -283,7 +284,6 @@ void bx_dbg_disassemble_command(const char *, Bit64u from, Bit64u to);
 void bx_dbg_instrument_command(const char *);
 void bx_dbg_doit_command(unsigned);
 void bx_dbg_crc_command(bx_phy_address addr1, bx_phy_address addr2);
-extern bx_bool watchpoint_continue;
 void bx_dbg_linux_syscall(unsigned which_cpu);
 void bx_dbg_info_ne2k(int page, int reg);
 void bx_dbg_info_pic(void);
@@ -303,7 +303,7 @@ void bx_dbg_lin_memory_access(unsigned cpu, bx_address lin, bx_phy_address phy, 
 void bx_dbg_phy_memory_access(unsigned cpu, bx_phy_address phy, unsigned len, unsigned rw, Bit8u *data);
 
 // check memory access for watchpoints
-void bx_dbg_check_memory_access_watchpoints(unsigned cpu, bx_phy_address phy, unsigned len, unsigned rw);
+void bx_dbg_check_memory_watchpoints(unsigned cpu, bx_phy_address phy, unsigned len, unsigned rw);
 
 // commands that work with Bochs param tree
 void bx_dbg_restore_command(const char *param_name, const char *path);
