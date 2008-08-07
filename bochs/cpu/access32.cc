@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: access32.cc,v 1.6 2008-08-03 19:53:08 sshwarts Exp $
+// $Id: access32.cc,v 1.7 2008-08-07 21:07:53 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008 Stanislav Shwartsman
@@ -335,7 +335,7 @@ accessOK:
     }
 #endif
     if (laddr & 15) {
-      BX_ERROR(("write_virtual_dqword_aligned(): #GP misaligned access"));
+      BX_ERROR(("write_virtual_dqword_aligned_32(): #GP misaligned access"));
       exception(BX_GP_EXCEPTION, 0, 0);
     }
     access_write_linear(laddr, 16, CPL, (void *) data);
@@ -647,7 +647,7 @@ accessOK:
     }
 #endif
     if (laddr & 15) {
-      BX_ERROR(("read_virtual_dqword_aligned(): #GP misaligned access"));
+      BX_ERROR(("read_virtual_dqword_aligned_32(): #GP misaligned access"));
       exception(BX_GP_EXCEPTION, 0, 0);
     }
     access_read_linear(laddr, 16, CPL, BX_READ, (void *) data);
