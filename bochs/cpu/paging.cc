@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.147 2008-08-04 14:46:28 sshwarts Exp $
+// $Id: paging.cc,v 1.148 2008-08-07 22:14:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -331,41 +331,28 @@ static unsigned priv_check[BX_PRIV_CHECK_SIZE];
 //       value, necessitating a TLB flush when CR0.WP changes.
 //
 //       The test is:
-//         OK = 1 << ( (W<<1) | U )   [W:1=write, 0=read, U:1=CPL3,0=CPL0-2]
-//       
-//       Thus for reads, it is:
-//         OK = 0x10 << (          U )
-//       And for writes:
-//         OK = 0x40 << (          U )
+//         OK = (accessBits & ((W<<1) | U)) != 0  [W:1=write, 0=read, U:1=CPL3,0=CPL0-2]
 //
-//     bit 7:       a Write from User   privilege is OK
-//     bit 6:       a Write from System privilege is OK
-//     bit 5:       a Read  from User   privilege is OK
-//     bit 4:       a Read  from System privilege is OK
+//       Or when taking into account direct access according to Host Ptr: 
+//         OK = (accessBits & (TLB_HostPtr | (W<<1) | U)) != 0
+
+//       Thus for direct reads, it is:
+//         OK = 0x4 << (          U )
+//       And for direct writes:
+//         OK = 0x6 << (          U )
 //
-//       And the lowest 4 bits are as above, except that they also indicate
-//       that hostPageAddr is valid, so we do not separately need to test 
-//       that pointer against NULL.  These have smaller constants for us
-//       to be able to use smaller encodings in the trace generators.  Note
-//       that whenever bit n (n=0,1,2,3) is set, then also n+4 is set.
-//       (The opposite is of course not true)
-//
-//     bit 3:       a Write from User   privilege is OK, hostPageAddr is valid
-//     bit 2:       a Write from System privilege is OK, hostPageAddr is valid
-//     bit 1:       a Read  from User   privilege is OK, hostPageAddr is valid
-//     bit 0:       a Read  from System privilege is OK, hostPageAddr is valid
+//       Note, that the TLB accessBits should have TLB_HostPtr bit set when
+//       direct access through host pointer is NOT allowed for the page.
+//       A memory operation asking for a direct access through host pointer
+//       will set TLB_HostPtr bit in the accessBits and thus get non zero 
+//       result when the direct access is not allowed.
 //
 
-#define TLB_WriteUserOK       0x80
-#define TLB_WriteSysOK        0x40
-#define TLB_ReadUserOK        0x20
-#define TLB_ReadSysOK         0x10
-#define TLB_WriteUserPtrOK    0x08
-#define TLB_WriteSysPtrOK     0x04
-#define TLB_ReadUserPtrOK     0x02
-#define TLB_ReadSysPtrOK      0x01
+#define TLB_SysOnly           (0x01)
+#define TLB_ReadOnly          (0x02)
+#define TLB_HostPtr           (0x04) /* set this bit when direct access is NOT allowed */
 
-#define TLB_GlobalPage        0x80000000
+#define TLB_GlobalPage  (0x80000000)
 
 // === TLB Instrumentation section ==============================
 
@@ -920,7 +907,7 @@ bx_phy_address BX_CPU_C::translate_linear_PAE(bx_address laddr, Bit32u &combined
 // Translate a linear address to a physical address
 bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned curr_pl, unsigned rw, unsigned access_type)
 {
-  Bit32u   accessBits, combined_access = 0;
+  Bit32u   combined_access = 0;
   unsigned priv_index;
 
   // note - we assume physical memory < 4gig so for brevity & speed, we'll use
@@ -941,7 +928,7 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned curr_pl, un
   {
     paddress = tlbEntry->ppf | poffset;
 
-    if (tlbEntry->accessBits & (0x10 << ((isWrite<<1) | pl)))
+    if (! (tlbEntry->accessBits & ((isWrite<<1) | pl)))
       return paddress;
 
     // The current access does not have permission according to the info
@@ -1084,29 +1071,14 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned curr_pl, un
   tlbEntry->lpf = lpf;
   tlbEntry->ppf = ppf;
 
-  // b3: Write User  OK
-  // b2: Write Sys   OK
-  // b1: Read  User  OK
-  // b0: Read  Sys   OK
-  if (combined_access & 4) { // User
-    // User priv; read from {user,sys} OK.
-    accessBits = (TLB_ReadUserOK | TLB_ReadSysOK);
-    if (isWrite) { // Current operation is a write (Dirty bit updated)
-      if (combined_access & 2) {
-         // R/W access from {user,sys} OK.
-        accessBits |= (TLB_WriteUserOK | TLB_WriteSysOK);
-      }
-      else {
-        accessBits |= TLB_WriteSysOK; // read only page, only {sys} write allowed
-      }
-    }
-  }
-  else { // System
-    accessBits = TLB_ReadSysOK;     // System priv; read from {sys} OK.
-    if (isWrite) {     // Current operation is a write (Dirty bit updated)
-      accessBits |= TLB_WriteSysOK; // write from {sys} OK.
-    }
-  }
+  Bit32u accessBits = TLB_HostPtr; // HostPtr is not allowed by default
+
+  if ((combined_access & 4) == 0) // System
+    accessBits |= TLB_SysOnly;
+
+  if (! isWrite) // Current operation is a read
+    accessBits |= TLB_ReadOnly; // Write NOT allowed
+
 #if BX_SUPPORT_GLOBAL_PAGES
   if (combined_access & 0x100) // Global bit
     accessBits |= TLB_GlobalPage;
@@ -1124,7 +1096,7 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned curr_pl, un
 #if BX_X86_DEBUGGER
     if (! hwbreakpoint_check(laddr))
 #endif
-      accessBits |= (accessBits & 0xF0) >> 4;
+      accessBits &= ~TLB_HostPtr; // allow direct access with HostPtr
   }
 #endif
   tlbEntry->accessBits = accessBits;
@@ -1314,8 +1286,7 @@ void BX_CPU_C::access_write_linear(bx_address laddr, unsigned len, unsigned curr
             tlbEntry->ppf = (bx_phy_address) lpf;
             tlbEntry->hostPageAddr = hostPageAddr;
             // Got direct write pointer OK.  Mark for any operation to succeed.
-            tlbEntry->accessBits = (TLB_ReadSysOK | TLB_ReadUserOK | TLB_WriteSysOK | TLB_WriteUserOK |
-               TLB_ReadSysPtrOK | TLB_ReadUserPtrOK | TLB_WriteSysPtrOK | TLB_WriteUserPtrOK);
+            tlbEntry->accessBits = 0;
           }
         }
       }
@@ -1478,28 +1449,14 @@ void BX_CPU_C::access_read_linear(bx_address laddr, unsigned len, unsigned curr_
 
           // Request a direct write pointer so we can do either R or W.
           bx_hostpageaddr_t hostPageAddr = (bx_hostpageaddr_t)
-            BX_MEM(0)->getHostMemAddr(BX_CPU_THIS, A20ADDR(lpf), BX_WRITE, DATA_ACCESS);
+            BX_MEM(0)->getHostMemAddr(BX_CPU_THIS, A20ADDR(lpf), BX_READ, DATA_ACCESS);
 
           if (hostPageAddr) {
             tlbEntry->lpf = lpf;
             tlbEntry->ppf = (bx_phy_address) lpf;
             tlbEntry->hostPageAddr = hostPageAddr;
-            // Got direct write pointer OK.  Mark for any operation to succeed.
-            tlbEntry->accessBits = (TLB_ReadSysOK | TLB_ReadUserOK | TLB_WriteSysOK | TLB_WriteUserOK |
-               TLB_ReadSysPtrOK | TLB_ReadUserPtrOK | TLB_WriteSysPtrOK | TLB_WriteUserPtrOK);
-          }
-          else {
-            // Direct write vetoed.  Try requesting only direct reads.
-            hostPageAddr = (bx_hostpageaddr_t) BX_MEM(0)->getHostMemAddr(BX_CPU_THIS,
-               A20ADDR(lpf), BX_READ, DATA_ACCESS);
-
-            if (hostPageAddr) {
-              tlbEntry->lpf = lpf;
-              tlbEntry->ppf = (bx_phy_address) lpf;
-              tlbEntry->hostPageAddr = hostPageAddr;
-              // Got direct write pointer OK.  Mark for any operation to succeed.
-              tlbEntry->accessBits = (TLB_ReadSysOK | TLB_ReadUserOK | TLB_ReadSysPtrOK | TLB_ReadUserPtrOK);
-            }
+            // Got direct read pointer OK.  Mark for any following read to succeed.
+            tlbEntry->accessBits = TLB_ReadOnly;
           }
         }
       }

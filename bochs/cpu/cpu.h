@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.499 2008-08-03 19:53:08 sshwarts Exp $
+// $Id: cpu.h,v 1.500 2008-08-07 22:14:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -243,7 +243,9 @@
 
 #endif
 
-#define CPL (BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.rpl)
+#define CPL       (BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.rpl)
+
+#define USER_PL   (BX_CPU_THIS_PTR user_pl) /* CPL == 3 */
 
 #if BX_SUPPORT_SMP
 #define BX_CPU_ID (BX_CPU_THIS_PTR bx_cpuid)

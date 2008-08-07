@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: access32.cc,v 1.7 2008-08-07 21:07:53 sshwarts Exp $
+// $Id: access32.cc,v 1.8 2008-08-07 22:14:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008 Stanislav Shwartsman
@@ -45,7 +45,7 @@ accessOK:
     if (tlbEntry->lpf == lpf) {
       // See if the TLB entry privilege level allows us write access
       // from this CPL.
-      if (tlbEntry->accessBits & (0x04 << BX_CPU_THIS_PTR user_pl)) {
+      if (! (tlbEntry->accessBits & (0x6 | USER_PL))) {
         bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
         Bit32u pageOffset = PAGE_OFFSET(laddr);
         BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr, tlbEntry->ppf | pageOffset, 1, BX_WRITE);
@@ -93,7 +93,7 @@ accessOK:
     if (tlbEntry->lpf == lpf) {
       // See if the TLB entry privilege level allows us write access
       // from this CPL.
-      if (tlbEntry->accessBits & (0x04 << BX_CPU_THIS_PTR user_pl)) {
+      if (! (tlbEntry->accessBits & (0x6 | USER_PL))) {
         bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
         Bit32u pageOffset = PAGE_OFFSET(laddr);
         BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr, tlbEntry->ppf | pageOffset, 2, BX_WRITE);
@@ -149,7 +149,7 @@ accessOK:
     if (tlbEntry->lpf == lpf) {
       // See if the TLB entry privilege level allows us write access
       // from this CPL.
-      if (tlbEntry->accessBits & (0x04 << BX_CPU_THIS_PTR user_pl)) {
+      if (! (tlbEntry->accessBits & (0x6 | USER_PL))) {
         bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
         Bit32u pageOffset = PAGE_OFFSET(laddr);
         BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr, tlbEntry->ppf | pageOffset, 4, BX_WRITE);
@@ -205,7 +205,7 @@ accessOK:
     if (tlbEntry->lpf == lpf) {
       // See if the TLB entry privilege level allows us write access
       // from this CPL.
-      if (tlbEntry->accessBits & (0x04 << BX_CPU_THIS_PTR user_pl)) {
+      if (! (tlbEntry->accessBits & (0x6 | USER_PL))) {
         bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
         Bit32u pageOffset = PAGE_OFFSET(laddr);
         BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr, tlbEntry->ppf | pageOffset, 8, BX_WRITE);
@@ -261,7 +261,7 @@ accessOK:
     if (tlbEntry->lpf == lpf) {
       // See if the TLB entry privilege level allows us write access
       // from this CPL.
-      if (tlbEntry->accessBits & (0x04 << BX_CPU_THIS_PTR user_pl)) {
+      if (! (tlbEntry->accessBits & (0x6 | USER_PL))) {
         bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
         Bit32u pageOffset = PAGE_OFFSET(laddr);
         BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr, tlbEntry->ppf | pageOffset, 16, BX_WRITE);
@@ -318,7 +318,7 @@ accessOK:
     if (tlbEntry->lpf == lpf) {
       // See if the TLB entry privilege level allows us write access
       // from this CPL.
-      if (tlbEntry->accessBits & (0x04 << BX_CPU_THIS_PTR user_pl)) {
+      if (! (tlbEntry->accessBits & (0x6 | USER_PL))) {
         bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
         Bit32u pageOffset = PAGE_OFFSET(laddr);
         BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr, tlbEntry->ppf | pageOffset, 16, BX_WRITE);
@@ -372,7 +372,7 @@ accessOK:
     if (tlbEntry->lpf == lpf) {
       // See if the TLB entry privilege level allows us read access
       // from this CPL.
-      if (tlbEntry->accessBits & (0x01 + BX_CPU_THIS_PTR user_pl)) { // Read this pl OK.
+      if (! (tlbEntry->accessBits & (0x4 | USER_PL))) { // Read this pl OK.
         bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
         Bit32u pageOffset = PAGE_OFFSET(laddr);
         BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr, tlbEntry->ppf | pageOffset, 1, BX_READ);
@@ -418,7 +418,7 @@ accessOK:
     if (tlbEntry->lpf == lpf) {
       // See if the TLB entry privilege level allows us read access
       // from this CPL.
-      if (tlbEntry->accessBits & (0x01 + BX_CPU_THIS_PTR user_pl)) { // Read this pl OK.
+      if (! (tlbEntry->accessBits & (0x4 | USER_PL))) { // Read this pl OK.
         bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
         Bit32u pageOffset = PAGE_OFFSET(laddr);
         BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr, tlbEntry->ppf | pageOffset, 2, BX_READ);
@@ -472,7 +472,7 @@ accessOK:
     if (tlbEntry->lpf == lpf) {
       // See if the TLB entry privilege level allows us read access
       // from this CPL.
-      if (tlbEntry->accessBits & (0x01 + BX_CPU_THIS_PTR user_pl)) { // Read this pl OK.
+      if (! (tlbEntry->accessBits & (0x4 | USER_PL))) { // Read this pl OK.
         bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
         Bit32u pageOffset = PAGE_OFFSET(laddr);
         BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr, tlbEntry->ppf | pageOffset, 4, BX_READ);
@@ -526,7 +526,7 @@ accessOK:
     if (tlbEntry->lpf == lpf) {
       // See if the TLB entry privilege level allows us read access
       // from this CPL.
-      if (tlbEntry->accessBits & (0x01 + BX_CPU_THIS_PTR user_pl)) { // Read this pl OK.
+      if (! (tlbEntry->accessBits & (0x4 | USER_PL))) { // Read this pl OK.
         bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
         Bit32u pageOffset = PAGE_OFFSET(laddr);
         BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr, tlbEntry->ppf | pageOffset, 8, BX_READ);
@@ -579,7 +579,7 @@ accessOK:
     if (tlbEntry->lpf == lpf) {
       // See if the TLB entry privilege level allows us read access
       // from this CPL.
-      if (tlbEntry->accessBits & (0x01 + BX_CPU_THIS_PTR user_pl)) { // Read this pl OK.
+      if (! (tlbEntry->accessBits & (0x4 | USER_PL))) { // Read this pl OK.
         bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
         Bit32u pageOffset = PAGE_OFFSET(laddr);
         BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr, tlbEntry->ppf | pageOffset, 16, BX_READ);
@@ -633,7 +633,7 @@ accessOK:
     if (tlbEntry->lpf == lpf) {
       // See if the TLB entry privilege level allows us read access
       // from this CPL.
-      if (tlbEntry->accessBits & (0x01 + BX_CPU_THIS_PTR user_pl)) { // Read this pl OK.
+      if (! (tlbEntry->accessBits & (0x4 | USER_PL))) { // Read this pl OK.
         bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
         Bit32u pageOffset = PAGE_OFFSET(laddr);
         BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr, tlbEntry->ppf | pageOffset, 16, BX_READ);
@@ -689,7 +689,7 @@ accessOK:
     if (tlbEntry->lpf == lpf) {
       // See if the TLB entry privilege level allows us write access
       // from this CPL.
-      if (tlbEntry->accessBits & (0x04 << BX_CPU_THIS_PTR user_pl)) {
+      if (! (tlbEntry->accessBits & (0x6 | USER_PL))) {
         bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
         Bit32u pageOffset = PAGE_OFFSET(laddr);
         BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr, tlbEntry->ppf | pageOffset, 1, BX_RW);
@@ -739,7 +739,7 @@ accessOK:
     if (tlbEntry->lpf == lpf) {
       // See if the TLB entry privilege level allows us write access
       // from this CPL.
-      if (tlbEntry->accessBits & (0x04 << BX_CPU_THIS_PTR user_pl)) {
+      if (! (tlbEntry->accessBits & (0x6 | USER_PL))) {
         bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
         Bit32u pageOffset = PAGE_OFFSET(laddr);
         BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr, tlbEntry->ppf | pageOffset, 2, BX_RW);
@@ -797,7 +797,7 @@ accessOK:
     if (tlbEntry->lpf == lpf) {
       // See if the TLB entry privilege level allows us write access
       // from this CPL.
-      if (tlbEntry->accessBits & (0x04 << BX_CPU_THIS_PTR user_pl)) {
+      if (! (tlbEntry->accessBits & (0x6 | USER_PL))) {
         bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
         Bit32u pageOffset = PAGE_OFFSET(laddr);
         BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr, tlbEntry->ppf | pageOffset, 4, BX_RW);
@@ -855,7 +855,7 @@ accessOK:
     if (tlbEntry->lpf == lpf) {
       // See if the TLB entry privilege level allows us write access
       // from this CPL.
-      if (tlbEntry->accessBits & (0x04 << BX_CPU_THIS_PTR user_pl)) {
+      if (! (tlbEntry->accessBits & (0x6 | USER_PL))) {
         bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
         Bit32u pageOffset = PAGE_OFFSET(laddr);
         BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr, tlbEntry->ppf | pageOffset, 8, BX_RW);
@@ -1079,7 +1079,7 @@ accessOK:
     if (tlbEntry->lpf == lpf) {
       // See if the TLB entry privilege level allows us write access
       // from this CPL.
-      if (tlbEntry->accessBits & (0x04 << user)) {
+      if (! (tlbEntry->accessBits & (0x6 | user))) {
         bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
         Bit32u pageOffset = PAGE_OFFSET(laddr);
         BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr, tlbEntry->ppf | pageOffset, 2, BX_WRITE);
@@ -1135,7 +1135,7 @@ accessOK:
     if (tlbEntry->lpf == lpf) {
       // See if the TLB entry privilege level allows us write access
       // from this CPL.
-      if (tlbEntry->accessBits & (0x04 << user)) {
+      if (! (tlbEntry->accessBits & (0x6 | user))) {
         bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
         Bit32u pageOffset = PAGE_OFFSET(laddr);
         BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr, tlbEntry->ppf | pageOffset, 4, BX_WRITE);
