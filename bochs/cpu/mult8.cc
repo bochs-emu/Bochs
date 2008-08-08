@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: mult8.cc,v 1.29 2008-05-24 10:26:03 sshwarts Exp $
+// $Id: mult8.cc,v 1.30 2008-08-08 09:22:47 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -41,9 +41,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MUL_ALEb(bxInstruction_c *i)
     op2 = BX_READ_8BIT_REGx(i->rm(),i->extend8bitL());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    op2 = read_virtual_byte(i->seg(), RMAddr(i));
+    op2 = read_virtual_byte(i->seg(), eaddr);
   }
 
   Bit32u product_16 = ((Bit16u) op1) * ((Bit16u) op2);
@@ -73,9 +73,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::IMUL_ALEb(bxInstruction_c *i)
     op2 = BX_READ_8BIT_REGx(i->rm(),i->extend8bitL());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    op2 = (Bit8s) read_virtual_byte(i->seg(), RMAddr(i));
+    op2 = (Bit8s) read_virtual_byte(i->seg(), eaddr);
   }
 
   Bit16s product_16 = op1 * op2;
@@ -108,9 +108,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::DIV_ALEb(bxInstruction_c *i)
     op2 = BX_READ_8BIT_REGx(i->rm(),i->extend8bitL());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    op2 = read_virtual_byte(i->seg(), RMAddr(i));
+    op2 = read_virtual_byte(i->seg(), eaddr);
   }
 
   if (op2 == 0) {
@@ -143,9 +143,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::IDIV_ALEb(bxInstruction_c *i)
     op2 = BX_READ_8BIT_REGx(i->rm(),i->extend8bitL());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    op2 = (Bit8s) read_virtual_byte(i->seg(), RMAddr(i));
+    op2 = (Bit8s) read_virtual_byte(i->seg(), eaddr);
   }
 
   if (op2 == 0)

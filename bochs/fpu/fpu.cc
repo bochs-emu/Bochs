@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu.cc,v 1.43 2008-06-12 19:14:40 sshwarts Exp $
+// $Id: fpu.cc,v 1.44 2008-08-08 09:22:49 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -49,7 +49,7 @@ void BX_CPU_C::prepareFPU(bxInstruction_c *i,
     BX_CPU_THIS_PTR the_i387.fip = BX_CPU_THIS_PTR prev_rip;
 
     if (! i->modC0()) {
-       BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+       RMAddr(i) = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
        BX_CPU_THIS_PTR the_i387.fds = BX_CPU_THIS_PTR sregs[i->seg()].selector.value;
        BX_CPU_THIS_PTR the_i387.fdp = RMAddr(i);
@@ -93,7 +93,7 @@ int BX_CPU_C::fpu_save_environment(bxInstruction_c *i)
        }
     }
 
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    RMAddr(i) = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
     if (protected_mode())  /* Protected Mode */
     {
@@ -197,7 +197,7 @@ int BX_CPU_C::fpu_load_environment(bxInstruction_c *i)
 {
     int offset;
 
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    RMAddr(i) = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
     if (protected_mode())  /* Protected Mode */
     {
@@ -330,9 +330,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLDCW(bxInstruction_c *i)
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i, CHECK_PENDING_EXCEPTIONS, !UPDATE_LAST_OPCODE);
 
-  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  Bit16u cwd = read_virtual_word(i->seg(), RMAddr(i));
+  Bit16u cwd = read_virtual_word(i->seg(), eaddr);
   FPU_CONTROL_WORD = (cwd & ~FPU_CW_Reserved_Bits) | 0x0040; // bit 6 is reserved as '1
 
   /* check for unmasked exceptions */
@@ -359,9 +359,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FNSTCW(bxInstruction_c *i)
 
   Bit16u cwd = BX_CPU_THIS_PTR the_i387.get_control_word();
 
-  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  write_virtual_word(i->seg(), RMAddr(i), cwd);
+  write_virtual_word(i->seg(), eaddr, cwd);
 #else
   BX_INFO(("FNSTCW: required FPU, configure --enable-fpu"));
 #endif
@@ -375,9 +375,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FNSTSW(bxInstruction_c *i)
 
   Bit16u swd = BX_CPU_THIS_PTR the_i387.get_status_word();
 
-  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  write_virtual_word(i->seg(), RMAddr(i), swd);
+  write_virtual_word(i->seg(), eaddr, swd);
 #else
   BX_INFO(("FNSTSW: required FPU, configure --enable-fpu"));
 #endif

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack32.cc,v 1.54 2008-06-12 19:14:39 sshwarts Exp $
+// $Id: stack32.cc,v 1.55 2008-08-08 09:22:49 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -45,9 +45,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::POP_EdM(bxInstruction_c *i)
   // Note: there is one little weirdism here.  It is possible to use
   // ESP in the modrm addressing. If used, the value of ESP after the
   // pop is used to calculate the address.
-  BX_CPU_CALL_METHODR (i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  write_virtual_dword(i->seg(), RMAddr(i), val32);
+  write_virtual_dword(i->seg(), eaddr, val32);
 
   BX_CPU_THIS_PTR speculative_rsp = 0;
 }
@@ -162,9 +162,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUSH_Id(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUSH_EdM(bxInstruction_c *i)
 {
-  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  Bit32u op1_32 = read_virtual_dword(i->seg(), RMAddr(i));
+  Bit32u op1_32 = read_virtual_dword(i->seg(), eaddr);
 
   push_32(op1_32);
 }

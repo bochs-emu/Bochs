@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack16.cc,v 1.41 2008-06-12 19:14:39 sshwarts Exp $
+// $Id: stack16.cc,v 1.42 2008-08-08 09:22:49 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -148,9 +148,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::POP_EwM(bxInstruction_c *i)
   // Note: there is one little weirdism here.  It is possible to use
   // SP in the modrm addressing. If used, the value of SP after the
   // pop is used to calculate the address.
-  BX_CPU_CALL_METHODR (i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  write_virtual_word(i->seg(), RMAddr(i), val16);
+  write_virtual_word(i->seg(), eaddr, val16);
 
   BX_CPU_THIS_PTR speculative_rsp = 0;
 }
@@ -162,9 +162,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUSH_Iw(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUSH_EwM(bxInstruction_c *i)
 {
-  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  Bit16u op1_16 = read_virtual_word(i->seg(), RMAddr(i));
+  Bit16u op1_16 = read_virtual_word(i->seg(), eaddr);
 
   push_16(op1_16);
 }

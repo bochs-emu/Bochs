@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer32.cc,v 1.75 2008-06-23 15:58:22 sshwarts Exp $
+// $Id: ctrl_xfer32.cc,v 1.76 2008-08-08 09:22:46 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -251,13 +251,13 @@ done:
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::CALL_EdM(bxInstruction_c *i)
 {
-  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR show_flag |= Flag_call;
 #endif
 
-  Bit32u op1_32 = read_virtual_dword(i->seg(), RMAddr(i));
+  Bit32u op1_32 = read_virtual_dword(i->seg(), eaddr);
 
   if (op1_32 > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled)
   {
@@ -302,11 +302,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CALL32_Ep(bxInstruction_c *i)
   BX_CPU_THIS_PTR show_flag |= Flag_call;
 #endif
 
-  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
   /* pointer, segment address pair */
-  op1_32 = read_virtual_dword(i->seg(), RMAddr(i));
-  cs_raw = read_virtual_word (i->seg(), RMAddr(i)+4);
+  op1_32 = read_virtual_dword(i->seg(), eaddr);
+  cs_raw = read_virtual_word (i->seg(), eaddr+4);
 
   BX_CPU_THIS_PTR speculative_rsp = 1;
   BX_CPU_THIS_PTR prev_rsp = RSP;
@@ -603,10 +603,10 @@ done:
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::JMP_EdM(bxInstruction_c *i)
 {
-  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
   /* pointer, segment address pair */
-  Bit32u new_EIP = read_virtual_dword(i->seg(), RMAddr(i));
+  Bit32u new_EIP = read_virtual_dword(i->seg(), eaddr);
   branch_near32(new_EIP);
   BX_INSTR_UCNEAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_JMP, new_EIP);
 }
@@ -626,11 +626,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::JMP32_Ep(bxInstruction_c *i)
 
   invalidate_prefetch_q();
 
-  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
   /* pointer, segment address pair */
-  op1_32 = read_virtual_dword(i->seg(), RMAddr(i));
-  cs_raw = read_virtual_word (i->seg(), RMAddr(i)+4);
+  op1_32 = read_virtual_dword(i->seg(), eaddr);
+  cs_raw = read_virtual_word (i->seg(), eaddr+4);
 
   // jump_protected doesn't affect RSP so it is RSP safe
   if (protected_mode()) {

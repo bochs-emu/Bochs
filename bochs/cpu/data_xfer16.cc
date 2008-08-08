@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: data_xfer16.cc,v 1.60 2008-07-13 15:35:09 sshwarts Exp $
+// $Id: data_xfer16.cc,v 1.61 2008-08-08 09:22:47 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -44,9 +44,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XCHG_RXAX(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_EwGwM(bxInstruction_c *i)
 {
-  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  write_virtual_word(i->seg(), RMAddr(i), BX_READ_16BIT_REG(i->nnn()));
+  write_virtual_word(i->seg(), eaddr, BX_READ_16BIT_REG(i->nnn()));
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_GwEwR(bxInstruction_c *i)
@@ -56,9 +56,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_GwEwR(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_GwEwM(bxInstruction_c *i)
 {
-  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  Bit16u val16 = read_virtual_word(i->seg(), RMAddr(i));
+  Bit16u val16 = read_virtual_word(i->seg(), eaddr);
   BX_WRITE_16BIT_REG(i->nnn(), val16);
 }
 
@@ -88,10 +88,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_EwSwM(bxInstruction_c *i)
     exception(BX_UD_EXCEPTION, 0, 0);
   }
 
-  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
   Bit16u seg_reg = BX_CPU_THIS_PTR sregs[i->nnn()].selector.value;
-  write_virtual_word(i->seg(), RMAddr(i), seg_reg);
+  write_virtual_word(i->seg(), eaddr, seg_reg);
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_SwEw(bxInstruction_c *i)
@@ -108,9 +108,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_SwEw(bxInstruction_c *i)
     op2_16 = BX_READ_16BIT_REG(i->rm());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    op2_16 = read_virtual_word(i->seg(), RMAddr(i));
+    op2_16 = read_virtual_word(i->seg(), eaddr);
   }
 
   load_seg_reg(&BX_CPU_THIS_PTR sregs[i->nnn()], op2_16);
@@ -127,9 +127,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_SwEw(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::LEA_GwM(bxInstruction_c *i)
 {
-  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  BX_WRITE_16BIT_REG(i->nnn(), (Bit16u) RMAddr(i));
+  BX_WRITE_16BIT_REG(i->nnn(), (Bit16u) eaddr);
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_AXOd(bxInstruction_c *i)
@@ -144,17 +144,17 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_OdAX(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_EwIwM(bxInstruction_c *i)
 {
-  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  write_virtual_word(i->seg(), RMAddr(i), i->Iw());
+  write_virtual_word(i->seg(), eaddr, i->Iw());
 }
 
 #if BX_CPU_LEVEL >= 3
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVZX_GwEbM(bxInstruction_c *i)
 {
-  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  Bit8u op2_8 = read_virtual_byte(i->seg(), RMAddr(i));
+  Bit8u op2_8 = read_virtual_byte(i->seg(), eaddr);
 
   /* zero extend byte op2 into word op1 */
   BX_WRITE_16BIT_REG(i->nnn(), (Bit16u) op2_8);
@@ -170,9 +170,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVZX_GwEbR(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSX_GwEbM(bxInstruction_c *i)
 {
-  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  Bit8u op2_8 = read_virtual_byte(i->seg(), RMAddr(i));
+  Bit8u op2_8 = read_virtual_byte(i->seg(), eaddr);
 
   /* sign extend byte op2 into word op1 */
   BX_WRITE_16BIT_REG(i->nnn(), (Bit8s) op2_8);
@@ -191,9 +191,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XCHG_EwGwM(bxInstruction_c *i)
 {
   Bit16u op1_16, op2_16;
 
-  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  op1_16 = read_RMW_virtual_word(i->seg(), RMAddr(i));
+  op1_16 = read_RMW_virtual_word(i->seg(), eaddr);
   op2_16 = BX_READ_16BIT_REG(i->nnn());
 
   write_RMW_virtual_word(op2_16);
@@ -227,9 +227,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XCHG_EwGwR(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVO_GwEwM(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  Bit16u op2_16 = read_virtual_word(i->seg(), RMAddr(i));
+  Bit16u op2_16 = read_virtual_word(i->seg(), eaddr);
 
   if (get_OF())
     BX_WRITE_16BIT_REG(i->nnn(), op2_16);
@@ -253,9 +253,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVO_GwEwR(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVNO_GwEwM(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  Bit16u op2_16 = read_virtual_word(i->seg(), RMAddr(i));
+  Bit16u op2_16 = read_virtual_word(i->seg(), eaddr);
 
   if (!get_OF())
     BX_WRITE_16BIT_REG(i->nnn(), op2_16);
@@ -279,9 +279,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVNO_GwEwR(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVB_GwEwM(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  Bit16u op2_16 = read_virtual_word(i->seg(), RMAddr(i));
+  Bit16u op2_16 = read_virtual_word(i->seg(), eaddr);
 
   if (get_CF())
     BX_WRITE_16BIT_REG(i->nnn(), op2_16);
@@ -305,9 +305,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVB_GwEwR(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVNB_GwEwM(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  Bit16u op2_16 = read_virtual_word(i->seg(), RMAddr(i));
+  Bit16u op2_16 = read_virtual_word(i->seg(), eaddr);
 
   if (!get_CF())
     BX_WRITE_16BIT_REG(i->nnn(), op2_16);
@@ -331,9 +331,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVNB_GwEwR(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVZ_GwEwM(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  Bit16u op2_16 = read_virtual_word(i->seg(), RMAddr(i));
+  Bit16u op2_16 = read_virtual_word(i->seg(), eaddr);
 
   if (get_ZF())
     BX_WRITE_16BIT_REG(i->nnn(), op2_16);
@@ -357,9 +357,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVZ_GwEwR(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVNZ_GwEwM(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  Bit16u op2_16 = read_virtual_word(i->seg(), RMAddr(i));
+  Bit16u op2_16 = read_virtual_word(i->seg(), eaddr);
 
   if (!get_ZF())
     BX_WRITE_16BIT_REG(i->nnn(), op2_16);
@@ -383,9 +383,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVNZ_GwEwR(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVBE_GwEwM(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  Bit16u op2_16 = read_virtual_word(i->seg(), RMAddr(i));
+  Bit16u op2_16 = read_virtual_word(i->seg(), eaddr);
 
   if (get_CF() || get_ZF())
     BX_WRITE_16BIT_REG(i->nnn(), op2_16);
@@ -409,9 +409,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVBE_GwEwR(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVNBE_GwEwM(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  Bit16u op2_16 = read_virtual_word(i->seg(), RMAddr(i));
+  Bit16u op2_16 = read_virtual_word(i->seg(), eaddr);
 
   if (! (get_CF() || get_ZF()))
     BX_WRITE_16BIT_REG(i->nnn(), op2_16);
@@ -435,9 +435,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVNBE_GwEwR(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVS_GwEwM(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  Bit16u op2_16 = read_virtual_word(i->seg(), RMAddr(i));
+  Bit16u op2_16 = read_virtual_word(i->seg(), eaddr);
 
   if (get_SF())
     BX_WRITE_16BIT_REG(i->nnn(), op2_16);
@@ -461,9 +461,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVS_GwEwR(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVNS_GwEwM(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  Bit16u op2_16 = read_virtual_word(i->seg(), RMAddr(i));
+  Bit16u op2_16 = read_virtual_word(i->seg(), eaddr);
 
   if (!get_SF())
     BX_WRITE_16BIT_REG(i->nnn(), op2_16);
@@ -487,9 +487,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVNS_GwEwR(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVP_GwEwM(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  Bit16u op2_16 = read_virtual_word(i->seg(), RMAddr(i));
+  Bit16u op2_16 = read_virtual_word(i->seg(), eaddr);
 
   if (get_PF())
     BX_WRITE_16BIT_REG(i->nnn(), op2_16);
@@ -513,9 +513,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVP_GwEwR(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVNP_GwEwM(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  Bit16u op2_16 = read_virtual_word(i->seg(), RMAddr(i));
+  Bit16u op2_16 = read_virtual_word(i->seg(), eaddr);
 
   if (!get_PF())
     BX_WRITE_16BIT_REG(i->nnn(), op2_16);
@@ -539,9 +539,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVNP_GwEwR(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVL_GwEwM(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  Bit16u op2_16 = read_virtual_word(i->seg(), RMAddr(i));
+  Bit16u op2_16 = read_virtual_word(i->seg(), eaddr);
 
   if (getB_SF() != getB_OF())
     BX_WRITE_16BIT_REG(i->nnn(), op2_16);
@@ -565,9 +565,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVL_GwEwR(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVNL_GwEwM(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  Bit16u op2_16 = read_virtual_word(i->seg(), RMAddr(i));
+  Bit16u op2_16 = read_virtual_word(i->seg(), eaddr);
 
   if (getB_SF() == getB_OF())
     BX_WRITE_16BIT_REG(i->nnn(), op2_16);
@@ -591,9 +591,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVNL_GwEwR(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVLE_GwEwM(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  Bit16u op2_16 = read_virtual_word(i->seg(), RMAddr(i));
+  Bit16u op2_16 = read_virtual_word(i->seg(), eaddr);
 
   if (get_ZF() || (getB_SF() != getB_OF()))
     BX_WRITE_16BIT_REG(i->nnn(), op2_16);
@@ -617,9 +617,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVLE_GwEwR(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVNLE_GwEwM(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  Bit16u op2_16 = read_virtual_word(i->seg(), RMAddr(i));
+  Bit16u op2_16 = read_virtual_word(i->seg(), eaddr);
 
   if (! get_ZF() && (getB_SF() == getB_OF()))
     BX_WRITE_16BIT_REG(i->nnn(), op2_16);

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: shift16.cc,v 1.46 2008-04-05 19:08:01 sshwarts Exp $
+// $Id: shift16.cc,v 1.47 2008-08-08 09:22:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -45,10 +45,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHLD_EwGwM(bxInstruction_c *i)
 
   count &= 0x1f; // use only 5 LSB's
 
-  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
   /* pointer, segment address pair */
-  op1_16 = read_RMW_virtual_word(i->seg(), RMAddr(i));
+  op1_16 = read_RMW_virtual_word(i->seg(), eaddr);
 
   if (!count) return;
 
@@ -132,10 +132,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHRD_EwGwM(bxInstruction_c *i)
 
   count &= 0x1f; /* use only 5 LSB's */
 
-  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
   /* pointer, segment address pair */
-  op1_16 = read_RMW_virtual_word(i->seg(), RMAddr(i));
+  op1_16 = read_RMW_virtual_word(i->seg(), eaddr);
 
   if (!count) return;
 
@@ -220,9 +220,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROL_Ew(bxInstruction_c *i)
     op1_16 = BX_READ_16BIT_REG(i->rm());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    op1_16 = read_RMW_virtual_word(i->seg(), RMAddr(i));
+    op1_16 = read_RMW_virtual_word(i->seg(), eaddr);
   }
 
   if ((count & 0x0f) == 0) {
@@ -269,9 +269,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROR_Ew(bxInstruction_c *i)
     op1_16 = BX_READ_16BIT_REG(i->rm());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    op1_16 = read_RMW_virtual_word(i->seg(), RMAddr(i));
+    op1_16 = read_RMW_virtual_word(i->seg(), eaddr);
   }
 
   if ((count & 0x0f) == 0) {
@@ -320,9 +320,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RCL_Ew(bxInstruction_c *i)
     op1_16 = BX_READ_16BIT_REG(i->rm());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    op1_16 = read_RMW_virtual_word(i->seg(), RMAddr(i));
+    op1_16 = read_RMW_virtual_word(i->seg(), eaddr);
   }
 
   if (!count) return;
@@ -369,9 +369,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RCR_Ew(bxInstruction_c *i)
     op1_16 = BX_READ_16BIT_REG(i->rm());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    op1_16 = read_RMW_virtual_word(i->seg(), RMAddr(i));
+    op1_16 = read_RMW_virtual_word(i->seg(), eaddr);
   }
 
   if (! count) return;
@@ -410,9 +410,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHL_Ew(bxInstruction_c *i)
     op1_16 = BX_READ_16BIT_REG(i->rm());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    op1_16 = read_RMW_virtual_word(i->seg(), RMAddr(i));
+    op1_16 = read_RMW_virtual_word(i->seg(), eaddr);
   }
 
   if (!count) return;
@@ -456,9 +456,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHR_Ew(bxInstruction_c *i)
     op1_16 = BX_READ_16BIT_REG(i->rm());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    op1_16 = read_RMW_virtual_word(i->seg(), RMAddr(i));
+    op1_16 = read_RMW_virtual_word(i->seg(), eaddr);
   }
 
   if (!count) return;
@@ -499,9 +499,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SAR_Ew(bxInstruction_c *i)
     op1_16 = BX_READ_16BIT_REG(i->rm());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    op1_16 = read_RMW_virtual_word(i->seg(), RMAddr(i));
+    op1_16 = read_RMW_virtual_word(i->seg(), eaddr);
   }
 
   if (!count) return;

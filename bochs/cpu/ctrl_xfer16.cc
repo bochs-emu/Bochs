@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer16.cc,v 1.58 2008-06-23 15:58:21 sshwarts Exp $
+// $Id: ctrl_xfer16.cc,v 1.59 2008-08-08 09:22:46 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -253,13 +253,13 @@ done:
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::CALL_EwM(bxInstruction_c *i)
 {
-  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR show_flag |= Flag_call;
 #endif
 
-  Bit16u op1_16 = read_virtual_word(i->seg(), RMAddr(i));
+  Bit16u op1_16 = read_virtual_word(i->seg(), eaddr);
 
   if (op1_16 > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled)
   {
@@ -304,10 +304,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CALL16_Ep(bxInstruction_c *i)
   BX_CPU_THIS_PTR show_flag |= Flag_call;
 #endif
 
-  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  op1_16 = read_virtual_word(i->seg(), RMAddr(i));
-  cs_raw = read_virtual_word(i->seg(), RMAddr(i)+2);
+  op1_16 = read_virtual_word(i->seg(), eaddr);
+  cs_raw = read_virtual_word(i->seg(), eaddr+2);
 
   BX_CPU_THIS_PTR speculative_rsp = 1;
   BX_CPU_THIS_PTR prev_rsp = RSP;
@@ -570,9 +570,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::JNLE_Jw(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::JMP_EwM(bxInstruction_c *i)
 {
-  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  Bit16u new_IP = read_virtual_word(i->seg(), RMAddr(i));
+  Bit16u new_IP = read_virtual_word(i->seg(), eaddr);
   branch_near16(new_IP);
 
   BX_INSTR_UCNEAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_JMP, new_IP);
@@ -593,10 +593,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::JMP16_Ep(bxInstruction_c *i)
 
   invalidate_prefetch_q();
 
-  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  op1_16 = read_virtual_word(i->seg(), RMAddr(i));
-  cs_raw = read_virtual_word(i->seg(), RMAddr(i)+2);
+  op1_16 = read_virtual_word(i->seg(), eaddr);
+  cs_raw = read_virtual_word(i->seg(), eaddr+2);
 
   // jump_protected doesn't affect RSP so it is RSP safe
   if (protected_mode()) {

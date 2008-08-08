@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: mmx.cc,v 1.80 2008-07-13 15:35:09 sshwarts Exp $
+// $Id: mmx.cc,v 1.81 2008-08-08 09:22:47 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2002 Stanislav Shwartsman
@@ -74,9 +74,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSHUFB_PqQq(bxInstruction_c *i)
     op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    MMXUQ(op2) = read_virtual_qword(i->seg(), RMAddr(i));
+    MMXUQ(op2) = read_virtual_qword(i->seg(), eaddr);
   }
 
   for(unsigned j=0; j<8; j++)
@@ -108,9 +108,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PHADDW_PqQq(bxInstruction_c *i)
     op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    MMXUQ(op2) = read_virtual_qword(i->seg(), RMAddr(i));
+    MMXUQ(op2) = read_virtual_qword(i->seg(), eaddr);
   }
 
   MMXUW0(result) = MMXUW0(op1) + MMXUW1(op1);
@@ -138,9 +138,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PHADDD_PqQq(bxInstruction_c *i)
     op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    MMXUQ(op2) = read_virtual_qword(i->seg(), RMAddr(i));
+    MMXUQ(op2) = read_virtual_qword(i->seg(), eaddr);
   }
 
   MMXUD0(result) = MMXUD0(op1) + MMXUD1(op1);
@@ -166,9 +166,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PHADDSW_PqQq(bxInstruction_c *i)
     op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    MMXUQ(op2) = read_virtual_qword(i->seg(), RMAddr(i));
+    MMXUQ(op2) = read_virtual_qword(i->seg(), eaddr);
   }
 
   MMXSW0(result) = SaturateDwordSToWordS(Bit32s(MMXSW0(op1)) + Bit32s(MMXSW1(op1)));
@@ -197,9 +197,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMADDUBSW_PqQq(bxInstruction_c *i)
     op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    MMXUQ(op2) = read_virtual_qword(i->seg(), RMAddr(i));
+    MMXUQ(op2) = read_virtual_qword(i->seg(), eaddr);
   }
 
   for(unsigned j=0; j<4; j++)
@@ -231,9 +231,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PHSUBSW_PqQq(bxInstruction_c *i)
     op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    MMXUQ(op2) = read_virtual_qword(i->seg(), RMAddr(i));
+    MMXUQ(op2) = read_virtual_qword(i->seg(), eaddr);
   }
 
   MMXSW0(result) = SaturateDwordSToWordS(Bit32s(MMXSW0(op1)) - Bit32s(MMXSW1(op1)));
@@ -262,9 +262,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PHSUBW_PqQq(bxInstruction_c *i)
     op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    MMXUQ(op2) = read_virtual_qword(i->seg(), RMAddr(i));
+    MMXUQ(op2) = read_virtual_qword(i->seg(), eaddr);
   }
 
   MMXUW0(result) = MMXUW0(op1) - MMXUW1(op1);
@@ -292,9 +292,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PHSUBD_PqQq(bxInstruction_c *i)
     op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    MMXUQ(op2) = read_virtual_qword(i->seg(), RMAddr(i));
+    MMXUQ(op2) = read_virtual_qword(i->seg(), eaddr);
   }
 
   MMXUD0(result) = MMXUD0(op1) - MMXUD1(op1);
@@ -320,9 +320,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSIGNB_PqQq(bxInstruction_c *i)
     op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    MMXUQ(op2) = read_virtual_qword(i->seg(), RMAddr(i));
+    MMXUQ(op2) = read_virtual_qword(i->seg(), eaddr);
   }
 
   for(unsigned j=0; j<8; j++) {
@@ -350,9 +350,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSIGNW_PqQq(bxInstruction_c *i)
     op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    MMXUQ(op2) = read_virtual_qword(i->seg(), RMAddr(i));
+    MMXUQ(op2) = read_virtual_qword(i->seg(), eaddr);
   }
 
   for(unsigned j=0; j<4; j++) {
@@ -380,9 +380,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSIGND_PqQq(bxInstruction_c *i)
     op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    MMXUQ(op2) = read_virtual_qword(i->seg(), RMAddr(i));
+    MMXUQ(op2) = read_virtual_qword(i->seg(), eaddr);
   }
 
   int sign;
@@ -412,9 +412,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMULHRSW_PqQq(bxInstruction_c *i)
     op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    MMXUQ(op2) = read_virtual_qword(i->seg(), RMAddr(i));
+    MMXUQ(op2) = read_virtual_qword(i->seg(), eaddr);
   }
 
   for(unsigned j=0; j<4; j++) {
@@ -447,9 +447,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PABSB_PqQq(bxInstruction_c *i)
     op = BX_READ_MMX_REG(i->rm());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    MMXUQ(op) = read_virtual_qword(i->seg(), RMAddr(i));
+    MMXUQ(op) = read_virtual_qword(i->seg(), eaddr);
   }
 
   if (MMXSB0(op) < 0) MMXUB0(op) = -MMXSB0(op);
@@ -481,9 +481,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PABSW_PqQq(bxInstruction_c *i)
     op = BX_READ_MMX_REG(i->rm());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    MMXUQ(op) = read_virtual_qword(i->seg(), RMAddr(i));
+    MMXUQ(op) = read_virtual_qword(i->seg(), eaddr);
   }
 
   if (MMXSW0(op) < 0) MMXUW0(op) = -MMXSW0(op);
@@ -511,9 +511,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PABSD_PqQq(bxInstruction_c *i)
     op = BX_READ_MMX_REG(i->rm());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    MMXUQ(op) = read_virtual_qword(i->seg(), RMAddr(i));
+    MMXUQ(op) = read_virtual_qword(i->seg(), eaddr);
   }
 
   if (MMXSD0(op) < 0) MMXUD0(op) = -MMXSD0(op);
@@ -540,9 +540,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PALIGNR_PqQqIb(bxInstruction_c *i)
     op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    MMXUQ(op2) = read_virtual_qword(i->seg(), RMAddr(i));
+    MMXUQ(op2) = read_virtual_qword(i->seg(), eaddr);
   }
 
   unsigned shift = i->Ib() * 8;
@@ -579,9 +579,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUNPCKLBW_PqQd(bxInstruction_c *i)
     op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    MMXUQ(op2) = read_virtual_qword(i->seg(), RMAddr(i));
+    MMXUQ(op2) = read_virtual_qword(i->seg(), eaddr);
   }
 
   MMXUB7(result) = MMXUB3(op2);
@@ -614,9 +614,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUNPCKLWD_PqQd(bxInstruction_c *i)
     op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    MMXUQ(op2) = read_virtual_qword(i->seg(), RMAddr(i));
+    MMXUQ(op2) = read_virtual_qword(i->seg(), eaddr);
   }
 
   MMXUW3(result) = MMXUW1(op2);
@@ -645,9 +645,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUNPCKLDQ_PqQd(bxInstruction_c *i)
     op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    MMXUQ(op2) = read_virtual_qword(i->seg(), RMAddr(i));
+    MMXUQ(op2) = read_virtual_qword(i->seg(), eaddr);
   }
 
   MMXUD1(op1) = MMXUD0(op2);
@@ -673,9 +673,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PACKSSWB_PqQq(bxInstruction_c *i)
     op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    MMXUQ(op2) = read_virtual_qword(i->seg(), RMAddr(i));
+    MMXUQ(op2) = read_virtual_qword(i->seg(), eaddr);
   }
 
   MMXSB0(result) = SaturateWordSToByteS(MMXSW0(op1));
@@ -708,9 +708,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PCMPGTB_PqQq(bxInstruction_c *i)
     op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    MMXUQ(op2) = read_virtual_qword(i->seg(), RMAddr(i));
+    MMXUQ(op2) = read_virtual_qword(i->seg(), eaddr);
   }
 
   MMXUB0(op1) = (MMXSB0(op1) > MMXSB0(op2)) ? 0xff : 0;
@@ -743,9 +743,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PCMPGTW_PqQq(bxInstruction_c *i)
     op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    MMXUQ(op2) = read_virtual_qword(i->seg(), RMAddr(i));
+    MMXUQ(op2) = read_virtual_qword(i->seg(), eaddr);
   }
 
   MMXUW0(op1) = (MMXSW0(op1) > MMXSW0(op2)) ? 0xffff : 0;
@@ -774,9 +774,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PCMPGTD_PqQq(bxInstruction_c *i)
     op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    MMXUQ(op2) = read_virtual_qword(i->seg(), RMAddr(i));
+    MMXUQ(op2) = read_virtual_qword(i->seg(), eaddr);
   }
 
   MMXUD0(op1) = (MMXSD0(op1) > MMXSD0(op2)) ? 0xffffffff : 0;
@@ -803,9 +803,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PACKUSWB_PqQq(bxInstruction_c *i)
     op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    MMXUQ(op2) = read_virtual_qword(i->seg(), RMAddr(i));
+    MMXUQ(op2) = read_virtual_qword(i->seg(), eaddr);
   }
 
   MMXUB0(result) = SaturateWordSToByteU(MMXSW0(op1));
@@ -838,9 +838,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUNPCKHBW_PqQq(bxInstruction_c *i)
     op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    MMXUQ(op2) = read_virtual_qword(i->seg(), RMAddr(i));
+    MMXUQ(op2) = read_virtual_qword(i->seg(), eaddr);
   }
 
   MMXUB7(result) = MMXUB7(op2);
@@ -873,9 +873,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUNPCKHWD_PqQq(bxInstruction_c *i)
     op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    MMXUQ(op2) = read_virtual_qword(i->seg(), RMAddr(i));
+    MMXUQ(op2) = read_virtual_qword(i->seg(), eaddr);
   }
 
   MMXUW3(result) = MMXUW3(op2);
@@ -904,9 +904,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUNPCKHDQ_PqQq(bxInstruction_c *i)
     op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    MMXUQ(op2) = read_virtual_qword(i->seg(), RMAddr(i));
+    MMXUQ(op2) = read_virtual_qword(i->seg(), eaddr);
   }
 
   MMXUD1(result) = MMXUD1(op2);
@@ -933,9 +933,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PACKSSDW_PqQq(bxInstruction_c *i)
     op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    MMXUQ(op2) = read_virtual_qword(i->seg(), RMAddr(i));
+    MMXUQ(op2) = read_virtual_qword(i->seg(), eaddr);
   }
 
   MMXSW0(result) = SaturateDwordSToWordS(MMXSD0(op1));
@@ -966,9 +966,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVD_PqEd(bxInstruction_c *i)
     MMXUD0(op) = BX_READ_32BIT_REG(i->rm());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    MMXUD0(op) = read_virtual_dword(i->seg(), RMAddr(i));
+    MMXUD0(op) = read_virtual_dword(i->seg(), eaddr);
   }
 
   /* now write result back to destination */
@@ -993,9 +993,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVQ_PqEq(bxInstruction_c *i)
     MMXUQ(op) = BX_READ_64BIT_REG(i->rm());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    MMXUQ(op) = read_virtual_qword_64(i->seg(), RMAddr(i));
+    MMXUQ(op) = read_virtual_qword_64(i->seg(), eaddr);
   }
 
   /* now write result back to destination */
@@ -1017,9 +1017,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVQ_PqQq(bxInstruction_c *i)
     op = BX_READ_MMX_REG(i->rm());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    MMXUQ(op) = read_virtual_qword(i->seg(), RMAddr(i));
+    MMXUQ(op) = read_virtual_qword(i->seg(), eaddr);
   }
 
   /* now write result back to destination */
@@ -1044,9 +1044,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSHUFW_PqQqIb(bxInstruction_c *i)
     op = BX_READ_MMX_REG(i->rm());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    MMXUQ(op) = read_virtual_qword(i->seg(), RMAddr(i));
+    MMXUQ(op) = read_virtual_qword(i->seg(), eaddr);
   }
 
   MMXUW0(result) = op.mmx16u((order)    & 0x3);
@@ -1075,9 +1075,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PCMPEQB_PqQq(bxInstruction_c *i)
     op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    MMXUQ(op2) = read_virtual_qword(i->seg(), RMAddr(i));
+    MMXUQ(op2) = read_virtual_qword(i->seg(), eaddr);
   }
 
   MMXUB0(op1) = (MMXUB0(op1) == MMXUB0(op2)) ? 0xff : 0;
@@ -1110,9 +1110,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PCMPEQW_PqQq(bxInstruction_c *i)
     op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    MMXUQ(op2) = read_virtual_qword(i->seg(), RMAddr(i));
+    MMXUQ(op2) = read_virtual_qword(i->seg(), eaddr);
   }
 
   MMXUW0(op1) = (MMXUW0(op1) == MMXUW0(op2)) ? 0xffff : 0;
@@ -1141,9 +1141,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PCMPEQD_PqQq(bxInstruction_c *i)
     op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    MMXUQ(op2) = read_virtual_qword(i->seg(), RMAddr(i));
+    MMXUQ(op2) = read_virtual_qword(i->seg(), eaddr);
   }
 
   MMXUD0(op1) = (MMXUD0(op1) == MMXUD0(op2)) ? 0xffffffff : 0;
@@ -1182,9 +1182,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVD_EdPd(bxInstruction_c *i)
     BX_WRITE_32BIT_REGZ(i->rm(), MMXUD0(op));
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    write_virtual_dword(i->seg(), RMAddr(i), MMXUD0(op));
+    write_virtual_dword(i->seg(), eaddr, MMXUD0(op));
   }
 
 #else
@@ -1207,9 +1207,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVQ_EqPq(bxInstruction_c *i)
     BX_WRITE_64BIT_REG(i->rm(), MMXUQ(op));
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    write_virtual_qword_64(i->seg(), RMAddr(i), MMXUQ(op));
+    write_virtual_qword_64(i->seg(), eaddr, MMXUQ(op));
   }
 }
 
@@ -1228,9 +1228,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVQ_QqPq(bxInstruction_c *i)
     BX_WRITE_MMX_REG(i->rm(), op);
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    write_virtual_qword(i->seg(), RMAddr(i), MMXUQ(op));
+    write_virtual_qword(i->seg(), eaddr, MMXUQ(op));
   }
 #else
   BX_INFO(("MOVQ_QqPq: required MMX, use --enable-mmx option"));
@@ -1252,9 +1252,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PINSRW_PqEwIb(bxInstruction_c *i)
     op2 = BX_READ_16BIT_REG(i->rm());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    op2 = read_virtual_word(i->seg(), RMAddr(i));
+    op2 = read_virtual_word(i->seg(), eaddr);
   }
 
   op1.xmm16u(i->Ib() & 0x3) = op2;
@@ -1296,9 +1296,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSRLW_PqQq(bxInstruction_c *i)
     op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    MMXUQ(op2) = read_virtual_qword(i->seg(), RMAddr(i));
+    MMXUQ(op2) = read_virtual_qword(i->seg(), eaddr);
   }
 
   if(MMXUQ(op2) > 15) MMXUQ(op1) = 0;
@@ -1333,9 +1333,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSRLD_PqQq(bxInstruction_c *i)
     op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    MMXUQ(op2) = read_virtual_qword(i->seg(), RMAddr(i));
+    MMXUQ(op2) = read_virtual_qword(i->seg(), eaddr);
   }
 
   if(MMXUQ(op2) > 31) MMXUQ(op1) = 0;
@@ -1368,9 +1368,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSRLQ_PqQq(bxInstruction_c *i)
     op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    MMXUQ(op2) = read_virtual_qword(i->seg(), RMAddr(i));
+    MMXUQ(op2) = read_virtual_qword(i->seg(), eaddr);
   }
 
   if(MMXUQ(op2) > 63) {
@@ -1401,9 +1401,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PADDQ_PqQq(bxInstruction_c *i)
     op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    MMXUQ(op2) = read_virtual_qword(i->seg(), RMAddr(i));
+    MMXUQ(op2) = read_virtual_qword(i->seg(), eaddr);
   }
 
   MMXUQ(op1) += MMXUQ(op2);
@@ -1429,9 +1429,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMULLW_PqQq(bxInstruction_c *i)
     op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    MMXUQ(op2) = read_virtual_qword(i->seg(), RMAddr(i));
+    MMXUQ(op2) = read_virtual_qword(i->seg(), eaddr);
   }
 
   Bit32u product1 = Bit32u(MMXUW0(op1)) * Bit32u(MMXUW0(op2));
@@ -1492,9 +1492,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSUBUSB_PqQq(bxInstruction_c *i)
     op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    MMXUQ(op2) = read_virtual_qword(i->seg(), RMAddr(i));
+    MMXUQ(op2) = read_virtual_qword(i->seg(), eaddr);
   }
 
   MMXUQ(result) = 0;
@@ -1529,9 +1529,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSUBUSW_PqQq(bxInstruction_c *i)
     op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    MMXUQ(op2) = read_virtual_qword(i->seg(), RMAddr(i));
+    MMXUQ(op2) = read_virtual_qword(i->seg(), eaddr);
   }
 
   MMXUQ(result) = 0;
@@ -1562,9 +1562,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMINUB_PqQq(bxInstruction_c *i)
     op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    MMXUQ(op2) = read_virtual_qword(i->seg(), RMAddr(i));
+    MMXUQ(op2) = read_virtual_qword(i->seg(), eaddr);
   }
 
   if(MMXUB0(op2) < MMXUB0(op1)) MMXUB0(op1) = MMXUB0(op2);
@@ -1597,9 +1597,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PAND_PqQq(bxInstruction_c *i)
     op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    MMXUQ(op2) = read_virtual_qword(i->seg(), RMAddr(i));
+    MMXUQ(op2) = read_virtual_qword(i->seg(), eaddr);
   }
 
   MMXUQ(op1) &= MMXUQ(op2);
@@ -1625,9 +1625,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PADDUSB_PqQq(bxInstruction_c *i)
     op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    MMXUQ(op2) = read_virtual_qword(i->seg(), RMAddr(i));
+    MMXUQ(op2) = read_virtual_qword(i->seg(), eaddr);
   }
 
   MMXUB0(result) = SaturateWordSToByteU(Bit16s(MMXUB0(op1)) + Bit16s(MMXUB0(op2)));
@@ -1660,9 +1660,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PADDUSW_PqQq(bxInstruction_c *i)
     op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    MMXUQ(op2) = read_virtual_qword(i->seg(), RMAddr(i));
+    MMXUQ(op2) = read_virtual_qword(i->seg(), eaddr);
   }
 
   MMXUW0(result) = SaturateDwordSToWordU(Bit32s(MMXUW0(op1)) + Bit32s(MMXUW0(op2)));
@@ -1691,9 +1691,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMAXUB_PqQq(bxInstruction_c *i)
     op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    MMXUQ(op2) = read_virtual_qword(i->seg(), RMAddr(i));
+    MMXUQ(op2) = read_virtual_qword(i->seg(), eaddr);
   }
 
   if(MMXUB0(op2) > MMXUB0(op1)) MMXUB0(op1) = MMXUB0(op2);
@@ -1726,9 +1726,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PANDN_PqQq(bxInstruction_c *i)
     op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    MMXUQ(op2) = read_virtual_qword(i->seg(), RMAddr(i));
+    MMXUQ(op2) = read_virtual_qword(i->seg(), eaddr);
   }
 
   MMXUQ(op1) = ~(MMXUQ(op1)) & MMXUQ(op2);
@@ -1754,9 +1754,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PAVGB_PqQq(bxInstruction_c *i)
     op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    MMXUQ(op2) = read_virtual_qword(i->seg(), RMAddr(i));
+    MMXUQ(op2) = read_virtual_qword(i->seg(), eaddr);
   }
 
   MMXUB0(op1) = (MMXUB0(op1) + MMXUB0(op2) + 1) >> 1;
@@ -1789,9 +1789,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSRAW_PqQq(bxInstruction_c *i)
     op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    MMXUQ(op2) = read_virtual_qword(i->seg(), RMAddr(i));
+    MMXUQ(op2) = read_virtual_qword(i->seg(), eaddr);
   }
 
   if(!MMXUQ(op2)) return;
@@ -1837,9 +1837,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSRAD_PqQq(bxInstruction_c *i)
     op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    MMXUQ(op2) = read_virtual_qword(i->seg(), RMAddr(i));
+    MMXUQ(op2) = read_virtual_qword(i->seg(), eaddr);
   }
 
   if(!MMXUQ(op2)) return;
@@ -1882,9 +1882,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PAVGW_PqQq(bxInstruction_c *i)
     op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    MMXUQ(op2) = read_virtual_qword(i->seg(), RMAddr(i));
+    MMXUQ(op2) = read_virtual_qword(i->seg(), eaddr);
   }
 
   MMXUW0(op1) = (MMXUW0(op1) + MMXUW0(op2) + 1) >> 1;
@@ -1913,9 +1913,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMULHUW_PqQq(bxInstruction_c *i)
     op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    MMXUQ(op2) = read_virtual_qword(i->seg(), RMAddr(i));
+    MMXUQ(op2) = read_virtual_qword(i->seg(), eaddr);
   }
 
   Bit32u product1 = Bit32u(MMXUW0(op1)) * Bit32u(MMXUW0(op2));
@@ -1949,9 +1949,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMULHW_PqQq(bxInstruction_c *i)
     op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    MMXUQ(op2) = read_virtual_qword(i->seg(), RMAddr(i));
+    MMXUQ(op2) = read_virtual_qword(i->seg(), eaddr);
   }
 
   Bit32s product1 = Bit32s(MMXSW0(op1)) * Bit32s(MMXSW0(op2));
@@ -1978,8 +1978,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVNTQ_MqPq(bxInstruction_c *i)
 #if BX_SUPPORT_3DNOW || BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareMMX();
   BxPackedMmxRegister reg = BX_READ_MMX_REG(i->nnn());
-  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-  write_virtual_qword(i->seg(), RMAddr(i), MMXUQ(reg));
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  write_virtual_qword(i->seg(), eaddr, MMXUQ(reg));
 #else
   BX_INFO(("MOVNTQ_MqPq: required SSE or 3DNOW, use --enable-sse or --enable-3dnow options"));
   exception(BX_UD_EXCEPTION, 0, 0);
@@ -1999,9 +1999,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSUBSB_PqQq(bxInstruction_c *i)
     op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    MMXUQ(op2) = read_virtual_qword(i->seg(), RMAddr(i));
+    MMXUQ(op2) = read_virtual_qword(i->seg(), eaddr);
   }
 
   MMXSB0(result) = SaturateWordSToByteS(Bit16s(MMXSB0(op1)) - Bit16s(MMXSB0(op2)));
@@ -2034,9 +2034,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSUBSW_PqQq(bxInstruction_c *i)
     op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    MMXUQ(op2) = read_virtual_qword(i->seg(), RMAddr(i));
+    MMXUQ(op2) = read_virtual_qword(i->seg(), eaddr);
   }
 
   MMXSW0(result) = SaturateDwordSToWordS(Bit32s(MMXSW0(op1)) - Bit32s(MMXSW0(op2)));
@@ -2065,9 +2065,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMINSW_PqQq(bxInstruction_c *i)
     op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    MMXUQ(op2) = read_virtual_qword(i->seg(), RMAddr(i));
+    MMXUQ(op2) = read_virtual_qword(i->seg(), eaddr);
   }
 
   if(MMXSW0(op2) < MMXSW0(op1)) MMXSW0(op1) = MMXSW0(op2);
@@ -2096,9 +2096,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::POR_PqQq(bxInstruction_c *i)
     op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    MMXUQ(op2) = read_virtual_qword(i->seg(), RMAddr(i));
+    MMXUQ(op2) = read_virtual_qword(i->seg(), eaddr);
   }
 
   MMXUQ(op1) |= MMXUQ(op2);
@@ -2124,9 +2124,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PADDSB_PqQq(bxInstruction_c *i)
     op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    MMXUQ(op2) = read_virtual_qword(i->seg(), RMAddr(i));
+    MMXUQ(op2) = read_virtual_qword(i->seg(), eaddr);
   }
 
   MMXSB0(result) = SaturateWordSToByteS(Bit16s(MMXSB0(op1)) + Bit16s(MMXSB0(op2)));
@@ -2159,9 +2159,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PADDSW_PqQq(bxInstruction_c *i)
     op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    MMXUQ(op2) = read_virtual_qword(i->seg(), RMAddr(i));
+    MMXUQ(op2) = read_virtual_qword(i->seg(), eaddr);
   }
 
   MMXSW0(result) = SaturateDwordSToWordS(Bit32s(MMXSW0(op1)) + Bit32s(MMXSW0(op2)));
@@ -2190,9 +2190,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMAXSW_PqQq(bxInstruction_c *i)
     op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    MMXUQ(op2) = read_virtual_qword(i->seg(), RMAddr(i));
+    MMXUQ(op2) = read_virtual_qword(i->seg(), eaddr);
   }
 
   if(MMXSW0(op2) > MMXSW0(op1)) MMXSW0(op1) = MMXSW0(op2);
@@ -2221,9 +2221,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PXOR_PqQq(bxInstruction_c *i)
     op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    MMXUQ(op2) = read_virtual_qword(i->seg(), RMAddr(i));
+    MMXUQ(op2) = read_virtual_qword(i->seg(), eaddr);
   }
 
   MMXUQ(op1) ^= MMXUQ(op2);
@@ -2249,9 +2249,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSLLW_PqQq(bxInstruction_c *i)
     op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    MMXUQ(op2) = read_virtual_qword(i->seg(), RMAddr(i));
+    MMXUQ(op2) = read_virtual_qword(i->seg(), eaddr);
   }
 
   if(MMXUQ(op2) > 15) MMXUQ(op1) = 0;
@@ -2286,9 +2286,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSLLD_PqQq(bxInstruction_c *i)
     op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    MMXUQ(op2) = read_virtual_qword(i->seg(), RMAddr(i));
+    MMXUQ(op2) = read_virtual_qword(i->seg(), eaddr);
   }
 
   if(MMXUQ(op2) > 31) MMXUQ(op1) = 0;
@@ -2321,9 +2321,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSLLQ_PqQq(bxInstruction_c *i)
     op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    MMXUQ(op2) = read_virtual_qword(i->seg(), RMAddr(i));
+    MMXUQ(op2) = read_virtual_qword(i->seg(), eaddr);
   }
 
   if(MMXUQ(op2) > 63) {
@@ -2354,9 +2354,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMULUDQ_PqQq(bxInstruction_c *i)
     op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    MMXUQ(op2) = read_virtual_qword(i->seg(), RMAddr(i));
+    MMXUQ(op2) = read_virtual_qword(i->seg(), eaddr);
   }
 
   MMXUQ(result) = Bit64u(MMXUD0(op1)) * Bit64u(MMXUD0(op2));
@@ -2382,9 +2382,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMADDWD_PqQq(bxInstruction_c *i)
     op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    MMXUQ(op2) = read_virtual_qword(i->seg(), RMAddr(i));
+    MMXUQ(op2) = read_virtual_qword(i->seg(), eaddr);
   }
 
   if(MMXUD0(op1) == 0x80008000 && MMXUD0(op2) == 0x80008000) {
@@ -2423,9 +2423,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSADBW_PqQq(bxInstruction_c *i)
     op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    MMXUQ(op2) = read_virtual_qword(i->seg(), RMAddr(i));
+    MMXUQ(op2) = read_virtual_qword(i->seg(), eaddr);
   }
 
   temp += abs(MMXUB0(op1) - MMXUB0(op2));
@@ -2504,9 +2504,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSUBB_PqQq(bxInstruction_c *i)
     op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    MMXUQ(op2) = read_virtual_qword(i->seg(), RMAddr(i));
+    MMXUQ(op2) = read_virtual_qword(i->seg(), eaddr);
   }
 
   MMXUB0(op1) -= MMXUB0(op2);
@@ -2539,9 +2539,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSUBW_PqQq(bxInstruction_c *i)
     op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    MMXUQ(op2) = read_virtual_qword(i->seg(), RMAddr(i));
+    MMXUQ(op2) = read_virtual_qword(i->seg(), eaddr);
   }
 
   MMXUW0(op1) -= MMXUW0(op2);
@@ -2570,9 +2570,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSUBD_PqQq(bxInstruction_c *i)
     op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    MMXUQ(op2) = read_virtual_qword(i->seg(), RMAddr(i));
+    MMXUQ(op2) = read_virtual_qword(i->seg(), eaddr);
   }
 
   MMXUD0(op1) -= MMXUD0(op2);
@@ -2599,9 +2599,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSUBQ_PqQq(bxInstruction_c *i)
     op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    MMXUQ(op2) = read_virtual_qword(i->seg(), RMAddr(i));
+    MMXUQ(op2) = read_virtual_qword(i->seg(), eaddr);
   }
 
   MMXUQ(op1) -= MMXUQ(op2);
@@ -2627,9 +2627,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PADDB_PqQq(bxInstruction_c *i)
     op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    MMXUQ(op2) = read_virtual_qword(i->seg(), RMAddr(i));
+    MMXUQ(op2) = read_virtual_qword(i->seg(), eaddr);
   }
 
   MMXUB0(op1) += MMXUB0(op2);
@@ -2662,9 +2662,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PADDW_PqQq(bxInstruction_c *i)
     op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    MMXUQ(op2) = read_virtual_qword(i->seg(), RMAddr(i));
+    MMXUQ(op2) = read_virtual_qword(i->seg(), eaddr);
   }
 
   MMXUW0(op1) += MMXUW0(op2);
@@ -2693,9 +2693,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PADDD_PqQq(bxInstruction_c *i)
     op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    MMXUQ(op2) = read_virtual_qword(i->seg(), RMAddr(i));
+    MMXUQ(op2) = read_virtual_qword(i->seg(), eaddr);
   }
 
   MMXUD0(op1) += MMXUD0(op2);

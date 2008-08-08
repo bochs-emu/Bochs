@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.250 2008-08-03 19:53:09 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.251 2008-08-08 09:22:47 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -53,8 +53,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::NOP(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PREFETCH(bxInstruction_c *i)
 {
 #if BX_INSTRUMENTATION
-  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-  BX_INSTR_PREFETCH_HINT(BX_CPU_ID, i->nnn(), i->seg(), RMAddr(i));
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  BX_INSTR_PREFETCH_HINT(BX_CPU_ID, i->nnn(), i->seg(), eaddr);
 #endif
 }
 
@@ -188,15 +188,15 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CLFLUSH(bxInstruction_c *i)
 #if BX_SUPPORT_CLFLUSH
   bx_segment_reg_t *seg = &BX_CPU_THIS_PTR sregs[i->seg()];
 
-  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
   // check if we could access the memory segment
   if (!(seg->cache.valid & SegAccessROK4G)) {
-    if (! execute_virtual_checks(seg, RMAddr(i), 1))
+    if (! execute_virtual_checks(seg, eaddr, 1))
       exception(int_number(i->seg()), 0, 0);
   }
 
-  bx_address laddr = BX_CPU_THIS_PTR get_laddr(i->seg(), RMAddr(i));
+  bx_address laddr = BX_CPU_THIS_PTR get_laddr(i->seg(), eaddr);
 #if BX_SUPPORT_X86_64
   if (! IsCanonical(laddr)) {
     BX_ERROR(("CLFLUSH: non-canonical access !"));
@@ -805,9 +805,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LMSW_Ew(bxInstruction_c *i)
     msw = BX_READ_16BIT_REG(i->rm());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    msw = read_virtual_word(i->seg(), RMAddr(i));
+    msw = read_virtual_word(i->seg(), eaddr);
   }
 
   // LMSW does not affect PG,CD,NW,AM,WP,NE,ET bits, and cannot clear PE
@@ -833,10 +833,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SMSW_EwR(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::SMSW_EwM(bxInstruction_c *i)
 {
-  Bit16u msw  = BX_CPU_THIS_PTR cr0.getRegister() & 0xffff;
-  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  Bit16u msw = BX_CPU_THIS_PTR cr0.getRegister() & 0xffff;
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
   /* pointer, segment address pair */
-  write_virtual_word(i->seg(), RMAddr(i), msw);
+  write_virtual_word(i->seg(), eaddr, msw);
 }
 #endif
 

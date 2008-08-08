@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.148 2008-08-07 22:14:38 sshwarts Exp $
+// $Id: paging.cc,v 1.149 2008-08-08 09:22:47 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -555,8 +555,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INVLPG(bxInstruction_c* i)
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
-  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-  bx_address laddr = BX_CPU_THIS_PTR get_laddr(i->seg(), RMAddr(i));
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address laddr = get_laddr(i->seg(), eaddr);
   BX_INSTR_TLB_CNTRL(BX_CPU_ID, BX_INSTR_INVLPG, laddr);
   TLB_invlpg(laddr);
 #else

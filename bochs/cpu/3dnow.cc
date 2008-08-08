@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: 3dnow.cc,v 1.24 2008-04-14 16:50:27 sshwarts Exp $
+// $Id: 3dnow.cc,v 1.25 2008-08-08 09:22:46 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2002 Stanislav Shwartsman
@@ -53,9 +53,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PI2FW_PqQq(bxInstruction_c *i)
     op = BX_READ_MMX_REG(i->rm());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    MMXUQ(op) = read_virtual_qword(i->seg(), RMAddr(i));
+    MMXUQ(op) = read_virtual_qword(i->seg(), eaddr);
   }
 
   float_status_t status_word;
@@ -82,9 +82,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PI2FD_PqQq(bxInstruction_c *i)
     op = BX_READ_MMX_REG(i->rm());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    MMXUQ(op) = read_virtual_qword(i->seg(), RMAddr(i));
+    MMXUQ(op) = read_virtual_qword(i->seg(), eaddr);
   }
 
   float_status_t status_word;
@@ -116,9 +116,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PF2ID_PqQq(bxInstruction_c *i)
     op = BX_READ_MMX_REG(i->rm());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    MMXUQ(op) = read_virtual_qword(i->seg(), RMAddr(i));
+    MMXUQ(op) = read_virtual_qword(i->seg(), eaddr);
   }
 
   float_status_t status_word;
@@ -225,9 +225,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMULHRW_PqQq(bxInstruction_c *i)
     op2 = BX_READ_MMX_REG(i->rm());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    MMXUQ(op2) = read_virtual_qword(i->seg(), RMAddr(i));
+    MMXUQ(op2) = read_virtual_qword(i->seg(), eaddr);
   }
 
   Bit32s product1 = Bit32s(MMXSW0(op1)) * Bit32s(MMXSW0(op2)) + 0x8000;
@@ -256,9 +256,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSWAPD_PqQq(bxInstruction_c *i)
     op = BX_READ_MMX_REG(i->rm());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    MMXUQ(op) = read_virtual_qword(i->seg(), RMAddr(i));
+    MMXUQ(op) = read_virtual_qword(i->seg(), eaddr);
   }
 
   MMXUD0(result) = MMXUD1(op);

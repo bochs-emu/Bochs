@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: mult64.cc,v 1.31 2008-06-17 20:23:16 sshwarts Exp $
+// $Id: mult64.cc,v 1.32 2008-08-08 09:22:47 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -218,9 +218,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MUL_RAXEq(bxInstruction_c *i)
     op2_64 = BX_READ_64BIT_REG(i->rm());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    op2_64 = read_virtual_qword_64(i->seg(), RMAddr(i));
+    op2_64 = read_virtual_qword_64(i->seg(), eaddr);
   }
 
   // product_128 = ((Bit128u) op1_64) * ((Bit128u) op2_64);
@@ -253,9 +253,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::IMUL_RAXEq(bxInstruction_c *i)
     op2_64 = BX_READ_64BIT_REG(i->rm());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    op2_64 = (Bit64s) read_virtual_qword_64(i->seg(), RMAddr(i));
+    op2_64 = (Bit64s) read_virtual_qword_64(i->seg(), eaddr);
   }
 
   // product_128 = ((Bit128s) op1_64) * ((Bit128s) op2_64);
@@ -294,9 +294,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::DIV_RAXEq(bxInstruction_c *i)
     op2_64 = BX_READ_64BIT_REG(i->rm());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    op2_64 = read_virtual_qword_64(i->seg(), RMAddr(i));
+    op2_64 = read_virtual_qword_64(i->seg(), eaddr);
   }
 
   if (op2_64 == 0) {
@@ -335,9 +335,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::IDIV_RAXEq(bxInstruction_c *i)
     op2_64 = BX_READ_64BIT_REG(i->rm());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    op2_64 = (Bit64s) read_virtual_qword_64(i->seg(), RMAddr(i));
+    op2_64 = (Bit64s) read_virtual_qword_64(i->seg(), eaddr);
   }
 
   if (op2_64 == 0) {
@@ -382,9 +382,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::IMUL_GqEqId(bxInstruction_c *i)
     op2_64 = BX_READ_64BIT_REG(i->rm());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    op2_64 = (Bit64s) read_virtual_qword_64(i->seg(), RMAddr(i));
+    op2_64 = (Bit64s) read_virtual_qword_64(i->seg(), eaddr);
   }
 
   long_imul(&product_128,op2_64,op3_64);
@@ -410,9 +410,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::IMUL_GqEq(bxInstruction_c *i)
     op2_64 = BX_READ_64BIT_REG(i->rm());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    op2_64 = (Bit64s) read_virtual_qword_64(i->seg(), RMAddr(i));
+    op2_64 = (Bit64s) read_virtual_qword_64(i->seg(), eaddr);
   }
 
   op1_64 = BX_READ_64BIT_REG(i->nnn());

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: protect_ctrl.cc,v 1.90 2008-07-14 14:46:45 sshwarts Exp $
+// $Id: protect_ctrl.cc,v 1.91 2008-08-08 09:22:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -44,9 +44,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ARPL_EwGw(bxInstruction_c *i)
     op1_16 = BX_READ_16BIT_REG(i->rm());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    op1_16 = read_RMW_virtual_word(i->seg(), RMAddr(i));
+    op1_16 = read_RMW_virtual_word(i->seg(), eaddr);
   }
 
   op2_16 = BX_READ_16BIT_REG(i->nnn());
@@ -84,9 +84,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LAR_GvEw(bxInstruction_c *i)
     raw_selector = BX_READ_16BIT_REG(i->rm());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    raw_selector = read_virtual_word(i->seg(), RMAddr(i));
+    raw_selector = read_virtual_word(i->seg(), eaddr);
   }
 
   /* if selector null, clear ZF and done */
@@ -192,9 +192,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LSL_GvEw(bxInstruction_c *i)
     raw_selector = BX_READ_16BIT_REG(i->rm());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    raw_selector = read_virtual_word(i->seg(), RMAddr(i));
+    raw_selector = read_virtual_word(i->seg(), eaddr);
   }
 
   /* if selector null, clear ZF and done */
@@ -280,9 +280,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SLDT_Ew(bxInstruction_c *i)
     }
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    write_virtual_word(i->seg(), RMAddr(i), val16);
+    write_virtual_word(i->seg(), eaddr, val16);
   }
 }
 
@@ -303,9 +303,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::STR_Ew(bxInstruction_c *i)
     }
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    write_virtual_word(i->seg(), RMAddr(i), val16);
+    write_virtual_word(i->seg(), eaddr, val16);
   }
 }
 
@@ -334,9 +334,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LLDT_Ew(bxInstruction_c *i)
     raw_selector = BX_READ_16BIT_REG(i->rm());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    raw_selector = read_virtual_word(i->seg(), RMAddr(i));
+    raw_selector = read_virtual_word(i->seg(), eaddr);
   }
 
   invalidate_prefetch_q();
@@ -423,9 +423,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LTR_Ew(bxInstruction_c *i)
     raw_selector = BX_READ_16BIT_REG(i->rm());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    raw_selector = read_virtual_word(i->seg(), RMAddr(i));
+    raw_selector = read_virtual_word(i->seg(), eaddr);
   }
 
   invalidate_prefetch_q();
@@ -521,9 +521,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VERR_Ew(bxInstruction_c *i)
     raw_selector = BX_READ_16BIT_REG(i->rm());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    raw_selector = read_virtual_word(i->seg(), RMAddr(i));
+    raw_selector = read_virtual_word(i->seg(), eaddr);
   }
 
   /* if selector null, clear ZF and done */
@@ -611,9 +611,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VERW_Ew(bxInstruction_c *i)
     raw_selector = BX_READ_16BIT_REG(i->rm());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    raw_selector = read_virtual_word(i->seg(), RMAddr(i));
+    raw_selector = read_virtual_word(i->seg(), eaddr);
   }
 
   /* if selector null, clear ZF and done */
@@ -671,10 +671,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SGDT_Ms(bxInstruction_c *i)
   Bit16u limit_16 = BX_CPU_THIS_PTR gdtr.limit;
   Bit32u base_32  = (Bit32u) BX_CPU_THIS_PTR gdtr.base;
 
-  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  Bit32u eaddr = (Bit32u) BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  write_virtual_word_32(i->seg(), RMAddr(i), limit_16);
-  write_virtual_dword_32(i->seg(), RMAddr(i)+2, base_32);
+  write_virtual_word_32(i->seg(), eaddr, limit_16);
+  write_virtual_dword_32(i->seg(), eaddr+2, base_32);
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::SIDT_Ms(bxInstruction_c *i)
@@ -682,10 +682,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SIDT_Ms(bxInstruction_c *i)
   Bit16u limit_16 = BX_CPU_THIS_PTR idtr.limit;
   Bit32u base_32  = (Bit32u) BX_CPU_THIS_PTR idtr.base;
 
-  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  Bit32u eaddr = (Bit32u) BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  write_virtual_word_32(i->seg(), RMAddr(i), limit_16);
-  write_virtual_dword_32(i->seg(), RMAddr(i)+2, base_32);
+  write_virtual_word_32(i->seg(), eaddr, limit_16);
+  write_virtual_dword_32(i->seg(), eaddr+2, base_32);
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::LGDT_Ms(bxInstruction_c *i)
@@ -702,10 +702,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LGDT_Ms(bxInstruction_c *i)
 
   invalidate_prefetch_q();
 
-  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  Bit32u eaddr = (Bit32u) BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  Bit16u limit_16 = read_virtual_word_32(i->seg(), RMAddr(i));
-  Bit32u base_32 = read_virtual_dword_32(i->seg(), RMAddr(i) + 2);
+  Bit16u limit_16 = read_virtual_word_32(i->seg(), eaddr);
+  Bit32u base_32 = read_virtual_dword_32(i->seg(), eaddr + 2);
 
   if (i->os32L() == 0) base_32 &= 0x00ffffff; /* ignore upper 8 bits */
 
@@ -727,10 +727,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LIDT_Ms(bxInstruction_c *i)
 
   invalidate_prefetch_q();
 
-  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  Bit32u eaddr = (Bit32u) BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  Bit32u base_32 = read_virtual_dword_32(i->seg(), RMAddr(i) + 2);
-  Bit16u limit_16 = read_virtual_word_32(i->seg(), RMAddr(i));
+  Bit32u base_32 = read_virtual_dword_32(i->seg(), eaddr + 2);
+  Bit16u limit_16 = read_virtual_word_32(i->seg(), eaddr);
 
   if (i->os32L() == 0) base_32 &= 0x00ffffff; /* ignore upper 8 bits */
 
@@ -745,10 +745,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SGDT64_Ms(bxInstruction_c *i)
   Bit16u limit_16 = BX_CPU_THIS_PTR gdtr.limit;
   Bit64u base_64  = BX_CPU_THIS_PTR gdtr.base;
 
-  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  write_virtual_word_64(i->seg(), RMAddr(i), limit_16);
-  write_virtual_qword_64(i->seg(), RMAddr(i)+2, base_64);
+  write_virtual_word_64(i->seg(), eaddr, limit_16);
+  write_virtual_qword_64(i->seg(), eaddr+2, base_64);
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::SIDT64_Ms(bxInstruction_c *i)
@@ -756,10 +756,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SIDT64_Ms(bxInstruction_c *i)
   Bit16u limit_16 = BX_CPU_THIS_PTR idtr.limit;
   Bit64u base_64  = BX_CPU_THIS_PTR idtr.base;
 
-  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  write_virtual_word_64(i->seg(), RMAddr(i), limit_16);
-  write_virtual_qword_64(i->seg(), RMAddr(i)+2, base_64);
+  write_virtual_word_64(i->seg(), eaddr, limit_16);
+  write_virtual_qword_64(i->seg(), eaddr+2, base_64);
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::LGDT64_Ms(bxInstruction_c *i)
@@ -771,14 +771,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LGDT64_Ms(bxInstruction_c *i)
 
   invalidate_prefetch_q();
 
-  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  Bit64u base_64 = read_virtual_qword_64(i->seg(), RMAddr(i) + 2);
+  Bit64u base_64 = read_virtual_qword_64(i->seg(), eaddr + 2);
   if (! IsCanonical(base_64)) {
     BX_ERROR(("LGDT64_Ms: loaded base64 address is not in canonical form!"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
-  Bit16u limit_16 = read_virtual_word_64(i->seg(), RMAddr(i));
+  Bit16u limit_16 = read_virtual_word_64(i->seg(), eaddr);
 
   BX_CPU_THIS_PTR gdtr.limit = limit_16;
   BX_CPU_THIS_PTR gdtr.base = base_64;
@@ -793,14 +793,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LIDT64_Ms(bxInstruction_c *i)
 
   invalidate_prefetch_q();
 
-  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  Bit64u base_64 = read_virtual_qword_64(i->seg(), RMAddr(i) + 2);
+  Bit64u base_64 = read_virtual_qword_64(i->seg(), eaddr + 2);
   if (! IsCanonical(base_64)) {
     BX_ERROR(("LIDT64_Ms: loaded base64 address is not in canonical form!"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
-  Bit16u limit_16 = read_virtual_word_64(i->seg(), RMAddr(i));
+  Bit16u limit_16 = read_virtual_word_64(i->seg(), eaddr);
 
   BX_CPU_THIS_PTR idtr.limit = limit_16;
   BX_CPU_THIS_PTR idtr.base = base_64;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: shift64.cc,v 1.37 2008-05-10 18:10:53 sshwarts Exp $
+// $Id: shift64.cc,v 1.38 2008-08-08 09:22:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -38,10 +38,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHLD_EqGqM(bxInstruction_c *i)
   unsigned count;
   unsigned cf, of;
 
-  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
   /* pointer, segment address pair */
-  op1_64 = read_RMW_virtual_qword_64(i->seg(), RMAddr(i));
+  op1_64 = read_RMW_virtual_qword_64(i->seg(), eaddr);
 
   if (i->b1() == 0xa4) // 0x1a4
     count = i->Ib();
@@ -98,10 +98,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHRD_EqGqM(bxInstruction_c *i)
   unsigned count;
   unsigned cf, of;
 
-  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
   /* pointer, segment address pair */
-  op1_64 = read_RMW_virtual_qword_64(i->seg(), RMAddr(i));
+  op1_64 = read_RMW_virtual_qword_64(i->seg(), eaddr);
 
   if (i->b1() == 0xac) // 0x1ac
     count = i->Ib();
@@ -158,10 +158,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROL_EqM(bxInstruction_c *i)
   unsigned count;
   unsigned bit0, bit63;
 
-  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
   /* pointer, segment address pair */
-  op1_64 = read_RMW_virtual_qword_64(i->seg(), RMAddr(i));
+  op1_64 = read_RMW_virtual_qword_64(i->seg(), eaddr);
 
   if (i->b1() == 0xd3)
     count = CL;
@@ -211,10 +211,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROR_EqM(bxInstruction_c *i)
   unsigned count;
   unsigned bit62, bit63;
 
-  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
   /* pointer, segment address pair */
-  op1_64 = read_RMW_virtual_qword_64(i->seg(), RMAddr(i));
+  op1_64 = read_RMW_virtual_qword_64(i->seg(), eaddr);
 
   if (i->b1() == 0xd3)
     count = CL;
@@ -264,10 +264,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RCL_EqM(bxInstruction_c *i)
   unsigned count;
   unsigned cf, of;
 
-  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
   /* pointer, segment address pair */
-  op1_64 = read_RMW_virtual_qword_64(i->seg(), RMAddr(i));
+  op1_64 = read_RMW_virtual_qword_64(i->seg(), eaddr);
 
   if (i->b1() == 0xd3)
     count = CL;
@@ -329,10 +329,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RCR_EqM(bxInstruction_c *i)
   unsigned count;
   unsigned of, cf;
 
-  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
   /* pointer, segment address pair */
-  op1_64 = read_RMW_virtual_qword_64(i->seg(), RMAddr(i));
+  op1_64 = read_RMW_virtual_qword_64(i->seg(), eaddr);
 
   if (i->b1() == 0xd3)
     count = CL;
@@ -394,10 +394,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHL_EqM(bxInstruction_c *i)
   unsigned count;
   unsigned cf, of;
 
-  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
   /* pointer, segment address pair */
-  op1_64 = read_RMW_virtual_qword_64(i->seg(), RMAddr(i));
+  op1_64 = read_RMW_virtual_qword_64(i->seg(), eaddr);
 
   if (i->b1() == 0xd3)
     count = CL;
@@ -449,10 +449,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHR_EqM(bxInstruction_c *i)
   unsigned count;
   unsigned cf, of;
 
-  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
   /* pointer, segment address pair */
-  op1_64 = read_RMW_virtual_qword_64(i->seg(), RMAddr(i));
+  op1_64 = read_RMW_virtual_qword_64(i->seg(), eaddr);
 
   if (i->b1() == 0xd3)
     count = CL;
@@ -507,10 +507,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SAR_EqM(bxInstruction_c *i)
   Bit64u op1_64, result_64;
   unsigned count;
 
-  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
   /* pointer, segment address pair */
-  op1_64 = read_RMW_virtual_qword_64(i->seg(), RMAddr(i));
+  op1_64 = read_RMW_virtual_qword_64(i->seg(), eaddr);
 
   if (i->b1() == 0xd3)
     count = CL;

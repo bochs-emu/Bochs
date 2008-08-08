@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logical64.cc,v 1.29 2008-07-13 09:59:59 sshwarts Exp $
+// $Id: logical64.cc,v 1.30 2008-08-08 09:22:47 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -36,9 +36,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XOR_EqGqM(bxInstruction_c *i)
 {
   Bit64u op1_64, op2_64;
 
-  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  op1_64 = read_RMW_virtual_qword_64(i->seg(), RMAddr(i));
+  op1_64 = read_RMW_virtual_qword_64(i->seg(), eaddr);
   op2_64 = BX_READ_64BIT_REG(i->nnn());
   op1_64 ^= op2_64;
   write_RMW_virtual_qword(op1_64);
@@ -50,10 +50,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XOR_GqEqM(bxInstruction_c *i)
 {
   Bit64u op1_64, op2_64;
 
-  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
   op1_64 = BX_READ_64BIT_REG(i->nnn());
-  op2_64 = read_virtual_qword_64(i->seg(), RMAddr(i));
+  op2_64 = read_virtual_qword_64(i->seg(), eaddr);
   op1_64 ^= op2_64;
 
   /* now write result back to destination */
@@ -93,9 +93,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XOR_EqIdM(bxInstruction_c *i)
 {
   Bit64u op1_64, op2_64 = (Bit32s) i->Id();
 
-  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  op1_64 = read_RMW_virtual_qword_64(i->seg(), RMAddr(i));
+  op1_64 = read_RMW_virtual_qword_64(i->seg(), eaddr);
   op1_64 ^= op2_64;
   write_RMW_virtual_qword(op1_64);
 
@@ -117,9 +117,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::OR_EqIdM(bxInstruction_c *i)
 {
   Bit64u op1_64, op2_64 = (Bit32s) i->Id();
 
-  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  op1_64 = read_RMW_virtual_qword_64(i->seg(), RMAddr(i));
+  op1_64 = read_RMW_virtual_qword_64(i->seg(), eaddr);
   op1_64 |= op2_64;
   write_RMW_virtual_qword(op1_64);
 
@@ -141,9 +141,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::NOT_EqM(bxInstruction_c *i)
 {
   Bit64u op1_64;
 
-  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  op1_64 = read_RMW_virtual_qword_64(i->seg(), RMAddr(i));
+  op1_64 = read_RMW_virtual_qword_64(i->seg(), eaddr);
   op1_64 = ~op1_64;
   write_RMW_virtual_qword(op1_64);
 }
@@ -159,9 +159,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::OR_EqGqM(bxInstruction_c *i)
 {
   Bit64u op1_64, op2_64;
 
-  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  op1_64 = read_RMW_virtual_qword_64(i->seg(), RMAddr(i));
+  op1_64 = read_RMW_virtual_qword_64(i->seg(), eaddr);
   op2_64 = BX_READ_64BIT_REG(i->nnn());
   op1_64 |= op2_64;
   write_RMW_virtual_qword(op1_64);
@@ -173,10 +173,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::OR_GqEqM(bxInstruction_c *i)
 {
   Bit64u op1_64, op2_64;
 
-  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
   op1_64 = BX_READ_64BIT_REG(i->nnn());
-  op2_64 = read_virtual_qword_64(i->seg(), RMAddr(i));
+  op2_64 = read_virtual_qword_64(i->seg(), eaddr);
   op1_64 |= op2_64;
 
   /* now write result back to destination */
@@ -216,9 +216,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::AND_EqGqM(bxInstruction_c *i)
 {
   Bit64u op1_64, op2_64;
 
-  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  op1_64 = read_RMW_virtual_qword_64(i->seg(), RMAddr(i));
+  op1_64 = read_RMW_virtual_qword_64(i->seg(), eaddr);
   op2_64 = BX_READ_64BIT_REG(i->nnn());
   op1_64 &= op2_64;
   write_RMW_virtual_qword(op1_64);
@@ -230,10 +230,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::AND_GqEqM(bxInstruction_c *i)
 {
   Bit64u op1_64, op2_64;
 
-  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
   op1_64 = BX_READ_64BIT_REG(i->nnn());
-  op2_64 = read_virtual_qword_64(i->seg(), RMAddr(i));
+  op2_64 = read_virtual_qword_64(i->seg(), eaddr);
   op1_64 &= op2_64;
 
   /* now write result back to destination */
@@ -272,9 +272,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::AND_EqIdM(bxInstruction_c *i)
 {
   Bit64u op1_64, op2_64 = (Bit32s) i->Id();
 
-  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  op1_64 = read_RMW_virtual_qword_64(i->seg(), RMAddr(i));
+  op1_64 = read_RMW_virtual_qword_64(i->seg(), eaddr);
   op1_64 &= op2_64;
   write_RMW_virtual_qword(op1_64);
 
@@ -296,9 +296,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::TEST_EqGqM(bxInstruction_c *i)
 {
   Bit64u op1_64, op2_64;
 
-  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  op1_64 = read_virtual_qword_64(i->seg(), RMAddr(i));
+  op1_64 = read_virtual_qword_64(i->seg(), eaddr);
   op2_64 = BX_READ_64BIT_REG(i->nnn());
   op1_64 &= op2_64;
 
@@ -331,9 +331,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::TEST_EqIdM(bxInstruction_c *i)
 {
   Bit64u op1_64, op2_64;
 
-  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  op1_64 = read_virtual_qword_64(i->seg(), RMAddr(i));
+  op1_64 = read_virtual_qword_64(i->seg(), eaddr);
   op2_64 = (Bit32s) i->Id();
   op1_64 &= op2_64;
 

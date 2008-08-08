@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.500 2008-08-07 22:14:38 sshwarts Exp $
+// $Id: cpu.h,v 1.501 2008-08-08 09:22:46 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -384,7 +384,7 @@ class BX_MEM_C;
 #  define BX_CPU_CALL_METHOD(func, args) \
             (this->*((BxExecutePtr_tR) (func))) args
 #  define BX_CPU_CALL_METHODR(func, args) \
-            (this->*((BxExecutePtr_tR) (func))) args
+            (this->*((BxResolvePtr_tR) (func))) args
 #else
 // static member functions.  With SMF, there is only one CPU by definition.
 #  define BX_CPU_THIS_PTR  BX_CPU(0)->
@@ -394,7 +394,7 @@ class BX_MEM_C;
 #  define BX_CPU_CALL_METHOD(func, args) \
             ((BxExecutePtr_tR) (func)) args
 #  define BX_CPU_CALL_METHODR(func, args) \
-            ((BxExecutePtr_tR) (func)) args
+            ((BxResolvePtr_tR) (func)) args
 #endif
 
 #if BX_SUPPORT_SMP
@@ -2745,13 +2745,13 @@ public: // for now...
   BX_SMF void UndefinedOpcode(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void BxError(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
-  BX_SMF void BxResolve16Disp(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void BxResolve16BaseIndex(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void BxResolve32Base(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void BxResolve32BaseIndex(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF bx_address BxResolve16Disp(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF bx_address BxResolve16BaseIndex(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF bx_address BxResolve32Base(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF bx_address BxResolve32BaseIndex(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 #if BX_SUPPORT_X86_64
-  BX_SMF void BxResolve64Base(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void BxResolve64BaseIndex(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF bx_address BxResolve64Base(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF bx_address BxResolve64BaseIndex(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 #endif
 // <TAG-CLASS-CPU-END>
 

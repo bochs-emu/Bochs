@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: shift8.cc,v 1.37 2008-03-22 21:29:41 sshwarts Exp $
+// $Id: shift8.cc,v 1.38 2008-08-08 09:22:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -46,9 +46,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROL_Eb(bxInstruction_c *i)
     op1_8 = BX_READ_8BIT_REGx(i->rm(), i->extend8bitL());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    op1_8 = read_RMW_virtual_byte(i->seg(), RMAddr(i));
+    op1_8 = read_RMW_virtual_byte(i->seg(), eaddr);
   }
 
   if ((count & 0x07) == 0) {
@@ -98,9 +98,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROR_Eb(bxInstruction_c *i)
     op1_8 = BX_READ_8BIT_REGx(i->rm(), i->extend8bitL());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    op1_8 = read_RMW_virtual_byte(i->seg(), RMAddr(i));
+    op1_8 = read_RMW_virtual_byte(i->seg(), eaddr);
   }
 
   if ((count & 0x07) == 0) {
@@ -151,9 +151,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RCL_Eb(bxInstruction_c *i)
     op1_8 = BX_READ_8BIT_REGx(i->rm(), i->extend8bitL());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    op1_8 = read_RMW_virtual_byte(i->seg(), RMAddr(i));
+    op1_8 = read_RMW_virtual_byte(i->seg(), eaddr);
   }
 
   count = (count & 0x1f) % 9;
@@ -197,9 +197,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RCR_Eb(bxInstruction_c *i)
     op1_8 = BX_READ_8BIT_REGx(i->rm(), i->extend8bitL());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    op1_8 = read_RMW_virtual_byte(i->seg(), RMAddr(i));
+    op1_8 = read_RMW_virtual_byte(i->seg(), eaddr);
   }
 
   count = (count & 0x1f) % 9;
@@ -240,9 +240,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHL_Eb(bxInstruction_c *i)
     op1_8 = BX_READ_8BIT_REGx(i->rm(), i->extend8bitL());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    op1_8 = read_RMW_virtual_byte(i->seg(), RMAddr(i));
+    op1_8 = read_RMW_virtual_byte(i->seg(), eaddr);
   }
 
   if (!count) return;
@@ -286,9 +286,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHR_Eb(bxInstruction_c *i)
     op1_8 = BX_READ_8BIT_REGx(i->rm(), i->extend8bitL());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    op1_8 = read_RMW_virtual_byte(i->seg(), RMAddr(i));
+    op1_8 = read_RMW_virtual_byte(i->seg(), eaddr);
   }
 
   if (!count) return;
@@ -329,9 +329,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SAR_Eb(bxInstruction_c *i)
     op1_8 = BX_READ_8BIT_REGx(i->rm(), i->extend8bitL());
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    op1_8 = read_RMW_virtual_byte(i->seg(), RMAddr(i));
+    op1_8 = read_RMW_virtual_byte(i->seg(), eaddr);
   }
 
   if (!count) return;
