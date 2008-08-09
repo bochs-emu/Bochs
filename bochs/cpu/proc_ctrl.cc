@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.251 2008-08-08 09:22:47 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.252 2008-08-09 19:18:09 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -41,7 +41,7 @@
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::UndefinedOpcode(bxInstruction_c *i)
 {
-  BX_DEBUG(("UndefinedOpcode: 0x%d%02x causes #UD exception", i->hasOpcodeExtension(), i->b1()));
+  BX_DEBUG(("UndefinedOpcode: b1 = 0x%02x causes #UD exception", i->b1()));
   exception(BX_UD_EXCEPTION, 0, 0);
 }
 

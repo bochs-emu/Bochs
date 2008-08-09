@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.204 2008-07-13 09:59:59 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.205 2008-08-09 19:18:09 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -3398,7 +3398,6 @@ fetch_b1:
       }
       return(0);
     case 0x0f: // 2 byte escape
-      i->setOpcodeExtension();
       if (ilen < remain) {
         ilen++;
         b1 = 0x100 | *iptr++;

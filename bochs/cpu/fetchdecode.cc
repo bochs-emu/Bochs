@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.196 2008-07-13 15:35:09 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.197 2008-08-09 19:18:09 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2488,7 +2488,6 @@ fetch_b1:
 
   switch (b1) {
     case 0x0f: // 2-byte escape
-      i->setOpcodeExtension();
       if (ilen < remain) {
         ilen++;
         b1 = 0x100 | *iptr++;
@@ -2947,9 +2946,13 @@ modrm_done:
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::BxError(bxInstruction_c *i)
 {
-  BX_DEBUG(("BxError: i with opcode=0x%u%02x", i->hasOpcodeExtension(), i->b1()));
+  BX_DEBUG(("BxError: Encountered an unknown instruction b1=0x%02x (signalling #UD)", i->b1()));
   BX_DEBUG(("modrm was 0x%02x, nnn was %u, rm was %u", i->modrm(), i->nnn(), i->rm()));
-  BX_DEBUG(("WARNING: Encountered an unknown instruction (signalling #UD)"));
+
+#if BX_DISASM && BX_DEBUGGER == 0 // with debugger it easy to see the #UD
+  if (LOG_THIS getonoff(LOGLEV_DEBUG))
+    debug_disasm_instruction(BX_CPU_THIS_PTR prev_rip);
+#endif
 
   exception(BX_UD_EXCEPTION, 0, 0);
 }

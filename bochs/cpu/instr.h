@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: instr.h,v 1.14 2008-08-08 09:22:47 sshwarts Exp $
+// $Id: instr.h,v 1.15 2008-08-09 19:18:09 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008 Stanislav Shwartsman
@@ -50,9 +50,8 @@ public:
 #endif
 
   struct {
-    //  7...2 (unused)
-    //  1...1 stop trace (used with trace cache)
-    //  0...0 opcode extension: 0-none, 1-0x0f used
+    //  7...1 (unused)
+    //  0...0 stop trace (used with trace cache)
     Bit8u metaInfo4;
 
     //  7...0 b1 - opcode byte
@@ -274,19 +273,12 @@ public:
     metaInfo.metaInfo3 = b1 & 0xff;
   }
 
-  BX_CPP_INLINE void setOpcodeExtension(void) {
-    metaInfo.metaInfo4 |= 1;
-  }
-  BX_CPP_INLINE unsigned hasOpcodeExtension(void) const {
-    return metaInfo.metaInfo4 & 1;
-  }
-
 #if BX_SUPPORT_TRACE_CACHE
   BX_CPP_INLINE void setStopTraceAttr(void) {
-   metaInfo.metaInfo4 |= (1<<1);
+   metaInfo.metaInfo4 |= 1;
   }
   BX_CPP_INLINE unsigned getStopTraceAttr(void) const {
-    return metaInfo.metaInfo4 & (1<<1);
+    return metaInfo.metaInfo4 & 1;
   }
 #endif
 };
