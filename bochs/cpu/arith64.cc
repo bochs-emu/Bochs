@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith64.cc,v 1.55 2008-08-08 09:22:46 sshwarts Exp $
+// $Id: arith64.cc,v 1.56 2008-08-09 21:05:05 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -47,20 +47,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ADD_EqGqM(bxInstruction_c *i)
   SET_FLAGS_OSZAPC_ADD_64(op1_64, op2_64, sum_64);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::ADD_GqEqM(bxInstruction_c *i)
-{
-  Bit64u op1_64, op2_64, sum_64;
-
-  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-
-  op1_64 = BX_READ_64BIT_REG(i->nnn());
-  op2_64 = read_virtual_qword_64(i->seg(), eaddr);
-  sum_64 = op1_64 + op2_64;
-  BX_WRITE_64BIT_REG(i->nnn(), sum_64);
-
-  SET_FLAGS_OSZAPC_ADD_64(op1_64, op2_64, sum_64);
-}
-
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::ADD_GqEqR(bxInstruction_c *i)
 {
   Bit64u op1_64, op2_64, sum_64;
@@ -100,24 +86,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ADC_EqGqM(bxInstruction_c *i)
   op2_64 = BX_READ_64BIT_REG(i->nnn());
   sum_64 = op1_64 + op2_64 + temp_CF;
   write_RMW_virtual_qword(sum_64);
-
-  SET_FLAGS_OSZAPC_64(op1_64, op2_64, sum_64, BX_LF_INSTR_ADD_ADC64(temp_CF));
-}
-
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::ADC_GqEqM(bxInstruction_c *i)
-{
-  bx_bool temp_CF = getB_CF();
-
-  Bit64u op1_64, op2_64, sum_64;
-
-  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-
-  op1_64 = BX_READ_64BIT_REG(i->nnn());
-  op2_64 = read_virtual_qword_64(i->seg(), eaddr);
-  sum_64 = op1_64 + op2_64 + temp_CF;
-
-  /* now write sum back to destination */
-  BX_WRITE_64BIT_REG(i->nnn(), sum_64);
 
   SET_FLAGS_OSZAPC_64(op1_64, op2_64, sum_64, BX_LF_INSTR_ADD_ADC64(temp_CF));
 }
@@ -167,24 +135,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SBB_EqGqM(bxInstruction_c *i)
   op2_64 = BX_READ_64BIT_REG(i->nnn());
   diff_64 = op1_64 - (op2_64 + temp_CF);
   write_RMW_virtual_qword(diff_64);
-
-  SET_FLAGS_OSZAPC_64(op1_64, op2_64, diff_64, BX_LF_INSTR_SUB_SBB64(temp_CF));
-}
-
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::SBB_GqEqM(bxInstruction_c *i)
-{
-  bx_bool temp_CF = getB_CF();
-
-  Bit64u op1_64, op2_64, diff_64;
-
-  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-
-  op1_64 = BX_READ_64BIT_REG(i->nnn());
-  op2_64 = read_virtual_qword_64(i->seg(), eaddr);
-  diff_64 = op1_64 - (op2_64 + temp_CF);
-
-  /* now write diff back to destination */
-  BX_WRITE_64BIT_REG(i->nnn(), diff_64);
 
   SET_FLAGS_OSZAPC_64(op1_64, op2_64, diff_64, BX_LF_INSTR_SUB_SBB64(temp_CF));
 }
@@ -267,22 +217,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SUB_EqGqM(bxInstruction_c *i)
   SET_FLAGS_OSZAPC_SUB_64(op1_64, op2_64, diff_64);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::SUB_GqEqM(bxInstruction_c *i)
-{
-  Bit64u op1_64, op2_64, diff_64;
-
-  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-
-  op1_64 = BX_READ_64BIT_REG(i->nnn());
-  op2_64 = read_virtual_qword_64(i->seg(), eaddr);
-  diff_64 = op1_64 - op2_64;
-
-  /* now write diff back to destination */
-  BX_WRITE_64BIT_REG(i->nnn(), diff_64);
-
-  SET_FLAGS_OSZAPC_SUB_64(op1_64, op2_64, diff_64);
-}
-
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::SUB_GqEqR(bxInstruction_c *i)
 {
   Bit64u op1_64, op2_64, diff_64;
@@ -319,19 +253,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMP_EqGqM(bxInstruction_c *i)
 
   op1_64 = read_virtual_qword_64(i->seg(), eaddr);
   op2_64 = BX_READ_64BIT_REG(i->nnn());
-  diff_64 = op1_64 - op2_64;
-
-  SET_FLAGS_OSZAPC_SUB_64(op1_64, op2_64, diff_64);
-}
-
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMP_GqEqM(bxInstruction_c *i)
-{
-  Bit64u op1_64, op2_64, diff_64;
-
-  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-
-  op1_64 = BX_READ_64BIT_REG(i->nnn());
-  op2_64 = read_virtual_qword_64(i->seg(), eaddr);
   diff_64 = op1_64 - op2_64;
 
   SET_FLAGS_OSZAPC_SUB_64(op1_64, op2_64, diff_64);

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: instr.h,v 1.15 2008-08-09 19:18:09 sshwarts Exp $
+// $Id: instr.h,v 1.16 2008-08-09 21:05:06 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008 Stanislav Shwartsman
@@ -45,6 +45,7 @@ public:
   // the memory address (if any).
   BxResolvePtr_tR ResolveModrm;
   BxExecutePtr_tR execute;
+  BxExecutePtr_tR execute2;
 #if BX_INSTRUMENTATION
   Bit16u ia_opcode;
 #endif

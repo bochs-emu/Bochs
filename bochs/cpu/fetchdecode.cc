@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.197 2008-08-09 19:18:09 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.198 2008-08-09 21:05:05 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -185,7 +185,7 @@ static unsigned sreg_mod1or2_base32[8] = {
 
 // table of all Bochs opcodes
 bxIAOpcodeTable BxOpcodesTable[] = {
-#define bx_define_opcode(a, b, c) { &b, c },
+#define bx_define_opcode(a, b, c, d ) { b, c, d },
 #include "ia_opcodes.h"
 };
 #undef  bx_define_opcode
@@ -2578,14 +2578,15 @@ fetch_b1:
       mod = 0xc0;
 
     i->setModRM(b2);
-    i->setRm(rm);
     i->setNnn(nnn);
 
     if (mod == 0xc0) { // mod == 11b
       i->assertModC0();
+      i->setRm(rm);
       goto modrm_done;
     }
 
+    i->setRm(BX_TMP_REGISTER);
     i->setSibBase(rm);      // initialize with rm to use BxResolve32Base
     i->setSibIndex(BX_NIL_REGISTER);
     // initialize displ32 with zero to include cases with no diplacement
@@ -2927,6 +2928,7 @@ modrm_done:
 #endif
 
   i->execute = BxOpcodesTable[ia_opcode].execute;
+  i->execute2 = BxOpcodesTable[ia_opcode].execute2;
 
   if (BxOpcodesTable[ia_opcode].attr == BxArithDstRM) {
     i->setRm(nnn);

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logical64.cc,v 1.30 2008-08-08 09:22:47 sshwarts Exp $
+// $Id: logical64.cc,v 1.31 2008-08-09 21:05:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -42,22 +42,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XOR_EqGqM(bxInstruction_c *i)
   op2_64 = BX_READ_64BIT_REG(i->nnn());
   op1_64 ^= op2_64;
   write_RMW_virtual_qword(op1_64);
-
-  SET_FLAGS_OSZAPC_LOGIC_64(op1_64);
-}
-
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::XOR_GqEqM(bxInstruction_c *i)
-{
-  Bit64u op1_64, op2_64;
-
-  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-
-  op1_64 = BX_READ_64BIT_REG(i->nnn());
-  op2_64 = read_virtual_qword_64(i->seg(), eaddr);
-  op1_64 ^= op2_64;
-
-  /* now write result back to destination */
-  BX_WRITE_64BIT_REG(i->nnn(), op1_64);
 
   SET_FLAGS_OSZAPC_LOGIC_64(op1_64);
 }
@@ -169,22 +153,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::OR_EqGqM(bxInstruction_c *i)
   SET_FLAGS_OSZAPC_LOGIC_64(op1_64);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::OR_GqEqM(bxInstruction_c *i)
-{
-  Bit64u op1_64, op2_64;
-
-  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-
-  op1_64 = BX_READ_64BIT_REG(i->nnn());
-  op2_64 = read_virtual_qword_64(i->seg(), eaddr);
-  op1_64 |= op2_64;
-
-  /* now write result back to destination */
-  BX_WRITE_64BIT_REG(i->nnn(), op1_64);
-
-  SET_FLAGS_OSZAPC_LOGIC_64(op1_64);
-}
-
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::OR_GqEqR(bxInstruction_c *i)
 {
   Bit64u op1_64, op2_64;
@@ -222,22 +190,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::AND_EqGqM(bxInstruction_c *i)
   op2_64 = BX_READ_64BIT_REG(i->nnn());
   op1_64 &= op2_64;
   write_RMW_virtual_qword(op1_64);
-
-  SET_FLAGS_OSZAPC_LOGIC_64(op1_64);
-}
-
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::AND_GqEqM(bxInstruction_c *i)
-{
-  Bit64u op1_64, op2_64;
-
-  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-
-  op1_64 = BX_READ_64BIT_REG(i->nnn());
-  op2_64 = read_virtual_qword_64(i->seg(), eaddr);
-  op1_64 &= op2_64;
-
-  /* now write result back to destination */
-  BX_WRITE_64BIT_REG(i->nnn(), op1_64);
 
   SET_FLAGS_OSZAPC_LOGIC_64(op1_64);
 }

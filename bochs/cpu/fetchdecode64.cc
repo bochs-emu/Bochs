@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.205 2008-08-09 19:18:09 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.206 2008-08-09 21:05:05 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -3505,14 +3505,15 @@ fetch_b1:
       mod = 0xc0;
 
     i->setModRM(b2);
-    i->setRm(rm);
     i->setNnn(nnn);
 
     if (mod == 0xc0) { // mod == 11b
+      i->setRm(rm);
       i->assertModC0();
       goto modrm_done;
     }
 
+    i->setRm(BX_TMP_REGISTER);
     i->setSibBase(rm);      // initialize with rm to use BxResolve32Base
     i->setSibIndex(BX_NIL_REGISTER);
     // initialize displ32 with zero to include cases with no diplacement
@@ -3848,6 +3849,7 @@ modrm_done:
 #endif
 
   i->execute = BxOpcodesTable[ia_opcode].execute;
+  i->execute2 = BxOpcodesTable[ia_opcode].execute2;
 
   if (BxOpcodesTable[ia_opcode].attr == BxArithDstRM) {
     i->setRm(nnn);
