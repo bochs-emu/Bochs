@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: data_xfer.cc,v 1.1 2008-08-09 21:05:05 sshwarts Exp $
+// $Id: data_xfer.cc,v 1.2 2008-08-09 21:07:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008 Stanislav Shwartsman
@@ -44,7 +44,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Ed(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Eq(bxInstruction_c *i)
 {
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-  TMP64 = read_virtual_qword(i->seg(), eaddr);
+  TMP64 = read_virtual_qword_64(i->seg(), eaddr);
   BX_CPU_CALL_METHOD(i->execute2, (i));
 }
 #endif
