@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.149 2008-08-08 09:22:47 sshwarts Exp $
+// $Id: paging.cc,v 1.150 2008-08-10 20:32:00 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1073,11 +1073,19 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned curr_pl, un
 
   Bit32u accessBits = TLB_HostPtr; // HostPtr is not allowed by default
 
-  if ((combined_access & 4) == 0) // System
+  if ((combined_access & 4) == 0) { // System
     accessBits |= TLB_SysOnly;
-
-  if (! isWrite) // Current operation is a read
-    accessBits |= TLB_ReadOnly; // Write NOT allowed
+    if (! isWrite)
+      accessBits |= TLB_ReadOnly;
+  }
+  else {
+    // Current operation is a read or a page is read only
+    // Not efficient handling of system write to user read only page:
+    // hopefully it is very rare case, optimize later
+    if (! isWrite || (combined_access & 2) == 0) {
+      accessBits |= TLB_ReadOnly;
+    }
+  }
 
 #if BX_SUPPORT_GLOBAL_PAGES
   if (combined_access & 0x100) // Global bit
