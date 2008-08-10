@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bit64.cc,v 1.16 2008-08-08 09:22:46 sshwarts Exp $
+// $Id: bit64.cc,v 1.17 2008-08-10 19:34:28 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -32,25 +32,15 @@
 
 #if BX_SUPPORT_X86_64
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::BSF_GqEq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::BSF_GqEqR(bxInstruction_c *i)
 {
-  Bit64u op1_64, op2_64;
-
-  /* op2_64 is a register or memory reference */
-  if (i->modC0()) {
-    op2_64 = BX_READ_64BIT_REG(i->rm());
-  }
-  else {
-    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-    /* pointer, segment address pair */
-    op2_64 = read_virtual_qword_64(i->seg(), eaddr);
-  }
+  Bit64u op2_64 = BX_READ_64BIT_REG(i->rm());
 
   if (op2_64 == 0) {
     assert_ZF(); /* op1_64 undefined */
   }
   else {
-    op1_64 = 0;
+    Bit64u op1_64 = 0;
     while ((op2_64 & 0x01) == 0) {
       op1_64++;
       op2_64 >>= 1;
@@ -64,25 +54,15 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BSF_GqEq(bxInstruction_c *i)
   }
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::BSR_GqEq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::BSR_GqEqR(bxInstruction_c *i)
 {
-  Bit64u op1_64, op2_64;
-
-  /* op2_64 is a register or memory reference */
-  if (i->modC0()) {
-    op2_64 = BX_READ_64BIT_REG(i->rm());
-  }
-  else {
-    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-    /* pointer, segment address pair */
-    op2_64 = read_virtual_qword_64(i->seg(), eaddr);
-  }
+  Bit64u op2_64 = BX_READ_64BIT_REG(i->rm());
 
   if (op2_64 == 0) {
     assert_ZF(); /* op1_64 undefined */
   }
   else {
-    op1_64 = 63;
+    Bit64u op1_64 = 63;
     while ((op2_64 & BX_CONST64(0x8000000000000000)) == 0) {
       op1_64--;
       op2_64 <<= 1;

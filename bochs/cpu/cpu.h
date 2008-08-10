@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.502 2008-08-09 21:05:05 sshwarts Exp $
+// $Id: cpu.h,v 1.503 2008-08-10 19:34:28 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1375,10 +1375,10 @@ public: // for now...
   BX_SMF void SHLD_EdGdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void SHLD_EdGdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
-  BX_SMF void BSF_GwEw(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void BSF_GdEd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void BSR_GwEw(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void BSR_GdEd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void BSF_GwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void BSF_GdEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void BSR_GwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void BSR_GdEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
   BX_SMF void BT_EwGwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void BT_EdGdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -1640,8 +1640,6 @@ public: // for now...
 
   BX_SMF void CALL_EdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void CALL_EwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void CALL_EdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void CALL_EwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
   BX_SMF void CALL32_Ep(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void CALL16_Ep(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -1650,8 +1648,6 @@ public: // for now...
 
   BX_SMF void JMP_EdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void JMP_EwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void JMP_EdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void JMP_EwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
   BX_SMF void SLDT_Ew(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void STR_Ew(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -1674,6 +1670,8 @@ public: // for now...
 #if BX_SUPPORT_X86_64
   BX_SMF void LOAD_Eq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 #endif
+  BX_SMF void LOAD_Wss(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void LOAD_Wsd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void LOAD_Wdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
 #if BX_SUPPORT_FPU == 0	// if FPU is disabled
@@ -2532,8 +2530,8 @@ public: // for now...
   BX_SMF void MOVSX_GqEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void MOVSX_GqEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
-  BX_SMF void BSF_GqEq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void BSR_GqEq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void BSF_GqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void BSR_GqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
   BX_SMF void BT_EqGqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void BTS_EqGqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -2590,10 +2588,8 @@ public: // for now...
   BX_SMF void DEC_EqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void INC_EqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void DEC_EqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void CALL_EqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void CALL_EqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void CALL64_Ep(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void JMP_EqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void JMP_EqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void JMP64_Ep(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void PUSHF_Fq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);

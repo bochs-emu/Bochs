@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bit32.cc,v 1.11 2008-08-08 09:22:46 sshwarts Exp $
+// $Id: bit32.cc,v 1.12 2008-08-10 19:34:28 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -32,26 +32,15 @@
 
 #if BX_CPU_LEVEL >= 3
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::BSF_GdEd(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::BSF_GdEdR(bxInstruction_c *i)
 {
-  /* for 32 bit operand size mode */
-  Bit32u op1_32, op2_32;
-
-  /* op2_32 is a register or memory reference */
-  if (i->modC0()) {
-    op2_32 = BX_READ_32BIT_REG(i->rm());
-  }
-  else {
-    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-    /* pointer, segment address pair */
-    op2_32 = read_virtual_dword(i->seg(), eaddr);
-  }
+  Bit32u op2_32 = BX_READ_32BIT_REG(i->rm());
 
   if (op2_32 == 0) {
     assert_ZF(); /* op1_32 undefined */
   }
   else {
-    op1_32 = 0;
+    Bit32u op1_32 = 0;
     while ((op2_32 & 0x01) == 0) {
       op1_32++;
       op2_32 >>= 1;
@@ -65,26 +54,15 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BSF_GdEd(bxInstruction_c *i)
   }
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::BSR_GdEd(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::BSR_GdEdR(bxInstruction_c *i)
 {
-  /* for 32 bit operand size mode */
-  Bit32u op1_32, op2_32;
-
-  /* op2_32 is a register or memory reference */
-  if (i->modC0()) {
-    op2_32 = BX_READ_32BIT_REG(i->rm());
-  }
-  else {
-    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-    /* pointer, segment address pair */
-    op2_32 = read_virtual_dword(i->seg(), eaddr);
-  }
+  Bit32u op2_32 = BX_READ_32BIT_REG(i->rm());
 
   if (op2_32 == 0) {
     assert_ZF(); /* op1_32 undefined */
   }
   else {
-    op1_32 = 31;
+    Bit32u op1_32 = 31;
     while ((op2_32 & 0x80000000) == 0) {
       op1_32--;
       op2_32 <<= 1;

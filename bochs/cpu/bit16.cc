@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bit16.cc,v 1.12 2008-08-08 09:22:46 sshwarts Exp $
+// $Id: bit16.cc,v 1.13 2008-08-10 19:34:28 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -32,26 +32,15 @@
 
 #if BX_CPU_LEVEL >= 3
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::BSF_GwEw(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::BSF_GwEwR(bxInstruction_c *i)
 {
-  Bit16u op1_16, op2_16;
-
-  /* op2_16 is a register or memory reference */
-  if (i->modC0()) {
-    op2_16 = BX_READ_16BIT_REG(i->rm());
-  }
-  else {
-    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-
-    /* pointer, segment address pair */
-    op2_16 = read_virtual_word(i->seg(), eaddr);
-  }
+  Bit16u op2_16 = BX_READ_16BIT_REG(i->rm());
 
   if (op2_16 == 0) {
     assert_ZF(); /* op1_16 undefined */
   }
   else {
-    op1_16 = 0;
+    Bit16u op1_16 = 0;
     while ((op2_16 & 0x01) == 0) {
       op1_16++;
       op2_16 >>= 1;
@@ -65,26 +54,15 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BSF_GwEw(bxInstruction_c *i)
   }
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::BSR_GwEw(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::BSR_GwEwR(bxInstruction_c *i)
 {
-  Bit16u op1_16, op2_16;
-
-  /* op2_16 is a register or memory reference */
-  if (i->modC0()) {
-    op2_16 = BX_READ_16BIT_REG(i->rm());
-  }
-  else {
-    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-
-    /* pointer, segment address pair */
-    op2_16 = read_virtual_word(i->seg(), eaddr);
-  }
+  Bit16u op2_16 = BX_READ_16BIT_REG(i->rm());
 
   if (op2_16 == 0) {
     assert_ZF(); /* op1_16 undefined */
   }
   else {
-    op1_16 = 15;
+    Bit16u op1_16 = 15;
     while ((op2_16 & 0x8000) == 0) {
       op1_16--;
       op2_16 <<= 1;

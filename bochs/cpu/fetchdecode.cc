@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.198 2008-08-09 21:05:05 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.199 2008-08-10 19:34:28 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -690,8 +690,8 @@ static const BxOpcodeInfo_t BxOpcodeInfo32R[512*2] = {
   /* 0F B9 /wr */ { 0, BX_IA_UD2B },
   /* 0F BA /wr */ { BxGroup8, BX_IA_ERROR, BxOpcodeInfoG8EwIbR },
   /* 0F BB /wr */ { 0, BX_IA_BTC_EwGwR },
-  /* 0F BC /wr */ { 0, BX_IA_BSF_GwEw },
-  /* 0F BD /wr */ { 0, BX_IA_BSR_GwEw },
+  /* 0F BC /wr */ { 0, BX_IA_BSF_GwEwR },
+  /* 0F BD /wr */ { 0, BX_IA_BSR_GwEwR },
   /* 0F BE /wr */ { 0, BX_IA_MOVSX_GwEbR },
   /* 0F BF /wr */ { 0, BX_IA_MOV_GwEwR }, // MOVSX_GwEw
   /* 0F C0 /wr */ { 0, BX_IA_XADD_EbGbR },
@@ -1253,8 +1253,8 @@ static const BxOpcodeInfo_t BxOpcodeInfo32R[512*2] = {
   /* 0F B9 /dr */ { BxTraceEnd, BX_IA_UD2B },
   /* 0F BA /dr */ { BxGroup8, BX_IA_ERROR, BxOpcodeInfoG8EdIbR },
   /* 0F BB /dr */ { 0, BX_IA_BTC_EdGdR },
-  /* 0F BC /dr */ { 0, BX_IA_BSF_GdEd },
-  /* 0F BD /dr */ { 0, BX_IA_BSR_GdEd },
+  /* 0F BC /dr */ { 0, BX_IA_BSF_GdEdR },
+  /* 0F BD /dr */ { 0, BX_IA_BSR_GdEdR },
   /* 0F BE /dr */ { 0, BX_IA_MOVSX_GdEbR },
   /* 0F BF /dr */ { 0, BX_IA_MOVSX_GdEwR },
   /* 0F C0 /dr */ { 0, BX_IA_XADD_EbGbR },
@@ -1823,8 +1823,8 @@ static const BxOpcodeInfo_t BxOpcodeInfo32M[512*2] = {
   /* 0F B9 /wm */ { BxTraceEnd, BX_IA_UD2B },
   /* 0F BA /wm */ { BxGroup8, BX_IA_ERROR, BxOpcodeInfoG8EwIbM },
   /* 0F BB /wm */ { BxLockable, BX_IA_BTC_EwGwM },
-  /* 0F BC /wm */ { 0, BX_IA_BSF_GwEw },
-  /* 0F BD /wm */ { 0, BX_IA_BSR_GwEw },
+  /* 0F BC /wm */ { 0, BX_IA_BSF_GwEwM },
+  /* 0F BD /wm */ { 0, BX_IA_BSR_GwEwM },
   /* 0F BE /wm */ { 0, BX_IA_MOVSX_GwEbM },
   /* 0F BF /wm */ { 0, BX_IA_MOV_GwEwM }, // MOVSX_GwEw
   /* 0F C0 /wm */ { BxLockable, BX_IA_XADD_EbGbM },
@@ -2386,8 +2386,8 @@ static const BxOpcodeInfo_t BxOpcodeInfo32M[512*2] = {
   /* 0F B9 /dm */ { BxTraceEnd, BX_IA_UD2B },
   /* 0F BA /dm */ { BxGroup8, BX_IA_ERROR, BxOpcodeInfoG8EdIbM },
   /* 0F BB /dm */ { BxLockable, BX_IA_BTC_EdGdM },
-  /* 0F BC /dm */ { 0, BX_IA_BSF_GdEd },
-  /* 0F BD /dm */ { 0, BX_IA_BSR_GdEd },
+  /* 0F BC /dm */ { 0, BX_IA_BSF_GdEdM },
+  /* 0F BD /dm */ { 0, BX_IA_BSR_GdEdM },
   /* 0F BE /dm */ { 0, BX_IA_MOVSX_GdEbM },
   /* 0F BF /dm */ { 0, BX_IA_MOVSX_GdEwM },
   /* 0F C0 /dm */ { BxLockable, BX_IA_XADD_EbGbM },
@@ -2456,6 +2456,14 @@ static const BxOpcodeInfo_t BxOpcodeInfo32M[512*2] = {
   /* 0F FF /dm */ { 0, BX_IA_ERROR }
 };
 
+enum {
+  BX_RESOLVE16_DISPLACEMENT,
+  BX_RESOLVE16_BASE_INDEX,
+  BX_RESOLVE32_BASE,
+  BX_RESOLVE32_BASE_INDEX,
+  BX_RESOLVE_NONE
+};
+
   unsigned BX_CPP_AttrRegparmN(3)
 BX_CPU_C::fetchDecode32(const Bit8u *iptr, bxInstruction_c *i, unsigned remainingInPage)
 {
@@ -2464,7 +2472,7 @@ BX_CPU_C::fetchDecode32(const Bit8u *iptr, bxInstruction_c *i, unsigned remainin
 
   bx_bool is_32, lock=0;
   unsigned b1, b2, ilen=0, attr, os_32, ia_opcode = 0;
-  unsigned imm_mode, offset;
+  unsigned imm_mode, offset, resolve = BX_RESOLVE_NONE;
   unsigned rm = 0, mod=0, nnn=0;
 
 #define SSE_PREFIX_NONE 0
@@ -2594,6 +2602,7 @@ fetch_b1:
 
     if (i->as32L()) {
       // 32-bit addressing modes; note that mod==11b handled above
+      resolve = BX_RESOLVE32_BASE;
       i->ResolveModrm = &BX_CPU_C::BxResolve32Base;
       if (rm != 4) { // no s-i-b byte
         if (mod == 0x00) { // mod == 00b
@@ -2642,6 +2651,7 @@ get_8bit_displ:
         i->setSibScale(scale);
         i->setSibBase(base);
         if (index != 4) {
+          resolve = BX_RESOLVE32_BASE_INDEX;
           i->ResolveModrm = &BX_CPU_C::BxResolve32BaseIndex;
           i->setSibIndex(index);
         }
@@ -2665,6 +2675,7 @@ get_8bit_displ:
     }
     else {
       // 16-bit addressing modes, mod==11b handled above
+      resolve = BX_RESOLVE16_BASE_INDEX;
       i->ResolveModrm = &BX_CPU_C::BxResolve16BaseIndex;
       i->setSibBase(Resolve16BaseReg[rm]);
       i->setSibIndex(Resolve16IndexReg[rm]);
@@ -2672,6 +2683,7 @@ get_8bit_displ:
         if (BX_NULL_SEG_REG(i->seg()))
           i->setSeg(sreg_mod00_rm16[rm]);
         if (rm == 0x06) {
+          resolve = BX_RESOLVE16_DISPLACEMENT;
           i->ResolveModrm = &BX_CPU_C::BxResolve16Disp;
 get_16bit_displ:
           if ((ilen+1) < remain) {
