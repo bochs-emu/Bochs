@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: mult32.cc,v 1.30 2008-08-08 09:22:47 sshwarts Exp $
+// $Id: mult32.cc,v 1.31 2008-08-10 21:16:12 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -35,26 +35,14 @@
 #define RDX EDX
 #endif
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::MUL_EAXEd(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::MUL_EAXEdR(bxInstruction_c *i)
 {
-  Bit32u op1_32, op2_32, product_32h, product_32l;
-  Bit64u product_64;
+  Bit32u op1_32 = EAX;
+  Bit32u op2_32 = BX_READ_32BIT_REG(i->rm());
 
-  op1_32 = EAX;
-
-  /* op2 is a register or memory reference */
-  if (i->modC0()) {
-    op2_32 = BX_READ_32BIT_REG(i->rm());
-  }
-  else {
-    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-    /* pointer, segment address pair */
-    op2_32 = read_virtual_dword(i->seg(), eaddr);
-  }
-
-  product_64  = ((Bit64u) op1_32) * ((Bit64u) op2_32);
-  product_32l = (Bit32u) (product_64 & 0xFFFFFFFF);
-  product_32h = (Bit32u) (product_64 >> 32);
+  Bit64u product_64  = ((Bit64u) op1_32) * ((Bit64u) op2_32);
+  Bit32u product_32l = GET32L(product_64);
+  Bit32u product_32h = GET32H(product_64);
 
   /* now write product back to destination */
   RAX = product_32l;
@@ -68,25 +56,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MUL_EAXEd(bxInstruction_c *i)
   }
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::IMUL_EAXEd(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::IMUL_EAXEdR(bxInstruction_c *i)
 {
-  Bit32s op1_32, op2_32;
-
-  op1_32 = EAX;
-
-  /* op2 is a register or memory reference */
-  if (i->modC0()) {
-    op2_32 = BX_READ_32BIT_REG(i->rm());
-  }
-  else {
-    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-    /* pointer, segment address pair */
-    op2_32 = (Bit32s) read_virtual_dword(i->seg(), eaddr);
-  }
+  Bit32s op1_32 = EAX;
+  Bit32s op2_32 = BX_READ_32BIT_REG(i->rm());
 
   Bit64s product_64  = ((Bit64s) op1_32) * ((Bit64s) op2_32);
-  Bit32u product_32l = (Bit32u) (product_64 & 0xFFFFFFFF);
-  Bit32u product_32h = (Bit32u) (product_64 >> 32);
+  Bit32u product_32l = GET32L(product_64);
+  Bit32u product_32h = GET32H(product_64);
 
   /* now write product back to destination */
   RAX = product_32l;
@@ -103,30 +80,18 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::IMUL_EAXEd(bxInstruction_c *i)
   }
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::DIV_EAXEd(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::DIV_EAXEdR(bxInstruction_c *i)
 {
-  Bit32u op2_32, remainder_32, quotient_32l;
-  Bit64u op1_64, quotient_64;
-
-  op1_64 = (((Bit64u) EDX) << 32) + ((Bit64u) EAX);
-
-  /* op2 is a register or memory reference */
-  if (i->modC0()) {
-    op2_32 = BX_READ_32BIT_REG(i->rm());
-  }
-  else {
-    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-    /* pointer, segment address pair */
-    op2_32 = read_virtual_dword(i->seg(), eaddr);
-  }
-
+  Bit32u op2_32 = BX_READ_32BIT_REG(i->rm());
   if (op2_32 == 0) {
     exception(BX_DE_EXCEPTION, 0, 0);
   }
 
-  quotient_64  = op1_64 / op2_32;
-  remainder_32 = (Bit32u) (op1_64 % op2_32);
-  quotient_32l = (Bit32u) (quotient_64 & 0xFFFFFFFF);
+  Bit64u op1_64 = (((Bit64u) EDX) << 32) + ((Bit64u) EAX);
+
+  Bit64u quotient_64  = op1_64 / op2_32;
+  Bit32u remainder_32 = (Bit32u) (op1_64 % op2_32);
+  Bit32u quotient_32l = (Bit32u) (quotient_64 & 0xFFFFFFFF);
 
   if (quotient_64 != quotient_32l)
   {
@@ -142,33 +107,22 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::DIV_EAXEd(bxInstruction_c *i)
   RDX = remainder_32;
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::IDIV_EAXEd(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::IDIV_EAXEdR(bxInstruction_c *i)
 {
-  Bit32s op2_32, remainder_32, quotient_32l;
-  Bit64s op1_64, quotient_64;
-
-  op1_64 = (((Bit64u) EDX) << 32) | ((Bit64u) EAX);
-
-  /* op2 is a register or memory reference */
-  if (i->modC0()) {
-    op2_32 = BX_READ_32BIT_REG(i->rm());
-  }
-  else {
-    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-    /* pointer, segment address pair */
-    op2_32 = (Bit32s) read_virtual_dword(i->seg(), eaddr);
-  }
-
-  if (op2_32 == 0)
-    exception(BX_DE_EXCEPTION, 0, 0);
+  Bit64s op1_64 = (((Bit64u) EDX) << 32) | ((Bit64u) EAX);
 
   /* check MIN_INT case */
   if (op1_64 == ((Bit64s)BX_CONST64(0x8000000000000000)))
     exception(BX_DE_EXCEPTION, 0, 0);
 
-  quotient_64  = op1_64 / op2_32;
-  remainder_32 = (Bit32s) (op1_64 % op2_32);
-  quotient_32l = (Bit32s) (quotient_64 & 0xFFFFFFFF);
+  Bit32s op2_32 = BX_READ_32BIT_REG(i->rm());
+
+  if (op2_32 == 0)
+    exception(BX_DE_EXCEPTION, 0, 0);
+
+  Bit64s quotient_64  = op1_64 / op2_32;
+  Bit32s remainder_32 = (Bit32s) (op1_64 % op2_32);
+  Bit32s quotient_32l = (Bit32s) (quotient_64 & 0xFFFFFFFF);
 
   if (quotient_64 != quotient_32l)
   {
@@ -184,21 +138,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::IDIV_EAXEd(bxInstruction_c *i)
   RDX = remainder_32;
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::IMUL_GdEdId(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::IMUL_GdEdIdR(bxInstruction_c *i)
 {
-  Bit32s op2_32, op3_32;
-
-  op3_32 = i->Id();
-
-  /* op2 is a register or memory reference */
-  if (i->modC0()) {
-    op2_32 = BX_READ_32BIT_REG(i->rm());
-  }
-  else {
-    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-    /* pointer, segment address pair */
-    op2_32 = (Bit32s) read_virtual_dword(i->seg(), eaddr);
-  }
+  Bit32s op2_32 = BX_READ_32BIT_REG(i->rm());
+  Bit32s op3_32 = i->Id();
 
   Bit64s product_64 = ((Bit64s) op2_32) * ((Bit64s) op3_32);
   Bit32u product_32 = (Bit32u)(product_64 & 0xFFFFFFFF);
@@ -217,21 +160,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::IMUL_GdEdId(bxInstruction_c *i)
   }
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::IMUL_GdEd(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::IMUL_GdEdR(bxInstruction_c *i)
 {
-  Bit32s op1_32, op2_32;
-
-  /* op2 is a register or memory reference */
-  if (i->modC0()) {
-    op2_32 = BX_READ_32BIT_REG(i->rm());
-  }
-  else {
-    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-    /* pointer, segment address pair */
-    op2_32 = (Bit32s) read_virtual_dword(i->seg(), eaddr);
-  }
-
-  op1_32 = BX_READ_32BIT_REG(i->nnn());
+  Bit32s op1_32 = BX_READ_32BIT_REG(i->nnn());
+  Bit32s op2_32 = BX_READ_32BIT_REG(i->rm());
 
   Bit64s product_64 = ((Bit64s) op1_32) * ((Bit64s) op2_32);
   Bit32u product_32 = (Bit32u)(product_64 & 0xFFFFFFFF);

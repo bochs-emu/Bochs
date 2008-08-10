@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.503 2008-08-10 19:34:28 sshwarts Exp $
+// $Id: cpu.h,v 1.504 2008-08-10 21:16:12 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1617,16 +1617,16 @@ public: // for now...
   BX_SMF void TEST_EdIdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
   BX_SMF void MUL_ALEb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void IMUL_GdEd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void IMUL_GdEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void IMUL_ALEb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void IMUL_GdEdId(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void IMUL_GdEdIdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void DIV_ALEb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void IDIV_ALEb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
-  BX_SMF void MUL_EAXEd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void IMUL_EAXEd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void DIV_EAXEd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void IDIV_EAXEd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void MUL_EAXEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void IMUL_EAXEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void DIV_EAXEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void IDIV_EAXEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
   BX_SMF void INC_EbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void DEC_EbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -2336,12 +2336,13 @@ public: // for now...
   BX_SMF void CMPXCHG_EwGwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void CMPXCHG_EdGdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
-  BX_SMF void MUL_AXEw(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void IMUL_AXEw(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void DIV_AXEw(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void IDIV_AXEw(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void IMUL_GwEwIw(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void IMUL_GwEw(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void MUL_AXEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void IMUL_AXEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void DIV_AXEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void IDIV_AXEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void IMUL_GwEwIwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void IMUL_GwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
   BX_SMF void NOP(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void MOV_RLIb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void MOV_RHIb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -2364,8 +2365,8 @@ public: // for now...
   BX_SMF void POP_ERX(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void POP_EdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
-  BX_SMF void POPCNT_GwEw(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void POPCNT_GdEd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void POPCNT_GwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void POPCNT_GdEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
 #if BX_SUPPORT_X86_64
   // 64 bit extensions
@@ -2515,9 +2516,6 @@ public: // for now...
   BX_SMF void SHRD_EqGqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void SHRD_EqGqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
-  BX_SMF void IMUL_GqEq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void IMUL_GqEqId(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-
   BX_SMF void MOVZX_GqEbM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void MOVZX_GqEwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void MOVSX_GqEbM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -2579,10 +2577,12 @@ public: // for now...
   BX_SMF void TEST_EqIdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void TEST_EqIdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
-  BX_SMF void MUL_RAXEq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void IMUL_RAXEq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void DIV_RAXEq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void IDIV_RAXEq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void MUL_RAXEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void IMUL_RAXEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void DIV_RAXEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void IDIV_RAXEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void IMUL_GqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void IMUL_GqEqIdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
   BX_SMF void INC_EqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void DEC_EqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -2664,7 +2664,7 @@ public: // for now...
   BX_SMF void MOVQ_PqEq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void MOVQ_VdqEq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void MOVNTI_MqGq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void POPCNT_GqEq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void POPCNT_GqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 #endif  // #if BX_SUPPORT_X86_64
 
   BX_SMF void INVLPG(bxInstruction_c *) BX_CPP_AttrRegparmN(1);

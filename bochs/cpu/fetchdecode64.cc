@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.207 2008-08-10 19:34:28 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.208 2008-08-10 21:16:12 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -286,9 +286,9 @@ static const BxOpcodeInfo_t BxOpcodeInfo64R[512*3] = {
   /* 66 /wr */ { 0, BX_IA_ERROR }, // OS:
   /* 67 /wr */ { 0, BX_IA_ERROR }, // AS:
   /* 68 /wr */ { BxImmediate_Iw, BX_IA_PUSH_Iw },
-  /* 69 /wr */ { BxImmediate_Iw, BX_IA_IMUL_GwEwIw },
+  /* 69 /wr */ { BxImmediate_Iw, BX_IA_IMUL_GwEwIwR },
   /* 6A /wr */ { BxImmediate_Ib_SE, BX_IA_PUSH_Iw },
-  /* 6B /wr */ { BxImmediate_Ib_SE, BX_IA_IMUL_GwEwIw },
+  /* 6B /wr */ { BxImmediate_Ib_SE, BX_IA_IMUL_GwEwIwR },
   /* 6C /wr */ { 0, BX_IA_REP_INSB_YbDX },
   /* 6D /wr */ { 0, BX_IA_REP_INSW_YwDX },
   /* 6E /wr */ { 0, BX_IA_REP_OUTSB_DXXb },
@@ -625,7 +625,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo64R[512*3] = {
   /* 0F AC /wr */ { BxImmediate_Ib, BX_IA_SHRD_EwGwR },
   /* 0F AD /wr */ { 0,              BX_IA_SHRD_EwGwR },
   /* 0F AE /wr */ { BxGroup15, BX_IA_ERROR, BxOpcodeInfoG15R },
-  /* 0F AF /wr */ { 0, BX_IA_IMUL_GwEw },
+  /* 0F AF /wr */ { 0, BX_IA_IMUL_GwEwR },
   /* 0F B0 /wr */ { 0, BX_IA_CMPXCHG_EbGbR },
   /* 0F B1 /wr */ { 0, BX_IA_CMPXCHG_EwGwR },
   /* 0F B2 /wr */ { 0, BX_IA_ERROR }, // LSS
@@ -634,7 +634,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo64R[512*3] = {
   /* 0F B5 /wr */ { 0, BX_IA_ERROR }, // LGS
   /* 0F B6 /wr */ { 0, BX_IA_MOVZX_GwEbR },
   /* 0F B7 /wr */ { 0, BX_IA_MOV_GwEwR }, // MOVZX_GwEw
-  /* 0F B8 /wr */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0fb8w },
+  /* 0F B8 /wr */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0fb8wR },
   /* 0F B9 /wr */ { BxTraceEnd, BX_IA_UD2B },
   /* 0F BA /wr */ { BxGroup8, BX_IA_ERROR, BxOpcodeInfoG8EwIbR },
   /* 0F BB /wr */ { 0, BX_IA_BTC_EwGwR },
@@ -813,9 +813,9 @@ static const BxOpcodeInfo_t BxOpcodeInfo64R[512*3] = {
   /* 66 /dr */ { 0, BX_IA_ERROR }, // OS:
   /* 67 /dr */ { 0, BX_IA_ERROR }, // AS:
   /* 68 /dr */ { BxImmediate_Id, BX_IA_PUSH64_Id },
-  /* 69 /dr */ { BxImmediate_Id, BX_IA_IMUL_GdEdId },
+  /* 69 /dr */ { BxImmediate_Id, BX_IA_IMUL_GdEdIdR },
   /* 6A /dr */ { BxImmediate_Ib_SE, BX_IA_PUSH64_Id },
-  /* 6B /dr */ { BxImmediate_Ib_SE, BX_IA_IMUL_GdEdId },
+  /* 6B /dr */ { BxImmediate_Ib_SE, BX_IA_IMUL_GdEdIdR },
   /* 6C /dr */ { 0, BX_IA_REP_INSB_YbDX },
   /* 6D /dr */ { 0, BX_IA_REP_INSD_YdDX },
   /* 6E /dr */ { 0, BX_IA_REP_OUTSB_DXXb },
@@ -1152,7 +1152,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo64R[512*3] = {
   /* 0F AC /dr */ { BxImmediate_Ib, BX_IA_SHRD_EdGdR },
   /* 0F AD /dr */ { 0,              BX_IA_SHRD_EdGdR },
   /* 0F AE /dr */ { BxGroup15, BX_IA_ERROR, BxOpcodeInfoG15R },
-  /* 0F AF /dr */ { 0, BX_IA_IMUL_GdEd },
+  /* 0F AF /dr */ { 0, BX_IA_IMUL_GdEdR },
   /* 0F B0 /dr */ { 0, BX_IA_CMPXCHG_EbGbR },
   /* 0F B1 /dr */ { 0, BX_IA_CMPXCHG_EdGdR },
   /* 0F B2 /dr */ { 0, BX_IA_ERROR }, // LSS
@@ -1161,7 +1161,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo64R[512*3] = {
   /* 0F B5 /dr */ { 0, BX_IA_ERROR }, // LFS
   /* 0F B6 /dr */ { 0, BX_IA_MOVZX_GdEbR },
   /* 0F B7 /dr */ { 0, BX_IA_MOVZX_GdEwR },
-  /* 0F B8 /dr */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0fb8d },
+  /* 0F B8 /dr */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0fb8dR },
   /* 0F B9 /dr */ { BxTraceEnd, BX_IA_UD2B },
   /* 0F BA /dr */ { BxGroup8, BX_IA_ERROR, BxOpcodeInfoG8EdIbR },
   /* 0F BB /dr */ { 0, BX_IA_BTC_EdGdR },
@@ -1340,9 +1340,9 @@ static const BxOpcodeInfo_t BxOpcodeInfo64R[512*3] = {
   /* 66 /qr */ { 0, BX_IA_ERROR }, // OS:
   /* 67 /qr */ { 0, BX_IA_ERROR }, // AS:
   /* 68 /qr */ { BxImmediate_Id, BX_IA_PUSH64_Id },
-  /* 69 /qr */ { BxImmediate_Id, BX_IA_IMUL_GqEqId },
+  /* 69 /qr */ { BxImmediate_Id, BX_IA_IMUL_GqEqIdR },
   /* 6A /qr */ { BxImmediate_Ib_SE, BX_IA_PUSH64_Id },
-  /* 6B /qr */ { BxImmediate_Ib_SE, BX_IA_IMUL_GqEqId },
+  /* 6B /qr */ { BxImmediate_Ib_SE, BX_IA_IMUL_GqEqIdR },
   /* 6C /qr */ { 0, BX_IA_REP_INSB_YbDX },
   /* 6D /qr */ { 0, BX_IA_REP_INSD_YdDX },
   /* 6E /qr */ { 0, BX_IA_REP_OUTSB_DXXb },
@@ -1679,7 +1679,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo64R[512*3] = {
   /* 0F AC /qr */ { BxImmediate_Ib, BX_IA_SHRD_EqGqR },
   /* 0F AD /qr */ { 0,              BX_IA_SHRD_EqGqR },
   /* 0F AE /qr */ { BxGroup15, BX_IA_ERROR, BxOpcodeInfoG15R },
-  /* 0F AF /qr */ { 0, BX_IA_IMUL_GqEq },
+  /* 0F AF /qr */ { 0, BX_IA_IMUL_GqEqR },
   /* 0F B0 /qr */ { 0, BX_IA_CMPXCHG_EbGbR },
   /* 0F B1 /qr */ { 0, BX_IA_CMPXCHG_EqGqR },
   /* 0F B2 /qr */ { 0, BX_IA_ERROR }, // LSS
@@ -1688,7 +1688,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo64R[512*3] = {
   /* 0F B5 /qr */ { 0, BX_IA_ERROR }, // LGS
   /* 0F B6 /qr */ { 0, BX_IA_MOVZX_GqEbR },
   /* 0F B7 /qr */ { 0, BX_IA_MOVZX_GqEwR },
-  /* 0F B8 /qr */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0fb8q },
+  /* 0F B8 /qr */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0fb8qR },
   /* 0F B9 /qr */ { BxTraceEnd, BX_IA_UD2B },
   /* 0F BA /qr */ { BxGroup8, BX_IA_ERROR, BxOpcodeInfo64G8EqIbR },
   /* 0F BB /qr */ { 0, BX_IA_BTC_EqGqR },
@@ -1873,9 +1873,9 @@ static const BxOpcodeInfo_t BxOpcodeInfo64M[512*3] = {
   /* 66 /wm */ { 0, BX_IA_ERROR }, // OS:
   /* 67 /wm */ { 0, BX_IA_ERROR }, // AS:
   /* 68 /wm */ { BxImmediate_Iw, BX_IA_PUSH_Iw },
-  /* 69 /wm */ { BxImmediate_Iw, BX_IA_IMUL_GwEwIw },
+  /* 69 /wm */ { BxImmediate_Iw, BX_IA_IMUL_GwEwIwM },
   /* 6A /wm */ { BxImmediate_Ib_SE, BX_IA_PUSH_Iw },
-  /* 6B /wm */ { BxImmediate_Ib_SE, BX_IA_IMUL_GwEwIw },
+  /* 6B /wm */ { BxImmediate_Ib_SE, BX_IA_IMUL_GwEwIwM },
   /* 6C /wm */ { 0, BX_IA_REP_INSB_YbDX },
   /* 6D /wm */ { 0, BX_IA_REP_INSW_YwDX },
   /* 6E /wm */ { 0, BX_IA_REP_OUTSB_DXXb },
@@ -2212,7 +2212,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo64M[512*3] = {
   /* 0F AC /wm */ { BxImmediate_Ib, BX_IA_SHRD_EwGwM },
   /* 0F AD /wm */ { 0,              BX_IA_SHRD_EwGwM },
   /* 0F AE /wm */ { BxGroup15, BX_IA_ERROR, BxOpcodeInfoG15M },
-  /* 0F AF /wm */ { 0, BX_IA_IMUL_GwEw },
+  /* 0F AF /wm */ { 0, BX_IA_IMUL_GwEwM },
   /* 0F B0 /wm */ { BxLockable, BX_IA_CMPXCHG_EbGbM },
   /* 0F B1 /wm */ { BxLockable, BX_IA_CMPXCHG_EwGwM },
   /* 0F B2 /wm */ { 0, BX_IA_LSS_GwMp },
@@ -2221,7 +2221,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo64M[512*3] = {
   /* 0F B5 /wm */ { 0, BX_IA_LGS_GwMp },
   /* 0F B6 /wm */ { 0, BX_IA_MOVZX_GwEbM },
   /* 0F B7 /wm */ { 0, BX_IA_MOV_GwEwM }, // MOVZX_GwEw
-  /* 0F B8 /wm */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0fb8w },
+  /* 0F B8 /wm */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0fb8wM },
   /* 0F B9 /wm */ { BxTraceEnd, BX_IA_UD2B },
   /* 0F BA /wm */ { BxGroup8, BX_IA_ERROR, BxOpcodeInfoG8EwIbM },
   /* 0F BB /wm */ { BxLockable, BX_IA_BTC_EwGwM },
@@ -2400,9 +2400,9 @@ static const BxOpcodeInfo_t BxOpcodeInfo64M[512*3] = {
   /* 66 /dm */ { 0, BX_IA_ERROR }, // OS:
   /* 67 /dm */ { 0, BX_IA_ERROR }, // AS:
   /* 68 /dm */ { BxImmediate_Id, BX_IA_PUSH64_Id },
-  /* 69 /dm */ { BxImmediate_Id, BX_IA_IMUL_GdEdId },
+  /* 69 /dm */ { BxImmediate_Id, BX_IA_IMUL_GdEdIdM },
   /* 6A /dm */ { BxImmediate_Ib_SE, BX_IA_PUSH64_Id },
-  /* 6B /dm */ { BxImmediate_Ib_SE, BX_IA_IMUL_GdEdId },
+  /* 6B /dm */ { BxImmediate_Ib_SE, BX_IA_IMUL_GdEdIdM },
   /* 6C /dm */ { 0, BX_IA_REP_INSB_YbDX },
   /* 6D /dm */ { 0, BX_IA_REP_INSD_YdDX },
   /* 6E /dm */ { 0, BX_IA_REP_OUTSB_DXXb },
@@ -2739,7 +2739,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo64M[512*3] = {
   /* 0F AC /dm */ { BxImmediate_Ib, BX_IA_SHRD_EdGdM },
   /* 0F AD /dm */ { 0,              BX_IA_SHRD_EdGdM },
   /* 0F AE /dm */ { BxGroup15, BX_IA_ERROR, BxOpcodeInfoG15M },
-  /* 0F AF /dm */ { 0, BX_IA_IMUL_GdEd },
+  /* 0F AF /dm */ { 0, BX_IA_IMUL_GdEdM },
   /* 0F B0 /dm */ { BxLockable, BX_IA_CMPXCHG_EbGbM },
   /* 0F B1 /dm */ { BxLockable, BX_IA_CMPXCHG_EdGdM },
   /* 0F B2 /dm */ { 0, BX_IA_LSS_GdMp },
@@ -2748,7 +2748,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo64M[512*3] = {
   /* 0F B5 /dm */ { 0, BX_IA_LGS_GdMp },
   /* 0F B6 /dm */ { 0, BX_IA_MOVZX_GdEbM },
   /* 0F B7 /dm */ { 0, BX_IA_MOVZX_GdEwM },
-  /* 0F B8 /dm */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0fb8d },
+  /* 0F B8 /dm */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0fb8dM },
   /* 0F B9 /dm */ { BxTraceEnd, BX_IA_UD2B },
   /* 0F BA /dm */ { BxGroup8, BX_IA_ERROR, BxOpcodeInfoG8EdIbM },
   /* 0F BB /dm */ { BxLockable, BX_IA_BTC_EdGdM },
@@ -2927,9 +2927,9 @@ static const BxOpcodeInfo_t BxOpcodeInfo64M[512*3] = {
   /* 66 /qm */ { 0, BX_IA_ERROR }, // OS:
   /* 67 /qm */ { 0, BX_IA_ERROR }, // AS:
   /* 68 /qm */ { BxImmediate_Id, BX_IA_PUSH64_Id },
-  /* 69 /qm */ { BxImmediate_Id, BX_IA_IMUL_GqEqId },
+  /* 69 /qm */ { BxImmediate_Id, BX_IA_IMUL_GqEqIdM },
   /* 6A /qm */ { BxImmediate_Ib_SE, BX_IA_PUSH64_Id },
-  /* 6B /qm */ { BxImmediate_Ib_SE, BX_IA_IMUL_GqEqId },
+  /* 6B /qm */ { BxImmediate_Ib_SE, BX_IA_IMUL_GqEqIdM },
   /* 6C /qm */ { 0, BX_IA_REP_INSB_YbDX },
   /* 6D /qm */ { 0, BX_IA_REP_INSD_YdDX },
   /* 6E /qm */ { 0, BX_IA_REP_OUTSB_DXXb },
@@ -3266,7 +3266,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo64M[512*3] = {
   /* 0F AC /qm */ { BxImmediate_Ib, BX_IA_SHRD_EqGqM },
   /* 0F AD /qm */ { 0,              BX_IA_SHRD_EqGqM },
   /* 0F AE /qm */ { BxGroup15, BX_IA_ERROR, BxOpcodeInfoG15M },
-  /* 0F AF /qm */ { 0, BX_IA_IMUL_GqEq },
+  /* 0F AF /qm */ { 0, BX_IA_IMUL_GqEqM },
   /* 0F B0 /qm */ { BxLockable, BX_IA_CMPXCHG_EbGbM },
   /* 0F B1 /qm */ { BxLockable, BX_IA_CMPXCHG_EqGqM },
   /* 0F B2 /qm */ { 0, BX_IA_LSS_GqMp }, // TODO: LSS_GdMp for AMD CPU
@@ -3275,7 +3275,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo64M[512*3] = {
   /* 0F B5 /qm */ { 0, BX_IA_LGS_GqMp }, // TODO: LGS_GdMp for AMD CPU
   /* 0F B6 /qm */ { 0, BX_IA_MOVZX_GqEbM },
   /* 0F B7 /qm */ { 0, BX_IA_MOVZX_GqEwM },
-  /* 0F B8 /qm */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0fb8q },
+  /* 0F B8 /qm */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0fb8qM },
   /* 0F B9 /qm */ { BxTraceEnd, BX_IA_UD2B },
   /* 0F BA /qm */ { BxGroup8, BX_IA_ERROR, BxOpcodeInfo64G8EqIbM },
   /* 0F BB /qm */ { BxLockable, BX_IA_BTC_EqGqM },

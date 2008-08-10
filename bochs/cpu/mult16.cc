@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: mult16.cc,v 1.31 2008-08-08 09:22:47 sshwarts Exp $
+// $Id: mult16.cc,v 1.32 2008-08-10 21:16:12 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -30,25 +30,15 @@
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::MUL_AXEw(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::MUL_AXEwR(bxInstruction_c *i)
 {
-  Bit16u op1_16, op2_16;
-
-  op1_16 = AX;
-
-  /* op2 is a register or memory reference */
-  if (i->modC0()) {
-    op2_16 = BX_READ_16BIT_REG(i->rm());
-  }
-  else {
-    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-    /* pointer, segment address pair */
-    op2_16 = read_virtual_word(i->seg(), eaddr);
-  }
+  Bit16u op1_16 = AX;
+  Bit16u op2_16 = BX_READ_16BIT_REG(i->rm());
 
   Bit32u product_32  = ((Bit32u) op1_16) * ((Bit32u) op2_16);
   Bit16u product_16l = (product_32 & 0xFFFF);
   Bit16u product_16h =  product_32 >> 16;
+
   /* now write product back to destination */
   AX = product_16l;
   DX = product_16h;
@@ -61,21 +51,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MUL_AXEw(bxInstruction_c *i)
   }
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::IMUL_AXEw(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::IMUL_AXEwR(bxInstruction_c *i)
 {
-  Bit16s op1_16, op2_16;
-
-  op1_16 = AX;
-
-  /* op2 is a register or memory reference */
-  if (i->modC0()) {
-    op2_16 = BX_READ_16BIT_REG(i->rm());
-  }
-  else {
-    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-    /* pointer, segment address pair */
-    op2_16 = (Bit16s) read_virtual_word(i->seg(), eaddr);
-  }
+  Bit16s op1_16 = AX;
+  Bit16s op2_16 = BX_READ_16BIT_REG(i->rm());
 
   Bit32s product_32  = ((Bit32s) op1_16) * ((Bit32s) op2_16);
   Bit16u product_16l = (product_32 & 0xFFFF);
@@ -96,29 +75,17 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::IMUL_AXEw(bxInstruction_c *i)
   }
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::DIV_AXEw(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::DIV_AXEwR(bxInstruction_c *i)
 {
-  Bit16u op2_16, remainder_16, quotient_16l;
-  Bit32u op1_32, quotient_32;
-
-  op1_32 = (((Bit32u) DX) << 16) | ((Bit32u) AX);
-
-  /* op2 is a register or memory reference */
-  if (i->modC0()) {
-    op2_16 = BX_READ_16BIT_REG(i->rm());
-  }
-  else {
-    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-    /* pointer, segment address pair */
-    op2_16 = read_virtual_word(i->seg(), eaddr);
-  }
-
+  Bit16u op2_16 = BX_READ_16BIT_REG(i->rm());
   if (op2_16 == 0)
     exception(BX_DE_EXCEPTION, 0, 0);
 
-  quotient_32  = op1_32 / op2_16;
-  remainder_16 = op1_32 % op2_16;
-  quotient_16l = quotient_32 & 0xFFFF;
+  Bit32u op1_32 = (((Bit32u) DX) << 16) | ((Bit32u) AX);
+
+  Bit32u quotient_32  = op1_32 / op2_16;
+  Bit16u remainder_16 = op1_32 % op2_16;
+  Bit16u quotient_16l = quotient_32 & 0xFFFF;
 
   if (quotient_32 != quotient_16l)
     exception(BX_DE_EXCEPTION, 0, 0);
@@ -128,33 +95,22 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::DIV_AXEw(bxInstruction_c *i)
   DX = remainder_16;
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::IDIV_AXEw(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::IDIV_AXEwR(bxInstruction_c *i)
 {
-  Bit16s op2_16, remainder_16, quotient_16l;
-  Bit32s op1_32, quotient_32;
-
-  op1_32 = ((((Bit32u) DX) << 16) | ((Bit32u) AX));
-
-  /* op2 is a register or memory reference */
-  if (i->modC0()) {
-    op2_16 = BX_READ_16BIT_REG(i->rm());
-  }
-  else {
-    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-    /* pointer, segment address pair */
-    op2_16 = (Bit16s) read_virtual_word(i->seg(), eaddr);
-  }
-
-  if (op2_16 == 0)
-    exception(BX_DE_EXCEPTION, 0, 0);
+  Bit32s op1_32 = ((((Bit32u) DX) << 16) | ((Bit32u) AX));
 
   /* check MIN_INT case */
   if (op1_32 == ((Bit32s)0x80000000))
     exception(BX_DE_EXCEPTION, 0, 0);
 
-  quotient_32  = op1_32 / op2_16;
-  remainder_16 = op1_32 % op2_16;
-  quotient_16l = quotient_32 & 0xFFFF;
+  Bit16s op2_16 = BX_READ_16BIT_REG(i->rm());
+
+  if (op2_16 == 0)
+    exception(BX_DE_EXCEPTION, 0, 0);
+
+  Bit32s quotient_32  = op1_32 / op2_16;
+  Bit16s remainder_16 = op1_32 % op2_16;
+  Bit16s quotient_16l = quotient_32 & 0xFFFF;
 
   if (quotient_32 != quotient_16l)
     exception(BX_DE_EXCEPTION, 0, 0);
@@ -164,21 +120,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::IDIV_AXEw(bxInstruction_c *i)
   DX = remainder_16;
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::IMUL_GwEwIw(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::IMUL_GwEwIwR(bxInstruction_c *i)
 {
-  Bit16s op2_16, op3_16;
-
-  op3_16 = i->Iw();
-
-  /* op2 is a register or memory reference */
-  if (i->modC0()) {
-    op2_16 = BX_READ_16BIT_REG(i->rm());
-  }
-  else {
-    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-    /* pointer, segment address pair */
-    op2_16 = (Bit16s) read_virtual_word(i->seg(), eaddr);
-  }
+  Bit16s op2_16 = BX_READ_16BIT_REG(i->rm());
+  Bit16s op3_16 = i->Iw();
 
   Bit32s product_32  = op2_16 * op3_16;
   Bit16u product_16 = (product_32 & 0xFFFF);
@@ -197,21 +142,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::IMUL_GwEwIw(bxInstruction_c *i)
   }
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::IMUL_GwEw(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::IMUL_GwEwR(bxInstruction_c *i)
 {
-  Bit16s op1_16, op2_16;
-
-  /* op2 is a register or memory reference */
-  if (i->modC0()) {
-    op2_16 = BX_READ_16BIT_REG(i->rm());
-  }
-  else {
-    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-    /* pointer, segment address pair */
-    op2_16 = (Bit16s) read_virtual_word(i->seg(), eaddr);
-  }
-
-  op1_16 = BX_READ_16BIT_REG(i->nnn());
+  Bit16s op1_16 = BX_READ_16BIT_REG(i->nnn());
+  Bit16s op2_16 = BX_READ_16BIT_REG(i->rm());
 
   Bit32s product_32 = op1_16 * op2_16;
   Bit16u product_16 = (product_32 & 0xFFFF);

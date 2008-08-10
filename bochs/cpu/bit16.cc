@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bit16.cc,v 1.13 2008-08-10 19:34:28 sshwarts Exp $
+// $Id: bit16.cc,v 1.14 2008-08-10 21:16:12 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -337,22 +337,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BTR_EwIbR(bxInstruction_c *i)
 }
 
 /* 0F B8 */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::POPCNT_GwEw(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::POPCNT_GwEwR(bxInstruction_c *i)
 {
 #if BX_SUPPORT_POPCNT || (BX_SUPPORT_SSE >= 5) || (BX_SUPPORT_SSE >= 4 && BX_SUPPORT_SSE_EXTENSION > 0)
-  Bit16u op1_16, op2_16;
+  Bit16u op2_16 = BX_READ_16BIT_REG(i->rm());
 
-  /* op2_16 is a register or memory reference */
-  if (i->modC0()) {
-    op2_16 = BX_READ_16BIT_REG(i->rm());
-  }
-  else {
-    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-    /* pointer, segment address pair */
-    op2_16 = read_virtual_word(i->seg(), eaddr);
-  }
-
-  op1_16 = 0;
+  Bit16u op1_16 = 0;
   while (op2_16 != 0) {
     if (op2_16 & 1) op1_16++;
     op2_16 >>= 1;
