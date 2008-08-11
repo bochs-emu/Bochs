@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.201 2008-08-11 18:53:23 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.202 2008-08-11 21:06:27 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2609,12 +2609,10 @@ fetch_b1:
           if (BX_NULL_SEG_REG(i->seg())) i->setSeg(BX_SEG_REG_DS);
           if (rm == 5) {
             i->setSibBase(BX_NIL_REGISTER);
-get_32bit_displ:
             if ((ilen+3) < remain) {
               i->modRMForm.displ32u = FetchDWORD(iptr);
               iptr += 4;
               ilen += 4;
-              goto modrm_done;
             }
             else return(0);
           }
@@ -2624,7 +2622,6 @@ get_32bit_displ:
         if (BX_NULL_SEG_REG(i->seg()))
           i->setSeg(sreg_mod01or10_rm32[rm]);
         if (mod == 0x40) { // mod == 01b
-get_8bit_displ:
           if (ilen < remain) {
             // 8 sign extended to 32
             i->modRMForm.displ32u = (Bit8s) *iptr++;
@@ -2634,7 +2631,15 @@ get_8bit_displ:
           else return(0);
         }
         // (mod == 0x80) mod == 10b
-        goto get_32bit_displ;
+        if ((ilen+3) < remain) {
+          i->modRMForm.displ32u = FetchDWORD(iptr);
+          iptr += 4;
+          ilen += 4;
+        }
+        else {
+          return(0);
+        }
+        goto modrm_done;
       }
       else { // mod!=11b, rm==4, s-i-b byte follows
         unsigned sib, base, index, scale;
@@ -2660,17 +2665,42 @@ get_8bit_displ:
             i->setSeg(sreg_mod0_base32[base]);
           if (base == 0x05) {
             i->setSibBase(BX_NIL_REGISTER);
-            goto get_32bit_displ;
+            if ((ilen+3) < remain) {
+              i->modRMForm.displ32u = FetchDWORD(iptr);
+              iptr += 4;
+              ilen += 4;
+            }
+            else {
+              return(0);
+            }
           }
           // mod==00b, rm==4, base!=5
           goto modrm_done;
         }
         if (BX_NULL_SEG_REG(i->seg()))
           i->setSeg(sreg_mod1or2_base32[base]);
-        if (mod == 0x40) // mod==01b, rm==4
-          goto get_8bit_displ;
+        if (mod == 0x40) { // mod==01b, rm==4
+          if (ilen < remain) {
+            // 8 sign extended to 32
+            i->modRMForm.displ32u = (Bit8s) *iptr++;
+            ilen++;
+            goto modrm_done;
+          }
+          else {
+            return(0);
+          }
+          goto modrm_done;
+        }
         // (mod == 0x80),   mod==10b, rm==4
-        goto get_32bit_displ;
+        if ((ilen+3) < remain) {
+          i->modRMForm.displ32u = FetchDWORD(iptr);
+          iptr += 4;
+          ilen += 4;
+        }
+        else {
+          return(0);
+        }
+        goto modrm_done;
       }
     }
     else {
@@ -2685,7 +2715,6 @@ get_8bit_displ:
         if (rm == 0x06) {
           resolve = BX_RESOLVE16_DISPLACEMENT;
           i->ResolveModrm = &BX_CPU_C::BxResolve16Disp;
-get_16bit_displ:
           if ((ilen+1) < remain) {
             i->modRMForm.displ16u = FetchWORD(iptr);
             iptr += 2;
@@ -2708,7 +2737,12 @@ get_16bit_displ:
         else return(0);
       }
       // (mod == 0x80)      mod == 10b
-      goto get_16bit_displ;
+      if ((ilen+1) < remain) {
+        i->modRMForm.displ16u = FetchWORD(iptr);
+        iptr += 2;
+        ilen += 2;
+      }
+      else return(0);
     }
 
 modrm_done:
