@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.372 2008-07-12 15:20:18 vruppert Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.373 2008-08-11 18:53:21 sshwarts Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -1828,6 +1828,23 @@ AC_ARG_ENABLE(popcnt,
       AC_DEFINE(BX_SUPPORT_POPCNT, 0)
     fi
     ]
+  )
+
+AC_MSG_CHECKING(for MOVBE instruction support)
+AC_ARG_ENABLE(movbe,
+  [  --enable-movbe                    support for MOVBE Intel Atom(R) instruction],
+  [if test "$enableval" = yes; then
+    AC_MSG_RESULT(yes)
+    AC_DEFINE(BX_SUPPORT_MOVBE, 1)
+   elif test "$enableval" = no; then
+    AC_MSG_RESULT(no)
+    AC_DEFINE(BX_SUPPORT_MOVBE, 0)
+   fi
+   ],
+  [
+    AC_MSG_RESULT(no)
+    AC_DEFINE(BX_SUPPORT_MOVBE, 0)
+  ]
   )
 
 AC_MSG_CHECKING(for MONITOR/MWAIT instructions support (experimental))

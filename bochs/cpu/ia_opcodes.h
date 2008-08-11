@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ia_opcodes.h,v 1.15 2008-08-10 21:16:12 sshwarts Exp $
+// $Id: ia_opcodes.h,v 1.16 2008-08-11 18:53:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008 Stanislav Shwartsman
@@ -1255,13 +1255,28 @@ bx_define_opcode(BX_IA_MOVNTDQA_VdqMdq, &BX_CPU_C::MOVNTDQA_VdqMdq, NULL, 0)
 
 // SSE4.2
 bx_define_opcode(BX_IA_CRC32_GdEb, &BX_CPU_C::CRC32_GdEb, NULL, 0)
-bx_define_opcode(BX_IA_CRC32_GdEv, &BX_CPU_C::CRC32_GdEv, NULL, 0)
+bx_define_opcode(BX_IA_CRC32_GdEw, &BX_CPU_C::CRC32_GdEw, NULL, 0)
+bx_define_opcode(BX_IA_CRC32_GdEd, &BX_CPU_C::CRC32_GdEd, NULL, 0)
+#if BX_SUPPORT_X86_64
+bx_define_opcode(BX_IA_CRC32_GdEq, &BX_CPU_C::CRC32_GdEq, NULL, 0)
+#endif
 bx_define_opcode(BX_IA_PCMPGTQ_VdqWdq, &BX_CPU_C::PCMPGTQ_VdqWdq, NULL, 0)
 bx_define_opcode(BX_IA_PCMPESTRM_VdqWdqIb, &BX_CPU_C::PCMPESTRM_VdqWdqIb, NULL, 0)
 bx_define_opcode(BX_IA_PCMPESTRI_VdqWdqIb, &BX_CPU_C::PCMPESTRI_VdqWdqIb, NULL, 0)
 bx_define_opcode(BX_IA_PCMPISTRM_VdqWdqIb, &BX_CPU_C::PCMPISTRM_VdqWdqIb, NULL, 0)
 bx_define_opcode(BX_IA_PCMPISTRI_VdqWdqIb, &BX_CPU_C::PCMPISTRI_VdqWdqIb, NULL, 0)
 // SSE4.2
+
+// MOVBE instruction
+bx_define_opcode(BX_IA_MOVBE_GwEw, &BX_CPU_C::MOVBE_GwEw, NULL, 0)
+bx_define_opcode(BX_IA_MOVBE_GdEd, &BX_CPU_C::MOVBE_GdEd, NULL, 0)
+bx_define_opcode(BX_IA_MOVBE_EwGw, &BX_CPU_C::MOVBE_EwGw, NULL, 0)
+bx_define_opcode(BX_IA_MOVBE_EdGd, &BX_CPU_C::MOVBE_EdGd, NULL, 0)
+#if BX_SUPPORT_X86_64
+bx_define_opcode(BX_IA_MOVBE_GqEq, &BX_CPU_C::MOVBE_GqEq, NULL, 0)
+bx_define_opcode(BX_IA_MOVBE_EqGq, &BX_CPU_C::MOVBE_EqGq, NULL, 0)
+#endif
+// MOVBE instruction
 #endif
 
 // XSAVE extensions

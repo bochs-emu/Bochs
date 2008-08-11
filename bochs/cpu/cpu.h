@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.504 2008-08-10 21:16:12 sshwarts Exp $
+// $Id: cpu.h,v 1.505 2008-08-11 18:53:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2197,13 +2197,27 @@ public: // for now...
 
   /* SSE4.2 */
   BX_SMF void CRC32_GdEb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void CRC32_GdEv(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CRC32_GdEw(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CRC32_GdEd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+#if BX_SUPPORT_X86_64
+  BX_SMF void CRC32_GdEq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+#endif
   BX_SMF void PCMPGTQ_VdqWdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void PCMPESTRM_VdqWdqIb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void PCMPESTRI_VdqWdqIb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void PCMPISTRM_VdqWdqIb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void PCMPISTRI_VdqWdqIb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   /* SSE4.2 */
+#endif
+
+  /* MOVBE Intel Atom(R) instruction */
+  BX_SMF void MOVBE_GwEw(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void MOVBE_GdEd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void MOVBE_EwGw(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void MOVBE_EdGd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+#if BX_SUPPORT_X86_64
+  BX_SMF void MOVBE_GqEq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void MOVBE_EqGq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 #endif
 
   /* XSAVE/XRSTOR extensions */
@@ -3681,7 +3695,7 @@ IMPLEMENT_EFLAG_ACCESSOR   (TF,   8)
 #define BxFPEscape          0x0030 // Group encoding: 011
 #define BxRMGroup           0x0040 // Group encoding: 100
 #define Bx3ByteOp           0x0050 // Group encoding: 101
-                                   // Group encoding: 110
+#define BxOSizeGrp          0x0060 // Group encoding: 110
                                    // Group encoding: 111
 
 #define BxLockable          0x0080 // bit 7

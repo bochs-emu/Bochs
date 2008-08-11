@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.h,v 1.72 2008-08-10 21:16:12 sshwarts Exp $
+// $Id: fetchdecode.h,v 1.73 2008-08-11 18:53:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005 Stanislav Shwartsman
@@ -2236,7 +2236,6 @@ static const BxOpcodeInfo_t BxOpcodeGroupSSE_0f38de[4] = {
   /* F3 */ { 0, BX_IA_ERROR }
 };
 
-
 static const BxOpcodeInfo_t BxOpcodeGroupSSE_0f38df[4] = {
   /* -- */ { 0, BX_IA_ERROR },
   /* 66 */ { 0, BX_IA_AESDECLAST_VdqWdq }, // AES
@@ -2244,17 +2243,41 @@ static const BxOpcodeInfo_t BxOpcodeGroupSSE_0f38df[4] = {
   /* F3 */ { 0, BX_IA_ERROR }
 };
 
+static const BxOpcodeInfo_t BxOpcodeGroupSSE_0f38f0_movbe[BX_SUPPORT_X86_64 + 2] = {
+  /* 16 */ { 0, BX_IA_MOVBE_GwEw },
+  /* 32 */ { 0, BX_IA_MOVBE_GdEd },
+#if BX_SUPPORT_X86_64
+  /* 64 */ { 0, BX_IA_MOVBE_GqEq }
+#endif
+};
+
+static const BxOpcodeInfo_t BxOpcodeGroupSSE_0f38f1_movbe[BX_SUPPORT_X86_64 + 2] = {
+  /* 16 */ { 0, BX_IA_MOVBE_EwGw },
+  /* 32 */ { 0, BX_IA_MOVBE_EdGd },
+#if BX_SUPPORT_X86_64
+  /* 64 */ { 0, BX_IA_MOVBE_EqGq }
+#endif
+};
+
 static const BxOpcodeInfo_t BxOpcodeGroupSSE_0f38f0[4] = {
-  /* -- */ { 0, BX_IA_ERROR },
+  /* -- */ { BxOSizeGrp, BX_IA_ERROR, BxOpcodeGroupSSE_0f38f0_movbe },
   /* 66 */ { 0, BX_IA_ERROR },
   /* F2 */ { 0, BX_IA_CRC32_GdEb },
   /* F3 */ { 0, BX_IA_ERROR }
 };
 
+static const BxOpcodeInfo_t BxOpcodeGroupSSE_0f38f1_crc32[BX_SUPPORT_X86_64 + 2] = {
+  /* 16 */ { 0, BX_IA_CRC32_GdEw },
+  /* 32 */ { 0, BX_IA_CRC32_GdEd },
+#if BX_SUPPORT_X86_64
+  /* 64 */ { 0, BX_IA_CRC32_GdEq }
+#endif
+};
+
 static const BxOpcodeInfo_t BxOpcodeGroupSSE_0f38f1[4] = {
-  /* -- */ { 0, BX_IA_ERROR },
+  /* -- */ { BxOSizeGrp, BX_IA_ERROR, BxOpcodeGroupSSE_0f38f1_movbe },
   /* 66 */ { 0, BX_IA_ERROR },
-  /* F2 */ { 0, BX_IA_CRC32_GdEv },
+  /* F2 */ { BxOSizeGrp, BX_IA_ERROR, BxOpcodeGroupSSE_0f38f1_crc32 },
   /* F3 */ { 0, BX_IA_ERROR }
 };
 

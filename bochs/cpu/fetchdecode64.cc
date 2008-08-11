@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.208 2008-08-10 21:16:12 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.209 2008-08-11 18:53:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -3690,6 +3690,9 @@ modrm_done:
           OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[b3]);
           break;
 #endif
+        case BxOSizeGrp:
+          OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[offset >> 8]);
+          break;
         case BxPrefixSSE:
           /* For SSE opcodes look into another 4 entries table
                      with the opcode prefixes (NONE, 0x66, 0xF2, 0xF3) */

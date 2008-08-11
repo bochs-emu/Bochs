@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpuid.cc,v 1.70 2008-07-13 15:35:09 sshwarts Exp $
+// $Id: cpuid.cc,v 1.71 2008-08-11 18:53:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007 Stanislav Shwartsman
@@ -141,7 +141,7 @@ Bit32u BX_CPU_C::get_extended_cpuid_features(void)
   // [19:19] SSE4.1 Instructions
   // [20:20] SSE4.2 Instructions
   // [21:22] X2APIC
-  // [22:22] Reserved
+  // [22:22] MOVBE instruction
   // [23:23] POPCNT instruction
   // [24:24] reserved
   // [25:25] AES Instructions
@@ -170,11 +170,15 @@ Bit32u BX_CPU_C::get_extended_cpuid_features(void)
   features |= (1<<19);           // support SSE4.1
 #endif
 
-#if (BX_SUPPORT_SSE >= 5) || (BX_SUPPORT_SSE >= 4 && BX_SUPPORT_SSE_EXTENSION > 0)
-  features |= (1<<20);           // support SSE4.2 (SSE4E)
+#if (BX_SUPPORT_SSE > 4) || (BX_SUPPORT_SSE >= 4 && BX_SUPPORT_SSE_EXTENSION > 0)
+  features |= (1<<20);           // support SSE4.2
 #endif
 
-#if BX_SUPPORT_POPCNT || (BX_SUPPORT_SSE >= 5) || (BX_SUPPORT_SSE >= 4 && BX_SUPPORT_SSE_EXTENSION > 0)
+#if BX_SUPPORT_MOVBE
+  features |= (1<<22);           // support MOVBE instruction
+#endif
+
+#if BX_SUPPORT_POPCNT || (BX_SUPPORT_SSE > 4) || (BX_SUPPORT_SSE >= 4 && BX_SUPPORT_SSE_EXTENSION > 0)
   features |= (1<<23);           // support POPCNT instruction
 #endif
 
