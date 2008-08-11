@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logical8.cc,v 1.41 2008-08-08 09:22:47 sshwarts Exp $
+// $Id: logical8.cc,v 1.42 2008-08-11 20:34:05 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -40,20 +40,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XOR_EbGbM(bxInstruction_c *i)
   op2 = BX_READ_8BIT_REGx(i->nnn(), i->extend8bitL());
   op1 ^= op2;
   write_RMW_virtual_byte(op1);
-
-  SET_FLAGS_OSZAPC_LOGIC_8(op1);
-}
-
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::XOR_GbEbM(bxInstruction_c *i)
-{
-  Bit8u op1, op2;
-
-  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-
-  op1 = BX_READ_8BIT_REGx(i->nnn(), i->extend8bitL());
-  op2 = read_virtual_byte(i->seg(), eaddr);
-  op1 ^= op2;
-  BX_WRITE_8BIT_REGx(i->nnn(), i->extend8bitL(), op1);
 
   SET_FLAGS_OSZAPC_LOGIC_8(op1);
 }
@@ -161,20 +147,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::OR_EbGbM(bxInstruction_c *i)
   SET_FLAGS_OSZAPC_LOGIC_8(op1);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::OR_GbEbM(bxInstruction_c *i)
-{
-  Bit8u op1, op2;
-
-  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-
-  op1 = BX_READ_8BIT_REGx(i->nnn(), i->extend8bitL());
-  op2 = read_virtual_byte(i->seg(), eaddr);
-  op1 |= op2;
-  BX_WRITE_8BIT_REGx(i->nnn(), i->extend8bitL(), op1);
-
-  SET_FLAGS_OSZAPC_LOGIC_8(op1);
-}
-
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::OR_GbEbR(bxInstruction_c *i)
 {
   Bit8u op1, op2;
@@ -209,20 +181,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::AND_EbGbM(bxInstruction_c *i)
   op2 = BX_READ_8BIT_REGx(i->nnn(), i->extend8bitL());
   op1 &= op2;
   write_RMW_virtual_byte(op1);
-
-  SET_FLAGS_OSZAPC_LOGIC_8(op1);
-}
-
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::AND_GbEbM(bxInstruction_c *i)
-{
-  Bit8u op1, op2;
-
-  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-
-  op1 = BX_READ_8BIT_REGx(i->nnn(), i->extend8bitL());
-  op2 = read_virtual_byte(i->seg(), eaddr);
-  op1 &= op2;
-  BX_WRITE_8BIT_REGx(i->nnn(), i->extend8bitL(), op1);
 
   SET_FLAGS_OSZAPC_LOGIC_8(op1);
 }
@@ -275,19 +233,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::AND_EbIbR(bxInstruction_c *i)
   SET_FLAGS_OSZAPC_LOGIC_8(op1);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::TEST_EbGbM(bxInstruction_c *i)
-{
-  Bit8u op1, op2;
-
-  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-
-  op1 = read_virtual_byte(i->seg(), eaddr);
-  op2 = BX_READ_8BIT_REGx(i->nnn(), i->extend8bitL());
-  op1 &= op2;
-
-  SET_FLAGS_OSZAPC_LOGIC_8(op1);
-}
-
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::TEST_EbGbR(bxInstruction_c *i)
 {
   Bit8u op1, op2;
@@ -307,15 +252,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::TEST_ALIb(bxInstruction_c *i)
   op2 = i->Ib();
   op1 &= op2;
 
-  SET_FLAGS_OSZAPC_LOGIC_8(op1);
-}
-
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::TEST_EbIbM(bxInstruction_c *i)
-{
-  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-
-  Bit8u op1 = read_virtual_byte(i->seg(), eaddr);
-  op1 &= i->Ib();
   SET_FLAGS_OSZAPC_LOGIC_8(op1);
 }
 

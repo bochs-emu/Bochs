@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.h,v 1.73 2008-08-11 18:53:23 sshwarts Exp $
+// $Id: fetchdecode.h,v 1.74 2008-08-11 20:34:05 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005 Stanislav Shwartsman
@@ -3232,10 +3232,10 @@ static const BxOpcodeInfo_t BxOpcodeInfoG3EbM[8] = {
   /* 1 */ { BxImmediate_Ib, BX_IA_TEST_EbIbM },
   /* 2 */ { BxLockable,     BX_IA_NOT_EbM },
   /* 3 */ { BxLockable,     BX_IA_NEG_EbM },
-  /* 4 */ { 0,              BX_IA_MUL_ALEb },
-  /* 5 */ { 0,              BX_IA_IMUL_ALEb },
-  /* 6 */ { 0,              BX_IA_DIV_ALEb },
-  /* 7 */ { 0,              BX_IA_IDIV_ALEb }
+  /* 4 */ { 0,              BX_IA_MUL_ALEbM },
+  /* 5 */ { 0,              BX_IA_IMUL_ALEbM },
+  /* 6 */ { 0,              BX_IA_DIV_ALEbM },
+  /* 7 */ { 0,              BX_IA_IDIV_ALEbM }
 };
 
 static const BxOpcodeInfo_t BxOpcodeInfoG3EbR[8] = {
@@ -3243,10 +3243,10 @@ static const BxOpcodeInfo_t BxOpcodeInfoG3EbR[8] = {
   /* 1 */ { BxImmediate_Ib, BX_IA_TEST_EbIbR },
   /* 2 */ { 0, BX_IA_NOT_EbR },
   /* 3 */ { 0, BX_IA_NEG_EbR },
-  /* 4 */ { 0, BX_IA_MUL_ALEb },
-  /* 5 */ { 0, BX_IA_IMUL_ALEb },
-  /* 6 */ { 0, BX_IA_DIV_ALEb },
-  /* 7 */ { 0, BX_IA_IDIV_ALEb }
+  /* 4 */ { 0, BX_IA_MUL_ALEbR },
+  /* 5 */ { 0, BX_IA_IMUL_ALEbR },
+  /* 6 */ { 0, BX_IA_DIV_ALEbR },
+  /* 7 */ { 0, BX_IA_IDIV_ALEbR }
 };
 
 static const BxOpcodeInfo_t BxOpcodeInfoG3EwM[8] = {

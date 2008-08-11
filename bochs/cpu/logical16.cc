@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logical16.cc,v 1.41 2008-08-09 21:05:06 sshwarts Exp $
+// $Id: logical16.cc,v 1.42 2008-08-11 20:34:05 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -227,18 +227,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::AND_EwIwR(bxInstruction_c *i)
   SET_FLAGS_OSZAPC_LOGIC_16(op1_16);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::TEST_EwGwM(bxInstruction_c *i)
-{
-  Bit16u op1_16, op2_16;
-
-  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-
-  op1_16 = read_virtual_word(i->seg(), eaddr);
-  op2_16 = BX_READ_16BIT_REG(i->nnn());
-  op1_16 &= op2_16;
-  SET_FLAGS_OSZAPC_LOGIC_16(op1_16);
-}
-
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::TEST_EwGwR(bxInstruction_c *i)
 {
   Bit16u op1_16, op2_16;
@@ -257,15 +245,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::TEST_AXIw(bxInstruction_c *i)
   op2_16 = i->Iw();
   op1_16 &= op2_16;
 
-  SET_FLAGS_OSZAPC_LOGIC_16(op1_16);
-}
-
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::TEST_EwIwM(bxInstruction_c *i)
-{
-  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-
-  Bit16u op1_16 = read_virtual_word(i->seg(), eaddr);
-  op1_16 &= i->Iw();
   SET_FLAGS_OSZAPC_LOGIC_16(op1_16);
 }
 

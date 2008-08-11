@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.505 2008-08-11 18:53:23 sshwarts Exp $
+// $Id: cpu.h,v 1.506 2008-08-11 20:34:05 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -117,7 +117,6 @@
 #define BH (BX_CPU_THIS_PTR gen_reg[3].word.byte.rh)
 
 #define TMP8L (BX_CPU_THIS_PTR gen_reg[BX_TMP_REGISTER].word.byte.rl)
-#define TMP8H (BX_CPU_THIS_PTR gen_reg[BX_TMP_REGISTER].word.byte.rh)
 
 // access to 16 bit general registers
 #define AX (BX_CPU_THIS_PTR gen_reg[0].word.rx)
@@ -185,14 +184,14 @@
 #endif
 
 #if BX_SUPPORT_X86_64
-#define BX_READ_8BIT_REGx(index,extended)  ((((index) < 4) || (extended)) ? \
+#define BX_READ_8BIT_REGx(index,extended)  ((((index) & 4) == 0 || (extended)) ? \
   (BX_CPU_THIS_PTR gen_reg[index].word.byte.rl) : \
   (BX_CPU_THIS_PTR gen_reg[(index)-4].word.byte.rh))
 #define BX_READ_64BIT_REG(index) (BX_CPU_THIS_PTR gen_reg[index].rrx)
 #else
-#define BX_READ_8BIT_REG(index)  (((index) < 4) ? \
-  (BX_CPU_THIS_PTR gen_reg[index].word.byte.rl) : \
-  (BX_CPU_THIS_PTR gen_reg[(index)-4].word.byte.rh))
+#define BX_READ_8BIT_REG(index)  (((index) & 4) ? \
+  (BX_CPU_THIS_PTR gen_reg[(index)-4].word.byte.rh)) : \
+  (BX_CPU_THIS_PTR gen_reg[index].word.byte.rl)
 #define BX_READ_8BIT_REGx(index,ext) BX_READ_8BIT_REG(index)
 #endif
 
@@ -217,7 +216,7 @@
 #if BX_SUPPORT_X86_64
 
 #define BX_WRITE_8BIT_REGx(index, extended, val) {\
-  if (((index) < 4) || (extended)) \
+  if (((index) & 4) == 0 || (extended)) \
     BX_CPU_THIS_PTR gen_reg[index].word.byte.rl = val; \
   else \
     BX_CPU_THIS_PTR gen_reg[(index)-4].word.byte.rh = val; \
@@ -237,10 +236,10 @@
 #else
 
 #define BX_WRITE_8BIT_REG(index, val) {\
-  if ((index) < 4) \
-    BX_CPU_THIS_PTR gen_reg[index].word.byte.rl = val; \
-  else \
+  if ((index) & 4) \
     BX_CPU_THIS_PTR gen_reg[(index)-4].word.byte.rh = val; \
+  else \
+    BX_CPU_THIS_PTR gen_reg[index].word.byte.rl = val; \
 }
 #define BX_WRITE_8BIT_REGx(index, ext, val) BX_WRITE_8BIT_REG(index, val)
 
@@ -1126,10 +1125,6 @@ public: // for now...
   BX_SMF void TEST_EwGwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void TEST_EdGdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
-  BX_SMF void TEST_EbGbM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void TEST_EwGwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void TEST_EdGdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-
   BX_SMF void XCHG_EbGbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void XCHG_EwGwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void XCHG_EdGdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -1443,15 +1438,6 @@ public: // for now...
 
   BX_SMF void BSWAP_ERX(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
-  BX_SMF void ADD_GbEbM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void OR_GbEbM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void ADC_GbEbM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void SBB_GbEbM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void AND_GbEbM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void SUB_GbEbM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void XOR_GbEbM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void CMP_GbEbM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-
   BX_SMF void ADD_GbEbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void OR_GbEbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void ADC_GbEbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -1608,20 +1594,17 @@ public: // for now...
   BX_SMF void SHR_EdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void SAR_EdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
-  BX_SMF void TEST_EbIbM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void TEST_EwIwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void TEST_EdIdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-
   BX_SMF void TEST_EbIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void TEST_EwIwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void TEST_EdIdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
-  BX_SMF void MUL_ALEb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void IMUL_GdEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void IMUL_ALEb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void IMUL_GdEdIdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void DIV_ALEb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void IDIV_ALEb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void MUL_ALEbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void IMUL_ALEbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void DIV_ALEbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void IDIV_ALEbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
   BX_SMF void MUL_EAXEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void IMUL_EAXEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -1665,6 +1648,7 @@ public: // for now...
   BX_SMF void LMSW_Ew(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
   // service methods
+  BX_SMF void LOAD_Eb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void LOAD_Ew(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void LOAD_Ed(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 #if BX_SUPPORT_X86_64
@@ -2430,7 +2414,6 @@ public: // for now...
   BX_SMF void CMP_EqIdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
   BX_SMF void TEST_EqGqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void TEST_EqGqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void TEST_RAXId(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
   BX_SMF void XCHG_EqGqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -2588,7 +2571,6 @@ public: // for now...
   BX_SMF void NOT_EqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void NEG_EqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
-  BX_SMF void TEST_EqIdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void TEST_EqIdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
   BX_SMF void MUL_RAXEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);

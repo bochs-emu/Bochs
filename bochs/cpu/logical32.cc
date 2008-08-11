@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logical32.cc,v 1.42 2008-08-09 21:05:07 sshwarts Exp $
+// $Id: logical32.cc,v 1.43 2008-08-11 20:34:05 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -232,19 +232,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::AND_EdIdR(bxInstruction_c *i)
   SET_FLAGS_OSZAPC_LOGIC_32(op1_32);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::TEST_EdGdM(bxInstruction_c *i)
-{
-  Bit32u op1_32, op2_32;
-
-  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-
-  op1_32 = read_virtual_dword(i->seg(), eaddr);
-  op2_32 = BX_READ_32BIT_REG(i->nnn());
-  op1_32 &= op2_32;
-
-  SET_FLAGS_OSZAPC_LOGIC_32(op1_32);
-}
-
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::TEST_EdGdR(bxInstruction_c *i)
 {
   Bit32u op1_32, op2_32;
@@ -264,15 +251,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::TEST_EAXId(bxInstruction_c *i)
   op2_32 = i->Id();
   op1_32 &= op2_32;
 
-  SET_FLAGS_OSZAPC_LOGIC_32(op1_32);
-}
-
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::TEST_EdIdM(bxInstruction_c *i)
-{
-  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-
-  Bit32u op1_32 = read_virtual_dword(i->seg(), eaddr);
-  op1_32 &= i->Id();
   SET_FLAGS_OSZAPC_LOGIC_32(op1_32);
 }
 
