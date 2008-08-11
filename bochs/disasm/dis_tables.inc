@@ -512,8 +512,20 @@ static BxDisasmOpcodeTable_t BxDisasmGroupSSE_0f38df[4] = {
   /* F3 */ { 0, &Ia_Invalid }
 };
 
+static BxDisasmOpcodeTable_t BxDisasmGrpOs64B_movbe_GvEv[3] = {
+  /* 16 */ { 0, &Ia_movbe_Gw_Ew },
+  /* 32 */ { 0, &Ia_movbe_Gd_Ed },
+  /* 64 */ { 0, &Ia_movbe_Gq_Eq }
+};
+
+static BxDisasmOpcodeTable_t BxDisasmGrpOs64B_movbe_EvGv[3] = {
+  /* 16 */ { 0, &Ia_movbe_Ew_Gw },
+  /* 32 */ { 0, &Ia_movbe_Ed_Gd },
+  /* 64 */ { 0, &Ia_movbe_Eq_Gq }
+};
+
 static BxDisasmOpcodeTable_t BxDisasmGroupSSE_0f38f0[4] = {
-  /* -- */ { 0, &Ia_Invalid },
+  /* -- */ { GR64BIT(movbe_GvEv) },
   /* 66 */ { 0, &Ia_Invalid },
   /* F2 */ { 0, &Ia_crc32_Gd_Eb },      // SSE4.2
   /* F3 */ { 0, &Ia_Invalid }
@@ -526,7 +538,7 @@ static BxDisasmOpcodeTable_t BxDisasmGrpOs64B_crc32[3] = {
 };
 
 static BxDisasmOpcodeTable_t BxDisasmGroupSSE_0f38f1[4] = {
-  /* -- */ { 0, &Ia_Invalid },
+  /* -- */ { GR64BIT(movbe_EvGv) },
   /* 66 */ { 0, &Ia_Invalid },
   /* F2 */ { GR64BIT(crc32) },          // SSE4.2
   /* F3 */ { 0, &Ia_Invalid }
