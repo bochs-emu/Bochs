@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.506 2008-08-11 20:34:05 sshwarts Exp $
+// $Id: cpu.h,v 1.507 2008-08-12 05:03:51 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -190,8 +190,8 @@
 #define BX_READ_64BIT_REG(index) (BX_CPU_THIS_PTR gen_reg[index].rrx)
 #else
 #define BX_READ_8BIT_REG(index)  (((index) & 4) ? \
-  (BX_CPU_THIS_PTR gen_reg[(index)-4].word.byte.rh)) : \
-  (BX_CPU_THIS_PTR gen_reg[index].word.byte.rl)
+  (BX_CPU_THIS_PTR gen_reg[(index)-4].word.byte.rh) : \
+  (BX_CPU_THIS_PTR gen_reg[index].word.byte.rl))
 #define BX_READ_8BIT_REGx(index,ext) BX_READ_8BIT_REG(index)
 #endif
 
