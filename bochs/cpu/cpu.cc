@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.235 2008-08-07 22:14:38 sshwarts Exp $
+// $Id: cpu.cc,v 1.236 2008-08-12 19:25:42 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -506,7 +506,7 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
     interrupt(vector, 0, 0, 0);
     // Set up environment, as would be when this main cpu loop gets
     // invoked.  At the end of normal instructions, we always commmit
-    // the new EIP/ESP values.  But here, we call interrupt() much like
+    // the new EIP.  But here, we call interrupt() much like
     // it was a sofware interrupt instruction, and need to effect the
     // commit here.  This code mirrors similar code above.
     BX_CPU_THIS_PTR prev_rip = RIP; // commit new RIP
@@ -586,7 +586,7 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
   // will be processed on the next boundary.
   BX_CPU_THIS_PTR inhibit_mask = 0;
 
-  if (!(BX_CPU_INTR ||
+  if (!((BX_CPU_INTR && BX_CPU_THIS_PTR get_IF()) ||
         BX_CPU_THIS_PTR debug_trap ||
         BX_HRQ ||
         BX_CPU_THIS_PTR get_TF()

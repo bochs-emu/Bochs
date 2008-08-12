@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: icache.cc,v 1.15 2008-07-17 17:28:25 sshwarts Exp $
+// $Id: icache.cc,v 1.16 2008-08-12 19:25:42 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007 Stanislav Shwartsman
@@ -95,8 +95,6 @@ void BX_CPU_C::serveICacheMiss(bxICacheEntry_c *cache_entry, Bit32u eipBiased, b
   unsigned ret, max_length = BX_MAX_TRACE_LENGTH;
 
   bxInstruction_c *i = cache_entry->i;
-
-  if (BX_CPU_THIS_PTR async_event) max_length = 1;
 
   for (unsigned n=0;n<max_length;n++)
   {
