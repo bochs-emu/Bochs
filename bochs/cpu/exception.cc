@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.119 2008-07-26 14:19:06 sshwarts Exp $
+// $Id: exception.cc,v 1.120 2008-08-13 21:51:54 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -254,7 +254,7 @@ void BX_CPU_C::long_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error_code
          BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value);
     write_new_stack_qword_64(RSP - 16, cs_descriptor.dpl, old_RSP);
     write_new_stack_qword_64(RSP - 24, cs_descriptor.dpl, read_eflags());
-    write_new_stack_qword_64(RSP - 32,  cs_descriptor.dpl,
+    write_new_stack_qword_64(RSP - 32, cs_descriptor.dpl,
          BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value);
     write_new_stack_qword_64(RSP - 40, cs_descriptor.dpl, RIP);
     RSP -= 40;

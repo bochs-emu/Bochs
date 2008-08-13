@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: smm.cc,v 1.42 2008-08-03 19:53:09 sshwarts Exp $
+// $Id: smm.cc,v 1.43 2008-08-13 21:51:54 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2006 Stanislav Shwartsman
@@ -135,7 +135,7 @@ void BX_CPU_C::enter_system_management_mode(void)
   BX_CPU_THIS_PTR cr0.set_PG(0); // paging disabled (bit 31)
 
   // paging mode was changed - flush TLB
-  TLB_flush(1); // 1 = Flush Global entries also
+  TLB_flush(); //  Flush Global entries also
 
 #if BX_CPU_LEVEL >= 4
   BX_CPU_THIS_PTR cr4.setRegister(0);

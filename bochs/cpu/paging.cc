@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.150 2008-08-10 20:32:00 sshwarts Exp $
+// $Id: paging.cc,v 1.151 2008-08-13 21:51:54 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -401,7 +401,7 @@ BX_CPU_C::pagingCR0Changed(Bit32u oldCR0, Bit32u newCR0)
   // Additionally, the TLB strategy is based on the current value of
   // WP, so if that changes we must also flush the TLB.
   if ((oldCR0 & 0x80010001) != (newCR0 & 0x80010001))
-    TLB_flush(1); // 1 = Flush Global entries also.
+    TLB_flush(); // Flush Global entries also.
 }
 
   void BX_CPP_AttrRegparmN(2)
@@ -409,7 +409,7 @@ BX_CPU_C::pagingCR4Changed(Bit32u oldCR4, Bit32u newCR4)
 {
   // Modification of PGE,PAE,PSE flushes TLB cache according to docs.
   if ((oldCR4 & 0x000000b0) != (newCR4 & 0x000000b0))
-    TLB_flush(1); // 1 = Flush Global entries also.
+    TLB_flush(); // Flush Global entries also.
 
 #if BX_SUPPORT_PAE
   if ((oldCR4 & 0x00000020) != (newCR4 & 0x00000020)) {
@@ -425,7 +425,7 @@ BX_CPU_C::pagingCR4Changed(Bit32u oldCR4, Bit32u newCR4)
 BX_CPU_C::SetCR3(bx_address val)
 {
   // flush TLB even if value does not change
-  TLB_flush(0); // 0 = Don't flush Global entries.
+  TLB_flushNonGlobal(); // Don't flush Global entries.
 
 #if BX_SUPPORT_PAE
   if (BX_CPU_THIS_PTR cr4.get_PAE() && !long_mode()) {
@@ -455,9 +455,6 @@ BX_CPU_C::SetCR3(bx_address val)
 void BX_CPU_C::TLB_init(void)
 {
   unsigned n, wp, us_combined, rw_combined, us_current, rw_current;
-
-  for (n=0; n<BX_TLB_SIZE; n++)
-    BX_CPU_THIS_PTR TLB.entry[n].lpf = BX_INVALID_TLB_ENTRY;
 
   //
   // Setup privilege check matrix.
@@ -490,27 +487,18 @@ void BX_CPU_C::TLB_init(void)
       }
     }
   }
+
+  TLB_flush();
 }
 
-void BX_CPU_C::TLB_flush(bx_bool invalidateGlobal)
+void BX_CPU_C::TLB_flush(void)
 {
 #if InstrumentTLB
-  if (invalidateGlobal)
-    InstrTLB_Increment(tlbGlobalFlushes);
-  else
-    InstrTLB_Increment(tlbNonGlobalFlushes);
+  InstrTLB_Increment(tlbGlobalFlushes);
 #endif
 
   for (unsigned n=0; n<BX_TLB_SIZE; n++) {
-    // To be conscious of the native cache line usage, only
-    // write to (invalidate) entries which need it.
-    bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[n];
-    if (tlbEntry->lpf != BX_INVALID_TLB_ENTRY) {
-#if BX_SUPPORT_GLOBAL_PAGES
-      if (invalidateGlobal || !(tlbEntry->accessBits & TLB_GlobalPage))
-#endif
-        tlbEntry->lpf = BX_INVALID_TLB_ENTRY;
-    }
+    BX_CPU_THIS_PTR TLB.entry[n].lpf = BX_INVALID_TLB_ENTRY;
   }
 
 #if BX_SUPPORT_PAE
@@ -524,13 +512,41 @@ void BX_CPU_C::TLB_flush(bx_bool invalidateGlobal)
 #endif
 }
 
+#if BX_SUPPORT_GLOBAL_PAGES
+
+void BX_CPU_C::TLB_flushNonGlobal(void)
+{
+#if InstrumentTLB
+  InstrTLB_Increment(tlbNonGlobalFlushes);
+#endif
+
+  for (unsigned n=0; n<BX_TLB_SIZE; n++) {
+    bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[n];
+    if (!(tlbEntry->accessBits & TLB_GlobalPage))
+      tlbEntry->lpf = BX_INVALID_TLB_ENTRY;
+  }
+
+#if BX_SUPPORT_PAE
+  BX_CPU_THIS_PTR PDPE_CACHE.valid = 0;
+#endif
+
+#if BX_SUPPORT_MONITOR_MWAIT
+  // invalidating of the TLB might change translation for monitored page
+  // and cause subsequent MWAIT instruction to wait forever
+  BX_CPU_THIS_PTR monitor.reset_monitor();
+#endif
+}
+
+#endif
+
 void BX_CPU_C::TLB_invlpg(bx_address laddr)
 {
   BX_DEBUG(("TLB_invlpg(0x"FMT_ADDRX"): invalidate TLB entry", laddr));
 
   unsigned TLB_index = BX_TLB_INDEX_OF(laddr, 0);
+  bx_address lpf = LPFOf(laddr);
   bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[TLB_index];
-  if (tlbEntry->lpf == LPFOf(laddr)) {
+  if (tlbEntry->lpf == lpf) {
     tlbEntry->lpf = BX_INVALID_TLB_ENTRY;
   }
 

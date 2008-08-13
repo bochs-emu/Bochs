@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.507 2008-08-12 05:03:51 sshwarts Exp $
+// $Id: cpu.h,v 1.508 2008-08-13 21:51:53 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2994,7 +2994,12 @@ public: // for now...
     return translate_linear(laddr, curr_pl, rw, DATA_ACCESS);
   }
 
-  BX_SMF void TLB_flush(bx_bool invalidateGlobal);
+#if BX_SUPPORT_GLOBAL_PAGES
+  BX_SMF void TLB_flushNonGlobal(void);
+#else
+  #define TLB_flushNonGlobal() TLB_flush()
+#endif
+  BX_SMF void TLB_flush(void);
   BX_SMF void TLB_invlpg(bx_address laddr);
   BX_SMF void TLB_init(void);
   BX_SMF void set_INTR(bx_bool value);

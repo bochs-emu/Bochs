@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.176 2008-08-13 20:54:03 sshwarts Exp $
+// $Id: init.cc,v 1.177 2008-08-13 21:51:54 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -649,7 +649,7 @@ void BX_CPU_C::after_restore_state(void)
 
   SetCR0(cr0.val32);
   SetCR3(cr3);
-  TLB_flush(1);
+  TLB_flush();
   assert_checks();
   invalidate_prefetch_q();
   debug(RIP);
