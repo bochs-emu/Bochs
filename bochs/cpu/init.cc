@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.175 2008-08-03 19:53:08 sshwarts Exp $
+// $Id: init.cc,v 1.176 2008-08-13 20:54:03 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -888,9 +888,6 @@ void BX_CPU_C::reset(unsigned source)
 #if BX_SUPPORT_XSAVE
   BX_CPU_THIS_PTR xcr0.setRegister(0x1);
 #endif
-
-  // CR0/CR4 paging might be modified
-  TLB_flush(1);
 
 /* initialise MSR registers to defaults */
 #if BX_CPU_LEVEL >= 5
