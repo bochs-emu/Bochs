@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.151 2008-08-13 21:51:54 sshwarts Exp $
+// $Id: paging.cc,v 1.152 2008-08-14 22:26:15 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -302,8 +302,9 @@ static unsigned priv_check[BX_PRIV_CHECK_SIZE];
 // Each entry in the TLB cache has 3 entries:
 //
 //   lpf:         Linear Page Frame (page aligned linear address of page)
-//     bits 32..12  Linear page frame.
-//     bits 11...0  Invalidate index.
+//     bits 32..12  Linear page frame
+//     bit  11      0: TLB HostPtr access allowed, 1: not allowed
+//     bit  10...0  Invalidate index
 //
 //   ppf:         Physical Page Frame (page aligned phy address of page)
 //
@@ -331,26 +332,24 @@ static unsigned priv_check[BX_PRIV_CHECK_SIZE];
 //       value, necessitating a TLB flush when CR0.WP changes.
 //
 //       The test is:
-//         OK = (accessBits & ((W<<1) | U)) != 0  [W:1=write, 0=read, U:1=CPL3,0=CPL0-2]
+//         OK = (accessBits & ((W<<1) | U)) <> 0  [W:1=Write, 0=Read, U:1=CPL3,0=CPL0-2]
 //
-//       Or when taking into account direct access according to Host Ptr: 
-//         OK = (accessBits & (TLB_HostPtr | (W<<1) | U)) != 0
-
-//       Thus for direct reads, it is:
-//         OK = 0x4 << (          U )
-//       And for direct writes:
-//         OK = 0x6 << (          U )
+//       Thus for reads, it is:
+//         OK =       (          U )
+//       And for writes:
+//         OK = 0x2 | (          U )
 //
-//       Note, that the TLB accessBits should have TLB_HostPtr bit set when
-//       direct access through host pointer is NOT allowed for the page.
-//       A memory operation asking for a direct access through host pointer
-//       will set TLB_HostPtr bit in the accessBits and thus get non zero 
-//       result when the direct access is not allowed.
+//       Note, that the TLB should have TLB_HostPtr bit set when direct
+//       access through host pointer is NOT allowed for the page. A memory
+//       operation asking for a direct access through host pointer will
+//       set TLB_HostPtr bit in its lpf field and thus get TLB miss result 
+//       when the direct access is not allowed.
 //
 
-#define TLB_SysOnly           (0x01)
-#define TLB_ReadOnly          (0x02)
-#define TLB_HostPtr           (0x04) /* set this bit when direct access is NOT allowed */
+#define TLB_SysOnly     (0x1)
+#define TLB_ReadOnly    (0x2)
+
+#define TLB_HostPtr     (0x800) /* set this bit when direct access is NOT allowed */
 
 #define TLB_GlobalPage  (0x80000000)
 
@@ -546,7 +545,7 @@ void BX_CPU_C::TLB_invlpg(bx_address laddr)
   unsigned TLB_index = BX_TLB_INDEX_OF(laddr, 0);
   bx_address lpf = LPFOf(laddr);
   bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[TLB_index];
-  if (tlbEntry->lpf == lpf) {
+  if (LPFOf(tlbEntry->lpf) == lpf) {
     tlbEntry->lpf = BX_INVALID_TLB_ENTRY;
   }
 
@@ -940,7 +939,7 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned curr_pl, un
   bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[TLB_index];
 
   // already looked up TLB for code access
-  if (tlbEntry->lpf == lpf)
+  if (LPFOf(tlbEntry->lpf) == lpf)
   {
     paddress = tlbEntry->ppf | poffset;
 
@@ -1084,28 +1083,28 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned curr_pl, un
   // Calculate physical memory address and fill in TLB cache entry
   paddress = ppf | poffset;
 
-  tlbEntry->lpf = lpf;
+  // direct memory access is NOT allowed by default
+  tlbEntry->lpf = lpf | TLB_HostPtr;
   tlbEntry->ppf = ppf;
-
-  Bit32u accessBits = TLB_HostPtr; // HostPtr is not allowed by default
+  tlbEntry->accessBits = 0;
 
   if ((combined_access & 4) == 0) { // System
-    accessBits |= TLB_SysOnly;
+    tlbEntry->accessBits |= TLB_SysOnly;
     if (! isWrite)
-      accessBits |= TLB_ReadOnly;
+      tlbEntry->accessBits |= TLB_ReadOnly;
   }
   else {
     // Current operation is a read or a page is read only
     // Not efficient handling of system write to user read only page:
     // hopefully it is very rare case, optimize later
     if (! isWrite || (combined_access & 2) == 0) {
-      accessBits |= TLB_ReadOnly;
+       tlbEntry->accessBits |= TLB_ReadOnly;
     }
   }
 
 #if BX_SUPPORT_GLOBAL_PAGES
   if (combined_access & 0x100) // Global bit
-    accessBits |= TLB_GlobalPage;
+    tlbEntry->accessBits |= TLB_GlobalPage;
 #endif
 
 #if BX_SupportGuest2HostTLB
@@ -1120,10 +1119,9 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned curr_pl, un
 #if BX_X86_DEBUGGER
     if (! hwbreakpoint_check(laddr))
 #endif
-      accessBits &= ~TLB_HostPtr; // allow direct access with HostPtr
+       tlbEntry->lpf = LPFOf(tlbEntry->lpf); // allow direct access with HostPtr
   }
 #endif
-  tlbEntry->accessBits = accessBits;
 
   return paddress;
 }
@@ -1144,7 +1142,7 @@ bx_bool BX_CPU_C::dbg_xlate_linear2phy(bx_address laddr, bx_phy_address *phy)
   unsigned TLB_index = BX_TLB_INDEX_OF(lpf, 0);
   bx_TLB_entry *tlbEntry  = &BX_CPU_THIS_PTR TLB.entry[TLB_index];
 
-  if (tlbEntry->lpf == lpf) {
+  if (LPFOf(tlbEntry->lpf) == lpf) {
     paddress = tlbEntry->ppf | PAGE_OFFSET(laddr);
     *phy = paddress;
     return 1;
@@ -1298,7 +1296,7 @@ void BX_CPU_C::access_write_linear(bx_address laddr, unsigned len, unsigned curr
         bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
         bx_address lpf = LPFOf(laddr);
       
-        if (tlbEntry->lpf != lpf) {
+        if (LPFOf(tlbEntry->lpf) != lpf) {
           // We haven't seen this page, or it's been bumped before.
 
           // Request a direct write pointer so we can do either R or W.
@@ -1306,10 +1304,10 @@ void BX_CPU_C::access_write_linear(bx_address laddr, unsigned len, unsigned curr
             BX_MEM(0)->getHostMemAddr(BX_CPU_THIS, A20ADDR(lpf), BX_WRITE, DATA_ACCESS);
 
           if (hostPageAddr) {
-            tlbEntry->lpf = lpf;
+            tlbEntry->lpf = lpf; // Got direct write pointer OK
             tlbEntry->ppf = (bx_phy_address) lpf;
             tlbEntry->hostPageAddr = hostPageAddr;
-            // Got direct write pointer OK.  Mark for any operation to succeed.
+            // Mark for any operation to succeed.
             tlbEntry->accessBits = 0;
           }
         }
@@ -1468,18 +1466,18 @@ void BX_CPU_C::access_read_linear(bx_address laddr, unsigned len, unsigned curr_
         bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
         bx_address lpf = LPFOf(laddr);
 
-        if (tlbEntry->lpf != lpf) {
+        if (LPFOf(tlbEntry->lpf) != lpf) {
           // We haven't seen this page, or it's been bumped before.
 
           // Request a direct write pointer so we can do either R or W.
           bx_hostpageaddr_t hostPageAddr = (bx_hostpageaddr_t)
-            BX_MEM(0)->getHostMemAddr(BX_CPU_THIS, A20ADDR(lpf), BX_READ, DATA_ACCESS);
+              BX_MEM(0)->getHostMemAddr(BX_CPU_THIS, A20ADDR(lpf), BX_READ, DATA_ACCESS);
 
           if (hostPageAddr) {
-            tlbEntry->lpf = lpf;
+            tlbEntry->lpf = lpf; // Got direct read pointer OK.
             tlbEntry->ppf = (bx_phy_address) lpf;
             tlbEntry->hostPageAddr = hostPageAddr;
-            // Got direct read pointer OK.  Mark for any following read to succeed.
+            // Mark for any following read to succeed.
             tlbEntry->accessBits = TLB_ReadOnly;
           }
         }

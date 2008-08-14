@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.236 2008-08-12 19:25:42 sshwarts Exp $
+// $Id: cpu.cc,v 1.237 2008-08-14 22:26:14 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -644,7 +644,7 @@ void BX_CPU_C::prefetch(void)
   bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[TLB_index];
   Bit8u *fetchPtr = 0;
 
-  if (tlbEntry->lpf == lpf && !(tlbEntry->accessBits & (0x4 | USER_PL))) {
+  if ((tlbEntry->lpf == lpf) && !(tlbEntry->accessBits & USER_PL)) {
     pAddr = A20ADDR(tlbEntry->ppf | pageOffset);
 #if BX_SupportGuest2HostTLB
     fetchPtr = (Bit8u*) (tlbEntry->hostPageAddr);

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: access.cc,v 1.117 2008-08-07 22:14:38 sshwarts Exp $
+// $Id: access.cc,v 1.118 2008-08-14 22:26:14 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -282,7 +282,7 @@ BX_CPU_C::v2h_read_byte(bx_address laddr, bx_bool user)
   if (tlbEntry->lpf == lpf) {
     // See if the TLB entry privilege level allows us read access
     // from this CPL.
-    if (! (tlbEntry->accessBits & (0x4 | user))) { // Read this pl OK.
+    if (! (tlbEntry->accessBits & user)) { // Read this pl OK.
       bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
       Bit32u pageOffset = PAGE_OFFSET(laddr);
       Bit8u *hostAddr = (Bit8u*) (hostPageAddr | pageOffset);
@@ -303,7 +303,7 @@ BX_CPU_C::v2h_write_byte(bx_address laddr, bx_bool user)
   {
     // See if the TLB entry privilege level allows us write access
     // from this CPL.
-    if (! (tlbEntry->accessBits & (0x6 | user))) {
+    if (! (tlbEntry->accessBits & (0x2 | user))) {
       bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
       Bit32u pageOffset = PAGE_OFFSET(laddr);
       Bit8u *hostAddr = (Bit8u*) (hostPageAddr | pageOffset);
