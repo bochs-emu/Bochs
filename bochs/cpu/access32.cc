@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: access32.cc,v 1.11 2008-08-14 22:26:14 sshwarts Exp $
+// $Id: access32.cc,v 1.12 2008-08-15 10:12:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008 Stanislav Shwartsman
@@ -112,10 +112,11 @@ accessOK:
       }
     }
 #endif
+
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
     if (BX_CPU_THIS_PTR alignment_check()) {
       if (laddr & 1) {
-        BX_ERROR(("write_virtual_word(): #AC misaligned access"));
+        BX_ERROR(("write_virtual_word_32(): #AC misaligned access"));
         exception(BX_AC_EXCEPTION, 0, 0);
       }
     }
@@ -175,7 +176,7 @@ accessOK:
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
     if (BX_CPU_THIS_PTR alignment_check()) {
       if (laddr & 3) {
-        BX_ERROR(("write_virtual_dword(): #AC misaligned access"));
+        BX_ERROR(("write_virtual_dword_32(): #AC misaligned access"));
         exception(BX_AC_EXCEPTION, 0, 0);
       }
     }
@@ -235,7 +236,7 @@ accessOK:
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
     if (BX_CPU_THIS_PTR alignment_check()) {
       if (laddr & 7) {
-        BX_ERROR(("write_virtual_qword(): #AC misaligned access"));
+        BX_ERROR(("write_virtual_qword_32(): #AC misaligned access"));
         exception(BX_AC_EXCEPTION, 0, 0);
       }
     }
@@ -296,7 +297,7 @@ accessOK:
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
     if (BX_CPU_THIS_PTR alignment_check()) {
       if (laddr & 15) {
-        BX_ERROR(("write_virtual_dqword(): #AC misaligned access"));
+        BX_ERROR(("write_virtual_dqword_32(): #AC misaligned access"));
         exception(BX_AC_EXCEPTION, 0, 0);
       }
     }
@@ -453,7 +454,7 @@ accessOK:
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
     if (BX_CPU_THIS_PTR alignment_check()) {
       if (laddr & 1) {
-        BX_ERROR(("read_virtual_word(): #AC misaligned access"));
+        BX_ERROR(("read_virtual_word_32(): #AC misaligned access"));
         exception(BX_AC_EXCEPTION, 0, 0);
       }
     }
@@ -511,7 +512,7 @@ accessOK:
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
     if (BX_CPU_THIS_PTR alignment_check()) {
       if (laddr & 3) {
-        BX_ERROR(("read_virtual_dword(): #AC misaligned access"));
+        BX_ERROR(("read_virtual_dword_32(): #AC misaligned access"));
         exception(BX_AC_EXCEPTION, 0, 0);
       }
     }
@@ -569,7 +570,7 @@ accessOK:
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
     if (BX_CPU_THIS_PTR alignment_check()) {
       if (laddr & 7) {
-        BX_ERROR(("read_virtual_qword(): #AC misaligned access"));
+        BX_ERROR(("read_virtual_qword_32(): #AC misaligned access"));
         exception(BX_AC_EXCEPTION, 0, 0);
       }
     }
@@ -627,7 +628,7 @@ accessOK:
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
     if (BX_CPU_THIS_PTR alignment_check()) {
       if (laddr & 15) {
-        BX_ERROR(("read_virtual_dqword(): #AC misaligned access"));
+        BX_ERROR(("read_virtual_dqword_32(): #AC misaligned access"));
         exception(BX_AC_EXCEPTION, 0, 0);
       }
     }
@@ -794,7 +795,7 @@ accessOK:
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
     if (BX_CPU_THIS_PTR alignment_check()) {
       if (laddr & 1) {
-        BX_ERROR(("read_RMW_virtual_word(): #AC misaligned access"));
+        BX_ERROR(("read_RMW_virtual_word_32(): #AC misaligned access"));
         exception(BX_AC_EXCEPTION, 0, 0);
       }
     }
@@ -856,7 +857,7 @@ accessOK:
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
     if (BX_CPU_THIS_PTR alignment_check()) {
       if (laddr & 3) {
-        BX_ERROR(("read_RMW_virtual_dword(): #AC misaligned access"));
+        BX_ERROR(("read_RMW_virtual_dword_32(): #AC misaligned access"));
         exception(BX_AC_EXCEPTION, 0, 0);
       }
     }
@@ -918,7 +919,7 @@ accessOK:
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
     if (BX_CPU_THIS_PTR alignment_check()) {
       if (laddr & 7) {
-        BX_ERROR(("read_RMW_virtual_qword(): #AC misaligned access"));
+        BX_ERROR(("read_RMW_virtual_qword_32(): #AC misaligned access"));
         exception(BX_AC_EXCEPTION, 0, 0);
       }
     }
