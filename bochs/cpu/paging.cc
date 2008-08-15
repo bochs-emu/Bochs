@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.152 2008-08-14 22:26:15 sshwarts Exp $
+// $Id: paging.cc,v 1.153 2008-08-15 14:30:50 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -276,6 +276,9 @@
   #define BX_INVALID_TLB_ENTRY 0xffffffff
 #endif
 
+// bit [11] of the TLB lpf used for TLB_HostPtr valid indication
+#define TLB_LPFOf(laddr) AlignedAccessLPFOf(laddr, 0x7ff)
+
 #if BX_CPU_LEVEL >= 4
 #  define BX_PRIV_CHECK_SIZE 32
 #else
@@ -545,7 +548,7 @@ void BX_CPU_C::TLB_invlpg(bx_address laddr)
   unsigned TLB_index = BX_TLB_INDEX_OF(laddr, 0);
   bx_address lpf = LPFOf(laddr);
   bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[TLB_index];
-  if (LPFOf(tlbEntry->lpf) == lpf) {
+  if (TLB_LPFOf(tlbEntry->lpf) == lpf) {
     tlbEntry->lpf = BX_INVALID_TLB_ENTRY;
   }
 
@@ -939,7 +942,7 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned curr_pl, un
   bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[TLB_index];
 
   // already looked up TLB for code access
-  if (LPFOf(tlbEntry->lpf) == lpf)
+  if (TLB_LPFOf(tlbEntry->lpf) == lpf)
   {
     paddress = tlbEntry->ppf | poffset;
 
@@ -1119,7 +1122,7 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned curr_pl, un
 #if BX_X86_DEBUGGER
     if (! hwbreakpoint_check(laddr))
 #endif
-       tlbEntry->lpf = LPFOf(tlbEntry->lpf); // allow direct access with HostPtr
+       tlbEntry->lpf = lpf; // allow direct access with HostPtr
   }
 #endif
 
@@ -1142,7 +1145,7 @@ bx_bool BX_CPU_C::dbg_xlate_linear2phy(bx_address laddr, bx_phy_address *phy)
   unsigned TLB_index = BX_TLB_INDEX_OF(lpf, 0);
   bx_TLB_entry *tlbEntry  = &BX_CPU_THIS_PTR TLB.entry[TLB_index];
 
-  if (LPFOf(tlbEntry->lpf) == lpf) {
+  if (TLB_LPFOf(tlbEntry->lpf) == lpf) {
     paddress = tlbEntry->ppf | PAGE_OFFSET(laddr);
     *phy = paddress;
     return 1;
@@ -1296,7 +1299,7 @@ void BX_CPU_C::access_write_linear(bx_address laddr, unsigned len, unsigned curr
         bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
         bx_address lpf = LPFOf(laddr);
       
-        if (LPFOf(tlbEntry->lpf) != lpf) {
+        if (TLB_LPFOf(tlbEntry->lpf) != lpf) {
           // We haven't seen this page, or it's been bumped before.
 
           // Request a direct write pointer so we can do either R or W.
@@ -1466,7 +1469,7 @@ void BX_CPU_C::access_read_linear(bx_address laddr, unsigned len, unsigned curr_
         bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
         bx_address lpf = LPFOf(laddr);
 
-        if (LPFOf(tlbEntry->lpf) != lpf) {
+        if (TLB_LPFOf(tlbEntry->lpf) != lpf) {
           // We haven't seen this page, or it's been bumped before.
 
           // Request a direct write pointer so we can do either R or W.
