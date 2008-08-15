@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.253 2008-08-13 21:51:54 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.254 2008-08-15 10:59:31 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1631,6 +1631,27 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDMSR(bxInstruction_c *i)
 #endif
 }
 
+#if BX_SUPPORT_MTRR
+BX_CPP_INLINE bx_bool isMemTypeValidMTTR(Bit8u memtype)
+{
+  switch(memtype) {
+  case 0x00: // UC
+  case 0x01: // WC
+  case 0x04: // WT
+  case 0x05: // WP
+  case 0x06: // WB
+    return 1;
+  default:
+    return 0;
+  }
+}
+
+BX_CPP_INLINE bx_bool isMemTypeValidPAT(Bit8u memtype)
+{
+  return (memtype == 0x07) /* UC- */ || isMemTypeValidMTTR(memtype);
+}
+#endif
+
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRMSR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
@@ -1678,31 +1699,47 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRMSR(bxInstruction_c *i)
       exception(BX_GP_EXCEPTION, 0, 0);
 
     case BX_MSR_MTRRPHYSBASE0:
-    case BX_MSR_MTRRPHYSMASK0:
     case BX_MSR_MTRRPHYSBASE1:
-    case BX_MSR_MTRRPHYSMASK1:
     case BX_MSR_MTRRPHYSBASE2:
-    case BX_MSR_MTRRPHYSMASK2:
     case BX_MSR_MTRRPHYSBASE3:
-    case BX_MSR_MTRRPHYSMASK3:
     case BX_MSR_MTRRPHYSBASE4:
-    case BX_MSR_MTRRPHYSMASK4:
     case BX_MSR_MTRRPHYSBASE5:
-    case BX_MSR_MTRRPHYSMASK5:
     case BX_MSR_MTRRPHYSBASE6:
-    case BX_MSR_MTRRPHYSMASK6:
     case BX_MSR_MTRRPHYSBASE7:
+      if (! isMemTypeValidMTTR(AL)) {
+        BX_ERROR(("WRMSR: attempt to write invalid Memory Type to BX_MSR_MTRRPHYSBASE"));
+        exception(BX_GP_EXCEPTION, 0, 0);
+      }
+    case BX_MSR_MTRRPHYSMASK0:
+    case BX_MSR_MTRRPHYSMASK1:
+    case BX_MSR_MTRRPHYSMASK2:
+    case BX_MSR_MTRRPHYSMASK3:
+    case BX_MSR_MTRRPHYSMASK4:
+    case BX_MSR_MTRRPHYSMASK5:
+    case BX_MSR_MTRRPHYSMASK6:
     case BX_MSR_MTRRPHYSMASK7:
       BX_CPU_THIS_PTR msr.mtrrphys[ECX - BX_MSR_MTRRPHYSBASE0] = val64;
       break;
 
     case BX_MSR_MTRRFIX64K_00000:
+      if (! isMemTypeValidMTTR(AL)) {
+        BX_ERROR(("WRMSR: attempt to write invalid Memory Type to MSR_MTRRFIX64K_00000"));
+        exception(BX_GP_EXCEPTION, 0, 0);
+      }
       BX_CPU_THIS_PTR msr.mtrrfix64k_00000 = val64;
       break;
     case BX_MSR_MTRRFIX16K_80000:
+      if (! isMemTypeValidMTTR(AL)) {
+        BX_ERROR(("WRMSR: attempt to write invalid Memory Type to MSR_MTRRFIX16K_80000"));
+        exception(BX_GP_EXCEPTION, 0, 0);
+      }
       BX_CPU_THIS_PTR msr.mtrrfix16k_80000 = val64;
       break;
     case BX_MSR_MTRRFIX16K_A0000:
+      if (! isMemTypeValidMTTR(AL)) {
+        BX_ERROR(("WRMSR: attempt to write invalid Memory Type to MSR_MTRRFIX16K_A0000"));
+        exception(BX_GP_EXCEPTION, 0, 0);
+      }
       BX_CPU_THIS_PTR msr.mtrrfix16k_a0000 = val64;
       break;
 
@@ -1718,10 +1755,25 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRMSR(bxInstruction_c *i)
       break;
 
     case BX_MSR_PAT:
+      if (! isMemTypeValidPAT(AL) || ! isMemTypeValidPAT(AH) ||
+          ! isMemTypeValidPAT((EAX >> 16) & 0xFF) || 
+          ! isMemTypeValidPAT(EAX >> 24) ||
+          ! isMemTypeValidPAT(DL) || ! isMemTypeValidPAT(DH) ||
+          ! isMemTypeValidPAT((EDX >> 16) & 0xFF) || 
+          ! isMemTypeValidPAT(EDX >> 24))
+      {
+        BX_ERROR(("WRMSR: attempt to write invalid Memory Type to MSR_PAT"));
+        exception(BX_GP_EXCEPTION, 0, 0);
+      }
+      
       BX_CPU_THIS_PTR msr.pat = val64;
       break;
 
     case BX_MSR_MTRR_DEFTYPE:
+      if (! isMemTypeValidMTTR(AL)) {
+        BX_ERROR(("WRMSR: attempt to write invalid Memory Type to MSR_MTRR_DEFTYPE"));
+        exception(BX_GP_EXCEPTION, 0, 0);
+      }
       BX_CPU_THIS_PTR msr.mtrr_deftype = EAX;
       break;
 #endif
