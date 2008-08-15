@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: segment_ctrl_pro.cc,v 1.96 2008-08-03 19:53:09 sshwarts Exp $
+// $Id: segment_ctrl_pro.cc,v 1.97 2008-08-15 14:31:31 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -207,7 +207,6 @@ BX_CPU_C::load_seg_reg(bx_segment_reg_t *seg, Bit16u new_value)
   seg->cache.u.segment.base = new_value << 4;
   seg->cache.segment = 1; /* regular segment */
   seg->cache.p = 1; /* present */
-  seg->cache.type = BX_DATA_READ_WRITE_ACCESSED;
 
   if (seg == &BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS]) {
     invalidate_prefetch_q();
@@ -221,6 +220,7 @@ BX_CPU_C::load_seg_reg(bx_segment_reg_t *seg, Bit16u new_value)
   /* Support for big real mode */
   if (real_mode()) return;
 
+  seg->cache.type = BX_DATA_READ_WRITE_ACCESSED;
   seg->cache.dpl = 3; /* we are in v8086 mode */
   seg->cache.u.segment.limit        = 0xffff;
   seg->cache.u.segment.limit_scaled = 0xffff;
