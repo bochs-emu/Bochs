@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.508 2008-08-13 21:51:53 sshwarts Exp $
+// $Id: cpu.h,v 1.509 2008-08-16 15:35:35 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2996,8 +2996,6 @@ public: // for now...
 
 #if BX_SUPPORT_GLOBAL_PAGES
   BX_SMF void TLB_flushNonGlobal(void);
-#else
-  #define TLB_flushNonGlobal() TLB_flush()
 #endif
   BX_SMF void TLB_flush(void);
   BX_SMF void TLB_invlpg(bx_address laddr);
