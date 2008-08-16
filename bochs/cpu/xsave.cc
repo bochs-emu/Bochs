@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: xsave.cc,v 1.13 2008-08-08 09:22:49 sshwarts Exp $
+// $Id: xsave.cc,v 1.14 2008-08-16 12:19:30 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008 Stanislav Shwartsman
@@ -84,7 +84,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVE(bxInstruction_c *i)
     else
 #endif
     {
-      xmm.xmm32u(2) = (Bit32u)(BX_CPU_THIS_PTR the_i387.fip) & 0xffffffff;
+      xmm.xmm32u(2) = (Bit32u)(BX_CPU_THIS_PTR the_i387.fip);
       xmm.xmm32u(3) =         (BX_CPU_THIS_PTR the_i387.fcs);
     }
 
@@ -107,10 +107,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVE(bxInstruction_c *i)
     else
 #endif
     {
-      write_virtual_dword(i->seg(), eaddr + 16, 
-            (Bit32u)(BX_CPU_THIS_PTR the_i387.fdp & 0xffffffff));
-      write_virtual_dword(i->seg(), eaddr + 20, 
-            (Bit32u)(BX_CPU_THIS_PTR the_i387.fds));
+      write_virtual_dword(i->seg(), eaddr + 16, (Bit32u) BX_CPU_THIS_PTR the_i387.fdp);
+      write_virtual_dword(i->seg(), eaddr + 20, (Bit32u) BX_CPU_THIS_PTR the_i387.fds);
     }
     /* do not touch MXCSR state */
 
@@ -213,7 +211,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
 #endif
       {
         BX_CPU_THIS_PTR the_i387.fip = xmm.xmm32u(2);
-        BX_CPU_THIS_PTR the_i387.fcs = xmm.xmm16u(5);
+        BX_CPU_THIS_PTR the_i387.fcs = xmm.xmm16u(6);
       }
 
       Bit32u tag_byte = xmm.xmmubyte(4);

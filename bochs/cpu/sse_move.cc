@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_move.cc,v 1.94 2008-08-08 09:22:48 sshwarts Exp $
+// $Id: sse_move.cc,v 1.95 2008-08-16 12:19:30 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -199,7 +199,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FXSAVE(bxInstruction_c *i)
   else
 #endif
   {
-    xmm.xmm32u(2) = (Bit32u)(BX_CPU_THIS_PTR the_i387.fip) & 0xffffffff;
+    xmm.xmm32u(2) = (Bit32u)(BX_CPU_THIS_PTR the_i387.fip);
     xmm.xmm32u(3) =         (BX_CPU_THIS_PTR the_i387.fcs);
   }
 
@@ -225,7 +225,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FXSAVE(bxInstruction_c *i)
   else
 #endif
   {
-    xmm.xmm32u(0) = (Bit32u)(BX_CPU_THIS_PTR the_i387.fdp) & 0xffffffff;
+    xmm.xmm32u(0) = (Bit32u)(BX_CPU_THIS_PTR the_i387.fdp);
     xmm.xmm32u(1) =         (BX_CPU_THIS_PTR the_i387.fds);
   }
 
@@ -314,7 +314,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FXRSTOR(bxInstruction_c *i)
 #endif
   {
     BX_CPU_THIS_PTR the_i387.fip = xmm.xmm32u(2);
-    BX_CPU_THIS_PTR the_i387.fcs = xmm.xmm16u(5);
+    BX_CPU_THIS_PTR the_i387.fcs = xmm.xmm16u(6);
   }
 
   Bit32u tag_byte = xmm.xmmubyte(4);
