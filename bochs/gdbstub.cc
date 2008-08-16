@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gdbstub.cc,v 1.32 2008-02-15 19:03:53 sshwarts Exp $
+// $Id: gdbstub.cc,v 1.33 2008-08-16 12:29:30 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2006  The Bochs Project Team
@@ -100,7 +100,7 @@ static void put_reply(char* buffer)
   unsigned char csum;
   int i;
 
-  BX_DEBUG (("put_buffer %s", buffer));
+  BX_DEBUG(("put_buffer '%s'", buffer));
 
   do {
     put_debug_char('$');
@@ -182,31 +182,25 @@ static void get_command(char* buffer)
 
 void hex2mem(char* buf, unsigned char* mem, int count)
 {
-  int i;
   unsigned char ch;
 
-  for (i = 0; i<count; i++)
+  for (int i = 0; i<count; i++)
   {
     ch = hex(*buf++) << 4;
     ch = ch + hex(*buf++);
-    *mem = ch;
-    mem++;
+    *mem++ = ch;
   }
 }
 
 char* mem2hex(char* mem, char* buf, int count)
 {
-  int i;
   unsigned char ch;
 
-  for (i = 0; i<count; i++)
+  for (int i = 0; i<count; i++)
   {
-    ch = *mem;
-    mem++;
-    *buf = hexchars[ch >> 4];
-    buf++;
-    *buf = hexchars[ch % 16];
-    buf++;
+    ch = *mem++;
+    *buf++ = hexchars[ch >> 4];
+    *buf++ = hexchars[ch % 16];
   }
   *buf = 0;
   return(buf);
@@ -439,15 +433,13 @@ static void debug_loop(void)
 {
   char buffer[255];
   char obuf[255];
-  int ne;
+  int ne = 0;
   unsigned char mem[255];
-
-  ne = 0;
 
   while (ne == 0)
   {
     get_command(buffer);
-    BX_DEBUG(("get_buffer %s", buffer));
+    BX_DEBUG(("get_buffer '%s'", buffer));
 
     switch (buffer[0])
     {
@@ -809,6 +801,10 @@ static void debug_loop(void)
                   SIM->get_param_num("data_base", gdbstub_list)->get(),
                   SIM->get_param_num("bss_base", gdbstub_list)->get());
           put_reply(obuf);
+        }
+        else if (strncmp(&buffer[1], "Supported", strlen("Supported")) == 0)
+        {
+          put_reply("");
         }
         else
         {
