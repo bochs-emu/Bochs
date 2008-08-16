@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.177 2008-08-13 21:51:54 sshwarts Exp $
+// $Id: init.cc,v 1.178 2008-08-16 21:06:56 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -378,7 +378,6 @@ void BX_CPU_C::register_state(void)
     BXRS_PARAM_BOOL(sreg, avl, segment->cache.u.segment.avl);
   }
 
-#if BX_CPU_LEVEL >= 2
   bx_list_c *GDTR = new bx_list_c(cpu, "GDTR", 2);
   BXRS_HEX_PARAM_FIELD(GDTR, base, gdtr.base);
   BXRS_HEX_PARAM_FIELD(GDTR, limit, gdtr.limit);
@@ -386,7 +385,6 @@ void BX_CPU_C::register_state(void)
   bx_list_c *IDTR = new bx_list_c(cpu, "IDTR", 2);
   BXRS_HEX_PARAM_FIELD(IDTR, base, idtr.base);
   BXRS_HEX_PARAM_FIELD(IDTR, limit, idtr.limit);
-#endif
 
   bx_list_c *LDTR = new bx_list_c(cpu, "LDTR", 7);
   BXRS_PARAM_SPECIAL16(LDTR, selector, param_save_handler, param_restore_handler);
@@ -731,7 +729,6 @@ void BX_CPU_C::reset(unsigned source)
   parse_selector(0xf000,
           &BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector);
 
-#if BX_CPU_LEVEL >= 2
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.valid    = 1;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.p        = 1;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.dpl      = 0;
@@ -741,7 +738,7 @@ void BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.base         = 0xFFFF0000;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit        = 0xFFFF;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled = 0xFFFF;
-#endif
+
 #if BX_CPU_LEVEL >= 3
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.g   = 0; /* byte granular */
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b = 0; /* 16bit default size */
@@ -760,7 +757,6 @@ void BX_CPU_C::reset(unsigned source)
   parse_selector(0x0000,
           &BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector);
 
-#if BX_CPU_LEVEL >= 2
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.valid    = 1;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.p        = 1;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.dpl      = 0;
@@ -770,7 +766,6 @@ void BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.u.segment.base         = 0x00000000;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.u.segment.limit        = 0xFFFF;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.u.segment.limit_scaled = 0xFFFF;
-#endif
 #if BX_CPU_LEVEL >= 3
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.u.segment.avl = 0;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.u.segment.g   = 0; /* byte granular */
@@ -788,7 +783,6 @@ void BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS] = BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS];
 #endif
 
-#if BX_CPU_LEVEL >= 2
   /* GDTR (Global Descriptor Table Register) */
   BX_CPU_THIS_PTR gdtr.base  = 0x00000000;
   BX_CPU_THIS_PTR gdtr.limit =     0xFFFF;
@@ -833,7 +827,6 @@ void BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR tr.cache.u.system.limit_scaled =     0xFFFF;
   BX_CPU_THIS_PTR tr.cache.u.system.avl = 0;
   BX_CPU_THIS_PTR tr.cache.u.system.g   = 0;  /* byte granular */
-#endif
 #endif
 
   // DR0 - DR7 (Debug Registers)

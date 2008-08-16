@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: segment_ctrl_pro.cc,v 1.98 2008-08-15 17:39:22 sshwarts Exp $
+// $Id: segment_ctrl_pro.cc,v 1.99 2008-08-16 21:06:56 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -310,7 +310,6 @@ void BX_CPU_C::validate_seg_regs(void)
   validate_seg_reg(BX_SEG_REG_GS);
 }
 
-#if BX_CPU_LEVEL >= 2
   void BX_CPP_AttrRegparmN(2)
 BX_CPU_C::parse_selector(Bit16u raw_selector, bx_selector_t *selector)
 {
@@ -319,7 +318,6 @@ BX_CPU_C::parse_selector(Bit16u raw_selector, bx_selector_t *selector)
   selector->ti    = (raw_selector >> 2) & 0x01;
   selector->rpl   = raw_selector & 0x03;
 }
-#endif
 
   Bit8u  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::ar_byte(const bx_descriptor_t *d)
@@ -651,7 +649,6 @@ BX_CPU_C::load_ss(bx_selector_t *selector, bx_descriptor_t *descriptor, Bit8u cp
     BX_PANIC(("load_ss(): invalid selector/descriptor passed."));
 }
 
-#if BX_CPU_LEVEL >= 2
 void BX_CPU_C::fetch_raw_descriptor(const bx_selector_t *selector,
                         Bit32u *dword1, Bit32u *dword2, unsigned exception_no)
 {
@@ -757,6 +754,4 @@ void BX_CPU_C::fetch_raw_descriptor_64(const bx_selector_t *selector,
   *dword2 = GET32H(raw_descriptor1);
   *dword3 = GET32L(raw_descriptor2);
 }
-#endif
-
 #endif

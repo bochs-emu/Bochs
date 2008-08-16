@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.509 2008-08-16 15:35:35 sshwarts Exp $
+// $Id: cpu.h,v 1.510 2008-08-16 21:06:56 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -419,24 +419,28 @@ BOCHSAPI extern BX_CPU_C   bx_cpu;
 // The macro is used once for each flag bit
 // Do not use for arithmetic flags !
 #define DECLARE_EFLAG_ACCESSOR(name,bitnum)                     \
-  BX_SMF BX_CPP_INLINE void    assert_##name ();                \
-  BX_SMF BX_CPP_INLINE void    clear_##name ();                 \
   BX_SMF BX_CPP_INLINE Bit32u  get_##name ();                   \
-  BX_SMF BX_CPP_INLINE bx_bool getB_##name ();                  \
-  BX_SMF BX_CPP_INLINE void    set_##name (bx_bool val);        \
+  BX_SMF BX_CPP_INLINE bx_bool getB_##name ();
+
+#define DECLARE_EFLAG_SET_ACCESSOR(name,bitnum)                 \
+  BX_SMF BX_CPP_INLINE void assert_##name ();                   \
+  BX_SMF BX_CPP_INLINE void clear_##name ();                    \
+  BX_SMF BX_CPP_INLINE void set_##name (bx_bool val);
 
 #define IMPLEMENT_EFLAG_ACCESSOR(name,bitnum)                   \
-  BX_CPP_INLINE void BX_CPU_C::assert_##name () {               \
-    BX_CPU_THIS_PTR eflags |= (1<<bitnum);                      \
-  }                                                             \
-  BX_CPP_INLINE void BX_CPU_C::clear_##name () {                \
-    BX_CPU_THIS_PTR eflags &= ~(1<<bitnum);                     \
-  }                                                             \
   BX_CPP_INLINE bx_bool BX_CPU_C::getB_##name () {              \
     return 1 & (BX_CPU_THIS_PTR eflags >> bitnum);              \
   }                                                             \
   BX_CPP_INLINE Bit32u  BX_CPU_C::get_##name () {               \
     return BX_CPU_THIS_PTR eflags & (1 << bitnum);              \
+  }
+
+#define IMPLEMENT_EFLAG_SET_ACCESSOR(name,bitnum)               \
+  BX_CPP_INLINE void BX_CPU_C::assert_##name () {               \
+    BX_CPU_THIS_PTR eflags |= (1<<bitnum);                      \
+  }                                                             \
+  BX_CPP_INLINE void BX_CPU_C::clear_##name () {                \
+    BX_CPU_THIS_PTR eflags &= ~(1<<bitnum);                     \
   }                                                             \
   BX_CPP_INLINE void BX_CPU_C::set_##name (bx_bool val) {       \
     BX_CPU_THIS_PTR eflags =                                    \
@@ -445,22 +449,19 @@ BOCHSAPI extern BX_CPU_C   bx_cpu;
 
 #if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
 
-#define DECLARE_EFLAG_ACCESSOR_AC(bitnum)                       \
-  BX_SMF BX_CPP_INLINE void    clear_AC();                      \
-  BX_SMF BX_CPP_INLINE Bit32u  get_AC();                        \
-  BX_SMF BX_CPP_INLINE bx_bool getB_AC();                       \
-  BX_SMF BX_CPP_INLINE void    set_AC(bx_bool val);             \
+#define DECLARE_EFLAG_SET_ACCESSOR_AC(bitnum)                   \
+  BX_SMF BX_CPP_INLINE void assert_AC();                        \
+  BX_SMF BX_CPP_INLINE void clear_AC();                         \
+  BX_SMF BX_CPP_INLINE void set_AC(bx_bool val);
 
-#define IMPLEMENT_EFLAG_ACCESSOR_AC(bitnum)                     \
-  BX_CPP_INLINE void BX_CPU_C::clear_AC () {                    \
+#define IMPLEMENT_EFLAG_SET_ACCESSOR_AC(bitnum)                 \
+  BX_CPP_INLINE void BX_CPU_C::assert_AC () {                   \
+    BX_CPU_THIS_PTR eflags |= (1<<bitnum);                      \
+    handleAlignmentCheck();                                     \
+  }                                                             \
+  BX_CPP_INLINE void BX_CPU_C::clear_AC() {                     \
     BX_CPU_THIS_PTR eflags &= ~(1<<bitnum);                     \
     BX_CPU_THIS_PTR alignment_check_mask = LPF_MASK;            \
-  }                                                             \
-  BX_CPP_INLINE Bit32u BX_CPU_C::get_AC() {                     \
-    return BX_CPU_THIS_PTR eflags & (1 << bitnum);              \
-  }                                                             \
-  BX_CPP_INLINE bx_bool BX_CPU_C::getB_AC() {                   \
-    return 1 & (BX_CPU_THIS_PTR eflags >> bitnum);              \
   }                                                             \
   BX_CPP_INLINE void BX_CPU_C::set_AC(bx_bool val) {            \
     BX_CPU_THIS_PTR eflags =                                    \
@@ -470,20 +471,12 @@ BOCHSAPI extern BX_CPU_C   bx_cpu;
 
 #endif
 
-#define DECLARE_EFLAG_ACCESSOR_VM(bitnum)                       \
-  BX_SMF BX_CPP_INLINE void    assert_VM();                     \
-  BX_SMF BX_CPP_INLINE void    clear_VM();                      \
-  BX_SMF BX_CPP_INLINE Bit32u  get_VM();                        \
-  BX_SMF BX_CPP_INLINE bx_bool getB_VM();                       \
-  BX_SMF BX_CPP_INLINE void    set_VM(bx_bool val);
+#define DECLARE_EFLAG_SET_ACCESSOR_VM(bitnum)                   \
+  BX_SMF BX_CPP_INLINE void assert_VM();                        \
+  BX_SMF BX_CPP_INLINE void clear_VM();                         \
+  BX_SMF BX_CPP_INLINE void set_VM(bx_bool val);
 
-#define IMPLEMENT_EFLAG_ACCESSOR_VM(bitnum)                     \
-  BX_CPP_INLINE Bit32u  BX_CPU_C::get_VM() {                    \
-    return BX_CPU_THIS_PTR eflags & (1 << bitnum);              \
-  }                                                             \
-  BX_CPP_INLINE bx_bool BX_CPU_C::getB_VM() {                   \
-    return 1 & (BX_CPU_THIS_PTR eflags >> bitnum);              \
-  }                                                             \
+#define IMPLEMENT_EFLAG_SET_ACCESSOR_VM(bitnum)                 \
   BX_CPP_INLINE void BX_CPU_C::assert_VM() {                    \
     set_VM(1);                                                  \
   }                                                             \
@@ -496,6 +489,44 @@ BOCHSAPI extern BX_CPU_C   bx_cpu;
         (BX_CPU_THIS_PTR eflags&~(1<<bitnum))|((val)<<bitnum);  \
       handleCpuModeChange();                                    \
     }                                                           \
+  }
+
+#define DECLARE_EFLAG_SET_ACCESSOR_IF(bitnum)                   \
+  BX_SMF BX_CPP_INLINE void assert_IF();                        \
+  BX_SMF BX_CPP_INLINE void clear_IF();                         \
+  BX_SMF BX_CPP_INLINE void set_IF(bx_bool val);
+
+#define IMPLEMENT_EFLAG_SET_ACCESSOR_IF(bitnum)                 \
+  BX_CPP_INLINE void BX_CPU_C::assert_IF() {                    \
+    if (! BX_CPU_THIS_PTR get_IF())                             \
+      BX_CPU_THIS_PTR async_event = 1;                          \
+    BX_CPU_THIS_PTR eflags |= (1<<bitnum);                      \
+  }                                                             \
+  BX_CPP_INLINE void BX_CPU_C::clear_IF() {                     \
+    BX_CPU_THIS_PTR eflags &= ~(1<<bitnum);                     \
+  }                                                             \
+  BX_CPP_INLINE void BX_CPU_C::set_IF(bx_bool val) {            \
+    if (val) assert_IF();                                       \
+    else clear_IF();                                            \
+  }
+
+#define DECLARE_EFLAG_SET_ACCESSOR_TF(bitnum)                   \
+  BX_SMF BX_CPP_INLINE void assert_TF();                        \
+  BX_SMF BX_CPP_INLINE void clear_TF();                         \
+  BX_SMF BX_CPP_INLINE void set_TF(bx_bool val);
+
+#define IMPLEMENT_EFLAG_SET_ACCESSOR_TF(bitnum)                 \
+  BX_CPP_INLINE void BX_CPU_C::assert_TF() {                    \
+    BX_CPU_THIS_PTR eflags |= (1<<bitnum);                      \
+    BX_CPU_THIS_PTR async_event = 1;                            \
+  }                                                             \
+  BX_CPP_INLINE void BX_CPU_C::clear_TF() {                     \
+    BX_CPU_THIS_PTR eflags &= ~(1<<bitnum);                     \
+  }                                                             \
+  BX_CPP_INLINE void BX_CPU_C::set_TF(bx_bool val) {            \
+    if (val) BX_CPU_THIS_PTR async_event = 1;                   \
+    BX_CPU_THIS_PTR eflags =                                    \
+      (BX_CPU_THIS_PTR eflags&~(1<<bitnum))|((val)<<bitnum);    \
   }
 
 #define DECLARE_EFLAG_ACCESSOR_IOPL(bitnum)                     \
@@ -794,10 +825,8 @@ public: // for now...
   bx_segment_reg_t  sregs[6];
 
   /* system segment registers */
-#if BX_CPU_LEVEL >= 2
   bx_global_segment_reg_t gdtr; /* global descriptor table register */
   bx_global_segment_reg_t idtr; /* interrupt descriptor table register */
-#endif
   bx_segment_reg_t        ldtr; /* local descriptor table register */
   bx_segment_reg_t        tr;   /* task register */
 
@@ -811,7 +840,6 @@ public: // for now...
   /* TR3 - TR7 (Test Register 3-7), unimplemented */
 
   /* Control registers */
-#if BX_CPU_LEVEL >= 2
   bx_cr0_t       cr0;
   Bit32u         cr1;
   bx_address     cr2;
@@ -819,7 +847,6 @@ public: // for now...
   bx_phy_address cr3_masked;
 #if BX_CPU_LEVEL >= 4
   bx_cr4_t       cr4;
-#endif
 #endif
 
 #if BX_SUPPORT_X86_64
@@ -3176,18 +3203,29 @@ public: // for now...
   DECLARE_EFLAG_ACCESSOR   (ID,  21)
   DECLARE_EFLAG_ACCESSOR   (VIP, 20)
   DECLARE_EFLAG_ACCESSOR   (VIF, 19)
-#if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
-  DECLARE_EFLAG_ACCESSOR_AC(     18)
-#else
   DECLARE_EFLAG_ACCESSOR   (AC,  18)
-#endif
-  DECLARE_EFLAG_ACCESSOR_VM(     17)
+  DECLARE_EFLAG_ACCESSOR   (VM,  17)
   DECLARE_EFLAG_ACCESSOR   (RF,  16)
   DECLARE_EFLAG_ACCESSOR   (NT,  14)
   DECLARE_EFLAG_ACCESSOR_IOPL(   12)
   DECLARE_EFLAG_ACCESSOR   (DF,  10)
   DECLARE_EFLAG_ACCESSOR   (IF,   9)
   DECLARE_EFLAG_ACCESSOR   (TF,   8)
+
+  DECLARE_EFLAG_SET_ACCESSOR   (ID,  21)
+  DECLARE_EFLAG_SET_ACCESSOR   (VIP, 20)
+  DECLARE_EFLAG_SET_ACCESSOR   (VIF, 19)
+#if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
+  DECLARE_EFLAG_SET_ACCESSOR_AC(     18)
+#else
+  DECLARE_EFLAG_SET_ACCESSOR   (AC,  18)
+#endif
+  DECLARE_EFLAG_SET_ACCESSOR_VM(     17)
+  DECLARE_EFLAG_SET_ACCESSOR   (RF,  16)
+  DECLARE_EFLAG_SET_ACCESSOR   (NT,  14)
+  DECLARE_EFLAG_SET_ACCESSOR   (DF,  10)
+  DECLARE_EFLAG_SET_ACCESSOR_IF(      9)
+  DECLARE_EFLAG_SET_ACCESSOR_TF(      8)
 
   BX_SMF BX_CPP_INLINE bx_bool real_mode(void);
   BX_SMF BX_CPP_INLINE bx_bool smm_mode(void);
@@ -3628,18 +3666,29 @@ BX_CPP_INLINE bx_bool BX_CPU_C::get_PFLazy(void)
 IMPLEMENT_EFLAG_ACCESSOR   (ID,  21)
 IMPLEMENT_EFLAG_ACCESSOR   (VIP, 20)
 IMPLEMENT_EFLAG_ACCESSOR   (VIF, 19)
-#if BX_SUPPORT_ALIGNMENT_CHECK
-IMPLEMENT_EFLAG_ACCESSOR_AC(     18)
-#else
 IMPLEMENT_EFLAG_ACCESSOR   (AC,  18)
-#endif
-IMPLEMENT_EFLAG_ACCESSOR_VM(     17)
+IMPLEMENT_EFLAG_ACCESSOR   (VM,  17)
 IMPLEMENT_EFLAG_ACCESSOR   (RF,  16)
 IMPLEMENT_EFLAG_ACCESSOR   (NT,  14)
 IMPLEMENT_EFLAG_ACCESSOR_IOPL(   12)
 IMPLEMENT_EFLAG_ACCESSOR   (DF,  10)
 IMPLEMENT_EFLAG_ACCESSOR   (IF,   9)
 IMPLEMENT_EFLAG_ACCESSOR   (TF,   8)
+
+IMPLEMENT_EFLAG_SET_ACCESSOR   (ID,  21)
+IMPLEMENT_EFLAG_SET_ACCESSOR   (VIP, 20)
+IMPLEMENT_EFLAG_SET_ACCESSOR   (VIF, 19)
+#if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
+IMPLEMENT_EFLAG_SET_ACCESSOR_AC(     18)
+#else
+IMPLEMENT_EFLAG_SET_ACCESSOR   (AC,  18)
+#endif
+IMPLEMENT_EFLAG_SET_ACCESSOR_VM(     17)
+IMPLEMENT_EFLAG_SET_ACCESSOR   (RF,  16)
+IMPLEMENT_EFLAG_SET_ACCESSOR   (NT,  14)
+IMPLEMENT_EFLAG_SET_ACCESSOR   (DF,  10)
+IMPLEMENT_EFLAG_SET_ACCESSOR_IF(      9)
+IMPLEMENT_EFLAG_SET_ACCESSOR_TF(      8)
 
 #define BX_TASK_FROM_JUMP         10
 #define BX_TASK_FROM_CALL_OR_INT  11
