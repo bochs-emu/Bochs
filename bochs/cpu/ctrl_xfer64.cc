@@ -1,5 +1,5 @@
 ////////c/////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer64.cc,v 1.72 2008-08-10 19:34:28 sshwarts Exp $
+// $Id: ctrl_xfer64.cc,v 1.73 2008-08-16 15:32:44 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -139,14 +139,20 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CALL_Jq(bxInstruction_c *i)
   BX_CPU_THIS_PTR show_flag |= Flag_call;
 #endif
 
+  BX_CPU_THIS_PTR speculative_rsp = 1;
+  BX_CPU_THIS_PTR prev_rsp = RSP;
+
+  /* push 64 bit EA of next instruction */
+  push_64(RIP);
+
   if (! IsCanonical(new_RIP)) {
     BX_ERROR(("CALL_Jq: canonical RIP violation"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
-  /* push 64 bit EA of next instruction */
-  push_64(RIP);
   RIP = new_RIP;
+
+  BX_CPU_THIS_PTR speculative_rsp = 0;
 
   BX_INSTR_UCNEAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_CALL, RIP);
 }
@@ -157,16 +163,23 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CALL_EqR(bxInstruction_c *i)
   BX_CPU_THIS_PTR show_flag |= Flag_call;
 #endif
 
-  Bit64u op1_64 = BX_READ_64BIT_REG(i->rm());
+  Bit64u new_RIP = BX_READ_64BIT_REG(i->rm());
 
-  if (! IsCanonical(op1_64))
+  BX_CPU_THIS_PTR speculative_rsp = 1;
+  BX_CPU_THIS_PTR prev_rsp = RSP;
+
+  /* push 64 bit EA of next instruction */
+  push_64(RIP);
+
+  if (! IsCanonical(new_RIP))
   {
     BX_ERROR(("CALL_Eq: canonical RIP violation"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
-  push_64(RIP);
-  RIP = op1_64;
+  RIP = new_RIP;
+
+  BX_CPU_THIS_PTR speculative_rsp = 0;
 
   BX_INSTR_UCNEAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_CALL, RIP);
 }

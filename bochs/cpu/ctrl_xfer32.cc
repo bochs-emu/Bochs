@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer32.cc,v 1.77 2008-08-10 19:34:28 sshwarts Exp $
+// $Id: ctrl_xfer32.cc,v 1.78 2008-08-16 15:32:44 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -196,14 +196,15 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CALL_Jd(bxInstruction_c *i)
 
   Bit32u new_EIP = EIP + i->Id();
 
-  if (new_EIP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled) {
-    BX_ERROR(("CALL_Jd: offset outside of CS limits"));
-    exception(BX_GP_EXCEPTION, 0, 0);
-  }
+  BX_CPU_THIS_PTR speculative_rsp = 1;
+  BX_CPU_THIS_PTR prev_rsp = RSP;
 
   /* push 32 bit EA of next instruction */
   push_32(EIP);
-  RIP = new_EIP;
+
+  branch_near32(new_EIP);
+
+  BX_CPU_THIS_PTR speculative_rsp = 0;
 
   BX_INSTR_UCNEAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_CALL, EIP);
 }
@@ -255,16 +256,17 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CALL_EdR(bxInstruction_c *i)
   BX_CPU_THIS_PTR show_flag |= Flag_call;
 #endif
 
-  Bit32u op1_32 = BX_READ_32BIT_REG(i->rm());
+  Bit32u new_EIP = BX_READ_32BIT_REG(i->rm());
 
-  if (op1_32 > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled)
-  {
-    BX_ERROR(("CALL_Ed: EIP out of CS limits!"));
-    exception(BX_GP_EXCEPTION, 0, 0);
-  }
+  BX_CPU_THIS_PTR speculative_rsp = 1;
+  BX_CPU_THIS_PTR prev_rsp = RSP;
 
+  /* push 32 bit EA of next instruction */
   push_32(EIP);
-  RIP = op1_32;
+
+  branch_near32(new_EIP);
+
+  BX_CPU_THIS_PTR speculative_rsp = 0;
 
   BX_INSTR_UCNEAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_CALL, EIP);
 }

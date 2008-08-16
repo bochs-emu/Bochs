@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer16.cc,v 1.60 2008-08-10 19:34:28 sshwarts Exp $
+// $Id: ctrl_xfer16.cc,v 1.61 2008-08-16 15:32:44 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -197,17 +197,16 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CALL_Jw(bxInstruction_c *i)
   BX_CPU_THIS_PTR show_flag |= Flag_call;
 #endif
 
-  Bit16u new_IP = (Bit16u)(IP + (Bit32s) i->Id());
-
-  if (new_IP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled)
-  {
-    BX_ERROR(("CALL_Jw: IP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].limit"));
-    exception(BX_GP_EXCEPTION, 0, 0);
-  }
+  BX_CPU_THIS_PTR speculative_rsp = 1;
+  BX_CPU_THIS_PTR prev_rsp = RSP;
 
   /* push 16 bit EA of next instruction */
   push_16(IP);
-  RIP = new_IP;
+
+  Bit16u new_IP = (Bit16u)(IP + (Bit32s) i->Id());
+  branch_near16(new_IP);
+
+  BX_CPU_THIS_PTR speculative_rsp = 0;
 
   BX_INSTR_UCNEAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_CALL, EIP);
 }
@@ -253,20 +252,21 @@ done:
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::CALL_EwR(bxInstruction_c *i)
 {
-  Bit16u op1_16 = BX_READ_16BIT_REG(i->rm());
+  Bit16u new_IP = BX_READ_16BIT_REG(i->rm());
 
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR show_flag |= Flag_call;
 #endif
 
-  if (op1_16 > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled)
-  {
-    BX_ERROR(("CALL_Ew: IP out of CS limits!"));
-    exception(BX_GP_EXCEPTION, 0, 0);
-  }
+  BX_CPU_THIS_PTR speculative_rsp = 1;
+  BX_CPU_THIS_PTR prev_rsp = RSP;
 
+  /* push 16 bit EA of next instruction */
   push_16(IP);
-  RIP = op1_16;
+
+  branch_near16(new_IP);
+
+  BX_CPU_THIS_PTR speculative_rsp = 0;
 
   BX_INSTR_UCNEAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_CALL, EIP);
 }
