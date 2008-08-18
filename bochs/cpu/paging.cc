@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.154 2008-08-16 15:35:35 sshwarts Exp $
+// $Id: paging.cc,v 1.155 2008-08-18 05:20:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -938,6 +938,8 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned curr_pl, un
   bx_phy_address paddress, ppf, poffset = PAGE_OFFSET(laddr);
   bx_bool isWrite = (rw >= BX_WRITE); // write or r-m-w
   unsigned pl = (curr_pl == 3);
+
+  BX_ASSERT(BX_CPU_THIS_PTR cr0.get_PG());
 
   InstrTLB_Increment(tlbLookups);
   InstrTLB_Stats();

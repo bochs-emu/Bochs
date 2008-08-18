@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.237 2008-08-14 22:26:14 sshwarts Exp $
+// $Id: cpu.cc,v 1.238 2008-08-18 05:20:22 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -610,8 +610,7 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
 
 void BX_CPU_C::prefetch(void)
 {
-  bx_address temp_rip = RIP;
-  bx_address laddr = BX_CPU_THIS_PTR get_laddr(BX_SEG_REG_CS, temp_rip);
+  bx_address laddr = BX_CPU_THIS_PTR get_laddr(BX_SEG_REG_CS, RIP);
   bx_phy_address pAddr;
   unsigned pageOffset = PAGE_OFFSET(laddr);
 
@@ -630,8 +629,8 @@ void BX_CPU_C::prefetch(void)
 #endif
   {
     Bit32u temp_limit = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled;
-    if (((Bit32u) temp_rip) > temp_limit) {
-      BX_ERROR(("prefetch: EIP [%08x] > CS.limit [%08x]", (Bit32u) temp_rip, temp_limit));
+    if (EIP > temp_limit) {
+      BX_ERROR(("prefetch: EIP [%08x] > CS.limit [%08x]", EIP, temp_limit));
       exception(BX_GP_EXCEPTION, 0, 0);
     }
     if (temp_limit + BX_CPU_THIS_PTR eipPageBias < 4096) {
