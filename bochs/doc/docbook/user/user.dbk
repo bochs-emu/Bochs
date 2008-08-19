@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.244 2008-07-19 12:01:54 vruppert Exp $
+$Id: user.dbk,v 1.245 2008-08-19 16:43:06 sshwarts Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -3070,6 +3070,16 @@ binary compiled with SMP support.
 Reset the CPU when triple fault occur (highly recommended) rather than PANIC.
 Remember that if you are trying to continue after triple fault the simulation
 will be completely bogus !
+</para>
+<para><command>vendor_string</command></para>
+<para>
+Set the CPUID vendor string returned by CPUID(0x0).  This should be a
+twelve-character ASCII string. 
+</para>
+<para><command>brand_string</command></para>
+<para>
+Set the CPUID brand string returned by CPUID(0x80000002 .. 0x80000004]).  This should be 
+at most a forty-eight-character ASCII string.  
 </para>
 <para><command>ips</command></para>
 <para>

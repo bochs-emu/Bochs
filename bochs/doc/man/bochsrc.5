@@ -137,6 +137,16 @@ Reset the CPU when triple fault occur (highly recommended) rather than
 PANIC. Remember that if you trying to continue after triple fault the
 simulation will be completely bogus !
 
+vendor_string:
+
+Set the CPUID vendor string returned by CPUID(0x0).  This should be a
+twelve-character ASCII string.  
+
+brand_string:
+
+Set the CPUID vendor string returned by CPUID(0x80000002 .. 0x80000004).  
+This should be at most a forty-eight-character ASCII string.  
+
 ips:
 
 Emulated Instructions Per Second.  This is the

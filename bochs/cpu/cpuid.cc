@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpuid.cc,v 1.71 2008-08-11 18:53:23 sshwarts Exp $
+// $Id: cpuid.cc,v 1.72 2008-08-19 16:43:06 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007 Stanislav Shwartsman
@@ -32,12 +32,6 @@
 #define RBX EBX
 #define RCX ECX
 #define RDX EDX
-#endif
-
-#if BX_SUPPORT_3DNOW
-  #define BX_CPU_VENDOR_INTEL 0
-#else
-  #define BX_CPU_VENDOR_INTEL 1
 #endif
 
 /* Get CPU version information. */
@@ -331,6 +325,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CPUID(bxInstruction_c *i)
 
 void BX_CPU_C::set_cpuid_defaults(void)
 {
+  Bit8u *vendor_string = (Bit8u *)SIM->get_param_string(BXPN_VENDOR_STRING)->getptr();
+  Bit8u *brand_string = (Bit8u *)SIM->get_param_string(BXPN_BRAND_STRING)->getptr();
+
   cpuid_function_t *cpuid;
   int i;
 
@@ -369,15 +366,10 @@ void BX_CPU_C::set_cpuid_defaults(void)
     cpuid->eax = 0xD;
 #endif
 
-#if BX_CPU_VENDOR_INTEL
-  cpuid->ebx = 0x756e6547; // "Genu"
-  cpuid->edx = 0x49656e69; // "ineI"
-  cpuid->ecx = 0x6c65746e; // "ntel"
-#else
-  cpuid->ebx = 0x68747541; // "Auth"
-  cpuid->edx = 0x69746e65; // "enti"
-  cpuid->ecx = 0x444d4163; // "cAMD"
-#endif
+  // CPUID vendor string (e.g. GenuineIntel, AuthenticAMD, CentaurHauls, ...)
+  memcpy(&(cpuid->ebx), vendor_string    , 4);
+  memcpy(&(cpuid->edx), vendor_string + 4, 4);
+  memcpy(&(cpuid->ecx), vendor_string + 8, 4);
 
   // ------------------------------------------------------
   // CPUID function 0x00000001
@@ -561,9 +553,9 @@ void BX_CPU_C::set_cpuid_defaults(void)
   cpuid->edx = 0;          // Reserved for Intel
   cpuid->ecx = 0;
 #else
-  cpuid->ebx = 0x68747541; // "Auth"
-  cpuid->edx = 0x69746e65; // "enti"
-  cpuid->ecx = 0x444d4163; // "cAMD"
+  memcpy(&(cpuid->ebx), vendor_string    , 4);
+  memcpy(&(cpuid->edx), vendor_string + 4, 4);
+  memcpy(&(cpuid->ecx), vendor_string + 8, 4);
 #endif
 
   // ------------------------------------------------------
@@ -640,60 +632,32 @@ void BX_CPU_C::set_cpuid_defaults(void)
 #endif
   cpuid->edx = features;
 
-#if BX_CPU_VENDOR_INTEL
   // Processor Brand String, use the value that is returned
   // by the first processor in the Pentium 4 family
-  // (according to Intel manual)
+  // (according to Intel manual or the AMD manual)
 
   // ------------------------------------------------------
   // CPUID function 0x80000002
+
   cpuid = &(BX_CPU_THIS_PTR cpuid_ext_function[2]);
-  cpuid->eax = 0x20202020; // "    "
-  cpuid->ebx = 0x20202020; // "    "
-  cpuid->ecx = 0x20202020; // "    "
-  cpuid->edx = 0x6E492020; // "  In"
+  memcpy(&(cpuid->eax), brand_string     , 4);
+  memcpy(&(cpuid->ebx), brand_string +  4, 4);
+  memcpy(&(cpuid->ecx), brand_string +  8, 4);
+  memcpy(&(cpuid->edx), brand_string + 12, 4);
 
   // CPUID function 0x80000003
   cpuid = &(BX_CPU_THIS_PTR cpuid_ext_function[3]);
-  cpuid->eax = 0x286C6574; // "tel("
-  cpuid->ebx = 0x50202952; // "R) P"
-  cpuid->ecx = 0x69746E65; // "enti"
-  cpuid->edx = 0x52286D75; // "um(R"
+  memcpy(&(cpuid->eax), brand_string + 16, 4);
+  memcpy(&(cpuid->ebx), brand_string + 20, 4);
+  memcpy(&(cpuid->ecx), brand_string + 24, 4);
+  memcpy(&(cpuid->edx), brand_string + 28, 4);
 
   // CPUID function 0x80000004
   cpuid = &(BX_CPU_THIS_PTR cpuid_ext_function[4]);
-  cpuid->eax = 0x20342029; // ") 4 "
-  cpuid->ebx = 0x20555043; // "CPU "
-  cpuid->ecx = 0x20202020; // "    "
-  cpuid->edx = 0x00202020; // "    "
-#else
-  // Processor Brand String, use the value given
-  // in AMD manuals.
-
-  // ------------------------------------------------------
-  // CPUID function 0x80000002
-  cpuid = &(BX_CPU_THIS_PTR cpuid_ext_function[2]);
-  cpuid->eax = 0x20444D41; // "AMD "
-  cpuid->ebx = 0x6C687441; // "Athl"
-  cpuid->ecx = 0x74286E6F; // "on(t"
-  cpuid->edx = 0x7020296D; // "m) p"
-
-  // ------------------------------------------------------
-  // CPUID function 0x80000003
-  cpuid = &(BX_CPU_THIS_PTR cpuid_ext_function[3]);
-  cpuid->eax = 0x65636F72; // "roce"
-  cpuid->ebx = 0x726F7373; // "ssor"
-  cpuid->ecx = 0x00000000;
-  cpuid->edx = 0x00000000;
-
-  // ------------------------------------------------------
-  // CPUID function 0x80000004
-  cpuid = &(BX_CPU_THIS_PTR cpuid_ext_function[4]);
-  cpuid->eax = 0x00000000;
-  cpuid->ebx = 0x00000000;
-  cpuid->ecx = 0x00000000;
-  cpuid->edx = 0x00000000;
-#endif
+  memcpy(&(cpuid->eax), brand_string + 32, 4);
+  memcpy(&(cpuid->ebx), brand_string + 36, 4);
+  memcpy(&(cpuid->ecx), brand_string + 40, 4);
+  memcpy(&(cpuid->edx), brand_string + 44, 4);
 
 #if BX_SUPPORT_X86_64
   // ------------------------------------------------------

@@ -737,6 +737,16 @@ typedef
 #error Trace cache optimization cannot be compiled without iCache!
 #endif
 
+#if BX_SUPPORT_3DNOW
+  #define BX_CPU_VENDOR_INTEL 0
+#else
+  #define BX_CPU_VENDOR_INTEL 1
+#endif
+
+// Maximum CPUID vendor and brand string lengths
+#define BX_CPUID_VENDOR_LEN 12
+#define BX_CPUID_BRAND_LEN  48
+
 // if 1, don't do gpf on MSRs that we don't implement
 #define BX_IGNORE_BAD_MSR 0
 

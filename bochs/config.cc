@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.136 2008-07-27 08:06:21 vruppert Exp $
+// $Id: config.cc,v 1.137 2008-08-19 16:43:05 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -418,7 +418,7 @@ void bx_init_options()
 #endif
 
   // cpu subtree
-  bx_list_c *cpu_param = new bx_list_c(root_param, "cpu", "CPU Options");
+  bx_list_c *cpu_param = new bx_list_c(root_param, "cpu", "CPU Options", 8);
 
   // cpu options
   bx_param_num_c *nprocessors = new bx_param_num_c(cpu_param,
@@ -455,6 +455,27 @@ void bx_init_options()
       "reset_on_triple_fault", "Enable CPU reset on triple fault",
       "Enable CPU reset if triple fault occured (highly recommended)",
       1);
+  new bx_param_string_c(cpu_param,
+      "vendor_string",
+      "CPUID vendor string",
+      "Set the CPUID vendor string",
+#if BX_CPU_VENDOR_INTEL
+      "GenuineIntel", 
+#else
+      "AuthenticAMD", 
+#endif
+      BX_CPUID_VENDOR_LEN+1);
+  new bx_param_string_c(cpu_param,
+      "brand_string",
+      "CPUID brand string",
+      "Set the CPUID brand string",
+#if BX_CPU_VENDOR_INTEL
+      "              Intel(R) Pentium(R) 4 CPU        ", 
+#else
+      "AMD Athlon(tm) processor",
+#endif
+      BX_CPUID_BRAND_LEN+1);
+
   cpu_param->get_options()->set(menu->SHOW_PARENT);
 
   // memory subtree
@@ -2463,6 +2484,16 @@ static int parse_line_formatted(const char *context, int num_params, char *param
         } else {
           PARSE_ERR(("%s: cpu directive malformed.", context));
         }
+      } else if (!strncmp(params[i], "vendor_string=", 14)) {
+        if (strlen(&params[i][14]) != BX_CPUID_VENDOR_LEN) {
+          PARSE_ERR(("%s: cpu directive malformed.", context));
+        }
+        SIM->get_param_string(BXPN_VENDOR_STRING)->set(&params[i][14]);
+      } else if (!strncmp(params[i], "brand_string=", 13)) {
+        if (strlen(&params[i][13]) > BX_CPUID_BRAND_LEN) {
+          PARSE_ERR(("%s: cpu directive malformed.", context));
+        } 
+        SIM->get_param_string(BXPN_BRAND_STRING)->set(&params[i][13]);
       } else {
         PARSE_ERR(("%s: cpu directive malformed.", context));
       }
