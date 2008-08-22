@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial.cc,v 1.83 2008-06-18 16:33:44 sshwarts Exp $
+// $Id: serial.cc,v 1.84 2008-08-22 07:58:20 akrisak Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -1391,7 +1391,7 @@ bx_serial_c::rx_timer(void)
       (BX_SER_THIS s[port].fifo_cntl.enable)) {
     switch (BX_SER_THIS s[port].io_mode) {
       case BX_SER_MODE_SOCKET:
-#if defined(SERIAL_ENABLE)
+#if BX_HAVE_SELECT && defined(SERIAL_ENABLE)
         if (BX_SER_THIS s[port].line_status.rxdata_ready == 0) {
           tval.tv_sec  = 0;
           tval.tv_usec = 0;
