@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.210 2008-08-23 13:55:37 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.211 2008-08-23 22:34:17 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -3791,20 +3791,6 @@ modrm_done:
       case BxImmediate_BrOff8:
         if (ilen < remain) {
           i->modRMForm.Id = (Bit8s) (*iptr);
-          ilen++;
-        }
-        else {
-          return(0);
-        }
-        break;
-      case BxImmediate_IbIb:
-        if (ilen < remain) {
-          i->IxIxForm.Ib = *iptr++;
-          ilen++;
-        }
-        else return(0);
-        if (ilen < remain) {
-          i->IxIxForm.Ib2 = *iptr;
           ilen++;
         }
         else {
