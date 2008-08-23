@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.238 2008-08-18 05:20:22 sshwarts Exp $
+// $Id: cpu.cc,v 1.239 2008-08-23 22:27:57 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -743,7 +743,7 @@ void BX_CPU_C::boundaryFetch(const Bit8u *fetchPtr, unsigned remainingInPage, bx
   // again on the next instruction.  Perhaps we can optimize this to
   // eliminate the extra prefetch() since we do it above, but have to
   // think about repeated instructions, etc.
-  invalidate_prefetch_q();
+  // invalidate_prefetch_q();
 
   BX_INSTR_OPCODE(BX_CPU_ID, fetchBuffer, i->ilen(),
       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b, Is64BitMode());

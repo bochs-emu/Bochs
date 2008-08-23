@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.203 2008-08-23 13:55:36 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.204 2008-08-23 22:27:58 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -351,7 +351,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo32R[512*2] = {
   /* 97 /wr */ { 0, BX_IA_XCHG_RXAX },
   /* 98 /wr */ { 0, BX_IA_CBW },
   /* 99 /wr */ { 0, BX_IA_CWD },
-  /* 9A /wr */ { BxImmediate_IvIw | BxTraceEnd, BX_IA_CALL16_Ap },
+  /* 9A /wr */ { BxImmediate_IwIw | BxTraceEnd, BX_IA_CALL16_Ap },
   /* 9B /wr */ { 0, BX_IA_FWAIT },
   /* 9C /wr */ { 0, BX_IA_PUSHF_Fw },
   /* 9D /wr */ { 0, BX_IA_POPF_Fw },
@@ -442,7 +442,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo32R[512*2] = {
   /* E7 /wr */ { BxImmediate_Ib, BX_IA_OUT_IbAX },
   /* E8 /wr */ { BxImmediate_BrOff16 | BxTraceEnd, BX_IA_CALL_Jw },
   /* E9 /wr */ { BxImmediate_BrOff16 | BxTraceEnd, BX_IA_JMP_Jw },
-  /* EA /wr */ { BxImmediate_IvIw | BxTraceEnd, BX_IA_JMP_Ap },
+  /* EA /wr */ { BxImmediate_IwIw | BxTraceEnd, BX_IA_JMP_Ap },
   /* EB /wr */ { BxImmediate_BrOff8 | BxTraceEnd, BX_IA_JMP_Jw },
   /* EC /wr */ { 0, BX_IA_IN_ALDX },
   /* ED /wr */ { 0, BX_IA_IN_AXDX },
@@ -914,7 +914,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo32R[512*2] = {
   /* 97 /dr */ { 0, BX_IA_XCHG_ERXEAX },
   /* 98 /dr */ { 0, BX_IA_CWDE },
   /* 99 /dr */ { 0, BX_IA_CDQ },
-  /* 9A /dr */ { BxImmediate_IvIw | BxTraceEnd, BX_IA_CALL32_Ap },
+  /* 9A /dr */ { BxImmediate_IdIw | BxTraceEnd, BX_IA_CALL32_Ap },
   /* 9B /dr */ { 0, BX_IA_FWAIT },
   /* 9C /dr */ { 0, BX_IA_PUSHF_Fd },
   /* 9D /dr */ { 0, BX_IA_POPF_Fd },
@@ -1005,7 +1005,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo32R[512*2] = {
   /* E7 /dr */ { BxImmediate_Ib, BX_IA_OUT_IbEAX },
   /* E8 /dr */ { BxImmediate_BrOff32 | BxTraceEnd, BX_IA_CALL_Jd },
   /* E9 /dr */ { BxImmediate_BrOff32 | BxTraceEnd, BX_IA_JMP_Jd },
-  /* EA /dr */ { BxImmediate_IvIw | BxTraceEnd, BX_IA_JMP_Ap },
+  /* EA /dr */ { BxImmediate_IdIw | BxTraceEnd, BX_IA_JMP_Ap },
   /* EB /dr */ { BxImmediate_BrOff8 | BxTraceEnd, BX_IA_JMP_Jd },
   /* EC /dr */ { 0, BX_IA_IN_ALDX },
   /* ED /dr */ { 0, BX_IA_IN_EAXDX },
@@ -1484,7 +1484,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo32M[512*2] = {
   /* 97 /wm */ { 0, BX_IA_XCHG_RXAX },
   /* 98 /wm */ { 0, BX_IA_CBW },
   /* 99 /wm */ { 0, BX_IA_CWD },
-  /* 9A /wm */ { BxImmediate_IvIw | BxTraceEnd, BX_IA_CALL16_Ap },
+  /* 9A /wm */ { BxImmediate_IwIw | BxTraceEnd, BX_IA_CALL16_Ap },
   /* 9B /wm */ { 0, BX_IA_FWAIT },
   /* 9C /wm */ { 0, BX_IA_PUSHF_Fw },
   /* 9D /wm */ { 0, BX_IA_POPF_Fw },
@@ -1575,7 +1575,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo32M[512*2] = {
   /* E7 /wm */ { BxImmediate_Ib, BX_IA_OUT_IbAX },
   /* E8 /wm */ { BxImmediate_BrOff16 | BxTraceEnd, BX_IA_CALL_Jw },
   /* E9 /wm */ { BxImmediate_BrOff16 | BxTraceEnd, BX_IA_JMP_Jw },
-  /* EA /wm */ { BxImmediate_IvIw | BxTraceEnd, BX_IA_JMP_Ap },
+  /* EA /wm */ { BxImmediate_IwIw | BxTraceEnd, BX_IA_JMP_Ap },
   /* EB /wm */ { BxImmediate_BrOff8 | BxTraceEnd, BX_IA_JMP_Jw },
   /* EC /wm */ { 0, BX_IA_IN_ALDX },
   /* ED /wm */ { 0, BX_IA_IN_AXDX },
@@ -2047,7 +2047,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo32M[512*2] = {
   /* 97 /dm */ { 0, BX_IA_XCHG_ERXEAX },
   /* 98 /dm */ { 0, BX_IA_CWDE },
   /* 99 /dm */ { 0, BX_IA_CDQ },
-  /* 9A /dm */ { BxImmediate_IvIw | BxTraceEnd, BX_IA_CALL32_Ap },
+  /* 9A /dm */ { BxImmediate_IdIw | BxTraceEnd, BX_IA_CALL32_Ap },
   /* 9B /dm */ { 0, BX_IA_FWAIT },
   /* 9C /dm */ { 0, BX_IA_PUSHF_Fd },
   /* 9D /dm */ { 0, BX_IA_POPF_Fd },
@@ -2138,7 +2138,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo32M[512*2] = {
   /* E7 /dm */ { BxImmediate_Ib, BX_IA_OUT_IbEAX },
   /* E8 /dm */ { BxImmediate_BrOff32 | BxTraceEnd, BX_IA_CALL_Jd },
   /* E9 /dm */ { BxImmediate_BrOff32 | BxTraceEnd, BX_IA_JMP_Jd },
-  /* EA /dm */ { BxImmediate_IvIw | BxTraceEnd, BX_IA_JMP_Ap },
+  /* EA /dm */ { BxImmediate_IdIw | BxTraceEnd, BX_IA_JMP_Ap },
   /* EB /dm */ { BxImmediate_BrOff8 | BxTraceEnd, BX_IA_JMP_Jd },
   /* EC /dm */ { 0, BX_IA_IN_ALDX },
   /* ED /dm */ { 0, BX_IA_IN_EAXDX },
@@ -2874,36 +2874,15 @@ modrm_done:
           return(0);
         }
         break;
-      case BxImmediate_BrOff16:
-        if ((ilen+1) < remain) {
-          i->modRMForm.Id = (Bit16s) FetchWORD(iptr);
-          ilen += 2;
-        }
-        else {
-          return(0);
-        }
-        break;
-      case BxImmediate_IbIb:
-        if (ilen < remain) {
-          i->IxIxForm.Ib = *iptr++;
-          ilen++;
-        }
-        else return(0);
-        if (ilen < remain) {
-          i->IxIxForm.Ib2 = *iptr;
-          ilen++;
-        }
-        else {
-          return(0);
-        }
-        break;
       case BxImmediate_IwIb:
         if ((ilen+1) < remain) {
           i->IxIxForm.Iw = FetchWORD(iptr);
           iptr += 2;
           ilen += 2;
         }
-        else return(0);
+        else {
+          return(0);
+        }
         if (ilen < remain) {
           i->IxIxForm.Ib2 = *iptr;
           ilen++;
@@ -2912,24 +2891,32 @@ modrm_done:
           return(0);
         }
         break;
-      case BxImmediate_IvIw: // CALL_Ap
-        if (i->os32L()) {
-          if ((ilen+3) < remain) {
-            i->IxIxForm.Id = FetchDWORD(iptr);
-            iptr += 4;
-            ilen += 4;
-          }
-          else return(0);
+      case BxImmediate_IwIw: // CALL_Ap
+        if ((ilen+1) < remain) {
+          i->IxIxForm.Iw = FetchWORD(iptr);
+          iptr += 2;
+          ilen += 2;
         }
         else {
-          if ((ilen+1) < remain) {
-            i->IxIxForm.Iw = FetchWORD(iptr);
-            iptr += 2;
-            ilen += 2;
-          }
-          else return(0);
+          return(0);
         }
-        // Get Iw for BxImmediate_IvIw
+        if ((ilen+1) < remain) {
+          i->IxIxForm.Iw2 = FetchWORD(iptr);
+          ilen += 2;
+        }
+        else {
+          return(0);
+        }
+        break;
+      case BxImmediate_IdIw: // CALL_Ap
+        if ((ilen+3) < remain) {
+          i->IxIxForm.Id = FetchDWORD(iptr);
+          iptr += 4;
+          ilen += 4;
+        }
+        else {
+          return(0);
+        }
         if ((ilen+1) < remain) {
           i->IxIxForm.Iw2 = FetchWORD(iptr);
           ilen += 2;

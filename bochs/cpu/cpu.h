@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.511 2008-08-18 05:20:23 sshwarts Exp $
+// $Id: cpu.h,v 1.512 2008-08-23 22:27:57 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -3714,15 +3714,16 @@ IMPLEMENT_EFLAG_SET_ACCESSOR_TF(      8)
 #define BxImmediate_Iw      0x0004 // 16 bit
 #define BxImmediate_IbIb    0x0005 // SSE4A
 #define BxImmediate_IwIb    0x0006 // enter_IwIb
-#define BxImmediate_IvIw    0x0007 // call_Ap, not encodable in 64-bit mode
-#define BxImmediate_Id      0x0008 // 32 bit
-#define BxImmediate_O       0x0009 // MOV_ALOd, mov_OdAL, mov_eAXOv, mov_OveAX
-#define BxImmediate_BrOff8  0x000A // Relative branch offset byte
-#define BxImmediate_BrOff16 0x000B // Relative branch offset word, not encodable in 64-bit mode
+#define BxImmediate_IwIw    0x0007 // call_Ap, not encodable in 64-bit mode
+#define BxImmediate_IdIw    0x0008 // call_Ap, not encodable in 64-bit mode
+#define BxImmediate_Id      0x0009 // 32 bit
+#define BxImmediate_O       0x000A // MOV_ALOd, mov_OdAL, mov_eAXOv, mov_OveAX
+#define BxImmediate_BrOff8  0x000B // Relative branch offset byte
 #if BX_SUPPORT_X86_64
 #define BxImmediate_Iq      0x000C // 64 bit override
 #endif
 
+#define BxImmediate_BrOff16 BxImmediate_Iw // Relative branch offset word, not encodable in 64-bit mode
 #define BxImmediate_BrOff32 BxImmediate_Id // Relative branch offset dword
 
 // Lookup for opcode and attributes in another opcode tables
