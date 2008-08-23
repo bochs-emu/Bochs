@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.254 2008-08-15 10:59:31 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.255 2008-08-23 13:55:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -573,8 +573,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CdRd(bxInstruction_c *i)
    *   reg field specifies which special register
    */
 
-  invalidate_prefetch_q();
-
   /* This instruction is always treated as a register-to-register,
    * regardless of the encoding of the MOD field in the MODRM byte.
    */
@@ -681,8 +679,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CqRq(bxInstruction_c *i)
    */
   if (!i->modC0())
     BX_PANIC(("MOV_CqRq(): rm field not a register!"));
-
-  invalidate_prefetch_q();
 
   Bit64u val_64 = BX_READ_64BIT_REG(i->rm());
 
@@ -798,8 +794,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LMSW_Ew(bxInstruction_c *i)
     BX_ERROR(("LMSW: CPL!=0 not in real mode"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
-
-  invalidate_prefetch_q();
 
   if (i->modC0()) {
     msw = BX_READ_16BIT_REG(i->rm());

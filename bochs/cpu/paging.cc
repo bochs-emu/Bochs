@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.155 2008-08-18 05:20:23 sshwarts Exp $
+// $Id: paging.cc,v 1.156 2008-08-23 13:55:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -504,6 +504,8 @@ void BX_CPU_C::TLB_flush(void)
   InstrTLB_Increment(tlbGlobalFlushes);
 #endif
 
+  invalidate_prefetch_q();
+
   for (unsigned n=0; n<BX_TLB_SIZE; n++) {
     BX_CPU_THIS_PTR TLB.entry[n].lpf = BX_INVALID_TLB_ENTRY;
   }
@@ -527,6 +529,8 @@ void BX_CPU_C::TLB_flushNonGlobal(void)
   InstrTLB_Increment(tlbNonGlobalFlushes);
 #endif
 
+  invalidate_prefetch_q();
+
   for (unsigned n=0; n<BX_TLB_SIZE; n++) {
     bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[n];
     if (!(tlbEntry->accessBits & TLB_GlobalPage))
@@ -548,6 +552,8 @@ void BX_CPU_C::TLB_flushNonGlobal(void)
 
 void BX_CPU_C::TLB_invlpg(bx_address laddr)
 {
+  invalidate_prefetch_q();
+
   BX_DEBUG(("TLB_invlpg(0x"FMT_ADDRX"): invalidate TLB entry", laddr));
 
   unsigned TLB_index = BX_TLB_INDEX_OF(laddr, 0);
@@ -571,8 +577,6 @@ void BX_CPU_C::TLB_invlpg(bx_address laddr)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::INVLPG(bxInstruction_c* i)
 {
 #if BX_CPU_LEVEL >= 4
-  invalidate_prefetch_q();
-
   if (!real_mode() && CPL!=0) {
     BX_ERROR(("INVLPG: priveledge check failed, generate #GP(0)"));
     exception(BX_GP_EXCEPTION, 0, 0);
