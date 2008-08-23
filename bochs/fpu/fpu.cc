@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu.cc,v 1.44 2008-08-08 09:22:49 sshwarts Exp $
+// $Id: fpu.cc,v 1.45 2008-08-23 10:48:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -53,9 +53,6 @@ void BX_CPU_C::prepareFPU(bxInstruction_c *i,
 
        BX_CPU_THIS_PTR the_i387.fds = BX_CPU_THIS_PTR sregs[i->seg()].selector.value;
        BX_CPU_THIS_PTR the_i387.fdp = RMAddr(i);
-    } else {
-       BX_CPU_THIS_PTR the_i387.fds = BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value;
-       BX_CPU_THIS_PTR the_i387.fdp = 0;
     }
   }
 }
