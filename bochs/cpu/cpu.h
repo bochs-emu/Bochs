@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.512 2008-08-23 22:27:57 sshwarts Exp $
+// $Id: cpu.h,v 1.513 2008-08-24 17:29:17 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2285,13 +2285,13 @@ public: // for now...
 #if BX_SUPPORT_SSE >= 2
   #define BX_SSE2_ALIAS(i) i
 #else
-  #define BX_SSE2_ALIAS(i) BX_CPU_C::BxError
+  #define BX_SSE2_ALIAS(i) &BX_CPU_C::BxError
 #endif
 
 #if BX_SUPPORT_3DNOW
   #define BX_3DNOW_ALIAS(i) i
 #else
-  #define BX_3DNOW_ALIAS(i) BX_CPU_C::BxError
+  #define BX_3DNOW_ALIAS(i) &BX_CPU_C::BxError
 #endif
 
   BX_SMF void CMPXCHG_XBTS(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
