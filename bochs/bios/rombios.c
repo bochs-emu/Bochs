@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.212 2008-07-27 08:06:22 vruppert Exp $
+// $Id: rombios.c,v 1.213 2008-08-24 20:41:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -940,7 +940,7 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.212 $ $Date: 2008-07-27 08:06:22 $";
+static char bios_cvs_version_string[] = "$Revision: 1.213 $ $Date: 2008-08-24 20:41:38 $";
 
 #define BIOS_COPYRIGHT_STRING "(c) 2002 MandrakeSoft S.A. Written by Kevin Lawton & the Bochs team."
 
@@ -8079,9 +8079,7 @@ ASM_END
 
     bootdrv = (Bit8u)(status>>8);
     bootseg = read_word(ebda_seg,&EbdaData->cdemu.load_segment);
-    /* Canonicalize bootseg:bootip */
-    bootip = (bootseg & 0x0fff) << 4;
-    bootseg &= 0xf000;
+    bootip = 0;
     break;
 #endif
 
@@ -8099,6 +8097,8 @@ ASM_END
   /* Jump to the boot vector */
 ASM_START
     mov  bp, sp
+    push cs
+    push #int18_handler
     ;; Build an iret stack frame that will take us to the boot vector.
     ;; iret pops ip, then cs, then flags, so push them in the opposite order.
     pushf

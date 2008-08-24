@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios32.c,v 1.29 2008-07-30 15:13:40 sshwarts Exp $
+// $Id: rombios32.c,v 1.30 2008-08-24 20:41:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  32 bit Bochs BIOS init code
@@ -513,6 +513,8 @@ void smp_probe(void)
 #define PCI_DEVICE_ID_INTEL_82441       0x1237
 #define PCI_DEVICE_ID_INTEL_82371SB_0   0x7000
 #define PCI_DEVICE_ID_INTEL_82371SB_1   0x7010
+#define PCI_DEVICE_ID_INTEL_82371AB_0   0x7110
+#define PCI_DEVICE_ID_INTEL_82371AB     0x7111
 #define PCI_DEVICE_ID_INTEL_82371AB_3   0x7113
 
 #define PCI_VENDOR_ID_IBM               0x1014
@@ -656,11 +658,13 @@ static void pci_bios_init_bridges(PCIDevice *d)
     vendor_id = pci_config_readw(d, PCI_VENDOR_ID);
     device_id = pci_config_readw(d, PCI_DEVICE_ID);
 
-    if (vendor_id == PCI_VENDOR_ID_INTEL && device_id == PCI_DEVICE_ID_INTEL_82371SB_0) {
+    if (vendor_id == PCI_VENDOR_ID_INTEL &&
+       (device_id == PCI_DEVICE_ID_INTEL_82371SB_0 ||
+        device_id == PCI_DEVICE_ID_INTEL_82371AB_0)) {
         int i, irq;
         uint8_t elcr[2];
 
-        /* PIIX3 bridge */
+        /* PIIX3/PIIX4 PCI to ISA bridge */
 
         elcr[0] = 0x00;
         elcr[1] = 0x00;
@@ -673,7 +677,7 @@ static void pci_bios_init_bridges(PCIDevice *d)
         }
         outb(0x4d0, elcr[0]);
         outb(0x4d1, elcr[1]);
-        BX_INFO("PIIX3 init: elcr=%02x %02x\n",
+        BX_INFO("PIIX3/PIIX4 init: elcr=%02x %02x\n",
                 elcr[0], elcr[1]);
     } else if (vendor_id == PCI_VENDOR_ID_INTEL && device_id == PCI_DEVICE_ID_INTEL_82441) {
         /* i440 PCI bridge */
@@ -736,8 +740,10 @@ static void pci_bios_init_device(PCIDevice *d)
             d->bus, d->devfn, vendor_id, device_id);
     switch(class) {
     case 0x0101:
-        if (vendor_id == PCI_VENDOR_ID_INTEL && device_id == PCI_DEVICE_ID_INTEL_82371SB_1) {
-            /* PIIX3 IDE */
+        if (vendor_id == PCI_VENDOR_ID_INTEL &&
+           (device_id == PCI_DEVICE_ID_INTEL_82371SB_1 ||
+            device_id == PCI_DEVICE_ID_INTEL_82371AB)) {
+            /* PIIX3/PIIX4 IDE */
             pci_config_writew(d, 0x40, 0x8000); // enable IDE0
             pci_config_writew(d, 0x42, 0x8000); // enable IDE1
             goto default_map;
@@ -1558,6 +1564,9 @@ struct smbios_type_4 {
 	uint16_t current_speed;
 	uint8_t status;
 	uint8_t processor_upgrade;
+        uint16_t l1_cache_handle;
+        uint16_t l2_cache_handle;
+        uint16_t l3_cache_handle;
 } __attribute__((__packed__));
 
 /* SMBIOS type 16 - Physical Memory Array
@@ -1783,6 +1792,10 @@ smbios_type_4_init(void *start, unsigned int cpu_number)
 
     p->status = 0x41; /* socket populated, CPU enabled */
     p->processor_upgrade = 0x01; /* other */
+
+    p->l1_cache_handle = 0xffff; /* cache information structure not provided */
+    p->l2_cache_handle = 0xffff;
+    p->l3_cache_handle = 0xffff;
 
     start += sizeof(struct smbios_type_4);
 
