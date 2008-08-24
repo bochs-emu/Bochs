@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: soundwin.cc,v 1.21 2008-07-26 08:02:27 vruppert Exp $
+// $Id: soundwin.cc,v 1.22 2008-08-24 17:28:42 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -73,15 +73,15 @@ bx_sound_windows_c::bx_sound_windows_c(bx_sb16_c *sb16)
 
 #define NEWBUFFER(size) &(DataPointer[offset]); offset += ALIGN(size)
 
-  int offset = 0;
+  unsigned offset = 0;
   MidiHeader = (LPMIDIHDR) NEWBUFFER(sizeof(MIDIHDR));
   MidiData = (LPSTR) NEWBUFFER(BX_SOUND_WINDOWS_MAXSYSEXLEN);
 
   for (int bufnum=0; bufnum<BX_SOUND_WINDOWS_NBUF; bufnum++)
-    {
+  {
       WaveHeader[bufnum] = (LPWAVEHDR) NEWBUFFER(sizeof(WAVEHDR));
       WaveData[bufnum] = (LPSTR) NEWBUFFER(BX_SOUND_OUTPUT_WAVEPACKETSIZE+64);
-    }
+  }
 
   if (offset > size)
     BX_PANIC(("Allocated memory was too small!"));
@@ -251,7 +251,7 @@ int bx_sound_windows_c::playnextbuffer()
       int frequency = WaveInfo.frequency;
       int stereo = WaveInfo.stereo;
       int bits = WaveInfo.bits;
-      int format = WaveInfo.format;
+//    int format = WaveInfo.format;
       int bps = (bits / 8) * (stereo + 1);
 
       waveformat.wf.wFormatTag = WAVE_FORMAT_PCM;
