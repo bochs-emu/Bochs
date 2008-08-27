@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack32.cc,v 1.55 2008-08-08 09:22:49 sshwarts Exp $
+// $Id: stack32.cc,v 1.56 2008-08-27 21:57:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -302,22 +302,20 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ENTER32_IwIb(bxInstruction_c *i)
   BX_CPU_THIS_PTR speculative_rsp = 0;
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::LEAVE(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::LEAVE32(bxInstruction_c *i)
 {
-  BX_CPU_THIS_PTR speculative_rsp = 1;
-  BX_CPU_THIS_PTR prev_rsp = RSP;
+  BX_ASSERT(BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64);
 
-  // delete frame
-  if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b)
-    ESP = EBP;
-  else
-     SP = BP;
+  Bit32u value32;
 
-  // restore frame pointer
-  if (i->os32L())
-    EBP = pop_32();
-  else
-    BP = pop_16();
+  if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b) {
+    value32 = read_virtual_dword_32(BX_SEG_REG_SS, EBP);
+    ESP = EBP + 4;
+  }
+  else {
+    value32 = read_virtual_dword_32(BX_SEG_REG_SS, BP);
+    SP = BP + 4;
+  }
 
-  BX_CPU_THIS_PTR speculative_rsp = 0;
+  EBP = value32;
 }

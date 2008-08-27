@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.513 2008-08-24 17:29:17 sshwarts Exp $
+// $Id: cpu.h,v 1.514 2008-08-27 21:57:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1257,7 +1257,8 @@ public: // for now...
 
   BX_SMF void ENTER16_IwIb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void ENTER32_IwIb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void LEAVE(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void LEAVE16(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void LEAVE32(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
   BX_SMF void INT1(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void INT3(bxInstruction_c *) BX_CPP_AttrRegparmN(1);

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ia_opcodes.h,v 1.17 2008-08-11 20:34:05 sshwarts Exp $
+// $Id: ia_opcodes.h,v 1.18 2008-08-27 21:57:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008 Stanislav Shwartsman
@@ -360,7 +360,8 @@ bx_define_opcode(BX_IA_LDS_GdMp, &BX_CPU_C::LDS_GdMp, NULL, 0)
 bx_define_opcode(BX_IA_LDS_GwMp, &BX_CPU_C::LDS_GwMp, NULL, 0)
 bx_define_opcode(BX_IA_LEA_GdM, &BX_CPU_C::LEA_GdM, NULL, 0)
 bx_define_opcode(BX_IA_LEA_GwM, &BX_CPU_C::LEA_GwM, NULL, 0)
-bx_define_opcode(BX_IA_LEAVE, &BX_CPU_C::LEAVE, NULL, 0)
+bx_define_opcode(BX_IA_LEAVE16, &BX_CPU_C::LEAVE16, NULL, 0)
+bx_define_opcode(BX_IA_LEAVE32, &BX_CPU_C::LEAVE32, NULL, 0)
 bx_define_opcode(BX_IA_LES_GdMp, &BX_CPU_C::LES_GdMp, NULL, 0)
 bx_define_opcode(BX_IA_LES_GwMp, &BX_CPU_C::LES_GwMp, NULL, 0)
 bx_define_opcode(BX_IA_LFS_GdMp, &BX_CPU_C::LFS_GdMp, NULL, 0)

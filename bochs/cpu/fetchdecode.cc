@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.204 2008-08-23 22:27:58 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.205 2008-08-27 21:57:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -398,7 +398,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo32R[512*2] = {
   /* C6 /wr */ { BxGroup11, BX_IA_ERROR, BxOpcodeInfoG11EbR },
   /* C7 /wr */ { BxGroup11, BX_IA_ERROR, BxOpcodeInfoG11EwR },
   /* C8 /wr */ { BxImmediate_IwIb, BX_IA_ENTER16_IwIb },
-  /* C9 /wr */ { 0, BX_IA_LEAVE },
+  /* C9 /wr */ { 0, BX_IA_LEAVE16 },
   /* CA /wr */ { BxImmediate_Iw | BxTraceEnd, BX_IA_RETfar16_Iw },
   /* CB /wr */ { BxTraceEnd,                  BX_IA_RETfar16 },
   /* CC /wr */ { BxTraceEnd, BX_IA_INT3 },
@@ -961,7 +961,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo32R[512*2] = {
   /* C6 /dr */ { BxGroup11, BX_IA_ERROR, BxOpcodeInfoG11EbR },
   /* C7 /dr */ { BxGroup11, BX_IA_ERROR, BxOpcodeInfoG11EdR },
   /* C8 /dr */ { BxImmediate_IwIb, BX_IA_ENTER32_IwIb },
-  /* C9 /dr */ { 0, BX_IA_LEAVE },
+  /* C9 /dr */ { 0, BX_IA_LEAVE32 },
   /* CA /dr */ { BxImmediate_Iw | BxTraceEnd, BX_IA_RETfar32_Iw },
   /* CB /dr */ { BxTraceEnd,                  BX_IA_RETfar32 },
   /* CC /dr */ { BxTraceEnd, BX_IA_INT3 },
@@ -1531,7 +1531,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo32M[512*2] = {
   /* C6 /wm */ { BxGroup11, BX_IA_ERROR, BxOpcodeInfoG11EbM },
   /* C7 /wm */ { BxGroup11, BX_IA_ERROR, BxOpcodeInfoG11EwM },
   /* C8 /wm */ { BxImmediate_IwIb, BX_IA_ENTER16_IwIb },
-  /* C9 /wm */ { 0, BX_IA_LEAVE },
+  /* C9 /wm */ { 0, BX_IA_LEAVE16 },
   /* CA /wm */ { BxImmediate_Iw | BxTraceEnd, BX_IA_RETfar16_Iw },
   /* CB /wm */ { BxTraceEnd,                  BX_IA_RETfar16 },
   /* CC /wm */ { BxTraceEnd, BX_IA_INT3 },
@@ -2094,7 +2094,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo32M[512*2] = {
   /* C6 /dm */ { BxGroup11, BX_IA_ERROR, BxOpcodeInfoG11EbM },
   /* C7 /dm */ { BxGroup11, BX_IA_ERROR, BxOpcodeInfoG11EdM },
   /* C8 /dm */ { BxImmediate_IwIb, BX_IA_ENTER32_IwIb },
-  /* C9 /dm */ { 0, BX_IA_LEAVE },
+  /* C9 /dm */ { 0, BX_IA_LEAVE32 },
   /* CA /dm */ { BxImmediate_Iw | BxTraceEnd, BX_IA_RETfar32_Iw },
   /* CB /dm */ { BxTraceEnd,                  BX_IA_RETfar32 },
   /* CC /dm */ { BxTraceEnd, BX_IA_INT3 },

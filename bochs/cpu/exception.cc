@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.120 2008-08-13 21:51:54 sshwarts Exp $
+// $Id: exception.cc,v 1.121 2008-08-27 21:57:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -831,7 +831,6 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code, bx_bool trap)
   unsigned exception_type = 0, exception_class = BX_EXCEPTION_CLASS_FAULT;
   bx_bool push_error = 0;
 
-  invalidate_prefetch_q();
   BX_INSTR_EXCEPTION(BX_CPU_ID, vector);
 
 #if BX_DEBUGGER

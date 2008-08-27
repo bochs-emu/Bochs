@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack16.cc,v 1.42 2008-08-08 09:22:49 sshwarts Exp $
+// $Id: stack16.cc,v 1.43 2008-08-27 21:57:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -302,4 +302,22 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ENTER16_IwIb(bxInstruction_c *i)
   BP = frame_ptr16;
 
   BX_CPU_THIS_PTR speculative_rsp = 0;
+}
+
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::LEAVE16(bxInstruction_c *i)
+{
+  BX_ASSERT(BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64);
+
+  Bit16u value16;
+
+  if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b) {
+    value16 = read_virtual_word_32(BX_SEG_REG_SS, EBP);
+    ESP = EBP + 2;
+  }
+  else {
+    value16 = read_virtual_word_32(BX_SEG_REG_SS, BP);
+    SP = BP + 2;
+  }
+
+  BP = value16;
 }
