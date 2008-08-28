@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.156 2008-08-07 21:09:29 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.157 2008-08-28 10:57:37 akrisak Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1465,6 +1465,12 @@ void bx_dbg_print_stack_command(unsigned nwords)
   {
     if (BX_CPU(dbg_cpu)->sregs[BX_SEG_REG_SS].cache.u.segment.d_b) {
       linear_sp = BX_CPU(dbg_cpu)->get_reg32(BX_32BIT_REG_ESP);
+
+      if (BX_CPU(dbg_cpu)->protected_mode()) {
+        linear_sp += BX_CPU(dbg_cpu)->sregs[BX_SEG_REG_SS].cache.u.segment.base;
+        linear_sp &= 0xffffffff;
+      }
+
       len = 4;
     }
     else {
