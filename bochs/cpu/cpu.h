@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.514 2008-08-27 21:57:40 sshwarts Exp $
+// $Id: cpu.h,v 1.515 2008-08-29 19:23:00 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -3739,9 +3739,10 @@ IMPLEMENT_EFLAG_SET_ACCESSOR_TF(      8)
                                    // Group encoding: 111
 
 #define BxLockable          0x0080 // bit 7
+#define BxArithDstRM        0x0100 // bit 8
 
 #if BX_SUPPORT_TRACE_CACHE
-  #define BxTraceEnd        0x0100 // bit 8
+  #define BxTraceEnd        0x0200 // bit 9
 #else
   #define BxTraceEnd        0
 #endif
