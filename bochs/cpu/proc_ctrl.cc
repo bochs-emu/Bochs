@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.255 2008-08-23 13:55:37 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.256 2008-08-29 22:14:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -303,13 +303,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_DdRd(bxInstruction_c *i)
           (((val_32>>28) & 3)==2)) {
         // IO breakpoints (10b) are not yet supported.
         BX_PANIC(("MOV_DdRd: write of %08x contains IO breakpoint", val_32));
-      }
-      if ((((val_32>>18) & 3)==2) ||
-          (((val_32>>22) & 3)==2) ||
-          (((val_32>>26) & 3)==2) ||
-          (((val_32>>30) & 3)==2)) {
-        // LEN0..3 contains undefined length specifier (10b)
-        BX_PANIC(("MOV_DdRd: write of %08x contains undefined LENx", val_32));
       }
       if (((((val_32>>16) & 3)==0) && (((val_32>>18) & 3)!=0)) ||
           ((((val_32>>20) & 3)==0) && (((val_32>>22) & 3)!=0)) ||
