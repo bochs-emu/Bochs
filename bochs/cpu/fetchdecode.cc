@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.206 2008-08-29 19:23:00 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.207 2008-08-29 20:43:05 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -710,7 +710,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo32R[512*2] = {
   /* 0F CD /wr */ { 0, BX_IA_BSWAP_ERX },
   /* 0F CE /wr */ { 0, BX_IA_BSWAP_ERX },
   /* 0F CF /wr */ { 0, BX_IA_BSWAP_ERX },
-  /* 0F D0 /wr */ { BxPrefixSSE, BX_IA_ADDSUBPD_VpdWpd, BxOpcodeGroupSSE_0fd0 },
+  /* 0F D0 /wr */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0fd0 },
   /* 0F D1 /wr */ { BxPrefixSSE, BX_IA_PSRLW_PqQq, BxOpcodeGroupSSE_0fd1 },
   /* 0F D2 /wr */ { BxPrefixSSE, BX_IA_PSRLD_PqQq, BxOpcodeGroupSSE_0fd2 },
   /* 0F D3 /wr */ { BxPrefixSSE, BX_IA_PSRLQ_PqQq, BxOpcodeGroupSSE_0fd3 },
@@ -1273,7 +1273,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo32R[512*2] = {
   /* 0F CD /dr */ { 0, BX_IA_BSWAP_ERX },
   /* 0F CE /dr */ { 0, BX_IA_BSWAP_ERX },
   /* 0F CF /dr */ { 0, BX_IA_BSWAP_ERX },
-  /* 0F D0 /dr */ { BxPrefixSSE, BX_IA_ADDSUBPD_VpdWpd, BxOpcodeGroupSSE_0fd0 },
+  /* 0F D0 /dr */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0fd0 },
   /* 0F D1 /dr */ { BxPrefixSSE, BX_IA_PSRLW_PqQq, BxOpcodeGroupSSE_0fd1 },
   /* 0F D2 /dr */ { BxPrefixSSE, BX_IA_PSRLD_PqQq, BxOpcodeGroupSSE_0fd2 },
   /* 0F D3 /dr */ { BxPrefixSSE, BX_IA_PSRLQ_PqQq, BxOpcodeGroupSSE_0fd3 },
@@ -1843,7 +1843,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo32M[512*2] = {
   /* 0F CD /wm */ { 0, BX_IA_BSWAP_ERX },
   /* 0F CE /wm */ { 0, BX_IA_BSWAP_ERX },
   /* 0F CF /wm */ { 0, BX_IA_BSWAP_ERX },
-  /* 0F D0 /wm */ { BxPrefixSSE, BX_IA_ADDSUBPD_VpdWpd, BxOpcodeGroupSSE_0fd0 },
+  /* 0F D0 /wm */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0fd0 },
   /* 0F D1 /wm */ { BxPrefixSSE, BX_IA_PSRLW_PqQq, BxOpcodeGroupSSE_0fd1 },
   /* 0F D2 /wm */ { BxPrefixSSE, BX_IA_PSRLD_PqQq, BxOpcodeGroupSSE_0fd2 },
   /* 0F D3 /wm */ { BxPrefixSSE, BX_IA_PSRLQ_PqQq, BxOpcodeGroupSSE_0fd3 },
@@ -2406,7 +2406,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo32M[512*2] = {
   /* 0F CD /dm */ { 0, BX_IA_BSWAP_ERX },
   /* 0F CE /dm */ { 0, BX_IA_BSWAP_ERX },
   /* 0F CF /dm */ { 0, BX_IA_BSWAP_ERX },
-  /* 0F D0 /dm */ { BxPrefixSSE, BX_IA_ADDSUBPD_VpdWpd, BxOpcodeGroupSSE_0fd0 },
+  /* 0F D0 /dm */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0fd0 },
   /* 0F D1 /dm */ { BxPrefixSSE, BX_IA_PSRLW_PqQq, BxOpcodeGroupSSE_0fd1 },
   /* 0F D2 /dm */ { BxPrefixSSE, BX_IA_PSRLD_PqQq, BxOpcodeGroupSSE_0fd2 },
   /* 0F D3 /dm */ { BxPrefixSSE, BX_IA_PSRLQ_PqQq, BxOpcodeGroupSSE_0fd3 },
