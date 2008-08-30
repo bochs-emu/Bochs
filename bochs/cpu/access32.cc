@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: access32.cc,v 1.12 2008-08-15 10:12:41 sshwarts Exp $
+// $Id: access32.cc,v 1.13 2008-08-30 15:00:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008 Stanislav Shwartsman
@@ -113,6 +113,12 @@ accessOK:
     }
 #endif
 
+    // missed 4G limit check
+    if (offset == 0xffffffff) {
+      BX_ERROR(("write_virtual_word_32(): 4G segment limit violation"));
+      exception(int_number(s), 0, 0);
+    }
+
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
     if (BX_CPU_THIS_PTR alignment_check()) {
       if (laddr & 1) {
@@ -121,6 +127,7 @@ accessOK:
       }
     }
 #endif
+
     access_write_linear(laddr, 2, CPL, (void *) &data);
     return;
   }
@@ -173,6 +180,13 @@ accessOK:
       }
     }
 #endif
+
+    // missed 4G limit check
+    if (offset >= 0xfffffffd) {
+      BX_ERROR(("write_virtual_dword_32(): 4G segment limit violation"));
+      exception(int_number(s), 0, 0);
+    }
+
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
     if (BX_CPU_THIS_PTR alignment_check()) {
       if (laddr & 3) {
@@ -181,6 +195,7 @@ accessOK:
       }
     }
 #endif
+
     access_write_linear(laddr, 4, CPL, (void *) &data);
     return;
   }
@@ -233,6 +248,13 @@ accessOK:
       }
     }
 #endif
+
+    // missed 4G limit check
+    if (offset >= 0xfffffff8) {
+      BX_ERROR(("write_virtual_qword_32(): 4G segment limit violation"));
+      exception(int_number(s), 0, 0);
+    }
+
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
     if (BX_CPU_THIS_PTR alignment_check()) {
       if (laddr & 7) {
@@ -241,6 +263,7 @@ accessOK:
       }
     }
 #endif
+
     access_write_linear(laddr, 8, CPL, (void *) &data);
     return;
   }
@@ -294,6 +317,13 @@ accessOK:
       }
     }
 #endif
+
+    // missed 4G limit check
+    if (offset >= 0xffffffea) {
+      BX_ERROR(("write_virtual_dqword_32(): 4G segment limit violation"));
+      exception(int_number(s), 0, 0);
+    }
+
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
     if (BX_CPU_THIS_PTR alignment_check()) {
       if (laddr & 15) {
@@ -302,6 +332,7 @@ accessOK:
       }
     }
 #endif
+
     access_write_linear(laddr, 16, CPL, (void *) data);
     return;
   }
@@ -451,6 +482,13 @@ accessOK:
       }
     }
 #endif
+
+    // missed 4G limit check
+    if (offset == 0xffffffff) {
+      BX_ERROR(("read_virtual_word_32(): 4G segment limit violation"));
+      exception(int_number(s), 0, 0);
+    }
+
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
     if (BX_CPU_THIS_PTR alignment_check()) {
       if (laddr & 1) {
@@ -459,6 +497,7 @@ accessOK:
       }
     }
 #endif
+
     access_read_linear(laddr, 2, CPL, BX_READ, (void *) &data);
     return data;
   }
@@ -509,6 +548,13 @@ accessOK:
       }
     }
 #endif
+
+    // missed 4G limit check
+    if (offset >= 0xfffffffd) {
+      BX_ERROR(("read_virtual_dword_32(): 4G segment limit violation"));
+      exception(int_number(s), 0, 0);
+    }
+
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
     if (BX_CPU_THIS_PTR alignment_check()) {
       if (laddr & 3) {
@@ -517,6 +563,7 @@ accessOK:
       }
     }
 #endif
+
     access_read_linear(laddr, 4, CPL, BX_READ, (void *) &data);
     return data;
   }
@@ -567,6 +614,13 @@ accessOK:
       }
     }
 #endif
+
+    // missed 4G limit check
+    if (offset >= 0xfffffff8) {
+      BX_ERROR(("read_virtual_qword_32(): 4G segment limit violation"));
+      exception(int_number(s), 0, 0);
+    }
+
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
     if (BX_CPU_THIS_PTR alignment_check()) {
       if (laddr & 7) {
@@ -575,6 +629,7 @@ accessOK:
       }
     }
 #endif
+
     access_read_linear(laddr, 8, CPL, BX_READ, (void *) &data);
     return data;
   }
@@ -625,6 +680,13 @@ accessOK:
       }
     }
 #endif
+
+    // missed 4G limit check
+    if (offset >= 0xffffffea) {
+      BX_ERROR(("read_virtual_dqword_32(): 4G segment limit violation"));
+      exception(int_number(s), 0, 0);
+    }
+
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
     if (BX_CPU_THIS_PTR alignment_check()) {
       if (laddr & 15) {
@@ -633,6 +695,7 @@ accessOK:
       }
     }
 #endif
+
     access_read_linear(laddr, 16, CPL, BX_READ, (void *) data);
     return;
   }
@@ -792,6 +855,13 @@ accessOK:
       }
     }
 #endif
+
+    // missed 4G limit check
+    if (offset == 0xffffffff) {
+      BX_ERROR(("read_RMW_virtual_word_32(): 4G segment limit violation"));
+      exception(int_number(s), 0, 0);
+    }
+
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
     if (BX_CPU_THIS_PTR alignment_check()) {
       if (laddr & 1) {
@@ -800,6 +870,7 @@ accessOK:
       }
     }
 #endif
+
     access_read_linear(laddr, 2, CPL, BX_RW, (void *) &data);
     return data;
   }
@@ -854,6 +925,13 @@ accessOK:
       }
     }
 #endif
+
+    // missed 4G limit check
+    if (offset >= 0xfffffffd) {
+      BX_ERROR(("read_RMW_virtual_dword_32(): 4G segment limit violation"));
+      exception(int_number(s), 0, 0);
+    }
+
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
     if (BX_CPU_THIS_PTR alignment_check()) {
       if (laddr & 3) {
@@ -862,6 +940,7 @@ accessOK:
       }
     }
 #endif
+
     access_read_linear(laddr, 4, CPL, BX_RW, (void *) &data);
     return data;
   }
@@ -916,6 +995,13 @@ accessOK:
       }
     }
 #endif
+
+    // missed 4G limit check
+    if (offset >= 0xfffffff8) {
+      BX_ERROR(("read_RMW_virtual_qword_32(): 4G segment limit violation"));
+      exception(int_number(s), 0, 0);
+    }
+
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
     if (BX_CPU_THIS_PTR alignment_check()) {
       if (laddr & 7) {
@@ -924,6 +1010,7 @@ accessOK:
       }
     }
 #endif
+
     access_read_linear(laddr, 8, CPL, BX_RW, (void *) &data);
     return data;
   }
@@ -1143,6 +1230,13 @@ accessOK:
       }
     }
 #endif
+
+    // missed 4G limit check
+    if (offset == 0xffffffff) {
+      BX_ERROR(("write_new_stack_word_32(): 4G segment limit violation"));
+      exception(BX_SS_EXCEPTION, seg->selector.value & 0xfffc, 0);
+    }
+
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
     if (BX_CPU_THIS_PTR alignment_check() && user) {
       if (laddr & 1) {
@@ -1151,6 +1245,7 @@ accessOK:
       }
     }
 #endif
+
     access_write_linear(laddr, 2, curr_pl, (void *) &data);
     return;
   }
@@ -1203,6 +1298,13 @@ accessOK:
       }
     }
 #endif
+
+    // missed 4G limit check
+    if (offset >= 0xfffffffd) {
+      BX_ERROR(("write_new_stack_dword_32(): 4G segment limit violation"));
+      exception(BX_SS_EXCEPTION, seg->selector.value & 0xfffc, 0);
+    }
+
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
     if (BX_CPU_THIS_PTR alignment_check() && user) {
       if (laddr & 3) {
@@ -1211,6 +1313,7 @@ accessOK:
       }
     }
 #endif
+
     access_write_linear(laddr, 4, curr_pl, (void *) &data);
     return;
   }
