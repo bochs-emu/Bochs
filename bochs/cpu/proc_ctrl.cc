@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.256 2008-08-29 22:14:02 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.257 2008-08-30 08:14:46 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -297,13 +297,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_DdRd(bxInstruction_c *i)
       // by setting the LE and/or GE flags.
 
       // Some sanity checks...
-      if ((((val_32>>16) & 3)==2) ||
-          (((val_32>>20) & 3)==2) ||
-          (((val_32>>24) & 3)==2) ||
-          (((val_32>>28) & 3)==2)) {
-        // IO breakpoints (10b) are not yet supported.
-        BX_PANIC(("MOV_DdRd: write of %08x contains IO breakpoint", val_32));
-      }
       if (((((val_32>>16) & 3)==0) && (((val_32>>18) & 3)!=0)) ||
           ((((val_32>>20) & 3)==0) && (((val_32>>22) & 3)!=0)) ||
           ((((val_32>>24) & 3)==0) && (((val_32>>26) & 3)!=0)) ||
@@ -461,22 +454,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_DqRq(bxInstruction_c *i)
       // by setting the LE and/or GE flags.
 
       // Some sanity checks...
-      if ((((val_64>>16) & 3)==2) ||
-          (((val_64>>20) & 3)==2) ||
-          (((val_64>>24) & 3)==2) ||
-          (((val_64>>28) & 3)==2))
-      {
-        // IO breakpoints (10b) are not yet supported.
-        BX_PANIC(("MOV_DqRq: write of %08x:%08x contains IO breakpoint",
-          (Bit32u)(val_64 >> 32), (Bit32u)(val_64 & 0xFFFFFFFF)));
-      }
       if (((((val_64>>16) & 3)==0) && (((val_64>>18) & 3)!=0)) ||
           ((((val_64>>20) & 3)==0) && (((val_64>>22) & 3)!=0)) ||
           ((((val_64>>24) & 3)==0) && (((val_64>>26) & 3)!=0)) ||
           ((((val_64>>28) & 3)==0) && (((val_64>>30) & 3)!=0)))
       {
         // Instruction breakpoint with LENx not 00b (1-byte length)
-        BX_PANIC(("MOV_DqRq: write of %08x:%08x , R/W=00b LEN!=00b",
+        BX_PANIC(("MOV_DqRq: write of %08x:%08x, R/W=00b LEN!=00b",
           (Bit32u)(val_64 >> 32), (Bit32u)(val_64 & 0xFFFFFFFF)));
       }
 
@@ -2600,5 +2584,32 @@ Bit32u BX_CPU_C::hwdebug_compare(bx_address laddr_0, unsigned size,
   }
 
   return dr6_mask;
+}
+
+void BX_CPU_C::iobreakpoint_match(unsigned port, unsigned len)
+{
+  // Only compare debug registers if any breakpoints are enabled
+  if (BX_CPU_THIS_PTR cr4.get_DE() && (BX_CPU_THIS_PTR dr7 & 0x000000ff))
+  {
+    Bit32u dr_op[4], dr_len[4];
+    Bit32u dr7 = BX_CPU_THIS_PTR dr7;
+
+    dr_len[0] = 1 + (dr7>>18) & 3;
+    dr_len[1] = 1 + (dr7>>22) & 3;
+    dr_len[2] = 1 + (dr7>>26) & 3;
+    dr_len[3] = 1 + (dr7>>30) & 3;
+
+    dr_op[0] = (dr7>>16) & 3;
+    dr_op[1] = (dr7>>20) & 3;
+    dr_op[2] = (dr7>>24) & 3;
+    dr_op[3] = (dr7>>28) & 3;
+
+    for (unsigned n=0;n<4;n++) {
+      if (dr_op[n] == 2 && dr_len[n] == len && BX_CPU_THIS_PTR dr[n] == port) {
+        BX_CPU_THIS_PTR debug_trap |= (1<<n);
+        BX_CPU_THIS_PTR async_event = 1;
+      }        
+    }
+  }
 }
 #endif

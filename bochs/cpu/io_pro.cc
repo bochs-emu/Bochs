@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: io_pro.cc,v 1.36 2008-08-27 21:26:23 sshwarts Exp $
+// $Id: io_pro.cc,v 1.37 2008-08-30 08:14:46 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -142,6 +142,10 @@ bx_bool BX_CPU_C::allow_io(Bit16u port, unsigned len)
     if ((permission16 >> bit_index) & mask)
       return(0);
   }
+
+#if BX_X86_DEBUGGER
+  iobreakpoint_match(port, len);
+#endif
 
   return(1);
 }
