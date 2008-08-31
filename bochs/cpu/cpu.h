@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.516 2008-08-30 08:14:46 sshwarts Exp $
+// $Id: cpu.h,v 1.517 2008-08-31 06:04:14 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2836,7 +2836,10 @@ public: // for now...
   // write of word/dword to new stack could happen only in legacy mode
   BX_SMF void write_new_stack_word_32(bx_segment_reg_t *seg, Bit32u offset, unsigned curr_pl, Bit16u data);
   BX_SMF void write_new_stack_dword_32(bx_segment_reg_t *seg, Bit32u offset, unsigned curr_pl, Bit32u data);
+  BX_SMF void write_new_stack_qword_32(bx_segment_reg_t *seg, Bit32u offset, unsigned curr_pl, Bit64u data);
 #if BX_SUPPORT_X86_64
+  BX_SMF void write_new_stack_word_64(Bit64u offset, unsigned curr_pl, Bit16u data);
+  BX_SMF void write_new_stack_dword_64(Bit64u offset, unsigned curr_pl, Bit32u data);
   BX_SMF void write_new_stack_qword_64(Bit64u offset, unsigned curr_pl, Bit64u data);
 #endif
 

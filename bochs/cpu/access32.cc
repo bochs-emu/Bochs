@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: access32.cc,v 1.13 2008-08-30 15:00:38 sshwarts Exp $
+// $Id: access32.cc,v 1.14 2008-08-31 06:04:14 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008 Stanislav Shwartsman
@@ -1198,8 +1198,6 @@ void BX_CPU_C::write_new_stack_word_32(bx_segment_reg_t *seg, Bit32u offset, uns
 {
   Bit32u laddr;
 
-  BX_ASSERT(BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64);
-
   if (seg->cache.valid & SegAccessWOK4G) {
 accessOK:
     laddr = (Bit32u)(seg->cache.u.segment.base) + offset;
@@ -1257,7 +1255,8 @@ accessOK:
 
   // add error code when segment violation occurs when pushing into new stack
   if (!write_virtual_checks(seg, offset, 2))
-    exception(BX_SS_EXCEPTION, seg->selector.value & 0xfffc, 0);
+    exception(BX_SS_EXCEPTION, 
+         seg->selector.rpl != CPL ? (seg->selector.value & 0xfffc) : 0, 0);
   goto accessOK;
 }
 
@@ -1265,8 +1264,6 @@ accessOK:
 void BX_CPU_C::write_new_stack_dword_32(bx_segment_reg_t *seg, Bit32u offset, unsigned curr_pl, Bit32u data)
 {
   Bit32u laddr;
-
-  BX_ASSERT(BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64);
 
   if (seg->cache.valid & SegAccessWOK4G) {
 accessOK:
@@ -1325,6 +1322,75 @@ accessOK:
 
   // add error code when segment violation occurs when pushing into new stack
   if (!write_virtual_checks(seg, offset, 4))
-    exception(BX_SS_EXCEPTION, seg->selector.value & 0xfffc, 0);
+    exception(BX_SS_EXCEPTION, 
+         seg->selector.rpl != CPL ? (seg->selector.value & 0xfffc) : 0, 0);
+  goto accessOK;
+}
+
+// assuming the write happens in legacy mode
+void BX_CPU_C::write_new_stack_qword_32(bx_segment_reg_t *seg, Bit32u offset, unsigned curr_pl, Bit64u data)
+{
+  Bit32u laddr;
+
+  if (seg->cache.valid & SegAccessWOK4G) {
+accessOK:
+    laddr = (Bit32u)(seg->cache.u.segment.base) + offset;
+    bx_bool user = (curr_pl == 3);
+#if BX_SupportGuest2HostTLB
+    unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 7);
+#if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
+    Bit32u lpf = AlignedAccessLPFOf(laddr, 7) & (Bit32u) BX_CPU_THIS_PTR alignment_check_mask;
+#else
+    Bit32u lpf = LPFOf(laddr);
+#endif    
+    bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
+    if (tlbEntry->lpf == lpf) {
+      // See if the TLB entry privilege level allows us write access
+      // from this CPL.
+      if (! (tlbEntry->accessBits & (0x2 | user))) {
+        bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
+        Bit32u pageOffset = PAGE_OFFSET(laddr);
+        BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr, tlbEntry->ppf | pageOffset, 8, BX_WRITE);
+        BX_DBG_LIN_MEMORY_ACCESS(BX_CPU_ID, laddr,
+            tlbEntry->ppf | pageOffset, 8, curr_pl, BX_WRITE, (Bit8u*) &data);
+        Bit64u *hostAddr = (Bit64u*) (hostPageAddr | pageOffset);
+#if BX_SUPPORT_ICACHE
+        pageWriteStampTable.decWriteStamp(tlbEntry->ppf);
+#endif
+        WriteHostQWordToLittleEndian(hostAddr, data);
+        return;
+      }
+    }
+#endif
+
+    // missed 4G limit check
+    if (offset >= 0xfffffff8) {
+      BX_ERROR(("write_new_stack_qword_32(): 4G segment limit violation"));
+      exception(BX_SS_EXCEPTION, 
+         seg->selector.rpl != CPL ? (seg->selector.value & 0xfffc) : 0, 0);
+    }
+
+#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
+    if (BX_CPU_THIS_PTR alignment_check() && user) {
+      if (laddr & 7) {
+        BX_ERROR(("write_new_stack_qword_32(): #AC misaligned access"));
+        exception(BX_AC_EXCEPTION, 0, 0);
+      }
+    }
+#endif
+
+    access_write_linear(laddr, 8, curr_pl, (void *) &data);
+    return;
+  }
+
+  if (seg->cache.valid & SegAccessWOK) {
+    if (offset <= (seg->cache.u.segment.limit_scaled-7))
+      goto accessOK;
+  }
+
+  // add error code when segment violation occurs when pushing into new stack
+  if (!write_virtual_checks(seg, offset, 8))
+    exception(BX_SS_EXCEPTION, 
+        seg->selector.rpl != CPL ? (seg->selector.value & 0xfffc) : 0, 0);
   goto accessOK;
 }

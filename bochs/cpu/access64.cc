@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: access64.cc,v 1.16 2008-08-14 22:26:14 sshwarts Exp $
+// $Id: access64.cc,v 1.17 2008-08-31 06:04:14 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008 Stanislav Shwartsman
@@ -804,10 +804,104 @@ BX_CPU_C::read_RMW_virtual_qword_64(unsigned s, Bit64u offset)
   return data;
 }
 
+void BX_CPU_C::write_new_stack_word_64(Bit64u laddr, unsigned curr_pl, Bit16u data)
+{
+  bx_bool user = (curr_pl == 3);
+#if BX_SupportGuest2HostTLB
+  unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 1);
+#if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
+  Bit64u lpf = AlignedAccessLPFOf(laddr, 1) & BX_CPU_THIS_PTR alignment_check_mask;
+#else
+  Bit64u lpf = LPFOf(laddr);
+#endif    
+  bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
+  if (tlbEntry->lpf == lpf) {
+    // See if the TLB entry privilege level allows us write access
+    // from this CPL.
+    if (! (tlbEntry->accessBits & (0x2 | user))) {
+      bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
+      Bit32u pageOffset = PAGE_OFFSET(laddr);
+      BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr, tlbEntry->ppf | pageOffset, 2, BX_WRITE);
+      BX_DBG_LIN_MEMORY_ACCESS(BX_CPU_ID, laddr,
+          tlbEntry->ppf | pageOffset, 2, curr_pl, BX_WRITE, (Bit8u*) &data);
+      Bit16u *hostAddr = (Bit16u*) (hostPageAddr | pageOffset);
+#if BX_SUPPORT_ICACHE
+      pageWriteStampTable.decWriteStamp(tlbEntry->ppf);
+#endif
+      WriteHostWordToLittleEndian(hostAddr, data);
+      return;
+    }
+  }
+#endif
+
+  if (! IsCanonical(laddr) || ! IsCanonical(laddr+1)) {
+    BX_ERROR(("write_new_stack_word_64(): canonical failure"));
+    exception(BX_SS_EXCEPTION, 0, 0);
+  }
+
+#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
+  if (BX_CPU_THIS_PTR alignment_check() && user) {
+    if (laddr & 1) {
+      BX_ERROR(("write_new_stack_word_64(): #AC misaligned access"));
+      exception(BX_AC_EXCEPTION, 0, 0);
+    }
+  }
+#endif
+
+  access_write_linear(laddr, 2, curr_pl, (void *) &data);
+}
+
+void BX_CPU_C::write_new_stack_dword_64(Bit64u laddr, unsigned curr_pl, Bit32u data)
+{
+  bx_bool user = (curr_pl == 3);
+#if BX_SupportGuest2HostTLB
+  unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 3);
+#if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
+  Bit64u lpf = AlignedAccessLPFOf(laddr, 3) & BX_CPU_THIS_PTR alignment_check_mask;
+#else
+  Bit64u lpf = LPFOf(laddr);
+#endif    
+  bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
+  if (tlbEntry->lpf == lpf) {
+    // See if the TLB entry privilege level allows us write access
+    // from this CPL.
+    if (! (tlbEntry->accessBits & (0x2 | user))) {
+      bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
+      Bit32u pageOffset = PAGE_OFFSET(laddr);
+      BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr, tlbEntry->ppf | pageOffset, 4, BX_WRITE);
+      BX_DBG_LIN_MEMORY_ACCESS(BX_CPU_ID, laddr,
+          tlbEntry->ppf | pageOffset, 4, curr_pl, BX_WRITE, (Bit8u*) &data);
+      Bit32u *hostAddr = (Bit32u*) (hostPageAddr | pageOffset);
+#if BX_SUPPORT_ICACHE
+      pageWriteStampTable.decWriteStamp(tlbEntry->ppf);
+#endif
+      WriteHostDWordToLittleEndian(hostAddr, data);
+      return;
+    }
+  }
+#endif
+
+  if (! IsCanonical(laddr) || ! IsCanonical(laddr+3)) {
+    BX_ERROR(("write_new_stack_dword_64(): canonical failure"));
+    exception(BX_SS_EXCEPTION, 0, 0);
+  }
+
+#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
+  if (BX_CPU_THIS_PTR alignment_check() && user) {
+    if (laddr & 3) {
+      BX_ERROR(("write_new_stack_dword_64(): #AC misaligned access"));
+      exception(BX_AC_EXCEPTION, 0, 0);
+    }
+  }
+#endif
+
+  access_write_linear(laddr, 4, curr_pl, (void *) &data);
+}
+
 void BX_CPU_C::write_new_stack_qword_64(Bit64u laddr, unsigned curr_pl, Bit64u data)
 {
-#if BX_SupportGuest2HostTLB
   bx_bool user = (curr_pl == 3);
+#if BX_SupportGuest2HostTLB
   unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 7);
 #if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
   Bit64u lpf = AlignedAccessLPFOf(laddr, 7) & BX_CPU_THIS_PTR alignment_check_mask;

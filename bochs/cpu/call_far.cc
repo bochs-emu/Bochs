@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: call_far.cc,v 1.39 2008-06-14 16:55:44 sshwarts Exp $
+// $Id: call_far.cc,v 1.40 2008-08-31 06:04:14 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005 Stanislav Shwartsman
@@ -37,6 +37,7 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
   bx_selector_t cs_selector;
   Bit32u dword1, dword2;
   bx_descriptor_t cs_descriptor;
+  Bit32u temp_RSP;
 
   /* new cs selector must not be null, else #GP(0) */
   if ((cs_raw & 0xfffc) == 0) {
@@ -61,22 +62,68 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
     check_cs(&cs_descriptor, cs_raw, BX_SELECTOR_RPL(cs_raw), CPL);
 
 #if BX_SUPPORT_X86_64
-    if (i->os64L()) {
-      // push return address onto stack (CS padded to 64bits)
-      push_64((Bit64u) BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value);
-      push_64(RIP);
+    if (cs_descriptor.u.segment.l) {
+      // moving to long mode, push return address onto 64-bit stack
+      if (i->os64L()) {
+        write_new_stack_qword_64(RSP -  8, cs_descriptor.dpl,
+             BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value);
+        write_new_stack_qword_64(RSP - 16, cs_descriptor.dpl, RIP);
+        RSP -= 16;
+      }
+      else if (i->os32L()) {
+        write_new_stack_dword_64(RSP - 4, cs_descriptor.dpl,
+             BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value);
+        write_new_stack_dword_64(RSP - 8, cs_descriptor.dpl, EIP);
+        RSP -= 8;
+      }
+      else {
+        write_new_stack_word_64(RSP - 2, cs_descriptor.dpl,
+             BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value);
+        write_new_stack_word_64(RSP - 4, cs_descriptor.dpl, IP);
+        RSP -= 4;
+      }
     }
     else
 #endif
-    if (i->os32L()) {
-      // push return address onto stack (CS padded to 32bits)
-      push_32((Bit32u) BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value);
-      push_32(EIP);
-    }
-    else {
-      // push return address onto stack
-      push_16(BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value);
-      push_16(IP);
+    {
+      // moving to legacy mode, push return address onto 32-bit stack
+      if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b)
+        temp_RSP = ESP;
+      else
+        temp_RSP = SP;
+
+#if BX_SUPPORT_X86_64
+      if (i->os64L()) {
+        write_new_stack_qword_32(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS],
+             temp_RSP -  8, cs_descriptor.dpl,
+             BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value);
+        write_new_stack_qword_32(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS],
+             temp_RSP - 16, cs_descriptor.dpl, RIP);
+        temp_RSP -= 16;
+      }
+      else
+#endif
+      if (i->os32L()) {
+        write_new_stack_dword_32(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS],
+             temp_RSP - 4, cs_descriptor.dpl,
+             BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value);
+        write_new_stack_dword_32(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS],
+             temp_RSP - 8, cs_descriptor.dpl, EIP);
+        temp_RSP -= 8;
+      }
+      else {
+        write_new_stack_word_32(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS],
+             temp_RSP - 2, cs_descriptor.dpl,
+             BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value);
+        write_new_stack_word_32(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS],
+             temp_RSP - 4, cs_descriptor.dpl, IP);
+        temp_RSP -= 4;
+      }
+
+      if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b)
+        ESP = (Bit32u) temp_RSP;
+      else
+         SP = (Bit16u) temp_RSP;
     }
 
     // load code segment descriptor into CS cache
