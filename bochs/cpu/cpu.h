@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.517 2008-08-31 06:04:14 sshwarts Exp $
+// $Id: cpu.h,v 1.518 2008-09-02 05:38:36 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -3256,7 +3256,7 @@ public: // for now...
   BX_SMF void FPU_check_pending_exceptions(void);
   BX_SMF void FPU_stack_underflow(int stnr, int pop_stack = 0);
   BX_SMF void FPU_stack_overflow(void);
-  BX_SMF bx_bool FPU_exception(int exception);
+  BX_SMF unsigned FPU_exception(int exception);
   BX_SMF int  fpu_save_environment(bxInstruction_c *);
   BX_SMF int  fpu_load_environment(bxInstruction_c *);
   BX_SMF Bit8u pack_FPU_TW(Bit16u tag_word);
