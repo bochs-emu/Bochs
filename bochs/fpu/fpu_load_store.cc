@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu_load_store.cc,v 1.27 2008-07-13 15:35:10 sshwarts Exp $
+// $Id: fpu_load_store.cc,v 1.28 2008-09-02 19:46:30 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -308,7 +308,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FST_SINGLE_REAL(bxInstruction_c *i)
 
      save_reg = floatx80_to_float32(BX_READ_FPU_REG(0), status);
 
-     if (BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags))
+     if (BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags, 1))
         return;
   }
 
@@ -346,7 +346,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FST_DOUBLE_REAL(bxInstruction_c *i)
 
      save_reg = floatx80_to_float64(BX_READ_FPU_REG(0), status);
 
-     if (BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags))
+     if (BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags, 1))
         return;
   }
 
@@ -415,7 +415,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FIST_WORD_INTEGER(bxInstruction_c *i)
 
      save_reg = floatx80_to_int16(BX_READ_FPU_REG(0), status);
 
-     if (BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags))
+     if (BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags, 1))
         return;
   }
 
@@ -453,7 +453,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FIST_DWORD_INTEGER(bxInstruction_c *i)
 
      save_reg = floatx80_to_int32(BX_READ_FPU_REG(0), status);
 
-     if (BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags))
+     if (BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags, 1))
          return;
   }
 
@@ -489,7 +489,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FISTP_QWORD_INTEGER(bxInstruction_c *i)
 
      save_reg = floatx80_to_int64(BX_READ_FPU_REG(0), status);
 
-     if (BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags))
+     if (BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags, 1))
          return;
   }
 
@@ -557,7 +557,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FBSTP_PACKED_BCD(bxInstruction_c *i)
     }
 
     /* check for fpu arithmetic exceptions */
-    if (BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags))
+    if (BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags, 1))
         return;
   }
 
@@ -595,7 +595,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FISTTP16(bxInstruction_c *i)
 
      save_reg = floatx80_to_int16_round_to_zero(BX_READ_FPU_REG(0), status);
 
-     if (BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags))
+     if (BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags, 1))
         return;
   }
 
@@ -631,7 +631,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FISTTP32(bxInstruction_c *i)
 
      save_reg = floatx80_to_int32_round_to_zero(BX_READ_FPU_REG(0), status);
 
-     if (BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags))
+     if (BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags, 1))
          return;
   }
 
@@ -667,7 +667,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FISTTP64(bxInstruction_c *i)
 
      save_reg = floatx80_to_int64_round_to_zero(BX_READ_FPU_REG(0), status);
 
-     if (BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags))
+     if (BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags, 1))
          return;
   }
 
