@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ferr.cc,v 1.11 2008-05-10 13:34:01 sshwarts Exp $
+// $Id: ferr.cc,v 1.12 2008-09-02 05:36:15 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -53,23 +53,20 @@ void BX_CPU_C::FPU_stack_underflow(int stnr, int pop_stack)
   FPU_exception(FPU_EX_Stack_Underflow);
 }
 
-/* Returns 1 if unmasked exception occured */
-bx_bool BX_CPU_C::FPU_exception(int exception)
+/* Returns unmasked exceptions if occured */
+unsigned BX_CPU_C::FPU_exception(int exception)
 {
-  int unmasked = 0;
-
   /* Extract only the bits which we use to set the status word */
   exception &= (FPU_SW_Exceptions_Mask);
 
   /* Set the corresponding exception bits */
   FPU_PARTIAL_STATUS |= exception;
 
+  unsigned unmasked = FPU_PARTIAL_STATUS & ~FPU_CONTROL_WORD & FPU_CW_Exceptions_Mask;
+
   /* Set summary bits iff exception isn't masked */
-  if (FPU_PARTIAL_STATUS & ~FPU_CONTROL_WORD & FPU_CW_Exceptions_Mask)
-  {
+  if (unmasked)
     FPU_PARTIAL_STATUS |= (FPU_SW_Summary | FPU_SW_Backward);
-    unmasked = 1;
-  }
 
   if (exception & (FPU_SW_Stack_Fault | FPU_EX_Precision))
   {
@@ -79,6 +76,10 @@ bx_bool BX_CPU_C::FPU_exception(int exception)
       FPU_PARTIAL_STATUS &= ~FPU_SW_C1;
     }
   }
+
+  // if #P unmasked exception occured the result still has to be
+  // written to the destination.
+  unmasked &= ~FPU_CW_Precision;
 
   return unmasked;
 }
