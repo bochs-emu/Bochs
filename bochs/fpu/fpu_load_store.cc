@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu_load_store.cc,v 1.28 2008-09-02 19:46:30 sshwarts Exp $
+// $Id: fpu_load_store.cc,v 1.29 2008-09-03 20:13:52 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -45,13 +45,18 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLD_STi(bxInstruction_c *i)
     return;
   }
 
+  floatx80 sti_reg = floatx80_default_nan;
+
   if (IS_TAG_EMPTY(i->rm()))
   {
-    BX_CPU_THIS_PTR FPU_stack_underflow(0);
-    return;
-  }
+    FPU_exception(FPU_EX_Stack_Underflow);
 
-  floatx80 sti_reg = BX_READ_FPU_REG(i->rm());
+    if (! BX_CPU_THIS_PTR the_i387.is_IA_masked()) 
+      return;
+  }
+  else {
+    sti_reg = BX_READ_FPU_REG(i->rm());
+  }
 
   BX_CPU_THIS_PTR the_i387.FPU_push();
   BX_WRITE_FPU_REG(sti_reg, 0);
