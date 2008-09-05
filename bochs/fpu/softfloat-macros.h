@@ -44,7 +44,7 @@ these four paragraphs for those parts of this code that are retained.
 | The result is stored in the location pointed to by `zPtr'.
 *----------------------------------------------------------------------------*/
 
-BX_CPP_INLINE void shift32RightJamming(Bit32u a, int count, Bit32u *zPtr)
+BX_CPP_INLINE Bit32u shift32RightJamming(Bit32u a, int count)
 {
     Bit32u z;
 
@@ -57,7 +57,8 @@ BX_CPP_INLINE void shift32RightJamming(Bit32u a, int count, Bit32u *zPtr)
     else {
         z = (a != 0);
     }
-    *zPtr = z;
+
+    return z;
 }
 
 /*----------------------------------------------------------------------------
@@ -69,17 +70,21 @@ BX_CPP_INLINE void shift32RightJamming(Bit32u a, int count, Bit32u *zPtr)
 | The result is stored in the location pointed to by `zPtr'.
 *----------------------------------------------------------------------------*/
 
-BX_CPP_INLINE void shift64RightJamming(Bit64u a, int count, Bit64u *zPtr)
+BX_CPP_INLINE Bit64u shift64RightJamming(Bit64u a, int count)
 {
+    Bit64u z;
+
     if (count == 0) {
-        *zPtr = a;
+        z = a;
     }
     else if (count < 64) {
-        *zPtr = (a>>count) | ((a<<((-count) & 63)) != 0);
+        z = (a>>count) | ((a << ((-count) & 63)) != 0);
     }
     else {
-        *zPtr = (a != 0);
+        z = (a != 0);
     }
+
+    return z;
 }
 
 /*----------------------------------------------------------------------------

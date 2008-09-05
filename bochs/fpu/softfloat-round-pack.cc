@@ -207,7 +207,7 @@ float32 roundAndPackFloat32(int zSign, Bit16s zExp, Bit32u zSig, float_status_t 
         }
         if (zExp < 0) {
             int isTiny = (zExp < -1) || (zSig + roundIncrement < 0x80000000);
-            shift32RightJamming(zSig, -zExp, &zSig);
+            zSig = shift32RightJamming(zSig, -zExp);
             zExp = 0;
             roundBits = zSig & roundMask;
             if (isTiny && roundBits) {
@@ -306,7 +306,7 @@ float64 roundAndPackFloat64(int zSign, Bit16s zExp, Bit64u zSig, float_status_t 
         }
         if (zExp < 0) {
             int isTiny = (zExp < -1) || (zSig + roundIncrement < BX_CONST64(0x8000000000000000));
-            shift64RightJamming(zSig, -zExp, &zSig);
+            zSig = shift64RightJamming(zSig, -zExp);
             zExp = 0;
             roundBits = (Bit16s)(zSig & 0x3FF);
             if (isTiny && roundBits) {
@@ -421,7 +421,7 @@ floatx80 roundAndPackFloatx80(int roundingPrecision,
         }
         if (zExp <= 0) {
             int isTiny = (zExp < 0) || (zSig0 <= zSig0 + roundIncrement);
-            shift64RightJamming(zSig0, 1 - zExp, &zSig0);
+            zSig0 = shift64RightJamming(zSig0, 1 - zExp);
             zSigExact = zSig0;
             zExp = 0;
             roundBits = zSig0 & roundMask;

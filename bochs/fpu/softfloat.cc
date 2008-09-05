@@ -104,7 +104,7 @@ float32 int64_to_float32(Bit64s a, float_status_t &status)
     else {
         shiftCount += 7;
         if (shiftCount < 0) {
-            shift64RightJamming(absA, -shiftCount, &absA);
+            absA = shift64RightJamming(absA, -shiftCount);
         }
         else {
             absA <<= shiftCount;
@@ -148,7 +148,7 @@ Bit32s float32_to_int32(float32 a, float_status_t &status)
     int shiftCount = 0xAF - aExp;
     Bit64u aSig64 = aSig;
     aSig64 <<= 32;
-    if (0 < shiftCount) shift64RightJamming(aSig64, shiftCount, &aSig64);
+    if (0 < shiftCount) aSig64 = shift64RightJamming(aSig64, shiftCount);
     return roundAndPackInt32(aSign, aSig64, status);
 }
 
@@ -383,7 +383,7 @@ static float32 addFloat32Sigs(float32 a, float32 b, int zSign, float_status_t &s
         }
         else bSig |= 0x20000000;
 
-        shift32RightJamming(bSig, expDiff, &bSig);
+        bSig = shift32RightJamming(bSig, expDiff);
         zExp = aExp;
     }
     else if (expDiff < 0) {
@@ -401,7 +401,7 @@ static float32 addFloat32Sigs(float32 a, float32 b, int zSign, float_status_t &s
         }
         else aSig |= 0x20000000;
 
-        shift32RightJamming(aSig, -expDiff, &aSig);
+        aSig = shift32RightJamming(aSig, -expDiff);
         zExp = bExp;
     }
     else {
@@ -480,7 +480,7 @@ static float32 subFloat32Sigs(float32 a, float32 b, int zSign, float_status_t &s
     }
     else aSig |= 0x40000000;
 
-    shift32RightJamming(aSig, -expDiff, &aSig);
+    aSig = shift32RightJamming(aSig, -expDiff);
     bSig |= 0x40000000;
  bBigger:
     zSig = bSig - aSig;
@@ -502,7 +502,7 @@ static float32 subFloat32Sigs(float32 a, float32 b, int zSign, float_status_t &s
     }
     else bSig |= 0x40000000;
 
-    shift32RightJamming(bSig, expDiff, &bSig);
+    bSig = shift32RightJamming(bSig, expDiff);
     aSig |= 0x40000000;
  aBigger:
     zSig = aSig - bSig;
@@ -607,7 +607,7 @@ float32 float32_mul(float32 a, float32 b, float_status_t &status)
     zExp = aExp + bExp - 0x7F;
     aSig = (aSig | 0x00800000)<<7;
     bSig = (bSig | 0x00800000)<<8;
-    shift64RightJamming(((Bit64u) aSig) * bSig, 32, &zSig64);
+    zSig64 = shift64RightJamming(((Bit64u) aSig) * bSig, 32);
     zSig = (Bit32u) zSig64;
     if (0 <= (Bit32s) (zSig<<1)) {
         zSig <<= 1;
@@ -728,7 +728,7 @@ float32 float32_sqrt(float32 a, float_status_t &status)
         }
         zSig |= (rem != 0);
     }
-    shift32RightJamming(zSig, 1, &zSig);
+    zSig = shift32RightJamming(zSig, 1);
  roundAndPack:
     return roundAndPackFloat32(0, zExp, zSig, status);
 }
@@ -1047,7 +1047,7 @@ Bit32s float64_to_int32(float64 a, float_status_t &status)
     if ((aExp == 0x7FF) && aSig) aSign = 0;
     if (aExp) aSig |= BX_CONST64(0x0010000000000000);
     int shiftCount = 0x42C - aExp;
-    if (0 < shiftCount) shift64RightJamming(aSig, shiftCount, &aSig);
+    if (0 < shiftCount) aSig = shift64RightJamming(aSig, shiftCount);
     return roundAndPackInt32(aSign, aSig, status);
 }
 
@@ -1200,7 +1200,7 @@ float32 float64_to_float32(float64 a, float_status_t &status)
         if (aSig == 0) return packFloat32(aSign, 0, 0);
         float_raise(status, float_flag_denormal);
     }
-    shift64RightJamming(aSig, 22, &aSig);
+    aSig = shift64RightJamming(aSig, 22);
     zSig = (Bit32u) aSig;
     if (aExp || zSig) {
         zSig |= 0x40000000;
@@ -1305,7 +1305,7 @@ static float64 addFloat64Sigs(float64 a, float64 b, int zSign, float_status_t &s
         }
         else bSig |= BX_CONST64(0x2000000000000000);
 
-        shift64RightJamming(bSig, expDiff, &bSig);
+        bSig = shift64RightJamming(bSig, expDiff);
         zExp = aExp;
     }
     else if (expDiff < 0) {
@@ -1323,7 +1323,7 @@ static float64 addFloat64Sigs(float64 a, float64 b, int zSign, float_status_t &s
         }
         else aSig |= BX_CONST64(0x2000000000000000);
 
-        shift64RightJamming(aSig, -expDiff, &aSig);
+        aSig = shift64RightJamming(aSig, -expDiff);
         zExp = bExp;
     }
     else {
@@ -1402,7 +1402,7 @@ static float64 subFloat64Sigs(float64 a, float64 b, int zSign, float_status_t &s
     }
     else aSig |= BX_CONST64(0x4000000000000000);
 
-    shift64RightJamming(aSig, -expDiff, &aSig);
+    aSig = shift64RightJamming(aSig, -expDiff);
     bSig |= BX_CONST64(0x4000000000000000);
  bBigger:
     zSig = bSig - aSig;
@@ -1424,7 +1424,7 @@ static float64 subFloat64Sigs(float64 a, float64 b, int zSign, float_status_t &s
     }
     else bSig |= BX_CONST64(0x4000000000000000);
 
-    shift64RightJamming(bSig, expDiff, &bSig);
+    bSig = shift64RightJamming(bSig, expDiff);
     aSig |= BX_CONST64(0x4000000000000000);
  aBigger:
     zSig = aSig - bSig;
@@ -2068,7 +2068,7 @@ Bit32s floatx80_to_int32(floatx80 a, float_status_t &status)
     if ((aExp == 0x7FFF) && (Bit64u) (aSig<<1)) aSign = 0;
     int shiftCount = 0x4037 - aExp;
     if (shiftCount <= 0) shiftCount = 1;
-    shift64RightJamming(aSig, shiftCount, &aSig);
+    aSig = shift64RightJamming(aSig, shiftCount);
     return roundAndPackInt32(aSign, aSig, status);
 }
 
@@ -2235,7 +2235,7 @@ float32 floatx80_to_float32(floatx80 a, float_status_t &status)
 
         return packFloat32(aSign, 0xFF, 0);
     }
-    shift64RightJamming(aSig, 33, &aSig);
+    aSig = shift64RightJamming(aSig, 33);
     if (aExp || aSig) aExp -= 0x3F81;
     return roundAndPackFloat32(aSign, aExp, (Bit32u) aSig, status);
 }
@@ -2269,7 +2269,7 @@ float64 floatx80_to_float64(floatx80 a, float_status_t &status)
         }
         return packFloat64(aSign, 0x7FF, 0);
     }
-    shift64RightJamming(aSig, 1, &zSig);
+    zSig = shift64RightJamming(aSig, 1);
     if (aExp || aSig) aExp -= 0x3C01;
     return roundAndPackFloat64(aSign, aExp, zSig, status);
 }
