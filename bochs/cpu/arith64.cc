@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith64.cc,v 1.56 2008-08-09 21:05:05 sshwarts Exp $
+// $Id: arith64.cc,v 1.57 2008-09-05 21:43:12 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -563,7 +563,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPXCHG16B(bxInstruction_c *i)
 
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  if (eaddr & 0xf) {
+  bx_address laddr = get_laddr64(i->seg(), eaddr);
+
+  if (laddr & 0xf) {
     BX_ERROR(("CMPXCHG16B: not aligned memory location (#GP)"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
