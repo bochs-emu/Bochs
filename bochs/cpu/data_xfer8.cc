@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: data_xfer8.cc,v 1.43 2008-08-29 19:23:00 sshwarts Exp $
+// $Id: data_xfer8.cc,v 1.44 2008-09-06 21:18:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -63,12 +63,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_GbEbR(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_ALOd(bxInstruction_c *i)
 {
-  AL = read_virtual_byte(i->seg(), i->Id());
+  AL = read_virtual_byte_32(i->seg(), i->Id());
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_OdAL(bxInstruction_c *i)
 {
-  write_virtual_byte(i->seg(), i->Id(), AL);
+  write_virtual_byte_32(i->seg(), i->Id(), AL);
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_EbIbM(bxInstruction_c *i)

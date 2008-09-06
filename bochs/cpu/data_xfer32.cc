@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: data_xfer32.cc,v 1.60 2008-09-06 21:10:40 sshwarts Exp $
+// $Id: data_xfer32.cc,v 1.61 2008-09-06 21:18:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -81,12 +81,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LEA_GdM(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_EAXOd(bxInstruction_c *i)
 {
-  RAX = read_virtual_dword(i->seg(), i->Id());
+  RAX = read_virtual_dword_32(i->seg(), i->Id());
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_OdEAX(bxInstruction_c *i)
 {
-  write_virtual_dword(i->seg(), i->Id(), EAX);
+  write_virtual_dword_32(i->seg(), i->Id(), EAX);
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_EdIdM(bxInstruction_c *i)

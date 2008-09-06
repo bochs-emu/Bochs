@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: data_xfer16.cc,v 1.62 2008-08-09 21:05:05 sshwarts Exp $
+// $Id: data_xfer16.cc,v 1.63 2008-09-06 21:18:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -134,12 +134,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LEA_GwM(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_AXOd(bxInstruction_c *i)
 {
-  AX = read_virtual_word(i->seg(), i->Id());
+  AX = read_virtual_word_32(i->seg(), i->Id());
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_OdAX(bxInstruction_c *i)
 {
-  write_virtual_word(i->seg(), i->Id(), AX);
+  write_virtual_word_32(i->seg(), i->Id(), AX);
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_EwIwM(bxInstruction_c *i)
