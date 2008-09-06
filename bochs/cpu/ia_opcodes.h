@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ia_opcodes.h,v 1.19 2008-08-29 19:23:03 sshwarts Exp $
+// $Id: ia_opcodes.h,v 1.20 2008-09-06 21:10:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008 Stanislav Shwartsman
@@ -389,7 +389,7 @@ bx_define_opcode(BX_IA_MOV_EwSwM, &BX_CPU_C::MOV_EwSwM, NULL)
 bx_define_opcode(BX_IA_MOV_EwSwR, &BX_CPU_C::MOV_EwSwR, NULL)
 bx_define_opcode(BX_IA_MOV_GbEbM, &BX_CPU_C::MOV_GbEbM, NULL)
 bx_define_opcode(BX_IA_MOV_GbEbR, &BX_CPU_C::MOV_GbEbR, NULL)
-bx_define_opcode(BX_IA_MOV_GdEdM, &BX_CPU_C::MOV_GdEdM, NULL)
+bx_define_opcode(BX_IA_MOV32_GdEdM, &BX_CPU_C::MOV32_GdEdM, NULL)
 bx_define_opcode(BX_IA_MOV_GdEdR, &BX_CPU_C::MOV_GdEdR, NULL)
 bx_define_opcode(BX_IA_MOV_GwEwM, &BX_CPU_C::MOV_GwEwM, NULL)
 bx_define_opcode(BX_IA_MOV_GwEwR, &BX_CPU_C::MOV_GwEwR, NULL)
@@ -1324,6 +1324,7 @@ bx_define_opcode(BX_IA_TEST_RAXId, &BX_CPU_C::TEST_RAXId, NULL)
 bx_define_opcode(BX_IA_XCHG_EqGqR, &BX_CPU_C::XCHG_EqGqR, NULL)
 bx_define_opcode(BX_IA_XCHG_EqGqM, &BX_CPU_C::XCHG_EqGqM, NULL)
 bx_define_opcode(BX_IA_LEA_GqM, &BX_CPU_C::LEA_GqM, NULL)
+bx_define_opcode(BX_IA_MOV64_GdEdM, &BX_CPU_C::MOV64_GdEdM, NULL)
 bx_define_opcode(BX_IA_MOV_RAXOq, &BX_CPU_C::MOV_RAXOq, NULL)
 bx_define_opcode(BX_IA_MOV_OqRAX, &BX_CPU_C::MOV_OqRAX, NULL)
 bx_define_opcode(BX_IA_MOV_EAXOq, &BX_CPU_C::MOV_EAXOq, NULL)
