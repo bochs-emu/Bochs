@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: instrument.h,v 1.26 2008-06-23 02:56:31 sshwarts Exp $
+// $Id: instrument.h,v 1.27 2008-09-06 17:49:31 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -147,7 +147,6 @@ extern bxInstrumentation *icpu;
 /* decoding completed */
 #  define BX_INSTR_OPCODE(cpu_id, opcode, len, is32, is64) \
                        icpu[cpu_id].bx_instr_opcode(opcode, len, is32, is64)
-#  define BX_INSTR_FETCH_DECODE_COMPLETED(cpu_id, i)
 
 /* exceptional case and interrupt */
 #  define BX_INSTR_EXCEPTION(cpu_id, vector)            icpu[cpu_id].bx_instr_exception(vector)
@@ -208,7 +207,6 @@ extern bxInstrumentation *icpu;
 
 /* decoding completed */
 #  define BX_INSTR_OPCODE(cpu_id, opcode, len, is32, is64)
-#  define BX_INSTR_FETCH_DECODE_COMPLETED(cpu_id, i)
 
 /* exceptional case and interrupt */
 #  define BX_INSTR_EXCEPTION(cpu_id, vector)

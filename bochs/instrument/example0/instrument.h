@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: instrument.h,v 1.28 2008-06-23 02:56:31 sshwarts Exp $
+// $Id: instrument.h,v 1.29 2008-09-06 17:49:31 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -98,7 +98,6 @@ void bx_instr_mem_data_access(unsigned cpu, unsigned seg, bx_address offset, uns
 /* decoding completed */
 #  define BX_INSTR_OPCODE(cpu_id, opcode, len, is32, is64) \
                        bx_instr_opcode(cpu_id, opcode, len, is32, is64)
-#  define BX_INSTR_FETCH_DECODE_COMPLETED(cpu_id, i)
 
 /* exceptional case and interrupt */
 #  define BX_INSTR_EXCEPTION(cpu_id, vector)            bx_instr_exception(cpu_id, vector)
@@ -160,7 +159,6 @@ void bx_instr_mem_data_access(unsigned cpu, unsigned seg, bx_address offset, uns
 
 /* decoding completed */
 #  define BX_INSTR_OPCODE(cpu_id, opcode, len, is32, is64)
-#  define BX_INSTR_FETCH_DECODE_COMPLETED(cpu_id, i)
 
 /* exceptional case and interrupt */
 #  define BX_INSTR_EXCEPTION(cpu_id, vector)

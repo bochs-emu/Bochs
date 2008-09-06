@@ -90,15 +90,6 @@ Currently the callback is not supported when trace-cache optimization feature
 is enabled.
 
 
-	void bx_instr_fetch_decode_completed(unsigned cpu, bxInstruction_c *i);
-
-The  callback  is  called  each  time,  when  Bochs  finishes  decoding of new
-instruction.  Through  this  callback  function  Bochs  could provide decoding
-information  of the instruction. The bxInstruction_c argument of the callbacks
-it  is  a  Bochs internal structure that holds all necessary information about
-the instruction, such as sib/modrm bytes, operand, execution pointer and etc.
-
-
 	void bx_instr_interrupt(unsigned cpu, unsigned vector);
 
 The  callback  is called each time, when Bochs simulator executes an interrupt
