@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: call_far.cc,v 1.40 2008-08-31 06:04:14 sshwarts Exp $
+// $Id: call_far.cc,v 1.41 2008-09-06 17:44:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005 Stanislav Shwartsman
@@ -586,8 +586,7 @@ BX_CPU_C::call_gate64(bx_selector_t *gate_selector)
     BX_DEBUG(("CALL GATE TO MORE PRIVILEGE LEVEL"));
 
     // get new RSP for new privilege level from TSS
-    get_RSP_from_TSS(cs_descriptor.dpl, &RSP_for_cpl_x);
-
+    RSP_for_cpl_x  = get_RSP_from_TSS(cs_descriptor.dpl);
     Bit64u old_SS  = BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value;
     Bit64u old_RSP = RSP;
 

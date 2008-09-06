@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: soft_int.cc,v 1.43 2008-08-08 09:22:48 sshwarts Exp $
+// $Id: soft_int.cc,v 1.44 2008-09-06 17:44:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -134,13 +134,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INT_Ib(bxInstruction_c *i)
 #if BX_SUPPORT_VME
     if (BX_CPU_THIS_PTR cr4.get_VME())
     {
-      Bit8u vme_redirection_bitmap;
-      Bit16u io_base;
+      bx_address tr_base = BX_CPU_THIS_PTR tr.cache.u.system.base;
 
-      access_read_linear(BX_CPU_THIS_PTR tr.cache.u.system.base + 102,
-            2, 0, BX_READ, &io_base);
-      access_read_linear(BX_CPU_THIS_PTR tr.cache.u.system.base + io_base - 32 + (vector >> 3),
-            1, 0, BX_READ, &vme_redirection_bitmap);
+      Bit16u io_base = system_read_word(tr_base + 102);
+      Bit8u vme_redirection_bitmap = system_read_byte(tr_base + io_base - 32 + (vector >> 3));
 
       if (! (vme_redirection_bitmap & (1 << (vector & 7))))
       {

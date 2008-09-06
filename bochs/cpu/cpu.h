@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.519 2008-09-02 19:46:55 sshwarts Exp $
+// $Id: cpu.h,v 1.520 2008-09-06 17:44:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2970,6 +2970,11 @@ public: // for now...
 
 #endif
 
+  BX_SMF Bit8u  system_read_byte(bx_address laddr) BX_CPP_AttrRegparmN(1);
+  BX_SMF Bit16u system_read_word(bx_address laddr) BX_CPP_AttrRegparmN(1);
+  BX_SMF Bit32u system_read_dword(bx_address laddr) BX_CPP_AttrRegparmN(1);
+  BX_SMF Bit64u system_read_qword(bx_address laddr) BX_CPP_AttrRegparmN(1);
+
 #if BX_SupportGuest2HostTLB
   BX_SMF Bit8u* v2h_read_byte(bx_address laddr, bx_bool user) BX_CPP_AttrRegparmN(2);
   BX_SMF Bit8u* v2h_write_byte(bx_address laddr, bx_bool user) BX_CPP_AttrRegparmN(2);
@@ -3095,7 +3100,7 @@ public: // for now...
                  unsigned source, Bit32u dword1, Bit32u dword2);
   BX_SMF void get_SS_ESP_from_TSS(unsigned pl, Bit16u *ss, Bit32u *esp);
 #if BX_SUPPORT_X86_64
-  BX_SMF void get_RSP_from_TSS(unsigned pl, Bit64u *rsp);
+  BX_SMF Bit64u get_RSP_from_TSS(unsigned pl);
 #endif
   BX_SMF void write_flags(Bit16u flags, bx_bool change_IOPL, bx_bool change_IF) BX_CPP_AttrRegparmN(3);
   BX_SMF void writeEFlags(Bit32u eflags, Bit32u changeMask) BX_CPP_AttrRegparmN(2); // Newer variant.

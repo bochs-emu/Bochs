@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: segment_ctrl_pro.cc,v 1.99 2008-08-16 21:06:56 sshwarts Exp $
+// $Id: segment_ctrl_pro.cc,v 1.100 2008-09-06 17:44:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -677,7 +677,7 @@ void BX_CPU_C::fetch_raw_descriptor(const bx_selector_t *selector,
     offset = BX_CPU_THIS_PTR ldtr.cache.u.system.base + index*8;
   }
 
-  access_read_linear(offset, 8, 0, BX_READ, &raw_descriptor);
+  raw_descriptor = system_read_qword(offset);
 
   *dword1 = GET32L(raw_descriptor);
   *dword2 = GET32H(raw_descriptor);
@@ -705,7 +705,7 @@ BX_CPU_C::fetch_raw_descriptor2(const bx_selector_t *selector, Bit32u *dword1, B
     offset = BX_CPU_THIS_PTR ldtr.cache.u.system.base + index*8;
   }
 
-  access_read_linear(offset, 8, 0, BX_READ, &raw_descriptor);
+  raw_descriptor = system_read_qword(offset);
 
   *dword1 = GET32L(raw_descriptor);
   *dword2 = GET32H(raw_descriptor);
@@ -742,10 +742,10 @@ void BX_CPU_C::fetch_raw_descriptor_64(const bx_selector_t *selector,
     offset = BX_CPU_THIS_PTR ldtr.cache.u.system.base + index*8;
   }
 
-  access_read_linear(offset,      8, 0, BX_READ, &raw_descriptor1);
-  access_read_linear(offset +  8, 8, 0, BX_READ, &raw_descriptor2);
+  raw_descriptor1 = system_read_qword(offset);
+  raw_descriptor2 = system_read_qword(offset + 8);
 
-  if (raw_descriptor2 & BX_CONST64(0x00001f0000000000)) {
+  if (raw_descriptor2 & BX_CONST64(0x00001F0000000000)) {
     BX_ERROR(("fetch_raw_descriptor64: extended attributes DWORD4 TYPE != 0"));
     exception(BX_GP_EXCEPTION, selector->value & 0xfffc, 0);
   }

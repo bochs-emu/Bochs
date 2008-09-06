@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: io_pro.cc,v 1.37 2008-08-30 08:14:46 sshwarts Exp $
+// $Id: io_pro.cc,v 1.38 2008-09-06 17:44:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -110,8 +110,6 @@ bx_bool BX_CPU_C::allow_io(Bit16u port, unsigned len)
 
   if (BX_CPU_THIS_PTR cr0.get_PE() && (BX_CPU_THIS_PTR get_VM() || (CPL>BX_CPU_THIS_PTR get_IOPL())))
   {
-    Bit16u io_base, permission16;
-
     if (BX_CPU_THIS_PTR tr.cache.valid==0 ||
        (BX_CPU_THIS_PTR tr.cache.type != BX_SYS_SEGMENT_AVAIL_386_TSS &&
         BX_CPU_THIS_PTR tr.cache.type != BX_SYS_SEGMENT_BUSY_386_TSS))
@@ -125,8 +123,7 @@ bx_bool BX_CPU_C::allow_io(Bit16u port, unsigned len)
       return(0);
     }
 
-    access_read_linear(BX_CPU_THIS_PTR tr.cache.u.system.base + 102,
-                   2, 0, BX_READ, &io_base);
+    Bit16u io_base = system_read_word(BX_CPU_THIS_PTR tr.cache.u.system.base + 102);
 
     if ((io_base + port/8) >= BX_CPU_THIS_PTR tr.cache.u.system.limit_scaled) {
       BX_ERROR(("allow_io(): IO port %x (len %d) outside TSS IO permission map (base=%x, limit=%x) #GP(0)",
@@ -134,8 +131,7 @@ bx_bool BX_CPU_C::allow_io(Bit16u port, unsigned len)
       return(0);
     }
 
-    access_read_linear(BX_CPU_THIS_PTR tr.cache.u.system.base + io_base + port/8,
-                   2, 0, BX_READ, &permission16);
+    Bit16u permission16 = system_read_word(BX_CPU_THIS_PTR tr.cache.u.system.base + io_base + port/8);
 
     unsigned bit_index = port & 0x7;
     unsigned mask = (1 << len) - 1;

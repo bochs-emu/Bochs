@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.121 2008-08-27 21:57:40 sshwarts Exp $
+// $Id: exception.cc,v 1.122 2008-09-06 17:44:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -62,7 +62,7 @@ static const bx_bool is_exception_OK[3][3] = {
 void BX_CPU_C::long_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error_code, Bit16u error_code)
 {
   // long mode interrupt
-  Bit64u tmp1, tmp2;
+  Bit64u desctmp1, desctmp2;
 
   bx_descriptor_t gate_descriptor, cs_descriptor;
   bx_selector_t cs_selector;
@@ -74,17 +74,17 @@ void BX_CPU_C::long_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error_code
     exception(BX_GP_EXCEPTION, vector*16 + 2, 0);
   }
 
-  access_read_linear(BX_CPU_THIS_PTR idtr.base + vector*16,     8, 0, BX_READ, &tmp1);
-  access_read_linear(BX_CPU_THIS_PTR idtr.base + vector*16 + 8, 8, 0, BX_READ, &tmp2);
+  desctmp1 = system_read_qword(BX_CPU_THIS_PTR idtr.base + vector*16);
+  desctmp2 = system_read_qword(BX_CPU_THIS_PTR idtr.base + vector*16 + 8);
 
-  if (tmp2 & BX_CONST64(0x00001F0000000000)) {
+  if (desctmp2 & BX_CONST64(0x00001F0000000000)) {
     BX_ERROR(("interrupt(long mode): IDT entry extended attributes DWORD4 TYPE != 0"));
     exception(BX_GP_EXCEPTION, vector*16 + 2, 0);
   }
 
-  Bit32u dword1 = GET32L(tmp1);
-  Bit32u dword2 = GET32H(tmp1);
-  Bit32u dword3 = GET32L(tmp2);
+  Bit32u dword1 = GET32L(desctmp1);
+  Bit32u dword2 = GET32H(desctmp1);
+  Bit32u dword3 = GET32L(desctmp2);
 
   parse_descriptor(dword1, dword2, &gate_descriptor);
 
@@ -172,10 +172,10 @@ void BX_CPU_C::long_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error_code
     // check selector and descriptor for new stack in current TSS
     if (ist != 0) {
       BX_DEBUG(("interrupt(long mode): trap to IST, vector = %d", ist));
-      get_RSP_from_TSS(ist+3, &RSP_for_cpl_x);
+      RSP_for_cpl_x = get_RSP_from_TSS(ist+3);
     }
     else {
-      get_RSP_from_TSS(cs_descriptor.dpl, &RSP_for_cpl_x);
+      RSP_for_cpl_x = get_RSP_from_TSS(cs_descriptor.dpl);
     }
 
     RSP_for_cpl_x &= BX_CONST64(0xfffffffffffffff0);
@@ -241,7 +241,7 @@ void BX_CPU_C::long_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error_code
     // check selector and descriptor for new stack in current TSS
     if (ist > 0) {
       BX_DEBUG(("interrupt(long mode): trap to IST, vector = %d", ist));
-      get_RSP_from_TSS(ist+3, &RSP);
+      RSP = get_RSP_from_TSS(ist+3);
     }
 
     // align stack
@@ -306,12 +306,10 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error
     exception(BX_GP_EXCEPTION, vector*8 + 2, 0);
   }
 
-  // descriptor AR byte must indicate interrupt gate, trap gate,
-  // or task gate, else #GP(vector*8 + 2 + EXT)
-  access_read_linear(BX_CPU_THIS_PTR idtr.base + vector*8,     4, 0,
-      BX_READ, &dword1);
-  access_read_linear(BX_CPU_THIS_PTR idtr.base + vector*8 + 4, 4, 0,
-      BX_READ, &dword2);
+  Bit64u desctmp = system_read_qword(BX_CPU_THIS_PTR idtr.base + vector*8);
+
+  dword1 = GET32L(desctmp);
+  dword2 = GET32H(desctmp);
 
   parse_descriptor(dword1, dword2, &gate_descriptor);
 
@@ -320,6 +318,8 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error
     exception(BX_GP_EXCEPTION, vector*8 + 2, 0);
   }
 
+  // descriptor AR byte must indicate interrupt gate, trap gate,
+  // or task gate, else #GP(vector*8 + 2 + EXT)
   switch (gate_descriptor.type) {
   case BX_TASK_GATE:
   case BX_286_INTERRUPT_GATE:
@@ -752,7 +752,7 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error
 void BX_CPU_C::real_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error_code, Bit16u error_code)
 {
   // real mode interrupt
-  Bit16u cs_selector, ip;
+  Bit16u cs_selector;
 
   if ((vector*4+3) > BX_CPU_THIS_PTR idtr.limit) {
     BX_ERROR(("interrupt(real mode) vector > idtr.limit"));
@@ -760,15 +760,11 @@ void BX_CPU_C::real_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error_code
   }
 
   push_16((Bit16u) read_eflags());
+  push_16(BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value);
+  push_16(IP);
 
-  cs_selector = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value;
-  push_16(cs_selector);
-  ip = EIP;
-  push_16(ip);
-
-  access_read_linear(BX_CPU_THIS_PTR idtr.base + 4 * vector,     2, 0, BX_READ, &ip);
-  EIP = (Bit32u) ip;
-  access_read_linear(BX_CPU_THIS_PTR idtr.base + 4 * vector + 2, 2, 0, BX_READ, &cs_selector);
+  EIP         = system_read_word(BX_CPU_THIS_PTR idtr.base + 4 * vector);
+  cs_selector = system_read_word(BX_CPU_THIS_PTR idtr.base + 4 * vector + 2);
   load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], cs_selector);
 
   /* INT affects the following flags: I,T */

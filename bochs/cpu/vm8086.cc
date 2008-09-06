@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vm8086.cc,v 1.47 2008-08-03 19:53:09 sshwarts Exp $
+// $Id: vm8086.cc,v 1.48 2008-09-06 17:44:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -172,10 +172,10 @@ void BX_CPU_C::iret32_stack_return_from_v86(bxInstruction_c *i)
 #if BX_SUPPORT_VME
 void BX_CPU_C::v86_redirect_interrupt(Bit32u vector)
 {
-  Bit16u temp_IP, temp_CS, temp_flags = (Bit16u) read_eflags();
+  Bit16u temp_flags = (Bit16u) read_eflags();
 
-  access_read_linear(vector*4 + 2, 2, 0, BX_READ, &temp_CS);
-  access_read_linear(vector*4,     2, 0, BX_READ, &temp_IP);
+  Bit16u temp_CS = system_read_word(vector*4 + 2);
+  Bit16u temp_IP = system_read_word(vector*4);
 
   if (BX_CPU_THIS_PTR get_IOPL() < 3) {
     temp_flags |= EFlagsIOPLMask;

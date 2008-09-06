@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: tasking.cc,v 1.61 2008-08-03 19:53:09 sshwarts Exp $
+// $Id: tasking.cc,v 1.62 2008-09-06 17:44:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -289,38 +289,36 @@ void BX_CPU_C::task_switch(bx_selector_t *tss_selector,
   // STEP 4: The new-task state is loaded from the TSS
 
   if (tss_descriptor->type <= 3) {
-    access_read_linear(Bit32u(nbase32 + 14), 2, 0, BX_READ, &temp16);
-      newEIP = temp16; // zero out upper word
-    access_read_linear(Bit32u(nbase32 + 16), 2, 0, BX_READ, &temp16);
-      newEFLAGS = temp16;
+    newEIP    = system_read_word(Bit32u(nbase32 + 14));
+    newEFLAGS = system_read_word(Bit32u(nbase32 + 16));
 
     // incoming TSS is 16bit:
     //   - upper word of general registers is set to 0xFFFF
     //   - upper word of eflags is zero'd
     //   - FS, GS are zero'd
     //   - upper word of eIP is zero'd
-    access_read_linear(Bit32u(nbase32 + 18), 2, 0, BX_READ, &temp16);
+    temp16 = system_read_word(Bit32u(nbase32 + 18));
       newEAX = 0xffff0000 | temp16;
-    access_read_linear(Bit32u(nbase32 + 20), 2, 0, BX_READ, &temp16);
+    temp16 = system_read_word(Bit32u(nbase32 + 20));
       newECX = 0xffff0000 | temp16;
-    access_read_linear(Bit32u(nbase32 + 22), 2, 0, BX_READ, &temp16);
+    temp16 = system_read_word(Bit32u(nbase32 + 22));
       newEDX = 0xffff0000 | temp16;
-    access_read_linear(Bit32u(nbase32 + 24), 2, 0, BX_READ, &temp16);
+    temp16 = system_read_word(Bit32u(nbase32 + 24));
       newEBX = 0xffff0000 | temp16;
-    access_read_linear(Bit32u(nbase32 + 26), 2, 0, BX_READ, &temp16);
+    temp16 = system_read_word(Bit32u(nbase32 + 26));
       newESP = 0xffff0000 | temp16;
-    access_read_linear(Bit32u(nbase32 + 28), 2, 0, BX_READ, &temp16);
+    temp16 = system_read_word(Bit32u(nbase32 + 28));
       newEBP = 0xffff0000 | temp16;
-    access_read_linear(Bit32u(nbase32 + 30), 2, 0, BX_READ, &temp16);
+    temp16 = system_read_word(Bit32u(nbase32 + 30));
       newESI = 0xffff0000 | temp16;
-    access_read_linear(Bit32u(nbase32 + 32), 2, 0, BX_READ, &temp16);
+    temp16 = system_read_word(Bit32u(nbase32 + 32));
       newEDI = 0xffff0000 | temp16;
 
-    access_read_linear(Bit32u(nbase32 + 34), 2, 0, BX_READ, &raw_es_selector);
-    access_read_linear(Bit32u(nbase32 + 36), 2, 0, BX_READ, &raw_cs_selector);
-    access_read_linear(Bit32u(nbase32 + 38), 2, 0, BX_READ, &raw_ss_selector);
-    access_read_linear(Bit32u(nbase32 + 40), 2, 0, BX_READ, &raw_ds_selector);
-    access_read_linear(Bit32u(nbase32 + 42), 2, 0, BX_READ, &raw_ldt_selector);
+    raw_es_selector  = system_read_word(Bit32u(nbase32 + 34));
+    raw_cs_selector  = system_read_word(Bit32u(nbase32 + 36));
+    raw_ss_selector  = system_read_word(Bit32u(nbase32 + 38));
+    raw_ds_selector  = system_read_word(Bit32u(nbase32 + 40));
+    raw_ldt_selector = system_read_word(Bit32u(nbase32 + 42));
 
     raw_fs_selector = 0; // use a NULL selector
     raw_gs_selector = 0; // use a NULL selector
@@ -330,27 +328,29 @@ void BX_CPU_C::task_switch(bx_selector_t *tss_selector,
   }
   else {
     if (BX_CPU_THIS_PTR cr0.get_PG())
-      access_read_linear(Bit32u(nbase32 + 0x1c), 4, 0, BX_READ, &newCR3);
+      newCR3 = system_read_dword(Bit32u(nbase32 + 0x1c));
     else
       newCR3 = 0;   // keep compiler happy (not used)
-    access_read_linear(Bit32u(nbase32 + 0x20), 4, 0, BX_READ, &newEIP);
-    access_read_linear(Bit32u(nbase32 + 0x24), 4, 0, BX_READ, &newEFLAGS);
-    access_read_linear(Bit32u(nbase32 + 0x28), 4, 0, BX_READ, &newEAX);
-    access_read_linear(Bit32u(nbase32 + 0x2c), 4, 0, BX_READ, &newECX);
-    access_read_linear(Bit32u(nbase32 + 0x30), 4, 0, BX_READ, &newEDX);
-    access_read_linear(Bit32u(nbase32 + 0x34), 4, 0, BX_READ, &newEBX);
-    access_read_linear(Bit32u(nbase32 + 0x38), 4, 0, BX_READ, &newESP);
-    access_read_linear(Bit32u(nbase32 + 0x3c), 4, 0, BX_READ, &newEBP);
-    access_read_linear(Bit32u(nbase32 + 0x40), 4, 0, BX_READ, &newESI);
-    access_read_linear(Bit32u(nbase32 + 0x44), 4, 0, BX_READ, &newEDI);
-    access_read_linear(Bit32u(nbase32 + 0x48), 2, 0, BX_READ, &raw_es_selector);
-    access_read_linear(Bit32u(nbase32 + 0x4c), 2, 0, BX_READ, &raw_cs_selector);
-    access_read_linear(Bit32u(nbase32 + 0x50), 2, 0, BX_READ, &raw_ss_selector);
-    access_read_linear(Bit32u(nbase32 + 0x54), 2, 0, BX_READ, &raw_ds_selector);
-    access_read_linear(Bit32u(nbase32 + 0x58), 2, 0, BX_READ, &raw_fs_selector);
-    access_read_linear(Bit32u(nbase32 + 0x5c), 2, 0, BX_READ, &raw_gs_selector);
-    access_read_linear(Bit32u(nbase32 + 0x60), 2, 0, BX_READ, &raw_ldt_selector);
-    access_read_linear(Bit32u(nbase32 + 0x64), 2, 0, BX_READ, &trap_word);
+
+    newEIP    = system_read_dword(Bit32u(nbase32 + 0x20));
+    newEFLAGS = system_read_dword(Bit32u(nbase32 + 0x24));
+    newEAX    = system_read_dword(Bit32u(nbase32 + 0x28));
+    newECX    = system_read_dword(Bit32u(nbase32 + 0x2c));
+    newEDX    = system_read_dword(Bit32u(nbase32 + 0x30));
+    newEBX    = system_read_dword(Bit32u(nbase32 + 0x34));
+    newESP    = system_read_dword(Bit32u(nbase32 + 0x38));
+    newEBP    = system_read_dword(Bit32u(nbase32 + 0x3c));
+    newESI    = system_read_dword(Bit32u(nbase32 + 0x40));
+    newEDI    = system_read_dword(Bit32u(nbase32 + 0x44));
+
+    raw_es_selector  = system_read_word(Bit32u(nbase32 + 0x48));
+    raw_cs_selector  = system_read_word(Bit32u(nbase32 + 0x4c));
+    raw_ss_selector  = system_read_word(Bit32u(nbase32 + 0x50));
+    raw_ds_selector  = system_read_word(Bit32u(nbase32 + 0x54));
+    raw_fs_selector  = system_read_word(Bit32u(nbase32 + 0x58));
+    raw_gs_selector  = system_read_word(Bit32u(nbase32 + 0x5c));
+    raw_ldt_selector = system_read_word(Bit32u(nbase32 + 0x60));
+    trap_word        = system_read_word(Bit32u(nbase32 + 0x64));
   }
 
   // Step 5: If CALL, interrupt, or JMP, set busy flag in new task's
@@ -712,26 +712,20 @@ void BX_CPU_C::get_SS_ESP_from_TSS(unsigned pl, Bit16u *ss, Bit32u *esp)
       BX_DEBUG(("get_SS_ESP_from_TSS(386): TSSstackaddr > TSS.LIMIT"));
       exception(BX_TS_EXCEPTION, BX_CPU_THIS_PTR tr.selector.value & 0xfffc, 0);
     }
-    access_read_linear(BX_CPU_THIS_PTR tr.cache.u.system.base +
-      TSSstackaddr+4, 2, 0, BX_READ, ss);
-    access_read_linear(BX_CPU_THIS_PTR tr.cache.u.system.base +
-      TSSstackaddr,   4, 0, BX_READ, esp);
+    *ss  = system_read_word (BX_CPU_THIS_PTR tr.cache.u.system.base + TSSstackaddr + 4);
+    *esp = system_read_dword(BX_CPU_THIS_PTR tr.cache.u.system.base + TSSstackaddr);
   }
   else if (BX_CPU_THIS_PTR tr.cache.type==BX_SYS_SEGMENT_AVAIL_286_TSS ||
            BX_CPU_THIS_PTR tr.cache.type==BX_SYS_SEGMENT_BUSY_286_TSS)
   {
     // 16-bit TSS
-    Bit16u temp16;
     Bit32u TSSstackaddr = 4*pl + 2;
-    if ((TSSstackaddr+4) > BX_CPU_THIS_PTR tr.cache.u.system.limit_scaled) {
+    if ((TSSstackaddr+3) > BX_CPU_THIS_PTR tr.cache.u.system.limit_scaled) {
       BX_DEBUG(("get_SS_ESP_from_TSS(286): TSSstackaddr > TSS.LIMIT"));
       exception(BX_TS_EXCEPTION, BX_CPU_THIS_PTR tr.selector.value & 0xfffc, 0);
     }
-    access_read_linear(BX_CPU_THIS_PTR tr.cache.u.system.base +
-      TSSstackaddr+2, 2, 0, BX_READ, ss);
-    access_read_linear(BX_CPU_THIS_PTR tr.cache.u.system.base +
-      TSSstackaddr,   2, 0, BX_READ, &temp16);
-    *esp = temp16; // truncate
+    *ss  =          system_read_word(BX_CPU_THIS_PTR tr.cache.u.system.base + TSSstackaddr + 2);
+    *esp = (Bit32u) system_read_word(BX_CPU_THIS_PTR tr.cache.u.system.base + TSSstackaddr);
   }
   else {
     BX_PANIC(("get_SS_ESP_from_TSS: TR is bogus type (%u)",
@@ -740,7 +734,7 @@ void BX_CPU_C::get_SS_ESP_from_TSS(unsigned pl, Bit16u *ss, Bit32u *esp)
 }
 
 #if BX_SUPPORT_X86_64
-void BX_CPU_C::get_RSP_from_TSS(unsigned pl, Bit64u *rsp)
+Bit64u BX_CPU_C::get_RSP_from_TSS(unsigned pl)
 {
   if (BX_CPU_THIS_PTR tr.cache.valid==0)
     BX_PANIC(("get_RSP_from_TSS: TR.cache invalid"));
@@ -752,7 +746,7 @@ void BX_CPU_C::get_RSP_from_TSS(unsigned pl, Bit64u *rsp)
     exception(BX_TS_EXCEPTION, BX_CPU_THIS_PTR tr.selector.value & 0xfffc, 0);
   }
 
-  access_read_linear(BX_CPU_THIS_PTR tr.cache.u.system.base +
-    TSSstackaddr, 8, 0, BX_READ, rsp);
+  Bit64u rsp = system_read_qword(BX_CPU_THIS_PTR tr.cache.u.system.base + TSSstackaddr);
+  return rsp;
 }
 #endif  // #if BX_SUPPORT_X86_64

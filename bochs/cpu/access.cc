@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: access.cc,v 1.118 2008-08-14 22:26:14 sshwarts Exp $
+// $Id: access.cc,v 1.119 2008-09-06 17:44:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -270,6 +270,106 @@ int BX_CPU_C::int_number(unsigned s)
     return BX_SS_EXCEPTION;
   else
     return BX_GP_EXCEPTION;
+}
+
+  Bit8u BX_CPP_AttrRegparmN(1)
+BX_CPU_C::system_read_byte(bx_address laddr)
+{
+  Bit8u data;
+
+#if BX_SupportGuest2HostTLB
+  unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 0);
+  bx_address lpf = LPFOf(laddr);
+  bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
+  if (tlbEntry->lpf == lpf) {
+    bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
+    Bit32u pageOffset = PAGE_OFFSET(laddr);
+    BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr, tlbEntry->ppf | pageOffset, 1, BX_READ);
+    Bit8u *hostAddr = (Bit8u*) (hostPageAddr | pageOffset);
+    data = *hostAddr;
+    BX_DBG_LIN_MEMORY_ACCESS(BX_CPU_ID, laddr,
+        tlbEntry->ppf | pageOffset, 1, 0, BX_READ, (Bit8u*) &data);
+    return data;
+  }
+#endif
+
+  access_read_linear(laddr, 1, 0, BX_READ, (void *) &data);
+  return data;
+}
+
+  Bit16u BX_CPP_AttrRegparmN(1)
+BX_CPU_C::system_read_word(bx_address laddr)
+{
+  Bit16u data;
+
+#if BX_SupportGuest2HostTLB
+  unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 1);
+  bx_address lpf = LPFOf(laddr);
+  bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
+  if (tlbEntry->lpf == lpf) {
+    bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
+    Bit32u pageOffset = PAGE_OFFSET(laddr);
+    BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr, tlbEntry->ppf | pageOffset, 2, BX_READ);
+    Bit16u *hostAddr = (Bit16u*) (hostPageAddr | pageOffset);
+    ReadHostWordFromLittleEndian(hostAddr, data);
+    BX_DBG_LIN_MEMORY_ACCESS(BX_CPU_ID, laddr,
+        tlbEntry->ppf | pageOffset, 2, 0, BX_READ, (Bit8u*) &data);
+    return data;
+  }
+#endif
+
+  access_read_linear(laddr, 2, 0, BX_READ, (void *) &data);
+  return data;
+}
+
+  Bit32u BX_CPP_AttrRegparmN(1)
+BX_CPU_C::system_read_dword(bx_address laddr)
+{
+  Bit32u data;
+
+#if BX_SupportGuest2HostTLB
+  unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 3);
+  bx_address lpf = LPFOf(laddr);
+  bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
+  if (tlbEntry->lpf == lpf) {
+    bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
+    Bit32u pageOffset = PAGE_OFFSET(laddr);
+    BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr, tlbEntry->ppf | pageOffset, 4, BX_READ);
+    Bit32u *hostAddr = (Bit32u*) (hostPageAddr | pageOffset);
+    ReadHostDWordFromLittleEndian(hostAddr, data);
+    BX_DBG_LIN_MEMORY_ACCESS(BX_CPU_ID, laddr,
+        tlbEntry->ppf | pageOffset, 4, 0, BX_READ, (Bit8u*) &data);
+    return data;
+  }
+#endif
+
+  access_read_linear(laddr, 4, 0, BX_READ, (void *) &data);
+  return data;
+}
+
+  Bit64u BX_CPP_AttrRegparmN(1)
+BX_CPU_C::system_read_qword(bx_address laddr)
+{
+  Bit64u data;
+
+#if BX_SupportGuest2HostTLB
+  unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 7);
+  bx_address lpf = LPFOf(laddr);
+  bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
+  if (tlbEntry->lpf == lpf) {
+    bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
+    Bit32u pageOffset = PAGE_OFFSET(laddr);
+    BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr, tlbEntry->ppf | pageOffset, 8, BX_READ);
+    Bit64u *hostAddr = (Bit64u*) (hostPageAddr | pageOffset);
+    ReadHostQWordFromLittleEndian(hostAddr, data);
+    BX_DBG_LIN_MEMORY_ACCESS(BX_CPU_ID, laddr,
+        tlbEntry->ppf | pageOffset, 8, 0, BX_READ, (Bit8u*) &data);
+    return data;
+  }
+#endif
+
+  access_read_linear(laddr, 8, 0, BX_READ, (void *) &data);
+  return data;
 }
 
 #if BX_SupportGuest2HostTLB
