@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_string.cc,v 1.10 2008-08-11 18:53:24 sshwarts Exp $
+// $Id: sse_string.cc,v 1.11 2008-09-06 18:21:29 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007 Stanislav Shwartsman
@@ -34,7 +34,7 @@
 #if (BX_SUPPORT_SSE > 4) || (BX_SUPPORT_SSE >= 4 && BX_SUPPORT_SSE_EXTENSION > 0)
 
 // Compare all pairs of Ai, Bj according to imm8 control
-static void compare_strings(bx_bool BoolRes[16][16], BxPackedXmmRegister op1, BxPackedXmmRegister op2, Bit8u imm)
+static void compare_strings(Bit8u BoolRes[16][16], BxPackedXmmRegister op1, BxPackedXmmRegister op2, Bit8u imm)
 {
   unsigned i, j;
   unsigned aggregation_operation = (imm >> 2) & 3;
@@ -204,7 +204,7 @@ static bx_bool override_if_data_invalid(bx_bool val, bx_bool i_valid, bx_bool j_
   return val;
 }
 
-static Bit16u aggregate(bx_bool BoolRes[16][16], unsigned len1, unsigned len2, Bit8u imm)
+static Bit16u aggregate(Bit8u BoolRes[16][16], unsigned len1, unsigned len2, Bit8u imm)
 {
   unsigned aggregation_operation = (imm >> 2) & 3;
   unsigned num_elements = (imm & 0x1) ? 8 : 16;
@@ -311,7 +311,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PCMPESTRM_VdqWdqIb(bxInstruction_c *i)
   }
 
   // compare all pairs of Ai, Bj
-  bx_bool BoolRes[16][16];
+  Bit8u BoolRes[16][16];
   compare_strings(BoolRes, op1, op2, imm8);
   unsigned len1, len2, num_elements = (imm8 & 0x1) ? 8 : 16;
 
@@ -381,7 +381,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PCMPESTRI_VdqWdqIb(bxInstruction_c *i)
   }
 
   // compare all pairs of Ai, Bj
-  bx_bool BoolRes[16][16];
+  Bit8u BoolRes[16][16];
   compare_strings(BoolRes, op1, op2, imm8);
   unsigned len1, len2, num_elements = (imm8 & 0x1) ? 8 : 16;
   int index;
@@ -448,7 +448,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PCMPISTRM_VdqWdqIb(bxInstruction_c *i)
   }
 
   // compare all pairs of Ai, Bj
-  bx_bool BoolRes[16][16];
+  Bit8u BoolRes[16][16];
   compare_strings(BoolRes, op1, op2, imm8);
 
   unsigned num_elements = (imm8 & 0x1) ? 8 : 16;
@@ -509,7 +509,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PCMPISTRI_VdqWdqIb(bxInstruction_c *i)
   }
 
   // compare all pairs of Ai, Bj
-  bx_bool BoolRes[16][16];
+  Bit8u BoolRes[16][16];
   compare_strings(BoolRes, op1, op2, imm8);
   unsigned num_elements = (imm8 & 0x1) ? 8 : 16;
   int index;

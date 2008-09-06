@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.214 2008-09-06 17:49:31 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.215 2008-09-06 18:21:28 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -47,7 +47,7 @@
 
 #define X 0 /* undefined opcode */
 
-static const bx_bool BxOpcodeHasModrm64[512] = {
+static const Bit8u BxOpcodeHasModrm64[512] = {
   /*       0 1 2 3 4 5 6 7 8 9 a b c d e f          */
   /*       -------------------------------          */
   /* 00 */ 1,1,1,1,0,0,X,X,1,1,1,1,0,0,X,X,
