@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.157 2008-08-28 10:57:37 akrisak Exp $
+// $Id: dbg_main.cc,v 1.158 2008-09-07 07:57:01 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -116,7 +116,7 @@ static Bit8u bx_disasm_ibuf[32];
 static char  bx_disasm_tbuf[512];
 
 // watchpoints
-static struct watch {
+static struct watchp {
   bx_phy_address watch;
   Bit32u handle;
   unsigned type; // BX_READ, BX_WRITE, BX_RW
