@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: smm.cc,v 1.44 2008-09-08 15:45:57 sshwarts Exp $
+// $Id: smm.cc,v 1.45 2008-09-08 20:47:33 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2006 Stanislav Shwartsman
@@ -148,7 +148,7 @@ void BX_CPU_C::enter_system_management_mode(void)
   parse_selector(BX_CPU_THIS_PTR smbase >> 4,
                &BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector);
 
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.valid    = SegValidCache | SegAccessROK4G | SegAccessWOK4G;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.valid    = SegValidCache | SegAccessROK | SegAccessWOK;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.p        = 1;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.dpl      = 0;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.segment  = 1;  /* data/code segment */
@@ -175,7 +175,7 @@ void BX_CPU_C::enter_system_management_mode(void)
   parse_selector(0x0000,
                &BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector);
 
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.valid    = SegValidCache | SegAccessROK4G | SegAccessWOK4G;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.valid    = SegValidCache | SegAccessROK | SegAccessWOK;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.p        = 1;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.dpl      = 0;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.segment  = 1; /* data/code segment */

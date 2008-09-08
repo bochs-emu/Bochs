@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: access.cc,v 1.119 2008-09-06 17:44:02 sshwarts Exp $
+// $Id: access.cc,v 1.120 2008-09-08 20:47:33 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -39,7 +39,7 @@ BX_CPU_C::write_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned le
 #if BX_SUPPORT_X86_64
   if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
     // Mark cache as being OK type for succeeding reads/writes
-    seg->cache.valid |= SegAccessROK | SegAccessWOK | SegAccessROK4G | SegAccessWOK4G;
+    seg->cache.valid |= SegAccessROK | SegAccessWOK;
     return 1;
   }
 #endif
@@ -80,9 +80,6 @@ BX_CPU_C::write_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned le
         // limit check in other functions, and we don't want the value to roll.
         // Only normal segments (not expand down) are handled this way.
         seg->cache.valid |= SegAccessROK | SegAccessWOK;
- 
-        if (seg->cache.u.segment.limit_scaled == 0xffffffff)
-          seg->cache.valid |= SegAccessROK4G | SegAccessWOK4G;
       }
       break;
 
@@ -114,7 +111,7 @@ BX_CPU_C::read_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned len
 #if BX_SUPPORT_X86_64
   if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
     // Mark cache as being OK type for succeeding reads/writes
-    seg->cache.valid |= SegAccessROK | SegAccessWOK | SegAccessROK4G | SegAccessWOK4G;
+    seg->cache.valid |= SegAccessROK | SegAccessWOK;
     return 1;
   }
 #endif
@@ -144,8 +141,6 @@ BX_CPU_C::read_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned len
         // Mark cache as being OK type for succeeding reads. See notes for
         // write checks; similar code.
         seg->cache.valid |= SegAccessROK;
-        if (seg->cache.u.segment.limit_scaled == 0xffffffff)
-          seg->cache.valid |= SegAccessROK4G;
       }
       break;
 
@@ -184,7 +179,7 @@ BX_CPU_C::execute_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned 
 #if BX_SUPPORT_X86_64
   if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
     // Mark cache as being OK type for succeeding reads/writes
-    seg->cache.valid |= SegAccessROK | SegAccessWOK | SegAccessROK4G | SegAccessWOK4G;
+    seg->cache.valid |= SegAccessROK | SegAccessWOK;
     return 1;
   }
 #endif
@@ -214,8 +209,6 @@ BX_CPU_C::execute_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned 
         // Mark cache as being OK type for succeeding reads. See notes for
         // write checks; similar code.
         seg->cache.valid |= SegAccessROK;
-        if (seg->cache.u.segment.limit_scaled == 0xffffffff)
-          seg->cache.valid |= SegAccessROK4G;
       }
       break;
 

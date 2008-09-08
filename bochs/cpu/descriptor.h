@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: descriptor.h,v 1.24 2008-05-26 18:02:07 sshwarts Exp $
+// $Id: descriptor.h,v 1.25 2008-09-08 20:47:33 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007 Stanislav Shwartsman
@@ -58,8 +58,6 @@ typedef struct
 #define SegValidCache  (0x01)
 #define SegAccessROK   (0x02)
 #define SegAccessWOK   (0x04)
-#define SegAccessROK4G (0x08)
-#define SegAccessWOK4G (0x10)
 
   unsigned valid;        // Holds above values, Or'd together.  Used to
                          // hold only 0 or 1.

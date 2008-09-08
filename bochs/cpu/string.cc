@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: string.cc,v 1.63 2008-08-03 19:53:09 sshwarts Exp $
+// $Id: string.cc,v 1.64 2008-09-08 20:47:33 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -49,12 +49,18 @@ Bit32u BX_CPU_C::FastRepMOVSB(bxInstruction_c *i, unsigned srcSeg, bx_address sr
   bx_address laddrDst, laddrSrc;
   Bit8u *hostAddrSrc, *hostAddrDst;
 
+  BX_ASSERT(BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64);
+
   bx_segment_reg_t *srcSegPtr = &BX_CPU_THIS_PTR sregs[srcSeg];
-  if (!(srcSegPtr->cache.valid & SegAccessROK4G))
+  if (!(srcSegPtr->cache.valid & SegAccessROK))
+    return 0;
+  if ((srcOff | 0xfff) > srcSegPtr->cache.u.segment.limit_scaled)
     return 0;
 
   bx_segment_reg_t *dstSegPtr = &BX_CPU_THIS_PTR sregs[dstSeg];
-  if (!(dstSegPtr->cache.valid & SegAccessWOK4G))
+  if (!(dstSegPtr->cache.valid & SegAccessWOK))
+    return 0;
+  if ((dstOff | 0xfff) > dstSegPtr->cache.u.segment.limit_scaled)
     return 0;
 
   laddrSrc = BX_CPU_THIS_PTR get_laddr(srcSeg, srcOff);
@@ -144,12 +150,18 @@ Bit32u BX_CPU_C::FastRepMOVSW(bxInstruction_c *i, unsigned srcSeg, bx_address sr
   bx_address laddrDst, laddrSrc;
   Bit8u *hostAddrSrc, *hostAddrDst;
 
+  BX_ASSERT(BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64);
+
   bx_segment_reg_t *srcSegPtr = &BX_CPU_THIS_PTR sregs[srcSeg];
-  if (!(srcSegPtr->cache.valid & SegAccessROK4G))
+  if (!(srcSegPtr->cache.valid & SegAccessROK))
+    return 0;
+  if ((srcOff | 0xfff) > srcSegPtr->cache.u.segment.limit_scaled)
     return 0;
 
   bx_segment_reg_t *dstSegPtr = &BX_CPU_THIS_PTR sregs[dstSeg];
-  if (!(dstSegPtr->cache.valid & SegAccessWOK4G))
+  if (!(dstSegPtr->cache.valid & SegAccessWOK))
+    return 0;
+  if ((dstOff | 0xfff) > dstSegPtr->cache.u.segment.limit_scaled)
     return 0;
 
   laddrSrc = BX_CPU_THIS_PTR get_laddr(srcSeg, srcOff);
@@ -242,12 +254,18 @@ Bit32u BX_CPU_C::FastRepMOVSD(bxInstruction_c *i, unsigned srcSeg, bx_address sr
   bx_address laddrDst, laddrSrc;
   Bit8u *hostAddrSrc, *hostAddrDst;
 
+  BX_ASSERT(BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64);
+
   bx_segment_reg_t *srcSegPtr = &BX_CPU_THIS_PTR sregs[srcSeg];
-  if (!(srcSegPtr->cache.valid & SegAccessROK4G))
+  if (!(srcSegPtr->cache.valid & SegAccessROK))
+    return 0;
+  if ((srcOff | 0xfff) > srcSegPtr->cache.u.segment.limit_scaled)
     return 0;
 
   bx_segment_reg_t *dstSegPtr = &BX_CPU_THIS_PTR sregs[dstSeg];
-  if (!(dstSegPtr->cache.valid & SegAccessWOK4G))
+  if (!(dstSegPtr->cache.valid & SegAccessWOK))
+    return 0;
+  if ((dstOff | 0xfff) > dstSegPtr->cache.u.segment.limit_scaled)
     return 0;
 
   laddrSrc = BX_CPU_THIS_PTR get_laddr(srcSeg, srcOff);
@@ -340,8 +358,12 @@ Bit32u BX_CPU_C::FastRepSTOSB(bxInstruction_c *i, unsigned dstSeg, bx_address ds
   bx_address laddrDst;
   Bit8u *hostAddrDst;
 
+  BX_ASSERT(BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64);
+
   bx_segment_reg_t *dstSegPtr = &BX_CPU_THIS_PTR sregs[dstSeg];
-  if ((dstSegPtr->cache.valid & SegAccessWOK4G) != SegAccessWOK4G)
+  if (!(dstSegPtr->cache.valid & SegAccessWOK))
+    return 0;
+  if ((dstOff | 0xfff) > dstSegPtr->cache.u.segment.limit_scaled)
     return 0;
 
   laddrDst = BX_CPU_THIS_PTR get_laddr(dstSeg, dstOff);
@@ -405,8 +427,12 @@ Bit32u BX_CPU_C::FastRepSTOSW(bxInstruction_c *i, unsigned dstSeg, bx_address ds
   bx_address laddrDst;
   Bit8u *hostAddrDst;
 
+  BX_ASSERT(BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64);
+
   bx_segment_reg_t *dstSegPtr = &BX_CPU_THIS_PTR sregs[dstSeg];
-  if ((dstSegPtr->cache.valid & SegAccessWOK4G) != SegAccessWOK4G)
+  if (!(dstSegPtr->cache.valid & SegAccessWOK))
+    return 0;
+  if ((dstOff | 0xfff) > dstSegPtr->cache.u.segment.limit_scaled)
     return 0;
 
   laddrDst = BX_CPU_THIS_PTR get_laddr(dstSeg, dstOff);
@@ -472,8 +498,12 @@ Bit32u BX_CPU_C::FastRepSTOSD(bxInstruction_c *i, unsigned dstSeg, bx_address ds
   bx_address laddrDst;
   Bit8u *hostAddrDst;
 
+  BX_ASSERT(BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64);
+
   bx_segment_reg_t *dstSegPtr = &BX_CPU_THIS_PTR sregs[dstSeg];
-  if (!(dstSegPtr->cache.valid & SegAccessWOK4G))
+  if (!(dstSegPtr->cache.valid & SegAccessWOK))
+    return 0;
+  if ((dstOff | 0xfff) > dstSegPtr->cache.u.segment.limit_scaled)
     return 0;
 
   laddrDst = BX_CPU_THIS_PTR get_laddr(dstSeg, dstOff);
