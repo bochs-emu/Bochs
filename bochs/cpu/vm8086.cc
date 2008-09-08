@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vm8086.cc,v 1.48 2008-09-06 17:44:02 sshwarts Exp $
+// $Id: vm8086.cc,v 1.49 2008-09-08 15:45:57 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -207,7 +207,7 @@ void BX_CPU_C::v86_redirect_interrupt(Bit32u vector)
 
 void BX_CPU_C::init_v8086_mode(void)
 {
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.valid   = 1;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.valid   = SegValidCache | SegAccessROK | SegAccessWOK;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.p       = 1;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.dpl     = 3;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.segment = 1;
@@ -228,7 +228,7 @@ void BX_CPU_C::init_v8086_mode(void)
   handleAlignmentCheck(); // CPL was modified
 #endif
 
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.valid   = 1;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.valid   = SegValidCache | SegAccessROK | SegAccessWOK;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.p       = 1;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.dpl     = 3;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.segment = 1;
@@ -242,7 +242,7 @@ void BX_CPU_C::init_v8086_mode(void)
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.avl          = 0;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.rpl                 = 3;
 
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.valid   = 1;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.valid   = SegValidCache | SegAccessROK | SegAccessWOK;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.p       = 1;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.dpl     = 3;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.segment = 1;
@@ -256,7 +256,7 @@ void BX_CPU_C::init_v8086_mode(void)
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.u.segment.avl          = 0;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.rpl                 = 3;
 
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.valid   = 1;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.valid   = SegValidCache | SegAccessROK | SegAccessWOK;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.p       = 1;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.dpl     = 3;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.segment = 1;
@@ -270,7 +270,7 @@ void BX_CPU_C::init_v8086_mode(void)
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.u.segment.avl          = 0;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.rpl                 = 3;
 
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.valid   = 1;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.valid   = SegValidCache | SegAccessROK | SegAccessWOK;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.p       = 1;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.dpl     = 3;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.segment = 1;
@@ -284,7 +284,7 @@ void BX_CPU_C::init_v8086_mode(void)
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.u.segment.avl          = 0;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].selector.rpl                 = 3;
 
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.valid   = 1;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.valid   = SegValidCache | SegAccessROK | SegAccessWOK;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.p       = 1;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.dpl     = 3;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.segment = 1;

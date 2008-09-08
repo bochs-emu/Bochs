@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: access32.cc,v 1.14 2008-08-31 06:04:14 sshwarts Exp $
+// $Id: access32.cc,v 1.15 2008-09-08 15:45:56 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008 Stanislav Shwartsman
@@ -89,7 +89,7 @@ accessOK:
 #if BX_SupportGuest2HostTLB
     unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 1);
 #if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
-    Bit32u lpf = AlignedAccessLPFOf(laddr, 1) & (Bit32u) BX_CPU_THIS_PTR alignment_check_mask;
+    Bit32u lpf = AlignedAccessLPFOf(laddr, (1 & BX_CPU_THIS_PTR alignment_check_mask));
 #else
     Bit32u lpf = LPFOf(laddr);
 #endif    
@@ -157,7 +157,7 @@ accessOK:
 #if BX_SupportGuest2HostTLB
     unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 3);
 #if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
-    Bit32u lpf = AlignedAccessLPFOf(laddr, 3) & (Bit32u) BX_CPU_THIS_PTR alignment_check_mask;
+    Bit32u lpf = AlignedAccessLPFOf(laddr, (3 & BX_CPU_THIS_PTR alignment_check_mask));
 #else
     Bit32u lpf = LPFOf(laddr);
 #endif    
@@ -225,7 +225,7 @@ accessOK:
 #if BX_SupportGuest2HostTLB
     unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 7);
 #if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
-    Bit32u lpf = AlignedAccessLPFOf(laddr, 7) & (Bit32u) BX_CPU_THIS_PTR alignment_check_mask;
+    Bit32u lpf = AlignedAccessLPFOf(laddr, (7 & BX_CPU_THIS_PTR alignment_check_mask));
 #else
     Bit32u lpf = LPFOf(laddr);
 #endif    
@@ -293,7 +293,7 @@ accessOK:
 #if BX_SupportGuest2HostTLB
     unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 15);
 #if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
-    Bit32u lpf = AlignedAccessLPFOf(laddr, 15) & (Bit32u) BX_CPU_THIS_PTR alignment_check_mask;
+    Bit32u lpf = AlignedAccessLPFOf(laddr, (15 & BX_CPU_THIS_PTR alignment_check_mask));
 #else
     Bit32u lpf = LPFOf(laddr);
 #endif    
@@ -462,7 +462,7 @@ accessOK:
 #if BX_SupportGuest2HostTLB
     unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 1);
 #if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
-    Bit32u lpf = AlignedAccessLPFOf(laddr, 1) & (Bit32u) BX_CPU_THIS_PTR alignment_check_mask;
+    Bit32u lpf = AlignedAccessLPFOf(laddr, (1 & BX_CPU_THIS_PTR alignment_check_mask));
 #else
     Bit32u lpf = LPFOf(laddr);
 #endif    
@@ -528,7 +528,7 @@ accessOK:
 #if BX_SupportGuest2HostTLB
     unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 3);
 #if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
-    Bit32u lpf = AlignedAccessLPFOf(laddr, 3) & (Bit32u) BX_CPU_THIS_PTR alignment_check_mask;
+    Bit32u lpf = AlignedAccessLPFOf(laddr, (3 & BX_CPU_THIS_PTR alignment_check_mask));
 #else
     Bit32u lpf = LPFOf(laddr);
 #endif    
@@ -594,7 +594,7 @@ accessOK:
 #if BX_SupportGuest2HostTLB
     unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 7);
 #if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
-    Bit32u lpf = AlignedAccessLPFOf(laddr, 7) & (Bit32u) BX_CPU_THIS_PTR alignment_check_mask;
+    Bit32u lpf = AlignedAccessLPFOf(laddr, (7 & BX_CPU_THIS_PTR alignment_check_mask));
 #else
     Bit32u lpf = LPFOf(laddr);
 #endif    
@@ -659,7 +659,7 @@ accessOK:
 #if BX_SupportGuest2HostTLB
     unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 15);
 #if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
-    Bit32u lpf = AlignedAccessLPFOf(laddr, 15) & (Bit32u) BX_CPU_THIS_PTR alignment_check_mask;
+    Bit32u lpf = AlignedAccessLPFOf(laddr, (15 & BX_CPU_THIS_PTR alignment_check_mask));
 #else
     Bit32u lpf = LPFOf(laddr);
 #endif    
@@ -831,7 +831,7 @@ accessOK:
 #if BX_SupportGuest2HostTLB
     unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 1);
 #if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
-    Bit32u lpf = AlignedAccessLPFOf(laddr, 1) & (Bit32u) BX_CPU_THIS_PTR alignment_check_mask;
+    Bit32u lpf = AlignedAccessLPFOf(laddr, (1 & BX_CPU_THIS_PTR alignment_check_mask));
 #else
     Bit32u lpf = LPFOf(laddr);
 #endif    
@@ -901,7 +901,7 @@ accessOK:
 #if BX_SupportGuest2HostTLB
     unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 3);
 #if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
-    Bit32u lpf = AlignedAccessLPFOf(laddr, 3) & (Bit32u) BX_CPU_THIS_PTR alignment_check_mask;
+    Bit32u lpf = AlignedAccessLPFOf(laddr, (3 & BX_CPU_THIS_PTR alignment_check_mask));
 #else
     Bit32u lpf = LPFOf(laddr);
 #endif    
@@ -971,7 +971,7 @@ accessOK:
 #if BX_SupportGuest2HostTLB
     unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 7);
 #if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
-    Bit32u lpf = AlignedAccessLPFOf(laddr, 7) & (Bit32u) BX_CPU_THIS_PTR alignment_check_mask;
+    Bit32u lpf = AlignedAccessLPFOf(laddr, (7 & BX_CPU_THIS_PTR alignment_check_mask));
 #else
     Bit32u lpf = LPFOf(laddr);
 #endif    
@@ -1205,7 +1205,7 @@ accessOK:
 #if BX_SupportGuest2HostTLB
     unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 1);
 #if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
-    Bit32u lpf = AlignedAccessLPFOf(laddr, 1) & (Bit32u) BX_CPU_THIS_PTR alignment_check_mask;
+    Bit32u lpf = AlignedAccessLPFOf(laddr, (1 & BX_CPU_THIS_PTR alignment_check_mask));
 #else
     Bit32u lpf = LPFOf(laddr);
 #endif    
@@ -1272,7 +1272,7 @@ accessOK:
 #if BX_SupportGuest2HostTLB
     unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 3);
 #if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
-    Bit32u lpf = AlignedAccessLPFOf(laddr, 3) & (Bit32u) BX_CPU_THIS_PTR alignment_check_mask;
+    Bit32u lpf = AlignedAccessLPFOf(laddr, (3 & BX_CPU_THIS_PTR alignment_check_mask));
 #else
     Bit32u lpf = LPFOf(laddr);
 #endif    
@@ -1339,7 +1339,7 @@ accessOK:
 #if BX_SupportGuest2HostTLB
     unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 7);
 #if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
-    Bit32u lpf = AlignedAccessLPFOf(laddr, 7) & (Bit32u) BX_CPU_THIS_PTR alignment_check_mask;
+    Bit32u lpf = AlignedAccessLPFOf(laddr, (7 & BX_CPU_THIS_PTR alignment_check_mask));
 #else
     Bit32u lpf = LPFOf(laddr);
 #endif    

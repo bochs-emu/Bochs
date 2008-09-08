@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.522 2008-09-06 21:10:40 sshwarts Exp $
+// $Id: cpu.h,v 1.523 2008-09-08 15:45:56 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -461,7 +461,7 @@ BOCHSAPI extern BX_CPU_C   bx_cpu;
   }                                                             \
   BX_CPP_INLINE void BX_CPU_C::clear_AC() {                     \
     BX_CPU_THIS_PTR eflags &= ~(1<<bitnum);                     \
-    BX_CPU_THIS_PTR alignment_check_mask = LPF_MASK;            \
+    BX_CPU_THIS_PTR alignment_check_mask = 0;                   \
   }                                                             \
   BX_CPP_INLINE void BX_CPU_C::set_AC(bx_bool val) {            \
     BX_CPU_THIS_PTR eflags =                                    \
@@ -925,7 +925,7 @@ public: // for now...
   bx_bool  in_smm;
   bx_bool  nmi_disable;
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
-  bx_address alignment_check_mask;
+  unsigned alignment_check_mask;
 #endif
 
 #if BX_DEBUGGER
@@ -3489,7 +3489,7 @@ BX_CPP_INLINE unsigned BX_CPU_C::get_cpu_mode(void)
 #if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
 BX_CPP_INLINE bx_bool BX_CPU_C::alignment_check(void)
 {
-  return (Bit32u)(BX_CPU_THIS_PTR alignment_check_mask) & 1;
+  return BX_CPU_THIS_PTR alignment_check_mask;
 }
 #endif
 

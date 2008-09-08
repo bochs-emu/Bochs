@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: access64.cc,v 1.17 2008-08-31 06:04:14 sshwarts Exp $
+// $Id: access64.cc,v 1.18 2008-09-08 15:45:56 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008 Stanislav Shwartsman
@@ -78,7 +78,7 @@ BX_CPU_C::write_virtual_word_64(unsigned s, Bit64u offset, Bit16u data)
 #if BX_SupportGuest2HostTLB
   unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 1);
 #if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
-  Bit64u lpf = AlignedAccessLPFOf(laddr, 1) & BX_CPU_THIS_PTR alignment_check_mask;
+  Bit64u lpf = AlignedAccessLPFOf(laddr, (1 & BX_CPU_THIS_PTR alignment_check_mask));
 #else
   Bit64u lpf = LPFOf(laddr);
 #endif    
@@ -130,7 +130,7 @@ BX_CPU_C::write_virtual_dword_64(unsigned s, Bit64u offset, Bit32u data)
 #if BX_SupportGuest2HostTLB
   unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 3);
 #if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
-  Bit64u lpf = AlignedAccessLPFOf(laddr, 3) & BX_CPU_THIS_PTR alignment_check_mask;
+  Bit64u lpf = AlignedAccessLPFOf(laddr, (3 & BX_CPU_THIS_PTR alignment_check_mask));
 #else
   Bit64u lpf = LPFOf(laddr);
 #endif    
@@ -182,7 +182,7 @@ BX_CPU_C::write_virtual_qword_64(unsigned s, Bit64u offset, Bit64u data)
 #if BX_SupportGuest2HostTLB
   unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 7);
 #if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
-  Bit64u lpf = AlignedAccessLPFOf(laddr, 7) & BX_CPU_THIS_PTR alignment_check_mask;
+  Bit64u lpf = AlignedAccessLPFOf(laddr, (7 & BX_CPU_THIS_PTR alignment_check_mask));
 #else
   Bit64u lpf = LPFOf(laddr);
 #endif    
@@ -234,7 +234,7 @@ BX_CPU_C::write_virtual_dqword_64(unsigned s, Bit64u offset, const BxPackedXmmRe
 #if BX_SupportGuest2HostTLB
   unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 15);
 #if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
-  Bit64u lpf = AlignedAccessLPFOf(laddr, 15) & BX_CPU_THIS_PTR alignment_check_mask;
+  Bit64u lpf = AlignedAccessLPFOf(laddr, (15 & BX_CPU_THIS_PTR alignment_check_mask));
 #else
   Bit64u lpf = LPFOf(laddr);
 #endif    
@@ -369,7 +369,7 @@ BX_CPU_C::read_virtual_word_64(unsigned s, Bit64u offset)
 #if BX_SupportGuest2HostTLB
   unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 1);
 #if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
-  Bit64u lpf = AlignedAccessLPFOf(laddr, 1) & BX_CPU_THIS_PTR alignment_check_mask;
+  Bit64u lpf = AlignedAccessLPFOf(laddr, (1 & BX_CPU_THIS_PTR alignment_check_mask));
 #else
   Bit64u lpf = LPFOf(laddr);
 #endif    
@@ -419,7 +419,7 @@ BX_CPU_C::read_virtual_dword_64(unsigned s, Bit64u offset)
 #if BX_SupportGuest2HostTLB
   unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 3);
 #if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
-  Bit64u lpf = AlignedAccessLPFOf(laddr, 3) & BX_CPU_THIS_PTR alignment_check_mask;
+  Bit64u lpf = AlignedAccessLPFOf(laddr, (3 & BX_CPU_THIS_PTR alignment_check_mask));
 #else
   Bit64u lpf = LPFOf(laddr);
 #endif    
@@ -469,7 +469,7 @@ BX_CPU_C::read_virtual_qword_64(unsigned s, Bit64u offset)
 #if BX_SupportGuest2HostTLB
   unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 7);
 #if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
-  Bit64u lpf = AlignedAccessLPFOf(laddr, 7) & BX_CPU_THIS_PTR alignment_check_mask;
+  Bit64u lpf = AlignedAccessLPFOf(laddr, (7 & BX_CPU_THIS_PTR alignment_check_mask));
 #else
   Bit64u lpf = LPFOf(laddr);
 #endif    
@@ -517,7 +517,7 @@ BX_CPU_C::read_virtual_dqword_64(unsigned s, Bit64u offset, BxPackedXmmRegister 
 #if BX_SupportGuest2HostTLB
   unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 15);
 #if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
-  Bit64u lpf = AlignedAccessLPFOf(laddr, 15) & BX_CPU_THIS_PTR alignment_check_mask;
+  Bit64u lpf = AlignedAccessLPFOf(laddr, (15 & BX_CPU_THIS_PTR alignment_check_mask));
 #else
   Bit64u lpf = LPFOf(laddr);
 #endif    
@@ -653,7 +653,7 @@ BX_CPU_C::read_RMW_virtual_word_64(unsigned s, Bit64u offset)
 #if BX_SupportGuest2HostTLB
   unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 1);
 #if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
-  Bit64u lpf = AlignedAccessLPFOf(laddr, 1) & BX_CPU_THIS_PTR alignment_check_mask;
+  Bit64u lpf = AlignedAccessLPFOf(laddr, (1 & BX_CPU_THIS_PTR alignment_check_mask));
 #else
   Bit64u lpf = LPFOf(laddr);
 #endif    
@@ -707,7 +707,7 @@ BX_CPU_C::read_RMW_virtual_dword_64(unsigned s, Bit64u offset)
 #if BX_SupportGuest2HostTLB
   unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 3);
 #if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
-  Bit64u lpf = AlignedAccessLPFOf(laddr, 3) & BX_CPU_THIS_PTR alignment_check_mask;
+  Bit64u lpf = AlignedAccessLPFOf(laddr, (3 & BX_CPU_THIS_PTR alignment_check_mask));
 #else
   Bit64u lpf = LPFOf(laddr);
 #endif    
@@ -761,7 +761,7 @@ BX_CPU_C::read_RMW_virtual_qword_64(unsigned s, Bit64u offset)
 #if BX_SupportGuest2HostTLB
   unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 7);
 #if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
-  Bit64u lpf = AlignedAccessLPFOf(laddr, 7) & BX_CPU_THIS_PTR alignment_check_mask;
+  Bit64u lpf = AlignedAccessLPFOf(laddr, (7 & BX_CPU_THIS_PTR alignment_check_mask));
 #else
   Bit64u lpf = LPFOf(laddr);
 #endif    
@@ -810,7 +810,7 @@ void BX_CPU_C::write_new_stack_word_64(Bit64u laddr, unsigned curr_pl, Bit16u da
 #if BX_SupportGuest2HostTLB
   unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 1);
 #if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
-  Bit64u lpf = AlignedAccessLPFOf(laddr, 1) & BX_CPU_THIS_PTR alignment_check_mask;
+  Bit64u lpf = AlignedAccessLPFOf(laddr, (1 & BX_CPU_THIS_PTR alignment_check_mask));
 #else
   Bit64u lpf = LPFOf(laddr);
 #endif    
@@ -857,7 +857,7 @@ void BX_CPU_C::write_new_stack_dword_64(Bit64u laddr, unsigned curr_pl, Bit32u d
 #if BX_SupportGuest2HostTLB
   unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 3);
 #if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
-  Bit64u lpf = AlignedAccessLPFOf(laddr, 3) & BX_CPU_THIS_PTR alignment_check_mask;
+  Bit64u lpf = AlignedAccessLPFOf(laddr, (3 & BX_CPU_THIS_PTR alignment_check_mask));
 #else
   Bit64u lpf = LPFOf(laddr);
 #endif    
@@ -904,7 +904,7 @@ void BX_CPU_C::write_new_stack_qword_64(Bit64u laddr, unsigned curr_pl, Bit64u d
 #if BX_SupportGuest2HostTLB
   unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 7);
 #if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
-  Bit64u lpf = AlignedAccessLPFOf(laddr, 7) & BX_CPU_THIS_PTR alignment_check_mask;
+  Bit64u lpf = AlignedAccessLPFOf(laddr, (7 & BX_CPU_THIS_PTR alignment_check_mask));
 #else
   Bit64u lpf = LPFOf(laddr);
 #endif    
