@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.210 2008-09-06 21:10:40 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.211 2008-09-08 16:15:59 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2474,6 +2474,7 @@ BX_CPU_C::fetchDecode32(const Bit8u *iptr, bxInstruction_c *i, unsigned remainin
   unsigned b1, b2, ilen=0, attr, os_32, ia_opcode = 0;
   unsigned imm_mode, offset, resolve = BX_RESOLVE_NONE;
   unsigned rm = 0, mod=0, nnn=0;
+  unsigned seg = BX_SEG_REG_DS, seg_override = BX_SEG_REG_NULL;
 
 #define SSE_PREFIX_NONE 0
 #define SSE_PREFIX_66   1
@@ -2529,14 +2530,14 @@ fetch_b1:
     case 0x2e: // CS:
     case 0x36: // SS:
     case 0x3e: // DS:
-      i->setSeg((b1 >> 3) & 3);
+      seg_override = (b1 >> 3) & 3;
       if (ilen < remain) {
         goto fetch_b1;
       }
       return(0);
     case 0x64: // FS:
     case 0x65: // GS:
-      i->setSeg(b1 & 0xf);
+      seg_override = (b1 & 0xf);
       if (ilen < remain) {
         goto fetch_b1;
       }
@@ -2606,7 +2607,6 @@ fetch_b1:
       i->ResolveModrm = &BX_CPU_C::BxResolve32Base;
       if (rm != 4) { // no s-i-b byte
         if (mod == 0x00) { // mod == 00b
-          if (BX_NULL_SEG_REG(i->seg())) i->setSeg(BX_SEG_REG_DS);
           if (rm == 5) {
             i->setSibBase(BX_NIL_REGISTER);
             if ((ilen+3) < remain) {
@@ -2619,8 +2619,7 @@ fetch_b1:
           // mod==00b, rm!=4, rm!=5
           goto modrm_done;
         }
-        if (BX_NULL_SEG_REG(i->seg()))
-          i->setSeg(sreg_mod01or10_rm32[rm]);
+        seg = sreg_mod01or10_rm32[rm];
         if (mod == 0x40) { // mod == 01b
           if (ilen < remain) {
             // 8 sign extended to 32
@@ -2661,8 +2660,7 @@ fetch_b1:
           i->setSibIndex(index);
         }
         if (mod == 0x00) { // mod==00b, rm==4
-          if (BX_NULL_SEG_REG(i->seg()))
-            i->setSeg(sreg_mod0_base32[base]);
+          seg = sreg_mod0_base32[base];
           if (base == 0x05) {
             i->setSibBase(BX_NIL_REGISTER);
             if ((ilen+3) < remain) {
@@ -2677,8 +2675,7 @@ fetch_b1:
           // mod==00b, rm==4, base!=5
           goto modrm_done;
         }
-        if (BX_NULL_SEG_REG(i->seg()))
-          i->setSeg(sreg_mod1or2_base32[base]);
+        seg = sreg_mod1or2_base32[base];
         if (mod == 0x40) { // mod==01b, rm==4
           if (ilen < remain) {
             // 8 sign extended to 32
@@ -2710,8 +2707,7 @@ fetch_b1:
       i->setSibBase(Resolve16BaseReg[rm]);
       i->setSibIndex(Resolve16IndexReg[rm]);
       if (mod == 0x00) { // mod == 00b
-        if (BX_NULL_SEG_REG(i->seg()))
-          i->setSeg(sreg_mod00_rm16[rm]);
+        seg = sreg_mod00_rm16[rm];
         if (rm == 0x06) {
           resolve = BX_RESOLVE16_DISPLACEMENT;
           i->ResolveModrm = &BX_CPU_C::BxResolve16Disp;
@@ -2725,8 +2721,7 @@ fetch_b1:
         }
         goto modrm_done;
       }
-      if (BX_NULL_SEG_REG(i->seg()))
-        i->setSeg(sreg_mod01or10_rm16[rm]);
+      seg = sreg_mod01or10_rm16[rm];
       if (mod == 0x40) { // mod == 01b
         if (ilen < remain) {
           // 8 sign extended to 16
@@ -2958,8 +2953,9 @@ modrm_done:
      ia_opcode = Bx3DNowOpcodeInfo[i->modRMForm.Ib].IA;
 #endif
 
-  if (BX_NULL_SEG_REG(i->seg()))
-     i->setSeg(BX_SEG_REG_DS);
+  if (! BX_NULL_SEG_REG(seg_override))
+     seg = seg_override;
+  i->setSeg(seg);
 
 #if BX_SUPPORT_TRACE_CACHE
   if ((attr & BxTraceEnd) || ia_opcode == BX_IA_ERROR)

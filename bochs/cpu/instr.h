@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: instr.h,v 1.16 2008-08-09 21:05:06 sshwarts Exp $
+// $Id: instr.h,v 1.17 2008-09-08 16:15:59 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008 Stanislav Shwartsman
@@ -193,7 +193,6 @@ public:
   {
     metaInfo.metaInfo1 = (os32<<3) | (as32<<4) | (os64<<5) | (as64<<6);
     metaInfo.metaInfo4 = 0;
-    metaData[BX_INSTR_METADATA_SEG] = BX_SEG_REG_NULL;
   }
   BX_CPP_INLINE unsigned seg(void) const {
     return metaData[BX_INSTR_METADATA_SEG];

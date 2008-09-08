@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.216 2008-09-06 21:10:40 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.217 2008-09-08 16:15:59 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -3366,6 +3366,8 @@ BX_CPU_C::fetchDecode64(const Bit8u *iptr, bxInstruction_c *i, unsigned remainin
   unsigned b1, b2, ilen=0, attr, lock=0, ia_opcode = 0;
   unsigned imm_mode, offset = 512, rex_r = 0, rex_x = 0, rex_b = 0;
   unsigned rm = 0, mod = 0, nnn = 0, resolve = BX_RESOLVE_NONE;
+  unsigned seg = BX_SEG_REG_DS, seg_override = BX_SEG_REG_NULL;
+
 #define SSE_PREFIX_NONE 0
 #define SSE_PREFIX_66   1
 #define SSE_PREFIX_F2   2
@@ -3434,7 +3436,7 @@ fetch_b1:
     case 0x64: // FS:
     case 0x65: // GS:
       rex_prefix = 0;
-      i->setSeg(b1 & 0xf);
+      seg_override = b1 & 0xf;
       if (ilen < remain) {
         goto fetch_b1;
       }
@@ -3533,8 +3535,6 @@ fetch_b1:
       i->ResolveModrm = &BX_CPU_C::BxResolve64Base;
       if ((rm & 0x7) != 4) { // no s-i-b byte
         if (mod == 0x00) { // mod == 00b
-          if (BX_NULL_SEG_REG(i->seg()))
-            i->setSeg(BX_SEG_REG_DS);
           if ((rm & 0x7) == 5) {
             i->setSibBase(BX_64BIT_REG_RIP);
 get_32bit_displ:
@@ -3549,8 +3549,7 @@ get_32bit_displ:
           // mod==00b, rm!=4, rm!=5
           goto modrm_done;
         }
-        if (BX_NULL_SEG_REG(i->seg()))
-          i->setSeg(sreg_mod01or10_rm32[rm]);
+        seg = sreg_mod01or10_rm32[rm];
         if (mod == 0x40) { // mod == 01b
 get_8bit_displ:
           if (ilen < remain) {
@@ -3584,8 +3583,7 @@ get_8bit_displ:
           i->setSibIndex(index);
         }
         if (mod == 0x00) { // mod==00b, rm==4
-          if (BX_NULL_SEG_REG(i->seg()))
-            i->setSeg(sreg_mod0_base32[base]);
+          seg = sreg_mod0_base32[base];
           if ((base & 0x7) == 5) {
             i->setSibBase(BX_NIL_REGISTER);
             goto get_32bit_displ;
@@ -3593,8 +3591,7 @@ get_8bit_displ:
           // mod==00b, rm==4, base!=5
           goto modrm_done;
         }
-        if (BX_NULL_SEG_REG(i->seg()))
-          i->setSeg(sreg_mod1or2_base32[base]);
+        seg = sreg_mod1or2_base32[base];
         if (mod == 0x40) // mod==01b, rm==4
           goto get_8bit_displ;
         // (mod == 0x80),   mod==10b, rm==4
@@ -3607,8 +3604,6 @@ get_8bit_displ:
       i->ResolveModrm = &BX_CPU_C::BxResolve32Base;
       if ((rm & 0x7) != 4) { // no s-i-b byte
         if (mod == 0x00) { // mod == 00b
-          if (BX_NULL_SEG_REG(i->seg()))
-            i->setSeg(BX_SEG_REG_DS);
           if ((rm & 0x7) == 5) {
             i->setSibBase(BX_32BIT_REG_EIP);
             goto get_32bit_displ;
@@ -3616,8 +3611,7 @@ get_8bit_displ:
           // mod==00b, rm!=4, rm!=5
           goto modrm_done;
         }
-        if (BX_NULL_SEG_REG(i->seg()))
-          i->setSeg(sreg_mod01or10_rm32[rm]);
+        seg = sreg_mod01or10_rm32[rm];
         if (mod == 0x40) // mod == 01b
           goto get_8bit_displ;
         // (mod == 0x80)    mod == 10b
@@ -3643,8 +3637,7 @@ get_8bit_displ:
           i->setSibIndex(index);
         }
         if (mod == 0x00) { // mod==00b, rm==4
-          if (BX_NULL_SEG_REG(i->seg()))
-            i->setSeg(sreg_mod0_base32[base]);
+          seg = sreg_mod0_base32[base];
           if ((base & 0x7) == 5) {
             i->setSibBase(BX_NIL_REGISTER);
             goto get_32bit_displ;
@@ -3652,8 +3645,7 @@ get_8bit_displ:
           // mod==00b, rm==4, base!=5
           goto modrm_done;
         }
-        if (BX_NULL_SEG_REG(i->seg()))
-          i->setSeg(sreg_mod1or2_base32[base]);
+        seg = sreg_mod1or2_base32[base];
         if (mod == 0x40) // mod==01b, rm==4
           goto get_8bit_displ;
         // (mod == 0x80),   mod==10b, rm==4
@@ -3844,8 +3836,9 @@ modrm_done:
      ia_opcode = Bx3DNowOpcodeInfo[i->modRMForm.Ib].IA;
 #endif
 
-  if (BX_NULL_SEG_REG(i->seg()))
-     i->setSeg(BX_SEG_REG_DS);
+  if (! BX_NULL_SEG_REG(seg_override))
+     seg = seg_override;
+  i->setSeg(seg);
 
 #if BX_SUPPORT_TRACE_CACHE
   if ((attr & BxTraceEnd) || ia_opcode == BX_IA_ERROR)
