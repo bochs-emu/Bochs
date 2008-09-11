@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: segment_ctrl_pro.cc,v 1.100 2008-09-06 17:44:02 sshwarts Exp $
+// $Id: segment_ctrl_pro.cc,v 1.101 2008-09-11 21:54:57 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -433,7 +433,7 @@ BX_CPU_C::get_descriptor_h(const bx_descriptor_t *d)
 
 #if BX_CPU_LEVEL >= 3
   Bit16u BX_CPP_AttrRegparmN(1)
-BX_CPU_C::get_segment_ar_data(const bx_descriptor_t *d)  // used for SMM
+BX_CPU_C::get_segment_ar_data(const bx_descriptor_t *d)  // for SMM ONLY
 {
   Bit16u val = 0;
 
@@ -448,7 +448,12 @@ BX_CPU_C::get_segment_ar_data(const bx_descriptor_t *d)  // used for SMM
 #endif
           (d->u.segment.d_b << 14) |
           (d->u.segment.g << 15);
-    return(val);
+
+    // for SMM map the segment cache valid bit stored in AR[8]
+    if (d->valid)
+        val |= (1<<8);
+
+    return val;
   }
 
   switch (d->type) {
@@ -465,14 +470,19 @@ BX_CPU_C::get_segment_ar_data(const bx_descriptor_t *d)  // used for SMM
               (d->p << 7) |
               (d->u.system.avl << 12) |
               (d->u.system.g << 15);
-        return(val);
+        break;
     default:
         BX_PANIC(("get_segment_ar_data(): case %u unsupported", (unsigned) d->type));
   }
 
+  // for SMM map the segment cache valid bit stored in AR[8]
+  if (d->valid)
+      val |= (1<<8);
+
   return val;
 }
 
+// for SMM ONLY
 bx_bool BX_CPU_C::set_segment_ar_data(bx_segment_reg_t *seg,
             Bit16u raw_selector, bx_address base, Bit32u limit, Bit16u ar_data)
 {
@@ -480,28 +490,29 @@ bx_bool BX_CPU_C::set_segment_ar_data(bx_segment_reg_t *seg,
 
   bx_descriptor_t *d = &seg->cache;
 
-  d->p        = (ar_data >> 7) & 0x01;
-  d->dpl      = (ar_data >> 5) & 0x03;
-  d->segment  = (ar_data >> 4) & 0x01;
+  d->p        = (ar_data >> 7) & 0x1;
+  d->dpl      = (ar_data >> 5) & 0x3;
+  d->segment  = (ar_data >> 4) & 0x1;
   d->type     = (ar_data & 0x0f);
 
+  // for SMM map the segment cache valid bit stored in AR[8]
+  d->valid    = (ar_data >> 8) & 0x1;
+
   if (d->segment) { /* data/code segment descriptors */
-    d->u.segment.g     = (ar_data >> 15) & 0x01;
-    d->u.segment.d_b   = (ar_data >> 14) & 0x01;
+    d->u.segment.g     = (ar_data >> 15) & 0x1;
+    d->u.segment.d_b   = (ar_data >> 14) & 0x1;
 #if BX_SUPPORT_X86_64
-    d->u.segment.l     = (ar_data >> 13) & 0x01;
+    d->u.segment.l     = (ar_data >> 13) & 0x1;
 #endif
-    d->u.segment.avl   = (ar_data >> 12) & 0x01;
+    d->u.segment.avl   = (ar_data >> 12) & 0x1;
 
     d->u.segment.base  = base;
     d->u.segment.limit = limit;
 
     if (d->u.segment.g)
-      d->u.segment.limit_scaled = (d->u.segment.limit << 12) | 0x0fff;
+      d->u.segment.limit_scaled = (d->u.segment.limit << 12) | 0xfff;
     else
       d->u.segment.limit_scaled = (d->u.segment.limit);
-
-    d->valid = 1;
   }
   else {
     switch(d->type) {
@@ -510,13 +521,12 @@ bx_bool BX_CPU_C::set_segment_ar_data(bx_segment_reg_t *seg,
       case BX_SYS_SEGMENT_BUSY_286_TSS:
       case BX_SYS_SEGMENT_AVAIL_386_TSS:
       case BX_SYS_SEGMENT_BUSY_386_TSS:
-        d->valid       = 1;
-        d->u.system.avl   = (ar_data >> 12) & 0x01;
-        d->u.system.g     = (ar_data >> 15) & 0x01;
+        d->u.system.avl   = (ar_data >> 12) & 0x1;
+        d->u.system.g     = (ar_data >> 15) & 0x1;
         d->u.system.base  = base;
         d->u.system.limit = limit;
         if (d->u.system.g)
-          d->u.system.limit_scaled = (d->u.system.limit << 12) | 0x0fff;
+          d->u.system.limit_scaled = (d->u.system.limit << 12) | 0xfff;
         else
           d->u.system.limit_scaled = (d->u.system.limit);
         break;
@@ -526,12 +536,7 @@ bx_bool BX_CPU_C::set_segment_ar_data(bx_segment_reg_t *seg,
     }
   }
 
-  /* invalidate if null selector */
-  if ((raw_selector & 0xfffc) == 0) {
-     seg->cache.valid = 0;
-  }
-
-  return seg->cache.valid;
+  return d->valid;
 }
 #endif
 
@@ -541,10 +546,10 @@ BX_CPU_C::parse_descriptor(Bit32u dword1, Bit32u dword2, bx_descriptor_t *temp)
   Bit8u AR_byte;
 
   AR_byte        = dword2 >> 8;
-  temp->p        = (AR_byte >> 7) & 0x01;
-  temp->dpl      = (AR_byte >> 5) & 0x03;
-  temp->segment  = (AR_byte >> 4) & 0x01;
-  temp->type     = (AR_byte & 0x0f);
+  temp->p        = (AR_byte >> 7) & 0x1;
+  temp->dpl      = (AR_byte >> 5) & 0x3;
+  temp->segment  = (AR_byte >> 4) & 0x1;
+  temp->type     = (AR_byte & 0xf);
   temp->valid    = 0; /* start out invalid */
 
   if (temp->segment) { /* data/code segment descriptors */
@@ -561,7 +566,7 @@ BX_CPU_C::parse_descriptor(Bit32u dword1, Bit32u dword2, bx_descriptor_t *temp)
     temp->u.segment.base      |= (dword2 & 0xFF000000);
 
     if (temp->u.segment.g)
-      temp->u.segment.limit_scaled = (temp->u.segment.limit << 12) | 0x0fff;
+      temp->u.segment.limit_scaled = (temp->u.segment.limit << 12) | 0xfff;
     else
       temp->u.segment.limit_scaled = (temp->u.segment.limit);
 
@@ -613,7 +618,7 @@ BX_CPU_C::parse_descriptor(Bit32u dword1, Bit32u dword2, bx_descriptor_t *temp)
         temp->u.system.g     = (dword2 & 0x00800000) > 0;
         temp->u.system.avl   = (dword2 & 0x00100000) > 0;
         if (temp->u.system.g)
-          temp->u.system.limit_scaled = (temp->u.system.limit << 12) | 0x0fff;
+          temp->u.system.limit_scaled = (temp->u.system.limit << 12) | 0xfff;
         else
           temp->u.system.limit_scaled = (temp->u.system.limit);
         temp->valid = 1;
