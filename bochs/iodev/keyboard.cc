@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.cc,v 1.133 2008-02-15 22:05:42 sshwarts Exp $
+// $Id: keyboard.cc,v 1.134 2008-09-12 14:40:41 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -126,7 +126,7 @@ void bx_keyb_c::resetinternals(bx_bool powerup)
 
 void bx_keyb_c::init(void)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.133 2008-02-15 22:05:42 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.134 2008-09-12 14:40:41 vruppert Exp $"));
   Bit32u   i;
 
   DEV_register_irq(1, "8042 Keyboard controller");
@@ -553,6 +553,9 @@ void bx_keyb_c::write(Bit32u address, Bit32u value, unsigned io_len)
 	    BX_KEY_THIS s.kbd_controller.scancodes_translate = scan_convert;
             }
             break;
+          case 0xcb: // write keyboard controller mode
+            BX_DEBUG(("write keyboard controller mode with value %02xh", (unsigned) value));
+            break;
           case 0xd1: // write output port
             BX_DEBUG(("write output port with value %02xh", (unsigned) value));
 	    BX_DEBUG(("write output port : %sable A20",(value & 0x02)?"en":"dis"));
@@ -694,6 +697,14 @@ void bx_keyb_c::write(Bit32u address, Bit32u value, unsigned io_len)
           }
           // keyboard not inhibited
           controller_enQ(0x80, 0);
+          break;
+        case 0xca: // read keyboard controller mode
+          controller_enQ(0x01, 0); // PS/2 (MCA)interface
+          break;
+        case 0xcb: //  write keyboard controller mode
+          BX_DEBUG(("write keyboard controller mode"));
+          // write keyboard controller mode to bit 0 of port 0x60
+          BX_KEY_THIS s.kbd_controller.expecting_port60h = 1;
           break;
         case 0xd0: // read output port: next byte read from port 60h
           BX_DEBUG(("io write to port 64h, command d0h (partial)"));
