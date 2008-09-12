@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.137 2008-08-19 16:43:05 sshwarts Exp $
+// $Id: config.cc,v 1.138 2008-09-12 21:05:49 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1705,8 +1705,8 @@ int bx_read_configuration(const char *rcfile)
   }
   // update log actions
   for (int level=0; level<N_LOGLEV; level++) {
-    int action = SIM->get_default_log_action (level);
-    io->set_log_action (level, action);
+    int action = SIM->get_default_log_action(level);
+    io->set_log_action(level, action);
   }
   return 0;
 }
@@ -1722,8 +1722,8 @@ int bx_parse_cmdline(int arg, int argc, char *argv[])
   }
   // update log actions
   for (int level=0; level<N_LOGLEV; level++) {
-    int action = SIM->get_default_log_action (level);
-    io->set_log_action (level, action);
+    int action = SIM->get_default_log_action(level);
+    io->set_log_action(level, action);
   }
   return 0;
 }
@@ -2016,13 +2016,13 @@ static Bit32s parse_log_options(const char *context, char *loglev, char *param1)
   }
   char *action = param1 + 7;
   if (!strcmp(action, "fatal"))
-    SIM->set_default_log_action (level, ACT_FATAL);
+    SIM->set_default_log_action(level, ACT_FATAL);
   else if (!strcmp (action, "report"))
-    SIM->set_default_log_action (level, ACT_REPORT);
+    SIM->set_default_log_action(level, ACT_REPORT);
   else if (!strcmp (action, "ignore"))
-    SIM->set_default_log_action (level, ACT_IGNORE);
+    SIM->set_default_log_action(level, ACT_IGNORE);
   else if (!strcmp (action, "ask"))
-    SIM->set_default_log_action (level, ACT_ASK);
+    SIM->set_default_log_action(level, ACT_ASK);
   else {
     PARSE_ERR(("%s: %s directive malformed.", context, loglev));
   }
@@ -3381,17 +3381,19 @@ int bx_write_log_options(FILE *fp, bx_list_c *base)
 {
   fprintf(fp, "log: %s\n", SIM->get_param_string("filename", base)->getptr());
   fprintf(fp, "logprefix: %s\n", SIM->get_param_string("prefix", base)->getptr());
+#if BX_DEBUGGER
   fprintf(fp, "debugger_log: %s\n", SIM->get_param_string("debugger_filename", base)->getptr());
+#endif
   fprintf(fp, "panic: action=%s\n",
-      io->getaction(logfunctions::get_default_action (LOGLEV_PANIC)));
+      io->getaction(logfunctions::get_default_action(LOGLEV_PANIC)));
   fprintf(fp, "error: action=%s\n",
-      io->getaction(logfunctions::get_default_action (LOGLEV_ERROR)));
+      io->getaction(logfunctions::get_default_action(LOGLEV_ERROR)));
   fprintf(fp, "info: action=%s\n",
-      io->getaction(logfunctions::get_default_action (LOGLEV_INFO)));
+      io->getaction(logfunctions::get_default_action(LOGLEV_INFO)));
   fprintf(fp, "debug: action=%s\n",
-      io->getaction(logfunctions::get_default_action (LOGLEV_DEBUG)));
+      io->getaction(logfunctions::get_default_action(LOGLEV_DEBUG)));
   fprintf(fp, "pass: action=%s\n",
-      io->getaction(logfunctions::get_default_action (LOGLEV_PASS)));
+      io->getaction(logfunctions::get_default_action(LOGLEV_PASS)));
   return 0;
 }
 
