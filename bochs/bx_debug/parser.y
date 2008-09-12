@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: parser.y,v 1.31 2008-08-07 21:09:30 sshwarts Exp $
+// $Id: parser.y,v 1.32 2008-09-12 21:03:56 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 %{
@@ -259,7 +259,7 @@ show_command:
     ;
 
 page_command:
-      BX_TOKEN_PAGE BX_TOKEN_NUMERIC '\n'
+      BX_TOKEN_PAGE expression '\n'
       {
           bx_dbg_xlate_address($2);
           free($1);
