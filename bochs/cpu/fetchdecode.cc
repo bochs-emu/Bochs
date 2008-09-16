@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.212 2008-09-12 20:59:31 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.213 2008-09-16 18:28:53 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -414,14 +414,14 @@ static const BxOpcodeInfo_t BxOpcodeInfo32R[512*2] = {
   /* D6 /wr */ { 0, BX_IA_SALC },
   /* D7 /wr */ { 0, BX_IA_XLAT },
 #if BX_SUPPORT_FPU
-  /* D8 /wr */ { BxFPEscape, BX_IA_ERROR, BxOpcodeInfo_FloatingPoint },
-  /* D9 /wr */ { BxFPEscape, BX_IA_ERROR, BxOpcodeInfo_FloatingPoint },
-  /* DA /wr */ { BxFPEscape, BX_IA_ERROR, BxOpcodeInfo_FloatingPoint },
-  /* DB /wr */ { BxFPEscape, BX_IA_ERROR, BxOpcodeInfo_FloatingPoint },
-  /* DC /wr */ { BxFPEscape, BX_IA_ERROR, BxOpcodeInfo_FloatingPoint },
-  /* DD /wr */ { BxFPEscape, BX_IA_ERROR, BxOpcodeInfo_FloatingPoint },
-  /* DE /wr */ { BxFPEscape, BX_IA_ERROR, BxOpcodeInfo_FloatingPoint },
-  /* DF /wr */ { BxFPEscape, BX_IA_ERROR, BxOpcodeInfo_FloatingPoint },
+  /* D8 /wr */ { BxFPEscape, BX_IA_ERROR, BxOpcodeInfo_FloatingPointD8 },
+  /* D9 /wr */ { BxFPEscape, BX_IA_ERROR, BxOpcodeInfo_FloatingPointD9 },
+  /* DA /wr */ { BxFPEscape, BX_IA_ERROR, BxOpcodeInfo_FloatingPointDA },
+  /* DB /wr */ { BxFPEscape, BX_IA_ERROR, BxOpcodeInfo_FloatingPointDB },
+  /* DC /wr */ { BxFPEscape, BX_IA_ERROR, BxOpcodeInfo_FloatingPointDC },
+  /* DD /wr */ { BxFPEscape, BX_IA_ERROR, BxOpcodeInfo_FloatingPointDD },
+  /* DE /wr */ { BxFPEscape, BX_IA_ERROR, BxOpcodeInfo_FloatingPointDE },
+  /* DF /wr */ { BxFPEscape, BX_IA_ERROR, BxOpcodeInfo_FloatingPointDF },
 #else
   /* D8 /wr */ { 0, BX_IA_FPU_ESC },
   /* D9 /wr */ { 0, BX_IA_FPU_ESC },
@@ -977,14 +977,14 @@ static const BxOpcodeInfo_t BxOpcodeInfo32R[512*2] = {
   /* D6 /dr */ { 0, BX_IA_SALC },
   /* D7 /dr */ { 0, BX_IA_XLAT },
 #if BX_SUPPORT_FPU
-  /* D8 /dr */ { BxFPEscape, BX_IA_ERROR, BxOpcodeInfo_FloatingPoint },
-  /* D9 /dr */ { BxFPEscape, BX_IA_ERROR, BxOpcodeInfo_FloatingPoint },
-  /* DA /dr */ { BxFPEscape, BX_IA_ERROR, BxOpcodeInfo_FloatingPoint },
-  /* DB /dr */ { BxFPEscape, BX_IA_ERROR, BxOpcodeInfo_FloatingPoint },
-  /* DC /dr */ { BxFPEscape, BX_IA_ERROR, BxOpcodeInfo_FloatingPoint },
-  /* DD /dr */ { BxFPEscape, BX_IA_ERROR, BxOpcodeInfo_FloatingPoint },
-  /* DE /dr */ { BxFPEscape, BX_IA_ERROR, BxOpcodeInfo_FloatingPoint },
-  /* DF /dr */ { BxFPEscape, BX_IA_ERROR, BxOpcodeInfo_FloatingPoint },
+  /* D8 /dr */ { BxFPEscape, BX_IA_ERROR, BxOpcodeInfo_FloatingPointD8 },
+  /* D9 /dr */ { BxFPEscape, BX_IA_ERROR, BxOpcodeInfo_FloatingPointD9 },
+  /* DA /dr */ { BxFPEscape, BX_IA_ERROR, BxOpcodeInfo_FloatingPointDA },
+  /* DB /dr */ { BxFPEscape, BX_IA_ERROR, BxOpcodeInfo_FloatingPointDB },
+  /* DC /dr */ { BxFPEscape, BX_IA_ERROR, BxOpcodeInfo_FloatingPointDC },
+  /* DD /dr */ { BxFPEscape, BX_IA_ERROR, BxOpcodeInfo_FloatingPointDD },
+  /* DE /dr */ { BxFPEscape, BX_IA_ERROR, BxOpcodeInfo_FloatingPointDE },
+  /* DF /dr */ { BxFPEscape, BX_IA_ERROR, BxOpcodeInfo_FloatingPointDF },
 #else
   /* D8 /dr */ { 0, BX_IA_FPU_ESC },
   /* D9 /dr */ { 0, BX_IA_FPU_ESC },
@@ -1547,14 +1547,14 @@ static const BxOpcodeInfo_t BxOpcodeInfo32M[512*2] = {
   /* D6 /wm */ { 0, BX_IA_SALC },
   /* D7 /wm */ { 0, BX_IA_XLAT },
 #if BX_SUPPORT_FPU
-  /* D8 /wm */ { BxFPGroup, BX_IA_ERROR, BxOpcodeInfo_FPGroupD8 },
-  /* D9 /wm */ { BxFPGroup, BX_IA_ERROR, BxOpcodeInfo_FPGroupD9 },
-  /* DA /wm */ { BxFPGroup, BX_IA_ERROR, BxOpcodeInfo_FPGroupDA },
-  /* DB /wm */ { BxFPGroup, BX_IA_ERROR, BxOpcodeInfo_FPGroupDB },
-  /* DC /wm */ { BxFPGroup, BX_IA_ERROR, BxOpcodeInfo_FPGroupDC },
-  /* DD /wm */ { BxFPGroup, BX_IA_ERROR, BxOpcodeInfo_FPGroupDD },
-  /* DE /wm */ { BxFPGroup, BX_IA_ERROR, BxOpcodeInfo_FPGroupDE },
-  /* DF /wm */ { BxFPGroup, BX_IA_ERROR, BxOpcodeInfo_FPGroupDF },
+  /* D8 /wm */ { BxGroupFP, BX_IA_ERROR, BxOpcodeInfo_FPGroupD8 },
+  /* D9 /wm */ { BxGroupFP, BX_IA_ERROR, BxOpcodeInfo_FPGroupD9 },
+  /* DA /wm */ { BxGroupFP, BX_IA_ERROR, BxOpcodeInfo_FPGroupDA },
+  /* DB /wm */ { BxGroupFP, BX_IA_ERROR, BxOpcodeInfo_FPGroupDB },
+  /* DC /wm */ { BxGroupFP, BX_IA_ERROR, BxOpcodeInfo_FPGroupDC },
+  /* DD /wm */ { BxGroupFP, BX_IA_ERROR, BxOpcodeInfo_FPGroupDD },
+  /* DE /wm */ { BxGroupFP, BX_IA_ERROR, BxOpcodeInfo_FPGroupDE },
+  /* DF /wm */ { BxGroupFP, BX_IA_ERROR, BxOpcodeInfo_FPGroupDF },
 #else
   /* D8 /wm */ { 0, BX_IA_FPU_ESC },
   /* D9 /wm */ { 0, BX_IA_FPU_ESC },
@@ -2110,14 +2110,14 @@ static const BxOpcodeInfo_t BxOpcodeInfo32M[512*2] = {
   /* D6 /dm */ { 0, BX_IA_SALC },
   /* D7 /dm */ { 0, BX_IA_XLAT },
 #if BX_SUPPORT_FPU
-  /* D8 /dm */ { BxFPGroup, BX_IA_ERROR, BxOpcodeInfo_FPGroupD8 },
-  /* D9 /dm */ { BxFPGroup, BX_IA_ERROR, BxOpcodeInfo_FPGroupD9 },
-  /* DA /dm */ { BxFPGroup, BX_IA_ERROR, BxOpcodeInfo_FPGroupDA },
-  /* DB /dm */ { BxFPGroup, BX_IA_ERROR, BxOpcodeInfo_FPGroupDB },
-  /* DC /dm */ { BxFPGroup, BX_IA_ERROR, BxOpcodeInfo_FPGroupDC },
-  /* DD /dm */ { BxFPGroup, BX_IA_ERROR, BxOpcodeInfo_FPGroupDD },
-  /* DE /dm */ { BxFPGroup, BX_IA_ERROR, BxOpcodeInfo_FPGroupDE },
-  /* DF /dm */ { BxFPGroup, BX_IA_ERROR, BxOpcodeInfo_FPGroupDF },
+  /* D8 /dm */ { BxGroupFP, BX_IA_ERROR, BxOpcodeInfo_FPGroupD8 },
+  /* D9 /dm */ { BxGroupFP, BX_IA_ERROR, BxOpcodeInfo_FPGroupD9 },
+  /* DA /dm */ { BxGroupFP, BX_IA_ERROR, BxOpcodeInfo_FPGroupDA },
+  /* DB /dm */ { BxGroupFP, BX_IA_ERROR, BxOpcodeInfo_FPGroupDB },
+  /* DC /dm */ { BxGroupFP, BX_IA_ERROR, BxOpcodeInfo_FPGroupDC },
+  /* DD /dm */ { BxGroupFP, BX_IA_ERROR, BxOpcodeInfo_FPGroupDD },
+  /* DE /dm */ { BxGroupFP, BX_IA_ERROR, BxOpcodeInfo_FPGroupDE },
+  /* DF /dm */ { BxGroupFP, BX_IA_ERROR, BxOpcodeInfo_FPGroupDF },
 #else
   /* D8 /dm */ { 0, BX_IA_FPU_ESC },
   /* D9 /dm */ { 0, BX_IA_FPU_ESC },
@@ -2780,14 +2780,9 @@ modrm_done:
             break;
           }
           continue;
-#if BX_SUPPORT_FPU
         case BxFPEscape:
-          {
-            int index = (b1-0xD8)*64 + (0x3f & b2);
-            OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[index]);
-          }
+          OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[b2 & 0x3f]);
           break;
-#endif
         default:
           BX_PANIC(("fetchdecode: Unknown opcode group"));
       }

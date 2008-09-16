@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.524 2008-09-12 20:59:31 sshwarts Exp $
+// $Id: cpu.h,v 1.525 2008-09-16 18:28:53 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -3783,7 +3783,7 @@ IMPLEMENT_EFLAG_SET_ACCESSOR_TF(      8)
 #define BxGroup15         BxGroupN
 #define BxGroup16         BxGroupN
 
-#define BxFPGroup         BxGroupN
+#define BxGroupFP         BxGroupN
 
 // <TAG-DEFINES-DECODE-END>
 

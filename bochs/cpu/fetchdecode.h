@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.h,v 1.76 2008-08-29 20:43:05 sshwarts Exp $
+// $Id: fetchdecode.h,v 1.77 2008-09-16 18:28:53 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005 Stanislav Shwartsman
@@ -181,7 +181,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo_FPGroupDF[8] = {
 };
 
 // 512 entries for second byte of floating point instructions. (when mod==11b)
-static const BxOpcodeInfo_t BxOpcodeInfo_FloatingPoint[512] = {
+static const BxOpcodeInfo_t BxOpcodeInfo_FloatingPointD8[64] = {
   // D8 (modrm is outside 00h - BFh) (mod == 11)
   /* D8 C0 */ { 0, BX_IA_FADD_ST0_STj  },
   /* D8 C1 */ { 0, BX_IA_FADD_ST0_STj  },
@@ -246,8 +246,10 @@ static const BxOpcodeInfo_t BxOpcodeInfo_FloatingPoint[512] = {
   /* D8 FC */ { 0, BX_IA_FDIVR_ST0_STj },
   /* D8 FD */ { 0, BX_IA_FDIVR_ST0_STj },
   /* D8 FE */ { 0, BX_IA_FDIVR_ST0_STj },
-  /* D8 FF */ { 0, BX_IA_FDIVR_ST0_STj },
+  /* D8 FF */ { 0, BX_IA_FDIVR_ST0_STj }
+};
 
+static const BxOpcodeInfo_t BxOpcodeInfo_FloatingPointD9[64] = {
   // D9 (modrm is outside 00h - BFh) (mod == 11)
   /* D9 C0 */ { 0, BX_IA_FLD_STi  },
   /* D9 C1 */ { 0, BX_IA_FLD_STi  },
@@ -312,8 +314,10 @@ static const BxOpcodeInfo_t BxOpcodeInfo_FloatingPoint[512] = {
   /* D9 FC */ { 0, BX_IA_FRNDINT },
   /* D9 FD */ { 0, BX_IA_FSCALE  },
   /* D9 FE */ { 0, BX_IA_FSIN    },
-  /* D9 FF */ { 0, BX_IA_FCOS    },
+  /* D9 FF */ { 0, BX_IA_FCOS    }
+};
 
+static const BxOpcodeInfo_t BxOpcodeInfo_FloatingPointDA[64] = {
   // DA (modrm is outside 00h - BFh) (mod == 11)
   /* DA C0 */ { 0, BX_IA_FCMOV_ST0_STj },
   /* DA C1 */ { 0, BX_IA_FCMOV_ST0_STj },
@@ -378,8 +382,10 @@ static const BxOpcodeInfo_t BxOpcodeInfo_FloatingPoint[512] = {
   /* DA FC */ { 0, BX_IA_ERROR },
   /* DA FD */ { 0, BX_IA_ERROR },
   /* DA FE */ { 0, BX_IA_ERROR },
-  /* DA FF */ { 0, BX_IA_ERROR },
+  /* DA FF */ { 0, BX_IA_ERROR }
+};
 
+static const BxOpcodeInfo_t BxOpcodeInfo_FloatingPointDB[64] = {
   // DB (modrm is outside 00h - BFh) (mod == 11)
   /* DB C0 */ { 0, BX_IA_FCMOV_ST0_STj },
   /* DB C1 */ { 0, BX_IA_FCMOV_ST0_STj },
@@ -444,8 +450,10 @@ static const BxOpcodeInfo_t BxOpcodeInfo_FloatingPoint[512] = {
   /* DB FC */ { 0, BX_IA_ERROR },
   /* DB FD */ { 0, BX_IA_ERROR },
   /* DB FE */ { 0, BX_IA_ERROR },
-  /* DB FF */ { 0, BX_IA_ERROR },
+  /* DB FF */ { 0, BX_IA_ERROR }
+};
 
+static const BxOpcodeInfo_t BxOpcodeInfo_FloatingPointDC[64] = {
   // DC (modrm is outside 00h - BFh) (mod == 11)
   /* DC C0 */ { 0, BX_IA_FADD_STi_ST0 },
   /* DC C1 */ { 0, BX_IA_FADD_STi_ST0 },
@@ -510,8 +518,10 @@ static const BxOpcodeInfo_t BxOpcodeInfo_FloatingPoint[512] = {
   /* DC FC */ { 0, BX_IA_FDIV_STi_ST0  },
   /* DC FD */ { 0, BX_IA_FDIV_STi_ST0  },
   /* DC FE */ { 0, BX_IA_FDIV_STi_ST0  },
-  /* DC FF */ { 0, BX_IA_FDIV_STi_ST0  },
+  /* DC FF */ { 0, BX_IA_FDIV_STi_ST0  }
+};
 
+static const BxOpcodeInfo_t BxOpcodeInfo_FloatingPointDD[64] = {
   // DD (modrm is outside 00h - BFh) (mod == 11)
   /* DD C0 */ { 0, BX_IA_FFREE_STi },
   /* DD C1 */ { 0, BX_IA_FFREE_STi },
@@ -576,8 +586,10 @@ static const BxOpcodeInfo_t BxOpcodeInfo_FloatingPoint[512] = {
   /* DD FC */ { 0, BX_IA_ERROR },
   /* DD FD */ { 0, BX_IA_ERROR },
   /* DD FE */ { 0, BX_IA_ERROR },
-  /* DD FF */ { 0, BX_IA_ERROR },
+  /* DD FF */ { 0, BX_IA_ERROR }
+};
 
+static const BxOpcodeInfo_t BxOpcodeInfo_FloatingPointDE[64] = {
   // DE (modrm is outside 00h - BFh) (mod == 11)
   // all instructions pop FPU stack
   /* DE C0 */ { 0, BX_IA_FADD_STi_ST0 },
@@ -643,8 +655,10 @@ static const BxOpcodeInfo_t BxOpcodeInfo_FloatingPoint[512] = {
   /* DE FC */ { 0, BX_IA_FDIV_STi_ST0  },
   /* DE FD */ { 0, BX_IA_FDIV_STi_ST0  },
   /* DE FE */ { 0, BX_IA_FDIV_STi_ST0  },
-  /* DE FF */ { 0, BX_IA_FDIV_STi_ST0  },
+  /* DE FF */ { 0, BX_IA_FDIV_STi_ST0  }
+};
 
+static const BxOpcodeInfo_t BxOpcodeInfo_FloatingPointDF[64] = {
   // DF (modrm is outside 00h - BFh) (mod == 11)
   /* DF C0 */ { 0, BX_IA_FFREEP_STi },   // 287+ compatibility opcode
   /* DF C1 */ { 0, BX_IA_FFREEP_STi },
