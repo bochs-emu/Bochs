@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.526 2008-09-16 19:20:02 sshwarts Exp $
+// $Id: cpu.h,v 1.527 2008-09-16 20:57:15 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1683,6 +1683,9 @@ public: // for now...
   BX_SMF void LOAD_Eb_Resolve32BaseIndex(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
   BX_SMF void LOAD_Ew(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void LOAD_Ew_Resolve16BaseIndex(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void LOAD_Ew_Resolve32Base(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void LOAD_Ew_Resolve32BaseIndex(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
   BX_SMF void LOAD_Ed(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void LOAD_Ed_Resolve16BaseIndex(bxInstruction_c *) BX_CPP_AttrRegparmN(1);

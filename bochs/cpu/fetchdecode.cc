@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.215 2008-09-16 19:22:13 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.216 2008-09-16 20:57:16 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2987,9 +2987,9 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::optimize32(bxInstruction_c *i, unsigned re
   };
 
   static const BxExecutePtr_tR BxTableLoad32_Ew[3] = {
-    &BX_CPU_C::LOAD_Ew,
-    &BX_CPU_C::LOAD_Ew,
-    &BX_CPU_C::LOAD_Ew
+    &BX_CPU_C::LOAD_Ew_Resolve16BaseIndex,
+    &BX_CPU_C::LOAD_Ew_Resolve32Base,
+    &BX_CPU_C::LOAD_Ew_Resolve32BaseIndex
   };
 
   static const BxExecutePtr_tR BxTableLoad32_Ed[3] = {
