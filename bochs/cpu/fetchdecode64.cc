@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.219 2008-09-16 18:28:53 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.220 2008-09-16 19:20:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -3858,6 +3858,11 @@ modrm_done:
 #endif
 
   return(1);
+}
+
+void BX_CPP_AttrRegparmN(2) BX_CPU_C::optimize64(bxInstruction_c *i, unsigned resolve)
+{
+  // empty for now
 }
 
 #endif /* if BX_SUPPORT_X86_64 */

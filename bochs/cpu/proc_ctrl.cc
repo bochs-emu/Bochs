@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.259 2008-09-08 20:47:33 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.260 2008-09-16 19:20:03 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1149,11 +1149,22 @@ void BX_CPU_C::handleCpuModeChange(void)
 void BX_CPU_C::handleAlignmentCheck(void)
 {
   if (CPL == 3 && BX_CPU_THIS_PTR cr0.get_AM() && BX_CPU_THIS_PTR get_AC()) {
-    BX_CPU_THIS_PTR alignment_check_mask = 0xF;
-    BX_INFO(("Enable alignment check (#AC exception)"));
+    if (BX_CPU_THIS_PTR alignment_check_mask == 0) {
+      BX_CPU_THIS_PTR alignment_check_mask = 0xF;
+      BX_INFO(("Enable alignment check (#AC exception)"));
+#if BX_SUPPORT_ICACHE
+      BX_CPU_THIS_PTR iCache.flushICacheEntries();
+#endif
+    }
   }
   else {
-    BX_CPU_THIS_PTR alignment_check_mask = 0;
+    if (BX_CPU_THIS_PTR alignment_check_mask != 0) {
+      BX_CPU_THIS_PTR alignment_check_mask = 0;
+      BX_INFO(("Disable alignment check (#AC exception)"));
+#if BX_SUPPORT_ICACHE
+      BX_CPU_THIS_PTR iCache.flushICacheEntries();
+#endif
+    }
   }
 }
 #endif

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.213 2008-09-16 18:28:53 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.214 2008-09-16 19:20:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2457,8 +2457,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo32M[512*2] = {
 };
 
 enum {
-  BX_RESOLVE16_DISPLACEMENT,
-  BX_RESOLVE16_BASE_INDEX,
+  BX_RESOLVE16,
   BX_RESOLVE32_BASE,
   BX_RESOLVE32_BASE_INDEX,
   BX_RESOLVE_NONE
@@ -2702,15 +2701,15 @@ fetch_b1:
     }
     else {
       // 16-bit addressing modes, mod==11b handled above
-      resolve = BX_RESOLVE16_BASE_INDEX;
+      resolve = BX_RESOLVE16;
       i->ResolveModrm = &BX_CPU_C::BxResolve16BaseIndex;
       i->setSibBase(Resolve16BaseReg[rm]);
       i->setSibIndex(Resolve16IndexReg[rm]);
       if (mod == 0x00) { // mod == 00b
         seg = sreg_mod00_rm16[rm];
         if (rm == 0x06) {
-          resolve = BX_RESOLVE16_DISPLACEMENT;
-          i->ResolveModrm = &BX_CPU_C::BxResolve16Disp;
+          i->setSibBase(BX_NIL_REGISTER);
+          i->setSibIndex(BX_NIL_REGISTER);
           if ((ilen+1) < remain) {
             i->modRMForm.displ16u = FetchWORD(iptr);
             iptr += 2;
@@ -2972,7 +2971,42 @@ modrm_done:
   i->ia_opcode = ia_opcode;
 #endif
 
+  if (i->execute2 != NULL) {
+    optimize32(i, resolve);
+  }
+
   return(1);
+}
+
+void BX_CPP_AttrRegparmN(2) BX_CPU_C::optimize32(bxInstruction_c *i, unsigned resolve)
+{
+  // LOAD speedups
+  static const BxExecutePtr_tR BxTableLoad32_Eb[3] = {
+    &BX_CPU_C::LOAD_Eb_Resolve16BaseIndex,
+    &BX_CPU_C::LOAD_Eb_Resolve32Base,
+    &BX_CPU_C::LOAD_Eb_Resolve32BaseIndex
+  };
+
+  static const BxExecutePtr_tR BxTableLoad32_Ew[3] = {
+    &BX_CPU_C::LOAD_Ew,
+    &BX_CPU_C::LOAD_Ew,
+    &BX_CPU_C::LOAD_Ew
+  };
+
+  static const BxExecutePtr_tR BxTableLoad32_Ed[3] = {
+    &BX_CPU_C::LOAD_Ed_Resolve16BaseIndex,
+    &BX_CPU_C::LOAD_Ed_Resolve32Base,
+    &BX_CPU_C::LOAD_Ed_Resolve32BaseIndex
+  };
+
+  if (! BX_CPU_THIS_PTR alignment_check()) {
+    if (i->execute == &BX_CPU_C::LOAD_Eb)
+      i->execute = BxTableLoad32_Eb[resolve];
+    else if (i->execute == &BX_CPU_C::LOAD_Ew)
+      i->execute = BxTableLoad32_Ew[resolve];
+    else if (i->execute == &BX_CPU_C::LOAD_Ed)
+      i->execute = BxTableLoad32_Ed[resolve];
+  }
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::BxError(bxInstruction_c *i)

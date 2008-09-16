@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.525 2008-09-16 18:28:53 sshwarts Exp $
+// $Id: cpu.h,v 1.526 2008-09-16 19:20:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1676,10 +1676,19 @@ public: // for now...
   BX_SMF void SMSW_EwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void LMSW_Ew(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
-  // service methods
+  // LOAD methods
   BX_SMF void LOAD_Eb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void LOAD_Eb_Resolve16BaseIndex(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void LOAD_Eb_Resolve32Base(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void LOAD_Eb_Resolve32BaseIndex(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
   BX_SMF void LOAD_Ew(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
   BX_SMF void LOAD_Ed(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void LOAD_Ed_Resolve16BaseIndex(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void LOAD_Ed_Resolve32Base(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void LOAD_Ed_Resolve32BaseIndex(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
 #if BX_SUPPORT_X86_64
   BX_SMF void LOAD_Eq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 #endif
@@ -2712,7 +2721,6 @@ public: // for now...
   BX_SMF void UndefinedOpcode(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void BxError(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
-  BX_SMF bx_address BxResolve16Disp(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF bx_address BxResolve16BaseIndex(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF bx_address BxResolve32Base(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF bx_address BxResolve32BaseIndex(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -2751,8 +2759,10 @@ public: // for now...
   BX_SMF unsigned handleAsyncEvent(void);
 
   BX_SMF unsigned fetchDecode32(const Bit8u *fetchPtr, bxInstruction_c *i, unsigned remainingInPage) BX_CPP_AttrRegparmN(3);
+  BX_SMF void optimize32(bxInstruction_c *i, unsigned resolve) BX_CPP_AttrRegparmN(2);
 #if BX_SUPPORT_X86_64
   BX_SMF unsigned fetchDecode64(const Bit8u *fetchPtr, bxInstruction_c *i, unsigned remainingInPage) BX_CPP_AttrRegparmN(3);
+  BX_SMF void optimize64(bxInstruction_c *i, unsigned resolve) BX_CPP_AttrRegparmN(2);
 #endif
   BX_SMF bx_bool fetchInstruction(bxInstruction_c *iStorage, Bit32u eipBiased);
   BX_SMF void boundaryFetch(const Bit8u *fetchPtr, unsigned remainingInPage, bxInstruction_c *);

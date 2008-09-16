@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: resolve.cc,v 1.4 2008-08-08 09:22:48 sshwarts Exp $
+// $Id: resolve.cc,v 1.5 2008-09-16 19:20:03 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008 Stanislav Shwartsman
@@ -30,11 +30,6 @@
 // 16 bit address size
 //
 
-  bx_address  BX_CPP_AttrRegparmN(1)
-BX_CPU_C::BxResolve16Disp(bxInstruction_c *i)
-{
-  return i->displ16u();
-}
   bx_address  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::BxResolve16BaseIndex(bxInstruction_c *i)
 {
