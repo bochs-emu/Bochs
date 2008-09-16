@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu.cc,v 1.46 2008-09-12 20:59:31 sshwarts Exp $
+// $Id: fpu.cc,v 1.47 2008-09-16 20:40:56 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -198,7 +198,7 @@ bx_address BX_CPU_C::fpu_load_environment(bxInstruction_c *i)
 {
     unsigned offset;
 
-    Bit32u eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
     if (protected_mode())  /* Protected Mode */
     {
