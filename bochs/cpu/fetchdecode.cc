@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.214 2008-09-16 19:20:02 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.215 2008-09-16 19:22:13 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2709,7 +2709,6 @@ fetch_b1:
         seg = sreg_mod00_rm16[rm];
         if (rm == 0x06) {
           i->setSibBase(BX_NIL_REGISTER);
-          i->setSibIndex(BX_NIL_REGISTER);
           if ((ilen+1) < remain) {
             i->modRMForm.displ16u = FetchWORD(iptr);
             iptr += 2;
