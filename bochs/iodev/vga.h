@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.h,v 1.61 2008-04-29 22:14:23 sshwarts Exp $
+// $Id: vga.h,v 1.62 2008-09-18 20:10:17 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -96,24 +96,23 @@
 
   #define VBE_DISPI_LFB_PHYSICAL_ADDRESS  0xE0000000
 
+  #define VBE_DISPI_TOTAL_VIDEO_MEMORY_KB	(VBE_DISPI_TOTAL_VIDEO_MEMORY_MB * 1024)
+  #define VBE_DISPI_TOTAL_VIDEO_MEMORY_BYTES 	(VBE_DISPI_TOTAL_VIDEO_MEMORY_KB * 1024)
 
-#define VBE_DISPI_TOTAL_VIDEO_MEMORY_KB		(VBE_DISPI_TOTAL_VIDEO_MEMORY_MB * 1024)
-#define VBE_DISPI_TOTAL_VIDEO_MEMORY_BYTES 	(VBE_DISPI_TOTAL_VIDEO_MEMORY_KB * 1024)
-
-#define BX_MAX_XRES VBE_DISPI_MAX_XRES
-#define BX_MAX_YRES VBE_DISPI_MAX_YRES
+  #define BX_MAX_XRES VBE_DISPI_MAX_XRES
+  #define BX_MAX_YRES VBE_DISPI_MAX_YRES
 
 #elif BX_SUPPORT_CLGD54XX
 
-#define BX_MAX_XRES 1280
-#define BX_MAX_YRES 1024
+  #define BX_MAX_XRES 1280
+  #define BX_MAX_YRES 1024
 
 #else
 
-#define BX_MAX_XRES 800
-#define BX_MAX_YRES 600
+  #define BX_MAX_XRES 800
+  #define BX_MAX_YRES 600
 
-#endif //BX_SUPPORT_VBE
+#endif // BX_SUPPORT_VBE
 
 #define X_TILESIZE 16
 #define Y_TILESIZE 24
@@ -165,7 +164,9 @@ protected:
 
   static Bit32u read_handler(void *this_ptr, Bit32u address, unsigned io_len);
   static void   write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len);
+#if BX_USE_VGA_SMF
   static void   write_handler_no_log(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len);
+#endif
 
 #if BX_SUPPORT_VBE
   static Bit32u vbe_read_handler(void *this_ptr, Bit32u address, unsigned io_len);
@@ -308,36 +309,34 @@ protected:
   } s;  // state information
 
 
-#if !BX_USE_VGA_SMF
+#if BX_USE_VGA_SMF == 0
   Bit32u read(Bit32u address, unsigned io_len);
-  void  write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_log);
-#else
-  void write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_log);
 #endif
+  void  write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_log);
 
 #if BX_SUPPORT_VBE
 
-#if !BX_USE_VGA_SMF
+#if BX_USE_VGA_SMF == 0
   Bit32u vbe_read(Bit32u address, unsigned io_len);
   void  vbe_write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_log);
-#else
-  void vbe_write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_log);
 #endif
-#endif
+
+#endif // BX_SUPPORT_VBE
 
   int timer_id;
   bx_bool extension_init;
   bx_bool extension_checked;
 
-  public:
+public:
   static void     timer_handler(void *);
+#if BX_USE_VGA_SMF == 0
   BX_VGA_SMF void timer(void);
+#endif
   static Bit64s   vga_param_handler(bx_param_c *param, int set, Bit64s val);
 
-  protected:
+protected:
   BX_VGA_SMF void update(void);
-  BX_VGA_SMF void determine_screen_dimensions(unsigned *piHeight,
-                                              unsigned *piWidth);
+  BX_VGA_SMF void determine_screen_dimensions(unsigned *piHeight, unsigned *piWidth);
 };
 
 #if BX_SUPPORT_CLGD54XX
