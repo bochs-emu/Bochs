@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: access64.cc,v 1.19 2008-09-16 20:57:15 sshwarts Exp $
+// $Id: access64.cc,v 1.20 2008-09-18 17:37:28 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008 Stanislav Shwartsman
@@ -233,11 +233,7 @@ BX_CPU_C::write_virtual_dqword_64(unsigned s, Bit64u offset, const BxPackedXmmRe
   Bit64u laddr = BX_CPU_THIS_PTR get_laddr64(s, offset);
 #if BX_SupportGuest2HostTLB
   unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 15);
-#if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
-  Bit64u lpf = AlignedAccessLPFOf(laddr, (15 & BX_CPU_THIS_PTR alignment_check_mask));
-#else
   Bit64u lpf = LPFOf(laddr);
-#endif    
   bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
   if (tlbEntry->lpf == lpf) {
     // See if the TLB entry privilege level allows us write access
@@ -263,15 +259,6 @@ BX_CPU_C::write_virtual_dqword_64(unsigned s, Bit64u offset, const BxPackedXmmRe
     BX_ERROR(("write_virtual_dqword_64(): canonical failure"));
     exception(int_number(s), 0, 0);
   }
-
-#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
-  if (BX_CPU_THIS_PTR alignment_check()) {
-    if (laddr & 15) {
-      BX_ERROR(("write_virtual_dqword_64(): #AC misaligned access"));
-      exception(BX_AC_EXCEPTION, 0, 0);
-    }
-  }
-#endif
 
   access_write_linear(laddr, 16, CPL, (void *) data);
 }
@@ -516,11 +503,7 @@ BX_CPU_C::read_virtual_dqword_64(unsigned s, Bit64u offset, BxPackedXmmRegister 
   Bit64u laddr = BX_CPU_THIS_PTR get_laddr64(s, offset);
 #if BX_SupportGuest2HostTLB
   unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 15);
-#if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
-  Bit64u lpf = AlignedAccessLPFOf(laddr, (15 & BX_CPU_THIS_PTR alignment_check_mask));
-#else
   Bit64u lpf = LPFOf(laddr);
-#endif    
   bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
   if (tlbEntry->lpf == lpf) {
     // See if the TLB entry privilege level allows us read access
@@ -544,14 +527,6 @@ BX_CPU_C::read_virtual_dqword_64(unsigned s, Bit64u offset, BxPackedXmmRegister 
     exception(int_number(s), 0, 0);
   }
 
-#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
-  if (BX_CPU_THIS_PTR alignment_check()) {
-    if (laddr & 15) {
-      BX_ERROR(("read_virtual_dqword_64(): #AC misaligned access"));
-      exception(BX_AC_EXCEPTION, 0, 0);
-    }
-  }
-#endif
   access_read_linear(laddr, 16, CPL, BX_READ, (void *) data);
 }
 

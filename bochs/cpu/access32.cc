@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: access32.cc,v 1.17 2008-09-16 20:57:15 sshwarts Exp $
+// $Id: access32.cc,v 1.18 2008-09-18 17:37:28 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008 Stanislav Shwartsman
@@ -279,11 +279,7 @@ accessOK:
       laddr = BX_CPU_THIS_PTR get_laddr32(s, offset);
 #if BX_SupportGuest2HostTLB
       unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 15);
-#if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
-      Bit32u lpf = AlignedAccessLPFOf(laddr, (15 & BX_CPU_THIS_PTR alignment_check_mask));
-#else
       Bit32u lpf = LPFOf(laddr);
-#endif    
       bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
       if (tlbEntry->lpf == lpf) {
         // See if the TLB entry privilege level allows us write access
@@ -301,15 +297,6 @@ accessOK:
           WriteHostQWordToLittleEndian(hostAddr,   data->xmm64u(0));
           WriteHostQWordToLittleEndian(hostAddr+1, data->xmm64u(1));
           return;
-        }
-      }
-#endif
-
-#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
-      if (BX_CPU_THIS_PTR alignment_check()) {
-        if (laddr & 15) {
-          BX_ERROR(("write_virtual_dqword_32(): #AC misaligned access"));
-          exception(BX_AC_EXCEPTION, 0, 0);
         }
       }
 #endif
@@ -627,11 +614,7 @@ accessOK:
       laddr = BX_CPU_THIS_PTR get_laddr32(s, offset);
 #if BX_SupportGuest2HostTLB
       unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 15);
-#if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
-      Bit32u lpf = AlignedAccessLPFOf(laddr, (15 & BX_CPU_THIS_PTR alignment_check_mask));
-#else
       Bit32u lpf = LPFOf(laddr);
-#endif    
       bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
       if (tlbEntry->lpf == lpf) {
         // See if the TLB entry privilege level allows us read access
@@ -646,15 +629,6 @@ accessOK:
           BX_DBG_LIN_MEMORY_ACCESS(BX_CPU_ID, laddr,
               tlbEntry->ppf | pageOffset, 16, CPL, BX_READ, (Bit8u*) data);
           return;
-        }
-      }
-#endif
-
-#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
-      if (BX_CPU_THIS_PTR alignment_check()) {
-        if (laddr & 15) {
-          BX_ERROR(("read_virtual_dqword_32(): #AC misaligned access"));
-          exception(BX_AC_EXCEPTION, 0, 0);
         }
       }
 #endif
