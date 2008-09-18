@@ -526,9 +526,7 @@ typedef Bit32u bx_phy_address;
 
 // create an unsigned integer type that is the same size as a pointer.
 // You can typecast a pointer to a bx_pr_equiv_t without losing any
-// bits (and without getting the compiler excited).  This is used in
-// the FPU emulation code, where pointers and integers are often
-// used interchangeably.
+// bits (and without getting the compiler excited).
 #if SIZEOF_INT_P == 4
   typedef Bit32u bx_ptr_equiv_t;
 #elif SIZEOF_INT_P == 8
