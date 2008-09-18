@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.h,v 1.42 2008-02-15 22:05:43 sshwarts Exp $
+// $Id: keyboard.h,v 1.43 2008-09-18 17:18:36 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -66,7 +66,7 @@ public:
 private:
   BX_KEY_SMF Bit8u    get_kbd_enable(void);
   BX_KEY_SMF void     service_paste_buf ();
-  BX_KEY_SMF void     create_mouse_packet(bool force_enq);
+  BX_KEY_SMF void     create_mouse_packet(bx_bool force_enq);
   BX_KEY_SMF unsigned periodic(Bit32u usec_delta);
 
 
