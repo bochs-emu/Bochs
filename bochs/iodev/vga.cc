@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.153 2008-09-18 20:10:17 sshwarts Exp $
+// $Id: vga.cc,v 1.154 2008-09-18 20:16:27 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -38,7 +38,7 @@
 
 // Only reference the array if the tile numbers are within the bounds
 // of the array.  If out of bounds, do nothing.
-#define SET_TILE_UPDATED(xtile,ytile, value)                              \
+#define SET_TILE_UPDATED(xtile, ytile, value)                            \
   do {                                                                   \
     if (((xtile) < BX_NUM_X_TILES) && ((ytile) < BX_NUM_Y_TILES))        \
       BX_VGA_THIS s.vga_tile_updated[(xtile)][(ytile)] = value;          \
@@ -510,10 +510,13 @@ void bx_vga_c::register_state(void)
     new bx_shadow_num_c(vbe, "cur_dispi", &BX_VGA_THIS s.vbe_cur_dispi, BASE_HEX);
     new bx_shadow_num_c(vbe, "xres", &BX_VGA_THIS s.vbe_xres);
     new bx_shadow_num_c(vbe, "yres", &BX_VGA_THIS s.vbe_yres);
-    new bx_shadow_bool_c(vbe, "enabled", &BX_VGA_THIS s.vbe_enabled);
     new bx_shadow_num_c(vbe, "bpp", &BX_VGA_THIS s.vbe_bpp);
     new bx_shadow_num_c(vbe, "bank", &BX_VGA_THIS s.vbe_bank);
+    new bx_shadow_bool_c(vbe, "enabled", &BX_VGA_THIS s.vbe_enabled);
     new bx_shadow_num_c(vbe, "curindex", &BX_VGA_THIS s.vbe_curindex);
+    new bx_shadow_num_c(vbe, "visible_screen_size", &BX_VGA_THIS s.vbe_visible_screen_size);
+    new bx_shadow_num_c(vbe, "offset_x", &BX_VGA_THIS s.vbe_offset_x);
+    new bx_shadow_num_c(vbe, "offset_y", &BX_VGA_THIS s.vbe_offset_y);
     new bx_shadow_num_c(vbe, "virtual_xres", &BX_VGA_THIS s.vbe_virtual_xres);
     new bx_shadow_num_c(vbe, "virtual_yres", &BX_VGA_THIS s.vbe_virtual_yres);
     new bx_shadow_num_c(vbe, "virtual_start", &BX_VGA_THIS s.vbe_virtual_start);

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: svga_cirrus.cc,v 1.44 2008-04-29 22:14:23 sshwarts Exp $
+// $Id: svga_cirrus.cc,v 1.45 2008-09-18 20:16:27 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Copyright (c) 2004 Makoto Suzuki (suzu)
@@ -452,8 +452,8 @@ void bx_svga_cirrus_c::after_restore_state(void)
 #endif
     for (unsigned i=0; i<256; i++) {
       bx_gui->palette_change(i, BX_CIRRUS_THIS s.pel.data[i].red<<2,
-                             BX_CIRRUS_THIS s.pel.data[i].green<<2,
-                             BX_CIRRUS_THIS s.pel.data[i].blue<<2);
+                                BX_CIRRUS_THIS s.pel.data[i].green<<2,
+                                BX_CIRRUS_THIS s.pel.data[i].blue<<2);
     }
     BX_CIRRUS_THIS svga_needs_update_mode = 1;
     BX_CIRRUS_THIS svga_update();
