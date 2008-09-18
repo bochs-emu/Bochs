@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu.cc,v 1.47 2008-09-16 20:40:56 sshwarts Exp $
+// $Id: fpu.cc,v 1.48 2008-09-18 19:10:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -137,7 +137,7 @@ bx_address BX_CPU_C::fpu_save_environment(bxInstruction_c *i)
             tmp = (BX_CPU_THIS_PTR the_i387.fds);
             write_virtual_word(i->seg(), eaddr + 0x0c, tmp);
 
-            offset = 0x1e;
+            offset = 0x0e;
         }
     }
     else   /* Real or V86 Mode */
