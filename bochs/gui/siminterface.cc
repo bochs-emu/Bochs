@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.181 2008-08-19 16:43:06 sshwarts Exp $
+// $Id: siminterface.cc,v 1.182 2008-09-19 21:31:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // See siminterface.h for description of the siminterface concept.
@@ -174,11 +174,11 @@ static bx_param_c *find_param(const char *full_pname, const char *rest_of_pname,
   }
   *to = 0;
   if (!component[0]) {
-    BX_PANIC (("find_param: found empty component in parameter name '%s'", full_pname));
+    BX_PANIC(("find_param: found empty component in parameter name '%s'", full_pname));
     // or does that mean that we're done?
   }
   if (base->get_type() != BXT_LIST) {
-    BX_PANIC (("find_param: base was not a list!"));
+    BX_PANIC(("find_param: base was not a list!"));
   }
   BX_DEBUG(("searching for component '%s' in list '%s'", component, base->get_name()));
 
@@ -211,13 +211,13 @@ bx_param_num_c *bx_real_sim_c::get_param_num (const char *pname, bx_param_c *bas
 {
   bx_param_c *generic = get_param(pname, base);
   if (generic==NULL) {
-    BX_PANIC(("get_param_num(%s) could not find a parameter", pname));
+    BX_ERROR(("get_param_num(%s) could not find a parameter", pname));
     return NULL;
   }
   int type = generic->get_type();
   if (type == BXT_PARAM_NUM || type == BXT_PARAM_BOOL || type == BXT_PARAM_ENUM)
     return (bx_param_num_c *)generic;
-  BX_PANIC(("get_param_num(%s) could not find an integer parameter with that name", pname));
+  BX_ERROR(("get_param_num(%s) could not find an integer parameter with that name", pname));
   return NULL;
 }
 
@@ -225,12 +225,12 @@ bx_param_string_c *bx_real_sim_c::get_param_string(const char *pname, bx_param_c
 {
   bx_param_c *generic = get_param(pname, base);
   if (generic==NULL) {
-    BX_PANIC (("get_param_string(%s) could not find a parameter", pname));
+    BX_ERROR(("get_param_string(%s) could not find a parameter", pname));
     return NULL;
   }
   if (generic->get_type() == BXT_PARAM_STRING)
     return (bx_param_string_c *)generic;
-  BX_PANIC(("get_param_string(%s) could not find an integer parameter with that name", pname));
+  BX_ERROR(("get_param_string(%s) could not find an integer parameter with that name", pname));
   return NULL;
 }
 
@@ -238,12 +238,12 @@ bx_param_bool_c *bx_real_sim_c::get_param_bool(const char *pname, bx_param_c *ba
 {
   bx_param_c *generic = get_param(pname, base);
   if (generic==NULL) {
-    BX_PANIC(("get_param_bool(%s) could not find a parameter", pname));
+    BX_ERROR(("get_param_bool(%s) could not find a parameter", pname));
     return NULL;
   }
   if (generic->get_type () == BXT_PARAM_BOOL)
     return (bx_param_bool_c *)generic;
-  BX_PANIC(("get_param_bool(%s) could not find a bool parameter with that name", pname));
+  BX_ERROR(("get_param_bool(%s) could not find a bool parameter with that name", pname));
   return NULL;
 }
 
@@ -251,12 +251,12 @@ bx_param_enum_c *bx_real_sim_c::get_param_enum(const char *pname, bx_param_c *ba
 {
   bx_param_c *generic = get_param(pname, base);
   if (generic==NULL) {
-    BX_PANIC(("get_param_enum(%s) could not find a parameter", pname));
+    BX_ERROR(("get_param_enum(%s) could not find a parameter", pname));
     return NULL;
   }
   if (generic->get_type() == BXT_PARAM_ENUM)
     return (bx_param_enum_c *)generic;
-  BX_PANIC(("get_param_enum(%s) could not find a enum parameter with that name", pname));
+  BX_ERROR(("get_param_enum(%s) could not find a enum parameter with that name", pname));
   return NULL;
 }
 
@@ -338,7 +338,8 @@ const char *bx_real_sim_c::get_log_level_name(int level)
   return io->getlevel(level);
 }
 
-void bx_real_sim_c::quit_sim(int code) {
+void bx_real_sim_c::quit_sim(int code)
+{
   BX_INFO(("quit_sim called with exit code %d", code));
   exit_code = code;
   io->exit_log();
@@ -545,7 +546,8 @@ int bx_real_sim_c::ask_yes_no(const char *title, const char *prompt, bx_bool the
   sim_to_ci_event(&event);
   if (event.retcode >= 0) {
     return param.get();
-  } else {
+  }
+  else {
     return event.retcode;
   }
 }
@@ -1599,7 +1601,7 @@ void bx_shadow_num_c::set(Bit64s newval)
 {
   Bit64u tmp = 0;
   if (((newval < min) || (newval > max)) && (min != BX_MIN_BIT64S) && ((Bit64u)max != BX_MAX_BIT64U))
-    BX_PANIC (("numerical parameter %s was set to " FMT_LL "d, which is out of range " FMT_LL "d to " FMT_LL "d", get_name (), newval, min, max));
+    BX_PANIC(("numerical parameter %s was set to " FMT_LL "d, which is out of range " FMT_LL "d to " FMT_LL "d", get_name (), newval, min, max));
   switch (varsize) {
     case 8:
       tmp = *(val.p8bit) & ~(mask << lowbit);
@@ -1991,7 +1993,7 @@ bx_list_c* bx_list_c::clone()
 
 void bx_list_c::add(bx_param_c *param)
 {
-  if (this->size >= this->maxsize)
+  if (size >= maxsize)
     BX_PANIC(("add param '%s' to bx_list_c '%s': list capacity exceeded",
               param->get_name(), get_name()));
   list[size] = param;
@@ -2006,8 +2008,8 @@ bx_param_c* bx_list_c::get(int index)
 
 bx_param_c* bx_list_c::get_by_name(const char *name)
 {
-  int i, imax = get_size();
-  for (i=0; i<imax; i++) {
+  int imax = get_size();
+  for (int i=0; i<imax; i++) {
     bx_param_c *p = get(i);
     if (0 == strcmp (name, p->get_name())) {
       return p;
@@ -2018,19 +2020,18 @@ bx_param_c* bx_list_c::get_by_name(const char *name)
 
 void bx_list_c::reset()
 {
-  int i, imax = get_size();
-  for (i=0; i<imax; i++) {
+  int imax = get_size();
+  for (int i=0; i<imax; i++) {
     get(i)->reset();
   }
 }
 
 void bx_list_c::clear()
 {
-  int i, imax = get_size();
-  bx_param_c *param;
-  for (i=0; i<imax; i++) {
-    param = get(i);
+  int imax = get_size();
+  for (int i=0; i<imax; i++) {
+    bx_param_c *param = get(i);
     delete param;
   }
-  this->size = 0;
+  size = 0;
 }
