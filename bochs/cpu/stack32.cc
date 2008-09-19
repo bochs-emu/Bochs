@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack32.cc,v 1.56 2008-08-27 21:57:40 sshwarts Exp $
+// $Id: stack32.cc,v 1.57 2008-09-19 19:18:57 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -164,7 +164,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUSH_EdM(bxInstruction_c *i)
 {
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  Bit32u op1_32 = read_virtual_dword(i->seg(), eaddr);
+  Bit32u op1_32 = read_virtual_dword_32(i->seg(), eaddr);
 
   push_32(op1_32);
 }

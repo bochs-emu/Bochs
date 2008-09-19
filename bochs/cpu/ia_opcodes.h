@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ia_opcodes.h,v 1.20 2008-09-06 21:10:40 sshwarts Exp $
+// $Id: ia_opcodes.h,v 1.21 2008-09-19 19:18:56 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008 Stanislav Shwartsman
@@ -293,7 +293,7 @@ bx_define_opcode(BX_IA_INT_Ib, &BX_CPU_C::INT_Ib, NULL)
 bx_define_opcode(BX_IA_INT1, &BX_CPU_C::INT1, NULL)
 bx_define_opcode(BX_IA_INT3, &BX_CPU_C::INT3, NULL)
 bx_define_opcode(BX_IA_INTO, &BX_CPU_C::INTO, NULL)
-bx_define_opcode(BX_IA_INVD, &BX_CPU_C::INVD, NULL)
+bx_define_opcode(BX_IA_INVD, &BX_CPU_C::WBINVD, NULL)
 bx_define_opcode(BX_IA_INVLPG, &BX_CPU_C::INVLPG, NULL)
 bx_define_opcode(BX_IA_IRET16, &BX_CPU_C::IRET16, NULL)
 bx_define_opcode(BX_IA_IRET32, &BX_CPU_C::IRET32, NULL)

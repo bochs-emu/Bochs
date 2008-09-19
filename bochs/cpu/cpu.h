@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.527 2008-09-16 20:57:15 sshwarts Exp $
+// $Id: cpu.h,v 1.528 2008-09-19 19:18:56 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1309,7 +1309,6 @@ public: // for now...
   BX_SMF void LAR_GvEw(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void LSL_GvEw(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void CLTS(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void INVD(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void WBINVD(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void CLFLUSH(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
