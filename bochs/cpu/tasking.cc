@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: tasking.cc,v 1.62 2008-09-06 17:44:02 sshwarts Exp $
+// $Id: tasking.cc,v 1.63 2008-09-22 19:53:47 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -415,15 +415,6 @@ void BX_CPU_C::task_switch(bx_selector_t *tss_selector,
   //          EFLAGS, EIP, general purpose registers, and segment
   //          descriptor parts of the segment registers.
 
-  if ((tss_descriptor->type >= 9) && BX_CPU_THIS_PTR cr0.get_PG()) {
-    // change CR3 only if it actually modified
-    if (newCR3 != BX_CPU_THIS_PTR cr3) {
-      SetCR3(newCR3); // Tell paging unit about new cr3 value
-      BX_DEBUG (("task_switch changing CR3 to 0x" FMT_PHY_ADDRX, newCR3));
-      BX_INSTR_TLB_CNTRL(BX_CPU_ID, BX_INSTR_TASKSWITCH, newCR3);
-    }
-  }
-
   BX_CPU_THIS_PTR prev_rip = EIP = newEIP;
 
   EAX = newEAX;
@@ -441,31 +432,37 @@ void BX_CPU_C::task_switch(bx_selector_t *tss_selector,
   // occur later, the selectors will at least be loaded.
   parse_selector(raw_cs_selector, &cs_selector);
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector = cs_selector;
+  parse_selector(raw_ss_selector, &ss_selector);
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector = ss_selector;
   parse_selector(raw_ds_selector, &ds_selector);
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector = ds_selector;
   parse_selector(raw_es_selector, &es_selector);
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector = es_selector;
-  parse_selector(raw_ss_selector, &ss_selector);
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector = ss_selector;
   parse_selector(raw_fs_selector, &fs_selector);
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].selector = fs_selector;
   parse_selector(raw_gs_selector, &gs_selector);
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].selector = gs_selector;
-
   parse_selector(raw_ldt_selector, &ldt_selector);
   BX_CPU_THIS_PTR ldtr.selector = ldt_selector;
 
-  // Start out with invalid descriptor caches, fill in
-  // with values only as they are validated.
+  // Start out with invalid descriptor caches, fill in with
+  // values only as they are validated
   BX_CPU_THIS_PTR ldtr.cache.valid = 0;
-  BX_CPU_THIS_PTR ldtr.cache.u.system.limit = 0;
-  BX_CPU_THIS_PTR ldtr.cache.u.system.limit_scaled = 0;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.valid = 0;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.valid = 0;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.valid = 0;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.valid = 0;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.valid = 0;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.valid = 0;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.valid = 0;
+
+  if ((tss_descriptor->type >= 9) && BX_CPU_THIS_PTR cr0.get_PG()) {
+    // change CR3 only if it actually modified
+    if (newCR3 != BX_CPU_THIS_PTR cr3) {
+      SetCR3(newCR3); // Tell paging unit about new cr3 value
+      BX_DEBUG(("task_switch changing CR3 to 0x" FMT_PHY_ADDRX, newCR3));
+      BX_INSTR_TLB_CNTRL(BX_CPU_ID, BX_INSTR_TASKSWITCH, newCR3);
+    }
+  }
 
   // LDTR
   if (ldt_selector.ti) {
@@ -507,14 +504,19 @@ void BX_CPU_C::task_switch(bx_selector_t *tss_selector,
 
   if (v8086_mode()) {
     // load seg regs as 8086 registers
-    load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], raw_cs_selector);
     load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS], raw_ss_selector);
     load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS], raw_ds_selector);
     load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES], raw_es_selector);
     load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS], raw_fs_selector);
     load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS], raw_gs_selector);
+    load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], raw_cs_selector);
   }
   else {
+
+    unsigned save_CPL = CPL;
+    /* set CPL to 3 to force a privilege level change and stack switch if SS
+       is not properly loaded */
+    CPL = 3;
 
     // SS
     if ((raw_ss_selector & 0xfffc) != 0)
@@ -526,6 +528,7 @@ void BX_CPU_C::task_switch(bx_selector_t *tss_selector,
       }
 
       parse_descriptor(dword1, dword2, &ss_descriptor);
+
       // SS selector must be within its descriptor table limits else #TS(SS)
       // SS descriptor AR byte must must indicate writable data segment,
       // else #TS(SS)
@@ -565,6 +568,17 @@ void BX_CPU_C::task_switch(bx_selector_t *tss_selector,
       BX_ERROR(("task_switch(exception after commit point): SS NULL"));
       exception(BX_TS_EXCEPTION, raw_ss_selector & 0xfffc, 0);
     }
+
+    CPL = save_CPL;
+
+    task_switch_load_selector(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS],
+        &ds_selector, raw_ds_selector, cs_selector.rpl);
+    task_switch_load_selector(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES],
+        &es_selector, raw_es_selector, cs_selector.rpl);
+    task_switch_load_selector(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS],
+        &fs_selector, raw_fs_selector, cs_selector.rpl);
+    task_switch_load_selector(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS],
+        &gs_selector, raw_gs_selector, cs_selector.rpl);
 
     // if new selector is not null then perform following checks:
     //    index must be within its descriptor table limits else #TS(selector)
@@ -629,16 +643,8 @@ void BX_CPU_C::task_switch(bx_selector_t *tss_selector,
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
     handleAlignmentCheck(); // task switch, CPL was modified
 #endif
-
-    task_switch_load_selector(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS],
-        &ds_selector, raw_ds_selector, cs_selector.rpl);
-    task_switch_load_selector(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES],
-        &es_selector, raw_es_selector, cs_selector.rpl);
-    task_switch_load_selector(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS],
-        &fs_selector, raw_fs_selector, cs_selector.rpl);
-    task_switch_load_selector(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS],
-        &gs_selector, raw_gs_selector, cs_selector.rpl);
   }
+
 
   if ((tss_descriptor->type>=9) && (trap_word & 0x1)) {
     BX_CPU_THIS_PTR debug_trap |= 0x00008000; // BT flag in DR6
