@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpuid.cc,v 1.73 2008-09-22 21:38:11 sshwarts Exp $
+// $Id: cpuid.cc,v 1.74 2008-09-22 21:41:22 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007 Stanislav Shwartsman
@@ -502,7 +502,7 @@ void BX_CPU_C::set_cpuid_defaults(void)
 
   // do not report CPUID functions above 0x3 if cpuid_limit_winnt is set
   // to workaround WinNT issue.
-  if (! cpuid_limit_winnt) return;
+  if (cpuid_limit_winnt) return;
 
   // ------------------------------------------------------
   // CPUID function 0x00000004 - Deterministic Cache Parameters
