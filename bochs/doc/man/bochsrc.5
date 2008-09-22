@@ -137,6 +137,11 @@ Reset the CPU when triple fault occur (highly recommended) rather than
 PANIC. Remember that if you trying to continue after triple fault the
 simulation will be completely bogus !
 
+cpuid_limit_winnt:
+
+Determine whether to limit maximum CPUID function to 3. This mode is
+required to workaround WinNT installation and boot issues.
+
 vendor_string:
 
 Set the CPUID vendor string returned by CPUID(0x0).  This should be a

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.138 2008-09-12 21:05:49 sshwarts Exp $
+// $Id: config.cc,v 1.139 2008-09-22 21:38:11 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -455,6 +455,10 @@ void bx_init_options()
       "reset_on_triple_fault", "Enable CPU reset on triple fault",
       "Enable CPU reset if triple fault occured (highly recommended)",
       1);
+  new bx_param_bool_c(cpu_param,
+      "cpuid_limit_winnt", "Limit max CPUID function to 3",
+      "Limit max CPUID function reported to 3 to workaround WinNT issue",
+      0);
   new bx_param_string_c(cpu_param,
       "vendor_string",
       "CPUID vendor string",
@@ -2480,7 +2484,13 @@ static int parse_line_formatted(const char *context, int num_params, char *param
 #endif
       } else if (!strncmp(params[i], "reset_on_triple_fault=", 22)) {
         if (params[i][22] == '0' || params[i][22] == '1') {
-          SIM->get_param_bool(BXPN_RESET_ON_TRIPLE_FAULT)->set (params[i][22] - '0');
+          SIM->get_param_bool(BXPN_RESET_ON_TRIPLE_FAULT)->set(params[i][22] - '0');
+        } else {
+          PARSE_ERR(("%s: cpu directive malformed.", context));
+        }
+      } else if (!strncmp(params[i], "cpuid_limit_winnt=", 18)) {
+        if (params[i][18] == '0' || params[i][18] == '1') {
+          SIM->get_param_bool(BXPN_CPUID_LIMIT_WINNT)->set(params[i][18] - '0');
         } else {
           PARSE_ERR(("%s: cpu directive malformed.", context));
         }
@@ -2522,7 +2532,7 @@ static int parse_line_formatted(const char *context, int num_params, char *param
         PARSE_ERR(("%s: romimage directive malformed.", context));
       }
     } else {
-      SIM->get_param_num(BXPN_ROM_ADDRESS)->set (0);
+      SIM->get_param_num(BXPN_ROM_ADDRESS)->set(0);
     }
   } else if (!strcmp(params[0], "vgaromimage")) {
     if (num_params != 2) {
@@ -3524,14 +3534,17 @@ int bx_write_configuration(const char *rc, int overwrite)
   fprintf(fp, "vga_update_interval: %u\n", SIM->get_param_num(BXPN_VGA_UPDATE_INTERVAL)->get());
   fprintf(fp, "vga: extension=%s\n", SIM->get_param_string(BXPN_VGA_EXTENSION)->getptr());
 #if BX_SUPPORT_SMP
-  fprintf(fp, "cpu: count=%u:%u:%u, ips=%u, quantum=%d, reset_on_triple_fault=%d\n",
+  fprintf(fp, "cpu: count=%u:%u:%u, ips=%u, quantum=%d, reset_on_triple_fault=%d, cpuid_limit_winnt=%d\n",
     SIM->get_param_num(BXPN_CPU_NPROCESSORS)->get(), SIM->get_param_num(BXPN_CPU_NCORES)->get(),
     SIM->get_param_num(BXPN_CPU_NTHREADS)->get(), SIM->get_param_num(BXPN_IPS)->get(),
     SIM->get_param_num(BXPN_SMP_QUANTUM)->get(),
-    SIM->get_param_bool(BXPN_RESET_ON_TRIPLE_FAULT)->get());
+    SIM->get_param_bool(BXPN_RESET_ON_TRIPLE_FAULT)->get(),
+    SIM->get_param_bool(BXPN_CPUID_LIMIT_WINNT)->get());
 #else
-  fprintf(fp, "cpu: count=1, ips=%u, reset_on_triple_fault=%d\n",
-    SIM->get_param_num(BXPN_IPS)->get(), SIM->get_param_bool(BXPN_RESET_ON_TRIPLE_FAULT)->get());
+  fprintf(fp, "cpu: count=1, ips=%u, reset_on_triple_fault=%d, cpuid_limit_winnt=%d\n",
+    SIM->get_param_num(BXPN_IPS)->get(),
+    SIM->get_param_bool(BXPN_RESET_ON_TRIPLE_FAULT)->get(),
+    SIM->get_param_bool(BXPN_CPUID_LIMIT_WINNT)->get());
 #endif
   fprintf(fp, "text_snapshot_check: enabled=%d\n", SIM->get_param_bool(BXPN_TEXT_SNAPSHOT_CHECK)->get());
   fprintf(fp, "private_colormap: enabled=%d\n", SIM->get_param_bool(BXPN_PRIVATE_COLORMAP)->get());

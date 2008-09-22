@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.245 2008-08-19 16:43:06 sshwarts Exp $
+$Id: user.dbk,v 1.246 2008-09-22 21:38:11 sshwarts Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -3065,11 +3065,16 @@ Maximum amount of instructions allowed to execute by processor before
 returning control to another cpu. This option exists only in Bochs
 binary compiled with SMP support.
 </para>
-<para><command>reset-on-triple-fault</command></para>
+<para><command>reset_on_triple_fault</command></para>
 <para>
 Reset the CPU when triple fault occur (highly recommended) rather than PANIC.
 Remember that if you are trying to continue after triple fault the simulation
 will be completely bogus !
+</para>
+<para><command>cpuid_limit_winnt</command></para>
+<para>
+Determine whether to limit maximum CPUID function to 3. This mode is required
+to workaround WinNT installation and boot issues.
 </para>
 <para><command>vendor_string</command></para>
 <para>
@@ -3111,7 +3116,7 @@ speed.</para></footnote>.
   </row>
 </thead>
   <tbody>
-<row><entry>2.3.7</entry><entry>2.6Ghz</entry><entry>Intel Core 2 Q9770 with WinXP/g++ 3.4 </entry><entry> 50 to 55 MIPS</entry></row>
+<row><entry>2.3.7</entry><entry>3.2Ghz</entry><entry>Intel Core 2 Q9770 with WinXP/g++ 3.4 </entry><entry> 50 to 55 MIPS</entry></row>
 <row><entry>2.3.7</entry><entry>2.6Ghz</entry><entry>Intel Core 2 Duo with WinXP/g++ 3.4 </entry><entry> 38 to 43 MIPS</entry></row>
 <row><entry>2.2.6</entry><entry>2.6Ghz</entry><entry>Intel Core 2 Duo with WinXP/g++ 3.4 </entry><entry> 21 to 25 MIPS</entry></row>
 <row><entry>2.2.6</entry><entry>2.1Ghz</entry><entry>Athlon XP with Linux 2.6/g++ 3.4 </entry><entry> 12 to 15 MIPS</entry></row>

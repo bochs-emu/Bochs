@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpuid.cc,v 1.72 2008-08-19 16:43:06 sshwarts Exp $
+// $Id: cpuid.cc,v 1.73 2008-09-22 21:38:11 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007 Stanislav Shwartsman
@@ -327,6 +327,7 @@ void BX_CPU_C::set_cpuid_defaults(void)
 {
   Bit8u *vendor_string = (Bit8u *)SIM->get_param_string(BXPN_VENDOR_STRING)->getptr();
   Bit8u *brand_string = (Bit8u *)SIM->get_param_string(BXPN_BRAND_STRING)->getptr();
+  bool cpuid_limit_winnt = SIM->get_param_bool(BXPN_CPUID_LIMIT_WINNT)->get();
 
   cpuid_function_t *cpuid;
   int i;
@@ -360,10 +361,14 @@ void BX_CPU_C::set_cpuid_defaults(void)
 #else
   // for Pentium Pro, Pentium II, Pentium 4 processors
   cpuid->eax = 2;
-  if (BX_SUPPORT_MONITOR_MWAIT)
-    cpuid->eax = 0x5;
-  if (BX_SUPPORT_XSAVE)
-    cpuid->eax = 0xD;
+  // do not report CPUID functions above 0x3 if cpuid_limit_winnt is set
+  // to workaround WinNT issue.
+  if (! cpuid_limit_winnt) {
+    if (BX_SUPPORT_MONITOR_MWAIT)
+      cpuid->eax = 0x5;
+    if (BX_SUPPORT_XSAVE)
+      cpuid->eax = 0xD;
+  }
 #endif
 
   // CPUID vendor string (e.g. GenuineIntel, AuthenticAMD, CentaurHauls, ...)
@@ -494,6 +499,10 @@ void BX_CPU_C::set_cpuid_defaults(void)
   cpuid->ebx = 0;
   cpuid->ecx = 0;
   cpuid->edx = 0;
+
+  // do not report CPUID functions above 0x3 if cpuid_limit_winnt is set
+  // to workaround WinNT issue.
+  if (! cpuid_limit_winnt) return;
 
   // ------------------------------------------------------
   // CPUID function 0x00000004 - Deterministic Cache Parameters
