@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.216 2008-09-16 20:57:16 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.217 2008-09-23 13:25:32 akrisak Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2998,6 +2998,7 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::optimize32(bxInstruction_c *i, unsigned re
     &BX_CPU_C::LOAD_Ed_Resolve32BaseIndex
   };
 
+#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
   if (! BX_CPU_THIS_PTR alignment_check()) {
     if (i->execute == &BX_CPU_C::LOAD_Eb)
       i->execute = BxTableLoad32_Eb[resolve];
@@ -3006,6 +3007,7 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::optimize32(bxInstruction_c *i, unsigned re
     else if (i->execute == &BX_CPU_C::LOAD_Ed)
       i->execute = BxTableLoad32_Ed[resolve];
   }
+#endif
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::BxError(bxInstruction_c *i)
