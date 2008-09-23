@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: icache.cc,v 1.16 2008-08-12 19:25:42 sshwarts Exp $
+// $Id: icache.cc,v 1.17 2008-09-23 17:33:18 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007 Stanislav Shwartsman
@@ -57,20 +57,19 @@ bx_bool BX_CPU_C::fetchInstruction(bxInstruction_c *iStorage, Bit32u eipBiased)
 
 bxPageWriteStampTable pageWriteStampTable;
 
-void purgeICaches(void)
-{
-  for (unsigned i=0; i<BX_SMP_PROCESSORS; i++)
-    BX_CPU(i)->iCache.purgeICacheEntries();
-
-  pageWriteStampTable.purgeWriteStamps();
-}
-
 void flushICaches(void)
 {
-  for (unsigned i=0; i<BX_SMP_PROCESSORS; i++)
+  for (unsigned i=0; i<BX_SMP_PROCESSORS; i++) {
     BX_CPU(i)->iCache.flushICacheEntries();
+    BX_CPU(i)->async_event |= BX_ASYNC_EVENT_STOP_TRACE;
+  }
 
   pageWriteStampTable.resetWriteStamps();
+}
+
+void purgeICaches(void)
+{
+  flushICaches();
 }
 
 #if BX_SUPPORT_TRACE_CACHE
