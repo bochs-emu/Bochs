@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.239 2008-08-23 22:27:57 sshwarts Exp $
+// $Id: cpu.cc,v 1.240 2008-09-23 19:33:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -573,7 +573,7 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
         // boundary. (becomes a trap)
         if (! (BX_CPU_THIS_PTR inhibit_mask & BX_INHIBIT_DEBUG)) {
           // Commit debug events to DR6
-          BX_CPU_THIS_PTR dr6 = BX_CPU_THIS_PTR debug_trap;
+          BX_CPU_THIS_PTR dr6 |= BX_CPU_THIS_PTR debug_trap;
           exception(BX_DB_EXCEPTION, 0, 0); // no error, not interrupt
         }
       }
