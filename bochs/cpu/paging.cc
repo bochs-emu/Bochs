@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.156 2008-08-23 13:55:37 sshwarts Exp $
+// $Id: paging.cc,v 1.157 2008-09-24 10:39:35 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -435,24 +435,29 @@ BX_CPU_C::SetCR3(bx_address val)
     TLB_flush();          // Flush Global entries also.
 
 #if BX_SUPPORT_PAE
-  if (BX_CPU_THIS_PTR cr4.get_PAE() && !long_mode()) {
-    // when not in long mode cr3 could be only 32-bit
-    BX_CPU_THIS_PTR cr3_masked = val & 0xffffffe0;
+  if (BX_CPU_THIS_PTR cr4.get_PAE()) {
+#if BX_SUPPORT_X86_64
+    if (long_mode()) {
+#if BX_PHY_ADDRESS_WIDTH == 32
+      if (val & BX_CONST64(0x000fffff00000000)) {
+        BX_PANIC(("SetCR3() 0x%08x%08x: Only 32 bit physical address space is emulated !", GET32H(val), GET32L(val)));
+      }
+#endif
+      // bits [63-52], [11-5], [2-0] are reserved
+      if (val & (BX_CONST64(0xfff0000000000000) | BX_PHY_ADDRESS_RESERVED_BITS)) {
+        BX_ERROR(("SetCR3(): Attempt to write to reserved bits of CR3"));
+        exception(BX_GP_EXCEPTION, 0, 0);
+      }
+
+      BX_CPU_THIS_PTR cr3_masked = val & BX_CONST64(0x000ffffffffff000);
+    }
+    else
+#endif
+      BX_CPU_THIS_PTR cr3_masked = val & 0xffffffe0;
   }
   else
 #endif
-  {
-#if BX_PHY_ADDRESS_WIDTH == 32
-    if (val & BX_CONST64(0x000fffff00000000)) {
-      BX_PANIC(("SetCR3() 0x%08x%08x: Only 32 bit physical address space is emulated !", GET32H(val), GET32L(val)));
-    }
-#endif
-    if (val & BX_PHY_ADDRESS_RESERVED_BITS) {
-      BX_ERROR(("SetCR3(): Attempt to write to reserved bits of CR3"));
-      exception(BX_GP_EXCEPTION, 0, 0);
-    }
-    BX_CPU_THIS_PTR cr3_masked = val & BX_CONST64(0x000ffffffffff000);
-  }
+    BX_CPU_THIS_PTR cr3_masked = val & 0xfffff000;
 
   BX_CPU_THIS_PTR cr3 = val;
 }
