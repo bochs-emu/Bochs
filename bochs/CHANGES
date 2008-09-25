@@ -1,3 +1,73 @@
+Changes after 2.3.7 release:
+
+Detailed change log :
+
+- CPU and internal debugger
+  - Support new Intel Atom(R) MOVBE instruction, to enable configure with
+        --enable-movbe option
+  - Implemented modern BIOSes mode limiting max reported CPUID function
+    to 3 using .bochsrc CPU option. The mode is required in order to
+    correctly install and boot WinNT.
+  - Many bugfixes for CPU emulation correctness (both x86 and x86-64).
+  - Updated CPU instrumentation callbacks.
+  - Fixed Bochs internal debugger breakpoints/watchpoints handling.
+
+- System BIOS
+  - TBD
+
+- Configure and compile
+  - Added ability to configure CPUID vendor/brand strings through .bochsrc
+    (patch from @SF by Doug Reed)
+
+- Misc
+  - Updated Bochs TESTFORM to version 0.4
+
+- SF patches applied
+ [2073039] Remove CMOS accsess from AML code by Gleb Natapov
+ [2072168] smbios: add L1-L3 cache handle to processor information by Sebastian
+ [2055416] bochsrc cpu options for cpuid vendor and brand string by Doug Reed
+ [2035278] rombios: Fix return from BEV via retf by Sebastian
+ [2035260] rombios: El Torito load segment fix by Sebastian
+ [2031978] Fix VMware backdoor command 0Ah by Jamie Lokier
+ [2015277] Remove obsolete comment about DATA_SEG_DEFS_HERE hack by Sebastian
+ [2011268] Set new default format and unit only if both are supported by Sebastian
+ [2001919] gdbstub: fix qSupported reply by Sebastian
+ [2001912] gdbstub: enclose packet data by apostrophes by Sebastian
+ [1998071] fix missing SIGHUP and SIGQUIT with term ui on mingw by Sebastian
+ [1998063] fix wrong colors with term ui by Sebastian
+ [1995064] Compile fix needed for --enable-debugger and gcc 4.3 by Hans de Goede
+ [1994564] Fix typo in RDMSR BX_MSR_MTRRFIX16K_A0000 by Sebastian
+ [1994396] Change hard_drive_post #if by Sebastian
+ [1993235] TESTFORM email address update by Sebastian
+ [1992322] PATCH: fix compilation of bochs 2.3.7 on bigendian machines by Hans de Goede
+ [1991280] Shutdown status code 0Ch handler by Sebastian
+ [1990108] Shutdown status code 0Bh handler by Sebastian
+ [1988907] Shutdown status code 0Ah handler by Sebastian
+ [1984467] two typos in a release! (2.3.7)
+ [1981505] Init PIIX4 PCI to ISA bridge and IDE by Sebastian
+
+- these S.F. bugs were closed
+ [2123358] SMP (HTT): wbinvd executed by CPU1 crashes CPU0
+ [2029758] BEV can return via retf instead of int 18h
+ [2026501] El Torito incorrect boot segment:offset
+ [2010173] x command breaks after one error about x/s or x/i
+ [2002758] Arch Linux: >>PANIC<< ATAPI command with zero byte count
+ [1992138] Misspell in cpu/ia_opcodes.h
+ [1990187] testform feedback
+ [1985387] fail to make using gcc4 with --enable-debugger
+ [1976171] Keyboard missing break code for enter (0x9C)
+ [1952548] String to char * warnings
+ [1940714] SYSENTER/SYSEXIT doesn't work in long mode
+ [1936132] Link problem with --enable-debugger & --enable-disasm
+ [1934477] Linear address wrap is not working
+ [1923803] legacy rombios - e820 map and ACPI_DATA_SIZE
+ [1919328] 00000000000i[APIC?] local apic in initializing
+ [1902928] with debugger cpu_loop leaves CPU with unstable state
+ [1898929] Bochs VESA BIOS violates specs (banks == 1)
+ [1875721] Bit "Accessed" in LDT/GDT descriptors & #PF
+ [1874124] bx_Instruction_c::ilen() const  
+
+-------------------------------------------------------------------------
 Changes in 2.3.7 (June 3, 2008):
 
 Brief summary :
@@ -21,7 +91,7 @@ Detailed change log :
   - Fixed Bochs failure on RISC host machines with BxRepeatSpeedups
     optimization enabled
   - Implemented SYSENTER/SYSEXIT instructions in long mode
-  - More than 100 bugfixes in CPU emulation correctness (both x86 and x86-64)
+  - More than 100 bugfixes for CPU emulation correctness (both x86 and x86-64)
     - MenuetOS64 floppy images booting perfect again !
   - Updated CPU instrumentation callbacks
 
