@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: aes.cc,v 1.3 2008-08-08 09:22:46 sshwarts Exp $
+// $Id: aes.cc,v 1.4 2008-09-25 19:19:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008 Stanislav Shwartsman
@@ -233,7 +233,7 @@ static void AES_MixColumns(BxPackedXmmRegister &state)
                              AES_STATE(tmp, 3, j);
 
     AES_STATE(state, 2, j) = AES_STATE(tmp, 0, j) ^
-                             AES_STATE(tmp, 1, j);
+                             AES_STATE(tmp, 1, j) ^
                              gf_mul(0x2, AES_STATE(tmp, 2, j)) ^
                              gf_mul(0x3, AES_STATE(tmp, 3, j));
 
