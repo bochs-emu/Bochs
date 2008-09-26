@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.h,v 1.57 2008-02-05 22:57:41 sshwarts Exp $
+// $Id: gui.h,v 1.58 2008-09-26 11:05:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -136,6 +136,7 @@ public:
   static void     mouse_enabled_changed(bx_bool val);
   int register_statusitem(const char *text);
   static void init_signal_handlers();
+  static void toggle_mouse_enable(void);
 
 
 protected:
@@ -151,7 +152,6 @@ protected:
   static void snapshot_handler(void);
   static void snapshot_checker(void *);
   static void config_handler(void);
-  static void toggle_mouse_enable(void);
   static void userbutton_handler(void);
   static void save_restore_handler(void);
 
