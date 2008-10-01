@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: instrument.cc,v 1.27 2008-09-06 17:49:32 sshwarts Exp $
+// $Id: instrument.cc,v 1.28 2008-10-01 11:36:04 akrisak Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -28,6 +28,9 @@
 #include "bochs.h"
 
 #if BX_INSTRUMENTATION
+
+void bx_instr_init_env(void) {}
+void bx_instr_exit_env(void) {}
 
 void bx_instr_init(unsigned cpu) {}
 void bx_instr_exit(unsigned cpu) {}

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.382 2008-05-30 20:35:05 sshwarts Exp $
+// $Id: main.cc,v 1.383 2008-10-01 11:36:04 akrisak Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -263,8 +263,11 @@ int bxmain (void) {
   static jmp_buf context;
   if (setjmp (context) == 0) {
     SIM->set_quit_context (&context);
+    BX_INSTR_INIT_ENV();
     if (bx_init_main(bx_startup_flags.argc, bx_startup_flags.argv) < 0)
+    { BX_INSTR_EXIT_ENV();
       return 0;
+    }
     // read a param to decide which config interface to start.
     // If one exists, start it.  If not, just begin.
     bx_param_enum_c *ci_param = SIM->get_param_enum(BXPN_SEL_CONFIG_INTERFACE);
@@ -303,6 +306,7 @@ int bxmain (void) {
     fgets(buf, sizeof(buf), stdin);
   }
 #endif
+  BX_INSTR_EXIT_ENV();
   return SIM->get_exit_code();
 }
 

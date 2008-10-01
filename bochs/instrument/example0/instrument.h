@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: instrument.h,v 1.29 2008-09-06 17:49:31 sshwarts Exp $
+// $Id: instrument.h,v 1.30 2008-10-01 11:36:04 akrisak Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -56,6 +56,9 @@
 
 class bxInstruction_c;
 
+void bx_instr_init_env(void);
+void bx_instr_exit_env(void);
+
 // called from the CPU core
 
 void bx_instr_init(unsigned cpu);
@@ -74,6 +77,10 @@ void bx_instr_exception(unsigned cpu, unsigned vector);
 void bx_instr_hwinterrupt(unsigned cpu, unsigned vector, Bit16u cs, bx_address eip);
 
 void bx_instr_mem_data_access(unsigned cpu, unsigned seg, bx_address offset, unsigned len, unsigned rw);
+
+/* initialization/deinitialization of instrumentalization*/
+#  define BX_INSTR_INIT_ENV() bx_instr_init_env()
+#  define BX_INSTR_EXIT_ENV() bx_instr_exit_env()
 
 /* simulation init, shutdown, reset */
 #  define BX_INSTR_INIT(cpu_id)            bx_instr_init(cpu_id)
@@ -136,6 +143,10 @@ void bx_instr_mem_data_access(unsigned cpu, unsigned seg, bx_address offset, uns
 #  define BX_INSTR_WRMSR(cpu_id, addr, value)
 
 #else
+
+/* initialization/deinitialization of instrumentalization*/
+#  define BX_INSTR_INIT_ENV()
+#  define BX_INSTR_EXIT_ENV()
 
 /* simulation init, shutdown, reset */
 #  define BX_INSTR_INIT(cpu_id)

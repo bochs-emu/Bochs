@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: instrument.cc,v 1.24 2008-06-23 02:56:31 sshwarts Exp $
+// $Id: instrument.cc,v 1.25 2008-10-01 11:36:04 akrisak Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -62,6 +62,9 @@ static struct instruction_t {
 
 static logfunctions *instrument_log = new logfunctions ();
 #define LOG_THIS instrument_log->
+
+void bx_instr_init_env(void) {}
+void bx_instr_exit_env(void) {}
 
 void bx_instr_init(unsigned cpu)
 {
