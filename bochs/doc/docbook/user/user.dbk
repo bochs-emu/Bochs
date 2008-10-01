@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.246 2008-09-22 21:38:11 sshwarts Exp $
+$Id: user.dbk,v 1.247 2008-10-01 09:44:40 sshwarts Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -2300,11 +2300,6 @@ turn it off.
           DR0..DR8, instruction and data breakpoints etc., then you
           should use this option.  Otherwise don't use it, as it
           will slow down the emulation.</entry>
-    </row>
-    <row>
-      <entry>--enable-external-debugger</entry>
-      <entry>no</entry>
-      <entry>Enable external debugger support (only available on Win32).</entry>
     </row>
     <row>
       <entry>--enable-pci</entry>

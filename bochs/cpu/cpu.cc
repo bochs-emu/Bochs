@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.242 2008-09-26 20:41:41 sshwarts Exp $
+// $Id: cpu.cc,v 1.243 2008-10-01 09:44:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -31,10 +31,6 @@
 #define LOG_THIS BX_CPU_THIS_PTR
 
 #include "iodev/iodev.h"
-
-#if BX_EXTERNAL_DEBUGGER
-#include "extdb.h"
-#endif
 
 // Make code more tidy with a few macros.
 #if BX_SUPPORT_X86_64==0
@@ -100,7 +96,7 @@ void BX_CPU_C::cpu_loop(Bit32u max_instr_count)
     // only from exception function we can get here ...
     BX_INSTR_NEW_INSTRUCTION(BX_CPU_ID);
     BX_TICK1_IF_SINGLE_PROCESSOR();
-#if BX_DEBUGGER || BX_EXTERNAL_DEBUGGER || BX_GDBSTUB
+#if BX_DEBUGGER || BX_GDBSTUB
     if (dbg_instruction_epilog()) return;
 #endif
     CHECK_MAX_INSTRUCTIONS(max_instr_count);
@@ -181,7 +177,7 @@ no_async_event:
          i->ilen(), BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b, Is64BitMode());
 #endif
 
-#if BX_DEBUGGER || BX_EXTERNAL_DEBUGGER || BX_GDBSTUB
+#if BX_DEBUGGER || BX_GDBSTUB
       if (dbg_instruction_prolog()) return;
 #endif
 
@@ -204,7 +200,7 @@ no_async_event:
       BX_INSTR_NEW_INSTRUCTION(BX_CPU_ID);
 
       // note instructions generating exceptions never reach this point
-#if BX_DEBUGGER || BX_EXTERNAL_DEBUGGER || BX_GDBSTUB
+#if BX_DEBUGGER || BX_GDBSTUB
       if (dbg_instruction_epilog()) return;
 #endif
 
@@ -769,25 +765,11 @@ void BX_CPU_C::deliver_SMI(void)
   BX_CPU_THIS_PTR async_event = 1;
 }
 
-#if BX_EXTERNAL_DEBUGGER
-void BX_CPU_C::ask(int level, const char *prefix, const char *fmt, va_list ap)
-{
-  char buf1[1024];
-  vsprintf (buf1, fmt, ap);
-  printf ("%s %s\n", prefix, buf1);
-  trap_debugger(1, BX_CPU_THIS);
-}
-#endif
-
-#if BX_DEBUGGER || BX_EXTERNAL_DEBUGGER || BX_GDBSTUB
+#if BX_DEBUGGER || BX_GDBSTUB
 bx_bool BX_CPU_C::dbg_instruction_prolog(void)
 {
 #if BX_DEBUGGER
   if(dbg_check_begin_instr_bpoint()) return 1;
-#endif
-
-#if BX_EXTERNAL_DEBUGGER
-  bx_external_debugger(BX_CPU_THIS);
 #endif
 
   return 0;
@@ -808,7 +790,7 @@ bx_bool BX_CPU_C::dbg_instruction_epilog(void)
 
   return 0;
 }
-#endif // BX_DEBUGGER || BX_EXTERNAL_DEBUGGER || BX_GDBSTUB
+#endif // BX_DEBUGGER || BX_GDBSTUB
 
 #if BX_DEBUGGER
 extern unsigned dbg_show_mask;

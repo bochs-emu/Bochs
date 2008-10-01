@@ -962,9 +962,6 @@ typedef
 // I/O Interface to debug
 #define BX_SUPPORT_IODEBUG 0
 
-// External Debugger
-#define BX_EXTERNAL_DEBUGGER 0
-
 #ifdef WIN32
 #define BX_FLOPPY0_NAME "Floppy Disk A:"
 #define BX_FLOPPY1_NAME "Floppy Disk B:"

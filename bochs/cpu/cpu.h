@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.528 2008-09-19 19:18:56 sshwarts Exp $
+// $Id: cpu.h,v 1.529 2008-10-01 09:44:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -989,10 +989,6 @@ public: // for now...
                               // for a direct write access.
   } address_xlation;
 
-#if BX_EXTERNAL_DEBUGGER
-  virtual void ask(int level, const char *prefix, const char *fmt, va_list ap);
-#endif
-
   BX_SMF void setEFlags(Bit32u val) BX_CPP_AttrRegparmN(1);
 
 #define ArithmeticalFlag(flag, lfMask, eflagsBitShift) \
@@ -1039,11 +1035,7 @@ public: // for now...
 
   // constructors & destructors...
   BX_CPU_C(unsigned id = 0);
-#if BX_EXTERNAL_DEBUGGER
-  virtual ~BX_CPU_C();
-#else
-  ~BX_CPU_C();
-#endif
+ ~BX_CPU_C();
   void initialize(void);
   void after_restore_state(void);
   void register_state(void);
@@ -2747,7 +2739,7 @@ public: // for now...
   BX_SMF bx_bool  dbg_check_begin_instr_bpoint(void);
   BX_SMF bx_bool  dbg_check_end_instr_bpoint(void);
 #endif
-#if BX_DEBUGGER || BX_EXTERNAL_DEBUGGER || BX_GDBSTUB
+#if BX_DEBUGGER || BX_GDBSTUB
   BX_SMF bx_bool  dbg_instruction_prolog(void);
   BX_SMF bx_bool  dbg_instruction_epilog(void);
 #endif

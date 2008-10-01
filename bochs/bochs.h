@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.232 2008-06-12 21:02:53 sshwarts Exp $
+// $Id: bochs.h,v 1.233 2008-10-01 09:44:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -285,11 +285,7 @@ public:
   void pass(const char *fmt, ...)   BX_CPP_AttrPrintf(2, 3);
   void ldebug(const char *fmt, ...) BX_CPP_AttrPrintf(2, 3);
   void fatal (const char *prefix, const char *fmt, va_list ap, int exit_status);
-#if BX_EXTERNAL_DEBUGGER
-  virtual void ask (int level, const char *prefix, const char *fmt, va_list ap);
-#else
   void ask (int level, const char *prefix, const char *fmt, va_list ap);
-#endif
   void put(const char *);
   void settype(int);
   void setio(class iofunctions *);

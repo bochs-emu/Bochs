@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: soft_int.cc,v 1.44 2008-09-06 17:44:02 sshwarts Exp $
+// $Id: soft_int.cc,v 1.45 2008-10-01 09:44:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -29,10 +29,6 @@
 #include "bochs.h"
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
-
-#if BX_EXTERNAL_DEBUGGER
-#include "extdb.h"
-#endif
 
 // Make code more tidy with a few macros.
 #if BX_SUPPORT_X86_64==0
@@ -78,10 +74,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INT1(bxInstruction_c *i)
 
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR show_flag |= Flag_softint;
-#endif
-
-#if BX_EXTERNAL_DEBUGGER
-  trap_debugger(0, BX_CPU_THIS);
 #endif
 
   BX_CPU_THIS_PTR speculative_rsp = 1;
