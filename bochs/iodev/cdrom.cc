@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cdrom.cc,v 1.91 2008-02-15 22:05:41 sshwarts Exp $
+// $Id: cdrom.cc,v 1.92 2008-10-01 07:47:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -523,7 +523,7 @@ cdrom_interface::cdrom_interface(char *dev)
 
 void
 cdrom_interface::init(void) {
-  BX_DEBUG(("Init $Id: cdrom.cc,v 1.91 2008-02-15 22:05:41 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: cdrom.cc,v 1.92 2008-10-01 07:47:02 sshwarts Exp $"));
   BX_INFO(("file = '%s'",path));
 }
 
@@ -1435,7 +1435,7 @@ cdrom_interface::read_block(Bit8u* buf, int lba, int blocksize)
 #define CD_SEEK_DISTANCE kCDSectorSizeWhole
     if(using_file)
     {
-      pos = lseek(fd, lba*BX_CD_FRAMESIZE, SEEK_SET);
+      pos = lseek(fd, (off_t) lba * BX_CD_FRAMESIZE, SEEK_SET);
       if (pos < 0) {
         BX_PANIC(("cdrom: read_block: lseek returned error."));
       } else {
@@ -1446,7 +1446,7 @@ cdrom_interface::read_block(Bit8u* buf, int lba, int blocksize)
     {
       // This seek will leave us 16 bytes from the start of the data
       // hence the magic number.
-      pos = lseek(fd, lba*CD_SEEK_DISTANCE + 16, SEEK_SET);
+      pos = lseek(fd, (off_t) lba *CD_SEEK_DISTANCE + 16, SEEK_SET);
       if (pos < 0) {
         BX_PANIC(("cdrom: read_block: lseek returned error."));
       } else {
@@ -1454,7 +1454,7 @@ cdrom_interface::read_block(Bit8u* buf, int lba, int blocksize)
       }
     }
 #else
-    pos = lseek(fd, lba*BX_CD_FRAMESIZE, SEEK_SET);
+    pos = lseek(fd, (off_t) lba * BX_CD_FRAMESIZE, SEEK_SET);
     if (pos < 0) {
       BX_PANIC(("cdrom: read_block: lseek returned error."));
     } else {
