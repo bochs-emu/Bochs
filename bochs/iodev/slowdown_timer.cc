@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: slowdown_timer.cc,v 1.28 2008-02-15 22:05:43 sshwarts Exp $
+// $Id: slowdown_timer.cc,v 1.29 2008-10-01 07:54:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -30,6 +30,7 @@
 #include "slowdown_timer.h"
 
 #include <errno.h>
+#include <unistd.h>
 
 //These need to stay printfs because they are useless in the log file.
 #define BX_SLOWDOWN_PRINTF_FEEDBACK 0
