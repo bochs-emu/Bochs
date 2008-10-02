@@ -17,12 +17,17 @@ Detailed change log :
 
 - Configure and compile
   - Added ability to configure CPUID vendor/brand strings through .bochsrc
-    (patch from @SF by Doug Reed)
+    (patch from @SF by Doug Reed).
+  - Removed Peter Tattam's closed source external debugger interface from
+    the code.
 
 - Misc
   - Updated Bochs TESTFORM to version 0.4
 
 - SF patches applied
+ [2137774] Patch to fix bug: cdrom: read_block: lseek returned error by Gabor Olah
+ [2134642] Fix scan_to_scanascii table for F11 and F12 by Ben Guthro & Steve Ofsthun
+ [2123036] sdl fullscreen fix by ggbsf
  [2073039] Remove CMOS accsess from AML code by Gleb Natapov
  [2072168] smbios: add L1-L3 cache handle to processor information by Sebastian
  [2055416] bochsrc cpu options for cpuid vendor and brand string by Doug Reed
@@ -47,6 +52,7 @@ Detailed change log :
  [1981505] Init PIIX4 PCI to ISA bridge and IDE by Sebastian
 
 - these S.F. bugs were closed
+ [2106514] RIS / startrom.com install ALMOST works
  [2123358] SMP (HTT): wbinvd executed by CPU1 crashes CPU0
  [2029758] BEV can return via retf instead of int 18h
  [2026501] El Torito incorrect boot segment:offset
