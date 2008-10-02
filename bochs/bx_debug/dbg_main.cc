@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.158 2008-09-07 07:57:01 vruppert Exp $
+// $Id: dbg_main.cc,v 1.159 2008-10-02 06:48:33 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -535,7 +535,7 @@ void bx_dbg_check_memory_watchpoints(unsigned cpu, bx_phy_address phy, unsigned 
   // TODO: Each breakpoint should have an associated CPU#
   for (unsigned i = 0; i < num_watchpoints; i++) {
     if (watchpoint[i].type == rw || watchpoint[i].type == BX_RW) {
-      if (watchpoint[i].watch <= phy && (watchpoint[i].watch + len) > phy) {
+      if (watchpoint[i].watch >= phy && watchpoint[i].watch < (phy + len)) {
         BX_CPU(cpu)->watchpoint  = phy;
         BX_CPU(cpu)->break_point = rw;
         break;
