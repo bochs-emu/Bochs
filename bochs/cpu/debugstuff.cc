@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debugstuff.cc,v 1.97 2008-05-26 21:46:38 sshwarts Exp $
+// $Id: debugstuff.cc,v 1.98 2008-10-02 18:14:52 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -244,8 +244,8 @@ void BX_CPU_C::debug(bx_address offset)
     (unsigned) (EIP),
     (unsigned) (BX_CPU_THIS_PTR prev_rip >> 32),
     (unsigned) (BX_CPU_THIS_PTR prev_rip & 0xffffffff)));
-  BX_INFO(("| CR0=0x%08x CR1=0x%x CR2=0x%08x%08x",
-    (unsigned) (BX_CPU_THIS_PTR cr0.getRegister()), 0,
+  BX_INFO(("| CR0=0x%08x CR2=0x%08x%08x",
+    (unsigned) (BX_CPU_THIS_PTR cr0.getRegister()),
     (unsigned) (BX_CPU_THIS_PTR cr2 >> 32),
     (unsigned) (BX_CPU_THIS_PTR cr2 & 0xffffffff)));
   BX_INFO(("| CR3=0x%08x CR4=0x%08x",
@@ -255,13 +255,13 @@ void BX_CPU_C::debug(bx_address offset)
     (unsigned) BX_CPU_THIS_PTR prev_rip));
 
 #if BX_CPU_LEVEL >= 2 && BX_CPU_LEVEL < 4
-  BX_INFO(("| CR0=0x%08x CR1=%x CR2=0x%08x CR3=0x%08x",
-    BX_CPU_THIS_PTR cr0.getRegister(), 0,
+  BX_INFO(("| CR0=0x%08x CR2=0x%08x CR3=0x%08x",
+    BX_CPU_THIS_PTR cr0.getRegister(),
     BX_CPU_THIS_PTR cr2,
     BX_CPU_THIS_PTR cr3));
 #elif BX_CPU_LEVEL >= 4
-  BX_INFO(("| CR0=0x%08x CR1=%x CR2=0x%08x",
-    BX_CPU_THIS_PTR cr0.getRegister(), 0,
+  BX_INFO(("| CR0=0x%08x CR2=0x%08x",
+    BX_CPU_THIS_PTR cr0.getRegister(),
     BX_CPU_THIS_PTR cr2));
   BX_INFO(("| CR3=0x%08x CR4=0x%08x",
     BX_CPU_THIS_PTR cr3,
