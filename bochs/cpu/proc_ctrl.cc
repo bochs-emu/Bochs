@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.262 2008-10-03 16:53:08 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.263 2008-10-03 17:00:46 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1906,7 +1906,7 @@ void BX_CPU_C::check_monitor(bx_phy_address begin_addr, unsigned len)
     BX_CPU_THIS_PTR debug_trap &= ~BX_DEBUG_TRAP_SPECIAL;
     // clear monitor
     BX_MEM(0)->clear_monitor(BX_CPU_THIS_PTR bx_cpuid);
-    BX_CPU_THIS_PTR monitor.reset_monitor();;
+    BX_CPU_THIS_PTR monitor.reset_monitor();
  }
 }
 #endif
