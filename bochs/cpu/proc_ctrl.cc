@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.261 2008-09-19 19:18:56 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.262 2008-10-03 16:53:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1906,6 +1906,7 @@ void BX_CPU_C::check_monitor(bx_phy_address begin_addr, unsigned len)
     BX_CPU_THIS_PTR debug_trap &= ~BX_DEBUG_TRAP_SPECIAL;
     // clear monitor
     BX_MEM(0)->clear_monitor(BX_CPU_THIS_PTR bx_cpuid);
+    BX_CPU_THIS_PTR monitor.reset_monitor();;
  }
 }
 #endif
@@ -1979,6 +1980,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MONITOR(bxInstruction_c *i)
   BX_CPU_THIS_PTR monitor.monitor_begin = paddr;
   BX_CPU_THIS_PTR monitor.monitor_end   = paddr + CACHE_LINE_SIZE;
 
+  // Set the monitor immediately.  If monitor is still armed when we MWAIT,
+  // the processor will stall.
+  bx_pc_system.invlpg(BX_CPU_THIS_PTR monitor.monitor_begin);
+  if ((BX_CPU_THIS_PTR monitor.monitor_end & ~0xfff) != (BX_CPU_THIS_PTR monitor.monitor_begin & ~0xfff))
+    bx_pc_system.invlpg(BX_CPU_THIS_PTR monitor.monitor_end);
+  BX_DEBUG(("MONITOR for phys_addr=0x" FMT_PHY_ADDRX, BX_CPU_THIS_PTR monitor.monitor_begin));
+  BX_MEM(0)->set_monitor(BX_CPU_THIS_PTR bx_cpuid);
 #else
   BX_INFO(("MONITOR: use --enable-monitor-mwait to enable MONITOR/MWAIT support"));
   exception(BX_UD_EXCEPTION, 0, 0);
@@ -2005,11 +2013,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MWAIT(bxInstruction_c *i)
     return;
   }
 
-  bx_pc_system.invlpg(BX_CPU_THIS_PTR monitor.monitor_begin);
-  if ((BX_CPU_THIS_PTR monitor.monitor_end & ~0xfff) != (BX_CPU_THIS_PTR monitor.monitor_begin & ~0xfff))
-    bx_pc_system.invlpg(BX_CPU_THIS_PTR monitor.monitor_end);
-  BX_DEBUG(("MWAIT for phys_addr=" FMT_PHY_ADDRX, BX_CPU_THIS_PTR monitor.monitor_begin));
-  BX_MEM(0)->set_monitor(BX_CPU_THIS_PTR bx_cpuid);
+  // If monitor has already triggered, we just return.
+  if (!BX_CPU_THIS_PTR monitor.armed) {
+    BX_DEBUG(("MWAIT: the MONITOR was already triggered"));
+    return;
+  }
 
   // stops instruction execution and places the processor in a optimized
   // state.  Events that cause exit from MWAIT state are:

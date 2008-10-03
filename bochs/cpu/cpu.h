@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.529 2008-10-01 09:44:40 sshwarts Exp $
+// $Id: cpu.h,v 1.530 2008-10-03 16:53:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -756,14 +756,14 @@ typedef struct {
 struct monitor_addr_t {
     bx_phy_address monitor_begin;
     bx_phy_address monitor_end;
-
+    bool armed;
     // avoid false trigger when MONITOR was not set up properly
     monitor_addr_t():
-      monitor_begin(0xffffffff), monitor_end(0xffffffff) {}
+      monitor_begin(0xffffffff), monitor_end(0xffffffff), armed(false) {}
     monitor_addr_t(bx_phy_address addr, unsigned len):
-      monitor_begin(addr), monitor_end(addr+len) {}
+      monitor_begin(addr), monitor_end(addr+len), armed(true) {}
 
-    void reset_monitor(void) { monitor_begin = monitor_end = 0xffffffff; }
+    void reset_monitor(void) { monitor_begin = monitor_end = 0xffffffff; armed = false; }
 };
 #endif
 
