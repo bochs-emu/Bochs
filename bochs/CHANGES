@@ -12,19 +12,30 @@ Detailed change log :
   - Updated CPU instrumentation callbacks.
   - Fixed Bochs internal debugger breakpoints/watchpoints handling.
 
-- System BIOS
-  - TBD
-
 - Configure and compile
   - Added ability to configure CPUID vendor/brand strings through .bochsrc
     (patch from @SF by Doug Reed).
   - Removed Peter Tattam's closed source external debugger interface from
     the code.
 
+- I/O Devices
+  - Hard drive / cdrom
+    - PACKET-DMA feature now supported by all ATAPI commands
+    - ATAPI command 0x1A added (based on the Qemu implementation)
+  - sb16
+    - Added limited ALSA sound support on Linux (PCM/MIDI output)
+    - FM synthesizer now usable with MIDI output (simple piano only)
+      - Fixed OPL frequency to MIDI note translation
+      - Fixed MIDI output command
+  - keyboard
+    - added keyboard controller commands 0xCA and 0xCB
+
 - Misc
   - Updated Bochs TESTFORM to version 0.4
 
 - SF patches applied
+ [1984662] red led for disk write and titlebar mod by ggbsf
+ [2142955] Fix for monitor/mwait by Doug Gibson
  [2137774] Patch to fix bug: cdrom: read_block: lseek returned error by Gabor Olah
  [2134642] Fix scan_to_scanascii table for F11 and F12 by Ben Guthro & Steve Ofsthun
  [2123036] sdl fullscreen fix by ggbsf
