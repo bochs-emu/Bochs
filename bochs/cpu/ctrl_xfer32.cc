@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer32.cc,v 1.78 2008-08-16 15:32:44 sshwarts Exp $
+// $Id: ctrl_xfer32.cc,v 1.79 2008-10-06 20:26:14 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -40,6 +40,8 @@
 
 BX_CPP_INLINE void BX_CPP_AttrRegparmN(1) BX_CPU_C::branch_near32(Bit32u new_EIP)
 {
+  BX_ASSERT(BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64);
+
   // check always, not only in protected mode
   if (new_EIP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled)
   {
@@ -47,7 +49,7 @@ BX_CPP_INLINE void BX_CPP_AttrRegparmN(1) BX_CPU_C::branch_near32(Bit32u new_EIP
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
-  RIP = new_EIP;
+  EIP = new_EIP;
 
 #if BX_SUPPORT_TRACE_CACHE && !defined(BX_TRACE_CACHE_NO_SPECULATIVE_TRACING)
   // assert magic async_event to stop trace execution
@@ -57,12 +59,14 @@ BX_CPP_INLINE void BX_CPP_AttrRegparmN(1) BX_CPU_C::branch_near32(Bit32u new_EIP
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::RETnear32_Iw(bxInstruction_c *i)
 {
+  BX_ASSERT(BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64);
+
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR show_flag |= Flag_ret;
 #endif
 
   BX_CPU_THIS_PTR speculative_rsp = 1;
-  BX_CPU_THIS_PTR prev_rsp = RSP;
+  BX_CPU_THIS_PTR prev_rsp = ESP;
 
   Bit16u imm16 = i->Iw();
   Bit32u return_EIP = pop_32();
@@ -71,7 +75,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RETnear32_Iw(bxInstruction_c *i)
     BX_ERROR(("RETnear32_Iw: offset outside of CS limits"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
-  RIP = return_EIP;
+  EIP = return_EIP;
 
   if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b)
     ESP += imm16;
@@ -85,12 +89,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RETnear32_Iw(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::RETnear32(bxInstruction_c *i)
 {
+  BX_ASSERT(BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64);
+
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR show_flag |= Flag_ret;
 #endif
 
   BX_CPU_THIS_PTR speculative_rsp = 1;
-  BX_CPU_THIS_PTR prev_rsp = RSP;
+  BX_CPU_THIS_PTR prev_rsp = ESP;
 
   Bit32u return_EIP = pop_32();
   if (return_EIP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled)
@@ -98,7 +104,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RETnear32(bxInstruction_c *i)
     BX_ERROR(("RETnear32: offset outside of CS limits"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
-  RIP = return_EIP;
+  EIP = return_EIP;
 
   BX_CPU_THIS_PTR speculative_rsp = 0;
 
@@ -107,6 +113,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RETnear32(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::RETfar32_Iw(bxInstruction_c *i)
 {
+  BX_ASSERT(BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64);
+
   invalidate_prefetch_q();
 
 #if BX_DEBUGGER
@@ -118,7 +126,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RETfar32_Iw(bxInstruction_c *i)
   Bit32u eip;
 
   BX_CPU_THIS_PTR speculative_rsp = 1;
-  BX_CPU_THIS_PTR prev_rsp = RSP;
+  BX_CPU_THIS_PTR prev_rsp = ESP;
 
   if (protected_mode()) {
     BX_CPU_THIS_PTR return_protected(i, imm16);
@@ -135,7 +143,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RETfar32_Iw(bxInstruction_c *i)
   }
 
   load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], cs_raw);
-  RIP = eip;
+  EIP = eip;
 
   if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b)
     ESP += imm16;
@@ -151,6 +159,8 @@ done:
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::RETfar32(bxInstruction_c *i)
 {
+  BX_ASSERT(BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64);
+
   Bit32u eip;
   Bit16u cs_raw;
 
@@ -161,7 +171,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RETfar32(bxInstruction_c *i)
 #endif
 
   BX_CPU_THIS_PTR speculative_rsp = 1;
-  BX_CPU_THIS_PTR prev_rsp = RSP;
+  BX_CPU_THIS_PTR prev_rsp = ESP;
 
   if (protected_mode()) {
     BX_CPU_THIS_PTR return_protected(i, 0);
@@ -179,7 +189,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RETfar32(bxInstruction_c *i)
   cs_raw = (Bit16u) pop_32(); /* 32bit pop, MSW discarded */
 
   load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], cs_raw);
-  RIP = eip;
+  EIP = eip;
 
 done:
   BX_CPU_THIS_PTR speculative_rsp = 0;
@@ -197,7 +207,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CALL_Jd(bxInstruction_c *i)
   Bit32u new_EIP = EIP + i->Id();
 
   BX_CPU_THIS_PTR speculative_rsp = 1;
-  BX_CPU_THIS_PTR prev_rsp = RSP;
+  BX_CPU_THIS_PTR prev_rsp = ESP;
 
   /* push 32 bit EA of next instruction */
   push_32(EIP);
@@ -211,6 +221,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CALL_Jd(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::CALL32_Ap(bxInstruction_c *i)
 {
+  BX_ASSERT(BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64);
+
   Bit16u cs_raw;
   Bit32u disp32;
 
@@ -224,7 +236,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CALL32_Ap(bxInstruction_c *i)
   cs_raw = i->Iw2();
 
   BX_CPU_THIS_PTR speculative_rsp = 1;
-  BX_CPU_THIS_PTR prev_rsp = RSP;
+  BX_CPU_THIS_PTR prev_rsp = ESP;
 
   if (protected_mode()) {
     BX_CPU_THIS_PTR call_protected(i, cs_raw, disp32);
@@ -241,7 +253,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CALL32_Ap(bxInstruction_c *i)
   push_32(EIP);
 
   load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], cs_raw);
-  RIP = disp32;
+  EIP = disp32;
 
 done:
   BX_CPU_THIS_PTR speculative_rsp = 0;
@@ -259,7 +271,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CALL_EdR(bxInstruction_c *i)
   Bit32u new_EIP = BX_READ_32BIT_REG(i->rm());
 
   BX_CPU_THIS_PTR speculative_rsp = 1;
-  BX_CPU_THIS_PTR prev_rsp = RSP;
+  BX_CPU_THIS_PTR prev_rsp = ESP;
 
   /* push 32 bit EA of next instruction */
   push_32(EIP);
@@ -548,6 +560,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::JNLE_Jd(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::JMP_Ap(bxInstruction_c *i)
 {
+  BX_ASSERT(BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64);
+
   Bit32u disp32;
   Bit16u cs_raw;
 
@@ -561,7 +575,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::JMP_Ap(bxInstruction_c *i)
   }
   cs_raw = i->Iw2();
 
-  // jump_protected doesn't affect RSP so it is RSP safe
+  // jump_protected doesn't affect ESP so it is ESP safe
   if (protected_mode()) {
     BX_CPU_THIS_PTR jump_protected(i, cs_raw, disp32);
     goto done;
@@ -574,7 +588,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::JMP_Ap(bxInstruction_c *i)
   }
 
   load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], cs_raw);
-  RIP = disp32;
+  EIP = disp32;
 
 done:
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_JMP,
@@ -624,6 +638,8 @@ done:
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::IRET32(bxInstruction_c *i)
 {
+  BX_ASSERT(BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64);
+
   Bit32u eip, eflags32;
   Bit16u cs_raw;
 
@@ -636,7 +652,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::IRET32(bxInstruction_c *i)
   BX_CPU_THIS_PTR nmi_disable = 0;
 
   BX_CPU_THIS_PTR speculative_rsp = 1;
-  BX_CPU_THIS_PTR prev_rsp = RSP;
+  BX_CPU_THIS_PTR prev_rsp = ESP;
 
   if (v8086_mode()) {
     // IOPL check in stack_return_from_v86()
@@ -660,7 +676,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::IRET32(bxInstruction_c *i)
   }
 
   load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], cs_raw);
-  RIP = eip;
+  EIP = eip;
   writeEFlags(eflags32, 0x00257fd5); // VIF, VIP, VM unchanged
 
 done:
