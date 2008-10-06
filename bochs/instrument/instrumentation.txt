@@ -19,6 +19,7 @@ directory to it, then customize it. Use:
 BOCHS instrumentation callbacks
         
         void bx_instr_init_env();
+
 The  callback is called when Bochs is initialized, before of reading .bochsrc.
 It   can  be  used  for  registration  of  parameters  in  siminterface.  Then
 when  bx_instr_init() is called it can access configuration parameters defined
@@ -26,10 +27,10 @@ when  bx_instr_init() is called it can access configuration parameters defined
 by bx_instr_init_env(),  so  instrumentalization  module  can  use  additional
 options in .bochsrc.
 
-
-
         void bx_instr_exit_env();
-The callback is called each time, when Bochs is exits.
+
+The callback is called each time Bochs exits.
+
 	void bx_instr_init(unsigned cpu);
 
 The  callback  is  called each time, when Bochs initializes the CPU object. It
