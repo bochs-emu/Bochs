@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: access32.cc,v 1.18 2008-09-18 17:37:28 sshwarts Exp $
+// $Id: access32.cc,v 1.19 2008-10-06 17:50:06 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008 Stanislav Shwartsman
@@ -264,6 +264,8 @@ accessOK:
   goto accessOK;
 }
 
+#if BX_CPU_LEVEL >= 6
+
   void BX_CPP_AttrRegparmN(3)
 BX_CPU_C::write_virtual_dqword_32(unsigned s, Bit32u offset, const BxPackedXmmRegister *data)
 {
@@ -368,6 +370,8 @@ accessOK:
     exception(int_number(s), 0, 0);
   goto accessOK;
 }
+
+#endif
 
   Bit8u BX_CPP_AttrRegparmN(2)
 BX_CPU_C::read_virtual_byte_32(unsigned s, Bit32u offset)
@@ -599,6 +603,8 @@ accessOK:
   goto accessOK;
 }
 
+#if BX_CPU_LEVEL >= 6
+
   void BX_CPP_AttrRegparmN(3)
 BX_CPU_C::read_virtual_dqword_32(unsigned s, Bit32u offset, BxPackedXmmRegister *data)
 {
@@ -697,6 +703,8 @@ accessOK:
     exception(int_number(s), 0, 0);
   goto accessOK;
 }
+
+#endif
 
 //////////////////////////////////////////////////////////////
 // special Read-Modify-Write operations                     //
