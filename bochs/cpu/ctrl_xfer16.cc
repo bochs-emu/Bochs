@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer16.cc,v 1.62 2008-08-23 22:27:58 sshwarts Exp $
+// $Id: ctrl_xfer16.cc,v 1.63 2008-10-06 20:41:28 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -38,6 +38,8 @@
 
 BX_CPP_INLINE void BX_CPP_AttrRegparmN(1) BX_CPU_C::branch_near16(Bit16u new_IP)
 {
+  BX_ASSERT(BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64);
+
   // check always, not only in protected mode
   if (new_IP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled)
   {
@@ -45,7 +47,7 @@ BX_CPP_INLINE void BX_CPP_AttrRegparmN(1) BX_CPU_C::branch_near16(Bit16u new_IP)
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
-  RIP = new_IP;
+  EIP = new_IP;
 
 #if BX_SUPPORT_TRACE_CACHE && !defined(BX_TRACE_CACHE_NO_SPECULATIVE_TRACING)
   // assert magic async_event to stop trace execution
@@ -55,12 +57,14 @@ BX_CPP_INLINE void BX_CPP_AttrRegparmN(1) BX_CPU_C::branch_near16(Bit16u new_IP)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::RETnear16_Iw(bxInstruction_c *i)
 {
+  BX_ASSERT(BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64);
+
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR show_flag |= Flag_ret;
 #endif
 
   BX_CPU_THIS_PTR speculative_rsp = 1;
-  BX_CPU_THIS_PTR prev_rsp = RSP;
+  BX_CPU_THIS_PTR prev_rsp = ESP;
 
   Bit16u return_IP = pop_16();
 
@@ -70,7 +74,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RETnear16_Iw(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
-  RIP = return_IP;
+  EIP = return_IP;
 
   Bit16u imm16 = i->Iw();
 
@@ -86,12 +90,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RETnear16_Iw(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::RETnear16(bxInstruction_c *i)
 {
+  BX_ASSERT(BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64);
+
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR show_flag |= Flag_ret;
 #endif
 
   BX_CPU_THIS_PTR speculative_rsp = 1;
-  BX_CPU_THIS_PTR prev_rsp = RSP;
+  BX_CPU_THIS_PTR prev_rsp = ESP;
 
   Bit16u return_IP = pop_16();
 
@@ -101,7 +107,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RETnear16(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
-  RIP = return_IP;
+  EIP = return_IP;
 
   BX_CPU_THIS_PTR speculative_rsp = 0;
 
@@ -181,7 +187,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RETfar16(bxInstruction_c *i)
   }
 
   load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], cs_raw);
-  RIP = (Bit32u) ip;
+  EIP = (Bit32u) ip;
 
 done:
 
@@ -213,6 +219,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CALL_Jw(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::CALL16_Ap(bxInstruction_c *i)
 {
+  BX_ASSERT(BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64);
+
   invalidate_prefetch_q();
 
 #if BX_DEBUGGER
@@ -223,7 +231,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CALL16_Ap(bxInstruction_c *i)
   Bit16u cs_raw = i->Iw2();
 
   BX_CPU_THIS_PTR speculative_rsp = 1;
-  BX_CPU_THIS_PTR prev_rsp = RSP;
+  BX_CPU_THIS_PTR prev_rsp = ESP;
 
   if (protected_mode()) {
     BX_CPU_THIS_PTR call_protected(i, cs_raw, disp16);
@@ -240,7 +248,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CALL16_Ap(bxInstruction_c *i)
   }
 
   load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], cs_raw);
-  RIP = (Bit32u) disp16;
+  EIP = (Bit32u) disp16;
 
 done:
 
@@ -259,7 +267,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CALL_EwR(bxInstruction_c *i)
 #endif
 
   BX_CPU_THIS_PTR speculative_rsp = 1;
-  BX_CPU_THIS_PTR prev_rsp = RSP;
+  BX_CPU_THIS_PTR prev_rsp = ESP;
 
   /* push 16 bit EA of next instruction */
   push_16(IP);
@@ -305,7 +313,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CALL16_Ep(bxInstruction_c *i)
   }
 
   load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], cs_raw);
-  RIP = op1_16;
+  EIP = op1_16;
 
 done:
 
@@ -579,7 +587,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::JMP16_Ep(bxInstruction_c *i)
   }
 
   load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], cs_raw);
-  RIP = op1_16;
+  EIP = op1_16;
 
 done:
 

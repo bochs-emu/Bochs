@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer32.cc,v 1.79 2008-10-06 20:26:14 sshwarts Exp $
+// $Id: ctrl_xfer32.cc,v 1.80 2008-10-06 20:41:28 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -113,8 +113,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RETnear32(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::RETfar32_Iw(bxInstruction_c *i)
 {
-  BX_ASSERT(BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64);
-
   invalidate_prefetch_q();
 
 #if BX_DEBUGGER
@@ -126,7 +124,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RETfar32_Iw(bxInstruction_c *i)
   Bit32u eip;
 
   BX_CPU_THIS_PTR speculative_rsp = 1;
-  BX_CPU_THIS_PTR prev_rsp = ESP;
+  BX_CPU_THIS_PTR prev_rsp = RSP;
 
   if (protected_mode()) {
     BX_CPU_THIS_PTR return_protected(i, imm16);
@@ -159,8 +157,6 @@ done:
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::RETfar32(bxInstruction_c *i)
 {
-  BX_ASSERT(BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64);
-
   Bit32u eip;
   Bit16u cs_raw;
 
@@ -171,7 +167,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RETfar32(bxInstruction_c *i)
 #endif
 
   BX_CPU_THIS_PTR speculative_rsp = 1;
-  BX_CPU_THIS_PTR prev_rsp = ESP;
+  BX_CPU_THIS_PTR prev_rsp = RSP;
 
   if (protected_mode()) {
     BX_CPU_THIS_PTR return_protected(i, 0);
@@ -318,7 +314,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CALL32_Ep(bxInstruction_c *i)
   push_32(EIP);
 
   load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], cs_raw);
-  RIP = op1_32;
+  EIP = op1_32;
 
 done:
   BX_CPU_THIS_PTR speculative_rsp = 0;
@@ -629,7 +625,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::JMP32_Ep(bxInstruction_c *i)
   }
 
   load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], cs_raw);
-  RIP = op1_32;
+  EIP = op1_32;
 
 done:
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_JMP,
