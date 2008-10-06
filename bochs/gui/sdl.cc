@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sdl.cc,v 1.75 2008-09-26 11:05:07 sshwarts Exp $
+// $Id: sdl.cc,v 1.76 2008-10-06 22:00:11 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -53,11 +53,13 @@ public:
   DECLARE_GUI_VIRTUAL_METHODS()
   DECLARE_GUI_NEW_VIRTUAL_METHODS()
   virtual void set_display_mode(disp_mode_t newmode);
-  virtual void statusbar_setitem(int element, bx_bool active);
+  virtual void statusbar_setitem(int element, bx_bool active, bx_bool w = 0);
 #if BX_SHOW_IPS
   virtual void show_ips(Bit32u ips_count);
 #endif
 };
+
+void sdl_set_status_text(int element, const char *text, bx_bool active, bx_bool w = 0);
 
 // declare one instance of the gui object and call macro to insert the
 // plugin code
@@ -69,9 +71,11 @@ IMPLEMENT_GUI_PLUGIN_CODE(sdl)
 #if SDL_BYTEORDER == SDL_BIG_ENDIAN
 const Uint32 status_led_green = 0x00ff0000;
 const Uint32 status_gray_text = 0x80808000;
+const Uint32 status_led_red = 0x0040ff00;
 #else
 const Uint32 status_led_green = 0x0000ff00;
 const Uint32 status_gray_text = 0x00808080;
+const Uint32 status_led_red = 0x00ff4000;
 #endif
 
 static unsigned prev_cursor_x=0;
@@ -350,7 +354,7 @@ void bx_sdl_gui_c::specific_init(int argc, char **argv,
 #endif
 }
 
-void sdl_set_status_text(int element, const char *text, bx_bool active)
+void sdl_set_status_text(int element, const char *text, bx_bool active, bx_bool w)
 {
   Uint32 *buf, *buf_row;
   Uint32 disp, fgcolor, bgcolor;
@@ -368,7 +372,7 @@ void sdl_set_status_text(int element, const char *text, bx_bool active)
   rowsleft = statusbar_height - 2;
   fgcolor = active?headerbar_fg:status_gray_text;
   if (element > 0) {
-    bgcolor = active?status_led_green:headerbar_bg;
+    bgcolor = active?(w?status_led_red:status_led_green):headerbar_bg;
   } else {
     bgcolor = headerbar_bg;
   }
@@ -413,14 +417,14 @@ void sdl_set_status_text(int element, const char *text, bx_bool active)
   SDL_UpdateRect(sdl_screen, xleft,res_y+headerbar_height+1,xsize,statusbar_height-2);
 }
 
-void bx_sdl_gui_c::statusbar_setitem(int element, bx_bool active)
+void bx_sdl_gui_c::statusbar_setitem(int element, bx_bool active, bx_bool w)
 {
   if (element < 0) {
     for (unsigned i = 0; i < statusitem_count; i++) {
-      sdl_set_status_text(i+1, statusitem_text[i], active);
+      sdl_set_status_text(i+1, statusitem_text[i], active, w);
     }
   } else if ((unsigned)element < statusitem_count) {
-    sdl_set_status_text(element+1, statusitem_text[element], active);
+    sdl_set_status_text(element+1, statusitem_text[element], active, w);
   }
 }
 

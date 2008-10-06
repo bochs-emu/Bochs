@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rfb.cc,v 1.59 2008-09-26 11:05:07 sshwarts Exp $
+// $Id: rfb.cc,v 1.60 2008-10-06 22:00:11 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2000  Psyon.Org!
@@ -51,11 +51,13 @@ public:
   DECLARE_GUI_VIRTUAL_METHODS()
   DECLARE_GUI_NEW_VIRTUAL_METHODS()
   void get_capabilities(Bit16u *xres, Bit16u *yres, Bit16u *bpp);
-  void statusbar_setitem(int element, bx_bool active);
+  void statusbar_setitem(int element, bx_bool active, bx_bool w=0);
 #if BX_SHOW_IPS
   void show_ips(Bit32u ips_count);
 #endif
 };
+
+void rfbSetStatusText(int element, const char *text, bx_bool active, bx_bool w=0);
 
 // declare one instance of the gui object and call macro to insert the
 // plugin code
@@ -288,7 +290,7 @@ void bx_rfb_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsi
   dialog_caps = 0;
 }
 
-void rfbSetStatusText(int element, const char *text, bx_bool active)
+void rfbSetStatusText(int element, const char *text, bx_bool active, bx_bool w)
 {
   char *newBits;
   unsigned xleft, xsize, color, i, len;
@@ -302,7 +304,7 @@ void rfbSetStatusText(int element, const char *text, bx_bool active)
     newBits[((xsize / 8) + 1) * i] = 0;
   }
   if (element > 0) {
-    color = active?0xa0:0xf7;
+    color = color = active?(w?0xc0:0xa0):0xf7;
   } else {
     color = 0xf0;
   }
@@ -320,14 +322,14 @@ void rfbSetStatusText(int element, const char *text, bx_bool active)
   rfbUpdateRegion.updated = true;
 }
 
-void bx_rfb_gui_c::statusbar_setitem(int element, bx_bool active)
+void bx_rfb_gui_c::statusbar_setitem(int element, bx_bool active, bx_bool w)
 {
   if (element < 0) {
     for (unsigned i = 0; i < statusitem_count; i++) {
-      rfbSetStatusText(i+1, statusitem_text[i], active);
+      rfbSetStatusText(i+1, statusitem_text[i], active, w);
     }
   } else if ((unsigned)element < statusitem_count) {
-    rfbSetStatusText(element+1, statusitem_text[element], active);
+    rfbSetStatusText(element+1, statusitem_text[element], active, w);
   }
 }
 

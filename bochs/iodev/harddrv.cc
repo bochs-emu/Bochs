@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.214 2008-07-27 08:06:22 vruppert Exp $
+// $Id: harddrv.cc,v 1.215 2008-10-06 22:00:11 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -173,7 +173,7 @@ void bx_hard_drive_c::init(void)
   char  ata_name[20];
   bx_list_c *base;
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.214 2008-07-27 08:06:22 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.215 2008-10-06 22:00:11 sshwarts Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     sprintf(ata_name, "ata.%d.resources", channel);
@@ -3519,7 +3519,7 @@ bx_bool bx_hard_drive_c::ide_write_sector(Bit8u channel, Bit8u *buffer, Bit32u b
     }
     /* set status bar conditions for device */
     if (!BX_SELECTED_DRIVE(channel).iolight_counter)
-      bx_gui->statusbar_setitem(BX_SELECTED_DRIVE(channel).statusbar_id, 1);
+      bx_gui->statusbar_setitem(BX_SELECTED_DRIVE(channel).statusbar_id, 1, 1 /* write */);
     BX_SELECTED_DRIVE(channel).iolight_counter = 5;
     bx_pc_system.activate_timer(BX_HD_THIS iolight_timer_index, 100000, 0);
     ret = BX_SELECTED_DRIVE(channel).hard_drive->write((bx_ptr_t)bufptr, 512);

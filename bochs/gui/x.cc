@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: x.cc,v 1.116 2008-05-25 12:28:27 vruppert Exp $
+// $Id: x.cc,v 1.117 2008-10-06 22:00:11 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -65,7 +65,7 @@ public:
 #endif
   virtual void beep_on(float frequency);
   virtual void beep_off();
-  virtual void statusbar_setitem(int element, bx_bool active);
+  virtual void statusbar_setitem(int element, bx_bool active, bx_bool w=0);
   virtual void get_capabilities(Bit16u *xres, Bit16u *yres, Bit16u *bpp);
 #if BX_SHOW_IPS
   virtual void show_ips(Bit32u ips_count);
@@ -167,7 +167,7 @@ static Bit8u x11_mouse_msg_counter = 0;
 
 static void headerbar_click(int x, int y);
 static void send_keyboard_mouse_status(void);
-static void set_status_text(int element, const char *text, bx_bool active);
+static void set_status_text(int element, const char *text, bx_bool active, bx_bool w=0);
 
 
 Bit32u ascii_to_key_event[0x5f] = {
@@ -608,11 +608,13 @@ void bx_x_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsign
   switch (imBPP) {
     case 16:
       bx_status_led_green = 0x07e0;
+      bx_status_led_red = 0xf900;
       bx_status_graytext = 0x8410;
       break;
     case 24:
     case 32:
       bx_status_led_green = 0x00ff00;
+      bx_status_led_red = 0xff4000;
       bx_status_graytext = 0x808080;
       break;
     default:
@@ -662,7 +664,7 @@ void bx_x_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsign
   dialog_caps |= (BX_GUI_DLG_USER | BX_GUI_DLG_SNAPSHOT | BX_GUI_DLG_CDROM);
 }
 
-void set_status_text(int element, const char *text, bx_bool active)
+void set_status_text(int element, const char *text, bx_bool active, bx_bool w)
 {
   int xleft, xsize, sb_ypos;
 
@@ -680,7 +682,10 @@ void set_status_text(int element, const char *text, bx_bool active)
   } else if (element <= BX_MAX_STATUSITEMS) {
     bx_statusitem_active[element] = active;
     if (active) {
-      XSetForeground(bx_x_display, gc_headerbar, bx_status_led_green);
+      if (w)
+        XSetForeground(bx_x_display, gc_headerbar, bx_status_led_red);
+      else
+        XSetForeground(bx_x_display, gc_headerbar, bx_status_led_green);
       XFillRectangle(bx_x_display, win, gc_headerbar, xleft, sb_ypos+2, xsize-1, bx_statusbar_y-2);
       XSetForeground(bx_x_display, gc_headerbar, black_pixel);
     } else {
@@ -693,14 +698,14 @@ void set_status_text(int element, const char *text, bx_bool active)
   }
 }
 
-void bx_x_gui_c::statusbar_setitem(int element, bx_bool active)
+void bx_x_gui_c::statusbar_setitem(int element, bx_bool active, bx_bool w)
 {
   if (element < 0) {
     for (unsigned i = 0; i < statusitem_count; i++) {
-      set_status_text(i+1, statusitem_text[i], active);
+      set_status_text(i+1, statusitem_text[i], active, w);
     }
   } else if ((unsigned)element < statusitem_count) {
-    set_status_text(element+1, statusitem_text[element], active);
+    set_status_text(element+1, statusitem_text[element], active, w);
   }
 }
 

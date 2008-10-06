@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32.cc,v 1.120 2008-06-01 10:56:29 vruppert Exp $
+// $Id: win32.cc,v 1.121 2008-10-06 22:00:11 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -50,7 +50,7 @@ class bx_win32_gui_c : public bx_gui_c {
 public:
   bx_win32_gui_c (void) {}
   DECLARE_GUI_VIRTUAL_METHODS();
-  virtual void statusbar_setitem(int element, bx_bool active);
+  virtual void statusbar_setitem(int element, bx_bool active, bx_bool w=0);
   virtual void get_capabilities(Bit16u *xres, Bit16u *yres, Bit16u *bpp);
   virtual void set_tooltip(unsigned hbar_id, const char *tip);
 #if BX_SHOW_IPS
@@ -168,6 +168,7 @@ static char ipsText[20];
 long SB_Edges[BX_MAX_STATUSITEMS+BX_SB_TEXT_ELEMENTS+1];
 char SB_Text[BX_MAX_STATUSITEMS][10];
 bx_bool SB_Active[BX_MAX_STATUSITEMS];
+bx_bool SB_ActiveW[BX_MAX_STATUSITEMS];
 
 // Misc stuff
 static unsigned dimension_x, dimension_y, current_bpp;
@@ -207,7 +208,7 @@ sharedThreadInfo stInfo;
 LRESULT CALLBACK mainWndProc (HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK simWndProc (HWND, UINT, WPARAM, LPARAM);
 VOID CDECL UIThread(PVOID);
-void SetStatusText(int Num, const char *Text, bx_bool active);
+void SetStatusText(int Num, const char *Text, bx_bool active, bx_bool w=0);
 void terminateEmul(int);
 void create_vga_font(void);
 static unsigned char reverse_bitorder(unsigned char);
@@ -939,7 +940,7 @@ VOID CDECL UIThread(PVOID pvoid)
   _endthread();
 }
 
-void SetStatusText(int Num, const char *Text, bx_bool active)
+void SetStatusText(int Num, const char *Text, bx_bool active, bx_bool w)
 {
   char StatText[MAX_PATH];
 
@@ -952,20 +953,20 @@ void SetStatusText(int Num, const char *Text, bx_bool active)
     lstrcpy(StatText+1, Text);
     lstrcpy(SB_Text[Num-BX_SB_TEXT_ELEMENTS], StatText);
     SB_Active[Num-BX_SB_TEXT_ELEMENTS] = active;
+    SB_ActiveW[Num-BX_SB_TEXT_ELEMENTS] = w;
     SendMessage(hwndSB, SB_SETTEXT, Num | SBT_OWNERDRAW, (long)SB_Text[Num-BX_SB_TEXT_ELEMENTS]);
   }
   UpdateWindow(hwndSB);
 }
 
-void
-bx_win32_gui_c::statusbar_setitem(int element, bx_bool active)
+void bx_win32_gui_c::statusbar_setitem(int element, bx_bool active, bx_bool w)
 {
   if (element < 0) {
     for (int i = 0; i < (int)statusitem_count; i++) {
-      SetStatusText(i+BX_SB_TEXT_ELEMENTS, statusitem_text[i], active);
+      SetStatusText(i+BX_SB_TEXT_ELEMENTS, statusitem_text[i], active, w);
     }
   } else if (element < (int)statusitem_count) {
-    SetStatusText(element+BX_SB_TEXT_ELEMENTS, statusitem_text[element], active);
+    SetStatusText(element+BX_SB_TEXT_ELEMENTS, statusitem_text[element], active, w);
   }
 }
 
@@ -1009,7 +1010,7 @@ LRESULT CALLBACK mainWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
       SendMessage(hwndSB, WM_SIZE, 0, 0);
       // now fit simWindow to mainWindow
       int rect_data[] = { 1, 0, IsWindowVisible(hwndTB),
-       100, IsWindowVisible(hwndSB), 0x7712, 0, 0 };
+         100, IsWindowVisible(hwndSB), 0x7712, 0, 0 };
       RECT R;
       GetEffectiveClientRect(hwnd, &R, rect_data);
       x = R.right - R.left;
@@ -1031,7 +1032,10 @@ LRESULT CALLBACK mainWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
     if (lpdis->hwndItem == hwndSB) {
       sbtext = (char *)lpdis->itemData;
       if (SB_Active[lpdis->itemID-BX_SB_TEXT_ELEMENTS]) {
-        SetBkColor(lpdis->hDC, 0x0000FF00);
+        if (SB_ActiveW[lpdis->itemID-BX_SB_TEXT_ELEMENTS])
+          SetBkColor(lpdis->hDC, 0x000040FF);
+        else
+          SetBkColor(lpdis->hDC, 0x0000FF00);
       } else {
         SetBkMode(lpdis->hDC, TRANSPARENT);
         SetTextColor(lpdis->hDC, 0x00808080);
@@ -1047,16 +1051,15 @@ LRESULT CALLBACK mainWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
       lpttt = (LPTOOLTIPTEXT)lParam;
       idTT = (int)wParam;
       hbar_id = idTT - 101;
-      if ((SendMessage(hwndTB, TB_GETSTATE, idTT, 0)) &&
-          (bx_headerbar_entry[hbar_id].tooltip != NULL)) {
-          lstrcpy(lpttt->szText, bx_headerbar_entry[hbar_id].tooltip);
+      if (SendMessage(hwndTB, TB_GETSTATE, idTT, 0) && bx_headerbar_entry[hbar_id].tooltip != NULL) {
+        lstrcpy(lpttt->szText, bx_headerbar_entry[hbar_id].tooltip);
       }
     }
     return FALSE;
     break;
 
   }
-  return DefWindowProc (hwnd, iMsg, wParam, lParam);
+  return DefWindowProc(hwnd, iMsg, wParam, lParam);
 }
 
 void SetMouseCapture()
