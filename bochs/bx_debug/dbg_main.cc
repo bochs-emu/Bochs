@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.159 2008-10-02 06:48:33 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.160 2008-10-07 07:47:56 akrisak Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -434,6 +434,10 @@ int bxwrap(void)
   bx_dbg_exit(1);
   return(0); // keep compiler quiet
 }
+
+#ifdef WIN32
+char* bxtext;
+#endif
 
 void bxerror(char *s)
 {

@@ -53,7 +53,7 @@ OBJS = \
 	init.o \
 	cpu.o \
 	icache.o \
-	resolve.o \
+	resolver.o \
 	fetchdecode.o \
 	access.o \
 	access32.o \
@@ -656,7 +656,7 @@ protect_ctrl.o: protect_ctrl.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   lazy_flags.h icache.h apic.h ../cpu/i387.h ../fpu/softfloat.h \
   ../config.h ../fpu/tag_w.h ../fpu/status_w.h ../fpu/control_w.h \
   ../cpu/xmm.h stack.h
-resolve.o: resolve.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
+resolver.o: resolver.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
   ../extplugin.h ../gui/gui.h ../gui/textconfig.h ../config.h \
