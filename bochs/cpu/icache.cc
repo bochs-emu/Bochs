@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: icache.cc,v 1.18 2008-09-24 10:39:35 sshwarts Exp $
+// $Id: icache.cc,v 1.19 2008-10-08 20:40:26 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007 Stanislav Shwartsman
@@ -91,11 +91,11 @@ void BX_CPU_C::serveICacheMiss(bxICacheEntry_c *cache_entry, Bit32u eipBiased, b
 
   unsigned remainingInPage = BX_CPU_THIS_PTR eipPageWindowSize - eipBiased;
   const Bit8u *fetchPtr = BX_CPU_THIS_PTR eipFetchPtr + eipBiased;
-  unsigned ret, max_length = BX_MAX_TRACE_LENGTH;
+  unsigned ret;
 
   bxInstruction_c *i = cache_entry->i;
 
-  for (unsigned n=0;n<max_length;n++)
+  for (unsigned n=0;n<BX_MAX_TRACE_LENGTH;n++)
   {
 #if BX_SUPPORT_X86_64
     if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64)

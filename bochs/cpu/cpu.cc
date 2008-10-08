@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.245 2008-10-08 20:15:37 sshwarts Exp $
+// $Id: cpu.cc,v 1.246 2008-10-08 20:40:26 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -291,137 +291,128 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::repeat(bxInstruction_c *i, BxExecutePtr_tR
 #endif
 }
 
-// repeat prefix 0xF2
 void BX_CPP_AttrRegparmN(2) BX_CPU_C::repeat_ZF(bxInstruction_c *i, BxExecutePtr_tR execute)
 {
-  BX_ASSERT(i->repUsedL()); // TRUE by design
+  unsigned rep = i->repUsedValue();
 
-#if BX_SUPPORT_X86_64
-  if (i->as64L()) {
-    while(1) {
-      if (RCX != 0) {
-        BX_CPU_CALL_METHOD(execute, (i));
-        BX_INSTR_REPEAT_ITERATION(BX_CPU_ID, i);
-        RCX --;
-      }
-      if (get_ZF() || RCX == 0) return;
-
-#if BX_DEBUGGER == 0
-      if (BX_CPU_THIS_PTR async_event)
-#endif
-        break; // exit always if debugger enabled
-
-      BX_TICK1_IF_SINGLE_PROCESSOR();
-    }
-  }
-  else
-#endif
-  if (i->as32L()) {
-    while(1) {
-      if (ECX != 0) {
-        BX_CPU_CALL_METHOD(execute, (i));
-        BX_INSTR_REPEAT_ITERATION(BX_CPU_ID, i);
-        RCX = ECX - 1;
-      }
-      if (get_ZF() || ECX == 0) return;
-
-#if BX_DEBUGGER == 0
-      if (BX_CPU_THIS_PTR async_event)
-#endif
-        break; // exit always if debugger enabled
-
-      BX_TICK1_IF_SINGLE_PROCESSOR();
-    }
-  }
-  else  // 16bit addrsize
-  {
-    while(1) {
-      if (CX != 0) {
-        BX_CPU_CALL_METHOD(execute, (i));
-        BX_INSTR_REPEAT_ITERATION(BX_CPU_ID, i);
-        CX --;
-      }
-      if (get_ZF() || CX == 0) return;
-
-#if BX_DEBUGGER == 0
-      if (BX_CPU_THIS_PTR async_event)
-#endif
-        break; // exit always if debugger enabled
-
-      BX_TICK1_IF_SINGLE_PROCESSOR();
-    }
-  }
-
-  RIP = BX_CPU_THIS_PTR prev_rip; // repeat loop not done, restore RIP
-
-#if BX_SUPPORT_TRACE_CACHE
-  // assert magic async_event to stop trace execution
-  BX_CPU_THIS_PTR async_event |= BX_ASYNC_EVENT_STOP_TRACE;
-#endif
-}
-
-// repeat prefix 0xF3
-void BX_CPP_AttrRegparmN(2) BX_CPU_C::repeat_NZF(bxInstruction_c *i, BxExecutePtr_tR execute)
-{
   // non repeated instruction
-  if (! i->repUsedL()) {
+  if (! rep) {
     BX_CPU_CALL_METHOD(execute, (i));
     return;
   }
 
+  if (rep == 3) { /* repeat prefix 0xF3 */
 #if BX_SUPPORT_X86_64
-  if (i->as64L()) {
-    while(1) {
-      if (RCX != 0) {
-        BX_CPU_CALL_METHOD(execute, (i));
-        BX_INSTR_REPEAT_ITERATION(BX_CPU_ID, i);
-        RCX --;
-      }
-      if (! get_ZF() || RCX == 0) return;
+    if (i->as64L()) {
+      while(1) {
+        if (RCX != 0) {
+          BX_CPU_CALL_METHOD(execute, (i));
+          BX_INSTR_REPEAT_ITERATION(BX_CPU_ID, i);
+          RCX --;
+        }
+        if (! get_ZF() || RCX == 0) return;
 
 #if BX_DEBUGGER == 0
-      if (BX_CPU_THIS_PTR async_event)
+        if (BX_CPU_THIS_PTR async_event)
 #endif
-        break; // exit always if debugger enabled
+          break; // exit always if debugger enabled
 
-      BX_TICK1_IF_SINGLE_PROCESSOR();
+        BX_TICK1_IF_SINGLE_PROCESSOR();
+      }
+    }
+    else
+#endif
+    if (i->as32L()) {
+      while(1) {
+        if (ECX != 0) {
+          BX_CPU_CALL_METHOD(execute, (i));
+          BX_INSTR_REPEAT_ITERATION(BX_CPU_ID, i);
+          RCX = ECX - 1;
+        }
+        if (! get_ZF() || ECX == 0) return;
+
+#if BX_DEBUGGER == 0
+        if (BX_CPU_THIS_PTR async_event)
+#endif
+          break; // exit always if debugger enabled
+
+        BX_TICK1_IF_SINGLE_PROCESSOR();
+      }
+    }
+    else  // 16bit addrsize
+    {
+      while(1) {
+        if (CX != 0) {
+          BX_CPU_CALL_METHOD(execute, (i));
+          BX_INSTR_REPEAT_ITERATION(BX_CPU_ID, i);
+          CX --;
+        }
+        if (! get_ZF() || CX == 0) return;
+
+#if BX_DEBUGGER == 0
+        if (BX_CPU_THIS_PTR async_event)
+#endif
+          break; // exit always if debugger enabled
+
+        BX_TICK1_IF_SINGLE_PROCESSOR();
+      }
     }
   }
-  else
-#endif
-  if (i->as32L()) {
-    while(1) {
-      if (ECX != 0) {
-        BX_CPU_CALL_METHOD(execute, (i));
-        BX_INSTR_REPEAT_ITERATION(BX_CPU_ID, i);
-        RCX = ECX - 1;
-      }
-      if (! get_ZF() || ECX == 0) return;
+  else {          /* repeat prefix 0xF2 */
+#if BX_SUPPORT_X86_64
+    if (i->as64L()) {
+      while(1) {
+        if (RCX != 0) {
+          BX_CPU_CALL_METHOD(execute, (i));
+          BX_INSTR_REPEAT_ITERATION(BX_CPU_ID, i);
+          RCX --;
+        }
+        if (get_ZF() || RCX == 0) return;
 
 #if BX_DEBUGGER == 0
-      if (BX_CPU_THIS_PTR async_event)
+        if (BX_CPU_THIS_PTR async_event)
 #endif
-        break; // exit always if debugger enabled
+          break; // exit always if debugger enabled
 
-      BX_TICK1_IF_SINGLE_PROCESSOR();
+        BX_TICK1_IF_SINGLE_PROCESSOR();
+      }
     }
-  }
-  else  // 16bit addrsize
-  {
-    while(1) {
-      if (CX != 0) {
-        BX_CPU_CALL_METHOD(execute, (i));
-        BX_INSTR_REPEAT_ITERATION(BX_CPU_ID, i);
-        CX --;
-      }
-      if (! get_ZF() || CX == 0) return;
+    else
+#endif
+    if (i->as32L()) {
+      while(1) {
+        if (ECX != 0) {
+          BX_CPU_CALL_METHOD(execute, (i));
+          BX_INSTR_REPEAT_ITERATION(BX_CPU_ID, i);
+          RCX = ECX - 1;
+        }
+        if (get_ZF() || ECX == 0) return;
 
 #if BX_DEBUGGER == 0
-      if (BX_CPU_THIS_PTR async_event)
+        if (BX_CPU_THIS_PTR async_event)
 #endif
-        break; // exit always if debugger enabled
+          break; // exit always if debugger enabled
 
-      BX_TICK1_IF_SINGLE_PROCESSOR();
+        BX_TICK1_IF_SINGLE_PROCESSOR();
+      }
+    }
+    else  // 16bit addrsize
+    {
+      while(1) {
+        if (CX != 0) {
+          BX_CPU_CALL_METHOD(execute, (i));
+          BX_INSTR_REPEAT_ITERATION(BX_CPU_ID, i);
+          CX --;
+        }
+        if (get_ZF() || CX == 0) return;
+
+#if BX_DEBUGGER == 0
+        if (BX_CPU_THIS_PTR async_event)
+#endif
+          break; // exit always if debugger enabled
+
+        BX_TICK1_IF_SINGLE_PROCESSOR();
+      }
     }
   }
 

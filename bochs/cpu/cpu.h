@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.534 2008-10-08 20:15:37 sshwarts Exp $
+// $Id: cpu.h,v 1.535 2008-10-08 20:40:26 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -3024,7 +3024,6 @@ public: // for now...
 
   BX_SMF void repeat(bxInstruction_c *i, BxExecutePtr_tR execute) BX_CPP_AttrRegparmN(2);
   BX_SMF void repeat_ZF(bxInstruction_c *i, BxExecutePtr_tR execute) BX_CPP_AttrRegparmN(2);
-  BX_SMF void repeat_NZF(bxInstruction_c *i, BxExecutePtr_tR execute) BX_CPP_AttrRegparmN(2);
 
   // linear address for access_linear expected to be canonical !
   BX_SMF void access_read_linear(bx_address address, unsigned length, unsigned curr_pl,
