@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_pfp.cc,v 1.50 2008-08-08 09:22:48 sshwarts Exp $
+// $Id: sse_pfp.cc,v 1.51 2008-10-08 10:51:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -86,12 +86,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTPI2PS_VpsQq(bxInstruction_c *i)
 #if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
 
+  /* check floating point status word for a pending FPU exceptions */
+  FPU_check_pending_exceptions();
+
   BxPackedMmxRegister op;
   BxPackedXmmRegister result;
 
   /* op is a register or memory reference */
   if (i->modC0()) {
-    BX_CPU_THIS_PTR prepareFPU2MMX();
     op = BX_READ_MMX_REG(i->rm());
   }
   else {
@@ -100,6 +102,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTPI2PS_VpsQq(bxInstruction_c *i)
     /* pointer, segment address pair */
     MMXUQ(op) = read_virtual_qword(i->seg(), eaddr);
   }
+
+  BX_CPU_THIS_PTR prepareFPU2MMX(); /* FPU2MMX state transition */
 
   float_status_t status_word;
   mxcsr_to_softfloat_status_word(status_word, MXCSR);
@@ -125,12 +129,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTPI2PD_VpdQq(bxInstruction_c *i)
 #if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
+  /* check floating point status word for a pending FPU exceptions */
+  FPU_check_pending_exceptions();
+
   BxPackedMmxRegister op;
   BxPackedXmmRegister result;
 
   /* op is a register or memory reference */
   if (i->modC0()) {
-    BX_CPU_THIS_PTR prepareFPU2MMX();
     op = BX_READ_MMX_REG(i->rm());
   }
   else {
@@ -139,6 +145,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTPI2PD_VpdQq(bxInstruction_c *i)
     /* pointer, segment address pair */
     MMXUQ(op) = read_virtual_qword(i->seg(), eaddr);
   }
+
+  BX_CPU_THIS_PTR prepareFPU2MMX(); /* FPU2MMX state transition */
 
   result.xmm64u(0) = int32_to_float64(MMXUD0(op));
   result.xmm64u(1) = int32_to_float64(MMXUD1(op));
@@ -276,7 +284,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTTPS2PI_PqWps(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
-  BX_CPU_THIS_PTR prepareFPU2MMX();
+
+  /* check floating point status word for a pending FPU exceptions */
+  FPU_check_pending_exceptions();
 
   Bit64u op;
   BxPackedMmxRegister result;
@@ -290,6 +300,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTTPS2PI_PqWps(bxInstruction_c *i)
     /* pointer, segment address pair */
     op = read_virtual_qword(i->seg(), eaddr);
   }
+
+  BX_CPU_THIS_PTR prepareFPU2MMX(); /* FPU2MMX state transition */
 
   float_status_t status_word;
   mxcsr_to_softfloat_status_word(status_word, MXCSR);
@@ -323,7 +335,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTTPD2PI_PqWpd(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
-  BX_CPU_THIS_PTR prepareFPU2MMX();
+
+  /* check floating point status word for a pending FPU exceptions */
+  FPU_check_pending_exceptions();
 
   BxPackedXmmRegister op;
   BxPackedMmxRegister result;
@@ -337,6 +351,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTTPD2PI_PqWpd(bxInstruction_c *i)
     /* pointer, segment address pair */
     readVirtualDQwordAligned(i->seg(), eaddr, (Bit8u *) &op);
   }
+
+  BX_CPU_THIS_PTR prepareFPU2MMX(); /* FPU2MMX state transition */
 
   float_status_t status_word;
   mxcsr_to_softfloat_status_word(status_word, MXCSR);
@@ -466,7 +482,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTPS2PI_PqWps(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
-  BX_CPU_THIS_PTR prepareFPU2MMX();
+
+  /* check floating point status word for a pending FPU exceptions */
+  FPU_check_pending_exceptions();
 
   Bit64u op;
   BxPackedMmxRegister result;
@@ -480,6 +498,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTPS2PI_PqWps(bxInstruction_c *i)
     /* pointer, segment address pair */
     op = read_virtual_qword(i->seg(), eaddr);
   }
+
+  BX_CPU_THIS_PTR prepareFPU2MMX(); /* FPU2MMX state transition */
 
   float_status_t status_word;
   mxcsr_to_softfloat_status_word(status_word, MXCSR);
@@ -514,7 +534,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTPD2PI_PqWpd(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
-  BX_CPU_THIS_PTR prepareFPU2MMX();
+
+  /* check floating point status word for a pending FPU exceptions */
+  FPU_check_pending_exceptions();
 
   BxPackedXmmRegister op;
   BxPackedMmxRegister result;
@@ -528,6 +550,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTPD2PI_PqWpd(bxInstruction_c *i)
     /* pointer, segment address pair */
     readVirtualDQwordAligned(i->seg(), eaddr, (Bit8u *) &op);
   }
+
+  BX_CPU_THIS_PTR prepareFPU2MMX(); /* FPU2MMX state transition */
 
   float_status_t status_word;
   mxcsr_to_softfloat_status_word(status_word, MXCSR);
@@ -835,6 +859,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTDQ2PS_VpsWdq(bxInstruction_c *i)
     /* pointer, segment address pair */
     readVirtualDQwordAligned(i->seg(), eaddr, (Bit8u *) &op);
   }
+
+  BX_CPU_THIS_PTR prepareFPU2MMX(); /* FPU2MMX state transition */
 
   float_status_t status_word;
   mxcsr_to_softfloat_status_word(status_word, MXCSR);
