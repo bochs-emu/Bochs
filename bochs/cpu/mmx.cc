@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: mmx.cc,v 1.82 2008-10-08 10:51:38 sshwarts Exp $
+// $Id: mmx.cc,v 1.83 2008-10-08 11:14:35 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2002 Stanislav Shwartsman
@@ -34,18 +34,6 @@ void BX_CPU_C::print_state_MMX(void)
     BxPackedMmxRegister mm = BX_READ_MMX_REG(i);
     BX_DEBUG(("MM%d: %08x%08x\n", i, MMXUD1(mm), MMXUD0(mm)));
   }
-}
-
-void BX_CPU_C::prepareMMX(void)
-{
-  if(BX_CPU_THIS_PTR cr0.get_EM())
-    exception(BX_UD_EXCEPTION, 0, 0);
-
-  if(BX_CPU_THIS_PTR cr0.get_TS())
-    exception(BX_NM_EXCEPTION, 0, 0);
-
-  /* check floating point status word for a pending FPU exceptions */
-  FPU_check_pending_exceptions();
 }
 
 void BX_CPU_C::prepareFPU2MMX(void)

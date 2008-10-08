@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.532 2008-10-06 20:06:30 sshwarts Exp $
+// $Id: cpu.h,v 1.533 2008-10-08 11:14:35 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -3300,6 +3300,20 @@ public: // for now...
   BX_SMF void    check_monitor(bx_phy_address addr, unsigned len);
 #endif
 };
+
+#if BX_SUPPORT_MMX
+BX_CPP_INLINE void BX_CPU_C::prepareMMX(void)
+{
+  if(BX_CPU_THIS_PTR cr0.get_EM())
+    exception(BX_UD_EXCEPTION, 0, 0);
+
+  if(BX_CPU_THIS_PTR cr0.get_TS())
+    exception(BX_NM_EXCEPTION, 0, 0);
+
+  /* check floating point status word for a pending FPU exceptions */
+  FPU_check_pending_exceptions();
+}
+#endif
 
 #if BX_SUPPORT_SSE
 BX_CPP_INLINE void BX_CPU_C::prepareSSE(void)
