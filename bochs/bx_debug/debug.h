@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debug.h,v 1.46 2008-08-07 21:09:29 sshwarts Exp $
+// $Id: debug.h,v 1.47 2008-10-08 17:13:35 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -240,7 +240,7 @@ void bx_dbg_show_command(const char*);
 void bx_dbg_print_stack_command(unsigned nwords);
 extern bx_bool watchpoint_continue;
 void bx_dbg_watch(int type, bx_phy_address address);
-void bx_dbg_unwatch(int handle);
+void bx_dbg_unwatch(bx_phy_address handle);
 void bx_dbg_continue_command(void);
 void bx_dbg_stepN_command(Bit32u count);
 void bx_dbg_set_auto_disassemble(bx_bool enable);

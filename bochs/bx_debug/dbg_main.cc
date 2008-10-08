@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.160 2008-10-07 07:47:56 akrisak Exp $
+// $Id: dbg_main.cc,v 1.161 2008-10-08 17:13:35 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -115,14 +115,10 @@ static disassembler bx_disassemble;
 static Bit8u bx_disasm_ibuf[32];
 static char  bx_disasm_tbuf[512];
 
-// watchpoints
-static struct watchp {
-  bx_phy_address watch;
-  Bit32u handle;
-  unsigned type; // BX_READ, BX_WRITE, BX_RW
-} watchpoint[BX_DBG_MAX_WATCHPONTS];
-
-static unsigned num_watchpoints = 0;
+unsigned num_write_watchpoints = 0;
+unsigned num_read_watchpoints = 0;
+bx_phy_address write_watchpoint[BX_DBG_MAX_WATCHPONTS];
+bx_phy_address read_watchpoint[BX_DBG_MAX_WATCHPONTS];
 bx_bool watchpoint_continue = 0;
 
 #define DBG_PRINTF_BUFFER_LEN 1024
@@ -535,11 +531,20 @@ void bx_dbg_halt(unsigned cpu)
 
 void bx_dbg_check_memory_watchpoints(unsigned cpu, bx_phy_address phy, unsigned len, unsigned rw)
 {
-  // Check for physical write watch points
-  // TODO: Each breakpoint should have an associated CPU#
-  for (unsigned i = 0; i < num_watchpoints; i++) {
-    if (watchpoint[i].type == rw || watchpoint[i].type == BX_RW) {
-      if (watchpoint[i].watch >= phy && watchpoint[i].watch < (phy + len)) {
+  if (rw == BX_WRITE) {
+    // Check for physical write watch points
+    for (unsigned i = 0; i < num_write_watchpoints; i++) {
+      if (write_watchpoint[i] >= phy && write_watchpoint[i] < (phy + len)) {
+        BX_CPU(cpu)->watchpoint  = phy;
+        BX_CPU(cpu)->break_point = rw;
+        break;
+      }
+    }
+  }
+  else {
+    // Check for physical read watch points
+    for (unsigned i = 0; i < num_read_watchpoints; i++) {
+      if (read_watchpoint[i] >= phy && read_watchpoint[i] < (phy + len)) {
         BX_CPU(cpu)->watchpoint  = phy;
         BX_CPU(cpu)->break_point = rw;
         break;
@@ -1517,52 +1522,71 @@ void bx_dbg_watch(int type, bx_phy_address address)
 {
   if (type == -1) {
     // print watch point info
-    for (unsigned i = 0; i < num_watchpoints; i++) {
+    for (unsigned i = 0; i < num_read_watchpoints; i++) {
       Bit8u buf[2];
-      if (BX_MEM(0)->dbg_fetch_mem(BX_CPU(dbg_cpu), watchpoint[i].watch, 2, buf))
-        dbg_printf("%4d   %s   0x"FMT_PHY_ADDRX"   (%04x)\n",
-            watchpoint[i].handle, 
-            watchpoint[i].type == BX_READ ? "RD" : (watchpoint[i].type == BX_WRITE ? "WR" : "RW"),
-            watchpoint[i].watch, (int)buf[0] | ((int)buf[1] << 8));
+      if (BX_MEM(0)->dbg_fetch_mem(BX_CPU(dbg_cpu), read_watchpoint[i], 2, buf))
+        dbg_printf("rd 0x"FMT_PHY_ADDRX"   (%04x)\n",
+            read_watchpoint[i], (int)buf[0] | ((int)buf[1] << 8));
       else
-        dbg_printf("%4d  %s   0x"FMT_PHY_ADDRX"   (read error)\n",
-            watchpoint[i].handle, 
-            watchpoint[i].type == BX_READ ? "RD" : (watchpoint[i].type == BX_WRITE ? "WR" : "RW"),
-            watchpoint[i].watch);
+        dbg_printf("rd 0x"FMT_PHY_ADDRX"   (read error)\n", read_watchpoint[i]);
+    }
+    for (unsigned i = 0; i < num_write_watchpoints; i++) {
+      Bit8u buf[2];
+      if (BX_MEM(0)->dbg_fetch_mem(BX_CPU(dbg_cpu), write_watchpoint[i], 2, buf))
+        dbg_printf("wr 0x"FMT_PHY_ADDRX"   (%04x)\n",
+            write_watchpoint[i], (int)buf[0] | ((int)buf[1] << 8));
+      else
+        dbg_printf("wr 0x"FMT_PHY_ADDRX"   (read error)\n", write_watchpoint[i]);
     }
   } else {
-    if (num_watchpoints == BX_DBG_MAX_WATCHPONTS) {
-      dbg_printf("Too many watchpoints (%d)\n", BX_DBG_MAX_WATCHPONTS);
-      return;
+    if (type == BX_READ) {
+      if (num_read_watchpoints == BX_DBG_MAX_WATCHPONTS) {
+        dbg_printf("Too many read watchpoints (%d)\n", BX_DBG_MAX_WATCHPONTS);
+        return;
+      }
+      read_watchpoint[num_read_watchpoints++] = address;
+      dbg_printf("read watchpoint at 0x" FMT_PHY_ADDRX " inserted\n", address);
     }
-    watchpoint[num_watchpoints].watch = address;
-    watchpoint[num_watchpoints].type = type;
-    watchpoint[num_watchpoints].handle = bx_debugger.next_wpoint_id++;
-    dbg_printf("watchpoint %d at 0x" FMT_PHY_ADDRX " inserted\n", watchpoint[num_watchpoints].handle, address);
-    num_watchpoints++;
+    else {
+      if (num_write_watchpoints == BX_DBG_MAX_WATCHPONTS) {
+        dbg_printf("Too many write watchpoints (%d)\n", BX_DBG_MAX_WATCHPONTS);
+        return;
+      }
+      write_watchpoint[num_write_watchpoints++] = address;
+      dbg_printf("write watchpoint at 0x" FMT_PHY_ADDRX " inserted\n", address);
+    }
   }
 }
 
-void bx_dbg_unwatch(int handle)
+void bx_dbg_unwatch(bx_phy_address address)
 {
-  if (handle == -1) {
+  if (address == (bx_phy_address) -1) {
     // unwatch all
-    num_watchpoints = 0;
-    bx_debugger.next_wpoint_id = 1;
+    num_read_watchpoints = num_write_watchpoints = 0;
     dbg_printf("All watchpoints removed\n");
     return;
   }
 
-  // see if breakpoint is a physical breakpoint
-  for (unsigned i=0; i<num_watchpoints; i++) {
-    if (watchpoint[i].handle == (Bit32u) handle) {
-      dbg_printf("watchpoint %d at 0x" FMT_PHY_ADDRX " removed\n", watchpoint[i].handle, watchpoint[i].watch);
+  for (unsigned i=0; i<num_read_watchpoints; i++) {
+    if (read_watchpoint[i] == address) {
+      dbg_printf("read watchpoint at 0x" FMT_PHY_ADDRX " removed\n", address);
       // found watchpoint, delete it by shifting remaining entries left
-      for (unsigned j=i; j<(num_watchpoints-1); j++) {
-        watchpoint[j].watch = watchpoint[j+1].watch;
-        watchpoint[j].type = watchpoint[j+1].type;
+      for (unsigned j=i; j<(num_read_watchpoints-1); j++) {
+        read_watchpoint[j] = read_watchpoint[j+1];
       }
-      num_watchpoints--;
+      num_read_watchpoints--;
+      break;
+    }
+  }
+
+  for (unsigned i=0; i<num_write_watchpoints; i++) {
+    if (write_watchpoint[i] == address) {
+      dbg_printf("write watchpoint at 0x" FMT_PHY_ADDRX " removed\n", address);
+      // found watchpoint, delete it by shifting remaining entries left
+      for (unsigned j=i; j<(num_write_watchpoints-1); j++) {
+        write_watchpoint[j] = write_watchpoint[j+1];
+      }
+      num_write_watchpoints--;
       break;
     }
   }

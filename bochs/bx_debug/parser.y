@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: parser.y,v 1.32 2008-09-12 21:03:56 sshwarts Exp $
+// $Id: parser.y,v 1.33 2008-10-08 17:13:35 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 %{
@@ -329,12 +329,12 @@ watch_point_command:
           bx_dbg_watch(-1, 0);
           free($1);
       }
-    | BX_TOKEN_WATCH BX_TOKEN_READ BX_TOKEN_NUMERIC '\n'
+    | BX_TOKEN_WATCH BX_TOKEN_READ expression '\n'
       {
           bx_dbg_watch(0, $3); /* BX_READ */
           free($1); free($2);
       }
-    | BX_TOKEN_WATCH BX_TOKEN_WRITE BX_TOKEN_NUMERIC '\n'
+    | BX_TOKEN_WATCH BX_TOKEN_WRITE expression '\n'
       {
           bx_dbg_watch(1, $3); /* BX_WRITE */
           free($1); free($2);
@@ -344,7 +344,7 @@ watch_point_command:
           bx_dbg_unwatch(-1);
           free($1);
       }
-    | BX_TOKEN_UNWATCH BX_TOKEN_NUMERIC '\n'
+    | BX_TOKEN_UNWATCH expression '\n'
       {
           bx_dbg_unwatch($2);
           free($1);
@@ -1021,8 +1021,8 @@ help_command:
        }
      | BX_TOKEN_HELP BX_TOKEN_UNWATCH '\n'
        {
-         dbg_printf("unwatch        - remove all watch points\n");
-         dbg_printf("unwatch handle - remove a watch point\n");
+         dbg_printf("unwatch      - remove all watch points\n");
+         dbg_printf("unwatch addr - remove a watch point\n");
          free($1);free($2);
        }
      | BX_TOKEN_HELP BX_TOKEN_EXAMINE '\n'
