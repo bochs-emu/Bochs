@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.161 2008-10-08 17:13:35 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.162 2008-10-08 20:15:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1602,8 +1602,6 @@ one_more:
 
   // I must guard for ICOUNT or one CPU could run forever without giving
   // the others a chance.
-  bx_guard.guard_for |= BX_DBG_GUARD_CTRL_C; // stop on Ctrl-C
-
   for (cpu=0; cpu < BX_SMP_PROCESSORS; cpu++) {
     BX_CPU(cpu)->guard_found.guard_found = 0;
     BX_CPU(cpu)->guard_found.icount = 0;
@@ -1689,9 +1687,6 @@ void bx_dbg_stepN_command(Bit32u count)
   // use simulation mode while executing instructions.  When the prompt
   // is printed, we will return to config mode.
   SIM->set_display_mode(DISP_MODE_SIM);
-
-  // single CPU
-  bx_guard.guard_for |= BX_DBG_GUARD_CTRL_C; // or Ctrl-C
 
   // reset guard counters for all CPUs
   int stop = 0;
@@ -1788,7 +1783,7 @@ void bx_dbg_print_guard_results(void)
 
   for (cpu=0; cpu<BX_SMP_PROCESSORS; cpu++) {
     unsigned long found = BX_CPU(cpu)->guard_found.guard_found;
-    if (found & BX_DBG_GUARD_CTRL_C) { /* ... */ }
+    if (! found) { /* ... */ }
 #if (BX_DBG_MAX_VIR_BPOINTS > 0)
     else if (found & BX_DBG_GUARD_IADDR_VIR) {
       i = BX_CPU(cpu)->guard_found.iaddr_index;

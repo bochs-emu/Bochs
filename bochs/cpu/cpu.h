@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.533 2008-10-08 11:14:35 sshwarts Exp $
+// $Id: cpu.h,v 1.534 2008-10-08 20:15:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -3022,8 +3022,9 @@ public: // for now...
        Bit16u port, Bit32u wordCount);
 #endif
 
-  BX_SMF void repeat(bxInstruction_c *, BxExecutePtr_tR execute) BX_CPP_AttrRegparmN(2);
-  BX_SMF void repeat_ZFL(bxInstruction_c *, BxExecutePtr_tR execute) BX_CPP_AttrRegparmN(2);
+  BX_SMF void repeat(bxInstruction_c *i, BxExecutePtr_tR execute) BX_CPP_AttrRegparmN(2);
+  BX_SMF void repeat_ZF(bxInstruction_c *i, BxExecutePtr_tR execute) BX_CPP_AttrRegparmN(2);
+  BX_SMF void repeat_NZF(bxInstruction_c *i, BxExecutePtr_tR execute) BX_CPP_AttrRegparmN(2);
 
   // linear address for access_linear expected to be canonical !
   BX_SMF void access_read_linear(bx_address address, unsigned length, unsigned curr_pl,

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: string.cc,v 1.64 2008-09-08 20:47:33 sshwarts Exp $
+// $Id: string.cc,v 1.65 2008-10-08 20:15:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -969,51 +969,81 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSQ64_XqYq(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_CMPSB_XbYb(bxInstruction_c *i)
 {
 #if BX_SUPPORT_X86_64
-  if (i->as64L())
-    BX_CPU_THIS_PTR repeat_ZFL(i, &BX_CPU_C::CMPSB64_XbYb);
+  if (i->as64L()) {
+    if (i->repUsedValue() == 2)
+      BX_CPU_THIS_PTR repeat_ZF(i, &BX_CPU_C::CMPSB64_XbYb);
+    else 
+      BX_CPU_THIS_PTR repeat_NZF(i, &BX_CPU_C::CMPSB64_XbYb);
+  }
   else
 #endif
   if (i->as32L()) {
-    BX_CPU_THIS_PTR repeat_ZFL(i, &BX_CPU_C::CMPSB32_XbYb);
+    if (i->repUsedValue() == 2)
+      BX_CPU_THIS_PTR repeat_ZF(i, &BX_CPU_C::CMPSB32_XbYb);
+    else
+      BX_CPU_THIS_PTR repeat_NZF(i, &BX_CPU_C::CMPSB32_XbYb);
     BX_CLEAR_64BIT_HIGH(BX_64BIT_REG_RSI); // always clear upper part of RSI/RDI
     BX_CLEAR_64BIT_HIGH(BX_64BIT_REG_RDI);
   }
   else {
-    BX_CPU_THIS_PTR repeat_ZFL(i, &BX_CPU_C::CMPSB16_XbYb);
+    if (i->repUsedValue() == 2)
+      BX_CPU_THIS_PTR repeat_ZF(i, &BX_CPU_C::CMPSB16_XbYb);
+    else
+      BX_CPU_THIS_PTR repeat_NZF(i, &BX_CPU_C::CMPSB16_XbYb);
   }
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_CMPSW_XwYw(bxInstruction_c *i)
 {
 #if BX_SUPPORT_X86_64
-  if (i->as64L())
-    BX_CPU_THIS_PTR repeat_ZFL(i, &BX_CPU_C::CMPSW64_XwYw);
+  if (i->as64L()) {
+    if (i->repUsedValue() == 2)
+      BX_CPU_THIS_PTR repeat_ZF(i, &BX_CPU_C::CMPSW64_XwYw);
+    else
+      BX_CPU_THIS_PTR repeat_NZF(i, &BX_CPU_C::CMPSW64_XwYw);
+  }
   else
 #endif
   if (i->as32L()) {
-    BX_CPU_THIS_PTR repeat_ZFL(i, &BX_CPU_C::CMPSW32_XwYw);
+    if (i->repUsedValue() == 2)
+      BX_CPU_THIS_PTR repeat_ZF(i, &BX_CPU_C::CMPSW32_XwYw);
+    else
+      BX_CPU_THIS_PTR repeat_NZF(i, &BX_CPU_C::CMPSW32_XwYw);
     BX_CLEAR_64BIT_HIGH(BX_64BIT_REG_RSI); // always clear upper part of RSI/RDI
     BX_CLEAR_64BIT_HIGH(BX_64BIT_REG_RDI);
   }
   else {
-    BX_CPU_THIS_PTR repeat_ZFL(i, &BX_CPU_C::CMPSW16_XwYw);
+    if (i->repUsedValue() == 2)
+      BX_CPU_THIS_PTR repeat_ZF(i, &BX_CPU_C::CMPSW16_XwYw);
+    else
+      BX_CPU_THIS_PTR repeat_NZF(i, &BX_CPU_C::CMPSW16_XwYw);
   }
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_CMPSD_XdYd(bxInstruction_c *i)
 {
 #if BX_SUPPORT_X86_64
-  if (i->as64L())
-    BX_CPU_THIS_PTR repeat_ZFL(i, &BX_CPU_C::CMPSD64_XdYd);
+  if (i->as64L()) {
+    if (i->repUsedValue() == 2)
+      BX_CPU_THIS_PTR repeat_ZF(i, &BX_CPU_C::CMPSD64_XdYd);
+    else
+      BX_CPU_THIS_PTR repeat_NZF(i, &BX_CPU_C::CMPSD64_XdYd);
+  }
   else
 #endif
   if (i->as32L()) {
-    BX_CPU_THIS_PTR repeat_ZFL(i, &BX_CPU_C::CMPSD32_XdYd);
+    if (i->repUsedValue() == 2)
+      BX_CPU_THIS_PTR repeat_ZF(i, &BX_CPU_C::CMPSD32_XdYd);
+    else
+      BX_CPU_THIS_PTR repeat_NZF(i, &BX_CPU_C::CMPSD32_XdYd);
     BX_CLEAR_64BIT_HIGH(BX_64BIT_REG_RSI); // always clear upper part of RSI/RDI
     BX_CLEAR_64BIT_HIGH(BX_64BIT_REG_RDI);
   }
   else {
-    BX_CPU_THIS_PTR repeat_ZFL(i, &BX_CPU_C::CMPSD16_XdYd);
+    if (i->repUsedValue() == 2)
+      BX_CPU_THIS_PTR repeat_ZF(i, &BX_CPU_C::CMPSD16_XdYd);
+    else
+      BX_CPU_THIS_PTR repeat_NZF(i, &BX_CPU_C::CMPSD16_XdYd);
   }
 }
 
@@ -1021,10 +1051,16 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_CMPSD_XdYd(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_CMPSQ_XqYq(bxInstruction_c *i)
 {
   if (i->as64L()) {
-    BX_CPU_THIS_PTR repeat_ZFL(i, &BX_CPU_C::CMPSQ64_XqYq);
+    if (i->repUsedValue() == 2)
+      BX_CPU_THIS_PTR repeat_ZF(i, &BX_CPU_C::CMPSQ64_XqYq);
+    else
+      BX_CPU_THIS_PTR repeat_NZF(i, &BX_CPU_C::CMPSQ64_XqYq);
   }
   else {
-    BX_CPU_THIS_PTR repeat_ZFL(i, &BX_CPU_C::CMPSQ32_XqYq);
+    if (i->repUsedValue() == 2)
+      BX_CPU_THIS_PTR repeat_ZF(i, &BX_CPU_C::CMPSQ32_XqYq);
+    else
+      BX_CPU_THIS_PTR repeat_NZF(i, &BX_CPU_C::CMPSQ32_XqYq);
     BX_CLEAR_64BIT_HIGH(BX_64BIT_REG_RSI); // always clear upper part of RSI/RDI
     BX_CLEAR_64BIT_HIGH(BX_64BIT_REG_RDI);
   }
@@ -1362,48 +1398,78 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPSQ64_XqYq(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_SCASB_ALXb(bxInstruction_c *i)
 {
 #if BX_SUPPORT_X86_64
-  if (i->as64L())
-    BX_CPU_THIS_PTR repeat_ZFL(i, &BX_CPU_C::SCASB64_ALXb);
+  if (i->as64L()) {
+    if (i->repUsedValue() == 2)
+      BX_CPU_THIS_PTR repeat_ZF(i, &BX_CPU_C::SCASB64_ALXb);
+    else
+      BX_CPU_THIS_PTR repeat_NZF(i, &BX_CPU_C::SCASB64_ALXb);
+  }
   else
 #endif
   if (i->as32L()) {
-    BX_CPU_THIS_PTR repeat_ZFL(i, &BX_CPU_C::SCASB32_ALXb);
+    if (i->repUsedValue() == 2)
+      BX_CPU_THIS_PTR repeat_ZF(i, &BX_CPU_C::SCASB32_ALXb);
+    else
+      BX_CPU_THIS_PTR repeat_NZF(i, &BX_CPU_C::SCASB32_ALXb);
     BX_CLEAR_64BIT_HIGH(BX_64BIT_REG_RDI); // always clear upper part of RDI
   }
   else {
-    BX_CPU_THIS_PTR repeat_ZFL(i, &BX_CPU_C::SCASB16_ALXb);
+    if (i->repUsedValue() == 2)
+      BX_CPU_THIS_PTR repeat_ZF(i, &BX_CPU_C::SCASB16_ALXb);
+    else
+      BX_CPU_THIS_PTR repeat_NZF(i, &BX_CPU_C::SCASB16_ALXb);
   }
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_SCASW_AXXw(bxInstruction_c *i)
 {
 #if BX_SUPPORT_X86_64
-  if (i->as64L())
-    BX_CPU_THIS_PTR repeat_ZFL(i, &BX_CPU_C::SCASW64_AXXw);
+  if (i->as64L()) {
+    if (i->repUsedValue() == 2)
+      BX_CPU_THIS_PTR repeat_ZF(i, &BX_CPU_C::SCASW64_AXXw);
+    else
+      BX_CPU_THIS_PTR repeat_NZF(i, &BX_CPU_C::SCASW64_AXXw);
+  }
   else
 #endif
   if (i->as32L()) {
-    BX_CPU_THIS_PTR repeat_ZFL(i, &BX_CPU_C::SCASW32_AXXw);
+    if (i->repUsedValue() == 2)
+      BX_CPU_THIS_PTR repeat_ZF(i, &BX_CPU_C::SCASW32_AXXw);
+    else
+      BX_CPU_THIS_PTR repeat_NZF(i, &BX_CPU_C::SCASW32_AXXw);
     BX_CLEAR_64BIT_HIGH(BX_64BIT_REG_RDI); // always clear upper part of RDI
   }
   else {
-    BX_CPU_THIS_PTR repeat_ZFL(i, &BX_CPU_C::SCASW16_AXXw);
+    if (i->repUsedValue() == 2)
+      BX_CPU_THIS_PTR repeat_ZF(i, &BX_CPU_C::SCASW16_AXXw);
+    else
+      BX_CPU_THIS_PTR repeat_NZF(i, &BX_CPU_C::SCASW16_AXXw);
   }
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_SCASD_EAXXd(bxInstruction_c *i)
 {
 #if BX_SUPPORT_X86_64
-  if (i->as64L())
-    BX_CPU_THIS_PTR repeat_ZFL(i, &BX_CPU_C::SCASD64_EAXXd);
+  if (i->as64L()) {
+    if (i->repUsedValue() == 2)
+      BX_CPU_THIS_PTR repeat_ZF(i, &BX_CPU_C::SCASD64_EAXXd);
+    else
+      BX_CPU_THIS_PTR repeat_NZF(i, &BX_CPU_C::SCASD64_EAXXd);
+  }
   else
 #endif
   if (i->as32L()) {
-    BX_CPU_THIS_PTR repeat_ZFL(i, &BX_CPU_C::SCASD32_EAXXd);
+    if (i->repUsedValue() == 2)
+      BX_CPU_THIS_PTR repeat_ZF(i, &BX_CPU_C::SCASD32_EAXXd);
+    else
+      BX_CPU_THIS_PTR repeat_NZF(i, &BX_CPU_C::SCASD32_EAXXd);
     BX_CLEAR_64BIT_HIGH(BX_64BIT_REG_RDI); // always clear upper part of RDI
   }
   else {
-    BX_CPU_THIS_PTR repeat_ZFL(i, &BX_CPU_C::SCASD16_EAXXd);
+    if (i->repUsedValue() == 2)
+      BX_CPU_THIS_PTR repeat_ZF(i, &BX_CPU_C::SCASD16_EAXXd);
+    else
+      BX_CPU_THIS_PTR repeat_NZF(i, &BX_CPU_C::SCASD16_EAXXd);
   }
 }
 
@@ -1411,10 +1477,16 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_SCASD_EAXXd(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_SCASQ_RAXXq(bxInstruction_c *i)
 {
   if (i->as64L()) {
-    BX_CPU_THIS_PTR repeat_ZFL(i, &BX_CPU_C::SCASQ64_RAXXq);
+    if (i->repUsedValue() == 2)
+      BX_CPU_THIS_PTR repeat_ZF(i, &BX_CPU_C::SCASQ64_RAXXq);
+    else
+      BX_CPU_THIS_PTR repeat_NZF(i, &BX_CPU_C::SCASQ64_RAXXq);
   }
   else {
-    BX_CPU_THIS_PTR repeat_ZFL(i, &BX_CPU_C::SCASQ32_RAXXq);
+    if (i->repUsedValue() == 2)
+      BX_CPU_THIS_PTR repeat_ZF(i, &BX_CPU_C::SCASQ32_RAXXq);
+    else
+      BX_CPU_THIS_PTR repeat_NZF(i, &BX_CPU_C::SCASQ32_RAXXq);
     BX_CLEAR_64BIT_HIGH(BX_64BIT_REG_RDI); // always clear upper part of RDI
   }
 }

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.244 2008-10-06 22:19:22 sshwarts Exp $
+// $Id: cpu.cc,v 1.245 2008-10-08 20:15:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -291,15 +291,10 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::repeat(bxInstruction_c *i, BxExecutePtr_tR
 #endif
 }
 
-void BX_CPP_AttrRegparmN(2) BX_CPU_C::repeat_ZFL(bxInstruction_c *i, BxExecutePtr_tR execute)
+// repeat prefix 0xF2
+void BX_CPP_AttrRegparmN(2) BX_CPU_C::repeat_ZF(bxInstruction_c *i, BxExecutePtr_tR execute)
 {
-  // non repeated instruction
-  if (! i->repUsedL()) {
-    BX_CPU_CALL_METHOD(execute, (i));
-    return;
-  }
-
-  unsigned rep = i->repUsedValue();
+  BX_ASSERT(i->repUsedL()); // TRUE by design
 
 #if BX_SUPPORT_X86_64
   if (i->as64L()) {
@@ -309,9 +304,7 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::repeat_ZFL(bxInstruction_c *i, BxExecutePt
         BX_INSTR_REPEAT_ITERATION(BX_CPU_ID, i);
         RCX --;
       }
-      if (rep==3 && get_ZF()==0) return;
-      if (rep==2 && get_ZF()!=0) return;
-      if (RCX == 0) return;
+      if (get_ZF() || RCX == 0) return;
 
 #if BX_DEBUGGER == 0
       if (BX_CPU_THIS_PTR async_event)
@@ -330,9 +323,7 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::repeat_ZFL(bxInstruction_c *i, BxExecutePt
         BX_INSTR_REPEAT_ITERATION(BX_CPU_ID, i);
         RCX = ECX - 1;
       }
-      if (rep==3 && get_ZF()==0) return;
-      if (rep==2 && get_ZF()!=0) return;
-      if (ECX == 0) return;
+      if (get_ZF() || ECX == 0) return;
 
 #if BX_DEBUGGER == 0
       if (BX_CPU_THIS_PTR async_event)
@@ -350,9 +341,80 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::repeat_ZFL(bxInstruction_c *i, BxExecutePt
         BX_INSTR_REPEAT_ITERATION(BX_CPU_ID, i);
         CX --;
       }
-      if (rep==3 && get_ZF()==0) return;
-      if (rep==2 && get_ZF()!=0) return;
-      if (CX == 0) return;
+      if (get_ZF() || CX == 0) return;
+
+#if BX_DEBUGGER == 0
+      if (BX_CPU_THIS_PTR async_event)
+#endif
+        break; // exit always if debugger enabled
+
+      BX_TICK1_IF_SINGLE_PROCESSOR();
+    }
+  }
+
+  RIP = BX_CPU_THIS_PTR prev_rip; // repeat loop not done, restore RIP
+
+#if BX_SUPPORT_TRACE_CACHE
+  // assert magic async_event to stop trace execution
+  BX_CPU_THIS_PTR async_event |= BX_ASYNC_EVENT_STOP_TRACE;
+#endif
+}
+
+// repeat prefix 0xF3
+void BX_CPP_AttrRegparmN(2) BX_CPU_C::repeat_NZF(bxInstruction_c *i, BxExecutePtr_tR execute)
+{
+  // non repeated instruction
+  if (! i->repUsedL()) {
+    BX_CPU_CALL_METHOD(execute, (i));
+    return;
+  }
+
+#if BX_SUPPORT_X86_64
+  if (i->as64L()) {
+    while(1) {
+      if (RCX != 0) {
+        BX_CPU_CALL_METHOD(execute, (i));
+        BX_INSTR_REPEAT_ITERATION(BX_CPU_ID, i);
+        RCX --;
+      }
+      if (! get_ZF() || RCX == 0) return;
+
+#if BX_DEBUGGER == 0
+      if (BX_CPU_THIS_PTR async_event)
+#endif
+        break; // exit always if debugger enabled
+
+      BX_TICK1_IF_SINGLE_PROCESSOR();
+    }
+  }
+  else
+#endif
+  if (i->as32L()) {
+    while(1) {
+      if (ECX != 0) {
+        BX_CPU_CALL_METHOD(execute, (i));
+        BX_INSTR_REPEAT_ITERATION(BX_CPU_ID, i);
+        RCX = ECX - 1;
+      }
+      if (! get_ZF() || ECX == 0) return;
+
+#if BX_DEBUGGER == 0
+      if (BX_CPU_THIS_PTR async_event)
+#endif
+        break; // exit always if debugger enabled
+
+      BX_TICK1_IF_SINGLE_PROCESSOR();
+    }
+  }
+  else  // 16bit addrsize
+  {
+    while(1) {
+      if (CX != 0) {
+        BX_CPU_CALL_METHOD(execute, (i));
+        BX_INSTR_REPEAT_ITERATION(BX_CPU_ID, i);
+        CX --;
+      }
+      if (! get_ZF() || CX == 0) return;
 
 #if BX_DEBUGGER == 0
       if (BX_CPU_THIS_PTR async_event)
@@ -919,12 +981,9 @@ bx_bool BX_CPU_C::dbg_check_end_instr_bpoint(void)
     return(1); // on a breakpoint
   }
 
-  // convenient point to see if user typed Ctrl-C
-  if (bx_guard.interrupt_requested &&
-     (bx_guard.guard_for & BX_DBG_GUARD_CTRL_C))
-  {
-    BX_CPU_THIS_PTR guard_found.guard_found = BX_DBG_GUARD_CTRL_C;
-    return(1); // Ctrl-C pressed
+  // convenient point to see if user requested debug break or typed Ctrl-C
+  if (bx_guard.interrupt_requested) {
+    return(1);
   }
 
   return(0); // no breakpoint
