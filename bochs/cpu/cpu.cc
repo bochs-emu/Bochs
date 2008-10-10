@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.246 2008-10-08 20:40:26 sshwarts Exp $
+// $Id: cpu.cc,v 1.247 2008-10-10 20:49:16 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -667,13 +667,9 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
 
 void BX_CPU_C::prefetch(void)
 {
-  bx_address laddr = BX_CPU_THIS_PTR get_laddr(BX_SEG_REG_CS, RIP);
+  bx_address laddr;
   bx_phy_address pAddr;
-  unsigned pageOffset = PAGE_OFFSET(laddr);
-
-  // Calculate RIP at the beginning of the page.
-  BX_CPU_THIS_PTR eipPageBias = pageOffset - RIP;
-  BX_CPU_THIS_PTR eipPageWindowSize = 4096;
+  unsigned pageOffset;
 
 #if BX_SUPPORT_X86_64
   if (Is64BitMode()) {
@@ -681,18 +677,35 @@ void BX_CPU_C::prefetch(void)
       BX_ERROR(("prefetch: #GP(0): RIP crossed canonical boundary"));
       exception(BX_GP_EXCEPTION, 0, 0);
     }
+
+    // linear address is equal to RIP in 64-bit long mode
+    pageOffset = PAGE_OFFSET(EIP);
+    laddr = RIP;
+
+    // Calculate RIP at the beginning of the page.
+    BX_CPU_THIS_PTR eipPageBias = pageOffset - RIP;
+    BX_CPU_THIS_PTR eipPageWindowSize = 4096;
   }
   else
 #endif
   {
     BX_CLEAR_64BIT_HIGH(BX_64BIT_REG_RIP); /* avoid 32-bit EIP wrap */
-    Bit32u temp_limit = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled;
-    if (EIP > temp_limit) {
-      BX_ERROR(("prefetch: EIP [%08x] > CS.limit [%08x]", EIP, temp_limit));
+    laddr = BX_CPU_THIS_PTR get_laddr32(BX_SEG_REG_CS, EIP);
+    pageOffset = PAGE_OFFSET(laddr);
+
+    // Calculate RIP at the beginning of the page.
+    BX_CPU_THIS_PTR eipPageBias = pageOffset - EIP;
+
+    Bit32u limit = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled;
+    if (EIP > limit) {
+      BX_ERROR(("prefetch: EIP [%08x] > CS.limit [%08x]", EIP, limit));
       exception(BX_GP_EXCEPTION, 0, 0);
     }
-    if (temp_limit + BX_CPU_THIS_PTR eipPageBias < 4096) {
-      BX_CPU_THIS_PTR eipPageWindowSize = temp_limit + BX_CPU_THIS_PTR eipPageBias + 1;
+    if (limit + BX_CPU_THIS_PTR eipPageBias < 4096) {
+      BX_CPU_THIS_PTR eipPageWindowSize = limit + BX_CPU_THIS_PTR eipPageBias + 1;
+    }
+    else {
+      BX_CPU_THIS_PTR eipPageWindowSize = 4096;
     }
   }
 

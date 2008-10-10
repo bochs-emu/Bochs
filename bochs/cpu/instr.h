@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: instr.h,v 1.17 2008-09-08 16:15:59 sshwarts Exp $
+// $Id: instr.h,v 1.18 2008-10-10 20:49:16 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008 Stanislav Shwartsman
@@ -43,9 +43,9 @@ public:
   // given the current state of the CPU and the instruction data,
   // and a function to execute the instruction after resolving
   // the memory address (if any).
-  BxResolvePtr_tR ResolveModrm;
   BxExecutePtr_tR execute;
   BxExecutePtr_tR execute2;
+  BxResolvePtr_tR ResolveModrm;
 #if BX_INSTRUMENTATION
   Bit16u ia_opcode;
 #endif
