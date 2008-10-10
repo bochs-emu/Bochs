@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.247 2008-10-10 20:49:16 sshwarts Exp $
+// $Id: cpu.cc,v 1.248 2008-10-10 21:09:25 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -668,7 +668,6 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
 void BX_CPU_C::prefetch(void)
 {
   bx_address laddr;
-  bx_phy_address pAddr;
   unsigned pageOffset;
 
 #if BX_SUPPORT_X86_64
@@ -715,12 +714,14 @@ void BX_CPU_C::prefetch(void)
   Bit8u *fetchPtr = 0;
 
   if ((tlbEntry->lpf == lpf) && !(tlbEntry->accessBits & USER_PL)) {
-    pAddr = A20ADDR(tlbEntry->ppf | pageOffset);
+    BX_CPU_THIS_PTR pAddrA20Page = A20ADDR(tlbEntry->ppf);
 #if BX_SupportGuest2HostTLB
     fetchPtr = (Bit8u*) (tlbEntry->hostPageAddr);
 #endif
   }  
   else {
+    bx_phy_address pAddr;
+
     if (BX_CPU_THIS_PTR cr0.get_PG()) {
       pAddr = translate_linear(laddr, CPL, BX_READ, CODE_ACCESS);
       pAddr = A20ADDR(pAddr);
@@ -728,9 +729,9 @@ void BX_CPU_C::prefetch(void)
     else {
       pAddr = A20ADDR(laddr);
     }
-  }
 
-  BX_CPU_THIS_PTR pAddrA20Page = LPFOf(pAddr);
+    BX_CPU_THIS_PTR pAddrA20Page = LPFOf(pAddr);
+  }
 
   if (fetchPtr) {
     BX_CPU_THIS_PTR eipFetchPtr = fetchPtr;
@@ -742,6 +743,7 @@ void BX_CPU_C::prefetch(void)
 
   // Sanity checks
   if (! BX_CPU_THIS_PTR eipFetchPtr) {
+    bx_phy_address pAddr = BX_CPU_THIS_PTR pAddrA20Page + pageOffset;
     if (pAddr >= BX_MEM(0)->get_memory_len()) {
       BX_PANIC(("prefetch: running in bogus memory, pAddr=0x" FMT_PHY_ADDRX, pAddr));
     }
@@ -751,11 +753,11 @@ void BX_CPU_C::prefetch(void)
   }
 
 #if BX_SUPPORT_ICACHE
-  BX_CPU_THIS_PTR currPageWriteStampPtr = pageWriteStampTable.getPageWriteStampPtr(pAddr);
+  BX_CPU_THIS_PTR currPageWriteStampPtr = pageWriteStampTable.getPageWriteStampPtr(BX_CPU_THIS_PTR pAddrA20Page);
   Bit32u pageWriteStamp = *(BX_CPU_THIS_PTR currPageWriteStampPtr);
   pageWriteStamp &= ~ICacheWriteStampFetchModeMask; // Clear out old fetch mode bits
   pageWriteStamp |=  BX_CPU_THIS_PTR fetchModeMask; // And add new ones
-  pageWriteStampTable.setPageWriteStamp(pAddr, pageWriteStamp);
+  pageWriteStampTable.setPageWriteStamp(BX_CPU_THIS_PTR pAddrA20Page, pageWriteStamp);
 #endif
 }
 
