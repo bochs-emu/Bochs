@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: x.cc,v 1.117 2008-10-06 22:00:11 sshwarts Exp $
+// $Id: x.cc,v 1.118 2008-10-13 07:31:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -157,7 +157,7 @@ static unsigned bx_statusitem_pos[12] = {
   0, 200, 240, 280, 320, 360, 400, 440, 480, 520, 560, 600
   };
 static bx_bool bx_statusitem_active[12];
-static long bx_status_led_green, bx_status_graytext;
+static long bx_status_led_green, bx_status_led_red, bx_status_graytext;
 static char bx_status_info_text[34];
 #if BX_SHOW_IPS
 static bx_bool x11_ips_update = 0, x11_hide_ips = 0;
