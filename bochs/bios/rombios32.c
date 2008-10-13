@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios32.c,v 1.30 2008-08-24 20:41:38 sshwarts Exp $
+// $Id: rombios32.c,v 1.31 2008-10-13 09:47:55 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  32 bit Bochs BIOS init code
@@ -395,29 +395,7 @@ unsigned long bios_table_end_addr;
 
 void uuid_probe(void)
 {
-#ifdef BX_QEMU
-    uint32_t eax, ebx, ecx, edx;
-
-    // check if backdoor port exists
-    asm volatile ("outl %%eax, %%dx"
-        : "=a" (eax), "=b" (ebx), "=c" (ecx), "=d" (edx)
-        : "a" (0x564d5868), "b" (0), "c" (0xa), "d" (0x5658));
-    if (ebx == 0x564d5868) {
-        uint32_t *uuid_ptr = (uint32_t *)bios_uuid;
-        // get uuid
-        asm volatile ("outl %%eax, %%dx"
-            : "=a" (eax), "=b" (ebx), "=c" (ecx), "=d" (edx)
-            : "a" (0x564d5868), "c" (0x13), "d" (0x5658));
-        uuid_ptr[0] = eax;
-        uuid_ptr[1] = ebx;
-        uuid_ptr[2] = ecx;
-        uuid_ptr[3] = edx;
-    } else
-#endif
-    {
-        // UUID not set
-        memset(bios_uuid, 0, 16);
-    }
+    memset(bios_uuid, 0, 16);
 }
 
 void cpu_probe(void)
