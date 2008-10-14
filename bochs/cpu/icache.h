@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: icache.h,v 1.39 2008-07-26 15:07:14 sshwarts Exp $
+// $Id: icache.h,v 1.40 2008-10-14 17:23:53 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007 Stanislav Shwartsman
@@ -140,7 +140,8 @@ public:
 
   BX_CPP_INLINE unsigned hash(bx_phy_address pAddr) const
   {
-    return (pAddr + (pAddr << 2) + (pAddr>>6)) & (BxICacheEntries-1);
+//  return (pAddr + (pAddr << 2) + (pAddr>>6)) & (BxICacheEntries-1);
+    return (pAddr) & (BxICacheEntries-1);
   }
 
 #if BX_SUPPORT_TRACE_CACHE
