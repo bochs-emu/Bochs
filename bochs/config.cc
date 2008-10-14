@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.139 2008-09-22 21:38:11 sshwarts Exp $
+// $Id: config.cc,v 1.140 2008-10-14 06:55:18 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -418,7 +418,7 @@ void bx_init_options()
 #endif
 
   // cpu subtree
-  bx_list_c *cpu_param = new bx_list_c(root_param, "cpu", "CPU Options", 8);
+  bx_list_c *cpu_param = new bx_list_c(root_param, "cpu", "CPU Options", 8 + BX_SUPPORT_SMP);
 
   // cpu options
   bx_param_num_c *nprocessors = new bx_param_num_c(cpu_param,
