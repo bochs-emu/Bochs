@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios32.c,v 1.31 2008-10-13 09:47:55 sshwarts Exp $
+// $Id: rombios32.c,v 1.32 2008-10-15 19:04:09 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  32 bit Bochs BIOS init code
@@ -393,8 +393,50 @@ int pm_sci_int;
 unsigned long bios_table_cur_addr;
 unsigned long bios_table_end_addr;
 
+#ifdef BX_QEMU
+#define QEMU_CFG_CTL_PORT 0x510
+#define QEMU_CFG_DATA_PORT 0x511
+#define QEMU_CFG_SIGNATURE  0x00
+#define QEMU_CFG_ID         0x01
+#define QEMU_CFG_UUID       0x02
+
+int qemu_cfg_port;
+
+void qemu_cfg_select(int f)
+{
+    outw(QEMU_CFG_CTL_PORT, f);
+}
+
+int qemu_cfg_port_probe()
+{
+    char *sig = "QEMU";
+    int i;
+
+    qemu_cfg_select(QEMU_CFG_SIGNATURE);
+
+    for (i = 0; i < 4; i++)
+        if (inb(QEMU_CFG_DATA_PORT) != sig[i])
+            return 0;
+
+    return 1;
+}
+
+void qemu_cfg_read(uint8_t *buf, int len)
+{
+    while (len--)
+        *(buf++) = inb(QEMU_CFG_DATA_PORT);
+}
+#endif
+
 void uuid_probe(void)
 {
+#ifdef BX_QEMU
+    if(qemu_cfg_port) {
+        qemu_cfg_select(QEMU_CFG_UUID);
+        qemu_cfg_read(bios_uuid, 16);
+        return;
+    }
+#endif
     memset(bios_uuid, 0, 16);
 }
 
@@ -1972,6 +2014,10 @@ void smbios_init(void)
 void rombios32_init(void)
 {
     BX_INFO("Starting rombios32\n");
+
+#ifdef BX_QEMU
+    qemu_cfg_port = qemu_cfg_port_probe();
+#endif
 
     ram_probe();
 
