@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.383 2008-10-01 11:36:04 akrisak Exp $
+// $Id: main.cc,v 1.384 2008-10-18 17:12:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -493,8 +493,10 @@ void print_usage(void)
     "  -q               quick start (skip configuration interface)\n"
     "  -benchmark n     run bochs in benchmark mode for millions of emulated ticks\n"
     "  -r path          restore the Bochs state from path\n"
+    "  -log filename    specify Bochs log file name\n"
 #if BX_DEBUGGER
     "  -rc filename     execute debugger commands stored in file\n"
+    "  -dbglog filename specify Bochs internal debugger log file name\n"
 #endif
     "  --help           display this help and exit\n\n"
     "For information on Bochs configuration file arguments, see the\n"
@@ -545,6 +547,16 @@ int bx_init_main(int argc, char *argv[])
     else if (!strcmp("-q", argv[arg])) {
       SIM->get_param_enum(BXPN_BOCHS_START)->set(BX_QUICK_START);
     }
+    else if (!strcmp("-log", argv[arg])) {
+      if (++arg >= argc) BX_PANIC(("-log must be followed by a filename"));
+      else SIM->get_param_string(BXPN_LOG_FILENAME)->set(argv[arg]);
+    }
+#if BX_DEBUGGER
+    else if (!strcmp("-dbglog", argv[arg])) {
+      if (++arg >= argc) BX_PANIC(("-dbglog must be followed by a filename"));
+      else SIM->get_param_string(BXPN_DEBUGGER_LOG_FILENAME)->set(argv[arg]);
+    }
+#endif
     else if (!strcmp("-f", argv[arg])) {
       if (++arg >= argc) BX_PANIC(("-f must be followed by a filename"));
       else bochsrc_filename = argv[arg];

@@ -17,6 +17,8 @@ Detailed change log :
     (patch from @SF by Doug Reed).
   - Removed Peter Tattam's closed source external debugger interface from
     the code.
+  - Added ability to choose Bochs log file name and Bochs debugger log file
+    name from Bochs command line (using new -log and -dbglog options)
 
 - I/O Devices
   - Hard drive / cdrom
@@ -63,6 +65,8 @@ Detailed change log :
  [1981505] Init PIIX4 PCI to ISA bridge and IDE by Sebastian
 
 - these S.F. bugs were closed
+ [2162824] latest cvs fails to compile
+ [2164506] latest bochs fails to start
  [2106514] RIS / startrom.com install ALMOST works
  [2123358] SMP (HTT): wbinvd executed by CPU1 crashes CPU0
  [2029758] BEV can return via retf instead of int 18h
