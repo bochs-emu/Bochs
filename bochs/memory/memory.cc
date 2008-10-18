@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: memory.cc,v 1.70 2008-07-26 14:44:26 sshwarts Exp $
+// $Id: memory.cc,v 1.71 2008-10-18 18:10:14 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -353,6 +353,11 @@ inc_one:
 #endif
 
     for (unsigned i = 0; i < len; i++) {
+#if BX_PHY_ADDRESS_LONG
+      if (a20addr >= BX_CONST64(0xFFFFFFFF))
+        *data_ptr = 0xff;
+      else
+#endif      
       if (a20addr >= (bx_phy_address)~BIOS_MASK)
         *data_ptr = BX_MEM_THIS rom[a20addr & BIOS_MASK];
       else

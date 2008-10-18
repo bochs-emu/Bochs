@@ -60,7 +60,7 @@
 #define BX_SUPPORT_APIC 0
 
 #if (BX_SUPPORT_SMP && !BX_SUPPORT_APIC)
-#error For multiprocessor simulation, BX_SUPPORT_APIC is required.
+  #error For multiprocessor simulation, BX_SUPPORT_APIC is required.
 #endif
 
 // if simulating Linux, this provides a few more debugging options
@@ -267,7 +267,7 @@
 #define BX_HAVE_ZLIB 0
 
 #if BX_COMPRESSED_HD_SUPPORT && !BX_HAVE_ZLIB
-#error You must have zlib to enable compressed hd support
+  #error You must have zlib to enable compressed hd support
 #endif
 
 // This option defines the number of supported ATA channels.
@@ -275,7 +275,7 @@
 #define BX_MAX_ATA_CHANNEL 4
 
 #if (BX_MAX_ATA_CHANNEL>4 || BX_MAX_ATA_CHANNEL<1)
-#  error "BX_MAX_ATA_CHANNEL should be between 1 and 4"
+  #error "BX_MAX_ATA_CHANNEL should be between 1 and 4"
 #endif
 
 // =================================================================
@@ -503,6 +503,13 @@ typedef Bit32u bx_phy_address;
 #define BX_PHY_ADDRESS_WIDTH 32
 #endif
 
+// small sanity check
+#if BX_PHY_ADDRESS_LONG
+  #if (BX_PHY_ADDRESS_WIDTH <= 32)
+    #error "BX_PHY_ADDRESS_LONG implies emulated physical address width > 32 bit"
+  #endif
+#endif
+
 // technically, in an 8 bit signed the real minimum is -128, not -127.
 // But if you decide to negate -128 you tend to get -128 again, so it's
 // better not to use the absolute maximum in the signed range.
@@ -650,7 +657,7 @@ typedef
 #define BX_DISASM   0
 
 #if (BX_DEBUGGER == 1) && (BX_DISASM == 0)
-#error Dissembler is required for BX_DEBUGGER !
+  #error Dissembler is required for BX_DEBUGGER !
 #endif
 
 #define BX_PROVIDE_CPU_MEMORY    1
@@ -679,7 +686,7 @@ typedef
 #define BX_SUPPORT_ACPI 0
 
 #if (BX_SUPPORT_ACPI && !BX_SUPPORT_PCI)
-#error To enable ACPI support, you must also enable PCI
+  #error To enable ACPI support, you must also enable PCI
 #endif
 
 // Experimental VGA on PCI
@@ -689,14 +696,14 @@ typedef
 #define BX_SUPPORT_PCIDEV 0
 
 #if (BX_SUPPORT_PCIDEV && !BX_SUPPORT_PCI)
-#error To enable PCI host device mapping, you must also enable PCI
+  #error To enable PCI host device mapping, you must also enable PCI
 #endif
 
 // limited USB on PCI
 #define BX_SUPPORT_PCIUSB 0
 
 #if (BX_SUPPORT_PCIUSB && !BX_SUPPORT_PCI)
-#error To enable USB, you must also enable PCI
+  #error To enable USB, you must also enable PCI
 #endif
 
 #define BX_SUPPORT_BUSMOUSE 0
@@ -732,7 +739,7 @@ typedef
 #define BX_SUPPORT_TRACE_CACHE 0
 
 #if (BX_SUPPORT_TRACE_CACHE && BX_SUPPORT_ICACHE==0)
-#error Trace cache optimization cannot be compiled without iCache!
+  #error Trace cache optimization cannot be compiled without iCache!
 #endif
 
 #if BX_SUPPORT_3DNOW
@@ -756,51 +763,51 @@ typedef
 #endif
 
 #if (BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL < 4)
-#error Alignment exception check is not supported in i386 !
+  #error Alignment exception check is not supported in i386 !
 #endif
 
 #if (BX_SUPPORT_VME && BX_CPU_LEVEL < 5)
-#error With CPU level < 5, you must disable v8086 mode extensions !
+  #error With CPU level < 5, you must disable v8086 mode extensions !
 #endif
 
 #if (BX_SUPPORT_MMX && BX_CPU_LEVEL < 5)
-#error With CPU level < 5, you must disable MMX support !
+  #error With CPU level < 5, you must disable MMX support !
 #endif
 
 #if (!BX_SUPPORT_FPU && BX_CPU_LEVEL > 4)
-#error With CPU level > 4, you must enable FPU support !
+  #error With CPU level > 4, you must enable FPU support !
 #endif
 
 #if (BX_SUPPORT_MMX && !BX_SUPPORT_FPU)
-#error "MMX cannot be compiled without FPU support !"
+  #error "MMX cannot be compiled without FPU support !"
 #endif
 
 #if (BX_SUPPORT_FPU && BX_CPU_LEVEL < 3)
-#error "FPU cannot be compiled without cpu level >= 3 !"
+  #error "FPU cannot be compiled without cpu level >= 3 !"
 #endif
 
 #if (BX_SUPPORT_3DNOW && !BX_SUPPORT_MMX)
-#error "3DNow! cannot be compiled without MMX support !"
+  #error "3DNow! cannot be compiled without MMX support !"
 #endif
 
 #if (BX_SUPPORT_AES && !BX_SUPPORT_SSE)
-#error "AES cannot be compiled without SSE support !"
+  #error "AES cannot be compiled without SSE support !"
 #endif
 
 #if (BX_SUPPORT_XSAVE && !BX_SUPPORT_SSE)
-#error "XSAVE cannot be compiled without SSE support !"
+  #error "XSAVE cannot be compiled without SSE support !"
 #endif
 
 #if (BX_SUPPORT_SSE && !BX_SUPPORT_MMX)
-#error "SSE cannot be compiled without FPU+MMX support !"
+  #error "SSE cannot be compiled without FPU+MMX support !"
 #endif
 
 #if (BX_CPU_LEVEL<6 && BX_SUPPORT_SSE)
-#error "SSE is only supported with CPU_LEVEL >= 6 !"
+  #error "SSE is only supported with CPU_LEVEL >= 6 !"
 #endif
 
 #if (BX_CPU_LEVEL<6 && BX_SUPPORT_SEP)
-#error "SYSENTER/SYSEXIT only supported with CPU_LEVEL >= 6 !"
+  #error "SYSENTER/SYSEXIT only supported with CPU_LEVEL >= 6 !"
 #endif
 
 #if (BX_SUPPORT_SSE < 3) || (BX_SUPPORT_SSE == 3 && BX_SUPPORT_SSE_EXTENSION == 0)
@@ -810,39 +817,39 @@ typedef
 #endif
 
 #if (BX_CPU_LEVEL<6 && BX_SUPPORT_PAE)
-#error "Physical Address Extensions (PAE) only supported with CPU_LEVEL >= 6 !"
+  #error "Physical Address Extensions (PAE) only supported with CPU_LEVEL >= 6 !"
 #endif
 #if (BX_CPU_LEVEL<6 && BX_SUPPORT_GLOBAL_PAGES)
-#error "Page Global Extension (PGE) only supported with CPU_LEVEL >= 6 !"
+  #error "Page Global Extension (PGE) only supported with CPU_LEVEL >= 6 !"
 #endif
 #if (BX_CPU_LEVEL<5 && BX_SUPPORT_LARGE_PAGES)
-#error "Page Size Extension (PSE) only supported with CPU_LEVEL >= 5 !"
+  #error "Page Size Extension (PSE) only supported with CPU_LEVEL >= 5 !"
 #endif
 #if (BX_CPU_LEVEL<6 && BX_SUPPORT_MTRR)
-#error "MTRRs only supported with CPU_LEVEL >= 6 !"
+  #error "MTRRs only supported with CPU_LEVEL >= 6 !"
 #endif
 
 #if (BX_SUPPORT_PAE && !BX_SUPPORT_LARGE_PAGES)
-#error "Physical Address Extensions (PAE) requires large pages support !"
+  #error "Physical Address Extensions (PAE) requires large pages support !"
 #endif
 
 #if BX_SUPPORT_X86_64
 // Sanity checks to ensure that you cannot accidently use conflicting options.
 
 #if BX_CPU_LEVEL < 6
-#error "X86-64 requires cpu level 6 or greater !"
+  #error "X86-64 requires cpu level 6 or greater !"
 #endif
 #if (BX_SUPPORT_SSE<2)
-#error "X86-64 requires SSE2 !"
+  #error "X86-64 requires SSE2 !"
 #endif
 #if !BX_SUPPORT_PAE
-#error "X86-64 requires Physical Address Extensions (PAE) !"
+  #error "X86-64 requires Physical Address Extensions (PAE) !"
 #endif
 #if !BX_SUPPORT_GLOBAL_PAGES
-#error "X86-64 requires Page Global Extension (PGE) !"
+  #error "X86-64 requires Page Global Extension (PGE) !"
 #endif
 #if !BX_SUPPORT_LARGE_PAGES
-#error "X86-64 requires Page Size Extension (PSE) !"
+  #error "X86-64 requires Page Size Extension (PSE) !"
 #endif
 #endif
 
@@ -924,7 +931,7 @@ typedef
 #define BX_SUPPORT_PCIPNIC 0
 
 #if (BX_SUPPORT_PCIPNIC && !BX_SUPPORT_PCI)
-#error To enable the PCI pseudo NIC, you must also enable PCI
+  #error To enable the PCI pseudo NIC, you must also enable PCI
 #endif
 
 // this enables the lowlevel stuff below if one of the NICs is present

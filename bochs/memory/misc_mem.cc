@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: misc_mem.cc,v 1.115 2008-05-10 21:36:55 sshwarts Exp $
+// $Id: misc_mem.cc,v 1.116 2008-10-18 18:10:14 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -76,7 +76,7 @@ void BX_MEM_C::init_memory(Bit32u memsize)
 {
   unsigned idx;
 
-  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.115 2008-05-10 21:36:55 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.116 2008-10-18 18:10:14 sshwarts Exp $"));
 
   if (BX_MEM_THIS actual_vector != NULL) {
     BX_INFO (("freeing existing memory vector"));
@@ -404,6 +404,12 @@ bx_bool BX_MEM_C::dbg_fetch_mem(BX_CPU_C *cpu, bx_phy_address addr, unsigned len
         *buf = BX_MEM_THIS rom[(addr & EXROM_MASK) + BIOSROMSZ];
       }
     }
+#if BX_PHY_ADDRESS_LONG
+    else if (addr >= BX_CONST64(0xFFFFFFFF)) {
+      *buf = 0xff;
+      ret = 0; // error, beyond limits of memory
+    }
+#endif
     else if (addr >= (bx_phy_address)~BIOS_MASK)
     {
       *buf = BX_MEM_THIS rom[addr & BIOS_MASK];
@@ -473,7 +479,7 @@ bx_bool BX_MEM_C::dbg_crc32(bx_phy_address addr1, bx_phy_address addr2, Bit32u *
   while(1) { 
     unsigned remainsInPage = 0x1000 - (addr1 & 0xfff);
     unsigned access_length = (len < remainsInPage) ? len : remainsInPage;
-   *crc = crc32(BX_MEM_THIS get_vector(addr1), access_length);
+    *crc = crc32(BX_MEM_THIS get_vector(addr1), access_length);
     addr1 += access_length;
     len -= access_length;
   }
@@ -578,6 +584,12 @@ Bit8u *BX_MEM_C::getHostMemAddr(BX_CPU_C *cpu, bx_phy_address a20Addr, unsigned 
         return((Bit8u *) &BX_MEM_THIS rom[(a20Addr & EXROM_MASK) + BIOSROMSZ]);
       }
     }
+#if BX_PHY_ADDRESS_LONG
+    else if (addr >= BX_CONST64(0xFFFFFFFF)) {
+      // Error, requested addr is out of bounds.
+      return (Bit8u *) &BX_MEM_THIS bogus[a20Addr & 0xfff];
+    }
+#endif
     else if (a20Addr >= (bx_phy_address)~BIOS_MASK)
     {
       return (Bit8u *) &BX_MEM_THIS rom[a20Addr & BIOS_MASK];
@@ -585,7 +597,7 @@ Bit8u *BX_MEM_C::getHostMemAddr(BX_CPU_C *cpu, bx_phy_address a20Addr, unsigned 
     else
     {
       // Error, requested addr is out of bounds.
-      return (Bit8u *) &BX_MEM_THIS bogus[a20Addr & 0x0fff];
+      return (Bit8u *) &BX_MEM_THIS bogus[a20Addr & 0xfff];
     }
   }
   else
