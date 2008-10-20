@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.234 2008-10-02 06:49:20 sshwarts Exp $
+// $Id: bochs.h,v 1.235 2008-10-20 19:13:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -521,12 +521,6 @@ extern bx_bool bx_gui_sighandler;
 #define BX_N_PARALLEL_PORTS 2
 #define BX_N_USB_HUBS 1
 #define BX_N_PCI_SLOTS 5
-
-#if BX_SUPPORT_SMP
-  #define BX_SMP_PROCESSORS (bx_cpu_count)
-#else
-  #define BX_SMP_PROCESSORS 1
-#endif
 
 void bx_center_print(FILE *file, const char *line, unsigned maxwidth);
 

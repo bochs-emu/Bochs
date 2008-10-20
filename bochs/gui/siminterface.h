@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.218 2008-09-22 21:38:15 sshwarts Exp $
+// $Id: siminterface.h,v 1.219 2008-10-20 19:13:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Intro to siminterface by Bryce Denney:
@@ -238,6 +238,12 @@ typedef enum {
 
 // base value for generated new parameter id
 #define BXP_NEW_PARAM_ID 1001
+
+#if BX_SUPPORT_SMP
+  #define BX_SMP_PROCESSORS (bx_cpu_count)
+#else
+  #define BX_SMP_PROCESSORS 1
+#endif
 
 typedef enum {
   BX_TOOLBAR_UNDEFINED,
