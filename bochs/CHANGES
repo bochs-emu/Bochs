@@ -1,5 +1,12 @@
 Changes after 2.3.7 release:
 
+Brief summary :
+
+- Added graphical Bochs debugger under Win32 host !
+  - Thanks for Chourdakis Michael and Bruce Ewing.
+- Many fixes in Bochs internal debugger and CPU instrumentation.
+- Bugfixes for CPU emulation correctness.
+
 Detailed change log :
 
 - CPU and internal debugger
@@ -65,6 +72,8 @@ Detailed change log :
  [1981505] Init PIIX4 PCI to ISA bridge and IDE by Sebastian
 
 - these S.F. bugs were closed
+ [1803018] new win32debug dialog problems
+ [2141679] windows vcc build broken
  [2162824] latest cvs fails to compile
  [2164506] latest bochs fails to start
  [2106514] RIS / startrom.com install ALMOST works

@@ -1,34 +1,22 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32dialog.cc,v 1.62 2008-02-05 22:57:41 sshwarts Exp $
+// $Id: win32dialog.cc,v 1.63 2008-10-21 13:45:03 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
-#include "config.h"
+#include "win32dialog.h"
 
 #if BX_USE_TEXTCONFIG && defined(WIN32)
 
-extern "C" {
-#include <assert.h>
-#include <stdio.h>
-#include <windows.h>
-#include <commctrl.h>
-#include <shlobj.h>
-#include <ctype.h>
-}
+#include "bochs.h"
 #include "win32res.h"
-#include "siminterface.h"
-#include "textconfig.h"
-#include "win32dialog.h"
 
 const char log_choices[5][16] = {"ignore", "log", "ask user", "end simulation", "no change"};
 static int retcode = 0;
 static bxevent_handler old_callback = NULL;
 static void *old_callback_arg = NULL;
 #if BX_DEBUGGER
-static HWND hDebugDialog = NULL;
-static char *debug_cmd = NULL;
-static BOOL debug_cmd_ready = FALSE;
-static BOOL showCPU = FALSE;
-static bx_param_num_c *cpu_param[16];
+HWND hDebugDialog = NULL;
+char *debug_cmd = NULL;
+BOOL debug_cmd_ready = FALSE;
 #endif
 
 int AskFilename(HWND hwnd, bx_param_filename_c *param, const char *ext);
@@ -904,124 +892,6 @@ int RuntimeOptionsDialog()
   return retcode;
 }
 
-#if BX_DEBUGGER
-void RefreshDebugDialog()
-{
-  unsigned i;
-  char buffer[20];
-
-  if (showCPU) {
-    for (i = 0; i < 15; i++) {
-      sprintf(buffer, "%08X", cpu_param[i]->get());
-      SetDlgItemText(hDebugDialog, IDCPUVAL1+i, buffer);
-    }
-  }
-}
-
-static BOOL CALLBACK DebuggerDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
-{
-  unsigned i;
-  int idx, lines;
-  static RECT R;
-
-  switch (msg) {
-    case WM_INITDIALOG:
-      GetWindowRect(hDlg, &R);
-#if BX_SUPPORT_X86_64
-      cpu_param[0] = SIM->get_param_num("cpu0.RAX", SIM->get_bochs_root());
-      cpu_param[1] = SIM->get_param_num("cpu0.RBX", SIM->get_bochs_root());
-      cpu_param[2] = SIM->get_param_num("cpu0.RCX", SIM->get_bochs_root());
-      cpu_param[3] = SIM->get_param_num("cpu0.RDX", SIM->get_bochs_root());
-      cpu_param[4] = SIM->get_param_num("cpu0.RSP", SIM->get_bochs_root());
-      cpu_param[5] = SIM->get_param_num("cpu0.RBP", SIM->get_bochs_root());
-      cpu_param[6] = SIM->get_param_num("cpu0.RSI", SIM->get_bochs_root());
-      cpu_param[7] = SIM->get_param_num("cpu0.RDI", SIM->get_bochs_root());
-      cpu_param[8] = SIM->get_param_num("cpu0.RIP", SIM->get_bochs_root());
-#else
-      cpu_param[0] = SIM->get_param_num("cpu0.EAX", SIM->get_bochs_root());
-      cpu_param[1] = SIM->get_param_num("cpu0.EBX", SIM->get_bochs_root());
-      cpu_param[2] = SIM->get_param_num("cpu0.ECX", SIM->get_bochs_root());
-      cpu_param[3] = SIM->get_param_num("cpu0.EDX", SIM->get_bochs_root());
-      cpu_param[4] = SIM->get_param_num("cpu0.ESP", SIM->get_bochs_root());
-      cpu_param[5] = SIM->get_param_num("cpu0.EBP", SIM->get_bochs_root());
-      cpu_param[6] = SIM->get_param_num("cpu0.ESI", SIM->get_bochs_root());
-      cpu_param[7] = SIM->get_param_num("cpu0.EDI", SIM->get_bochs_root());
-      cpu_param[8] = SIM->get_param_num("cpu0.EIP", SIM->get_bochs_root());
-#endif
-      cpu_param[9] = SIM->get_param_num("cpu0.CS.selector", SIM->get_bochs_root());
-      cpu_param[10] = SIM->get_param_num("cpu0.DS.selector", SIM->get_bochs_root());
-      cpu_param[11] = SIM->get_param_num("cpu0.ES.selector", SIM->get_bochs_root());
-      cpu_param[12] = SIM->get_param_num("cpu0.FS.selector", SIM->get_bochs_root());
-      cpu_param[13] = SIM->get_param_num("cpu0.GS.selector", SIM->get_bochs_root());
-      cpu_param[14] = SIM->get_param_num("cpu0.EFLAGS", SIM->get_bochs_root());
-      return TRUE;
-    case WM_CLOSE:
-      bx_user_quit = 1;
-      SIM->debug_break();
-      DestroyWindow(hDebugDialog);
-      hDebugDialog = NULL;
-      break;
-    case WM_COMMAND:
-      switch (LOWORD(wParam)) {
-        case IDEXEC:
-          GetDlgItemText(hDlg, DEBUG_CMD, debug_cmd, 512);
-          if (lstrlen(debug_cmd) > 0) {
-            debug_cmd_ready = TRUE;
-          } else {
-            SetFocus(GetDlgItem(hDlg, DEBUG_CMD));
-          }
-          break;
-        case IDSTOP:
-          SIM->debug_break();
-          break;
-        case IDSHOWCPU:
-          showCPU = !showCPU;
-          if (showCPU) {
-            SetDlgItemText(hDlg, IDSHOWCPU, "Hide CPU <<");
-            MoveWindow(hDlg, R.left, R.top, R.right - R.left + 300, R.bottom - R.top, TRUE);
-            RefreshDebugDialog();
-          } else {
-            SetDlgItemText(hDlg, IDSHOWCPU, "Show CPU >>");
-            MoveWindow(hDlg, R.left, R.top, R.right - R.left, R.bottom - R.top, TRUE);
-          }
-          for (i = 0; i < 15; i++) {
-            ShowWindow(GetDlgItem(hDlg, IDCPULBL1+i), showCPU ? SW_SHOW : SW_HIDE);
-            ShowWindow(GetDlgItem(hDlg, IDCPUVAL1+i), showCPU ? SW_SHOW : SW_HIDE);
-          }
-          break;
-      }
-    case WM_USER:
-      if (wParam == 0x1234) {
-        EnableWindow(GetDlgItem(hDlg, DEBUG_CMD), lParam > 0);
-        EnableWindow(GetDlgItem(hDlg, IDEXEC), lParam > 0);
-        EnableWindow(GetDlgItem(hDlg, IDSTOP), lParam == 0);
-        SetFocus(GetDlgItem(hDlg, (lParam > 0)?DEBUG_CMD:IDSTOP));
-      } else if (wParam == 0x5678) {
-        lines = SendMessage(GetDlgItem(hDlg, DEBUG_MSG), EM_GETLINECOUNT, 0, 0);
-        if (lines > 100) {
-          idx = SendMessage(GetDlgItem(hDlg, DEBUG_MSG), EM_LINEINDEX, 1, 0);
-          SendMessage(GetDlgItem(hDlg, DEBUG_MSG), EM_SETSEL, 0, idx);
-          SendMessage(GetDlgItem(hDlg, DEBUG_MSG), EM_REPLACESEL, 0, (LPARAM)"");
-          lines--;
-        }
-        idx = SendMessage(GetDlgItem(hDlg, DEBUG_MSG), EM_LINEINDEX, lines - 1, 0);
-        idx += SendMessage(GetDlgItem(hDlg, DEBUG_MSG), EM_LINELENGTH, idx, 0);
-        SendMessage(GetDlgItem(hDlg, DEBUG_MSG), EM_SETSEL, idx, idx);
-        SendMessage(GetDlgItem(hDlg, DEBUG_MSG), EM_REPLACESEL, 0, lParam);
-      }
-      break;
-  }
-  return FALSE;
-}
-
-void InitDebugDialog(HWND mainwnd)
-{
-  hDebugDialog = CreateDialog(GetModuleHandle(NULL), MAKEINTRESOURCE(DEBUGGER_DLG), mainwnd,
-                              (DLGPROC)DebuggerDlgProc);
-  ShowWindow(hDebugDialog, SW_SHOW);
-}
-#endif
-
 BxEvent* win32_notify_callback(void *unused, BxEvent *event)
 {
   int opts;
@@ -1044,6 +914,7 @@ BxEvent* win32_notify_callback(void *unused, BxEvent *event)
         debug_cmd = new char[512];
         SendMessage(hDebugDialog, WM_USER, 0x1234, 1);
         debug_cmd_ready = FALSE;
+        SendMessage(hDebugDialog, WM_USER, 0x1234, 2);
         while (!debug_cmd_ready && (hDebugDialog != NULL)) {
           Sleep(10);
         }

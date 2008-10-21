@@ -184,3 +184,4 @@ BEGIN
 END
 
 #include "bxversion.rc"
+#include "win32_enh_dbg.rc"
