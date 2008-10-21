@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: string.cc,v 1.66 2008-10-08 20:40:26 sshwarts Exp $
+// $Id: string.cc,v 1.67 2008-10-21 19:50:05 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -88,22 +88,28 @@ Bit32u BX_CPU_C::FastRepMOVSB(bxInstruction_c *i, unsigned srcSeg, bx_address sr
 
 #if BX_SupportGuest2HostTLB
   hostAddrDst = v2h_write_byte(laddrDst, BX_CPU_THIS_PTR user_pl);
+  // Check that native host access was not vetoed for that page
+  if (!hostAddrDst) return 0;
 #else
   bx_phy_address paddrDst;
 
   if (BX_CPU_THIS_PTR cr0.get_PG()) {
     paddrDst = dtranslate_linear(laddrDst, CPL, BX_WRITE);
+    paddrDst = A20ADDR(paddrDst);
   }
-  else {
-    paddrDst = laddrDst;
-  }
+  else
+    paddrDst = A20ADDR(laddrDst);
 
   // If we want to write directly into the physical memory array,
   // we need the A20 address.
   hostAddrDst = BX_MEM(0)->getHostMemAddr(BX_CPU_THIS,
-            A20ADDR(paddrDst), BX_WRITE, DATA_ACCESS);
+            paddrDst, BX_WRITE, DATA_ACCESS);
+  // Check that native host access was not vetoed for that page
+  if (!hostAddrDst) return 0;
+#if BX_SUPPORT_ICACHE
+  pageWriteStampTable.decWriteStamp(paddrDst);
 #endif
-  if (! hostAddrDst) return 0;
+#endif
 
   // See how many bytes can fit in the rest of this page.
   if (BX_CPU_THIS_PTR get_DF()) {
@@ -189,22 +195,28 @@ Bit32u BX_CPU_C::FastRepMOVSW(bxInstruction_c *i, unsigned srcSeg, bx_address sr
 
 #if BX_SupportGuest2HostTLB
   hostAddrDst = v2h_write_byte(laddrDst, BX_CPU_THIS_PTR user_pl);
+  // Check that native host access was not vetoed for that page
+  if (!hostAddrDst) return 0;
 #else
   bx_phy_address paddrDst;
 
   if (BX_CPU_THIS_PTR cr0.get_PG()) {
     paddrDst = dtranslate_linear(laddrDst, CPL, BX_WRITE);
+    paddrDst = A20ADDR(paddrDst);
   }
-  else {
-    paddrDst = laddrDst;
-  }
+  else
+    paddrDst = A20ADDR(laddrDst);
 
   // If we want to write directly into the physical memory array,
   // we need the A20 address.
   hostAddrDst = BX_MEM(0)->getHostMemAddr(BX_CPU_THIS,
-            A20ADDR(paddrDst), BX_WRITE, DATA_ACCESS);
+            paddrDst, BX_WRITE, DATA_ACCESS);
+  // Check that native host access was not vetoed for that page
+  if (!hostAddrDst) return 0;
+#if BX_SUPPORT_ICACHE
+  pageWriteStampTable.decWriteStamp(paddrDst);
 #endif
-  if (! hostAddrDst) return 0;
+#endif
 
   // See how many words can fit in the rest of this page.
   if (BX_CPU_THIS_PTR get_DF()) {
@@ -293,22 +305,28 @@ Bit32u BX_CPU_C::FastRepMOVSD(bxInstruction_c *i, unsigned srcSeg, bx_address sr
 
 #if BX_SupportGuest2HostTLB
   hostAddrDst = v2h_write_byte(laddrDst, BX_CPU_THIS_PTR user_pl);
+  // Check that native host access was not vetoed for that page
+  if (!hostAddrDst) return 0;
 #else
   bx_phy_address paddrDst;
 
   if (BX_CPU_THIS_PTR cr0.get_PG()) {
     paddrDst = dtranslate_linear(laddrDst, CPL, BX_WRITE);
+    paddrDst = A20ADDR(paddrDst);
   }
-  else {
-    paddrDst = laddrDst;
-  }
+  else
+    paddrDst = A20ADDR(laddrDst);
 
   // If we want to write directly into the physical memory array,
   // we need the A20 address.
   hostAddrDst = BX_MEM(0)->getHostMemAddr(BX_CPU_THIS,
-            A20ADDR(paddrDst), BX_WRITE, DATA_ACCESS);
+            paddrDst, BX_WRITE, DATA_ACCESS);
+  // Check that native host access was not vetoed for that page
+  if (!hostAddrDst) return 0;
+#if BX_SUPPORT_ICACHE
+  pageWriteStampTable.decWriteStamp(paddrDst);
 #endif
-  if (! hostAddrDst) return 0;
+#endif
 
   // See how many dwords can fit in the rest of this page.
   if (BX_CPU_THIS_PTR get_DF()) {
@@ -370,22 +388,28 @@ Bit32u BX_CPU_C::FastRepSTOSB(bxInstruction_c *i, unsigned dstSeg, bx_address ds
 
 #if BX_SupportGuest2HostTLB
   hostAddrDst = v2h_write_byte(laddrDst, BX_CPU_THIS_PTR user_pl);
+  // Check that native host access was not vetoed for that page
+  if (!hostAddrDst) return 0;
 #else
   bx_phy_address paddrDst;
 
   if (BX_CPU_THIS_PTR cr0.get_PG()) {
     paddrDst = dtranslate_linear(laddrDst, CPL, BX_WRITE);
+    paddrDst = A20ADDR(paddrDst);
   }
-  else {
-    paddrDst = laddrDst;
-  }
+  else
+    paddrDst = A20ADDR(laddrDst);
 
   // If we want to write directly into the physical memory array,
   // we need the A20 address.
   hostAddrDst = BX_MEM(0)->getHostMemAddr(BX_CPU_THIS,
-            A20ADDR(paddrDst), BX_WRITE, DATA_ACCESS);
+            paddrDst, BX_WRITE, DATA_ACCESS);
+  // Check that native host access was not vetoed for that page
+  if (!hostAddrDst) return 0;
+#if BX_SUPPORT_ICACHE
+  pageWriteStampTable.decWriteStamp(paddrDst);
 #endif
-  if (! hostAddrDst) return 0;
+#endif
 
   // See how many bytes can fit in the rest of this page.
   if (BX_CPU_THIS_PTR get_DF()) {
@@ -439,22 +463,28 @@ Bit32u BX_CPU_C::FastRepSTOSW(bxInstruction_c *i, unsigned dstSeg, bx_address ds
 
 #if BX_SupportGuest2HostTLB
   hostAddrDst = v2h_write_byte(laddrDst, BX_CPU_THIS_PTR user_pl);
+  // Check that native host access was not vetoed for that page
+  if (!hostAddrDst) return 0;
 #else
   bx_phy_address paddrDst;
 
   if (BX_CPU_THIS_PTR cr0.get_PG()) {
     paddrDst = dtranslate_linear(laddrDst, CPL, BX_WRITE);
+    paddrDst = A20ADDR(paddrDst);
   }
-  else {
-    paddrDst = laddrDst;
-  }
+  else
+    paddrDst = A20ADDR(laddrDst);
 
   // If we want to write directly into the physical memory array,
   // we need the A20 address.
   hostAddrDst = BX_MEM(0)->getHostMemAddr(BX_CPU_THIS,
-            A20ADDR(paddrDst), BX_WRITE, DATA_ACCESS);
+            paddrDst, BX_WRITE, DATA_ACCESS);
+  // Check that native host access was not vetoed for that page
+  if (!hostAddrDst) return 0;
+#if BX_SUPPORT_ICACHE
+  pageWriteStampTable.decWriteStamp(paddrDst);
 #endif
-  if (! hostAddrDst) return 0;
+#endif
 
   // See how many words can fit in the rest of this page.
   if (BX_CPU_THIS_PTR get_DF()) {
@@ -510,22 +540,28 @@ Bit32u BX_CPU_C::FastRepSTOSD(bxInstruction_c *i, unsigned dstSeg, bx_address ds
 
 #if BX_SupportGuest2HostTLB
   hostAddrDst = v2h_write_byte(laddrDst, BX_CPU_THIS_PTR user_pl);
+  // Check that native host access was not vetoed for that page
+  if (!hostAddrDst) return 0;
 #else
   bx_phy_address paddrDst;
 
   if (BX_CPU_THIS_PTR cr0.get_PG()) {
     paddrDst = dtranslate_linear(laddrDst, CPL, BX_WRITE);
+    paddrDst = A20ADDR(paddrDst);
   }
-  else {
-    paddrDst = laddrDst;
-  }
+  else
+    paddrDst = A20ADDR(laddrDst);
 
   // If we want to write directly into the physical memory array,
   // we need the A20 address.
   hostAddrDst = BX_MEM(0)->getHostMemAddr(BX_CPU_THIS,
-            A20ADDR(paddrDst), BX_WRITE, DATA_ACCESS);
+            paddrDst, BX_WRITE, DATA_ACCESS);
+  // Check that native host access was not vetoed for that page
+  if (!hostAddrDst) return 0;
+#if BX_SUPPORT_ICACHE
+  pageWriteStampTable.decWriteStamp(paddrDst);
 #endif
-  if (! hostAddrDst) return 0;
+#endif
 
   // See how many dwords can fit in the rest of this page.
   if (BX_CPU_THIS_PTR get_DF()) {

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: misc_mem.cc,v 1.117 2008-10-18 18:14:04 sshwarts Exp $
+// $Id: misc_mem.cc,v 1.118 2008-10-21 19:50:05 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -76,7 +76,7 @@ void BX_MEM_C::init_memory(Bit32u memsize)
 {
   unsigned idx;
 
-  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.117 2008-10-18 18:14:04 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.118 2008-10-21 19:50:05 sshwarts Exp $"));
 
   if (BX_MEM_THIS actual_vector != NULL) {
     BX_INFO (("freeing existing memory vector"));
@@ -628,10 +628,6 @@ Bit8u *BX_MEM_C::getHostMemAddr(BX_CPU_C *cpu, bx_phy_address a20Addr, unsigned 
         return(NULL);  // Vetoed!  ROMs
       }
     }
-
-#if BX_SUPPORT_ICACHE
-    pageWriteStampTable.decWriteStamp(a20Addr);
-#endif
 
     return retAddr;
   }
