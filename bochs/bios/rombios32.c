@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios32.c,v 1.32 2008-10-15 19:04:09 sshwarts Exp $
+// $Id: rombios32.c,v 1.33 2008-10-31 18:07:15 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  32 bit Bochs BIOS init code
@@ -756,10 +756,10 @@ static void pci_bios_init_device(PCIDevice *d)
     class = pci_config_readw(d, PCI_CLASS_DEVICE);
     vendor_id = pci_config_readw(d, PCI_VENDOR_ID);
     device_id = pci_config_readw(d, PCI_DEVICE_ID);
-    BX_INFO("PCI: bus=%d devfn=0x%02x: vendor_id=0x%04x device_id=0x%04x\n",
-            d->bus, d->devfn, vendor_id, device_id);
+    BX_INFO("PCI: bus=%d devfn=0x%02x: vendor_id=0x%04x device_id=0x%04x class=0x%04x\n",
+            d->bus, d->devfn, vendor_id, device_id, class);
     switch(class) {
-    case 0x0101:
+    case 0x0101: /* Mass storage controller - IDE interface */
         if (vendor_id == PCI_VENDOR_ID_INTEL &&
            (device_id == PCI_DEVICE_ID_INTEL_82371SB_1 ||
             device_id == PCI_DEVICE_ID_INTEL_82371AB)) {
@@ -775,14 +775,13 @@ static void pci_bios_init_device(PCIDevice *d)
             pci_set_io_region_addr(d, 3, 0x374);
         }
         break;
-    case 0x0300:
+    case 0x0300: /* Display controller - VGA compatible controller */
         if (vendor_id != 0x1234)
             goto default_map;
         /* VGA: map frame buffer to default Bochs VBE address */
         pci_set_io_region_addr(d, 0, 0xE0000000);
         break;
-    case 0x0800:
-        /* PIC */
+    case 0x0800: /* Generic system peripheral - PIC */
         if (vendor_id == PCI_VENDOR_ID_IBM) {
             /* IBM */
             if (device_id == 0x0046 || device_id == 0xFFFF) {
