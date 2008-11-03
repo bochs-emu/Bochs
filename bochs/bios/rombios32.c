@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios32.c,v 1.33 2008-10-31 18:07:15 sshwarts Exp $
+// $Id: rombios32.c,v 1.34 2008-11-03 19:53:12 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  32 bit Bochs BIOS init code
@@ -2042,5 +2042,10 @@ void rombios32_init(void)
         BX_INFO("bios_table_cur_addr: 0x%08lx\n", bios_table_cur_addr);
         if (bios_table_cur_addr > bios_table_end_addr)
             BX_PANIC("bios_table_end_addr overflow!\n");
+#ifdef BX_USE_EBDA_TABLES
+        BX_INFO("ebda_cur_addr: 0x%08lx\n", ebda_cur_addr);
+        if (ebda_cur_addr > 0xA0000)
+            BX_PANIC("ebda_cur_addr overflow!\n");
+#endif
     }
 }
