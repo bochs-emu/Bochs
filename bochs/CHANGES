@@ -43,6 +43,9 @@ Detailed change log :
   - Updated Bochs TESTFORM to version 0.4
 
 - SF patches applied
+ [1827082] [PATCH] Configurable CPU vendor by Marcel Sondaar
+ [2217229] Panic on EBDA overflow in rombios32 by Sebastian
+ [2210194] Log pci class code by Sebastian
  [1984662] red led for disk write and titlebar mod by ggbsf
  [2142955] Fix for monitor/mwait by Doug Gibson
  [2137774] Patch to fix bug: cdrom: read_block: lseek returned error by Gabor Olah
@@ -72,6 +75,7 @@ Detailed change log :
  [1981505] Init PIIX4 PCI to ISA bridge and IDE by Sebastian
 
 - these S.F. bugs were closed
+ [1173093] Debugger totally not supports x86-64
  [1803018] new win32debug dialog problems
  [2141679] windows vcc build broken
  [2162824] latest cvs fails to compile
@@ -96,6 +100,14 @@ Detailed change log :
  [1898929] Bochs VESA BIOS violates specs (banks == 1)
  [1875721] Bit "Accessed" in LDT/GDT descriptors & #PF
  [1874124] bx_Instruction_c::ilen() const  
+
+- these S.F. feature requests were closed/implemented
+ [1363136] Full debugger SMP and 64 bit support
+ [2068304] Support for ACPI
+  [431032] debugger "x" command
+  [423420] profiling ideas (SMF)
+  [445342] Add FM support?
+  [928439] alsa  
 
 -------------------------------------------------------------------------
 Changes in 2.3.7 (June 3, 2008):
@@ -156,7 +168,7 @@ Detailed change log :
 
 - Display libraries
   - implemented text mode character blinking in some guis
-  - improved 'x' gui runtime dialogs
+  - improved 'X' gui runtime dialogs
 
 - SF patches applied
  [1980833] Fix shutdown status code 5h handler by Kevin O'Connor
