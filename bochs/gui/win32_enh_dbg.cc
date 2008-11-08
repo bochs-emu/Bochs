@@ -843,7 +843,7 @@ void FillRegs()
     rV[RSP_Rnum] = rV[ESP_Rnum];
 #else
     // copy the lower dwords of RAX - RBP to EAX - EBP (with 32bit truncation)
-    i = RBP_Rnum + 1;
+    i = RIP_Rnum + 1;
     while (--i >= 0)
         rV[i + (EAX_Rnum - RAX_Rnum)] = GET32L(rV[i]);
 #endif
