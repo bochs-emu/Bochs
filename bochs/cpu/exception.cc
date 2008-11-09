@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.122 2008-09-06 17:44:02 sshwarts Exp $
+// $Id: exception.cc,v 1.123 2008-11-09 22:08:21 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -444,8 +444,13 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error
       exception(BX_NP_EXCEPTION, cs_selector.value & 0xfffc, 0);
     }
 
+    if (cs_descriptor.dpl > CPL) {
+      BX_ERROR(("interrupt(): code segment DPL(%d) > CPL", cs_descriptor.dpl));
+      exception(BX_GP_EXCEPTION, cs_selector.value & 0xfffc, 0);
+    }
+
     // if code segment is non-conforming and DPL < CPL then
-    // INTERRUPT TO INNER PRIVILEGE:
+    // INTERRUPT TO INNER PRIVILEGE
     if(IS_CODE_SEGMENT_NON_CONFORMING(cs_descriptor.type) && (cs_descriptor.dpl < CPL))
     {
       Bit16u old_SS, old_CS, SS_for_cpl_x;
@@ -458,7 +463,7 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error
 
       if (is_v8086_mode && cs_descriptor.dpl != 0) {
         // if code segment DPL != 0 then #GP(new code segment selector)
-        BX_ERROR(("interrupt(): code segment DPL != 0 in v8086 mode"));
+        BX_ERROR(("interrupt(): code segment DPL(%d) != 0 in v8086 mode", cs_descriptor.dpl));
         exception(BX_GP_EXCEPTION, cs_selector.value & 0xfffc, 0);
       }
 
@@ -681,22 +686,19 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error
 
       return;
     }
-
-    if (v8086_mode()) {
-      // if code segment DPL != 0 then #GP(new code segment selector)
-      BX_ERROR(("interrupt(): code seg DPL != 0 in v8086 mode"));
-      exception(BX_GP_EXCEPTION, cs_selector.value & 0xfffc, 0);
-    }
-
-    // if code segment is conforming OR code segment DPL = CPL then
-    // INTERRUPT TO SAME PRIVILEGE LEVEL:
-    if (IS_CODE_SEGMENT_CONFORMING(cs_descriptor.type) || cs_descriptor.dpl==CPL)
+    else
     {
-      BX_DEBUG(("int_trap_gate286(): INTERRUPT TO SAME PRIVILEGE"));
+      BX_DEBUG(("interrupt(): INTERRUPT TO SAME PRIVILEGE"));
+
+      if (v8086_mode() && (IS_CODE_SEGMENT_CONFORMING(cs_descriptor.type) || cs_descriptor.dpl != 0)) {
+        // if code segment DPL != 0 then #GP(new code segment selector)
+        BX_ERROR(("interrupt(): code segment conforming or DPL(%d) != 0 in v8086 mode", cs_descriptor.dpl));
+        exception(BX_GP_EXCEPTION, cs_selector.value & 0xfffc, 0);
+      }
 
       // EIP must be in CS limit else #GP(0)
       if (gate_dest_offset > cs_descriptor.u.segment.limit_scaled) {
-        BX_ERROR(("interrupt(): IP > cs descriptor limit"));
+        BX_ERROR(("interrupt(): IP > CS descriptor limit"));
         exception(BX_GP_EXCEPTION, 0, 0);
       }
 
@@ -733,15 +735,6 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error
       BX_CPU_THIS_PTR clear_RF();
       return;
     }
-
-    // else #GP(CS selector + ext)
-    BX_DEBUG(("interrupt: bad descriptor"));
-    BX_DEBUG(("type=%u, descriptor.dpl=%u, CPL=%u",
-          (unsigned) cs_descriptor.type, (unsigned) cs_descriptor.dpl,
-          (unsigned) CPL));
-    BX_DEBUG(("cs.segment = %u", (unsigned) cs_descriptor.segment));
-    exception(BX_GP_EXCEPTION, cs_selector.value & 0xfffc, 0);
-    break;
 
   default:
     BX_PANIC(("bad descriptor type in interrupt()!"));
