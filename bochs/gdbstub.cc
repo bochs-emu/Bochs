@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gdbstub.cc,v 1.33 2008-08-16 12:29:30 sshwarts Exp $
+// $Id: gdbstub.cc,v 1.34 2008-11-09 22:56:54 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2006  The Bochs Project Team
@@ -573,19 +573,23 @@ static void debug_loop(void)
         value = read_little_endian_hex(ebuf);
 
         BX_INFO(("reg %d set to %Lx", reg, value));
-#if !BX_SUPPORT_X86_64
+#if BX_SUPPORT_X86_64 == 0
         switch (reg)
         {
-          case 1:
-          EAX = value;
-          break;
+          case 0:
+            EAX = value;
+            break;
 
-          case 2:
+          case 1:
             ECX = value;
             break;
 
-          case 3:
+          case 2:
             EBX = value;
+            break;
+
+          case 3:
+            EDX = value;
             break;
 
           case 4:
@@ -632,19 +636,19 @@ static void debug_loop(void)
             break;
 
           case 4:
-            RSI = value;
+            RSP = value;
             break;
 
           case 5:
-            RDI = value;
+            RBP = value;
             break;
 
           case 6:
-            ESP = value;
+            RSI = value;
             break;
 
           case 7:
-            RBP = value;
+            RDI = value;
             break;
 
           case 8:
@@ -694,7 +698,7 @@ static void debug_loop(void)
       }
 
       case 'g':
-#if !BX_SUPPORT_X86_64
+#if BX_SUPPORT_X86_64 == 0
         registers[0] = EAX;
         registers[1] = ECX;
         registers[2] = EDX;
