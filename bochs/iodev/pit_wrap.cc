@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////
-// $Id: pit_wrap.cc,v 1.69 2008-02-15 22:05:43 sshwarts Exp $
+// $Id: pit_wrap.cc,v 1.70 2008-11-09 22:04:14 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -51,11 +51,6 @@
 bx_pit_c bx_pit;
 #if BX_USE_PIT_SMF
 #define this (&bx_pit)
-#endif
-
-//Workaround for environments where OUT is defined.
-#ifdef OUT
-#  undef OUT
 #endif
 
 

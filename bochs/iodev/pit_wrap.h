@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pit_wrap.h,v 1.28 2008-02-15 22:05:43 sshwarts Exp $
+// $Id: pit_wrap.h,v 1.29 2008-11-09 22:04:14 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -36,10 +36,6 @@
 #else
 #  define BX_PIT_SMF
 #  define BX_PIT_THIS this->
-#endif
-
-#ifdef OUT
-#  undef OUT
 #endif
 
 class bx_pit_c : public logfunctions {
