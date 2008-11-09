@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.248 2008-10-10 21:09:25 sshwarts Exp $
+// $Id: cpu.cc,v 1.249 2008-11-09 22:33:44 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -700,12 +700,10 @@ void BX_CPU_C::prefetch(void)
       BX_ERROR(("prefetch: EIP [%08x] > CS.limit [%08x]", EIP, limit));
       exception(BX_GP_EXCEPTION, 0, 0);
     }
-    if (limit + BX_CPU_THIS_PTR eipPageBias < 4096) {
-      BX_CPU_THIS_PTR eipPageWindowSize = limit + BX_CPU_THIS_PTR eipPageBias + 1;
-    }
-    else {
-      BX_CPU_THIS_PTR eipPageWindowSize = 4096;
-    }
+
+    BX_CPU_THIS_PTR eipPageWindowSize = limit + BX_CPU_THIS_PTR eipPageBias + 1;
+    if (BX_CPU_THIS_PTR eipPageWindowSize > 4096)
+        BX_CPU_THIS_PTR eipPageWindowSize = 4096;
   }
 
   bx_address lpf = LPFOf(laddr);
