@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.249 2008-11-09 22:33:44 sshwarts Exp $
+// $Id: cpu.cc,v 1.250 2008-11-11 17:44:19 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -693,7 +693,7 @@ void BX_CPU_C::prefetch(void)
     pageOffset = PAGE_OFFSET(laddr);
 
     // Calculate RIP at the beginning of the page.
-    BX_CPU_THIS_PTR eipPageBias = pageOffset - EIP;
+    BX_CPU_THIS_PTR eipPageBias = (bx_address) pageOffset - EIP;
 
     Bit32u limit = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled;
     if (EIP > limit) {
@@ -701,9 +701,10 @@ void BX_CPU_C::prefetch(void)
       exception(BX_GP_EXCEPTION, 0, 0);
     }
 
-    BX_CPU_THIS_PTR eipPageWindowSize = limit + BX_CPU_THIS_PTR eipPageBias + 1;
-    if (BX_CPU_THIS_PTR eipPageWindowSize > 4096)
-        BX_CPU_THIS_PTR eipPageWindowSize = 4096;
+    BX_CPU_THIS_PTR eipPageWindowSize = 4096;
+    if (limit + BX_CPU_THIS_PTR eipPageBias < 4096) {
+      BX_CPU_THIS_PTR eipPageWindowSize = limit + BX_CPU_THIS_PTR eipPageBias + 1;
+    }
   }
 
   bx_address lpf = LPFOf(laddr);
