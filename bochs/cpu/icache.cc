@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: icache.cc,v 1.19 2008-10-08 20:40:26 sshwarts Exp $
+// $Id: icache.cc,v 1.20 2008-11-13 22:58:54 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007 Stanislav Shwartsman
@@ -62,6 +62,7 @@ void flushICaches(void)
   for (unsigned i=0; i<BX_SMP_PROCESSORS; i++) {
     BX_CPU(i)->iCache.flushICacheEntries();
     BX_CPU(i)->invalidate_prefetch_q();
+    BX_CPU(i)->async_event |= BX_ASYNC_EVENT_STOP_TRACE;
   }
 
   pageWriteStampTable.resetWriteStamps();
