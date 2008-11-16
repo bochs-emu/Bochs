@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wx.cc,v 1.95 2008-09-26 11:05:07 sshwarts Exp $
+// $Id: wx.cc,v 1.96 2008-11-16 21:01:09 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxWidgets VGA display for Bochs.  wx.cc implements a custom
@@ -63,7 +63,7 @@ public:
   bx_wx_gui_c (void) {}
   DECLARE_GUI_VIRTUAL_METHODS()
   DECLARE_GUI_NEW_VIRTUAL_METHODS()
-  void statusbar_setitem(int element, bx_bool active);
+  void statusbar_setitem(int element, bx_bool active, bx_bool w=0);
 #if BX_SHOW_IPS
   void show_ips(Bit32u ips_count);
 #endif
@@ -1038,7 +1038,7 @@ void bx_wx_gui_c::handle_events(void)
   num_events = 0;
 }
 
-void bx_wx_gui_c::statusbar_setitem(int element, bx_bool active)
+void bx_wx_gui_c::statusbar_setitem(int element, bx_bool active, bx_bool w)
 {
 #if defined(__WXMSW__)
   char status_text[10];
