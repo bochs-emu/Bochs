@@ -31,6 +31,8 @@ Detailed change log :
   - Hard drive / cdrom
     - PACKET-DMA feature now supported by all ATAPI commands
     - ATAPI command 0x1A added (based on the Qemu implementation)
+  - I/O APIC
+    - implemented I/O APIC device hardware reset
   - sb16
     - Added limited ALSA sound support on Linux (PCM/MIDI output)
     - FM synthesizer now usable with MIDI output (simple piano only)
