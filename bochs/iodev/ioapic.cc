@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ioapic.cc,v 1.37 2008-04-29 22:14:23 sshwarts Exp $
+// $Id: ioapic.cc,v 1.38 2008-11-17 20:06:16 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -77,8 +77,6 @@ bx_ioapic_c::bx_ioapic_c()
   settype(IOAPICLOG);
 }
 
-bx_ioapic_c::~bx_ioapic_c() {}
-
 #define BX_IOAPIC_DEFAULT_ID (BX_SMP_PROCESSORS)
 
 void bx_ioapic_c::init(void)
@@ -87,9 +85,13 @@ void bx_ioapic_c::init(void)
   BX_INFO(("initializing I/O APIC"));
   base_addr = BX_IOAPIC_BASE_ADDR;
   set_id(BX_IOAPIC_DEFAULT_ID);
-  ioregsel = 0;
   DEV_register_memory_handlers(&bx_ioapic,
       ioapic_read, ioapic_write, base_addr, base_addr + 0xfff);
+  reset(BX_RESET_HARDWARE);
+}
+
+void bx_ioapic_c::reset(unsigned type)
+{
   // all interrupts masked
   for (int i=0; i<BX_IOAPIC_NUM_PINS; i++) {
     ioredtbl[i].set_lo_part(0x00010000);
@@ -97,6 +99,7 @@ void bx_ioapic_c::init(void)
   }
   intin = 0;
   irr = 0;
+  ioregsel = 0;
 }
 
 void bx_ioapic_c::read_aligned(bx_phy_address address, Bit32u *data)
