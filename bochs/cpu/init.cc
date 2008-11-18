@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.180 2008-11-18 20:55:59 sshwarts Exp $
+// $Id: init.cc,v 1.181 2008-11-18 20:58:09 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -991,7 +991,7 @@ void BX_CPU_C::reset(unsigned source)
   // initialize CPUID values - make sure apicbase already initialized
   set_cpuid_defaults();
 
-  BX_INSTR_RESET(BX_CPU_ID);
+  BX_INSTR_RESET(BX_CPU_ID, source);
 }
 
 void BX_CPU_C::sanity_checks(void)
