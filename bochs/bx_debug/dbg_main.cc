@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.162 2008-10-08 20:15:37 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.163 2008-11-18 21:03:04 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1707,10 +1707,10 @@ void bx_dbg_stepN_command(Bit32u count)
       if (found || (reason != STOP_NO_REASON && reason != STOP_CPU_HALTED))
         stop = 1;
     }
-#if BX_SUPPORT_SMP == 0
-    // ticks are handled inside the cpu loop
-#else
-    BX_TICK1();
+
+#if BX_SUPPORT_SMP
+    // when (BX_SMP_PROCESSORS == 1) ticks are handled inside the cpu loop
+    if (BX_SMP_PROCESSORS > 1) BX_TICK1();
 #endif
   }
 
