@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: instrument.h,v 1.28 2008-10-01 11:36:04 akrisak Exp $
+// $Id: instrument.h,v 1.29 2008-11-18 20:55:59 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -99,7 +99,7 @@ public:
   void toggle_active() { active = !active; }
   bx_bool is_active() const { return active; }
 
-  void bx_instr_reset();
+  void bx_instr_reset(unsigned type);
   void bx_instr_new_instruction();
 
   void bx_instr_cnear_branch_taken(bx_address new_eip);
@@ -128,9 +128,9 @@ extern bxInstrumentation *icpu;
 #  define BX_INSTR_EXIT_ENV() bx_instr_exit_env()
 
 /* simulation init, shutdown, reset */
-#  define BX_INSTR_INIT(cpu_id)	           bx_instr_init(cpu_id);
+#  define BX_INSTR_INITIALIZE(cpu_id)	   bx_instr_initialize(cpu_id);
 #  define BX_INSTR_EXIT(cpu_id)
-#  define BX_INSTR_RESET(cpu_id)           icpu[cpu_id].bx_instr_reset()
+#  define BX_INSTR_RESET(cpu_id, type)     icpu[cpu_id].bx_instr_reset(type)
 #  define BX_INSTR_HLT(cpu_id)
 #  define BX_INSTR_MWAIT(cpu_id, addr, len, flags)
 
@@ -194,9 +194,9 @@ extern bxInstrumentation *icpu;
 #  define BX_INSTR_EXIT_ENV()
 
 /* simulation init, shutdown, reset */
-#  define BX_INSTR_INIT(cpu_id)
+#  define BX_INSTR_INITIALIZE(cpu_id)
 #  define BX_INSTR_EXIT(cpu_id)
-#  define BX_INSTR_RESET(cpu_id)
+#  define BX_INSTR_RESET(cpu_id, type)
 #  define BX_INSTR_HLT(cpu_id)
 #  define BX_INSTR_MWAIT(cpu_id, addr, len, flags)
 #  define BX_INSTR_NEW_INSTRUCTION(cpu_id)

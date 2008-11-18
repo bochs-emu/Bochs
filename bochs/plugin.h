@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: plugin.h,v 1.62 2008-02-15 22:05:38 sshwarts Exp $
+// $Id: plugin.h,v 1.63 2008-11-18 20:55:59 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This file provides macros and types needed for plugins.  It is based on
@@ -22,7 +22,7 @@ extern "C" {
 #endif
 
 #define BX_PLUGIN_UNMAPPED  "unmapped"
-#define BX_PLUGIN_BIOSDEV   " biosdev"
+#define BX_PLUGIN_BIOSDEV   "biosdev"
 #define BX_PLUGIN_CMOS      "cmos"
 #define BX_PLUGIN_VGA       "vga"
 #define BX_PLUGIN_FLOPPY    "floppy"

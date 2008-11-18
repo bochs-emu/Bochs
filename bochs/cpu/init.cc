@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.179 2008-09-08 15:45:56 sshwarts Exp $
+// $Id: init.cc,v 1.180 2008-11-18 20:55:59 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -858,7 +858,9 @@ void BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR alignment_check_mask = 0;
 #endif
 
-  BX_CPU_THIS_PTR smbase = 0x30000;
+  if (source == BX_RESET_HARDWARE) {
+    BX_CPU_THIS_PTR smbase = 0x30000; // do not change SMBASE on INIT
+  }
 
   BX_CPU_THIS_PTR cr0.setRegister(0x60000010);
   // handle reserved bits
@@ -900,7 +902,9 @@ void BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR msr.kernelgsbase = 0;
   BX_CPU_THIS_PTR msr.tsc_aux = 0;
 #endif
-  BX_CPU_THIS_PTR set_TSC(0);
+  if (source == BX_RESET_HARDWARE) {
+    BX_CPU_THIS_PTR set_TSC(0); // do not change TSC on INIT
+  }
 #endif
 
 #if BX_SUPPORT_SEP
@@ -909,19 +913,22 @@ void BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR msr.sysenter_eip_msr = 0;
 #endif
 
+  // Do not change MTRR on INIT
 #if BX_SUPPORT_MTRR
-  for (n=0; n<16; n++)
-    BX_CPU_THIS_PTR msr.mtrrphys[n] = 0;
+  if (source == BX_RESET_HARDWARE) {
+    for (n=0; n<16; n++)
+      BX_CPU_THIS_PTR msr.mtrrphys[n] = 0;
 
-  BX_CPU_THIS_PTR msr.mtrrfix64k_00000 = 0; // all fix range MTRRs undefined according to manual
-  BX_CPU_THIS_PTR msr.mtrrfix16k_80000 = 0;
-  BX_CPU_THIS_PTR msr.mtrrfix16k_a0000 = 0;
+    BX_CPU_THIS_PTR msr.mtrrfix64k_00000 = 0; // all fix range MTRRs undefined according to manual
+    BX_CPU_THIS_PTR msr.mtrrfix16k_80000 = 0;
+    BX_CPU_THIS_PTR msr.mtrrfix16k_a0000 = 0;
 
-  for (n=0; n<8; n++)
-    BX_CPU_THIS_PTR msr.mtrrfix4k[n] = 0;
+    for (n=0; n<8; n++)
+      BX_CPU_THIS_PTR msr.mtrrfix4k[n] = 0;
 
-  BX_CPU_THIS_PTR msr.pat = BX_CONST64(0x0007040600070406);
-  BX_CPU_THIS_PTR msr.mtrr_deftype = 0;
+    BX_CPU_THIS_PTR msr.pat = BX_CONST64(0x0007040600070406);
+    BX_CPU_THIS_PTR msr.mtrr_deftype = 0;
+  }
 #endif
 
   BX_CPU_THIS_PTR EXT = 0;
@@ -946,18 +953,22 @@ void BX_CPU_C::reset(unsigned source)
 
   // Reset the Floating Point Unit
 #if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR the_i387.reset(); // unchanged on #INIT
+  if (source == BX_RESET_HARDWARE) {
+    BX_CPU_THIS_PTR the_i387.reset();
+  }
 #endif
 
   // Reset XMM state
 #if BX_SUPPORT_SSE >= 1  // unchanged on #INIT
-  for(n=0; n<BX_XMM_REGISTERS; n++)
-  {
-    BX_CPU_THIS_PTR xmm[n].xmm64u(0) = 0;
-    BX_CPU_THIS_PTR xmm[n].xmm64u(1) = 0;
-  }
+  if (source == BX_RESET_HARDWARE) {
+    for(n=0; n<BX_XMM_REGISTERS; n++)
+    {
+      BX_CPU_THIS_PTR xmm[n].xmm64u(0) = 0;
+      BX_CPU_THIS_PTR xmm[n].xmm64u(1) = 0;
+    }
 
-  BX_CPU_THIS_PTR mxcsr.mxcsr = MXCSR_RESET;
+    BX_CPU_THIS_PTR mxcsr.mxcsr = MXCSR_RESET;
+  }
 #endif
 
 #if BX_SUPPORT_SMP

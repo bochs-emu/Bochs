@@ -17,6 +17,7 @@ directory to it, then customize it. Use:
 
 -----------------------------------------------------------------------------
 BOCHS instrumentation callbacks
+
         
         void bx_instr_init_env();
 
@@ -27,15 +28,18 @@ when  bx_instr_init() is called it can access configuration parameters defined
 by bx_instr_init_env(),  so  instrumentalization  module  can  use  additional
 options in .bochsrc.
 
+
         void bx_instr_exit_env();
 
 The callback is called each time Bochs exits.
 
-	void bx_instr_init(unsigned cpu);
+
+	void bx_instr_initialize(unsigned cpu);
 
 The  callback  is  called each time, when Bochs initializes the CPU object. It
 can  be  used for initialization of user's data, dynamic memory allocation and
 etc.
+
 
 	void bx_instr_exit(unsigned cpu);
 
@@ -43,7 +47,7 @@ The  callback is called each time, when Bochs destructs the CPU object. It can
 be used for destruction of user's data, allocated by bx_instr_init callback.
 
 
-	void bx_instr_reset(unsigned cpu);
+	void bx_instr_reset(unsigned cpu, unsigned type);
 
 The  callback  is called each time, when Bochs resets the CPU object. It would
 be  executed  once  at the start of simulation and each time that user presses

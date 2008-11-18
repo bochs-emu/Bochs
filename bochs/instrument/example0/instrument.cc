@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: instrument.cc,v 1.25 2008-10-01 11:36:04 akrisak Exp $
+// $Id: instrument.cc,v 1.26 2008-11-18 20:55:59 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -66,7 +66,7 @@ static logfunctions *instrument_log = new logfunctions ();
 void bx_instr_init_env(void) {}
 void bx_instr_exit_env(void) {}
 
-void bx_instr_init(unsigned cpu)
+void bx_instr_initialize(unsigned cpu)
 {
   assert(cpu < BX_SMP_PROCESSORS);
 
@@ -76,7 +76,7 @@ void bx_instr_init(unsigned cpu)
   fprintf(stderr, "Initialize cpu %d\n", cpu);
 }
 
-void bx_instr_reset(unsigned cpu)
+void bx_instr_reset(unsigned cpu, unsigned type)
 {
   instruction[cpu].valid = 0;
   instruction[cpu].num_data_accesses = 0;

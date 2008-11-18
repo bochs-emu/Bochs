@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: instrument.cc,v 1.28 2008-10-01 11:36:04 akrisak Exp $
+// $Id: instrument.cc,v 1.29 2008-11-18 20:55:59 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -32,9 +32,9 @@
 void bx_instr_init_env(void) {}
 void bx_instr_exit_env(void) {}
 
-void bx_instr_init(unsigned cpu) {}
+void bx_instr_initialize(unsigned cpu) {}
 void bx_instr_exit(unsigned cpu) {}
-void bx_instr_reset(unsigned cpu) {}
+void bx_instr_reset(unsigned cpu, unsigned type) {}
 void bx_instr_hlt(unsigned cpu) {}
 void bx_instr_mwait(unsigned cpu, bx_phy_address addr, unsigned len, Bit32u flags) {}
 void bx_instr_new_instruction(unsigned cpu) {}
