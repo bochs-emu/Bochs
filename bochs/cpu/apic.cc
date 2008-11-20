@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.cc,v 1.110 2008-06-17 21:21:17 sshwarts Exp $
+// $Id: apic.cc,v 1.111 2008-11-20 18:44:15 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (c) 2002 Zwane Mwaikambo, Stanislav Shwartsman
@@ -288,7 +288,6 @@ void bx_local_apic_c::init()
   dest_format = 0xf;
   icr_hi = 0;
   icr_lo = 0;
-  log_dest = 0;
   task_priority = 0;
 
   for(i=0; i<BX_LAPIC_MAX_INTS; i++) {
@@ -702,16 +701,16 @@ bx_bool bx_local_apic_c::deliver(Bit8u vector, Bit8u delivery_mode, Bit8u trig_m
     trigger_irq(vector, trig_mode);
     break;
   case APIC_DM_SMI:
-    BX_PANIC(("Delivery of SMI still not implemented !"));
+    BX_INFO(("Deliver SMI"));
     cpu->deliver_SMI();
     return 1;
   case APIC_DM_NMI:
-    BX_PANIC(("Delivery of NMI still not implemented !"));
+    BX_INFO(("Deliver NMI"));
     cpu->deliver_NMI();
     return 1;
   case APIC_DM_INIT:
-    BX_DEBUG(("Deliver INIT IPI"));
-    init();
+    BX_INFO(("Deliver INIT IPI"));
+    cpu->deliver_INIT();
     break;
   case APIC_DM_SIPI:
     BX_DEBUG(("Deliver Start Up IPI"));
@@ -806,12 +805,26 @@ void bx_local_apic_c::print_status(void)
 
 bx_bool bx_local_apic_c::match_logical_addr(Bit8u address)
 {
-  if(dest_format != 0xf) {
-    BX_PANIC(("bx_local_apic_c::match_logical_addr: cluster model addressing not implemented"));
+  bx_bool match = 0;
+
+  if (dest_format == 0xf) {
+    // flat model
+    match = ((address & log_dest) != 0);
+    BX_DEBUG(("%s: comparing MDA %02x to my LDR %02x -> %s", cpu->name,
+      address, log_dest, match? "Match" : "Not a match"));
   }
-  bx_bool match = ((address & log_dest) != 0);
-  BX_DEBUG(("%s: comparing MDA %02x to my LDR %02x -> %s", cpu->name,
-    address, log_dest, match? "Match" : "Not a match"));
+  else if (dest_format == 0) {
+    // cluster model
+    if (address == 0xff) // broadcast all
+      return 1;
+
+    if ((address & 0xf0) == (log_dest & 0xf0))
+      match = ((address & log_dest & 0x0f) != 0);
+  }
+  else {
+    BX_PANIC(("bx_local_apic_c::match_logical_addr: unsupported dest format 0x%x", dest_format));
+  }
+
   return match;
 }
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.250 2008-11-11 17:44:19 sshwarts Exp $
+// $Id: cpu.cc,v 1.251 2008-11-20 18:44:15 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -819,6 +819,11 @@ void BX_CPU_C::boundaryFetch(const Bit8u *fetchPtr, unsigned remainingInPage, bx
 
   BX_INSTR_OPCODE(BX_CPU_ID, fetchBuffer, i->ilen(),
       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b, Is64BitMode());
+}
+
+void BX_CPU_C::deliver_INIT(void)
+{
+  BX_CPU_THIS_PTR reset(BX_RESET_SOFTWARE);
 }
 
 void BX_CPU_C::deliver_NMI(void)

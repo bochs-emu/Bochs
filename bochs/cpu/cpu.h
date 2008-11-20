@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.535 2008-10-08 20:40:26 sshwarts Exp $
+// $Id: cpu.h,v 1.536 2008-11-20 18:44:15 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -3163,6 +3163,7 @@ public: // for now...
   BX_SMF void    sanity_checks(void);
   BX_SMF void    assert_checks(void);
   BX_SMF void    enter_system_management_mode(void);
+  BX_SMF void    deliver_INIT(void);
   BX_SMF void    deliver_NMI(void);
   BX_SMF void    deliver_SMI(void);
   BX_SMF void    debug(bx_address offset);
