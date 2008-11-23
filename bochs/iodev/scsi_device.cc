@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: scsi_device.cc,v 1.6 2008-01-26 22:24:02 sshwarts Exp $
+// $Id: scsi_device.cc,v 1.7 2008-11-23 19:21:19 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2007  Volker Ruppert
@@ -264,14 +264,14 @@ int scsi_device_t::scsi_write_data(Bit32u tag)
         scsi_command_complete(r, SENSE_HARDWARE_ERROR);
       }
       ret = hdimage->write((bx_ptr_t)r->dma_buf, r->buf_len);
+      r->sector += n;
+      r->sector_count -= n;
       if (ret < r->buf_len) {
         BX_ERROR(("could not write() hard drive image file"));
         scsi_command_complete(r, SENSE_HARDWARE_ERROR);
       } else {
         scsi_write_complete((void*)r, 0);
       }
-      r->sector += n;
-      r->sector_count -= n;
     } else {
       scsi_write_complete(r, 0);
     }
