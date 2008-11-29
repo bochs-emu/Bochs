@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.536 2008-11-20 18:44:15 sshwarts Exp $
+// $Id: cpu.h,v 1.537 2008-11-29 19:28:09 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -646,8 +646,9 @@ struct cpuid_function_t {
 typedef bx_ptr_equiv_t bx_hostpageaddr_t;
 
 typedef struct {
-  bx_address lpf;     // linear page frame
-  bx_phy_address ppf; // physical page frame
+  bx_address lpf;       // linear page frame
+  bx_address lpf_mask;  // linear address mask of the page size
+  bx_phy_address ppf;   // physical page frame
   Bit32u accessBits;
   bx_hostpageaddr_t hostPageAddr;
 } bx_TLB_entry;
@@ -3035,7 +3036,7 @@ public: // for now...
   // linear address for translate_linear expected to be canonical !
   BX_SMF bx_phy_address translate_linear(bx_address laddr, unsigned curr_pl, unsigned rw, unsigned access_type);
 #if BX_SUPPORT_PAE
-  BX_SMF bx_phy_address translate_linear_PAE(bx_address laddr, Bit32u &combined_access, unsigned curr_pl, unsigned rw, unsigned access_type);
+  BX_SMF bx_phy_address translate_linear_PAE(bx_address laddr, bx_address &lpf_mask, Bit32u &combined_access, unsigned curr_pl, unsigned rw, unsigned access_type);
 #endif
 
   BX_SMF BX_CPP_INLINE bx_phy_address dtranslate_linear(bx_address laddr, unsigned curr_pl, unsigned rw)

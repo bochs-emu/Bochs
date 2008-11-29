@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.157 2008-09-24 10:39:35 sshwarts Exp $
+// $Id: paging.cc,v 1.158 2008-11-29 19:28:10 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -561,12 +561,21 @@ void BX_CPU_C::TLB_invlpg(bx_address laddr)
 
   BX_DEBUG(("TLB_invlpg(0x"FMT_ADDRX"): invalidate TLB entry", laddr));
 
+#if BX_SUPPORT_LARGE_PAGES
+  // make sure INVLPG handles correctly large pages
+  for (unsigned n=0; n<BX_TLB_SIZE; n++) {
+    bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[n];
+    if ((laddr & tlbEntry->lpf_mask) == (tlbEntry->lpf & tlbEntry->lpf_mask))
+      tlbEntry->lpf = BX_INVALID_TLB_ENTRY;
+  }
+#else
   unsigned TLB_index = BX_TLB_INDEX_OF(laddr, 0);
   bx_address lpf = LPFOf(laddr);
   bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[TLB_index];
   if (TLB_LPFOf(tlbEntry->lpf) == lpf) {
     tlbEntry->lpf = BX_INVALID_TLB_ENTRY;
   }
+#endif
 
 #if BX_SUPPORT_PAE
   BX_CPU_THIS_PTR PDPE_CACHE.valid = 0;
@@ -589,6 +598,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INVLPG(bxInstruction_c* i)
 
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
   bx_address laddr = get_laddr(i->seg(), eaddr);
+
+#if BX_SUPPORT_X86_64
+  if (! IsCanonical(laddr)) {
+    BX_ERROR(("INVLPG: non-canonical access !"));
+    exception(int_number(i->seg()), 0, 0);
+  }
+#endif
+
   BX_INSTR_TLB_CNTRL(BX_CPU_ID, BX_INSTR_INVLPG, laddr);
   TLB_invlpg(laddr);
 #else
@@ -647,7 +664,7 @@ void BX_CPU_C::page_fault(unsigned fault, bx_address laddr, unsigned user, unsig
 #if BX_SUPPORT_PAE
 
 // Translate a linear address to a physical address in PAE paging mode
-bx_phy_address BX_CPU_C::translate_linear_PAE(bx_address laddr, Bit32u &combined_access, unsigned curr_pl, unsigned rw, unsigned access_type)
+bx_phy_address BX_CPU_C::translate_linear_PAE(bx_address laddr, bx_address &lpf_mask, Bit32u &combined_access, unsigned curr_pl, unsigned rw, unsigned access_type)
 {
   bx_phy_address pdpe_addr, ppf;
   Bit64u pdpe, pde, pte;
@@ -832,6 +849,7 @@ bx_phy_address BX_CPU_C::translate_linear_PAE(bx_address laddr, Bit32u &combined
 
     // Make up the physical page frame address.
     ppf = (bx_phy_address)((pde & BX_CONST64(0x000fffffffe00000)) | (laddr & 0x001ff000));
+    lpf_mask = 0x1fffff;
 
     return ppf;
   }
@@ -940,6 +958,7 @@ bx_phy_address BX_CPU_C::translate_linear_PAE(bx_address laddr, Bit32u &combined
 bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned curr_pl, unsigned rw, unsigned access_type)
 {
   Bit32u   combined_access = 0;
+  bx_address lpf_mask = 0xfff; // 4K pages
   unsigned priv_index;
 
   // note - we assume physical memory < 4gig so for brevity & speed, we'll use
@@ -978,7 +997,7 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned curr_pl, un
 #if BX_SUPPORT_PAE
   if (BX_CPU_THIS_PTR cr4.get_PAE())
   {
-    ppf = translate_linear_PAE(laddr, combined_access, curr_pl, rw, access_type);
+    ppf = translate_linear_PAE(laddr, lpf_mask, combined_access, curr_pl, rw, access_type);
   }
   else
 #endif  // #if BX_SUPPORT_PAE
@@ -1000,8 +1019,7 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned curr_pl, un
 #if BX_SUPPORT_LARGE_PAGES
     if ((pde & 0x80) && BX_CPU_THIS_PTR cr4.get_PSE())
     {
-      // Note: when the PSE and PAE flags in CR4 are set, the
-      //       processor generates a PF if the reserved bits are not zero.
+      // 4M paging
       if (pde & PAGING_PSE_PDE4M_RESERVED_BITS) {
         BX_DEBUG(("PSE PDE4M: reserved bit is set: PDE=0x%08x", pde));
         page_fault(ERROR_RESERVED | ERROR_PROTECTION, laddr, pl, isWrite, access_type);
@@ -1040,6 +1058,7 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned curr_pl, un
 
       // make up the physical frame number
       ppf = (pde & 0xffc00000) | (laddr & 0x003ff000);
+      lpf_mask = 0x3fffff;
     }
     else // else normal 4K page...
 #endif
@@ -1104,6 +1123,7 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned curr_pl, un
 
   // direct memory access is NOT allowed by default
   tlbEntry->lpf = lpf | TLB_HostPtr;
+  tlbEntry->lpf_mask = ~((bx_address) lpf_mask);
   tlbEntry->ppf = ppf;
   tlbEntry->accessBits = 0;
 
