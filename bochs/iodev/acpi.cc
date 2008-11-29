@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: acpi.cc,v 1.14 2008-03-26 16:25:05 sshwarts Exp $
+// $Id: acpi.cc,v 1.15 2008-11-29 19:39:12 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2006  Volker Ruppert
@@ -152,33 +152,40 @@ void bx_acpi_ctrl_c::init(void)
 
 void bx_acpi_ctrl_c::reset(unsigned type)
 {
-  unsigned i;
+  BX_ACPI_THIS s.pci_conf[0x04] = 0x00; // command_io + command_mem
+  BX_ACPI_THIS s.pci_conf[0x05] = 0x00;
+  BX_ACPI_THIS s.pci_conf[0x06] = 0x80; // status_devsel_medium
+  BX_ACPI_THIS s.pci_conf[0x07] = 0x02;
+  BX_ACPI_THIS s.pci_conf[0x3c] = 0x00; // IRQ
 
-  static const struct reset_vals_t {
-    unsigned      addr;
-    unsigned char val;
-  } reset_vals[] = {
-      { 0x04, 0x00 }, { 0x05, 0x00 },  // command_io + command_mem
-      { 0x06, 0x80 }, { 0x07, 0x02 },  // status_devsel_medium
-      { 0x3c, 0x00 },                  // IRQ
-      // PM base 0x40 - 0x43
-      { 0x40, 0x01 }, { 0x41, 0x00 },
-      { 0x42, 0x00 }, { 0x43, 0x00 },
-      // device resources
-      { 0x5f, 0x90 }, { 0x63, 0x60 },
-      { 0x67, 0x98 },
-      // SM base 0x90 - 0x93
-      { 0x90, 0x01 }, { 0x91, 0x00 },
-      { 0x92, 0x00 }, { 0x93, 0x00 }
-  };
-  for (i = 0; i < sizeof(reset_vals) / sizeof(*reset_vals); ++i) {
-    BX_ACPI_THIS s.pci_conf[reset_vals[i].addr] = reset_vals[i].val;
-  }
+  // PM base 0x40 - 0x43
+  BX_ACPI_THIS s.pci_conf[0x40] = 0x01;
+  BX_ACPI_THIS s.pci_conf[0x41] = 0x00;
+  BX_ACPI_THIS s.pci_conf[0x42] = 0x00;
+  BX_ACPI_THIS s.pci_conf[0x43] = 0x00;
+
+  // clear DEVACTB register on PIIX4 ACPI reset
+  BX_ACPI_THIS s.pci_conf[0x58] = 0x00;
+  BX_ACPI_THIS s.pci_conf[0x59] = 0x00;
+
+  // device resources
+  BX_ACPI_THIS s.pci_conf[0x5a] = 0x00;
+  BX_ACPI_THIS s.pci_conf[0x5b] = 0x00;
+  BX_ACPI_THIS s.pci_conf[0x5f] = 0x90;
+  BX_ACPI_THIS s.pci_conf[0x63] = 0x60;
+  BX_ACPI_THIS s.pci_conf[0x67] = 0x98;
+
+  // SM base 0x90 - 0x93
+  BX_ACPI_THIS s.pci_conf[0x90] = 0x01;
+  BX_ACPI_THIS s.pci_conf[0x91] = 0x00;
+  BX_ACPI_THIS s.pci_conf[0x92] = 0x00;
+  BX_ACPI_THIS s.pci_conf[0x93] = 0x00;
 
   BX_ACPI_THIS s.pmsts = 0;
   BX_ACPI_THIS s.pmen = 0;
   BX_ACPI_THIS s.pmcntrl = 0;
   BX_ACPI_THIS s.tmr_overflow_time = 0xffffff;
+
   BX_ACPI_THIS s.smbus.stat = 0;
   BX_ACPI_THIS s.smbus.ctl = 0;
   BX_ACPI_THIS s.smbus.cmd = 0;
@@ -186,7 +193,8 @@ void bx_acpi_ctrl_c::reset(unsigned type)
   BX_ACPI_THIS s.smbus.data0 = 0;
   BX_ACPI_THIS s.smbus.data1 = 0;
   BX_ACPI_THIS s.smbus.index = 0;
-  for (i = 0; i < 32; i++) {
+
+  for (unsigned i = 0; i < 32; i++) {
     BX_ACPI_THIS s.smbus.data[i] = 0;
   }
 }
