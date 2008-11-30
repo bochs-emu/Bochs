@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ne2k.cc,v 1.98 2008-05-24 06:53:05 vruppert Exp $
+// $Id: ne2k.cc,v 1.99 2008-11-30 17:22:22 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -324,7 +324,7 @@ void bx_ne2k_c::write_cr(Bit32u value)
 
     // some more debug
     if (BX_NE2K_THIS s.tx_timer_active)
-      BX_PANIC(("CR write, tx timer still active"));
+      BX_ERROR(("CR write, tx timer still active"));
 
     // Schedule a timer to trigger a tx-complete interrupt
     // The number of microseconds is the bit-time / 10.
@@ -1412,7 +1412,7 @@ void bx_ne2k_c::init(void)
   Bit8u macaddr[6];
   bx_list_c *base;
 
-  BX_DEBUG(("Init $Id: ne2k.cc,v 1.98 2008-05-24 06:53:05 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: ne2k.cc,v 1.99 2008-11-30 17:22:22 vruppert Exp $"));
 
   // Read in values from config interface
   base = (bx_list_c*) SIM->get_param(BXPN_NE2K);

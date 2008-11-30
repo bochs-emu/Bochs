@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_tap.cc,v 1.30 2008-02-15 22:05:42 sshwarts Exp $
+// $Id: eth_tap.cc,v 1.31 2008-11-30 17:22:22 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -79,6 +79,9 @@
 // host, you should be able to get Bochs talking to anyone on the internet.
 //
 
+// Pavel Dufek (PD), CZ, 2008 - quick & dirty hack for Solaris 10 sparc tap 
+// ala Qemu.
+
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
 // platforms that require a special tag on exported symbols, BX_PLUGGABLE
 // is used to know when we are exporting symbols and when we are importing.
@@ -114,6 +117,11 @@
 #include <assert.h>
 #include <fcntl.h>
 #include <errno.h>
+#if defined(__sun__)
+// Sun/Solaris specific defines/includes
+#define TUNNEWPPA       (('T'<<16) | 0x0001)
+#include <stropts.h>
+#endif
 
 #define BX_ETH_TAP_LOGGING 0
 
@@ -170,7 +178,11 @@ bx_tap_pktmover_c::bx_tap_pktmover_c(const char *netif,
   if (strncmp (netif, "tap", 3) != 0) {
     BX_PANIC (("eth_tap: interface name (%s) must be tap0..tap15", netif));
   }
+#if defined(__sun__)
+  strcpy(filename,"/dev/tap"); /* PD - device on Solaris is always the same */
+#else
   sprintf (filename, "/dev/%s", netif);
+#endif
 
 #if defined(__linux__)
   // check if the TAP devices is running, and turn on ARP.  This is based
@@ -207,9 +219,31 @@ bx_tap_pktmover_c::bx_tap_pktmover_c(const char *netif,
 
   fd = open (filename, O_RDWR);
   if (fd < 0) {
-    BX_PANIC(("open failed on %s: %s", netif, strerror(errno)));
+    BX_PANIC(("open failed on TAP %s: %s", netif, strerror(errno)));
     return;
   }
+
+#if defined(__sun__) 
+  char *ptr;			/* PD - ppa allocation ala qemu */
+  char my_dev[10]; /* enough ... */
+  int ppa=-1;
+  struct strioctl strioc_ppa;
+
+  my_dev[10-1]=0;
+  strncpy(my_dev,netif,10); /* following ptr= does not work with const char* */
+  if( *my_dev ) { /* find the ppa number X from string tapX */
+    ptr = my_dev;
+    while( *ptr && !isdigit((int)*ptr) ) ptr++;
+    ppa = atoi(ptr);
+  }
+  /* Assign a new PPA and get its unit number. */
+  strioc_ppa.ic_cmd = TUNNEWPPA;
+  strioc_ppa.ic_timout = 0;
+  strioc_ppa.ic_len = sizeof(ppa);
+  strioc_ppa.ic_dp = (char *)&ppa;
+  if ((ppa = ioctl (fd, I_STR, &strioc_ppa)) < 0)
+    BX_PANIC(("Can't assign new interface tap%d !",ppa));
+#endif
 
   /* set O_ASYNC flag so that we can poll with read() */
   if ((flags = fcntl(fd, F_GETFL)) < 0) {
@@ -273,19 +307,34 @@ void bx_tap_pktmover_c::sendpkt(void *buf, unsigned io_len)
   Bit8u txbuf[BX_PACKET_BUFSIZE];
   txbuf[0] = 0;
   txbuf[1] = 0;
+  unsigned int size;
 #if defined(__FreeBSD__) || defined(__FreeBSD_kernel__) || \
-   defined(__APPLE__)  || defined(__OpenBSD__) // Should be fixed for other *BSD
+   defined(__APPLE__)  || defined(__OpenBSD__) || defined(__sun__) // Should be fixed for other *BSD
   memcpy(txbuf, buf, io_len);
-  unsigned int size = write(fd, txbuf, io_len);
+  /* PD - for Sun variant the retry cycle from qemu - mainly to be sure packet
+     is really out */
+#if defined(__sun__)
+  int ret;
+  for(;;) {
+    ret=write(fd, txbuf, io_len);
+    if (ret < 0 && (errno == EINTR || errno == EAGAIN)) {
+    } else {
+      size=ret;
+      break;
+    }
+  }
+#else /* not defined __sun__ */
+  size = write(fd, txbuf, io_len);
+#endif /* whole condition about defined __sun__ */
   if (size != io_len) {
-#else
+#else /* not bsd/apple/sun style */
   memcpy(txbuf+2, buf, io_len);
-  unsigned int size = write(fd, txbuf, io_len+2);
+  size = write(fd, txbuf, io_len+2);
   if (size != io_len+2) {
 #endif
     BX_PANIC(("write on tap device: %s", strerror(errno)));
   } else {
-    BX_DEBUG(("wrote %d bytes + 2 byte pad on tap", io_len));
+    BX_DEBUG(("wrote %d bytes + ev. 2 byte pad on tap", io_len));
   }
 #if BX_ETH_TAP_LOGGING
   BX_DEBUG(("sendpkt length %u", io_len));
@@ -320,10 +369,18 @@ void bx_tap_pktmover_c::rx_timer()
   Bit8u buf[BX_PACKET_BUFSIZE];
   Bit8u *rxbuf;
   if (fd<0) return;
+#if defined(__sun__)
+  struct strbuf sbuf;
+  int f = 0;
+  sbuf.maxlen = sizeof(buf);
+  sbuf.buf = (char *)buf;
+  nbytes = getmsg(fd, NULL, &sbuf, &f) >=0 ? sbuf.len : -1;
+#else
   nbytes = read (fd, buf, sizeof(buf));
+#endif
 
   // hack: discard first two bytes
-#if defined(__FreeBSD__) || defined(__FreeBSD_kernel__) || defined(__APPLE__)  // Should be fixed for other *BSD
+#if defined(__FreeBSD__) || defined(__FreeBSD_kernel__) || defined(__APPLE__) || defined(__sun__) // Should be fixed for other *BSD
   rxbuf = buf;
 #else
   rxbuf = buf+2;
