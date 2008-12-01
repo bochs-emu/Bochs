@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.158 2008-11-29 19:28:10 sshwarts Exp $
+// $Id: paging.cc,v 1.159 2008-12-01 19:35:25 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -388,11 +388,6 @@ static unsigned tlbNonGlobalFlushes=0;
 #define InstrTLB_Stats()
 #define InstrTLB_Increment(v)
 #endif
-
-#define BX_PHY_ADDRESS_MASK ((((Bit64u)(1)) << BX_PHY_ADDRESS_WIDTH) - 1)
-
-#define BX_PHY_ADDRESS_RESERVED_BITS \
-      (~BX_PHY_ADDRESS_MASK & BX_CONST64(0xfffffffffffff))
 
 // ==============================================================
 
