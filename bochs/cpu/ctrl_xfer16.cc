@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer16.cc,v 1.63 2008-10-06 20:41:28 sshwarts Exp $
+// $Id: ctrl_xfer16.cc,v 1.64 2008-12-01 19:06:14 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -605,7 +605,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::IRET16(bxInstruction_c *i)
   BX_CPU_THIS_PTR show_flag |= Flag_iret;
 #endif
 
-  BX_CPU_THIS_PTR nmi_disable = 0;
+  BX_CPU_THIS_PTR disable_NMI = 0;
 
   BX_CPU_THIS_PTR speculative_rsp = 1;
   BX_CPU_THIS_PTR prev_rsp = RSP;

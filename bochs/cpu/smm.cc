@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: smm.cc,v 1.45 2008-09-08 20:47:33 sshwarts Exp $
+// $Id: smm.cc,v 1.46 2008-12-01 19:06:14 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2006 Stanislav Shwartsman
@@ -76,7 +76,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RSM(bxInstruction_c *i)
 
   BX_INFO(("RSM: Resuming from System Management Mode"));
 
-  BX_CPU_THIS_PTR nmi_disable = 0;
+  BX_CPU_THIS_PTR disable_NMI = 0;
 
   Bit32u saved_state[SMM_SAVE_STATE_MAP_SIZE], n;
   // reset reserved bits

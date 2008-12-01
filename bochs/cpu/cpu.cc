@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.252 2008-12-01 18:54:24 sshwarts Exp $
+// $Id: cpu.cc,v 1.253 2008-12-01 19:06:14 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -436,7 +436,7 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
     while (1)
     {
       if ((BX_CPU_INTR && (BX_CPU_THIS_PTR get_IF() || (BX_CPU_THIS_PTR debug_trap & BX_DEBUG_TRAP_MWAIT_IF))) ||
-           BX_CPU_THIS_PTR nmi_pending || BX_CPU_THIS_PTR smi_pending)
+           BX_CPU_THIS_PTR pending_NMI || BX_CPU_THIS_PTR pending_SMI)
       {
         // interrupt ends the HALT condition
 #if BX_SUPPORT_MONITOR_MWAIT
@@ -496,11 +496,11 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
   //   SMI
   //   INIT
   // (bochs doesn't support these)
-  if (BX_CPU_THIS_PTR smi_pending && ! BX_CPU_THIS_PTR smm_mode())
+  if (BX_CPU_THIS_PTR pending_SMI && ! BX_CPU_THIS_PTR smm_mode())
   {
     // clear SMI pending flag and disable NMI when SMM was accepted
-    BX_CPU_THIS_PTR smi_pending = 0;
-    BX_CPU_THIS_PTR nmi_disable = 1;
+    BX_CPU_THIS_PTR pending_SMI = 0;
+    BX_CPU_THIS_PTR disable_NMI = 1;
     enter_system_management_mode();
   }
 
@@ -528,9 +528,9 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
     // an opportunity to check interrupts on the next instruction
     // boundary.
   }
-  else if (BX_CPU_THIS_PTR nmi_pending) {
-    BX_CPU_THIS_PTR nmi_pending = 0;
-    BX_CPU_THIS_PTR nmi_disable = 1;
+  else if (BX_CPU_THIS_PTR pending_NMI) {
+    BX_CPU_THIS_PTR pending_NMI = 0;
+    BX_CPU_THIS_PTR disable_NMI = 1;
     BX_CPU_THIS_PTR errorno = 0;
     BX_CPU_THIS_PTR EXT = 1; /* external event */
     BX_INSTR_HWINTERRUPT(BX_CPU_ID, 2, BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, RIP);
@@ -823,19 +823,19 @@ void BX_CPU_C::boundaryFetch(const Bit8u *fetchPtr, unsigned remainingInPage, bx
 
 void BX_CPU_C::deliver_INIT(void)
 {
-  if (! BX_CPU_THIS_PTR init_disable)
+  if (! BX_CPU_THIS_PTR disable_INIT)
     BX_CPU_THIS_PTR reset(BX_RESET_SOFTWARE);
 }
 
 void BX_CPU_C::deliver_NMI(void)
 {
-  BX_CPU_THIS_PTR nmi_pending = 1;
+  BX_CPU_THIS_PTR pending_NMI = 1;
   BX_CPU_THIS_PTR async_event = 1;
 }
 
 void BX_CPU_C::deliver_SMI(void)
 {
-  BX_CPU_THIS_PTR smi_pending = 1;
+  BX_CPU_THIS_PTR pending_SMI = 1;
   BX_CPU_THIS_PTR async_event = 1;
 }
 

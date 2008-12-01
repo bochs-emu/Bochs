@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.cc,v 1.111 2008-11-20 18:44:15 sshwarts Exp $
+// $Id: apic.cc,v 1.112 2008-12-01 19:06:14 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (c) 2002 Zwane Mwaikambo, Stanislav Shwartsman
@@ -818,7 +818,7 @@ bx_bool bx_local_apic_c::match_logical_addr(Bit8u address)
     if (address == 0xff) // broadcast all
       return 1;
 
-    if ((address & 0xf0) == (log_dest & 0xf0))
+    if ((unsigned)(address & 0xf0) == (unsigned)(log_dest & 0xf0))
       match = ((address & log_dest & 0x0f) != 0);
   }
   else {

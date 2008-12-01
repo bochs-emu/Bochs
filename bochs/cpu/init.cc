@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.182 2008-12-01 18:54:24 sshwarts Exp $
+// $Id: init.cc,v 1.183 2008-12-01 19:06:14 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -507,11 +507,13 @@ void BX_CPU_C::register_state(void)
 
   BXRS_PARAM_BOOL(cpu, EXT, EXT);
   BXRS_PARAM_BOOL(cpu, INTR, INTR);
-  BXRS_PARAM_BOOL(cpu, smi_pending, smi_pending);
-  BXRS_PARAM_BOOL(cpu, nmi_pending, nmi_pending);
   BXRS_PARAM_BOOL(cpu, in_smm, in_smm);
-  BXRS_PARAM_BOOL(cpu, nmi_disable, nmi_disable);
-  BXRS_PARAM_BOOL(cpu, init_disable, init_disable);
+  BXRS_PARAM_BOOL(cpu, disable_SMI, disable_SMI);
+  BXRS_PARAM_BOOL(cpu, pending_SMI, pending_SMI);
+  BXRS_PARAM_BOOL(cpu, disable_NMI, disable_NMI);
+  BXRS_PARAM_BOOL(cpu, pending_NMI, pending_NMI);
+  BXRS_PARAM_BOOL(cpu, disable_INIT, disable_INIT);
+  BXRS_PARAM_BOOL(cpu, pending_INIT, pending_INIT);
   BXRS_PARAM_BOOL(cpu, trace, trace);
 }
 
@@ -851,11 +853,13 @@ void BX_CPU_C::reset(unsigned source)
 #  error "DR6: CPU > 6"
 #endif
 
-  BX_CPU_THIS_PTR smi_pending = 0;
-  BX_CPU_THIS_PTR nmi_pending = 0;
   BX_CPU_THIS_PTR in_smm = 0;
-  BX_CPU_THIS_PTR nmi_disable = 0;
-  BX_CPU_THIS_PTR init_disable = 0;
+  BX_CPU_THIS_PTR disable_SMI = 0;
+  BX_CPU_THIS_PTR pending_SMI = 0;
+  BX_CPU_THIS_PTR disable_NMI = 0;
+  BX_CPU_THIS_PTR pending_NMI = 0;
+  BX_CPU_THIS_PTR disable_INIT = 0;
+  BX_CPU_THIS_PTR pending_INIT = 0;
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
   BX_CPU_THIS_PTR alignment_check_mask = 0;
 #endif

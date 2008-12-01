@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.538 2008-12-01 18:54:24 sshwarts Exp $
+// $Id: cpu.h,v 1.539 2008-12-01 19:06:14 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -902,9 +902,16 @@ public: // for now...
   #define BX_ASYNC_EVENT_STOP_TRACE (0x80000000)
 #endif
 
+  bx_bool  in_smm;
+  unsigned cpu_mode;
+  bx_bool  user_pl;
   volatile bx_bool INTR;
-  volatile bx_bool smi_pending;
-  volatile bx_bool nmi_pending;
+  volatile bx_bool pending_SMI;
+  volatile bx_bool pending_NMI;
+  volatile bx_bool pending_INIT;
+  bx_bool  disable_SMI;
+  bx_bool  disable_NMI;
+  bx_bool  disable_INIT;
 
   // for exceptions
   jmp_buf jmp_buf_env;
@@ -921,11 +928,6 @@ public: // for now...
   const Bit8u *eipFetchPtr;
   bx_phy_address pAddrA20Page; // Guest physical address of current instruction
                                // page with A20() already applied.
-  unsigned cpu_mode;
-  bx_bool  user_pl;
-  bx_bool  in_smm;
-  bx_bool  nmi_disable;
-  bx_bool  init_disable;
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
   unsigned alignment_check_mask;
 #endif
