@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.537 2008-11-29 19:28:09 sshwarts Exp $
+// $Id: cpu.h,v 1.538 2008-12-01 18:54:24 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -925,6 +925,7 @@ public: // for now...
   bx_bool  user_pl;
   bx_bool  in_smm;
   bx_bool  nmi_disable;
+  bx_bool  init_disable;
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
   unsigned alignment_check_mask;
 #endif

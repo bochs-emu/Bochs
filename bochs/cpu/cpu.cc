@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.251 2008-11-20 18:44:15 sshwarts Exp $
+// $Id: cpu.cc,v 1.252 2008-12-01 18:54:24 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -823,7 +823,8 @@ void BX_CPU_C::boundaryFetch(const Bit8u *fetchPtr, unsigned remainingInPage, bx
 
 void BX_CPU_C::deliver_INIT(void)
 {
-  BX_CPU_THIS_PTR reset(BX_RESET_SOFTWARE);
+  if (! BX_CPU_THIS_PTR init_disable)
+    BX_CPU_THIS_PTR reset(BX_RESET_SOFTWARE);
 }
 
 void BX_CPU_C::deliver_NMI(void)

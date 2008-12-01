@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.181 2008-11-18 20:58:09 sshwarts Exp $
+// $Id: init.cc,v 1.182 2008-12-01 18:54:24 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -511,6 +511,7 @@ void BX_CPU_C::register_state(void)
   BXRS_PARAM_BOOL(cpu, nmi_pending, nmi_pending);
   BXRS_PARAM_BOOL(cpu, in_smm, in_smm);
   BXRS_PARAM_BOOL(cpu, nmi_disable, nmi_disable);
+  BXRS_PARAM_BOOL(cpu, init_disable, init_disable);
   BXRS_PARAM_BOOL(cpu, trace, trace);
 }
 
@@ -854,6 +855,7 @@ void BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR nmi_pending = 0;
   BX_CPU_THIS_PTR in_smm = 0;
   BX_CPU_THIS_PTR nmi_disable = 0;
+  BX_CPU_THIS_PTR init_disable = 0;
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
   BX_CPU_THIS_PTR alignment_check_mask = 0;
 #endif
