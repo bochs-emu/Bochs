@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci_ide.cc,v 1.34 2008-07-06 14:15:41 vruppert Exp $
+// $Id: pci_ide.cc,v 1.35 2008-12-02 21:38:51 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -253,7 +253,8 @@ void bx_pci_ide_c::timer()
       (BX_PIDE_THIS s.bmdma[channel].prd_current == 0)) {
     return;
   }
-  DEV_MEM_READ_PHYSICAL(BX_PIDE_THIS s.bmdma[channel].prd_current, 8, (Bit8u *)&prd);
+  DEV_MEM_READ_PHYSICAL(BX_PIDE_THIS s.bmdma[channel].prd_current, 4, (Bit8u *)&prd.addr);
+  DEV_MEM_READ_PHYSICAL(BX_PIDE_THIS s.bmdma[channel].prd_current+4, 4, (Bit8u *)&prd.size);
   size = prd.size & 0xfffe;
   if (size == 0) {
     size = 0x10000;
@@ -304,7 +305,8 @@ void bx_pci_ide_c::timer()
     DEV_hd_bmdma_complete(channel);
   } else {
     BX_PIDE_THIS s.bmdma[channel].prd_current += 8;
-    DEV_MEM_READ_PHYSICAL(BX_PIDE_THIS s.bmdma[channel].prd_current, 8, (Bit8u *)&prd);
+    DEV_MEM_READ_PHYSICAL(BX_PIDE_THIS s.bmdma[channel].prd_current, 4, (Bit8u *)&prd.addr);
+    DEV_MEM_READ_PHYSICAL(BX_PIDE_THIS s.bmdma[channel].prd_current+4, 4, (Bit8u *)&prd.size);
     size = prd.size & 0xfffe;
     if (size == 0) {
       size = 0x10000;
