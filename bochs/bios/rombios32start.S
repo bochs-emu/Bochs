@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios32start.S,v 1.6 2008-12-04 18:44:14 sshwarts Exp $
+// $Id: rombios32start.S,v 1.7 2008-12-04 18:46:55 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  32 bit Bochs BIOS init code
@@ -49,7 +49,7 @@ _start:
 smp_ap_boot_code_start:
   xor %ax, %ax
   mov %ax, %ds
-  lock incw CPU_COUNT_ADDR
+  lock incw smp_cpus
 1:
   hlt
   jmp 1b

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios32.c,v 1.37 2008-12-04 18:44:14 sshwarts Exp $
+// $Id: rombios32.c,v 1.38 2008-12-04 18:46:55 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  32 bit Bochs BIOS init code
@@ -57,7 +57,7 @@ typedef unsigned long long uint64_t;
 
 #define APIC_ENABLED 0x0100
 
-#define AP_BOOT_ADDR 0x10000
+#define AP_BOOT_ADDR 0x9f000
 
 #define MPTABLE_MAX_SIZE  0x00002000
 #define SMI_CMD_IO_ADDR   0xb2
@@ -392,7 +392,7 @@ void delay_ms(int n)
     }
 }
 
-int smp_cpus;
+uint16_t smp_cpus;
 uint32_t cpuid_signature;
 uint32_t cpuid_features;
 uint32_t cpuid_ext_features;
@@ -495,7 +495,7 @@ void smp_probe(void)
 {
     uint32_t val, sipi_vector;
 
-    smp_cpus = 1;
+    writew(&smp_cpus, 1);
     if (cpuid_features & CPUID_APIC) {
 
         /* enable local APIC */
@@ -503,7 +503,6 @@ void smp_probe(void)
         val |= APIC_ENABLED;
         writel(APIC_BASE + APIC_SVR, val);
 
-        writew((void *)CPU_COUNT_ADDR, 1);
         /* copy AP boot code */
         memcpy((void *)AP_BOOT_ADDR, &smp_ap_boot_code_start,
                &smp_ap_boot_code_end - &smp_ap_boot_code_start);
@@ -514,10 +513,8 @@ void smp_probe(void)
         writel(APIC_BASE + APIC_ICR_LOW, 0x000C4600 | sipi_vector);
 
         delay_ms(10);
-
-        smp_cpus = readw((void *)CPU_COUNT_ADDR);
     }
-    BX_INFO("Found %d cpu(s)\n", smp_cpus);
+    BX_INFO("Found %d cpu(s)\n", readw(&smp_cpus));
 }
 
 /****************************************************/

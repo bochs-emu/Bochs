@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.218 2008-12-04 18:44:14 sshwarts Exp $
+// $Id: rombios.c,v 1.219 2008-12-04 18:46:55 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -940,7 +940,7 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.218 $ $Date: 2008-12-04 18:44:14 $";
+static char bios_cvs_version_string[] = "$Revision: 1.219 $ $Date: 2008-12-04 18:46:55 $";
 
 #define BIOS_COPYRIGHT_STRING "(c) 2002 MandrakeSoft S.A. Written by Kevin Lawton & the Bochs team."
 
@@ -4548,7 +4548,7 @@ ASM_END
                 {
                     case 0:
                         set_e820_range(ES, regs.u.r16.di,
-                                       0x0000000L, 0x0009fc00L, 1);
+                                       0x0000000L, 0x0009f000L, 1);
                         regs.u.r32.ebx = 1;
                         regs.u.r32.eax = 0x534D4150;
                         regs.u.r32.ecx = 0x14;
@@ -4557,7 +4557,7 @@ ASM_END
                         break;
                     case 1:
                         set_e820_range(ES, regs.u.r16.di,
-                                       0x0009fc00L, 0x000a0000L, 2);
+                                       0x0009f000L, 0x000a0000L, 2);
                         regs.u.r32.ebx = 2;
                         regs.u.r32.eax = 0x534D4150;
                         regs.u.r32.ecx = 0x14;
@@ -10036,8 +10036,11 @@ rombios32_05:
   mov gs, ax
   cld
 
-  ;; init the stack pointer
-  mov esp, #0x00080000
+  ;; init the stack pointer to point below EBDA
+  mov ax, [0x040e]
+  shl eax, #4
+  mov esp, #-0x10
+  add esp, eax
 
   ;; pass pointer to s3_resume_flag and s3_resume_vector to rombios32
   push #0x04b0
