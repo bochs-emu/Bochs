@@ -133,6 +133,21 @@ DefinitionBlock (
     }
 
     Scope(\_SB.PCI0) {
+        Device (VGA) {
+                 Name (_ADR, 0x00020000)
+                 Method (_S1D, 0, NotSerialized)
+                 {
+                         Return (0x00)
+                 }
+                 Method (_S2D, 0, NotSerialized)
+                 {
+                         Return (0x00)
+                 }
+                 Method (_S3D, 0, NotSerialized)
+                 {
+                         Return (0x00)
+                 }
+        }
 
 	/* PIIX3 ISA bridge */
         Device (ISA) {
