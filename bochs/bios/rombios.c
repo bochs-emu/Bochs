@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.215 2008-11-13 19:15:20 sshwarts Exp $
+// $Id: rombios.c,v 1.216 2008-12-04 18:40:54 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -940,7 +940,7 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.215 $ $Date: 2008-11-13 19:15:20 $";
+static char bios_cvs_version_string[] = "$Revision: 1.216 $ $Date: 2008-12-04 18:40:54 $";
 
 #define BIOS_COPYRIGHT_STRING "(c) 2002 MandrakeSoft S.A. Written by Kevin Lawton & the Bochs team."
 
@@ -1917,6 +1917,11 @@ shutdown_status_panic(status)
   BX_PANIC("Unimplemented shutdown status: %02x\n",(Bit8u)status);
 }
 
+void s3_resume_panic()
+{
+  BX_PANIC("Returned from s3_resume.\n");
+}
+
 //--------------------------------------------------------------------------
 // print_bios_banner
 //   displays a the bios version
@@ -2196,6 +2201,33 @@ debugger_on()
 debugger_off()
 {
   outb(0xfedc, 0x00);
+}
+
+int
+s3_resume()
+{
+    Bit32u s3_wakeup_vector;
+    Bit8u s3_resume_flag;
+
+    s3_resume_flag = read_byte(0x40, 0xb0);
+    s3_wakeup_vector = read_dword(0x40, 0xb2);
+
+    BX_INFO("S3 resume called %x 0x%lx\n", s3_resume_flag, s3_wakeup_vector);
+    if (s3_resume_flag != 0xFE || !s3_wakeup_vector)
+	    return 0;
+
+    write_byte(0x40, 0xb0, 0);
+
+    /* setup wakeup vector */
+    write_word(0x40, 0xb6, (s3_wakeup_vector & 0xF)); /* IP */
+    write_word(0x40, 0xb8, (s3_wakeup_vector >> 4)); /* CS */
+
+    BX_INFO("S3 resume jump to %x:%x\n", (s3_wakeup_vector >> 4),
+		    (s3_wakeup_vector & 0xF));
+ASM_START
+    jmpf [0x04b6]
+ASM_END
+    return 1;
 }
 
 #if BX_USE_ATADRV
@@ -9081,6 +9113,15 @@ retf_post_0x467:
   mov ss, [0x469]
   retf
 
+s3_post:
+#if BX_ROMBIOS32
+  call rombios32_init
+#endif
+  call _s3_resume
+  mov bl, #0x00
+  and ax, ax
+  jz normal_post
+  call _s3_resume_panic
 
 ;--------------------
 eoi_both_pics:
@@ -10005,6 +10046,10 @@ rombios32_05:
   ;; init the stack pointer
   mov esp, #0x00080000
 
+  ;; pass pointer to s3_resume_flag and s3_resume_vector to rombios32
+  push #0x04b0
+  push #0x04b2
+
   ;; call rombios32 code
   mov eax, #0x00040000
   call eax
@@ -10374,6 +10419,12 @@ normal_post:
   xor  ax, ax
   mov  ds, ax
   mov  ss, ax
+
+  ;; Save shutdown status
+  mov 0x04b0, bl
+
+  cmp bl, #0xfe
+  jz s3_post
 
   ;; zero out BIOS data area (40:00..40:ff)
   mov  es, ax
