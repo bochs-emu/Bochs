@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios32.c,v 1.35 2008-12-04 18:40:54 sshwarts Exp $
+// $Id: rombios32.c,v 1.36 2008-12-04 18:42:32 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  32 bit Bochs BIOS init code
@@ -731,6 +731,12 @@ static void smm_init(PCIDevice *d)
     value = pci_config_readl(d, 0x58);
     if ((value & (1 << 25)) == 0) {
 
+        /* enable the SMM memory window */
+        pci_config_writeb(&i440_pcidev, 0x72, 0x02 | 0x48);
+
+        /* save original memory content */
+        memcpy((void *)0xa8000, (void *)0x38000, 0x8000);
+
         /* copy the SMM relocation code */
         memcpy((void *)0x38000, &smm_relocation_start,
                &smm_relocation_end - &smm_relocation_start);
@@ -747,8 +753,8 @@ static void smm_init(PCIDevice *d)
         /* wait until SMM code executed */
         while (inb(0xb3) != 0x00);
 
-        /* enable the SMM memory window */
-        pci_config_writeb(&i440_pcidev, 0x72, 0x02 | 0x48);
+        /* restore original memory content */
+        memcpy((void *)0x38000, (void *)0xa8000, 0x8000);
 
         /* copy the SMM code */
         memcpy((void *)0xa8000, &smm_code_start,

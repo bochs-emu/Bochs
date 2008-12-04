@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.216 2008-12-04 18:40:54 sshwarts Exp $
+// $Id: rombios.c,v 1.217 2008-12-04 18:42:32 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -940,7 +940,7 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.216 $ $Date: 2008-12-04 18:40:54 $";
+static char bios_cvs_version_string[] = "$Revision: 1.217 $ $Date: 2008-12-04 18:42:32 $";
 
 #define BIOS_COPYRIGHT_STRING "(c) 2002 MandrakeSoft S.A. Written by Kevin Lawton & the Bochs team."
 
