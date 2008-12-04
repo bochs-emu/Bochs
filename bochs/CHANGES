@@ -27,6 +27,9 @@ Detailed change log :
   - Added ability to choose Bochs log file name and Bochs debugger log file
     name from Bochs command line (using new -log and -dbglog options)
 
+- BIOS
+  - Added S3 (suspend to RAM) ACPI state to BIOS (patch by Gleb Natapov)
+
 - I/O Devices
   - Hard drive / cdrom
     - PACKET-DMA feature now supported by all ATAPI commands
@@ -45,6 +48,9 @@ Detailed change log :
   - Updated Bochs TESTFORM to version 0.4
 
 - SF patches applied
+ [2307269] acpi: handle S3 by Sebastian
+ [2354134] TAP networking on Solaris/Sparc repaired
+ [2144692] The scsi device can not complete its writing data command by naiyue
  [1827082] [PATCH] Configurable CPU vendor by Marcel Sondaar
  [2217229] Panic on EBDA overflow in rombios32 by Sebastian
  [2210194] Log pci class code by Sebastian
