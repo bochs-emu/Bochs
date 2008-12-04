@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios32start.S,v 1.5 2008-03-28 09:02:57 sshwarts Exp $
+// $Id: rombios32start.S,v 1.6 2008-12-04 18:44:14 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  32 bit Bochs BIOS init code
@@ -32,9 +32,16 @@ _start:
   /* clear bss section */
   xor %eax, %eax
   mov $__bss_start, %edi
-  mov $_end, %ecx
+  mov $__bss_end, %ecx
   sub %edi, %ecx
   rep stosb
+
+  /* copy data section */
+  mov $_end, %esi
+  mov $__data_start, %edi
+  mov $__data_end, %ecx
+  sub %edi, %ecx
+  rep movsb
 
   jmp rombios32_init
 

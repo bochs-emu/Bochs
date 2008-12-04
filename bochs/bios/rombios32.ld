@@ -3,14 +3,12 @@ OUTPUT_ARCH(i386)
 ENTRY(_start);
 SECTIONS
 {
-        . = 0x00040000;
+        . = 0x000e0000;
         .text     : { *(.text)    }
-        .rodata    : { *(.rodata) }
-        . = ALIGN(4096);
-        .data     : { *(.data)    }
-        __bss_start = . ;
-        .bss      : { *(.bss) *(COMMON) }
+        .rodata    : { *(.rodata*) }
         _end = . ;
+        .data 0x700 : AT (_end) { __data_start = .; *(.data); __data_end = .;}
+        .bss      : { __bss_start = .; *(.bss) *(COMMON); __bss_end = .;}
         /DISCARD/ : { *(.stab)
                      *(.stabstr)
                      *(.comment)

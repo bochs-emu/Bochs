@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.217 2008-12-04 18:42:32 sshwarts Exp $
+// $Id: rombios.c,v 1.218 2008-12-04 18:44:14 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -940,7 +940,7 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.217 $ $Date: 2008-12-04 18:42:32 $";
+static char bios_cvs_version_string[] = "$Revision: 1.218 $ $Date: 2008-12-04 18:44:14 $";
 
 #define BIOS_COPYRIGHT_STRING "(c) 2002 MandrakeSoft S.A. Written by Kevin Lawton & the Bochs team."
 
@@ -10036,13 +10036,6 @@ rombios32_05:
   mov gs, ax
   cld
 
-  ;; copy rombios32 code to ram (ram offset = 1MB)
-  mov esi, #0xfffe0000
-  mov edi, #0x00040000
-  mov ecx, #0x10000 / 4
-  rep
-    movsd
-
   ;; init the stack pointer
   mov esp, #0x00080000
 
@@ -10051,16 +10044,8 @@ rombios32_05:
   push #0x04b2
 
   ;; call rombios32 code
-  mov eax, #0x00040000
+  mov eax, #0x000e0000
   call eax
-
-  ;; reset the memory (some boot loaders such as syslinux suppose
-  ;; that the memory is set to zero)
-  mov edi, #0x00040000
-  mov ecx, #0x40000 / 4
-  xor eax, eax
-  rep
-    stosd
 
   ;; return to 16 bit protected mode first
   db 0xea
