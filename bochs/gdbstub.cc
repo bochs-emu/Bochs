@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gdbstub.cc,v 1.34 2008-11-09 22:56:54 sshwarts Exp $
+// $Id: gdbstub.cc,v 1.35 2008-12-05 22:34:42 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2006  The Bochs Project Team
@@ -420,10 +420,10 @@ static int access_linear(Bit64u laddress,
   valid = BX_CPU(0)->dbg_xlate_linear2phy(laddress, (bx_phy_address*)&phys);
   if (!valid) return(0);
 
-  if (rw == BX_READ) {
-    valid = BX_MEM(0)->dbg_fetch_mem(BX_CPU(0), phys, len, data);
-  } else {
+  if (rw & 1) {
     valid = BX_MEM(0)->dbg_set_mem(phys, len, data);
+  } else {
+    valid = BX_MEM(0)->dbg_fetch_mem(BX_CPU(0), phys, len, data);
   }
 
   return(valid);

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.163 2008-11-18 21:03:04 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.164 2008-12-05 22:34:42 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -531,7 +531,7 @@ void bx_dbg_halt(unsigned cpu)
 
 void bx_dbg_check_memory_watchpoints(unsigned cpu, bx_phy_address phy, unsigned len, unsigned rw)
 {
-  if (rw == BX_WRITE) {
+  if (rw & 1) {
     // Check for physical write watch points
     for (unsigned i = 0; i < num_write_watchpoints; i++) {
       if (write_watchpoint[i] >= phy && write_watchpoint[i] < (phy + len)) {
@@ -560,9 +560,11 @@ void bx_dbg_lin_memory_access(unsigned cpu, bx_address lin, bx_phy_address phy, 
   if (! BX_CPU(cpu)->trace_mem)
     return;
 
+  bx_bool write = rw & 1;
+
   dbg_printf("[CPU%d %s]: LIN 0x" FMT_ADDRX " PHY 0x" FMT_PHY_ADDRX " (len=%d, pl=%d)",
      cpu, 
-     (rw == BX_READ) ? "RD" : (rw == BX_WRITE) ? "WR" : "??",
+     (write) ? "WR" : "RD",
      lin, phy,
      len, pl);
 
@@ -598,9 +600,11 @@ void bx_dbg_phy_memory_access(unsigned cpu, bx_phy_address phy, unsigned len, un
   if (! BX_CPU(cpu)->trace_mem)
     return;
 
+  bx_bool write = rw & 1;
+
   dbg_printf("[CPU%d %s]: PHY 0x" FMT_PHY_ADDRX " (len=%d)",
      cpu, 
-     (rw == BX_READ) ? "RD" : (rw == BX_WRITE) ? "WR" : "??",
+     (write) ? "WR" : "RD",
      phy,
      len);
 

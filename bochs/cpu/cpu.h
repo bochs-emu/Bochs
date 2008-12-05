@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.539 2008-12-01 19:06:14 sshwarts Exp $
+// $Id: cpu.h,v 1.540 2008-12-05 22:34:42 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -3034,17 +3034,17 @@ public: // for now...
        unsigned rw, void *data);
   BX_SMF void access_write_linear(bx_address address, unsigned length, unsigned curr_pl,
        void *data);
-  BX_SMF void page_fault(unsigned fault, bx_address laddr, unsigned user, unsigned rw, unsigned access_type);
+  BX_SMF void page_fault(unsigned fault, bx_address laddr, unsigned user, unsigned rw);
 
   // linear address for translate_linear expected to be canonical !
-  BX_SMF bx_phy_address translate_linear(bx_address laddr, unsigned curr_pl, unsigned rw, unsigned access_type);
+  BX_SMF bx_phy_address translate_linear(bx_address laddr, unsigned curr_pl, unsigned rw);
 #if BX_SUPPORT_PAE
-  BX_SMF bx_phy_address translate_linear_PAE(bx_address laddr, bx_address &lpf_mask, Bit32u &combined_access, unsigned curr_pl, unsigned rw, unsigned access_type);
+  BX_SMF bx_phy_address translate_linear_PAE(bx_address laddr, bx_address &lpf_mask, Bit32u &combined_access, unsigned curr_pl, unsigned rw);
 #endif
 
   BX_SMF BX_CPP_INLINE bx_phy_address dtranslate_linear(bx_address laddr, unsigned curr_pl, unsigned rw)
   {
-    return translate_linear(laddr, curr_pl, rw, DATA_ACCESS);
+    return translate_linear(laddr, curr_pl, rw);
   }
 
 #if BX_SUPPORT_GLOBAL_PAGES
