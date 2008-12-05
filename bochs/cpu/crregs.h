@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: crregs.h,v 1.10 2008-04-16 16:44:04 sshwarts Exp $
+// $Id: crregs.h,v 1.11 2008-12-05 13:10:51 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007 Stanislav Shwartsman
@@ -147,5 +147,27 @@ struct xcr0_t {
 #endif
 
 #undef IMPLEMENT_CRREG_ACCESSORS
+
+typedef struct msr {
+  Bit32u index;            // MSR index
+  Bit64u val64;            // current MSR value
+  Bit64u reset_value;      // reset value
+  Bit64u write_mask;       // r/o bits mask
+  Bit64u hardwired_bits;   // hardwired bits mask
+
+  msr(unsigned idx, Bit64u reset_val = 0, Bit64u wmask = 0, Bit64u hmask = 0):
+     index(idx), val64(reset_val), reset_value(reset_val),
+     write_mask(wmask), hardwired_bits(hmask) {}
+
+  BX_CPP_INLINE void reset() { val64 = reset_value; }
+
+  BX_CPP_INLINE Bit64u getRegister() { return val64; }
+  BX_CPP_INLINE bx_bool setRegister(Bit64u new_val) {
+     new_val = (new_val & ~hardwired_bits) | (val64 & hardwired_bits);
+     if ((val64 ^ new_val) & write_mask) return 0;
+     val64 = new_val;
+     return 1;
+  }
+} MSR;
 
 #endif
