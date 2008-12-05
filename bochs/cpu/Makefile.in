@@ -95,6 +95,7 @@ OBJS = \
 	exception.o \
 	cpuid.o \
 	proc_ctrl.o \
+	msr.o \
 	smm.o \
 	lazy_flags.o \
 	flag_ctrl_pro.o \
@@ -639,6 +640,15 @@ paging.o: paging.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debu
   ../cpu/i387.h ../fpu/softfloat.h ../config.h ../fpu/tag_w.h \
   ../fpu/status_w.h ../fpu/control_w.h ../cpu/xmm.h stack.h
 proc_ctrl.o: proc_ctrl.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
+  ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
+  ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
+  ../extplugin.h ../gui/gui.h ../gui/textconfig.h ../config.h \
+  ../gui/keymap.h ../instrument/stubs/instrument.h cpu.h \
+  ../disasm/disasm.h ../config.h crregs.h descriptor.h instr.h \
+  lazy_flags.h icache.h apic.h ../cpu/i387.h ../fpu/softfloat.h \
+  ../config.h ../fpu/tag_w.h ../fpu/status_w.h ../fpu/control_w.h \
+  ../cpu/xmm.h stack.h
+msr.o: msr.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
   ../extplugin.h ../gui/gui.h ../gui/textconfig.h ../config.h \
