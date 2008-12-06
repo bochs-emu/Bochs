@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.540 2008-12-05 22:34:42 sshwarts Exp $
+// $Id: cpu.h,v 1.541 2008-12-06 18:00:59 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -3139,7 +3139,7 @@ public: // for now...
   BX_SMF Bit32u  get_descriptor_l(const bx_descriptor_t *) BX_CPP_AttrRegparmN(1);
   BX_SMF Bit32u  get_descriptor_h(const bx_descriptor_t *) BX_CPP_AttrRegparmN(1);
   BX_SMF Bit16u  get_segment_ar_data(const bx_descriptor_t *d) BX_CPP_AttrRegparmN(1);
-  BX_SMF bx_bool set_segment_ar_data(bx_segment_reg_t *seg, Bit16u raw_selector,
+  BX_SMF bx_bool set_segment_ar_data(bx_segment_reg_t *seg, bx_bool valid, Bit16u raw_selector,
                          bx_address base, Bit32u limit, Bit16u ar_data);
   BX_SMF void    check_cs(bx_descriptor_t *descriptor, Bit16u cs_raw, Bit8u check_rpl, Bit8u check_cpl);
   // the basic assumption of the code that load_cs and load_ss cannot fail !
