@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: segment_ctrl_pro.cc,v 1.102 2008-12-06 18:01:00 sshwarts Exp $
+// $Id: segment_ctrl_pro.cc,v 1.103 2008-12-06 18:52:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -475,7 +475,7 @@ BX_CPU_C::get_segment_ar_data(const bx_descriptor_t *d)
 }
 
 bx_bool BX_CPU_C::set_segment_ar_data(bx_segment_reg_t *seg, bx_bool valid,
-            Bit16u raw_selector, bx_address base, Bit32u limit, Bit16u ar_data)
+            Bit16u raw_selector, bx_address base, Bit32u limit_scaled, Bit16u ar_data)
 {
   parse_selector(raw_selector, &seg->selector);
 
@@ -497,12 +497,12 @@ bx_bool BX_CPU_C::set_segment_ar_data(bx_segment_reg_t *seg, bx_bool valid,
     d->u.segment.avl   = (ar_data >> 12) & 0x1;
 
     d->u.segment.base  = base;
-    d->u.segment.limit = limit;
+    d->u.segment.limit_scaled = limit_scaled;
 
     if (d->u.segment.g)
-      d->u.segment.limit_scaled = (d->u.segment.limit << 12) | 0xfff;
+      d->u.segment.limit = (d->u.segment.limit_scaled >> 12);
     else
-      d->u.segment.limit_scaled = (d->u.segment.limit);
+      d->u.segment.limit = (d->u.segment.limit_scaled);
   }
   else {
     switch(d->type) {
@@ -514,11 +514,11 @@ bx_bool BX_CPU_C::set_segment_ar_data(bx_segment_reg_t *seg, bx_bool valid,
         d->u.system.avl   = (ar_data >> 12) & 0x1;
         d->u.system.g     = (ar_data >> 15) & 0x1;
         d->u.system.base  = base;
-        d->u.system.limit = limit;
+        d->u.system.limit_scaled = limit_scaled;
         if (d->u.system.g)
-          d->u.system.limit_scaled = (d->u.system.limit << 12) | 0xfff;
+          d->u.system.limit = (d->u.system.limit_scaled >> 12);
         else
-          d->u.system.limit_scaled = (d->u.system.limit);
+          d->u.system.limit = (d->u.system.limit_scaled);
         break;
 
       default:
