@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: crregs.h,v 1.11 2008-12-05 13:10:51 sshwarts Exp $
+// $Id: crregs.h,v 1.12 2008-12-06 10:21:55 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007 Stanislav Shwartsman
@@ -62,15 +62,16 @@ struct bx_cr0_t {
 #if BX_CPU_LEVEL >= 4
   IMPLEMENT_CRREG_ACCESSORS(ET, 4);
   IMPLEMENT_CRREG_ACCESSORS(NE, 5);
-  IMPLEMENT_CRREG_ACCESSORS(AM, 18);
   IMPLEMENT_CRREG_ACCESSORS(WP, 16);
+  IMPLEMENT_CRREG_ACCESSORS(AM, 18);
   IMPLEMENT_CRREG_ACCESSORS(CD, 29);
   IMPLEMENT_CRREG_ACCESSORS(NW, 30);
 #endif
   IMPLEMENT_CRREG_ACCESSORS(PG, 31);
 
-  BX_CPP_INLINE Bit32u getRegister() { return val32; }
-  BX_CPP_INLINE void setRegister(Bit32u val) { val32 = val; }
+  BX_CPP_INLINE Bit32u get32() { return val32; }
+  // ET is hardwired bit in CR0
+  BX_CPP_INLINE void set32(Bit32u val) { val32 = val | 0x10; }
 };
 
 #if BX_CPU_LEVEL >= 4
@@ -94,8 +95,8 @@ struct bx_cr4_t {
   IMPLEMENT_CRREG_ACCESSORS(OSXSAVE, 18);
 #endif
 
-  BX_CPP_INLINE Bit32u getRegister() { return val32; }
-  BX_CPP_INLINE void setRegister(Bit32u val) { val32 = val; }
+  BX_CPP_INLINE Bit32u get32() { return val32; }
+  BX_CPP_INLINE void set32(Bit32u val) { val32 = val; }
 };
 #endif  // #if BX_CPU_LEVEL >= 4
 
@@ -116,8 +117,8 @@ struct bx_efer_t {
   IMPLEMENT_CRREG_ACCESSORS(NXE,   11);
   IMPLEMENT_CRREG_ACCESSORS(FFXSR, 14);
 
-  BX_CPP_INLINE Bit32u getRegister() { return val32; }
-  BX_CPP_INLINE void setRegister(Bit32u val) { val32 = val; }
+  BX_CPP_INLINE Bit32u get32() { return val32; }
+  BX_CPP_INLINE void set32(Bit32u val) { val32 = val; }
 };
 
 #define BX_EFER_LMA_MASK       (1<<10)
@@ -141,8 +142,8 @@ struct xcr0_t {
   IMPLEMENT_CRREG_ACCESSORS(SSE, BX_XCR0_SSE_BIT);
 #endif
 
-  BX_CPP_INLINE Bit32u getRegister() { return val32; }
-  BX_CPP_INLINE void setRegister(Bit32u val) { val32 = val; }
+  BX_CPP_INLINE Bit32u get32() { return val32; }
+  BX_CPP_INLINE void set32(Bit32u val) { val32 = val; }
 };
 #endif
 
@@ -161,8 +162,8 @@ typedef struct msr {
 
   BX_CPP_INLINE void reset() { val64 = reset_value; }
 
-  BX_CPP_INLINE Bit64u getRegister() { return val64; }
-  BX_CPP_INLINE bx_bool setRegister(Bit64u new_val) {
+  BX_CPP_INLINE Bit64u get64() { return val64; }
+  BX_CPP_INLINE bx_bool set64(Bit64u new_val) {
      new_val = (new_val & ~hardwired_bits) | (val64 & hardwired_bits);
      if ((val64 ^ new_val) & write_mask) return 0;
      val64 = new_val;

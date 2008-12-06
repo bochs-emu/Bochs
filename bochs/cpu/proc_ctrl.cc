@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.264 2008-12-05 12:48:36 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.265 2008-12-06 10:21:55 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -604,7 +604,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RdCd(bxInstruction_c *i)
 
   switch (i->nnn()) {
     case 0: // CR0 (MSW)
-      val_32 = BX_CPU_THIS_PTR cr0.getRegister();
+      val_32 = BX_CPU_THIS_PTR cr0.get32();
       break;
     case 2: /* CR2 */
       BX_DEBUG(("MOV_RdCd: reading CR2"));
@@ -617,7 +617,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RdCd(bxInstruction_c *i)
     case 4: // CR4
 #if BX_CPU_LEVEL > 3
       BX_DEBUG(("MOV_RdCd: read of CR4"));
-      val_32 = BX_CPU_THIS_PTR cr4.getRegister();
+      val_32 = BX_CPU_THIS_PTR cr4.get32();
 #endif
       break;
     default:
@@ -721,7 +721,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RqCq(bxInstruction_c *i)
 
   switch (i->nnn()) {
     case 0: // CR0 (MSW)
-      val_64 = BX_CPU_THIS_PTR cr0.getRegister();
+      val_64 = BX_CPU_THIS_PTR cr0.get32();
       break;
     case 2: /* CR2 */
       BX_DEBUG(("MOV_RqCq: read of CR2"));
@@ -733,7 +733,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RqCq(bxInstruction_c *i)
       break;
     case 4: // CR4
       BX_DEBUG(("MOV_RqCq: read of CR4"));
-      val_64 = BX_CPU_THIS_PTR cr4.getRegister();
+      val_64 = BX_CPU_THIS_PTR cr4.get32();
       break;
 #if BX_SUPPORT_APIC
     case 8: // CR8
@@ -782,23 +782,23 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LMSW_Ew(bxInstruction_c *i)
     msw |= 0x0001; // adjust PE bit to current value of 1
 
   msw &= 0xf; // LMSW only affects last 4 flags
-  Bit32u cr0 = (BX_CPU_THIS_PTR cr0.getRegister() & 0xfffffff0) | msw;
+  Bit32u cr0 = (BX_CPU_THIS_PTR cr0.get32() & 0xfffffff0) | msw;
   SetCR0(cr0);
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::SMSW_EwR(bxInstruction_c *i)
 {
   if (i->os32L()) {
-    BX_WRITE_32BIT_REGZ(i->rm(), BX_CPU_THIS_PTR cr0.getRegister());
+    BX_WRITE_32BIT_REGZ(i->rm(), BX_CPU_THIS_PTR cr0.get32());
   }
   else {
-    BX_WRITE_16BIT_REG(i->rm(), BX_CPU_THIS_PTR cr0.getRegister() & 0xffff);
+    BX_WRITE_16BIT_REG(i->rm(), BX_CPU_THIS_PTR cr0.get32() & 0xffff);
   }
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::SMSW_EwM(bxInstruction_c *i)
 {
-  Bit16u msw = BX_CPU_THIS_PTR cr0.getRegister() & 0xffff;
+  Bit16u msw = BX_CPU_THIS_PTR cr0.get32() & 0xffff;
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
   /* pointer, segment address pair */
   write_virtual_word(i->seg(), eaddr, msw);
@@ -1174,7 +1174,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SetCR0(Bit32u val_32)
 
   // from either MOV_CdRd() or debug functions
   // protection checks made already or forcing from debug
-  Bit32u oldCR0 = BX_CPU_THIS_PTR cr0.getRegister();
+  Bit32u oldCR0 = BX_CPU_THIS_PTR cr0.get32();
 
 #if BX_SUPPORT_X86_64
   bx_bool prev_pg = BX_CPU_THIS_PTR cr0.get_PG();
@@ -1222,7 +1222,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SetCR0(Bit32u val_32)
 #else
 #error "SetCR0: implement reserved bits behaviour for this CPU_LEVEL"
 #endif
-  BX_CPU_THIS_PTR cr0.setRegister(val_32);
+  BX_CPU_THIS_PTR cr0.set32(val_32);
 
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
   handleAlignmentCheck();
@@ -1238,7 +1238,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SetCR0(Bit32u val_32)
 #if BX_CPU_LEVEL >= 4
 bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::SetCR4(bx_address val)
 {
-  Bit32u oldCR4 = BX_CPU_THIS_PTR cr4.getRegister();
+  Bit32u oldCR4 = BX_CPU_THIS_PTR cr4.get32();
   bx_address allowMask = 0;
 
   // CR4 bits definitions:
@@ -1316,8 +1316,8 @@ bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::SetCR4(bx_address val)
     return 0;
   }
 
-  BX_CPU_THIS_PTR cr4.setRegister(val);
-  pagingCR4Changed(oldCR4, BX_CPU_THIS_PTR cr4.getRegister());
+  BX_CPU_THIS_PTR cr4.set32(val);
+  pagingCR4Changed(oldCR4, BX_CPU_THIS_PTR cr4.get32());
   return 1;
 }
 #endif

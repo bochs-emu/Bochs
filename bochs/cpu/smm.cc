@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: smm.cc,v 1.46 2008-12-01 19:06:14 sshwarts Exp $
+// $Id: smm.cc,v 1.47 2008-12-06 10:21:55 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2006 Stanislav Shwartsman
@@ -138,11 +138,11 @@ void BX_CPU_C::enter_system_management_mode(void)
   TLB_flush(); //  Flush Global entries also
 
 #if BX_CPU_LEVEL >= 4
-  BX_CPU_THIS_PTR cr4.setRegister(0);
+  BX_CPU_THIS_PTR cr4.set32(0);
 #endif
 
 #if BX_SUPPORT_X86_64
-  BX_CPU_THIS_PTR efer.setRegister(0);
+  BX_CPU_THIS_PTR efer.set32(0);
 #endif
 
   parse_selector(BX_CPU_THIS_PTR smbase >> 4,
@@ -252,14 +252,14 @@ void BX_CPU_C::smram_save_state(Bit32u *saved_state)
   // --- Debug and Control Registers --- //
   SMRAM_FIELD(saved_state, SMRAM_OFFSET_DR6) = BX_CPU_THIS_PTR dr6;
   SMRAM_FIELD(saved_state, SMRAM_OFFSET_DR7) = BX_CPU_THIS_PTR dr7;
-  SMRAM_FIELD(saved_state, SMRAM_OFFSET_CR0) = BX_CPU_THIS_PTR cr0.getRegister();
+  SMRAM_FIELD(saved_state, SMRAM_OFFSET_CR0) = BX_CPU_THIS_PTR cr0.get32();
   SMRAM_FIELD(saved_state, SMRAM_OFFSET_CR3) = BX_CPU_THIS_PTR cr3;
-  SMRAM_FIELD(saved_state, SMRAM_OFFSET_CR4) = BX_CPU_THIS_PTR cr4.getRegister();
+  SMRAM_FIELD(saved_state, SMRAM_OFFSET_CR4) = BX_CPU_THIS_PTR cr4.get32();
   /* base+0x7f44 to base+0x7f04 is reserved */
   SMRAM_FIELD(saved_state, SMRAM_SMBASE_OFFSET)   = BX_CPU_THIS_PTR smbase;
   SMRAM_FIELD(saved_state, SMRAM_SMM_REVISION_ID) = SMM_REVISION_ID;
   /* base+0x7ef8 to base+0x7ed8 is reserved */
-  SMRAM_FIELD(saved_state, SMRAM_OFFSET_EFER) = BX_CPU_THIS_PTR efer.getRegister();
+  SMRAM_FIELD(saved_state, SMRAM_OFFSET_EFER) = BX_CPU_THIS_PTR efer.get32();
   /* base+0x7ecc is reserved */
   /* base+0x7ec8 is I/O Instruction Restart, Auto-Halt Restart and NMI Mask */
   /* base+0x7ec4 is reserved */
@@ -364,7 +364,7 @@ bx_bool BX_CPU_C::smram_restore_state(const Bit32u *saved_state)
     return 0;
   }
 
-  BX_CPU_THIS_PTR efer.setRegister(temp_efer & BX_EFER_SUPPORTED_BITS);
+  BX_CPU_THIS_PTR efer.set32(temp_efer & BX_EFER_SUPPORTED_BITS);
 
   if (BX_CPU_THIS_PTR efer.get_LMA()) {
     if (temp_eflags & EFlagsVMMask) {
@@ -532,7 +532,7 @@ bx_bool BX_CPU_C::smram_restore_state(const Bit32u *saved_state)
 
 void BX_CPU_C::smram_save_state(Bit32u *saved_state)
 {
-  SMRAM_FIELD(saved_state, SMRAM_OFFSET_CR0) = BX_CPU_THIS_PTR cr0.getRegister();
+  SMRAM_FIELD(saved_state, SMRAM_OFFSET_CR0) = BX_CPU_THIS_PTR cr0.get32();
   SMRAM_FIELD(saved_state, SMRAM_OFFSET_CR3) = BX_CPU_THIS_PTR cr3;
   SMRAM_FIELD(saved_state, SMRAM_OFFSET_EFLAGS) = read_eflags();
   SMRAM_FIELD(saved_state, SMRAM_OFFSET_EIP) = EIP;
@@ -622,7 +622,7 @@ void BX_CPU_C::smram_save_state(Bit32u *saved_state)
 
   /* base+0x7f28 to base+7f18 is reserved */
 #if BX_CPU_LEVEL >= 4
-  SMRAM_FIELD(saved_state, SMRAM_OFFSET_CR4) = BX_CPU_THIS_PTR cr4.getRegister();
+  SMRAM_FIELD(saved_state, SMRAM_OFFSET_CR4) = BX_CPU_THIS_PTR cr4.get32();
 #endif
 
   /* base+0x7f02 is Auto HALT restart field (2 byte) */

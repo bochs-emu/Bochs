@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: xsave.cc,v 1.14 2008-08-16 12:19:30 sshwarts Exp $
+// $Id: xsave.cc,v 1.15 2008-12-06 10:21:55 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008 Stanislav Shwartsman
@@ -41,7 +41,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVE(bxInstruction_c *i)
 
   BX_CPU_THIS_PTR prepareXSAVE();
 
-  BX_DEBUG(("XSAVE: save processor state XCR0=0x%08x", BX_CPU_THIS_PTR xcr0.getRegister()));
+  BX_DEBUG(("XSAVE: save processor state XCR0=0x%08x", BX_CPU_THIS_PTR xcr0.get32()));
 
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
@@ -158,7 +158,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
 
   BX_CPU_THIS_PTR prepareXSAVE();
 
-  BX_DEBUG(("XRSTOR: restore processor state XCR0=0x%08x", BX_CPU_THIS_PTR xcr0.getRegister()));
+  BX_DEBUG(("XRSTOR: restore processor state XCR0=0x%08x", BX_CPU_THIS_PTR xcr0.get32()));
 
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
   bx_address laddr = get_laddr(i->seg(), eaddr);
@@ -172,7 +172,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
   Bit64u header2 = read_virtual_qword(i->seg(), eaddr + 520);
   Bit64u header3 = read_virtual_qword(i->seg(), eaddr + 528);
 
-  if ((~BX_CPU_THIS_PTR xcr0.getRegister() & header1) != 0) {
+  if ((~BX_CPU_THIS_PTR xcr0.get32() & header1) != 0) {
     BX_ERROR(("XRSTOR: Broken header state"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
@@ -306,7 +306,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XGETBV(bxInstruction_c *i)
   }
 
   RDX = 0;
-  RAX = BX_CPU_THIS_PTR xcr0.getRegister();
+  RAX = BX_CPU_THIS_PTR xcr0.get32();
 #else
   BX_INFO(("XGETBV: required XSAVE support, use --enable-xsave option"));
   exception(BX_UD_EXCEPTION, 0, 0);
@@ -344,7 +344,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XSETBV(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
-  BX_CPU_THIS_PTR xcr0.setRegister(EAX);
+  BX_CPU_THIS_PTR xcr0.set32(EAX);
 #else
   BX_INFO(("XSETBV: required XSAVE support, use --enable-xsave option"));
   exception(BX_UD_EXCEPTION, 0, 0);

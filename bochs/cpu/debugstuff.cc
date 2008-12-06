@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debugstuff.cc,v 1.98 2008-10-02 18:14:52 sshwarts Exp $
+// $Id: debugstuff.cc,v 1.99 2008-12-06 10:21:55 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -125,7 +125,7 @@ void BX_CPU_C::debug(bx_address offset)
   BX_INFO(("SS.d_b = %u bit",
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b ? 32 : 16));
 #if BX_SUPPORT_X86_64
-  BX_INFO(("EFER   = 0x%08x", BX_CPU_THIS_PTR efer.getRegister()));
+  BX_INFO(("EFER   = 0x%08x", BX_CPU_THIS_PTR efer.get32()));
   BX_INFO(("| RAX=%08x%08x  RBX=%08x%08x",
           (unsigned) (RAX >> 32), (unsigned) EAX,
           (unsigned) (RBX >> 32), (unsigned) EBX));
@@ -245,27 +245,27 @@ void BX_CPU_C::debug(bx_address offset)
     (unsigned) (BX_CPU_THIS_PTR prev_rip >> 32),
     (unsigned) (BX_CPU_THIS_PTR prev_rip & 0xffffffff)));
   BX_INFO(("| CR0=0x%08x CR2=0x%08x%08x",
-    (unsigned) (BX_CPU_THIS_PTR cr0.getRegister()),
+    (unsigned) (BX_CPU_THIS_PTR cr0.get32()),
     (unsigned) (BX_CPU_THIS_PTR cr2 >> 32),
     (unsigned) (BX_CPU_THIS_PTR cr2 & 0xffffffff)));
   BX_INFO(("| CR3=0x%08x CR4=0x%08x",
-    (unsigned) BX_CPU_THIS_PTR cr3, BX_CPU_THIS_PTR cr4.getRegister()));
+    (unsigned) BX_CPU_THIS_PTR cr3, BX_CPU_THIS_PTR cr4.get32()));
 #else
   BX_INFO(("| EIP=%08x (%08x)", (unsigned) EIP,
     (unsigned) BX_CPU_THIS_PTR prev_rip));
 
 #if BX_CPU_LEVEL >= 2 && BX_CPU_LEVEL < 4
   BX_INFO(("| CR0=0x%08x CR2=0x%08x CR3=0x%08x",
-    BX_CPU_THIS_PTR cr0.getRegister(),
+    BX_CPU_THIS_PTR cr0.get32(),
     BX_CPU_THIS_PTR cr2,
     BX_CPU_THIS_PTR cr3));
 #elif BX_CPU_LEVEL >= 4
   BX_INFO(("| CR0=0x%08x CR2=0x%08x",
-    BX_CPU_THIS_PTR cr0.getRegister(),
+    BX_CPU_THIS_PTR cr0.get32(),
     BX_CPU_THIS_PTR cr2));
   BX_INFO(("| CR3=0x%08x CR4=0x%08x",
     BX_CPU_THIS_PTR cr3,
-    BX_CPU_THIS_PTR cr4.getRegister()));
+    BX_CPU_THIS_PTR cr4.get32()));
 #endif
 
 #endif // BX_SUPPORT_X86_64
@@ -293,14 +293,14 @@ Bit32u BX_CPU_C::dbg_get_reg(unsigned reg)
     case BX_DBG_REG_FS: return(BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].selector.value);
     case BX_DBG_REG_GS: return(BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].selector.value);
     case BX_DBG_REG_CR0:
-      return BX_CPU_THIS_PTR cr0.getRegister();
+      return BX_CPU_THIS_PTR cr0.get32();
     case BX_DBG_REG_CR2:
       return BX_CPU_THIS_PTR cr2;
     case BX_DBG_REG_CR3:
       return BX_CPU_THIS_PTR cr3;
 #if BX_CPU_LEVEL >= 4
     case BX_DBG_REG_CR4:
-      return BX_CPU_THIS_PTR cr4.getRegister();
+      return BX_CPU_THIS_PTR cr4.get32();
 #endif
     default:
       BX_PANIC(("get_reg: request for unknown register"));

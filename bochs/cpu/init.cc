@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.184 2008-12-04 20:26:06 sshwarts Exp $
+// $Id: init.cc,v 1.185 2008-12-06 10:21:55 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -868,7 +868,7 @@ void BX_CPU_C::reset(unsigned source)
     BX_CPU_THIS_PTR smbase = 0x30000; // do not change SMBASE on INIT
   }
 
-  BX_CPU_THIS_PTR cr0.setRegister(0x60000010);
+  BX_CPU_THIS_PTR cr0.set32(0x60000010);
   // handle reserved bits
 #if BX_CPU_LEVEL == 3
   // reserved bits all set to 1 on 386
@@ -883,11 +883,11 @@ void BX_CPU_C::reset(unsigned source)
 #endif
 
 #if BX_CPU_LEVEL >= 4
-  BX_CPU_THIS_PTR cr4.setRegister(0);
+  BX_CPU_THIS_PTR cr4.set32(0);
 #endif
 
 #if BX_SUPPORT_XSAVE
-  BX_CPU_THIS_PTR xcr0.setRegister(0x1);
+  BX_CPU_THIS_PTR xcr0.set32(0x1);
 #endif
 
 /* initialise MSR registers to defaults */
@@ -899,7 +899,7 @@ void BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR msr.apicbase |= 0x900;
 #endif
 #if BX_SUPPORT_X86_64
-  BX_CPU_THIS_PTR efer.setRegister(0);
+  BX_CPU_THIS_PTR efer.set32(0);
 
   BX_CPU_THIS_PTR msr.star  = 0;
   BX_CPU_THIS_PTR msr.lstar = 0;
