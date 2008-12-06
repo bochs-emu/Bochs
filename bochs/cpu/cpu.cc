@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.254 2008-12-05 22:34:42 sshwarts Exp $
+// $Id: cpu.cc,v 1.255 2008-12-06 07:14:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -722,7 +722,7 @@ void BX_CPU_C::prefetch(void)
     bx_phy_address pAddr;
 
     if (BX_CPU_THIS_PTR cr0.get_PG()) {
-      pAddr = translate_linear(laddr, CPL, BX_READ);
+      pAddr = translate_linear(laddr, CPL, BX_EXECUTE);
       pAddr = A20ADDR(pAddr);
     } 
     else {
