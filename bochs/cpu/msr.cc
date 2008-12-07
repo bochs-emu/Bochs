@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: msr.cc,v 1.2 2008-12-06 10:21:55 sshwarts Exp $
+// $Id: msr.cc,v 1.3 2008-12-07 06:15:26 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008 Stanislav Shwartsman
@@ -25,6 +25,12 @@
 #include "bochs.h"
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
+
+#if BX_SUPPORT_X86_64==0
+// Make life easier for merging code.
+#define RAX EAX
+#define RDX EDX
+#endif
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDMSR(bxInstruction_c *i)
 {
