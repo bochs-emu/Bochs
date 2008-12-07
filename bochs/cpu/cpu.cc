@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.255 2008-12-06 07:14:40 sshwarts Exp $
+// $Id: cpu.cc,v 1.256 2008-12-07 19:47:34 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -836,6 +836,12 @@ void BX_CPU_C::deliver_NMI(void)
 void BX_CPU_C::deliver_SMI(void)
 {
   BX_CPU_THIS_PTR pending_SMI = 1;
+  BX_CPU_THIS_PTR async_event = 1;
+}
+
+void BX_CPU_C::set_INTR(bx_bool value)
+{
+  BX_CPU_THIS_PTR INTR = value;
   BX_CPU_THIS_PTR async_event = 1;
 }
 

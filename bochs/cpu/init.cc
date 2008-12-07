@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.185 2008-12-06 10:21:55 sshwarts Exp $
+// $Id: init.cc,v 1.186 2008-12-07 19:47:34 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1172,10 +1172,4 @@ void BX_CPU_C::assert_checks(void)
   if (BX_CPU_THIS_PTR monitor.monitor_end < BX_CPU_THIS_PTR monitor.monitor_begin)
     BX_PANIC(("assert_checks: MONITOR range is not set correctly !"));
 #endif
-}
-
-void BX_CPU_C::set_INTR(bx_bool value)
-{
-  BX_CPU_THIS_PTR INTR = value;
-  BX_CPU_THIS_PTR async_event = 1;
 }
