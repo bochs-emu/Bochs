@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.220 2008-12-04 18:48:33 sshwarts Exp $
+// $Id: rombios.c,v 1.221 2008-12-07 17:32:29 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -940,7 +940,7 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.220 $ $Date: 2008-12-04 18:48:33 $";
+static char bios_cvs_version_string[] = "$Revision: 1.221 $ $Date: 2008-12-07 17:32:29 $";
 
 #define BIOS_COPYRIGHT_STRING "(c) 2002 MandrakeSoft S.A. Written by Kevin Lawton & the Bochs team."
 
@@ -3601,11 +3601,11 @@ cdrom_boot()
     if (atapi_is_cdrom(device)) break;
     }
 
-  if(error = atapi_is_ready(device) != 0)
-    BX_INFO("ata_is_ready returned %d\n",error);
-
   // if not found
   if(device >= BX_MAX_ATA_DEVICES) return 2;
+
+  if(error = atapi_is_ready(device) != 0)
+    BX_INFO("ata_is_ready returned %d\n",error);
 
   // Read the Boot Record Volume Descriptor
   memsetb(get_SS(),atacmd,0,12);
