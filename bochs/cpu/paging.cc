@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.160 2008-12-05 22:34:42 sshwarts Exp $
+// $Id: paging.cc,v 1.161 2008-12-08 20:01:26 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -960,7 +960,7 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned curr_pl, un
   // note - we assume physical memory < 4gig so for brevity & speed, we'll use
   // 32 bit entries although cr3 is expanded to 64 bits.
   bx_phy_address paddress, ppf, poffset = PAGE_OFFSET(laddr);
-  bx_bool isWrite = (rw >= BX_WRITE); // write or r-m-w
+  bx_bool isWrite = rw & 1; // write or r-m-w
   unsigned pl = (curr_pl == 3);
 
   BX_ASSERT(BX_CPU_THIS_PTR cr0.get_PG());
