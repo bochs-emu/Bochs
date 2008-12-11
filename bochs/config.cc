@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.140 2008-10-14 06:55:18 sshwarts Exp $
+// $Id: config.cc,v 1.141 2008-12-11 18:01:54 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -647,7 +647,7 @@ void bx_init_options()
   bx_list_c *pci = new bx_list_c(root_param, "pci", "PCI Options");
 
   // pci options
-  bx_param_c *pci_deps_list[1+BX_N_PCI_SLOTS];
+  bx_param_c *pci_deps_list[3+BX_N_PCI_SLOTS+2*BX_SUPPORT_PCIDEV];
   bx_param_c **pci_deps_ptr = &pci_deps_list[0];
 
   bx_param_bool_c *i440fx_support = new bx_param_bool_c(pci,

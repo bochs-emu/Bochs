@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_vnet.cc,v 1.22 2008-01-26 22:24:01 sshwarts Exp $
+// $Id: eth_vnet.cc,v 1.23 2008-12-11 18:01:56 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // virtual Ethernet locator
@@ -132,7 +132,7 @@ public:
   bx_vnet_pktmover_c();
   void pktmover_init(
     const char *netif, const char *macaddr,
-    eth_rx_handler_t rxh, void *rxarg, char *script);
+    eth_rx_handler_t rxh, void *rxarg, const char *script);
   void sendpkt(void *buf, unsigned io_len);
 private:
   void guest_to_host(const Bit8u *buf, unsigned io_len);
@@ -240,7 +240,7 @@ protected:
   eth_pktmover_c *allocate(
       const char *netif, const char *macaddr,
       eth_rx_handler_t rxh,
-      void *rxarg, char *script) {
+      void *rxarg, const char *script) {
     bx_vnet_pktmover_c *pktmover;
     pktmover = new bx_vnet_pktmover_c();
     pktmover->pktmover_init(netif, macaddr, rxh, rxarg, script);
@@ -324,7 +324,7 @@ bx_vnet_pktmover_c::bx_vnet_pktmover_c()
 
 void bx_vnet_pktmover_c::pktmover_init(
   const char *netif, const char *macaddr,
-  eth_rx_handler_t rxh, void *rxarg, char *script)
+  eth_rx_handler_t rxh, void *rxarg, const char *script)
 {
   BX_INFO(("ne2k vnet driver"));
   this->rxh   = rxh;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth.h,v 1.18 2008-01-26 22:24:01 sshwarts Exp $
+// $Id: eth.h,v 1.19 2008-12-11 18:01:56 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -38,7 +38,7 @@ typedef void (*eth_rx_handler_t)(void *arg, const void *buf, unsigned len);
 
 static const Bit8u broadcast_macaddr[6] = {0xff,0xff,0xff,0xff,0xff,0xff};
 
-int execute_script(char *name, char* arg1);
+int execute_script(const char *name, char* arg1);
 
 //
 //  The eth_pktmover class is used by ethernet chip emulations
@@ -69,7 +69,7 @@ public:
 				const char *macaddr,
 				eth_rx_handler_t rxh,
 				void *rxarg,
-				char *script);
+				const char *script);
 protected:
   eth_locator_c(const char *type);
   virtual ~eth_locator_c() {}
@@ -77,7 +77,7 @@ protected:
 				const char *macaddr,
 				eth_rx_handler_t rxh,
 				void *rxarg,
-				char *script) = 0;
+				const char *script) = 0;
 private:
   static eth_locator_c *all;
   eth_locator_c *next;

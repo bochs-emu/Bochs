@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_null.cc,v 1.21 2008-01-26 22:24:01 sshwarts Exp $
+// $Id: eth_null.cc,v 1.22 2008-12-11 18:01:56 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -53,7 +53,7 @@ class bx_null_pktmover_c : public eth_pktmover_c {
 public:
   bx_null_pktmover_c(const char *netif, const char *macaddr,
 		     eth_rx_handler_t rxh,
-		     void *rxarg, char *script);
+		     void *rxarg, const char *script);
   void sendpkt(void *buf, unsigned io_len);
 private:
   int rx_timer_index;
@@ -72,7 +72,7 @@ public:
 protected:
   eth_pktmover_c *allocate(const char *netif, const char *macaddr,
 			   eth_rx_handler_t rxh,
-			   void *rxarg, char *script) {
+			   void *rxarg, const char *script) {
     return (new bx_null_pktmover_c(netif, macaddr, rxh, rxarg, script));
   }
 } bx_null_match;
@@ -87,7 +87,7 @@ bx_null_pktmover_c::bx_null_pktmover_c(const char *netif,
 				       const char *macaddr,
 				       eth_rx_handler_t rxh,
 				       void *rxarg,
-				       char *script)
+				       const char *script)
 {
 #if BX_ETH_NULL_LOGGING
   // Start the rx poll

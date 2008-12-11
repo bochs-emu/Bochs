@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_fbsd.cc,v 1.34 2008-01-26 22:24:01 sshwarts Exp $
+// $Id: eth_fbsd.cc,v 1.35 2008-12-11 18:01:56 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -104,7 +104,7 @@ public:
   bx_fbsd_pktmover_c(const char *netif,
 		     const char *macaddr,
 		     eth_rx_handler_t rxh,
-		     void *rxarg, char *script);
+		     void *rxarg, const char *script);
   void sendpkt(void *buf, unsigned io_len);
 
 private:
@@ -129,7 +129,7 @@ protected:
   eth_pktmover_c *allocate(const char *netif,
 			   const char *macaddr,
 			   eth_rx_handler_t rxh,
-			   void *rxarg, char *script) {
+			   void *rxarg, const char *script) {
     return (new bx_fbsd_pktmover_c(netif, macaddr, rxh, rxarg, script));
   }
 } bx_fbsd_match;
@@ -148,7 +148,7 @@ bx_fbsd_pktmover_c::bx_fbsd_pktmover_c(const char *netif,
 				       const char *macaddr,
 				       eth_rx_handler_t rxh,
 				       void *rxarg,
-				       char *script)
+				       const char *script)
 {
   char device[sizeof "/dev/bpf000"];
   int tmpfd;

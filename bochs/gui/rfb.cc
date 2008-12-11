@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rfb.cc,v 1.60 2008-10-06 22:00:11 sshwarts Exp $
+// $Id: rfb.cc,v 1.61 2008-12-11 18:01:55 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2000  Psyon.Org!
@@ -304,7 +304,7 @@ void rfbSetStatusText(int element, const char *text, bx_bool active, bx_bool w)
     newBits[((xsize / 8) + 1) * i] = 0;
   }
   if (element > 0) {
-    color = color = active?(w?0xc0:0xa0):0xf7;
+    color = active?(w?0xc0:0xa0):0xf7;
   } else {
     color = 0xf0;
   }

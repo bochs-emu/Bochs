@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_vde.cc,v 1.15 2008-02-15 22:05:42 sshwarts Exp $
+// $Id: eth_vde.cc,v 1.16 2008-12-11 18:01:56 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003  Renzo Davoli
@@ -73,7 +73,7 @@ class bx_vde_pktmover_c : public eth_pktmover_c {
 public:
   bx_vde_pktmover_c(const char *netif, const char *macaddr,
 		     eth_rx_handler_t rxh,
-		     void *rxarg, char *script);
+		     void *rxarg, const char *script);
   void sendpkt(void *buf, unsigned io_len);
 private:
   int fd;
@@ -96,7 +96,7 @@ public:
 protected:
   eth_pktmover_c *allocate(const char *netif, const char *macaddr,
 			   eth_rx_handler_t rxh,
-			   void *rxarg, char *script) {
+			   void *rxarg, const char *script) {
     return (new bx_vde_pktmover_c(netif, macaddr, rxh, rxarg, script));
   }
 } bx_vde_match;
@@ -111,7 +111,7 @@ bx_vde_pktmover_c::bx_vde_pktmover_c(const char *netif,
 				       const char *macaddr,
 				       eth_rx_handler_t rxh,
 				       void *rxarg,
-				       char *script)
+				       const char *script)
 {
   int flags;
   //if (strncmp (netif, "vde", 3) != 0) {

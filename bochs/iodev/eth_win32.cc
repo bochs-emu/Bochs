@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_win32.cc,v 1.27 2008-01-26 22:24:01 sshwarts Exp $
+// $Id: eth_win32.cc,v 1.28 2008-12-11 18:01:56 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -211,7 +211,7 @@ static const struct bpf_insn macfilter[] = {
 class bx_win32_pktmover_c : public eth_pktmover_c {
 public:
   bx_win32_pktmover_c(const char *netif, const char *macaddr,
-	  eth_rx_handler_t rxh, void *rxarg, char *script);
+	  eth_rx_handler_t rxh, void *rxarg, const char *script);
   void sendpkt(void *buf, unsigned io_len);
 private:
   struct bpf_insn filter[8];
@@ -233,7 +233,7 @@ public:
 protected:
   eth_pktmover_c *allocate(const char *netif, const char *macaddr,
                            eth_rx_handler_t rxh,
-                           void *rxarg, char *script) {
+                           void *rxarg, const char *script) {
     return (new bx_win32_pktmover_c(netif, macaddr, rxh, rxarg, script));
   }
 } bx_win32_match;
@@ -245,7 +245,7 @@ protected:
 // the constructor
 bx_win32_pktmover_c::bx_win32_pktmover_c(
   const char *netif, const char *macaddr,
-  eth_rx_handler_t rxh, void *rxarg, char *script)
+  eth_rx_handler_t rxh, void *rxarg, const char *script)
 {
   // Open Packet Driver Here.
   DWORD dwVersion;

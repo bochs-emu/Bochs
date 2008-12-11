@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.215 2008-10-06 22:00:11 sshwarts Exp $
+// $Id: harddrv.cc,v 1.216 2008-12-11 18:01:56 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -173,7 +173,7 @@ void bx_hard_drive_c::init(void)
   char  ata_name[20];
   bx_list_c *base;
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.215 2008-10-06 22:00:11 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.216 2008-12-11 18:01:56 vruppert Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     sprintf(ata_name, "ata.%d.resources", channel);
@@ -2705,7 +2705,7 @@ bx_hard_drive_c::increment_address(Bit8u channel)
   BX_SELECTED_CONTROLLER(channel).num_sectors--;
 
   if (BX_SELECTED_CONTROLLER(channel).lba_mode) {
-    Bit64s current_address;
+    Bit64s current_address = 0;
     calculate_logical_address(channel, &current_address);
     current_address++;
     if (!BX_SELECTED_CONTROLLER(channel).lba48) {
@@ -3463,7 +3463,7 @@ void bx_hard_drive_c::set_signature(Bit8u channel, Bit8u id)
 
 bx_bool bx_hard_drive_c::ide_read_sector(Bit8u channel, Bit8u *buffer, Bit32u buffer_size)
 {
-  Bit64s logical_sector;
+  Bit64s logical_sector = 0;
   Bit64s ret;
 
   int sector_count = (buffer_size / 512);
@@ -3500,7 +3500,7 @@ bx_bool bx_hard_drive_c::ide_read_sector(Bit8u channel, Bit8u *buffer, Bit32u bu
 
 bx_bool bx_hard_drive_c::ide_write_sector(Bit8u channel, Bit8u *buffer, Bit32u buffer_size)
 {
-  Bit64s logical_sector;
+  Bit64s logical_sector = 0;
   Bit64s ret;
 
   int sector_count = (buffer_size / 512);

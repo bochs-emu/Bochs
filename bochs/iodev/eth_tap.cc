@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_tap.cc,v 1.31 2008-11-30 17:22:22 vruppert Exp $
+// $Id: eth_tap.cc,v 1.32 2008-12-11 18:01:56 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -132,7 +132,7 @@ class bx_tap_pktmover_c : public eth_pktmover_c {
 public:
   bx_tap_pktmover_c(const char *netif, const char *macaddr,
 		     eth_rx_handler_t rxh,
-		     void *rxarg, char *script);
+		     void *rxarg, const char *script);
   void sendpkt(void *buf, unsigned io_len);
 private:
   int fd;
@@ -156,7 +156,7 @@ public:
 protected:
   eth_pktmover_c *allocate(const char *netif, const char *macaddr,
 			   eth_rx_handler_t rxh,
-			   void *rxarg, char *script) {
+			   void *rxarg, const char *script) {
     return (new bx_tap_pktmover_c(netif, macaddr, rxh, rxarg, script));
   }
 } bx_tap_match;
@@ -171,7 +171,7 @@ bx_tap_pktmover_c::bx_tap_pktmover_c(const char *netif,
 				       const char *macaddr,
 				       eth_rx_handler_t rxh,
 				       void *rxarg,
-				       char *script)
+				       const char *script)
 {
   int flags;
   char filename[BX_PATHNAME_LEN];

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sb16.cc,v 1.63 2008-07-27 15:41:43 vruppert Exp $
+// $Id: sb16.cc,v 1.64 2008-12-11 18:01:56 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -3499,7 +3499,7 @@ bx_bool bx_sb16_buffer::put(Bit8u data)
 }
 
 // This writes a formatted string to the buffer
-bx_bool bx_sb16_buffer::puts(char *data, ...)
+bx_bool bx_sb16_buffer::puts(const char *data, ...)
 {
   if (data == NULL)
     return 0;  // invalid string

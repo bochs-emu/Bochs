@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_tuntap.cc,v 1.28 2008-02-15 22:05:42 sshwarts Exp $
+// $Id: eth_tuntap.cc,v 1.29 2008-12-11 18:01:56 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -83,7 +83,7 @@ class bx_tuntap_pktmover_c : public eth_pktmover_c {
 public:
   bx_tuntap_pktmover_c(const char *netif, const char *macaddr,
 		     eth_rx_handler_t rxh,
-		     void *rxarg, char *script);
+		     void *rxarg, const char *script);
   void sendpkt(void *buf, unsigned io_len);
 private:
   int fd;
@@ -107,7 +107,7 @@ public:
 protected:
   eth_pktmover_c *allocate(const char *netif, const char *macaddr,
 			   eth_rx_handler_t rxh,
-			   void *rxarg, char *script) {
+			   void *rxarg, const char *script) {
     return (new bx_tuntap_pktmover_c(netif, macaddr, rxh, rxarg, script));
   }
 } bx_tuntap_match;
@@ -122,7 +122,7 @@ bx_tuntap_pktmover_c::bx_tuntap_pktmover_c(const char *netif,
 				       const char *macaddr,
 				       eth_rx_handler_t rxh,
 				       void *rxarg,
-				       char *script)
+				       const char *script)
 {
   int flags;
 
