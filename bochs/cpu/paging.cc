@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.163 2008-12-11 21:19:38 sshwarts Exp $
+// $Id: paging.cc,v 1.164 2008-12-11 21:30:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -763,10 +763,10 @@ bx_phy_address BX_CPU_C::translate_linear_PAE(bx_address laddr, bx_address &lpf_
       nx_fault = 1;
     }
   }
-
+#if BX_SUPPORT_1G_PAGES
   // 1G pages support
   if (pdpe & 0x80) {
-    if (pdpe & PAGING_PAE_PDPE_RESERVED_BITS) {
+    if (pdpe & PAGING_PAE_PDPE1G_RESERVED_BITS) {
       BX_DEBUG(("PAE 1G PDPE: reserved bit is set: PDPE=%08x:%08x", GET32H(pdpe), GET32L(pdpe)));
       page_fault(ERROR_RESERVED | ERROR_PROTECTION, laddr, pl, rw);
     }
@@ -809,8 +809,9 @@ bx_phy_address BX_CPU_C::translate_linear_PAE(bx_address laddr, bx_address &lpf_
     return ppf;
   }
 #endif
+#endif
 
-  if (pdpe & PAGING_PAE_PDPE1G_RESERVED_BITS) {
+  if (pdpe & PAGING_PAE_PDPE_RESERVED_BITS) {
     BX_DEBUG(("PAE PDPE: reserved bit is set: PDPE=%08x:%08x", GET32H(pdpe), GET32L(pdpe)));
     page_fault(ERROR_RESERVED | ERROR_PROTECTION, laddr, pl, rw);
   }
