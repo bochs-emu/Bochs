@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.162 2008-12-11 21:00:01 sshwarts Exp $
+// $Id: paging.cc,v 1.163 2008-12-11 21:19:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1199,7 +1199,6 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned curr_pl, un
     tlbEntry->accessBits |= TLB_GlobalPage;
 #endif
 
-#if BX_SupportGuest2HostTLB
   // Attempt to get a host pointer to this physical page. Put that
   // pointer in the TLB cache. Note if the request is vetoed, NULL
   // will be returned, and it's OK to OR zero in anyways.
@@ -1213,7 +1212,6 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned curr_pl, un
 #endif
        tlbEntry->lpf = lpf; // allow direct access with HostPtr
   }
-#endif
 
   return paddress;
 }
@@ -1377,7 +1375,6 @@ void BX_CPU_C::access_write_linear(bx_address laddr, unsigned len, unsigned curr
       BX_DBG_LIN_MEMORY_ACCESS(BX_CPU_ID, laddr, (bx_phy_address) laddr, len,
                           curr_pl, BX_WRITE, (Bit8u*) data);
 
-#if BX_SupportGuest2HostTLB
       // do not replace to the TLB if there is a breakpoint defined
       // in the same page
 #if BX_X86_DEBUGGER
@@ -1404,7 +1401,6 @@ void BX_CPU_C::access_write_linear(bx_address laddr, unsigned len, unsigned curr
           }
         }
       }
-#endif
 
       BX_MEM(0)->writePhysicalPage(BX_CPU_THIS, (bx_phy_address) laddr, len, data);
     }
@@ -1547,7 +1543,6 @@ void BX_CPU_C::access_read_linear(bx_address laddr, unsigned len, unsigned curr_
       BX_CPU_THIS_PTR address_xlation.pages     = 1;
       BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr, (bx_phy_address) laddr, len, xlate_rw);
 
-#if BX_SupportGuest2HostTLB
       // do not replace to the TLB if there is a breakpoint defined
       // in the same page
 #if BX_X86_DEBUGGER
@@ -1574,7 +1569,6 @@ void BX_CPU_C::access_read_linear(bx_address laddr, unsigned len, unsigned curr_
           }
         }
       }
-#endif
 
       BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, (bx_phy_address) laddr, len, data);
       BX_DBG_LIN_MEMORY_ACCESS(BX_CPU_ID, laddr, (bx_phy_address) laddr, len,

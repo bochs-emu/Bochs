@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: access32.cc,v 1.19 2008-10-06 17:50:06 sshwarts Exp $
+// $Id: access32.cc,v 1.20 2008-12-11 21:19:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008 Stanislav Shwartsman
@@ -39,7 +39,6 @@ BX_CPU_C::write_virtual_byte_32(unsigned s, Bit32u offset, Bit8u data)
     if (offset <= seg->cache.u.segment.limit_scaled) {
 accessOK:
       laddr = BX_CPU_THIS_PTR get_laddr32(s, offset);
-#if BX_SupportGuest2HostTLB
       unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 0);
       Bit32u lpf = LPFOf(laddr);
       bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
@@ -60,7 +59,6 @@ accessOK:
           return;
         }
       }
-#endif
       access_write_linear(laddr, 1, CPL, (void *) &data);
       return;
     }
@@ -88,7 +86,6 @@ BX_CPU_C::write_virtual_word_32(unsigned s, Bit32u offset, Bit16u data)
     if (offset < seg->cache.u.segment.limit_scaled) {
 accessOK:
       laddr = BX_CPU_THIS_PTR get_laddr32(s, offset);
-#if BX_SupportGuest2HostTLB
       unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 1);
 #if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
       Bit32u lpf = AlignedAccessLPFOf(laddr, (1 & BX_CPU_THIS_PTR alignment_check_mask));
@@ -113,7 +110,6 @@ accessOK:
           return;
         }
       }
-#endif
 
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
       if (BX_CPU_THIS_PTR alignment_check()) {
@@ -151,7 +147,6 @@ BX_CPU_C::write_virtual_dword_32(unsigned s, Bit32u offset, Bit32u data)
     if (offset < (seg->cache.u.segment.limit_scaled-2)) {
 accessOK:
       laddr = BX_CPU_THIS_PTR get_laddr32(s, offset);
-#if BX_SupportGuest2HostTLB
       unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 3);
 #if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
       Bit32u lpf = AlignedAccessLPFOf(laddr, (3 & BX_CPU_THIS_PTR alignment_check_mask));
@@ -176,7 +171,6 @@ accessOK:
           return;
         }
       }
-#endif
 
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
       if (BX_CPU_THIS_PTR alignment_check()) {
@@ -214,7 +208,6 @@ BX_CPU_C::write_virtual_qword_32(unsigned s, Bit32u offset, Bit64u data)
     if (offset <= (seg->cache.u.segment.limit_scaled-7)) {
 accessOK:
       laddr = BX_CPU_THIS_PTR get_laddr32(s, offset);
-#if BX_SupportGuest2HostTLB
       unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 7);
 #if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
       Bit32u lpf = AlignedAccessLPFOf(laddr, (7 & BX_CPU_THIS_PTR alignment_check_mask));
@@ -239,7 +232,6 @@ accessOK:
           return;
         }
       }
-#endif
 
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
       if (BX_CPU_THIS_PTR alignment_check()) {
@@ -279,7 +271,6 @@ BX_CPU_C::write_virtual_dqword_32(unsigned s, Bit32u offset, const BxPackedXmmRe
     if (offset <= (seg->cache.u.segment.limit_scaled-15)) {
 accessOK:
       laddr = BX_CPU_THIS_PTR get_laddr32(s, offset);
-#if BX_SupportGuest2HostTLB
       unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 15);
       Bit32u lpf = LPFOf(laddr);
       bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
@@ -301,7 +292,6 @@ accessOK:
           return;
         }
       }
-#endif
 
       access_write_linear(laddr, 16, CPL, (void *) data);
       return;
@@ -330,7 +320,6 @@ BX_CPU_C::write_virtual_dqword_aligned_32(unsigned s, Bit32u offset, const BxPac
     if (offset <= (seg->cache.u.segment.limit_scaled-15)) {
 accessOK:
       laddr = BX_CPU_THIS_PTR get_laddr32(s, offset);
-#if BX_SupportGuest2HostTLB
       unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 15);
       Bit32u lpf = AlignedAccessLPFOf(laddr, 15);
       bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
@@ -352,7 +341,6 @@ accessOK:
           return;
         }
       }
-#endif
       if (laddr & 15) {
         BX_ERROR(("write_virtual_dqword_aligned_32(): #GP misaligned access"));
         exception(BX_GP_EXCEPTION, 0, 0);
@@ -387,7 +375,6 @@ BX_CPU_C::read_virtual_byte_32(unsigned s, Bit32u offset)
     if (offset <= seg->cache.u.segment.limit_scaled) {
 accessOK:
       laddr = BX_CPU_THIS_PTR get_laddr32(s, offset);
-#if BX_SupportGuest2HostTLB
       unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 0);
       Bit32u lpf = LPFOf(laddr);
       bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
@@ -405,7 +392,6 @@ accessOK:
           return data;
         }
       }
-#endif
       access_read_linear(laddr, 1, CPL, BX_READ, (void *) &data);
       return data;
     }
@@ -434,7 +420,6 @@ BX_CPU_C::read_virtual_word_32(unsigned s, Bit32u offset)
     if (offset < seg->cache.u.segment.limit_scaled) {
 accessOK:
       laddr = BX_CPU_THIS_PTR get_laddr32(s, offset);
-#if BX_SupportGuest2HostTLB
       unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 1);
 #if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
       Bit32u lpf = AlignedAccessLPFOf(laddr, (1 & BX_CPU_THIS_PTR alignment_check_mask));
@@ -456,7 +441,6 @@ accessOK:
           return data;
         }
       }
-#endif
 
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
       if (BX_CPU_THIS_PTR alignment_check()) {
@@ -495,7 +479,6 @@ BX_CPU_C::read_virtual_dword_32(unsigned s, Bit32u offset)
     if (offset < (seg->cache.u.segment.limit_scaled-2)) {
 accessOK:
       laddr = BX_CPU_THIS_PTR get_laddr32(s, offset);
-#if BX_SupportGuest2HostTLB
       unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 3);
 #if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
       Bit32u lpf = AlignedAccessLPFOf(laddr, (3 & BX_CPU_THIS_PTR alignment_check_mask));
@@ -517,7 +500,6 @@ accessOK:
           return data;
         }
       }
-#endif
 
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
       if (BX_CPU_THIS_PTR alignment_check()) {
@@ -556,7 +538,6 @@ BX_CPU_C::read_virtual_qword_32(unsigned s, Bit32u offset)
     if (offset <= (seg->cache.u.segment.limit_scaled-7)) {
 accessOK:
       laddr = BX_CPU_THIS_PTR get_laddr32(s, offset);
-#if BX_SupportGuest2HostTLB
       unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 7);
 #if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
       Bit32u lpf = AlignedAccessLPFOf(laddr, (7 & BX_CPU_THIS_PTR alignment_check_mask));
@@ -578,7 +559,6 @@ accessOK:
           return data;
         }
       }
-#endif
 
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
       if (BX_CPU_THIS_PTR alignment_check()) {
@@ -618,7 +598,6 @@ BX_CPU_C::read_virtual_dqword_32(unsigned s, Bit32u offset, BxPackedXmmRegister 
     if (offset <= (seg->cache.u.segment.limit_scaled-15)) {
 accessOK:
       laddr = BX_CPU_THIS_PTR get_laddr32(s, offset);
-#if BX_SupportGuest2HostTLB
       unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 15);
       Bit32u lpf = LPFOf(laddr);
       bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
@@ -637,8 +616,6 @@ accessOK:
           return;
         }
       }
-#endif
-
       access_read_linear(laddr, 16, CPL, BX_READ, (void *) data);
       return;
     }
@@ -666,7 +643,6 @@ BX_CPU_C::read_virtual_dqword_aligned_32(unsigned s, Bit32u offset, BxPackedXmmR
     if (offset <= (seg->cache.u.segment.limit_scaled-15)) {
 accessOK:
       laddr = BX_CPU_THIS_PTR get_laddr32(s, offset);
-#if BX_SupportGuest2HostTLB
       unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 15);
       Bit32u lpf = AlignedAccessLPFOf(laddr, 15);
       bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
@@ -685,7 +661,6 @@ accessOK:
           return;
         }
       }
-#endif
       if (laddr & 15) {
         BX_ERROR(("read_virtual_dqword_aligned_32(): #GP misaligned access"));
         exception(BX_GP_EXCEPTION, 0, 0);
@@ -725,7 +700,6 @@ BX_CPU_C::read_RMW_virtual_byte_32(unsigned s, Bit32u offset)
     if (offset <= seg->cache.u.segment.limit_scaled) {
 accessOK:
       laddr = BX_CPU_THIS_PTR get_laddr32(s, offset);
-#if BX_SupportGuest2HostTLB
       unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 0);
       Bit32u lpf = LPFOf(laddr);
       bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
@@ -747,7 +721,6 @@ accessOK:
           return data;
         }
       }
-#endif
       access_read_linear(laddr, 1, CPL, BX_RW, (void *) &data);
       return data;
     }
@@ -776,7 +749,6 @@ BX_CPU_C::read_RMW_virtual_word_32(unsigned s, Bit32u offset)
     if (offset < seg->cache.u.segment.limit_scaled) {
 accessOK:
       laddr = BX_CPU_THIS_PTR get_laddr32(s, offset);
-#if BX_SupportGuest2HostTLB
       unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 1);
 #if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
       Bit32u lpf = AlignedAccessLPFOf(laddr, (1 & BX_CPU_THIS_PTR alignment_check_mask));
@@ -802,7 +774,6 @@ accessOK:
           return data;
         }
       }
-#endif
 
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
       if (BX_CPU_THIS_PTR alignment_check()) {
@@ -841,7 +812,6 @@ BX_CPU_C::read_RMW_virtual_dword_32(unsigned s, Bit32u offset)
     if (offset < (seg->cache.u.segment.limit_scaled-2)) {
 accessOK:
       laddr = BX_CPU_THIS_PTR get_laddr32(s, offset);
-#if BX_SupportGuest2HostTLB
       unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 3);
 #if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
       Bit32u lpf = AlignedAccessLPFOf(laddr, (3 & BX_CPU_THIS_PTR alignment_check_mask));
@@ -867,7 +837,6 @@ accessOK:
           return data;
         }
       }
-#endif
 
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
       if (BX_CPU_THIS_PTR alignment_check()) {
@@ -906,7 +875,6 @@ BX_CPU_C::read_RMW_virtual_qword_32(unsigned s, Bit32u offset)
     if (offset <= (seg->cache.u.segment.limit_scaled-7)) {
 accessOK:
       laddr = BX_CPU_THIS_PTR get_laddr32(s, offset);
-#if BX_SupportGuest2HostTLB
       unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 7);
 #if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
       Bit32u lpf = AlignedAccessLPFOf(laddr, (7 & BX_CPU_THIS_PTR alignment_check_mask));
@@ -932,7 +900,6 @@ accessOK:
           return data;
         }
       }
-#endif
 
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
       if (BX_CPU_THIS_PTR alignment_check()) {
@@ -1135,7 +1102,6 @@ void BX_CPU_C::write_new_stack_word_32(bx_segment_reg_t *seg, Bit32u offset, uns
 accessOK:
       laddr = (Bit32u)(seg->cache.u.segment.base) + offset;
       bx_bool user = (curr_pl == 3);
-#if BX_SupportGuest2HostTLB
       unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 1);
 #if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
       Bit32u lpf = AlignedAccessLPFOf(laddr, (1 & BX_CPU_THIS_PTR alignment_check_mask));
@@ -1160,7 +1126,6 @@ accessOK:
           return;
         }
       }
-#endif
 
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
       if (BX_CPU_THIS_PTR alignment_check() && user) {
@@ -1198,7 +1163,6 @@ void BX_CPU_C::write_new_stack_dword_32(bx_segment_reg_t *seg, Bit32u offset, un
 accessOK:
       laddr = (Bit32u)(seg->cache.u.segment.base) + offset;
       bx_bool user = (curr_pl == 3);
-#if BX_SupportGuest2HostTLB
       unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 3);
 #if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
       Bit32u lpf = AlignedAccessLPFOf(laddr, (3 & BX_CPU_THIS_PTR alignment_check_mask));
@@ -1223,7 +1187,6 @@ accessOK:
           return;
         }
       }
-#endif
 
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
       if (BX_CPU_THIS_PTR alignment_check() && user) {
@@ -1261,7 +1224,6 @@ void BX_CPU_C::write_new_stack_qword_32(bx_segment_reg_t *seg, Bit32u offset, un
 accessOK:
       laddr = (Bit32u)(seg->cache.u.segment.base) + offset;
       bx_bool user = (curr_pl == 3);
-#if BX_SupportGuest2HostTLB
       unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 7);
 #if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
       Bit32u lpf = AlignedAccessLPFOf(laddr, (7 & BX_CPU_THIS_PTR alignment_check_mask));
@@ -1286,7 +1248,6 @@ accessOK:
           return;
         }
       }
-#endif
 
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
       if (BX_CPU_THIS_PTR alignment_check() && user) {

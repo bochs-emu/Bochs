@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: load32.cc,v 1.2 2008-09-16 20:57:16 sshwarts Exp $
+// $Id: load32.cc,v 1.3 2008-12-11 21:19:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008 Stanislav Shwartsman
@@ -48,7 +48,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Eb_Resolve16BaseIndex(bxInstruction_c
     if (offset <= seg->cache.u.segment.limit_scaled) {
 accessOK:
       laddr = BX_CPU_THIS_PTR get_laddr32(s, offset);
-#if BX_SupportGuest2HostTLB
       unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 0);
       Bit32u lpf = LPFOf(laddr);
       bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
@@ -63,9 +62,7 @@ accessOK:
         BX_DBG_LIN_MEMORY_ACCESS(BX_CPU_ID, laddr,
               tlbEntry->ppf | pageOffset, 1, CPL, BX_READ, (Bit8u*) &TMP8L);
       }
-      else
-#endif
-      {
+      else {
         access_read_linear(laddr, 1, CPL, BX_READ, (void *) &TMP8L);
       }
 
@@ -98,7 +95,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Eb_Resolve32Base(bxInstruction_c *i)
     if (offset <= seg->cache.u.segment.limit_scaled) {
 accessOK:
       laddr = BX_CPU_THIS_PTR get_laddr32(s, offset);
-#if BX_SupportGuest2HostTLB
       unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 0);
       Bit32u lpf = LPFOf(laddr);
       bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
@@ -113,9 +109,7 @@ accessOK:
         BX_DBG_LIN_MEMORY_ACCESS(BX_CPU_ID, laddr,
               tlbEntry->ppf | pageOffset, 1, CPL, BX_READ, (Bit8u*) &TMP8L);
       }
-      else
-#endif
-      {
+      else {
         access_read_linear(laddr, 1, CPL, BX_READ, (void *) &TMP8L);
       }
 
@@ -148,7 +142,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Eb_Resolve32BaseIndex(bxInstruction_c
     if (offset <= seg->cache.u.segment.limit_scaled) {
 accessOK:
       laddr = BX_CPU_THIS_PTR get_laddr32(s, offset);
-#if BX_SupportGuest2HostTLB
       unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 0);
       Bit32u lpf = LPFOf(laddr);
       bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
@@ -163,9 +156,7 @@ accessOK:
         BX_DBG_LIN_MEMORY_ACCESS(BX_CPU_ID, laddr,
               tlbEntry->ppf | pageOffset, 1, CPL, BX_READ, (Bit8u*) &TMP8L);
       }
-      else
-#endif
-      {
+      else {
         access_read_linear(laddr, 1, CPL, BX_READ, (void *) &TMP8L);
       }
 
@@ -205,7 +196,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Ew_Resolve16BaseIndex(bxInstruction_c
     if (offset < seg->cache.u.segment.limit_scaled) {
 accessOK:
       laddr = BX_CPU_THIS_PTR get_laddr32(s, offset);
-#if BX_SupportGuest2HostTLB
       unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 1);
       Bit32u lpf = LPFOf(laddr);
       bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
@@ -220,9 +210,7 @@ accessOK:
         BX_DBG_LIN_MEMORY_ACCESS(BX_CPU_ID, laddr,
               tlbEntry->ppf | pageOffset, 2, CPL, BX_READ, (Bit8u*) &TMP16);
       }
-      else
-#endif
-      {
+      else {
         access_read_linear(laddr, 2, CPL, BX_READ, (void *) &TMP16);
       }
 
@@ -255,7 +243,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Ew_Resolve32Base(bxInstruction_c *i)
     if (offset < seg->cache.u.segment.limit_scaled) {
 accessOK:
       laddr = BX_CPU_THIS_PTR get_laddr32(s, offset);
-#if BX_SupportGuest2HostTLB
       unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 1);
       Bit32u lpf = LPFOf(laddr);
       bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
@@ -270,9 +257,7 @@ accessOK:
         BX_DBG_LIN_MEMORY_ACCESS(BX_CPU_ID, laddr,
               tlbEntry->ppf | pageOffset, 2, CPL, BX_READ, (Bit8u*) &TMP16);
       }
-      else
-#endif
-      {
+      else {
         access_read_linear(laddr, 2, CPL, BX_READ, (void *) &TMP16);
       }
 
@@ -305,7 +290,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Ew_Resolve32BaseIndex(bxInstruction_c
     if (offset < seg->cache.u.segment.limit_scaled) {
 accessOK:
       laddr = BX_CPU_THIS_PTR get_laddr32(s, offset);
-#if BX_SupportGuest2HostTLB
       unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 1);
       Bit32u lpf = LPFOf(laddr);
       bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
@@ -320,9 +304,7 @@ accessOK:
         BX_DBG_LIN_MEMORY_ACCESS(BX_CPU_ID, laddr,
               tlbEntry->ppf | pageOffset, 2, CPL, BX_READ, (Bit8u*) &TMP16);
       }
-      else
-#endif
-      {
+      else {
         access_read_linear(laddr, 2, CPL, BX_READ, (void *) &TMP16);
       }
 
@@ -362,7 +344,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Ed_Resolve16BaseIndex(bxInstruction_c
     if (offset < (seg->cache.u.segment.limit_scaled-2)) {
 accessOK:
       laddr = BX_CPU_THIS_PTR get_laddr32(s, offset);
-#if BX_SupportGuest2HostTLB
       unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 3);
       Bit32u lpf = LPFOf(laddr);
       bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
@@ -377,9 +358,7 @@ accessOK:
         BX_DBG_LIN_MEMORY_ACCESS(BX_CPU_ID, laddr,
               tlbEntry->ppf | pageOffset, 4, CPL, BX_READ, (Bit8u*) &TMP32);
       }
-      else
-#endif
-      {
+      else {
         access_read_linear(laddr, 4, CPL, BX_READ, (void *) &TMP32);
       }
 
@@ -412,7 +391,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Ed_Resolve32Base(bxInstruction_c *i)
     if (offset < (seg->cache.u.segment.limit_scaled-2)) {
 accessOK:
       laddr = BX_CPU_THIS_PTR get_laddr32(s, offset);
-#if BX_SupportGuest2HostTLB
       unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 3);
       Bit32u lpf = LPFOf(laddr);
       bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
@@ -427,9 +405,7 @@ accessOK:
         BX_DBG_LIN_MEMORY_ACCESS(BX_CPU_ID, laddr,
             tlbEntry->ppf | pageOffset, 4, CPL, BX_READ, (Bit8u*) &TMP32);
       }
-      else
-#endif
-      {
+      else {
         access_read_linear(laddr, 4, CPL, BX_READ, (void *) &TMP32);
       }
 
@@ -462,7 +438,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Ed_Resolve32BaseIndex(bxInstruction_c
     if (offset < (seg->cache.u.segment.limit_scaled-2)) {
 accessOK:
       laddr = BX_CPU_THIS_PTR get_laddr32(s, offset);
-#if BX_SupportGuest2HostTLB
       unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 3);
       Bit32u lpf = LPFOf(laddr);
       bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
@@ -477,9 +452,7 @@ accessOK:
         BX_DBG_LIN_MEMORY_ACCESS(BX_CPU_ID, laddr,
               tlbEntry->ppf | pageOffset, 4, CPL, BX_READ, (Bit8u*) &TMP32);
       }
-      else
-#endif
-      {
+      else {
         access_read_linear(laddr, 4, CPL, BX_READ, (void *) &TMP32);
       }
 

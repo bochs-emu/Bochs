@@ -28,6 +28,8 @@ Detailed change log :
     the code.
   - Added ability to choose Bochs log file name and Bochs debugger log file
     name from Bochs command line (using new -log and -dbglog options)
+  - Removed --enable-guest2hos-tlb configure option. The option will be
+    always enabled for any Bochs configuration.
 
 - BIOS
   - Added S3 (suspend to RAM) ACPI state to BIOS (patch by Gleb Natapov)

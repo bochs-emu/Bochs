@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #####################################################################
-# $Id: batch-build.perl,v 1.11 2007-09-20 17:33:31 sshwarts Exp $
+# $Id: batch-build.perl,v 1.12 2008-12-11 21:19:38 sshwarts Exp $
 #####################################################################
 #
 # Batch build tool for multiple configurations
@@ -132,8 +132,6 @@ add_configuration ('large-pages',
   '--enable-large-pages');
 add_configuration ('pae',
   '--enable-pae');
-add_configuration ('g2h-tlb',
-  '--enable-guest2host-tlb');
 add_configuration ('repeat',
   '--enable-repeat-speedups');
 add_configuration ('globalpg',
@@ -174,6 +172,10 @@ add_configuration ('sse1',
   '--enable-sse=1');
 add_configuration ('sse2',
   '--enable-sse=2');
+add_configuration ('sse3',
+  '--enable-sse=3');
+add_configuration ('sse4',
+  '--enable-sse=4');
 add_configuration ('sse2-dbg',
   '--enable-sse=2 --enable-debugger');
 add_configuration ('sse2-x86-64-wx-d',

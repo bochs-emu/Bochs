@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.256 2008-12-07 19:47:34 sshwarts Exp $
+// $Id: cpu.cc,v 1.257 2008-12-11 21:19:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -714,9 +714,7 @@ void BX_CPU_C::prefetch(void)
 
   if ((tlbEntry->lpf == lpf) && !(tlbEntry->accessBits & USER_PL)) {
     BX_CPU_THIS_PTR pAddrA20Page = A20ADDR(tlbEntry->ppf);
-#if BX_SupportGuest2HostTLB
     fetchPtr = (Bit8u*) (tlbEntry->hostPageAddr);
-#endif
   }  
   else {
     bx_phy_address pAddr;

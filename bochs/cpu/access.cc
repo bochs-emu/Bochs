@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: access.cc,v 1.120 2008-09-08 20:47:33 sshwarts Exp $
+// $Id: access.cc,v 1.121 2008-12-11 21:19:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -270,7 +270,6 @@ BX_CPU_C::system_read_byte(bx_address laddr)
 {
   Bit8u data;
 
-#if BX_SupportGuest2HostTLB
   unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 0);
   bx_address lpf = LPFOf(laddr);
   bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
@@ -284,7 +283,6 @@ BX_CPU_C::system_read_byte(bx_address laddr)
         tlbEntry->ppf | pageOffset, 1, 0, BX_READ, (Bit8u*) &data);
     return data;
   }
-#endif
 
   access_read_linear(laddr, 1, 0, BX_READ, (void *) &data);
   return data;
@@ -295,7 +293,6 @@ BX_CPU_C::system_read_word(bx_address laddr)
 {
   Bit16u data;
 
-#if BX_SupportGuest2HostTLB
   unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 1);
   bx_address lpf = LPFOf(laddr);
   bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
@@ -309,7 +306,6 @@ BX_CPU_C::system_read_word(bx_address laddr)
         tlbEntry->ppf | pageOffset, 2, 0, BX_READ, (Bit8u*) &data);
     return data;
   }
-#endif
 
   access_read_linear(laddr, 2, 0, BX_READ, (void *) &data);
   return data;
@@ -320,7 +316,6 @@ BX_CPU_C::system_read_dword(bx_address laddr)
 {
   Bit32u data;
 
-#if BX_SupportGuest2HostTLB
   unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 3);
   bx_address lpf = LPFOf(laddr);
   bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
@@ -334,7 +329,6 @@ BX_CPU_C::system_read_dword(bx_address laddr)
         tlbEntry->ppf | pageOffset, 4, 0, BX_READ, (Bit8u*) &data);
     return data;
   }
-#endif
 
   access_read_linear(laddr, 4, 0, BX_READ, (void *) &data);
   return data;
@@ -345,7 +339,6 @@ BX_CPU_C::system_read_qword(bx_address laddr)
 {
   Bit64u data;
 
-#if BX_SupportGuest2HostTLB
   unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 7);
   bx_address lpf = LPFOf(laddr);
   bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
@@ -359,13 +352,11 @@ BX_CPU_C::system_read_qword(bx_address laddr)
         tlbEntry->ppf | pageOffset, 8, 0, BX_READ, (Bit8u*) &data);
     return data;
   }
-#endif
 
   access_read_linear(laddr, 8, 0, BX_READ, (void *) &data);
   return data;
 }
 
-#if BX_SupportGuest2HostTLB
   Bit8u* BX_CPP_AttrRegparmN(2)
 BX_CPU_C::v2h_read_byte(bx_address laddr, bx_bool user)
 {
@@ -409,4 +400,3 @@ BX_CPU_C::v2h_write_byte(bx_address laddr, bx_bool user)
 
   return 0;
 }
-#endif   // BX_SupportGuest2HostTLB
