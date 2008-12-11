@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpuid.cc,v 1.75 2008-12-06 10:21:55 sshwarts Exp $
+// $Id: cpuid.cc,v 1.76 2008-12-11 21:00:01 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007 Stanislav Shwartsman
@@ -638,6 +638,9 @@ void BX_CPU_C::set_cpuid_defaults(void)
 #endif
 #if BX_SUPPORT_X86_64
   features |= (1 << 29) | (1 << 27) | (1 << 25) | (1 << 20) | (1 << 11);
+#if BX_SUPPORT_1G_PAGES
+  features |= (1 << 27);
+#endif
 #endif
   cpuid->edx = features;
 

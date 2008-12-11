@@ -12,6 +12,8 @@ Detailed change log :
 - CPU and internal debugger
   - Support new Intel Atom(R) MOVBE instruction, to enable configure with
         --enable-movbe option
+  - Support for 1G pages in long mode, to enable configure with
+        --enable-1g-pages option
   - Implemented modern BIOSes mode limiting max reported CPUID function
     to 3 using .bochsrc CPU option. The mode is required in order to
     correctly install and boot WinNT.
@@ -48,6 +50,7 @@ Detailed change log :
   - Updated Bochs TESTFORM to version 0.4
 
 - SF patches applied
+ [2403372] rombios: check for valid cdrom before using it by Sebastian
  [2307269] acpi: handle S3 by Sebastian
  [2354134] TAP networking on Solaris/Sparc repaired
  [2144692] The scsi device can not complete its writing data command by naiyue
@@ -83,6 +86,7 @@ Detailed change log :
  [1981505] Init PIIX4 PCI to ISA bridge and IDE by Sebastian
 
 - these S.F. bugs were closed
+ [2105989] could not read() hard drive image file at byte 269824
  [1173093] Debugger totally not supports x86-64
  [1803018] new win32debug dialog problems
  [2141679] windows vcc build broken

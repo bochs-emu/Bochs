@@ -14,6 +14,7 @@
   --enable-pae \
   --enable-global-pages \
   --enable-mtrr \
+  --enable-1g-pages \
   --enable-ignore-bad-msr \
   --enable-port-e9-hack \
   --enable-debugger \
