@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.266 2008-12-08 20:01:26 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.267 2008-12-13 18:40:39 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -297,7 +297,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_DdRd(bxInstruction_c *i)
           ((((val_32>>28) & 3)==0) && (((val_32>>30) & 3)!=0)))
       {
         // Instruction breakpoint with LENx not 00b (1-byte length)
-        BX_PANIC(("MOV_DdRd: write of %08x, R/W=00b LEN!=00b", val_32));
+        BX_ERROR(("MOV_DdRd: write of %08x, R/W=00b LEN!=00b", val_32));
       }
 #if BX_CPU_LEVEL <= 4
       // 386/486: you can play with all the bits except b10 is always 1
@@ -454,7 +454,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_DqRq(bxInstruction_c *i)
           ((((val_64>>28) & 3)==0) && (((val_64>>30) & 3)!=0)))
       {
         // Instruction breakpoint with LENx not 00b (1-byte length)
-        BX_PANIC(("MOV_DqRq: write of %08x:%08x, R/W=00b LEN!=00b",
+        BX_ERROR(("MOV_DqRq: write of %08x:%08x, R/W=00b LEN!=00b",
           (Bit32u)(val_64 >> 32), (Bit32u)(val_64 & 0xFFFFFFFF)));
       }
 
