@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: misc_mem.cc,v 1.119 2008-12-05 22:34:42 sshwarts Exp $
+// $Id: misc_mem.cc,v 1.120 2008-12-13 11:03:36 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -76,7 +76,7 @@ void BX_MEM_C::init_memory(Bit32u memsize)
 {
   unsigned idx;
 
-  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.119 2008-12-05 22:34:42 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.120 2008-12-13 11:03:36 vruppert Exp $"));
 
   if (BX_MEM_THIS actual_vector != NULL) {
     BX_INFO (("freeing existing memory vector"));
@@ -513,18 +513,18 @@ bx_bool BX_MEM_C::dbg_crc32(bx_phy_address addr1, bx_phy_address addr2, Bit32u *
 
 Bit8u *BX_MEM_C::getHostMemAddr(BX_CPU_C *cpu, bx_phy_address a20Addr, unsigned rw)
 {
-  BX_ASSERT(cpu != 0); // getHostMemAddr could be used only inside the CPU
-
 #if BX_SUPPORT_APIC
-  bx_generic_apic_c *local_apic = &cpu->local_apic;
-  if (local_apic->get_base() == (a20Addr & ~0xfff))
-    return(NULL); // Vetoed!  APIC address space
+  if (cpu != NULL) {
+    bx_generic_apic_c *local_apic = &cpu->local_apic;
+    if (local_apic->get_base() == (a20Addr & ~0xfff))
+      return(NULL); // Vetoed!  APIC address space
+  }
 #endif
 
   bx_bool write = rw & 1;
 
   // allow direct access to SMRAM memory space for code and veto data
-  if (rw == BX_EXECUTE) {
+  if ((cpu != NULL) && (rw == BX_EXECUTE)) {
     // reading from SMRAM memory space
     if ((a20Addr & 0xfffe0000) == 0x000a0000 && (BX_MEM_THIS smram_available))
     {
