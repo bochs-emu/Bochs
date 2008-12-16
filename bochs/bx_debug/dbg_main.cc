@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.165 2008-12-08 20:20:30 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.166 2008-12-16 19:26:57 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2759,7 +2759,7 @@ void bx_dbg_info_dirty_command(void)
   }
 }
 
-void bx_dbg_print_descriptor(unsigned char desc[8], int verbose)
+void bx_dbg_print_descriptor(unsigned char desc[8])
 {
   Bit32u lo = (desc[3] << 24) | (desc[2] << 16) | (desc[1] << 8) | (desc[0]);
   Bit32u hi = (desc[7] << 24) | (desc[6] << 16) | (desc[5] << 8) | (desc[4]);
@@ -2769,53 +2769,12 @@ void bx_dbg_print_descriptor(unsigned char desc[8], int verbose)
   Bit32u limit = (hi & 0x000f0000) | (lo & 0xffff);
   Bit32u segment = (lo >> 16) & 0xffff;
   Bit32u offset = (lo & 0xffff) | (hi & 0xffff0000);
-  unsigned type = (hi >> 8) & 0x0f;
-  unsigned dpl = (hi >> 13) & 0x03;
-  unsigned s = (hi >> 12) & 0x01;
-  unsigned d_b = (hi >> 22) & 0x01;
-  unsigned g = (hi >> 23) & 0x01;
-#if 0
-  unsigned present = (hi >> 15) & 0x01;
-  unsigned avl = (hi >> 20) & 0x01;
-  unsigned base_is_jump_addr;
-  if (s) {
-    // either a code or a data segment. bit 11 (type file MSB) then says
-    // 0=data segment, 1=code seg
-    if (type&8) {
-      dbg_printf("Segment type: Code, %s%s%s\n",
-        (type&2)? "Execute/Read" : "Execute-Only",
-        (type&4)? ", Conforming" : "",
-        (type&1)? ", Accessed" : "");
-      dbg_printf("D flag=%d (use %d-bit addresses, %d-bit or 8-bit operands)\n", d_b, d_b? 32 : 16);
-    } else {
-      dbg_printf("Segment type: Data, %s%s%s\n",
-        (type&2)? "Read/Write" : "Read-Only",
-        (type&4)? ", Expand-down" : "",
-        (type&1)? ", Accessed" : "");
-    }
-  } else {
-    // types from IA32-devel-guide-3, page 3-15.
-    static char *type_names[16] = { "Reserved", "16-Bit TSS (available)", "LDT", "16-Bit TSS (Busy)", "16-Bit Call Gate", "Task Gate", "16-Bit Interrupt Gate", "16-Bit Trap Gate", "Reserved", "32-Bit TSS (Available)", "Reserved", "32-Bit TSS (Busy)", "32-Bit Call Gate", "Reserved", "32-Bit Interrupt Gate", "32-Bit Trap Gate" };
-    // some kind of gate?
-    dbg_printf("System segment, type=0x%x=%s\n", type, type_names[type]);
-    base_is_jump_addr = 1;
-    // for call gates, print segment:offset and parameter count p.40-15
-    // for task gate, only present,dpl,TSS segment selector exist. p.5-13
-    // for interrupt gate, segment:offset,p,dpl
-    // for trap gate, segment:offset,p,dpl
-  }
-  dbg_printf("DPL=descriptor privilege level=%d\n", dpl);
-  if (base_is_jump_addr) {
-    dbg_printf("target address=%04x:%08x\n", segment, offset);
-  } else {
-    dbg_printf("base address=%08x\n", base);
-    dbg_printf("G=granularity=%d\n", g);
-    dbg_printf("limit=0x%05x %s (see G)\n", limit, g?"4K-byte units" : "bytes");
-    dbg_printf("AVL=available to OS=%d\n", avl);
-  }
-  dbg_printf("P=present=%d\n", present);
-#endif
-  /* brief output */
+  unsigned type = (hi >> 8) & 0xf;
+  unsigned dpl = (hi >> 13) & 0x3;
+  unsigned s = (hi >> 12) & 0x1;
+  unsigned d_b = (hi >> 22) & 0x1;
+  unsigned g = (hi >> 23) & 0x1;
+
   // 32-bit trap gate, target=0010:c0108ec4, DPL=0, present=1
   // code segment, base=0000:00cfffff, length=0xffff
   if (s) {
@@ -2838,7 +2797,24 @@ void bx_dbg_print_descriptor(unsigned char desc[8], int verbose)
   } else {
     // types from IA32-devel-guide-3, page 3-15.
     static char *undef = "???";
-    static char *type_names[16] = { undef, "16-Bit TSS (available)", "LDT", "16-Bit TSS (Busy)", "16-Bit Call Gate", "Task Gate", "16-Bit Interrupt Gate", "16-Bit Trap Gate", undef, "32-Bit TSS (Available)", undef, "32-Bit TSS (Busy)", "32-Bit Call Gate", undef, "32-Bit Interrupt Gate", "32-Bit Trap Gate" };
+    static char *type_names[16] = { 
+        undef,
+        "16-Bit TSS (available)",
+        "LDT",
+        "16-Bit TSS (Busy)",
+        "16-Bit Call Gate",
+        "Task Gate",
+        "16-Bit Interrupt Gate",
+        "16-Bit Trap Gate",
+        undef,
+        "32-Bit TSS (Available)",
+        undef,
+        "32-Bit TSS (Busy)",
+        "32-Bit Call Gate",
+        undef,
+        "32-Bit Interrupt Gate",
+        "32-Bit Trap Gate"
+    };
     dbg_printf("%s ", type_names[type]);
     // only print more if type is valid
     if (type_names[type] == undef)  {
@@ -2854,7 +2830,7 @@ void bx_dbg_print_descriptor(unsigned char desc[8], int verbose)
       case BX_SYS_SEGMENT_BUSY_286_TSS:
       case BX_SYS_SEGMENT_AVAIL_386_TSS:
       case BX_SYS_SEGMENT_BUSY_386_TSS:
-       dbg_printf("at 0x%08x, length 0x%05x", base, limit);
+        dbg_printf("at 0x%08x, length 0x%05x", base, limit);
         break;
       case BX_SYS_SEGMENT_LDT:
         // it's an LDT. not much to print.
@@ -2862,11 +2838,80 @@ void bx_dbg_print_descriptor(unsigned char desc[8], int verbose)
       default:
         // task, int, trap, or call gate.
         dbg_printf("target=0x%04x:0x%08x, DPL=%d", segment, offset, dpl);
+        break;
       }
     }
     dbg_printf("\n");
   }
 }
+
+#if BX_SUPPORT_X86_64
+void bx_dbg_print_descriptor64(unsigned char desc[8])
+{
+  Bit32u lo1 = (desc[3]  << 24) | (desc[2]  << 16) | (desc[1]  << 8) | (desc[0]);
+  Bit32u hi1 = (desc[7]  << 24) | (desc[6]  << 16) | (desc[5]  << 8) | (desc[4]);
+  Bit32u lo2 = (desc[11] << 24) | (desc[10] << 16) | (desc[9]  << 8) | (desc[8]);
+  Bit32u hi2 = (desc[15] << 24) | (desc[14] << 16) | (desc[13] << 8) | (desc[12]);
+  Bit32u segment = (lo1 >> 16) & 0xffff;
+  Bit64u offset = (lo1 & 0xffff) | (hi1 & 0xffff0000) | ((Bit64u)(lo2) << 32);
+  unsigned type = (hi1 >> 8) & 0xf;
+  unsigned dpl = (hi1 >> 13) & 0x3;
+  unsigned s = (hi1 >> 12) & 0x1;
+
+  if (s) {
+    dbg_printf("bx_dbg_print_descriptor64: only system entries displayed in 64bit mode\n");
+  }
+  else {
+    static char *undef = "???";
+    static char *type_names[16] = { 
+        undef,
+        undef,
+        "LDT",
+        undef,
+        undef,
+        undef,
+        undef,
+        undef,
+        undef,
+        "64-Bit TSS (Available)",
+        undef,
+        "64-Bit TSS (Busy)",
+        "64-Bit Call Gate",
+        undef,
+        "64-Bit Interrupt Gate",
+        "64-Bit Trap Gate"
+    };
+    dbg_printf("%s ", type_names[type]);
+    // only print more if type is valid
+    if (type_names[type] == undef)  {
+      dbg_printf("\ndescriptor dword2 hi=0x%08x, lo=0x%08x", hi2, lo2);
+      dbg_printf("\n           dword1 hi=0x%08x, lo=0x%08x", hi1, lo1);
+    } else {
+      // for call gates, print segment:offset and parameter count p.4-15
+      // for task gate, only present,dpl,TSS segment selector exist. p.5-13
+      // for interrupt gate, segment:offset,p,dpl
+      // for trap gate, segment:offset,p,dpl
+      // for TSS, base address and segment limit
+      switch (type) {
+      case BX_SYS_SEGMENT_AVAIL_286_TSS:
+      case BX_SYS_SEGMENT_BUSY_286_TSS:
+      case BX_SYS_SEGMENT_AVAIL_386_TSS:
+      case BX_SYS_SEGMENT_BUSY_386_TSS:
+        // don't print nothing about 64-bit TSS
+        break;
+      case BX_SYS_SEGMENT_LDT:
+        // it's an LDT. not much to print.
+        break;
+      default:
+        // task, int, trap, or call gate.
+        dbg_printf("target=0x%04x:"FMT_ADDRX", DPL=%d", segment, offset, dpl);
+        break;
+      }
+    }
+    dbg_printf("\n");
+  }
+}
+#endif
 
 void bx_dbg_info_idt_command(unsigned from, unsigned to)
 {
@@ -2888,19 +2933,38 @@ void bx_dbg_info_idt_command(unsigned from, unsigned to)
     to = temp;
   }
 
-  dbg_printf("Interrupt Descriptor Table (base=0x" FMT_ADDRX ", limit=%d):\n", idtr.base, idtr.limit);
-  for (unsigned n = from; n<=to; n++) {
-    Bit8u entry[8];
-    if (8*n + 7 > idtr.limit) break;
-    if (bx_dbg_read_linear(dbg_cpu, idtr.base + 8*n, 8, entry)) {
-      dbg_printf("IDT[0x%02x]=", n);
-      bx_dbg_print_descriptor(entry, 0);
-    }
-    else {
-      dbg_printf("error: IDTR+8*%d points to invalid linear address 0x" FMT_ADDRX "\n",
-        n, idtr.base);
+#if BX_SUPPORT_X86_64
+  if (BX_CPU(dbg_cpu)->get_cpu_mode() == BX_MODE_LONG_64) {
+    dbg_printf("Interrupt Descriptor Table (base=0x" FMT_ADDRX ", limit=%d):\n", idtr.base, idtr.limit);
+    for (unsigned n = from; n<=to; n++) {
+      Bit8u entry[16];
+      if (16*n + 15 > idtr.limit) break;
+      if (bx_dbg_read_linear(dbg_cpu, idtr.base + 16*n, 16, entry)) {
+        dbg_printf("IDT[0x%02x]=", n);
+        bx_dbg_print_descriptor64(entry);
+      }
+      else {
+        dbg_printf("error: IDTR+16*%d points to invalid linear address 0x" FMT_ADDRX "\n", n, idtr.base);
+      }
     }
   }
+  else
+#endif
+  {
+    dbg_printf("Interrupt Descriptor Table (base=0x" FMT_ADDRX ", limit=%d):\n", idtr.base, idtr.limit);
+    for (unsigned n = from; n<=to; n++) {
+      Bit8u entry[8];
+      if (8*n + 7 > idtr.limit) break;
+      if (bx_dbg_read_linear(dbg_cpu, idtr.base + 8*n, 8, entry)) {
+        dbg_printf("IDT[0x%02x]=", n);
+        bx_dbg_print_descriptor(entry);
+      }
+      else {
+        dbg_printf("error: IDTR+8*%d points to invalid linear address 0x" FMT_ADDRX "\n", n, idtr.base);
+      }
+    }
+  }
+
   if (all)
     dbg_printf("You can list individual entries with 'info idt [NUM]' or groups with 'info idt [NUM] [NUM]'\n");
 }
@@ -2931,7 +2995,7 @@ void bx_dbg_info_gdt_command(unsigned from, unsigned to)
     if (8*n + 7 > gdtr.limit) break;
     if (bx_dbg_read_linear(dbg_cpu, gdtr.base + 8*n, 8, entry)) {
       dbg_printf("GDT[0x%02x]=", n);
-      bx_dbg_print_descriptor(entry, 0);
+      bx_dbg_print_descriptor(entry);
     }
     else {
       dbg_printf("error: GDTR+8*%d points to invalid linear address 0x" FMT_ADDRX "\n",
@@ -2969,7 +3033,7 @@ void bx_dbg_info_ldt_command(unsigned from, unsigned to)
     if (8*n + 7 > ldtr_limit) break;
     if (bx_dbg_read_linear(dbg_cpu, ldtr_base + 8*n, 8, entry)) {
       dbg_printf("LDT[0x%02x]=", n);
-      bx_dbg_print_descriptor(entry, 0);
+      bx_dbg_print_descriptor(entry);
     }
     else {
       dbg_printf("error: LDTR+8*%d points to invalid linear address 0x" FMT_ADDRX "\n",
