@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.166 2008-12-16 19:26:57 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.167 2008-12-16 19:28:19 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2934,7 +2934,7 @@ void bx_dbg_info_idt_command(unsigned from, unsigned to)
   }
 
 #if BX_SUPPORT_X86_64
-  if (BX_CPU(dbg_cpu)->get_cpu_mode() == BX_MODE_LONG_64) {
+  if (BX_CPU(dbg_cpu)->long_mode()) {
     dbg_printf("Interrupt Descriptor Table (base=0x" FMT_ADDRX ", limit=%d):\n", idtr.base, idtr.limit);
     for (unsigned n = from; n<=to; n++) {
       Bit8u entry[16];
