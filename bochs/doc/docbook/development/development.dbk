@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/development/development.dbk
-$Id: development.dbk,v 1.29 2008-12-17 10:01:44 vruppert Exp $
+$Id: development.dbk,v 1.30 2008-12-17 14:43:16 vruppert Exp $
 
 This is the top level file for the Bochs Developers Manual.
 ================================================================
@@ -2457,11 +2457,24 @@ Connection to shell.sourceforge.net closed.
 </para>
 </section>
 
-      <section id="update-online-docs"><title>Updating the online documentation</title>
-      <para>
-      &FIXME;
-      </para>
-      </section>
+<section id="update-online-docs"><title>Updating the online documentation</title>
+<para>
+To update the online documentation, a file called<filename>bochsdoc.tar.gz</filename>
+must be generated with the <command>make</command>. This file must be uploaded
+to the location of the online documentation on SF using <command>scp</command>.
+<screen>
+cd doc/docbook
+make bochsdoc.tar.gz
+scp bochsdoc.tar.gz vruppert,bochs@web.sf.net:htdocs/doc/docbook
+</screen>
+After a successful upload, the HTML files must be unpacked from the SF shell.
+See previous section how to create a shell.
+<screen>
+cd /home/groups/b/bo/bochs/htdocs/doc/docbook
+tar xvzf bochsdoc.tar.gz
+</screen>
+</para>
+</section>
 
       <section id="repository"><title>website html repository</title>
       <para>
