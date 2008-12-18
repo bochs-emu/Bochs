@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wx.cc,v 1.96 2008-11-16 21:01:09 vruppert Exp $
+// $Id: wx.cc,v 1.97 2008-12-18 09:55:09 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxWidgets VGA display for Bochs.  wx.cc implements a custom
@@ -822,9 +822,13 @@ bx_bool MyPanel::fillBxKeyEvent (wxKeyEvent& wxev, BxKeyEvent& bxev, bx_bool rel
     case WXK_NUMPAD_RIGHT:         bx_key = BX_KEY_KP_RIGHT;     break;
     case WXK_NUMPAD_DOWN:          bx_key = BX_KEY_KP_DOWN;      break;
     case WXK_NUMPAD_PRIOR:         bx_key = BX_KEY_KP_PAGE_UP;   break;
+#if WXK_NUMPAD_PAGEUP != WXK_NUMPAD_PRIOR
     case WXK_NUMPAD_PAGEUP:        bx_key = BX_KEY_KP_PAGE_UP;   break;
+#endif
     case WXK_NUMPAD_NEXT:          bx_key = BX_KEY_KP_PAGE_DOWN; break;
+#if WXK_NUMPAD_PAGEDOWN != WXK_NUMPAD_NEXT
     case WXK_NUMPAD_PAGEDOWN:      bx_key = BX_KEY_KP_PAGE_DOWN; break;
+#endif
     case WXK_NUMPAD_END:           bx_key = BX_KEY_KP_END;       break;
     case WXK_NUMPAD_BEGIN:         bx_key = BX_KEY_KP_HOME;      break;
     case WXK_NUMPAD_INSERT:        bx_key = BX_KEY_KP_INSERT;    break;
@@ -849,7 +853,11 @@ bx_bool MyPanel::fillBxKeyEvent (wxKeyEvent& wxev, BxKeyEvent& bxev, bx_bool rel
     case 220: bx_key = BX_KEY_BACKSLASH;     break; // \|
     case 222: bx_key = BX_KEY_SINGLE_QUOTE;  break; // '"
     case 305: bx_key = BX_KEY_KP_5;          break; // keypad 5
-    case 392: bx_key = BX_KEY_KP_ADD;        break; // keypad plus
+//#if defined(WXK_NUMPAD_ADD)
+    case WXK_NUMPAD_ADD: bx_key = BX_KEY_KP_ADD; break; // keypad plus
+//#else
+//    case 392: bx_key = BX_KEY_KP_ADD;        break; // keypad plus
+//#endif
 
     default:
       wxLogMessage(wxT ("Unhandled key event: %i (0x%x)"), key, key);

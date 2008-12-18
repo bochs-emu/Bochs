@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxdialog.cc,v 1.105 2008-02-15 22:05:40 sshwarts Exp $
+// $Id: wxdialog.cc,v 1.106 2008-12-18 09:55:09 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
@@ -571,7 +571,7 @@ void AdvancedLogOptionsDialog::SetAction(int dev, int evtype, int act) {
   int *ptr;
   // wxLogDebug(wxT("SetAction dev=%d type=%d act=%d"), dev, evtype, act);
   wxChoice *control = action[dev][evtype];
-  for (int i=0; i < control->GetCount(); i++) {
+  for (int i=0; i < (int)control->GetCount(); i++) {
     // wxLogDebug(wxT("reading action[%d][%d]->GetClientData(%d)"), dev, evtype, i);
     ptr = (int*) control->GetClientData(i);
     if (ptr == NULL) continue;
@@ -817,7 +817,7 @@ ParamDialog::~ParamDialog()
 {
   paramHash->BeginFind();
   wxNode *node;
-  while ((node = paramHash->Next()) != NULL) {
+  while ((node = (wxNode*)paramHash->Next()) != NULL) {
     // assume that no ParamStruct appears in the hash table under multiple
     // keys.  If so, we will delete it twice and corrupt memory.
     ParamStruct *pstr = (ParamStruct*) node->GetData();
@@ -871,7 +871,7 @@ bool ParamDialog::isGeneratedId (int id) {
   return (id >= ID_LAST_USER_DEFINED && id < _next_id);
 }
 
-void ParamDialog::AddParamList(char *nameList[], bx_param_c *base, wxFlexGridSizer *sizer, bool plain)
+void ParamDialog::AddParamList(const char *nameList[], bx_param_c *base, wxFlexGridSizer *sizer, bool plain)
 {
   int i = 0;
   while (nameList[i] != NULL) {
@@ -1127,7 +1127,7 @@ bool ParamDialog::CopyGuiToParam()
   // loop through all the parameters
   idHash->BeginFind();
   wxNode *node;
-  while ((node = idHash->Next()) != NULL) {
+  while ((node = (wxNode*)idHash->Next()) != NULL) {
     ParamStruct *pstr = (ParamStruct*) node->GetData();
     wxLogDebug(wxT("commit changes for param %s"), pstr->param->get_name());
     int type = pstr->param->get_type();
@@ -1207,7 +1207,7 @@ void ParamDialog::EnableChanged()
 {
   idHash->BeginFind();
   wxNode *node;
-  while ((node = idHash->Next ()) != NULL) {
+  while ((node = (wxNode*)idHash->Next ()) != NULL) {
     ParamStruct *pstr = (ParamStruct*) node->GetData();
     if (pstr->param->get_type() == BXT_PARAM_BOOL)
       EnableChanged(pstr);
@@ -1408,7 +1408,7 @@ void ParamDialog::CopyParamToGui ()
   // loop through all the parameters
   idHash->BeginFind ();
   wxNode *node;
-  while ((node = idHash->Next ()) != NULL) {
+  while ((node = (wxNode*)idHash->Next ()) != NULL) {
     ParamStruct *pstr = (ParamStruct*) node->GetData ();
     IFDBG_DLG(wxLogDebug(wxT("refresh param %s"), pstr->param->get_name()));
     int type = pstr->param->get_type ();
@@ -1535,13 +1535,13 @@ CpuRegistersDialog::CpuRegistersDialog(
 {
   wxFlexGridSizer *column;
   nflags = 0;
-  char *mainRegList1[] = CPU_REGS_MAIN_REGS1;
-  char *mainRegList2[] = CPU_REGS_MAIN_REGS2;
-  char *mainRegList3[] = CPU_REGS_MAIN_REGS3;
-  char *flagList[]     = CPU_REGS_FLAGS;
-  char *controlList[]  = CPU_REGS_CONTROL_REGS;
-  char *debugList[]    = CPU_REGS_DEBUG_REGS;
-  char *testList[]     = CPU_REGS_TEST_REGS;
+  const char *mainRegList1[] = CPU_REGS_MAIN_REGS1;
+  const char *mainRegList2[] = CPU_REGS_MAIN_REGS2;
+  const char *mainRegList3[] = CPU_REGS_MAIN_REGS3;
+  const char *flagList[]     = CPU_REGS_FLAGS;
+  const char *controlList[]  = CPU_REGS_CONTROL_REGS;
+  const char *debugList[]    = CPU_REGS_DEBUG_REGS;
+  const char *testList[]     = CPU_REGS_TEST_REGS;
   bx_list_c *base      = (bx_list_c*)SIM->get_param(BXPN_WX_CPU0_STATE);
 
   // top level objects
@@ -1764,7 +1764,7 @@ void LogOptionsDialog::SetAction(int evtype, int a)
   // find the choice whose client data matches "a".
   int *ptr;
   //wxLogDebug ("SetAction type=%d a=%d", evtype, a);
-  for (int i=0; i < action[evtype]->GetCount(); i++) {
+  for (int i=0; i < (int)action[evtype]->GetCount(); i++) {
     //wxLogDebug ("reading action[%d]->GetClientData(%d)", evtype, i);
     ptr = (int*) action[evtype]->GetClientData(i);
     if (ptr == NULL) continue;

@@ -1,10 +1,11 @@
 ////////////////////////////////////////////////////////////////////
-// $Id: wxdialog.h,v 1.70 2008-02-05 22:57:41 sshwarts Exp $
+// $Id: wxdialog.h,v 1.71 2008-12-18 09:55:09 vruppert Exp $
 ////////////////////////////////////////////////////////////////////
 //
 // wxWidgets dialogs for Bochs
 
 #include <wx/spinctrl.h>
+#include <wx/notebook.h>
 
 ////////////////////////////////////////////////////////////////////
 // text messages used in several places
@@ -423,7 +424,7 @@ public:
   bool Show(bool val) { isShowing = val; return wxDialog::Show(val); }
   void AddParam(bx_param_c *param, wxFlexGridSizer *sizer, bool plain = false);
   void AddParam(bx_param_c *param, bool plain = false, AddParamContext *context = NULL);
-  void AddParamList(char *nameList[], bx_param_c *base, wxFlexGridSizer *sizer = NULL, bool plain = false);
+  void AddParamList(const char *nameList[], bx_param_c *base, wxFlexGridSizer *sizer = NULL, bool plain = false);
   virtual void CopyParamToGui();
   bool IsShowing() { return isShowing; }
   void SetRuntimeFlag(bool val) { runtime = val; }
