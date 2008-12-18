@@ -1,10 +1,10 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32dialog.cc,v 1.63 2008-10-21 13:45:03 sshwarts Exp $
+// $Id: win32dialog.cc,v 1.64 2008-12-18 15:37:25 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #include "win32dialog.h"
 
-#if BX_USE_TEXTCONFIG && defined(WIN32)
+#if BX_USE_TEXTCONFIG && defined(WIN32) && (BX_WITH_WIN32 || BX_WITH_SDL)
 
 #include "bochs.h"
 #include "win32res.h"

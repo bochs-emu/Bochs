@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: term.cc,v 1.41 2008-06-22 08:32:59 vruppert Exp $
+// $Id: term.cc,v 1.42 2008-12-18 15:37:25 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2000  MandrakeSoft S.A.
@@ -34,8 +34,6 @@
 #include "bochs.h"
 #include "iodev.h"
 #if BX_WITH_TERM
-
-#include "icon_bochs.h"
 
 extern "C" {
 #include <curses.h>
