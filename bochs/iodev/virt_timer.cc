@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: virt_timer.cc,v 1.37 2008-02-15 22:05:43 sshwarts Exp $
+// $Id: virt_timer.cc,v 1.38 2008-12-19 12:52:34 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -91,7 +91,7 @@
 //Minimum number of emulated useconds per second.
 //  Now calculated using BX_MIN_IPS, the minimum number of
 //   instructions per second.
-#define MIN_USEC_PER_SECOND (((((Bit64u)USEC_PER_SECOND)*((Bit64u)BX_MIN_IPS))/((Bit64u)(SIM->get_param_num(BXPN_IPS)->get())))+(Bit64u)1)
+#define MIN_USEC_PER_SECOND (((((Bit64u)USEC_PER_SECOND)*((Bit64u)BX_MIN_IPS))/((Bit64u)ips))+(Bit64u)1)
 
 
 //DEBUG configuration:
@@ -400,6 +400,9 @@ void bx_virt_timer_c::init(void)
   if (virtual_timers_realtime) {
     BX_INFO(("using 'realtime pit' synchronization method"));
   }
+
+  // Local copy of IPS value to avoid reading it frequently in timer handler
+  ips = SIM->get_param_num(BXPN_IPS)->get();
 
   register_timer(this, nullTimer, (Bit32u)NullTimerInterval, 1, 1, "Null Timer");
 

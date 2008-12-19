@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: virt_timer.h,v 1.15 2008-02-15 22:05:43 sshwarts Exp $
+// $Id: virt_timer.h,v 1.16 2008-12-19 12:52:34 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -78,6 +78,9 @@ private:
   Bit64u total_ticks;
   Bit64u last_realtime_ticks;
   Bit64u ticks_per_second;
+
+  // Local copy of IPS value
+  Bit64u ips;
 
   bx_bool init_done;
 
