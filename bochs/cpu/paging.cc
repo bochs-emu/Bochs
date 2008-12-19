@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.164 2008-12-11 21:30:37 sshwarts Exp $
+// $Id: paging.cc,v 1.165 2008-12-19 16:03:25 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -514,6 +514,10 @@ void BX_CPU_C::TLB_flush(void)
   BX_CPU_THIS_PTR PDPE_CACHE.valid = 0;
 #endif
 
+#if BX__SUPPORT_LARGE_PAGES
+  BX_CPU_THIS_PTR TLB.split_large = 0;  // flush whole TLB
+#endif
+
 #if BX_SUPPORT_MONITOR_MWAIT
   // invalidating of the TLB might change translation for monitored page
   // and cause subsequent MWAIT instruction to wait forever
@@ -533,8 +537,13 @@ void BX_CPU_C::TLB_flushNonGlobal(void)
 
   for (unsigned n=0; n<BX_TLB_SIZE; n++) {
     bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[n];
-    if (!(tlbEntry->accessBits & TLB_GlobalPage))
+    if (!(tlbEntry->accessBits & TLB_GlobalPage)) {
       tlbEntry->lpf = BX_INVALID_TLB_ENTRY;
+    }
+#if BX_SUPPORT_LARGE_PAGES
+    else if (~tlbEntry->lpf_mask > 0xfff)
+      BX_CPU_THIS_PTR TLB.split_large = 1;
+#endif
   }
 
 #if BX_SUPPORT_PAE
@@ -557,20 +566,30 @@ void BX_CPU_C::TLB_invlpg(bx_address laddr)
   BX_DEBUG(("TLB_invlpg(0x"FMT_ADDRX"): invalidate TLB entry", laddr));
 
 #if BX_SUPPORT_LARGE_PAGES
-  // make sure INVLPG handles correctly large pages
-  for (unsigned n=0; n<BX_TLB_SIZE; n++) {
-    bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[n];
-    if ((laddr & tlbEntry->lpf_mask) == (tlbEntry->lpf & tlbEntry->lpf_mask))
-      tlbEntry->lpf = BX_INVALID_TLB_ENTRY;
+  bx_bool large = 0;
+
+  if (BX_CPU_THIS_PTR TLB.split_large) {
+    // make sure INVLPG handles correctly large pages
+    for (unsigned n=0; n<BX_TLB_SIZE; n++) {
+      bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[n];
+      if ((laddr & tlbEntry->lpf_mask) == (tlbEntry->lpf & tlbEntry->lpf_mask)) {
+        tlbEntry->lpf = BX_INVALID_TLB_ENTRY;
+      }
+      else if (~tlbEntry->lpf_mask > 0xfff) large = 1;
+    }
+
+    BX_CPU_THIS_PTR TLB.split_large = large;
   }
-#else
-  unsigned TLB_index = BX_TLB_INDEX_OF(laddr, 0);
-  bx_address lpf = LPFOf(laddr);
-  bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[TLB_index];
-  if (TLB_LPFOf(tlbEntry->lpf) == lpf) {
-    tlbEntry->lpf = BX_INVALID_TLB_ENTRY;
-  }
+  else
 #endif
+  {
+    unsigned TLB_index = BX_TLB_INDEX_OF(laddr, 0);
+    bx_address lpf = LPFOf(laddr);
+    bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[TLB_index];
+    if (TLB_LPFOf(tlbEntry->lpf) == lpf) {
+      tlbEntry->lpf = BX_INVALID_TLB_ENTRY;
+    }
+  }
 
 #if BX_SUPPORT_PAE
   BX_CPU_THIS_PTR PDPE_CACHE.valid = 0;
@@ -1174,6 +1193,11 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned curr_pl, un
 
   // Calculate physical memory address and fill in TLB cache entry
   paddress = ppf | poffset;
+
+#if BX_SUPPORT_LARGE_PAGES
+  if (lpf_mask > 0xfff)
+    BX_CPU_THIS_PTR TLB.split_large = 1;
+#endif
 
   // direct memory access is NOT allowed by default
   tlbEntry->lpf = lpf | TLB_HostPtr;

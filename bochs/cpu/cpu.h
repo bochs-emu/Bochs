@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.543 2008-12-11 21:19:38 sshwarts Exp $
+// $Id: cpu.h,v 1.544 2008-12-19 16:03:25 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -948,6 +948,9 @@ public: // for now...
   // for paging
   struct {
     bx_TLB_entry entry[BX_TLB_SIZE] BX_CPP_AlignN(16);
+#if BX_SUPPORT_LARGE_PAGES
+    bx_bool split_large;
+#endif
   } TLB;
 
 #if BX_SUPPORT_PAE
