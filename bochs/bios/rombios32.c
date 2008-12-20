@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios32.c,v 1.39 2008-12-04 18:48:33 sshwarts Exp $
+// $Id: rombios32.c,v 1.40 2008-12-20 14:26:55 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  32 bit Bochs BIOS init code
@@ -1094,6 +1094,12 @@ static void mptable_init(void)
 /* Table structure from Linux kernel (the ACPI tables are under the
    BSD license) */
 
+/*
+ * All tables must be byte-packed to match the ACPI specification, since
+ * the tables are provided by the system BIOS.
+ */
+#pragma pack(1)
+
 #define ACPI_TABLE_HEADER_DEF   /* ACPI common table header */ \
 	uint8_t                            signature [4];          /* ACPI signature (4 ASCII characters) */\
 	uint32_t                             length;                 /* Length of table, in bytes, including header */\
@@ -1279,6 +1285,10 @@ struct madt_io_apic
 	uint32_t                             interrupt;              /* Global system interrupt where INTI
 			  * lines start */
 };
+
+/* Reset to default packing */
+
+#pragma pack()
 
 #include "acpi-dsdt.hex"
 
