@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial.cc,v 1.84 2008-08-22 07:58:20 akrisak Exp $
+// $Id: serial.cc,v 1.85 2008-12-21 08:56:26 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -384,8 +384,8 @@ bx_serial_c::init(void)
             i+1, server ? "server" : "client", socket, host, port));
       } else if (!strncmp(mode, "pipe", 4)) {
         if (strlen(dev) > 0) {
-          bx_bool server = !strcmp(mode, "pipe-server");
 #ifdef WIN32
+          bx_bool server = !strcmp(mode, "pipe-server");
           HANDLE pipe;
 
           BX_SER_THIS s[i].io_mode = BX_SER_MODE_PIPE;

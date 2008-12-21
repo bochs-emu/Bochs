@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.216 2008-12-11 18:01:56 vruppert Exp $
+// $Id: harddrv.cc,v 1.217 2008-12-21 08:56:26 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -173,7 +173,7 @@ void bx_hard_drive_c::init(void)
   char  ata_name[20];
   bx_list_c *base;
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.216 2008-12-11 18:01:56 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.217 2008-12-21 08:56:26 vruppert Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     sprintf(ata_name, "ata.%d.resources", channel);
@@ -946,19 +946,20 @@ Bit32u bx_hard_drive_c::read(Bit32u address, unsigned io_len)
                   BX_SELECTED_DRIVE(channel).cdrom.next_lba++;
                   BX_SELECTED_DRIVE(channel).cdrom.remaining_blocks--;
 
-                  if (bx_dbg.disk || (BX_SELECTED_IS_CD(channel) && bx_dbg.cdrom))
-                    if (!BX_SELECTED_DRIVE(channel).cdrom.remaining_blocks)
+                  if (bx_dbg.disk || (BX_SELECTED_IS_CD(channel) && bx_dbg.cdrom)) {
+                    if (!BX_SELECTED_DRIVE(channel).cdrom.remaining_blocks) {
                       BX_INFO(("Last READ block loaded {CDROM}"));
-                    else
+                    } else {
                       BX_INFO(("READ block loaded (%d remaining) {CDROM}",
                                BX_SELECTED_DRIVE(channel).cdrom.remaining_blocks));
-
+                    }
+                  }
                   // one block transfered, start at beginning
                   index = 0;
 #else
                   BX_PANIC(("Read with no LOWLEVEL_CDROM"));
 #endif
-	          break;
+                  break;
 
                 default: // no need to load a new block
                   break;

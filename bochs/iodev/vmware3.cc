@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmware3.cc,v 1.19 2008-01-26 22:24:03 sshwarts Exp $
+// $Id: vmware3.cc,v 1.20 2008-12-21 08:56:26 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 
 /*
@@ -162,8 +162,8 @@ bool vmware3_image_t::is_valid_header(COW_Header & header)
 char * vmware3_image_t::generate_cow_name(const char * filename, unsigned chain)
 {
     char * name = new char[strlen(filename) + 4];
-    if(name == 0)
-        BX_PANIC(("unable to allocate %lu bytes for vmware3 COW file name (base: %s, chain: %u)", strlen(filename) + 4, filename, chain));
+    if(name == NULL)
+        BX_PANIC(("unable to allocate %u bytes for vmware3 COW file name (base: %s, chain: %u)", strlen(filename) + 4, filename, chain));
     strcpy(name, filename);
     if(chain != 0)
     {
@@ -358,7 +358,7 @@ ssize_t vmware3_image_t::read(void * buf, size_t count)
         off_t offset = perform_seek();
         if(offset == INVALID_OFFSET)
         {
-            BX_DEBUG(("vmware3 COW read failed on %lu bytes", count));
+            BX_DEBUG(("vmware3 COW read failed on %u bytes", count));
             return -1;
         }
         unsigned bytes_remaining = (unsigned)(tlb_size - offset);
@@ -467,7 +467,7 @@ ssize_t vmware3_image_t::write(const void * buf, size_t count)
             memcpy(current->tlb + offset, buf, bytes_remaining);
             if(!sync())
             {
-                BX_DEBUG(("failed to sync when writing %lu bytes", count));
+                BX_DEBUG(("failed to sync when writing %u bytes", count));
                 return -1;
             }
             amount = bytes_remaining;

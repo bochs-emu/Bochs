@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ioapic.cc,v 1.38 2008-11-17 20:06:16 sshwarts Exp $
+// $Id: ioapic.cc,v 1.39 2008-12-21 08:56:26 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -42,7 +42,7 @@ static bx_bool ioapic_read(bx_phy_address a20addr, unsigned len, void *data, voi
 static bx_bool ioapic_write(bx_phy_address a20addr, unsigned len, void *data, void *param)
 {
   if (len != 4) {
-    BX_PANIC (("I/O apic write with len=%ld (should be 4)", len));
+    BX_PANIC (("I/O apic write with len=%d (should be 4)", len));
   }
   bx_ioapic.write(a20addr, (Bit32u*) data, len);
   return 1;
