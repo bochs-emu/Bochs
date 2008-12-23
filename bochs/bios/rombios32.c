@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios32.c,v 1.40 2008-12-20 14:26:55 vruppert Exp $
+// $Id: rombios32.c,v 1.41 2008-12-23 09:20:43 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  32 bit Bochs BIOS init code
@@ -1098,7 +1098,6 @@ static void mptable_init(void)
  * All tables must be byte-packed to match the ACPI specification, since
  * the tables are provided by the system BIOS.
  */
-#pragma pack(1)
 
 #define ACPI_TABLE_HEADER_DEF   /* ACPI common table header */ \
 	uint8_t                            signature [4];          /* ACPI signature (4 ASCII characters) */\
@@ -1115,7 +1114,7 @@ static void mptable_init(void)
 struct acpi_table_header         /* ACPI common table header */
 {
 	ACPI_TABLE_HEADER_DEF
-};
+} __attribute__((__packed__));
 
 struct rsdp_descriptor         /* Root System Descriptor Pointer */
 {
@@ -1128,7 +1127,7 @@ struct rsdp_descriptor         /* Root System Descriptor Pointer */
 	uint64_t                             xsdt_physical_address;  /* 64-bit physical address of XSDT */
 	uint8_t                              extended_checksum;      /* Checksum of entire table */
 	uint8_t                            reserved [3];           /* Reserved field must be 0 */
-};
+} __attribute__((__packed__));
 
 /*
  * ACPI 1.0 Root System Description Table (RSDT)
@@ -1138,7 +1137,7 @@ struct rsdt_descriptor_rev1
 	ACPI_TABLE_HEADER_DEF                           /* ACPI common table header */
 	uint32_t                             table_offset_entry [3]; /* Array of pointers to other */
 			 /* ACPI tables */
-};
+} __attribute__((__packed__));
 
 /*
  * ACPI 1.0 Firmware ACPI Control Structure (FACS)
@@ -1153,7 +1152,7 @@ struct facs_descriptor_rev1
 	uint32_t                             S4bios_f        : 1;    /* Indicates if S4BIOS support is present */
 	uint32_t                             reserved1       : 31;   /* Must be 0 */
 	uint8_t                              resverved3 [40];        /* Reserved - must be zero */
-};
+} __attribute__((__packed__));
 
 
 /*
@@ -1214,7 +1213,7 @@ struct fadt_descriptor_rev1
 #else
         uint32_t flags;
 #endif
-};
+} __attribute__((__packed__));
 
 /*
  * MADT values and structures
@@ -1238,7 +1237,7 @@ struct multiple_apic_table
 #else
         uint32_t                             flags;
 #endif
-};
+} __attribute__((__packed__));
 
 
 /* Values for Type in APIC_HEADER_DEF */
@@ -1274,7 +1273,7 @@ struct madt_processor_apic
 #else
         uint32_t flags;
 #endif
-};
+} __attribute__((__packed__));
 
 struct madt_io_apic
 {
@@ -1284,11 +1283,7 @@ struct madt_io_apic
 	uint32_t                             address;                /* APIC physical address */
 	uint32_t                             interrupt;              /* Global system interrupt where INTI
 			  * lines start */
-};
-
-/* Reset to default packing */
-
-#pragma pack()
+} __attribute__((__packed__));
 
 #include "acpi-dsdt.hex"
 
