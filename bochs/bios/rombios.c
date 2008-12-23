@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.222 2008-12-15 06:05:52 sshwarts Exp $
+// $Id: rombios.c,v 1.223 2008-12-23 09:20:06 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -940,7 +940,7 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.222 $ $Date: 2008-12-15 06:05:52 $";
+static char bios_cvs_version_string[] = "$Revision: 1.223 $ $Date: 2008-12-23 09:20:06 $";
 
 #define BIOS_COPYRIGHT_STRING "(c) 2002 MandrakeSoft S.A. Written by Kevin Lawton & the Bochs team."
 
@@ -10251,6 +10251,30 @@ block_count_rounded:
   mov  ax, 2[bx]
   cmp  ax, #0x506e
   jne  no_bev
+
+  mov  ax, 0x16[bx] ;; 0x16 is the offset of Boot Connection Vector
+  cmp  ax, #0x0000
+  je   no_bcv
+
+  ;; Option ROM has BCV. Run it now.
+  push cx       ;; Push seg
+  push ax       ;; Push offset
+
+  ;; Point ES:DI at "$PnP", which tells the ROM that we are a PnP BIOS.
+  mov  bx, #0xf000
+  mov  es, bx
+  lea  di, pnp_string
+  /* jump to BCV function entry pointer */
+  mov  bp, sp   ;; Call ROM BCV routine using seg:off on stack
+  db   0xff     ;; call_far ss:[bp+0]
+  db   0x5e
+  db   0
+  cli           ;; In case expansion ROM BIOS turns IF on
+  add  sp, #2   ;; Pop offset value
+  pop  cx       ;; Pop seg value (restore CX)
+  jmp   no_bev
+
+no_bcv:
   mov  ax, 0x1a[bx] ;; 0x1A is also the offset into the expansion header of...
   cmp  ax, #0x0000  ;; the Bootstrap Entry Vector, or zero if there is none.
   je   no_bev
