@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/development/development.dbk
-$Id: development.dbk,v 1.30 2008-12-17 14:43:16 vruppert Exp $
+$Id: development.dbk,v 1.31 2008-12-25 16:58:44 vruppert Exp $
 
 This is the top level file for the Bochs Developers Manual.
 ================================================================
@@ -577,6 +577,7 @@ shows all CMOS registers and their meaning.
 <screen>
 Legend:
 S	- set by the emulator (Bochs)
+Q	- set by the emulator (Qemu)
 B	- set by the bios
 U	- unused by the bios
 
@@ -689,6 +690,8 @@ LOC	NOTES	MEANING
 	bits
 	3-0	boot drive #1
 	7-4	boot drive #2
+0x5b	Q	extra memory above 4GB
+0x5f	Q	number of processors
 </screen>
 </para>
 </section>

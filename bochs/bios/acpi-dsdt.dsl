@@ -130,6 +130,26 @@ DefinitionBlock (
                     ,, , AddressRangeMemory, TypeStatic)
             })
         }
+#ifdef BX_QEMU
+        Device(HPET) {
+            Name(_HID,  EISAID("PNP0103"))
+            Name(_UID, 0)
+            Method (_STA, 0, NotSerialized) {
+                    Return(0x0F)
+            }
+            Name(_CRS, ResourceTemplate() {
+                DWordMemory(
+                    ResourceConsumer, PosDecode, MinFixed, MaxFixed,
+                    NonCacheable, ReadWrite,
+                    0x00000000,
+                    0xFED00000,
+                    0xFED003FF,
+                    0x00000000,
+                    0x00000400 /* 1K memory: FED00000 - FED003FF */
+                )
+            })
+        }
+#endif
     }
 
     Scope(\_SB.PCI0) {
