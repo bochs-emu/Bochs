@@ -59,7 +59,7 @@
 #display_library: sdl, options="fullscreen" # startup in fullscreen mode
 #display_library: term
 #display_library: win32, options="legacyF12" # use F12 to toggle mouse
-#display_library: win32, options="windebug"  # use Win32 debugger gui
+#display_library: win32, options="gui_debug" # use Win32 debugger gui
 #display_library: wx
 #display_library: x, options="hideIPS" # disable IPS output in status bar
 
