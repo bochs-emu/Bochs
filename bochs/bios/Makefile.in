@@ -105,7 +105,9 @@ rombios32.o: rombios32.c acpi-dsdt.hex
 
 ifeq ("1", "0")
 acpi-dsdt.hex: acpi-dsdt.dsl
-	iasl -tc -p $@ $<
+	cpp -P $< $<.i
+	iasl -tc -p $@ $<.i
+	rm $<.i
 	sed -i -e's/^unsigned/const unsigned/' $@
 endif
 
