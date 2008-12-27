@@ -28,7 +28,7 @@ Detailed change log :
     the code.
   - Added ability to choose Bochs log file name and Bochs debugger log file
     name from Bochs command line (using new -log and -dbglog options)
-  - Removed --enable-guest2hos-tlb configure option. The option will be
+  - Removed --enable-guest2host-tlb configure option. The option will be
     always enabled for any Bochs configuration.
 
 - BIOS
@@ -52,6 +52,7 @@ Detailed change log :
   - Updated Bochs TESTFORM to version 0.4
 
 - SF patches applied
+ [1895665] kvm: bios: add support to memory above the pci hole by Izik Eidus
  [2403372] rombios: check for valid cdrom before using it by Sebastian
  [2307269] acpi: handle S3 by Sebastian
  [2354134] TAP networking on Solaris/Sparc repaired
@@ -88,6 +89,10 @@ Detailed change log :
  [1981505] Init PIIX4 PCI to ISA bridge and IDE by Sebastian
 
 - these S.F. bugs were closed
+ [1659659] wrong behaviour a20 at boot
+ [1998027] minwg + --with-term + --with-out-win32 = link failure
+ [1871936] bochs-2.3.6 make fails on wx.cc
+ [1684666] info idt for long mode  
  [2105989] could not read() hard drive image file at byte 269824
  [1173093] Debugger totally not supports x86-64
  [1803018] new win32debug dialog problems
