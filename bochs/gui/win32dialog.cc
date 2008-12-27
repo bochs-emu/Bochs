@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32dialog.cc,v 1.64 2008-12-18 15:37:25 vruppert Exp $
+// $Id: win32dialog.cc,v 1.65 2008-12-27 12:06:39 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #include "win32dialog.h"
@@ -15,8 +15,8 @@ static bxevent_handler old_callback = NULL;
 static void *old_callback_arg = NULL;
 #if BX_DEBUGGER
 HWND hDebugDialog = NULL;
-char *debug_cmd = NULL;
-BOOL debug_cmd_ready = FALSE;
+extern char *debug_cmd;
+extern bx_bool debug_cmd_ready;
 #endif
 
 int AskFilename(HWND hwnd, bx_param_filename_c *param, const char *ext);

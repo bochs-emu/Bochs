@@ -1,6 +1,9 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32dialog.h,v 1.12 2008-10-21 13:45:03 sshwarts Exp $
+// $Id: win32dialog.h,v 1.13 2008-12-27 12:06:39 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
+
+#ifndef BX_WIN32_DIALOGS_H
+#define BX_WIN32_DIALOGS_H
 
 #include "config.h"
 
@@ -25,9 +28,11 @@ extern "C" {
 
 int RuntimeOptionsDialog();
 #if BX_DEBUGGER
-void InitDebugDialog(HWND mainwnd);
+void InitDebugDialog(void* mainwnd);
 void RefreshDebugDialog();
 #endif
 void win32_init_notify_callback();
 
 #endif
+
+#endif // BX_WIN32_DIALOGS_H
