@@ -1,4 +1,4 @@
-$Id: PARAM_TREE.txt,v 1.15 2008-09-22 21:38:11 sshwarts Exp $
+$Id: PARAM_TREE.txt,v 1.16 2008-12-28 21:01:18 sshwarts Exp $
 
 Starting from Bochs 2.3 the parameters are organized in a tree structure
 instead of a huge flat list. The parameter tree was required for implementing
@@ -24,6 +24,9 @@ cpu
   quantum
   reset_on_triple_fault
   cpuid_limit_winnt
+  vendor_string
+  brand_string
+  msrs
 
 memory
   standard
