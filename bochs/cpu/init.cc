@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.186 2008-12-07 19:47:34 sshwarts Exp $
+// $Id: init.cc,v 1.187 2008-12-28 20:30:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -163,6 +163,14 @@ void BX_CPU_C::initialize(void)
   // in SMP mode, the prefix of the CPU will be changed to [CPUn] in
   // bx_local_apic_c::set_id as soon as the apic ID is assigned.
   sprintf(name, "CPU %d", BX_CPU_ID);
+
+#if BX_CONFIGURE_MSRS
+  for (unsigned n=0; n <= BX_MSR_MAX_INDEX; n++) {
+    BX_CPU_THIS_PTR msrs[n] = 0;
+  }
+  const char *msrs_filename = SIM->get_param_string(BXPN_CONFIGURABLE_MSRS_PATH)->getptr();
+  load_MSRs(msrs_filename);
+#endif
 
 #if BX_WITH_WX
   register_wx_state();
@@ -460,6 +468,20 @@ void BX_CPU_C::register_state(void)
 
   BXRS_HEX_PARAM_FIELD(MSR, pat, msr.pat);
   BXRS_HEX_PARAM_FIELD(MSR, mtrr_deftype, msr.mtrr_deftype);
+#endif
+#if BX_CONFIGURE_MSRS
+  bx_list_c *MSRS = new bx_list_c(cpu, "MSRS", BX_MSR_MAX_INDEX);
+  for(n=0; n < BX_MSR_MAX_INDEX; n++) {
+    if (! msrs[n]) continue;
+    sprintf(name, "msr_0x%03x", n);
+    bx_list_c *m = new bx_list_c(MSRS, name, 6);
+    BXRS_HEX_PARAM_FIELD(m, index, msrs[n]->index);
+    BXRS_DEC_PARAM_FIELD(m, type, msrs[n]->type);
+    BXRS_HEX_PARAM_FIELD(m, val64, msrs[n]->val64);
+    BXRS_HEX_PARAM_FIELD(m, reset, msrs[n]->reset_value);
+    BXRS_HEX_PARAM_FIELD(m, reserved, msrs[n]->reserved);
+    BXRS_HEX_PARAM_FIELD(m, ignored, msrs[n]->ignored);
+  }
 #endif
 #endif
 
@@ -834,10 +856,8 @@ void BX_CPU_C::reset(unsigned source)
 
   // DR0 - DR7 (Debug Registers)
 #if BX_CPU_LEVEL >= 3
-  BX_CPU_THIS_PTR dr[0] = 0;   /* undefined */
-  BX_CPU_THIS_PTR dr[1] = 0;   /* undefined */
-  BX_CPU_THIS_PTR dr[2] = 0;   /* undefined */
-  BX_CPU_THIS_PTR dr[3] = 0;   /* undefined */
+  for (n=0; n<4; n++)
+    BX_CPU_THIS_PTR dr[n] = 0;   /* undefined */
 #endif
 
   BX_CPU_THIS_PTR dr7 = 0x00000400;
@@ -934,6 +954,16 @@ void BX_CPU_C::reset(unsigned source)
 
     BX_CPU_THIS_PTR msr.pat = BX_CONST64(0x0007040600070406);
     BX_CPU_THIS_PTR msr.mtrr_deftype = 0;
+  }
+#endif
+
+  // All configurable MSRs do not change on INIT
+#if BX_CONFIGURE_MSRS
+  if (source == BX_RESET_HARDWARE) {
+    for (n=0; n <= BX_MSR_MAX_INDEX; n++) {
+      if (BX_CPU_THIS_PTR msrs[n])
+        BX_CPU_THIS_PTR msrs[n]->reset();
+    }
   }
 #endif
 

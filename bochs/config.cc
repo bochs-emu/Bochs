@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.141 2008-12-11 18:01:54 vruppert Exp $
+// $Id: config.cc,v 1.142 2008-12-28 20:30:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -418,7 +418,7 @@ void bx_init_options()
 #endif
 
   // cpu subtree
-  bx_list_c *cpu_param = new bx_list_c(root_param, "cpu", "CPU Options", 8 + BX_SUPPORT_SMP);
+  bx_list_c *cpu_param = new bx_list_c(root_param, "cpu", "CPU Options", 9 + BX_SUPPORT_SMP);
 
   // cpu options
   bx_param_num_c *nprocessors = new bx_param_num_c(cpu_param,
@@ -459,6 +459,14 @@ void bx_init_options()
       "cpuid_limit_winnt", "Limit max CPUID function to 3",
       "Limit max CPUID function reported to 3 to workaround WinNT issue",
       0);
+#if BX_CONFIGURE_MSRS
+  new bx_param_string_c(cpu_param,
+      "msrs",
+      "Configurable MSR definition file",
+      "Set path to the configurable MSR definition file",
+      "msrs.def", 
+      BX_PATHNAME_LEN+1);
+#endif
   new bx_param_string_c(cpu_param,
       "vendor_string",
       "CPUID vendor string",
@@ -2494,6 +2502,8 @@ static int parse_line_formatted(const char *context, int num_params, char *param
         } else {
           PARSE_ERR(("%s: cpu directive malformed.", context));
         }
+      } else if (!strncmp(params[i], "msrs=", 5)) {
+        SIM->get_param_string(BXPN_CONFIGURABLE_MSRS_PATH)->set(&params[1][5]);
       } else if (!strncmp(params[i], "vendor_string=", 14)) {
         if (strlen(&params[i][14]) != BX_CPUID_VENDOR_LEN) {
           PARSE_ERR(("%s: cpu directive malformed.", context));

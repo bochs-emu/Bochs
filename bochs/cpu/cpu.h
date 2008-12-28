@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.544 2008-12-19 16:03:25 sshwarts Exp $
+// $Id: cpu.h,v 1.545 2008-12-28 20:30:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -283,57 +283,54 @@
 #define BX_MC_EXCEPTION  18
 #define BX_XM_EXCEPTION  19
 
+#define BX_MSR_MAX_INDEX           0xfff
+
 /* MSR registers */
-#define BX_MSR_P5_MC_ADDR        0x0000
-#define BX_MSR_MC_TYPE           0x0001
-#define BX_MSR_TSC               0x0010
-#define BX_MSR_CESR              0x0011
-#define BX_MSR_CTR0              0x0012
-#define BX_MSR_CTR1              0x0013
-#define BX_MSR_APICBASE          0x001b
+#define BX_MSR_TSC                 0x010
+#define BX_MSR_APICBASE            0x01b
 
 #if BX_SUPPORT_SEP
-#  define BX_MSR_SYSENTER_CS  0x0174
-#  define BX_MSR_SYSENTER_ESP 0x0175
-#  define BX_MSR_SYSENTER_EIP 0x0176
+#  define BX_MSR_SYSENTER_CS       0x174
+#  define BX_MSR_SYSENTER_ESP      0x175
+#  define BX_MSR_SYSENTER_EIP      0x176
 #endif
 
-#define BX_MSR_DEBUGCTLMSR       0x01d9
-#define BX_MSR_LASTBRANCHFROMIP  0x01db
-#define BX_MSR_LASTBRANCHTOIP    0x01dc
-#define BX_MSR_LASTINTOIP        0x01dd
+#define BX_MSR_DEBUGCTLMSR         0x1d9
+#define BX_MSR_LASTBRANCHFROMIP    0x1db
+#define BX_MSR_LASTBRANCHTOIP      0x1dc
+#define BX_MSR_LASTINTOIP          0x1dd
 
 #if BX_SUPPORT_MTRR
-  #define BX_MSR_MTRRCAP           0x00fe
-  #define BX_MSR_MTRRPHYSBASE0     0x0200
-  #define BX_MSR_MTRRPHYSMASK0     0x0201
-  #define BX_MSR_MTRRPHYSBASE1     0x0202
-  #define BX_MSR_MTRRPHYSMASK1     0x0203
-  #define BX_MSR_MTRRPHYSBASE2     0x0204
-  #define BX_MSR_MTRRPHYSMASK2     0x0205
-  #define BX_MSR_MTRRPHYSBASE3     0x0206
-  #define BX_MSR_MTRRPHYSMASK3     0x0207
-  #define BX_MSR_MTRRPHYSBASE4     0x0208
-  #define BX_MSR_MTRRPHYSMASK4     0x0209
-  #define BX_MSR_MTRRPHYSBASE5     0x020a
-  #define BX_MSR_MTRRPHYSMASK5     0x020b
-  #define BX_MSR_MTRRPHYSBASE6     0x020c
-  #define BX_MSR_MTRRPHYSMASK6     0x020d
-  #define BX_MSR_MTRRPHYSBASE7     0x020e
-  #define BX_MSR_MTRRPHYSMASK7     0x020f
-  #define BX_MSR_MTRRFIX64K_00000  0x0250
-  #define BX_MSR_MTRRFIX16K_80000  0x0258
-  #define BX_MSR_MTRRFIX16K_A0000  0x0259
-  #define BX_MSR_MTRRFIX4K_C0000   0x0268
-  #define BX_MSR_MTRRFIX4K_C8000   0x0269
-  #define BX_MSR_MTRRFIX4K_D0000   0x026a
-  #define BX_MSR_MTRRFIX4K_D8000   0x026b
-  #define BX_MSR_MTRRFIX4K_E0000   0x026c
-  #define BX_MSR_MTRRFIX4K_E8000   0x026d
-  #define BX_MSR_MTRRFIX4K_F0000   0x026e
-  #define BX_MSR_MTRRFIX4K_F8000   0x026f
-  #define BX_MSR_PAT               0x0277
-  #define BX_MSR_MTRR_DEFTYPE      0x02ff
+  #define BX_MSR_MTRRCAP           0x0fe
+  #define BX_MSR_MTRRPHYSBASE0     0x200
+  #define BX_MSR_MTRRPHYSMASK0     0x201
+  #define BX_MSR_MTRRPHYSBASE1     0x202
+  #define BX_MSR_MTRRPHYSMASK1     0x203
+  #define BX_MSR_MTRRPHYSBASE2     0x204
+  #define BX_MSR_MTRRPHYSMASK2     0x205
+  #define BX_MSR_MTRRPHYSBASE3     0x206
+  #define BX_MSR_MTRRPHYSMASK3     0x207
+  #define BX_MSR_MTRRPHYSBASE4     0x208
+  #define BX_MSR_MTRRPHYSMASK4     0x209
+  #define BX_MSR_MTRRPHYSBASE5     0x20a
+  #define BX_MSR_MTRRPHYSMASK5     0x20b
+  #define BX_MSR_MTRRPHYSBASE6     0x20c
+  #define BX_MSR_MTRRPHYSMASK6     0x20d
+  #define BX_MSR_MTRRPHYSBASE7     0x20e
+  #define BX_MSR_MTRRPHYSMASK7     0x20f
+  #define BX_MSR_MTRRFIX64K_00000  0x250
+  #define BX_MSR_MTRRFIX16K_80000  0x258
+  #define BX_MSR_MTRRFIX16K_A0000  0x259
+  #define BX_MSR_MTRRFIX4K_C0000   0x268
+  #define BX_MSR_MTRRFIX4K_C8000   0x269
+  #define BX_MSR_MTRRFIX4K_D0000   0x26a
+  #define BX_MSR_MTRRFIX4K_D8000   0x26b
+  #define BX_MSR_MTRRFIX4K_E0000   0x26c
+  #define BX_MSR_MTRRFIX4K_E8000   0x26d
+  #define BX_MSR_MTRRFIX4K_F0000   0x26e
+  #define BX_MSR_MTRRFIX4K_F8000   0x26f
+  #define BX_MSR_PAT               0x277
+  #define BX_MSR_MTRR_DEFTYPE      0x2ff
 #endif
 
 #if BX_SUPPORT_X86_64
@@ -865,6 +862,10 @@ public: // for now...
   bx_regs_msr_t msr;
 #endif
 
+#if BX_CONFIGURE_MSRS
+  MSR *msrs[BX_MSR_MAX_INDEX];
+#endif
+
 #if BX_SUPPORT_FPU || BX_SUPPORT_MMX
   i387_t the_i387;
 #endif
@@ -1043,14 +1044,15 @@ public: // for now...
   // constructors & destructors...
   BX_CPU_C(unsigned id = 0);
  ~BX_CPU_C();
+
   void initialize(void);
   void after_restore_state(void);
   void register_state(void);
 #if BX_WITH_WX
   void register_wx_state(void);
 #endif
-  static  Bit64s param_save_handler(void *devptr, bx_param_c *param, Bit64s val);
-  static  Bit64s param_restore_handler(void *devptr, bx_param_c *param, Bit64s val);
+  static Bit64s param_save_handler(void *devptr, bx_param_c *param, Bit64s val);
+  static Bit64s param_restore_handler(void *devptr, bx_param_c *param, Bit64s val);
 #if !BX_USE_CPU_SMF
   Bit64s param_save(bx_param_c *param, Bit64s val);
   Bit64s param_restore(bx_param_c *param, Bit64s val);
@@ -3304,6 +3306,10 @@ public: // for now...
 #if BX_SUPPORT_MONITOR_MWAIT
   BX_SMF bx_bool    is_monitor(bx_phy_address addr, unsigned len);
   BX_SMF void    check_monitor(bx_phy_address addr, unsigned len);
+#endif
+
+#if BX_CONFIGURE_MSRS
+  int load_MSRs(const char *file);
 #endif
 };
 

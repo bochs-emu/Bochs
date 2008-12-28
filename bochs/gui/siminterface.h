@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.219 2008-10-20 19:13:08 sshwarts Exp $
+// $Id: siminterface.h,v 1.220 2008-12-28 20:30:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Intro to siminterface by Bryce Denney:
@@ -133,6 +133,7 @@ typedef enum {
 #define BXPN_SMP_QUANTUM                 "cpu.quantum"
 #define BXPN_RESET_ON_TRIPLE_FAULT       "cpu.reset_on_triple_fault"
 #define BXPN_CPUID_LIMIT_WINNT           "cpu.cpuid_limit_winnt"
+#define BXPN_CONFIGURABLE_MSRS_PATH      "cpu.msrs"
 #define BXPN_VENDOR_STRING               "cpu.vendor_string"
 #define BXPN_BRAND_STRING                "cpu.brand_string"
 #define BXPN_MEM_SIZE                    "memory.standard.ram.size"

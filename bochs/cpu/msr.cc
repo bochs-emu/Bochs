@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: msr.cc,v 1.3 2008-12-07 06:15:26 sshwarts Exp $
+// $Id: msr.cc,v 1.4 2008-12-28 20:30:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008 Stanislav Shwartsman
@@ -40,8 +40,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDMSR(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
+  Bit32u index = ECX;
+
   /* We have the requested MSR register in ECX */
-  switch(ECX) {
+  switch(index) {
 
 #if BX_SUPPORT_SEP
     case BX_MSR_SYSENTER_CS:
@@ -50,12 +52,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDMSR(bxInstruction_c *i)
       break;
 
     case BX_MSR_SYSENTER_ESP:
-      RAX = BX_CPU_THIS_PTR msr.sysenter_esp_msr;
-      RDX = 0;
+      RAX = GET32L(BX_CPU_THIS_PTR msr.sysenter_esp_msr);
+      RDX = GET32H(BX_CPU_THIS_PTR msr.sysenter_esp_msr);
       break;
 
     case BX_MSR_SYSENTER_EIP:
-      RAX = BX_CPU_THIS_PTR msr.sysenter_eip_msr;
+      RAX = GET32L(BX_CPU_THIS_PTR msr.sysenter_eip_msr);
+      RDX = GET32H(BX_CPU_THIS_PTR msr.sysenter_eip_msr);
       RDX = 0;
       break;
 #endif
@@ -82,21 +85,21 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDMSR(bxInstruction_c *i)
     case BX_MSR_MTRRPHYSMASK6:
     case BX_MSR_MTRRPHYSBASE7:
     case BX_MSR_MTRRPHYSMASK7:
-      RAX = BX_CPU_THIS_PTR msr.mtrrphys[ECX - BX_MSR_MTRRPHYSBASE0] & 0xffffffff;
-      RDX = BX_CPU_THIS_PTR msr.mtrrphys[ECX - BX_MSR_MTRRPHYSBASE0] >> 32;
+      RAX = GET32L(BX_CPU_THIS_PTR msr.mtrrphys[index - BX_MSR_MTRRPHYSBASE0]);
+      RDX = GET32H(BX_CPU_THIS_PTR msr.mtrrphys[index - BX_MSR_MTRRPHYSBASE0]);
       break;
 
     case BX_MSR_MTRRFIX64K_00000:
-      RAX = BX_CPU_THIS_PTR msr.mtrrfix64k_00000 & 0xffffffff;
-      RDX = BX_CPU_THIS_PTR msr.mtrrfix64k_00000 >> 32;
+      RAX = GET32L(BX_CPU_THIS_PTR msr.mtrrfix64k_00000);
+      RDX = GET32H(BX_CPU_THIS_PTR msr.mtrrfix64k_00000);
       break;
     case BX_MSR_MTRRFIX16K_80000:
-      RAX = BX_CPU_THIS_PTR msr.mtrrfix16k_80000 & 0xffffffff;
-      RDX = BX_CPU_THIS_PTR msr.mtrrfix16k_80000 >> 32;
+      RAX = GET32L(BX_CPU_THIS_PTR msr.mtrrfix16k_80000);
+      RDX = GET32H(BX_CPU_THIS_PTR msr.mtrrfix16k_80000);
       break;
     case BX_MSR_MTRRFIX16K_A0000:
-      RAX = BX_CPU_THIS_PTR msr.mtrrfix16k_a0000 & 0xffffffff;
-      RDX = BX_CPU_THIS_PTR msr.mtrrfix16k_a0000 >> 32;
+      RAX = GET32L(BX_CPU_THIS_PTR msr.mtrrfix16k_a0000);
+      RDX = GET32H(BX_CPU_THIS_PTR msr.mtrrfix16k_a0000);
       break;
 
     case BX_MSR_MTRRFIX4K_C0000:
@@ -107,13 +110,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDMSR(bxInstruction_c *i)
     case BX_MSR_MTRRFIX4K_E8000:
     case BX_MSR_MTRRFIX4K_F0000:
     case BX_MSR_MTRRFIX4K_F8000:
-      RAX = BX_CPU_THIS_PTR msr.mtrrfix4k[ECX - BX_MSR_MTRRFIX4K_C0000] & 0xffffffff;
-      RDX = BX_CPU_THIS_PTR msr.mtrrfix4k[ECX - BX_MSR_MTRRFIX4K_C0000] >> 32;
+      RAX = GET32L(BX_CPU_THIS_PTR msr.mtrrfix4k[index - BX_MSR_MTRRFIX4K_C0000]);
+      RDX = GET32H(BX_CPU_THIS_PTR msr.mtrrfix4k[index - BX_MSR_MTRRFIX4K_C0000]);
       break;
 
     case BX_MSR_PAT:
-      RAX = BX_CPU_THIS_PTR msr.pat & 0xffffffff;
-      RDX = BX_CPU_THIS_PTR msr.pat >> 32;
+      RAX = GET32L(BX_CPU_THIS_PTR msr.pat);
+      RDX = GET32H(BX_CPU_THIS_PTR msr.pat);
       break;
 
     case BX_MSR_MTRR_DEFTYPE:
@@ -121,30 +124,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDMSR(bxInstruction_c *i)
       RDX = 0;
       break;
 #endif
-
-#if BX_CPU_LEVEL == 5
-    /* The following registers are defined for Pentium only */
-    case BX_MSR_P5_MC_ADDR:
-    case BX_MSR_MC_TYPE:
-      /* TODO */
-      break;
-
-    case BX_MSR_CESR:
-      /* TODO */
-      break;
-#else
-    /* These are noops on i686... */
-    case BX_MSR_P5_MC_ADDR:
-    case BX_MSR_MC_TYPE:
-      /* do nothing */
-      break;
-
-    /* ... And these cause an exception on i686 */
-    case BX_MSR_CESR:
-    case BX_MSR_CTR0:
-    case BX_MSR_CTR1:
-      exception(BX_GP_EXCEPTION, 0, 0);
-#endif  /* BX_CPU_LEVEL == 5 */
 
     case BX_MSR_TSC:
       RDTSC(i);
@@ -173,18 +152,18 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDMSR(bxInstruction_c *i)
       break;
 
     case BX_MSR_STAR:
-      RAX = MSR_STAR & 0xffffffff;
-      RDX = MSR_STAR >> 32;
+      RAX = GET32L(MSR_STAR);
+      RDX = GET32H(MSR_STAR);
       break;
 
     case BX_MSR_LSTAR:
-      RAX = MSR_LSTAR & 0xffffffff;
-      RDX = MSR_LSTAR >> 32;
+      RAX = GET32L(MSR_LSTAR);
+      RDX = GET32H(MSR_LSTAR);
       break;
 
     case BX_MSR_CSTAR:
-      RAX = MSR_CSTAR & 0xffffffff;
-      RDX = MSR_CSTAR >> 32;
+      RAX = GET32L(MSR_CSTAR);
+      RDX = GET32H(MSR_CSTAR);
       break;
 
     case BX_MSR_FMASK:
@@ -193,18 +172,18 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDMSR(bxInstruction_c *i)
       break;
 
     case BX_MSR_FSBASE:
-      RAX = MSR_FSBASE & 0xffffffff;
-      RDX = MSR_FSBASE >> 32;
+      RAX = GET32L(MSR_FSBASE);
+      RDX = GET32H(MSR_FSBASE);
       break;
 
     case BX_MSR_GSBASE:
-      RAX = MSR_GSBASE & 0xffffffff;
-      RDX = MSR_GSBASE >> 32;
+      RAX = GET32L(MSR_GSBASE);
+      RDX = GET32H(MSR_GSBASE);
       break;
 
     case BX_MSR_KERNELGSBASE:
-      RAX = MSR_KERNELGSBASE & 0xffffffff;
-      RDX = MSR_KERNELGSBASE >> 32;
+      RAX = GET32L(MSR_KERNELGSBASE);
+      RDX = GET32H(MSR_KERNELGSBASE);
       break;
 
     case BX_MSR_TSC_AUX:
@@ -214,7 +193,15 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDMSR(bxInstruction_c *i)
 #endif  // #if BX_SUPPORT_X86_64
 
     default:
-      BX_ERROR(("RDMSR: Unknown register %#x", ECX));
+#if BX_CONFIGURE_MSRS
+      if (BX_CPU_THIS_PTR msrs[index]) {
+        RAX = GET32L(BX_CPU_THIS_PTR msrs[index]->get64());
+        RDX = GET32H(BX_CPU_THIS_PTR msrs[index]->get64());
+        break;
+      }
+#endif
+      // failed to find the MSR, could #GP or ignore it silently
+      BX_ERROR(("RDMSR: Unknown register %#x", index));
 #if BX_IGNORE_BAD_MSR
       RAX = 0;
       RDX = 0;
@@ -258,11 +245,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRMSR(bxInstruction_c *i)
   }
 
   Bit64u val64 = ((Bit64u) EDX << 32) | EAX;
+  Bit32u index = ECX;
 
-  BX_INSTR_WRMSR(BX_CPU_ID, ECX, val64);
+  BX_INSTR_WRMSR(BX_CPU_ID, index, val64);
 
   /* ECX has the MSR to write to */
-  switch(ECX) {
+  switch(index) {
 
 #if BX_SUPPORT_SEP
     case BX_MSR_SYSENTER_CS:
@@ -315,7 +303,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRMSR(bxInstruction_c *i)
     case BX_MSR_MTRRPHYSMASK5:
     case BX_MSR_MTRRPHYSMASK6:
     case BX_MSR_MTRRPHYSMASK7:
-      BX_CPU_THIS_PTR msr.mtrrphys[ECX - BX_MSR_MTRRPHYSBASE0] = val64;
+      BX_CPU_THIS_PTR msr.mtrrphys[index - BX_MSR_MTRRPHYSBASE0] = val64;
       break;
 
     case BX_MSR_MTRRFIX64K_00000:
@@ -348,7 +336,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRMSR(bxInstruction_c *i)
     case BX_MSR_MTRRFIX4K_E8000:
     case BX_MSR_MTRRFIX4K_F0000:
     case BX_MSR_MTRRFIX4K_F8000:
-      BX_CPU_THIS_PTR msr.mtrrfix4k[ECX - BX_MSR_MTRRFIX4K_C0000] = val64;
+      BX_CPU_THIS_PTR msr.mtrrfix4k[index - BX_MSR_MTRRFIX4K_C0000] = val64;
       break;
 
     case BX_MSR_PAT:
@@ -374,27 +362,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRMSR(bxInstruction_c *i)
       BX_CPU_THIS_PTR msr.mtrr_deftype = EAX;
       break;
 #endif
-
-#if BX_CPU_LEVEL == 5
-    /* The following registers are defined for Pentium only */
-    case BX_MSR_P5_MC_ADDR:
-    case BX_MSR_MC_TYPE:
-    case BX_MSR_CESR:
-      /* TODO */
-      break;
-#else
-    /* These are noops on i686... */
-    case BX_MSR_P5_MC_ADDR:
-    case BX_MSR_MC_TYPE:
-      /* do nothing */
-      break;
-
-    /* ... And these cause an exception on i686 */
-    case BX_MSR_CESR:
-    case BX_MSR_CTR0:
-    case BX_MSR_CTR1:
-      exception(BX_GP_EXCEPTION, 0, 0);
-#endif  /* BX_CPU_LEVEL == 5 */
 
     case BX_MSR_TSC:
       BX_CPU_THIS_PTR set_TSC(val64);
@@ -436,7 +403,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRMSR(bxInstruction_c *i)
         exception(BX_GP_EXCEPTION, 0, 0);
       }
 
-      // #GP(0) if changing EFER.LME when cr0.pg = 1
+      /* #GP(0) if changing EFER.LME when cr0.pg = 1 */
       if ((BX_CPU_THIS_PTR efer.get_LME() != ((EAX >> 8) & 1)) &&
            BX_CPU_THIS_PTR  cr0.get_PG())
       {
@@ -502,7 +469,17 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRMSR(bxInstruction_c *i)
 #endif  // #if BX_SUPPORT_X86_64
 
     default:
-      BX_ERROR(("WRMSR: Unknown register %#x", ECX));
+#if BX_CONFIGURE_MSRS
+      if (BX_CPU_THIS_PTR msrs[index]) {
+        if (! BX_CPU_THIS_PTR msrs[index]->set64(val64)) {
+          BX_ERROR(("WRMSR: Write failed to MSR %#x - #GP fault", index));
+          exception(BX_GP_EXCEPTION, 0, 0);
+        }
+        break;
+      }
+#endif
+      // failed to find the MSR, could #GP or ignore it silently
+      BX_ERROR(("WRMSR: Unknown register %#x", index));
 #if BX_IGNORE_BAD_MSR == 0
       exception(BX_GP_EXCEPTION, 0, 0);
 #endif
@@ -512,3 +489,64 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRMSR(bxInstruction_c *i)
   exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
+
+#if BX_CONFIGURE_MSRS
+
+int BX_CPU_C::load_MSRs(const char *file)
+{
+  char line[512];
+  unsigned linenum = 0;
+  Bit32u index, type;
+  Bit32u reset_hi, reset_lo;
+  Bit32u rsrv_hi, rsrv_lo;
+  Bit32u ignr_hi, ignr_lo;
+
+  FILE *fd = fopen (file, "r");
+  if (fd == NULL) return -1;
+  int retval = 0;
+  do {
+    linenum++;
+    char* ret = fgets(line, sizeof(line)-1, fd);
+    line[sizeof(line) - 1] = '\0';
+    size_t len = strlen(line);
+    if (len>0 && line[len-1] < ' ')
+      line[len-1] = '\0';
+
+    if (ret != NULL && strlen(line)) {
+      if (line[0] == '#') continue;
+      retval = sscanf(line, "%x %d %08x %08x %08x %08x %08x %08x",
+         &index, &type, &reset_hi, &reset_lo, &rsrv_hi, &rsrv_lo, &ignr_hi, &ignr_lo);
+
+      if (retval < 8) {
+        retval = -1;
+        BX_PANIC(("%s:%d > error parsing MSRs config file!", file, linenum));
+        break;  // quit parsing after first error
+      }
+      if (index > BX_MSR_MAX_INDEX) {
+        BX_PANIC(("%s:%d > MSR index is too big !", file, linenum));
+        continue;
+      }
+      if (BX_CPU_THIS_PTR msrs[index]) {
+        BX_PANIC(("%s:%d > MSR[0x%03x] is already defined!", file, linenum, index));
+        continue;
+      }
+      if (type > 2) {
+        BX_PANIC(("%s:%d > MSR[0x%03x] unknown type !", file, linenum, index));
+        continue;
+      }
+
+      BX_INFO(("loaded MSR[0x%03x] type=%d %08x:%08x %08x:%08x %08x:%08x", index, type,
+        reset_hi, reset_lo, rsrv_hi, rsrv_lo, ignr_hi, ignr_lo));
+
+      BX_CPU_THIS_PTR msrs[index] = new MSR(index, type,
+        ((Bit64u)(reset_hi) << 32) | reset_lo,
+        ((Bit64u) (rsrv_hi) << 32) | rsrv_lo,
+        ((Bit64u) (ignr_hi) << 32) | ignr_lo);
+    }
+  } while (!feof(fd));
+
+  fclose(fd);
+  return retval;
+}
+
+#endif

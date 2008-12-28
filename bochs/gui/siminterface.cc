@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.182 2008-09-19 21:31:08 sshwarts Exp $
+// $Id: siminterface.cc,v 1.183 2008-12-28 20:30:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // See siminterface.h for description of the siminterface concept.
@@ -95,16 +95,16 @@ public:
   // yes/no dialog
   virtual int ask_yes_no(const char *title, const char *prompt, bx_bool the_default);
   // called at a regular interval, currently by the keyboard handler.
-  virtual void periodic ();
-  virtual int create_disk_image (const char *filename, int sectors, bx_bool overwrite);
-  virtual void refresh_ci ();
-  virtual void refresh_vga () {
+  virtual void periodic();
+  virtual int create_disk_image(const char *filename, int sectors, bx_bool overwrite);
+  virtual void refresh_ci();
+  virtual void refresh_vga() {
     // maybe need to check if something has been initialized yet?
     DEV_vga_refresh();
   }
-  virtual void handle_events () {
+  virtual void handle_events() {
     // maybe need to check if something has been initialized yet?
-    bx_gui->handle_events ();
+    bx_gui->handle_events();
   }
   // find first hard drive or cdrom
   bx_param_c *get_first_atadevice(Bit32u search_type);
@@ -115,17 +115,17 @@ public:
     return get_first_atadevice(BX_ATA_DEVICE_DISK);
   }
 #if BX_DEBUGGER
-  virtual void debug_break ();
+  virtual void debug_break();
   virtual void debug_interpret_cmd (char *cmd);
   virtual char *debug_get_next_command ();
-  virtual void debug_puts (const char *cmd);
+  virtual void debug_puts(const char *cmd);
 #endif
   virtual void register_configuration_interface (
     const char* name,
     config_interface_callback_t callback,
     void *userdata);
   virtual int configuration_interface(const char* name, ci_command_t command);
-  virtual int begin_simulation (int argc, char *argv[]);
+  virtual int begin_simulation(int argc, char *argv[]);
   virtual void set_sim_thread_func(is_sim_thread_func_t func) {}
   virtual bx_bool is_sim_thread();
   bx_bool debug_gui;
@@ -207,7 +207,7 @@ bx_param_c *bx_real_sim_c::get_param(const char *pname, bx_param_c *base)
   return find_param(pname, pname, base);
 }
 
-bx_param_num_c *bx_real_sim_c::get_param_num (const char *pname, bx_param_c *base)
+bx_param_num_c *bx_real_sim_c::get_param_num(const char *pname, bx_param_c *base)
 {
   bx_param_c *generic = get_param(pname, base);
   if (generic==NULL) {
@@ -809,7 +809,7 @@ bx_bool bx_real_sim_c::register_user_option(const char *keyword, user_option_par
 
 Bit32s bx_real_sim_c::parse_user_option(int idx, const char *context, int num_params, char *params [])
 {
-  if ((idx < 0) || (idx >= n_user_options)) {
+  if (idx < 0 || idx >= n_user_options) {
     return -1;
   }
   return (*user_option_parser[idx])(context, num_params, params);
@@ -1008,54 +1008,59 @@ bx_bool bx_real_sim_c::restore_bochs_param(bx_list_c *root, const char *sr_path,
               param = get_param(ptr, base);
             }
           } else if (i == 2) {
-            if (param->get_type() != BXT_LIST) {
-              param->get_param_path(pname, 80);
-              BX_DEBUG(("restoring parameter '%s'", pname));
+            if (param == NULL) {
+              BX_PANIC(("cannot find param!"));
             }
-            switch (param->get_type()) {
-              case BXT_PARAM_NUM:
-                if ((ptr[0] == '0') && (ptr[1] == 'x')) {
-                  ((bx_param_num_c*)param)->set(strtoull(ptr, NULL, 16));
-                } else {
-                  ((bx_param_num_c*)param)->set(strtoull(ptr, NULL, 10));
-                }
-                break;
-              case BXT_PARAM_BOOL:
-                ((bx_param_bool_c*)param)->set(!strcmp(ptr, "true"));
-                break;
-              case BXT_PARAM_ENUM:
-                ((bx_param_enum_c*)param)->set_by_name(ptr);
-                break;
-              case BXT_PARAM_STRING:
-                if (((bx_param_string_c*)param)->get_options()->get() & bx_param_string_c::RAW_BYTES) {
-                  p = 0;
-                  for (j = 0; j < ((bx_param_string_c*)param)->get_maxsize(); j++) {
-                    if (ptr[p] == ((bx_param_string_c*)param)->get_separator()) {
-                      p++;
-                    }
-                    if (sscanf(ptr+p, "%02x", &n) == 1) {
-                      buf[j] = n;
-                      p += 2;
-                    }
+            else {
+              if (param->get_type() != BXT_LIST) {
+                param->get_param_path(pname, 80);
+                BX_DEBUG(("restoring parameter '%s'", pname));
+              }
+              switch (param->get_type()) {
+                case BXT_PARAM_NUM:
+                  if ((ptr[0] == '0') && (ptr[1] == 'x')) {
+                    ((bx_param_num_c*)param)->set(strtoull(ptr, NULL, 16));
+                  } else {
+                    ((bx_param_num_c*)param)->set(strtoull(ptr, NULL, 10));
                   }
-                  ((bx_param_string_c*)param)->set(buf);
-                } else {
-                  ((bx_param_string_c*)param)->set(ptr);
-                }
-                break;
-              case BXT_PARAM_DATA:
-                sprintf(devdata, "%s/%s", sr_path, ptr);
-                fp2 = fopen(devdata, "rb");
-                if (fp2 != NULL) {
-                  fread(((bx_shadow_data_c*)param)->getptr(), 1, ((bx_shadow_data_c*)param)->get_size(), fp2);
-                  fclose(fp2);
-                }
-                break;
-              case BXT_LIST:
-                base = (bx_list_c*)param;
-                break;
-              default:
-                BX_ERROR(("restore_sr_param(): unknown parameter type"));
+                  break;
+                case BXT_PARAM_BOOL:
+                  ((bx_param_bool_c*)param)->set(!strcmp(ptr, "true"));
+                  break;
+                case BXT_PARAM_ENUM:
+                  ((bx_param_enum_c*)param)->set_by_name(ptr);
+                  break;
+                case BXT_PARAM_STRING:
+                  if (((bx_param_string_c*)param)->get_options()->get() & bx_param_string_c::RAW_BYTES) {
+                    p = 0;
+                    for (j = 0; j < ((bx_param_string_c*)param)->get_maxsize(); j++) {
+                      if (ptr[p] == ((bx_param_string_c*)param)->get_separator()) {
+                        p++;
+                      }
+                      if (sscanf(ptr+p, "%02x", &n) == 1) {
+                        buf[j] = n;
+                        p += 2;
+                      }
+                    }
+                    ((bx_param_string_c*)param)->set(buf);
+                  } else {
+                    ((bx_param_string_c*)param)->set(ptr);
+                  }
+                  break;
+                case BXT_PARAM_DATA:
+                  sprintf(devdata, "%s/%s", sr_path, ptr);
+                  fp2 = fopen(devdata, "rb");
+                  if (fp2 != NULL) {
+                    fread(((bx_shadow_data_c*)param)->getptr(), 1, ((bx_shadow_data_c*)param)->get_size(), fp2);
+                    fclose(fp2);
+                  }
+                  break;
+                case BXT_LIST:
+                  base = (bx_list_c*)param;
+                  break;
+                default:
+                  BX_ERROR(("restore_sr_param(): unknown parameter type"));
+              }
             }
           }
           i++;

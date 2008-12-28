@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.378 2008-12-27 12:06:39 sshwarts Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.379 2008-12-28 20:30:48 sshwarts Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -1077,6 +1077,27 @@ AC_ARG_ENABLE(host-specific-asms,
   [
     AC_MSG_RESULT(no)
     speedup_host_specific_asms=0
+    ]
+  )
+
+AC_MSG_CHECKING(support for configurable MSR registers)
+AC_ARG_ENABLE(configurable-msrs,
+  [  --enable-configurable-msrs        support for configurable MSR registers],
+  [if test "$enableval" = yes; then
+    AC_MSG_RESULT(yes)
+    AC_DEFINE(BX_CONFIGURE_MSRS, 1)
+   else
+    AC_MSG_RESULT(no)
+    AC_DEFINE(BX_CONFIGURE_MSRS, 0)
+   fi],
+  [
+    if test "$bx_cpu_level" -ge 5; then
+      AC_MSG_RESULT(yes)
+      AC_DEFINE(BX_CONFIGURE_MSRS, 1)
+    else
+      AC_MSG_RESULT(no)
+      AC_DEFINE(BX_CONFIGURE_MSRS, 0)
+    fi
     ]
   )
 

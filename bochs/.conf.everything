@@ -7,15 +7,13 @@
   --enable-apic \
   --enable-x86-64 \
   --enable-all-optimizations \
-  --enable-ne2000 \
-  --enable-pci \
-  --enable-acpi \
   --enable-large-pages \
   --enable-pae \
   --enable-global-pages \
   --enable-mtrr \
   --enable-1g-pages \
   --enable-ignore-bad-msr \
+  --enable-configurable-msrs \
   --enable-port-e9-hack \
   --enable-debugger \
   --enable-disasm \
@@ -35,11 +33,14 @@
   --enable-xsave \
   --enable-aes \
   --enable-x86-debugger \
-  --enable-cdrom \
-  --enable-sb16 \
   --enable-instrumentation=instrument/example1 \
-  --enable-iodebug \
-  --enable-show-ips \
+  --enable-ne2000 \
+  --enable-pci \
+  --enable-acpi \
   --enable-clgd54xx \
   --enable-usb \
+  --enable-cdrom \
+  --enable-sb16 \
+  --enable-iodebug \
+  --enable-show-ips \
   --with-all-libs

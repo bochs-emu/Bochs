@@ -10,6 +10,9 @@ Brief summary :
 Detailed change log :
 
 - CPU and internal debugger
+  - Support for configurable MSR registers emulation, to enable configure with
+        --enable-configurable-msrs option
+    Look for configuration example in .bochsrc and msrs.def
   - Support new Intel Atom(R) MOVBE instruction, to enable configure with
         --enable-movbe option
   - Support for 1G pages in long mode, to enable configure with
@@ -121,6 +124,7 @@ Detailed change log :
  [1874124] bx_Instruction_c::ilen() const  
 
 - these S.F. feature requests were closed/implemented
+ [1488136] debugger access to floppy controller  
  [1363136] Full debugger SMP and 64 bit support
  [2068304] Support for ACPI
   [431032] debugger "x" command
