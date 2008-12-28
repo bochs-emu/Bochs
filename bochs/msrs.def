@@ -1,0 +1,45 @@
+#
+#                   ----------------------------------
+#                      Bochs CPU MSRs configuration
+#                   ----------------------------------
+#
+# LEGEND:
+# ------
+#
+#    MSR ADDRESS - MSR address in hex (supplied in ECX register for RDMSR/WRMSR)
+#    MSR TYPE    - MSR type, see below
+#
+#    The following fields have any meaning for MSRs with no type only:
+#
+#    RESET_HI    - reset value of the MSR (bits 63:32)
+#    RESET_LO    - reset value of the MSR (bits 31:00)
+#
+#    NOTE: the value of the MSR doesn't change on INIT (software reset).
+#
+#    RSRVD_HI    - mask of reserved bits (bits 63:32)
+#    RSRVD_LO    - mask of reserved bits (bits 31:00)
+#
+#    NOTE: #GP fault will be generated when trying to modify any of MSR
+#          reserved bits.
+#
+#    IGNRD_HI    - mask of ignored bits (bits 63:32)
+#    IGNRD_LO    - mask of ignored bits (bits 31:00)
+#
+#    NOTE: Ignored bits will keep their reset value, all writes to these 
+#          bits are ignored.
+#
+# MSR TYPES:
+# ---------
+#
+#    0 - No type.
+#    1 - MSR contains linear address, 
+#        #GP if writing non-canonical address in 64-bit mode.
+#    2 - MSR contains physical address,
+#        #GP if writing a value which exceeds emulated physical address size.
+#
+
+
+# ADDRESS  TYPE   RESET_HI   RESET_LO    RSRVD_HI   RSRVD_LO   IGNRD_HI   IGNRD_LO
+# ---------------------------------------------------------------------------------
+   0x02c     0    00000000   00000000    00000000   00000000   00000000   00000000
+	
