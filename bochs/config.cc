@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.142 2008-12-28 20:30:48 sshwarts Exp $
+// $Id: config.cc,v 1.143 2008-12-28 20:49:03 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -464,8 +464,7 @@ void bx_init_options()
       "msrs",
       "Configurable MSR definition file",
       "Set path to the configurable MSR definition file",
-      "msrs.def", 
-      BX_PATHNAME_LEN+1);
+      "", BX_PATHNAME_LEN);
 #endif
   new bx_param_string_c(cpu_param,
       "vendor_string",
@@ -3544,18 +3543,22 @@ int bx_write_configuration(const char *rc, int overwrite)
   fprintf(fp, "vga_update_interval: %u\n", SIM->get_param_num(BXPN_VGA_UPDATE_INTERVAL)->get());
   fprintf(fp, "vga: extension=%s\n", SIM->get_param_string(BXPN_VGA_EXTENSION)->getptr());
 #if BX_SUPPORT_SMP
-  fprintf(fp, "cpu: count=%u:%u:%u, ips=%u, quantum=%d, reset_on_triple_fault=%d, cpuid_limit_winnt=%d\n",
+  fprintf(fp, "cpu: count=%u:%u:%u, ips=%u, quantum=%d, ",
     SIM->get_param_num(BXPN_CPU_NPROCESSORS)->get(), SIM->get_param_num(BXPN_CPU_NCORES)->get(),
     SIM->get_param_num(BXPN_CPU_NTHREADS)->get(), SIM->get_param_num(BXPN_IPS)->get(),
-    SIM->get_param_num(BXPN_SMP_QUANTUM)->get(),
-    SIM->get_param_bool(BXPN_RESET_ON_TRIPLE_FAULT)->get(),
-    SIM->get_param_bool(BXPN_CPUID_LIMIT_WINNT)->get());
+    SIM->get_param_num(BXPN_SMP_QUANTUM)->get());
 #else
-  fprintf(fp, "cpu: count=1, ips=%u, reset_on_triple_fault=%d, cpuid_limit_winnt=%d\n",
-    SIM->get_param_num(BXPN_IPS)->get(),
+  fprintf(fp, "cpu: count=1, ips=%u, ", SIM->get_param_num(BXPN_IPS)->get());
+#endif
+  fprintf(fp, "reset_on_triple_fault=%d, cpuid_limit_winnt=%d",
     SIM->get_param_bool(BXPN_RESET_ON_TRIPLE_FAULT)->get(),
     SIM->get_param_bool(BXPN_CPUID_LIMIT_WINNT)->get());
-#endif
+#if BX_CONFIGURE_MSRS
+  strptr = SIM->get_param_string(BXPN_CONFIGURABLE_MSRS_PATH)->getptr();
+  if (strlen(strptr) > 0)
+    fprintf(fp, "msrs==\"%s\"", strptr);
+#endif  
+  fprintf(fp, "\n");
   fprintf(fp, "text_snapshot_check: enabled=%d\n", SIM->get_param_bool(BXPN_TEXT_SNAPSHOT_CHECK)->get());
   fprintf(fp, "private_colormap: enabled=%d\n", SIM->get_param_bool(BXPN_PRIVATE_COLORMAP)->get());
 #if BX_WITH_AMIGAOS

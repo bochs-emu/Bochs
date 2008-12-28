@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.247 2008-10-01 09:44:40 sshwarts Exp $
+$Id: user.dbk,v 1.248 2008-12-28 20:49:03 sshwarts Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -3070,6 +3070,11 @@ will be completely bogus !
 <para>
 Determine whether to limit maximum CPUID function to 3. This mode is required
 to workaround WinNT installation and boot issues.
+</para>
+<para><command>msrs</command></para>
+<para>
+Define path to user CPU Model Specific Registers (MSRs) specification.
+See example in msrs.def.
 </para>
 <para><command>vendor_string</command></para>
 <para>
