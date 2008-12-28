@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.388 2008-12-28 20:49:03 sshwarts Exp $
+// $Id: main.cc,v 1.389 2008-12-28 20:53:31 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -993,9 +993,8 @@ void bx_init_hardware()
 #if BX_CONFIGURE_MSRS
   const char *msrs_file = SIM->get_param_string(BXPN_CONFIGURABLE_MSRS_PATH)->getptr();
   if(strlen(msrs_file) > 0)
-    BX_INFO(("  load configurable MSRs from file %s", msrs_file));
+    BX_INFO(("  load configurable MSRs from file \"%s\"", msrs_file));
 #endif
-  BX_INFO(("  APIC support: %s",BX_SUPPORT_APIC?"yes":"no"));
   BX_INFO(("CPU configuration"));
   BX_INFO(("  level: %d",BX_CPU_LEVEL));
 #if BX_SUPPORT_SMP
@@ -1003,6 +1002,7 @@ void bx_init_hardware()
 #else
   BX_INFO(("  SMP support: no"));
 #endif
+  BX_INFO(("  APIC support: %s",BX_SUPPORT_APIC?"yes":"no"));
   BX_INFO(("  FPU support: %s",BX_SUPPORT_FPU?"yes":"no"));
   BX_INFO(("  MMX support: %s",BX_SUPPORT_MMX?"yes":"no"));
   if (BX_SUPPORT_SSE == 0)
