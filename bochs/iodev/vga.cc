@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.154 2008-09-18 20:16:27 sshwarts Exp $
+// $Id: vga.cc,v 1.155 2008-12-29 08:16:53 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -985,7 +985,7 @@ void bx_vga_c::write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_l
   Bit8u charmap1, charmap2, prev_memory_mapping;
   bx_bool prev_video_enabled, prev_line_graphics, prev_int_pal_size;
   bx_bool prev_graphics_alpha, prev_chain_odd_even;
-  bx_bool needs_update = 0;
+  bx_bool needs_update = 0, charmap_update = 0;
 
 #if defined(VGA_TRACE_FEATURE)
   if (!no_log)
@@ -1099,9 +1099,7 @@ void bx_vga_c::write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_l
             BX_VGA_THIS s.attribute_ctrl.mode_ctrl.internal_palette_size =
               (value >> 7) & 0x01;
             if (((value >> 2) & 0x01) != prev_line_graphics) {
-              bx_gui->set_text_charmap(
-                & BX_VGA_THIS s.memory[0x20000 + BX_VGA_THIS s.charmap_address]);
-              BX_VGA_THIS s.vga_mem_updated = 1;
+              charmap_update = 1;
             }
             if (((value >> 7) & 0x01) != prev_int_pal_size) {
               needs_update = 1;
@@ -1199,9 +1197,7 @@ void bx_vga_c::write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_l
           if (BX_VGA_THIS s.sequencer.reset1 && ((value & 0x01) == 0)) {
             BX_VGA_THIS s.sequencer.char_map_select = 0;
             BX_VGA_THIS s.charmap_address = 0;
-            bx_gui->set_text_charmap(
-              & BX_VGA_THIS s.memory[0x20000 + BX_VGA_THIS s.charmap_address]);
-            BX_VGA_THIS s.vga_mem_updated = 1;
+            charmap_update = 1;
           }
           BX_VGA_THIS s.sequencer.reset1 = (value >> 0) & 0x01;
           BX_VGA_THIS s.sequencer.reset2 = (value >> 1) & 0x01;
@@ -1228,11 +1224,9 @@ void bx_vga_c::write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_l
           if (charmap1 > 3) charmap1 = (charmap1 & 3) + 4;
           charmap2 = (value & 0x2C) >> 2;
           if (charmap2 > 3) charmap2 = (charmap2 & 3) + 4;
-	  if (BX_VGA_THIS s.CRTC.reg[0x09] > 0) {
+          if (BX_VGA_THIS s.CRTC.reg[0x09] > 0) {
             BX_VGA_THIS s.charmap_address = charmap_offset[charmap1];
-            bx_gui->set_text_charmap(
-              & BX_VGA_THIS s.memory[0x20000 + BX_VGA_THIS s.charmap_address]);
-            BX_VGA_THIS s.vga_mem_updated = 1;
+            charmap_update = 1;
           }
           if (charmap2 != charmap1)
             BX_INFO(("char map select: map #2 in block #%d unused", charmap2));
@@ -1455,6 +1449,7 @@ void bx_vga_c::write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_l
             BX_VGA_THIS s.y_doublescan = ((value & 0x9f) > 0);
             BX_VGA_THIS s.line_compare &= 0x1ff;
             if (BX_VGA_THIS s.CRTC.reg[0x09] & 0x40) BX_VGA_THIS s.line_compare |= 0x200;
+            charmap_update = 1;
             needs_update = 1;
             break;
           case 0x0A:
@@ -1514,6 +1509,11 @@ void bx_vga_c::write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_l
         (unsigned) address, (unsigned) value));
   }
 
+  if (charmap_update) {
+    bx_gui->set_text_charmap(
+      & BX_VGA_THIS s.memory[0x20000 + BX_VGA_THIS s.charmap_address]);
+    BX_VGA_THIS s.vga_mem_updated = 1;
+  }
   if (needs_update) {
     // Mark all video as updated so the changes will go through
     BX_VGA_THIS redraw_area(0, 0, old_iWidth, old_iHeight);
@@ -2145,18 +2145,14 @@ void bx_vga_c::update(void)
     VDE = BX_VGA_THIS s.vertical_display_end;
     // Maximum Scan Line: height of character cell
     MSL = BX_VGA_THIS s.CRTC.reg[0x09] & 0x1f;
-    if (MSL == 0) {
-      BX_ERROR(("character height = 1, skipping text update"));
-      return;
-    }
     cols = BX_VGA_THIS s.CRTC.reg[1] + 1;
     if ((MSL == 1) && (VDE == 399)) {
       // emulated CGA graphics mode 160x100x16 colors
       MSL = 3;
     }
     rows = (VDE+1)/(MSL+1);
-    if (rows > BX_MAX_TEXT_LINES) {
-      BX_PANIC(("text rows>%d: %d",BX_MAX_TEXT_LINES,rows));
+    if ((rows * tm_info.line_offset) > (1 << 17)) {
+      BX_PANIC(("update(): text mode: out of memory"));
       return;
     }
     cWidth = ((BX_VGA_THIS s.sequencer.reg1 & 0x01) == 1) ? 8 : 9;

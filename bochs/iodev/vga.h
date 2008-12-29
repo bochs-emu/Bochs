@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.h,v 1.62 2008-09-18 20:10:17 sshwarts Exp $
+// $Id: vga.h,v 1.63 2008-12-29 08:16:53 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -118,10 +118,6 @@
 #define Y_TILESIZE 24
 #define BX_NUM_X_TILES (BX_MAX_XRES /X_TILESIZE)
 #define BX_NUM_Y_TILES (BX_MAX_YRES /Y_TILESIZE)
-
-// Support varying number of rows of text.  This used to
-// be limited to only 25 lines.
-#define BX_MAX_TEXT_LINES 100
 
 #if BX_USE_VGA_SMF
 #  define BX_VGA_SMF  static
