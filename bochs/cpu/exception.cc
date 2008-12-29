@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.123 2008-11-09 22:08:21 sshwarts Exp $
+// $Id: exception.cc,v 1.124 2008-12-29 17:46:42 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -846,7 +846,7 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code, bx_bool trap)
 #endif
       if (SIM->get_param_bool(BXPN_RESET_ON_TRIPLE_FAULT)->get()) {
         BX_ERROR(("exception(): 3rd (%d) exception with no resolution, shutdown status is %02xh, resetting", vector, DEV_cmos_get_reg(0x0f)));
-        bx_pc_system.Reset(BX_RESET_SOFTWARE);
+        bx_pc_system.Reset(BX_RESET_HARDWARE);
       }
       else {
         BX_PANIC(("exception(): 3rd (%d) exception with no resolution", vector));
