@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: io.cc,v 1.69 2008-12-11 21:19:38 sshwarts Exp $
+// $Id: io.cc,v 1.70 2008-12-29 17:35:35 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -202,6 +202,11 @@ Bit32u BX_CPU_C::FastRepOUTSW(bxInstruction_c *i, unsigned srcSeg, bx_address sr
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_INSB_YbDX(bxInstruction_c *i)
 {
+  if (! BX_CPU_THIS_PTR allow_io(DX, 1)) {
+    BX_DEBUG(("INSB_YbDX: I/O access not allowed !"));
+    exception(BX_GP_EXCEPTION, 0, 0);
+  }
+
 #if BX_SUPPORT_X86_64
   if (i->as64L()) {
     BX_CPU_THIS_PTR repeat(i, &BX_CPU_C::INSB64_YbDX);
@@ -220,11 +225,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_INSB_YbDX(bxInstruction_c *i)
 // 16-bit address size
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::INSB16_YbDX(bxInstruction_c *i)
 {
-  if (! BX_CPU_THIS_PTR allow_io(DX, 1)) {
-    BX_DEBUG(("INSB_YbDX: I/O access not allowed !"));
-    exception(BX_GP_EXCEPTION, 0, 0);
-  }
-
   // trigger any segment or page faults before reading from IO port
   Bit8u value8 = read_RMW_virtual_byte_32(BX_SEG_REG_ES, DI);
 
@@ -241,11 +241,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INSB16_YbDX(bxInstruction_c *i)
 // 32-bit address size
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::INSB32_YbDX(bxInstruction_c *i)
 {
-  if (! BX_CPU_THIS_PTR allow_io(DX, 1)) {
-    BX_DEBUG(("INSB_YbDX: I/O access not allowed !"));
-    exception(BX_GP_EXCEPTION, 0, 0);
-  }
-
   // trigger any segment or page faults before reading from IO port
   Bit8u value8 = read_RMW_virtual_byte_32(BX_SEG_REG_ES, EDI);
 
@@ -267,11 +262,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INSB32_YbDX(bxInstruction_c *i)
 // 64-bit address size
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::INSB64_YbDX(bxInstruction_c *i)
 {
-  if (! BX_CPU_THIS_PTR allow_io(DX, 1)) {
-    BX_DEBUG(("INSB_YbDX: I/O access not allowed !"));
-    exception(BX_GP_EXCEPTION, 0, 0);
-  }
-
   // trigger any segment or page faults before reading from IO port
   Bit8u value8 = read_RMW_virtual_byte_64(BX_SEG_REG_ES, RDI);
 
@@ -289,6 +279,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INSB64_YbDX(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_INSW_YwDX(bxInstruction_c *i)
 {
+  if (! BX_CPU_THIS_PTR allow_io(DX, 2)) {
+    BX_DEBUG(("INSW_YwDX: I/O access not allowed !"));
+    exception(BX_GP_EXCEPTION, 0, 0);
+  }
+
 #if BX_SUPPORT_X86_64
   if (i->as64L()) {
     BX_CPU_THIS_PTR repeat(i, &BX_CPU_C::INSW64_YwDX);
@@ -307,11 +302,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_INSW_YwDX(bxInstruction_c *i)
 // 16-bit operand size, 16-bit address size
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::INSW16_YwDX(bxInstruction_c *i)
 {
-  if (! BX_CPU_THIS_PTR allow_io(DX, 2)) {
-    BX_DEBUG(("INSW16_YwDX: I/O access not allowed !"));
-    exception(BX_GP_EXCEPTION, 0, 0);
-  }
-
   // trigger any segment or page faults before reading from IO port
   Bit16u value16 = read_RMW_virtual_word_32(BX_SEG_REG_ES, DI);
 
@@ -331,11 +321,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INSW32_YwDX(bxInstruction_c *i)
   Bit16u value16=0;
   Bit32u edi = EDI;
   unsigned incr = 2;
-
-  if (! BX_CPU_THIS_PTR allow_io(DX, 2)) {
-    BX_DEBUG(("INSW32_YwDX: I/O access not allowed !"));
-    exception(BX_GP_EXCEPTION, 0, 0);
-  }
 
 #if (BX_SupportRepeatSpeedups) && (BX_DEBUGGER == 0)
   /* If conditions are right, we can transfer IO to physical memory
@@ -386,11 +371,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INSW32_YwDX(bxInstruction_c *i)
 // 16-bit operand size, 64-bit address size
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::INSW64_YwDX(bxInstruction_c *i)
 {
-  if (! BX_CPU_THIS_PTR allow_io(DX, 2)) {
-    BX_DEBUG(("INSW64_YwDX: I/O access not allowed !"));
-    exception(BX_GP_EXCEPTION, 0, 0);
-  }
-
   // trigger any segment or page faults before reading from IO port
   Bit16u value16 = read_RMW_virtual_word_64(BX_SEG_REG_ES, RDI);
 
@@ -408,6 +388,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INSW64_YwDX(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_INSD_YdDX(bxInstruction_c *i)
 {
+  if (! BX_CPU_THIS_PTR allow_io(DX, 4)) {
+    BX_DEBUG(("INSD_YdDX: I/O access not allowed !"));
+    exception(BX_GP_EXCEPTION, 0, 0);
+  }
+
 #if BX_SUPPORT_X86_64
   if (i->as64L()) {
     BX_CPU_THIS_PTR repeat(i, &BX_CPU_C::INSD64_YdDX);
@@ -426,11 +411,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_INSD_YdDX(bxInstruction_c *i)
 // 32-bit operand size, 16-bit address size
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::INSD16_YdDX(bxInstruction_c *i)
 {
-  if (! BX_CPU_THIS_PTR allow_io(DX, 4)) {
-    BX_DEBUG(("INSD16_YdDX: I/O access not allowed !"));
-    exception(BX_GP_EXCEPTION, 0, 0);
-  }
-
   // trigger any segment or page faults before reading from IO port
   Bit32u value32 = read_RMW_virtual_dword_32(BX_SEG_REG_ES, DI);
 
@@ -447,11 +427,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INSD16_YdDX(bxInstruction_c *i)
 // 32-bit operand size, 32-bit address size
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::INSD32_YdDX(bxInstruction_c *i)
 {
-  if (! BX_CPU_THIS_PTR allow_io(DX, 4)) {
-    BX_DEBUG(("INSD32_YdDX: I/O access not allowed !"));
-    exception(BX_GP_EXCEPTION, 0, 0);
-  }
-
   // trigger any segment or page faults before reading from IO port
   Bit32u value32 = read_RMW_virtual_dword_32(BX_SEG_REG_ES, EDI);
 
@@ -470,11 +445,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INSD32_YdDX(bxInstruction_c *i)
 // 32-bit operand size, 64-bit address size
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::INSD64_YdDX(bxInstruction_c *i)
 {
-  if (! BX_CPU_THIS_PTR allow_io(DX, 4)) {
-    BX_DEBUG(("INSD64_YdDX: I/O access not allowed !"));
-    exception(BX_GP_EXCEPTION, 0, 0);
-  }
-
   // trigger any segment or page faults before reading from IO port
   Bit32u value32 = read_RMW_virtual_dword_64(BX_SEG_REG_ES, RDI);
 
@@ -496,6 +466,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INSD64_YdDX(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_OUTSB_DXXb(bxInstruction_c *i)
 {
+  if (! BX_CPU_THIS_PTR allow_io(DX, 1)) {
+    BX_DEBUG(("OUTSB_DXXb: I/O access not allowed !"));
+    exception(BX_GP_EXCEPTION, 0, 0);
+  }
+
 #if BX_SUPPORT_X86_64
   if (i->as64L()) {
     BX_CPU_THIS_PTR repeat(i, &BX_CPU_C::OUTSB64_DXXb);
@@ -514,11 +489,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_OUTSB_DXXb(bxInstruction_c *i)
 // 16-bit address size
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::OUTSB16_DXXb(bxInstruction_c *i)
 {
-  if (! BX_CPU_THIS_PTR allow_io(DX, 1)) {
-    BX_DEBUG(("OUTSB16_DXXb: I/O access not allowed !"));
-    exception(BX_GP_EXCEPTION, 0, 0);
-  }
-
   Bit8u value8 = read_virtual_byte_32(i->seg(), SI);
   BX_OUTP(DX, value8, 1);
 
@@ -531,11 +501,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::OUTSB16_DXXb(bxInstruction_c *i)
 // 32-bit address size
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::OUTSB32_DXXb(bxInstruction_c *i)
 {
-  if (! BX_CPU_THIS_PTR allow_io(DX, 1)) {
-    BX_DEBUG(("OUTSB32_DXXb: I/O access not allowed !"));
-    exception(BX_GP_EXCEPTION, 0, 0);
-  }
-
   Bit8u value8 = read_virtual_byte(i->seg(), ESI);
   BX_OUTP(DX, value8, 1);
 
@@ -550,11 +515,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::OUTSB32_DXXb(bxInstruction_c *i)
 // 64-bit address size
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::OUTSB64_DXXb(bxInstruction_c *i)
 {
-  if (! BX_CPU_THIS_PTR allow_io(DX, 1)) {
-    BX_DEBUG(("OUTSB64_DXXb: I/O access not allowed !"));
-    exception(BX_GP_EXCEPTION, 0, 0);
-  }
-
   Bit8u value8 = read_virtual_byte_64(i->seg(), RSI);
   BX_OUTP(DX, value8, 1);
 
@@ -568,6 +528,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::OUTSB64_DXXb(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_OUTSW_DXXw(bxInstruction_c *i)
 {
+  if (! BX_CPU_THIS_PTR allow_io(DX, 2)) {
+    BX_DEBUG(("OUTSW_DXXw: I/O access not allowed !"));
+    exception(BX_GP_EXCEPTION, 0, 0);
+  }
+
 #if BX_SUPPORT_X86_64
   if (i->as64L()) {
     BX_CPU_THIS_PTR repeat(i, &BX_CPU_C::OUTSW64_DXXw);
@@ -586,11 +551,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_OUTSW_DXXw(bxInstruction_c *i)
 // 16-bit operand size, 16-bit address size
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::OUTSW16_DXXw(bxInstruction_c *i)
 {
-  if (! BX_CPU_THIS_PTR allow_io(DX, 2)) {
-    BX_DEBUG(("OUTSW16_DXXw: I/O access not allowed !"));
-    exception(BX_GP_EXCEPTION, 0, 0);
-  }
-
   Bit16u value16 = read_virtual_word_32(i->seg(), SI);
   BX_OUTP(DX, value16, 2);
 
@@ -603,11 +563,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::OUTSW16_DXXw(bxInstruction_c *i)
 // 16-bit operand size, 32-bit address size
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::OUTSW32_DXXw(bxInstruction_c *i)
 {
-  if (! BX_CPU_THIS_PTR allow_io(DX, 2)) {
-    BX_DEBUG(("OUTSW32_DXXw: I/O access not allowed !"));
-    exception(BX_GP_EXCEPTION, 0, 0);
-  }
-
   Bit16u value16;
   Bit32u esi = ESI;
   unsigned incr = 2;
@@ -649,11 +604,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::OUTSW32_DXXw(bxInstruction_c *i)
 // 16-bit operand size, 64-bit address size
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::OUTSW64_DXXw(bxInstruction_c *i)
 {
-  if (! BX_CPU_THIS_PTR allow_io(DX, 2)) {
-    BX_DEBUG(("OUTSW64_DXXw: I/O access not allowed !"));
-    exception(BX_GP_EXCEPTION, 0, 0);
-  }
-
   Bit16u value16 = read_virtual_word_64(i->seg(), RSI);
   BX_OUTP(DX, value16, 2);
 
@@ -667,6 +617,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::OUTSW64_DXXw(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_OUTSD_DXXd(bxInstruction_c *i)
 {
+  if (! BX_CPU_THIS_PTR allow_io(DX, 4)) {
+    BX_DEBUG(("OUTSD_DXXd: I/O access not allowed !"));
+    exception(BX_GP_EXCEPTION, 0, 0);
+  }
+
 #if BX_SUPPORT_X86_64
   if (i->as64L()) {
     BX_CPU_THIS_PTR repeat(i, &BX_CPU_C::OUTSD64_DXXd);
@@ -685,11 +640,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_OUTSD_DXXd(bxInstruction_c *i)
 // 32-bit operand size, 16-bit address size
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::OUTSD16_DXXd(bxInstruction_c *i)
 {
-  if (! BX_CPU_THIS_PTR allow_io(DX, 4)) {
-    BX_DEBUG(("OUTSD16_DXXd: I/O access not allowed !"));
-    exception(BX_GP_EXCEPTION, 0, 0);
-  }
-
   Bit32u value32 = read_virtual_dword_32(i->seg(), SI);
   BX_OUTP(DX, value32, 4);
 
@@ -702,11 +652,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::OUTSD16_DXXd(bxInstruction_c *i)
 // 32-bit operand size, 32-bit address size
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::OUTSD32_DXXd(bxInstruction_c *i)
 {
-  if (! BX_CPU_THIS_PTR allow_io(DX, 4)) {
-    BX_DEBUG(("OUTSD32_DXXd: I/O access not allowed !"));
-    exception(BX_GP_EXCEPTION, 0, 0);
-  }
-
   Bit32u value32 = read_virtual_dword(i->seg(), ESI);
   BX_OUTP(DX, value32, 4);
 
@@ -721,11 +666,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::OUTSD32_DXXd(bxInstruction_c *i)
 // 32-bit operand size, 64-bit address size
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::OUTSD64_DXXd(bxInstruction_c *i)
 {
-  if (! BX_CPU_THIS_PTR allow_io(DX, 4)) {
-    BX_DEBUG(("OUTSD64_DXXd: I/O access not allowed !"));
-    exception(BX_GP_EXCEPTION, 0, 0);
-  }
-
   Bit32u value32 = read_virtual_dword_64(i->seg(), RSI);
   BX_OUTP(DX, value32, 4);
 
