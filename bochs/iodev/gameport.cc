@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gameport.cc,v 1.16 2008-07-26 08:02:27 vruppert Exp $
+// $Id: gameport.cc,v 1.17 2008-12-29 20:16:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003  MandrakeSoft S.A.
@@ -34,6 +34,7 @@
 #define BX_PLUGGABLE
 
 #include "iodev.h"
+#include "gameport.h"
 
 #ifdef __linux__
 

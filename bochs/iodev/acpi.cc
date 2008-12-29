@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: acpi.cc,v 1.16 2008-12-04 18:50:31 sshwarts Exp $
+// $Id: acpi.cc,v 1.17 2008-12-29 20:16:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2006  Volker Ruppert
@@ -30,6 +30,8 @@
 
 #include "bochs.h"
 #include "iodev.h"
+#include "acpi.h"
+
 #if BX_SUPPORT_PCI && BX_SUPPORT_ACPI
 
 #define LOG_THIS theACPIController->

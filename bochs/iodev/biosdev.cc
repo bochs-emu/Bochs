@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: biosdev.cc,v 1.14 2008-07-26 08:02:27 vruppert Exp $
+// $Id: biosdev.cc,v 1.15 2008-12-29 20:16:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -44,6 +44,7 @@
 #define BX_PLUGGABLE
 
 #include "iodev.h"
+#include "biosdev.h"
 
 bx_biosdev_c *theBiosDevice = NULL;
 

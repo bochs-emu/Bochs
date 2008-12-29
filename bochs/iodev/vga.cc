@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.155 2008-12-29 08:16:53 vruppert Exp $
+// $Id: vga.cc,v 1.156 2008-12-29 20:16:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -31,6 +31,7 @@
 #define BX_PLUGGABLE
 
 #include "iodev.h"
+#include "vga.h"
 
 #define LOG_THIS theVga->
 

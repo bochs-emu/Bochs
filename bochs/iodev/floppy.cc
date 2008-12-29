@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.cc,v 1.111 2008-12-21 09:41:30 vruppert Exp $
+// $Id: floppy.cc,v 1.112 2008-12-29 20:16:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -55,6 +55,7 @@ extern "C" {
 }
 #endif
 #include "iodev.h"
+#include "floppy.h"
 // windows.h included by bochs.h
 #ifdef WIN32
 extern "C" {
@@ -141,7 +142,7 @@ void bx_floppy_ctrl_c::init(void)
 {
   Bit8u i, cmos_value;
 
-  BX_DEBUG(("Init $Id: floppy.cc,v 1.111 2008-12-21 09:41:30 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: floppy.cc,v 1.112 2008-12-29 20:16:07 sshwarts Exp $"));
   DEV_dma_register_8bit_channel(2, dma_read, dma_write, "Floppy Drive");
   DEV_register_irq(6, "Floppy Drive");
   for (unsigned addr=0x03F2; addr<=0x03F7; addr++) {

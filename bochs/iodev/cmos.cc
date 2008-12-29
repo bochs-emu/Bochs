@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cmos.cc,v 1.65 2008-12-25 16:58:44 vruppert Exp $
+// $Id: cmos.cc,v 1.66 2008-12-29 20:16:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -31,6 +31,7 @@
 #define BX_PLUGGABLE
 
 #include "iodev.h"
+#include "cmos.h"
 
 #define LOG_THIS theCmosDevice->
 
@@ -145,7 +146,7 @@ bx_cmos_c::~bx_cmos_c(void)
 
 void bx_cmos_c::init(void)
 {
-  BX_DEBUG(("Init $Id: cmos.cc,v 1.65 2008-12-25 16:58:44 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: cmos.cc,v 1.66 2008-12-29 20:16:07 sshwarts Exp $"));
   // CMOS RAM & RTC
 
   DEV_register_ioread_handler(this, read_handler, 0x0070, "CMOS RAM", 1);

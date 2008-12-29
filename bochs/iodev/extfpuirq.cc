@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: extfpuirq.cc,v 1.10 2008-07-26 08:02:27 vruppert Exp $
+// $Id: extfpuirq.cc,v 1.11 2008-12-29 20:16:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -34,6 +34,7 @@
 #define BX_PLUGGABLE
 
 #include "iodev.h"
+#include "extfpuirq.h"
 
 #define LOG_THIS theExternalFpuIrq->
 

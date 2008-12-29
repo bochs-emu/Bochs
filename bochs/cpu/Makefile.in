@@ -177,15 +177,25 @@ access.o: access.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debu
   crregs.h descriptor.h instr.h lazy_flags.h icache.h apic.h \
   ../cpu/i387.h ../fpu/softfloat.h ../config.h ../fpu/tag_w.h \
   ../fpu/status_w.h ../fpu/control_w.h ../cpu/xmm.h stack.h
-access32.o: access32.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
-  ../config.h ../osdep.h ../bxversion.h ../gui/siminterface.h \
-  ../memory/memory.h ../pc_system.h ../plugin.h ../extplugin.h \
-  ../gui/gui.h ../gui/textconfig.h ../config.h ../gui/keymap.h \
-  ../instrument/stubs/instrument.h cpu.h ../disasm/disasm.h ../config.h \
-  crregs.h descriptor.h instr.h lazy_flags.h icache.h apic.h \
-  ../cpu/i387.h ../fpu/softfloat.h ../config.h ../fpu/tag_w.h \
-  ../fpu/status_w.h ../fpu/control_w.h ../cpu/xmm.h stack.h
-access64.o: access64.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
+access32.o: access32.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
+  ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
+  ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
+  ../extplugin.h ../gui/gui.h ../gui/textconfig.h ../config.h \
+  ../gui/keymap.h ../instrument/stubs/instrument.h cpu.h \
+  ../disasm/disasm.h ../config.h crregs.h descriptor.h instr.h \
+  lazy_flags.h icache.h apic.h ../cpu/i387.h ../fpu/softfloat.h \
+  ../config.h ../fpu/tag_w.h ../fpu/status_w.h ../fpu/control_w.h \
+  ../cpu/xmm.h stack.h
+access64.o: access64.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
+  ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
+  ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
+  ../extplugin.h ../gui/gui.h ../gui/textconfig.h ../config.h \
+  ../gui/keymap.h ../instrument/stubs/instrument.h cpu.h \
+  ../disasm/disasm.h ../config.h crregs.h descriptor.h instr.h \
+  lazy_flags.h icache.h apic.h ../cpu/i387.h ../fpu/softfloat.h \
+  ../config.h ../fpu/tag_w.h ../fpu/status_w.h ../fpu/control_w.h \
+  ../cpu/xmm.h stack.h
+aes.o: aes.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../config.h ../osdep.h ../bxversion.h ../gui/siminterface.h \
   ../memory/memory.h ../pc_system.h ../plugin.h ../extplugin.h \
   ../gui/gui.h ../gui/textconfig.h ../config.h ../gui/keymap.h \
@@ -201,15 +211,9 @@ apic.o: apic.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h 
   crregs.h descriptor.h instr.h lazy_flags.h icache.h apic.h \
   ../cpu/i387.h ../fpu/softfloat.h ../config.h ../fpu/tag_w.h \
   ../fpu/status_w.h ../fpu/control_w.h ../cpu/xmm.h stack.h \
-  ../iodev/iodev.h ../bochs.h ../iodev/pci.h ../iodev/pci2isa.h \
-  ../iodev/pci_ide.h ../iodev/acpi.h ../iodev/pcivga.h ../iodev/vga.h \
+  ../iodev/iodev.h ../bochs.h ../iodev/pci.h ../iodev/vga.h \
   ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h \
-  ../iodev/biosdev.h ../iodev/cmos.h ../iodev/dma.h ../iodev/floppy.h \
-  ../iodev/harddrv.h ../iodev/keyboard.h ../iodev/parallel.h \
-  ../iodev/pic.h ../iodev/pit_wrap.h ../iodev/pit82c54.h \
-  ../iodev/virt_timer.h ../iodev/serial.h ../iodev/unmapped.h \
-  ../iodev/ne2k.h ../iodev/guest2host.h ../iodev/slowdown_timer.h \
-  ../iodev/extfpuirq.h ../iodev/gameport.h
+  ../iodev/keyboard.h ../iodev/serial.h ../iodev/ne2k.h
 arith16.o: arith16.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
@@ -246,14 +250,6 @@ arith8.o: arith8.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debu
   ../cpu/i387.h ../fpu/softfloat.h ../config.h ../fpu/tag_w.h \
   ../fpu/status_w.h ../fpu/control_w.h ../cpu/xmm.h stack.h
 bcd.o: bcd.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
-  ../config.h ../osdep.h ../bxversion.h ../gui/siminterface.h \
-  ../memory/memory.h ../pc_system.h ../plugin.h ../extplugin.h \
-  ../gui/gui.h ../gui/textconfig.h ../config.h ../gui/keymap.h \
-  ../instrument/stubs/instrument.h cpu.h ../disasm/disasm.h ../config.h \
-  crregs.h descriptor.h instr.h lazy_flags.h icache.h apic.h \
-  ../cpu/i387.h ../fpu/softfloat.h ../config.h ../fpu/tag_w.h \
-  ../fpu/status_w.h ../fpu/control_w.h ../cpu/xmm.h stack.h
-crc32.o: crc32.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../config.h ../osdep.h ../bxversion.h ../gui/siminterface.h \
   ../memory/memory.h ../pc_system.h ../plugin.h ../extplugin.h \
   ../gui/gui.h ../gui/textconfig.h ../config.h ../gui/keymap.h \
@@ -310,16 +306,18 @@ cpu.o: cpu.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   crregs.h descriptor.h instr.h lazy_flags.h icache.h apic.h \
   ../cpu/i387.h ../fpu/softfloat.h ../config.h ../fpu/tag_w.h \
   ../fpu/status_w.h ../fpu/control_w.h ../cpu/xmm.h stack.h \
-  ../iodev/iodev.h ../bochs.h ../iodev/pci.h ../iodev/pci2isa.h \
-  ../iodev/pci_ide.h ../iodev/acpi.h ../iodev/pcivga.h ../iodev/vga.h \
+  ../iodev/iodev.h ../bochs.h ../iodev/pci.h ../iodev/vga.h \
   ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h \
-  ../iodev/biosdev.h ../iodev/cmos.h ../iodev/dma.h ../iodev/floppy.h \
-  ../iodev/harddrv.h ../iodev/keyboard.h ../iodev/parallel.h \
-  ../iodev/pic.h ../iodev/pit_wrap.h ../iodev/pit82c54.h \
-  ../iodev/virt_timer.h ../iodev/serial.h ../iodev/unmapped.h \
-  ../iodev/ne2k.h ../iodev/guest2host.h ../iodev/slowdown_timer.h \
-  ../iodev/extfpuirq.h ../iodev/gameport.h
+  ../iodev/keyboard.h ../iodev/serial.h ../iodev/ne2k.h
 cpuid.o: cpuid.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
+  ../config.h ../osdep.h ../bxversion.h ../gui/siminterface.h \
+  ../memory/memory.h ../pc_system.h ../plugin.h ../extplugin.h \
+  ../gui/gui.h ../gui/textconfig.h ../config.h ../gui/keymap.h \
+  ../instrument/stubs/instrument.h cpu.h ../disasm/disasm.h ../config.h \
+  crregs.h descriptor.h instr.h lazy_flags.h icache.h apic.h \
+  ../cpu/i387.h ../fpu/softfloat.h ../config.h ../fpu/tag_w.h \
+  ../fpu/status_w.h ../fpu/control_w.h ../cpu/xmm.h stack.h
+crc32.o: crc32.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../config.h ../osdep.h ../bxversion.h ../gui/siminterface.h \
   ../memory/memory.h ../pc_system.h ../plugin.h ../extplugin.h \
   ../gui/gui.h ../gui/textconfig.h ../config.h ../gui/keymap.h \
@@ -355,15 +353,6 @@ ctrl_xfer64.o: ctrl_xfer64.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../config.h ../fpu/tag_w.h ../fpu/status_w.h ../fpu/control_w.h \
   ../cpu/xmm.h stack.h
 ctrl_xfer_pro.o: ctrl_xfer_pro.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
-  ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
-  ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
-  ../extplugin.h ../gui/gui.h ../gui/textconfig.h ../config.h \
-  ../gui/keymap.h ../instrument/stubs/instrument.h cpu.h \
-  ../disasm/disasm.h ../config.h crregs.h descriptor.h instr.h \
-  lazy_flags.h icache.h apic.h ../cpu/i387.h ../fpu/softfloat.h \
-  ../config.h ../fpu/tag_w.h ../fpu/status_w.h ../fpu/control_w.h \
-  ../cpu/xmm.h stack.h
-load32.o: load32.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
   ../extplugin.h ../gui/gui.h ../gui/textconfig.h ../config.h \
@@ -426,14 +415,8 @@ exception.o: exception.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   lazy_flags.h icache.h apic.h ../cpu/i387.h ../fpu/softfloat.h \
   ../config.h ../fpu/tag_w.h ../fpu/status_w.h ../fpu/control_w.h \
   ../cpu/xmm.h stack.h ../iodev/iodev.h ../bochs.h ../iodev/pci.h \
-  ../iodev/pci2isa.h ../iodev/pci_ide.h ../iodev/acpi.h ../iodev/pcivga.h \
   ../iodev/vga.h ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h \
-  ../iodev/biosdev.h ../iodev/cmos.h ../iodev/dma.h ../iodev/floppy.h \
-  ../iodev/harddrv.h ../iodev/keyboard.h ../iodev/parallel.h \
-  ../iodev/pic.h ../iodev/pit_wrap.h ../iodev/pit82c54.h \
-  ../iodev/virt_timer.h ../iodev/serial.h ../iodev/unmapped.h \
-  ../iodev/ne2k.h ../iodev/guest2host.h ../iodev/slowdown_timer.h \
-  ../iodev/extfpuirq.h ../iodev/gameport.h
+  ../iodev/keyboard.h ../iodev/serial.h ../iodev/ne2k.h
 fetchdecode.o: fetchdecode.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
@@ -503,15 +486,9 @@ io.o: io.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   crregs.h descriptor.h instr.h lazy_flags.h icache.h apic.h \
   ../cpu/i387.h ../fpu/softfloat.h ../config.h ../fpu/tag_w.h \
   ../fpu/status_w.h ../fpu/control_w.h ../cpu/xmm.h stack.h \
-  ../iodev/iodev.h ../bochs.h ../iodev/pci.h ../iodev/pci2isa.h \
-  ../iodev/pci_ide.h ../iodev/acpi.h ../iodev/pcivga.h ../iodev/vga.h \
+  ../iodev/iodev.h ../bochs.h ../iodev/pci.h ../iodev/vga.h \
   ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h \
-  ../iodev/biosdev.h ../iodev/cmos.h ../iodev/dma.h ../iodev/floppy.h \
-  ../iodev/harddrv.h ../iodev/keyboard.h ../iodev/parallel.h \
-  ../iodev/pic.h ../iodev/pit_wrap.h ../iodev/pit82c54.h \
-  ../iodev/virt_timer.h ../iodev/serial.h ../iodev/unmapped.h \
-  ../iodev/ne2k.h ../iodev/guest2host.h ../iodev/slowdown_timer.h \
-  ../iodev/extfpuirq.h ../iodev/gameport.h
+  ../iodev/keyboard.h ../iodev/serial.h ../iodev/ne2k.h
 io_pro.o: io_pro.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../config.h ../osdep.h ../bxversion.h ../gui/siminterface.h \
   ../memory/memory.h ../pc_system.h ../plugin.h ../extplugin.h \
@@ -520,15 +497,9 @@ io_pro.o: io_pro.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debu
   crregs.h descriptor.h instr.h lazy_flags.h icache.h apic.h \
   ../cpu/i387.h ../fpu/softfloat.h ../config.h ../fpu/tag_w.h \
   ../fpu/status_w.h ../fpu/control_w.h ../cpu/xmm.h stack.h \
-  ../iodev/iodev.h ../bochs.h ../iodev/pci.h ../iodev/pci2isa.h \
-  ../iodev/pci_ide.h ../iodev/acpi.h ../iodev/pcivga.h ../iodev/vga.h \
+  ../iodev/iodev.h ../bochs.h ../iodev/pci.h ../iodev/vga.h \
   ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h \
-  ../iodev/biosdev.h ../iodev/cmos.h ../iodev/dma.h ../iodev/floppy.h \
-  ../iodev/harddrv.h ../iodev/keyboard.h ../iodev/parallel.h \
-  ../iodev/pic.h ../iodev/pit_wrap.h ../iodev/pit82c54.h \
-  ../iodev/virt_timer.h ../iodev/serial.h ../iodev/unmapped.h \
-  ../iodev/ne2k.h ../iodev/guest2host.h ../iodev/slowdown_timer.h \
-  ../iodev/extfpuirq.h ../iodev/gameport.h
+  ../iodev/keyboard.h ../iodev/serial.h ../iodev/ne2k.h
 iret.o: iret.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../config.h ../osdep.h ../bxversion.h ../gui/siminterface.h \
   ../memory/memory.h ../pc_system.h ../plugin.h ../extplugin.h \
@@ -555,6 +526,14 @@ lazy_flags.o: lazy_flags.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   lazy_flags.h icache.h apic.h ../cpu/i387.h ../fpu/softfloat.h \
   ../config.h ../fpu/tag_w.h ../fpu/status_w.h ../fpu/control_w.h \
   ../cpu/xmm.h stack.h
+load32.o: load32.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
+  ../config.h ../osdep.h ../bxversion.h ../gui/siminterface.h \
+  ../memory/memory.h ../pc_system.h ../plugin.h ../extplugin.h \
+  ../gui/gui.h ../gui/textconfig.h ../config.h ../gui/keymap.h \
+  ../instrument/stubs/instrument.h cpu.h ../disasm/disasm.h ../config.h \
+  crregs.h descriptor.h instr.h lazy_flags.h icache.h apic.h \
+  ../cpu/i387.h ../fpu/softfloat.h ../config.h ../fpu/tag_w.h \
+  ../fpu/status_w.h ../fpu/control_w.h ../cpu/xmm.h stack.h
 logical16.o: logical16.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
@@ -592,6 +571,14 @@ logical8.o: logical8.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../config.h ../fpu/tag_w.h ../fpu/status_w.h ../fpu/control_w.h \
   ../cpu/xmm.h stack.h
 mmx.o: mmx.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
+  ../config.h ../osdep.h ../bxversion.h ../gui/siminterface.h \
+  ../memory/memory.h ../pc_system.h ../plugin.h ../extplugin.h \
+  ../gui/gui.h ../gui/textconfig.h ../config.h ../gui/keymap.h \
+  ../instrument/stubs/instrument.h cpu.h ../disasm/disasm.h ../config.h \
+  crregs.h descriptor.h instr.h lazy_flags.h icache.h apic.h \
+  ../cpu/i387.h ../fpu/softfloat.h ../config.h ../fpu/tag_w.h \
+  ../fpu/status_w.h ../fpu/control_w.h ../cpu/xmm.h stack.h
+msr.o: msr.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../config.h ../osdep.h ../bxversion.h ../gui/siminterface.h \
   ../memory/memory.h ../pc_system.h ../plugin.h ../extplugin.h \
   ../gui/gui.h ../gui/textconfig.h ../config.h ../gui/keymap.h \
@@ -640,15 +627,6 @@ paging.o: paging.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debu
   ../cpu/i387.h ../fpu/softfloat.h ../config.h ../fpu/tag_w.h \
   ../fpu/status_w.h ../fpu/control_w.h ../cpu/xmm.h stack.h
 proc_ctrl.o: proc_ctrl.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
-  ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
-  ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
-  ../extplugin.h ../gui/gui.h ../gui/textconfig.h ../config.h \
-  ../gui/keymap.h ../instrument/stubs/instrument.h cpu.h \
-  ../disasm/disasm.h ../config.h crregs.h descriptor.h instr.h \
-  lazy_flags.h icache.h apic.h ../cpu/i387.h ../fpu/softfloat.h \
-  ../config.h ../fpu/tag_w.h ../fpu/status_w.h ../fpu/control_w.h \
-  ../cpu/xmm.h stack.h
-msr.o: msr.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
   ../extplugin.h ../gui/gui.h ../gui/textconfig.h ../config.h \
@@ -851,14 +829,6 @@ vm8086.o: vm8086.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debu
   ../cpu/i387.h ../fpu/softfloat.h ../config.h ../fpu/tag_w.h \
   ../fpu/status_w.h ../fpu/control_w.h ../cpu/xmm.h stack.h
 xsave.o: xsave.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
-  ../config.h ../osdep.h ../bxversion.h ../gui/siminterface.h \
-  ../memory/memory.h ../pc_system.h ../plugin.h ../extplugin.h \
-  ../gui/gui.h ../gui/textconfig.h ../config.h ../gui/keymap.h \
-  ../instrument/stubs/instrument.h cpu.h ../disasm/disasm.h ../config.h \
-  crregs.h descriptor.h instr.h lazy_flags.h icache.h apic.h \
-  ../cpu/i387.h ../fpu/softfloat.h ../config.h ../fpu/tag_w.h \
-  ../fpu/status_w.h ../fpu/control_w.h ../cpu/xmm.h stack.h
-aes.o: aes.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../config.h ../osdep.h ../bxversion.h ../gui/siminterface.h \
   ../memory/memory.h ../pc_system.h ../plugin.h ../extplugin.h \
   ../gui/gui.h ../gui/textconfig.h ../config.h ../gui/keymap.h \

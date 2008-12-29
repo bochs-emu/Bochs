@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: unmapped.cc,v 1.27 2008-02-15 22:05:43 sshwarts Exp $
+// $Id: unmapped.cc,v 1.28 2008-12-29 20:16:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -31,6 +31,7 @@
 // is used to know when we are exporting symbols and when we are importing.
 #define BX_PLUGGABLE
 #include "iodev.h"
+#include "unmapped.h"
 
 #define LOG_THIS theUnmappedDevice->
 

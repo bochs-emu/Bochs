@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dma.cc,v 1.47 2008-04-17 14:39:32 sshwarts Exp $
+// $Id: dma.cc,v 1.48 2008-12-29 20:16:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -31,6 +31,7 @@
 #define BX_PLUGGABLE
 
 #include "iodev.h"
+#include "dma.h"
 
 #define LOG_THIS theDmaDevice->
 
@@ -122,7 +123,7 @@ unsigned bx_dma_c::get_TC(void)
 void bx_dma_c::init(void)
 {
   unsigned c, i, j;
-  BX_DEBUG(("Init $Id: dma.cc,v 1.47 2008-04-17 14:39:32 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: dma.cc,v 1.48 2008-12-29 20:16:07 sshwarts Exp $"));
 
   /* 8237 DMA controller */
 

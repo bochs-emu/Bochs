@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: busmouse.h,v 1.7 2008-01-26 22:24:00 sshwarts Exp $
+// $Id: busmouse.h,v 1.8 2008-12-29 20:16:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -62,8 +62,8 @@ private:
   static Bit32u read_handler(void *this_ptr, Bit32u address, unsigned io_len);
   static void   write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len);
 #if !BX_USE_BUSM_SMF
-  void     write(Bit32u   address, Bit32u   value, unsigned io_len);
-  Bit32u   read(Bit32u   address, unsigned io_len);
+  void   write(Bit32u address, Bit32u value, unsigned io_len);
+  Bit32u  read(Bit32u address, unsigned io_len);
 #endif
 
   int   timer_index; // our timer index
@@ -107,7 +107,6 @@ private:
   Bit8u   cur_command;   // current command
   Bit8u   command_val;   // current command val
 };
-
 
 #endif  // #ifndef _PCBUSM_H
 

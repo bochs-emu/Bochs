@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.96 2008-12-13 11:03:36 vruppert Exp $
+// $Id: iodev.h,v 1.97 2008-12-29 20:16:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -372,8 +372,9 @@ public:
 
 class BOCHSAPI bx_devices_c : public logfunctions {
 public:
-  bx_devices_c(void);
- ~bx_devices_c(void);
+  bx_devices_c();
+ ~bx_devices_c();
+
   // Initialize the device stubs (in constructur and exit())
   void init_stubs(void);
   // Register I/O addresses and IRQ lines. Initialize any internal
@@ -591,14 +592,6 @@ BX_CPP_INLINE void DEV_MEM_WRITE_PHYSICAL_BLOCK(bx_phy_address phy_addr, unsigne
 
 #if BX_SUPPORT_PCI
 #include "iodev/pci.h"
-#include "iodev/pci2isa.h"
-#include "iodev/pci_ide.h"
-#if BX_SUPPORT_ACPI
-#include "iodev/acpi.h"
-#endif
-#if BX_SUPPORT_PCIVGA
-#include "iodev/pcivga.h"
-#endif
 #if BX_SUPPORT_PCIDEV
 #include "iodev/pcidev.h"
 #endif
@@ -610,35 +603,18 @@ BX_CPP_INLINE void DEV_MEM_WRITE_PHYSICAL_BLOCK(bx_phy_address phy_addr, unsigne
 #if BX_SUPPORT_APIC
 #  include "iodev/ioapic.h"
 #endif
-#include "iodev/biosdev.h"
-#include "iodev/cmos.h"
-#include "iodev/dma.h"
-#include "iodev/floppy.h"
-#include "iodev/harddrv.h"
 #if BX_SUPPORT_IODEBUG
 #   include "iodev/iodebug.h"
 #endif
 #include "iodev/keyboard.h"
-#if BX_SUPPORT_BUSMOUSE
-#   include "iodev/busmouse.h"
-#endif
-#include "iodev/parallel.h"
-#include "iodev/pic.h"
-#include "iodev/pit_wrap.h"
-#include "iodev/virt_timer.h"
 #include "iodev/serial.h"
 #if BX_SUPPORT_SB16
 #  include "iodev/sb16.h"
 #endif
-#include "iodev/unmapped.h"
 #include "iodev/ne2k.h"
 #if BX_SUPPORT_PCIPNIC
 #include "iodev/pcipnic.h"
 #endif
-#include "iodev/guest2host.h"
-#include "iodev/slowdown_timer.h"
-#include "iodev/extfpuirq.h"
-#include "iodev/gameport.h"
 
 #endif /* NO_DEVICE_INCLUDES */
 

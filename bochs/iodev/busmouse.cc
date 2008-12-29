@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: busmouse.cc,v 1.9 2008-02-15 22:05:41 sshwarts Exp $
+// $Id: busmouse.cc,v 1.10 2008-12-29 20:16:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -33,6 +33,7 @@
 #define BX_PLUGGABLE
 
 #include "iodev.h"
+#include "busmouse.h"
 
 #if BX_SUPPORT_BUSMOUSE
 
@@ -70,7 +71,7 @@ bx_busm_c::~bx_busm_c()
 
 void bx_busm_c::init(void)
 {
-  BX_DEBUG(("Init $Id: busmouse.cc,v 1.9 2008-02-15 22:05:41 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: busmouse.cc,v 1.10 2008-12-29 20:16:07 sshwarts Exp $"));
 
   DEV_register_irq(BUS_MOUSE_IRQ, "Bus Mouse");
 
@@ -117,21 +118,21 @@ void bx_busm_c::register_state(void)
   BXRS_HEX_PARAM_FIELD(list, current_y, BX_BUSM_THIS current_y);
   BXRS_HEX_PARAM_FIELD(list, current_b, BX_BUSM_THIS current_b);
   BXRS_HEX_PARAM_FIELD(list, sig_port_sequ, BX_BUSM_THIS sig_port_sequ);
-  BXRS_HEX_PARAM_FILED(list, control_val, BX_BUSM_THIS control_val);
+  BXRS_HEX_PARAM_FIELD(list, control_val, BX_BUSM_THIS control_val);
 
   bx_list_c *ctrl = new bx_list_c(list, "control", 7);
   BXRS_PARAM_BOOL(ctrl, mode_set, BX_BUSM_THIS control.mode_set);
-  BXRS_HEX_PARAM_FILED(ctrl, modeA_select, BX_BUSM_THIS control.modeA_select);
+  BXRS_HEX_PARAM_FIELD(ctrl, modeA_select, BX_BUSM_THIS control.modeA_select);
   BXRS_PARAM_BOOL(ctrl, portA_dir, BX_BUSM_THIS control.portA_dir);
   BXRS_PARAM_BOOL(ctrl, portC_upper_dir, BX_BUSM_THIS control.portC_upper_dir);
   BXRS_PARAM_BOOL(ctrl, modeBC_select, BX_BUSM_THIS control.modeBC_select);
   BXRS_PARAM_BOOL(ctrl, portB_dir, BX_BUSM_THIS control.portB_dir);
   BXRS_PARAM_BOOL(ctrl, portC_lower_dir, BX_BUSM_THIS control.portC_lower_dir);
 
-  BXRS_PARAM_BOOL(list, interrupts, BX_BUSM_THIS control.interrupts);
-  BXRS_PARAM_BOOL(list, packet_update, BX_BUSM_THIS control.packet_update);
-  BXRS_HEX_PARAM_FILED(list, cur_command, BX_BUSM_THIS cur_command);
-  BXRS_HEX_PARAM_FILED(list, command_val, BX_BUSM_THIS command_val);
+  BXRS_PARAM_BOOL(list, interrupts, BX_BUSM_THIS interrupts);
+  BXRS_PARAM_BOOL(list, packet_update, BX_BUSM_THIS packet_update);
+  BXRS_HEX_PARAM_FIELD(list, cur_command, BX_BUSM_THIS cur_command);
+  BXRS_HEX_PARAM_FIELD(list, command_val, BX_BUSM_THIS command_val);
 }
 
 // static IO port read callback handler

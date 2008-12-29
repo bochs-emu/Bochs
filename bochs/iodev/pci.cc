@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci.cc,v 1.56 2008-01-26 22:24:02 sshwarts Exp $
+// $Id: pci.cc,v 1.57 2008-12-29 20:16:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -34,6 +34,8 @@
 #define BX_PLUGGABLE
 
 #include "iodev.h"
+#include "pci.h"
+
 #if BX_SUPPORT_PCI
 
 #define LOG_THIS thePciBridge->

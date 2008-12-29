@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.217 2008-12-21 08:56:26 vruppert Exp $
+// $Id: harddrv.cc,v 1.218 2008-12-29 20:16:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -35,6 +35,7 @@
 #define BX_PLUGGABLE
 
 #include "iodev.h"
+#include "harddrv.h"
 #include "hdimage.h"
 #include "vmware3.h"
 #include "vmware4.h"
@@ -173,7 +174,7 @@ void bx_hard_drive_c::init(void)
   char  ata_name[20];
   bx_list_c *base;
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.217 2008-12-21 08:56:26 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.218 2008-12-29 20:16:08 sshwarts Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     sprintf(ata_name, "ata.%d.resources", channel);

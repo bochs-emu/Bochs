@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: svga_cirrus.cc,v 1.45 2008-09-18 20:16:27 sshwarts Exp $
+// $Id: svga_cirrus.cc,v 1.46 2008-12-29 20:16:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Copyright (c) 2004 Makoto Suzuki (suzu)
@@ -37,6 +37,7 @@
 #define BX_PLUGGABLE
 
 #include "iodev.h"
+#include "vga.h"
 
 #if BX_SUPPORT_CLGD54XX
 

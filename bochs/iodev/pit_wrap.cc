@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////
-// $Id: pit_wrap.cc,v 1.70 2008-11-09 22:04:14 vruppert Exp $
+// $Id: pit_wrap.cc,v 1.71 2008-12-29 20:16:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -26,6 +26,8 @@
 
 
 #include "iodev.h"
+#include "pit_wrap.h"
+#include "virt_timer.h"
 
 #include "speaker.h"
 

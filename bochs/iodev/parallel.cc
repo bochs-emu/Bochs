@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: parallel.cc,v 1.35 2008-07-26 08:02:27 vruppert Exp $
+// $Id: parallel.cc,v 1.36 2008-12-29 20:16:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -35,6 +35,8 @@
 #define BX_PLUGGABLE
 
 #include "iodev.h"
+#include "parallel.h"
+
 #define LOG_THIS theParallelDevice->
 
 bx_parallel_c *theParallelDevice = NULL;
@@ -76,7 +78,7 @@ void bx_parallel_c::init(void)
   char name[16], pname[20];
   bx_list_c *base;
 
-  BX_DEBUG(("Init $Id: parallel.cc,v 1.35 2008-07-26 08:02:27 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: parallel.cc,v 1.36 2008-12-29 20:16:08 sshwarts Exp $"));
 
   for (unsigned i=0; i<BX_N_PARALLEL_PORTS; i++) {
     sprintf(pname, "ports.parallel.%d", i+1);

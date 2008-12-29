@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: devices.cc,v 1.124 2008-12-29 18:02:01 sshwarts Exp $
+// $Id: devices.cc,v 1.125 2008-12-29 20:16:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -31,8 +31,12 @@
 
 #include "bochs.h"
 #include "iodev.h"
-#define LOG_THIS bx_devices.
 
+#include "iodev/pit_wrap.h"
+#include "iodev/virt_timer.h"
+#include "iodev/slowdown_timer.h"
+
+#define LOG_THIS bx_devices.
 
 /* main memory size (in Kbytes)
  * subtract 1k for extended BIOS area
@@ -110,7 +114,7 @@ void bx_devices_c::init(BX_MEM_C *newmem)
   unsigned i;
   const char def_name[] = "Default";
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.124 2008-12-29 18:02:01 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.125 2008-12-29 20:16:07 sshwarts Exp $"));
   mem = newmem;
 
   /* set no-default handlers, will be overwritten by the real default handler */

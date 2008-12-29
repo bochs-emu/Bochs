@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ne2k.cc,v 1.99 2008-11-30 17:22:22 vruppert Exp $
+// $Id: ne2k.cc,v 1.100 2008-12-29 20:16:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -34,6 +34,7 @@
 #define BX_PLUGGABLE
 
 #include "iodev.h"
+
 #if BX_SUPPORT_NE2K
 
 #include "eth.h"
@@ -1412,7 +1413,7 @@ void bx_ne2k_c::init(void)
   Bit8u macaddr[6];
   bx_list_c *base;
 
-  BX_DEBUG(("Init $Id: ne2k.cc,v 1.99 2008-11-30 17:22:22 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: ne2k.cc,v 1.100 2008-12-29 20:16:08 sshwarts Exp $"));
 
   // Read in values from config interface
   base = (bx_list_c*) SIM->get_param(BXPN_NE2K);
