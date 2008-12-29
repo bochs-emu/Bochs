@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: msr.cc,v 1.4 2008-12-28 20:30:48 sshwarts Exp $
+// $Id: msr.cc,v 1.5 2008-12-29 19:18:21 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008 Stanislav Shwartsman
@@ -194,7 +194,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDMSR(bxInstruction_c *i)
 
     default:
 #if BX_CONFIGURE_MSRS
-      if (BX_CPU_THIS_PTR msrs[index]) {
+      if (index < BX_MSR_MAX_INDEX && BX_CPU_THIS_PTR msrs[index]) {
         RAX = GET32L(BX_CPU_THIS_PTR msrs[index]->get64());
         RDX = GET32H(BX_CPU_THIS_PTR msrs[index]->get64());
         break;
@@ -470,7 +470,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRMSR(bxInstruction_c *i)
 
     default:
 #if BX_CONFIGURE_MSRS
-      if (BX_CPU_THIS_PTR msrs[index]) {
+      if (index < BX_MSR_MAX_INDEX && BX_CPU_THIS_PTR msrs[index]) {
         if (! BX_CPU_THIS_PTR msrs[index]->set64(val64)) {
           BX_ERROR(("WRMSR: Write failed to MSR %#x - #GP fault", index));
           exception(BX_GP_EXCEPTION, 0, 0);
