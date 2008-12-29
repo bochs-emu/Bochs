@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wx.cc,v 1.97 2008-12-18 09:55:09 vruppert Exp $
+// $Id: wx.cc,v 1.98 2008-12-29 08:51:34 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxWidgets VGA display for Bochs.  wx.cc implements a custom
@@ -1238,8 +1238,13 @@ void bx_wx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
   y = 0;
   cs_y = 0;
   text_base = new_text - tm_info.start_address;
-  split_textrow = (line_compare + v_panning) / wxFontY;
-  split_fontrows = ((line_compare + v_panning) % wxFontY) + 1;
+  if (line_compare < wxScreenY) {
+    split_textrow = (line_compare + v_panning) / wxFontY;
+    split_fontrows = ((line_compare + v_panning) % wxFontY) + 1;
+  } else {
+    split_textrow = rows + 1;
+    split_fontrows = 0;
+  }
   split_screen = 0;
   do {
     hchars = text_cols;
