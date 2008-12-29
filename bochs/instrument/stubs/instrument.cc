@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: instrument.cc,v 1.29 2008-11-18 20:55:59 sshwarts Exp $
+// $Id: instrument.cc,v 1.30 2008-12-29 18:02:01 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -65,9 +65,8 @@ void bx_instr_after_execution(unsigned cpu, bxInstruction_c *i) {}
 void bx_instr_repeat_iteration(unsigned cpu, bxInstruction_c *i) {}
 
 void bx_instr_inp(Bit16u addr, unsigned len) {}
-void bx_instr_outp(Bit16u addr, unsigned len) {}
 void bx_instr_inp2(Bit16u addr, unsigned len, unsigned val) {}
-void bx_instr_outp2(Bit16u addr, unsigned len, unsigned val) {}
+void bx_instr_outp(Bit16u addr, unsigned len, unsigned val) {}
 
 void bx_instr_mem_data_access(unsigned cpu, unsigned seg, bx_address offset, unsigned len, unsigned rw) {}
 void bx_instr_lin_access(unsigned cpu, bx_address lin, bx_address phy, unsigned len, unsigned rw) {}

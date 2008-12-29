@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: devices.cc,v 1.123 2008-09-18 17:18:36 sshwarts Exp $
+// $Id: devices.cc,v 1.124 2008-12-29 18:02:01 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -110,7 +110,7 @@ void bx_devices_c::init(BX_MEM_C *newmem)
   unsigned i;
   const char def_name[] = "Default";
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.123 2008-09-18 17:18:36 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.124 2008-12-29 18:02:01 sshwarts Exp $"));
   mem = newmem;
 
   /* set no-default handlers, will be overwritten by the real default handler */
@@ -504,8 +504,7 @@ bx_bool bx_devices_c::register_irq(unsigned irq, const char *name)
     return 0;
   }
   if (irq_handler_name[irq]) {
-    BX_PANIC(("IRQ %u conflict, %s with %s", irq,
-      irq_handler_name[irq], name));
+    BX_PANIC(("IRQ %u conflict, %s with %s", irq, irq_handler_name[irq], name));
     return 0;
   }
   irq_handler_name[irq] = new char[strlen(name)+1];
@@ -539,7 +538,7 @@ bx_bool bx_devices_c::unregister_irq(unsigned irq, const char *name)
 bx_bool bx_devices_c::register_io_read_handler(void *this_ptr, bx_read_handler_t f,
                                                Bit32u addr, const char *name, Bit8u mask)
 {
-  addr &= 0x0000ffff;
+  addr &= 0xffff;
 
   if (!f)
     return 0;
@@ -591,7 +590,7 @@ bx_bool bx_devices_c::register_io_read_handler(void *this_ptr, bx_read_handler_t
 bx_bool bx_devices_c::register_io_write_handler(void *this_ptr, bx_write_handler_t f,
                                                 Bit32u addr, const char *name, Bit8u mask)
 {
-  addr &= 0x0000ffff;
+  addr &= 0xffff;
 
   if (!f)
     return 0;
@@ -645,8 +644,8 @@ bx_bool bx_devices_c::register_io_read_handler_range(void *this_ptr, bx_read_han
                                              const char *name, Bit8u mask)
 {
   Bit32u addr;
-  begin_addr &= 0x0000ffff;
-  end_addr &= 0x0000ffff;
+  begin_addr &= 0xffff;
+  end_addr &= 0xffff;
 
   if (end_addr < begin_addr) {
     BX_ERROR(("!!! end_addr < begin_addr !!!"));
@@ -709,8 +708,8 @@ bx_bool bx_devices_c::register_io_write_handler_range(void *this_ptr, bx_write_h
                                               const char *name, Bit8u mask)
 {
   Bit32u addr;
-  begin_addr &= 0x0000ffff;
-  end_addr &= 0x0000ffff;
+  begin_addr &= 0xffff;
+  end_addr &= 0xffff;
 
   if (end_addr < begin_addr) {
     BX_ERROR(("!!! end_addr < begin_addr !!!"));
@@ -781,6 +780,7 @@ bx_bool bx_devices_c::register_default_io_read_handler(void *this_ptr, bx_read_h
   io_read_handlers.handler_name = new char[strlen(name)+1];
   strcpy(io_read_handlers.handler_name, name);
   io_read_handlers.mask = mask;
+
   return 1;
 }
 
@@ -795,13 +795,14 @@ bx_bool bx_devices_c::register_default_io_write_handler(void *this_ptr, bx_write
   io_write_handlers.handler_name = new char[strlen(name)+1];
   strcpy(io_write_handlers.handler_name, name);
   io_write_handlers.mask = mask;
+
   return 1;
 }
 
 bx_bool bx_devices_c::unregister_io_read_handler(void *this_ptr, bx_read_handler_t f,
                                          Bit32u addr, Bit8u mask)
 {
-  addr &= 0x0000ffff;
+  addr &= 0xffff;
 
   struct io_handler_struct *io_read_handler = read_port_to_handler[addr];
 
@@ -847,7 +848,7 @@ bx_bool bx_devices_c::unregister_io_read_handler(void *this_ptr, bx_read_handler
 bx_bool bx_devices_c::unregister_io_write_handler(void *this_ptr, bx_write_handler_t f,
                                           Bit32u addr, Bit8u mask)
 {
-  addr &= 0x0000ffff;
+  addr &= 0xffff;
 
   struct io_handler_struct *io_write_handler = write_port_to_handler[addr];
 
@@ -881,8 +882,8 @@ bx_bool bx_devices_c::unregister_io_write_handler(void *this_ptr, bx_write_handl
 bx_bool bx_devices_c::unregister_io_read_handler_range(void *this_ptr, bx_read_handler_t f,
                                                Bit32u begin, Bit32u end, Bit8u mask)
 {
-  begin &= 0x0000ffff;
-  end &= 0x0000ffff;
+  begin &= 0xffff;
+  end &= 0xffff;
   Bit32u addr;
   bx_bool ret = 1;
 
@@ -899,8 +900,8 @@ bx_bool bx_devices_c::unregister_io_read_handler_range(void *this_ptr, bx_read_h
 bx_bool bx_devices_c::unregister_io_write_handler_range(void *this_ptr, bx_write_handler_t f,
                                                 Bit32u begin, Bit32u end, Bit8u mask)
 {
-  begin &= 0x0000ffff;
-  end &= 0x0000ffff;
+  begin &= 0xffff;
+  end &= 0xffff;
   Bit32u addr;
   bx_bool ret = 1;
 
@@ -940,8 +941,10 @@ bx_devices_c::inp(Bit16u addr, unsigned io_len)
       BX_ERROR(("read from port 0x%04x with len %d returns 0x%x", addr, io_len, ret));
     }
   }
+
   BX_INSTR_INP2(addr, io_len, ret);
   BX_DBG_IO_REPORT(addr, io_len, BX_READ, ret);
+
   return(ret);
 }
 
@@ -955,9 +958,7 @@ bx_devices_c::outp(Bit16u addr, Bit32u value, unsigned io_len)
 {
   struct io_handler_struct *io_write_handler;
 
-  BX_INSTR_OUTP(addr, io_len);
-  BX_INSTR_OUTP2(addr, io_len, value);
-
+  BX_INSTR_OUTP(addr, io_len, value);
   BX_DBG_IO_REPORT(addr, io_len, BX_WRITE, value);
 
   io_write_handler = write_port_to_handler[addr];

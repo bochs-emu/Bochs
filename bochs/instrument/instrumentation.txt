@@ -220,9 +220,8 @@ These callback functions are the feedback from external memory system.
 
 
 	void bx_instr_inp(Bit16u addr, unsigned len);
-	void bx_instr_outp(Bit16u addr, unsigned len);
 	void bx_instr_inp2(Bit16u addr, unsigned len, unsigned val);
-	void bx_instr_outp2(Bit16u addr, unsigned len, unsigned val);
+	void bx_instr_outp(Bit16u addr, unsigned len, unsigned val);
 
 These callback functions are a feedback from various system devices.
 
