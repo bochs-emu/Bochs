@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: devices.cc,v 1.125 2008-12-29 20:16:07 sshwarts Exp $
+// $Id: devices.cc,v 1.126 2008-12-30 18:11:13 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -102,7 +102,7 @@ void bx_devices_c::init_stubs()
   pluginBusMouse = &stubBusMouse;
 #endif
 #if BX_SUPPORT_IODEBUG
-  iodebug = NULL;
+  pluginIODebug = &stubIODebug;
 #endif
 #if 0
   g2h = NULL;
@@ -114,7 +114,7 @@ void bx_devices_c::init(BX_MEM_C *newmem)
   unsigned i;
   const char def_name[] = "Default";
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.125 2008-12-29 20:16:07 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.126 2008-12-30 18:11:13 vruppert Exp $"));
   mem = newmem;
 
   /* set no-default handlers, will be overwritten by the real default handler */
@@ -251,6 +251,9 @@ void bx_devices_c::init(BX_MEM_C *newmem)
     BX_ERROR(("Bochs is not compiled with SB16 support"));
 #endif
   }
+#if BX_SUPPORT_IODEBUG
+  PLUG_load_plugin(iodebug, PLUGTYPE_OPTIONAL);
+#endif
 
 #if BX_SUPPORT_PCI
   pluginPciBridge->init ();
@@ -266,11 +269,6 @@ void bx_devices_c::init(BX_MEM_C *newmem)
   /*--- 8254 PIT ---*/
   pit = & bx_pit;
   pit->init();
-
-#if BX_SUPPORT_IODEBUG
-  iodebug = &bx_iodebug;
-  iodebug->init();
-#endif
 
 #if 0
   // Guest to Host interface.  Used with special guest drivers
@@ -337,9 +335,6 @@ void bx_devices_c::reset(unsigned type)
   pluginVgaDevice->reset(type);
   pluginPicDevice->reset(type);
   pit->reset(type);
-#if BX_SUPPORT_IODEBUG
-  iodebug->reset(type);
-#endif
   // now reset optional plugins
   bx_reset_plugins(type);
 }

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: memory.cc,v 1.71 2008-10-18 18:10:14 sshwarts Exp $
+// $Id: memory.cc,v 1.72 2008-12-30 18:11:13 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -61,7 +61,7 @@ void BX_MEM_C::writePhysicalPage(BX_CPU_C *cpu, bx_phy_address addr, unsigned le
 
   if (cpu != NULL) {
 #if BX_SUPPORT_IODEBUG
-    bx_iodebug_c::mem_write(cpu, a20addr, len, data);
+    bx_devices.pluginIODebug->mem_write(cpu, a20addr, len, data);
 #endif
 
     BX_INSTR_PHY_WRITE(cpu->which_cpu(), a20addr, len);
@@ -210,7 +210,7 @@ void BX_MEM_C::readPhysicalPage(BX_CPU_C *cpu, bx_phy_address addr, unsigned len
 
   if (cpu != NULL) {
 #if BX_SUPPORT_IODEBUG
-    bx_iodebug_c::mem_read(cpu, a20addr, len, data);
+    bx_devices.pluginIODebug->mem_read(cpu, a20addr, len, data);
 #endif
 
     BX_INSTR_PHY_READ(cpu->which_cpu(), a20addr, len);

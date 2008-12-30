@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.99 2008-12-30 15:33:37 vruppert Exp $
+// $Id: iodev.h,v 1.100 2008-12-30 18:11:13 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -50,9 +50,6 @@
 class bx_pit_c;
 #if BX_SUPPORT_APIC
 class bx_ioapic_c;
-#endif
-#if BX_SUPPORT_IODEBUG
-class bx_iodebug_c;
 #endif
 #if 0
 class bx_g2h_c;
@@ -370,6 +367,18 @@ public:
 };
 #endif
 
+#if BX_SUPPORT_IODEBUG
+class BOCHSAPI bx_iodebug_stub_c : public bx_devmodel_c {
+public:
+  virtual void mem_write(BX_CPU_C *cpu, bx_phy_address addr, unsigned len, void *data) {
+    STUBFUNC(iodebug, mem_write);
+  }
+  virtual void mem_read(BX_CPU_C *cpu, bx_phy_address addr, unsigned len, void *data) {
+    STUBFUNC(iodebug, mem_read);
+  }
+};
+#endif
+
 class BOCHSAPI bx_devices_c : public logfunctions {
 public:
   bx_devices_c();
@@ -446,7 +455,7 @@ public:
   bx_busm_stub_c    *pluginBusMouse;
 #endif
 #if BX_SUPPORT_IODEBUG
-  bx_iodebug_c	    *iodebug;
+  bx_iodebug_stub_c *pluginIODebug;
 #endif
 #if 0
   bx_g2h_c          *g2h;
@@ -475,6 +484,9 @@ public:
 #endif
 #if BX_SUPPORT_ACPI
   bx_acpi_ctrl_stub_c stubACPIController;
+#endif
+#if BX_SUPPORT_IODEBUG
+  bx_iodebug_stub_c stubIODebug;
 #endif
 
   // Some info to pass to devices which can handled bulk IO.  This allows
@@ -596,9 +608,6 @@ BX_CPP_INLINE void DEV_MEM_WRITE_PHYSICAL_BLOCK(bx_phy_address phy_addr, unsigne
 #include "iodev/vga.h"
 #if BX_SUPPORT_APIC
 #  include "iodev/ioapic.h"
-#endif
-#if BX_SUPPORT_IODEBUG
-#   include "iodev/iodebug.h"
 #endif
 #include "iodev/keyboard.h"
 #include "iodev/serial.h"

@@ -72,7 +72,6 @@ OBJS_THAT_CANNOT_BE_PLUGINS = \
   pit82c54.o pit_wrap.o \
   virt_timer.o \
   slowdown_timer.o \
-  @IODEBUG_OBJS@ \
   $(MCH_OBJS) \
   $(IOAPIC_OBJS)
 
@@ -94,7 +93,8 @@ OBJS_THAT_CAN_BE_PLUGINS = \
   @GAME_OBJS@ \
   @PCI_OBJ@ \
   @SB16_OBJS@ \
-  @NE2K_OBJS@
+  @NE2K_OBJS@ \
+  @IODEBUG_OBJS@
 
 OBJS_THAT_SUPPORT_OTHER_PLUGINS = \
   scancodes.o \

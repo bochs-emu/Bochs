@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: plugin.h,v 1.63 2008-11-18 20:55:59 sshwarts Exp $
+// $Id: plugin.h,v 1.64 2008-12-30 18:11:12 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This file provides macros and types needed for plugins.  It is based on
@@ -46,6 +46,7 @@ extern "C" {
 #define BX_PLUGIN_GAMEPORT  "gameport"
 #define BX_PLUGIN_SPEAKER   "speaker"
 #define BX_PLUGIN_ACPI      "acpi"
+#define BX_PLUGIN_IODEBUG   "iodebug"
 
 
 #define BX_REGISTER_DEVICE_DEVMODEL(a,b,c,d) pluginRegisterDeviceDevmodel(a,b,c,d)
@@ -379,6 +380,7 @@ DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(extfpuirq)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(gameport)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(speaker)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(acpi)
+DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(iodebug)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(amigaos)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(beos)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(carbon)

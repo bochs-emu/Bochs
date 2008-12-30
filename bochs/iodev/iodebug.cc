@@ -1,15 +1,57 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodebug.cc,v 1.26 2008-05-01 20:46:58 sshwarts Exp $
+// $Id: iodebug.cc,v 1.27 2008-12-30 18:11:13 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
+//
+//  Copyright (C) 2008  MandrakeSoft S.A.
+//
+//    MandrakeSoft S.A.
+//    43, rue d'Aboukir
+//    75002 Paris - France
+//    http://www.linux-mandrake.com/
+//    http://www.mandrakesoft.com/
+//
+//  This library is free software; you can redistribute it and/or
+//  modify it under the terms of the GNU Lesser General Public
+//  License as published by the Free Software Foundation; either
+//  version 2 of the License, or (at your option) any later version.
+//
+//  This library is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+//  Lesser General Public License for more details.
+//
+//  You should have received a copy of the GNU Lesser General Public
+//  License along with this library; if not, write to the Free Software
+//  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+/////////////////////////////////////////////////////////////////////////
+
+// Define BX_PLUGGABLE in files that can be compiled into plugins.  For
+// platforms that require a special tag on exported symbols, BX_PLUGGABLE
+// is used to know when we are exporting symbols and when we are importing.
+#define BX_PLUGGABLE
 
 #include "bochs.h"
 #include "cpu/cpu.h"
 #include "iodev.h"
 #if BX_SUPPORT_IODEBUG
+#include "iodebug.h"
 
 #define BX_IODEBUG_THIS this->
 
-bx_iodebug_c bx_iodebug;
+bx_iodebug_c *theIODebugDevice = NULL;
+
+int libiodebug_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
+{
+  theIODebugDevice = new bx_iodebug_c();
+  bx_devices.pluginIODebug = theIODebugDevice;
+  BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theIODebugDevice, BX_PLUGIN_IODEBUG);
+  return(0); // Success
+}
+
+void libiodebug_LTX_plugin_fini(void)
+{
+  delete theIODebugDevice;
+}
 
 struct bx_iodebug_s_type {
   bx_bool enabled;
@@ -167,12 +209,12 @@ void bx_iodebug_c::mem_write(BX_CPU_C *cpu, bx_phy_address addr, unsigned len, v
     if (cpu != NULL)
       fprintf(stderr, "by EIP:\t\t" FMT_ADDRX "\n\t", cpu->get_instruction_pointer());
     else
-      fprintf(stderr, "(device origin)\t", cpu->get_instruction_pointer());
+      fprintf(stderr, "(device origin)\t");
 
     fprintf(stderr, "range start: \t\t%08X\trange end:\t%08X\n\taddress accessed:\t%08X\tdata written:\t",
-	     bx_iodebug_s.monitored_mem_areas_start[area],
-	     bx_iodebug_s.monitored_mem_areas_end[area],
-	     (unsigned) addr);
+            bx_iodebug_s.monitored_mem_areas_start[area],
+            bx_iodebug_s.monitored_mem_areas_end[area],
+            (unsigned) addr);
 
     switch(len)
     {
@@ -230,7 +272,7 @@ void bx_iodebug_c::mem_read(BX_CPU_C *cpu, bx_phy_address addr, unsigned len, vo
     if (cpu != NULL)
       fprintf(stderr, "by EIP:\t\t" FMT_ADDRX "\n\t", cpu->get_instruction_pointer());
     else
-      fprintf(stderr, "(device origin)\t", cpu->get_instruction_pointer());
+      fprintf(stderr, "(device origin)\t");
 
     fprintf(stderr, "range start: \t\t%08X\trange end:\t%08X\n\taddress accessed:\t%08X\tdata written:\t",
 	     bx_iodebug_s.monitored_mem_areas_start[area],
