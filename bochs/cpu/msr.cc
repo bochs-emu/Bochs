@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: msr.cc,v 1.5 2008-12-29 19:18:21 sshwarts Exp $
+// $Id: msr.cc,v 1.6 2008-12-30 18:16:30 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008 Stanislav Shwartsman
@@ -522,7 +522,7 @@ int BX_CPU_C::load_MSRs(const char *file)
         BX_PANIC(("%s:%d > error parsing MSRs config file!", file, linenum));
         break;  // quit parsing after first error
       }
-      if (index > BX_MSR_MAX_INDEX) {
+      if (index >= BX_MSR_MAX_INDEX) {
         BX_PANIC(("%s:%d > MSR index is too big !", file, linenum));
         continue;
       }
