@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_msd.h,v 1.5 2007-09-28 19:52:07 sshwarts Exp $
+// $Id: usb_msd.h,v 1.6 2008-12-30 09:17:09 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2007  Volker Ruppert
@@ -23,6 +23,7 @@
 #ifndef BX_IODEV_USB_MSD_H
 #define BX_IODEV_USB_MSD_H
 
+class device_image_t;
 class scsi_device_t;
 
 

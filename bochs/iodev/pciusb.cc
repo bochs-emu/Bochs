@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pciusb.cc,v 1.66 2008-12-14 08:56:05 vruppert Exp $
+// $Id: pciusb.cc,v 1.67 2008-12-30 09:17:09 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -58,6 +58,7 @@
 
 #include "iodev.h"
 #if BX_SUPPORT_PCI && BX_SUPPORT_PCIUSB
+#include "pciusb.h"
 #include "usb_hid.h"
 #include "usb_msd.h"
 
