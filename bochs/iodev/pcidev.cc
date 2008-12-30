@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pcidev.cc,v 1.16 2008-07-26 08:02:27 vruppert Exp $
+// $Id: pcidev.cc,v 1.17 2008-12-30 15:33:38 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 
 /*
@@ -33,6 +33,7 @@
 #include "iodev.h"
 #if BX_SUPPORT_PCI && BX_SUPPORT_PCIDEV
 
+#include "pcidev.h"
 #include "kernel_pcidev.h"
 
 #include <sys/ioctl.h>

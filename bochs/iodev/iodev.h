@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.98 2008-12-30 09:17:09 vruppert Exp $
+// $Id: iodev.h,v 1.99 2008-12-30 15:33:37 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -592,9 +592,6 @@ BX_CPP_INLINE void DEV_MEM_WRITE_PHYSICAL_BLOCK(bx_phy_address phy_addr, unsigne
 
 #if BX_SUPPORT_PCI
 #include "iodev/pci.h"
-#if BX_SUPPORT_PCIDEV
-#include "iodev/pcidev.h"
-#endif
 #endif
 #include "iodev/vga.h"
 #if BX_SUPPORT_APIC
@@ -605,9 +602,6 @@ BX_CPP_INLINE void DEV_MEM_WRITE_PHYSICAL_BLOCK(bx_phy_address phy_addr, unsigne
 #endif
 #include "iodev/keyboard.h"
 #include "iodev/serial.h"
-#if BX_SUPPORT_PCIPNIC
-#include "iodev/pcipnic.h"
-#endif
 
 #endif /* NO_DEVICE_INCLUDES */
 
