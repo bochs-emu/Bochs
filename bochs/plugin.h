@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: plugin.h,v 1.64 2008-12-30 18:11:12 vruppert Exp $
+// $Id: plugin.h,v 1.65 2009-01-01 12:06:31 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This file provides macros and types needed for plugins.  It is based on
@@ -393,6 +393,7 @@ DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(term)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(win32)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(wx)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(x)
+DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(user)
 
 
 #ifdef __cplusplus

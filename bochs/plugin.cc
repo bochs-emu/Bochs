@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: plugin.cc,v 1.25 2008-02-15 22:05:38 sshwarts Exp $
+// $Id: plugin.cc,v 1.26 2009-01-01 12:06:31 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This file defines the plugin and plugin-device registration functions and
@@ -343,7 +343,19 @@ void plugin_fini_all (void)
 
 void plugin_load(char *name, char *args, plugintype_t type)
 {
-  plugin_t *plugin;
+  plugin_t *plugin, *temp;
+
+  if (plugins != NULL) {
+    temp = plugins;
+
+    while (temp != NULL) {
+      if (!strcmp(name, temp->name)) {
+        BX_PANIC(("plugin '%s' already loaded", name));
+        return;
+      }
+      temp = temp->next;
+    }
+  }
 
   plugin = (plugin_t *)malloc (sizeof(plugin_t));
   if (!plugin)
@@ -375,7 +387,11 @@ void plugin_load(char *name, char *args, plugintype_t type)
     return;
   }
 
-  sprintf(buf, PLUGIN_INIT_FMT_STRING, name);
+  if (type != PLUGTYPE_USER) {
+    sprintf(buf, PLUGIN_INIT_FMT_STRING, name);
+  } else {
+    sprintf(buf, PLUGIN_INIT_FMT_STRING, "user");
+  }
   plugin->plugin_init =
       (int (*)(struct _plugin_t *, enum plugintype_t, int, char *[])) /* monster typecast */
       lt_dlsym (plugin->handle, buf);
@@ -384,9 +400,13 @@ void plugin_load(char *name, char *args, plugintype_t type)
     plugin_abort ();
   }
 
-  sprintf(buf, PLUGIN_FINI_FMT_STRING, name);
+  if (type != PLUGTYPE_USER) {
+    sprintf(buf, PLUGIN_FINI_FMT_STRING, name);
+  } else {
+    sprintf(buf, PLUGIN_FINI_FMT_STRING, "user");
+  }
   plugin->plugin_fini = (void (*)(void)) lt_dlsym (plugin->handle, buf);
-  if (plugin->plugin_init == NULL) {
+  if (plugin->plugin_fini == NULL) {
     pluginlog->panic("could not find plugin_fini: %s", lt_dlerror ());
     plugin_abort();
   }
@@ -403,7 +423,7 @@ void plugin_load(char *name, char *args, plugintype_t type)
   else
   {
    /* Non-empty list.  Add to end. */
-   plugin_t *temp = plugins;
+   temp = plugins;
 
    while (temp->next)
       temp = temp->next;
