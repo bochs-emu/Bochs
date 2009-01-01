@@ -9,6 +9,8 @@
 
 #if BX_DEBUGGER
 
+#if BX_WITH_WIN32 // FIXME
+
 #include "bochs.h"
 #include "cpu/cpu.h"
 
@@ -3452,5 +3454,7 @@ void dbgOnToggle(bx_bool on)
 {
     dbgOn = TRUE;
 }
+
+#endif // BX_WITH_WIN32
 
 #endif
