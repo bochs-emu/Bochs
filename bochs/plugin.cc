@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: plugin.cc,v 1.26 2009-01-01 12:06:31 vruppert Exp $
+// $Id: plugin.cc,v 1.27 2009-01-02 11:51:03 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This file defines the plugin and plugin-device registration functions and
@@ -326,6 +326,7 @@ plugin_t *plugin_unload(plugin_t *plugin)
 
   lt_dlclose(plugin->handle);
   delete [] plugin->name;
+  delete [] plugin->args;
 
   dead_plug = plugin;
   plugin = plugin->next;
@@ -561,11 +562,13 @@ bx_bool pluginDevicePresent(char *name)
 /* Plugin system: Load one plugin                                       */
 /************************************************************************/
 
-int bx_load_plugin(const char *name, plugintype_t type)
+int bx_load_plugin(const char *name, const char *options, plugintype_t type)
 {
   char *namecopy = new char[1+strlen(name)];
+  char *optscopy = new char[1+strlen(options)];
   strcpy(namecopy, name);
-  plugin_load(namecopy, "", type);
+  strcpy(optscopy, options);
+  plugin_load(namecopy, optscopy, type);
   return 0;
 }
 

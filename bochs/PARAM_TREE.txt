@@ -1,4 +1,4 @@
-$Id: PARAM_TREE.txt,v 1.16 2008-12-28 21:01:18 sshwarts Exp $
+$Id: PARAM_TREE.txt,v 1.17 2009-01-02 11:51:02 vruppert Exp $
 
 Starting from Bochs 2.3 the parameters are organized in a tree structure
 instead of a huge flat list. The parameter tree was required for implementing
@@ -217,6 +217,12 @@ misc
     text_base
     data_base
     bss_base
+  user_plugin
+    1
+      name
+      options
+    2 ... 8
+      (same options as misc.user_plugin.1)
 
 log
   filename

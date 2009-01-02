@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: plugin.h,v 1.65 2009-01-01 12:06:31 vruppert Exp $
+// $Id: plugin.h,v 1.66 2009-01-02 11:51:03 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This file provides macros and types needed for plugins.  It is based on
@@ -57,7 +57,8 @@ extern "C" {
 #define DEV_reset_devices(type) {bx_devices.reset(type); }
 #define DEV_register_state() {bx_devices.register_state(); }
 #define DEV_after_restore_state() {bx_devices.after_restore_state(); }
-#define PLUG_load_plugin(name,type) {bx_load_plugin(#name,type);}
+#define PLUG_load_plugin(name,type) {bx_load_plugin(#name,"",type);}
+#define PLUG_load_user_plugin(name,options) {bx_load_plugin(name,options,PLUGTYPE_USER);}
 #define PLUG_unload_plugin(name) {bx_unload_plugin(#name);}
 
 #define DEV_register_ioread_handler(b,c,d,e,f)  pluginRegisterIOReadHandler(b,c,d,e,f)
@@ -337,7 +338,7 @@ BOCHSAPI extern Bit8u   (*pluginWr_memType)(Bit32u addr);
 
 void plugin_abort(void);
 
-int bx_load_plugin(const char *name, plugintype_t type);
+int bx_load_plugin(const char *name, const char *options, plugintype_t type);
 extern void bx_unload_plugin(const char *name);
 extern void bx_init_plugins(void);
 extern void bx_reset_plugins(unsigned);

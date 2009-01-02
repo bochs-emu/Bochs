@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.236 2008-12-05 22:34:42 sshwarts Exp $
+// $Id: bochs.h,v 1.237 2009-01-02 11:51:03 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -519,6 +519,7 @@ extern bx_bool bx_gui_sighandler;
 #define BX_N_PARALLEL_PORTS 2
 #define BX_N_USB_HUBS 1
 #define BX_N_PCI_SLOTS 5
+#define BX_N_USER_PLUGINS 8
 
 void bx_center_print(FILE *file, const char *line, unsigned maxwidth);
 
