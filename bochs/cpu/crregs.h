@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: crregs.h,v 1.13 2008-12-28 20:30:48 sshwarts Exp $
+// $Id: crregs.h,v 1.14 2009-01-02 13:23:06 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007 Stanislav Shwartsman
@@ -179,7 +179,7 @@ typedef struct msr {
          break;
 #endif
        case BX_PHY_ADDRESS_MSR:
-         if (new_val & BX_PHY_ADDRESS_RESERVED_BITS) return 0;
+         if (! IsValidPhyAddr(new_val)) return 0;
          break;
        default:
          if ((val64 ^ new_val) & reserved) return 0;
