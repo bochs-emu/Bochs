@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.546 2009-01-02 13:21:48 sshwarts Exp $
+// $Id: cpu.h,v 1.547 2009-01-03 20:04:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -332,6 +332,16 @@
   #define BX_MSR_PAT               0x277
   #define BX_MSR_MTRR_DEFTYPE      0x2ff
 #endif
+
+enum {
+  BX_MEMTYPE_UC = 0,
+  BX_MEMTYPE_WC,
+  BX_MEMTYPE_RESERVED2,
+  BX_MEMTYPE_RESERVED3,
+  BX_MEMTYPE_WT,
+  BX_MEMTYPE_WP,
+  BX_MEMTYPE_WB
+};
 
 #if BX_SUPPORT_X86_64
 #define BX_MSR_EFER             0xc0000080
