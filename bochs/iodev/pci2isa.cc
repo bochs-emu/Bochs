@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci2isa.cc,v 1.45 2008-12-30 09:17:09 vruppert Exp $
+// $Id: pci2isa.cc,v 1.46 2009-01-03 08:55:00 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -34,9 +34,11 @@
 #define BX_PLUGGABLE
 
 #include "iodev.h"
-#include "pci2isa.h"
 
 #if BX_SUPPORT_PCI
+
+#include "pci.h"
+#include "pci2isa.h"
 
 #define LOG_THIS thePci2IsaBridge->
 

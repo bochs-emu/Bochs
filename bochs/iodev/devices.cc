@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: devices.cc,v 1.127 2009-01-02 11:51:03 vruppert Exp $
+// $Id: devices.cc,v 1.128 2009-01-03 08:55:00 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -29,7 +29,6 @@
 /////////////////////////////////////////////////////////////////////////
 
 
-#include "bochs.h"
 #include "iodev.h"
 
 #include "iodev/pit_wrap.h"
@@ -118,7 +117,7 @@ void bx_devices_c::init(BX_MEM_C *newmem)
   char *plugin;
 #endif
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.127 2009-01-02 11:51:03 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.128 2009-01-03 08:55:00 vruppert Exp $"));
   mem = newmem;
 
   /* set no-default handlers, will be overwritten by the real default handler */

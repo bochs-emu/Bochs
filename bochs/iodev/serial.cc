@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial.cc,v 1.85 2008-12-21 08:56:26 vruppert Exp $
+// $Id: serial.cc,v 1.86 2009-01-03 08:55:00 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -37,6 +37,8 @@
 #define BX_PLUGGABLE
 
 #include "iodev.h"
+#include "serial.h"
+
 #ifndef WIN32
 #include <sys/socket.h>
 #include <netinet/in.h>

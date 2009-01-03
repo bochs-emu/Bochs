@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pciusb.cc,v 1.67 2008-12-30 09:17:09 vruppert Exp $
+// $Id: pciusb.cc,v 1.68 2009-01-03 08:55:00 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -57,7 +57,10 @@
 #define BX_PLUGGABLE
 
 #include "iodev.h"
+
 #if BX_SUPPORT_PCI && BX_SUPPORT_PCIUSB
+
+#include "pci.h"
 #include "pciusb.h"
 #include "usb_hid.h"
 #include "usb_msd.h"

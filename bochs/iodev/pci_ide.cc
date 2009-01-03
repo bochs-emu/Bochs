@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci_ide.cc,v 1.36 2008-12-29 20:16:08 sshwarts Exp $
+// $Id: pci_ide.cc,v 1.37 2009-01-03 08:55:00 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -34,9 +34,11 @@
 #define BX_PLUGGABLE
 
 #include "iodev.h"
-#include "pci_ide.h"
 
 #if BX_SUPPORT_PCI
+
+#include "pci.h"
+#include "pci_ide.h"
 
 #define LOG_THIS thePciIdeController->
 

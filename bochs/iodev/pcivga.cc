@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pcivga.cc,v 1.19 2008-12-29 20:16:08 sshwarts Exp $
+// $Id: pcivga.cc,v 1.20 2009-01-03 08:55:00 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002,2003 Mike Nordell
@@ -34,9 +34,11 @@
 #define BX_PLUGGABLE
 
 #include "iodev.h"
-#include "pcivga.h"
 
 #if BX_SUPPORT_PCI && BX_SUPPORT_PCIVGA
+
+#include "pci.h"
+#include "pcivga.h"
 
 #define LOG_THIS thePciVgaAdapter->
 
