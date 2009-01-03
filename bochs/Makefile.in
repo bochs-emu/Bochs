@@ -679,9 +679,8 @@ install_macosx: all download_dlx install_man @INSTALL_DOCBOOK_VAR@
 config.o: config.@CPP_SUFFIX@ bochs.h config.h osdep.h bx_debug/debug.h config.h \
   osdep.h bxversion.h gui/siminterface.h memory/memory.h pc_system.h \
   plugin.h extplugin.h ltdl.h gui/gui.h gui/textconfig.h gui/keymap.h \
-  instrument/stubs/instrument.h iodev/iodev.h bochs.h iodev/pci.h \
-  iodev/vga.h iodev/svga_cirrus.h iodev/ioapic.h cpu/apic.h \
-  iodev/keyboard.h iodev/serial.h
+  instrument/stubs/instrument.h iodev/iodev.h bochs.h iodev/vga.h \
+  iodev/svga_cirrus.h iodev/ioapic.h cpu/apic.h iodev/keyboard.h
 crc.o: crc.@CPP_SUFFIX@ config.h
 gdbstub.o: gdbstub.@CPP_SUFFIX@ bochs.h config.h osdep.h bx_debug/debug.h config.h \
   osdep.h bxversion.h gui/siminterface.h memory/memory.h pc_system.h \
@@ -689,9 +688,8 @@ gdbstub.o: gdbstub.@CPP_SUFFIX@ bochs.h config.h osdep.h bx_debug/debug.h config
   instrument/stubs/instrument.h cpu/cpu.h disasm/disasm.h cpu/crregs.h \
   cpu/descriptor.h cpu/instr.h cpu/lazy_flags.h cpu/icache.h cpu/apic.h \
   cpu/i387.h fpu/softfloat.h fpu/tag_w.h fpu/status_w.h fpu/control_w.h \
-  cpu/xmm.h cpu/stack.h iodev/iodev.h bochs.h iodev/pci.h iodev/vga.h \
-  iodev/svga_cirrus.h iodev/ioapic.h cpu/apic.h iodev/keyboard.h \
-  iodev/serial.h
+  cpu/xmm.h cpu/stack.h iodev/iodev.h bochs.h iodev/vga.h \
+  iodev/svga_cirrus.h iodev/ioapic.h cpu/apic.h iodev/keyboard.h
 load32bitOShack.o: load32bitOShack.@CPP_SUFFIX@ bochs.h config.h osdep.h \
   bx_debug/debug.h config.h osdep.h bxversion.h gui/siminterface.h \
   memory/memory.h pc_system.h plugin.h extplugin.h ltdl.h gui/gui.h \
@@ -699,26 +697,24 @@ load32bitOShack.o: load32bitOShack.@CPP_SUFFIX@ bochs.h config.h osdep.h \
   disasm/disasm.h cpu/crregs.h cpu/descriptor.h cpu/instr.h \
   cpu/lazy_flags.h cpu/icache.h cpu/apic.h cpu/i387.h fpu/softfloat.h \
   fpu/tag_w.h fpu/status_w.h fpu/control_w.h cpu/xmm.h iodev/iodev.h \
-  bochs.h iodev/pci.h iodev/vga.h iodev/svga_cirrus.h iodev/ioapic.h \
-  cpu/apic.h iodev/keyboard.h iodev/serial.h
+  bochs.h iodev/vga.h iodev/svga_cirrus.h iodev/ioapic.h cpu/apic.h \
+  iodev/keyboard.h
 logio.o: logio.@CPP_SUFFIX@ bochs.h config.h osdep.h bx_debug/debug.h config.h \
   osdep.h bxversion.h gui/siminterface.h memory/memory.h pc_system.h \
   plugin.h extplugin.h ltdl.h gui/gui.h gui/textconfig.h gui/keymap.h \
   instrument/stubs/instrument.h cpu/cpu.h disasm/disasm.h cpu/crregs.h \
   cpu/descriptor.h cpu/instr.h cpu/lazy_flags.h cpu/icache.h cpu/apic.h \
   cpu/i387.h fpu/softfloat.h fpu/tag_w.h fpu/status_w.h fpu/control_w.h \
-  cpu/xmm.h iodev/iodev.h bochs.h iodev/pci.h iodev/vga.h \
-  iodev/svga_cirrus.h iodev/ioapic.h cpu/apic.h iodev/keyboard.h \
-  iodev/serial.h
+  cpu/xmm.h iodev/iodev.h bochs.h iodev/vga.h iodev/svga_cirrus.h \
+  iodev/ioapic.h cpu/apic.h iodev/keyboard.h
 main.o: main.@CPP_SUFFIX@ bochs.h config.h osdep.h bx_debug/debug.h config.h \
   osdep.h bxversion.h gui/siminterface.h memory/memory.h pc_system.h \
   plugin.h extplugin.h ltdl.h gui/gui.h gui/textconfig.h gui/keymap.h \
   instrument/stubs/instrument.h cpu/cpu.h disasm/disasm.h cpu/crregs.h \
   cpu/descriptor.h cpu/instr.h cpu/lazy_flags.h cpu/icache.h cpu/apic.h \
   cpu/i387.h fpu/softfloat.h fpu/tag_w.h fpu/status_w.h fpu/control_w.h \
-  cpu/xmm.h iodev/iodev.h bochs.h iodev/pci.h iodev/vga.h \
-  iodev/svga_cirrus.h iodev/ioapic.h cpu/apic.h iodev/keyboard.h \
-  iodev/serial.h
+  cpu/xmm.h iodev/iodev.h bochs.h iodev/vga.h iodev/svga_cirrus.h \
+  iodev/ioapic.h cpu/apic.h iodev/keyboard.h
 osdep.o: osdep.@CPP_SUFFIX@ bochs.h config.h osdep.h bx_debug/debug.h config.h \
   osdep.h bxversion.h gui/siminterface.h memory/memory.h pc_system.h \
   plugin.h extplugin.h ltdl.h gui/gui.h gui/textconfig.h gui/keymap.h \
@@ -729,9 +725,8 @@ pc_system.o: pc_system.@CPP_SUFFIX@ bochs.h config.h osdep.h bx_debug/debug.h \
   gui/keymap.h instrument/stubs/instrument.h cpu/cpu.h disasm/disasm.h \
   cpu/crregs.h cpu/descriptor.h cpu/instr.h cpu/lazy_flags.h cpu/icache.h \
   cpu/apic.h cpu/i387.h fpu/softfloat.h fpu/tag_w.h fpu/status_w.h \
-  fpu/control_w.h cpu/xmm.h iodev/iodev.h bochs.h iodev/pci.h iodev/vga.h \
-  iodev/svga_cirrus.h iodev/ioapic.h cpu/apic.h iodev/keyboard.h \
-  iodev/serial.h
+  fpu/control_w.h cpu/xmm.h iodev/iodev.h bochs.h iodev/vga.h \
+  iodev/svga_cirrus.h iodev/ioapic.h cpu/apic.h iodev/keyboard.h
 plex86-interface.o: plex86-interface.@CPP_SUFFIX@ bochs.h config.h osdep.h \
   bx_debug/debug.h config.h osdep.h bxversion.h gui/siminterface.h \
   memory/memory.h pc_system.h plugin.h extplugin.h ltdl.h gui/gui.h \
@@ -740,6 +735,5 @@ plex86-interface.o: plex86-interface.@CPP_SUFFIX@ bochs.h config.h osdep.h \
 plugin.o: plugin.@CPP_SUFFIX@ bochs.h config.h osdep.h bx_debug/debug.h config.h \
   osdep.h bxversion.h gui/siminterface.h memory/memory.h pc_system.h \
   plugin.h extplugin.h ltdl.h gui/gui.h gui/textconfig.h gui/keymap.h \
-  instrument/stubs/instrument.h iodev/iodev.h bochs.h iodev/pci.h \
-  iodev/vga.h iodev/svga_cirrus.h iodev/ioapic.h cpu/apic.h \
-  iodev/keyboard.h iodev/serial.h
+  instrument/stubs/instrument.h iodev/iodev.h bochs.h iodev/vga.h \
+  iodev/svga_cirrus.h iodev/ioapic.h cpu/apic.h iodev/keyboard.h
