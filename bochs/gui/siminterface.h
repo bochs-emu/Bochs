@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.220 2008-12-28 20:30:48 sshwarts Exp $
+// $Id: siminterface.h,v 1.221 2009-01-04 21:46:20 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Intro to siminterface by Bryce Denney:
@@ -836,7 +836,8 @@ public:
 #endif
 };
 
-typedef const char* (*param_string_event_handler)(class bx_param_string_c *, int set, const char *val, int maxlen);
+typedef const char* (*param_string_event_handler)(class bx_param_string_c *,
+                     int set, const char *oldval, const char *newval, int maxlen);
 
 class BOCHSAPI bx_param_string_c : public bx_param_c {
   int maxsize;
@@ -965,6 +966,7 @@ public:
   bx_param_c *get_parent() { return parent; }
   virtual void reset();
   virtual void clear();
+  virtual void remove(const char *name);
 #if BX_USE_TEXTCONFIG
   virtual void text_print(FILE *);
   virtual int text_ask(FILE *fpin, FILE *fpout);
@@ -1217,6 +1219,7 @@ public:
   // user-defined option support
   virtual int find_user_option(const char *keyword) {return -1;}
   virtual bx_bool register_user_option(const char *keyword, user_option_parser_t parser, user_option_save_t save_func) {return 0;}
+  virtual bx_bool unregister_user_option(const char *keyword) {return 0;}
   virtual Bit32s parse_user_option(int idx, const char *context, int num_params, char *params []) {return -1;}
   virtual Bit32s save_user_options(FILE *fp) {return -1;}
   // save/restore support

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: textconfig.cc,v 1.70 2008-12-18 15:37:25 vruppert Exp $
+// $Id: textconfig.cc,v 1.71 2009-01-04 21:46:20 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This is code for a text-mode configuration interface.  Note that this file
@@ -283,6 +283,9 @@ static const char *startup_options_prompt =
 "12. Network card options\n"
 "13. Sound Blaster 16 options\n"
 "14. Other options\n"
+#if BX_PLUGINS
+"15. User-defined options\n"
+#endif
 "\n"
 "Please choose one: [0] ";
 
@@ -445,7 +448,7 @@ int bx_config_interface(int menu)
         }
         break;
       case BX_CI_START_OPTS:
-        if (ask_uint(startup_options_prompt, "", 0, 14, 0, &choice, 10) < 0) return -1;
+        if (ask_uint(startup_options_prompt, "", 0, 14+BX_PLUGINS, 0, &choice, 10) < 0) return -1;
         switch (choice) {
           case 0: return 0;
           case 1: do_menu("log"); break;
@@ -462,6 +465,9 @@ int bx_config_interface(int menu)
           case 12: do_menu("network"); break;
           case 13: do_menu(BXPN_SB16); break;
           case 14: do_menu("misc"); break;
+#if BX_PLUGINS
+          case 15: do_menu("user"); break;
+#endif
           default: BAD_OPTION(menu, choice);
         }
         break;

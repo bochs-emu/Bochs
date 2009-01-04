@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.101 2009-01-03 08:55:00 vruppert Exp $
+// $Id: iodev.h,v 1.102 2009-01-04 21:46:20 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -77,7 +77,6 @@ typedef void   (*bx_write_handler_t)(void *, Bit32u, Bit32u, unsigned);
 class BOCHSAPI bx_devmodel_c : public logfunctions {
   public:
   virtual ~bx_devmodel_c() {}
-  virtual void init_mem(BX_MEM_C *) {}
   virtual void init(void) {}
   virtual void reset(unsigned type) {}
   virtual void register_state(void) {}

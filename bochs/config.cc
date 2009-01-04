@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.146 2009-01-02 14:16:16 vruppert Exp $
+// $Id: config.cc,v 1.147 2009-01-04 21:46:20 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -193,7 +193,8 @@ static Bit64s bx_param_handler(bx_param_c *param, int set, Bit64s val)
   return val;
 }
 
-const char *bx_param_string_handler(bx_param_string_c *param, int set, const char *val, int maxlen)
+const char *bx_param_string_handler(bx_param_string_c *param, int set,
+                                    const char *oldval, const char *val, int maxlen)
 {
   char pname[BX_PATHNAME_LEN];
   Bit8u channel, device;
@@ -291,6 +292,15 @@ const char *bx_param_string_handler(bx_param_string_c *param, int set, const cha
           SIM->get_param_enum(BXPN_FLOPPYB_STATUS)->set_enabled(!empty);
         }
       }
+#if BX_PLUGINS
+    } else if (!strncmp(pname, "misc.user_plugin", 16)) {
+      if ((strlen(oldval) > 0) && (strcmp(oldval, "none"))) {
+        PLUG_unload_user_plugin(oldval);
+      }
+      if ((strlen(val) > 0) && (strcmp(val, "none"))) {
+        PLUG_load_user_plugin(val);
+      }
+#endif
     } else {
       BX_PANIC(("bx_param_string_handler called with unknown parameter '%s'", pname));
     }
@@ -1630,16 +1640,15 @@ void bx_init_options()
   menu->get_options()->set(bx_list_c::SHOW_PARENT | bx_list_c::USE_BOX_TITLE);
   for (i=0; i<BX_N_USER_PLUGINS; i++) {
     sprintf(name, "%d", i+1);
-    sprintf(descr, "User-defined plugin device #%d", i+1);
     sprintf(label, "User Plugin #%d", i+1);
-    bx_list_c *plugin = new bx_list_c(menu, name, label, 2);
-    new bx_param_string_c(plugin, "name", "Plugin name",
-      "Name of user plugin to load",
+    sprintf(descr, "User-defined plugin device #%d", i+1);
+    bx_param_string_c *plugin = new bx_param_string_c(menu, name, label, descr,
       "", BX_PATHNAME_LEN);
-    new bx_param_string_c(plugin, "options", "Plugin options",
-      "Configuration options for user plugin",
-      "", BX_PATHNAME_LEN);
+    plugin->set_handler(bx_param_string_handler);
   }
+  // user-defined options subtree
+  bx_list_c *user = new bx_list_c(root_param, "user", "User-defined options", 16);
+  user->get_options()->set(bx_list_c::SHOW_PARENT);
 #endif
 
   // log options subtree
@@ -1729,6 +1738,8 @@ void bx_reset_options()
   SIM->get_param("log")->reset();
 
 #if BX_PLUGINS
+  // user-defined options
+  SIM->get_param("user")->reset();
   bx_user_plugin_count = 0;
 #endif
 }
@@ -3186,20 +3197,17 @@ static int parse_line_formatted(const char *context, int num_params, char *param
 #if BX_PLUGINS
   else if (!strcmp(params[0], "user_plugin")) {
     char tmpname[80];
-    if (bx_user_plugin_count < BX_N_USER_PLUGINS) {
-      sprintf(tmpname, "misc.user_plugin.%d", ++bx_user_plugin_count);
-      base = (bx_list_c*) SIM->get_param(tmpname);
-      for (i=1; i<num_params; i++) {
-        if (!strncmp(params[i], "name=", 5)) {
-          SIM->get_param_string("name", base)->set(&params[i][5]);
-        } else if (!strncmp(params[i], "options=", 8)) {
-          SIM->get_param_string("options", base)->set(&params[i][8]);
+    for (i=1; i<num_params; i++) {
+      if (!strncmp(params[i], "name=", 5)) {
+        if (bx_user_plugin_count < BX_N_USER_PLUGINS) {
+          sprintf(tmpname, "misc.user_plugin.%d", ++bx_user_plugin_count);
+          SIM->get_param_string(tmpname)->set(&params[i][5]);
         } else {
-          PARSE_ERR(("%s: unknown user plugin parameter '%s'", context, params[i]));
+          PARSE_ERR(("%s: too many user plugins", context));
         }
+      } else {
+        PARSE_ERR(("%s: unknown user plugin parameter '%s'", context, params[i]));
       }
-    } else {
-      PARSE_ERR(("%s: too many user plugins", context));
     }
   }
 #endif

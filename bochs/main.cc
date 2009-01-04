@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.389 2008-12-28 20:53:31 sshwarts Exp $
+// $Id: main.cc,v 1.390 2009-01-04 21:46:20 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -702,6 +702,10 @@ int bx_init_main(int argc, char *argv[])
 #endif
 #endif  /* if BX_PLUGINS */
 
+  // initialize plugin system. This must happen before we attempt to
+  // load any modules.
+  plugin_startup();
+
   int norcfile = 1;
 
   if (SIM->get_param_bool(BXPN_RESTORE_FLAG)->get()) {
@@ -753,9 +757,6 @@ int bx_init_main(int argc, char *argv[])
       return -1;
     }
   }
-  // initialize plugin system. This must happen before we attempt to
-  // load any modules.
-  plugin_startup();
   return 0;
 }
 

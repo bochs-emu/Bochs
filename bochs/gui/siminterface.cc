@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.184 2009-01-02 14:16:16 vruppert Exp $
+// $Id: siminterface.cc,v 1.185 2009-01-04 21:46:20 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // See siminterface.h for description of the siminterface concept.
@@ -141,6 +141,7 @@ public:
   // user-defined option support
   virtual int find_user_option(const char *keyword);
   virtual bx_bool register_user_option(const char *keyword, user_option_parser_t parser, user_option_save_t save_func);
+  virtual bx_bool unregister_user_option(const char *keyword);
   virtual Bit32s parse_user_option(int idx, const char *context, int num_params, char *params []);
   virtual Bit32s save_user_options(FILE *fp);
 
@@ -804,6 +805,22 @@ bx_bool bx_real_sim_c::register_user_option(const char *keyword, user_option_par
     user_option_parser[n_user_options] = parser;
     user_option_save[n_user_options++] = save_func;
     return 1;
+  }
+}
+
+bx_bool bx_real_sim_c::unregister_user_option(const char *keyword)
+{
+  int idx = find_user_option(keyword);
+  if (idx >= 0) {
+    for (int i = idx; i < n_user_options; i++) {
+      user_option_name[i] = user_option_name[i+1];
+      user_option_parser[i] = user_option_parser[i+1];
+      user_option_save[i] = user_option_save[i+1];
+    }
+    n_user_options--;
+    return 1;
+  } else {
+    return 0;
   }
 }
 
@@ -1797,8 +1814,6 @@ void bx_param_string_c::reset()
 void bx_param_string_c::set_handler(param_string_event_handler handler)
 {
   this->handler = handler;
-  // now that there's a handler, call set once to run the handler immediately
-  //set (getptr ());
 }
 
 void bx_param_string_c::set_enable_handler(param_enable_handler handler)
@@ -1824,23 +1839,29 @@ Bit32s bx_param_string_c::get(char *buf, int len)
   if (handler) {
     // the handler can choose to replace the value in val/len.  Also its
     // return value is passed back as the return value of get.
-    (*handler)(this, 0, buf, len);
+    (*handler)(this, 0, buf, buf, len);
   }
   return 0;
 }
 
 void bx_param_string_c::set(const char *buf)
 {
-  if (options->get() & RAW_BYTES)
+  char *oldval = new char[maxsize];
+
+  if (options->get() & RAW_BYTES) {
+    memcpy(oldval, val, maxsize);
     memcpy(val, buf, maxsize);
-  else {
+  } else {
+    strncpy(oldval, val, maxsize);
+    oldval[maxsize - 1] = 0;
     strncpy(val, buf, maxsize);
     val[maxsize - 1] = 0;
   }
   if (handler) {
     // the handler can return a different char* to be copied into the value
-    buf = (*handler)(this, 1, buf, -1);
+    buf = (*handler)(this, 1, oldval, buf, -1);
   }
+  delete [] oldval;
 }
 
 bx_bool bx_param_string_c::equals(const char *buf)
@@ -2042,4 +2063,23 @@ void bx_list_c::clear()
     delete param;
   }
   size = 0;
+}
+
+void bx_list_c::remove(const char *name)
+{
+  int imax = get_size();
+  int found = 0;
+  for (int i=0; i<imax; i++) {
+    bx_param_c *p = get(i);
+    if (!found && !strcmp(name, p->get_name())) {
+      delete p;
+      found = 1;
+    }
+    if (found) {
+      list[i] = list[i+1];
+    }
+  }
+  if (found) {
+    size--;
+  }
 }

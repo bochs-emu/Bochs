@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: devices.cc,v 1.128 2009-01-03 08:55:00 vruppert Exp $
+// $Id: devices.cc,v 1.129 2009-01-04 21:46:20 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -112,12 +112,8 @@ void bx_devices_c::init(BX_MEM_C *newmem)
 {
   unsigned i;
   const char def_name[] = "Default";
-#if BX_PLUGINS
-  char tmpstr[80];
-  char *plugin;
-#endif
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.128 2009-01-03 08:55:00 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.129 2009-01-04 21:46:20 vruppert Exp $"));
   mem = newmem;
 
   /* set no-default handlers, will be overwritten by the real default handler */
@@ -256,18 +252,6 @@ void bx_devices_c::init(BX_MEM_C *newmem)
   }
 #if BX_SUPPORT_IODEBUG
   PLUG_load_plugin(iodebug, PLUGTYPE_OPTIONAL);
-#endif
-
-#if BX_PLUGINS
-  // user plugins
-  for (i = 0; i < BX_N_USER_PLUGINS; i++) {
-    sprintf(tmpstr, "misc.user_plugin.%d.name", i+1);
-    plugin = SIM->get_param_string(tmpstr)->getptr();
-    if (strlen(plugin) > 0) {
-      sprintf(tmpstr, "misc.user_plugin.%d.options", i+1);
-      PLUG_load_user_plugin(plugin, SIM->get_param_string(tmpstr)->getptr());
-    }
-  }
 #endif
 
 #if BX_SUPPORT_PCI

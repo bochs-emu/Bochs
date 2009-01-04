@@ -1,4 +1,4 @@
-$Id: PARAM_TREE.txt,v 1.17 2009-01-02 11:51:02 vruppert Exp $
+$Id: PARAM_TREE.txt,v 1.18 2009-01-04 21:46:20 vruppert Exp $
 
 Starting from Bochs 2.3 the parameters are organized in a tree structure
 instead of a huge flat list. The parameter tree was required for implementing
@@ -218,11 +218,7 @@ misc
     data_base
     bss_base
   user_plugin
-    1
-      name
-      options
-    2 ... 8
-      (same options as misc.user_plugin.1)
+    1 ... 8
 
 log
   filename
@@ -239,5 +235,8 @@ bochs
 
 wxdebug
   (special subtree for wxBochs debugger)
+
+user
+  (subtree for user-defined options)
 
 (updated Oct  8, 2006 by vruppert)

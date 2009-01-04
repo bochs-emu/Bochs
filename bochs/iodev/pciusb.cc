@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pciusb.cc,v 1.68 2009-01-03 08:55:00 vruppert Exp $
+// $Id: pciusb.cc,v 1.69 2009-01-04 21:46:20 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -1394,7 +1394,8 @@ int usb_device_t::handle_packet(USBPacket *p)
 
 // USB runtime parameter handler
 
-const char *bx_pciusb_c::usb_param_handler(bx_param_string_c *param, int set, const char *val, int maxlen)
+const char *bx_pciusb_c::usb_param_handler(bx_param_string_c *param, int set,
+                                           const char *oldval, const char *val, int maxlen)
 {
   usbdev_type type = USB_DEV_TYPE_NONE;
 

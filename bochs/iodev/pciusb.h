@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pciusb.h,v 1.31 2008-01-26 22:24:02 sshwarts Exp $
+// $Id: pciusb.h,v 1.32 2009-01-04 21:46:20 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -344,7 +344,8 @@ public:
   virtual Bit32u  pci_read_handler(Bit8u address, unsigned io_len);
   virtual void    pci_write_handler(Bit8u address, Bit32u value, unsigned io_len);
 
-  static const char *usb_param_handler(bx_param_string_c *param, int set, const char *val, int maxlen);
+  static const char *usb_param_handler(bx_param_string_c *param, int set,
+                                       const char *oldval, const char *val, int maxlen);
 
 private:
   bx_bool  busy;

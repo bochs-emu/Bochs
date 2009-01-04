@@ -789,7 +789,7 @@ i440fxsupport: enabled=1
 # Load user-defined plugin. This option is available only if Bochs is
 # compiled with plugin support. Maximum 8 different plugins are supported.
 #=======================================================================
-#user_plugin: name=testdev, option=test
+#user_plugin: name=testdev
 
 #=======================================================================
 # for Macintosh, use the style of pathnames in the following
