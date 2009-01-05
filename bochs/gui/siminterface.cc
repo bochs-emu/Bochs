@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.185 2009-01-04 21:46:20 vruppert Exp $
+// $Id: siminterface.cc,v 1.186 2009-01-05 21:15:17 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // See siminterface.h for description of the siminterface concept.
@@ -29,6 +29,12 @@ bx_list_c *root_param = NULL;
 // bx_keyboard.s.internal_buffer[4] (or whatever) directly. -Bryce
 //
 
+typedef struct {
+  const char *name;
+  user_option_parser_t parser;
+  user_option_save_t savefn;
+} user_option_t;
+
 class bx_real_sim_c : public bx_simulator_interface_c {
   bxevent_handler bxevent_callback;
   void *bxevent_callback_data;
@@ -36,9 +42,7 @@ class bx_real_sim_c : public bx_simulator_interface_c {
   config_interface_callback_t ci_callback;
   void *ci_callback_data;
   int n_user_options;
-  user_option_parser_t user_option_parser[BX_MAX_USER_OPTIONS];
-  user_option_save_t user_option_save[BX_MAX_USER_OPTIONS];
-  const char *user_option_name[BX_MAX_USER_OPTIONS];
+  user_option_t user_option[BX_MAX_USER_OPTIONS];
   int init_done;
   int enabled;
   // save context to jump to if we must quit unexpectedly
@@ -777,7 +781,7 @@ int bx_real_sim_c::find_user_option(const char *keyword)
 {
   int i = 0;
   while (i < n_user_options) {
-    if (!strcmp(keyword, user_option_name[i])) {
+    if (!strcmp(keyword, user_option[i].name)) {
       return i;
     }
     i++;
@@ -793,7 +797,7 @@ bx_bool bx_real_sim_c::register_user_option(const char *keyword, user_option_par
   }
   int idx = find_user_option(keyword);
   if (idx >= 0) {
-    if (parser == user_option_parser[idx]) {
+    if (parser == user_option[idx].parser) {
       // parse handler already registered
       return 1;
     } else {
@@ -801,9 +805,10 @@ bx_bool bx_real_sim_c::register_user_option(const char *keyword, user_option_par
       return 0;
     }
   } else {
-    user_option_name[n_user_options] = keyword;
-    user_option_parser[n_user_options] = parser;
-    user_option_save[n_user_options++] = save_func;
+    idx = n_user_options++;
+    user_option[idx].name = keyword;
+    user_option[idx].parser = parser;
+    user_option[idx].savefn = save_func;
     return 1;
   }
 }
@@ -813,9 +818,7 @@ bx_bool bx_real_sim_c::unregister_user_option(const char *keyword)
   int idx = find_user_option(keyword);
   if (idx >= 0) {
     for (int i = idx; i < n_user_options; i++) {
-      user_option_name[i] = user_option_name[i+1];
-      user_option_parser[i] = user_option_parser[i+1];
-      user_option_save[i] = user_option_save[i+1];
+      user_option[i] = user_option[i+1];
     }
     n_user_options--;
     return 1;
@@ -829,14 +832,14 @@ Bit32s bx_real_sim_c::parse_user_option(int idx, const char *context, int num_pa
   if (idx < 0 || idx >= n_user_options) {
     return -1;
   }
-  return (*user_option_parser[idx])(context, num_params, params);
+  return (*user_option[idx].parser)(context, num_params, params);
 }
 
 Bit32s bx_real_sim_c::save_user_options(FILE *fp)
 {
   for (int i = 0; i < n_user_options; i++) {
-    if (user_option_save[i] != NULL) {
-      (*user_option_save[i])(fp);
+    if (user_option[i].savefn != NULL) {
+      (*user_option[i].savefn)(fp);
     }
   }
   return 0;
