@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.147 2009-01-04 21:46:20 vruppert Exp $
+// $Id: config.cc,v 1.148 2009-01-06 20:35:38 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -22,7 +22,7 @@
 //
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
-//  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+//  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include "bochs.h"
 #include "iodev/iodev.h"
@@ -3212,9 +3212,9 @@ static int parse_line_formatted(const char *context, int num_params, char *param
   }
 #endif
   // user-defined options handled by registered functions
-  else if ((i = SIM->find_user_option(params[0])) >= 0)
+  else if (SIM->is_user_option(params[0]))
   {
-    return SIM->parse_user_option(i, context, num_params, &params[0]);
+    return SIM->parse_user_option(context, num_params, &params[0]);
   }
   else
   {

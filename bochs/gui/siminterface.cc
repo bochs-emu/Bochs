@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.186 2009-01-05 21:15:17 vruppert Exp $
+// $Id: siminterface.cc,v 1.187 2009-01-06 20:35:39 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // See siminterface.h for description of the siminterface concept.
@@ -14,8 +14,6 @@ logfunctions *siminterface_log = NULL;
 bx_list_c *root_param = NULL;
 #define LOG_THIS siminterface_log->
 
-#define BX_MAX_USER_OPTIONS 16
-
 // bx_simulator_interface just defines the interface that the Bochs simulator
 // and the gui will use to talk to each other.  None of the methods of
 // bx_simulator_interface are implemented; they are all virtual.  The
@@ -29,10 +27,11 @@ bx_list_c *root_param = NULL;
 // bx_keyboard.s.internal_buffer[4] (or whatever) directly. -Bryce
 //
 
-typedef struct {
+typedef struct _user_option_t {
   const char *name;
   user_option_parser_t parser;
   user_option_save_t savefn;
+  struct _user_option_t *next;
 } user_option_t;
 
 class bx_real_sim_c : public bx_simulator_interface_c {
@@ -41,8 +40,7 @@ class bx_real_sim_c : public bx_simulator_interface_c {
   const char *registered_ci_name;
   config_interface_callback_t ci_callback;
   void *ci_callback_data;
-  int n_user_options;
-  user_option_t user_option[BX_MAX_USER_OPTIONS];
+  user_option_t *user_options;
   int init_done;
   int enabled;
   // save context to jump to if we must quit unexpectedly
@@ -143,10 +141,10 @@ public:
   }
   virtual bx_bool test_for_text_console();
   // user-defined option support
-  virtual int find_user_option(const char *keyword);
   virtual bx_bool register_user_option(const char *keyword, user_option_parser_t parser, user_option_save_t save_func);
   virtual bx_bool unregister_user_option(const char *keyword);
-  virtual Bit32s parse_user_option(int idx, const char *context, int num_params, char *params []);
+  virtual bx_bool is_user_option(const char *keyword);
+  virtual Bit32s parse_user_option(const char *context, int num_params, char *params []);
   virtual Bit32s save_user_options(FILE *fp);
 
   // save/restore support
@@ -294,7 +292,7 @@ bx_real_sim_c::bx_real_sim_c()
   quit_context = NULL;
   exit_code = 0;
   param_id = BXP_NEW_PARAM_ID;
-  n_user_options = 0;
+  user_options = NULL;
 }
 
 void bx_real_sim_c::reset_all_param()
@@ -777,69 +775,90 @@ bx_bool bx_real_sim_c::test_for_text_console()
   return 1;
 }
 
-int bx_real_sim_c::find_user_option(const char *keyword)
+bx_bool bx_real_sim_c::is_user_option(const char *keyword)
 {
-  int i = 0;
-  while (i < n_user_options) {
-    if (!strcmp(keyword, user_option[i].name)) {
-      return i;
-    }
-    i++;
+  user_option_t *user_option;
+
+  for (user_option = user_options; user_option; user_option = user_option->next) {
+    if (!strcmp(user_option->name, keyword)) return 1;
   }
-  return -1;
+  return 0;
 }
 
 bx_bool bx_real_sim_c::register_user_option(const char *keyword, user_option_parser_t parser,
                                             user_option_save_t save_func)
 {
-  if (n_user_options >= BX_MAX_USER_OPTIONS) {
+  user_option_t *user_option;
+
+  user_option = (user_option_t *)malloc(sizeof(user_option_t));
+  if (user_option == NULL) {
+    BX_PANIC(("can't allocate user_option_t"));
     return 0;
   }
-  int idx = find_user_option(keyword);
-  if (idx >= 0) {
-    if (parser == user_option[idx].parser) {
-      // parse handler already registered
-      return 1;
-    } else {
-      // keyword already exists
-      return 0;
-    }
+
+  user_option->name = keyword;
+  user_option->parser = parser;
+  user_option->savefn = save_func;
+  user_option->next = NULL;
+
+  if (user_options == NULL) {
+    user_options = user_option;
   } else {
-    idx = n_user_options++;
-    user_option[idx].name = keyword;
-    user_option[idx].parser = parser;
-    user_option[idx].savefn = save_func;
-    return 1;
+    user_option_t *temp = user_options;
+
+    while (temp->next) {
+      if (!strcmp(temp->name, keyword)) {
+        free(user_option);
+        return 0;
+      }
+      temp = temp->next;
+    }
+    temp->next = user_option;
   }
+  return 1;
 }
 
 bx_bool bx_real_sim_c::unregister_user_option(const char *keyword)
 {
-  int idx = find_user_option(keyword);
-  if (idx >= 0) {
-    for (int i = idx; i < n_user_options; i++) {
-      user_option[i] = user_option[i+1];
+  user_option_t *user_option, *prev = NULL;
+
+  for (user_option = user_options; user_option; user_option = user_option->next) {
+    if (!strcmp(user_option->name, keyword)) {
+      if (prev == NULL) {
+        user_options = user_option->next;
+      } else {
+        prev->next = user_option->next;
+      }
+      free(user_option);
+      return 1;
+    } else {
+      prev = user_option;
     }
-    n_user_options--;
-    return 1;
-  } else {
-    return 0;
   }
+  return 0;
 }
 
-Bit32s bx_real_sim_c::parse_user_option(int idx, const char *context, int num_params, char *params [])
+Bit32s bx_real_sim_c::parse_user_option(const char *context, int num_params, char *params [])
 {
-  if (idx < 0 || idx >= n_user_options) {
-    return -1;
+  user_option_t *user_option;
+
+  for (user_option = user_options; user_option; user_option = user_option->next) {
+    if ((!strcmp(user_option->name, params[0])) &&
+        (user_option->parser != NULL)) {
+      return (*user_option->parser)(context, num_params, params);
+    }
   }
-  return (*user_option[idx].parser)(context, num_params, params);
+  return -1;
+
 }
 
 Bit32s bx_real_sim_c::save_user_options(FILE *fp)
 {
-  for (int i = 0; i < n_user_options; i++) {
-    if (user_option[i].savefn != NULL) {
-      (*user_option[i].savefn)(fp);
+  user_option_t *user_option;
+
+  for (user_option = user_options; user_option; user_option = user_option->next) {
+    if (user_option->savefn != NULL) {
+      (*user_option->savefn)(fp);
     }
   }
   return 0;

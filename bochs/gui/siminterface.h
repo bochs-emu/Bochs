@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.221 2009-01-04 21:46:20 vruppert Exp $
+// $Id: siminterface.h,v 1.222 2009-01-06 20:35:39 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Intro to siminterface by Bryce Denney:
@@ -1217,10 +1217,10 @@ public:
   virtual void set_display_mode(disp_mode_t newmode) {}
   virtual bx_bool test_for_text_console() {return 1;}
   // user-defined option support
-  virtual int find_user_option(const char *keyword) {return -1;}
   virtual bx_bool register_user_option(const char *keyword, user_option_parser_t parser, user_option_save_t save_func) {return 0;}
   virtual bx_bool unregister_user_option(const char *keyword) {return 0;}
-  virtual Bit32s parse_user_option(int idx, const char *context, int num_params, char *params []) {return -1;}
+  virtual bx_bool is_user_option(const char *keyword) {return 0;}
+  virtual Bit32s parse_user_option(const char *context, int num_params, char *params []) {return -1;}
   virtual Bit32s save_user_options(FILE *fp) {return -1;}
   // save/restore support
   virtual void init_save_restore() {}
