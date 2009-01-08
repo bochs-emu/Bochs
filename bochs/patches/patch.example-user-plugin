@@ -9,17 +9,19 @@ Detailed description:
   It contains enough code for testing the existing user plugin support
   in Bochs and creates a device that installs a 32-bit r/w register at
   i/o address 0x1000.
-  This example also show how to install and handle user-defined config
+  This example also shows how to install and handle user-defined config
   options for bochsrc, command line and the config interface. In this
   demo it is used to specify the reset value.
   For user plugin support Bochs must be configured with plugins enabled.
   Compiling with plugin support is known to work on Linux and Windows
-  (Cygwin or MinGW/MSYS).
+  (Cygwin or MinGW/MSYS). Bochs supports loading of up to 16 different
+  user plugins when starting up. Loading / removing plugins at runtime
+  is not yet supported.
 
 Patch was created with:
   diff -u
 Apply patch to what version:
-  cvs checked out on 5 Jan 2009
+  cvs checked out on 8 Jan 2009
 Instructions:
   To patch, go to main bochs directory.
   Type "patch -p0 < THIS_PATCH_FILE".
@@ -30,7 +32,7 @@ Instructions:
 ----------------------------------------------------------------------
 diff -urN ../bochs/configure.in ./configure.in
 --- ../bochs/configure.in	2008-12-29 09:16:19.000000000 +0100
-+++ ./configure.in	2009-01-02 17:56:41.000000000 +0100
++++ ./configure.in	2009-01-03 17:51:43.000000000 +0100
 @@ -3037,4 +3037,4 @@
  	 build/linux/bochs-dlx \
  	 bxversion.h bxversion.rc build/macosx/Info.plist \
@@ -39,7 +41,7 @@ diff -urN ../bochs/configure.in ./configure.in
 +	 host/linux/pcidev/Makefile user-plugin/Makefile)
 diff -urN ../bochs/user-plugin/Makefile.in ./user-plugin/Makefile.in
 --- ../bochs/user-plugin/Makefile.in	1970-01-01 01:00:00.000000000 +0100
-+++ ./user-plugin/Makefile.in	2009-01-03 17:51:43.000000000 +0100
++++ ./user-plugin/Makefile.in	2009-01-06 21:32:24.000000000 +0100
 @@ -0,0 +1,108 @@
 +# Copyright (C) 2009  Volker Ruppert
 +#
@@ -53,9 +55,9 @@ diff -urN ../bochs/user-plugin/Makefile.in ./user-plugin/Makefile.in
 +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 +# Lesser General Public License for more details.
 +#
-+# You should have received a copy of the GNU Lesser General Public License
-+# along with this library; if not, write to the Free Software Foundation, Inc.,
-+# 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++# You should have received a copy of the GNU Lesser General Public
++# License along with this library; if not, write to the Free Software
++# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 +
 +# Makefile for the user plugin example of bochs
 +
@@ -151,8 +153,8 @@ diff -urN ../bochs/user-plugin/Makefile.in ./user-plugin/Makefile.in
 +  ../gui/keymap.h ../instrument/stubs/instrument.h testdev.h
 diff -urN ../bochs/user-plugin/testdev.cc ./user-plugin/testdev.cc
 --- ../bochs/user-plugin/testdev.cc	1970-01-01 01:00:00.000000000 +0100
-+++ ./user-plugin/testdev.cc	2009-01-05 17:43:53.000000000 +0100
-@@ -0,0 +1,120 @@
++++ ./user-plugin/testdev.cc	2009-01-07 18:01:50.000000000 +0100
+@@ -0,0 +1,119 @@
 +// Copyright (C) 2009  Volker Ruppert
 +//
 +// This library is free software; you can redistribute it and/or
@@ -165,9 +167,9 @@ diff -urN ../bochs/user-plugin/testdev.cc ./user-plugin/testdev.cc
 +// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 +// Lesser General Public License for more details.
 +//
-+// You should have received a copy of the GNU Lesser General Public License
-+// along with this library; if not, write to the Free Software Foundation, Inc.,
-+// 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++// You should have received a copy of the GNU Lesser General Public
++// License along with this library; if not, write to the Free Software
++// Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 +
 +// User plugin example (see patch description for details)
 +
@@ -200,7 +202,6 @@ diff -urN ../bochs/user-plugin/testdev.cc ./user-plugin/testdev.cc
 +  new bx_param_num_c(menu, "test", "Test Parameter", "", 0, BX_MAX_BIT32U, 0);
 +  // register user-defined option for bochsrc and command line
 +  SIM->register_user_option("testdev", testdev_options_parser, testdev_options_save);
-+
 +  return(0); // Success
 +}
 +
@@ -218,10 +219,10 @@ diff -urN ../bochs/user-plugin/testdev.cc ./user-plugin/testdev.cc
 +    if (!strncmp(params[1], "test=", 5)) {
 +      SIM->get_param_num("user.testdev.test")->set(atoi(&params[1][5]));
 +    } else {
-+      BX_ERROR(("%s: testdev: unknown parameter '%s'", context, params[1]));
++      BX_PANIC(("%s: testdev: unknown parameter '%s'", context, params[1]));
 +    }
 +  } else {
-+    BX_ERROR(("%s: unknown directive '%s'", context, params[0]));
++    BX_PANIC(("%s: unknown directive '%s'", context, params[0]));
 +  }
 +  return 0;
 +}
@@ -275,7 +276,7 @@ diff -urN ../bochs/user-plugin/testdev.cc ./user-plugin/testdev.cc
 +}
 diff -urN ../bochs/user-plugin/testdev.h ./user-plugin/testdev.h
 --- ../bochs/user-plugin/testdev.h	1970-01-01 01:00:00.000000000 +0100
-+++ ./user-plugin/testdev.h	2009-01-03 17:51:43.000000000 +0100
++++ ./user-plugin/testdev.h	2009-01-06 21:31:59.000000000 +0100
 @@ -0,0 +1,40 @@
 +// Copyright (C) 2009  Volker Ruppert
 +//
@@ -289,9 +290,9 @@ diff -urN ../bochs/user-plugin/testdev.h ./user-plugin/testdev.h
 +// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 +// Lesser General Public License for more details.
 +//
-+// You should have received a copy of the GNU Lesser General Public License
-+// along with this library; if not, write to the Free Software Foundation, Inc.,
-+// 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++// You should have received a copy of the GNU Lesser General Public
++// License along with this library; if not, write to the Free Software
++// Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 +
 +#ifndef BX_TESTDEV_H
 +#define BX_TESTDEV_H
