@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.547 2009-01-03 20:04:02 sshwarts Exp $
+// $Id: cpu.h,v 1.548 2009-01-08 18:07:43 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -283,7 +283,7 @@
 #define BX_MC_EXCEPTION  18
 #define BX_XM_EXCEPTION  19
 
-#define BX_MSR_MAX_INDEX           0xfff
+#define BX_MSR_MAX_INDEX          0x1000
 
 /* MSR registers */
 #define BX_MSR_TSC                 0x010

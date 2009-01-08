@@ -3,10 +3,6 @@
 
 #include "win32dialog.h"
 
-// FIXME: platform dependent!
-#define TreeParent  HTREEITEM
-void MakeTreeChild (HTREEITEM *h_P, int ChildCount, HTREEITEM *h_TC);
-
 void MoveLists();
 void SetStatusText(int column, char *buf); // should it be here ?
 void MakeListsGray();
