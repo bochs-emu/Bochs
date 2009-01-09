@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32dialog.cc,v 1.65 2008-12-27 12:06:39 sshwarts Exp $
+// $Id: win32dialog.cc,v 1.66 2009-01-09 14:53:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #include "win32dialog.h"
@@ -9,14 +9,18 @@
 #include "bochs.h"
 #include "win32res.h"
 
+// for refreshing the bochs VGA window:
+#include "iodev/iodev.h"
+BOCHSAPI extern bx_devices_c bx_devices;
+
 const char log_choices[5][16] = {"ignore", "log", "ask user", "end simulation", "no change"};
 static int retcode = 0;
 static bxevent_handler old_callback = NULL;
 static void *old_callback_arg = NULL;
 #if BX_DEBUGGER
-HWND hDebugDialog = NULL;
 extern char *debug_cmd;
 extern bx_bool debug_cmd_ready;
+extern bx_bool vgaw_refresh;
 #endif
 
 int AskFilename(HWND hwnd, bx_param_filename_c *param, const char *ext);
@@ -897,10 +901,6 @@ BxEvent* win32_notify_callback(void *unused, BxEvent *event)
   int opts;
   bx_param_c *param;
   bx_param_string_c *sparam;
-#if BX_DEBUGGER
-  char debug_msg[1024];
-  int i, j;
-#endif
 
   event->retcode = -1;
   switch (event->type)
@@ -911,32 +911,25 @@ BxEvent* win32_notify_callback(void *unused, BxEvent *event)
 #if BX_DEBUGGER
     case BX_SYNC_EVT_GET_DBG_COMMAND:
       {
+        // sim is at a "break" -- internal debugger is ready for a command
         debug_cmd = new char[512];
-        SendMessage(hDebugDialog, WM_USER, 0x1234, 1);
         debug_cmd_ready = FALSE;
-        SendMessage(hDebugDialog, WM_USER, 0x1234, 2);
-        while (!debug_cmd_ready && (hDebugDialog != NULL)) {
+        HitBreak();
+        while (debug_cmd_ready == FALSE && bx_user_quit == 0)
+        {
+          if (vgaw_refresh != FALSE)  // is the GUI frontend requesting a VGAW refresh?
+             DEV_vga_refresh();
+          vgaw_refresh = FALSE;
           Sleep(10);
         }
-        if (hDebugDialog == NULL) {
-          lstrcpy(debug_cmd, "q");
-        } else {
-          SendMessage(hDebugDialog, WM_USER, 0x1234, 0);
-        }
+        if (bx_user_quit != 0)
+          BX_EXIT(0);
         event->u.debugcmd.command = debug_cmd;
         event->retcode = 1;
         return event;
       }
     case BX_ASYNC_EVT_DBG_MSG:
-      lstrcpy(debug_msg, (char*)event->u.logmsg.msg);
-      for (i = 0; i < lstrlen(debug_msg); i++) {
-        if (debug_msg[i] == 10) {
-          for (j = lstrlen(debug_msg); j >= i; j--) debug_msg[j+1] = debug_msg[j];
-          debug_msg[i] = 13;
-          i++;
-        }
-      }
-      SendMessage(hDebugDialog, WM_USER, 0x5678, (LPARAM)debug_msg);
+      ParseIDText ((char*) event->u.logmsg.msg);
       // free the char* which was allocated in dbg_printf
       delete [] ((char*)event->u.logmsg.msg);
       return event;
@@ -971,11 +964,6 @@ BxEvent* win32_notify_callback(void *unused, BxEvent *event)
         event->retcode = 0;
         return event;
       }
-    case BX_ASYNC_EVT_REFRESH:
-#if BX_DEBUGGER
-      RefreshDebugDialog();
-      return event;
-#endif
     case BX_SYNC_EVT_TICK: // called periodically by siminterface.
       // fall into default case
     default:

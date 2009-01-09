@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32.cc,v 1.123 2008-12-29 08:51:34 vruppert Exp $
+// $Id: win32.cc,v 1.124 2009-01-09 14:53:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -921,7 +921,7 @@ VOID CDECL UIThread(PVOID pvoid)
       ShowWindow(stInfo.mainWnd, SW_SHOW);
 #if BX_DEBUGGER
       if (gui_debug) {
-        InitDebugDialog(stInfo.mainWnd);
+        InitDebugDialog();
       }
 #endif
       stInfo.UIinited = TRUE;
@@ -1589,13 +1589,8 @@ void bx_win32_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
   y = 0;
   cs_y = 0;
   text_base = new_text - tm_info.start_address;
-  if (line_compare < dimension_y) {
-    split_textrow = (line_compare + v_panning) / yChar;
-    split_fontrows = ((line_compare + v_panning) % yChar) + 1;
-  } else {
-    split_textrow = rows + 1;
-    split_fontrows = 0;
-  }
+  split_textrow = (line_compare + v_panning) / yChar;
+  split_fontrows = ((line_compare + v_panning) % yChar) + 1;
   split_screen = 0;
   do {
     hchars = text_cols;

@@ -5,21 +5,19 @@
 #include "bochs.h"
 #include "disasm/disasm.h"
 
-// for refreshing the bochs VGA window:
-#include "iodev/iodev.h"
-BOCHSAPI extern bx_devices_c bx_devices;
-
 #include "win32dialog.h"
 #include "enh_dbg.h"
 
 #include "wenhdbg_res.h"    // MenuIDs
-#include "wenhdbg_h.h"
 
 // Important Note! All the string manipulation functions assume one byte chars -- ie. "ascii",
 // instead of "wide" chars. If there exists a compiler that automatically assumes wide chars
 // (ie. 2 byte), then all the function names in here need to be changed to FORCE the compiler
 // to use the "A" functions instead of the "W" functions. That is, strcpyA(), sprintfA(), etc.
 // This will require setting macros for the non-os-specific code, too.
+
+#include <windows.h>
+#include <commctrl.h>
 
 // User Customizable initial settings:
 
@@ -47,7 +45,12 @@ COLORREF ColorList[16] = {  // background "register type" colors indexed by RegC
 
 // END of User Customizable settings
 
-//#include <process.h>      // OYOY
+COLORREF AsmColors[4] = {
+    RGB(0,0,0),         // text foreground color is normally black
+    RGB(0,100,0),       // current opcode is dark green and bold
+    RGB(150,0,0),       // a breakpoint is red and italic
+    RGB(0,0,200)        // both = blue, bold, AND italic
+};
 
 #ifndef LVIF_GROUPID
 #define IS_WIN98
@@ -96,7 +99,9 @@ HWND hE_O;          // debugger text output
 HWND hT;            // param_tree window
 HWND hBTN[5];       // button row
 HWND hCPUt[BX_MAX_SMP_THREADS_SUPPORTED];   // "tabs" for the individual CPUs
-HFONT CustomFont = NULL;
+HFONT CustomFont[4];
+HFONT DefFont;
+LOGFONT mylf;
 HMENU hOptMenu;     // "Options" popup menu (needed to set check marks)
 HMENU hViewMenu;    // "View" popup menu (needed to gray entries)
 HMENU hCmdMenu;     // "Command" popup menu (needed to gray entries)
@@ -131,7 +136,7 @@ Bit32u SelectedBID;
 #define BTN_BASE            1024
 #define MULTICPU_BTN_BASE   1030
 
-bx_bool UpdInProgress[3];       // flag -- list update incomplete (not OK to paint) HIHI this will need to go in the .h file
+bx_bool UpdInProgress[3];       // flag -- list update incomplete (not OK to paint)
 
 INT_PTR CALLBACK A_DP(HWND hh,UINT mm,WPARAM ww,LPARAM ll)
 {
@@ -1206,11 +1211,10 @@ void DelWatchpoint(bx_phy_address *wp_array, unsigned int *TotEntries, int i)
 
 bx_bool NewFont()
 {
-    HFONT hF = (HFONT) CallWindowProc(*wEdit,hE_I,WM_GETFONT,0,0);
     LOGFONT lf;
     if (AtBreak == FALSE)
         return FALSE;
-    GetObject(hF,sizeof(lf),&lf);
+    GetObject(DefFont,sizeof(lf),&lf);
     CHOOSEFONT cF = {0};
     cF.lStructSize = sizeof(cF);
     cF.hwndOwner = hY;
@@ -1224,15 +1228,27 @@ bx_bool NewFont()
     ShowWindow(hL[DUMP_WND],SW_HIDE);
     ShowWindow(hS_S,SW_HIDE);
     ShowWindow(hE_I,SW_HIDE);
-    if (CustomFont != NULL)
-        DeleteObject (CustomFont);
-    CustomFont = CreateFontIndirect(&lf);
-    DeleteObject(hF);
-    CallWindowProc(wListView,hL[REG_WND],WM_SETFONT,(WPARAM)CustomFont,MAKELPARAM(TRUE,0));
-    CallWindowProc(wListView,hL[ASM_WND],WM_SETFONT,(WPARAM)CustomFont,MAKELPARAM(TRUE,0));
-    CallWindowProc(wListView,hL[DUMP_WND],WM_SETFONT,(WPARAM)CustomFont,MAKELPARAM(TRUE,0));
-    CallWindowProc(*wEdit,hE_I,WM_SETFONT,(WPARAM)CustomFont,MAKELPARAM(TRUE,0));
-    SendMessage(hS_S,WM_SETFONT,(WPARAM)CustomFont,MAKELPARAM(TRUE,0));
+    if (*CustomFont != DefFont)             // destroy all variations of the prev. font
+        DeleteObject (*CustomFont);
+    DeleteObject (CustomFont[1]);
+    DeleteObject (CustomFont[2]);
+    DeleteObject (CustomFont[3]);
+    *CustomFont = CreateFontIndirect(&lf);
+    // create a bold version of the deffont
+    lf.lfWeight = FW_BOLD;
+    CustomFont[1] = CreateFontIndirect (&lf);
+    // create a bold + italic version of the deffont
+    lf.lfItalic = 1;
+    CustomFont[3] = CreateFontIndirect (&lf);
+    // create an italic version of the deffont (turn off bold)
+    lf.lfWeight = FW_NORMAL;
+    CustomFont[2] = CreateFontIndirect (&lf);
+
+    CallWindowProc(wListView,hL[REG_WND],WM_SETFONT,(WPARAM)*CustomFont,MAKELPARAM(TRUE,0));
+    CallWindowProc(wListView,hL[ASM_WND],WM_SETFONT,(WPARAM)*CustomFont,MAKELPARAM(TRUE,0));
+    CallWindowProc(wListView,hL[DUMP_WND],WM_SETFONT,(WPARAM)*CustomFont,MAKELPARAM(TRUE,0));
+    CallWindowProc(*wEdit,hE_I,WM_SETFONT,(WPARAM)*CustomFont,MAKELPARAM(TRUE,0));
+    SendMessage(hS_S,WM_SETFONT,(WPARAM)*CustomFont,MAKELPARAM(TRUE,0));
     return TRUE;
 }
 
@@ -1244,13 +1260,14 @@ LRESULT CALLBACK B_WP(HWND hh,UINT mm,WPARAM ww,LPARAM ll)
     extern unsigned num_read_watchpoints;
     extern bx_phy_address write_watchpoint[];
     extern bx_phy_address read_watchpoint[];
+    extern bx_bool vgaw_refresh;
 
     switch(mm)
     {
         case WM_CREATE:
         {
             HFONT hF = (HFONT)GetStockObject(OEM_FIXED_FONT);
-            HFONT hF2 = (HFONT)GetStockObject(DEFAULT_GUI_FONT);
+            DefFont = (HFONT)GetStockObject(DEFAULT_GUI_FONT);
 
             // Register Window
             char* txt0[] = {"Reg Name","Hex Value","Decimal"};
@@ -1263,7 +1280,7 @@ LRESULT CALLBACK B_WP(HWND hh,UINT mm,WPARAM ww,LPARAM ll)
             lvc.pszText = txt0[2];
             ListView_InsertColumn(hL[REG_WND],2,&lvc);
 
-        //      Enable the groupID's for the register window
+            // Enable the groupID's for the register window
 #ifndef IS_WIN98
             // GroupID's are only supported on XP or higher -- verify Win Version
             // the group stuff may COMPILE correctly, but still may fail at runtime
@@ -1309,7 +1326,7 @@ LRESULT CALLBACK B_WP(HWND hh,UINT mm,WPARAM ww,LPARAM ll)
             hE_I = CreateWindowEx(0,"edit","",WS_CHILD | WS_VISIBLE,0,0,1,1,hh,(HMENU)1004,GetModuleHandle(0),0);
             // without AUTOHSCROLL, output window text is always supposed to wordwrap
             hE_O = CreateWindowEx(0,"edit","",WS_VSCROLL | WS_BORDER | WS_CHILD | WS_VISIBLE | ES_MULTILINE,0,0,1,1,hh,(HMENU)1003,GetModuleHandle(0),0);
-            SendMessage(hE_I,WM_SETFONT,(WPARAM)hF2,MAKELPARAM(TRUE,0));
+            SendMessage(hE_I,WM_SETFONT,(WPARAM)DefFont, MAKELPARAM(TRUE,0));
             SendMessage(hE_O,WM_SETFONT,(WPARAM)hF,MAKELPARAM(TRUE,0));
             // subclass both the edit windows together
             *wEdit = (WNDPROC) SetWindowLong (hE_I,GWL_WNDPROC,(long) ThisEditProc);
@@ -1317,13 +1334,13 @@ LRESULT CALLBACK B_WP(HWND hh,UINT mm,WPARAM ww,LPARAM ll)
 
             // Status
             hS_S = CreateWindowEx(0,STATUSCLASSNAME,"",WS_CHILD | WS_VISIBLE,0,0,1,1,hh,(HMENU)1006,GetModuleHandle(0),0);
-            SendMessage(hS_S,WM_SETFONT,(WPARAM)hF2,MAKELPARAM(TRUE,0));
+            SendMessage(hS_S,WM_SETFONT,(WPARAM)DefFont,MAKELPARAM(TRUE,0));
             int p[4] = {100,250,400,-1};
             SendMessage(hS_S,SB_SETPARTS,4,(LPARAM)p);
 
             // Dump Window
             hL[DUMP_WND] = CreateWindowEx(0,"sLV","",LVStyle[2],0,0,100,100,hh,(HMENU)1002,GetModuleHandle(0),0);
-            //SendMessage(hL[DUMP_WND],WM_SETFONT,(WPARAM)hF2,MAKELPARAM(TRUE,0));
+            //SendMessage(hL[DUMP_WND],WM_SETFONT,(WPARAM)DefFont,MAKELPARAM(TRUE,0));
             strcpy (bigbuf, "Address");
             lvc.pszText = bigbuf;
             ListView_InsertColumn(hL[DUMP_WND],0,&lvc);
@@ -1359,7 +1376,7 @@ LRESULT CALLBACK B_WP(HWND hh,UINT mm,WPARAM ww,LPARAM ll)
 #endif
             hT = CreateWindowEx(0,WC_TREEVIEW,"",TVS_DISABLEDRAGDROP | TVS_HASLINES | TVS_HASBUTTONS | WS_CHILD | WS_BORDER,
                 0,0,1,1,hh,(HMENU)1010,GetModuleHandle(0),0);
-            //SendMessage(hT,WM_SETFONT,(WPARAM)hF2,MAKELPARAM(TRUE,0));
+            //SendMessage(hT,WM_SETFONT,(WPARAM)DefFont,MAKELPARAM(TRUE,0));
             // Use the same messagehandler for the tree window as for ListViews
             wTreeView = (WNDPROC) SetWindowLong (hT,GWL_WNDPROC,(long) LVProc);
 
@@ -1513,36 +1530,46 @@ LRESULT CALLBACK B_WP(HWND hh,UINT mm,WPARAM ww,LPARAM ll)
 
                 if (d->nmcd.dwDrawStage == CDDS_ITEMPREPAINT)   // select the "active" ASM line
                 {
+                    unsigned int fgclr = 0;         // normal text color is black
                     d->clrTextBk = RGB(255,255,255);        // background is white
                     if (!AtBreak)
                         d->clrTextBk = RGB(210,210,210);    // unless sim is "running"
 
-                    unsigned char r=0, g=0, b=0;        // normal text color is black
-
                     bx_address h = (bx_address) AsmLA[d->nmcd.dwItemSpec];
                     if (h == CurrentAsmLA)
-                        g = 100;                // current opcode is colored dark green
+                        fgclr = 1;              // current opcode is colored dark green
                     int j= BreakCount;
                     while (--j >= 0)            // loop over all breakpoints
                     {
                         // brk list is sorted -- if the value goes too low, end the loop
-                    // And I know for a fact that some complers are soooo stupid that they
-                    // will repeat the following test twice, unless you force them not to.
+                        // And I know for a fact that some complers are soooo stupid that they
+                        // will repeat the following test twice, unless you force them not to.
                         register bx_address i = BrkLAddr[j] - h;
 //                      if (BrkLAddr[j] < h)
                         if (i < 0)
                             j = 0;      // force the loop to end if it goes too far
 //                      else if (BrkLAddr[j] == h)
                         else if (i == 0)
-                        {
-                            g = j= 0;
-                            if (h == CurrentAsmLA)
-                                b = 200;        // breakpoint @ current opcode = blue
-                            else
-                                r = 150;        // active breakpoint is red
-                        }
+                            fgclr |= 2;     // change color if on a breakpoint
                     }
-                    d->clrText = RGB(r,g,b);
+                    d->clrText = AsmColors[fgclr];
+                    if (fgclr != 0)     // if this row has color, process its subitems further
+                    {
+                        SetWindowLong(hh, DWL_MSGRESULT, CDRF_NOTIFYSUBITEMDRAW);
+                        return CDRF_NOTIFYSUBITEMDRAW;
+                    }
+                }
+                else if (d->nmcd.dwDrawStage == (CDDS_SUBITEM | CDDS_ITEMPREPAINT) && d->iSubItem == 2)
+                {
+                    // add extra visual feedback to a "colored" ASM mnemonic cell
+                    // -- but don't try to recalculate breakpoints! Just "guess" from the color.
+                    int fontattrib = 3;
+                    if (d->clrText == AsmColors[1])     // green = current RIP = bold
+                        fontattrib = 1;
+                    else if (d->clrText == AsmColors[2])    // red = brkpt = italic
+                        fontattrib = 2;
+                    SelectObject (d->nmcd.hdc, CustomFont[fontattrib]);
+                    return CDRF_NEWFONT | CDRF_DODEFAULT;
                 }
                 break;
             }
@@ -1711,7 +1738,7 @@ LRESULT CALLBACK B_WP(HWND hh,UINT mm,WPARAM ww,LPARAM ll)
                     ParseIDText ("\n");
             }
             UpdateStatus();
-            DEV_vga_refresh();
+            vgaw_refresh = TRUE;    // ask bochs to update its own VGA window
             break;
         }
         case WM_NCMOUSEMOVE:
@@ -1727,52 +1754,35 @@ LRESULT CALLBACK B_WP(HWND hh,UINT mm,WPARAM ww,LPARAM ll)
             bx_user_quit = 1;
             SIM->debug_break();
             KillTimer(hh,2);
-            if (CustomFont != NULL)
-                DeleteObject (CustomFont);
-            DestroyWindow(hDebugDialog);
-            hDebugDialog = NULL;
+            if (*CustomFont != DefFont)
+                DeleteObject (*CustomFont);
+            DeleteObject (CustomFont[1]);
+            DeleteObject (CustomFont[2]);
+            DeleteObject (CustomFont[3]);
+            DestroyWindow(hY);
             break;
         }
-        case WM_USER:
-        {
-            // ww == 0x1234, ll = 0 - bochs started running a command
-            //          11 = 1 - bochs stopped on some type of break
-            //          ll = 2 - bochs is ready to run a command
-            // ww == 0x5678 - output text from debugger in available in lparam
-
-            if (ww == 0x1234 && ll == 2)
-                dbgOnToggle(TRUE);  // bochs internal debugger is able to accept commands now
-
-            if (ww != 0x1234 || ll != 0)
-            {
-                // Sim is at a "break".
-                if (AtBreak == FALSE)
-                {
-                    AtBreak = TRUE;
-                    StatusChange = TRUE;
-                }
-                if (doDumpRefresh != FALSE)
-                    RefreshDataWin();
-                OnBreak();
-            }
-
-            if (ww == 0x5678)   // bochs internal debugger produced some text?
-            {
-                if (strstr((char*)ll,"HALTED"))
-                    break;
-
-                ParseIDText((char*)ll); // Process all debugger text output
-            }
-            return 0;
-        }
     }
-
     return DefWindowProc(hh,mm,ww,ll);
+}
+
+void HitBreak()
+{
+    // Sim is at a "break".
+    if (AtBreak == FALSE)
+    {
+        AtBreak = TRUE;
+        StatusChange = TRUE;
+    }
+    if (doDumpRefresh != FALSE)
+        RefreshDataWin();
+    OnBreak();
 }
 
 // This function must be called immediately after bochs starts
 bx_bool OSInit()
 {
+    TEXTMETRIC tm;
     InitCommonControls();   // start the common control dll
     SpListView();       // create superclass for listviews to use when they are created
     SpBtn();            // same for buttons
@@ -1798,7 +1808,21 @@ bx_bool OSInit()
         0,hTopMenu,GetModuleHandle(0),0);
     if (hY == NULL)
         return FALSE;
-    hDebugDialog = hY;
+    HDC hdc = GetDC (hY);
+    *CustomFont = DefFont;  // create the deffont with modded attributes (bold, italic)
+    GetTextFace(hdc, LF_FULLFACESIZE, mylf.lfFaceName); // (constant is max length of a fontname)
+    GetTextMetrics (hdc, &tm);
+    ReleaseDC (hY, hdc);
+    mylf.lfHeight = -(tm.tmHeight);     // request a TOTAL font height of tmHeight
+    // create a bold version of the deffont
+    mylf.lfWeight = FW_BOLD;
+    CustomFont[1] = CreateFontIndirect (&mylf);
+    // create a bold + italic version of the deffont
+    mylf.lfItalic = 1;
+    CustomFont[3] = CreateFontIndirect (&mylf);
+    // create an italic version of the deffont (turn off bold)
+    mylf.lfWeight = FW_NORMAL;
+    CustomFont[2] = CreateFontIndirect (&mylf);
     return TRUE;
 }
 
@@ -1816,7 +1840,7 @@ void MakeBL(HTREEITEM *h_P, bx_param_c *p)
             if (((bx_param_num_c*)p)->get_base() == BASE_DEC)
                 sprintf (tmpcb + j,": " FMT_LL "d",((bx_param_num_c*)p)->get64());
             else
-                sprintf (tmpcb + j,": 0x%0llX",((bx_param_num_c*)p)->get64());
+                sprintf (tmpcb + j,": 0x" FMT_LL "X",((bx_param_num_c*)p)->get64());
             break;
         case BXT_LIST:
             as_list = (bx_list_c *)p;

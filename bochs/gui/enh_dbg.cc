@@ -1,4 +1,4 @@
-//  BOCHS ENHANCED DEBUGGER Ver 1.1-b1
+//  BOCHS ENHANCED DEBUGGER Ver 1.2
 //  (C) Chourdakis Michael, 2008
 //  http://www.turboirc.com
 //
@@ -9,13 +9,13 @@
 
 #if BX_DEBUGGER
 
+#include <math.h>
+
 #include "bochs.h"
 #include "cpu/cpu.h"
 
 #include "enh_dbg.h"
-
 #include "wenhdbg_res.h"    // MenuIDs
-#include "wenhdbg_h.h"
 
 // Match stuff
 #define MATCH_TRUE 1
@@ -27,13 +27,13 @@
 
 bx_bool debug_cmd_ready = FALSE;
 char *debug_cmd = NULL;
+bx_bool vgaw_refresh = 0;
 
 // get a "class" to access the disassebler
 // Note; any instance has access to all the member functions -- that is enough!
 // -- i.e. No further initialization necessary.
 static disassembler bx_disassemble;
 
-bx_bool dbgOn = FALSE;          // the bochs internal debugger needs some time to get started
 int useCR = 1;                  // Win32 needs CRLF pairs for an EOL
 bx_bool NeedSysRresize = TRUE;  // use Sys Reg to help autosize Reg "hex" column
 
@@ -523,6 +523,49 @@ bx_bool ReadBxLMem(Bit64u laddr, unsigned len, Bit8u *buf)
     return retval;
 }
 
+// binary conversion (and validity testing) on hex/decimal char string inputs
+Bit64u cvthex(char *p, Bit64u errval)
+{
+    Bit64u ret = 0;
+    bx_bool end = FALSE;
+    while (end == FALSE)
+    {
+        if (*p >= '0' && *p <= '9')             // test for digits
+            ret = (ret << 4) | (*(p++) - '0');
+        else if ((*p | 0x20) >= 'a' && (*p | 0x20) <= 'f')  // test for hex letters
+            ret = (ret << 4) | ((*(p++) | 0x20) - 'a' + 10);    // 0xA = 10, of course
+        else
+            end = TRUE;
+    }
+    if (*p != 0 && *p != ' ' && *p != '\t')     // hex must end on a whitespace
+        return errval;
+    return ret;
+}
+
+Bit64u cvt64(char *nstr, bx_bool negok)
+{
+    char *p, *s;
+    Bit64u ret = 0;
+    bx_bool neg = FALSE;
+    p= nstr;
+    while (*p==' ' || *p == '\t')
+        ++p;
+    if (*p == '-' && negok != FALSE)
+    {
+        ++p;
+        neg = TRUE;
+    }
+    if (*p == '0' && (p[1] | 0x20) == 'x' && neg == FALSE)
+        return cvthex (p+2, 0);
+    s = p;
+    while (*p >= '0' && *p <= '9')
+        ret = (ret * 10) + *(p++) - '0';
+    if ((*p | 0x20) >= 'a' && (*p | 0x20) <= 'f' && neg == FALSE)
+        return cvthex (s, ret);
+    if (neg != FALSE)
+        return 0 - ret;
+    return ret;
+}
 
 // "singlestep" disassembly lines from the internal debugger are sometimes ignored
 bx_bool isSSDisasm(char *s)
@@ -1015,7 +1058,7 @@ void LoadRegList()
     }
     // always insert eflags next
     RitemToRnum[itemnum] = EFL_Rnum;
-    sprintf(regtxt,Fmt32b[UprCase],(Bit32u)rV[i]);  // print the hex column
+    sprintf(regtxt,Fmt32b[UprCase],(Bit32u)rV[EFL_Rnum]);   // print the hex column
     cols[0] = RDispName[EFL_Rnum];
     InsertListRow(cols, 2, REG_WND, itemnum, 0);    // 2 cols, group 0
     ++itemnum;
@@ -1521,7 +1564,7 @@ void FillIDT()
                 Bit64u off64 = (Bit64u)(ofs | ((Bit32u) idtbuf[6] << 16) | ((Bit32u) idtbuf[7] << 24));
                 off64 |= ((Bit64u) idtbuf[8] << 32) | ((Bit64u) idtbuf[9] << 40);
                 off64 |= ((Bit64u) idtbuf[10] << 48) | ((Bit64u) idtbuf[11] << 56);
-                sprintf(cols[17],"0x%04X:0x%016llX", sel, off64);
+                sprintf(cols[17],"0x%04X:0x" FMT_LLCAPX, sel, off64);
                 // TODO: also print some flags from idtbuf[5], maybe, in another column
                 break;
         }
@@ -1585,7 +1628,8 @@ void FillPAGE()
                 if (start_lin != 1)
                 {
                     sprintf (pa_lin,"0x%08X - 0x%08X",start_lin, lin - 1);
-                    sprintf (pa_phy,"0x%016llX - 0x%016llX",start_phy, start_phy + (lin-1-start_lin));
+                    sprintf (pa_phy,"0x" FMT_LLCAPX " - 0x" FMT_LLCAPX,
+                        start_phy, start_phy + (lin-1-start_lin));
                     AddPagingLine (LineCount,pa_lin,pa_phy);
                     ++LineCount;
                 }
@@ -1598,7 +1642,8 @@ void FillPAGE()
             if (start_lin != 1)
             {
                 sprintf (pa_lin,"0x%08X - 0x%08X",start_lin, lin - 1);
-                sprintf (pa_phy,"0x%016llX - 0x%016llX",start_phy, start_phy + (lin-1-start_lin));
+                sprintf (pa_phy,"0x" FMT_LLCAPX " - 0x" FMT_LLCAPX,
+                    start_phy, start_phy + (lin-1-start_lin));
                 AddPagingLine (LineCount,pa_lin,pa_phy);
                 ++LineCount;
             }
@@ -1611,7 +1656,7 @@ void FillPAGE()
     if (start_lin != 1)     // need to output one last line?
     {
         sprintf (pa_lin,"0x%08X - 0x%08X", start_lin, -1);
-        sprintf (pa_phy,"0x%016llX - 0x%016llX",start_phy, start_phy -1 -start_lin);
+        sprintf (pa_phy,"0x" FMT_LLCAPX " - 0x" FMT_LLCAPX,start_phy, start_phy + (lin-1-start_lin));
         AddPagingLine (LineCount,pa_lin,pa_phy);
     }
     RedrawColumns(DUMP_WND);
@@ -1625,7 +1670,6 @@ void FillStack()
     unsigned int len, i, wordsize, overlap;
     int j;
     bx_bool LglAddy;
-    bx_bool HasNeg = FALSE;
     bx_bool UpdateDisp;
     char *cp, *cpp;
     char *cols[18];
@@ -1770,16 +1814,13 @@ void FillStack()
                 tmp = *((Bit16s *) cp);
             else
                 tmp = *((Bit32s *) cp);
-            if (tmp < 0)
-                HasNeg = TRUE;
-            sprintf (cols[1],"0x%X",tmp);
+            sprintf (cols[1],Fmt32b[UprCase],tmp);
             sprintf (cols[17],"%d",tmp);
         }
         else
         {
             Bit64s tmp = *((Bit64s *) cp);
-            // don't bother testing negative -- 64b values are all the same length
-            sprintf (cols[0],Fmt64b[1],StackLA);
+            sprintf (cols[0],Fmt64b[UprCase],StackLA);
             sprintf (cols[1],Fmt64b[1],tmp);
             sprintf (cols[17], FMT_LL "d",tmp);
         }
@@ -1788,15 +1829,8 @@ void FillStack()
         cp += wordsize;
         ++i;
     }
-    if (ResizeColmns != FALSE)      // handle column resize changes
-        StackSized = 0;
-    if (StackSized == 0 || (StackSized == 1 && HasNeg != FALSE))
-    {
-        RedrawColumns(DUMP_WND);
-        StackSized = 1;     // may need to resize a second time
-        if (HasNeg != FALSE)
-            StackSized = 2;
-    }
+
+    RedrawColumns(DUMP_WND);
     EndListUpdate(DUMP_WND);
 }
 
@@ -1813,7 +1847,8 @@ void prtbrk (Bit32u seg, Bit64u addy, unsigned int id, bx_bool enabled, char *co
         i= 5;
         sprintf (cols[0],"%04X:",seg);
     }
-    sprintf (cols[0] + i,"%016llX",addy);
+
+    sprintf (cols[0] + i,FMT_LLCAPX,addy);
 }
 
 // Displays all Breakpoints and Watchpoints
@@ -2010,7 +2045,7 @@ void ShowData()
         if (In64Mode == FALSE)
             sprintf(cols[0],"0x%08X",(Bit32u) (DumpStart + i));
         else
-            sprintf(cols[0],"0x%016llX",DumpStart + i);
+            sprintf(cols[0],"0x" FMT_LLCAPX,DumpStart + i);
 
         *tmphex = 0;
         *cols[17] = 0;
@@ -2265,7 +2300,6 @@ bx_bool InitDataDump(bx_bool isLinear, Bit64u newDS)
 {
     bx_bool retval = TRUE;
     bx_bool MsgOnErr = FALSE;
-    char *s = tmpcb;
     if (AtBreak == FALSE)
         return FALSE;
     if (((int) newDS & 0xf) != 0)       // legal addys must be on 16byte boundary
@@ -2277,12 +2311,7 @@ bx_bool InitDataDump(bx_bool isLinear, Bit64u newDS)
         if (AskText("4K Memory Dump","4K Memory Dump -- Enter Address (use 0x for hex):",tmpcb) == FALSE)
             return FALSE;
 
-        while (*s == ' ')       // allow user to enter whitespace
-            ++s;
-        if (*s == '0' && (s[1] =='X' || s[1] == 'x'))   // and either hex or decimal
-            sscanf (s+2, FMT_LL "X",&newDS);
-        else
-            sscanf (s, FMT_LL "d",&newDS);
+        newDS = cvt64(tmpcb,FALSE);     // input either hex or decimal
         newDS &= ~15;                   // force Mem Dump to be 16b aligned
         MsgOnErr = TRUE;
     }
@@ -2310,6 +2339,7 @@ bx_bool InitDataDump(bx_bool isLinear, Bit64u newDS)
         return retval;
     }
     SA_valid = FALSE;       // any previous MemDump click is now irrelevant
+    ResizeColmns = TRUE;    // autosize column 0 once
     DumpInitted = TRUE;     // OK to refresh the Dump window in the future (it has data)
     DumpStart = newDS;
     LinearDump = isLinear;  // finalize dump mode, since it worked
@@ -2422,7 +2452,6 @@ void ToggleStack()
     {
         HideTree();
         DViewMode = VIEW_STACK;     // currently displaying stack
-        StackSized = 0;     // flag to autosize the stack display columns
         PStackLA = 1;       // flag to force a full refresh
         FillStack();
     }
@@ -2521,19 +2550,13 @@ void doFind()
 void doStepN()
 {
     Bit32u i;
-    char *s = tmpcb;
-        // can't run sim until everything is ready
-    if (AtBreak == FALSE || debug_cmd_ready != FALSE || dbgOn == FALSE)
+    // can't run sim until everything is ready
+    if (AtBreak == FALSE || debug_cmd_ready != FALSE)
         return;
     sprintf (tmpcb,"%d",PrevStepNSize);
     if (AskText("Singlestep N times","Number of steps (use 0x for hex):",tmpcb) == FALSE)
         return;
-    while (*s == ' ')       // allow user to enter whitespace
-        ++s;
-    if (*s == '0' && (s[1] =='X' || s[1] == 'x'))   // and either hex or decimal
-        sscanf (s+2,"%x",&i);
-    else
-        sscanf (s,"%d",&i);
+    i = (Bit32u) cvt64(tmpcb,FALSE);        // input either hex or decimal
     if (i == 0)
         return;
     PrevStepNSize = i;
@@ -2548,7 +2571,6 @@ void doStepN()
 // User wants a custom disassembly
 void doDisAsm()
 {
-    char *s = tmpcb;
     int NumLines = DefaultAsmLines;
     Bit64u h;
     if (AtBreak == FALSE)
@@ -2557,12 +2579,7 @@ void doDisAsm()
     if (AskText("Disassemble",
         "Disassemble -- Enter Linear Start Address (use 0x for hex):",tmpcb) == FALSE)
         return;
-    while (*s == ' ')       // allow user to enter whitespace
-        ++s;
-    if (*s == '0' && (s[1] =='X' || s[1] == 'x'))   // and either hex or decimal
-        sscanf (s+2, FMT_LL "x",&h);
-    else
-        sscanf (s, FMT_LL "d",&h);
+    h = cvt64(tmpcb,FALSE);             // input either hex or decimal
     sprintf (tmpcb,"%d",NumLines);
     if (AskText("Disassemble","Number of lines: (Max. 2048)",tmpcb) == FALSE)
         return;
@@ -2695,14 +2712,8 @@ void ChangeReg()
         sprintf (tmpcb,"0x" FMT_LL "X", rV[i]);
     if (AskText("Change Register Value",d1,tmpcb))
     {
-        Bit64s val;
-        char *s = tmpcb;
-        while (*s == ' ')       // allow user to enter whitespace
-            ++s;
-        if (*s == '0' && (s[1] =='X' || s[1] == 'x'))   // and either hex or decimal
-            sscanf (s+2, FMT_LL "X",&val);
-        else
-            sscanf(tmpcb, FMT_LL "d",&val);
+        Bit64u val;
+        val = cvt64(tmpcb,TRUE);            // input either hex or decimal
 #if BX_SUPPORT_X86_64
         if (i >= EAX_Rnum && i <= EBP_Rnum)     // must use RAX-RBP when setting 32b registers
             i -= EAX_Rnum - RAX_Rnum;
@@ -2931,7 +2942,7 @@ int HotKey (int ww, int Alt, int Shift, int Control)
             else
             {
                 // can't continue until everything is ready
-                if (AtBreak != FALSE && debug_cmd_ready == FALSE && dbgOn != FALSE)
+                if (AtBreak != FALSE && debug_cmd_ready == FALSE)
                 {
                     // The VGAW *MUST* be refreshed periodically -- it's best to use the timer.
                     // Which means that the sim cannot be directly run from this msglp thread.
@@ -2992,7 +3003,7 @@ int HotKey (int ww, int Alt, int Shift, int Control)
 
         case VK_F8:
                 // can't continue until everything is ready
-            if (AtBreak != FALSE && debug_cmd_ready == FALSE && dbgOn != FALSE)
+            if (AtBreak != FALSE && debug_cmd_ready == FALSE)
             {
                 *debug_cmd = 'p';   // send a fake "proceed" command to the internal debugger
                 debug_cmd[1] = 0;
@@ -3003,7 +3014,7 @@ int HotKey (int ww, int Alt, int Shift, int Control)
             break;
 
         case VK_F11:
-            if (AtBreak != FALSE && debug_cmd_ready == FALSE && dbgOn != FALSE)
+            if (AtBreak != FALSE && debug_cmd_ready == FALSE)
             {
                 bx_dbg_stepN_command(1);        // singlestep
                 StatusChange = TRUE;
@@ -3042,7 +3053,7 @@ int HotKey (int ww, int Alt, int Shift, int Control)
 
         case VK_RETURN:
             // can't run a command until everything is ready
-            if (AtBreak != FALSE && debug_cmd_ready == FALSE && dbgOn != FALSE)
+            if (AtBreak != FALSE && debug_cmd_ready == FALSE)
             {
                 *tmpcb = 0;
                 GetInputEntry(tmpcb);
@@ -3087,7 +3098,7 @@ void ActivateMenuItem (int cmd)
     switch(cmd)
     {
         case CMD_CONT: // run/go/continue
-            if (AtBreak != FALSE && debug_cmd_ready == FALSE && dbgOn != FALSE)
+            if (AtBreak != FALSE && debug_cmd_ready == FALSE)
             {
                 // The VGAW *MUST* be refreshed periodically -- it's best to use the timer.
                 // Which means that the sim cannot be directly run from this msglp thread.
@@ -3100,7 +3111,7 @@ void ActivateMenuItem (int cmd)
             break;
 
         case CMD_STEP1: // step 1
-            if (AtBreak != FALSE && debug_cmd_ready == FALSE && dbgOn != FALSE)
+            if (AtBreak != FALSE && debug_cmd_ready == FALSE)
             {
                 bx_dbg_stepN_command(1);        // singlestep
                 StatusChange = TRUE;
@@ -3370,7 +3381,7 @@ void ActivateMenuItem (int cmd)
             break;
 
         case CMD_ABOUT:     // "About" box
-            DispMessage ("Bochs Enhanced Debugger, Version 1.1-b1\r\nCopyright (C) Chourdakis Michael.\r\nModified by Bruce Ewing",
+            DispMessage ("Bochs Enhanced Debugger, Version 1.2\r\nCopyright (C) Chourdakis Michael.\r\nModified by Bruce Ewing",
                 "About");
             break;
 
@@ -3381,19 +3392,10 @@ void ActivateMenuItem (int cmd)
     }
 }
 
-void RefreshDebugDialog()
-{
-}
-
-void InitDebugDialog(void* mainwnd)
+void InitDebugDialog()
 {
     DoAllInit();    // non-os-specific init stuff
     OSInit();
-}
-
-void dbgOnToggle(bx_bool on)
-{
-    dbgOn = TRUE;
 }
 
 #endif
