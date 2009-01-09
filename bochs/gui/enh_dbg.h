@@ -103,8 +103,6 @@ extern Bit64u BottomAsmLA;     // beginning and end addrs on ASM window
 extern Bit64u TopAsmLA;
 
 extern Bit32u PrevStepNSize;  // cpu_loop control variables
-//Bit32u RequestedLoops;      // number of cpu_loops the user is asking for
-//bx_bool DoBreak;            // stop a local subthreaded cpu_loop
 extern Bit64u PrevPtime;      // any number other than 0
 extern Bit64u NewPtime;       // used to test whether sim has "updated"
 extern unsigned TotCPUs;      // # of CPUs in a multi-CPU simulation

@@ -76,8 +76,6 @@ Bit64u BottomAsmLA;         // beginning and end addrs on ASM window
 Bit64u TopAsmLA;
 
 Bit32u PrevStepNSize = 50;  // cpu_loop control variables
-//Bit32u RequestedLoops;    // number of cpu_loops the user is asking for
-//bx_bool DoBreak;          // stop a local subthreaded cpu_loop
 Bit64u PrevPtime = 9;       // any number other than 0
 Bit64u NewPtime;            // used to test whether sim has "updated"
 unsigned TotCPUs;           // # of CPUs in a multi-CPU simulation
@@ -3029,7 +3027,6 @@ int HotKey (int ww, int Alt, int Shift, int Control)
         case 'C':           // ^c = break
             if (Control < 0)
             {
-//              DoBreak = TRUE;
                 SIM->debug_break();
             }
             break;
@@ -3126,7 +3123,6 @@ void ActivateMenuItem (int cmd)
         case CMD_BREAK: // break/stop the sim
             // SIM->debug_break() only "break"s the internal debugger
             SIM->debug_break();
-//                  DoBreak = TRUE;     // break any local thread-based cpu_loops
             break;
 
         case CMD_BRKPT: // set or delete breakpoint(s) at the selected address(es)

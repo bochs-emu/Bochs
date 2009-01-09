@@ -1504,7 +1504,6 @@ LRESULT CALLBACK B_WP(HWND hh,UINT mm,WPARAM ww,LPARAM ll)
             {
                 if (AtBreak == FALSE)
                 {
-//                  DoBreak = TRUE;
                     SIM->debug_break();     // On a menu click always break (with some exceptions)
                 }
             }
