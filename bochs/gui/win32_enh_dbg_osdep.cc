@@ -88,7 +88,11 @@ static int BtnLkup[6] = {
     CMD_CONT, CMD_STEP1, CMD_STEPN, CMD_RFRSH, CMD_BREAK
 };
 
-extern HWND hDebugDialog;
+static unsigned LstTop = 0;
+static int SizeList = 0;
+static Bit32s xClick = -1;         // halfway through a mouseclick flag + location
+static Bit32s yClick = 0;          // values are in Listview coordinates
+static Bit32u CurTimeStamp = 0;    // last mousedown time
 
 // Handles to Windows and global stuff
 HWND hY = NULL;     // complete parent window
@@ -1543,7 +1547,7 @@ LRESULT CALLBACK B_WP(HWND hh,UINT mm,WPARAM ww,LPARAM ll)
                         // brk list is sorted -- if the value goes too low, end the loop
                         // And I know for a fact that some complers are soooo stupid that they
                         // will repeat the following test twice, unless you force them not to.
-                        register bx_address i = BrkLAddr[j] - h;
+                        bx_address i = BrkLAddr[j] - h;
 //                      if (BrkLAddr[j] < h)
                         if (i < 0)
                             j = 0;      // force the loop to end if it goes too far

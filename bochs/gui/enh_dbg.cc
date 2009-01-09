@@ -54,7 +54,7 @@ bx_bool ShowButtons = TRUE;     // Display the top-row Step/Continue pushbuttons
 bx_bool SeeRegColors = TRUE;    // Display registers with background color "groups"
 bx_bool ignoreNxtT = TRUE;      // Do not show "Next at t=" output lines
 bx_bool ignSSDisasm = TRUE;     // Do not show extra disassembly line at each break
-int UprCase = 1;                // 1 = convert all Asm, Register names, Register values to uppercase
+int UprCase = 0;                // 1 = convert all Asm, Register names, Register values to uppercase
 int DumpInAsciiMode = 3;        // bit 1 = show ASCII in dumps, bit 2 = show hex, value=0 is illegal
 
 bx_bool isLittleEndian = TRUE;
@@ -68,7 +68,6 @@ int topmargin = 3;              // autoscroller tries to leave this many lines a
 // 0x312 would have MemDump on the left, Register in the middle, ASM on the right
 short DockOrder = 0x123;        // set the default List "docking" (Reg, ASM, Dump)
 
-// Note: all these BSS global variables are initialized to 0 automatically
 bx_bool SA_valid = FALSE;
 Bit64u SelectedDataAddress = 0;
 Bit64u CurrentAsmLA = 0;    // = EIP/RIP -- for highlighting in ASM window
@@ -89,19 +88,13 @@ int Sizing = 0;     // current "resizing/docking mode"
 int Resize_HiX;     // horizontal limits of the current resize operation (pixels)
 int Resize_LoX;
 unsigned ListWidthPix[3] = {5,7,8}; // set initial proportions of Reg, Asm, Dump windows
-unsigned LstTop = 0;
-int CurCenterList;
-int SizeList;               // pre-docking list #
+int CurCenterList = 0;
 bx_bool DumpHasFocus = FALSE;
-Bit32s xClick = -1;         // halfway through a mouseclick flag + location
-Bit32s yClick;              // values are in Listview coordinates
-Bit32u CurTimeStamp;        // last mousedown time
 // BarClix holds the x-axis position (in pixels or logical units) of the two resizing bars,
 // in parent coordinates (ie. any window that contains the lists)
 unsigned short BarClix[2];
 
 bx_bool AtBreak = FALSE;    // Status indicators
-bx_bool PrevAtBreak = FALSE;
 bx_bool CpuModeChange = TRUE;
 bx_bool StatusChange = TRUE;
 
@@ -113,22 +106,10 @@ Bit32u InPaging = 0;            // Storage for the top bit of CR0, unmodified
 bx_bool doOneTimeInit = TRUE;   // Internal flags
 bx_bool ResizeColmns;           // address/value column autosize flag
 bx_bool FWflag = FALSE;         // friendly warning has been shown to user once already
-int StackSized;                 // autosize flag for stack window
 
-char *PrevStack;                // buffer for testing changes in stack values
+static char *PrevStack;             // buffer for testing changes in stack values
 Bit64u PStackLA = 0;                // to calculate alignment between prev and current stack
 bx_bool StackEntChg[STACK_ENTRIES];     // flag for "change detected" on each stack line
-bx_bool StkInvOnce = FALSE;         // sometimes need to specially invalidate the stack window
-
-static const char * EflBName[16] = {
-    "cf", "pf", "af", "zf", "sf", "tf", "if", "df", "of", "nt", "rf", "vm", "ac", "vif", "vip", "id"
-};
-static const int EflBNameLen[16] = {
-    2,2,2,2,2,2,2,2,2,2,2,2,2,3,3,2
-};
-static const int EflBitVal[16] = {
-    1, 4, 0x10, 0x40, 0x80, 0x100, 0x200, 0x400, 0x800, 0x4000, 0x10000, 0x20000, 0x40000, 0x80000, 0x100000, 0x200000
-};
 
 // only pay special attention to registers up to EFER
 static char* RegLCName[EFER_Rnum + 1] = {
@@ -161,22 +142,22 @@ bx_bool doDumpRefresh;
 int DViewMode = VIEW_MEMDUMP;
 bx_bool LinearDump = TRUE;     // FALSE = memdump uses physical addressing
 
-char *tmpcb;                // 512b is allocated in bigbuf
-char *AsmData;              // 5K for binary disassembly data
-char *CurStack;             // Stack workspace (400b usually)
-char *AsciiHex;             // Unsigned char to printable hex xlat table
+char *tmpcb;                   // 512b is allocated in bigbuf
+char *AsmData;                 // 5K for binary disassembly data
+char *CurStack;                // Stack workspace (400b usually)
+char *AsciiHex;                // Unsigned char to printable hex xlat table
 
-char bigbuf[outbufSIZE];        // 40K preallocated storage for all char buffers (see DoAllInit)
+char bigbuf[outbufSIZE];       // 40K preallocated storage for all char buffers (see DoAllInit)
 char *DbgAppendPtr = bigbuf;
-char *OutWindow;                // buffer for the Output window
-int OutWinCnt = OutWinSIZE;     // available size of OutWindow buffer
-int PO_Tdelay = 0;              // delay before displaying partial output lines
+char *OutWindow;               // buffer for the Output window
+int OutWinCnt = OutWinSIZE;    // available size of OutWindow buffer
+int PO_Tdelay = 0;             // delay before displaying partial output lines
 
-int AsmLineCount = 1;           // # of disassembled asm lines loaded
+int AsmLineCount = 1;          // # of disassembled asm lines loaded
 int AsmPgSize = 0;
-int ListLineRatio;              // number of vertical pixels in a ListView Item
-int ListVerticalPix;            // number of vertical pixels in each List
-Bit64u AsmLA[MAX_ASM];          // linear address of each disassembled ASM line
+int ListLineRatio;             // number of vertical pixels in a ListView Item
+int ListVerticalPix;           // number of vertical pixels in each List
+Bit64u AsmLA[MAX_ASM];         // linear address of each disassembled ASM line
 
 // Command stuff
 int CommandHistoryIdx = 0;
@@ -229,7 +210,7 @@ unsigned short WWPSnapCount;
 unsigned short RWPSnapCount;
 bx_phy_address WWP_Snapshot[16];
 bx_phy_address RWP_Snapshot[16];
-char UCtable[256];
+static char UCtable[256];
 
 short nDock[36] = {     // lookup table for alternate DockOrders
     0x231, 0x312, 0x231, 0x213, 0x132, 0x132,
@@ -292,7 +273,6 @@ int DoMatch(const char *text, const char *p, bx_bool IsCaseSensitive)
                     else
                         continue;
                 }
-                //         if (toupper(text[pT]) != toupper(p[pP]))
                 if (UCtable[(int) text[pT]] != UCtable[(int) p[pP]])
                     return MATCH_FALSE;
                 continue;
@@ -423,6 +403,16 @@ void upr(char* d)
 // create EFLAGS display for Status line
 void ShowEflags(char *buf)
 {
+    static const char * EflBName[16] = {
+        "cf", "pf", "af", "zf", "sf", "tf", "if", "df", "of", "nt", "rf", "vm", "ac", "vif", "vip", "id"
+    };
+    static const int EflBNameLen[16] = {
+        2,2,2,2,2,2,2,2,2,2,2,2,2,3,3,2
+    };
+    static const int EflBitVal[16] = {
+        1, 4, 0x10, 0x40, 0x80, 0x100, 0x200, 0x400, 0x800, 0x4000, 0x10000, 0x20000, 0x40000, 0x80000, 0x100000, 0x200000
+    };
+
     Bit32u Efl = (Bit32u) rV[EFL_Rnum];
     int i = 16;
     char *cp = buf + 6;
@@ -441,6 +431,8 @@ void ShowEflags(char *buf)
 // change the display on the status line if anything has changed
 void UpdateStatus()
 {
+    static bx_bool PrevAtBreak = FALSE;
+
     if (StatusChange == FALSE) return;  // avoid sending unnecessary messages/invalidations
     StatusChange = FALSE;
 
@@ -1664,6 +1656,8 @@ void FillPAGE()
 // build the stack display
 void FillStack()
 {
+    // sometimes need to specially invalidate the stack window
+    static bx_bool StkInvOnce = FALSE;
     Bit64u StackLA, EndLA;
     unsigned int len, i, wordsize, overlap;
     int j;
