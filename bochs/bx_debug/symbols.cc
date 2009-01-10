@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: symbols.cc,v 1.12 2008-06-16 17:09:52 sshwarts Exp $
+// $Id: symbols.cc,v 1.13 2009-01-10 21:38:36 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -195,7 +195,9 @@ symbol_entry_t* context_t::get_symbol_entry(Bit32u ip)
     return 0;
   }
 
-  return *(--iter);
+  --iter;
+  if(iter == syms->end()) return 0;
+  return *iter;
 }
 
 symbol_entry_t* context_t::get_symbol_entry(const char *Symbol) const
