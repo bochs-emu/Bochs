@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.188 2009-01-08 18:07:44 sshwarts Exp $
+// $Id: init.cc,v 1.189 2009-01-10 10:07:57 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -670,7 +670,8 @@ void BX_CPU_C::after_restore_state(void)
 {
   if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_IA32_V8086) CPL = 3;
 
-  SetCR0(cr0.val32);
+  if (!SetCR0(cr0.val32))
+    BX_PANIC(("Incorrect CR0 state !"));
   SetCR3(cr3);
   TLB_flush();
   assert_checks();

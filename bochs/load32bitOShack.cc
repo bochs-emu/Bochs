@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: load32bitOShack.cc,v 1.30 2008-05-01 20:08:36 sshwarts Exp $
+// $Id: load32bitOShack.cc,v 1.31 2009-01-10 10:07:56 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -213,7 +213,10 @@ void bx_load_linux_hack(void)
   // BX_CPU(0)->cr0.pe = 1;
   // BX_CPU(0)->cr0.val32 |= 0x01;
 
-  BX_CPU(0)->SetCR0(BX_CPU(0)->cr0.val32 | 0x01);
+  if (! BX_CPU(0)->SetCR0(BX_CPU(0)->cr0.val32 | 0x01)) {
+    BX_INFO(("bx_load_linux_hack: can't enable protected mode in CR0"));
+    BX_EXIT(1);
+  }
 
   // load esi with real_mode
   BX_CPU(0)->gen_reg[BX_32BIT_REG_ESI].dword.erx = 0x90000;

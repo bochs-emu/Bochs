@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: smm.cc,v 1.49 2008-12-06 18:52:02 sshwarts Exp $
+// $Id: smm.cc,v 1.50 2009-01-10 10:07:57 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2006 Stanislav Shwartsman
@@ -388,7 +388,10 @@ bx_bool BX_CPU_C::smram_restore_state(const Bit32u *saved_state)
   // hack CR0 to be able to back to long mode correctly
   BX_CPU_THIS_PTR cr0.set_PE(0); // real mode (bit 0)
   BX_CPU_THIS_PTR cr0.set_PG(0); // paging disabled (bit 31)
-  SetCR0(temp_cr0);
+  if (! SetCR0(temp_cr0)) {
+    BX_PANIC(("SMM restore: failed to restore CR0 !"));
+    return 0;
+  }
   setEFlags(temp_eflags);
 
   bx_phy_address temp_cr3 = SMRAM_FIELD(saved_state, SMRAM_OFFSET_CR3);
@@ -662,7 +665,10 @@ bx_bool BX_CPU_C::smram_restore_state(const Bit32u *saved_state)
     return 0;
   }
 
-  SetCR0(temp_cr0);
+  if (!SetCR0(temp_cr0)) {
+    BX_PANIC(("SMM restore: failed to restore CR0 !"));
+    return 0;
+  }
   SetCR3(temp_cr3);
   setEFlags(temp_eflags);
 

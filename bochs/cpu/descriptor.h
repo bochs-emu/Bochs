@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: descriptor.h,v 1.25 2008-09-08 20:47:33 sshwarts Exp $
+// $Id: descriptor.h,v 1.26 2009-01-10 10:07:57 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007 Stanislav Shwartsman
@@ -55,6 +55,7 @@ typedef struct { /* bx_selector_t */
 typedef struct
 {
 
+// do not go above 4 bits !
 #define SegValidCache  (0x01)
 #define SegAccessROK   (0x02)
 #define SegAccessWOK   (0x04)

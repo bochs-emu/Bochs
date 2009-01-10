@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.548 2009-01-08 18:07:43 sshwarts Exp $
+// $Id: cpu.h,v 1.549 2009-01-10 10:07:57 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2420,6 +2420,9 @@ public: // for now...
 
   BX_SMF void POPCNT_GwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void POPCNT_GdEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+#if BX_SUPPORT_X86_64
+  BX_SMF void POPCNT_GqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+#endif
 
 #if BX_SUPPORT_X86_64
   // 64 bit extensions
@@ -2717,7 +2720,6 @@ public: // for now...
   BX_SMF void MOVQ_PqEq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void MOVQ_VdqEq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void MOVNTI_MqGq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void POPCNT_GqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 #endif  // #if BX_SUPPORT_X86_64
 
   BX_SMF void INVLPG(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -3085,7 +3087,7 @@ public: // for now...
   BX_SMF void smram_save_state(Bit32u *smm_saved_state);
   BX_SMF bx_bool smram_restore_state(const Bit32u *smm_saved_state);
   BX_SMF int  int_number(unsigned s);
-  BX_SMF void SetCR0(Bit32u val_32) BX_CPP_AttrRegparmN(1);
+  BX_SMF bx_bool SetCR0(Bit32u val_32) BX_CPP_AttrRegparmN(1);
   BX_SMF void SetCR3(bx_address value) BX_CPP_AttrRegparmN(1);
 #if BX_CPU_LEVEL >= 4
   BX_SMF bx_bool SetCR4(bx_address val) BX_CPP_AttrRegparmN(1);

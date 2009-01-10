@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.268 2009-01-10 09:36:44 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.269 2009-01-10 10:07:57 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -554,7 +554,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CdRd(bxInstruction_c *i)
 
   switch (i->nnn()) {
     case 0: // CR0 (MSW)
-      SetCR0(val_32);
+      if (! SetCR0(val_32))
+        exception(BX_GP_EXCEPTION, 0, 0);
       break;
     case 2: /* CR2 */
       BX_DEBUG(("MOV_CdRd:CR2 = %08x", val_32));
@@ -655,7 +656,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CqRq(bxInstruction_c *i)
 
   switch (i->nnn()) {
     case 0: // CR0 (MSW)
-      SetCR0((Bit32u) val_64);
+      if (! SetCR0((Bit32u) val_64))
+        exception(BX_GP_EXCEPTION, 0, 0);
       break;
     case 2: /* CR2 */
       BX_DEBUG(("MOV_CqRq: write to CR2 of %08x:%08x", GET32H(val_64), GET32L(val_64)));
@@ -783,7 +785,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LMSW_Ew(bxInstruction_c *i)
 
   msw &= 0xf; // LMSW only affects last 4 flags
   Bit32u cr0 = (BX_CPU_THIS_PTR cr0.get32() & 0xfffffff0) | msw;
-  SetCR0(cr0);
+  if (! SetCR0(cr0))
+    exception(BX_GP_EXCEPTION, 0, 0);
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::SMSW_EwR(bxInstruction_c *i)
@@ -1159,7 +1162,7 @@ void BX_CPU_C::handleAlignmentCheck(void)
 }
 #endif
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::SetCR0(Bit32u val_32)
+bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::SetCR0(Bit32u val_32)
 {
   bx_bool pe = val_32 & 0x01;
   bx_bool nw = (val_32 >> 29) & 0x01;
@@ -1168,12 +1171,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SetCR0(Bit32u val_32)
 
   if (pg && !pe) {
     BX_ERROR(("SetCR0: GP(0) when attempt to set CR0.PG with CR0.PE cleared !"));
-    exception(BX_GP_EXCEPTION, 0, 0);
+    return 0;
   }
 
   if (nw && !cd) {
     BX_ERROR(("SetCR0: GP(0) when attempt to set CR0.NW with CR0.CD cleared !"));
-    exception(BX_GP_EXCEPTION, 0, 0);
+    return 0;
   }
 
   if (pe && BX_CPU_THIS_PTR get_VM()) BX_PANIC(("EFLAGS.VM=1, enter_PM"));
@@ -1189,15 +1192,15 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SetCR0(Bit32u val_32)
     if (BX_CPU_THIS_PTR efer.get_LME()) {
       if (!BX_CPU_THIS_PTR cr4.get_PAE()) {
         BX_ERROR(("SetCR0: attempt to enter x86-64 long mode without enabling CR4.PAE !"));
-        exception(BX_GP_EXCEPTION, 0, 0);
+        return 0;
       }
       if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.l) {
         BX_ERROR(("SetCR0: attempt to enter x86-64 long mode with CS.L !"));
-        exception(BX_GP_EXCEPTION, 0, 0);
+        return 0;
       }
       if (BX_CPU_THIS_PTR tr.cache.type <= 3) {
         BX_ERROR(("SetCR0: attempt to enter x86-64 long mode with TSS286 in TR !"));
-        exception(BX_GP_EXCEPTION, 0, 0);
+        return 0;
       }
       BX_CPU_THIS_PTR efer.set_LMA(1);
     }
@@ -1205,7 +1208,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SetCR0(Bit32u val_32)
   else if (prev_pg==1 && ! pg) {
     if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
       BX_ERROR(("SetCR0: attempt to leave 64 bit mode directly to legacy mode !"));
-      exception(BX_GP_EXCEPTION, 0, 0);
+      return 0;
     }
     if (BX_CPU_THIS_PTR efer.get_LMA()) {
       if (BX_CPU_THIS_PTR gen_reg[BX_64BIT_REG_RIP].dword.hrx != 0) {
@@ -1239,6 +1242,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SetCR0(Bit32u val_32)
   // Give the paging unit a chance to look for changes in bits
   // it cares about, like {PG,PE}, so it can flush cache entries etc.
   pagingCR0Changed(oldCR0, val_32);
+
+  return 1;
 }
 
 #if BX_CPU_LEVEL >= 4
