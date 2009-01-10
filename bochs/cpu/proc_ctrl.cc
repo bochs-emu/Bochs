@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.267 2008-12-13 18:40:39 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.268 2009-01-10 09:36:44 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1114,6 +1114,12 @@ void BX_CPU_C::handleCpuModeChange(void)
     }
     else {
       BX_CPU_THIS_PTR cpu_mode = BX_MODE_IA32_REAL;
+
+      // CS segment in real mode always allows full access
+      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.p        = 1;
+      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.segment  = 1;  /* data/code segment */
+      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.type = BX_DATA_READ_WRITE_ACCESSED;
+
       BX_ASSERT(CPL == 0);
     }
   }
