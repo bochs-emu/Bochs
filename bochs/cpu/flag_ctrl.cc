@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: flag_ctrl.cc,v 1.40 2008-07-13 14:01:09 sshwarts Exp $
+// $Id: flag_ctrl.cc,v 1.41 2009-01-10 10:37:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -86,7 +86,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CLI(bxInstruction_c *i)
   {
     if (IOPL != 3) {
 #if BX_SUPPORT_VME
-      if (CR4_VME_ENABLED) {
+      if (BX_CR4_VME_ENABLED) {
         BX_CPU_THIS_PTR clear_VIF();
         return;
       }
@@ -129,7 +129,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::STI(bxInstruction_c *i)
   {
     if (IOPL != 3) {
 #if BX_SUPPORT_VME
-      if (CR4_VME_ENABLED && BX_CPU_THIS_PTR get_VIP() == 0)
+      if (BX_CR4_VME_ENABLED && BX_CPU_THIS_PTR get_VIP() == 0)
       {
         BX_CPU_THIS_PTR assert_VIF();
         return;
@@ -167,12 +167,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUSHF_Fw(bxInstruction_c *i)
   Bit16u flags = (Bit16u) read_eflags();
 
   if (v8086_mode()) {
-    if ((BX_CPU_THIS_PTR get_IOPL() < 3) && (CR4_VME_ENABLED == 0)) {
+    if ((BX_CPU_THIS_PTR get_IOPL() < 3) && (BX_CR4_VME_ENABLED == 0)) {
       BX_DEBUG(("PUSHFW: #GP(0) in v8086 (no VME) mode"));
       exception(BX_GP_EXCEPTION, 0, 0);
     }
 #if BX_SUPPORT_VME
-    if (CR4_VME_ENABLED && BX_CPU_THIS_PTR get_IOPL() < 3) {
+    if (BX_CR4_VME_ENABLED && BX_CPU_THIS_PTR get_IOPL() < 3) {
       flags |= EFlagsIOPLMask;
       if (BX_CPU_THIS_PTR get_VIF())
         flags |=  EFlagsIFMask;
@@ -203,7 +203,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::POPF_Fw(bxInstruction_c *i)
       changeMask |= EFlagsIFMask;
   }
   else if (v8086_mode()) {
-    if ((BX_CPU_THIS_PTR get_IOPL() < 3) && (CR4_VME_ENABLED == 0)) {
+    if ((BX_CPU_THIS_PTR get_IOPL() < 3) && (BX_CR4_VME_ENABLED == 0)) {
       BX_DEBUG(("POPFW: #GP(0) in v8086 (no VME) mode"));
       exception(BX_GP_EXCEPTION, 0, 0);
     }
@@ -212,7 +212,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::POPF_Fw(bxInstruction_c *i)
 
     flags16 = pop_16();
 #if BX_SUPPORT_VME
-    if (CR4_VME_ENABLED && BX_CPU_THIS_PTR get_IOPL() < 3) {
+    if (BX_CR4_VME_ENABLED && BX_CPU_THIS_PTR get_IOPL() < 3) {
       if (((flags16 & EFlagsIFMask) && BX_CPU_THIS_PTR get_VIP()) ||
            (flags16 & EFlagsTFMask))
       {

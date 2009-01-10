@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vm8086.cc,v 1.49 2008-09-08 15:45:57 sshwarts Exp $
+// $Id: vm8086.cc,v 1.50 2009-01-10 10:37:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -100,7 +100,7 @@ void BX_CPU_C::stack_return_to_v86(Bit32u new_eip, Bit32u raw_cs_selector, Bit32
 
 void BX_CPU_C::iret16_stack_return_from_v86(bxInstruction_c *i)
 {
-  if ((BX_CPU_THIS_PTR get_IOPL() < 3) && (CR4_VME_ENABLED == 0)) {
+  if ((BX_CPU_THIS_PTR get_IOPL() < 3) && (BX_CR4_VME_ENABLED == 0)) {
     // trap to virtual 8086 monitor
     BX_DEBUG(("IRET in vm86 with IOPL != 3, VME = 0"));
     exception(BX_GP_EXCEPTION, 0, 0);
@@ -113,7 +113,7 @@ void BX_CPU_C::iret16_stack_return_from_v86(bxInstruction_c *i)
   flags16 = pop_16();
 
 #if BX_SUPPORT_VME
-  if (CR4_VME_ENABLED && BX_CPU_THIS_PTR get_IOPL() < 3)
+  if (BX_CR4_VME_ENABLED && BX_CPU_THIS_PTR get_IOPL() < 3)
   {
     if (((flags16 & EFlagsIFMask) && BX_CPU_THIS_PTR get_VIP()) ||
          (flags16 & EFlagsTFMask))

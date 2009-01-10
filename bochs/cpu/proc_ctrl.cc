@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.269 2009-01-10 10:07:57 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.270 2009-01-10 10:37:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1247,9 +1247,8 @@ bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::SetCR0(Bit32u val_32)
 }
 
 #if BX_CPU_LEVEL >= 4
-bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::SetCR4(bx_address val)
+bx_address get_cr4_allow_mask(void)
 {
-  Bit32u oldCR4 = BX_CPU_THIS_PTR cr4.get32();
   bx_address allowMask = 0;
 
   // CR4 bits definitions:
@@ -1311,6 +1310,14 @@ bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::SetCR4(bx_address val)
   allowMask |= (1<<18);  /* OSXSAVE */
 #endif
 
+  return allowMask;
+}
+
+bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::SetCR4(bx_address val)
+{
+  Bit32u oldCR4 = BX_CPU_THIS_PTR cr4.get32();
+  bx_address allowMask = get_cr4_allow_mask();
+
 #if BX_SUPPORT_X86_64
   // need to GP(0) if LMA=1 and PAE=1->0
   if (BX_CPU_THIS_PTR efer.get_LMA()) {
@@ -1336,7 +1343,7 @@ bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::SetCR4(bx_address val)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDPMC(bxInstruction_c *i)
 {
 /* We need to be Pentium with MMX or later */
-#if ((BX_CPU_LEVEL >= 6) || (BX_SUPPORT_MMX && BX_CPU_LEVEL == 5))
+#if (BX_CPU_LEVEL >= 6) || (BX_SUPPORT_MMX && BX_CPU_LEVEL == 5)
   bx_bool pce = BX_CPU_THIS_PTR cr4.get_PCE();
 
   if ((pce==1) || (CPL==0) || real_mode())
