@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.224 2008-12-25 16:58:44 vruppert Exp $
+// $Id: rombios.c,v 1.225 2009-01-10 10:50:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -940,7 +940,7 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.224 $ $Date: 2008-12-25 16:58:44 $";
+static char bios_cvs_version_string[] = "$Revision: 1.225 $ $Date: 2009-01-10 10:50:07 $";
 
 #define BIOS_COPYRIGHT_STRING "(c) 2002 MandrakeSoft S.A. Written by Kevin Lawton & the Bochs team."
 
@@ -4562,28 +4562,16 @@ ASM_END
                         set_e820_range(ES, regs.u.r16.di,
                                        0x0000000L, 0x0009f000L, 0, 0, 1);
                         regs.u.r32.ebx = 1;
-                        regs.u.r32.eax = 0x534D4150;
-                        regs.u.r32.ecx = 0x14;
-                        CLEAR_CF();
-                        return;
                         break;
                     case 1:
                         set_e820_range(ES, regs.u.r16.di,
                                        0x0009f000L, 0x000a0000L, 0, 0, 2);
                         regs.u.r32.ebx = 2;
-                        regs.u.r32.eax = 0x534D4150;
-                        regs.u.r32.ecx = 0x14;
-                        CLEAR_CF();
-                        return;
                         break;
                     case 2:
                         set_e820_range(ES, regs.u.r16.di,
                                        0x000e8000L, 0x00100000L, 0, 0, 2);
                         regs.u.r32.ebx = 3;
-                        regs.u.r32.eax = 0x534D4150;
-                        regs.u.r32.ecx = 0x14;
-                        CLEAR_CF();
-                        return;
                         break;
                     case 3:
 #if BX_ROMBIOS32
@@ -4597,20 +4585,12 @@ ASM_END
                                        extended_memory_size, 1);
                         regs.u.r32.ebx = 5;
 #endif
-                        regs.u.r32.eax = 0x534D4150;
-                        regs.u.r32.ecx = 0x14;
-                        CLEAR_CF();
-                        return;
                         break;
                     case 4:
                         set_e820_range(ES, regs.u.r16.di,
                                        extended_memory_size - ACPI_DATA_SIZE,
                                        extended_memory_size ,0, 0, 3); // ACPI RAM
                         regs.u.r32.ebx = 5;
-                        regs.u.r32.eax = 0x534D4150;
-                        regs.u.r32.ecx = 0x14;
-                        CLEAR_CF();
-                        return;
                         break;
                     case 5:
                         /* 256KB BIOS area at the end of 4 GB */
@@ -4620,24 +4600,21 @@ ASM_END
                             regs.u.r32.ebx = 6;
                         else
                             regs.u.r32.ebx = 0;
-                        regs.u.r32.eax = 0x534D4150;
-                        regs.u.r32.ecx = 0x14;
-                        CLEAR_CF();
-                        return;
+                        break;
                     case 6:
                         /* Maping of memory above 4 GB */
                         set_e820_range(ES, regs.u.r16.di, 0x00000000L,
                         extra_lowbits_memory_size, 1, extra_highbits_memory_size
                                        + 1, 1);
                         regs.u.r32.ebx = 0;
-                        regs.u.r32.eax = 0x534D4150;
-                        regs.u.r32.ecx = 0x14;
-                        CLEAR_CF();
-                        return;
+                        break;
                     default:  /* AX=E820, DX=534D4150, BX unrecognized */
                         goto int15_unimplemented;
                         break;
                 }
+                regs.u.r32.eax = 0x534D4150;
+                regs.u.r32.ecx = 0x14;
+                CLEAR_CF();
             } else {
               // if DX != 0x534D4150)
               goto int15_unimplemented;
