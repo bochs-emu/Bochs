@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.h,v 1.77 2008-09-16 18:28:53 sshwarts Exp $
+// $Id: fetchdecode.h,v 1.78 2009-01-10 16:01:55 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005 Stanislav Shwartsman
@@ -3290,62 +3290,76 @@ static const BxOpcodeInfo_t BxOpcodeInfoG6[8] = {
 /* Group 7 */
 /* ******* */
 
-// ----------------------------------------------------
-//     MOD    REG  RM  | non 64 bit mode | 64 bit mode
-// ----------------------------------------------------
-//  MOD <> 11  7   --- |     INVLPG      |   INVLPG
-//  MOD == 11  7    0  |      #UD        |   SWAPGS
-//  MOD == 11  7    1  |     RDTSCP      |   RDTSCP
-//  MOD == 11  7   2-7 |      #UD        |    #UD
-
-static const BxOpcodeInfo_t opcodesGroupRmMONITOR[8] = {
-  /* 0 */ { 0, BX_IA_MONITOR },
-  /* 1 */ { BxTraceEnd, BX_IA_MWAIT },
-  /* 2 */ { 0, BX_IA_ERROR },
-  /* 3 */ { 0, BX_IA_ERROR },
-  /* 4 */ { 0, BX_IA_ERROR },
-  /* 5 */ { 0, BX_IA_ERROR },
-  /* 6 */ { 0, BX_IA_ERROR },
-  /* 7 */ { 0, BX_IA_ERROR }
-};
-
-static const BxOpcodeInfo_t opcodesGroupRmXGETSET[8] = {
-  /* 0 */ { 0, BX_IA_XGETBV  },
-  /* 1 */ { 0, BX_IA_XSETBV  },
-  /* 2 */ { 0, BX_IA_ERROR },
-  /* 3 */ { 0, BX_IA_ERROR },
-  /* 4 */ { 0, BX_IA_ERROR },
-  /* 5 */ { 0, BX_IA_ERROR },
-  /* 6 */ { 0, BX_IA_ERROR },
-  /* 7 */ { 0, BX_IA_ERROR }
-};
-
+static const BxOpcodeInfo_t BxOpcodeInfoG7R[64] = {
+  /* 0F 01 C0 */ { 0, BX_IA_ERROR },
+  /* 0F 01 C1 */ { 0, BX_IA_ERROR },
+  /* 0F 01 C2 */ { 0, BX_IA_ERROR },
+  /* 0F 01 C3 */ { 0, BX_IA_ERROR },
+  /* 0F 01 C4 */ { 0, BX_IA_ERROR },
+  /* 0F 01 C5 */ { 0, BX_IA_ERROR },
+  /* 0F 01 C6 */ { 0, BX_IA_ERROR },
+  /* 0F 01 C7 */ { 0, BX_IA_ERROR },
+  /* 0F 01 C8 */ { 0, BX_IA_MONITOR },
+  /* 0F 01 C9 */ { BxTraceEnd, BX_IA_MWAIT },
+  /* 0F 01 CA */ { 0, BX_IA_ERROR },
+  /* 0F 01 CB */ { 0, BX_IA_ERROR },
+  /* 0F 01 CC */ { 0, BX_IA_ERROR },
+  /* 0F 01 CD */ { 0, BX_IA_ERROR },
+  /* 0F 01 CE */ { 0, BX_IA_ERROR },
+  /* 0F 01 CF */ { 0, BX_IA_ERROR },
+  /* 0F 01 D0 */ { 0, BX_IA_XGETBV },
+  /* 0F 01 D1 */ { 0, BX_IA_XSETBV },
+  /* 0F 01 D2 */ { 0, BX_IA_ERROR },
+  /* 0F 01 D3 */ { 0, BX_IA_ERROR },
+  /* 0F 01 D4 */ { 0, BX_IA_ERROR },
+  /* 0F 01 D5 */ { 0, BX_IA_ERROR },
+  /* 0F 01 D6 */ { 0, BX_IA_ERROR },
+  /* 0F 01 D7 */ { 0, BX_IA_ERROR },
+  /* 0F 01 D8 */ { 0, BX_IA_ERROR },
+  /* 0F 01 D9 */ { 0, BX_IA_ERROR },
+  /* 0F 01 DA */ { 0, BX_IA_ERROR },
+  /* 0F 01 DB */ { 0, BX_IA_ERROR },
+  /* 0F 01 DC */ { 0, BX_IA_ERROR },
+  /* 0F 01 DD */ { 0, BX_IA_ERROR },
+  /* 0F 01 DE */ { 0, BX_IA_ERROR },
+  /* 0F 01 DF */ { 0, BX_IA_ERROR },
+  /* 0F 01 E0 */ { 0, BX_IA_SMSW_EwR },
+  /* 0F 01 E1 */ { 0, BX_IA_SMSW_EwR },
+  /* 0F 01 E2 */ { 0, BX_IA_SMSW_EwR },
+  /* 0F 01 E3 */ { 0, BX_IA_SMSW_EwR },
+  /* 0F 01 E4 */ { 0, BX_IA_SMSW_EwR },
+  /* 0F 01 E5 */ { 0, BX_IA_SMSW_EwR },
+  /* 0F 01 E6 */ { 0, BX_IA_SMSW_EwR },
+  /* 0F 01 E7 */ { 0, BX_IA_SMSW_EwR },
+  /* 0F 01 E8 */ { 0, BX_IA_ERROR },
+  /* 0F 01 E9 */ { 0, BX_IA_ERROR },
+  /* 0F 01 EA */ { 0, BX_IA_ERROR },
+  /* 0F 01 EB */ { 0, BX_IA_ERROR },
+  /* 0F 01 EC */ { 0, BX_IA_ERROR },
+  /* 0F 01 ED */ { 0, BX_IA_ERROR },
+  /* 0F 01 EE */ { 0, BX_IA_ERROR },
+  /* 0F 01 EF */ { 0, BX_IA_ERROR },
+  /* 0F 01 F0 */ { BxTraceEnd, BX_IA_LMSW_Ew },
+  /* 0F 01 F1 */ { BxTraceEnd, BX_IA_LMSW_Ew },
+  /* 0F 01 F2 */ { BxTraceEnd, BX_IA_LMSW_Ew },
+  /* 0F 01 F3 */ { BxTraceEnd, BX_IA_LMSW_Ew },
+  /* 0F 01 F4 */ { BxTraceEnd, BX_IA_LMSW_Ew },
+  /* 0F 01 F5 */ { BxTraceEnd, BX_IA_LMSW_Ew },
+  /* 0F 01 F6 */ { BxTraceEnd, BX_IA_LMSW_Ew },
+  /* 0F 01 F7 */ { BxTraceEnd, BX_IA_LMSW_Ew },
 #if BX_SUPPORT_X86_64
-static const BxOpcodeInfo_t opcodesGroupRmINVLPG[8] = {
-  /* 0 */ { 0, BX_IA_ERROR },
-  /* 1 */ { 0, BX_IA_RDTSCP },
-  /* 2 */ { 0, BX_IA_ERROR },
-  /* 3 */ { 0, BX_IA_ERROR },
-  /* 4 */ { 0, BX_IA_ERROR },
-  /* 5 */ { 0, BX_IA_ERROR },
-  /* 6 */ { 0, BX_IA_ERROR },
-  /* 7 */ { 0, BX_IA_ERROR }
-};
-#endif
-
-static const BxOpcodeInfo_t BxOpcodeInfoG7R[8] = {
-  /* 0 */ { 0, BX_IA_ERROR },
-  /* 1 */ { BxRMGroup, BX_IA_ERROR, opcodesGroupRmMONITOR },
-  /* 2 */ { BxRMGroup, BX_IA_ERROR, opcodesGroupRmXGETSET },
-  /* 3 */ { 0, BX_IA_ERROR },
-  /* 4 */ { 0, BX_IA_SMSW_EwR },
-  /* 5 */ { 0, BX_IA_ERROR },
-  /* 6 */ { BxTraceEnd, BX_IA_LMSW_Ew },
-#if BX_SUPPORT_X86_64
-  /* 7 */ { BxRMGroup, BX_IA_ERROR, opcodesGroupRmINVLPG }
+  /* 0F 01 F8 */ { 0, BX_IA_SWAPGS },
+  /* 0F 01 F9 */ { 0, BX_IA_RDTSCP },
 #else
-  /* 7 */ { 0, BX_IA_ERROR }
+  /* 0F 01 F8 */ { 0, BX_IA_ERROR },
+  /* 0F 01 F9 */ { 0, BX_IA_ERROR },
 #endif
+  /* 0F 01 FA */ { 0, BX_IA_ERROR },
+  /* 0F 01 FB */ { 0, BX_IA_ERROR },
+  /* 0F 01 FC */ { 0, BX_IA_ERROR },
+  /* 0F 01 FD */ { 0, BX_IA_ERROR },
+  /* 0F 01 FE */ { 0, BX_IA_ERROR },
+  /* 0F 01 FF */ { 0, BX_IA_ERROR }
 };
 
 static const BxOpcodeInfo_t BxOpcodeInfoG7M[8] = {
@@ -3361,28 +3375,6 @@ static const BxOpcodeInfo_t BxOpcodeInfoG7M[8] = {
 };
 
 #if BX_SUPPORT_X86_64
-static const BxOpcodeInfo_t opcodesGroup64RmINVLPG[8] = {
-  /* 0 */ { 0, BX_IA_SWAPGS },
-  /* 1 */ { 0, BX_IA_RDTSCP },
-  /* 2 */ { 0, BX_IA_ERROR },
-  /* 3 */ { 0, BX_IA_ERROR },
-  /* 4 */ { 0, BX_IA_ERROR },
-  /* 5 */ { 0, BX_IA_ERROR },
-  /* 6 */ { 0, BX_IA_ERROR },
-  /* 7 */ { 0, BX_IA_ERROR }
-};
-
-static const BxOpcodeInfo_t BxOpcodeInfo64G7R[8] = {
-  /* 0 */ { 0, BX_IA_ERROR },
-  /* 1 */ { BxRMGroup, BX_IA_ERROR, opcodesGroupRmMONITOR },
-  /* 2 */ { 0, BX_IA_ERROR },
-  /* 3 */ { 0, BX_IA_ERROR },
-  /* 4 */ { 0, BX_IA_SMSW_EwR },
-  /* 5 */ { 0, BX_IA_ERROR },
-  /* 6 */ { BxTraceEnd, BX_IA_LMSW_Ew },
-  /* 7 */ { BxRMGroup, BX_IA_ERROR, opcodesGroup64RmINVLPG }
-};
-
 static const BxOpcodeInfo_t BxOpcodeInfo64G7M[8] = {
   /* 0 */ { 0, BX_IA_SGDT64_Ms },
   /* 1 */ { 0, BX_IA_SIDT64_Ms },
@@ -3394,7 +3386,6 @@ static const BxOpcodeInfo_t BxOpcodeInfo64G7M[8] = {
   /* 7 */ { BxTraceEnd, BX_IA_INVLPG  }
 };
 #endif
-
 
 /* ******* */
 /* Group 8 */

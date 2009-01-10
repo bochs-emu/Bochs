@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.220 2008-09-16 19:20:02 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.221 2009-01-10 16:01:55 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -439,7 +439,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo64R[512*3] = {
   /* FF /wr */ { BxGroup5, BX_IA_ERROR, BxOpcodeInfo64G5wR },
 
   /* 0F 00 /wr */ { BxGroup6, BX_IA_ERROR, BxOpcodeInfoG6 },
-  /* 0F 01 /wr */ { BxGroup7, BX_IA_ERROR, BxOpcodeInfo64G7R },
+  /* 0F 01 /wr */ { BxFPEscape, BX_IA_ERROR, BxOpcodeInfoG7R },
   /* 0F 02 /wr */ { 0, BX_IA_LAR_GvEw },
   /* 0F 03 /wr */ { 0, BX_IA_LSL_GvEw },
   /* 0F 04 /wr */ { 0, BX_IA_ERROR },
@@ -966,7 +966,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo64R[512*3] = {
   /* FF /dr */ { BxGroup5, BX_IA_ERROR, BxOpcodeInfo64G5dR },
 
   /* 0F 00 /dr */ { BxGroup6, BX_IA_ERROR, BxOpcodeInfoG6 },
-  /* 0F 01 /dr */ { BxGroup7, BX_IA_ERROR, BxOpcodeInfo64G7R },
+  /* 0F 01 /dr */ { BxFPEscape, BX_IA_ERROR, BxOpcodeInfoG7R },
   /* 0F 02 /dr */ { 0, BX_IA_LAR_GvEw },
   /* 0F 03 /dr */ { 0, BX_IA_LSL_GvEw },
   /* 0F 04 /dr */ { 0, BX_IA_ERROR },
@@ -1493,7 +1493,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo64R[512*3] = {
   /* FF /qr */ { BxGroup5, BX_IA_ERROR, BxOpcodeInfo64G5qR },
 
   /* 0F 00 /qr */ { BxGroup6, BX_IA_ERROR, BxOpcodeInfoG6 },
-  /* 0F 01 /qr */ { BxGroup7, BX_IA_ERROR, BxOpcodeInfo64G7R },
+  /* 0F 01 /qr */ { BxFPEscape, BX_IA_ERROR, BxOpcodeInfoG7R },
   /* 0F 02 /qr */ { 0, BX_IA_LAR_GvEw },
   /* 0F 03 /qr */ { 0, BX_IA_LSL_GvEw },
   /* 0F 04 /qr */ { 0, BX_IA_ERROR },
