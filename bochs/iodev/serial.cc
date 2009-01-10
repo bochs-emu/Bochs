@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial.cc,v 1.86 2009-01-03 08:55:00 vruppert Exp $
+// $Id: serial.cc,v 1.87 2009-01-10 11:30:20 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -22,7 +22,7 @@
 //
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
-//  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+//  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 /////////////////////////////////////////////////////////////////////////
 
 // Peter Grehan (grehan@iprg.nokia.com) coded the original version of this
@@ -74,7 +74,6 @@ void libserial_LTX_plugin_fini(void)
 bx_serial_c::bx_serial_c(void)
 {
   put("SER");
-  settype(SERLOG);
   for (int i=0; i<BX_SERIAL_MAXDEV; i++) {
     s[i].io_mode = BX_SER_MODE_NULL;
     s[i].tty_id = -1;

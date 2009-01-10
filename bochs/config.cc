@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.148 2009-01-06 20:35:38 vruppert Exp $
+// $Id: config.cc,v 1.149 2009-01-10 11:30:20 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -22,7 +22,7 @@
 //
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
-//  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+//  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include "bochs.h"
 #include "iodev/iodev.h"

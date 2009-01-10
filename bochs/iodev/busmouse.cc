@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: busmouse.cc,v 1.10 2008-12-29 20:16:07 sshwarts Exp $
+// $Id: busmouse.cc,v 1.11 2009-01-10 11:30:20 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -22,7 +22,7 @@
 //
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
-//  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+//  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 
 // Initial code by Ben Lunt 'fys frontiernet net'
@@ -61,7 +61,6 @@ void libbusmouse_LTX_plugin_fini(void)
 bx_busm_c::bx_busm_c()
 {
   put("BUSM");
-  settype(BUSMLOG);
 }
 
 bx_busm_c::~bx_busm_c()
@@ -71,7 +70,7 @@ bx_busm_c::~bx_busm_c()
 
 void bx_busm_c::init(void)
 {
-  BX_DEBUG(("Init $Id: busmouse.cc,v 1.10 2008-12-29 20:16:07 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: busmouse.cc,v 1.11 2009-01-10 11:30:20 vruppert Exp $"));
 
   DEV_register_irq(BUS_MOUSE_IRQ, "Bus Mouse");
 

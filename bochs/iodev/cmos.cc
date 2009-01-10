@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cmos.cc,v 1.66 2008-12-29 20:16:07 sshwarts Exp $
+// $Id: cmos.cc,v 1.67 2009-01-10 11:30:20 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -22,7 +22,7 @@
 //
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
-//  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+//  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
@@ -123,7 +123,6 @@ void libcmos_LTX_plugin_fini(void)
 bx_cmos_c::bx_cmos_c(void)
 {
   put("CMOS");
-  settype(CMOSLOG);
 
   for (unsigned i=0; i<128; i++) s.reg[i] = 0;
 
@@ -146,7 +145,7 @@ bx_cmos_c::~bx_cmos_c(void)
 
 void bx_cmos_c::init(void)
 {
-  BX_DEBUG(("Init $Id: cmos.cc,v 1.66 2008-12-29 20:16:07 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: cmos.cc,v 1.67 2009-01-10 11:30:20 vruppert Exp $"));
   // CMOS RAM & RTC
 
   DEV_register_ioread_handler(this, read_handler, 0x0070, "CMOS RAM", 1);

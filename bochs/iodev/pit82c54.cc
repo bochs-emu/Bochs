@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pit82c54.cc,v 1.32 2008-02-15 22:05:43 sshwarts Exp $
+// $Id: pit82c54.cc,v 1.33 2009-01-10 11:30:20 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 
 /*
@@ -155,7 +155,6 @@ pit_82C54::decrement (counter_type &thisctr)
 void pit_82C54::init(void)
 {
   put("PIT81");
-  settype(PIT81LOG);
 
   for(int i=0;i<3;i++) {
     BX_DEBUG(("Setting read_state to LSB"));

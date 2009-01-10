@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: acpi.cc,v 1.18 2009-01-03 08:55:00 vruppert Exp $
+// $Id: acpi.cc,v 1.19 2009-01-10 11:30:20 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2006  Volker Ruppert
@@ -16,7 +16,7 @@
 //
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
-//  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+//  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 //
 // PIIX4 ACPI support
@@ -107,7 +107,6 @@ Bit64u muldiv64(Bit64u a, Bit32u b, Bit32u c)
 bx_acpi_ctrl_c::bx_acpi_ctrl_c()
 {
   put("ACPI");
-  settype(ACPILOG);
   s.timer_index = BX_NULL_TIMER_HANDLE;
 }
 

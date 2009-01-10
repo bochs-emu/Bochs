@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.cc,v 1.112 2008-12-01 19:06:14 sshwarts Exp $
+// $Id: apic.cc,v 1.113 2009-01-10 11:30:20 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (c) 2002 Zwane Mwaikambo, Stanislav Shwartsman
@@ -16,7 +16,7 @@
 //
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
-//  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+//  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 //
 /////////////////////////////////////////////////////////////////////////
 
@@ -169,7 +169,6 @@ void apic_bus_broadcast_smi(void)
 bx_generic_apic_c::bx_generic_apic_c(bx_phy_address base)
 {
   put("APIC?");
-  settype(APICLOG);
   id = APIC_UNKNOWN_ID;
   set_base(base);
 }
@@ -321,7 +320,6 @@ void bx_local_apic_c::set_id(Bit8u newid)
     char buffer[16];
     sprintf(buffer, "APIC%x", id);
     put(buffer);
-    settype(CPU0LOG + id);
     sprintf(buffer, "CPU%x", id);
     cpu->put(buffer);
   } else {

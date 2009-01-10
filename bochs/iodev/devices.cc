@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: devices.cc,v 1.129 2009-01-04 21:46:20 vruppert Exp $
+// $Id: devices.cc,v 1.130 2009-01-10 11:30:20 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -24,7 +24,7 @@
 //
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
-//  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+//  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 //
 /////////////////////////////////////////////////////////////////////////
 
@@ -51,7 +51,6 @@ bx_devices_c bx_devices;
 bx_devices_c::bx_devices_c()
 {
   put("DEV");
-  settype(DEVLOG);
 
   read_port_to_handler = NULL;
   write_port_to_handler = NULL;
@@ -113,7 +112,7 @@ void bx_devices_c::init(BX_MEM_C *newmem)
   unsigned i;
   const char def_name[] = "Default";
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.129 2009-01-04 21:46:20 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.130 2009-01-10 11:30:20 vruppert Exp $"));
   mem = newmem;
 
   /* set no-default handlers, will be overwritten by the real default handler */

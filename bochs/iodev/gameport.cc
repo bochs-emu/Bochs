@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gameport.cc,v 1.17 2008-12-29 20:16:08 sshwarts Exp $
+// $Id: gameport.cc,v 1.18 2009-01-10 11:30:20 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003  MandrakeSoft S.A.
@@ -22,7 +22,7 @@
 //
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
-//  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+//  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 //
 // Standard PC gameport
@@ -75,7 +75,6 @@ void libgameport_LTX_plugin_fini(void)
 bx_gameport_c::bx_gameport_c()
 {
   put("GAME");
-  settype(GAMELOG);
   joyfd = -1;
 }
 

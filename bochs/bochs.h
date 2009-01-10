@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.237 2009-01-02 11:51:03 vruppert Exp $
+// $Id: bochs.h,v 1.238 2009-01-10 11:30:20 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -22,7 +22,7 @@
 //
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
-//  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+//  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 //
 // bochs.h is the master header file for all C++ code.  It includes all
@@ -262,7 +262,6 @@ void print_tree(bx_param_c *node, int level = 0);
 typedef class BOCHSAPI logfunctions
 {
   char *prefix;
-  int type;
 // values of onoff: 0=ignore, 1=report, 2=ask, 3=fatal
 #define ACT_IGNORE 0
 #define ACT_REPORT 1
@@ -287,7 +286,6 @@ public:
   void fatal (const char *prefix, const char *fmt, va_list ap, int exit_status);
   void ask (int level, const char *prefix, const char *fmt, va_list ap);
   void put(const char *);
-  void settype(int);
   void setio(class iofunctions *);
   void setonoff(int loglev, int value) {
     assert (loglev >= 0 && loglev < N_LOGLEV);
@@ -310,17 +308,6 @@ public:
 } logfunc_t;
 
 #define BX_LOGPREFIX_SIZE 51
-
-enum {
-  IOLOG=0, FDLOG, GENLOG, CMOSLOG, CDLOG, DMALOG, ETHLOG, G2HLOG, HDLOG, KBDLOG,
-  NE2KLOG, PARLOG, PCILOG, PICLOG, PITLOG, SB16LOG, SERLOG, VGALOG,
-  DEVLOG, MEMLOG, DISLOG, GUILOG, IOAPICLOG, APICLOG, CPU0LOG, CPU1LOG,
-  CPU2LOG, CPU3LOG, CPU4LOG, CPU5LOG, CPU6LOG, CPU7LOG, CPU8LOG, CPU9LOG,
-  CPU10LOG, CPU11LOG, CPU12LOG, CPU13LOG, CPU14LOG, CPU15LOG, CTRLLOG,
-  UNMAPLOG, SERRLOG, BIOSLOG, PIT81LOG, PIT82LOG, IODEBUGLOG, PCI2ISALOG,
-  PLUGINLOG, EXTFPUIRQLOG , PCIVGALOG, PCIUSBLOG, VTIMERLOG, STIMERLOG,
-  PCIIDELOG, PCIDEVLOG, PCIPNICLOG, SPEAKERLOG, BUSMLOG, GAMELOG, ACPILOG
-};
 
 class BOCHSAPI iofunctions {
   int magic;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ne2k.cc,v 1.102 2009-01-03 08:55:00 vruppert Exp $
+// $Id: ne2k.cc,v 1.103 2009-01-10 11:30:20 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -22,7 +22,7 @@
 //
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
-//  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+//  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 /////////////////////////////////////////////////////////////////////////
 
 // Peter Grehan (grehan@iprg.nokia.com) coded the initial version of this
@@ -70,7 +70,6 @@ void libne2k_LTX_plugin_fini(void)
 bx_ne2k_c::bx_ne2k_c()
 {
   put("NE2K");
-  settype(NE2KLOG);
   s.tx_timer_index = BX_NULL_TIMER_HANDLE;
   ethdev = NULL;
 }
@@ -1417,7 +1416,7 @@ void bx_ne2k_c::init(void)
   Bit8u macaddr[6];
   bx_list_c *base;
 
-  BX_DEBUG(("Init $Id: ne2k.cc,v 1.102 2009-01-03 08:55:00 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: ne2k.cc,v 1.103 2009-01-10 11:30:20 vruppert Exp $"));
 
   // Read in values from config interface
   base = (bx_list_c*) SIM->get_param(BXPN_NE2K);

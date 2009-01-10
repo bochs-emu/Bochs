@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: parallel.cc,v 1.36 2008-12-29 20:16:08 sshwarts Exp $
+// $Id: parallel.cc,v 1.37 2009-01-10 11:30:20 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -22,7 +22,7 @@
 //
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
-//  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+//  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 //
 ////////////////////////////////////////////////////////
 // This code was just a few stubs until Volker.Ruppert@t-online.de
@@ -56,7 +56,6 @@ void libparallel_LTX_plugin_fini(void)
 bx_parallel_c::bx_parallel_c()
 {
   put("PAR");
-  settype(PARLOG);
   for (int i=0; i<BX_PARPORT_MAXDEV; i++) {
     s[i].output = NULL;
   }
@@ -78,7 +77,7 @@ void bx_parallel_c::init(void)
   char name[16], pname[20];
   bx_list_c *base;
 
-  BX_DEBUG(("Init $Id: parallel.cc,v 1.36 2008-12-29 20:16:08 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: parallel.cc,v 1.37 2009-01-10 11:30:20 vruppert Exp $"));
 
   for (unsigned i=0; i<BX_N_PARALLEL_PORTS; i++) {
     sprintf(pname, "ports.parallel.%d", i+1);

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pciusb.cc,v 1.69 2009-01-04 21:46:20 vruppert Exp $
+// $Id: pciusb.cc,v 1.70 2009-01-10 11:30:20 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -22,7 +22,7 @@
 //
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
-//  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+//  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 // Experimental PCI USB adapter
 // Benjamin D Lunt (fys at frontiernet net) coded most of this usb emulation.
@@ -127,7 +127,6 @@ void libpciusb_LTX_plugin_fini(void)
 bx_pciusb_c::bx_pciusb_c()
 {
   put("USB");
-  settype(PCIUSBLOG);
   for (int i=0; i<BX_USB_CONFDEV; i++) {
     memset((void*)&hub[i], 0, sizeof(bx_usb_t));
   }

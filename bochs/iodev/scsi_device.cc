@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: scsi_device.cc,v 1.7 2008-11-23 19:21:19 vruppert Exp $
+// $Id: scsi_device.cc,v 1.8 2009-01-10 11:30:20 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2007  Volker Ruppert
@@ -16,7 +16,7 @@
 //
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
-//  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+//  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 // SCSI emulation layer ported from the Qemu project
 
@@ -51,7 +51,6 @@ scsi_device_t::scsi_device_t(device_image_t *_hdimage, int _tcq,
   cluster_size = 1;
 
   put("SCSID");
-  settype(PCIUSBLOG);
 }
 
 scsi_device_t::scsi_device_t(LOWLEVEL_CDROM *_cdrom, int _tcq,
@@ -68,7 +67,6 @@ scsi_device_t::scsi_device_t(LOWLEVEL_CDROM *_cdrom, int _tcq,
   cluster_size = 4;
 
   put("SCSIC");
-  settype(PCIUSBLOG);
 }
 
 scsi_device_t::~scsi_device_t(void)

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cdrom.cc,v 1.92 2008-10-01 07:47:02 sshwarts Exp $
+// $Id: cdrom.cc,v 1.93 2009-01-10 11:30:20 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -22,7 +22,7 @@
 //
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
-//  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+//  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 /////////////////////////////////////////////////////////////////////////
 
 // These are the low-level CDROM functions which are called
@@ -504,7 +504,6 @@ int GetCDCapacity(unsigned int hid, unsigned int tid, unsigned int lun)
 cdrom_interface::cdrom_interface(char *dev)
 {
   put("CD");
-  settype(CDLOG);
   fd = -1; // File descriptor not yet allocated
 
   if (dev == NULL) {
@@ -523,7 +522,7 @@ cdrom_interface::cdrom_interface(char *dev)
 
 void
 cdrom_interface::init(void) {
-  BX_DEBUG(("Init $Id: cdrom.cc,v 1.92 2008-10-01 07:47:02 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: cdrom.cc,v 1.93 2009-01-10 11:30:20 vruppert Exp $"));
   BX_INFO(("file = '%s'",path));
 }
 

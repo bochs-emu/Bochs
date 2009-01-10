@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.cc,v 1.112 2008-12-29 20:16:07 sshwarts Exp $
+// $Id: floppy.cc,v 1.113 2009-01-10 11:30:20 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -22,7 +22,7 @@
 //
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
-//  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+//  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 //
 /////////////////////////////////////////////////////////////////////////
 
@@ -129,7 +129,6 @@ void libfloppy_LTX_plugin_fini(void)
 bx_floppy_ctrl_c::bx_floppy_ctrl_c()
 {
   put("FDD");
-  settype(FDLOG);
   s.floppy_timer_index = BX_NULL_TIMER_HANDLE;
 }
 
@@ -142,7 +141,7 @@ void bx_floppy_ctrl_c::init(void)
 {
   Bit8u i, cmos_value;
 
-  BX_DEBUG(("Init $Id: floppy.cc,v 1.112 2008-12-29 20:16:07 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: floppy.cc,v 1.113 2009-01-10 11:30:20 vruppert Exp $"));
   DEV_dma_register_8bit_channel(2, dma_read, dma_write, "Floppy Drive");
   DEV_register_irq(6, "Floppy Drive");
   for (unsigned addr=0x03F2; addr<=0x03F7; addr++) {

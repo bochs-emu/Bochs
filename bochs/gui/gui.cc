@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.cc,v 1.105 2008-05-04 09:29:45 vruppert Exp $
+// $Id: gui.cc,v 1.106 2009-01-10 11:30:20 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -22,7 +22,7 @@
 //
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
-//  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+//  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 
 #include <signal.h>
@@ -102,7 +102,6 @@ static user_key_t user_keys[N_USER_KEYS] =
 bx_gui_c::bx_gui_c(void)
 {
   put("GUI"); // Init in specific_init
-  settype(GUILOG);
   statusitem_count = 0;
   framebuffer = NULL;
 }

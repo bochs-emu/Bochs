@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: misc_mem.cc,v 1.120 2008-12-13 11:03:36 vruppert Exp $
+// $Id: misc_mem.cc,v 1.121 2009-01-10 11:30:20 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -24,7 +24,7 @@
 //
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
-//  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+//  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 //
 /////////////////////////////////////////////////////////////////////////
 
@@ -43,7 +43,6 @@ BX_MEM_C::BX_MEM_C()
   char mem[6];
   snprintf(mem, 6, "MEM0");
   put(mem);
-  settype(MEMLOG);
 
   vector = NULL;
   actual_vector = NULL;
@@ -76,7 +75,7 @@ void BX_MEM_C::init_memory(Bit32u memsize)
 {
   unsigned idx;
 
-  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.120 2008-12-13 11:03:36 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.121 2009-01-10 11:30:20 vruppert Exp $"));
 
   if (BX_MEM_THIS actual_vector != NULL) {
     BX_INFO (("freeing existing memory vector"));

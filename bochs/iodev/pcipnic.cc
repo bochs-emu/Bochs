@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pcipnic.cc,v 1.29 2008-12-30 15:33:38 vruppert Exp $
+// $Id: pcipnic.cc,v 1.30 2009-01-10 11:30:20 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003  Fen Systems Ltd.
@@ -17,7 +17,7 @@
 //
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
-//  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+//  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 /////////////////////////////////////////////////////////////////////////
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
@@ -53,7 +53,6 @@ void libpcipnic_LTX_plugin_fini(void)
 bx_pcipnic_c::bx_pcipnic_c()
 {
   put("PNIC");
-  settype(PCIPNICLOG);
 }
 
 bx_pcipnic_c::~bx_pcipnic_c()

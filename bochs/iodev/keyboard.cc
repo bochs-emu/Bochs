@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.cc,v 1.135 2008-09-18 17:18:36 sshwarts Exp $
+// $Id: keyboard.cc,v 1.136 2009-01-10 11:30:20 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -22,7 +22,7 @@
 //
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
-//  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+//  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 /////////////////////////////////////////////////////////////////////////
 
 // Now features proper implementation of keyboard opcodes 0xF4 to 0xF6
@@ -82,7 +82,6 @@ void libkeyboard_LTX_plugin_fini(void)
 bx_keyb_c::bx_keyb_c()
 {
   put("KBD");
-  settype(KBDLOG);
   pastebuf = NULL;
 }
 
@@ -126,7 +125,7 @@ void bx_keyb_c::resetinternals(bx_bool powerup)
 
 void bx_keyb_c::init(void)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.135 2008-09-18 17:18:36 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.136 2009-01-10 11:30:20 vruppert Exp $"));
   Bit32u   i;
 
   DEV_register_irq(1, "8042 Keyboard controller");

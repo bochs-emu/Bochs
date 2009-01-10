@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodebug.cc,v 1.28 2009-01-03 08:55:00 vruppert Exp $
+// $Id: iodebug.cc,v 1.29 2009-01-10 11:30:20 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2008  MandrakeSoft S.A.
@@ -22,7 +22,7 @@
 //
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
-//  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+//  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 /////////////////////////////////////////////////////////////////////////
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
@@ -66,7 +66,6 @@ struct bx_iodebug_s_type {
 bx_iodebug_c::bx_iodebug_c()
 {
   put("IODBG");
-  settype(IODEBUGLOG);
 }
 
 void bx_iodebug_c::init(void)

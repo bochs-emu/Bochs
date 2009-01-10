@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_hid.cc,v 1.7 2008-01-26 22:24:02 sshwarts Exp $
+// $Id: usb_hid.cc,v 1.8 2009-01-10 11:30:20 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2007  Volker Ruppert
@@ -16,7 +16,7 @@
 //
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
-//  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+//  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 // USB HID emulation support (mouse and tablet) ported from the Qemu project
 // USB keypad emulation based on code by Benjamin D Lunt (fys at frontiernet net)
@@ -367,7 +367,6 @@ usb_hid_device_t::usb_hid_device_t(usbdev_type type)
   memset((void*)&s, 0, sizeof(s));
 
   put("USBHI");
-  settype(PCIUSBLOG);
 }
 
 usb_hid_device_t::~usb_hid_device_t(void)

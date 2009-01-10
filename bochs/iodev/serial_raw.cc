@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial_raw.cc,v 1.22 2008-01-26 22:24:02 sshwarts Exp $
+// $Id: serial_raw.cc,v 1.23 2009-01-10 11:30:20 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -22,7 +22,7 @@
 //
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
-//  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+//  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 //
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
@@ -53,7 +53,6 @@ serial_raw::serial_raw(const char *devname)
 #endif
 
   put ("SERR");
-  settype (SERRLOG);
 #ifdef WIN32
   memset(&dcb, 0, sizeof(DCB));
   dcb.DCBlength = sizeof(DCB);

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: speaker.cc,v 1.11 2008-01-26 22:24:02 sshwarts Exp $
+// $Id: speaker.cc,v 1.12 2009-01-10 11:30:20 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright 2003 by David N. Welton <davidw@dedasys.com>.
@@ -16,7 +16,7 @@
 //
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
-//  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+//  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #define BX_PLUGGABLE
 
@@ -55,7 +55,6 @@ void libspeaker_LTX_plugin_fini(void)
 bx_speaker_c::bx_speaker_c()
 {
   put("SPEAKER");
-  settype(SPEAKERLOG);
 
   beep_frequency = 0.0; // Off
 

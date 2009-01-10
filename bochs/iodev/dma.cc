@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dma.cc,v 1.48 2008-12-29 20:16:07 sshwarts Exp $
+// $Id: dma.cc,v 1.49 2009-01-10 11:30:20 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -22,7 +22,7 @@
 //
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
-//  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+//  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 /////////////////////////////////////////////////////////////////////////
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
@@ -58,7 +58,6 @@ void libdma_LTX_plugin_fini(void)
 bx_dma_c::bx_dma_c()
 {
   put("DMA");
-  settype(DMALOG);
 }
 
 bx_dma_c::~bx_dma_c()
@@ -123,7 +122,7 @@ unsigned bx_dma_c::get_TC(void)
 void bx_dma_c::init(void)
 {
   unsigned c, i, j;
-  BX_DEBUG(("Init $Id: dma.cc,v 1.48 2008-12-29 20:16:07 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: dma.cc,v 1.49 2009-01-10 11:30:20 vruppert Exp $"));
 
   /* 8237 DMA controller */
 

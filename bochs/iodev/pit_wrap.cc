@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////
-// $Id: pit_wrap.cc,v 1.71 2008-12-29 20:16:08 sshwarts Exp $
+// $Id: pit_wrap.cc,v 1.72 2009-01-10 11:30:20 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -22,7 +22,7 @@
 //
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
-//  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+//  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 
 #include "iodev.h"
@@ -78,7 +78,6 @@ bx_pit_c bx_pit;
 bx_pit_c::bx_pit_c()
 {
   put("PIT");
-  settype(PITLOG);
   s.speaker_data_on=0;
 
   /* 8254 PIT (Programmable Interval Timer) */

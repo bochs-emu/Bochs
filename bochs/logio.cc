@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logio.cc,v 1.70 2008-10-01 09:44:40 sshwarts Exp $
+// $Id: logio.cc,v 1.71 2009-01-10 11:30:20 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -22,7 +22,7 @@
 //
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
-//  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+//  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 
 #include "bochs.h"
@@ -61,7 +61,6 @@ void iofunctions::init(void)
   init_log(stderr);
   log = new logfunc_t(this);
   log->put("IO");
-  log->settype(IOLOG);
   log->ldebug("Init(log file: '%s').",logfn);
 }
 
@@ -161,18 +160,18 @@ void iofunctions::set_log_prefix(const char* prefix)
   strcpy(logprefix, prefix);
 }
 
-//  iofunctions::out(class, level, prefix, fmt, ap)
+//  iofunctions::out(level, prefix, fmt, ap)
 //  DO NOT nest out() from ::info() and the like.
 //    fmt and ap retained for direct printinf from iofunctions only!
 
-void iofunctions::out(int f, int l, const char *prefix, const char *fmt, va_list ap)
+void iofunctions::out(int level, const char *prefix, const char *fmt, va_list ap)
 {
   char c=' ', *s;
   assert(magic==MAGIC_LOGNUM);
   assert(this != NULL);
   assert(logfd != NULL);
 
-  switch(l) {
+  switch (level) {
     case LOGLEV_INFO: c='i'; break;
     case LOGLEV_PANIC: c='p'; break;
     case LOGLEV_PASS: c='s'; break;
@@ -217,9 +216,9 @@ void iofunctions::out(int f, int l, const char *prefix, const char *fmt, va_list
 
   fprintf(logfd," ");
 
-  if(l==LOGLEV_PANIC)
+  if(level==LOGLEV_PANIC)
     fprintf(logfd, ">>PANIC<< ");
-  if(l==LOGLEV_PASS)
+  if(level==LOGLEV_PASS)
     fprintf(logfd, ">>PASS<< ");
 
   vfprintf(logfd, fmt, ap);
@@ -276,7 +275,6 @@ logfunctions::logfunctions(void)
 {
   prefix = NULL;
   put(" ");
-  settype(GENLOG);
   if (io == NULL && Allocio == 0) {
     Allocio = 1;
     io = new iofunc_t(stderr);
@@ -292,7 +290,6 @@ logfunctions::logfunctions(iofunc_t *iofunc)
 {
   prefix = NULL;
   put(" ");
-  settype(GENLOG);
   setio(iofunc);
   // BUG: unfortunately this can be called before the bochsrc is read,
   // which means that the bochsrc has no effect on the actions.
@@ -346,11 +343,6 @@ void logfunctions::put(const char *p)
   prefix=tmpbuf;
 }
 
-void logfunctions::settype(int t)
-{
-  type=t;
-}
-
 void logfunctions::info(const char *fmt, ...)
 {
   va_list ap;
@@ -361,7 +353,7 @@ void logfunctions::info(const char *fmt, ...)
   if(!onoff[LOGLEV_INFO]) return;
 
   va_start(ap, fmt);
-  this->logio->out(this->type,LOGLEV_INFO,this->prefix, fmt, ap);
+  this->logio->out(LOGLEV_INFO, this->prefix, fmt, ap);
   if (onoff[LOGLEV_INFO] == ACT_ASK)
     ask(LOGLEV_INFO, this->prefix, fmt, ap);
   if (onoff[LOGLEV_INFO] == ACT_FATAL)
@@ -379,7 +371,7 @@ void logfunctions::error(const char *fmt, ...)
   if(!onoff[LOGLEV_ERROR]) return;
 
   va_start(ap, fmt);
-  this->logio->out(this->type,LOGLEV_ERROR,this->prefix, fmt, ap);
+  this->logio->out(LOGLEV_ERROR, this->prefix, fmt, ap);
   if (onoff[LOGLEV_ERROR] == ACT_ASK)
     ask(LOGLEV_ERROR, this->prefix, fmt, ap);
   if (onoff[LOGLEV_ERROR] == ACT_FATAL)
@@ -399,7 +391,7 @@ void logfunctions::panic(const char *fmt, ...)
   //if(!onoff[LOGLEV_PANIC]) return;
 
   va_start(ap, fmt);
-  this->logio->out(this->type,LOGLEV_PANIC,this->prefix, fmt, ap);
+  this->logio->out(LOGLEV_PANIC, this->prefix, fmt, ap);
 
   // This fixes a funny bug on linuxppc where va_list is no pointer but a struct
   va_end(ap);
@@ -424,7 +416,7 @@ void logfunctions::pass(const char *fmt, ...)
   //if(!onoff[LOGLEV_PASS]) return;
 
   va_start(ap, fmt);
-  this->logio->out(this->type,LOGLEV_PASS,this->prefix, fmt, ap);
+  this->logio->out(LOGLEV_PASS, this->prefix, fmt, ap);
 
   // This fixes a funny bug on linuxppc where va_list is no pointer but a struct
   va_end(ap);
@@ -447,7 +439,7 @@ void logfunctions::ldebug(const char *fmt, ...)
   if(!onoff[LOGLEV_DEBUG]) return;
 
   va_start(ap, fmt);
-  this->logio->out(this->type,LOGLEV_DEBUG,this->prefix, fmt, ap);
+  this->logio->out(LOGLEV_DEBUG, this->prefix, fmt, ap);
   if (onoff[LOGLEV_DEBUG] == ACT_ASK)
     ask(LOGLEV_DEBUG, this->prefix, fmt, ap);
   if (onoff[LOGLEV_DEBUG] == ACT_FATAL)
