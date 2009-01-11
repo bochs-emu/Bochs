@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: plugin.h,v 1.69 2009-01-11 08:48:47 vruppert Exp $
+// $Id: plugin.h,v 1.70 2009-01-11 18:46:01 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  The Bochs Project
@@ -51,6 +51,7 @@ extern "C" {
 #define BX_PLUGIN_HARDDRV   "harddrv"
 #define BX_PLUGIN_DMA       "dma"
 #define BX_PLUGIN_PIC       "pic"
+#define BX_PLUGIN_PIT       "pit"
 #define BX_PLUGIN_PCI       "pci"
 #define BX_PLUGIN_PCI2ISA   "pci2isa"
 #define BX_PLUGIN_PCI_IDE   "pci_ide"
@@ -379,6 +380,7 @@ DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(biosdev)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(cmos)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(dma)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(pic)
+DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(pit)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(vga)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(floppy)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(parallel)

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.102 2009-01-04 21:46:20 vruppert Exp $
+// $Id: iodev.h,v 1.103 2009-01-11 18:46:01 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -24,7 +24,7 @@
 //
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
-//  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+//  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 //
 /////////////////////////////////////////////////////////////////////////
 
@@ -47,7 +47,6 @@
 #define BX_MAX_IRQS 16
 #define BX_NO_IRQ  -1
 
-class bx_pit_c;
 #if BX_SUPPORT_APIC
 class bx_ioapic_c;
 #endif
@@ -435,7 +434,7 @@ public:
 #if BX_SUPPORT_ACPI
   bx_acpi_ctrl_stub_c *pluginACPIController;
 #endif
-  bx_pit_c          *pit;
+  bx_devmodel_c     *pluginPitDevice;
   bx_keyb_stub_c    *pluginKeyboard;
   bx_dma_stub_c     *pluginDmaDevice;
   bx_floppy_stub_c  *pluginFloppyDevice;

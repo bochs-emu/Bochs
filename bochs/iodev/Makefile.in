@@ -18,7 +18,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public
 # License along with this library; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 # Makefile for the iodev component of bochs
 
@@ -69,7 +69,6 @@ PCIDEV_CXXFLAGS = -I$(srcdir)/../host/linux/pcidev
 
 OBJS_THAT_CANNOT_BE_PLUGINS = \
   devices.o \
-  pit82c54.o pit_wrap.o \
   virt_timer.o \
   slowdown_timer.o \
   $(MCH_OBJS) \
@@ -77,6 +76,7 @@ OBJS_THAT_CANNOT_BE_PLUGINS = \
 
 OBJS_THAT_CAN_BE_PLUGINS = \
   pic.o \
+  pit_wrap.o \
   serial.o \
   parallel.o \
   floppy.o \
@@ -97,6 +97,7 @@ OBJS_THAT_CAN_BE_PLUGINS = \
   @IODEBUG_OBJS@
 
 OBJS_THAT_SUPPORT_OTHER_PLUGINS = \
+  pit82c54.o \
   scancodes.o \
   serial_raw.o \
   svga_cirrus.o \
@@ -146,7 +147,7 @@ libbx_harddrv.la: harddrv.lo hdimage.lo vmware3.lo vmware4.lo $(CDROM_OBJS:.o=.l
 libbx_keyboard.la: keyboard.lo scancodes.lo
 	$(LIBTOOL) --mode=link $(CXX) -module keyboard.lo scancodes.lo -o libbx_keyboard.la -rpath $(PLUGIN_PATH)
 
-libbx_pit.la: pit82c54.lo pit_wrap.lo
+libbx_pit_wrap.la: pit82c54.lo pit_wrap.lo
 	$(LIBTOOL) --mode=link $(CXX) -module pit82c54.lo pit_wrap.lo -o libbx_pit.la -rpath $(PLUGIN_PATH)
 
 libbx_sb16.la: sb16.lo $(SOUNDLOW_OBJS:.o=.lo)
@@ -178,7 +179,7 @@ bx_harddrv.dll: harddrv.o hdimage.o vmware3.o vmware4.o $(CDROM_OBJS)
 bx_keyboard.dll: keyboard.o scancodes.o
 	$(CXX) $(CXXFLAGS) -shared -o bx_keyboard.dll keyboard.o scancodes.o $(WIN32_DLL_IMPORT_LIBRARY)
 
-bx_pit.dll: pit82c54.o pit_wrap.o
+bx_pit_wrap.dll: pit82c54.o pit_wrap.o
 	$(CXX) $(CXXFLAGS) -shared -o bx_pit.dll pit82c54.o pit_wrap.o $(WIN32_DLL_IMPORT_LIBRARY)
 
 bx_sb16.dll: sb16.o $(SOUNDLOW_OBJS)

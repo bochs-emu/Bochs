@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pit_wrap.h,v 1.29 2008-11-09 22:04:14 vruppert Exp $
+// $Id: pit_wrap.h,v 1.30 2009-01-11 18:46:01 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -22,7 +22,7 @@
 //
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
-//  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+//  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #ifndef _BX_PIT_WRAP_H
 #define _BX_PIT_WRAP_H
@@ -32,25 +32,19 @@
 
 #if BX_USE_PIT_SMF
 #  define BX_PIT_SMF  static
-#  define BX_PIT_THIS bx_pit.
+#  define BX_PIT_THIS thePit->
 #else
 #  define BX_PIT_SMF
 #  define BX_PIT_THIS this->
 #endif
 
-class bx_pit_c : public logfunctions {
+class bx_pit_c : public bx_devmodel_c {
 public:
   bx_pit_c();
   virtual ~bx_pit_c() {}
-  BX_PIT_SMF int init(void);
-  BX_PIT_SMF void exit(void);
-  BX_PIT_SMF void reset(unsigned type);
-  BX_PIT_SMF bx_bool periodic(Bit32u usec_delta);
-  BX_PIT_SMF void register_state(void);
-
-  Bit16u get_timer(int Timer) {
-      return s.timer.get_inlatch(Timer);
-  }
+  virtual void init(void);
+  virtual void reset(unsigned type);
+  virtual void register_state(void);
 
 private:
   static Bit32u read_handler(void *this_ptr, Bit32u address, unsigned io_len);
@@ -73,16 +67,11 @@ private:
 
   static void timer_handler(void *this_ptr);
   BX_PIT_SMF void handle_timer();
-
-  BX_PIT_SMF void  write_count_reg(Bit8u value, unsigned timerid);
-  BX_PIT_SMF Bit8u read_counter(unsigned timerid);
-  BX_PIT_SMF void  latch(unsigned timerid);
-  BX_PIT_SMF void  set_GATE(unsigned pit_id, unsigned value);
-  BX_PIT_SMF void  start(unsigned timerid);
+  BX_PIT_SMF bx_bool periodic(Bit32u usec_delta);
 
   BX_PIT_SMF void  irq_handler(bx_bool value);
-};
 
-extern bx_pit_c bx_pit;
+  BX_PIT_SMF Bit16u get_timer(int Timer);
+};
 
 #endif  // #ifndef _BX_PIT_WRAP_H

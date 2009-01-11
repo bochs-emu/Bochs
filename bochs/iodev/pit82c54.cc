@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pit82c54.cc,v 1.33 2009-01-10 11:30:20 vruppert Exp $
+// $Id: pit82c54.cc,v 1.34 2009-01-11 18:46:01 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 
 /*
@@ -25,6 +25,11 @@
  * 6.)What happens when we trigger mode 1 in the middle of a 2-part
  *  write?
  */
+
+// Define BX_PLUGGABLE in files that can be compiled into plugins.  For
+// platforms that require a special tag on exported symbols, BX_PLUGGABLE
+// is used to know when we are exporting symbols and when we are importing.
+#define BX_PLUGGABLE
 
 #include "iodev.h"
 #include "pit82c54.h"

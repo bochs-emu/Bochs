@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////
-// $Id: pit_wrap.cc,v 1.72 2009-01-10 11:30:20 vruppert Exp $
+// $Id: pit_wrap.cc,v 1.73 2009-01-11 18:46:01 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -24,12 +24,33 @@
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
+// Define BX_PLUGGABLE in files that can be compiled into plugins.  For
+// platforms that require a special tag on exported symbols, BX_PLUGGABLE
+// is used to know when we are exporting symbols and when we are importing.
+#define BX_PLUGGABLE
 
 #include "iodev.h"
 #include "pit_wrap.h"
 #include "virt_timer.h"
-
 #include "speaker.h"
+
+
+#define LOG_THIS thePit->
+
+bx_pit_c *thePit = NULL;
+
+int libpit_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
+{
+  thePit = new bx_pit_c();
+  bx_devices.pluginPitDevice = thePit;
+  BX_REGISTER_DEVICE_DEVMODEL(plugin, type, thePit, BX_PLUGIN_PIT);
+  return(0); // Success
+}
+
+void libpit_LTX_plugin_fini(void)
+{
+  delete thePit;
+}
 
 //Important constant #defines:
 #define USEC_PER_SECOND (1000000)
@@ -43,17 +64,6 @@
 // This macro works around that.
 #define F2I(x)  ((Bit64u)(Bit64s) (x))
 #define I2F(x)  ((double)(Bit64s) (x))
-
-//DEBUG configuration:
-
-//Set up Logging.
-#define LOG_THIS bx_pit.
-
-//A single instance.
-bx_pit_c bx_pit;
-#if BX_USE_PIT_SMF
-#define this (&bx_pit)
-#endif
 
 
 //Generic MAX and MIN Functions
@@ -82,12 +92,12 @@ bx_pit_c::bx_pit_c()
 
   /* 8254 PIT (Programmable Interval Timer) */
 
-  BX_PIT_THIS s.timer_handle[1] = BX_NULL_TIMER_HANDLE;
-  BX_PIT_THIS s.timer_handle[2] = BX_NULL_TIMER_HANDLE;
-  BX_PIT_THIS s.timer_handle[0] = BX_NULL_TIMER_HANDLE;
+  s.timer_handle[1] = BX_NULL_TIMER_HANDLE;
+  s.timer_handle[2] = BX_NULL_TIMER_HANDLE;
+  s.timer_handle[0] = BX_NULL_TIMER_HANDLE;
 }
 
-int bx_pit_c::init(void)
+void bx_pit_c::init(void)
 {
   DEV_register_irq(0, "8254 PIT");
   DEV_register_ioread_handler(this, read_handler, 0x0040, "8254 PIT", 1);
@@ -136,14 +146,6 @@ int bx_pit_c::init(void)
   BX_DEBUG(("s.timer_id=%d",BX_PIT_THIS s.timer_handle[0]));
   BX_DEBUG(("s.timer.get_next_event_time=%d",BX_PIT_THIS s.timer.get_next_event_time()));
   BX_DEBUG(("s.last_next_event_time=%d",BX_PIT_THIS s.last_next_event_time));
-
-  return(1);
-}
-
-void bx_pit_c::exit(void)
-{
-  BX_PIT_THIS s.timer_handle[0] = BX_NULL_TIMER_HANDLE;
-  BX_PIT_THIS s.timer.init();
 }
 
 void bx_pit_c::reset(unsigned type)
@@ -308,9 +310,9 @@ void bx_pit_c::write(Bit32u address, Bit32u dvalue, unsigned io_len)
     case 0x61:
       BX_PIT_THIS s.speaker_data_on = (value >> 1) & 0x01;
       if (BX_PIT_THIS s.speaker_data_on) {
-	  DEV_speaker_beep_on((float)(1193180.0 / this->get_timer(2)));
+        DEV_speaker_beep_on((float)(1193180.0 / BX_PIT_THIS get_timer(2)));
       } else {
-	  DEV_speaker_beep_off();
+        DEV_speaker_beep_off();
       }
       /* ??? only on AT+ */
       BX_PIT_THIS s.timer.set_GATE(2, value & 0x01);
@@ -374,4 +376,8 @@ void bx_pit_c::irq_handler(bx_bool value)
   } else {
     DEV_pic_lower_irq(0);
   }
+}
+
+Bit16u bx_pit_c::get_timer(int Timer) {
+  return BX_PIT_THIS s.timer.get_inlatch(Timer);
 }
