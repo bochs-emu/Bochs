@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios32.c,v 1.43 2008-12-27 16:28:49 vruppert Exp $
+// $Id: rombios32.c,v 1.44 2009-01-11 19:52:36 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  32 bit Bochs BIOS init code
@@ -2009,7 +2009,7 @@ smbios_type_19_init(void *start, uint32_t memory_size_mb)
     p->header.handle = 0x1300;
 
     p->starting_address = 0;
-    p->ending_address = (memory_size_mb-1) * 1024;
+    p->ending_address = (memory_size_mb * 1024) - 1;
     p->memory_array_handle = 0x1000;
     p->partition_width = 1;
 
@@ -2030,7 +2030,7 @@ smbios_type_20_init(void *start, uint32_t memory_size_mb)
     p->header.handle = 0x1400;
 
     p->starting_address = 0;
-    p->ending_address = (memory_size_mb-1)*1024;
+    p->ending_address = (memory_size_mb * 1024) - 1;
     p->memory_device_handle = 0x1100;
     p->memory_array_mapped_address_handle = 0x1300;
     p->partition_row_position = 1;
