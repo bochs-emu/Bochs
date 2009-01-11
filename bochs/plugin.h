@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: plugin.h,v 1.68 2009-01-10 11:30:20 vruppert Exp $
+// $Id: plugin.h,v 1.69 2009-01-11 08:48:47 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  The Bochs Project
@@ -71,10 +71,6 @@ extern "C" {
 
 #if BX_PLUGINS
 
-#define DEV_init_devices() {bx_devices.init(BX_MEM(0)); }
-#define DEV_reset_devices(type) {bx_devices.reset(type); }
-#define DEV_register_state() {bx_devices.register_state(); }
-#define DEV_after_restore_state() {bx_devices.after_restore_state(); }
 #define PLUG_load_plugin(name,type) {bx_load_plugin(#name,type);}
 #define PLUG_load_user_plugin(name) {bx_load_plugin(name,PLUGTYPE_USER);}
 #define PLUG_unload_plugin(name) {bx_unload_plugin(#name,1);}
@@ -96,10 +92,6 @@ extern "C" {
 
 #else
 
-#define DEV_init_devices() {bx_devices.init(BX_MEM(0)); }
-#define DEV_reset_devices(type) {bx_devices.reset(type); }
-#define DEV_register_state() {bx_devices.register_state(); }
-#define DEV_after_restore_state() {bx_devices.after_restore_state(); }
 // When plugins are off, PLUG_load_plugin will call the plugin_init function
 // directly.
 #define PLUG_load_plugin(name,type) {lib##name##_LTX_plugin_init(NULL,type,0,NULL);}
@@ -119,10 +111,13 @@ extern "C" {
 
 #endif // #if BX_PLUGINS
 
-#define DEV_ioapic_present() (bx_devices.ioapic != NULL)
-
-// FIXME Do we really need pluginRegisterTimer ?
+///////// Common device macros
+#define DEV_init_devices() {bx_devices.init(BX_MEM(0)); }
+#define DEV_reset_devices(type) {bx_devices.reset(type); }
+#define DEV_register_state() {bx_devices.register_state(); }
+#define DEV_after_restore_state() {bx_devices.after_restore_state(); }
 #define DEV_register_timer(a,b,c,d,e,f) bx_pc_system.register_timer(a,b,c,d,e,f)
+#define DEV_ioapic_present() (bx_devices.ioapic != NULL)
 
 ///////// CMOS macros
 #define DEV_cmos_get_reg(a) (bx_devices.pluginCmosDevice->get_reg(a))
