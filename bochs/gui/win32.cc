@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32.cc,v 1.125 2009-01-09 17:16:03 sshwarts Exp $
+// $Id: win32.cc,v 1.126 2009-01-12 19:15:35 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -177,7 +177,7 @@ static unsigned stretch_factor=1;
 static BOOL BxTextMode = TRUE;
 static BOOL legacyF12 = FALSE;
 static BOOL fix_size = FALSE;
-#if BX_DEBUGGER
+#if BX_DEBUGGER && BX_DEBUGGER_GUI
 static BOOL gui_debug = FALSE;
 #endif
 static HWND hotKeyReceiver = NULL;
@@ -654,7 +654,7 @@ void bx_win32_gui_c::specific_init(int argc, char **argv, unsigned
       BX_INFO(("option %d: %s", i, argv[i]));
       if (!strcmp(argv[i], "legacyF12")) {
         legacyF12 = TRUE;
-#if BX_DEBUGGER
+#if BX_DEBUGGER && BX_DEBUGGER_GUI
       } else if (!strcmp(argv[i], "gui_debug")) {
         gui_debug = TRUE;
         SIM->set_debug_gui(1);
@@ -919,7 +919,7 @@ VOID CDECL UIThread(PVOID pvoid)
     if (MemoryBitmap && MemoryDC) {
       resize_main_window();
       ShowWindow(stInfo.mainWnd, SW_SHOW);
-#if BX_DEBUGGER
+#if BX_DEBUGGER && BX_DEBUGGER_GUI
       if (gui_debug) {
         InitDebugDialog();
       }

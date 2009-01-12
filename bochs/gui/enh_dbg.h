@@ -1,6 +1,8 @@
 #ifndef BX_ENH_DBG_DEF_H
 #define BX_ENH_DBG_DEF_H
 
+#if BX_DEBUGGER && BX_DEBUGGER_GUI
+
 void MoveLists();
 void SetStatusText(int column, char *buf); // should it be here ?
 void MakeListsGray();
@@ -37,6 +39,10 @@ int GetNextSelectedLI(int listnum, int StartPt);
 bx_bool OSInit();
 void SpecialInit();
 
+extern char *debug_cmd;
+extern bx_bool debug_cmd_ready;
+extern bx_bool vgaw_refresh;
+
 #define CHK_CMD_MODEB   CMD_MODEB
 #define CHK_CMD_ONECPU  CMD_ONECPU
 #define CHK_CMD_UCASE   CMD_UCASE
@@ -56,6 +62,33 @@ void SpecialInit();
 
 #ifndef TRUE
 #define TRUE                1
+#endif
+
+#ifndef WIN32
+
+// Need to define my version of the win32 "virtual keys"
+
+#define VK_PRIOR    65365
+#define VK_NEXT     65366
+#define VK_F2       65471
+#define VK_F3       65472
+#define VK_F4       65473
+#define VK_F5       65474
+#define VK_F6       65475
+#define VK_F7       65476
+#define VK_F8       65477
+#define VK_F9       65478
+#define VK_F11      65480
+#define VK_UP       65362
+#define VK_DOWN     65364
+#define VK_RETURN   65293
+#define VK_LEFT     65361
+#define VK_RIGHT    65363
+#define VK_END      65367
+#define VK_HOME     65360
+#define VK_DELETE   65535
+#define VK_ESCAPE   65307
+
 #endif
 
 // User Customizable initial settings:
@@ -300,3 +333,4 @@ extern bx_phy_address RWP_Snapshot[16];
 
 #endif
 
+#endif

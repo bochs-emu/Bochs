@@ -4,6 +4,7 @@ Brief summary :
 
 - Added graphical Bochs debugger under Win32 host !
   - Thanks for Chourdakis Michael and Bruce Ewing.
+- Added user plugin interface support
 - Many fixes in Bochs internal debugger and CPU instrumentation.
 - Bugfixes for CPU emulation correctness.
 
@@ -33,11 +34,15 @@ Detailed change log :
     name from Bochs command line (using new -log and -dbglog options)
   - Removed --enable-guest2host-tlb configure option. The option will be
     always enabled for any Bochs configuration.
+  - Added configure option to compile in GUI frontend for Bochs internal
+    debugger, to enable configure with --enable-debugger-gui option. The GUI
+    debugger frontend is enabled by default with Bochs internal debugger.
 
 - BIOS
   - Added S3 (suspend to RAM) ACPI state to BIOS (patch by Gleb Natapov)
 
 - I/O Devices
+  - Added user plugin support
   - Hard drive / cdrom
     - PACKET-DMA feature now supported by all ATAPI commands
     - ATAPI command 0x1A added (based on the Qemu implementation)
@@ -92,6 +97,8 @@ Detailed change log :
  [1981505] Init PIIX4 PCI to ISA bridge and IDE by Sebastian
 
 - these S.F. bugs were closed
+ [2426271] cannot get correcet symbol entry
+ [2471982] VGA character height glitches
  [1659659] wrong behaviour a20 at boot
  [1998027] minwg + --with-term + --with-out-win32 = link failure
  [1871936] bochs-2.3.6 make fails on wx.cc
@@ -124,6 +131,7 @@ Detailed change log :
  [1874124] bx_Instruction_c::ilen() const  
 
 - these S.F. feature requests were closed/implemented
+ [1429015] Support for user plugins
  [1488136] debugger access to floppy controller  
  [1363136] Full debugger SMP and 64 bit support
  [2068304] Support for ACPI

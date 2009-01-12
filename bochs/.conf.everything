@@ -17,6 +17,7 @@
   --enable-port-e9-hack \
   --enable-debugger \
   --enable-disasm \
+  --enable-debugger-gui \
   --enable-vbe \
   --enable-mmx \
   --enable-fpu \

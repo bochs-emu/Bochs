@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32dialog.h,v 1.14 2009-01-09 14:53:38 sshwarts Exp $
+// $Id: win32dialog.h,v 1.15 2009-01-12 19:15:35 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #ifndef BX_WIN32_DIALOGS_H
@@ -27,7 +27,7 @@ extern "C" {
 #if BX_USE_TEXTCONFIG && defined(WIN32)
 
 int RuntimeOptionsDialog();
-#if BX_DEBUGGER
+#if BX_DEBUGGER && BX_DEBUGGER_GUI
 void InitDebugDialog();
 void ParseIDText (char *p);
 void HitBreak();

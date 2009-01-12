@@ -7,7 +7,7 @@
 
 #include "config.h"
 
-#if BX_DEBUGGER
+#if BX_DEBUGGER && BX_DEBUGGER_GUI
 
 #include <math.h>
 
@@ -24,10 +24,6 @@
 
 #define NEGATE_CLASS
 #define OPTIMIZE_JUST_STAR
-
-bx_bool debug_cmd_ready = FALSE;
-char *debug_cmd = NULL;
-bx_bool vgaw_refresh = 0;
 
 // get a "class" to access the disassebler
 // Note; any instance has access to all the member functions -- that is enough!

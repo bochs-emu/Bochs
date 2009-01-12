@@ -1,6 +1,6 @@
 #include "config.h"
 
-#if BX_DEBUGGER
+#if BX_DEBUGGER && BX_DEBUGGER_GUI
 
 #include "bochs.h"
 #include "disasm/disasm.h"
