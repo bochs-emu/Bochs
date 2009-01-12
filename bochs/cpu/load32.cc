@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: load32.cc,v 1.3 2008-12-11 21:19:38 sshwarts Exp $
+// $Id: load32.cc,v 1.4 2009-01-12 20:14:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008 Stanislav Shwartsman
@@ -35,7 +35,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Eb(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Eb_Resolve16BaseIndex(bxInstruction_c *i)
 {
-  Bit16u offset = BX_READ_16BIT_REG(i->sibBase()) + BX_READ_16BIT_REG(i->sibIndex()) + (Bit16s) i->displ16u();
+  Bit16u offset = BX_READ_16BIT_REG(i->sibBase()) + BX_READ_16BIT_REG(i->sibIndex()) + i->displ16s();
   Bit32u laddr;
 
   unsigned s = i->seg();
@@ -82,7 +82,7 @@ accessOK:
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Eb_Resolve32Base(bxInstruction_c *i)
 {
-  Bit32u offset = BX_READ_32BIT_REG(i->sibBase()) + (Bit32s) i->displ32u();
+  Bit32u offset = BX_READ_32BIT_REG(i->sibBase()) + i->displ32s();
   Bit32u laddr;
 
   unsigned s = i->seg();
@@ -129,7 +129,7 @@ accessOK:
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Eb_Resolve32BaseIndex(bxInstruction_c *i)
 {
-  Bit32u offset = BX_READ_32BIT_REG(i->sibBase()) + (BX_READ_32BIT_REG(i->sibIndex()) << i->sibScale()) + (Bit32s) i->displ32u();
+  Bit32u offset = BX_READ_32BIT_REG(i->sibBase()) + (BX_READ_32BIT_REG(i->sibIndex()) << i->sibScale()) + i->displ32s();
   Bit32u laddr;
 
   unsigned s = i->seg();
@@ -183,7 +183,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Ew(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Ew_Resolve16BaseIndex(bxInstruction_c *i)
 {
-  Bit16u offset = BX_READ_16BIT_REG(i->sibBase()) + BX_READ_16BIT_REG(i->sibIndex()) + (Bit16s) i->displ16u();
+  Bit16u offset = BX_READ_16BIT_REG(i->sibBase()) + BX_READ_16BIT_REG(i->sibIndex()) + i->displ16s();
   Bit32u laddr;
 
   unsigned s = i->seg();
@@ -230,7 +230,7 @@ accessOK:
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Ew_Resolve32Base(bxInstruction_c *i)
 {
-  Bit32u offset = BX_READ_32BIT_REG(i->sibBase()) + (Bit32s) i->displ32u();
+  Bit32u offset = BX_READ_32BIT_REG(i->sibBase()) + i->displ32s();
   Bit32u laddr;
 
   unsigned s = i->seg();
@@ -277,7 +277,7 @@ accessOK:
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Ew_Resolve32BaseIndex(bxInstruction_c *i)
 {
-  Bit32u offset = BX_READ_32BIT_REG(i->sibBase()) + (BX_READ_32BIT_REG(i->sibIndex()) << i->sibScale()) + (Bit32s) i->displ32u();
+  Bit32u offset = BX_READ_32BIT_REG(i->sibBase()) + (BX_READ_32BIT_REG(i->sibIndex()) << i->sibScale()) + i->displ32s();
   Bit32u laddr;
 
   unsigned s = i->seg();
@@ -331,7 +331,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Ed(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Ed_Resolve16BaseIndex(bxInstruction_c *i)
 {
-  Bit16u offset = BX_READ_16BIT_REG(i->sibBase()) + BX_READ_16BIT_REG(i->sibIndex()) + (Bit16s) i->displ16u();
+  Bit16u offset = BX_READ_16BIT_REG(i->sibBase()) + BX_READ_16BIT_REG(i->sibIndex()) + i->displ16s();
   Bit32u laddr;
 
   unsigned s = i->seg();
@@ -378,7 +378,7 @@ accessOK:
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Ed_Resolve32Base(bxInstruction_c *i)
 {
-  Bit32u offset = BX_READ_32BIT_REG(i->sibBase()) + (Bit32s) i->displ32u();
+  Bit32u offset = BX_READ_32BIT_REG(i->sibBase()) + i->displ32s();
   Bit32u laddr;
 
   unsigned s = i->seg();
@@ -425,7 +425,7 @@ accessOK:
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Ed_Resolve32BaseIndex(bxInstruction_c *i)
 {
-  Bit32u offset = BX_READ_32BIT_REG(i->sibBase()) + (BX_READ_32BIT_REG(i->sibIndex()) << i->sibScale()) + (Bit32s) i->displ32u();
+  Bit32u offset = BX_READ_32BIT_REG(i->sibBase()) + (BX_READ_32BIT_REG(i->sibIndex()) << i->sibScale()) + i->displ32s();
   Bit32u laddr;
 
   unsigned s = i->seg();

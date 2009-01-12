@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: instr.h,v 1.18 2008-10-10 20:49:16 sshwarts Exp $
+// $Id: instr.h,v 1.19 2009-01-12 20:14:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008 Stanislav Shwartsman
@@ -173,8 +173,8 @@ public:
   BX_CPP_INLINE unsigned sibBase() const {
     return metaData[BX_INSTR_METADATA_BASE];
   }
-  BX_CPP_INLINE Bit32u displ32u() const { return modRMForm.displ32u; }
-  BX_CPP_INLINE Bit16u displ16u() const { return modRMForm.displ16u; }
+  BX_CPP_INLINE Bit32s displ32s() const { return (Bit32s) modRMForm.displ32u; }
+  BX_CPP_INLINE Bit16s displ16s() const { return (Bit16s) modRMForm.displ16u; }
   BX_CPP_INLINE Bit32u Id() const  { return modRMForm.Id; }
   BX_CPP_INLINE Bit16u Iw() const  { return modRMForm.Iw; }
   BX_CPP_INLINE Bit8u  Ib() const  { return modRMForm.Ib; }
