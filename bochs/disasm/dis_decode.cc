@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dis_decode.cc,v 1.47 2008-06-11 21:05:38 sshwarts Exp $
+// $Id: dis_decode.cc,v 1.48 2009-01-13 22:40:16 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #include <stdio.h>
@@ -202,7 +202,7 @@ x86_insn disassembler::decode(bx_bool is_32, bx_bool is_64, bx_address base, bx_
   {
     switch(attr) {
        case _GROUPN:
-         entry = &(OPCODE_TABLE(entry)[insn.nnn]);
+         entry = &(OPCODE_TABLE(entry)[insn.nnn & 7]);
          break;
 
        case _GRPSSE:
@@ -217,13 +217,13 @@ x86_insn disassembler::decode(bx_bool is_32, bx_bool is_64, bx_address base, bx_
          break;
 
        case _GRPRM:
-         entry = &(OPCODE_TABLE(entry)[insn.rm]);
+         entry = &(OPCODE_TABLE(entry)[insn.rm & 7]);
          break;
 
        case _GRPFP:
          if(insn.mod != 3)
          {
-             entry = &(OPCODE_TABLE(entry)[insn.nnn]);
+             entry = &(OPCODE_TABLE(entry)[insn.nnn & 7]);
          } else {
              int index = (insn.b1-0xD8)*64 + (insn.modrm & 0x3f);
              entry = &(BxDisasmOpcodeInfoFP[index]);
