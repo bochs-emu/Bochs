@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.270 2009-01-10 10:37:23 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.271 2009-01-13 22:54:49 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1330,7 +1330,7 @@ bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::SetCR4(bx_address val)
 
   // Need to GPF if trying to set undefined bits.
   if (val & ~allowMask) {
-    BX_ERROR(("#GP(0): SetCR4: Write of 0x%08x not supported (allowMask=0x%x)", val, allowMask));
+    BX_ERROR(("#GP(0): SetCR4: Write of 0x%08x not supported (allowMask=0x%x)", (Bit32u) val, (Bit32u) allowMask));
     return 0;
   }
 
@@ -1338,7 +1338,7 @@ bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::SetCR4(bx_address val)
   pagingCR4Changed(oldCR4, BX_CPU_THIS_PTR cr4.get32());
   return 1;
 }
-#endif
+#endif // BX_CPU_LEVEL >= 4
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDPMC(bxInstruction_c *i)
 {
