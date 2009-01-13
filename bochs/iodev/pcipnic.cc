@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pcipnic.cc,v 1.30 2009-01-10 11:30:20 vruppert Exp $
+// $Id: pcipnic.cc,v 1.31 2009-01-13 18:56:35 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003  Fen Systems Ltd.
@@ -29,6 +29,7 @@
 #include "iodev.h"
 #if BX_SUPPORT_PCI && BX_SUPPORT_PCIPNIC
 
+#include "pci.h"
 #include "eth.h"
 #include "pcipnic.h"
 
