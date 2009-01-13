@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: iret.cc,v 1.39 2008-09-06 17:44:02 sshwarts Exp $
+// $Id: iret.cc,v 1.40 2009-01-13 19:00:30 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005 Stanislav Shwartsman
@@ -143,7 +143,7 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
     // if VM=1 in flags image on stack then STACK_RETURN_TO_V86
     if (new_eflags & EFlagsVMMask) {
       if (CPL == 0) {
-        BX_CPU_THIS_PTR stack_return_to_v86(new_eip, raw_cs_selector, new_eflags);
+        stack_return_to_v86(new_eip, raw_cs_selector, new_eflags);
         return;
       }
       else BX_INFO(("iret: VM set on stack, CPL!=0"));

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: segment_ctrl_pro.cc,v 1.103 2008-12-06 18:52:02 sshwarts Exp $
+// $Id: segment_ctrl_pro.cc,v 1.104 2009-01-13 19:00:30 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -522,7 +522,7 @@ bx_bool BX_CPU_C::set_segment_ar_data(bx_segment_reg_t *seg, bx_bool valid,
         break;
 
       default:
-        BX_PANIC(("set_segment_ar_data(): case %u unsupported", (unsigned) d->type));
+        BX_PANIC(("set_segment_ar_data(): case %u unsupported, valid=%d", (unsigned) d->type, d->valid));
     }
   }
 
