@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.h,v 1.43 2008-09-18 17:18:36 sshwarts Exp $
+// $Id: keyboard.h,v 1.44 2009-01-13 19:01:19 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -54,6 +54,7 @@ public:
   // override stubs from bx_keyb_stub_c
   virtual void gen_scancode(Bit32u key);
   virtual void paste_bytes(Bit8u *data, Bit32s length);
+  virtual void mouse_enabled_changed(bx_bool enabled);
   virtual void mouse_motion(int delta_x, int delta_y, int delta_z, unsigned button_state);
   virtual void register_state(void);
   virtual void after_restore_state(void);
@@ -61,7 +62,6 @@ public:
   // runtime options
   static     Bit64s   kbd_param_handler(bx_param_c *param, int set, Bit64s val);
   BX_KEY_SMF void     paste_delay_changed(Bit32u value);
-  BX_KEY_SMF void     mouse_enabled_changed(bx_bool enabled);
 
 private:
   BX_KEY_SMF Bit8u    get_kbd_enable(void);
@@ -112,7 +112,6 @@ private:
     } kbd_controller;
 
     struct mouseStruct {
-      bx_bool captured; // host mouse capture enabled
       Bit8u   type;
       Bit8u   sample_rate;
       Bit8u   resolution_cpmm; // resolution in counts per mm

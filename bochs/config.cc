@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.149 2009-01-10 11:30:20 vruppert Exp $
+// $Id: config.cc,v 1.150 2009-01-13 19:01:19 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -184,6 +184,11 @@ static Bit64s bx_param_handler(bx_param_c *param, int set, Bit64s val)
       if ((set) && (SIM->get_init_done())) {
         DEV_floppy_set_media_status(1, val == BX_INSERTED);
         bx_gui->update_drive_status_buttons();
+      }
+    } else if (!strcmp(pname, BXPN_MOUSE_ENABLED)) {
+      if ((set) && (SIM->get_init_done())) {
+        bx_gui->mouse_enabled_changed(val!=0);
+        DEV_mouse_enabled_changed(val!=0);
       }
     } else {
       BX_PANIC(("bx_param_handler called with unknown parameter '%s'", pname));
@@ -896,10 +901,13 @@ void bx_init_options()
       BX_MOUSE_TYPE_NONE);
   type->set_ask_format("Choose the type of mouse [%s] ");
 
-  new bx_param_bool_c(mouse,
+  enabled = new bx_param_bool_c(mouse,
       "enabled", "Enable the mouse capture",
       "Controls whether the mouse sends events to the guest. The hardware emulation is always enabled.",
       0);
+  enabled->set_handler(bx_param_handler);
+  enabled->set_runtime_param(1);
+
   kbd_mouse->get_options()->set(bx_list_c::SHOW_PARENT);
   keyboard->get_options()->set(bx_list_c::SHOW_PARENT);
   mouse->get_options()->set(bx_list_c::SHOW_PARENT);

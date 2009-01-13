@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.cc,v 1.136 2009-01-10 11:30:20 vruppert Exp $
+// $Id: keyboard.cc,v 1.137 2009-01-13 19:01:19 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -88,7 +88,6 @@ bx_keyb_c::bx_keyb_c()
 bx_keyb_c::~bx_keyb_c()
 {
   // remove runtime parameter handler
-  SIM->get_param_bool(BXPN_MOUSE_ENABLED)->set_handler(NULL);
   SIM->get_param_num(BXPN_KBD_PASTE_DELAY)->set_handler(NULL);
   if (pastebuf != NULL) {
     delete [] pastebuf;
@@ -125,7 +124,7 @@ void bx_keyb_c::resetinternals(bx_bool powerup)
 
 void bx_keyb_c::init(void)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.136 2009-01-10 11:30:20 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.137 2009-01-13 19:01:19 vruppert Exp $"));
   Bit32u   i;
 
   DEV_register_irq(1, "8042 Keyboard controller");
@@ -179,7 +178,6 @@ void bx_keyb_c::init(void)
   BX_KEY_THIS s.kbd_controller.timer_pending = 0;
 
   // Mouse initialization stuff
-  BX_KEY_THIS s.mouse.captured        = SIM->get_param_bool(BXPN_MOUSE_ENABLED)->get();
   BX_KEY_THIS s.mouse.type            = SIM->get_param_enum(BXPN_MOUSE_TYPE)->get();
   BX_KEY_THIS s.mouse.sample_rate     = 100; // reports per second
   BX_KEY_THIS s.mouse.resolution_cpmm = 4;   // 4 counts per millimeter
@@ -259,9 +257,7 @@ void bx_keyb_c::init(void)
   }
 #endif
 
-  // init runtime parameters
-  SIM->get_param_bool(BXPN_MOUSE_ENABLED)->set_handler(kbd_param_handler);
-  SIM->get_param_bool(BXPN_MOUSE_ENABLED)->set_runtime_param(1);
+  // init runtime parameter
   SIM->get_param_num(BXPN_KBD_PASTE_DELAY)->set_handler(kbd_param_handler);
   SIM->get_param_num(BXPN_KBD_PASTE_DELAY)->set_runtime_param(1);
 }
@@ -363,10 +359,7 @@ Bit64s bx_keyb_c::kbd_param_handler(bx_param_c *param, int set, Bit64s val)
   if (set) {
     char pname[BX_PATHNAME_LEN];
     param->get_param_path(pname, BX_PATHNAME_LEN);
-    if (!strcmp(pname, BXPN_MOUSE_ENABLED)) {
-      bx_gui->mouse_enabled_changed(val!=0);
-      BX_KEY_THIS mouse_enabled_changed(val!=0);
-    } else if (!strcmp(pname, BXPN_KBD_PASTE_DELAY)) {
+    if (!strcmp(pname, BXPN_KBD_PASTE_DELAY)) {
       BX_KEY_THIS paste_delay_changed((Bit32u)val);
     } else {
       BX_PANIC(("kbd_param_handler called with unexpected parameter '%s'", pname));
@@ -867,9 +860,9 @@ void bx_keyb_c::gen_scancode(Bit32u key)
     scancode=(unsigned char *)scancodes[(key&0xFF)][BX_KEY_THIS s.kbd_controller.current_scancodes_set].make;
 
 #if BX_SUPPORT_PCIUSB
-  if (DEV_usb_keyboard_connected()) {
-    // if we have a keyboard/keypad installed, we need to call its handler first
-    if (DEV_usb_key_enq(scancode)) return;
+  // if we have a keyboard/keypad installed, we need to call its handler first
+  if (DEV_usb_key_enq(scancode)) {
+    return;
   }
 #endif
 
@@ -1611,15 +1604,6 @@ void bx_keyb_c::create_mouse_packet(bx_bool force_enq)
 
 void bx_keyb_c::mouse_enabled_changed(bx_bool enabled)
 {
-  BX_KEY_THIS s.mouse.captured = enabled;
-#if BX_SUPPORT_PCIUSB
-  // if an usb mouse is connected, notify the device about the status change
-  if (DEV_usb_mouse_connected()) {
-    DEV_usb_mouse_enabled_changed(enabled);
-    return;
-  }
-#endif
-
   if (BX_KEY_THIS s.mouse.delayed_dx || BX_KEY_THIS s.mouse.delayed_dy ||
       BX_KEY_THIS s.mouse.delayed_dz) {
     create_mouse_packet(1);
@@ -1632,36 +1616,7 @@ void bx_keyb_c::mouse_enabled_changed(bx_bool enabled)
 
 void bx_keyb_c::mouse_motion(int delta_x, int delta_y, int delta_z, unsigned button_state)
 {
-  bool force_enq=0;
-
-  // If mouse events are disabled on the GUI headerbar, don't
-  // generate any mouse data
-  if (!BX_KEY_THIS s.mouse.captured)
-    return;
-
-#if BX_SUPPORT_PCIUSB
-  // if an usb mouse is connected, redirect mouse data to the usb device
-  if (DEV_usb_mouse_connected()) {
-    DEV_usb_mouse_enq(delta_x, delta_y, delta_z, button_state);
-    return;
-  }
-#endif
-
-  // if type == serial, redirect mouse data to the serial device
-  if ((BX_KEY_THIS s.mouse.type == BX_MOUSE_TYPE_SERIAL) ||
-      (BX_KEY_THIS s.mouse.type == BX_MOUSE_TYPE_SERIAL_WHEEL) ||
-      (BX_KEY_THIS s.mouse.type == BX_MOUSE_TYPE_SERIAL_MSYS)) {
-    DEV_serial_mouse_enq(delta_x, delta_y, delta_z, button_state);
-    return;
-  }
-
-#if BX_SUPPORT_BUSMOUSE
-  // if type == bus, redirect mouse data to the bus device
-  if (BX_KEY_THIS s.mouse.type == BX_MOUSE_TYPE_BUS) {
-    DEV_bus_mouse_enq(delta_x, delta_y, 0, button_state);
-    return;
-  }
-#endif
+  bx_bool force_enq=0;
 
   // don't generate interrupts if we are in remote mode.
   if (BX_KEY_THIS s.mouse.mode == MOUSE_MODE_REMOTE)

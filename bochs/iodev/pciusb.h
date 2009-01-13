@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pciusb.h,v 1.32 2009-01-04 21:46:20 vruppert Exp $
+// $Id: pciusb.h,v 1.33 2009-01-13 19:01:19 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -334,11 +334,9 @@ public:
   virtual ~bx_pciusb_c();
   virtual void init(void);
   virtual void reset(unsigned);
-  virtual void usb_mouse_enq(int delta_x, int delta_y, int delta_z, unsigned button_state);
-  virtual void usb_mouse_enabled_changed(bx_bool enable);
+  virtual bx_bool usb_mouse_enq(int delta_x, int delta_y, int delta_z, unsigned button_state);
+  virtual bx_bool usb_mouse_enabled_changed(bx_bool enabled);
   virtual bx_bool usb_key_enq(Bit8u *scan_code);
-  virtual bx_bool usb_keyboard_connected();
-  virtual bx_bool usb_mouse_connected();
   virtual void register_state(void);
   virtual void after_restore_state(void);
   virtual Bit32u  pci_read_handler(Bit8u address, unsigned io_len);

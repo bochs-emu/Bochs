@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.103 2009-01-11 18:46:01 vruppert Exp $
+// $Id: iodev.h,v 1.104 2009-01-13 19:01:19 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -116,6 +116,9 @@ class BOCHSAPI bx_keyb_stub_c : public bx_devmodel_c {
 public:
   virtual ~bx_keyb_stub_c() {}
   // stubs for bx_keyb_c methods
+  virtual void mouse_enabled_changed(bx_bool enabled) {
+    STUBFUNC(keyboard, mouse_enabled_changed);
+  }
   virtual void mouse_motion(int delta_x, int delta_y, int delta_z, unsigned button_state) {
     STUBFUNC(keyboard, mouse_motion);
   }
@@ -334,18 +337,15 @@ public:
 #if BX_SUPPORT_PCIUSB
 class BOCHSAPI bx_pci_usb_stub_c : public bx_devmodel_c, public bx_pci_device_stub_c {
 public:
-  virtual void usb_mouse_enq(int delta_x, int delta_y, int delta_z, unsigned button_state) {
-    STUBFUNC(pciusb, usb_mouse_enq);
-  }
-  virtual void usb_mouse_enabled_changed(bx_bool enable) {
-    STUBFUNC(pciusb, usb_mouse_enabled_changed);
-  }
-  virtual bx_bool usb_key_enq(Bit8u *scan_code) {
-    STUBFUNC(pciusb, usb_key_enq);
+  virtual bx_bool usb_mouse_enq(int delta_x, int delta_y, int delta_z, unsigned button_state) {
     return 0;
   }
-  virtual bx_bool usb_keyboard_connected() { return 0; }
-  virtual bx_bool usb_mouse_connected() { return 0; }
+  virtual bx_bool usb_mouse_enabled_changed(bx_bool enabled) {
+    return 0;
+  }
+  virtual bx_bool usb_key_enq(Bit8u *scan_code) {
+    return 0;
+  }
 };
 #endif
 
@@ -421,6 +421,8 @@ public:
   bx_bool unregister_irq(unsigned irq, const char *name);
   Bit32u inp(Bit16u addr, unsigned io_len) BX_CPP_AttrRegparmN(2);
   void   outp(Bit16u addr, Bit32u value, unsigned io_len) BX_CPP_AttrRegparmN(3);
+  void mouse_enabled_changed(bx_bool enabled);
+  void mouse_motion(int delta_x, int delta_y, int delta_z, unsigned button_state);
 
   static void timer_handler(void *);
   void timer(void);
@@ -525,6 +527,9 @@ private:
 
   static Bit32u default_read_handler(void *this_ptr, Bit32u address, unsigned io_len);
   static void   default_write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len);
+
+  bx_bool mouse_captured; // host mouse capture enabled
+  Bit8u mouse_type;
 
   int timer_handle;
   bx_bool is_serial_enabled();

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pciusb.cc,v 1.70 2009-01-10 11:30:20 vruppert Exp $
+// $Id: pciusb.cc,v 1.71 2009-01-13 19:01:19 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -1117,11 +1117,13 @@ void bx_pciusb_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len
   BX_DEBUG(("USB PCI write register 0x%02x                   value 0x%s", address, szTmp));
 }
 
-void bx_pciusb_c::usb_mouse_enabled_changed(bx_bool enable)
+bx_bool bx_pciusb_c::usb_mouse_enabled_changed(bx_bool enabled)
 {
-  if (enable && (BX_USB_THIS mousedev != NULL)) {
-    mousedev->handle_reset();
+  if (BX_USB_THIS mousedev != NULL) {
+    if (enabled) mousedev->handle_reset();
+    return 1;
   }
+  return 0;
 }
 
 void bx_pciusb_c::usb_set_connect_status(Bit8u port, int type, bx_bool connected)
@@ -1201,11 +1203,13 @@ void bx_pciusb_c::usb_set_connect_status(Bit8u port, int type, bx_bool connected
   }
 }
 
-void bx_pciusb_c::usb_mouse_enq(int delta_x, int delta_y, int delta_z, unsigned button_state)
+bx_bool bx_pciusb_c::usb_mouse_enq(int delta_x, int delta_y, int delta_z, unsigned button_state)
 {
   if (BX_USB_THIS mousedev != NULL) {
     mousedev->mouse_enq(delta_x, delta_y, delta_z, button_state);
+    return 1;
   }
+  return 0;
 }
 
 bx_bool bx_pciusb_c::usb_key_enq(Bit8u *scan_code)
@@ -1214,16 +1218,6 @@ bx_bool bx_pciusb_c::usb_key_enq(Bit8u *scan_code)
     return keybdev->key_enq(scan_code);
   }
   return 0;
-}
-
-bx_bool bx_pciusb_c::usb_keyboard_connected()
-{
-  return (BX_USB_THIS keybdev != NULL);
-}
-
-bx_bool bx_pciusb_c::usb_mouse_connected()
-{
-  return (BX_USB_THIS mousedev != NULL);
 }
 
 // Send an internal message to a USB device

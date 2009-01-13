@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: devices.cc,v 1.131 2009-01-11 18:46:01 vruppert Exp $
+// $Id: devices.cc,v 1.132 2009-01-13 19:01:19 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -110,7 +110,7 @@ void bx_devices_c::init(BX_MEM_C *newmem)
   unsigned i;
   const char def_name[] = "Default";
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.131 2009-01-11 18:46:01 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.132 2009-01-13 19:01:19 vruppert Exp $"));
   mem = newmem;
 
   /* set no-default handlers, will be overwritten by the real default handler */
@@ -142,6 +142,10 @@ void bx_devices_c::init(BX_MEM_C *newmem)
     irq_handler_name[i] = NULL;
   }
 
+  // common mouse settings
+  mouse_captured = SIM->get_param_bool(BXPN_MOUSE_ENABLED)->get();
+  mouse_type = SIM->get_param_enum(BXPN_MOUSE_TYPE)->get();
+
   // register as soon as possible - the devices want to have their timers !
   bx_virt_timer.init();
   bx_slowdown_timer.init();
@@ -164,7 +168,7 @@ void bx_devices_c::init(BX_MEM_C *newmem)
   PLUG_load_plugin(harddrv, PLUGTYPE_OPTIONAL);
   PLUG_load_plugin(keyboard, PLUGTYPE_OPTIONAL);
 #if BX_SUPPORT_BUSMOUSE
-  if (SIM->get_param_enum(BXPN_MOUSE_TYPE)->get() == BX_MOUSE_TYPE_BUS) {
+  if (mouse_type == BX_MOUSE_TYPE_BUS) {
     PLUG_load_plugin(busmouse, PLUGTYPE_OPTIONAL);
   }
 #endif
@@ -179,7 +183,7 @@ void bx_devices_c::init(BX_MEM_C *newmem)
   PLUG_load_plugin(speaker, PLUGTYPE_OPTIONAL);
 
   // Start with registering the default (unmapped) handler
-  pluginUnmapped->init ();
+  pluginUnmapped->init();
 
   // PCI logic (i440FX)
   if (SIM->get_param_bool(BXPN_I440FX_SUPPORT)->get()) {
@@ -998,6 +1002,52 @@ bx_bool bx_devices_c::is_parallel_enabled(void)
       return 1;
   }
   return 0;
+}
+
+void bx_devices_c::mouse_enabled_changed(bx_bool enabled)
+{
+  mouse_captured = enabled;
+#if BX_SUPPORT_PCIUSB
+  if (pluginPciUSBAdapter->usb_mouse_enabled_changed(enabled)) {
+    return;
+  }
+#endif
+
+  pluginKeyboard->mouse_enabled_changed(enabled);
+}
+
+void bx_devices_c::mouse_motion(int delta_x, int delta_y, int delta_z, unsigned button_state)
+{
+
+  // If mouse events are disabled on the GUI headerbar, don't
+  // generate any mouse data
+  if (!mouse_captured)
+    return;
+
+#if BX_SUPPORT_PCIUSB
+  // if an usb mouse is connected, redirect mouse data to the usb device
+  if (pluginPciUSBAdapter->usb_mouse_enq(delta_x, delta_y, delta_z, button_state)) {
+    return;
+  }
+#endif
+
+  // if type == serial, redirect mouse data to the serial device
+  if ((mouse_type == BX_MOUSE_TYPE_SERIAL) ||
+      (mouse_type == BX_MOUSE_TYPE_SERIAL_WHEEL) ||
+      (mouse_type == BX_MOUSE_TYPE_SERIAL_MSYS)) {
+    pluginSerialDevice->serial_mouse_enq(delta_x, delta_y, delta_z, button_state);
+    return;
+  }
+
+#if BX_SUPPORT_BUSMOUSE
+  // if type == bus, redirect mouse data to the bus device
+  if (mouse_type == BX_MOUSE_TYPE_BUS) {
+    pluginBusMouse->bus_mouse_enq(delta_x, delta_y, 0, button_state);
+    return;
+  }
+#endif
+
+  pluginKeyboard->mouse_motion(delta_x, delta_y, delta_z, button_state);
 }
 
 void bx_pci_device_stub_c::register_pci_state(bx_list_c *list, Bit8u *pci_conf)

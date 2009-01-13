@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: plugin.h,v 1.70 2009-01-11 18:46:01 vruppert Exp $
+// $Id: plugin.h,v 1.71 2009-01-13 19:01:19 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  The Bochs Project
@@ -119,6 +119,9 @@ extern "C" {
 #define DEV_after_restore_state() {bx_devices.after_restore_state(); }
 #define DEV_register_timer(a,b,c,d,e,f) bx_pc_system.register_timer(a,b,c,d,e,f)
 #define DEV_ioapic_present() (bx_devices.ioapic != NULL)
+#define DEV_mouse_enabled_changed(en) (bx_devices.mouse_enabled_changed(en))
+#define DEV_mouse_motion(dx, dy, state) (bx_devices.mouse_motion(dx, dy, 0, state))
+#define DEV_mouse_motion_ext(dx, dy, dz, state) (bx_devices.mouse_motion(dx, dy, dz, state))
 
 ///////// CMOS macros
 #define DEV_cmos_get_reg(a) (bx_devices.pluginCmosDevice->get_reg(a))
@@ -128,10 +131,6 @@ extern "C" {
 #define DEV_cmos_present() (bx_devices.pluginCmosDevice != &bx_devices.stubCmos)
 
 ///////// keyboard macros
-#define DEV_mouse_motion(dx, dy, state) \
-    (bx_devices.pluginKeyboard->mouse_motion(dx, dy, 0, state))
-#define DEV_mouse_motion_ext(dx, dy, dz, state) \
-    (bx_devices.pluginKeyboard->mouse_motion(dx, dy, dz, state))
 #define DEV_kbd_gen_scancode(key) \
     (bx_devices.pluginKeyboard->gen_scancode(key))
 #define DEV_kbd_paste_bytes(bytes, count) \
@@ -221,26 +220,10 @@ extern "C" {
 #define DEV_speaker_beep_on(frequency) bx_devices.pluginSpeaker->beep_on(frequency)
 #define DEV_speaker_beep_off() bx_devices.pluginSpeaker->beep_off()
 
-///////// Serial macro
-#define DEV_serial_mouse_enq(dx, dy, dz, state) \
-    (bx_devices.pluginSerialDevice->serial_mouse_enq(dx, dy, dz, state))
-
-///////// BUS mouse macro
-#define DEV_bus_mouse_enq(dx, dy, dz, state) \
-    (bx_devices.pluginBusMouse->bus_mouse_enq(dx, dy, 0, state))
-
-///////// USB device macros
+///////// USB device macro
 #if BX_SUPPORT_PCIUSB
-#define DEV_usb_mouse_enq(dx, dy, dz, state) \
-    (bx_devices.pluginPciUSBAdapter->usb_mouse_enq(dx, dy, dz, state))
-#define DEV_usb_mouse_enabled_changed(enable) \
-    (bx_devices.pluginPciUSBAdapter->usb_mouse_enabled_changed(enable))
 #define DEV_usb_key_enq(scan_code) \
     (bx_devices.pluginPciUSBAdapter->usb_key_enq(scan_code))
-#define DEV_usb_keyboard_connected() \
-    (bx_devices.pluginPciUSBAdapter->usb_keyboard_connected())
-#define DEV_usb_mouse_connected() \
-    (bx_devices.pluginPciUSBAdapter->usb_mouse_connected())
 #endif
 
 //////// Memory macros
