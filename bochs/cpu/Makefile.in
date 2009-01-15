@@ -72,7 +72,6 @@ OBJS = \
 	xsave.o \
 	aes.o \
 	soft_int.o \
-	io_pro.o \
 	apic.o \
 	bcd.o \
 	mult16.o \
@@ -458,16 +457,6 @@ init.o: init.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h 
   ../fpu/softfloat.h ../fpu/tag_w.h ../fpu/status_w.h ../fpu/control_w.h \
   ../cpu/xmm.h stack.h
 io.o: io.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
-  ../config.h ../osdep.h ../bxversion.h ../gui/siminterface.h \
-  ../memory/memory.h ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h \
-  ../gui/gui.h ../gui/textconfig.h ../gui/keymap.h \
-  ../instrument/stubs/instrument.h cpu.h ../disasm/disasm.h crregs.h \
-  descriptor.h instr.h lazy_flags.h icache.h apic.h ../cpu/i387.h \
-  ../fpu/softfloat.h ../fpu/tag_w.h ../fpu/status_w.h ../fpu/control_w.h \
-  ../cpu/xmm.h stack.h ../iodev/iodev.h ../iodev/vga.h \
-  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h \
-  ../iodev/keyboard.h
-io_pro.o: io_pro.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../config.h ../osdep.h ../bxversion.h ../gui/siminterface.h \
   ../memory/memory.h ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h \
   ../gui/gui.h ../gui/textconfig.h ../gui/keymap.h \

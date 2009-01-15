@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.549 2009-01-10 10:07:57 sshwarts Exp $
+// $Id: cpu.h,v 1.550 2009-01-15 16:53:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -3142,12 +3142,6 @@ public: // for now...
   BX_SMF Bit32u force_flags(void);
   BX_SMF Bit32u read_eflags(void) { return BX_CPU_THIS_PTR force_flags(); }
 
-  BX_SMF Bit8u   inp8(Bit16u addr) BX_CPP_AttrRegparmN(1);
-  BX_SMF void    outp8(Bit16u addr, Bit8u value) BX_CPP_AttrRegparmN(2);
-  BX_SMF Bit16u  inp16(Bit16u addr) BX_CPP_AttrRegparmN(1);
-  BX_SMF void    outp16(Bit16u addr, Bit16u value) BX_CPP_AttrRegparmN(2);
-  BX_SMF Bit32u  inp32(Bit16u addr) BX_CPP_AttrRegparmN(1);
-  BX_SMF void    outp32(Bit16u addr, Bit32u value) BX_CPP_AttrRegparmN(2);
   BX_SMF bx_bool allow_io(Bit16u addr, unsigned len);
   BX_SMF void    parse_selector(Bit16u raw_selector, bx_selector_t *selector) BX_CPP_AttrRegparmN(2);
   BX_SMF void    parse_descriptor(Bit32u dword1, Bit32u dword2, bx_descriptor_t *temp) BX_CPP_AttrRegparmN(3);

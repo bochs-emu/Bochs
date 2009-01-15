@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: io.cc,v 1.70 2008-12-29 17:35:35 sshwarts Exp $
+// $Id: io.cc,v 1.71 2009-01-15 16:53:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -683,60 +683,236 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::OUTSD64_DXXd(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::IN_ALIb(bxInstruction_c *i)
 {
-  AL = BX_CPU_THIS_PTR inp8(i->Ib());
+  unsigned port = i->Ib();
+
+  if (! BX_CPU_THIS_PTR allow_io(port, 1)) {
+    BX_DEBUG(("IN_ALIb: I/O access not allowed !"));
+    exception(BX_GP_EXCEPTION, 0, 0);
+  }
+
+#if BX_SUPPORT_VMX
+  VMexit_IO(i, port, VMEXIT_IO_INTR_LEN(1) | VMEXIT_IO_INSTR_PORTIN | VMEXIT_IO_INSTR_IMM);
+#endif
+
+  AL = BX_INP(port, 1);
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::IN_AXIb(bxInstruction_c *i)
 {
-  AX = BX_CPU_THIS_PTR inp16(i->Ib());
+  unsigned port = i->Ib();
+
+  if (! BX_CPU_THIS_PTR allow_io(port, 2)) {
+    BX_DEBUG(("IN_AXIb: I/O access not allowed !"));
+    exception(BX_GP_EXCEPTION, 0, 0);
+  }
+
+#if BX_SUPPORT_VMX
+  VMexit_IO(i, port, VMEXIT_IO_INTR_LEN(2) | VMEXIT_IO_INSTR_PORTIN | VMEXIT_IO_INSTR_IMM);
+#endif
+
+  AX = BX_INP(port, 2);
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::IN_EAXIb(bxInstruction_c *i)
 {
-  RAX = BX_CPU_THIS_PTR inp32(i->Ib());
+  unsigned port = i->Ib();
+
+  if (! BX_CPU_THIS_PTR allow_io(port, 4)) {
+    BX_DEBUG(("IN_EAXIb: I/O access not allowed !"));
+    exception(BX_GP_EXCEPTION, 0, 0);
+  }
+
+#if BX_SUPPORT_VMX
+  VMexit_IO(i, port, VMEXIT_IO_INTR_LEN(4) | VMEXIT_IO_INSTR_PORTIN | VMEXIT_IO_INSTR_IMM);
+#endif
+
+  RAX = BX_INP(port, 4);
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::OUT_IbAL(bxInstruction_c *i)
 {
-  BX_CPU_THIS_PTR outp8(i->Ib(), AL);
+  unsigned port = i->Ib();
+
+  if (! BX_CPU_THIS_PTR allow_io(port, 1)) {
+    BX_DEBUG(("OUT_IbAL: I/O access not allowed !"));
+    exception(BX_GP_EXCEPTION, 0, 0);
+  }
+
+#if BX_SUPPORT_VMX
+  VMexit_IO(i, port, VMEXIT_IO_INTR_LEN(1) | VMEXIT_IO_INSTR_IMM);
+#endif
+
+  BX_OUTP(port, AL, 1);
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::OUT_IbAX(bxInstruction_c *i)
 {
-  BX_CPU_THIS_PTR outp16(i->Ib(), AX);
+  unsigned port = i->Ib();
+
+  if (! BX_CPU_THIS_PTR allow_io(port, 2)) {
+    BX_DEBUG(("OUT_IbAX: I/O access not allowed !"));
+    exception(BX_GP_EXCEPTION, 0, 0);
+  }
+
+#if BX_SUPPORT_VMX
+  VMexit_IO(i, port, VMEXIT_IO_INTR_LEN(2) | VMEXIT_IO_INSTR_IMM);
+#endif
+
+  BX_OUTP(port, AX, 2);
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::OUT_IbEAX(bxInstruction_c *i)
 {
-  BX_CPU_THIS_PTR outp32(i->Ib(), EAX);
+  unsigned port = i->Ib();
+
+  if (! BX_CPU_THIS_PTR allow_io(port, 4)) {
+    BX_DEBUG(("OUT_IbEAX: I/O access not allowed !"));
+    exception(BX_GP_EXCEPTION, 0, 0);
+  }
+
+#if BX_SUPPORT_VMX
+  VMexit_IO(i, port, VMEXIT_IO_INTR_LEN(4) | VMEXIT_IO_INSTR_IMM);
+#endif
+
+  BX_OUTP(port, EAX, 4);
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::IN_ALDX(bxInstruction_c *i)
 {
-  AL = BX_CPU_THIS_PTR inp8(DX);
+  unsigned port = DX;
+
+  if (! BX_CPU_THIS_PTR allow_io(port, 1)) {
+    BX_DEBUG(("IN_ALDX: I/O access not allowed !"));
+    exception(BX_GP_EXCEPTION, 0, 0);
+  }
+
+#if BX_SUPPORT_VMX
+  VMexit_IO(i, port, VMEXIT_IO_INTR_LEN(1) | VMEXIT_IO_INSTR_PORTIN);
+#endif
+
+  AL = BX_INP(port, 1);
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::IN_AXDX(bxInstruction_c *i)
 {
-  AX = BX_CPU_THIS_PTR inp16(DX);
+  unsigned port = DX;
+
+  if (! BX_CPU_THIS_PTR allow_io(port, 2)) {
+    BX_DEBUG(("IN_AXDX: I/O access not allowed !"));
+    exception(BX_GP_EXCEPTION, 0, 0);
+  }
+
+#if BX_SUPPORT_VMX
+  VMexit_IO(i, port, VMEXIT_IO_INTR_LEN(2) | VMEXIT_IO_INSTR_PORTIN);
+#endif
+
+  AX = BX_INP(port, 2);
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::IN_EAXDX(bxInstruction_c *i)
 {
-  RAX = BX_CPU_THIS_PTR inp32(DX);
+  unsigned port = DX;
+
+  if (! BX_CPU_THIS_PTR allow_io(port, 4)) {
+    BX_DEBUG(("IN_EAXDX: I/O access not allowed !"));
+    exception(BX_GP_EXCEPTION, 0, 0);
+  }
+
+#if BX_SUPPORT_VMX
+  VMexit_IO(i, port, VMEXIT_IO_INTR_LEN(4) | VMEXIT_IO_INSTR_PORTIN);
+#endif
+
+  RAX = BX_INP(port, 4);
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::OUT_DXAL(bxInstruction_c *i)
 {
-  BX_CPU_THIS_PTR outp8(DX, AL);
+  unsigned port = DX;
+
+  if (! BX_CPU_THIS_PTR allow_io(port, 1)) {
+    BX_DEBUG(("OUT_DXAL: I/O access not allowed !"));
+    exception(BX_GP_EXCEPTION, 0, 0);
+  }
+
+#if BX_SUPPORT_VMX
+  VMexit_IO(i, port, VMEXIT_IO_INTR_LEN(1));
+#endif
+
+  BX_OUTP(port, AL, 1);
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::OUT_DXAX(bxInstruction_c *i)
 {
-  BX_CPU_THIS_PTR outp16(DX, AX);
+  unsigned port = DX;
+
+  if (! BX_CPU_THIS_PTR allow_io(port, 2)) {
+    BX_DEBUG(("OUT_DXAX: I/O access not allowed !"));
+    exception(BX_GP_EXCEPTION, 0, 0);
+  }
+
+#if BX_SUPPORT_VMX
+  VMexit_IO(i, port, VMEXIT_IO_INTR_LEN(2));
+#endif
+
+  BX_OUTP(port, AX, 2);
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::OUT_DXEAX(bxInstruction_c *i)
 {
-  BX_CPU_THIS_PTR outp32(DX, EAX);
+  unsigned port = DX;
+
+  if (! BX_CPU_THIS_PTR allow_io(port, 4)) {
+    BX_DEBUG(("OUT_DXEAX: I/O access not allowed !"));
+    exception(BX_GP_EXCEPTION, 0, 0);
+  }
+
+#if BX_SUPPORT_VMX
+  VMexit_IO(i, port, VMEXIT_IO_INTR_LEN(4));
+#endif
+
+  BX_OUTP(port, EAX, 4);
+}
+
+bx_bool BX_CPU_C::allow_io(Bit16u port, unsigned len)
+{
+  /* If CPL <= IOPL, then all IO portesses are accessible.
+   * Otherwise, must check the IO permission map on >286.
+   * On the 286, there is no IO permissions map */
+
+  if (BX_CPU_THIS_PTR cr0.get_PE() && (BX_CPU_THIS_PTR get_VM() || (CPL>BX_CPU_THIS_PTR get_IOPL())))
+  {
+    if (BX_CPU_THIS_PTR tr.cache.valid==0 ||
+       (BX_CPU_THIS_PTR tr.cache.type != BX_SYS_SEGMENT_AVAIL_386_TSS &&
+        BX_CPU_THIS_PTR tr.cache.type != BX_SYS_SEGMENT_BUSY_386_TSS))
+    {
+      BX_ERROR(("allow_io(): TR doesn't point to a valid 32bit TSS, TR.TYPE=%u", BX_CPU_THIS_PTR tr.cache.type));
+      return(0);
+    }
+
+    if (BX_CPU_THIS_PTR tr.cache.u.system.limit_scaled < 103) {
+      BX_ERROR(("allow_io(): TR.limit < 103"));
+      return(0);
+    }
+
+    Bit16u io_base = system_read_word(BX_CPU_THIS_PTR tr.cache.u.system.base + 102);
+
+    if ((io_base + port/8) >= BX_CPU_THIS_PTR tr.cache.u.system.limit_scaled) {
+      BX_DEBUG(("allow_io(): IO port %x (len %d) outside TSS IO permission map (base=%x, limit=%x) #GP(0)",
+        port, len, io_base, BX_CPU_THIS_PTR tr.cache.u.system.limit_scaled));
+      return(0);
+    }
+
+    Bit16u permission16 = system_read_word(BX_CPU_THIS_PTR tr.cache.u.system.base + io_base + port/8);
+
+    unsigned bit_index = port & 0x7;
+    unsigned mask = (1 << len) - 1;
+    if ((permission16 >> bit_index) & mask)
+      return(0);
+  }
+
+#if BX_X86_DEBUGGER
+  iobreakpoint_match(port, len);
+#endif
+
+  return(1);
 }
