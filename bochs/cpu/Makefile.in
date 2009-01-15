@@ -45,8 +45,6 @@ RANLIB = @RANLIB@
 
 BX_INCDIRS = -I.. -I$(srcdir)/.. -I../@INSTRUMENT_DIR@ -I$(srcdir)/../@INSTRUMENT_DIR@
 
-EXT_DEBUG_OBJS = @EXT_DEBUG_OBJS@
-
 # Objects which are synced between the cpu and cpu64 code and
 # are used for either compile.
 OBJS = \
@@ -115,8 +113,7 @@ OBJS = \
 	bit16.o \
 	bit32.o \
 	string.o \
-	paging.o \
-	$(EXT_DEBUG_OBJS)
+	paging.o
 	
 # Objects which are only used for x86-64 code
 OBJS64 = \

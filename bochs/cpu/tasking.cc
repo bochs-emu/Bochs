@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: tasking.cc,v 1.63 2008-09-22 19:53:47 sshwarts Exp $
+// $Id: tasking.cc,v 1.64 2009-01-15 21:52:52 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -209,7 +209,7 @@ void BX_CPU_C::task_switch(bx_selector_t *tss_selector,
     // the written state consistent (ie, we don't encounter a
     // page fault in the middle).
 
-    if (source == BX_TASK_FROM_CALL_OR_INT)
+    if (source == BX_TASK_FROM_CALL || source == BX_TASK_FROM_INT)
     {
       dtranslate_linear(nbase32,     0, BX_WRITE);
       dtranslate_linear(nbase32 + 2, 0, BX_WRITE);
@@ -279,7 +279,7 @@ void BX_CPU_C::task_switch(bx_selector_t *tss_selector,
   }
 
   // effect on link field of new task
-  if (source == BX_TASK_FROM_CALL_OR_INT)
+  if (source == BX_TASK_FROM_CALL || source == BX_TASK_FROM_INT)
   {
     // set to selector of old task's TSS
     temp16 = BX_CPU_THIS_PTR tr.selector.value;
@@ -356,7 +356,7 @@ void BX_CPU_C::task_switch(bx_selector_t *tss_selector,
   // Step 5: If CALL, interrupt, or JMP, set busy flag in new task's
   //         TSS descriptor.  If IRET, leave set.
 
-  if (source == BX_TASK_FROM_JUMP || source == BX_TASK_FROM_CALL_OR_INT)
+  if (source != BX_TASK_FROM_IRET)
   {
     // set the new task's busy bit
     Bit32u laddr = (Bit32u)(BX_CPU_THIS_PTR gdtr.base) + (tss_selector->index<<3) + 4;
@@ -404,7 +404,7 @@ void BX_CPU_C::task_switch(bx_selector_t *tss_selector,
   //         NT is restored from new TSS eflags image. (no change)
 
   // effect on NT flag of new task
-  if (source == BX_TASK_FROM_CALL_OR_INT) {
+  if (source == BX_TASK_FROM_CALL || source == BX_TASK_FROM_INT) {
     newEFLAGS |= EFlagsNTMask; // NT flag is set
   }
 

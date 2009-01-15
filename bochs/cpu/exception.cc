@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.125 2009-01-13 22:54:49 sshwarts Exp $
+// $Id: exception.cc,v 1.126 2009-01-15 21:52:52 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -386,7 +386,7 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error
 
     // switch tasks with nesting to TSS
     task_switch(&tss_selector, &tss_descriptor,
-                    BX_TASK_FROM_CALL_OR_INT, dword1, dword2);
+                    BX_TASK_FROM_INT, dword1, dword2);
 
     // if interrupt was caused by fault with error code
     //   stack limits must allow push of 2 more bytes, else #SS(0)

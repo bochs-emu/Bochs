@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.550 2009-01-15 16:53:08 sshwarts Exp $
+// $Id: cpu.h,v 1.551 2009-01-15 21:52:52 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -3749,9 +3749,10 @@ IMPLEMENT_EFLAG_SET_ACCESSOR   (DF,  10)
 IMPLEMENT_EFLAG_SET_ACCESSOR_IF(      9)
 IMPLEMENT_EFLAG_SET_ACCESSOR_TF(      8)
 
-#define BX_TASK_FROM_JUMP         10
-#define BX_TASK_FROM_CALL_OR_INT  11
-#define BX_TASK_FROM_IRET         12
+#define BX_TASK_FROM_CALL       0
+#define BX_TASK_FROM_IRET       1
+#define BX_TASK_FROM_JUMP       2
+#define BX_TASK_FROM_INT        3     
 
 // <TAG-DEFINES-DECODE-START>
 
