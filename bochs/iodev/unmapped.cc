@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: unmapped.cc,v 1.29 2009-01-10 11:30:20 vruppert Exp $
+// $Id: unmapped.cc,v 1.30 2009-01-15 17:34:20 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -40,7 +40,6 @@ bx_unmapped_c *theUnmappedDevice = NULL;
 int libunmapped_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
 {
   theUnmappedDevice = new bx_unmapped_c();
-  bx_devices.pluginUnmapped = theUnmappedDevice;
   BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theUnmappedDevice, BX_PLUGIN_UNMAPPED);
   return(0); // Success
 }

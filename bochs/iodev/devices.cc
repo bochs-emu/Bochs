@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: devices.cc,v 1.132 2009-01-13 19:01:19 vruppert Exp $
+// $Id: devices.cc,v 1.133 2009-01-15 17:34:20 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -88,7 +88,6 @@ void bx_devices_c::init_stubs()
   pluginFloppyDevice = &stubFloppy;
   pluginCmosDevice = &stubCmos;
   pluginSerialDevice = &stubSerial;
-  pluginUnmapped = NULL;
   pluginVgaDevice = &stubVga;
   pluginPicDevice = &stubPic;
   pluginHardDrive = &stubHardDrive;
@@ -110,10 +109,10 @@ void bx_devices_c::init(BX_MEM_C *newmem)
   unsigned i;
   const char def_name[] = "Default";
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.132 2009-01-13 19:01:19 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.133 2009-01-15 17:34:20 vruppert Exp $"));
   mem = newmem;
 
-  /* set no-default handlers, will be overwritten by the real default handler */
+  /* set builtin default handlers, will be overwritten by the real default handler */
   register_default_io_read_handler(NULL, &default_read_handler, def_name, 7);
   io_read_handlers.next = &io_read_handlers;
   io_read_handlers.prev = &io_read_handlers;
@@ -156,14 +155,13 @@ void bx_devices_c::init(BX_MEM_C *newmem)
   // "by hand" in this file.  Basically, we're using core plugins when we
   // want to control the init order.
   //
-  // CB: UNMAPPED should maybe be optional
-  PLUG_load_plugin(unmapped, PLUGTYPE_CORE);
   PLUG_load_plugin(cmos, PLUGTYPE_CORE);
   PLUG_load_plugin(dma, PLUGTYPE_CORE);
   PLUG_load_plugin(pic, PLUGTYPE_CORE);
   PLUG_load_plugin(pit, PLUGTYPE_CORE);
   PLUG_load_plugin(vga, PLUGTYPE_CORE);
   PLUG_load_plugin(floppy, PLUGTYPE_CORE);
+  PLUG_load_plugin(unmapped, PLUGTYPE_OPTIONAL);
   PLUG_load_plugin(biosdev, PLUGTYPE_OPTIONAL);
   PLUG_load_plugin(harddrv, PLUGTYPE_OPTIONAL);
   PLUG_load_plugin(keyboard, PLUGTYPE_OPTIONAL);
@@ -181,9 +179,6 @@ void bx_devices_c::init(BX_MEM_C *newmem)
   PLUG_load_plugin(gameport, PLUGTYPE_OPTIONAL);
 #endif
   PLUG_load_plugin(speaker, PLUGTYPE_OPTIONAL);
-
-  // Start with registering the default (unmapped) handler
-  pluginUnmapped->init();
 
   // PCI logic (i440FX)
   if (SIM->get_param_bool(BXPN_I440FX_SUPPORT)->get()) {
@@ -229,21 +224,6 @@ void bx_devices_c::init(BX_MEM_C *newmem)
 #endif
   }
 
-#if BX_SUPPORT_APIC
-  // I/O APIC 82093AA
-  ioapic = & bx_ioapic;
-  ioapic->init ();
-#endif
-
-  // CMOS RAM & RTC
-  pluginCmosDevice->init ();
-
-  /*--- 8237 DMA ---*/
-  pluginDmaDevice->init();
-
-  //--- FLOPPY ---
-  pluginFloppyDevice->init();
-
   //--- SOUND ---
   if (SIM->get_param_bool(BXPN_SB16_ENABLED)->get()) {
 #if BX_SUPPORT_SB16
@@ -256,13 +236,28 @@ void bx_devices_c::init(BX_MEM_C *newmem)
   PLUG_load_plugin(iodebug, PLUGTYPE_OPTIONAL);
 #endif
 
+#if BX_SUPPORT_APIC
+  // I/O APIC 82093AA
+  ioapic = &bx_ioapic;
+  ioapic->init();
+#endif
+
+  // CMOS RAM & RTC
+  pluginCmosDevice->init();
+
+  /*--- 8237 DMA ---*/
+  pluginDmaDevice->init();
+
+  //--- FLOPPY ---
+  pluginFloppyDevice->init();
+
 #if BX_SUPPORT_PCI
-  pluginPciBridge->init ();
-  pluginPci2IsaBridge->init ();
+  pluginPciBridge->init();
+  pluginPci2IsaBridge->init();
 #endif
 
   /*--- VGA adapter ---*/
-  pluginVgaDevice->init ();
+  pluginVgaDevice->init();
 
   /*--- 8259A PIC ---*/
   pluginPicDevice->init();
@@ -319,7 +314,6 @@ void bx_devices_c::init(BX_MEM_C *newmem)
 void bx_devices_c::reset(unsigned type)
 {
   mem->disable_smram();
-  pluginUnmapped->reset(type);
 #if BX_SUPPORT_PCI
   if (SIM->get_param_bool(BXPN_I440FX_SUPPORT)->get()) {
     pluginPciBridge->reset(type);
@@ -402,7 +396,6 @@ void bx_devices_c::exit()
   bx_slowdown_timer.exit();
 
   PLUG_unload_plugin(pit);
-  PLUG_unload_plugin(unmapped);
   PLUG_unload_plugin(cmos);
   PLUG_unload_plugin(dma);
   PLUG_unload_plugin(pic);
@@ -457,21 +450,19 @@ void bx_devices_c::port92_write(Bit32u address, Bit32u value, unsigned io_len)
   }
 }
 
-// This defines a no-default read handler,
+// This defines the builtin default read handler,
 // so Bochs does not segfault if unmapped is not loaded
 Bit32u bx_devices_c::default_read_handler(void *this_ptr, Bit32u address, unsigned io_len)
 {
   UNUSED(this_ptr);
-  BX_PANIC(("No default io-read handler found for 0x%04x/%d. Unmapped io-device not loaded ?", address, io_len));
   return 0xffffffff;
 }
 
-// This defines a no-default write handler,
+// This defines the builtin default write handler,
 // so Bochs does not segfault if unmapped is not loaded
 void bx_devices_c::default_write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len)
 {
   UNUSED(this_ptr);
-  BX_PANIC(("No default io-write handler found for 0x%04x/%d. Unmapped io-device not loaded ?", address, io_len));
 }
 
 void bx_devices_c::timer_handler(void *this_ptr)
