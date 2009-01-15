@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: io.cc,v 1.71 2009-01-15 16:53:08 sshwarts Exp $
+// $Id: io.cc,v 1.72 2009-01-15 17:12:18 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -690,10 +690,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::IN_ALIb(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
-#if BX_SUPPORT_VMX
-  VMexit_IO(i, port, VMEXIT_IO_INTR_LEN(1) | VMEXIT_IO_INSTR_PORTIN | VMEXIT_IO_INSTR_IMM);
-#endif
-
   AL = BX_INP(port, 1);
 }
 
@@ -705,10 +701,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::IN_AXIb(bxInstruction_c *i)
     BX_DEBUG(("IN_AXIb: I/O access not allowed !"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
-
-#if BX_SUPPORT_VMX
-  VMexit_IO(i, port, VMEXIT_IO_INTR_LEN(2) | VMEXIT_IO_INSTR_PORTIN | VMEXIT_IO_INSTR_IMM);
-#endif
 
   AX = BX_INP(port, 2);
 }
@@ -722,10 +714,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::IN_EAXIb(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
-#if BX_SUPPORT_VMX
-  VMexit_IO(i, port, VMEXIT_IO_INTR_LEN(4) | VMEXIT_IO_INSTR_PORTIN | VMEXIT_IO_INSTR_IMM);
-#endif
-
   RAX = BX_INP(port, 4);
 }
 
@@ -737,10 +725,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::OUT_IbAL(bxInstruction_c *i)
     BX_DEBUG(("OUT_IbAL: I/O access not allowed !"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
-
-#if BX_SUPPORT_VMX
-  VMexit_IO(i, port, VMEXIT_IO_INTR_LEN(1) | VMEXIT_IO_INSTR_IMM);
-#endif
 
   BX_OUTP(port, AL, 1);
 }
@@ -754,10 +738,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::OUT_IbAX(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
-#if BX_SUPPORT_VMX
-  VMexit_IO(i, port, VMEXIT_IO_INTR_LEN(2) | VMEXIT_IO_INSTR_IMM);
-#endif
-
   BX_OUTP(port, AX, 2);
 }
 
@@ -769,10 +749,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::OUT_IbEAX(bxInstruction_c *i)
     BX_DEBUG(("OUT_IbEAX: I/O access not allowed !"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
-
-#if BX_SUPPORT_VMX
-  VMexit_IO(i, port, VMEXIT_IO_INTR_LEN(4) | VMEXIT_IO_INSTR_IMM);
-#endif
 
   BX_OUTP(port, EAX, 4);
 }
@@ -786,10 +762,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::IN_ALDX(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
-#if BX_SUPPORT_VMX
-  VMexit_IO(i, port, VMEXIT_IO_INTR_LEN(1) | VMEXIT_IO_INSTR_PORTIN);
-#endif
-
   AL = BX_INP(port, 1);
 }
 
@@ -801,10 +773,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::IN_AXDX(bxInstruction_c *i)
     BX_DEBUG(("IN_AXDX: I/O access not allowed !"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
-
-#if BX_SUPPORT_VMX
-  VMexit_IO(i, port, VMEXIT_IO_INTR_LEN(2) | VMEXIT_IO_INSTR_PORTIN);
-#endif
 
   AX = BX_INP(port, 2);
 }
@@ -818,10 +786,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::IN_EAXDX(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
-#if BX_SUPPORT_VMX
-  VMexit_IO(i, port, VMEXIT_IO_INTR_LEN(4) | VMEXIT_IO_INSTR_PORTIN);
-#endif
-
   RAX = BX_INP(port, 4);
 }
 
@@ -833,10 +797,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::OUT_DXAL(bxInstruction_c *i)
     BX_DEBUG(("OUT_DXAL: I/O access not allowed !"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
-
-#if BX_SUPPORT_VMX
-  VMexit_IO(i, port, VMEXIT_IO_INTR_LEN(1));
-#endif
 
   BX_OUTP(port, AL, 1);
 }
@@ -850,10 +810,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::OUT_DXAX(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
-#if BX_SUPPORT_VMX
-  VMexit_IO(i, port, VMEXIT_IO_INTR_LEN(2));
-#endif
-
   BX_OUTP(port, AX, 2);
 }
 
@@ -865,10 +821,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::OUT_DXEAX(bxInstruction_c *i)
     BX_DEBUG(("OUT_DXEAX: I/O access not allowed !"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
-
-#if BX_SUPPORT_VMX
-  VMexit_IO(i, port, VMEXIT_IO_INTR_LEN(4));
-#endif
 
   BX_OUTP(port, EAX, 4);
 }
