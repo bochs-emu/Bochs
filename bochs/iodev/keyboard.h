@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.h,v 1.44 2009-01-13 19:01:19 vruppert Exp $
+// $Id: keyboard.h,v 1.45 2009-01-16 11:53:38 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -22,13 +22,12 @@
 //
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
-//  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+//  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #ifndef _PCKEY_H
 #define _PCKEY_H
 
 #define BX_KBD_ELEMENTS 16
-#define BX_MOUSE_BUFF_SIZE 48
 
 // these keywords should only be used in keyboard.cc
 #if BX_USE_KEY_SMF
