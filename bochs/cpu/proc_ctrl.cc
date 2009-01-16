@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.271 2009-01-13 22:54:49 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.272 2009-01-16 18:18:58 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -22,7 +22,7 @@
 //
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
-//  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+//  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA B 02110-1301 USA
 //
 /////////////////////////////////////////////////////////////////////////
 
@@ -676,13 +676,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CqRq(bxInstruction_c *i)
       if (! SetCR4(val_64))
         exception(BX_GP_EXCEPTION, 0, 0);
       break;
-#if BX_SUPPORT_APIC
     case 8: // CR8
       // CR8 is aliased to APIC->TASK PRIORITY register
       //   APIC.TPR[7:4] = CR8[3:0]
       //   APIC.TPR[3:0] = 0
       // Reads of CR8 return zero extended APIC.TPR[7:4]
       // Write to CR8 update APIC.TPR[7:4]
+#if BX_SUPPORT_APIC
       if (val_64 & BX_CONST64(0xfffffffffffffff0)) {
         BX_ERROR(("MOV_CqRq: Attempt to set reserved bits of CR8"));
         exception(BX_GP_EXCEPTION, 0, 0);
@@ -737,13 +737,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RqCq(bxInstruction_c *i)
       BX_DEBUG(("MOV_RqCq: read of CR4"));
       val_64 = BX_CPU_THIS_PTR cr4.get32();
       break;
-#if BX_SUPPORT_APIC
     case 8: // CR8
       // CR8 is aliased to APIC->TASK PRIORITY register
       //   APIC.TPR[7:4] = CR8[3:0]
       //   APIC.TPR[3:0] = 0
       // Reads of CR8 return zero extended APIC.TPR[7:4]
       // Write to CR8 update APIC.TPR[7:4]
+#if BX_SUPPORT_APIC
       val_64 = (BX_CPU_THIS_PTR local_apic.get_tpr() & 0xF) >> 4;
       break;
 #endif
