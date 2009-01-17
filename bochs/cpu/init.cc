@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.190 2009-01-10 11:30:20 vruppert Exp $
+// $Id: init.cc,v 1.191 2009-01-17 22:35:45 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -170,6 +170,8 @@ void BX_CPU_C::initialize(void)
   const char *msrs_filename = SIM->get_param_string(BXPN_CONFIGURABLE_MSRS_PATH)->getptr();
   load_MSRs(msrs_filename);
 #endif
+
+  init_SMRAM();
 
 #if BX_WITH_WX
   register_wx_state();
