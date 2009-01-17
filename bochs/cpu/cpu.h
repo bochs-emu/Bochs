@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.552 2009-01-16 18:18:58 sshwarts Exp $
+// $Id: cpu.h,v 1.553 2009-01-17 18:56:25 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -3149,7 +3149,6 @@ public: // for now...
   BX_SMF void    set_ar_byte(bx_descriptor_t *d, Bit8u ar_byte) BX_CPP_AttrRegparmN(2);
   BX_SMF Bit32u  get_descriptor_l(const bx_descriptor_t *) BX_CPP_AttrRegparmN(1);
   BX_SMF Bit32u  get_descriptor_h(const bx_descriptor_t *) BX_CPP_AttrRegparmN(1);
-  BX_SMF Bit16u  get_segment_ar_data(const bx_descriptor_t *d) BX_CPP_AttrRegparmN(1);
   BX_SMF bx_bool set_segment_ar_data(bx_segment_reg_t *seg, bx_bool valid, Bit16u raw_selector,
                          bx_address base, Bit32u limit_scaled, Bit16u ar_data);
   BX_SMF void    check_cs(bx_descriptor_t *descriptor, Bit16u cs_raw, Bit8u check_rpl, Bit8u check_cpl);

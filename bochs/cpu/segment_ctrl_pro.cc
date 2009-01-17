@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: segment_ctrl_pro.cc,v 1.106 2009-01-16 18:18:58 sshwarts Exp $
+// $Id: segment_ctrl_pro.cc,v 1.107 2009-01-17 18:56:25 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -322,9 +322,7 @@ BX_CPU_C::parse_selector(Bit16u raw_selector, bx_selector_t *selector)
   Bit8u  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::ar_byte(const bx_descriptor_t *d)
 {
-  if (d->valid == 0) {
-    return(0);
-  }
+  if (d->valid == 0) return(0);
 
   return (d->type) |
          (d->segment << 4) |
@@ -346,9 +344,7 @@ BX_CPU_C::get_descriptor_l(const bx_descriptor_t *d)
 {
   Bit32u val;
 
-  if (d->valid == 0) {
-    return(0);
-  }
+//if (d->valid == 0) return(0);
 
   if (d->segment) {
     val = ((d->u.segment.base & 0xffff) << 16) | (d->u.segment.limit & 0xffff);
@@ -369,7 +365,7 @@ BX_CPU_C::get_descriptor_l(const bx_descriptor_t *d)
         return(val);
 
       default:
-        BX_PANIC(("#get_descriptor_l(): type %d not finished", d->type));
+        BX_ERROR(("#get_descriptor_l(): type %d not finished", d->type));
         return(0);
     }
   }
@@ -380,9 +376,7 @@ BX_CPU_C::get_descriptor_h(const bx_descriptor_t *d)
 {
   Bit32u val;
 
-  if (d->valid == 0) {
-    return(0);
-  }
+//if (d->valid == 0) return(0);
 
   if (d->segment) {
     val = (d->u.segment.base & 0xff000000) |
@@ -425,55 +419,13 @@ BX_CPU_C::get_descriptor_h(const bx_descriptor_t *d)
         return(val);
 
       default:
-        BX_PANIC(("#get_descriptor_h(): type %d not finished", d->type));
+        BX_ERROR(("#get_descriptor_h(): type %d not finished", d->type));
         return(0);
     }
   }
 }
 
 #if BX_CPU_LEVEL >= 3
-  Bit16u BX_CPP_AttrRegparmN(1)
-BX_CPU_C::get_segment_ar_data(const bx_descriptor_t *d)
-{
-  Bit16u val = 0;
-
-  if (d->segment) { /* data/code segment descriptors */
-    val = (d->type) |
-          (d->segment << 4) |
-          (d->dpl << 5) |
-          (d->p << 7) |
-          (d->u.segment.avl << 12) |
-#if BX_SUPPORT_X86_64
-          (d->u.segment.l << 13) |
-#endif
-          (d->u.segment.d_b << 14) |
-          (d->u.segment.g << 15);
-
-    return val;
-  }
-
-  switch (d->type) {
-    case BX_SYS_SEGMENT_AVAIL_286_TSS:
-    case BX_SYS_SEGMENT_BUSY_286_TSS:
-        BX_ASSERT(d->u.system.g   == 0);
-        BX_ASSERT(d->u.system.avl == 0);
-        // fall through
-    case BX_SYS_SEGMENT_LDT:
-    case BX_SYS_SEGMENT_AVAIL_386_TSS:
-    case BX_SYS_SEGMENT_BUSY_386_TSS:
-        val = (d->type) |
-              (d->dpl << 5) |
-              (d->p << 7) |
-              (d->u.system.avl << 12) |
-              (d->u.system.g << 15);
-        break;
-    default:
-        BX_PANIC(("get_segment_ar_data(): case %u unsupported", (unsigned) d->type));
-  }
-
-  return val;
-}
-
 bx_bool BX_CPU_C::set_segment_ar_data(bx_segment_reg_t *seg, bx_bool valid,
             Bit16u raw_selector, bx_address base, Bit32u limit_scaled, Bit16u ar_data)
 {
