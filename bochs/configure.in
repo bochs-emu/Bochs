@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.381 2009-01-15 21:52:52 sshwarts Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.382 2009-01-18 13:11:27 vruppert Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -762,7 +762,7 @@ AC_ARG_ENABLE(usb,
     AC_MSG_RESULT(yes)
     AC_DEFINE(BX_SUPPORT_PCIUSB, 1)
     PCI_OBJ="$PCI_OBJ pciusb.o"
-    USBDEV_OBJS="usb_hid.o usb_msd.o"
+    USBDEV_OBJS="usb_common.o usb_hid.o usb_msd.o"
     SCSI_OBJS="scsi_device.o"
    else
     AC_MSG_RESULT(no)

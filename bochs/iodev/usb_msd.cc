@@ -1,8 +1,8 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_msd.cc,v 1.9 2009-01-10 11:30:20 vruppert Exp $
+// $Id: usb_msd.cc,v 1.10 2009-01-18 13:11:27 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2007  Volker Ruppert
+//  Copyright (C) 2009  Volker Ruppert
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -28,8 +28,9 @@
 
 #define NO_DEVICE_INCLUDES
 #include "iodev.h"
+
 #if BX_SUPPORT_PCI && BX_SUPPORT_PCIUSB
-#include "pciusb.h"
+#include "usb_common.h"
 #include "hdimage.h"
 #include "scsi_device.h"
 #include "usb_msd.h"

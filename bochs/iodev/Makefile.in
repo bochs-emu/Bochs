@@ -165,8 +165,8 @@ libbx_serial.la: serial.lo serial_raw.lo
 libbx_vga.la: vga.lo svga_cirrus.lo
 	$(LIBTOOL) --mode=link $(CXX) -module vga.lo svga_cirrus.lo -o libbx_vga.la -rpath $(PLUGIN_PATH)
 
-libbx_pciusb.la: pciusb.lo usb_hid.lo usb_msd.lo scsi_device.lo hdimage.lo cdrom.lo
-	$(LIBTOOL) --mode=link $(CXX) -module pciusb.lo usb_hid.lo usb_msd.lo scsi_device.lo hdimage.lo cdrom.lo -o libbx_pciusb.la -rpath $(PLUGIN_PATH)
+libbx_pciusb.la: pciusb.lo $(USBDEV_OBJS:.o=.lo) scsi_device.lo hdimage.lo cdrom.lo
+	$(LIBTOOL) --mode=link $(CXX) -module pciusb.lo $(USBDEV_OBJS:.o=.lo) scsi_device.lo hdimage.lo cdrom.lo -o libbx_pciusb.la -rpath $(PLUGIN_PATH)
 
 #### building DLLs for win32  (tested on cygwin only)
 bx_%.dll: %.o
@@ -200,8 +200,8 @@ bx_serial.dll: serial.o serial_raw.o
 bx_vga.dll: vga.o svga_cirrus.o
 	$(CXX) $(CXXFLAGS) -shared -o bx_vga.dll vga.o svga_cirrus.o $(WIN32_DLL_IMPORT_LIBRARY)
 
-bx_pciusb.dll: pciusb.o usb_hid.o usb_msd.o scsi_device.o hdimage.o cdrom.o
-	$(CXX) $(CXXFLAGS) -shared -o bx_pciusb.dll pciusb.o usb_hid.o usb_msd.o scsi_device.o hdimage.o cdrom.o $(WIN32_DLL_IMPORT_LIBRARY)
+bx_pciusb.dll: pciusb.o $(USBDEV_OBJS) scsi_device.o hdimage.o cdrom.o
+	$(CXX) $(CXXFLAGS) -shared -o bx_pciusb.dll pciusb.o $(USBDEV_OBJS) scsi_device.o hdimage.o cdrom.o $(WIN32_DLL_IMPORT_LIBRARY)
 
 ##### end DLL section
 
@@ -226,22 +226,19 @@ acpi.o: acpi.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
   ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h ../iodev/vga.h \
-  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h \
-  ../iodev/keyboard.h pci.h acpi.h
+  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h pci.h acpi.h
 biosdev.o: biosdev.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
   ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h ../iodev/vga.h \
-  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h \
-  ../iodev/keyboard.h biosdev.h
+  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h biosdev.h
 busmouse.o: busmouse.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
   ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h ../iodev/vga.h \
-  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h \
-  ../iodev/keyboard.h busmouse.h
+  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h busmouse.h
 cdrom_amigaos.o: cdrom_amigaos.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
@@ -259,8 +256,7 @@ cmos.o: cmos.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
   ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h ../iodev/vga.h \
-  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h \
-  ../iodev/keyboard.h cmos.h
+  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h cmos.h
 crc32.o: crc32.@CPP_SUFFIX@ crc32.h ../config.h
 devices.o: devices.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
@@ -268,15 +264,13 @@ devices.o: devices.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h ../iodev/vga.h \
   ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h \
-  ../iodev/keyboard.h ../iodev/pit_wrap.h ../iodev/pit82c54.h \
   ../iodev/virt_timer.h ../iodev/slowdown_timer.h
 dma.o: dma.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
   ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h ../iodev/vga.h \
-  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h \
-  ../iodev/keyboard.h dma.h
+  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h dma.h
 eth_arpback.o: eth_arpback.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
@@ -307,8 +301,7 @@ eth_packetmaker.o: eth_packetmaker.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
   ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h ../iodev/vga.h \
-  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h \
-  ../iodev/keyboard.h
+  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h
 eth_tap.o: eth_tap.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
@@ -339,36 +332,32 @@ extfpuirq.o: extfpuirq.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
   ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h ../iodev/vga.h \
-  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h \
-  ../iodev/keyboard.h extfpuirq.h
+  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h extfpuirq.h
 floppy.o: floppy.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
   ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h ../iodev/vga.h \
-  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h \
-  ../iodev/keyboard.h floppy.h
+  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h floppy.h
 gameport.o: gameport.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
   ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h ../iodev/vga.h \
-  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h \
-  ../iodev/keyboard.h gameport.h
+  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h gameport.h
 guest2host.o: guest2host.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
   ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h ../iodev/vga.h \
-  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h \
-  ../iodev/keyboard.h guest2host.h
+  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h guest2host.h
 harddrv.o: harddrv.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
   ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h ../iodev/vga.h \
-  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h \
-  ../iodev/keyboard.h harddrv.h hdimage.h vmware3.h vmware4.h cdrom.h
+  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h harddrv.h \
+  hdimage.h vmware3.h vmware4.h cdrom.h
 hdimage.o: hdimage.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
@@ -379,113 +368,102 @@ ioapic.o: ioapic.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
   ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h ../iodev/vga.h \
-  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h \
-  ../iodev/keyboard.h
+  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h
 iodebug.o: iodebug.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
   ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h ../iodev/vga.h \
-  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h \
-  ../iodev/keyboard.h
+  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h
 keyboard.o: keyboard.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
   ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h ../iodev/vga.h \
-  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h \
-  ../iodev/keyboard.h scancodes.h
+  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h keyboard.h \
+  scancodes.h
 ne2k.o: ne2k.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
   ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h ../iodev/vga.h \
-  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h \
-  ../iodev/keyboard.h pci.h ne2k.h eth.h
+  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h pci.h ne2k.h \
+  eth.h
 parallel.o: parallel.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
   ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h ../iodev/vga.h \
-  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h \
-  ../iodev/keyboard.h parallel.h
+  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h parallel.h
 pci2isa.o: pci2isa.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
   ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h ../iodev/vga.h \
-  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h \
-  ../iodev/keyboard.h pci.h pci2isa.h
+  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h pci.h pci2isa.h
 pci.o: pci.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
   ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h ../iodev/vga.h \
-  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h \
-  ../iodev/keyboard.h pci.h
+  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h pci.h
 pcidev.o: pcidev.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
   ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h ../iodev/vga.h \
-  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h \
-  ../iodev/keyboard.h
+  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h
 pci_ide.o: pci_ide.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
   ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h ../iodev/vga.h \
-  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h \
-  ../iodev/keyboard.h pci.h pci_ide.h
+  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h pci.h pci_ide.h
 pcipnic.o: pcipnic.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
   ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h ../iodev/vga.h \
-  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h \
-  ../iodev/keyboard.h
+  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h
 pciusb.o: pciusb.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
   ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h ../iodev/vga.h \
-  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h \
-  ../iodev/keyboard.h pci.h pciusb.h usb_hid.h usb_msd.h
+  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h pci.h \
+  usb_common.h usb_hid.h usb_msd.h pciusb.h
 pcivga.o: pcivga.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
   ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h ../iodev/vga.h \
-  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h \
-  ../iodev/keyboard.h pci.h pcivga.h
+  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h pci.h pcivga.h
 pic.o: pic.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
   ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h ../iodev/vga.h \
-  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h \
-  ../iodev/keyboard.h pic.h
+  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h pic.h
 pit82c54.o: pit82c54.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
   ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h ../iodev/vga.h \
-  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h \
-  ../iodev/keyboard.h pit82c54.h
+  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h pit82c54.h
 pit_wrap.o: pit_wrap.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
   ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h ../iodev/vga.h \
-  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h \
-  ../iodev/keyboard.h pit_wrap.h pit82c54.h virt_timer.h speaker.h
+  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h pit_wrap.h \
+  pit82c54.h virt_timer.h speaker.h
 sb16.o: sb16.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
   ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h ../iodev/vga.h \
-  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h \
-  ../iodev/keyboard.h sb16.h soundlnx.h soundwin.h soundosx.h
+  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h sb16.h \
+  soundlnx.h soundwin.h soundosx.h
 scancodes.o: scancodes.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
@@ -502,8 +480,7 @@ serial.o: serial.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
   ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h ../iodev/vga.h \
-  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h \
-  ../iodev/keyboard.h serial.h
+  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h serial.h
 serial_raw.o: serial_raw.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
@@ -539,33 +516,37 @@ svga_cirrus.o: svga_cirrus.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
   ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h ../iodev/vga.h \
-  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h \
-  ../iodev/keyboard.h vga.h
+  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h vga.h
 unmapped.o: unmapped.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
   ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h ../iodev/vga.h \
-  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h \
-  ../iodev/keyboard.h unmapped.h
+  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h unmapped.h
+usb_common.o: usb_common.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
+  ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
+  ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
+  ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
+  ../gui/keymap.h ../instrument/stubs/instrument.h ../iodev/vga.h \
+  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h pci.h \
+  usb_common.h usb_hid.h usb_msd.h
 usb_hid.o: usb_hid.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
   ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
-  ../gui/keymap.h ../instrument/stubs/instrument.h pciusb.h usb_hid.h
+  ../gui/keymap.h ../instrument/stubs/instrument.h usb_common.h usb_hid.h
 usb_msd.o: usb_msd.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
   ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
-  ../gui/keymap.h ../instrument/stubs/instrument.h pciusb.h hdimage.h \
+  ../gui/keymap.h ../instrument/stubs/instrument.h usb_common.h hdimage.h \
   scsi_device.h usb_msd.h
 vga.o: vga.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
   ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h ../iodev/vga.h \
-  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h \
-  ../iodev/keyboard.h vga.h
+  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h vga.h
 virt_timer.o: virt_timer.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
@@ -586,22 +567,19 @@ acpi.lo: acpi.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
   ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h ../iodev/vga.h \
-  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h \
-  ../iodev/keyboard.h pci.h acpi.h
+  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h pci.h acpi.h
 biosdev.lo: biosdev.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
   ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h ../iodev/vga.h \
-  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h \
-  ../iodev/keyboard.h biosdev.h
+  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h biosdev.h
 busmouse.lo: busmouse.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
   ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h ../iodev/vga.h \
-  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h \
-  ../iodev/keyboard.h busmouse.h
+  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h busmouse.h
 cdrom_amigaos.lo: cdrom_amigaos.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
@@ -619,8 +597,7 @@ cmos.lo: cmos.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
   ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h ../iodev/vga.h \
-  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h \
-  ../iodev/keyboard.h cmos.h
+  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h cmos.h
 crc32.lo: crc32.@CPP_SUFFIX@ crc32.h ../config.h
 devices.lo: devices.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
@@ -628,15 +605,13 @@ devices.lo: devices.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h ../iodev/vga.h \
   ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h \
-  ../iodev/keyboard.h ../iodev/pit_wrap.h ../iodev/pit82c54.h \
   ../iodev/virt_timer.h ../iodev/slowdown_timer.h
 dma.lo: dma.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
   ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h ../iodev/vga.h \
-  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h \
-  ../iodev/keyboard.h dma.h
+  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h dma.h
 eth_arpback.lo: eth_arpback.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
@@ -667,8 +642,7 @@ eth_packetmaker.lo: eth_packetmaker.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h 
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
   ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h ../iodev/vga.h \
-  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h \
-  ../iodev/keyboard.h
+  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h
 eth_tap.lo: eth_tap.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
@@ -699,36 +673,32 @@ extfpuirq.lo: extfpuirq.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
   ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h ../iodev/vga.h \
-  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h \
-  ../iodev/keyboard.h extfpuirq.h
+  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h extfpuirq.h
 floppy.lo: floppy.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
   ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h ../iodev/vga.h \
-  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h \
-  ../iodev/keyboard.h floppy.h
+  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h floppy.h
 gameport.lo: gameport.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
   ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h ../iodev/vga.h \
-  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h \
-  ../iodev/keyboard.h gameport.h
+  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h gameport.h
 guest2host.lo: guest2host.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
   ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h ../iodev/vga.h \
-  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h \
-  ../iodev/keyboard.h guest2host.h
+  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h guest2host.h
 harddrv.lo: harddrv.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
   ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h ../iodev/vga.h \
-  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h \
-  ../iodev/keyboard.h harddrv.h hdimage.h vmware3.h vmware4.h cdrom.h
+  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h harddrv.h \
+  hdimage.h vmware3.h vmware4.h cdrom.h
 hdimage.lo: hdimage.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
@@ -739,113 +709,102 @@ ioapic.lo: ioapic.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
   ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h ../iodev/vga.h \
-  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h \
-  ../iodev/keyboard.h
+  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h
 iodebug.lo: iodebug.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
   ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h ../iodev/vga.h \
-  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h \
-  ../iodev/keyboard.h
+  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h
 keyboard.lo: keyboard.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
   ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h ../iodev/vga.h \
-  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h \
-  ../iodev/keyboard.h scancodes.h
+  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h keyboard.h \
+  scancodes.h
 ne2k.lo: ne2k.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
   ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h ../iodev/vga.h \
-  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h \
-  ../iodev/keyboard.h pci.h ne2k.h eth.h
+  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h pci.h ne2k.h \
+  eth.h
 parallel.lo: parallel.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
   ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h ../iodev/vga.h \
-  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h \
-  ../iodev/keyboard.h parallel.h
+  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h parallel.h
 pci2isa.lo: pci2isa.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
   ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h ../iodev/vga.h \
-  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h \
-  ../iodev/keyboard.h pci.h pci2isa.h
+  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h pci.h pci2isa.h
 pci.lo: pci.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
   ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h ../iodev/vga.h \
-  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h \
-  ../iodev/keyboard.h pci.h
+  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h pci.h
 pcidev.lo: pcidev.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
   ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h ../iodev/vga.h \
-  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h \
-  ../iodev/keyboard.h
+  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h
 pci_ide.lo: pci_ide.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
   ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h ../iodev/vga.h \
-  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h \
-  ../iodev/keyboard.h pci.h pci_ide.h
+  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h pci.h pci_ide.h
 pcipnic.lo: pcipnic.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
   ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h ../iodev/vga.h \
-  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h \
-  ../iodev/keyboard.h
+  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h
 pciusb.lo: pciusb.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
   ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h ../iodev/vga.h \
-  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h \
-  ../iodev/keyboard.h pci.h pciusb.h usb_hid.h usb_msd.h
+  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h pci.h \
+  usb_common.h usb_hid.h usb_msd.h pciusb.h
 pcivga.lo: pcivga.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
   ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h ../iodev/vga.h \
-  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h \
-  ../iodev/keyboard.h pci.h pcivga.h
+  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h pci.h pcivga.h
 pic.lo: pic.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
   ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h ../iodev/vga.h \
-  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h \
-  ../iodev/keyboard.h pic.h
+  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h pic.h
 pit82c54.lo: pit82c54.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
   ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h ../iodev/vga.h \
-  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h \
-  ../iodev/keyboard.h pit82c54.h
+  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h pit82c54.h
 pit_wrap.lo: pit_wrap.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
   ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h ../iodev/vga.h \
-  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h \
-  ../iodev/keyboard.h pit_wrap.h pit82c54.h virt_timer.h speaker.h
+  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h pit_wrap.h \
+  pit82c54.h virt_timer.h speaker.h
 sb16.lo: sb16.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
   ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h ../iodev/vga.h \
-  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h \
-  ../iodev/keyboard.h sb16.h soundlnx.h soundwin.h soundosx.h
+  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h sb16.h \
+  soundlnx.h soundwin.h soundosx.h
 scancodes.lo: scancodes.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
@@ -862,8 +821,7 @@ serial.lo: serial.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
   ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h ../iodev/vga.h \
-  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h \
-  ../iodev/keyboard.h serial.h
+  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h serial.h
 serial_raw.lo: serial_raw.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
@@ -899,33 +857,37 @@ svga_cirrus.lo: svga_cirrus.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
   ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h ../iodev/vga.h \
-  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h \
-  ../iodev/keyboard.h vga.h
+  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h vga.h
 unmapped.lo: unmapped.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
   ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h ../iodev/vga.h \
-  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h \
-  ../iodev/keyboard.h unmapped.h
+  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h unmapped.h
+usb_common.lo: usb_common.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
+  ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
+  ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
+  ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
+  ../gui/keymap.h ../instrument/stubs/instrument.h ../iodev/vga.h \
+  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h pci.h \
+  usb_common.h usb_hid.h usb_msd.h
 usb_hid.lo: usb_hid.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
   ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
-  ../gui/keymap.h ../instrument/stubs/instrument.h pciusb.h usb_hid.h
+  ../gui/keymap.h ../instrument/stubs/instrument.h usb_common.h usb_hid.h
 usb_msd.lo: usb_msd.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
   ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
-  ../gui/keymap.h ../instrument/stubs/instrument.h pciusb.h hdimage.h \
+  ../gui/keymap.h ../instrument/stubs/instrument.h usb_common.h hdimage.h \
   scsi_device.h usb_msd.h
 vga.lo: vga.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
   ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h ../iodev/vga.h \
-  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h \
-  ../iodev/keyboard.h vga.h
+  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h vga.h
 virt_timer.lo: virt_timer.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
