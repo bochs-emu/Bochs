@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_hid.cc,v 1.10 2009-01-19 09:48:11 vruppert Exp $
+// $Id: usb_hid.cc,v 1.11 2009-01-19 13:13:32 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Volker Ruppert
@@ -449,7 +449,7 @@ int usb_hid_device_c::handle_control(int request, int value, int index, int leng
             memcpy(data, bx_keypad_dev_descriptor,
                    sizeof(bx_keypad_dev_descriptor));
             ret = sizeof(bx_keypad_dev_descriptor);
-	  } else {
+          } else {
             goto fail;
           }
           break;
@@ -468,7 +468,7 @@ int usb_hid_device_c::handle_control(int request, int value, int index, int leng
             ret = sizeof(bx_keypad_config_descriptor);
           } else {
             goto fail;
-          }		
+          }
           break;
         case USB_DT_STRING:
           switch(value & 0xff) {

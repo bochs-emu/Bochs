@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.h,v 1.63 2008-12-29 08:16:53 vruppert Exp $
+// $Id: vga.h,v 1.64 2009-01-19 13:13:32 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -22,7 +22,7 @@
 //
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
-//  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+//  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #ifndef BX_IODEV_VGA_H
 #define BX_IODEV_VGA_H
@@ -59,9 +59,6 @@
 
   #define VBE_DISPI_IOPORT_INDEX          0x01CE
   #define VBE_DISPI_IOPORT_DATA           0x01CF
-
-  #define VBE_DISPI_IOPORT_INDEX_OLD      0xFF80
-  #define VBE_DISPI_IOPORT_DATA_OLD       0xFF81
 
   #define VBE_DISPI_INDEX_ID              0x0
   #define VBE_DISPI_INDEX_XRES            0x1

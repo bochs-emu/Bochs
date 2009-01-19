@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_uhci.h,v 1.1 2009-01-19 09:48:12 vruppert Exp $
+// $Id: usb_uhci.h,v 1.2 2009-01-19 13:13:32 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Benjamin D Lunt (fys at frontiernet net)
@@ -209,7 +209,7 @@ private:
 
   USBPacket usb_packet;
 
-  static void   set_irq_level(bx_bool level);
+  static void set_irq_level(bx_bool level);
 
   static void init_device(Bit8u port, const char *devname);
   static void usb_set_connect_status(Bit8u port, int type, bx_bool connected);

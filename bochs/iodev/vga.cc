@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.156 2008-12-29 20:16:08 sshwarts Exp $
+// $Id: vga.cc,v 1.157 2009-01-19 13:13:32 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -22,7 +22,7 @@
 //
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
-//  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+//  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 /////////////////////////////////////////////////////////////////////////
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
@@ -294,12 +294,6 @@ void bx_vga_c::init(void)
     for (addr=VBE_DISPI_IOPORT_INDEX; addr<=VBE_DISPI_IOPORT_DATA; addr++) {
       DEV_register_ioread_handler(this, vbe_read_handler, addr, "vga video", 7);
       DEV_register_iowrite_handler(this, vbe_write_handler, addr, "vga video", 7);
-    }
-    if (!BX_SUPPORT_PCIUSB || !SIM->get_param_bool(BXPN_USB1_ENABLED)->get()) {
-      for (addr=VBE_DISPI_IOPORT_INDEX_OLD; addr<=VBE_DISPI_IOPORT_DATA_OLD; addr++) {
-        DEV_register_ioread_handler(this, vbe_read_handler, addr, "vga video", 7);
-        DEV_register_iowrite_handler(this, vbe_write_handler, addr, "vga video", 7);
-      }
     }
     DEV_register_memory_handlers(theVga, mem_read_handler, mem_write_handler,
                                  VBE_DISPI_LFB_PHYSICAL_ADDRESS,
@@ -3043,8 +3037,7 @@ Bit32u bx_vga_c::vbe_read(Bit32u address, unsigned io_len)
 
 //  BX_INFO(("VBE_read %x (len %x)", address, io_len));
 
-  if ((address==VBE_DISPI_IOPORT_INDEX) ||
-      (address==VBE_DISPI_IOPORT_INDEX_OLD))
+  if (address==VBE_DISPI_IOPORT_INDEX)
   {
     // index register
     return (Bit32u) BX_VGA_THIS s.vbe_curindex;
@@ -3133,8 +3126,6 @@ Bit32u bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
   {
     // index register
     case VBE_DISPI_IOPORT_INDEX:
-    // legacy index register
-    case VBE_DISPI_IOPORT_INDEX_OLD:
 
       BX_VGA_THIS s.vbe_curindex = (Bit16u) value;
       break;
@@ -3142,8 +3133,6 @@ Bit32u bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
     // data register
     // FIXME: maybe do some 'sanity' checks on received data?
     case VBE_DISPI_IOPORT_DATA:
-    // legacy data register
-    case VBE_DISPI_IOPORT_DATA_OLD:
       switch (BX_VGA_THIS s.vbe_curindex)
       {
         case VBE_DISPI_INDEX_ID: // Display Interface ID check

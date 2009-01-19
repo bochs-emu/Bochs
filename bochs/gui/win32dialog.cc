@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32dialog.cc,v 1.67 2009-01-12 19:15:35 sshwarts Exp $
+// $Id: win32dialog.cc,v 1.68 2009-01-19 13:13:32 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #include "win32dialog.h"
@@ -555,9 +555,9 @@ static BOOL CALLBACK RTUSBdevDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM 
 
   switch (msg) {
     case WM_INITDIALOG:
-      if (SIM->get_param_string(BXPN_USB1_PORT1)->get_enabled()) {
-        SetDlgItemText(hDlg, IDUSBDEV1, SIM->get_param_string(BXPN_USB1_PORT1)->getptr());
-        SetDlgItemText(hDlg, IDUSBDEV2, SIM->get_param_string(BXPN_USB1_PORT2)->getptr());
+      if (SIM->get_param_string(BXPN_UHCI_PORT1)->get_enabled()) {
+        SetDlgItemText(hDlg, IDUSBDEV1, SIM->get_param_string(BXPN_UHCI_PORT1)->getptr());
+        SetDlgItemText(hDlg, IDUSBDEV2, SIM->get_param_string(BXPN_UHCI_PORT2)->getptr());
       } else {
         EnableWindow(GetDlgItem(hDlg, IDUSBLBL1), FALSE);
         EnableWindow(GetDlgItem(hDlg, IDUSBLBL2), FALSE);
@@ -572,9 +572,9 @@ static BOOL CALLBACK RTUSBdevDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM 
         case PSN_APPLY:
           if ((psn->lParam == FALSE) && changed) { // Apply pressed & change in this dialog
             GetDlgItemText(hDlg, IDUSBDEV1, buffer, sizeof(buffer));
-            SIM->get_param_string(BXPN_USB1_PORT1)->set(buffer);
+            SIM->get_param_string(BXPN_UHCI_PORT1)->set(buffer);
             GetDlgItemText(hDlg, IDUSBDEV2, buffer, sizeof(buffer));
-            SIM->get_param_string(BXPN_USB1_PORT2)->set(buffer);
+            SIM->get_param_string(BXPN_UHCI_PORT2)->set(buffer);
           }
           return PSNRET_NOERROR;
         case PSN_QUERYCANCEL:

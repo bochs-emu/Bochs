@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: devices.cc,v 1.134 2009-01-19 09:48:11 vruppert Exp $
+// $Id: devices.cc,v 1.135 2009-01-19 13:13:32 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -112,7 +112,7 @@ void bx_devices_c::init(BX_MEM_C *newmem)
   unsigned i;
   const char def_name[] = "Default";
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.134 2009-01-19 09:48:11 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.135 2009-01-19 13:13:32 vruppert Exp $"));
   mem = newmem;
 
   /* set builtin default handlers, will be overwritten by the real default handler */
@@ -993,13 +993,15 @@ bx_bool bx_devices_c::is_parallel_enabled(void)
 
 bx_bool bx_devices_c::is_usb_ohci_enabled(void)
 {
-  // TODO
+  if (SIM->get_param_bool(BXPN_OHCI_ENABLED)->get()) {
+    return 1;
+  }
   return 0;
 }
 
 bx_bool bx_devices_c::is_usb_uhci_enabled(void)
 {
-  if (SIM->get_param_bool("ports.usb.1.enabled")->get()) {
+  if (SIM->get_param_bool(BXPN_UHCI_ENABLED)->get()) {
     return 1;
   }
   return 0;

@@ -1,4 +1,4 @@
-$Id: PARAM_TREE.txt,v 1.19 2009-01-06 20:35:38 vruppert Exp $
+$Id: PARAM_TREE.txt,v 1.20 2009-01-19 13:13:32 vruppert Exp $
 
 Starting from Bochs 2.3 the parameters are organized in a tree structure
 instead of a huge flat list. The parameter tree was required for implementing
@@ -175,13 +175,15 @@ ports
       outfile
     2
       (same options as ports.parallel.1)
-  usb
-    1
-      enabled
-      port1
-      option1
-      port2
-      option2
+usb
+  uhci
+    enabled
+    port1
+    port2
+  ohci
+    enabled
+    port1
+    port2
 
 network
   ne2k
@@ -239,4 +241,4 @@ wxdebug
 user
   (subtree for user-defined options)
 
-(updated Jan  6, 2008 by vruppert)
+(updated Jan 19, 2008 by vruppert)

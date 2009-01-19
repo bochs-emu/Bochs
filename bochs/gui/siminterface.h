@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.223 2009-01-10 11:30:20 vruppert Exp $
+// $Id: siminterface.h,v 1.224 2009-01-19 13:13:32 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  The Bochs Project
@@ -229,9 +229,12 @@ typedef enum {
 #define BXPN_ATA1_SLAVE                  "ata.1.slave"
 #define BXPN_ATA2_SLAVE                  "ata.2.slave"
 #define BXPN_ATA3_SLAVE                  "ata.3.slave"
-#define BXPN_USB1_ENABLED                "ports.usb.1.enabled"
-#define BXPN_USB1_PORT1                  "ports.usb.1.port1"
-#define BXPN_USB1_PORT2                  "ports.usb.1.port2"
+#define BXPN_UHCI_ENABLED                "usb.uhci.enabled"
+#define BXPN_UHCI_PORT1                  "usb.uhci.port1"
+#define BXPN_UHCI_PORT2                  "usb.uhci.port2"
+#define BXPN_OHCI_ENABLED                "usb.ohci.enabled"
+#define BXPN_OHCI_PORT1                  "usb.ohci.port1"
+#define BXPN_OHCI_PORT2                  "usb.ohci.port2"
 #define BXPN_NE2K                        "network.ne2k"
 #define BXPN_NE2K_ENABLED                "network.ne2k.enabled"
 #define BXPN_PNIC                        "network.pnic"
