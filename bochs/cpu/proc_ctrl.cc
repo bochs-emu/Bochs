@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.273 2009-01-17 16:55:13 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.274 2009-01-19 17:43:54 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1382,9 +1382,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDPMC(bxInstruction_c *i)
 }
 
 #if BX_CPU_LEVEL >= 5
-BX_CPP_INLINE Bit64u BX_CPU_C::get_TSC(void)
+Bit64u BX_CPU_C::get_TSC(void)
 {
-  return bx_pc_system.time_ticks() - BX_CPU_THIS_PTR msr.tsc_last_reset;
+  Bit64u tsc = bx_pc_system.time_ticks() - BX_CPU_THIS_PTR msr.tsc_last_reset;
+  return tsc;
 }
 
 void BX_CPU_C::set_TSC(Bit64u newval)
@@ -1394,7 +1395,7 @@ void BX_CPU_C::set_TSC(Bit64u newval)
   BX_CPU_THIS_PTR msr.tsc_last_reset = bx_pc_system.time_ticks() - newval;
 
   // verify
-  BX_ASSERT (get_TSC() == newval);
+  BX_ASSERT(get_TSC() == newval);
 }
 #endif
 
@@ -1404,11 +1405,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDTSC(bxInstruction_c *i)
   if (! BX_CPU_THIS_PTR cr4.get_TSD() || CPL==0) {
     // return ticks
     Bit64u ticks = BX_CPU_THIS_PTR get_TSC();
-    RAX = (Bit32u) (ticks & 0xffffffff);
-    RDX = (Bit32u) ((ticks >> 32) & 0xffffffff);
+    RAX = GET32L(ticks);
+    RDX = GET32H(ticks);
   } else {
-    // not allowed to use RDTSC!
-    BX_ERROR(("RDTSC: incorrect usage of RDTSC instruction !"));
+    BX_ERROR(("RDTSC: not allowed to use instruction !"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 #else

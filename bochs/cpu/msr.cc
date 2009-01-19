@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: msr.cc,v 1.9 2009-01-19 16:45:54 sshwarts Exp $
+// $Id: msr.cc,v 1.10 2009-01-19 17:43:54 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008 Stanislav Shwartsman
@@ -41,32 +41,28 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDMSR(bxInstruction_c *i)
   }
 
   Bit32u index = ECX;
+  Bit64u val64 = 0;
 
   /* We have the requested MSR register in ECX */
   switch(index) {
 
 #if BX_SUPPORT_SEP
     case BX_MSR_SYSENTER_CS:
-      RAX = BX_CPU_THIS_PTR msr.sysenter_cs_msr;
-      RDX = 0;
+      val64 = BX_CPU_THIS_PTR msr.sysenter_cs_msr;
       break;
 
     case BX_MSR_SYSENTER_ESP:
-      RAX = GET32L(BX_CPU_THIS_PTR msr.sysenter_esp_msr);
-      RDX = GET32H(BX_CPU_THIS_PTR msr.sysenter_esp_msr);
+      val64 = BX_CPU_THIS_PTR msr.sysenter_esp_msr;
       break;
 
     case BX_MSR_SYSENTER_EIP:
-      RAX = GET32L(BX_CPU_THIS_PTR msr.sysenter_eip_msr);
-      RDX = GET32H(BX_CPU_THIS_PTR msr.sysenter_eip_msr);
-      RDX = 0;
+      val64 = BX_CPU_THIS_PTR msr.sysenter_eip_msr;
       break;
 #endif
 
 #if BX_SUPPORT_MTRR
     case BX_MSR_MTRRCAP:   // read only MSR
-      RAX = 0x508;
-      RDX = 0;
+      val64 = BX_CONST64(0x0000000000000508);
       break;
 
     case BX_MSR_MTRRPHYSBASE0:
@@ -85,21 +81,17 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDMSR(bxInstruction_c *i)
     case BX_MSR_MTRRPHYSMASK6:
     case BX_MSR_MTRRPHYSBASE7:
     case BX_MSR_MTRRPHYSMASK7:
-      RAX = GET32L(BX_CPU_THIS_PTR msr.mtrrphys[index - BX_MSR_MTRRPHYSBASE0]);
-      RDX = GET32H(BX_CPU_THIS_PTR msr.mtrrphys[index - BX_MSR_MTRRPHYSBASE0]);
+      val64 = BX_CPU_THIS_PTR msr.mtrrphys[index - BX_MSR_MTRRPHYSBASE0];
       break;
 
     case BX_MSR_MTRRFIX64K_00000:
-      RAX = GET32L(BX_CPU_THIS_PTR msr.mtrrfix64k_00000);
-      RDX = GET32H(BX_CPU_THIS_PTR msr.mtrrfix64k_00000);
+      val64 = BX_CPU_THIS_PTR msr.mtrrfix64k_00000;
       break;
     case BX_MSR_MTRRFIX16K_80000:
-      RAX = GET32L(BX_CPU_THIS_PTR msr.mtrrfix16k_80000);
-      RDX = GET32H(BX_CPU_THIS_PTR msr.mtrrfix16k_80000);
+      val64 = BX_CPU_THIS_PTR msr.mtrrfix16k_80000;
       break;
     case BX_MSR_MTRRFIX16K_A0000:
-      RAX = GET32L(BX_CPU_THIS_PTR msr.mtrrfix16k_a0000);
-      RDX = GET32H(BX_CPU_THIS_PTR msr.mtrrfix16k_a0000);
+      val64 = BX_CPU_THIS_PTR msr.mtrrfix16k_a0000;
       break;
 
     case BX_MSR_MTRRFIX4K_C0000:
@@ -110,23 +102,20 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDMSR(bxInstruction_c *i)
     case BX_MSR_MTRRFIX4K_E8000:
     case BX_MSR_MTRRFIX4K_F0000:
     case BX_MSR_MTRRFIX4K_F8000:
-      RAX = GET32L(BX_CPU_THIS_PTR msr.mtrrfix4k[index - BX_MSR_MTRRFIX4K_C0000]);
-      RDX = GET32H(BX_CPU_THIS_PTR msr.mtrrfix4k[index - BX_MSR_MTRRFIX4K_C0000]);
+      val64 = BX_CPU_THIS_PTR msr.mtrrfix4k[index - BX_MSR_MTRRFIX4K_C0000];
       break;
 
     case BX_MSR_PAT:
-      RAX = GET32L(BX_CPU_THIS_PTR msr.pat);
-      RDX = GET32H(BX_CPU_THIS_PTR msr.pat);
+      val64 = BX_CPU_THIS_PTR msr.pat;
       break;
 
     case BX_MSR_MTRR_DEFTYPE:
-      RAX = BX_CPU_THIS_PTR msr.mtrr_deftype;
-      RDX = 0;
+      val64 = BX_CPU_THIS_PTR msr.mtrr_deftype;
       break;
 #endif
 
     case BX_MSR_TSC:
-      RDTSC(i);
+      val64 = BX_CPU_THIS_PTR get_TSC();
       break;
 
     /* MSR_APICBASE
@@ -139,76 +128,66 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDMSR(bxInstruction_c *i)
     */
 #if BX_SUPPORT_APIC
     case BX_MSR_APICBASE:
-      RAX = BX_CPU_THIS_PTR msr.apicbase;
-      RDX = 0;
-      BX_INFO(("RDMSR: Read %08x:%08x from MSR_APICBASE", EDX, EAX));
+      val64 = BX_CPU_THIS_PTR msr.apicbase;
+      BX_INFO(("RDMSR: Read %08x:%08x from MSR_APICBASE", GET32H(val64), GET32L(val64)));
       break;
 #endif
 
 #if BX_SUPPORT_X86_64
     case BX_MSR_EFER:
-      RAX = BX_CPU_THIS_PTR efer.get32();
-      RDX = 0;
+      val64 = BX_CPU_THIS_PTR efer.get32();
       break;
 
     case BX_MSR_STAR:
-      RAX = GET32L(MSR_STAR);
-      RDX = GET32H(MSR_STAR);
+      val64 = MSR_STAR;
       break;
 
     case BX_MSR_LSTAR:
-      RAX = GET32L(MSR_LSTAR);
-      RDX = GET32H(MSR_LSTAR);
+      val64 = MSR_LSTAR;
       break;
 
     case BX_MSR_CSTAR:
-      RAX = GET32L(MSR_CSTAR);
-      RDX = GET32H(MSR_CSTAR);
+      val64 = MSR_CSTAR;
       break;
 
     case BX_MSR_FMASK:
-      RAX = MSR_FMASK;
-      RDX = 0;
+      val64 = MSR_FMASK;
       break;
 
     case BX_MSR_FSBASE:
-      RAX = GET32L(MSR_FSBASE);
-      RDX = GET32H(MSR_FSBASE);
+      val64 = MSR_FSBASE;
       break;
 
     case BX_MSR_GSBASE:
-      RAX = GET32L(MSR_GSBASE);
-      RDX = GET32H(MSR_GSBASE);
+      val64 = MSR_GSBASE;
       break;
 
     case BX_MSR_KERNELGSBASE:
-      RAX = GET32L(MSR_KERNELGSBASE);
-      RDX = GET32H(MSR_KERNELGSBASE);
+      val64 = MSR_KERNELGSBASE;
       break;
 
     case BX_MSR_TSC_AUX:
-      RAX = MSR_TSC_AUX;   // 32 bit MSR
-      RDX = 0;
+      val64 = MSR_TSC_AUX;   // 32 bit MSR
       break;
 #endif  // #if BX_SUPPORT_X86_64
 
     default:
 #if BX_CONFIGURE_MSRS
       if (index < BX_MSR_MAX_INDEX && BX_CPU_THIS_PTR msrs[index]) {
-        RAX = GET32L(BX_CPU_THIS_PTR msrs[index]->get64());
-        RDX = GET32H(BX_CPU_THIS_PTR msrs[index]->get64());
+        val64 = BX_CPU_THIS_PTR msrs[index]->get64();
         break;
       }
 #endif
       // failed to find the MSR, could #GP or ignore it silently
       BX_ERROR(("RDMSR: Unknown register %#x", index));
-#if BX_IGNORE_BAD_MSR
-      RAX = 0;
-      RDX = 0;
-#else
+#if BX_IGNORE_BAD_MSR == 0
       exception(BX_GP_EXCEPTION, 0, 0);
 #endif
   }
+
+  RAX = GET32L(val64);
+  RDX = GET32H(val64);
+
 #else
   BX_INFO(("RDMSR: Pentium CPU required, use --enable-cpu-level=5"));
   exception(BX_UD_EXCEPTION, 0, 0);
