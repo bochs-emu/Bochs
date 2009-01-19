@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.554 2009-01-17 22:35:44 sshwarts Exp $
+// $Id: cpu.h,v 1.555 2009-01-19 18:08:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -3101,6 +3101,11 @@ public: // for now...
   BX_SMF void handleCpuModeChange(void);
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
   BX_SMF void handleAlignmentCheck(void);
+#endif
+
+#if BX_CPU_LEVEL >= 5
+  BX_SMF bx_bool rdmsr(Bit32u index, Bit64u *val_64) BX_CPP_AttrRegparmN(2);
+  BX_SMF bx_bool wrmsr(Bit32u index, Bit64u  val_64) BX_CPP_AttrRegparmN(2);
 #endif
 
   BX_SMF void jump_protected(bxInstruction_c *, Bit16u cs, bx_address disp) BX_CPP_AttrRegparmN(3);
