@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_uhci.cc,v 1.2 2009-01-19 13:13:32 vruppert Exp $
+// $Id: usb_uhci.cc,v 1.3 2009-01-19 21:39:03 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Benjamin D Lunt (fys at frontiernet net)
@@ -307,7 +307,7 @@ void bx_usb_uhci_c::init_device(Bit8u port, const char *devname)
     BX_PANIC(("unknown USB device: %s", devname));
     return;
   }
-  sprintf(pname, "usb.uhci.port%d.device", port+1);
+  sprintf(pname, "usb_uhci.hub.port%d.device", port+1);
   bx_list_c *devlist = (bx_list_c*)SIM->get_param(pname, SIM->get_bochs_root());
   BX_UHCI_THIS hub.usb_port[port].device->register_state(devlist);
   usb_set_connect_status(port, type, 1);
@@ -1113,7 +1113,7 @@ void bx_usb_uhci_c::usb_set_connect_status(Bit8u port, int type, bx_bool connect
         if (BX_UHCI_THIS hub.usb_port[port].device != NULL) {
           delete BX_UHCI_THIS hub.usb_port[port].device;
           BX_UHCI_THIS hub.usb_port[port].device = NULL;
-          sprintf(pname, "usb.uhci.port%d.device", port+1);
+          sprintf(pname, "usb_uhci.hub.port%d.device", port+1);
           bx_list_c *devlist = (bx_list_c*)SIM->get_param(pname, SIM->get_bochs_root());
           devlist->clear();
         }

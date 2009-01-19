@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.151 2009-01-19 13:13:32 vruppert Exp $
+// $Id: config.cc,v 1.152 2009-01-19 21:39:03 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1370,7 +1370,7 @@ void bx_init_options()
   }
 
   // usb subtree
-  bx_list_c *usb = new bx_list_c(root_param, "usb", "USB Configuration");
+  bx_list_c *usb = new bx_list_c(ports, "usb", "USB Configuration");
   usb->get_options()->set(bx_list_c::SHOW_PARENT);
   bx_param_string_c *port;
 
@@ -3617,9 +3617,9 @@ int bx_write_configuration(const char *rc, int overwrite)
     bx_write_serial_options(fp, base, i+1);
   }
   // usb
-  base = (bx_list_c*) SIM->get_param("usb.uhci");
+  base = (bx_list_c*) SIM->get_param("ports.usb.uhci");
   bx_write_usb_options(fp, base);
-  base = (bx_list_c*) SIM->get_param("usb.ohci");
+  base = (bx_list_c*) SIM->get_param("ports.usb.ohci");
   bx_write_usb_options(fp, base);
   // pci
   fprintf(fp, "i440fxsupport: enabled=%d",

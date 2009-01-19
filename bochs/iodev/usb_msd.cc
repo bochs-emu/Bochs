@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_msd.cc,v 1.11 2009-01-19 09:48:11 vruppert Exp $
+// $Id: usb_msd.cc,v 1.12 2009-01-19 21:39:03 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Volker Ruppert
@@ -142,7 +142,8 @@ usb_msd_device_c::usb_msd_device_c(void)
 
 usb_msd_device_c::~usb_msd_device_c(void)
 {
-  delete s.scsi_dev;
+  if (s.scsi_dev != NULL)
+    delete s.scsi_dev;
   s.hdimage->close();
   delete s.hdimage;
 }
