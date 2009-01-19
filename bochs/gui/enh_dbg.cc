@@ -13,6 +13,7 @@
 
 #include "bochs.h"
 #include "cpu/cpu.h"
+#include "disasm/disasm.h"
 
 #include "enh_dbg.h"
 #include "wenhdbg_res.h"    // MenuIDs

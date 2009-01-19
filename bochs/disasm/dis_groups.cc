@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dis_groups.cc,v 1.40 2008-02-05 22:33:33 sshwarts Exp $
+// $Id: dis_groups.cc,v 1.41 2009-01-19 19:01:03 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #include <stdio.h>
@@ -27,26 +27,26 @@ void disassembler::Apd(const x86_insn *insn)
 }
 
 // 8-bit general purpose registers
-void disassembler::AL(const x86_insn *insn) { dis_sprintf("%s", general_8bit_regname[rAX_REG]); }
-void disassembler::CL(const x86_insn *insn) { dis_sprintf("%s", general_8bit_regname[rCX_REG]); }
+void disassembler::AL_Reg(const x86_insn *insn) { dis_sprintf("%s", general_8bit_regname[rAX_REG]); }
+void disassembler::CL_Reg(const x86_insn *insn) { dis_sprintf("%s", general_8bit_regname[rCX_REG]); }
 
 // 16-bit general purpose registers
-void disassembler::AX(const x86_insn *insn) {
+void disassembler::AX_Reg(const x86_insn *insn) {
   dis_sprintf("%s", general_16bit_regname[rAX_REG]);
 }
 
-void disassembler::DX(const x86_insn *insn) {
+void disassembler::DX_Reg(const x86_insn *insn) {
   dis_sprintf("%s", general_16bit_regname[rDX_REG]);
 }
 
 // 32-bit general purpose registers
-void disassembler::EAX(const x86_insn *insn)
+void disassembler::EAX_Reg(const x86_insn *insn)
 {
   dis_sprintf("%s", general_32bit_regname[rAX_REG]);
 }
 
 // 64-bit general purpose registers
-void disassembler::RAX(const x86_insn *insn)
+void disassembler::RAX_Reg(const x86_insn *insn)
 {
   dis_sprintf("%s", general_64bit_regname[rAX_REG]);
 }
@@ -93,7 +93,7 @@ void disassembler::Dd(const x86_insn *insn)
 void disassembler::Dq(const x86_insn *insn) { Dd(insn); }
 
 // 8-bit general purpose register
-void disassembler::R8(const x86_insn *insn)
+void disassembler::Reg8(const x86_insn *insn)
 {
   unsigned reg = (insn->b1 & 7) | insn->rex_b;
 

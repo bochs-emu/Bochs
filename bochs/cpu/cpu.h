@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.555 2009-01-19 18:08:38 sshwarts Exp $
+// $Id: cpu.h,v 1.556 2009-01-19 19:01:03 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -29,10 +29,6 @@
 #  define BX_CPU_H 1
 
 #include <setjmp.h>
-
-#if BX_DISASM
-#  include "disasm/disasm.h"
-#endif
 
 // <TAG-DEFINES-DECODE-START>
 // segment register encoding

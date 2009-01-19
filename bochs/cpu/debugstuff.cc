@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debugstuff.cc,v 1.100 2009-01-16 18:18:58 sshwarts Exp $
+// $Id: debugstuff.cc,v 1.101 2009-01-19 19:01:03 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -32,6 +32,8 @@
 #define LOG_THIS BX_CPU_THIS_PTR
 
 #if BX_DISASM
+
+#include "disasm/disasm.h"
 
 void BX_CPU_C::debug_disasm_instruction(bx_address offset)
 {

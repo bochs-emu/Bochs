@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dis_tables.h,v 1.34 2008-02-29 03:02:03 sshwarts Exp $
+// $Id: dis_tables.h,v 1.35 2009-01-19 19:01:03 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #ifndef _BX_DISASM_TABLES_
@@ -29,56 +29,56 @@
 #define Apw &disassembler::Apw
 #define Apd &disassembler::Apd
 
-#define  AL &disassembler::AL
-#define  CL &disassembler::CL
-#define  AX &disassembler::AX
-#define  DX &disassembler::DX
+#define AL_Reg &disassembler::AL_Reg
+#define CL_Reg &disassembler::CL_Reg
+#define AX_Reg &disassembler::AX_Reg
+#define DX_Reg &disassembler::DX_Reg
 
-#define EAX &disassembler::EAX
-#define RAX &disassembler::RAX
+#define EAX_Reg &disassembler::EAX_Reg
+#define RAX_Reg &disassembler::RAX_Reg
 
-#define  CS &disassembler::CS
-#define  DS &disassembler::DS
-#define  ES &disassembler::ES
-#define  SS &disassembler::SS
-#define  FS &disassembler::FS
-#define  GS &disassembler::GS
+#define CS &disassembler::CS
+#define DS &disassembler::DS
+#define ES &disassembler::ES
+#define SS &disassembler::SS
+#define FS &disassembler::FS
+#define GS &disassembler::GS
 
-#define  Sw &disassembler::Sw
+#define Sw &disassembler::Sw
 
-#define  Td &disassembler::Td
+#define Td &disassembler::Td
 
-#define  Cd &disassembler::Cd
-#define  Cq &disassembler::Cq
+#define Cd &disassembler::Cd
+#define Cq &disassembler::Cq
 
-#define  Dd &disassembler::Dd
-#define  Dq &disassembler::Dq
+#define Dd &disassembler::Dd
+#define Dq &disassembler::Dq
 
-#define  R8 &disassembler::R8
-#define  RX &disassembler::RX
-#define ERX &disassembler::ERX
-#define RRX &disassembler::RRX
+#define Reg8 &disassembler::Reg8
+#define   RX &disassembler::RX
+#define  ERX &disassembler::ERX
+#define  RRX &disassembler::RRX
 
-#define  Eb &disassembler::Eb
-#define  Ew &disassembler::Ew
-#define  Ed &disassembler::Ed
-#define  Eq &disassembler::Eq
+#define Eb &disassembler::Eb
+#define Ew &disassembler::Ew
+#define Ed &disassembler::Ed
+#define Eq &disassembler::Eq
 
-#define  Gb &disassembler::Gb
-#define  Gw &disassembler::Gw
-#define  Gd &disassembler::Gd
-#define  Gq &disassembler::Gq
+#define Gb &disassembler::Gb
+#define Gw &disassembler::Gw
+#define Gd &disassembler::Gd
+#define Gq &disassembler::Gq
 
 #define Hbd &disassembler::Hbd
 #define Hwd &disassembler::Hwd
 #define  Hd &disassembler::Hd
 #define  Hq &disassembler::Hq
 
-#define  I1 &disassembler::I1
-#define  Ib &disassembler::Ib
-#define  Iw &disassembler::Iw
-#define  Id &disassembler::Id
-#define  Iq &disassembler::Iq
+#define I1 &disassembler::I1
+#define Ib &disassembler::Ib
+#define Iw &disassembler::Iw
+#define Id &disassembler::Id
+#define Iq &disassembler::Iq
 
 #define IbIb &disassembler::IbIb
 #define IwIb &disassembler::IwIb
@@ -91,14 +91,14 @@
 #define ST0 &disassembler::ST0
 #define STi &disassembler::STi
 
-#define  Rw &disassembler::Rw
-#define  Rd &disassembler::Rd
-#define  Rq &disassembler::Rq
+#define Rw &disassembler::Rw
+#define Rd &disassembler::Rd
+#define Rq &disassembler::Rq
 
-#define  Pq &disassembler::Pq
-#define  Qd &disassembler::Qd
-#define  Qq &disassembler::Qq
-#define  Nq &disassembler::Nq
+#define Pq &disassembler::Pq
+#define Qd &disassembler::Qd
+#define Qq &disassembler::Qq
+#define Nq &disassembler::Nq
 
 #define  Vq &disassembler::Vq
 #define Vdq &disassembler::Vdq
@@ -117,10 +117,10 @@
 #define Wps &disassembler::Wps
 #define Wpd &disassembler::Wpd
 
-#define  Ob &disassembler::Ob
-#define  Ow &disassembler::Ow
-#define  Od &disassembler::Od
-#define  Oq &disassembler::Oq
+#define Ob &disassembler::Ob
+#define Ow &disassembler::Ow
+#define Od &disassembler::Od
+#define Oq &disassembler::Oq
 
 #define  Ma &disassembler::Ma
 #define  Mp &disassembler::Mp
@@ -137,21 +137,21 @@
 #define Mss &disassembler::Mss
 #define Msd &disassembler::Msd
 
-#define  Xb &disassembler::Xb
-#define  Xw &disassembler::Xw
-#define  Xd &disassembler::Xd
-#define  Xq &disassembler::Xq
+#define Xb &disassembler::Xb
+#define Xw &disassembler::Xw
+#define Xd &disassembler::Xd
+#define Xq &disassembler::Xq
 
-#define  Yb &disassembler::Yb
-#define  Yw &disassembler::Yw
-#define  Yd &disassembler::Yd
-#define  Yq &disassembler::Yq
+#define Yb &disassembler::Yb
+#define Yw &disassembler::Yw
+#define Yd &disassembler::Yd
+#define Yq &disassembler::Yq
 
-#define  Jb &disassembler::Jb
-#define  Jw &disassembler::Jw
-#define  Jd &disassembler::Jd
+#define Jb &disassembler::Jb
+#define Jw &disassembler::Jw
+#define Jd &disassembler::Jd
 
-#define  XX 0
+#define XX 0
 
 const struct BxDisasmOpcodeInfo_t
 #include "opcodes.inc"
