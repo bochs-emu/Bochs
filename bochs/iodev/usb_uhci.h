@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pciusb.h,v 1.34 2009-01-18 13:11:27 vruppert Exp $
+// $Id: usb_uhci.h,v 1.1 2009-01-19 09:48:12 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Benjamin D Lunt (fys at frontiernet net)
@@ -18,19 +18,16 @@
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-#ifndef BX_IODEV_PCIUSB_H
-#define BX_IODEV_PCIUSB_H
+#ifndef BX_IODEV_USB_UHCI_H
+#define BX_IODEV_USB_UHCI_H
 
-#if BX_USE_PCIUSB_SMF
-#  define BX_USB_THIS theUSBDevice->
-#  define BX_USB_THIS_PTR theUSBDevice
+#if BX_USE_USB_UHCI_SMF
+#  define BX_UHCI_THIS theUSB_UHCI->
+#  define BX_UHCI_THIS_PTR theUSB_UHCI
 #else
-#  define BX_USB_THIS this->
-#  define BX_USB_THIS_PTR this
+#  define BX_UHCI_THIS this->
+#  define BX_UHCI_THIS_PTR this
 #endif
-
-#define BX_USB_MAXDEV   1
-#define BX_USB_CONFDEV  1   /* only 1 USB hub currently */
 
 #define USB_NUM_PORTS   2   /* UHCI supports 2 ports per root hub */
 
@@ -143,7 +140,7 @@ typedef struct {
   //  Can only write in WORD sizes (Read in byte sizes???)
   struct {
     // our data
-    usb_device_t *device;   // device connected to this port
+    usb_device_c *device;   // device connected to this port
 
     // bit reps of actual port
     bx_bool suspend;
@@ -163,7 +160,7 @@ typedef struct {
 
   int statusbar_id[2]; // IDs of the status LEDs
 
-} bx_usb_t;
+} bx_usb_uhci_t;
 
 #pragma pack (push, 1)
 struct TD {
@@ -184,10 +181,10 @@ struct HCSTACK {
   bx_bool t;
 };
 
-class bx_pciusb_c : public bx_pci_usb_stub_c {
+class bx_usb_uhci_c : public bx_pci_usb_stub_c {
 public:
-  bx_pciusb_c();
-  virtual ~bx_pciusb_c();
+  bx_usb_uhci_c();
+  virtual ~bx_usb_uhci_c();
   virtual void init(void);
   virtual void reset(unsigned);
   virtual bx_bool usb_mouse_enq(int delta_x, int delta_y, int delta_z, unsigned button_state);
@@ -202,18 +199,17 @@ public:
                                        const char *oldval, const char *val, int maxlen);
 
 private:
-  bx_bool  busy;
+  bx_usb_uhci_t hub;
+  Bit8u         global_reset;
+  bx_bool       busy;
+  Bit8u         *device_buffer;
 
-  bx_usb_t hub[BX_USB_CONFDEV];
-  Bit8u    global_reset;
-
-  static void set_irq_level(bx_bool level);
-  Bit8u  *device_buffer;
-
-  usb_hid_device_t *mousedev;
-  usb_hid_device_t *keybdev;
+  usb_hid_device_c *mousedev;
+  usb_hid_device_c *keybdev;
 
   USBPacket usb_packet;
+
+  static void   set_irq_level(bx_bool level);
 
   static void init_device(Bit8u port, const char *devname);
   static void usb_set_connect_status(Bit8u port, int type, bx_bool connected);
@@ -226,11 +222,11 @@ private:
 
   static Bit32u read_handler(void *this_ptr, Bit32u address, unsigned io_len);
   static void   write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len);
-#if !BX_USE_PCIUSB_SMF
+#if !BX_USE_USB_UHCI_SMF
   Bit32u read(Bit32u address, unsigned io_len);
   void   write(Bit32u address, Bit32u value, unsigned io_len);
 #endif
-  void usb_send_msg(usb_device_t *dev, int msg);
+  void usb_send_msg(usb_device_c *dev, int msg);
 };
 
 #endif

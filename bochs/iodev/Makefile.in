@@ -165,8 +165,11 @@ libbx_serial.la: serial.lo serial_raw.lo
 libbx_vga.la: vga.lo svga_cirrus.lo
 	$(LIBTOOL) --mode=link $(CXX) -module vga.lo svga_cirrus.lo -o libbx_vga.la -rpath $(PLUGIN_PATH)
 
-libbx_pciusb.la: pciusb.lo $(USBDEV_OBJS:.o=.lo) scsi_device.lo hdimage.lo cdrom.lo
-	$(LIBTOOL) --mode=link $(CXX) -module pciusb.lo $(USBDEV_OBJS:.o=.lo) scsi_device.lo hdimage.lo cdrom.lo -o libbx_pciusb.la -rpath $(PLUGIN_PATH)
+libbx_usb_uhci.la: usb_uhci.lo $(USBDEV_OBJS:.o=.lo) scsi_device.lo hdimage.lo cdrom.lo
+	$(LIBTOOL) --mode=link $(CXX) -module usb_uhci.lo $(USBDEV_OBJS:.o=.lo) scsi_device.lo hdimage.lo cdrom.lo -o libbx_usb_uhci.la -rpath $(PLUGIN_PATH)
+
+libbx_usb_ohci.la: usb_ohci.lo $(USBDEV_OBJS:.o=.lo) scsi_device.lo hdimage.lo cdrom.lo
+	$(LIBTOOL) --mode=link $(CXX) -module usb_ohci.lo $(USBDEV_OBJS:.o=.lo) scsi_device.lo hdimage.lo cdrom.lo -o libbx_usb_ohci.la -rpath $(PLUGIN_PATH)
 
 #### building DLLs for win32  (tested on cygwin only)
 bx_%.dll: %.o
@@ -200,8 +203,11 @@ bx_serial.dll: serial.o serial_raw.o
 bx_vga.dll: vga.o svga_cirrus.o
 	$(CXX) $(CXXFLAGS) -shared -o bx_vga.dll vga.o svga_cirrus.o $(WIN32_DLL_IMPORT_LIBRARY)
 
-bx_pciusb.dll: pciusb.o $(USBDEV_OBJS) scsi_device.o hdimage.o cdrom.o
-	$(CXX) $(CXXFLAGS) -shared -o bx_pciusb.dll pciusb.o $(USBDEV_OBJS) scsi_device.o hdimage.o cdrom.o $(WIN32_DLL_IMPORT_LIBRARY)
+bx_usb_uhci.dll: usb_uhci.o $(USBDEV_OBJS) scsi_device.o hdimage.o cdrom.o
+	$(CXX) $(CXXFLAGS) -shared -o bx_usb_uhci.dll usb_uhci.o $(USBDEV_OBJS) scsi_device.o hdimage.o cdrom.o $(WIN32_DLL_IMPORT_LIBRARY)
+
+bx_usb_ohci.dll: usb_ohci.o $(USBDEV_OBJS) scsi_device.o hdimage.o cdrom.o
+	$(CXX) $(CXXFLAGS) -shared -o bx_usb_ohci.dll usb_ohci.o $(USBDEV_OBJS) scsi_device.o hdimage.o cdrom.o $(WIN32_DLL_IMPORT_LIBRARY)
 
 ##### end DLL section
 
@@ -425,13 +431,6 @@ pcipnic.o: pcipnic.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h ../iodev/vga.h \
   ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h
-pciusb.o: pciusb.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
-  ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
-  ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
-  ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
-  ../gui/keymap.h ../instrument/stubs/instrument.h ../iodev/vga.h \
-  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h pci.h \
-  usb_common.h usb_hid.h usb_msd.h pciusb.h
 pcivga.o: pcivga.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
@@ -541,6 +540,20 @@ usb_msd.o: usb_msd.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h usb_common.h hdimage.h \
   scsi_device.h usb_msd.h
+usb_ohci.o: usb_ohci.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
+  ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
+  ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
+  ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
+  ../gui/keymap.h ../instrument/stubs/instrument.h ../iodev/vga.h \
+  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h pci.h \
+  usb_common.h usb_hid.h usb_msd.h usb_ohci.h
+usb_uhci.o: usb_uhci.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
+  ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
+  ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
+  ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
+  ../gui/keymap.h ../instrument/stubs/instrument.h ../iodev/vga.h \
+  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h pci.h \
+  usb_common.h usb_hid.h usb_msd.h usb_uhci.h
 vga.o: vga.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
@@ -766,13 +779,6 @@ pcipnic.lo: pcipnic.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h ../iodev/vga.h \
   ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h
-pciusb.lo: pciusb.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
-  ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
-  ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
-  ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
-  ../gui/keymap.h ../instrument/stubs/instrument.h ../iodev/vga.h \
-  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h pci.h \
-  usb_common.h usb_hid.h usb_msd.h pciusb.h
 pcivga.lo: pcivga.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
@@ -882,6 +888,20 @@ usb_msd.lo: usb_msd.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h usb_common.h hdimage.h \
   scsi_device.h usb_msd.h
+usb_ohci.lo: usb_ohci.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
+  ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
+  ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
+  ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
+  ../gui/keymap.h ../instrument/stubs/instrument.h ../iodev/vga.h \
+  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h pci.h \
+  usb_common.h usb_hid.h usb_msd.h usb_ohci.h
+usb_uhci.lo: usb_uhci.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
+  ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
+  ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
+  ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
+  ../gui/keymap.h ../instrument/stubs/instrument.h ../iodev/vga.h \
+  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h pci.h \
+  usb_common.h usb_hid.h usb_msd.h usb_uhci.h
 vga.lo: vga.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \

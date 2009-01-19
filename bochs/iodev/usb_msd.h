@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_msd.h,v 1.7 2009-01-18 13:11:27 vruppert Exp $
+// $Id: usb_msd.h,v 1.8 2009-01-19 09:48:12 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Volker Ruppert
@@ -27,10 +27,10 @@ class device_image_t;
 class scsi_device_t;
 
 
-class usb_msd_device_t : public usb_device_t {
+class usb_msd_device_c : public usb_device_c {
 public:
-  usb_msd_device_t(void);
-  virtual ~usb_msd_device_t(void);
+  usb_msd_device_c(void);
+  virtual ~usb_msd_device_c(void);
 
   bx_bool init(const char *filename);
   virtual void handle_reset();

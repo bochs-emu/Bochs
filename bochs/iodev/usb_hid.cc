@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_hid.cc,v 1.9 2009-01-18 13:11:27 vruppert Exp $
+// $Id: usb_hid.cc,v 1.10 2009-01-19 09:48:11 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Volker Ruppert
@@ -353,7 +353,7 @@ struct KEYPAD keypad_lookup[KEYPAD_LEN] = {
   { { 0xE0, 0x5A  }, { 0x00, 0x00, 0x58, 0x00, 0x00, 0x00, 0x00, 0x00 } },  // Enter
 };
 
-usb_hid_device_t::usb_hid_device_t(usbdev_type type)
+usb_hid_device_c::usb_hid_device_c(usbdev_type type)
 {
   d.type = type;
   d.speed = USB_SPEED_LOW;
@@ -370,11 +370,11 @@ usb_hid_device_t::usb_hid_device_t(usbdev_type type)
   put("USBHI");
 }
 
-usb_hid_device_t::~usb_hid_device_t(void)
+usb_hid_device_c::~usb_hid_device_c(void)
 {
 }
 
-void usb_hid_device_t::register_state_specific(bx_list_c *parent)
+void usb_hid_device_c::register_state_specific(bx_list_c *parent)
 {
   bx_list_c *key;
   Bit8u i;
@@ -400,13 +400,13 @@ void usb_hid_device_t::register_state_specific(bx_list_c *parent)
   }
 }
 
-void usb_hid_device_t::handle_reset()
+void usb_hid_device_c::handle_reset()
 {
   memset((void*)&s, 0, sizeof(s));
   BX_DEBUG(("Reset"));
 }
 
-int usb_hid_device_t::handle_control(int request, int value, int index, int length, Bit8u *data)
+int usb_hid_device_c::handle_control(int request, int value, int index, int length, Bit8u *data)
 {
   int ret = 0;
 
@@ -588,7 +588,7 @@ int usb_hid_device_t::handle_control(int request, int value, int index, int leng
   return ret;
 }
 
-int usb_hid_device_t::handle_data(USBPacket *p)
+int usb_hid_device_c::handle_data(USBPacket *p)
 {
   int ret = 0;
 
@@ -623,7 +623,7 @@ int usb_hid_device_t::handle_data(USBPacket *p)
   return ret;
 }
 
-int usb_hid_device_t::mouse_poll(Bit8u *buf, int len)
+int usb_hid_device_c::mouse_poll(Bit8u *buf, int len)
 {
   int l = 0;
 
@@ -658,7 +658,7 @@ int usb_hid_device_t::mouse_poll(Bit8u *buf, int len)
   return l;
 }
 
-void usb_hid_device_t::mouse_enq(int delta_x, int delta_y, int delta_z, unsigned button_state)
+void usb_hid_device_c::mouse_enq(int delta_x, int delta_y, int delta_z, unsigned button_state)
 {
   if (d.type == USB_DEV_TYPE_MOUSE) {
     // scale down the motion
@@ -711,7 +711,7 @@ void usb_hid_device_t::mouse_enq(int delta_x, int delta_y, int delta_z, unsigned
   s.b_state = (Bit8u) button_state;
 }
 
-int usb_hid_device_t::keypad_poll(Bit8u *buf, int len)
+int usb_hid_device_c::keypad_poll(Bit8u *buf, int len)
 {
   int l = 0;
 
@@ -722,7 +722,7 @@ int usb_hid_device_t::keypad_poll(Bit8u *buf, int len)
   return l;
 }
 
-bx_bool usb_hid_device_t::key_enq(Bit8u *scan_code)
+bx_bool usb_hid_device_c::key_enq(Bit8u *scan_code)
 {
   bx_bool is_break_code = 0;
   Bit8u our_scan_code[8];

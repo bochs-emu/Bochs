@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_common.cc,v 1.1 2009-01-18 13:11:27 vruppert Exp $
+// $Id: usb_common.cc,v 1.2 2009-01-19 09:48:11 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Benjamin D Lunt (fys at frontiernet net)
@@ -53,7 +53,6 @@
 
 #if BX_SUPPORT_PCI && BX_SUPPORT_PCIUSB
 
-#include "pci.h"
 #include "usb_common.h"
 #include "usb_hid.h"
 #include "usb_msd.h"
@@ -62,7 +61,7 @@
 
 
 // Dumps the contents of a buffer to the log file
-void usb_device_t::usb_dump_packet(Bit8u *data, unsigned size)
+void usb_device_c::usb_dump_packet(Bit8u *data, unsigned size)
 {
   char the_packet[256], str[16];
   strcpy(the_packet, "Packet contents (in hex):");
@@ -80,7 +79,7 @@ void usb_device_t::usb_dump_packet(Bit8u *data, unsigned size)
     BX_DEBUG(("%s", the_packet));
 }
 
-int usb_device_t::set_usb_string(Bit8u *buf, const char *str)
+int usb_device_c::set_usb_string(Bit8u *buf, const char *str)
 {
   size_t len, i;
   Bit8u *q;
@@ -106,7 +105,7 @@ int usb_device_t::set_usb_string(Bit8u *buf, const char *str)
 #define SETUP_STATE_DATA 1
 #define SETUP_STATE_ACK  2
 
-int usb_device_t::handle_packet(USBPacket *p)
+int usb_device_c::handle_packet(USBPacket *p)
 {
   int l, ret = 0;
   int len = p->len;
@@ -239,7 +238,7 @@ int usb_device_t::handle_packet(USBPacket *p)
   return ret;
 }
 
-void usb_device_t::register_state(bx_list_c *parent)
+void usb_device_c::register_state(bx_list_c *parent)
 {
   bx_list_c *list = new bx_list_c(parent, "d", "Common USB Device State");
   new bx_shadow_num_c(list, "addr", &d.addr);
@@ -249,7 +248,7 @@ void usb_device_t::register_state(bx_list_c *parent)
 }
 
 // base class for USB devices
-usb_device_t::usb_device_t(void) {
+usb_device_c::usb_device_c(void) {
   memset((void*)&d, 0, sizeof(d));
 }
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: plugin.h,v 1.71 2009-01-13 19:01:19 vruppert Exp $
+// $Id: plugin.h,v 1.72 2009-01-19 09:48:11 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  The Bochs Project
@@ -60,7 +60,8 @@ extern "C" {
 #define BX_PLUGIN_EXTFPUIRQ "extfpuirq"
 #define BX_PLUGIN_PCIVGA    "pcivga"
 #define BX_PLUGIN_PCIDEV    "pcidev"
-#define BX_PLUGIN_PCIUSB    "pciusb"
+#define BX_PLUGIN_USB_UHCI  "usb_uhci"
+#define BX_PLUGIN_USB_OHCI  "usb_ohci"
 #define BX_PLUGIN_PCIPNIC   "pcipnic"
 #define BX_PLUGIN_GAMEPORT  "gameport"
 #define BX_PLUGIN_SPEAKER   "speaker"
@@ -220,10 +221,14 @@ extern "C" {
 #define DEV_speaker_beep_on(frequency) bx_devices.pluginSpeaker->beep_on(frequency)
 #define DEV_speaker_beep_off() bx_devices.pluginSpeaker->beep_off()
 
-///////// USB device macro
-#if BX_SUPPORT_PCIUSB
-#define DEV_usb_key_enq(scan_code) \
-    (bx_devices.pluginPciUSBAdapter->usb_key_enq(scan_code))
+///////// USB device macros
+#if BX_SUPPORT_USB_UHCI
+#define DEV_usb_uhci_key_enq(scan_code) \
+    (bx_devices.pluginUSB_UHCI->usb_key_enq(scan_code))
+#endif
+#if BX_SUPPORT_USB_OHCI
+#define DEV_usb_ohci_key_enq(scan_code) \
+    (bx_devices.pluginUSB_OHCI->usb_key_enq(scan_code))
 #endif
 
 //////// Memory macros
@@ -372,7 +377,8 @@ DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(pci2isa)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(pci_ide)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(pcivga)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(pcidev)
-DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(pciusb)
+DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(usb_uhci)
+DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(usb_ohci)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(pcipnic)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(sb16)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(ne2k)

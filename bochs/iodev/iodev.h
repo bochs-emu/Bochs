@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.106 2009-01-16 11:53:38 vruppert Exp $
+// $Id: iodev.h,v 1.107 2009-01-19 09:48:11 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -440,8 +440,11 @@ public:
   bx_floppy_stub_c  *pluginFloppyDevice;
   bx_cmos_stub_c    *pluginCmosDevice;
   bx_serial_stub_c  *pluginSerialDevice;
-#if BX_SUPPORT_PCIUSB
-  bx_pci_usb_stub_c *pluginPciUSBAdapter;
+#if BX_SUPPORT_USB_UHCI
+  bx_pci_usb_stub_c *pluginUSB_UHCI;
+#endif
+#if BX_SUPPORT_USB_OHCI
+  bx_pci_usb_stub_c *pluginUSB_OHCI;
 #endif
   bx_vga_stub_c     *pluginVgaDevice;
   bx_pic_stub_c     *pluginPicDevice;
@@ -529,9 +532,11 @@ private:
   Bit8u mouse_type;
 
   int timer_handle;
+
   bx_bool is_serial_enabled();
-  bx_bool is_usb_enabled();
   bx_bool is_parallel_enabled();
+  bx_bool is_usb_ohci_enabled();
+  bx_bool is_usb_uhci_enabled();
 };
 
 // memory stub has an assumption that there are no memory accesses splitting 4K page

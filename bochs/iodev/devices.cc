@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: devices.cc,v 1.133 2009-01-15 17:34:20 vruppert Exp $
+// $Id: devices.cc,v 1.134 2009-01-19 09:48:11 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -79,8 +79,11 @@ void bx_devices_c::init_stubs()
 #if BX_SUPPORT_ACPI
   pluginACPIController = &stubACPIController;
 #endif
-#if BX_SUPPORT_PCIUSB
-    pluginPciUSBAdapter = &stubUsbAdapter;
+#if BX_SUPPORT_USB_UHCI
+    pluginUSB_UHCI = &stubUsbAdapter;
+#endif
+#if BX_SUPPORT_USB_OHCI
+    pluginUSB_OHCI = &stubUsbAdapter;
 #endif
 #endif
   pluginKeyboard = &stubKeyboard;
@@ -109,7 +112,7 @@ void bx_devices_c::init(BX_MEM_C *newmem)
   unsigned i;
   const char def_name[] = "Default";
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.133 2009-01-15 17:34:20 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.134 2009-01-19 09:48:11 vruppert Exp $"));
   mem = newmem;
 
   /* set builtin default handlers, will be overwritten by the real default handler */
@@ -195,9 +198,14 @@ void bx_devices_c::init(BX_MEM_C *newmem)
       PLUG_load_plugin(pcivga, PLUGTYPE_OPTIONAL);
     }
 #endif
-#if BX_SUPPORT_PCIUSB
-    if (is_usb_enabled()) {
-      PLUG_load_plugin(pciusb, PLUGTYPE_OPTIONAL);
+#if BX_SUPPORT_USB_UHCI
+    if (is_usb_uhci_enabled()) {
+      PLUG_load_plugin(usb_uhci, PLUGTYPE_OPTIONAL);
+    }
+#endif
+#if BX_SUPPORT_USB_OHCI
+    if (is_usb_ohci_enabled()) {
+      PLUG_load_plugin(usb_ohci, PLUGTYPE_OPTIONAL);
     }
 #endif
 #if BX_SUPPORT_PCIDEV
@@ -971,18 +979,6 @@ bx_bool bx_devices_c::is_serial_enabled(void)
   return 0;
 }
 
-bx_bool bx_devices_c::is_usb_enabled(void)
-{
-  char pname[20];
-
-  for (int i=0; i<BX_N_USB_HUBS; i++) {
-    sprintf(pname, "ports.usb.%d.enabled", i+1);
-    if (SIM->get_param_bool(pname)->get())
-       return 1;
-  }
-  return 0;
-}
-
 bx_bool bx_devices_c::is_parallel_enabled(void)
 {
   char pname[26];
@@ -995,11 +991,31 @@ bx_bool bx_devices_c::is_parallel_enabled(void)
   return 0;
 }
 
+bx_bool bx_devices_c::is_usb_ohci_enabled(void)
+{
+  // TODO
+  return 0;
+}
+
+bx_bool bx_devices_c::is_usb_uhci_enabled(void)
+{
+  if (SIM->get_param_bool("ports.usb.1.enabled")->get()) {
+    return 1;
+  }
+  return 0;
+}
+
+// common mouse device handlers
 void bx_devices_c::mouse_enabled_changed(bx_bool enabled)
 {
   mouse_captured = enabled;
-#if BX_SUPPORT_PCIUSB
-  if (pluginPciUSBAdapter->usb_mouse_enabled_changed(enabled)) {
+#if BX_SUPPORT_USB_UHCI
+  if (pluginUSB_UHCI->usb_mouse_enabled_changed(enabled)) {
+    return;
+  }
+#endif
+#if BX_SUPPORT_USB_OHCI
+  if (pluginUSB_OHCI->usb_mouse_enabled_changed(enabled)) {
     return;
   }
 #endif
@@ -1015,9 +1031,14 @@ void bx_devices_c::mouse_motion(int delta_x, int delta_y, int delta_z, unsigned 
   if (!mouse_captured)
     return;
 
-#if BX_SUPPORT_PCIUSB
   // if an usb mouse is connected, redirect mouse data to the usb device
-  if (pluginPciUSBAdapter->usb_mouse_enq(delta_x, delta_y, delta_z, button_state)) {
+#if BX_SUPPORT_USB_UHCI
+  if (pluginUSB_UHCI->usb_mouse_enq(delta_x, delta_y, delta_z, button_state)) {
+    return;
+  }
+#endif
+#if BX_SUPPORT_USB_OHCI
+  if (pluginUSB_OHCI->usb_mouse_enq(delta_x, delta_y, delta_z, button_state)) {
     return;
   }
 #endif

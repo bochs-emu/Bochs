@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_msd.cc,v 1.10 2009-01-18 13:11:27 vruppert Exp $
+// $Id: usb_msd.cc,v 1.11 2009-01-19 09:48:11 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Volker Ruppert
@@ -130,7 +130,7 @@ static const Bit8u bx_msd_config_descriptor[] = {
   0x00        /*  u8  ep_bInterval; */
 };
 
-usb_msd_device_t::usb_msd_device_t(void)
+usb_msd_device_c::usb_msd_device_c(void)
 {
   d.type = USB_DEV_TYPE_DISK;
   d.speed = USB_SPEED_FULL;
@@ -140,14 +140,14 @@ usb_msd_device_t::usb_msd_device_t(void)
   put("USBMS");
 }
 
-usb_msd_device_t::~usb_msd_device_t(void)
+usb_msd_device_c::~usb_msd_device_c(void)
 {
   delete s.scsi_dev;
   s.hdimage->close();
   delete s.hdimage;
 }
 
-bx_bool usb_msd_device_t::init(const char *filename)
+bx_bool usb_msd_device_c::init(const char *filename)
 {
   s.hdimage = new default_image_t();
   if (s.hdimage->open(filename) < 0) {
@@ -162,7 +162,7 @@ bx_bool usb_msd_device_t::init(const char *filename)
   }
 }
 
-void usb_msd_device_t::register_state_specific(bx_list_c *parent)
+void usb_msd_device_c::register_state_specific(bx_list_c *parent)
 {
   s.sr_list = new bx_list_c(parent, "s", "USB MSD Device State", 8);
   new bx_shadow_num_c(s.sr_list, "mode", &s.mode);
@@ -174,13 +174,13 @@ void usb_msd_device_t::register_state_specific(bx_list_c *parent)
   new bx_shadow_num_c(s.sr_list, "result", &s.result);
 }
 
-void usb_msd_device_t::handle_reset()
+void usb_msd_device_c::handle_reset()
 {
   BX_DEBUG(("Reset"));
   s.mode = USB_MSDM_CBW;
 }
 
-int usb_msd_device_t::handle_control(int request, int value, int index, int length, Bit8u *data)
+int usb_msd_device_c::handle_control(int request, int value, int index, int length, Bit8u *data)
 {
   int ret = 0;
 
@@ -306,7 +306,7 @@ int usb_msd_device_t::handle_control(int request, int value, int index, int leng
   return ret;
 }
 
-int usb_msd_device_t::handle_data(USBPacket *p)
+int usb_msd_device_c::handle_data(USBPacket *p)
 {
   struct usb_msd_cbw cbw;
   int ret = 0;
@@ -456,7 +456,7 @@ fail:
   return ret;
 }
 
-void usb_msd_device_t::copy_data()
+void usb_msd_device_c::copy_data()
 {
   Bit32u len = s.usb_len;
   if (len > s.scsi_len)
@@ -480,7 +480,7 @@ void usb_msd_device_t::copy_data()
   }
 }
 
-void usb_msd_device_t::send_status()
+void usb_msd_device_c::send_status()
 {
   struct usb_msd_csw csw;
 
@@ -491,13 +491,13 @@ void usb_msd_device_t::send_status()
   memcpy(s.usb_buf, &csw, 13);
 }
 
-void usb_msd_device_t::usb_msd_command_complete(void *this_ptr, int reason, Bit32u tag, Bit32u arg)
+void usb_msd_device_c::usb_msd_command_complete(void *this_ptr, int reason, Bit32u tag, Bit32u arg)
 {
-  usb_msd_device_t *class_ptr = (usb_msd_device_t *) this_ptr;
+  usb_msd_device_c *class_ptr = (usb_msd_device_c *) this_ptr;
   class_ptr->command_complete(reason, tag, arg);
 }
 
-void usb_msd_device_t::command_complete(int reason, Bit32u tag, Bit32u arg)
+void usb_msd_device_c::command_complete(int reason, Bit32u tag, Bit32u arg)
 {
   USBPacket *p = s.packet;
 
