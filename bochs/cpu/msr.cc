@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: msr.cc,v 1.8 2009-01-16 18:18:58 sshwarts Exp $
+// $Id: msr.cc,v 1.9 2009-01-19 16:45:54 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008 Stanislav Shwartsman
@@ -216,7 +216,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDMSR(bxInstruction_c *i)
 }
 
 #if BX_SUPPORT_MTRR
-BX_CPP_INLINE bx_bool isMemTypeValidMTTR(Bit8u memtype)
+BX_CPP_INLINE bx_bool isMemTypeValidMTRR(Bit8u memtype)
 {
   switch(memtype) {
   case BX_MEMTYPE_UC:
@@ -232,7 +232,7 @@ BX_CPP_INLINE bx_bool isMemTypeValidMTTR(Bit8u memtype)
 
 BX_CPP_INLINE bx_bool isMemTypeValidPAT(Bit8u memtype)
 {
-  return (memtype == 0x07) /* UC- */ || isMemTypeValidMTTR(memtype);
+  return (memtype == 0x07) /* UC- */ || isMemTypeValidMTRR(memtype);
 }
 #endif
 
@@ -291,7 +291,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRMSR(bxInstruction_c *i)
     case BX_MSR_MTRRPHYSBASE5:
     case BX_MSR_MTRRPHYSBASE6:
     case BX_MSR_MTRRPHYSBASE7:
-      if (! isMemTypeValidMTTR(AL)) {
+      if (! isMemTypeValidMTRR(AL)) {
         BX_ERROR(("WRMSR: attempt to write invalid Memory Type to BX_MSR_MTRRPHYSBASE"));
         exception(BX_GP_EXCEPTION, 0, 0);
       }
@@ -307,21 +307,21 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRMSR(bxInstruction_c *i)
       break;
 
     case BX_MSR_MTRRFIX64K_00000:
-      if (! isMemTypeValidMTTR(AL)) {
+      if (! isMemTypeValidMTRR(AL)) {
         BX_ERROR(("WRMSR: attempt to write invalid Memory Type to MSR_MTRRFIX64K_00000"));
         exception(BX_GP_EXCEPTION, 0, 0);
       }
       BX_CPU_THIS_PTR msr.mtrrfix64k_00000 = val64;
       break;
     case BX_MSR_MTRRFIX16K_80000:
-      if (! isMemTypeValidMTTR(AL)) {
+      if (! isMemTypeValidMTRR(AL)) {
         BX_ERROR(("WRMSR: attempt to write invalid Memory Type to MSR_MTRRFIX16K_80000"));
         exception(BX_GP_EXCEPTION, 0, 0);
       }
       BX_CPU_THIS_PTR msr.mtrrfix16k_80000 = val64;
       break;
     case BX_MSR_MTRRFIX16K_A0000:
-      if (! isMemTypeValidMTTR(AL)) {
+      if (! isMemTypeValidMTRR(AL)) {
         BX_ERROR(("WRMSR: attempt to write invalid Memory Type to MSR_MTRRFIX16K_A0000"));
         exception(BX_GP_EXCEPTION, 0, 0);
       }
@@ -355,7 +355,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRMSR(bxInstruction_c *i)
       break;
 
     case BX_MSR_MTRR_DEFTYPE:
-      if (! isMemTypeValidMTTR(AL)) {
+      if (! isMemTypeValidMTRR(AL)) {
         BX_ERROR(("WRMSR: attempt to write invalid Memory Type to MSR_MTRR_DEFTYPE"));
         exception(BX_GP_EXCEPTION, 0, 0);
       }
