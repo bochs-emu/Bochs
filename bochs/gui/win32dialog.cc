@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32dialog.cc,v 1.68 2009-01-19 13:13:32 vruppert Exp $
+// $Id: win32dialog.cc,v 1.69 2009-01-19 20:37:40 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #include "win32dialog.h"
@@ -8,10 +8,6 @@
 
 #include "bochs.h"
 #include "win32res.h"
-
-// for refreshing the bochs VGA window:
-#include "iodev/iodev.h"
-BOCHSAPI extern bx_devices_c bx_devices;
 
 const char log_choices[5][16] = {"ignore", "log", "ask user", "end simulation", "no change"};
 static int retcode = 0;
@@ -918,7 +914,7 @@ BxEvent* win32_notify_callback(void *unused, BxEvent *event)
         while (debug_cmd_ready == FALSE && bx_user_quit == 0)
         {
           if (vgaw_refresh != FALSE)  // is the GUI frontend requesting a VGAW refresh?
-             DEV_vga_refresh();
+            SIM->refresh_vga();
           vgaw_refresh = FALSE;
           Sleep(10);
         }
