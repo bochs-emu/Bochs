@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: textconfig.cc,v 1.71 2009-01-04 21:46:20 vruppert Exp $
+// $Id: textconfig.cc,v 1.72 2009-01-20 09:26:26 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This is code for a text-mode configuration interface.  Note that this file
@@ -279,7 +279,7 @@ static const char *startup_options_prompt =
 "8. Bochs Display & Interface options\n"
 "9. Keyboard & Mouse options\n"
 "10. Disk options\n"
-"11. Serial & Parallel port options\n"
+"11. Serial / Parallel / USB options\n"
 "12. Network card options\n"
 "13. Sound Blaster 16 options\n"
 "14. Other options\n"

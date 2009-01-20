@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.156 2008-02-15 22:05:40 sshwarts Exp $
+// $Id: wxmain.cc,v 1.157 2009-01-20 09:26:26 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWidgets frame, toolbar, menus, and dialogs.
@@ -450,7 +450,7 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size, 
   menuEdit->Append(ID_Edit_Display, wxT("&Display + Interface..."));
   menuEdit->Append(ID_Edit_Keyboard, wxT("&Keyboard + Mouse..."));
   menuEdit->Append(ID_Edit_Boot, wxT("&Boot..."));
-  menuEdit->Append(ID_Edit_Serial_Parallel, wxT("&Serial/Parallel..."));
+  menuEdit->Append(ID_Edit_Serial_Parallel, wxT("&Serial/Parallel/USB..."));
   menuEdit->Append(ID_Edit_Network, wxT("&Network..."));
   menuEdit->Append(ID_Edit_Sound, wxT("S&ound..."));
   menuEdit->Append(ID_Edit_Other, wxT("&Other..."));

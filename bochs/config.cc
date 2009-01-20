@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.152 2009-01-19 21:39:03 vruppert Exp $
+// $Id: config.cc,v 1.153 2009-01-20 09:26:26 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1755,11 +1755,8 @@ void bx_reset_options()
   // ata/atapi drives
   SIM->get_param("ata")->reset();
 
-  // standard ports
+  // serial/parallel/usb
   SIM->get_param("ports")->reset();
-
-  // usb
-  SIM->get_param("usb")->reset();
 
   // ne2k & pnic
   SIM->get_param("network")->reset();
