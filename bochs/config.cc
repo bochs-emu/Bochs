@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.153 2009-01-20 09:26:26 vruppert Exp $
+// $Id: config.cc,v 1.154 2009-01-20 12:37:41 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -460,8 +460,8 @@ void bx_init_options()
   new bx_param_num_c(cpu_param,
       "ips", "Emulated instructions per second (IPS)",
       "Emulated instructions per second, used to calibrate bochs emulated time with wall clock time.",
-      1, BX_MAX_BIT32U,
-      2000000);
+      BX_MIN_IPS, BX_MAX_BIT32U,
+      4000000);
 #if BX_SUPPORT_SMP
   new bx_param_num_c(cpu_param,
       "quantum", "Quantum ticks in SMP simulation",
@@ -818,8 +818,8 @@ void bx_init_options()
       "vga_update_interval",
       "VGA Update Interval",
       "Number of microseconds between VGA updates",
-      1, BX_MAX_BIT32U,
-      40000);
+      40000, BX_MAX_BIT32U,
+      50000);
   vga_update_interval->set_ask_format ("Type a new value for VGA update interval: [%d] ");
 
   bx_param_string_c *vga_extension = new bx_param_string_c(display,
@@ -2553,9 +2553,6 @@ static int parse_line_formatted(const char *context, int num_params, char *param
         SIM->get_param_num(BXPN_CPU_NTHREADS)->set(threads);
       } else if (!strncmp(params[i], "ips=", 4)) {
         SIM->get_param_num(BXPN_IPS)->set(atol(&params[i][4]));
-        if (SIM->get_param_num(BXPN_IPS)->get() < BX_MIN_IPS) {
-          PARSE_WARN(("%s: WARNING: ips is AWFULLY low!", context));
-        }
 #if BX_SUPPORT_SMP
       } else if (!strncmp(params[i], "quantum=", 8)) {
         SIM->get_param_num(BXPN_SMP_QUANTUM)->set(atol(&params[i][8]));
@@ -2675,9 +2672,6 @@ static int parse_line_formatted(const char *context, int num_params, char *param
       PARSE_ERR(("%s: vga_update_interval directive: wrong # args.", context));
     }
     SIM->get_param_num(BXPN_VGA_UPDATE_INTERVAL)->set(atol(params[1]));
-    if (SIM->get_param_num(BXPN_VGA_UPDATE_INTERVAL)->get() < 50000) {
-      BX_INFO(("%s: vga_update_interval seems awfully small!", context));
-    }
   } else if (!strcmp(params[0], "vga")) {
     if (num_params != 2) {
       PARSE_ERR(("%s: vga directive: wrong # args.", context));

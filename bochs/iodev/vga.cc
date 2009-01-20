@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.157 2009-01-19 13:13:32 vruppert Exp $
+// $Id: vga.cc,v 1.158 2009-01-20 12:37:41 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -2141,6 +2141,11 @@ void bx_vga_c::update(void)
     // Maximum Scan Line: height of character cell
     MSL = BX_VGA_THIS s.CRTC.reg[0x09] & 0x1f;
     cols = BX_VGA_THIS s.CRTC.reg[1] + 1;
+    // workaround for update() calls before VGABIOS init
+    if (cols == 1) {
+      cols = 80;
+      MSL = 15;
+    }
     if ((MSL == 1) && (VDE == 399)) {
       // emulated CGA graphics mode 160x100x16 colors
       MSL = 3;
