@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: instrument.cc,v 1.26 2008-11-18 20:55:59 sshwarts Exp $
+// $Id: instrument.cc,v 1.27 2009-01-20 19:34:16 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -187,11 +187,11 @@ void bx_instr_interrupt(unsigned cpu, unsigned vector)
   }
 }
 
-void bx_instr_exception(unsigned cpu, unsigned vector)
+void bx_instr_exception(unsigned cpu, unsigned vector, unsigned error_code)
 {
   if(active)
   {
-    fprintf(stderr, "CPU %u: exception %02xh\n", cpu, vector);
+    fprintf(stderr, "CPU %u: exception %02xh, error_code = %x\n", cpu, vector, error_code);
   }
 }
 

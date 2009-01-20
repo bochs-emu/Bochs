@@ -113,7 +113,7 @@ The  callback  is called each time, when Bochs simulator executes an interrupt
 (software interrupt, hardware interrupt or an exception).
 
 
-	void bx_instr_exception(unsigned cpu, unsigned vector);
+	void bx_instr_exception(unsigned cpu, unsigned vector, unsigned error_code);
 
 The callback is called each time, when Bochs simulator executes an exception.
 
