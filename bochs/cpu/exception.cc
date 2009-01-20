@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.129 2009-01-20 19:34:16 sshwarts Exp $
+// $Id: exception.cc,v 1.130 2009-01-20 21:28:43 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -59,13 +59,29 @@ static const bx_bool is_exception_OK[3][3] = {
 #define BX_EXCEPTION_CLASS_ABORT 2
 
 #if BX_SUPPORT_X86_64
-void BX_CPU_C::long_mode_int(Bit8u vector, unsigned is_INT, bx_bool is_error_code, Bit16u error_code)
+void BX_CPU_C::long_mode_int(Bit8u vector, unsigned type, bx_bool is_error_code, Bit16u error_code)
 {
   // long mode interrupt
   Bit64u desctmp1, desctmp2;
 
   bx_descriptor_t gate_descriptor, cs_descriptor;
   bx_selector_t cs_selector;
+
+  bx_bool is_INT = 0;
+  switch(type) {
+    case BX_SOFTWARE_INTERRUPT:
+    case BX_PRIVILEGED_SOFTWARE_INTERRUPT:
+    case BX_SOFTWARE_EXCEPTION:
+      is_INT = 1;
+      break;
+    case BX_EXTERNAL_INTERRUPT:
+    case BX_NMI:
+    case BX_HARDWARE_EXCEPTION:
+      break;
+
+    default:
+      BX_PANIC(("long_mode_int(): unknown exception type %d", type));
+  }
 
   // interrupt vector must be within IDT table limits,
   // else #GP(vector number*16 + 2 + EXT)
@@ -285,7 +301,7 @@ void BX_CPU_C::long_mode_int(Bit8u vector, unsigned is_INT, bx_bool is_error_cod
 }
 #endif
 
-void BX_CPU_C::protected_mode_int(Bit8u vector, unsigned is_INT, bx_bool is_error_code, Bit16u error_code)
+void BX_CPU_C::protected_mode_int(Bit8u vector, unsigned type, bx_bool is_error_code, Bit16u error_code)
 {
   // protected mode interrupt
   Bit32u dword1, dword2;
@@ -298,6 +314,22 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, unsigned is_INT, bx_bool is_erro
 
   Bit16u gate_dest_selector;
   Bit32u gate_dest_offset;
+
+  bx_bool is_INT = 0;
+  switch(type) {
+    case BX_SOFTWARE_INTERRUPT:
+    case BX_PRIVILEGED_SOFTWARE_INTERRUPT:
+    case BX_SOFTWARE_EXCEPTION:
+      is_INT = 1;
+      break;
+    case BX_EXTERNAL_INTERRUPT:
+    case BX_NMI:
+    case BX_HARDWARE_EXCEPTION:
+      break;
+
+    default:
+      BX_PANIC(("interrupt(): unknown exception type %d", type));
+  }
 
   // interrupt vector must be within IDT table limits,
   // else #GP(vector number*8 + 2 + EXT)
@@ -355,7 +387,7 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, unsigned is_INT, bx_bool is_erro
     // must specify global in the local/global bit,
     //      else #GP(TSS selector)
     if (tss_selector.ti) {
-      BX_ERROR(("interrupt: tss_selector.ti=1 from gate descriptor - #GP(tss_selector)"));
+      BX_ERROR(("interrupt(): tss_selector.ti=1 from gate descriptor - #GP(tss_selector)"));
       exception(BX_GP_EXCEPTION, raw_tss_selector & 0xfffc, 0);
     }
 
@@ -367,20 +399,20 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, unsigned is_INT, bx_bool is_erro
     // AR byte must specify available TSS,
     //   else #GP(TSS selector)
     if (tss_descriptor.valid==0 || tss_descriptor.segment) {
-      BX_ERROR(("exception: TSS selector points to invalid or bad TSS - #GP(tss_selector)"));
+      BX_ERROR(("interrupt(): TSS selector points to invalid or bad TSS - #GP(tss_selector)"));
       exception(BX_GP_EXCEPTION, raw_tss_selector & 0xfffc, 0);
     }
 
     if (tss_descriptor.type!=BX_SYS_SEGMENT_AVAIL_286_TSS &&
         tss_descriptor.type!=BX_SYS_SEGMENT_AVAIL_386_TSS)
     {
-      BX_ERROR(("exception: TSS selector points to bad TSS - #GP(tss_selector)"));
+      BX_ERROR(("interrupt(): TSS selector points to bad TSS - #GP(tss_selector)"));
       exception(BX_GP_EXCEPTION, raw_tss_selector & 0xfffc, 0);
     }
 
     // TSS must be present, else #NP(TSS selector)
     if (! IS_PRESENT(tss_descriptor)) {
-      BX_ERROR(("exception: TSS descriptor.p == 0"));
+      BX_ERROR(("interrupt(): TSS descriptor.p == 0"));
       exception(BX_NP_EXCEPTION, raw_tss_selector & 0xfffc, 0);
     }
 
@@ -401,7 +433,7 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, unsigned is_INT, bx_bool is_erro
 
     // instruction pointer must be in CS limit, else #GP(0)
     if (EIP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled) {
-      BX_ERROR(("exception(): EIP > CS.limit"));
+      BX_ERROR(("interrupt(): EIP > CS.limit"));
       exception(BX_GP_EXCEPTION, 0, 0);
     }
 
@@ -742,7 +774,7 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, unsigned is_INT, bx_bool is_erro
   }
 }
 
-void BX_CPU_C::real_mode_int(Bit8u vector, unsigned is_INT, bx_bool is_error_code, Bit16u error_code)
+void BX_CPU_C::real_mode_int(Bit8u vector, unsigned type, bx_bool is_error_code, Bit16u error_code)
 {
   // real mode interrupt
   Bit16u cs_selector;
@@ -769,7 +801,7 @@ void BX_CPU_C::real_mode_int(Bit8u vector, unsigned is_INT, bx_bool is_error_cod
   BX_CPU_THIS_PTR clear_RF();
 }
 
-void BX_CPU_C::interrupt(Bit8u vector, unsigned is_INT, bx_bool is_error_code, Bit16u error_code)
+void BX_CPU_C::interrupt(Bit8u vector, unsigned type, bx_bool is_error_code, Bit16u error_code)
 {
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR show_flag |= Flag_intsig;
@@ -781,8 +813,8 @@ void BX_CPU_C::interrupt(Bit8u vector, unsigned is_INT, bx_bool is_error_code, B
   bx_dbg_interrupt(BX_CPU_ID, vector, error_code);
 #endif
 
-  BX_DEBUG(("interrupt(): vector = %u, INT = %u, EXT = %u",
-      (unsigned) vector, (unsigned) is_INT, (unsigned) BX_CPU_THIS_PTR EXT));
+  BX_DEBUG(("interrupt(): vector = %u, TYPE = %u, EXT = %u",
+      vector, type, (unsigned) BX_CPU_THIS_PTR EXT));
 
   BX_INSTR_INTERRUPT(BX_CPU_ID, vector);
   invalidate_prefetch_q();
@@ -799,16 +831,16 @@ void BX_CPU_C::interrupt(Bit8u vector, unsigned is_INT, bx_bool is_error_code, B
 
 #if BX_SUPPORT_X86_64
   if (long_mode()) {
-    long_mode_int(vector, is_INT, is_error_code, error_code);
+    long_mode_int(vector, type, is_error_code, error_code);
     return;
   }
 #endif
 
   if(real_mode()) {
-    real_mode_int(vector, is_INT, is_error_code, error_code);
+    real_mode_int(vector, type, is_error_code, error_code);
   }
   else {
-    protected_mode_int(vector, is_INT, is_error_code, error_code);
+    protected_mode_int(vector, type, is_error_code, error_code);
   }
 }
 
@@ -933,12 +965,12 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code, unsigned unused)
 
   if (real_mode()) {
     // not INT, no error code pushed
-    BX_CPU_THIS_PTR interrupt(vector, 0, 0, 0);
+    BX_CPU_THIS_PTR interrupt(vector, BX_HARDWARE_EXCEPTION, 0, 0);
     BX_CPU_THIS_PTR errorno = 0; // error resolved
     longjmp(BX_CPU_THIS_PTR jmp_buf_env, 1); // go back to main decode loop
   }
   else {
-    BX_CPU_THIS_PTR interrupt(vector, 0, push_error, error_code);
+    BX_CPU_THIS_PTR interrupt(vector, BX_HARDWARE_EXCEPTION, push_error, error_code);
     BX_CPU_THIS_PTR errorno = 0; // error resolved
     longjmp(BX_CPU_THIS_PTR jmp_buf_env, 1); // go back to main decode loop
   }

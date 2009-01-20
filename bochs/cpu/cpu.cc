@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.258 2009-01-16 18:18:58 sshwarts Exp $
+// $Id: cpu.cc,v 1.259 2009-01-20 21:28:43 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -149,7 +149,7 @@ no_async_event:
     InstrICache_Increment(iCacheLookups);
     InstrICache_Stats();
 
-    if ((entry->pAddr == pAddr) &&
+    if ((entry->pAddr == pAddr) && (entry->writeStamp != ICacheWriteStampInvalid) &&
         (entry->writeStamp == *(BX_CPU_THIS_PTR currPageWriteStampPtr)))
     {
       // iCache hit. An instruction was found in the iCache
@@ -534,7 +534,7 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
     BX_CPU_THIS_PTR errorno = 0;
     BX_CPU_THIS_PTR EXT = 1; /* external event */
     BX_INSTR_HWINTERRUPT(BX_CPU_ID, 2, BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, RIP);
-    interrupt(2, 0, 0, 0);
+    interrupt(2, BX_NMI, 0, 0);
   }
   else if (BX_CPU_INTR && BX_CPU_THIS_PTR get_IF() && BX_DBG_ASYNC_INTR)
   {
@@ -552,7 +552,7 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
     BX_CPU_THIS_PTR EXT = 1; /* external event */
     BX_INSTR_HWINTERRUPT(BX_CPU_ID, vector,
         BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, RIP);
-    interrupt(vector, 0, 0, 0);
+    interrupt(vector, BX_EXTERNAL_INTERRUPT, 0, 0);
     // Set up environment, as would be when this main cpu loop gets
     // invoked.  At the end of normal instructions, we always commmit
     // the new EIP.  But here, we call interrupt() much like
@@ -1015,7 +1015,7 @@ void BX_CPU_C::dbg_take_irq(void)
       BX_CPU_THIS_PTR errorno = 0;
       BX_CPU_THIS_PTR EXT = 1; // external event
       BX_CPU_THIS_PTR async_event = 1; // set in case INTR is triggered
-      interrupt(vector, 0, 0, 0);
+      interrupt(vector, BX_EXTERNAL_INTERRUPT, 0, 0);
     }
   }
 }
@@ -1030,7 +1030,7 @@ void BX_CPU_C::dbg_force_interrupt(unsigned vector)
     BX_CPU_THIS_PTR errorno = 0;
     BX_CPU_THIS_PTR EXT = 1; // external event
     BX_CPU_THIS_PTR async_event = 1; // probably don't need this
-    interrupt(vector, 0, 0, 0);
+    interrupt(vector, BX_EXTERNAL_INTERRUPT, 0, 0);
   }
 }
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: soft_int.cc,v 1.46 2009-01-16 18:18:58 sshwarts Exp $
+// $Id: soft_int.cc,v 1.47 2009-01-20 21:28:43 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -80,7 +80,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INT1(bxInstruction_c *i)
   BX_CPU_THIS_PTR prev_rsp = RSP;
 
   // interrupt is not RSP safe
-  interrupt(1, 1, 0, 0);
+  interrupt(1, BX_HARDWARE_EXCEPTION, 0, 0);
 
   BX_CPU_THIS_PTR speculative_rsp = 0;
 
@@ -101,7 +101,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INT3(bxInstruction_c *i)
   BX_CPU_THIS_PTR prev_rsp = RSP;
 
   // interrupt is not RSP safe
-  interrupt(3, 1, 0, 0);
+  interrupt(3, BX_SOFTWARE_EXCEPTION, 0, 0);
 
   BX_CPU_THIS_PTR speculative_rsp = 0;
 
@@ -153,7 +153,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INT_Ib(bxInstruction_c *i)
   }
 #endif
 
-  interrupt(vector, 1, 0, 0);
+  interrupt(vector, BX_SOFTWARE_INTERRUPT, 0, 0);
 
 done:
 
@@ -175,7 +175,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INTO(bxInstruction_c *i)
     BX_CPU_THIS_PTR prev_rsp = RSP;
 
     // interrupt is not RSP safe
-    interrupt(4, 1, 0, 0);
+    interrupt(4, BX_SOFTWARE_EXCEPTION, 0, 0);
 
     BX_CPU_THIS_PTR speculative_rsp = 0;
 

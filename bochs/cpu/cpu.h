@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.558 2009-01-20 19:34:16 sshwarts Exp $
+// $Id: cpu.h,v 1.559 2009-01-20 21:28:43 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -3070,14 +3070,14 @@ public: // for now...
   BX_SMF void TLB_init(void);
   BX_SMF void set_INTR(bx_bool value);
   BX_SMF const char *strseg(bx_segment_reg_t *seg);
-  BX_SMF void interrupt(Bit8u vector, unsigned is_INT, bx_bool is_error_code,
+  BX_SMF void interrupt(Bit8u vector, unsigned type, bx_bool push_error,
                  Bit16u error_code);
-  BX_SMF void real_mode_int(Bit8u vector, unsigned is_INT, bx_bool is_error_code,
+  BX_SMF void real_mode_int(Bit8u vector, unsigned type, bx_bool push_error,
                  Bit16u error_code);
-  BX_SMF void protected_mode_int(Bit8u vector, unsigned is_INT, bx_bool is_error_code,
+  BX_SMF void protected_mode_int(Bit8u vector, unsigned type, bx_bool push_error,
                  Bit16u error_code);
 #if BX_SUPPORT_X86_64
-  BX_SMF void long_mode_int(Bit8u vector, unsigned is_INT, bx_bool is_error_code,
+  BX_SMF void long_mode_int(Bit8u vector, unsigned type, bx_bool push_error,
                  Bit16u error_code);
 #endif
   BX_SMF void exception(unsigned vector, Bit16u error_code, unsigned unused)
@@ -3755,7 +3755,17 @@ IMPLEMENT_EFLAG_SET_ACCESSOR_TF(      8)
 #define BX_TASK_FROM_CALL       0
 #define BX_TASK_FROM_IRET       1
 #define BX_TASK_FROM_JUMP       2
-#define BX_TASK_FROM_INT        3     
+#define BX_TASK_FROM_INT        3
+
+// exception types for interrupt method
+enum {
+  BX_EXTERNAL_INTERRUPT = 0,
+  BX_NMI = 2,
+  BX_HARDWARE_EXCEPTION = 3,  // all exceptions except #BP and #OF
+  BX_SOFTWARE_INTERRUPT = 4,
+  BX_PRIVILEGED_SOFTWARE_INTERRUPT = 5,
+  BX_SOFTWARE_EXCEPTION = 6   // they are software exceptions
+};
 
 // <TAG-DEFINES-DECODE-START>
 

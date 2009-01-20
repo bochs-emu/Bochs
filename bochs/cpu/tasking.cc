@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: tasking.cc,v 1.65 2009-01-16 18:18:59 sshwarts Exp $
+// $Id: tasking.cc,v 1.66 2009-01-20 21:28:43 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -156,13 +156,6 @@ void BX_CPU_C::task_switch(bx_selector_t *tss_selector,
   //         to verify that the TSS limit is greater than or equal
   //         to 67h (2Bh for 16-bit TSS).
 
-  // Gather info about old TSS
-  if (BX_CPU_THIS_PTR tr.cache.type <= 3) {
-    old_TSS_max = 0x29;
-  }
-  else {
-    old_TSS_max = 0x5F;
-  }
   // Gather info about new TSS
   if (tss_descriptor->type <= 3) { // {1,3}
     new_TSS_max = 0x2B;
@@ -171,8 +164,6 @@ void BX_CPU_C::task_switch(bx_selector_t *tss_selector,
     new_TSS_max = 0x67;
   }
 
-  obase32 = (Bit32u) BX_CPU_THIS_PTR tr.cache.u.system.base;        // old TSS.base
-  old_TSS_limit = BX_CPU_THIS_PTR tr.cache.u.system.limit_scaled;
   nbase32 = (Bit32u) tss_descriptor->u.system.base;                 // new TSS.base
   new_TSS_limit = tss_descriptor->u.system.limit_scaled;
 
@@ -183,6 +174,17 @@ void BX_CPU_C::task_switch(bx_selector_t *tss_selector,
     BX_ERROR(("task_switch(): new TSS limit < %d", new_TSS_max));
     exception(BX_TS_EXCEPTION, tss_selector->value & 0xfffc, 0);
   }
+
+  // Gather info about old TSS
+  if (BX_CPU_THIS_PTR tr.cache.type <= 3) {
+    old_TSS_max = 0x29;
+  }
+  else {
+    old_TSS_max = 0x5F;
+  }
+
+  obase32 = (Bit32u) BX_CPU_THIS_PTR tr.cache.u.system.base;        // old TSS.base
+  old_TSS_limit = BX_CPU_THIS_PTR tr.cache.u.system.limit_scaled;
 
   if (old_TSS_limit < old_TSS_max) {
     BX_ERROR(("task_switch(): old TSS limit < %d", old_TSS_max));
