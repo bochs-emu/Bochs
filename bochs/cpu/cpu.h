@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.556 2009-01-19 19:01:03 sshwarts Exp $
+// $Id: cpu.h,v 1.557 2009-01-20 18:15:25 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -3068,17 +3068,17 @@ public: // for now...
   BX_SMF void TLB_init(void);
   BX_SMF void set_INTR(bx_bool value);
   BX_SMF const char *strseg(bx_segment_reg_t *seg);
-  BX_SMF void interrupt(Bit8u vector, bx_bool is_INT, bx_bool is_error_code,
+  BX_SMF void interrupt(Bit8u vector, unsigned is_INT, bx_bool is_error_code,
                  Bit16u error_code);
-  BX_SMF void real_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error_code,
+  BX_SMF void real_mode_int(Bit8u vector, unsigned is_INT, bx_bool is_error_code,
                  Bit16u error_code);
-  BX_SMF void protected_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error_code,
+  BX_SMF void protected_mode_int(Bit8u vector, unsigned is_INT, bx_bool is_error_code,
                  Bit16u error_code);
 #if BX_SUPPORT_X86_64
-  BX_SMF void long_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error_code,
+  BX_SMF void long_mode_int(Bit8u vector, unsigned is_INT, bx_bool is_error_code,
                  Bit16u error_code);
 #endif
-  BX_SMF void exception(unsigned vector, Bit16u error_code, bx_bool trap)
+  BX_SMF void exception(unsigned vector, Bit16u error_code, unsigned unused)
                   BX_CPP_AttrNoReturn();
   BX_SMF void init_SMRAM(void);
   BX_SMF void smram_save_state(Bit32u *smm_saved_state);

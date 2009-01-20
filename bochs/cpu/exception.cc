@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.127 2009-01-16 18:18:58 sshwarts Exp $
+// $Id: exception.cc,v 1.128 2009-01-20 18:15:25 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -59,7 +59,7 @@ static const bx_bool is_exception_OK[3][3] = {
 #define BX_EXCEPTION_CLASS_ABORT 2
 
 #if BX_SUPPORT_X86_64
-void BX_CPU_C::long_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error_code, Bit16u error_code)
+void BX_CPU_C::long_mode_int(Bit8u vector, unsigned is_INT, bx_bool is_error_code, Bit16u error_code)
 {
   // long mode interrupt
   Bit64u desctmp1, desctmp2;
@@ -285,7 +285,7 @@ void BX_CPU_C::long_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error_code
 }
 #endif
 
-void BX_CPU_C::protected_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error_code, Bit16u error_code)
+void BX_CPU_C::protected_mode_int(Bit8u vector, unsigned is_INT, bx_bool is_error_code, Bit16u error_code)
 {
   // protected mode interrupt
   Bit32u dword1, dword2;
@@ -742,7 +742,7 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error
   }
 }
 
-void BX_CPU_C::real_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error_code, Bit16u error_code)
+void BX_CPU_C::real_mode_int(Bit8u vector, unsigned is_INT, bx_bool is_error_code, Bit16u error_code)
 {
   // real mode interrupt
   Bit16u cs_selector;
@@ -769,7 +769,7 @@ void BX_CPU_C::real_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error_code
   BX_CPU_THIS_PTR clear_RF();
 }
 
-void BX_CPU_C::interrupt(Bit8u vector, bx_bool is_INT, bx_bool is_error_code, Bit16u error_code)
+void BX_CPU_C::interrupt(Bit8u vector, unsigned is_INT, bx_bool is_error_code, Bit16u error_code)
 {
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR show_flag |= Flag_intsig;
@@ -815,7 +815,7 @@ void BX_CPU_C::interrupt(Bit8u vector, bx_bool is_INT, bx_bool is_error_code, Bi
 // vector:     0..255: vector in IDT
 // error_code: if exception generates and error, push this error code
 // trap:       override exception class to TRAP
-void BX_CPU_C::exception(unsigned vector, Bit16u error_code, bx_bool trap)
+void BX_CPU_C::exception(unsigned vector, Bit16u error_code, unsigned unused)
 {
   unsigned exception_type = 0, exception_class = BX_EXCEPTION_CLASS_FAULT;
   bx_bool push_error = 0;
@@ -982,19 +982,14 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code, bx_bool trap)
       break;
   }
 
-  if (trap) {
-    exception_class = BX_EXCEPTION_CLASS_TRAP;
-  }
-  else {
-    if (exception_class == BX_EXCEPTION_CLASS_FAULT)
-    {
-      // restore RIP/RSP to value before error occurred
-      RIP = BX_CPU_THIS_PTR prev_rip;
-      if (BX_CPU_THIS_PTR speculative_rsp)
-        RSP = BX_CPU_THIS_PTR prev_rsp;
+  if (exception_class == BX_EXCEPTION_CLASS_FAULT)
+  {
+    // restore RIP/RSP to value before error occurred
+    RIP = BX_CPU_THIS_PTR prev_rip;
+    if (BX_CPU_THIS_PTR speculative_rsp)
+      RSP = BX_CPU_THIS_PTR prev_rsp;
 
-      if (vector != BX_DB_EXCEPTION) BX_CPU_THIS_PTR assert_RF();
-    }
+    if (vector != BX_DB_EXCEPTION) BX_CPU_THIS_PTR assert_RF();
   }
 
   // clear GD flag in the DR7 prior entering debug exception handler
@@ -1004,9 +999,6 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code, bx_bool trap)
   if (exception_type != BX_ET_PAGE_FAULT) {
     // Page faults have different format
     error_code = (error_code & 0xfffe) | BX_CPU_THIS_PTR EXT;
-  }
-  else {
-    // FIXME: special format error returned for page faults ?
   }
   BX_CPU_THIS_PTR EXT = 1;
 
