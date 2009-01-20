@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.259 2009-01-20 21:28:43 sshwarts Exp $
+// $Id: cpu.cc,v 1.260 2009-01-20 21:34:59 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -149,7 +149,7 @@ no_async_event:
     InstrICache_Increment(iCacheLookups);
     InstrICache_Stats();
 
-    if ((entry->pAddr == pAddr) && (entry->writeStamp != ICacheWriteStampInvalid) &&
+    if ((entry->pAddr == pAddr) &&
         (entry->writeStamp == *(BX_CPU_THIS_PTR currPageWriteStampPtr)))
     {
       // iCache hit. An instruction was found in the iCache
