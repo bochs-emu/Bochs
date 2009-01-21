@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.130 2009-01-20 21:28:43 sshwarts Exp $
+// $Id: exception.cc,v 1.131 2009-01-21 22:09:59 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -59,29 +59,13 @@ static const bx_bool is_exception_OK[3][3] = {
 #define BX_EXCEPTION_CLASS_ABORT 2
 
 #if BX_SUPPORT_X86_64
-void BX_CPU_C::long_mode_int(Bit8u vector, unsigned type, bx_bool is_error_code, Bit16u error_code)
+void BX_CPU_C::long_mode_int(Bit8u vector, unsigned is_INT, bx_bool push_error, Bit16u error_code)
 {
   // long mode interrupt
   Bit64u desctmp1, desctmp2;
 
   bx_descriptor_t gate_descriptor, cs_descriptor;
   bx_selector_t cs_selector;
-
-  bx_bool is_INT = 0;
-  switch(type) {
-    case BX_SOFTWARE_INTERRUPT:
-    case BX_PRIVILEGED_SOFTWARE_INTERRUPT:
-    case BX_SOFTWARE_EXCEPTION:
-      is_INT = 1;
-      break;
-    case BX_EXTERNAL_INTERRUPT:
-    case BX_NMI:
-    case BX_HARDWARE_EXCEPTION:
-      break;
-
-    default:
-      BX_PANIC(("long_mode_int(): unknown exception type %d", type));
-  }
 
   // interrupt vector must be within IDT table limits,
   // else #GP(vector number*16 + 2 + EXT)
@@ -217,7 +201,7 @@ void BX_CPU_C::long_mode_int(Bit8u vector, unsigned type, bx_bool is_error_code,
     write_new_stack_qword_64(RSP_for_cpl_x - 40, cs_descriptor.dpl, old_RIP);
     RSP_for_cpl_x -= 40;
 
-    if (is_error_code) {
+    if (push_error) {
       RSP_for_cpl_x -= 8;
       write_new_stack_qword_64(RSP_for_cpl_x, cs_descriptor.dpl, error_code);
     }
@@ -275,7 +259,7 @@ void BX_CPU_C::long_mode_int(Bit8u vector, unsigned type, bx_bool is_error_code,
     write_new_stack_qword_64(RSP - 40, cs_descriptor.dpl, RIP);
     RSP -= 40;
 
-    if (is_error_code) {
+    if (push_error) {
       RSP -= 8;
       write_new_stack_qword_64(RSP, cs_descriptor.dpl, error_code);
     }
@@ -301,7 +285,7 @@ void BX_CPU_C::long_mode_int(Bit8u vector, unsigned type, bx_bool is_error_code,
 }
 #endif
 
-void BX_CPU_C::protected_mode_int(Bit8u vector, unsigned type, bx_bool is_error_code, Bit16u error_code)
+void BX_CPU_C::protected_mode_int(Bit8u vector, unsigned is_INT, bx_bool push_error, Bit16u error_code)
 {
   // protected mode interrupt
   Bit32u dword1, dword2;
@@ -314,22 +298,6 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, unsigned type, bx_bool is_error_
 
   Bit16u gate_dest_selector;
   Bit32u gate_dest_offset;
-
-  bx_bool is_INT = 0;
-  switch(type) {
-    case BX_SOFTWARE_INTERRUPT:
-    case BX_PRIVILEGED_SOFTWARE_INTERRUPT:
-    case BX_SOFTWARE_EXCEPTION:
-      is_INT = 1;
-      break;
-    case BX_EXTERNAL_INTERRUPT:
-    case BX_NMI:
-    case BX_HARDWARE_EXCEPTION:
-      break;
-
-    default:
-      BX_PANIC(("interrupt(): unknown exception type %d", type));
-  }
 
   // interrupt vector must be within IDT table limits,
   // else #GP(vector number*8 + 2 + EXT)
@@ -424,7 +392,7 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, unsigned type, bx_bool is_error_
     //   stack limits must allow push of 2 more bytes, else #SS(0)
     // push error code onto stack
 
-    if (is_error_code) {
+    if (push_error) {
       if (tss_descriptor.type >= 9) // TSS386
         push_32(error_code);
       else
@@ -604,7 +572,7 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, unsigned type, bx_bool is_error_
           write_new_stack_dword_32(&new_stack, temp_ESP-20, cs_descriptor.dpl, old_EIP);
           temp_ESP -= 20;
 
-          if (is_error_code) {
+          if (push_error) {
             temp_ESP -= 4;
             write_new_stack_dword_32(&new_stack, temp_ESP, cs_descriptor.dpl, error_code);
           }
@@ -618,7 +586,7 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, unsigned type, bx_bool is_error_
           write_new_stack_word_32(&new_stack, temp_ESP-10, cs_descriptor.dpl, (Bit16u) old_EIP);
           temp_ESP -= 10;
 
-          if (is_error_code) {
+          if (push_error) {
             temp_ESP -= 2;
             write_new_stack_word_32(&new_stack, temp_ESP, cs_descriptor.dpl, error_code);
           }
@@ -664,7 +632,7 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, unsigned type, bx_bool is_error_
           write_new_stack_dword_32(&new_stack, (Bit16u)(temp_SP-20), cs_descriptor.dpl, old_EIP);
           temp_SP -= 20;
 
-          if (is_error_code) {
+          if (push_error) {
             temp_SP -= 4;
             write_new_stack_dword_32(&new_stack, temp_SP, cs_descriptor.dpl, error_code);
           }
@@ -678,7 +646,7 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, unsigned type, bx_bool is_error_
           write_new_stack_word_32(&new_stack, (Bit16u)(temp_SP-10), cs_descriptor.dpl, (Bit16u) old_EIP);
           temp_SP -= 10;
 
-          if (is_error_code) {
+          if (push_error) {
             temp_SP -= 2;
             write_new_stack_word_32(&new_stack, temp_SP, cs_descriptor.dpl, error_code);
           }
@@ -741,14 +709,14 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, unsigned type, bx_bool is_error_
         push_32(read_eflags());
         push_32(BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value);
         push_32(EIP);
-        if (is_error_code)
+        if (push_error)
           push_32(error_code);
       }
       else { // 286 gate
         push_16((Bit16u) read_eflags());
         push_16(BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value);
         push_16(IP);
-        if (is_error_code)
+        if (push_error)
           push_16(error_code);
       }
 
@@ -774,7 +742,7 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, unsigned type, bx_bool is_error_
   }
 }
 
-void BX_CPU_C::real_mode_int(Bit8u vector, unsigned type, bx_bool is_error_code, Bit16u error_code)
+void BX_CPU_C::real_mode_int(Bit8u vector, unsigned is_INT, bx_bool push_error, Bit16u error_code)
 {
   // real mode interrupt
   Bit16u cs_selector;
@@ -801,7 +769,7 @@ void BX_CPU_C::real_mode_int(Bit8u vector, unsigned type, bx_bool is_error_code,
   BX_CPU_THIS_PTR clear_RF();
 }
 
-void BX_CPU_C::interrupt(Bit8u vector, unsigned type, bx_bool is_error_code, Bit16u error_code)
+void BX_CPU_C::interrupt(Bit8u vector, unsigned type, bx_bool push_error, Bit16u error_code)
 {
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR show_flag |= Flag_intsig;
@@ -813,11 +781,28 @@ void BX_CPU_C::interrupt(Bit8u vector, unsigned type, bx_bool is_error_code, Bit
   bx_dbg_interrupt(BX_CPU_ID, vector, error_code);
 #endif
 
+  BX_INSTR_INTERRUPT(BX_CPU_ID, vector);
+
+  invalidate_prefetch_q();
+
+  bx_bool is_INT = 0;
+  switch(type) {
+    case BX_SOFTWARE_INTERRUPT:
+    case BX_PRIVILEGED_SOFTWARE_INTERRUPT:
+    case BX_SOFTWARE_EXCEPTION:
+      is_INT = 1;
+      break;
+    case BX_EXTERNAL_INTERRUPT:
+    case BX_NMI:
+    case BX_HARDWARE_EXCEPTION:
+      break;
+
+    default:
+      BX_PANIC(("interrupt(): unknown exception type %d", type));
+  }
+
   BX_DEBUG(("interrupt(): vector = %u, TYPE = %u, EXT = %u",
       vector, type, (unsigned) BX_CPU_THIS_PTR EXT));
-
-  BX_INSTR_INTERRUPT(BX_CPU_ID, vector);
-  invalidate_prefetch_q();
 
   // Discard any traps and inhibits for new context; traps will
   // resume upon return.
@@ -831,16 +816,17 @@ void BX_CPU_C::interrupt(Bit8u vector, unsigned type, bx_bool is_error_code, Bit
 
 #if BX_SUPPORT_X86_64
   if (long_mode()) {
-    long_mode_int(vector, type, is_error_code, error_code);
-    return;
+    long_mode_int(vector, is_INT, push_error, error_code);
   }
+  else
 #endif
-
-  if(real_mode()) {
-    real_mode_int(vector, type, is_error_code, error_code);
-  }
-  else {
-    protected_mode_int(vector, type, is_error_code, error_code);
+  {
+    if(real_mode()) {
+      real_mode_int(vector, is_INT, push_error, error_code);
+    }
+    else {
+      protected_mode_int(vector, is_INT, push_error, error_code);
+    }
   }
 }
 

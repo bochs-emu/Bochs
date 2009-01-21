@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.559 2009-01-20 21:28:43 sshwarts Exp $
+// $Id: cpu.h,v 1.560 2009-01-21 22:09:59 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -3072,12 +3072,12 @@ public: // for now...
   BX_SMF const char *strseg(bx_segment_reg_t *seg);
   BX_SMF void interrupt(Bit8u vector, unsigned type, bx_bool push_error,
                  Bit16u error_code);
-  BX_SMF void real_mode_int(Bit8u vector, unsigned type, bx_bool push_error,
+  BX_SMF void real_mode_int(Bit8u vector, unsigned is_INT, bx_bool push_error,
                  Bit16u error_code);
-  BX_SMF void protected_mode_int(Bit8u vector, unsigned type, bx_bool push_error,
+  BX_SMF void protected_mode_int(Bit8u vector, unsigned is_INT, bx_bool push_error,
                  Bit16u error_code);
 #if BX_SUPPORT_X86_64
-  BX_SMF void long_mode_int(Bit8u vector, unsigned type, bx_bool push_error,
+  BX_SMF void long_mode_int(Bit8u vector, unsigned is_INT, bx_bool push_error,
                  Bit16u error_code);
 #endif
   BX_SMF void exception(unsigned vector, Bit16u error_code, unsigned unused)

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.274 2009-01-19 17:43:54 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.275 2009-01-21 22:09:59 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -217,7 +217,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CLFLUSH(bxInstruction_c *i)
 #endif
 }
 
-#if BX_CPU_LEVEL >= 3
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_DdRd(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 4
@@ -756,9 +755,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RqCq(bxInstruction_c *i)
 }
 #endif // #if BX_SUPPORT_X86_64
 
-#endif // #if BX_CPU_LEVEL >= 3
-
-#if BX_CPU_LEVEL >= 2
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::LMSW_Ew(bxInstruction_c *i)
 {
   Bit16u msw;
@@ -781,7 +777,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LMSW_Ew(bxInstruction_c *i)
 
   // LMSW cannot clear PE
   if (BX_CPU_THIS_PTR cr0.get_PE())
-    msw |= 0x0001; // adjust PE bit to current value of 1
+    msw |= 0x1; // adjust PE bit to current value of 1
 
   msw &= 0xf; // LMSW only affects last 4 flags
   Bit32u cr0 = (BX_CPU_THIS_PTR cr0.get32() & 0xfffffff0) | msw;
@@ -806,7 +802,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SMSW_EwM(bxInstruction_c *i)
   /* pointer, segment address pair */
   write_virtual_word(i->seg(), eaddr, msw);
 }
-#endif
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_TdRd(bxInstruction_c *i)
 {
@@ -1164,10 +1159,10 @@ void BX_CPU_C::handleAlignmentCheck(void)
 
 bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::SetCR0(Bit32u val_32)
 {
-  bx_bool pe = val_32 & 0x01;
-  bx_bool nw = (val_32 >> 29) & 0x01;
-  bx_bool cd = (val_32 >> 30) & 0x01;
-  bx_bool pg = (val_32 >> 31) & 0x01;
+  bx_bool pe = val_32 & 0x1;
+  bx_bool nw = (val_32 >> 29) & 0x1;
+  bx_bool cd = (val_32 >> 30) & 0x1;
+  bx_bool pg = (val_32 >> 31) & 0x1;
 
   if (pg && !pe) {
     BX_ERROR(("SetCR0: GP(0) when attempt to set CR0.PG with CR0.PE cleared !"));
