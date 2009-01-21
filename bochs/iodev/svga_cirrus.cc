@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: svga_cirrus.cc,v 1.46 2008-12-29 20:16:08 sshwarts Exp $
+// $Id: svga_cirrus.cc,v 1.47 2009-01-21 22:16:09 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Copyright (c) 2004 Makoto Suzuki (suzu)
@@ -18,7 +18,7 @@
 //
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
-//  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+//  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 //
 /////////////////////////////////////////////////////////////////////////
 
@@ -38,6 +38,7 @@
 
 #include "iodev.h"
 #include "vga.h"
+#include "svga_cirrus.h"
 
 #if BX_SUPPORT_CLGD54XX
 

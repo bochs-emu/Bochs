@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.h,v 1.64 2009-01-19 13:13:32 vruppert Exp $
+// $Id: vga.h,v 1.65 2009-01-21 22:16:09 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -334,7 +334,6 @@ protected:
 
 #if BX_SUPPORT_CLGD54XX
 void libvga_set_smf_pointer(bx_vga_c *theVga_ptr);
-#include "iodev/svga_cirrus.h"
 #endif
 
 #endif
