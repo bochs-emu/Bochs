@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pcivga.cc,v 1.21 2009-01-10 11:30:20 vruppert Exp $
+// $Id: pcivga.cc,v 1.22 2009-01-22 22:29:23 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002,2003 Mike Nordell
@@ -38,6 +38,7 @@
 #if BX_SUPPORT_PCI && BX_SUPPORT_PCIVGA
 
 #include "pci.h"
+#include "vga.h"
 #include "pcivga.h"
 
 #define LOG_THIS thePciVgaAdapter->
@@ -105,12 +106,15 @@ void bx_pcivga_c::reset(unsigned type)
     unsigned      addr;
     unsigned char val;
   } reset_vals[] = {
-      { 0x04, 0x03 }, { 0x05, 0x00 },	// command_io + command_mem
-      { 0x06, 0x00 }, { 0x07, 0x02 }	// status_devsel_medium
+      { 0x04, 0x03 }, { 0x05, 0x00 }, // command_io + command_mem
+      { 0x06, 0x00 }, { 0x07, 0x02 }  // status_devsel_medium
   };
   for (unsigned i = 0; i < sizeof(reset_vals) / sizeof(*reset_vals); ++i) {
     BX_PCIVGA_THIS s.pci_conf[reset_vals[i].addr] = reset_vals[i].val;
   }
+  // FIXME: LFB address should be changeable
+  WriteHostDWordToLittleEndian(&BX_PCIVGA_THIS s.pci_conf[0x10],
+                               VBE_DISPI_LFB_PHYSICAL_ADDRESS | 0x08);
 }
 
 void bx_pcivga_c::register_state(void)
@@ -151,6 +155,7 @@ Bit32u bx_pcivga_c::pci_read_handler(Bit8u address, unsigned io_len)
                }
       break;
     case 0x0c: pszName = "(cache line size) "; break;
+    case 0x10: pszName = "(base address #0) "; break;
     case 0x28: pszName = "(cardbus cis)     "; break;
     case 0x2c: pszName = "(subsys. vendor+) "; break;
     case 0x30: pszName = "(rom base)        "; break;
@@ -180,29 +185,52 @@ Bit32u bx_pcivga_c::pci_read_handler(Bit8u address, unsigned io_len)
 // static pci configuration space write callback handler
 void bx_pcivga_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len)
 {
-  if ((address >= 0x10) && (address < 0x34))
+  unsigned i;
+  unsigned write_addr;
+  Bit8u new_value, old_value;
+  Bit32u mask, value32;
+  bx_bool baseaddr_change = 0;
+
+  if ((address >= 0x14) && (address < 0x34))
     return;
-  // This odd code is to display only what bytes actually were written.
-  char szTmp[9];
-  char szTmp2[3];
-  szTmp[0] = '\0';
-  szTmp2[0] = '\0';
-  for (unsigned i=0; i<io_len; i++) {
-    const Bit8u value8 = (value >> (i*8)) & 0xFF;
-    switch (address+i) {
-      case 0x04: // disallowing write to command
-      case 0x06: // disallowing write to status lo-byte (is that expected?)
-        strcpy(szTmp2, "..");
-        break;
-      default:
-        BX_PCIVGA_THIS s.pci_conf[address+i] = value8;
-        sprintf(szTmp2, "%02x", value8);
+  if (io_len <= 4) {
+    // This odd code is to display only what bytes actually were written.
+    char szTmp[9];
+    char szTmp2[3];
+    szTmp[0] = '\0';
+    szTmp2[0] = '\0';
+    for (i = 0; i < io_len; i++) {
+      write_addr = address + i;
+      old_value = BX_PCIVGA_THIS s.pci_conf[write_addr];
+      new_value = (Bit8u)(value & 0xff);
+      switch (write_addr) {
+        case 0x04: // disallowing write to command
+        case 0x06: // disallowing write to status lo-byte (is that expected?)
+          new_value = old_value;
+          strcpy(szTmp2, "..");
+          break;
+        case 0x10: // base address #0
+          new_value = (new_value & 0xf0) | (old_value & 0x0f);
+        case 0x11: case 0x12: case 0x13:
+          baseaddr_change |= (old_value != new_value);
+        default:
+          sprintf(szTmp2, "%02x", new_value);
+      }
+      BX_PCIVGA_THIS s.pci_conf[write_addr] = new_value;
+      value >>= 8;
+      strrev(szTmp2);
+      strcat(szTmp, szTmp2);
     }
-    strrev(szTmp2);
-    strcat(szTmp, szTmp2);
+    if (baseaddr_change) {
+      // FIXME: implement changeable LFB address
+      ReadHostDWordFromLittleEndian(&BX_PCIVGA_THIS s.pci_conf[0x10], value32);
+      mask = ~((VBE_DISPI_TOTAL_VIDEO_MEMORY_MB << 20) - 1);
+      value32 &= mask;
+      WriteHostDWordToLittleEndian(&BX_PCIVGA_THIS s.pci_conf[0x10], value32);
+    }
+    strrev(szTmp);
+    BX_DEBUG(("Experimental PCIVGA write register 0x%02x value 0x%s", address, szTmp));
   }
-  strrev(szTmp);
-  BX_DEBUG(("Experimental PCIVGA write register 0x%02x value 0x%s", address, szTmp));
 }
 
 #endif // BX_SUPPORT_PCI && BX_SUPPORT_PCIVGA
