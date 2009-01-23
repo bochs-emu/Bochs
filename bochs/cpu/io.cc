@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: io.cc,v 1.74 2009-01-23 09:26:24 sshwarts Exp $
+// $Id: io.cc,v 1.75 2009-01-23 09:33:11 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -825,7 +825,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::OUT_DXEAX(bxInstruction_c *i)
   BX_OUTP(port, EAX, 4);
 }
 
-bx_bool BX_CPU_C::allow_io(bxInstruction_c *i, Bit16u port, unsigned len)
+bx_bool BX_CPP_AttrRegparmN(3) BX_CPU_C::allow_io(bxInstruction_c *i, Bit16u port, unsigned len)
 {
   /* If CPL <= IOPL, then all IO portesses are accessible.
    * Otherwise, must check the IO permission map on >286.
