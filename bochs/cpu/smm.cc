@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: smm.cc,v 1.53 2009-01-17 22:35:45 sshwarts Exp $
+// $Id: smm.cc,v 1.54 2009-01-23 21:28:01 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2006 Stanislav Shwartsman
@@ -424,14 +424,14 @@ void BX_CPU_C::smram_save_state(Bit32u *saved_state)
   SMRAM_FIELD(saved_state, SMRAM_FIELD_TR_BASE_HI32) = GET32H(BX_CPU_THIS_PTR tr.cache.u.system.base);
   SMRAM_FIELD(saved_state, SMRAM_FIELD_TR_BASE) = GET32L(BX_CPU_THIS_PTR tr.cache.u.system.base);
   SMRAM_FIELD(saved_state, SMRAM_FIELD_TR_LIMIT) = BX_CPU_THIS_PTR tr.cache.u.system.limit_scaled;
-  Bit32u tr_ar = ((get_descriptor_h(&BX_CPU_THIS_PTR tr.cache) >> 8) & 0xffff) | (BX_CPU_THIS_PTR tr.cache.valid << 8);
+  Bit32u tr_ar = ((get_descriptor_h(&BX_CPU_THIS_PTR tr.cache) >> 8) & 0xf0ff) | (BX_CPU_THIS_PTR tr.cache.valid << 8);
   SMRAM_FIELD(saved_state, SMRAM_FIELD_TR_SELECTOR_AR) = BX_CPU_THIS_PTR tr.selector.value | (tr_ar << 16);
 
   // --- LDTR --- //
   SMRAM_FIELD(saved_state, SMRAM_FIELD_LDTR_BASE_HI32) = GET32H(BX_CPU_THIS_PTR ldtr.cache.u.system.base);
   SMRAM_FIELD(saved_state, SMRAM_FIELD_LDTR_BASE) = GET32L(BX_CPU_THIS_PTR ldtr.cache.u.system.base);
   SMRAM_FIELD(saved_state, SMRAM_FIELD_LDTR_LIMIT) = BX_CPU_THIS_PTR ldtr.cache.u.system.limit_scaled;
-  Bit32u ldtr_ar = ((get_descriptor_h(&BX_CPU_THIS_PTR ldtr.cache) >> 8) & 0xffff) | (BX_CPU_THIS_PTR ldtr.cache.valid << 8);
+  Bit32u ldtr_ar = ((get_descriptor_h(&BX_CPU_THIS_PTR ldtr.cache) >> 8) & 0xf0ff) | (BX_CPU_THIS_PTR ldtr.cache.valid << 8);
   SMRAM_FIELD(saved_state, SMRAM_FIELD_LDTR_SELECTOR_AR) = BX_CPU_THIS_PTR ldtr.selector.value | (ldtr_ar << 16);
 
   // --- IDTR --- //
@@ -449,7 +449,7 @@ void BX_CPU_C::smram_save_state(Bit32u *saved_state)
     SMRAM_FIELD(saved_state, SMRAM_FIELD_ES_BASE_HI32 + 4*segreg) = GET32H(seg->cache.u.segment.base);
     SMRAM_FIELD(saved_state, SMRAM_FIELD_ES_BASE + 4*segreg) = GET32L(seg->cache.u.segment.base);
     SMRAM_FIELD(saved_state, SMRAM_FIELD_ES_LIMIT + 4*segreg) = seg->cache.u.segment.limit_scaled;
-    Bit32u seg_ar = ((get_descriptor_h(&seg->cache) >> 8) & 0xffff) | (seg->cache.valid << 8);
+    Bit32u seg_ar = ((get_descriptor_h(&seg->cache) >> 8) & 0xf0ff) | (seg->cache.valid << 8);
     SMRAM_FIELD(saved_state, SMRAM_FIELD_ES_SELECTOR_AR + 4*segreg) = seg->selector.value | (seg_ar << 16);
   }
 }
@@ -541,7 +541,7 @@ bx_bool BX_CPU_C::smram_restore_state(const Bit32u *saved_state)
     Bit16u ar_data = SMRAM_FIELD(saved_state, SMRAM_FIELD_ES_SELECTOR_AR + 4*segreg) >> 16;
     if (set_segment_ar_data(&BX_CPU_THIS_PTR sregs[segreg],
           (ar_data >> 8) & 1,
-          SMRAM_FIELD(saved_state, SMRAM_FIELD_ES_SELECTOR_AR + 4*segreg) & 0xffff,
+          SMRAM_FIELD(saved_state, SMRAM_FIELD_ES_SELECTOR_AR + 4*segreg) & 0xf0ff,
           SMRAM_FIELD64(saved_state, SMRAM_FIELD_ES_BASE_HI32 + 4*segreg, SMRAM_FIELD_ES_BASE + 4*segreg),
           SMRAM_FIELD(saved_state, SMRAM_FIELD_ES_LIMIT + 4*segreg), ar_data))
     {
@@ -557,7 +557,7 @@ bx_bool BX_CPU_C::smram_restore_state(const Bit32u *saved_state)
   Bit16u ar_data = SMRAM_FIELD(saved_state, SMRAM_FIELD_LDTR_SELECTOR_AR) >> 16;
   if (set_segment_ar_data(&BX_CPU_THIS_PTR ldtr,
           (ar_data >> 8) & 1,
-          SMRAM_FIELD(saved_state, SMRAM_FIELD_LDTR_SELECTOR_AR) & 0xffff,
+          SMRAM_FIELD(saved_state, SMRAM_FIELD_LDTR_SELECTOR_AR) & 0xf0ff,
           SMRAM_FIELD64(saved_state, SMRAM_FIELD_LDTR_BASE_HI32, SMRAM_FIELD_LDTR_BASE),
           SMRAM_FIELD(saved_state, SMRAM_FIELD_LDTR_LIMIT), ar_data))
   {
@@ -570,7 +570,7 @@ bx_bool BX_CPU_C::smram_restore_state(const Bit32u *saved_state)
   ar_data = SMRAM_FIELD(saved_state, SMRAM_FIELD_TR_SELECTOR_AR) >> 16;
   if (set_segment_ar_data(&BX_CPU_THIS_PTR tr,
           (ar_data >> 8) & 1,
-          SMRAM_FIELD(saved_state, SMRAM_FIELD_TR_SELECTOR_AR) & 0xffff,
+          SMRAM_FIELD(saved_state, SMRAM_FIELD_TR_SELECTOR_AR) & 0xf0ff,
           SMRAM_FIELD64(saved_state, SMRAM_FIELD_TR_BASE_HI32, SMRAM_FIELD_TR_BASE),
           SMRAM_FIELD(saved_state, SMRAM_FIELD_TR_LIMIT), ar_data))
   {
@@ -617,14 +617,14 @@ void BX_CPU_C::smram_save_state(Bit32u *saved_state)
   SMRAM_FIELD(saved_state, SMRAM_FIELD_TR_SELECTOR) = BX_CPU_THIS_PTR tr.selector.value;
   SMRAM_FIELD(saved_state, SMRAM_FIELD_TR_BASE) = BX_CPU_THIS_PTR tr.cache.u.system.base;
   SMRAM_FIELD(saved_state, SMRAM_FIELD_TR_LIMIT) = BX_CPU_THIS_PTR tr.cache.u.system.limit_scaled;
-  Bit32u tr_ar = ((get_descriptor_h(&BX_CPU_THIS_PTR tr.cache) >> 8) & 0xffff) | (BX_CPU_THIS_PTR tr.cache.valid << 8);
+  Bit32u tr_ar = ((get_descriptor_h(&BX_CPU_THIS_PTR tr.cache) >> 8) & 0xf0ff) | (BX_CPU_THIS_PTR tr.cache.valid << 8);
   SMRAM_FIELD(saved_state, SMRAM_FIELD_TR_SELECTOR_AR) = BX_CPU_THIS_PTR tr.selector.value | (tr_ar << 16);
 
   // --- LDTR --- //
   SMRAM_FIELD(saved_state, SMRAM_FIELD_LDTR_SELECTOR) = BX_CPU_THIS_PTR ldtr.selector.value;
   SMRAM_FIELD(saved_state, SMRAM_FIELD_LDTR_BASE) = BX_CPU_THIS_PTR ldtr.cache.u.system.base;
   SMRAM_FIELD(saved_state, SMRAM_FIELD_LDTR_LIMIT) = BX_CPU_THIS_PTR ldtr.cache.u.system.limit_scaled;
-  Bit32u ldtr_ar = ((get_descriptor_h(&BX_CPU_THIS_PTR ldtr.cache) >> 8) & 0xffff) | (BX_CPU_THIS_PTR ldtr.cache.valid << 8);
+  Bit32u ldtr_ar = ((get_descriptor_h(&BX_CPU_THIS_PTR ldtr.cache) >> 8) & 0xf0ff) | (BX_CPU_THIS_PTR ldtr.cache.valid << 8);
   SMRAM_FIELD(saved_state, SMRAM_FIELD_LDTR_SELECTOR_AR) = BX_CPU_THIS_PTR ldtr.selector.value | (ldtr_ar << 16);
 
   // --- IDTR --- //
@@ -640,7 +640,7 @@ void BX_CPU_C::smram_save_state(Bit32u *saved_state)
     SMRAM_FIELD(saved_state, SMRAM_FIELD_ES_SELECTOR + 4*segreg) = seg->selector.value;
     SMRAM_FIELD(saved_state, SMRAM_FIELD_ES_BASE + 4*segreg) = seg->cache.u.segment.base;
     SMRAM_FIELD(saved_state, SMRAM_FIELD_ES_LIMIT + 4*segreg) = seg->cache.u.segment.limit_scaled;
-    Bit32u seg_ar = ((get_descriptor_h(&seg->cache) >> 8) & 0xffff) | (seg->cache.valid << 8);
+    Bit32u seg_ar = ((get_descriptor_h(&seg->cache) >> 8) & 0xf0ff) | (seg->cache.valid << 8);
     SMRAM_FIELD(saved_state, SMRAM_FIELD_ES_SELECTOR_AR + 4*segreg) = seg->selector.value | (seg_ar << 16);
   }
 }
@@ -701,7 +701,7 @@ bx_bool BX_CPU_C::smram_restore_state(const Bit32u *saved_state)
     Bit32u ar_data = SMRAM_FIELD(saved_state, SMRAM_FIELD_ES_SELECTOR_AR + 4*segreg) >> 16;
     if (set_segment_ar_data(&BX_CPU_THIS_PTR sregs[segreg],
           (ar_data >> 8) & 1,
-          SMRAM_FIELD(saved_state, SMRAM_FIELD_ES_SELECTOR_AR + 4*segreg) & 0xffff,
+          SMRAM_FIELD(saved_state, SMRAM_FIELD_ES_SELECTOR_AR + 4*segreg) & 0xf0ff,
           SMRAM_FIELD(saved_state, SMRAM_FIELD_ES_BASE + 4*segreg),
           SMRAM_FIELD(saved_state, SMRAM_FIELD_ES_LIMIT + 4*segreg), ar_data))
     {
@@ -715,7 +715,7 @@ bx_bool BX_CPU_C::smram_restore_state(const Bit32u *saved_state)
   Bit32u ar_data = SMRAM_FIELD(saved_state, SMRAM_FIELD_LDTR_SELECTOR_AR) >> 16;
   if (set_segment_ar_data(&BX_CPU_THIS_PTR ldtr,
           (ar_data >> 8) & 1,
-          SMRAM_FIELD(saved_state, SMRAM_FIELD_LDTR_SELECTOR_AR) & 0xffff,
+          SMRAM_FIELD(saved_state, SMRAM_FIELD_LDTR_SELECTOR_AR) & 0xf0ff,
           SMRAM_FIELD(saved_state, SMRAM_FIELD_LDTR_BASE),
           SMRAM_FIELD(saved_state, SMRAM_FIELD_LDTR_LIMIT), ar_data))
   {
@@ -728,7 +728,7 @@ bx_bool BX_CPU_C::smram_restore_state(const Bit32u *saved_state)
   ar_data = SMRAM_FIELD(saved_state, SMRAM_FIELD_TR_SELECTOR_AR) >> 16;
   if (set_segment_ar_data(&BX_CPU_THIS_PTR tr,
           (ar_data >> 8) & 1,
-          SMRAM_FIELD(saved_state, SMRAM_FIELD_TR_SELECTOR_AR) & 0xffff,
+          SMRAM_FIELD(saved_state, SMRAM_FIELD_TR_SELECTOR_AR) & 0xf0ff,
           SMRAM_FIELD(saved_state, SMRAM_FIELD_TR_BASE),
           SMRAM_FIELD(saved_state, SMRAM_FIELD_TR_LIMIT), ar_data))
   {
