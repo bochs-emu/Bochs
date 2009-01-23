@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.275 2009-01-21 22:09:59 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.276 2009-01-23 09:26:24 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -137,8 +137,31 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CLTS(bxInstruction_c *i)
   BX_CPU_THIS_PTR cr0.set_TS(0);
 }
 
-/* 0F 08   INVD */
-/* 0F 09 WBINVD */
+/* 0F 08 */
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::INVD(bxInstruction_c *i)
+{
+#if BX_CPU_LEVEL >= 4
+  if (!real_mode() && CPL!=0) {
+    BX_ERROR(("INVD: priveledge check failed, generate #GP(0)"));
+    exception(BX_GP_EXCEPTION, 0, 0);
+  }
+
+  invalidate_prefetch_q();
+
+  BX_DEBUG(("INVD: Flush internal caches !"));
+  BX_INSTR_CACHE_CNTRL(BX_CPU_ID, BX_INSTR_INVD);
+
+#if BX_SUPPORT_ICACHE
+  flushICaches();
+#endif
+
+#else
+  BX_INFO(("INVD: required 486 support, use --enable-cpu-level=4 option"));
+  exception(BX_UD_EXCEPTION, 0, 0);
+#endif
+}
+
+/* 0F 09 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::WBINVD(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 4
@@ -149,20 +172,15 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::WBINVD(bxInstruction_c *i)
 
   invalidate_prefetch_q();
 
-  BX_DEBUG(("INVD/WBINVD: Flush internal caches !"));
-#if BX_INSTRUMENTATION
-  if (i->b1() == 0x08)
-    BX_INSTR_CACHE_CNTRL(BX_CPU_ID, BX_INSTR_INVD);
-  else
-    BX_INSTR_CACHE_CNTRL(BX_CPU_ID, BX_INSTR_WBINVD);
-#endif
+  BX_DEBUG(("WBINVD: Flush internal caches !"));
+  BX_INSTR_CACHE_CNTRL(BX_CPU_ID, BX_INSTR_WBINVD);
 
 #if BX_SUPPORT_ICACHE
   flushICaches();
 #endif
 
 #else
-  BX_INFO(("INVD/WBINVD: required 486 support, use --enable-cpu-level=4 option"));
+  BX_INFO(("WBINVD: required 486 support, use --enable-cpu-level=4 option"));
   exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }

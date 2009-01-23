@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: io.cc,v 1.73 2009-01-16 18:18:58 sshwarts Exp $
+// $Id: io.cc,v 1.74 2009-01-23 09:26:24 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -202,7 +202,7 @@ Bit32u BX_CPU_C::FastRepOUTSW(bxInstruction_c *i, unsigned srcSeg, bx_address sr
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_INSB_YbDX(bxInstruction_c *i)
 {
-  if (! BX_CPU_THIS_PTR allow_io(DX, 1)) {
+  if (! allow_io(i, DX, 1)) {
     BX_DEBUG(("INSB_YbDX: I/O access not allowed !"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
@@ -279,7 +279,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INSB64_YbDX(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_INSW_YwDX(bxInstruction_c *i)
 {
-  if (! BX_CPU_THIS_PTR allow_io(DX, 2)) {
+  if (! allow_io(i, DX, 2)) {
     BX_DEBUG(("INSW_YwDX: I/O access not allowed !"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
@@ -388,7 +388,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INSW64_YwDX(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_INSD_YdDX(bxInstruction_c *i)
 {
-  if (! BX_CPU_THIS_PTR allow_io(DX, 4)) {
+  if (! allow_io(i, DX, 4)) {
     BX_DEBUG(("INSD_YdDX: I/O access not allowed !"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
@@ -466,7 +466,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INSD64_YdDX(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_OUTSB_DXXb(bxInstruction_c *i)
 {
-  if (! BX_CPU_THIS_PTR allow_io(DX, 1)) {
+  if (! allow_io(i, DX, 1)) {
     BX_DEBUG(("OUTSB_DXXb: I/O access not allowed !"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
@@ -528,7 +528,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::OUTSB64_DXXb(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_OUTSW_DXXw(bxInstruction_c *i)
 {
-  if (! BX_CPU_THIS_PTR allow_io(DX, 2)) {
+  if (! allow_io(i, DX, 2)) {
     BX_DEBUG(("OUTSW_DXXw: I/O access not allowed !"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
@@ -617,7 +617,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::OUTSW64_DXXw(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_OUTSD_DXXd(bxInstruction_c *i)
 {
-  if (! BX_CPU_THIS_PTR allow_io(DX, 4)) {
+  if (! allow_io(i, DX, 4)) {
     BX_DEBUG(("OUTSD_DXXd: I/O access not allowed !"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
@@ -685,7 +685,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::IN_ALIb(bxInstruction_c *i)
 {
   unsigned port = i->Ib();
 
-  if (! BX_CPU_THIS_PTR allow_io(port, 1)) {
+  if (! allow_io(i, port, 1)) {
     BX_DEBUG(("IN_ALIb: I/O access not allowed !"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
@@ -697,7 +697,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::IN_AXIb(bxInstruction_c *i)
 {
   unsigned port = i->Ib();
 
-  if (! BX_CPU_THIS_PTR allow_io(port, 2)) {
+  if (! allow_io(i, port, 2)) {
     BX_DEBUG(("IN_AXIb: I/O access not allowed !"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
@@ -709,7 +709,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::IN_EAXIb(bxInstruction_c *i)
 {
   unsigned port = i->Ib();
 
-  if (! BX_CPU_THIS_PTR allow_io(port, 4)) {
+  if (! allow_io(i, port, 4)) {
     BX_DEBUG(("IN_EAXIb: I/O access not allowed !"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
@@ -721,7 +721,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::OUT_IbAL(bxInstruction_c *i)
 {
   unsigned port = i->Ib();
 
-  if (! BX_CPU_THIS_PTR allow_io(port, 1)) {
+  if (! allow_io(i, port, 1)) {
     BX_DEBUG(("OUT_IbAL: I/O access not allowed !"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
@@ -733,7 +733,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::OUT_IbAX(bxInstruction_c *i)
 {
   unsigned port = i->Ib();
 
-  if (! BX_CPU_THIS_PTR allow_io(port, 2)) {
+  if (! allow_io(i, port, 2)) {
     BX_DEBUG(("OUT_IbAX: I/O access not allowed !"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
@@ -745,7 +745,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::OUT_IbEAX(bxInstruction_c *i)
 {
   unsigned port = i->Ib();
 
-  if (! BX_CPU_THIS_PTR allow_io(port, 4)) {
+  if (! allow_io(i, port, 4)) {
     BX_DEBUG(("OUT_IbEAX: I/O access not allowed !"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
@@ -757,7 +757,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::IN_ALDX(bxInstruction_c *i)
 {
   unsigned port = DX;
 
-  if (! BX_CPU_THIS_PTR allow_io(port, 1)) {
+  if (! allow_io(i, port, 1)) {
     BX_DEBUG(("IN_ALDX: I/O access not allowed !"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
@@ -769,7 +769,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::IN_AXDX(bxInstruction_c *i)
 {
   unsigned port = DX;
 
-  if (! BX_CPU_THIS_PTR allow_io(port, 2)) {
+  if (! allow_io(i, port, 2)) {
     BX_DEBUG(("IN_AXDX: I/O access not allowed !"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
@@ -781,7 +781,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::IN_EAXDX(bxInstruction_c *i)
 {
   unsigned port = DX;
 
-  if (! BX_CPU_THIS_PTR allow_io(port, 4)) {
+  if (! allow_io(i, port, 4)) {
     BX_DEBUG(("IN_EAXDX: I/O access not allowed !"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
@@ -793,7 +793,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::OUT_DXAL(bxInstruction_c *i)
 {
   unsigned port = DX;
 
-  if (! BX_CPU_THIS_PTR allow_io(port, 1)) {
+  if (! allow_io(i, port, 1)) {
     BX_DEBUG(("OUT_DXAL: I/O access not allowed !"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
@@ -805,7 +805,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::OUT_DXAX(bxInstruction_c *i)
 {
   unsigned port = DX;
 
-  if (! BX_CPU_THIS_PTR allow_io(port, 2)) {
+  if (! allow_io(i, port, 2)) {
     BX_DEBUG(("OUT_DXAX: I/O access not allowed !"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
@@ -817,7 +817,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::OUT_DXEAX(bxInstruction_c *i)
 {
   unsigned port = DX;
 
-  if (! BX_CPU_THIS_PTR allow_io(port, 4)) {
+  if (! allow_io(i, port, 4)) {
     BX_DEBUG(("OUT_DXEAX: I/O access not allowed !"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
@@ -825,7 +825,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::OUT_DXEAX(bxInstruction_c *i)
   BX_OUTP(port, EAX, 4);
 }
 
-bx_bool BX_CPU_C::allow_io(Bit16u port, unsigned len)
+bx_bool BX_CPU_C::allow_io(bxInstruction_c *i, Bit16u port, unsigned len)
 {
   /* If CPL <= IOPL, then all IO portesses are accessible.
    * Otherwise, must check the IO permission map on >286.

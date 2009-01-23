@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.560 2009-01-21 22:09:59 sshwarts Exp $
+// $Id: cpu.h,v 1.561 2009-01-23 09:26:24 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -260,6 +260,12 @@
 #endif
 
 #endif  // defined(NEED_CPU_REG_SHORTCUTS)
+
+struct ExceptionInfo {
+  unsigned exception_type;
+  unsigned exception_class;
+  bx_bool push_error;
+};
 
 #define BX_DE_EXCEPTION   0 // Divide Error (fault)
 #define BX_DB_EXCEPTION   1 // Debug (fault/trap)
@@ -1320,6 +1326,7 @@ public: // for now...
   BX_SMF void LAR_GvEw(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void LSL_GvEw(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void CLTS(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void INVD(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void WBINVD(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void CLFLUSH(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
@@ -3146,7 +3153,7 @@ public: // for now...
   BX_SMF Bit32u force_flags(void);
   BX_SMF Bit32u read_eflags(void) { return BX_CPU_THIS_PTR force_flags(); }
 
-  BX_SMF bx_bool allow_io(Bit16u addr, unsigned len);
+  BX_SMF bx_bool allow_io(bxInstruction_c *i, Bit16u addr, unsigned len) BX_CPP_AttrRegparmN(3);
   BX_SMF void    parse_selector(Bit16u raw_selector, bx_selector_t *selector) BX_CPP_AttrRegparmN(2);
   BX_SMF void    parse_descriptor(Bit32u dword1, Bit32u dword2, bx_descriptor_t *temp) BX_CPP_AttrRegparmN(3);
   BX_SMF Bit8u   ar_byte(const bx_descriptor_t *d) BX_CPP_AttrRegparmN(1);

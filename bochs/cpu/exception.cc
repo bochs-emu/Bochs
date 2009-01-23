@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.131 2009-01-21 22:09:59 sshwarts Exp $
+// $Id: exception.cc,v 1.132 2009-01-23 09:26:24 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -822,49 +822,44 @@ void BX_CPU_C::interrupt(Bit8u vector, unsigned type, bx_bool push_error, Bit16u
 #endif
   {
     if(real_mode()) {
-      real_mode_int(vector, is_INT, push_error, error_code);
+       real_mode_int(vector, is_INT, push_error, error_code);
     }
     else {
-      protected_mode_int(vector, is_INT, push_error, error_code);
+       protected_mode_int(vector, is_INT, push_error, error_code);
     }
   }
 }
+
+struct ExceptionInfo exceptions_info[BX_CPU_HANDLED_EXCEPTIONS+1] = {
+  /* DE */ { BX_ET_CONTRIBUTORY, BX_EXCEPTION_CLASS_FAULT, 0 },
+  /* DB */ { BX_ET_BENIGN,       BX_EXCEPTION_CLASS_FAULT, 0 },
+  /* -- */ { BX_ET_BENIGN,       BX_EXCEPTION_CLASS_FAULT, 0 }, // NMI
+  /* BP */ { BX_ET_BENIGN,       BX_EXCEPTION_CLASS_TRAP,  0 },
+  /* OF */ { BX_ET_BENIGN,       BX_EXCEPTION_CLASS_TRAP,  0 },
+  /* BR */ { BX_ET_BENIGN,       BX_EXCEPTION_CLASS_FAULT, 0 },
+  /* UD */ { BX_ET_BENIGN,       BX_EXCEPTION_CLASS_FAULT, 0 },
+  /* NM */ { BX_ET_BENIGN,       BX_EXCEPTION_CLASS_FAULT, 0 },
+  /* DF */ { BX_ET_DOUBLE_FAULT, BX_EXCEPTION_CLASS_ABORT, 1 },
+             // coprocessor segment overrun (286,386 only)
+  /* -- */ { BX_ET_BENIGN,       BX_EXCEPTION_CLASS_ABORT, 0 },
+  /* TS */ { BX_ET_CONTRIBUTORY, BX_EXCEPTION_CLASS_FAULT, 1 },
+  /* NP */ { BX_ET_CONTRIBUTORY, BX_EXCEPTION_CLASS_FAULT, 1 },
+  /* SS */ { BX_ET_CONTRIBUTORY, BX_EXCEPTION_CLASS_FAULT, 1 },
+  /* GP */ { BX_ET_CONTRIBUTORY, BX_EXCEPTION_CLASS_FAULT, 1 },
+  /* PF */ { BX_ET_PAGE_FAULT,   BX_EXCEPTION_CLASS_FAULT, 1 },
+  /* -- */ { BX_ET_BENIGN,       BX_EXCEPTION_CLASS_FAULT, 0 }, // reserved
+  /* MF */ { BX_ET_BENIGN,       BX_EXCEPTION_CLASS_FAULT, 0 },
+  /* AC */ { BX_ET_BENIGN,       BX_EXCEPTION_CLASS_FAULT, 1 },
+  /* MC */ { BX_ET_BENIGN,       BX_EXCEPTION_CLASS_ABORT, 0 },
+  /* XM */ { BX_ET_BENIGN,       BX_EXCEPTION_CLASS_FAULT, 0 },
+  /* -- */ { BX_ET_BENIGN,       BX_EXCEPTION_CLASS_FAULT, 0 }  // default
+};
 
 // vector:     0..255: vector in IDT
 // error_code: if exception generates and error, push this error code
 // trap:       override exception class to TRAP
 void BX_CPU_C::exception(unsigned vector, Bit16u error_code, unsigned unused)
 {
-  struct ExceptionInfo {
-    unsigned exception_type;
-    unsigned exception_class;
-    bx_bool push_error;
-  };
-
-  static struct ExceptionInfo exceptions_info[BX_CPU_HANDLED_EXCEPTIONS] = {
-   /* DE */ { BX_ET_CONTRIBUTORY, BX_EXCEPTION_CLASS_FAULT, 0 },
-   /* DB */ { BX_ET_BENIGN,       BX_EXCEPTION_CLASS_FAULT, 0 },
-   /* -- */ { BX_ET_BENIGN,       BX_EXCEPTION_CLASS_FAULT, 0 }, // NMI
-   /* BP */ { BX_ET_BENIGN,       BX_EXCEPTION_CLASS_TRAP,  0 },
-   /* OF */ { BX_ET_BENIGN,       BX_EXCEPTION_CLASS_TRAP,  0 },
-   /* BR */ { BX_ET_BENIGN,       BX_EXCEPTION_CLASS_FAULT, 0 },
-   /* UD */ { BX_ET_BENIGN,       BX_EXCEPTION_CLASS_FAULT, 0 },
-   /* NM */ { BX_ET_BENIGN,       BX_EXCEPTION_CLASS_FAULT, 0 },
-   /* DF */ { BX_ET_DOUBLE_FAULT, BX_EXCEPTION_CLASS_ABORT, 1 },
-              // coprocessor segment overrun (286,386 only)
-   /* -- */ { BX_ET_BENIGN,       BX_EXCEPTION_CLASS_ABORT, 0 },
-   /* TS */ { BX_ET_CONTRIBUTORY, BX_EXCEPTION_CLASS_FAULT, 1 },
-   /* NP */ { BX_ET_CONTRIBUTORY, BX_EXCEPTION_CLASS_FAULT, 1 },
-   /* SS */ { BX_ET_CONTRIBUTORY, BX_EXCEPTION_CLASS_FAULT, 1 },
-   /* GP */ { BX_ET_CONTRIBUTORY, BX_EXCEPTION_CLASS_FAULT, 1 },
-   /* PF */ { BX_ET_PAGE_FAULT,   BX_EXCEPTION_CLASS_FAULT, 1 },
-   /* -- */ { BX_ET_BENIGN,       BX_EXCEPTION_CLASS_FAULT, 0 }, // reserved
-   /* MF */ { BX_ET_BENIGN,       BX_EXCEPTION_CLASS_FAULT, 0 },
-   /* AC */ { BX_ET_BENIGN,       BX_EXCEPTION_CLASS_FAULT, 1 },
-   /* MC */ { BX_ET_BENIGN,       BX_EXCEPTION_CLASS_ABORT, 0 },
-   /* XM */ { BX_ET_BENIGN,       BX_EXCEPTION_CLASS_FAULT, 0 }
-  };
-
   BX_INSTR_EXCEPTION(BX_CPU_ID, vector, error_code);
 
 #if BX_DEBUGGER
@@ -880,6 +875,24 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code, unsigned unused)
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS] = BX_CPU_THIS_PTR save_ss;
     RIP = BX_CPU_THIS_PTR save_eip;
     RSP = BX_CPU_THIS_PTR save_esp;
+  }
+
+  unsigned exception_type = 0;
+  unsigned exception_class = BX_EXCEPTION_CLASS_FAULT;
+  bx_bool push_error = 0;
+
+  if (vector < BX_CPU_HANDLED_EXCEPTIONS) {
+     push_error = exceptions_info[vector].push_error;
+     exception_class = exceptions_info[vector].exception_class;
+     exception_type = exceptions_info[vector].exception_type;
+  }
+  else {
+     BX_PANIC(("exception(%u): bad vector", vector));
+  }
+
+  if (vector != BX_PF_EXCEPTION && exception_type != BX_DF_EXCEPTION) {
+    // Page faults have different format
+    error_code = (error_code & 0xfffe) | BX_CPU_THIS_PTR EXT;
   }
 
   if (BX_CPU_THIS_PTR errorno > 0) {
@@ -902,19 +915,6 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code, unsigned unused)
     }
   }
 
-  unsigned exception_type = 0;
-  unsigned exception_class = BX_EXCEPTION_CLASS_FAULT;
-  bx_bool push_error = 0;
-
-  if (vector < BX_CPU_HANDLED_EXCEPTIONS) {
-     push_error = exceptions_info[vector].push_error;
-     exception_class = exceptions_info[vector].exception_class;
-     exception_type = exceptions_info[vector].exception_type;
-  }
-  else {
-     BX_PANIC(("exception(%u): bad vector", vector));
-  }
-
   // note: fault-class exceptions _except_ #DB set RF in
   //       eflags image.
   if (exception_class == BX_EXCEPTION_CLASS_FAULT)
@@ -931,10 +931,6 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code, unsigned unused)
   if (vector == BX_DB_EXCEPTION)
     BX_CPU_THIS_PTR dr7 &= ~0x00002000;
 
-  if (exception_type != BX_ET_PAGE_FAULT) {
-    // Page faults have different format
-    error_code = (error_code & 0xfffe) | BX_CPU_THIS_PTR EXT;
-  }
   BX_CPU_THIS_PTR EXT = 1;
 
   /* if we've already had 1st exception, see if 2nd causes a

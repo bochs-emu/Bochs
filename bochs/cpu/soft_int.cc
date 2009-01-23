@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: soft_int.cc,v 1.47 2009-01-20 21:28:43 sshwarts Exp $
+// $Id: soft_int.cc,v 1.48 2009-01-23 09:26:24 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -166,11 +166,12 @@ done:
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::INTO(bxInstruction_c *i)
 {
+  if (get_OF()) {
+
 #if BX_DEBUGGER
-  BX_CPU_THIS_PTR show_flag |= Flag_softint;
+    BX_CPU_THIS_PTR show_flag |= Flag_softint;
 #endif
 
-  if (get_OF()) {
     BX_CPU_THIS_PTR speculative_rsp = 1;
     BX_CPU_THIS_PTR prev_rsp = RSP;
 
