@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.132 2009-01-23 09:26:24 sshwarts Exp $
+// $Id: exception.cc,v 1.133 2009-01-23 18:19:57 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -890,7 +890,7 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code, unsigned unused)
      BX_PANIC(("exception(%u): bad vector", vector));
   }
 
-  if (vector != BX_PF_EXCEPTION && exception_type != BX_DF_EXCEPTION) {
+  if (vector != BX_PF_EXCEPTION && vector != BX_DF_EXCEPTION) {
     // Page faults have different format
     error_code = (error_code & 0xfffe) | BX_CPU_THIS_PTR EXT;
   }
