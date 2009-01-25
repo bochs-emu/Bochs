@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.158 2009-01-20 12:37:41 vruppert Exp $
+// $Id: vga.cc,v 1.159 2009-01-25 09:09:49 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -3079,9 +3079,9 @@ Bit32u bx_vga_c::vbe_read(Bit32u address, unsigned io_len)
 
       case VBE_DISPI_INDEX_ENABLE: // vbe enabled
         retval = BX_VGA_THIS s.vbe_enabled;
-	if (BX_VGA_THIS s.vbe_get_capabilities)
+        if (BX_VGA_THIS s.vbe_get_capabilities)
           retval |= VBE_DISPI_GETCAPS;
-	if (BX_VGA_THIS s.vbe_8bit_dac)
+        if (BX_VGA_THIS s.vbe_8bit_dac)
           retval |= VBE_DISPI_8BIT_DAC;
         return retval;
 
@@ -3089,16 +3089,19 @@ Bit32u bx_vga_c::vbe_read(Bit32u address, unsigned io_len)
         return BX_VGA_THIS s.vbe_bank;
 
       case VBE_DISPI_INDEX_X_OFFSET:
-      	return BX_VGA_THIS s.vbe_offset_x;
+        return BX_VGA_THIS s.vbe_offset_x;
 
       case VBE_DISPI_INDEX_Y_OFFSET:
-      	return BX_VGA_THIS s.vbe_offset_y;
+        return BX_VGA_THIS s.vbe_offset_y;
 
       case VBE_DISPI_INDEX_VIRT_WIDTH:
-      	return BX_VGA_THIS s.vbe_virtual_xres;
+        return BX_VGA_THIS s.vbe_virtual_xres;
 
       case VBE_DISPI_INDEX_VIRT_HEIGHT:
-      	return BX_VGA_THIS s.vbe_virtual_yres;      	
+        return BX_VGA_THIS s.vbe_virtual_yres;
+
+      case VBE_DISPI_INDEX_VIDEO_MEMORY_64K:
+        return (VBE_DISPI_TOTAL_VIDEO_MEMORY_KB >> 6);
 
       default:
         BX_PANIC(("VBE unknown data read index 0x%x",BX_VGA_THIS s.vbe_curindex));
@@ -3146,7 +3149,8 @@ Bit32u bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
               (value == VBE_DISPI_ID1) ||
               (value == VBE_DISPI_ID2) ||
               (value == VBE_DISPI_ID3) ||
-              (value == VBE_DISPI_ID4))
+              (value == VBE_DISPI_ID4) ||
+              (value == VBE_DISPI_ID5))
           {
             // allow backwards compatible with previous dispi bioses
             BX_VGA_THIS s.vbe_cur_dispi=value;
@@ -3452,13 +3456,13 @@ Bit32u bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
           BX_VGA_THIS s.vbe_visible_screen_size = BX_VGA_THIS s.line_offset * BX_VGA_THIS s.vbe_yres;
 
         } break;
-	/*
+        /*
         case VBE_DISPI_INDEX_VIRT_HEIGHT:
         {
           BX_INFO(("VBE virtual height %x", value));
 
         } break;
-	*/
+        */
         default:
         {
           BX_PANIC(("VBE unknown data write index 0x%x",BX_VGA_THIS s.vbe_curindex));
