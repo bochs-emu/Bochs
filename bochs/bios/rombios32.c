@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios32.c,v 1.44 2009-01-11 19:52:36 sshwarts Exp $
+// $Id: rombios32.c,v 1.45 2009-01-26 09:21:00 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  32 bit Bochs BIOS init code
@@ -47,7 +47,9 @@ typedef unsigned long long uint64_t;
 
 #define wbinvd() asm volatile("wbinvd")
 
+#define CPUID_MSR (1 << 5)
 #define CPUID_APIC (1 << 9)
+#define CPUID_MTRR (1 << 12)
 
 #define APIC_BASE    ((uint8_t *)0xfee00000)
 #define APIC_ICR_LOW 0x300
@@ -63,6 +65,23 @@ typedef unsigned long long uint64_t;
 #define SMI_CMD_IO_ADDR   0xb2
 
 #define BIOS_TMP_STORAGE  0x00030000 /* 64 KB used to copy the BIOS to shadow RAM */
+
+#define MSR_MTRRcap                     0x000000fe
+#define MSR_MTRRfix64K_00000            0x00000250
+#define MSR_MTRRfix16K_80000            0x00000258
+#define MSR_MTRRfix16K_A0000            0x00000259
+#define MSR_MTRRfix4K_C0000             0x00000268
+#define MSR_MTRRfix4K_C8000             0x00000269
+#define MSR_MTRRfix4K_D0000             0x0000026a
+#define MSR_MTRRfix4K_D8000             0x0000026b
+#define MSR_MTRRfix4K_E0000             0x0000026c
+#define MSR_MTRRfix4K_E8000             0x0000026d
+#define MSR_MTRRfix4K_F0000             0x0000026e
+#define MSR_MTRRfix4K_F8000             0x0000026f
+#define MSR_MTRRdefType                 0x000002ff
+
+#define MTRRphysBase_MSR(reg) (0x200 + 2 * (reg))
+#define MTRRphysMask_MSR(reg) (0x200 + 2 * (reg) + 1)
 
 static inline void outl(int addr, int val)
 {
@@ -133,6 +152,19 @@ static inline uint8_t readb(const void *addr)
 static inline void putc(int c)
 {
     outb(INFO_PORT, c);
+}
+
+static uint64_t rdmsr(unsigned index)
+{
+    unsigned long long ret;
+
+    asm ("rdmsr" : "=A"(ret) : "c"(index));
+    return ret;
+}
+
+static void wrmsr(unsigned index, uint64_t val)
+{
+    asm volatile ("wrmsr" : : "c"(index), "A"(val));
 }
 
 static inline int isdigit(int c)
@@ -407,6 +439,18 @@ int pm_sci_int;
 unsigned long bios_table_cur_addr;
 unsigned long bios_table_end_addr;
 
+void wrmsr_smp(uint32_t index, uint64_t val)
+{
+    static struct { uint32_t ecx, eax, edx; } *p = (void *)SMP_MSR_ADDR;
+
+    wrmsr(index, val);
+    p->ecx = index;
+    p->eax = val;
+    p->edx = val >> 32;
+    ++p;
+    p->ecx = 0;
+}
+
 #ifdef BX_QEMU
 #define QEMU_CFG_CTL_PORT 0x510
 #define QEMU_CFG_DATA_PORT 0x511
@@ -467,6 +511,55 @@ static int cmos_readb(int addr)
 {
     outb(0x70, addr);
     return inb(0x71);
+}
+
+void setup_mtrr(void)
+{
+    int i, vcnt, fix, wc;
+    uint32_t mtrr_cap;
+    union {
+        uint8_t valb[8];
+        uint64_t val;
+    } u;
+
+    *(uint32_t *)SMP_MSR_ADDR = 0;
+
+    if (!(cpuid_features & CPUID_MTRR))
+        return;
+
+    if (!(cpuid_features & CPUID_MSR))
+        return;
+
+    mtrr_cap = rdmsr(MSR_MTRRcap);
+    vcnt = mtrr_cap & 0xff;
+    fix = mtrr_cap & 0x100;
+    wc = mtrr_cap & 0x400;
+    if (!vcnt || !fix)
+        return;
+
+    u.val = 0;
+    for (i = 0; i < 8; ++i)
+        if (ram_size >= 65536 * (i + 1))
+            u.valb[i] = 6;
+    wrmsr_smp(MSR_MTRRfix64K_00000, u.val);
+    u.val = 0;
+    for (i = 0; i < 8; ++i)
+        if (ram_size >= 65536 * 8 + 16384 * (i + 1))
+            u.valb[i] = 6;
+    wrmsr_smp(MSR_MTRRfix16K_80000, u.val);
+    wrmsr_smp(MSR_MTRRfix16K_A0000, 0);
+    wrmsr_smp(MSR_MTRRfix4K_C0000, 0);
+    wrmsr_smp(MSR_MTRRfix4K_C8000, 0);
+    wrmsr_smp(MSR_MTRRfix4K_D0000, 0);
+    wrmsr_smp(MSR_MTRRfix4K_D8000, 0);
+    wrmsr_smp(MSR_MTRRfix4K_E0000, 0);
+    wrmsr_smp(MSR_MTRRfix4K_E8000, 0);
+    wrmsr_smp(MSR_MTRRfix4K_F0000, 0);
+    wrmsr_smp(MSR_MTRRfix4K_F8000, 0);
+    /* Mark 3.5-4GB as UC, anything not specified defaults to WB */
+    wrmsr_smp(MTRRphysBase_MSR(0), 0xe0000000ull | 0);
+    wrmsr_smp(MTRRphysMask_MSR(0), ~(0x20000000ull - 1) | 0x800);
+    wrmsr_smp(MSR_MTRRdefType, 0xc06);
 }
 
 void ram_probe(void)
@@ -2191,6 +2284,8 @@ void rombios32_init(uint32_t *s3_resume_vector, uint8_t *shutdown_flag)
     ram_probe();
 
     cpu_probe();
+
+    setup_mtrr();
 
     smp_probe();
 
