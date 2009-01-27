@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.cc,v 1.113 2009-01-10 11:30:20 vruppert Exp $
+// $Id: apic.cc,v 1.114 2009-01-27 21:13:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (c) 2002 Zwane Mwaikambo, Stanislav Shwartsman
@@ -506,32 +506,23 @@ void bx_local_apic_c::receive_EOI(Bit32u value)
   if(vec < 0) {
     BX_DEBUG(("EOI written without any bit in ISR"));
   } else {
-      if((Bit32u) vec != spurious_vector) {
-        BX_DEBUG(("%s: local apic received EOI, hopefully for vector 0x%02x", cpu->name, vec));
-        isr[vec] = 0;
-        if(tmr[vec]) {
-            apic_bus_broadcast_eoi(vec);
-            tmr[vec] = 0;
-        }
-        service_local_apic();
-      }
+    if ((Bit32u) vec != spurious_vector) {
+       BX_DEBUG(("%s: local apic received EOI, hopefully for vector 0x%02x", cpu->name, vec));
+       isr[vec] = 0;
+       if(tmr[vec]) {
+           apic_bus_broadcast_eoi(vec);
+           tmr[vec] = 0;
+       }
+       service_local_apic();
+    }
   }
 
-  if(bx_dbg.apic)
-      print_status();
+  if(bx_dbg.apic) print_status();
 }
 
 void bx_local_apic_c::startup_msg(Bit32u vector)
 {
-  if(cpu->debug_trap & BX_DEBUG_TRAP_SPECIAL) {
-    cpu->debug_trap &= ~BX_DEBUG_TRAP_SPECIAL;
-    cpu->gen_reg[BX_32BIT_REG_EIP].dword.erx = 0;
-    cpu->load_seg_reg(&cpu->sregs[BX_SEG_REG_CS], vector*0x100);
-    BX_INFO(("%s started up at %04X:%08X by APIC",
-       cpu->name, vector*0x100, cpu->get_eip()));
-  } else {
-    BX_INFO(("%s started up by APIC, but was not halted at the time", cpu->name));
-  }
+  cpu->deliver_SIPI(vector);
 }
 
 // APIC read: 4 byte read from 16-byte aligned APIC address

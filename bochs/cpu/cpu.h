@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.562 2009-01-27 20:29:04 sshwarts Exp $
+// $Id: cpu.h,v 1.563 2009-01-27 21:13:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -3192,6 +3192,7 @@ public: // for now...
   BX_SMF void    deliver_INIT(void);
   BX_SMF void    deliver_NMI(void);
   BX_SMF void    deliver_SMI(void);
+  BX_SMF void    deliver_SIPI(unsigned vector);
   BX_SMF void    debug(bx_address offset);
 #if BX_DISASM
   BX_SMF void    debug_disasm_instruction(bx_address offset);
