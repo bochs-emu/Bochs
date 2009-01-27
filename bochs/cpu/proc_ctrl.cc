@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.276 2009-01-23 09:26:24 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.277 2009-01-27 20:29:05 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -46,6 +46,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::UndefinedOpcode(bxInstruction_c *i)
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::NOP(bxInstruction_c *i)
+{
+  // No operation.
+}
+
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::PAUSE(bxInstruction_c *i)
 {
   // No operation.
 }

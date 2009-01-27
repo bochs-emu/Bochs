@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ia_opcodes.h,v 1.23 2009-01-23 09:26:24 sshwarts Exp $
+// $Id: ia_opcodes.h,v 1.24 2009-01-27 20:29:05 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008 Stanislav Shwartsman
@@ -429,6 +429,7 @@ bx_define_opcode(BX_IA_NEG_EdR, &BX_CPU_C::NEG_EdR, NULL)
 bx_define_opcode(BX_IA_NEG_EwM, &BX_CPU_C::NEG_EwM, NULL)
 bx_define_opcode(BX_IA_NEG_EwR, &BX_CPU_C::NEG_EwR, NULL)
 bx_define_opcode(BX_IA_NOP, &BX_CPU_C::NOP, NULL)
+bx_define_opcode(BX_IA_PAUSE, &BX_CPU_C::PAUSE, NULL)
 bx_define_opcode(BX_IA_NOT_EbM, &BX_CPU_C::NOT_EbM, NULL)
 bx_define_opcode(BX_IA_NOT_EbR, &BX_CPU_C::NOT_EbR, NULL)
 bx_define_opcode(BX_IA_NOT_EdM, &BX_CPU_C::NOT_EdM, NULL)

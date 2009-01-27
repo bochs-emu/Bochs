@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.222 2009-01-16 18:18:58 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.223 2009-01-27 20:29:05 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -3711,8 +3711,21 @@ modrm_done:
     // Note that a 2-byte opcode (0F XX) will jump to before
     // the if() above after fetching the 2nd byte, so this path is
     // taken in all cases if a modrm byte is NOT required.
-    ia_opcode = BxOpcodeInfo64R[b1+offset].IA;
-    i->setOpcodeReg((b1 & 7) | rex_b);
+
+    const BxOpcodeInfo_t *OpcodeInfoPtr = &(BxOpcodeInfo64R[b1+offset]);
+
+    if (b1 == 0x90 && sse_prefix == SSE_PREFIX_F3) {
+      ia_opcode = BX_IA_PAUSE;
+    }
+    else {
+      unsigned group = attr & BxGroupX;
+      BX_ASSERT(group == BxPrefixSSE || group == 0);
+      if (group == BxPrefixSSE && sse_prefix)
+        OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[sse_prefix-1]);
+
+      ia_opcode = OpcodeInfoPtr->IA;
+      i->setOpcodeReg((b1 & 7) | rex_b);
+    }
   }
 
   if (lock) { // lock prefix invalid opcode

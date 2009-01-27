@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.561 2009-01-23 09:26:24 sshwarts Exp $
+// $Id: cpu.h,v 1.562 2009-01-27 20:29:04 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2402,6 +2402,7 @@ public: // for now...
   BX_SMF void IMUL_GwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
   BX_SMF void NOP(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void PAUSE(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void MOV_RLIb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void MOV_RHIb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void MOV_RXIw(bxInstruction_c *) BX_CPP_AttrRegparmN(1);

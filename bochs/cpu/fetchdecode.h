@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.h,v 1.79 2009-01-16 18:18:58 sshwarts Exp $
+// $Id: fetchdecode.h,v 1.80 2009-01-27 20:29:05 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005 Stanislav Shwartsman
@@ -1004,6 +1004,12 @@ static const BxOpcodeInfo_t BxOpcodeGroupSSE_ERR[3] = {
   /* 66 */ { 0, BX_IA_ERROR },
   /* F2 */ { 0, BX_IA_ERROR },
   /* F3 */ { 0, BX_IA_ERROR }
+};
+
+static const BxOpcodeInfo_t BxOpcodeGroupSSE_PAUSE[3] = {
+  /* 66 */ { 0, BX_IA_NOP },
+  /* F2 */ { 0, BX_IA_NOP },
+  /* F3 */ { 0, BX_IA_PAUSE }
 };
 
 static const BxOpcodeInfo_t BxOpcodeGroupSSE_0f10[3] = {

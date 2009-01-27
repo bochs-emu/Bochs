@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.220 2009-01-16 18:18:58 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.221 2009-01-27 20:29:05 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -341,7 +341,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo32R[512*2] = {
   /* 8D /wr */ { 0, BX_IA_ERROR }, // LEA
   /* 8E /wr */ { 0, BX_IA_MOV_SwEw },
   /* 8F /wr */ { BxGroup1A, BX_IA_ERROR, BxOpcodeInfoG1AEwR },
-  /* 90 /wr */ { 0, BX_IA_NOP },
+  /* 90 /wr */ { BxPrefixSSE, BX_IA_NOP, BxOpcodeGroupSSE_PAUSE },
   /* 91 /wr */ { 0, BX_IA_XCHG_RXAX },
   /* 92 /wr */ { 0, BX_IA_XCHG_RXAX },
   /* 93 /wr */ { 0, BX_IA_XCHG_RXAX },
@@ -904,7 +904,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo32R[512*2] = {
   /* 8D /dr */ { 0, BX_IA_ERROR }, // LEA
   /* 8E /dr */ { 0, BX_IA_MOV_SwEw },
   /* 8F /dr */ { BxGroup1A, BX_IA_ERROR, BxOpcodeInfoG1AEdR },
-  /* 90 /dr */ { 0, BX_IA_NOP },
+  /* 90 /dr */ { BxPrefixSSE, BX_IA_NOP, BxOpcodeGroupSSE_PAUSE },
   /* 91 /dr */ { 0, BX_IA_XCHG_ERXEAX },
   /* 92 /dr */ { 0, BX_IA_XCHG_ERXEAX },
   /* 93 /dr */ { 0, BX_IA_XCHG_ERXEAX },
@@ -1474,7 +1474,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo32M[512*2] = {
   /* 8D /wm */ { 0, BX_IA_LEA_GwM },
   /* 8E /wm */ { 0, BX_IA_MOV_SwEw },
   /* 8F /wm */ { BxGroup1A, BX_IA_ERROR, BxOpcodeInfoG1AEwM },
-  /* 90 /wm */ { 0, BX_IA_NOP },
+  /* 90 /wm */ { BxPrefixSSE, BX_IA_NOP, BxOpcodeGroupSSE_PAUSE },
   /* 91 /wm */ { 0, BX_IA_XCHG_RXAX },
   /* 92 /wm */ { 0, BX_IA_XCHG_RXAX },
   /* 93 /wm */ { 0, BX_IA_XCHG_RXAX },
@@ -2037,7 +2037,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo32M[512*2] = {
   /* 8D /dm */ { 0, BX_IA_LEA_GdM },
   /* 8E /dm */ { 0, BX_IA_MOV_SwEw },
   /* 8F /dm */ { BxGroup1A, BX_IA_ERROR, BxOpcodeInfoG1AEdM },
-  /* 90 /dm */ { 0, BX_IA_NOP },
+  /* 90 /dm */ { BxPrefixSSE, BX_IA_NOP, BxOpcodeGroupSSE_PAUSE },
   /* 91 /dm */ { 0, BX_IA_XCHG_ERXEAX },
   /* 92 /dm */ { 0, BX_IA_XCHG_ERXEAX },
   /* 93 /dm */ { 0, BX_IA_XCHG_ERXEAX },
@@ -2796,7 +2796,15 @@ modrm_done:
     // Note that a 2-byte opcode (0F XX) will jump to before
     // the if() above after fetching the 2nd byte, so this path is
     // taken in all cases if a modrm byte is NOT required.
-    ia_opcode = BxOpcodeInfo32R[b1+offset].IA;
+
+    const BxOpcodeInfo_t *OpcodeInfoPtr = &(BxOpcodeInfo32R[b1+offset]);
+
+    unsigned group = attr & BxGroupX;
+    BX_ASSERT(group == BxPrefixSSE || group == 0);
+    if (group == BxPrefixSSE && sse_prefix)
+      OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[sse_prefix-1]);
+
+    ia_opcode = OpcodeInfoPtr->IA;
     i->setOpcodeReg(b1 & 7);
   }
 
