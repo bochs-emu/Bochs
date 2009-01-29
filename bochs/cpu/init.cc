@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.192 2009-01-23 17:48:38 sshwarts Exp $
+// $Id: init.cc,v 1.193 2009-01-29 20:27:57 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -318,6 +318,7 @@ void BX_CPU_C::register_state(void)
   BXRS_PARAM_SPECIAL32(cpu, cpuid_std,   param_save_handler, param_restore_handler);
   BXRS_PARAM_SPECIAL32(cpu, cpuid_ext,   param_save_handler, param_restore_handler);
   BXRS_DEC_PARAM_SIMPLE(cpu, cpu_mode);
+  BXRS_HEX_PARAM_SIMPLE(cpu, activity_state);
   BXRS_HEX_PARAM_SIMPLE(cpu, inhibit_mask);
   BXRS_HEX_PARAM_SIMPLE(cpu, debug_trap);
 #if BX_SUPPORT_X86_64
@@ -733,6 +734,7 @@ void BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR setEFlags(0x2); // Bit1 is always set
 
   BX_CPU_THIS_PTR inhibit_mask = 0;
+  BX_CPU_THIS_PTR activity_state = BX_ACTIVITY_STATE_ACTIVE;
   BX_CPU_THIS_PTR debug_trap = 0;
 
   /* instruction pointer */
@@ -1020,7 +1022,7 @@ void BX_CPU_C::reset(unsigned source)
     // it's an application processor, halt until IPI is heard.
     BX_CPU_THIS_PTR msr.apicbase &= ~0x0100; /* clear bit 8 BSP */
     BX_INFO(("CPU[%d] is an application processor. Halting until IPI.", apic_id));
-    debug_trap |= BX_DEBUG_TRAP_WAIT_FOR_SIPI;
+    activity_state = BX_ACTIVITY_STATE_WAIT_FOR_SIPI;
     async_event = 1;
   }
 #endif

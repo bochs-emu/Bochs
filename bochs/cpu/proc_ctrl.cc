@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.277 2009-01-27 20:29:05 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.278 2009-01-29 20:27:57 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -77,7 +77,7 @@ void BX_CPU_C::shutdown(void)
   BX_CPU_THIS_PTR clear_IF();
 
   // artificial trap bit, why use another variable.
-  BX_CPU_THIS_PTR debug_trap |= BX_DEBUG_TRAP_SHUTDOWN; // artificial trap
+  BX_CPU_THIS_PTR activity_state = BX_ACTIVITY_STATE_HLT;
   BX_CPU_THIS_PTR async_event = 1; // so processor knows to check
   // Execution of this instruction completes.  The processor
   // will remain in a halt state until one of the above conditions
@@ -115,7 +115,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::HLT(bxInstruction_c *i)
   // following HLT.
 
   // artificial trap bit, why use another variable.
-  BX_CPU_THIS_PTR debug_trap |= BX_DEBUG_TRAP_HALT; // artificial trap
+  BX_CPU_THIS_PTR activity_state = BX_ACTIVITY_STATE_HLT;
   BX_CPU_THIS_PTR async_event = 1; // so processor knows to check
   // Execution of this instruction completes.  The processor
   // will remain in a halt state until one of the above conditions
@@ -1457,8 +1457,8 @@ void BX_CPU_C::check_monitor(bx_phy_address begin_addr, unsigned len)
 {
   if (is_monitor(begin_addr, len)) {
     // wakeup from MWAIT state
-    BX_ASSERT(BX_CPU_THIS_PTR debug_trap & BX_DEBUG_TRAP_MWAIT);
-    BX_CPU_THIS_PTR debug_trap &= ~BX_DEBUG_TRAP_SPECIAL;
+    BX_ASSERT(BX_CPU_THIS_PTR activity_state >= BX_ACTIVITY_STATE_MWAIT);
+    BX_CPU_THIS_PTR activity_state = BX_ACTIVITY_STATE_ACTIVE;
     // clear monitor
     BX_MEM(0)->clear_monitor(BX_CPU_THIS_PTR bx_cpuid);
     BX_CPU_THIS_PTR monitor.reset_monitor();
@@ -1581,10 +1581,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MWAIT(bxInstruction_c *i)
   // the execution. Any far control transfer between MONITOR and MWAIT
   // resets the monitoring logic.
 
-  // artificial trap bit, why use another variable.
-  BX_CPU_THIS_PTR debug_trap |= BX_DEBUG_TRAP_MWAIT; // artificial trap
   if (ECX & 1)
-    BX_CPU_THIS_PTR debug_trap |= BX_DEBUG_TRAP_MWAIT_IF;
+    BX_CPU_THIS_PTR activity_state = BX_ACTIVITY_STATE_MWAIT_IF;
+  else
+    BX_CPU_THIS_PTR activity_state = BX_ACTIVITY_STATE_MWAIT;
+
   BX_CPU_THIS_PTR async_event = 1; // so processor knows to check
   // Execution of this instruction completes.  The processor
   // will remain in a optimized state until one of the above

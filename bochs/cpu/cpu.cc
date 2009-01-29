@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.261 2009-01-27 21:13:38 sshwarts Exp $
+// $Id: cpu.cc,v 1.262 2009-01-29 20:27:57 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -429,25 +429,25 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
   //
   // This area is where we process special conditions and events.
   //
-  if (BX_CPU_THIS_PTR debug_trap & BX_DEBUG_TRAP_SPECIAL) {
-    // I made up the bitmask above to mean HALT state.
-    // for one processor, pass the time as quickly as possible until
+  if (BX_CPU_THIS_PTR activity_state) {
+    // For one processor, pass the time as quickly as possible until
     // an interrupt wakes up the CPU.
     while (1)
     {
-      if ((BX_CPU_INTR && (BX_CPU_THIS_PTR get_IF() || (BX_CPU_THIS_PTR debug_trap & BX_DEBUG_TRAP_MWAIT_IF))) ||
+      if ((BX_CPU_INTR && (BX_CPU_THIS_PTR get_IF() || 
+          (BX_CPU_THIS_PTR activity_state == BX_ACTIVITY_STATE_MWAIT_IF))) ||
            BX_CPU_THIS_PTR pending_NMI || BX_CPU_THIS_PTR pending_SMI)
       {
         // interrupt ends the HALT condition
 #if BX_SUPPORT_MONITOR_MWAIT
-        if (BX_CPU_THIS_PTR debug_trap & BX_DEBUG_TRAP_MWAIT)
+        if (BX_CPU_THIS_PTR activity_state >= BX_ACTIVITY_STATE_MWAIT)
           BX_MEM(0)->clear_monitor(BX_CPU_THIS_PTR bx_cpuid);
 #endif
-        BX_CPU_THIS_PTR debug_trap = 0; // clear traps for after resume
+        BX_CPU_THIS_PTR activity_state = 0;
         BX_CPU_THIS_PTR inhibit_mask = 0; // clear inhibits for after resume
         break;
       }
-      if ((BX_CPU_THIS_PTR debug_trap & BX_DEBUG_TRAP_SPECIAL) == 0) {
+      if (BX_CPU_THIS_PTR activity_state == BX_ACTIVITY_STATE_ACTIVE) {
         BX_INFO(("handleAsyncEvent: reset detected in HLT state"));
         break;
       }
@@ -821,8 +821,8 @@ void BX_CPU_C::boundaryFetch(const Bit8u *fetchPtr, unsigned remainingInPage, bx
 
 void BX_CPU_C::deliver_SIPI(unsigned vector)
 {
-  if (BX_CPU_THIS_PTR debug_trap & BX_DEBUG_TRAP_SPECIAL) {
-    BX_CPU_THIS_PTR debug_trap &= ~BX_DEBUG_TRAP_SPECIAL;
+  if (BX_CPU_THIS_PTR activity_state == BX_ACTIVITY_STATE_WAIT_FOR_SIPI) {
+    BX_CPU_THIS_PTR activity_state = BX_ACTIVITY_STATE_ACTIVE;
     RIP = 0;
     load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], vector*0x100);
     BX_INFO(("%s started up at %04X:%08X by APIC",

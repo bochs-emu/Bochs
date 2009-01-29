@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.563 2009-01-27 21:13:38 sshwarts Exp $
+// $Id: cpu.h,v 1.564 2009-01-29 20:27:57 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -366,7 +366,6 @@ enum {
 #define BX_MODE_LONG_64         0x4   // EFER.LMA = 1, CR0.PE=1, CS.L=1
 
 extern const char* cpu_mode_string(unsigned cpu_mode);
-extern const char* cpu_state_string(Bit32u debug_trap);
 
 #if BX_SUPPORT_X86_64
 #define IsCanonical(offset) ((Bit64u)((((Bit64s)(offset)) >> (BX_LIN_ADDRESS_WIDTH-1)) + 1) < 2)
@@ -904,13 +903,13 @@ public: // for now...
                 * 0 if current CS:IP caused exception */
   unsigned errorno;   /* signal exception during instruction emulation */
 
-#define BX_DEBUG_TRAP_HALT          (0x80000000)
-#define BX_DEBUG_TRAP_SHUTDOWN      (0x40000000)
-#define BX_DEBUG_TRAP_WAIT_FOR_SIPI (0x20000000)
-#define BX_DEBUG_TRAP_MWAIT         (0x10000000)
-#define BX_DEBUG_TRAP_MWAIT_IF      (0x18000000)
-// combine all possible states
-#define BX_DEBUG_TRAP_SPECIAL       (0xf8000000)
+#define BX_ACTIVITY_STATE_ACTIVE        (0)
+#define BX_ACTIVITY_STATE_HLT           (1)
+#define BX_ACTIVITY_STATE_SHUTDOWN      (2)
+#define BX_ACTIVITY_STATE_WAIT_FOR_SIPI (3)
+#define BX_ACTIVITY_STATE_MWAIT         (4)
+#define BX_ACTIVITY_STATE_MWAIT_IF      (5)
+  unsigned activity_state;
 
   Bit32u   debug_trap; // holds DR6 value (16bit) to be set as well
   volatile Bit32u  async_event;
