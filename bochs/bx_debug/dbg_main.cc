@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.170 2009-01-19 19:01:02 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.171 2009-01-30 21:46:42 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2223,7 +2223,7 @@ static void bx_print_char(Bit8u ch)
     dbg_printf(" \\x%02X", ch);
 }
 
-void dbg_printf_binary(char *format, Bit32u data, int bits)
+void dbg_printf_binary(const char *format, Bit32u data, int bits)
 {
   int b,len = 0;
   char num[33];
@@ -2802,8 +2802,8 @@ void bx_dbg_print_descriptor(unsigned char desc[8])
     }
   } else {
     // types from IA32-devel-guide-3, page 3-15.
-    static char *undef = "???";
-    static char *type_names[16] = { 
+    static const char *undef = "???";
+    static const char *type_names[16] = { 
         undef,
         "16-Bit TSS (available)",
         "LDT",
@@ -2868,8 +2868,8 @@ void bx_dbg_print_descriptor64(unsigned char desc[8])
     dbg_printf("bx_dbg_print_descriptor64: only system entries displayed in 64bit mode\n");
   }
   else {
-    static char *undef = "???";
-    static char *type_names[16] = { 
+    static const char *undef = "???";
+    static const char *type_names[16] = { 
         undef,
         undef,
         "LDT",
