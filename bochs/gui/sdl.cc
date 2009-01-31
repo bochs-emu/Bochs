@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sdl.cc,v 1.78 2008-12-29 08:51:34 vruppert Exp $
+// $Id: sdl.cc,v 1.79 2009-01-31 18:11:13 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -22,7 +22,7 @@
 //
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
-//  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+//  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 /////////////////////////////////////////////////////////////////////////
 
 #define _MULTI_THREAD
@@ -141,6 +141,12 @@ static char sdl_ips_text[20];
 #endif
 
 static void headerbar_click(int x);
+
+#if !defined(WIN32) && BX_DEBUGGER && BX_DEBUGGER_GUI
+BxEvent *sdl_notify_callback (void *unused, BxEvent *event);
+bxevent_handler old_callback = NULL;
+void *old_callback_arg = NULL;
+#endif
 
 #if BX_SHOW_IPS
 #if  defined(__MINGW32__) || defined(_MSC_VER)
@@ -341,6 +347,16 @@ void bx_sdl_gui_c::specific_init(int argc, char **argv,
       if (!strcmp(argv[i], "fullscreen")) {
         sdl_fullscreen_toggle = 1;
         switch_to_fullscreen();
+#if !defined(WIN32) && BX_DEBUGGER && BX_DEBUGGER_GUI
+      } else if (!strcmp(argv[i], "gui_debug")) {
+        extern void InitDebugDialog();
+        SIM->set_debug_gui(1);
+        // redirect notify callback to sdl specific code
+        SIM->get_notify_callback (&old_callback, &old_callback_arg);
+        assert (old_callback != NULL);
+        SIM->set_notify_callback (sdl_notify_callback, NULL);
+        InitDebugDialog();
+#endif
       } else {
         BX_PANIC(("Unknown sdl option '%s'", argv[i]));
       }
@@ -1527,10 +1543,10 @@ void bx_sdl_gui_c::exit(void)
 }
 
 /// key mapping for SDL
-typedef struct keyTableEntry {
+typedef struct {
   const char *name;
   Bit32u value;
-};
+} keyTableEntry;
 
 #define DEF_SDL_KEY(key) \
   { #key, key },
@@ -1588,5 +1604,51 @@ void bx_sdl_gui_c::show_ips(Bit32u ips_count)
   }
 }
 #endif
+
+#if !defined(WIN32) && BX_DEBUGGER && BX_DEBUGGER_GUI
+BxEvent *sdl_notify_callback (void *unused, BxEvent *event)
+{
+  extern char *debug_cmd;
+  extern bx_bool debug_cmd_ready;
+  extern bx_bool vgaw_refresh;
+  extern void ParseIDText (char *p);
+  extern void HitBreak();
+  switch (event->type)
+  {
+    case BX_SYNC_EVT_GET_DBG_COMMAND:
+      {
+        debug_cmd = new char[512];
+        debug_cmd_ready = 0;
+        HitBreak();
+        while (debug_cmd_ready == 0 && bx_user_quit == 0)
+        {
+          if (vgaw_refresh != 0)  // is the GUI frontend requesting a VGAW refresh?
+            DEV_vga_refresh();
+          vgaw_refresh = 0;
+#ifdef WIN32
+          Sleep(100);
+#else
+          sleep(1);
+#endif
+        }
+        if (bx_user_quit != 0)
+          BX_EXIT(0);
+
+        event->u.debugcmd.command = debug_cmd;
+        event->retcode = 1;
+        return event;
+      }
+    case BX_ASYNC_EVT_DBG_MSG:
+      {
+        ParseIDText ((char*) event->u.logmsg.msg);
+        // free the char* which was allocated in dbg_printf
+        delete [] ((char*)event->u.logmsg.msg);
+        return event;
+      }
+    default:
+      return (*old_callback)(old_callback_arg, event);
+  }
+}
+#endif /* if BX_DEBUGGER */
 
 #endif /* if BX_WITH_SDL */
