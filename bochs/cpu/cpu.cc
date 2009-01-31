@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.263 2009-01-31 10:43:23 sshwarts Exp $
+// $Id: cpu.cc,v 1.264 2009-01-31 11:53:57 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -844,6 +844,7 @@ void BX_CPU_C::deliver_SIPI(unsigned vector)
     BX_CPU_THIS_PTR activity_state = BX_ACTIVITY_STATE_ACTIVE;
     RIP = 0;
     load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], vector*0x100);
+    BX_CPU_THIS_PTR disable_INIT = 0; // enable INIT pin back
     BX_INFO(("%s started up at %04X:%08X by APIC",
                    BX_CPU_THIS_PTR name, vector*0x100, EIP));
   } else {
@@ -853,8 +854,9 @@ void BX_CPU_C::deliver_SIPI(unsigned vector)
 
 void BX_CPU_C::deliver_INIT(void)
 {
-  if (! BX_CPU_THIS_PTR disable_INIT)
+  if (! BX_CPU_THIS_PTR disable_INIT) {
     BX_CPU_THIS_PTR reset(BX_RESET_SOFTWARE);
+  }
 }
 
 void BX_CPU_C::deliver_NMI(void)

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.194 2009-01-31 10:43:23 sshwarts Exp $
+// $Id: init.cc,v 1.195 2009-01-31 11:53:57 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1038,6 +1038,7 @@ void BX_CPU_C::reset(unsigned source)
     BX_CPU_THIS_PTR msr.apicbase &= ~0x0100; /* clear bit 8 BSP */
     BX_INFO(("CPU[%d] is an application processor. Halting until IPI.", apic_id));
     activity_state = BX_ACTIVITY_STATE_WAIT_FOR_SIPI;
+    disable_INIT = 1; // INIT is disabled when CPU is waiting for SIPI
     async_event = 1;
   }
 #endif
