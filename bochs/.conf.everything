@@ -33,6 +33,7 @@
   --enable-monitor-mwait \
   --enable-xsave \
   --enable-aes \
+  --enable-vmx \
   --enable-x86-debugger \
   --enable-instrumentation=instrument/example1 \
   --enable-ne2000 \
@@ -40,6 +41,7 @@
   --enable-acpi \
   --enable-clgd54xx \
   --enable-usb \
+  --enable-usb-ohci \
   --enable-cdrom \
   --enable-sb16 \
   --enable-iodebug \
