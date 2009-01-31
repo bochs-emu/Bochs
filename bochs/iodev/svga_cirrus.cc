@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: svga_cirrus.cc,v 1.47 2009-01-21 22:16:09 vruppert Exp $
+// $Id: svga_cirrus.cc,v 1.48 2009-01-31 18:13:17 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Copyright (c) 2004 Makoto Suzuki (suzu)
@@ -225,7 +225,7 @@ static bx_svga_cirrus_c *theSvga = NULL;
 int libvga_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
 {
   theSvga = new bx_svga_cirrus_c();
-  libvga_set_smf_pointer(theSvga);
+  bx_vga_set_smf_pointer(theSvga);
   bx_devices.pluginVgaDevice = theSvga;
   BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theSvga, BX_PLUGIN_VGA);
   return(0); // Success

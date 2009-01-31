@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.h,v 1.66 2009-01-25 09:09:49 vruppert Exp $
+// $Id: vga.h,v 1.67 2009-01-31 18:13:17 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -153,6 +153,12 @@ public:
                                    unsigned *txWidth);
   virtual Bit8u  get_actl_palette_idx(Bit8u index);
 
+  static void     timer_handler(void *);
+#if BX_USE_VGA_SMF == 0
+  BX_VGA_SMF void timer(void);
+#endif
+  static Bit64s   vga_param_handler(bx_param_c *param, int set, Bit64s val);
+
 protected:
   void init_iohandlers(bx_read_handler_t f_read, bx_write_handler_t f_write);
   void init_systemtimer(bx_timer_handler_t f_timer, param_event_handler f_param);
@@ -167,6 +173,23 @@ protected:
   static Bit32u vbe_read_handler(void *this_ptr, Bit32u address, unsigned io_len);
   static void   vbe_write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len);
 #endif
+
+#if BX_USE_VGA_SMF == 0
+  Bit32u read(Bit32u address, unsigned io_len);
+#endif
+  void  write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_log);
+
+#if BX_SUPPORT_VBE
+
+#if BX_USE_VGA_SMF == 0
+  Bit32u vbe_read(Bit32u address, unsigned io_len);
+  void  vbe_write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_log);
+#endif
+
+#endif // BX_SUPPORT_VBE
+
+  BX_VGA_SMF void update(void);
+  BX_VGA_SMF void determine_screen_dimensions(unsigned *piHeight, unsigned *piWidth);
 
   struct {
     struct {
@@ -278,64 +301,40 @@ protected:
     bx_bool x_dotclockdiv2;
     bx_bool y_doublescan;
     Bit8u last_bpp;
-
-#if BX_SUPPORT_VBE
-    Bit16u  vbe_cur_dispi;
-    Bit16u  vbe_xres;
-    Bit16u  vbe_yres;
-    Bit16u  vbe_bpp;
-    Bit16u  vbe_max_xres;
-    Bit16u  vbe_max_yres;
-    Bit16u  vbe_max_bpp;
-    Bit16u  vbe_bank;
-    bx_bool vbe_enabled;
-    Bit16u  vbe_curindex;
-    Bit32u  vbe_visible_screen_size; /**< in bytes */
-    Bit16u  vbe_offset_x;		 /**< Virtual screen x start (in pixels) */
-    Bit16u  vbe_offset_y;		 /**< Virtual screen y start (in pixels) */
-    Bit16u  vbe_virtual_xres;
-    Bit16u  vbe_virtual_yres;
-    Bit32u  vbe_virtual_start;   /**< For dealing with bpp>8, this is where the virtual screen starts. */
-    Bit8u   vbe_bpp_multiplier;  /**< We have to save this b/c sometimes we need to recalculate stuff with it. */
-    bx_bool vbe_lfb_enabled;
-    bx_bool vbe_get_capabilities;
-    bx_bool vbe_8bit_dac;
-#endif
   } s;  // state information
 
-
-#if BX_USE_VGA_SMF == 0
-  Bit32u read(Bit32u address, unsigned io_len);
-#endif
-  void  write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_log);
-
 #if BX_SUPPORT_VBE
-
-#if BX_USE_VGA_SMF == 0
-  Bit32u vbe_read(Bit32u address, unsigned io_len);
-  void  vbe_write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_log);
+  struct {
+    Bit16u  cur_dispi;
+    Bit16u  xres;
+    Bit16u  yres;
+    Bit16u  bpp;
+    Bit16u  max_xres;
+    Bit16u  max_yres;
+    Bit16u  max_bpp;
+    Bit16u  bank;
+    bx_bool enabled;
+    Bit16u  curindex;
+    Bit32u  visible_screen_size; /**< in bytes */
+    Bit16u  offset_x;            /**< Virtual screen x start (in pixels) */
+    Bit16u  offset_y;            /**< Virtual screen y start (in pixels) */
+    Bit16u  virtual_xres;
+    Bit16u  virtual_yres;
+    Bit32u  virtual_start;   /**< For dealing with bpp>8, this is where the virtual screen starts. */
+    Bit8u   bpp_multiplier;  /**< We have to save this b/c sometimes we need to recalculate stuff with it. */
+    bx_bool lfb_enabled;
+    bx_bool get_capabilities;
+    bx_bool dac_8bit;
+  } vbe;  // VBE state information
 #endif
-
-#endif // BX_SUPPORT_VBE
 
   int timer_id;
   bx_bool extension_init;
   bx_bool extension_checked;
-
-public:
-  static void     timer_handler(void *);
-#if BX_USE_VGA_SMF == 0
-  BX_VGA_SMF void timer(void);
-#endif
-  static Bit64s   vga_param_handler(bx_param_c *param, int set, Bit64s val);
-
-protected:
-  BX_VGA_SMF void update(void);
-  BX_VGA_SMF void determine_screen_dimensions(unsigned *piHeight, unsigned *piWidth);
 };
 
 #if BX_SUPPORT_CLGD54XX
-void libvga_set_smf_pointer(bx_vga_c *theVga_ptr);
+void bx_vga_set_smf_pointer(bx_vga_c *theVga_ptr);
 #endif
 
 #endif
