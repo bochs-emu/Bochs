@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gtk_enh_dbg_osdep.cc,v 1.3 2009-01-31 14:51:41 sshwarts Exp $
+// $Id: gtk_enh_dbg_osdep.cc,v 1.4 2009-01-31 19:02:24 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  BOCHS ENHANCED DEBUGGER Ver 1.2
@@ -50,7 +50,7 @@ const GdkColor ColorList[16] = {
 
 void DockResize (int j, Bit32u x);      // need some function prototypes
 void SetHorzLimits();
-void ParseIDText(char *x);
+void ParseIDText(const char *x);
 void ShowData();
 void UpdateStatus();
 void doUpdate();
@@ -487,7 +487,7 @@ void Invalidate(int i)
     gtk_widget_queue_draw(LV[i]);               // redraw the selected ListView "bin" window
 }
 
-void SetStatusText(int column, char *buf)
+void SetStatusText(int column, const char *buf)
 {
     gtk_label_set_text(GTK_LABEL(Stat[column]), buf);
 }
@@ -1039,7 +1039,7 @@ void ShowMemData(bx_bool initting)
 // create the top layer of a parameter tree TreeView
 void FillPTree()
 {
-    int i;
+    int n;
     GtkTreeStore *treestore;
     extern bx_list_c *root_param;
     // Note: don't multithread this display -- the user expects it to complete
@@ -1052,8 +1052,8 @@ void FillPTree()
     treestore = (GtkTreeStore *) gtk_tree_view_get_model( GTK_TREE_VIEW(PTree) );
     gtk_tree_store_clear(GTK_TREE_STORE(treestore));
     // Note: all tree strings are hardcoded to be in tmpcb -- don't change!
-    i = root_param->get_size();
-    while (--i >= 0)
+    n = root_param->get_size();
+    for (int i=0; i<n; i++)
         MakeBL(NULL, root_param->get(i));
     gtk_widget_show(PTree);
 }
@@ -1818,7 +1818,7 @@ static gboolean VGAWrefreshTick(GtkWidget *widget)
     if (PO_Tdelay > 0)      // output window is delaying display of a partial line?
     {
         if (--PO_Tdelay == 0)   // on a timeout, add a lf to complete the line
-            ParseIDText ("\n");
+            ParseIDText ((char*)"\n");
     }
     Invalidate (0);
     Invalidate (1);
@@ -2024,7 +2024,7 @@ void ListClr_PaintCb(GtkTreeViewColumn *col,
 }
 
 // build the columns for each of the three main lists
-void MakeList(int listnum, char *ColNameArray[])
+void MakeList(int listnum, const char *ColNameArray[])
 {
     int i;
     int nColumns = 3;
@@ -2049,7 +2049,7 @@ void MakeList(int listnum, char *ColNameArray[])
             G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_INT);
     }
 
-    char *cp = ColNameArray[0];
+    char *cp = (char*)ColNameArray[0];
     *txt = '0' -1;
     txt[1] = 0;
     // allocate one renderer for each ListView
@@ -2059,7 +2059,7 @@ void MakeList(int listnum, char *ColNameArray[])
     {
         // when nColumns == 18, there are only two entries in ColNameArray
         if (nColumns == 3)
-            cp = ColNameArray[i];
+            cp = (char*)ColNameArray[i];
         column = gtk_tree_view_column_new_with_attributes(cp,
             renderer, "text", i, NULL);
         gtk_tree_view_append_column(GTK_TREE_VIEW(LV[listnum]), column);
@@ -2069,7 +2069,7 @@ void MakeList(int listnum, char *ColNameArray[])
         cp = txt;
         ++*cp;      // cheap way to create "0" through "9" and "A" through "F"
         if (i == 10) *cp = 'A';
-        else if (i == 16) cp = ColNameArray[1];
+        else if (i == 16) cp = (char*)ColNameArray[1];
     // must store copies of all the columns, to change column titles and other "properties" later
         AllCols[(listnum*3) + i] = column;
     }
@@ -2133,7 +2133,7 @@ bx_bool OSInit()
 {
     int i, argc;
     char *argv[2], **argvp;
-    char* LColNames[] = {
+    const char* LColNames[] = {
         "Reg Name","Hex Value","Decimal","L.Address","Bytes","Mnemonic","Address","Ascii"
     };
     GtkTextBuffer *Tbuffer;
@@ -2355,7 +2355,7 @@ void MakeBL(TreeParent *h_P, bx_param_c *p)
 {
     TreeParent h_new;
     bx_list_c *as_list = NULL;
-    int i = 0;
+    int n = 0;
     strcpy (tmpcb, p->get_name());
     int j = strlen (tmpcb);
     switch (p->get_type())
@@ -2368,7 +2368,7 @@ void MakeBL(TreeParent *h_P, bx_param_c *p)
             break;
         case BXT_LIST:
             as_list = (bx_list_c *)p;
-            i = as_list->get_size();
+            n = as_list->get_size();
             break;
         case BXT_PARAM_BOOL:
             sprintf (tmpcb + j,": %s",((bx_param_bool_c*)p)->get()?"true":"false");
@@ -2399,10 +2399,10 @@ void MakeBL(TreeParent *h_P, bx_param_c *p)
         case BXT_PARAM_DATA:
             sprintf (tmpcb + j,": binary data, size=%d",((bx_shadow_data_c*)p)->get_size());
     }
-    MakeTreeChild (h_P, i, &h_new);
-    if (i > 0)
+    MakeTreeChild (h_P, n, &h_new);
+    if (n > 0)
     {
-        while (--i >= 0)
+        for (int i=0; i<n; i++)
             MakeBL(&h_new, as_list->get(i));    // recurse for all children that are lists
     }
 }
