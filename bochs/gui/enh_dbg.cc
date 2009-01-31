@@ -1,3 +1,7 @@
+/////////////////////////////////////////////////////////////////////////
+// $Id: enh_dbg.cc,v 1.9 2009-01-31 10:04:25 sshwarts Exp $
+/////////////////////////////////////////////////////////////////////////
+//
 //  BOCHS ENHANCED DEBUGGER Ver 1.2
 //  (C) Chourdakis Michael, 2008
 //  http://www.turboirc.com
@@ -16,7 +20,6 @@
 #include "disasm/disasm.h"
 
 #include "enh_dbg.h"
-#include "wenhdbg_res.h"    // MenuIDs
 
 // Match stuff
 #define MATCH_TRUE 1
@@ -31,8 +34,13 @@
 // -- i.e. No further initialization necessary.
 static disassembler bx_disassemble;
 
-int useCR = 1;                  // Win32 needs CRLF pairs for an EOL
-bx_bool NeedSysRresize = TRUE;  // use Sys Reg to help autosize Reg "hex" column
+#ifdef WIN32
+int useCR = 1;                    // Win32 needs CRLF pairs for an EOL
+bx_bool NeedSysRresize = TRUE;    // use Sys Reg to help autosize Reg "hex" column
+#else
+int useCR = 0;
+bx_bool NeedSysRresize = FALSE;   // use Sys Reg to help autosize Reg "hex" column
+#endif
 
 bx_bool SeeReg[8] = {
     TRUE,   // in 64bit mode, show 32bit versions of registers also (EAX, ...)
@@ -160,6 +168,10 @@ Bit64u AsmLA[MAX_ASM];         // linear address of each disassembled ASM line
 int CommandHistoryIdx = 0;
 char *CmdHistory[CmdHistorySize];  // 64 command History storage (fixed 80b each)
 int CmdHInsert = 0;                // index of next history entry to store
+
+int SizeList = 0;
+Bit32s xClick = -1;         // halfway through a mouseclick flag + location
+Bit32s yClick = 0;          // values are in Listview coordinates
 
 static char* GDTt2[8] = {
    "16-bit code",
@@ -311,12 +323,11 @@ int IsMatching(const char *text, const char *p, bx_bool IsCaseSensitive)
 }
 
 // utility function for list resizing operation -- set LoX and HiX
-// the resize/dock operation exits if the mouse moves beyond LoX or HiX
-// ParentX is the x-coordinate of the mouse in the list's parent's coord sys
-void SetHorzLimits(Bit32s ParentX)
+// the resize operation exits if the mouse moves beyond LoX or HiX
+void SetHorzLimits()
 {
     int i;
-    if (ParentX < BarClix[0] + 10)  // is it the left or right bar?
+    if (Sizing == -2)  // is it the left or right bar?
     {
         Resize_LoX = OneCharWide << 2;      // set horizontal limits
         i = ListWidthPix[(DockOrder >> 8) -1];  // col1 width
@@ -324,7 +335,7 @@ void SetHorzLimits(Bit32s ParentX)
         Resize_HiX = i + ListWidthPix[CurCenterList] - (OneCharWide << 2);
         Sizing = 1;
     }
-    else if (ParentX > BarClix[1] - 10)
+    else
     {
         i = ListWidthPix[(DockOrder >> 8) -1];  // col1 width
         Resize_LoX = i + (OneCharWide << 2);    // set horizontal limits
@@ -339,14 +350,14 @@ void DockResize (int DestIdx, Bit32u ParentX)
 {
     if (Sizing >= 10)       // dock operation
     {
-        Sizing -= 10;           // calculate which list initiated dock = moving window
-        if (Sizing != DestIdx)  // moving window = destination window is a no-op
+        int Siz = Sizing - 10;  // calculate which list initiated dock = moving window
+        if (Siz != DestIdx)     // moving window = destination window is a no-op
         {
             // Convert Sizing and DestIdx into a table lookup index (j)
             // -- otherwise, the "algorithm" to compute new DockOrder is annoying
-            int j = (Sizing*2 + ((Sizing | DestIdx) & 1)) *6;
-            if (Sizing == 1)
-                j = (Sizing*4 + (DestIdx & 2)) *3;
+            int j = (Siz*2 + ((Siz | DestIdx) & 1)) *6;
+            if (Siz == 1)
+                j = (Siz*4 + (DestIdx & 2)) *3;
 
             // convert current DockOrder to a number from 0 to 5, add to j
             j += ((DockOrder >> 7) - 2) &6;
@@ -356,8 +367,7 @@ void DockResize (int DestIdx, Bit32u ParentX)
             MoveLists();
         }
     }
-
-    else            // resize operation
+    else    // resize operation
     {
         int idx, totpix;
         if (Sizing == 1)
@@ -375,9 +385,9 @@ void DockResize (int DestIdx, Bit32u ParentX)
             ListWidthPix[CurCenterList] = ParentX;
             ListWidthPix[idx] = totpix - ParentX;   // reset the widths of the right and center windows
         }
+
         MoveLists();
     }
-    Sizing = 0;
 }
 
 // Convert a string (except for the 0x in a hex number) to uppercase
@@ -2379,7 +2389,7 @@ void ToggleGDT()
         return;
     GrayMenuItem (0, CMD_WPTWR);
     GrayMenuItem (0, CMD_WPTRD);
-    if (DViewMode == VIEW_GDT || (GDT_Len & 7) != 7 || (unsigned) GDT_Len >= 0x10000)
+    if (DViewMode == VIEW_GDT || /*(GDT_Len & 7) != 7 ||*/ (unsigned) GDT_Len >= 0x10000)
     {
         if (DViewMode != VIEW_GDT)
             DispMessage("GDT limit is illegal","Simulation error");
@@ -2399,7 +2409,7 @@ void ToggleIDT()
         return;
     GrayMenuItem (0, CMD_WPTWR);
     GrayMenuItem (0, CMD_WPTRD);
-    if (DViewMode == VIEW_IDT || (IDT_Len & 3) != 3 || (unsigned) IDT_Len >= 0x10000)
+    if (DViewMode == VIEW_IDT || /*(IDT_Len & 3) != 3 ||*/ (unsigned) IDT_Len >= 0x10000)
     {
         if (DViewMode != VIEW_IDT)
             DispMessage("IDT limit is illegal","Simulation error");

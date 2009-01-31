@@ -1,3 +1,14 @@
+/////////////////////////////////////////////////////////////////////////
+// $Id: gtk_enh_dbg_osdep.cc,v 1.2 2009-01-31 10:04:25 sshwarts Exp $
+/////////////////////////////////////////////////////////////////////////
+//
+//  BOCHS ENHANCED DEBUGGER Ver 1.2
+//  (C) Chourdakis Michael, 2008
+//  http://www.turboirc.com
+//
+//  Modified by Bruce Ewing
+//
+
 #include "config.h"
 
 #if BX_DEBUGGER && BX_DEBUGGER_GUI

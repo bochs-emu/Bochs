@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.189 2009-01-12 19:15:35 sshwarts Exp $
+// $Id: siminterface.cc,v 1.190 2009-01-31 10:04:25 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  The Bochs Project
@@ -180,8 +180,8 @@ private:
   bx_bool save_sr_param(FILE *fp, bx_param_c *node, const char *sr_path, int level);
 };
 
-#if BX_DEBUGGER
-// FIXME: you will probably want to put these into the SIM-> structure
+#if BX_DEBUGGER && BX_DEBUGGER_GUI
+// FIXME: these probably belong inside the bx_simulator_interface_c structure
 char *debug_cmd = NULL;
 bx_bool debug_cmd_ready = 0;
 bx_bool vgaw_refresh = 0;

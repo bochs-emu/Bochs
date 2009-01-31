@@ -1,7 +1,26 @@
+/////////////////////////////////////////////////////////////////////////
+// $Id: enh_dbg.h,v 1.7 2009-01-31 10:04:25 sshwarts Exp $
+/////////////////////////////////////////////////////////////////////////
+//
+//  BOCHS ENHANCED DEBUGGER Ver 1.2
+//  (C) Chourdakis Michael, 2008
+//  http://www.turboirc.com
+//
+//  Modified by Bruce Ewing
+//
+
 #ifndef BX_ENH_DBG_DEF_H
 #define BX_ENH_DBG_DEF_H
 
 #if BX_DEBUGGER && BX_DEBUGGER_GUI
+
+#ifndef FALSE
+#define FALSE 0
+#endif
+
+#ifndef TRUE
+#define TRUE  1
+#endif
 
 void MoveLists();
 void SetStatusText(int column, char *buf); // should it be here ?
@@ -39,9 +58,14 @@ int GetNextSelectedLI(int listnum, int StartPt);
 bx_bool OSInit();
 void SpecialInit();
 
+void HitBreak();
+void ParseIDText(char *x);
+
 extern char *debug_cmd;
 extern bx_bool debug_cmd_ready;
 extern bx_bool vgaw_refresh;
+
+#ifdef WIN32
 
 #define CHK_CMD_MODEB   CMD_MODEB
 #define CHK_CMD_ONECPU  CMD_ONECPU
@@ -56,12 +80,42 @@ extern bx_bool vgaw_refresh;
 #define CHK_CMD_RCLR    CMD_RCLR
 #define CHK_CMD_EREG    CMD_EREG
 
-#ifndef FALSE
-#define FALSE               0
-#endif
+#else // GTK+
 
-#ifndef TRUE
-#define TRUE                1
+// checkmark indices
+#define MODE_BRK    0
+#define ONE_CPU     1
+#define U_CASE      2
+#define IO_WIN      3
+#define SHOW_BTN    4
+#define MD_HEX      5
+#define MD_ASC      6
+#define L_END       7
+#define IGN_SA      8
+#define IGN_NT      9
+#define R_CLR       10
+#define E_REG       11
+#define S_REG       12
+#define SYS_R       13
+#define C_REG       14
+#define FPU_R       15
+#define XMM_R       16
+#define D_REG       17
+//#define T_REG     18
+
+#define CHK_CMD_MODEB   MODE_BRK
+#define CHK_CMD_ONECPU  ONE_CPU
+#define CHK_CMD_UCASE   U_CASE
+#define CHK_CMD_IOWIN   IO_WIN
+#define CHK_CMD_SBTN    SHOW_BTN
+#define CHK_CMD_MHEX    MD_HEX
+#define CHK_CMD_MASCII  MD_ASC
+#define CHK_CMD_LEND    L_END
+#define CHK_CMD_IGNSA   IGN_SA
+#define CHK_CMD_IGNNT   IGN_NT
+#define CHK_CMD_RCLR    R_CLR
+#define CHK_CMD_EREG    E_REG
+
 #endif
 
 #ifndef WIN32
@@ -200,8 +254,9 @@ extern int PO_Tdelay;              // delay before displaying partial output lin
 
 extern int AsmPgSize;
 extern int ListLineRatio;          // number of vertical pixels in a ListView Item
-extern int ListVerticalPix; // number of vertical pixels in each List
-extern Bit64u AsmLA[MAX_ASM];             // linear address of each disassembled ASM line
+extern int ListVerticalPix;        // number of vertical pixels in each List
+extern int AsmLineCount;           // # of disassembled asm lines loaded
+extern Bit64u AsmLA[MAX_ASM];      // linear address of each disassembled ASM line
 
 // Command stuff
 extern int CommandHistoryIdx;
@@ -330,6 +385,26 @@ extern unsigned short WWPSnapCount;
 extern unsigned short RWPSnapCount;
 extern bx_phy_address WWP_Snapshot[16];
 extern bx_phy_address RWP_Snapshot[16];
+
+extern int SizeList;
+extern Bit32s xClick;          // halfway through a mouseclick flag + location
+extern Bit32s yClick;          // values are in Listview coordinates
+
+#include "wenhdbg_res.h"    // MenuIDs
+
+static char* DC0txt[2] = {"P.Address","L.Address"};    // DumpMode definitions in text
+
+static const char* BTxt[6] = {
+  "Continue [c]",
+  "Step [s]",
+  "Step N [s ###]",
+  "Refresh",
+  "Break [^C]",
+  "Break All"};
+
+static int BtnLkup[6] = {
+    CMD_CONT, CMD_STEP1, CMD_STEPN, CMD_RFRSH, CMD_BREAK
+};
 
 #endif
 

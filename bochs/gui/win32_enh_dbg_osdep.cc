@@ -1,14 +1,21 @@
+/////////////////////////////////////////////////////////////////////////
+// $Id: win32_enh_dbg_osdep.cc,v 1.7 2009-01-31 10:04:25 sshwarts Exp $
+/////////////////////////////////////////////////////////////////////////
+//
+//  BOCHS ENHANCED DEBUGGER Ver 1.2
+//  (C) Chourdakis Michael, 2008
+//  http://www.turboirc.com
+//
+//  Modified by Bruce Ewing
+//
+
 #include "config.h"
 
 #if BX_DEBUGGER && BX_DEBUGGER_GUI
 
 #include "bochs.h"
-#include "disasm/disasm.h"
-
 #include "win32dialog.h"
 #include "enh_dbg.h"
-
-#include "wenhdbg_res.h"    // MenuIDs
 
 // Important Note! All the string manipulation functions assume one byte chars -- ie. "ascii",
 // instead of "wide" chars. If there exists a compiler that automatically assumes wide chars
@@ -64,7 +71,7 @@ COLORREF AsmColors[4] = {
 #define WS_POPUP_IDX    14
 
 void DockResize (int j, Bit32u x);      // need some function prototypes
-void SetHorzLimits(Bit32s i);
+void SetHorzLimits(void);
 void ParseIDText(char *x);
 void ShowData();
 void UpdateStatus();
@@ -80,18 +87,7 @@ void ActivateMenuItem (int LW);
 void SetMemLine (int L);
 void MakeBL(HTREEITEM *h_P, bx_param_c *p);
 
-static char* DC0txt[2] = {"P.Address","L.Address"};    // DumpMode definitions in text
-
-static const char* BTxt[6] = {"Continue [c]","Step [s]","Step N [s ###]","Refresh","Break [^C]","Break All"};
-
-static int BtnLkup[6] = {
-    CMD_CONT, CMD_STEP1, CMD_STEPN, CMD_RFRSH, CMD_BREAK
-};
-
 static unsigned LstTop = 0;
-static int SizeList = 0;
-static Bit32s xClick = -1;         // halfway through a mouseclick flag + location
-static Bit32s yClick = 0;          // values are in Listview coordinates
 static Bit32u CurTimeStamp = 0;    // last mousedown time
 
 // Handles to Windows and global stuff
@@ -309,6 +305,7 @@ LRESULT CALLBACK LVProc(HWND hh, UINT mm, WPARAM ww, LPARAM ll)
                     ClientToScreen(hh,&pt);
                     ScreenToClient(hY,&pt);     // convert to parent's coordinates
                     DockResize (j, (Bit32u)pt.x);
+                    Sizing = 0;
                 }
             }
             if (Sizing != 0)
@@ -327,6 +324,7 @@ LRESULT CALLBACK LVProc(HWND hh, UINT mm, WPARAM ww, LPARAM ll)
                     else if (hh == hL[ASM_WND])
                         j = ASM_WND;
                     DockResize (j, (Bit32u)pt.x);
+                    Sizing = 0;
                 }
                 else if (Sizing > 5)
                     SetCursor(hCursDock);
@@ -371,7 +369,7 @@ LRESULT CALLBACK LVProc(HWND hh, UINT mm, WPARAM ww, LPARAM ll)
             ScreenToClient(hY,&pt);     // convert to parent's coordinates
             if (Sizing < 0)             // doing a presize? -- enter full resize mode
             {
-                SetHorzLimits((int) pt.x);
+                SetHorzLimits();
                 SetCursor(hCursResize);
                 return 0;               // important to eat the mousedown (for scrollbars)
             }
@@ -387,9 +385,7 @@ LRESULT CALLBACK LVProc(HWND hh, UINT mm, WPARAM ww, LPARAM ll)
         case WM_LBUTTONDOWN:
             if (Sizing < 0)     // doing a presize?
             {
-                GetCursorPos(&pt);          // Screen coordinates
-                ScreenToClient(hY,&pt);     // convert to parent's coordinates
-                SetHorzLimits((int) pt.x);
+                SetHorzLimits();
                 SetCursor(hCursResize);
             }
             else        // set "pre-dock" mode
@@ -423,6 +419,7 @@ LRESULT CALLBACK LVProc(HWND hh, UINT mm, WPARAM ww, LPARAM ll)
                 GetCursorPos(&pt);          // Screen coordinates
                 ScreenToClient(hY,&pt);     // convert to parent's coordinates
                 DockResize (j, (Bit32u) pt.x);
+                Sizing = 0;
             }
             else if (xClick >= 0)
             {

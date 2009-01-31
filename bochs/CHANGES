@@ -2,9 +2,9 @@ Changes after 2.3.7 release:
 
 Brief summary :
 
-- Added graphical Bochs debugger under Win32 host !
+- Added graphical Bochs debugger frontend for most of the supported platforms.
   - Thanks for Chourdakis Michael and Bruce Ewing.
-- Added user plugin interface support
+- Added user plugin interface support.
 - Many fixes in Bochs internal debugger and CPU instrumentation.
 - Bugfixes for CPU emulation correctness.
 

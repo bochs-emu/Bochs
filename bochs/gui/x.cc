@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: x.cc,v 1.119 2008-12-29 08:51:34 vruppert Exp $
+// $Id: x.cc,v 1.120 2009-01-31 10:04:25 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -34,6 +34,7 @@
 
 #include "bochs.h"
 #include "iodev.h"
+#include "enh_dbg.h"
 #if BX_WITH_X11
 
 extern "C" {
@@ -648,6 +649,14 @@ void bx_x_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsign
   // parse x11 specific options
   if (argc > 1) {
     for (i = 1; i < argc; i++) {
+#if BX_DEBUGGER && BX_DEBUGGER_GUI
+      if (!strcmp(argv[i], "gui_debug")) {
+        void InitDebugDialog();
+        SIM->set_debug_gui(1);
+        InitDebugDialog();
+      }
+      else
+#endif
 #if BX_SHOW_IPS
       if (!strcmp(argv[i], "hideIPS")) {
         x11_hide_ips = 1;
@@ -2546,6 +2555,34 @@ BxEvent *x11_notify_callback (void *unused, BxEvent *event)
         event->retcode = x11_yesno_dialog((bx_param_bool_c *)param);
         return event;
       }
+#if BX_DEBUGGER && BX_DEBUGGER_GUI
+    case BX_SYNC_EVT_GET_DBG_COMMAND:
+      {
+        debug_cmd = new char[512];
+        debug_cmd_ready = 0;
+        HitBreak();
+        while (debug_cmd_ready == 0 && bx_user_quit == 0)
+        {
+          if (vgaw_refresh != 0)  // is the GUI frontend requesting a VGAW refresh?
+            DEV_vga_refresh();
+          vgaw_refresh = 0;
+          sleep(1);
+        }
+        if (bx_user_quit != 0)
+          BX_EXIT(0);
+
+        event->u.debugcmd.command = debug_cmd;
+        event->retcode = 1;
+        return event;
+      }
+    case BX_ASYNC_EVT_DBG_MSG:
+      {
+        ParseIDText ((char*) event->u.logmsg.msg);
+        // free the char* which was allocated in dbg_printf
+        delete [] ((char*)event->u.logmsg.msg);
+        return event;
+      }
+#endif
     case BX_SYNC_EVT_TICK: // called periodically by siminterface.
     case BX_ASYNC_EVT_REFRESH: // called when some bx_param_c parameters have changed.
       // fall into default case

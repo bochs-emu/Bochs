@@ -46,7 +46,7 @@ SHELL = /bin/sh
 
 CXX = @CXX@
 CXXFLAGS = $(BX_INCDIRS) @CXXFLAGS@  @GUI_CXXFLAGS@
-LOCAL_CXXFLAGS =
+LOCAL_CXXFLAGS = @TOOLKIT_CXXFLAGS@
 LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
 X_CFLAGS = @X_CFLAGS@
@@ -70,7 +70,7 @@ GUI_OBJS_RFB = rfb.o
 GUI_OBJS_AMIGAOS = amigaos.o
 GUI_OBJS_WX = wx.o
 GUI_OBJS_WX_SUPPORT = wxmain.o wxdialog.o
-OBJS_THAT_CANNOT_BE_PLUGINS = keymap.o gui.o siminterface.o textconfig.o enh_dbg.o @DIALOG_OBJS@
+OBJS_THAT_CANNOT_BE_PLUGINS = keymap.o gui.o siminterface.o textconfig.o enh_dbg.o @ENH_DBG_OBJS@ @DIALOG_OBJS@
 OBJS_THAT_CAN_BE_PLUGINS = @GUI_OBJS@
 
 X_LIBS = @X_LIBS@
@@ -285,7 +285,7 @@ win32.o: win32.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.
   ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h \
   ../iodev/keyboard.h
 win32dialog.o: win32dialog.@CPP_SUFFIX@ win32dialog.h ../config.h
-win32_enh_dbg_osdep.o: win32_enh_dbg_osdep.@CPP_SUFFIX@ ../config.h
+win32_enh_dbg_osdep.o: win32_enh_dbg_osdep.@CPP_SUFFIX@ enh_dbg.h ../config.h
 wx.o: wx.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../config.h ../osdep.h ../bxversion.h ../gui/siminterface.h \
   ../memory/memory.h ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h \
@@ -303,6 +303,7 @@ wxmain.o: wxmain.@CPP_SUFFIX@ ../config.h \
   bitmaps/power.xpm bitmaps/reset.xpm bitmaps/snapshot.xpm \
   bitmaps/mouse.xpm bitmaps/userbutton.xpm bitmaps/saverestore.xpm \
   icon_bochs.xpm
+gtk_enh_dbg_osdep.o: gtk_enh_dbg_osdep.@CPP_SUFFIX@ enh_dbg.h ../config.h
 x.o: x.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../config.h ../osdep.h ../bxversion.h ../gui/siminterface.h \
   ../memory/memory.h ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h \
@@ -405,7 +406,7 @@ win32.lo: win32.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug
   ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h \
   ../iodev/keyboard.h
 win32dialog.lo: win32dialog.@CPP_SUFFIX@ win32dialog.h ../config.h
-win32_enh_dbg_osdep.lo: win32_enh_dbg_osdep.@CPP_SUFFIX@ ../config.h
+win32_enh_dbg_osdep.lo: win32_enh_dbg_osdep.@CPP_SUFFIX@ enh_dbg.h ../config.h
 wx.lo: wx.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../config.h ../osdep.h ../bxversion.h ../gui/siminterface.h \
   ../memory/memory.h ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h \
@@ -423,6 +424,7 @@ wxmain.lo: wxmain.@CPP_SUFFIX@ ../config.h \
   bitmaps/power.xpm bitmaps/reset.xpm bitmaps/snapshot.xpm \
   bitmaps/mouse.xpm bitmaps/userbutton.xpm bitmaps/saverestore.xpm \
   icon_bochs.xpm
+gtk_enh_dbg_osdep.lo: gtk_enh_dbg_osdep.@CPP_SUFFIX@ enh_dbg.h ../config.h
 x.lo: x.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../config.h ../osdep.h ../bxversion.h ../gui/siminterface.h \
   ../memory/memory.h ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h \

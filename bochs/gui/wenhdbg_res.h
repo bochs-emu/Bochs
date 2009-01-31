@@ -1,3 +1,14 @@
+/////////////////////////////////////////////////////////////////////////
+// $Id: wenhdbg_res.h,v 1.3 2009-01-31 10:04:25 sshwarts Exp $
+/////////////////////////////////////////////////////////////////////////
+//
+//  BOCHS ENHANCED DEBUGGER Ver 1.2
+//  (C) Chourdakis Michael, 2008
+//  http://www.turboirc.com
+//
+//  Modified by Bruce Ewing
+//
+
 #ifndef BX_ENH_DBG_RES_H
 #define BX_ENH_DBG_RES_H
 
