@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gtk_enh_dbg_osdep.cc,v 1.2 2009-01-31 10:04:25 sshwarts Exp $
+// $Id: gtk_enh_dbg_osdep.cc,v 1.3 2009-01-31 14:51:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  BOCHS ENHANCED DEBUGGER Ver 1.2
@@ -980,7 +980,7 @@ void EndListUpdate(int listnum)
 //  Invalidate (listnum);
 }
 
-void DispMessage(char *msg, char *title)
+void DispMessage(const char *msg, const char *title)
 {
     GtkWidget *dialog;
     dialog = gtk_message_dialog_new(GTK_WINDOW(window),
@@ -1023,7 +1023,7 @@ void ShowMemData(bx_bool initting)
     DViewMode = VIEW_MEMDUMP;       // returning to MemDump mode
     if (DumpInitted == FALSE)
     {
-        StartListUpdate(DUMP_WND);      // autosize for a blank MemDump window
+        StartListUpdate(DUMP_WND);  // autosize for a blank MemDump window
         EndListUpdate(DUMP_WND);
     }
     else
@@ -1100,7 +1100,7 @@ bx_bool NewFont()
         pango_font_description_free (fontdesc);
         g_object_unref (layout);
         OneCharWide = width;        // The "width" I'm getting is about half what I expect
-//  OneCharWide = width >> 1;   // pretend that an average char width is half an "M"
+//      OneCharWide = width >> 1;   // pretend that an average char width is half an "M"
         if (OneCharWide > 12) OneCharWide = 12;
     }
     g_free (ofn);

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: enh_dbg.cc,v 1.9 2009-01-31 10:04:25 sshwarts Exp $
+// $Id: enh_dbg.cc,v 1.10 2009-01-31 14:51:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  BOCHS ENHANCED DEBUGGER Ver 1.2
@@ -117,7 +117,7 @@ Bit64u PStackLA = 0;                // to calculate alignment between prev and c
 bx_bool StackEntChg[STACK_ENTRIES];     // flag for "change detected" on each stack line
 
 // only pay special attention to registers up to EFER
-static char* RegLCName[EFER_Rnum + 1] = {
+static const char* RegLCName[EFER_Rnum + 1] = {
     "rax","rbx","rcx","rdx","rsi","rdi","rbp","rsp","rip",
     "r8","r9","r10","r11","r12","r13","r14","r15",
     "eflags","eax","ebx","ecx","edx","esi","edi","ebp","esp","eip",
@@ -2078,13 +2078,11 @@ void ShowData()
 // (must build the pointer list while building the names)
 void MakeRDnames()
 {
-    char *p, *c;
-
-    p = RDispName[0];       // first storage location
+    char *p = RDispName[0];       // first storage location
     for (int i=0; i < 41; i++)
     {
         RDispName[i] = p;   // create the Name pointer
-        c = RegLCName[i];   // Register name in lower case
+        const char *c = RegLCName[i];   // Register name in lower case
 
         if (UprCase != 0)
         {
@@ -2285,7 +2283,7 @@ bx_bool FindHex(unsigned char* b1,int bs,unsigned char* b2,int by)
     return FALSE;
 }
 
-bx_bool AskText(char *title, char *prompt, char *DefaultText)
+bx_bool AskText(const char *title, char *prompt, char *DefaultText)
 {
     ask_str.title= title;
     ask_str.prompt= prompt;
@@ -2548,14 +2546,13 @@ void doFind()
 
 void doStepN()
 {
-    Bit32u i;
     // can't run sim until everything is ready
     if (AtBreak == FALSE || debug_cmd_ready != FALSE)
         return;
     sprintf (tmpcb,"%d",PrevStepNSize);
     if (AskText("Singlestep N times","Number of steps (use 0x for hex):",tmpcb) == FALSE)
         return;
-    i = (Bit32u) cvt64(tmpcb,FALSE);        // input either hex or decimal
+    Bit32u i = (Bit32u) cvt64(tmpcb,FALSE);        // input either hex or decimal
     if (i == 0)
         return;
     PrevStepNSize = i;
@@ -2571,14 +2568,13 @@ void doStepN()
 void doDisAsm()
 {
     int NumLines = DefaultAsmLines;
-    Bit64u h;
     if (AtBreak == FALSE)
         return;
     sprintf (tmpcb,"0x" FMT_LL "X",CurrentAsmLA);
     if (AskText("Disassemble",
         "Disassemble -- Enter Linear Start Address (use 0x for hex):",tmpcb) == FALSE)
         return;
-    h = cvt64(tmpcb,FALSE);             // input either hex or decimal
+    Bit64u h = cvt64(tmpcb,FALSE);             // input either hex or decimal
     sprintf (tmpcb,"%d",NumLines);
     if (AskText("Disassemble","Number of lines: (Max. 2048)",tmpcb) == FALSE)
         return;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32_enh_dbg_osdep.cc,v 1.7 2009-01-31 10:04:25 sshwarts Exp $
+// $Id: win32_enh_dbg_osdep.cc,v 1.8 2009-01-31 14:51:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  BOCHS ENHANCED DEBUGGER Ver 1.2
@@ -1117,7 +1117,7 @@ void EndListUpdate(int listnum)
     ShowWindow(hL[listnum],SW_SHOW);
 }
 
-void DispMessage(char *msg, char *title)
+void DispMessage(const char *msg, const char *title)
 {
     MessageBox (hY, msg, title, MB_OK);
 }
