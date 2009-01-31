@@ -109,6 +109,7 @@ used.  If you tried out the feature, move the X to the "works" or
 x86-64             [X]      [ ]     [ ]     [__]
 floating point     [X]      [ ]     [ ]     [__]
 SMP                [X]      [ ]     [ ]     [__]
+VMX                [X]      [ ]     [ ]     [__]
 keyboard           [X]      [ ]     [ ]     [__]
 floppy disk        [X]      [ ]     [ ]     [__]
 raw floppy disk    [X]      [ ]     [ ]     [__]
