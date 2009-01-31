@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ia_opcodes.h,v 1.24 2009-01-27 20:29:05 sshwarts Exp $
+// $Id: ia_opcodes.h,v 1.25 2009-01-31 10:43:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008 Stanislav Shwartsman
@@ -1552,3 +1552,20 @@ bx_define_opcode(BX_IA_MOVNTI_MqGq, &BX_CPU_C::MOVNTI_MqGq, NULL)
 bx_define_opcode(BX_IA_POPCNT_GqEqR, &BX_CPU_C::POPCNT_GqEqR, NULL)
 bx_define_opcode(BX_IA_POPCNT_GqEqM, &BX_CPU_C::LOAD_Eq, &BX_CPU_C::POPCNT_GqEqR)
 #endif
+
+// VMX
+bx_define_opcode(BX_IA_VMXON_Mq, &BX_CPU_C::VMXON, NULL)
+bx_define_opcode(BX_IA_VMXOFF, &BX_CPU_C::VMXOFF, NULL)
+bx_define_opcode(BX_IA_VMCALL, &BX_CPU_C::VMCALL, NULL)
+bx_define_opcode(BX_IA_VMLAUNCH, &BX_CPU_C::VMLAUNCH, NULL)
+bx_define_opcode(BX_IA_VMRESUME, &BX_CPU_C::VMLAUNCH, NULL)
+bx_define_opcode(BX_IA_VMCLEAR_Mq, &BX_CPU_C::VMCLEAR, NULL)
+bx_define_opcode(BX_IA_VMPTRLD_Mq, &BX_CPU_C::VMPTRLD, NULL)
+bx_define_opcode(BX_IA_VMPTRST_Mq, &BX_CPU_C::VMPTRST, NULL)
+bx_define_opcode(BX_IA_VMREAD_EdGd, &BX_CPU_C::VMREAD, NULL)
+bx_define_opcode(BX_IA_VMREAD_EqGq, &BX_CPU_C::VMREAD, NULL)
+bx_define_opcode(BX_IA_VMWRITE_GdEd, &BX_CPU_C::VMWRITE, NULL)
+#if BX_SUPPORT_X86_64
+bx_define_opcode(BX_IA_VMWRITE_GqEq, &BX_CPU_C::VMWRITE, NULL)
+#endif
+// VMX

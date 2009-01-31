@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.278 2009-01-29 20:27:57 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.279 2009-01-31 10:43:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -52,7 +52,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::NOP(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PAUSE(bxInstruction_c *i)
 {
-  // No operation.
+#if BX_SUPPORT_VMX
+  VMexit_PAUSE(i);
+#endif
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PREFETCH(bxInstruction_c *i)
@@ -108,6 +110,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::HLT(bxInstruction_c *i)
     BX_INFO(("WARNING: HLT instruction with IF=0!"));
   }
 
+#if BX_SUPPORT_VMX
+  VMexit_HLT(i);
+#endif
+
   // stops instruction execution and places the processor in a
   // HALT state.  An enabled interrupt, NMI, or reset will resume
   // execution.  If interrupt (including NMI) is used to resume
@@ -139,6 +145,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CLTS(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
+#if BX_SUPPORT_VMX
+  if(VMexit_CLTS(i)) return;
+#endif
+
   BX_CPU_THIS_PTR cr0.set_TS(0);
 }
 
@@ -150,6 +160,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INVD(bxInstruction_c *i)
     BX_ERROR(("INVD: priveledge check failed, generate #GP(0)"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
+
+#if BX_SUPPORT_VMX
+  if (BX_CPU_THIS_PTR in_vmx_guest) {
+    BX_ERROR(("VMEXIT: INVD in VMX non-root operation"));
+    VMexit(i, VMX_VMEXIT_INVD, 0);
+  }
+#endif
 
   invalidate_prefetch_q();
 
@@ -242,6 +259,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CLFLUSH(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_DdRd(bxInstruction_c *i)
 {
+#if BX_SUPPORT_VMX
+  VMexit_DR_Access(i, 0 /* write */);
+#endif
+
 #if BX_CPU_LEVEL >= 4
   if (BX_CPU_THIS_PTR cr4.get_DE()) {
     if ((i->nnn() & 0xE) == 4) {
@@ -345,6 +366,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RdDd(bxInstruction_c *i)
 {
   Bit32u val_32;
 
+#if BX_SUPPORT_VMX
+  VMexit_DR_Access(i, 1 /* read */);
+#endif
+
 #if BX_CPU_LEVEL >= 4
   if (BX_CPU_THIS_PTR cr4.get_DE()) {
     if ((i->nnn() & 0xE) == 4) {
@@ -406,6 +431,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RdDd(bxInstruction_c *i)
 #if BX_SUPPORT_X86_64
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_DqRq(bxInstruction_c *i)
 {
+#if BX_SUPPORT_VMX
+  VMexit_DR_Access(i, 0 /* write */);
+#endif
+
   /* NOTES:
    *   64bit operands always used
    *   r/m field specifies general register
@@ -495,6 +524,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RqDq(bxInstruction_c *i)
 {
   Bit64u val_64;
 
+#if BX_SUPPORT_VMX
+  VMexit_DR_Access(i, 1 /* read */);
+#endif
+
   if (BX_CPU_THIS_PTR cr4.get_DE()) {
     if ((i->nnn() & 0xE) == 4) {
       BX_ERROR(("MOV_RqDq: access to DR4/DR5 causes #UD"));
@@ -576,6 +609,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CdRd(bxInstruction_c *i)
 
   switch (i->nnn()) {
     case 0: // CR0 (MSW)
+#if BX_SUPPORT_VMX
+      val_32 = VMexit_CR0_Write(i, val_32);
+#endif
       if (! SetCR0(val_32))
         exception(BX_GP_EXCEPTION, 0, 0);
       break;
@@ -584,6 +620,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CdRd(bxInstruction_c *i)
       BX_CPU_THIS_PTR cr2 = val_32;
       break;
     case 3: // CR3
+#if BX_SUPPORT_VMX
+      VMexit_CR3_Write(i, val_32);
+#endif
       BX_DEBUG(("MOV_CdRd:CR3 = %08x", val_32));
       // Reserved bits take on value of MOV instruction
       SetCR3(val_32);
@@ -591,6 +630,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CdRd(bxInstruction_c *i)
       break;
 #if BX_CPU_LEVEL > 3
     case 4: // CR4
+#if BX_SUPPORT_VMX
+      val_32 = VMexit_CR4_Write(i, val_32);
+#endif
       // Protected mode: #GP(0) if attempt to write a 1 to
       // any reserved bit of CR4
       if (! SetCR4(val_32))
@@ -627,20 +669,23 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RdCd(bxInstruction_c *i)
 
   switch (i->nnn()) {
     case 0: // CR0 (MSW)
-      val_32 = BX_CPU_THIS_PTR cr0.get32();
+      val_32 = read_CR0(); /* correctly handle VMX */
       break;
     case 2: /* CR2 */
       BX_DEBUG(("MOV_RdCd: reading CR2"));
       val_32 = (Bit32u) BX_CPU_THIS_PTR cr2;
       break;
     case 3: // CR3
+#if BX_SUPPORT_VMX
+      VMexit_CR3_Read(i);
+#endif
       BX_DEBUG(("MOV_RdCd: reading CR3"));
       val_32 = (Bit32u) BX_CPU_THIS_PTR cr3;
       break;
     case 4: // CR4
 #if BX_CPU_LEVEL > 3
       BX_DEBUG(("MOV_RdCd: read of CR4"));
-      val_32 = BX_CPU_THIS_PTR cr4.get32();
+      val_32 = read_CR4(); /* correctly handle VMX */
 #endif
       break;
     default:
@@ -677,7 +722,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CqRq(bxInstruction_c *i)
   Bit64u val_64 = BX_READ_64BIT_REG(i->rm());
 
   switch (i->nnn()) {
-    case 0: // CR0 (MSW)
+    case 0: // CR0
+#if BX_SUPPORT_VMX
+      val_64 = VMexit_CR0_Write(i, val_64);
+#endif
       if (! SetCR0((Bit32u) val_64))
         exception(BX_GP_EXCEPTION, 0, 0);
       break;
@@ -686,19 +734,26 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CqRq(bxInstruction_c *i)
       BX_CPU_THIS_PTR cr2 = val_64;
       break;
     case 3: // CR3
+#if BX_SUPPORT_VMX
+      VMexit_CR3_Write(i, val_64);
+#endif
       BX_DEBUG(("MOV_CqRq: write to CR3 of %08x:%08x", GET32H(val_64), GET32L(val_64)));
       // Reserved bits take on value of MOV instruction
       SetCR3(val_64);
       BX_INSTR_TLB_CNTRL(BX_CPU_ID, BX_INSTR_MOV_CR3, val_64);
       break;
     case 4: // CR4
-      // Protected mode: #GP(0) if attempt to write a 1 to
-      // any reserved bit of CR4
+#if BX_SUPPORT_VMX
+      val_64 = VMexit_CR4_Write(i, val_64);
+#endif
       BX_DEBUG(("MOV_CqRq: write to CR4 of %08x:%08x", GET32H(val_64), GET32L(val_64)));
       if (! SetCR4(val_64))
         exception(BX_GP_EXCEPTION, 0, 0);
       break;
     case 8: // CR8
+#if BX_SUPPORT_VMX
+      VMexit_CR8_Write(i);
+#endif
       // CR8 is aliased to APIC->TASK PRIORITY register
       //   APIC.TPR[7:4] = CR8[3:0]
       //   APIC.TPR[3:0] = 0
@@ -745,21 +800,27 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RqCq(bxInstruction_c *i)
 
   switch (i->nnn()) {
     case 0: // CR0 (MSW)
-      val_64 = BX_CPU_THIS_PTR cr0.get32();
+      val_64 = read_CR0(); /* correctly handle VMX */
       break;
     case 2: /* CR2 */
       BX_DEBUG(("MOV_RqCq: read of CR2"));
       val_64 = BX_CPU_THIS_PTR cr2;
       break;
     case 3: // CR3
+#if BX_SUPPORT_VMX
+      VMexit_CR3_Read(i);
+#endif
       BX_DEBUG(("MOV_RqCq: read of CR3"));
       val_64 = BX_CPU_THIS_PTR cr3;
       break;
     case 4: // CR4
       BX_DEBUG(("MOV_RqCq: read of CR4"));
-      val_64 = BX_CPU_THIS_PTR cr4.get32();
+      val_64 = read_CR4(); /* correctly handle VMX */
       break;
     case 8: // CR8
+#if BX_SUPPORT_VMX
+      VMexit_CR8_Read(i);
+#endif
       // CR8 is aliased to APIC->TASK PRIORITY register
       //   APIC.TPR[7:4] = CR8[3:0]
       //   APIC.TPR[3:0] = 0
@@ -791,18 +852,24 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LMSW_Ew(bxInstruction_c *i)
     msw = BX_READ_16BIT_REG(i->rm());
   }
   else {
-    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    /* use RMAddr(i) to save address for VMexit */
+    RMAddr(i) = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    msw = read_virtual_word(i->seg(), eaddr);
+    msw = read_virtual_word(i->seg(), RMAddr(i));
   }
 
   // LMSW does not affect PG,CD,NW,AM,WP,NE,ET bits, and cannot clear PE
+
+#if BX_SUPPORT_VMX
+  VMexit_LMSW(i, msw);
+#endif
 
   // LMSW cannot clear PE
   if (BX_CPU_THIS_PTR cr0.get_PE())
     msw |= 0x1; // adjust PE bit to current value of 1
 
   msw &= 0xf; // LMSW only affects last 4 flags
+
   Bit32u cr0 = (BX_CPU_THIS_PTR cr0.get32() & 0xfffffff0) | msw;
   if (! SetCR0(cr0))
     exception(BX_GP_EXCEPTION, 0, 0);
@@ -810,19 +877,20 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LMSW_Ew(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::SMSW_EwR(bxInstruction_c *i)
 {
+  Bit32u msw = read_CR0();  // handle CR0 shadow in VMX
+
   if (i->os32L()) {
-    BX_WRITE_32BIT_REGZ(i->rm(), BX_CPU_THIS_PTR cr0.get32());
+    BX_WRITE_32BIT_REGZ(i->rm(), msw);
   }
   else {
-    BX_WRITE_16BIT_REG(i->rm(), BX_CPU_THIS_PTR cr0.get32() & 0xffff);
+    BX_WRITE_16BIT_REG(i->rm(), msw & 0xffff);
   }
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::SMSW_EwM(bxInstruction_c *i)
 {
-  Bit16u msw = BX_CPU_THIS_PTR cr0.get32() & 0xffff;
+  Bit16u msw = read_CR0() & 0xffff;   // handle CR0 shadow in VMX
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-  /* pointer, segment address pair */
   write_virtual_word(i->seg(), eaddr, msw);
 }
 
@@ -1180,6 +1248,34 @@ void BX_CPU_C::handleAlignmentCheck(void)
 }
 #endif
 
+bx_address BX_CPU_C::read_CR0(void)
+{
+  bx_address cr0_val = BX_CPU_THIS_PTR cr0.get32();
+
+#if BX_SUPPORT_VMX
+  if (BX_CPU_THIS_PTR in_vmx_guest) {
+    VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
+    cr0_val = (cr0_val & ~vm->vm_cr0_mask) | (vm->vm_cr0_read_shadow & vm->vm_cr0_mask);
+  }
+#endif
+
+  return cr0_val;
+}
+
+bx_address BX_CPU_C::read_CR4(void)
+{
+  bx_address cr4_val = BX_CPU_THIS_PTR cr4.get32();
+
+#if BX_SUPPORT_VMX
+  if (BX_CPU_THIS_PTR in_vmx_guest) {
+    VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
+    cr4_val = (cr4_val & ~vm->vm_cr4_mask) | (vm->vm_cr4_read_shadow & vm->vm_cr4_mask);
+  }
+#endif
+
+  return cr4_val;
+}
+
 bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::SetCR0(Bit32u val_32)
 {
   bx_bool pe = val_32 & 0x1;
@@ -1197,7 +1293,15 @@ bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::SetCR0(Bit32u val_32)
     return 0;
   }
 
-  if (pe && BX_CPU_THIS_PTR get_VM()) BX_PANIC(("EFLAGS.VM=1, enter_PM"));
+#if BX_SUPPORT_VMX
+  if (BX_CPU_THIS_PTR in_vmx) {
+    bx_bool ne = (val_32 >> 5) & 0x1;
+    if (!pe || !ne || !pg) {
+      BX_ERROR(("Attempt to clear CR0.PE/CR0.NE/CR0.PG in vmx mode"));
+      return 0;
+    }
+  }
+#endif
 
   // from either MOV_CdRd() or debug functions
   // protection checks made already or forcing from debug
@@ -1324,6 +1428,10 @@ bx_address get_cr4_allow_mask(void)
   allowMask |= (1<<10);  /* OSXMMECPT */
 #endif
 
+#if BX_SUPPORT_VMX
+  allowMask |= (1<<13);  /* VMX Enable */
+#endif
+
 #if BX_SUPPORT_XSAVE
   allowMask |= (1<<18);  /* OSXSAVE */
 #endif
@@ -1343,6 +1451,13 @@ bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::SetCR4(bx_address val)
       BX_ERROR(("SetCR4: attempt to change PAE when EFER.LMA=1"));
       return 0;
     }
+  }
+#endif
+
+#if BX_SUPPORT_VMX
+  if (!(val & (1 << 13)) && BX_CPU_THIS_PTR in_vmx) {
+    BX_ERROR(("Attempt to clear CR4.VMXE in vmx mode"));
+    exception(BX_GP_EXCEPTION, 0, 0);
   }
 #endif
 
@@ -1366,6 +1481,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDPMC(bxInstruction_c *i)
 
   if ((pce==1) || (CPL==0) || real_mode())
   {
+
+#if BX_SUPPORT_VMX
+    VMexit_RDPMC(i);
+#endif
+
     /* According to manual, Pentium 4 has 18 counters,
      * previous versions have two.  And the P4 also can do
      * short read-out (EDX always 0).  Otherwise it is
@@ -1403,6 +1523,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDPMC(bxInstruction_c *i)
 Bit64u BX_CPU_C::get_TSC(void)
 {
   Bit64u tsc = bx_pc_system.time_ticks() - BX_CPU_THIS_PTR msr.tsc_last_reset;
+#if BX_SUPPORT_VMX
+  tsc += VMX_TSC_Offset();
+#endif
   return tsc;
 }
 
@@ -1421,10 +1544,17 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDTSC(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
   if (! BX_CPU_THIS_PTR cr4.get_TSD() || CPL==0) {
+
+#if BX_SUPPORT_VMX
+    VMexit_RDTSC(i);
+#endif
+
     // return ticks
     Bit64u ticks = BX_CPU_THIS_PTR get_TSC();
+
     RAX = GET32L(ticks);
     RDX = GET32H(ticks);
+
   } else {
     BX_ERROR(("RDTSC: not allowed to use instruction !"));
     exception(BX_GP_EXCEPTION, 0, 0);

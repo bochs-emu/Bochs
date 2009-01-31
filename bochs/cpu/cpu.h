@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.564 2009-01-29 20:27:57 sshwarts Exp $
+// $Id: cpu.h,v 1.565 2009-01-31 10:43:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -346,6 +346,24 @@ enum {
   BX_MEMTYPE_WP,
   BX_MEMTYPE_WB
 };
+
+#if BX_SUPPORT_VMX
+  #define BX_MSR_VMX_BASIC                0x480
+  #define BX_MSR_VMX_PINBASED_CTRLS       0x481
+  #define BX_MSR_VMX_PROCBASED_CTRLS      0x482
+  #define BX_MSR_VMX_VMEXIT_CTRLS         0x483
+  #define BX_MSR_VMX_VMENTRY_CTRLS        0x484
+  #define BX_MSR_VMX_MISC                 0x485
+  #define BX_MSR_VMX_CR0_FIXED0           0x486
+  #define BX_MSR_VMX_CR0_FIXED1           0x487
+  #define BX_MSR_VMX_CR4_FIXED0           0x488
+  #define BX_MSR_VMX_CR4_FIXED1           0x489
+  #define BX_MSR_VMX_VMCS_ENUM            0x48a
+  #define BX_MSR_VMX_TRUE_PINBASED_CTRLS  0x48d
+  #define BX_MSR_VMX_TRUE_PROCBASED_CTRLS 0x48e
+  #define BX_MSR_VMX_TRUE_VMEXIT_CTRLS    0x48f
+  #define BX_MSR_VMX_TRUE_VMENTRY_CTRLS   0x490
+#endif
 
 #if BX_SUPPORT_X86_64
 #define BX_MSR_EFER             0xc0000080
@@ -765,6 +783,10 @@ typedef struct {
 #include "cpu/xmm.h"
 #endif
 
+#if BX_SUPPORT_VMX
+#include "vmx.h"
+#endif
+
 #if BX_SUPPORT_MONITOR_MWAIT
 struct monitor_addr_t {
     bx_phy_address monitor_begin;
@@ -896,6 +918,15 @@ public: // for now...
 
 #if BX_SUPPORT_APIC
   bx_local_apic_c local_apic;
+#endif
+
+#if BX_SUPPORT_VMX
+  bx_bool in_event;
+  bx_bool in_vmx;
+  bx_bool in_vmx_guest;
+  bx_bool intr_pending_vmx;
+  Bit64u  vmcsptr;
+  VMCS_CACHE vmcs;
 #endif
 
   bx_bool EXT; /* 1 if processing external interrupt or exception
@@ -2279,6 +2310,18 @@ public: // for now...
   BX_SMF void AESKEYGENASSIST_VdqWdqIb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   /* AES instructions */
 
+  /* VMX instructions */
+  BX_SMF void VMXON(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VMXOFF(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VMCALL(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VMLAUNCH(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VMCLEAR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VMPTRLD(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VMPTRST(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VMREAD(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VMWRITE(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  /* VMX instructions */
+
   /*** Duplicate SSE instructions ***/
   // Although in implementation, these instructions are aliased to the
   // another function, it's nice to have them call a separate function when
@@ -3114,7 +3157,7 @@ public: // for now...
 #endif
 
   BX_SMF void jump_protected(bxInstruction_c *, Bit16u cs, bx_address disp) BX_CPP_AttrRegparmN(3);
-  BX_SMF void jmp_task_gate(bx_descriptor_t *gate_descriptor) BX_CPP_AttrRegparmN(1);
+  BX_SMF void jmp_task_gate(bxInstruction_c *, bx_descriptor_t *gate_descriptor) BX_CPP_AttrRegparmN(2);
   BX_SMF void jmp_call_gate(bx_descriptor_t *gate_descriptor) BX_CPP_AttrRegparmN(1);
 #if BX_SUPPORT_X86_64
   BX_SMF void jmp_call_gate64(bx_selector_t *selector) BX_CPP_AttrRegparmN(1);
@@ -3139,7 +3182,7 @@ public: // for now...
   BX_SMF void init_v8086_mode(void);
   BX_SMF void task_switch_load_selector(bx_segment_reg_t *seg,
                  bx_selector_t *selector, Bit16u raw_selector, Bit8u cs_rpl);
-  BX_SMF void task_switch(bx_selector_t *selector, bx_descriptor_t *descriptor,
+  BX_SMF void task_switch(bxInstruction_c *i, bx_selector_t *selector, bx_descriptor_t *descriptor,
                  unsigned source, Bit32u dword1, Bit32u dword2);
   BX_SMF void get_SS_ESP_from_TSS(unsigned pl, Bit16u *ss, Bit32u *esp);
 #if BX_SUPPORT_X86_64
@@ -3325,6 +3368,61 @@ public: // for now...
 #if BX_SUPPORT_MONITOR_MWAIT
   BX_SMF bx_bool    is_monitor(bx_phy_address addr, unsigned len);
   BX_SMF void    check_monitor(bx_phy_address addr, unsigned len);
+#endif
+
+  BX_SMF bx_address read_CR0(void);
+  BX_SMF bx_address read_CR4(void);
+#if BX_SUPPORT_VMX
+  BX_SMF Bit32u VMread32(unsigned encoding);
+  BX_SMF void VMwrite32(unsigned encoding, Bit32u val_32);
+  BX_SMF void VMwrite64(unsigned encoding, Bit64u val_64);
+  BX_SMF Bit64u VMread64(unsigned encoding);
+  BX_SMF void VMsucceed(void);
+  BX_SMF void VMfailInvalid(void);
+  BX_SMF void VMfail(Bit32u error_code);
+  BX_SMF void VMabort(VMX_vmabort_code error_code);
+  BX_SMF Bit32u LoadMSRs(Bit32u msr_cnt, bx_phy_address pAddr);
+  BX_SMF Bit32u StoreMSRs(Bit32u msr_cnt, bx_phy_address pAddr);
+  BX_SMF VMX_error_code VMenterLoadCheckVmControls(void);
+  BX_SMF VMX_error_code VMenterLoadCheckHostState(void);
+  BX_SMF Bit32u VMenterLoadCheckGuestState(Bit64u *qualification);
+  BX_SMF void VMenterInjectEvents(void);
+  BX_SMF void VMexit(bxInstruction_c *i, Bit32u reason, Bit64u qualification);
+  BX_SMF void VMexitSaveGuestState(void);
+  BX_SMF void VMexitSaveGuestMSRs(void);
+  BX_SMF void VMexitLoadHostState(void);
+  BX_SMF bx_bool is_VMXON_PTR(Bit64u vmxptr);
+  BX_SMF void init_VMCS(void);
+  BX_SMF void register_vmx_state(bx_param_c *parent);
+  BX_SMF Bit64s VMX_TSC_Offset(void);
+  // vmexit reasons
+  BX_SMF void VMexit_Instruction(bxInstruction_c *i, Bit32u reason) BX_CPP_AttrRegparmN(2);
+  BX_SMF void VMexit_Event(bxInstruction_c *i, unsigned type, unsigned vector,
+       Bit16u errcode, bx_bool errcode_valid, Bit64u qualification = 0);
+  BX_SMF void VMexit_TripleFault(void);
+  BX_SMF void VMexit_ExtInterrupt(void);
+  BX_SMF void VMexit_TaskSwitch(bxInstruction_c *i, Bit16u tss_selector, unsigned source) BX_CPP_AttrRegparmN(3);
+  BX_SMF void VMexit_SoftwareInterrupt(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VMexit_HLT(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VMexit_PAUSE(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VMexit_INVLPG(bxInstruction_c *i, bx_address laddr) BX_CPP_AttrRegparmN(2);
+  BX_SMF void VMexit_RDTSC(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VMexit_RDPMC(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
+  BX_SMF bx_bool VMexit_CLTS(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VMexit_MSR(bxInstruction_c *i, unsigned op, Bit32u msr) BX_CPP_AttrRegparmN(3);
+  BX_SMF void VMexit_IO(bxInstruction_c *i, unsigned port, unsigned len) BX_CPP_AttrRegparmN(3);
+  BX_SMF void VMexit_LMSW(bxInstruction_c *i, Bit32u msw) BX_CPP_AttrRegparmN(2);
+  BX_SMF bx_address VMexit_CR0_Write(bxInstruction_c *i, bx_address) BX_CPP_AttrRegparmN(2);
+  BX_SMF void VMexit_CR3_Read(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VMexit_CR3_Write(bxInstruction_c *i, bx_address) BX_CPP_AttrRegparmN(2);
+  BX_SMF bx_address VMexit_CR4_Write(bxInstruction_c *i, bx_address) BX_CPP_AttrRegparmN(2);
+  BX_SMF void VMexit_CR8_Read(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VMexit_CR8_Write(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VMexit_DR_Access(bxInstruction_c *i, unsigned read) BX_CPP_AttrRegparmN(2);
+#if BX_SUPPORT_MONITOR_MWAIT
+  BX_SMF void VMexit_MONITOR(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VMexit_MWAIT(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
+#endif
 #endif
 
 #if BX_CONFIGURE_MSRS

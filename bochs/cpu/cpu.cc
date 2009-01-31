@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.262 2009-01-29 20:27:57 sshwarts Exp $
+// $Id: cpu.cc,v 1.263 2009-01-31 10:43:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -533,13 +533,26 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
     BX_CPU_THIS_PTR disable_NMI = 1;
     BX_CPU_THIS_PTR errorno = 0;
     BX_CPU_THIS_PTR EXT = 1; /* external event */
+#if BX_SUPPORT_VMX
+    VMexit_Event(0, BX_NMI, 2, 0, 0);
+#endif
     BX_INSTR_HWINTERRUPT(BX_CPU_ID, 2, BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, RIP);
     interrupt(2, BX_NMI, 0, 0);
   }
+#if BX_SUPPORT_VMX
+  else if (BX_CPU_THIS_PTR intr_pending_vmx && BX_CPU_THIS_PTR get_IF())
+  {
+    // interrupt-window exiting
+    BX_ERROR(("VMEXIT: Interrupt window exiting"));
+    VMexit(0, VMX_VMEXIT_INTERRUPT_WINDOW, 0);
+  }
+#endif
   else if (BX_CPU_INTR && BX_CPU_THIS_PTR get_IF() && BX_DBG_ASYNC_INTR)
   {
     Bit8u vector;
-
+#if BX_SUPPORT_VMX
+    VMexit_ExtInterrupt();
+#endif
     // NOTE: similar code in ::take_irq()
 #if BX_SUPPORT_APIC
     if (BX_CPU_THIS_PTR local_apic.INTR)
@@ -550,6 +563,9 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
       vector = DEV_pic_iac(); // may set INTR with next interrupt
     BX_CPU_THIS_PTR errorno = 0;
     BX_CPU_THIS_PTR EXT = 1; /* external event */
+#if BX_SUPPORT_VMX
+    VMexit_Event(0, BX_EXTERNAL_INTERRUPT, vector, 0, 0);
+#endif
     BX_INSTR_HWINTERRUPT(BX_CPU_ID, vector,
         BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, RIP);
     interrupt(vector, BX_EXTERNAL_INTERRUPT, 0, 0);
@@ -649,6 +665,9 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
         BX_CPU_THIS_PTR get_TF()
 #if BX_X86_DEBUGGER
         || (BX_CPU_THIS_PTR dr7 & 0xff)
+#endif
+#if BX_SUPPORT_VMX
+        || (BX_CPU_THIS_PTR intr_pending_vmx)
 #endif
         ))
     BX_CPU_THIS_PTR async_event = 0;

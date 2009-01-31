@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: call_far.cc,v 1.43 2009-01-16 18:18:58 sshwarts Exp $
+// $Id: call_far.cc,v 1.44 2009-01-31 10:43:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005 Stanislav Shwartsman
@@ -202,7 +202,7 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
           BX_DEBUG(("call_protected: 32bit available TSS"));
 
         // SWITCH_TASKS _without_ nesting to TSS
-        task_switch(&gate_selector, &gate_descriptor,
+        task_switch(i, &gate_selector, &gate_descriptor,
           BX_TASK_FROM_CALL, dword1, dword2);
 
         // EIP must be in code seg limit, else #GP(0)
@@ -248,7 +248,7 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
         }
 
         // SWITCH_TASKS without nesting to TSS
-        task_switch(&tss_selector, &tss_descriptor,
+        task_switch(i, &tss_selector, &tss_descriptor,
                     BX_TASK_FROM_CALL, dword1, dword2);
 
         // EIP must be within code segment limit, else #TS(0)

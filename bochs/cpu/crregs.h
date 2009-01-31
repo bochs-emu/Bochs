@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: crregs.h,v 1.16 2009-01-16 18:18:58 sshwarts Exp $
+// $Id: crregs.h,v 1.17 2009-01-31 10:43:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007 Stanislav Shwartsman
@@ -91,6 +91,9 @@ struct bx_cr4_t {
   IMPLEMENT_CRREG_ACCESSORS(PCE, 8);
   IMPLEMENT_CRREG_ACCESSORS(OSFXSR, 9);
   IMPLEMENT_CRREG_ACCESSORS(OSXMMEXCPT, 10);
+#if BX_SUPPORT_VMX
+  IMPLEMENT_CRREG_ACCESSORS(VMXE, 13);
+#endif
 #if BX_SUPPORT_XSAVE
   IMPLEMENT_CRREG_ACCESSORS(OSXSAVE, 18);
 #endif

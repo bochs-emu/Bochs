@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: soft_int.cc,v 1.48 2009-01-23 09:26:24 sshwarts Exp $
+// $Id: soft_int.cc,v 1.49 2009-01-31 10:43:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -69,6 +69,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BOUND_GdMa(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::INT1(bxInstruction_c *i)
 {
+#if BX_SUPPORT_VMX
+  VMexit_Event(i, BX_PRIVILEGED_SOFTWARE_INTERRUPT, 1, 0, 0);
+#endif
+
   // This is an undocumented instrucion (opcode 0xf1)
   // which is useful for an ICE system.
 
@@ -80,7 +84,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INT1(bxInstruction_c *i)
   BX_CPU_THIS_PTR prev_rsp = RSP;
 
   // interrupt is not RSP safe
-  interrupt(1, BX_HARDWARE_EXCEPTION, 0, 0);
+  interrupt(1, BX_PRIVILEGED_SOFTWARE_INTERRUPT, 0, 0);
 
   BX_CPU_THIS_PTR speculative_rsp = 0;
 
@@ -92,6 +96,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INT1(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::INT3(bxInstruction_c *i)
 {
   // INT 3 is not IOPL sensitive
+
+#if BX_SUPPORT_VMX
+  VMexit_Event(i, BX_SOFTWARE_EXCEPTION, 3, 0, 0);
+#endif
 
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR show_flag |= Flag_softint;
@@ -147,6 +155,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INT_Ib(bxInstruction_c *i)
     }
   }
 
+#if BX_SUPPORT_VMX
+  VMexit_Event(i, BX_SOFTWARE_INTERRUPT, vector, 0, 0);
+#endif
+
 #ifdef SHOW_EXIT_STATUS
   if ((vector == 0x21) && (AH == 0x4c)) {
     BX_INFO(("INT 21/4C called AL=0x%02x, BX=0x%04x", (unsigned) AL, (unsigned) BX));
@@ -167,6 +179,10 @@ done:
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::INTO(bxInstruction_c *i)
 {
   if (get_OF()) {
+
+#if BX_SUPPORT_VMX
+    VMexit_Event(i, BX_SOFTWARE_EXCEPTION, 4, 0, 0);
+#endif
 
 #if BX_DEBUGGER
     BX_CPU_THIS_PTR show_flag |= Flag_softint;

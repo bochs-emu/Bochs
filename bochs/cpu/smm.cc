@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: smm.cc,v 1.54 2009-01-23 21:28:01 sshwarts Exp $
+// $Id: smm.cc,v 1.55 2009-01-31 10:43:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2006 Stanislav Shwartsman
@@ -71,6 +71,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RSM(bxInstruction_c *i)
     BX_INFO(("RSM not in System Management Mode !"));
     exception(BX_UD_EXCEPTION, 0, 0);
   }
+
+#if BX_SUPPORT_VMX
+  if (BX_CPU_THIS_PTR in_vmx_guest) {
+    BX_ERROR(("VMEXIT: RSM in VMX non-root operation"));
+    VMexit(i, VMX_VMEXIT_RSM, 0);
+  }
+#endif
 
   invalidate_prefetch_q();
 

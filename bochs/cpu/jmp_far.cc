@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: jmp_far.cc,v 1.17 2009-01-16 18:18:58 sshwarts Exp $
+// $Id: jmp_far.cc,v 1.18 2009-01-31 10:43:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005 Stanislav Shwartsman
@@ -117,7 +117,7 @@ BX_CPU_C::jump_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
           BX_DEBUG(("jump_protected: jump to 386 TSS"));
 
         // SWITCH_TASKS _without_ nesting to TSS
-        task_switch(&selector, &descriptor, BX_TASK_FROM_JUMP, dword1, dword2);
+        task_switch(i, &selector, &descriptor, BX_TASK_FROM_JUMP, dword1, dword2);
 
         // EIP must be in code seg limit, else #GP(0)
         if (EIP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled) {
@@ -127,7 +127,7 @@ BX_CPU_C::jump_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
         return;
 
       case BX_TASK_GATE:
-        jmp_task_gate(&descriptor);
+        jmp_task_gate(i, &descriptor);
         return;
 
       case BX_286_CALL_GATE:
@@ -142,8 +142,8 @@ BX_CPU_C::jump_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
   }
 }
 
-  void BX_CPP_AttrRegparmN(1)
-BX_CPU_C::jmp_task_gate(bx_descriptor_t *gate_descriptor)
+  void BX_CPP_AttrRegparmN(2)
+BX_CPU_C::jmp_task_gate(bxInstruction_c *i, bx_descriptor_t *gate_descriptor)
 {
   Bit16u          raw_tss_selector;
   bx_selector_t   tss_selector;
@@ -186,7 +186,7 @@ BX_CPU_C::jmp_task_gate(bx_descriptor_t *gate_descriptor)
   }
 
   // SWITCH_TASKS _without_ nesting to TSS
-  task_switch(&tss_selector, &tss_descriptor, BX_TASK_FROM_JUMP, dword1, dword2);
+  task_switch(i, &tss_selector, &tss_descriptor, BX_TASK_FROM_JUMP, dword1, dword2);
 
   // EIP must be within code segment limit, else #GP(0)
   if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b)

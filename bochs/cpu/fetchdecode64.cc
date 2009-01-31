@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.223 2009-01-27 20:29:05 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.224 2009-01-31 10:43:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -75,7 +75,7 @@ static const Bit8u BxOpcodeHasModrm64[512] = {
            1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, /* 0F 40 */
            1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, /* 0F 50 */
            1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, /* 0F 60 */
-           1,1,1,1,1,1,1,0,X,X,X,X,1,1,1,1, /* 0F 70 */
+           1,1,1,1,1,1,1,0,1,1,X,X,1,1,1,1, /* 0F 70 */
            0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, /* 0F 80 */
            1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, /* 0F 90 */
            0,0,0,1,1,1,X,X,0,0,0,1,1,1,1,1, /* 0F A0 */
@@ -570,8 +570,8 @@ static const BxOpcodeInfo_t BxOpcodeInfo64R[512*3] = {
   /* 0F 75 /wr */ { BxPrefixSSE, BX_IA_PCMPEQW_PqQq, BxOpcodeGroupSSE_0f75 },
   /* 0F 76 /wr */ { BxPrefixSSE, BX_IA_PCMPEQD_PqQq, BxOpcodeGroupSSE_0f76 },
   /* 0F 77 /wr */ { BxPrefixSSE, BX_IA_EMMS, BxOpcodeGroupSSE_ERR },
-  /* 0F 78 /wr */ { 0, BX_IA_ERROR },
-  /* 0F 79 /wr */ { 0, BX_IA_ERROR },
+  /* 0F 78 /wr */ { BxPrefixSSE, BX_IA_VMREAD_EqGq, BxOpcodeGroupSSE_ERR },
+  /* 0F 79 /wr */ { BxPrefixSSE, BX_IA_VMWRITE_GqEq, BxOpcodeGroupSSE_ERR },
   /* 0F 7A /wr */ { 0, BX_IA_ERROR },
   /* 0F 7B /wr */ { 0, BX_IA_ERROR },
   /* 0F 7C /wr */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0f7c },
@@ -1097,8 +1097,8 @@ static const BxOpcodeInfo_t BxOpcodeInfo64R[512*3] = {
   /* 0F 75 /dr */ { BxPrefixSSE, BX_IA_PCMPEQW_PqQq, BxOpcodeGroupSSE_0f75 },
   /* 0F 76 /dr */ { BxPrefixSSE, BX_IA_PCMPEQD_PqQq, BxOpcodeGroupSSE_0f76 },
   /* 0F 77 /dr */ { BxPrefixSSE, BX_IA_EMMS, BxOpcodeGroupSSE_ERR },
-  /* 0F 78 /dr */ { 0, BX_IA_ERROR },
-  /* 0F 79 /dr */ { 0, BX_IA_ERROR },
+  /* 0F 78 /dr */ { BxPrefixSSE, BX_IA_VMREAD_EqGq, BxOpcodeGroupSSE_ERR },
+  /* 0F 79 /dr */ { BxPrefixSSE, BX_IA_VMWRITE_GqEq, BxOpcodeGroupSSE_ERR },
   /* 0F 7A /dr */ { 0, BX_IA_ERROR },
   /* 0F 7B /dr */ { 0, BX_IA_ERROR },
   /* 0F 7C /dr */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0f7c },
@@ -1624,8 +1624,8 @@ static const BxOpcodeInfo_t BxOpcodeInfo64R[512*3] = {
   /* 0F 75 /qr */ { BxPrefixSSE, BX_IA_PCMPEQW_PqQq, BxOpcodeGroupSSE_0f75 },
   /* 0F 76 /qr */ { BxPrefixSSE, BX_IA_PCMPEQD_PqQq, BxOpcodeGroupSSE_0f76 },
   /* 0F 77 /qr */ { BxPrefixSSE, BX_IA_EMMS, BxOpcodeGroupSSE_ERR },
-  /* 0F 78 /qr */ { 0, BX_IA_ERROR },
-  /* 0F 79 /qr */ { 0, BX_IA_ERROR },
+  /* 0F 78 /qr */ { BxPrefixSSE, BX_IA_VMREAD_EqGq, BxOpcodeGroupSSE_ERR },
+  /* 0F 79 /qr */ { BxPrefixSSE, BX_IA_VMWRITE_GqEq, BxOpcodeGroupSSE_ERR },
   /* 0F 7A /qr */ { 0, BX_IA_ERROR },
   /* 0F 7B /qr */ { 0, BX_IA_ERROR },
   /* 0F 7C /qr */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0f7c },
@@ -2157,8 +2157,8 @@ static const BxOpcodeInfo_t BxOpcodeInfo64M[512*3] = {
   /* 0F 75 /wm */ { BxPrefixSSE, BX_IA_PCMPEQW_PqQq, BxOpcodeGroupSSE_0f75 },
   /* 0F 76 /wm */ { BxPrefixSSE, BX_IA_PCMPEQD_PqQq, BxOpcodeGroupSSE_0f76 },
   /* 0F 77 /wm */ { BxPrefixSSE, BX_IA_EMMS, BxOpcodeGroupSSE_ERR },
-  /* 0F 78 /wm */ { 0, BX_IA_ERROR },
-  /* 0F 79 /wm */ { 0, BX_IA_ERROR },
+  /* 0F 78 /wm */ { BxPrefixSSE, BX_IA_VMREAD_EqGq, BxOpcodeGroupSSE_ERR },
+  /* 0F 79 /wm */ { BxPrefixSSE, BX_IA_VMWRITE_GqEq, BxOpcodeGroupSSE_ERR },
   /* 0F 7A /wm */ { 0, BX_IA_ERROR },
   /* 0F 7B /wm */ { 0, BX_IA_ERROR },
   /* 0F 7C /wm */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0f7c },
@@ -2684,8 +2684,8 @@ static const BxOpcodeInfo_t BxOpcodeInfo64M[512*3] = {
   /* 0F 75 /dm */ { BxPrefixSSE, BX_IA_PCMPEQW_PqQq, BxOpcodeGroupSSE_0f75 },
   /* 0F 76 /dm */ { BxPrefixSSE, BX_IA_PCMPEQD_PqQq, BxOpcodeGroupSSE_0f76 },
   /* 0F 77 /dm */ { BxPrefixSSE, BX_IA_EMMS, BxOpcodeGroupSSE_ERR },
-  /* 0F 78 /dm */ { 0, BX_IA_ERROR },
-  /* 0F 79 /dm */ { 0, BX_IA_ERROR },
+  /* 0F 78 /dm */ { BxPrefixSSE, BX_IA_VMREAD_EqGq, BxOpcodeGroupSSE_ERR },
+  /* 0F 79 /dm */ { BxPrefixSSE, BX_IA_VMWRITE_GqEq, BxOpcodeGroupSSE_ERR },
   /* 0F 7A /dm */ { 0, BX_IA_ERROR },
   /* 0F 7B /dm */ { 0, BX_IA_ERROR },
   /* 0F 7C /dm */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0f7c },
@@ -3211,8 +3211,8 @@ static const BxOpcodeInfo_t BxOpcodeInfo64M[512*3] = {
   /* 0F 75 /qm */ { BxPrefixSSE, BX_IA_PCMPEQW_PqQq, BxOpcodeGroupSSE_0f75 },
   /* 0F 76 /qm */ { BxPrefixSSE, BX_IA_PCMPEQD_PqQq, BxOpcodeGroupSSE_0f76 },
   /* 0F 77 /qm */ { BxPrefixSSE, BX_IA_EMMS, BxOpcodeGroupSSE_ERR },
-  /* 0F 78 /qm */ { 0, BX_IA_ERROR },
-  /* 0F 79 /qm */ { 0, BX_IA_ERROR },
+  /* 0F 78 /qm */ { BxPrefixSSE, BX_IA_VMREAD_EqGq, BxOpcodeGroupSSE_ERR },
+  /* 0F 79 /qm */ { BxPrefixSSE, BX_IA_VMWRITE_GqEq, BxOpcodeGroupSSE_ERR },
   /* 0F 7A /qm */ { 0, BX_IA_ERROR },
   /* 0F 7B /qm */ { 0, BX_IA_ERROR },
   /* 0F 7C /qm */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0f7c },

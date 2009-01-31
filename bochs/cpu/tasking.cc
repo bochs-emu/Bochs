@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: tasking.cc,v 1.66 2009-01-20 21:28:43 sshwarts Exp $
+// $Id: tasking.cc,v 1.67 2009-01-31 10:43:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -111,7 +111,7 @@
   //       exactly the same behaviour as above.  There seems to
   //       be some misprints in the Intel docs.
 
-void BX_CPU_C::task_switch(bx_selector_t *tss_selector,
+void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
                  bx_descriptor_t *tss_descriptor, unsigned source,
                  Bit32u dword1, Bit32u dword2)
 {
@@ -174,6 +174,10 @@ void BX_CPU_C::task_switch(bx_selector_t *tss_selector,
     BX_ERROR(("task_switch(): new TSS limit < %d", new_TSS_max));
     exception(BX_TS_EXCEPTION, tss_selector->value & 0xfffc, 0);
   }
+
+#if BX_SUPPORT_VMX
+  VMexit_TaskSwitch(i, tss_selector->value, source);
+#endif
 
   // Gather info about old TSS
   if (BX_CPU_THIS_PTR tr.cache.type <= 3) {

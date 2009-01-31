@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: iret.cc,v 1.41 2009-01-16 18:18:58 sshwarts Exp $
+// $Id: iret.cc,v 1.42 2009-01-31 10:43:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005 Stanislav Shwartsman
@@ -94,7 +94,7 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
     }
 
     // switch tasks (without nesting) to TSS specified by back link selector
-    task_switch(&link_selector, &tss_descriptor,
+    task_switch(i, &link_selector, &tss_descriptor,
                 BX_TASK_FROM_IRET, dword1, dword2);
 
     // mark the task just abandoned as not busy

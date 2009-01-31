@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpuid.cc,v 1.77 2009-01-16 18:18:58 sshwarts Exp $
+// $Id: cpuid.cc,v 1.78 2009-01-31 10:43:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007 Stanislav Shwartsman
@@ -152,6 +152,9 @@ Bit32u BX_CPU_C::get_extended_cpuid_features(void)
 #if BX_SUPPORT_MONITOR_MWAIT
   features |= (1<<3);            // support MONITOR/MWAIT
 #endif
+#if BX_SUPPORT_VMX
+  features |= (1<<5);            // support VMX
+#endif
 #if (BX_SUPPORT_SSE >= 4) || (BX_SUPPORT_SSE >= 3 && BX_SUPPORT_SSE_EXTENSION > 0)
   features |= (1<<9);            // support SSE3E
 #endif
@@ -266,6 +269,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CPUID(bxInstruction_c *i)
   Bit32u function    = EAX;
 #if BX_SUPPORT_XSAVE
   Bit32u subfunction = ECX;
+#endif
+
+#if BX_SUPPORT_VMX
+  if (BX_CPU_THIS_PTR in_vmx_guest) {
+    BX_ERROR(("VMEXIT: CPUID in VMX non-root operation"));
+    VMexit(i, VMX_VMEXIT_CPUID, 0);
+  }
 #endif
 
   if(function < 0x80000000) {

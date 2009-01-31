@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.384 2009-01-31 10:04:25 sshwarts Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.385 2009-01-31 10:43:23 sshwarts Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -1599,6 +1599,23 @@ AC_ARG_ENABLE(vme,
       AC_DEFINE(BX_SUPPORT_VME, 0)
     fi
     ]
+  )
+
+AC_MSG_CHECKING(for VMX support)
+AC_ARG_ENABLE(vmx,
+  [  --enable-vmx                      virtualization extensions],
+  [if test "$enableval" = yes; then
+    AC_MSG_RESULT(yes)
+    AC_DEFINE(BX_SUPPORT_VMX, 1)
+   elif test "$enableval" = no; then
+    AC_MSG_RESULT(no)
+    AC_DEFINE(BX_SUPPORT_VMX, 0)
+   fi
+   ],
+  [
+    AC_MSG_RESULT(no)
+    AC_DEFINE(BX_SUPPORT_VMX, 0)
+  ]
   )
 
 support_mmx=1

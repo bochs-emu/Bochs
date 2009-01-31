@@ -4,13 +4,21 @@ Brief summary :
 
 - Added graphical Bochs debugger frontend for most of the supported platforms.
   - Thanks for Chourdakis Michael and Bruce Ewing.
+- Added VMX hardware emulation and configurable MSRs to the CPU model.
 - Added user plugin interface support.
-- Many fixes in Bochs internal debugger and CPU instrumentation.
 - Bugfixes for CPU emulation correctness.
+- Many fixes in Bochs internal debugger and CPU instrumentation.
 
 Detailed change log :
 
 - CPU and internal debugger
+  - Support for VMX hardware emulation in Bochs CPU, to enable configure with
+        --enable-vmx option
+    Nearly complete VMX implementation, with few exceptions:
+       - Dual-monitor treatment of SMIs and SMM not implemented yet
+       - NMI virtualization, APIC virtualization not implemented yet
+       - VMENTER to not-active state not supported yet
+       - No advanced features like Extended Page Tables or VPID
   - Support for configurable MSR registers emulation, to enable configure with
         --enable-configurable-msrs option
     Look for configuration example in .bochsrc and msrs.def
@@ -34,20 +42,20 @@ Detailed change log :
     name from Bochs command line (using new -log and -dbglog options)
   - Removed --enable-guest2host-tlb configure option. The option will be
     always enabled for any Bochs configuration.
-  - Added configure option to compile in GUI frontend for Bochs internal
-    debugger, to enable configure with --enable-debugger-gui option. The GUI
-    debugger frontend is enabled by default with Bochs internal debugger.
+  - Added configure option to compile in GUI frontend for Bochs debugger,
+    to enable configure with --enable-debugger-gui option.
+    The GUI debugger frontend is enabled by default with Bochs debugger.
 
 - BIOS
   - Added S3 (suspend to RAM) ACPI state to BIOS (patch by Gleb Natapov)
+  - Implemented MTRR support in the bios
+  - Bug fixes
 
 - I/O Devices
   - Added user plugin support
   - Hard drive / cdrom
     - PACKET-DMA feature now supported by all ATAPI commands
     - ATAPI command 0x1A added (based on the Qemu implementation)
-  - I/O APIC
-    - implemented I/O APIC device hardware reset
   - sb16
     - Added limited ALSA sound support on Linux (PCM/MIDI output)
     - FM synthesizer now usable with MIDI output (simple piano only)
@@ -55,6 +63,13 @@ Detailed change log :
       - Fixed MIDI output command
   - keyboard
     - added keyboard controller commands 0xCA and 0xCB
+  - USB
+    - initial USB OHCI support written by Ben Lunt (Win98 detects
+      the controller, connecting devices not implemented yet)
+  - VGA
+    - VBE video memory increased to 16 MB
+  - I/O APIC
+    - implemented I/O APIC device hardware reset
 
 - Misc
   - Updated Bochs TESTFORM to version 0.4
@@ -131,6 +146,7 @@ Detailed change log :
  [1874124] bx_Instruction_c::ilen() const  
 
 - these S.F. feature requests were closed/implemented
+ [1506385] Intel Core Duo VT features
  [1429015] Support for user plugins
  [1488136] debugger access to floppy controller  
  [1363136] Full debugger SMP and 64 bit support

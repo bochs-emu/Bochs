@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: msr.cc,v 1.11 2009-01-19 18:08:38 sshwarts Exp $
+// $Id: msr.cc,v 1.12 2009-01-31 10:43:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008 Stanislav Shwartsman
@@ -126,6 +126,39 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
       break;
 #endif
 
+#if BX_SUPPORT_VMX
+    case BX_MSR_VMX_BASIC:
+      val64 = VMX_MSR_VMX_BASIC;
+      break;
+    case BX_MSR_VMX_PINBASED_CTRLS:
+      val64 = VMX_MSR_VMX_PINBASED_CTRLS;
+      break;
+    case BX_MSR_VMX_PROCBASED_CTRLS:
+      val64 = VMX_MSR_VMX_PROCBASED_CTRLS;
+      break;
+    case BX_MSR_VMX_VMEXIT_CTRLS:
+      val64 = VMX_MSR_VMX_VMEXIT_CTRLS;
+      break;
+    case BX_MSR_VMX_VMENTRY_CTRLS:
+      val64 = VMX_MSR_VMX_VMENTRY_CTRLS;
+      break;
+    case BX_MSR_VMX_CR0_FIXED0:
+      val64 = VMX_MSR_CR0_FIXED0;
+      break;
+    case BX_MSR_VMX_CR0_FIXED1:
+      val64 = VMX_MSR_CR0_FIXED1;
+      break;
+    case BX_MSR_VMX_CR4_FIXED0:
+      val64 = VMX_MSR_CR4_FIXED0;
+      break;
+    case BX_MSR_VMX_CR4_FIXED1:
+      val64 = VMX_MSR_CR4_FIXED1;
+      break;
+    case BX_MSR_VMX_VMCS_ENUM:
+      val64 = VMX_MSR_VMCS_ENUM;
+      break;
+#endif
+
 #if BX_SUPPORT_X86_64
     case BX_MSR_EFER:
       val64 = BX_CPU_THIS_PTR efer.get32();
@@ -194,6 +227,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDMSR(bxInstruction_c *i)
 
   Bit32u index = ECX;
   Bit64u val64 = 0;
+
+#if BX_SUPPORT_VMX
+  VMexit_MSR(i, VMX_VMEXIT_RDMSR, index);
+#endif
 
   if (!rdmsr(index, &val64))
     exception(BX_GP_EXCEPTION, 0, 0);
@@ -383,6 +420,26 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
       break;
 #endif
 
+#if BX_SUPPORT_VMX
+    case BX_MSR_VMX_BASIC:
+    case BX_MSR_VMX_PINBASED_CTRLS:
+    case BX_MSR_VMX_PROCBASED_CTRLS:
+    case BX_MSR_VMX_VMEXIT_CTRLS:
+    case BX_MSR_VMX_VMENTRY_CTRLS:
+    case BX_MSR_VMX_MISC:
+    case BX_MSR_VMX_CR0_FIXED0:
+    case BX_MSR_VMX_CR0_FIXED1:
+    case BX_MSR_VMX_CR4_FIXED0:
+    case BX_MSR_VMX_CR4_FIXED1:
+    case BX_MSR_VMX_VMCS_ENUM:
+    case BX_MSR_VMX_TRUE_PINBASED_CTRLS:
+    case BX_MSR_VMX_TRUE_PROCBASED_CTRLS:
+    case BX_MSR_VMX_TRUE_VMEXIT_CTRLS:
+    case BX_MSR_VMX_TRUE_VMENTRY_CTRLS:
+      BX_ERROR(("WRMSR: VMX read only MSR"));
+      return 0;
+#endif
+
 #if BX_SUPPORT_X86_64
     case BX_MSR_EFER:
       if (val_64 & ~BX_EFER_SUPPORTED_BITS) {
@@ -403,7 +460,7 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
       break;
 
     case BX_MSR_STAR:
-      MSR_STAR  = val_64;
+      MSR_STAR = val_64;
       break;
 
     case BX_MSR_LSTAR:
@@ -486,6 +543,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRMSR(bxInstruction_c *i)
 
   Bit64u val_64 = ((Bit64u) EDX << 32) | EAX;
   Bit32u index = ECX;
+
+#if BX_SUPPORT_VMX
+  VMexit_MSR(i, VMX_VMEXIT_WRMSR, index);
+#endif
 
   if (! wrmsr(index, val_64))
     exception(BX_GP_EXCEPTION, 0, 0);

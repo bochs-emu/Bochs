@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.133 2009-01-23 18:19:57 sshwarts Exp $
+// $Id: exception.cc,v 1.134 2009-01-31 10:43:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -108,7 +108,7 @@ void BX_CPU_C::long_mode_int(Bit8u vector, unsigned is_INT, bx_bool push_error, 
   // else #GP(vector * 16 + 2 + EXT)
   if (is_INT && (gate_descriptor.dpl < CPL))
   {
-    BX_ERROR(("interrupt(long mode): is_INT && (dpl < CPL)"));
+    BX_ERROR(("interrupt(long mode): is_INT && gate.dpl < CPL"));
     exception(BX_GP_EXCEPTION, vector*16 + 2, 0);
   }
 
@@ -385,7 +385,7 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, unsigned is_INT, bx_bool push_er
     }
 
     // switch tasks with nesting to TSS
-    task_switch(&tss_selector, &tss_descriptor,
+    task_switch(0, &tss_selector, &tss_descriptor,
                     BX_TASK_FROM_INT, dword1, dword2);
 
     // if interrupt was caused by fault with error code
@@ -814,6 +814,10 @@ void BX_CPU_C::interrupt(Bit8u vector, unsigned type, bx_bool push_error, Bit16u
   BX_CPU_THIS_PTR save_eip = RIP;
   BX_CPU_THIS_PTR save_esp = RSP;
 
+#if BX_SUPPORT_VMX
+  BX_CPU_THIS_PTR in_event = 1;
+#endif
+
 #if BX_SUPPORT_X86_64
   if (long_mode()) {
     long_mode_int(vector, is_INT, push_error, error_code);
@@ -828,6 +832,10 @@ void BX_CPU_C::interrupt(Bit8u vector, unsigned type, bx_bool push_error, Bit16u
        protected_mode_int(vector, is_INT, push_error, error_code);
     }
   }
+
+#if BX_SUPPORT_VMX
+  BX_CPU_THIS_PTR in_event = 0;
+#endif
 }
 
 struct ExceptionInfo exceptions_info[BX_CPU_HANDLED_EXCEPTIONS+1] = {
@@ -895,9 +903,16 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code, unsigned unused)
     error_code = (error_code & 0xfffe) | BX_CPU_THIS_PTR EXT;
   }
 
+#if BX_SUPPORT_VMX
+  VMexit_Event(0, BX_HARDWARE_EXCEPTION, vector, error_code, push_error);
+#endif
+
   if (BX_CPU_THIS_PTR errorno > 0) {
     if (BX_CPU_THIS_PTR errorno > 2 || BX_CPU_THIS_PTR curr_exception == BX_ET_DOUBLE_FAULT) {
       debug(BX_CPU_THIS_PTR prev_rip); // print debug information to the log
+#if BX_SUPPORT_VMX
+      VMexit_TripleFault();
+#endif
 #if BX_DEBUGGER
       // trap into debugger (similar as done when PANIC occured)
       bx_debug_break();

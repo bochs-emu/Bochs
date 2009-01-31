@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.h,v 1.80 2009-01-27 20:29:05 sshwarts Exp $
+// $Id: fetchdecode.h,v 1.81 2009-01-31 10:43:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005 Stanislav Shwartsman
@@ -2256,6 +2256,13 @@ static const BxOpcodeInfo_t BxOpcodeGroupSSE_0f3adf[3] = {
   /* F3 */ { 0, BX_IA_ERROR }
 };
 
+static const BxOpcodeInfo_t BxOpcodeGroupSSE_G9VMX6[3] = {
+  /* 66 */ { 0, BX_IA_VMCLEAR_Mq },
+  /* F2 */ { 0, BX_IA_ERROR },
+  /* F3 */ { 0, BX_IA_VMXON_Mq }
+};
+
+
 /* ************************************************************************ */
 /* 3-byte opcode table (Table A-4, 0F 38) */
 
@@ -3298,10 +3305,10 @@ static const BxOpcodeInfo_t BxOpcodeInfoG6[8] = {
 
 static const BxOpcodeInfo_t BxOpcodeInfoG7R[64] = {
   /* 0F 01 C0 */ { 0, BX_IA_ERROR },
-  /* 0F 01 C1 */ { 0, BX_IA_ERROR },
-  /* 0F 01 C2 */ { 0, BX_IA_ERROR },
-  /* 0F 01 C3 */ { 0, BX_IA_ERROR },
-  /* 0F 01 C4 */ { 0, BX_IA_ERROR },
+  /* 0F 01 C1 */ { BxTraceEnd | BxPrefixSSE, BX_IA_VMCALL, BxOpcodeGroupSSE_ERR },
+  /* 0F 01 C2 */ { BxTraceEnd | BxPrefixSSE, BX_IA_VMLAUNCH, BxOpcodeGroupSSE_ERR },
+  /* 0F 01 C3 */ { BxTraceEnd | BxPrefixSSE, BX_IA_VMRESUME, BxOpcodeGroupSSE_ERR },
+  /* 0F 01 C4 */ { BxTraceEnd | BxPrefixSSE, BX_IA_VMXOFF, BxOpcodeGroupSSE_ERR },
   /* 0F 01 C5 */ { 0, BX_IA_ERROR },
   /* 0F 01 C6 */ { 0, BX_IA_ERROR },
   /* 0F 01 C7 */ { 0, BX_IA_ERROR },
@@ -3476,8 +3483,8 @@ static const BxOpcodeInfo_t BxOpcodeInfoG9M[8] = {
   /* 3 */ { 0, BX_IA_ERROR },
   /* 4 */ { 0, BX_IA_ERROR },
   /* 5 */ { 0, BX_IA_ERROR },
-  /* 6 */ { 0, BX_IA_ERROR },
-  /* 7 */ { 0, BX_IA_ERROR }
+  /* 6 */ { BxTraceEnd | BxPrefixSSE, BX_IA_VMPTRLD_Mq, BxOpcodeGroupSSE_G9VMX6 },
+  /* 7 */ { BxTraceEnd | BxPrefixSSE, BX_IA_VMPTRST_Mq, BxOpcodeGroupSSE_ERR }
 };
 
 #if BX_SUPPORT_X86_64
@@ -3488,8 +3495,8 @@ static const BxOpcodeInfo_t BxOpcodeInfo64G9qM[8] = {
   /* 3 */ { 0, BX_IA_ERROR },
   /* 4 */ { 0, BX_IA_ERROR },
   /* 5 */ { 0, BX_IA_ERROR },
-  /* 6 */ { 0, BX_IA_ERROR },
-  /* 7 */ { 0, BX_IA_ERROR }
+  /* 6 */ { BxTraceEnd | BxPrefixSSE, BX_IA_VMPTRLD_Mq, BxOpcodeGroupSSE_G9VMX6 },
+  /* 7 */ { BxTraceEnd | BxPrefixSSE, BX_IA_VMPTRST_Mq, BxOpcodeGroupSSE_ERR }
 };
 #endif
 

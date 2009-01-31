@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.166 2009-01-16 18:18:58 sshwarts Exp $
+// $Id: paging.cc,v 1.167 2009-01-31 10:43:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -620,6 +620,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INVLPG(bxInstruction_c* i)
   }
 #endif
 
+#if BX_SUPPORT_VMX
+  VMexit_INVLPG(i, laddr);
+#endif
+
   BX_INSTR_TLB_CNTRL(BX_CPU_ID, BX_INSTR_INVLPG, laddr);
   TLB_invlpg(laddr);
 #else
@@ -644,6 +648,11 @@ void BX_CPU_C::page_fault(unsigned fault, bx_address laddr, unsigned user, unsig
   if (BX_CPU_THIS_PTR efer.get_NXE() && (rw == BX_EXECUTE))
     error_code |= ERROR_CODE_ACCESS; // I/D = 1
 #endif
+
+#if BX_SUPPORT_VMX
+  VMexit_Event(0, BX_HARDWARE_EXCEPTION, BX_PF_EXCEPTION, error_code, 1, laddr); // before the CR2 was modified
+#endif
+
   BX_CPU_THIS_PTR cr2 = laddr;
 
 #if BX_SUPPORT_X86_64

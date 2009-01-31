@@ -69,6 +69,8 @@ OBJS = \
 	sse_string.o \
 	xsave.o \
 	aes.o \
+	vmx.o \
+	vmexit.o \
 	soft_int.o \
 	apic.o \
 	bcd.o \
@@ -164,7 +166,7 @@ dist-clean: clean
   ../instrument/stubs/instrument.h cpu.h crregs.h descriptor.h instr.h \
   lazy_flags.h icache.h apic.h ../cpu/i387.h ../fpu/softfloat.h \
   ../config.h ../fpu/tag_w.h ../fpu/status_w.h ../fpu/control_w.h \
-  ../cpu/xmm.h stack.h
+  ../cpu/xmm.h vmx.h stack.h
 access.o: access.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../config.h ../osdep.h ../bxversion.h ../gui/siminterface.h \
   ../memory/memory.h ../pc_system.h ../plugin.h ../extplugin.h \
@@ -172,7 +174,7 @@ access.o: access.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debu
   ../instrument/stubs/instrument.h cpu.h crregs.h descriptor.h instr.h \
   lazy_flags.h icache.h apic.h ../cpu/i387.h ../fpu/softfloat.h \
   ../config.h ../fpu/tag_w.h ../fpu/status_w.h ../fpu/control_w.h \
-  ../cpu/xmm.h stack.h
+  ../cpu/xmm.h vmx.h stack.h
 access32.o: access32.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
@@ -180,7 +182,7 @@ access32.o: access32.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h cpu.h crregs.h \
   descriptor.h instr.h lazy_flags.h icache.h apic.h ../cpu/i387.h \
   ../fpu/softfloat.h ../config.h ../fpu/tag_w.h ../fpu/status_w.h \
-  ../fpu/control_w.h ../cpu/xmm.h stack.h
+  ../fpu/control_w.h ../cpu/xmm.h vmx.h stack.h
 access64.o: access64.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
@@ -188,7 +190,7 @@ access64.o: access64.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h cpu.h crregs.h \
   descriptor.h instr.h lazy_flags.h icache.h apic.h ../cpu/i387.h \
   ../fpu/softfloat.h ../config.h ../fpu/tag_w.h ../fpu/status_w.h \
-  ../fpu/control_w.h ../cpu/xmm.h stack.h
+  ../fpu/control_w.h ../cpu/xmm.h vmx.h stack.h
 aes.o: aes.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../config.h ../osdep.h ../bxversion.h ../gui/siminterface.h \
   ../memory/memory.h ../pc_system.h ../plugin.h ../extplugin.h \
@@ -196,7 +198,7 @@ aes.o: aes.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../instrument/stubs/instrument.h cpu.h crregs.h descriptor.h instr.h \
   lazy_flags.h icache.h apic.h ../cpu/i387.h ../fpu/softfloat.h \
   ../config.h ../fpu/tag_w.h ../fpu/status_w.h ../fpu/control_w.h \
-  ../cpu/xmm.h stack.h
+  ../cpu/xmm.h vmx.h stack.h
 apic.o: apic.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../config.h ../osdep.h ../bxversion.h ../gui/siminterface.h \
   ../memory/memory.h ../pc_system.h ../plugin.h ../extplugin.h \
@@ -204,8 +206,8 @@ apic.o: apic.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h 
   ../instrument/stubs/instrument.h cpu.h crregs.h descriptor.h instr.h \
   lazy_flags.h icache.h apic.h ../cpu/i387.h ../fpu/softfloat.h \
   ../config.h ../fpu/tag_w.h ../fpu/status_w.h ../fpu/control_w.h \
-  ../cpu/xmm.h stack.h ../iodev/iodev.h ../bochs.h ../iodev/vga.h \
-  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h
+  ../cpu/xmm.h vmx.h stack.h ../iodev/iodev.h ../bochs.h ../iodev/vga.h \
+  ../iodev/ioapic.h ../cpu/apic.h
 arith16.o: arith16.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
@@ -213,7 +215,7 @@ arith16.o: arith16.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h cpu.h crregs.h \
   descriptor.h instr.h lazy_flags.h icache.h apic.h ../cpu/i387.h \
   ../fpu/softfloat.h ../config.h ../fpu/tag_w.h ../fpu/status_w.h \
-  ../fpu/control_w.h ../cpu/xmm.h stack.h
+  ../fpu/control_w.h ../cpu/xmm.h vmx.h stack.h
 arith32.o: arith32.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
@@ -221,7 +223,7 @@ arith32.o: arith32.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h cpu.h crregs.h \
   descriptor.h instr.h lazy_flags.h icache.h apic.h ../cpu/i387.h \
   ../fpu/softfloat.h ../config.h ../fpu/tag_w.h ../fpu/status_w.h \
-  ../fpu/control_w.h ../cpu/xmm.h stack.h
+  ../fpu/control_w.h ../cpu/xmm.h vmx.h stack.h
 arith64.o: arith64.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
@@ -229,7 +231,7 @@ arith64.o: arith64.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h cpu.h crregs.h \
   descriptor.h instr.h lazy_flags.h icache.h apic.h ../cpu/i387.h \
   ../fpu/softfloat.h ../config.h ../fpu/tag_w.h ../fpu/status_w.h \
-  ../fpu/control_w.h ../cpu/xmm.h stack.h
+  ../fpu/control_w.h ../cpu/xmm.h vmx.h stack.h
 arith8.o: arith8.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../config.h ../osdep.h ../bxversion.h ../gui/siminterface.h \
   ../memory/memory.h ../pc_system.h ../plugin.h ../extplugin.h \
@@ -237,7 +239,7 @@ arith8.o: arith8.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debu
   ../instrument/stubs/instrument.h cpu.h crregs.h descriptor.h instr.h \
   lazy_flags.h icache.h apic.h ../cpu/i387.h ../fpu/softfloat.h \
   ../config.h ../fpu/tag_w.h ../fpu/status_w.h ../fpu/control_w.h \
-  ../cpu/xmm.h stack.h
+  ../cpu/xmm.h vmx.h stack.h
 bcd.o: bcd.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../config.h ../osdep.h ../bxversion.h ../gui/siminterface.h \
   ../memory/memory.h ../pc_system.h ../plugin.h ../extplugin.h \
@@ -245,7 +247,7 @@ bcd.o: bcd.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../instrument/stubs/instrument.h cpu.h crregs.h descriptor.h instr.h \
   lazy_flags.h icache.h apic.h ../cpu/i387.h ../fpu/softfloat.h \
   ../config.h ../fpu/tag_w.h ../fpu/status_w.h ../fpu/control_w.h \
-  ../cpu/xmm.h stack.h
+  ../cpu/xmm.h vmx.h stack.h
 bit.o: bit.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../config.h ../osdep.h ../bxversion.h ../gui/siminterface.h \
   ../memory/memory.h ../pc_system.h ../plugin.h ../extplugin.h \
@@ -253,7 +255,7 @@ bit.o: bit.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../instrument/stubs/instrument.h cpu.h crregs.h descriptor.h instr.h \
   lazy_flags.h icache.h apic.h ../cpu/i387.h ../fpu/softfloat.h \
   ../config.h ../fpu/tag_w.h ../fpu/status_w.h ../fpu/control_w.h \
-  ../cpu/xmm.h stack.h
+  ../cpu/xmm.h vmx.h stack.h
 bit16.o: bit16.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../config.h ../osdep.h ../bxversion.h ../gui/siminterface.h \
   ../memory/memory.h ../pc_system.h ../plugin.h ../extplugin.h \
@@ -261,7 +263,7 @@ bit16.o: bit16.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.
   ../instrument/stubs/instrument.h cpu.h crregs.h descriptor.h instr.h \
   lazy_flags.h icache.h apic.h ../cpu/i387.h ../fpu/softfloat.h \
   ../config.h ../fpu/tag_w.h ../fpu/status_w.h ../fpu/control_w.h \
-  ../cpu/xmm.h stack.h
+  ../cpu/xmm.h vmx.h stack.h
 bit32.o: bit32.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../config.h ../osdep.h ../bxversion.h ../gui/siminterface.h \
   ../memory/memory.h ../pc_system.h ../plugin.h ../extplugin.h \
@@ -269,7 +271,7 @@ bit32.o: bit32.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.
   ../instrument/stubs/instrument.h cpu.h crregs.h descriptor.h instr.h \
   lazy_flags.h icache.h apic.h ../cpu/i387.h ../fpu/softfloat.h \
   ../config.h ../fpu/tag_w.h ../fpu/status_w.h ../fpu/control_w.h \
-  ../cpu/xmm.h stack.h
+  ../cpu/xmm.h vmx.h stack.h
 bit64.o: bit64.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../config.h ../osdep.h ../bxversion.h ../gui/siminterface.h \
   ../memory/memory.h ../pc_system.h ../plugin.h ../extplugin.h \
@@ -277,7 +279,7 @@ bit64.o: bit64.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.
   ../instrument/stubs/instrument.h cpu.h crregs.h descriptor.h instr.h \
   lazy_flags.h icache.h apic.h ../cpu/i387.h ../fpu/softfloat.h \
   ../config.h ../fpu/tag_w.h ../fpu/status_w.h ../fpu/control_w.h \
-  ../cpu/xmm.h stack.h
+  ../cpu/xmm.h vmx.h stack.h
 call_far.o: call_far.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
@@ -285,7 +287,7 @@ call_far.o: call_far.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h cpu.h crregs.h \
   descriptor.h instr.h lazy_flags.h icache.h apic.h ../cpu/i387.h \
   ../fpu/softfloat.h ../config.h ../fpu/tag_w.h ../fpu/status_w.h \
-  ../fpu/control_w.h ../cpu/xmm.h stack.h
+  ../fpu/control_w.h ../cpu/xmm.h vmx.h stack.h
 cpu.o: cpu.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../config.h ../osdep.h ../bxversion.h ../gui/siminterface.h \
   ../memory/memory.h ../pc_system.h ../plugin.h ../extplugin.h \
@@ -293,8 +295,8 @@ cpu.o: cpu.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../instrument/stubs/instrument.h cpu.h crregs.h descriptor.h instr.h \
   lazy_flags.h icache.h apic.h ../cpu/i387.h ../fpu/softfloat.h \
   ../config.h ../fpu/tag_w.h ../fpu/status_w.h ../fpu/control_w.h \
-  ../cpu/xmm.h stack.h ../iodev/iodev.h ../bochs.h ../iodev/vga.h \
-  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h
+  ../cpu/xmm.h vmx.h stack.h ../iodev/iodev.h ../bochs.h ../iodev/vga.h \
+  ../iodev/ioapic.h ../cpu/apic.h
 cpuid.o: cpuid.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../config.h ../osdep.h ../bxversion.h ../gui/siminterface.h \
   ../memory/memory.h ../pc_system.h ../plugin.h ../extplugin.h \
@@ -302,7 +304,7 @@ cpuid.o: cpuid.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.
   ../instrument/stubs/instrument.h cpu.h crregs.h descriptor.h instr.h \
   lazy_flags.h icache.h apic.h ../cpu/i387.h ../fpu/softfloat.h \
   ../config.h ../fpu/tag_w.h ../fpu/status_w.h ../fpu/control_w.h \
-  ../cpu/xmm.h stack.h
+  ../cpu/xmm.h vmx.h stack.h
 crc32.o: crc32.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../config.h ../osdep.h ../bxversion.h ../gui/siminterface.h \
   ../memory/memory.h ../pc_system.h ../plugin.h ../extplugin.h \
@@ -310,7 +312,7 @@ crc32.o: crc32.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.
   ../instrument/stubs/instrument.h cpu.h crregs.h descriptor.h instr.h \
   lazy_flags.h icache.h apic.h ../cpu/i387.h ../fpu/softfloat.h \
   ../config.h ../fpu/tag_w.h ../fpu/status_w.h ../fpu/control_w.h \
-  ../cpu/xmm.h stack.h
+  ../cpu/xmm.h vmx.h stack.h
 ctrl_xfer16.o: ctrl_xfer16.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
@@ -318,7 +320,7 @@ ctrl_xfer16.o: ctrl_xfer16.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h cpu.h crregs.h \
   descriptor.h instr.h lazy_flags.h icache.h apic.h ../cpu/i387.h \
   ../fpu/softfloat.h ../config.h ../fpu/tag_w.h ../fpu/status_w.h \
-  ../fpu/control_w.h ../cpu/xmm.h stack.h
+  ../fpu/control_w.h ../cpu/xmm.h vmx.h stack.h
 ctrl_xfer32.o: ctrl_xfer32.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
@@ -326,7 +328,7 @@ ctrl_xfer32.o: ctrl_xfer32.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h cpu.h crregs.h \
   descriptor.h instr.h lazy_flags.h icache.h apic.h ../cpu/i387.h \
   ../fpu/softfloat.h ../config.h ../fpu/tag_w.h ../fpu/status_w.h \
-  ../fpu/control_w.h ../cpu/xmm.h stack.h
+  ../fpu/control_w.h ../cpu/xmm.h vmx.h stack.h
 ctrl_xfer64.o: ctrl_xfer64.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
@@ -334,7 +336,7 @@ ctrl_xfer64.o: ctrl_xfer64.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h cpu.h crregs.h \
   descriptor.h instr.h lazy_flags.h icache.h apic.h ../cpu/i387.h \
   ../fpu/softfloat.h ../config.h ../fpu/tag_w.h ../fpu/status_w.h \
-  ../fpu/control_w.h ../cpu/xmm.h stack.h
+  ../fpu/control_w.h ../cpu/xmm.h vmx.h stack.h
 ctrl_xfer_pro.o: ctrl_xfer_pro.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
@@ -342,7 +344,7 @@ ctrl_xfer_pro.o: ctrl_xfer_pro.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h cpu.h crregs.h \
   descriptor.h instr.h lazy_flags.h icache.h apic.h ../cpu/i387.h \
   ../fpu/softfloat.h ../config.h ../fpu/tag_w.h ../fpu/status_w.h \
-  ../fpu/control_w.h ../cpu/xmm.h stack.h
+  ../fpu/control_w.h ../cpu/xmm.h vmx.h stack.h
 data_xfer16.o: data_xfer16.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
@@ -350,7 +352,7 @@ data_xfer16.o: data_xfer16.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h cpu.h crregs.h \
   descriptor.h instr.h lazy_flags.h icache.h apic.h ../cpu/i387.h \
   ../fpu/softfloat.h ../config.h ../fpu/tag_w.h ../fpu/status_w.h \
-  ../fpu/control_w.h ../cpu/xmm.h stack.h
+  ../fpu/control_w.h ../cpu/xmm.h vmx.h stack.h
 data_xfer32.o: data_xfer32.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
@@ -358,7 +360,7 @@ data_xfer32.o: data_xfer32.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h cpu.h crregs.h \
   descriptor.h instr.h lazy_flags.h icache.h apic.h ../cpu/i387.h \
   ../fpu/softfloat.h ../config.h ../fpu/tag_w.h ../fpu/status_w.h \
-  ../fpu/control_w.h ../cpu/xmm.h stack.h
+  ../fpu/control_w.h ../cpu/xmm.h vmx.h stack.h
 data_xfer64.o: data_xfer64.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
@@ -366,7 +368,7 @@ data_xfer64.o: data_xfer64.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h cpu.h crregs.h \
   descriptor.h instr.h lazy_flags.h icache.h apic.h ../cpu/i387.h \
   ../fpu/softfloat.h ../config.h ../fpu/tag_w.h ../fpu/status_w.h \
-  ../fpu/control_w.h ../cpu/xmm.h stack.h
+  ../fpu/control_w.h ../cpu/xmm.h vmx.h stack.h
 data_xfer8.o: data_xfer8.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
@@ -374,7 +376,7 @@ data_xfer8.o: data_xfer8.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h cpu.h crregs.h \
   descriptor.h instr.h lazy_flags.h icache.h apic.h ../cpu/i387.h \
   ../fpu/softfloat.h ../config.h ../fpu/tag_w.h ../fpu/status_w.h \
-  ../fpu/control_w.h ../cpu/xmm.h stack.h
+  ../fpu/control_w.h ../cpu/xmm.h vmx.h stack.h
 debugstuff.o: debugstuff.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
@@ -382,7 +384,7 @@ debugstuff.o: debugstuff.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h cpu.h crregs.h \
   descriptor.h instr.h lazy_flags.h icache.h apic.h ../cpu/i387.h \
   ../fpu/softfloat.h ../config.h ../fpu/tag_w.h ../fpu/status_w.h \
-  ../fpu/control_w.h ../cpu/xmm.h stack.h ../disasm/disasm.h
+  ../fpu/control_w.h ../cpu/xmm.h vmx.h stack.h ../disasm/disasm.h
 exception.o: exception.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
@@ -390,8 +392,8 @@ exception.o: exception.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h cpu.h crregs.h \
   descriptor.h instr.h lazy_flags.h icache.h apic.h ../cpu/i387.h \
   ../fpu/softfloat.h ../config.h ../fpu/tag_w.h ../fpu/status_w.h \
-  ../fpu/control_w.h ../cpu/xmm.h stack.h ../iodev/iodev.h ../bochs.h \
-  ../iodev/vga.h ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h
+  ../fpu/control_w.h ../cpu/xmm.h vmx.h stack.h ../iodev/iodev.h \
+  ../bochs.h ../iodev/vga.h ../iodev/ioapic.h ../cpu/apic.h
 fetchdecode.o: fetchdecode.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
@@ -399,7 +401,8 @@ fetchdecode.o: fetchdecode.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h cpu.h crregs.h \
   descriptor.h instr.h lazy_flags.h icache.h apic.h ../cpu/i387.h \
   ../fpu/softfloat.h ../config.h ../fpu/tag_w.h ../fpu/status_w.h \
-  ../fpu/control_w.h ../cpu/xmm.h stack.h fetchdecode.h ia_opcodes.h
+  ../fpu/control_w.h ../cpu/xmm.h vmx.h stack.h fetchdecode.h \
+  ia_opcodes.h
 fetchdecode64.o: fetchdecode64.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
@@ -407,7 +410,8 @@ fetchdecode64.o: fetchdecode64.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h cpu.h crregs.h \
   descriptor.h instr.h lazy_flags.h icache.h apic.h ../cpu/i387.h \
   ../fpu/softfloat.h ../config.h ../fpu/tag_w.h ../fpu/status_w.h \
-  ../fpu/control_w.h ../cpu/xmm.h stack.h fetchdecode.h ia_opcodes.h
+  ../fpu/control_w.h ../cpu/xmm.h vmx.h stack.h fetchdecode.h \
+  ia_opcodes.h
 flag_ctrl.o: flag_ctrl.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
@@ -415,7 +419,7 @@ flag_ctrl.o: flag_ctrl.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h cpu.h crregs.h \
   descriptor.h instr.h lazy_flags.h icache.h apic.h ../cpu/i387.h \
   ../fpu/softfloat.h ../config.h ../fpu/tag_w.h ../fpu/status_w.h \
-  ../fpu/control_w.h ../cpu/xmm.h stack.h
+  ../fpu/control_w.h ../cpu/xmm.h vmx.h stack.h
 flag_ctrl_pro.o: flag_ctrl_pro.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
@@ -423,7 +427,7 @@ flag_ctrl_pro.o: flag_ctrl_pro.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h cpu.h crregs.h \
   descriptor.h instr.h lazy_flags.h icache.h apic.h ../cpu/i387.h \
   ../fpu/softfloat.h ../config.h ../fpu/tag_w.h ../fpu/status_w.h \
-  ../fpu/control_w.h ../cpu/xmm.h stack.h
+  ../fpu/control_w.h ../cpu/xmm.h vmx.h stack.h
 fpu_emu.o: fpu_emu.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
@@ -431,7 +435,7 @@ fpu_emu.o: fpu_emu.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h cpu.h crregs.h \
   descriptor.h instr.h lazy_flags.h icache.h apic.h ../cpu/i387.h \
   ../fpu/softfloat.h ../config.h ../fpu/tag_w.h ../fpu/status_w.h \
-  ../fpu/control_w.h ../cpu/xmm.h stack.h
+  ../fpu/control_w.h ../cpu/xmm.h vmx.h stack.h
 icache.o: icache.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../config.h ../osdep.h ../bxversion.h ../gui/siminterface.h \
   ../memory/memory.h ../pc_system.h ../plugin.h ../extplugin.h \
@@ -439,7 +443,7 @@ icache.o: icache.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debu
   ../instrument/stubs/instrument.h cpu.h crregs.h descriptor.h instr.h \
   lazy_flags.h icache.h apic.h ../cpu/i387.h ../fpu/softfloat.h \
   ../config.h ../fpu/tag_w.h ../fpu/status_w.h ../fpu/control_w.h \
-  ../cpu/xmm.h stack.h
+  ../cpu/xmm.h vmx.h stack.h
 init.o: init.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../config.h ../osdep.h ../bxversion.h ../gui/siminterface.h \
   ../memory/memory.h ../pc_system.h ../plugin.h ../extplugin.h \
@@ -447,7 +451,7 @@ init.o: init.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h 
   ../instrument/stubs/instrument.h cpu.h crregs.h descriptor.h instr.h \
   lazy_flags.h icache.h apic.h ../cpu/i387.h ../fpu/softfloat.h \
   ../config.h ../fpu/tag_w.h ../fpu/status_w.h ../fpu/control_w.h \
-  ../cpu/xmm.h stack.h
+  ../cpu/xmm.h vmx.h stack.h
 io.o: io.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../config.h ../osdep.h ../bxversion.h ../gui/siminterface.h \
   ../memory/memory.h ../pc_system.h ../plugin.h ../extplugin.h \
@@ -455,8 +459,8 @@ io.o: io.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../instrument/stubs/instrument.h cpu.h crregs.h descriptor.h instr.h \
   lazy_flags.h icache.h apic.h ../cpu/i387.h ../fpu/softfloat.h \
   ../config.h ../fpu/tag_w.h ../fpu/status_w.h ../fpu/control_w.h \
-  ../cpu/xmm.h stack.h ../iodev/iodev.h ../bochs.h ../iodev/vga.h \
-  ../iodev/svga_cirrus.h ../iodev/ioapic.h ../cpu/apic.h
+  ../cpu/xmm.h vmx.h stack.h ../iodev/iodev.h ../bochs.h ../iodev/vga.h \
+  ../iodev/ioapic.h ../cpu/apic.h
 iret.o: iret.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../config.h ../osdep.h ../bxversion.h ../gui/siminterface.h \
   ../memory/memory.h ../pc_system.h ../plugin.h ../extplugin.h \
@@ -464,7 +468,7 @@ iret.o: iret.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h 
   ../instrument/stubs/instrument.h cpu.h crregs.h descriptor.h instr.h \
   lazy_flags.h icache.h apic.h ../cpu/i387.h ../fpu/softfloat.h \
   ../config.h ../fpu/tag_w.h ../fpu/status_w.h ../fpu/control_w.h \
-  ../cpu/xmm.h stack.h
+  ../cpu/xmm.h vmx.h stack.h
 jmp_far.o: jmp_far.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
@@ -472,7 +476,7 @@ jmp_far.o: jmp_far.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h cpu.h crregs.h \
   descriptor.h instr.h lazy_flags.h icache.h apic.h ../cpu/i387.h \
   ../fpu/softfloat.h ../config.h ../fpu/tag_w.h ../fpu/status_w.h \
-  ../fpu/control_w.h ../cpu/xmm.h stack.h
+  ../fpu/control_w.h ../cpu/xmm.h vmx.h stack.h
 lazy_flags.o: lazy_flags.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
@@ -480,7 +484,7 @@ lazy_flags.o: lazy_flags.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h cpu.h crregs.h \
   descriptor.h instr.h lazy_flags.h icache.h apic.h ../cpu/i387.h \
   ../fpu/softfloat.h ../config.h ../fpu/tag_w.h ../fpu/status_w.h \
-  ../fpu/control_w.h ../cpu/xmm.h stack.h
+  ../fpu/control_w.h ../cpu/xmm.h vmx.h stack.h
 load32.o: load32.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../config.h ../osdep.h ../bxversion.h ../gui/siminterface.h \
   ../memory/memory.h ../pc_system.h ../plugin.h ../extplugin.h \
@@ -488,7 +492,7 @@ load32.o: load32.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debu
   ../instrument/stubs/instrument.h cpu.h crregs.h descriptor.h instr.h \
   lazy_flags.h icache.h apic.h ../cpu/i387.h ../fpu/softfloat.h \
   ../config.h ../fpu/tag_w.h ../fpu/status_w.h ../fpu/control_w.h \
-  ../cpu/xmm.h stack.h
+  ../cpu/xmm.h vmx.h stack.h
 logical16.o: logical16.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
@@ -496,7 +500,7 @@ logical16.o: logical16.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h cpu.h crregs.h \
   descriptor.h instr.h lazy_flags.h icache.h apic.h ../cpu/i387.h \
   ../fpu/softfloat.h ../config.h ../fpu/tag_w.h ../fpu/status_w.h \
-  ../fpu/control_w.h ../cpu/xmm.h stack.h
+  ../fpu/control_w.h ../cpu/xmm.h vmx.h stack.h
 logical32.o: logical32.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
@@ -504,7 +508,7 @@ logical32.o: logical32.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h cpu.h crregs.h \
   descriptor.h instr.h lazy_flags.h icache.h apic.h ../cpu/i387.h \
   ../fpu/softfloat.h ../config.h ../fpu/tag_w.h ../fpu/status_w.h \
-  ../fpu/control_w.h ../cpu/xmm.h stack.h
+  ../fpu/control_w.h ../cpu/xmm.h vmx.h stack.h
 logical64.o: logical64.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
@@ -512,7 +516,7 @@ logical64.o: logical64.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h cpu.h crregs.h \
   descriptor.h instr.h lazy_flags.h icache.h apic.h ../cpu/i387.h \
   ../fpu/softfloat.h ../config.h ../fpu/tag_w.h ../fpu/status_w.h \
-  ../fpu/control_w.h ../cpu/xmm.h stack.h
+  ../fpu/control_w.h ../cpu/xmm.h vmx.h stack.h
 logical8.o: logical8.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
@@ -520,7 +524,7 @@ logical8.o: logical8.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h cpu.h crregs.h \
   descriptor.h instr.h lazy_flags.h icache.h apic.h ../cpu/i387.h \
   ../fpu/softfloat.h ../config.h ../fpu/tag_w.h ../fpu/status_w.h \
-  ../fpu/control_w.h ../cpu/xmm.h stack.h
+  ../fpu/control_w.h ../cpu/xmm.h vmx.h stack.h
 mmx.o: mmx.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../config.h ../osdep.h ../bxversion.h ../gui/siminterface.h \
   ../memory/memory.h ../pc_system.h ../plugin.h ../extplugin.h \
@@ -528,7 +532,7 @@ mmx.o: mmx.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../instrument/stubs/instrument.h cpu.h crregs.h descriptor.h instr.h \
   lazy_flags.h icache.h apic.h ../cpu/i387.h ../fpu/softfloat.h \
   ../config.h ../fpu/tag_w.h ../fpu/status_w.h ../fpu/control_w.h \
-  ../cpu/xmm.h stack.h
+  ../cpu/xmm.h vmx.h stack.h
 msr.o: msr.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../config.h ../osdep.h ../bxversion.h ../gui/siminterface.h \
   ../memory/memory.h ../pc_system.h ../plugin.h ../extplugin.h \
@@ -536,7 +540,7 @@ msr.o: msr.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../instrument/stubs/instrument.h cpu.h crregs.h descriptor.h instr.h \
   lazy_flags.h icache.h apic.h ../cpu/i387.h ../fpu/softfloat.h \
   ../config.h ../fpu/tag_w.h ../fpu/status_w.h ../fpu/control_w.h \
-  ../cpu/xmm.h stack.h
+  ../cpu/xmm.h vmx.h stack.h
 mult16.o: mult16.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../config.h ../osdep.h ../bxversion.h ../gui/siminterface.h \
   ../memory/memory.h ../pc_system.h ../plugin.h ../extplugin.h \
@@ -544,7 +548,7 @@ mult16.o: mult16.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debu
   ../instrument/stubs/instrument.h cpu.h crregs.h descriptor.h instr.h \
   lazy_flags.h icache.h apic.h ../cpu/i387.h ../fpu/softfloat.h \
   ../config.h ../fpu/tag_w.h ../fpu/status_w.h ../fpu/control_w.h \
-  ../cpu/xmm.h stack.h
+  ../cpu/xmm.h vmx.h stack.h
 mult32.o: mult32.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../config.h ../osdep.h ../bxversion.h ../gui/siminterface.h \
   ../memory/memory.h ../pc_system.h ../plugin.h ../extplugin.h \
@@ -552,7 +556,7 @@ mult32.o: mult32.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debu
   ../instrument/stubs/instrument.h cpu.h crregs.h descriptor.h instr.h \
   lazy_flags.h icache.h apic.h ../cpu/i387.h ../fpu/softfloat.h \
   ../config.h ../fpu/tag_w.h ../fpu/status_w.h ../fpu/control_w.h \
-  ../cpu/xmm.h stack.h
+  ../cpu/xmm.h vmx.h stack.h
 mult64.o: mult64.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../config.h ../osdep.h ../bxversion.h ../gui/siminterface.h \
   ../memory/memory.h ../pc_system.h ../plugin.h ../extplugin.h \
@@ -560,7 +564,7 @@ mult64.o: mult64.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debu
   ../instrument/stubs/instrument.h cpu.h crregs.h descriptor.h instr.h \
   lazy_flags.h icache.h apic.h ../cpu/i387.h ../fpu/softfloat.h \
   ../config.h ../fpu/tag_w.h ../fpu/status_w.h ../fpu/control_w.h \
-  ../cpu/xmm.h stack.h
+  ../cpu/xmm.h vmx.h stack.h
 mult8.o: mult8.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../config.h ../osdep.h ../bxversion.h ../gui/siminterface.h \
   ../memory/memory.h ../pc_system.h ../plugin.h ../extplugin.h \
@@ -568,7 +572,7 @@ mult8.o: mult8.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.
   ../instrument/stubs/instrument.h cpu.h crregs.h descriptor.h instr.h \
   lazy_flags.h icache.h apic.h ../cpu/i387.h ../fpu/softfloat.h \
   ../config.h ../fpu/tag_w.h ../fpu/status_w.h ../fpu/control_w.h \
-  ../cpu/xmm.h stack.h
+  ../cpu/xmm.h vmx.h stack.h
 paging.o: paging.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../config.h ../osdep.h ../bxversion.h ../gui/siminterface.h \
   ../memory/memory.h ../pc_system.h ../plugin.h ../extplugin.h \
@@ -576,7 +580,7 @@ paging.o: paging.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debu
   ../instrument/stubs/instrument.h cpu.h crregs.h descriptor.h instr.h \
   lazy_flags.h icache.h apic.h ../cpu/i387.h ../fpu/softfloat.h \
   ../config.h ../fpu/tag_w.h ../fpu/status_w.h ../fpu/control_w.h \
-  ../cpu/xmm.h stack.h
+  ../cpu/xmm.h vmx.h stack.h
 proc_ctrl.o: proc_ctrl.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
@@ -584,7 +588,7 @@ proc_ctrl.o: proc_ctrl.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h cpu.h crregs.h \
   descriptor.h instr.h lazy_flags.h icache.h apic.h ../cpu/i387.h \
   ../fpu/softfloat.h ../config.h ../fpu/tag_w.h ../fpu/status_w.h \
-  ../fpu/control_w.h ../cpu/xmm.h stack.h
+  ../fpu/control_w.h ../cpu/xmm.h vmx.h stack.h
 protect_ctrl.o: protect_ctrl.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
@@ -592,7 +596,7 @@ protect_ctrl.o: protect_ctrl.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h cpu.h crregs.h \
   descriptor.h instr.h lazy_flags.h icache.h apic.h ../cpu/i387.h \
   ../fpu/softfloat.h ../config.h ../fpu/tag_w.h ../fpu/status_w.h \
-  ../fpu/control_w.h ../cpu/xmm.h stack.h
+  ../fpu/control_w.h ../cpu/xmm.h vmx.h stack.h
 resolver.o: resolver.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
@@ -600,7 +604,7 @@ resolver.o: resolver.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h cpu.h crregs.h \
   descriptor.h instr.h lazy_flags.h icache.h apic.h ../cpu/i387.h \
   ../fpu/softfloat.h ../config.h ../fpu/tag_w.h ../fpu/status_w.h \
-  ../fpu/control_w.h ../cpu/xmm.h stack.h
+  ../fpu/control_w.h ../cpu/xmm.h vmx.h stack.h
 ret_far.o: ret_far.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
@@ -608,7 +612,7 @@ ret_far.o: ret_far.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h cpu.h crregs.h \
   descriptor.h instr.h lazy_flags.h icache.h apic.h ../cpu/i387.h \
   ../fpu/softfloat.h ../config.h ../fpu/tag_w.h ../fpu/status_w.h \
-  ../fpu/control_w.h ../cpu/xmm.h stack.h
+  ../fpu/control_w.h ../cpu/xmm.h vmx.h stack.h
 segment_ctrl.o: segment_ctrl.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
@@ -616,7 +620,7 @@ segment_ctrl.o: segment_ctrl.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h cpu.h crregs.h \
   descriptor.h instr.h lazy_flags.h icache.h apic.h ../cpu/i387.h \
   ../fpu/softfloat.h ../config.h ../fpu/tag_w.h ../fpu/status_w.h \
-  ../fpu/control_w.h ../cpu/xmm.h stack.h
+  ../fpu/control_w.h ../cpu/xmm.h vmx.h stack.h
 segment_ctrl_pro.o: segment_ctrl_pro.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
@@ -624,7 +628,7 @@ segment_ctrl_pro.o: segment_ctrl_pro.@CPP_SUFFIX@ ../bochs.h ../config.h ../osde
   ../gui/keymap.h ../instrument/stubs/instrument.h cpu.h crregs.h \
   descriptor.h instr.h lazy_flags.h icache.h apic.h ../cpu/i387.h \
   ../fpu/softfloat.h ../config.h ../fpu/tag_w.h ../fpu/status_w.h \
-  ../fpu/control_w.h ../cpu/xmm.h stack.h
+  ../fpu/control_w.h ../cpu/xmm.h vmx.h stack.h
 shift16.o: shift16.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
@@ -632,7 +636,7 @@ shift16.o: shift16.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h cpu.h crregs.h \
   descriptor.h instr.h lazy_flags.h icache.h apic.h ../cpu/i387.h \
   ../fpu/softfloat.h ../config.h ../fpu/tag_w.h ../fpu/status_w.h \
-  ../fpu/control_w.h ../cpu/xmm.h stack.h
+  ../fpu/control_w.h ../cpu/xmm.h vmx.h stack.h
 shift32.o: shift32.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
@@ -640,7 +644,7 @@ shift32.o: shift32.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h cpu.h crregs.h \
   descriptor.h instr.h lazy_flags.h icache.h apic.h ../cpu/i387.h \
   ../fpu/softfloat.h ../config.h ../fpu/tag_w.h ../fpu/status_w.h \
-  ../fpu/control_w.h ../cpu/xmm.h stack.h
+  ../fpu/control_w.h ../cpu/xmm.h vmx.h stack.h
 shift64.o: shift64.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
@@ -648,7 +652,7 @@ shift64.o: shift64.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h cpu.h crregs.h \
   descriptor.h instr.h lazy_flags.h icache.h apic.h ../cpu/i387.h \
   ../fpu/softfloat.h ../config.h ../fpu/tag_w.h ../fpu/status_w.h \
-  ../fpu/control_w.h ../cpu/xmm.h stack.h
+  ../fpu/control_w.h ../cpu/xmm.h vmx.h stack.h
 shift8.o: shift8.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../config.h ../osdep.h ../bxversion.h ../gui/siminterface.h \
   ../memory/memory.h ../pc_system.h ../plugin.h ../extplugin.h \
@@ -656,7 +660,7 @@ shift8.o: shift8.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debu
   ../instrument/stubs/instrument.h cpu.h crregs.h descriptor.h instr.h \
   lazy_flags.h icache.h apic.h ../cpu/i387.h ../fpu/softfloat.h \
   ../config.h ../fpu/tag_w.h ../fpu/status_w.h ../fpu/control_w.h \
-  ../cpu/xmm.h stack.h
+  ../cpu/xmm.h vmx.h stack.h
 smm.o: smm.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../config.h ../osdep.h ../bxversion.h ../gui/siminterface.h \
   ../memory/memory.h ../pc_system.h ../plugin.h ../extplugin.h \
@@ -664,7 +668,7 @@ smm.o: smm.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../instrument/stubs/instrument.h cpu.h crregs.h descriptor.h instr.h \
   lazy_flags.h icache.h apic.h ../cpu/i387.h ../fpu/softfloat.h \
   ../config.h ../fpu/tag_w.h ../fpu/status_w.h ../fpu/control_w.h \
-  ../cpu/xmm.h stack.h smm.h
+  ../cpu/xmm.h vmx.h stack.h smm.h
 soft_int.o: soft_int.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
@@ -672,7 +676,7 @@ soft_int.o: soft_int.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h cpu.h crregs.h \
   descriptor.h instr.h lazy_flags.h icache.h apic.h ../cpu/i387.h \
   ../fpu/softfloat.h ../config.h ../fpu/tag_w.h ../fpu/status_w.h \
-  ../fpu/control_w.h ../cpu/xmm.h stack.h
+  ../fpu/control_w.h ../cpu/xmm.h vmx.h stack.h
 sse.o: sse.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../config.h ../osdep.h ../bxversion.h ../gui/siminterface.h \
   ../memory/memory.h ../pc_system.h ../plugin.h ../extplugin.h \
@@ -680,7 +684,7 @@ sse.o: sse.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../instrument/stubs/instrument.h cpu.h crregs.h descriptor.h instr.h \
   lazy_flags.h icache.h apic.h ../cpu/i387.h ../fpu/softfloat.h \
   ../config.h ../fpu/tag_w.h ../fpu/status_w.h ../fpu/control_w.h \
-  ../cpu/xmm.h stack.h
+  ../cpu/xmm.h vmx.h stack.h
 sse_move.o: sse_move.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
@@ -688,7 +692,7 @@ sse_move.o: sse_move.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h cpu.h crregs.h \
   descriptor.h instr.h lazy_flags.h icache.h apic.h ../cpu/i387.h \
   ../fpu/softfloat.h ../config.h ../fpu/tag_w.h ../fpu/status_w.h \
-  ../fpu/control_w.h ../cpu/xmm.h stack.h
+  ../fpu/control_w.h ../cpu/xmm.h vmx.h stack.h
 sse_pfp.o: sse_pfp.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
@@ -696,8 +700,8 @@ sse_pfp.o: sse_pfp.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h cpu.h crregs.h \
   descriptor.h instr.h lazy_flags.h icache.h apic.h ../cpu/i387.h \
   ../fpu/softfloat.h ../config.h ../fpu/tag_w.h ../fpu/status_w.h \
-  ../fpu/control_w.h ../cpu/xmm.h stack.h ../fpu/softfloat-specialize.h \
-  ../fpu/softfloat.h
+  ../fpu/control_w.h ../cpu/xmm.h vmx.h stack.h \
+  ../fpu/softfloat-specialize.h ../fpu/softfloat.h
 sse_rcp.o: sse_rcp.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
@@ -705,8 +709,8 @@ sse_rcp.o: sse_rcp.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h cpu.h crregs.h \
   descriptor.h instr.h lazy_flags.h icache.h apic.h ../cpu/i387.h \
   ../fpu/softfloat.h ../config.h ../fpu/tag_w.h ../fpu/status_w.h \
-  ../fpu/control_w.h ../cpu/xmm.h stack.h ../fpu/softfloat-specialize.h \
-  ../fpu/softfloat.h
+  ../fpu/control_w.h ../cpu/xmm.h vmx.h stack.h \
+  ../fpu/softfloat-specialize.h ../fpu/softfloat.h
 sse_string.o: sse_string.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
@@ -714,7 +718,7 @@ sse_string.o: sse_string.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h cpu.h crregs.h \
   descriptor.h instr.h lazy_flags.h icache.h apic.h ../cpu/i387.h \
   ../fpu/softfloat.h ../config.h ../fpu/tag_w.h ../fpu/status_w.h \
-  ../fpu/control_w.h ../cpu/xmm.h stack.h
+  ../fpu/control_w.h ../cpu/xmm.h vmx.h stack.h
 stack16.o: stack16.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
@@ -722,7 +726,7 @@ stack16.o: stack16.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h cpu.h crregs.h \
   descriptor.h instr.h lazy_flags.h icache.h apic.h ../cpu/i387.h \
   ../fpu/softfloat.h ../config.h ../fpu/tag_w.h ../fpu/status_w.h \
-  ../fpu/control_w.h ../cpu/xmm.h stack.h
+  ../fpu/control_w.h ../cpu/xmm.h vmx.h stack.h
 stack32.o: stack32.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
@@ -730,7 +734,7 @@ stack32.o: stack32.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h cpu.h crregs.h \
   descriptor.h instr.h lazy_flags.h icache.h apic.h ../cpu/i387.h \
   ../fpu/softfloat.h ../config.h ../fpu/tag_w.h ../fpu/status_w.h \
-  ../fpu/control_w.h ../cpu/xmm.h stack.h
+  ../fpu/control_w.h ../cpu/xmm.h vmx.h stack.h
 stack64.o: stack64.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
@@ -738,7 +742,7 @@ stack64.o: stack64.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h cpu.h crregs.h \
   descriptor.h instr.h lazy_flags.h icache.h apic.h ../cpu/i387.h \
   ../fpu/softfloat.h ../config.h ../fpu/tag_w.h ../fpu/status_w.h \
-  ../fpu/control_w.h ../cpu/xmm.h stack.h
+  ../fpu/control_w.h ../cpu/xmm.h vmx.h stack.h
 string.o: string.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../config.h ../osdep.h ../bxversion.h ../gui/siminterface.h \
   ../memory/memory.h ../pc_system.h ../plugin.h ../extplugin.h \
@@ -746,7 +750,7 @@ string.o: string.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debu
   ../instrument/stubs/instrument.h cpu.h crregs.h descriptor.h instr.h \
   lazy_flags.h icache.h apic.h ../cpu/i387.h ../fpu/softfloat.h \
   ../config.h ../fpu/tag_w.h ../fpu/status_w.h ../fpu/control_w.h \
-  ../cpu/xmm.h stack.h
+  ../cpu/xmm.h vmx.h stack.h
 tasking.o: tasking.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
@@ -754,7 +758,7 @@ tasking.o: tasking.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h cpu.h crregs.h \
   descriptor.h instr.h lazy_flags.h icache.h apic.h ../cpu/i387.h \
   ../fpu/softfloat.h ../config.h ../fpu/tag_w.h ../fpu/status_w.h \
-  ../fpu/control_w.h ../cpu/xmm.h stack.h
+  ../fpu/control_w.h ../cpu/xmm.h vmx.h stack.h
 vm8086.o: vm8086.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../config.h ../osdep.h ../bxversion.h ../gui/siminterface.h \
   ../memory/memory.h ../pc_system.h ../plugin.h ../extplugin.h \
@@ -762,7 +766,24 @@ vm8086.o: vm8086.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debu
   ../instrument/stubs/instrument.h cpu.h crregs.h descriptor.h instr.h \
   lazy_flags.h icache.h apic.h ../cpu/i387.h ../fpu/softfloat.h \
   ../config.h ../fpu/tag_w.h ../fpu/status_w.h ../fpu/control_w.h \
-  ../cpu/xmm.h stack.h
+  ../cpu/xmm.h vmx.h stack.h
+vmexit.o: vmexit.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
+  ../config.h ../osdep.h ../bxversion.h ../gui/siminterface.h \
+  ../memory/memory.h ../pc_system.h ../plugin.h ../extplugin.h \
+  ../gui/gui.h ../gui/textconfig.h ../config.h ../gui/keymap.h \
+  ../instrument/stubs/instrument.h cpu.h crregs.h descriptor.h instr.h \
+  lazy_flags.h icache.h apic.h ../cpu/i387.h ../fpu/softfloat.h \
+  ../config.h ../fpu/tag_w.h ../fpu/status_w.h ../fpu/control_w.h \
+  ../cpu/xmm.h vmx.h stack.h
+vmx.o: vmx.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
+  ../config.h ../osdep.h ../bxversion.h ../gui/siminterface.h \
+  ../memory/memory.h ../pc_system.h ../plugin.h ../extplugin.h \
+  ../gui/gui.h ../gui/textconfig.h ../config.h ../gui/keymap.h \
+  ../instrument/stubs/instrument.h cpu.h crregs.h descriptor.h instr.h \
+  lazy_flags.h icache.h apic.h ../cpu/i387.h ../fpu/softfloat.h \
+  ../config.h ../fpu/tag_w.h ../fpu/status_w.h ../fpu/control_w.h \
+  ../cpu/xmm.h vmx.h stack.h ../iodev/iodev.h ../bochs.h ../iodev/vga.h \
+  ../iodev/ioapic.h ../cpu/apic.h
 xsave.o: xsave.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../config.h ../osdep.h ../bxversion.h ../gui/siminterface.h \
   ../memory/memory.h ../pc_system.h ../plugin.h ../extplugin.h \
@@ -770,4 +791,4 @@ xsave.o: xsave.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.
   ../instrument/stubs/instrument.h cpu.h crregs.h descriptor.h instr.h \
   lazy_flags.h icache.h apic.h ../cpu/i387.h ../fpu/softfloat.h \
   ../config.h ../fpu/tag_w.h ../fpu/status_w.h ../fpu/control_w.h \
-  ../cpu/xmm.h stack.h
+  ../cpu/xmm.h vmx.h stack.h
