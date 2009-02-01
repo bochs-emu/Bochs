@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmexit.cc,v 1.1 2009-01-31 10:43:24 sshwarts Exp $
+// $Id: vmexit.cc,v 1.2 2009-02-01 22:23:33 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2009 Stanislav Shwartsman
@@ -301,6 +301,10 @@ void BX_CPU_C::VMexit_Event(bxInstruction_c *i, unsigned type, unsigned vector, 
   // in a double fault exception that causes VMEXIT directly
   if (vector == BX_DF_EXCEPTION)
     BX_CPU_THIS_PTR in_event = 0; // clear in_event indication on #DF
+
+  // qualifcation for debug exceptions similar to debug_trap field
+  if (vector == BX_DB_EXCEPTION) 
+    qualification = BX_CPU_THIS_PTR debug_trap & 0x0000600f;
 
   Bit32u interruption_info = vector | (type << 8);
   if (errcode_valid)
