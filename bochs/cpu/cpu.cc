@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.264 2009-01-31 11:53:57 sshwarts Exp $
+// $Id: cpu.cc,v 1.265 2009-02-01 20:47:06 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -485,10 +485,8 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
 
   // Priority 2: Trap on Task Switch
   //   T flag in TSS is set
-  if (BX_CPU_THIS_PTR debug_trap & 0x00008000) {
-    BX_CPU_THIS_PTR dr6 |= BX_CPU_THIS_PTR debug_trap;
+  if (BX_CPU_THIS_PTR debug_trap & BX_DEBUG_TRAP_TASK_SWITCH_BIT)
     exception(BX_DB_EXCEPTION, 0, 0); // no error, not interrupt
-  }
 
   // Priority 3: External Hardware Interventions
   //   FLUSH
@@ -514,7 +512,6 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
     // which loaded SS.  If so we clear the inhibit_mask below
     // and don't execute this code until the next boundary.
     // Commit debug events to DR6
-    BX_CPU_THIS_PTR dr6 |= BX_CPU_THIS_PTR debug_trap;
     exception(BX_DB_EXCEPTION, 0, 0); // no error, not interrupt
   }
 
@@ -614,7 +611,7 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
     // TF is set before execution of next instruction.  Schedule
     // a debug trap (#DB) after execution.  After completion of
     // next instruction, the code above will invoke the trap.
-    BX_CPU_THIS_PTR debug_trap |= 0x00004000; // BS flag in DR6
+    BX_CPU_THIS_PTR debug_trap |= BX_DEBUG_SINGLE_STEP_BIT;
   }
 
   // Now we can handle things which are synchronous to instruction
@@ -628,27 +625,14 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
     if (BX_CPU_THIS_PTR dr7 & 0x000000ff) {
       bx_address iaddr = get_laddr(BX_SEG_REG_CS, BX_CPU_THIS_PTR prev_rip);
       Bit32u dr6_bits = hwdebug_compare(iaddr, 1, BX_HWDebugInstruction, BX_HWDebugInstruction);
-      if (dr6_bits)
-      {
+      if (dr6_bits) {
         // Add to the list of debug events thus far.
-        BX_CPU_THIS_PTR async_event = 1;
         BX_CPU_THIS_PTR debug_trap |= dr6_bits;
         // If debug events are not inhibited on this boundary,
         // fire off a debug fault.  Otherwise handle it on the next
         // boundary. (becomes a trap)
-        if (! (BX_CPU_THIS_PTR inhibit_mask & BX_INHIBIT_DEBUG)) {
-          // Commit debug events to DR6
-#if BX_CPU_LEVEL <= 4
-          // On 386/486 bit12 is settable
-          BX_CPU_THIS_PTR dr6 = (BX_CPU_THIS_PTR dr6 & 0xffff0ff0) |
-                            (BX_CPU_THIS_PTR debug_trap & 0x0000f00f);
-#else
-          // On Pentium+, bit12 is always zero
-          BX_CPU_THIS_PTR dr6 = (BX_CPU_THIS_PTR dr6 & 0xffff0ff0) |
-                            (BX_CPU_THIS_PTR debug_trap & 0x0000e00f);
-#endif
+        if (! (BX_CPU_THIS_PTR inhibit_mask & BX_INHIBIT_DEBUG))
           exception(BX_DB_EXCEPTION, 0, 0); // no error, not interrupt
-        }
       }
     }
   }

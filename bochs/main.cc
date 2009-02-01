@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.391 2009-01-16 18:18:57 sshwarts Exp $
+// $Id: main.cc,v 1.392 2009-02-01 20:47:06 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1024,6 +1024,7 @@ void bx_init_hardware()
   BX_INFO(("  MWAIT support: %s",BX_SUPPORT_MONITOR_MWAIT?"yes":"no"));
   BX_INFO(("  XSAVE support: %s",BX_SUPPORT_XSAVE?"yes":"no"));
   BX_INFO(("  AES support: %s",BX_SUPPORT_AES?"yes":"no"));
+  BX_INFO(("  VMX support: %s",BX_SUPPORT_VMX?"yes":"no"));
   BX_INFO(("Optimization configuration"));
   BX_INFO(("  RepeatSpeedups support: %s",BX_SupportRepeatSpeedups?"yes":"no"));
   BX_INFO(("  Icache support: %s",BX_SUPPORT_ICACHE?"yes":"no"));

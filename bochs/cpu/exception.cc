@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.134 2009-01-31 10:43:23 sshwarts Exp $
+// $Id: exception.cc,v 1.135 2009-02-01 20:47:06 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -942,9 +942,20 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code, unsigned unused)
     if (vector != BX_DB_EXCEPTION) BX_CPU_THIS_PTR assert_RF();
   }
 
-  // clear GD flag in the DR7 prior entering debug exception handler
-  if (vector == BX_DB_EXCEPTION)
+  if (vector == BX_DB_EXCEPTION) {
+    // Commit debug events to DR6
+#if BX_CPU_LEVEL <= 4
+    // On 386/486 bit12 is settable
+    BX_CPU_THIS_PTR dr6 = (BX_CPU_THIS_PTR dr6 & 0xffff0ff0) |
+                          (BX_CPU_THIS_PTR debug_trap & 0x0000f00f);
+#else
+    // On Pentium+, bit12 is always zero
+    BX_CPU_THIS_PTR dr6 = (BX_CPU_THIS_PTR dr6 & 0xffff0ff0) |
+                          (BX_CPU_THIS_PTR debug_trap & 0x0000e00f);
+#endif
+    // clear GD flag in the DR7 prior entering debug exception handler
     BX_CPU_THIS_PTR dr7 &= ~0x00002000;
+  }
 
   BX_CPU_THIS_PTR EXT = 1;
 

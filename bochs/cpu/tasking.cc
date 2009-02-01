@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: tasking.cc,v 1.67 2009-01-31 10:43:23 sshwarts Exp $
+// $Id: tasking.cc,v 1.68 2009-02-01 20:47:06 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -653,7 +653,7 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
 
 
   if ((tss_descriptor->type>=9) && (trap_word & 0x1)) {
-    BX_CPU_THIS_PTR debug_trap |= 0x00008000; // BT flag in DR6
+    BX_CPU_THIS_PTR debug_trap |= BX_DEBUG_TRAP_TASK_SWITCH_BIT; // BT flag
     BX_CPU_THIS_PTR async_event = 1; // so processor knows to check
     BX_INFO(("task_switch: T bit set in new TSS"));
   }

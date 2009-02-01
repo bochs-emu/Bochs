@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.279 2009-01-31 10:43:23 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.280 2009-02-01 20:47:06 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -276,7 +276,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_DdRd(bxInstruction_c *i)
   // handler, to allow access to the debug registers
   if (BX_CPU_THIS_PTR dr7 & 0x2000) { // GD bit set
     BX_ERROR(("MOV_DdRd: DR7 GD bit is set"));
-    BX_CPU_THIS_PTR dr6 |= 0x2000;
+    BX_CPU_THIS_PTR debug_trap |= BX_DEBUG_DR_ACCESS_BIT;
     exception(BX_DB_EXCEPTION, 0, 0);
   }
 
@@ -383,7 +383,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RdDd(bxInstruction_c *i)
   // handler, to allow access to the debug registers
   if (BX_CPU_THIS_PTR dr7 & 0x2000) { // GD bit set
     BX_ERROR(("MOV_RdDd: DR7 GD bit is set"));
-    BX_CPU_THIS_PTR dr6 |= 0x2000;
+    BX_CPU_THIS_PTR debug_trap |= BX_DEBUG_DR_ACCESS_BIT;
     exception(BX_DB_EXCEPTION, 0, 0);
   }
 
@@ -452,7 +452,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_DqRq(bxInstruction_c *i)
   // handler, to allow access to the debug registers
   if (BX_CPU_THIS_PTR dr7 & 0x2000) { // GD bit set
     BX_ERROR(("MOV_DqRq: DR7 GD bit is set"));
-    BX_CPU_THIS_PTR dr6 |= 0x2000;
+    BX_CPU_THIS_PTR debug_trap |= BX_DEBUG_DR_ACCESS_BIT;
     exception(BX_DB_EXCEPTION, 0, 0);
   }
 
@@ -485,6 +485,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_DqRq(bxInstruction_c *i)
       // DR4 aliased to DR6 by default. With Debug Extensions ON,
       // access to DR4 causes #UD
     case 6: // DR6
+      if (GET32H(val_64)) {
+        BX_ERROR(("MOV_DqRq: attempt to set upper part of DR6"));
+        exception(BX_GP_EXCEPTION, 0, 0);
+      }
       // On Pentium+, bit12 is always zero
       BX_CPU_THIS_PTR dr6 = (BX_CPU_THIS_PTR dr6 & 0xffff0ff0) |
                             (val_64 & 0x0000e00f);
@@ -497,6 +501,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_DqRq(bxInstruction_c *i)
       // Note: 486+ ignore GE and LE flags.  On the 386, exact
       // data breakpoint matching does not occur unless it is enabled
       // by setting the LE and/or GE flags.
+
+      if (GET32H(val_64)) {
+        BX_ERROR(("MOV_DqRq: attempt to set upper part of DR7"));
+        exception(BX_GP_EXCEPTION, 0, 0);
+      }
 
       // Some sanity checks...
       if (((((val_64>>16) & 3)==0) && (((val_64>>18) & 3)!=0)) ||
@@ -539,7 +548,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RqDq(bxInstruction_c *i)
   // handler, to allow access to the debug registers
   if (BX_CPU_THIS_PTR dr7 & 0x2000) { // GD bit set
     BX_ERROR(("MOV_RqDq: DR7 GD bit is set"));
-    BX_CPU_THIS_PTR dr6 |= 0x2000;
+    BX_CPU_THIS_PTR debug_trap |= BX_DEBUG_DR_ACCESS_BIT;
     exception(BX_DB_EXCEPTION, 0, 0);
   }
 

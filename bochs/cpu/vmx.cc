@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmx.cc,v 1.1 2009-01-31 10:43:24 sshwarts Exp $
+// $Id: vmx.cc,v 1.2 2009-02-01 20:47:06 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2009 Stanislav Shwartsman
@@ -1046,9 +1046,14 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
     }
   }
 
-  guest.activity_state = VMread32(VMCS_32BIT_GUEST_ACTIVITY_STATE);
-  guest.interruptibility_state = VMread32(VMCS_32BIT_GUEST_INTERRUPTIBILITY_STATE);
   guest.tmpDR6 = VMread64(VMCS_GUEST_PENDING_DBG_EXCEPTIONS);
+
+  if (guest.tmpDR6 & BX_CONST64(0xFFFFFFFFFFFF5FF0)) {
+    BX_ERROR(("VMENTER FAIL: VMCS guest tmpDR6 reserved bits"));
+    return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
+  }
+
+  guest.activity_state = VMread32(VMCS_32BIT_GUEST_ACTIVITY_STATE);
 
   if (guest.activity_state >= BX_VMX_LAST_ACTIVITY_STATE) {
     BX_ERROR(("VMENTER FAIL: VMCS guest activity state %d", guest.activity_state));
@@ -1061,6 +1066,8 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
       return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
     }
   }
+
+  guest.interruptibility_state = VMread32(VMCS_32BIT_GUEST_INTERRUPTIBILITY_STATE);
 
   if (guest.interruptibility_state & ~BX_VMX_INTERRUPTIBILITY_STATE_MASK) {
     BX_ERROR(("VMENTER FAIL: VMCS guest interruptibility state broken"));
@@ -1314,10 +1321,13 @@ Bit32u BX_CPU_C::StoreMSRs(Bit32u msr_cnt, bx_phy_address pAddr)
 
 void BX_CPU_C::VMexitSaveGuestState(void)
 {
+  VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
+
   VMwrite64(VMCS_GUEST_CR0, BX_CPU_THIS_PTR cr0.get32());
   VMwrite64(VMCS_GUEST_CR3, BX_CPU_THIS_PTR cr3);
   VMwrite64(VMCS_GUEST_CR4, BX_CPU_THIS_PTR cr4.get32());
-  VMwrite64(VMCS_GUEST_DR7, BX_CPU_THIS_PTR dr7);
+  if (vm->vmexit_ctrls & VMX_VMEXIT_CTRL1_SAVE_DBG_CTRLS)
+     VMwrite64(VMCS_GUEST_DR7, BX_CPU_THIS_PTR dr7);
   VMwrite64(VMCS_GUEST_RIP, RIP);
   VMwrite64(VMCS_GUEST_RSP, RSP);
   VMwrite64(VMCS_GUEST_RFLAGS, BX_CPU_THIS_PTR read_eflags());
@@ -1368,6 +1378,10 @@ void BX_CPU_C::VMexitSaveGuestState(void)
   VMwrite64(VMCS_GUEST_IA32_SYSENTER_EIP_MSR, BX_CPU_THIS_PTR msr.sysenter_eip_msr);
   VMwrite32(VMCS_32BIT_GUEST_IA32_SYSENTER_CS_MSR, BX_CPU_THIS_PTR msr.sysenter_cs_msr);
 
+  Bit32u tmpDR6 = BX_CPU_THIS_PTR debug_trap;
+  if (tmpDR6 & 0xf) tmpDR6 |= (1 << 12);
+  VMwrite64(VMCS_GUEST_PENDING_DBG_EXCEPTIONS, tmpDR6 & 0x0000500f);
+  
   Bit32u interruptibility_state = 0;
   if (BX_CPU_THIS_PTR inhibit_mask & BX_INHIBIT_INTERRUPTS) {
      if (BX_CPU_THIS_PTR inhibit_mask & BX_INHIBIT_DEBUG)
