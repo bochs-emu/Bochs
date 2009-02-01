@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: enh_dbg.h,v 1.9 2009-01-31 19:02:24 vruppert Exp $
+// $Id: enh_dbg.h,v 1.10 2009-02-01 08:08:20 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  BOCHS ENHANCED DEBUGGER Ver 1.2
@@ -192,7 +192,7 @@ extern unsigned CurrentCPU;   // cpu that is being displayed
 // AskTest stuff -- for the generic dialog box
 struct ASKTEXT {
     const char* title;
-    char* prompt;
+    const char* prompt;
     char* reply;
 };
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: enh_dbg.cc,v 1.10 2009-01-31 14:51:41 sshwarts Exp $
+// $Id: enh_dbg.cc,v 1.11 2009-02-01 08:08:20 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  BOCHS ENHANCED DEBUGGER Ver 1.2
@@ -173,7 +173,7 @@ int SizeList = 0;
 Bit32s xClick = -1;         // halfway through a mouseclick flag + location
 Bit32s yClick = 0;          // values are in Listview coordinates
 
-static char* GDTt2[8] = {
+static const char* GDTt2[8] = {
    "16-bit code",
    "64-bit code",
    "32-bit code",
@@ -184,7 +184,7 @@ static char* GDTt2[8] = {
    "Unused"
 };
 
-static char* GDTsT[] = { "","Available 16bit TSS","LDT","Busy 16bit TSS","16bit Call Gate",
+static const char* GDTsT[] = { "","Available 16bit TSS","LDT","Busy 16bit TSS","16bit Call Gate",
                 "Task Gate","16bit Interrupt Gate","16bit Trap Gate","Reserved",
                 "Available 32bit TSS","Reserved","Busy 32bit TSS","32bit Call Gate",
                 "Reserved","32bit Interrupt Gate","32bit Trap Gate"
@@ -197,7 +197,7 @@ static const char* Fmt16b[2] = { "%04x", "%04X" };
 static const char* xDT64Fmt[2] = { FMT_ADDRX64 " (%4x)", "%016llX (%4X)" };
 static const char* xDT32Fmt[2] = { "%08x (%4x)", "%08X (%4X)" };
 
-static char *BrkName[5] = {
+static const char *BrkName[5] = {
    "Linear Breakpt",
    "Physical Breakpt",
    "Virtual Breakpt",
@@ -1433,7 +1433,7 @@ void FillGDT()
             limit = limit * 4096 + 4095;    // and the bottom 12 bits aren't tested
 
         GroupId = 8;        // default to "blank" group
-        cols[17]= GDTsT[0]; // default info string is blank
+        cols[17]= (char*)GDTsT[0]; // default info string is blank
         j = 8;              // default GDT type (group) is blank
         if ((gdtbuf[5] & 0x10) == 0)    // 'S' bit clear = System segment
         {
@@ -1441,7 +1441,7 @@ void FillGDT()
             if (limit == 0 && (gdtbuf[5] & 0x80) == 0)      // 'P' (present) bit
                 GroupId = 0;
             // point to the approprate info string for the GDT system segment type
-            cols[17] = GDTsT[(int) (gdtbuf[5] & 0xf)];
+            cols[17] = (char*)GDTsT[(int) (gdtbuf[5] & 0xf)];
         }
         else        // it's an 'executable' code or data segment
         {
@@ -1474,7 +1474,7 @@ void FillGDT()
         sprintf(cols[3],"%u", (gdtbuf[5] & 0x60) >> 5);
 
         if (i == 0)
-            cols[17] = GDTt2[7];    // call "Null" selector "unused"
+            cols[17] = (char*)GDTt2[7];    // call "Null" selector "unused"
         InsertListRow(cols, 18, DUMP_WND, i, GroupId);  // 18 cols
     }
     RedrawColumns(DUMP_WND);
@@ -1900,7 +1900,7 @@ void FillBrkp()
         cols[1]= brktxt;
         cols[17]= brktxt;
         InsertListRow(cols, 18, DUMP_WND, LineCount++, 8);  // make a blank row
-        cols[0]= BrkName[brktype];
+        cols[0]= (char*)BrkName[brktype];
         InsertListRow(cols, 18, DUMP_WND, LineCount++, 8);  // brkpt "type" as only text on row
         cols[0]= brktxt + 1;
         if (brktype < 3)
@@ -2283,7 +2283,7 @@ bx_bool FindHex(unsigned char* b1,int bs,unsigned char* b2,int by)
     return FALSE;
 }
 
-bx_bool AskText(const char *title, char *prompt, char *DefaultText)
+bx_bool AskText(const char *title, const char *prompt, char *DefaultText)
 {
     ask_str.title= title;
     ask_str.prompt= prompt;
@@ -2777,7 +2777,7 @@ void SetMemLine(int L)
             if (err == 0)
             {
                 // convert the hex to a byte, and try to store the byte in bochs physmem
-                sscanf (s,"%2X",&newval);
+                sscanf (s,"%2X", (unsigned int*)&newval);
                 if ( bx_mem.dbg_set_mem( (bx_phy_address) h, 1, &newval) == FALSE )
                     err = 2;
                 ++h;                    // bump to the next mem address
