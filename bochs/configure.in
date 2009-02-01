@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.386 2009-02-01 12:40:30 vruppert Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.387 2009-02-01 18:24:41 vruppert Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -2726,10 +2726,10 @@ esac
 
 ENH_DBG_OBJS=""
 if test "$gui_debugger" = 1; then
-  if test "$with_win32" = yes; then
-     ENH_DBG_OBJS="win32_enh_dbg_osdep.o"
-  else
+  if test "$needs_gtk2" = 1; then
      ENH_DBG_OBJS="gtk_enh_dbg_osdep.o"
+  elif test "$with_win32" = yes; then
+     ENH_DBG_OBJS="win32_enh_dbg_osdep.o"
   fi
 fi
 AC_SUBST(ENH_DBG_OBJS)
