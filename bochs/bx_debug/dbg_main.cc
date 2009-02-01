@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.171 2009-01-30 21:46:42 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.172 2009-02-01 22:20:04 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1703,30 +1703,37 @@ void bx_dbg_stepN_command(Bit32u count)
   SIM->set_display_mode(DISP_MODE_SIM);
 
   // reset guard counters for all CPUs
-  int stop = 0;
   for (unsigned cpu=0; cpu < BX_SMP_PROCESSORS; cpu++) {
     BX_CPU(cpu)->guard_found.icount = 0;
     BX_CPU(cpu)->guard_found.time_tick = bx_pc_system.time_ticks();
   }
 
-  // for now, step each CPU one instruction at a time
-  for (unsigned cycle=0; !stop && cycle < count; cycle++) {
-    for (unsigned cpu=0; cpu < BX_SMP_PROCESSORS; cpu++) {
-      bx_guard.interrupt_requested = 0;
-      BX_CPU(cpu)->guard_found.guard_found = 0;
-      BX_CPU(cpu)->cpu_loop(1);
-      // set stop flag if a guard found other than icount or halted
-      unsigned long found = BX_CPU(cpu)->guard_found.guard_found;
-      stop_reason_t reason = (stop_reason_t) BX_CPU(cpu)->stop_reason;
-      if (found || (reason != STOP_NO_REASON && reason != STOP_CPU_HALTED))
-        stop = 1;
-    }
-
-#if BX_SUPPORT_SMP
-    // when (BX_SMP_PROCESSORS == 1) ticks are handled inside the cpu loop
-    if (BX_SMP_PROCESSORS > 1) BX_TICK1();
-#endif
+  if (BX_SMP_PROCESSORS == 1) {
+    bx_guard.interrupt_requested = 0;
+    BX_CPU(cpu)->guard_found.guard_found = 0;
+    BX_CPU(cpu)->cpu_loop(count);
   }
+#if BX_SUPPORT_SMP
+  else {
+    int stop = 0;
+    // for now, step each CPU one instruction at a time
+    for (unsigned cycle=0; !stop && cycle < count; cycle++) {
+      for (unsigned cpu=0; cpu < BX_SMP_PROCESSORS; cpu++) {
+        bx_guard.interrupt_requested = 0;
+        BX_CPU(cpu)->guard_found.guard_found = 0;
+        BX_CPU(cpu)->cpu_loop(1);
+        // set stop flag if a guard found other than icount or halted
+        unsigned long found = BX_CPU(cpu)->guard_found.guard_found;
+        stop_reason_t reason = (stop_reason_t) BX_CPU(cpu)->stop_reason;
+        if (found || (reason != STOP_NO_REASON && reason != STOP_CPU_HALTED))
+          stop = 1;
+      }
+
+      // when (BX_SMP_PROCESSORS == 1) ticks are handled inside the cpu loop
+      if (BX_SMP_PROCESSORS > 1) BX_TICK1();
+    }
+  }
+#endif
 
   BX_INSTR_DEBUG_PROMPT();
   bx_dbg_print_guard_results();
