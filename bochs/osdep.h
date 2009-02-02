@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: osdep.h,v 1.29 2009-01-16 18:18:57 sshwarts Exp $
+// $Id: osdep.h,v 1.30 2009-02-02 13:02:48 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -159,6 +159,15 @@ extern "C" {
 #if !BX_HAVE_STRREV
 #define strrev bx_strrev
   extern char *bx_strrev(char *str);
+#endif
+
+#if BX_HAVE_STRICMP
+  // great, just use the usual function
+#elif BX_HAVE_STRCASECMP
+  #define stricmp strcasecmp
+#else
+  // FIXME: for now using case sensitive function
+  #define stricmp strcmp
 #endif
 
 #if !BX_HAVE_SOCKLEN_T

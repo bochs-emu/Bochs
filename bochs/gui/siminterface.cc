@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.190 2009-01-31 10:04:25 sshwarts Exp $
+// $Id: siminterface.cc,v 1.191 2009-02-02 13:02:48 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  The Bochs Project
@@ -24,7 +24,6 @@
 // Basically, the siminterface is visible from both the simulator and
 // the configuration user interface, and allows them to talk to each other.
 
-#include "bochs.h"
 #include "iodev.h"
 
 bx_simulator_interface_c *SIM = NULL;
@@ -2068,9 +2067,11 @@ bx_list_c* bx_list_c::clone()
 
 void bx_list_c::add(bx_param_c *param)
 {
-  if (size >= maxsize)
+  if (size >= maxsize) {
     BX_PANIC(("add param '%s' to bx_list_c '%s': list capacity exceeded",
               param->get_name(), get_name()));
+    return;
+  }
   list[size] = param;
   size++;
 }
@@ -2086,7 +2087,7 @@ bx_param_c* bx_list_c::get_by_name(const char *name)
   int imax = get_size();
   for (int i=0; i<imax; i++) {
     bx_param_c *p = get(i);
-    if (0 == strcmp (name, p->get_name())) {
+    if (!stricmp(name, p->get_name())) {
       return p;
     }
   }
@@ -2117,7 +2118,7 @@ void bx_list_c::remove(const char *name)
   int found = 0;
   for (int i=0; i<imax; i++) {
     bx_param_c *p = get(i);
-    if (!found && !strcmp(name, p->get_name())) {
+    if (!found && !stricmp(name, p->get_name())) {
       delete p;
       found = 1;
     }
