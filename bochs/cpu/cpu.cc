@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.265 2009-02-01 20:47:06 sshwarts Exp $
+// $Id: cpu.cc,v 1.266 2009-02-02 18:59:44 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -505,15 +505,6 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
   // Priority 4: Traps on Previous Instruction
   //   Breakpoints
   //   Debug Trap Exceptions (TF flag set or data/IO breakpoint)
-  if (BX_CPU_THIS_PTR debug_trap &&
-       !(BX_CPU_THIS_PTR inhibit_mask & BX_INHIBIT_DEBUG))
-  {
-    // A trap may be inhibited on this boundary due to an instruction
-    // which loaded SS.  If so we clear the inhibit_mask below
-    // and don't execute this code until the next boundary.
-    // Commit debug events to DR6
-    exception(BX_DB_EXCEPTION, 0, 0); // no error, not interrupt
-  }
 
   // Priority 5: External Interrupts
   //   NMI Interrupts
@@ -524,6 +515,20 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
     // inhibit_mask is cleared below, in which case we will have
     // an opportunity to check interrupts on the next instruction
     // boundary.
+  }
+#if BX_SUPPORT_VMX
+  else if (BX_CPU_THIS_PTR intr_pending_vmx && BX_CPU_THIS_PTR get_IF())
+  {
+    // interrupt-window exiting
+    BX_ERROR(("VMEXIT: Interrupt window exiting"));
+    VMexit(0, VMX_VMEXIT_INTERRUPT_WINDOW, 0);
+  }
+#endif
+  else if (BX_CPU_THIS_PTR debug_trap) {
+    // A trap may be inhibited on this boundary due to an instruction
+    // which loaded SS.  If so we clear the inhibit_mask below
+    // and don't execute this code until the next boundary.
+    exception(BX_DB_EXCEPTION, 0, 0); // no error, not interrupt
   }
   else if (BX_CPU_THIS_PTR pending_NMI) {
     BX_CPU_THIS_PTR pending_NMI = 0;
@@ -536,14 +541,6 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
     BX_INSTR_HWINTERRUPT(BX_CPU_ID, 2, BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, RIP);
     interrupt(2, BX_NMI, 0, 0);
   }
-#if BX_SUPPORT_VMX
-  else if (BX_CPU_THIS_PTR intr_pending_vmx && BX_CPU_THIS_PTR get_IF())
-  {
-    // interrupt-window exiting
-    BX_ERROR(("VMEXIT: Interrupt window exiting"));
-    VMexit(0, VMX_VMEXIT_INTERRUPT_WINDOW, 0);
-  }
-#endif
   else if (BX_CPU_INTR && BX_CPU_THIS_PTR get_IF() && BX_DBG_ASYNC_INTR)
   {
     Bit8u vector;

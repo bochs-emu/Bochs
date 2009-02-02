@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.566 2009-02-01 20:47:06 sshwarts Exp $
+// $Id: cpu.h,v 1.567 2009-02-02 18:59:44 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -3415,7 +3415,7 @@ public: // for now...
   BX_SMF bx_bool VMexit_CLTS(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
   BX_SMF void VMexit_MSR(bxInstruction_c *i, unsigned op, Bit32u msr) BX_CPP_AttrRegparmN(3);
   BX_SMF void VMexit_IO(bxInstruction_c *i, unsigned port, unsigned len) BX_CPP_AttrRegparmN(3);
-  BX_SMF void VMexit_LMSW(bxInstruction_c *i, Bit32u msw) BX_CPP_AttrRegparmN(2);
+  BX_SMF Bit32u VMexit_LMSW(bxInstruction_c *i, Bit32u msw) BX_CPP_AttrRegparmN(2);
   BX_SMF bx_address VMexit_CR0_Write(bxInstruction_c *i, bx_address) BX_CPP_AttrRegparmN(2);
   BX_SMF void VMexit_CR3_Read(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
   BX_SMF void VMexit_CR3_Write(bxInstruction_c *i, bx_address) BX_CPP_AttrRegparmN(2);

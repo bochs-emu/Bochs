@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.280 2009-02-01 20:47:06 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.281 2009-02-02 18:59:44 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -870,7 +870,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LMSW_Ew(bxInstruction_c *i)
   // LMSW does not affect PG,CD,NW,AM,WP,NE,ET bits, and cannot clear PE
 
 #if BX_SUPPORT_VMX
-  VMexit_LMSW(i, msw);
+  msw = VMexit_LMSW(i, msw);
 #endif
 
   // LMSW cannot clear PE

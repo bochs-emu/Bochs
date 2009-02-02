@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmexit.cc,v 1.2 2009-02-01 22:23:33 sshwarts Exp $
+// $Id: vmexit.cc,v 1.3 2009-02-02 18:59:44 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2009 Stanislav Shwartsman
@@ -515,21 +515,22 @@ bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::VMexit_CLTS(bxInstruction_c *i)
     return 0;
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMexit_LMSW(bxInstruction_c *i, Bit32u msw)
+Bit32u BX_CPP_AttrRegparmN(2) BX_CPU_C::VMexit_LMSW(bxInstruction_c *i, Bit32u msw)
 {
-  if (! BX_CPU_THIS_PTR in_vmx_guest) return;
+  if (! BX_CPU_THIS_PTR in_vmx_guest) return msw;
 
   VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
+  Bit32u mask = vm->vm_cr0_mask & 0xF; /* LMSW affects only low 4 bits */
   bx_bool vmexit = 0;
 
-  if ((vm->vm_cr0_mask & msw & 0x1) != 0 && (vm->vm_cr0_read_shadow & 0x1) == 0)
+  if ((mask & msw & 0x1) != 0 && (vm->vm_cr0_read_shadow & 0x1) == 0)
     vmexit = 1;
 
-  if ((vm->vm_cr0_mask & vm->vm_cr0_read_shadow & 0xE) != (vm->vm_cr0_mask & msw & 0xE))
+  if ((mask & vm->vm_cr0_read_shadow & 0xE) != (mask & msw & 0xE))
     vmexit = 1;
 
   if (vmexit) {
-    BX_ERROR(("VMEXIT: CR0 write by LMSW"));
+    BX_ERROR(("VMEXIT: CR0 write by LMSW of value 0x%04x", msw));
 
     Bit64u qualification = VMX_VMEXIT_CR_ACCESS_LMSW << 4;
     qualification |= msw << 16;
@@ -540,6 +541,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMexit_LMSW(bxInstruction_c *i, Bit32u msw
 
     VMexit(i, VMX_VMEXIT_CR_ACCESS, qualification);
   }
+
+  // keep untouched all the bits set in CR0 mask
+  return (BX_CPU_THIS_PTR cr0.get32() & mask) | (msw & ~mask);
 }
 
 bx_address BX_CPP_AttrRegparmN(2) BX_CPU_C::VMexit_CR0_Write(bxInstruction_c *i, bx_address val)
