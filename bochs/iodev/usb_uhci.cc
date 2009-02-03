@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_uhci.cc,v 1.3 2009-01-19 21:39:03 vruppert Exp $
+// $Id: usb_uhci.cc,v 1.4 2009-02-03 18:21:21 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Benjamin D Lunt (fys at frontiernet net)
@@ -1053,18 +1053,16 @@ void bx_usb_uhci_c::usb_set_connect_status(Bit8u port, int type, bx_bool connect
   if (BX_UHCI_THIS hub.usb_port[port].device != NULL) {
     if (BX_UHCI_THIS hub.usb_port[port].device->get_type() == type) {
       if (connected) {
-        if (!BX_UHCI_THIS hub.usb_port[port].device->get_connected()) {
-          BX_UHCI_THIS hub.usb_port[port].low_speed =
-            (BX_UHCI_THIS hub.usb_port[port].device->get_speed() == USB_SPEED_LOW);
-        }
+        BX_UHCI_THIS hub.usb_port[port].low_speed =
+          (BX_UHCI_THIS hub.usb_port[port].device->get_speed() == USB_SPEED_LOW);
         if (BX_UHCI_THIS hub.usb_port[port].low_speed) {
           BX_UHCI_THIS hub.usb_port[port].line_dminus = 1;  //  dminus=1 & dplus=0 = low speed  (at idle time)
           BX_UHCI_THIS hub.usb_port[port].line_dplus = 0;   //  dminus=0 & dplus=1 = high speed (at idle time)
         } else {
-          BX_UHCI_THIS hub.usb_port[port].line_dminus = 0;  //  dminus=1 & dplus=0 = low speed  (at idle time)
-          BX_UHCI_THIS hub.usb_port[port].line_dplus = 1;   //  dminus=0 & dplus=1 = high speed (at idle time)
+          BX_UHCI_THIS hub.usb_port[port].line_dminus = 0;
+          BX_UHCI_THIS hub.usb_port[port].line_dplus = 1;
         }
-        BX_UHCI_THIS hub.usb_port[port].status = 1;       //
+        BX_UHCI_THIS hub.usb_port[port].status = 1;
         BX_UHCI_THIS hub.usb_port[port].connect_changed = 1;
         BX_UHCI_THIS hub.usb_port[port].able_changed = 1;
 
@@ -1098,8 +1096,8 @@ void bx_usb_uhci_c::usb_set_connect_status(Bit8u port, int type, bx_bool connect
         BX_UHCI_THIS hub.usb_port[port].enabled = 0;
         BX_UHCI_THIS hub.usb_port[port].able_changed = 1;
         BX_UHCI_THIS hub.usb_port[port].low_speed = 0;
-        BX_UHCI_THIS hub.usb_port[port].line_dminus = 0;  //  dminus=1 & dplus=0 = low speed  (at idle time)
-        BX_UHCI_THIS hub.usb_port[port].line_dplus = 0;   //  dminus=0 & dplus=1 = high speed (at idle time)
+        BX_UHCI_THIS hub.usb_port[port].line_dminus = 0;
+        BX_UHCI_THIS hub.usb_port[port].line_dplus = 0;
         if ((type == USB_DEV_TYPE_MOUSE) ||
             (type == USB_DEV_TYPE_TABLET)) {
           if (BX_UHCI_THIS hub.usb_port[port].device == BX_UHCI_THIS mousedev) {
