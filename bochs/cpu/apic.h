@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.h,v 1.39 2009-01-16 18:18:58 sshwarts Exp $
+// $Id: apic.h,v 1.40 2009-02-03 20:42:15 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (c) 2002 Zwane Mwaikambo, Stanislav Shwartsman
@@ -48,10 +48,10 @@ public:
   void set_id(Bit8u newid);
   Bit8u get_id() const { return id; }
   bx_bool is_selected(bx_phy_address addr, unsigned len);
-  void read(bx_phy_address addr, void *data, unsigned len);
   virtual void read_aligned(bx_phy_address address, Bit32u *data) = 0;
-  void write(bx_phy_address address, void *value, unsigned len);
+  void read(bx_phy_address addr, void *data, unsigned len);
   virtual void write_aligned(bx_phy_address address, Bit32u *data) = 0;
+  void write(bx_phy_address addr, void *data, unsigned len);
 };
 
 #ifdef BX_INCLUDE_LOCAL_APIC

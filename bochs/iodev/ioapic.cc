@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ioapic.cc,v 1.42 2009-02-03 19:12:00 sshwarts Exp $
+// $Id: ioapic.cc,v 1.43 2009-02-03 20:42:15 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -46,7 +46,7 @@ static bx_bool ioapic_write(bx_phy_address a20addr, unsigned len, void *data, vo
     return 1;
   }
 
-  if(a20addr & 3) {
+  if(a20addr & 0xf) {
     BX_PANIC(("I/O apic write at unaligned address 0x" FMT_PHY_ADDRX, a20addr));
     return 1;
   }

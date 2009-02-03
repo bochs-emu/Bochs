@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.cc,v 1.115 2009-02-03 19:25:37 sshwarts Exp $
+// $Id: apic.cc,v 1.116 2009-02-03 20:42:15 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (c) 2002 Zwane Mwaikambo, Stanislav Shwartsman
@@ -221,33 +221,17 @@ void bx_generic_apic_c::read(bx_phy_address addr, void *data, unsigned len)
 
 void bx_generic_apic_c::write(bx_phy_address addr, void *data, unsigned len)
 {
-  if((addr & ~0x3) != ((addr+len-1) & ~0x3)) {
-    BX_PANIC(("APIC write at address 0x" FMT_PHY_ADDRX " spans 32-bit boundary !", addr));
+  if (len != 4) {
+    BX_PANIC(("APIC write with len=%d (should be 4)", len));
     return;
   }
-  bx_phy_address addr_aligned = addr & ~0x3;
-  if(len == 4) { // must be 32-bit aligned
-    write_aligned(addr_aligned, (Bit32u*) data);
+
+  if(addr & 0xf) {
+    BX_PANIC(("APIC write at unaligned address 0x" FMT_PHY_ADDRX, addr));
     return;
   }
-  // partial write to the apic register, need to update some bytes
-  // and do not touch the others, i.e. to do RMW operation
-  Bit32u value;
-  read_aligned(addr_aligned, &value);  // apic read has no side effects
-  // handle partial write, independent of endian-ness
-  unsigned shift = (addr&3)*8;
-  if (len == 1) {
-    value &= ~(0xff << shift);
-    value |= (*((Bit8u *) data) << shift);
-  }
-  else if (len == 2) {
-    value &= ~(0xffff << shift);
-    value |= (*((Bit16u *)data) << shift);
-  }
-  else {
-    BX_PANIC(("Unsupported APIC write at address 0x" FMT_PHY_ADDRX ", len=%d", addr, len));
-  }
-  write_aligned(addr_aligned, &value);
+
+  write_aligned(addr, (Bit32u*) data);
 }
 
 bx_local_apic_c::bx_local_apic_c(BX_CPU_C *mycpu)
@@ -325,10 +309,8 @@ void bx_local_apic_c::set_id(Bit8u newid)
   } else {
     BX_INFO(("naming convention for apics requires id=0-%d only", APIC_MAX_ID));
   }
-  if(BX_CPU_LEVEL<2)
-    BX_INFO(("8086"));
-  else
-    BX_INFO(("80%d86", BX_CPU_LEVEL));
+
+  BX_INFO(("80%d86", BX_CPU_LEVEL));
 }
 
 // APIC write: 4 byte write to 16-byte aligned APIC address

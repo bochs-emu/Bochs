@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ioapic.h,v 1.26 2008-11-17 20:06:16 sshwarts Exp $
+// $Id: ioapic.h,v 1.27 2009-02-03 20:42:15 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -82,8 +82,9 @@ class bx_ioapic_c : public bx_generic_apic_c
   // It's not clear if this is how the real device works.
   Bit32u irr;
 
-public:
   bx_io_redirect_entry_t ioredtbl[BX_IOAPIC_NUM_PINS];  // table of redirections
+
+public:
   bx_ioapic_c();
   virtual ~bx_ioapic_c() {}
   virtual void init();
@@ -93,7 +94,7 @@ public:
   void set_irq_level(Bit8u int_in, bx_bool level);
   void receive_eoi(Bit8u vector);
   void service_ioapic(void);
-  virtual void register_state(void);
+  void register_state(void);
 };
 
 #endif
