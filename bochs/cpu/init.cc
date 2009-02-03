@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.197 2009-02-03 19:26:09 sshwarts Exp $
+// $Id: init.cc,v 1.198 2009-02-03 19:28:22 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1026,22 +1026,20 @@ void BX_CPU_C::reset(unsigned source)
 #endif
 
 #if BX_SUPPORT_SMP
-  if (source == BX_RESET_HARDWARE) {
-    // notice if I'm the bootstrap processor.  If not, do the equivalent of
-    // a HALT instruction.
-    int apic_id = local_apic.get_id();
-    if (BX_BOOTSTRAP_PROCESSOR == apic_id) {
-      // boot normally
-      BX_CPU_THIS_PTR msr.apicbase |= 0x0100; /* set bit 8 BSP */
-      BX_INFO(("CPU[%d] is the bootstrap processor", apic_id));
-    } else {
-      // it's an application processor, halt until IPI is heard.
-      BX_CPU_THIS_PTR msr.apicbase &= ~0x0100; /* clear bit 8 BSP */
-      BX_INFO(("CPU[%d] is an application processor. Halting until IPI.", apic_id));
-      activity_state = BX_ACTIVITY_STATE_WAIT_FOR_SIPI;
-      disable_INIT = 1; // INIT is disabled when CPU is waiting for SIPI
-      async_event = 1;
-    }
+  // notice if I'm the bootstrap processor.  If not, do the equivalent of
+  // a HALT instruction.
+  int apic_id = local_apic.get_id();
+  if (BX_BOOTSTRAP_PROCESSOR == apic_id) {
+    // boot normally
+    BX_CPU_THIS_PTR msr.apicbase |= 0x0100; /* set bit 8 BSP */
+    BX_INFO(("CPU[%d] is the bootstrap processor", apic_id));
+  } else {
+    // it's an application processor, halt until IPI is heard.
+    BX_CPU_THIS_PTR msr.apicbase &= ~0x0100; /* clear bit 8 BSP */
+    BX_INFO(("CPU[%d] is an application processor. Halting until IPI.", apic_id));
+    activity_state = BX_ACTIVITY_STATE_WAIT_FOR_SIPI;
+    disable_INIT = 1; // INIT is disabled when CPU is waiting for SIPI
+    async_event = 1;
   }
 #endif
 
