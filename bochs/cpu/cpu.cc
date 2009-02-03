@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.267 2009-02-03 19:17:15 sshwarts Exp $
+// $Id: cpu.cc,v 1.268 2009-02-03 19:26:09 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -854,8 +854,10 @@ void BX_CPU_C::deliver_SIPI(unsigned vector)
 
 void BX_CPU_C::deliver_INIT(void)
 {
-  BX_CPU_THIS_PTR pending_INIT = 1;
-  BX_CPU_THIS_PTR async_event = 1;
+  if (! BX_CPU_THIS_PTR disable_INIT) {
+    BX_CPU_THIS_PTR pending_INIT = 1;
+    BX_CPU_THIS_PTR async_event = 1;
+  }
 }
 
 void BX_CPU_C::deliver_NMI(void)
