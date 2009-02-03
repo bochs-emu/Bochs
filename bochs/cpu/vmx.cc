@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmx.cc,v 1.4 2009-02-02 18:59:44 sshwarts Exp $
+// $Id: vmx.cc,v 1.5 2009-02-03 19:17:15 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2009 Stanislav Shwartsman
@@ -1194,13 +1194,15 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
     else BX_CPU_THIS_PTR inhibit_mask = 0;
   }
 
-  if (BX_CPU_THIS_PTR inhibit_mask) {
+  if (BX_CPU_THIS_PTR inhibit_mask)
     BX_CPU_THIS_PTR async_event = 1;
-  }
+
+  if (guest.interruptibility_state & BX_VMX_INTERRUPTS_BLOCKED_NMI_BLOCKED)
+    BX_CPU_THIS_PTR disable_NMI = 1;
 
   if (vm->vmexec_ctrls2 & VMX_VM_EXEC_CTRL2_INTERRUPT_WINDOW_VMEXIT) {
     BX_CPU_THIS_PTR async_event = 1;
-    BX_CPU_THIS_PTR intr_pending_vmx = 1; // set up interrupt window exiting
+    BX_CPU_THIS_PTR vmx_interrupt_window = 1; // set up interrupt window exiting
   }
 
 #if BX_SUPPORT_MONITOR_MWAIT
@@ -1633,8 +1635,9 @@ void BX_CPU_C::VMexit(bxInstruction_c *i, Bit32u reason, Bit64u qualification)
   // STEP 4: Go back to VMX host
   //
 
+  BX_CPU_THIS_PTR disable_INIT = 1; // INIT is disabled in VMX root mode
   BX_CPU_THIS_PTR in_vmx_guest = 0;
-  BX_CPU_THIS_PTR intr_pending_vmx = 0;
+  BX_CPU_THIS_PTR vmx_interrupt_window = 0;
 
   longjmp(BX_CPU_THIS_PTR jmp_buf_env, 1); // go back to main decode loop
 }
@@ -1684,7 +1687,7 @@ void BX_CPU_C::VMXON(bxInstruction_c *i)
       
     BX_CPU_THIS_PTR vmcsptr = BX_INVALID_VMCSPTR;
     BX_CPU_THIS_PTR in_vmx = 1;
-    BX_CPU_THIS_PTR disable_INIT = 1;
+    BX_CPU_THIS_PTR disable_INIT = 1; // INIT is disabled in VMX root mode
     // block and disable A20M;
 
 #if BX_SUPPORT_MONITOR_MWAIT
@@ -1965,6 +1968,7 @@ void BX_CPU_C::VMLAUNCH(bxInstruction_c *i)
 */
 
   BX_CPU_THIS_PTR in_vmx_guest = 1;
+  BX_CPU_THIS_PTR disable_INIT = 0;
 
   ///////////////////////////////////////////////////////
   // STEP 7: Inject events to the guest
@@ -2664,7 +2668,7 @@ void BX_CPU_C::register_vmx_state(bx_param_c *parent)
   BXRS_HEX_PARAM_FIELD(vmx, vmcsptr, BX_CPU_THIS_PTR vmcsptr);
   BXRS_PARAM_BOOL(vmx, in_vmx, BX_CPU_THIS_PTR in_vmx);
   BXRS_PARAM_BOOL(vmx, in_vmx_guest, BX_CPU_THIS_PTR in_vmx_guest);
-  BXRS_PARAM_BOOL(vmx, intr_pending_vmx, BX_CPU_THIS_PTR intr_pending_vmx);
+  BXRS_PARAM_BOOL(vmx, vmx_interrupt_window, BX_CPU_THIS_PTR vmx_interrupt_window);
 
   bx_list_c *vmcache = new bx_list_c(vmx, "VMCS_CACHE", 5);
 

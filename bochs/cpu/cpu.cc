@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.266 2009-02-02 18:59:44 sshwarts Exp $
+// $Id: cpu.cc,v 1.267 2009-02-03 19:17:15 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -436,7 +436,7 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
     {
       if ((BX_CPU_INTR && (BX_CPU_THIS_PTR get_IF() || 
           (BX_CPU_THIS_PTR activity_state == BX_ACTIVITY_STATE_MWAIT_IF))) ||
-           BX_CPU_THIS_PTR pending_NMI || BX_CPU_THIS_PTR pending_SMI)
+           BX_CPU_THIS_PTR pending_NMI || BX_CPU_THIS_PTR pending_SMI || BX_CPU_THIS_PTR pending_INIT)
       {
         // interrupt ends the HALT condition
 #if BX_SUPPORT_MONITOR_MWAIT
@@ -493,18 +493,35 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
   //   STOPCLK
   //   SMI
   //   INIT
-  // (bochs doesn't support these)
   if (BX_CPU_THIS_PTR pending_SMI && ! BX_CPU_THIS_PTR smm_mode())
   {
     // clear SMI pending flag and disable NMI when SMM was accepted
     BX_CPU_THIS_PTR pending_SMI = 0;
-    BX_CPU_THIS_PTR disable_NMI = 1;
     enter_system_management_mode();
+  }
+
+  if (BX_CPU_THIS_PTR pending_INIT && ! BX_CPU_THIS_PTR disable_INIT) {
+#if BX_SUPPORT_VMX
+    if (BX_CPU_THIS_PTR in_vmx_guest) {
+      BX_ERROR(("VMEXIT: INIT pin asserted"));
+      VMexit(0, VMX_VMEXIT_INIT, 0);
+    }
+#endif
+    // reset will clear pending INIT
+    BX_CPU_THIS_PTR reset(BX_RESET_SOFTWARE);
   }
 
   // Priority 4: Traps on Previous Instruction
   //   Breakpoints
   //   Debug Trap Exceptions (TF flag set or data/IO breakpoint)
+  if (BX_CPU_THIS_PTR debug_trap &&
+       !(BX_CPU_THIS_PTR inhibit_mask & BX_INHIBIT_DEBUG))
+  {
+    // A trap may be inhibited on this boundary due to an instruction
+    // which loaded SS.  If so we clear the inhibit_mask below
+    // and don't execute this code until the next boundary.
+    exception(BX_DB_EXCEPTION, 0, 0); // no error, not interrupt
+  }
 
   // Priority 5: External Interrupts
   //   NMI Interrupts
@@ -517,20 +534,15 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
     // boundary.
   }
 #if BX_SUPPORT_VMX
-  else if (BX_CPU_THIS_PTR intr_pending_vmx && BX_CPU_THIS_PTR get_IF())
+  else if (! BX_CPU_THIS_PTR disable_NMI && BX_CPU_THIS_PTR in_vmx_guest && 
+       VMEXIT(VMX_VM_EXEC_CTRL2_NMI_WINDOW_VMEXIT))
   {
-    // interrupt-window exiting
-    BX_ERROR(("VMEXIT: Interrupt window exiting"));
-    VMexit(0, VMX_VMEXIT_INTERRUPT_WINDOW, 0);
+    // NMI-window exiting
+    BX_ERROR(("VMEXIT: NMI window exiting"));
+    VMexit(0, VMX_VMEXIT_NMI_WINDOW, 0);
   }
 #endif
-  else if (BX_CPU_THIS_PTR debug_trap) {
-    // A trap may be inhibited on this boundary due to an instruction
-    // which loaded SS.  If so we clear the inhibit_mask below
-    // and don't execute this code until the next boundary.
-    exception(BX_DB_EXCEPTION, 0, 0); // no error, not interrupt
-  }
-  else if (BX_CPU_THIS_PTR pending_NMI) {
+  else if (BX_CPU_THIS_PTR pending_NMI && ! BX_CPU_THIS_PTR disable_NMI) {
     BX_CPU_THIS_PTR pending_NMI = 0;
     BX_CPU_THIS_PTR disable_NMI = 1;
     BX_CPU_THIS_PTR errorno = 0;
@@ -541,6 +553,13 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
     BX_INSTR_HWINTERRUPT(BX_CPU_ID, 2, BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, RIP);
     interrupt(2, BX_NMI, 0, 0);
   }
+#if BX_SUPPORT_VMX
+  else if (BX_CPU_THIS_PTR vmx_interrupt_window && BX_CPU_THIS_PTR get_IF()) {
+    // interrupt-window exiting
+    BX_ERROR(("VMEXIT: interrupt window exiting"));
+    VMexit(0, VMX_VMEXIT_INTERRUPT_WINDOW, 0);
+  }
+#endif
   else if (BX_CPU_INTR && BX_CPU_THIS_PTR get_IF() && BX_DBG_ASYNC_INTR)
   {
     Bit8u vector;
@@ -648,7 +667,7 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
         || (BX_CPU_THIS_PTR dr7 & 0xff)
 #endif
 #if BX_SUPPORT_VMX
-        || (BX_CPU_THIS_PTR intr_pending_vmx)
+        || (BX_CPU_THIS_PTR vmx_interrupt_window)
 #endif
         ))
     BX_CPU_THIS_PTR async_event = 0;
@@ -835,9 +854,8 @@ void BX_CPU_C::deliver_SIPI(unsigned vector)
 
 void BX_CPU_C::deliver_INIT(void)
 {
-  if (! BX_CPU_THIS_PTR disable_INIT) {
-    BX_CPU_THIS_PTR reset(BX_RESET_SOFTWARE);
-  }
+  BX_CPU_THIS_PTR pending_INIT = 1;
+  BX_CPU_THIS_PTR async_event = 1;
 }
 
 void BX_CPU_C::deliver_NMI(void)

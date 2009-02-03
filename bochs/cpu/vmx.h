@@ -471,8 +471,7 @@ typedef struct bx_VMCS
 
 #define VMX_VM_EXEC_CRTL1_SUPPORTED_BITS \
        (VMX_VM_EXEC_CTRL1_EXTERNAL_INTERRUPT_VMEXIT | \
-        VMX_VM_EXEC_CTRL1_NMI_VMEXIT | \
-        VMX_VM_EXEC_CTRL1_VIRTUAL_NMI)
+        VMX_VM_EXEC_CTRL1_NMI_VMEXIT)
 
 #endif
 
@@ -657,6 +656,9 @@ enum VMX_Activity_State {
    BX_VMX_STATE_WAIT_FOR_SIPI,
    BX_VMX_LAST_ACTIVITY_STATE
 };
+
+#define PIN_VMEXIT(ctrl) (BX_CPU_THIS_PTR vmcs.vmexec_ctrls1 & (ctrl))
+#define     VMEXIT(ctrl) (BX_CPU_THIS_PTR vmcs.vmexec_ctrls2 & (ctrl))
 
 #define BX_VMX_INTERRUPTS_BLOCKED_BY_STI      (1 << 0)
 #define BX_VMX_INTERRUPTS_BLOCKED_BY_MOV_SS   (1 << 1)

@@ -1,5 +1,5 @@
 ////////c/////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer64.cc,v 1.76 2009-01-16 18:18:58 sshwarts Exp $
+// $Id: ctrl_xfer64.cc,v 1.77 2009-02-03 19:17:15 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -462,11 +462,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::IRET64(bxInstruction_c *i)
 {
   invalidate_prefetch_q();
 
+#if BX_SUPPORT_VMX
+  if (!BX_CPU_THIS_PTR in_vmx_guest || !VMEXIT(VMX_VM_EXEC_CTRL1_NMI_VMEXIT))
+#endif
+    BX_CPU_THIS_PTR disable_NMI = 0;
+
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR show_flag |= Flag_iret;
 #endif
-
-  BX_CPU_THIS_PTR disable_NMI = 0;
 
   BX_ASSERT(protected_mode());
 

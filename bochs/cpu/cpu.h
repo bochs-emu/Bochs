@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.567 2009-02-02 18:59:44 sshwarts Exp $
+// $Id: cpu.h,v 1.568 2009-02-03 19:17:15 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -924,7 +924,7 @@ public: // for now...
   bx_bool in_event;
   bx_bool in_vmx;
   bx_bool in_vmx_guest;
-  bx_bool intr_pending_vmx;
+  bx_bool vmx_interrupt_window;
   Bit64u  vmcsptr;
   VMCS_CACHE vmcs;
 #endif

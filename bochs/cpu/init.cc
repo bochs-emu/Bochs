@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.195 2009-01-31 11:53:57 sshwarts Exp $
+// $Id: init.cc,v 1.196 2009-02-03 19:17:15 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1021,7 +1021,7 @@ void BX_CPU_C::reset(unsigned source)
 #if BX_SUPPORT_VMX
   BX_CPU_THIS_PTR in_vmx = BX_CPU_THIS_PTR in_vmx_guest = 0;
   BX_CPU_THIS_PTR in_event = 0;
-  BX_CPU_THIS_PTR intr_pending_vmx = 0;
+  BX_CPU_THIS_PTR vmx_interrupt_window = 0;
   BX_CPU_THIS_PTR vmcsptr = BX_CONST64(0xFFFFFFFFFFFFFFFF);
 #endif
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmexit.cc,v 1.3 2009-02-02 18:59:44 sshwarts Exp $
+// $Id: vmexit.cc,v 1.4 2009-02-03 19:17:15 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2009 Stanislav Shwartsman
@@ -126,8 +126,6 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::VMexit_Instruction(bxInstruction_c *i, Bit
   VMexit(i, reason, qualification);
 }
 
-#define VMEXIT(ctrl) (BX_CPU_THIS_PTR vmcs.vmexec_ctrls2 & (ctrl))
-
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMexit_HLT(bxInstruction_c *i)
 {
   if (! BX_CPU_THIS_PTR in_vmx_guest) return;
@@ -222,10 +220,8 @@ void BX_CPU_C::VMexit_ExtInterrupt(void)
 {
   if (! BX_CPU_THIS_PTR in_vmx_guest) return;
 
-  VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
-
-  if (vm->vmexec_ctrls1 & VMX_VM_EXEC_CTRL1_EXTERNAL_INTERRUPT_VMEXIT) {
-    if (! (vm->vmexit_ctrls & VMX_VMEXIT_CTRL1_INTA_ON_VMEXIT)) {
+  if (PIN_VMEXIT(VMX_VM_EXEC_CTRL1_EXTERNAL_INTERRUPT_VMEXIT)) {
+    if (! PIN_VMEXIT(VMX_VMEXIT_CTRL1_INTA_ON_VMEXIT)) {
        // interrupt wasn't acknowledged and still pending, interruption info is invalid
        VMwrite32(VMCS_32BIT_VMEXIT_INTERRUPTION_INFO, 0);
        VMexit(0, VMX_VMEXIT_EXTERNAL_INTERRUPT, 0);
@@ -244,12 +240,12 @@ void BX_CPU_C::VMexit_Event(bxInstruction_c *i, unsigned type, unsigned vector, 
   switch(type) {
     case BX_EXTERNAL_INTERRUPT:
       reason = VMX_VMEXIT_EXTERNAL_INTERRUPT;
-      if (vm->vmexec_ctrls1 & VMX_VM_EXEC_CTRL1_EXTERNAL_INTERRUPT_VMEXIT)
+      if (PIN_VMEXIT(VMX_VM_EXEC_CTRL1_EXTERNAL_INTERRUPT_VMEXIT))
          vmexit = 1;
       break;
 
     case BX_NMI:
-      if (vm->vmexec_ctrls1 & VMX_VM_EXEC_CTRL1_NMI_VMEXIT)
+      if (PIN_VMEXIT(VMX_VM_EXEC_CTRL1_NMI_VMEXIT))
          vmexit = 1;
       break;
 
