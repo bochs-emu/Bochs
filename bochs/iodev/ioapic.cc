@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ioapic.cc,v 1.41 2009-01-10 11:30:20 vruppert Exp $
+// $Id: ioapic.cc,v 1.42 2009-02-03 19:12:00 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -43,8 +43,15 @@ static bx_bool ioapic_write(bx_phy_address a20addr, unsigned len, void *data, vo
 {
   if (len != 4) {
     BX_PANIC (("I/O apic write with len=%d (should be 4)", len));
+    return 1;
   }
-  bx_ioapic.write(a20addr, (Bit32u*) data, len);
+
+  if(a20addr & 3) {
+    BX_PANIC(("I/O apic write at unaligned address 0x" FMT_PHY_ADDRX, a20addr));
+    return 1;
+  }
+
+  bx_ioapic.write_aligned(a20addr, (Bit32u*) data);
   return 1;
 }
 
