@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.281 2009-02-02 18:59:44 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.282 2009-02-03 21:11:31 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -625,14 +625,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CdRd(bxInstruction_c *i)
         exception(BX_GP_EXCEPTION, 0, 0);
       break;
     case 2: /* CR2 */
-      BX_DEBUG(("MOV_CdRd:CR2 = %08x", val_32));
       BX_CPU_THIS_PTR cr2 = val_32;
       break;
     case 3: // CR3
 #if BX_SUPPORT_VMX
       VMexit_CR3_Write(i, val_32);
 #endif
-      BX_DEBUG(("MOV_CdRd:CR3 = %08x", val_32));
       // Reserved bits take on value of MOV instruction
       SetCR3(val_32);
       BX_INSTR_TLB_CNTRL(BX_CPU_ID, BX_INSTR_MOV_CR3, val_32);
@@ -681,19 +679,16 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RdCd(bxInstruction_c *i)
       val_32 = read_CR0(); /* correctly handle VMX */
       break;
     case 2: /* CR2 */
-      BX_DEBUG(("MOV_RdCd: reading CR2"));
       val_32 = (Bit32u) BX_CPU_THIS_PTR cr2;
       break;
     case 3: // CR3
 #if BX_SUPPORT_VMX
       VMexit_CR3_Read(i);
 #endif
-      BX_DEBUG(("MOV_RdCd: reading CR3"));
       val_32 = (Bit32u) BX_CPU_THIS_PTR cr3;
       break;
     case 4: // CR4
 #if BX_CPU_LEVEL > 3
-      BX_DEBUG(("MOV_RdCd: read of CR4"));
       val_32 = read_CR4(); /* correctly handle VMX */
 #endif
       break;
@@ -735,18 +730,16 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CqRq(bxInstruction_c *i)
 #if BX_SUPPORT_VMX
       val_64 = VMexit_CR0_Write(i, val_64);
 #endif
-      if (! SetCR0((Bit32u) val_64))
+      if (! SetCR0(val_64))
         exception(BX_GP_EXCEPTION, 0, 0);
       break;
     case 2: /* CR2 */
-      BX_DEBUG(("MOV_CqRq: write to CR2 of %08x:%08x", GET32H(val_64), GET32L(val_64)));
       BX_CPU_THIS_PTR cr2 = val_64;
       break;
     case 3: // CR3
 #if BX_SUPPORT_VMX
       VMexit_CR3_Write(i, val_64);
 #endif
-      BX_DEBUG(("MOV_CqRq: write to CR3 of %08x:%08x", GET32H(val_64), GET32L(val_64)));
       // Reserved bits take on value of MOV instruction
       SetCR3(val_64);
       BX_INSTR_TLB_CNTRL(BX_CPU_ID, BX_INSTR_MOV_CR3, val_64);
@@ -812,18 +805,15 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RqCq(bxInstruction_c *i)
       val_64 = read_CR0(); /* correctly handle VMX */
       break;
     case 2: /* CR2 */
-      BX_DEBUG(("MOV_RqCq: read of CR2"));
       val_64 = BX_CPU_THIS_PTR cr2;
       break;
     case 3: // CR3
 #if BX_SUPPORT_VMX
       VMexit_CR3_Read(i);
 #endif
-      BX_DEBUG(("MOV_RqCq: read of CR3"));
       val_64 = BX_CPU_THIS_PTR cr3;
       break;
     case 4: // CR4
-      BX_DEBUG(("MOV_RqCq: read of CR4"));
       val_64 = read_CR4(); /* correctly handle VMX */
       break;
     case 8: // CR8
@@ -1285,8 +1275,15 @@ bx_address BX_CPU_C::read_CR4(void)
   return cr4_val;
 }
 
-bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::SetCR0(Bit32u val_32)
+bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::SetCR0(bx_address val_64)
 {
+  if (GET32H(val_64)) {
+    BX_ERROR(("SetCR0: GP(0) when trying to set CR0 > 32 bits"));
+    return 0;
+  }
+
+  Bit32u val_32 = GET32L(val_64);
+
   bx_bool pe = val_32 & 0x1;
   bx_bool nw = (val_32 >> 29) & 0x1;
   bx_bool cd = (val_32 >> 30) & 0x1;
@@ -1478,6 +1475,7 @@ bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::SetCR4(bx_address val)
 
   BX_CPU_THIS_PTR cr4.set32(val);
   pagingCR4Changed(oldCR4, BX_CPU_THIS_PTR cr4.get32());
+
   return 1;
 }
 #endif // BX_CPU_LEVEL >= 4
