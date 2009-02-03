@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.cc,v 1.114 2009-01-27 21:13:38 sshwarts Exp $
+// $Id: apic.cc,v 1.115 2009-02-03 19:25:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (c) 2002 Zwane Mwaikambo, Stanislav Shwartsman
@@ -702,7 +702,7 @@ bx_bool bx_local_apic_c::deliver(Bit8u vector, Bit8u delivery_mode, Bit8u trig_m
     cpu->deliver_INIT();
     break;
   case APIC_DM_SIPI:
-    BX_DEBUG(("Deliver Start Up IPI"));
+    BX_INFO(("Deliver Start Up IPI"));
     startup_msg(vector);
     break;
   case APIC_DM_EXTINT:
