@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_vnet.cc,v 1.23 2008-12-11 18:01:56 vruppert Exp $
+// $Id: eth_vnet.cc,v 1.24 2009-02-03 20:04:20 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // virtual Ethernet locator
@@ -862,6 +862,7 @@ void bx_vnet_pktmover_c::udpipv4_dhcp_handler_ns(
   bx_bool found_serverid = false;
   bx_bool found_leasetime = false;
   bx_bool found_guest_ipaddr = false;
+  bx_bool found_host_name = false;
   Bit32u leasetime = BX_MAX_BIT32U;
   const Bit8u *dhcpreqparams = NULL;
   unsigned dhcpreqparams_len = 0;
@@ -870,6 +871,8 @@ void bx_vnet_pktmover_c::udpipv4_dhcp_handler_ns(
   unsigned dhcpreqparams_default_len = 0;
   Bit8u *replyopts;
   Bit8u replybuf[576];
+  char *hostname = NULL;
+  unsigned hostname_len = 0;
 
   if (data_len < (236U+64U)) return;
   if (data[0] != BOOTREQUEST) return;
@@ -941,6 +944,14 @@ void bx_vnet_pktmover_c::udpipv4_dhcp_handler_ns(
         memcpy(guest_ipv4addr,default_guest_ipv4addr,4);
       }
       break;
+    case BOOTPOPT_HOST_NAME:
+      if (extlen < 1)
+        break;
+      hostname = (char*)malloc(extlen);
+      memcpy(hostname, extdata, extlen);
+      hostname_len = extlen;
+      found_host_name = true;
+      break;
     default:
       BX_ERROR(("extcode %d not supported yet", extcode));
       break;
@@ -973,6 +984,9 @@ void bx_vnet_pktmover_c::udpipv4_dhcp_handler_ns(
     opts_len -= 3;
     dhcpreqparam_default[0] = BOOTPOPT_IP_ADDRESS_LEASE_TIME;
     dhcpreqparam_default[1] = BOOTPOPT_SERVER_IDENTIFIER;
+    if (found_host_name) {
+      dhcpreqparam_default[2] = BOOTPOPT_HOST_NAME;
+    }
     dhcpreqparam_default_validflag = true;
     break;
   case DHCPREQUEST:
@@ -1113,6 +1127,22 @@ void bx_vnet_pktmover_c::udpipv4_dhcp_handler_ns(
         put_net4(replyopts, 1800);
         replyopts += 4;
         break;
+      case BOOTPOPT_HOST_NAME:
+        if (hostname != NULL) {
+          BX_INFO(("provide BOOTPOPT_HOST_NAME"));
+          if (opts_len < (hostname_len + 2)) {
+            free(hostname);
+            BX_ERROR(("option buffer is insufficient"));
+            return;
+          }
+          opts_len -= (hostname_len + 2);
+          *replyopts ++ = BOOTPOPT_HOST_NAME;
+          *replyopts ++ = hostname_len;
+          memcpy(replyopts, hostname, hostname_len);
+          *replyopts += hostname_len;
+          free(hostname);
+          break;
+        }
       default:
         if (*(dhcpreqparams-1) != 0) {
           BX_ERROR(("dhcp server: requested parameter %u not supported yet",*(dhcpreqparams-1)));
