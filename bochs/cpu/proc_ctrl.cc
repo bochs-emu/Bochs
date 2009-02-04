@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.282 2009-02-03 21:11:31 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.283 2009-02-04 16:05:47 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1275,14 +1275,16 @@ bx_address BX_CPU_C::read_CR4(void)
   return cr4_val;
 }
 
-bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::SetCR0(bx_address val_64)
+bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::SetCR0(bx_address val)
 {
-  if (GET32H(val_64)) {
+#if BX_SUPPORT_X86_64
+  if (GET32H(val)) {
     BX_ERROR(("SetCR0: GP(0) when trying to set CR0 > 32 bits"));
     return 0;
   }
+#endif
 
-  Bit32u val_32 = GET32L(val_64);
+  Bit32u val_32 = GET32L(val);
 
   bx_bool pe = val_32 & 0x1;
   bx_bool nw = (val_32 >> 29) & 0x1;
