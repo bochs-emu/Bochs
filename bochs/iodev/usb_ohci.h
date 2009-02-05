@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_ohci.h,v 1.1 2009-01-19 17:18:57 vruppert Exp $
+// $Id: usb_ohci.h,v 1.2 2009-02-05 16:53:44 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Benjamin D Lunt (fys at frontiernet net)
@@ -31,10 +31,83 @@
 
 #define USB_NUM_PORTS   2
 
+// Completion Codes
+enum {
+  NoError = 0,
+  CRC,
+  BitStuffing,
+  DataToggleMismatch,
+  Stall,
+  DeviceNotResponding,
+  PIDCheckFailure,
+  UnexpectedPID,
+  DataOverrun,
+  DataUnderrun,
+  BufferOverrun = 0xC,
+  BufferUnderrun,
+  NotAccessed
+};
+
+struct OHCI_ED {
+  Bit32u   fa       :7;
+  unsigned en       :4;
+  unsigned d        :2;
+  unsigned s        :1;
+  unsigned k        :1;
+  unsigned f        :1;
+  unsigned mps      :11;
+  unsigned          :5;
+  Bit32u            :4;
+  unsigned tail_p   :28;
+  Bit32u   h        :1;
+  unsigned c        :1;
+  unsigned zero     :2;
+  unsigned head_p   :28;
+  Bit32u            :4;
+  unsigned next_ed  :28;
+};
+
+struct OHCI_TD {
+  Bit32u   unknown  :18;
+  unsigned r        :1;
+  unsigned dp       :2;
+  unsigned di       :3;
+  unsigned t        :2;
+  unsigned ec       :2;
+  unsigned cc       :4;
+  Bit32u   cbp;
+  Bit32u   zero     :4;
+  unsigned next_td  :28;
+  Bit32u   be;
+};
+
+struct OHCI_TD_ISO {
+  Bit32u   sf       :16;
+  unsigned unkn     :5;
+  unsigned di       :3;
+  unsigned fc       :3;
+  unsigned unkn1    :1;
+  unsigned cc       :4;
+  Bit32u   unkn2    :12;
+  unsigned bp0      :20;
+  Bit32u   zero     :4;
+  unsigned next_td  :28;
+  Bit32u   be;
+  Bit32u   offset0  :16;
+  unsigned offset1  :16;
+  Bit32u   offset2  :16;
+  unsigned offset3  :16;
+  Bit32u   offset4  :16;
+  unsigned offset5  :16;
+  Bit32u   offset6  :16;
+  unsigned offset7  :16;
+};
+
 typedef struct {
   bx_phy_address base_addr;
 
-  int   timer_index;
+  int   frame_index;
+  int   interval_index;
 
   struct OHCI_OP_REGS {
     struct {                     //   size                                on reset     HCD  HC
@@ -87,18 +160,9 @@ typedef struct {
       bx_bool so;                //  1 bit SchedulingOverrun           = 0b             RW  RW
     } HcInterruptEnable;         //                                    = 0x00000000
     struct {
-      bx_bool mie;               //  1 bit MasterInterruptEnable       = 0b             RW  R
-      bx_bool oc;                //  1 bit OwnershipChange             = 0b             RWC R
-      Bit32u  reserved;          // 23 bit reserved                    = 0x000000       R   R
-      bx_bool rhsc;              //  1 bit RootHubStatusChange         = 0b             RWC RW
-      bx_bool fno;               //  1 bit FrameNumberOverflow         = 0b             RWC RW
-      bx_bool ue;                //  1 bit UnrecoverableError          = 0b             RWC RW
-      bx_bool rd;                //  1 bit ResumeDetected              = 0b             RWC RW
-      bx_bool sf;                //  1 bit StartifFrame                = 0b             RWC RW
-      bx_bool wdh;               //  1 bit WritebackDoneHead           = 0b             RWC RW
-      bx_bool so;                //  1 bit SchedulingOverrun           = 0b             RWC RW
-    } HcInterruptDisable;        //                                    = 0x00000000
-    Bit32u HcHCCA;               // 32 bit addr HCCommunicationArea    = 0x00000000     RW  R
+      Bit32u hcca;               // 24 bit HCCommunicationArea         = 0x000000       RW  R
+      Bit8u  zero;               //  8 bit zero                        = 0000b          R   R
+    } HcHCCA;                    //                                    = 0x00000000
     struct {
       Bit32u  pced;              // 28 bit PeriodCurrentED             = 0x00000000     R   RW
       Bit8u   zero;              //  4 bit zero                        = 0000b          R   R
@@ -132,7 +196,7 @@ typedef struct {
     struct {
       bx_bool frt;               //  1 bit FrameRemainingToggle        = 0b             R   RW
       Bit8u   reserved;          // 17 bit reserved                    = 0x00000        R   R
-      Bit16u  fr;                // 14 bit FrameRemaining              = 0x0000         RW  R
+      Bit32s  fr;                // 14 bit FrameRemaining              = 0x0000         RW  R
     } HcFmRemaining;             //                                    = 0x00000000
     struct {
       Bit16u  reserved;          // 16 bit reserved                    = 0x00000        R   R
@@ -197,6 +261,7 @@ typedef struct {
 
   Bit8u pci_conf[256];
   Bit8u devfunc;
+  unsigned ohci_done_count;
 
   int statusbar_id[2]; // IDs of the status LEDs
 } bx_usb_ohci_t;
@@ -224,7 +289,6 @@ private:
 
   bx_usb_ohci_t hub;
   Bit8u         global_reset;
-  bx_bool       busy;
   Bit8u         *device_buffer;
 
   usb_hid_device_c *mousedev;
@@ -232,16 +296,21 @@ private:
 
   USBPacket usb_packet;
 
-  static void set_irq_level(bx_bool level);
+  static void reset_hc();
+  static void reset_port(int);
+  static void set_irq_level(const bx_bool, const bx_bool);
 
   static void init_device(Bit8u port, const char *devname);
   static void usb_set_connect_status(Bit8u port, int type, bx_bool connected);
 
-  static void usb_timer_handler(void *);
-  void usb_timer(void);
-  bx_bool DoTransfer(Bit32u address, Bit32u queue_num, struct TD *);
-  void set_status(struct TD *td, bx_bool stalled, bx_bool data_buffer_error, bx_bool babble,
-    bx_bool nak, bx_bool crc_time_out, bx_bool bitstuff_error, Bit16u act_len);
+  static void usb_frame_handler(void *);
+  void usb_frame_timer(void);
+  static void usb_interval_handler(void *);
+  void usb_interval_timer(void);
+
+  bx_bool process_ed(struct OHCI_ED *, const Bit32u, const bx_bool);
+  bx_bool process_td(struct OHCI_TD *, struct OHCI_ED *);
+
 #if BX_USE_USB_OHCI_SMF
   static bx_bool read_handler(bx_phy_address addr, unsigned len, void *data, void *param);
   static bx_bool write_handler(bx_phy_address addr, unsigned len, void *data, void *param);
