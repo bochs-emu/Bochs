@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.224 2009-01-31 10:43:23 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.225 2009-02-06 15:03:47 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -494,8 +494,8 @@ static const BxOpcodeInfo_t BxOpcodeInfo64R[512*3] = {
   /* 0F 31 /wr */ { 0, BX_IA_RDTSC },
   /* 0F 32 /wr */ { 0, BX_IA_RDMSR },
   /* 0F 33 /wr */ { 0, BX_IA_RDPMC },
-  /* 0F 34 /wr */ { 0, BX_IA_SYSENTER },
-  /* 0F 35 /wr */ { 0, BX_IA_SYSEXIT },
+  /* 0F 34 /wr */ { BxTraceEnd, BX_IA_SYSENTER },
+  /* 0F 35 /wr */ { BxTraceEnd, BX_IA_SYSEXIT },
   /* 0F 36 /wr */ { 0, BX_IA_ERROR },
   /* 0F 37 /wr */ { 0, BX_IA_ERROR },
 #if (BX_SUPPORT_SSE >= 4) || (BX_SUPPORT_SSE >= 3 && BX_SUPPORT_SSE_EXTENSION > 0)
@@ -1021,8 +1021,8 @@ static const BxOpcodeInfo_t BxOpcodeInfo64R[512*3] = {
   /* 0F 31 /dr */ { 0, BX_IA_RDTSC },
   /* 0F 32 /dr */ { 0, BX_IA_RDMSR },
   /* 0F 33 /dr */ { 0, BX_IA_RDPMC },
-  /* 0F 34 /dr */ { 0, BX_IA_SYSENTER },
-  /* 0F 35 /dr */ { 0, BX_IA_SYSEXIT },
+  /* 0F 34 /dr */ { BxTraceEnd, BX_IA_SYSENTER },
+  /* 0F 35 /dr */ { BxTraceEnd, BX_IA_SYSEXIT },
   /* 0F 36 /dr */ { 0, BX_IA_ERROR },
   /* 0F 37 /dr */ { 0, BX_IA_ERROR },
 #if (BX_SUPPORT_SSE >= 4) || (BX_SUPPORT_SSE >= 3 && BX_SUPPORT_SSE_EXTENSION > 0)
@@ -1548,8 +1548,8 @@ static const BxOpcodeInfo_t BxOpcodeInfo64R[512*3] = {
   /* 0F 31 /qr */ { 0, BX_IA_RDTSC },
   /* 0F 32 /qr */ { 0, BX_IA_RDMSR },
   /* 0F 33 /qr */ { 0, BX_IA_RDPMC },
-  /* 0F 34 /qr */ { 0, BX_IA_SYSENTER },
-  /* 0F 35 /qr */ { 0, BX_IA_SYSEXIT },
+  /* 0F 34 /qr */ { BxTraceEnd, BX_IA_SYSENTER },
+  /* 0F 35 /qr */ { BxTraceEnd, BX_IA_SYSEXIT },
   /* 0F 36 /qr */ { 0, BX_IA_ERROR },
   /* 0F 37 /qr */ { 0, BX_IA_ERROR },
 #if (BX_SUPPORT_SSE >= 4) || (BX_SUPPORT_SSE >= 3 && BX_SUPPORT_SSE_EXTENSION > 0)
@@ -2081,8 +2081,8 @@ static const BxOpcodeInfo_t BxOpcodeInfo64M[512*3] = {
   /* 0F 31 /wm */ { 0, BX_IA_RDTSC },
   /* 0F 32 /wm */ { 0, BX_IA_RDMSR },
   /* 0F 33 /wm */ { 0, BX_IA_RDPMC },
-  /* 0F 34 /wm */ { 0, BX_IA_SYSENTER },
-  /* 0F 35 /wm */ { 0, BX_IA_SYSEXIT },
+  /* 0F 34 /wm */ { BxTraceEnd, BX_IA_SYSENTER },
+  /* 0F 35 /wm */ { BxTraceEnd, BX_IA_SYSEXIT },
   /* 0F 36 /wm */ { 0, BX_IA_ERROR },
   /* 0F 37 /wm */ { 0, BX_IA_ERROR },
 #if (BX_SUPPORT_SSE >= 4) || (BX_SUPPORT_SSE >= 3 && BX_SUPPORT_SSE_EXTENSION > 0)
@@ -2608,8 +2608,8 @@ static const BxOpcodeInfo_t BxOpcodeInfo64M[512*3] = {
   /* 0F 31 /dm */ { 0, BX_IA_RDTSC },
   /* 0F 32 /dm */ { 0, BX_IA_RDMSR },
   /* 0F 33 /dm */ { 0, BX_IA_RDPMC },
-  /* 0F 34 /dm */ { 0, BX_IA_SYSENTER },
-  /* 0F 35 /dm */ { 0, BX_IA_SYSEXIT },
+  /* 0F 34 /dm */ { BxTraceEnd, BX_IA_SYSENTER },
+  /* 0F 35 /dm */ { BxTraceEnd, BX_IA_SYSEXIT },
   /* 0F 36 /dm */ { 0, BX_IA_ERROR },
   /* 0F 37 /dm */ { 0, BX_IA_ERROR },
 #if (BX_SUPPORT_SSE >= 4) || (BX_SUPPORT_SSE >= 3 && BX_SUPPORT_SSE_EXTENSION > 0)
@@ -3135,8 +3135,8 @@ static const BxOpcodeInfo_t BxOpcodeInfo64M[512*3] = {
   /* 0F 31 /qm */ { 0, BX_IA_RDTSC },
   /* 0F 32 /qm */ { 0, BX_IA_RDMSR },
   /* 0F 33 /qm */ { 0, BX_IA_RDPMC },
-  /* 0F 34 /qm */ { 0, BX_IA_SYSENTER },
-  /* 0F 35 /qm */ { 0, BX_IA_SYSEXIT },
+  /* 0F 34 /qm */ { BxTraceEnd, BX_IA_SYSENTER },
+  /* 0F 35 /qm */ { BxTraceEnd, BX_IA_SYSEXIT },
   /* 0F 36 /qm */ { 0, BX_IA_ERROR },
   /* 0F 37 /qm */ { 0, BX_IA_ERROR },
 #if (BX_SUPPORT_SSE >= 4) || (BX_SUPPORT_SSE >= 3 && BX_SUPPORT_SSE_EXTENSION > 0)
