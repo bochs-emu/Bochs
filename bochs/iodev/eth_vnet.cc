@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_vnet.cc,v 1.24 2009-02-03 20:04:20 vruppert Exp $
+// $Id: eth_vnet.cc,v 1.25 2009-02-07 10:11:19 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // virtual Ethernet locator
@@ -1141,6 +1141,7 @@ void bx_vnet_pktmover_c::udpipv4_dhcp_handler_ns(
           memcpy(replyopts, hostname, hostname_len);
           *replyopts += hostname_len;
           free(hostname);
+          hostname = NULL;
           break;
         }
       default:
