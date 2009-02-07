@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.225 2009-01-19 21:39:03 vruppert Exp $
+// $Id: siminterface.h,v 1.226 2009-02-07 20:35:39 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  The Bochs Project
@@ -16,7 +16,7 @@
 //
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
-//  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+//  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA B 02110-1301 USA
 //
 /////////////////////////////////////////////////////////////////////////
 //
@@ -143,6 +143,8 @@ typedef enum {
 #define BXPN_BOCHS_BENCHMARK             "general.benchmark"
 #define BXPN_RESTORE_FLAG                "general.restore"
 #define BXPN_RESTORE_PATH                "general.restore_path"
+#define BXPN_LOAD_FLAG                   "general.load"
+#define BXPN_LOAD_PATH                   "general.load_path"
 #define BXPN_DEBUG_RUNNING               "general.debug_running"
 #define BXPN_CPU_NPROCESSORS             "cpu.n_processors"
 #define BXPN_CPU_NCORES                  "cpu.n_cores"
