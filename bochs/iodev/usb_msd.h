@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_msd.h,v 1.8 2009-01-19 09:48:12 vruppert Exp $
+// $Id: usb_msd.h,v 1.9 2009-02-07 21:05:31 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Volker Ruppert
@@ -16,7 +16,8 @@
 //
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
-//  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+//  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA B 02110-1301 USA
+/////////////////////////////////////////////////////////////////////////
 
 // USB mass storage device support ported from the Qemu project
 
@@ -25,7 +26,6 @@
 
 class device_image_t;
 class scsi_device_t;
-
 
 class usb_msd_device_c : public usb_device_c {
 public:

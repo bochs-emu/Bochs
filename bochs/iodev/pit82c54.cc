@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pit82c54.cc,v 1.34 2009-01-11 18:46:01 vruppert Exp $
+// $Id: pit82c54.cc,v 1.35 2009-02-07 21:05:31 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 /*
@@ -95,7 +95,7 @@ void pit_82C54::latch_counter(counter_type &thisctr)
     }
 }
 
-void pit_82C54::set_OUT (counter_type &thisctr, bx_bool data)
+void pit_82C54::set_OUT(counter_type &thisctr, bx_bool data)
 {
   if (thisctr.OUTpin != data) {
     thisctr.OUTpin = data;
@@ -934,12 +934,11 @@ Bit32u pit_82C54::get_clock_event_time(Bit8u cnum)
 
 Bit32u pit_82C54::get_next_event_time(void)
 {
-  Bit32u out;
   Bit32u time0=get_clock_event_time(0);
   Bit32u time1=get_clock_event_time(1);
   Bit32u time2=get_clock_event_time(2);
 
-  out=time0;
+  Bit32u out=time0;
   if (time1 && (time1<out))
     out=time1;
   if (time2 && (time2<out))

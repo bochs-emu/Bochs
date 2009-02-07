@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: soundlnx.h,v 1.11 2008-07-20 08:08:23 vruppert Exp $
+// $Id: soundlnx.h,v 1.12 2009-02-07 21:05:31 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -22,7 +22,9 @@
 //
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
-//  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+//  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA B 02110-1301 USA
+//
+/////////////////////////////////////////////////////////////////////////
 
 // Josef Drexler coded the original version of the lowlevel sound support
 // for Linux using OSS. The current version also supports OSS on FreeBSD and
