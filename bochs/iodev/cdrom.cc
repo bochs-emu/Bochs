@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cdrom.cc,v 1.94 2009-02-07 21:05:30 sshwarts Exp $
+// $Id: cdrom.cc,v 1.95 2009-02-08 09:05:52 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -22,7 +22,7 @@
 //
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
-//  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA B 02110-1301 USA
+//  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 /////////////////////////////////////////////////////////////////////////
 
 // These are the low-level CDROM functions which are called
@@ -522,7 +522,7 @@ cdrom_interface::cdrom_interface(char *dev)
 
 void
 cdrom_interface::init(void) {
-  BX_DEBUG(("Init $Id: cdrom.cc,v 1.94 2009-02-07 21:05:30 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: cdrom.cc,v 1.95 2009-02-08 09:05:52 vruppert Exp $"));
   BX_INFO(("file = '%s'",path));
 }
 

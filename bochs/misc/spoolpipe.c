@@ -1,4 +1,4 @@
-/* $Id: spoolpipe.c,v 1.1 2002-09-23 19:25:06 bdenney Exp $
+/* $Id: spoolpipe.c,v 1.2 2009-02-08 09:05:52 vruppert Exp $
  *
  * spoolpipe.c
  * by Carl Sopchak
@@ -26,7 +26,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA.
  *
  * --------------------------------------------------------------------------
  * Modification log:

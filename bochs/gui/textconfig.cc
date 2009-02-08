@@ -1,6 +1,22 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: textconfig.cc,v 1.72 2009-01-20 09:26:26 vruppert Exp $
+// $Id: textconfig.cc,v 1.73 2009-02-08 09:05:52 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
+//
+//  Copyright (C) 2009  The Bochs Project
+//
+//  This library is free software; you can redistribute it and/or
+//  modify it under the terms of the GNU Lesser General Public
+//  License as published by the Free Software Foundation; either
+//  version 2 of the License, or (at your option) any later version.
+//
+//  This library is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+//  Lesser General Public License for more details.
+//
+//  You should have received a copy of the GNU Lesser General Public
+//  License along with this library; if not, write to the Free Software
+//  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 //
 // This is code for a text-mode configuration interface.  Note that this file
 // does NOT include bochs.h.  Instead, it does all of its contact with

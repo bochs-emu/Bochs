@@ -1,5 +1,5 @@
 #####################################################################
-# $Id: aclocal.m4,v 1.7 2006-03-13 17:17:38 vruppert Exp $
+# $Id: aclocal.m4,v 1.8 2009-02-08 09:05:51 vruppert Exp $
 #####################################################################
 
 dnl -------------------------------------------------------------------
@@ -105,7 +105,7 @@ dnl ----------end of largefile test------------------------------------
 ##
 ## You should have received a copy of the GNU General Public License
 ## along with this program; if not, write to the Free Software
-## Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+## Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA.
 ##
 ## As a special exception to the GNU General Public License, if you
 ## distribute this file as part of a program that contains a
@@ -4051,7 +4051,7 @@ ifelse([$1], [],
 #
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA.
 #
 # As a special exception to the GNU General Public License, if you
 # distribute this file as part of a program that contains a
@@ -6050,7 +6050,7 @@ AC_MSG_RESULT([$SED])
 ##
 ## You should have received a copy of the GNU General Public License
 ## along with this program; if not, write to the Free Software
-## Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+## Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA.
 ##
 ## As a special exception to the GNU General Public License, if you
 ## distribute this file as part of a program that contains a
@@ -6492,7 +6492,7 @@ AC_CHECK_FUNCS([argz_append argz_create_sep argz_insert argz_next argz_stringify
 #
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA.
 #
 # As a special exception to the GNU General Public License, if you
 # distribute this file as part of a program that contains a

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ltdl.c,v 1.4 2002-11-01 13:02:15 bdenney Exp $
+// $Id: ltdl.c,v 1.5 2009-02-08 09:05:51 vruppert Exp $
 //
 // NOTE: The ltdl library comes from the Libtool package.  Bochs uses
 // ltdl and libtool to build and load plugins.  The libtool
@@ -29,8 +29,7 @@ Lesser General Public License for more details.
 
 You should have received a copy of the GNU Lesser General Public
 License along with this library; if not, write to the Free Software
-Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
-02111-1307  USA
+Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 
 */
 

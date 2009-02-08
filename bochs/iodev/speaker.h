@@ -1,14 +1,25 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: speaker.h,v 1.4 2006-04-27 15:11:45 sshwarts Exp $
+// $Id: speaker.h,v 1.5 2009-02-08 09:05:52 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
+//
+//  Copyright 2003 by David N. Welton <davidw@dedasys.com>.
+//
+//  This library is free software; you can redistribute it and/or
+//  modify it under the terms of the GNU Lesser General Public
+//  License as published by the Free Software Foundation; either
+//  version 2 of the License, or (at your option) any later version.
+//
+//  This library is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+//  Lesser General Public License for more details.
+//
+//  You should have received a copy of the GNU Lesser General Public
+//  License along with this library; if not, write to the Free Software
+//  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 
-/*
-Copyright David N. Welton <davidw@dedasys.com> 2003
-
-This code may be distributed under the same terms as bochs.
-*/
-
-/* This file defines a class to deal with the speaker.
+ /*
+ * This file defines a class to deal with the speaker.
  * This class also tries to play beeps on the console
  * (linux only) and also forwards beeps to the gui
  * so we have the possiblity to signal the beep
