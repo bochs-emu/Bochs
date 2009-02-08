@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.135 2009-02-01 20:47:06 sshwarts Exp $
+// $Id: exception.cc,v 1.136 2009-02-08 17:37:19 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -302,7 +302,7 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, unsigned is_INT, bx_bool push_er
   // interrupt vector must be within IDT table limits,
   // else #GP(vector number*8 + 2 + EXT)
   if ((vector*8 + 7) > BX_CPU_THIS_PTR idtr.limit) {
-    BX_DEBUG(("interrupt(): vector must be within IDT table limits, IDT.limit = 0x%x", BX_CPU_THIS_PTR idtr.limit));
+    BX_ERROR(("interrupt(): vector must be within IDT table limits, IDT.limit = 0x%x", BX_CPU_THIS_PTR idtr.limit));
     exception(BX_GP_EXCEPTION, vector*8 + 2, 0);
   }
 
@@ -314,7 +314,7 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, unsigned is_INT, bx_bool push_er
   parse_descriptor(dword1, dword2, &gate_descriptor);
 
   if ((gate_descriptor.valid==0) || gate_descriptor.segment) {
-    BX_DEBUG(("interrupt(): gate descriptor is not valid sys seg (vector=0x%02x)", vector));
+    BX_ERROR(("interrupt(): gate descriptor is not valid sys seg (vector=0x%02x)", vector));
     exception(BX_GP_EXCEPTION, vector*8 + 2, 0);
   }
 
@@ -336,7 +336,7 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, unsigned is_INT, bx_bool push_er
   // if software interrupt, then gate descripor DPL must be >= CPL,
   // else #GP(vector * 8 + 2 + EXT)
   if (is_INT && (gate_descriptor.dpl < CPL)) {
-    BX_DEBUG(("interrupt(): is_INT && (dpl < CPL)"));
+    BX_ERROR(("interrupt(): is_INT && (gate.dpl < CPL)"));
     exception(BX_GP_EXCEPTION, vector*8 + 2, 0);
   }
 
@@ -516,7 +516,7 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, unsigned is_INT, bx_bool push_er
 
       // IP must be within CS segment boundaries, else #GP(0)
       if (gate_dest_offset > cs_descriptor.u.segment.limit_scaled) {
-        BX_DEBUG(("interrupt(): gate EIP > CS.limit"));
+        BX_ERROR(("interrupt(): gate EIP > CS.limit"));
         exception(BX_GP_EXCEPTION, 0, 0);
       }
 
@@ -788,8 +788,8 @@ void BX_CPU_C::interrupt(Bit8u vector, unsigned type, bx_bool push_error, Bit16u
   bx_bool is_INT = 0;
   switch(type) {
     case BX_SOFTWARE_INTERRUPT:
-    case BX_PRIVILEGED_SOFTWARE_INTERRUPT:
     case BX_SOFTWARE_EXCEPTION:
+    case BX_PRIVILEGED_SOFTWARE_INTERRUPT:
       is_INT = 1;
       break;
     case BX_EXTERNAL_INTERRUPT:
@@ -801,7 +801,7 @@ void BX_CPU_C::interrupt(Bit8u vector, unsigned type, bx_bool push_error, Bit16u
       BX_PANIC(("interrupt(): unknown exception type %d", type));
   }
 
-  BX_DEBUG(("interrupt(): vector = %u, TYPE = %u, EXT = %u",
+  BX_DEBUG(("interrupt(): vector = %02x, TYPE = %u, EXT = %u",
       vector, type, (unsigned) BX_CPU_THIS_PTR EXT));
 
   // Discard any traps and inhibits for new context; traps will

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.268 2009-02-03 19:26:09 sshwarts Exp $
+// $Id: cpu.cc,v 1.269 2009-02-08 17:37:19 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -815,10 +815,10 @@ void BX_CPU_C::boundaryFetch(const Bit8u *fetchPtr, unsigned remainingInPage, bx
   }
 #if BX_SUPPORT_X86_64
   if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64)
-    ret = fetchDecode64(fetchBuffer, i, fetchBufferLimit);
+    ret = fetchDecode64(fetchBuffer, i, remainingInPage+fetchBufferLimit);
   else
 #endif
-    ret = fetchDecode32(fetchBuffer, i, fetchBufferLimit);
+    ret = fetchDecode32(fetchBuffer, i, remainingInPage+fetchBufferLimit);
 
   if (ret==0) {
     BX_INFO(("boundaryFetch #GP(0): failed to complete instruction decoding"));
