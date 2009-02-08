@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: x.cc,v 1.122 2009-02-08 09:05:52 vruppert Exp $
+// $Id: x.cc,v 1.123 2009-02-08 18:52:06 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -2577,9 +2577,7 @@ BxEvent *x11_notify_callback (void *unused, BxEvent *event)
       }
     case BX_ASYNC_EVT_DBG_MSG:
       {
-        ParseIDText ((char*) event->u.logmsg.msg);
-        // free the char* which was allocated in dbg_printf
-        delete [] ((char*)event->u.logmsg.msg);
+        ParseIDText (event->u.logmsg.msg);
         return event;
       }
 #endif

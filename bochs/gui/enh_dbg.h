@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: enh_dbg.h,v 1.10 2009-02-01 08:08:20 vruppert Exp $
+// $Id: enh_dbg.h,v 1.11 2009-02-08 18:52:06 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  BOCHS ENHANCED DEBUGGER Ver 1.2
@@ -59,7 +59,7 @@ bx_bool OSInit();
 void SpecialInit();
 
 void HitBreak();
-void ParseIDText(char *x);
+void ParseIDText(const char *x);
 
 extern char *debug_cmd;
 extern bx_bool debug_cmd_ready;

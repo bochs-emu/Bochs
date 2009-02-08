@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.228 2009-02-08 09:05:52 vruppert Exp $
+// $Id: siminterface.h,v 1.229 2009-02-08 18:52:06 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  The Bochs Project
@@ -505,7 +505,7 @@ typedef struct {
   const char *msg;
 } BxLogMsgEvent;
 
-// Event type: BX_ASYNC_EVT_DBG_MSG   (unused)
+// Event type: BX_ASYNC_EVT_DBG_MSG
 //
 // Also uses BxLogMsgEvent, but this is a message to be displayed in
 // the debugger history window.

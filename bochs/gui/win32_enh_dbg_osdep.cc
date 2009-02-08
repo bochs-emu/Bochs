@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32_enh_dbg_osdep.cc,v 1.9 2009-02-01 10:30:47 vruppert Exp $
+// $Id: win32_enh_dbg_osdep.cc,v 1.10 2009-02-08 18:52:06 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  BOCHS ENHANCED DEBUGGER Ver 1.2
@@ -72,7 +72,7 @@ COLORREF AsmColors[4] = {
 
 void DockResize (int j, Bit32u x);      // need some function prototypes
 void SetHorzLimits(void);
-void ParseIDText(char *x);
+void ParseIDText(const char *x);
 void ShowData();
 void UpdateStatus();
 void doUpdate();

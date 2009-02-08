@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gtk_enh_dbg_osdep.cc,v 1.4 2009-01-31 19:02:24 vruppert Exp $
+// $Id: gtk_enh_dbg_osdep.cc,v 1.5 2009-02-08 18:52:06 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  BOCHS ENHANCED DEBUGGER Ver 1.2
@@ -1818,7 +1818,7 @@ static gboolean VGAWrefreshTick(GtkWidget *widget)
     if (PO_Tdelay > 0)      // output window is delaying display of a partial line?
     {
         if (--PO_Tdelay == 0)   // on a timeout, add a lf to complete the line
-            ParseIDText ((char*)"\n");
+            ParseIDText ("\n");
     }
     Invalidate (0);
     Invalidate (1);

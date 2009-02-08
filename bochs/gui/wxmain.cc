@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.157 2009-01-20 09:26:26 vruppert Exp $
+// $Id: wxmain.cc,v 1.158 2009-02-08 18:52:06 sshwarts Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWidgets frame, toolbar, menus, and dialogs.
@@ -1205,8 +1205,6 @@ void MyFrame::OnSim2CIEvent(wxCommandEvent& event)
 #if BX_DEBUGGER
   case BX_ASYNC_EVT_DBG_MSG:
     showDebugLog->AppendText(wxString(be->u.logmsg.msg, wxConvUTF8));
-    // free the char* which was allocated in dbg_printf
-    delete [] ((char*) be->u.logmsg.msg);
     break;
 #endif
   case BX_SYNC_EVT_LOG_ASK:

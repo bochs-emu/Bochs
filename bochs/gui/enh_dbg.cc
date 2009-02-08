@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: enh_dbg.cc,v 1.11 2009-02-01 08:08:20 vruppert Exp $
+// $Id: enh_dbg.cc,v 1.12 2009-02-08 18:52:06 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  BOCHS ENHANCED DEBUGGER Ver 1.2
@@ -591,13 +591,12 @@ bx_bool isSSDisasm(char *s)
 
 // dump output from the bochs internal debugger to Output window
 // Note: this routine may be called *DIRECTLY* from bochs!
-void ParseIDText(char *x)
+void ParseIDText(const char *x)
 {
-    char *s = x;
     int i = 0;
     int overflow = 0;
-    while (*s !=0 && *s != '\r' && *s != '\n' && DbgAppendPtr < tmpcb)
-        *(DbgAppendPtr++)= *(s++);      // append the chars from x into the bigbuf
+    while (*x !=0 && *x != '\r' && *x != '\n' && DbgAppendPtr < tmpcb)
+        *(DbgAppendPtr++)= *(x++);  // append the chars from x into the bigbuf
     if (DbgAppendPtr >= tmpcb)      // overflow error?
     {
         DispMessage("Debugger output cannot be parsed -- line too long","Buffer overflow");
@@ -606,7 +605,7 @@ void ParseIDText(char *x)
     }
 
     *DbgAppendPtr = 0;
-    if (*s == 0)            // automatically process only complete lines further
+    if (*x == 0)            // automatically process only complete lines further
     {
         PO_Tdelay = 2;      // wait a half second, then force display of partial lines
         return;
@@ -614,7 +613,7 @@ void ParseIDText(char *x)
     PO_Tdelay = 0;          // line completed -- cancel any partial output time delay
 
     // restart DbgAppendPtr at the beginning of a new line buffer
-    s= DbgAppendPtr= bigbuf;    // s -> raw text line from debugger
+    char *s = DbgAppendPtr = bigbuf;    // s -> raw text line from debugger
     if (ignoreNxtT != FALSE)
     {
         if (strncmp(s,"Next at t",9) == 0)

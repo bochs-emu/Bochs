@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.173 2009-02-08 09:05:52 vruppert Exp $
+// $Id: dbg_main.cc,v 1.174 2009-02-08 18:52:06 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -130,7 +130,7 @@ void dbg_printf(const char *fmt, ...)
 {
   va_list ap;
   va_start(ap, fmt);
-  char *buf = new char[DBG_PRINTF_BUFFER_LEN+1];
+  char buf[DBG_PRINTF_BUFFER_LEN+1];
   vsnprintf(buf, DBG_PRINTF_BUFFER_LEN, fmt, ap);
   va_end(ap);
   if (debugger_log != NULL) {
