@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_vnet.cc,v 1.26 2009-02-08 09:05:52 vruppert Exp $
+// $Id: eth_vnet.cc,v 1.27 2009-02-09 17:04:30 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  The Bochs Project
@@ -354,7 +354,7 @@ void bx_vnet_pktmover_c::pktmover_init(
   host_macaddr[5] = (host_macaddr[5] & (~0x01)) ^ 0x02;
 
   memcpy(&host_ipv4addr[0], &default_host_ipv4addr[0], 4);
-  memcpy(&guest_ipv4addr[0], &broadcast_ipv4addr[0][0], 4);
+  memcpy(&guest_ipv4addr[0], &broadcast_ipv4addr[1][0], 4);
 
   l4data_used = 0;
 
