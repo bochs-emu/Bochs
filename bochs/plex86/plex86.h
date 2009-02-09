@@ -1,5 +1,5 @@
 /************************************************************************
- * $Id: plex86.h,v 1.7 2004-09-11 15:39:53 vruppert Exp $
+ * $Id: plex86.h,v 1.8 2009-02-09 10:35:55 vruppert Exp $
  ************************************************************************
  *
  *  plex86: run multiple x86 operating systems concurrently
@@ -17,7 +17,7 @@
  *
  *  You should have received a copy of the GNU Lesser General Public
  *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+ *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
  */
 
 #ifndef __PLEX86_H__
