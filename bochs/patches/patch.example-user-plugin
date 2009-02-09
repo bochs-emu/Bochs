@@ -21,7 +21,7 @@ Detailed description:
 Patch was created with:
   diff -u
 Apply patch to what version:
-  cvs checked out on 10 Jan 2009
+  cvs checked out on 09 Feb 2009
 Instructions:
   To patch, go to main bochs directory.
   Type "patch -p0 < THIS_PATCH_FILE".
@@ -31,9 +31,9 @@ Instructions:
   make install
 ----------------------------------------------------------------------
 diff -urN ../bochs/configure.in ./configure.in
---- ../bochs/configure.in	2008-12-29 09:16:19.000000000 +0100
-+++ ./configure.in	2009-01-03 17:51:43.000000000 +0100
-@@ -3037,4 +3037,4 @@
+--- ../bochs/configure.in	2009-02-02 14:02:47.000000000 +0100
++++ ./configure.in	2009-02-09 10:49:14.000000000 +0100
+@@ -3126,4 +3126,4 @@
  	 build/linux/bochs-dlx \
  	 bxversion.h bxversion.rc build/macosx/Info.plist \
  	 build/win32/nsis/Makefile build/win32/nsis/bochs.nsi \
@@ -41,7 +41,7 @@ diff -urN ../bochs/configure.in ./configure.in
 +	 host/linux/pcidev/Makefile user-plugin/Makefile)
 diff -urN ../bochs/user-plugin/Makefile.in ./user-plugin/Makefile.in
 --- ../bochs/user-plugin/Makefile.in	1970-01-01 01:00:00.000000000 +0100
-+++ ./user-plugin/Makefile.in	2009-01-10 12:50:25.000000000 +0100
++++ ./user-plugin/Makefile.in	2009-02-09 10:49:14.000000000 +0100
 @@ -0,0 +1,108 @@
 +# Copyright (C) 2009  Volker Ruppert
 +#
@@ -57,7 +57,7 @@ diff -urN ../bochs/user-plugin/Makefile.in ./user-plugin/Makefile.in
 +#
 +# You should have received a copy of the GNU Lesser General Public
 +# License along with this library; if not, write to the Free Software
-+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 +
 +# Makefile for the user plugin example of bochs
 +
@@ -153,7 +153,7 @@ diff -urN ../bochs/user-plugin/Makefile.in ./user-plugin/Makefile.in
 +  ../gui/keymap.h ../instrument/stubs/instrument.h testdev.h
 diff -urN ../bochs/user-plugin/testdev.cc ./user-plugin/testdev.cc
 --- ../bochs/user-plugin/testdev.cc	1970-01-01 01:00:00.000000000 +0100
-+++ ./user-plugin/testdev.cc	2009-01-10 12:50:06.000000000 +0100
++++ ./user-plugin/testdev.cc	2009-02-09 10:49:14.000000000 +0100
 @@ -0,0 +1,118 @@
 +// Copyright (C) 2009  Volker Ruppert
 +//
@@ -169,7 +169,7 @@ diff -urN ../bochs/user-plugin/testdev.cc ./user-plugin/testdev.cc
 +//
 +// You should have received a copy of the GNU Lesser General Public
 +// License along with this library; if not, write to the Free Software
-+// Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++// Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 +
 +// User plugin example (see patch description for details)
 +
@@ -275,7 +275,7 @@ diff -urN ../bochs/user-plugin/testdev.cc ./user-plugin/testdev.cc
 +}
 diff -urN ../bochs/user-plugin/testdev.h ./user-plugin/testdev.h
 --- ../bochs/user-plugin/testdev.h	1970-01-01 01:00:00.000000000 +0100
-+++ ./user-plugin/testdev.h	2009-01-10 12:50:14.000000000 +0100
++++ ./user-plugin/testdev.h	2009-02-09 10:49:14.000000000 +0100
 @@ -0,0 +1,40 @@
 +// Copyright (C) 2009  Volker Ruppert
 +//
@@ -291,7 +291,7 @@ diff -urN ../bochs/user-plugin/testdev.h ./user-plugin/testdev.h
 +//
 +// You should have received a copy of the GNU Lesser General Public
 +// License along with this library; if not, write to the Free Software
-+// Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++// Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 +
 +#ifndef BX_TESTDEV_H
 +#define BX_TESTDEV_H
