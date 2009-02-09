@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.225 2009-01-10 10:50:07 sshwarts Exp $
+// $Id: rombios.c,v 1.226 2009-02-09 17:05:29 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -940,7 +940,7 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.225 $ $Date: 2009-01-10 10:50:07 $";
+static char bios_cvs_version_string[] = "$Revision: 1.226 $ $Date: 2009-02-09 17:05:29 $";
 
 #define BIOS_COPYRIGHT_STRING "(c) 2002 MandrakeSoft S.A. Written by Kevin Lawton & the Bochs team."
 
@@ -9910,8 +9910,8 @@ pcibios_init_irqs:
   mov  dl, #0x00
   call pcibios_init_sel_reg
   mov  dx, #0x0cfc
-  in   eax, dx
-  cmp  eax, [si+12] ;; check irq router
+  in   ax, dx
+  cmp  ax, [si+12] ;; check irq router
   jne  pci_init_end
   mov  dl, [si+34]
   call pcibios_init_sel_reg
