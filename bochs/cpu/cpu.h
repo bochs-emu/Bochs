@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.569 2009-02-03 21:11:31 sshwarts Exp $
+// $Id: cpu.h,v 1.570 2009-02-09 19:46:34 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -3375,7 +3375,9 @@ public: // for now...
 #endif
 
   BX_SMF bx_address read_CR0(void);
+#if BX_CPU_LEVEL > 3
   BX_SMF bx_address read_CR4(void);
+#endif
 #if BX_SUPPORT_VMX
   BX_SMF Bit32u VMread32(unsigned encoding);
   BX_SMF void VMwrite32(unsigned encoding, Bit32u val_32);

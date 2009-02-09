@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: descriptor.h,v 1.27 2009-01-16 18:18:58 sshwarts Exp $
+// $Id: descriptor.h,v 1.28 2009-02-09 19:46:34 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007 Stanislav Shwartsman
@@ -173,9 +173,7 @@ union {
 #define IS_CODE_SEGMENT_CONFORMING(type)  (((type) >> 2) & 0x1)
 #define IS_DATA_SEGMENT_EXPAND_DOWN(type) (((type) >> 2) & 0x1)
 #define IS_CODE_SEGMENT_READABLE(type)    (((type) >> 1) & 0x1)
-
-// data segment writeable bit is ignored when in 64-bit mode
-#define IS_DATA_SEGMENT_WRITEABLE(type)   (Is64BitMode() || (((type) >> 1) & 0x1))
+#define IS_DATA_SEGMENT_WRITEABLE(type)   (((type) >> 1) & 0x1)
 
 #define IS_SEGMENT_ACCESSED(type)         ((type) & 0x1)
 

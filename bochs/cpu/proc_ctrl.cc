@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.284 2009-02-06 15:25:57 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.285 2009-02-09 19:46:34 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1266,6 +1266,7 @@ bx_address BX_CPU_C::read_CR0(void)
   return cr0_val;
 }
 
+#if BX_CPU_LEVEL > 3
 bx_address BX_CPU_C::read_CR4(void)
 {
   bx_address cr4_val = BX_CPU_THIS_PTR cr4.get32();
@@ -1279,6 +1280,7 @@ bx_address BX_CPU_C::read_CR4(void)
 
   return cr4_val;
 }
+#endif
 
 bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::SetCR0(bx_address val)
 {
