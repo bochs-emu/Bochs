@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.194 2009-02-08 18:52:06 sshwarts Exp $
+// $Id: siminterface.cc,v 1.195 2009-02-12 20:30:52 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  The Bochs Project
@@ -732,7 +732,7 @@ void bx_real_sim_c::debug_puts(const char *text)
     sim_to_ci_event(event);
   } else {
     // text mode debugger: just write to console
-    fputs(text, stderr);
+    puts(text);
   }
 }
 #endif
