@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmx.cc,v 1.6 2009-02-04 16:05:47 sshwarts Exp $
+// $Id: vmx.cc,v 1.7 2009-02-13 20:09:56 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2009 Stanislav Shwartsman
@@ -1170,6 +1170,8 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
   //
 
   BX_CPU_THIS_PTR async_event = 0;
+  if (guest.rflags & (EFlagsTFMask|EFlagsRFMask))
+    BX_CPU_THIS_PTR async_event = 1;
 
   if (vm->vmentry_ctrls & VMX_VMENTRY_CTRL1_SMM_ENTER)
     BX_PANIC(("VMENTER: entry to SMM is not implemented yet !"));

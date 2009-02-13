@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: flag_ctrl_pro.cc,v 1.36 2009-01-16 18:18:58 sshwarts Exp $
+// $Id: flag_ctrl_pro.cc,v 1.37 2009-02-13 20:09:56 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -41,8 +41,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::setEFlags(Bit32u val)
   }
 #endif
 
-  if (val & EFlagsTFMask) {
-    BX_CPU_THIS_PTR async_event = 1; // TF = 1
+  if (val & (EFlagsTFMask|EFlagsRFMask)) {
+    BX_CPU_THIS_PTR async_event = 1; // TF == 1 || RF == 1
   }
 
   if (val & EFlagsIFMask) {

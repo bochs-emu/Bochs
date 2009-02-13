@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.570 2009-02-09 19:46:34 sshwarts Exp $
+// $Id: cpu.h,v 1.571 2009-02-13 20:09:56 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -450,9 +450,7 @@ BOCHSAPI extern BX_CPU_C   bx_cpu;
 // Do not use for arithmetic flags !
 #define DECLARE_EFLAG_ACCESSOR(name,bitnum)                     \
   BX_SMF BX_CPP_INLINE Bit32u  get_##name ();                   \
-  BX_SMF BX_CPP_INLINE bx_bool getB_##name ();
-
-#define DECLARE_EFLAG_SET_ACCESSOR(name,bitnum)                 \
+  BX_SMF BX_CPP_INLINE bx_bool getB_##name ();                  \
   BX_SMF BX_CPP_INLINE void assert_##name ();                   \
   BX_SMF BX_CPP_INLINE void clear_##name ();                    \
   BX_SMF BX_CPP_INLINE void set_##name (bx_bool val);
@@ -479,11 +477,6 @@ BOCHSAPI extern BX_CPU_C   bx_cpu;
 
 #if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
 
-#define DECLARE_EFLAG_SET_ACCESSOR_AC(bitnum)                   \
-  BX_SMF BX_CPP_INLINE void assert_AC();                        \
-  BX_SMF BX_CPP_INLINE void clear_AC();                         \
-  BX_SMF BX_CPP_INLINE void set_AC(bx_bool val);
-
 #define IMPLEMENT_EFLAG_SET_ACCESSOR_AC(bitnum)                 \
   BX_CPP_INLINE void BX_CPU_C::assert_AC () {                   \
     BX_CPU_THIS_PTR eflags |= (1<<bitnum);                      \
@@ -501,11 +494,6 @@ BOCHSAPI extern BX_CPU_C   bx_cpu;
 
 #endif
 
-#define DECLARE_EFLAG_SET_ACCESSOR_VM(bitnum)                   \
-  BX_SMF BX_CPP_INLINE void assert_VM();                        \
-  BX_SMF BX_CPP_INLINE void clear_VM();                         \
-  BX_SMF BX_CPP_INLINE void set_VM(bx_bool val);
-
 #define IMPLEMENT_EFLAG_SET_ACCESSOR_VM(bitnum)                 \
   BX_CPP_INLINE void BX_CPU_C::assert_VM() {                    \
     set_VM(1);                                                  \
@@ -521,39 +509,16 @@ BOCHSAPI extern BX_CPU_C   bx_cpu;
     }                                                           \
   }
 
-#define DECLARE_EFLAG_SET_ACCESSOR_IF(bitnum)                   \
-  BX_SMF BX_CPP_INLINE void assert_IF();                        \
-  BX_SMF BX_CPP_INLINE void clear_IF();                         \
-  BX_SMF BX_CPP_INLINE void set_IF(bx_bool val);
-
-#define IMPLEMENT_EFLAG_SET_ACCESSOR_IF(bitnum)                 \
-  BX_CPP_INLINE void BX_CPU_C::assert_IF() {                    \
-    if (! BX_CPU_THIS_PTR get_IF())                             \
-      BX_CPU_THIS_PTR async_event = 1;                          \
-    BX_CPU_THIS_PTR eflags |= (1<<bitnum);                      \
-  }                                                             \
-  BX_CPP_INLINE void BX_CPU_C::clear_IF() {                     \
-    BX_CPU_THIS_PTR eflags &= ~(1<<bitnum);                     \
-  }                                                             \
-  BX_CPP_INLINE void BX_CPU_C::set_IF(bx_bool val) {            \
-    if (val) assert_IF();                                       \
-    else clear_IF();                                            \
-  }
-
-#define DECLARE_EFLAG_SET_ACCESSOR_TF(bitnum)                   \
-  BX_SMF BX_CPP_INLINE void assert_TF();                        \
-  BX_SMF BX_CPP_INLINE void clear_TF();                         \
-  BX_SMF BX_CPP_INLINE void set_TF(bx_bool val);
-
-#define IMPLEMENT_EFLAG_SET_ACCESSOR_TF(bitnum)                 \
-  BX_CPP_INLINE void BX_CPU_C::assert_TF() {                    \
-    BX_CPU_THIS_PTR eflags |= (1<<bitnum);                      \
+// assert async_event when RF, IF or TF is set
+#define IMPLEMENT_EFLAG_SET_ACCESSOR_IF_RF_TF(name,bitnum)      \
+  BX_CPP_INLINE void BX_CPU_C::assert_##name() {                \
     BX_CPU_THIS_PTR async_event = 1;                            \
+    BX_CPU_THIS_PTR eflags |= (1<<bitnum);                      \
   }                                                             \
-  BX_CPP_INLINE void BX_CPU_C::clear_TF() {                     \
+  BX_CPP_INLINE void BX_CPU_C::clear_##name() {                 \
     BX_CPU_THIS_PTR eflags &= ~(1<<bitnum);                     \
   }                                                             \
-  BX_CPP_INLINE void BX_CPU_C::set_TF(bx_bool val) {            \
+  BX_CPP_INLINE void BX_CPU_C::set_##name(bx_bool val) {        \
     if (val) BX_CPU_THIS_PTR async_event = 1;                   \
     BX_CPU_THIS_PTR eflags =                                    \
       (BX_CPU_THIS_PTR eflags&~(1<<bitnum))|((val)<<bitnum);    \
@@ -3309,21 +3274,6 @@ public: // for now...
   DECLARE_EFLAG_ACCESSOR   (IF,   9)
   DECLARE_EFLAG_ACCESSOR   (TF,   8)
 
-  DECLARE_EFLAG_SET_ACCESSOR   (ID,  21)
-  DECLARE_EFLAG_SET_ACCESSOR   (VIP, 20)
-  DECLARE_EFLAG_SET_ACCESSOR   (VIF, 19)
-#if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
-  DECLARE_EFLAG_SET_ACCESSOR_AC(     18)
-#else
-  DECLARE_EFLAG_SET_ACCESSOR   (AC,  18)
-#endif
-  DECLARE_EFLAG_SET_ACCESSOR_VM(     17)
-  DECLARE_EFLAG_SET_ACCESSOR   (RF,  16)
-  DECLARE_EFLAG_SET_ACCESSOR   (NT,  14)
-  DECLARE_EFLAG_SET_ACCESSOR   (DF,  10)
-  DECLARE_EFLAG_SET_ACCESSOR_IF(      9)
-  DECLARE_EFLAG_SET_ACCESSOR_TF(      8)
-
   BX_SMF BX_CPP_INLINE bx_bool real_mode(void);
   BX_SMF BX_CPP_INLINE bx_bool smm_mode(void);
   BX_SMF BX_CPP_INLINE bx_bool protected_mode(void);
@@ -3849,21 +3799,21 @@ IMPLEMENT_EFLAG_ACCESSOR   (DF,  10)
 IMPLEMENT_EFLAG_ACCESSOR   (IF,   9)
 IMPLEMENT_EFLAG_ACCESSOR   (TF,   8)
 
-IMPLEMENT_EFLAG_SET_ACCESSOR   (ID,  21)
-IMPLEMENT_EFLAG_SET_ACCESSOR   (VIP, 20)
-IMPLEMENT_EFLAG_SET_ACCESSOR   (VIF, 19)
+IMPLEMENT_EFLAG_SET_ACCESSOR         (ID,  21)
+IMPLEMENT_EFLAG_SET_ACCESSOR         (VIP, 20)
+IMPLEMENT_EFLAG_SET_ACCESSOR         (VIF, 19)
 #if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
-IMPLEMENT_EFLAG_SET_ACCESSOR_AC(     18)
+IMPLEMENT_EFLAG_SET_ACCESSOR_AC      (     18)
 #else
-IMPLEMENT_EFLAG_SET_ACCESSOR   (AC,  18)
+IMPLEMENT_EFLAG_SET_ACCESSOR         (AC,  18)
 #endif
-IMPLEMENT_EFLAG_SET_ACCESSOR_VM(     17)
-IMPLEMENT_EFLAG_SET_ACCESSOR   (RF,  16)
-IMPLEMENT_EFLAG_SET_ACCESSOR   (NT,  14)
-IMPLEMENT_EFLAG_SET_ACCESSOR   (DF,  10)
-IMPLEMENT_EFLAG_SET_ACCESSOR_IF(      9)
-IMPLEMENT_EFLAG_SET_ACCESSOR_TF(      8)
-
+IMPLEMENT_EFLAG_SET_ACCESSOR_VM      (     17)
+IMPLEMENT_EFLAG_SET_ACCESSOR_IF_RF_TF(RF,  16)
+IMPLEMENT_EFLAG_SET_ACCESSOR         (NT,  14)
+IMPLEMENT_EFLAG_SET_ACCESSOR         (DF,  10)
+IMPLEMENT_EFLAG_SET_ACCESSOR_IF_RF_TF(IF,   9)
+IMPLEMENT_EFLAG_SET_ACCESSOR_IF_RF_TF(TF,   8)
+                               
 #define BX_TASK_FROM_CALL       0
 #define BX_TASK_FROM_IRET       1
 #define BX_TASK_FROM_JUMP       2
