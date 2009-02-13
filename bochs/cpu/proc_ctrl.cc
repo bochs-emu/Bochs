@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.285 2009-02-09 19:46:34 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.286 2009-02-13 09:51:57 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1615,9 +1615,16 @@ void BX_CPU_C::check_monitor(bx_phy_address begin_addr, unsigned len)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MONITOR(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MONITOR_MWAIT
-  // TODO: #UD when CPL > 0 and
-  //       MSR 0xC0010015[MONITOR_MWAIT_USER_UNABLE] = 1
+  if (!real_mode() && CPL != 0) {
+    BX_DEBUG(("MWAIT instruction not recognized when CPL != 0"));
+    exception(BX_UD_EXCEPTION, 0, 0);
+  }
+
   BX_DEBUG(("MONITOR instruction executed EAX = 0x08x", (unsigned) EAX));
+
+#if BX_SUPPORT_VMX
+  VMexit_MONITOR(i);
+#endif
 
   if (RCX != 0) {
     BX_ERROR(("MONITOR: no optional extensions supported"));
@@ -1697,9 +1704,16 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MONITOR(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MWAIT(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MONITOR_MWAIT
-  // TODO: #UD when CPL > 0 and
-  //       MSR 0xC0010015[MONITOR_MWAIT_USER_UNABLE] = 1
+  if (!real_mode() && CPL != 0) {
+    BX_DEBUG(("MWAIT instruction not recognized when CPL != 0"));
+    exception(BX_UD_EXCEPTION, 0, 0);
+  }
+
   BX_DEBUG(("MWAIT instruction executed ECX = 0x%08x", ECX));
+
+#if BX_SUPPORT_VMX
+  VMexit_MWAIT(i);
+#endif
 
   // only one extension is supported
   //   ECX[0] - interrupt MWAIT even if EFLAGS.IF = 0

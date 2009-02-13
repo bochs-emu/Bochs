@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.136 2009-02-08 17:37:19 sshwarts Exp $
+// $Id: exception.cc,v 1.137 2009-02-13 09:51:57 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -789,9 +789,9 @@ void BX_CPU_C::interrupt(Bit8u vector, unsigned type, bx_bool push_error, Bit16u
   switch(type) {
     case BX_SOFTWARE_INTERRUPT:
     case BX_SOFTWARE_EXCEPTION:
-    case BX_PRIVILEGED_SOFTWARE_INTERRUPT:
       is_INT = 1;
       break;
+    case BX_PRIVILEGED_SOFTWARE_INTERRUPT:
     case BX_EXTERNAL_INTERRUPT:
     case BX_NMI:
     case BX_HARDWARE_EXCEPTION:
