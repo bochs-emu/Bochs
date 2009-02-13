@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: mmx.cc,v 1.84 2009-01-16 18:18:58 sshwarts Exp $
+// $Id: mmx.cc,v 1.85 2009-02-13 10:15:16 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2002 Stanislav Shwartsman
@@ -1230,7 +1230,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVD_EdPd(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
   BX_CPU_THIS_PTR prepareMMX();
-  BX_CPU_THIS_PTR prepareFPU2MMX(); /* FPU2MMX transition */
 
   BxPackedMmxRegister op = BX_READ_MMX_REG(i->nnn());
 
@@ -1243,6 +1242,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVD_EdPd(bxInstruction_c *i)
     /* pointer, segment address pair */
     write_virtual_dword(i->seg(), eaddr, MMXUD0(op));
   }
+
+  // do not cause FPU2MMX transition if memory write faults
+  BX_CPU_THIS_PTR prepareFPU2MMX();
 #else
   BX_INFO(("MOVD_EdPd: required MMX, use --enable-mmx option"));
   exception(BX_UD_EXCEPTION, 0, 0);
@@ -1255,7 +1257,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVD_EdPd(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVQ_EqPq(bxInstruction_c *i)
 {
   BX_CPU_THIS_PTR prepareMMX();
-  BX_CPU_THIS_PTR prepareFPU2MMX(); /* FPU2MMX transition */
 
   BxPackedMmxRegister op = BX_READ_MMX_REG(i->nnn());
 
@@ -1268,6 +1269,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVQ_EqPq(bxInstruction_c *i)
     /* pointer, segment address pair */
     write_virtual_qword_64(i->seg(), eaddr, MMXUQ(op));
   }
+
+  // do not cause FPU2MMX transition if memory write faults
+  BX_CPU_THIS_PTR prepareFPU2MMX();
 }
 
 #endif
@@ -1277,7 +1281,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVQ_QqPq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
   BX_CPU_THIS_PTR prepareMMX();
-  BX_CPU_THIS_PTR prepareFPU2MMX(); /* FPU2MMX transition */
 
   BxPackedMmxRegister op = BX_READ_MMX_REG(i->nnn());
 
@@ -1290,6 +1293,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVQ_QqPq(bxInstruction_c *i)
     /* pointer, segment address pair */
     write_virtual_qword(i->seg(), eaddr, MMXUQ(op));
   }
+
+  // do not cause FPU2MMX transition if memory write faults
+  BX_CPU_THIS_PTR prepareFPU2MMX();
 #else
   BX_INFO(("MOVQ_QqPq: required MMX, use --enable-mmx option"));
   exception(BX_UD_EXCEPTION, 0, 0);
@@ -2077,11 +2083,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVNTQ_MqPq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_3DNOW || BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareMMX();
-  BX_CPU_THIS_PTR prepareFPU2MMX(); /* FPU2MMX transition */
 
   BxPackedMmxRegister reg = BX_READ_MMX_REG(i->nnn());
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
   write_virtual_qword(i->seg(), eaddr, MMXUQ(reg));
+
+  // do not cause FPU2MMX transition if memory write faults
+  BX_CPU_THIS_PTR prepareFPU2MMX();
 #else
   BX_INFO(("MOVNTQ_MqPq: required SSE or 3DNOW, use --enable-sse or --enable-3dnow options"));
   exception(BX_UD_EXCEPTION, 0, 0);
