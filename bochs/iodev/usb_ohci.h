@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_ohci.h,v 1.4 2009-02-08 09:05:52 vruppert Exp $
+// $Id: usb_ohci.h,v 1.5 2009-02-14 10:06:20 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Benjamin D Lunt (fys at frontiernet net)
@@ -49,60 +49,53 @@ enum {
   NotAccessed
 };
 
+
+#define ED_GET_MPS(x)     (((x)->dword0 & 0x07FF0000) >> 16)
+#define ED_GET_F(x)       (((x)->dword0 & 0x00008000) >> 15)
+#define ED_GET_K(x)       (((x)->dword0 & 0x00004000) >> 14)
+#define ED_GET_S(x)       (((x)->dword0 & 0x00002000) >> 13)
+#define ED_GET_D(x)       (((x)->dword0 & 0x00001800) >> 11)
+#define ED_GET_EN(x)      (((x)->dword0 & 0x00000780) >>  7)
+#define ED_GET_FA(x)      (((x)->dword0 & 0x0000007F) >>  0)
+#define ED_GET_TAILP(x)    ((x)->dword1 & 0xFFFFFFF0)
+#define ED_GET_HEADP(x)    ((x)->dword2 & 0xFFFFFFF0)
+#define ED_SET_HEADP(x, y) ((x)->dword2 = ((x)->dword2 & 0x0000000F) | ((y) & 0xFFFFFFF0))
+#define ED_GET_C(x)       (((x)->dword2 & 0x00000002) >>  1)
+#define ED_SET_C(x,y)      ((x)->dword2 = ((x)->dword2 & ~0x00000002) | ((y)<<1))
+#define ED_GET_H(x)       (((x)->dword2 & 0x00000001) >>  0)
+#define ED_SET_H(x,y)      ((x)->dword2 = ((x)->dword2 & ~0x00000001) | ((y)<<0))
+#define ED_GET_NEXTED(x)   ((x)->dword3 & 0xFFFFFFF0)
+
 struct OHCI_ED {
-  Bit32u   fa       :7;
-  unsigned en       :4;
-  unsigned d        :2;
-  unsigned s        :1;
-  unsigned k        :1;
-  unsigned f        :1;
-  unsigned mps      :11;
-  unsigned          :5;
-  Bit32u            :4;
-  unsigned tail_p   :28;
-  Bit32u   h        :1;
-  unsigned c        :1;
-  unsigned zero     :2;
-  unsigned head_p   :28;
-  Bit32u            :4;
-  unsigned next_ed  :28;
+  Bit32u   dword0;
+  Bit32u   dword1;
+  Bit32u   dword2;
+  Bit32u   dword3;
 };
+
+
+#define TD_GET_R(x)       (((x)->dword0 & 0x00040000) >> 18)
+#define TD_GET_DP(x)      (((x)->dword0 & 0x00180000) >> 19)
+#define TD_GET_DI(x)      (((x)->dword0 & 0x00E00000) >> 21)
+#define TD_GET_T(x)       (((x)->dword0 & 0x03000000) >> 24)
+#define TD_SET_T(x,y)      ((x)->dword0 = ((x)->dword0 & ~0x03000000) | ((y)<<24))
+#define TD_GET_EC(x)      (((x)->dword0 & 0x0C000000) >> 26)
+#define TD_SET_EC(x,y)     ((x)->dword0 = ((x)->dword0 & ~0x0C000000) | ((y)<<26))
+#define TD_GET_CC(x)      (((x)->dword0 & 0xF0000000) >> 28)
+#define TD_SET_CC(x,y)     ((x)->dword0 = ((x)->dword0 & ~0xF0000000) | ((y)<<28))
+#define TD_GET_CBP(x)      ((x)->dword1)
+#define TD_SET_CBP(x,y)    ((x)->dword1 = y)
+#define TD_GET_NEXTTD(x)   ((x)->dword2 & 0xFFFFFFF0)
+#define TD_SET_NEXTTD(x,y) ((x)->dword2 = (y & 0xFFFFFFF0))
+#define TD_GET_BE(x)       ((x)->dword3)
 
 struct OHCI_TD {
-  Bit32u   unknown  :18;
-  unsigned r        :1;
-  unsigned dp       :2;
-  unsigned di       :3;
-  unsigned t        :2;
-  unsigned ec       :2;
-  unsigned cc       :4;
-  Bit32u   cbp;
-  Bit32u   zero     :4;
-  unsigned next_td  :28;
-  Bit32u   be;
+  Bit32u   dword0;
+  Bit32u   dword1;
+  Bit32u   dword2;
+  Bit32u   dword3;
 };
 
-struct OHCI_TD_ISO {
-  Bit32u   sf       :16;
-  unsigned unkn     :5;
-  unsigned di       :3;
-  unsigned fc       :3;
-  unsigned unkn1    :1;
-  unsigned cc       :4;
-  Bit32u   unkn2    :12;
-  unsigned bp0      :20;
-  Bit32u   zero     :4;
-  unsigned next_td  :28;
-  Bit32u   be;
-  Bit32u   offset0  :16;
-  unsigned offset1  :16;
-  Bit32u   offset2  :16;
-  unsigned offset3  :16;
-  Bit32u   offset4  :16;
-  unsigned offset5  :16;
-  Bit32u   offset6  :16;
-  unsigned offset7  :16;
-};
 
 typedef struct {
   bx_phy_address base_addr;
@@ -289,7 +282,6 @@ public:
 private:
 
   bx_usb_ohci_t hub;
-  Bit8u         global_reset;
   Bit8u         *device_buffer;
 
   usb_hid_device_c *mousedev;
@@ -299,7 +291,8 @@ private:
 
   static void reset_hc();
   static void reset_port(int);
-  static void set_irq_level(const bx_bool, const bx_bool);
+  static void set_irq_level(const bx_bool);
+  static void set_irq_state();
 
   static void init_device(Bit8u port, const char *devname);
   static void usb_set_connect_status(Bit8u port, int type, bx_bool connected);

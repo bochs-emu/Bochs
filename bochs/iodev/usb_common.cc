@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_common.cc,v 1.4 2009-02-08 09:05:52 vruppert Exp $
+// $Id: usb_common.cc,v 1.5 2009-02-14 10:06:20 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Benjamin D Lunt (fys at frontiernet net)
@@ -217,8 +217,11 @@ int usb_device_c::handle_packet(USBPacket *p)
                   d.setup_state = SETUP_STATE_ACK;
                 ret = l;
               } else {
+                // it is okay for a host to send an OUT before it reads
+                //  all of the expected IN.  It is telling the controller
+                //  that it doesn't want any more from that particular call.
+                ret = 0;
                 d.setup_state = SETUP_STATE_IDLE;
-                goto fail;
               }
               break;
             default:

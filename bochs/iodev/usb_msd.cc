@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_msd.cc,v 1.14 2009-02-08 09:05:52 vruppert Exp $
+// $Id: usb_msd.cc,v 1.15 2009-02-14 10:06:20 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Volker Ruppert
@@ -249,7 +249,7 @@ int usb_msd_device_c::handle_control(int request, int value, int index, int leng
               ret = set_usb_string(data, "1");
               break;
             default:
-              BX_ERROR(("USB MSD handle_control: unknown descriptor 0x%02x", value & 0xff));
+              BX_ERROR(("USB MSD handle_control: unknown string descriptor 0x%02x", value & 0xff));
               goto fail;
           }
           break;
@@ -263,6 +263,7 @@ int usb_msd_device_c::handle_control(int request, int value, int index, int leng
           ret = 10;
           break;
         default:
+          BX_ERROR(("USB MSD handle_control: unknown descriptor type 0x%02x", value >> 8));
           goto fail;
       }
       break;
