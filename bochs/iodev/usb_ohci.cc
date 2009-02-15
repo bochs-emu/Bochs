@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_ohci.cc,v 1.6 2009-02-14 10:06:20 vruppert Exp $
+// $Id: usb_ohci.cc,v 1.7 2009-02-15 14:06:54 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Benjamin D Lunt (fys at frontiernet net)
@@ -351,12 +351,6 @@ void bx_usb_ohci_c::reset_hc()
       BX_OHCI_THIS hub.usb_port[i].device = NULL;
     }
   }
-
-  BX_OHCI_THIS mousedev = NULL;
-  BX_OHCI_THIS keybdev = NULL;
-
-  init_device(0, SIM->get_param_string(BXPN_OHCI_PORT1)->getptr());
-  init_device(1, SIM->get_param_string(BXPN_OHCI_PORT2)->getptr());
 }
 
 void bx_usb_ohci_c::reset_port(int p)
@@ -417,6 +411,11 @@ void bx_usb_ohci_c::init_device(Bit8u port, const char *devname)
   char pname[BX_PATHNAME_LEN];
 
   if (!strlen(devname) || !strcmp(devname, "none")) return;
+
+  if (BX_OHCI_THIS hub.usb_port[port].device != NULL) {
+    BX_ERROR(("init_device(): port%d already in use", port+1));
+    return;
+  }
 
   if (!strcmp(devname, "mouse")) {
     type = USB_DEV_TYPE_MOUSE;
@@ -761,6 +760,7 @@ bx_bool bx_usb_ohci_c::write_handler(bx_phy_address addr, unsigned len, void *da
       if (value & (1<< 2)) BX_OHCI_THIS hub.op_regs.HcInterruptStatus.sf   = 0;
       if (value & (1<< 1)) BX_OHCI_THIS hub.op_regs.HcInterruptStatus.wdh  = 0;
       if (value & (1<< 0)) BX_OHCI_THIS hub.op_regs.HcInterruptStatus.so   = 0;
+      set_irq_state();
       break;
 
     case 0x10: // HcInterruptEnable
@@ -790,6 +790,7 @@ bx_bool bx_usb_ohci_c::write_handler(bx_phy_address addr, unsigned len, void *da
       if (value & (1<< 2)) BX_OHCI_THIS hub.op_regs.HcInterruptEnable.sf   = 0;
       if (value & (1<< 1)) BX_OHCI_THIS hub.op_regs.HcInterruptEnable.wdh  = 0;
       if (value & (1<< 0)) BX_OHCI_THIS hub.op_regs.HcInterruptEnable.so   = 0;
+      set_irq_state();
       break;
 
     case 0x18: // HcHCCA

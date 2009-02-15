@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_uhci.cc,v 1.7 2009-02-15 08:16:16 vruppert Exp $
+// $Id: usb_uhci.cc,v 1.8 2009-02-15 14:06:55 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Benjamin D Lunt (fys at frontiernet net)
@@ -281,6 +281,11 @@ void bx_usb_uhci_c::init_device(Bit8u port, const char *devname)
   char pname[BX_PATHNAME_LEN];
 
   if (!strlen(devname) || !strcmp(devname, "none")) return;
+
+  if (BX_UHCI_THIS hub.usb_port[port].device != NULL) {
+    BX_ERROR(("init_device(): port%d already in use", port+1));
+    return;
+  }
 
   if (!strcmp(devname, "mouse")) {
     type = USB_DEV_TYPE_MOUSE;
