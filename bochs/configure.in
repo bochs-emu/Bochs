@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.388 2009-02-02 13:02:47 vruppert Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.389 2009-02-15 18:51:13 sshwarts Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -525,6 +525,23 @@ AC_ARG_ENABLE(smp,
   [
     AC_MSG_RESULT(no)
     AC_DEFINE(BX_SUPPORT_SMP, 0)
+    ]
+  )
+
+AC_MSG_CHECKING(for larger than 32 bit physical address emulation)
+AC_ARG_ENABLE(long-phy-address,
+  [  --enable-long-phy-address         compile in support for physical address larger than 32 bit],
+  [if test "$enableval" = yes; then
+    AC_MSG_RESULT(yes)
+    AC_DEFINE(BX_PHY_ADDRESS_LONG, 1)
+   else
+    AC_MSG_RESULT(no)
+    AC_DEFINE(BX_PHY_ADDRESS_LONG, 0)
+   fi
+   ],
+  [
+    AC_MSG_RESULT(no)
+    AC_DEFINE(BX_PHY_ADDRESS_LONG, 0)
     ]
   )
 

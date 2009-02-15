@@ -71,6 +71,9 @@ Detailed change log :
   - I/O APIC
     - implemented I/O APIC device hardware reset
 
+- General
+  - Bochs param tree index keys are case independent now
+
 - Misc
   - Updated Bochs TESTFORM to version 0.4
 
@@ -146,6 +149,7 @@ Detailed change log :
  [1874124] bx_Instruction_c::ilen() const  
 
 - these S.F. feature requests were closed/implemented
+ [1977045] support 40 bit physical address
  [1506385] Intel Core Duo VT features
  [1429015] Support for user plugins
  [1488136] debugger access to floppy controller  

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: icache.h,v 1.41 2009-01-16 18:18:58 sshwarts Exp $
+// $Id: icache.h,v 1.42 2009-02-15 18:51:13 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007 Stanislav Shwartsman
@@ -54,35 +54,46 @@ public:
   }
  ~bxPageWriteStampTable() { delete [] pageWriteStampTable; }
 
+  BX_CPP_INLINE Bit32u hash(bx_phy_address pAddr) const {
+#if BX_PHY_ADDRESS_LONG
+    // can share writeStamps between multiple pages
+    Bit32u lo = (pAddr >> 12) & (PHY_MEM_PAGES-1);
+    Bit32u hi = (pAddr >> 32) & (PHY_MEM_PAGES-1);
+    return lo ^ hi;
+#else
+    return (Bit32u)(pAddr) >> 12;
+#endif
+  }
+
   BX_CPP_INLINE Bit32u getPageWriteStamp(bx_phy_address pAddr) const
   {
-    return pageWriteStampTable[pAddr>>12];
+    return pageWriteStampTable[hash(pAddr)];
   }
 
   BX_CPP_INLINE const Bit32u *getPageWriteStampPtr(bx_phy_address pAddr) const
   {
-    return &pageWriteStampTable[pAddr>>12];
+    return &pageWriteStampTable[hash(pAddr)];
   }
 
   BX_CPP_INLINE void setPageWriteStamp(bx_phy_address pAddr, Bit32u pageWriteStamp)
   {
-    pageWriteStampTable[pAddr>>12] = pageWriteStamp;
+    pageWriteStampTable[hash(pAddr)] = pageWriteStamp;
   }
 
   BX_CPP_INLINE void decWriteStamp(bx_phy_address pAddr)
   {
-    pAddr >>= 12;
+    Bit32u index = hash(pAddr);
 #if BX_SUPPORT_TRACE_CACHE
-    if ((pageWriteStampTable[pAddr] & ICacheWriteStampFetchModeMask) != ICacheWriteStampFetchModeMask)
+    if ((pageWriteStampTable[index] & ICacheWriteStampFetchModeMask) != ICacheWriteStampFetchModeMask)
     {
       handleSMC(); // one of the CPUs might be running trace from this page
       // Decrement page write stamp, so iCache entries with older stamps are
       // effectively invalidated.
-      pageWriteStampTable[pAddr]--;
+      pageWriteStampTable[index]--;
     }
 #endif
 #if BX_DEBUGGER
-    BX_DBG_DIRTY_PAGE(pAddr);
+    BX_DBG_DIRTY_PAGE(index);
 #endif
   }
 
