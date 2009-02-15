@@ -115,38 +115,30 @@ Detailed change log :
  [1981505] Init PIIX4 PCI to ISA bridge and IDE by Sebastian
 
 - these S.F. bugs were closed
- [2426271] cannot get correcet symbol entry
+ [1757068] current cvs(Jul19, 07) failed to boot smp
+ [2426271] cannot get correct symbol entry
  [2471982] VGA character height glitches
  [1659659] wrong behaviour a20 at boot
  [1998027] minwg + --with-term + --with-out-win32 = link failure
  [1871936] bochs-2.3.6 make fails on wx.cc
- [1684666] info idt for long mode  
+ [1684666] info idt for long mode
  [2105989] could not read() hard drive image file at byte 269824
  [1173093] Debugger totally not supports x86-64
  [1803018] new win32debug dialog problems
  [2141679] windows vcc build broken
  [2162824] latest cvs fails to compile
  [2164506] latest bochs fails to start
+ [2129223] MOV reg16, SS not working in real mode due to dead code
  [2106514] RIS / startrom.com install ALMOST works
  [2123358] SMP (HTT): wbinvd executed by CPU1 crashes CPU0
- [2029758] BEV can return via retf instead of int 18h
- [2026501] El Torito incorrect boot segment:offset
- [2010173] x command breaks after one error about x/s or x/i
  [2002758] Arch Linux: >>PANIC<< ATAPI command with zero byte count
- [1992138] Misspell in cpu/ia_opcodes.h
- [1990187] testform feedback
+ [2026501] El Torito incorrect boot segment:offset
+ [2029758] BEV can return via retf instead of int 18h
+ [2010173] x command breaks after one error about x/s or x/i
+ [1830665] harddrv PANIC: ATAPI command with zero byte count
  [1985387] fail to make using gcc4 with --enable-debugger
- [1976171] Keyboard missing break code for enter (0x9C)
- [1952548] String to char * warnings
- [1940714] SYSENTER/SYSEXIT doesn't work in long mode
- [1936132] Link problem with --enable-debugger & --enable-disasm
- [1934477] Linear address wrap is not working
- [1923803] legacy rombios - e820 map and ACPI_DATA_SIZE
- [1919328] 00000000000i[APIC?] local apic in initializing
- [1902928] with debugger cpu_loop leaves CPU with unstable state
- [1898929] Bochs VESA BIOS violates specs (banks == 1)
- [1875721] Bit "Accessed" in LDT/GDT descriptors & #PF
- [1874124] bx_Instruction_c::ilen() const  
+ [1990187] testform feedback
+ [1992138] Misspell in cpu/ia_opcodes.h
 
 - these S.F. feature requests were closed/implemented
  [1977045] support 40 bit physical address
