@@ -26,6 +26,11 @@ Detailed change log :
         --enable-movbe option
   - Support for 1G pages in long mode, to enable configure with
         --enable-1g-pages option
+  - Support for > 32 bit physical address space in CPU. Up to 36 bit could be
+    seen in legacy mode (PAE) and up to 40 bit in x86-64 mode.
+    Still support the same amount of the physical memory in the memory object,
+    so system with > 4Gb of RAM yet cannot be emulated.
+    To enable configure with --enable-long-phy-address option.
   - Implemented modern BIOSes mode limiting max reported CPUID function
     to 3 using .bochsrc CPU option. The mode is required in order to
     correctly install and boot WinNT.
