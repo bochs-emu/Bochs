@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_uhci.cc,v 1.6 2009-02-08 09:05:52 vruppert Exp $
+// $Id: usb_uhci.cc,v 1.7 2009-02-15 08:16:16 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Benjamin D Lunt (fys at frontiernet net)
@@ -93,7 +93,11 @@ void bx_usb_uhci_c::init(void)
   BX_UHCI_THIS hub.timer_index =
                    bx_pc_system.register_timer(this, usb_timer_handler, 1000, 1,1, "usb.timer");
 
-  BX_UHCI_THIS hub.devfunc = BX_PCI_DEVICE(1,2);
+  if (DEV_is_pci_device(BX_PLUGIN_USB_UHCI)) {
+    BX_UHCI_THIS hub.devfunc = 0x00;
+  } else {
+    BX_UHCI_THIS hub.devfunc = BX_PCI_DEVICE(1,2);
+  }
   DEV_register_pci_handlers(this, &BX_UHCI_THIS hub.devfunc, BX_PLUGIN_USB_UHCI,
                             "Experimental USB UHCI");
 
@@ -724,8 +728,12 @@ void bx_usb_uhci_c::usb_timer(void)
               if (td.dword1 & (1<<22)) stalled = 1;
 
               DEV_MEM_WRITE_PHYSICAL(address+4, 4, (Bit8u*) &td.dword1);  // write back the status
+              if (shortpacket) {
+                td.dword0 |= 1;
+                stack[stk].t = 1;
+              }
               // copy pointer for next queue item, in to vert queue head
-              if ((stk > 0) && !shortpacket && (stack[stk].d == HC_VERT))
+              if ((stk > 0) && (stack[stk].d == HC_VERT))
                 DEV_MEM_WRITE_PHYSICAL(lastvertaddr, 4, (Bit8u*) &td.dword0);
             }
           }
