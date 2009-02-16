@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.174 2009-02-08 18:52:06 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.175 2009-02-16 18:27:50 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1703,15 +1703,15 @@ void bx_dbg_stepN_command(Bit32u count)
   SIM->set_display_mode(DISP_MODE_SIM);
 
   // reset guard counters for all CPUs
-  for (unsigned cpu=0; cpu < BX_SMP_PROCESSORS; cpu++) {
-    BX_CPU(cpu)->guard_found.icount = 0;
-    BX_CPU(cpu)->guard_found.time_tick = bx_pc_system.time_ticks();
+  for (unsigned n=0; n < BX_SMP_PROCESSORS; n++) {
+    BX_CPU(n)->guard_found.icount = 0;
+    BX_CPU(n)->guard_found.time_tick = bx_pc_system.time_ticks();
   }
 
   if (BX_SMP_PROCESSORS == 1) {
     bx_guard.interrupt_requested = 0;
-    BX_CPU(cpu)->guard_found.guard_found = 0;
-    BX_CPU(cpu)->cpu_loop(count);
+    BX_CPU(0)->guard_found.guard_found = 0;
+    BX_CPU(0)->cpu_loop(count);
   }
 #if BX_SUPPORT_SMP
   else {
