@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: msr.cc,v 1.13 2009-02-17 19:20:47 sshwarts Exp $
+// $Id: msr.cc,v 1.14 2009-02-17 19:44:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008 Stanislav Shwartsman
@@ -392,31 +392,9 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
       BX_CPU_THIS_PTR set_TSC(val_64);
       break;
 
-    /* MSR_APICBASE
-       0:7    Reserved
-       8     This is set if its the BSP
-       9:10    Reserved
-       11    APIC Global Enable bit (1=enabled 0=disabled)
-       12:35  APIC Base Address (in Bochs 12:31 because of 32-bit physical addr)
-       36:63  Reserved
-    */
 #if BX_SUPPORT_APIC
     case BX_MSR_APICBASE:
-      if (BX_CPU_THIS_PTR msr.apicbase & 0x800) {
-        BX_INFO(("WRMSR: wrote %08x:%08x to MSR_APICBASE", val32_hi, val32_lo));
-#if BX_PHY_ADDRESS_WIDTH == 32
-        if (val32_hi != 0) {
-            BX_PANIC(("MSR_APICBASE: Only 32 bit physical address space is emulated !"));
-        }
-#endif
-        BX_CPU_THIS_PTR msr.apicbase = val_64;
-        BX_CPU_THIS_PTR lapic.set_base(BX_CPU_THIS_PTR msr.apicbase);
-        // TLB flush is required for emulation correctness
-        TLB_flush();  // don't care about performance of apic relocation
-      }
-      else {
-        BX_INFO(("WRMSR: MSR_APICBASE APIC global enable bit cleared !"));
-      }
+      relocate_apic(val_64);
       break;
 #endif
 
@@ -532,6 +510,37 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
   return 1;
 }
 #endif // BX_CPU_LEVEL >= 5
+
+#if BX_SUPPORT_APIC
+void BX_CPU_C::relocate_apic(Bit64u val_64)
+{
+  /* MSR_APICBASE
+   *  0:7    Reserved
+   *  8      This is set if CPU is BSP
+   *  9      Reserved
+   *  10     X2APIC mode bit (1=enabled 0=disabled)
+   *  11     APIC Global Enable bit (1=enabled 0=disabled)
+   *  12:35  APIC Base Address (physical)
+   *  36:63  Reserved
+   */
+  if (BX_CPU_THIS_PTR msr.apicbase & 0x800) {
+    Bit32u val32_hi = GET32H(val_64), val32_lo = GET32L(val_64);
+    BX_INFO(("WRMSR: wrote %08x:%08x to MSR_APICBASE", val32_hi, val32_lo));
+#if BX_PHY_ADDRESS_WIDTH == 32
+    if (val32_hi != 0) {
+      BX_PANIC(("MSR_APICBASE: Only 32 bit physical address space is emulated !"));
+    }
+#endif
+    BX_CPU_THIS_PTR msr.apicbase = val_64;
+    BX_CPU_THIS_PTR lapic.set_base(BX_CPU_THIS_PTR msr.apicbase);
+    // TLB flush is required for emulation correctness
+    TLB_flush();  // don't care about performance of apic relocation
+  }
+  else {
+    BX_INFO(("WRMSR: MSR_APICBASE APIC global enable bit cleared !"));
+  }
+}
+#endif
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRMSR(bxInstruction_c *i)
 {

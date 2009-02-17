@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.572 2009-02-17 19:20:47 sshwarts Exp $
+// $Id: cpu.h,v 1.573 2009-02-17 19:44:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -3126,6 +3126,10 @@ public: // for now...
 #if BX_CPU_LEVEL >= 5
   BX_SMF bx_bool rdmsr(Bit32u index, Bit64u *val_64) BX_CPP_AttrRegparmN(2);
   BX_SMF bx_bool wrmsr(Bit32u index, Bit64u  val_64) BX_CPP_AttrRegparmN(2);
+#endif
+
+#if BX_SUPPORT_APIC
+  BX_SMF void relocate_apic(Bit64u val_64);
 #endif
 
   BX_SMF void jump_protected(bxInstruction_c *, Bit16u cs, bx_address disp) BX_CPP_AttrRegparmN(3);

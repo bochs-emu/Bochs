@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.cc,v 1.117 2009-02-17 19:20:46 sshwarts Exp $
+// $Id: apic.cc,v 1.118 2009-02-17 19:44:01 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (c) 2002 Zwane Mwaikambo, Stanislav Shwartsman
@@ -181,7 +181,7 @@ void bx_generic_apic_c::set_base(bx_phy_address newbase)
     BX_INFO(("relocate APIC id=%d to 0x" FMT_PHY_ADDRX, id, newbase));
 }
 
-void bx_generic_apic_c::set_id(Bit8u newid)
+void bx_generic_apic_c::set_id(Bit32u newid)
 {
   BX_INFO(("set APIC ID to %d", newid));
   id = newid;
