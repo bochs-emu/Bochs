@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_msd.cc,v 1.15 2009-02-14 10:06:20 vruppert Exp $
+// $Id: usb_msd.cc,v 1.16 2009-02-17 16:43:51 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Volker Ruppert
@@ -288,13 +288,12 @@ int usb_msd_device_c::handle_control(int request, int value, int index, int leng
       ret = 0;
       break;
       // Class specific requests
+    case InterfaceOutClassRequest | MassStorageReset:
     case MassStorageReset:
-      // Ben: Hack for 0x21 | MassStorageReset
-      // 0x21 = (REQ_TYPE_CLASS | RECPT_INTERFACE);
-    case 0x21FF:
       s.mode = USB_MSDM_CBW;
       ret = 0;
       break;
+    case InterfaceInClassRequest | GetMaxLun:
     case GetMaxLun:
       data[0] = 0;
       ret = 1;
