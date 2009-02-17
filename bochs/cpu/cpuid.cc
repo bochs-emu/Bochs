@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpuid.cc,v 1.78 2009-01-31 10:43:23 sshwarts Exp $
+// $Id: cpuid.cc,v 1.79 2009-02-17 19:20:47 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007 Stanislav Shwartsman
@@ -407,7 +407,7 @@ void BX_CPU_C::set_cpuid_defaults(void)
 
   cpuid->ebx = 0;
 #if BX_SUPPORT_APIC
-  cpuid->ebx |= (BX_CPU_THIS_PTR local_apic.get_id() << 24);
+  cpuid->ebx |= (BX_CPU_THIS_PTR lapic.get_id() << 24);
 #endif
 #if BX_SUPPORT_CLFLUSH
   cpuid->ebx |= (CACHE_LINE_SIZE / 8) << 8;

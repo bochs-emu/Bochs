@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.571 2009-02-13 20:09:56 sshwarts Exp $
+// $Id: cpu.h,v 1.572 2009-02-17 19:20:47 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -400,7 +400,7 @@ extern const char* cpu_mode_string(unsigned cpu_mode);
 #define StackAddrSize64() Is64BitMode()
 
 #if BX_SUPPORT_APIC
-  #define BX_CPU_INTR  (BX_CPU_THIS_PTR INTR || BX_CPU_THIS_PTR local_apic.INTR)
+  #define BX_CPU_INTR  (BX_CPU_THIS_PTR INTR || BX_CPU_THIS_PTR lapic.INTR)
 #else
   #define BX_CPU_INTR  (BX_CPU_THIS_PTR INTR)
 #endif
@@ -882,7 +882,7 @@ public: // for now...
 #endif
 
 #if BX_SUPPORT_APIC
-  bx_local_apic_c local_apic;
+  bx_local_apic_c lapic;
 #endif
 
 #if BX_SUPPORT_VMX
@@ -3064,11 +3064,14 @@ public: // for now...
   BX_SMF void repeat_ZF(bxInstruction_c *i, BxExecutePtr_tR execute) BX_CPP_AttrRegparmN(2);
 
   // linear address for access_linear expected to be canonical !
-  BX_SMF void access_read_linear(bx_address address, unsigned length, unsigned curr_pl,
+  BX_SMF void access_read_linear(bx_address laddr, unsigned len, unsigned curr_pl,
        unsigned rw, void *data);
-  BX_SMF void access_write_linear(bx_address address, unsigned length, unsigned curr_pl,
+  BX_SMF void access_write_linear(bx_address laddr, unsigned len, unsigned curr_pl,
        void *data);
   BX_SMF void page_fault(unsigned fault, bx_address laddr, unsigned user, unsigned rw);
+
+  BX_SMF void access_read_physical(bx_phy_address paddr, unsigned len, void *data);
+  BX_SMF void access_write_physical(bx_phy_address paddr, unsigned len, void *data);
 
   // linear address for translate_linear expected to be canonical !
   BX_SMF bx_phy_address translate_linear(bx_address laddr, unsigned curr_pl, unsigned rw);

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: msr.cc,v 1.12 2009-01-31 10:43:23 sshwarts Exp $
+// $Id: msr.cc,v 1.13 2009-02-17 19:20:47 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008 Stanislav Shwartsman
@@ -410,7 +410,7 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
         }
 #endif
         BX_CPU_THIS_PTR msr.apicbase = val_64;
-        BX_CPU_THIS_PTR local_apic.set_base(BX_CPU_THIS_PTR msr.apicbase);
+        BX_CPU_THIS_PTR lapic.set_base(BX_CPU_THIS_PTR msr.apicbase);
         // TLB flush is required for emulation correctness
         TLB_flush();  // don't care about performance of apic relocation
       }

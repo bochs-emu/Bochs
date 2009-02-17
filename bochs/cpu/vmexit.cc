@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmexit.cc,v 1.4 2009-02-03 19:17:15 sshwarts Exp $
+// $Id: vmexit.cc,v 1.5 2009-02-17 19:20:47 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2009 Stanislav Shwartsman
@@ -355,7 +355,7 @@ void BX_CPP_AttrRegparmN(3) BX_CPU_C::VMexit_MSR(bxInstruction_c *i, unsigned op
        else {
          // check MSR-HI bitmaps
          bx_phy_address pAddr = vm->msr_bitmap_addr + (msr >> 3) + 1024 + (op == VMX_VMEXIT_RDMSR) ? 0 : 2048;
-         BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, pAddr, 1, &field);
+         access_read_physical(pAddr, 1, &field);
          BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pAddr, 1, BX_READ, &field);
          if (field & (1 << (msr & 7)))
             vmexit = 1;
@@ -366,7 +366,7 @@ void BX_CPP_AttrRegparmN(3) BX_CPU_C::VMexit_MSR(bxInstruction_c *i, unsigned op
        else {
          // check MSR-LO bitmaps
          bx_phy_address pAddr = vm->msr_bitmap_addr + (msr >> 3) + (op == VMX_VMEXIT_RDMSR) ? 0 : 2048;
-         BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, pAddr, 1, &field);
+         access_read_physical(pAddr, 1, &field);
          BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pAddr, 1, BX_READ, &field);
          if (field & (1 << (msr & 7)))
             vmexit = 1;
@@ -399,7 +399,7 @@ void BX_CPP_AttrRegparmN(3) BX_CPU_C::VMexit_IO(bxInstruction_c *i, unsigned por
      else {
         bx_phy_address pAddr = BX_CPU_THIS_PTR vmcs.io_bitmap_addr[(port >> 15) & 1] + ((port & 0x7fff) >> 4);
         Bit16u bitmap;
-        BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, pAddr, 2, (Bit8u*) &bitmap);
+        access_read_physical(pAddr, 2, (Bit8u*) &bitmap);
         BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pAddr, 2, BX_READ, (Bit8u*) &bitmap);
 
         for (unsigned n = port; n < port + len; n++) {

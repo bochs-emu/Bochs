@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.cc,v 1.116 2009-02-03 20:42:15 sshwarts Exp $
+// $Id: apic.cc,v 1.117 2009-02-17 19:20:46 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (c) 2002 Zwane Mwaikambo, Stanislav Shwartsman
@@ -239,7 +239,7 @@ bx_local_apic_c::bx_local_apic_c(BX_CPU_C *mycpu)
 {
   // KPL: Register a non-active timer for use when the timer is started.
   timer_handle = bx_pc_system.register_timer_ticks(this,
-            BX_CPU(0)->local_apic.periodic_smf, 0, 0, 0, "lapic");
+            BX_CPU(0)->lapic.periodic_smf, 0, 0, 0, "lapic");
   timer_active = 0;
 
   reset(BX_RESET_HARDWARE);

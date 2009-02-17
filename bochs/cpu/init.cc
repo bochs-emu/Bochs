@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.198 2009-02-03 19:28:22 sshwarts Exp $
+// $Id: init.cc,v 1.199 2009-02-17 19:20:47 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -38,7 +38,7 @@
 
 BX_CPU_C::BX_CPU_C(unsigned id): bx_cpuid(id)
 #if BX_SUPPORT_APIC
-   ,local_apic (this)
+   ,lapic (this)
 #endif
 {
   // in case of SMF, you cannot reference any member data
@@ -155,8 +155,8 @@ void BX_CPU_C::initialize(void)
   BX_CPU_THIS_PTR set_INTR (0);
 
 #if BX_SUPPORT_APIC
-  BX_CPU_THIS_PTR local_apic.set_id(BX_CPU_ID);
-  BX_CPU_THIS_PTR local_apic.init();
+  BX_CPU_THIS_PTR lapic.set_id(BX_CPU_ID);
+  BX_CPU_THIS_PTR lapic.init();
 #endif
 
   // in SMP mode, the prefix of the CPU will be changed to [CPUn] in
@@ -528,7 +528,7 @@ void BX_CPU_C::register_state(void)
 #endif
 
 #if BX_SUPPORT_APIC
-  local_apic.register_state(cpu);
+  lapic.register_state(cpu);
 #endif
 
 #if BX_SUPPORT_VMX
@@ -926,7 +926,7 @@ void BX_CPU_C::reset(unsigned source)
 #if BX_SUPPORT_APIC
   /* APIC Address, APIC enabled and BSP is default, we'll fill in the rest later */
   BX_CPU_THIS_PTR msr.apicbase = BX_LAPIC_BASE_ADDR;
-  BX_CPU_THIS_PTR local_apic.init();
+  BX_CPU_THIS_PTR lapic.init();
   BX_CPU_THIS_PTR msr.apicbase |= 0x900;
 #endif
 #if BX_SUPPORT_X86_64
@@ -1028,7 +1028,7 @@ void BX_CPU_C::reset(unsigned source)
 #if BX_SUPPORT_SMP
   // notice if I'm the bootstrap processor.  If not, do the equivalent of
   // a HALT instruction.
-  int apic_id = local_apic.get_id();
+  int apic_id = lapic.get_id();
   if (BX_BOOTSTRAP_PROCESSOR == apic_id) {
     // boot normally
     BX_CPU_THIS_PTR msr.apicbase |= 0x0100; /* set bit 8 BSP */

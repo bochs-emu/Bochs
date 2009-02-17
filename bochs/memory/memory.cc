@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: memory.cc,v 1.74 2009-02-08 09:05:52 vruppert Exp $
+// $Id: memory.cc,v 1.75 2009-02-17 19:20:47 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -65,14 +65,6 @@ void BX_MEM_C::writePhysicalPage(BX_CPU_C *cpu, bx_phy_address addr, unsigned le
 #endif
 
     BX_INSTR_PHY_WRITE(cpu->which_cpu(), a20addr, len);
-
-#if BX_SUPPORT_APIC
-    bx_generic_apic_c *local_apic = &cpu->local_apic;
-    if (local_apic->is_selected(a20addr, len)) {
-      local_apic->write(a20addr, (Bit32u *)data, len);
-      return;
-    }
-#endif
 
     if ((a20addr & 0xfffe0000) == 0x000a0000 && (BX_MEM_THIS smram_available))
     {
@@ -214,14 +206,6 @@ void BX_MEM_C::readPhysicalPage(BX_CPU_C *cpu, bx_phy_address addr, unsigned len
 #endif
 
     BX_INSTR_PHY_READ(cpu->which_cpu(), a20addr, len);
-
-#if BX_SUPPORT_APIC
-    bx_generic_apic_c *local_apic = &cpu->local_apic;
-    if (local_apic->is_selected (a20addr, len)) {
-      local_apic->read(a20addr, data, len);
-      return;
-    }
-#endif
 
     if ((a20addr & 0xfffe0000) == 0x000a0000 && (BX_MEM_THIS smram_available))
     {

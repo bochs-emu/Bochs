@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: misc_mem.cc,v 1.123 2009-02-08 09:05:52 vruppert Exp $
+// $Id: misc_mem.cc,v 1.124 2009-02-17 19:20:47 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -75,7 +75,7 @@ void BX_MEM_C::init_memory(Bit32u memsize)
 {
   unsigned idx;
 
-  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.123 2009-02-08 09:05:52 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.124 2009-02-17 19:20:47 sshwarts Exp $"));
 
   if (BX_MEM_THIS actual_vector != NULL) {
     BX_INFO (("freeing existing memory vector"));
@@ -514,8 +514,8 @@ Bit8u *BX_MEM_C::getHostMemAddr(BX_CPU_C *cpu, bx_phy_address a20Addr, unsigned 
 {
 #if BX_SUPPORT_APIC
   if (cpu != NULL) {
-    bx_generic_apic_c *local_apic = &cpu->local_apic;
-    if (local_apic->get_base() == (a20Addr & ~0xfff))
+    bx_generic_apic_c *lapic = &cpu->lapic;
+    if (lapic->get_base() == (a20Addr & ~0xfff))
       return(NULL); // Vetoed!  APIC address space
   }
 #endif

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.h,v 1.40 2009-02-03 20:42:15 sshwarts Exp $
+// $Id: apic.h,v 1.41 2009-02-17 19:20:46 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (c) 2002 Zwane Mwaikambo, Stanislav Shwartsman
@@ -56,7 +56,7 @@ public:
 
 #ifdef BX_INCLUDE_LOCAL_APIC
 
-#define BX_CPU_APIC(i) (&(BX_CPU(i)->local_apic))
+#define BX_CPU_APIC(i) (&(BX_CPU(i)->lapic))
 
 #ifdef BX_IMPLEMENT_XAPIC
 #  define BX_LAPIC_VERSION_ID 0x00050014  // P4 has 6 LVT entries

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.286 2009-02-13 09:51:57 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.287 2009-02-17 19:20:47 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -771,7 +771,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CqRq(bxInstruction_c *i)
         BX_ERROR(("MOV_CqRq: Attempt to set reserved bits of CR8"));
         exception(BX_GP_EXCEPTION, 0, 0);
       }
-      BX_CPU_THIS_PTR local_apic.set_tpr((val_64 & 0xF) << 0x4);
+      BX_CPU_THIS_PTR lapic.set_tpr((val_64 & 0xF) << 0x4);
       break;
 #endif
     default:
@@ -831,7 +831,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RqCq(bxInstruction_c *i)
       // Reads of CR8 return zero extended APIC.TPR[7:4]
       // Write to CR8 update APIC.TPR[7:4]
 #if BX_SUPPORT_APIC
-      val_64 = (BX_CPU_THIS_PTR local_apic.get_tpr() & 0xF) >> 4;
+      val_64 = (BX_CPU_THIS_PTR lapic.get_tpr() & 0xF) >> 4;
       break;
 #endif
     default:
