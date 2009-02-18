@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.199 2009-02-17 19:20:47 sshwarts Exp $
+// $Id: init.cc,v 1.200 2009-02-18 22:33:06 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -927,6 +927,7 @@ void BX_CPU_C::reset(unsigned source)
   /* APIC Address, APIC enabled and BSP is default, we'll fill in the rest later */
   BX_CPU_THIS_PTR msr.apicbase = BX_LAPIC_BASE_ADDR;
   BX_CPU_THIS_PTR lapic.init();
+  BX_CPU_THIS_PTR lapic.set_base(BX_CPU_THIS_PTR msr.apicbase);
   BX_CPU_THIS_PTR msr.apicbase |= 0x900;
 #endif
 #if BX_SUPPORT_X86_64

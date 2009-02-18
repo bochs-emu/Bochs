@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.287 2009-02-17 19:20:47 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.288 2009-02-18 22:33:06 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -350,10 +350,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_DdRd(bxInstruction_c *i)
       // Even bits 11,10 are changeable though reserved.
       BX_CPU_THIS_PTR dr7 = (val_32 & 0xffff2fff) | 0x00000400;
 #endif
+#if BX_X86_DEBUGGER
       // if we have breakpoints enabled then we must check
       // breakpoints condition in cpu loop
       if(BX_CPU_THIS_PTR dr7 & 0xff)
         BX_CPU_THIS_PTR async_event = 1;
+#endif
       break;
 
     default:
@@ -522,10 +524,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_DqRq(bxInstruction_c *i)
       // Even bits 11,10 are changeable though reserved.
       BX_CPU_THIS_PTR dr7 = (val_64 & 0xffff2fff) | 0x00000400;
 
+#if BX_X86_DEBUGGER
       // if we have breakpoints enabled then we must check
       // breakpoints condition in cpu loop
       if(BX_CPU_THIS_PTR dr7 & 0xff)
         BX_CPU_THIS_PTR async_event = 1;
+#endif
       break;
 
     default:

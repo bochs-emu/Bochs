@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.cc,v 1.119 2009-02-18 22:24:52 sshwarts Exp $
+// $Id: apic.cc,v 1.120 2009-02-18 22:33:06 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (c) 2002 Zwane Mwaikambo, Stanislav Shwartsman
@@ -236,7 +236,7 @@ void bx_local_apic_c::set_base(bx_phy_address newbase)
   newbase &= ~((bx_phy_address) 0xfff);
   base_addr = newbase;
   if (id != APIC_UNKNOWN_ID)
-    BX_INFO(("relocate APIC id=%d to 0x" FMT_PHY_ADDRX, id, newbase));
+    BX_INFO(("allocate APIC id=%d to 0x" FMT_PHY_ADDRX, id, newbase));
 }
 
 void bx_local_apic_c::set_id(Bit32u new_id)
