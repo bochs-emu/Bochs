@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: msr.cc,v 1.14 2009-02-17 19:44:02 sshwarts Exp $
+// $Id: msr.cc,v 1.15 2009-02-18 22:24:57 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008 Stanislav Shwartsman
@@ -394,8 +394,7 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
 
 #if BX_SUPPORT_APIC
     case BX_MSR_APICBASE:
-      relocate_apic(val_64);
-      break;
+      return relocate_apic(val_64);
 #endif
 
 #if BX_SUPPORT_VMX
@@ -512,7 +511,7 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
 #endif // BX_CPU_LEVEL >= 5
 
 #if BX_SUPPORT_APIC
-void BX_CPU_C::relocate_apic(Bit64u val_64)
+bx_bool BX_CPU_C::relocate_apic(Bit64u val_64)
 {
   /* MSR_APICBASE
    *  0:7    Reserved
@@ -523,14 +522,22 @@ void BX_CPU_C::relocate_apic(Bit64u val_64)
    *  12:35  APIC Base Address (physical)
    *  36:63  Reserved
    */
+
+#define BX_MSR_APICBASE_RESERVED_BITS 0x6ff
+
   if (BX_CPU_THIS_PTR msr.apicbase & 0x800) {
     Bit32u val32_hi = GET32H(val_64), val32_lo = GET32L(val_64);
     BX_INFO(("WRMSR: wrote %08x:%08x to MSR_APICBASE", val32_hi, val32_lo));
-#if BX_PHY_ADDRESS_WIDTH == 32
-    if (val32_hi != 0) {
-      BX_PANIC(("MSR_APICBASE: Only 32 bit physical address space is emulated !"));
+#if BX_SUPPORT_X86_64
+    if (! IsValidPhyAddr(val_64)) {
+      BX_ERROR(("relocate_apic: invalid physical address"));
+      return 0;
     }
 #endif
+    if (val32_lo & BX_MSR_APICBASE_RESERVED_BITS) {
+      BX_ERROR(("relocate_apic: attempt to set reserved bits"));
+      return 0;
+    }
     BX_CPU_THIS_PTR msr.apicbase = val_64;
     BX_CPU_THIS_PTR lapic.set_base(BX_CPU_THIS_PTR msr.apicbase);
     // TLB flush is required for emulation correctness
@@ -539,6 +546,8 @@ void BX_CPU_C::relocate_apic(Bit64u val_64)
   else {
     BX_INFO(("WRMSR: MSR_APICBASE APIC global enable bit cleared !"));
   }
+
+  return 1;
 }
 #endif
 

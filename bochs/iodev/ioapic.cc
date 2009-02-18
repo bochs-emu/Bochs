@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ioapic.cc,v 1.45 2009-02-08 09:05:52 vruppert Exp $
+// $Id: ioapic.cc,v 1.46 2009-02-18 22:25:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -36,14 +36,31 @@ class bx_ioapic_c bx_ioapic;
 
 static bx_bool ioapic_read(bx_phy_address a20addr, unsigned len, void *data, void *param)
 {
-  bx_ioapic.read(a20addr, data, len);
+  if((a20addr & ~0x3) != ((a20addr+len-1) & ~0x3)) {
+    BX_PANIC(("I/O APIC read at address 0x" FMT_PHY_ADDRX " spans 32-bit boundary !", a20addr));
+    return 1;
+  }
+  Bit32u value = bx_ioapic.read_aligned(a20addr & ~0x3);
+  if(len == 4) { // must be 32-bit aligned
+    *((Bit32u *)data) = value;
+    return 1;
+  }
+  // handle partial read, independent of endian-ness
+  value >>= (a20addr&3)*8;
+  if (len == 1)
+    *((Bit8u *) data) = value & 0xff;
+  else if (len == 2)
+    *((Bit16u *)data) = value & 0xffff;
+  else
+    BX_PANIC(("Unsupported I/O APIC read at address 0x" FMT_PHY_ADDRX ", len=%d", a20addr, len));
+
   return 1;
 }
 
 static bx_bool ioapic_write(bx_phy_address a20addr, unsigned len, void *data, void *param)
 {
   if (len != 4) {
-    BX_PANIC (("I/O apic write with len=%d (should be 4)", len));
+    BX_PANIC(("I/O apic write with len=%d (should be 4)", len));
     return 1;
   }
 
@@ -76,22 +93,18 @@ void bx_io_redirect_entry_t::register_state(bx_param_c *parent)
   BXRS_HEX_PARAM_SIMPLE(parent, hi);
 }
 
-#define BX_IOAPIC_BASE_ADDR (0xfec00000)
+#define BX_IOAPIC_BASE_ADDR  (0xfec00000)
+#define BX_IOAPIC_DEFAULT_ID (BX_SMP_PROCESSORS)
 
-bx_ioapic_c::bx_ioapic_c()
-  : bx_generic_apic_c(BX_IOAPIC_BASE_ADDR)
+bx_ioapic_c::bx_ioapic_c(): base_addr(BX_IOAPIC_BASE_ADDR)
 {
+  set_id(BX_IOAPIC_DEFAULT_ID);
   put("IOAP");
 }
 
-#define BX_IOAPIC_DEFAULT_ID (BX_SMP_PROCESSORS)
-
 void bx_ioapic_c::init(void)
 {
-  bx_generic_apic_c::init();
   BX_INFO(("initializing I/O APIC"));
-  base_addr = BX_IOAPIC_BASE_ADDR;
-  set_id(BX_IOAPIC_DEFAULT_ID);
   DEV_register_memory_handlers(&bx_ioapic,
       ioapic_read, ioapic_write, base_addr, base_addr + 0xfff);
   reset(BX_RESET_HARDWARE);
@@ -109,39 +122,43 @@ void bx_ioapic_c::reset(unsigned type)
   ioregsel = 0;
 }
 
-void bx_ioapic_c::read_aligned(bx_phy_address address, Bit32u *data)
+Bit32u bx_ioapic_c::read_aligned(bx_phy_address address)
 {
   BX_DEBUG(("IOAPIC: read aligned addr=%08x", address));
   address &= 0xff;
   if (address == 0x00) {
     // select register
-    *data = ioregsel;
-    return;
+    return ioregsel;
   } else {
     if (address != 0x10)
       BX_PANIC(("IOAPIC: read from unsupported address"));
   }
+
+  Bit32u data;
+
   // only reached when reading data register
   switch (ioregsel) {
   case 0x00:  // APIC ID, note this is 4bits, the upper 4 are reserved
-    *data = ((id & APIC_ID_MASK) << 24);
-    return;
+    data = ((id & APIC_ID_MASK) << 24);
+    break;
   case 0x01:  // version
-    *data = BX_IOAPIC_VERSION_ID;
-    return;
+    data = BX_IOAPIC_VERSION_ID;
+    break;
   case 0x02:
     BX_INFO(("IOAPIC: arbitration ID unsupported, returned 0"));
-    *data = 0;
-    return;
+    data = 0;
+    break;
   default:
     int index = (ioregsel - 0x10) >> 1;
     if (index >= 0 && index < BX_IOAPIC_NUM_PINS) {
       bx_io_redirect_entry_t *entry = ioredtbl + index;
-      *data = (ioregsel&1) ? entry->get_hi_part() : entry->get_lo_part();
-      return;
+      data = (ioregsel&1) ? entry->get_hi_part() : entry->get_lo_part();
+      break;
     }
     BX_PANIC(("IOAPIC: IOREGSEL points to undefined register %02x", ioregsel));
   }
+
+  return data;
 }
 
 void bx_ioapic_c::write_aligned(bx_phy_address address, Bit32u *value)
@@ -262,6 +279,7 @@ void bx_ioapic_c::service_ioapic()
 void bx_ioapic_c::register_state(void)
 {
   bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "ioapic", "IOAPIC State", 4);
+
   BXRS_HEX_PARAM_SIMPLE(list, ioregsel);
   BXRS_HEX_PARAM_SIMPLE(list, intin);
   BXRS_HEX_PARAM_SIMPLE(list, irr);

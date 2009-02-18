@@ -25,7 +25,6 @@ TODO (know issues in CPU model):
 
 [!] Some of APIC functionality still not implemented, for example
 
-    - Globally disabled APIC
     - LVT pins handling
     - Filter interrupts according processor priority (PPR)
 

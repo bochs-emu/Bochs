@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ioapic.h,v 1.29 2009-02-08 09:05:52 vruppert Exp $
+// $Id: ioapic.h,v 1.30 2009-02-18 22:25:04 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -73,8 +73,11 @@ public:
   void register_state(bx_param_c *parent);
 };
 
-class bx_ioapic_c : public bx_generic_apic_c
+class bx_ioapic_c : public logfunctions
 {
+  bx_phy_address base_addr;
+  Bit32u id;
+
   Bit32u ioregsel;    // selects between various registers
   Bit32u intin;
   // interrupt request bitmask, not visible from the outside.  Bits in the
@@ -88,14 +91,22 @@ class bx_ioapic_c : public bx_generic_apic_c
 
 public:
   bx_ioapic_c();
-  virtual ~bx_ioapic_c() {}
-  virtual void init();
-  virtual void reset(unsigned type);
-  virtual void read_aligned(bx_phy_address address, Bit32u *data);
-  virtual void write_aligned(bx_phy_address address, Bit32u *data);
+ ~bx_ioapic_c() {}
+
+  void init();
+  void reset(unsigned type);
+
+  bx_phy_address get_base(void) const { return base_addr; }
+  void set_id(Bit32u new_id) { id = new_id; }
+  Bit32u get_id() const { return id; }
+
+  Bit32u read_aligned(bx_phy_address address);
+  void write_aligned(bx_phy_address address, Bit32u *data);
+
   void set_irq_level(Bit8u int_in, bx_bool level);
   void receive_eoi(Bit8u vector);
   void service_ioapic(void);
+
   void register_state(void);
 };
 

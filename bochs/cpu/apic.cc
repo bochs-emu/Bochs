@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.cc,v 1.118 2009-02-17 19:44:01 sshwarts Exp $
+// $Id: apic.cc,v 1.119 2009-02-18 22:24:52 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (c) 2002 Zwane Mwaikambo, Stanislav Shwartsman
@@ -28,6 +28,8 @@
 #if BX_SUPPORT_APIC
 
 #define LOG_THIS this->
+
+#define APIC_UNKNOWN_ID 0xff
 
 #define APIC_BROADCAST_PHYSICAL_DESTINATION_MODE (APIC_MAX_ID)
 
@@ -166,78 +168,13 @@ void apic_bus_broadcast_smi(void)
 
 ////////////////////////////////////
 
-bx_generic_apic_c::bx_generic_apic_c(bx_phy_address base)
+bx_local_apic_c::bx_local_apic_c(BX_CPU_C *mycpu)
+  : base_addr(BX_LAPIC_BASE_ADDR), cpu(mycpu), cpu_id(cpu->which_cpu())
 {
   put("APIC?");
   id = APIC_UNKNOWN_ID;
-  set_base(base);
-}
 
-void bx_generic_apic_c::set_base(bx_phy_address newbase)
-{
-  newbase &= (~0xfff);
-  base_addr = newbase;
-  if (id != APIC_UNKNOWN_ID)
-    BX_INFO(("relocate APIC id=%d to 0x" FMT_PHY_ADDRX, id, newbase));
-}
-
-void bx_generic_apic_c::set_id(Bit32u newid)
-{
-  BX_INFO(("set APIC ID to %d", newid));
-  id = newid;
-}
-
-bx_bool bx_generic_apic_c::is_selected(bx_phy_address addr, unsigned len)
-{
-  if((addr & ~0xfff) == get_base()) {
-    if((addr & 0xf) != 0)
-      BX_INFO(("warning: misaligned APIC access. addr=0x" FMT_PHY_ADDRX ", len=%d", addr, len));
-    return 1;
-  }
-  return 0;
-}
-
-void bx_generic_apic_c::read(bx_phy_address addr, void *data, unsigned len)
-{
-  if((addr & ~0x3) != ((addr+len-1) & ~0x3)) {
-    BX_PANIC(("APIC read at address 0x" FMT_PHY_ADDRX " spans 32-bit boundary !", addr));
-    return;
-  }
-  Bit32u value;
-  read_aligned(addr & ~0x3, &value);
-  if(len == 4) { // must be 32-bit aligned
-    *((Bit32u *)data) = value;
-    return;
-  }
-  // handle partial read, independent of endian-ness
-  value >>= (addr&3)*8;
-  if (len == 1)
-    *((Bit8u *) data) = value & 0xff;
-  else if (len == 2)
-    *((Bit16u *)data) = value & 0xffff;
-  else
-    BX_PANIC(("Unsupported APIC read at address 0x" FMT_PHY_ADDRX ", len=%d", addr, len));
-}
-
-void bx_generic_apic_c::write(bx_phy_address addr, void *data, unsigned len)
-{
-  if (len != 4) {
-    BX_PANIC(("APIC write with len=%d (should be 4)", len));
-    return;
-  }
-
-  if(addr & 0xf) {
-    BX_PANIC(("APIC write at unaligned address 0x" FMT_PHY_ADDRX, addr));
-    return;
-  }
-
-  write_aligned(addr, (Bit32u*) data);
-}
-
-bx_local_apic_c::bx_local_apic_c(BX_CPU_C *mycpu)
-  : bx_generic_apic_c(BX_LAPIC_BASE_ADDR), cpu(mycpu), cpu_id(cpu->which_cpu())
-{
-  // KPL: Register a non-active timer for use when the timer is started.
+  // Register a non-active timer for use when the timer is started.
   timer_handle = bx_pc_system.register_timer_ticks(this,
             BX_CPU(0)->lapic.periodic_smf, 0, 0, 0, "lapic");
   timer_active = 0;
@@ -249,8 +186,6 @@ bx_local_apic_c::bx_local_apic_c(BX_CPU_C *mycpu)
 
 void bx_local_apic_c::reset(unsigned type)
 {
-  UNUSED(type);
-
   /* same as INIT but also sets arbitration ID and APIC ID */
   init();
 }
@@ -258,8 +193,6 @@ void bx_local_apic_c::reset(unsigned type)
 void bx_local_apic_c::init()
 {
   int i;
-
-  bx_generic_apic_c::init();
 
   BX_INFO(("local apic in %s initializing",
      (cpu && cpu->name) ? cpu->name : "?"));
@@ -293,13 +226,24 @@ void bx_local_apic_c::init()
 
   spurious_vector  = 0xff;   // software disabled(bit 8)
   software_enabled = 0;
-  focus_disable    = 0;
+  global_enabled = 1;
+  focus_disable = 0;
 }
 
-void bx_local_apic_c::set_id(Bit8u newid)
+void bx_local_apic_c::set_base(bx_phy_address newbase)
 {
-  bx_generic_apic_c::set_id(newid);
-  sprintf(cpu->name, "CPU apicid=%02x",(Bit32u)id);
+  global_enabled = (newbase >> 11) & 1;
+  newbase &= ~((bx_phy_address) 0xfff);
+  base_addr = newbase;
+  if (id != APIC_UNKNOWN_ID)
+    BX_INFO(("relocate APIC id=%d to 0x" FMT_PHY_ADDRX, id, newbase));
+}
+
+void bx_local_apic_c::set_id(Bit32u new_id)
+{
+  id = new_id;
+  sprintf(cpu->name, "CPU apicid=%02x", id);
+
   if(id < APIC_MAX_ID) {
     char buffer[16];
     sprintf(buffer, "APIC%x", id);
@@ -307,10 +251,59 @@ void bx_local_apic_c::set_id(Bit8u newid)
     sprintf(buffer, "CPU%x", id);
     cpu->put(buffer);
   } else {
-    BX_INFO(("naming convention for apics requires id=0-%d only", APIC_MAX_ID));
+    BX_INFO(("naming convention for APICs requires id=0-%d only", APIC_MAX_ID));
   }
 
   BX_INFO(("80%d86", BX_CPU_LEVEL));
+}
+
+bx_bool bx_local_apic_c::is_selected(bx_phy_address addr)
+{
+  if (! global_enabled) return 0;
+
+  if((addr & ~0xfff) == base_addr) {
+    if((addr & 0xf) != 0)
+      BX_INFO(("warning: misaligned APIC access. addr=0x" FMT_PHY_ADDRX, addr));
+    return 1;
+  }
+  return 0;
+}
+
+void bx_local_apic_c::read(bx_phy_address addr, void *data, unsigned len)
+{
+  if((addr & ~0x3) != ((addr+len-1) & ~0x3)) {
+    BX_PANIC(("APIC read at address 0x" FMT_PHY_ADDRX " spans 32-bit boundary !", addr));
+    return;
+  }
+  Bit32u value;
+  read_aligned(addr & ~0x3, &value);
+  if(len == 4) { // must be 32-bit aligned
+    *((Bit32u *)data) = value;
+    return;
+  }
+  // handle partial read, independent of endian-ness
+  value >>= (addr&3)*8;
+  if (len == 1)
+    *((Bit8u *) data) = value & 0xff;
+  else if (len == 2)
+    *((Bit16u *)data) = value & 0xffff;
+  else
+    BX_PANIC(("Unsupported APIC read at address 0x" FMT_PHY_ADDRX ", len=%d", addr, len));
+}
+
+void bx_local_apic_c::write(bx_phy_address addr, void *data, unsigned len)
+{
+  if (len != 4) {
+    BX_PANIC(("APIC write with len=%d (should be 4)", len));
+    return;
+  }
+
+  if(addr & 0xf) {
+    BX_PANIC(("APIC write at unaligned address 0x" FMT_PHY_ADDRX, addr));
+    return;
+  }
+
+  write_aligned(addr, (Bit32u*) data);
 }
 
 // APIC write: 4 byte write to 16-byte aligned APIC address
@@ -948,6 +941,7 @@ void bx_local_apic_c::register_state(bx_param_c *parent)
   BXRS_HEX_PARAM_SIMPLE(lapic, id);
   BXRS_HEX_PARAM_SIMPLE(lapic, spurious_vector);
   BXRS_PARAM_BOOL(lapic, software_enabled, software_enabled);
+  BXRS_PARAM_BOOL(lapic, global_enabled, global_enabled);
   BXRS_PARAM_BOOL(lapic, focus_disable, focus_disable);
   BXRS_HEX_PARAM_SIMPLE(lapic, task_priority);
   BXRS_HEX_PARAM_SIMPLE(lapic, spurious_vector);

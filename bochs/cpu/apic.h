@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.h,v 1.42 2009-02-17 19:44:02 sshwarts Exp $
+// $Id: apic.h,v 1.43 2009-02-18 22:24:55 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (c) 2002 Zwane Mwaikambo, Stanislav Shwartsman
@@ -32,28 +32,6 @@
 #define APIC_LEVEL_TRIGGERED	1
 #define APIC_EDGE_TRIGGERED	0
 
-class BOCHSAPI bx_generic_apic_c : public logfunctions {
-protected:
-  bx_phy_address base_addr;
-  Bit32u id;
-#define APIC_UNKNOWN_ID 0xff
-public:
-  bx_generic_apic_c(bx_phy_address base);
-  virtual ~bx_generic_apic_c() { }
-  // init is called during RESET and when an INIT message is delivered
-  virtual void init() { }
-  virtual void reset(unsigned type) {}
-  bx_phy_address get_base(void) const { return base_addr; }
-  void set_base(bx_phy_address newbase);
-  void set_id(Bit32u newid);
-  Bit32u get_id() const { return id; }
-  bx_bool is_selected(bx_phy_address addr, unsigned len);
-  virtual void read_aligned(bx_phy_address address, Bit32u *data) = 0;
-  void read(bx_phy_address addr, void *data, unsigned len);
-  virtual void write_aligned(bx_phy_address address, Bit32u *data) = 0;
-  void write(bx_phy_address addr, void *data, unsigned len);
-};
-
 #ifdef BX_INCLUDE_LOCAL_APIC
 
 #define BX_CPU_APIC(i) (&(BX_CPU(i)->lapic))
@@ -68,10 +46,14 @@ public:
 #define BX_NUM_LOCAL_APICS  BX_SMP_PROCESSORS
 #define BX_LAPIC_MAX_INTS   256
 
-class BOCHSAPI bx_local_apic_c : public bx_generic_apic_c
+class BOCHSAPI bx_local_apic_c : public logfunctions
 {
-  Bit32u  spurious_vector;
+  bx_phy_address base_addr;
+  Bit32u id;
+  bx_bool global_enabled;
+
   bx_bool software_enabled;
+  Bit32u  spurious_vector;
   bx_bool focus_disable;
 
   Bit32u task_priority;         // Task priority (TPR)
@@ -142,12 +124,18 @@ class BOCHSAPI bx_local_apic_c : public bx_generic_apic_c
 public:
   bx_bool INTR;
   bx_local_apic_c(BX_CPU_C *cpu);
-  virtual ~bx_local_apic_c() { }
-  virtual void reset(unsigned type);
-  virtual void init(void);
-  void set_id(Bit8u newid);   // redefine to set cpu->name
-  virtual void write_aligned(bx_phy_address addr, Bit32u *data);
-  virtual void read_aligned(bx_phy_address address, Bit32u *data);
+ ~bx_local_apic_c() { }
+  void reset(unsigned type);
+  void init(void);
+  bx_phy_address get_base(void) const { return base_addr; }
+  void set_base(bx_phy_address newbase);
+  void set_id(Bit32u newid);
+  Bit32u get_id() const { return id; }
+  bx_bool is_selected(bx_phy_address addr);
+  void read(bx_phy_address addr, void *data, unsigned len);
+  void write(bx_phy_address addr, void *data, unsigned len);
+  void write_aligned(bx_phy_address addr, Bit32u *data);
+  void read_aligned(bx_phy_address address, Bit32u *data);
   void startup_msg(Bit32u vector);
   // on local APIC, trigger means raise the CPU's INTR line. For now
   // I also have to raise pc_system.INTR but that should be replaced
