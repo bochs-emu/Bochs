@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.h,v 1.43 2009-02-18 22:24:55 sshwarts Exp $
+// $Id: apic.h,v 1.44 2009-02-19 23:19:11 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (c) 2002 Zwane Mwaikambo, Stanislav Shwartsman
@@ -34,8 +34,6 @@
 
 #ifdef BX_INCLUDE_LOCAL_APIC
 
-#define BX_CPU_APIC(i) (&(BX_CPU(i)->lapic))
-
 #ifdef BX_IMPLEMENT_XAPIC
 #  define BX_LAPIC_VERSION_ID 0x00050014  // P4 has 6 LVT entries
 #else
@@ -46,18 +44,23 @@
 #define BX_NUM_LOCAL_APICS  BX_SMP_PROCESSORS
 #define BX_LAPIC_MAX_INTS   256
 
+#define BX_APIC_GLOBALLY_DISABLED 0
+#define BX_APIC_STATE_INVALID     1
+#define BX_APIC_XAPIC_MODE        2
+#define BX_APIC_X2APIC_MODE       3
+
 class BOCHSAPI bx_local_apic_c : public logfunctions
 {
   bx_phy_address base_addr;
   Bit32u id;
-  bx_bool global_enabled;
+  unsigned mode;
 
   bx_bool software_enabled;
   Bit32u  spurious_vector;
   bx_bool focus_disable;
 
   Bit32u task_priority;         // Task priority (TPR)
-  Bit32u log_dest;              // Logical destination (LDR)
+  Bit32u ldr;                   // Logical destination (LDR)
   Bit32u dest_format;           // Destination format (DFR)
 
   // ISR=in-service register.  When an IRR bit is cleared, the corresponding
@@ -90,7 +93,7 @@ class BOCHSAPI bx_local_apic_c : public logfunctions
   Bit32u lvt[APIC_LVT_ENTRIES];
 #define APIC_LVT_TIMER   0
 #define APIC_LVT_THERMAL 1
-#define APIC_LVT_PERFORM 2
+#define APIC_LVT_PERFMON 2
 #define APIC_LVT_LINT0   3
 #define APIC_LVT_LINT1   4
 #define APIC_LVT_ERROR   5
@@ -118,9 +121,6 @@ class BOCHSAPI bx_local_apic_c : public logfunctions
 
   BX_CPU_C *cpu;
 
-  // corresponding BX_CPU_ID for the local APIC
-  unsigned cpu_id;
-
 public:
   bx_bool INTR;
   bx_local_apic_c(BX_CPU_C *cpu);
@@ -134,14 +134,14 @@ public:
   bx_bool is_selected(bx_phy_address addr);
   void read(bx_phy_address addr, void *data, unsigned len);
   void write(bx_phy_address addr, void *data, unsigned len);
-  void write_aligned(bx_phy_address addr, Bit32u *data);
-  void read_aligned(bx_phy_address address, Bit32u *data);
-  void startup_msg(Bit32u vector);
+  void write_aligned(bx_phy_address addr, Bit32u data);
+  Bit32u read_aligned(bx_phy_address address);
+  void startup_msg(Bit8u vector);
   // on local APIC, trigger means raise the CPU's INTR line. For now
   // I also have to raise pc_system.INTR but that should be replaced
   // with the cpu-specific INTR signals.
-  void trigger_irq(unsigned num, unsigned trigger_mode, bx_bool bypass_irr_isr = 0);
-  void untrigger_irq(unsigned num, unsigned trigger_mode);
+  void trigger_irq(Bit8u vector, unsigned trigger_mode, bx_bool bypass_irr_isr = 0);
+  void untrigger_irq(Bit8u vector, unsigned trigger_mode);
   Bit8u acknowledge_int(void);  // only the local CPU should call this
   int highest_priority_int(Bit8u *array);
   void receive_EOI(Bit32u value);
@@ -151,7 +151,7 @@ public:
   void print_status(void);
   bx_bool match_logical_addr (Bit8u address);
   bx_bool deliver(Bit8u vector, Bit8u delivery_mode, Bit8u trig_mode);
-  Bit8u get_tpr(void);
+  Bit8u get_tpr(void) { return task_priority; }
   void  set_tpr(Bit8u tpr);
   Bit8u get_ppr(void);
   Bit8u get_apr(void);
@@ -175,7 +175,7 @@ public:
 #endif
 
 int apic_bus_deliver_lowest_priority(Bit8u vector, Bit8u dest, bx_bool trig_mode, bx_bool broadcast);
-int apic_bus_deliver_interrupt(Bit8u vector, Bit8u dest, Bit8u delivery_mode, Bit8u dest_mode, bx_bool level, bx_bool trig_mode);
+int apic_bus_deliver_interrupt(Bit8u vector, Bit8u dest, Bit8u delivery_mode, bx_bool logical_dest, bx_bool level, bx_bool trig_mode);
 int apic_bus_broadcast_interrupt(Bit8u vector, Bit8u delivery_mode, bx_bool trig_mode, int exclude_cpu);
 
 #endif // if BX_SUPPORT_APIC

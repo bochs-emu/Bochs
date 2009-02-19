@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ioapic.h,v 1.30 2009-02-18 22:25:04 sshwarts Exp $
+// $Id: ioapic.h,v 1.31 2009-02-19 23:19:11 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -101,7 +101,7 @@ public:
   Bit32u get_id() const { return id; }
 
   Bit32u read_aligned(bx_phy_address address);
-  void write_aligned(bx_phy_address address, Bit32u *data);
+  void write_aligned(bx_phy_address address, Bit32u data);
 
   void set_irq_level(Bit8u int_in, bx_bool level);
   void receive_eoi(Bit8u vector);

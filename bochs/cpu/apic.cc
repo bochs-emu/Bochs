@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.cc,v 1.121 2009-02-18 22:38:58 sshwarts Exp $
+// $Id: apic.cc,v 1.122 2009-02-19 23:19:10 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (c) 2002 Zwane Mwaikambo, Stanislav Shwartsman
@@ -29,6 +29,8 @@
 
 #define LOG_THIS this->
 
+#define BX_CPU_APIC(i) (&(BX_CPU(i)->lapic))
+
 #define APIC_UNKNOWN_ID 0xff
 
 #define APIC_BROADCAST_PHYSICAL_DESTINATION_MODE (APIC_MAX_ID)
@@ -38,14 +40,13 @@
 
 ///////////// APIC BUS /////////////
 
-int apic_bus_deliver_interrupt(Bit8u vector, Bit8u dest, Bit8u delivery_mode, Bit8u dest_mode, bx_bool level, bx_bool trig_mode)
+int apic_bus_deliver_interrupt(Bit8u vector, Bit8u dest, Bit8u delivery_mode, bx_bool logical_dest, bx_bool level, bx_bool trig_mode)
 {
   if(delivery_mode == APIC_DM_LOWPRI)
   {
-     if(dest_mode == 0) {
+     if(logical_dest == 0) {
        // I/O subsytem initiated interrupt with lowest priority delivery
-       // mode is not supported in physical destination mode
-//     BX_ERROR(("Ignoring lowest priority interrupt in physical dest mode !"));
+       // which is not supported in physical destination mode
        return 0;
      }
      else {
@@ -54,9 +55,9 @@ int apic_bus_deliver_interrupt(Bit8u vector, Bit8u dest, Bit8u delivery_mode, Bi
   }
 
   // determine destination local apics and deliver
-  if(dest_mode == 0) {
-    if(dest == APIC_BROADCAST_PHYSICAL_DESTINATION_MODE)
-    {
+  if(logical_dest == 0) {
+    // physical destination mode
+    if(dest == APIC_BROADCAST_PHYSICAL_DESTINATION_MODE) {
        return apic_bus_broadcast_interrupt(vector, delivery_mode, trig_mode, APIC_MAX_ID);
     }
     else {
@@ -169,7 +170,7 @@ void apic_bus_broadcast_smi(void)
 ////////////////////////////////////
 
 bx_local_apic_c::bx_local_apic_c(BX_CPU_C *mycpu)
-  : base_addr(BX_LAPIC_BASE_ADDR), cpu(mycpu), cpu_id(cpu->which_cpu())
+  : base_addr(BX_LAPIC_BASE_ADDR), cpu(mycpu)
 {
   put("APIC?");
   id = APIC_UNKNOWN_ID;
@@ -200,7 +201,7 @@ void bx_local_apic_c::init()
   // default address for a local APIC, can be moved
   base_addr = BX_LAPIC_BASE_ADDR;
   error_status = shadow_error_status = 0;
-  log_dest = 0;
+  ldr = 0;
   dest_format = 0xf;
   icr_hi = 0;
   icr_lo = 0;
@@ -226,18 +227,18 @@ void bx_local_apic_c::init()
 
   spurious_vector  = 0xff;   // software disabled(bit 8)
   software_enabled = 0;
-  global_enabled = 1;
   focus_disable = 0;
+  mode = BX_APIC_XAPIC_MODE;
 }
 
 void bx_local_apic_c::set_base(bx_phy_address newbase)
 {
-  global_enabled = (newbase >> 11) & 1;
+  mode = (newbase >> 10) & 3;
   newbase &= ~((bx_phy_address) 0xfff);
   base_addr = newbase;
   if (id != APIC_UNKNOWN_ID) {
-    BX_INFO(("allocate APIC id=%d (%s) to 0x" FMT_PHY_ADDRX,
-      id, global_enabled ? "enabled" : "disabled", newbase));
+    BX_INFO(("allocate APIC id=%d (MMIO %s) to 0x" FMT_PHY_ADDRX,
+      id, (mode == BX_APIC_XAPIC_MODE) ? "enabled" : "disabled", newbase));
   }
 }
 
@@ -261,7 +262,7 @@ void bx_local_apic_c::set_id(Bit32u new_id)
 
 bx_bool bx_local_apic_c::is_selected(bx_phy_address addr)
 {
-  if (! global_enabled) return 0;
+  if (mode != BX_APIC_XAPIC_MODE) return 0;
 
   if((addr & ~0xfff) == base_addr) {
     if((addr & 0xf) != 0)
@@ -277,8 +278,7 @@ void bx_local_apic_c::read(bx_phy_address addr, void *data, unsigned len)
     BX_PANIC(("APIC read at address 0x" FMT_PHY_ADDRX " spans 32-bit boundary !", addr));
     return;
   }
-  Bit32u value;
-  read_aligned(addr & ~0x3, &value);
+  Bit32u value = read_aligned(addr & ~0x3);
   if(len == 4) { // must be 32-bit aligned
     *((Bit32u *)data) = value;
     return;
@@ -305,38 +305,82 @@ void bx_local_apic_c::write(bx_phy_address addr, void *data, unsigned len)
     return;
   }
 
-  write_aligned(addr, (Bit32u*) data);
+  write_aligned(addr, *((Bit32u*) data));
 }
 
+#define BX_LAPIC_ID                   0x020
+#define BX_LAPIC_VERSION              0x030
+#define BX_LAPIC_TPR                  0x080
+#define BX_LAPIC_ARBITRATION_PRIORITY 0x090
+#define BX_LAPIC_PPR                  0x0A0
+#define BX_LAPIC_EOI                  0x0B0
+#define BX_LAPIC_LDR                  0x0D0
+#define BX_LAPIC_DESTINATION_FORMAT   0x0E0
+#define BX_LAPIC_SPURIOUS_VECTOR      0x0F0
+#define BX_LAPIC_ISR1                 0x100
+#define BX_LAPIC_ISR2                 0x110
+#define BX_LAPIC_ISR3                 0x120
+#define BX_LAPIC_ISR4                 0x130
+#define BX_LAPIC_ISR5                 0x140
+#define BX_LAPIC_ISR6                 0x150
+#define BX_LAPIC_ISR7                 0x160
+#define BX_LAPIC_ISR8                 0x170
+#define BX_LAPIC_TMR1                 0x180
+#define BX_LAPIC_TMR2                 0x190
+#define BX_LAPIC_TMR3                 0x1A0
+#define BX_LAPIC_TMR4                 0x1B0
+#define BX_LAPIC_TMR5                 0x1C0
+#define BX_LAPIC_TMR6                 0x1D0
+#define BX_LAPIC_TMR7                 0x1E0
+#define BX_LAPIC_TMR8                 0x1F0
+#define BX_LAPIC_IRR1                 0x200
+#define BX_LAPIC_IRR2                 0x210
+#define BX_LAPIC_IRR3                 0x220
+#define BX_LAPIC_IRR4                 0x230
+#define BX_LAPIC_IRR5                 0x240
+#define BX_LAPIC_IRR6                 0x250
+#define BX_LAPIC_IRR7                 0x260
+#define BX_LAPIC_IRR8                 0x270
+#define BX_LAPIC_ESR                  0x280
+#define BX_LAPIC_LVT_CMCI             0x2F0
+#define BX_LAPIC_ICR_LO               0x300
+#define BX_LAPIC_ICR_HI               0x310
+#define BX_LAPIC_LVT_TIMER            0x320
+#define BX_LAPIC_LVT_THERMAL          0x330
+#define BX_LAPIC_LVT_PERFMON          0x340
+#define BX_LAPIC_LVT_LINT0            0x350
+#define BX_LAPIC_LVT_LINT1            0x360
+#define BX_LAPIC_LVT_ERROR            0x370
+#define BX_LAPIC_TIMER_INITIAL_COUNT  0x380
+#define BX_LAPIC_TIMER_CURRENT_COUNT  0x390
+#define BX_LAPIC_TIMER_DIVIDE_CFG     0x3E0
+#define BX_LAPIC_SELF_IPI             0x3F0
+
 // APIC write: 4 byte write to 16-byte aligned APIC address
-void bx_local_apic_c::write_aligned(bx_phy_address addr, Bit32u *data)
+void bx_local_apic_c::write_aligned(bx_phy_address addr, Bit32u value)
 {
-  BX_DEBUG(("%s: LAPIC write 0x" FMT_PHY_ADDRX " to address %08x", cpu->name, *data, addr));
   BX_ASSERT((addr & 0xf) == 0);
-  Bit32u apic_reg = addr & 0xff0;
-  Bit32u value = *data;
+  unsigned apic_reg = addr & 0xff0;
+  BX_DEBUG(("%s: LAPIC write 0x%08x to register 0x%04x", cpu->name, value, apic_reg));
   switch(apic_reg) {
-    case 0x20: // local APIC id
-      id = (value>>24) & APIC_ID_MASK;
-      break;
-    case 0x80: // task priority
+    case BX_LAPIC_TPR: // task priority
       set_tpr(value & 0xff);
       break;
-    case 0xb0: // EOI
+    case BX_LAPIC_EOI: // EOI
       receive_EOI(value);
       break;
-    case 0xd0: // logical destination
-      log_dest = (value >> 24) & APIC_ID_MASK;
-      BX_DEBUG(("set logical destination to %02x", log_dest));
+    case BX_LAPIC_LDR: // logical destination
+      ldr = (value >> 24) & APIC_ID_MASK;
+      BX_DEBUG(("set logical destination to %08x", ldr));
       break;
-    case 0xe0: // destination format
+    case BX_LAPIC_DESTINATION_FORMAT:
       dest_format = (value >> 28) & 0xf;
       BX_DEBUG(("set destination format to %02x", dest_format));
       break;
-    case 0xf0: // spurious interrupt vector
+    case BX_LAPIC_SPURIOUS_VECTOR:
       write_spurious_interrupt_register(value);
       break;
-    case 0x280: // error status reg
+    case BX_LAPIC_ESR: // error status reg
       // Here's what the IA-devguide-3 says on p.7-45:
       // The ESR is a read/write register and is reset after being written to
       // by the processor. A write to the ESR must be done just prior to
@@ -344,60 +388,63 @@ void bx_local_apic_c::write_aligned(bx_phy_address addr, Bit32u *data)
       error_status = shadow_error_status;
       shadow_error_status = 0;
       break;
-    case 0x300: // interrupt command reg 0-31
+    case BX_LAPIC_ICR_LO: // interrupt command reg 0-31
       icr_lo = value & ~(1<<12);  // force delivery status bit = 0(idle)
       send_ipi();
       break;
-    case 0x310: // interrupt command reg 31-63
+    case BX_LAPIC_ICR_HI: // interrupt command reg 31-63
       icr_hi = value & 0xff000000;
       break;
-    case 0x320: // LVT Timer Reg
-      lvt[APIC_LVT_TIMER] = value & 0x300ff;
-      if(! software_enabled) lvt[APIC_LVT_TIMER] |= 0x10000;
-      break;
-    case 0x330: // LVT Thermal Monitor
-      lvt[APIC_LVT_THERMAL] = value & 0x107ff;
-      if(! software_enabled) lvt[APIC_LVT_THERMAL] |= 0x10000;
-      break;
-    case 0x340: // LVT Performance Counter
-      lvt[APIC_LVT_PERFORM] = value & 0x107ff;
-      if(! software_enabled) lvt[APIC_LVT_PERFORM] |= 0x10000;
-      break;
-    case 0x350: // LVT LINT0 Reg
-      lvt[APIC_LVT_LINT0] = value & 0x1a7ff;
-      if(! software_enabled) lvt[APIC_LVT_LINT0] |= 0x10000;
-      break;
-    case 0x360: // LVT Lint1 Reg
-      lvt[APIC_LVT_LINT1] = value & 0x1a7ff;
-      if(! software_enabled) lvt[APIC_LVT_LINT1] |= 0x10000;
-      break;
-    case 0x370: // LVT Error Reg
-      lvt[APIC_LVT_ERROR] = value & 0x100ff;
-      if(! software_enabled) lvt[APIC_LVT_ERROR] |= 0x10000;
-      break;
-    case 0x380: // initial count for timer
+    case BX_LAPIC_LVT_TIMER:   // LVT Timer Reg
+    case BX_LAPIC_LVT_THERMAL: // LVT Thermal Monitor
+    case BX_LAPIC_LVT_PERFMON: // LVT Performance Counter
+    case BX_LAPIC_LVT_LINT0:   // LVT LINT0 Reg
+    case BX_LAPIC_LVT_LINT1:   // LVT LINT1 Reg
+    case BX_LAPIC_LVT_ERROR:   // LVT Error Reg
+      {
+         static Bit32u lvt_mask[] = {
+           0x000310ff, /* TIMER */
+           0x000117ff, /* THERMAL */
+           0x000117ff, /* PERFMON */
+           0x0001f7ff, /* LINT0 */
+           0x0001f7ff, /* LINT1 */
+           0x000110ff  /* ERROR */
+         };
+         unsigned lvt_entry = (apic_reg - BX_LAPIC_LVT_TIMER) >> 4;
+         lvt[lvt_entry] = value & lvt_mask[lvt_entry];
+         if(! software_enabled) lvt[lvt_entry] |= 0x10000;
+         break;
+      }
+    case BX_LAPIC_TIMER_INITIAL_COUNT:
       set_initial_timer_count(value);
       break;
-    case 0x3e0: // timer divide configuration
+    case BX_LAPIC_TIMER_DIVIDE_CFG:
       // only bits 3, 1, and 0 are writable
       timer_divconf = value & 0xb;
       set_divide_configuration(timer_divconf);
       break;
     /* all read-only registers go here */
-    case 0x30: // local APIC version
-    case 0x90: // arbitration priority
-    case 0xa0: // processor priority
+    case BX_LAPIC_ID:      // local APIC id
+    case BX_LAPIC_VERSION: // local APIC version
+    case BX_LAPIC_ARBITRATION_PRIORITY:
+    case BX_LAPIC_PPR:     // processor priority
     // ISRs not writable
-    case 0x100: case 0x110: case 0x120: case 0x130:
-    case 0x140: case 0x150: case 0x160: case 0x170:
+    case BX_LAPIC_ISR1: case BX_LAPIC_ISR2:
+    case BX_LAPIC_ISR3: case BX_LAPIC_ISR4:
+    case BX_LAPIC_ISR5: case BX_LAPIC_ISR6:
+    case BX_LAPIC_ISR7: case BX_LAPIC_ISR8:
     // TMRs not writable
-    case 0x180: case 0x190: case 0x1a0: case 0x1b0:
-    case 0x1c0: case 0x1d0: case 0x1e0: case 0x1f0:
+    case BX_LAPIC_TMR1: case BX_LAPIC_TMR2:
+    case BX_LAPIC_TMR3: case BX_LAPIC_TMR4:
+    case BX_LAPIC_TMR5: case BX_LAPIC_TMR6:
+    case BX_LAPIC_TMR7: case BX_LAPIC_TMR8:
     // IRRs not writable
-    case 0x200: case 0x210: case 0x220: case 0x230:
-    case 0x240: case 0x250: case 0x260: case 0x270:
-      // current count for timer
-    case 0x390:
+    case BX_LAPIC_IRR1: case BX_LAPIC_IRR2:
+    case BX_LAPIC_IRR3: case BX_LAPIC_IRR4:
+    case BX_LAPIC_IRR5: case BX_LAPIC_IRR6:
+    case BX_LAPIC_IRR7: case BX_LAPIC_IRR8:
+    // current count for timer
+    case BX_LAPIC_TIMER_CURRENT_COUNT:
       // all read-only registers should fall into this line
       BX_INFO(("warning: write to read-only APIC register 0x%x", apic_reg));
       break;
@@ -414,7 +461,7 @@ void bx_local_apic_c::send_ipi(void)
   int dest_shorthand = (icr_lo >> 18) & 3;
   int trig_mode = (icr_lo >> 15) & 1;
   int level = (icr_lo >> 14) & 1;
-  int dest_mode = (icr_lo >> 11) & 1;
+  int logical_dest = (icr_lo >> 11) & 1;
   int delivery_mode = (icr_lo >> 8) & 7;
   int vector = (icr_lo & 0xff);
   int accepted = 0;
@@ -433,7 +480,7 @@ void bx_local_apic_c::send_ipi(void)
 
   switch(dest_shorthand) {
   case 0:  // no shorthand, use real destination value
-    accepted = apic_bus_deliver_interrupt(vector, dest, delivery_mode, dest_mode, level, trig_mode);
+    accepted = apic_bus_deliver_interrupt(vector, dest, delivery_mode, logical_dest, level, trig_mode);
     break;
   case 1:  // self
     trigger_irq(vector, trig_mode);
@@ -497,130 +544,131 @@ void bx_local_apic_c::receive_EOI(Bit32u value)
   if(bx_dbg.apic) print_status();
 }
 
-void bx_local_apic_c::startup_msg(Bit32u vector)
+void bx_local_apic_c::startup_msg(Bit8u vector)
 {
   cpu->deliver_SIPI(vector);
 }
 
 // APIC read: 4 byte read from 16-byte aligned APIC address
-void bx_local_apic_c::read_aligned(bx_phy_address addr, Bit32u *data)
+Bit32u bx_local_apic_c::read_aligned(bx_phy_address addr)
 {
-  BX_DEBUG(("%s: LAPIC read from address 0x" FMT_PHY_ADDRX, cpu->name, addr));
   BX_ASSERT((addr & 0xf) == 0);
-  *data = 0;  // default value for unimplemented registers
-  bx_phy_address apic_reg = addr & 0xff0;
+  Bit32u data = 0;  // default value for unimplemented registers
+  unsigned apic_reg = addr & 0xff0;
+  BX_DEBUG(("%s: LAPIC read from register 0x%04x", cpu->name, apic_reg));
   switch(apic_reg) {
-  case 0x20: // local APIC id
-    *data = (id) << 24; break;
-  case 0x30: // local APIC version
-    *data = BX_LAPIC_VERSION_ID; break;
-  case 0x80: // task priority
-    *data = task_priority & 0xff; break;
-  case 0x90: // arbitration priority
-    *data = get_apr(); break;
-  case 0xa0: // processor priority
-    *data = get_ppr(); break;
-  case 0xb0: // EOI
+  case BX_LAPIC_ID:      // local APIC id
+    data = (id) << 24; break;
+  case BX_LAPIC_VERSION: // local APIC version
+    data = BX_LAPIC_VERSION_ID; break;
+  case BX_LAPIC_TPR:     // task priority
+    data = task_priority & 0xff; break;
+  case BX_LAPIC_ARBITRATION_PRIORITY:
+    data = get_apr(); break;
+  case BX_LAPIC_PPR:     // processor priority
+    data = get_ppr(); break;
+  case BX_LAPIC_EOI:     // EOI
     /*
      * Read-modify-write operations should operate without generating
      * exceptions, and are used by some operating systems to EOI.
      * The results of reads should be ignored by the OS.
      */
     break;
-  case 0xd0: // logical destination
-    *data = (log_dest & APIC_ID_MASK) << 24; break;
-  case 0xe0: // destination format
-    *data = ((dest_format & 0xf) << 24) | 0x0fffffff; break;
-  case 0xf0: // spurious interrupt vector
+  case BX_LAPIC_LDR:     // logical destination
+    data = (ldr & APIC_ID_MASK) << 24; break;
+  case BX_LAPIC_DESTINATION_FORMAT:
+    data = ((dest_format & 0xf) << 24) | 0x0fffffff; break;
+  case BX_LAPIC_SPURIOUS_VECTOR:
     {
       Bit32u reg = spurious_vector;
       if(software_enabled) reg |= 0x100;
       if(focus_disable) reg |= 0x200;
-      *data = reg;
+      data = reg;
     }
     break;
-  case 0x100: case 0x110:
-  case 0x120: case 0x130:
-  case 0x140: case 0x150:
-  case 0x160: case 0x170:
+  case BX_LAPIC_ISR1: case BX_LAPIC_ISR2:
+  case BX_LAPIC_ISR3: case BX_LAPIC_ISR4:
+  case BX_LAPIC_ISR5: case BX_LAPIC_ISR6:
+  case BX_LAPIC_ISR7: case BX_LAPIC_ISR8:
     {
-      unsigned index = (apic_reg - 0x100) << 1;
+      unsigned index = (apic_reg - BX_LAPIC_ISR1) << 1;
       Bit32u value = 0, mask = 1;
       for(int i=0;i<32;i++) {
         if(isr[index+i]) value |= mask;
         mask <<= 1;
       }
-      *data = value;
+      data = value;
     }
     break;
-  case 0x180: case 0x190:
-  case 0x1a0: case 0x1b0:
-  case 0x1c0: case 0x1d0:
-  case 0x1e0: case 0x1f0:
+  case BX_LAPIC_TMR1: case BX_LAPIC_TMR2:
+  case BX_LAPIC_TMR3: case BX_LAPIC_TMR4:
+  case BX_LAPIC_TMR5: case BX_LAPIC_TMR6:
+  case BX_LAPIC_TMR7: case BX_LAPIC_TMR8:
     {
-      unsigned index = (apic_reg - 0x180) << 1;
+      unsigned index = (apic_reg - BX_LAPIC_TMR1) << 1;
       Bit32u value = 0, mask = 1;
       for(int i=0;i<32;i++) {
         if(tmr[index+i]) value |= mask;
         mask <<= 1;
       }
-      *data = value;
+      data = value;
     }
     break;
-  case 0x200: case 0x210:
-  case 0x220: case 0x230:
-  case 0x240: case 0x250:
-  case 0x260: case 0x270:
+  case BX_LAPIC_IRR1: case BX_LAPIC_IRR2:
+  case BX_LAPIC_IRR3: case BX_LAPIC_IRR4:
+  case BX_LAPIC_IRR5: case BX_LAPIC_IRR6:
+  case BX_LAPIC_IRR7: case BX_LAPIC_IRR8:
     {
-      unsigned index = (apic_reg - 0x200) << 1;
+      unsigned index = (apic_reg - BX_LAPIC_IRR1) << 1;
       Bit32u value = 0, mask = 1;
       for(int i=0;i<32;i++) {
         if(irr[index+i]) value |= mask;
         mask <<= 1;
       }
-      *data = value;
+      data = value;
     }
     break;
-  case 0x280: // error status reg
-    *data = error_status; break;
-  case 0x300: // interrupt command reg  0-31
-    *data = icr_lo; break;
-  case 0x310: // interrupt command reg 31-63
-    *data = icr_hi; break;
-  case 0x320: // LVT Timer Reg
-  case 0x330: // LVT Thermal Monitor
-  case 0x340: // LVT Performance Counter
-  case 0x350: // LVT LINT0 Reg
-  case 0x360: // LVT Lint1 Reg
-  case 0x370: // LVT Error Reg
+  case BX_LAPIC_ESR:     // error status reg
+    data = error_status; break;
+  case BX_LAPIC_ICR_LO:  // interrupt command reg  0-31
+    data = icr_lo; break;
+  case BX_LAPIC_ICR_HI:  // interrupt command reg 31-63
+    data = icr_hi; break;
+  case BX_LAPIC_LVT_TIMER:   // LVT Timer Reg
+  case BX_LAPIC_LVT_THERMAL: // LVT Thermal Monitor
+  case BX_LAPIC_LVT_PERFMON: // LVT Performance Counter
+  case BX_LAPIC_LVT_LINT0:   // LVT LINT0 Reg
+  case BX_LAPIC_LVT_LINT1:   // LVT Lint1 Reg
+  case BX_LAPIC_LVT_ERROR:   // LVT Error Reg
     {
-      int index = (apic_reg - 0x320) >> 4;
-      *data = lvt[index];
+      int index = (apic_reg - BX_LAPIC_LVT_TIMER) >> 4;
+      data = lvt[index];
       break;
     }
-  case 0x380: // initial count for timer
-    *data = timer_initial;
+  case BX_LAPIC_TIMER_INITIAL_COUNT: // initial count for timer
+    data = timer_initial;
     break;
-  case 0x390: // current count for timer
+  case BX_LAPIC_TIMER_CURRENT_COUNT: // current count for timer
     if(timer_active==0) {
-      *data = timer_current;
+      data = timer_current;
     } else {
       Bit64u delta64 = (bx_pc_system.time_ticks() - ticksInitial) / timer_divide_factor;
       Bit32u delta32 = (Bit32u) delta64;
       if(delta32 > timer_initial)
         BX_PANIC(("APIC: R(curr timer count): delta < initial"));
       timer_current = timer_initial - delta32;
-      *data = timer_current;
+      data = timer_current;
     }
     break;
-  case 0x3e0: // timer divide configuration
-    *data = timer_divconf;
+  case BX_LAPIC_TIMER_DIVIDE_CFG:   // timer divide configuration
+    data = timer_divconf;
     break;
   default:
     BX_INFO(("APIC register %08x not implemented", apic_reg));
   }
 
-  BX_DEBUG(("%s: read from APIC address 0x" FMT_PHY_ADDRX " = %08x", cpu->name, addr, *data));
+  BX_DEBUG(("%s: read from APIC address 0x" FMT_PHY_ADDRX " = %08x", cpu->name, addr, data));
+  return data;
 }
 
 int bx_local_apic_c::highest_priority_int(Bit8u *array)
@@ -693,7 +741,7 @@ bx_bool bx_local_apic_c::deliver(Bit8u vector, Bit8u delivery_mode, Bit8u trig_m
   return 1;
 }
 
-void bx_local_apic_c::trigger_irq(unsigned vector, unsigned trigger_mode, bx_bool bypass_irr_isr)
+void bx_local_apic_c::trigger_irq(Bit8u vector, unsigned trigger_mode, bx_bool bypass_irr_isr)
 {
   BX_DEBUG(("Local apic on %s: trigger interrupt vector=0x%x", cpu->name, vector));
 
@@ -720,7 +768,7 @@ service_vector:
   service_local_apic();
 }
 
-void bx_local_apic_c::untrigger_irq(unsigned vector, unsigned trigger_mode)
+void bx_local_apic_c::untrigger_irq(Bit8u vector, unsigned trigger_mode)
 {
   BX_DEBUG(("Local apic on %s: untrigger interrupt vector=0x%x", cpu->name, vector));
   // hardware says "no more".  clear the bit.  If the CPU hasn't yet
@@ -775,17 +823,17 @@ bx_bool bx_local_apic_c::match_logical_addr(Bit8u address)
 
   if (dest_format == 0xf) {
     // flat model
-    match = ((address & log_dest) != 0);
+    match = ((address & ldr) != 0);
     BX_DEBUG(("%s: comparing MDA %02x to my LDR %02x -> %s", cpu->name,
-      address, log_dest, match? "Match" : "Not a match"));
+      address, ldr, match? "Match" : "Not a match"));
   }
   else if (dest_format == 0) {
     // cluster model
     if (address == 0xff) // broadcast all
       return 1;
 
-    if ((unsigned)(address & 0xf0) == (unsigned)(log_dest & 0xf0))
-      match = ((address & log_dest & 0x0f) != 0);
+    if ((unsigned)(address & 0xf0) == (unsigned)(ldr & 0xf0))
+      match = ((address & ldr & 0x0f) != 0);
   }
   else {
     BX_PANIC(("bx_local_apic_c::match_logical_addr: unsupported dest format 0x%x", dest_format));
@@ -806,12 +854,7 @@ Bit8u bx_local_apic_c::get_ppr(void)
   return ppr;
 }
 
-Bit8u bx_local_apic_c::get_tpr(void)
-{
-  return task_priority;
-}
-
-void  bx_local_apic_c::set_tpr(Bit8u priority)
+void bx_local_apic_c::set_tpr(Bit8u priority)
 {
   if(priority < task_priority) {
     task_priority = priority;
@@ -941,13 +984,12 @@ void bx_local_apic_c::register_state(bx_param_c *parent)
 
   BXRS_HEX_PARAM_SIMPLE(lapic, base_addr);
   BXRS_HEX_PARAM_SIMPLE(lapic, id);
+  BXRS_HEX_PARAM_SIMPLE(lapic, mode);
   BXRS_HEX_PARAM_SIMPLE(lapic, spurious_vector);
   BXRS_PARAM_BOOL(lapic, software_enabled, software_enabled);
-  BXRS_PARAM_BOOL(lapic, global_enabled, global_enabled);
   BXRS_PARAM_BOOL(lapic, focus_disable, focus_disable);
   BXRS_HEX_PARAM_SIMPLE(lapic, task_priority);
-  BXRS_HEX_PARAM_SIMPLE(lapic, spurious_vector);
-  BXRS_HEX_PARAM_SIMPLE(lapic, log_dest);
+  BXRS_HEX_PARAM_SIMPLE(lapic, ldr);
   BXRS_HEX_PARAM_SIMPLE(lapic, dest_format);
 
   bx_list_c *ISR = new bx_list_c(lapic, "isr", BX_LAPIC_MAX_INTS);

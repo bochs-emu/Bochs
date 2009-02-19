@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ioapic.cc,v 1.46 2009-02-18 22:25:02 sshwarts Exp $
+// $Id: ioapic.cc,v 1.47 2009-02-19 23:19:11 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -69,7 +69,7 @@ static bx_bool ioapic_write(bx_phy_address a20addr, unsigned len, void *data, vo
     return 1;
   }
 
-  bx_ioapic.write_aligned(a20addr, (Bit32u*) data);
+  bx_ioapic.write_aligned(a20addr, *((Bit32u*) data));
   return 1;
 }
 
@@ -134,7 +134,7 @@ Bit32u bx_ioapic_c::read_aligned(bx_phy_address address)
       BX_PANIC(("IOAPIC: read from unsupported address"));
   }
 
-  Bit32u data;
+  Bit32u data = 0;
 
   // only reached when reading data register
   switch (ioregsel) {
@@ -146,7 +146,6 @@ Bit32u bx_ioapic_c::read_aligned(bx_phy_address address)
     break;
   case 0x02:
     BX_INFO(("IOAPIC: arbitration ID unsupported, returned 0"));
-    data = 0;
     break;
   default:
     int index = (ioregsel - 0x10) >> 1;
@@ -161,12 +160,12 @@ Bit32u bx_ioapic_c::read_aligned(bx_phy_address address)
   return data;
 }
 
-void bx_ioapic_c::write_aligned(bx_phy_address address, Bit32u *value)
+void bx_ioapic_c::write_aligned(bx_phy_address address, Bit32u value)
 {
-  BX_DEBUG(("IOAPIC: write aligned addr=%08x, data=%08x", address, *value));
+  BX_DEBUG(("IOAPIC: write aligned addr=%08x, data=%08x", (unsigned) address, value));
   address &= 0xff;
   if (address == 0x00)  {
-    ioregsel = *value;
+    ioregsel = value;
     return;
   } else {
     if (address != 0x10)
@@ -176,7 +175,7 @@ void bx_ioapic_c::write_aligned(bx_phy_address address, Bit32u *value)
   switch (ioregsel) {
     case 0x00: // set APIC ID
       {
-	Bit8u newid = (*value >> 24) & APIC_ID_MASK;
+	Bit8u newid = (value >> 24) & APIC_ID_MASK;
 	BX_INFO(("IOAPIC: setting id to 0x%x", newid));
 	set_id (newid);
 	return;
@@ -190,9 +189,9 @@ void bx_ioapic_c::write_aligned(bx_phy_address address, Bit32u *value)
       if (index >= 0 && index < BX_IOAPIC_NUM_PINS) {
 	bx_io_redirect_entry_t *entry = ioredtbl + index;
 	if (ioregsel&1)
-	  entry->set_hi_part(*value);
+	  entry->set_hi_part(value);
 	else
-	  entry->set_lo_part(*value);
+	  entry->set_lo_part(value);
 	char buf[1024];
 	entry->sprintf_self(buf);
 	BX_DEBUG(("IOAPIC: now entry[%d] is %s", index, buf));
