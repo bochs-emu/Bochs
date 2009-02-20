@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.574 2009-02-18 22:24:56 sshwarts Exp $
+// $Id: cpu.h,v 1.575 2009-02-20 08:12:51 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -261,7 +261,7 @@
 
 #endif  // defined(NEED_CPU_REG_SHORTCUTS)
 
-struct ExceptionInfo {
+struct BxExceptionInfo {
   unsigned exception_type;
   unsigned exception_class;
   bx_bool push_error;

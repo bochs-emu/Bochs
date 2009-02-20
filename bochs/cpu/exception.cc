@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.137 2009-02-13 09:51:57 sshwarts Exp $
+// $Id: exception.cc,v 1.138 2009-02-20 08:12:51 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -838,7 +838,7 @@ void BX_CPU_C::interrupt(Bit8u vector, unsigned type, bx_bool push_error, Bit16u
 #endif
 }
 
-struct ExceptionInfo exceptions_info[BX_CPU_HANDLED_EXCEPTIONS+1] = {
+struct BxExceptionInfo exceptions_info[BX_CPU_HANDLED_EXCEPTIONS+1] = {
   /* DE */ { BX_ET_CONTRIBUTORY, BX_EXCEPTION_CLASS_FAULT, 0 },
   /* DB */ { BX_ET_BENIGN,       BX_EXCEPTION_CLASS_FAULT, 0 },
   /* -- */ { BX_ET_BENIGN,       BX_EXCEPTION_CLASS_FAULT, 0 }, // NMI

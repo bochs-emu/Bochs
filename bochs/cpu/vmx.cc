@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmx.cc,v 1.8 2009-02-17 19:20:47 sshwarts Exp $
+// $Id: vmx.cc,v 1.9 2009-02-20 08:12:51 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2009 Stanislav Shwartsman
@@ -173,7 +173,7 @@ void BX_CPU_C::VMabort(VMX_vmabort_code error_code)
 // VMenter
 ////////////////////////////////////////////////////////////
 
-extern struct ExceptionInfo exceptions_info[];
+extern struct BxExceptionInfo exceptions_info[];
 
 #define VMENTRY_INJECTING_EVENT(vmentry_interr_info) (vmentry_interr_info & 0x80000000)
 
