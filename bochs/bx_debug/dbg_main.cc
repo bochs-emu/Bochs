@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.175 2009-02-16 18:27:50 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.176 2009-02-20 23:01:09 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -920,22 +920,22 @@ void bx_dbg_quit_command(void)
 void bx_dbg_trace_command(bx_bool enable)
 {
   BX_CPU(dbg_cpu)->trace = enable;
-  dbg_printf("Tracing %s for %s\n", enable ? "enabled" : "disabled",
-     BX_CPU(dbg_cpu)->name);
+  dbg_printf("Tracing %s for CPU%d\n", enable ? "enabled" : "disabled",
+     BX_CPU(dbg_cpu)->which_cpu());
 }
 
 void bx_dbg_trace_reg_command(bx_bool enable)
 {
   BX_CPU(dbg_cpu)->trace_reg = enable;
-  dbg_printf("Register-Tracing %s for %s\n", enable ? "enabled" : "disabled",
-     BX_CPU(dbg_cpu)->name);
+  dbg_printf("Register-Tracing %s for CPU%d\n", enable ? "enabled" : "disabled",
+     BX_CPU(dbg_cpu)->which_cpu());
 }
 
 void bx_dbg_trace_mem_command(bx_bool enable)
 {
   BX_CPU(dbg_cpu)->trace_mem = enable;
-  dbg_printf("Memory-Tracing %s for %s\n", enable ? "enabled" : "disabled",
-     BX_CPU(dbg_cpu)->name);
+  dbg_printf("Memory-Tracing %s for CPU%d\n", enable ? "enabled" : "disabled",
+     BX_CPU(dbg_cpu)->which_cpu());
 }
 
 void bx_dbg_ptime_command(void)
