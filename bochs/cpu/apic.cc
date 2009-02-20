@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.cc,v 1.122 2009-02-19 23:19:10 sshwarts Exp $
+// $Id: apic.cc,v 1.123 2009-02-20 17:05:03 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (c) 2002 Zwane Mwaikambo, Stanislav Shwartsman
@@ -173,7 +173,7 @@ bx_local_apic_c::bx_local_apic_c(BX_CPU_C *mycpu)
   : base_addr(BX_LAPIC_BASE_ADDR), cpu(mycpu)
 {
   put("APIC?");
-  id = APIC_UNKNOWN_ID;
+  apic_id = APIC_UNKNOWN_ID;
 
   // Register a non-active timer for use when the timer is started.
   timer_handle = bx_pc_system.register_timer_ticks(this,
@@ -195,8 +195,7 @@ void bx_local_apic_c::init()
 {
   int i;
 
-  BX_INFO(("local apic in %s initializing",
-     (cpu && cpu->name) ? cpu->name : "?"));
+  BX_INFO(("local apic %d initializing", apic_id));
 
   // default address for a local APIC, can be moved
   base_addr = BX_LAPIC_BASE_ADDR;
@@ -236,22 +235,21 @@ void bx_local_apic_c::set_base(bx_phy_address newbase)
   mode = (newbase >> 10) & 3;
   newbase &= ~((bx_phy_address) 0xfff);
   base_addr = newbase;
-  if (id != APIC_UNKNOWN_ID) {
+  if (apic_id != APIC_UNKNOWN_ID) {
     BX_INFO(("allocate APIC id=%d (MMIO %s) to 0x" FMT_PHY_ADDRX,
-      id, (mode == BX_APIC_XAPIC_MODE) ? "enabled" : "disabled", newbase));
+      apic_id, (mode == BX_APIC_XAPIC_MODE) ? "enabled" : "disabled", newbase));
   }
 }
 
 void bx_local_apic_c::set_id(Bit32u new_id)
 {
-  id = new_id;
-  sprintf(cpu->name, "CPU apicid=%02x", id);
+  apic_id = new_id;
 
-  if(id < APIC_MAX_ID) {
+  if(apic_id < APIC_MAX_ID) {
     char buffer[16];
-    sprintf(buffer, "APIC%x", id);
+    sprintf(buffer, "APIC%x", apic_id);
     put(buffer);
-    sprintf(buffer, "CPU%x", id);
+    sprintf(buffer, "CPU%x", apic_id);
     cpu->put(buffer);
   } else {
     BX_INFO(("naming convention for APICs requires id=0-%d only", APIC_MAX_ID));
@@ -361,7 +359,7 @@ void bx_local_apic_c::write_aligned(bx_phy_address addr, Bit32u value)
 {
   BX_ASSERT((addr & 0xf) == 0);
   unsigned apic_reg = addr & 0xff0;
-  BX_DEBUG(("%s: LAPIC write 0x%08x to register 0x%04x", cpu->name, value, apic_reg));
+  BX_DEBUG(("LAPIC write 0x%08x to register 0x%04x", value, apic_reg));
   switch(apic_reg) {
     case BX_LAPIC_TPR: // task priority
       set_tpr(value & 0xff);
@@ -525,13 +523,13 @@ void bx_local_apic_c::write_spurious_interrupt_register(Bit32u value)
 
 void bx_local_apic_c::receive_EOI(Bit32u value)
 {
-  BX_DEBUG(("%s: Wrote 0x%x to EOI", cpu->name, value));
+  BX_DEBUG(("Wrote 0x%x to EOI", value));
   int vec = highest_priority_int(isr);
   if(vec < 0) {
     BX_DEBUG(("EOI written without any bit in ISR"));
   } else {
     if ((Bit32u) vec != spurious_vector) {
-       BX_DEBUG(("%s: local apic received EOI, hopefully for vector 0x%02x", cpu->name, vec));
+       BX_DEBUG(("local apic received EOI, hopefully for vector 0x%02x", vec));
        isr[vec] = 0;
        if(tmr[vec]) {
            apic_bus_broadcast_eoi(vec);
@@ -555,10 +553,10 @@ Bit32u bx_local_apic_c::read_aligned(bx_phy_address addr)
   BX_ASSERT((addr & 0xf) == 0);
   Bit32u data = 0;  // default value for unimplemented registers
   unsigned apic_reg = addr & 0xff0;
-  BX_DEBUG(("%s: LAPIC read from register 0x%04x", cpu->name, apic_reg));
+  BX_DEBUG(("LAPIC read from register 0x%04x", apic_reg));
   switch(apic_reg) {
   case BX_LAPIC_ID:      // local APIC id
-    data = (id) << 24; break;
+    data = apic_id << 24; break;
   case BX_LAPIC_VERSION: // local APIC version
     data = BX_LAPIC_VERSION_ID; break;
   case BX_LAPIC_TPR:     // task priority
@@ -667,7 +665,7 @@ Bit32u bx_local_apic_c::read_aligned(bx_phy_address addr)
     BX_INFO(("APIC register %08x not implemented", apic_reg));
   }
 
-  BX_DEBUG(("%s: read from APIC address 0x" FMT_PHY_ADDRX " = %08x", cpu->name, addr, data));
+  BX_DEBUG(("read from APIC address 0x" FMT_PHY_ADDRX " = %08x", addr, data));
   return data;
 }
 
@@ -691,11 +689,11 @@ void bx_local_apic_c::service_local_apic(void)
   if (first_irr < 0) return;   // no interrupts, leave INTR=0
   int first_isr = highest_priority_int(isr);
   if (first_isr >= 0 && first_irr <= first_isr) {
-    BX_DEBUG(("local apic(%s): not delivering int 0x%02x because int 0x%02x is in service", cpu->name, first_irr, first_isr));
+    BX_DEBUG(("lapic(%x): not delivering int 0x%02x because int 0x%02x is in service", apic_id, first_irr, first_isr));
     return;
   }
   if(((Bit32u)(first_irr) & 0xf0) <= (task_priority & 0xf0)) {
-    BX_DEBUG(("local apic(%s): not delivering int 0x%02X because task_priority is 0x%02X", cpu->name, first_irr, task_priority));
+    BX_DEBUG(("lapic(%x): not delivering int 0x%02X because task_priority is 0x%02X", apic_id, first_irr, task_priority));
     return;
   }
   // interrupt has appeared in irr. Raise INTR. When the CPU
@@ -743,7 +741,7 @@ bx_bool bx_local_apic_c::deliver(Bit8u vector, Bit8u delivery_mode, Bit8u trig_m
 
 void bx_local_apic_c::trigger_irq(Bit8u vector, unsigned trigger_mode, bx_bool bypass_irr_isr)
 {
-  BX_DEBUG(("Local apic on %s: trigger interrupt vector=0x%x", cpu->name, vector));
+  BX_DEBUG(("trigger interrupt vector=0x%02x", vector));
 
   if(vector > BX_LAPIC_LAST_VECTOR || vector < BX_LAPIC_FIRST_VECTOR) {
     shadow_error_status |= APIC_ERR_RX_ILLEGAL_VEC;
@@ -770,7 +768,7 @@ service_vector:
 
 void bx_local_apic_c::untrigger_irq(Bit8u vector, unsigned trigger_mode)
 {
-  BX_DEBUG(("Local apic on %s: untrigger interrupt vector=0x%x", cpu->name, vector));
+  BX_DEBUG(("untrigger interrupt vector=0x%02x", vector));
   // hardware says "no more".  clear the bit.  If the CPU hasn't yet
   // acknowledged the interrupt, it will never be serviced.
   BX_ASSERT(irr[vector] == 1);
@@ -782,13 +780,14 @@ Bit8u bx_local_apic_c::acknowledge_int(void)
 {
   // CPU calls this when it is ready to service one interrupt
   if(!INTR)
-    BX_PANIC(("%s: acknowledged an interrupt, but INTR=0", cpu->name));
+    BX_PANIC(("APIC %d acknowledged an interrupt, but INTR=0", apic_id));
+
   BX_ASSERT(INTR);
   int vector = highest_priority_int(irr);
   if (vector < 0) goto spurious;
   if((vector & 0xf0) <= get_ppr()) goto spurious;
   BX_ASSERT(irr[vector] == 1);
-  BX_DEBUG(("%s: acknowledge_int returning vector 0x%x", cpu->name, vector));
+  BX_DEBUG(("acknowledge_int() returning vector 0x%02x", vector));
   irr[vector] = 0;
   isr[vector] = 1;
   if(bx_dbg.apic) {
@@ -808,7 +807,7 @@ spurious:
 
 void bx_local_apic_c::print_status(void)
 {
-  BX_INFO(("%s local apic: status is {:", cpu->name));
+  BX_INFO(("lapic %d: status is {:", apic_id));
   for(int vec=0; vec<BX_LAPIC_MAX_INTS; vec++) {
     if(irr[vec] || isr[vec]) {
       BX_INFO(("vec 0x%x: irr=%d, isr=%d", vec,(int)irr[vec],(int)isr[vec]));
@@ -824,8 +823,8 @@ bx_bool bx_local_apic_c::match_logical_addr(Bit8u address)
   if (dest_format == 0xf) {
     // flat model
     match = ((address & ldr) != 0);
-    BX_DEBUG(("%s: comparing MDA %02x to my LDR %02x -> %s", cpu->name,
-      address, ldr, match? "Match" : "Not a match"));
+    BX_DEBUG(("comparing MDA %02x to my LDR %02x -> %s", address,
+      ldr, match ? "Match" : "Not a match"));
   }
   else if (dest_format == 0) {
     // cluster model
@@ -903,7 +902,7 @@ void bx_local_apic_c::periodic_smf(void *this_ptr)
 void bx_local_apic_c::periodic(void)
 {
   if(!timer_active) {
-    BX_ERROR(("%s: bx_local_apic_c::periodic called, timer_active==0", cpu->name));
+    BX_ERROR(("bx_local_apic_c::periodic called, timer_active==0"));
     return;
   }
 
@@ -916,12 +915,12 @@ void bx_local_apic_c::periodic(void)
       trigger_irq(timervec & 0xff, APIC_EDGE_TRIGGERED);
     }
     else {
-      BX_DEBUG(("%s: local apic timer LVT masked", cpu->name));
+      BX_DEBUG(("local apic timer LVT masked"));
     }
     // Reload timer values.
     timer_current = timer_initial;
     ticksInitial = bx_pc_system.time_ticks(); // Take a reading.
-    BX_DEBUG(("%s: local apic timer(periodic) triggered int, reset counter to 0x%08x", cpu->name, timer_current));
+    BX_DEBUG(("local apic timer(periodic) triggered int, reset counter to 0x%08x", timer_current));
   }
   else {
     // one-shot mode
@@ -931,10 +930,10 @@ void bx_local_apic_c::periodic(void)
       trigger_irq(timervec & 0xff, APIC_EDGE_TRIGGERED);
     }
     else {
-      BX_DEBUG(("%s: local apic timer LVT masked", cpu->name));
+      BX_DEBUG(("local apic timer LVT masked"));
     }
     timer_active = 0;
-    BX_DEBUG(("%s: local apic timer(one-shot) triggered int", cpu->name));
+    BX_DEBUG(("local apic timer(one-shot) triggered int"));
     bx_pc_system.deactivate_timer(timer_handle);
   }
 }
@@ -945,8 +944,8 @@ void bx_local_apic_c::set_divide_configuration(Bit32u value)
   // move bit 3 down to bit 0.
   value = ((value & 8) >> 1) | (value & 3);
   BX_ASSERT(value >= 0 && value <= 7);
-  timer_divide_factor = (value==7)? 1 : (2 << value);
-  BX_INFO(("%s: set timer divide factor to %d", cpu->name, timer_divide_factor));
+  timer_divide_factor = (value==7) ? 1 : (2 << value);
+  BX_INFO(("set timer divide factor to %d", timer_divide_factor));
 }
 
 void bx_local_apic_c::set_initial_timer_count(Bit32u value)
@@ -983,7 +982,7 @@ void bx_local_apic_c::register_state(bx_param_c *parent)
   bx_list_c *lapic = new bx_list_c(parent, "local_apic", 25);
 
   BXRS_HEX_PARAM_SIMPLE(lapic, base_addr);
-  BXRS_HEX_PARAM_SIMPLE(lapic, id);
+  BXRS_HEX_PARAM_SIMPLE(lapic, apic_id);
   BXRS_HEX_PARAM_SIMPLE(lapic, mode);
   BXRS_HEX_PARAM_SIMPLE(lapic, spurious_vector);
   BXRS_PARAM_BOOL(lapic, software_enabled, software_enabled);

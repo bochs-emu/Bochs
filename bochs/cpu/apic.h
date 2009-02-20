@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.h,v 1.45 2009-02-20 16:01:30 sshwarts Exp $
+// $Id: apic.h,v 1.46 2009-02-20 17:05:03 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (c) 2002 Zwane Mwaikambo, Stanislav Shwartsman
@@ -48,7 +48,7 @@
 class BOCHSAPI bx_local_apic_c : public logfunctions
 {
   bx_phy_address base_addr;
-  Bit32u id;
+  Bit32u apic_id;
   unsigned mode;
 
   bx_bool software_enabled;
@@ -126,7 +126,7 @@ public:
   bx_phy_address get_base(void) const { return base_addr; }
   void set_base(bx_phy_address newbase);
   void set_id(Bit32u newid);
-  Bit32u get_id() const { return id; }
+  Bit32u get_id() const { return apic_id; }
   bx_bool is_selected(bx_phy_address addr);
   void read(bx_phy_address addr, void *data, unsigned len);
   void write(bx_phy_address addr, void *data, unsigned len);

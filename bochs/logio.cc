@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logio.cc,v 1.71 2009-01-10 11:30:20 vruppert Exp $
+// $Id: logio.cc,v 1.72 2009-02-20 17:05:03 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -299,36 +299,34 @@ logfunctions::logfunctions(iofunc_t *iofunc)
 
 logfunctions::~logfunctions()
 {
-  this->logio->remove_logfn(this);
+  logio->remove_logfn(this);
   if (prefix) free(prefix);
 }
 
 void logfunctions::setio(iofunc_t *i)
 {
   // add pointer to iofunction object to use
-  this->logio = i;
+  logio = i;
   // give iofunction a pointer to me
   i->add_logfn(this);
 }
 
 void logfunctions::put(const char *p)
 {
-  char * tmpbuf=strdup("[     ]");   // if we ever have more than 32 chars,
-                                     // we need to rethink this
+  char *tmpbuf=strdup("[     ]");   // if we ever have more than 32 chars,
+                                    // we need to rethink this
 
   if (tmpbuf == NULL)
-  {
-    return;                          // allocation not successful
-  }
+    return;                         // allocation not successful
 
-  if (this->prefix != NULL)
+  if (prefix != NULL)
   {
-    free(this->prefix);              // free previously allocated memory
+    free(prefix);             // free previously allocated memory
     prefix = NULL;
   }
 
   size_t len=strlen(p);
-  for(size_t i=1;i<len+1;i++) {
+  for(size_t i=1;i <= len;i++) {
     tmpbuf[i]=p[i-1];
   }
 
@@ -340,24 +338,23 @@ void logfunctions::put(const char *p)
   default: tmpbuf[6]=']'; tmpbuf[7]='\0'; break;
   }
 
-  prefix=tmpbuf;
+  prefix = tmpbuf;
 }
 
 void logfunctions::info(const char *fmt, ...)
 {
   va_list ap;
 
-  assert(this != NULL);
-  assert(this->logio != NULL);
+  assert(logio != NULL);
 
   if(!onoff[LOGLEV_INFO]) return;
 
   va_start(ap, fmt);
-  this->logio->out(LOGLEV_INFO, this->prefix, fmt, ap);
+  logio->out(LOGLEV_INFO, prefix, fmt, ap);
   if (onoff[LOGLEV_INFO] == ACT_ASK)
-    ask(LOGLEV_INFO, this->prefix, fmt, ap);
+    ask(LOGLEV_INFO, prefix, fmt, ap);
   if (onoff[LOGLEV_INFO] == ACT_FATAL)
-    fatal(this->prefix, fmt, ap, 1);
+    fatal(prefix, fmt, ap, 1);
   va_end(ap);
 }
 
@@ -365,17 +362,16 @@ void logfunctions::error(const char *fmt, ...)
 {
   va_list ap;
 
-  assert(this != NULL);
-  assert(this->logio != NULL);
+  assert(logio != NULL);
 
   if(!onoff[LOGLEV_ERROR]) return;
 
   va_start(ap, fmt);
-  this->logio->out(LOGLEV_ERROR, this->prefix, fmt, ap);
+  logio->out(LOGLEV_ERROR, prefix, fmt, ap);
   if (onoff[LOGLEV_ERROR] == ACT_ASK)
-    ask(LOGLEV_ERROR, this->prefix, fmt, ap);
+    ask(LOGLEV_ERROR, prefix, fmt, ap);
   if (onoff[LOGLEV_ERROR] == ACT_FATAL)
-    fatal(this->prefix, fmt, ap, 1);
+    fatal(prefix, fmt, ap, 1);
   va_end(ap);
 }
 
@@ -383,24 +379,23 @@ void logfunctions::panic(const char *fmt, ...)
 {
   va_list ap;
 
-  assert(this != NULL);
-  assert(this->logio != NULL);
+  assert(logio != NULL);
 
   // Special case for panics since they are so important.  Always print
   // the panic to the log, no matter what the log action says.
   //if(!onoff[LOGLEV_PANIC]) return;
 
   va_start(ap, fmt);
-  this->logio->out(LOGLEV_PANIC, this->prefix, fmt, ap);
+  logio->out(LOGLEV_PANIC, prefix, fmt, ap);
 
   // This fixes a funny bug on linuxppc where va_list is no pointer but a struct
   va_end(ap);
   va_start(ap, fmt);
 
   if (onoff[LOGLEV_PANIC] == ACT_ASK)
-    ask(LOGLEV_PANIC, this->prefix, fmt, ap);
+    ask(LOGLEV_PANIC, prefix, fmt, ap);
   if (onoff[LOGLEV_PANIC] == ACT_FATAL)
-    fatal(this->prefix, fmt, ap, 1);
+    fatal(prefix, fmt, ap, 1);
   va_end(ap);
 }
 
@@ -408,24 +403,23 @@ void logfunctions::pass(const char *fmt, ...)
 {
   va_list ap;
 
-  assert(this != NULL);
-  assert(this->logio != NULL);
+  assert(logio != NULL);
 
   // Special case for panics since they are so important.  Always print
   // the panic to the log, no matter what the log action says.
   //if(!onoff[LOGLEV_PASS]) return;
 
   va_start(ap, fmt);
-  this->logio->out(LOGLEV_PASS, this->prefix, fmt, ap);
+  logio->out(LOGLEV_PASS, prefix, fmt, ap);
 
   // This fixes a funny bug on linuxppc where va_list is no pointer but a struct
   va_end(ap);
   va_start(ap, fmt);
 
   if (onoff[LOGLEV_PASS] == ACT_ASK)
-    ask(LOGLEV_PASS, this->prefix, fmt, ap);
+    ask(LOGLEV_PASS, prefix, fmt, ap);
   if (onoff[LOGLEV_PASS] == ACT_FATAL)
-    fatal(this->prefix, fmt, ap, 101);
+    fatal(prefix, fmt, ap, 101);
   va_end(ap);
 }
 
@@ -433,17 +427,16 @@ void logfunctions::ldebug(const char *fmt, ...)
 {
   va_list ap;
 
-  assert(this != NULL);
-  assert(this->logio != NULL);
+  assert(logio != NULL);
 
   if(!onoff[LOGLEV_DEBUG]) return;
 
   va_start(ap, fmt);
-  this->logio->out(LOGLEV_DEBUG, this->prefix, fmt, ap);
+  logio->out(LOGLEV_DEBUG, prefix, fmt, ap);
   if (onoff[LOGLEV_DEBUG] == ACT_ASK)
-    ask(LOGLEV_DEBUG, this->prefix, fmt, ap);
+    ask(LOGLEV_DEBUG, prefix, fmt, ap);
   if (onoff[LOGLEV_DEBUG] == ACT_FATAL)
-    fatal(this->prefix, fmt, ap, 1);
+    fatal(prefix, fmt, ap, 1);
   va_end(ap);
 }
 

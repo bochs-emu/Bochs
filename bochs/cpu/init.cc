@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.201 2009-02-18 22:38:58 sshwarts Exp $
+// $Id: init.cc,v 1.202 2009-02-20 17:05:03 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -158,10 +158,6 @@ void BX_CPU_C::initialize(void)
   BX_CPU_THIS_PTR lapic.set_id(BX_CPU_ID);
   BX_CPU_THIS_PTR lapic.init();
 #endif
-
-  // in SMP mode, the prefix of the CPU will be changed to [CPUn] in
-  // bx_local_apic_c::set_id as soon as the apic ID is assigned.
-  sprintf(name, "CPU %d", BX_CPU_ID);
 
 #if BX_CONFIGURE_MSRS
   for (unsigned n=0; n < BX_MSR_MAX_INDEX; n++) {

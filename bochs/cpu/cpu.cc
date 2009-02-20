@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.270 2009-02-17 19:20:46 sshwarts Exp $
+// $Id: cpu.cc,v 1.271 2009-02-20 17:05:03 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -845,10 +845,10 @@ void BX_CPU_C::deliver_SIPI(unsigned vector)
     RIP = 0;
     load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], vector*0x100);
     BX_CPU_THIS_PTR disable_INIT = 0; // enable INIT pin back
-    BX_INFO(("%s started up at %04X:%08X by APIC",
-                   BX_CPU_THIS_PTR name, vector*0x100, EIP));
+    BX_INFO(("CPU %d started up at %04X:%08X by APIC",
+                   BX_CPU_THIS_PTR bx_cpuid, vector*0x100, EIP));
   } else {
-    BX_INFO(("%s started up by APIC, but was not halted at the time", BX_CPU_THIS_PTR name));
+    BX_INFO(("CPU %d started up by APIC, but was not halted at the time", BX_CPU_THIS_PTR bx_cpuid));
   }
 }
 

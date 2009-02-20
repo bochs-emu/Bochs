@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.575 2009-02-20 08:12:51 sshwarts Exp $
+// $Id: cpu.h,v 1.576 2009-02-20 17:05:03 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -770,8 +770,6 @@ struct monitor_addr_t {
 class BOCHSAPI BX_CPU_C : public logfunctions {
 
 public: // for now...
-
-  char name[64];
 
   unsigned bx_cpuid;
 
