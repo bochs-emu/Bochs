@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: msr.cc,v 1.15 2009-02-18 22:24:57 sshwarts Exp $
+// $Id: msr.cc,v 1.16 2009-02-20 22:00:42 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008 Stanislav Shwartsman
@@ -111,14 +111,6 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
       val64 = BX_CPU_THIS_PTR get_TSC();
       break;
 
-    /* MSR_APICBASE
-       0:7    Reserved
-       8     This is set if its the BSP
-       9:10    Reserved
-       11    APIC Global Enable bit (1=enabled 0=disabled)
-       12:35  APIC Base Address
-       36:63  Reserved
-    */
 #if BX_SUPPORT_APIC
     case BX_MSR_APICBASE:
       val64 = BX_CPU_THIS_PTR msr.apicbase;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.576 2009-02-20 17:05:03 sshwarts Exp $
+// $Id: cpu.h,v 1.577 2009-02-20 22:00:42 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -739,7 +739,6 @@ typedef struct {
 #endif  // #if BX_SUPPORT_X86_64
 
 #if BX_SUPPORT_APIC
-#define BX_INCLUDE_LOCAL_APIC 1
 #include "apic.h"
 #endif
 

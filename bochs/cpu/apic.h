@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.h,v 1.47 2009-02-20 17:26:01 sshwarts Exp $
+// $Id: apic.h,v 1.48 2009-02-20 22:00:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (c) 2002 Zwane Mwaikambo, Stanislav Shwartsman
@@ -28,8 +28,6 @@
 #define APIC_LEVEL_TRIGGERED	1
 #define APIC_EDGE_TRIGGERED	0
 
-#ifdef BX_INCLUDE_LOCAL_APIC
-
 #ifdef BX_IMPLEMENT_XAPIC
 #  define BX_LAPIC_VERSION_ID 0x00050014  // P4 has 6 LVT entries
 #else
@@ -48,11 +46,11 @@
 class BOCHSAPI bx_local_apic_c : public logfunctions
 {
   bx_phy_address base_addr;
-  Bit32u apic_id;
   unsigned mode;
+  Bit32u apic_id;               //  4 bit in legacy mode, 8 bit in XAPIC mode
 
   bx_bool software_enabled;
-  Bit32u  spurious_vector;
+  Bit8u  spurious_vector;
   bx_bool focus_disable;
 
   Bit32u task_priority;         // Task priority (TPR)
@@ -156,17 +154,6 @@ public:
   void set_initial_timer_count(Bit32u value);
   void register_state(bx_param_c *parent);
 };
-
-#endif /* BX_INCLUDE_LOCAL_APIC */
-
-// For P6 and Pentium family processors the local APIC ID feild is 4 bits.
-#ifdef BX_IMPLEMENT_XAPIC
-  #define APIC_MAX_ID  0xff
-  #define APIC_ID_MASK 0xff
-#else
-  #define APIC_MAX_ID  0x0f
-  #define APIC_ID_MASK 0x0f
-#endif
 
 int apic_bus_deliver_lowest_priority(Bit8u vector, Bit8u dest, bx_bool trig_mode, bx_bool broadcast);
 int apic_bus_deliver_interrupt(Bit8u vector, Bit8u dest, Bit8u delivery_mode, bx_bool logical_dest, bx_bool level, bx_bool trig_mode);

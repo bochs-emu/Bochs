@@ -882,11 +882,18 @@ typedef
 #define BX_SUPPORT_SMP         0
 #define BX_BOOTSTRAP_PROCESSOR 0
 
-#ifndef BX_IMPLEMENT_XAPIC
-  #define BX_MAX_SMP_THREADS_SUPPORTED 15  /* without XAPIC only 15 CPUs */
+// For P6 and Pentium family processors the local APIC ID feild is 4 bits
+// APIC_MAX_ID indicate broadcast so it can't be used as valid APIC ID
+#ifdef BX_IMPLEMENT_XAPIC
+  #define APIC_MAX_ID  0xff
+  #define APIC_ID_MASK 0xff
 #else
-  #define BX_MAX_SMP_THREADS_SUPPORTED 255
+  #define APIC_MAX_ID  0x0f
+  #define APIC_ID_MASK 0x0f
 #endif
+
+// leave APIC ID for I/O APIC
+#define BX_MAX_SMP_THREADS_SUPPORTED (APIC_MAX_ID-1)
 
 #if (BX_SUPPORT_SMP && !BX_SUPPORT_APIC)
   #error For multiprocessor simulation, BX_SUPPORT_APIC is required !

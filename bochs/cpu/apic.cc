@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.cc,v 1.126 2009-02-20 20:44:20 sshwarts Exp $
+// $Id: apic.cc,v 1.127 2009-02-20 22:00:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (c) 2002 Zwane Mwaikambo, Stanislav Shwartsman
@@ -31,8 +31,6 @@
 
 #define BX_CPU_APIC(i) (&(BX_CPU(i)->lapic))
 
-#define APIC_BROADCAST_PHYSICAL_DESTINATION_MODE (APIC_MAX_ID)
-
 #define BX_LAPIC_FIRST_VECTOR	0x10
 #define BX_LAPIC_LAST_VECTOR	0xfe
 
@@ -42,7 +40,7 @@ int apic_bus_deliver_interrupt(Bit8u vector, Bit8u dest, Bit8u delivery_mode, bx
 {
   if(delivery_mode == APIC_DM_LOWPRI)
   {
-     if(logical_dest == 0) {
+     if(! logical_dest) {
        // I/O subsytem initiated interrupt with lowest priority delivery
        // which is not supported in physical destination mode
        return 0;
@@ -53,9 +51,9 @@ int apic_bus_deliver_interrupt(Bit8u vector, Bit8u dest, Bit8u delivery_mode, bx
   }
 
   // determine destination local apics and deliver
-  if(logical_dest == 0) {
+  if(! logical_dest) {
     // physical destination mode
-    if(dest == APIC_BROADCAST_PHYSICAL_DESTINATION_MODE) {
+    if((dest & APIC_ID_MASK) == APIC_MAX_ID) {
        return apic_bus_broadcast_interrupt(vector, delivery_mode, trig_mode, APIC_MAX_ID);
     }
     else {
@@ -218,9 +216,11 @@ void bx_local_apic_c::reset(unsigned type)
     lvt[i] = 0x10000;	// all LVT are masked
   }
 
-  spurious_vector  = 0xff;   // software disabled(bit 8)
+  // split spurious vector register to 3 fields
+  spurious_vector = 0xff;
   software_enabled = 0;
   focus_disable = 0;
+
   mode = BX_APIC_XAPIC_MODE;
 
   INTR = 0;
@@ -666,11 +666,11 @@ void bx_local_apic_c::service_local_apic(void)
   if (first_irr < 0) return;   // no interrupts, leave INTR=0
   int first_isr = highest_priority_int(isr);
   if (first_isr >= 0 && first_irr <= first_isr) {
-    BX_DEBUG(("lapic(%x): not delivering int 0x%02x because int 0x%02x is in service", apic_id, first_irr, first_isr));
+    BX_DEBUG(("lapic(%d): not delivering int 0x%02x because int 0x%02x is in service", apic_id, first_irr, first_isr));
     return;
   }
   if(((Bit32u)(first_irr) & 0xf0) <= (task_priority & 0xf0)) {
-    BX_DEBUG(("lapic(%x): not delivering int 0x%02X because task_priority is 0x%02X", apic_id, first_irr, task_priority));
+    BX_DEBUG(("lapic(%d): not delivering int 0x%02X because task_priority is 0x%02X", apic_id, first_irr, task_priority));
     return;
   }
   // interrupt has appeared in irr. Raise INTR. When the CPU

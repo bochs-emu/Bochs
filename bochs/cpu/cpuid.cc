@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpuid.cc,v 1.79 2009-02-17 19:20:47 sshwarts Exp $
+// $Id: cpuid.cc,v 1.80 2009-02-20 22:00:42 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007 Stanislav Shwartsman
@@ -134,7 +134,7 @@ Bit32u BX_CPU_C::get_extended_cpuid_features(void)
   // [18:18] DCA - Direct Cache Access
   // [19:19] SSE4.1 Instructions
   // [20:20] SSE4.2 Instructions
-  // [21:22] X2APIC
+  // [21:21] X2APIC
   // [22:22] MOVBE instruction
   // [23:23] POPCNT instruction
   // [24:24] reserved
@@ -407,7 +407,7 @@ void BX_CPU_C::set_cpuid_defaults(void)
 
   cpuid->ebx = 0;
 #if BX_SUPPORT_APIC
-  cpuid->ebx |= (BX_CPU_THIS_PTR lapic.get_id() << 24);
+  cpuid->ebx |= ((BX_CPU_THIS_PTR lapic.get_id() & 0xff) << 24);
 #endif
 #if BX_SUPPORT_CLFLUSH
   cpuid->ebx |= (CACHE_LINE_SIZE / 8) << 8;
@@ -438,8 +438,8 @@ void BX_CPU_C::set_cpuid_defaults(void)
   //   [18:18] DCA - Direct Cache Access
   //   [19:19] SSE4.1 Instructions
   //   [20:20] SSE4.2 Instructions
-  //   [21:22] X2APIC
-  //   [22:22] Reserved
+  //   [21:21] X2APIC
+  //   [22:22] MOVBE instruction
   //   [23:23] POPCNT instruction
   //   [24:24] reserved
   //   [25:25] AES Instructions
