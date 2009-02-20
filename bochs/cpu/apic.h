@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.h,v 1.44 2009-02-19 23:19:11 sshwarts Exp $
+// $Id: apic.h,v 1.45 2009-02-20 16:01:30 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (c) 2002 Zwane Mwaikambo, Stanislav Shwartsman
@@ -21,11 +21,7 @@
 /////////////////////////////////////////////////////////////////////////
 
 #ifndef BX_CPU_APIC_H
-#  define BX_CPU_APIC_H 1
-
-#if BX_CPU_LEVEL == 6 && BX_SUPPORT_SSE >= 2
-  #define BX_IMPLEMENT_XAPIC 1
-#endif
+#define BX_CPU_APIC_H 1
 
 #if BX_SUPPORT_APIC
 
