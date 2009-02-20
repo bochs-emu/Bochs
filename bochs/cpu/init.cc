@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.202 2009-02-20 17:05:03 sshwarts Exp $
+// $Id: init.cc,v 1.203 2009-02-20 17:26:01 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -38,13 +38,15 @@
 
 BX_CPU_C::BX_CPU_C(unsigned id): bx_cpuid(id)
 #if BX_SUPPORT_APIC
-   ,lapic (this)
+   ,lapic (this, id)
 #endif
 {
   // in case of SMF, you cannot reference any member data
   // in the constructor because the only access to it is via
   // global variables which aren't initialized quite yet.
-  put("CPU");
+  char buffer[16];
+  sprintf(buffer, "CPU%x", bx_cpuid);
+  put(buffer);
 }
 
 #if BX_WITH_WX
@@ -149,15 +151,10 @@ static Bit64s cpu_param_handler(bx_param_c *param, int set, Bit64s val)
 
 #endif
 
+// BX_CPU_C constructor
 void BX_CPU_C::initialize(void)
 {
-  // BX_CPU_C constructor
   BX_CPU_THIS_PTR set_INTR (0);
-
-#if BX_SUPPORT_APIC
-  BX_CPU_THIS_PTR lapic.set_id(BX_CPU_ID);
-  BX_CPU_THIS_PTR lapic.init();
-#endif
 
 #if BX_CONFIGURE_MSRS
   for (unsigned n=0; n < BX_MSR_MAX_INDEX; n++) {
@@ -922,7 +919,7 @@ void BX_CPU_C::reset(unsigned source)
 #if BX_SUPPORT_APIC
   /* APIC Address, APIC enabled and BSP is default, we'll fill in the rest later */
   BX_CPU_THIS_PTR msr.apicbase = BX_LAPIC_BASE_ADDR;
-  BX_CPU_THIS_PTR lapic.init();
+  BX_CPU_THIS_PTR lapic.reset(source);
   BX_CPU_THIS_PTR msr.apicbase |= 0x900;
   BX_CPU_THIS_PTR lapic.set_base(BX_CPU_THIS_PTR msr.apicbase);
 #endif

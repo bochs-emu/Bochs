@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.h,v 1.46 2009-02-20 17:05:03 sshwarts Exp $
+// $Id: apic.h,v 1.47 2009-02-20 17:26:01 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (c) 2002 Zwane Mwaikambo, Stanislav Shwartsman
@@ -119,13 +119,11 @@ class BOCHSAPI bx_local_apic_c : public logfunctions
 
 public:
   bx_bool INTR;
-  bx_local_apic_c(BX_CPU_C *cpu);
+  bx_local_apic_c(BX_CPU_C *cpu, unsigned id);
  ~bx_local_apic_c() { }
   void reset(unsigned type);
-  void init(void);
   bx_phy_address get_base(void) const { return base_addr; }
   void set_base(bx_phy_address newbase);
-  void set_id(Bit32u newid);
   Bit32u get_id() const { return apic_id; }
   bx_bool is_selected(bx_phy_address addr);
   void read(bx_phy_address addr, void *data, unsigned len);

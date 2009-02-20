@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.cc,v 1.123 2009-02-20 17:05:03 sshwarts Exp $
+// $Id: apic.cc,v 1.124 2009-02-20 17:26:01 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (c) 2002 Zwane Mwaikambo, Stanislav Shwartsman
@@ -30,8 +30,6 @@
 #define LOG_THIS this->
 
 #define BX_CPU_APIC(i) (&(BX_CPU(i)->lapic))
-
-#define APIC_UNKNOWN_ID 0xff
 
 #define APIC_BROADCAST_PHYSICAL_DESTINATION_MODE (APIC_MAX_ID)
 
@@ -169,11 +167,17 @@ void apic_bus_broadcast_smi(void)
 
 ////////////////////////////////////
 
-bx_local_apic_c::bx_local_apic_c(BX_CPU_C *mycpu)
+bx_local_apic_c::bx_local_apic_c(BX_CPU_C *mycpu, unsigned id)
   : base_addr(BX_LAPIC_BASE_ADDR), cpu(mycpu)
 {
-  put("APIC?");
-  apic_id = APIC_UNKNOWN_ID;
+  apic_id = id;
+  BX_ASSERT(apic_id < APIC_MAX_ID);
+
+  char buffer[16];
+  sprintf(buffer, "APIC%x", apic_id);
+  put(buffer);
+
+  BX_INFO(("80%d86", BX_CPU_LEVEL));
 
   // Register a non-active timer for use when the timer is started.
   timer_handle = bx_pc_system.register_timer_ticks(this,
@@ -186,12 +190,6 @@ bx_local_apic_c::bx_local_apic_c(BX_CPU_C *mycpu)
 }
 
 void bx_local_apic_c::reset(unsigned type)
-{
-  /* same as INIT but also sets arbitration ID and APIC ID */
-  init();
-}
-
-void bx_local_apic_c::init()
 {
   int i;
 
@@ -235,27 +233,8 @@ void bx_local_apic_c::set_base(bx_phy_address newbase)
   mode = (newbase >> 10) & 3;
   newbase &= ~((bx_phy_address) 0xfff);
   base_addr = newbase;
-  if (apic_id != APIC_UNKNOWN_ID) {
-    BX_INFO(("allocate APIC id=%d (MMIO %s) to 0x" FMT_PHY_ADDRX,
-      apic_id, (mode == BX_APIC_XAPIC_MODE) ? "enabled" : "disabled", newbase));
-  }
-}
-
-void bx_local_apic_c::set_id(Bit32u new_id)
-{
-  apic_id = new_id;
-
-  if(apic_id < APIC_MAX_ID) {
-    char buffer[16];
-    sprintf(buffer, "APIC%x", apic_id);
-    put(buffer);
-    sprintf(buffer, "CPU%x", apic_id);
-    cpu->put(buffer);
-  } else {
-    BX_INFO(("naming convention for APICs requires id=0-%d only", APIC_MAX_ID));
-  }
-
-  BX_INFO(("80%d86", BX_CPU_LEVEL));
+  BX_INFO(("allocate APIC id=%d (MMIO %s) to 0x" FMT_PHY_ADDRX,
+    apic_id, (mode == BX_APIC_XAPIC_MODE) ? "enabled" : "disabled", newbase));
 }
 
 bx_bool bx_local_apic_c::is_selected(bx_phy_address addr)
