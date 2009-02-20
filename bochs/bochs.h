@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.240 2009-01-19 13:13:32 vruppert Exp $
+// $Id: bochs.h,v 1.241 2009-02-20 15:38:36 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -356,7 +356,7 @@ public:
 
 protected:
   int n_logfn;
-#define MAX_LOGFNS 128
+#define MAX_LOGFNS 512
   logfunc_t *logfn_list[MAX_LOGFNS];
   const char *logfn;
 };

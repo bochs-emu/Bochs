@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.154 2009-01-20 12:37:41 vruppert Exp $
+// $Id: config.cc,v 1.155 2009-02-20 15:38:36 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -426,8 +426,8 @@ void bx_init_options()
   bx_list_c *special_menus = new bx_list_c(root_param, "menu", "");
 
 #if BX_SUPPORT_SMP
-  #define BX_CPU_PROCESSORS_LIMIT 8
-  #define BX_CPU_CORES_LIMIT 4
+  #define BX_CPU_PROCESSORS_LIMIT 255
+  #define BX_CPU_CORES_LIMIT 8
   #define BX_CPU_HT_THREADS_LIMIT 4
 #else
   #define BX_CPU_PROCESSORS_LIMIT 1
