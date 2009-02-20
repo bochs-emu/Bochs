@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.cc,v 1.124 2009-02-20 17:26:01 sshwarts Exp $
+// $Id: apic.cc,v 1.125 2009-02-20 17:35:55 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (c) 2002 Zwane Mwaikambo, Stanislav Shwartsman
@@ -177,16 +177,12 @@ bx_local_apic_c::bx_local_apic_c(BX_CPU_C *mycpu, unsigned id)
   sprintf(buffer, "APIC%x", apic_id);
   put(buffer);
 
-  BX_INFO(("80%d86", BX_CPU_LEVEL));
-
   // Register a non-active timer for use when the timer is started.
   timer_handle = bx_pc_system.register_timer_ticks(this,
             BX_CPU(0)->lapic.periodic_smf, 0, 0, 0, "lapic");
   timer_active = 0;
 
   reset(BX_RESET_HARDWARE);
-	
-  INTR = 0;
 }
 
 void bx_local_apic_c::reset(unsigned type)
@@ -226,6 +222,8 @@ void bx_local_apic_c::reset(unsigned type)
   software_enabled = 0;
   focus_disable = 0;
   mode = BX_APIC_XAPIC_MODE;
+
+  INTR = 0;
 }
 
 void bx_local_apic_c::set_base(bx_phy_address newbase)
