@@ -4,7 +4,9 @@ Brief summary :
 
 - Added graphical Bochs debugger frontend for most of the supported platforms.
   - Thanks for Chourdakis Michael and Bruce Ewing.
-- Added VMX hardware emulation and configurable MSRs to the CPU model.
+- Many new CPU features in emulation
+  - Support for > 32 bit physical address space and configurable MSRs
+  - VMX, 1G pages in long mode, MOVBE instruction
 - Added user plugin interface support.
 - Bugfixes for CPU emulation correctness.
 - Many fixes in Bochs internal debugger and CPU instrumentation.
@@ -120,6 +122,9 @@ Detailed change log :
  [1981505] Init PIIX4 PCI to ISA bridge and IDE by Sebastian
 
 - these S.F. bugs were closed
+ [2617003] ExceptionInfo conflicts with OS X api
+ [2609432] stepping causes segfault (CVS)
+ [2605861] compile error with --enable-smp
  [1757068] current cvs(Jul19, 07) failed to boot smp
  [2426271] cannot get correct symbol entry
  [2471982] VGA character height glitches
