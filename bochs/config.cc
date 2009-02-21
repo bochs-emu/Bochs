@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.155 2009-02-20 15:38:36 sshwarts Exp $
+// $Id: config.cc,v 1.156 2009-02-21 11:43:18 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1665,6 +1665,26 @@ void bx_init_options()
     0);
   enabled->set_dependent_list(menu->clone());
 
+  // optional plugin control
+  menu = new bx_list_c(misc, "plugin_ctrl", "Optional Plugin Control", 8);
+  menu->get_options()->set(bx_list_c::SHOW_PARENT | bx_list_c::USE_BOX_TITLE);
+  new bx_param_bool_c(menu, "unmapped", "unmapped", "", 1);
+  new bx_param_bool_c(menu, "biosdev", "biosdev", "", 1);
+  new bx_param_bool_c(menu, "speaker", "speaker", "", 1);
+  new bx_param_bool_c(menu, "extfpuirq", "extfpuirq", "", 1);
+#if BX_SUPPORT_GAMEPORT
+  new bx_param_bool_c(menu, "gameport", "gameport", "", 1);
+#endif
+#if BX_SUPPORT_IODEBUG
+  new bx_param_bool_c(menu, "iodebug", "iodebug", "", 1);
+#endif
+#if BX_SUPPORT_PCI
+  new bx_param_bool_c(menu, "pci_ide", "pci_ide", "", 1);
+#endif
+#if BX_SUPPORT_ACPI
+  new bx_param_bool_c(menu, "acpi", "acpi", "", 1);
+#endif
+
 #if BX_PLUGINS
   // user plugin options
   menu = new bx_list_c(misc, "user_plugin", "User Plugin Options", BX_N_USER_PLUGINS);
@@ -3233,6 +3253,21 @@ static int parse_line_formatted(const char *context, int num_params, char *param
     }
   }
 #endif
+  else if (!strcmp(params[0], "plugin_ctrl")) {
+    char *pname, *val;
+    bx_param_bool_c *plugin;
+    for (i=1; i<num_params; i++) {
+      pname = strtok(params[i], "=");
+      val = strtok(NULL, "");
+      base = (bx_list_c*)SIM->get_param(BXPN_PLUGIN_CTRL);
+      plugin = (bx_param_bool_c*)base->get_by_name(pname);
+      if (plugin != NULL) {
+        plugin->set(atoi(val));
+      } else {
+        PARSE_ERR(("%s: unknown optional plugin '%s'", context, pname));
+      }
+    }
+  }
   // user-defined options handled by registered functions
   else if (SIM->is_user_option(params[0]))
   {

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: plugin.h,v 1.72 2009-01-19 09:48:11 vruppert Exp $
+// $Id: plugin.h,v 1.73 2009-02-21 11:43:18 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  The Bochs Project
@@ -74,6 +74,7 @@ extern "C" {
 #if BX_PLUGINS
 
 #define PLUG_load_plugin(name,type) {bx_load_plugin(#name,type);}
+#define PLUG_load_opt_plugin(name) {bx_load_plugin(name,PLUGTYPE_OPTIONAL);}
 #define PLUG_load_user_plugin(name) {bx_load_plugin(name,PLUGTYPE_USER);}
 #define PLUG_unload_plugin(name) {bx_unload_plugin(#name,1);}
 #define PLUG_unload_user_plugin(name) {bx_unload_plugin(name,1);}

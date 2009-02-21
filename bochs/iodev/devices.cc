@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: devices.cc,v 1.137 2009-02-08 09:05:52 vruppert Exp $
+// $Id: devices.cc,v 1.138 2009-02-21 11:43:18 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -111,8 +111,10 @@ void bx_devices_c::init(BX_MEM_C *newmem)
 {
   unsigned i;
   const char def_name[] = "Default";
+  bx_list_c *plugin_ctrl;
+  bx_param_bool_c *plugin;
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.137 2009-02-08 09:05:52 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.138 2009-02-21 11:43:18 vruppert Exp $"));
   mem = newmem;
 
   /* set builtin default handlers, will be overwritten by the real default handler */
@@ -164,8 +166,26 @@ void bx_devices_c::init(BX_MEM_C *newmem)
   PLUG_load_plugin(pit, PLUGTYPE_CORE);
   PLUG_load_plugin(vga, PLUGTYPE_CORE);
   PLUG_load_plugin(floppy, PLUGTYPE_CORE);
-  PLUG_load_plugin(unmapped, PLUGTYPE_OPTIONAL);
-  PLUG_load_plugin(biosdev, PLUGTYPE_OPTIONAL);
+
+  // PCI logic (i440FX)
+  if (SIM->get_param_bool(BXPN_I440FX_SUPPORT)->get()) {
+#if BX_SUPPORT_PCI
+    PLUG_load_plugin(pci, PLUGTYPE_CORE);
+    PLUG_load_plugin(pci2isa, PLUGTYPE_CORE);
+#else
+    BX_ERROR(("Bochs is not compiled with PCI support"));
+#endif
+  }
+
+  // optional plugins not controlled by separate option
+  plugin_ctrl = (bx_list_c*)SIM->get_param(BXPN_PLUGIN_CTRL);
+  for (i = 0; i < (unsigned)plugin_ctrl->get_size(); i++) {
+    plugin = (bx_param_bool_c*)(plugin_ctrl->get(i));
+    if (plugin->get()) {
+      PLUG_load_opt_plugin(plugin->get_name());
+    }
+  }
+
   PLUG_load_plugin(harddrv, PLUGTYPE_OPTIONAL);
   PLUG_load_plugin(keyboard, PLUGTYPE_OPTIONAL);
 #if BX_SUPPORT_BUSMOUSE
@@ -177,21 +197,9 @@ void bx_devices_c::init(BX_MEM_C *newmem)
     PLUG_load_plugin(serial, PLUGTYPE_OPTIONAL);
   if (is_parallel_enabled())
     PLUG_load_plugin(parallel, PLUGTYPE_OPTIONAL);
-  PLUG_load_plugin(extfpuirq, PLUGTYPE_OPTIONAL);
-#if BX_SUPPORT_GAMEPORT
-  PLUG_load_plugin(gameport, PLUGTYPE_OPTIONAL);
-#endif
-  PLUG_load_plugin(speaker, PLUGTYPE_OPTIONAL);
 
-  // PCI logic (i440FX)
-  if (SIM->get_param_bool(BXPN_I440FX_SUPPORT)->get()) {
 #if BX_SUPPORT_PCI
-    PLUG_load_plugin(pci, PLUGTYPE_CORE);
-    PLUG_load_plugin(pci2isa, PLUGTYPE_CORE);
-    PLUG_load_plugin(pci_ide, PLUGTYPE_OPTIONAL);
-#if BX_SUPPORT_ACPI
-    PLUG_load_plugin(acpi, PLUGTYPE_OPTIONAL);
-#endif
+  if (SIM->get_param_bool(BXPN_I440FX_SUPPORT)->get()) {
 #if BX_SUPPORT_PCIVGA
     if ((DEV_is_pci_device("pcivga")) &&
         (!strcmp(SIM->get_param_string(BXPN_VGA_EXTENSION)->getptr(), "vbe"))) {
@@ -218,10 +226,8 @@ void bx_devices_c::init(BX_MEM_C *newmem)
     PLUG_load_plugin(pcipnic, PLUGTYPE_OPTIONAL);
   }
 #endif
-#else
-    BX_ERROR(("Bochs is not compiled with PCI support"));
-#endif
   }
+#endif
 
   // NE2000 NIC
   if (SIM->get_param_bool(BXPN_NE2K_ENABLED)->get()) {
@@ -240,9 +246,6 @@ void bx_devices_c::init(BX_MEM_C *newmem)
     BX_ERROR(("Bochs is not compiled with SB16 support"));
 #endif
   }
-#if BX_SUPPORT_IODEBUG
-  PLUG_load_plugin(iodebug, PLUGTYPE_OPTIONAL);
-#endif
 
 #if BX_SUPPORT_APIC
   // I/O APIC 82093AA

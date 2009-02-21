@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.229 2009-02-08 18:52:06 sshwarts Exp $
+// $Id: siminterface.h,v 1.230 2009-02-21 11:43:18 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  The Bochs Project
@@ -247,6 +247,7 @@ typedef enum {
 #define BXPN_SB16_LOGLEVEL               "sound.sb16.loglevel"
 #define BXPN_TEXT_SNAPSHOT_CHECK         "misc.text_snapshot_check"
 #define BXPN_GDBSTUB                     "misc.gdbstub"
+#define BXPN_PLUGIN_CTRL                 "misc.plugin_ctrl"
 #define BXPN_LOG_FILENAME                "log.filename"
 #define BXPN_LOG_PREFIX                  "log.prefix"
 #define BXPN_DEBUGGER_LOG_FILENAME       "log.debugger_filename"

@@ -785,6 +785,15 @@ i440fxsupport: enabled=1
 #gdbstub: enabled=0, port=1234, text_base=0, data_base=0, bss_base=0
 
 #=======================================================================
+# PLUGIN_CTRL:
+# Controls the presence of optional plugins without a separate option.
+# By default all existing plugins are enabled. These plugins are currently
+# supported: 'acpi', 'biosdev', 'extfpuirq', 'gameport', 'iodebug',
+# 'pci_ide', 'speaker' and 'unmapped'.
+#=======================================================================
+#plugin_ctrl: biosdev=0, speaker=0
+
+#=======================================================================
 # USER_PLUGIN:
 # Load user-defined plugin. This option is available only if Bochs is
 # compiled with plugin support. Maximum 8 different plugins are supported.
