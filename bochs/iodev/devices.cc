@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: devices.cc,v 1.138 2009-02-21 11:43:18 vruppert Exp $
+// $Id: devices.cc,v 1.139 2009-02-21 16:08:02 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -113,8 +113,11 @@ void bx_devices_c::init(BX_MEM_C *newmem)
   const char def_name[] = "Default";
   bx_list_c *plugin_ctrl;
   bx_param_bool_c *plugin;
+#if !BX_PLUGINS
+  const char *plugname;
+#endif
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.138 2009-02-21 11:43:18 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.139 2009-02-21 16:08:02 vruppert Exp $"));
   mem = newmem;
 
   /* set builtin default handlers, will be overwritten by the real default handler */
@@ -182,7 +185,44 @@ void bx_devices_c::init(BX_MEM_C *newmem)
   for (i = 0; i < (unsigned)plugin_ctrl->get_size(); i++) {
     plugin = (bx_param_bool_c*)(plugin_ctrl->get(i));
     if (plugin->get()) {
+#if BX_PLUGINS
       PLUG_load_opt_plugin(plugin->get_name());
+#else
+      // workaround in case of plugins disabled
+      plugname = plugin->get_name();
+      if (!strcmp(plugname, BX_PLUGIN_UNMAPPED)) {
+        PLUG_load_plugin(unmapped, PLUGTYPE_OPTIONAL);
+      }
+      else if (!strcmp(plugname, BX_PLUGIN_BIOSDEV)) {
+        PLUG_load_plugin(biosdev, PLUGTYPE_OPTIONAL);
+      }
+      else if (!strcmp(plugname, BX_PLUGIN_SPEAKER)) {
+        PLUG_load_plugin(speaker, PLUGTYPE_OPTIONAL);
+      }
+      else if (!strcmp(plugname, BX_PLUGIN_EXTFPUIRQ)) {
+        PLUG_load_plugin(extfpuirq, PLUGTYPE_OPTIONAL);
+      }
+#if BX_SUPPORT_GAMEPORT
+      else if (!strcmp(plugname, BX_PLUGIN_GAMEPORT)) {
+        PLUG_load_plugin(gameport, PLUGTYPE_OPTIONAL);
+      }
+#endif
+#if BX_SUPPORT_IODEBUG
+      else if (!strcmp(plugname, BX_PLUGIN_IODEBUG)) {
+        PLUG_load_plugin(iodebug, PLUGTYPE_OPTIONAL);
+      }
+#endif
+#if BX_SUPPORT_PCI
+      else if (!strcmp(plugname, BX_PLUGIN_PCI_IDE)) {
+        PLUG_load_plugin(pci_ide, PLUGTYPE_OPTIONAL);
+      }
+#endif
+#if BX_SUPPORT_ACPI
+      else if (!strcmp(plugname, BX_PLUGIN_ACPI)) {
+        PLUG_load_plugin(acpi, PLUGTYPE_OPTIONAL);
+      }
+#endif
+#endif
     }
   }
 
