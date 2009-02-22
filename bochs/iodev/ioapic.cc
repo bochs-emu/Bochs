@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ioapic.cc,v 1.48 2009-02-22 10:44:50 vruppert Exp $
+// $Id: ioapic.cc,v 1.49 2009-02-22 17:37:09 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -34,7 +34,6 @@
 
 #if BX_SUPPORT_APIC
 
-#include "cpu/apic.h"
 #include "ioapic.h"
 
 #define LOG_THIS theIOAPIC->
