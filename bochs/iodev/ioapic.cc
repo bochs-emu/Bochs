@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ioapic.cc,v 1.47 2009-02-19 23:19:11 sshwarts Exp $
+// $Id: ioapic.cc,v 1.48 2009-02-22 10:44:50 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -23,16 +23,36 @@
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
-//
+/////////////////////////////////////////////////////////////////////////
+
+// Define BX_PLUGGABLE in files that can be compiled into plugins.  For
+// platforms that require a special tag on exported symbols, BX_PLUGGABLE
+// is used to know when we are exporting symbols and when we are importing.
+#define BX_PLUGGABLE
 
 #include "iodev.h"
 
 #if BX_SUPPORT_APIC
 
 #include "cpu/apic.h"
+#include "ioapic.h"
 
-class bx_ioapic_c bx_ioapic;
-#define LOG_THIS  bx_ioapic.
+#define LOG_THIS theIOAPIC->
+
+bx_ioapic_c *theIOAPIC = NULL;
+
+int libioapic_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
+{
+  theIOAPIC = new bx_ioapic_c();
+  bx_devices.pluginIOAPIC = theIOAPIC;
+  BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theIOAPIC, BX_PLUGIN_IOAPIC);
+  return(0); // Success
+}
+
+void libioapic_LTX_plugin_fini(void)
+{
+  delete theIOAPIC;
+}
 
 static bx_bool ioapic_read(bx_phy_address a20addr, unsigned len, void *data, void *param)
 {
@@ -40,7 +60,7 @@ static bx_bool ioapic_read(bx_phy_address a20addr, unsigned len, void *data, voi
     BX_PANIC(("I/O APIC read at address 0x" FMT_PHY_ADDRX " spans 32-bit boundary !", a20addr));
     return 1;
   }
-  Bit32u value = bx_ioapic.read_aligned(a20addr & ~0x3);
+  Bit32u value = theIOAPIC->read_aligned(a20addr & ~0x3);
   if(len == 4) { // must be 32-bit aligned
     *((Bit32u *)data) = value;
     return 1;
@@ -69,7 +89,7 @@ static bx_bool ioapic_write(bx_phy_address a20addr, unsigned len, void *data, vo
     return 1;
   }
 
-  bx_ioapic.write_aligned(a20addr, *((Bit32u*) data));
+  theIOAPIC->write_aligned(a20addr, *((Bit32u*) data));
   return 1;
 }
 
@@ -105,7 +125,7 @@ bx_ioapic_c::bx_ioapic_c(): base_addr(BX_IOAPIC_BASE_ADDR)
 void bx_ioapic_c::init(void)
 {
   BX_INFO(("initializing I/O APIC"));
-  DEV_register_memory_handlers(&bx_ioapic,
+  DEV_register_memory_handlers(theIOAPIC,
       ioapic_read, ioapic_write, base_addr, base_addr + 0xfff);
   reset(BX_RESET_HARDWARE);
 }

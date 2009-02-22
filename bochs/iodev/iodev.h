@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.109 2009-02-08 09:05:52 vruppert Exp $
+// $Id: iodev.h,v 1.110 2009-02-22 10:44:50 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -41,9 +41,6 @@
 /* size of internal buffer for mouse devices */
 #define BX_MOUSE_BUFF_SIZE 48
 
-#if BX_SUPPORT_APIC
-class bx_ioapic_c;
-#endif
 #if 0
 class bx_g2h_c;
 #endif
@@ -375,6 +372,14 @@ public:
 };
 #endif
 
+#if BX_SUPPORT_APIC
+class BOCHSAPI bx_ioapic_stub_c : public bx_devmodel_c {
+public:
+  virtual void receive_eoi(Bit8u vector) {}
+  virtual void set_irq_level(Bit8u int_in, bx_bool level) {}
+};
+#endif
+
 class BOCHSAPI bx_devices_c : public logfunctions {
 public:
   bx_devices_c();
@@ -425,9 +430,6 @@ public:
   static void timer_handler(void *);
   void timer(void);
 
-#if BX_SUPPORT_APIC
-  bx_ioapic_c       *ioapic;
-#endif
   bx_pci_bridge_stub_c *pluginPciBridge;
   bx_pci2isa_stub_c *pluginPci2IsaBridge;
   bx_pci_ide_stub_c *pluginPciIdeController;
@@ -456,6 +458,9 @@ public:
 #endif
 #if BX_SUPPORT_IODEBUG
   bx_iodebug_stub_c *pluginIODebug;
+#endif
+#if BX_SUPPORT_APIC
+  bx_ioapic_stub_c       *pluginIOAPIC;
 #endif
 #if 0
   bx_g2h_c          *g2h;
@@ -487,6 +492,9 @@ public:
 #endif
 #if BX_SUPPORT_IODEBUG
   bx_iodebug_stub_c stubIODebug;
+#endif
+#if BX_SUPPORT_APIC
+  bx_ioapic_stub_c stubIOAPIC;
 #endif
 
   // Some info to pass to devices which can handled bulk IO.  This allows
@@ -608,9 +616,6 @@ BX_CPP_INLINE void DEV_MEM_WRITE_PHYSICAL_BLOCK(bx_phy_address phy_addr, unsigne
 #ifndef NO_DEVICE_INCLUDES
 
 #include "iodev/vga.h"
-#if BX_SUPPORT_APIC
-#  include "iodev/ioapic.h"
-#endif
 
 #endif /* NO_DEVICE_INCLUDES */
 

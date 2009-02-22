@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: devices.cc,v 1.139 2009-02-21 16:08:02 vruppert Exp $
+// $Id: devices.cc,v 1.140 2009-02-22 10:44:50 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -102,6 +102,9 @@ void bx_devices_c::init_stubs()
 #if BX_SUPPORT_IODEBUG
   pluginIODebug = &stubIODebug;
 #endif
+#if BX_SUPPORT_IOAPIC
+  pluginIOAPIC = &stubIOAPIC;
+#endif
 #if 0
   g2h = NULL;
 #endif
@@ -117,7 +120,7 @@ void bx_devices_c::init(BX_MEM_C *newmem)
   const char *plugname;
 #endif
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.139 2009-02-21 16:08:02 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.140 2009-02-22 10:44:50 vruppert Exp $"));
   mem = newmem;
 
   /* set builtin default handlers, will be overwritten by the real default handler */
@@ -222,6 +225,11 @@ void bx_devices_c::init(BX_MEM_C *newmem)
         PLUG_load_plugin(acpi, PLUGTYPE_OPTIONAL);
       }
 #endif
+#if BX_SUPPORT_APIC
+      else if (!strcmp(plugname, BX_PLUGIN_IOAPIC)) {
+        PLUG_load_plugin(ioapic, PLUGTYPE_OPTIONAL);
+      }
+#endif
 #endif
     }
   }
@@ -286,12 +294,6 @@ void bx_devices_c::init(BX_MEM_C *newmem)
     BX_ERROR(("Bochs is not compiled with SB16 support"));
 #endif
   }
-
-#if BX_SUPPORT_APIC
-  // I/O APIC 82093AA
-  ioapic = &bx_ioapic;
-  ioapic->init();
-#endif
 
   // CMOS RAM & RTC
   pluginCmosDevice->init();
@@ -371,9 +373,6 @@ void bx_devices_c::reset(unsigned type)
     pluginPci2IsaBridge->reset(type);
   }
 #endif
-#if BX_SUPPORT_APIC
-  ioapic->reset(type);
-#endif
   pluginCmosDevice->reset(type);
   pluginDmaDevice->reset(type);
   pluginFloppyDevice->reset(type);
@@ -392,9 +391,6 @@ void bx_devices_c::register_state()
     pluginPciBridge->register_state();
     pluginPci2IsaBridge->register_state();
   }
-#endif
-#if BX_SUPPORT_APIC
-  ioapic->register_state();
 #endif
   pluginCmosDevice->register_state();
   pluginDmaDevice->register_state();

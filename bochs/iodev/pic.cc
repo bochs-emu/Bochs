@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pic.cc,v 1.53 2009-02-08 09:05:52 vruppert Exp $
+// $Id: pic.cc,v 1.54 2009-02-22 10:44:50 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -622,7 +622,7 @@ void bx_pic_c::lower_irq(unsigned irq_no)
 #if BX_SUPPORT_APIC
   // forward this function call to the ioapic too
   if (DEV_ioapic_present() && (irq_no != 2)) {
-    bx_devices.ioapic->set_irq_level(irq_no, 0);
+    DEV_ioapic_set_irq_level(irq_no, 0);
   }
 #endif
 
@@ -644,7 +644,7 @@ void bx_pic_c::raise_irq(unsigned irq_no)
 #if BX_SUPPORT_APIC
   // forward this function call to the ioapic too
   if (DEV_ioapic_present() && (irq_no != 2)) {
-    bx_devices.ioapic->set_irq_level(irq_no, 1);
+    DEV_ioapic_set_irq_level(irq_no, 1);
   }
 #endif
 

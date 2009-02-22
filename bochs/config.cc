@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.156 2009-02-21 11:43:18 vruppert Exp $
+// $Id: config.cc,v 1.157 2009-02-22 10:44:49 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1666,7 +1666,7 @@ void bx_init_options()
   enabled->set_dependent_list(menu->clone());
 
   // optional plugin control
-  menu = new bx_list_c(misc, "plugin_ctrl", "Optional Plugin Control", 8);
+  menu = new bx_list_c(misc, "plugin_ctrl", "Optional Plugin Control", 9);
   menu->get_options()->set(bx_list_c::SHOW_PARENT | bx_list_c::USE_BOX_TITLE);
   new bx_param_bool_c(menu, "unmapped", "unmapped", "", 1);
   new bx_param_bool_c(menu, "biosdev", "biosdev", "", 1);
@@ -1683,6 +1683,9 @@ void bx_init_options()
 #endif
 #if BX_SUPPORT_ACPI
   new bx_param_bool_c(menu, "acpi", "acpi", "", 1);
+#endif
+#if BX_SUPPORT_APIC
+  new bx_param_bool_c(menu, "ioapic", "ioapic", "", 1);
 #endif
 
 #if BX_PLUGINS

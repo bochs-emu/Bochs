@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: plugin.h,v 1.73 2009-02-21 11:43:18 vruppert Exp $
+// $Id: plugin.h,v 1.74 2009-02-22 10:44:49 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  The Bochs Project
@@ -67,6 +67,7 @@ extern "C" {
 #define BX_PLUGIN_SPEAKER   "speaker"
 #define BX_PLUGIN_ACPI      "acpi"
 #define BX_PLUGIN_IODEBUG   "iodebug"
+#define BX_PLUGIN_IOAPIC    "ioapic"
 
 
 #define BX_REGISTER_DEVICE_DEVMODEL(a,b,c,d) pluginRegisterDeviceDevmodel(a,b,c,d)
@@ -120,10 +121,14 @@ extern "C" {
 #define DEV_register_state() {bx_devices.register_state(); }
 #define DEV_after_restore_state() {bx_devices.after_restore_state(); }
 #define DEV_register_timer(a,b,c,d,e,f) bx_pc_system.register_timer(a,b,c,d,e,f)
-#define DEV_ioapic_present() (bx_devices.ioapic != NULL)
 #define DEV_mouse_enabled_changed(en) (bx_devices.mouse_enabled_changed(en))
 #define DEV_mouse_motion(dx, dy, state) (bx_devices.mouse_motion(dx, dy, 0, state))
 #define DEV_mouse_motion_ext(dx, dy, dz, state) (bx_devices.mouse_motion(dx, dy, dz, state))
+
+///////// I/O APIC macros
+#define DEV_ioapic_present() (bx_devices.pluginIOAPIC != NULL)
+#define DEV_ioapic_receive_eoi(a) (bx_devices.pluginIOAPIC->receive_eoi(a))
+#define DEV_ioapic_set_irq_level(a,b) (bx_devices.pluginIOAPIC->set_irq_level(a,b))
 
 ///////// CMOS macros
 #define DEV_cmos_get_reg(a) (bx_devices.pluginCmosDevice->get_reg(a))
@@ -388,6 +393,7 @@ DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(gameport)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(speaker)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(acpi)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(iodebug)
+DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(ioapic)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(amigaos)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(beos)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(carbon)
