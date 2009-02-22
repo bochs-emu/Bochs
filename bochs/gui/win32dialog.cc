@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32dialog.cc,v 1.71 2009-02-08 18:52:06 sshwarts Exp $
+// $Id: win32dialog.cc,v 1.72 2009-02-22 21:48:21 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  The Bochs Project
@@ -886,13 +886,13 @@ int RuntimeOptionsDialog()
     psp[i].hInstance = NULL;
   }
   psp[0].pszTemplate = MAKEINTRESOURCE(RT_CDROM_DLG);
-  psp[0].pfnDlgProc = RTCdromDlgProc;
+  psp[0].pfnDlgProc = (DLGPROC) RTCdromDlgProc;
   psp[1].pszTemplate = MAKEINTRESOURCE(RT_USBDEV_DLG);
-  psp[1].pfnDlgProc = RTUSBdevDlgProc;
+  psp[1].pfnDlgProc = (DLGPROC) RTUSBdevDlgProc;
   psp[2].pszTemplate = MAKEINTRESOURCE(RT_LOGOPT_DLG);
-  psp[2].pfnDlgProc = RTLogOptDlgProc;
+  psp[2].pfnDlgProc = (DLGPROC) RTLogOptDlgProc;
   psp[3].pszTemplate = MAKEINTRESOURCE(RT_MISC_DLG);
-  psp[3].pfnDlgProc = RTMiscDlgProc;
+  psp[3].pfnDlgProc = (DLGPROC) RTMiscDlgProc;
 
   memset(&psh,0,sizeof(PROPSHEETHEADER));
   psh.dwSize = sizeof(PROPSHEETHEADER);
