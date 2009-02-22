@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.157 2009-02-22 10:44:49 vruppert Exp $
+// $Id: config.cc,v 1.158 2009-02-22 17:05:40 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1668,24 +1668,24 @@ void bx_init_options()
   // optional plugin control
   menu = new bx_list_c(misc, "plugin_ctrl", "Optional Plugin Control", 9);
   menu->get_options()->set(bx_list_c::SHOW_PARENT | bx_list_c::USE_BOX_TITLE);
-  new bx_param_bool_c(menu, "unmapped", "unmapped", "", 1);
-  new bx_param_bool_c(menu, "biosdev", "biosdev", "", 1);
-  new bx_param_bool_c(menu, "speaker", "speaker", "", 1);
-  new bx_param_bool_c(menu, "extfpuirq", "extfpuirq", "", 1);
+  new bx_param_bool_c(menu, "unmapped", "Enable 'unmapped'", "", 1);
+  new bx_param_bool_c(menu, "biosdev", "Enable 'biosdev'", "", 1);
+  new bx_param_bool_c(menu, "speaker", "Enable 'speaker'", "", 1);
+  new bx_param_bool_c(menu, "extfpuirq", "Enable 'extfpuirq'", "", 1);
 #if BX_SUPPORT_GAMEPORT
-  new bx_param_bool_c(menu, "gameport", "gameport", "", 1);
+  new bx_param_bool_c(menu, "gameport", "Enable 'gameport'", "", 1);
 #endif
 #if BX_SUPPORT_IODEBUG
-  new bx_param_bool_c(menu, "iodebug", "iodebug", "", 1);
+  new bx_param_bool_c(menu, "iodebug", "Enable 'iodebug'", "", 1);
 #endif
 #if BX_SUPPORT_PCI
-  new bx_param_bool_c(menu, "pci_ide", "pci_ide", "", 1);
+  new bx_param_bool_c(menu, "pci_ide", "Enable 'pci_ide'", "", 1);
 #endif
 #if BX_SUPPORT_ACPI
-  new bx_param_bool_c(menu, "acpi", "acpi", "", 1);
+  new bx_param_bool_c(menu, "acpi", "Enable 'acpi'", "", 1);
 #endif
 #if BX_SUPPORT_APIC
-  new bx_param_bool_c(menu, "ioapic", "ioapic", "", 1);
+  new bx_param_bool_c(menu, "ioapic", "Enable 'ioapic'", "", 1);
 #endif
 
 #if BX_PLUGINS

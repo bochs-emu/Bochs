@@ -60,6 +60,9 @@ Detailed change log :
 
 - I/O Devices
   - Added user plugin support
+  - remaining devices converted to plugins: pit, ioapic, iodebug
+  - added bochsrc option to control the presence of optional plugin
+    devices without a separate option
   - Hard drive / cdrom
     - PACKET-DMA feature now supported by all ATAPI commands
     - ATAPI command 0x1A added (based on the Qemu implementation)
@@ -71,8 +74,8 @@ Detailed change log :
   - keyboard
     - added keyboard controller commands 0xCA and 0xCB
   - USB
-    - initial USB OHCI support written by Ben Lunt (Win98 detects
-      the controller, connecting devices not implemented yet)
+    - initial USB OHCI support written by Ben Lunt (Win98SE can use
+      the USB mouse connected to OHCI)
   - VGA
     - VBE video memory increased to 16 MB
   - I/O APIC

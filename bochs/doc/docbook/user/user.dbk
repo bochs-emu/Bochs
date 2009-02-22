@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.249 2009-02-08 09:05:52 vruppert Exp $
+$Id: user.dbk,v 1.250 2009-02-22 17:05:40 vruppert Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -3807,7 +3807,7 @@ are in the usual "property=value" format.
 <para>
 Examples:
 <screen>
-  vga_update_interval: 40000 # default
+  vga_update_interval: 50000 # default
   vga_update_interval: 250000
 </screen>
 Video memory is scanned for updates and screen updated every so many virtual
@@ -3903,11 +3903,10 @@ Examples:
   mouse: enabled=1, type=serial
   mouse: enabled=0
 </screen>
-This option prevents Bochs from creating mouse "events" unless a mouse is
-enabled. The hardware emulation itself is not disabled by this. You can
-turn the mouse on by setting enabled to 1, or turn it off by setting
-enabled to 0. Unless you have a particular reason for enabling the mouse
-by default, it is recommended that you leave it off. You can also toggle the
+The Bochs gui creates mouse "events" unless the 'enabled' option is
+set to 0. The hardware emulation itself is not disabled by this.
+Unless you have a particular reason for enabling the mouse by default,
+it is recommended that you leave it off. You can also toggle the
 mouse usage at runtime (see <link linkend="headerbar">headerbar</link>).
 </para>
 <para>
@@ -3915,7 +3914,7 @@ mouse usage at runtime (see <link linkend="headerbar">headerbar</link>).
   The default value is 'ps2'. The other choices are 'imps2' (wheel mouse
   on PS/2), 'serial', 'serial_wheel' and 'serial_msys' (one com port requires
   setting 'mode=mouse', see <link linkend="bochsopt-com">com option</link>).
-  To connect a mouse to an USB port, see the <link linkend="bochsopt-usb1">usb1 option</link>
+  To connect a mouse to an USB port, see the <link linkend="bochsopt-usb_uhci">usb_uhci option</link>
   (requires PCI and USB support).
 </para>
 </section>
@@ -3973,12 +3972,12 @@ located in the <constant>bochs/host/linux/pcidev/</constant> directory.
 </para>
 </section>
 
-<section id="bochsopt-usb1"><title>usb1</title>
+<section id="bochsopt-usb_uhci"><title>usb_uhci</title>
 <para>
 Examples:
 <screen>
-  usb1: enabled=1, port1=mouse, port2=keypad
-  usb1: enabled=1, port1=tablet, port2=disk:usbdisk.img
+  usb_uhci: enabled=1, port1=mouse, port2=keypad
+  usb_uhci: enabled=1, port1=tablet, port2=disk:usbdisk.img
 </screen>
 This option controls the presence of the USB root hub which is a part of the
 i440FX PCI chipset.
@@ -4223,6 +4222,19 @@ The rtc_init parameter controls whether initialize the RTC with values stored
 in the image. By default the time0 argument given to the
 <link linkend="bochsopt-clock">clock option</link> is used. With 'rtc_init=image'
 the image is the source for the initial time.
+</para>
+</section>
+
+<section><title>plugin_ctrl</title>
+<para>
+Example:
+<screen>
+  plugin_ctrl: biosdev=0, speaker=0
+</screen>
+Controls the presence of optional plugins without a separate option.
+By default all existing plugins are enabled. These plugins are currently
+supported: 'acpi', 'biosdev', 'extfpuirq', 'gameport', 'iodebug',
+'pci_ide', 'speaker' and 'unmapped'.
 </para>
 </section>
 

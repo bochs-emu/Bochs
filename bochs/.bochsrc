@@ -526,7 +526,7 @@ parport1: enabled=1, file="parport.out"
 #=======================================================================
 # VGA_UPDATE_INTERVAL:
 # Video memory is scanned for updates and screen updated every so many
-# virtual seconds.  The default is 40000, about 25Hz. Keep in mind that
+# virtual seconds.  The default is 50000, about 20Hz. Keep in mind that
 # you must tweak the 'cpu: ips=N' directive to be as close to the number
 # of emulated instructions-per-second your workstation can do, for this
 # to be accurate.
@@ -567,17 +567,16 @@ keyboard_paste_delay: 100000
 
 #=======================================================================
 # MOUSE: 
-# This option prevents Bochs from creating mouse "events" unless a mouse
-# is  enabled. The hardware emulation itself is not disabled by this.
-# You can turn the mouse on by setting enabled to 1, or turn it off by
-# setting enabled to 0. Unless you have a particular reason for enabling
-# the mouse by default, it is recommended that you leave it off.
-# You can also toggle the mouse usage at runtime (control key + middle
-# mouse button on X11, SDL, wxWidgets and Win32).
+# The Bochs gui creates mouse "events" unless the 'enabled' option is
+# set to 0. The hardware emulation itself is not disabled by this.
+# Unless you have a particular reason for enabling the mouse by default,
+# it is recommended that you leave it off. You can also toggle the mouse
+# usage at runtime (control key + middle mouse button on X11, SDL,
+# wxWidgets and Win32).
 # With the mouse type option you can select the type of mouse to emulate.
 # The default value is 'ps2'. The other choices are 'imps2' (wheel mouse
 # on PS/2), 'serial', 'serial_wheel' and 'serial_msys' (one com port requires
-# setting 'mode=mouse'). To connect a mouse to an USB port, see the 'usb1'
+# setting 'mode=mouse'). To connect a mouse to an USB port, see the 'usb_uhci'
 # option (requires PCI and USB support).
 #
 # Examples:
@@ -715,7 +714,7 @@ keyboard_mapping: enabled=0, map=
 i440fxsupport: enabled=1
 
 #=======================================================================
-# USB1:
+# USB_UHCI:
 # This option controls the presence of the USB root hub which is a part
 # of the i440FX PCI chipset. With the portX option you can connect devices
 # to the hub (currently supported: 'mouse', 'tablet', 'keypad' and 'disk').
@@ -726,8 +725,8 @@ i440fxsupport: enabled=1
 # To connect a flat image as an USB hardisk you can use the 'disk' device with
 # the path to the image separated with a colon (see below).
 #=======================================================================
-#usb1: enabled=1
-#usb1: enabled=1, port1=mouse, port2=disk:usbdisk.img
+#usb_uhci: enabled=1
+#usb_uhci: enabled=1, port1=mouse, port2=disk:usbdisk.img
 
 #=======================================================================
 # CMOSIMAGE:
