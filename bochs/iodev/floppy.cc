@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.cc,v 1.115 2009-02-08 09:05:52 vruppert Exp $
+// $Id: floppy.cc,v 1.116 2009-02-23 08:31:41 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -141,7 +141,7 @@ void bx_floppy_ctrl_c::init(void)
 {
   Bit8u i, cmos_value;
 
-  BX_DEBUG(("Init $Id: floppy.cc,v 1.115 2009-02-08 09:05:52 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: floppy.cc,v 1.116 2009-02-23 08:31:41 vruppert Exp $"));
   DEV_dma_register_8bit_channel(2, dma_read, dma_write, "Floppy Drive");
   DEV_register_irq(6, "Floppy Drive");
   for (unsigned addr=0x03F2; addr<=0x03F7; addr++) {
@@ -455,6 +455,7 @@ Bit32u bx_floppy_ctrl_c::read(Bit32u address, unsigned io_len)
 #endif  // !BX_USE_FD_SMF
   Bit8u value = 0, drive;
 
+  Bit8u pending_command = BX_FD_THIS s.pending_command;
   switch (address) {
 #if BX_DMA_FLOPPY_IO
     case 0x3F2: // diskette controller digital output register
@@ -467,7 +468,7 @@ Bit32u bx_floppy_ctrl_c::read(Bit32u address, unsigned io_len)
 
     case 0x3F5: /* diskette controller data */
       if ((BX_FD_THIS s.main_status_reg & FD_MS_NDMA) &&
-	((BX_FD_THIS s.pending_command & 0x4f) == 0x46)) {
+          ((BX_FD_THIS s.pending_command & 0x4f) == 0x46)) {
         dma_write(&value);
         lower_interrupt();
         // don't enter idle phase until we've given CPU last data byte
@@ -539,8 +540,8 @@ Bit32u bx_floppy_ctrl_c::read(Bit32u address, unsigned io_len)
       return(0);
       break;
   }
-  BX_DEBUG(("read(): during command 0x%02x, port %04x returns 0x%02x",
-               BX_FD_THIS s.pending_command, address, value));
+  BX_DEBUG(("read(): during command 0x%02x, port 0x%04x returns 0x%02x",
+            pending_command, address, value));
   return (value);
 }
 
@@ -565,7 +566,7 @@ void bx_floppy_ctrl_c::write(Bit32u address, Bit32u value, unsigned io_len)
   Bit8u drive_select;
   Bit8u motor_on_drive0, motor_on_drive1;
 
-  BX_DEBUG(("write access to port %04x, value=%02x", address, value));
+  BX_DEBUG(("write access to port 0x%04x, value=0x%02x", address, value));
 
   switch (address) {
 #if BX_DMA_FLOPPY_IO
@@ -608,7 +609,7 @@ void bx_floppy_ctrl_c::write(Bit32u address, Bit32u value, unsigned io_len)
       BX_DEBUG(("  drive_select=%02x",
         (unsigned) drive_select));
       if (BX_FD_THIS s.device_type[drive_select] == FDRIVE_NONE) {
-        BX_DEBUG(("WARNING: not existing drive selected"));
+        BX_DEBUG(("WARNING: non existing drive selected"));
       }
       break;
 
@@ -625,7 +626,7 @@ void bx_floppy_ctrl_c::write(Bit32u address, Bit32u value, unsigned io_len)
       break;
 
     case 0x3F5: /* diskette controller data */
-      BX_DEBUG(("command = %02x", (unsigned) value));
+      BX_DEBUG(("command = 0x%02x", (unsigned) value));
       if ((BX_FD_THIS s.main_status_reg & FD_MS_NDMA) && ((BX_FD_THIS s.pending_command & 0x4f) == 0x45)) {
         BX_FD_THIS dma_read((Bit8u *) &value);
         BX_FD_THIS lower_interrupt();
