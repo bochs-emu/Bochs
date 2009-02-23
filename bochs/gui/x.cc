@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: x.cc,v 1.123 2009-02-08 18:52:06 sshwarts Exp $
+// $Id: x.cc,v 1.124 2009-02-23 11:06:53 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -33,6 +33,7 @@
 #define BX_PLUGGABLE
 
 #include "bochs.h"
+#include "keymap.h"
 #include "iodev.h"
 #include "enh_dbg.h"
 #if BX_WITH_X11

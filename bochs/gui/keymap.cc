@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keymap.cc,v 1.25 2009-02-08 09:05:52 vruppert Exp $
+// $Id: keymap.cc,v 1.26 2009-02-23 11:06:53 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002 MandrakeSoft S.A.
@@ -26,6 +26,7 @@
 //
 
 #include "bochs.h"
+#include "keymap.h"
 
 // Table of bochs "BX_KEY_*" symbols
 // the table must be in BX_KEY_* order

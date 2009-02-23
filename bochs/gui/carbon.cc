@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: carbon.cc,v 1.41 2009-02-08 09:05:52 vruppert Exp $
+// $Id: carbon.cc,v 1.42 2009-02-23 11:06:53 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -44,6 +44,7 @@
 #define Float32 KLUDGE_Float32
 #define Float64 KLUDGE_Float64
 #include "bochs.h"
+#include "keymap.h"
 #include "iodev.h"
 #undef Float32
 #undef Float64

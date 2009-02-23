@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.241 2009-02-20 15:38:36 sshwarts Exp $
+// $Id: bochs.h,v 1.242 2009-02-23 11:06:53 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -480,8 +480,6 @@ BOCHSAPI extern bx_debug_t bx_dbg;
 #include "pc_system.h"
 #include "plugin.h"
 #include "gui/gui.h"
-#include "gui/textconfig.h"
-#include "gui/keymap.h"
 
 /* --- EXTERNS --- */
 

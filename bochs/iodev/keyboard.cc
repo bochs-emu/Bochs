@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.cc,v 1.141 2009-02-08 09:05:52 vruppert Exp $
+// $Id: keyboard.cc,v 1.142 2009-02-23 11:06:53 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -53,6 +53,7 @@
 #define BX_PLUGGABLE
 
 #include "iodev.h"
+#include "gui/keymap.h"
 #include <math.h>
 #include "keyboard.h"
 #include "scancodes.h"
@@ -125,7 +126,7 @@ void bx_keyb_c::resetinternals(bx_bool powerup)
 
 void bx_keyb_c::init(void)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.141 2009-02-08 09:05:52 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.142 2009-02-23 11:06:53 vruppert Exp $"));
   Bit32u   i;
 
   DEV_register_irq(1, "8042 Keyboard controller");

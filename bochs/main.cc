@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.392 2009-02-01 20:47:06 sshwarts Exp $
+// $Id: main.cc,v 1.393 2009-02-23 11:06:53 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -25,6 +25,7 @@
 //  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include "bochs.h"
+#include "gui/textconfig.h"
 #include "cpu/cpu.h"
 #include "iodev/iodev.h"
 
