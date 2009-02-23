@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: devices.cc,v 1.140 2009-02-22 10:44:50 vruppert Exp $
+// $Id: devices.cc,v 1.141 2009-02-23 18:38:25 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -120,7 +120,7 @@ void bx_devices_c::init(BX_MEM_C *newmem)
   const char *plugname;
 #endif
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.140 2009-02-22 10:44:50 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.141 2009-02-23 18:38:25 vruppert Exp $"));
   mem = newmem;
 
   /* set builtin default handlers, will be overwritten by the real default handler */
@@ -234,13 +234,14 @@ void bx_devices_c::init(BX_MEM_C *newmem)
     }
   }
 
-  PLUG_load_plugin(harddrv, PLUGTYPE_OPTIONAL);
   PLUG_load_plugin(keyboard, PLUGTYPE_OPTIONAL);
 #if BX_SUPPORT_BUSMOUSE
   if (mouse_type == BX_MOUSE_TYPE_BUS) {
     PLUG_load_plugin(busmouse, PLUGTYPE_OPTIONAL);
   }
 #endif
+  if (is_harddrv_enabled())
+    PLUG_load_plugin(harddrv, PLUGTYPE_OPTIONAL);
   if (is_serial_enabled())
     PLUG_load_plugin(serial, PLUGTYPE_OPTIONAL);
   if (is_parallel_enabled())
@@ -1004,6 +1005,18 @@ bx_devices_c::outp(Bit16u addr, Bit32u value, unsigned io_len)
   } else if (addr != 0x0cf8) { // don't flood the logfile when probing PCI
     BX_ERROR(("write to port 0x%04x with len %d ignored", addr, io_len));
   }
+}
+
+bx_bool bx_devices_c::is_harddrv_enabled(void)
+{
+  char pname[24];
+
+  for (int i=0; i<BX_MAX_ATA_CHANNEL; i++) {
+    sprintf(pname, "ata.%d.resources.enabled", i);
+    if (SIM->get_param_bool(pname)->get())
+      return 1;
+  }
+  return 0;
 }
 
 bx_bool bx_devices_c::is_serial_enabled(void)
