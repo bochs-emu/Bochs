@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_ohci.h,v 1.5 2009-02-14 10:06:20 vruppert Exp $
+// $Id: usb_ohci.h,v 1.6 2009-02-24 17:15:27 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Benjamin D Lunt (fys at frontiernet net)
@@ -31,6 +31,16 @@
 #endif
 
 #define USB_NUM_PORTS   2
+
+#define OHCI_INTR_SO          (1<<0) // Scheduling overrun
+#define OHCI_INTR_WD          (1<<1) // HcDoneHead writeback
+#define OHCI_INTR_SF          (1<<2) // Start of frame
+#define OHCI_INTR_RD          (1<<3) // Resume detect
+#define OHCI_INTR_UE          (1<<4) // Unrecoverable error
+#define OHCI_INTR_FNO         (1<<5) // Frame number overflow
+#define OHCI_INTR_RHSC        (1<<6) // Root hub status change
+#define OHCI_INTR_OC          (1<<30) // Ownership change
+#define OHCI_INTR_MIE         (1<<31) // Master Interrupt Enable
 
 // Completion Codes
 enum {
@@ -129,58 +139,15 @@ typedef struct {
       bx_bool clf;               //  1 bit ControlListFilled           = 0b             RW  RW
       bx_bool hcr;               //  1 bit HostControllerReset         = 0b             RW  RW
     } HcCommandStatus;           //                                    = 0x00000000
-    struct {
-      bx_bool zero;              //  1 bit zero                        = 0b             R   R
-      bx_bool oc;                //  1 bit OwnershipChange             = 0b             RWC RW
-      Bit32u  reserved;          // 23 bit reserved                    = 0x000000       R   R
-      bx_bool rhsc;              //  1 bit RootHubStatusChange         = 0b             RWC RW
-      bx_bool fno;               //  1 bit FrameNumberOverflow         = 0b             RWC RW
-      bx_bool ue;                //  1 bit UnrecoverableError          = 0b             RWC RW
-      bx_bool rd;                //  1 bit ResumeDetected              = 0b             RWC RW
-      bx_bool sf;                //  1 bit StartifFrame                = 0b             RWC RW
-      bx_bool wdh;               //  1 bit WritebackDoneHead           = 0b             RWC RW
-      bx_bool so;                //  1 bit SchedulingOverrun           = 0b             RWC RW
-    } HcInterruptStatus;         //                                    = 0x00000000
-    struct {
-      bx_bool mie;               //  1 bit MasterInterruptEnable       = 0b             RW  R
-      bx_bool oc;                //  1 bit OwnershipChange             = 0b             RW  R
-      Bit32u  reserved;          // 23 bit reserved                    = 0x000000       R   R
-      bx_bool rhsc;              //  1 bit RootHubStatusChange         = 0b             RW  RW
-      bx_bool fno;               //  1 bit FrameNumberOverflow         = 0b             RW  RW
-      bx_bool ue;                //  1 bit UnrecoverableError          = 0b             RW  RW
-      bx_bool rd;                //  1 bit ResumeDetected              = 0b             RW  RW
-      bx_bool sf;                //  1 bit StartifFrame                = 0b             RW  RW
-      bx_bool wdh;               //  1 bit WritebackDoneHead           = 0b             RW  RW
-      bx_bool so;                //  1 bit SchedulingOverrun           = 0b             RW  RW
-    } HcInterruptEnable;         //                                    = 0x00000000
-    struct {
-      Bit32u hcca;               // 24 bit HCCommunicationArea         = 0x000000       RW  R
-      Bit8u  zero;               //  8 bit zero                        = 0000b          R   R
-    } HcHCCA;                    //                                    = 0x00000000
-    struct {
-      Bit32u  pced;              // 28 bit PeriodCurrentED             = 0x00000000     R   RW
-      Bit8u   zero;              //  4 bit zero                        = 0000b          R   R
-    } HcPeriodCurrentED;         //                                    = 0x00000000
-    struct {
-      Bit32u  ched;              // 28 bit ControlHeadED               = 0x00000000     RW  R
-      Bit8u   zero;              //  4 bit zero                        = 0000b          R   R
-    } HcControlHeadED;           //                                    = 0x00000000
-    struct {
-      Bit32u  cced;              // 28 bit ControlCurrentED            = 0x00000000     RW  R
-      Bit8u   zero;              //  4 bit zero                        = 0000b          R   R
-    } HcControlCurrentED;        //                                    = 0x00000000
-    struct {
-      Bit32u  bhed;              // 28 bit BulkHeadED                  = 0x00000000     RW  R
-      Bit8u   zero;              //  4 bit zero                        = 0000b          R   R
-    } HcBulkHeadED;              //                                    = 0x00000000
-    struct {
-      Bit32u  bced;              // 28 bit BulkCurrentED               = 0x00000000     RW  RW
-      Bit8u   zero;              //  4 bit zero                        = 0000b          R   R
-    } HcBulkCurrentED;           //                                    = 0x00000000
-    struct {
-      Bit32u  dh;                // 28 bit BulkCurrentED               = 0x00000000     RW  RW
-      Bit8u   zero;              //  4 bit zero                        = 0000b          R   R
-    } HcDoneHead;                //                                    = 0x00000000
+    Bit32u HcInterruptStatus;
+    Bit32u HcInterruptEnable;
+    Bit32u HcHCCA;
+    Bit32u HcPeriodCurrentED;
+    Bit32u HcControlHeadED;
+    Bit32u HcControlCurrentED;
+    Bit32u HcBulkHeadED;
+    Bit32u HcBulkCurrentED;
+    Bit32u HcDoneHead;
     struct {
       bx_bool fit;               //  1 bit FrameIntervalToggle         = 0b             RW  R
       Bit16u  fsmps;             // 15 bit FSLargestDataPacket         = TBD (0)        RW  R
@@ -228,6 +195,12 @@ typedef struct {
       bx_bool oci;               //  1 bit OverCurrentIndicator        = 0b             R   RW
       bx_bool lps;               //  1 bit LocalPowerStatus(r)         = 0b             RW  R
     } HcRhStatus;                //                                    = 0x00000000
+  } op_regs;
+
+  struct {
+    // our data
+    usb_device_c *device;   // device connected to this port
+
     struct {
       Bit16u  reserved0;         // 11 bit reserved                    = 0x000000       R   R
       bx_bool prsc;              //  1 bit PortResetStatusChange       = 0b             RW  RW
@@ -244,13 +217,7 @@ typedef struct {
       bx_bool pss;               //  1 bit PortSuspendStatus           = 0b             RW  RW
       bx_bool pes;               //  1 bit PortEnableStatus            = 0b             RW  RW
       bx_bool ccs;               //  1 bit CurrentConnectStatus        = 0b             RW  RW
-    } HcRhPortStatus[1003];      //                                    = 0x00000000
-  } op_regs;
-
-  struct {
-    // our data
-    usb_device_c *device;   // device connected to this port
-
+    } HcRhPortStatus;            //                                    = 0x00000000
   } usb_port[USB_NUM_PORTS];
 
   Bit8u pci_conf[256];
