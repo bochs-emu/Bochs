@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_ohci.cc,v 1.8 2009-02-24 17:15:27 vruppert Exp $
+// $Id: usb_ohci.cc,v 1.9 2009-02-25 18:18:57 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Benjamin D Lunt (fys at frontiernet net)
@@ -100,12 +100,18 @@ bx_usb_ohci_c::bx_usb_ohci_c()
 
 bx_usb_ohci_c::~bx_usb_ohci_c()
 {
+  char pname[BX_PATHNAME_LEN];
+
   if (BX_OHCI_THIS device_buffer != NULL)
     delete [] BX_OHCI_THIS device_buffer;
 
-  for (int j=0; j<USB_NUM_PORTS; j++) {
-    if (BX_OHCI_THIS hub.usb_port[j].device != NULL) {
-      delete BX_OHCI_THIS hub.usb_port[j].device;
+  for (int i=0; i<USB_NUM_PORTS; i++) {
+    if (BX_OHCI_THIS hub.usb_port[i].device != NULL) {
+      delete BX_OHCI_THIS hub.usb_port[i].device;
+      BX_OHCI_THIS hub.usb_port[i].device = NULL;
+      sprintf(pname, "usb_ohci.hub.port%d.device", i+1);
+      bx_list_c *devlist = (bx_list_c*)SIM->get_param(pname, SIM->get_bochs_root());
+      devlist->clear();
     }
   }
 
@@ -117,6 +123,8 @@ bx_usb_ohci_c::~bx_usb_ohci_c()
 
 void bx_usb_ohci_c::init(void)
 {
+  unsigned i;
+
   BX_OHCI_THIS device_buffer = new Bit8u[65536];
 
   // Call our frame timer routine every 1mS (1,000uS)
@@ -133,7 +141,7 @@ void bx_usb_ohci_c::init(void)
   DEV_register_pci_handlers(this, &BX_OHCI_THIS hub.devfunc, BX_PLUGIN_USB_OHCI,
                             "Experimental USB OHCI");
 
-  for (unsigned i=0; i<256; i++)
+  for (i=0; i<256; i++)
     BX_OHCI_THIS hub.pci_conf[i] = 0x0;
 
   BX_OHCI_THIS hub.base_addr = 0x0;
@@ -146,6 +154,12 @@ void bx_usb_ohci_c::init(void)
   SIM->get_param_string(BXPN_OHCI_PORT1)->set_runtime_param(1);
   SIM->get_param_string(BXPN_OHCI_PORT2)->set_handler(usb_param_handler);
   SIM->get_param_string(BXPN_OHCI_PORT2)->set_runtime_param(1);
+
+  for (i=0; i<USB_NUM_PORTS; i++) {
+    BX_OHCI_THIS hub.usb_port[i].device = NULL;
+  }
+  BX_OHCI_THIS mousedev = NULL;
+  BX_OHCI_THIS keybdev = NULL;
 
   //HACK: Turn on debug messages from the start
   //BX_OHCI_THIS setonoff(LOGLEV_DEBUG, ACT_REPORT);
@@ -171,7 +185,6 @@ void bx_usb_ohci_c::reset(unsigned type)
       { 0x0a, 0x03 },                 // class_sub  USB Host Controller
       { 0x0b, 0x0c },                 // class_base Serial Bus Controller
       { 0x0D, 0x40 },                 // bus latency
-      //{ 0x0e, 0x80 },                 // header_type_generic (multi-function device)
       { 0x0e, 0x00 },                 // header_type_generic
 
       // address space 0x10 - 0x13
@@ -205,11 +218,12 @@ void bx_usb_ohci_c::reset(unsigned type)
 
   BX_OHCI_THIS reset_hc();
 
-  BX_OHCI_THIS mousedev = NULL;
-  BX_OHCI_THIS keybdev = NULL;
-
-  init_device(0, SIM->get_param_string(BXPN_OHCI_PORT1)->getptr());
-  init_device(1, SIM->get_param_string(BXPN_OHCI_PORT2)->getptr());
+  if (BX_OHCI_THIS hub.usb_port[0].device == NULL) {
+    init_device(0, SIM->get_param_string(BXPN_OHCI_PORT1)->getptr());
+  }
+  if (BX_OHCI_THIS hub.usb_port[1].device == NULL) {
+    init_device(1, SIM->get_param_string(BXPN_OHCI_PORT2)->getptr());
+  }
 }
 
 void bx_usb_ohci_c::reset_hc()
@@ -322,8 +336,7 @@ void bx_usb_ohci_c::reset_hc()
   for (i=0; i<USB_NUM_PORTS; i++) {
     reset_port(i);
     if (BX_OHCI_THIS hub.usb_port[i].device != NULL) {
-      delete BX_OHCI_THIS hub.usb_port[i].device;
-      BX_OHCI_THIS hub.usb_port[i].device = NULL;
+      usb_set_connect_status(i, BX_OHCI_THIS hub.usb_port[i].device->get_type(), 1);
     }
   }
 }
@@ -604,26 +617,20 @@ bx_bool bx_usb_ohci_c::read_handler(bx_phy_address addr, unsigned len, void *dat
 #if (USB_NUM_PORTS < 4)
       val = 0;
       break;
-#else
-      p = 3;
 #endif
     case 0x5C: // HcRhPortStatus[2]
 #if (USB_NUM_PORTS < 3)
       val = 0;
       break;
-#else
-      p = 2;
 #endif
     case 0x58: // HcRhPortStatus[1]
 #if (USB_NUM_PORTS < 2)
       val = 0;
       break;
-#else
-      p = 1;
 #endif
     case 0x54: // HcRhPortStatus[0]
+      p = (offset - 0x54) >> 2;
       if (BX_OHCI_THIS hub.usb_port[p].HcRhPortStatus.pps == 1) {
-        p = (offset - 0x54) >> 2;
         val =   (BX_OHCI_THIS hub.usb_port[p].HcRhPortStatus.reserved0  << 21)
               | (BX_OHCI_THIS hub.usb_port[p].HcRhPortStatus.prsc      ? (1 << 20) : 0)
               | (BX_OHCI_THIS hub.usb_port[p].HcRhPortStatus.ocic      ? (1 << 19) : 0)
@@ -724,7 +731,7 @@ bx_bool bx_usb_ohci_c::write_handler(bx_phy_address addr, unsigned len, void *da
     case 0x10: // HcInterruptEnable
       if (value & 0x3FFFFF80)
         BX_ERROR(("Write to a reserved field in HcInterruptEnable"));
-      BX_OHCI_THIS hub.op_regs.HcInterruptEnable = (value & 0xC000007F);
+      BX_OHCI_THIS hub.op_regs.HcInterruptEnable |= (value & 0xC000007F);
       set_irq_state();
       break;
 
