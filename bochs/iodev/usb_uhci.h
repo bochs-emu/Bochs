@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_uhci.h,v 1.4 2009-02-08 09:05:52 vruppert Exp $
+// $Id: usb_uhci.h,v 1.5 2009-02-26 22:46:37 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Benjamin D Lunt (fys at frontiernet net)
@@ -212,6 +212,7 @@ private:
   static void set_irq_level(bx_bool level);
 
   static void init_device(Bit8u port, const char *devname);
+  static void remove_device(Bit8u port);
   static void usb_set_connect_status(Bit8u port, int type, bx_bool connected);
 
   static void usb_timer_handler(void *);

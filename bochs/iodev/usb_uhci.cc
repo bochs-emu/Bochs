@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_uhci.cc,v 1.8 2009-02-15 14:06:55 vruppert Exp $
+// $Id: usb_uhci.cc,v 1.9 2009-02-26 22:46:37 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Benjamin D Lunt (fys at frontiernet net)
@@ -70,10 +70,8 @@ bx_usb_uhci_c::~bx_usb_uhci_c()
   if (BX_UHCI_THIS device_buffer != NULL)
     delete [] BX_UHCI_THIS device_buffer;
 
-  for (int j=0; j<USB_NUM_PORTS; j++) {
-    if (BX_UHCI_THIS hub.usb_port[j].device != NULL) {
-      delete BX_UHCI_THIS hub.usb_port[j].device;
-    }
+  for (int i=0; i<USB_NUM_PORTS; i++) {
+    remove_device(i);
   }
 
   SIM->get_param_string(BXPN_UHCI_PORT1)->set_handler(NULL);
@@ -84,7 +82,7 @@ bx_usb_uhci_c::~bx_usb_uhci_c()
 
 void bx_usb_uhci_c::init(void)
 {
-  // called once when bochs initializes
+  unsigned i;
 
   BX_UHCI_THIS device_buffer = new Bit8u[65536];
 
@@ -101,7 +99,7 @@ void bx_usb_uhci_c::init(void)
   DEV_register_pci_handlers(this, &BX_UHCI_THIS hub.devfunc, BX_PLUGIN_USB_UHCI,
                             "Experimental USB UHCI");
 
-  for (unsigned i=0; i<256; i++) {
+  for (i=0; i<256; i++) {
     BX_UHCI_THIS hub.pci_conf[i] = 0x0;
   }
 
@@ -114,6 +112,12 @@ void bx_usb_uhci_c::init(void)
   SIM->get_param_string(BXPN_UHCI_PORT1)->set_runtime_param(1);
   SIM->get_param_string(BXPN_UHCI_PORT2)->set_handler(usb_param_handler);
   SIM->get_param_string(BXPN_UHCI_PORT2)->set_runtime_param(1);
+
+  for (i=0; i<USB_NUM_PORTS; i++) {
+    BX_UHCI_THIS hub.usb_port[i].device = NULL;
+  }
+  BX_UHCI_THIS mousedev = NULL;
+  BX_UHCI_THIS keybdev = NULL;
 
   //HACK: Turn on debug messages from the start
   //BX_UHCI_THIS setonoff(LOGLEV_DEBUG, ACT_REPORT);
@@ -192,17 +196,18 @@ void bx_usb_uhci_c::reset(unsigned type)
     BX_UHCI_THIS hub.usb_port[j].enabled = 0;
     BX_UHCI_THIS hub.usb_port[j].able_changed = 0;
     BX_UHCI_THIS hub.usb_port[j].status = 0;
-    if (BX_UHCI_THIS hub.usb_port[j].device != NULL) {
-      delete BX_UHCI_THIS hub.usb_port[j].device;
-      BX_UHCI_THIS hub.usb_port[j].device = NULL;
-    }
   }
 
-  BX_UHCI_THIS mousedev = NULL;
-  BX_UHCI_THIS keybdev = NULL;
-
-  init_device(0, SIM->get_param_string(BXPN_UHCI_PORT1)->getptr());
-  init_device(1, SIM->get_param_string(BXPN_UHCI_PORT2)->getptr());
+  if (BX_UHCI_THIS hub.usb_port[0].device == NULL) {
+    init_device(0, SIM->get_param_string(BXPN_UHCI_PORT1)->getptr());
+  } else {
+    usb_set_connect_status(0, BX_UHCI_THIS hub.usb_port[0].device->get_type(), 1);
+  }
+  if (BX_UHCI_THIS hub.usb_port[1].device == NULL) {
+    init_device(1, SIM->get_param_string(BXPN_UHCI_PORT2)->getptr());
+  } else {
+    usb_set_connect_status(1, BX_UHCI_THIS hub.usb_port[1].device->get_type(), 1);
+  }
 }
 
 void bx_usb_uhci_c::register_state(void)
@@ -321,6 +326,31 @@ void bx_usb_uhci_c::init_device(Bit8u port, const char *devname)
   bx_list_c *devlist = (bx_list_c*)SIM->get_param(pname, SIM->get_bochs_root());
   BX_UHCI_THIS hub.usb_port[port].device->register_state(devlist);
   usb_set_connect_status(port, type, 1);
+}
+
+void bx_usb_uhci_c::remove_device(Bit8u port)
+{
+  char pname[BX_PATHNAME_LEN];
+  int type;
+
+  if (BX_UHCI_THIS hub.usb_port[port].device != NULL) {
+    type = BX_UHCI_THIS hub.usb_port[port].device->get_type();
+    if ((type == USB_DEV_TYPE_MOUSE) ||
+        (type == USB_DEV_TYPE_TABLET)) {
+      if (BX_UHCI_THIS hub.usb_port[port].device == BX_UHCI_THIS mousedev) {
+        BX_UHCI_THIS mousedev = NULL;
+      }
+    } else if (type == USB_DEV_TYPE_KEYPAD) {
+      if (BX_UHCI_THIS hub.usb_port[port].device == BX_UHCI_THIS keybdev) {
+        BX_UHCI_THIS keybdev = NULL;
+      }
+    }
+    delete BX_UHCI_THIS hub.usb_port[port].device;
+    BX_UHCI_THIS hub.usb_port[port].device = NULL;
+    sprintf(pname, "usb_uhci.hub.port%d.device", port+1);
+    bx_list_c *devlist = (bx_list_c*)SIM->get_param(pname, SIM->get_bochs_root());
+    devlist->clear();
+  }
 }
 
 void bx_usb_uhci_c::set_irq_level(bx_bool level)
@@ -1112,23 +1142,7 @@ void bx_usb_uhci_c::usb_set_connect_status(Bit8u port, int type, bx_bool connect
         BX_UHCI_THIS hub.usb_port[port].low_speed = 0;
         BX_UHCI_THIS hub.usb_port[port].line_dminus = 0;
         BX_UHCI_THIS hub.usb_port[port].line_dplus = 0;
-        if ((type == USB_DEV_TYPE_MOUSE) ||
-            (type == USB_DEV_TYPE_TABLET)) {
-          if (BX_UHCI_THIS hub.usb_port[port].device == BX_UHCI_THIS mousedev) {
-            BX_UHCI_THIS mousedev = NULL;
-          }
-        } else if (type == USB_DEV_TYPE_KEYPAD) {
-          if (BX_UHCI_THIS hub.usb_port[port].device == BX_UHCI_THIS keybdev) {
-            BX_UHCI_THIS keybdev = NULL;
-          }
-        }
-        if (BX_UHCI_THIS hub.usb_port[port].device != NULL) {
-          delete BX_UHCI_THIS hub.usb_port[port].device;
-          BX_UHCI_THIS hub.usb_port[port].device = NULL;
-          sprintf(pname, "usb_uhci.hub.port%d.device", port+1);
-          bx_list_c *devlist = (bx_list_c*)SIM->get_param(pname, SIM->get_bochs_root());
-          devlist->clear();
-        }
+        remove_device(port);
       }
     }
   }
