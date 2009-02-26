@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_ohci.h,v 1.6 2009-02-24 17:15:27 vruppert Exp $
+// $Id: usb_ohci.h,v 1.7 2009-02-26 18:43:11 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Benjamin D Lunt (fys at frontiernet net)
@@ -114,10 +114,7 @@ typedef struct {
   int   interval_index;
 
   struct OHCI_OP_REGS {
-    struct {                     //   size                                on reset     HCD  HC
-      Bit32u reserved;           // 24 bit reserved                    = 0x000001 (?)   R   R
-      Bit8u  rev;                // 8 bit revision                     = 0x10           R   R
-    } HcRevision;                //                                    = 0x00000110
+    Bit16u HcRevision;
     struct {
       Bit32u reserved;           // 21 bit reserved                    = 0x000000       R   R
       bx_bool rwe;               //  1 bit RemoteWakeupEnable          = 0b             RW  R
@@ -159,18 +156,9 @@ typedef struct {
       Bit8u   reserved;          // 17 bit reserved                    = 0x00000        R   R
       Bit32s  fr;                // 14 bit FrameRemaining              = 0x0000         RW  R
     } HcFmRemaining;             //                                    = 0x00000000
-    struct {
-      Bit16u  reserved;          // 16 bit reserved                    = 0x00000        R   R
-      Bit16u  fn;                // 16 bit FrameNumber                 = 0x00000        R   RW
-    } HcFmNumber;                //                                    = 0x00000000
-    struct {
-      Bit32u  reserved;          // 18 bit reserved                    = 0x00000        R   R
-      Bit16u  ps;                // 14 bit PeriodicStart               = 0x00000        RW  R
-    } HcPeriodicStart;           //                                    = 0x00000000
-    struct {
-      Bit32u  reserved;          // 22 bit reserved                    = 0x00000        R   R
-      Bit16u  lst;               // 12 bit LSThreshold                 = 0x0628         RW  R
-    } HcLSThreshold;             //                                    = 0x00000628
+    Bit32u HcFmNumber;
+    Bit32u HcPeriodicStart;
+    Bit16u HcLSThreshold;
     struct {
       Bit8u   potpgt;            //  8 bit PowerOnToPowerGoodTime      = 0x10           RW  R
       Bit16u  reserved;          // 11 bit reserved                    = 0x000          R   R
@@ -217,7 +205,7 @@ typedef struct {
       bx_bool pss;               //  1 bit PortSuspendStatus           = 0b             RW  RW
       bx_bool pes;               //  1 bit PortEnableStatus            = 0b             RW  RW
       bx_bool ccs;               //  1 bit CurrentConnectStatus        = 0b             RW  RW
-    } HcRhPortStatus;            //                                    = 0x00000000
+    } HcRhPortStatus;
   } usb_port[USB_NUM_PORTS];
 
   Bit8u pci_conf[256];
@@ -258,10 +246,11 @@ private:
 
   static void reset_hc();
   static void reset_port(int);
-  static void set_irq_level(const bx_bool);
-  static void set_irq_state();
+  static void update_irq();
+  static void set_interrupt(Bit32u value);
 
   static void init_device(Bit8u port, const char *devname);
+  static void remove_device(Bit8u port);
   static void usb_set_connect_status(Bit8u port, int type, bx_bool connected);
 
   static void usb_frame_handler(void *);
