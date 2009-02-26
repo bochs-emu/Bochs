@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: access32.cc,v 1.23 2009-02-17 19:20:46 sshwarts Exp $
+// $Id: access32.cc,v 1.24 2009-02-26 21:56:53 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008 Stanislav Shwartsman
@@ -320,7 +320,7 @@ BX_CPU_C::write_virtual_dqword_aligned_32(unsigned s, Bit32u offset, const BxPac
     if (offset <= (seg->cache.u.segment.limit_scaled-15)) {
 accessOK:
       laddr = BX_CPU_THIS_PTR get_laddr32(s, offset);
-      unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 15);
+      unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 0);
       Bit32u lpf = AlignedAccessLPFOf(laddr, 15);
       bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
       if (tlbEntry->lpf == lpf) {
@@ -643,7 +643,7 @@ BX_CPU_C::read_virtual_dqword_aligned_32(unsigned s, Bit32u offset, BxPackedXmmR
     if (offset <= (seg->cache.u.segment.limit_scaled-15)) {
 accessOK:
       laddr = BX_CPU_THIS_PTR get_laddr32(s, offset);
-      unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 15);
+      unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 0);
       Bit32u lpf = AlignedAccessLPFOf(laddr, 15);
       bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
       if (tlbEntry->lpf == lpf) {

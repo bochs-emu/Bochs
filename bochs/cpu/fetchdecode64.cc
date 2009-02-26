@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.225 2009-02-06 15:03:47 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.226 2009-02-26 21:57:01 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -505,7 +505,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo64R[512*3] = {
 #endif
   /* 0F 39 /wr */ { 0, BX_IA_ERROR },
 #if (BX_SUPPORT_SSE >= 4) || (BX_SUPPORT_SSE >= 3 && BX_SUPPORT_SSE_EXTENSION > 0)
-  /* 0F 3A /wr */ { Bx3ByteOp, BX_IA_ERROR, BxOpcode3ByteTable0f3a }, // 3-byte escape
+  /* 0F 3A /wr */ { Bx3ByteOp | BxImmediate_Ib, BX_IA_ERROR, BxOpcode3ByteTable0f3a }, // 3-byte escape
 #else
   /* 0F 3A /wr */ { 0, BX_IA_ERROR },
 #endif
@@ -1032,7 +1032,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo64R[512*3] = {
 #endif
   /* 0F 39 /dr */ { 0, BX_IA_ERROR },
 #if (BX_SUPPORT_SSE >= 4) || (BX_SUPPORT_SSE >= 3 && BX_SUPPORT_SSE_EXTENSION > 0)
-  /* 0F 3A /dr */ { Bx3ByteOp, BX_IA_ERROR, BxOpcode3ByteTable0f3a }, // 3-byte escape
+  /* 0F 3A /dr */ { Bx3ByteOp | BxImmediate_Ib, BX_IA_ERROR, BxOpcode3ByteTable0f3a }, // 3-byte escape
 #else
   /* 0F 3A /dr */ { 0, BX_IA_ERROR },
 #endif
@@ -1559,7 +1559,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo64R[512*3] = {
 #endif
   /* 0F 39 /qr */ { 0, BX_IA_ERROR },
 #if (BX_SUPPORT_SSE >= 4) || (BX_SUPPORT_SSE >= 3 && BX_SUPPORT_SSE_EXTENSION > 0)
-  /* 0F 3A /qr */ { Bx3ByteOp, BX_IA_ERROR, BxOpcode3ByteTable0f3a }, // 3-byte escape
+  /* 0F 3A /qr */ { Bx3ByteOp | BxImmediate_Ib, BX_IA_ERROR, BxOpcode3ByteTable0f3a }, // 3-byte escape
 #else
   /* 0F 3A /qr */ { 0, BX_IA_ERROR },
 #endif
@@ -2092,7 +2092,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo64M[512*3] = {
 #endif
   /* 0F 39 /wm */ { 0, BX_IA_ERROR },
 #if (BX_SUPPORT_SSE >= 4) || (BX_SUPPORT_SSE >= 3 && BX_SUPPORT_SSE_EXTENSION > 0)
-  /* 0F 3A /wm */ { Bx3ByteOp, BX_IA_ERROR, BxOpcode3ByteTable0f3a }, // 3-byte escape
+  /* 0F 3A /wm */ { Bx3ByteOp | BxImmediate_Ib, BX_IA_ERROR, BxOpcode3ByteTable0f3a }, // 3-byte escape
 #else
   /* 0F 3A /wm */ { 0, BX_IA_ERROR },
 #endif
@@ -2619,7 +2619,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo64M[512*3] = {
 #endif
   /* 0F 39 /dm */ { 0, BX_IA_ERROR },
 #if (BX_SUPPORT_SSE >= 4) || (BX_SUPPORT_SSE >= 3 && BX_SUPPORT_SSE_EXTENSION > 0)
-  /* 0F 3A /dm */ { Bx3ByteOp, BX_IA_ERROR, BxOpcode3ByteTable0f3a }, // 3-byte escape
+  /* 0F 3A /dm */ { Bx3ByteOp | BxImmediate_Ib, BX_IA_ERROR, BxOpcode3ByteTable0f3a }, // 3-byte escape
 #else
   /* 0F 3A /dm */ { 0, BX_IA_ERROR },
 #endif
@@ -3146,7 +3146,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo64M[512*3] = {
 #endif
   /* 0F 39 /qm */ { 0, BX_IA_ERROR },
 #if (BX_SUPPORT_SSE >= 4) || (BX_SUPPORT_SSE >= 3 && BX_SUPPORT_SSE_EXTENSION > 0)
-  /* 0F 3A /qm */ { Bx3ByteOp, BX_IA_ERROR, BxOpcode3ByteTable0f3a }, // 3-byte escape
+  /* 0F 3A /qm */ { Bx3ByteOp | BxImmediate_Ib, BX_IA_ERROR, BxOpcode3ByteTable0f3a }, // 3-byte escape
 #else
   /* 0F 3A /qm */ { 0, BX_IA_ERROR },
 #endif
@@ -3691,6 +3691,12 @@ modrm_done:
           if (sse_prefix) {
             OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[sse_prefix-1]);
             break;
+          }
+          continue;
+        case BxPrefixSSE66:
+          /* For SSE opcodes with prefix 66 only */
+          if (sse_prefix != SSE_PREFIX_66) {
+            OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[0]); // BX_IA_ERROR
           }
           continue;
         case BxFPEscape:
