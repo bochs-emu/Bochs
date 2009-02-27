@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.288 2009-02-18 22:33:06 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.289 2009-02-27 20:00:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -835,7 +835,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RqCq(bxInstruction_c *i)
       // Reads of CR8 return zero extended APIC.TPR[7:4]
       // Write to CR8 update APIC.TPR[7:4]
 #if BX_SUPPORT_APIC
-      val_64 = (BX_CPU_THIS_PTR lapic.get_tpr() & 0xF) >> 4;
+      val_64 = (BX_CPU_THIS_PTR lapic.get_tpr() >> 4) & 0xF;
       break;
 #endif
     default:
