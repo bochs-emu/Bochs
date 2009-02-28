@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.578 2009-02-26 21:56:58 sshwarts Exp $
+// $Id: cpu.h,v 1.579 2009-02-28 09:28:18 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -3862,21 +3862,21 @@ enum {
 #define BxImmediate_BrOff32 BxImmediate_Id // Relative branch offset dword
 
 // Lookup for opcode and attributes in another opcode tables
-// Totally 7 opcode groups supported
-#define BxGroupX            0x0070 // bits 6..4: opcode groups definition
-#define BxGroupN            0x0010 // Group encoding: 001
-#define BxPrefixSSE         0x0020 // Group encoding: 010
-#define BxPrefixSSE66       0x0030 // Group encoding: 011
-#define BxFPEscape          0x0040 // Group encoding: 100
-#define BxRMGroup           0x0050 // Group encoding: 101
-#define Bx3ByteOp           0x0060 // Group encoding: 110
-#define BxOSizeGrp          0x0070 // Group encoding: 111
+// Totally 15 opcode groups supported
+#define BxGroupX            0x00f0 // bits 7..4: opcode groups definition
+#define BxGroupN            0x0010 // Group encoding: 0001
+#define BxPrefixSSE         0x0020 // Group encoding: 0010
+#define BxPrefixSSE66       0x0030 // Group encoding: 0011
+#define BxFPEscape          0x0040 // Group encoding: 0100
+#define BxRMGroup           0x0050 // Group encoding: 0101
+#define Bx3ByteOp           0x0060 // Group encoding: 0110
+#define BxOSizeGrp          0x0070 // Group encoding: 0111
 
-#define BxLockable          0x0080 // bit 7
-#define BxArithDstRM        0x0100 // bit 8
+#define BxLockable          0x0100 // bit 8
+#define BxArithDstRM        0x0200 // bit 8
 
 #if BX_SUPPORT_TRACE_CACHE
-  #define BxTraceEnd        0x0200 // bit 9
+  #define BxTraceEnd        0x0400 // bit 9
 #else
   #define BxTraceEnd        0
 #endif

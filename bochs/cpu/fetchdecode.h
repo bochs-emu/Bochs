@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.h,v 1.83 2009-02-26 21:57:00 sshwarts Exp $
+// $Id: fetchdecode.h,v 1.84 2009-02-28 09:28:18 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005 Stanislav Shwartsman
@@ -1272,18 +1272,6 @@ static const BxOpcodeInfo_t BxOpcodeGroupSSE_0f6a[3] = {
 
 static const BxOpcodeInfo_t BxOpcodeGroupSSE_0f6b[3] = {
   /* 66 */ { 0, BX_IA_PACKSSDW_VdqWdq },
-  /* F2 */ { 0, BX_IA_ERROR },
-  /* F3 */ { 0, BX_IA_ERROR }
-};
-
-static const BxOpcodeInfo_t BxOpcodeGroupSSE_0f6c[3] = {
-  /* 66 */ { 0, BX_IA_PUNPCKLQDQ_VdqWdq },
-  /* F2 */ { 0, BX_IA_ERROR },
-  /* F3 */ { 0, BX_IA_ERROR }
-};
-
-static const BxOpcodeInfo_t BxOpcodeGroupSSE_0f6d[3] = {
-  /* 66 */ { 0, BX_IA_PUNPCKHQDQ_VdqWdq },
   /* F2 */ { 0, BX_IA_ERROR },
   /* F3 */ { 0, BX_IA_ERROR }
 };
