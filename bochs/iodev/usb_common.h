@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_common.h,v 1.5 2009-02-17 16:43:51 vruppert Exp $
+// $Id: usb_common.h,v 1.6 2009-03-01 19:29:36 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Benjamin D Lunt (fys at frontiernet net)
@@ -139,6 +139,8 @@ public:
   usbdev_type get_type() {return d.type;}
   int get_speed() {return d.speed;}
   Bit8u get_address() {return d.addr;}
+
+  void usb_send_msg(int msg);
 
 protected:
   struct {

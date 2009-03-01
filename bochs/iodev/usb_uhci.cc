@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_uhci.cc,v 1.9 2009-02-26 22:46:37 vruppert Exp $
+// $Id: usb_uhci.cc,v 1.10 2009-03-01 19:29:36 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Benjamin D Lunt (fys at frontiernet net)
@@ -313,7 +313,7 @@ void bx_usb_uhci_c::init_device(Bit8u port, const char *devname)
   } else if (!strncmp(devname, "disk", 4)) {
     if ((strlen(devname) > 5) && (devname[4] == ':')) {
       type = USB_DEV_TYPE_DISK;
-      BX_UHCI_THIS hub.usb_port[port].device = new usb_msd_device_c();
+      BX_UHCI_THIS hub.usb_port[port].device = new usb_msd_device_c(devname+5);
     } else {
       BX_PANIC(("USB device 'disk' needs a filename separated with a colon"));
       return;
@@ -496,7 +496,7 @@ void bx_usb_uhci_c::write(Bit32u address, Bit32u value, unsigned io_len)
         for (unsigned i=0; i<USB_NUM_PORTS; i++) {
           if (BX_UHCI_THIS hub.usb_port[i].status) {
             if (BX_UHCI_THIS hub.usb_port[i].device != NULL) {
-              BX_UHCI_THIS usb_send_msg(BX_UHCI_THIS hub.usb_port[i].device, USB_MSG_RESET);
+              BX_UHCI_THIS hub.usb_port[i].device->usb_send_msg(USB_MSG_RESET);
             }
           }
           BX_UHCI_THIS hub.usb_port[i].connect_changed = 1;
@@ -638,7 +638,7 @@ void bx_usb_uhci_c::write(Bit32u address, Bit32u value, unsigned io_len)
               BX_UHCI_THIS hub.usb_port[port].low_speed =
                 (BX_UHCI_THIS hub.usb_port[port].device->get_speed() == USB_SPEED_LOW);
               usb_set_connect_status(port, BX_UHCI_THIS hub.usb_port[port].device->get_type(), 1);
-              BX_UHCI_THIS usb_send_msg(BX_UHCI_THIS hub.usb_port[port].device, USB_MSG_RESET);
+              BX_UHCI_THIS hub.usb_port[port].device->usb_send_msg(USB_MSG_RESET);
             }
           }
           BX_INFO(("Port%d: Reset", port+1));
@@ -1091,14 +1091,12 @@ bx_bool bx_usb_uhci_c::usb_mouse_enabled_changed(bx_bool enabled)
 
 void bx_usb_uhci_c::usb_set_connect_status(Bit8u port, int type, bx_bool connected)
 {
-  char pname[BX_PATHNAME_LEN];
-  char fname[BX_PATHNAME_LEN];
-
-  if (BX_UHCI_THIS hub.usb_port[port].device != NULL) {
-    if (BX_UHCI_THIS hub.usb_port[port].device->get_type() == type) {
+  usb_device_c *device = BX_UHCI_THIS hub.usb_port[port].device;
+  if (device != NULL) {
+    if (device->get_type() == type) {
       if (connected) {
         BX_UHCI_THIS hub.usb_port[port].low_speed =
-          (BX_UHCI_THIS hub.usb_port[port].device->get_speed() == USB_SPEED_LOW);
+          (device->get_speed() == USB_SPEED_LOW);
         if (BX_UHCI_THIS hub.usb_port[port].low_speed) {
           BX_UHCI_THIS hub.usb_port[port].line_dminus = 1;  //  dminus=1 & dplus=0 = low speed  (at idle time)
           BX_UHCI_THIS hub.usb_port[port].line_dplus = 0;   //  dminus=0 & dplus=1 = high speed (at idle time)
@@ -1121,17 +1119,12 @@ void bx_usb_uhci_c::usb_set_connect_status(Bit8u port, int type, bx_bool connect
         }
 
         if ((type == USB_DEV_TYPE_DISK) &&
-            (!BX_UHCI_THIS hub.usb_port[port].device->get_connected())) {
-          if (port == 0) {
-            strcpy(pname, BXPN_UHCI_PORT1);
-          } else {
-            strcpy(pname, BXPN_UHCI_PORT2);
-          }
-          strcpy(fname, SIM->get_param_string(pname)->getptr() + 5);
-          if (!((usb_msd_device_c*)BX_UHCI_THIS hub.usb_port[port].device)->init(fname)) {
+            (!device->get_connected())) {
+          if (!((usb_msd_device_c*)device)->init()) {
             usb_set_connect_status(port, USB_DEV_TYPE_DISK, 0);
           } else {
-            BX_INFO(("HD on USB port #%d: '%s'", port+1, fname));
+            BX_INFO(("HD on USB port #%d: '%s'", port+1,
+                     ((usb_msd_device_c*)device)->get_path()));
           }
         }
       } else {
@@ -1163,15 +1156,6 @@ bx_bool bx_usb_uhci_c::usb_key_enq(Bit8u *scan_code)
     return keybdev->key_enq(scan_code);
   }
   return 0;
-}
-
-// Send an internal message to a USB device
-void bx_usb_uhci_c::usb_send_msg(usb_device_c *dev, int msg)
-{
-    USBPacket p;
-    memset(&p, 0, sizeof(p));
-    p.pid = msg;
-    dev->handle_packet(&p);
 }
 
 // USB runtime parameter handler

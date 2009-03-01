@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_ohci.h,v 1.7 2009-02-26 18:43:11 vruppert Exp $
+// $Id: usb_ohci.h,v 1.8 2009-03-01 19:29:36 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Benjamin D Lunt (fys at frontiernet net)
@@ -107,6 +107,34 @@ struct OHCI_TD {
 };
 
 
+#define ISO_TD_GET_CC(x)      (((x)->dword0 & 0xF0000000) >> 28)
+#define ISO_TD_GET_FC(x)      (((x)->dword0 & 0x0F000000) >> 24)
+#define ISO_TD_GET_DI(x)      (((x)->dword0 & 0x00E00000) >> 21)
+#define ISO_TD_GET_SF(x)       ((x)->dword0 & 0x0000FFFF)
+#define ISO_TD_GET_BP0(x)     (((x)->dword1 & 0xFFFFF000) >> 12)
+#define ISO_TD_GET_NEXTTD(x)   ((x)->dword2 & 0xFFFFFFF0)
+#define ISO_TD_GET_BE(x)       ((x)->dword3)
+#define ISO_TD_GET_PSW0(x)     ((x)->dword4 & 0x0000FFFF)
+#define ISO_TD_GET_PSW1(x)    (((x)->dword4 & 0xFFFF0000) >> 16)
+#define ISO_TD_GET_PSW2(x)     ((x)->dword5 & 0x0000FFFF)
+#define ISO_TD_GET_PSW3(x)    (((x)->dword5 & 0xFFFF0000) >> 16)
+#define ISO_TD_GET_PSW4(x)     ((x)->dword6 & 0x0000FFFF)
+#define ISO_TD_GET_PSW5(x)    (((x)->dword6 & 0xFFFF0000) >> 16)
+#define ISO_TD_GET_PSW6(x)     ((x)->dword7 & 0x0000FFFF)
+#define ISO_TD_GET_PSW7(x)    (((x)->dword7 & 0xFFFF0000) >> 16)
+
+struct OHCI_ISO_TD {
+  Bit32u   dword0;
+  Bit32u   dword1;
+  Bit32u   dword2;
+  Bit32u   dword3;
+  Bit32u   dword4;
+  Bit32u   dword5;
+  Bit32u   dword6;
+  Bit32u   dword7;
+};
+
+
 typedef struct {
   bx_phy_address base_addr;
 
@@ -211,6 +239,8 @@ typedef struct {
   Bit8u pci_conf[256];
   Bit8u devfunc;
   unsigned ohci_done_count;
+  bx_bool  use_control_head;
+  bx_bool  use_bulk_head;
 
   int statusbar_id[2]; // IDs of the status LEDs
 } bx_usb_ohci_t;
@@ -258,7 +288,7 @@ private:
   static void usb_interval_handler(void *);
   void usb_interval_timer(void);
 
-  bx_bool process_ed(struct OHCI_ED *, const Bit32u, const bx_bool);
+  void process_ed(struct OHCI_ED *, const Bit32u);
   bx_bool process_td(struct OHCI_TD *, struct OHCI_ED *);
 
 #if BX_USE_USB_OHCI_SMF
@@ -268,7 +298,6 @@ private:
   bx_bool read_handler(bx_phy_address addr, unsigned len, void *data, void *param);
   bx_bool write_handler(bx_phy_address addr, unsigned len, void *data, void *param);
 #endif
-  void usb_send_msg(usb_device_c *dev, int msg);
 };
 
 #endif  // BX_IODEV_USB_OHCI_H

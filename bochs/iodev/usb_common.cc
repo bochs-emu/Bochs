@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_common.cc,v 1.5 2009-02-14 10:06:20 vruppert Exp $
+// $Id: usb_common.cc,v 1.6 2009-03-01 19:29:36 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Benjamin D Lunt (fys at frontiernet net)
@@ -253,6 +253,15 @@ void usb_device_c::register_state(bx_list_c *parent)
 // base class for USB devices
 usb_device_c::usb_device_c(void) {
   memset((void*)&d, 0, sizeof(d));
+}
+
+// Send an internal message to a USB device
+void usb_device_c::usb_send_msg(int msg)
+{
+  USBPacket p;
+  memset(&p, 0, sizeof(p));
+  p.pid = msg;
+  handle_packet(&p);
 }
 
 #endif // BX_SUPPORT_PCI && BX_SUPPORT_PCIUSB

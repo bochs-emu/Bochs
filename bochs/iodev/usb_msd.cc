@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_msd.cc,v 1.16 2009-02-17 16:43:51 vruppert Exp $
+// $Id: usb_msd.cc,v 1.17 2009-03-01 19:29:36 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Volker Ruppert
@@ -130,12 +130,13 @@ static const Bit8u bx_msd_config_descriptor[] = {
   0x00        /*  u8  ep_bInterval; */
 };
 
-usb_msd_device_c::usb_msd_device_c(void)
+usb_msd_device_c::usb_msd_device_c(const char *filename)
 {
   d.type = USB_DEV_TYPE_DISK;
   d.speed = USB_SPEED_FULL;
   strcpy(d.devname, "BOCHS USB HARDDRIVE");
   memset((void*)&s, 0, sizeof(s));
+  s.fname = filename;
 
   put("USBMS");
 }
@@ -148,11 +149,11 @@ usb_msd_device_c::~usb_msd_device_c(void)
   delete s.hdimage;
 }
 
-bx_bool usb_msd_device_c::init(const char *filename)
+bx_bool usb_msd_device_c::init()
 {
   s.hdimage = new default_image_t();
-  if (s.hdimage->open(filename) < 0) {
-    BX_ERROR(("could not open hard drive image file '%s'", filename));
+  if (s.hdimage->open(s.fname) < 0) {
+    BX_ERROR(("could not open hard drive image file '%s'", s.fname));
     return 0;
   } else {
     s.scsi_dev = new scsi_device_t(s.hdimage, 0, usb_msd_command_complete, (void*)this);

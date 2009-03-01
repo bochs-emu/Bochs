@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_uhci.h,v 1.5 2009-02-26 22:46:37 vruppert Exp $
+// $Id: usb_uhci.h,v 1.6 2009-03-01 19:29:36 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Benjamin D Lunt (fys at frontiernet net)
@@ -227,7 +227,6 @@ private:
   Bit32u read(Bit32u address, unsigned io_len);
   void   write(Bit32u address, Bit32u value, unsigned io_len);
 #endif
-  void usb_send_msg(usb_device_c *dev, int msg);
 };
 
 #endif
