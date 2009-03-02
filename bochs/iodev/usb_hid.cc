@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_hid.cc,v 1.14 2009-02-14 10:06:20 vruppert Exp $
+// $Id: usb_hid.cc,v 1.15 2009-03-02 21:21:16 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Volker Ruppert
@@ -360,8 +360,10 @@ usb_hid_device_c::usb_hid_device_c(usbdev_type type)
   d.speed = USB_SPEED_LOW;
   if (d.type == USB_DEV_TYPE_MOUSE) {
     strcpy(d.devname, "USB Mouse");
+    DEV_register_removable_mouse((void*)this, mouse_enq_static, mouse_enabled_changed);
   } else if (d.type == USB_DEV_TYPE_TABLET) {
     strcpy(d.devname, "USB Tablet");
+    DEV_register_removable_mouse((void*)this, mouse_enq_static, mouse_enabled_changed);
   } else if (d.type == USB_DEV_TYPE_KEYPAD) {
     strcpy(d.devname, "USB/PS2 Keypad");
   }
@@ -373,6 +375,10 @@ usb_hid_device_c::usb_hid_device_c(usbdev_type type)
 
 usb_hid_device_c::~usb_hid_device_c(void)
 {
+  if ((d.type == USB_DEV_TYPE_MOUSE) ||
+      (d.type == USB_DEV_TYPE_TABLET)) {
+    DEV_unregister_removable_mouse((void*)this);
+  }
 }
 
 void usb_hid_device_c::register_state_specific(bx_list_c *parent)
@@ -657,6 +663,16 @@ int usb_hid_device_c::mouse_poll(Bit8u *buf, int len)
     l = 6;
   }
   return l;
+}
+
+void usb_hid_device_c::mouse_enabled_changed(void *dev, bx_bool enabled)
+{
+  if (enabled) ((usb_hid_device_c*)dev)->handle_reset();
+}
+
+void usb_hid_device_c::mouse_enq_static(void *dev, int delta_x, int delta_y, int delta_z, unsigned button_state)
+{
+  ((usb_hid_device_c*)dev)->mouse_enq(delta_x, delta_y, delta_z, button_state);
 }
 
 void usb_hid_device_c::mouse_enq(int delta_x, int delta_y, int delta_z, unsigned button_state)

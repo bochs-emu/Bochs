@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: devices.cc,v 1.141 2009-02-23 18:38:25 vruppert Exp $
+// $Id: devices.cc,v 1.142 2009-03-02 21:21:16 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -120,7 +120,7 @@ void bx_devices_c::init(BX_MEM_C *newmem)
   const char *plugname;
 #endif
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.141 2009-02-23 18:38:25 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.142 2009-03-02 21:21:16 vruppert Exp $"));
   mem = newmem;
 
   /* set builtin default handlers, will be overwritten by the real default handler */
@@ -153,6 +153,9 @@ void bx_devices_c::init(BX_MEM_C *newmem)
   }
 
   // common mouse settings
+  bx_mouse_dev = NULL;
+  bx_mouse_enq = NULL;
+  bx_mouse_enabled_changed = NULL;
   mouse_captured = SIM->get_param_bool(BXPN_MOUSE_ENABLED)->get();
   mouse_type = SIM->get_param_enum(BXPN_MOUSE_TYPE)->get();
 
@@ -1060,42 +1063,48 @@ bx_bool bx_devices_c::is_usb_uhci_enabled(void)
 }
 
 // common mouse device handlers
+void bx_devices_c::register_removable_mouse(void *dev, bx_mouse_enq_t mouse_enq,
+                                            bx_mouse_enabled_changed_t mouse_enabled_changed)
+{
+  if (bx_mouse_dev == NULL) {
+    bx_mouse_dev = dev;
+    bx_mouse_enq = mouse_enq;
+    bx_mouse_enabled_changed = mouse_enabled_changed;
+  }
+}
+
+void bx_devices_c::unregister_removable_mouse(void *dev)
+{
+  if (dev == bx_mouse_dev) {
+    bx_mouse_dev = NULL;
+    bx_mouse_enq = NULL;
+    bx_mouse_enabled_changed = NULL;
+  }
+}
+
 void bx_devices_c::mouse_enabled_changed(bx_bool enabled)
 {
   mouse_captured = enabled;
-#if BX_SUPPORT_USB_UHCI
-  if (pluginUSB_UHCI->usb_mouse_enabled_changed(enabled)) {
+  if (bx_mouse_dev != NULL) {
+    bx_mouse_enabled_changed(bx_mouse_dev, enabled);
     return;
   }
-#endif
-#if BX_SUPPORT_USB_OHCI
-  if (pluginUSB_OHCI->usb_mouse_enabled_changed(enabled)) {
-    return;
-  }
-#endif
 
   pluginKeyboard->mouse_enabled_changed(enabled);
 }
 
 void bx_devices_c::mouse_motion(int delta_x, int delta_y, int delta_z, unsigned button_state)
 {
-
   // If mouse events are disabled on the GUI headerbar, don't
   // generate any mouse data
   if (!mouse_captured)
     return;
 
-  // if an usb mouse is connected, redirect mouse data to the usb device
-#if BX_SUPPORT_USB_UHCI
-  if (pluginUSB_UHCI->usb_mouse_enq(delta_x, delta_y, delta_z, button_state)) {
+  // if a removable mouse is connected, redirect mouse data to the device
+  if (bx_mouse_dev != NULL) {
+    bx_mouse_enq(bx_mouse_dev, delta_x, delta_y, delta_z, button_state);
     return;
   }
-#endif
-#if BX_SUPPORT_USB_OHCI
-  if (pluginUSB_OHCI->usb_mouse_enq(delta_x, delta_y, delta_z, button_state)) {
-    return;
-  }
-#endif
 
   // if type == serial, redirect mouse data to the serial device
   if ((mouse_type == BX_MOUSE_TYPE_SERIAL) ||

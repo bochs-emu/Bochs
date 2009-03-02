@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.111 2009-02-23 18:38:25 vruppert Exp $
+// $Id: iodev.h,v 1.112 2009-03-02 21:21:16 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -47,6 +47,9 @@ class bx_g2h_c;
 
 typedef Bit32u (*bx_read_handler_t)(void *, Bit32u, unsigned);
 typedef void   (*bx_write_handler_t)(void *, Bit32u, Bit32u, unsigned);
+
+typedef void (*bx_mouse_enq_t)(void *, int, int, int, unsigned);
+typedef void (*bx_mouse_enabled_changed_t)(void *, bx_bool);
 
 #if BX_USE_DEV_SMF
 #  define BX_DEV_SMF  static
@@ -332,12 +335,6 @@ public:
 #if BX_SUPPORT_PCIUSB
 class BOCHSAPI bx_pci_usb_stub_c : public bx_devmodel_c, public bx_pci_device_stub_c {
 public:
-  virtual bx_bool usb_mouse_enq(int delta_x, int delta_y, int delta_z, unsigned button_state) {
-    return 0;
-  }
-  virtual bx_bool usb_mouse_enabled_changed(bx_bool enabled) {
-    return 0;
-  }
   virtual bx_bool usb_key_enq(Bit8u *scan_code) {
     return 0;
   }
@@ -424,6 +421,8 @@ public:
   bx_bool unregister_irq(unsigned irq, const char *name);
   Bit32u inp(Bit16u addr, unsigned io_len) BX_CPP_AttrRegparmN(2);
   void   outp(Bit16u addr, Bit32u value, unsigned io_len) BX_CPP_AttrRegparmN(3);
+  void register_removable_mouse(void *dev, bx_mouse_enq_t mouse_enq, bx_mouse_enabled_changed_t mouse_enabled_changed);
+  void unregister_removable_mouse(void *dev);
   void mouse_enabled_changed(bx_bool enabled);
   void mouse_motion(int delta_x, int delta_y, int delta_z, unsigned button_state);
 
@@ -538,6 +537,9 @@ private:
 
   bx_bool mouse_captured; // host mouse capture enabled
   Bit8u mouse_type;
+  void *bx_mouse_dev;
+  bx_mouse_enq_t bx_mouse_enq;
+  bx_mouse_enabled_changed_t bx_mouse_enabled_changed;
 
   int timer_handle;
 

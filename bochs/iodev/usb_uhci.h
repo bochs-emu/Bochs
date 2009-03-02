@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_uhci.h,v 1.6 2009-03-01 19:29:36 vruppert Exp $
+// $Id: usb_uhci.h,v 1.7 2009-03-02 21:21:16 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Benjamin D Lunt (fys at frontiernet net)
@@ -187,8 +187,6 @@ public:
   virtual ~bx_usb_uhci_c();
   virtual void init(void);
   virtual void reset(unsigned);
-  virtual bx_bool usb_mouse_enq(int delta_x, int delta_y, int delta_z, unsigned button_state);
-  virtual bx_bool usb_mouse_enabled_changed(bx_bool enabled);
   virtual bx_bool usb_key_enq(Bit8u *scan_code);
   virtual void register_state(void);
   virtual void after_restore_state(void);
@@ -204,7 +202,6 @@ private:
   bx_bool       busy;
   Bit8u         *device_buffer;
 
-  usb_hid_device_c *mousedev;
   usb_hid_device_c *keybdev;
 
   USBPacket usb_packet;

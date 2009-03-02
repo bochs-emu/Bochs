@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_uhci.cc,v 1.10 2009-03-01 19:29:36 vruppert Exp $
+// $Id: usb_uhci.cc,v 1.11 2009-03-02 21:21:16 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Benjamin D Lunt (fys at frontiernet net)
@@ -116,7 +116,6 @@ void bx_usb_uhci_c::init(void)
   for (i=0; i<USB_NUM_PORTS; i++) {
     BX_UHCI_THIS hub.usb_port[i].device = NULL;
   }
-  BX_UHCI_THIS mousedev = NULL;
   BX_UHCI_THIS keybdev = NULL;
 
   //HACK: Turn on debug messages from the start
@@ -295,15 +294,9 @@ void bx_usb_uhci_c::init_device(Bit8u port, const char *devname)
   if (!strcmp(devname, "mouse")) {
     type = USB_DEV_TYPE_MOUSE;
     BX_UHCI_THIS hub.usb_port[port].device = new usb_hid_device_c(type);
-    if (BX_UHCI_THIS mousedev == NULL) {
-      BX_UHCI_THIS mousedev = (usb_hid_device_c*)BX_UHCI_THIS hub.usb_port[port].device;
-    }
   } else if (!strcmp(devname, "tablet")) {
     type = USB_DEV_TYPE_TABLET;
     BX_UHCI_THIS hub.usb_port[port].device = new usb_hid_device_c(type);
-    if (BX_UHCI_THIS mousedev == NULL) {
-      BX_UHCI_THIS mousedev = (usb_hid_device_c*)BX_UHCI_THIS hub.usb_port[port].device;
-    }
   } else if (!strcmp(devname, "keypad")) {
     type = USB_DEV_TYPE_KEYPAD;
     BX_UHCI_THIS hub.usb_port[port].device = new usb_hid_device_c(type);
@@ -335,12 +328,7 @@ void bx_usb_uhci_c::remove_device(Bit8u port)
 
   if (BX_UHCI_THIS hub.usb_port[port].device != NULL) {
     type = BX_UHCI_THIS hub.usb_port[port].device->get_type();
-    if ((type == USB_DEV_TYPE_MOUSE) ||
-        (type == USB_DEV_TYPE_TABLET)) {
-      if (BX_UHCI_THIS hub.usb_port[port].device == BX_UHCI_THIS mousedev) {
-        BX_UHCI_THIS mousedev = NULL;
-      }
-    } else if (type == USB_DEV_TYPE_KEYPAD) {
+    if (type == USB_DEV_TYPE_KEYPAD) {
       if (BX_UHCI_THIS hub.usb_port[port].device == BX_UHCI_THIS keybdev) {
         BX_UHCI_THIS keybdev = NULL;
       }
@@ -1080,15 +1068,6 @@ void bx_usb_uhci_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_l
   BX_DEBUG(("USB UHCI write register 0x%02x                   value 0x%s", address, szTmp));
 }
 
-bx_bool bx_usb_uhci_c::usb_mouse_enabled_changed(bx_bool enabled)
-{
-  if (BX_UHCI_THIS mousedev != NULL) {
-    if (enabled) mousedev->handle_reset();
-    return 1;
-  }
-  return 0;
-}
-
 void bx_usb_uhci_c::usb_set_connect_status(Bit8u port, int type, bx_bool connected)
 {
   usb_device_c *device = BX_UHCI_THIS hub.usb_port[port].device;
@@ -1139,15 +1118,6 @@ void bx_usb_uhci_c::usb_set_connect_status(Bit8u port, int type, bx_bool connect
       }
     }
   }
-}
-
-bx_bool bx_usb_uhci_c::usb_mouse_enq(int delta_x, int delta_y, int delta_z, unsigned button_state)
-{
-  if (BX_UHCI_THIS mousedev != NULL) {
-    mousedev->mouse_enq(delta_x, delta_y, delta_z, button_state);
-    return 1;
-  }
-  return 0;
 }
 
 bx_bool bx_usb_uhci_c::usb_key_enq(Bit8u *scan_code)
