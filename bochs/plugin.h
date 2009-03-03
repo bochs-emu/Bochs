@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: plugin.h,v 1.77 2009-03-03 18:29:51 vruppert Exp $
+// $Id: plugin.h,v 1.78 2009-03-03 20:34:50 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  The Bochs Project
@@ -129,6 +129,7 @@ extern "C" {
 #define DEV_optional_key_enq(a) (bx_devices.optional_key_enq(a))
 #define DEV_register_removable_keyboard(a,b) (bx_devices.register_removable_keyboard(a,b))
 #define DEV_unregister_removable_keyboard(a) (bx_devices.unregister_removable_keyboard(a))
+#define DEV_register_default_mouse(a,b,c) (bx_devices.register_default_mouse(a,b,c))
 #define DEV_register_removable_mouse(a,b,c) (bx_devices.register_removable_mouse(a,b,c))
 #define DEV_unregister_removable_mouse(a) (bx_devices.unregister_removable_mouse(a))
 

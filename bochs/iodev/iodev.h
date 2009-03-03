@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.113 2009-03-03 18:29:51 vruppert Exp $
+// $Id: iodev.h,v 1.114 2009-03-03 20:34:50 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -111,12 +111,6 @@ class BOCHSAPI bx_keyb_stub_c : public bx_devmodel_c {
 public:
   virtual ~bx_keyb_stub_c() {}
   // stubs for bx_keyb_c methods
-  virtual void mouse_enabled_changed(bx_bool enabled) {
-    STUBFUNC(keyboard, mouse_enabled_changed);
-  }
-  virtual void mouse_motion(int delta_x, int delta_y, int delta_z, unsigned button_state) {
-    STUBFUNC(keyboard, mouse_motion);
-  }
   virtual void gen_scancode(Bit32u key) {
     STUBFUNC(keyboard, gen_scancode);
   }
@@ -326,26 +320,10 @@ public:
   }
 };
 
-class BOCHSAPI bx_serial_stub_c : public bx_devmodel_c {
-public:
-  virtual void serial_mouse_enq(int delta_x, int delta_y, int delta_z, unsigned button_state) {
-    STUBFUNC(serial, serial_mouse_enq);
-  }
-};
-
 #if BX_SUPPORT_ACPI
 class BOCHSAPI bx_acpi_ctrl_stub_c : public bx_devmodel_c, public bx_pci_device_stub_c {
 public:
   virtual void generate_smi(Bit8u value) {}
-};
-#endif
-
-#if BX_SUPPORT_BUSMOUSE
-class BOCHSAPI bx_busm_stub_c : public bx_devmodel_c {
-public:
-  virtual void bus_mouse_enq(int delta_x, int delta_y, int delta_z, unsigned button_state) {
-    STUBFUNC(busmouse, bus_mouse_enq);
-  }
 };
 #endif
 
@@ -416,6 +394,7 @@ public:
 
   void register_removable_keyboard(void *dev, bx_keyb_enq_t keyb_enq);
   void unregister_removable_keyboard(void *dev);
+  void register_default_mouse(void *dev, bx_mouse_enq_t mouse_enq, bx_mouse_enabled_changed_t mouse_enabled_changed);
   void register_removable_mouse(void *dev, bx_mouse_enq_t mouse_enq, bx_mouse_enabled_changed_t mouse_enabled_changed);
   void unregister_removable_mouse(void *dev);
   bx_bool optional_key_enq(Bit8u *scan_code);
@@ -436,15 +415,11 @@ public:
   bx_dma_stub_c     *pluginDmaDevice;
   bx_floppy_stub_c  *pluginFloppyDevice;
   bx_cmos_stub_c    *pluginCmosDevice;
-  bx_serial_stub_c  *pluginSerialDevice;
   bx_vga_stub_c     *pluginVgaDevice;
   bx_pic_stub_c     *pluginPicDevice;
   bx_hard_drive_stub_c *pluginHardDrive;
   bx_ne2k_stub_c    *pluginNE2kDevice;
   bx_speaker_stub_c *pluginSpeaker;
-#if BX_SUPPORT_BUSMOUSE
-  bx_busm_stub_c    *pluginBusMouse;
-#endif
 #if BX_SUPPORT_IODEBUG
   bx_iodebug_stub_c *pluginIODebug;
 #endif
@@ -459,9 +434,6 @@ public:
   // loaded
   bx_cmos_stub_c stubCmos;
   bx_keyb_stub_c stubKeyboard;
-#if BX_SUPPORT_BUSMOUSE
-  bx_busm_stub_c stubBusMouse;
-#endif
   bx_hard_drive_stub_c stubHardDrive;
   bx_dma_stub_c  stubDma;
   bx_pic_stub_c  stubPic;
@@ -472,7 +444,6 @@ public:
   bx_pci_ide_stub_c stubPciIde;
   bx_ne2k_stub_c    stubNE2k;
   bx_speaker_stub_c stubSpeaker;
-  bx_serial_stub_c  stubSerial;
 #if BX_SUPPORT_ACPI
   bx_acpi_ctrl_stub_c stubACPIController;
 #endif
@@ -528,7 +499,7 @@ private:
     void *dev;
     bx_mouse_enq_t enq_event;
     bx_mouse_enabled_changed_t enabled_changed;
-  } bx_mouse;
+  } bx_mouse[2];
   struct {
     void *dev;
     bx_keyb_enq_t enq_event;

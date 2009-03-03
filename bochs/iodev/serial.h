@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial.h,v 1.36 2009-02-08 09:05:52 vruppert Exp $
+// $Id: serial.h,v 1.37 2009-03-03 20:34:50 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -204,13 +204,12 @@ typedef struct {
 
 
 
-class bx_serial_c : public bx_serial_stub_c {
+class bx_serial_c : public bx_devmodel_c {
 public:
   bx_serial_c();
   virtual ~bx_serial_c();
   virtual void init(void);
   virtual void reset(unsigned type);
-  virtual void serial_mouse_enq(int delta_x, int delta_y, int delta_z, unsigned button_state);
   virtual void register_state(void);
 
 private:
@@ -241,6 +240,9 @@ private:
 
   static void fifo_timer_handler(void *);
   BX_SER_SMF void fifo_timer(void);
+
+  static void mouse_enq_static(void *dev, int delta_x, int delta_y, int delta_z, unsigned button_state);
+  void mouse_enq(int delta_x, int delta_y, int delta_z, unsigned button_state);
 
   static Bit32u read_handler(void *this_ptr, Bit32u address, unsigned io_len);
   static void   write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len);

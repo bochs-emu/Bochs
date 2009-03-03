@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial.cc,v 1.89 2009-02-08 09:05:52 vruppert Exp $
+// $Id: serial.cc,v 1.90 2009-03-03 20:34:50 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -61,7 +61,6 @@ bx_serial_c *theSerialDevice = NULL;
 int libserial_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
 {
   theSerialDevice = new bx_serial_c();
-  bx_devices.pluginSerialDevice = theSerialDevice;
   BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theSerialDevice, BX_PLUGIN_SERIAL);
   return(0); // Success
 }
@@ -435,6 +434,11 @@ bx_serial_c::init(void)
       }
       BX_INFO(("com%d at 0x%04x irq %d", i+1, ports[i], BX_SER_THIS s[i].IRQ));
     }
+  }
+  if ((BX_SER_THIS mouse_type == BX_MOUSE_TYPE_SERIAL) ||
+      (BX_SER_THIS mouse_type == BX_MOUSE_TYPE_SERIAL_WHEEL) ||
+      (BX_SER_THIS mouse_type == BX_MOUSE_TYPE_SERIAL_MSYS)) {
+    DEV_register_default_mouse(this, mouse_enq_static, NULL);
   }
 }
 
@@ -1534,8 +1538,12 @@ bx_serial_c::fifo_timer(void)
 }
 
 
-  void
-bx_serial_c::serial_mouse_enq(int delta_x, int delta_y, int delta_z, unsigned button_state)
+void bx_serial_c::mouse_enq_static(void *dev, int delta_x, int delta_y, int delta_z, unsigned button_state)
+{
+  ((bx_serial_c*)dev)->mouse_enq(delta_x, delta_y, delta_z, button_state);
+}
+
+void bx_serial_c::mouse_enq(int delta_x, int delta_y, int delta_z, unsigned button_state)
 {
   Bit8u b1, b2, b3, mouse_data[5];
   int bytes, tail;

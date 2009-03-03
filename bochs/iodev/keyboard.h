@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.h,v 1.47 2009-02-08 09:05:52 vruppert Exp $
+// $Id: keyboard.h,v 1.48 2009-03-03 20:34:50 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -53,8 +53,6 @@ public:
   // override stubs from bx_keyb_stub_c
   virtual void gen_scancode(Bit32u key);
   virtual void paste_bytes(Bit8u *data, Bit32s length);
-  virtual void mouse_enabled_changed(bx_bool enabled);
-  virtual void mouse_motion(int delta_x, int delta_y, int delta_z, unsigned button_state);
   virtual void register_state(void);
   virtual void after_restore_state(void);
 
@@ -227,6 +225,11 @@ private:
   BX_KEY_SMF void     controller_enQ(Bit8u data, unsigned source);
   BX_KEY_SMF bx_bool  mouse_enQ_packet(Bit8u b1, Bit8u b2, Bit8u b3, Bit8u b4);
   BX_KEY_SMF void     mouse_enQ(Bit8u mouse_data);
+
+  static void mouse_enabled_changed_static(void *dev, bx_bool enabled);
+  void mouse_enabled_changed(bx_bool enabled);
+  static void mouse_enq_static(void *dev, int delta_x, int delta_y, int delta_z, unsigned button_state);
+  void mouse_motion(int delta_x, int delta_y, int delta_z, unsigned button_state);
 
   static void   timer_handler(void *);
   void   timer(void);
