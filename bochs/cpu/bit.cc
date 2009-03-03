@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bit.cc,v 1.61 2009-03-03 06:18:00 sshwarts Exp $
+// $Id: bit.cc,v 1.62 2009-03-03 16:55:20 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -407,7 +407,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVBE_GqEq(bxInstruction_c *i)
   b5 = val64 & 0xff; val64 >>= 8;
   b6 = val64 & 0xff; val64 >>= 8;
   b7 = val64;
-  val64 = (b0<<56) | (b1<<48) | (b2<<40) | (b3<<32) | (b4<<24) | (b4<<16) | (b4<<8) | b7;
+  val64 = (b0<<56) | (b1<<48) | (b2<<40) | (b3<<32) | (b4<<24) | (b5<<16) | (b6<<8) | b7;
 
   BX_WRITE_64BIT_REG(i->nnn(), val64);
 #else
@@ -430,7 +430,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVBE_EqGq(bxInstruction_c *i)
   b5 = val64 & 0xff; val64 >>= 8;
   b6 = val64 & 0xff; val64 >>= 8;
   b7 = val64;
-  val64 = (b0<<56) | (b1<<48) | (b2<<40) | (b3<<32) | (b4<<24) | (b4<<16) | (b4<<8) | b7;
+  val64 = (b0<<56) | (b1<<48) | (b2<<40) | (b3<<32) | (b4<<24) | (b5<<16) | (b6<<8) | b7;
 
   if (i->modC0()) {
     BX_WRITE_64BIT_REG(i->rm(), val64);
