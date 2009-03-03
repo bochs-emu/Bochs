@@ -88,6 +88,8 @@ Detailed change log :
   - Updated Bochs TESTFORM to version 0.4
 
 - SF patches applied
+ [2655090] 64 bit BSWAP with REX.W broken by M. Eby
+ [2645919] CR8 bug when reading by M. Eby
  [1895665] kvm: bios: add support to memory above the pci hole by Izik Eidus
  [2403372] rombios: check for valid cdrom before using it by Sebastian
  [2307269] acpi: handle S3 by Sebastian
