@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_hid.cc,v 1.15 2009-03-02 21:21:16 vruppert Exp $
+// $Id: usb_hid.cc,v 1.16 2009-03-03 18:29:51 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Volker Ruppert
@@ -366,6 +366,7 @@ usb_hid_device_c::usb_hid_device_c(usbdev_type type)
     DEV_register_removable_mouse((void*)this, mouse_enq_static, mouse_enabled_changed);
   } else if (d.type == USB_DEV_TYPE_KEYPAD) {
     strcpy(d.devname, "USB/PS2 Keypad");
+    DEV_register_removable_keyboard((void*)this, key_enq_static);
   }
   d.connected = 1;
   memset((void*)&s, 0, sizeof(s));
@@ -378,6 +379,8 @@ usb_hid_device_c::~usb_hid_device_c(void)
   if ((d.type == USB_DEV_TYPE_MOUSE) ||
       (d.type == USB_DEV_TYPE_TABLET)) {
     DEV_unregister_removable_mouse((void*)this);
+  } else if (d.type == USB_DEV_TYPE_KEYPAD) {
+    DEV_unregister_removable_keyboard((void*)this);
   }
 }
 
@@ -737,6 +740,11 @@ int usb_hid_device_c::keypad_poll(Bit8u *buf, int len)
     l = 8;
   }
   return l;
+}
+
+bx_bool usb_hid_device_c::key_enq_static(void *dev, Bit8u *scan_code)
+{
+  return ((usb_hid_device_c*)dev)->key_enq(scan_code);
 }
 
 bx_bool usb_hid_device_c::key_enq(Bit8u *scan_code)

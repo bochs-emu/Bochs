@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_ohci.h,v 1.9 2009-03-02 21:21:16 vruppert Exp $
+// $Id: usb_ohci.h,v 1.10 2009-03-03 18:29:51 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Benjamin D Lunt (fys at frontiernet net)
@@ -247,13 +247,12 @@ typedef struct {
 
 
 
-class bx_usb_ohci_c : public bx_pci_usb_stub_c {
+class bx_usb_ohci_c : public bx_devmodel_c, public bx_pci_device_stub_c {
 public:
   bx_usb_ohci_c();
   virtual ~bx_usb_ohci_c();
   virtual void init(void);
   virtual void reset(unsigned);
-  virtual bx_bool usb_key_enq(Bit8u *scan_code);
   virtual void register_state(void);
   virtual void after_restore_state(void);
   virtual Bit32u  pci_read_handler(Bit8u address, unsigned io_len);
@@ -266,8 +265,6 @@ private:
 
   bx_usb_ohci_t hub;
   Bit8u         *device_buffer;
-
-  usb_hid_device_c *keybdev;
 
   USBPacket usb_packet;
 

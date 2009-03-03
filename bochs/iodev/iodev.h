@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.112 2009-03-02 21:21:16 vruppert Exp $
+// $Id: iodev.h,v 1.113 2009-03-03 18:29:51 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -48,6 +48,7 @@ class bx_g2h_c;
 typedef Bit32u (*bx_read_handler_t)(void *, Bit32u, unsigned);
 typedef void   (*bx_write_handler_t)(void *, Bit32u, Bit32u, unsigned);
 
+typedef bx_bool (*bx_keyb_enq_t)(void *, Bit8u *);
 typedef void (*bx_mouse_enq_t)(void *, int, int, int, unsigned);
 typedef void (*bx_mouse_enabled_changed_t)(void *, bx_bool);
 
@@ -332,15 +333,6 @@ public:
   }
 };
 
-#if BX_SUPPORT_PCIUSB
-class BOCHSAPI bx_pci_usb_stub_c : public bx_devmodel_c, public bx_pci_device_stub_c {
-public:
-  virtual bx_bool usb_key_enq(Bit8u *scan_code) {
-    return 0;
-  }
-};
-#endif
-
 #if BX_SUPPORT_ACPI
 class BOCHSAPI bx_acpi_ctrl_stub_c : public bx_devmodel_c, public bx_pci_device_stub_c {
 public:
@@ -421,8 +413,12 @@ public:
   bx_bool unregister_irq(unsigned irq, const char *name);
   Bit32u inp(Bit16u addr, unsigned io_len) BX_CPP_AttrRegparmN(2);
   void   outp(Bit16u addr, Bit32u value, unsigned io_len) BX_CPP_AttrRegparmN(3);
+
+  void register_removable_keyboard(void *dev, bx_keyb_enq_t keyb_enq);
+  void unregister_removable_keyboard(void *dev);
   void register_removable_mouse(void *dev, bx_mouse_enq_t mouse_enq, bx_mouse_enabled_changed_t mouse_enabled_changed);
   void unregister_removable_mouse(void *dev);
+  bx_bool optional_key_enq(Bit8u *scan_code);
   void mouse_enabled_changed(bx_bool enabled);
   void mouse_motion(int delta_x, int delta_y, int delta_z, unsigned button_state);
 
@@ -441,12 +437,6 @@ public:
   bx_floppy_stub_c  *pluginFloppyDevice;
   bx_cmos_stub_c    *pluginCmosDevice;
   bx_serial_stub_c  *pluginSerialDevice;
-#if BX_SUPPORT_USB_UHCI
-  bx_pci_usb_stub_c *pluginUSB_UHCI;
-#endif
-#if BX_SUPPORT_USB_OHCI
-  bx_pci_usb_stub_c *pluginUSB_OHCI;
-#endif
   bx_vga_stub_c     *pluginVgaDevice;
   bx_pic_stub_c     *pluginPicDevice;
   bx_hard_drive_stub_c *pluginHardDrive;
@@ -483,9 +473,6 @@ public:
   bx_ne2k_stub_c    stubNE2k;
   bx_speaker_stub_c stubSpeaker;
   bx_serial_stub_c  stubSerial;
-#if BX_SUPPORT_PCIUSB
-  bx_pci_usb_stub_c stubUsbAdapter;
-#endif
 #if BX_SUPPORT_ACPI
   bx_acpi_ctrl_stub_c stubACPIController;
 #endif
@@ -537,9 +524,15 @@ private:
 
   bx_bool mouse_captured; // host mouse capture enabled
   Bit8u mouse_type;
-  void *bx_mouse_dev;
-  bx_mouse_enq_t bx_mouse_enq;
-  bx_mouse_enabled_changed_t bx_mouse_enabled_changed;
+  struct {
+    void *dev;
+    bx_mouse_enq_t enq_event;
+    bx_mouse_enabled_changed_t enabled_changed;
+  } bx_mouse;
+  struct {
+    void *dev;
+    bx_keyb_enq_t enq_event;
+  } bx_keyboard;
 
   int timer_handle;
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: plugin.h,v 1.76 2009-03-02 21:21:16 vruppert Exp $
+// $Id: plugin.h,v 1.77 2009-03-03 18:29:51 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  The Bochs Project
@@ -124,6 +124,11 @@ extern "C" {
 #define DEV_mouse_enabled_changed(en) (bx_devices.mouse_enabled_changed(en))
 #define DEV_mouse_motion(dx, dy, state) (bx_devices.mouse_motion(dx, dy, 0, state))
 #define DEV_mouse_motion_ext(dx, dy, dz, state) (bx_devices.mouse_motion(dx, dy, dz, state))
+
+///////// Removable devices macros
+#define DEV_optional_key_enq(a) (bx_devices.optional_key_enq(a))
+#define DEV_register_removable_keyboard(a,b) (bx_devices.register_removable_keyboard(a,b))
+#define DEV_unregister_removable_keyboard(a) (bx_devices.unregister_removable_keyboard(a))
 #define DEV_register_removable_mouse(a,b,c) (bx_devices.register_removable_mouse(a,b,c))
 #define DEV_unregister_removable_mouse(a) (bx_devices.unregister_removable_mouse(a))
 
@@ -228,16 +233,6 @@ extern "C" {
 ///////// Speaker macros
 #define DEV_speaker_beep_on(frequency) bx_devices.pluginSpeaker->beep_on(frequency)
 #define DEV_speaker_beep_off() bx_devices.pluginSpeaker->beep_off()
-
-///////// USB device macros
-#if BX_SUPPORT_USB_UHCI
-#define DEV_usb_uhci_key_enq(scan_code) \
-    (bx_devices.pluginUSB_UHCI->usb_key_enq(scan_code))
-#endif
-#if BX_SUPPORT_USB_OHCI
-#define DEV_usb_ohci_key_enq(scan_code) \
-    (bx_devices.pluginUSB_OHCI->usb_key_enq(scan_code))
-#endif
 
 //////// Memory macros
 #define DEV_register_memory_handlers(param,rh,wh,b,e) \

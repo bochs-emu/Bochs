@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_hid.h,v 1.10 2009-03-02 21:21:16 vruppert Exp $
+// $Id: usb_hid.h,v 1.11 2009-03-03 18:29:51 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Volker Ruppert
@@ -34,7 +34,6 @@ public:
   virtual int handle_control(int request, int value, int index, int length, Bit8u *data);
   virtual int handle_data(USBPacket *p);
   virtual void register_state_specific(bx_list_c *parent);
-  bx_bool key_enq(Bit8u *scan_code);
 
 private:
   struct {
@@ -49,6 +48,8 @@ private:
     Bit8u key_pad_packet[8];
   } s;
 
+  static bx_bool key_enq_static(void *dev, Bit8u *scan_code);
+  bx_bool key_enq(Bit8u *scan_code);
   static void mouse_enabled_changed(void *dev, bx_bool enabled);
   static void mouse_enq_static(void *dev, int delta_x, int delta_y, int delta_z, unsigned button_state);
   void mouse_enq(int delta_x, int delta_y, int delta_z, unsigned button_state);

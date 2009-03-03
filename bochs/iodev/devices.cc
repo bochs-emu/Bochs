@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: devices.cc,v 1.142 2009-03-02 21:21:16 vruppert Exp $
+// $Id: devices.cc,v 1.143 2009-03-03 18:29:51 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -79,12 +79,6 @@ void bx_devices_c::init_stubs()
 #if BX_SUPPORT_ACPI
   pluginACPIController = &stubACPIController;
 #endif
-#if BX_SUPPORT_USB_UHCI
-    pluginUSB_UHCI = &stubUsbAdapter;
-#endif
-#if BX_SUPPORT_USB_OHCI
-    pluginUSB_OHCI = &stubUsbAdapter;
-#endif
 #endif
   pluginKeyboard = &stubKeyboard;
   pluginDmaDevice = &stubDma;
@@ -120,7 +114,7 @@ void bx_devices_c::init(BX_MEM_C *newmem)
   const char *plugname;
 #endif
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.142 2009-03-02 21:21:16 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.143 2009-03-03 18:29:51 vruppert Exp $"));
   mem = newmem;
 
   /* set builtin default handlers, will be overwritten by the real default handler */
@@ -152,10 +146,13 @@ void bx_devices_c::init(BX_MEM_C *newmem)
     irq_handler_name[i] = NULL;
   }
 
+  // removable devices init
+  bx_keyboard.dev = NULL;
+  bx_keyboard.enq_event = NULL;
+  bx_mouse.dev = NULL;
+  bx_mouse.enq_event = NULL;
+  bx_mouse.enabled_changed = NULL;
   // common mouse settings
-  bx_mouse_dev = NULL;
-  bx_mouse_enq = NULL;
-  bx_mouse_enabled_changed = NULL;
   mouse_captured = SIM->get_param_bool(BXPN_MOUSE_ENABLED)->get();
   mouse_type = SIM->get_param_enum(BXPN_MOUSE_TYPE)->get();
 
@@ -1062,31 +1059,56 @@ bx_bool bx_devices_c::is_usb_uhci_enabled(void)
   return 0;
 }
 
-// common mouse device handlers
+// removable keyboard/mouse registration
+void bx_devices_c::register_removable_keyboard(void *dev, bx_keyb_enq_t keyb_enq)
+{
+  if (bx_keyboard.dev == NULL) {
+    bx_keyboard.dev = dev;
+    bx_keyboard.enq_event = keyb_enq;
+  }
+}
+
+void bx_devices_c::unregister_removable_keyboard(void *dev)
+{
+  if (dev == bx_mouse.dev) {
+    bx_keyboard.dev = NULL;
+    bx_keyboard.enq_event = NULL;
+  }
+}
+
 void bx_devices_c::register_removable_mouse(void *dev, bx_mouse_enq_t mouse_enq,
                                             bx_mouse_enabled_changed_t mouse_enabled_changed)
 {
-  if (bx_mouse_dev == NULL) {
-    bx_mouse_dev = dev;
-    bx_mouse_enq = mouse_enq;
-    bx_mouse_enabled_changed = mouse_enabled_changed;
+  if (bx_mouse.dev == NULL) {
+    bx_mouse.dev = dev;
+    bx_mouse.enq_event = mouse_enq;
+    bx_mouse.enabled_changed = mouse_enabled_changed;
   }
 }
 
 void bx_devices_c::unregister_removable_mouse(void *dev)
 {
-  if (dev == bx_mouse_dev) {
-    bx_mouse_dev = NULL;
-    bx_mouse_enq = NULL;
-    bx_mouse_enabled_changed = NULL;
+  if (dev == bx_mouse.dev) {
+    bx_mouse.dev = NULL;
+    bx_mouse.enq_event = NULL;
+    bx_mouse.enabled_changed = NULL;
   }
 }
 
+bx_bool bx_devices_c::optional_key_enq(Bit8u *scan_code)
+{
+  if (bx_keyboard.dev != NULL) {
+    return bx_keyboard.enq_event(bx_keyboard.dev, scan_code);
+  }
+  return 0;
+}
+
+// common mouse device handlers
 void bx_devices_c::mouse_enabled_changed(bx_bool enabled)
 {
   mouse_captured = enabled;
-  if (bx_mouse_dev != NULL) {
-    bx_mouse_enabled_changed(bx_mouse_dev, enabled);
+  if (bx_mouse.dev != NULL) {
+    bx_mouse.enabled_changed(bx_mouse.dev, enabled);
     return;
   }
 
@@ -1101,8 +1123,8 @@ void bx_devices_c::mouse_motion(int delta_x, int delta_y, int delta_z, unsigned 
     return;
 
   // if a removable mouse is connected, redirect mouse data to the device
-  if (bx_mouse_dev != NULL) {
-    bx_mouse_enq(bx_mouse_dev, delta_x, delta_y, delta_z, button_state);
+  if (bx_mouse.dev != NULL) {
+    bx_mouse.enq_event(bx_mouse.dev, delta_x, delta_y, delta_z, button_state);
     return;
   }
 

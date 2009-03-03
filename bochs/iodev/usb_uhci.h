@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_uhci.h,v 1.7 2009-03-02 21:21:16 vruppert Exp $
+// $Id: usb_uhci.h,v 1.8 2009-03-03 18:29:51 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Benjamin D Lunt (fys at frontiernet net)
@@ -181,13 +181,12 @@ struct HCSTACK {
   bx_bool t;
 };
 
-class bx_usb_uhci_c : public bx_pci_usb_stub_c {
+class bx_usb_uhci_c : public bx_devmodel_c, public bx_pci_device_stub_c {
 public:
   bx_usb_uhci_c();
   virtual ~bx_usb_uhci_c();
   virtual void init(void);
   virtual void reset(unsigned);
-  virtual bx_bool usb_key_enq(Bit8u *scan_code);
   virtual void register_state(void);
   virtual void after_restore_state(void);
   virtual Bit32u  pci_read_handler(Bit8u address, unsigned io_len);
@@ -201,8 +200,6 @@ private:
   Bit8u         global_reset;
   bx_bool       busy;
   Bit8u         *device_buffer;
-
-  usb_hid_device_c *keybdev;
 
   USBPacket usb_packet;
 

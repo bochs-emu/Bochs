@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_ohci.cc,v 1.13 2009-03-02 21:21:16 vruppert Exp $
+// $Id: usb_ohci.cc,v 1.14 2009-03-03 18:29:51 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Benjamin D Lunt (fys at frontiernet net)
@@ -81,7 +81,6 @@ const char *usb_ohci_port_name[] = {
 int libusb_ohci_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
 {
   theUSB_OHCI = new bx_usb_ohci_c();
-  bx_devices.pluginUSB_OHCI = theUSB_OHCI;
   BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theUSB_OHCI, BX_PLUGIN_USB_OHCI);
   return 0; // Success
 }
@@ -152,7 +151,6 @@ void bx_usb_ohci_c::init(void)
   for (i=0; i<USB_NUM_PORTS; i++) {
     BX_OHCI_THIS hub.usb_port[i].device = NULL;
   }
-  BX_OHCI_THIS keybdev = NULL;
 
   //HACK: Turn on debug messages from the start
   //BX_OHCI_THIS setonoff(LOGLEV_DEBUG, ACT_REPORT);
@@ -470,9 +468,6 @@ void bx_usb_ohci_c::init_device(Bit8u port, const char *devname)
   } else if (!strcmp(devname, "keypad")) {
     type = USB_DEV_TYPE_KEYPAD;
     BX_OHCI_THIS hub.usb_port[port].device = new usb_hid_device_c(type);
-    if (BX_OHCI_THIS keybdev == NULL) {
-      BX_OHCI_THIS keybdev = (usb_hid_device_c*)BX_OHCI_THIS hub.usb_port[port].device;
-    }
   } else if (!strncmp(devname, "disk", 4)) {
     if ((strlen(devname) > 5) && (devname[4] == ':')) {
       type = USB_DEV_TYPE_DISK;
@@ -494,15 +489,8 @@ void bx_usb_ohci_c::init_device(Bit8u port, const char *devname)
 void bx_usb_ohci_c::remove_device(Bit8u port)
 {
   char pname[BX_PATHNAME_LEN];
-  int type;
 
   if (BX_OHCI_THIS hub.usb_port[port].device != NULL) {
-    type = BX_OHCI_THIS hub.usb_port[port].device->get_type();
-    if (type == USB_DEV_TYPE_KEYPAD) {
-      if (BX_OHCI_THIS hub.usb_port[port].device == BX_OHCI_THIS keybdev) {
-        BX_OHCI_THIS keybdev = NULL;
-      }
-    }
     delete BX_OHCI_THIS hub.usb_port[port].device;
     BX_OHCI_THIS hub.usb_port[port].device = NULL;
     sprintf(pname, "usb_ohci.hub.port%d.device", port+1);
@@ -1499,14 +1487,6 @@ void bx_usb_ohci_c::usb_set_connect_status(Bit8u port, int type, bx_bool connect
     // we changed the value of the port, so show it
     set_interrupt(OHCI_INTR_RHSC);
   }
-}
-
-bx_bool bx_usb_ohci_c::usb_key_enq(Bit8u *scan_code)
-{
-  if (BX_OHCI_THIS keybdev != NULL) {
-    return keybdev->key_enq(scan_code);
-  }
-  return 0;
 }
 
 // USB runtime parameter handler

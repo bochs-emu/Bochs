@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.cc,v 1.142 2009-02-23 11:06:53 vruppert Exp $
+// $Id: keyboard.cc,v 1.143 2009-03-03 18:29:51 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -126,7 +126,7 @@ void bx_keyb_c::resetinternals(bx_bool powerup)
 
 void bx_keyb_c::init(void)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.142 2009-02-23 11:06:53 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.143 2009-03-03 18:29:51 vruppert Exp $"));
   Bit32u   i;
 
   DEV_register_irq(1, "8042 Keyboard controller");
@@ -861,17 +861,10 @@ void bx_keyb_c::gen_scancode(Bit32u key)
   else
     scancode=(unsigned char *)scancodes[(key&0xFF)][BX_KEY_THIS s.kbd_controller.current_scancodes_set].make;
 
-  // if we have a keyboard/keypad installed, we need to call its handler first
-#if BX_SUPPORT_USB_UHCI
-  if (DEV_usb_uhci_key_enq(scancode)) {
+  // if we have a removable keyboard installed, we need to call its handler first
+  if (DEV_optional_key_enq(scancode)) {
     return;
   }
-#endif
-#if BX_SUPPORT_USB_OHCI
-  if (DEV_usb_ohci_key_enq(scancode)) {
-    return;
-  }
-#endif
 
   if (BX_KEY_THIS s.kbd_controller.scancodes_translate) {
     // Translate before send
