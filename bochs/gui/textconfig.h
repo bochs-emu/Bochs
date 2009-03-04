@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: textconfig.h,v 1.9 2009-02-08 09:05:52 vruppert Exp $
+// $Id: textconfig.h,v 1.10 2009-03-04 18:20:44 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  The Bochs Project
@@ -47,6 +47,7 @@ enum {
   BX_CI_RT_LOGOPTS1,
   BX_CI_RT_LOGOPTS2,
   BX_CI_RT_INST_TR,
+  BX_CI_RT_USB,
   BX_CI_RT_MISC,
   BX_CI_RT_CONT,
   BX_CI_RT_QUIT

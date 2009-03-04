@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: textconfig.cc,v 1.73 2009-02-08 09:05:52 vruppert Exp $
+// $Id: textconfig.cc,v 1.74 2009-03-04 18:20:40 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  The Bochs Project
@@ -320,11 +320,12 @@ static const char *runtime_menu_prompt =
 "8. Log options for all devices\n"
 "9. Log options for individual devices\n"
 "10. Instruction tracing: off (doesn't exist yet)\n"
-"11. Misc runtime options\n"
-"12. Continue simulation\n"
-"13. Quit now\n"
+"11. USB runtime options\n"
+"12. Misc runtime options\n"
+"13. Continue simulation\n"
+"14. Quit now\n"
 "\n"
-"Please choose one:  [12] ";
+"Please choose one:  [13] ";
 #endif
 
 #define NOT_IMPLEMENTED(choice) \
@@ -527,6 +528,7 @@ int bx_config_interface(int menu)
             case BX_CI_RT_LOGOPTS1: bx_log_options(0); break;
             case BX_CI_RT_LOGOPTS2: bx_log_options(1); break;
             case BX_CI_RT_INST_TR: NOT_IMPLEMENTED(choice); break;
+            case BX_CI_RT_USB: do_menu(BXPN_MENU_RUNTIME_USB); break;
             case BX_CI_RT_MISC: do_menu(BXPN_MENU_RUNTIME); break;
             case BX_CI_RT_CONT: fprintf(stderr, "Continuing simulation\n"); return 0;
             case BX_CI_RT_QUIT:

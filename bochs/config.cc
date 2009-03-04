@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.158 2009-02-22 17:05:40 vruppert Exp $
+// $Id: config.cc,v 1.159 2009-03-04 18:20:32 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1731,7 +1731,10 @@ void bx_init_options()
   path->set_ask_format("Enter debugger log filename: [%s] ");
   path->set_enabled(BX_DEBUGGER);
 
-  // runtime options
+  // USB runtime options
+  usb = new bx_list_c(special_menus, "usb_runtime", "USB runtime options", 10);
+  usb->get_options()->set(bx_list_c::SHOW_PARENT);
+  // misc runtime options
   bx_param_c *runtime_init_list[] = {
       SIM->get_param_num(BXPN_VGA_UPDATE_INTERVAL),
       SIM->get_param_bool(BXPN_MOUSE_ENABLED),
@@ -1739,10 +1742,6 @@ void bx_init_options()
       SIM->get_param_string(BXPN_USER_SHORTCUT),
       SIM->get_param_num(BXPN_SB16_DMATIMER),
       SIM->get_param_num(BXPN_SB16_LOGLEVEL),
-      SIM->get_param_string(BXPN_UHCI_PORT1),
-      SIM->get_param_string(BXPN_UHCI_PORT2),
-      SIM->get_param_string(BXPN_OHCI_PORT1),
-      SIM->get_param_string(BXPN_OHCI_PORT2),
       NULL
   };
   menu = new bx_list_c(special_menus, "runtime", "Misc runtime options", runtime_init_list);

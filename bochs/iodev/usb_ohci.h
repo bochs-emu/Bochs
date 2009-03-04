@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_ohci.h,v 1.10 2009-03-03 18:29:51 vruppert Exp $
+// $Id: usb_ohci.h,v 1.11 2009-03-04 18:20:46 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Benjamin D Lunt (fys at frontiernet net)
@@ -30,7 +30,7 @@
 #  define BX_OHCI_THIS_PTR this
 #endif
 
-#define USB_NUM_PORTS   2
+#define USB_OHCI_NUM_PORTS  2
 
 #define OHCI_INTR_SO          (1<<0) // Scheduling overrun
 #define OHCI_INTR_WD          (1<<1) // HcDoneHead writeback
@@ -234,7 +234,7 @@ typedef struct {
       bx_bool pes;               //  1 bit PortEnableStatus            = 0b             RW  RW
       bx_bool ccs;               //  1 bit CurrentConnectStatus        = 0b             RW  RW
     } HcRhPortStatus;
-  } usb_port[USB_NUM_PORTS];
+  } usb_port[USB_OHCI_NUM_PORTS];
 
   Bit8u pci_conf[256];
   Bit8u devfunc;

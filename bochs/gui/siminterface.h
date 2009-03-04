@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.230 2009-02-21 11:43:18 vruppert Exp $
+// $Id: siminterface.h,v 1.231 2009-03-04 18:20:39 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  The Bochs Project
@@ -229,9 +229,11 @@ typedef enum {
 #define BXPN_ATA1_SLAVE                  "ata.1.slave"
 #define BXPN_ATA2_SLAVE                  "ata.2.slave"
 #define BXPN_ATA3_SLAVE                  "ata.3.slave"
+#define BXPN_USB_UHCI                    "ports.usb.uhci"
 #define BXPN_UHCI_ENABLED                "ports.usb.uhci.enabled"
 #define BXPN_UHCI_PORT1                  "ports.usb.uhci.port1"
 #define BXPN_UHCI_PORT2                  "ports.usb.uhci.port2"
+#define BXPN_USB_OHCI                    "ports.usb.ohci"
 #define BXPN_OHCI_ENABLED                "ports.usb.ohci.enabled"
 #define BXPN_OHCI_PORT1                  "ports.usb.ohci.port1"
 #define BXPN_OHCI_PORT2                  "ports.usb.ohci.port2"
@@ -254,6 +256,7 @@ typedef enum {
 #define BXPN_MENU_DISK                   "menu.disk"
 #define BXPN_MENU_MEMORY                 "menu.memory"
 #define BXPN_MENU_RUNTIME                "menu.runtime"
+#define BXPN_MENU_RUNTIME_USB            "menu.usb_runtime"
 #define BXPN_WX_KBD_STATE                "wxdebug.keyboard"
 #define BXPN_WX_CPU_STATE                "wxdebug.cpu"
 #define BXPN_WX_CPU0_STATE               "wxdebug.cpu.0"
