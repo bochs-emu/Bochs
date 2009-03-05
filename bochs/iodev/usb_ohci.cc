@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_ohci.cc,v 1.16 2009-03-05 17:29:09 vruppert Exp $
+// $Id: usb_ohci.cc,v 1.17 2009-03-05 21:34:58 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Benjamin D Lunt (fys at frontiernet net)
@@ -1166,8 +1166,7 @@ void bx_usb_ohci_c::process_ed(struct OHCI_ED *ed, const Bit32u ed_address)
 
 bx_bool bx_usb_ohci_c::process_td(struct OHCI_TD *td, struct OHCI_ED *ed)
 {
-  usb_device_c *dev = NULL;
-  unsigned i, pid = 0, len = 0;
+  unsigned pid = 0, len = 0;
   int r, ret = 0;
   char buf_str[1025], temp_str[17];
 
@@ -1190,29 +1189,6 @@ bx_bool bx_usb_ohci_c::process_td(struct OHCI_TD *td, struct OHCI_ED *ed)
       pid = USB_TOKEN_IN;
   }
 
-  // find the device
-  for (i=0; i<USB_OHCI_NUM_PORTS; i++) {
-    if (BX_OHCI_THIS hub.usb_port[i].device != NULL) {
-      if (BX_OHCI_THIS hub.usb_port[i].device->get_connected()) {
-        if (BX_OHCI_THIS hub.usb_port[i].device->get_address() == ED_GET_FA(ed)) {
-          dev = BX_OHCI_THIS hub.usb_port[i].device;
-          break;
-        }
-      }
-    }
-  }
-  if (dev == NULL) {
-    if ((pid == USB_TOKEN_OUT) && (ED_GET_MPS(ed) == 0x7FF) && (ED_GET_FA(ed) == 0)) {
-      // This is the "keep awake" packet that Windows sends once a schedule cycle.
-      // For now, let it pass through to the code below.
-    } else {
-      TD_SET_CC(td, DeviceNotResponding);
-      TD_SET_EC(td, 3);
-      BX_PANIC(("Device not found for addr: %i", ED_GET_FA(ed)));
-      return 1;  // device not found
-    }
-  }
-
   // calculate the length of the packet
   if (TD_GET_CBP(td) && TD_GET_BE(td)) {
     if ((TD_GET_CBP(td) & 0xFFFFF000) != (TD_GET_BE(td) & 0xFFFFF000))
@@ -1222,118 +1198,128 @@ bx_bool bx_usb_ohci_c::process_td(struct OHCI_TD *td, struct OHCI_ED *ed)
   } else
     len = 0;
 
-  if (dev != NULL) {
-    BX_OHCI_THIS usb_packet.pid = pid;
-    BX_OHCI_THIS usb_packet.devaddr = ED_GET_FA(ed);
-    BX_OHCI_THIS usb_packet.devep = ED_GET_EN(ed);
-    BX_OHCI_THIS usb_packet.data = BX_OHCI_THIS device_buffer;
-    switch (pid) {
-      case USB_TOKEN_SETUP:
-      case USB_TOKEN_OUT:
-        BX_OHCI_THIS usb_packet.len = (len <= ED_GET_MPS(ed)) ? len : ED_GET_MPS(ed);
-        break;
-      case USB_TOKEN_IN:
-        BX_OHCI_THIS usb_packet.len = len;
-        break;
-    }
-
-    BX_DEBUG(("    pid = %s  addr = %i   endpnt = %i    len = %i  mps = %i (0x%08X   0x%08X)", 
-      (pid == USB_TOKEN_IN)? "IN" : (pid == USB_TOKEN_OUT) ? "OUT" : (pid == USB_TOKEN_SETUP) ? "SETUP" : "UNKNOWN", 
-      ED_GET_FA(ed), ED_GET_EN(ed), len, ED_GET_MPS(ed), TD_GET_CBP(td), TD_GET_BE(td)));
-    BX_DEBUG(("    td->t = %i  ed->c = %i  td->di = %i  td->r = %i", TD_GET_T(td), ED_GET_C(ed), TD_GET_DI(td), TD_GET_R(td)));
-    BX_DEBUG(("    td->cbp = 0x%08X", TD_GET_CBP(td)));
-
-    switch (pid) {
-      case USB_TOKEN_SETUP:
-        if (len > 0)
-          DEV_MEM_READ_PHYSICAL_BLOCK(TD_GET_CBP(td), len, device_buffer);
-        // TODO: This is a hack.  dev->handle_packet() should return the amount of bytes
-        //  it received, not the amount it anticipates on receiving/sending in the next packet.
-        if ((ret = dev->handle_packet(&BX_OHCI_THIS usb_packet)) >= 0)
-          ret = 8;
-        break;
-      case USB_TOKEN_OUT:
-        if (len > 0)
-          DEV_MEM_READ_PHYSICAL_BLOCK(TD_GET_CBP(td), len, device_buffer);
-        ret = dev->handle_packet(&BX_OHCI_THIS usb_packet);
-        break;
-      case USB_TOKEN_IN:
-        ret = dev->handle_packet(&BX_OHCI_THIS usb_packet);
-        if (ret >= 0) {
-          //if (ret > (int) ED_GET_MPS(ed))
-          //  ret = USB_RET_BABBLE;
-          if (ret > 0)
-            DEV_MEM_WRITE_PHYSICAL_BLOCK(TD_GET_CBP(td), ret, device_buffer);
-        } else
-          ret = 0;
-        break;
-      default:
-        TD_SET_CC(td, UnexpectedPID);
-        TD_SET_EC(td, 3);
-        return 1;
-    }
-
-    // print the buffer used, to the log file
-    if (ret > 0) {
-      buf_str[0] = 0;
-      for (r=0; r<ret; r++) {
-        sprintf(temp_str, "%02X ", device_buffer[r]);
-        strcat(buf_str, temp_str);
-      }
-      BX_DEBUG(("(%i bytes)   %s", r, buf_str));
-    }
-
-    if ((ret == (int)len) || ((pid == USB_TOKEN_IN) && (ret >= 0) && TD_GET_R(td))) {
-      if (ret == (int)len)
-        TD_SET_CBP(td, 0);
-      else {
-        TD_SET_CBP(td, TD_GET_CBP(td) + ret);
-        if (((TD_GET_CBP(td) & 0x0FFF) + ret) > 0x0FFF) {
-          TD_SET_CBP(td, TD_GET_CBP(td) & 0x0FFF);
-          TD_SET_CBP(td, TD_GET_CBP(td) | (TD_GET_BE(td) & ~0x0FFF));
-        }
-      }
-      if (TD_GET_T(td) & 2)
-        TD_SET_T(td, TD_GET_T(td) ^ 1);
-      ED_SET_C(ed, (TD_GET_T(td) & 1));
-      TD_SET_CC(td, NoError);
-      TD_SET_EC(td, 0);
-    } else {
-      if (ret >= 0)
-        TD_SET_CC(td, DataUnderrun);
-      else {
-        switch (ret) {
-          case USB_RET_NODEV:  // (-1)
-            TD_SET_CC(td, DeviceNotResponding);
-            break;
-          case USB_RET_NAK:    // (-2)
-            TD_SET_CC(td, Stall);
-            break;
-          case USB_RET_STALL:  // (-3)
-            TD_SET_CC(td, Stall);
-            break;
-          case USB_RET_BABBLE:  // (-4)
-            TD_SET_CC(td, BufferOverrun);
-            break;
-          case USB_RET_ASYNC:  // (-5)
-            TD_SET_CC(td, BufferOverrun);
-            break;
-          default:
-            BX_ERROR(("Unknown error returned: %i", ret));
-            break;
-        }
-      }
-      TD_SET_EC(td, 3);
-      ED_SET_H(ed, 1);
-    }
-
-    BX_DEBUG((" td->cbp = 0x%08X   ret = %i  len = %i  td->cc = %i   td->ec = %i  ed->h = %i", TD_GET_CBP(td), ret, len, TD_GET_CC(td), TD_GET_EC(td), ED_GET_H(ed)));
-    BX_DEBUG(("    td->t = %i  ed->c = %i", TD_GET_T(td), ED_GET_C(ed)));
-
-    return 1;
+  BX_OHCI_THIS usb_packet.pid = pid;
+  BX_OHCI_THIS usb_packet.devaddr = ED_GET_FA(ed);
+  BX_OHCI_THIS usb_packet.devep = ED_GET_EN(ed);
+  BX_OHCI_THIS usb_packet.data = BX_OHCI_THIS device_buffer;
+  switch (pid) {
+    case USB_TOKEN_SETUP:
+    case USB_TOKEN_OUT:
+      BX_OHCI_THIS usb_packet.len = (len <= ED_GET_MPS(ed)) ? len : ED_GET_MPS(ed);
+      break;
+    case USB_TOKEN_IN:
+      BX_OHCI_THIS usb_packet.len = len;
+      break;
   }
 
-  return 0;
+  BX_DEBUG(("    pid = %s  addr = %i   endpnt = %i    len = %i  mps = %i (0x%08X   0x%08X)", 
+    (pid == USB_TOKEN_IN)? "IN" : (pid == USB_TOKEN_OUT) ? "OUT" : (pid == USB_TOKEN_SETUP) ? "SETUP" : "UNKNOWN", 
+    ED_GET_FA(ed), ED_GET_EN(ed), len, ED_GET_MPS(ed), TD_GET_CBP(td), TD_GET_BE(td)));
+  BX_DEBUG(("    td->t = %i  ed->c = %i  td->di = %i  td->r = %i", TD_GET_T(td), ED_GET_C(ed), TD_GET_DI(td), TD_GET_R(td)));
+  BX_DEBUG(("    td->cbp = 0x%08X", TD_GET_CBP(td)));
+
+  switch (pid) {
+    case USB_TOKEN_SETUP:
+      if (len > 0)
+        DEV_MEM_READ_PHYSICAL_BLOCK(TD_GET_CBP(td), len, device_buffer);
+      // TODO: This is a hack.  dev->handle_packet() should return the amount of bytes
+      //  it received, not the amount it anticipates on receiving/sending in the next packet.
+      if ((ret = BX_OHCI_THIS broadcast_packet(&BX_OHCI_THIS usb_packet)) >= 0)
+        ret = 8;
+      break;
+    case USB_TOKEN_OUT:
+      if (len > 0)
+        DEV_MEM_READ_PHYSICAL_BLOCK(TD_GET_CBP(td), len, device_buffer);
+      ret = BX_OHCI_THIS broadcast_packet(&BX_OHCI_THIS usb_packet);
+      break;
+    case USB_TOKEN_IN:
+      ret = BX_OHCI_THIS broadcast_packet(&BX_OHCI_THIS usb_packet);
+      if (ret >= 0) {
+        //if (ret > (int) ED_GET_MPS(ed))
+        //  ret = USB_RET_BABBLE;
+        if (ret > 0)
+          DEV_MEM_WRITE_PHYSICAL_BLOCK(TD_GET_CBP(td), ret, device_buffer);
+      } else
+        ret = 0;
+      break;
+    default:
+      TD_SET_CC(td, UnexpectedPID);
+      TD_SET_EC(td, 3);
+      return 1;
+  }
+
+  // print the buffer used, to the log file
+  if (ret > 0) {
+    buf_str[0] = 0;
+    for (r=0; r<ret; r++) {
+      sprintf(temp_str, "%02X ", device_buffer[r]);
+      strcat(buf_str, temp_str);
+    }
+    BX_DEBUG(("(%i bytes)   %s", r, buf_str));
+  }
+
+  if ((ret == (int)len) || ((pid == USB_TOKEN_IN) && (ret >= 0) && TD_GET_R(td))) {
+    if (ret == (int)len)
+      TD_SET_CBP(td, 0);
+    else {
+      TD_SET_CBP(td, TD_GET_CBP(td) + ret);
+      if (((TD_GET_CBP(td) & 0x0FFF) + ret) > 0x0FFF) {
+        TD_SET_CBP(td, TD_GET_CBP(td) & 0x0FFF);
+        TD_SET_CBP(td, TD_GET_CBP(td) | (TD_GET_BE(td) & ~0x0FFF));
+      }
+    }
+    if (TD_GET_T(td) & 2)
+      TD_SET_T(td, TD_GET_T(td) ^ 1);
+    ED_SET_C(ed, (TD_GET_T(td) & 1));
+    TD_SET_CC(td, NoError);
+    TD_SET_EC(td, 0);
+  } else {
+    if (ret >= 0)
+      TD_SET_CC(td, DataUnderrun);
+    else {
+      switch (ret) {
+        case USB_RET_NODEV:  // (-1)
+          TD_SET_CC(td, DeviceNotResponding);
+          break;
+        case USB_RET_NAK:    // (-2)
+          TD_SET_CC(td, Stall);
+          break;
+        case USB_RET_STALL:  // (-3)
+          TD_SET_CC(td, Stall);
+          break;
+        case USB_RET_BABBLE:  // (-4)
+          TD_SET_CC(td, BufferOverrun);
+          break;
+        case USB_RET_ASYNC:  // (-5)
+          TD_SET_CC(td, BufferOverrun);
+          break;
+        default:
+          BX_ERROR(("Unknown error returned: %i", ret));
+          break;
+      }
+    }
+    TD_SET_EC(td, 3);
+    ED_SET_H(ed, 1);
+  }
+
+  BX_DEBUG((" td->cbp = 0x%08X   ret = %i  len = %i  td->cc = %i   td->ec = %i  ed->h = %i", TD_GET_CBP(td), ret, len, TD_GET_CC(td), TD_GET_EC(td), ED_GET_H(ed)));
+  BX_DEBUG(("    td->t = %i  ed->c = %i", TD_GET_T(td), ED_GET_C(ed)));
+
+  return 1;
+}
+
+int bx_usb_ohci_c::broadcast_packet(USBPacket *p)
+{
+  int i, ret;
+
+  ret = USB_RET_NODEV;
+  for (i = 0; i < USB_OHCI_NUM_PORTS && ret == USB_RET_NODEV; i++) {
+    if ((BX_OHCI_THIS hub.usb_port[i].device != NULL) &&
+        (BX_OHCI_THIS hub.usb_port[i].HcRhPortStatus.ccs)) {
+      ret = BX_OHCI_THIS hub.usb_port[i].device->handle_packet(p);
+    }
+  }
+  return ret;
 }
 
 // pci configuration space read callback handler
@@ -1462,7 +1448,7 @@ void bx_usb_ohci_c::usb_set_connect_status(Bit8u port, int type, bx_bool connect
 {
   const bx_bool ccs_org = BX_OHCI_THIS hub.usb_port[port].HcRhPortStatus.ccs;
   const bx_bool pes_org = BX_OHCI_THIS hub.usb_port[port].HcRhPortStatus.pes;
-  
+
   usb_device_c *device = BX_OHCI_THIS hub.usb_port[port].device;
   if (device != NULL) {
     if (device->get_type() == type) {
@@ -1503,14 +1489,15 @@ const char *bx_usb_ohci_c::usb_param_handler(bx_param_string_c *param, int set,
 
   if (set) {
     portnum = atoi(param->get_name()+4) - 1;
+    bx_bool empty = ((strlen(val) == 0) || (!strcmp(val, "none")));
     if ((portnum >= 0) && (portnum < USB_OHCI_NUM_PORTS)) {
       BX_INFO(("USB port #%d experimental device change", portnum+1));
-      if (!strcmp(val, "none") && BX_OHCI_THIS hub.usb_port[portnum].HcRhPortStatus.ccs) {
+      if (empty && BX_OHCI_THIS hub.usb_port[portnum].HcRhPortStatus.ccs) {
         if (BX_OHCI_THIS hub.usb_port[portnum].device != NULL) {
           type = BX_OHCI_THIS hub.usb_port[portnum].device->get_type();
         }
         usb_set_connect_status(portnum, type, 0);
-      } else if (strcmp(val, "none") && !BX_OHCI_THIS hub.usb_port[portnum].HcRhPortStatus.ccs) {
+      } else if (!empty && !BX_OHCI_THIS hub.usb_port[portnum].HcRhPortStatus.ccs) {
         init_device(portnum, val);
       }
     } else {

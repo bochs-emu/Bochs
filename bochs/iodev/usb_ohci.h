@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_ohci.h,v 1.11 2009-03-04 18:20:46 vruppert Exp $
+// $Id: usb_ohci.h,v 1.12 2009-03-05 21:35:00 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Benjamin D Lunt (fys at frontiernet net)
@@ -275,6 +275,7 @@ private:
 
   static void init_device(Bit8u port, const char *devname);
   static void remove_device(Bit8u port);
+  static int  broadcast_packet(USBPacket *p);
   static void usb_set_connect_status(Bit8u port, int type, bx_bool connected);
 
   static void usb_frame_handler(void *);
