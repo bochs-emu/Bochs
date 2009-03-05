@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_uhci.cc,v 1.13 2009-03-04 18:20:46 vruppert Exp $
+// $Id: usb_uhci.cc,v 1.14 2009-03-05 19:12:23 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Benjamin D Lunt (fys at frontiernet net)
@@ -817,8 +817,7 @@ void bx_usb_uhci_c::usb_timer(void)
 
 bx_bool bx_usb_uhci_c::DoTransfer(Bit32u address, Bit32u queue_num, struct TD *td) {
 
-  int i, len = 0, ret = 0;
-  usb_device_c *dev = NULL;
+  int len = 0, ret = 0;
 
   Bit16u maxlen = (td->dword2 >> 21);
   Bit8u  addr   = (td->dword2 >> 8) & 0x7F;
@@ -838,34 +837,6 @@ bx_bool bx_usb_uhci_c::DoTransfer(Bit32u address, Bit32u queue_num, struct TD *t
   //if (td->dword0 & 0x8) return 1; // error = reserved bits in dword0 set
   // other error checks here
 
-  // find device address
-  bx_bool at_least_one = 0;
-  for (i=0; i<USB_UHCI_NUM_PORTS; i++) {
-    if (BX_UHCI_THIS hub.usb_port[i].device != NULL) {
-      if (BX_UHCI_THIS hub.usb_port[i].device->get_connected()) {
-        at_least_one = 1;
-        if (BX_UHCI_THIS hub.usb_port[i].device->get_address() == addr) {
-          dev = BX_UHCI_THIS hub.usb_port[i].device;
-          break;
-        }
-      }
-    }
-  }
-  if (!at_least_one) {
-    BX_UHCI_THIS set_status(td, 1, 0, 0, 0, (pid==USB_TOKEN_SETUP)?1:0, 0, 0x007); // an 8 byte packet was received, but stalled
-    return 1;
-  }
-  if (dev == NULL) {
-    if ((pid == USB_TOKEN_OUT) && (maxlen == 0x7FF) && (addr == 0)) {
-      // This is the "keep awake" packet that Windows sends once a schedule cycle.
-      // For now, let it pass through to the code below.
-    } else {
-      BX_PANIC(("Device not found for addr: %i", addr));
-      BX_UHCI_THIS set_status(td, 1, 0, 0, 0, (pid==USB_TOKEN_SETUP)?1:0, 0, 0x007); // an 8 byte packet was received, but stalled
-      return 1;  // device not found
-    }
-  }
-
   // the device should remain in a stall state until the next setup packet is recieved
   // For some reason, this doesn't work yet.
   //if (dev && dev->in_stall && (pid != USB_TOKEN_SETUP))
@@ -874,48 +845,59 @@ bx_bool bx_usb_uhci_c::DoTransfer(Bit32u address, Bit32u queue_num, struct TD *t
   maxlen++;
   maxlen &= 0x7FF;
 
-  if (dev != NULL) {
-    BX_UHCI_THIS usb_packet.pid = pid;
-    BX_UHCI_THIS usb_packet.devaddr = addr;
-    BX_UHCI_THIS usb_packet.devep = endpt;
-    BX_UHCI_THIS usb_packet.data = device_buffer;
-    BX_UHCI_THIS usb_packet.len = maxlen;
-    switch (pid) {
-      case USB_TOKEN_OUT:
-      case USB_TOKEN_SETUP:
-        if (maxlen > 0) {
-          DEV_MEM_READ_PHYSICAL_BLOCK(td->dword3, maxlen, device_buffer);
+  BX_UHCI_THIS usb_packet.pid = pid;
+  BX_UHCI_THIS usb_packet.devaddr = addr;
+  BX_UHCI_THIS usb_packet.devep = endpt;
+  BX_UHCI_THIS usb_packet.data = device_buffer;
+  BX_UHCI_THIS usb_packet.len = maxlen;
+  switch (pid) {
+    case USB_TOKEN_OUT:
+    case USB_TOKEN_SETUP:
+      if (maxlen > 0) {
+        DEV_MEM_READ_PHYSICAL_BLOCK(td->dword3, maxlen, device_buffer);
+      }
+      ret = BX_UHCI_THIS broadcast_packet(&BX_UHCI_THIS usb_packet);
+      len = maxlen;
+      break;
+    case USB_TOKEN_IN:
+      ret = BX_UHCI_THIS broadcast_packet(&BX_UHCI_THIS usb_packet);
+      if (ret >= 0) {
+        len = ret;
+        if (len > maxlen) {
+          len = maxlen;
+          ret = USB_RET_BABBLE;
         }
-        ret = dev->handle_packet(&BX_UHCI_THIS usb_packet);
-        len = maxlen;
-        break;
-      case USB_TOKEN_IN:
-        ret = dev->handle_packet(&BX_UHCI_THIS usb_packet);
-        if (ret >= 0) {
-          len = ret;
-          if (len > maxlen) {
-            len = maxlen;
-            ret = USB_RET_BABBLE;
-          }
-          if (len > 0) {
-            DEV_MEM_WRITE_PHYSICAL_BLOCK(td->dword3, len, device_buffer);
-          }
-        } else {
-          len = 0;
+        if (len > 0) {
+          DEV_MEM_WRITE_PHYSICAL_BLOCK(td->dword3, len, device_buffer);
         }
-        break;
-      default:
-        BX_UHCI_THIS hub.usb_status.host_error = 1;
-        BX_UHCI_THIS set_irq_level(1);
-    }
-    if (ret >= 0) {
-      BX_UHCI_THIS set_status(td, 0, 0, 0, 0, 0, 0, len-1);
-    } else {
-      BX_UHCI_THIS set_status(td, 1, 0, 0, 0, 0, 0, 0x007); // stalled
-    }
-    return 1;
+      } else {
+        len = 0;
+      }
+      break;
+    default:
+      BX_UHCI_THIS hub.usb_status.host_error = 1;
+      BX_UHCI_THIS set_irq_level(1);
   }
-  return 0;
+  if (ret >= 0) {
+    BX_UHCI_THIS set_status(td, 0, 0, 0, 0, 0, 0, len-1);
+  } else {
+    BX_UHCI_THIS set_status(td, 1, 0, 0, 0, 0, 0, 0x007); // stalled
+  }
+  return 1;
+}
+
+int bx_usb_uhci_c::broadcast_packet(USBPacket *p)
+{
+  int i, ret;
+
+  ret = USB_RET_NODEV;
+  for (i = 0; i < USB_UHCI_NUM_PORTS && ret == USB_RET_NODEV; i++) {
+    if ((BX_UHCI_THIS hub.usb_port[i].device != NULL) &&
+        (BX_UHCI_THIS hub.usb_port[i].status)) {
+      ret = BX_UHCI_THIS hub.usb_port[i].device->handle_packet(p);
+    }
+  }
+  return ret;
 }
 
 // If the request fails, set the stall bit ????
@@ -1120,14 +1102,15 @@ const char *bx_usb_uhci_c::usb_param_handler(bx_param_string_c *param, int set,
 
   if (set) {
     portnum = atoi(param->get_name()+4) - 1;
+    bx_bool empty = ((strlen(val) == 0) || (!strcmp(val, "none")));
     if ((portnum >= 0) && (portnum < USB_UHCI_NUM_PORTS)) {
       BX_INFO(("USB port #%d experimental device change", portnum+1));
-      if (!strcmp(val, "none") && BX_UHCI_THIS hub.usb_port[portnum].status) {
+      if (empty && BX_UHCI_THIS hub.usb_port[portnum].status) {
         if (BX_UHCI_THIS hub.usb_port[portnum].device != NULL) {
           type = BX_UHCI_THIS hub.usb_port[portnum].device->get_type();
         }
         usb_set_connect_status(portnum, type, 0);
-      } else if (strcmp(val, "none") && !BX_UHCI_THIS hub.usb_port[portnum].status) {
+      } else if (!empty && !BX_UHCI_THIS hub.usb_port[portnum].status) {
         init_device(portnum, val);
       }
     } else {
