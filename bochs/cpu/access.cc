@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: access.cc,v 1.122 2009-01-16 18:18:58 sshwarts Exp $
+// $Id: access.cc,v 1.123 2009-03-05 17:48:12 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -35,14 +35,6 @@
 BX_CPU_C::write_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned length)
 {
   Bit32u upper_limit;
-
-#if BX_SUPPORT_X86_64
-  if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
-    // Mark cache as being OK type for succeeding reads/writes
-    seg->cache.valid |= SegAccessROK | SegAccessWOK;
-    return 1;
-  }
-#endif
 
   if (seg->cache.valid==0) {
     BX_DEBUG(("write_virtual_checks(): segment descriptor not valid"));
@@ -108,14 +100,6 @@ BX_CPU_C::read_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned len
 {
   Bit32u upper_limit;
 
-#if BX_SUPPORT_X86_64
-  if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
-    // Mark cache as being OK type for succeeding reads/writes
-    seg->cache.valid |= SegAccessROK | SegAccessWOK;
-    return 1;
-  }
-#endif
-
   if (seg->cache.valid==0) {
     BX_DEBUG(("read_virtual_checks(): segment descriptor not valid"));
     return 0;
@@ -175,14 +159,6 @@ BX_CPU_C::read_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned len
 BX_CPU_C::execute_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned length)
 {
   Bit32u upper_limit;
-
-#if BX_SUPPORT_X86_64
-  if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
-    // Mark cache as being OK type for succeeding reads/writes
-    seg->cache.valid |= SegAccessROK | SegAccessWOK;
-    return 1;
-  }
-#endif
 
   if (seg->cache.valid==0) {
     BX_DEBUG(("execute_virtual_checks(): segment descriptor not valid"));
