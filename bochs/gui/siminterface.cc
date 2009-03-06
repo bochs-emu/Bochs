@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.196 2009-02-12 20:39:38 sshwarts Exp $
+// $Id: siminterface.cc,v 1.197 2009-03-06 16:07:56 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  The Bochs Project
@@ -2105,7 +2105,9 @@ void bx_list_c::clear()
   int imax = get_size();
   for (int i=0; i<imax; i++) {
     bx_param_c *param = get(i);
-    delete param;
+    if (param->get_parent() == this) {
+      delete param;
+    }
   }
   size = 0;
 }
@@ -2117,7 +2119,9 @@ void bx_list_c::remove(const char *name)
   for (int i=0; i<imax; i++) {
     bx_param_c *p = get(i);
     if (!found && !stricmp(name, p->get_name())) {
-      delete p;
+      if (p->get_parent() == this) {
+        delete p;
+      }
       found = 1;
     }
     if (found) {
