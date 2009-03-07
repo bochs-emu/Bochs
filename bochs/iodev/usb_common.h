@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_common.h,v 1.6 2009-03-01 19:29:36 vruppert Exp $
+// $Id: usb_common.h,v 1.7 2009-03-07 16:57:17 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Benjamin D Lunt (fys at frontiernet net)
@@ -118,7 +118,8 @@ enum usbdev_type {
   USB_DEV_TYPE_MOUSE,
   USB_DEV_TYPE_TABLET,
   USB_DEV_TYPE_KEYPAD,
-  USB_DEV_TYPE_DISK
+  USB_DEV_TYPE_DISK,
+  USB_DEV_TYPE_HUB
 };
 
 

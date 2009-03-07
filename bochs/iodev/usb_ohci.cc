@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_ohci.cc,v 1.17 2009-03-05 21:34:58 vruppert Exp $
+// $Id: usb_ohci.cc,v 1.18 2009-03-07 16:57:17 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Benjamin D Lunt (fys at frontiernet net)
@@ -42,6 +42,7 @@
 #include "pci.h"
 #include "usb_common.h"
 #include "usb_hid.h"
+#include "usb_hub.h"
 #include "usb_msd.h"
 #include "usb_ohci.h"
 
@@ -479,6 +480,9 @@ void bx_usb_ohci_c::init_device(Bit8u port, const char *devname)
       BX_PANIC(("USB device 'disk' needs a filename separated with a colon"));
       return;
     }
+  } else if (!strcmp(devname, "hub")) {
+    type = USB_DEV_TYPE_HUB;
+    BX_OHCI_THIS hub.usb_port[port].device = new usb_hub_device_c();
   } else {
     BX_PANIC(("unknown USB device: %s", devname));
     return;
