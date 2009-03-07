@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32dialog.cc,v 1.73 2009-02-24 08:08:20 vruppert Exp $
+// $Id: win32dialog.cc,v 1.74 2009-03-07 20:02:49 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  The Bochs Project
@@ -568,14 +568,26 @@ static BOOL CALLBACK RTUSBdevDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM 
 
   switch (msg) {
     case WM_INITDIALOG:
-      if (SIM->get_param_string(BXPN_UHCI_PORT1)->get_enabled()) {
-        SetDlgItemText(hDlg, IDUSBDEV1, SIM->get_param_string(BXPN_UHCI_PORT1)->getptr());
-        SetDlgItemText(hDlg, IDUSBDEV2, SIM->get_param_string(BXPN_UHCI_PORT2)->getptr());
+      if (((bx_list_c*)SIM->get_param(BXPN_MENU_RUNTIME_USB))->get_by_name("uhci")) {
+        SetDlgItemText(hDlg, IDUHCIDEV1, SIM->get_param_string(BXPN_UHCI_PORT1)->getptr());
+        SetDlgItemText(hDlg, IDUHCIDEV2, SIM->get_param_string(BXPN_UHCI_PORT2)->getptr());
       } else {
-        EnableWindow(GetDlgItem(hDlg, IDUSBLBL1), FALSE);
-        EnableWindow(GetDlgItem(hDlg, IDUSBLBL2), FALSE);
-        EnableWindow(GetDlgItem(hDlg, IDUSBDEV1), FALSE);
-        EnableWindow(GetDlgItem(hDlg, IDUSBDEV2), FALSE);
+        EnableWindow(GetDlgItem(hDlg, IDUHCILBL1), FALSE);
+        EnableWindow(GetDlgItem(hDlg, IDUHCILBL2), FALSE);
+        EnableWindow(GetDlgItem(hDlg, IDUHCIDEV1), FALSE);
+        EnableWindow(GetDlgItem(hDlg, IDUHCIDEV2), FALSE);
+      }
+      if (((bx_list_c*)SIM->get_param(BXPN_MENU_RUNTIME_USB))->get_by_name("ohci")) {
+        SetDlgItemText(hDlg, IDOHCIDEV1, SIM->get_param_string(BXPN_OHCI_PORT1)->getptr());
+        SetDlgItemText(hDlg, IDOHCIDEV2, SIM->get_param_string(BXPN_OHCI_PORT2)->getptr());
+      } else {
+        EnableWindow(GetDlgItem(hDlg, IDOHCILBL1), FALSE);
+        EnableWindow(GetDlgItem(hDlg, IDOHCILBL2), FALSE);
+        EnableWindow(GetDlgItem(hDlg, IDOHCIDEV1), FALSE);
+        EnableWindow(GetDlgItem(hDlg, IDOHCIDEV2), FALSE);
+      }
+      if (!((bx_list_c*)SIM->get_param(BXPN_MENU_RUNTIME_USB))->get_by_name("exthub1")) {
+        EnableWindow(GetDlgItem(hDlg, IDEXTHUB1), FALSE);
       }
       changed = FALSE;
       return TRUE;
@@ -584,10 +596,16 @@ static BOOL CALLBACK RTUSBdevDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM 
       switch(psn->hdr.code) {
         case PSN_APPLY:
           if ((psn->lParam == FALSE) && changed) { // Apply pressed & change in this dialog
-            GetDlgItemText(hDlg, IDUSBDEV1, buffer, sizeof(buffer));
+            GetDlgItemText(hDlg, IDUHCIDEV1, buffer, sizeof(buffer));
             SIM->get_param_string(BXPN_UHCI_PORT1)->set(buffer);
-            GetDlgItemText(hDlg, IDUSBDEV2, buffer, sizeof(buffer));
+            GetDlgItemText(hDlg, IDUHCIDEV2, buffer, sizeof(buffer));
             SIM->get_param_string(BXPN_UHCI_PORT2)->set(buffer);
+            GetDlgItemText(hDlg, IDOHCIDEV1, buffer, sizeof(buffer));
+            SIM->get_param_string(BXPN_OHCI_PORT1)->set(buffer);
+            GetDlgItemText(hDlg, IDOHCIDEV2, buffer, sizeof(buffer));
+            SIM->get_param_string(BXPN_OHCI_PORT2)->set(buffer);
+            EnableWindow(GetDlgItem(hDlg, IDEXTHUB1),
+              (((bx_list_c*)SIM->get_param(BXPN_MENU_RUNTIME_USB))->get_by_name("exthub1") != NULL));
           }
           return PSNRET_NOERROR;
         case PSN_QUERYCANCEL:
@@ -600,13 +618,21 @@ static BOOL CALLBACK RTUSBdevDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM 
       switch(noticode) {
         case EN_CHANGE:
           switch (LOWORD(wParam)) {
-            case IDUSBDEV1:
-            case IDUSBDEV2:
+            case IDUHCIDEV1:
+            case IDUHCIDEV2:
+            case IDOHCIDEV1:
+            case IDOHCIDEV2:
               changed = TRUE;
               SendMessage(GetParent(hDlg), PSM_CHANGED, (WPARAM)hDlg, 0);
               break;
           }
           break;
+        default:
+          switch (LOWORD(wParam)) {
+            case IDEXTHUB1:
+              MessageBox(hDlg, "Not implemented yet", "Error", MB_ICONERROR);
+              break;
+          }
       }
       break;
   }

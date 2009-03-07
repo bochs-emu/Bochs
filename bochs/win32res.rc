@@ -92,11 +92,16 @@ STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "USB Options"
 FONT 8, "Helv"
 BEGIN
-    LTEXT           "USB port #1 device", IDUSBLBL1, 10, 27, 70, 14
-    EDITTEXT        IDUSBDEV1, 85, 25, 100, 14, ES_AUTOHSCROLL
-    LTEXT           "USB port #2 device", IDUSBLBL2, 10, 47, 70, 14
-    EDITTEXT        IDUSBDEV2, 85, 45, 100, 14, ES_AUTOHSCROLL
-    LTEXT           "USB device change support is still experimental !", IDUSBWARN, 10, 120, 155, 14
+    LTEXT           "UHCI port #1 device", IDUHCILBL1, 10, 27, 70, 14
+    EDITTEXT        IDUHCIDEV1, 85, 25, 100, 14, ES_AUTOHSCROLL
+    LTEXT           "UHCI port #2 device", IDUHCILBL2, 10, 47, 70, 14
+    EDITTEXT        IDUHCIDEV2, 85, 45, 100, 14, ES_AUTOHSCROLL
+    LTEXT           "OHCI port #1 device", IDOHCILBL1, 10, 67, 70, 14
+    EDITTEXT        IDOHCIDEV1, 85, 65, 100, 14, ES_AUTOHSCROLL
+    LTEXT           "OHCI port #2 device", IDOHCILBL2, 10, 87, 70, 14
+    EDITTEXT        IDOHCIDEV2, 85, 85, 100, 14, ES_AUTOHSCROLL
+    PUSHBUTTON      "External hub", IDEXTHUB1, 85, 105, 50, 14
+    LTEXT           "USB device change support is still experimental !", IDUSBWARN, 10, 130, 155, 14
 END
 
 RT_LOGOPT_DLG DIALOG 30, 30, 240, 180
