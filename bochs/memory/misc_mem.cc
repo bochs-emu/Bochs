@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: misc_mem.cc,v 1.125 2009-02-18 22:25:04 sshwarts Exp $
+// $Id: misc_mem.cc,v 1.126 2009-03-08 21:23:39 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -75,7 +75,7 @@ void BX_MEM_C::init_memory(Bit32u memsize)
 {
   unsigned idx;
 
-  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.125 2009-02-18 22:25:04 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.126 2009-03-08 21:23:39 sshwarts Exp $"));
 
   if (BX_MEM_THIS actual_vector != NULL) {
     BX_INFO (("freeing existing memory vector"));
@@ -510,8 +510,10 @@ bx_bool BX_MEM_C::dbg_crc32(bx_phy_address addr1, bx_phy_address addr2, Bit32u *
 // 0xf0000 - 0xfffff    Upper BIOS Area (64K)
 //
 
-Bit8u *BX_MEM_C::getHostMemAddr(BX_CPU_C *cpu, bx_phy_address a20Addr, unsigned rw)
+Bit8u *BX_MEM_C::getHostMemAddr(BX_CPU_C *cpu, bx_phy_address addr, unsigned rw)
 {
+  bx_phy_address a20Addr = A20ADDR(addr);
+
 #if BX_SUPPORT_APIC
   if (cpu != NULL) {
     if (cpu->lapic.is_selected(a20Addr))

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.579 2009-02-28 09:28:18 sshwarts Exp $
+// $Id: cpu.h,v 1.580 2009-03-08 21:23:36 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -939,8 +939,8 @@ public: // for now...
   bx_address eipPageBias;
   Bit32u     eipPageWindowSize;
   const Bit8u *eipFetchPtr;
-  bx_phy_address pAddrA20Page; // Guest physical address of current instruction
-                               // page with A20() already applied.
+  bx_phy_address pAddrPage; // Guest physical address of current instruction page
+
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
   unsigned alignment_check_mask;
 #endif
@@ -3873,10 +3873,10 @@ enum {
 #define BxOSizeGrp          0x0070 // Group encoding: 0111
 
 #define BxLockable          0x0100 // bit 8
-#define BxArithDstRM        0x0200 // bit 8
+#define BxArithDstRM        0x0200 // bit 9
 
 #if BX_SUPPORT_TRACE_CACHE
-  #define BxTraceEnd        0x0400 // bit 9
+  #define BxTraceEnd        0x0400 // bit 10
 #else
   #define BxTraceEnd        0
 #endif

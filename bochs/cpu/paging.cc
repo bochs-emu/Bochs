@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.171 2009-02-23 17:09:39 sshwarts Exp $
+// $Id: paging.cc,v 1.172 2009-03-08 21:23:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1236,8 +1236,7 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned curr_pl, un
   // Attempt to get a host pointer to this physical page. Put that
   // pointer in the TLB cache. Note if the request is vetoed, NULL
   // will be returned, and it's OK to OR zero in anyways.
-  tlbEntry->hostPageAddr = (bx_hostpageaddr_t) BX_MEM(0)->getHostMemAddr(BX_CPU_THIS,
-       A20ADDR(ppf), rw);
+  tlbEntry->hostPageAddr = (bx_hostpageaddr_t) BX_MEM(0)->getHostMemAddr(BX_CPU_THIS, ppf, rw);
 
   if (tlbEntry->hostPageAddr) {
     // All access allowed also via direct pointer
@@ -1423,7 +1422,7 @@ void BX_CPU_C::access_write_linear(bx_address laddr, unsigned len, unsigned curr
 
           // Request a direct write pointer so we can do either R or W.
           bx_hostpageaddr_t hostPageAddr = (bx_hostpageaddr_t)
-            BX_MEM(0)->getHostMemAddr(BX_CPU_THIS, A20ADDR(lpf), BX_WRITE);
+            BX_MEM(0)->getHostMemAddr(BX_CPU_THIS, lpf, BX_WRITE);
 
           if (hostPageAddr) {
             tlbEntry->lpf = lpf; // Got direct write pointer OK
@@ -1586,7 +1585,7 @@ void BX_CPU_C::access_read_linear(bx_address laddr, unsigned len, unsigned curr_
 
           // Request a direct write pointer so we can do either R or W.
           bx_hostpageaddr_t hostPageAddr = (bx_hostpageaddr_t)
-              BX_MEM(0)->getHostMemAddr(BX_CPU_THIS, A20ADDR(lpf), BX_READ);
+              BX_MEM(0)->getHostMemAddr(BX_CPU_THIS, lpf, BX_READ);
 
           if (hostPageAddr) {
             tlbEntry->lpf = lpf; // Got direct read pointer OK.
@@ -1656,10 +1655,8 @@ void BX_CPU_C::access_read_linear(bx_address laddr, unsigned len, unsigned curr_
 void BX_CPU_C::access_write_physical(bx_phy_address paddr, unsigned len, void *data)
 {
 #if BX_SUPPORT_APIC
-  bx_phy_address a20addr = A20ADDR(paddr);
-
-  if (BX_CPU_THIS_PTR lapic.is_selected(a20addr)) {
-    BX_CPU_THIS_PTR lapic.write(a20addr, data, len);
+  if (BX_CPU_THIS_PTR lapic.is_selected(paddr)) {
+    BX_CPU_THIS_PTR lapic.write(paddr, data, len);
     return;
   }
 #endif
@@ -1670,10 +1667,8 @@ void BX_CPU_C::access_write_physical(bx_phy_address paddr, unsigned len, void *d
 void BX_CPU_C::access_read_physical(bx_phy_address paddr, unsigned len, void *data)
 {
 #if BX_SUPPORT_APIC
-  bx_phy_address a20addr = A20ADDR(paddr);
-
-  if (BX_CPU_THIS_PTR lapic.is_selected(a20addr)) {
-    BX_CPU_THIS_PTR lapic.read(a20addr, data, len);
+  if (BX_CPU_THIS_PTR lapic.is_selected(paddr)) {
+    BX_CPU_THIS_PTR lapic.read(paddr, data, len);
     return;
   }
 #endif

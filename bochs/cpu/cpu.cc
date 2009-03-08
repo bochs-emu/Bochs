@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.271 2009-02-20 17:05:03 sshwarts Exp $
+// $Id: cpu.cc,v 1.272 2009-03-08 21:23:35 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -142,7 +142,7 @@ no_async_event:
     }
 
 #if BX_SUPPORT_ICACHE
-    bx_phy_address pAddr = BX_CPU_THIS_PTR pAddrA20Page + eipBiased;
+    bx_phy_address pAddr = BX_CPU_THIS_PTR pAddrPage + eipBiased;
     bxICacheEntry_c *entry = BX_CPU_THIS_PTR iCache.get_entry(pAddr);
     bxInstruction_c *i = entry->i;
 
@@ -732,21 +732,20 @@ void BX_CPU_C::prefetch(void)
   Bit8u *fetchPtr = 0;
 
   if ((tlbEntry->lpf == lpf) && !(tlbEntry->accessBits & USER_PL)) {
-    BX_CPU_THIS_PTR pAddrA20Page = A20ADDR(tlbEntry->ppf);
-    fetchPtr = (Bit8u*) (tlbEntry->hostPageAddr);
+    BX_CPU_THIS_PTR pAddrPage = tlbEntry->ppf;
+    fetchPtr = (Bit8u*) tlbEntry->hostPageAddr;
   }  
   else {
     bx_phy_address pAddr;
 
     if (BX_CPU_THIS_PTR cr0.get_PG()) {
       pAddr = translate_linear(laddr, CPL, BX_EXECUTE);
-      pAddr = A20ADDR(pAddr);
     } 
     else {
-      pAddr = A20ADDR(laddr);
+      pAddr = laddr;
     }
 
-    BX_CPU_THIS_PTR pAddrA20Page = LPFOf(pAddr);
+    BX_CPU_THIS_PTR pAddrPage = LPFOf(pAddr);
   }
 
   if (fetchPtr) {
@@ -754,12 +753,12 @@ void BX_CPU_C::prefetch(void)
   }
   else {
     BX_CPU_THIS_PTR eipFetchPtr = BX_MEM(0)->getHostMemAddr(BX_CPU_THIS,
-        BX_CPU_THIS_PTR pAddrA20Page, BX_EXECUTE);
+        BX_CPU_THIS_PTR pAddrPage, BX_EXECUTE);
   }
 
   // Sanity checks
   if (! BX_CPU_THIS_PTR eipFetchPtr) {
-    bx_phy_address pAddr = BX_CPU_THIS_PTR pAddrA20Page + pageOffset;
+    bx_phy_address pAddr = BX_CPU_THIS_PTR pAddrPage + pageOffset;
     if (pAddr >= BX_MEM(0)->get_memory_len()) {
       BX_PANIC(("prefetch: running in bogus memory, pAddr=0x" FMT_PHY_ADDRX, pAddr));
     }
@@ -769,11 +768,11 @@ void BX_CPU_C::prefetch(void)
   }
 
 #if BX_SUPPORT_ICACHE
-  BX_CPU_THIS_PTR currPageWriteStampPtr = pageWriteStampTable.getPageWriteStampPtr(BX_CPU_THIS_PTR pAddrA20Page);
+  BX_CPU_THIS_PTR currPageWriteStampPtr = pageWriteStampTable.getPageWriteStampPtr(BX_CPU_THIS_PTR pAddrPage);
   Bit32u pageWriteStamp = *(BX_CPU_THIS_PTR currPageWriteStampPtr);
   pageWriteStamp &= ~ICacheWriteStampFetchModeMask; // Clear out old fetch mode bits
   pageWriteStamp |=  BX_CPU_THIS_PTR fetchModeMask; // And add new ones
-  pageWriteStampTable.setPageWriteStamp(BX_CPU_THIS_PTR pAddrA20Page, pageWriteStamp);
+  pageWriteStampTable.setPageWriteStamp(BX_CPU_THIS_PTR pAddrPage, pageWriteStamp);
 #endif
 }
 

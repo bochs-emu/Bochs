@@ -48,8 +48,8 @@ diff -u -r1.136 bochs.h
  #define BX_RW      2
  
  
-+#define BX_MEM_GET_HOST_MEM_ADDR_READ(addr) BX_MEM(0)->getHostMemAddr(BX_CPU(0),A20ADDR(addr), BX_READ)
-+#define BX_MEM_GET_HOST_MEM_ADDR_WRITE(addr) BX_MEM(0)->getHostMemAddr(BX_CPU(0),A20ADDR(addr), BX_WRITE)
++#define BX_MEM_GET_HOST_MEM_ADDR_READ(addr) BX_MEM(0)->getHostMemAddr(NULL, addr, BX_READ)
++#define BX_MEM_GET_HOST_MEM_ADDR_WRITE(addr) BX_MEM(0)->getHostMemAddr(NULL, addr, BX_WRITE)
  
  
  

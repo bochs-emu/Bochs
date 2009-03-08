@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: memory.h,v 1.55 2009-02-08 09:05:52 vruppert Exp $
+// $Id: memory.h,v 1.56 2009-03-08 21:23:39 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -111,7 +111,7 @@ public:
   BX_MEM_SMF bx_bool dbg_set_mem(bx_phy_address addr, unsigned len, Bit8u *buf);
   BX_MEM_SMF bx_bool dbg_crc32(bx_phy_address addr1, bx_phy_address addr2, Bit32u *crc);
 #endif
-  BX_MEM_SMF Bit8u* getHostMemAddr(BX_CPU_C *cpu, bx_phy_address a20Addr, unsigned rw);
+  BX_MEM_SMF Bit8u* getHostMemAddr(BX_CPU_C *cpu, bx_phy_address addr, unsigned rw);
   BX_MEM_SMF bx_bool registerMemoryHandlers(void *param, memory_handler_t read_handler,
 		  memory_handler_t write_handler, bx_phy_address begin_addr, bx_phy_address end_addr);
   BX_MEM_SMF bx_bool unregisterMemoryHandlers(memory_handler_t read_handler, memory_handler_t write_handler,
