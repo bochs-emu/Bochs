@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32dialog.cc,v 1.74 2009-03-07 20:02:49 vruppert Exp $
+// $Id: win32dialog.cc,v 1.75 2009-03-08 22:10:16 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  The Bochs Project
@@ -596,14 +596,22 @@ static BOOL CALLBACK RTUSBdevDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM 
       switch(psn->hdr.code) {
         case PSN_APPLY:
           if ((psn->lParam == FALSE) && changed) { // Apply pressed & change in this dialog
-            GetDlgItemText(hDlg, IDUHCIDEV1, buffer, sizeof(buffer));
-            SIM->get_param_string(BXPN_UHCI_PORT1)->set(buffer);
-            GetDlgItemText(hDlg, IDUHCIDEV2, buffer, sizeof(buffer));
-            SIM->get_param_string(BXPN_UHCI_PORT2)->set(buffer);
-            GetDlgItemText(hDlg, IDOHCIDEV1, buffer, sizeof(buffer));
-            SIM->get_param_string(BXPN_OHCI_PORT1)->set(buffer);
-            GetDlgItemText(hDlg, IDOHCIDEV2, buffer, sizeof(buffer));
-            SIM->get_param_string(BXPN_OHCI_PORT2)->set(buffer);
+            if (SendMessage(GetDlgItem(hDlg, IDUHCIDEV1), EM_GETMODIFY, 0, 0)) {
+              GetDlgItemText(hDlg, IDUHCIDEV1, buffer, sizeof(buffer));
+              SIM->get_param_string(BXPN_UHCI_PORT1)->set(buffer);
+            }
+            if (SendMessage(GetDlgItem(hDlg, IDUHCIDEV2), EM_GETMODIFY, 0, 0)) {
+              GetDlgItemText(hDlg, IDUHCIDEV2, buffer, sizeof(buffer));
+              SIM->get_param_string(BXPN_UHCI_PORT2)->set(buffer);
+            }
+            if (SendMessage(GetDlgItem(hDlg, IDOHCIDEV1), EM_GETMODIFY, 0, 0)) {
+              GetDlgItemText(hDlg, IDOHCIDEV1, buffer, sizeof(buffer));
+              SIM->get_param_string(BXPN_OHCI_PORT1)->set(buffer);
+            }
+            if (SendMessage(GetDlgItem(hDlg, IDOHCIDEV2), EM_GETMODIFY, 0, 0)) {
+              GetDlgItemText(hDlg, IDOHCIDEV2, buffer, sizeof(buffer));
+              SIM->get_param_string(BXPN_OHCI_PORT2)->set(buffer);
+            }
             EnableWindow(GetDlgItem(hDlg, IDEXTHUB1),
               (((bx_list_c*)SIM->get_param(BXPN_MENU_RUNTIME_USB))->get_by_name("exthub1") != NULL));
           }
@@ -770,18 +778,28 @@ static BOOL CALLBACK RTMiscDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lP
       switch(psn->hdr.code) {
         case PSN_APPLY:
           if ((psn->lParam == FALSE) && changed) { // Apply pressed & change in this dialog
-            value = GetDlgItemInt(hDlg, IDVGAUPDATE, NULL, FALSE);
-            SIM->get_param_num(BXPN_VGA_UPDATE_INTERVAL)->set(value);
-            value = GetDlgItemInt(hDlg, IDKBDPASTE, NULL, FALSE);
-            SIM->get_param_num(BXPN_KBD_PASTE_DELAY)->set(value);
+            if (SendMessage(GetDlgItem(hDlg, IDVGAUPDATE), EM_GETMODIFY, 0, 0)) {
+              value = GetDlgItemInt(hDlg, IDVGAUPDATE, NULL, FALSE);
+              SIM->get_param_num(BXPN_VGA_UPDATE_INTERVAL)->set(value);
+            }
+            if (SendMessage(GetDlgItem(hDlg, IDKBDPASTE), EM_GETMODIFY, 0, 0)) {
+              value = GetDlgItemInt(hDlg, IDKBDPASTE, NULL, FALSE);
+              SIM->get_param_num(BXPN_KBD_PASTE_DELAY)->set(value);
+            }
             value = SendMessage(GetDlgItem(hDlg, IDMOUSE), BM_GETCHECK, 0, 0);
             SIM->get_param_num(BXPN_MOUSE_ENABLED)->set(value==BST_CHECKED);
-            GetDlgItemText(hDlg, IDUSERBTN, buffer, sizeof(buffer));
-            SIM->get_param_string(BXPN_USER_SHORTCUT)->set(buffer);
-            value = GetDlgItemInt(hDlg, IDSB16TIMER, NULL, FALSE);
-            SIM->get_param_num(BXPN_SB16_DMATIMER)->set(value);
-            value = GetDlgItemInt(hDlg, IDSBLOGLEV, NULL, FALSE);
-            SIM->get_param_num(BXPN_SB16_LOGLEVEL)->set(value);
+            if (SendMessage(GetDlgItem(hDlg, IDUSERBTN), EM_GETMODIFY, 0, 0)) {
+              GetDlgItemText(hDlg, IDUSERBTN, buffer, sizeof(buffer));
+              SIM->get_param_string(BXPN_USER_SHORTCUT)->set(buffer);
+            }
+            if (SendMessage(GetDlgItem(hDlg, IDSB16TIMER), EM_GETMODIFY, 0, 0)) {
+              value = GetDlgItemInt(hDlg, IDSB16TIMER, NULL, FALSE);
+              SIM->get_param_num(BXPN_SB16_DMATIMER)->set(value);
+            }
+            if (SendMessage(GetDlgItem(hDlg, IDSBLOGLEV), EM_GETMODIFY, 0, 0)) {
+              value = GetDlgItemInt(hDlg, IDSBLOGLEV, NULL, FALSE);
+              SIM->get_param_num(BXPN_SB16_LOGLEVEL)->set(value);
+            }
             changed = FALSE;
           }
           return PSNRET_NOERROR;
