@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.cc,v 1.116 2009-02-23 08:31:41 vruppert Exp $
+// $Id: floppy.cc,v 1.117 2009-03-08 08:22:23 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -141,7 +141,7 @@ void bx_floppy_ctrl_c::init(void)
 {
   Bit8u i, cmos_value;
 
-  BX_DEBUG(("Init $Id: floppy.cc,v 1.116 2009-02-23 08:31:41 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: floppy.cc,v 1.117 2009-03-08 08:22:23 vruppert Exp $"));
   DEV_dma_register_8bit_channel(2, dma_read, dma_write, "Floppy Drive");
   DEV_register_irq(6, "Floppy Drive");
   for (unsigned addr=0x03F2; addr<=0x03F7; addr++) {
@@ -788,7 +788,9 @@ void bx_floppy_ctrl_c::floppy_command(void)
       BX_FD_THIS s.head[drive] = (BX_FD_THIS s.command[1] >> 2) & 0x01;
       BX_FD_THIS s.status_reg3 = 0x28 | (BX_FD_THIS s.head[drive]<<2) | drive
         | (BX_FD_THIS s.media[drive].write_protected ? 0x40 : 0x00);
-      if (BX_FD_THIS s.cylinder[drive] == 0) BX_FD_THIS s.status_reg3 |= 0x10;
+      if ((BX_FD_THIS s.device_type[drive] != FDRIVE_NONE) &&
+          (BX_FD_THIS s.cylinder[drive] == 0))
+        BX_FD_THIS s.status_reg3 |= 0x10;
       enter_result_phase();
       return;
 
