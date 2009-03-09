@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_ohci.cc,v 1.20 2009-03-09 14:44:06 vruppert Exp $
+// $Id: usb_ohci.cc,v 1.21 2009-03-09 23:18:52 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Benjamin D Lunt (fys at frontiernet net)
@@ -127,11 +127,6 @@ void bx_usb_ohci_c::init(void)
   BX_OHCI_THIS hub.frame_index =
                    bx_pc_system.register_timer(this, usb_frame_handler, 1000, 1,1, "ohci.frame_timer");
 
-  // Call our interval timer routine every 1uS
-  // Continuous and active
-  BX_OHCI_THIS hub.interval_index =
-                   bx_pc_system.register_timer(this, usb_interval_handler, 1, 1,1, "ohci.interval_timer");
-
   BX_OHCI_THIS hub.devfunc = 0x00;
   DEV_register_pci_handlers(this, &BX_OHCI_THIS hub.devfunc, BX_PLUGIN_USB_OHCI,
                             "Experimental USB OHCI");
@@ -143,6 +138,7 @@ void bx_usb_ohci_c::init(void)
   BX_OHCI_THIS hub.ohci_done_count = 7;
   BX_OHCI_THIS hub.use_control_head = 0;
   BX_OHCI_THIS hub.use_bulk_head = 0;
+  BX_OHCI_THIS hub.sof_time = 0;
 
   //FIXME: for now, we want a status bar // hub zero, port zero
   BX_OHCI_THIS hub.statusbar_id[0] = bx_gui->register_statusitem("OHCI");
@@ -285,9 +281,7 @@ void bx_usb_ohci_c::reset_hc()
   BX_OHCI_THIS hub.op_regs.HcFmInterval.fi       = 0x2EDF;
 
   // HcFmRemaining
-  BX_OHCI_THIS hub.op_regs.HcFmRemaining.frt      =      0;
-  BX_OHCI_THIS hub.op_regs.HcFmRemaining.reserved =      0;
-  BX_OHCI_THIS hub.op_regs.HcFmRemaining.fr       = 0x0000;
+  BX_OHCI_THIS hub.op_regs.HcFmRemainingToggle   =      0;
 
   // HcFmNumber
   BX_OHCI_THIS hub.op_regs.HcFmNumber         = 0x00000000;
@@ -309,7 +303,7 @@ void bx_usb_ohci_c::reset_hc()
   BX_OHCI_THIS hub.op_regs.HcRhDescriptorA.ndp      =    USB_OHCI_NUM_PORTS;
 
   // HcRhDescriptorB
-  BX_OHCI_THIS hub.op_regs.HcRhDescriptorB.ppcm     = 0x0000 | ((USB_OHCI_NUM_PORTS == 1) ? 2 : 0) | ((USB_OHCI_NUM_PORTS == 2) ? 6 : 0);
+  BX_OHCI_THIS hub.op_regs.HcRhDescriptorB.ppcm     = ((1 << USB_OHCI_NUM_PORTS) - 1) << 1;
   BX_OHCI_THIS hub.op_regs.HcRhDescriptorB.dr       = 0x0000;
 
   // HcRhStatus
@@ -358,7 +352,7 @@ void bx_usb_ohci_c::register_state(void)
   bx_list_c *hub, *port, *reg;
 
   bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "usb_ohci", "USB OHCI State");
-  hub = new bx_list_c(list, "hub", 24);
+  hub = new bx_list_c(list, "hub", 25);
   reg = new bx_list_c(hub, "HcControl", 9);
   new bx_shadow_bool_c(reg, "rwe", &BX_OHCI_THIS hub.op_regs.HcControl.rwe);
   new bx_shadow_bool_c(reg, "rwc", &BX_OHCI_THIS hub.op_regs.HcControl.rwc);
@@ -388,9 +382,7 @@ void bx_usb_ohci_c::register_state(void)
   new bx_shadow_bool_c(reg, "fit", &BX_OHCI_THIS hub.op_regs.HcFmInterval.fit);
   new bx_shadow_num_c(reg, "fsmps", &BX_OHCI_THIS hub.op_regs.HcFmInterval.fsmps);
   new bx_shadow_num_c(reg, "fi", &BX_OHCI_THIS hub.op_regs.HcFmInterval.fi, BASE_HEX);
-  reg = new bx_list_c(hub, "HcFmRemaining", 2);
-  new bx_shadow_bool_c(reg, "frt", &BX_OHCI_THIS hub.op_regs.HcFmRemaining.frt);
-  new bx_shadow_num_c(reg, "fr", &BX_OHCI_THIS hub.op_regs.HcFmRemaining.fr, BASE_HEX);
+  new bx_shadow_bool_c(hub, "HcFmRemainingToggle", &BX_OHCI_THIS hub.op_regs.HcFmRemainingToggle);
   new bx_shadow_num_c(hub, "HcFmNumber", &BX_OHCI_THIS hub.op_regs.HcFmNumber, BASE_HEX);
   new bx_shadow_num_c(hub, "HcPeriodicStart", &BX_OHCI_THIS hub.op_regs.HcPeriodicStart, BASE_HEX);
   reg = new bx_list_c(hub, "HcRhDescriptorA", 7);
@@ -433,6 +425,7 @@ void bx_usb_ohci_c::register_state(void)
   new bx_shadow_num_c(hub, "ohci_done_count", &BX_OHCI_THIS hub.ohci_done_count, BASE_DEC);
   new bx_shadow_bool_c(hub, "use_control_head", &BX_OHCI_THIS hub.use_control_head);
   new bx_shadow_bool_c(hub, "use_bulk_head", &BX_OHCI_THIS hub.use_bulk_head);
+  new bx_shadow_num_c(hub, "sof_time", &BX_OHCI_THIS hub.sof_time);
   register_pci_state(hub, BX_OHCI_THIS hub.pci_conf);
 }
 
@@ -590,9 +583,7 @@ bx_bool bx_usb_ohci_c::read_handler(bx_phy_address addr, unsigned len, void *dat
       break;
 
     case 0x38: // HcFmRemaining
-      val =   (BX_OHCI_THIS hub.op_regs.HcFmRemaining.frt      ? 1 << 31 : 0)
-            | (BX_OHCI_THIS hub.op_regs.HcFmRemaining.reserved     << 14)
-            | (BX_OHCI_THIS hub.op_regs.HcFmRemaining.fr           << 0);
+      val = get_frame_remaining();
       break;
 
     case 0x3C: // HcFmNumber
@@ -724,8 +715,7 @@ bx_bool bx_usb_ohci_c::write_handler(bx_phy_address addr, unsigned len, void *da
       BX_OHCI_THIS hub.op_regs.HcControl.ple      = (value & (1<< 2)) ? 1 : 0;
       BX_OHCI_THIS hub.op_regs.HcControl.cbsr     = (value & (3<< 0)) >>  0;
       if (BX_OHCI_THIS hub.op_regs.HcControl.hcfs == 0x02) {
-        BX_OHCI_THIS hub.op_regs.HcFmRemaining.fr = BX_OHCI_THIS hub.op_regs.HcFmInterval.fi;
-        BX_OHCI_THIS hub.op_regs.HcFmRemaining.frt = 0;
+        BX_OHCI_THIS hub.op_regs.HcFmRemainingToggle = 0;
         if (org_state != 2)
           BX_OHCI_THIS hub.use_control_head = BX_OHCI_THIS hub.use_bulk_head = 1;
       }
@@ -978,19 +968,18 @@ bx_bool bx_usb_ohci_c::write_handler(bx_phy_address addr, unsigned len, void *da
   return 1;
 }
 
-void bx_usb_ohci_c::usb_interval_handler(void *this_ptr)
+Bit32u bx_usb_ohci_c::get_frame_remaining(void)
 {
-  bx_usb_ohci_c *class_ptr = (bx_usb_ohci_c *) this_ptr;
-  class_ptr->usb_interval_timer();
-}
+  Bit16u bit_time, fr;
 
-// Called once every 1uS
-void bx_usb_ohci_c::usb_interval_timer(void)
-{
-  // if remaining > 0, decrement it
-  //(0x2EDF+1) / 12 = 1000
-  if (BX_OHCI_THIS hub.op_regs.HcFmRemaining.fr > 0)
-    BX_OHCI_THIS hub.op_regs.HcFmRemaining.fr =- 12;
+  bit_time = (Bit16u)((bx_pc_system.time_usec() - BX_OHCI_THIS hub.sof_time) * 12);
+  if ((BX_OHCI_THIS hub.op_regs.HcControl.hcfs != 2) ||
+      (bit_time > BX_OHCI_THIS hub.op_regs.HcFmInterval.fi)) {
+    fr = 0;
+  } else {
+    fr = BX_OHCI_THIS hub.op_regs.HcFmInterval.fi - bit_time;
+  }
+  return (BX_OHCI_THIS hub.op_regs.HcFmRemainingToggle << 31) | fr;
 }
 
 void bx_usb_ohci_c::usb_frame_handler(void *this_ptr)
@@ -1008,8 +997,8 @@ void bx_usb_ohci_c::usb_frame_timer(void)
 
   if (BX_OHCI_THIS hub.op_regs.HcControl.hcfs == 2) {
     // set remaining to the interval amount.
-    BX_OHCI_THIS hub.op_regs.HcFmRemaining.fr = BX_OHCI_THIS hub.op_regs.HcFmInterval.fi;
-    BX_OHCI_THIS hub.op_regs.HcFmRemaining.frt = BX_OHCI_THIS hub.op_regs.HcFmInterval.fit;
+    BX_OHCI_THIS hub.op_regs.HcFmRemainingToggle = BX_OHCI_THIS hub.op_regs.HcFmInterval.fit;
+    BX_OHCI_THIS hub.sof_time = bx_pc_system.time_usec();
 
     // The Frame Number Register is incremented
     //  every time bit 15 is changed (at 0x8000 or 0x0000), fno is fired.
@@ -1062,7 +1051,7 @@ void bx_usb_ohci_c::usb_frame_timer(void)
         DEV_MEM_READ_PHYSICAL(BX_OHCI_THIS hub.op_regs.HcControlCurrentED + 12, 4, (Bit8u*) &cur_ed.dword3);
         process_ed(&cur_ed, BX_OHCI_THIS hub.op_regs.HcControlCurrentED);
         BX_OHCI_THIS hub.op_regs.HcControlCurrentED = ED_GET_NEXTED(&cur_ed);
-        if (BX_OHCI_THIS hub.op_regs.HcFmRemaining.fr < 8000)
+        if (get_frame_remaining() < 8000)
           goto do_bulk_eds;
       }
     }
@@ -1085,7 +1074,7 @@ do_bulk_eds:
         DEV_MEM_READ_PHYSICAL(BX_OHCI_THIS hub.op_regs.HcBulkCurrentED + 12, 4, (Bit8u*) &cur_ed.dword3);
         process_ed(&cur_ed, BX_OHCI_THIS hub.op_regs.HcBulkCurrentED);
         BX_OHCI_THIS hub.op_regs.HcBulkCurrentED = ED_GET_NEXTED(&cur_ed);
-        if (BX_OHCI_THIS hub.op_regs.HcFmRemaining.fr < 4000)
+        if (get_frame_remaining() < 4000)
           goto do_iso_eds;
       }
     }

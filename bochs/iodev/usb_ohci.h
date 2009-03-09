@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_ohci.h,v 1.12 2009-03-05 21:35:00 vruppert Exp $
+// $Id: usb_ohci.h,v 1.13 2009-03-09 23:18:52 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Benjamin D Lunt (fys at frontiernet net)
@@ -179,11 +179,7 @@ typedef struct {
       Bit8u   reserved;          //  2 bit reserved                    = 00b            R   R
       Bit16u  fi;                // 14 bit FrameInterval               = 0x2EDF         RW  R
     } HcFmInterval;              //                                    = 0x00002EDF
-    struct {
-      bx_bool frt;               //  1 bit FrameRemainingToggle        = 0b             R   RW
-      Bit8u   reserved;          // 17 bit reserved                    = 0x00000        R   R
-      Bit32s  fr;                // 14 bit FrameRemaining              = 0x0000         RW  R
-    } HcFmRemaining;             //                                    = 0x00000000
+    bx_bool HcFmRemainingToggle; //  1 bit FrameRemainingToggle        = 0b             R   RW
     Bit32u HcFmNumber;
     Bit32u HcPeriodicStart;
     Bit16u HcLSThreshold;
@@ -241,6 +237,7 @@ typedef struct {
   unsigned ohci_done_count;
   bx_bool  use_control_head;
   bx_bool  use_bulk_head;
+  Bit64u   sof_time;
 
   int statusbar_id[2]; // IDs of the status LEDs
 } bx_usb_ohci_t;
@@ -280,8 +277,8 @@ private:
 
   static void usb_frame_handler(void *);
   void usb_frame_timer(void);
-  static void usb_interval_handler(void *);
-  void usb_interval_timer(void);
+
+  static Bit32u get_frame_remaining(void);
 
   void process_ed(struct OHCI_ED *, const Bit32u);
   bx_bool process_td(struct OHCI_TD *, struct OHCI_ED *);
