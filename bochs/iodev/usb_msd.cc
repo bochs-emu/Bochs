@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_msd.cc,v 1.18 2009-03-09 12:18:40 vruppert Exp $
+// $Id: usb_msd.cc,v 1.19 2009-03-09 14:44:06 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Volker Ruppert
@@ -206,6 +206,7 @@ int usb_msd_device_c::handle_control(int request, int value, int index, int leng
 
   switch (request) {
     case DeviceRequest | USB_REQ_GET_STATUS:
+    case EndpointRequest | USB_REQ_GET_STATUS:
       data[0] = (1 << USB_DEVICE_SELF_POWERED) |
         (d.remote_wakeup << USB_DEVICE_REMOTE_WAKEUP);
       data[1] = 0x00;
@@ -298,6 +299,7 @@ int usb_msd_device_c::handle_control(int request, int value, int index, int leng
       ret = 1;
       break;
     case DeviceOutRequest | USB_REQ_SET_INTERFACE:
+    case InterfaceOutRequest | USB_REQ_SET_INTERFACE:
       ret = 0;
       break;
     case EndpointOutRequest | USB_REQ_CLEAR_FEATURE:

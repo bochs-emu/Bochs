@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_ohci.cc,v 1.19 2009-03-09 12:18:40 vruppert Exp $
+// $Id: usb_ohci.cc,v 1.20 2009-03-09 14:44:06 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Benjamin D Lunt (fys at frontiernet net)
@@ -1438,13 +1438,13 @@ void bx_usb_ohci_c::usb_set_connect_status(Bit8u port, int type, bx_bool connect
         BX_OHCI_THIS hub.usb_port[port].HcRhPortStatus.lsda =
           (device->get_speed() == USB_SPEED_LOW);
         BX_OHCI_THIS hub.usb_port[port].HcRhPortStatus.ccs = 1;
-        if ((type == USB_DEV_TYPE_DISK) &&
+        if (((type == USB_DEV_TYPE_DISK) || (type == USB_DEV_TYPE_CDROM)) &&
             (!device->get_connected())) {
           if (!((usb_msd_device_c*)device)->init()) {
-            usb_set_connect_status(port, USB_DEV_TYPE_DISK, 0);
+            usb_set_connect_status(port, type, 0);
           } else {
-            BX_INFO(("HD on USB port #%d: '%s'", port+1,
-            ((usb_msd_device_c*)device)->get_path()));
+            BX_INFO(("%s on USB port #%d: '%s'", (type == USB_DEV_TYPE_DISK) ? "HD":"CD",
+                     port+1, ((usb_msd_device_c*)device)->get_path()));
           }
         }
       } else { // not connected

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_hub.cc,v 1.2 2009-03-09 12:18:40 vruppert Exp $
+// $Id: usb_hub.cc,v 1.3 2009-03-09 14:44:06 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Volker Ruppert
@@ -644,12 +644,13 @@ void usb_hub_device_c::usb_set_connect_status(Bit8u port, int type, bx_bool conn
           hub.usb_port[port].PortStatus |= PORT_STAT_LOW_SPEED;
         else
           hub.usb_port[port].PortStatus &= ~PORT_STAT_LOW_SPEED;
-        if ((type == USB_DEV_TYPE_DISK) && (!device->get_connected())) {
-          if (!((usb_msd_device_c*)hub.usb_port[port].device)->init()) {
-            usb_set_connect_status(port, USB_DEV_TYPE_DISK, 0);
+        if (((type == USB_DEV_TYPE_DISK) || (type == USB_DEV_TYPE_CDROM)) &&
+            (!device->get_connected())) {
+          if (!((usb_msd_device_c*)device)->init()) {
+            usb_set_connect_status(port, type, 0);
           } else {
-            BX_INFO(("HD on USB port #%d: '%s'", port+1,
-                     ((usb_msd_device_c*)device)->get_path()));
+            BX_INFO(("%s on USB port #%d: '%s'", (type == USB_DEV_TYPE_DISK) ? "HD":"CD",
+                     port+1, ((usb_msd_device_c*)device)->get_path()));
           }
         }
       } else {
