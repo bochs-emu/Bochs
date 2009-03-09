@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_msd.cc,v 1.17 2009-03-01 19:29:36 vruppert Exp $
+// $Id: usb_msd.cc,v 1.18 2009-03-09 12:18:40 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Volker Ruppert
@@ -31,6 +31,7 @@
 
 #if BX_SUPPORT_PCI && BX_SUPPORT_PCIUSB
 #include "usb_common.h"
+#include "cdrom.h"
 #include "hdimage.h"
 #include "scsi_device.h"
 #include "usb_msd.h"
@@ -130,11 +131,15 @@ static const Bit8u bx_msd_config_descriptor[] = {
   0x00        /*  u8  ep_bInterval; */
 };
 
-usb_msd_device_c::usb_msd_device_c(const char *filename)
+usb_msd_device_c::usb_msd_device_c(usbdev_type type, const char *filename)
 {
-  d.type = USB_DEV_TYPE_DISK;
+  d.type = type;
   d.speed = USB_SPEED_FULL;
-  strcpy(d.devname, "BOCHS USB HARDDRIVE");
+  if (d.type == USB_DEV_TYPE_DISK) {
+    strcpy(d.devname, "BOCHS USB HARDDRIVE");
+  } else if (d.type == USB_DEV_TYPE_CDROM) {
+    strcpy(d.devname, "BOCHS USB CDROM");
+  }
   memset((void*)&s, 0, sizeof(s));
   s.fname = filename;
 
@@ -145,23 +150,36 @@ usb_msd_device_c::~usb_msd_device_c(void)
 {
   if (s.scsi_dev != NULL)
     delete s.scsi_dev;
-  s.hdimage->close();
-  delete s.hdimage;
+  if (s.hdimage != NULL) {
+    delete s.hdimage;
+  } else if (s.cdrom != NULL) {
+    delete s.cdrom;
+  }
 }
 
 bx_bool usb_msd_device_c::init()
 {
-  s.hdimage = new default_image_t();
-  if (s.hdimage->open(s.fname) < 0) {
-    BX_ERROR(("could not open hard drive image file '%s'", s.fname));
-    return 0;
-  } else {
-    s.scsi_dev = new scsi_device_t(s.hdimage, 0, usb_msd_command_complete, (void*)this);
-    s.scsi_dev->register_state(s.sr_list, "scsidev");
-    s.mode = USB_MSDM_CBW;
-    d.connected = 1;
-    return 1;
+  if (d.type == USB_DEV_TYPE_DISK) {
+    s.hdimage = new default_image_t();
+    if (s.hdimage->open(s.fname) < 0) {
+      BX_ERROR(("could not open hard drive image file '%s'", s.fname));
+      return 0;
+    } else {
+      s.scsi_dev = new scsi_device_t(s.hdimage, 0, usb_msd_command_complete, (void*)this);
+    }
+  } else if (d.type == USB_DEV_TYPE_CDROM) {
+    s.cdrom = new LOWLEVEL_CDROM(s.fname);
+    if (!s.cdrom->insert_cdrom()) {
+      BX_ERROR(("could not open cdrom image file '%s'", s.fname));
+      return 0;
+    } else {
+      s.scsi_dev = new scsi_device_t(s.cdrom, 0, usb_msd_command_complete, (void*)this);
+    }
   }
+  s.scsi_dev->register_state(s.sr_list, "scsidev");
+  s.mode = USB_MSDM_CBW;
+  d.connected = 1;
+  return 1;
 }
 
 void usb_msd_device_c::register_state_specific(bx_list_c *parent)
@@ -375,7 +393,7 @@ int usb_msd_device_c::handle_data(USBPacket *p)
           }
           if (s.usb_len) {
             BX_INFO(("deferring packet %p", p));
-            // TODO: defer packet
+            usb_defer_packet(p, this);
             s.packet = p;
             ret = USB_RET_ASYNC;
           } else {
@@ -397,7 +415,7 @@ int usb_msd_device_c::handle_data(USBPacket *p)
         case USB_MSDM_DATAOUT:
           if (s.data_len != 0 || len < 13)
             goto fail;
-          // TODO: defer packet
+          usb_defer_packet(p, this);
           s.packet = p;
           ret = USB_RET_ASYNC;
           break;
@@ -433,7 +451,7 @@ int usb_msd_device_c::handle_data(USBPacket *p)
         }
         if (s.usb_len) {
           BX_INFO(("deferring packet %p", p));
-          // TODO: defer packet
+          usb_defer_packet(p, this);
           s.packet = p;
           ret = USB_RET_ASYNC;
         } else {
@@ -539,6 +557,13 @@ void usb_msd_device_c::command_complete(int reason, Bit32u tag, Bit32u arg)
       s.packet = NULL;
     }
   }
+}
+
+void usb_msd_device_c::cancel_packet(USBPacket *p)
+{
+  s.scsi_dev->scsi_cancel_io(s.tag);
+  s.packet = NULL;
+  s.scsi_len = 0;
 }
 
 #endif // BX_SUPPORT_PCI && BX_SUPPORT_PCIUSB

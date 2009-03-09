@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_uhci.cc,v 1.15 2009-03-07 16:57:17 vruppert Exp $
+// $Id: usb_uhci.cc,v 1.16 2009-03-09 12:18:40 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Benjamin D Lunt (fys at frontiernet net)
@@ -283,7 +283,7 @@ void bx_usb_uhci_c::after_restore_state(void)
 
 void bx_usb_uhci_c::init_device(Bit8u port, const char *devname)
 {
-  usbdev_type type = USB_DEV_TYPE_NONE;
+  usbdev_type type;
   char pname[BX_PATHNAME_LEN];
 
   if (!strlen(devname) || !strcmp(devname, "none")) return;
@@ -292,35 +292,13 @@ void bx_usb_uhci_c::init_device(Bit8u port, const char *devname)
     BX_ERROR(("init_device(): port%d already in use", port+1));
     return;
   }
-
-  if (!strcmp(devname, "mouse")) {
-    type = USB_DEV_TYPE_MOUSE;
-    BX_UHCI_THIS hub.usb_port[port].device = new usb_hid_device_c(type);
-  } else if (!strcmp(devname, "tablet")) {
-    type = USB_DEV_TYPE_TABLET;
-    BX_UHCI_THIS hub.usb_port[port].device = new usb_hid_device_c(type);
-  } else if (!strcmp(devname, "keypad")) {
-    type = USB_DEV_TYPE_KEYPAD;
-    BX_UHCI_THIS hub.usb_port[port].device = new usb_hid_device_c(type);
-  } else if (!strncmp(devname, "disk", 4)) {
-    if ((strlen(devname) > 5) && (devname[4] == ':')) {
-      type = USB_DEV_TYPE_DISK;
-      BX_UHCI_THIS hub.usb_port[port].device = new usb_msd_device_c(devname+5);
-    } else {
-      BX_PANIC(("USB device 'disk' needs a filename separated with a colon"));
-      return;
-    }
-  } else if (!strcmp(devname, "hub")) {
-    type = USB_DEV_TYPE_HUB;
-    BX_UHCI_THIS hub.usb_port[port].device = new usb_hub_device_c();
-  } else {
-    BX_PANIC(("unknown USB device: %s", devname));
-    return;
+  type = usb_init_device(devname, BX_UHCI_THIS_PTR, &BX_UHCI_THIS hub.usb_port[port].device);
+  if (BX_UHCI_THIS hub.usb_port[port].device != NULL) {
+    sprintf(pname, "usb_uhci.hub.port%d.device", port+1);
+    bx_list_c *devlist = (bx_list_c*)SIM->get_param(pname, SIM->get_bochs_root());
+    BX_UHCI_THIS hub.usb_port[port].device->register_state(devlist);
+    usb_set_connect_status(port, type, 1);
   }
-  sprintf(pname, "usb_uhci.hub.port%d.device", port+1);
-  bx_list_c *devlist = (bx_list_c*)SIM->get_param(pname, SIM->get_bochs_root());
-  BX_UHCI_THIS hub.usb_port[port].device->register_state(devlist);
-  usb_set_connect_status(port, type, 1);
 }
 
 void bx_usb_uhci_c::remove_device(Bit8u port)

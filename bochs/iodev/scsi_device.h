@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: scsi_device.h,v 1.7 2009-02-08 09:05:52 vruppert Exp $
+// $Id: scsi_device.h,v 1.8 2009-03-09 12:18:40 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2007  Volker Ruppert
@@ -88,6 +88,7 @@ private:
   int tcq;
   scsi_completionfn completion;
   void *dev;
+  bx_bool locked;
 };
 
 #endif

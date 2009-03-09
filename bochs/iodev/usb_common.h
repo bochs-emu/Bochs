@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_common.h,v 1.7 2009-03-07 16:57:17 vruppert Exp $
+// $Id: usb_common.h,v 1.8 2009-03-09 12:18:40 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Benjamin D Lunt (fys at frontiernet net)
@@ -105,12 +105,15 @@
 #define USB_DT_OTHER_SPEED_CONFIG       0x07
 #define USB_DT_INTERFACE_POWER          0x08
 
+class usb_device_c;
+
 struct USBPacket {
   int pid;
   Bit8u devaddr;
   Bit8u devep;
   Bit8u *data;
   int len;
+  usb_device_c *dev;
 };
 
 enum usbdev_type {
@@ -119,8 +122,11 @@ enum usbdev_type {
   USB_DEV_TYPE_TABLET,
   USB_DEV_TYPE_KEYPAD,
   USB_DEV_TYPE_DISK,
+  USB_DEV_TYPE_CDROM,
   USB_DEV_TYPE_HUB
 };
+
+usbdev_type usb_init_device(const char *devname, logfunctions *hc, usb_device_c **device);
 
 
 class usb_device_c : public logfunctions {
@@ -135,6 +141,7 @@ public:
   void register_state(bx_list_c *parent);
   virtual void register_state_specific(bx_list_c *parent) {}
   virtual void after_restore_state() {}
+  virtual void cancel_packet(USBPacket *p) {}
 
   bx_bool get_connected() {return d.connected;}
   usbdev_type get_type() {return d.type;}
@@ -164,5 +171,15 @@ protected:
   void usb_dump_packet(Bit8u *data, unsigned size);
   int set_usb_string(Bit8u *buf, const char *str);
 };
+
+static inline void usb_defer_packet(USBPacket *p, usb_device_c *dev)
+{
+  p->dev = dev;
+}
+
+static inline void usb_cancel_packet(USBPacket *p)
+{
+  p->dev->cancel_packet(p);
+}
 
 #endif

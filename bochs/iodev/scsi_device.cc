@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: scsi_device.cc,v 1.10 2009-02-08 09:05:52 vruppert Exp $
+// $Id: scsi_device.cc,v 1.11 2009-03-09 12:18:40 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2007  Volker Ruppert
@@ -48,6 +48,7 @@ scsi_device_t::scsi_device_t(device_image_t *_hdimage, int _tcq,
   completion = _completion;
   dev = _dev;
   cluster_size = 1;
+  locked = 0;
 
   put("SCSID");
 }
@@ -64,12 +65,32 @@ scsi_device_t::scsi_device_t(LOWLEVEL_CDROM *_cdrom, int _tcq,
   completion = _completion;
   dev = _dev;
   cluster_size = 4;
+  locked = 0;
 
   put("SCSIC");
 }
 
 scsi_device_t::~scsi_device_t(void)
 {
+  SCSIRequest *r, *next;
+
+  if (requests) {
+    r = requests;
+    while (r != NULL) {
+      next = r->next;
+      delete r;
+      r = next;
+    }
+  }
+  if (free_requests) {
+    r = free_requests;
+    while (r != NULL) {
+      next = r->next;
+      delete r;
+      r = next;
+    }
+    free_requests = NULL;
+  }
 }
 
 void scsi_device_t::register_state(bx_list_c *parent, const char *name)
@@ -422,7 +443,7 @@ Bit32s scsi_device_t::scsi_send_command(Bit32u tag, Bit8u *buf, int lun)
           p[5] = 0xff; /* CD DA, DA accurate, RW supported,
                           RW corrected, C2 errors, ISRC,
                           UPC, Bar code */
-          p[6] = 0x2d; // TODO: | (bdrv_is_locked(s->bdrv)? 2 : 0);
+          p[6] = 0x2d | (locked ? 2 : 0);
           /* Locking supported, jumper present, eject, tray */
           p[7] = 0; /* no volume & mute control, no changer */
           p[8] = (50 * 176) >> 8; // 50x read speed
@@ -450,6 +471,7 @@ Bit32s scsi_device_t::scsi_send_command(Bit32u tag, Bit8u *buf, int lun)
       break;
     case 0x1e:
       BX_INFO(("Prevent Allow Medium Removal (prevent = %d)", buf[4] & 3));
+      locked = buf[4] & 1;
       break;
     case 0x25:
       BX_DEBUG(("Read Capacity"));

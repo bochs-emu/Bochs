@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cdrom.cc,v 1.95 2009-02-08 09:05:52 vruppert Exp $
+// $Id: cdrom.cc,v 1.96 2009-03-09 12:18:40 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -501,7 +501,7 @@ int GetCDCapacity(unsigned int hid, unsigned int tid, unsigned int lun)
 
 #endif
 
-cdrom_interface::cdrom_interface(char *dev)
+cdrom_interface::cdrom_interface(const char *dev)
 {
   put("CD");
   fd = -1; // File descriptor not yet allocated
@@ -522,7 +522,7 @@ cdrom_interface::cdrom_interface(char *dev)
 
 void
 cdrom_interface::init(void) {
-  BX_DEBUG(("Init $Id: cdrom.cc,v 1.95 2009-02-08 09:05:52 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: cdrom.cc,v 1.96 2009-03-09 12:18:40 vruppert Exp $"));
   BX_INFO(("file = '%s'",path));
 }
 
@@ -539,7 +539,7 @@ cdrom_interface::~cdrom_interface(void)
 }
 
   bx_bool
-cdrom_interface::insert_cdrom(char *dev)
+cdrom_interface::insert_cdrom(const char *dev)
 {
   unsigned char buffer[BX_CD_FRAMESIZE];
 #ifndef WIN32

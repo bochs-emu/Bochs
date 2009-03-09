@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_common.cc,v 1.6 2009-03-01 19:29:36 vruppert Exp $
+// $Id: usb_common.cc,v 1.7 2009-03-09 12:18:40 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Benjamin D Lunt (fys at frontiernet net)
@@ -55,10 +55,49 @@
 
 #include "usb_common.h"
 #include "usb_hid.h"
+#include "usb_hub.h"
 #include "usb_msd.h"
 
 #define LOG_THIS
 
+usbdev_type usb_init_device(const char *devname, logfunctions *hub, usb_device_c **device)
+{
+  usbdev_type type = USB_DEV_TYPE_NONE;
+
+  if (!strcmp(devname, "mouse")) {
+    type = USB_DEV_TYPE_MOUSE;
+    *device = new usb_hid_device_c(type);
+  } else if (!strcmp(devname, "tablet")) {
+    type = USB_DEV_TYPE_TABLET;
+    *device = new usb_hid_device_c(type);
+  } else if (!strcmp(devname, "keypad")) {
+    type = USB_DEV_TYPE_KEYPAD;
+    *device = new usb_hid_device_c(type);
+  } else if (!strncmp(devname, "disk", 4)) {
+    if ((strlen(devname) > 5) && (devname[4] == ':')) {
+      type = USB_DEV_TYPE_DISK;
+      *device = new usb_msd_device_c(type, devname+5);
+    } else {
+      hub->panic("USB device 'disk' needs a filename separated with a colon");
+      return type;
+    }
+//  } else if (!strncmp(devname, "cdrom", 5)) {
+//    if ((strlen(devname) > 6) && (devname[5] == ':')) {
+//      type = USB_DEV_TYPE_CDROM;
+//      *device = new usb_msd_device_c(type, devname+6);
+//    } else {
+//      hub->panic("USB device 'cdrom' needs a filename separated with a colon");
+//      return type;
+//    }
+  } else if (!strcmp(devname, "hub")) {
+    type = USB_DEV_TYPE_HUB;
+    *device = new usb_hub_device_c();
+  } else {
+    hub->panic("unknown USB device: %s", devname);
+    return type;
+  }
+  return type;
+}
 
 // Dumps the contents of a buffer to the log file
 void usb_device_c::usb_dump_packet(Bit8u *data, unsigned size)

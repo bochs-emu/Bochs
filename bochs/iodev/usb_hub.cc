@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_hub.cc,v 1.1 2009-03-07 16:57:17 vruppert Exp $
+// $Id: usb_hub.cc,v 1.2 2009-03-09 12:18:40 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Volker Ruppert
@@ -207,6 +207,9 @@ static bx_bool remove_usb_hub(usb_hub_device_c *hub)
         prev->next = ext_usb_hub->next;
       }
       free(ext_usb_hub);
+      if (ext_usb_hubs == NULL) {
+        hub_count = 0;
+      }
       return 1;
     } else {
       prev = ext_usb_hub;
@@ -598,7 +601,7 @@ int usb_hub_device_c::handle_packet(USBPacket *p)
 
 void usb_hub_device_c::init_device(Bit8u port, const char *devname)
 {
-  usbdev_type type = USB_DEV_TYPE_NONE;
+  usbdev_type type;
   char pname[BX_PATHNAME_LEN];
 
   if (!strlen(devname) || !strcmp(devname, "none")) return;
@@ -607,35 +610,13 @@ void usb_hub_device_c::init_device(Bit8u port, const char *devname)
     BX_ERROR(("init_device(): port%d already in use", port+1));
     return;
   }
-
-  if (!strcmp(devname, "mouse")) {
-    type = USB_DEV_TYPE_MOUSE;
-    hub.usb_port[port].device = new usb_hid_device_c(type);
-  } else if (!strcmp(devname, "tablet")) {
-    type = USB_DEV_TYPE_TABLET;
-    hub.usb_port[port].device = new usb_hid_device_c(type);
-  } else if (!strcmp(devname, "keypad")) {
-    type = USB_DEV_TYPE_KEYPAD;
-    hub.usb_port[port].device = new usb_hid_device_c(type);
-  } else if (!strncmp(devname, "disk", 4)) {
-    if ((strlen(devname) > 5) && (devname[4] == ':')) {
-      type = USB_DEV_TYPE_DISK;
-      hub.usb_port[port].device = new usb_msd_device_c(devname+5);
-    } else {
-      BX_PANIC(("USB device 'disk' needs a filename separated with a colon"));
-      return;
-    }
-  } else if (!strcmp(devname, "hub")) {
-    type = USB_DEV_TYPE_HUB;
-    hub.usb_port[port].device = new usb_hub_device_c();
-  } else {
-    BX_PANIC(("unknown USB device: %s", devname));
-    return;
+  type = usb_init_device(devname, this, &hub.usb_port[port].device);
+  if (hub.usb_port[port].device != NULL) {
+    sprintf(pname, "port%d.device", port+1);
+    bx_list_c *devlist = (bx_list_c*)SIM->get_param(pname, hub.state);
+    hub.usb_port[port].device->register_state(devlist);
+    usb_set_connect_status(port, type, 1);
   }
-  sprintf(pname, "port%d.device", port+1);
-  bx_list_c *devlist = (bx_list_c*)SIM->get_param(pname, hub.state);
-  hub.usb_port[port].device->register_state(devlist);
-  usb_set_connect_status(port, type, 1);
 }
 
 void usb_hub_device_c::remove_device(Bit8u port)

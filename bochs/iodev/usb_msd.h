@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_msd.h,v 1.11 2009-03-01 19:29:36 vruppert Exp $
+// $Id: usb_msd.h,v 1.12 2009-03-09 12:18:40 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Volker Ruppert
@@ -25,11 +25,12 @@
 #define BX_IODEV_USB_MSD_H
 
 class device_image_t;
+class LOWLEVEL_CDROM;
 class scsi_device_t;
 
 class usb_msd_device_c : public usb_device_c {
 public:
-  usb_msd_device_c(const char *filename);
+  usb_msd_device_c(usbdev_type type, const char *filename);
   virtual ~usb_msd_device_c(void);
 
   bx_bool init();
@@ -38,6 +39,7 @@ public:
   virtual int handle_control(int request, int value, int index, int length, Bit8u *data);
   virtual int handle_data(USBPacket *p);
   virtual void register_state_specific(bx_list_c *parent);
+  virtual void cancel_packet(USBPacket *p);
 
 protected:
   void copy_data();
@@ -57,6 +59,7 @@ private:
     Bit32u tag;
     int result;
     device_image_t *hdimage;
+    LOWLEVEL_CDROM *cdrom;
     scsi_device_t *scsi_dev;
     USBPacket *packet;
     bx_list_c *sr_list;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cdrom.h,v 1.22 2009-02-08 09:05:52 vruppert Exp $
+// $Id: cdrom.h,v 1.23 2009-03-09 12:18:40 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -30,12 +30,12 @@
 
 class cdrom_interface : public logfunctions {
 public:
-  cdrom_interface(char *dev);
+  cdrom_interface(const char *dev);
   virtual ~cdrom_interface(void);
   void init(void);
 
   // Load CD-ROM. Returns 0 if CD is not ready.
-  bx_bool insert_cdrom(char *dev = NULL);
+  bx_bool insert_cdrom(const char *dev = NULL);
 
   // Logically eject the CD.
   void eject_cdrom();
