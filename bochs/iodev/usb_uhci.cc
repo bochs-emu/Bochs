@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_uhci.cc,v 1.17 2009-03-09 14:44:06 vruppert Exp $
+// $Id: usb_uhci.cc,v 1.18 2009-03-09 18:28:17 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Benjamin D Lunt (fys at frontiernet net)
@@ -543,7 +543,7 @@ void bx_usb_uhci_c::write(Bit32u address, Bit32u value, unsigned io_len)
 
     case 0x08: // frame base register (32-bit)
       if (value & 0xFFF)
-        BX_PANIC(("write to frame base register with bits 11:0 not zero: 0x%08x", value));
+        BX_DEBUG(("write to frame base register with bits 11:0 not zero: 0x%08x", value));
 
       BX_UHCI_THIS hub.usb_frame_base.frame_base = (value & ~0xfff);
       break;
@@ -875,7 +875,7 @@ int bx_usb_uhci_c::broadcast_packet(USBPacket *p)
   ret = USB_RET_NODEV;
   for (i = 0; i < USB_UHCI_NUM_PORTS && ret == USB_RET_NODEV; i++) {
     if ((BX_UHCI_THIS hub.usb_port[i].device != NULL) &&
-        (BX_UHCI_THIS hub.usb_port[i].status)) {
+        (BX_UHCI_THIS hub.usb_port[i].enabled)) {
       ret = BX_UHCI_THIS hub.usb_port[i].device->handle_packet(p);
     }
   }
