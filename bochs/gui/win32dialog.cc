@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32dialog.cc,v 1.75 2009-03-08 22:10:16 vruppert Exp $
+// $Id: win32dialog.cc,v 1.76 2009-03-10 19:33:03 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  The Bochs Project
@@ -25,6 +25,7 @@
 #include "bochs.h"
 #include "textconfig.h"
 #include "win32res.h"
+#include "win32paramdlg.h"
 
 const char log_choices[5][16] = {"ignore", "log", "ask user", "end simulation", "no change"};
 static int retcode = 0;
@@ -35,8 +36,6 @@ extern char *debug_cmd;
 extern bx_bool debug_cmd_ready;
 extern bx_bool vgaw_refresh;
 #endif
-
-int AskFilename(HWND hwnd, bx_param_filename_c *param, const char *ext);
 
 char *backslashes(char *s)
 {
@@ -638,7 +637,8 @@ static BOOL CALLBACK RTUSBdevDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM 
         default:
           switch (LOWORD(wParam)) {
             case IDEXTHUB1:
-              MessageBox(hDlg, "Not implemented yet", "Error", MB_ICONERROR);
+              bx_list_c *exthub = (bx_list_c*)SIM->get_param("exthub1", SIM->get_param(BXPN_MENU_RUNTIME_USB));
+              win32ParamDialog(hDlg, exthub);
               break;
           }
       }
@@ -840,64 +840,6 @@ void LogAskDialog(BxEvent *event)
 {
   event->retcode = DialogBoxParam(NULL, MAKEINTRESOURCE(ASK_DLG), GetBochsWindow(),
                                   (DLGPROC)LogAskProc, (LPARAM)event);
-}
-
-int AskFilename(HWND hwnd, bx_param_filename_c *param, const char *ext)
-{
-  OPENFILENAME ofn;
-  int ret;
-  DWORD errcode;
-  char filename[MAX_PATH];
-  const char *title;
-  char errtext[80];
-
-  param->get(filename, MAX_PATH);
-  // common file dialogs don't accept raw device names
-  if ((isalpha(filename[0])) && (filename[1] == ':') && (strlen(filename) == 2)) {
-    filename[0] = 0;
-  }
-  title = param->get_label();
-  if (!title) title = param->get_name();
-  memset(&ofn, 0, sizeof(OPENFILENAME));
-  ofn.lStructSize = sizeof(OPENFILENAME);
-  ofn.hwndOwner = hwnd;
-  ofn.lpstrFile   = filename;
-  ofn.nMaxFile    = MAX_PATH;
-  ofn.lpstrInitialDir = bx_startup_flags.initial_dir;
-  ofn.lpstrTitle = title;
-  ofn.Flags = OFN_EXPLORER | OFN_HIDEREADONLY;
-  ofn.lpstrDefExt = ext;
-  if (!lstrcmp(ext, "img")) {
-    ofn.lpstrFilter = "Floppy image files (*.img)\0*.img\0All files (*.*)\0*.*\0";
-  } else if (!lstrcmp(ext, "iso")) {
-    ofn.lpstrFilter = "CD-ROM image files (*.iso)\0*.iso\0All files (*.*)\0*.*\0";
-  } else if (!lstrcmp(ext, "txt")) {
-    ofn.lpstrFilter = "Text files (*.txt)\0*.txt\0All files (*.*)\0*.*\0";
-  } else {
-    ofn.lpstrFilter = "All files (*.*)\0*.*\0";
-  }
-  if (param->get_options()->get() & bx_param_filename_c::SAVE_FILE_DIALOG) {
-    ofn.Flags |= OFN_OVERWRITEPROMPT;
-    ret = GetSaveFileName(&ofn);
-  } else {
-    ofn.Flags |= OFN_FILEMUSTEXIST;
-    ret = GetOpenFileName(&ofn);
-  }
-  param->set(filename);
-  if (ret == 0) {
-    errcode = CommDlgExtendedError();
-    if (errcode == 0) {
-      ret = -1;
-    } else {
-      if (errcode == 0x3002) {
-        wsprintf(errtext, "CommDlgExtendedError: invalid filename");
-      } else {
-        wsprintf(errtext, "CommDlgExtendedError returns 0x%04x", errcode);
-      }
-      MessageBox(hwnd, errtext, "Error", MB_ICONERROR);
-    }
-  }
-  return ret;
 }
 
 int AskString(bx_param_string_c *param)

@@ -77,3 +77,4 @@
 #define IDOHCIDEV1  2640
 #define IDOHCIDEV2  2650
 #define IDEXTHUB1   2660
+#define PARAM_DLG   3000
