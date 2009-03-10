@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_pfp.cc,v 1.52 2009-01-16 18:18:58 sshwarts Exp $
+// $Id: sse_pfp.cc,v 1.53 2009-03-10 21:43:11 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -415,7 +415,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTTSD2SI_GdWsd(bxInstruction_c *i)
     BX_CPU_THIS_PTR check_exceptionsSSE(status_word.float_exception_flags);
     BX_WRITE_32BIT_REGZ(i->nnn(), result);
   }
-
 #else
   BX_INFO(("CVTTSD2SI_GdWsd: required SSE2, use --enable-sse option"));
   exception(BX_UD_EXCEPTION, 0, 0);
@@ -464,7 +463,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTTSS2SI_GdWss(bxInstruction_c *i)
     BX_CPU_THIS_PTR check_exceptionsSSE(status_word.float_exception_flags);
     BX_WRITE_32BIT_REGZ(i->nnn(), result);
   }
-
 #else
   BX_INFO(("CVTTSS2SI_GdWss: required SSE, use --enable-sse option"));
   exception(BX_UD_EXCEPTION, 0, 0);
@@ -614,7 +612,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTSD2SI_GdWsd(bxInstruction_c *i)
     BX_CPU_THIS_PTR check_exceptionsSSE(status_word.float_exception_flags);
     BX_WRITE_32BIT_REGZ(i->nnn(), result);
   }
-
 #else
   BX_INFO(("CVTSD2SI_GdWsd: required SSE2, use --enable-sse option"));
   exception(BX_UD_EXCEPTION, 0, 0);
@@ -663,7 +660,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTSS2SI_GdWss(bxInstruction_c *i)
     BX_CPU_THIS_PTR check_exceptionsSSE(status_word.float_exception_flags);
     BX_WRITE_32BIT_REGZ(i->nnn(), result);
   }
-
 #else
   BX_INFO(("CVTSS2SI_GdWss: required SSE, use --enable-sse option"));
   exception(BX_UD_EXCEPTION, 0, 0);
@@ -709,7 +705,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTPS2PD_VpsWps(bxInstruction_c *i)
 
   BX_CPU_THIS_PTR check_exceptionsSSE(status_word.float_exception_flags);
   BX_WRITE_XMM_REG(i->nnn(), result);
-
 #else
   BX_INFO(("CVTPS2PD_VpsWps: required SSE2, use --enable-sse option"));
   exception(BX_UD_EXCEPTION, 0, 0);
@@ -755,7 +750,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTPD2PS_VpdWpd(bxInstruction_c *i)
 
   BX_CPU_THIS_PTR check_exceptionsSSE(status_word.float_exception_flags);
   BX_WRITE_XMM_REG(i->nnn(), result);
-
 #else
   BX_INFO(("CVTPD2PS_VpdWpd: required SSE2, use --enable-sse option"));
   exception(BX_UD_EXCEPTION, 0, 0);
@@ -793,7 +787,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTSD2SS_VsdWsd(bxInstruction_c *i)
   result = float64_to_float32(op, status_word);
   BX_CPU_THIS_PTR check_exceptionsSSE(status_word.float_exception_flags);
   BX_WRITE_XMM_REG_LO_DWORD(i->nnn(), result);
-
 #else
   BX_INFO(("CVTSD2SS_VsdWsd: required SSE2, use --enable-sse option"));
   exception(BX_UD_EXCEPTION, 0, 0);
@@ -829,7 +822,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTSS2SD_VssWss(bxInstruction_c *i)
   result = float32_to_float64(op, status_word);
   BX_CPU_THIS_PTR check_exceptionsSSE(status_word.float_exception_flags);
   BX_WRITE_XMM_REG_LO_QWORD(i->nnn(), result);
-
 #else
   BX_INFO(("CVTSS2SD_VssWss: required SSE2, use --enable-sse option"));
   exception(BX_UD_EXCEPTION, 0, 0);
@@ -1294,7 +1286,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SQRTPS_VpsWps(bxInstruction_c *i)
 
   BX_CPU_THIS_PTR check_exceptionsSSE(status_word.float_exception_flags);
   BX_WRITE_XMM_REG(i->nnn(), op);
-
 #else
   BX_INFO(("SQRTPS_VpsWps: required SSE, use --enable-sse option"));
   exception(BX_UD_EXCEPTION, 0, 0);
@@ -1337,7 +1328,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SQRTPD_VpdWpd(bxInstruction_c *i)
 
   BX_CPU_THIS_PTR check_exceptionsSSE(status_word.float_exception_flags);
   BX_WRITE_XMM_REG(i->nnn(), op);
-
 #else
   BX_INFO(("SQRTPD_VpdWpd: required SSE2, use --enable-sse option"));
   exception(BX_UD_EXCEPTION, 0, 0);
@@ -1372,7 +1362,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SQRTSD_VsdWsd(bxInstruction_c *i)
   op = float64_sqrt(op, status_word);
   BX_CPU_THIS_PTR check_exceptionsSSE(status_word.float_exception_flags);
   BX_WRITE_XMM_REG_LO_QWORD(i->nnn(), op);
-
 #else
   BX_INFO(("SQRTSD_VsdWsd: required SSE2, use --enable-sse option"));
   exception(BX_UD_EXCEPTION, 0, 0);
@@ -1407,7 +1396,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SQRTSS_VssWss(bxInstruction_c *i)
   op = float32_sqrt(op, status_word);
   BX_CPU_THIS_PTR check_exceptionsSSE(status_word.float_exception_flags);
   BX_WRITE_XMM_REG_LO_DWORD(i->nnn(), op);
-
 #else
   BX_INFO(("SQRTSS_VssWss: required SSE, use --enable-sse option"));
   exception(BX_UD_EXCEPTION, 0, 0);
@@ -1458,7 +1446,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ADDPS_VpsWps(bxInstruction_c *i)
 
   BX_CPU_THIS_PTR check_exceptionsSSE(status_word.float_exception_flags);
   BX_WRITE_XMM_REG(i->nnn(), op1);
-
 #else
   BX_INFO(("ADDPS_VpsWps: required SSE, use --enable-sse option"));
   exception(BX_UD_EXCEPTION, 0, 0);
@@ -1503,7 +1490,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ADDPD_VpdWpd(bxInstruction_c *i)
 
   BX_CPU_THIS_PTR check_exceptionsSSE(status_word.float_exception_flags);
   BX_WRITE_XMM_REG(i->nnn(), op1);
-
 #else
   BX_INFO(("ADDPD_VpdWpd: required SSE2, use --enable-sse option"));
   exception(BX_UD_EXCEPTION, 0, 0);
@@ -1544,7 +1530,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ADDSD_VsdWsd(bxInstruction_c *i)
   op1 = float64_add(op1, op2, status_word);
   BX_CPU_THIS_PTR check_exceptionsSSE(status_word.float_exception_flags);
   BX_WRITE_XMM_REG_LO_QWORD(i->nnn(), op1);
-
 #else
   BX_INFO(("ADDSD_VsdWsd: required SSE2, use --enable-sse option"));
   exception(BX_UD_EXCEPTION, 0, 0);
@@ -1585,7 +1570,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ADDSS_VssWss(bxInstruction_c *i)
   op1 = float32_add(op1, op2, status_word);
   BX_CPU_THIS_PTR check_exceptionsSSE(status_word.float_exception_flags);
   BX_WRITE_XMM_REG_LO_DWORD(i->nnn(), op1);
-
 #else
   BX_INFO(("ADDSS_VssWss: required SSE, use --enable-sse option"));
   exception(BX_UD_EXCEPTION, 0, 0);
@@ -1636,7 +1620,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MULPS_VpsWps(bxInstruction_c *i)
 
   BX_CPU_THIS_PTR check_exceptionsSSE(status_word.float_exception_flags);
   BX_WRITE_XMM_REG(i->nnn(), op1);
-
 #else
   BX_INFO(("MULPS_VpsWps: required SSE, use --enable-sse option"));
   exception(BX_UD_EXCEPTION, 0, 0);
@@ -1681,7 +1664,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MULPD_VpdWpd(bxInstruction_c *i)
 
   BX_CPU_THIS_PTR check_exceptionsSSE(status_word.float_exception_flags);
   BX_WRITE_XMM_REG(i->nnn(), op1);
-
 #else
   BX_INFO(("MULPD_VpdWpd: required SSE2, use --enable-sse option"));
   exception(BX_UD_EXCEPTION, 0, 0);
@@ -1722,7 +1704,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MULSD_VsdWsd(bxInstruction_c *i)
   op1 = float64_mul(op1, op2, status_word);
   BX_CPU_THIS_PTR check_exceptionsSSE(status_word.float_exception_flags);
   BX_WRITE_XMM_REG_LO_QWORD(i->nnn(), op1);
-
 #else
   BX_INFO(("MULSD_VsdWsd: required SSE2, use --enable-sse option"));
   exception(BX_UD_EXCEPTION, 0, 0);
@@ -1763,7 +1744,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MULSS_VssWss(bxInstruction_c *i)
   op1 = float32_mul(op1, op2, status_word);
   BX_CPU_THIS_PTR check_exceptionsSSE(status_word.float_exception_flags);
   BX_WRITE_XMM_REG_LO_DWORD(i->nnn(), op1);
-
 #else
   BX_INFO(("MULSS_VssWss: required SSE, use --enable-sse option"));
   exception(BX_UD_EXCEPTION, 0, 0);
@@ -1814,7 +1794,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SUBPS_VpsWps(bxInstruction_c *i)
 
   BX_CPU_THIS_PTR check_exceptionsSSE(status_word.float_exception_flags);
   BX_WRITE_XMM_REG(i->nnn(), op1);
-
 #else
   BX_INFO(("SUBPS_VpsWps: required SSE, use --enable-sse option"));
   exception(BX_UD_EXCEPTION, 0, 0);
@@ -1859,7 +1838,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SUBPD_VpdWpd(bxInstruction_c *i)
 
   BX_CPU_THIS_PTR check_exceptionsSSE(status_word.float_exception_flags);
   BX_WRITE_XMM_REG(i->nnn(), op1);
-
 #else
   BX_INFO(("SUBPD_VpdWpd: required SSE2, use --enable-sse option"));
   exception(BX_UD_EXCEPTION, 0, 0);
@@ -1900,7 +1878,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SUBSD_VsdWsd(bxInstruction_c *i)
   op1 = float64_sub(op1, op2, status_word);
   BX_CPU_THIS_PTR check_exceptionsSSE(status_word.float_exception_flags);
   BX_WRITE_XMM_REG_LO_QWORD(i->nnn(), op1);
-
 #else
   BX_INFO(("SUBSD_VsdWsd: required SSE2, use --enable-sse option"));
   exception(BX_UD_EXCEPTION, 0, 0);
@@ -1941,7 +1918,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SUBSS_VssWss(bxInstruction_c *i)
   op1 = float32_sub(op1, op2, status_word);
   BX_CPU_THIS_PTR check_exceptionsSSE(status_word.float_exception_flags);
   BX_WRITE_XMM_REG_LO_DWORD(i->nnn(), op1);
-
 #else
   BX_INFO(("SUBSS_VssWss: required SSE, use --enable-sse option"));
   exception(BX_UD_EXCEPTION, 0, 0);
@@ -1997,7 +1973,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MINPS_VpsWps(bxInstruction_c *i)
 
   BX_CPU_THIS_PTR check_exceptionsSSE(status_word.float_exception_flags);
   BX_WRITE_XMM_REG(i->nnn(), op1);
-
 #else
   BX_INFO(("MINPS_VpsWps: required SSE, use --enable-sse option"));
   exception(BX_UD_EXCEPTION, 0, 0);
@@ -2045,7 +2020,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MINPD_VpdWpd(bxInstruction_c *i)
 
   BX_CPU_THIS_PTR check_exceptionsSSE(status_word.float_exception_flags);
   BX_WRITE_XMM_REG(i->nnn(), op1);
-
 #else
   BX_INFO(("MINPD_VpdWpd: required SSE2, use --enable-sse option"));
   exception(BX_UD_EXCEPTION, 0, 0);
@@ -2087,7 +2061,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MINSD_VsdWsd(bxInstruction_c *i)
   BX_CPU_THIS_PTR check_exceptionsSSE(status_word.float_exception_flags);
   BX_WRITE_XMM_REG_LO_QWORD(i->nnn(),
          (rc == float_relation_less) ? op1 : op2);
-
 #else
   BX_INFO(("MINSD_VsdWsd: required SSE2, use --enable-sse option"));
   exception(BX_UD_EXCEPTION, 0, 0);
@@ -2129,7 +2102,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MINSS_VssWss(bxInstruction_c *i)
   BX_CPU_THIS_PTR check_exceptionsSSE(status_word.float_exception_flags);
   BX_WRITE_XMM_REG_LO_DWORD(i->nnn(),
          (rc == float_relation_less) ? op1 : op2);
-
 #else
   BX_INFO(("MINSS_VssWss: required SSE, use --enable-sse option"));
   exception(BX_UD_EXCEPTION, 0, 0);
@@ -2180,7 +2152,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::DIVPS_VpsWps(bxInstruction_c *i)
 
   BX_CPU_THIS_PTR check_exceptionsSSE(status_word.float_exception_flags);
   BX_WRITE_XMM_REG(i->nnn(), op1);
-
 #else
   BX_INFO(("DIVPS_VpsWps: required SSE, use --enable-sse option"));
   exception(BX_UD_EXCEPTION, 0, 0);
@@ -2225,7 +2196,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::DIVPD_VpdWpd(bxInstruction_c *i)
 
   BX_CPU_THIS_PTR check_exceptionsSSE(status_word.float_exception_flags);
   BX_WRITE_XMM_REG(i->nnn(), op1);
-
 #else
   BX_INFO(("DIVPD_VpdWpd: required SSE2, use --enable-sse option"));
   exception(BX_UD_EXCEPTION, 0, 0);
@@ -2266,7 +2236,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::DIVSD_VsdWsd(bxInstruction_c *i)
   op1 = float64_div(op1, op2, status_word);
   BX_CPU_THIS_PTR check_exceptionsSSE(status_word.float_exception_flags);
   BX_WRITE_XMM_REG_LO_QWORD(i->nnn(), op1);
-
 #else
   BX_INFO(("DIVSD_VsdWsd: required SSE2, use --enable-sse option"));
   exception(BX_UD_EXCEPTION, 0, 0);
@@ -2307,7 +2276,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::DIVSS_VssWss(bxInstruction_c *i)
   op1 = float32_div(op1, op2, status_word);
   BX_CPU_THIS_PTR check_exceptionsSSE(status_word.float_exception_flags);
   BX_WRITE_XMM_REG_LO_DWORD(i->nnn(), op1);
-
 #else
   BX_INFO(("DIVSS_VssWss: required SSE, use --enable-sse option"));
   exception(BX_UD_EXCEPTION, 0, 0);
@@ -2363,7 +2331,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MAXPS_VpsWps(bxInstruction_c *i)
 
   BX_CPU_THIS_PTR check_exceptionsSSE(status_word.float_exception_flags);
   BX_WRITE_XMM_REG(i->nnn(), op1);
-
 #else
   BX_INFO(("MAXPS_VpsWps: required SSE, use --enable-sse option"));
   exception(BX_UD_EXCEPTION, 0, 0);
@@ -2411,7 +2378,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MAXPD_VpdWpd(bxInstruction_c *i)
 
   BX_CPU_THIS_PTR check_exceptionsSSE(status_word.float_exception_flags);
   BX_WRITE_XMM_REG(i->nnn(), op1);
-
 #else
   BX_INFO(("MAXPD_VpdWpd: required SSE2, use --enable-sse option"));
   exception(BX_UD_EXCEPTION, 0, 0);
@@ -2453,7 +2419,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MAXSD_VsdWsd(bxInstruction_c *i)
   BX_CPU_THIS_PTR check_exceptionsSSE(status_word.float_exception_flags);
   BX_WRITE_XMM_REG_LO_QWORD(i->nnn(),
          (rc == float_relation_greater) ? op1 : op2);
-
 #else
   BX_INFO(("MAXSD_VsdWsd: required SSE2, use --enable-sse option"));
   exception(BX_UD_EXCEPTION, 0, 0);
@@ -2495,7 +2460,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MAXSS_VssWss(bxInstruction_c *i)
   BX_CPU_THIS_PTR check_exceptionsSSE(status_word.float_exception_flags);
   BX_WRITE_XMM_REG_LO_DWORD(i->nnn(),
          (rc == float_relation_greater) ? op1 : op2);
-
 #else
   BX_INFO(("MAXSS_VssWss: required SSE, use --enable-sse option"));
   exception(BX_UD_EXCEPTION, 0, 0);
@@ -2540,7 +2504,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::HADDPD_VpdWpd(bxInstruction_c *i)
 
   BX_CPU_THIS_PTR check_exceptionsSSE(status_word.float_exception_flags);
   BX_WRITE_XMM_REG(i->nnn(), op1);
-
 #else
   BX_INFO(("HADDPD_VpdWpd: required SSE3, use --enable-sse option"));
   exception(BX_UD_EXCEPTION, 0, 0);
@@ -2591,7 +2554,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::HADDPS_VpsWps(bxInstruction_c *i)
 
   BX_CPU_THIS_PTR check_exceptionsSSE(status_word.float_exception_flags);
   BX_WRITE_XMM_REG(i->nnn(), op1);
-
 #else
   BX_INFO(("HADDPS_VpsWps: required SSE3, use --enable-sse option"));
   exception(BX_UD_EXCEPTION, 0, 0);
@@ -2636,7 +2598,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::HSUBPD_VpdWpd(bxInstruction_c *i)
 
   BX_CPU_THIS_PTR check_exceptionsSSE(status_word.float_exception_flags);
   BX_WRITE_XMM_REG(i->nnn(), op1);
-
 #else
   BX_INFO(("HSUBPD_VpdWpd: required SSE3, use --enable-sse option"));
   exception(BX_UD_EXCEPTION, 0, 0);
@@ -2687,7 +2648,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::HSUBPS_VpsWps(bxInstruction_c *i)
 
   BX_CPU_THIS_PTR check_exceptionsSSE(status_word.float_exception_flags);
   BX_WRITE_XMM_REG(i->nnn(), op1);
-
 #else
   BX_INFO(("HSUBPS_VpsWps: required SSE3, use --enable-sse option"));
   exception(BX_UD_EXCEPTION, 0, 0);
@@ -2765,7 +2725,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPPS_VpsWpsIb(bxInstruction_c *i)
 
   BX_CPU_THIS_PTR check_exceptionsSSE(status.float_exception_flags);
   BX_WRITE_XMM_REG(i->nnn(), op1);
-
 #else
   BX_INFO(("CMPPS_VpsWpsIb: required SSE, use --enable-sse option"));
   exception(BX_UD_EXCEPTION, 0, 0);
@@ -2831,7 +2790,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPPD_VpdWpdIb(bxInstruction_c *i)
 
   BX_CPU_THIS_PTR check_exceptionsSSE(status.float_exception_flags);
   BX_WRITE_XMM_REG(i->nnn(), op1);
-
 #else
   BX_INFO(("CMPPD_VpdWpdIb: required SSE2, use --enable-sse option"));
   exception(BX_UD_EXCEPTION, 0, 0);
@@ -2996,7 +2954,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ADDSUBPD_VpdWpd(bxInstruction_c *i)
 
   BX_CPU_THIS_PTR check_exceptionsSSE(status_word.float_exception_flags);
   BX_WRITE_XMM_REG(i->nnn(), op1);
-
 #else
   BX_INFO(("ADDSUBPD_VpdWpd: required SSE3, use --enable-sse option"));
   exception(BX_UD_EXCEPTION, 0, 0);
@@ -3047,7 +3004,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ADDSUBPS_VpsWps(bxInstruction_c *i)
 
   BX_CPU_THIS_PTR check_exceptionsSSE(status_word.float_exception_flags);
   BX_WRITE_XMM_REG(i->nnn(), op1);
-
 #else
   BX_INFO(("ADDSUBPS_VpsWps: required SSE3, use --enable-sse option"));
   exception(BX_UD_EXCEPTION, 0, 0);

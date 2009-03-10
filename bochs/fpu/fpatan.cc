@@ -32,18 +32,18 @@ these four paragraphs for those parts of this code that are retained.
 #define FPATAN_ARR_SIZE 11
 
 static const float128 float128_one =
-	packFloat128(BX_CONST64(0x3fff000000000000), BX_CONST64(0x0000000000000000));
+        packFloat128(BX_CONST64(0x3fff000000000000), BX_CONST64(0x0000000000000000));
 static const float128 float128_sqrt3 =
-	packFloat128(BX_CONST64(0x3fffbb67ae8584ca), BX_CONST64(0xa73b25742d7078b8));
+        packFloat128(BX_CONST64(0x3fffbb67ae8584ca), BX_CONST64(0xa73b25742d7078b8));
 static const floatx80 floatx80_pi  =
-	packFloatx80(0, 0x4000, BX_CONST64(0xc90fdaa22168c235));
+        packFloatx80(0, 0x4000, BX_CONST64(0xc90fdaa22168c235));
 
 static const float128 float128_pi2 =
-	packFloat128(BX_CONST64(0x3fff921fb54442d1), BX_CONST64(0x8469898CC5170416));
+        packFloat128(BX_CONST64(0x3fff921fb54442d1), BX_CONST64(0x8469898CC5170416));
 static const float128 float128_pi4 =
-	packFloat128(BX_CONST64(0x3ffe921fb54442d1), BX_CONST64(0x8469898CC5170416));
+        packFloat128(BX_CONST64(0x3ffe921fb54442d1), BX_CONST64(0x8469898CC5170416));
 static const float128 float128_pi6 =
-	packFloat128(BX_CONST64(0x3ffe0c152382d736), BX_CONST64(0x58465BB32E0F580F));
+        packFloat128(BX_CONST64(0x3ffe0c152382d736), BX_CONST64(0x58465BB32E0F580F));
 
 static float128 atan_arr[FPATAN_ARR_SIZE] =
 {
@@ -231,8 +231,8 @@ return_PI_or_ZERO:
         x = float128_div(b128, a128, status);
     }
     else {
-	x = float128_div(a128, b128, status);
-	swap = 1;
+        x = float128_div(a128, b128, status);
+        swap = 1;
     }
 
     Bit32s xExp = extractFloat128Exp(x);
@@ -240,7 +240,7 @@ return_PI_or_ZERO:
     if (xExp <= EXP_BIAS-40)
         goto approximation_completed;
 
-    if (x.hi >= BX_CONST64(0x3ffe800000000000))	// 3/4 < x < 1
+    if (x.hi >= BX_CONST64(0x3ffe800000000000))        // 3/4 < x < 1
     {
         /*
         arctan(x) = arctan((x-1)/(x+1)) + pi/4

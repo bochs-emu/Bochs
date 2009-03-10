@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu_const.cc,v 1.14 2009-02-08 17:29:34 sshwarts Exp $
+// $Id: fpu_const.cc,v 1.15 2009-03-10 21:43:11 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -61,12 +61,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLDL2T(bxInstruction_c *i)
 
   if (! IS_TAG_EMPTY(-1))
   {
-      BX_CPU_THIS_PTR FPU_stack_overflow();
-      return;
+    BX_CPU_THIS_PTR FPU_stack_overflow();
   }
-
-  BX_CPU_THIS_PTR the_i387.FPU_push();
-  BX_WRITE_FPU_REG(FPU_round_const(Const_L2T, (FPU_CONTROL_WORD == FPU_RC_UP) ? 1 : 0), 0);
+  else {
+    BX_CPU_THIS_PTR the_i387.FPU_push();
+    BX_WRITE_FPU_REG(FPU_round_const(Const_L2T, (FPU_CONTROL_WORD == FPU_RC_UP) ? 1 : 0), 0);
+  }
 #else
   BX_INFO(("FLDL2T: required FPU, configure --enable-fpu"));
 #endif
@@ -81,12 +81,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLDL2E(bxInstruction_c *i)
 
   if (! IS_TAG_EMPTY(-1))
   {
-      BX_CPU_THIS_PTR FPU_stack_overflow();
-      return;
+    BX_CPU_THIS_PTR FPU_stack_overflow();
   }
-
-  BX_CPU_THIS_PTR the_i387.FPU_push();
-  BX_WRITE_FPU_REG(FPU_round_const(Const_L2E, DOWN_OR_CHOP() ? -1 : 0), 0);
+  else {
+    BX_CPU_THIS_PTR the_i387.FPU_push();
+    BX_WRITE_FPU_REG(FPU_round_const(Const_L2E, DOWN_OR_CHOP() ? -1 : 0), 0);
+  }
 #else
   BX_INFO(("FLDL2E: required FPU, configure --enable-fpu"));
 #endif
@@ -101,12 +101,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLDPI(bxInstruction_c *i)
 
   if (! IS_TAG_EMPTY(-1))
   {
-      BX_CPU_THIS_PTR FPU_stack_overflow();
-      return;
+    BX_CPU_THIS_PTR FPU_stack_overflow();
   }
-
-  BX_CPU_THIS_PTR the_i387.FPU_push();
-  BX_WRITE_FPU_REG(FPU_round_const(Const_PI, DOWN_OR_CHOP() ? -1 : 0), 0);
+  else {
+    BX_CPU_THIS_PTR the_i387.FPU_push();
+    BX_WRITE_FPU_REG(FPU_round_const(Const_PI, DOWN_OR_CHOP() ? -1 : 0), 0);
+  }
 #else
   BX_INFO(("FLDPI: required FPU, configure --enable-fpu"));
 #endif
@@ -121,12 +121,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLDLG2(bxInstruction_c *i)
 
   if (! IS_TAG_EMPTY(-1))
   {
-      BX_CPU_THIS_PTR FPU_stack_overflow();
-      return;
+    BX_CPU_THIS_PTR FPU_stack_overflow();
   }
-
-  BX_CPU_THIS_PTR the_i387.FPU_push();
-  BX_WRITE_FPU_REG(FPU_round_const(Const_LG2, DOWN_OR_CHOP() ? -1 : 0), 0);
+  else {
+    BX_CPU_THIS_PTR the_i387.FPU_push();
+    BX_WRITE_FPU_REG(FPU_round_const(Const_LG2, DOWN_OR_CHOP() ? -1 : 0), 0);
+  }
 #else
   BX_INFO(("FLDLG2: required FPU, configure --enable-fpu"));
 #endif
@@ -141,12 +141,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLDLN2(bxInstruction_c *i)
 
   if (! IS_TAG_EMPTY(-1))
   {
-      BX_CPU_THIS_PTR FPU_stack_overflow();
-      return;
+    BX_CPU_THIS_PTR FPU_stack_overflow();
   }
-
-  BX_CPU_THIS_PTR the_i387.FPU_push();
-  BX_WRITE_FPU_REG(FPU_round_const(Const_LN2, DOWN_OR_CHOP() ? -1 : 0), 0);
+  else {
+    BX_CPU_THIS_PTR the_i387.FPU_push();
+    BX_WRITE_FPU_REG(FPU_round_const(Const_LN2, DOWN_OR_CHOP() ? -1 : 0), 0);
+  }
 #else
   BX_INFO(("FLDLN2: required FPU, configure --enable-fpu"));
 #endif
@@ -161,12 +161,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLD1(bxInstruction_c *i)
 
   if (! IS_TAG_EMPTY(-1))
   {
-      BX_CPU_THIS_PTR FPU_stack_overflow();
-      return;
+    BX_CPU_THIS_PTR FPU_stack_overflow();
   }
-
-  BX_CPU_THIS_PTR the_i387.FPU_push();
-  BX_WRITE_FPU_REG(Const_1, 0);
+  else {
+    BX_CPU_THIS_PTR the_i387.FPU_push();
+    BX_WRITE_FPU_REG(Const_1, 0);
+  }
 #else
   BX_INFO(("FLD1: required FPU, configure --enable-fpu"));
 #endif
@@ -181,12 +181,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLDZ(bxInstruction_c *i)
 
   if (! IS_TAG_EMPTY(-1))
   {
-      BX_CPU_THIS_PTR FPU_stack_overflow();
-      return;
+    BX_CPU_THIS_PTR FPU_stack_overflow();
   }
-
-  BX_CPU_THIS_PTR the_i387.FPU_push();
-  BX_WRITE_FPU_REG(Const_Z, 0);
+  else {
+    BX_CPU_THIS_PTR the_i387.FPU_push();
+    BX_WRITE_FPU_REG(Const_Z, 0);
+  }
 #else
   BX_INFO(("FLDZ: required FPU, configure --enable-fpu"));
 #endif

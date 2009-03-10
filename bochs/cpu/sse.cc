@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse.cc,v 1.64 2009-01-16 18:18:58 sshwarts Exp $
+// $Id: sse.cc,v 1.65 2009-03-10 21:43:11 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -652,7 +652,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PTEST_VdqWdq(bxInstruction_c *i)
       (op2.xmm64u(1) & ~op1.xmm64u(1)) == 0) result |= EFlagsCFMask;
 
   setEFlagsOSZAPC(result);
-
 #else
   BX_INFO(("PTEST_VdqWdq: required SSE4, use --enable-sse option"));
   exception(BX_UD_EXCEPTION, 0, 0);

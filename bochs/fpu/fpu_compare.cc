@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu_compare.cc,v 1.20 2009-02-08 17:29:34 sshwarts Exp $
+// $Id: fpu_compare.cc,v 1.21 2009-03-10 21:43:11 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -48,7 +48,7 @@ static int status_word_flags_fpu_compare(int float_relation)
          return (FPU_SW_C3);
   }
 
-  return (-1);	// should never get here
+  return (-1);        // should never get here
 }
 
 #if BX_SUPPORT_FPU || BX_SUPPORT_SSE >= 1
@@ -104,17 +104,15 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FCOM_STi(bxInstruction_c *i)
   }
 
   float_status_t status =
-      FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
+     FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
 
   int rc = floatx80_compare(BX_READ_FPU_REG(0), BX_READ_FPU_REG(i->rm()), status);
 
-  if (BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags))
-      return;
-
-  setcc(status_word_flags_fpu_compare(rc));
-
-  if (pop_stack)
-      BX_CPU_THIS_PTR the_i387.FPU_pop();
+  if (! BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags)) {
+     setcc(status_word_flags_fpu_compare(rc));
+     if (pop_stack)
+        BX_CPU_THIS_PTR the_i387.FPU_pop();
+  }
 #else
   BX_INFO(("FCOM(P)_STi: required FPU, configure --enable-fpu"));
 #endif
@@ -148,13 +146,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FCOMI_ST0_STj(bxInstruction_c *i)
 
   int rc = floatx80_compare(BX_READ_FPU_REG(0), BX_READ_FPU_REG(i->rm()), status);
 
-  if (BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags))
-      return;
-
-  BX_CPU_THIS_PTR write_eflags_fpu_compare(rc);
-
-  if (pop_stack)
-      BX_CPU_THIS_PTR the_i387.FPU_pop();
+  if (! BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags)) {
+     BX_CPU_THIS_PTR write_eflags_fpu_compare(rc);
+     if (pop_stack)
+         BX_CPU_THIS_PTR the_i387.FPU_pop();
+  }
 #else
   BX_INFO(("FCOMI(P)_ST0_STj: required P6 FPU, configure --enable-fpu, cpu-level=6"));
   exception(BX_UD_EXCEPTION, 0, 0);
@@ -189,13 +185,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FUCOMI_ST0_STj(bxInstruction_c *i)
 
   int rc = floatx80_compare_quiet(BX_READ_FPU_REG(0), BX_READ_FPU_REG(i->rm()), status);
 
-  if (BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags))
-      return;
-
-  BX_CPU_THIS_PTR write_eflags_fpu_compare(rc);
-
-  if (pop_stack)
-      BX_CPU_THIS_PTR the_i387.FPU_pop();
+  if (! BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags)) {
+     BX_CPU_THIS_PTR write_eflags_fpu_compare(rc);
+     if (pop_stack)
+         BX_CPU_THIS_PTR the_i387.FPU_pop();
+  }
 #else
   BX_INFO(("FUCOMI(P)_ST0_STj: required P6 FPU, configure --enable-fpu, cpu-level=6"));
   exception(BX_UD_EXCEPTION, 0, 0);
@@ -228,13 +222,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FUCOM_STi(bxInstruction_c *i)
 
   int rc = floatx80_compare_quiet(BX_READ_FPU_REG(0), BX_READ_FPU_REG(i->rm()), status);
 
-  if (BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags))
-      return;
-
-  setcc(status_word_flags_fpu_compare(rc));
-
-  if (pop_stack)
-      BX_CPU_THIS_PTR the_i387.FPU_pop();
+  if (! BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags)) {
+     setcc(status_word_flags_fpu_compare(rc));
+     if (pop_stack)
+         BX_CPU_THIS_PTR the_i387.FPU_pop();
+  }
 #else
   BX_INFO(("FUCOM(P)_STi: required FPU, configure --enable-fpu"));
 #endif
@@ -269,15 +261,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FCOM_SINGLE_REAL(bxInstruction_c *i)
       FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
 
   int rc = floatx80_compare(BX_READ_FPU_REG(0),
-  	float32_to_floatx80(load_reg, status), status);
+          float32_to_floatx80(load_reg, status), status);
 
-  if (BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags))
-      return;
-
-  setcc(status_word_flags_fpu_compare(rc));
-
-  if (pop_stack)
-      BX_CPU_THIS_PTR the_i387.FPU_pop();
+  if (! BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags)) {
+     setcc(status_word_flags_fpu_compare(rc));
+     if (pop_stack)
+         BX_CPU_THIS_PTR the_i387.FPU_pop();
+  }
 #else
   BX_INFO(("FCOM(P)_SINGLE_REAL: required FPU, configure --enable-fpu"));
 #endif
@@ -312,15 +302,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FCOM_DOUBLE_REAL(bxInstruction_c *i)
       FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
 
   int rc = floatx80_compare(BX_READ_FPU_REG(0),
-  	float64_to_floatx80(load_reg, status), status);
+          float64_to_floatx80(load_reg, status), status);
 
-  if (BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags))
-      return;
-
-  setcc(status_word_flags_fpu_compare(rc));
-
-  if (pop_stack)
-      BX_CPU_THIS_PTR the_i387.FPU_pop();
+  if (! BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags)) {
+     setcc(status_word_flags_fpu_compare(rc));
+     if (pop_stack)
+         BX_CPU_THIS_PTR the_i387.FPU_pop();
+  }
 #else
   BX_INFO(("FCOM(P)_DOUBLE_REAL: required FPU, configure --enable-fpu"));
 #endif
@@ -355,15 +343,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FICOM_WORD_INTEGER(bxInstruction_c *i)
       FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
 
   int rc = floatx80_compare(BX_READ_FPU_REG(0),
-  	int32_to_floatx80((Bit32s)(load_reg)), status);
+          int32_to_floatx80((Bit32s)(load_reg)), status);
 
-  if (BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags))
-      return;
-
-  setcc(status_word_flags_fpu_compare(rc));
-
-  if (pop_stack)
-      BX_CPU_THIS_PTR the_i387.FPU_pop();
+  if (! BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags)) {
+     setcc(status_word_flags_fpu_compare(rc));
+     if (pop_stack)
+         BX_CPU_THIS_PTR the_i387.FPU_pop();
+  }
 #else
   BX_INFO(("FICOM(P)_WORD_INTEGER: required FPU, configure --enable-fpu"));
 #endif
@@ -397,16 +383,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FICOM_DWORD_INTEGER(bxInstruction_c *i)
   float_status_t status =
       FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
 
-  int rc = floatx80_compare(BX_READ_FPU_REG(0),
-  	int32_to_floatx80(load_reg), status);
+  int rc = floatx80_compare(BX_READ_FPU_REG(0), int32_to_floatx80(load_reg), status);
 
-  if (BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags))
-      return;
-
-  setcc(status_word_flags_fpu_compare(rc));
-
-  if (pop_stack)
-      BX_CPU_THIS_PTR the_i387.FPU_pop();
+  if (! BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags)) {
+     setcc(status_word_flags_fpu_compare(rc));
+     if (pop_stack)
+         BX_CPU_THIS_PTR the_i387.FPU_pop();
+  }
 #else
   BX_INFO(("FICOM(P)_DWORD_INTEGER: required FPU, configure --enable-fpu"));
 #endif
@@ -440,13 +423,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FCOMPP(bxInstruction_c *i)
 
   int rc = floatx80_compare(BX_READ_FPU_REG(0), BX_READ_FPU_REG(1), status);
 
-  if (BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags))
-      return;
-
-  setcc(status_word_flags_fpu_compare(rc));
-
-  BX_CPU_THIS_PTR the_i387.FPU_pop();
-  BX_CPU_THIS_PTR the_i387.FPU_pop();
+  if (! BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags)) {
+     setcc(status_word_flags_fpu_compare(rc));
+     BX_CPU_THIS_PTR the_i387.FPU_pop();
+     BX_CPU_THIS_PTR the_i387.FPU_pop();
+  }
 #else
   BX_INFO(("FCOMPP: required FPU, configure --enable-fpu"));
 #endif
@@ -478,13 +459,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FUCOMPP(bxInstruction_c *i)
 
   int rc = floatx80_compare_quiet(BX_READ_FPU_REG(0), BX_READ_FPU_REG(1), status);
 
-  if (BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags))
-      return;
-
-  setcc(status_word_flags_fpu_compare(rc));
-
-  BX_CPU_THIS_PTR the_i387.FPU_pop();
-  BX_CPU_THIS_PTR the_i387.FPU_pop();
+  if (! BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags)) {
+     setcc(status_word_flags_fpu_compare(rc));
+     BX_CPU_THIS_PTR the_i387.FPU_pop();
+     BX_CPU_THIS_PTR the_i387.FPU_pop();
+  }
 #else
   BX_INFO(("FUCOMPP: required FPU, configure --enable-fpu"));
 #endif
@@ -552,10 +531,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FTST(bxInstruction_c *i)
 
   int rc = floatx80_compare(BX_READ_FPU_REG(0), Const_Z, status);
 
-  if (BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags))
-      return;
-
-  setcc(status_word_flags_fpu_compare(rc));
+  if (! BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags))
+     setcc(status_word_flags_fpu_compare(rc));
 #else
   BX_INFO(("FTST: required FPU, configure --enable-fpu"));
 #endif

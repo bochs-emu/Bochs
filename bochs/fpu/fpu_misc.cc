@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu_misc.cc,v 1.16 2009-02-08 17:29:34 sshwarts Exp $
+// $Id: fpu_misc.cc,v 1.17 2009-03-10 21:43:11 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -50,7 +50,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FXCH_STi(bxInstruction_c *i)
 
       if(BX_CPU_THIS_PTR the_i387.is_IA_masked())
       {
-	  /* Masked response */
+          /* Masked response */
           if (st0_tag == FPU_Tag_Empty)
               st0_reg = floatx80_default_nan;
 
@@ -74,14 +74,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FCHS(bxInstruction_c *i)
   BX_CPU_THIS_PTR prepareFPU(i);
 
   if (IS_TAG_EMPTY(0)) {
-      BX_CPU_THIS_PTR FPU_stack_underflow(0);
-      return;
+     BX_CPU_THIS_PTR FPU_stack_underflow(0);
   }
-
-  clear_C1();
-
-  floatx80 st0_reg = BX_READ_FPU_REG(0);
-  BX_WRITE_FPU_REG(floatx80_chs(st0_reg), 0);
+  else {
+     clear_C1();
+     floatx80 st0_reg = BX_READ_FPU_REG(0);
+     BX_WRITE_FPU_REG(floatx80_chs(st0_reg), 0);
+  }
 #else
   BX_INFO(("FCHS: required FPU, configure --enable-fpu"));
 #endif
@@ -94,14 +93,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FABS(bxInstruction_c *i)
   BX_CPU_THIS_PTR prepareFPU(i);
 
   if (IS_TAG_EMPTY(0)) {
-      BX_CPU_THIS_PTR FPU_stack_underflow(0);
-      return;
+     BX_CPU_THIS_PTR FPU_stack_underflow(0);
   }
-
-  clear_C1();
-
-  floatx80 st0_reg = BX_READ_FPU_REG(0);
-  BX_WRITE_FPU_REG(floatx80_abs(st0_reg), 0);
+  else {
+     clear_C1();
+     floatx80 st0_reg = BX_READ_FPU_REG(0);
+     BX_WRITE_FPU_REG(floatx80_abs(st0_reg), 0);
+  }
 #else
   BX_INFO(("FABS: required FPU, configure --enable-fpu"));
 #endif

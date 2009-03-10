@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu_tags.cc,v 1.9 2009-02-08 17:29:34 sshwarts Exp $
+// $Id: fpu_tags.cc,v 1.10 2009-03-10 21:43:11 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -41,7 +41,7 @@ int FPU_tagof(const floatx80 &reg)
    if (exp == 0)
    {
       if (! floatx80_fraction(reg))
-	  return FPU_Tag_Zero;
+          return FPU_Tag_Zero;
 
       /* The number is a de-normal or pseudodenormal. */
       return FPU_Tag_Special;
