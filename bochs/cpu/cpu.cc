@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.273 2009-03-10 16:28:00 sshwarts Exp $
+// $Id: cpu.cc,v 1.274 2009-03-10 17:02:03 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -916,9 +916,7 @@ bx_bool BX_CPU_C::dbg_check_begin_instr_bpoint(void)
   BX_CPU_THIS_PTR guard_found.cs  = cs;
   BX_CPU_THIS_PTR guard_found.eip = debug_eip;
   BX_CPU_THIS_PTR guard_found.laddr = BX_CPU_THIS_PTR get_laddr(BX_SEG_REG_CS, debug_eip);
-  BX_CPU_THIS_PTR guard_found.is_32bit_code =
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b;
-  BX_CPU_THIS_PTR guard_found.is_64bit_code = Is64BitMode();
+  BX_CPU_THIS_PTR guard_found.code_32_64 = BX_CPU_THIS_PTR fetchModeMask >> 30;
 
   // support for 'show' command in debugger
   if(dbg_show_mask) {

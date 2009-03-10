@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.177 2009-03-10 16:28:00 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.178 2009-03-10 17:02:03 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1759,8 +1759,8 @@ void bx_dbg_disassemble_current(int which_cpu, int print_time)
 
   if (bx_dbg_read_linear(which_cpu, BX_CPU(which_cpu)->guard_found.laddr, 16, bx_disasm_ibuf))
   {
-    unsigned ilen = bx_disassemble.disasm(IS_CODE32(BX_CPU(which_cpu)->guard_found.code_32_64),
-      IS_CODE64(BX_CPU(which_cpu)->guard_found),
+    unsigned ilen = bx_disassemble.disasm(IS_CODE_32(BX_CPU(which_cpu)->guard_found.code_32_64),
+      IS_CODE_64(BX_CPU(which_cpu)->guard_found.code_32_64),
       BX_CPU(which_cpu)->get_segment_base(BX_SEG_REG_CS),
       BX_CPU(which_cpu)->guard_found.eip, bx_disasm_ibuf, bx_disasm_tbuf);
 
@@ -3674,8 +3674,8 @@ void bx_dbg_step_over_command()
     return;
   }
 
-  x86_insn insn = bx_disassemble.decode(IS_CODE32(BX_CPU(dbg_cpu)->guard_found.code_32_64),
-      IS_CODE64(BX_CPU(dbg_cpu)->guard_found.code_32_64),
+  x86_insn insn = bx_disassemble.decode(IS_CODE_32(BX_CPU(dbg_cpu)->guard_found.code_32_64),
+      IS_CODE_64(BX_CPU(dbg_cpu)->guard_found.code_32_64),
       BX_CPU(dbg_cpu)->get_segment_base(BX_SEG_REG_CS),
       BX_CPU(dbg_cpu)->guard_found.eip, bx_disasm_ibuf, bx_disasm_tbuf);
 
