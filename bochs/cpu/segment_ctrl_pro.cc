@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: segment_ctrl_pro.cc,v 1.107 2009-01-17 18:56:25 sshwarts Exp $
+// $Id: segment_ctrl_pro.cc,v 1.108 2009-03-10 20:01:56 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -209,6 +209,22 @@ BX_CPU_C::load_seg_reg(bx_segment_reg_t *seg, Bit16u new_value)
   seg->cache.p = 1; /* present */
   seg->cache.type = BX_DATA_READ_WRITE_ACCESSED;
 
+  /* Do not modify segment limit and AR bytes when in real mode */
+  /* Support for big real mode */
+  if (!real_mode()) {
+    seg->cache.dpl = 3; /* we are in v8086 mode */
+    seg->cache.u.segment.limit        = 0xffff;
+    seg->cache.u.segment.limit_scaled = 0xffff;
+#if BX_CPU_LEVEL >= 3
+    seg->cache.u.segment.g     = 0; /* byte granular */
+    seg->cache.u.segment.d_b   = 0; /* default 16bit size */
+#if BX_SUPPORT_X86_64
+    seg->cache.u.segment.l     = 0; /* default 16bit size */
+#endif
+    seg->cache.u.segment.avl   = 0;
+#endif
+  }
+
   if (seg == &BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS]) {
     invalidate_prefetch_q();
     updateFetchModeMask();
@@ -216,22 +232,6 @@ BX_CPU_C::load_seg_reg(bx_segment_reg_t *seg, Bit16u new_value)
     handleAlignmentCheck(); // CPL was modified
 #endif
   }
-
-  /* Do not modify segment limit and AR bytes when in real mode */
-  /* Support for big real mode */
-  if (real_mode()) return;
-
-  seg->cache.dpl = 3; /* we are in v8086 mode */
-  seg->cache.u.segment.limit        = 0xffff;
-  seg->cache.u.segment.limit_scaled = 0xffff;
-#if BX_CPU_LEVEL >= 3
-  seg->cache.u.segment.g     = 0; /* byte granular */
-  seg->cache.u.segment.d_b   = 0; /* default 16bit size */
-#if BX_SUPPORT_X86_64
-  seg->cache.u.segment.l     = 0; /* default 16bit size */
-#endif
-  seg->cache.u.segment.avl   = 0;
-#endif
 }
 
   void BX_CPP_AttrRegparmN(1)

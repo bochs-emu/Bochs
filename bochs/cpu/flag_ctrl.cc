@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: flag_ctrl.cc,v 1.43 2009-03-10 16:28:01 sshwarts Exp $
+// $Id: flag_ctrl.cc,v 1.44 2009-03-10 20:01:56 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -225,6 +225,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::POPF_Fw(bxInstruction_c *i)
       Bit32u flags32 = (Bit32u) flags16;
       if (BX_CPU_THIS_PTR get_IF()) flags32 |= EFlagsVIFMask;
       writeEFlags(flags32, changeMask);
+
+      RSP_COMMIT;
       return;
     }
 #endif
