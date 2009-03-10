@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debug.h,v 1.49 2009-02-08 09:05:52 vruppert Exp $
+// $Id: debug.h,v 1.50 2009-03-10 16:28:00 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -379,7 +379,7 @@ void bx_dbg_exit(int code);
 #define BX_DBG_GUARD_CTRL_C        0x0100
 
 typedef struct {
-  unsigned long guard_for;
+  unsigned guard_for;
 
   // instruction address breakpoints
   struct {
@@ -451,19 +451,22 @@ typedef struct {
 // working information for each simulator to update when a guard
 // is reached (found)
 typedef struct bx_guard_found_t {
-  unsigned long guard_found;
+  unsigned guard_found;
   unsigned iaddr_index;
   Bit64u icount; // number of completed instructions from last breakpoint hit
   Bit32u  cs; // cs:eip and linear addr of instruction at guard point
   bx_address eip;
   bx_address laddr;
-  bx_bool is_32bit_code; // CS seg size at guard point
-  bx_bool is_64bit_code;
+  // 00 - 16 bit, 01 - 32 bit, 10 - 64-bit, 11 - illegal
+  unsigned code_32_64; // CS seg size at guard point
   bx_bool ctrl_c; // simulator stopped due to Ctrl-C request
   Bit64u  time_tick; // time tick when guard reached
 } bx_guard_found_t;
 
 extern bx_guard_t bx_guard;
+
+#define IS_CODE_32(code_32_64) ((code_32_64 & 1) != 0)
+#define IS_CODE_64(code_32_64) ((code_32_64 & 2) != 0)
 
 void bx_dbg_init_infile(void);
 int  bx_dbg_set_rcfile(const char *rcfile);

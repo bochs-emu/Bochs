@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: soft_int.cc,v 1.49 2009-01-31 10:43:23 sshwarts Exp $
+// $Id: soft_int.cc,v 1.50 2009-03-10 16:28:01 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -80,13 +80,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INT1(bxInstruction_c *i)
   BX_CPU_THIS_PTR show_flag |= Flag_softint;
 #endif
 
-  BX_CPU_THIS_PTR speculative_rsp = 1;
-  BX_CPU_THIS_PTR prev_rsp = RSP;
+  RSP_SPECULATIVE;
 
   // interrupt is not RSP safe
   interrupt(1, BX_PRIVILEGED_SOFTWARE_INTERRUPT, 0, 0);
 
-  BX_CPU_THIS_PTR speculative_rsp = 0;
+  RSP_COMMIT;
 
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_INT,
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value,
@@ -105,13 +104,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INT3(bxInstruction_c *i)
   BX_CPU_THIS_PTR show_flag |= Flag_softint;
 #endif
 
-  BX_CPU_THIS_PTR speculative_rsp = 1;
-  BX_CPU_THIS_PTR prev_rsp = RSP;
+  RSP_SPECULATIVE;
 
   // interrupt is not RSP safe
   interrupt(3, BX_SOFTWARE_EXCEPTION, 0, 0);
 
-  BX_CPU_THIS_PTR speculative_rsp = 0;
+  RSP_COMMIT;
 
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_INT,
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value,
@@ -127,8 +125,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INT_Ib(bxInstruction_c *i)
 
   Bit8u vector = i->Ib();
 
-  BX_CPU_THIS_PTR speculative_rsp = 1;
-  BX_CPU_THIS_PTR prev_rsp = RSP;
+  RSP_SPECULATIVE;
 
   if (v8086_mode()) {
 #if BX_SUPPORT_VME
@@ -169,7 +166,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INT_Ib(bxInstruction_c *i)
 
 done:
 
-  BX_CPU_THIS_PTR speculative_rsp = 0;
+  RSP_COMMIT;
 
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_INT,
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value,
@@ -188,13 +185,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INTO(bxInstruction_c *i)
     BX_CPU_THIS_PTR show_flag |= Flag_softint;
 #endif
 
-    BX_CPU_THIS_PTR speculative_rsp = 1;
-    BX_CPU_THIS_PTR prev_rsp = RSP;
+    RSP_SPECULATIVE;
 
     // interrupt is not RSP safe
     interrupt(4, BX_SOFTWARE_EXCEPTION, 0, 0);
 
-    BX_CPU_THIS_PTR speculative_rsp = 0;
+    RSP_COMMIT;
 
     BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_INT,
                         BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value,

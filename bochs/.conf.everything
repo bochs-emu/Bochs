@@ -36,6 +36,7 @@
   --enable-aes \
   --enable-vmx \
   --enable-x86-debugger \
+  --enable-a20-pin \
   --enable-instrumentation=instrument/example1 \
   --enable-ne2000 \
   --enable-pci \

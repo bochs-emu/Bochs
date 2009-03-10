@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: flag_ctrl.cc,v 1.42 2009-01-16 18:18:58 sshwarts Exp $
+// $Id: flag_ctrl.cc,v 1.43 2009-03-10 16:28:01 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -207,8 +207,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::POPF_Fw(bxInstruction_c *i)
       BX_DEBUG(("POPFW: #GP(0) in v8086 (no VME) mode"));
       exception(BX_GP_EXCEPTION, 0, 0);
     }
-    BX_CPU_THIS_PTR speculative_rsp = 1;
-    BX_CPU_THIS_PTR prev_rsp = RSP;
+
+    RSP_SPECULATIVE;
 
     flags16 = pop_16();
 #if BX_SUPPORT_VME
@@ -230,7 +230,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::POPF_Fw(bxInstruction_c *i)
 #endif
     changeMask |= EFlagsIFMask;
 
-    BX_CPU_THIS_PTR speculative_rsp = 0;
+    RSP_COMMIT;
   }
   else {
     flags16 = pop_16();

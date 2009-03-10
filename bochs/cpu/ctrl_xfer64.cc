@@ -1,5 +1,5 @@
 ////////c/////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer64.cc,v 1.77 2009-02-03 19:17:15 sshwarts Exp $
+// $Id: ctrl_xfer64.cc,v 1.78 2009-03-10 16:28:01 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -97,13 +97,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RETfar64_Iw(bxInstruction_c *i)
 
   BX_ASSERT(protected_mode());
 
-  BX_CPU_THIS_PTR speculative_rsp = 1;
-  BX_CPU_THIS_PTR prev_rsp = RSP;
+  RSP_SPECULATIVE;
 
   // return_protected is not RSP safe
   return_protected(i, i->Iw());
 
-  BX_CPU_THIS_PTR speculative_rsp = 0;
+  RSP_COMMIT;
 
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_RET,
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, RIP);
@@ -119,13 +118,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RETfar64(bxInstruction_c *i)
 
   BX_ASSERT(protected_mode());
 
-  BX_CPU_THIS_PTR speculative_rsp = 1;
-  BX_CPU_THIS_PTR prev_rsp = RSP;
+  RSP_SPECULATIVE;
 
   // return_protected is not RSP safe
   return_protected(i, 0);
 
-  BX_CPU_THIS_PTR speculative_rsp = 0;
+  RSP_COMMIT;
 
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_RET,
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, RIP);
@@ -192,13 +190,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CALL64_Ep(bxInstruction_c *i)
 
   BX_ASSERT(protected_mode());
 
-  BX_CPU_THIS_PTR speculative_rsp = 1;
-  BX_CPU_THIS_PTR prev_rsp = RSP;
+  RSP_SPECULATIVE;
 
   // call_protected is not RSP safe
   call_protected(i, cs_raw, op1_64);
 
-  BX_CPU_THIS_PTR speculative_rsp = 0;
+  RSP_COMMIT;
 
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_CALL,
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, RIP);
@@ -471,15 +468,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::IRET64(bxInstruction_c *i)
   BX_CPU_THIS_PTR show_flag |= Flag_iret;
 #endif
 
-  BX_ASSERT(protected_mode());
+  BX_ASSERT(long_mode());
 
-  BX_CPU_THIS_PTR speculative_rsp = 1;
-  BX_CPU_THIS_PTR prev_rsp = RSP;
+  RSP_SPECULATIVE;
 
   // long_iret is not RSP safe
   long_iret(i);
 
-  BX_CPU_THIS_PTR speculative_rsp = 0;
+  RSP_COMMIT;
 
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_IRET,
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, RIP);

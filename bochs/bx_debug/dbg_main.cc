@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.176 2009-02-20 23:01:09 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.177 2009-03-10 16:28:00 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -218,10 +218,11 @@ int bx_dbg_main(void)
     BX_CPU(i)->guard_found.eip = BX_CPU(i)->prev_rip;
     BX_CPU(i)->guard_found.laddr =
       BX_CPU(i)->get_laddr(BX_SEG_REG_CS, BX_CPU(i)->prev_rip);
-    BX_CPU(i)->guard_found.is_32bit_code =
-      (BX_CPU(i)->sregs[BX_SEG_REG_CS].cache.u.segment.d_b);
-    BX_CPU(i)->guard_found.is_64bit_code =
-      (BX_CPU(i)->get_cpu_mode() == BX_MODE_LONG_64);
+    // 00 - 16 bit, 01 - 32 bit, 10 - 64-bit, 11 - illegal
+    if (BX_CPU(i)->sregs[BX_SEG_REG_CS].cache.u.segment.d_b)
+      BX_CPU(i)->guard_found.code_32_64 |= 0x1;
+    if (BX_CPU(i)->get_cpu_mode() == BX_MODE_LONG_64)
+      BX_CPU(i)->guard_found.code_32_64 |= 0x2;
   }
   // finally, call the usual function to print the disassembly
   dbg_printf("Next at t=" FMT_LL "d\n", bx_pc_system.time_ticks());
@@ -1652,7 +1653,7 @@ one_more:
       Bit32u executed = BX_CPU(cpu)->guard_found.icount - cpu_icount;
       if (executed > max_executed) max_executed = executed;
       // set stop flag if a guard found other than icount or halted
-      unsigned long found = BX_CPU(cpu)->guard_found.guard_found;
+      unsigned found = BX_CPU(cpu)->guard_found.guard_found;
       stop_reason_t reason = (stop_reason_t) BX_CPU(cpu)->stop_reason;
       if (found || (reason != STOP_NO_REASON && reason != STOP_CPU_HALTED)) {
         stop = 1;
@@ -1723,7 +1724,7 @@ void bx_dbg_stepN_command(Bit32u count)
         BX_CPU(cpu)->guard_found.guard_found = 0;
         BX_CPU(cpu)->cpu_loop(1);
         // set stop flag if a guard found other than icount or halted
-        unsigned long found = BX_CPU(cpu)->guard_found.guard_found;
+        unsigned found = BX_CPU(cpu)->guard_found.guard_found;
         stop_reason_t reason = (stop_reason_t) BX_CPU(cpu)->stop_reason;
         if (found || (reason != STOP_NO_REASON && reason != STOP_CPU_HALTED))
           stop = 1;
@@ -1758,8 +1759,8 @@ void bx_dbg_disassemble_current(int which_cpu, int print_time)
 
   if (bx_dbg_read_linear(which_cpu, BX_CPU(which_cpu)->guard_found.laddr, 16, bx_disasm_ibuf))
   {
-    unsigned ilen = bx_disassemble.disasm(BX_CPU(which_cpu)->guard_found.is_32bit_code,
-      BX_CPU(which_cpu)->guard_found.is_64bit_code,
+    unsigned ilen = bx_disassemble.disasm(IS_CODE32(BX_CPU(which_cpu)->guard_found.code_32_64),
+      IS_CODE64(BX_CPU(which_cpu)->guard_found),
       BX_CPU(which_cpu)->get_segment_base(BX_SEG_REG_CS),
       BX_CPU(which_cpu)->guard_found.eip, bx_disasm_ibuf, bx_disasm_tbuf);
 
@@ -1803,7 +1804,7 @@ void bx_dbg_print_guard_results(void)
   unsigned cpu, i;
 
   for (cpu=0; cpu<BX_SMP_PROCESSORS; cpu++) {
-    unsigned long found = BX_CPU(cpu)->guard_found.guard_found;
+    unsigned found = BX_CPU(cpu)->guard_found.guard_found;
     if (! found) { /* ... */ }
 #if (BX_DBG_MAX_VIR_BPOINTS > 0)
     else if (found & BX_DBG_GUARD_IADDR_VIR) {
@@ -3673,8 +3674,8 @@ void bx_dbg_step_over_command()
     return;
   }
 
-  x86_insn insn = bx_disassemble.decode(BX_CPU(dbg_cpu)->guard_found.is_32bit_code,
-      BX_CPU(dbg_cpu)->guard_found.is_64bit_code,
+  x86_insn insn = bx_disassemble.decode(IS_CODE32(BX_CPU(dbg_cpu)->guard_found.code_32_64),
+      IS_CODE64(BX_CPU(dbg_cpu)->guard_found.code_32_64),
       BX_CPU(dbg_cpu)->get_segment_base(BX_SEG_REG_CS),
       BX_CPU(dbg_cpu)->guard_found.eip, bx_disasm_ibuf, bx_disasm_tbuf);
 

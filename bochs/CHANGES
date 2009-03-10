@@ -52,6 +52,8 @@ Detailed change log :
   - Added configure option to compile in GUI frontend for Bochs debugger,
     to enable configure with --enable-debugger-gui option.
     The GUI debugger frontend is enabled by default with Bochs debugger.
+  - Added configure option to enable/disable A20 pin support. Disabling the
+    A20 pin support slightly speeds up the emulation.
 
 - BIOS
   - Added S3 (suspend to RAM) ACPI state to BIOS (patch by Gleb Natapov)

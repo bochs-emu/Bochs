@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack16.cc,v 1.44 2009-01-16 18:18:59 sshwarts Exp $
+// $Id: stack16.cc,v 1.45 2009-03-10 16:28:01 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -72,57 +72,52 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUSH16_SS(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::POP16_DS(bxInstruction_c *i)
 {
-  BX_CPU_THIS_PTR speculative_rsp = 1;
-  BX_CPU_THIS_PTR prev_rsp = RSP;
+  RSP_SPECULATIVE;
 
   Bit16u ds = pop_16();
   load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS], ds);
 
-  BX_CPU_THIS_PTR speculative_rsp = 0;
+  RSP_COMMIT;
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::POP16_ES(bxInstruction_c *i)
 {
-  BX_CPU_THIS_PTR speculative_rsp = 1;
-  BX_CPU_THIS_PTR prev_rsp = RSP;
+  RSP_SPECULATIVE;
 
   Bit16u es = pop_16();
   load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES], es);
 
-  BX_CPU_THIS_PTR speculative_rsp = 0;
+  RSP_COMMIT;
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::POP16_FS(bxInstruction_c *i)
 {
-  BX_CPU_THIS_PTR speculative_rsp = 1;
-  BX_CPU_THIS_PTR prev_rsp = RSP;
+  RSP_SPECULATIVE;
 
   Bit16u fs = pop_16();
   load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS], fs);
 
-  BX_CPU_THIS_PTR speculative_rsp = 0;
+  RSP_COMMIT;
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::POP16_GS(bxInstruction_c *i)
 {
-  BX_CPU_THIS_PTR speculative_rsp = 1;
-  BX_CPU_THIS_PTR prev_rsp = RSP;
+  RSP_SPECULATIVE;
 
   Bit16u gs = pop_16();
   load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS], gs);
 
-  BX_CPU_THIS_PTR speculative_rsp = 0;
+  RSP_COMMIT;
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::POP16_SS(bxInstruction_c *i)
 {
-  BX_CPU_THIS_PTR speculative_rsp = 1;
-  BX_CPU_THIS_PTR prev_rsp = RSP;
+  RSP_SPECULATIVE;
 
   Bit16u ss = pop_16();
   load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS], ss);
 
-  BX_CPU_THIS_PTR speculative_rsp = 0;
+  RSP_COMMIT;
 
   // POP SS inhibits interrupts, debug exceptions and single-step
   // trap exceptions until the execution boundary following the
@@ -140,8 +135,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::POP_RX(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::POP_EwM(bxInstruction_c *i)
 {
-  BX_CPU_THIS_PTR speculative_rsp = 1;
-  BX_CPU_THIS_PTR prev_rsp = RSP;
+  RSP_SPECULATIVE;
 
   Bit16u val16 = pop_16();
 
@@ -152,7 +146,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::POP_EwM(bxInstruction_c *i)
 
   write_virtual_word(i->seg(), eaddr, val16);
 
-  BX_CPU_THIS_PTR speculative_rsp = 0;
+  RSP_COMMIT;
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUSH_Iw(bxInstruction_c *i)
@@ -246,8 +240,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ENTER16_IwIb(bxInstruction_c *i)
   Bit8u level = i->Ib2();
   level &= 0x1F;
 
-  BX_CPU_THIS_PTR speculative_rsp = 1;
-  BX_CPU_THIS_PTR prev_rsp = RSP;
+  RSP_SPECULATIVE;
 
   push_16(BP);
   Bit16u frame_ptr16 = SP;
@@ -301,7 +294,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ENTER16_IwIb(bxInstruction_c *i)
 
   BP = frame_ptr16;
 
-  BX_CPU_THIS_PTR speculative_rsp = 0;
+  RSP_COMMIT;
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::LEAVE16(bxInstruction_c *i)

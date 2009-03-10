@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.580 2009-03-08 21:23:36 sshwarts Exp $
+// $Id: cpu.h,v 1.581 2009-03-10 16:28:01 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -3430,17 +3430,28 @@ BX_CPP_INLINE void BX_CPU_C::prepareXSAVE(void)
 #define RMAddr(i)  (BX_CPU_THIS_PTR address_xlation.rm_addr)
 
 #if defined(NEED_CPU_REG_SHORTCUTS)
-  #include "stack.h"
-#endif
+
+#include "stack.h"
+
+#define RSP_SPECULATIVE {              \
+  BX_CPU_THIS_PTR speculative_rsp = 1; \
+  BX_CPU_THIS_PTR prev_rsp = RSP;      \
+}
+
+#define RSP_COMMIT {                   \
+  BX_CPU_THIS_PTR speculative_rsp = 0; \
+}
+
+#endif // defined(NEED_CPU_REG_SHORTCUTS)
 
 BX_CPP_INLINE void BX_CPU_C::updateFetchModeMask(void)
 {
 #if BX_SUPPORT_ICACHE
   BX_CPU_THIS_PTR fetchModeMask =
 #if BX_SUPPORT_X86_64
-    ((BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64)<<30) |
+    ((BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64)<<31) |
 #endif
-     (BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b << 31);
+     (BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b << 30);
 #endif
 
   BX_CPU_THIS_PTR user_pl = // CPL == 3

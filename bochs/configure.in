@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.390 2009-03-07 16:57:17 vruppert Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.391 2009-03-10 16:28:00 sshwarts Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -484,6 +484,23 @@ AC_TRY_COMPILE([], [ { 42LL; } ],
       AC_MSG_RESULT(no)
       AC_DEFINE(BX_64BIT_CONSTANTS_USE_LL, 0)
     ])
+
+AC_MSG_CHECKING(for A20 support)
+AC_ARG_ENABLE(a20-pin,
+  [  --enable-a20-pin                  compile in support for A20 pin],
+  [if test "$enableval" = yes; then
+    AC_MSG_RESULT(yes)
+    AC_DEFINE(BX_SUPPORT_A20, 1)
+   else
+    AC_MSG_RESULT(no)
+    AC_DEFINE(BX_SUPPORT_A20, 0)
+   fi
+   ],
+  [
+    AC_MSG_RESULT(yes)
+    AC_DEFINE(BX_SUPPORT_A20, 1)
+    ]
+  )
 
 use_x86_64=0
 AC_MSG_CHECKING(for x86-64 support)
