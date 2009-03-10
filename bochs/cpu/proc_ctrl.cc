@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.289 2009-02-27 20:00:02 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.290 2009-03-10 22:28:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1112,7 +1112,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOADALL(bxInstruction_c *i)
     BX_PANIC(("loadall: CS invalid"));
   }
 
-  updateFetchModeMask();
   handleCpuModeChange();
 
   /* ES */
@@ -1220,6 +1219,8 @@ void BX_CPU_C::handleCpuModeChange(void)
       BX_ASSERT(CPL == 0);
     }
   }
+
+  updateFetchModeMask();
 
   if (mode != BX_CPU_THIS_PTR cpu_mode) {
     BX_DEBUG(("%s activated", cpu_mode_string(BX_CPU_THIS_PTR cpu_mode)));
@@ -1820,10 +1821,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSENTER(bxInstruction_c *i)
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.l            =  long_mode();
 #endif
 
-  updateFetchModeMask();
-
 #if BX_SUPPORT_X86_64
   handleCpuModeChange(); // mode change could happen only when in long_mode()
+#else
+  updateFetchModeMask();
 #endif
 
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
@@ -1941,10 +1942,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSEXIT(bxInstruction_c *i)
     EIP = EDX;
   }
 
-  updateFetchModeMask();
-
 #if BX_SUPPORT_X86_64
   handleCpuModeChange(); // mode change could happen only when in long_mode()
+#else
+  updateFetchModeMask();
 #endif
 
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
@@ -2019,7 +2020,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSCALL(bxInstruction_c *i)
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.l            = 1; /* 64-bit code */
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.avl          = 0; /* available for use by system */
 
-    updateFetchModeMask();
     handleCpuModeChange(); // mode change could only happen when in long_mode()
 
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
@@ -2170,7 +2170,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSRET(bxInstruction_c *i)
       temp_RIP = ECX;
     }
 
-    updateFetchModeMask();
     handleCpuModeChange(); // mode change could only happen when in long64 mode
 
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
