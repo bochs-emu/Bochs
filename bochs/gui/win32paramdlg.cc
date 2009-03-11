@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32paramdlg.cc,v 1.1 2009-03-10 19:33:03 vruppert Exp $
+// $Id: win32paramdlg.cc,v 1.2 2009-03-11 18:53:21 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Volker Ruppert
@@ -149,11 +149,11 @@ HWND CreateBrowseButton(HWND hDlg, UINT id, UINT ctrl)
   return Button;
 }
 
-HWND CreateCheckbox(HWND hDlg, UINT id, UINT ctrl)
+HWND CreateCheckbox(HWND hDlg, UINT id, UINT ctrl, bx_param_bool_c *bparam)
 {
   HWND Checkbox;
   RECT r;
-  int code;
+  int code, val;
 
   code = ID_PARAM + id;
   r.left = 90;
@@ -164,6 +164,8 @@ HWND CreateCheckbox(HWND hDlg, UINT id, UINT ctrl)
   Checkbox = CreateWindow("BUTTON", "", BS_AUTOCHECKBOX | WS_CHILD | WS_TABSTOP,
                           r.left, r.top, r.right-r.left+1, r.bottom-r.top+1,
                           hDlg, (HMENU)code, NULL, NULL);
+  val = bparam->get();
+  SendMessage(Checkbox, BM_SETCHECK, val ? BST_CHECKED : BST_UNCHECKED, 0);
   SendMessage(Checkbox, WM_SETFONT, (UINT)DlgFont, TRUE);
   ShowWindow(Checkbox, SW_SHOW);
   return Checkbox;
@@ -195,11 +197,12 @@ HWND CreateInput(HWND hDlg, UINT id, UINT ctrl, BOOL numeric, const char *data)
   return Input;
 }
 
-HWND CreateCombobox(HWND hDlg, UINT id, UINT ctrl)
+HWND CreateCombobox(HWND hDlg, UINT id, UINT ctrl, bx_param_enum_c *eparam)
 {
   HWND Combo;
   RECT r;
-  int code;
+  int code, j;
+  const char *choice;
 
   code = ID_PARAM + id;
   r.left = 90;
@@ -209,6 +212,13 @@ HWND CreateCombobox(HWND hDlg, UINT id, UINT ctrl)
   MapDialogRect(hDlg, &r);
   Combo = CreateWindow("COMBOBOX", "", WS_CHILD | WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST,
                        r.left, r.top, r.right-r.left+1, r.bottom-r.top+1, hDlg, (HMENU)code, NULL, NULL);
+  j = 0;
+  do {
+    choice = eparam->get_choice(j);
+    SendMessage(Combo, CB_ADDSTRING, 0, (LPARAM)choice);
+    j++;
+  } while (choice != NULL);
+  SendMessage(Combo, CB_SETCURSEL, (WPARAM)(eparam->get()-eparam->get_min()), 0);
   SendMessage(Combo, WM_SETFONT, (UINT)DlgFont, TRUE);
   ShowWindow(Combo, SW_SHOW);
   return Combo;
@@ -221,8 +231,9 @@ static BOOL CALLBACK ParamDlgProc(HWND Window, UINT AMessage, WPARAM wParam, LPA
   bx_param_c *param;
   bx_param_enum_c *eparam;
   bx_param_string_c *sparam;
-  int code, i, j, nctrl, options, val, xsize = 308, ysize;
-  const char *label, *choice;
+  bx_list_c *deplist;
+  int code, i, j, k, nctrl, options, val, xsize = 308, ysize;
+  const char *label;
   char buffer[512];
   HWND ltext, control, browse;
   RECT r;
@@ -232,14 +243,14 @@ static BOOL CALLBACK ParamDlgProc(HWND Window, UINT AMessage, WPARAM wParam, LPA
       EndDialog(Window, 0);
       break;
     case WM_INITDIALOG:
-      list = (bx_list_c*)lParam;
+      list = (bx_list_c*)SIM->get_param((const char*)lParam);
       items = list->get_size();
       options = list->get_options()->get();
       SetWindowText(Window, list->get_title()->getptr());
       nctrl = 0;
       for (i = 0; i < items; i++) {
         param = list->get(i);
-        if ((param->get_enabled()) && (!SIM->get_init_done() || param->get_runtime_param())) {
+        if (!SIM->get_init_done() || (param->get_enabled() && param->get_runtime_param())) {
           label = param->get_label();
           if (label == NULL) {
             label = param->get_name();
@@ -252,19 +263,9 @@ static BOOL CALLBACK ParamDlgProc(HWND Window, UINT AMessage, WPARAM wParam, LPA
           ltext = CreateLabel(Window, i, nctrl, buffer);
           browse = NULL;
           if (param->get_type() == BXT_PARAM_BOOL) {
-            control = CreateCheckbox(Window, i, nctrl);
-            val = ((bx_param_bool_c*)param)->get();
-            SendMessage(control, BM_SETCHECK, val ? BST_CHECKED : BST_UNCHECKED, 0);
+            control = CreateCheckbox(Window, i, nctrl, (bx_param_bool_c*)param);
           } else if (param->get_type() == BXT_PARAM_ENUM) {
-            control = CreateCombobox(Window, i, nctrl);
-            eparam = (bx_param_enum_c*)param;
-            j = 0;
-            do {
-              choice = eparam->get_choice(j);
-              SendMessage(control, CB_ADDSTRING, 0, (LPARAM)choice);
-              j++;
-            } while (choice != NULL);
-            SendMessage(control, CB_SETCURSEL, (WPARAM)(eparam->get()-eparam->get_min()), 0);
+            control = CreateCombobox(Window, i, nctrl, (bx_param_enum_c*)param);
           } else if (param->get_type() == BXT_PARAM_NUM) {
             control = CreateInput(Window, i, nctrl, TRUE, "");
             SetDlgItemInt(Window, ID_PARAM + i, ((bx_param_num_c*)param)->get(), FALSE);
@@ -275,6 +276,11 @@ static BOOL CALLBACK ParamDlgProc(HWND Window, UINT AMessage, WPARAM wParam, LPA
               browse = CreateBrowseButton(Window, i, nctrl);
               xsize = 400;
             }
+          }
+          if (!param->get_enabled()) {
+            EnableWindow(ltext, FALSE);
+            EnableWindow(control, FALSE);
+            if (browse) EnableWindow(browse, FALSE);
           }
           nctrl++;
         }
@@ -343,6 +349,26 @@ static BOOL CALLBACK ParamDlgProc(HWND Window, UINT AMessage, WPARAM wParam, LPA
               SetWindowText(GetDlgItem(Window, ID_PARAM + i), sparam->getptr());
               SetFocus(GetDlgItem(Window, ID_PARAM + i));
             }
+          } else if ((code >= ID_PARAM) && (code < (ID_PARAM + items))) {
+            i = code - ID_PARAM;
+            param = list->get(i);
+            if (param->get_type() == BXT_PARAM_BOOL) {
+              deplist = ((bx_param_bool_c *)param)->get_dependent_list();
+              if (deplist != NULL) {
+                val = SendMessage(GetDlgItem(Window, code), BM_GETCHECK, 0, 0);
+                for (j = 0; j < items; j++) {
+                  for (k = 0; k < deplist->get_size(); k++) {
+                    if ((list->get(j) != param) && (list->get(j) == deplist->get(k))) {
+                      EnableWindow(GetDlgItem(Window, ID_LABEL+j), val);
+                      EnableWindow(GetDlgItem(Window, ID_PARAM+j), val);
+                      if (GetDlgItem(Window, ID_BROWSE+j) != NULL) {
+                        EnableWindow(GetDlgItem(Window, ID_BROWSE+j), val);
+                      }
+                    }
+                  }
+                }
+              }
+            }
           }
       }
       break;
@@ -354,12 +380,12 @@ static BOOL CALLBACK ParamDlgProc(HWND Window, UINT AMessage, WPARAM wParam, LPA
   return 0;
 }
 
-int win32ParamDialog(HWND parent, bx_list_c *list)
+int win32ParamDialog(HWND parent, const char *menu)
 {
   int ret;
 
   InitDlgFont();
-  ret = DialogBoxParam(NULL, MAKEINTRESOURCE(PARAM_DLG), parent, (DLGPROC)ParamDlgProc, (LPARAM)list);
+  ret = DialogBoxParam(NULL, MAKEINTRESOURCE(PARAM_DLG), parent, (DLGPROC)ParamDlgProc, (LPARAM)menu);
   DeleteObject(DlgFont);
   return ret;
 }

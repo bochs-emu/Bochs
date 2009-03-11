@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32dialog.cc,v 1.76 2009-03-10 19:33:03 vruppert Exp $
+// $Id: win32dialog.cc,v 1.77 2009-03-11 18:53:18 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  The Bochs Project
@@ -637,8 +637,8 @@ static BOOL CALLBACK RTUSBdevDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM 
         default:
           switch (LOWORD(wParam)) {
             case IDEXTHUB1:
-              bx_list_c *exthub = (bx_list_c*)SIM->get_param("exthub1", SIM->get_param(BXPN_MENU_RUNTIME_USB));
-              win32ParamDialog(hDlg, exthub);
+              wsprintf(buffer, "%s.exthub1", BXPN_MENU_RUNTIME_USB);
+              win32ParamDialog(hDlg, buffer);
               break;
           }
       }
