@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_common.cc,v 1.7 2009-03-09 12:18:40 vruppert Exp $
+// $Id: usb_common.cc,v 1.8 2009-03-12 20:24:56 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Benjamin D Lunt (fys at frontiernet net)
@@ -63,6 +63,7 @@
 usbdev_type usb_init_device(const char *devname, logfunctions *hub, usb_device_c **device)
 {
   usbdev_type type = USB_DEV_TYPE_NONE;
+  int ports;
 
   if (!strcmp(devname, "mouse")) {
     type = USB_DEV_TYPE_MOUSE;
@@ -89,9 +90,20 @@ usbdev_type usb_init_device(const char *devname, logfunctions *hub, usb_device_c
 //      hub->panic("USB device 'cdrom' needs a filename separated with a colon");
 //      return type;
 //    }
-  } else if (!strcmp(devname, "hub")) {
+  } else if (!strncmp(devname, "hub", 3)) {
     type = USB_DEV_TYPE_HUB;
-    *device = new usb_hub_device_c();
+    ports = 4;
+    if (strlen(devname) > 3) {
+      if (devname[3] == ':') {
+        ports = atoi(&devname[4]);
+        if ((ports < 2) || (ports > 8)) {
+          hub->panic("USB device 'hub': invalid number of ports");
+        }
+      } else {
+        hub->panic("USB device 'hub' needs the port count separated with a colon");
+      }
+    }
+    *device = new usb_hub_device_c(ports);
   } else {
     hub->panic("unknown USB device: %s", devname);
     return type;

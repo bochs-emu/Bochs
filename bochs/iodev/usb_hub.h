@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_hub.h,v 1.1 2009-03-07 16:57:17 vruppert Exp $
+// $Id: usb_hub.h,v 1.2 2009-03-12 20:24:56 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Volker Ruppert
@@ -29,7 +29,7 @@
 
 class usb_hub_device_c : public usb_device_c {
 public:
-  usb_hub_device_c(void);
+  usb_hub_device_c(Bit8u ports);
   virtual ~usb_hub_device_c(void);
 
   virtual int handle_packet(USBPacket *p);
@@ -42,6 +42,7 @@ public:
 
 private:
   struct {
+    Bit8u n_ports;
     bx_list_c *config;
     bx_list_c *state;
     struct {

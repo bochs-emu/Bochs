@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_hub.cc,v 1.3 2009-03-09 14:44:06 vruppert Exp $
+// $Id: usb_hub.cc,v 1.4 2009-03-12 20:24:56 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Volker Ruppert
@@ -231,7 +231,7 @@ static usb_hub_device_c *find_usb_hub(const char *name)
 }
 
 
-usb_hub_device_c::usb_hub_device_c()
+usb_hub_device_c::usb_hub_device_c(Bit8u ports)
 {
   int i;
   char pname[10];
@@ -243,7 +243,8 @@ usb_hub_device_c::usb_hub_device_c()
   strcpy(d.devname, "Bochs USB HUB");
   d.connected = 1;
   memset((void*)&hub, 0, sizeof(hub));
-  for(i = 0; i < USB_HUB_NUM_PORTS; i++) {
+  hub.n_ports = ports;
+  for(i = 0; i < hub.n_ports; i++) {
     hub.usb_port[i].PortStatus = PORT_STAT_POWER;
     hub.usb_port[i].PortChange = 0;
   }
@@ -254,10 +255,10 @@ usb_hub_device_c::usb_hub_device_c()
   bx_list_c *usb_rt = (bx_list_c*)SIM->get_param(BXPN_MENU_RUNTIME_USB);
   sprintf(pname, "exthub%d", ++hub_count);
   sprintf(label, "External Hub #%d Configuration", hub_count);
-  hub.config = new bx_list_c(usb, pname, label, USB_HUB_NUM_PORTS);
+  hub.config = new bx_list_c(usb, pname, label, hub.n_ports);
   hub.config->get_options()->set(bx_list_c::SHOW_PARENT | bx_list_c::USE_BOX_TITLE);
   usb_rt->add(hub.config);
-  for(i = 0; i < USB_HUB_NUM_PORTS; i++) {
+  for(i = 0; i < hub.n_ports; i++) {
     sprintf(pname, "port%d", i+1);
     sprintf(label, "Port #%d device", i+1);
     port = new bx_param_string_c(hub.config, pname, label, "", "", BX_PATHNAME_LEN);
@@ -270,7 +271,7 @@ usb_hub_device_c::usb_hub_device_c()
 
 usb_hub_device_c::~usb_hub_device_c(void)
 {
-  for (int i=0; i<USB_HUB_NUM_PORTS; i++) {
+  for (int i=0; i<hub.n_ports; i++) {
     remove_device(i);
   }
   bx_list_c *usb_rt = (bx_list_c*)SIM->get_param(BXPN_MENU_RUNTIME_USB);
@@ -289,8 +290,8 @@ void usb_hub_device_c::register_state_specific(bx_list_c *parent)
   char portnum[6];
   bx_list_c *port;
 
-  hub.state = new bx_list_c(parent, "hub", "USB HUB Device State", USB_HUB_NUM_PORTS);
-  for (i=0; i<USB_HUB_NUM_PORTS; i++) {
+  hub.state = new bx_list_c(parent, "hub", "USB HUB Device State", hub.n_ports);
+  for (i=0; i<hub.n_ports; i++) {
     sprintf(portnum, "port%d", i+1);
     port = new bx_list_c(hub.state, portnum, 3);
     new bx_shadow_num_c(port, "PortStatus", &hub.usb_port[i].PortStatus, BASE_HEX);
@@ -302,7 +303,7 @@ void usb_hub_device_c::register_state_specific(bx_list_c *parent)
 
 void usb_hub_device_c::after_restore_state()
 {
-  for (int i=0; i<USB_HUB_NUM_PORTS; i++) {
+  for (int i=0; i<hub.n_ports; i++) {
     if (hub.usb_port[i].device != NULL) {
       hub.usb_port[i].device->after_restore_state();
     }
@@ -366,7 +367,7 @@ int usb_hub_device_c::handle_control(int request, int value, int index, int leng
 
           /* status change endpoint size based on number
            * of ports */
-          data[22] = (USB_HUB_NUM_PORTS + 1 + 7) / 8;
+          data[22] = (hub.n_ports + 1 + 7) / 8;
 
           ret = sizeof(bx_hub_config_descriptor);
           break;
@@ -424,7 +425,7 @@ int usb_hub_device_c::handle_control(int request, int value, int index, int leng
       break;
     case GetPortStatus:
       n = index - 1;
-      if (n >= USB_HUB_NUM_PORTS)
+      if (n >= hub.n_ports)
         goto fail;
       data[0] = (hub.usb_port[n].PortStatus & 0xff);
       data[1] = (hub.usb_port[n].PortStatus >> 8);
@@ -442,7 +443,7 @@ int usb_hub_device_c::handle_control(int request, int value, int index, int leng
       break;
     case SetPortFeature:
       n = index - 1;
-      if (n >= USB_HUB_NUM_PORTS)
+      if (n >= hub.n_ports)
         goto fail;
       switch(value) {
         case PORT_SUSPEND:
@@ -465,7 +466,7 @@ int usb_hub_device_c::handle_control(int request, int value, int index, int leng
       break;
     case ClearPortFeature:
       n = index - 1;
-      if (n >= USB_HUB_NUM_PORTS)
+      if (n >= hub.n_ports)
         goto fail;
       switch(value) {
         case PORT_ENABLE:
@@ -499,17 +500,17 @@ int usb_hub_device_c::handle_control(int request, int value, int index, int leng
           unsigned int limit, var_hub_size = 0;
           memcpy(data, bx_hub_hub_descriptor,
                  sizeof(bx_hub_hub_descriptor));
-          data[2] = USB_HUB_NUM_PORTS;
+          data[2] = hub.n_ports;
 
           /* fill DeviceRemovable bits */
-          limit = ((USB_HUB_NUM_PORTS + 1 + 7) / 8) + 7;
+          limit = ((hub.n_ports + 1 + 7) / 8) + 7;
           for (n = 7; n < limit; n++) {
             data[n] = 0x00;
             var_hub_size++;
           }
 
           /* fill PortPwrCtrlMask bits */
-          limit = limit + ((USB_HUB_NUM_PORTS + 7) / 8);
+          limit = limit + ((hub.n_ports + 7) / 8);
           for (;n < limit; n++) {
             data[n] = 0xff;
             var_hub_size++;
@@ -536,14 +537,14 @@ int usb_hub_device_c::handle_data(USBPacket *p)
       if (p->devep == 1) {
         unsigned int status;
         int i, n;
-        n = (USB_HUB_NUM_PORTS + 1 + 7) / 8;
+        n = (hub.n_ports + 1 + 7) / 8;
         if (p->len == 1) { /* FreeBSD workaround */
           n = 1;
         } else if (n > p->len) {
           return USB_RET_BABBLE;
         }
         status = 0;
-        for(i = 0; i < USB_HUB_NUM_PORTS; i++) {
+        for(i = 0; i < hub.n_ports; i++) {
           if (hub.usb_port[i].PortChange)
             status |= (1 << (i + 1));
         }
@@ -573,7 +574,7 @@ int usb_hub_device_c::broadcast_packet(USBPacket *p)
   int i, ret;
   usb_device_c *dev;
 
-  for(i = 0; i < USB_HUB_NUM_PORTS; i++) {
+  for(i = 0; i < hub.n_ports; i++) {
     dev = hub.usb_port[i].device;
     if ((dev != NULL) && (hub.usb_port[i].PortStatus & PORT_STAT_ENABLE)) {
       ret = dev->handle_packet(p);
@@ -683,7 +684,7 @@ const char *usb_hub_device_c::hub_param_handler(bx_param_string_c *param, int se
       hubnum = atoi(param->get_parent()->get_name()+6);
       portnum = atoi(param->get_name()+4) - 1;
       bx_bool empty = ((strlen(val) == 0) || (!strcmp(val, "none")));
-      if ((portnum >= 0) && (portnum < USB_HUB_NUM_PORTS)) {
+      if ((portnum >= 0) && (portnum < hub->hub.n_ports)) {
         BX_INFO(("USB hub #%d, port #%d experimental device change", hubnum, portnum+1));
         if (empty && (hub->hub.usb_port[portnum].PortStatus & PORT_STAT_CONNECTION)) {
           if (hub->hub.usb_port[portnum].device != NULL) {
