@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32paramdlg.cc,v 1.2 2009-03-11 18:53:21 vruppert Exp $
+// $Id: win32paramdlg.cc,v 1.3 2009-03-12 19:40:41 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Volker Ruppert
@@ -171,25 +171,50 @@ HWND CreateCheckbox(HWND hDlg, UINT id, UINT ctrl, bx_param_bool_c *bparam)
   return Checkbox;
 }
 
-HWND CreateInput(HWND hDlg, UINT id, UINT ctrl, BOOL numeric, const char *data)
+HWND CreateInput(HWND hDlg, UINT id, UINT ctrl, bx_param_c *param)
 {
   HWND Input;
   RECT r;
-  int code, style;
+  int code, i, style;
+  bx_param_num_c *nparam;
+  bx_param_string_c *sparam;
+  char buffer[512];
+  char eachbyte[16];
+  char sep_string[2];
+  char *val;
 
   code = ID_PARAM + id;
   style = WS_CHILD | WS_TABSTOP;
-  if (numeric) {
-    style |= ES_NUMBER;
+  if (param->get_type() == BXT_PARAM_STRING) {
+    sparam = (bx_param_string_c*)param;
+    val = sparam->getptr();
+    if (sparam->get_options()->get() & sparam->RAW_BYTES) {
+      buffer[0] = 0;
+      sep_string[0] = sparam->get_separator();
+      sep_string[1] = 0;
+      for (i = 0; i < sparam->get_maxsize(); i++) {
+        wsprintf(eachbyte, "%s%02x", (i>0)?sep_string : "", (Bit8u)0xff&val[i]);
+        strncat(buffer, eachbyte, sizeof(buffer));
+      }
+    } else {
+      lstrcpyn(buffer, val, 512);
+      style |= ES_AUTOHSCROLL;
+    }
   } else {
-    style |= ES_AUTOHSCROLL;
+    nparam = (bx_param_num_c*)param;
+    if (nparam->get_base() == BASE_HEX) {
+      wsprintf(buffer, "0x%x", nparam->get());
+    } else {
+      wsprintf(buffer, "%d", nparam->get());
+      style |= ES_NUMBER;
+    }
   }
   r.left = 90;
   r.top = ctrl * 20 + 15;
   r.right = 190;
   r.bottom = r.top + 14;
   MapDialogRect(hDlg, &r);
-  Input = CreateWindowEx(WS_EX_CLIENTEDGE | WS_EX_NOPARENTNOTIFY, "EDIT", data,
+  Input = CreateWindowEx(WS_EX_CLIENTEDGE | WS_EX_NOPARENTNOTIFY, "EDIT", buffer,
                          style, r.left, r.top, r.right-r.left+1,
                          r.bottom-r.top+1, hDlg, (HMENU)code, NULL, NULL);
   SendMessage(Input, WM_SETFONT, (UINT)DlgFont, TRUE);
@@ -228,23 +253,28 @@ static BOOL CALLBACK ParamDlgProc(HWND Window, UINT AMessage, WPARAM wParam, LPA
 {
   static bx_list_c *list = NULL;
   static int items = 0;
+  static Bit64u *n_disable = NULL;
   bx_param_c *param;
+  bx_param_num_c *nparam;
   bx_param_enum_c *eparam;
   bx_param_string_c *sparam;
   bx_list_c *deplist;
   int code, i, j, k, nctrl, options, val, xsize = 308, ysize;
-  const char *label;
-  char buffer[512];
+  const char *label, *src;
+  char buffer[512], rawbuf[512];
   HWND ltext, control, browse;
   RECT r;
 
   switch (AMessage) {
     case WM_CLOSE:
+      free(n_disable);
       EndDialog(Window, 0);
       break;
     case WM_INITDIALOG:
       list = (bx_list_c*)SIM->get_param((const char*)lParam);
       items = list->get_size();
+      n_disable = (Bit64u*)malloc(items * sizeof(Bit64u));
+      memset(n_disable, 0, items * sizeof(Bit64u));
       options = list->get_options()->get();
       SetWindowText(Window, list->get_title()->getptr());
       nctrl = 0;
@@ -267,11 +297,10 @@ static BOOL CALLBACK ParamDlgProc(HWND Window, UINT AMessage, WPARAM wParam, LPA
           } else if (param->get_type() == BXT_PARAM_ENUM) {
             control = CreateCombobox(Window, i, nctrl, (bx_param_enum_c*)param);
           } else if (param->get_type() == BXT_PARAM_NUM) {
-            control = CreateInput(Window, i, nctrl, TRUE, "");
-            SetDlgItemInt(Window, ID_PARAM + i, ((bx_param_num_c*)param)->get(), FALSE);
+            control = CreateInput(Window, i, nctrl, param);
           } else if (param->get_type() == BXT_PARAM_STRING) {
+            control = CreateInput(Window, i, nctrl, param);
             sparam = (bx_param_string_c*)param;
-            control = CreateInput(Window, i, nctrl, FALSE, sparam->getptr());
             if (sparam->get_options()->get() & sparam->IS_FILENAME) {
               browse = CreateBrowseButton(Window, i, nctrl);
               xsize = 400;
@@ -315,6 +344,7 @@ static BOOL CALLBACK ParamDlgProc(HWND Window, UINT AMessage, WPARAM wParam, LPA
       code = LOWORD(wParam);
       switch (code) {
         case IDCANCEL:
+          free(n_disable);
           EndDialog(Window, 0);
           break;
         case IDOK:
@@ -330,15 +360,40 @@ static BOOL CALLBACK ParamDlgProc(HWND Window, UINT AMessage, WPARAM wParam, LPA
             } else {
               if (SendMessage(GetDlgItem(Window, ID_PARAM + i), EM_GETMODIFY, 0, 0)) {
                 if (param->get_type() == BXT_PARAM_NUM) {
-                  val = GetDlgItemInt(Window, ID_PARAM + i, NULL, FALSE);
-                  ((bx_param_num_c*)param)->set(val);
+                  nparam = (bx_param_num_c*)param;
+                  if (nparam->get_base() == BASE_HEX) {
+                    GetWindowText(GetDlgItem(Window, ID_PARAM + i), buffer, 511);
+                    sscanf(buffer, "%x", &val);
+                  } else {
+                    val = GetDlgItemInt(Window, ID_PARAM + i, NULL, FALSE);
+                  }
+                  nparam->set(val);
                 } else if (param->get_type() == BXT_PARAM_STRING) {
                   GetWindowText(GetDlgItem(Window, ID_PARAM + i), buffer, 511);
-                  ((bx_param_string_c*)param)->set(buffer);
+                  sparam = (bx_param_string_c*)param;
+                  if (sparam->get_options()->get() & sparam->RAW_BYTES) {
+                    src = &buffer[0];
+                    memset(rawbuf, 0, sparam->get_maxsize());
+                    for (j = 0; j < sparam->get_maxsize(); j++) {
+                      while (*src == sparam->get_separator())
+                        src++;
+                      if (*src == 0) break;
+                      if (sscanf(src, "%02x", &val)) {
+                        rawbuf[j] = val;
+                        src += 2;
+                      } else {
+                        break;
+                      }
+                    }
+                    sparam->set(rawbuf);
+                  } else {
+                    sparam->set(buffer);
+                  }
                 }
               }
             }
           }
+          free(n_disable);
           EndDialog(Window, 1);
           break;
         default:
@@ -352,17 +407,27 @@ static BOOL CALLBACK ParamDlgProc(HWND Window, UINT AMessage, WPARAM wParam, LPA
           } else if ((code >= ID_PARAM) && (code < (ID_PARAM + items))) {
             i = code - ID_PARAM;
             param = list->get(i);
-            if (param->get_type() == BXT_PARAM_BOOL) {
+            if ((param->get_type() == BXT_PARAM_BOOL) ||
+                (param->get_type() == BXT_PARAM_NUM)) {
               deplist = ((bx_param_bool_c *)param)->get_dependent_list();
               if (deplist != NULL) {
-                val = SendMessage(GetDlgItem(Window, code), BM_GETCHECK, 0, 0);
+                if (param->get_type() == BXT_PARAM_BOOL) {
+                  val = SendMessage(GetDlgItem(Window, code), BM_GETCHECK, 0, 0);
+                } else {
+                  val = GetDlgItemInt(Window, code, NULL, FALSE);
+                }
                 for (j = 0; j < items; j++) {
                   for (k = 0; k < deplist->get_size(); k++) {
                     if ((list->get(j) != param) && (list->get(j) == deplist->get(k))) {
-                      EnableWindow(GetDlgItem(Window, ID_LABEL+j), val);
-                      EnableWindow(GetDlgItem(Window, ID_PARAM+j), val);
+                      if (val) {
+                        n_disable[j] &= ~(1 << i);
+                      } else {
+                        n_disable[j] |= (1 << i);
+                      }
+                      EnableWindow(GetDlgItem(Window, ID_LABEL+j), !n_disable[j]);
+                      EnableWindow(GetDlgItem(Window, ID_PARAM+j), !n_disable[j]);
                       if (GetDlgItem(Window, ID_BROWSE+j) != NULL) {
-                        EnableWindow(GetDlgItem(Window, ID_BROWSE+j), val);
+                        EnableWindow(GetDlgItem(Window, ID_BROWSE+j), !n_disable[j]);
                       }
                     }
                   }
