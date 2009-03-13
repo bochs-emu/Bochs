@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: access.cc,v 1.123 2009-03-05 17:48:12 sshwarts Exp $
+// $Id: access.cc,v 1.124 2009-03-13 18:48:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -367,9 +367,7 @@ BX_CPU_C::v2h_write_byte(bx_address laddr, bx_bool user)
       bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
       Bit32u pageOffset = PAGE_OFFSET(laddr);
       Bit8u *hostAddr = (Bit8u*) (hostPageAddr | pageOffset);
-#if BX_SUPPORT_ICACHE
       pageWriteStampTable.decWriteStamp(tlbEntry->ppf);
-#endif
       return hostAddr;
     }
   }

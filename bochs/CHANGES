@@ -47,8 +47,11 @@ Detailed change log :
     the code.
   - Added ability to choose Bochs log file name and Bochs debugger log file
     name from Bochs command line (using new -log and -dbglog options)
-  - Removed --enable-guest2host-tlb configure option. The option will be
-    always enabled for any Bochs configuration.
+  - Removed --enable-guest2host-tlb configure option. The option is always
+    enabled for any Bochs configuration.
+  - Removed --enable-icache configure option. The option is always enabled
+    for any Bochs configuration. Trace cache support still remains optional
+    and could be configured off.
   - Added configure option to compile in GUI frontend for Bochs debugger,
     to enable configure with --enable-debugger-gui option.
     The GUI debugger frontend is enabled by default with Bochs debugger.

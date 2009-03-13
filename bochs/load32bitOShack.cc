@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: load32bitOShack.cc,v 1.32 2009-01-16 18:18:57 sshwarts Exp $
+// $Id: load32bitOShack.cc,v 1.33 2009-03-13 18:48:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -246,10 +246,6 @@ void bx_load_null_kernel_hack(void)
   BX_CPU(0)->sregs[BX_SEG_REG_CS].cache.u.segment.g   = 1; // page gran
   BX_CPU(0)->sregs[BX_SEG_REG_CS].cache.u.segment.d_b = 1; // 32bit
 
-#if BX_SUPPORT_ICACHE
-  BX_CPU(0)->updateFetchModeMask();
-#endif
-
   // DS deltas
   BX_CPU(0)->sregs[BX_SEG_REG_DS].cache.u.segment.base = 0x00000000;
   BX_CPU(0)->sregs[BX_SEG_REG_DS].cache.u.segment.limit = 0xFFFFF;
@@ -259,10 +255,11 @@ void bx_load_null_kernel_hack(void)
 
   // CR0 deltas
   BX_CPU(0)->cr0.set_PE(1); // protected mode
+
+  BX_CPU(0)->handleCpuModeChange();
 }
 
-  Bit32u
-bx_load_kernel_image(char *path, Bit32u paddr)
+Bit32u bx_load_kernel_image(char *path, Bit32u paddr)
 {
   struct stat stat_buf;
   int fd, ret;

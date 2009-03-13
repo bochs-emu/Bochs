@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.203 2009-02-20 17:26:01 sshwarts Exp $
+// $Id: init.cc,v 1.204 2009-03-13 18:48:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -778,9 +778,7 @@ void BX_CPU_C::reset(unsigned source)
 #endif
 
   updateFetchModeMask();
-#if BX_SUPPORT_ICACHE
   flushICaches();
-#endif
 
   /* DS (Data Segment) and descriptor cache */
   parse_selector(0x0000,

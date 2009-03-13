@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: icache.h,v 1.43 2009-03-10 16:28:01 sshwarts Exp $
+// $Id: icache.h,v 1.44 2009-03-13 18:48:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007 Stanislav Shwartsman
@@ -23,8 +23,6 @@
 
 #ifndef BX_ICACHE_H
 #define BX_ICACHE_H
-
-#if BX_SUPPORT_ICACHE
 
 // bit31: 1=Long Mode, 0=not Long Mode.
 // bit30: 1=CS is 32/64-bit, 0=CS is 16-bit.
@@ -198,7 +196,5 @@ BX_CPP_INLINE void bxICache_c::purgeICacheEntries(void)
 
 extern void purgeICaches(void);
 extern void flushICaches(void);
-
-#endif // BX_SUPPORT_ICACHE
 
 #endif

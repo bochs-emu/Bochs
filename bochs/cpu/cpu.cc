@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.275 2009-03-13 18:02:33 sshwarts Exp $
+// $Id: cpu.cc,v 1.276 2009-03-13 18:48:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -38,9 +38,6 @@
 #define RCX ECX
 #endif
 
-// ICACHE instrumentation code
-#if BX_SUPPORT_ICACHE
-
 #define InstrumentICACHE 0
 
 #if InstrumentICACHE
@@ -59,13 +56,10 @@ static unsigned iCacheMisses=0;
   } \
 }
 #define InstrICache_Increment(v) (v)++
-
 #else
 #define InstrICache_Stats()
 #define InstrICache_Increment(v)
 #endif
-
-#endif // BX_SUPPORT_ICACHE
 
 // The CHECK_MAX_INSTRUCTIONS macro allows cpu_loop to execute a few
 // instructions and then return so that the other processors have a chance to
@@ -141,7 +135,6 @@ no_async_event:
       eipBiased = RIP + BX_CPU_THIS_PTR eipPageBias;
     }
 
-#if BX_SUPPORT_ICACHE
     bx_phy_address pAddr = BX_CPU_THIS_PTR pAddrPage + eipBiased;
     bxICacheEntry_c *entry = BX_CPU_THIS_PTR iCache.get_entry(pAddr);
     bxInstruction_c *i = entry->i;
@@ -161,10 +154,6 @@ no_async_event:
       serveICacheMiss(entry, eipBiased, pAddr);
       i = entry->i;
     }
-#else
-    bxInstruction_c iStorage, *i = &iStorage;
-    fetchInstruction(i, eipBiased);
-#endif
 
 #if BX_SUPPORT_TRACE_CACHE
     unsigned length = entry->ilen;
@@ -767,13 +756,11 @@ void BX_CPU_C::prefetch(void)
     }
   }
 
-#if BX_SUPPORT_ICACHE
   BX_CPU_THIS_PTR currPageWriteStampPtr = pageWriteStampTable.getPageWriteStampPtr(BX_CPU_THIS_PTR pAddrPage);
   Bit32u pageWriteStamp = *(BX_CPU_THIS_PTR currPageWriteStampPtr);
   pageWriteStamp &= ~ICacheWriteStampFetchModeMask; // Clear out old fetch mode bits
   pageWriteStamp |=  BX_CPU_THIS_PTR fetchModeMask; // And add new ones
   pageWriteStampTable.setPageWriteStamp(BX_CPU_THIS_PTR pAddrPage, pageWriteStamp);
-#endif
 }
 
 void BX_CPU_C::boundaryFetch(const Bit8u *fetchPtr, unsigned remainingInPage, bxInstruction_c *i)

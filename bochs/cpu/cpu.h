@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.583 2009-03-13 18:26:10 sshwarts Exp $
+// $Id: cpu.h,v 1.584 2009-03-13 18:48:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -621,10 +621,7 @@ struct cpuid_function_t {
 #include "descriptor.h"
 #include "instr.h"
 #include "lazy_flags.h"
-
-#if BX_SUPPORT_ICACHE
 #include "icache.h"
-#endif
 
 // BX_TLB_SIZE: Number of entries in TLB
 // BX_TLB_INDEX_OF(lpf): This macro is passed the linear page frame
@@ -987,11 +984,9 @@ public: // for now...
   // An instruction cache.  Each entry should be exactly 32 bytes, and
   // this structure should be aligned on a 32-byte boundary to be friendly
   // with the host cache lines.
-#if BX_SUPPORT_ICACHE
   bxICache_c iCache BX_CPP_AlignN(32);
   Bit32u fetchModeMask;
   const Bit32u *currPageWriteStampPtr;
-#endif
 
   struct {
     bx_address rm_addr;       // The address offset after resolution
@@ -2776,13 +2771,12 @@ public: // for now...
 #if BX_SUPPORT_X86_64
   BX_SMF unsigned fetchDecode64(const Bit8u *fetchPtr, bxInstruction_c *i, unsigned remainingInPage) BX_CPP_AttrRegparmN(3);
 #endif
-  BX_SMF bx_bool fetchInstruction(bxInstruction_c *iStorage, Bit32u eipBiased);
   BX_SMF void boundaryFetch(const Bit8u *fetchPtr, unsigned remainingInPage, bxInstruction_c *);
-#if BX_SUPPORT_ICACHE
   BX_SMF void serveICacheMiss(bxICacheEntry_c *entry, Bit32u eipBiased, bx_phy_address pAddr);
 #if BX_SUPPORT_TRACE_CACHE
   BX_SMF bx_bool mergeTraces(bxICacheEntry_c *entry, bxInstruction_c *i, bx_phy_address pAddr);
-#endif
+#else
+  BX_SMF bx_bool fetchInstruction(bxInstruction_c *iStorage, Bit32u eipBiased);
 #endif
   BX_SMF void prefetch(void);
   BX_SMF void updateFetchModeMask(void);
@@ -3427,13 +3421,11 @@ BX_CPP_INLINE void BX_CPU_C::prepareXSAVE(void)
 
 BX_CPP_INLINE void BX_CPU_C::updateFetchModeMask(void)
 {
-#if BX_SUPPORT_ICACHE
   BX_CPU_THIS_PTR fetchModeMask =
 #if BX_SUPPORT_X86_64
     ((BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64)<<31) |
 #endif
      (BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b << 30);
-#endif
 
   BX_CPU_THIS_PTR user_pl = // CPL == 3
      (BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.rpl == 3);

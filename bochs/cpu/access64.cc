@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: access64.cc,v 1.23 2009-02-26 21:56:57 sshwarts Exp $
+// $Id: access64.cc,v 1.24 2009-03-13 18:48:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008 Stanislav Shwartsman
@@ -49,9 +49,7 @@ BX_CPU_C::write_virtual_byte_64(unsigned s, Bit64u offset, Bit8u data)
       BX_DBG_LIN_MEMORY_ACCESS(BX_CPU_ID, laddr,
             tlbEntry->ppf | pageOffset, 1, CPL, BX_WRITE, (Bit8u*) &data);
       Bit8u *hostAddr = (Bit8u*) (hostPageAddr | pageOffset);
-#if BX_SUPPORT_ICACHE
       pageWriteStampTable.decWriteStamp(tlbEntry->ppf);
-#endif
       *hostAddr = data;
       return;
     }
@@ -90,9 +88,7 @@ BX_CPU_C::write_virtual_word_64(unsigned s, Bit64u offset, Bit16u data)
       BX_DBG_LIN_MEMORY_ACCESS(BX_CPU_ID, laddr,
           tlbEntry->ppf | pageOffset, 2, CPL, BX_WRITE, (Bit8u*) &data);
       Bit16u *hostAddr = (Bit16u*) (hostPageAddr | pageOffset);
-#if BX_SUPPORT_ICACHE
       pageWriteStampTable.decWriteStamp(tlbEntry->ppf);
-#endif
       WriteHostWordToLittleEndian(hostAddr, data);
       return;
     }
@@ -140,9 +136,7 @@ BX_CPU_C::write_virtual_dword_64(unsigned s, Bit64u offset, Bit32u data)
       BX_DBG_LIN_MEMORY_ACCESS(BX_CPU_ID, laddr,
           tlbEntry->ppf | pageOffset, 4, CPL, BX_WRITE, (Bit8u*) &data);
       Bit32u *hostAddr = (Bit32u*) (hostPageAddr | pageOffset);
-#if BX_SUPPORT_ICACHE
       pageWriteStampTable.decWriteStamp(tlbEntry->ppf);
-#endif
       WriteHostDWordToLittleEndian(hostAddr, data);
       return;
     }
@@ -190,9 +184,7 @@ BX_CPU_C::write_virtual_qword_64(unsigned s, Bit64u offset, Bit64u data)
       BX_DBG_LIN_MEMORY_ACCESS(BX_CPU_ID, laddr,
           tlbEntry->ppf | pageOffset, 8, CPL, BX_WRITE, (Bit8u*) &data);
       Bit64u *hostAddr = (Bit64u*) (hostPageAddr | pageOffset);
-#if BX_SUPPORT_ICACHE
       pageWriteStampTable.decWriteStamp(tlbEntry->ppf);
-#endif
       WriteHostQWordToLittleEndian(hostAddr, data);
       return;
     }
@@ -236,9 +228,7 @@ BX_CPU_C::write_virtual_dqword_64(unsigned s, Bit64u offset, const BxPackedXmmRe
       BX_DBG_LIN_MEMORY_ACCESS(BX_CPU_ID, laddr,
           tlbEntry->ppf | pageOffset, 16, CPL, BX_WRITE, (Bit8u*) data);
       Bit64u *hostAddr = (Bit64u*) (hostPageAddr | pageOffset);
-#if BX_SUPPORT_ICACHE
       pageWriteStampTable.decWriteStamp(tlbEntry->ppf);
-#endif
       WriteHostQWordToLittleEndian(hostAddr,   data->xmm64u(0));
       WriteHostQWordToLittleEndian(hostAddr+1, data->xmm64u(1));
       return;
@@ -274,9 +264,7 @@ BX_CPU_C::write_virtual_dqword_aligned_64(unsigned s, Bit64u offset, const BxPac
       BX_DBG_LIN_MEMORY_ACCESS(BX_CPU_ID, laddr,
           tlbEntry->ppf | pageOffset, 16, CPL, BX_WRITE, (Bit8u*) data);
       Bit64u *hostAddr = (Bit64u*) (hostPageAddr | pageOffset);
-#if BX_SUPPORT_ICACHE
       pageWriteStampTable.decWriteStamp(tlbEntry->ppf);
-#endif
       WriteHostQWordToLittleEndian(hostAddr,   data->xmm64u(0));
       WriteHostQWordToLittleEndian(hostAddr+1, data->xmm64u(1));
       return;
@@ -570,9 +558,7 @@ BX_CPU_C::read_RMW_virtual_byte_64(unsigned s, Bit64u offset)
       bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
       Bit32u pageOffset = PAGE_OFFSET(laddr);
       Bit8u *hostAddr = (Bit8u*) (hostPageAddr | pageOffset);
-#if BX_SUPPORT_ICACHE
       pageWriteStampTable.decWriteStamp(tlbEntry->ppf);
-#endif
       data = *hostAddr;
       BX_CPU_THIS_PTR address_xlation.pages = (bx_ptr_equiv_t) hostAddr;
       BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr, tlbEntry->ppf | pageOffset, 1, BX_RW);
@@ -613,9 +599,7 @@ BX_CPU_C::read_RMW_virtual_word_64(unsigned s, Bit64u offset)
       bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
       Bit32u pageOffset = PAGE_OFFSET(laddr);
       Bit16u *hostAddr = (Bit16u*) (hostPageAddr | pageOffset);
-#if BX_SUPPORT_ICACHE
       pageWriteStampTable.decWriteStamp(tlbEntry->ppf);
-#endif
       ReadHostWordFromLittleEndian(hostAddr, data);
       BX_CPU_THIS_PTR address_xlation.pages = (bx_ptr_equiv_t) hostAddr;
       BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr, tlbEntry->ppf | pageOffset, 2, BX_RW);
@@ -665,9 +649,7 @@ BX_CPU_C::read_RMW_virtual_dword_64(unsigned s, Bit64u offset)
       bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
       Bit32u pageOffset = PAGE_OFFSET(laddr);
       Bit32u *hostAddr = (Bit32u*) (hostPageAddr | pageOffset);
-#if BX_SUPPORT_ICACHE
       pageWriteStampTable.decWriteStamp(tlbEntry->ppf);
-#endif
       ReadHostDWordFromLittleEndian(hostAddr, data);
       BX_CPU_THIS_PTR address_xlation.pages = (bx_ptr_equiv_t) hostAddr;
       BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr, tlbEntry->ppf | pageOffset, 4, BX_RW);
@@ -717,9 +699,7 @@ BX_CPU_C::read_RMW_virtual_qword_64(unsigned s, Bit64u offset)
       bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
       Bit32u pageOffset = PAGE_OFFSET(laddr);
       Bit64u *hostAddr = (Bit64u*) (hostPageAddr | pageOffset);
-#if BX_SUPPORT_ICACHE
       pageWriteStampTable.decWriteStamp(tlbEntry->ppf);
-#endif
       ReadHostQWordFromLittleEndian(hostAddr, data);
       BX_CPU_THIS_PTR address_xlation.pages = (bx_ptr_equiv_t) hostAddr;
       BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr, tlbEntry->ppf | pageOffset, 8, BX_RW);
@@ -767,9 +747,7 @@ void BX_CPU_C::write_new_stack_word_64(Bit64u laddr, unsigned curr_pl, Bit16u da
       BX_DBG_LIN_MEMORY_ACCESS(BX_CPU_ID, laddr,
           tlbEntry->ppf | pageOffset, 2, curr_pl, BX_WRITE, (Bit8u*) &data);
       Bit16u *hostAddr = (Bit16u*) (hostPageAddr | pageOffset);
-#if BX_SUPPORT_ICACHE
       pageWriteStampTable.decWriteStamp(tlbEntry->ppf);
-#endif
       WriteHostWordToLittleEndian(hostAddr, data);
       return;
     }
@@ -812,9 +790,7 @@ void BX_CPU_C::write_new_stack_dword_64(Bit64u laddr, unsigned curr_pl, Bit32u d
       BX_DBG_LIN_MEMORY_ACCESS(BX_CPU_ID, laddr,
           tlbEntry->ppf | pageOffset, 4, curr_pl, BX_WRITE, (Bit8u*) &data);
       Bit32u *hostAddr = (Bit32u*) (hostPageAddr | pageOffset);
-#if BX_SUPPORT_ICACHE
       pageWriteStampTable.decWriteStamp(tlbEntry->ppf);
-#endif
       WriteHostDWordToLittleEndian(hostAddr, data);
       return;
     }
@@ -857,9 +833,7 @@ void BX_CPU_C::write_new_stack_qword_64(Bit64u laddr, unsigned curr_pl, Bit64u d
       BX_DBG_LIN_MEMORY_ACCESS(BX_CPU_ID, laddr,
           tlbEntry->ppf | pageOffset, 8, curr_pl, BX_WRITE, (Bit8u*) &data);
       Bit64u *hostAddr = (Bit64u*) (hostPageAddr | pageOffset);
-#if BX_SUPPORT_ICACHE
       pageWriteStampTable.decWriteStamp(tlbEntry->ppf);
-#endif
       WriteHostQWordToLittleEndian(hostAddr, data);
       return;
     }

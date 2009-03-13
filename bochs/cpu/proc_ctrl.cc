@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.290 2009-03-10 22:28:08 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.291 2009-03-13 18:48:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -173,10 +173,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INVD(bxInstruction_c *i)
   BX_DEBUG(("INVD: Flush internal caches !"));
   BX_INSTR_CACHE_CNTRL(BX_CPU_ID, BX_INSTR_INVD);
 
-#if BX_SUPPORT_ICACHE
   flushICaches();
-#endif
-
 #else
   BX_INFO(("INVD: required 486 support, use --enable-cpu-level=4 option"));
   exception(BX_UD_EXCEPTION, 0, 0);
@@ -197,10 +194,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::WBINVD(bxInstruction_c *i)
   BX_DEBUG(("WBINVD: Flush internal caches !"));
   BX_INSTR_CACHE_CNTRL(BX_CPU_ID, BX_INSTR_WBINVD);
 
-#if BX_SUPPORT_ICACHE
   flushICaches();
-#endif
-
 #else
   BX_INFO(("WBINVD: required 486 support, use --enable-cpu-level=4 option"));
   exception(BX_UD_EXCEPTION, 0, 0);
@@ -1240,18 +1234,14 @@ void BX_CPU_C::handleAlignmentCheck(void)
     if (BX_CPU_THIS_PTR alignment_check_mask == 0) {
       BX_CPU_THIS_PTR alignment_check_mask = 0xF;
       BX_INFO(("Enable alignment check (#AC exception)"));
-#if BX_SUPPORT_ICACHE
       BX_CPU_THIS_PTR iCache.flushICacheEntries();
-#endif
     }
   }
   else {
     if (BX_CPU_THIS_PTR alignment_check_mask != 0) {
       BX_CPU_THIS_PTR alignment_check_mask = 0;
       BX_INFO(("Disable alignment check (#AC exception)"));
-#if BX_SUPPORT_ICACHE
       BX_CPU_THIS_PTR iCache.flushICacheEntries();
-#endif
     }
   }
 }

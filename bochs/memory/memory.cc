@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: memory.cc,v 1.75 2009-02-17 19:20:47 sshwarts Exp $
+// $Id: memory.cc,v 1.76 2009-03-13 18:48:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -89,9 +89,7 @@ mem_write:
 
   // all memory access feets in single 4K page
   if (a20addr < BX_MEM_THIS len) {
-#if BX_SUPPORT_ICACHE
     pageWriteStampTable.decWriteStamp(a20addr);
-#endif
     // all of data is within limits of physical memory
     if ((a20addr & 0xfff80000) != 0x00080000 || (a20addr <= 0x0009ffff))
     {

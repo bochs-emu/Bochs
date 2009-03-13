@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pc_system.cc,v 1.73 2009-01-16 18:18:57 sshwarts Exp $
+// $Id: pc_system.cc,v 1.74 2009-03-13 18:48:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -48,12 +48,7 @@ double     m_ips; // Millions of Instructions Per Second
 #define SpewPeriodicTimerInfo 0
 #define MinAllowableTimerPeriod 1
 
-#if BX_SUPPORT_ICACHE
 const Bit64u bx_pc_system_c::NullTimerInterval = ICacheWriteStampStart;
-#else
-// This must be the maximum 32-bit unsigned int value, NOT (Bit64u) -1.
-const Bit64u bx_pc_system_c::NullTimerInterval = 0xffffffff;
-#endif
 
   // constructor
 bx_pc_system_c::bx_pc_system_c()
@@ -418,9 +413,7 @@ void bx_pc_system_c::nullTimer(void* this_ptr)
   }
 #endif
 
-#if BX_SUPPORT_ICACHE
   purgeICaches();
-#endif
 }
 
 void bx_pc_system_c::benchmarkTimer(void* this_ptr)
