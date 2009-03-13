@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.582 2009-03-13 18:02:33 sshwarts Exp $
+// $Id: cpu.h,v 1.583 2009-03-13 18:26:10 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -3740,14 +3740,14 @@ BX_CPP_INLINE bx_bool BX_CPU_C::get_PFLazy(void)
 #endif
 
 #define SET_FLAGS_OSZAPC_ADD_8(op1_8, op2_8, sum_8) \
-  SET_FLAGS_OSZAPC_8((op1_8), (op2_8), (sum_8), BX_LF_INSTR_ADD8)
+  SET_FLAGS_OSZAPC_S2_8((op2_8), (sum_8), BX_LF_INSTR_ADD8)
 #define SET_FLAGS_OSZAPC_ADD_16(op1_16, op2_16, sum_16) \
-  SET_FLAGS_OSZAPC_16((op1_16), (op2_16), (sum_16), BX_LF_INSTR_ADD16)
+  SET_FLAGS_OSZAPC_S2_16((op2_16), (sum_16), BX_LF_INSTR_ADD16)
 #define SET_FLAGS_OSZAPC_ADD_32(op1_32, op2_32, sum_32) \
-  SET_FLAGS_OSZAPC_32((op1_32), (op2_32), (sum_32), BX_LF_INSTR_ADD32)
+  SET_FLAGS_OSZAPC_S2_32((op2_32), (sum_32), BX_LF_INSTR_ADD32)
 #if BX_SUPPORT_X86_64
 #define SET_FLAGS_OSZAPC_ADD_64(op1_64, op2_64, sum_64) \
-  SET_FLAGS_OSZAPC_64((op1_64), (op2_64), (sum_64), BX_LF_INSTR_ADD64)
+  SET_FLAGS_OSZAPC_S2_64((op2_64), (sum_64), BX_LF_INSTR_ADD64)
 #endif
 
 #define SET_FLAGS_OSZAPC_SUB_8(op1_8, op2_8, diff_8) \
