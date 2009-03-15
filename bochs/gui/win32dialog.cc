@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32dialog.cc,v 1.77 2009-03-11 18:53:18 vruppert Exp $
+// $Id: win32dialog.cc,v 1.78 2009-03-15 21:16:16 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  The Bochs Project
@@ -263,7 +263,7 @@ static BOOL CALLBACK FloppyDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lP
         case IDBROWSE:
           GetDlgItemText(hDlg, IDPATH, path, MAX_PATH);
           param->set(backslashes(path));
-          if (AskFilename(hDlg, param, "img") > 0) {
+          if (AskFilename(hDlg, param) > 0) {
             SetWindowText(GetDlgItem(hDlg, IDPATH), param->getptr());
             SendMessage(GetDlgItem(hDlg, IDSTATUS), BM_SETCHECK, BST_CHECKED, 0);
             SendMessage(GetDlgItem(hDlg, IDMEDIATYPE), CB_SELECTSTRING, (WPARAM)-1, (LPARAM)"auto");
@@ -350,7 +350,7 @@ static BOOL CALLBACK Cdrom1DlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lP
         case IDBROWSE1:
           GetDlgItemText(hDlg, IDCDROM1, path, MAX_PATH);
           SIM->get_param_string("path", cdromop)->set(backslashes(path));
-          if (AskFilename(hDlg, (bx_param_filename_c *)SIM->get_param_string("path", cdromop), "iso") > 0) {
+          if (AskFilename(hDlg, (bx_param_filename_c *)SIM->get_param_string("path", cdromop)) > 0) {
             SetWindowText(GetDlgItem(hDlg, IDCDROM1), SIM->get_param_string("path", cdromop)->getptr());
             SendMessage(GetDlgItem(hDlg, IDSTATUS1), BM_SETCHECK, BST_CHECKED, 0);
           }
@@ -540,7 +540,7 @@ static BOOL CALLBACK RTCdromDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
               device = LOWORD(wParam) - IDBROWSE1;
               GetDlgItemText(hDlg, IDCDROM1+device, path, MAX_PATH);
               SIM->get_param_string("path", cdromop[device])->set(backslashes(path));
-              if (AskFilename(hDlg, (bx_param_filename_c *)SIM->get_param_string("path", cdromop[device]), "iso") > 0) {
+              if (AskFilename(hDlg, (bx_param_filename_c *)SIM->get_param_string("path", cdromop[device])) > 0) {
                 SetWindowText(GetDlgItem(hDlg, IDCDROM1+device), SIM->get_param_string("path", cdromop[device])->getptr());
                 SendMessage(GetDlgItem(hDlg, IDSTATUS1+device), BM_SETCHECK, BST_CHECKED, 0);
               }
@@ -935,12 +935,12 @@ BxEvent* win32_notify_callback(void *unused, BxEvent *event)
       param = event->u.param.param;
       if (param->get_type() == BXT_PARAM_STRING) {
         sparam = (bx_param_string_c *)param;
-        opts = sparam->get_options()->get();
+        opts = sparam->get_options();
         if (opts & sparam->IS_FILENAME) {
           if (opts & sparam->SELECT_FOLDER_DLG) {
             event->retcode = BrowseDir(sparam->get_label(), sparam->getptr());
           } else if (param->get_parent() == NULL) {
-            event->retcode = AskFilename(GetBochsWindow(), (bx_param_filename_c *)sparam, "txt");
+            event->retcode = AskFilename(GetBochsWindow(), (bx_param_filename_c *)sparam);
           } else {
             event->retcode = FloppyDialog((bx_param_filename_c *)sparam);
           }

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: textconfig.cc,v 1.74 2009-03-04 18:20:40 vruppert Exp $
+// $Id: textconfig.cc,v 1.75 2009-03-15 21:16:16 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  The Bochs Project
@@ -51,6 +51,7 @@ extern "C" {
 #include "extplugin.h"
 #ifdef WIN32
 #include "win32dialog.h"
+#include "win32paramdlg.h"
 #endif
 
 #define CI_PATH_LENGTH 512
@@ -409,6 +410,9 @@ int bx_config_interface(int menu)
 {
   Bit32u choice;
   char sr_path[CI_PATH_LENGTH];
+#ifdef WIN32
+  HWND hwnd = GetActiveWindow();
+#endif
   while (1) {
     switch (menu) {
       case BX_CI_INIT:
@@ -468,9 +472,23 @@ int bx_config_interface(int menu)
         if (ask_uint(startup_options_prompt, "", 0, 14+BX_PLUGINS, 0, &choice, 10) < 0) return -1;
         switch (choice) {
           case 0: return 0;
-          case 1: do_menu("log"); break;
           case 2: bx_log_options(0); break;
           case 3: bx_log_options(1); break;
+#ifdef WIN32
+          case 1: win32ParamDialog(hwnd, "log"); break;
+          case 4: win32ParamDialog(hwnd, "cpu"); break;
+          case 5: win32ParamDialog(hwnd, "memory"); break;
+          case 6: win32ParamDialog(hwnd, "clock_cmos"); break;
+          case 7: win32ParamDialog(hwnd, "pci"); break;
+          case 8: win32ParamDialog(hwnd, "display"); break;
+          case 9: win32ParamDialog(hwnd, "keyboard_mouse"); break;
+          case 10: win32ParamDialog(hwnd, BXPN_MENU_DISK_WIN32); break;
+          case 11: win32ParamDialog(hwnd, "ports"); break;
+          case 12: win32ParamDialog(hwnd, "network"); break;
+          case 13: win32ParamDialog(hwnd, BXPN_SB16); break;
+          case 14: win32ParamDialog(hwnd, "misc"); break;
+#else
+          case 1: do_menu("log"); break;
           case 4: do_menu("cpu"); break;
           case 5: do_menu(BXPN_MENU_MEMORY); break;
           case 6: do_menu("clock_cmos"); break;
@@ -482,6 +500,7 @@ int bx_config_interface(int menu)
           case 12: do_menu("network"); break;
           case 13: do_menu(BXPN_SB16); break;
           case 14: do_menu("misc"); break;
+#endif
 #if BX_PLUGINS
           case 15: do_menu("user"); break;
 #endif
@@ -784,7 +803,7 @@ void bx_param_enum_c::text_print(FILE *fp)
 void bx_param_string_c::text_print(FILE *fp)
 {
   char *value = getptr();
-  int opts = options->get();
+  int opts = options;
   if (opts & RAW_BYTES) {
     char buffer[1024];
     buffer[0] = 0;
@@ -818,10 +837,10 @@ void bx_list_c::text_print(FILE *fp)
   for (int i=0; i<size; i++) {
     assert(list[i] != NULL);
     if (list[i]->get_enabled()) {
-      if ((i>0) && (options->get() & SERIES_ASK))
+      if ((i>0) && (options & SERIES_ASK))
         fprintf(fp, ", ");
       list[i]->text_print(fp);
-      if (!(options->get() & SERIES_ASK))
+      if (!(options & SERIES_ASK))
         fprintf(fp, "\n");
     }
   }
@@ -919,7 +938,7 @@ int bx_param_string_c::text_ask(FILE *fpin, FILE *fpout)
   int status;
   const char *prompt = get_ask_format();
   if (prompt == NULL) {
-    if (options->get() & SELECT_FOLDER_DLG) {
+    if (options & SELECT_FOLDER_DLG) {
       fprintf(fpout, "%s\n\n", get_label());
       prompt = "Enter a path to an existing folder or press enter to cancel\n";
     } else {
@@ -937,7 +956,7 @@ int bx_param_string_c::text_ask(FILE *fpin, FILE *fpout)
       continue;
     }
     if (status < 0) return status;
-    int opts = options->get();
+    int opts = options;
     char buffer2[1024];
     strcpy(buffer2, buffer);
     if (status == 1 && opts & RAW_BYTES) {
@@ -965,7 +984,7 @@ int bx_list_c::text_ask(FILE *fpin, FILE *fpout)
   fprintf(fpout, "\n%s\n", my_title);
   for (i=0; i<imax; i++) fprintf(fpout, "-");
   fprintf(fpout, "\n");
-  if (options->get() & SERIES_ASK) {
+  if (options & SERIES_ASK) {
     for (int i=0; i<size; i++) {
       if (list[i]->get_enabled()) {
         if (!SIM->get_init_done() || list[i]->get_runtime_param()) {
@@ -974,7 +993,7 @@ int bx_list_c::text_ask(FILE *fpin, FILE *fpout)
       }
     }
   } else {
-    if (options->get() & SHOW_PARENT)
+    if (options & SHOW_PARENT)
       fprintf(fpout, "0. Return to previous menu\n");
     for (int i=0; i<size; i++) {
       assert(list[i] != NULL);
@@ -984,7 +1003,7 @@ int bx_list_c::text_ask(FILE *fpin, FILE *fpout)
           child = (bx_list_c*)list[i];
           fprintf(fpout, "%s\n", child->get_title()->getptr());
         } else {
-          if ((options->get() & SHOW_GROUP_NAME) && (list[i]->get_group() != NULL))
+          if ((options & SHOW_GROUP_NAME) && (list[i]->get_group() != NULL))
             fprintf(fpout, "%s ", list[i]->get_group());
           list[i]->text_print(fpout);
           fprintf(fpout, "\n");
@@ -1000,7 +1019,7 @@ int bx_list_c::text_ask(FILE *fpin, FILE *fpout)
     }
     fprintf(fpout, "\n");
     Bit32u n = choice->get();
-    int min = (options->get() & SHOW_PARENT) ? 0 : 1;
+    int min = (options & SHOW_PARENT) ? 0 : 1;
     int max = size;
     int status = ask_uint("Please choose one: [%d] ", "", min, max, n, &n, 10);
     if (status < 0) return status;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.161 2009-03-15 12:54:59 vruppert Exp $
+// $Id: config.cc,v 1.162 2009-03-15 21:16:16 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -95,6 +95,7 @@ static Bit64s bx_param_handler(bx_param_c *param, int set, Bit64s val)
             SIM->get_param_num("present", base)->set(1);
             SIM->get_param("mode", base)->set_enabled(1);
             SIM->get_param("path", base)->set_enabled(1);
+            ((bx_param_filename_c*)SIM->get_param("path", base))->set_extension("img");
             //SIM->get_param("journal", base)->set_enabled(1);
             SIM->get_param("cylinders", base)->set_enabled(1);
             SIM->get_param("heads", base)->set_enabled(1);
@@ -110,6 +111,7 @@ static Bit64s bx_param_handler(bx_param_c *param, int set, Bit64s val)
             SIM->get_param_num("present", base)->set(1);
             SIM->get_param("mode", base)->set_enabled(0);
             SIM->get_param("path", base)->set_enabled(1);
+            ((bx_param_filename_c*)SIM->get_param("path", base))->set_extension("iso");
             SIM->get_param("journal", base)->set_enabled(0);
             SIM->get_param("cylinders", base)->set_enabled(0);
             SIM->get_param("heads", base)->set_enabled(0);
@@ -505,7 +507,7 @@ void bx_init_options()
 #endif
       BX_CPUID_BRAND_LEN+1);
 
-  cpu_param->get_options()->set(menu->SHOW_PARENT);
+  cpu_param->set_options(menu->SHOW_PARENT);
 
   // memory subtree
   bx_list_c *memory = new bx_list_c(root_param, "memory", "Memory Options");
@@ -524,7 +526,7 @@ void bx_init_options()
       1, 2048,
       BX_DEFAULT_MEM_MEGS);
   ramsize->set_ask_format("Enter memory size (MB): [%d] ");
-  ramsize->set_options(bx_param_num_c::USE_SPIN_CONTROL);
+  ramsize->set_options(ramsize->USE_SPIN_CONTROL);
 
   path = new bx_param_filename_c(rom,
       "path",
@@ -580,9 +582,9 @@ void bx_init_options()
     sprintf(label, "Optional ROM #%d address:", i+1);
     strcat(label, " 0x%05x");
     optaddr->set_long_format(strdup(label));
-    optnum1->get_options()->set(bx_list_c::SHOW_PARENT | bx_list_c::USE_BOX_TITLE);
+    optnum1->set_options(optnum1->SHOW_PARENT | optnum1->USE_BOX_TITLE);
   }
-  optrom->get_options()->set(bx_list_c::SHOW_PARENT);
+  optrom->set_options(optrom->SHOW_PARENT);
 
   for (i=0; i<BX_N_OPTRAM_IMAGES; i++) {
     sprintf(name, "%d", i+1);
@@ -609,10 +611,10 @@ void bx_init_options()
     sprintf(label, "Optional RAM #%d address:", i+1);
     strcat(label, " 0x%05x");
     optaddr->set_long_format(strdup(label));
-    optnum2->get_options()->set(bx_list_c::SHOW_PARENT | bx_list_c::USE_BOX_TITLE);
+    optnum2->set_options(optnum2->SHOW_PARENT | optnum2->USE_BOX_TITLE);
   }
-  optrom->get_options()->set(bx_list_c::SHOW_PARENT);
-  memory->get_options()->set(bx_list_c::USE_TAB_WINDOW);
+  optrom->set_options(optrom->SHOW_PARENT);
+  memory->set_options(memory->USE_TAB_WINDOW);
 
   bx_param_c *memory_init_list[] = {
     SIM->get_param(BXPN_MEM_SIZE),
@@ -624,7 +626,7 @@ void bx_init_options()
     NULL
   };
   menu = new bx_list_c(special_menus, "memory", "Bochs Memory Options", memory_init_list);
-  menu->get_options()->set(bx_list_c::SHOW_PARENT);
+  menu->set_options(menu->SHOW_PARENT);
 
   // clock & cmos subtree
   bx_list_c *clock_cmos = new bx_list_c(root_param, "clock_cmos", "Clock & CMOS Options");
@@ -663,8 +665,8 @@ void bx_init_options()
 
   time0->set_ask_format("Enter Initial CMOS time (1:localtime, 2:utc, other:time in seconds): [%d] ");
   clock_sync->set_ask_format("Enter Synchronisation method: [%s] ");
-  clock_cmos->get_options()->set(bx_list_c::SHOW_PARENT);
-  cmosimage->get_options()->set(bx_list_c::SHOW_PARENT);
+  clock_cmos->set_options(clock_cmos->SHOW_PARENT);
+  cmosimage->set_options(cmosimage->SHOW_PARENT);
 
   // pci subtree
   bx_list_c *pci = new bx_list_c(root_param, "pci", "PCI Options");
@@ -727,9 +729,9 @@ void bx_init_options()
   // add final NULL at the end, and build the menu
   *pci_deps_ptr = NULL;
   i440fx_support->set_dependent_list(new bx_list_c(NULL, "", "", pci_deps_list));
-  pci->get_options()->set(bx_list_c::SHOW_PARENT);
-  slot->get_options()->set(bx_list_c::SHOW_PARENT);
-  pcidev->get_options()->set(bx_list_c::SHOW_PARENT | bx_list_c::USE_BOX_TITLE);
+  pci->set_options(pci->SHOW_PARENT);
+  slot->set_options(slot->SHOW_PARENT);
+  pcidev->set_options(pcidev->SHOW_PARENT | pcidev->USE_BOX_TITLE);
 
   // display subtree
   bx_list_c *display = new bx_list_c(root_param, "display", "Bochs Display & Interface Options", 7);
@@ -830,7 +832,7 @@ void bx_init_options()
 #elif BX_SUPPORT_CLGD54XX
   vga_extension->set_initial_val("cirrus");
 #endif
-  display->get_options()->set(bx_list_c::SHOW_PARENT);
+  display->set_options(display->SHOW_PARENT);
 
   // keyboard & mouse subtree
   bx_list_c *kbd_mouse = new bx_list_c(root_param, "keyboard_mouse", "Keyboard & Mouse Options");
@@ -864,6 +866,7 @@ void bx_init_options()
       "keymap", "Keymap filename",
       "Pathname of the keymap file used",
       "", BX_PATHNAME_LEN);
+  keymap->set_extension("map");
   deplist = new bx_list_c(NULL, 1);
   deplist->add(keymap);
   use_kbd_mapping->set_dependent_list(deplist);
@@ -906,9 +909,9 @@ void bx_init_options()
   enabled->set_handler(bx_param_handler);
   enabled->set_runtime_param(1);
 
-  kbd_mouse->get_options()->set(bx_list_c::SHOW_PARENT);
-  keyboard->get_options()->set(bx_list_c::SHOW_PARENT);
-  mouse->get_options()->set(bx_list_c::SHOW_PARENT);
+  kbd_mouse->set_options(kbd_mouse->SHOW_PARENT);
+  keyboard->set_options(keyboard->SHOW_PARENT);
+  mouse->set_options(mouse->SHOW_PARENT);
 
   // boot parameter subtree
   bx_list_c *boot_params = new bx_list_c(root_param, "boot_params", "Boot Options");
@@ -961,10 +964,10 @@ void bx_init_options()
   path->set_ask_format("Enter pathname of OS: [%s]");
   iolog->set_ask_format("Enter pathname of I/O log: [%s] ");
   initrd->set_ask_format("Enter pathname of initrd: [%s] ");
-  load32bitos->get_options()->set(menu->SERIES_ASK);
+  load32bitos->set_options(menu->SERIES_ASK);
   whichOS->set_handler(bx_param_handler);
   whichOS->set(Load32bitOSNone);
-  boot_params->get_options()->set(bx_list_c::SHOW_PARENT);
+  boot_params->set_options(menu->SHOW_PARENT);
 
   // floppy subtree
   bx_list_c *floppy = new bx_list_c(root_param, "floppy", "Floppy Options");
@@ -979,6 +982,7 @@ void bx_init_options()
       "Pathname of first floppy image file or device.  If you're booting from floppy, this should be a bootable floppy.",
       "", BX_PATHNAME_LEN);
   path->set_ask_format("Enter new filename, or 'none' for no disk: [%s] ");
+  path->set_extension("img");
   path->set_runtime_param(1);
 
   devtype = new bx_param_enum_c(floppya,
@@ -1013,7 +1017,7 @@ void bx_init_options()
   type->set_handler(bx_param_handler);
   status->set_handler(bx_param_handler);
   path->set_initial_val("none");
-  floppya->get_options()->set(bx_list_c::SERIES_ASK);
+  floppya->set_options(floppya->SERIES_ASK);
 
   path = new bx_param_filename_c(floppyb,
       "path",
@@ -1021,6 +1025,7 @@ void bx_init_options()
       "Pathname of second floppy image file or device.",
       "", BX_PATHNAME_LEN);
   path->set_ask_format("Enter new filename, or 'none' for no disk: [%s] ");
+  path->set_extension("img");
   path->set_runtime_param(1);
 
   devtype = new bx_param_enum_c(floppyb,
@@ -1055,11 +1060,12 @@ void bx_init_options()
   type->set_handler(bx_param_handler);
   status->set_handler(bx_param_handler);
   path->set_initial_val("none");
-  floppyb->get_options()->set(bx_list_c::SERIES_ASK);
-  floppy->get_options()->set(bx_list_c::SHOW_PARENT);
+  floppyb->set_options(floppyb->SERIES_ASK);
+  floppy->set_options(floppy->SHOW_PARENT);
 
   // ATA/ATAPI subtree
   bx_list_c *ata = new bx_list_c(root_param, "ata", "ATA/ATAPI Options");
+  ata->set_options(ata->USE_TAB_WINDOW);
 
   // disk options
   const char *s_atachannel[] = {
@@ -1102,9 +1108,9 @@ void bx_init_options()
 
     sprintf(name, "%d", channel);
     ata_menu[channel] = new bx_list_c(ata, name, s_atachannel[channel]);
-    ata_menu[channel]->get_options()->set(bx_list_c::USE_TAB_WINDOW);
+    ata_menu[channel]->set_options(bx_list_c::USE_TAB_WINDOW);
     ata_res[channel] = new bx_list_c(ata_menu[channel], "resources", s_atachannel[channel], 8);
-    ata_res[channel]->get_options()->set(bx_list_c::SERIES_ASK);
+    ata_res[channel]->set_options(bx_list_c::SERIES_ASK);
 
     enabled = new bx_param_bool_c(ata_res[channel],
       "enabled",
@@ -1138,7 +1144,7 @@ void bx_init_options()
       0, 15,
       ata_default_irq[channel]);
     irq->set_ask_format("Enter new IRQ: [%d] ");
-    irq->set_options(bx_param_num_c::USE_SPIN_CONTROL);
+    irq->set_options(irq->USE_SPIN_CONTROL);
 
     // all items in the ata[channel] menu depend on the enabled flag.
     // The menu list is complete, but a few dependent_list items will
@@ -1151,7 +1157,7 @@ void bx_init_options()
           s_atadevname[slave],
           s_atadevice[channel][slave],
           BXP_PARAMS_PER_ATA_DEVICE + 1);
-      menu->get_options()->set(bx_list_c::SERIES_ASK);
+      menu->set_options(menu->SERIES_ASK);
 
       bx_param_bool_c *present = new bx_param_bool_c(menu,
         "present",
@@ -1175,6 +1181,7 @@ void bx_init_options()
         "Pathname of the image or physical device (cdrom only)",
         "", BX_PATHNAME_LEN);
       path->set_ask_format("Enter new filename: [%s] ");
+      path->set_extension("img");
 
       mode = new bx_param_enum_c(menu,
         "mode",
@@ -1298,20 +1305,39 @@ void bx_init_options()
     NULL
   };
   menu = new bx_list_c(special_menus, "disk", "Bochs Disk Options", disk_menu_init_list);
-  menu->get_options()->set(bx_list_c::SHOW_PARENT);
+  menu->set_options(menu->SHOW_PARENT);
+
+  // disk menu for win32paramdlg
+  bx_param_c *disk_menu2_init_list[] = {
+    SIM->get_param("floppy"),
+    SIM->get_param("ata.0"),
+#if BX_MAX_ATA_CHANNEL>1
+    SIM->get_param("ata.1"),
+#endif
+#if BX_MAX_ATA_CHANNEL>2
+    SIM->get_param("ata.2"),
+#endif
+#if BX_MAX_ATA_CHANNEL>3
+    SIM->get_param("ata.3"),
+#endif
+    SIM->get_param("boot_params"),
+    NULL
+  };
+  menu = new bx_list_c(special_menus, "disk_win32", "Bochs Disk Options", disk_menu2_init_list);
+  menu->set_options(menu->USE_TAB_WINDOW);
 
   // ports subtree
   bx_list_c *ports = new bx_list_c(root_param, "ports", "Serial and Parallel Port Options");
-  ports->get_options()->set(bx_list_c::USE_TAB_WINDOW | bx_list_c::SHOW_PARENT);
+  ports->set_options(ports->USE_TAB_WINDOW | ports->SHOW_PARENT);
 
   // parallel ports
   bx_list_c *parallel = new bx_list_c(ports, "parallel", "Parallel Port Options");
-  parallel->get_options()->set(bx_list_c::SHOW_PARENT);
+  parallel->set_options(parallel->SHOW_PARENT);
   for (i=0; i<BX_N_PARALLEL_PORTS; i++) {
     sprintf(name, "%d", i+1);
     sprintf(label, "Parallel Port %d", i+1);
     menu = new bx_list_c(parallel, name, label);
-    menu->get_options()->set(bx_list_c::SERIES_ASK);
+    menu->set_options(menu->SERIES_ASK);
     sprintf(label, "Enable parallel port #%d", i+1);
     sprintf(descr, "Controls whether parallel port #%d is installed or not", i+1);
     enabled = new bx_param_bool_c(menu, "enabled", label, descr,
@@ -1320,6 +1346,7 @@ void bx_init_options()
     sprintf(descr, "Data written to parport#%d by the guest OS is written to this file", i+1);
     path = new bx_param_filename_c(menu, "outfile", label, descr,
       "", BX_PATHNAME_LEN);
+    path->set_extension("out");
     deplist = new bx_list_c(NULL, 1);
     deplist->add(path);
     enabled->set_dependent_list(deplist);
@@ -1342,12 +1369,12 @@ void bx_init_options()
 
   // serial ports
   bx_list_c *serial = new bx_list_c(ports, "serial", "Serial Port Options");
-  serial->get_options()->set(bx_list_c::SHOW_PARENT);
+  serial->set_options(serial->SHOW_PARENT);
   for (i=0; i<BX_N_SERIAL_PORTS; i++) {
     sprintf(name, "%d", i+1);
     sprintf(label, "Serial Port %d", i+1);
     menu = new bx_list_c(serial, name, label);
-    menu->get_options()->set(bx_list_c::SERIES_ASK);
+    menu->set_options(menu->SERIES_ASK);
     sprintf(label, "Enable serial port #%d (COM%d)", i+1, i+1);
     sprintf(descr, "Controls whether COM%d is installed or not", i+1);
     enabled = new bx_param_bool_c(menu, "enabled", label, descr,
@@ -1369,13 +1396,13 @@ void bx_init_options()
 
   // usb subtree
   bx_list_c *usb = new bx_list_c(ports, "usb", "USB Configuration");
-  usb->get_options()->set(bx_list_c::SHOW_PARENT);
+  usb->set_options(usb->SHOW_PARENT);
   bx_param_string_c *port;
 
   // UHCI options
   strcpy(group, "USB UHCI");
   menu = new bx_list_c(usb, "uhci", "UHCI Configuration");
-  menu->get_options()->set(bx_list_c::SHOW_PARENT);
+  menu->set_options(menu->SHOW_PARENT);
   menu->set_enabled(BX_SUPPORT_USB_UHCI);
   enabled = new bx_param_bool_c(menu,
     "enabled",
@@ -1397,7 +1424,7 @@ void bx_init_options()
   // OHCI options
   strcpy(group, "USB OHCI");
   menu = new bx_list_c(usb, "ohci", "OHCI Configuration");
-  menu->get_options()->set(bx_list_c::SHOW_PARENT);
+  menu->set_options(menu->SHOW_PARENT);
   menu->set_enabled(BX_SUPPORT_USB_OHCI);
   enabled = new bx_param_bool_c(menu,
     "enabled",
@@ -1418,7 +1445,7 @@ void bx_init_options()
 
   // network subtree
   bx_list_c *network = new bx_list_c(root_param, "network", "Network Configuration");
-  network->get_options()->set(bx_list_c::USE_TAB_WINDOW | bx_list_c::SHOW_PARENT);
+  network->set_options(network->USE_TAB_WINDOW | network->SHOW_PARENT);
 
   // ne2k & pnic options
   static const char *eth_module_list[] = {
@@ -1449,7 +1476,7 @@ void bx_init_options()
   };
   // ne2k options
   menu = new bx_list_c(network, "ne2k", "NE2000", 7);
-  menu->get_options()->set(bx_list_c::SHOW_PARENT);
+  menu->set_options(menu->SHOW_PARENT);
   menu->set_enabled(BX_SUPPORT_NE2K);
   enabled = new bx_param_bool_c(menu,
     "enabled",
@@ -1470,13 +1497,13 @@ void bx_init_options()
     "IRQ used by the NE2K device",
     0, 15,
     9);
-  irq->set_options(bx_param_num_c::USE_SPIN_CONTROL);
+  irq->set_options(irq->USE_SPIN_CONTROL);
   macaddr = new bx_param_string_c(menu,
     "macaddr",
     "MAC Address",
     "MAC address of the NE2K device. Don't use an address of a machine on your net.",
     "", 6);
-  macaddr->get_options()->set(bx_param_string_c::RAW_BYTES);
+  macaddr->set_options(macaddr->RAW_BYTES);
   macaddr->set_initial_val("\xfe\xfd\xde\xad\xbe\xef");
   macaddr->set_separator(':');
   ethmod = new bx_param_enum_c(menu,
@@ -1502,7 +1529,7 @@ void bx_init_options()
   enabled->set_dependent_list(menu->clone());
   // pnic options
   menu = new bx_list_c(network, "pnic", "PCI Pseudo NIC");
-  menu->get_options()->set(bx_list_c::SHOW_PARENT);
+  menu->set_options(menu->SHOW_PARENT);
   menu->set_enabled(BX_SUPPORT_PCIPNIC);
   enabled = new bx_param_bool_c(menu,
     "enabled",
@@ -1515,7 +1542,7 @@ void bx_init_options()
     "MAC Address",
     "MAC address of the Pseudo NIC device. Don't use an address of a machine on your net.",
     "", 6);
-  macaddr->get_options()->set(bx_param_string_c::RAW_BYTES);
+  macaddr->set_options(macaddr->RAW_BYTES);
   macaddr->set_initial_val("\xfe\xfd\xde\xad\xbe\xef");
   macaddr->set_separator(':');
   ethmod = new bx_param_enum_c(menu,
@@ -1542,9 +1569,9 @@ void bx_init_options()
 
   // sound subtree
   bx_list_c *sound = new bx_list_c(root_param, "sound", "Sound Configuration");
-  sound->get_options()->set(bx_list_c::SHOW_PARENT);
+  sound->set_options(sound->SHOW_PARENT);
   menu = new bx_list_c(sound, "sb16", "SB16 Configuration", 8);
-  menu->get_options()->set(bx_list_c::SHOW_PARENT);
+  menu->set_options(menu->SHOW_PARENT);
   menu->set_enabled(BX_SUPPORT_SB16);
 
   // SB16 options
@@ -1587,6 +1614,7 @@ void bx_init_options()
     "Log file",
     "The file to write the SB16 emulator messages to.",
     "", BX_PATHNAME_LEN);
+  logfile->set_extension("log");
   bx_param_num_c *dmatimer = new bx_param_num_c(menu,
     "dmatimer",
     "DMA timer",
@@ -1594,9 +1622,9 @@ void bx_init_options()
     0, BX_MAX_BIT32U,
     0);
 
-  midimode->set_options(bx_param_num_c::USE_SPIN_CONTROL);
-  wavemode->set_options(bx_param_num_c::USE_SPIN_CONTROL);
-  loglevel->set_options(bx_param_num_c::USE_SPIN_CONTROL);
+  midimode->set_options(midimode->USE_SPIN_CONTROL);
+  wavemode->set_options(wavemode->USE_SPIN_CONTROL);
+  loglevel->set_options(loglevel->USE_SPIN_CONTROL);
   loglevel->set_group("SB16");
   dmatimer->set_group("SB16");
   enabled->set_dependent_list(menu->clone());
@@ -1612,7 +1640,7 @@ void bx_init_options()
 
   // misc options subtree
   bx_list_c *misc = new bx_list_c(root_param, "misc", "Configure Everything Else");
-  misc->get_options()->set(bx_list_c::SHOW_PARENT);
+  misc->set_options(misc->SHOW_PARENT);
   bx_param_num_c *gdbstub_opt;
 
   // text snapshot check panic
@@ -1623,7 +1651,7 @@ void bx_init_options()
       0);
   // GDB stub
   menu = new bx_list_c(misc, "gdbstub", "GDB Stub Options");
-  menu->get_options()->set(bx_list_c::SHOW_PARENT | bx_list_c::USE_BOX_TITLE);
+  menu->set_options(menu->SHOW_PARENT | menu->USE_BOX_TITLE);
   menu->set_enabled(BX_GDBSTUB);
   enabled = new bx_param_bool_c(menu,
     "enabled",
@@ -1659,7 +1687,7 @@ void bx_init_options()
 
   // optional plugin control
   menu = new bx_list_c(misc, "plugin_ctrl", "Optional Plugin Control", 9);
-  menu->get_options()->set(bx_list_c::SHOW_PARENT | bx_list_c::USE_BOX_TITLE);
+  menu->set_options(menu->SHOW_PARENT | menu->USE_BOX_TITLE);
   new bx_param_bool_c(menu, "unmapped", "Enable 'unmapped'", "", 1);
   new bx_param_bool_c(menu, "biosdev", "Enable 'biosdev'", "", 1);
   new bx_param_bool_c(menu, "speaker", "Enable 'speaker'", "", 1);
@@ -1683,7 +1711,7 @@ void bx_init_options()
 #if BX_PLUGINS
   // user plugin options
   menu = new bx_list_c(misc, "user_plugin", "User Plugin Options", BX_N_USER_PLUGINS);
-  menu->get_options()->set(bx_list_c::SHOW_PARENT | bx_list_c::USE_BOX_TITLE);
+  menu->set_options(menu->SHOW_PARENT | menu->USE_BOX_TITLE);
   for (i=0; i<BX_N_USER_PLUGINS; i++) {
     sprintf(name, "%d", i+1);
     sprintf(label, "User Plugin #%d", i+1);
@@ -1694,7 +1722,7 @@ void bx_init_options()
   }
   // user-defined options subtree
   bx_list_c *user = new bx_list_c(root_param, "user", "User-defined options", 16);
-  user->get_options()->set(bx_list_c::SHOW_PARENT);
+  user->set_options(user->SHOW_PARENT);
 #endif
 
   // log options subtree
@@ -1707,6 +1735,7 @@ void bx_init_options()
       "Pathname of bochs log file",
       "-", BX_PATHNAME_LEN);
   path->set_ask_format("Enter log filename: [%s] ");
+  path->set_extension("txt");
 
   bx_param_string_c *prefix = new bx_param_string_c(menu,
       "prefix",
@@ -1721,11 +1750,12 @@ void bx_init_options()
       "Pathname of debugger log file",
       "-", BX_PATHNAME_LEN);
   path->set_ask_format("Enter debugger log filename: [%s] ");
+  path->set_extension("log");
   path->set_enabled(BX_DEBUGGER);
 
   // USB runtime options
   usb = new bx_list_c(special_menus, "usb_runtime", "USB runtime options", 10);
-  usb->get_options()->set(bx_list_c::SHOW_PARENT);
+  usb->set_options(usb->SHOW_PARENT);
   // misc runtime options
   bx_param_c *runtime_init_list[] = {
       SIM->get_param_num(BXPN_VGA_UPDATE_INTERVAL),
@@ -1737,7 +1767,7 @@ void bx_init_options()
       NULL
   };
   menu = new bx_list_c(special_menus, "runtime", "Misc runtime options", runtime_init_list);
-  menu->get_options()->set(bx_list_c::SHOW_PARENT | bx_list_c::SHOW_GROUP_NAME);
+  menu->set_options(menu->SHOW_PARENT | menu->SHOW_GROUP_NAME);
 }
 
 void bx_reset_options()

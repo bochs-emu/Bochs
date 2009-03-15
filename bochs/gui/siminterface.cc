@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.197 2009-03-06 16:07:56 vruppert Exp $
+// $Id: siminterface.cc,v 1.198 2009-03-15 21:16:16 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  The Bochs Project
@@ -550,7 +550,7 @@ int bx_real_sim_c::ask_filename(const char *filename, int maxlen, const char *pr
   BxEvent event;
   bx_param_string_c param(NULL, "filename", prompt, "", the_default, maxlen);
   flags |= param.IS_FILENAME;
-  param.get_options()->set(flags);
+  param.set_options(flags);
   event.type = BX_SYNC_EVT_ASK_PARAM;
   event.u.param.param = &param;
   sim_to_ci_event(&event);
@@ -1091,7 +1091,7 @@ bx_bool bx_real_sim_c::restore_bochs_param(bx_list_c *root, const char *sr_path,
                   ((bx_param_enum_c*)param)->set_by_name(ptr);
                   break;
                 case BXT_PARAM_STRING:
-                  if (((bx_param_string_c*)param)->get_options()->get() & bx_param_string_c::RAW_BYTES) {
+                  if (((bx_param_string_c*)param)->get_options() & bx_param_string_c::RAW_BYTES) {
                     p = 0;
                     for (j = 0; j < ((bx_param_string_c*)param)->get_maxsize(); j++) {
                       if (ptr[p] == ((bx_param_string_c*)param)->get_separator()) {
@@ -1195,7 +1195,7 @@ bx_bool bx_real_sim_c::save_sr_param(FILE *fp, bx_param_c *node, const char *sr_
       fprintf(fp, "%s\n", ((bx_param_enum_c*)node)->get_selected());
       break;
     case BXT_PARAM_STRING:
-      if (((bx_param_string_c*)node)->get_options()->get() & bx_param_string_c::RAW_BYTES) {
+      if (((bx_param_string_c*)node)->get_options() & bx_param_string_c::RAW_BYTES) {
         tmpstr[0] = 0;
         for (i = 0; i < ((bx_param_string_c*)node)->get_maxsize(); i++) {
           if (i > 0) {
@@ -1821,8 +1821,7 @@ bx_param_string_c::bx_param_string_c(bx_param_c *parent,
   if (maxsize > initial_val_size)
     memset(this->val + initial_val_size, 0, maxsize - initial_val_size);
   strncpy(this->initial_val, initial_val, maxsize);
-  this->options = new bx_param_num_c(NULL,
-      "stringoptions", NULL, NULL, 0, BX_MAX_BIT64S, 0);
+  this->options = 0;
   set(initial_val);
   if (parent) {
     BX_ASSERT(parent->get_type() == BXT_LIST);
@@ -1839,14 +1838,14 @@ bx_param_filename_c::bx_param_filename_c(bx_param_c *parent,
     int maxsize)
   : bx_param_string_c(parent, name, label, description, initial_val, maxsize)
 {
-  get_options()->set(IS_FILENAME);
+  set_options(IS_FILENAME);
+  ext = NULL;
 }
 
 bx_param_string_c::~bx_param_string_c()
 {
   if (val != NULL) delete [] val;
   if (initial_val != NULL) delete [] initial_val;
-  if (options != NULL) delete options;
 }
 
 void bx_param_string_c::reset()
@@ -1875,7 +1874,7 @@ void bx_param_string_c::set_enabled(int en)
 
 Bit32s bx_param_string_c::get(char *buf, int len)
 {
-  if (options->get() & RAW_BYTES)
+  if (options & RAW_BYTES)
     memcpy(buf, val, len);
   else
     strncpy(buf, val, len);
@@ -1891,7 +1890,7 @@ void bx_param_string_c::set(const char *buf)
 {
   char *oldval = new char[maxsize];
 
-  if (options->get() & RAW_BYTES) {
+  if (options & RAW_BYTES) {
     memcpy(oldval, val, maxsize);
     memcpy(val, buf, maxsize);
   } else {
@@ -1909,7 +1908,7 @@ void bx_param_string_c::set(const char *buf)
 
 bx_bool bx_param_string_c::equals(const char *buf)
 {
-  if (options->get() & RAW_BYTES)
+  if (options & RAW_BYTES)
     return (memcmp(val, buf, maxsize) == 0);
   else
     return (strncmp(val, buf, maxsize) == 0);
@@ -1917,7 +1916,7 @@ bx_bool bx_param_string_c::equals(const char *buf)
 
 void bx_param_string_c::set_initial_val(const char *buf)
 {
-  if (options->get() & RAW_BYTES)
+  if (options & RAW_BYTES)
     memcpy(initial_val, buf, maxsize);
   else
     strncpy(initial_val, buf, maxsize);
@@ -2018,7 +2017,6 @@ bx_list_c::~bx_list_c()
     delete [] list;
   }
   if (title != NULL) delete title;
-  if (options != NULL) delete options;
   if (choice != NULL) delete choice;
 }
 
@@ -2032,8 +2030,7 @@ void bx_list_c::init(const char *list_title)
   if ((list_title != NULL) && (strlen(list_title) > 0)) {
     this->title->set((char *)list_title);
   }
-  this->options = new bx_param_num_c(NULL,
-      "list_option", "", "", 0, BX_MAX_BIT64S, 0);
+  this->options = 0;
   this->choice = new bx_param_num_c(NULL,
       "list_choice", "", "", 0, BX_MAX_BIT64S, 1);
 }
@@ -2059,7 +2056,7 @@ bx_list_c* bx_list_c::clone()
   bx_list_c *newlist = new bx_list_c(NULL, name, title->getptr(), maxsize);
   for (int i=0; i<get_size(); i++)
     newlist->add(get(i));
-  newlist->get_options()->set(options->get());
+  newlist->set_options(options);
   return newlist;
 }
 

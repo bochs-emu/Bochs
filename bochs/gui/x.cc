@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: x.cc,v 1.124 2009-02-23 11:06:53 vruppert Exp $
+// $Id: x.cc,v 1.125 2009-03-15 21:16:16 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -2537,7 +2537,7 @@ BxEvent *x11_notify_callback (void *unused, BxEvent *event)
       param = event->u.param.param;
       if (param->get_type() == BXT_PARAM_STRING) {
         sparam = (bx_param_string_c *)param;
-        opts = sparam->get_options()->get();
+        opts = sparam->get_options();
         if ((opts & sparam->IS_FILENAME) == 0) {
           event->retcode = x11_string_dialog(sparam, NULL);
           return event;

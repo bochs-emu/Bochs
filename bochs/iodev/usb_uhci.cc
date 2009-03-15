@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_uhci.cc,v 1.19 2009-03-15 12:54:59 vruppert Exp $
+// $Id: usb_uhci.cc,v 1.20 2009-03-15 21:16:17 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Benjamin D Lunt (fys at frontiernet net)
@@ -113,7 +113,7 @@ void bx_usb_uhci_c::init(void)
 
   bx_list_c *usb_rt = (bx_list_c*)SIM->get_param(BXPN_MENU_RUNTIME_USB);
   bx_list_c *uhci = new bx_list_c(usb_rt, "uhci", "UHCI Configuration");
-  uhci->get_options()->set(bx_list_c::SHOW_PARENT);
+  uhci->set_options(uhci->SHOW_PARENT);
   for (i=0; i<BX_N_USB_UHCI_PORTS; i++) {
     sprintf(pname, "port%d", i+1);
     port = SIM->get_param_string(pname, SIM->get_param(BXPN_USB_UHCI));

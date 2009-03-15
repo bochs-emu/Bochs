@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxdialog.cc,v 1.106 2008-12-18 09:55:09 vruppert Exp $
+// $Id: wxdialog.cc,v 1.107 2009-03-15 21:16:16 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
@@ -999,10 +999,10 @@ void ParamDialog::AddParam (
     case BXT_PARAM_STRING: {
 	bx_param_string_c *param = (bx_param_string_c*) param_generic;
 	if (!plain) ADD_LABEL (prompt);
-	bool isFilename = param->get_options ()->get () & param->IS_FILENAME;
+        bool isFilename = param->get_options() & param->IS_FILENAME;
 	wxTextCtrl *txtctrl = new wxTextCtrl (context->parent, pstr->id, wxT(""), wxDefaultPosition, isFilename? longTextSize : normalTextSize);
         if (description) txtctrl->SetToolTip(wxString(description, wxConvUTF8));
-        if (param->get_options()->get() & param->RAW_BYTES) {
+        if (param->get_options() & param->RAW_BYTES) {
           char *value = param->getptr();
           wxString buffer;
           char sep_string[2];
@@ -1040,7 +1040,7 @@ void ParamDialog::AddParam (
       }
     case BXT_LIST: {
 	bx_list_c *list = (bx_list_c*) param_generic;
-	if (list->get_options()->get() & bx_list_c::USE_TAB_WINDOW) {
+        if (list->get_options() & bx_list_c::USE_TAB_WINDOW) {
 	  // put each item in a separate tab of a tabbed window
 	  wxNotebook *notebook = new wxNotebook(context->parent, -1);
 #if wxMAJOR_VERSION == 2 && wxMINOR_VERSION < 6
@@ -1085,7 +1085,7 @@ void ParamDialog::AddParam (
 	  paramHash->Put(pstr->param->get_id(), pstr);
 	} else {
           wxString boxTitle;
-          if (list->get_options()->get() & bx_list_c::USE_BOX_TITLE) {
+          if (list->get_options() & bx_list_c::USE_BOX_TITLE) {
             boxTitle = wxString(prompt, wxConvUTF8);
           } else {
             boxTitle = wxT("");
@@ -1167,7 +1167,7 @@ bool ParamDialog::CopyGuiToParam()
         bx_param_string_c *stringp = (bx_param_string_c*) pstr->param;
 	char buf[1024];
 	wxString tmp(pstr->u.text->GetValue ());
-        if (stringp->get_options()->get () & stringp->RAW_BYTES) {
+        if (stringp->get_options() & stringp->RAW_BYTES) {
           char src[1024];
           int i, p = 0;
           unsigned int n;

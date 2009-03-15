@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.231 2009-03-04 18:20:39 vruppert Exp $
+// $Id: siminterface.h,v 1.232 2009-03-15 21:16:16 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  The Bochs Project
@@ -254,6 +254,7 @@ typedef enum {
 #define BXPN_LOG_PREFIX                  "log.prefix"
 #define BXPN_DEBUGGER_LOG_FILENAME       "log.debugger_filename"
 #define BXPN_MENU_DISK                   "menu.disk"
+#define BXPN_MENU_DISK_WIN32             "menu.disk_win32"
 #define BXPN_MENU_MEMORY                 "menu.memory"
 #define BXPN_MENU_RUNTIME                "menu.runtime"
 #define BXPN_MENU_RUNTIME_USB            "menu.usb_runtime"
@@ -639,6 +640,7 @@ protected:
   char *group_name;  // name of the group the param belongs to
   int runtime_param;
   int enabled;
+  Bit32u options;
 public:
   bx_param_c(Bit32u id, const char *name, const char *description);
   bx_param_c(Bit32u id, const char *name, const char *label, const char *description);
@@ -667,6 +669,8 @@ public:
   static const char* set_default_format(const char *f);
   static const char *get_default_format() { return default_text_format; }
   virtual bx_list_c *get_dependent_list() { return NULL; }
+  void set_options(Bit32u options) { this->options = options; }
+  Bit32u get_options() const { return options; }
 #if BX_USE_TEXTCONFIG
   virtual void text_print(FILE *fp) {}
   virtual int text_ask(FILE *fpin, FILE *fpout) {return -1;}
@@ -701,7 +705,6 @@ protected:
   param_sr_handler restore_handler;
   param_enable_handler enable_handler;
   int base;
-  Bit32u options;
   bx_bool is_shadow;
 public:
   enum {
@@ -733,8 +736,6 @@ public:
   Bit64s get_max() { return max; }
   static Bit32u set_default_base(Bit32u val);
   static Bit32u get_default_base() { return default_base; }
-  void set_options(Bit32u options) { this->options = options; }
-  Bit32u get_options() const { return options; }
 #if BX_USE_TEXTCONFIG
   virtual void text_print(FILE *fp);
   virtual int text_ask(FILE *fpin, FILE *fpout);
@@ -869,7 +870,6 @@ class BOCHSAPI bx_param_string_c : public bx_param_c {
   char *val, *initial_val;
   param_string_event_handler handler;
   param_enable_handler enable_handler;
-  bx_param_num_c *options;
   char separator;
 public:
   enum {
@@ -895,7 +895,6 @@ public:
   char *getptr() {return val; }
   void set(const char *buf);
   bx_bool equals(const char *buf);
-  bx_param_num_c *get_options() { return options; }
   void set_separator(char sep) {separator = sep; }
   char get_separator() const {return separator; }
   int get_maxsize() const {return maxsize; }
@@ -910,6 +909,7 @@ public:
 // it initializes the options differently.  This is just a shortcut
 // for declaring a string param and setting the options with IS_FILENAME.
 class BOCHSAPI bx_param_filename_c : public bx_param_string_c {
+const char *ext;
 public:
   bx_param_filename_c(bx_param_c *parent,
       const char *name,
@@ -917,6 +917,8 @@ public:
       const char *description,
       const char *initial_val,
       int maxsize=-1);
+  const char *get_extension() {return ext;}
+  void set_extension(const char *ext) {this->ext = ext;}
 };
 
 class BOCHSAPI bx_shadow_data_c : public bx_param_c {
@@ -940,10 +942,6 @@ protected:
   // allocated in the constructor.
   bx_param_c **list;
   int size, maxsize;
-  // options is a bit field whose bits are defined by bx_listopt_bits ORed
-  // together.  Options is a bx_param so that if necessary the bx_list could
-  // install a handler to cause get/set of options to have side effects.
-  bx_param_num_c *options;
   // for a menu, the value of choice before the call to "ask" is default.
   // After ask, choice holds the value that the user chose.  Choice defaults
   // to 1 in the constructor.
@@ -984,7 +982,6 @@ public:
   bx_param_c *get(int index);
   bx_param_c *get_by_name(const char *name);
   int get_size() const { return size; }
-  bx_param_num_c *get_options() { return options; }
   bx_param_num_c *get_choice() { return choice; }
   bx_param_string_c *get_title() { return title; }
   void set_parent(bx_param_c *newparent);

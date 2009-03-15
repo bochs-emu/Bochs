@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32paramdlg.cc,v 1.4 2009-03-15 16:24:54 vruppert Exp $
+// $Id: win32paramdlg.cc,v 1.5 2009-03-15 21:16:16 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Volker Ruppert
@@ -23,10 +23,7 @@
 #if BX_USE_TEXTCONFIG && defined(WIN32) && (BX_WITH_WIN32 || BX_WITH_SDL)
 
 #include "bochs.h"
-#include "textconfig.h"
 #include "win32res.h"
-#include "win32dialog.h"
-#include "win32paramdlg.h"
 
 #define ID_LABEL 100
 #define ID_PARAM 1000
@@ -144,13 +141,13 @@ void cleanupDlgLists()
   }
 }
 
-int AskFilename(HWND hwnd, bx_param_filename_c *param, const char *ext)
+int AskFilename(HWND hwnd, bx_param_filename_c *param)
 {
   OPENFILENAME ofn;
   int ret;
   DWORD errcode;
   char filename[MAX_PATH];
-  const char *title;
+  const char *title, *ext;
   char errtext[80];
 
   param->get(filename, MAX_PATH);
@@ -159,6 +156,7 @@ int AskFilename(HWND hwnd, bx_param_filename_c *param, const char *ext)
     filename[0] = 0;
   }
   title = param->get_label();
+  ext = param->get_extension();
   if (!title) title = param->get_name();
   memset(&ofn, 0, sizeof(OPENFILENAME));
   ofn.lStructSize = sizeof(OPENFILENAME);
@@ -170,15 +168,19 @@ int AskFilename(HWND hwnd, bx_param_filename_c *param, const char *ext)
   ofn.Flags = OFN_EXPLORER | OFN_HIDEREADONLY;
   ofn.lpstrDefExt = ext;
   if (!lstrcmp(ext, "img")) {
-    ofn.lpstrFilter = "Floppy image files (*.img)\0*.img\0All files (*.*)\0*.*\0";
+    ofn.lpstrFilter = "Disk image files (*.img)\0*.img\0All files (*.*)\0*.*\0";
   } else if (!lstrcmp(ext, "iso")) {
     ofn.lpstrFilter = "CD-ROM image files (*.iso)\0*.iso\0All files (*.*)\0*.*\0";
+  } else if (!lstrcmp(ext, "log")) {
+    ofn.lpstrFilter = "Log files (*.log)\0*.log\0All files (*.*)\0*.*\0";
+  } else if (!lstrcmp(ext, "map")) {
+    ofn.lpstrFilter = "Keymap files (*.map)\0*.map\0All files (*.*)\0*.*\0";
   } else if (!lstrcmp(ext, "txt")) {
     ofn.lpstrFilter = "Text files (*.txt)\0*.txt\0All files (*.*)\0*.*\0";
   } else {
     ofn.lpstrFilter = "All files (*.*)\0*.*\0";
   }
-  if (param->get_options()->get() & bx_param_filename_c::SAVE_FILE_DIALOG) {
+  if (param->get_options() & param->SAVE_FILE_DIALOG) {
     ofn.Flags |= OFN_OVERWRITEPROMPT;
     ret = GetSaveFileName(&ofn);
   } else {
@@ -254,7 +256,7 @@ HWND CreateGroupbox(HWND hDlg, UINT cid, UINT xpos, UINT ypos, SIZE size, BOOL h
   r.right = r.left + size.cx;
   r.bottom = r.top + size.cy;
   MapDialogRect(hDlg, &r);
-  if (list->get_options()->get() & list->USE_BOX_TITLE) {
+  if (list->get_options() & list->USE_BOX_TITLE) {
     title = list->get_title()->getptr();
   }
   Groupbox = CreateWindow("BUTTON", title, BS_GROUPBOX | WS_CHILD, r.left, r.top,
@@ -289,6 +291,7 @@ HWND CreateTabControl(HWND hDlg, UINT cid, UINT xpos, UINT ypos, SIZE size, BOOL
       TabCtrl_InsertItem(TabControl, i, &tie);
     }
   }
+  TabCtrl_SetCurSel(TabControl, 0);
   SendMessage(TabControl, WM_SETFONT, (UINT)DlgFont, TRUE);
   ShowWindow(TabControl, hide ? SW_HIDE : SW_SHOW);
   return TabControl;
@@ -353,7 +356,7 @@ HWND CreateInput(HWND hDlg, UINT cid, UINT xpos, UINT ypos, BOOL hide, bx_param_
   if (param->get_type() == BXT_PARAM_STRING) {
     sparam = (bx_param_string_c*)param;
     val = sparam->getptr();
-    if (sparam->get_options()->get() & sparam->RAW_BYTES) {
+    if (sparam->get_options() & sparam->RAW_BYTES) {
       buffer[0] = 0;
       sep_string[0] = sparam->get_separator();
       sep_string[1] = 0;
@@ -437,7 +440,7 @@ SIZE CreateParamList(HWND hDlg, UINT lid, UINT xpos, UINT ypos, BOOL hide, bx_li
   BOOL ihide;
 
   items = list->get_size();
-  options = list->get_options()->get();
+  options = list->get_options();
   cid = registerDlgList(lid, list);
   x = xpos + 5;
   size.cx = 195;
@@ -487,7 +490,7 @@ SIZE CreateParamList(HWND hDlg, UINT lid, UINT xpos, UINT ypos, BOOL hide, bx_li
         } else if (param->get_type() == BXT_PARAM_STRING) {
           control = CreateInput(hDlg, cid, x, y, hide, param);
           sparam = (bx_param_string_c*)param;
-          if (sparam->get_options()->get() & sparam->IS_FILENAME) {
+          if (sparam->get_options() & sparam->IS_FILENAME) {
             browse = CreateBrowseButton(hDlg, cid, x, y, hide);
             if (size.cx < 255) size.cx = 255;
           }
@@ -550,7 +553,7 @@ void SetParamList(HWND hDlg, bx_list_c *list)
         } else if (param->get_type() == BXT_PARAM_STRING) {
           GetWindowText(GetDlgItem(hDlg, ID_PARAM + cid), buffer, 511);
           sparam = (bx_param_string_c*)param;
-          if (sparam->get_options()->get() & sparam->RAW_BYTES) {
+          if (sparam->get_options() & sparam->RAW_BYTES) {
             src = &buffer[0];
             memset(rawbuf, 0, sparam->get_maxsize());
             for (j = 0; j < sparam->get_maxsize(); j++) {
@@ -579,12 +582,17 @@ void ShowParamList(HWND hDlg, UINT lid, BOOL show, bx_list_c *list)
   UINT cid;
   int i;
   HWND Button, Updown;
+  BOOL ishow;
 
   ShowWindow(GetDlgItem(hDlg, ID_PARAM + lid), show ? SW_SHOW : SW_HIDE);
   cid = findDlgListBaseID(list);
   for (i = 0; i < list->get_size(); i++) {
     if (list->get(i)->get_type() == BXT_LIST) {
-      ShowParamList(hDlg, cid + i, show, (bx_list_c*)list->get(i));
+      ishow = show;
+      if (list->get_options() & list->USE_TAB_WINDOW) {
+        ishow &= (i == 0);
+      }
+      ShowParamList(hDlg, cid + i, ishow, (bx_list_c*)list->get(i));
     } else {
       ShowWindow(GetDlgItem(hDlg, ID_LABEL + cid + i), show ? SW_SHOW : SW_HIDE);
       ShowWindow(GetDlgItem(hDlg, ID_PARAM + cid + i), show ? SW_SHOW : SW_HIDE);
@@ -689,7 +697,7 @@ static BOOL CALLBACK ParamDlgProc(HWND Window, UINT AMessage, WPARAM wParam, LPA
             i = code - ID_BROWSE;
             sparam = (bx_param_string_c *)findParamFromDlgID(i);
             if (sparam != NULL) {
-              if (AskFilename(Window, (bx_param_filename_c *)sparam, "txt") > 0) {
+              if (AskFilename(Window, (bx_param_filename_c *)sparam) > 0) {
                 SetWindowText(GetDlgItem(Window, ID_PARAM + i), sparam->getptr());
                 SetFocus(GetDlgItem(Window, ID_PARAM + i));
               }

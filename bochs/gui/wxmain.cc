@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.158 2009-02-08 18:52:06 sshwarts Exp $
+// $Id: wxmain.cc,v 1.159 2009-03-15 21:16:16 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWidgets frame, toolbar, menus, and dialogs.
@@ -208,7 +208,7 @@ extern "C" int libwx_LTX_plugin_init(plugin_t *plugin, plugintype_t type,
       "cpu",
       "CPU State",
       BX_MAX_SMP_THREADS_SUPPORTED);
-  cpu->get_options()->set(bx_list_c::USE_TAB_WINDOW);
+  cpu->set_options(bx_list_c::USE_TAB_WINDOW);
   return 0; // success
 }
 
@@ -1091,9 +1091,7 @@ void MyFrame::OnSimThreadExit()
 int MyFrame::HandleAskParamString(bx_param_string_c *param)
 {
   wxLogDebug(wxT("HandleAskParamString start"));
-  bx_param_num_c *opt = param->get_options();
-  wxASSERT(opt != NULL);
-  int n_opt = opt->get();
+  int n_opt = param->get_options();
   const char *msg = param->get_label();
   if ((msg == NULL) || (strlen(msg) == 0)) {
     msg = param->get_name();

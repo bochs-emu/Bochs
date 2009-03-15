@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32paramdlg.h,v 1.2 2009-03-11 18:53:22 vruppert Exp $
+// $Id: win32paramdlg.h,v 1.3 2009-03-15 21:16:16 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Volker Ruppert
@@ -23,26 +23,9 @@
 
 #include "config.h"
 
-#ifndef _WIN32_IE
-#define _WIN32_IE 0x0400	// Force a minimum "OS level" for commctrl.h
-#endif
-#if _WIN32_IE < 0x0400
-#undef _WIN32_IE
-#define _WIN32_IE 0x0400
-#endif
-
-extern "C" {
-#include <assert.h>
-#include <stdio.h>
-#include <windows.h>
-#include <commctrl.h>
-#include <shlobj.h>
-#include <ctype.h>
-}
-
 #if BX_USE_TEXTCONFIG && defined(WIN32)
 
-int AskFilename(HWND hwnd, bx_param_filename_c *param, const char *ext);
+int AskFilename(HWND hwnd, bx_param_filename_c *param);
 int win32ParamDialog(HWND parent, const char *menu);
 
 #endif
