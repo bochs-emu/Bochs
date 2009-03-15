@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_uhci.cc,v 1.18 2009-03-09 18:28:17 vruppert Exp $
+// $Id: usb_uhci.cc,v 1.19 2009-03-15 12:54:59 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Benjamin D Lunt (fys at frontiernet net)
@@ -72,7 +72,7 @@ bx_usb_uhci_c::~bx_usb_uhci_c()
   if (BX_UHCI_THIS device_buffer != NULL)
     delete [] BX_UHCI_THIS device_buffer;
 
-  for (int i=0; i<USB_UHCI_NUM_PORTS; i++) {
+  for (int i=0; i<BX_N_USB_UHCI_PORTS; i++) {
     sprintf(pname, "port%d", i+1);
     SIM->get_param_string(pname, SIM->get_param(BXPN_USB_UHCI))->set_handler(NULL);
     remove_device(i);
@@ -114,7 +114,7 @@ void bx_usb_uhci_c::init(void)
   bx_list_c *usb_rt = (bx_list_c*)SIM->get_param(BXPN_MENU_RUNTIME_USB);
   bx_list_c *uhci = new bx_list_c(usb_rt, "uhci", "UHCI Configuration");
   uhci->get_options()->set(bx_list_c::SHOW_PARENT);
-  for (i=0; i<USB_UHCI_NUM_PORTS; i++) {
+  for (i=0; i<BX_N_USB_UHCI_PORTS; i++) {
     sprintf(pname, "port%d", i+1);
     port = SIM->get_param_string(pname, SIM->get_param(BXPN_USB_UHCI));
     uhci->add(port);
@@ -190,7 +190,7 @@ void bx_usb_uhci_c::reset(unsigned type)
   BX_UHCI_THIS hub.usb_frame_num.frame_num = 0x0000;
   BX_UHCI_THIS hub.usb_frame_base.frame_base = 0x00000000;
   BX_UHCI_THIS hub.usb_sof.sof_timing = 0x40;
-  for (j=0; j<USB_UHCI_NUM_PORTS; j++) {
+  for (j=0; j<BX_N_USB_UHCI_PORTS; j++) {
     BX_UHCI_THIS hub.usb_port[j].connect_changed = 0;
     BX_UHCI_THIS hub.usb_port[j].line_dminus = 0;
     BX_UHCI_THIS hub.usb_port[j].line_dplus = 0;
@@ -218,7 +218,7 @@ void bx_usb_uhci_c::register_state(void)
   bx_list_c *hub, *usb_cmd, *usb_st, *usb_en, *port;
 
   bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "usb_uhci", "USB UHCI State");
-  hub = new bx_list_c(list, "hub", USB_UHCI_NUM_PORTS + 7);
+  hub = new bx_list_c(list, "hub", BX_N_USB_UHCI_PORTS + 7);
   usb_cmd = new bx_list_c(hub, "usb_command", 8);
   new bx_shadow_bool_c(usb_cmd, "max_packet_size", &BX_UHCI_THIS hub.usb_command.max_packet_size);
   new bx_shadow_bool_c(usb_cmd, "configured", &BX_UHCI_THIS hub.usb_command.configured);
@@ -243,7 +243,7 @@ void bx_usb_uhci_c::register_state(void)
   new bx_shadow_num_c(hub, "frame_num", &BX_UHCI_THIS hub.usb_frame_num.frame_num, BASE_HEX);
   new bx_shadow_num_c(hub, "frame_base", &BX_UHCI_THIS hub.usb_frame_base.frame_base, BASE_HEX);
   new bx_shadow_num_c(hub, "sof_timing", &BX_UHCI_THIS hub.usb_sof.sof_timing, BASE_HEX);
-  for (j=0; j<USB_UHCI_NUM_PORTS; j++) {
+  for (j=0; j<BX_N_USB_UHCI_PORTS; j++) {
     sprintf(portnum, "port%d", j+1);
     port = new bx_list_c(hub, portnum, 11);
     new bx_shadow_bool_c(port, "suspend", &BX_UHCI_THIS hub.usb_port[j].suspend);
@@ -274,7 +274,7 @@ void bx_usb_uhci_c::after_restore_state(void)
   {
      BX_INFO(("new base address: 0x%04x", BX_UHCI_THIS hub.base_ioaddr));
   }
-  for (int j=0; j<USB_UHCI_NUM_PORTS; j++) {
+  for (int j=0; j<BX_N_USB_UHCI_PORTS; j++) {
     if (BX_UHCI_THIS hub.usb_port[j].device != NULL) {
       BX_UHCI_THIS hub.usb_port[j].device->after_restore_state();
     }
@@ -389,7 +389,7 @@ Bit32u bx_usb_uhci_c::read(Bit32u address, unsigned io_len)
     case 0x12: // port #2
     case 0x13:
       port = (offset & 0x0F) >> 1;
-      if (port < USB_UHCI_NUM_PORTS) {
+      if (port < BX_N_USB_UHCI_PORTS) {
         val = BX_UHCI_THIS hub.usb_port[port].suspend << 12
               |                                       1 << 10  // some Root Hubs have bit 10 set ?????
               | BX_UHCI_THIS hub.usb_port[port].reset << 9
@@ -454,7 +454,7 @@ void bx_usb_uhci_c::write(Bit32u address, Bit32u value, unsigned io_len)
       // HCRESET
       if (BX_UHCI_THIS hub.usb_command.host_reset) {
         BX_UHCI_THIS reset(0);
-        for (unsigned i=0; i<USB_UHCI_NUM_PORTS; i++) {
+        for (unsigned i=0; i<BX_N_USB_UHCI_PORTS; i++) {
           if (BX_UHCI_THIS hub.usb_port[i].status) {
             if (BX_UHCI_THIS hub.usb_port[i].device != NULL) {
               BX_UHCI_THIS hub.usb_port[i].device->usb_send_msg(USB_MSG_RESET);
@@ -562,7 +562,7 @@ void bx_usb_uhci_c::write(Bit32u address, Bit32u value, unsigned io_len)
     case 0x10: // port #1
     case 0x12: // port #2
       port = (offset & 0x0F) >> 1;
-      if ((port < USB_UHCI_NUM_PORTS) && (io_len == 2)) {
+      if ((port < BX_N_USB_UHCI_PORTS) && (io_len == 2)) {
         // If the ports reset bit is set, don't allow any writes unless the new write will clear the reset bit
         if (BX_UHCI_THIS hub.usb_port[port].reset & (value & (1<<9)))
           break;
@@ -627,7 +627,7 @@ void bx_usb_uhci_c::usb_timer(void)
 
   // If the "global reset" bit was set by software
   if (BX_UHCI_THIS global_reset) {
-    for (i=0; i<USB_UHCI_NUM_PORTS; i++) {
+    for (i=0; i<BX_N_USB_UHCI_PORTS; i++) {
       BX_UHCI_THIS hub.usb_port[i].able_changed = 0;
       BX_UHCI_THIS hub.usb_port[i].connect_changed = 0;
       BX_UHCI_THIS hub.usb_port[i].enabled = 0;
@@ -873,7 +873,7 @@ int bx_usb_uhci_c::broadcast_packet(USBPacket *p)
   int i, ret;
 
   ret = USB_RET_NODEV;
-  for (i = 0; i < USB_UHCI_NUM_PORTS && ret == USB_RET_NODEV; i++) {
+  for (i = 0; i < BX_N_USB_UHCI_PORTS && ret == USB_RET_NODEV; i++) {
     if ((BX_UHCI_THIS hub.usb_port[i].device != NULL) &&
         (BX_UHCI_THIS hub.usb_port[i].enabled)) {
       ret = BX_UHCI_THIS hub.usb_port[i].device->handle_packet(p);
@@ -1085,7 +1085,7 @@ const char *bx_usb_uhci_c::usb_param_handler(bx_param_string_c *param, int set,
   if (set) {
     portnum = atoi(param->get_name()+4) - 1;
     bx_bool empty = ((strlen(val) == 0) || (!strcmp(val, "none")));
-    if ((portnum >= 0) && (portnum < USB_UHCI_NUM_PORTS)) {
+    if ((portnum >= 0) && (portnum < BX_N_USB_UHCI_PORTS)) {
       BX_INFO(("USB port #%d experimental device change", portnum+1));
       if (empty && BX_UHCI_THIS hub.usb_port[portnum].status) {
         if (BX_UHCI_THIS hub.usb_port[portnum].device != NULL) {

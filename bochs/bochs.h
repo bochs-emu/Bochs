@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.242 2009-02-23 11:06:53 vruppert Exp $
+// $Id: bochs.h,v 1.243 2009-03-15 12:54:59 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -502,6 +502,9 @@ extern bx_bool bx_gui_sighandler;
 #define BX_N_OPTRAM_IMAGES 4
 #define BX_N_SERIAL_PORTS 4
 #define BX_N_PARALLEL_PORTS 2
+#define BX_N_USB_UHCI_PORTS 2
+#define BX_N_USB_OHCI_PORTS 2
+#define BX_N_USB_HUB_PORTS 8
 #define BX_N_PCI_SLOTS 5
 #define BX_N_USER_PLUGINS 8
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.160 2009-03-10 19:33:03 vruppert Exp $
+// $Id: config.cc,v 1.161 2009-03-15 12:54:59 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -524,9 +524,7 @@ void bx_init_options()
       1, 2048,
       BX_DEFAULT_MEM_MEGS);
   ramsize->set_ask_format("Enter memory size (MB): [%d] ");
-#if BX_WITH_WX
   ramsize->set_options(bx_param_num_c::USE_SPIN_CONTROL);
-#endif
 
   path = new bx_param_filename_c(rom,
       "path",
@@ -1385,18 +1383,16 @@ void bx_init_options()
     "Enables the UHCI emulation",
     0);
   enabled->set_enabled(BX_SUPPORT_USB_UHCI);
-  port = new bx_param_string_c(menu,
-    "port1",
-    "Port #1 device",
-    "Device connected to USB port #1",
-    "", BX_PATHNAME_LEN);
-  port->set_group(group);
-  port = new bx_param_string_c(menu,
-    "port2",
-    "Port #2 device",
-    "Device connected to USB port #2",
-    "", BX_PATHNAME_LEN);
-  port->set_group(group);
+  deplist = new bx_list_c(NULL, 2);
+  for (i=0; i<BX_N_USB_UHCI_PORTS; i++) {
+    sprintf(name, "port%d", i+1);
+    sprintf(label, "Port #%d device", i+1);
+    sprintf(descr, "Device connected to UHCI port #%d", i+1);
+    port = new bx_param_string_c(menu, name, label, descr, "", BX_PATHNAME_LEN);
+    port->set_group(group);
+    deplist->add(port);
+  }
+  enabled->set_dependent_list(deplist);
 
   // OHCI options
   strcpy(group, "USB OHCI");
@@ -1409,18 +1405,16 @@ void bx_init_options()
     "Enables the OHCI emulation",
     0);
   enabled->set_enabled(BX_SUPPORT_USB_OHCI);
-  port = new bx_param_string_c(menu,
-    "port1",
-    "Port #1 device",
-    "Device connected to USB port #1",
-    "", BX_PATHNAME_LEN);
-  port->set_group(group);
-  port = new bx_param_string_c(menu,
-    "port2",
-    "Port #2 device",
-    "Device connected to USB port #2",
-    "", BX_PATHNAME_LEN);
-  port->set_group(group);
+  deplist = new bx_list_c(NULL, 2);
+  for (i=0; i<BX_N_USB_OHCI_PORTS; i++) {
+    sprintf(name, "port%d", i+1);
+    sprintf(label, "Port #%d device", i+1);
+    sprintf(descr, "Device connected to OHCI port #%d", i+1);
+    port = new bx_param_string_c(menu, name, label, descr, "", BX_PATHNAME_LEN);
+    port->set_group(group);
+    deplist->add(port);
+  }
+  enabled->set_dependent_list(deplist);
 
   // network subtree
   bx_list_c *network = new bx_list_c(root_param, "network", "Network Configuration");
@@ -1600,11 +1594,9 @@ void bx_init_options()
     0, BX_MAX_BIT32U,
     0);
 
-#if BX_WITH_WX
   midimode->set_options(bx_param_num_c::USE_SPIN_CONTROL);
   wavemode->set_options(bx_param_num_c::USE_SPIN_CONTROL);
   loglevel->set_options(bx_param_num_c::USE_SPIN_CONTROL);
-#endif
   loglevel->set_group("SB16");
   dmatimer->set_group("SB16");
   enabled->set_dependent_list(menu->clone());

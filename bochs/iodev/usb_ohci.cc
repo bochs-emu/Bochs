@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_ohci.cc,v 1.21 2009-03-09 23:18:52 vruppert Exp $
+// $Id: usb_ohci.cc,v 1.22 2009-03-15 12:54:59 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Benjamin D Lunt (fys at frontiernet net)
@@ -27,12 +27,6 @@
 // platforms that require a special tag on exported symbols, BX_PLUGGABLE
 // is used to know when we are exporting symbols and when we are importing.
 #define BX_PLUGGABLE
-
-
-// TODO:
-//  if not Operational, stop the two timers to free cpu bandwidth,
-//    then start them again when in Operational? (Maybe only if not
-//    in operational for more than 10 frames.
 
 
 #include "iodev.h"
@@ -105,7 +99,7 @@ bx_usb_ohci_c::~bx_usb_ohci_c()
   if (BX_OHCI_THIS device_buffer != NULL)
     delete [] BX_OHCI_THIS device_buffer;
 
-  for (int i=0; i<USB_OHCI_NUM_PORTS; i++) {
+  for (int i=0; i<BX_N_USB_OHCI_PORTS; i++) {
     sprintf(pname, "port%d", i+1);
     SIM->get_param_string(pname, SIM->get_param(BXPN_USB_OHCI))->set_handler(NULL);
     remove_device(i);
@@ -146,7 +140,7 @@ void bx_usb_ohci_c::init(void)
   bx_list_c *usb_rt = (bx_list_c*)SIM->get_param(BXPN_MENU_RUNTIME_USB);
   bx_list_c *ohci = new bx_list_c(usb_rt, "ohci", "OHCI Configuration");
   ohci->get_options()->set(bx_list_c::SHOW_PARENT);
-  for (i=0; i<USB_OHCI_NUM_PORTS; i++) {
+  for (i=0; i<BX_N_USB_OHCI_PORTS; i++) {
     sprintf(pname, "port%d", i+1);
     port = SIM->get_param_string(pname, SIM->get_param(BXPN_USB_OHCI));
     ohci->add(port);
@@ -300,10 +294,10 @@ void bx_usb_ohci_c::reset_hc()
   BX_OHCI_THIS hub.op_regs.HcRhDescriptorA.dt       =    0;
   BX_OHCI_THIS hub.op_regs.HcRhDescriptorA.nps      =    0;
   BX_OHCI_THIS hub.op_regs.HcRhDescriptorA.psm      =    1;
-  BX_OHCI_THIS hub.op_regs.HcRhDescriptorA.ndp      =    USB_OHCI_NUM_PORTS;
+  BX_OHCI_THIS hub.op_regs.HcRhDescriptorA.ndp      =    BX_N_USB_OHCI_PORTS;
 
   // HcRhDescriptorB
-  BX_OHCI_THIS hub.op_regs.HcRhDescriptorB.ppcm     = ((1 << USB_OHCI_NUM_PORTS) - 1) << 1;
+  BX_OHCI_THIS hub.op_regs.HcRhDescriptorB.ppcm     = ((1 << BX_N_USB_OHCI_PORTS) - 1) << 1;
   BX_OHCI_THIS hub.op_regs.HcRhDescriptorB.dr       = 0x0000;
 
   // HcRhStatus
@@ -317,7 +311,7 @@ void bx_usb_ohci_c::reset_hc()
   BX_OHCI_THIS hub.op_regs.HcRhStatus.lps       = 0;
 
   // HcRhPortStatus[x]
-  for (i=0; i<USB_OHCI_NUM_PORTS; i++) {
+  for (i=0; i<BX_N_USB_OHCI_PORTS; i++) {
     reset_port(i);
     if (BX_OHCI_THIS hub.usb_port[i].device == NULL) {
       sprintf(pname, "port%d", i+1);
@@ -403,7 +397,7 @@ void bx_usb_ohci_c::register_state(void)
   new bx_shadow_bool_c(reg, "drwe", &BX_OHCI_THIS hub.op_regs.HcRhStatus.drwe);
   new bx_shadow_bool_c(reg, "oci", &BX_OHCI_THIS hub.op_regs.HcRhStatus.oci);
   new bx_shadow_bool_c(reg, "lps", &BX_OHCI_THIS hub.op_regs.HcRhStatus.lps);
-  for (i=0; i<USB_OHCI_NUM_PORTS; i++) {
+  for (i=0; i<BX_N_USB_OHCI_PORTS; i++) {
     sprintf(portnum, "port%d", i+1);
     port = new bx_list_c(hub, portnum, 2);
     reg = new bx_list_c(port, "HcRhPortStatus", 12);
@@ -437,7 +431,7 @@ void bx_usb_ohci_c::after_restore_state(void)
                          4096))  {
      BX_INFO(("new base address: 0x%04x", BX_OHCI_THIS hub.base_addr));
   }
-  for (int j=0; j<USB_OHCI_NUM_PORTS; j++) {
+  for (int j=0; j<BX_N_USB_OHCI_PORTS; j++) {
     if (BX_OHCI_THIS hub.usb_port[j].device != NULL) {
       BX_OHCI_THIS hub.usb_port[j].device->after_restore_state();
     }
@@ -626,17 +620,17 @@ bx_bool bx_usb_ohci_c::read_handler(bx_phy_address addr, unsigned len, void *dat
       break;
 
     case 0x60: // HcRhPortStatus[3]
-#if (USB_OHCI_NUM_PORTS < 4)
+#if (BX_N_USB_OHCI_PORTS < 4)
       val = 0;
       break;
 #endif
     case 0x5C: // HcRhPortStatus[2]
-#if (USB_OHCI_NUM_PORTS < 3)
+#if (BX_N_USB_OHCI_PORTS < 3)
       val = 0;
       break;
 #endif
     case 0x58: // HcRhPortStatus[1]
-#if (USB_OHCI_NUM_PORTS < 2)
+#if (BX_N_USB_OHCI_PORTS < 2)
       val = 0;
       break;
 #endif
@@ -733,7 +727,7 @@ bx_bool bx_usb_ohci_c::write_handler(bx_phy_address addr, unsigned len, void *da
         BX_OHCI_THIS hub.op_regs.HcCommandStatus.hcr = 1;
         BX_OHCI_THIS reset_hc();
         BX_OHCI_THIS hub.op_regs.HcControl.hcfs = 3;      // suspend state
-        for (unsigned i=0; i<USB_OHCI_NUM_PORTS; i++)
+        for (unsigned i=0; i<BX_N_USB_OHCI_PORTS; i++)
           if (BX_OHCI_THIS hub.usb_port[i].HcRhPortStatus.ccs && (BX_OHCI_THIS hub.usb_port[i].device != NULL))
             BX_OHCI_THIS hub.usb_port[i].device->usb_send_msg(USB_MSG_RESET);
       }
@@ -871,20 +865,20 @@ bx_bool bx_usb_ohci_c::write_handler(bx_phy_address addr, unsigned len, void *da
       if (value & (1<<17)) BX_OHCI_THIS hub.op_regs.HcRhStatus.ocic = 1;
       if (value & (1<<16)) {
         if (BX_OHCI_THIS hub.op_regs.HcRhDescriptorA.psm == 0) {
-          for (p=0; p<USB_OHCI_NUM_PORTS; p++)
+          for (p=0; p<BX_N_USB_OHCI_PORTS; p++)
             BX_OHCI_THIS hub.usb_port[p].HcRhPortStatus.pps = 1;
         } else {
-          for (p=0; p<USB_OHCI_NUM_PORTS; p++)
+          for (p=0; p<BX_N_USB_OHCI_PORTS; p++)
             if ((BX_OHCI_THIS hub.op_regs.HcRhDescriptorB.ppcm & (1<<p)) == 0)
               BX_OHCI_THIS hub.usb_port[p].HcRhPortStatus.pps = 1;
         }
       }
       if (value & (1<<0)) {
         if (BX_OHCI_THIS hub.op_regs.HcRhDescriptorA.psm == 0) {
-          for (p=0; p<USB_OHCI_NUM_PORTS; p++)
+          for (p=0; p<BX_N_USB_OHCI_PORTS; p++)
             BX_OHCI_THIS hub.usb_port[p].HcRhPortStatus.pps = 0;
         } else {
-          for (p=0; p<USB_OHCI_NUM_PORTS; p++)
+          for (p=0; p<BX_N_USB_OHCI_PORTS; p++)
             if (!(BX_OHCI_THIS hub.op_regs.HcRhDescriptorB.ppcm & (1<<p)))
               BX_OHCI_THIS hub.usb_port[p].HcRhPortStatus.pps = 0;
         }
@@ -893,15 +887,15 @@ bx_bool bx_usb_ohci_c::write_handler(bx_phy_address addr, unsigned len, void *da
     }
 
     case 0x60: // HcRhPortStatus[3]
-#if (USB_OHCI_NUM_PORTS < 4)
+#if (BX_N_USB_OHCI_PORTS < 4)
       break;
 #endif
     case 0x5C: // HcRhPortStatus[2]
-#if (USB_OHCI_NUM_PORTS < 3)
+#if (BX_N_USB_OHCI_PORTS < 3)
       break;
 #endif
     case 0x58: // HcRhPortStatus[1]
-#if (USB_OHCI_NUM_PORTS < 2)
+#if (BX_N_USB_OHCI_PORTS < 2)
       break;
 #endif
     case 0x54: { // HcRhPortStatus[0]
@@ -1284,7 +1278,7 @@ int bx_usb_ohci_c::broadcast_packet(USBPacket *p)
   int i, ret;
 
   ret = USB_RET_NODEV;
-  for (i = 0; i < USB_OHCI_NUM_PORTS && ret == USB_RET_NODEV; i++) {
+  for (i = 0; i < BX_N_USB_OHCI_PORTS && ret == USB_RET_NODEV; i++) {
     if ((BX_OHCI_THIS hub.usb_port[i].device != NULL) &&
         (BX_OHCI_THIS hub.usb_port[i].HcRhPortStatus.ccs)) {
       ret = BX_OHCI_THIS hub.usb_port[i].device->handle_packet(p);
@@ -1461,7 +1455,7 @@ const char *bx_usb_ohci_c::usb_param_handler(bx_param_string_c *param, int set,
   if (set) {
     portnum = atoi(param->get_name()+4) - 1;
     bx_bool empty = ((strlen(val) == 0) || (!strcmp(val, "none")));
-    if ((portnum >= 0) && (portnum < USB_OHCI_NUM_PORTS)) {
+    if ((portnum >= 0) && (portnum < BX_N_USB_OHCI_PORTS)) {
       BX_INFO(("USB port #%d experimental device change", portnum+1));
       if (empty && BX_OHCI_THIS hub.usb_port[portnum].HcRhPortStatus.ccs) {
         if (BX_OHCI_THIS hub.usb_port[portnum].device != NULL) {
