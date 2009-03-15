@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: call_far.cc,v 1.44 2009-01-31 10:43:23 sshwarts Exp $
+// $Id: call_far.cc,v 1.45 2009-03-15 16:52:54 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005 Stanislav Shwartsman
@@ -517,8 +517,7 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
 }
 
 #if BX_SUPPORT_X86_64
-  void BX_CPP_AttrRegparmN(3)
-BX_CPU_C::call_gate64(bx_selector_t *gate_selector)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::call_gate64(bx_selector_t *gate_selector)
 {
   bx_selector_t cs_selector;
   Bit32u dword1, dword2, dword3;
