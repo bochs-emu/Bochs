@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.232 2009-03-15 21:16:16 vruppert Exp $
+// $Id: siminterface.h,v 1.233 2009-03-16 21:07:44 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  The Bochs Project
@@ -844,6 +844,9 @@ public:
 
 class BOCHSAPI bx_param_enum_c : public bx_param_num_c {
   const char **choices;
+  bx_list_c *dependent_list;
+  Bit64u *deps_bitmap;
+  void update_dependents();
 public:
   bx_param_enum_c(bx_param_c *parent,
       const char *name,
@@ -852,10 +855,15 @@ public:
       const char **choices,
       Bit64s initial_val,
       Bit64s value_base = 0);
+  virtual ~bx_param_enum_c();
   const char *get_choice(int n) { return choices[n]; }
   const char *get_selected() { return choices[val.number - min]; }
   int find_by_name(const char *string);
+  virtual void set(Bit64s val);
   bx_bool set_by_name(const char *string);
+  void set_dependent_list(bx_list_c *l);
+  void set_dependent_bitmap(Bit64s value, Bit64u bitmap);
+  Bit64u get_dependent_bitmap(Bit64s value);
 #if BX_USE_TEXTCONFIG
   virtual void text_print(FILE *fp);
   virtual int text_ask(FILE *fpin, FILE *fpout);

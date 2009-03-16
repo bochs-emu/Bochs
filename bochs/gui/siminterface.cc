@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.198 2009-03-15 21:16:16 vruppert Exp $
+// $Id: siminterface.cc,v 1.199 2009-03-16 21:07:44 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  The Bochs Project
@@ -1474,7 +1474,7 @@ void bx_param_num_c::update_dependents()
     for (int i=0; i<dependent_list->get_size(); i++) {
       bx_param_c *param = dependent_list->get(i);
       if (param != this)
-	param->set_enabled(en);
+        param->set_enabled(en);
     }
   }
 }
@@ -1776,7 +1776,22 @@ bx_param_enum_c::bx_param_enum_c(bx_param_c *parent,
   // now that the max is known, replace the BX_MAX_BIT64S sent to the parent
   // class constructor with the real max.
   this->max = value_base + (p - choices - 1);
+  this->deps_bitmap = NULL;
   set(initial_val);
+}
+
+bx_param_enum_c::~bx_param_enum_c()
+{
+  if (deps_bitmap != NULL) {
+    free(deps_bitmap);
+  }
+}
+
+
+void bx_param_enum_c::set(Bit64s val)
+{
+  bx_param_num_c::set(val);
+  update_dependents();
 }
 
 int bx_param_enum_c::find_by_name(const char *string)
@@ -1795,6 +1810,46 @@ bx_bool bx_param_enum_c::set_by_name(const char *string)
   if (n<0) return 0;
   set(n + min);
   return 1;
+}
+
+void bx_param_enum_c::set_dependent_list(bx_list_c *l)
+{
+  dependent_list = l;
+  deps_bitmap = (Bit64u*)malloc(sizeof(Bit64u) * (max - min + 1));
+  for (int i=0; i<(max-min+1); i++) {
+    deps_bitmap[i] = (1 << (l->get_size())) - 1;
+  }
+  update_dependents();
+}
+
+void bx_param_enum_c::set_dependent_bitmap(Bit64s value, Bit64u bitmap)
+{
+  if (deps_bitmap != NULL) {
+    deps_bitmap[value - min] = bitmap;
+  }
+}
+
+Bit64u bx_param_enum_c::get_dependent_bitmap(Bit64s value)
+{
+  if (deps_bitmap != NULL) {
+    return deps_bitmap[value - min];
+  }
+  return 0;
+}
+
+void bx_param_enum_c::update_dependents()
+{
+  if ((dependent_list != NULL) && (deps_bitmap != NULL)) {
+    Bit64u en_bmap = deps_bitmap[val.number - min];
+    Bit64u mask = 0x1;
+    for (int i=0; i<dependent_list->get_size(); i++) {
+      int en = (en_bmap & mask) && enabled;
+      bx_param_c *param = dependent_list->get(i);
+      if (param != this)
+        param->set_enabled(en);
+      mask <<= 1;
+    }
+  }
 }
 
 bx_param_string_c::bx_param_string_c(bx_param_c *parent,

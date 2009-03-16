@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.162 2009-03-15 21:16:16 vruppert Exp $
+// $Id: config.cc,v 1.163 2009-03-16 21:07:44 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -92,34 +92,13 @@ static Bit64s bx_param_handler(bx_param_c *param, int set, Bit64s val)
       if (set) {
         switch (val) {
           case BX_ATA_DEVICE_DISK:
-            SIM->get_param_num("present", base)->set(1);
-            SIM->get_param("mode", base)->set_enabled(1);
-            SIM->get_param("path", base)->set_enabled(1);
             ((bx_param_filename_c*)SIM->get_param("path", base))->set_extension("img");
-            //SIM->get_param("journal", base)->set_enabled(1);
-            SIM->get_param("cylinders", base)->set_enabled(1);
-            SIM->get_param("heads", base)->set_enabled(1);
-            SIM->get_param("spt", base)->set_enabled(1);
-            SIM->get_param("status", base)->set_enabled(0);
-            SIM->get_param("model", base)->set_enabled(1);
-            SIM->get_param("biosdetect", base)->set_enabled(1);
-            SIM->get_param("translation", base)->set_enabled(1);
             SIM->get_param("path", base)->set_runtime_param(0);
             SIM->get_param("status", base)->set_runtime_param(0);
             break;
           case BX_ATA_DEVICE_CDROM:
-            SIM->get_param_num("present", base)->set(1);
-            SIM->get_param("mode", base)->set_enabled(0);
-            SIM->get_param("path", base)->set_enabled(1);
             ((bx_param_filename_c*)SIM->get_param("path", base))->set_extension("iso");
             SIM->get_param("journal", base)->set_enabled(0);
-            SIM->get_param("cylinders", base)->set_enabled(0);
-            SIM->get_param("heads", base)->set_enabled(0);
-            SIM->get_param("spt", base)->set_enabled(0);
-            SIM->get_param("status", base)->set_enabled(1);
-            SIM->get_param("model", base)->set_enabled(1);
-            SIM->get_param("biosdetect", base)->set_enabled(1);
-            SIM->get_param("translation", base)->set_enabled(0);
             SIM->get_param("path", base)->set_runtime_param(1);
             SIM->get_param("status", base)->set_runtime_param(1);
             break;
@@ -128,14 +107,7 @@ static Bit64s bx_param_handler(bx_param_c *param, int set, Bit64s val)
     }
   } else {
     param->get_param_path(pname, BX_PATHNAME_LEN);
-    if (!strcmp(pname, BXPN_LOAD32BITOS_WHICH)) {
-      if (set) {
-        int enable = (val != Load32bitOSNone);
-        SIM->get_param(BXPN_LOAD32BITOS_PATH)->set_enabled(enable);
-        SIM->get_param(BXPN_LOAD32BITOS_IOLOG)->set_enabled(enable);
-        SIM->get_param(BXPN_LOAD32BITOS_INITRD)->set_enabled(enable);
-      }
-    } else if (!strcmp(pname, BXPN_FLOPPYA_TYPE)) {
+    if (!strcmp(pname, BXPN_FLOPPYA_TYPE)) {
       if (set) {
         if (val == BX_FLOPPY_AUTO) {
           val = get_floppy_type_from_image(SIM->get_param_string(BXPN_FLOPPYA_PATH)->getptr());
@@ -965,7 +937,8 @@ void bx_init_options()
   iolog->set_ask_format("Enter pathname of I/O log: [%s] ");
   initrd->set_ask_format("Enter pathname of initrd: [%s] ");
   load32bitos->set_options(menu->SERIES_ASK);
-  whichOS->set_handler(bx_param_handler);
+  whichOS->set_dependent_list(load32bitos->clone());
+  whichOS->set_dependent_bitmap(Load32bitOSNone, 0);
   whichOS->set(Load32bitOSNone);
   boot_params->set_options(menu->SHOW_PARENT);
 
@@ -1261,6 +1234,21 @@ void bx_init_options()
       enabled->get_dependent_list()->add(present);
       // the master/slave menu depends on the ATA channel's enabled flag
       enabled->get_dependent_list()->add(menu);
+
+      // some items depend on the drive type
+      bx_param_c *type_deplist[] = {
+        mode,
+        status,
+        cylinders,
+        heads,
+        spt,
+        translation,
+        NULL
+      };
+      deplist = new bx_list_c(NULL, "deplist", "", type_deplist);
+      type->set_dependent_list(deplist);
+      type->set_dependent_bitmap(BX_ATA_DEVICE_DISK, 0x3d);
+      type->set_dependent_bitmap(BX_ATA_DEVICE_CDROM, 0x02);
 
       type->set_handler(bx_param_handler);
       mode->set_handler(bx_param_handler);
@@ -1627,7 +1615,11 @@ void bx_init_options()
   loglevel->set_options(loglevel->USE_SPIN_CONTROL);
   loglevel->set_group("SB16");
   dmatimer->set_group("SB16");
-  enabled->set_dependent_list(menu->clone());
+  deplist = new bx_list_c(NULL, 3);
+  deplist->add(midimode);
+  deplist->add(wavemode);
+  deplist->add(loglevel);
+  enabled->set_dependent_list(deplist);
   deplist = new bx_list_c(NULL, 1);
   deplist->add(midifile);
   midimode->set_dependent_list(deplist);
