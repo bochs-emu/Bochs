@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.164 2009-03-17 19:37:20 vruppert Exp $
+// $Id: config.cc,v 1.165 2009-03-17 20:20:57 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -923,7 +923,7 @@ void bx_init_options()
   iolog->set_ask_format("Enter pathname of I/O log: [%s] ");
   initrd->set_ask_format("Enter pathname of initrd: [%s] ");
   load32bitos->set_options(menu->SERIES_ASK);
-  whichOS->set_dependent_list(load32bitos->clone(), TRUE);
+  whichOS->set_dependent_list(load32bitos->clone(), 1);
   whichOS->set_dependent_bitmap(Load32bitOSNone, 0);
   whichOS->set(Load32bitOSNone);
   boot_params->set_options(menu->SHOW_PARENT);

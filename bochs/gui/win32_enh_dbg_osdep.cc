@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32_enh_dbg_osdep.cc,v 1.10 2009-02-08 18:52:06 sshwarts Exp $
+// $Id: win32_enh_dbg_osdep.cc,v 1.11 2009-03-17 20:20:57 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  BOCHS ENHANCED DEBUGGER Ver 1.2
@@ -1853,7 +1853,7 @@ void MakeBL(HTREEITEM *h_P, bx_param_c *p)
             sprintf (tmpcb + j,": %s",((bx_param_enum_c*)p)->get_selected());
             break;
         case BXT_PARAM_STRING:
-            if (((bx_param_string_c*)p)->get_options()->get() & bx_param_string_c::RAW_BYTES)
+            if (((bx_param_string_c*)p)->get_options() & bx_param_string_c::RAW_BYTES)
             {
                 char *cp = tmpcb + j;
                 unsigned char *rp = (unsigned char *)((bx_param_string_c*)p)->getptr();
