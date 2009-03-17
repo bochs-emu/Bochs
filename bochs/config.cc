@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.163 2009-03-16 21:07:44 vruppert Exp $
+// $Id: config.cc,v 1.164 2009-03-17 19:37:20 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -75,19 +75,6 @@ static Bit64s bx_param_handler(bx_param_c *param, int set, Bit64s val)
         DEV_hd_set_cd_media_status(handle, val == BX_INSERTED);
         bx_gui->update_drive_status_buttons();
       }
-    } else if (!strcmp(param->get_name(), "mode")) {
-      if (set) {
-        switch (val) {
-          case BX_ATA_MODE_UNDOABLE:
-          case BX_ATA_MODE_VOLATILE:
-//        case BX_ATA_MODE_Z_UNDOABLE:
-//        case BX_ATA_MODE_Z_VOLATILE:
-            SIM->get_param("journal", base)->set_enabled(1);
-            break;
-          default:
-            SIM->get_param("journal", base)->set_enabled(0);
-          }
-        }
     } else if (!strcmp(param->get_name(), "type")) {
       if (set) {
         switch (val) {
@@ -98,7 +85,6 @@ static Bit64s bx_param_handler(bx_param_c *param, int set, Bit64s val)
             break;
           case BX_ATA_DEVICE_CDROM:
             ((bx_param_filename_c*)SIM->get_param("path", base))->set_extension("iso");
-            SIM->get_param("journal", base)->set_enabled(0);
             SIM->get_param("path", base)->set_runtime_param(1);
             SIM->get_param("status", base)->set_runtime_param(1);
             break;
@@ -937,7 +923,7 @@ void bx_init_options()
   iolog->set_ask_format("Enter pathname of I/O log: [%s] ");
   initrd->set_ask_format("Enter pathname of initrd: [%s] ");
   load32bitos->set_options(menu->SERIES_ASK);
-  whichOS->set_dependent_list(load32bitos->clone());
+  whichOS->set_dependent_list(load32bitos->clone(), TRUE);
   whichOS->set_dependent_bitmap(Load32bitOSNone, 0);
   whichOS->set(Load32bitOSNone);
   boot_params->set_options(menu->SHOW_PARENT);
@@ -1180,6 +1166,11 @@ void bx_init_options()
         "Pathname of the journal file",
         "", BX_PATHNAME_LEN);
       journal->set_ask_format("Enter path of journal file: [%s]");
+      deplist = new bx_list_c(NULL, 1);
+      deplist->add(journal);
+      mode->set_dependent_list(deplist, 0);
+      mode->set_dependent_bitmap(BX_ATA_MODE_UNDOABLE, 1);
+      mode->set_dependent_bitmap(BX_ATA_MODE_VOLATILE, 1);
 
       bx_param_num_c *cylinders = new bx_param_num_c(menu,
         "cylinders",
@@ -1229,11 +1220,16 @@ void bx_init_options()
       translation->set_ask_format("Enter translation type: [%s]");
 
       // the menu and all items on it depend on the present flag
-      present->set_dependent_list(menu->clone());
-      // the present flag depends on the ATA channel's enabled flag
-      enabled->get_dependent_list()->add(present);
+      deplist = new bx_list_c(NULL, 4);
+      deplist->add(type);
+      deplist->add(path);
+      deplist->add(model);
+      deplist->add(biosdetect);
+      present->set_dependent_list(deplist);
       // the master/slave menu depends on the ATA channel's enabled flag
       enabled->get_dependent_list()->add(menu);
+      // the present flag depends on the ATA channel's enabled flag
+      enabled->get_dependent_list()->add(present);
 
       // some items depend on the drive type
       bx_param_c *type_deplist[] = {
@@ -1246,7 +1242,7 @@ void bx_init_options()
         NULL
       };
       deplist = new bx_list_c(NULL, "deplist", "", type_deplist);
-      type->set_dependent_list(deplist);
+      type->set_dependent_list(deplist, 0);
       type->set_dependent_bitmap(BX_ATA_DEVICE_DISK, 0x3d);
       type->set_dependent_bitmap(BX_ATA_DEVICE_CDROM, 0x02);
 
@@ -1513,7 +1509,7 @@ void bx_init_options()
     "Device configuration script",
     "Name of the script that is executed after Bochs initializes the network interface (optional).",
     "none", BX_PATHNAME_LEN);
-    path->set_ask_format("Enter new script name, or 'none': [%s] ");
+  path->set_ask_format("Enter new script name, or 'none': [%s] ");
   enabled->set_dependent_list(menu->clone());
   // pnic options
   menu = new bx_list_c(network, "pnic", "PCI Pseudo NIC");
@@ -1615,10 +1611,11 @@ void bx_init_options()
   loglevel->set_options(loglevel->USE_SPIN_CONTROL);
   loglevel->set_group("SB16");
   dmatimer->set_group("SB16");
-  deplist = new bx_list_c(NULL, 3);
+  deplist = new bx_list_c(NULL, 4);
   deplist->add(midimode);
   deplist->add(wavemode);
   deplist->add(loglevel);
+  deplist->add(dmatimer);
   enabled->set_dependent_list(deplist);
   deplist = new bx_list_c(NULL, 1);
   deplist->add(midifile);

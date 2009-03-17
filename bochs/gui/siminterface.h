@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.233 2009-03-16 21:07:44 vruppert Exp $
+// $Id: siminterface.h,v 1.234 2009-03-17 19:37:20 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  The Bochs Project
@@ -683,11 +683,6 @@ typedef int (*param_enable_handler)(class bx_param_c *, int en);
 
 class BOCHSAPI bx_param_num_c : public bx_param_c {
   BOCHSAPI_CYGONLY static Bit32u default_base;
-  // The dependent_list is initialized to NULL.  If dependent_list is modified
-  // to point to a bx_list_c of other parameters, the set() method of
-  // bx_param_bool_c will enable those parameters when this bool is true, and
-  // disable them when this bool is false.
-  bx_list_c *dependent_list;
   void update_dependents();
 protected:
   Bit64s min, max, initial_val;
@@ -706,6 +701,11 @@ protected:
   param_enable_handler enable_handler;
   int base;
   bx_bool is_shadow;
+  // The dependent_list is initialized to NULL.  If dependent_list is modified
+  // to point to a bx_list_c of other parameters, the set() method of
+  // bx_param_bool_c will enable those parameters when this bool is true, and
+  // disable them when this bool is false.
+  bx_list_c *dependent_list;
 public:
   enum {
     // When a bx_param_num_c is displayed in dialog, USE_SPIN_CONTROL controls
@@ -844,7 +844,6 @@ public:
 
 class BOCHSAPI bx_param_enum_c : public bx_param_num_c {
   const char **choices;
-  bx_list_c *dependent_list;
   Bit64u *deps_bitmap;
   void update_dependents();
 public:
@@ -861,7 +860,7 @@ public:
   int find_by_name(const char *string);
   virtual void set(Bit64s val);
   bx_bool set_by_name(const char *string);
-  void set_dependent_list(bx_list_c *l);
+  void set_dependent_list(bx_list_c *l, bx_bool enable_all);
   void set_dependent_bitmap(Bit64s value, Bit64u bitmap);
   Bit64u get_dependent_bitmap(Bit64s value);
 #if BX_USE_TEXTCONFIG

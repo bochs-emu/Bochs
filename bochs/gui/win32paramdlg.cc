@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32paramdlg.cc,v 1.5 2009-03-15 21:16:16 vruppert Exp $
+// $Id: win32paramdlg.cc,v 1.6 2009-03-17 19:37:20 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Volker Ruppert
@@ -612,11 +612,9 @@ void EnableParam(HWND hDlg, bx_param_c *param, BOOL val)
 {
   UINT cid;
   int i;
-  bx_list_c *plist, *clist;
+  bx_list_c *clist;
   HWND Button, Updown;
-  Bit64u *n_disable = NULL;
 
-  plist = (bx_list_c*)param->get_parent();
   cid = findDlgIDFromParam(param);
   if (param->get_type() == BXT_LIST) {
     clist = (bx_list_c*)param;
@@ -637,14 +635,70 @@ void EnableParam(HWND hDlg, bx_param_c *param, BOOL val)
   }
 }
 
+void ProcessDependentList(HWND hDlg, bx_param_num_c *nparam, BOOL enabled)
+{
+  UINT cid;
+  bx_list_c *deplist;
+  bx_param_c *dparam;
+  bx_param_enum_c *eparam;
+  Bit64s value;
+  Bit64u enable_bitmap, mask;
+  int i;
+  BOOL en;
+
+  cid = findDlgIDFromParam(nparam);
+  deplist = nparam->get_dependent_list();
+  if (nparam->get_type() == BXT_PARAM_ENUM) {
+    eparam = (bx_param_enum_c*)nparam;
+    value = SendMessage(GetDlgItem(hDlg, ID_PARAM + cid), CB_GETCURSEL, 0, 0);
+    enable_bitmap = eparam->get_dependent_bitmap(value + eparam->get_min());
+    mask = 0x1;
+    for (i = 0; i < deplist->get_size(); i++) {
+      dparam = deplist->get(i);
+      if (dparam != nparam) {
+        en = (enable_bitmap & mask) && enabled;
+        if ((dparam->get_type() == BXT_PARAM_BOOL) ||
+            (dparam->get_type() == BXT_PARAM_NUM) ||
+            (dparam->get_type() == BXT_PARAM_ENUM)) {
+          if (((bx_param_num_c*)dparam)->get_dependent_list() != NULL) {
+            ProcessDependentList(hDlg, (bx_param_num_c*)dparam, en);
+          }
+        }
+        EnableParam(hDlg, dparam, en);
+      }
+      mask <<= 1;
+    }
+  } else {
+    if (nparam->get_type() == BXT_PARAM_BOOL) {
+      value = SendMessage(GetDlgItem(hDlg, ID_PARAM + cid), BM_GETCHECK, 0, 0);
+    } else if (nparam->get_type() == BXT_PARAM_NUM) {
+      value = GetDlgItemInt(hDlg, ID_PARAM + cid, NULL, FALSE);
+    }
+    for (i = 0; i < deplist->get_size(); i++) {
+      dparam = deplist->get(i);
+      if (dparam != nparam) {
+        en = (value && enabled);
+        if ((dparam->get_type() == BXT_PARAM_BOOL) ||
+            (dparam->get_type() == BXT_PARAM_NUM) ||
+            (dparam->get_type() == BXT_PARAM_ENUM)) {
+          if (((bx_param_num_c*)dparam)->get_dependent_list() != NULL) {
+            ProcessDependentList(hDlg, (bx_param_num_c*)dparam, en);
+          }
+        }
+        EnableParam(hDlg, dparam, en);
+      }
+    }
+  }
+}
+
 static BOOL CALLBACK ParamDlgProc(HWND Window, UINT AMessage, WPARAM wParam, LPARAM lParam)
 {
   static bx_list_c *list = NULL;
   static int items = 0;
-  bx_param_c *param, *dparam;
+  bx_param_c *param;
   bx_param_string_c *sparam;
-  bx_list_c *deplist, *tmplist;
-  int cid, code, i, j, k, val;
+  bx_list_c *tmplist;
+  int cid, code, i, j, k;
   RECT r, r2;
   SIZE size;
   NMHDR tcinfo;
@@ -707,20 +761,10 @@ static BOOL CALLBACK ParamDlgProc(HWND Window, UINT AMessage, WPARAM wParam, LPA
             param = findParamFromDlgID(i);
             if (param != NULL) {
               if ((param->get_type() == BXT_PARAM_BOOL) ||
-                  (param->get_type() == BXT_PARAM_NUM)) {
-                deplist = ((bx_param_bool_c *)param)->get_dependent_list();
-                if (deplist != NULL) {
-                  if (param->get_type() == BXT_PARAM_BOOL) {
-                    val = SendMessage(GetDlgItem(Window, code), BM_GETCHECK, 0, 0);
-                  } else {
-                    val = GetDlgItemInt(Window, code, NULL, FALSE);
-                  }
-                  for (j = 0; j < deplist->get_size(); j++) {
-                    dparam = deplist->get(j);
-                    if (dparam != param) {
-                      EnableParam(Window, dparam, val);
-                    }
-                  }
+                  (param->get_type() == BXT_PARAM_NUM) ||
+                  (param->get_type() == BXT_PARAM_ENUM)) {
+                if (((bx_param_num_c*)param)->get_dependent_list() != NULL) {
+                  ProcessDependentList(Window, (bx_param_num_c*)param, TRUE);
                 }
               }
             }
