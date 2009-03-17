@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.276 2009-03-13 18:48:08 sshwarts Exp $
+// $Id: cpu.cc,v 1.277 2009-03-17 19:40:26 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -164,10 +164,6 @@ no_async_event:
 #if BX_INSTRUMENTATION
       BX_INSTR_OPCODE(BX_CPU_ID, BX_CPU_THIS_PTR eipFetchPtr + (RIP + BX_CPU_THIS_PTR eipPageBias),
          i->ilen(), BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b, Is64BitMode());
-#endif
-
-#if BX_DEBUGGER || BX_GDBSTUB
-      if (dbg_instruction_prolog()) return;
 #endif
 
 #if BX_DISASM
@@ -873,52 +869,62 @@ void BX_CPU_C::set_INTR(bx_bool value)
 }
 
 #if BX_DEBUGGER || BX_GDBSTUB
-bx_bool BX_CPU_C::dbg_instruction_prolog(void)
-{
-#if BX_DEBUGGER
-  if(dbg_check_begin_instr_bpoint()) return 1;
-#endif
-
-  return 0;
-}
-
 bx_bool BX_CPU_C::dbg_instruction_epilog(void)
 {
 #if BX_DEBUGGER
-  if (dbg_check_end_instr_bpoint()) return 1;
-#endif
-
-#if BX_GDBSTUB
-  if (bx_dbg.gdbstub_enabled) {
-    unsigned reason = bx_gdbstub_check(EIP);
-    if (reason != GDBSTUB_STOP_NO_REASON) return 1;
-  }
-#endif
-
-  return 0;
-}
-#endif // BX_DEBUGGER || BX_GDBSTUB
-
-#if BX_DEBUGGER
-extern unsigned dbg_show_mask;
-
-bx_bool BX_CPU_C::dbg_check_begin_instr_bpoint(void)
-{
   Bit64u tt = bx_pc_system.time_ticks();
   bx_address debug_eip = RIP;
   Bit16u cs = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value;
 
+  BX_CPU_THIS_PTR guard_found.icount++;
   BX_CPU_THIS_PTR guard_found.cs  = cs;
   BX_CPU_THIS_PTR guard_found.eip = debug_eip;
   BX_CPU_THIS_PTR guard_found.laddr = BX_CPU_THIS_PTR get_laddr(BX_SEG_REG_CS, debug_eip);
   BX_CPU_THIS_PTR guard_found.code_32_64 = BX_CPU_THIS_PTR fetchModeMask >> 30;
 
+  //
+  // Take care of break point conditions generated during instruction execution
+  //
+
+  // Check if we hit read/write or time breakpoint
+  if (BX_CPU_THIS_PTR break_point) {
+    switch (BX_CPU_THIS_PTR break_point) {
+    case BREAK_POINT_TIME:
+      BX_INFO(("[" FMT_LL "d] Caught time breakpoint", bx_pc_system.time_ticks()));
+      BX_CPU_THIS_PTR stop_reason = STOP_TIME_BREAK_POINT;
+      return(1); // on a breakpoint
+    case BREAK_POINT_READ:
+      BX_INFO(("[" FMT_LL "d] Caught read watch point", bx_pc_system.time_ticks()));
+      BX_CPU_THIS_PTR stop_reason = STOP_READ_WATCH_POINT;
+      return(1); // on a breakpoint
+    case BREAK_POINT_WRITE:
+      BX_INFO(("[" FMT_LL "d] Caught write watch point", bx_pc_system.time_ticks()));
+      BX_CPU_THIS_PTR stop_reason = STOP_WRITE_WATCH_POINT;
+      return(1); // on a breakpoint
+    default:
+      BX_PANIC(("Weird break point condition"));
+    }
+  }
+
+  if (BX_CPU_THIS_PTR magic_break) {
+    BX_INFO(("[" FMT_LL "d] Stopped on MAGIC BREAKPOINT", bx_pc_system.time_ticks()));
+    BX_CPU_THIS_PTR stop_reason = STOP_MAGIC_BREAK_POINT;
+    return(1); // on a breakpoint
+  }
+
+  // convenient point to see if user requested debug break or typed Ctrl-C
+  if (bx_guard.interrupt_requested) {
+    return(1);
+  }
+
   // support for 'show' command in debugger
+  extern unsigned dbg_show_mask;
   if(dbg_show_mask) {
     int rv = bx_dbg_show_symbolic();
     if (rv) return(rv);
   }
 
+  // Just committed an instruction, before fetching a new one
   // see if debugger is looking for iaddr breakpoint of any type
   if (bx_guard.guard_for & BX_DBG_GUARD_IADDR_ALL) {
 #if (BX_DBG_MAX_VIR_BPOINTS > 0)
@@ -982,51 +988,20 @@ bx_bool BX_CPU_C::dbg_check_begin_instr_bpoint(void)
     }
 #endif
   }
+#endif
 
-  return(0); // not on a breakpoint
+#if BX_GDBSTUB
+  if (bx_dbg.gdbstub_enabled) {
+    unsigned reason = bx_gdbstub_check(EIP);
+    if (reason != GDBSTUB_STOP_NO_REASON) return(1);
+  }
+#endif
+
+  return(0);
 }
+#endif // BX_DEBUGGER || BX_GDBSTUB
 
-bx_bool BX_CPU_C::dbg_check_end_instr_bpoint(void)
-{
-  BX_CPU_THIS_PTR guard_found.icount++;
-  BX_CPU_THIS_PTR guard_found.cs = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value;
-  BX_CPU_THIS_PTR guard_found.eip = RIP;
-  BX_CPU_THIS_PTR guard_found.laddr = BX_CPU_THIS_PTR get_laddr(BX_SEG_REG_CS, RIP);
-  BX_CPU_THIS_PTR guard_found.code_32_64 = BX_CPU_THIS_PTR fetchModeMask >> 30;
-
-  // Check if we hit read/write or time breakpoint
-  if (BX_CPU_THIS_PTR break_point) {
-    switch (BX_CPU_THIS_PTR break_point) {
-    case BREAK_POINT_TIME:
-      BX_INFO(("[" FMT_LL "d] Caught time breakpoint", bx_pc_system.time_ticks()));
-      BX_CPU_THIS_PTR stop_reason = STOP_TIME_BREAK_POINT;
-      return(1); // on a breakpoint
-    case BREAK_POINT_READ:
-      BX_INFO(("[" FMT_LL "d] Caught read watch point", bx_pc_system.time_ticks()));
-      BX_CPU_THIS_PTR stop_reason = STOP_READ_WATCH_POINT;
-      return(1); // on a breakpoint
-    case BREAK_POINT_WRITE:
-      BX_INFO(("[" FMT_LL "d] Caught write watch point", bx_pc_system.time_ticks()));
-      BX_CPU_THIS_PTR stop_reason = STOP_WRITE_WATCH_POINT;
-      return(1); // on a breakpoint
-    default:
-      BX_PANIC(("Weird break point condition"));
-    }
-  }
-
-  if (BX_CPU_THIS_PTR magic_break) {
-    BX_INFO(("[" FMT_LL "d] Stopped on MAGIC BREAKPOINT", bx_pc_system.time_ticks()));
-    BX_CPU_THIS_PTR stop_reason = STOP_MAGIC_BREAK_POINT;
-    return(1); // on a breakpoint
-  }
-
-  // convenient point to see if user requested debug break or typed Ctrl-C
-  if (bx_guard.interrupt_requested) {
-    return(1);
-  }
-
-  return(0); // no breakpoint
-}
+#if BX_DEBUGGER
 
 void BX_CPU_C::dbg_take_irq(void)
 {

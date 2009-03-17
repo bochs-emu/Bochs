@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.584 2009-03-13 18:48:08 sshwarts Exp $
+// $Id: cpu.h,v 1.585 2009-03-17 19:40:26 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2751,11 +2751,8 @@ public: // for now...
   BX_SMF void     dbg_get_gdtr(bx_dbg_global_sreg_t *sreg);
   BX_SMF void     dbg_get_idtr(bx_dbg_global_sreg_t *sreg);
   BX_SMF unsigned dbg_query_pending(void);
-  BX_SMF bx_bool  dbg_check_begin_instr_bpoint(void);
-  BX_SMF bx_bool  dbg_check_end_instr_bpoint(void);
 #endif
 #if BX_DEBUGGER || BX_GDBSTUB
-  BX_SMF bx_bool  dbg_instruction_prolog(void);
   BX_SMF bx_bool  dbg_instruction_epilog(void);
 #endif
 #if BX_DEBUGGER || BX_DISASM || BX_INSTRUMENTATION || BX_GDBSTUB
