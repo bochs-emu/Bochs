@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.394 2009-03-13 18:48:08 sshwarts Exp $
+// $Id: main.cc,v 1.395 2009-03-17 19:47:52 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -220,7 +220,7 @@ void print_tree(bx_param_c *node, int level)
       dbg_printf("%s = '%s' (enum)\n", node->get_name(), ((bx_param_enum_c*)node)->get_selected());
       break;
     case BXT_PARAM_STRING:
-      if (((bx_param_string_c*)node)->get_options()->get() & bx_param_string_c::RAW_BYTES) {
+      if (((bx_param_string_c*)node)->get_options() & bx_param_string_c::RAW_BYTES) {
         tmpstr[0] = 0;
         for (i = 0; i < ((bx_param_string_c*)node)->get_maxsize(); i++) {
           if (i > 0) {
