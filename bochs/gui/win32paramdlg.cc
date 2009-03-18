@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32paramdlg.cc,v 1.7 2009-03-18 07:59:04 vruppert Exp $
+// $Id: win32paramdlg.cc,v 1.8 2009-03-18 12:38:17 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Volker Ruppert
@@ -273,7 +273,6 @@ HWND CreateTabControl(HWND hDlg, UINT cid, UINT xpos, UINT ypos, SIZE size, BOOL
   RECT r;
   int code, i;
   bx_param_c *item;
-  const char *title = NULL;
 
   code = ID_PARAM + cid;
   r.left = xpos;
@@ -427,9 +426,30 @@ HWND CreateCombobox(HWND hDlg, UINT cid, UINT xpos, UINT ypos, BOOL hide, bx_par
   return Combo;
 }
 
+void EnableParam(HWND hDlg, UINT cid, bx_param_c *param, BOOL val)
+{
+  HWND Button, Updown;
+
+  if (cid == 0) {
+    cid = findDlgIDFromParam(param);
+  }
+  if (param->get_type() != BXT_LIST) {
+    EnableWindow(GetDlgItem(hDlg, ID_LABEL + cid), val);
+    EnableWindow(GetDlgItem(hDlg, ID_PARAM + cid), val);
+    Button = GetDlgItem(hDlg, ID_BROWSE + cid);
+    if (Button != NULL) {
+      EnableWindow(Button, val);
+    }
+    Updown = GetDlgItem(hDlg, ID_UPDOWN + cid);
+    if (Updown != NULL) {
+      EnableWindow(Updown, val);
+    }
+  }
+}
+
 SIZE CreateParamList(HWND hDlg, UINT lid, UINT xpos, UINT ypos, BOOL hide, bx_list_c *list)
 {
-  HWND ltext, control, browse;
+  HWND ltext, control = NULL, browse;
   SIZE size, lsize;
   bx_param_c *param;
   bx_param_string_c *sparam;
@@ -495,13 +515,11 @@ SIZE CreateParamList(HWND hDlg, UINT lid, UINT xpos, UINT ypos, BOOL hide, bx_li
             if (size.cx < 255) size.cx = 255;
           }
         }
+        if (!param->get_enabled()) {
+          EnableParam(hDlg, cid, param, FALSE);
+        }
         y += 20;
         size.cy += 20;
-      }
-      if (!param->get_enabled()) {
-        EnableWindow(ltext, FALSE);
-        EnableWindow(control, FALSE);
-        if (browse) EnableWindow(browse, FALSE);
       }
     }
     cid++;
@@ -610,26 +628,6 @@ void ShowParamList(HWND hDlg, UINT lid, BOOL show, bx_list_c *list)
   }
 }
 
-void EnableParam(HWND hDlg, bx_param_c *param, BOOL val)
-{
-  UINT cid;
-  HWND Button, Updown;
-
-  cid = findDlgIDFromParam(param);
-  if (param->get_type() != BXT_LIST) {
-    EnableWindow(GetDlgItem(hDlg, ID_LABEL + cid), val);
-    EnableWindow(GetDlgItem(hDlg, ID_PARAM + cid), val);
-    Button = GetDlgItem(hDlg, ID_BROWSE + cid);
-    if (Button != NULL) {
-      EnableWindow(Button, val);
-    }
-    Updown = GetDlgItem(hDlg, ID_UPDOWN + cid);
-    if (Updown != NULL) {
-      EnableWindow(Updown, val);
-    }
-  }
-}
-
 void ProcessDependentList(HWND hDlg, bx_param_num_c *nparam, BOOL enabled)
 {
   UINT cid;
@@ -659,7 +657,7 @@ void ProcessDependentList(HWND hDlg, bx_param_num_c *nparam, BOOL enabled)
             ProcessDependentList(hDlg, (bx_param_num_c*)dparam, en);
           }
         }
-        EnableParam(hDlg, dparam, en);
+        EnableParam(hDlg, 0, dparam, en);
       }
       mask <<= 1;
     }
@@ -680,7 +678,7 @@ void ProcessDependentList(HWND hDlg, bx_param_num_c *nparam, BOOL enabled)
             ProcessDependentList(hDlg, (bx_param_num_c*)dparam, en);
           }
         }
-        EnableParam(hDlg, dparam, en);
+        EnableParam(hDlg, 0, dparam, en);
       }
     }
   }
