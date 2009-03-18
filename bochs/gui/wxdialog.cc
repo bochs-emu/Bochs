@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxdialog.cc,v 1.108 2009-03-18 06:07:53 vruppert Exp $
+// $Id: wxdialog.cc,v 1.109 2009-03-18 18:57:37 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
@@ -1134,17 +1134,17 @@ bool ParamDialog::CopyGuiToParam()
     switch (type) {
       case BXT_PARAM_BOOL: {
         bx_param_bool_c *boolp = (bx_param_bool_c*) pstr->param;
-	bool val = pstr->u.checkbox->GetValue ();
-	if (val != boolp->get ()) boolp->set (val);
-	break;
+        bool val = pstr->u.checkbox->GetValue();
+        if (val != boolp->get()) boolp->set(val);
+        break;
         }
       case BXT_PARAM_NUM: {
         bx_param_num_c *nump = (bx_param_num_c*) pstr->param;
-	bool valid;
+        bool valid;
         int n;
-	wxString complaint(wxT("Invalid integer for '"));
-	complaint += wxString(pstr->param->get_name(), wxConvUTF8);
-	complaint += wxT("'.");
+        wxString complaint(wxT("Invalid integer for '"));
+        complaint += wxString(pstr->param->get_name(), wxConvUTF8);
+        complaint += wxT("'.");
         if (nump->get_options() & nump->USE_SPIN_CONTROL) {
           n = pstr->u.spin->GetValue();
         } else {
@@ -1154,19 +1154,19 @@ bool ParamDialog::CopyGuiToParam()
           wxMessageBox(wxT("Numerical parameter out of range"), wxT("Error"), wxOK | wxICON_ERROR, this);
           return false;
         }
-	if (n != nump->get()) nump->set(n);
-	break;
+        if (n != nump->get()) nump->set(n);
+        break;
       }
       case BXT_PARAM_ENUM: {
         bx_param_enum_c *enump = (bx_param_enum_c*) pstr->param;
-	int value = pstr->u.choice->GetSelection () + enump->get_min();
-	if (value != enump->get ()) enump->set (value);
-	break;
+        int value = pstr->u.choice->GetSelection() + enump->get_min();
+        if (value != enump->get()) enump->set(value);
+        break;
       }
       case BXT_PARAM_STRING: {
         bx_param_string_c *stringp = (bx_param_string_c*) pstr->param;
-	char buf[1024];
-	wxString tmp(pstr->u.text->GetValue ());
+        char buf[1024];
+        wxString tmp(pstr->u.text->GetValue());
         if (stringp->get_options() & stringp->RAW_BYTES) {
           char src[1024];
           int i, p = 0;
@@ -1174,8 +1174,8 @@ bool ParamDialog::CopyGuiToParam()
           strcpy(src, tmp.mb_str(wxConvUTF8));
           for (i=0; i<stringp->get_maxsize(); i++)
             buf[i] = 0;
-          for (i=0; i<stringp->get_maxsize (); i++) {
-            while (src[p] == stringp->get_separator ())
+          for (i=0; i<stringp->get_maxsize(); i++) {
+            while (src[p] == stringp->get_separator())
               p++;
             if (src[p] == 0) break;
             // try to read a byte of hex
@@ -1191,7 +1191,7 @@ bool ParamDialog::CopyGuiToParam()
           strncpy(buf, tmp.mb_str(wxConvUTF8), sizeof(buf));
         }
         buf[sizeof(buf)-1] = 0;
-        if (!stringp->equals (buf)) stringp->set (buf);
+        if (!stringp->equals(buf)) stringp->set(buf);
         break;
       }
       case BXT_LIST:
@@ -1276,22 +1276,13 @@ void ParamDialog::EnableChangedRecursive(
                 bool valid;
                 dep_en &= (GetTextCtrlInt(pstr->u.text, &valid, true, wxT("")) > 0);
               }
-            } else {
-              continue;
             }
             EnableChangedRecursive(deps, dep_en, pstr);
+          } else if (pstr->param->get_type() == BXT_PARAM_ENUM) {
+            EnumChanged(pstr);
           }
         }
       }
-    }
-  }
-  // if any enums changed, give them a chance to update
-  for (i=0; i<list->get_size (); i++) {
-    bx_param_c *param = list->get(i);
-    ParamStruct *pstr = (ParamStruct*) paramHash->Get(param->get_id());
-    if (pstr) {
-      if (pstr->param->get_type () == BXT_PARAM_ENUM)
-        EnumChanged (pstr);
     }
   }
 }
@@ -1325,111 +1316,38 @@ void ParamDialog::EnableParam(const char *pname, bx_list_c *base, bool enabled)
   if (pstr->u.window) pstr->u.window->Enable(enabled);
 }
 
-void ParamDialog::EnumChanged(ParamStruct *pstr)
+void ParamDialog::EnumChanged(ParamStruct *pstrEnum)
 {
-  wxLogDebug(wxT("EnumChanged"));
-  char pname[512];
-  Bit8u channel, device;
-
-  bx_list_c *base = (bx_list_c*) pstr->param->get_parent();
-  if (base != NULL) {
-    base->get_param_path(pname, 512);
-  } else {
-    pname[0] = 0;
-  }
-  if (!strncmp(pname, "ata.", 4)) {
-    channel = pname[4] - '0';
-    if (!strcmp(base->get_name(), "master")) {
-      device = 0;
-    } else {
-      device = 1;
-    }
-    if (!strcmp(pstr->param->get_name(), "type")) {
-      // find out if "present" checkbox is checked
-      int present_id = SIM->get_param_bool("present", base)->get_id();
-      ParamStruct *present = (ParamStruct*) paramHash->Get(present_id);
-      wxASSERT(present && present->param->get_type() == BXT_PARAM_BOOL);
-      if (!present->u.checkbox->GetValue())
-        return;  // device not enabled, leave it alone
-      if (!present->u.checkbox->IsEnabled())
-        return;  // enable button for the device is not enabled
-      wxASSERT(pstr->param->get_type() == BXT_PARAM_ENUM);
-      int type = pstr->u.choice->GetSelection();
-      if (type == BX_ATA_DEVICE_DISK) {
-        // enable cylinders, heads, spt
-        wxLogDebug(wxT("enabling disk parameters"));
-        EnableParam("mode", base, 1);
-        EnableParam("cylinders", base, 1);
-        EnableParam("heads", base, 1);
-        EnableParam("spt", base, 1);
-        EnableParam("status", base, 0);
-        EnableParam("translation", base, 1);
-
-        int mode_id = SIM->get_param_enum("mode", base)->get_id();
-        ParamStruct *mode_param = (ParamStruct*) paramHash->Get(mode_id);
-        int mode = BX_ATA_MODE_FLAT;
-        if(mode_param) mode=mode_param->u.choice->GetSelection();
-        switch(mode) {
-          case BX_ATA_MODE_UNDOABLE:
-          case BX_ATA_MODE_VOLATILE:
-            EnableParam("journal", base, 1);
-            break;
-          default:
-            EnableParam("journal", base, 0);
-            break;
+  bx_list_c *list = pstrEnum->param->get_dependent_list();
+  if (list) {
+    bool dep_en = pstrEnum->u.window->IsEnabled();
+    bx_param_enum_c *enump = (bx_param_enum_c*)pstrEnum->param;
+    int value = pstrEnum->u.choice->GetSelection() + enump->get_min();
+    Bit64u enable_bitmap = enump->get_dependent_bitmap(value);
+    Bit64u mask = 0x1;
+    int i;
+    for (i=0; i<list->get_size(); i++) {
+      bx_param_c *param = list->get(i);
+      if (param != enump) {
+        bool en = dep_en && (enable_bitmap & mask);
+        ParamStruct *pstr = (ParamStruct*) paramHash->Get(param->get_id());
+        if (en != pstr->u.window->IsEnabled()) {
+          EnableParam(pstr->param->get_id(), en);
+          if ((pstr->param->get_type() == BXT_PARAM_BOOL) ||
+              (pstr->param->get_type() == BXT_PARAM_NUM)) {
+            EnableChangedRecursive(pstr->param->get_dependent_list(), en, pstr);
+          } else if (pstr->param->get_type() == BXT_PARAM_ENUM) {
+            EnumChanged(pstr);
+          }
         }
-
-      } else {
-        // enable inserted
-        wxLogDebug(wxT("enabling cdrom parameters"));
-        EnableParam("mode", base, 0);
-        EnableParam("cylinders", base, 0);
-        EnableParam("heads", base, 0);
-        EnableParam("spt", base, 0);
-        EnableParam("status", base, 1);
-        EnableParam("translation", base, 0);
-        EnableParam("journal", base, 0);
       }
-    } else if (!strcmp(pstr->param->get_name(), "mode")) {
-      // find out if "present" checkbox is checked
-      int present_id = SIM->get_param_bool("present", base)->get_id();
-      ParamStruct *present = (ParamStruct*) paramHash->Get(present_id);
-      wxASSERT (present && present->param->get_type() == BXT_PARAM_BOOL);
-      if (!present->u.checkbox->GetValue ())
-        return;  // device not enabled, leave it alone
-      if (!present->u.checkbox->IsEnabled ())
-        return;  // enable button for the device is not enabled
-      wxASSERT(pstr->param->get_type() == BXT_PARAM_ENUM);
-      int mode = pstr->u.choice->GetSelection();
-      switch(mode) {
-        case BX_ATA_MODE_UNDOABLE:
-        case BX_ATA_MODE_VOLATILE:
-          EnableParam("journal", base, 1);
-          break;
-        default:
-          EnableParam("journal", base, 0);
-          break;
-      }
-    }
-  } else {
-    pstr->param->get_param_path(pname, 512);
-    if (!strcmp(pname, BXPN_LOAD32BITOS_WHICH)) {
-      int os = pstr->u.choice->GetSelection();
-      if (os != Load32bitOSNone) {
-        EnableParam(BXPN_LOAD32BITOS_PATH, 1);
-        EnableParam(BXPN_LOAD32BITOS_IOLOG, 1);
-        EnableParam(BXPN_LOAD32BITOS_INITRD, 1);
-      } else {
-        EnableParam(BXPN_LOAD32BITOS_PATH, 0);
-        EnableParam(BXPN_LOAD32BITOS_IOLOG, 0);
-        EnableParam(BXPN_LOAD32BITOS_INITRD, 0);
-      }
+      mask <<= 1;
     }
   }
 }
 
 // if any parameters changed, update the associated control
-void ParamDialog::CopyParamToGui ()
+void ParamDialog::CopyParamToGui()
 {
   // loop through all the parameters
   idHash->BeginFind ();
@@ -1441,26 +1359,26 @@ void ParamDialog::CopyParamToGui ()
     switch (type) {
       case BXT_PARAM_BOOL: {
         bx_param_bool_c *boolp = (bx_param_bool_c*) pstr->param;
-	pstr->u.checkbox->SetValue (boolp->get ());
-	break;
+        pstr->u.checkbox->SetValue(boolp->get());
+        break;
         }
       case BXT_PARAM_NUM: {
         bx_param_num_c *nump = (bx_param_num_c*) pstr->param;
-	const char *format = nump->get_format ();
-	if (!format)
-	  format = strdup(nump->get_base () == 16 ? "0x%X" : "%d");
-	SetTextCtrl (pstr->u.text, format, nump->get ());
-	break;
+        const char *format = nump->get_format();
+        if (!format)
+          format = strdup(nump->get_base() == 16 ? "0x%X" : "%d");
+        SetTextCtrl(pstr->u.text, format, nump->get());
+        break;
         }
       case BXT_PARAM_ENUM: {
         bx_param_enum_c *enump = (bx_param_enum_c*) pstr->param;
-	pstr->u.choice->SetSelection (enump->get () - enump->get_min ());
-	break;
+        pstr->u.choice->SetSelection(enump->get() - enump->get_min());
+        break;
         }
       case BXT_PARAM_STRING: {
         bx_param_string_c *stringp = (bx_param_string_c*) pstr->param;
-	pstr->u.text->SetValue (wxString(stringp->getptr (), wxConvUTF8));
-	break;
+        pstr->u.text->SetValue(wxString(stringp->getptr(), wxConvUTF8));
+        break;
         }
       case BXT_LIST:
         break;
