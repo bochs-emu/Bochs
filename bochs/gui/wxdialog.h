@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////
-// $Id: wxdialog.h,v 1.71 2008-12-18 09:55:09 vruppert Exp $
+// $Id: wxdialog.h,v 1.72 2009-03-18 06:07:53 vruppert Exp $
 ////////////////////////////////////////////////////////////////////
 //
 // wxWidgets dialogs for Bochs
@@ -404,7 +404,7 @@ protected:
   void EnableParam(const char *pname, bool enabled);
   void EnableParam(const char *pname, bx_list_c *base, bool enabled);
   void EnumChanged(ParamStruct *pstr);
-  void EnableChangedRecursive(bx_list_c *list, bool en, ParamStruct *pstrOfCheckbox);
+  void EnableChangedRecursive(bx_list_c *list, bool en, ParamStruct *pstr);
   void EnableChanged(ParamStruct *pstr);
   bool CopyGuiToParam();
 public:
