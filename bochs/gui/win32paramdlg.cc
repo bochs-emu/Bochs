@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32paramdlg.cc,v 1.6 2009-03-17 19:37:20 vruppert Exp $
+// $Id: win32paramdlg.cc,v 1.7 2009-03-18 07:59:04 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Volker Ruppert
@@ -530,46 +530,48 @@ void SetParamList(HWND hDlg, bx_list_c *list)
   for (i = 0; i < items; i++) {
     cid = lid + i;
     param = list->get(i);
-    if (param->get_type() == BXT_LIST) {
-      SetParamList(hDlg, (bx_list_c*)param);
-    } else if (param->get_type() == BXT_PARAM_BOOL) {
-      val = SendMessage(GetDlgItem(hDlg, ID_PARAM + cid), BM_GETCHECK, 0, 0);
-      ((bx_param_bool_c*)param)->set(val == BST_CHECKED);
-    } else if (param->get_type() == BXT_PARAM_ENUM) {
-      val = SendMessage(GetDlgItem(hDlg, ID_PARAM + cid), CB_GETCURSEL, 0, 0);
-      eparam = (bx_param_enum_c*)param;
-      eparam->set(val + eparam->get_min());
-    } else {
-      if (SendMessage(GetDlgItem(hDlg, ID_PARAM + cid), EM_GETMODIFY, 0, 0)) {
-        if (param->get_type() == BXT_PARAM_NUM) {
-          nparam = (bx_param_num_c*)param;
-          if (nparam->get_base() == BASE_HEX) {
-            GetWindowText(GetDlgItem(hDlg, ID_PARAM + cid), buffer, 511);
-            sscanf(buffer, "%x", &val);
-          } else {
-            val = GetDlgItemInt(hDlg, ID_PARAM + cid, NULL, FALSE);
-          }
-          nparam->set(val);
-        } else if (param->get_type() == BXT_PARAM_STRING) {
-          GetWindowText(GetDlgItem(hDlg, ID_PARAM + cid), buffer, 511);
-          sparam = (bx_param_string_c*)param;
-          if (sparam->get_options() & sparam->RAW_BYTES) {
-            src = &buffer[0];
-            memset(rawbuf, 0, sparam->get_maxsize());
-            for (j = 0; j < sparam->get_maxsize(); j++) {
-              while (*src == sparam->get_separator())
-                src++;
-              if (*src == 0) break;
-              if (sscanf(src, "%02x", &val)) {
-                rawbuf[j] = val;
-                src += 2;
-              } else {
-                break;
-              }
+    if (param->get_enabled()) {
+      if (param->get_type() == BXT_LIST) {
+        SetParamList(hDlg, (bx_list_c*)param);
+      } else if (param->get_type() == BXT_PARAM_BOOL) {
+        val = SendMessage(GetDlgItem(hDlg, ID_PARAM + cid), BM_GETCHECK, 0, 0);
+        ((bx_param_bool_c*)param)->set(val == BST_CHECKED);
+      } else if (param->get_type() == BXT_PARAM_ENUM) {
+        val = SendMessage(GetDlgItem(hDlg, ID_PARAM + cid), CB_GETCURSEL, 0, 0);
+        eparam = (bx_param_enum_c*)param;
+        eparam->set(val + eparam->get_min());
+      } else {
+        if (SendMessage(GetDlgItem(hDlg, ID_PARAM + cid), EM_GETMODIFY, 0, 0)) {
+          if (param->get_type() == BXT_PARAM_NUM) {
+            nparam = (bx_param_num_c*)param;
+            if (nparam->get_base() == BASE_HEX) {
+              GetWindowText(GetDlgItem(hDlg, ID_PARAM + cid), buffer, 511);
+              sscanf(buffer, "%x", &val);
+            } else {
+              val = GetDlgItemInt(hDlg, ID_PARAM + cid, NULL, FALSE);
             }
-            sparam->set(rawbuf);
-          } else {
-            sparam->set(buffer);
+            nparam->set(val);
+          } else if (param->get_type() == BXT_PARAM_STRING) {
+            GetWindowText(GetDlgItem(hDlg, ID_PARAM + cid), buffer, 511);
+            sparam = (bx_param_string_c*)param;
+            if (sparam->get_options() & sparam->RAW_BYTES) {
+              src = &buffer[0];
+              memset(rawbuf, 0, sparam->get_maxsize());
+              for (j = 0; j < sparam->get_maxsize(); j++) {
+                while (*src == sparam->get_separator())
+                  src++;
+                if (*src == 0) break;
+                if (sscanf(src, "%02x", &val)) {
+                  rawbuf[j] = val;
+                  src += 2;
+                } else {
+                  break;
+                }
+              }
+              sparam->set(rawbuf);
+            } else {
+              sparam->set(buffer);
+            }
           }
         }
       }
@@ -611,17 +613,10 @@ void ShowParamList(HWND hDlg, UINT lid, BOOL show, bx_list_c *list)
 void EnableParam(HWND hDlg, bx_param_c *param, BOOL val)
 {
   UINT cid;
-  int i;
-  bx_list_c *clist;
   HWND Button, Updown;
 
   cid = findDlgIDFromParam(param);
-  if (param->get_type() == BXT_LIST) {
-    clist = (bx_list_c*)param;
-    for (i = 0; i < clist->get_size(); i++) {
-      EnableParam(hDlg, clist->get(i), val);
-    }
-  } else {
+  if (param->get_type() != BXT_LIST) {
     EnableWindow(GetDlgItem(hDlg, ID_LABEL + cid), val);
     EnableWindow(GetDlgItem(hDlg, ID_PARAM + cid), val);
     Button = GetDlgItem(hDlg, ID_BROWSE + cid);
