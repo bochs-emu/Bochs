@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32paramdlg.cc,v 1.8 2009-03-18 12:38:17 vruppert Exp $
+// $Id: win32paramdlg.cc,v 1.9 2009-03-19 18:23:54 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Volker Ruppert
@@ -37,7 +37,8 @@ typedef struct _dlg_list_t {
   struct _dlg_list_t *next;
 } dlg_list_t;
 
-HFONT     DlgFont;
+HFONT DlgFont;
+WNDPROC DefEditWndProc;
 UINT  nextDlgID;
 dlg_list_t *dlg_lists = NULL;
 
@@ -220,9 +221,28 @@ void InitDlgFont(void)
   LFont.lfOutPrecision   = OUT_DEFAULT_PRECIS;  // output precision
   LFont.lfClipPrecision  = CLIP_DEFAULT_PRECIS; // clipping precision
   LFont.lfQuality        = DEFAULT_QUALITY;     // output quality
-  LFont.lfPitchAndFamily = DEFAULT_PITCH;    // pitch and family
+  LFont.lfPitchAndFamily = DEFAULT_PITCH;     // pitch and family
   lstrcpy(LFont.lfFaceName, "Helv");          // pointer to typeface name string
   DlgFont  = CreateFontIndirect(&LFont);
+}
+
+LRESULT CALLBACK EditHexWndProc(HWND Window, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+  if (msg == WM_CHAR) {
+    switch (wParam) {
+      case 0x08:
+        break;
+      case 'x':
+        break;
+      default:
+        if ((wParam < '0') || ((wParam > '9') && (wParam < 'A')) ||
+            ((wParam > 'F') && (wParam < 'a')) || (wParam > 'f')) {
+          MessageBeep(MB_OK);
+          return 0;
+        }
+    }
+  }
+  return CallWindowProc(DefEditWndProc, Window, msg, wParam, lParam);
 }
 
 HWND CreateLabel(HWND hDlg, UINT cid, UINT xpos, UINT ypos, BOOL hide, const char *text)
@@ -348,7 +368,7 @@ HWND CreateInput(HWND hDlg, UINT cid, UINT xpos, UINT ypos, BOOL hide, bx_param_
   char eachbyte[16];
   char sep_string[2];
   char *val;
-  BOOL spinctrl = FALSE;
+  BOOL spinctrl = FALSE, hexedit = FALSE;
 
   code = ID_PARAM + cid;
   style = WS_CHILD | WS_TABSTOP;
@@ -371,6 +391,7 @@ HWND CreateInput(HWND hDlg, UINT cid, UINT xpos, UINT ypos, BOOL hide, bx_param_
     nparam = (bx_param_num_c*)param;
     if (nparam->get_base() == BASE_HEX) {
       wsprintf(buffer, "0x%x", nparam->get());
+      hexedit = TRUE;
     } else {
       wsprintf(buffer, "%d", nparam->get());
       style |= ES_NUMBER;
@@ -387,6 +408,9 @@ HWND CreateInput(HWND hDlg, UINT cid, UINT xpos, UINT ypos, BOOL hide, bx_param_
   Input = CreateWindowEx(WS_EX_CLIENTEDGE | WS_EX_NOPARENTNOTIFY, "EDIT", buffer,
                          style, r.left, r.top, r.right-r.left+1,
                          r.bottom-r.top+1, hDlg, (HMENU)code, NULL, NULL);
+  if (hexedit) {
+    DefEditWndProc = (WNDPROC)SetWindowLong(Input, GWL_WNDPROC, (long)EditHexWndProc);
+  }
   if (spinctrl) {
     style = WS_CHILD | WS_BORDER | WS_VISIBLE | UDS_NOTHOUSANDS | UDS_ARROWKEYS |
             UDS_ALIGNRIGHT | UDS_SETBUDDYINT;
@@ -628,7 +652,7 @@ void ShowParamList(HWND hDlg, UINT lid, BOOL show, bx_list_c *list)
   }
 }
 
-void ProcessDependentList(HWND hDlg, bx_param_num_c *nparam, BOOL enabled)
+void ProcessDependentList(HWND hDlg, bx_param_c *param, BOOL enabled)
 {
   UINT cid;
   bx_list_c *deplist;
@@ -639,46 +663,43 @@ void ProcessDependentList(HWND hDlg, bx_param_num_c *nparam, BOOL enabled)
   int i;
   BOOL en;
 
-  cid = findDlgIDFromParam(nparam);
-  deplist = nparam->get_dependent_list();
-  if (nparam->get_type() == BXT_PARAM_ENUM) {
-    eparam = (bx_param_enum_c*)nparam;
-    value = SendMessage(GetDlgItem(hDlg, ID_PARAM + cid), CB_GETCURSEL, 0, 0);
-    enable_bitmap = eparam->get_dependent_bitmap(value + eparam->get_min());
-    mask = 0x1;
-    for (i = 0; i < deplist->get_size(); i++) {
-      dparam = deplist->get(i);
-      if (dparam != nparam) {
-        en = (enable_bitmap & mask) && enabled;
-        if ((dparam->get_type() == BXT_PARAM_BOOL) ||
-            (dparam->get_type() == BXT_PARAM_NUM) ||
-            (dparam->get_type() == BXT_PARAM_ENUM)) {
-          if (((bx_param_num_c*)dparam)->get_dependent_list() != NULL) {
-            ProcessDependentList(hDlg, (bx_param_num_c*)dparam, en);
+  deplist = param->get_dependent_list();
+  if (deplist != NULL) {
+    cid = findDlgIDFromParam(param);
+    if (param->get_type() == BXT_PARAM_ENUM) {
+      eparam = (bx_param_enum_c*)param;
+      value = SendMessage(GetDlgItem(hDlg, ID_PARAM + cid), CB_GETCURSEL, 0, 0);
+      enable_bitmap = eparam->get_dependent_bitmap(value + eparam->get_min());
+      mask = 0x1;
+      for (i = 0; i < deplist->get_size(); i++) {
+        dparam = deplist->get(i);
+        if (dparam != param) {
+          en = (enable_bitmap & mask) && enabled;
+          cid = findDlgIDFromParam(dparam);
+          if (en != IsWindowEnabled(GetDlgItem(hDlg, ID_PARAM + cid))) {
+            ProcessDependentList(hDlg, dparam, en);
+            EnableParam(hDlg, 0, dparam, en);
           }
         }
-        EnableParam(hDlg, 0, dparam, en);
+        mask <<= 1;
       }
-      mask <<= 1;
-    }
-  } else {
-    if (nparam->get_type() == BXT_PARAM_BOOL) {
-      value = SendMessage(GetDlgItem(hDlg, ID_PARAM + cid), BM_GETCHECK, 0, 0);
-    } else if (nparam->get_type() == BXT_PARAM_NUM) {
-      value = GetDlgItemInt(hDlg, ID_PARAM + cid, NULL, FALSE);
-    }
-    for (i = 0; i < deplist->get_size(); i++) {
-      dparam = deplist->get(i);
-      if (dparam != nparam) {
-        en = (value && enabled);
-        if ((dparam->get_type() == BXT_PARAM_BOOL) ||
-            (dparam->get_type() == BXT_PARAM_NUM) ||
-            (dparam->get_type() == BXT_PARAM_ENUM)) {
-          if (((bx_param_num_c*)dparam)->get_dependent_list() != NULL) {
-            ProcessDependentList(hDlg, (bx_param_num_c*)dparam, en);
+    } else if ((param->get_type() == BXT_PARAM_BOOL) ||
+               (param->get_type() == BXT_PARAM_NUM)) {
+      if (param->get_type() == BXT_PARAM_BOOL) {
+        value = SendMessage(GetDlgItem(hDlg, ID_PARAM + cid), BM_GETCHECK, 0, 0);
+      } else {
+        value = GetDlgItemInt(hDlg, ID_PARAM + cid, NULL, FALSE);
+      }
+      for (i = 0; i < deplist->get_size(); i++) {
+        dparam = deplist->get(i);
+        if (dparam != param) {
+          en = (value && enabled);
+          cid = findDlgIDFromParam(dparam);
+          if (en != IsWindowEnabled(GetDlgItem(hDlg, ID_PARAM + cid))) {
+            ProcessDependentList(hDlg, dparam, en);
+            EnableParam(hDlg, 0, dparam, en);
           }
         }
-        EnableParam(hDlg, 0, dparam, en);
       }
     }
   }
@@ -753,13 +774,7 @@ static BOOL CALLBACK ParamDlgProc(HWND Window, UINT AMessage, WPARAM wParam, LPA
             i = code - ID_PARAM;
             param = findParamFromDlgID(i);
             if (param != NULL) {
-              if ((param->get_type() == BXT_PARAM_BOOL) ||
-                  (param->get_type() == BXT_PARAM_NUM) ||
-                  (param->get_type() == BXT_PARAM_ENUM)) {
-                if (((bx_param_num_c*)param)->get_dependent_list() != NULL) {
-                  ProcessDependentList(Window, (bx_param_num_c*)param, TRUE);
-                }
-              }
+              ProcessDependentList(Window, param, TRUE);
             }
           }
       }
