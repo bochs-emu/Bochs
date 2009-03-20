@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////
-// $Id: wxdialog.h,v 1.72 2009-03-18 06:07:53 vruppert Exp $
+// $Id: wxdialog.h,v 1.73 2009-03-20 16:23:46 vruppert Exp $
 ////////////////////////////////////////////////////////////////////
 //
 // wxWidgets dialogs for Bochs
@@ -400,12 +400,9 @@ protected:
   // map parameter ID onto ParamStruct.
   wxHashTable *paramHash;
   virtual void EnableChanged();
-  void EnableParam(int param_id, bool enabled);
-  void EnableParam(const char *pname, bool enabled);
-  void EnableParam(const char *pname, bx_list_c *base, bool enabled);
-  void EnumChanged(ParamStruct *pstr);
-  void EnableChangedRecursive(bx_list_c *list, bool en, ParamStruct *pstr);
   void EnableChanged(ParamStruct *pstr);
+  void EnableParam(int param_id, bool enabled);
+  void ProcessDependentList(ParamStruct *pstrChanged, bool enabled);
   bool CopyGuiToParam();
 public:
   ParamDialog(wxWindow* parent, wxWindowID id);

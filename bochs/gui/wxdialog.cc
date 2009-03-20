@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxdialog.cc,v 1.109 2009-03-18 18:57:37 vruppert Exp $
+// $Id: wxdialog.cc,v 1.110 2009-03-20 16:23:46 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
@@ -1209,11 +1209,6 @@ void ParamDialog::EnableChanged()
   wxNode *node;
   while ((node = (wxNode*)idHash->Next ()) != NULL) {
     ParamStruct *pstr = (ParamStruct*) node->GetData();
-    if ((pstr->param->get_type() == BXT_PARAM_BOOL) ||
-        (pstr->param->get_type() == BXT_PARAM_NUM))
-      EnableChanged(pstr);
-    if (pstr->param->get_type() == BXT_PARAM_ENUM)
-      EnumChanged(pstr);
     if (runtime) {
       if ((pstr->param->get_type() != BXT_LIST) && !pstr->param->get_runtime_param())
         EnableParam(pstr->param->get_id(),  false);
@@ -1224,67 +1219,8 @@ void ParamDialog::EnableChanged()
 
 void ParamDialog::EnableChanged(ParamStruct *pstr)
 {
-  bool en;
-  wxLogDebug(wxT("EnableChanged on widgt %s"), pstr->param->get_name());
-  bx_param_num_c *enableParam = (bx_param_num_c*) pstr->param;
-  if (enableParam->get_type() == BXT_PARAM_BOOL) {
-    en = pstr->u.checkbox->GetValue();
-  } else if (enableParam->get_type() == BXT_PARAM_NUM) {
-    bool valid;
-    if (enableParam->get_options() & enableParam->USE_SPIN_CONTROL) {
-      en = (pstr->u.spin->GetValue() > 0);
-    } else {
-      en = (GetTextCtrlInt(pstr->u.text, &valid, true, wxT("")) > 0);
-    }
-  } else {
-    return;
-  }
-  EnableChangedRecursive(enableParam->get_dependent_list(), en, pstr);
-}
-
-void ParamDialog::EnableChangedRecursive(
-    bx_list_c *list,
-    bool en,
-    ParamStruct *pstrOfCheckbox)
-{
-  if (list==NULL) return;
-  int i;
-  for (i=0; i<list->get_size(); i++) {
-    bx_param_c *param = list->get(i);
-    ParamStruct *pstr = (ParamStruct*) paramHash->Get(param->get_id());
-    if (pstr) {
-      if (param == pstrOfCheckbox->param) {
-        wxLogDebug(wxT("not setting enable on checkbox '%s' that triggered the enable change"), pstrOfCheckbox->param->get_name());
-        continue;
-      }
-      wxLogDebug(wxT("setting enable for param '%s' to %d"), pstr->param->get_name(), en?1:0);
-      if (en != pstr->u.window->IsEnabled()) {
-        EnableParam(pstr->param->get_id(), en);
-        bx_list_c *deps = pstr->param->get_dependent_list();
-        if (deps) {
-          wxLogDebug(wxT("recursing on dependent list of %s"), list->get_name());
-          if ((pstr->param->get_type() == BXT_PARAM_BOOL) ||
-              (pstr->param->get_type() == BXT_PARAM_NUM)) {
-            bool dep_en = pstr->u.window->IsEnabled();
-            bx_param_num_c *nump = (bx_param_num_c*)pstr->param;
-            if (nump->get_type() == BXT_PARAM_BOOL) {
-              dep_en &= pstr->u.checkbox->GetValue();
-            } else if (nump->get_type() == BXT_PARAM_NUM) {
-              if (nump->get_options() & nump->USE_SPIN_CONTROL) {
-                dep_en &= (pstr->u.spin->GetValue() > 0);
-              } else {
-                bool valid;
-                dep_en &= (GetTextCtrlInt(pstr->u.text, &valid, true, wxT("")) > 0);
-              }
-            }
-            EnableChangedRecursive(deps, dep_en, pstr);
-          } else if (pstr->param->get_type() == BXT_PARAM_ENUM) {
-            EnumChanged(pstr);
-          }
-        }
-      }
-    }
-  }
+  wxLogDebug(wxT("EnableChanged on param %s"), pstr->param->get_name());
+  ProcessDependentList(pstr, true);
 }
 
 void ParamDialog::EnableParam(int param_id, bool enabled)
@@ -1296,52 +1232,61 @@ void ParamDialog::EnableParam(int param_id, bool enabled)
   if (pstr->u.window) pstr->u.window->Enable(enabled);
 }
 
-void ParamDialog::EnableParam(const char *pname, bool enabled)
+void ParamDialog::ProcessDependentList(ParamStruct *pstrChanged, bool enabled)
 {
-  int param_id = SIM->get_param(pname)->get_id();
-  ParamStruct *pstr = (ParamStruct*) paramHash->Get(param_id);
-  if (!pstr) return;
-  if (pstr->label) pstr->label->Enable(enabled);
-  if (pstr->browseButton) pstr->browseButton->Enable(enabled);
-  if (pstr->u.window) pstr->u.window->Enable(enabled);
-}
+  bx_param_c *param;
+  ParamStruct *pstr;
+  Bit64s value;
+  bool en;
+  int i;
 
-void ParamDialog::EnableParam(const char *pname, bx_list_c *base, bool enabled)
-{
-  int param_id = SIM->get_param(pname, base)->get_id();
-  ParamStruct *pstr = (ParamStruct*) paramHash->Get(param_id);
-  if (!pstr) return;
-  if (pstr->label) pstr->label->Enable(enabled);
-  if (pstr->browseButton) pstr->browseButton->Enable(enabled);
-  if (pstr->u.window) pstr->u.window->Enable(enabled);
-}
-
-void ParamDialog::EnumChanged(ParamStruct *pstrEnum)
-{
-  bx_list_c *list = pstrEnum->param->get_dependent_list();
+  bx_list_c *list = pstrChanged->param->get_dependent_list();
   if (list) {
-    bool dep_en = pstrEnum->u.window->IsEnabled();
-    bx_param_enum_c *enump = (bx_param_enum_c*)pstrEnum->param;
-    int value = pstrEnum->u.choice->GetSelection() + enump->get_min();
-    Bit64u enable_bitmap = enump->get_dependent_bitmap(value);
-    Bit64u mask = 0x1;
-    int i;
-    for (i=0; i<list->get_size(); i++) {
-      bx_param_c *param = list->get(i);
-      if (param != enump) {
-        bool en = dep_en && (enable_bitmap & mask);
-        ParamStruct *pstr = (ParamStruct*) paramHash->Get(param->get_id());
-        if (en != pstr->u.window->IsEnabled()) {
-          EnableParam(pstr->param->get_id(), en);
-          if ((pstr->param->get_type() == BXT_PARAM_BOOL) ||
-              (pstr->param->get_type() == BXT_PARAM_NUM)) {
-            EnableChangedRecursive(pstr->param->get_dependent_list(), en, pstr);
-          } else if (pstr->param->get_type() == BXT_PARAM_ENUM) {
-            EnumChanged(pstr);
+    if (pstrChanged->param->get_type() == BXT_PARAM_ENUM) {
+      bx_param_enum_c *enump = (bx_param_enum_c*)pstrChanged->param;
+      value = pstrChanged->u.choice->GetSelection() + enump->get_min();
+      Bit64u enable_bitmap = enump->get_dependent_bitmap(value);
+      Bit64u mask = 0x1;
+      for (i = 0; i < list->get_size(); i++) {
+        param = list->get(i);
+        if (param != enump) {
+          en = (enable_bitmap & mask) && enabled;
+          pstr = (ParamStruct*) paramHash->Get(param->get_id());
+          if (pstr) {
+            if (en != pstr->u.window->IsEnabled()) {
+              EnableParam(param->get_id(), en);
+              ProcessDependentList(pstr, en);
+            }
+          }
+        }
+        mask <<= 1;
+      }
+    } else if ((pstrChanged->param->get_type() == BXT_PARAM_BOOL) ||
+               (pstrChanged->param->get_type() == BXT_PARAM_NUM)) {
+      bx_param_num_c *nump = (bx_param_num_c*)pstrChanged->param;
+      if (nump->get_type() == BXT_PARAM_BOOL) {
+        value = pstrChanged->u.checkbox->GetValue();
+      } else {
+        if (nump->get_options() & nump->USE_SPIN_CONTROL) {
+          value = (pstrChanged->u.spin->GetValue() > 0);
+        } else {
+          bool valid;
+          value = (GetTextCtrlInt(pstrChanged->u.text, &valid, true, wxT("")) > 0);
+        }
+      }
+      for (i = 0; i < list->get_size(); i++) {
+        param = list->get(i);
+        if (param != nump) {
+          en = (value && enabled);
+          pstr = (ParamStruct*) paramHash->Get(param->get_id());
+          if (pstr) {
+            if (en != pstr->u.window->IsEnabled()) {
+              EnableParam(param->get_id(), en);
+              ProcessDependentList(pstr, en);
+            }
           }
         }
       }
-      mask <<= 1;
     }
   }
 }
@@ -1402,10 +1347,8 @@ void ParamDialog::OnEvent(wxCommandEvent& event)
       switch (pstr->param->get_type ()) {
         case BXT_PARAM_BOOL:
         case BXT_PARAM_NUM:
-          EnableChanged(pstr);
-          break;
         case BXT_PARAM_ENUM:
-          EnumChanged (pstr);
+          EnableChanged(pstr);
           break;
       }
       return;
