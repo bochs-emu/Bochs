@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.221 2009-02-08 09:05:52 vruppert Exp $
+// $Id: harddrv.cc,v 1.222 2009-03-21 00:50:53 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -173,7 +173,7 @@ void bx_hard_drive_c::init(void)
   char  ata_name[20];
   bx_list_c *base;
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.221 2009-02-08 09:05:52 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.222 2009-03-21 00:50:53 vruppert Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     sprintf(ata_name, "ata.%d.resources", channel);
@@ -449,6 +449,8 @@ void bx_hard_drive_c::init(void)
           BX_PANIC(("ata%d-%d image doesn't support geometry detection", channel, device));
         }
       } else if (SIM->get_param_enum("type", base)->get() == BX_ATA_DEVICE_CDROM) {
+        SIM->get_param("path", base)->set_runtime_param(1);
+        SIM->get_param("status", base)->set_runtime_param(1);
         BX_DEBUG(("CDROM on target %d/%d",channel,device));
         BX_HD_THIS channels[channel].drives[device].device_type = IDE_CDROM;
         BX_HD_THIS channels[channel].drives[device].cdrom.locked = 0;
@@ -458,30 +460,30 @@ void bx_hard_drive_c::init(void)
         sprintf(sbtext, "CD:%d-%s", channel, device?"S":"M");
         BX_HD_THIS channels[channel].drives[device].statusbar_id =
           bx_gui->register_statusitem(sbtext);
-	BX_HD_THIS cdrom_count++;
+        BX_HD_THIS cdrom_count++;
         BX_HD_THIS channels[channel].drives[device].device_num = BX_HD_THIS cdrom_count + 48;
 
         // Check bit fields
         BX_CONTROLLER(channel,device).sector_count = 0;
         BX_CONTROLLER(channel,device).interrupt_reason.c_d = 1;
         if (BX_CONTROLLER(channel,device).sector_count != 0x01)
-              BX_PANIC(("interrupt reason bit field error"));
+          BX_PANIC(("interrupt reason bit field error"));
 
         BX_CONTROLLER(channel,device).sector_count = 0;
         BX_CONTROLLER(channel,device).interrupt_reason.i_o = 1;
         if (BX_CONTROLLER(channel,device).sector_count != 0x02)
-              BX_PANIC(("interrupt reason bit field error"));
+          BX_PANIC(("interrupt reason bit field error"));
 
-	BX_CONTROLLER(channel,device).sector_count = 0;
-	BX_CONTROLLER(channel,device).interrupt_reason.rel = 1;
-	if (BX_CONTROLLER(channel,device).sector_count != 0x04)
-	      BX_PANIC(("interrupt reason bit field error"));
+        BX_CONTROLLER(channel,device).sector_count = 0;
+        BX_CONTROLLER(channel,device).interrupt_reason.rel = 1;
+        if (BX_CONTROLLER(channel,device).sector_count != 0x04)
+          BX_PANIC(("interrupt reason bit field error"));
 
-	BX_CONTROLLER(channel,device).sector_count = 0;
-	BX_CONTROLLER(channel,device).interrupt_reason.tag = 3;
-	if (BX_CONTROLLER(channel,device).sector_count != 0x18)
-	      BX_PANIC(("interrupt reason bit field error"));
-	BX_CONTROLLER(channel,device).sector_count = 0;
+        BX_CONTROLLER(channel,device).sector_count = 0;
+        BX_CONTROLLER(channel,device).interrupt_reason.tag = 3;
+        if (BX_CONTROLLER(channel,device).sector_count != 0x18)
+          BX_PANIC(("interrupt reason bit field error"));
+        BX_CONTROLLER(channel,device).sector_count = 0;
 
 	// allocate low level driver
 #ifdef LOWLEVEL_CDROM

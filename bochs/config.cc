@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.165 2009-03-17 20:20:57 vruppert Exp $
+// $Id: config.cc,v 1.166 2009-03-21 00:50:53 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -80,16 +80,15 @@ static Bit64s bx_param_handler(bx_param_c *param, int set, Bit64s val)
         switch (val) {
           case BX_ATA_DEVICE_DISK:
             ((bx_param_filename_c*)SIM->get_param("path", base))->set_extension("img");
-            SIM->get_param("path", base)->set_runtime_param(0);
-            SIM->get_param("status", base)->set_runtime_param(0);
             break;
           case BX_ATA_DEVICE_CDROM:
             ((bx_param_filename_c*)SIM->get_param("path", base))->set_extension("iso");
-            SIM->get_param("path", base)->set_runtime_param(1);
-            SIM->get_param("status", base)->set_runtime_param(1);
             break;
         }
       }
+    } else {
+      BX_PANIC(("bx_param_handler called with unknown parameter '%s.%s'", pname, param->get_name()));
+      return -1;
     }
   } else {
     param->get_param_path(pname, BX_PATHNAME_LEN);
@@ -269,52 +268,6 @@ const char *bx_param_string_handler(bx_param_string_c *param, int set,
     } else {
       BX_PANIC(("bx_param_string_handler called with unknown parameter '%s'", pname));
     }
-  }
-  return val;
-}
-
-static int bx_param_enable_handler (bx_param_c *param, int val)
-{
-  char pname[BX_PATHNAME_LEN];
-  Bit8u channel, device;
-
-  bx_list_c *base = (bx_list_c*) param->get_parent();
-  base->get_param_path(pname, BX_PATHNAME_LEN);
-  if (!strncmp(pname, "ata.", 4)) {
-    channel = pname[4] - '0';
-    if (!strcmp(base->get_name(), "master")) {
-      device = 0;
-    } else {
-      device = 1;
-    }
-    if (!strcmp(param->get_name(), "status")) {
-      if (val != 0) {
-        switch (SIM->get_param_enum("type", base)->get()) {
-          case BX_ATA_DEVICE_CDROM:
-            return (1);
-            break;
-        }
-      }
-    } else if (!strcmp(param->get_name(), "journal")) {
-      if (val != 0) {
-        switch (SIM->get_param_enum("type", base)->get()) {
-          case BX_ATA_DEVICE_DISK:
-            switch (SIM->get_param_enum("mode", base)->get()) {
-              case BX_ATA_MODE_UNDOABLE:
-              case BX_ATA_MODE_VOLATILE:
-//            case BX_ATA_MODE_Z_UNDOABLE:
-//            case BX_ATA_MODE_Z_VOLATILE:
-                return (1);
-                break;
-            }
-        }
-      }
-      return (0);
-    } else {
-      BX_PANIC(("bx_param_enable_handler called with unknown parameter '%s'", pname));
-    }
-  } else {
-    BX_PANIC(("bx_param_enable_handler called with unknown parameter '%s'", pname));
   }
   return val;
 }
@@ -1247,13 +1200,8 @@ void bx_init_options()
       type->set_dependent_bitmap(BX_ATA_DEVICE_CDROM, 0x02);
 
       type->set_handler(bx_param_handler);
-      mode->set_handler(bx_param_handler);
       status->set_handler(bx_param_handler);
       path->set_handler(bx_param_string_handler);
-
-      // Set the enable_hanlders
-      journal->set_enable_handler(bx_param_enable_handler);
-      status->set_enable_handler(bx_param_enable_handler);
     }
 
     // Enable two ATA interfaces by default, disable the others.
