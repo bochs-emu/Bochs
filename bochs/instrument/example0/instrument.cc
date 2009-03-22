@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: instrument.cc,v 1.28 2009-02-09 10:35:55 vruppert Exp $
+// $Id: instrument.cc,v 1.29 2009-03-22 09:52:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -29,6 +29,7 @@
 
 #include "bochs.h"
 #include "cpu/cpu.h"
+#include "disasm/disasm.h"
 
 // maximum size of an instruction
 #define MAX_OPCODE_SIZE 16

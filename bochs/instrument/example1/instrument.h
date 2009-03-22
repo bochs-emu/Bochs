@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: instrument.h,v 1.32 2009-02-09 10:35:55 vruppert Exp $
+// $Id: instrument.h,v 1.33 2009-03-22 09:52:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -55,6 +55,10 @@
 #if BX_INSTRUMENTATION
 
 class bxInstruction_c;
+
+void bx_instr_init_env(void);
+void bx_instr_exit_env(void);
+void bx_instr_initialize(unsigned cpu);
 
 // maximum size of an instruction
 #define MAX_OPCODE_SIZE 16
