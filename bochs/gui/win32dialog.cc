@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32dialog.cc,v 1.78 2009-03-15 21:16:16 vruppert Exp $
+// $Id: win32dialog.cc,v 1.79 2009-03-22 09:40:18 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  The Bochs Project
@@ -382,7 +382,7 @@ static BOOL CALLBACK Cdrom1DlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lP
   return FALSE;
 }
 
-void RuntimeDlgSetStdLogOpt(HWND hDlg)
+void SetStandardLogOptions(HWND hDlg)
 {
   int level, idx;
   int defchoice[5];
@@ -421,7 +421,7 @@ void RuntimeDlgSetStdLogOpt(HWND hDlg)
   EnableWindow(GetDlgItem(hDlg, IDDEVLIST), FALSE);
 }
 
-void RuntimeDlgSetAdvLogOpt(HWND hDlg)
+void SetAdvancedLogOptions(HWND hDlg)
 {
   int idx, level, mod;
 
@@ -441,6 +441,237 @@ void RuntimeDlgSetAdvLogOpt(HWND hDlg)
       }
     }
   }
+}
+
+void InitLogOptionsDialog(HWND hDlg)
+{
+  int idx, mod;
+  char prefix[8];
+
+  idx = 0;
+  for (mod=0; mod<SIM->get_n_log_modules(); mod++) {
+    if (strcmp(SIM->get_prefix(mod), "[     ]")) {
+      lstrcpyn(prefix, SIM->get_prefix(mod), sizeof(prefix));
+      lstrcpy(prefix, prefix+1);
+      prefix[5] = 0;
+      SendMessage(GetDlgItem(hDlg, IDDEVLIST), LB_ADDSTRING, 0, (LPARAM)prefix);
+      SendMessage(GetDlgItem(hDlg, IDDEVLIST), LB_SETITEMDATA, idx, mod);
+      idx++;
+    }
+  }
+  SetStandardLogOptions(hDlg);
+}
+
+void ApplyLogOptions(HWND hDlg, BOOL advanced)
+{
+  int idx, level, mod, value;
+
+  if (advanced) {
+    idx = SendMessage(GetDlgItem(hDlg, IDDEVLIST), LB_GETCURSEL, 0, 0);
+    mod = SendMessage(GetDlgItem(hDlg, IDDEVLIST), LB_GETITEMDATA, idx, 0);
+    for (level=0; level<5; level++) {
+      idx = SendMessage(GetDlgItem(hDlg, IDLOGEVT1+level), CB_GETCURSEL, 0, 0);
+      value = SendMessage(GetDlgItem(hDlg, IDLOGEVT1+level), CB_GETITEMDATA, idx, 0);
+      SIM->set_log_action (mod, level, value);
+    }
+    EnableWindow(GetDlgItem(hDlg, IDDEVLIST), TRUE);
+  } else {
+    for (level=0; level<5; level++) {
+      idx = SendMessage(GetDlgItem(hDlg, IDLOGEVT1+level), CB_GETCURSEL, 0, 0);
+      value = SendMessage(GetDlgItem(hDlg, IDLOGEVT1+level), CB_GETITEMDATA, idx, 0);
+      if (value < 4) {
+        // set new default
+        SIM->set_default_log_action (level, value);
+        // apply that action to all modules (devices)
+        SIM->set_log_action (-1, level, value);
+      }
+    }
+  }
+  EnableWindow(GetDlgItem(hDlg, IDADVLOGOPT), TRUE);
+}
+
+static BOOL CALLBACK SMLogOptDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+  static BOOL advanced;
+  static BOOL changed;
+  long noticode;
+
+  switch (msg) {
+    case WM_INITDIALOG:
+      InitLogOptionsDialog(hDlg);
+      advanced = FALSE;
+      changed = FALSE;
+      EnableWindow(GetDlgItem(hDlg, IDAPPLY), FALSE);
+      return TRUE;
+    case WM_CLOSE:
+      EndDialog(hDlg, 0);
+      break;
+    case WM_COMMAND:
+      noticode = HIWORD(wParam);
+      switch(noticode) {
+        case CBN_SELCHANGE: /* LBN_SELCHANGE is the same value */
+          switch (LOWORD(wParam)) {
+            case IDDEVLIST:
+              SetAdvancedLogOptions(hDlg);
+              break;
+            case IDLOGEVT1:
+            case IDLOGEVT2:
+            case IDLOGEVT3:
+            case IDLOGEVT4:
+            case IDLOGEVT5:
+              if (!changed) {
+                EnableWindow(GetDlgItem(hDlg, IDADVLOGOPT), FALSE);
+                if (advanced) {
+                  EnableWindow(GetDlgItem(hDlg, IDDEVLIST), FALSE);
+                }
+                changed = TRUE;
+                EnableWindow(GetDlgItem(hDlg, IDAPPLY), TRUE);
+              }
+              break;
+          }
+          break;
+        default:
+          switch (LOWORD(wParam)) {
+            case IDADVLOGOPT:
+              if (SendMessage(GetDlgItem(hDlg, IDADVLOGOPT), BM_GETCHECK, 0, 0) == BST_CHECKED) {
+                EnableWindow(GetDlgItem(hDlg, IDDEVLIST), TRUE);
+                SendMessage(GetDlgItem(hDlg, IDDEVLIST), LB_SETCURSEL, 0, 0);
+                SetAdvancedLogOptions(hDlg);
+                advanced = TRUE;
+              } else {
+                SendMessage(GetDlgItem(hDlg, IDDEVLIST), LB_SETCURSEL, (WPARAM)-1, 0);
+                SetStandardLogOptions(hDlg);
+                advanced = FALSE;
+              }
+              break;
+            case IDAPPLY:
+              ApplyLogOptions(hDlg, advanced);
+              EnableWindow(GetDlgItem(hDlg, IDAPPLY), FALSE);
+              break;
+            case IDOK:
+              ApplyLogOptions(hDlg, advanced);
+              EndDialog(hDlg, 1);
+              break;
+            case IDCANCEL:
+              EndDialog(hDlg, 0);
+              break;
+          }
+      }
+      break;
+  }
+  return FALSE;
+}
+
+void SMLogOptionsDialog(HWND hwnd)
+{
+  DialogBox(NULL, MAKEINTRESOURCE(SM_LOGOPT_DLG), hwnd, (DLGPROC)SMLogOptDlgProc);
+}
+
+typedef struct {
+  const char *label;
+  const char *param;
+} edit_opts_t;
+
+edit_opts_t edit_options[] = {
+  {"Logfile", "log"},
+  {"Log Options", "*"},
+  {"CPU", "cpu"},
+  {"Memory", "memory"},
+  {"Clock & CMOS", "clock_cmos"},
+  {"PCI", "pci"},
+  {"Display & Interface", "display"},
+  {"Keyboard & Mouse", "keyboard_mouse"},
+  {"Disk & Boot", BXPN_MENU_DISK_WIN32},
+  {"Serial / Parallel / USB", "ports"},
+  {"Network card", "network"},
+  {"Sound Blaster 16", BXPN_SB16},
+  {"Other", "misc"},
+#if BX_PLUGINS
+  {"User-defined Options", "user"},
+#endif
+  {NULL, NULL}
+};
+
+static BOOL CALLBACK StartMenuDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+  int code, i;
+  bx_param_filename_c *rcfile;
+  char path[BX_PATHNAME_LEN];
+
+  switch (msg) {
+    case WM_INITDIALOG:
+      EnableWindow(GetDlgItem(hDlg, IDEDITCFG), FALSE);
+      i = 0;
+      while (edit_options[i].label != NULL) {
+        SendMessage(GetDlgItem(hDlg, IDEDITBOX), LB_ADDSTRING, 0, (LPARAM)edit_options[i].label);
+        i++;
+      }
+      return TRUE;
+    case WM_CLOSE:
+      EndDialog(hDlg, -1);
+      break;
+    case WM_COMMAND:
+      code = HIWORD(wParam);
+      switch (LOWORD(wParam)) {
+        case IDREADRC:
+          rcfile = new bx_param_filename_c(NULL, "rcfile", "Load Bochs Config File",
+                                           "", "bochsrc.bxrc", BX_PATHNAME_LEN);
+          rcfile->set_extension("bxrc");
+          if (AskFilename(hDlg, rcfile)) {
+            SIM->reset_all_param();
+            SIM->read_rc(rcfile->getptr());
+          }
+          delete rcfile;
+          break;
+        case IDWRITERC:
+          rcfile = new bx_param_filename_c(NULL, "rcfile", "Save Bochs Config File",
+                                           "", "bochsrc.bxrc", BX_PATHNAME_LEN);
+          rcfile->set_extension("bxrc");
+          rcfile->set_options(rcfile->SAVE_FILE_DIALOG);
+          if (AskFilename(hDlg, rcfile)) {
+            SIM->write_rc(rcfile->getptr(), 1);
+          }
+          delete rcfile;
+          break;
+        case IDEDITBOX:
+          if ((code == LBN_SELCHANGE) ||
+              (code == LBN_DBLCLK)) {
+            EnableWindow(GetDlgItem(hDlg, IDEDITCFG), TRUE);
+          }
+          if (code != LBN_DBLCLK) {
+            break;
+          }
+        case IDEDITCFG:
+          i = SendMessage(GetDlgItem(hDlg, IDEDITBOX), LB_GETCURSEL, 0, 0);
+          if (lstrcmp(edit_options[i].param, "*")) {
+            win32ParamDialog(hDlg, edit_options[i].param);
+          } else {
+            SMLogOptionsDialog(hDlg);
+          }
+          break;
+        case IDRESETCFG:
+          if (MessageBox(hDlg, "Reset all options back to their factory defaults ?",
+                         "Reset Configuration", MB_ICONEXCLAMATION | MB_YESNO) == IDYES) {
+            SIM->reset_all_param();
+          }
+          break;
+        case IDRESTORE:
+          path[0] = 0;
+          if (BrowseDir("Restore Bochs state from...", path) >= 0) {
+            SIM->get_param_bool(BXPN_RESTORE_FLAG)->set(1);
+            SIM->get_param_string(BXPN_RESTORE_PATH)->set(path);
+            EndDialog(hDlg, 1);
+          }
+          break;
+        case IDOK:
+          EndDialog(hDlg, 1);
+          break;
+        case IDCANCEL:
+          EndDialog(hDlg, -1);
+          break;
+      }
+  }
+  return FALSE;
 }
 
 static BOOL CALLBACK RTCdromDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -651,25 +882,12 @@ static BOOL CALLBACK RTLogOptDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM 
 {
   static BOOL advanced;
   static BOOL changed;
-  int idx, level, mod, value;
   long noticode;
-  char prefix[8];
   PSHNOTIFY *psn;
 
   switch (msg) {
     case WM_INITDIALOG:
-      idx = 0;
-      for (mod=0; mod<SIM->get_n_log_modules(); mod++) {
-        if (strcmp(SIM->get_prefix(mod), "[     ]")) {
-          lstrcpyn(prefix, SIM->get_prefix(mod), sizeof(prefix));
-          lstrcpy(prefix, prefix+1);
-          prefix[5] = 0;
-          SendMessage(GetDlgItem(hDlg, IDDEVLIST), LB_ADDSTRING, 0, (LPARAM)prefix);
-          SendMessage(GetDlgItem(hDlg, IDDEVLIST), LB_SETITEMDATA, idx, mod);
-          idx++;
-        }
-      }
-      RuntimeDlgSetStdLogOpt(hDlg);
+      InitLogOptionsDialog(hDlg);
       advanced = FALSE;
       changed = FALSE;
       return TRUE;
@@ -678,28 +896,7 @@ static BOOL CALLBACK RTLogOptDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM 
       switch(psn->hdr.code) {
         case PSN_APPLY:
           if ((psn->lParam == FALSE) && changed) { // Apply pressed & change in this dialog
-            if (advanced) {
-              idx = SendMessage(GetDlgItem(hDlg, IDDEVLIST), LB_GETCURSEL, 0, 0);
-              mod = SendMessage(GetDlgItem(hDlg, IDDEVLIST), LB_GETITEMDATA, idx, 0);
-              for (level=0; level<5; level++) {
-                idx = SendMessage(GetDlgItem(hDlg, IDLOGEVT1+level), CB_GETCURSEL, 0, 0);
-                value = SendMessage(GetDlgItem(hDlg, IDLOGEVT1+level), CB_GETITEMDATA, idx, 0);
-                SIM->set_log_action (mod, level, value);
-              }
-              EnableWindow(GetDlgItem(hDlg, IDDEVLIST), TRUE);
-            } else {
-              for (level=0; level<5; level++) {
-                idx = SendMessage(GetDlgItem(hDlg, IDLOGEVT1+level), CB_GETCURSEL, 0, 0);
-                value = SendMessage(GetDlgItem(hDlg, IDLOGEVT1+level), CB_GETITEMDATA, idx, 0);
-                if (value < 4) {
-                  // set new default
-                  SIM->set_default_log_action (level, value);
-                  // apply that action to all modules (devices)
-                  SIM->set_log_action (-1, level, value);
-                }
-              }
-            }
-            EnableWindow(GetDlgItem(hDlg, IDADVLOGOPT), TRUE);
+            ApplyLogOptions(hDlg, advanced);
             changed = FALSE;
           }
           return PSNRET_NOERROR;
@@ -714,7 +911,7 @@ static BOOL CALLBACK RTLogOptDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM 
         case CBN_SELCHANGE: /* LBN_SELCHANGE is the same value */
           switch (LOWORD(wParam)) {
             case IDDEVLIST:
-              RuntimeDlgSetAdvLogOpt(hDlg);
+              SetAdvancedLogOptions(hDlg);
               break;
             case IDLOGEVT1:
             case IDLOGEVT2:
@@ -738,11 +935,11 @@ static BOOL CALLBACK RTLogOptDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM 
               if (SendMessage(GetDlgItem(hDlg, IDADVLOGOPT), BM_GETCHECK, 0, 0) == BST_CHECKED) {
                 EnableWindow(GetDlgItem(hDlg, IDDEVLIST), TRUE);
                 SendMessage(GetDlgItem(hDlg, IDDEVLIST), LB_SETCURSEL, 0, 0);
-                RuntimeDlgSetAdvLogOpt(hDlg);
+                SetAdvancedLogOptions(hDlg);
                 advanced = TRUE;
               } else {
                 SendMessage(GetDlgItem(hDlg, IDDEVLIST), LB_SETCURSEL, (WPARAM)-1, 0);
-                RuntimeDlgSetStdLogOpt(hDlg);
+                SetStandardLogOptions(hDlg);
                 advanced = FALSE;
               }
               break;
@@ -858,6 +1055,19 @@ int Cdrom1Dialog()
 {
   return DialogBox(NULL, MAKEINTRESOURCE(CDROM1_DLG), GetBochsWindow(),
                    (DLGPROC)Cdrom1DlgProc);
+}
+
+void StartMenuDialog(HWND hwnd)
+{
+  int i;
+
+  i = DialogBox(NULL, MAKEINTRESOURCE(STARTMENU_DLG), hwnd,
+                (DLGPROC)StartMenuDlgProc);
+  if (i == 1) {
+    SIM->begin_simulation(bx_startup_flags.argc, bx_startup_flags.argv);
+    // we don't expect it to return, but if it does, quit
+  }
+  SIM->quit_sim(1);
 }
 
 int RuntimeOptionsDialog()

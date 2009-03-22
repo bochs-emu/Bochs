@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32paramdlg.cc,v 1.9 2009-03-19 18:23:54 vruppert Exp $
+// $Id: win32paramdlg.cc,v 1.10 2009-03-22 09:40:18 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Volker Ruppert
@@ -168,7 +168,9 @@ int AskFilename(HWND hwnd, bx_param_filename_c *param)
   ofn.lpstrTitle = title;
   ofn.Flags = OFN_EXPLORER | OFN_HIDEREADONLY;
   ofn.lpstrDefExt = ext;
-  if (!lstrcmp(ext, "img")) {
+  if (!lstrcmp(ext, "bxrc")) {
+    ofn.lpstrFilter = "Bochs config files (*.bxrc)\0*.bxrc\0All files (*.*)\0*.*\0";
+  } else if (!lstrcmp(ext, "img")) {
     ofn.lpstrFilter = "Disk image files (*.img)\0*.img\0All files (*.*)\0*.*\0";
   } else if (!lstrcmp(ext, "iso")) {
     ofn.lpstrFilter = "CD-ROM image files (*.iso)\0*.iso\0All files (*.*)\0*.*\0";

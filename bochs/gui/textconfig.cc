@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: textconfig.cc,v 1.75 2009-03-15 21:16:16 vruppert Exp $
+// $Id: textconfig.cc,v 1.76 2009-03-22 09:40:18 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  The Bochs Project
@@ -51,7 +51,6 @@ extern "C" {
 #include "extplugin.h"
 #ifdef WIN32
 #include "win32dialog.h"
-#include "win32paramdlg.h"
 #endif
 
 #define CI_PATH_LENGTH 512
@@ -277,7 +276,12 @@ static const char *startup_menu_prompt =
 "4. Save options to...\n"
 "5. Restore the Bochs state from...\n"
 "6. Begin simulation\n"
+#ifdef WIN32
+"7. Win32 start menu dialog (experimental)\n"
+"8. Quit now\n"
+#else
 "7. Quit now\n"
+#endif
 "\n"
 "Please choose one: [%d] ";
 
@@ -425,6 +429,11 @@ int bx_config_interface(int menu)
         break;
       case BX_CI_START_MENU:
         {
+#ifdef WIN32
+          Bit32u n_choices = 8;
+#else
+          Bit32u n_choices = 7;
+#endif
           Bit32u default_choice;
           switch (SIM->get_param_enum(BXPN_BOCHS_START)->get()) {
             case BX_LOAD_START:
@@ -434,7 +443,7 @@ int bx_config_interface(int menu)
             default:
               default_choice = 6; break;
           }
-          if (ask_uint(startup_menu_prompt, "", 1, 7, default_choice, &choice, 10) < 0) return -1;
+          if (ask_uint(startup_menu_prompt, "", 1, n_choices, default_choice, &choice, 10) < 0) return -1;
           switch (choice) {
             case 1:
               fprintf(stderr, "I reset all options back to their factory defaults.\n\n");
@@ -463,7 +472,12 @@ int bx_config_interface(int menu)
               }
               break;
             case 6: bx_config_interface(BX_CI_START_SIMULATION); break;
+#ifdef WIN32
+            case 7: StartMenuDialog(hwnd); break;
+            case 8: SIM->quit_sim(1); return -1;
+#else
             case 7: SIM->quit_sim(1); return -1;
+#endif
             default: BAD_OPTION(menu, choice);
           }
         }
@@ -474,20 +488,6 @@ int bx_config_interface(int menu)
           case 0: return 0;
           case 2: bx_log_options(0); break;
           case 3: bx_log_options(1); break;
-#ifdef WIN32
-          case 1: win32ParamDialog(hwnd, "log"); break;
-          case 4: win32ParamDialog(hwnd, "cpu"); break;
-          case 5: win32ParamDialog(hwnd, "memory"); break;
-          case 6: win32ParamDialog(hwnd, "clock_cmos"); break;
-          case 7: win32ParamDialog(hwnd, "pci"); break;
-          case 8: win32ParamDialog(hwnd, "display"); break;
-          case 9: win32ParamDialog(hwnd, "keyboard_mouse"); break;
-          case 10: win32ParamDialog(hwnd, BXPN_MENU_DISK_WIN32); break;
-          case 11: win32ParamDialog(hwnd, "ports"); break;
-          case 12: win32ParamDialog(hwnd, "network"); break;
-          case 13: win32ParamDialog(hwnd, BXPN_SB16); break;
-          case 14: win32ParamDialog(hwnd, "misc"); break;
-#else
           case 1: do_menu("log"); break;
           case 4: do_menu("cpu"); break;
           case 5: do_menu(BXPN_MENU_MEMORY); break;
@@ -500,7 +500,6 @@ int bx_config_interface(int menu)
           case 12: do_menu("network"); break;
           case 13: do_menu(BXPN_SB16); break;
           case 14: do_menu("misc"); break;
-#endif
 #if BX_PLUGINS
           case 15: do_menu("user"); break;
 #endif

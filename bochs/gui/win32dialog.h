@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32dialog.h,v 1.17 2009-02-08 18:52:06 sshwarts Exp $
+// $Id: win32dialog.h,v 1.18 2009-03-22 09:40:18 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  The Bochs Project
@@ -42,6 +42,7 @@ extern "C" {
 
 #if BX_USE_TEXTCONFIG && defined(WIN32)
 
+void StartMenuDialog(HWND hwnd);
 int RuntimeOptionsDialog();
 #if BX_DEBUGGER && BX_DEBUGGER_GUI
 void InitDebugDialog();

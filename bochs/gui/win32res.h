@@ -1,5 +1,17 @@
 #define ICON_BOCHS  1000
 
+#define STARTMENU_DLG 1100
+#define IDCONFIG      1110
+#define IDREADRC      1120
+#define IDWRITERC     1130
+#define IDEDITCFG     1140
+#define IDRESETCFG    1150
+#define IDEDITGRP     1160
+#define IDEDITBOX     1170
+#define IDSIMU        1180
+#define IDRESTORE     1190
+#define SM_LOGOPT_DLG 1200
+#define IDAPPLY       1210
 #define ASK_DLG     2000
 #define IDASKTX1    2010
 #define IDASKDEV    2020
