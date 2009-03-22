@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bit.cc,v 1.62 2009-03-03 16:55:20 sshwarts Exp $
+// $Id: bit.cc,v 1.63 2009-03-22 21:23:12 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -303,7 +303,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVBE_GwEw(bxInstruction_c *i)
   
   b0 = val16 & 0xff; val16 >>= 8;
   b1 = val16;
-  val16 = (b1<<8) | b0;
+  val16 = (b0<<8) | b1;
 
   BX_WRITE_16BIT_REG(i->nnn(), val16);
 #else
@@ -319,7 +319,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVBE_EwGw(bxInstruction_c *i)
 
   b0 = val16 & 0xff; val16 >>= 8;
   b1 = val16;
-  val16 = (b1<<8) | b0;
+  val16 = (b0<<8) | b1;
 
   if (i->modC0()) {
     BX_WRITE_16BIT_REG(i->rm(), val16);
