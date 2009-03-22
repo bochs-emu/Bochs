@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.166 2009-03-21 00:50:53 vruppert Exp $
+// $Id: config.cc,v 1.167 2009-03-22 20:18:16 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -72,7 +72,7 @@ static Bit64s bx_param_handler(bx_param_c *param, int set, Bit64s val)
     if (!strcmp(param->get_name(), "status")) {
       if ((set) && (SIM->get_init_done())) {
         Bit32u handle = DEV_hd_get_device_handle(channel, device);
-        DEV_hd_set_cd_media_status(handle, val == BX_INSERTED);
+        DEV_hd_set_cd_media_status(handle, val);
         bx_gui->update_drive_status_buttons();
       }
     } else if (!strcmp(param->get_name(), "type")) {
@@ -195,7 +195,7 @@ const char *bx_param_string_handler(bx_param_string_c *param, int set,
             }
           }
           if (DEV_hd_present() &&
-              (SIM->get_param_num("status", base)->get() == BX_INSERTED) &&
+              (SIM->get_param_num("status", base)->get() == 1) &&
               (SIM->get_param_num("type", base)->get() == BX_ATA_DEVICE_CDROM)) {
             // tell the device model that we removed, then inserted the cd
             DEV_hd_set_cd_media_status(handle, 0);
@@ -278,7 +278,7 @@ void bx_init_options()
   bx_list_c *menu;
   bx_list_c *deplist;
   bx_param_num_c *ioaddr, *ioaddr2, *irq;
-  bx_param_bool_c *enabled;
+  bx_param_bool_c *enabled, *inserted;
   bx_param_enum_c *mode, *status, *type, *ethmod;
   bx_param_string_c *macaddr, *ethdev;
   bx_param_filename_c *path;
@@ -1104,14 +1104,12 @@ void bx_init_options()
         BX_ATA_MODE_FLAT);
       mode->set_ask_format("Enter mode of ATA device, (flat, concat, etc.): [%s] ");
 
-      status = new bx_param_enum_c(menu,
+      inserted = new bx_param_bool_c(menu,
         "status",
         "Inserted",
         "CD-ROM media status (inserted / ejected)",
-        atadevice_status_names,
-        BX_INSERTED,
-        BX_EJECTED);
-      status->set_ask_format("Is the device inserted or ejected? [%s] ");
+        0);
+      inserted->set_ask_format("Is media inserted in drive? [%s] ");
 
       bx_param_filename_c *journal = new bx_param_filename_c(menu,
         "journal",
@@ -1187,7 +1185,7 @@ void bx_init_options()
       // some items depend on the drive type
       bx_param_c *type_deplist[] = {
         mode,
-        status,
+        inserted,
         cylinders,
         heads,
         spt,
@@ -1200,7 +1198,7 @@ void bx_init_options()
       type->set_dependent_bitmap(BX_ATA_DEVICE_CDROM, 0x02);
 
       type->set_handler(bx_param_handler);
-      status->set_handler(bx_param_handler);
+      inserted->set_handler(bx_param_handler);
       path->set_handler(bx_param_string_handler);
     }
 
@@ -2377,9 +2375,9 @@ static int parse_line_formatted(const char *context, int num_params, char *param
       } else if (!strcmp(params[i], "translation=auto")) {
         SIM->get_param_enum("translation", base)->set(BX_ATA_TRANSLATION_AUTO);
       } else if (!strcmp(params[i], "status=ejected")) {
-        SIM->get_param_enum("status", base)->set(BX_EJECTED);
+        SIM->get_param_bool("status", base)->set(0);
       } else if (!strcmp(params[i], "status=inserted")) {
-        SIM->get_param_enum("status", base)->set(BX_INSERTED);
+        SIM->get_param_bool("status", base)->set(1);
       } else if (!strncmp(params[i], "journal=", 8)) {
         SIM->get_param_string("journal", base)->set(&params[i][8]);
       } else {
@@ -3304,7 +3302,7 @@ int bx_write_atadevice_options(FILE *fp, Bit8u channel, Bit8u drive, bx_list_c *
     } else if (SIM->get_param_enum("type", base)->get() == BX_ATA_DEVICE_CDROM) {
       fprintf(fp, "type=cdrom, path=\"%s\", status=%s",
         SIM->get_param_string("path", base)->getptr(),
-        SIM->get_param_enum("status", base)->get_selected());
+        SIM->get_param_bool("status", base)->get() ? "inserted":"ejected");
     }
 
     fprintf(fp, ", biosdetect=%s", SIM->get_param_enum("biosdetect", base)->get_selected());

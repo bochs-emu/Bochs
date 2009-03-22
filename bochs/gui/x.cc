@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: x.cc,v 1.125 2009-03-15 21:16:16 vruppert Exp $
+// $Id: x.cc,v 1.126 2009-03-22 20:18:17 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -2192,7 +2192,7 @@ int x11_ask_dialog(BxEvent *event)
   return retcode;
 }
 
-int x11_string_dialog(bx_param_string_c *param, bx_param_enum_c *param2)
+int x11_string_dialog(bx_param_string_c *param, bx_param_bool_c *param2)
 {
   x11_dialog_t xdlg;
   x11_control_t xctl_edit, xbtn_ok, xbtn_cancel, xbtn_status;
@@ -2205,7 +2205,7 @@ int x11_string_dialog(bx_param_string_c *param, bx_param_enum_c *param2)
 
   if (param2 != NULL) {
     strcpy(name, "First CD-ROM image/device");
-    status = (param2->get() == BX_INSERTED);
+    status = param2->get();
     h = 110;
     ok_button = 2;
     num_ctrls = 4;
@@ -2377,23 +2377,26 @@ int x11_string_dialog(bx_param_string_c *param, bx_param_enum_c *param2)
     if (param2 != NULL) {
       if (status == 1) {
         if (len > 0) {
-          param2->set(BX_INSERTED);
           param->set(value);
+          param2->set(1);
         } else {
-          param2->set(BX_EJECTED);
+          param2->set(0);
         }
       } else {
-        param2->set(BX_EJECTED);
+        param2->set(0);
       }
     } else {
       param->set(value);
     }
   }
-  if (control == (num_ctrls - 1)) control = -1;
   XFreeGC(bx_x_display, xdlg.gc);
   XFreeGC(bx_x_display, xdlg.gc_inv);
   XDestroyWindow(bx_x_display, xdlg.dialog);
-  return control;
+  if (control == ok_button) {
+    return 1;
+  } else {
+    return -1;
+  }
 }
 
 int x11_yesno_dialog(bx_param_bool_c *param)
@@ -2525,7 +2528,7 @@ BxEvent *x11_notify_callback (void *unused, BxEvent *event)
   int opts;
   bx_param_c *param;
   bx_param_string_c *sparam;
-  bx_param_enum_c *eparam;
+  bx_param_bool_c *bparam;
   bx_list_c *list;
 
   switch (event->type)
@@ -2549,8 +2552,8 @@ BxEvent *x11_notify_callback (void *unused, BxEvent *event)
       } else if (param->get_type() == BXT_LIST) {
         list = (bx_list_c *)param;
         sparam = (bx_param_string_c *)list->get_by_name("path");
-        eparam = (bx_param_enum_c *)list->get_by_name("status");
-        event->retcode = x11_string_dialog(sparam, eparam);
+        bparam = (bx_param_bool_c *)list->get_by_name("status");
+        event->retcode = x11_string_dialog(sparam, bparam);
         return event;
       } else if (param->get_type() == BXT_PARAM_BOOL) {
         event->retcode = x11_yesno_dialog((bx_param_bool_c *)param);

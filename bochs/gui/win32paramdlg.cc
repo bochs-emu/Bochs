@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32paramdlg.cc,v 1.10 2009-03-22 09:40:18 vruppert Exp $
+// $Id: win32paramdlg.cc,v 1.11 2009-03-22 20:18:17 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Volker Ruppert
@@ -574,7 +574,7 @@ void SetParamList(HWND hDlg, bx_list_c *list)
   for (i = 0; i < items; i++) {
     cid = lid + i;
     param = list->get(i);
-    if (param->get_enabled()) {
+    if (param->get_enabled() && (!SIM->get_init_done() || (SIM->get_init_done() && param->get_runtime_param()))) {
       if (param->get_type() == BXT_LIST) {
         SetParamList(hDlg, (bx_list_c*)param);
       } else if (param->get_type() == BXT_PARAM_BOOL) {
@@ -722,7 +722,7 @@ static BOOL CALLBACK ParamDlgProc(HWND Window, UINT AMessage, WPARAM wParam, LPA
   switch (AMessage) {
     case WM_CLOSE:
       cleanupDlgLists();
-      EndDialog(Window, 0);
+      EndDialog(Window, -1);
       break;
     case WM_INITDIALOG:
       list = (bx_list_c*)SIM->get_param((const char*)lParam);
@@ -755,7 +755,7 @@ static BOOL CALLBACK ParamDlgProc(HWND Window, UINT AMessage, WPARAM wParam, LPA
       switch (code) {
         case IDCANCEL:
           cleanupDlgLists();
-          EndDialog(Window, 0);
+          EndDialog(Window, -1);
           break;
         case IDOK:
           SetParamList(Window, list);

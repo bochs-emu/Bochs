@@ -31,7 +31,6 @@
 #define IDSTATUS    2250
 #define IDCREATE    2260
 #define IDCHANGETX  2265
-#define CDROM1_DLG  2300
 #define RT_CDROM_DLG 2400
 #define IDGROUP1    2411
 #define IDGROUP2    2412

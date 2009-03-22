@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: textconfig.cc,v 1.76 2009-03-22 09:40:18 vruppert Exp $
+// $Id: textconfig.cc,v 1.77 2009-03-22 20:18:17 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  The Bochs Project
@@ -54,8 +54,6 @@ extern "C" {
 #endif
 
 #define CI_PATH_LENGTH 512
-
-#define BX_INSERTED 11
 
 /* functions for changing particular options */
 void bx_config_interface_init();
@@ -369,7 +367,7 @@ void build_runtime_options_prompt(const char *format, char *buf, int size)
     else
       sprintf(buffer[2+cdrom], "(%s on ata%d) %s, %s",
         device&1?"slave":"master", device/2, SIM->get_param_string("path", cdromop)->getptr(),
-        (SIM->get_param_enum("status", cdromop)->get() == BX_INSERTED)? "inserted" : "ejected");
+        (SIM->get_param_bool("status", cdromop)->get()) ? "inserted" : "ejected");
     }
 
   snprintf(buf, size, format, buffer[0], buffer[1], buffer[2],
