@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer32.cc,v 1.84 2009-03-10 16:28:01 sshwarts Exp $
+// $Id: ctrl_xfer32.cc,v 1.85 2009-03-22 21:12:35 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -124,7 +124,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RETfar32_Iw(bxInstruction_c *i)
   RSP_SPECULATIVE;
 
   if (protected_mode()) {
-    BX_CPU_THIS_PTR return_protected(i, imm16);
+    return_protected(i, imm16);
     goto done;
   }
 
@@ -166,19 +166,18 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RETfar32(bxInstruction_c *i)
   RSP_SPECULATIVE;
 
   if (protected_mode()) {
-    BX_CPU_THIS_PTR return_protected(i, 0);
+    return_protected(i, 0);
     goto done;
   }
 
-  eip = pop_32();
+  eip    =          pop_32();
+  cs_raw = (Bit16u) pop_32(); /* 32bit pop, MSW discarded */
 
   // CS.LIMIT can't change when in real/v8086 mode
   if (eip > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled) {
     BX_ERROR(("RETfar32: instruction pointer not within code segment limits"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
-
-  cs_raw = (Bit16u) pop_32(); /* 32bit pop, MSW discarded */
 
   load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], cs_raw);
   EIP = eip;
@@ -229,7 +228,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CALL32_Ap(bxInstruction_c *i)
   RSP_SPECULATIVE;
 
   if (protected_mode()) {
-    BX_CPU_THIS_PTR call_protected(i, cs_raw, disp32);
+    call_protected(i, cs_raw, disp32);
     goto done;
   }
 
@@ -292,7 +291,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CALL32_Ep(bxInstruction_c *i)
   RSP_SPECULATIVE;
 
   if (protected_mode()) {
-    BX_CPU_THIS_PTR call_protected(i, cs_raw, op1_32);
+    call_protected(i, cs_raw, op1_32);
     goto done;
   }
 
@@ -565,7 +564,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::JMP_Ap(bxInstruction_c *i)
 
   // jump_protected doesn't affect ESP so it is ESP safe
   if (protected_mode()) {
-    BX_CPU_THIS_PTR jump_protected(i, cs_raw, disp32);
+    jump_protected(i, cs_raw, disp32);
     goto done;
   }
 
@@ -606,7 +605,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::JMP32_Ep(bxInstruction_c *i)
 
   // jump_protected doesn't affect RSP so it is RSP safe
   if (protected_mode()) {
-    BX_CPU_THIS_PTR jump_protected(i, cs_raw, op1_32);
+    jump_protected(i, cs_raw, op1_32);
     goto done;
   }
 

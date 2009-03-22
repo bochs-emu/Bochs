@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debugstuff.cc,v 1.102 2009-01-29 20:27:57 sshwarts Exp $
+// $Id: debugstuff.cc,v 1.103 2009-03-22 21:12:35 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -67,14 +67,14 @@ void BX_CPU_C::debug_disasm_instruction(bx_address offset)
         char_buf[i++] = letters[(instr_buf[j] >> 0) & 0xf];
       }
       char_buf[i] = 0;
-      BX_INFO((">> %s", char_buf));
+      BX_INFO(("0x" FMT_ADDRX ">> %s", offset, char_buf));
     }
     else {
-      BX_INFO(("(instruction unavailable) page split instruction"));
+      BX_INFO(("0x" FMT_ADDRX ": (instruction unavailable) page split instruction", offset));
     }
   }
   else {
-    BX_INFO(("(instruction unavailable) page not present"));
+    BX_INFO(("0x" FMT_ADDRX ": (instruction unavailable) page not present", offset));
   }
 #endif  // #if BX_DEBUGGER
 }

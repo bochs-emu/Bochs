@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: icache.cc,v 1.23 2009-03-22 06:09:18 sshwarts Exp $
+// $Id: icache.cc,v 1.24 2009-03-22 21:12:35 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007 Stanislav Shwartsman
@@ -114,7 +114,7 @@ void BX_CPU_C::serveICacheMiss(bxICacheEntry_c *cache_entry, Bit32u eipBiased, b
 
 bx_bool BX_CPU_C::mergeTraces(bxICacheEntry_c *entry, bxInstruction_c *i, bx_phy_address pAddr)
 {
-  bxICacheEntry_c *e = BX_CPU_THIS_PTR iCache.get_entry(pAddr);
+  bxICacheEntry_c *e = BX_CPU_THIS_PTR iCache.get_entry(pAddr, BX_CPU_THIS_PTR fetchModeMask);
 
   if ((e->pAddr == pAddr) && (e->writeStamp == entry->writeStamp))
   {

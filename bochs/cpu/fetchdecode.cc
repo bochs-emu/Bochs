@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.225 2009-03-13 18:02:33 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.226 2009-03-22 21:12:35 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2824,6 +2824,7 @@ modrm_done:
     }
   }
 
+  i->modRMForm.Id = 0;
   imm_mode = attr & BxImmediate;
   if (imm_mode) {
     switch (imm_mode) {

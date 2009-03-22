@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.585 2009-03-17 19:40:26 sshwarts Exp $
+// $Id: cpu.h,v 1.586 2009-03-22 21:12:35 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2655,7 +2655,6 @@ public: // for now...
   BX_SMF void RETnear64_Iw(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void RETnear64(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void RETfar64_Iw(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void RETfar64(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
   BX_SMF void CMOVO_GqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void CMOVNO_GqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -3420,9 +3419,9 @@ BX_CPP_INLINE void BX_CPU_C::updateFetchModeMask(void)
 {
   BX_CPU_THIS_PTR fetchModeMask =
 #if BX_SUPPORT_X86_64
-    ((BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64)<<31) |
+    ((BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64)<<1) |
 #endif
-     (BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b << 30);
+     (BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b);
 
   BX_CPU_THIS_PTR user_pl = // CPL == 3
      (BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.rpl == 3);
@@ -3729,14 +3728,14 @@ BX_CPP_INLINE bx_bool BX_CPU_C::get_PFLazy(void)
 #endif
 
 #define SET_FLAGS_OSZAPC_ADD_8(op1_8, op2_8, sum_8) \
-  SET_FLAGS_OSZAPC_S2_8((op2_8), (sum_8), BX_LF_INSTR_ADD8)
+  SET_FLAGS_OSZAPC_8((op1_8), (op2_8), (sum_8), BX_LF_INSTR_ADD8)
 #define SET_FLAGS_OSZAPC_ADD_16(op1_16, op2_16, sum_16) \
-  SET_FLAGS_OSZAPC_S2_16((op2_16), (sum_16), BX_LF_INSTR_ADD16)
+  SET_FLAGS_OSZAPC_16((op1_16), (op2_16), (sum_16), BX_LF_INSTR_ADD16)
 #define SET_FLAGS_OSZAPC_ADD_32(op1_32, op2_32, sum_32) \
-  SET_FLAGS_OSZAPC_S2_32((op2_32), (sum_32), BX_LF_INSTR_ADD32)
+  SET_FLAGS_OSZAPC_32((op1_32), (op2_32), (sum_32), BX_LF_INSTR_ADD32)
 #if BX_SUPPORT_X86_64
 #define SET_FLAGS_OSZAPC_ADD_64(op1_64, op2_64, sum_64) \
-  SET_FLAGS_OSZAPC_S2_64((op2_64), (sum_64), BX_LF_INSTR_ADD64)
+  SET_FLAGS_OSZAPC_64((op1_64), (op2_64), (sum_64), BX_LF_INSTR_ADD64)
 #endif
 
 #define SET_FLAGS_OSZAPC_SUB_8(op1_8, op2_8, diff_8) \

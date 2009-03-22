@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ia_opcodes.h,v 1.25 2009-01-31 10:43:23 sshwarts Exp $
+// $Id: ia_opcodes.h,v 1.26 2009-03-22 21:12:35 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008 Stanislav Shwartsman
@@ -1482,7 +1482,7 @@ bx_define_opcode(BX_IA_XADD_EqGqM, &BX_CPU_C::XADD_EqGqM, NULL)
 bx_define_opcode(BX_IA_RETnear64_Iw, &BX_CPU_C::RETnear64_Iw, NULL)
 bx_define_opcode(BX_IA_RETnear64, &BX_CPU_C::RETnear64, NULL)
 bx_define_opcode(BX_IA_RETfar64_Iw, &BX_CPU_C::RETfar64_Iw, NULL)
-bx_define_opcode(BX_IA_RETfar64, &BX_CPU_C::RETfar64, NULL)
+bx_define_opcode(BX_IA_RETfar64, &BX_CPU_C::RETfar64_Iw, NULL)
 bx_define_opcode(BX_IA_CMOVO_GqEqM, &BX_CPU_C::LOAD_Eq, &BX_CPU_C::CMOVO_GqEqR)
 bx_define_opcode(BX_IA_CMOVNO_GqEqM, &BX_CPU_C::LOAD_Eq, &BX_CPU_C::CMOVNO_GqEqR)
 bx_define_opcode(BX_IA_CMOVB_GqEqM, &BX_CPU_C::LOAD_Eq, &BX_CPU_C::CMOVB_GqEqR)

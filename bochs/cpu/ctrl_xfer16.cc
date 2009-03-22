@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer16.cc,v 1.67 2009-03-10 16:28:01 sshwarts Exp $
+// $Id: ctrl_xfer16.cc,v 1.68 2009-03-22 21:12:35 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -127,7 +127,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RETfar16_Iw(bxInstruction_c *i)
   RSP_SPECULATIVE;
 
   if (protected_mode()) {
-    BX_CPU_THIS_PTR return_protected(i, imm16);
+    return_protected(i, imm16);
     goto done;
   }
 
@@ -168,7 +168,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RETfar16(bxInstruction_c *i)
   RSP_SPECULATIVE;
 
   if (protected_mode()) {
-    BX_CPU_THIS_PTR return_protected(i, 0);
+    return_protected(i, 0);
     goto done;
   }
 
@@ -226,7 +226,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CALL16_Ap(bxInstruction_c *i)
   RSP_SPECULATIVE;
 
   if (protected_mode()) {
-    BX_CPU_THIS_PTR call_protected(i, cs_raw, disp16);
+    call_protected(i, cs_raw, disp16);
     goto done;
   }
 
@@ -288,7 +288,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CALL16_Ep(bxInstruction_c *i)
   RSP_SPECULATIVE;
 
   if (protected_mode()) {
-    BX_CPU_THIS_PTR call_protected(i, cs_raw, op1_16);
+    call_protected(i, cs_raw, op1_16);
     goto done;
   }
 
@@ -564,7 +564,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::JMP16_Ep(bxInstruction_c *i)
 
   // jump_protected doesn't affect RSP so it is RSP safe
   if (protected_mode()) {
-    BX_CPU_THIS_PTR jump_protected(i, cs_raw, op1_16);
+    jump_protected(i, cs_raw, op1_16);
     goto done;
   }
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.277 2009-03-17 19:40:26 sshwarts Exp $
+// $Id: cpu.cc,v 1.278 2009-03-22 21:12:35 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -136,7 +136,7 @@ no_async_event:
     }
 
     bx_phy_address pAddr = BX_CPU_THIS_PTR pAddrPage + eipBiased;
-    bxICacheEntry_c *entry = BX_CPU_THIS_PTR iCache.get_entry(pAddr);
+    bxICacheEntry_c *entry = BX_CPU_THIS_PTR iCache.get_entry(pAddr, BX_CPU_THIS_PTR fetchModeMask);
     bxInstruction_c *i = entry->i;
 
     InstrICache_Increment(iCacheLookups);
@@ -753,10 +753,7 @@ void BX_CPU_C::prefetch(void)
   }
 
   BX_CPU_THIS_PTR currPageWriteStampPtr = pageWriteStampTable.getPageWriteStampPtr(BX_CPU_THIS_PTR pAddrPage);
-  Bit32u pageWriteStamp = *(BX_CPU_THIS_PTR currPageWriteStampPtr);
-  pageWriteStamp &= ~ICacheWriteStampFetchModeMask; // Clear out old fetch mode bits
-  pageWriteStamp |=  BX_CPU_THIS_PTR fetchModeMask; // And add new ones
-  pageWriteStampTable.setPageWriteStamp(BX_CPU_THIS_PTR pAddrPage, pageWriteStamp);
+  pageWriteStampTable.markICache(BX_CPU_THIS_PTR pAddrPage);
 }
 
 void BX_CPU_C::boundaryFetch(const Bit8u *fetchPtr, unsigned remainingInPage, bxInstruction_c *i)
@@ -880,7 +877,7 @@ bx_bool BX_CPU_C::dbg_instruction_epilog(void)
   BX_CPU_THIS_PTR guard_found.cs  = cs;
   BX_CPU_THIS_PTR guard_found.eip = debug_eip;
   BX_CPU_THIS_PTR guard_found.laddr = BX_CPU_THIS_PTR get_laddr(BX_SEG_REG_CS, debug_eip);
-  BX_CPU_THIS_PTR guard_found.code_32_64 = BX_CPU_THIS_PTR fetchModeMask >> 30;
+  BX_CPU_THIS_PTR guard_found.code_32_64 = BX_CPU_THIS_PTR fetchModeMask;
 
   //
   // Take care of break point conditions generated during instruction execution

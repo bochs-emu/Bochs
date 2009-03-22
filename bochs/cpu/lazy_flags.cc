@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: lazy_flags.cc,v 1.51 2009-03-13 18:26:10 sshwarts Exp $
+// $Id: lazy_flags.cc,v 1.52 2009-03-22 21:12:35 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -65,9 +65,9 @@ const Bit8u bx_parity_lookup[256] = {
 #define result_32 ((Bit32u)(BX_CPU_THIS_PTR oszapc.result))
 
 #if BX_SUPPORT_X86_64
-#define op1_64    (BX_CPU_THIS_PTR oszapc.op1)
-#define op2_64    (BX_CPU_THIS_PTR oszapc.op2)
-#define result_64 (BX_CPU_THIS_PTR oszapc.result)
+#define op1_64    ((Bit64u)(BX_CPU_THIS_PTR oszapc.op1))
+#define op2_64    ((Bit64u)(BX_CPU_THIS_PTR oszapc.op2))
+#define result_64 ((Bit64u)(BX_CPU_THIS_PTR oszapc.result))
 #endif
 
 bx_bool BX_CPU_C::get_CFLazy(void)
@@ -78,23 +78,23 @@ bx_bool BX_CPU_C::get_CFLazy(void)
     case BX_LF_INSTR_ADD8:
     case BX_LF_INSTR_ADD16:
     case BX_LF_INSTR_ADD32:
-      cf = (result_32 < op2_32);
+      cf = (result_32 < op1_32);
       break;
 #if BX_SUPPORT_X86_64
     case BX_LF_INSTR_ADD64:
-      cf = (result_64 < op2_64);
+      cf = (result_64 < op1_64);
       break;
 #endif
     // used only if CF = 1 when executing ADC instruction
     case BX_LF_INSTR_ADC8:
     case BX_LF_INSTR_ADC16:
     case BX_LF_INSTR_ADC32:
-      cf = (result_32 <= op2_32);
+      cf = (result_32 <= op1_32);
       break;
 #if BX_SUPPORT_X86_64
     // used only if CF = 1 when executing ADC instruction
     case BX_LF_INSTR_ADC64:
-      cf = (result_64 <= op2_64);
+      cf = (result_64 <= op1_64);
       break;
 #endif
     case BX_LF_INSTR_SUB8:
@@ -159,24 +159,19 @@ bx_bool BX_CPU_C::get_AFLazy(void)
   switch (BX_CPU_THIS_PTR oszapc.instr) {
     case BX_LF_INSTR_ADD8:
     case BX_LF_INSTR_ADC8:
-    case BX_LF_INSTR_ADD16:
-    case BX_LF_INSTR_ADC16:
-    case BX_LF_INSTR_ADD32:
-    case BX_LF_INSTR_ADC32:
-#if BX_SUPPORT_X86_64
-    case BX_LF_INSTR_ADD64:
-    case BX_LF_INSTR_ADC64:
-#endif
-      BX_CPU_THIS_PTR oszapc.op1 =
-         BX_CPU_THIS_PTR oszapc.result - BX_CPU_THIS_PTR oszapc.op2;
-      // fall through
     case BX_LF_INSTR_SUB8:
     case BX_LF_INSTR_SBB8:
+    case BX_LF_INSTR_ADD16:
+    case BX_LF_INSTR_ADC16:
     case BX_LF_INSTR_SUB16:
     case BX_LF_INSTR_SBB16:
+    case BX_LF_INSTR_ADD32:
+    case BX_LF_INSTR_ADC32:
     case BX_LF_INSTR_SUB32:
     case BX_LF_INSTR_SBB32:
 #if BX_SUPPORT_X86_64
+    case BX_LF_INSTR_ADD64:
+    case BX_LF_INSTR_ADC64:
     case BX_LF_INSTR_SUB64:
     case BX_LF_INSTR_SBB64:
 #endif
@@ -239,15 +234,11 @@ bx_bool BX_CPU_C::get_OFLazy(void)
     case BX_LF_INSTR_ADC16:
     case BX_LF_INSTR_ADD32:
     case BX_LF_INSTR_ADC32:
-      BX_CPU_THIS_PTR oszapc.op1 =
-         BX_CPU_THIS_PTR oszapc.result - BX_CPU_THIS_PTR oszapc.op2;
       of = GET_ADD_OVERFLOW(op1_32, op2_32, result_32, 0x80000000);
       break;
 #if BX_SUPPORT_X86_64
     case BX_LF_INSTR_ADD64:
     case BX_LF_INSTR_ADC64:
-      BX_CPU_THIS_PTR oszapc.op1 =
-         BX_CPU_THIS_PTR oszapc.result - BX_CPU_THIS_PTR oszapc.op2;
       of = GET_ADD_OVERFLOW(op1_64, op2_64, result_64, BX_CONST64(0x8000000000000000));
       break;
 #endif

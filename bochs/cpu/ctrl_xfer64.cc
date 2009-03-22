@@ -1,5 +1,5 @@
 ////////c/////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer64.cc,v 1.78 2009-03-10 16:28:01 sshwarts Exp $
+// $Id: ctrl_xfer64.cc,v 1.79 2009-03-22 21:12:35 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -101,27 +101,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RETfar64_Iw(bxInstruction_c *i)
 
   // return_protected is not RSP safe
   return_protected(i, i->Iw());
-
-  RSP_COMMIT;
-
-  BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_RET,
-                      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, RIP);
-}
-
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::RETfar64(bxInstruction_c *i)
-{
-  invalidate_prefetch_q();
-
-#if BX_DEBUGGER
-  BX_CPU_THIS_PTR show_flag |= Flag_ret;
-#endif
-
-  BX_ASSERT(protected_mode());
-
-  RSP_SPECULATIVE;
-
-  // return_protected is not RSP safe
-  return_protected(i, 0);
 
   RSP_COMMIT;
 
