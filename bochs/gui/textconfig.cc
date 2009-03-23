@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: textconfig.cc,v 1.77 2009-03-22 20:18:17 vruppert Exp $
+// $Id: textconfig.cc,v 1.78 2009-03-23 19:05:16 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  The Bochs Project
@@ -349,7 +349,7 @@ void build_runtime_options_prompt(const char *format, char *buf, int size)
   for (int i=0; i<2; i++) {
     sprintf(pname, "floppy.%d", i);
     floppyop = (bx_list_c*) SIM->get_param(pname);
-    if (SIM->get_param_enum("devtype", floppyop)->get() == BX_FLOPPY_NONE)
+    if (SIM->get_param_enum("devtype", floppyop)->get() == BX_FDD_NONE)
       strcpy(buffer[i], "(not present)");
     else {
       sprintf(buffer[i], "%s, size=%s, %s", SIM->get_param_string("path", floppyop)->getptr(),
@@ -517,10 +517,10 @@ int bx_config_interface(int menu)
 #endif
           switch (choice) {
             case BX_CI_RT_FLOPPYA:
-              if (SIM->get_param_enum(BXPN_FLOPPYA_DEVTYPE)->get() != BX_FLOPPY_NONE) do_menu(BXPN_FLOPPYA);
+              if (SIM->get_param_enum(BXPN_FLOPPYA_DEVTYPE)->get() != BX_FDD_NONE) do_menu(BXPN_FLOPPYA);
               break;
             case BX_CI_RT_FLOPPYB:
-              if (SIM->get_param_enum(BXPN_FLOPPYB_DEVTYPE)->get() != BX_FLOPPY_NONE) do_menu(BXPN_FLOPPYB);
+              if (SIM->get_param_enum(BXPN_FLOPPYB_DEVTYPE)->get() != BX_FDD_NONE) do_menu(BXPN_FLOPPYB);
               break;
             case BX_CI_RT_CDROM1:
             case BX_CI_RT_CDROM2:

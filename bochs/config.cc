@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.167 2009-03-22 20:18:16 vruppert Exp $
+// $Id: config.cc,v 1.168 2009-03-23 19:05:15 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -92,46 +92,25 @@ static Bit64s bx_param_handler(bx_param_c *param, int set, Bit64s val)
     }
   } else {
     param->get_param_path(pname, BX_PATHNAME_LEN);
-    if (!strcmp(pname, BXPN_FLOPPYA_TYPE)) {
+    if ((!strcmp(pname, BXPN_FLOPPYA_TYPE)) ||
+        (!strcmp(pname, BXPN_FLOPPYB_TYPE))) {
       if (set) {
         if (val == BX_FLOPPY_AUTO) {
-          val = get_floppy_type_from_image(SIM->get_param_string(BXPN_FLOPPYA_PATH)->getptr());
-          SIM->get_param_enum(BXPN_FLOPPYA_TYPE)->set(val);
-        } else if (!SIM->get_init_done()) {
+          val = get_floppy_type_from_image(SIM->get_param_string("path", base)->getptr());
+          SIM->get_param_enum("type", base)->set(val);
+        } else if (!SIM->get_init_done() && (val != BX_FLOPPY_NONE)) {
           switch (val) {
-            case BX_FLOPPY_1_2:
-            case BX_FLOPPY_1_44:
             case BX_FLOPPY_2_88:
-              device = val;
+              device = BX_FDD_350ED;
               break;
             case BX_FLOPPY_720K:
-              device = BX_FLOPPY_1_44;
-              break;
-            default:
-              device = BX_FLOPPY_1_2;
-          }
-          SIM->get_param_enum(BXPN_FLOPPYA_DEVTYPE)->set(device);
-        }
-      }
-    } else if (!strcmp(pname, BXPN_FLOPPYB_TYPE)) {
-      if (set) {
-        if (val == BX_FLOPPY_AUTO) {
-          val = get_floppy_type_from_image(SIM->get_param_string(BXPN_FLOPPYB_PATH)->getptr());
-          SIM->get_param_enum(BXPN_FLOPPYB_TYPE)->set(val);
-        } else if (!SIM->get_init_done()) {
-          switch (val) {
-            case BX_FLOPPY_1_2:
             case BX_FLOPPY_1_44:
-            case BX_FLOPPY_2_88:
-              device = val;
-              break;
-            case BX_FLOPPY_720K:
-              device = BX_FLOPPY_1_44;
+              device = BX_FDD_350HD;
               break;
             default:
-              device = BX_FLOPPY_1_2;
+              device = BX_FDD_525HD;
           }
-          SIM->get_param_enum(BXPN_FLOPPYB_DEVTYPE)->set(device);
+          SIM->get_param_enum("devtype", base)->set(device);
         }
       }
     } else if (!strcmp(pname, BXPN_FLOPPYA_STATUS)) {
@@ -210,50 +189,29 @@ const char *bx_param_string_handler(bx_param_string_c *param, int set,
       if (set==1) {
         BX_INFO(("Screen mode changed to %s", val));
       }
-    } else if (!strcmp(pname, BXPN_FLOPPYA_PATH)) {
+    } else if ((!strcmp(pname, BXPN_FLOPPYA_PATH)) ||
+               (!strcmp(pname, BXPN_FLOPPYB_PATH))) {
       if (set==1) {
+        device = !strcmp(pname, BXPN_FLOPPYB_PATH);
         if (SIM->get_init_done()) {
           if (empty) {
-            DEV_floppy_set_media_status(0, 0);
+            DEV_floppy_set_media_status(device, 0);
             bx_gui->update_drive_status_buttons();
           } else {
-            if (!SIM->get_param_num(BXPN_FLOPPYA_TYPE)->get_enabled()) {
+            if (SIM->get_param_enum("devtype", base)->get() == BX_FDD_NONE) {
               BX_ERROR(("Cannot add a floppy drive at runtime"));
-              SIM->get_param_string(BXPN_FLOPPYA_PATH)->set("none");
+              SIM->get_param_string("path", base)->set("none");
             }
           }
           if ((DEV_floppy_present()) &&
-              (SIM->get_param_enum(BXPN_FLOPPYA_STATUS)->get() == BX_INSERTED)) {
+              (SIM->get_param_enum("status", base)->get() == BX_INSERTED)) {
             // tell the device model that we removed, then inserted the disk
-            DEV_floppy_set_media_status(0, 0);
-            DEV_floppy_set_media_status(0, 1);
+            DEV_floppy_set_media_status(device, 0);
+            DEV_floppy_set_media_status(device, 1);
           }
         } else {
-          SIM->get_param_enum(BXPN_FLOPPYA_TYPE)->set_enabled(!empty);
-          SIM->get_param_enum(BXPN_FLOPPYA_STATUS)->set_enabled(!empty);
-        }
-      }
-    } else if (!strcmp(pname, BXPN_FLOPPYB_PATH)) {
-      if (set==1) {
-        if (SIM->get_init_done()) {
-          if (empty) {
-            DEV_floppy_set_media_status(1, 0);
-            bx_gui->update_drive_status_buttons();
-          } else {
-            if (!SIM->get_param_num(BXPN_FLOPPYB_TYPE)->get_enabled()) {
-              BX_ERROR(("Cannot add a floppy drive at runtime"));
-              SIM->get_param_string(BXPN_FLOPPYB_PATH)->set("none");
-            }
-          }
-          if ((DEV_floppy_present()) &&
-              (SIM->get_param_enum(BXPN_FLOPPYB_STATUS)->get() == BX_INSERTED)) {
-            // tell the device model that we removed, then inserted the disk
-            DEV_floppy_set_media_status(1, 0);
-            DEV_floppy_set_media_status(1, 1);
-          }
-        } else {
-          SIM->get_param_enum(BXPN_FLOPPYB_TYPE)->set_enabled(!empty);
-          SIM->get_param_enum(BXPN_FLOPPYB_STATUS)->set_enabled(!empty);
+          SIM->get_param_enum("type", base)->set_enabled(!empty);
+          SIM->get_param_enum("status", base)->set_enabled(!empty);
         }
       }
 #if BX_PLUGINS
@@ -268,6 +226,26 @@ const char *bx_param_string_handler(bx_param_string_c *param, int set,
     } else {
       BX_PANIC(("bx_param_string_handler called with unknown parameter '%s'", pname));
     }
+  }
+  return val;
+}
+
+static int bx_param_enable_handler(bx_param_c *param, int val)
+{
+  char pname[BX_PATHNAME_LEN];
+  bx_param_string_c *sparam;
+  bx_bool empty;
+
+  bx_list_c *base = (bx_list_c*) param->get_parent();
+  param->get_param_path(pname, BX_PATHNAME_LEN);
+  if ((!strcmp(pname, BXPN_FLOPPYA_PATH)) ||
+      (!strcmp(pname, BXPN_FLOPPYB_PATH))) {
+    sparam = (bx_param_string_c*)param;
+    empty = (strlen(sparam->getptr()) < 1) || !strcmp(sparam->getptr(), "none");
+    SIM->get_param_enum("type", base)->set_enabled(val && !empty);
+    SIM->get_param_enum("status", base)->set_enabled(val && !empty);
+  } else {
+    BX_PANIC(("bx_param_enable_handler called with unknown parameter '%s'", pname));
   }
   return val;
 }
@@ -883,41 +861,43 @@ void bx_init_options()
 
   // floppy subtree
   bx_list_c *floppy = new bx_list_c(root_param, "floppy", "Floppy Options");
-  bx_list_c *floppya = new bx_list_c(floppy, "0", "Floppy Disk 0");
-  bx_list_c *floppyb = new bx_list_c(floppy, "1", "Floppy Disk 1");
+  bx_list_c *floppya = new bx_list_c(floppy, "0", "First Floppy Drive");
+  bx_list_c *floppyb = new bx_list_c(floppy, "1", "Second Floppy Drive");
 
   bx_param_enum_c *devtype;
   // floppy options
+  devtype = new bx_param_enum_c(floppya,
+      "devtype",
+      "Type of floppy drive",
+      "Type of floppy drive",
+      floppy_devtype_names,
+      BX_FDD_NONE,
+      BX_FDD_NONE);
+  devtype->set_ask_format("What type of floppy drive? [%s] ");
+
   path = new bx_param_filename_c(floppya,
       "path",
       "First floppy image/device",
       "Pathname of first floppy image file or device.  If you're booting from floppy, this should be a bootable floppy.",
       "", BX_PATHNAME_LEN);
   path->set_ask_format("Enter new filename, or 'none' for no disk: [%s] ");
+  path->set_enable_handler(bx_param_enable_handler);
   path->set_extension("img");
   path->set_runtime_param(1);
 
-  devtype = new bx_param_enum_c(floppya,
-      "devtype",
-      "Type of floppy drive",
-      "Type of floppy drive",
-      floppy_type_names,
-      BX_FLOPPY_NONE,
-      BX_FLOPPY_NONE);
-  devtype->set_enabled(0); // hide devtype parameter
   type = new bx_param_enum_c(floppya,
       "type",
-      "Type of floppy disk",
-      "Type of floppy disk",
+      "Type of floppy media",
+      "Type of floppy media",
       floppy_type_names,
       BX_FLOPPY_NONE,
       BX_FLOPPY_NONE);
-  type->set_ask_format("What type of floppy disk? (auto=detect) [%s] ");
+  type->set_ask_format("What type of floppy media? (auto=detect) [%s] ");
   type->set_runtime_param(1);
 
   status = new bx_param_enum_c(floppya,
       "status",
-      "Is floppya inserted",
+      "Media status",
       "Inserted or ejected",
       floppy_status_names,
       BX_INSERTED,
@@ -925,11 +905,24 @@ void bx_init_options()
   status->set_ask_format("Is the floppy inserted or ejected? [%s] ");
   status->set_runtime_param(1);
 
+  deplist = new bx_list_c(NULL, 1);
+  deplist->add(path);
+  devtype->set_dependent_list(deplist, 1);
+  devtype->set_dependent_bitmap(BX_FDD_NONE, 0);
   path->set_handler(bx_param_string_handler);
   type->set_handler(bx_param_handler);
   status->set_handler(bx_param_handler);
   path->set_initial_val("none");
-  floppya->set_options(floppya->SERIES_ASK);
+  floppya->set_options(floppya->SERIES_ASK | floppya->USE_BOX_TITLE);
+
+  devtype = new bx_param_enum_c(floppyb,
+      "devtype",
+      "Type of floppy drive",
+      "Type of floppy drive",
+      floppy_devtype_names,
+      BX_FDD_NONE,
+      BX_FDD_NONE);
+  devtype->set_ask_format("What type of floppy drive? [%s] ");
 
   path = new bx_param_filename_c(floppyb,
       "path",
@@ -937,30 +930,23 @@ void bx_init_options()
       "Pathname of second floppy image file or device.",
       "", BX_PATHNAME_LEN);
   path->set_ask_format("Enter new filename, or 'none' for no disk: [%s] ");
+  path->set_enable_handler(bx_param_enable_handler);
   path->set_extension("img");
   path->set_runtime_param(1);
 
-  devtype = new bx_param_enum_c(floppyb,
-      "devtype",
-      "Type of floppy drive",
-      "Type of floppy drive",
-      floppy_type_names,
-      BX_FLOPPY_NONE,
-      BX_FLOPPY_NONE);
-  devtype->set_enabled(0); // hide devtype parameter
   type = new bx_param_enum_c(floppyb,
       "type",
-      "Type of floppy disk",
-      "Type of floppy disk",
+      "Type of floppy media",
+      "Type of floppy media",
       floppy_type_names,
       BX_FLOPPY_NONE,
       BX_FLOPPY_NONE);
-  type->set_ask_format("What type of floppy disk? (auto=detect) [%s] ");
+  type->set_ask_format("What type of floppy media? (auto=detect) [%s] ");
   type->set_runtime_param(1);
 
   status = new bx_param_enum_c(floppyb,
       "status",
-      "Is floppyb inserted",
+      "Media status",
       "Inserted or ejected",
       floppy_status_names,
       BX_INSERTED,
@@ -968,11 +954,15 @@ void bx_init_options()
   status->set_ask_format("Is the floppy inserted or ejected? [%s] ");
   status->set_runtime_param(1);
 
+  deplist = new bx_list_c(NULL, 1);
+  deplist->add(path);
+  devtype->set_dependent_list(deplist, 1);
+  devtype->set_dependent_bitmap(BX_FDD_NONE, 0);
   path->set_handler(bx_param_string_handler);
   type->set_handler(bx_param_handler);
   status->set_handler(bx_param_handler);
   path->set_initial_val("none");
-  floppyb->set_options(floppyb->SERIES_ASK);
+  floppyb->set_options(floppyb->SERIES_ASK | floppyb->USE_BOX_TITLE);
   floppy->set_options(floppy->SHOW_PARENT);
 
   // ATA/ATAPI subtree

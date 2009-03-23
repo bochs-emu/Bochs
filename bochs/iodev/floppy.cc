@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.cc,v 1.117 2009-03-08 08:22:23 vruppert Exp $
+// $Id: floppy.cc,v 1.118 2009-03-23 19:05:16 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -83,8 +83,8 @@ bx_floppy_ctrl_c *theFloppyController;
 
 #define FDRIVE_NONE  0x00
 #define FDRIVE_525DD 0x01
-#define FDRIVE_350DD 0x02
-#define FDRIVE_525HD 0x04
+#define FDRIVE_525HD 0x02
+#define FDRIVE_350DD 0x04
 #define FDRIVE_350HD 0x08
 #define FDRIVE_350ED 0x10
 
@@ -98,12 +98,12 @@ typedef struct {
 } floppy_type_t;
 
 static floppy_type_t floppy_type[8] = {
-  {BX_FLOPPY_160K, 40, 1, 8, 320, 0x05},
-  {BX_FLOPPY_180K, 40, 1, 9, 360, 0x05},
-  {BX_FLOPPY_320K, 40, 2, 8, 640, 0x05},
-  {BX_FLOPPY_360K, 40, 2, 9, 720, 0x05},
+  {BX_FLOPPY_160K, 40, 1, 8, 320, 0x03},
+  {BX_FLOPPY_180K, 40, 1, 9, 360, 0x03},
+  {BX_FLOPPY_320K, 40, 2, 8, 640, 0x03},
+  {BX_FLOPPY_360K, 40, 2, 9, 720, 0x03},
   {BX_FLOPPY_720K, 80, 2, 9, 1440, 0x1f},
-  {BX_FLOPPY_1_2,  80, 2, 15, 2400, 0x04},
+  {BX_FLOPPY_1_2,  80, 2, 15, 2400, 0x02},
   {BX_FLOPPY_1_44, 80, 2, 18, 2880, 0x18},
   {BX_FLOPPY_2_88, 80, 2, 36, 5760, 0x10}
 };
@@ -139,9 +139,9 @@ bx_floppy_ctrl_c::~bx_floppy_ctrl_c()
 
 void bx_floppy_ctrl_c::init(void)
 {
-  Bit8u i, cmos_value;
+  Bit8u i, devtype, cmos_value;
 
-  BX_DEBUG(("Init $Id: floppy.cc,v 1.117 2009-03-08 08:22:23 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: floppy.cc,v 1.118 2009-03-23 19:05:16 vruppert Exp $"));
   DEV_dma_register_8bit_channel(2, dma_read, dma_write, "Floppy Drive");
   DEV_register_irq(6, "Floppy Drive");
   for (unsigned addr=0x03F2; addr<=0x03F7; addr++) {
@@ -169,51 +169,10 @@ void bx_floppy_ctrl_c::init(void)
   // Floppy A setup
   //
 
-  switch (SIM->get_param_enum(BXPN_FLOPPYA_DEVTYPE)->get()) {
-    case BX_FLOPPY_NONE:
-      break;
-    case BX_FLOPPY_360K:
-      cmos_value = 0x10;
-      BX_FD_THIS s.device_type[0] = FDRIVE_525DD;
-      break;
-    case BX_FLOPPY_1_2:
-      cmos_value = 0x20;
-      BX_FD_THIS s.device_type[0] = FDRIVE_525HD;
-      break;
-    case BX_FLOPPY_720K:
-      cmos_value = 0x30;
-      BX_FD_THIS s.device_type[0] = FDRIVE_350DD;
-      break;
-    case BX_FLOPPY_1_44:
-      cmos_value = 0x40;
-      BX_FD_THIS s.device_type[0] = FDRIVE_350HD;
-      break;
-    case BX_FLOPPY_2_88:
-      cmos_value = 0x50;
-      BX_FD_THIS s.device_type[0] = FDRIVE_350ED;
-      break;
-
-    // use CMOS reserved types
-    case BX_FLOPPY_160K:
-      cmos_value = 0x60;
-      BX_INFO(("WARNING: 1st floppy uses of reserved CMOS floppy drive type 6"));
-      BX_FD_THIS s.device_type[0] = FDRIVE_525DD;
-      break;
-    case BX_FLOPPY_180K:
-      cmos_value = 0x70;
-      BX_INFO(("WARNING: 1st floppy uses of reserved CMOS floppy drive type 7"));
-      BX_FD_THIS s.device_type[0] = FDRIVE_525DD;
-      break;
-    case BX_FLOPPY_320K:
-      cmos_value = 0x80;
-      BX_INFO(("WARNING: 1st floppy uses of reserved CMOS floppy drive type 8"));
-      BX_FD_THIS s.device_type[0] = FDRIVE_525DD;
-      break;
-
-    default:
-      BX_PANIC(("unknown floppya type"));
-    }
-  if (BX_FD_THIS s.device_type[0] != FDRIVE_NONE) {
+  devtype = SIM->get_param_enum(BXPN_FLOPPYA_DEVTYPE)->get();
+  cmos_value = (devtype << 4);
+  if (devtype != BX_FDD_NONE) {
+    BX_FD_THIS s.device_type[0] = 1 << (devtype - 1);
     BX_FD_THIS s.num_supported_floppies++;
     BX_FD_THIS s.statusbar_id[0] = bx_gui->register_statusitem(" A: ");
   } else {
@@ -240,51 +199,10 @@ void bx_floppy_ctrl_c::init(void)
   // Floppy B setup
   //
 
-  switch (SIM->get_param_enum(BXPN_FLOPPYB_DEVTYPE)->get()) {
-    case BX_FLOPPY_NONE:
-      break;
-    case BX_FLOPPY_360K:
-      cmos_value |= 0x01;
-      BX_FD_THIS s.device_type[1] = FDRIVE_525DD;
-      break;
-    case BX_FLOPPY_1_2:
-      cmos_value |= 0x02;
-      BX_FD_THIS s.device_type[1] = FDRIVE_525HD;
-      break;
-    case BX_FLOPPY_720K:
-      cmos_value |= 0x03;
-      BX_FD_THIS s.device_type[1] = FDRIVE_350DD;
-      break;
-    case BX_FLOPPY_1_44:
-      cmos_value |= 0x04;
-      BX_FD_THIS s.device_type[1] = FDRIVE_350HD;
-      break;
-    case BX_FLOPPY_2_88:
-      cmos_value |= 0x05;
-      BX_FD_THIS s.device_type[1] = FDRIVE_350ED;
-      break;
-
-    // use CMOS reserved types
-    case BX_FLOPPY_160K:
-      cmos_value |= 0x06;
-      BX_INFO(("WARNING: 2nd floppy uses of reserved CMOS floppy drive type 6"));
-      BX_FD_THIS s.device_type[1] = FDRIVE_525DD;
-      break;
-    case BX_FLOPPY_180K:
-      cmos_value |= 0x07;
-      BX_INFO(("WARNING: 2nd floppy uses of reserved CMOS floppy drive type 7"));
-      BX_FD_THIS s.device_type[1] = FDRIVE_525DD;
-      break;
-    case BX_FLOPPY_320K:
-      cmos_value |= 0x08;
-      BX_INFO(("WARNING: 2nd floppy uses of reserved CMOS floppy drive type 8"));
-      BX_FD_THIS s.device_type[1] = FDRIVE_525DD;
-      break;
-
-    default:
-      BX_PANIC(("unknown floppyb type"));
-    }
-  if (BX_FD_THIS s.device_type[1] != FDRIVE_NONE) {
+  devtype = SIM->get_param_enum(BXPN_FLOPPYB_DEVTYPE)->get();
+  cmos_value |= devtype;
+  if (devtype != BX_FDD_NONE) {
+    BX_FD_THIS s.device_type[1] = 1 << (devtype - 1);
     BX_FD_THIS s.num_supported_floppies++;
     BX_FD_THIS s.statusbar_id[1] = bx_gui->register_statusitem(" B: ");
   } else {

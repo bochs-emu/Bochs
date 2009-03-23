@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.201 2009-03-22 20:18:17 vruppert Exp $
+// $Id: siminterface.cc,v 1.202 2009-03-23 19:05:16 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  The Bochs Project
@@ -464,6 +464,7 @@ int bx_real_sim_c::get_cdrom_options(int level, bx_list_c **out, int *where)
 
 const char *bochs_start_names[] = { "quick", "load", "edit", "run" };
 
+const char *floppy_devtype_names[] = { "none", "5.25\" 360K", "5.25\" 1.2M", "3.5\" 720K", "3.5\" 1.44M", "3.5\" 2.88M", NULL };
 const char *floppy_type_names[] = { "none", "1.2M", "1.44M", "2.88M", "720K", "360K", "160K", "180K", "320K", "auto", NULL };
 int floppy_type_n_sectors[] = { -1, 80*2*15, 80*2*18, 80*2*36, 80*2*9, 40*2*9, 40*1*8, 40*1*9, 40*2*8, -1 };
 const char *floppy_status_names[] = { "ejected", "inserted", NULL };
@@ -1830,6 +1831,7 @@ void bx_param_enum_c::set_dependent_bitmap(Bit64s value, Bit64u bitmap)
   if (deps_bitmap != NULL) {
     deps_bitmap[value - min] = bitmap;
   }
+  update_dependents();
 }
 
 Bit64u bx_param_enum_c::get_dependent_bitmap(Bit64s value)

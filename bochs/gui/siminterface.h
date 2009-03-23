@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.235 2009-03-22 20:18:17 vruppert Exp $
+// $Id: siminterface.h,v 1.236 2009-03-23 19:05:16 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  The Bochs Project
@@ -1034,7 +1034,14 @@ enum {
   BX_MOUSE_TYPE_SERIAL_MSYS
 };
 
-#define BX_FLOPPY_NONE   10 // floppy not present
+#define BX_FDD_NONE  0 // floppy not present
+#define BX_FDD_525DD 1 // 360K  5.25"
+#define BX_FDD_525HD 2 // 1.2M  5.25"
+#define BX_FDD_350DD 3 // 720K  3.5"
+#define BX_FDD_350HD 4 // 1.44M 3.5"
+#define BX_FDD_350ED 5 // 2.88M 3.5"
+
+#define BX_FLOPPY_NONE   10 // media not present
 #define BX_FLOPPY_1_2    11 // 1.2M  5.25"
 #define BX_FLOPPY_1_44   12 // 1.44M 3.5"
 #define BX_FLOPPY_2_88   13 // 2.88M 3.5"
@@ -1087,6 +1094,7 @@ enum {
 #define BX_CLOCK_TIME0_UTC       2
 
 BOCHSAPI extern const char *bochs_start_names[];
+BOCHSAPI extern const char *floppy_devtype_names[];
 BOCHSAPI extern const char *floppy_type_names[];
 BOCHSAPI extern int floppy_type_n_sectors[];
 BOCHSAPI extern const char *floppy_status_names[];

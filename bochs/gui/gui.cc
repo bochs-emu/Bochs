@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.cc,v 1.109 2009-02-23 11:06:53 vruppert Exp $
+// $Id: gui.cc,v 1.110 2009-03-23 19:05:15 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -283,7 +283,7 @@ void bx_gui_c::update_drive_status_buttons(void)
 
 void bx_gui_c::floppyA_handler(void)
 {
-  if (SIM->get_param_enum(BXPN_FLOPPYA_DEVTYPE)->get() == BX_FLOPPY_NONE)
+  if (SIM->get_param_enum(BXPN_FLOPPYA_DEVTYPE)->get() == BX_FDD_NONE)
     return; // no primary floppy device present
   if (BX_GUI_THIS dialog_caps & BX_GUI_DLG_FLOPPY) {
     // instead of just toggling the status, call win32dialog to bring up
@@ -301,7 +301,7 @@ void bx_gui_c::floppyA_handler(void)
 
 void bx_gui_c::floppyB_handler(void)
 {
-  if (SIM->get_param_enum(BXPN_FLOPPYB_DEVTYPE)->get() == BX_FLOPPY_NONE)
+  if (SIM->get_param_enum(BXPN_FLOPPYB_DEVTYPE)->get() == BX_FDD_NONE)
     return; // no secondary floppy device present
   if (BX_GUI_THIS dialog_caps & BX_GUI_DLG_FLOPPY) {
     // instead of just toggling the status, call win32dialog to bring up

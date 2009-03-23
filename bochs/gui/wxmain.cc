@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.159 2009-03-15 21:16:16 vruppert Exp $
+// $Id: wxmain.cc,v 1.160 2009-03-23 19:05:16 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWidgets frame, toolbar, menus, and dialogs.
@@ -662,7 +662,7 @@ void MyFrame::OnEditBoot(wxCommandEvent& WXUNUSED(event))
 {
   int bootDevices = 0;
   bx_param_enum_c *floppy = SIM->get_param_enum(BXPN_FLOPPYA_DEVTYPE);
-  if (floppy->get() != BX_FLOPPY_NONE) {
+  if (floppy->get() != BX_FDD_NONE) {
     bootDevices++;
   }
   bx_param_c *firsthd = SIM->get_first_hd();
@@ -993,11 +993,11 @@ void MyFrame::simStatusChanged(StatusChange change, bx_bool popupNotify) {
   // only be edited if it was enabled at boot time.
   Bit64u value;
   value = SIM->get_param_enum(BXPN_FLOPPYA_DEVTYPE)->get();
-  menuEdit->Enable(ID_Edit_FD_0, canConfigure || (value != BX_FLOPPY_NONE));
-  bxToolBar->EnableTool(ID_Edit_FD_0, canConfigure || (value != BX_FLOPPY_NONE));
+  menuEdit->Enable(ID_Edit_FD_0, canConfigure || (value != BX_FDD_NONE));
+  bxToolBar->EnableTool(ID_Edit_FD_0, canConfigure || (value != BX_FDD_NONE));
   value = SIM->get_param_enum(BXPN_FLOPPYB_DEVTYPE)->get();
-  menuEdit->Enable(ID_Edit_FD_1, canConfigure || (value != BX_FLOPPY_NONE));
-  bxToolBar->EnableTool(ID_Edit_FD_1, canConfigure || (value != BX_FLOPPY_NONE));
+  menuEdit->Enable(ID_Edit_FD_1, canConfigure || (value != BX_FDD_NONE));
+  bxToolBar->EnableTool(ID_Edit_FD_1, canConfigure || (value != BX_FDD_NONE));
   bxToolBar->EnableTool(ID_Edit_Cdrom, canConfigure || (SIM->get_first_cdrom() != NULL));
 }
 
