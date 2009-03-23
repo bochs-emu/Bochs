@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.278 2009-03-22 21:12:35 sshwarts Exp $
+// $Id: cpu.cc,v 1.279 2009-03-23 16:46:17 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -175,7 +175,7 @@ no_async_event:
 
       // decoding instruction compeleted -> continue with execution
       BX_INSTR_BEFORE_EXECUTION(BX_CPU_ID, i);
-      EIP += i->ilen(); // 32-bit add
+      RIP += i->ilen(); // 32-bit add
       BX_CPU_CALL_METHOD(i->execute, (i)); // might iterate repeat instruction
       BX_CPU_THIS_PTR prev_rip = RIP; // commit new RIP
       BX_INSTR_AFTER_EXECUTION(BX_CPU_ID, i);
@@ -815,14 +815,6 @@ void BX_CPU_C::boundaryFetch(const Bit8u *fetchPtr, unsigned remainingInPage, bx
 
   BX_INSTR_OPCODE(BX_CPU_ID, fetchBuffer, i->ilen(),
       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b, Is64BitMode());
-
-  // hack to speedup RIP increment in x86-64 mode, the cpu_loop will increment
-  // EIP instead, the result is fully correct except for instructions crossing
-  // 32-bit address boundary. Handle them here.
-#if BX_SUPPORT_X86_64
-  RIP += i->ilen();
-  i->setILen(0);
-#endif
 }
 
 void BX_CPU_C::deliver_SIPI(unsigned vector)
