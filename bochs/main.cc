@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.396 2009-03-24 16:28:02 vruppert Exp $
+// $Id: main.cc,v 1.397 2009-03-24 20:17:02 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -26,7 +26,7 @@
 
 #include "bochs.h"
 #include "gui/textconfig.h"
-#ifdef WIN32
+#if BX_USE_TEXTCONFIG && defined(WIN32)
 #include "gui/win32dialog.h"
 #endif
 #include "cpu/cpu.h"
@@ -284,7 +284,7 @@ int bxmain (void) {
 #endif
     }
     else if (!strcmp(ci_name, "win32config")) {
-#ifdef WIN32
+#if BX_USE_TEXTCONFIG && defined(WIN32)
       init_win32_config_interface();
 #else
       BX_PANIC(("configuration interface 'win32config' not present"));
