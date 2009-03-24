@@ -958,8 +958,8 @@ typedef
 // set if you do have <set.h>, used in bx_debug/dbg_main.c
 #define BX_HAVE_SET_H 0
 
-// Support x86 hardware debugger registers and facilites.
-// These are the debug facilites offered by the x86 architecture,
+// Support x86 hardware debugger registers and facilities.
+// These are the debug facilities offered by the x86 architecture,
 // not the optional built-in debugger.
 #define BX_X86_DEBUGGER 0
 
