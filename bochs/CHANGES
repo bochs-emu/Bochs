@@ -161,6 +161,8 @@ Detailed change log :
  [1992138] Misspell in cpu/ia_opcodes.h
 
 - these S.F. feature requests were closed/implemented
+ [1883370] Make cd and floppy images more usable
+  [422783] change floppy size without restarting
  [2552685] param tree names should be case insensitive
  [1214659] PC Speaker emu turnoff. Plugin Controll.
  [1977045] support 40 bit physical address
