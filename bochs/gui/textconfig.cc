@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: textconfig.cc,v 1.78 2009-03-23 19:05:16 vruppert Exp $
+// $Id: textconfig.cc,v 1.79 2009-03-24 16:28:02 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  The Bochs Project
@@ -49,9 +49,6 @@ extern "C" {
 #include "textconfig.h"
 #include "siminterface.h"
 #include "extplugin.h"
-#ifdef WIN32
-#include "win32dialog.h"
-#endif
 
 #define CI_PATH_LENGTH 512
 
@@ -274,12 +271,7 @@ static const char *startup_menu_prompt =
 "4. Save options to...\n"
 "5. Restore the Bochs state from...\n"
 "6. Begin simulation\n"
-#ifdef WIN32
-"7. Win32 start menu dialog (experimental)\n"
-"8. Quit now\n"
-#else
 "7. Quit now\n"
-#endif
 "\n"
 "Please choose one: [%d] ";
 
@@ -308,7 +300,6 @@ static const char *startup_options_prompt =
 "\n"
 "Please choose one: [0] ";
 
-#if !defined(WIN32) || (!BX_WITH_WIN32 && !BX_WITH_SDL)
 static const char *runtime_menu_prompt =
 "---------------------\n"
 "Bochs Runtime Options\n"
@@ -329,7 +320,6 @@ static const char *runtime_menu_prompt =
 "14. Quit now\n"
 "\n"
 "Please choose one:  [13] ";
-#endif
 
 #define NOT_IMPLEMENTED(choice) \
   fprintf(stderr, "ERROR: choice %d not implemented\n", choice);
@@ -338,7 +328,6 @@ static const char *runtime_menu_prompt =
   do {fprintf(stderr, "ERROR: menu %d has no choice %d\n", menu, choice); \
       assert(0); } while (0)
 
-#if !defined(WIN32) || (!BX_WITH_WIN32 && !BX_WITH_SDL)
 void build_runtime_options_prompt(const char *format, char *buf, int size)
 {
   bx_list_c *floppyop;
@@ -373,7 +362,6 @@ void build_runtime_options_prompt(const char *format, char *buf, int size)
   snprintf(buf, size, format, buffer[0], buffer[1], buffer[2],
            buffer[3], buffer[4], buffer[5]);
 }
-#endif
 
 int do_menu(const char *pname)
 {
@@ -412,9 +400,6 @@ int bx_config_interface(int menu)
 {
   Bit32u choice;
   char sr_path[CI_PATH_LENGTH];
-#ifdef WIN32
-  HWND hwnd = GetActiveWindow();
-#endif
   while (1) {
     switch (menu) {
       case BX_CI_INIT:
@@ -427,11 +412,7 @@ int bx_config_interface(int menu)
         break;
       case BX_CI_START_MENU:
         {
-#ifdef WIN32
-          Bit32u n_choices = 8;
-#else
           Bit32u n_choices = 7;
-#endif
           Bit32u default_choice;
           switch (SIM->get_param_enum(BXPN_BOCHS_START)->get()) {
             case BX_LOAD_START:
@@ -470,12 +451,7 @@ int bx_config_interface(int menu)
               }
               break;
             case 6: bx_config_interface(BX_CI_START_SIMULATION); break;
-#ifdef WIN32
-            case 7: StartMenuDialog(hwnd); break;
-            case 8: SIM->quit_sim(1); return -1;
-#else
             case 7: SIM->quit_sim(1); return -1;
-#endif
             default: BAD_OPTION(menu, choice);
           }
         }
@@ -508,13 +484,9 @@ int bx_config_interface(int menu)
         {
           bx_list_c *cdromop = NULL;
           char pname[80];
-#if defined(WIN32) && (BX_WITH_WIN32 || BX_WITH_SDL)
-          choice = RuntimeOptionsDialog();
-#else
           char prompt[1024];
           build_runtime_options_prompt(runtime_menu_prompt, prompt, 1024);
           if (ask_uint(prompt, "", 1, BX_CI_RT_QUIT, BX_CI_RT_CONT, &choice, 10) < 0) return -1;
-#endif
           switch (choice) {
             case BX_CI_RT_FLOPPYA:
               if (SIM->get_param_enum(BXPN_FLOPPYA_DEVTYPE)->get() != BX_FDD_NONE) do_menu(BXPN_FLOPPYA);

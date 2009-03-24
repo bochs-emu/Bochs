@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32dialog.cc,v 1.81 2009-03-23 19:05:16 vruppert Exp $
+// $Id: win32dialog.cc,v 1.82 2009-03-24 16:28:03 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  The Bochs Project
@@ -23,14 +23,11 @@
 #if BX_USE_TEXTCONFIG && defined(WIN32) && (BX_WITH_WIN32 || BX_WITH_SDL)
 
 #include "bochs.h"
-#include "textconfig.h"
 #include "win32res.h"
 #include "win32paramdlg.h"
 
 const char log_choices[5][16] = {"ignore", "log", "ask user", "end simulation", "no change"};
 static int retcode = 0;
-static bxevent_handler old_callback = NULL;
-static void *old_callback_arg = NULL;
 #if BX_DEBUGGER
 extern char *debug_cmd;
 extern bx_bool debug_cmd_ready;
@@ -107,7 +104,7 @@ int BrowseDir(const char *Title, char *result)
   int r = -1;
 
   memset(&browseInfo,0,sizeof(BROWSEINFO));
-  browseInfo.hwndOwner = GetActiveWindow();
+  browseInfo.hwndOwner = GetBochsWindow();
   browseInfo.pszDisplayName = result;
   browseInfo.lpszTitle = (LPCSTR)Title;
   browseInfo.ulFlags = BIF_NEWDIALOGSTYLE | BIF_RETURNONLYFSDIRS;
@@ -605,6 +602,7 @@ static BOOL CALLBACK StartMenuDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM
           EndDialog(hDlg, 1);
           break;
         case IDCANCEL:
+          bx_user_quit = 1;
           EndDialog(hDlg, -1);
           break;
       }
@@ -680,11 +678,11 @@ static BOOL CALLBACK RTCdromDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
                 }
               }
             }
-            retcode = BX_CI_RT_CONT;
+            retcode = 0;
           }
           return PSNRET_NOERROR;
         case PSN_QUERYCANCEL:
-          retcode = BX_CI_RT_QUIT;
+          retcode = -1;
           return TRUE;
       }
       break;
@@ -785,7 +783,7 @@ static BOOL CALLBACK RTUSBdevDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM 
           }
           return PSNRET_NOERROR;
         case PSN_QUERYCANCEL:
-          retcode = BX_CI_RT_QUIT;
+          retcode = -1;
           return TRUE;
       }
       break;
@@ -839,7 +837,7 @@ static BOOL CALLBACK RTLogOptDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM 
           }
           return PSNRET_NOERROR;
         case PSN_QUERYCANCEL:
-          retcode = BX_CI_RT_QUIT;
+          retcode = -1;
           return TRUE;
       }
       break;
@@ -939,7 +937,7 @@ static BOOL CALLBACK RTMiscDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lP
           }
           return PSNRET_NOERROR;
         case PSN_QUERYCANCEL:
-          retcode = BX_CI_RT_QUIT;
+          retcode = -1;
           return TRUE;
       }
       break;
@@ -1106,17 +1104,49 @@ BxEvent* win32_notify_callback(void *unused, BxEvent *event)
         return event;
       }
     case BX_SYNC_EVT_TICK: // called periodically by siminterface.
+      event->retcode = 0;
       // fall into default case
     default:
-      return (*old_callback)(old_callback_arg, event);
+      return event;
   }
 }
 
-void win32_init_notify_callback()
+static int win32_ci_callback(void *userdata, ci_command_t command)
 {
-  SIM->get_notify_callback(&old_callback, &old_callback_arg);
-  assert (old_callback != NULL);
-  SIM->set_notify_callback(win32_notify_callback, NULL);
+  switch (command)
+  {
+    case CI_START:
+      SIM->set_notify_callback(win32_notify_callback, NULL);
+      if (SIM->get_param_enum(BXPN_BOCHS_START)->get() == BX_QUICK_START) {
+        SIM->begin_simulation(bx_startup_flags.argc, bx_startup_flags.argv);
+        // we don't expect it to return, but if it does, quit
+        SIM->quit_sim(1);
+      } else {
+        StartMenuDialog(GetActiveWindow());
+      }
+      break;
+    case CI_RUNTIME_CONFIG:
+      if (RuntimeOptionsDialog() < 0) {
+        bx_user_quit = 1;
+#if !BX_DEBUGGER
+        bx_atexit();
+        SIM->quit_sim(1);
+#else
+        bx_dbg_exit(1);
+#endif
+        return -1;
+      }
+      break;
+    case CI_SHUTDOWN:
+      break;
+  }
+  return 0;
+}
+
+int init_win32_config_interface()
+{
+  SIM->register_configuration_interface("win32config", win32_ci_callback, NULL);
+  return 0;  // success
 }
 
 #endif // BX_USE_TEXTCONFIG && defined(WIN32)

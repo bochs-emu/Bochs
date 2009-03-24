@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32dialog.h,v 1.18 2009-03-22 09:40:18 vruppert Exp $
+// $Id: win32dialog.h,v 1.19 2009-03-24 16:28:03 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  The Bochs Project
@@ -42,14 +42,12 @@ extern "C" {
 
 #if BX_USE_TEXTCONFIG && defined(WIN32)
 
-void StartMenuDialog(HWND hwnd);
-int RuntimeOptionsDialog();
 #if BX_DEBUGGER && BX_DEBUGGER_GUI
 void InitDebugDialog();
 void ParseIDText(const char *p);
 void HitBreak();
 #endif
-void win32_init_notify_callback();
+int init_win32_config_interface();
 
 #endif
 

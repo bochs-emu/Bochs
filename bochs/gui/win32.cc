@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32.cc,v 1.129 2009-02-23 11:06:53 vruppert Exp $
+// $Id: win32.cc,v 1.130 2009-03-24 16:28:03 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -613,7 +613,9 @@ void bx_win32_gui_c::specific_init(int argc, char **argv, unsigned
                                    unsigned headerbar_y)
 {
   int i;
+  bx_bool gui_ci;
 
+  gui_ci = !strcmp(SIM->get_param_enum(BXPN_SEL_CONFIG_INTERFACE)->get_selected(), "win32config");
   put("WGUI");
 
   // prepare for possible fullscreen mode
@@ -657,8 +659,12 @@ void bx_win32_gui_c::specific_init(int argc, char **argv, unsigned
         legacyF12 = TRUE;
 #if BX_DEBUGGER && BX_DEBUGGER_GUI
       } else if (!strcmp(argv[i], "gui_debug")) {
-        gui_debug = TRUE;
-        SIM->set_debug_gui(1);
+        if (gui_ci) {
+          gui_debug = TRUE;
+          SIM->set_debug_gui(1);
+        } else {
+          BX_PANIC(("Config interface 'win32config' is required for gui debugger"));
+        }
 #endif
       } else {
         BX_PANIC(("Unknown win32 option '%s'", argv[i]));
@@ -728,8 +734,9 @@ void bx_win32_gui_c::specific_init(int argc, char **argv, unsigned
     bx_keymap.loadKeymap(NULL);  // I have no function to convert X windows symbols
   }
 
-  win32_init_notify_callback();
-  dialog_caps = BX_GUI_DLG_ALL;
+  if (gui_ci) {
+    dialog_caps = BX_GUI_DLG_ALL;
+  }
 }
 
 void resize_main_window()

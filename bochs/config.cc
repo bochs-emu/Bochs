@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.169 2009-03-24 11:20:17 vruppert Exp $
+// $Id: config.cc,v 1.170 2009-03-24 16:28:02 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -269,6 +269,9 @@ void bx_init_options()
 
  // config interface option, set in bochsrc or command line
   static const char *config_interface_list[] = {
+#ifdef WIN32
+    "win32config",
+#endif
 #if BX_USE_TEXTCONFIG
     "textconfig",
 #endif
