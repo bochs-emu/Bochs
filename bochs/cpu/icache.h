@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: icache.h,v 1.45 2009-03-22 21:12:35 sshwarts Exp $
+// $Id: icache.h,v 1.46 2009-03-24 12:37:28 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007 Stanislav Shwartsman
@@ -53,11 +53,9 @@ public:
   BX_CPP_INLINE Bit32u hash(bx_phy_address pAddr) const {
 #if BX_PHY_ADDRESS_LONG
     // can share writeStamps between multiple pages
-    Bit32u lo = (pAddr >> 12) & (PHY_MEM_PAGES-1);
-    Bit32u hi = (pAddr >> 32) & (PHY_MEM_PAGES-1);
-    return lo ^ hi;
+    return (Bit32u) ((pAddr >> 12) & (PHY_MEM_PAGES-1));
 #else
-    return (Bit32u)(pAddr) >> 12;
+    return (Bit32u) (pAddr) >> 12;
 #endif
   }
 
@@ -90,7 +88,7 @@ public:
       handleSMC(); // one of the CPUs might be running trace from this page
       // Decrement page write stamp, so iCache entries with older stamps are
       // effectively invalidated.
-      pageWriteStampTable[index]--;
+      pageWriteStampTable[index] = (pageWriteStampTable[index] - 1) & ~ICacheWriteStampFetchModeMask;
     }
 #endif
 #if BX_DEBUGGER
