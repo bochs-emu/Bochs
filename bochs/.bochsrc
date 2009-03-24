@@ -198,20 +198,23 @@ vga: extension=vbe
 # booting from 'a' (or 'floppy').
 #
 # You can set the initial status of the media to 'ejected' or 'inserted'.
-#   floppya: 2_88=path, status=ejected             (2.88M 3.5" floppy)
-#   floppya: 1_44=path, status=inserted            (1.44M 3.5" floppy)
-#   floppya: 1_2=path, status=ejected              (1.2M  5.25" floppy)
-#   floppya: 720k=path, status=inserted            (720K  3.5" floppy)
-#   floppya: 360k=path, status=inserted            (360K  5.25" floppy)
-#   floppya: 320k=path, status=inserted            (320K  5.25" floppy)
-#   floppya: 180k=path, status=inserted            (180K  5.25" floppy)
-#   floppya: 160k=path, status=inserted            (160K  5.25" floppy)
-#   floppya: image=path, status=inserted           (guess type from image size)
+#   floppya: 2_88=path, status=ejected    (2.88M 3.5"  media)
+#   floppya: 1_44=path, status=inserted   (1.44M 3.5"  media)
+#   floppya: 1_2=path, status=ejected     (1.2M  5.25" media)
+#   floppya: 720k=path, status=inserted   (720K  3.5"  media)
+#   floppya: 360k=path, status=inserted   (360K  5.25" media)
+#   floppya: 320k=path, status=inserted   (320K  5.25" media)
+#   floppya: 180k=path, status=inserted   (180K  5.25" media)
+#   floppya: 160k=path, status=inserted   (160K  5.25" media)
+#   floppya: image=path, status=inserted  (guess media type from image size)
+#   floppya: type=1_44                    (1.44M 3.5" floppy drive, no media)
 #
 # The path should be the name of a disk image file.  On Unix, you can use a raw
 # device name such as /dev/fd0 on Linux.  On win32 platforms, use drive letters
 # such as a: or b: as the path.  The parameter 'image' works with image files
 # only. In that case the size must match one of the supported types.
+# The parameter 'type' can be used to enable the floppy drive without media
+# and status specified. Usually the drive type is set up based on the media type.
 #=======================================================================
 floppya: 1_44=/dev/fd0, status=inserted
 #floppya: image=../1.44, status=inserted
@@ -266,7 +269,7 @@ ata3: enabled=0, ioaddr1=0x168, ioaddr2=0x360, irq=9
 #   translation=type of translation of the bios, only for disks [none|lba|large|rechs|auto]
 #   model=      string returned by identify device command
 #   journal=    optional filename of the redolog for undoable and volatile disks
-#   
+#
 # Point this at a hard disk image file, cdrom iso file, or physical cdrom
 # device.  To create a hard disk image, try running bximage.  It will help you
 # choose the size and then suggest a line that works with it.
@@ -279,10 +282,10 @@ ata3: enabled=0, ioaddr1=0x168, ioaddr2=0x360, irq=9
 # access the "first" cdrom in the system.  On MacOSX, use path="drive"
 # to access the physical drive.
 #
-# The path is always mandatory. Disk geometry autodetection works with images
-# created by bximage if CHS is set to 0/0/0 (cylinders are calculated using
-# heads=16 and spt=63). For other hard disk images and modes the cylinders,
-# heads, and spt are mandatory.
+# The path is mandatory for hard disks. Disk geometry autodetection works with
+# images created by bximage if CHS is set to 0/0/0 (cylinders are calculated
+# using  heads=16 and spt=63). For other hard disk images and modes the
+# cylinders, heads, and spt are mandatory.
 #
 # Default values are:
 #   mode=flat, biosdetect=auto, translation=auto, model="Generic 1234"

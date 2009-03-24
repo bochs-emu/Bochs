@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.168 2009-03-23 19:05:15 vruppert Exp $
+// $Id: config.cc,v 1.169 2009-03-24 11:20:17 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -900,7 +900,7 @@ void bx_init_options()
       "Media status",
       "Inserted or ejected",
       floppy_status_names,
-      BX_INSERTED,
+      BX_EJECTED,
       BX_EJECTED);
   status->set_ask_format("Is the floppy inserted or ejected? [%s] ");
   status->set_runtime_param(1);
@@ -949,7 +949,7 @@ void bx_init_options()
       "Media status",
       "Inserted or ejected",
       floppy_status_names,
-      BX_INSERTED,
+      BX_EJECTED,
       BX_EJECTED);
   status->set_ask_format("Is the floppy inserted or ejected? [%s] ");
   status->set_runtime_param(1);
@@ -2135,109 +2135,83 @@ static int parse_line_formatted(const char *context, int num_params, char *param
     }
     bx_read_configuration(params[1]);
   }
-  else if (!strcmp(params[0], "floppya")) {
-    for (i=1; i<num_params; i++) {
-      if (!strncmp(params[i], "2_88=", 5)) {
-        SIM->get_param_string(BXPN_FLOPPYA_PATH)->set(&params[i][5]);
-        SIM->get_param_enum(BXPN_FLOPPYA_TYPE)->set(BX_FLOPPY_2_88);
-      }
-      else if (!strncmp(params[i], "1_44=", 5)) {
-        SIM->get_param_string(BXPN_FLOPPYA_PATH)->set(&params[i][5]);
-        SIM->get_param_enum(BXPN_FLOPPYA_TYPE)->set(BX_FLOPPY_1_44);
-      }
-      else if (!strncmp(params[i], "1_2=", 4)) {
-        SIM->get_param_string(BXPN_FLOPPYA_PATH)->set(&params[i][4]);
-        SIM->get_param_enum(BXPN_FLOPPYA_TYPE)->set(BX_FLOPPY_1_2);
-      }
-      else if (!strncmp(params[i], "720k=", 5)) {
-        SIM->get_param_string(BXPN_FLOPPYA_PATH)->set(&params[i][5]);
-        SIM->get_param_enum(BXPN_FLOPPYA_TYPE)->set(BX_FLOPPY_720K);
-      }
-      else if (!strncmp(params[i], "360k=", 5)) {
-        SIM->get_param_string(BXPN_FLOPPYA_PATH)->set(&params[i][5]);
-        SIM->get_param_enum(BXPN_FLOPPYA_TYPE)->set(BX_FLOPPY_360K);
-      }
-      // use CMOS reserved types?
-      else if (!strncmp(params[i], "160k=", 5)) {
-        SIM->get_param_string(BXPN_FLOPPYA_PATH)->set(&params[i][5]);
-        SIM->get_param_enum(BXPN_FLOPPYA_TYPE)->set(BX_FLOPPY_160K);
-      }
-      else if (!strncmp(params[i], "180k=", 5)) {
-        SIM->get_param_string(BXPN_FLOPPYA_PATH)->set(&params[i][5]);
-        SIM->get_param_enum(BXPN_FLOPPYA_TYPE)->set(BX_FLOPPY_180K);
-      }
-      else if (!strncmp(params[i], "320k=", 5)) {
-        SIM->get_param_string(BXPN_FLOPPYA_PATH)->set(&params[i][5]);
-        SIM->get_param_enum(BXPN_FLOPPYA_TYPE)->set(BX_FLOPPY_320K);
-      }
-      else if (!strncmp(params[i], "image=", 6)) {
-        /* "image=" means we should get floppy type from image */
-        SIM->get_param_string(BXPN_FLOPPYA_PATH)->set(&params[i][6]);
-        t = get_floppy_type_from_image(&params[i][6]);
-        if (t != BX_FLOPPY_UNKNOWN)
-          SIM->get_param_enum(BXPN_FLOPPYA_TYPE)->set(t);
-        else
-          PARSE_ERR(("%s: floppya image size doesn't match one of the supported types.", context));
-      }
-      else if (!strncmp(params[i], "status=", 7)) {
-        SIM->get_param_enum(BXPN_FLOPPYA_STATUS)->set_by_name(&params[i][7]);
-      }
-      else {
-        PARSE_ERR(("%s: floppya attribute '%s' not understood.", context,
-          params[i]));
-      }
+  else if ((!strcmp(params[0], "floppya")) ||
+           (!strcmp(params[0], "floppyb"))) {
+    if (!strcmp(params[0], "floppya")) {
+      base = (bx_list_c*) SIM->get_param(BXPN_FLOPPYA);
+    } else {
+      base = (bx_list_c*) SIM->get_param(BXPN_FLOPPYB);
     }
-  }
-
-  else if (!strcmp(params[0], "floppyb")) {
     for (i=1; i<num_params; i++) {
-      if (!strncmp(params[i], "2_88=", 5)) {
-        SIM->get_param_string(BXPN_FLOPPYB_PATH)->set(&params[i][5]);
-        SIM->get_param_enum(BXPN_FLOPPYB_TYPE)->set(BX_FLOPPY_2_88);
+      if (!strncmp(params[i], "type=", 5)) {
+        if (!strcmp(params[i]+5, "2_88")) {
+          SIM->get_param_enum("devtype", base)->set(BX_FDD_350ED);
+        }
+        else if (!strcmp(params[i]+5, "1_44")) {
+          SIM->get_param_enum("devtype", base)->set(BX_FDD_350HD);
+        }
+        else if (!strcmp(params[i]+5, "1_2")) {
+          SIM->get_param_enum("devtype", base)->set(BX_FDD_525HD);
+        }
+        else if (!strcmp(params[i]+5, "720k")) {
+          SIM->get_param_enum("devtype", base)->set(BX_FDD_350DD);
+        }
+        else if (!strcmp(params[i]+5, "360k")) {
+          SIM->get_param_enum("devtype", base)->set(BX_FDD_525DD);
+        }
+        else {
+          PARSE_ERR(("%s: %s: unknown type '%s'.", context, params[0],
+            params[i]+5));
+        }
+      }
+      else if (!strncmp(params[i], "2_88=", 5)) {
+        SIM->get_param_string("path", base)->set(&params[i][5]);
+        SIM->get_param_enum("type", base)->set(BX_FLOPPY_2_88);
       }
       else if (!strncmp(params[i], "1_44=", 5)) {
-        SIM->get_param_string(BXPN_FLOPPYB_PATH)->set(&params[i][5]);
-        SIM->get_param_enum(BXPN_FLOPPYB_TYPE)->set(BX_FLOPPY_1_44);
+        SIM->get_param_string("path", base)->set(&params[i][5]);
+        SIM->get_param_enum("type", base)->set(BX_FLOPPY_1_44);
       }
       else if (!strncmp(params[i], "1_2=", 4)) {
-        SIM->get_param_string(BXPN_FLOPPYB_PATH)->set(&params[i][4]);
-        SIM->get_param_enum(BXPN_FLOPPYB_TYPE)->set(BX_FLOPPY_1_2);
+        SIM->get_param_string("path", base)->set(&params[i][4]);
+        SIM->get_param_enum("type", base)->set(BX_FLOPPY_1_2);
       }
       else if (!strncmp(params[i], "720k=", 5)) {
-        SIM->get_param_string(BXPN_FLOPPYB_PATH)->set(&params[i][5]);
-        SIM->get_param_enum(BXPN_FLOPPYB_TYPE)->set(BX_FLOPPY_720K);
+        SIM->get_param_string("path", base)->set(&params[i][5]);
+        SIM->get_param_enum("type", base)->set(BX_FLOPPY_720K);
       }
       else if (!strncmp(params[i], "360k=", 5)) {
-        SIM->get_param_string(BXPN_FLOPPYB_PATH)->set(&params[i][5]);
-        SIM->get_param_enum(BXPN_FLOPPYB_TYPE)->set(BX_FLOPPY_360K);
+        SIM->get_param_string("path", base)->set(&params[i][5]);
+        SIM->get_param_enum("type", base)->set(BX_FLOPPY_360K);
       }
       // use CMOS reserved types?
       else if (!strncmp(params[i], "160k=", 5)) {
-        SIM->get_param_string(BXPN_FLOPPYB_PATH)->set(&params[i][5]);
-        SIM->get_param_enum(BXPN_FLOPPYB_TYPE)->set(BX_FLOPPY_160K);
+        SIM->get_param_string("path", base)->set(&params[i][5]);
+        SIM->get_param_enum("type", base)->set(BX_FLOPPY_160K);
       }
       else if (!strncmp(params[i], "180k=", 5)) {
-        SIM->get_param_string(BXPN_FLOPPYB_PATH)->set(&params[i][5]);
-        SIM->get_param_enum(BXPN_FLOPPYB_TYPE)->set(BX_FLOPPY_180K);
+        SIM->get_param_string("path", base)->set(&params[i][5]);
+        SIM->get_param_enum("type", base)->set(BX_FLOPPY_180K);
       }
       else if (!strncmp(params[i], "320k=", 5)) {
-        SIM->get_param_string(BXPN_FLOPPYB_PATH)->set(&params[i][5]);
-        SIM->get_param_enum(BXPN_FLOPPYB_TYPE)->set(BX_FLOPPY_320K);
+        SIM->get_param_string("path", base)->set(&params[i][5]);
+        SIM->get_param_enum("type", base)->set(BX_FLOPPY_320K);
       }
       else if (!strncmp(params[i], "image=", 6)) {
         /* "image=" means we should get floppy type from image */
-        SIM->get_param_string(BXPN_FLOPPYB_PATH)->set(&params[i][6]);
+        SIM->get_param_string("path", base)->set(&params[i][6]);
         t = get_floppy_type_from_image(&params[i][6]);
         if (t != BX_FLOPPY_UNKNOWN)
-          SIM->get_param_enum(BXPN_FLOPPYB_TYPE)->set(t);
+          SIM->get_param_enum("type", base)->set(t);
         else
-          PARSE_ERR(("%s: floppyb image size doesn't match one of the supported types.", context));
+          PARSE_ERR(("%s: %s image size doesn't match one of the supported types.",
+            context, params[0]));
       }
       else if (!strncmp(params[i], "status=", 7)) {
-        SIM->get_param_enum(BXPN_FLOPPYB_STATUS)->set_by_name(&params[i][7]);
+        SIM->get_param_enum("status", base)->set_by_name(&params[i][7]);
       }
       else {
-        PARSE_ERR(("%s: floppyb attribute '%s' not understood.", context,
+        PARSE_ERR(("%s: %s attribute '%s' not understood.", context, params[0],
           params[i]));
       }
     }
@@ -2303,7 +2277,7 @@ static int parse_line_formatted(const char *context, int num_params, char *param
   // ataX-master, ataX-slave
   else if ((!strncmp(params[0], "ata", 3)) && (strlen(params[0]) > 4)) {
     Bit8u channel = params[0][3];
-    int type = 0, mode = BX_ATA_MODE_FLAT, biosdetect = BX_ATA_BIOSDETECT_AUTO;
+    int type = -1, mode = BX_ATA_MODE_FLAT, biosdetect = BX_ATA_BIOSDETECT_AUTO;
     Bit32u cylinders = 0, heads = 0, sectors = 0;
     char tmpname[80];
 
@@ -2376,33 +2350,33 @@ static int parse_line_formatted(const char *context, int num_params, char *param
     }
 
     // Enables the ata device
-    if (strlen(SIM->get_param_string("path", base)->getptr()) > 0) {
-      SIM->get_param_bool("present", base)->set(1);
+    if (type >= 0) {
       SIM->get_param_enum("type", base)->set(type);
-      SIM->get_param_enum("mode", base)->set(mode);
-      SIM->get_param_num("cylinders", base)->set(cylinders);
-      SIM->get_param_num("heads", base)->set(heads);
-      SIM->get_param_num("spt", base)->set(sectors);
       SIM->get_param_num("biosdetect", base)->set(biosdetect);
+      if (type == BX_ATA_DEVICE_DISK) {
+        if (strlen(SIM->get_param_string("path", base)->getptr()) > 0) {
+          SIM->get_param_bool("present", base)->set(1);
+          SIM->get_param_enum("mode", base)->set(mode);
+          if ((cylinders == 0) && (heads == 0) && (sectors == 0)) {
+            PARSE_WARN(("%s: ataX-master/slave CHS set to 0/0/0 - autodetection enabled", context));
+            // using heads = 16 and spt = 63 for autodetection (bximage defaults)
+            SIM->get_param_num("heads", base)->set(16);
+            SIM->get_param_num("spt", base)->set(63);
+          } else {
+            SIM->get_param_num("cylinders", base)->set(cylinders);
+            SIM->get_param_num("heads", base)->set(heads);
+            SIM->get_param_num("spt", base)->set(sectors);
+          }
+        } else {
+          SIM->get_param_bool("present", base)->set(0);
+        }
+      } else if (type == BX_ATA_DEVICE_CDROM) {
+        SIM->get_param_bool("present", base)->set(1);
+      }
     } else {
       SIM->get_param_bool("present", base)->set(0);
     }
 
-    // if enabled, check if device ok
-    if (SIM->get_param_bool("present", base)->get() == 1) {
-      if (SIM->get_param_enum("type", base)->get() == BX_ATA_DEVICE_DISK) {
-        if ((SIM->get_param_num("cylinders", base)->get() == 0) &&
-            (SIM->get_param_num("heads", base)->get() == 0) &&
-            (SIM->get_param_num("spt", base)->get() == 0)) {
-          PARSE_WARN(("%s: ataX-master/slave CHS set to 0/0/0 - autodetection enabled", context));
-          // using heads = 16 and spt = 63 for autodetection (bximage defaults)
-          SIM->get_param_num("heads", base)->set(16);
-          SIM->get_param_num("spt", base)->set(63);
-        }
-      } else if (SIM->get_param_enum("type", base)->get() != BX_ATA_DEVICE_CDROM) {
-        PARSE_WARN(("%s: ataX-master/slave: type should be specified", context));
-      }
-    }
   } else if (!strcmp(params[0], "boot")) {
     char tmppath[80];
     if (num_params < 2) {
@@ -3236,23 +3210,40 @@ static const char *fdtypes[] = {
 
 int bx_write_floppy_options(FILE *fp, int drive)
 {
-  char path[80], type[80], status[80];
+  char devtype[80], path[80], type[80], status[80];
+  int ftype;
 
   BX_ASSERT(drive==0 || drive==1);
+  sprintf(devtype, "floppy.%d.devtype", drive);
   sprintf(path, "floppy.%d.path", drive);
   sprintf(type, "floppy.%d.type", drive);
   sprintf(status, "floppy.%d.status", drive);
-  if (SIM->get_param_enum(type)->get() == BX_FLOPPY_NONE) {
+  ftype = SIM->get_param_enum(devtype)->get();
+  if (ftype == BX_FDD_NONE) {
     fprintf(fp, "# no floppy%c\n", (char)'a'+drive);
     return 0;
+  } else {
+    fprintf(fp, "floppy%c: type=", (char)'a'+drive);
+    if (ftype == BX_FDD_350ED) {
+      fprintf(fp, "2_88");
+    } else if (ftype == BX_FDD_350HD) {
+      fprintf(fp, "1_44");
+    } else if (ftype == BX_FDD_525HD) {
+      fprintf(fp, "1_2");
+    } else if (ftype == BX_FDD_350DD) {
+      fprintf(fp, "720k");
+    } else if (ftype == BX_FDD_525DD) {
+      fprintf(fp, "360k");
+    }
   }
-  BX_ASSERT(SIM->get_param_enum(type)->get() > BX_FLOPPY_NONE &&
-            SIM->get_param_enum(type)->get() <= BX_FLOPPY_LAST);
-  fprintf(fp, "floppy%c: %s=\"%s\", status=%s\n",
-    (char)'a'+drive,
-    fdtypes[SIM->get_param_enum(type)->get() - BX_FLOPPY_NONE],
-    SIM->get_param_string(path)->getptr(),
-    SIM->get_param_enum(status)->get_selected());
+  if ((SIM->get_param_enum(type)->get() > BX_FLOPPY_NONE) &&
+      (SIM->get_param_enum(type)->get() <= BX_FLOPPY_LAST)) {
+    fprintf(fp, ", %s=\"%s\", status=%s",
+      fdtypes[SIM->get_param_enum(type)->get() - BX_FLOPPY_NONE],
+      SIM->get_param_string(path)->getptr(),
+      SIM->get_param_enum(status)->get_selected());
+  }
+  fprintf(fp, "\n");
   return 0;
 }
 
