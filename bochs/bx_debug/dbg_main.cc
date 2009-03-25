@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.178 2009-03-10 17:02:03 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.179 2009-03-25 07:09:52 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2718,7 +2718,7 @@ void bx_dbg_instrument_command(const char *comm)
     BX_INSTR_STOP();
   }
   else if (!strcmp(comm, "reset")) {
-    BX_INSTR_RESET(dbg_cpu);
+    BX_INSTR_RESET(dbg_cpu, BX_RESET_HARDWARE);
   }
   else if (!strcmp(comm, "print")) {
     BX_INSTR_PRINT();
