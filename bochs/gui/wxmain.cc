@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.160 2009-03-23 19:05:16 vruppert Exp $
+// $Id: wxmain.cc,v 1.161 2009-03-25 18:33:42 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWidgets frame, toolbar, menus, and dialogs.
@@ -1295,10 +1295,10 @@ void MyFrame::editFloppyConfig(int drive)
   if (!list) { wxLogError(wxT("floppy object param is null")); return; }
   bx_param_filename_c *fname = (bx_param_filename_c*) list->get_by_name("path");
   bx_param_enum_c *disktype = (bx_param_enum_c *) list->get_by_name("type");
-  bx_param_enum_c *status = (bx_param_enum_c *) list->get_by_name("status");
+  bx_param_bool_c *status = (bx_param_bool_c *) list->get_by_name("status");
   if (fname->get_type() != BXT_PARAM_STRING
       || disktype->get_type() != BXT_PARAM_ENUM
-      || status->get_type() != BXT_PARAM_ENUM) {
+      || status->get_type() != BXT_PARAM_BOOL) {
     wxLogError(wxT("floppy params have wrong type"));
     return;
   }
@@ -1320,7 +1320,7 @@ void MyFrame::editFloppyConfig(int drive)
   dlg.SetValidateFunc(editFloppyValidate);
   if (disktype->get() == BX_FLOPPY_NONE) {
     dlg.SetRadio(0);
-  } else if ((status->get() == BX_EJECTED) || (!strcmp("none", fname->getptr()))) {
+  } else if ((status->get() == 0) || (!strcmp("none", fname->getptr()))) {
     dlg.SetRadio((sim_thread == NULL)?1:0);
   } else {
     // otherwise the SetFilename() should have done the right thing.
@@ -1338,7 +1338,7 @@ void MyFrame::editFloppyConfig(int drive)
       }
     } else {
       if (dlg.GetRadio() > 0) {
-        status->set(BX_INSERTED);
+        status->set(1);
       }
     }
   }

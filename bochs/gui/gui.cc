@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.cc,v 1.110 2009-03-23 19:05:15 vruppert Exp $
+// $Id: gui.cc,v 1.111 2009-03-25 18:33:38 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -247,9 +247,9 @@ void bx_gui_c::cleanup(void)
 void bx_gui_c::update_drive_status_buttons(void)
 {
   BX_GUI_THIS floppyA_status = DEV_floppy_get_media_status(0)
-    && (SIM->get_param_enum(BXPN_FLOPPYA_STATUS)->get() == BX_INSERTED);
+    && (SIM->get_param_bool(BXPN_FLOPPYA_STATUS)->get());
   BX_GUI_THIS floppyB_status = DEV_floppy_get_media_status(1)
-    && (SIM->get_param_enum(BXPN_FLOPPYB_STATUS)->get() == BX_INSERTED);
+    && (SIM->get_param_bool(BXPN_FLOPPYB_STATUS)->get());
   Bit32u handle = DEV_hd_get_first_cd_handle();
   BX_GUI_THIS cdromD_status = DEV_hd_get_cd_media_status(handle);
   if (BX_GUI_THIS floppyA_status)

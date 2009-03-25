@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: textconfig.cc,v 1.79 2009-03-24 16:28:02 vruppert Exp $
+// $Id: textconfig.cc,v 1.80 2009-03-25 18:33:40 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  The Bochs Project
@@ -343,7 +343,7 @@ void build_runtime_options_prompt(const char *format, char *buf, int size)
     else {
       sprintf(buffer[i], "%s, size=%s, %s", SIM->get_param_string("path", floppyop)->getptr(),
         SIM->get_param_enum("type", floppyop)->get_selected(),
-        SIM->get_param_enum("status", floppyop)->get_selected());
+        SIM->get_param_bool("status", floppyop)->get() ? "inserted":"ejected");
       if (!SIM->get_param_string("path", floppyop)->getptr()[0]) strcpy(buffer[i], "none");
     }
   }

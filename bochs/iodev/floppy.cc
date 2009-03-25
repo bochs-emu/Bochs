@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.cc,v 1.118 2009-03-23 19:05:16 vruppert Exp $
+// $Id: floppy.cc,v 1.119 2009-03-25 18:33:43 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -141,7 +141,7 @@ void bx_floppy_ctrl_c::init(void)
 {
   Bit8u i, devtype, cmos_value;
 
-  BX_DEBUG(("Init $Id: floppy.cc,v 1.118 2009-03-23 19:05:16 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: floppy.cc,v 1.119 2009-03-25 18:33:43 vruppert Exp $"));
   DEV_dma_register_8bit_channel(2, dma_read, dma_write, "Floppy Drive");
   DEV_register_irq(6, "Floppy Drive");
   for (unsigned addr=0x03F2; addr<=0x03F7; addr++) {
@@ -180,7 +180,7 @@ void bx_floppy_ctrl_c::init(void)
   }
 
   if (SIM->get_param_enum(BXPN_FLOPPYA_TYPE)->get() != BX_FLOPPY_NONE) {
-    if (SIM->get_param_enum(BXPN_FLOPPYA_STATUS)->get() == BX_INSERTED) {
+    if (SIM->get_param_bool(BXPN_FLOPPYA_STATUS)->get()) {
       if (evaluate_media(BX_FD_THIS s.device_type[0], SIM->get_param_enum(BXPN_FLOPPYA_TYPE)->get(),
                          SIM->get_param_string(BXPN_FLOPPYA_PATH)->getptr(), & BX_FD_THIS s.media[0])) {
         BX_FD_THIS s.media_present[0] = 1;
@@ -190,7 +190,7 @@ void bx_floppy_ctrl_c::init(void)
         MED.write_protected, MED.heads, MED.tracks, MED.sectors_per_track));
 #undef MED
       } else {
-        SIM->get_param_enum(BXPN_FLOPPYA_STATUS)->set(BX_EJECTED);
+        SIM->get_param_bool(BXPN_FLOPPYA_STATUS)->set(0);
       }
     }
   }
@@ -210,7 +210,7 @@ void bx_floppy_ctrl_c::init(void)
   }
 
   if (SIM->get_param_enum(BXPN_FLOPPYB_TYPE)->get() != BX_FLOPPY_NONE) {
-    if (SIM->get_param_enum(BXPN_FLOPPYB_STATUS)->get() == BX_INSERTED) {
+    if (SIM->get_param_bool(BXPN_FLOPPYB_STATUS)->get()) {
       if (evaluate_media(BX_FD_THIS s.device_type[1], SIM->get_param_enum(BXPN_FLOPPYB_TYPE)->get(),
                          SIM->get_param_string(BXPN_FLOPPYB_PATH)->getptr(), & BX_FD_THIS s.media[1])) {
         BX_FD_THIS s.media_present[1] = 1;
@@ -220,7 +220,7 @@ void bx_floppy_ctrl_c::init(void)
         MED.write_protected, MED.heads, MED.tracks, MED.sectors_per_track));
 #undef MED
       } else {
-        SIM->get_param_enum(BXPN_FLOPPYB_STATUS)->set(BX_EJECTED);
+        SIM->get_param_bool(BXPN_FLOPPYB_STATUS)->set(0);
       }
     }
   }
@@ -1431,9 +1431,9 @@ unsigned bx_floppy_ctrl_c::set_media_status(unsigned drive, unsigned status)
     }
     BX_FD_THIS s.media_present[drive] = 0;
     if (drive == 0) {
-      SIM->get_param_enum(BXPN_FLOPPYA_STATUS)->set(BX_EJECTED);
+      SIM->get_param_bool(BXPN_FLOPPYA_STATUS)->set(0);
     } else {
-      SIM->get_param_enum(BXPN_FLOPPYB_STATUS)->set(BX_EJECTED);
+      SIM->get_param_bool(BXPN_FLOPPYB_STATUS)->set(0);
     }
     BX_FD_THIS s.DIR[drive] |= 0x80; // disk changed line
     return(0);
@@ -1453,22 +1453,22 @@ unsigned bx_floppy_ctrl_c::set_media_status(unsigned drive, unsigned status)
         BX_INFO(("fd0: '%s' ro=%d, h=%d,t=%d,spt=%d", SIM->get_param_string(BXPN_FLOPPYA_PATH)->getptr(),
         MED.write_protected, MED.heads, MED.tracks, MED.sectors_per_track));
 #undef MED
-        SIM->get_param_enum(BXPN_FLOPPYA_STATUS)->set(BX_INSERTED);
+        SIM->get_param_bool(BXPN_FLOPPYA_STATUS)->set(1);
       } else {
 #define MED (BX_FD_THIS s.media[1])
         BX_INFO(("fd1: '%s' ro=%d, h=%d,t=%d,spt=%d", SIM->get_param_string(BXPN_FLOPPYB_PATH)->getptr(),
         MED.write_protected, MED.heads, MED.tracks, MED.sectors_per_track));
 #undef MED
-        SIM->get_param_enum(BXPN_FLOPPYB_STATUS)->set(BX_INSERTED);
+        SIM->get_param_bool(BXPN_FLOPPYB_STATUS)->set(1);
       }
       return(1);
     } else {
       BX_FD_THIS s.media_present[drive] = 0;
       if (drive == 0) {
-        SIM->get_param_enum(BXPN_FLOPPYA_STATUS)->set(BX_EJECTED);
+        SIM->get_param_bool(BXPN_FLOPPYA_STATUS)->set(0);
         SIM->get_param_enum(BXPN_FLOPPYA_TYPE)->set(BX_FLOPPY_NONE);
       } else {
-        SIM->get_param_enum(BXPN_FLOPPYB_STATUS)->set(BX_EJECTED);
+        SIM->get_param_bool(BXPN_FLOPPYB_STATUS)->set(0);
         SIM->get_param_enum(BXPN_FLOPPYB_TYPE)->set(BX_FLOPPY_NONE);
       }
       return(0);

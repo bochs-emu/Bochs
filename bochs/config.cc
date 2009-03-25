@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.170 2009-03-24 16:28:02 vruppert Exp $
+// $Id: config.cc,v 1.171 2009-03-25 18:33:30 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -115,12 +115,12 @@ static Bit64s bx_param_handler(bx_param_c *param, int set, Bit64s val)
       }
     } else if (!strcmp(pname, BXPN_FLOPPYA_STATUS)) {
       if ((set) && (SIM->get_init_done())) {
-        DEV_floppy_set_media_status(0, val == BX_INSERTED);
+        DEV_floppy_set_media_status(0, val);
         bx_gui->update_drive_status_buttons();
       }
     } else if (!strcmp(pname, BXPN_FLOPPYB_STATUS)) {
       if ((set) && (SIM->get_init_done())) {
-        DEV_floppy_set_media_status(1, val == BX_INSERTED);
+        DEV_floppy_set_media_status(1, val);
         bx_gui->update_drive_status_buttons();
       }
     } else if (!strcmp(pname, BXPN_MOUSE_ENABLED)) {
@@ -204,14 +204,14 @@ const char *bx_param_string_handler(bx_param_string_c *param, int set,
             }
           }
           if ((DEV_floppy_present()) &&
-              (SIM->get_param_enum("status", base)->get() == BX_INSERTED)) {
+              (SIM->get_param_bool("status", base)->get() == 1)) {
             // tell the device model that we removed, then inserted the disk
             DEV_floppy_set_media_status(device, 0);
             DEV_floppy_set_media_status(device, 1);
           }
         } else {
           SIM->get_param_enum("type", base)->set_enabled(!empty);
-          SIM->get_param_enum("status", base)->set_enabled(!empty);
+          SIM->get_param_bool("status", base)->set_enabled(!empty);
         }
       }
 #if BX_PLUGINS
@@ -243,7 +243,7 @@ static int bx_param_enable_handler(bx_param_c *param, int val)
     sparam = (bx_param_string_c*)param;
     empty = (strlen(sparam->getptr()) < 1) || !strcmp(sparam->getptr(), "none");
     SIM->get_param_enum("type", base)->set_enabled(val && !empty);
-    SIM->get_param_enum("status", base)->set_enabled(val && !empty);
+    SIM->get_param_bool("status", base)->set_enabled(val && !empty);
   } else {
     BX_PANIC(("bx_param_enable_handler called with unknown parameter '%s'", pname));
   }
@@ -256,8 +256,8 @@ void bx_init_options()
   bx_list_c *menu;
   bx_list_c *deplist;
   bx_param_num_c *ioaddr, *ioaddr2, *irq;
-  bx_param_bool_c *enabled, *inserted;
-  bx_param_enum_c *mode, *status, *type, *ethmod;
+  bx_param_bool_c *enabled, *status;
+  bx_param_enum_c *mode, *type, *ethmod;
   bx_param_string_c *macaddr, *ethdev;
   bx_param_filename_c *path;
   char name[BX_PATHNAME_LEN], descr[512], group[16], label[512];
@@ -898,14 +898,12 @@ void bx_init_options()
   type->set_ask_format("What type of floppy media? (auto=detect) [%s] ");
   type->set_runtime_param(1);
 
-  status = new bx_param_enum_c(floppya,
+  status = new bx_param_bool_c(floppya,
       "status",
-      "Media status",
-      "Inserted or ejected",
-      floppy_status_names,
-      BX_EJECTED,
-      BX_EJECTED);
-  status->set_ask_format("Is the floppy inserted or ejected? [%s] ");
+      "Inserted",
+      "Floppy media status (inserted / ejected)",
+      0);
+  status->set_ask_format("Is media inserted in drive? [%s] ");
   status->set_runtime_param(1);
 
   deplist = new bx_list_c(NULL, 1);
@@ -947,14 +945,12 @@ void bx_init_options()
   type->set_ask_format("What type of floppy media? (auto=detect) [%s] ");
   type->set_runtime_param(1);
 
-  status = new bx_param_enum_c(floppyb,
+  status = new bx_param_bool_c(floppyb,
       "status",
-      "Media status",
-      "Inserted or ejected",
-      floppy_status_names,
-      BX_EJECTED,
-      BX_EJECTED);
-  status->set_ask_format("Is the floppy inserted or ejected? [%s] ");
+      "Inserted",
+      "Floppy media status (inserted / ejected)",
+      0);
+  status->set_ask_format("Is media inserted in drive? [%s] ");
   status->set_runtime_param(1);
 
   deplist = new bx_list_c(NULL, 1);
@@ -1097,12 +1093,12 @@ void bx_init_options()
         BX_ATA_MODE_FLAT);
       mode->set_ask_format("Enter mode of ATA device, (flat, concat, etc.): [%s] ");
 
-      inserted = new bx_param_bool_c(menu,
+      status = new bx_param_bool_c(menu,
         "status",
         "Inserted",
         "CD-ROM media status (inserted / ejected)",
         0);
-      inserted->set_ask_format("Is media inserted in drive? [%s] ");
+      status->set_ask_format("Is media inserted in drive? [%s] ");
 
       bx_param_filename_c *journal = new bx_param_filename_c(menu,
         "journal",
@@ -1178,7 +1174,7 @@ void bx_init_options()
       // some items depend on the drive type
       bx_param_c *type_deplist[] = {
         mode,
-        inserted,
+        status,
         cylinders,
         heads,
         spt,
@@ -1191,7 +1187,7 @@ void bx_init_options()
       type->set_dependent_bitmap(BX_ATA_DEVICE_CDROM, 0x02);
 
       type->set_handler(bx_param_handler);
-      inserted->set_handler(bx_param_handler);
+      status->set_handler(bx_param_handler);
       path->set_handler(bx_param_string_handler);
     }
 
@@ -2210,8 +2206,11 @@ static int parse_line_formatted(const char *context, int num_params, char *param
           PARSE_ERR(("%s: %s image size doesn't match one of the supported types.",
             context, params[0]));
       }
-      else if (!strncmp(params[i], "status=", 7)) {
-        SIM->get_param_enum("status", base)->set_by_name(&params[i][7]);
+      else if (!strcmp(params[i], "status=inserted")) {
+        SIM->get_param_bool("status", base)->set(1);
+      }
+      else if (!strcmp(params[i], "status=ejected")) {
+        SIM->get_param_bool("status", base)->set(0);
       }
       else {
         PARSE_ERR(("%s: %s attribute '%s' not understood.", context, params[0],
@@ -3244,7 +3243,7 @@ int bx_write_floppy_options(FILE *fp, int drive)
     fprintf(fp, ", %s=\"%s\", status=%s",
       fdtypes[SIM->get_param_enum(type)->get() - BX_FLOPPY_NONE],
       SIM->get_param_string(path)->getptr(),
-      SIM->get_param_enum(status)->get_selected());
+      SIM->get_param_bool(status)->get() ? "inserted":"ejected");
   }
   fprintf(fp, "\n");
   return 0;
