@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.279 2009-03-23 16:46:17 sshwarts Exp $
+// $Id: cpu.cc,v 1.280 2009-03-26 09:28:49 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -115,6 +115,11 @@ void BX_CPU_C::cpu_loop(Bit32u max_instr_count)
   BX_CPU_THIS_PTR EXT = 0;
   BX_CPU_THIS_PTR errorno = 0;
 
+  cpu_loop_core(max_instr_count);
+}
+
+void BX_CPU_C::cpu_loop_core(Bit32u max_instr_count)
+{
   while (1) {
 
     // check on events which occurred for previous instructions (traps)
