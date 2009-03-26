@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.280 2009-03-26 09:28:49 sshwarts Exp $
+// $Id: cpu.cc,v 1.281 2009-03-26 09:44:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -180,7 +180,7 @@ no_async_event:
 
       // decoding instruction compeleted -> continue with execution
       BX_INSTR_BEFORE_EXECUTION(BX_CPU_ID, i);
-      RIP += i->ilen(); // 32-bit add
+      RIP += i->ilen();
       BX_CPU_CALL_METHOD(i->execute, (i)); // might iterate repeat instruction
       BX_CPU_THIS_PTR prev_rip = RIP; // commit new RIP
       BX_INSTR_AFTER_EXECUTION(BX_CPU_ID, i);
@@ -758,7 +758,6 @@ void BX_CPU_C::prefetch(void)
   }
 
   BX_CPU_THIS_PTR currPageWriteStampPtr = pageWriteStampTable.getPageWriteStampPtr(BX_CPU_THIS_PTR pAddrPage);
-  pageWriteStampTable.markICache(BX_CPU_THIS_PTR pAddrPage);
 }
 
 void BX_CPU_C::boundaryFetch(const Bit8u *fetchPtr, unsigned remainingInPage, bxInstruction_c *i)
