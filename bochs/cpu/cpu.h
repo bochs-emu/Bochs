@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.587 2009-03-26 09:28:49 sshwarts Exp $
+// $Id: cpu.h,v 1.588 2009-03-26 10:24:10 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2761,7 +2761,6 @@ public: // for now...
 
   // now for some ancillary functions...
   BX_SMF void cpu_loop(Bit32u max_instr_count);
-  BX_SMF void cpu_loop_core(Bit32u max_instr_count);
   BX_SMF unsigned handleAsyncEvent(void);
 
   BX_SMF unsigned fetchDecode32(const Bit8u *fetchPtr, bxInstruction_c *i, unsigned remainingInPage) BX_CPP_AttrRegparmN(3);
