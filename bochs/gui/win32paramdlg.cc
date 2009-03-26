@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32paramdlg.cc,v 1.11 2009-03-22 20:18:17 vruppert Exp $
+// $Id: win32paramdlg.cc,v 1.12 2009-03-26 17:57:19 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Volker Ruppert
@@ -142,16 +142,20 @@ void cleanupDlgLists()
   }
 }
 
-int AskFilename(HWND hwnd, bx_param_filename_c *param)
+int AskFilename(HWND hwnd, bx_param_filename_c *param, char *buffer)
 {
   OPENFILENAME ofn;
   int ret;
   DWORD errcode;
-  char filename[MAX_PATH];
+  char filename[BX_PATHNAME_LEN];
   const char *title, *ext;
   char errtext[80];
 
-  param->get(filename, MAX_PATH);
+  if (buffer != NULL) {
+    lstrcpyn(filename, buffer, BX_PATHNAME_LEN);
+  } else {
+    param->get(filename, BX_PATHNAME_LEN);
+  }
   // common file dialogs don't accept raw device names
   if ((isalpha(filename[0])) && (filename[1] == ':') && (strlen(filename) == 2)) {
     filename[0] = 0;
@@ -190,7 +194,11 @@ int AskFilename(HWND hwnd, bx_param_filename_c *param)
     ofn.Flags |= OFN_FILEMUSTEXIST;
     ret = GetOpenFileName(&ofn);
   }
-  param->set(filename);
+  if (buffer != NULL) {
+    lstrcpyn(buffer, filename, BX_PATHNAME_LEN);
+  } else {
+    param->set(filename);
+  }
   if (ret == 0) {
     errcode = CommDlgExtendedError();
     if (errcode == 0) {
@@ -718,6 +726,7 @@ static BOOL CALLBACK ParamDlgProc(HWND Window, UINT AMessage, WPARAM wParam, LPA
   RECT r, r2;
   SIZE size;
   NMHDR tcinfo;
+  char fname[BX_PATHNAME_LEN];
 
   switch (AMessage) {
     case WM_CLOSE:
@@ -767,8 +776,9 @@ static BOOL CALLBACK ParamDlgProc(HWND Window, UINT AMessage, WPARAM wParam, LPA
             i = code - ID_BROWSE;
             sparam = (bx_param_string_c *)findParamFromDlgID(i);
             if (sparam != NULL) {
-              if (AskFilename(Window, (bx_param_filename_c *)sparam) > 0) {
-                SetWindowText(GetDlgItem(Window, ID_PARAM + i), sparam->getptr());
+              GetDlgItemText(Window, ID_PARAM + i, fname, BX_PATHNAME_LEN);
+              if (AskFilename(Window, (bx_param_filename_c *)sparam, fname) > 0) {
+                SetWindowText(GetDlgItem(Window, ID_PARAM + i), fname);
                 SetFocus(GetDlgItem(Window, ID_PARAM + i));
               }
             }

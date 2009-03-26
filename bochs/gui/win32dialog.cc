@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32dialog.cc,v 1.83 2009-03-25 18:33:41 vruppert Exp $
+// $Id: win32dialog.cc,v 1.84 2009-03-26 17:57:16 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  The Bochs Project
@@ -205,7 +205,6 @@ static BOOL CALLBACK FloppyDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lP
   static bx_param_bool_c *status;
   static bx_param_enum_c *devtype;
   static bx_param_enum_c *mediatype;
-  static char origpath[MAX_PATH];
   char mesg[MAX_PATH];
   char path[MAX_PATH];
   char pname[80];
@@ -238,20 +237,16 @@ static BOOL CALLBACK FloppyDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lP
       if (status->get()) {
         SendMessage(GetDlgItem(hDlg, IDSTATUS), BM_SETCHECK, BST_CHECKED, 0);
       }
-      lstrcpy(origpath, param->getptr());
+      lstrcpy(path, param->getptr());
       title = param->get_label();
       if (!title) title = param->get_name();
       SetWindowText(hDlg, title);
-      if (lstrlen(origpath) && lstrcmp(origpath, "none")) {
-        SetWindowText(GetDlgItem(hDlg, IDPATH), origpath);
+      if (lstrlen(path) && lstrcmp(path, "none")) {
+        SetWindowText(GetDlgItem(hDlg, IDPATH), path);
       }
       return TRUE;
       break;
     case WM_CLOSE:
-      GetDlgItemText(hDlg, IDPATH, path, MAX_PATH);
-      if (lstrcmp(path, origpath)) {
-        param->set(origpath);
-      }
       EndDialog(hDlg, -1);
       return TRUE;
       break;
@@ -259,9 +254,8 @@ static BOOL CALLBACK FloppyDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lP
       switch (LOWORD(wParam)) {
         case IDBROWSE:
           GetDlgItemText(hDlg, IDPATH, path, MAX_PATH);
-          param->set(backslashes(path));
-          if (AskFilename(hDlg, param) > 0) {
-            SetWindowText(GetDlgItem(hDlg, IDPATH), param->getptr());
+          if (AskFilename(hDlg, param, path) > 0) {
+            SetWindowText(GetDlgItem(hDlg, IDPATH), path);
             SendMessage(GetDlgItem(hDlg, IDSTATUS), BM_SETCHECK, BST_CHECKED, 0);
             SendMessage(GetDlgItem(hDlg, IDMEDIATYPE), CB_SELECTSTRING, (WPARAM)-1, (LPARAM)"auto");
             EnableWindow(GetDlgItem(hDlg, IDCREATE), FALSE);
@@ -289,10 +283,6 @@ static BOOL CALLBACK FloppyDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lP
           return TRUE;
           break;
         case IDCANCEL:
-          GetDlgItemText(hDlg, IDPATH, path, MAX_PATH);
-          if (lstrcmp(path, origpath)) {
-            param->set(origpath);
-          }
           EndDialog(hDlg, -1);
           return TRUE;
           break;
@@ -552,7 +542,7 @@ static BOOL CALLBACK StartMenuDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM
           rcfile = new bx_param_filename_c(NULL, "rcfile", "Load Bochs Config File",
                                            "", "bochsrc.bxrc", BX_PATHNAME_LEN);
           rcfile->set_extension("bxrc");
-          if (AskFilename(hDlg, rcfile)) {
+          if (AskFilename(hDlg, rcfile, NULL)) {
             SIM->reset_all_param();
             SIM->read_rc(rcfile->getptr());
           }
@@ -563,7 +553,7 @@ static BOOL CALLBACK StartMenuDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM
                                            "", "bochsrc.bxrc", BX_PATHNAME_LEN);
           rcfile->set_extension("bxrc");
           rcfile->set_options(rcfile->SAVE_FILE_DIALOG);
-          if (AskFilename(hDlg, rcfile)) {
+          if (AskFilename(hDlg, rcfile, NULL)) {
             SIM->write_rc(rcfile->getptr(), 1);
           }
           delete rcfile;
@@ -614,12 +604,11 @@ static BOOL CALLBACK RTCdromDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
 {
   static int devcount;
   static bx_list_c *cdromop[4];
-  static char origpath[4][MAX_PATH];
   static BOOL changed;
   int device;
   long noticode;
   Bit8u cdrom;
-  char path[MAX_PATH];
+  char path[BX_PATHNAME_LEN];
   PSHNOTIFY *psn;
 
   switch (msg) {
@@ -631,15 +620,15 @@ static BOOL CALLBACK RTCdromDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
       devcount = 1;
       for (cdrom=1; cdrom<4; cdrom++) {
         if (!SIM->get_cdrom_options(cdrom, &cdromop[cdrom], &device) ||
-	    !SIM->get_param_bool("present", cdromop[cdrom])->get()) {
+            !SIM->get_param_bool("present", cdromop[cdrom])->get()) {
           EnableWindow(GetDlgItem(hDlg, IDLABEL1+cdrom), FALSE);
           EnableWindow(GetDlgItem(hDlg, IDCDROM1+cdrom), FALSE);
           EnableWindow(GetDlgItem(hDlg, IDBROWSE1+cdrom), FALSE);
           EnableWindow(GetDlgItem(hDlg, IDSTATUS1+cdrom), FALSE);
         } else {
-          lstrcpy(origpath[cdrom], SIM->get_param_string("path", cdromop[cdrom])->getptr());
-          if (lstrlen(origpath[cdrom]) && lstrcmp(origpath[cdrom], "none")) {
-            SetWindowText(GetDlgItem(hDlg, IDCDROM1+cdrom), origpath[cdrom]);
+          lstrcpy(path, SIM->get_param_string("path", cdromop[cdrom])->getptr());
+          if (lstrlen(path) && lstrcmp(path, "none")) {
+            SetWindowText(GetDlgItem(hDlg, IDCDROM1+cdrom), path);
           }
           if (SIM->get_param_bool("status", cdromop[cdrom])->get()) {
             SendMessage(GetDlgItem(hDlg, IDSTATUS1+cdrom), BM_SETCHECK, BST_CHECKED, 0);
@@ -657,11 +646,11 @@ static BOOL CALLBACK RTCdromDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
             for (device=1; device<devcount; device++) {
               if (SendMessage(GetDlgItem(hDlg, IDSTATUS1+device), BM_GETCHECK, 0, 0) == BST_CHECKED) {
                 GetDlgItemText(hDlg, IDCDROM1+device, path, MAX_PATH);
-                if (lstrlen(path)) {
+                if (lstrcmp(path, SIM->get_param_string("path", cdromop[device])->getptr())) {
+                  SIM->get_param_string("path", cdromop[device])->set(path);
+                }
+                if (lstrlen(path) || lstrcmp(path, "none")) {
                   SIM->get_param_bool("status", cdromop[device])->set(1);
-                  if (lstrcmp(path, SIM->get_param_string("path", cdromop[device])->getptr())) {
-                    SIM->get_param_string("path", cdromop[device])->set(path);
-                  }
                 } else {
                   SIM->get_param_bool("status", cdromop[device])->set(0);
                 }
@@ -671,13 +660,6 @@ static BOOL CALLBACK RTCdromDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
             }
             changed = FALSE;
           } else {
-            if (changed) {
-              for (device=1; device<devcount; device++) {
-                if (lstrcmp(SIM->get_param_string("path", cdromop[device])->getptr(), origpath[device])) {
-                  SIM->get_param_string("path", cdromop[device])->set(origpath[device]);
-                }
-              }
-            }
             retcode = 0;
           }
           return PSNRET_NOERROR;
@@ -706,9 +688,8 @@ static BOOL CALLBACK RTCdromDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
             case IDBROWSE4:
               device = LOWORD(wParam) - IDBROWSE1;
               GetDlgItemText(hDlg, IDCDROM1+device, path, MAX_PATH);
-              SIM->get_param_string("path", cdromop[device])->set(backslashes(path));
-              if (AskFilename(hDlg, (bx_param_filename_c *)SIM->get_param_string("path", cdromop[device])) > 0) {
-                SetWindowText(GetDlgItem(hDlg, IDCDROM1+device), SIM->get_param_string("path", cdromop[device])->getptr());
+              if (AskFilename(hDlg, (bx_param_filename_c *)SIM->get_param_string("path", cdromop[device]), path) > 0) {
+                SetWindowText(GetDlgItem(hDlg, IDCDROM1+device), path);
                 SendMessage(GetDlgItem(hDlg, IDSTATUS1+device), BM_SETCHECK, BST_CHECKED, 0);
               }
               break;
@@ -1081,7 +1062,7 @@ BxEvent* win32_notify_callback(void *unused, BxEvent *event)
           if (opts & sparam->SELECT_FOLDER_DLG) {
             event->retcode = BrowseDir(sparam->get_label(), sparam->getptr());
           } else if (param->get_parent() == NULL) {
-            event->retcode = AskFilename(GetBochsWindow(), (bx_param_filename_c *)sparam);
+            event->retcode = AskFilename(GetBochsWindow(), (bx_param_filename_c *)sparam, NULL);
           } else {
             event->retcode = FloppyDialog((bx_param_filename_c *)sparam);
           }
