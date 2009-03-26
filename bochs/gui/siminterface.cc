@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.203 2009-03-25 18:33:38 vruppert Exp $
+// $Id: siminterface.cc,v 1.204 2009-03-26 09:19:56 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  The Bochs Project
@@ -236,53 +236,53 @@ bx_param_c *bx_real_sim_c::get_param(const char *pname, bx_param_c *base)
 
 bx_param_num_c *bx_real_sim_c::get_param_num(const char *pname, bx_param_c *base)
 {
-  bx_param_c *generic = get_param(pname, base);
-  if (generic==NULL) {
+  bx_param_c *gen = get_param(pname, base);
+  if (gen==NULL) {
     BX_ERROR(("get_param_num(%s) could not find a parameter", pname));
     return NULL;
   }
-  int type = generic->get_type();
+  int type = gen->get_type();
   if (type == BXT_PARAM_NUM || type == BXT_PARAM_BOOL || type == BXT_PARAM_ENUM)
-    return (bx_param_num_c *)generic;
+    return (bx_param_num_c *)gen;
   BX_ERROR(("get_param_num(%s) could not find an integer parameter with that name", pname));
   return NULL;
 }
 
 bx_param_string_c *bx_real_sim_c::get_param_string(const char *pname, bx_param_c *base)
 {
-  bx_param_c *generic = get_param(pname, base);
-  if (generic==NULL) {
+  bx_param_c *gen = get_param(pname, base);
+  if (gen==NULL) {
     BX_ERROR(("get_param_string(%s) could not find a parameter", pname));
     return NULL;
   }
-  if (generic->get_type() == BXT_PARAM_STRING)
-    return (bx_param_string_c *)generic;
+  if (gen->get_type() == BXT_PARAM_STRING)
+    return (bx_param_string_c *)gen;
   BX_ERROR(("get_param_string(%s) could not find an integer parameter with that name", pname));
   return NULL;
 }
 
 bx_param_bool_c *bx_real_sim_c::get_param_bool(const char *pname, bx_param_c *base)
 {
-  bx_param_c *generic = get_param(pname, base);
-  if (generic==NULL) {
+  bx_param_c *gen = get_param(pname, base);
+  if (gen==NULL) {
     BX_ERROR(("get_param_bool(%s) could not find a parameter", pname));
     return NULL;
   }
-  if (generic->get_type () == BXT_PARAM_BOOL)
-    return (bx_param_bool_c *)generic;
+  if (gen->get_type () == BXT_PARAM_BOOL)
+    return (bx_param_bool_c *)gen;
   BX_ERROR(("get_param_bool(%s) could not find a bool parameter with that name", pname));
   return NULL;
 }
 
 bx_param_enum_c *bx_real_sim_c::get_param_enum(const char *pname, bx_param_c *base)
 {
-  bx_param_c *generic = get_param(pname, base);
-  if (generic==NULL) {
+  bx_param_c *gen = get_param(pname, base);
+  if (gen==NULL) {
     BX_ERROR(("get_param_enum(%s) could not find a parameter", pname));
     return NULL;
   }
-  if (generic->get_type() == BXT_PARAM_ENUM)
-    return (bx_param_enum_c *)generic;
+  if (gen->get_type() == BXT_PARAM_ENUM)
+    return (bx_param_enum_c *)gen;
   BX_ERROR(("get_param_enum(%s) could not find a enum parameter with that name", pname));
   return NULL;
 }
