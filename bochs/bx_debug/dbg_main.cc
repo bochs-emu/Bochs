@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.180 2009-03-27 13:20:23 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.181 2009-03-27 21:01:16 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -540,7 +540,7 @@ void bx_dbg_check_memory_watchpoints(unsigned cpu, bx_phy_address phy, unsigned 
     for (unsigned i = 0; i < num_write_watchpoints; i++) {
       if (write_watchpoint[i] >= phy && write_watchpoint[i] < (phy + len)) {
         BX_CPU(cpu)->watchpoint  = phy;
-        BX_CPU(cpu)->break_point = rw;
+        BX_CPU(cpu)->break_point = BREAK_POINT_WRITE;
         break;
       }
     }
@@ -550,7 +550,7 @@ void bx_dbg_check_memory_watchpoints(unsigned cpu, bx_phy_address phy, unsigned 
     for (unsigned i = 0; i < num_read_watchpoints; i++) {
       if (read_watchpoint[i] >= phy && read_watchpoint[i] < (phy + len)) {
         BX_CPU(cpu)->watchpoint  = phy;
-        BX_CPU(cpu)->break_point = rw;
+        BX_CPU(cpu)->break_point = BREAK_POINT_READ;
         break;
       }
     }
