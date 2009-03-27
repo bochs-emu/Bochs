@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.179 2009-03-25 07:09:52 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.180 2009-03-27 13:20:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -831,7 +831,7 @@ void bx_dbg_info_registers_command(int which_regs_mask)
 
   if (which_regs_mask & BX_INFO_GENERAL_PURPOSE_REGS) {
 #if BX_SUPPORT_SMP
-    dbg_printf("%s:\n", BX_CPU(dbg_cpu)->name);
+    dbg_printf("CPU%d:\n", BX_CPU(dbg_cpu)->bx_cpuid);
 #endif
 #if BX_SUPPORT_X86_64 == 0
     reg = BX_CPU(dbg_cpu)->get_reg32(BX_32BIT_REG_EAX);
