@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.138 2009-02-20 08:12:51 sshwarts Exp $
+// $Id: exception.cc,v 1.139 2009-03-27 16:42:21 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -756,9 +756,15 @@ void BX_CPU_C::real_mode_int(Bit8u vector, unsigned is_INT, bx_bool push_error, 
   push_16(BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value);
   push_16(IP);
 
-  EIP         = system_read_word(BX_CPU_THIS_PTR idtr.base + 4 * vector);
+  Bit16u new_ip = system_read_word(BX_CPU_THIS_PTR idtr.base + 4 * vector);
+  // CS.LIMIT can't change when in real/v8086 mode
+  if (new_ip > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled) {
+    BX_ERROR(("interrupt(real mode): instruction pointer not within code segment limits"));
+    exception(BX_GP_EXCEPTION, 0, 0);
+  }
   cs_selector = system_read_word(BX_CPU_THIS_PTR idtr.base + 4 * vector + 2);
   load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], cs_selector);
+  EIP = new_ip;
 
   /* INT affects the following flags: I,T */
   BX_CPU_THIS_PTR clear_IF();

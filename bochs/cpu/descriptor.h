@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: descriptor.h,v 1.28 2009-02-09 19:46:34 sshwarts Exp $
+// $Id: descriptor.h,v 1.29 2009-03-27 16:42:21 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007 Stanislav Shwartsman
@@ -154,6 +154,7 @@ union {
 #if BX_CPU_LEVEL >= 3
     Bit32u  limit_scaled;  // Same notes as for 'segment' field
     bx_bool g;             /* granularity: 0=byte, 1=4K (page) */
+    bx_bool d_b;           /* default size: 0=16bit, 1=32bit */
     bx_bool avl;           /* available for use by system */
 #endif
   } system;                /* TSS and LDT */

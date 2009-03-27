@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: segment_ctrl_pro.cc,v 1.108 2009-03-10 20:01:56 sshwarts Exp $
+// $Id: segment_ctrl_pro.cc,v 1.109 2009-03-27 16:42:21 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -414,6 +414,7 @@ BX_CPU_C::get_descriptor_h(const bx_descriptor_t *d)
               (d->p << 15) |
               (d->u.system.limit & 0xf0000) |
               (d->u.system.avl << 20) |
+              (d->u.system.d_b << 22) |
               (d->u.system.g << 23) |
               (d->u.system.base & 0xff000000);
         return(val);
@@ -558,6 +559,7 @@ BX_CPU_C::parse_descriptor(Bit32u dword1, Bit32u dword2, bx_descriptor_t *temp)
                               ((dword2 & 0xff) << 16) | (dword2 & 0xff000000);
         temp->u.system.limit = (dword1 & 0x0000ffff)  | (dword2 & 0x000f0000);
         temp->u.system.g     = (dword2 & 0x00800000) > 0;
+        temp->u.system.d_b   = (dword2 & 0x00400000) > 0;
         temp->u.system.avl   = (dword2 & 0x00100000) > 0;
         if (temp->u.system.g)
           temp->u.system.limit_scaled = (temp->u.system.limit << 12) | 0xfff;

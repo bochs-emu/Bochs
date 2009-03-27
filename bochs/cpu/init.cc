@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.204 2009-03-13 18:48:08 sshwarts Exp $
+// $Id: init.cc,v 1.205 2009-03-27 16:42:21 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -393,22 +393,24 @@ void BX_CPU_C::register_state(void)
   BXRS_HEX_PARAM_FIELD(IDTR, base, idtr.base);
   BXRS_HEX_PARAM_FIELD(IDTR, limit, idtr.limit);
 
-  bx_list_c *LDTR = new bx_list_c(cpu, "LDTR", 7);
+  bx_list_c *LDTR = new bx_list_c(cpu, "LDTR", 8);
   BXRS_PARAM_SPECIAL16(LDTR, selector, param_save_handler, param_restore_handler);
   BXRS_HEX_PARAM_FIELD(LDTR, base,  ldtr.cache.u.system.base);
   BXRS_HEX_PARAM_FIELD(LDTR, limit, ldtr.cache.u.system.limit);
-  BXRS_HEX_PARAM_FIELD(LDTR, limit_scaled, ldtr.cache.u.system.limit);
+  BXRS_HEX_PARAM_FIELD(LDTR, limit_scaled, ldtr.cache.u.system.limit_scaled);
   BXRS_PARAM_SPECIAL8 (LDTR, ar_byte, param_save_handler, param_restore_handler);
   BXRS_PARAM_BOOL(LDTR, granularity, ldtr.cache.u.system.g);
+  BXRS_PARAM_BOOL(LDTR, d_b, ldtr.cache.u.system.d_b);
   BXRS_PARAM_BOOL(LDTR, avl, ldtr.cache.u.system.avl);
 
-  bx_list_c *TR = new bx_list_c(cpu, "TR", 7);
+  bx_list_c *TR = new bx_list_c(cpu, "TR", 8);
   BXRS_PARAM_SPECIAL16(TR, selector, param_save_handler, param_restore_handler);
   BXRS_HEX_PARAM_FIELD(TR, base,  tr.cache.u.system.base);
   BXRS_HEX_PARAM_FIELD(TR, limit, tr.cache.u.system.limit);
   BXRS_HEX_PARAM_FIELD(TR, limit_scaled, tr.cache.u.system.limit_scaled);
   BXRS_PARAM_SPECIAL8 (TR, ar_byte, param_save_handler, param_restore_handler);
   BXRS_PARAM_BOOL(TR, granularity, tr.cache.u.system.g);
+  BXRS_PARAM_BOOL(TR, d_b, tr.cache.u.system.d_b);
   BXRS_PARAM_BOOL(TR, avl, tr.cache.u.system.avl);
 
   BXRS_HEX_PARAM_SIMPLE(cpu, smbase);

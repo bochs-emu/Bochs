@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.172 2009-03-08 21:23:37 sshwarts Exp $
+// $Id: paging.cc,v 1.173 2009-03-27 16:42:21 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -666,7 +666,7 @@ void BX_CPU_C::page_fault(unsigned fault, bx_address laddr, unsigned user, unsig
 }
 
 /* PAE PML4: bits [51 .. physical address width], [7] - support 1G paging */
-  #define PAGING_PAE_PML4_RESERVED_BITS \
+#define PAGING_PAE_PML4_RESERVED_BITS \
     (BX_PHY_ADDRESS_RESERVED_BITS | BX_CONST64(0x80))
 
 #if BX_SUPPORT_1G_PAGES
