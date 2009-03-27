@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxdialog.cc,v 1.110 2009-03-20 16:23:46 vruppert Exp $
+// $Id: wxdialog.cc,v 1.111 2009-03-27 22:22:07 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
@@ -147,241 +147,6 @@ void LogMsgAskDialog::OnEvent(wxCommandEvent& event)
 }
 
 void LogMsgAskDialog::ShowHelp()
-{
-  wxMessageBox(MSG_NO_HELP, MSG_NO_HELP_CAPTION, wxOK | wxICON_ERROR, this);
-}
-
-//////////////////////////////////////////////////////////////////////
-// FloppyConfigDialog implementation
-//////////////////////////////////////////////////////////////////////
-// Structure:
-//   vertSizer:
-//     instructions
-//     radioSizer (vert):
-//       phys0
-//       phys1
-//       diskImageSizer (horiz):
-//         disk image file
-//         filename
-//         browse button
-//         create button
-//     capacitySizer (horizontal):
-//       capacity text
-//       capacity choice box
-//     hint text
-//     buttonSizer:
-//       cancel button
-//       ok button
-//       help button
-//
-
-// all events go to OnEvent method
-BEGIN_EVENT_TABLE(FloppyConfigDialog, wxDialog)
-  EVT_BUTTON(-1, FloppyConfigDialog::OnEvent)
-  EVT_TEXT(-1, FloppyConfigDialog::OnEvent)
-  EVT_CHOICE(-1, FloppyConfigDialog::OnEvent)
-END_EVENT_TABLE()
-
-
-FloppyConfigDialog::FloppyConfigDialog(
-    wxWindow* parent,
-    wxWindowID id)
-  : wxDialog (parent, id, wxT(""), wxDefaultPosition, wxDefaultSize,
-    wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER)
-{
-  validate = NULL;
-  n_rbtns = 0;
-  wxButton *btn;
-  vertSizer = new wxBoxSizer (wxVERTICAL);
-  instr = new wxStaticText (this, -1, FLOPPY_CONFIG_INSTRS);
-  radioSizer = new wxBoxSizer (wxVERTICAL);
-  diskImageSizer = new wxBoxSizer (wxHORIZONTAL);
-  capacitySizer = new wxBoxSizer (wxHORIZONTAL);
-  wxStaticText *hint = new wxStaticText (this, -1, FLOPPY_CONFIG_HINT);
-  buttonSizer = new wxBoxSizer (wxHORIZONTAL);
-  // add top level components to vertSizer
-  vertSizer->Add (instr, 0, wxTOP|wxLEFT, 30);
-  vertSizer->Add (radioSizer, 0, wxLEFT, 50);
-  vertSizer->Add (capacitySizer, 0, wxTOP|wxLEFT, 30);
-  vertSizer->Add (hint, 0, wxTOP|wxLEFT, 30);
-  vertSizer->Add (buttonSizer, 0, wxALIGN_RIGHT|wxTOP, 30);
-  // contents of capacitySizer
-  wxStaticText *captext = new wxStaticText(this, -1, FLOPPY_CONFIG_CAP);
-  capacity = new wxChoice(this, ID_Capacity);
-  capacitySizer->Add(captext, 0, wxALL, 5);
-  capacitySizer->Add(capacity, 0, wxALL|wxADJUST_MINSIZE, 5);
-  // contents of buttonSizer
-  btn = new wxButton(this, wxID_HELP, wxT("Help"));
-  buttonSizer->Add(btn, 0, wxALL, 5);
-  // use wxID_CANCEL because pressing ESC produces this same code
-  btn = new wxButton(this, wxID_CANCEL, wxT("Cancel"));
-  buttonSizer->Add(btn, 0, wxALL, 5);
-  CreateBtn = new wxButton(this, ID_Create, wxT("Create Image"));
-  buttonSizer->Add(CreateBtn, 0, wxALL, 5);
-  btn = new wxButton(this, wxID_OK, wxT("Ok"));
-  buttonSizer->Add(btn, 0, wxALL, 5);
-  // create filename and diskImageRadioBtn so that we can tweak them before
-  // Init comes.  However don't add it to any sizer yet because it needs to go
-  // in after the last radio button.
-  filename = new wxTextCtrl (this, ID_FilenameText, wxT(""), wxDefaultPosition, longTextSize);
-  diskImageRadioBtn = new wxRadioButton (this, ID_Filename, FLOPPY_CONFIG_DISKIMG);
-
-  // the radioSizer contents will be added by successive calls to
-  // AddRadio().  The diskImageSizer will be added last, in Init().
-}
-
-void FloppyConfigDialog::AddRadio (
-    const wxString& description,
-    const wxString& filename)
-{
-  if (n_rbtns >= FLOPPY_MAX_RBTNS) {
-    wxLogError(wxT("AddRadio failed: increase FLOPPY_MAX_RBTNS in wxdialog.h"));
-    return;
-  }
-  rbtn[n_rbtns] = new wxRadioButton(this, -1, description);
-  equivalentFilename[n_rbtns] = filename;
-  radioSizer->Add(rbtn[n_rbtns]);
-  n_rbtns++;
-}
-
-void FloppyConfigDialog::SetDriveName(wxString name)
-{
-  SetTitle(wxString(FLOPPY_CONFIG_TITLE) + name);
-  ChangeStaticText(vertSizer, instr, wxString(FLOPPY_CONFIG_INSTRS) + name +
-    wxT("."));
-}
-
-void FloppyConfigDialog::SetCapacityChoices(const char *choices[])
-{
-  int i = 0;
-  while (choices[i] != NULL) {
-    capacity->Append(wxString(choices[i], wxConvUTF8));
-    i++;
-  }
-}
-
-void FloppyConfigDialog::SetCapacity(int cap)
-{
-  capacity->SetSelection(cap);
-  CreateBtn->Enable(floppy_type_n_sectors[cap] > 0);
-}
-
-void FloppyConfigDialog::Init()
-{
-  // add contents of diskImageSizer
-  diskImageSizer->Add(diskImageRadioBtn);
-  diskImageSizer->Add(filename, 1, wxGROW);
-  wxButton *btn = new wxButton (this, ID_Browse, BTNLABEL_BROWSE);
-  diskImageSizer->Add(btn, 0, wxALL, 5);
-  radioSizer->Add(diskImageSizer);
-
-  SetAutoLayout(TRUE);
-  SetSizer(vertSizer);
-  vertSizer->Fit(this);
-  wxSize size = vertSizer->GetMinSize();
-  int margin = 5;
-  SetSizeHints (size.GetWidth() + margin, size.GetHeight() + margin);
-  Center();
-}
-
-int
-FloppyConfigDialog::GetRadio () {
-  int i;
-  for (i=0; i<n_rbtns; i++) {
-    if (rbtn[i]->GetValue())
-      return i;
-  }
-  if (diskImageRadioBtn->GetValue()) {
-    return i;
-  }
-  wxLogError(wxT("GetRadio() found nothing selected"));
-  return 0;
-}
-
-void
-FloppyConfigDialog::SetRadio (int n) {
-  if (n < n_rbtns) {
-    rbtn[n]->SetValue (TRUE);
-  } else {
-    diskImageRadioBtn->SetValue (TRUE);
-  }
-}
-
-void FloppyConfigDialog::SetFilename (wxString f) {
-  // search equivalentFilename[] for matches. if it matches, select the
-  // radio button instead.
-  for (int i=0; i<n_rbtns; i++) {
-    if (!f.Cmp(equivalentFilename[i])) {
-      rbtn[i]->SetValue(TRUE);
-      return;  // leaving filename text field unchanged
-    }
-  }
-  filename->SetValue(f);
-  diskImageRadioBtn->SetValue(TRUE);
-}
-
-wxString
-FloppyConfigDialog::GetFilename()
-{
-  int n = GetRadio();
-  if (n < n_rbtns) {
-    return equivalentFilename[n];
-  } else {
-    return filename->GetValue();
-  }
-}
-
-void FloppyConfigDialog::OnEvent(wxCommandEvent& event)
-{
-  int id = event.GetId ();
-  switch (id) {
-    case ID_FilenameText:
-      // when you type into the filename field, ensure that the radio
-      // button associated with that field is chosen.
-      diskImageRadioBtn->SetValue (TRUE);
-      break;
-    case wxID_OK:
-      // probably should validate before allowing ok
-      if (validate!=NULL && !(*validate)(this))
-	return;  // validation failed, don't leave yet
-      EndModal (wxID_OK);
-      break;
-    case ID_Browse:
-      if (BrowseTextCtrl(filename)) {
-        capacity->SetSelection(capacity->FindString(wxT("auto")));
-      }
-      break;
-    case ID_Capacity:
-      {
-        int cap = capacity->GetSelection();
-        CreateBtn->Enable(floppy_type_n_sectors[cap] > 0);
-      }
-      break;
-    case ID_Create:
-      {
-        int cap = capacity->GetSelection();
-        char name[1024];
-        strncpy(name, filename->GetValue().mb_str(wxConvUTF8), sizeof(name));
-        if (CreateImage (0, floppy_type_n_sectors[cap], name)) {
-          wxString msg(wxT("Created a "));
-          msg += capacity->GetString(cap);
-          msg += wxT(" disk image called '");
-          msg += filename->GetValue();
-          msg += wxT("'.");
-          wxMessageBox(msg, wxT("Image Created"), wxOK | wxICON_INFORMATION, this);
-        }
-      }
-      break;
-    case wxID_CANCEL:
-      EndModal(wxID_CANCEL);
-      break;
-    case wxID_HELP:
-      ShowHelp();
-      break;
-  }
-}
-
-void FloppyConfigDialog::ShowHelp()
 {
   wxMessageBox(MSG_NO_HELP, MSG_NO_HELP_CAPTION, wxOK | wxICON_ERROR, this);
 }
@@ -1609,6 +1374,87 @@ void CpuRegistersDialog::OnEvent(wxCommandEvent& event)
 #endif
     default:
       ParamDialog::OnEvent(event);
+  }
+}
+
+//////////////////////////////////////////////////////////////////////
+// FloppyConfigDialog implementation
+//////////////////////////////////////////////////////////////////////
+
+// all events go to OnEvent method
+BEGIN_EVENT_TABLE(FloppyConfigDialog, wxDialog)
+  EVT_BUTTON(-1, FloppyConfigDialog::OnEvent)
+  EVT_CHECKBOX(-1, FloppyConfigDialog::OnEvent)
+  EVT_CHOICE(-1, FloppyConfigDialog::OnEvent)
+  EVT_TEXT(-1, FloppyConfigDialog::OnEvent)
+END_EVENT_TABLE()
+
+FloppyConfigDialog::FloppyConfigDialog(
+    wxWindow* parent,
+    wxWindowID id)
+  : ParamDialog(parent, id)
+{
+  createButton = AddButton(ID_Create, wxT("Create Image"));
+  AddDefaultButtons();
+}
+
+void FloppyConfigDialog::Setup(bx_list_c *list)
+{
+  int devtype_id, path_id, media_id, status_id;
+
+  devtype_id = list->get_by_name("devtype")->get_id();
+  path_id = list->get_by_name("path")->get_id();
+  media_id = list->get_by_name("type")->get_id();
+  status_id = list->get_by_name("status")->get_id();
+  AddParam(list);
+  pstrDevice = (ParamStruct*) paramHash->Get(devtype_id);
+  pstrPath = (ParamStruct*) paramHash->Get(path_id);
+  pstrMedia = (ParamStruct*) paramHash->Get(media_id);
+  pstrStatus = (ParamStruct*) paramHash->Get(status_id);
+}
+
+void FloppyConfigDialog::OnEvent(wxCommandEvent& event)
+{
+  int id = event.GetId();
+  if (isGeneratedId(id)) {
+    ParamStruct *pstr = (ParamStruct*) idHash->Get(id);
+    if (pstr == NULL) {
+      wxLogDebug(wxT("ParamStruct not found for id=%d"), id);
+      return;
+    }
+    if (id == pstr->id) {
+      if ((pstr == pstrDevice) || (pstr == pstrMedia)) {
+        int val1 = pstrDevice->u.choice->GetSelection() + ((bx_param_num_c*)pstrDevice->param)->get_min();
+        int val2 = pstrMedia->u.choice->GetSelection() + ((bx_param_num_c*)pstrMedia->param)->get_min();
+        createButton->Enable((val1 != BX_FDD_NONE) && (val2 != BX_FLOPPY_NONE));
+      } else if ((pstr == pstrPath) && (!pstrPath->u.text->IsModified())) {
+        pstrMedia->u.choice->SetSelection(pstrMedia->u.choice->FindString(wxT("auto")));
+        pstrStatus->u.checkbox->SetValue(1);
+      }
+    }
+    ParamDialog::OnEvent(event);
+  } else {
+    switch (id) {
+      case ID_Create:
+        {
+          int cap = pstrMedia->u.choice->GetSelection();
+          char name[1024];
+          strncpy(name, pstrPath->u.text->GetValue().mb_str(wxConvUTF8), sizeof(name));
+          if ((floppy_type_n_sectors[cap] > 0) && (strlen(name) > 0) && (strcmp(name, "none"))) {
+            if (CreateImage (0, floppy_type_n_sectors[cap], name)) {
+              wxString msg(wxT("Created a "));
+              msg += pstrMedia->u.choice->GetString(cap);
+              msg += wxT(" disk image called '");
+              msg += pstrPath->u.text->GetValue();
+              msg += wxT("'.");
+              wxMessageBox(msg, wxT("Image Created"), wxOK | wxICON_INFORMATION, this);
+            }
+          }
+        }
+        break;
+      default:
+        ParamDialog::OnEvent(event);
+    }
   }
 }
 

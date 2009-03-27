@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////
-// $Id: wxdialog.h,v 1.73 2009-03-20 16:23:46 vruppert Exp $
+// $Id: wxdialog.h,v 1.74 2009-03-27 22:22:07 vruppert Exp $
 ////////////////////////////////////////////////////////////////////
 //
 // wxWidgets dialogs for Bochs
@@ -98,115 +98,6 @@ public:
   bool GetDontAsk() { return dontAsk->GetValue(); }
   void OnEvent(wxCommandEvent& event);
   int ShowModal() { Init(); return wxDialog::ShowModal(); }
-DECLARE_EVENT_TABLE()
-};
-
-////////////////////////////////////////////////////////////////////
-// FloppyConfigDialog is a modal dialog box that asks the user
-// what physical device or disk image should be used for emulation.
-//
-// +-----Configure Floppy Drive A----------------------------------+
-// |                                                               |
-// | Bochs can use a real floppy drive as Disk A, or use an        |
-// | image file.                                                   |
-// |                                                               |
-// |    [ ]  None/Disabled                                         |
-// |    [X]  Physical floppy drive A:                              |
-// |    [ ]  Physical floppy drive B:                              |
-// |    [ ]  Disk image: [_____________________________] [Browse]  |
-// |                                                               |
-// | What is the capacity of this disk? [1.44 MB]                  |
-// |                                                               |
-// | Hint: To create a disk image, choose the name and capacity    |
-// | above, then click Ok.                                         |
-// |                                                               |
-// |                   [ Help ] [ Cancel ] [ Create Image ] [ Ok ] |
-// +---------------------------------------------------------------+
-// To use this dialog:
-// After constructor, use AddRadio() to add radio buttons, SetFilename()
-// to fill in the disk image filename, SetCapacity() to set the capacity.
-// Then call ShowModal() to display it.  Return value is wxID_OK or
-// wxID_CANCEL.  If you set a validation function, then it will be called when
-// ok is pressed, and will get a chance to veto the "Ok" if it returns false.
-// After ShowModal() returns, use GetFilename and GetCapacity to see what the
-// user did.  If the validation function sets parameters, this may be
-// unnecessary.
-//
-// Volker reminded me that I wasn't paying much attention to
-// the distinction between configuring the device (pre-boot) and
-// configuring the media which can be done anytime.  Here's a proposal
-// to fix that...  -Bryce
-// +-----Configure Floppy Drive A----------------------------------+
-// |                                                               |
-// | +-- Device -----------------------------------------------+   |
-// | |                                                         |   |
-// | |  [ ] Enable Emulated Drive A                            |   |
-// | |                                                         |   |
-// | |  Drive capacity [1.44 MB]                               |   |
-// | |                                                         |   |
-// | +---------------------------------------------------------+   |
-// |                                                               |
-// | +-- Media: Where does the data come from? ----------------+   |
-// | |                                                         |   |
-// | | Bochs can use a physical floppy drive as the data       |   |
-// | | source, or use an image file.                           |   |
-// | |                                                         |   |
-// | |  [X]  Physical floppy drive A:                          |   |
-// | |  [ ]  Physical floppy drive B:                          |   |
-// | |  [ ]  Disk image: [_________________________] [Browse]  |   |
-// | |                                                         |   |
-// | | Media size [1.44 MB]                                    |   |
-// | |                                                         |   |
-// | | Hint: To create a disk image, choose the name and       |   |
-// | | capacity above, then click Ok.                          |   |
-// | |                                        [ Create Image ] |   |
-// | +---------------------------------------------------------+   |
-// |                                                               |
-// |                                    [ Help ] [ Cancel ] [ Ok ] |
-// +---------------------------------------------------------------+
-//////////////////////////////////////////////////////////////////////
-
-class FloppyConfigDialog: public wxDialog
-{
-public:
-#define FLOPPY_CONFIG_TITLE wxT("Configure ")
-#define FLOPPY_CONFIG_INSTRS wxT("Select the device or image to use when simulating ")
-#define FLOPPY_CONFIG_CAP wxT("What is the capacity of this disk?")
-#define FLOPPY_CONFIG_HINT wxT("To create a disk image, choose the file name and capacity, then click on \"Create Image\".\n\n" \
-                           "Clicking OK signals a media change for this drive.")
-#define FLOPPY_CONFIG_DISKIMG wxT("Disk image: ")
-private:
-  void Init();  // called automatically by ShowModal()
-  void ShowHelp();
-  wxStaticText *instr;
-#define FLOPPY_MAX_RBTNS 4
-  wxRadioButton *rbtn[FLOPPY_MAX_RBTNS];
-  wxString equivalentFilename[FLOPPY_MAX_RBTNS];
-  int n_rbtns;
-  wxButton *CreateBtn;
-  wxRadioButton *diskImageRadioBtn;
-  wxTextCtrl *filename;
-  wxChoice *capacity;
-  wxBoxSizer *vertSizer, *radioSizer, *diskImageSizer, *capacitySizer, *buttonSizer;
-  typedef bool (*validateFunc_t)(FloppyConfigDialog *dialog);
-  validateFunc_t validate;
-public:
-  FloppyConfigDialog(wxWindow* parent, wxWindowID id);
-  void OnEvent(wxCommandEvent& event);
-  void OnTextEvent(wxCommandEvent& event);
-  int ShowModal() { Init(); return wxDialog::ShowModal(); }
-  void SetRadio(int val);
-  void SetFilename(wxString f);
-  // Use char* instead of wxString because the array we use is already
-  // expressed as a char *[].
-  void SetCapacityChoices(const char *choices[]);
-  void SetCapacity(int cap);
-  int GetRadio();
-  int GetCapacity() { return capacity->GetSelection(); }
-  wxString GetFilename();
-  void SetDriveName(wxString name);
-  void SetValidateFunc(validateFunc_t v) { validate = v; }
-  void AddRadio(const wxString& description, const wxString& filename);
 DECLARE_EVENT_TABLE()
 };
 
@@ -387,7 +278,6 @@ private:
   wxTextCtrl *serialDelay, *pasteDelay, *mappingFile;
   wxCheckBox *enableKeymap;
   int genId();
-  bool isGeneratedId(int id);
   bool isShowing;
   int nbuttons;
   bool runtime;
@@ -404,6 +294,7 @@ protected:
   void EnableParam(int param_id, bool enabled);
   void ProcessDependentList(ParamStruct *pstrChanged, bool enabled);
   bool CopyGuiToParam();
+  bool isGeneratedId(int id);
 public:
   ParamDialog(wxWindow* parent, wxWindowID id);
   virtual ~ParamDialog();
@@ -426,6 +317,24 @@ public:
   bool IsShowing() { return isShowing; }
   void SetRuntimeFlag(bool val) { runtime = val; }
 DECLARE_EVENT_TABLE()
+};
+
+////////////////////////////////////////////////////////////////////////////
+// FloppyConfigDialog
+////////////////////////////////////////////////////////////////////////////
+//
+// the new FloppyConfigDialog is based on ParamDialog. It allows the user to
+// configure the floppy settings and to create a floppy image if necessary.
+class FloppyConfigDialog : public ParamDialog
+{
+private:
+  wxButton *createButton;
+  ParamStruct *pstrDevice, *pstrPath, *pstrMedia, *pstrStatus;
+public:
+  FloppyConfigDialog(wxWindow* parent, wxWindowID id);
+  void Setup(bx_list_c *list);
+  void OnEvent(wxCommandEvent& event);
+  DECLARE_EVENT_TABLE()
 };
 
 ////////////////////////////////////////////////////////////////////////////

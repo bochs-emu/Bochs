@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.161 2009-03-25 18:33:42 vruppert Exp $
+// $Id: wxmain.cc,v 1.162 2009-03-27 22:22:07 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWidgets frame, toolbar, menus, and dialogs.
@@ -1280,68 +1280,14 @@ void MyFrame::OnLogMsg(BxEvent *be)
     sim_thread->SendSyncResponse(be);  // only for case #2
 }
 
-bool MyFrame::editFloppyValidate(FloppyConfigDialog *dialog)
-{
-  // haven't done anything with this 'feature'
-  return true;
-}
-
 void MyFrame::editFloppyConfig(int drive)
 {
   FloppyConfigDialog dlg(this, -1);
-  dlg.SetDriveName(wxString(drive==0? BX_FLOPPY0_NAME : BX_FLOPPY1_NAME, wxConvUTF8));
-  dlg.SetCapacityChoices(floppy_type_names);
+  dlg.SetTitle(wxString(drive==0? BX_FLOPPY0_NAME : BX_FLOPPY1_NAME, wxConvUTF8));
   bx_list_c *list = (bx_list_c*) SIM->get_param((drive==0)? BXPN_FLOPPYA : BXPN_FLOPPYB);
-  if (!list) { wxLogError(wxT("floppy object param is null")); return; }
-  bx_param_filename_c *fname = (bx_param_filename_c*) list->get_by_name("path");
-  bx_param_enum_c *disktype = (bx_param_enum_c *) list->get_by_name("type");
-  bx_param_bool_c *status = (bx_param_bool_c *) list->get_by_name("status");
-  if (fname->get_type() != BXT_PARAM_STRING
-      || disktype->get_type() != BXT_PARAM_ENUM
-      || status->get_type() != BXT_PARAM_BOOL) {
-    wxLogError(wxT("floppy params have wrong type"));
-    return;
-  }
-  if (sim_thread == NULL) {
-    dlg.AddRadio(wxT("Not Present"), wxT(""));
-  }
-  dlg.AddRadio(wxT("Ejected"), wxT("none"));
-#if defined(__linux__)
-  dlg.AddRadio(wxT("Physical floppy drive /dev/fd0"), wxT("/dev/fd0"));
-  dlg.AddRadio(wxT("Physical floppy drive /dev/fd1"), wxT("/dev/fd1"));
-#elif defined(WIN32)
-  dlg.AddRadio(wxT("Physical floppy drive A:"), wxT("A:"));
-  dlg.AddRadio(wxT("Physical floppy drive B:"), wxT("B:"));
-#else
-  // add your favorite operating system here
-#endif
-  dlg.SetCapacity(disktype->get() - disktype->get_min());
-  dlg.SetFilename(wxString(fname->getptr(), wxConvUTF8));
-  dlg.SetValidateFunc(editFloppyValidate);
-  if (disktype->get() == BX_FLOPPY_NONE) {
-    dlg.SetRadio(0);
-  } else if ((status->get() == 0) || (!strcmp("none", fname->getptr()))) {
-    dlg.SetRadio((sim_thread == NULL)?1:0);
-  } else {
-    // otherwise the SetFilename() should have done the right thing.
-  }
-  int n = dlg.ShowModal();
-  if (n==wxID_OK) {
-    char filename[1024];
-    wxString fn(dlg.GetFilename());
-    strncpy(filename, fn.mb_str(wxConvUTF8), sizeof(filename));
-    fname->set(filename);
-    disktype->set(disktype->get_min() + dlg.GetCapacity());
-    if (sim_thread == NULL) {
-      if (dlg.GetRadio() == 0) {
-        disktype->set(BX_FLOPPY_NONE);
-      }
-    } else {
-      if (dlg.GetRadio() > 0) {
-        status->set(1);
-      }
-    }
-  }
+  dlg.Setup(list);
+  dlg.SetRuntimeFlag(sim_thread != NULL);
+  dlg.ShowModal();
 }
 
 void MyFrame::editFirstCdrom()
