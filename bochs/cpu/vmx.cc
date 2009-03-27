@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmx.cc,v 1.10 2009-03-10 22:28:08 sshwarts Exp $
+// $Id: vmx.cc,v 1.11 2009-03-27 09:37:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2009 Stanislav Shwartsman
@@ -494,12 +494,12 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckHostState(void)
 
   host_state->cr0 = (bx_address) VMread64(VMCS_HOST_CR0);
   if (~host_state->cr0 & VMX_MSR_CR0_FIXED0) {
-     BX_ERROR(("VMFAIL: VMCS host state invalid CR0"));
+     BX_ERROR(("VMFAIL: VMCS host state invalid CR0 0x%08x", (Bit32u) host_state->cr0));
      return VMXERR_VMENTRY_INVALID_VM_HOST_STATE_FIELD;
   }
 
   if (host_state->cr0 & ~VMX_MSR_CR0_FIXED1) {
-     BX_ERROR(("VMFAIL: VMCS host state invalid CR0"));
+     BX_ERROR(("VMFAIL: VMCS host state invalid CR0 0x%08x", (Bit32u) host_state->cr0));
      return VMXERR_VMENTRY_INVALID_VM_HOST_STATE_FIELD;
   }
 
@@ -513,11 +513,11 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckHostState(void)
 
   host_state->cr4 = (bx_address) VMread64(VMCS_HOST_CR4);
   if (~host_state->cr4 & VMX_MSR_CR4_FIXED0) {
-     BX_ERROR(("VMFAIL: VMCS host state invalid CR4"));
+     BX_ERROR(("VMFAIL: VMCS host state invalid CR4 0x%08x", (Bit32u) host_state->cr4));
      return VMXERR_VMENTRY_INVALID_VM_HOST_STATE_FIELD;
   }
   if (host_state->cr4 & ~VMX_MSR_CR4_FIXED1) {
-     BX_ERROR(("VMFAIL: VMCS host state invalid CR4"));
+     BX_ERROR(("VMFAIL: VMCS host state invalid CR4 0x%08x", (Bit32u) host_state->cr4));
      return VMXERR_VMENTRY_INVALID_VM_HOST_STATE_FIELD;
   }
 
