@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmx.cc,v 1.11 2009-03-27 09:37:48 sshwarts Exp $
+// $Id: vmx.cc,v 1.12 2009-03-28 13:42:09 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2009 Stanislav Shwartsman
@@ -53,21 +53,27 @@ void BX_CPU_C::init_VMCS(void)
   if (vmcs_map_ready) return;
   vmcs_map_ready = 1;
 
-#if 1
-  // try to build generic VMCS map
-  for (unsigned type=0; type<16; type++) {
-    for (unsigned field=0; field <= VMX_HIGHEST_VMCS_ENCODING; field++) {
-       // allocate 32 fields of 4 byte each per type
-       vmcs_map[type][field] = VMCS_DATA_OFFSET + (type*32 + field) * 4;
-       BX_ASSERT(vmcs_map[type][field] < VMX_VMCS_AREA_SIZE);
-    }
-  }
-#else
   for (unsigned type=0; type<16; type++) {
     for (unsigned field=0; field <= VMX_HIGHEST_VMCS_ENCODING; field++) {
        vmcs_map[type][field] = 0xffffffff;
     }
   }
+
+#if 1
+  // try to build generic VMCS map
+  for (unsigned type=0; type<16; type++) {
+    for (unsigned field=0; field <= VMX_HIGHEST_VMCS_ENCODING; field++) {
+       // allocate 32 fields of 4 byte each per type
+       if (vmcs_map[type][field] != 0xffffffff) {
+          BX_PANIC(("VMCS type %d field %d is already initialized", type, field));
+       }
+       vmcs_map[type][field] = VMCS_DATA_OFFSET + (type*64 + field) * 4;
+       if(vmcs_map[type][field] >= VMX_VMCS_AREA_SIZE) {
+          BX_PANIC(("VMCS type %d field %d is out of VMCS boundaries", type, field));
+       }
+    }
+  }
+#else
   // define your own VMCS format
 #include "vmcs.h"
 #endif
@@ -513,11 +519,11 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckHostState(void)
 
   host_state->cr4 = (bx_address) VMread64(VMCS_HOST_CR4);
   if (~host_state->cr4 & VMX_MSR_CR4_FIXED0) {
-     BX_ERROR(("VMFAIL: VMCS host state invalid CR4 0x%08x", (Bit32u) host_state->cr4));
+     BX_ERROR(("VMFAIL: VMCS host state invalid CR4 0x" FMT_ADDRX, host_state->cr4));
      return VMXERR_VMENTRY_INVALID_VM_HOST_STATE_FIELD;
   }
   if (host_state->cr4 & ~VMX_MSR_CR4_FIXED1) {
-     BX_ERROR(("VMFAIL: VMCS host state invalid CR4 0x%08x", (Bit32u) host_state->cr4));
+     BX_ERROR(("VMFAIL: VMCS host state invalid CR4 0x" FMT_ADDRX, host_state->cr4));
      return VMXERR_VMENTRY_INVALID_VM_HOST_STATE_FIELD;
   }
 
