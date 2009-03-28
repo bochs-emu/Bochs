@@ -23,57 +23,12 @@ No decisions about this yet.
 Speed (well lack of) is one of the biggest criticism made by users
 who'd like to see Bochs run as fast as Virtual PC.
 Paths we can explore to get more speed :
-4.1 virtualization : plex86
-4.2 dynamic translation : qemu, patch from h.johansson
+1.1 virtualization : plex86
+1.2 dynamic translation : qemu
 Status:
 Some work has been done for Bochs 2.3.7 but still long way is ahead.
 
-2. Plugin architecture
-2.1 The plugin architecture can be reworked if we want to support
-multiple similar devices like seral net or vga cards.
-We currently have two "types" of plugins: "core" and "optional".
-Maybe we could add "classes" of plugins. The current version of
-Bochs supports the classes "display_library" and "io_device".
-New classes can be "config_interface", "net_lowlevel" and
-"sound_lowlevel"
-2.2 Stanislav wrote :
-Plugin architecture should be rewritten like real plugin architecture s.t.
-Bochs VGA plugin for example will be real plugin. I mean that replacement
-of plugin dll in already compiled Bochs will replace Bochs VGA card and
-the new card will be detected automatically.
-This will allow for example developing of plugins separately from Bochs.
-2.3 Michael Brown wrote :
-If the configuration interface is to be reworked, could we also make it so
-that plugins are self-contained, rather than needing to pollute config.cc
-with code for defining and parsing plugin-specific options
-Status:
-A little bit of the basic work is done now: The config parameter handling has
-been rewritten to a parameter tree and user-defined bochsrc options are now
-supported. The main plugin architecture rewrite is not done yet.
-
-3. PCI host<->guest proxy
-Being able to use a real pci device from inside Bochs would be a
-great feature of Bochs. It would ease reverse engineering of non
-documented cards, or one could even use a real spare vga card.
-Frank Cornellis has done a great job on this subject, and we began
-integrating his changes.
-Status:
-The pcidev device is present in CVS and it has been updated for the new PCI
-infrastructure, but the new code is untested yet.
-
-4. Subdirectories in iodev
-The iodev directory contains the various implemented iodevice.
-With the new pci devices, new harddrives and new net access methods,
-it could be interesting to add new subdirectories like :
-iodev/video/... --> for standard vga and new card emulation
-iodev/disks/... --> for the ata/atapi classes, hd/cd classes and host accesses
-iodev/net/...   --> for ne2k and host net access
-isa and pci devices would be mixed in the directories, but this should
-be manageable.
-Status:
-Not done yet.
-
-5 multithreading. Conn Clark wrote :
+2 multithreading. Conn Clark wrote :
 Threading might be nice too, for those of us who have SMP/SMT machines.
 I have a patch from Mathis (who hangs out on the IRC channel all the
 time) that puts the video card interface in its own thread. It has
@@ -90,6 +45,51 @@ Status:
 Third party proup started a para-Bochs project exacly to reach above goals,
 some beta version is already released.
 The home page of the project: http://grid.hust.edu.cn/cluster/VirtualMachine/main.html
+
+3. Plugin architecture
+3.1 The plugin architecture can be reworked if we want to support
+multiple similar devices like seral net or vga cards.
+We currently have two "types" of plugins: "core" and "optional".
+Maybe we could add "classes" of plugins. The current version of
+Bochs supports the classes "display_library" and "io_device".
+New classes can be "config_interface", "net_lowlevel" and
+"sound_lowlevel"
+3.2 Stanislav wrote :
+Plugin architecture should be rewritten like real plugin architecture s.t.
+Bochs VGA plugin for example will be real plugin. I mean that replacement
+of plugin dll in already compiled Bochs will replace Bochs VGA card and
+the new card will be detected automatically.
+This will allow for example developing of plugins separately from Bochs.
+3.3 Michael Brown wrote :
+If the configuration interface is to be reworked, could we also make it so
+that plugins are self-contained, rather than needing to pollute config.cc
+with code for defining and parsing plugin-specific options
+Status:
+A little bit of the basic work is done now: The config parameter handling has
+been rewritten to a parameter tree and user-defined bochsrc options are now
+supported. The main plugin architecture rewrite is not done yet.
+
+4. PCI host<->guest proxy
+Being able to use a real pci device from inside Bochs would be a
+great feature of Bochs. It would ease reverse engineering of non
+documented cards, or one could even use a real spare vga card.
+Frank Cornellis has done a great job on this subject, and we began
+integrating his changes.
+Status:
+The pcidev device is present in CVS and it has been updated for the new PCI
+infrastructure, but the new code is untested yet.
+
+5. Subdirectories in iodev
+The iodev directory contains the various implemented iodevice.
+With the new pci devices, new harddrives and new net access methods,
+it could be interesting to add new subdirectories like :
+iodev/video/... --> for standard vga and new card emulation
+iodev/disks/... --> for the ata/atapi classes, hd/cd classes and host accesses
+iodev/net/...   --> for ne2k and host net access
+isa and pci devices would be mixed in the directories, but this should
+be manageable.
+Status:
+Not done yet.
 
 6. CPU
 6.1 This was asked in the ml, and I believe it's a good idea to provide
@@ -201,22 +201,12 @@ at run-time by iterating the main menu objects
 Status:
 The config options handling has been rewritten to a parameter tree.
 
-15. Save/Restore
-Save/restore of config and log options and the hardware state is supported
-in all Bochs configurations. Harddisk images are not handled yet.
-
-16. add to the roadmap that we should find some ideas to check
-correctness of instructions emulation, especially system instructions.
-arithmetic instructions could be validated with simply random testing
-Status:
-Not done yet.
-
-17. lowlevel serial support for Windows.
+15. lowlevel serial support for Windows.
 Volker is currently working on this.
 Status:
 Not yet complete (transmit works, receive is losing data).
 
-18. Parallel port
+16. Parallel port
 Conn Clark wrote :
 I would like to see better parallel port support so I can use a dongle.
 This is something I would find very useful as it would mean I wouldn't
@@ -228,7 +218,7 @@ bidirectional parallel port won't work.
 Status:
 Not done yet.
 
-19. Patches / Bug reports
+17. Patches / Bug reports
 There are dozens of patches floating around. Some are outdated,
 don't apply cleanly, are obsolete/unneeded. We could try to do
 some clean-up, and keep only relevent ones.
@@ -237,13 +227,13 @@ very old and we asked for more information with no response.
 Status:
 There is some progress, but still a lot of work to do.
 
-20. Positions
+18. Positions
 If you want to help without coding, here are available positions :
-20.1 Webmaster : update website (Jan Bruun Andersen offered to help)
-22.2 patch coordonator : look at incoming patches (sourceforge and
+18.1 Webmaster : update website (Jan Bruun Andersen offered to help)
+18.2 patch coordonator : look at incoming patches (sourceforge and
 mailing list) and upload / update in the cvs patches directory.
-20.3 platform maintainers for macos / win32
-20.4 disk image maintainer : create and maintain our collection
+18.3 platform maintainers for macos / win32
+18.4 disk image maintainer : create and maintain our collection
 of disk images. Usually, only the configuration file needs to be
 updated, and old bios files have to be removed.  Some packages
 still contain very old bios files, they should definitely have
@@ -251,7 +241,7 @@ to be removed.
 Status:
 More active developers are needed to do the things described above.
 
-21. Bochs demo cd/dvd
+19. Bochs demo cd/dvd
 With version 2.1, it is now technically possible to use disk images
 on a read-only media, with a journal files on a read/write media.
 It would be great to create a demo cd/dvd with executables for
@@ -261,7 +251,7 @@ directory on the harddisk.
 Status:
 Not done yet.
 
-22. Other CPU architectures : arm, ppc
+20. Other CPU architectures : arm, ppc
 This has been asked in the mailing list. I'm not really
 interested, but other people might be. Should we propose to
 host the new CPUs code in our source tree, or should we let

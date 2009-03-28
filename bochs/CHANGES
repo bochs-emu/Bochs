@@ -132,6 +132,7 @@ Detailed change log :
  [1981505] Init PIIX4 PCI to ISA bridge and IDE by Sebastian
 
 - these S.F. bugs were closed
+ [2710931] Problem compiling both instrumentation and debugger
  [2617003] ExceptionInfo conflicts with OS X api
  [2609432] stepping causes segfault (CVS)
  [2605861] compile error with --enable-smp
