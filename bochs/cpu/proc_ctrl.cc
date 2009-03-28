@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.291 2009-03-13 18:48:08 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.292 2009-03-28 08:27:01 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2281,14 +2281,13 @@ Bit32u BX_CPU_C::hwdebug_compare(bx_address laddr_0, unsigned size,
     {  0x0,   0x1,   0x7,          0x3   };
 
   bx_address laddr_n = laddr_0 + (size - 1);
-  bx_address dr[4], dr_n[4];
-  Bit32u dr_op[4], len[4];
+  Bit32u dr_op[4], dr_len[4];
   bx_bool ibpoint_found_n[4], ibpoint_found = 0;
 
-  len[0] = (dr7>>18) & 3;
-  len[1] = (dr7>>22) & 3;
-  len[2] = (dr7>>26) & 3;
-  len[3] = (dr7>>30) & 3;
+  dr_len[0] = (dr7>>18) & 3;
+  dr_len[1] = (dr7>>22) & 3;
+  dr_len[2] = (dr7>>26) & 3;
+  dr_len[3] = (dr7>>30) & 3;
 
   dr_op[0] = (dr7>>16) & 3;
   dr_op[1] = (dr7>>20) & 3;
@@ -2296,15 +2295,15 @@ Bit32u BX_CPU_C::hwdebug_compare(bx_address laddr_0, unsigned size,
   dr_op[3] = (dr7>>28) & 3;
 
   for (unsigned n=0;n<4;n++) {
-    dr[n]   = BX_CPU_THIS_PTR dr[n] & ~alignment_mask[len[n]];
-    dr_n[n] = dr[n] + alignment_mask[len[n]];
+    bx_address dr_start = BX_CPU_THIS_PTR dr[n] & ~alignment_mask[dr_len[n]];
+    bx_address dr_end = dr_start + alignment_mask[dr_len[n]];
     ibpoint_found_n[n] = 0;
 
     // See if this instruction address matches any breakpoints
     if (dr7 & (3 << n*2)) {
       if ((dr_op[n]==opa || dr_op[n]==opb) &&
-           (laddr_0 <= dr_n[n]) &&
-           (laddr_n >= dr[n])) {
+           (laddr_0 <= dr_end) &&
+           (laddr_n >= dr_start)) {
         ibpoint_found_n[n] = 1;
         ibpoint_found = 1;
       }
@@ -2333,24 +2332,10 @@ void BX_CPU_C::iobreakpoint_match(unsigned port, unsigned len)
   // Only compare debug registers if any breakpoints are enabled
   if (BX_CPU_THIS_PTR cr4.get_DE() && (BX_CPU_THIS_PTR dr7 & 0x000000ff))
   {
-    Bit32u dr_op[4], dr_len[4];
-    Bit32u dr7 = BX_CPU_THIS_PTR dr7;
-
-    dr_len[0] = 1 + (dr7>>18) & 3;
-    dr_len[1] = 1 + (dr7>>22) & 3;
-    dr_len[2] = 1 + (dr7>>26) & 3;
-    dr_len[3] = 1 + (dr7>>30) & 3;
-
-    dr_op[0] = (dr7>>16) & 3;
-    dr_op[1] = (dr7>>20) & 3;
-    dr_op[2] = (dr7>>24) & 3;
-    dr_op[3] = (dr7>>28) & 3;
-
-    for (unsigned n=0;n<4;n++) {
-      if (dr_op[n] == 2 && dr_len[n] == len && BX_CPU_THIS_PTR dr[n] == port) {
-        BX_CPU_THIS_PTR debug_trap |= (1<<n);
-        BX_CPU_THIS_PTR async_event = 1;
-      }        
+    Bit32u dr6_bits = hwdebug_compare(port, len, BX_HWDebugIO, BX_HWDebugIO);
+    if (dr6_bits) {
+      BX_CPU_THIS_PTR debug_trap |= dr6_bits;
+      BX_CPU_THIS_PTR async_event = 1;
     }
   }
 }
