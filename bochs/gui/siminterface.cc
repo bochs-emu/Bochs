@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.204 2009-03-26 09:19:56 sshwarts Exp $
+// $Id: siminterface.cc,v 1.205 2009-03-28 11:49:26 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  The Bochs Project
@@ -1854,6 +1854,16 @@ void bx_param_enum_c::update_dependents()
       mask <<= 1;
     }
   }
+}
+
+void bx_param_enum_c::set_enabled(int en)
+{
+  // The enable handler may wish to allow/disallow the action
+  if (enable_handler) {
+    en = (*enable_handler)(this, en);
+  }
+  bx_param_c::set_enabled(en);
+  update_dependents();
 }
 
 bx_param_string_c::bx_param_string_c(bx_param_c *parent,
