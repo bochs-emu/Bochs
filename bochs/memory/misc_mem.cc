@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: misc_mem.cc,v 1.126 2009-03-08 21:23:39 sshwarts Exp $
+// $Id: misc_mem.cc,v 1.127 2009-03-29 20:08:27 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -75,7 +75,7 @@ void BX_MEM_C::init_memory(Bit32u memsize)
 {
   unsigned idx;
 
-  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.126 2009-03-08 21:23:39 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.127 2009-03-29 20:08:27 sshwarts Exp $"));
 
   if (BX_MEM_THIS actual_vector != NULL) {
     BX_INFO (("freeing existing memory vector"));
@@ -218,7 +218,7 @@ void BX_MEM_C::load_ROM(const char *path, bx_phy_address romaddress, Bit8u type)
   size = (unsigned long)stat_buf.st_size;
 
   if (type > 0) {
-    max_size = 0x10000;
+    max_size = 0x20000;
   } else {
     max_size = BIOSROMSZ;
   }
