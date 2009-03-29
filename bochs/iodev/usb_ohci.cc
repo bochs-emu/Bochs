@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_ohci.cc,v 1.24 2009-03-29 07:56:28 vruppert Exp $
+// $Id: usb_ohci.cc,v 1.25 2009-03-29 20:48:17 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Benjamin D Lunt (fys at frontiernet net)
@@ -138,12 +138,13 @@ void bx_usb_ohci_c::init(void)
   BX_OHCI_THIS hub.statusbar_id[0] = bx_gui->register_statusitem("OHCI");
 
   bx_list_c *usb_rt = (bx_list_c*)SIM->get_param(BXPN_MENU_RUNTIME_USB);
-  bx_list_c *ohci = new bx_list_c(usb_rt, "ohci", "OHCI Configuration");
-  ohci->set_options(ohci->SHOW_PARENT);
+  bx_list_c *ohci = (bx_list_c*)SIM->get_param(BXPN_USB_OHCI);
+  ohci->set_options(ohci->SHOW_PARENT | ohci->USE_BOX_TITLE);
+  ohci->set_runtime_param(1);
+  usb_rt->add(ohci);
   for (i=0; i<BX_N_USB_OHCI_PORTS; i++) {
     sprintf(pname, "port%d", i+1);
-    port = SIM->get_param_string(pname, SIM->get_param(BXPN_USB_OHCI));
-    ohci->add(port);
+    port = SIM->get_param_string(pname, ohci);
     port->set_handler(usb_param_handler);
     port->set_runtime_param(1);
     BX_OHCI_THIS hub.usb_port[i].device = NULL;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.172 2009-03-29 11:13:49 vruppert Exp $
+// $Id: config.cc,v 1.173 2009-03-29 20:48:17 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1664,11 +1664,14 @@ void bx_init_options()
   path->set_extension("log");
   path->set_enabled(BX_DEBUGGER);
 
-  // USB runtime options
-  usb = new bx_list_c(special_menus, "usb_runtime", "USB runtime options", 10);
-  usb->set_options(usb->SHOW_PARENT);
+  // runtime options
+  menu = new bx_list_c(special_menus, "runtime", "Runtime options");
+  bx_list_c *cdrom = new bx_list_c(menu, "cdrom", "CD-ROM options", 10);
+  cdrom->set_options(cdrom->SHOW_PARENT);
+  usb = new bx_list_c(menu, "usb", "USB options", 10);
+  usb->set_options(usb->SHOW_PARENT | usb->SHOW_GROUP_NAME);
   // misc runtime options
-  bx_param_c *runtime_init_list[] = {
+  bx_param_c *rt_misc_init_list[] = {
       SIM->get_param_num(BXPN_VGA_UPDATE_INTERVAL),
       SIM->get_param_bool(BXPN_MOUSE_ENABLED),
       SIM->get_param_num(BXPN_KBD_PASTE_DELAY),
@@ -1677,8 +1680,8 @@ void bx_init_options()
       SIM->get_param_num(BXPN_SB16_LOGLEVEL),
       NULL
   };
-  menu = new bx_list_c(special_menus, "runtime", "Misc runtime options", runtime_init_list);
-  menu->set_options(menu->SHOW_PARENT | menu->SHOW_GROUP_NAME);
+  misc = new bx_list_c(menu, "misc", "Misc options", rt_misc_init_list);
+  misc->set_options(misc->SHOW_PARENT | misc->SHOW_GROUP_NAME);
 }
 
 void bx_reset_options()

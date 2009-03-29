@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.223 2009-03-22 20:18:17 vruppert Exp $
+// $Id: harddrv.cc,v 1.224 2009-03-29 20:48:17 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -173,7 +173,7 @@ void bx_hard_drive_c::init(void)
   char  ata_name[20];
   bx_list_c *base;
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.223 2009-03-22 20:18:17 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.224 2009-03-29 20:48:17 vruppert Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     sprintf(ata_name, "ata.%d.resources", channel);
@@ -449,6 +449,10 @@ void bx_hard_drive_c::init(void)
           BX_PANIC(("ata%d-%d image doesn't support geometry detection", channel, device));
         }
       } else if (SIM->get_param_enum("type", base)->get() == BX_ATA_DEVICE_CDROM) {
+        bx_list_c *cdrom_rt = (bx_list_c*)SIM->get_param(BXPN_MENU_RUNTIME_CDROM);
+        cdrom_rt->add(base);
+        base->set_options(base->USE_BOX_TITLE);
+        base->set_runtime_param(1);
         SIM->get_param("path", base)->set_runtime_param(1);
         SIM->get_param("status", base)->set_runtime_param(1);
         BX_DEBUG(("CDROM on target %d/%d",channel,device));

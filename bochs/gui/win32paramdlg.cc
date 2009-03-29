@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32paramdlg.cc,v 1.14 2009-03-29 11:13:49 vruppert Exp $
+// $Id: win32paramdlg.cc,v 1.15 2009-03-29 20:48:17 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Volker Ruppert
@@ -628,6 +628,7 @@ void SetParamList(HWND hDlg, bx_list_c *list)
         }
       }
     }
+    if ((i + 1) >= (UINT)list->get_size()) break;
   }
 }
 

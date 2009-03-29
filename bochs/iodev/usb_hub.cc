@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_hub.cc,v 1.5 2009-03-15 21:16:17 vruppert Exp $
+// $Id: usb_hub.cc,v 1.6 2009-03-29 20:48:17 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Volker Ruppert
@@ -251,13 +251,12 @@ usb_hub_device_c::usb_hub_device_c(Bit8u ports)
   add_usb_hub(this);
 
   // config options
-  bx_list_c *usb = (bx_list_c*)SIM->get_param("ports.usb");
   bx_list_c *usb_rt = (bx_list_c*)SIM->get_param(BXPN_MENU_RUNTIME_USB);
   sprintf(pname, "exthub%d", ++hub_count);
   sprintf(label, "External Hub #%d Configuration", hub_count);
-  hub.config = new bx_list_c(usb, pname, label, hub.n_ports);
+  hub.config = new bx_list_c(usb_rt, pname, label, hub.n_ports);
   hub.config->set_options(bx_list_c::SHOW_PARENT | bx_list_c::USE_BOX_TITLE);
-  usb_rt->add(hub.config);
+  hub.config->set_runtime_param(1);
   for(i = 0; i < hub.n_ports; i++) {
     sprintf(pname, "port%d", i+1);
     sprintf(label, "Port #%d device", i+1);
@@ -274,12 +273,10 @@ usb_hub_device_c::~usb_hub_device_c(void)
   for (int i=0; i<hub.n_ports; i++) {
     remove_device(i);
   }
+#if !BX_WITH_WX
+  // FIXME: the wx ParamDialog doesn't like this
   bx_list_c *usb_rt = (bx_list_c*)SIM->get_param(BXPN_MENU_RUNTIME_USB);
   usb_rt->remove(hub.config->get_name());
-  // FIXME: the wx ParamDialog doesn't like this
-#if !BX_WITH_WX
-  bx_list_c *usb = (bx_list_c*)SIM->get_param("ports.usb");
-  usb->remove(hub.config->get_name());
 #endif
   remove_usb_hub(this);
 }

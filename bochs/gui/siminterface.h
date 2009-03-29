@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.239 2009-03-29 11:13:49 vruppert Exp $
+// $Id: siminterface.h,v 1.240 2009-03-29 20:48:17 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  The Bochs Project
@@ -256,8 +256,9 @@ typedef enum {
 #define BXPN_MENU_DISK                   "menu.disk"
 #define BXPN_MENU_DISK_WIN32             "menu.disk_win32"
 #define BXPN_MENU_MEMORY                 "menu.memory"
-#define BXPN_MENU_RUNTIME                "menu.runtime"
-#define BXPN_MENU_RUNTIME_USB            "menu.usb_runtime"
+#define BXPN_MENU_RUNTIME_CDROM          "menu.runtime.cdrom"
+#define BXPN_MENU_RUNTIME_USB            "menu.runtime.usb"
+#define BXPN_MENU_RUNTIME_MISC           "menu.runtime.misc"
 #define BXPN_WX_KBD_STATE                "wxdebug.keyboard"
 #define BXPN_WX_CPU_STATE                "wxdebug.cpu"
 #define BXPN_WX_CPU0_STATE               "wxdebug.cpu.0"

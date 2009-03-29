@@ -1,4 +1,4 @@
-$Id: PARAM_TREE.txt,v 1.22 2009-03-15 21:16:16 vruppert Exp $
+$Id: PARAM_TREE.txt,v 1.23 2009-03-29 20:48:17 vruppert Exp $
 
 Starting from Bochs 2.3 the parameters are organized in a tree structure
 instead of a huge flat list. The parameter tree was required for implementing
@@ -232,6 +232,9 @@ menu
   disk_win32
   memory
   runtime
+    cdrom
+    usb
+    misc
 
 bochs
   (subtree containing Bochs state)
