@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32paramdlg.cc,v 1.13 2009-03-28 11:49:26 vruppert Exp $
+// $Id: win32paramdlg.cc,v 1.14 2009-03-29 11:13:49 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Volker Ruppert
@@ -670,6 +670,7 @@ void ProcessDependentList(HWND hDlg, bx_param_c *param, BOOL enabled)
   bx_param_enum_c *eparam;
   Bit64s value;
   Bit64u enable_bitmap, mask;
+  char buffer[BX_PATHNAME_LEN];
   int i;
   BOOL en;
 
@@ -694,11 +695,15 @@ void ProcessDependentList(HWND hDlg, bx_param_c *param, BOOL enabled)
         mask <<= 1;
       }
     } else if ((param->get_type() == BXT_PARAM_BOOL) ||
-               (param->get_type() == BXT_PARAM_NUM)) {
+               (param->get_type() == BXT_PARAM_NUM) ||
+               (param->get_type() == BXT_PARAM_STRING)) {
       if (param->get_type() == BXT_PARAM_BOOL) {
         value = SendMessage(GetDlgItem(hDlg, ID_PARAM + cid), BM_GETCHECK, 0, 0);
-      } else {
+      } else if (param->get_type() == BXT_PARAM_NUM) {
         value = GetDlgItemInt(hDlg, ID_PARAM + cid, NULL, FALSE);
+      } else {
+        GetWindowText(GetDlgItem(hDlg, ID_PARAM + cid), buffer, BX_PATHNAME_LEN);
+        value = (lstrlen(buffer) > 0) && (strcmp(buffer, "none"));
       }
       for (i = 0; i < deplist->get_size(); i++) {
         dparam = deplist->get(i);

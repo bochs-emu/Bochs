@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.238 2009-03-28 11:49:26 vruppert Exp $
+// $Id: siminterface.h,v 1.239 2009-03-29 11:13:49 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  The Bochs Project
@@ -637,6 +637,11 @@ protected:
   int runtime_param;
   int enabled;
   Bit32u options;
+  // The dependent_list is initialized to NULL.  If dependent_list is modified
+  // to point to a bx_list_c of other parameters, the set() method of the
+  // parameter type will enable those parameters when the enable condition is
+  // true, and disable them it is false.
+  bx_list_c *dependent_list;
 public:
   bx_param_c(Bit32u id, const char *name, const char *description);
   bx_param_c(Bit32u id, const char *name, const char *label, const char *description);
@@ -664,7 +669,7 @@ public:
   int getint() const {return -1;}
   static const char* set_default_format(const char *f);
   static const char *get_default_format() { return default_text_format; }
-  virtual bx_list_c *get_dependent_list() { return NULL; }
+  bx_list_c *get_dependent_list() { return dependent_list; }
   void set_options(Bit32u options) { this->options = options; }
   Bit32u get_options() const { return options; }
 #if BX_USE_TEXTCONFIG
@@ -697,11 +702,6 @@ protected:
   param_enable_handler enable_handler;
   int base;
   bx_bool is_shadow;
-  // The dependent_list is initialized to NULL.  If dependent_list is modified
-  // to point to a bx_list_c of other parameters, the set() method of
-  // bx_param_bool_c will enable those parameters when this bool is true, and
-  // disable them when this bool is false.
-  bx_list_c *dependent_list;
 public:
   enum {
     // When a bx_param_num_c is displayed in dialog, USE_SPIN_CONTROL controls
@@ -718,7 +718,6 @@ public:
   void set_handler(param_event_handler handler);
   void set_sr_handlers(void *devptr, param_sr_handler save, param_sr_handler restore);
   void set_enable_handler(param_enable_handler handler) { enable_handler = handler; }
-  virtual bx_list_c *get_dependent_list() { return dependent_list; }
   void set_dependent_list(bx_list_c *l);
   virtual void set_enabled(int enabled);
   virtual Bit32s get() { return (Bit32s) get64(); }
@@ -875,6 +874,7 @@ class BOCHSAPI bx_param_string_c : public bx_param_c {
   param_string_event_handler handler;
   param_enable_handler enable_handler;
   char separator;
+  void update_dependents();
 public:
   enum {
     RAW_BYTES = 1,         // use binary text editor, like MAC addr
@@ -895,6 +895,7 @@ public:
   void set_handler(param_string_event_handler handler);
   void set_enable_handler(param_enable_handler handler);
   virtual void set_enabled(int enabled);
+  void set_dependent_list(bx_list_c *l);
   Bit32s get(char *buf, int len);
   char *getptr() {return val; }
   void set(const char *buf);

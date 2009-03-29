@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.205 2009-03-28 11:49:26 vruppert Exp $
+// $Id: siminterface.cc,v 1.206 2009-03-29 11:13:49 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  The Bochs Project
@@ -1264,6 +1264,9 @@ bx_param_c::bx_param_c(Bit32u id, const char *param_name, const char *param_desc
   this->long_text_format = default_text_format;
   this->runtime_param = 0;
   this->enabled = 1;
+  // dependent_list must be initialized before the set(),
+  // because set calls update_dependents().
+  dependent_list = NULL;
 }
 
 bx_param_c::bx_param_c(Bit32u id, const char *param_name, const char *param_label, const char *param_desc)
@@ -1283,6 +1286,9 @@ bx_param_c::bx_param_c(Bit32u id, const char *param_name, const char *param_labe
   this->long_text_format = default_text_format;
   this->runtime_param = 0;
   this->enabled = 1;
+  // dependent_list must be initialized before the set(),
+  // because set calls update_dependents().
+  dependent_list = NULL;
 }
 
 bx_param_c::~bx_param_c()
@@ -1380,9 +1386,6 @@ bx_param_num_c::bx_param_num_c(bx_param_c *parent,
   this->enable_handler = NULL;
   this->base = default_base;
   this->is_shadow = is_shadow;
-  // dependent_list must be initialized before the set(),
-  // because set calls update_dependents().
-  dependent_list = NULL;
   if (!is_shadow) {
     set(initial_val);
   }
@@ -1932,6 +1935,18 @@ void bx_param_string_c::set_enable_handler(param_enable_handler handler)
   this->enable_handler = handler;
 }
 
+void bx_param_string_c::update_dependents()
+{
+  if (dependent_list) {
+    int en = (strlen(val) > 0) && (strcmp(val, "none")) && enabled;
+    for (int i=0; i<dependent_list->get_size(); i++) {
+      bx_param_c *param = dependent_list->get(i);
+      if (param != this)
+        param->set_enabled(en);
+    }
+  }
+}
+
 void bx_param_string_c::set_enabled(int en)
 {
   // The enable handler may wish to allow/disallow the action
@@ -1939,6 +1954,13 @@ void bx_param_string_c::set_enabled(int en)
     en = (*enable_handler)(this, en);
   }
   bx_param_c::set_enabled(en);
+  if (dependent_list != NULL) update_dependents();
+}
+
+void bx_param_string_c::set_dependent_list(bx_list_c *l)
+{
+  dependent_list = l;
+  update_dependents();
 }
 
 Bit32s bx_param_string_c::get(char *buf, int len)
@@ -1973,6 +1995,7 @@ void bx_param_string_c::set(const char *buf)
     buf = (*handler)(this, 1, oldval, buf, -1);
   }
   delete [] oldval;
+  if (dependent_list != NULL) update_dependents();
 }
 
 bx_bool bx_param_string_c::equals(const char *buf)
