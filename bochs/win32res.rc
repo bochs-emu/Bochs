@@ -57,16 +57,16 @@ CAPTION "Bochs Start Menu"
 FONT 8, "Helv"
 BEGIN
     GROUPBOX        "Configuration", IDCONFIG, 10, 10, 70, 97
-    PUSHBUTTON      "Load", IDREADRC, 20, 25, 50, 14
-    PUSHBUTTON      "Save", IDWRITERC, 20, 45, 50, 14
-    PUSHBUTTON      "Edit", IDEDITCFG, 20, 65, 50, 14
-    PUSHBUTTON      "Reset", IDRESETCFG, 20, 85, 50, 14
+    PUSHBUTTON      "L&oad", IDREADRC, 20, 25, 50, 14
+    PUSHBUTTON      "&Save", IDWRITERC, 20, 45, 50, 14
+    PUSHBUTTON      "&Edit", IDEDITCFG, 20, 65, 50, 14
+    PUSHBUTTON      "Rese&t", IDRESETCFG, 20, 85, 50, 14
     GROUPBOX        "Edit Options", IDEDITGRP, 90, 10, 95, 107
     LISTBOX         IDEDITBOX, 95, 20, 85, 100, WS_VSCROLL | WS_TABSTOP
     GROUPBOX        "Simulation", IDSIMU, 195, 10, 70, 77
-    DEFPUSHBUTTON   "Start", IDOK, 205, 25, 50, 14
-    PUSHBUTTON      "Restore State", IDRESTORE, 205, 45, 50, 14
-    PUSHBUTTON      "Quit", IDCANCEL, 205, 65, 50, 14
+    DEFPUSHBUTTON   "Sta&rt", IDOK, 205, 25, 50, 14
+    PUSHBUTTON      "Restore St&ate", IDRESTORE, 205, 45, 50, 14
+    PUSHBUTTON      "&Quit", IDCANCEL, 205, 65, 50, 14
 END
 
 SM_LOGOPT_DLG DIALOG 30, 30, 240, 180

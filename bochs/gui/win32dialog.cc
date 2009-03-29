@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32dialog.cc,v 1.84 2009-03-26 17:57:16 vruppert Exp $
+// $Id: win32dialog.cc,v 1.85 2009-03-29 00:21:10 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  The Bochs Project
@@ -542,7 +542,7 @@ static BOOL CALLBACK StartMenuDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM
           rcfile = new bx_param_filename_c(NULL, "rcfile", "Load Bochs Config File",
                                            "", "bochsrc.bxrc", BX_PATHNAME_LEN);
           rcfile->set_extension("bxrc");
-          if (AskFilename(hDlg, rcfile, NULL)) {
+          if (AskFilename(hDlg, rcfile, NULL) > 0) {
             SIM->reset_all_param();
             SIM->read_rc(rcfile->getptr());
           }
@@ -553,7 +553,7 @@ static BOOL CALLBACK StartMenuDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM
                                            "", "bochsrc.bxrc", BX_PATHNAME_LEN);
           rcfile->set_extension("bxrc");
           rcfile->set_options(rcfile->SAVE_FILE_DIALOG);
-          if (AskFilename(hDlg, rcfile, NULL)) {
+          if (AskFilename(hDlg, rcfile, NULL) > 0) {
             SIM->write_rc(rcfile->getptr(), 1);
           }
           delete rcfile;
