@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_ohci.cc,v 1.23 2009-03-15 21:16:17 vruppert Exp $
+// $Id: usb_ohci.cc,v 1.24 2009-03-29 07:56:28 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Benjamin D Lunt (fys at frontiernet net)
@@ -1215,12 +1215,17 @@ bx_bool bx_usb_ohci_c::process_td(struct OHCI_TD *td, struct OHCI_ED *ed)
 
   // print the buffer used, to the log file
   if (ret > 0) {
+    BX_DEBUG(("buffer dump (%i bytes)", ret));
     buf_str[0] = 0;
     for (r=0; r<ret; r++) {
       sprintf(temp_str, "%02X ", device_buffer[r]);
       strcat(buf_str, temp_str);
+      if ((r % 16) == 15) {
+        BX_DEBUG(("%s", buf_str));
+        buf_str[0] = 0;
+      }
     }
-    BX_DEBUG(("(%i bytes)   %s", r, buf_str));
+    if (strlen(buf_str) > 0) BX_DEBUG(("%s", buf_str));
   }
 
   if ((ret == (int)len) || ((pid == USB_TOKEN_IN) && (ret >= 0) && TD_GET_R(td))) {
