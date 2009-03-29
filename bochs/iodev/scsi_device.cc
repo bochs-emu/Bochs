@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: scsi_device.cc,v 1.11 2009-03-09 12:18:40 vruppert Exp $
+// $Id: scsi_device.cc,v 1.12 2009-03-29 00:22:03 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2007  Volker Ruppert
@@ -563,6 +563,9 @@ Bit32s scsi_device_t::scsi_send_command(Bit32u tag, Bit8u *buf, int lun)
       memset(outbuf, 0, 16);
       outbuf[3] = 8;
       r->buf_len = 16;
+      break;
+    case 0x2f:
+      BX_INFO(("Verify"));
       break;
     default:
       BX_ERROR(("Unknown SCSI command (%2.2x)", buf[0]));
