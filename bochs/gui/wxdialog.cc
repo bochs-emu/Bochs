@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxdialog.cc,v 1.111 2009-03-27 22:22:07 vruppert Exp $
+// $Id: wxdialog.cc,v 1.112 2009-03-29 13:26:07 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
@@ -999,7 +999,7 @@ void ParamDialog::EnableParam(int param_id, bool enabled)
 
 void ParamDialog::ProcessDependentList(ParamStruct *pstrChanged, bool enabled)
 {
-  bx_param_c *param;
+  bx_param_c *dparam;
   ParamStruct *pstr;
   Bit64s value;
   bool en;
@@ -1013,13 +1013,13 @@ void ParamDialog::ProcessDependentList(ParamStruct *pstrChanged, bool enabled)
       Bit64u enable_bitmap = enump->get_dependent_bitmap(value);
       Bit64u mask = 0x1;
       for (i = 0; i < list->get_size(); i++) {
-        param = list->get(i);
-        if (param != enump) {
+        dparam = list->get(i);
+        if (dparam != enump) {
           en = (enable_bitmap & mask) && enabled;
-          pstr = (ParamStruct*) paramHash->Get(param->get_id());
+          pstr = (ParamStruct*) paramHash->Get(dparam->get_id());
           if (pstr) {
             if (en != pstr->u.window->IsEnabled()) {
-              EnableParam(param->get_id(), en);
+              EnableParam(dparam->get_id(), en);
               ProcessDependentList(pstr, en);
             }
           }
@@ -1027,26 +1027,31 @@ void ParamDialog::ProcessDependentList(ParamStruct *pstrChanged, bool enabled)
         mask <<= 1;
       }
     } else if ((pstrChanged->param->get_type() == BXT_PARAM_BOOL) ||
-               (pstrChanged->param->get_type() == BXT_PARAM_NUM)) {
-      bx_param_num_c *nump = (bx_param_num_c*)pstrChanged->param;
-      if (nump->get_type() == BXT_PARAM_BOOL) {
+               (pstrChanged->param->get_type() == BXT_PARAM_NUM) ||
+               (pstrChanged->param->get_type() == BXT_PARAM_STRING)) {
+      bx_param_c *param = pstrChanged->param;
+      if (param->get_type() == BXT_PARAM_BOOL) {
         value = pstrChanged->u.checkbox->GetValue();
-      } else {
+      } else if (param->get_type() == BXT_PARAM_NUM) {
+        bx_param_num_c *nump = (bx_param_num_c*)param;
         if (nump->get_options() & nump->USE_SPIN_CONTROL) {
           value = (pstrChanged->u.spin->GetValue() > 0);
         } else {
           bool valid;
           value = (GetTextCtrlInt(pstrChanged->u.text, &valid, true, wxT("")) > 0);
         }
+      } else {
+        wxString tmp(pstrChanged->u.text->GetValue());
+        value = !tmp.IsEmpty() && tmp.compare(wxT("none"));
       }
       for (i = 0; i < list->get_size(); i++) {
-        param = list->get(i);
-        if (param != nump) {
+        dparam = list->get(i);
+        if (dparam != param) {
           en = (value && enabled);
-          pstr = (ParamStruct*) paramHash->Get(param->get_id());
+          pstr = (ParamStruct*) paramHash->Get(dparam->get_id());
           if (pstr) {
             if (en != pstr->u.window->IsEnabled()) {
-              EnableParam(param->get_id(), en);
+              EnableParam(dparam->get_id(), en);
               ProcessDependentList(pstr, en);
             }
           }
@@ -1113,6 +1118,7 @@ void ParamDialog::OnEvent(wxCommandEvent& event)
         case BXT_PARAM_BOOL:
         case BXT_PARAM_NUM:
         case BXT_PARAM_ENUM:
+        case BXT_PARAM_STRING:
           EnableChanged(pstr);
           break;
       }
