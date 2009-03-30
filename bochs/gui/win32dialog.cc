@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32dialog.cc,v 1.86 2009-03-29 20:48:17 vruppert Exp $
+// $Id: win32dialog.cc,v 1.87 2009-03-30 19:34:22 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  The Bochs Project
@@ -27,7 +27,6 @@
 #include "win32paramdlg.h"
 
 const char log_choices[5][16] = {"ignore", "log", "ask user", "end simulation", "no change"};
-static int retcode = 0;
 #if BX_DEBUGGER
 extern char *debug_cmd;
 extern bx_bool debug_cmd_ready;
@@ -527,7 +526,7 @@ edit_opts_t runtime_options[] = {
 static BOOL CALLBACK MainMenuDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   static bx_bool runtime;
-  int code, i;
+  int choice, code, i;
   bx_param_filename_c *rcfile;
   char path[BX_PATHNAME_LEN];
   const char *pname;
@@ -547,14 +546,20 @@ static BOOL CALLBACK MainMenuDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM 
           SendMessage(GetDlgItem(hDlg, IDEDITBOX), LB_ADDSTRING, 0, (LPARAM)runtime_options[i].label);
           i++;
         }
+        choice = IDOK;
       } else {
         i = 0;
         while (start_options[i].label != NULL) {
           SendMessage(GetDlgItem(hDlg, IDEDITBOX), LB_ADDSTRING, 0, (LPARAM)start_options[i].label);
           i++;
         }
+        if (SIM->get_param_enum(BXPN_BOCHS_START)->get() == BX_LOAD_START) {
+          choice = IDREADRC;
+        } else {
+          choice = IDOK;
+        }
       }
-      SetFocus(GetDlgItem(hDlg, IDOK));
+      SetFocus(GetDlgItem(hDlg, choice));
       return FALSE;
     case WM_CLOSE:
       EndDialog(hDlg, -1);
@@ -598,7 +603,11 @@ static BOOL CALLBACK MainMenuDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM 
             pname = start_options[i].param;
           }
           if (lstrcmp(pname, "*")) {
-            win32ParamDialog(hDlg, pname);
+            if (((bx_list_c*)SIM->get_param(pname))->get_size() > 0) {
+              win32ParamDialog(hDlg, pname);
+            } else {
+              MessageBox(hDlg, "Nothing to configure in this section", "Warning", MB_ICONEXCLAMATION);
+            }
           } else {
             LogOptionsDialog(hDlg);
           }
