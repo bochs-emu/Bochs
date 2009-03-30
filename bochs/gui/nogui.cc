@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: nogui.cc,v 1.28 2009-02-08 09:05:52 vruppert Exp $
+// $Id: nogui.cc,v 1.29 2009-03-30 20:42:06 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -62,8 +62,8 @@ IMPLEMENT_GUI_PLUGIN_CODE(nogui)
 // Called from gui.cc, once upon program startup, to allow for the
 // specific GUI code (X11, BeOS, ...) to be initialized.
 //
-// argc, argv: not used right now, but the intention is to pass native GUI
-//     specific options from the command line.  (X11 options, BeOS options,...)
+// argc, argv: these arguments can be used to initialize the GUI with
+//     specific options (X11 options, BeOS options,...)
 //
 // tilewidth, tileheight: for optimization, graphics_tile_update() passes
 //     only updated regions of the screen to the gui code to be redrawn.
@@ -73,8 +73,7 @@ IMPLEMENT_GUI_PLUGIN_CODE(nogui)
 //     always assumes the width of the current VGA mode width, but
 //     it's height is defined by this parameter.
 
-  void
-bx_nogui_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsigned tileheight,
+void bx_nogui_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsigned tileheight,
                      unsigned headerbar_y)
 {
   put("NGUI");
@@ -98,8 +97,7 @@ bx_nogui_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsigne
 // the gui code can poll for keyboard, mouse, and other
 // relevant events.
 
-  void
-bx_nogui_gui_c::handle_events(void)
+void bx_nogui_gui_c::handle_events(void)
 {
 }
 
@@ -109,8 +107,7 @@ bx_nogui_gui_c::handle_events(void)
 // Called periodically, requesting that the gui code flush all pending
 // screen update requests.
 
-  void
-bx_nogui_gui_c::flush(void)
+void bx_nogui_gui_c::flush(void)
 {
 }
 
@@ -120,8 +117,7 @@ bx_nogui_gui_c::flush(void)
 // Called to request that the VGA region is cleared.  Don't
 // clear the area that defines the headerbar.
 
-  void
-bx_nogui_gui_c::clear_screen(void)
+void bx_nogui_gui_c::clear_screen(void)
 {
 }
 
@@ -157,16 +153,25 @@ void bx_nogui_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
   UNUSED(tm_info);
 }
 
-  int
-bx_nogui_gui_c::get_clipboard_text(Bit8u **bytes, Bit32s *nbytes)
+
+// ::GET_CLIPBOARD_TEXT()
+//
+// Called to get text from the GUI clipboard. Returns 1 if successful.
+
+int bx_nogui_gui_c::get_clipboard_text(Bit8u **bytes, Bit32s *nbytes)
 {
   UNUSED(bytes);
   UNUSED(nbytes);
   return 0;
 }
 
-  int
-bx_nogui_gui_c::set_clipboard_text(char *text_snapshot, Bit32u len)
+
+// ::SET_CLIPBOARD_TEXT()
+//
+// Called to copy the text screen contents to the GUI clipboard.
+// Returns 1 if successful.
+
+int bx_nogui_gui_c::set_clipboard_text(char *text_snapshot, Bit32u len)
 {
   UNUSED(text_snapshot);
   UNUSED(len);
@@ -181,8 +186,7 @@ bx_nogui_gui_c::set_clipboard_text(char *text_snapshot, Bit32u len)
 // returns: 0=no screen update needed (color map change has direct effect)
 //          1=screen updated needed (redraw using current colormap)
 
-  bx_bool
-bx_nogui_gui_c::palette_change(unsigned index, unsigned red, unsigned green, unsigned blue)
+bx_bool bx_nogui_gui_c::palette_change(unsigned index, unsigned red, unsigned green, unsigned blue)
 {
   UNUSED(index);
   UNUSED(red);
@@ -207,14 +211,12 @@ bx_nogui_gui_c::palette_change(unsigned index, unsigned red, unsigned green, uns
 // note: origin of tile and of window based on (0,0) being in the upper
 //       left of the window.
 
-  void
-bx_nogui_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
+void bx_nogui_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
 {
   UNUSED(tile);
   UNUSED(x0);
   UNUSED(y0);
 }
-
 
 
 // ::DIMENSION_UPDATE()
@@ -229,8 +231,7 @@ bx_nogui_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
 // fwidth : new VGA character width in text mode
 // bpp : bits per pixel in graphics mode
 
-  void
-bx_nogui_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, unsigned fwidth, unsigned bpp)
+void bx_nogui_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, unsigned fwidth, unsigned bpp)
 {
   UNUSED(x);
   UNUSED(y);
@@ -251,8 +252,7 @@ bx_nogui_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, unsig
 // xdim: x dimension of bitmap
 // ydim: y dimension of bitmap
 
-  unsigned
-bx_nogui_gui_c::create_bitmap(const unsigned char *bmap, unsigned xdim, unsigned ydim)
+unsigned bx_nogui_gui_c::create_bitmap(const unsigned char *bmap, unsigned xdim, unsigned ydim)
 {
   UNUSED(bmap);
   UNUSED(xdim);
@@ -275,8 +275,7 @@ bx_nogui_gui_c::create_bitmap(const unsigned char *bmap, unsigned xdim, unsigned
 // f: a 'C' function pointer to callback when the mouse is clicked in
 //     the boundaries of this bitmap.
 
-  unsigned
-bx_nogui_gui_c::headerbar_bitmap(unsigned bmap_id, unsigned alignment, void (*f)(void))
+unsigned bx_nogui_gui_c::headerbar_bitmap(unsigned bmap_id, unsigned alignment, void (*f)(void))
 {
   UNUSED(bmap_id);
   UNUSED(alignment);
@@ -290,8 +289,7 @@ bx_nogui_gui_c::headerbar_bitmap(unsigned bmap_id, unsigned alignment, void (*f)
 // Show (redraw) the current headerbar, which is composed of
 // currently installed bitmaps.
 
-  void
-bx_nogui_gui_c::show_headerbar(void)
+void bx_nogui_gui_c::show_headerbar(void)
 {
 }
 
@@ -309,8 +307,7 @@ bx_nogui_gui_c::show_headerbar(void)
 // hbar_id: headerbar slot ID
 // bmap_id: bitmap ID
 
-  void
-bx_nogui_gui_c::replace_bitmap(unsigned hbar_id, unsigned bmap_id)
+void bx_nogui_gui_c::replace_bitmap(unsigned hbar_id, unsigned bmap_id)
 {
   UNUSED(hbar_id);
   UNUSED(bmap_id);
@@ -322,14 +319,17 @@ bx_nogui_gui_c::replace_bitmap(unsigned hbar_id, unsigned bmap_id)
 // Called before bochs terminates, to allow for a graceful
 // exit from the native GUI mechanism.
 
-  void
-bx_nogui_gui_c::exit(void)
+void bx_nogui_gui_c::exit(void)
 {
   BX_INFO(("bx_nogui_gui_c::exit() not implemented yet."));
 }
 
-  void
-bx_nogui_gui_c::mouse_enabled_changed_specific (bx_bool val)
+
+// ::MOUSE_ENABLED_CHANGED_SPECIFIC()
+//
+// Called whenever the mouse capture mode should be changed.
+
+void bx_nogui_gui_c::mouse_enabled_changed_specific(bx_bool val)
 {
 }
 
