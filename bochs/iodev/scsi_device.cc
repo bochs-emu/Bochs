@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: scsi_device.cc,v 1.12 2009-03-29 00:22:03 vruppert Exp $
+// $Id: scsi_device.cc,v 1.13 2009-03-31 20:04:56 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2007  Volker Ruppert
@@ -566,6 +566,41 @@ Bit32s scsi_device_t::scsi_send_command(Bit32u tag, Bit8u *buf, int lun)
       break;
     case 0x2f:
       BX_INFO(("Verify"));
+      break;
+    case 0x23: {
+
+      // USBMASS-UFI10.pdf  rev 1.0  Section 4.10
+      BX_INFO(("READ FORMAT CAPACITIES (MMC)"));
+
+      unsigned lun = (buf[1] >> 5);
+      unsigned len = (buf[7]<<8) | buf[8];
+#define OUR_LEN  12
+
+      // Cap List Header
+      outbuf[0] = 0;
+      outbuf[1] = 0;
+      outbuf[2] = 0;
+      outbuf[3] = OUR_LEN;
+
+      // Current/Max Cap Header
+      if (type == SCSIDEV_TYPE_CDROM) {
+        nb_sectors = cdrom->capacity() - 1;
+      } else {
+        nb_sectors = (hdimage->hd_size / 512) - 1;
+      }
+      /* Returned value is the address of the last sector.  */
+      outbuf[4] = (Bit8u)((nb_sectors >> 24) & 0xff);
+      outbuf[5] = (Bit8u)((nb_sectors >> 16) & 0xff);
+      outbuf[6] = (Bit8u)((nb_sectors >> 8) & 0xff);
+      outbuf[7] = (Bit8u)(nb_sectors & 0xff);
+      outbuf[8] = 2; // formatted (1 = unformatted)
+      outbuf[9] = 0;
+      outbuf[10] = cluster_size * 2;
+      outbuf[11] = 0;
+
+      r->buf_len = (len < OUR_LEN) ? len : OUR_LEN;
+
+      }
       break;
     default:
       BX_ERROR(("Unknown SCSI command (%2.2x)", buf[0]));
