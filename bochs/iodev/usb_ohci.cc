@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_ohci.cc,v 1.25 2009-03-29 20:48:17 vruppert Exp $
+// $Id: usb_ohci.cc,v 1.26 2009-03-31 20:05:30 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Benjamin D Lunt (fys at frontiernet net)
@@ -1229,7 +1229,9 @@ bx_bool bx_usb_ohci_c::process_td(struct OHCI_TD *td, struct OHCI_ED *ed)
     if (strlen(buf_str) > 0) BX_DEBUG(("%s", buf_str));
   }
 
-  if ((ret == (int)len) || ((pid == USB_TOKEN_IN) && (ret >= 0) && TD_GET_R(td))) {
+  if ((ret == (int)len) || ((pid == USB_TOKEN_IN) && (ret >= 0) &&
+      TD_GET_R(td)) || ((pid == USB_TOKEN_OUT) && (ret >= 0) &&
+      (ret <= (int) ED_GET_MPS(ed)))) {
     if (ret == (int)len)
       TD_SET_CBP(td, 0);
     else {
@@ -1239,9 +1241,11 @@ bx_bool bx_usb_ohci_c::process_td(struct OHCI_TD *td, struct OHCI_ED *ed)
         TD_SET_CBP(td, TD_GET_CBP(td) | (TD_GET_BE(td) & ~0x0FFF));
       }
     }
-    if (TD_GET_T(td) & 2)
+    if (TD_GET_T(td) & 2) {
       TD_SET_T(td, TD_GET_T(td) ^ 1);
-    ED_SET_C(ed, (TD_GET_T(td) & 1));
+      ED_SET_C(ed, (TD_GET_T(td) & 1));
+    } else
+      ED_SET_C(ed, (ED_GET_C(ed) ^ 1));
     TD_SET_CC(td, NoError);
     TD_SET_EC(td, 0);
   } else {
