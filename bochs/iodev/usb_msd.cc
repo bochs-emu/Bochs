@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_msd.cc,v 1.19 2009-03-09 14:44:06 vruppert Exp $
+// $Id: usb_msd.cc,v 1.20 2009-04-01 18:19:46 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Volker Ruppert
@@ -422,51 +422,51 @@ int usb_msd_device_c::handle_data(USBPacket *p)
           ret = USB_RET_ASYNC;
           break;
 
-      case USB_MSDM_CSW:
-        BX_DEBUG(("command status %d tag 0x%x, len %d",
-                s.result, s.tag, len));
-        if (len < 13)
-          return ret;
+        case USB_MSDM_CSW:
+          BX_DEBUG(("command status %d tag 0x%x, len %d",
+                    s.result, s.tag, len));
+          if (len < 13)
+            return ret;
 
-        s.usb_len = len;
-        s.usb_buf = data;
-        send_status();
-        s.mode = USB_MSDM_CBW;
-        ret = 13;
-        break;
+          s.usb_len = len;
+          s.usb_buf = data;
+          send_status();
+          s.mode = USB_MSDM_CBW;
+          ret = 13;
+          break;
 
-      case USB_MSDM_DATAIN:
-        BX_DEBUG(("data in %d/%d", len, s.data_len));
-        if (len > (int)s.data_len)
+        case USB_MSDM_DATAIN:
+          BX_DEBUG(("data in %d/%d", len, s.data_len));
+          if (len > (int)s.data_len)
             len = s.data_len;
-        s.usb_buf = data;
-        s.usb_len = len;
-        if (s.scsi_len) {
-          copy_data();
-        }
-        if (s.residue && s.usb_len) {
-          s.data_len -= s.usb_len;
-          memset(s.usb_buf, 0, s.usb_len);
-          if (s.data_len == 0)
-            s.mode = USB_MSDM_CSW;
-          s.usb_len = 0;
-        }
-        if (s.usb_len) {
-          BX_INFO(("deferring packet %p", p));
-          usb_defer_packet(p, this);
-          s.packet = p;
-          ret = USB_RET_ASYNC;
-        } else {
+          s.usb_buf = data;
+          s.usb_len = len;
+          if (s.scsi_len) {
+            copy_data();
+          }
+          if (s.residue && s.usb_len) {
+            s.data_len -= s.usb_len;
+            memset(s.usb_buf, 0, s.usb_len);
+            if (s.data_len == 0)
+              s.mode = USB_MSDM_CSW;
+            s.usb_len = 0;
+          }
+          if (s.usb_len) {
+            BX_INFO(("deferring packet %p", p));
+            usb_defer_packet(p, this);
+            s.packet = p;
+            ret = USB_RET_ASYNC;
+          } else {
             ret = len;
-        }
-        break;
+          }
+          break;
 
-      default:
-        BX_ERROR(("USB MSD handle_data: unexpected mode at USB_TOKEN_IN"));
-        goto fail;
-    }
-    if (ret > 0) usb_dump_packet(data, ret);
-    break;
+        default:
+          BX_ERROR(("USB MSD handle_data: unexpected mode at USB_TOKEN_IN"));
+          goto fail;
+      }
+      if (ret > 0) usb_dump_packet(data, ret);
+      break;
 
     default:
       BX_ERROR(("USB MSD handle_data: bad token"));

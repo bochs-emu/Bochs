@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: scsi_device.h,v 1.8 2009-03-09 12:18:40 vruppert Exp $
+// $Id: scsi_device.h,v 1.9 2009-04-01 18:19:43 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2007  Volker Ruppert
@@ -43,7 +43,11 @@ enum scsi_reason {
 #define SENSE_HARDWARE_ERROR  4
 #define SENSE_ILLEGAL_REQUEST 5
 
-#define SCSI_DMA_BUF_SIZE    65536
+#define STATUS_GOOD            0
+#define STATUS_CHECK_CONDITION 2
+
+#define SCSI_DMA_BUF_SIZE    131072
+#define SCSI_MAX_INQUIRY_LEN 256
 
 typedef struct SCSIRequest {
   scsi_device_t *dev;
@@ -52,6 +56,7 @@ typedef struct SCSIRequest {
   int sector_count;
   int buf_len;
   Bit8u dma_buf[SCSI_DMA_BUF_SIZE];
+  Bit32u status;
   struct SCSIRequest *next;
 } SCSIRequest;
 
@@ -66,7 +71,7 @@ public:
 
   void register_state(bx_list_c *parent, const char *name);
   Bit32s scsi_send_command(Bit32u tag, Bit8u *buf, int lun);
-  void scsi_command_complete(SCSIRequest *r, int sense);
+  void scsi_command_complete(SCSIRequest *r, int status, int sense);
   void scsi_cancel_io(Bit32u tag);
   void scsi_read_complete(void *req, int ret);
   void scsi_read_data(Bit32u tag);
@@ -84,11 +89,13 @@ private:
   LOWLEVEL_CDROM *cdrom;
   SCSIRequest *requests;
   int cluster_size;
+  Bit64u max_lba;
   int sense;
   int tcq;
   scsi_completionfn completion;
   void *dev;
   bx_bool locked;
+  char drive_serial_str[21];
 };
 
 #endif
