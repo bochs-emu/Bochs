@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_ohci.cc,v 1.26 2009-03-31 20:05:30 vruppert Exp $
+// $Id: usb_ohci.cc,v 1.27 2009-04-01 07:27:34 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Benjamin D Lunt (fys at frontiernet net)
@@ -1106,7 +1106,7 @@ void bx_usb_ohci_c::process_ed(struct OHCI_ED *ed, const Bit32u ed_address)
       }
     } else {
       BX_DEBUG(("Found a valid ED that points to an control/bulk/int TD"));
-      while (ED_GET_HEADP(ed) && (ED_GET_HEADP(ed) != ED_GET_TAILP(ed))) {
+      while (ED_GET_HEADP(ed) != ED_GET_TAILP(ed)) {
         DEV_MEM_READ_PHYSICAL(ED_GET_HEADP(ed),      4, (Bit8u*) &cur_td.dword0);
         DEV_MEM_READ_PHYSICAL(ED_GET_HEADP(ed) +  4, 4, (Bit8u*) &cur_td.dword1);
         DEV_MEM_READ_PHYSICAL(ED_GET_HEADP(ed) +  8, 4, (Bit8u*) &cur_td.dword2);
