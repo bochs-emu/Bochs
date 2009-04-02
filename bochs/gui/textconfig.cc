@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: textconfig.cc,v 1.81 2009-03-29 20:48:17 vruppert Exp $
+// $Id: textconfig.cc,v 1.82 2009-04-02 17:38:01 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  The Bochs Project
@@ -378,7 +378,9 @@ int do_menu(const char *pname)
       bx_param_c *chosen = menu->get(index);
       assert(chosen != NULL);
       if (chosen->get_enabled()) {
-        if (chosen->get_type() == BXT_LIST) {
+        if (SIM->get_init_done() && !chosen->get_runtime_param()) {
+          fprintf(stderr, "\nWARNING: parameter not available at runtime!\n");
+        } else if (chosen->get_type() == BXT_LIST) {
           char chosen_pname[80];
           chosen->get_param_path(chosen_pname, 80);
           do_menu(chosen_pname);
@@ -967,7 +969,8 @@ int bx_list_c::text_ask(FILE *fpin, FILE *fpout)
     for (int i=0; i<size; i++) {
       assert(list[i] != NULL);
       fprintf(fpout, "%d. ", i+1);
-      if (list[i]->get_enabled()) {
+      if ((list[i]->get_enabled()) &&
+          (!SIM->get_init_done() || list[i]->get_runtime_param())) {
         if (list[i]->get_type() == BXT_LIST) {
           child = (bx_list_c*)list[i];
           fprintf(fpout, "%s\n", child->get_title()->getptr());
