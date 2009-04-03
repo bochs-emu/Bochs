@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: scsi_device.h,v 1.9 2009-04-01 18:19:43 vruppert Exp $
+// $Id: scsi_device.h,v 1.10 2009-04-03 16:42:56 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2007  Volker Ruppert
@@ -78,6 +78,7 @@ public:
   void scsi_write_complete(void *req, int ret);
   int scsi_write_data(Bit32u tag);
   Bit8u* scsi_get_buf(Bit32u tag);
+  const char *get_serial_number() {return drive_serial_str;}
 protected:
   SCSIRequest* scsi_new_request(Bit32u tag);
   void scsi_remove_request(SCSIRequest *r);

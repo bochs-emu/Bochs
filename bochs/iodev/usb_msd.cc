@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_msd.cc,v 1.20 2009-04-01 18:19:46 vruppert Exp $
+// $Id: usb_msd.cc,v 1.21 2009-04-03 16:42:56 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Volker Ruppert
@@ -266,7 +266,7 @@ int usb_msd_device_c::handle_control(int request, int value, int index, int leng
               break;
             case 3:
               // serial number
-              ret = set_usb_string(data, "1");
+              ret = set_usb_string(data, s.scsi_dev->get_serial_number());
               break;
             default:
               BX_ERROR(("USB MSD handle_control: unknown string descriptor 0x%02x", value & 0xff));

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: scsi_device.cc,v 1.14 2009-04-01 18:19:39 vruppert Exp $
+// $Id: scsi_device.cc,v 1.15 2009-04-03 16:42:56 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2007  Volker Ruppert
@@ -38,6 +38,7 @@
 #define DEVICE_NAME "SCSI drive"
 
 static SCSIRequest *free_requests = NULL;
+static Bit32u serial_number = 12345678;
 
 scsi_device_t::scsi_device_t(device_image_t *_hdimage, int _tcq,
                            scsi_completionfn _completion, void *_dev)
@@ -52,8 +53,8 @@ scsi_device_t::scsi_device_t(device_image_t *_hdimage, int _tcq,
   dev = _dev;
   cluster_size = 1;
   locked = 0;
-  max_lba = hdimage->hd_size / 512;
-  strcpy(drive_serial_str, "1.0");
+  max_lba = (hdimage->hd_size / 512) - 1;
+  sprintf(drive_serial_str, "%d", serial_number++);
 
   put("SCSID");
 }
@@ -71,8 +72,8 @@ scsi_device_t::scsi_device_t(LOWLEVEL_CDROM *_cdrom, int _tcq,
   dev = _dev;
   cluster_size = 4;
   locked = 0;
-  max_lba = cdrom->capacity();
-  strcpy(drive_serial_str, "1.0");
+  max_lba = cdrom->capacity() - 1;
+  sprintf(drive_serial_str, "%d", serial_number++);
 
   put("SCSIC");
 }
@@ -229,6 +230,8 @@ void scsi_device_t::scsi_read_data(Bit32u tag)
   if (type == SCSIDEV_TYPE_CDROM) {
     if (!cdrom->read_block(r->dma_buf, r->sector, 2048)) {
       scsi_command_complete(r, STATUS_CHECK_CONDITION, SENSE_HARDWARE_ERROR);
+    } else {
+      scsi_read_complete((void*)r, 0);
     }
   } else {
     ret = (int)hdimage->lseek(r->sector * 512, SEEK_SET);

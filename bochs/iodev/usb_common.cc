@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_common.cc,v 1.9 2009-03-15 12:54:59 vruppert Exp $
+// $Id: usb_common.cc,v 1.10 2009-04-03 16:42:56 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Benjamin D Lunt (fys at frontiernet net)
@@ -82,14 +82,14 @@ usbdev_type usb_init_device(const char *devname, logfunctions *hub, usb_device_c
       hub->panic("USB device 'disk' needs a filename separated with a colon");
       return type;
     }
-//  } else if (!strncmp(devname, "cdrom", 5)) {
-//    if ((strlen(devname) > 6) && (devname[5] == ':')) {
-//      type = USB_DEV_TYPE_CDROM;
-//      *device = new usb_msd_device_c(type, devname+6);
-//    } else {
-//      hub->panic("USB device 'cdrom' needs a filename separated with a colon");
-//      return type;
-//    }
+  } else if (!strncmp(devname, "cdrom", 5)) {
+    if ((strlen(devname) > 6) && (devname[5] == ':')) {
+      type = USB_DEV_TYPE_CDROM;
+      *device = new usb_msd_device_c(type, devname+6);
+    } else {
+      hub->panic("USB device 'cdrom' needs a filename separated with a colon");
+      return type;
+    }
   } else if (!strncmp(devname, "hub", 3)) {
     type = USB_DEV_TYPE_HUB;
     ports = 4;
