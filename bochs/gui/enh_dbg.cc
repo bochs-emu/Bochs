@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: enh_dbg.cc,v 1.12 2009-02-08 18:52:06 sshwarts Exp $
+// $Id: enh_dbg.cc,v 1.13 2009-04-03 17:36:24 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  BOCHS ENHANCED DEBUGGER Ver 1.2
@@ -2652,6 +2652,13 @@ void SetBreak(int OneEntry)
             L = GetNextSelectedLI(ASM_WND, L);
     }
     Invalidate(ASM_WND);    // redraw the ASM window -- colors may have changed
+}
+
+void DelWatchpoint(bx_phy_address *wp_array, unsigned *TotEntries, int i)
+{
+    while (++i < (int) *TotEntries)
+        wp_array[i-1] = wp_array[i];
+    -- *TotEntries;
 }
 
 void SetWatchpoint(unsigned * num_watchpoints, bx_phy_address * watchpoint)

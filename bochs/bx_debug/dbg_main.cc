@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.181 2009-03-27 21:01:16 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.182 2009-04-03 17:36:24 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1533,55 +1533,58 @@ void bx_dbg_print_stack_command(unsigned nwords)
   }
 }
 
+void bx_dbg_print_watchpoints(void)
+{
+  Bit8u buf[2];
+
+  // print watch point info
+  for (unsigned i = 0; i < num_read_watchpoints; i++) {
+    if (BX_MEM(0)->dbg_fetch_mem(BX_CPU(dbg_cpu), read_watchpoint[i], 2, buf))
+      dbg_printf("rd 0x"FMT_PHY_ADDRX"   (%04x)\n",
+          read_watchpoint[i], (int)buf[0] | ((int)buf[1] << 8));
+    else
+      dbg_printf("rd 0x"FMT_PHY_ADDRX"   (read error)\n", read_watchpoint[i]);
+  }
+  for (unsigned i = 0; i < num_write_watchpoints; i++) {
+    if (BX_MEM(0)->dbg_fetch_mem(BX_CPU(dbg_cpu), write_watchpoint[i], 2, buf))
+      dbg_printf("wr 0x"FMT_PHY_ADDRX"   (%04x)\n",
+          write_watchpoint[i], (int)buf[0] | ((int)buf[1] << 8));
+    else
+      dbg_printf("wr 0x"FMT_PHY_ADDRX"   (read error)\n", write_watchpoint[i]);
+  }
+}
+
 void bx_dbg_watch(int type, bx_phy_address address)
 {
-  if (type == -1) {
-    // print watch point info
-    for (unsigned i = 0; i < num_read_watchpoints; i++) {
-      Bit8u buf[2];
-      if (BX_MEM(0)->dbg_fetch_mem(BX_CPU(dbg_cpu), read_watchpoint[i], 2, buf))
-        dbg_printf("rd 0x"FMT_PHY_ADDRX"   (%04x)\n",
-            read_watchpoint[i], (int)buf[0] | ((int)buf[1] << 8));
-      else
-        dbg_printf("rd 0x"FMT_PHY_ADDRX"   (read error)\n", read_watchpoint[i]);
+  if (type == BX_READ) {
+    if (num_read_watchpoints == BX_DBG_MAX_WATCHPONTS) {
+      dbg_printf("Too many read watchpoints (%d)\n", BX_DBG_MAX_WATCHPONTS);
+      return;
     }
-    for (unsigned i = 0; i < num_write_watchpoints; i++) {
-      Bit8u buf[2];
-      if (BX_MEM(0)->dbg_fetch_mem(BX_CPU(dbg_cpu), write_watchpoint[i], 2, buf))
-        dbg_printf("wr 0x"FMT_PHY_ADDRX"   (%04x)\n",
-            write_watchpoint[i], (int)buf[0] | ((int)buf[1] << 8));
-      else
-        dbg_printf("wr 0x"FMT_PHY_ADDRX"   (read error)\n", write_watchpoint[i]);
-    }
-  } else {
-    if (type == BX_READ) {
-      if (num_read_watchpoints == BX_DBG_MAX_WATCHPONTS) {
-        dbg_printf("Too many read watchpoints (%d)\n", BX_DBG_MAX_WATCHPONTS);
-        return;
-      }
-      read_watchpoint[num_read_watchpoints++] = address;
-      dbg_printf("read watchpoint at 0x" FMT_PHY_ADDRX " inserted\n", address);
-    }
-    else {
-      if (num_write_watchpoints == BX_DBG_MAX_WATCHPONTS) {
-        dbg_printf("Too many write watchpoints (%d)\n", BX_DBG_MAX_WATCHPONTS);
-        return;
-      }
-      write_watchpoint[num_write_watchpoints++] = address;
-      dbg_printf("write watchpoint at 0x" FMT_PHY_ADDRX " inserted\n", address);
-    }
+    read_watchpoint[num_read_watchpoints++] = address;
+    dbg_printf("read watchpoint at 0x" FMT_PHY_ADDRX " inserted\n", address);
   }
+  else if (type == BX_WRITE) {
+    if (num_write_watchpoints == BX_DBG_MAX_WATCHPONTS) {
+      dbg_printf("Too many write watchpoints (%d)\n", BX_DBG_MAX_WATCHPONTS);
+      return;
+    }
+    write_watchpoint[num_write_watchpoints++] = address;
+    dbg_printf("write watchpoint at 0x" FMT_PHY_ADDRX " inserted\n", address);
+  }
+  else {
+    dbg_printf("bx_dbg_watch: broken watchpoint type");
+  }
+}
+
+void bx_dbg_unwatch_all()
+{
+  num_read_watchpoints = num_write_watchpoints = 0;
+  dbg_printf("All watchpoints removed\n");
 }
 
 void bx_dbg_unwatch(bx_phy_address address)
 {
-  if (address == (bx_phy_address) -1) {
-    // unwatch all
-    num_read_watchpoints = num_write_watchpoints = 0;
-    dbg_printf("All watchpoints removed\n");
-    return;
-  }
-
   for (unsigned i=0; i<num_read_watchpoints; i++) {
     if (read_watchpoint[i] == address) {
       dbg_printf("read watchpoint at 0x" FMT_PHY_ADDRX " removed\n", address);

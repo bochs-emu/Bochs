@@ -1,10 +1,15 @@
 %{
 /////////////////////////////////////////////////////////////////////////
-// $Id: lexer.l,v 1.27 2008-05-01 19:10:04 sshwarts Exp $
+// $Id: lexer.l,v 1.28 2009-04-03 17:36:24 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #include <stdlib.h>
 #include <string.h>
+
+#ifdef WIN32
+	#include <io.h>
+#endif
+
 #include "debug.h"
 #if BX_DEBUGGER
 
@@ -69,9 +74,9 @@ creg		|
 cregs		{ bxlval.sval = strdup(bxtext); return(BX_TOKEN_CONTROL_REGS); }
 sreg		|
 sregs		{ bxlval.sval = strdup(bxtext); return(BX_TOKEN_SEGMENT_REGS); }
-r|reg		|
-regs		|
-registers       { bxlval.sval = strdup(bxtext); return(BX_TOKEN_REGISTERS); }
+r               { bxlval.sval = strdup(bxtext); return(BX_TOKEN_R); }
+reg|regs        |
+registers       { bxlval.sval = strdup(bxtext); return(BX_TOKEN_REGS); }
 fp|fpu          { bxlval.sval = strdup(bxtext); return(BX_TOKEN_FPU); }
 sse             |
 xmm             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_SSE); }
@@ -124,7 +129,7 @@ print-stack     { bxlval.sval = strdup(bxtext); return(BX_TOKEN_PRINT_STACK); }
 watch           { bxlval.sval = strdup(bxtext); return(BX_TOKEN_WATCH); }
 unwatch         { bxlval.sval = strdup(bxtext); return(BX_TOKEN_UNWATCH); }
 read            { bxlval.sval = strdup(bxtext); return(BX_TOKEN_READ); }
-write           { bxlval.sval = strdup(bxtext); return(BX_TOKEN_WRITE); }
+w|write         { bxlval.sval = strdup(bxtext); return(BX_TOKEN_WRITE); }
 show            { bxlval.sval = strdup(bxtext); return(BX_TOKEN_SHOW); }
 ldsym           { bxlval.sval = strdup(bxtext); return(BX_TOKEN_LOAD_SYMBOLS); }
 symbols         { bxlval.sval = strdup(bxtext); return(BX_TOKEN_SYMBOLS); }

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gtk_enh_dbg_osdep.cc,v 1.6 2009-03-17 20:20:57 vruppert Exp $
+// $Id: gtk_enh_dbg_osdep.cc,v 1.7 2009-04-03 17:36:24 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  BOCHS ENHANCED DEBUGGER Ver 1.2
@@ -1064,14 +1064,6 @@ void MakeTreeChild (TreeParent *h_P, int ChildCount, TreeParent *h_TC)
     treestore = (GtkTreeStore *) gtk_tree_view_get_model( GTK_TREE_VIEW(PTree) );
     gtk_tree_store_append(GTK_TREE_STORE(treestore), h_TC, h_P);            // create the "leaf"
     gtk_tree_store_set(GTK_TREE_STORE(treestore), h_TC, 0, tmpcb, -1);  // and put a name (+ data) on it
-}
-
-// technically, this is a copy of a non-os-specific code fragment
-void DelWatchpoint(bx_phy_address *wp_array, unsigned int *TotEntries, int i)
-{
-    while (++i < (int) *TotEntries)
-        wp_array[i-1] = wp_array[i];
-    -- *TotEntries;
 }
 
 bx_bool NewFont()

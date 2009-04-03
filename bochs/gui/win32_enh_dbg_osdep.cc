@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32_enh_dbg_osdep.cc,v 1.11 2009-03-17 20:20:57 vruppert Exp $
+// $Id: win32_enh_dbg_osdep.cc,v 1.12 2009-04-03 17:36:24 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  BOCHS ENHANCED DEBUGGER Ver 1.2
@@ -1200,14 +1200,6 @@ void MakeTreeChild (HTREEITEM *h_P, int ChildCount, HTREEITEM *h_TC)
         tvis.item.cChildren = 1;
     tvis.hParent = *h_P;        // create leaves/recurse branches
     *h_TC = (HTREEITEM) CallWindowProc(wTreeView,hT,TVM_INSERTITEM,(WPARAM) 0,(LPARAM) &tvis);
-}
-
-// technically, this is a copy of a non-os-specific code fragment
-void DelWatchpoint(bx_phy_address *wp_array, unsigned int *TotEntries, int i)
-{
-    while (++i < (int) *TotEntries)
-        wp_array[i-1] = wp_array[i];
-    -- *TotEntries;
 }
 
 bx_bool NewFont()
