@@ -650,7 +650,7 @@ $(APP)/.build_plugins: $(APP)/.build bochs_plugins
 	touch $(APP)/.build_plugins
 
 install_macosx: all download_dlx install_man @INSTALL_DOCBOOK_VAR@
-	-mkdir -p $(DESTDIR)$(prefix)
+	-mkdir -p $(DESTDIR)$(sharedir)
 	for i in $(INSTALL_LIST_MACOSX); do if test -e $$i; then $(CPMAC) -r $$i $(DESTDIR)$(sharedir); else $(CPMAC) -r $(srcdir)/$$i $(DESTDIR)$(sharedir); fi; done
 	$(CPMAC) $(srcdir)/.bochsrc $(DESTDIR)$(sharedir)/bochsrc-sample.txt
 	-mkdir $(DESTDIR)$(sharedir)/keymaps

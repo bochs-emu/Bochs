@@ -47,5 +47,6 @@
   --enable-cdrom \
   --enable-sb16 \
   --enable-iodebug \
+  --enable-gdb-stub \
   --enable-show-ips \
   --with-all-libs
