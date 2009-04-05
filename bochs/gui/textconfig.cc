@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: textconfig.cc,v 1.82 2009-04-02 17:38:01 vruppert Exp $
+// $Id: textconfig.cc,v 1.83 2009-04-05 19:06:11 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  The Bochs Project
@@ -502,10 +502,6 @@ int bx_config_interface(int menu)
             case BX_CI_RT_CDROM4:
               int device;
               if (SIM->get_cdrom_options(choice - BX_CI_RT_CDROM1, &cdromop, &device) && SIM->get_param_bool("present", cdromop)->get()) {
-                // disable type selection
-                SIM->get_param("type", cdromop)->set_enabled(0);
-                SIM->get_param("model", cdromop)->set_enabled(0);
-                SIM->get_param("biosdetect", cdromop)->set_enabled(0);
                 cdromop->get_param_path(pname, 80);
                 do_menu(pname);
               }
