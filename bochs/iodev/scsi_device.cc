@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: scsi_device.cc,v 1.15 2009-04-03 16:42:56 vruppert Exp $
+// $Id: scsi_device.cc,v 1.16 2009-04-05 16:28:35 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2007  Volker Ruppert
@@ -53,6 +53,7 @@ scsi_device_t::scsi_device_t(device_image_t *_hdimage, int _tcq,
   dev = _dev;
   cluster_size = 1;
   locked = 0;
+  inserted = 1;
   max_lba = (hdimage->hd_size / 512) - 1;
   sprintf(drive_serial_str, "%d", serial_number++);
 
@@ -72,6 +73,7 @@ scsi_device_t::scsi_device_t(LOWLEVEL_CDROM *_cdrom, int _tcq,
   dev = _dev;
   cluster_size = 4;
   locked = 0;
+  inserted = 1;
   max_lba = cdrom->capacity() - 1;
   sprintf(drive_serial_str, "%d", serial_number++);
 
@@ -382,6 +384,8 @@ Bit32s scsi_device_t::scsi_send_command(Bit32u tag, Bit8u *buf, int lun)
   switch (command) {
     case 0x0:
       BX_DEBUG(("Test Unit Ready"));
+      if (!inserted)
+        goto notready;
       break;
     case 0x03:
       BX_DEBUG(("request Sense (len %d)", len));
@@ -636,6 +640,7 @@ Bit32s scsi_device_t::scsi_send_command(Bit32u tag, Bit8u *buf, int lun)
         outbuf[7] = 0;
         r->buf_len = 8;
       } else {
+      notready:
         scsi_command_complete(r, STATUS_CHECK_CONDITION, SENSE_NOT_READY);
         return 0;
       }
