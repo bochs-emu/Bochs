@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.588 2009-03-26 10:24:10 sshwarts Exp $
+// $Id: cpu.h,v 1.589 2009-04-05 19:38:44 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -752,14 +752,14 @@ typedef struct {
 struct monitor_addr_t {
     bx_phy_address monitor_begin;
     bx_phy_address monitor_end;
-    bool armed;
+    bx_bool armed;
     // avoid false trigger when MONITOR was not set up properly
     monitor_addr_t():
-      monitor_begin(0xffffffff), monitor_end(0xffffffff), armed(false) {}
+      monitor_begin(0xffffffff), monitor_end(0xffffffff), armed(0) {}
     monitor_addr_t(bx_phy_address addr, unsigned len):
-      monitor_begin(addr), monitor_end(addr+len), armed(true) {}
+      monitor_begin(addr), monitor_end(addr+len), armed(1) {}
 
-    void reset_monitor(void) { monitor_begin = monitor_end = 0xffffffff; armed = false; }
+    void reset_monitor(void) { monitor_begin = monitor_end = 0xffffffff; armed = 0; }
 };
 #endif
 
@@ -867,7 +867,7 @@ public: // for now...
 #endif
 
 #if BX_SUPPORT_SSE
-  bx_xmm_reg_t xmm[BX_XMM_REGISTERS+1]; // +tmp XMM register
+  bx_xmm_reg_t xmm[BX_XMM_REGISTERS]; // need TMP XMM register ?
   bx_mxcsr_t mxcsr;
 #endif
 
