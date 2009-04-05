@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: load32bitOShack.cc,v 1.33 2009-03-13 18:48:08 sshwarts Exp $
+// $Id: load32bitOShack.cc,v 1.34 2009-04-05 18:16:29 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -241,16 +241,14 @@ void bx_load_null_kernel_hack(void)
 
   // CS deltas
   BX_CPU(0)->sregs[BX_SEG_REG_CS].cache.u.segment.base = 0x00000000;
-  BX_CPU(0)->sregs[BX_SEG_REG_CS].cache.u.segment.limit = 0xFFFFF;
   BX_CPU(0)->sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled = 0xFFFFFFFF;
-  BX_CPU(0)->sregs[BX_SEG_REG_CS].cache.u.segment.g   = 1; // page gran
+  BX_CPU(0)->sregs[BX_SEG_REG_CS].cache.u.segment.g   = 1; // page granularity
   BX_CPU(0)->sregs[BX_SEG_REG_CS].cache.u.segment.d_b = 1; // 32bit
 
   // DS deltas
   BX_CPU(0)->sregs[BX_SEG_REG_DS].cache.u.segment.base = 0x00000000;
-  BX_CPU(0)->sregs[BX_SEG_REG_DS].cache.u.segment.limit = 0xFFFFF;
   BX_CPU(0)->sregs[BX_SEG_REG_DS].cache.u.segment.limit_scaled = 0xFFFFFFFF;
-  BX_CPU(0)->sregs[BX_SEG_REG_DS].cache.u.segment.g   = 1; // page gran
+  BX_CPU(0)->sregs[BX_SEG_REG_DS].cache.u.segment.g   = 1; // page granularity
   BX_CPU(0)->sregs[BX_SEG_REG_DS].cache.u.segment.d_b = 1; // 32bit
 
   // CR0 deltas

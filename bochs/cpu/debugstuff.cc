@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debugstuff.cc,v 1.103 2009-03-22 21:12:35 sshwarts Exp $
+// $Id: debugstuff.cc,v 1.104 2009-04-05 18:16:29 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -179,7 +179,7 @@ void BX_CPU_C::debug(bx_address offset)
     (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.ti,
     (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.rpl,
     (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.base,
-    (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit,
+    (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled,
     (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.g,
     (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b));
   BX_INFO(("|  DS:%04x( %04x| %01u|  %1u) %08x %08x %1u %1u",
@@ -188,7 +188,7 @@ void BX_CPU_C::debug(bx_address offset)
     (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.ti,
     (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.rpl,
     (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.u.segment.base,
-    (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.u.segment.limit,
+    (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.u.segment.limit_scaled,
     (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.u.segment.g,
     (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.u.segment.d_b));
   BX_INFO(("|  SS:%04x( %04x| %01u|  %1u) %08x %08x %1u %1u",
@@ -197,7 +197,7 @@ void BX_CPU_C::debug(bx_address offset)
     (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.ti,
     (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.rpl,
     (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.base,
-    (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.limit,
+    (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.limit_scaled,
     (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.g,
     (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b));
   BX_INFO(("|  ES:%04x( %04x| %01u|  %1u) %08x %08x %1u %1u",
@@ -206,7 +206,7 @@ void BX_CPU_C::debug(bx_address offset)
     (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.ti,
     (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.rpl,
     (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.u.segment.base,
-    (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.u.segment.limit,
+    (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.u.segment.limit_scaled,
     (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.u.segment.g,
     (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.u.segment.d_b));
   BX_INFO(("|  FS:%04x( %04x| %01u|  %1u) %08x %08x %1u %1u",
@@ -215,7 +215,7 @@ void BX_CPU_C::debug(bx_address offset)
     (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].selector.ti,
     (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].selector.rpl,
     (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.u.segment.base,
-    (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.u.segment.limit,
+    (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.u.segment.limit_scaled,
     (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.u.segment.g,
     (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.u.segment.d_b));
   BX_INFO(("|  GS:%04x( %04x| %01u|  %1u) %08x %08x %1u %1u",
@@ -224,7 +224,7 @@ void BX_CPU_C::debug(bx_address offset)
     (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].selector.ti,
     (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].selector.rpl,
     (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.u.segment.base,
-    (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.u.segment.limit,
+    (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.u.segment.limit_scaled,
     (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.u.segment.g,
     (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.u.segment.d_b));
 #if BX_SUPPORT_X86_64
@@ -368,7 +368,6 @@ bx_bool BX_CPU_C::dbg_set_reg(unsigned reg, Bit32u val)
     seg->cache.segment = 1; // regular segment
     seg->cache.type = BX_DATA_READ_WRITE_ACCESSED;
     seg->cache.u.segment.base = val << 4;
-    seg->cache.u.segment.limit        = 0xffff;
     seg->cache.u.segment.limit_scaled = 0xffff;
     seg->cache.u.segment.g     = 0;      // byte granular
     seg->cache.u.segment.d_b   = 0;      // default 16bit size

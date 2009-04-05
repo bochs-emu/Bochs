@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: descriptor.h,v 1.29 2009-03-27 16:42:21 sshwarts Exp $
+// $Id: descriptor.h,v 1.30 2009-04-05 18:16:29 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007 Stanislav Shwartsman
@@ -125,7 +125,6 @@ typedef struct
 union {
   struct {
     bx_address base;       /* base address: 286=24bits, 386=32bits, long=64 */
-    Bit32u  limit;         /* limit: 286=16bits, 386=20bits */
     Bit32u  limit_scaled;  /* for efficiency, this contrived field is set to
                             * limit for byte granular, and
                             * (limit << 12) | 0xfff for page granular seg's
@@ -150,9 +149,8 @@ union {
   } taskgate;
   struct {
     bx_address base;       /* 286=24 386+ = 32/64 bit base */
-    Bit32u  limit;         /* 286+ = 16/32 bit limit */
+    Bit32u  limit_scaled;  /* Same notes as for 'segment' field */
 #if BX_CPU_LEVEL >= 3
-    Bit32u  limit_scaled;  // Same notes as for 'segment' field
     bx_bool g;             /* granularity: 0=byte, 1=4K (page) */
     bx_bool d_b;           /* default size: 0=16bit, 1=32bit */
     bx_bool avl;           /* available for use by system */

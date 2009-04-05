@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////
-// $Id: plex86-interface.cc,v 1.14 2009-01-16 18:18:57 sshwarts Exp $
+// $Id: plex86-interface.cc,v 1.15 2009-04-05 18:16:29 sshwarts Exp $
 ///////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  Kevin P. Lawton
@@ -350,7 +350,7 @@ void copyBochsDescriptorToPlex86(descriptor_t *plex86Desc, bx_descriptor_t *boch
   plex86Desc->type = (bochsDesc->segment<<4) | bochsDesc->type;
   if (bochsDesc->segment) {
     // Code/Data segment type.
-    Bit32u limit = bochsDesc->u.segment.limit;
+    Bit32u limit = bochsDesc->u.segment.limit_scaled;
     plex86Desc->limit_low  = limit; // Only lower 16-bits.
     plex86Desc->limit_high = limit >> 16;
     Bit32u base = bochsDesc->u.segment.base;
@@ -367,7 +367,7 @@ void copyBochsDescriptorToPlex86(descriptor_t *plex86Desc, bx_descriptor_t *boch
            bochsDesc->type == BX_SYS_SEGMENT_LDT)
   {
     // LDT or TSS
-    Bit32u limit = bochsDesc->u.system.limit;
+    Bit32u limit = bochsDesc->u.system.limit_scaled;
     plex86Desc->limit_low  = limit; // Only lower 16-bits.
     plex86Desc->limit_high = limit >> 16;
     Bit32u base = bochsDesc->u.system.base;

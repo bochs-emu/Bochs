@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.205 2009-03-27 16:42:21 sshwarts Exp $
+// $Id: init.cc,v 1.206 2009-04-05 18:16:29 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -373,7 +373,6 @@ void BX_CPU_C::register_state(void)
     BXRS_PARAM_SPECIAL16(sreg, selector,
            param_save_handler, param_restore_handler);
     BXRS_HEX_PARAM_FIELD(sreg, base, segment->cache.u.segment.base);
-    BXRS_HEX_PARAM_FIELD(sreg, limit, segment->cache.u.segment.limit);
     BXRS_HEX_PARAM_FIELD(sreg, limit_scaled, segment->cache.u.segment.limit_scaled);
     BXRS_PARAM_SPECIAL8 (sreg, ar_byte,
            param_save_handler, param_restore_handler);
@@ -396,7 +395,6 @@ void BX_CPU_C::register_state(void)
   bx_list_c *LDTR = new bx_list_c(cpu, "LDTR", 8);
   BXRS_PARAM_SPECIAL16(LDTR, selector, param_save_handler, param_restore_handler);
   BXRS_HEX_PARAM_FIELD(LDTR, base,  ldtr.cache.u.system.base);
-  BXRS_HEX_PARAM_FIELD(LDTR, limit, ldtr.cache.u.system.limit);
   BXRS_HEX_PARAM_FIELD(LDTR, limit_scaled, ldtr.cache.u.system.limit_scaled);
   BXRS_PARAM_SPECIAL8 (LDTR, ar_byte, param_save_handler, param_restore_handler);
   BXRS_PARAM_BOOL(LDTR, granularity, ldtr.cache.u.system.g);
@@ -406,7 +404,6 @@ void BX_CPU_C::register_state(void)
   bx_list_c *TR = new bx_list_c(cpu, "TR", 8);
   BXRS_PARAM_SPECIAL16(TR, selector, param_save_handler, param_restore_handler);
   BXRS_HEX_PARAM_FIELD(TR, base,  tr.cache.u.system.base);
-  BXRS_HEX_PARAM_FIELD(TR, limit, tr.cache.u.system.limit);
   BXRS_HEX_PARAM_FIELD(TR, limit_scaled, tr.cache.u.system.limit_scaled);
   BXRS_PARAM_SPECIAL8 (TR, ar_byte, param_save_handler, param_restore_handler);
   BXRS_PARAM_BOOL(TR, granularity, tr.cache.u.system.g);
@@ -767,7 +764,6 @@ void BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.type     = BX_DATA_READ_WRITE_ACCESSED;
 
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.base         = 0xFFFF0000;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit        = 0xFFFF;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled = 0xFFFF;
 
 #if BX_CPU_LEVEL >= 3
@@ -793,7 +789,6 @@ void BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.type     = BX_DATA_READ_WRITE_ACCESSED;
 
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.u.segment.base         = 0x00000000;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.u.segment.limit        = 0xFFFF;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.u.segment.limit_scaled = 0xFFFF;
 #if BX_CPU_LEVEL >= 3
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.u.segment.avl = 0;
@@ -832,12 +827,9 @@ void BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR ldtr.cache.segment  = 0; /* system segment */
   BX_CPU_THIS_PTR ldtr.cache.type     = BX_SYS_SEGMENT_LDT;
   BX_CPU_THIS_PTR ldtr.cache.u.system.base       = 0x00000000;
-  BX_CPU_THIS_PTR ldtr.cache.u.system.limit      =     0xFFFF;
-#if BX_CPU_LEVEL >= 3
   BX_CPU_THIS_PTR ldtr.cache.u.system.limit_scaled =   0xFFFF;
   BX_CPU_THIS_PTR ldtr.cache.u.system.avl = 0;
   BX_CPU_THIS_PTR ldtr.cache.u.system.g   = 0;  /* byte granular */
-#endif
 
   /* TR (Task Register) */
   BX_CPU_THIS_PTR tr.selector.value = 0x0000;
@@ -851,12 +843,9 @@ void BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR tr.cache.segment  = 0; /* system segment */
   BX_CPU_THIS_PTR tr.cache.type     = BX_SYS_SEGMENT_BUSY_386_TSS;
   BX_CPU_THIS_PTR tr.cache.u.system.base         = 0x00000000;
-  BX_CPU_THIS_PTR tr.cache.u.system.limit        =     0xFFFF;
-#if BX_CPU_LEVEL >= 3
   BX_CPU_THIS_PTR tr.cache.u.system.limit_scaled =     0xFFFF;
   BX_CPU_THIS_PTR tr.cache.u.system.avl = 0;
   BX_CPU_THIS_PTR tr.cache.u.system.g   = 0;  /* byte granular */
-#endif
 
   // DR0 - DR7 (Debug Registers)
 #if BX_CPU_LEVEL >= 3

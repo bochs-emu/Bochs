@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.182 2009-04-03 17:36:24 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.183 2009-04-05 18:16:29 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -777,44 +777,44 @@ void bx_dbg_info_segment_regs_command(void)
   bx_dbg_global_sreg_t global_sreg;
 
   BX_CPU(dbg_cpu)->dbg_get_sreg(&sreg, BX_DBG_SREG_CS);
-  dbg_printf("cs:s=0x%04x, dl=0x%08x, dh=0x%08x, valid=%u\n",
-      (unsigned) sreg.sel, (unsigned) sreg.des_l,
-      (unsigned) sreg.des_h, (unsigned) sreg.valid);
+  dbg_printf("cs:s=0x%04x, dh=0x%08x, dl=0x%08x, valid=%u\n",
+      (unsigned) sreg.sel, (unsigned) sreg.des_h,
+      (unsigned) sreg.des_l, (unsigned) sreg.valid);
 
   BX_CPU(dbg_cpu)->dbg_get_sreg(&sreg, BX_DBG_SREG_DS);
-  dbg_printf("ds:s=0x%04x, dl=0x%08x, dh=0x%08x, valid=%u\n",
-      (unsigned) sreg.sel, (unsigned) sreg.des_l,
-      (unsigned) sreg.des_h, (unsigned) sreg.valid);
+  dbg_printf("ds:s=0x%04x, dh=0x%08x, dl=0x%08x, valid=%u\n",
+      (unsigned) sreg.sel, (unsigned) sreg.des_h,
+      (unsigned) sreg.des_l, (unsigned) sreg.valid);
 
   BX_CPU(dbg_cpu)->dbg_get_sreg(&sreg, BX_DBG_SREG_SS);
-  dbg_printf("ss:s=0x%04x, dl=0x%08x, dh=0x%08x, valid=%u\n",
-      (unsigned) sreg.sel, (unsigned) sreg.des_l,
-      (unsigned) sreg.des_h, (unsigned) sreg.valid);
+  dbg_printf("ss:s=0x%04x, dh=0x%08x, dl=0x%08x, valid=%u\n",
+      (unsigned) sreg.sel, (unsigned) sreg.des_h,
+      (unsigned) sreg.des_l, (unsigned) sreg.valid);
 
   BX_CPU(dbg_cpu)->dbg_get_sreg(&sreg, BX_DBG_SREG_ES);
-  dbg_printf("es:s=0x%04x, dl=0x%08x, dh=0x%08x, valid=%u\n",
-      (unsigned) sreg.sel, (unsigned) sreg.des_l,
-      (unsigned) sreg.des_h, (unsigned) sreg.valid);
+  dbg_printf("es:s=0x%04x, dh=0x%08x, dl=0x%08x, valid=%u\n",
+      (unsigned) sreg.sel, (unsigned) sreg.des_h,
+      (unsigned) sreg.des_l, (unsigned) sreg.valid);
 
   BX_CPU(dbg_cpu)->dbg_get_sreg(&sreg, BX_DBG_SREG_FS);
-  dbg_printf("fs:s=0x%04x, dl=0x%08x, dh=0x%08x, valid=%u\n",
-      (unsigned) sreg.sel, (unsigned) sreg.des_l,
-      (unsigned) sreg.des_h, (unsigned) sreg.valid);
+  dbg_printf("fs:s=0x%04x, dh=0x%08x, dl=0x%08x, valid=%u\n",
+      (unsigned) sreg.sel, (unsigned) sreg.des_h,
+      (unsigned) sreg.des_l, (unsigned) sreg.valid);
 
   BX_CPU(dbg_cpu)->dbg_get_sreg(&sreg, BX_DBG_SREG_GS);
-  dbg_printf("gs:s=0x%04x, dl=0x%08x, dh=0x%08x, valid=%u\n",
-      (unsigned) sreg.sel, (unsigned) sreg.des_l,
-      (unsigned) sreg.des_h, (unsigned) sreg.valid);
+  dbg_printf("gs:s=0x%04x, dh=0x%08x, dl=0x%08x, valid=%u\n",
+      (unsigned) sreg.sel, (unsigned) sreg.des_h,
+      (unsigned) sreg.des_l, (unsigned) sreg.valid);
 
   BX_CPU(dbg_cpu)->dbg_get_ldtr(&sreg);
-  dbg_printf("ldtr:s=0x%04x, dl=0x%08x, dh=0x%08x, valid=%u\n",
-      (unsigned) sreg.sel, (unsigned) sreg.des_l,
-      (unsigned) sreg.des_h, (unsigned) sreg.valid);
+  dbg_printf("ldtr:s=0x%04x, dh=0x%08x, dl=0x%08x, valid=%u\n",
+      (unsigned) sreg.sel, (unsigned) sreg.des_h,
+      (unsigned) sreg.des_l, (unsigned) sreg.valid);
 
   BX_CPU(dbg_cpu)->dbg_get_tr(&sreg);
-  dbg_printf("tr:s=0x%04x, dl=0x%08x, dh=0x%08x, valid=%u\n",
-      (unsigned) sreg.sel, (unsigned) sreg.des_l,
-      (unsigned) sreg.des_h, (unsigned) sreg.valid);
+  dbg_printf("tr:s=0x%04x, dh=0x%08x, dl=0x%08x, valid=%u\n",
+      (unsigned) sreg.sel, (unsigned) sreg.des_h,
+      (unsigned) sreg.des_l, (unsigned) sreg.valid);
 
   BX_CPU(dbg_cpu)->dbg_get_gdtr(&global_sreg);
   dbg_printf("gdtr:base=0x%08x, limit=0x%x\n",
@@ -3604,7 +3604,7 @@ Bit32u bx_dbg_get_laddr(Bit16u sel, Bit32u ofs)
     Bit32u desc_base;
     if (selector.ti) {
       // LDT
-      if (((Bit32u)selector.index*8 + 7) > BX_CPU(dbg_cpu)->ldtr.cache.u.system.limit) {
+      if (((Bit32u)selector.index*8 + 7) > BX_CPU(dbg_cpu)->ldtr.cache.u.system.limit_scaled) {
         dbg_printf("ERROR: selector (%04x) > GDT size limit\n", selector.index*8);
         return 0;
       }
@@ -3670,9 +3670,9 @@ Bit32u bx_dbg_get_laddr(Bit16u sel, Bit32u ofs)
 
 void bx_dbg_step_over_command()
 {
-  bx_address Laddr = BX_CPU(dbg_cpu)->guard_found.laddr;
+  bx_address laddr = BX_CPU(dbg_cpu)->guard_found.laddr;
 
-  if (! bx_dbg_read_linear(dbg_cpu, Laddr, 16, bx_disasm_ibuf))
+  if (! bx_dbg_read_linear(dbg_cpu, laddr, 16, bx_disasm_ibuf))
   {
     return;
   }
@@ -3750,13 +3750,13 @@ void bx_dbg_step_over_command()
         case 4:
         // far
         case 5:
-         bx_dbg_stepN_command (1);
+         bx_dbg_stepN_command(1);
          return;
       }
   }
 
   // calls, ints, loops and so on
-  int BpId = bx_dbg_lbreakpoint_command(bkStepOver, Laddr + insn.ilen);
+  int BpId = bx_dbg_lbreakpoint_command(bkStepOver, laddr + insn.ilen);
   if (BpId == -1) {
     dbg_printf("bx_dbg_step_over_command:: Failed to set lbreakpoint !\n");
     return;
@@ -3764,7 +3764,7 @@ void bx_dbg_step_over_command()
 
   bx_dbg_continue_command();
 
-  if (bx_dbg_del_lbreak (BpId))
+  if (bx_dbg_del_lbreak(BpId))
     bx_dbg_breakpoint_changed();
 }
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: segment_ctrl_pro.cc,v 1.110 2009-03-28 08:27:01 sshwarts Exp $
+// $Id: segment_ctrl_pro.cc,v 1.111 2009-04-05 18:16:29 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -213,7 +213,6 @@ BX_CPU_C::load_seg_reg(bx_segment_reg_t *seg, Bit16u new_value)
   /* Support for big real mode */
   if (!real_mode()) {
     seg->cache.dpl = 3; /* we are in v8086 mode */
-    seg->cache.u.segment.limit        = 0xffff;
     seg->cache.u.segment.limit_scaled = 0xffff;
 #if BX_CPU_LEVEL >= 3
     seg->cache.u.segment.g     = 0; /* byte granular */
@@ -249,7 +248,6 @@ BX_CPU_C::load_null_selector(bx_segment_reg_t *seg)
   seg->cache.type     = 0;
 
   seg->cache.u.segment.base         = 0;
-  seg->cache.u.segment.limit        = 0;
   seg->cache.u.segment.limit_scaled = 0;
   seg->cache.u.segment.g            = 0;
   seg->cache.u.segment.d_b          = 0;
@@ -344,13 +342,18 @@ BX_CPU_C::get_descriptor_l(const bx_descriptor_t *d)
 {
   Bit32u val;
 
-//if (d->valid == 0) return(0);
-
   if (d->segment) {
-    val = ((d->u.segment.base & 0xffff) << 16) | (d->u.segment.limit & 0xffff);
+    Bit32u limit = d->u.segment.limit_scaled;
+    if (d->u.segment.g)
+      limit >>= 12;
+    val = ((d->u.segment.base & 0xffff) << 16) | (limit & 0xffff);
     return(val);
   }
   else {
+    Bit32u limit = d->u.system.limit_scaled;
+    if (d->u.segment.g)
+      limit >>= 12;
+
     switch (d->type) {
       case 0: // Reserved (not defined)
         BX_ERROR(("#get_descriptor_l(): type %d not finished", d->type));
@@ -361,7 +364,7 @@ BX_CPU_C::get_descriptor_l(const bx_descriptor_t *d)
       case BX_SYS_SEGMENT_BUSY_286_TSS:
       case BX_SYS_SEGMENT_AVAIL_386_TSS:
       case BX_SYS_SEGMENT_BUSY_386_TSS:
-        val = ((d->u.system.base & 0xffff) << 16) | (d->u.system.limit & 0xffff);
+        val = ((d->u.system.base & 0xffff) << 16) | (limit & 0xffff);
         return(val);
 
       default:
@@ -376,16 +379,16 @@ BX_CPU_C::get_descriptor_h(const bx_descriptor_t *d)
 {
   Bit32u val;
 
-//if (d->valid == 0) return(0);
-
   if (d->segment) {
+    Bit32u limit = d->u.segment.limit_scaled;
+    if (d->u.system.g)
+      limit >>= 12;
     val = (d->u.segment.base & 0xff000000) |
           ((d->u.segment.base >> 16) & 0x000000ff) |
           (d->type << 8) |
           (d->segment << 12) |
           (d->dpl << 13) |
-          (d->p << 15) |
-          (d->u.segment.limit & 0xf0000) |
+          (d->p << 15) | (limit & 0xf0000) |
           (d->u.segment.avl << 20) |
 #if BX_SUPPORT_X86_64
           (d->u.segment.l << 21) |
@@ -395,6 +398,10 @@ BX_CPU_C::get_descriptor_h(const bx_descriptor_t *d)
     return(val);
   }
   else {
+    Bit32u limit = d->u.system.limit_scaled;
+    if (d->u.system.g)
+      limit >>= 12;
+
     switch (d->type) {
       case 0: // Reserved (not yet defined)
         BX_ERROR(("#get_descriptor_h(): type %d not finished", d->type));
@@ -411,8 +418,7 @@ BX_CPU_C::get_descriptor_h(const bx_descriptor_t *d)
         val = ((d->u.system.base >> 16) & 0xff) |
               (d->type << 8) |
               (d->dpl << 13) |
-              (d->p << 15) |
-              (d->u.system.limit & 0xf0000) |
+              (d->p << 15) | (limit & 0xf0000) |
               (d->u.system.avl << 20) |
               (d->u.system.d_b << 22) |
               (d->u.system.g << 23) |
@@ -451,11 +457,6 @@ bx_bool BX_CPU_C::set_segment_ar_data(bx_segment_reg_t *seg, bx_bool valid,
 
     d->u.segment.base  = base;
     d->u.segment.limit_scaled = limit_scaled;
-
-    if (d->u.segment.g)
-      d->u.segment.limit = (d->u.segment.limit_scaled >> 12);
-    else
-      d->u.segment.limit = (d->u.segment.limit_scaled);
   }
   else {
     switch(d->type) {
@@ -469,10 +470,6 @@ bx_bool BX_CPU_C::set_segment_ar_data(bx_segment_reg_t *seg, bx_bool valid,
         d->u.system.g     = (ar_data >> 15) & 0x1;
         d->u.system.base  = base;
         d->u.system.limit_scaled = limit_scaled;
-        if (d->u.system.g)
-          d->u.system.limit = (d->u.system.limit_scaled >> 12);
-        else
-          d->u.system.limit = (d->u.system.limit_scaled);
         break;
 
       default:
@@ -488,6 +485,7 @@ bx_bool BX_CPU_C::set_segment_ar_data(bx_segment_reg_t *seg, bx_bool valid,
 BX_CPU_C::parse_descriptor(Bit32u dword1, Bit32u dword2, bx_descriptor_t *temp)
 {
   Bit8u AR_byte;
+  Bit32u limit;
 
   AR_byte        = dword2 >> 8;
   temp->p        = (AR_byte >> 7) & 0x1;
@@ -497,10 +495,9 @@ BX_CPU_C::parse_descriptor(Bit32u dword1, Bit32u dword2, bx_descriptor_t *temp)
   temp->valid    = 0; /* start out invalid */
 
   if (temp->segment) { /* data/code segment descriptors */
-    temp->u.segment.limit      = (dword1 & 0xffff);
-    temp->u.segment.base       = (dword1 >> 16) | ((dword2 & 0xFF) << 16);
+    limit = (dword1 & 0xffff) | (dword2 & 0x000F0000);
 
-    temp->u.segment.limit     |= (dword2 & 0x000F0000);
+    temp->u.segment.base       = (dword1 >> 16) | ((dword2 & 0xFF) << 16);
     temp->u.segment.g          = (dword2 & 0x00800000) > 0;
     temp->u.segment.d_b        = (dword2 & 0x00400000) > 0;
 #if BX_SUPPORT_X86_64
@@ -510,9 +507,9 @@ BX_CPU_C::parse_descriptor(Bit32u dword1, Bit32u dword2, bx_descriptor_t *temp)
     temp->u.segment.base      |= (dword2 & 0xFF000000);
 
     if (temp->u.segment.g)
-      temp->u.segment.limit_scaled = (temp->u.segment.limit << 12) | 0xfff;
+      temp->u.segment.limit_scaled = (limit << 12) | 0xfff;
     else
-      temp->u.segment.limit_scaled = (temp->u.segment.limit);
+      temp->u.segment.limit_scaled =  limit;
 
     temp->valid    = 1;
   }
@@ -556,16 +553,16 @@ BX_CPU_C::parse_descriptor(Bit32u dword1, Bit32u dword2, bx_descriptor_t *temp)
       case BX_SYS_SEGMENT_BUSY_286_TSS:
       case BX_SYS_SEGMENT_AVAIL_386_TSS:
       case BX_SYS_SEGMENT_BUSY_386_TSS:
+        limit = (dword1 & 0xffff) | (dword2 & 0x000F0000);
         temp->u.system.base  = (dword1 >> 16) |
                               ((dword2 & 0xff) << 16) | (dword2 & 0xff000000);
-        temp->u.system.limit = (dword1 & 0x0000ffff)  | (dword2 & 0x000f0000);
         temp->u.system.g     = (dword2 & 0x00800000) > 0;
         temp->u.system.d_b   = (dword2 & 0x00400000) > 0;
         temp->u.system.avl   = (dword2 & 0x00100000) > 0;
         if (temp->u.system.g)
-          temp->u.system.limit_scaled = (temp->u.system.limit << 12) | 0xfff;
+          temp->u.system.limit_scaled = (limit << 12) | 0xfff;
         else
-          temp->u.system.limit_scaled = (temp->u.system.limit);
+          temp->u.system.limit_scaled =  limit;
         temp->valid = 1;
         break;
 
