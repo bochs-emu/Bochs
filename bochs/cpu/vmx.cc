@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmx.cc,v 1.13 2009-04-05 18:16:29 sshwarts Exp $
+// $Id: vmx.cc,v 1.14 2009-04-05 19:09:44 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2009 Stanislav Shwartsman
@@ -1365,8 +1365,8 @@ void BX_CPU_C::VMexitSaveGuestState(void)
   // save guest LDTR
   Bit32u ldtr_selector = BX_CPU_THIS_PTR ldtr.selector.value;
   bx_bool ldtr_invalid = !BX_CPU_THIS_PTR ldtr.cache.valid;
-  bx_address ldtr_base = BX_CPU_THIS_PTR ldtr.cache.u.system.base;
-  Bit32u ldtr_limit = BX_CPU_THIS_PTR ldtr.cache.u.system.limit_scaled;
+  bx_address ldtr_base = BX_CPU_THIS_PTR ldtr.cache.u.segment.base;
+  Bit32u ldtr_limit = BX_CPU_THIS_PTR ldtr.cache.u.segment.limit_scaled;
   Bit32u ldtr_ar = get_descriptor_h(&BX_CPU_THIS_PTR ldtr.cache) & 0x00f0ff00;
 
   VMwrite32(VMCS_16BIT_GUEST_LDTR_SELECTOR, ldtr_selector);
@@ -1377,8 +1377,8 @@ void BX_CPU_C::VMexitSaveGuestState(void)
   // save guest TR
   Bit32u tr_selector = BX_CPU_THIS_PTR tr.selector.value;
   bx_bool tr_invalid = !BX_CPU_THIS_PTR tr.cache.valid;
-  bx_address tr_base = BX_CPU_THIS_PTR tr.cache.u.system.base;
-  Bit32u tr_limit = BX_CPU_THIS_PTR tr.cache.u.system.limit_scaled;
+  bx_address tr_base = BX_CPU_THIS_PTR tr.cache.u.segment.base;
+  Bit32u tr_limit = BX_CPU_THIS_PTR tr.cache.u.segment.limit_scaled;
   Bit32u tr_ar = get_descriptor_h(&BX_CPU_THIS_PTR tr.cache) & 0x00f0ff00;
 
   VMwrite32(VMCS_16BIT_GUEST_TR_SELECTOR, tr_selector);
@@ -1532,10 +1532,10 @@ void BX_CPU_C::VMexitLoadHostState(void)
   BX_CPU_THIS_PTR tr.cache.dpl      = 0; /* field not used */
   BX_CPU_THIS_PTR tr.cache.segment  = 0; /* system segment */
   BX_CPU_THIS_PTR tr.cache.type     = BX_SYS_SEGMENT_BUSY_386_TSS;
-  BX_CPU_THIS_PTR tr.cache.u.system.base         = host_state->tr_base;
-  BX_CPU_THIS_PTR tr.cache.u.system.limit_scaled = 0x67;
-  BX_CPU_THIS_PTR tr.cache.u.system.avl = 0;
-  BX_CPU_THIS_PTR tr.cache.u.system.g   = 0; /* byte granular */
+  BX_CPU_THIS_PTR tr.cache.u.segment.base         = host_state->tr_base;
+  BX_CPU_THIS_PTR tr.cache.u.segment.limit_scaled = 0x67;
+  BX_CPU_THIS_PTR tr.cache.u.segment.avl = 0;
+  BX_CPU_THIS_PTR tr.cache.u.segment.g   = 0; /* byte granular */
 
   // unusable LDTR
   BX_CPU_THIS_PTR ldtr.selector.value = 0x0000;

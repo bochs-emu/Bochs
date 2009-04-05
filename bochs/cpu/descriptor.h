@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: descriptor.h,v 1.30 2009-04-05 18:16:29 sshwarts Exp $
+// $Id: descriptor.h,v 1.31 2009-04-05 19:09:44 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007 Stanislav Shwartsman
@@ -147,15 +147,6 @@ union {
   struct {                 /* type 5: Task Gate Descriptor */
     Bit16u  tss_selector;  /* TSS segment selector */
   } taskgate;
-  struct {
-    bx_address base;       /* 286=24 386+ = 32/64 bit base */
-    Bit32u  limit_scaled;  /* Same notes as for 'segment' field */
-#if BX_CPU_LEVEL >= 3
-    bx_bool g;             /* granularity: 0=byte, 1=4K (page) */
-    bx_bool d_b;           /* default size: 0=16bit, 1=32bit */
-    bx_bool avl;           /* available for use by system */
-#endif
-  } system;                /* TSS and LDT */
 } u;
 
 } bx_descriptor_t;

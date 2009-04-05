@@ -461,15 +461,15 @@ typedef struct bx_VMCS
 #define VMX_VM_EXEC_CTRL1_EXTERNAL_INTERRUPT_VMEXIT (1 << 0)
 #define VMX_VM_EXEC_CTRL1_NMI_VMEXIT                (1 << 3)
 #define VMX_VM_EXEC_CTRL1_VIRTUAL_NMI               (1 << 5)
-#define VMX_VM_EXEC_CRTL1_VMX_PREEMPTION_TIMER      (1 << 6)
+#define VMX_VM_EXEC_CTRL1_VMX_PREEMPTION_TIMER      (1 << 6)
 
 #ifdef BX_VMX_ENABLE_ALL
 
-#define VMX_VM_EXEC_CRTL1_SUPPORTED_BITS (0x00000069)
+#define VMX_VM_EXEC_CTRL1_SUPPORTED_BITS (0x00000069)
 
 #else // only really supported features
 
-#define VMX_VM_EXEC_CRTL1_SUPPORTED_BITS \
+#define VMX_VM_EXEC_CTRL1_SUPPORTED_BITS \
        (VMX_VM_EXEC_CTRL1_EXTERNAL_INTERRUPT_VMEXIT | \
         VMX_VM_EXEC_CTRL1_NMI_VMEXIT)
 
@@ -721,7 +721,7 @@ enum VMX_Activity_State {
 // Allowed 1-settings: VMentry fail if a bit is '1 in pin-based vmexec controls
 // but set to '0 in this MSR.
 #define VMX_MSR_VMX_PINBASED_CTRLS_HI \
-       (VMX_VM_EXEC_CRTL1_SUPPORTED_BITS | VMX_MSR_VMX_PINBASED_CTRLS_LO)
+       (VMX_VM_EXEC_CTRL1_SUPPORTED_BITS | VMX_MSR_VMX_PINBASED_CTRLS_LO)
 
 #define VMX_MSR_VMX_PINBASED_CTRLS \
    ((((Bit64u) VMX_MSR_VMX_PINBASED_CTRLS_HI) << 32) | VMX_MSR_VMX_PINBASED_CTRLS_LO)

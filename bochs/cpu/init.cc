@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.206 2009-04-05 18:16:29 sshwarts Exp $
+// $Id: init.cc,v 1.207 2009-04-05 19:09:44 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -394,21 +394,21 @@ void BX_CPU_C::register_state(void)
 
   bx_list_c *LDTR = new bx_list_c(cpu, "LDTR", 8);
   BXRS_PARAM_SPECIAL16(LDTR, selector, param_save_handler, param_restore_handler);
-  BXRS_HEX_PARAM_FIELD(LDTR, base,  ldtr.cache.u.system.base);
-  BXRS_HEX_PARAM_FIELD(LDTR, limit_scaled, ldtr.cache.u.system.limit_scaled);
+  BXRS_HEX_PARAM_FIELD(LDTR, base,  ldtr.cache.u.segment.base);
+  BXRS_HEX_PARAM_FIELD(LDTR, limit_scaled, ldtr.cache.u.segment.limit_scaled);
   BXRS_PARAM_SPECIAL8 (LDTR, ar_byte, param_save_handler, param_restore_handler);
-  BXRS_PARAM_BOOL(LDTR, granularity, ldtr.cache.u.system.g);
-  BXRS_PARAM_BOOL(LDTR, d_b, ldtr.cache.u.system.d_b);
-  BXRS_PARAM_BOOL(LDTR, avl, ldtr.cache.u.system.avl);
+  BXRS_PARAM_BOOL(LDTR, granularity, ldtr.cache.u.segment.g);
+  BXRS_PARAM_BOOL(LDTR, d_b, ldtr.cache.u.segment.d_b);
+  BXRS_PARAM_BOOL(LDTR, avl, ldtr.cache.u.segment.avl);
 
   bx_list_c *TR = new bx_list_c(cpu, "TR", 8);
   BXRS_PARAM_SPECIAL16(TR, selector, param_save_handler, param_restore_handler);
-  BXRS_HEX_PARAM_FIELD(TR, base,  tr.cache.u.system.base);
-  BXRS_HEX_PARAM_FIELD(TR, limit_scaled, tr.cache.u.system.limit_scaled);
+  BXRS_HEX_PARAM_FIELD(TR, base,  tr.cache.u.segment.base);
+  BXRS_HEX_PARAM_FIELD(TR, limit_scaled, tr.cache.u.segment.limit_scaled);
   BXRS_PARAM_SPECIAL8 (TR, ar_byte, param_save_handler, param_restore_handler);
-  BXRS_PARAM_BOOL(TR, granularity, tr.cache.u.system.g);
-  BXRS_PARAM_BOOL(TR, d_b, tr.cache.u.system.d_b);
-  BXRS_PARAM_BOOL(TR, avl, tr.cache.u.system.avl);
+  BXRS_PARAM_BOOL(TR, granularity, tr.cache.u.segment.g);
+  BXRS_PARAM_BOOL(TR, d_b, tr.cache.u.segment.d_b);
+  BXRS_PARAM_BOOL(TR, avl, tr.cache.u.segment.avl);
 
   BXRS_HEX_PARAM_SIMPLE(cpu, smbase);
 
@@ -826,10 +826,10 @@ void BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR ldtr.cache.dpl      = 0; /* field not used */
   BX_CPU_THIS_PTR ldtr.cache.segment  = 0; /* system segment */
   BX_CPU_THIS_PTR ldtr.cache.type     = BX_SYS_SEGMENT_LDT;
-  BX_CPU_THIS_PTR ldtr.cache.u.system.base       = 0x00000000;
-  BX_CPU_THIS_PTR ldtr.cache.u.system.limit_scaled =   0xFFFF;
-  BX_CPU_THIS_PTR ldtr.cache.u.system.avl = 0;
-  BX_CPU_THIS_PTR ldtr.cache.u.system.g   = 0;  /* byte granular */
+  BX_CPU_THIS_PTR ldtr.cache.u.segment.base       = 0x00000000;
+  BX_CPU_THIS_PTR ldtr.cache.u.segment.limit_scaled =   0xFFFF;
+  BX_CPU_THIS_PTR ldtr.cache.u.segment.avl = 0;
+  BX_CPU_THIS_PTR ldtr.cache.u.segment.g   = 0;  /* byte granular */
 
   /* TR (Task Register) */
   BX_CPU_THIS_PTR tr.selector.value = 0x0000;
@@ -842,10 +842,10 @@ void BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR tr.cache.dpl      = 0; /* field not used */
   BX_CPU_THIS_PTR tr.cache.segment  = 0; /* system segment */
   BX_CPU_THIS_PTR tr.cache.type     = BX_SYS_SEGMENT_BUSY_386_TSS;
-  BX_CPU_THIS_PTR tr.cache.u.system.base         = 0x00000000;
-  BX_CPU_THIS_PTR tr.cache.u.system.limit_scaled =     0xFFFF;
-  BX_CPU_THIS_PTR tr.cache.u.system.avl = 0;
-  BX_CPU_THIS_PTR tr.cache.u.system.g   = 0;  /* byte granular */
+  BX_CPU_THIS_PTR tr.cache.u.segment.base         = 0x00000000;
+  BX_CPU_THIS_PTR tr.cache.u.segment.limit_scaled =     0xFFFF;
+  BX_CPU_THIS_PTR tr.cache.u.segment.avl = 0;
+  BX_CPU_THIS_PTR tr.cache.u.segment.g   = 0;  /* byte granular */
 
   // DR0 - DR7 (Debug Registers)
 #if BX_CPU_LEVEL >= 3
@@ -1186,9 +1186,9 @@ void BX_CPU_C::assert_checks(void)
       case BX_SYS_SEGMENT_BUSY_286_TSS:
       case BX_SYS_SEGMENT_AVAIL_286_TSS:
 #if BX_CPU_LEVEL >= 3
-        if (BX_CPU_THIS_PTR tr.cache.u.system.g != 0)
+        if (BX_CPU_THIS_PTR tr.cache.u.segment.g != 0)
           BX_PANIC(("assert_checks: tss286.g != 0 !"));
-        if (BX_CPU_THIS_PTR tr.cache.u.system.avl != 0)
+        if (BX_CPU_THIS_PTR tr.cache.u.segment.avl != 0)
           BX_PANIC(("assert_checks: tss286.avl != 0 !"));
 #endif
         break;

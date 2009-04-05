@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: tasking.cc,v 1.68 2009-02-01 20:47:06 sshwarts Exp $
+// $Id: tasking.cc,v 1.69 2009-04-05 19:09:44 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -164,8 +164,8 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
     new_TSS_max = 0x67;
   }
 
-  nbase32 = (Bit32u) tss_descriptor->u.system.base;                 // new TSS.base
-  new_TSS_limit = tss_descriptor->u.system.limit_scaled;
+  nbase32 = (Bit32u) tss_descriptor->u.segment.base;                 // new TSS.base
+  new_TSS_limit = tss_descriptor->u.segment.limit_scaled;
 
   // TSS must have valid limit, else #TS(TSS selector)
   if (tss_selector->ti || tss_descriptor->valid==0 ||
@@ -187,8 +187,8 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
     old_TSS_max = 0x5F;
   }
 
-  obase32 = (Bit32u) BX_CPU_THIS_PTR tr.cache.u.system.base;        // old TSS.base
-  old_TSS_limit = BX_CPU_THIS_PTR tr.cache.u.system.limit_scaled;
+  obase32 = (Bit32u) BX_CPU_THIS_PTR tr.cache.u.segment.base;        // old TSS.base
+  old_TSS_limit = BX_CPU_THIS_PTR tr.cache.u.segment.limit_scaled;
 
   if (old_TSS_limit < old_TSS_max) {
     BX_ERROR(("task_switch(): old TSS limit < %d", old_TSS_max));
@@ -720,24 +720,24 @@ void BX_CPU_C::get_SS_ESP_from_TSS(unsigned pl, Bit16u *ss, Bit32u *esp)
   {
     // 32-bit TSS
     Bit32u TSSstackaddr = 8*pl + 4;
-    if ((TSSstackaddr+7) > BX_CPU_THIS_PTR tr.cache.u.system.limit_scaled) {
+    if ((TSSstackaddr+7) > BX_CPU_THIS_PTR tr.cache.u.segment.limit_scaled) {
       BX_DEBUG(("get_SS_ESP_from_TSS(386): TSSstackaddr > TSS.LIMIT"));
       exception(BX_TS_EXCEPTION, BX_CPU_THIS_PTR tr.selector.value & 0xfffc, 0);
     }
-    *ss  = system_read_word (BX_CPU_THIS_PTR tr.cache.u.system.base + TSSstackaddr + 4);
-    *esp = system_read_dword(BX_CPU_THIS_PTR tr.cache.u.system.base + TSSstackaddr);
+    *ss  = system_read_word (BX_CPU_THIS_PTR tr.cache.u.segment.base + TSSstackaddr + 4);
+    *esp = system_read_dword(BX_CPU_THIS_PTR tr.cache.u.segment.base + TSSstackaddr);
   }
   else if (BX_CPU_THIS_PTR tr.cache.type==BX_SYS_SEGMENT_AVAIL_286_TSS ||
            BX_CPU_THIS_PTR tr.cache.type==BX_SYS_SEGMENT_BUSY_286_TSS)
   {
     // 16-bit TSS
     Bit32u TSSstackaddr = 4*pl + 2;
-    if ((TSSstackaddr+3) > BX_CPU_THIS_PTR tr.cache.u.system.limit_scaled) {
+    if ((TSSstackaddr+3) > BX_CPU_THIS_PTR tr.cache.u.segment.limit_scaled) {
       BX_DEBUG(("get_SS_ESP_from_TSS(286): TSSstackaddr > TSS.LIMIT"));
       exception(BX_TS_EXCEPTION, BX_CPU_THIS_PTR tr.selector.value & 0xfffc, 0);
     }
-    *ss  =          system_read_word(BX_CPU_THIS_PTR tr.cache.u.system.base + TSSstackaddr + 2);
-    *esp = (Bit32u) system_read_word(BX_CPU_THIS_PTR tr.cache.u.system.base + TSSstackaddr);
+    *ss  =          system_read_word(BX_CPU_THIS_PTR tr.cache.u.segment.base + TSSstackaddr + 2);
+    *esp = (Bit32u) system_read_word(BX_CPU_THIS_PTR tr.cache.u.segment.base + TSSstackaddr);
   }
   else {
     BX_PANIC(("get_SS_ESP_from_TSS: TR is bogus type (%u)",
@@ -753,12 +753,12 @@ Bit64u BX_CPU_C::get_RSP_from_TSS(unsigned pl)
 
   // 32-bit TSS
   Bit32u TSSstackaddr = 8*pl + 4;
-  if ((TSSstackaddr+7) > BX_CPU_THIS_PTR tr.cache.u.system.limit_scaled) {
+  if ((TSSstackaddr+7) > BX_CPU_THIS_PTR tr.cache.u.segment.limit_scaled) {
     BX_DEBUG(("get_RSP_from_TSS(): TSSstackaddr > TSS.LIMIT"));
     exception(BX_TS_EXCEPTION, BX_CPU_THIS_PTR tr.selector.value & 0xfffc, 0);
   }
 
-  Bit64u rsp = system_read_qword(BX_CPU_THIS_PTR tr.cache.u.system.base + TSSstackaddr);
+  Bit64u rsp = system_read_qword(BX_CPU_THIS_PTR tr.cache.u.segment.base + TSSstackaddr);
   return rsp;
 }
 #endif  // #if BX_SUPPORT_X86_64

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.183 2009-04-05 18:16:29 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.184 2009-04-05 19:09:43 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -3604,11 +3604,11 @@ Bit32u bx_dbg_get_laddr(Bit16u sel, Bit32u ofs)
     Bit32u desc_base;
     if (selector.ti) {
       // LDT
-      if (((Bit32u)selector.index*8 + 7) > BX_CPU(dbg_cpu)->ldtr.cache.u.system.limit_scaled) {
+      if (((Bit32u)selector.index*8 + 7) > BX_CPU(dbg_cpu)->ldtr.cache.u.segment.limit_scaled) {
         dbg_printf("ERROR: selector (%04x) > GDT size limit\n", selector.index*8);
         return 0;
       }
-      desc_base = BX_CPU(dbg_cpu)->ldtr.cache.u.system.base;
+      desc_base = BX_CPU(dbg_cpu)->ldtr.cache.u.segment.base;
     }
     else {
       // GDT

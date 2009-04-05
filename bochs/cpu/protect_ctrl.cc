@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: protect_ctrl.cc,v 1.92 2009-01-16 18:18:58 sshwarts Exp $
+// $Id: protect_ctrl.cc,v 1.93 2009-04-05 19:09:44 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -385,10 +385,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LLDT_Ew(bxInstruction_c *i)
   }
 
 #if BX_SUPPORT_X86_64
-  descriptor.u.system.base |= ((Bit64u)(dword3) << 32);
+  descriptor.u.segment.base |= ((Bit64u)(dword3) << 32);
   BX_DEBUG(("64 bit LDT base = 0x%08x%08x",
-     GET32H(descriptor.u.system.base), GET32L(descriptor.u.system.base)));
-  if (!IsCanonical(descriptor.u.system.base)) {
+     GET32H(descriptor.u.segment.base), GET32L(descriptor.u.segment.base)));
+  if (!IsCanonical(descriptor.u.segment.base)) {
     BX_ERROR(("LLDT: non-canonical LDT descriptor base!"));
     exception(BX_GP_EXCEPTION, raw_selector & 0xfffc, 0);
   }
@@ -480,10 +480,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LTR_Ew(bxInstruction_c *i)
   }
 
 #if BX_SUPPORT_X86_64
-  descriptor.u.system.base |= ((Bit64u)(dword3) << 32);
+  descriptor.u.segment.base |= ((Bit64u)(dword3) << 32);
   BX_DEBUG(("64 bit TSS base = 0x%08x%08x",
-     GET32H(descriptor.u.system.base), GET32L(descriptor.u.system.base)));
-  if (!IsCanonical(descriptor.u.system.base)) {
+     GET32H(descriptor.u.segment.base), GET32L(descriptor.u.segment.base)));
+  if (!IsCanonical(descriptor.u.segment.base)) {
     BX_ERROR(("LTR: non-canonical TSS descriptor base!"));
     exception(BX_GP_EXCEPTION, raw_selector & 0xfffc, 0);
   }

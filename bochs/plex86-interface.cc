@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////
-// $Id: plex86-interface.cc,v 1.15 2009-04-05 18:16:29 sshwarts Exp $
+// $Id: plex86-interface.cc,v 1.16 2009-04-05 19:09:43 sshwarts Exp $
 ///////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  Kevin P. Lawton
@@ -348,8 +348,12 @@ void copyBochsDescriptorToPlex86(descriptor_t *plex86Desc, bx_descriptor_t *boch
   plex86Desc->p = bochsDesc->p;
   plex86Desc->dpl = bochsDesc->dpl;
   plex86Desc->type = (bochsDesc->segment<<4) | bochsDesc->type;
-  if (bochsDesc->segment) {
-    // Code/Data segment type.
+  if (bochsDesc->segment ||
+      bochsDesc->type == BX_SYS_SEGMENT_AVAIL_286_TSS ||
+      bochsDesc->type == BX_SYS_SEGMENT_AVAIL_386_TSS ||
+      bochsDesc->type == BX_SYS_SEGMENT_LDT)
+  {
+    // Code/Data segment, LDT or TSS
     Bit32u limit = bochsDesc->u.segment.limit_scaled;
     plex86Desc->limit_low  = limit; // Only lower 16-bits.
     plex86Desc->limit_high = limit >> 16;
@@ -361,23 +365,6 @@ void copyBochsDescriptorToPlex86(descriptor_t *plex86Desc, bx_descriptor_t *boch
     plex86Desc->reserved = 0;
     plex86Desc->d_b = bochsDesc->u.segment.d_b;
     plex86Desc->g   = bochsDesc->u.segment.g;
-    }
-  else if (bochsDesc->type == BX_SYS_SEGMENT_AVAIL_286_TSS ||
-           bochsDesc->type == BX_SYS_SEGMENT_AVAIL_386_TSS ||
-           bochsDesc->type == BX_SYS_SEGMENT_LDT)
-  {
-    // LDT or TSS
-    Bit32u limit = bochsDesc->u.system.limit_scaled;
-    plex86Desc->limit_low  = limit; // Only lower 16-bits.
-    plex86Desc->limit_high = limit >> 16;
-    Bit32u base = bochsDesc->u.system.base;
-    plex86Desc->base_low  = base;
-    plex86Desc->base_med  = base >> 16;
-    plex86Desc->base_high = base >> 24;
-    plex86Desc->avl = bochsDesc->u.system.avl;
-    plex86Desc->reserved = 0;
-    plex86Desc->d_b = 0;
-    plex86Desc->g   = bochsDesc->u.system.g;
   }
   else {
     BX_PANIC(("copyBochsDescriptorToPlex86: desc type = %u.",

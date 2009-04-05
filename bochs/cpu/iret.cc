@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: iret.cc,v 1.43 2009-03-23 19:36:48 sshwarts Exp $
+// $Id: iret.cc,v 1.44 2009-04-05 19:09:44 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005 Stanislav Shwartsman
@@ -62,7 +62,7 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
       BX_PANIC(("IRET: TR not valid"));
 
     // examine back link selector in TSS addressed by current TR
-    raw_link_selector = system_read_word(BX_CPU_THIS_PTR tr.cache.u.system.base);
+    raw_link_selector = system_read_word(BX_CPU_THIS_PTR tr.cache.u.segment.base);
 
     // must specify global, else #TS(new TSS selector)
     parse_selector(raw_link_selector, &link_selector);
