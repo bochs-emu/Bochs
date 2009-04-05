@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////
-// $Id: wxdialog.h,v 1.74 2009-03-27 22:22:07 vruppert Exp $
+// $Id: wxdialog.h,v 1.75 2009-04-05 08:33:27 vruppert Exp $
 ////////////////////////////////////////////////////////////////////
 //
 // wxWidgets dialogs for Bochs
@@ -294,6 +294,7 @@ protected:
   void EnableParam(int param_id, bool enabled);
   void ProcessDependentList(ParamStruct *pstrChanged, bool enabled);
   bool CopyGuiToParam();
+  bool CopyGuiToParam(bx_param_c *param);
   bool isGeneratedId(int id);
 public:
   ParamDialog(wxWindow* parent, wxWindowID id);

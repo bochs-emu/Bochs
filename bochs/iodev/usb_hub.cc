@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_hub.cc,v 1.6 2009-03-29 20:48:17 vruppert Exp $
+// $Id: usb_hub.cc,v 1.7 2009-04-05 08:33:27 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Volker Ruppert
@@ -264,6 +264,10 @@ usb_hub_device_c::usb_hub_device_c(Bit8u ports)
     port->set_handler(hub_param_handler);
     port->set_runtime_param(1);
   }
+#if BX_WITH_WX
+  bx_list_c *usb = (bx_list_c*)SIM->get_param("ports.usb");
+  usb->add(hub.config);
+#endif
 
   put("USBHB");
 }
@@ -273,11 +277,12 @@ usb_hub_device_c::~usb_hub_device_c(void)
   for (int i=0; i<hub.n_ports; i++) {
     remove_device(i);
   }
-#if !BX_WITH_WX
-  // FIXME: the wx ParamDialog doesn't like this
+#if BX_WITH_WX
+  bx_list_c *usb = (bx_list_c*)SIM->get_param("ports.usb");
+  usb->remove(hub.config->get_name());
+#endif
   bx_list_c *usb_rt = (bx_list_c*)SIM->get_param(BXPN_MENU_RUNTIME_USB);
   usb_rt->remove(hub.config->get_name());
-#endif
   remove_usb_hub(this);
 }
 

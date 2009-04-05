@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxdialog.cc,v 1.112 2009-03-29 13:26:07 vruppert Exp $
+// $Id: wxdialog.cc,v 1.113 2009-04-05 08:33:26 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
@@ -895,75 +895,95 @@ bool ParamDialog::CopyGuiToParam()
   while ((node = (wxNode*)idHash->Next()) != NULL) {
     ParamStruct *pstr = (ParamStruct*) node->GetData();
     wxLogDebug(wxT("commit changes for param %s"), pstr->param->get_name());
-    int type = pstr->param->get_type();
-    switch (type) {
-      case BXT_PARAM_BOOL: {
-        bx_param_bool_c *boolp = (bx_param_bool_c*) pstr->param;
-        bool val = pstr->u.checkbox->GetValue();
-        if (val != boolp->get()) boolp->set(val);
-        break;
-        }
-      case BXT_PARAM_NUM: {
-        bx_param_num_c *nump = (bx_param_num_c*) pstr->param;
-        bool valid;
-        int n;
-        wxString complaint(wxT("Invalid integer for '"));
-        complaint += wxString(pstr->param->get_name(), wxConvUTF8);
-        complaint += wxT("'.");
-        if (nump->get_options() & nump->USE_SPIN_CONTROL) {
-          n = pstr->u.spin->GetValue();
-        } else {
-          n = GetTextCtrlInt(pstr->u.text, &valid, true, complaint);
-        }
-        if ((n < nump->get_min()) || (n > nump->get_max())) {
-          wxMessageBox(wxT("Numerical parameter out of range"), wxT("Error"), wxOK | wxICON_ERROR, this);
-          return false;
-        }
-        if (n != nump->get()) nump->set(n);
-        break;
-      }
-      case BXT_PARAM_ENUM: {
-        bx_param_enum_c *enump = (bx_param_enum_c*) pstr->param;
-        int value = pstr->u.choice->GetSelection() + enump->get_min();
-        if (value != enump->get()) enump->set(value);
-        break;
-      }
-      case BXT_PARAM_STRING: {
-        bx_param_string_c *stringp = (bx_param_string_c*) pstr->param;
-        char buf[1024];
-        wxString tmp(pstr->u.text->GetValue());
-        if (stringp->get_options() & stringp->RAW_BYTES) {
-          char src[1024];
-          int i, p = 0;
-          unsigned int n;
-          strcpy(src, tmp.mb_str(wxConvUTF8));
-          for (i=0; i<stringp->get_maxsize(); i++)
-            buf[i] = 0;
-          for (i=0; i<stringp->get_maxsize(); i++) {
-            while (src[p] == stringp->get_separator())
-              p++;
-            if (src[p] == 0) break;
-            // try to read a byte of hex
-            if (sscanf (src+p, "%02x", &n) == 1) {
-              buf[i] = n;
-              p+=2;
-            } else {
-              wxMessageBox(wxT("Illegal raw byte format"), wxT("Error"), wxOK | wxICON_ERROR, this);
-              return false;
-            }
-          }
-        } else {
-          strncpy(buf, tmp.mb_str(wxConvUTF8), sizeof(buf));
-        }
-        buf[sizeof(buf)-1] = 0;
-        if (!stringp->equals(buf)) stringp->set(buf);
-        break;
-      }
-      case BXT_LIST:
-        break;
-      default:
-        wxLogError(wxT("ParamDialog::CopyGuiToParam: unsupported param type id=%d"), (int)type);
+    CopyGuiToParam(pstr->param);
+    if (pstr->param->get_type() == BXT_LIST) break;
+  }
+  return true;
+}
+
+bool ParamDialog::CopyGuiToParam(bx_param_c *param)
+{
+  int i;
+
+  if (param == NULL) return false;
+  fprintf(stderr, "param: %s\n", param->get_name());
+  ParamStruct *pstr = (ParamStruct*) paramHash->Get(param->get_id());
+  wxLogDebug(wxT("commit changes for param %s"), param->get_name());
+  int type = param->get_type();
+  switch (type) {
+    case BXT_PARAM_BOOL: {
+      bx_param_bool_c *boolp = (bx_param_bool_c*) pstr->param;
+      bool val = pstr->u.checkbox->GetValue();
+      if (val != boolp->get()) boolp->set(val);
+      break;
     }
+    case BXT_PARAM_NUM: {
+      bx_param_num_c *nump = (bx_param_num_c*) pstr->param;
+      bool valid;
+      int n;
+      wxString complaint(wxT("Invalid integer for '"));
+      complaint += wxString(pstr->param->get_name(), wxConvUTF8);
+      complaint += wxT("'.");
+      if (nump->get_options() & nump->USE_SPIN_CONTROL) {
+        n = pstr->u.spin->GetValue();
+      } else {
+        n = GetTextCtrlInt(pstr->u.text, &valid, true, complaint);
+      }
+      if ((n < nump->get_min()) || (n > nump->get_max())) {
+        wxMessageBox(wxT("Numerical parameter out of range"), wxT("Error"), wxOK | wxICON_ERROR, this);
+        return false;
+      }
+      if (n != nump->get()) nump->set(n);
+      break;
+    }
+    case BXT_PARAM_ENUM: {
+      bx_param_enum_c *enump = (bx_param_enum_c*) pstr->param;
+      int value = pstr->u.choice->GetSelection() + enump->get_min();
+      if (value != enump->get()) enump->set(value);
+      break;
+    }
+    case BXT_PARAM_STRING: {
+      bx_param_string_c *stringp = (bx_param_string_c*) pstr->param;
+      char buf[1024];
+      wxString tmp(pstr->u.text->GetValue());
+      if (stringp->get_options() & stringp->RAW_BYTES) {
+        char src[1024];
+        int p = 0;
+        unsigned int n;
+        strcpy(src, tmp.mb_str(wxConvUTF8));
+        for (i=0; i<stringp->get_maxsize(); i++)
+          buf[i] = 0;
+        for (i=0; i<stringp->get_maxsize(); i++) {
+          while (src[p] == stringp->get_separator())
+            p++;
+          if (src[p] == 0) break;
+          // try to read a byte of hex
+          if (sscanf (src+p, "%02x", &n) == 1) {
+            buf[i] = n;
+            p+=2;
+          } else {
+            wxMessageBox(wxT("Illegal raw byte format"), wxT("Error"), wxOK | wxICON_ERROR, this);
+            return false;
+          }
+        }
+      } else {
+        strncpy(buf, tmp.mb_str(wxConvUTF8), sizeof(buf));
+      }
+      buf[sizeof(buf)-1] = 0;
+      if (!stringp->equals(buf)) stringp->set(buf);
+      break;
+    }
+    case BXT_LIST: {
+      bx_list_c *list = (bx_list_c*) param;
+      for (i = 0; i < list->get_size(); i++) {
+        bx_param_c *item = list->get(i);
+        fprintf(stderr, "list param: %s\n", item->get_name());
+        if (!CopyGuiToParam(item)) break;
+      }
+      break;
+    }
+    default:
+      wxLogError(wxT("ParamDialog::CopyGuiToParam: unsupported param type id=%d"), (int)type);
   }
   return true;
 }
@@ -1133,11 +1153,11 @@ void ParamDialog::OnEvent(wxCommandEvent& event)
   }
   switch (id) {
     case wxID_OK:
-      if (IsModal ()) {
-        if (CopyGuiToParam ())
+      if (IsModal()) {
+        if (CopyGuiToParam())
           EndModal (wxID_OK);
       } else {
-	CopyParamToGui ();
+        CopyParamToGui();
       }
       break;
     case wxID_CANCEL:
