@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_ohci.h,v 1.14 2009-03-15 12:54:59 vruppert Exp $
+// $Id: usb_ohci.h,v 1.15 2009-04-06 09:30:25 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Benjamin D Lunt (fys at frontiernet net)
@@ -239,7 +239,9 @@ typedef struct {
   bx_bool  use_bulk_head;
   Bit64u   sof_time;
 
-  int statusbar_id[2]; // IDs of the status LEDs
+  int statusbar_id; // ID of the status LEDs
+  int iolight_counter;
+  int iolight_timer_index;
 } bx_usb_ohci_t;
 
 
@@ -290,6 +292,10 @@ private:
   bx_bool read_handler(bx_phy_address addr, unsigned len, void *data, void *param);
   bx_bool write_handler(bx_phy_address addr, unsigned len, void *data, void *param);
 #endif
+
+  static void iolight_timer_handler(void *);
+  void iolight_timer(void);
+
 };
 
 #endif  // BX_IODEV_USB_OHCI_H
