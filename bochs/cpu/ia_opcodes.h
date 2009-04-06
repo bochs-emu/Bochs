@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ia_opcodes.h,v 1.26 2009-03-22 21:12:35 sshwarts Exp $
+// $Id: ia_opcodes.h,v 1.27 2009-04-06 18:44:28 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008 Stanislav Shwartsman
@@ -378,7 +378,6 @@ bx_define_opcode(BX_IA_MOV_EAXOd, &BX_CPU_C::MOV_EAXOd, NULL)
 bx_define_opcode(BX_IA_MOV_EbGbM, &BX_CPU_C::MOV_EbGbM, NULL)
 bx_define_opcode(BX_IA_MOV_EbIbM, &BX_CPU_C::MOV_EbIbM, NULL)
 bx_define_opcode(BX_IA_MOV_EbIbR, &BX_CPU_C::MOV_RLIb, NULL)
-bx_define_opcode(BX_IA_MOV_EdGdM, &BX_CPU_C::MOV_EdGdM, NULL)
 bx_define_opcode(BX_IA_MOV_EdIdM, &BX_CPU_C::MOV_EdIdM, NULL)
 bx_define_opcode(BX_IA_MOV_EdIdR, &BX_CPU_C::MOV_ERXId, NULL)
 bx_define_opcode(BX_IA_MOV_ERXId, &BX_CPU_C::MOV_ERXId, NULL)
@@ -389,6 +388,7 @@ bx_define_opcode(BX_IA_MOV_EwSwM, &BX_CPU_C::MOV_EwSwM, NULL)
 bx_define_opcode(BX_IA_MOV_EwSwR, &BX_CPU_C::MOV_EwSwR, NULL)
 bx_define_opcode(BX_IA_MOV_GbEbM, &BX_CPU_C::MOV_GbEbM, NULL)
 bx_define_opcode(BX_IA_MOV_GbEbR, &BX_CPU_C::MOV_GbEbR, NULL)
+bx_define_opcode(BX_IA_MOV32_EdGdM, &BX_CPU_C::MOV32_EdGdM, NULL)
 bx_define_opcode(BX_IA_MOV32_GdEdM, &BX_CPU_C::MOV32_GdEdM, NULL)
 bx_define_opcode(BX_IA_MOV_GdEdR, &BX_CPU_C::MOV_GdEdR, NULL)
 bx_define_opcode(BX_IA_MOV_GwEwM, &BX_CPU_C::MOV_GwEwM, NULL)
@@ -1325,6 +1325,7 @@ bx_define_opcode(BX_IA_TEST_RAXId, &BX_CPU_C::TEST_RAXId, NULL)
 bx_define_opcode(BX_IA_XCHG_EqGqR, &BX_CPU_C::XCHG_EqGqR, NULL)
 bx_define_opcode(BX_IA_XCHG_EqGqM, &BX_CPU_C::XCHG_EqGqM, NULL)
 bx_define_opcode(BX_IA_LEA_GqM, &BX_CPU_C::LEA_GqM, NULL)
+bx_define_opcode(BX_IA_MOV64_EdGdM, &BX_CPU_C::MOV64_EdGdM, NULL)
 bx_define_opcode(BX_IA_MOV64_GdEdM, &BX_CPU_C::MOV64_GdEdM, NULL)
 bx_define_opcode(BX_IA_MOV_RAXOq, &BX_CPU_C::MOV_RAXOq, NULL)
 bx_define_opcode(BX_IA_MOV_OqRAX, &BX_CPU_C::MOV_OqRAX, NULL)
@@ -1563,9 +1564,9 @@ bx_define_opcode(BX_IA_VMCLEAR_Mq, &BX_CPU_C::VMCLEAR, NULL)
 bx_define_opcode(BX_IA_VMPTRLD_Mq, &BX_CPU_C::VMPTRLD, NULL)
 bx_define_opcode(BX_IA_VMPTRST_Mq, &BX_CPU_C::VMPTRST, NULL)
 bx_define_opcode(BX_IA_VMREAD_EdGd, &BX_CPU_C::VMREAD, NULL)
-bx_define_opcode(BX_IA_VMREAD_EqGq, &BX_CPU_C::VMREAD, NULL)
 bx_define_opcode(BX_IA_VMWRITE_GdEd, &BX_CPU_C::VMWRITE, NULL)
 #if BX_SUPPORT_X86_64
+bx_define_opcode(BX_IA_VMREAD_EqGq, &BX_CPU_C::VMREAD, NULL)
 bx_define_opcode(BX_IA_VMWRITE_GqEq, &BX_CPU_C::VMWRITE, NULL)
 #endif
 // VMX

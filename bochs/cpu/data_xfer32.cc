@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: data_xfer32.cc,v 1.62 2009-01-16 18:18:58 sshwarts Exp $
+// $Id: data_xfer32.cc,v 1.63 2009-04-06 18:44:28 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -52,11 +52,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_ERXId(bxInstruction_c *i)
   BX_WRITE_32BIT_REGZ(i->opcodeReg(), i->Id());
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_EdGdM(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV32_EdGdM(bxInstruction_c *i)
 {
-  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  Bit32u eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  write_virtual_dword(i->seg(), eaddr, BX_READ_32BIT_REG(i->nnn()));
+  write_virtual_dword_32(i->seg(), eaddr, BX_READ_32BIT_REG(i->nnn()));
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_GdEdR(bxInstruction_c *i)

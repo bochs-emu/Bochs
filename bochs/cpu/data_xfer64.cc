@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: data_xfer64.cc,v 1.42 2009-01-16 18:18:58 sshwarts Exp $
+// $Id: data_xfer64.cc,v 1.43 2009-04-06 18:44:28 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -50,6 +50,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV64_GdEdM(bxInstruction_c *i)
 
   Bit32u val32 = read_virtual_dword_64(i->seg(), eaddr);
   BX_WRITE_32BIT_REGZ(i->nnn(), val32);
+}
+
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV64_EdGdM(bxInstruction_c *i)
+{
+  Bit64u eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+
+  write_virtual_dword_64(i->seg(), eaddr, BX_READ_32BIT_REG(i->nnn()));
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_EqGqM(bxInstruction_c *i)

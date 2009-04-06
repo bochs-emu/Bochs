@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.226 2009-03-22 21:12:35 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.227 2009-04-06 18:44:28 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2030,7 +2030,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo32M[512*2] = {
   /* 86 /dm */ { BxLockable, BX_IA_XCHG_EbGbM },
   /* 87 /dm */ { BxLockable, BX_IA_XCHG_EdGdM },
   /* 88 /dm */ { 0, BX_IA_MOV_EbGbM },
-  /* 89 /dm */ { 0, BX_IA_MOV_EdGdM },
+  /* 89 /dm */ { 0, BX_IA_MOV32_EdGdM },
   /* 8A /dm */ { 0, BX_IA_MOV_GbEbM },
   /* 8B /dm */ { 0, BX_IA_MOV32_GdEdM },
   /* 8C /dm */ { 0, BX_IA_MOV_EwSwM },

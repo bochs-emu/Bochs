@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.589 2009-04-05 19:38:44 sshwarts Exp $
+// $Id: cpu.h,v 1.590 2009-04-06 18:44:28 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1169,7 +1169,6 @@ public: // for now...
   BX_SMF void XCHG_EdGdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
   BX_SMF void MOV_EbGbM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void MOV_EdGdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void MOV_EwGwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void MOV_GbEbM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void MOV_GbEbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -1178,6 +1177,7 @@ public: // for now...
   BX_SMF void MOV_GwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
   BX_SMF void MOV32_GdEdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void MOV32_EdGdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
   BX_SMF void MOV_EwSwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void MOV_EwSwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -2564,6 +2564,7 @@ public: // for now...
   BX_SMF void SHRD_EqGqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
   BX_SMF void MOV64_GdEdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void MOV64_EdGdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
   BX_SMF void MOVZX_GqEbM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void MOVZX_GqEwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
