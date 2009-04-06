@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.283 2009-04-06 18:14:20 sshwarts Exp $
+// $Id: cpu.cc,v 1.284 2009-04-06 18:27:30 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -155,8 +155,10 @@ no_async_event:
       i = entry->i;
     }
 
+    BxExecutePtr_tR execute = i->execute;
+
 #if BX_SUPPORT_TRACE_CACHE
-    bxInstruction_c *last = i + (entry->ilen - 1);
+    bxInstruction_c *last = i + (entry->ilen);
 
     for(;;) {
 #endif
@@ -176,13 +178,17 @@ no_async_event:
       // decoding instruction compeleted -> continue with execution
       BX_INSTR_BEFORE_EXECUTION(BX_CPU_ID, i);
       RIP += i->ilen();
-      BX_CPU_CALL_METHOD(i->execute, (i)); // might iterate repeat instruction
+      BX_CPU_CALL_METHOD(execute, (i)); // might iterate repeat instruction
       BX_CPU_THIS_PTR prev_rip = RIP; // commit new RIP
       BX_INSTR_AFTER_EXECUTION(BX_CPU_ID, i);
       BX_TICK1_IF_SINGLE_PROCESSOR();
 
       // inform instrumentation about new instruction
       BX_INSTR_NEW_INSTRUCTION(BX_CPU_ID);
+
+#if BX_SUPPORT_TRACE_CACHE
+      execute = (++i)->execute;
+#endif
 
       // note instructions generating exceptions never reach this point
 #if BX_DEBUGGER || BX_GDBSTUB
@@ -198,7 +204,7 @@ no_async_event:
         break;
       }
 
-      if (i++ == last) goto no_async_event;
+      if (i == last) goto no_async_event;
     }
 #endif
   }  // while (1)
