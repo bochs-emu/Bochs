@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: scsi_device.cc,v 1.16 2009-04-05 16:28:35 vruppert Exp $
+// $Id: scsi_device.cc,v 1.17 2009-04-06 15:36:53 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2007  Volker Ruppert
@@ -213,7 +213,7 @@ void scsi_device_t::scsi_read_data(Bit32u tag)
     scsi_command_complete(r, STATUS_CHECK_CONDITION, SENSE_HARDWARE_ERROR);
     return;
   }
-  if (r->sector_count == -1) {
+  if (r->sector_count == (Bit32u)-1) {
     BX_DEBUG(("read buf_len=%d", r->buf_len));
     r->sector_count = 0;
     completion(dev, SCSI_REASON_DATA, r->tag, r->buf_len);

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_msd.cc,v 1.21 2009-04-03 16:42:56 vruppert Exp $
+// $Id: usb_msd.cc,v 1.22 2009-04-06 15:36:54 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Volker Ruppert
@@ -131,17 +131,45 @@ static const Bit8u bx_msd_config_descriptor[] = {
   0x00        /*  u8  ep_bInterval; */
 };
 
+static int cdrom_count = 0;
+
+
 usb_msd_device_c::usb_msd_device_c(usbdev_type type, const char *filename)
 {
+  char pname[10];
+  char label[32];
+  bx_param_string_c *path;
+  bx_param_bool_c *status;
+
   d.type = type;
   d.speed = USB_SPEED_FULL;
+  memset((void*)&s, 0, sizeof(s));
+  s.fname = filename;
   if (d.type == USB_DEV_TYPE_DISK) {
     strcpy(d.devname, "BOCHS USB HARDDRIVE");
   } else if (d.type == USB_DEV_TYPE_CDROM) {
     strcpy(d.devname, "BOCHS USB CDROM");
+    // config options
+    bx_list_c *usb_rt = (bx_list_c*)SIM->get_param(BXPN_MENU_RUNTIME_USB);
+    sprintf(pname, "cdrom%d", ++cdrom_count);
+    sprintf(label, "USB CD-ROM #%d Configuration", cdrom_count);
+    s.config = new bx_list_c(usb_rt, pname, label, 2);
+    s.config->set_options(bx_list_c::SERIES_ASK | bx_list_c::USE_BOX_TITLE);
+    s.config->set_runtime_param(1);
+    s.config->set_device_param(this);
+    path = new bx_param_string_c(s.config, "path", "Path", "", "", BX_PATHNAME_LEN);
+    path->set(s.fname);
+    path->set_handler(cd_param_string_handler);
+    path->set_runtime_param(1);
+    status = new bx_param_bool_c(s.config, "status", "Inserted", "", 1);
+    status->set_handler(cd_param_handler);
+    status->set_runtime_param(1);
+    // TODO: status
+#if BX_WITH_WX
+    bx_list_c *usb = (bx_list_c*)SIM->get_param("ports.usb");
+    usb->add(s.config);
+#endif
   }
-  memset((void*)&s, 0, sizeof(s));
-  s.fname = filename;
 
   put("USBMS");
 }
@@ -154,6 +182,12 @@ usb_msd_device_c::~usb_msd_device_c(void)
     delete s.hdimage;
   } else if (s.cdrom != NULL) {
     delete s.cdrom;
+#if BX_WITH_WX
+    bx_list_c *usb = (bx_list_c*)SIM->get_param("ports.usb");
+    usb->remove(s.config->get_name());
+#endif
+    bx_list_c *usb_rt = (bx_list_c*)SIM->get_param(BXPN_MENU_RUNTIME_USB);
+    usb_rt->remove(s.config->get_name());
   }
 }
 
@@ -566,6 +600,75 @@ void usb_msd_device_c::cancel_packet(USBPacket *p)
   s.scsi_dev->scsi_cancel_io(s.tag);
   s.packet = NULL;
   s.scsi_len = 0;
+}
+
+void usb_msd_device_c::set_inserted(bx_bool value)
+{
+  const char *path;
+
+  if (value) {
+    path = SIM->get_param_string("path", s.config)->getptr();
+    if (!s.cdrom->insert_cdrom(path)) {
+      SIM->get_param_bool("status", s.config)->set(0);
+      return;
+    }
+  } else {
+    s.cdrom->eject_cdrom();
+  }
+  s.scsi_dev->set_inserted(value);
+}
+
+bx_bool usb_msd_device_c::get_inserted()
+{
+  return s.scsi_dev->get_inserted();
+}
+
+#undef LOG_THIS
+#define LOG_THIS cdrom->
+
+// USB hub runtime parameter handlers
+const char *usb_msd_device_c::cd_param_string_handler(bx_param_string_c *param, int set,
+                                                      const char *oldval, const char *val, int maxlen)
+{
+  usb_msd_device_c *cdrom;
+
+  if (set) {
+    cdrom = (usb_msd_device_c*) param->get_parent()->get_device_param();
+    if (cdrom != NULL) {
+      bx_bool empty = ((strlen(val) == 0) || (!strcmp(val, "none")));
+      if (!empty) {
+        if (cdrom->get_inserted()) {
+          BX_ERROR(("direct path change not supported (setting to 'none')"));
+          param->set("none");
+        }
+      } else {
+        SIM->get_param_bool("status", param->get_parent())->set(0);
+      }
+    } else {
+      BX_PANIC(("cd_param_string_handler: cdrom not found"));
+    }
+  }
+  return val;
+}
+
+Bit64s usb_msd_device_c::cd_param_handler(bx_param_c *param, int set, Bit64s val)
+{
+  usb_msd_device_c *cdrom;
+  const char *path;
+
+  if (set) {
+    cdrom = (usb_msd_device_c*) param->get_parent()->get_device_param();
+    if (cdrom != NULL) {
+      path = SIM->get_param_string("path", param->get_parent())->getptr();
+      val &= ((strlen(path) > 0) && (strcmp(path, "none")));
+      if (val != cdrom->get_inserted()) {
+        cdrom->set_inserted(val);
+      }
+    } else {
+      BX_PANIC(("cd_param_string_handler: cdrom not found"));
+    }
+  }
+  return val;
 }
 
 #endif // BX_SUPPORT_PCI && BX_SUPPORT_PCIUSB

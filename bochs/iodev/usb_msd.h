@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_msd.h,v 1.12 2009-03-09 12:18:40 vruppert Exp $
+// $Id: usb_msd.h,v 1.13 2009-04-06 15:36:55 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Volker Ruppert
@@ -40,6 +40,8 @@ public:
   virtual int handle_data(USBPacket *p);
   virtual void register_state_specific(bx_list_c *parent);
   virtual void cancel_packet(USBPacket *p);
+  void set_inserted(bx_bool value);
+  bx_bool get_inserted();
 
 protected:
   void copy_data();
@@ -64,7 +66,12 @@ private:
     USBPacket *packet;
     bx_list_c *sr_list;
     const char *fname;
+    bx_list_c *config;
   } s;
+
+  static const char *cd_param_string_handler(bx_param_string_c *param, int set,
+                                             const char *oldval, const char *val, int maxlen);
+  static Bit64s cd_param_handler(bx_param_c *param, int set, Bit64s val);
 };
 
 #endif

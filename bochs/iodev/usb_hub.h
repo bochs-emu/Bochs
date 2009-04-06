@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_hub.h,v 1.3 2009-03-15 12:54:59 vruppert Exp $
+// $Id: usb_hub.h,v 1.4 2009-04-06 15:36:54 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Volker Ruppert
@@ -38,7 +38,6 @@ public:
   virtual int handle_data(USBPacket *p);
   virtual void register_state_specific(bx_list_c *parent);
   virtual void after_restore_state();
-  const char *get_name() {return hub.config->get_name();}
 
 private:
   struct {
