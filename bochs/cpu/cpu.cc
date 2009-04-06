@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.282 2009-03-26 10:24:08 sshwarts Exp $
+// $Id: cpu.cc,v 1.283 2009-04-06 18:14:20 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -156,9 +156,9 @@ no_async_event:
     }
 
 #if BX_SUPPORT_TRACE_CACHE
-    unsigned length = entry->ilen;
+    bxInstruction_c *last = i + (entry->ilen - 1);
 
-    for(;;i++) {
+    for(;;) {
 #endif
 
 #if BX_INSTRUMENTATION
@@ -198,7 +198,7 @@ no_async_event:
         break;
       }
 
-      if (--length == 0) goto no_async_event;
+      if (i++ == last) goto no_async_event;
     }
 #endif
   }  // while (1)
