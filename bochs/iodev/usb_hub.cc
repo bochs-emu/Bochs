@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_hub.cc,v 1.7 2009-04-05 08:33:27 vruppert Exp $
+// $Id: usb_hub.cc,v 1.8 2009-04-06 10:38:57 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Volker Ruppert
@@ -160,75 +160,7 @@ static const Bit8u bx_hub_hub_descriptor[] =
   /* DeviceRemovable and PortPwrCtrlMask patched in later */
 };
 
-// External hub registration for config handler access
-
-typedef struct _ext_usb_hub_t {
-  usb_hub_device_c *dev;
-  struct _ext_usb_hub_t *next;
-} ext_usb_hub_t;
-
 static int hub_count = 0;
-static ext_usb_hub_t *ext_usb_hubs = NULL;
-
-static bx_bool add_usb_hub(usb_hub_device_c *hub)
-{
-  ext_usb_hub_t *ext_usb_hub;
-
-  ext_usb_hub = (ext_usb_hub_t *)malloc(sizeof(ext_usb_hub_t));
-  if (ext_usb_hub == NULL) {
-    return 0;
-  }
-
-  ext_usb_hub->dev = hub;
-  ext_usb_hub->next = NULL;
-
-  if (ext_usb_hubs == NULL) {
-    ext_usb_hubs = ext_usb_hub;
-  } else {
-    ext_usb_hub_t *temp = ext_usb_hubs;
-
-    while (temp->next) {
-      temp = temp->next;
-    }
-    temp->next = ext_usb_hub;
-  }
-  return 1;
-}
-
-static bx_bool remove_usb_hub(usb_hub_device_c *hub)
-{
-  ext_usb_hub_t *ext_usb_hub, *prev = NULL;
-
-  for (ext_usb_hub = ext_usb_hubs; ext_usb_hub; ext_usb_hub = ext_usb_hub->next) {
-    if (ext_usb_hub->dev == hub) {
-      if (prev == NULL) {
-        ext_usb_hubs = ext_usb_hub->next;
-      } else {
-        prev->next = ext_usb_hub->next;
-      }
-      free(ext_usb_hub);
-      if (ext_usb_hubs == NULL) {
-        hub_count = 0;
-      }
-      return 1;
-    } else {
-      prev = ext_usb_hub;
-    }
-  }
-  return 0;
-}
-
-static usb_hub_device_c *find_usb_hub(const char *name)
-{
-  ext_usb_hub_t *ext_usb_hub;
-
-  for (ext_usb_hub = ext_usb_hubs; ext_usb_hub; ext_usb_hub = ext_usb_hub->next) {
-    if (!strcmp(ext_usb_hub->dev->get_name(), name)) {
-      return ext_usb_hub->dev;
-    }
-  }
-  return NULL;
-}
 
 
 usb_hub_device_c::usb_hub_device_c(Bit8u ports)
@@ -248,7 +180,6 @@ usb_hub_device_c::usb_hub_device_c(Bit8u ports)
     hub.usb_port[i].PortStatus = PORT_STAT_POWER;
     hub.usb_port[i].PortChange = 0;
   }
-  add_usb_hub(this);
 
   // config options
   bx_list_c *usb_rt = (bx_list_c*)SIM->get_param(BXPN_MENU_RUNTIME_USB);
@@ -257,6 +188,7 @@ usb_hub_device_c::usb_hub_device_c(Bit8u ports)
   hub.config = new bx_list_c(usb_rt, pname, label, hub.n_ports);
   hub.config->set_options(bx_list_c::SHOW_PARENT | bx_list_c::USE_BOX_TITLE);
   hub.config->set_runtime_param(1);
+  hub.config->set_device_param(this);
   for(i = 0; i < hub.n_ports; i++) {
     sprintf(pname, "port%d", i+1);
     sprintf(label, "Port #%d device", i+1);
@@ -283,7 +215,6 @@ usb_hub_device_c::~usb_hub_device_c(void)
 #endif
   bx_list_c *usb_rt = (bx_list_c*)SIM->get_param(BXPN_MENU_RUNTIME_USB);
   usb_rt->remove(hub.config->get_name());
-  remove_usb_hub(this);
 }
 
 void usb_hub_device_c::register_state_specific(bx_list_c *parent)
@@ -681,7 +612,7 @@ const char *usb_hub_device_c::hub_param_handler(bx_param_string_c *param, int se
   usb_hub_device_c *hub;
 
   if (set) {
-    hub = find_usb_hub(param->get_parent()->get_name());
+    hub = (usb_hub_device_c*) param->get_parent()->get_device_param();
     if (hub != NULL) {
       hubnum = atoi(param->get_parent()->get_name()+6);
       portnum = atoi(param->get_name()+4) - 1;
