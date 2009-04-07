@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_ohci.cc,v 1.28 2009-04-06 09:30:24 vruppert Exp $
+// $Id: usb_ohci.cc,v 1.29 2009-04-07 10:56:19 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Benjamin D Lunt (fys at frontiernet net)
@@ -1193,14 +1193,16 @@ bx_bool bx_usb_ohci_c::process_td(struct OHCI_TD *td, struct OHCI_ED *ed)
   BX_DEBUG(("    td->cbp = 0x%08X", TD_GET_CBP(td)));
 
   /* set status bar conditions for device */
-  if (!BX_OHCI_THIS hub.iolight_counter) {
-    if (pid == USB_TOKEN_OUT)
-      bx_gui->statusbar_setitem(BX_OHCI_THIS hub.statusbar_id, 1, 1);  // write
-    else
-      bx_gui->statusbar_setitem(BX_OHCI_THIS hub.statusbar_id, 1);     // read
+  if (len > 0) {
+    if (!BX_OHCI_THIS hub.iolight_counter) {
+      if (pid == USB_TOKEN_OUT)
+        bx_gui->statusbar_setitem(BX_OHCI_THIS hub.statusbar_id, 1, 1);  // write
+      else
+        bx_gui->statusbar_setitem(BX_OHCI_THIS hub.statusbar_id, 1);     // read
+    }
+    BX_OHCI_THIS hub.iolight_counter = 5;
+    bx_pc_system.activate_timer(BX_OHCI_THIS hub.iolight_timer_index, 5000, 0);
   }
-  BX_OHCI_THIS hub.iolight_counter = 5;
-  bx_pc_system.activate_timer(BX_OHCI_THIS hub.iolight_timer_index, 5000, 0);
 
   switch (pid) {
     case USB_TOKEN_SETUP:
