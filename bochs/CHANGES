@@ -132,6 +132,8 @@ Detailed change log :
  [1981505] Init PIIX4 PCI to ISA bridge and IDE by Sebastian
 
 - these S.F. bugs were closed
+ [2628318] 'VGABIOS-latest' bug
+ [1945055] can't 'make install' lastest bochs on loepard
  [2031993] Mac OS X Makefile bug
  [1843199] install error on mac osx
  [2710931] Problem compiling both instrumentation and debugger
