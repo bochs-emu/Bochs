@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debug.h,v 1.51 2009-04-03 17:36:24 sshwarts Exp $
+// $Id: debug.h,v 1.52 2009-04-07 16:12:19 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -219,7 +219,7 @@ void bx_dbg_set_reg8h_value(unsigned reg, Bit8u value);
 void bx_dbg_set_reg16_value(unsigned reg, Bit16u value);
 void bx_dbg_set_reg32_value(unsigned reg, Bit32u value);
 void bx_dbg_set_reg64_value(unsigned reg, Bit64u value);
-Bit32u bx_dbg_get_laddr(Bit16u sel, Bit32u ofs);
+bx_address bx_dbg_get_laddr(Bit16u sel, bx_address ofs);
 void bx_dbg_step_over_command(void);
 void bx_dbg_trace_command(bx_bool enable);
 void bx_dbg_trace_reg_command(bx_bool enable);
@@ -456,7 +456,7 @@ typedef struct bx_guard_found_t {
   unsigned guard_found;
   unsigned iaddr_index;
   Bit64u icount; // number of completed instructions from last breakpoint hit
-  Bit32u  cs; // cs:eip and linear addr of instruction at guard point
+  Bit32u cs;     // cs:eip and linear addr of instruction at guard point
   bx_address eip;
   bx_address laddr;
   // 00 - 16 bit, 01 - 32 bit, 10 - 64-bit, 11 - illegal

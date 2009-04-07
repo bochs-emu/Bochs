@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: io.cc,v 1.77 2009-04-05 19:09:44 sshwarts Exp $
+// $Id: io.cc,v 1.78 2009-04-07 16:12:19 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -846,7 +846,7 @@ bx_bool BX_CPP_AttrRegparmN(3) BX_CPU_C::allow_io(bxInstruction_c *i, Bit16u por
       return(0);
     }
 
-    Bit16u io_base = system_read_word(BX_CPU_THIS_PTR tr.cache.u.segment.base + 102);
+    Bit32u io_base = system_read_word(BX_CPU_THIS_PTR tr.cache.u.segment.base + 102);
 
     if ((io_base + port/8) >= BX_CPU_THIS_PTR tr.cache.u.segment.limit_scaled) {
       BX_DEBUG(("allow_io(): IO port %x (len %d) outside TSS IO permission map (base=%x, limit=%x) #GP(0)",

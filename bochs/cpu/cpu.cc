@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.284 2009-04-06 18:27:30 sshwarts Exp $
+// $Id: cpu.cc,v 1.285 2009-04-07 16:12:19 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -128,11 +128,11 @@ void BX_CPU_C::cpu_loop(Bit32u max_instr_count)
 
 no_async_event:
 
-    Bit32u eipBiased = RIP + BX_CPU_THIS_PTR eipPageBias;
+    Bit32u eipBiased = (Bit32u)(RIP + BX_CPU_THIS_PTR eipPageBias);
 
     if (eipBiased >= BX_CPU_THIS_PTR eipPageWindowSize) {
       prefetch();
-      eipBiased = RIP + BX_CPU_THIS_PTR eipPageBias;
+      eipBiased = (Bit32u)(RIP + BX_CPU_THIS_PTR eipPageBias);
     }
 
     bx_phy_address pAddr = BX_CPU_THIS_PTR pAddrPage + eipBiased;
@@ -713,7 +713,7 @@ void BX_CPU_C::prefetch(void)
 
     BX_CPU_THIS_PTR eipPageWindowSize = 4096;
     if (limit + BX_CPU_THIS_PTR eipPageBias < 4096) {
-      BX_CPU_THIS_PTR eipPageWindowSize = limit + BX_CPU_THIS_PTR eipPageBias + 1;
+      BX_CPU_THIS_PTR eipPageWindowSize = (Bit32u)(limit + BX_CPU_THIS_PTR eipPageBias + 1);
     }
   }
 
@@ -733,7 +733,7 @@ void BX_CPU_C::prefetch(void)
       pAddr = translate_linear(laddr, CPL, BX_EXECUTE);
     } 
     else {
-      pAddr = laddr;
+      pAddr = (bx_phy_address) laddr;
     }
 
     BX_CPU_THIS_PTR pAddrPage = LPFOf(pAddr);

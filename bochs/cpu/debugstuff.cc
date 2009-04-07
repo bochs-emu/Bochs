@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debugstuff.cc,v 1.104 2009-04-05 18:16:29 sshwarts Exp $
+// $Id: debugstuff.cc,v 1.105 2009-04-07 16:12:19 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -273,7 +273,7 @@ void BX_CPU_C::debug(bx_address offset)
 
 
 #if BX_DEBUGGER
-Bit32u BX_CPU_C::dbg_get_reg(unsigned reg)
+bx_address BX_CPU_C::dbg_get_reg(unsigned reg)
 {
   Bit32u return_val32;
 

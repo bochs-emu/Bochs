@@ -16,7 +16,6 @@ set echo
             --enable-show-ips \
             --disable-readline \
             --without-x \
-            --enable-cpp \
             --with-win32 --with-rfb --with-nogui
 
 unset echo

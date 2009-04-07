@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.294 2009-04-05 19:09:44 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.295 2009-04-07 16:12:19 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -221,7 +221,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CLFLUSH(bxInstruction_c *i)
   {
     // check if we could access the memory segment
     if (!(seg->cache.valid & SegAccessROK)) {
-      if (! execute_virtual_checks(seg, eaddr, 1))
+      if (! execute_virtual_checks(seg, (Bit32u) eaddr, 1))
         exception(int_number(i->seg()), 0, 0);
     }
     else {
@@ -399,7 +399,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RdDd(bxInstruction_c *i)
     case 1: // DR1
     case 2: // DR2
     case 3: // DR3
-      val_32 = BX_CPU_THIS_PTR dr[i->nnn()];
+      val_32 = (Bit32u) BX_CPU_THIS_PTR dr[i->nnn()];
       break;
 
     case 4: // DR4
@@ -679,7 +679,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RdCd(bxInstruction_c *i)
 
   switch (i->nnn()) {
     case 0: // CR0 (MSW)
-      val_32 = read_CR0(); /* correctly handle VMX */
+      val_32 = (Bit32u) read_CR0(); /* correctly handle VMX */
       break;
     case 2: /* CR2 */
       val_32 = (Bit32u) BX_CPU_THIS_PTR cr2;
@@ -692,7 +692,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RdCd(bxInstruction_c *i)
       break;
     case 4: // CR4
 #if BX_CPU_LEVEL > 3
-      val_32 = read_CR4(); /* correctly handle VMX */
+      val_32 = (Bit32u) read_CR4(); /* correctly handle VMX */
 #endif
       break;
     default:
@@ -879,7 +879,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LMSW_Ew(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::SMSW_EwR(bxInstruction_c *i)
 {
-  Bit32u msw = read_CR0();  // handle CR0 shadow in VMX
+  Bit32u msw = (Bit32u) read_CR0();  // handle CR0 shadow in VMX
 
   if (i->os32L()) {
     BX_WRITE_32BIT_REGZ(i->rm(), msw);

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: smm.cc,v 1.60 2009-04-05 19:09:44 sshwarts Exp $
+// $Id: smm.cc,v 1.61 2009-04-07 16:12:19 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2006 Stanislav Shwartsman
@@ -522,7 +522,7 @@ bx_bool BX_CPU_C::smram_restore_state(const Bit32u *saved_state)
   }
   setEFlags(temp_eflags);
 
-  bx_phy_address temp_cr3 = SMRAM_FIELD64(saved_state, SMRAM_FIELD_CR3_HI32, SMRAM_FIELD_CR3);
+  bx_phy_address temp_cr3 = (bx_phy_address) SMRAM_FIELD64(saved_state, SMRAM_FIELD_CR3_HI32, SMRAM_FIELD_CR3);
   SetCR3(temp_cr3);
 
   for (int n=0; n<BX_GENERAL_REGISTERS; n++) {

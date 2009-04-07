@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.173 2009-03-27 16:42:21 sshwarts Exp $
+// $Id: paging.cc,v 1.174 2009-04-07 16:12:19 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -706,7 +706,8 @@ bx_phy_address BX_CPU_C::translate_linear_PAE(bx_address laddr, bx_address &lpf_
   bx_phy_address pdpe_addr, ppf;
   Bit64u pdpe, pde, pte;
 #if BX_SUPPORT_X86_64
-  Bit64u pml4, pml4_addr = 0;
+  Bit64u pml4;
+  bx_phy_address pml4_addr = 0;
 #endif
   unsigned priv_index, nx_fault = 0;
   bx_bool isWrite = (rw & 1); // write or r-m-w

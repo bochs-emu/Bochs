@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32_enh_dbg_osdep.cc,v 1.12 2009-04-03 17:36:24 sshwarts Exp $
+// $Id: win32_enh_dbg_osdep.cc,v 1.13 2009-04-07 16:12:19 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  BOCHS ENHANCED DEBUGGER Ver 1.2
@@ -63,6 +63,11 @@ COLORREF AsmColors[4] = {
 #define IS_WIN98
 // this define may not exist in some compilers
 #define LVIF_GROUPID    0
+#endif
+
+#ifndef IS_WIN98
+// workaround broken code if IS_WIN98 not defined
+#define IS_WIN98
 #endif
 
 // The wordsize popup is the 15th entry in the Opt menu -- COUNTING SEPARATORS
@@ -1282,7 +1287,7 @@ LRESULT CALLBACK B_WP(HWND hh,UINT mm,WPARAM ww,LPARAM ll)
             bx_bool Group_OK = TRUE;
             MajWinVer = (Bit8u)(PackedVer & 0xff);      // Major version # is in the LOW byte
             MinWinVer = (Bit8u)((PackedVer>>8) & 0xff);
-            if (MajWinVer > 5 || (MajWinVer == 5 && MinWinVer >= 1)     // is it XP or higher?
+            if (MajWinVer > 5 || (MajWinVer == 5 && MinWinVer >= 1))     // is it XP or higher?
             {
                 wchar_t* txt[] = {L"General Purpose",L"Segment",L"Control",L"MMX",L"SSE",L"Debug",L"Test",L"Other"};
                 ListView_EnableGroupView(hL[REG_WND],TRUE);

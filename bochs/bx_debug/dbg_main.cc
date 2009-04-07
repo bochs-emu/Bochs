@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.184 2009-04-05 19:09:43 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.185 2009-04-07 16:12:19 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -72,7 +72,7 @@ static struct {
   unsigned disassemble_size;
   char     default_display_format;
   char     default_unit_size;
-  Bit32u   default_addr;
+  bx_address default_addr;
   unsigned next_bpoint_id;
   unsigned next_wpoint_id;
 } bx_debugger;
@@ -1164,7 +1164,7 @@ void bx_dbg_where_command()
     return;
   }
   Bit32u bp = BX_CPU(dbg_cpu)->get_reg32(BX_32BIT_REG_EBP);
-  Bit32u ip = BX_CPU(dbg_cpu)->get_instruction_pointer();
+  bx_address ip = BX_CPU(dbg_cpu)->get_instruction_pointer();
   dbg_printf("(%d) 0x%08x\n", 0, ip);
   for (int i = 1; i < 50; i++) {
     // Up
@@ -1399,7 +1399,7 @@ void bx_dbg_show_param_command(char *param)
 int bx_dbg_show_symbolic(void)
 {
   static unsigned last_cpu_mode = 0;
-  static bx_phy_address last_cr3 = 0;
+  static bx_address last_cr3 = 0;
 
   /* modes & address spaces */
   if (dbg_show_mask & BX_DBG_SHOW_MODE) {
@@ -2423,7 +2423,7 @@ void bx_dbg_examine_command(char *command, char *format, bx_bool format_passed,
     }
     else {
       // address is already physical address
-      BX_MEM(0)->dbg_fetch_mem(BX_CPU(dbg_cpu), addr, data_size, databuf);
+      BX_MEM(0)->dbg_fetch_mem(BX_CPU(dbg_cpu), (bx_phy_address) addr, data_size, databuf);
     }
 
     //FIXME HanishKVC The char display for data to be properly integrated
@@ -2667,7 +2667,7 @@ void bx_dbg_disassemble_command(const char *format, Bit64u from, Bit64u to)
   int numlines = INT_MAX;
 
   if (from > to) {
-     int temp = from;
+     Bit64u temp = from;
      from = to;
      to = temp;
   }
@@ -3139,7 +3139,7 @@ void bx_dbg_info_ivt_command(unsigned from, unsigned to)
 
     for (unsigned i = from; i <= to; i++)
     {
-      BX_MEM(0)->dbg_fetch_mem(BX_CPU(dbg_cpu), idtr.base + i * 4, sizeof(buff), buff);
+      BX_MEM(0)->dbg_fetch_mem(BX_CPU(dbg_cpu), (bx_phy_address)(idtr.base + i*4), sizeof(buff), buff);
 #ifdef BX_LITTLE_ENDIAN
       seg = *(Bit16u*)(&buff[2]);
       off = *(Bit16u*)(&buff[0]);
@@ -3583,9 +3583,9 @@ bx_address bx_dbg_get_instruction_pointer(void)
   return BX_CPU(dbg_cpu)->get_instruction_pointer();
 }
 
-Bit32u bx_dbg_get_laddr(Bit16u sel, Bit32u ofs)
+bx_address bx_dbg_get_laddr(Bit16u sel, bx_address ofs)
 {
-  Bit32u laddr;
+  bx_address laddr;
 
   if (BX_CPU(dbg_cpu)->protected_mode()) {
     bx_descriptor_t descriptor;
@@ -3601,7 +3601,7 @@ Bit32u bx_dbg_get_laddr(Bit16u sel, Bit32u ofs)
     /* parse fields in selector */
     BX_CPU(dbg_cpu)->parse_selector(sel, &selector);
 
-    Bit32u desc_base;
+    bx_address desc_base;
     if (selector.ti) {
       // LDT
       if (((Bit32u)selector.index*8 + 7) > BX_CPU(dbg_cpu)->ldtr.cache.u.segment.limit_scaled) {

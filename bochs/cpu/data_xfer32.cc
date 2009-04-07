@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: data_xfer32.cc,v 1.63 2009-04-06 18:44:28 sshwarts Exp $
+// $Id: data_xfer32.cc,v 1.64 2009-04-07 16:12:19 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -54,7 +54,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_ERXId(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV32_EdGdM(bxInstruction_c *i)
 {
-  Bit32u eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  Bit32u eaddr = (Bit32u) BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
   write_virtual_dword_32(i->seg(), eaddr, BX_READ_32BIT_REG(i->nnn()));
 }
@@ -66,7 +66,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_GdEdR(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV32_GdEdM(bxInstruction_c *i)
 {
-  Bit32u eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  Bit32u eaddr = (Bit32u) BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
   Bit32u val32 = read_virtual_dword_32(i->seg(), eaddr);
   BX_WRITE_32BIT_REGZ(i->nnn(), val32);

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.590 2009-04-06 18:44:28 sshwarts Exp $
+// $Id: cpu.h,v 1.591 2009-04-07 16:12:19 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2740,17 +2740,17 @@ public: // for now...
 // <TAG-CLASS-CPU-END>
 
 #if BX_DEBUGGER
-  BX_SMF void     dbg_take_irq(void);
-  BX_SMF void     dbg_force_interrupt(unsigned vector);
-  BX_SMF void     dbg_take_dma(void);
-  BX_SMF bx_bool  dbg_set_reg(unsigned reg, Bit32u val);
-  BX_SMF Bit32u   dbg_get_reg(unsigned reg);
-  BX_SMF bx_bool  dbg_get_sreg(bx_dbg_sreg_t *sreg, unsigned sreg_no);
-  BX_SMF void     dbg_get_tr(bx_dbg_sreg_t *sreg);
-  BX_SMF void     dbg_get_ldtr(bx_dbg_sreg_t *sreg);
-  BX_SMF void     dbg_get_gdtr(bx_dbg_global_sreg_t *sreg);
-  BX_SMF void     dbg_get_idtr(bx_dbg_global_sreg_t *sreg);
-  BX_SMF unsigned dbg_query_pending(void);
+  BX_SMF void       dbg_take_irq(void);
+  BX_SMF void       dbg_force_interrupt(unsigned vector);
+  BX_SMF void       dbg_take_dma(void);
+  BX_SMF bx_bool    dbg_set_reg(unsigned reg, Bit32u val);
+  BX_SMF bx_address dbg_get_reg(unsigned reg);
+  BX_SMF bx_bool    dbg_get_sreg(bx_dbg_sreg_t *sreg, unsigned sreg_no);
+  BX_SMF void       dbg_get_tr(bx_dbg_sreg_t *sreg);
+  BX_SMF void       dbg_get_ldtr(bx_dbg_sreg_t *sreg);
+  BX_SMF void       dbg_get_gdtr(bx_dbg_global_sreg_t *sreg);
+  BX_SMF void       dbg_get_idtr(bx_dbg_global_sreg_t *sreg);
+  BX_SMF unsigned   dbg_query_pending(void);
 #endif
 #if BX_DEBUGGER || BX_GDBSTUB
   BX_SMF bx_bool  dbg_instruction_epilog(void);
@@ -2868,85 +2868,85 @@ public: // for now...
 // write
 #define write_virtual_byte(seg, offset, data)     \
   (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) ? \
-      write_virtual_byte_64(seg, offset, data) :  \
-      write_virtual_byte_32(seg, offset, data)
+      write_virtual_byte_64(seg, (Bit64u) offset, data) : \
+      write_virtual_byte_32(seg, (Bit32u) offset, data)
 
 #define write_virtual_word(seg, offset, data)     \
   (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) ? \
-      write_virtual_word_64(seg, offset, data) :  \
-      write_virtual_word_32(seg, offset, data)
+      write_virtual_word_64(seg, (Bit64u) offset, data) : \
+      write_virtual_word_32(seg, (Bit32u) offset, data)
 
 #define write_virtual_dword(seg, offset, data)    \
   (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) ? \
-      write_virtual_dword_64(seg, offset, data) : \
-      write_virtual_dword_32(seg, offset, data)
+      write_virtual_dword_64(seg, (Bit64u) offset, data) : \
+      write_virtual_dword_32(seg, (Bit32u) offset, data)
 
 #define write_virtual_qword(seg, offset, data)    \
   (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) ? \
-      write_virtual_qword_64(seg, offset, data) : \
-      write_virtual_qword_32(seg, offset, data)
+      write_virtual_qword_64(seg, (Bit64u) offset, data) : \
+      write_virtual_qword_32(seg, (Bit32u) offset, data)
 
 #define write_virtual_dqword(seg, offset, data)   \
   (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) ? \
-      write_virtual_dqword_64(seg, offset, (const BxPackedXmmRegister*)(data)) : \
-      write_virtual_dqword_32(seg, offset, (const BxPackedXmmRegister*)(data))
+      write_virtual_dqword_64(seg, (Bit64u) offset, (const BxPackedXmmRegister*)(data)) : \
+      write_virtual_dqword_32(seg, (Bit32u) offset, (const BxPackedXmmRegister*)(data))
 
-#define write_virtual_dqword_aligned(seg, offset, data)   \
+#define write_virtual_dqword_aligned(seg, offset, data) \
   (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) ? \
-      write_virtual_dqword_aligned_64(seg, offset, (const BxPackedXmmRegister*)(data)) : \
-      write_virtual_dqword_aligned_32(seg, offset, (const BxPackedXmmRegister*)(data))
+      write_virtual_dqword_aligned_64(seg, (Bit64u) offset, (const BxPackedXmmRegister*)(data)) : \
+      write_virtual_dqword_aligned_32(seg, (Bit32u) offset, (const BxPackedXmmRegister*)(data))
 
 // read
-#define read_virtual_byte(seg, offset)            \
-  (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) ? \
-      read_virtual_byte_64(seg, offset) :         \
-      read_virtual_byte_32(seg, offset)
+#define read_virtual_byte(seg, offset)             \
+  (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) ?  \
+      read_virtual_byte_64(seg, (Bit64u) offset) : \
+      read_virtual_byte_32(seg, (Bit32u) offset)
 
-#define read_virtual_word(seg, offset)            \
-  (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) ? \
-      read_virtual_word_64(seg, offset) :         \
-      read_virtual_word_32(seg, offset)
+#define read_virtual_word(seg, offset)             \
+  (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) ?  \
+      read_virtual_word_64(seg, (Bit64u) offset) : \
+      read_virtual_word_32(seg, (Bit32u) offset)
 
-#define read_virtual_dword(seg, offset)           \
-  (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) ? \
-      read_virtual_dword_64(seg, offset) :        \
-      read_virtual_dword_32(seg, offset)
+#define read_virtual_dword(seg, offset)             \
+  (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) ?   \
+      read_virtual_dword_64(seg, (Bit64u) offset) : \
+      read_virtual_dword_32(seg, (Bit32u) offset)
 
-#define read_virtual_qword(seg, offset)           \
-  (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) ? \
-      read_virtual_qword_64(seg, offset) :        \
-      read_virtual_qword_32(seg, offset)
+#define read_virtual_qword(seg, offset)             \
+  (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) ?   \
+      read_virtual_qword_64(seg, (Bit64u) offset) : \
+      read_virtual_qword_32(seg, (Bit32u) offset)
 
 #define read_virtual_dqword(seg, offset, data)    \
   (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) ? \
-      read_virtual_dqword_64(seg, offset, (BxPackedXmmRegister*)(data)) : \
-      read_virtual_dqword_32(seg, offset, (BxPackedXmmRegister*)(data))
+      read_virtual_dqword_64(seg, (Bit64u) offset, (BxPackedXmmRegister*)(data)) : \
+      read_virtual_dqword_32(seg, (Bit32u) offset, (BxPackedXmmRegister*)(data))
 
-#define read_virtual_dqword_aligned(seg, offset, data)    \
+#define read_virtual_dqword_aligned(seg, offset, data) \
   (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) ? \
-      read_virtual_dqword_aligned_64(seg, offset, (BxPackedXmmRegister*)(data)) : \
-      read_virtual_dqword_aligned_32(seg, offset, (BxPackedXmmRegister*)(data))
+      read_virtual_dqword_aligned_64(seg, (Bit64u) offset, (BxPackedXmmRegister*)(data)) : \
+      read_virtual_dqword_aligned_32(seg, (Bit32u) offset, (BxPackedXmmRegister*)(data))
 
 // RMW
 #define read_RMW_virtual_byte(seg, offset)        \
   (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) ? \
-      read_RMW_virtual_byte_64(seg, offset) :     \
-      read_RMW_virtual_byte_32(seg, offset)
+      read_RMW_virtual_byte_64(seg, (Bit64u) offset) : \
+      read_RMW_virtual_byte_32(seg, (Bit32u) offset)
 
 #define read_RMW_virtual_word(seg, offset)        \
   (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) ? \
-      read_RMW_virtual_word_64(seg, offset) :     \
-      read_RMW_virtual_word_32(seg, offset)
+      read_RMW_virtual_word_64(seg, (Bit64u) offset) : \
+      read_RMW_virtual_word_32(seg, (Bit32u) offset)
 
 #define read_RMW_virtual_dword(seg, offset)       \
   (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) ? \
-      read_RMW_virtual_dword_64(seg, offset) :    \
-      read_RMW_virtual_dword_32(seg, offset)
+      read_RMW_virtual_dword_64(seg, (Bit64u) offset) : \
+      read_RMW_virtual_dword_32(seg, (Bit32u) offset)
 
 #define read_RMW_virtual_qword(seg, offset)       \
   (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) ? \
-      read_RMW_virtual_qword_64(seg, offset) :    \
-      read_RMW_virtual_qword_32(seg, offset)
+      read_RMW_virtual_qword_64(seg, (Bit64u) offset) : \
+      read_RMW_virtual_qword_32(seg, (Bit32u) offset)
 
 #else
 
