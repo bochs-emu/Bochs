@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32dialog.cc,v 1.87 2009-03-30 19:34:22 vruppert Exp $
+// $Id: win32dialog.cc,v 1.88 2009-04-07 20:18:14 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  The Bochs Project
@@ -471,9 +471,12 @@ static BOOL CALLBACK LogOptDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lP
             case IDAPPLY:
               ApplyLogOptions(hDlg, advanced);
               EnableWindow(GetDlgItem(hDlg, IDAPPLY), FALSE);
+              changed = FALSE;
               break;
             case IDOK:
-              ApplyLogOptions(hDlg, advanced);
+              if (changed) {
+                ApplyLogOptions(hDlg, advanced);
+              }
               EndDialog(hDlg, 1);
               break;
             case IDCANCEL:
