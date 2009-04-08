@@ -90,6 +90,13 @@ For any information on qemu, visit the website http://fabrice.bellard.free.fr/qe
 
 History
 -------
+vgabios-0.6c : Apr 08 2009
+  - Volker
+    . added DPMS support to cirrus vgabios (patch from Gleb Natapov)
+    . use VBE LFB address from PCI base address if present
+    . added support for a lot more non-standard VBE modes (e.g. widescreen modes)
+    . minor bugfixes
+
 vgabios-0.6b : May 30 2008
   - Volker
     . added PCI data structure for the Cirrus VGABIOS images
