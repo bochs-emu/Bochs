@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32.cc,v 1.130 2009-03-24 16:28:03 vruppert Exp $
+// $Id: win32.cc,v 1.131 2009-04-08 06:31:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -2233,7 +2233,7 @@ VOID CALLBACK MyTimer(HWND hwnd,UINT uMsg, UINT idEvent, DWORD dwTime)
 void alarm(int time)
 {
   UINT idTimer = 2;
-  SetTimer(stInfo.simWnd,idTimer,time*1000,MyTimer);
+  SetTimer(stInfo.simWnd,idTimer,time*1000,(TIMERPROC)MyTimer);
 }
 #endif
 #endif
