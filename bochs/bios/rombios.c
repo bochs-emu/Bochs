@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.228 2009-04-03 15:53:46 sshwarts Exp $
+// $Id: rombios.c,v 1.229 2009-04-09 20:34:09 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -937,7 +937,7 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.228 $ $Date: 2009-04-03 15:53:46 $";
+static char bios_cvs_version_string[] = "$Revision: 1.229 $ $Date: 2009-04-09 20:34:09 $";
 
 #define BIOS_COPYRIGHT_STRING "(c) 2002 MandrakeSoft S.A. Written by Kevin Lawton & the Bochs team."
 
@@ -10154,22 +10154,43 @@ no_serial:
   ret
 
 rom_checksum:
-  push ax
-  push bx
-  push cx
+  pusha
+  push ds
+
   xor  ax, ax
   xor  bx, bx
   xor  cx, cx
+  xor  dx, dx
+
   mov  ch, [2]
   shl  cx, #1
+
+  jnc checksum_loop
+  xchg dx, cx
+  dec  cx
+
 checksum_loop:
   add  al, [bx]
   inc  bx
   loop checksum_loop
+
+  test dx, dx
+  je checksum_out
+
+  add  al, [bx]
+  mov  cx, dx
+  mov  dx, ds
+  add  dh, #0x10
+  mov  ds, dx
+  xor  dx, dx
+  xor  bx, bx
+
+  jmp  checksum_loop
+
+checksum_out:
   and  al, #0xff
-  pop  cx
-  pop  bx
-  pop  ax
+  pop  ds
+  popa
   ret
 
 
