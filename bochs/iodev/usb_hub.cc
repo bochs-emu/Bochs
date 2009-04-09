@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_hub.cc,v 1.8 2009-04-06 10:38:57 vruppert Exp $
+// $Id: usb_hub.cc,v 1.9 2009-04-09 17:32:52 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Volker Ruppert
@@ -78,6 +78,8 @@
 #define PORT_C_RESET            20
 #define PORT_TEST               21
 #define PORT_INDICATOR          22
+
+static Bit32u serial_number = 1234;
 
 static const Bit8u bx_hub_dev_descriptor[] = {
   0x12,       /*  u8 bLength; */
@@ -176,6 +178,7 @@ usb_hub_device_c::usb_hub_device_c(Bit8u ports)
   d.connected = 1;
   memset((void*)&hub, 0, sizeof(hub));
   hub.n_ports = ports;
+  sprintf(hub.serial_number, "%d", serial_number++);
   for(i = 0; i < hub.n_ports; i++) {
     hub.usb_port[i].PortStatus = PORT_STAT_POWER;
     hub.usb_port[i].PortChange = 0;
@@ -316,7 +319,7 @@ int usb_hub_device_c::handle_control(int request, int value, int index, int leng
               break;
             case 1:
               /* serial number */
-              ret = set_usb_string(data, "1234");
+              ret = set_usb_string(data, hub.serial_number);
               break;
             case 2:
               /* product description */
