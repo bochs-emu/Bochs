@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pcivga.cc,v 1.25 2009-04-10 11:10:32 vruppert Exp $
+// $Id: pcivga.cc,v 1.26 2009-04-10 14:41:29 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002,2003 Mike Nordell
@@ -123,8 +123,8 @@ void bx_pcivga_c::register_state(void)
 
 void bx_pcivga_c::after_restore_state(void)
 {
-  if (((bx_vga_c*)bx_devices.pluginVgaDevice)->vbe_set_base_addr(
-        &BX_PCIVGA_THIS s.base_address, &BX_PCIVGA_THIS s.pci_conf[0x10])) {
+  if (DEV_vbe_set_base_addr(&BX_PCIVGA_THIS s.base_address,
+                            &BX_PCIVGA_THIS s.pci_conf[0x10])) {
     BX_INFO(("new base address: 0x%08x", BX_PCIVGA_THIS s.base_address));
   }
 }
@@ -227,8 +227,8 @@ void bx_pcivga_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len
       strcat(szTmp, szTmp2);
     }
     if (baseaddr_change) {
-      if (((bx_vga_c*)bx_devices.pluginVgaDevice)->vbe_set_base_addr(
-            &BX_PCIVGA_THIS s.base_address, &BX_PCIVGA_THIS s.pci_conf[0x10])) {
+      if (DEV_vbe_set_base_addr(&BX_PCIVGA_THIS s.base_address,
+                                &BX_PCIVGA_THIS s.pci_conf[0x10])) {
         BX_INFO(("new base address: 0x%08x", BX_PCIVGA_THIS s.base_address));
       }
     }

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.114 2009-03-03 20:34:50 vruppert Exp $
+// $Id: iodev.h,v 1.115 2009-04-10 14:41:29 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -259,6 +259,9 @@ public:
     return 0;
   }
   virtual void dump_status(void) {}
+  virtual bx_bool vbe_set_base_addr(Bit32u *addr, Bit8u *pci_conf) {
+    return 0;
+  }
 };
 
 class BOCHSAPI bx_pci_bridge_stub_c : public bx_devmodel_c, public bx_pci_device_stub_c {
