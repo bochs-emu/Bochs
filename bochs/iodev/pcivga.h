@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pcivga.h,v 1.9 2009-02-08 09:05:52 vruppert Exp $
+// $Id: pcivga.h,v 1.10 2009-04-10 11:10:32 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002,2003  Mike Nordell
@@ -34,12 +34,14 @@ public:
   virtual void init(void);
   virtual void reset(unsigned type);
   virtual void register_state(void);
+  virtual void after_restore_state(void);
 
   virtual Bit32u pci_read_handler(Bit8u address, unsigned io_len);
   virtual void   pci_write_handler(Bit8u address, Bit32u value, unsigned io_len);
 
 private:
   struct {
+    Bit32u base_address;
     Bit8u pci_conf[256];
   } s;
 };

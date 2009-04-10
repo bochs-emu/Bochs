@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.162 2009-02-08 09:05:52 vruppert Exp $
+// $Id: vga.cc,v 1.163 2009-04-10 11:10:32 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -291,10 +291,20 @@ void bx_vga_c::init(void)
       DEV_register_ioread_handler(this, vbe_read_handler, addr, "vga video", 7);
       DEV_register_iowrite_handler(this, vbe_write_handler, addr, "vga video", 7);
     }
-    DEV_register_memory_handlers(theVga, mem_read_handler, mem_write_handler,
-                                 VBE_DISPI_LFB_PHYSICAL_ADDRESS,
-                                 VBE_DISPI_LFB_PHYSICAL_ADDRESS + VBE_DISPI_TOTAL_VIDEO_MEMORY_BYTES - 1);
+#if BX_SUPPORT_PCI
+    if ((SIM->get_param_bool(BXPN_I440FX_SUPPORT)->get()) &&
+        (DEV_is_pci_device(BX_PLUGIN_PCIVGA))) {
+      BX_VGA_THIS vbe.base_address = 0x0000;
+    }
+    else
+#endif
+    {
+      BX_VGA_THIS vbe.base_address = VBE_DISPI_LFB_PHYSICAL_ADDRESS;
+      DEV_register_memory_handlers(theVga, mem_read_handler, mem_write_handler,
+                                   BX_VGA_THIS vbe.base_address,
+                                   BX_VGA_THIS vbe.base_address + VBE_DISPI_TOTAL_VIDEO_MEMORY_BYTES - 1);
 
+    }
     if (BX_VGA_THIS s.memory == NULL)
       BX_VGA_THIS s.memory = new Bit8u[VBE_DISPI_TOTAL_VIDEO_MEMORY_BYTES];
     memset(BX_VGA_THIS s.memory, 0, VBE_DISPI_TOTAL_VIDEO_MEMORY_BYTES);
@@ -2218,7 +2228,7 @@ Bit8u bx_vga_c::mem_read(bx_phy_address addr)
   {
     return vbe_mem_read(addr);
   }
-  else if (addr >= VBE_DISPI_LFB_PHYSICAL_ADDRESS)
+  else if ((BX_VGA_THIS vbe.base_address != 0) && (addr >= BX_VGA_THIS vbe.base_address))
   {
     return 0xff;
   }
@@ -2357,7 +2367,7 @@ void bx_vga_c::mem_write(bx_phy_address addr, Bit8u value)
     vbe_mem_write(addr, value);
     return;
   }
-  else if (addr >= VBE_DISPI_LFB_PHYSICAL_ADDRESS)
+  else if ((BX_VGA_THIS vbe.base_address != 0) && (addr >= BX_VGA_THIS vbe.base_address))
   {
     return;
   }
@@ -2934,15 +2944,26 @@ void bx_vga_c::redraw_area(unsigned x0, unsigned y0, unsigned width,
 
 
 #if BX_SUPPORT_VBE
+bx_bool bx_vga_c::vbe_set_base_addr(Bit32u *addr, Bit8u *pci_conf)
+{
+  if (DEV_pci_set_base_mem(BX_VGA_THIS_PTR, mem_read_handler,
+                           mem_write_handler,
+                           addr, pci_conf, VBE_DISPI_TOTAL_VIDEO_MEMORY_BYTES)) {
+    BX_VGA_THIS vbe.base_address = *addr;
+    return 1;
+  }
+  return 0;
+}
+
   Bit8u  BX_CPP_AttrRegparmN(1)
 bx_vga_c::vbe_mem_read(bx_phy_address addr)
 {
   Bit32u offset;
 
-  if (addr >= VBE_DISPI_LFB_PHYSICAL_ADDRESS)
+  if (addr >= BX_VGA_THIS vbe.base_address)
   {
     // LFB read
-    offset = addr - VBE_DISPI_LFB_PHYSICAL_ADDRESS;
+    offset = addr - BX_VGA_THIS vbe.base_address;
   }
   else
   {
@@ -2965,10 +2986,10 @@ bx_vga_c::vbe_mem_write(bx_phy_address addr, Bit8u value)
 
   if (BX_VGA_THIS vbe.lfb_enabled)
   {
-    if (addr >= VBE_DISPI_LFB_PHYSICAL_ADDRESS)
+    if (addr >= BX_VGA_THIS vbe.base_address)
     {
       // LFB write
-      offset = addr - VBE_DISPI_LFB_PHYSICAL_ADDRESS;
+      offset = addr - BX_VGA_THIS vbe.base_address;
     }
     else
     {
@@ -2978,7 +2999,7 @@ bx_vga_c::vbe_mem_write(bx_phy_address addr, Bit8u value)
   }
   else
   {
-    if (addr < VBE_DISPI_LFB_PHYSICAL_ADDRESS)
+    if (addr < BX_VGA_THIS vbe.base_address)
     {
       // banked mode write
       offset = (BX_VGA_THIS vbe.bank*65536) + (addr - 0xA0000);

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.h,v 1.69 2009-02-08 09:05:52 vruppert Exp $
+// $Id: vga.h,v 1.70 2009-04-10 11:10:32 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -121,9 +121,11 @@
 #if BX_USE_VGA_SMF
 #  define BX_VGA_SMF  static
 #  define BX_VGA_THIS theVga->
+#  define BX_VGA_THIS_PTR theVga
 #else
 #  define BX_VGA_SMF
 #  define BX_VGA_THIS this->
+#  define BX_VGA_THIS_PTR this
 #endif
 
 class bx_vga_c : public bx_vga_stub_c {
@@ -142,8 +144,9 @@ public:
   virtual void   after_restore_state(void);
 
 #if BX_SUPPORT_VBE
-  BX_VGA_SMF Bit8u  vbe_mem_read(bx_phy_address addr) BX_CPP_AttrRegparmN(1);
-  BX_VGA_SMF void   vbe_mem_write(bx_phy_address addr, Bit8u value) BX_CPP_AttrRegparmN(2);
+  BX_VGA_SMF bx_bool vbe_set_base_addr(Bit32u *addr, Bit8u *pci_conf);
+  BX_VGA_SMF Bit8u   vbe_mem_read(bx_phy_address addr) BX_CPP_AttrRegparmN(1);
+  BX_VGA_SMF void    vbe_mem_write(bx_phy_address addr, Bit8u value) BX_CPP_AttrRegparmN(2);
 #endif
 
   virtual void   redraw_area(unsigned x0, unsigned y0,
@@ -306,6 +309,7 @@ protected:
 #if BX_SUPPORT_VBE
   struct {
     Bit16u  cur_dispi;
+    Bit32u  base_address;
     Bit16u  xres;
     Bit16u  yres;
     Bit16u  bpp;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: devices.cc,v 1.144 2009-03-03 20:34:50 vruppert Exp $
+// $Id: devices.cc,v 1.145 2009-04-10 11:10:32 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -110,7 +110,7 @@ void bx_devices_c::init(BX_MEM_C *newmem)
   const char *plugname;
 #endif
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.144 2009-03-03 20:34:50 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.145 2009-04-10 11:10:32 vruppert Exp $"));
   mem = newmem;
 
   /* set builtin default handlers, will be overwritten by the real default handler */
@@ -247,7 +247,7 @@ void bx_devices_c::init(BX_MEM_C *newmem)
 
 #if BX_SUPPORT_PCI
   if (SIM->get_param_bool(BXPN_I440FX_SUPPORT)->get()) {
-#if BX_SUPPORT_PCIVGA
+#if BX_SUPPORT_PCIVGA && BX_SUPPORT_VBE
     if ((DEV_is_pci_device("pcivga")) &&
         (!strcmp(SIM->get_param_string(BXPN_VGA_EXTENSION)->getptr(), "vbe"))) {
       PLUG_load_plugin(pcivga, PLUGTYPE_OPTIONAL);
