@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cdrom.cc,v 1.96 2009-03-09 12:18:40 vruppert Exp $
+// $Id: cdrom.cc,v 1.97 2009-04-10 08:15:25 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -432,7 +432,7 @@ bool ReadCDSector(unsigned int hid, unsigned int tid, unsigned int lun, unsigned
   DWORD dwStatus;
 
   hEventSRB = CreateEvent(NULL, TRUE, FALSE, NULL);
-        
+
   memset(&srb,0,sizeof(SRB_ExecSCSICmd));
   srb.SRB_Cmd        = SC_EXEC_SCSI_CMD;
   srb.SRB_HaId       = hid;
@@ -469,7 +469,7 @@ int GetCDCapacity(unsigned int hid, unsigned int tid, unsigned int lun)
   unsigned char buf[8];
 
   hEventSRB = CreateEvent(NULL, TRUE, FALSE, NULL);
-        
+
   memset(&buf, 0, sizeof(buf));
   memset(&srb,0,sizeof(SRB_ExecSCSICmd));
   srb.SRB_Cmd        = SC_EXEC_SCSI_CMD;
@@ -501,9 +501,14 @@ int GetCDCapacity(unsigned int hid, unsigned int tid, unsigned int lun)
 
 #endif
 
+static unsigned int cdrom_count = 0;
+
 cdrom_interface::cdrom_interface(const char *dev)
 {
-  put("CD");
+  char prefix[6];
+
+  sprintf(prefix, "CD%d", ++cdrom_count);
+  put(prefix);
   fd = -1; // File descriptor not yet allocated
 
   if (dev == NULL) {
@@ -520,9 +525,9 @@ cdrom_interface::cdrom_interface(const char *dev)
 #endif
 }
 
-void
-cdrom_interface::init(void) {
-  BX_DEBUG(("Init $Id: cdrom.cc,v 1.96 2009-03-09 12:18:40 vruppert Exp $"));
+void cdrom_interface::init(void)
+{
+  BX_DEBUG(("Init $Id: cdrom.cc,v 1.97 2009-04-10 08:15:25 vruppert Exp $"));
   BX_INFO(("file = '%s'",path));
 }
 
@@ -538,8 +543,7 @@ cdrom_interface::~cdrom_interface(void)
   BX_DEBUG(("Exit"));
 }
 
-  bx_bool
-cdrom_interface::insert_cdrom(const char *dev)
+bx_bool cdrom_interface::insert_cdrom(const char *dev)
 {
   unsigned char buffer[BX_CD_FRAMESIZE];
 #ifndef WIN32
@@ -687,7 +691,7 @@ cdrom_interface::insert_cdrom(const char *dev)
     }
     if (S_ISREG (stat_buf.st_mode)) {
       using_file = 1;
-      BX_INFO (("Opening image file %s as a cd.", path));
+      BX_INFO (("Opening image file as a cd."));
     } else {
       using_file = 0;
       BX_INFO (("Using direct access for cdrom."));
@@ -699,8 +703,7 @@ cdrom_interface::insert_cdrom(const char *dev)
   return read_block(buffer, 0, 2048);
 }
 
-  bx_bool
-cdrom_interface::start_cdrom()
+bx_bool cdrom_interface::start_cdrom()
 {
   // Spin up the cdrom drive.
 
@@ -717,8 +720,7 @@ cdrom_interface::start_cdrom()
   return 0;
 }
 
-  void
-cdrom_interface::eject_cdrom()
+void cdrom_interface::eject_cdrom()
 {
   // Logically eject the CD.  I suppose we could stick in
   // some ioctl() calls to really eject the CD as well.
@@ -753,8 +755,7 @@ cdrom_interface::eject_cdrom()
 }
 
 
-  bx_bool
-cdrom_interface::read_toc(Bit8u* buf, int* length, bx_bool msf, int start_track, int format)
+bx_bool cdrom_interface::read_toc(Bit8u* buf, int* length, bx_bool msf, int start_track, int format)
 {
   unsigned i;
   // Read CD TOC. Returns 0 if start track is out of bounds.
@@ -1390,8 +1391,7 @@ Bit32u cdrom_interface::capacity()
 #endif
 }
 
-  bx_bool BX_CPP_AttrRegparmN(3)
-cdrom_interface::read_block(Bit8u* buf, int lba, int blocksize)
+bx_bool BX_CPP_AttrRegparmN(3) cdrom_interface::read_block(Bit8u* buf, int lba, int blocksize)
 {
   // Read a single block from the CD
 

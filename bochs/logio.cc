@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logio.cc,v 1.72 2009-02-20 17:05:03 sshwarts Exp $
+// $Id: logio.cc,v 1.73 2009-04-10 08:15:25 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -326,16 +326,11 @@ void logfunctions::put(const char *p)
   }
 
   size_t len=strlen(p);
+  if (len > (strlen(tmpbuf) - 2)) {
+    len = strlen(tmpbuf) - 2;
+  }
   for(size_t i=1;i <= len;i++) {
     tmpbuf[i]=p[i-1];
-  }
-
-  switch(len) {
-  case  1: tmpbuf[2]=' ';
-  case  2: tmpbuf[3]=' ';
-  case  3: tmpbuf[4]=' ';
-  case  4: tmpbuf[5]=' ';
-  default: tmpbuf[6]=']'; tmpbuf[7]='\0'; break;
   }
 
   prefix = tmpbuf;

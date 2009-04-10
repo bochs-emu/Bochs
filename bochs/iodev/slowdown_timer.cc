@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: slowdown_timer.cc,v 1.33 2009-02-08 09:05:52 vruppert Exp $
+// $Id: slowdown_timer.cc,v 1.34 2009-04-10 08:15:25 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -55,7 +55,7 @@ bx_slowdown_timer_c bx_slowdown_timer;
 
 bx_slowdown_timer_c::bx_slowdown_timer_c()
 {
-  put("STIMER");
+  put("STIME");
 
   s.start_time=0;
   s.start_emulated_time=0;

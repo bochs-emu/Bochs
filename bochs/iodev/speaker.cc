@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: speaker.cc,v 1.14 2009-02-08 09:05:52 vruppert Exp $
+// $Id: speaker.cc,v 1.15 2009-04-10 08:15:25 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright 2003 by David N. Welton <davidw@dedasys.com>.
@@ -54,7 +54,7 @@ void libspeaker_LTX_plugin_fini(void)
 
 bx_speaker_c::bx_speaker_c()
 {
-  put("SPEAKER");
+  put("SPEAK");
 
   beep_frequency = 0.0; // Off
 

@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: virt_timer.cc,v 1.41 2009-02-08 09:05:52 vruppert Exp $
+// $Id: virt_timer.cc,v 1.42 2009-04-10 08:15:25 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -133,7 +133,7 @@ bx_virt_timer_c bx_virt_timer;
 
 bx_virt_timer_c::bx_virt_timer_c()
 {
-  put("VTIMER");
+  put("VTIME");
 
   setup();
 }
