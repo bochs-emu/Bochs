@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_common.cc,v 1.10 2009-04-03 16:42:56 vruppert Exp $
+// $Id: usb_common.cc,v 1.11 2009-04-10 20:26:14 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Benjamin D Lunt (fys at frontiernet net)
@@ -180,6 +180,7 @@ int usb_device_c::handle_packet(USBPacket *p)
         return USB_RET_NODEV;
       if (len != 8)
         goto fail;
+      d.stall = 0;
       memcpy(d.setup_buf, data, 8);
       d.setup_len = (d.setup_buf[7] << 8) | d.setup_buf[6];
       d.setup_index = 0;
@@ -203,6 +204,7 @@ int usb_device_c::handle_packet(USBPacket *p)
     case USB_TOKEN_IN:
       if (d.state < USB_STATE_DEFAULT || p->devaddr != d.addr)
         return USB_RET_NODEV;
+      if (d.stall) goto fail;
       switch(p->devep) {
         case 0:
           switch(d.setup_state) {
@@ -246,6 +248,7 @@ int usb_device_c::handle_packet(USBPacket *p)
     case USB_TOKEN_OUT:
         if (d.state < USB_STATE_DEFAULT || p->devaddr != d.addr)
           return USB_RET_NODEV;
+        if (d.stall) goto fail;
         switch(p->devep) {
         case 0:
           switch(d.setup_state) {
@@ -286,6 +289,7 @@ int usb_device_c::handle_packet(USBPacket *p)
       break;
     default:
     fail:
+      d.stall = 1;
       ret = USB_RET_STALL;
       break;
   }

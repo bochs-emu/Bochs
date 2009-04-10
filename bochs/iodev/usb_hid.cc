@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_hid.cc,v 1.18 2009-04-10 07:12:25 vruppert Exp $
+// $Id: usb_hid.cc,v 1.19 2009-04-10 20:26:14 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Volker Ruppert
@@ -651,6 +651,7 @@ int usb_hid_device_c::handle_control(int request, int value, int index, int leng
     default:
       BX_ERROR(("USB HID handle_control: unknown request 0x%04x", request));
     fail:
+      d.stall = 1;
       ret = USB_RET_STALL;
       break;
   }
@@ -686,6 +687,7 @@ int usb_hid_device_c::handle_data(USBPacket *p)
       BX_ERROR(("USB HID handle_data: unexpected pid TOKEN_OUT"));
     default:
     fail:
+      d.stall = 1;
       ret = USB_RET_STALL;
       break;
   }

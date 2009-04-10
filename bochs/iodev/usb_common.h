@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_common.h,v 1.9 2009-04-10 07:12:25 vruppert Exp $
+// $Id: usb_common.h,v 1.10 2009-04-10 20:26:14 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Benjamin D Lunt (fys at frontiernet net)
@@ -166,6 +166,7 @@ protected:
     int setup_state;
     int setup_len;
     int setup_index;
+    bx_bool stall;
   } d;
 
   void usb_dump_packet(Bit8u *data, unsigned size);
