@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.229 2009-04-09 20:34:09 sshwarts Exp $
+// $Id: rombios.c,v 1.230 2009-04-10 16:36:34 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -937,7 +937,7 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.229 $ $Date: 2009-04-09 20:34:09 $";
+static char bios_cvs_version_string[] = "$Revision: 1.230 $ $Date: 2009-04-10 16:36:34 $";
 
 #define BIOS_COPYRIGHT_STRING "(c) 2002 MandrakeSoft S.A. Written by Kevin Lawton & the Bochs team."
 
@@ -3738,21 +3738,20 @@ cdrom_boot()
 // ---------------------------------------------------------------------------
 #endif // BX_ELTORITO_BOOT
 
-  void
-int14_function(regs, ds, iret_addr)
+void int14_function(regs, ds, iret_addr)
   pusha_regs_t regs; // regs pushed from PUSHA instruction
   Bit16u ds; // previous DS:, DS set to 0x0000 by asm wrapper
   iret_addr_t  iret_addr; // CS,IP,Flags pushed from original INT call
 {
   Bit16u addr,timer,val16;
-  Bit8u timeout;
+  Bit8u counter;
 
   ASM_START
   sti
   ASM_END
 
   addr = read_word(0x0040, (regs.u.r16.dx << 1));
-  timeout = read_byte(0x0040, 0x007C + regs.u.r16.dx);
+  counter = read_byte(0x0040, 0x007C + regs.u.r16.dx);
   if ((regs.u.r16.dx < 4) && (addr > 0)) {
     switch (regs.u.r8.ah) {
       case 0:
@@ -3772,32 +3771,35 @@ int14_function(regs, ds, iret_addr)
         break;
       case 1:
         timer = read_word(0x0040, 0x006C);
-        while (((inb(addr+5) & 0x60) != 0x60) && (timeout)) {
+        while (((inb(addr+5) & 0x60) != 0x60) && (counter)) {
           val16 = read_word(0x0040, 0x006C);
           if (val16 != timer) {
             timer = val16;
-            timeout--;
+            counter--;
           }
         }
-        if (timeout) outb(addr, regs.u.r8.al);
-        regs.u.r8.ah = inb(addr+5);
-        if (!timeout) regs.u.r8.ah |= 0x80;
+        if (counter > 0) {
+          outb(addr, regs.u.r8.al);
+          regs.u.r8.ah = inb(addr+5);
+        } else {
+          regs.u.r8.ah = 0x80;
+        }
         ClearCF(iret_addr.flags);
         break;
       case 2:
         timer = read_word(0x0040, 0x006C);
-        while (((inb(addr+5) & 0x01) == 0) && (timeout)) {
+        while (((inb(addr+5) & 0x01) == 0) && (counter)) {
           val16 = read_word(0x0040, 0x006C);
           if (val16 != timer) {
             timer = val16;
-            timeout--;
+            counter--;
           }
         }
-        if (timeout) {
-          regs.u.r8.ah = 0;
+        if (counter > 0) {
+          regs.u.r8.ah = inb(addr+5);
           regs.u.r8.al = inb(addr);
         } else {
-          regs.u.r8.ah = inb(addr+5);
+          regs.u.r8.ah = 0x80;
         }
         ClearCF(iret_addr.flags);
         break;
@@ -9787,7 +9789,7 @@ pcibios_init_sel_reg:
 pcibios_init_iomem_bases:
   push bp
   mov  bp, sp
-  mov  eax, #0xe0000000 ;; base for memory init
+  mov  eax, #0xc0000000 ;; base for memory init
   push eax
   mov  ax, #0xc000 ;; base for i/o init
   push ax

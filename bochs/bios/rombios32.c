@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios32.c,v 1.46 2009-02-20 15:36:29 sshwarts Exp $
+// $Id: rombios32.c,v 1.47 2009-04-10 16:36:34 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  32 bit Bochs BIOS init code
@@ -149,7 +149,7 @@ static inline uint8_t readb(const void *addr)
     return *(volatile const uint8_t *)addr;
 }
 
-static inline void putc(int c)
+static inline void putch(int c)
 {
     outb(INFO_PORT, c);
 }
@@ -396,7 +396,7 @@ void bios_printf(int flags, const char *fmt, ...)
     vsnprintf(buf, sizeof(buf), fmt, ap);
     s = buf;
     while (*s)
-        putc(*s++);
+        putch(*s++);
     va_end(ap);
 }
 
@@ -902,12 +902,6 @@ static void pci_bios_init_device(PCIDevice *d)
             pci_set_io_region_addr(d, 3, 0x374);
         }
         break;
-    case 0x0300: /* Display controller - VGA compatible controller */
-        if (vendor_id != 0x1234)
-            goto default_map;
-        /* VGA: map frame buffer to default Bochs VBE address */
-        pci_set_io_region_addr(d, 0, 0xE0000000);
-        break;
     case 0x0800: /* Generic system peripheral - PIC */
         if (vendor_id == PCI_VENDOR_ID_IBM) {
             /* IBM */
@@ -993,7 +987,7 @@ void pci_for_each_device(void (*init_func)(PCIDevice *d))
 void pci_bios_init(void)
 {
     pci_bios_io_addr = 0xc000;
-    pci_bios_mem_addr = 0xf0000000;
+    pci_bios_mem_addr = 0xc0000000;
     pci_bios_bigmem_addr = ram_size;
     if (pci_bios_bigmem_addr < 0x90000000)
         pci_bios_bigmem_addr = 0x90000000;
