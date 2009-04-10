@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_hub.cc,v 1.9 2009-04-09 17:32:52 vruppert Exp $
+// $Id: usb_hub.cc,v 1.10 2009-04-10 07:12:25 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Volker Ruppert
@@ -259,10 +259,14 @@ int usb_hub_device_c::handle_control(int request, int value, int index, int leng
 
   switch(request) {
     case DeviceRequest | USB_REQ_GET_STATUS:
-      data[0] = (1 << USB_DEVICE_SELF_POWERED) |
-                (d.remote_wakeup << USB_DEVICE_REMOTE_WAKEUP);
-      data[1] = 0x00;
-      ret = 2;
+      if (d.state == USB_STATE_DEFAULT)
+        goto fail;
+      else {
+        data[0] = (1 << USB_DEVICE_SELF_POWERED) |
+                  (d.remote_wakeup << USB_DEVICE_REMOTE_WAKEUP);
+        data[1] = 0x00;
+        ret = 2;
+      }
       break;
     case DeviceOutRequest | USB_REQ_CLEAR_FEATURE:
       if (value == USB_DEVICE_REMOTE_WAKEUP) {
@@ -287,6 +291,7 @@ int usb_hub_device_c::handle_control(int request, int value, int index, int leng
       ret = 0;
       break;
     case DeviceOutRequest | USB_REQ_SET_ADDRESS:
+      d.state = USB_STATE_ADDRESS;
       d.addr = value;
       ret = 0;
       break;
@@ -342,6 +347,7 @@ int usb_hub_device_c::handle_control(int request, int value, int index, int leng
       ret = 1;
       break;
     case DeviceOutRequest | USB_REQ_SET_CONFIGURATION:
+      d.state = USB_STATE_CONFIGURED;
       ret = 0;
       break;
     case DeviceRequest | USB_REQ_GET_INTERFACE:
@@ -353,11 +359,14 @@ int usb_hub_device_c::handle_control(int request, int value, int index, int leng
       break;
       /* usb specific requests */
     case GetHubStatus:
-      data[0] = 0;
-      data[1] = 0;
-      data[2] = 0;
-      data[3] = 0;
-      ret = 4;
+      if (d.state == USB_STATE_CONFIGURED) {
+        data[0] = 0;
+        data[1] = 0;
+        data[2] = 0;
+        data[3] = 0;
+        ret = 4;
+      } else
+        goto fail;
       break;
     case GetPortStatus:
       n = index - 1;
@@ -524,7 +533,7 @@ int usb_hub_device_c::broadcast_packet(USBPacket *p)
 
 int usb_hub_device_c::handle_packet(USBPacket *p)
 {
-  if ((d.state == USB_STATE_DEFAULT) &&
+  if ((d.state >= USB_STATE_DEFAULT) &&
       (d.addr != 0) &&
       (p->devaddr != d.addr) &&
         ((p->pid == USB_TOKEN_SETUP) ||

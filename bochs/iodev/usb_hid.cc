@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_hid.cc,v 1.17 2009-03-06 23:48:25 vruppert Exp $
+// $Id: usb_hid.cc,v 1.18 2009-04-10 07:12:25 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Volker Ruppert
@@ -126,6 +126,17 @@ static const Bit8u bx_mouse_config_descriptor[] = {
   0x0a,       /*  u8  ep_bInterval; (255ms -- usb 2.0 spec) */
 };
 
+static const Bit8u bx_mouse_hid_descriptor[] = {
+  /* HID descriptor */
+  0x09,        /*  u8  bLength; */
+  0x21,        /*  u8 bDescriptorType; */
+  0x00, 0x01,  /*  u16 HID_class */
+  0x00,        /*  u8 country_code */
+  0x01,        /*  u8 num_descriptors */
+  0x22,        /*  u8 type; Report */
+  50, 0        /*  u16 len */
+};
+
 static const Bit8u bx_mouse_hid_report_descriptor[] = {
   0x05, 0x01, 0x09, 0x02, 0xA1, 0x01, 0x09, 0x01,
   0xA1, 0x00, 0x05, 0x09, 0x19, 0x01, 0x29, 0x03,
@@ -178,6 +189,17 @@ static const Bit8u bx_tablet_config_descriptor[] = {
   0x03,       /*  u8  ep_bmAttributes; Interrupt */
   0x08, 0x00, /*  u16 ep_wMaxPacketSize; */
   0x0a,       /*  u8  ep_bInterval; (255ms -- usb 2.0 spec) */
+};
+
+static const Bit8u bx_tablet_hid_descriptor[] = {
+  /* HID descriptor */
+  0x09,        /*  u8  bLength; */
+  0x21,        /*  u8 bDescriptorType; */
+  0x00, 0x01,  /*  u16 HID_class */
+  0x00,        /*  u8 country_code */
+  0x01,        /*  u8 num_descriptors */
+  0x22,        /*  u8 type; Report */
+  74, 0,       /*  u16 len */
 };
 
 static const Bit8u bx_tablet_hid_report_descriptor[] = {
@@ -312,6 +334,17 @@ static const Bit8u bx_keypad_config_descriptor[] = {
   0x0a,       /*  u8  ep_bInterval; (255ms -- usb 2.0 spec) */
 };
 
+static const Bit8u bx_keypad_hid_descriptor[] = {
+  /* HID descriptor */
+  0x09,        /*  u8  bLength; */
+  0x21,        /*  u8 bDescriptorType; */
+  0x00, 0x01,  /*  u16 HID_class */
+  0x00,        /*  u8 country_code */
+  0x01,        /*  u8 num_descriptors */
+  0x22,        /*  u8 type; Report */
+  50, 0,       /*  u16 len */
+};
+
 static const Bit8u bx_keypad_hid_report_descriptor1[] = {
   0x05, 0x01, 0x09, 0x06, 0xA1, 0x01, 0x05, 0x07,
   0x19, 0xE0, 0x29, 0xE7, 0x15, 0x00, 0x25, 0x01,
@@ -422,10 +455,14 @@ int usb_hid_device_c::handle_control(int request, int value, int index, int leng
 
   switch(request) {
     case DeviceRequest | USB_REQ_GET_STATUS:
-      data[0] = (1 << USB_DEVICE_SELF_POWERED) |
-        (d.remote_wakeup << USB_DEVICE_REMOTE_WAKEUP);
-      data[1] = 0x00;
-      ret = 2;
+      if (d.state == USB_STATE_DEFAULT)
+        goto fail;
+      else {
+        data[0] = (1 << USB_DEVICE_SELF_POWERED) |
+          (d.remote_wakeup << USB_DEVICE_REMOTE_WAKEUP);
+        data[1] = 0x00;
+        ret = 2;
+      }
       break;
     case DeviceOutRequest | USB_REQ_CLEAR_FEATURE:
       if (value == USB_DEVICE_REMOTE_WAKEUP) {
@@ -444,6 +481,7 @@ int usb_hid_device_c::handle_control(int request, int value, int index, int leng
       ret = 0;
       break;
     case DeviceOutRequest | USB_REQ_SET_ADDRESS:
+      d.state = USB_STATE_ADDRESS;
       d.addr = value;
       ret = 0;
       break;
@@ -527,6 +565,7 @@ int usb_hid_device_c::handle_control(int request, int value, int index, int leng
       ret = 1;
       break;
     case DeviceOutRequest | USB_REQ_SET_CONFIGURATION:
+      d.state = USB_STATE_CONFIGURED;
       ret = 0;
       break;
     case DeviceRequest | USB_REQ_GET_INTERFACE:
@@ -539,6 +578,23 @@ int usb_hid_device_c::handle_control(int request, int value, int index, int leng
       /* hid specific requests */
     case InterfaceRequest | USB_REQ_GET_DESCRIPTOR:
       switch(value >> 8) {
+        case 0x21:
+          if (d.type == USB_DEV_TYPE_MOUSE) {
+            memcpy(data, bx_mouse_hid_descriptor,
+                   sizeof(bx_mouse_hid_descriptor));
+            ret = sizeof(bx_mouse_hid_descriptor);
+          } else if (d.type == USB_DEV_TYPE_TABLET) {
+            memcpy(data, bx_tablet_hid_descriptor,
+                   sizeof(bx_tablet_hid_descriptor));
+            ret = sizeof(bx_tablet_hid_descriptor);
+          } else if (d.type == USB_DEV_TYPE_KEYPAD) {
+            memcpy(data, bx_keypad_hid_descriptor,
+                   sizeof(bx_keypad_hid_descriptor));
+            ret = sizeof(bx_keypad_hid_descriptor);
+          } else {
+            goto fail;
+          }
+          break;
         case 0x22:
           if (d.type == USB_DEV_TYPE_MOUSE) {
             memcpy(data, bx_mouse_hid_report_descriptor,
@@ -562,6 +618,9 @@ int usb_hid_device_c::handle_control(int request, int value, int index, int leng
             goto fail;
           }
           break;
+        case 0x23:
+          BX_ERROR(("USB HID handle_control: Host requested the HID Physical Descriptor"));
+          goto fail;
         default:
           BX_ERROR(("USB HID handle_control: unknown HID descriptor 0x%02x", value >> 8));
           goto fail;
