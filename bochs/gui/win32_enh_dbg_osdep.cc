@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32_enh_dbg_osdep.cc,v 1.13 2009-04-07 16:12:19 sshwarts Exp $
+// $Id: win32_enh_dbg_osdep.cc,v 1.14 2009-04-11 13:46:54 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  BOCHS ENHANCED DEBUGGER Ver 1.2
@@ -840,7 +840,7 @@ void RedrawColumns(int listnum)
     }
     else
     {
-        char tmpc[20];
+        char tmpc[32];
         int i = 17;
         // MemDump resizes/uses ALL columns -- there ARE no unused ones
         if (DViewMode != VIEW_MEMDUMP && PrevDV != DViewMode)
