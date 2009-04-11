@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32dialog.cc,v 1.88 2009-04-07 20:18:14 vruppert Exp $
+// $Id: win32dialog.cc,v 1.89 2009-04-11 13:53:14 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  The Bochs Project
@@ -372,15 +372,13 @@ void InitLogOptionsDialog(HWND hDlg)
   int idx, mod;
   char prefix[8];
 
-  idx = 0;
   for (mod=0; mod<SIM->get_n_log_modules(); mod++) {
     if (strcmp(SIM->get_prefix(mod), "[     ]")) {
       lstrcpyn(prefix, SIM->get_prefix(mod), sizeof(prefix));
       lstrcpy(prefix, prefix+1);
       prefix[5] = 0;
-      SendMessage(GetDlgItem(hDlg, IDDEVLIST), LB_ADDSTRING, 0, (LPARAM)prefix);
+      idx = SendMessage(GetDlgItem(hDlg, IDDEVLIST), LB_ADDSTRING, 0, (LPARAM)prefix);
       SendMessage(GetDlgItem(hDlg, IDDEVLIST), LB_SETITEMDATA, idx, mod);
-      idx++;
     }
   }
   SetStandardLogOptions(hDlg);
