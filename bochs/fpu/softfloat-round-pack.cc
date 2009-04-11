@@ -203,6 +203,7 @@ float32 roundAndPackFloat32(int zSign, Bit16s zExp, Bit32u zSig, float_status_t 
                   && ((Bit32s) (zSig + roundIncrement) < 0)))
         {
             float_raise(status, float_flag_overflow | float_flag_inexact);
+            if (roundIncrement != 0) set_float_rounding_up(status);
             return packFloat32(zSign, 0xFF, 0) - (roundIncrement == 0);
         }
         if (zExp < 0) {
@@ -302,6 +303,7 @@ float64 roundAndPackFloat64(int zSign, Bit16s zExp, Bit64u zSig, float_status_t 
                   && ((Bit64s) (zSig + roundIncrement) < 0)))
         {
             float_raise(status, float_flag_overflow | float_flag_inexact);
+            if (roundIncrement != 0) set_float_rounding_up(status);
             return packFloat64(zSign, 0x7FF, 0) - (roundIncrement == 0);
         }
         if (zExp < 0) {

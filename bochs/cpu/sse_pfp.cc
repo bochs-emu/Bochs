@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_pfp.cc,v 1.53 2009-03-10 21:43:11 sshwarts Exp $
+// $Id: sse_pfp.cc,v 1.54 2009-04-11 17:00:28 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -32,6 +32,7 @@
 
 void BX_CPU_C::check_exceptionsSSE(int exceptions_flags)
 {
+  exceptions_flags &= 0x3F;
   int unmasked = ~(MXCSR.get_exceptions_masks()) & exceptions_flags;
   MXCSR.set_exceptions(exceptions_flags);
 
