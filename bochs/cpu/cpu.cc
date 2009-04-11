@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.286 2009-04-11 13:58:34 sshwarts Exp $
+// $Id: cpu.cc,v 1.287 2009-04-11 14:02:13 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -954,13 +954,15 @@ bx_bool BX_CPU_C::dbg_instruction_epilog(void)
     if (bx_guard.guard_for & BX_DBG_GUARD_IADDR_PHY) {
       bx_phy_address phy;
       bx_bool valid = dbg_xlate_linear2phy(BX_CPU_THIS_PTR guard_found.laddr, &phy);
-      for (unsigned n=0; n<bx_guard.iaddr.num_physical; n++) {
-        if (bx_guard.iaddr.phy[n].enabled && (bx_guard.iaddr.phy[n].addr == phy))
-        {
-          BX_CPU_THIS_PTR guard_found.guard_found = BX_DBG_GUARD_IADDR_PHY;
-          BX_CPU_THIS_PTR guard_found.iaddr_index = n;
-          BX_CPU_THIS_PTR guard_found.time_tick = tt;
-          return(1); // on a breakpoint
+      if (valid) {
+        for (unsigned n=0; n<bx_guard.iaddr.num_physical; n++) {
+          if (bx_guard.iaddr.phy[n].enabled && (bx_guard.iaddr.phy[n].addr == phy))
+          {
+            BX_CPU_THIS_PTR guard_found.guard_found = BX_DBG_GUARD_IADDR_PHY;
+            BX_CPU_THIS_PTR guard_found.iaddr_index = n;
+            BX_CPU_THIS_PTR guard_found.time_tick = tt;
+            return(1); // on a breakpoint
+          }
         }
       }
     }
