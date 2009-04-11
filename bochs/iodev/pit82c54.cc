@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pit82c54.cc,v 1.36 2009-02-08 09:05:52 vruppert Exp $
+// $Id: pit82c54.cc,v 1.37 2009-04-11 07:04:52 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  The Bochs Project
@@ -121,15 +121,13 @@ void pit_82C54::set_OUT(counter_type &thisctr, bx_bool data)
   }
 }
 
-  void BX_CPP_AttrRegparmN(2)
-pit_82C54::set_count (counter_type &thisctr, Bit32u data)
+void BX_CPP_AttrRegparmN(2) pit_82C54::set_count(counter_type &thisctr, Bit32u data)
 {
   thisctr.count=data & 0xFFFF;
   set_binary_to_count(thisctr);
 }
 
-  void BX_CPP_AttrRegparmN(1)
-pit_82C54::set_count_to_binary(counter_type &thisctr)
+void BX_CPP_AttrRegparmN(1) pit_82C54::set_count_to_binary(counter_type &thisctr)
 {
   if (thisctr.bcd_mode) {
     thisctr.count=
@@ -142,8 +140,7 @@ pit_82C54::set_count_to_binary(counter_type &thisctr)
   }
 }
 
-  void BX_CPP_AttrRegparmN(1)
-pit_82C54::set_binary_to_count(counter_type &thisctr)
+void BX_CPP_AttrRegparmN(1) pit_82C54::set_binary_to_count(counter_type &thisctr)
 {
   if (thisctr.bcd_mode) {
     thisctr.count_binary=
@@ -156,8 +153,7 @@ pit_82C54::set_binary_to_count(counter_type &thisctr)
   }
 }
 
-  void BX_CPP_AttrRegparmN(1)
-pit_82C54::decrement (counter_type &thisctr)
+void BX_CPP_AttrRegparmN(1) pit_82C54::decrement (counter_type &thisctr)
 {
   if (!thisctr.count) {
     if (thisctr.bcd_mode) {
@@ -242,8 +238,7 @@ void pit_82C54::register_state(bx_param_c *parent)
   }
 }
 
-void  BX_CPP_AttrRegparmN(2)
-pit_82C54::decrement_multiple(counter_type &thisctr, Bit32u cycles)
+void BX_CPP_AttrRegparmN(2) pit_82C54::decrement_multiple(counter_type &thisctr, Bit32u cycles)
 {
   while(cycles>0) {
     if (cycles<=thisctr.count_binary) {
@@ -340,8 +335,7 @@ void pit_82C54::clock_multiple(Bit8u cnum, Bit32u cycles)
   }
 }
 
-  void BX_CPP_AttrRegparmN(1)
-pit_82C54::clock(Bit8u cnum)
+void BX_CPP_AttrRegparmN(1) pit_82C54::clock(Bit8u cnum)
 {
     if (cnum>MAX_COUNTER) {
       BX_ERROR(("Counter number too high in clock"));
@@ -768,24 +762,29 @@ void pit_82C54::write(Bit8u address, Bit8u data)
       BX_DEBUG(("Write Initial Count: counter=%d, count=%d",address,data));
       switch(thisctr.write_state) {
       case LSByte_multiple:
-        thisctr.inlatch=(thisctr.inlatch & (0xFF<<8)) | data;
-        thisctr.write_state=MSByte_multiple;
+        thisctr.inlatch = data;
+        thisctr.write_state = MSByte_multiple;
         break;
       case LSByte:
-        thisctr.inlatch=(thisctr.inlatch & (0xFF<<8)) | data;
-        thisctr.null_count=1;
-        thisctr.count_written=1;
+        thisctr.inlatch = data;
+        thisctr.count_written = 1;
         break;
       case MSByte_multiple:
-        thisctr.write_state=LSByte_multiple;
-      case MSByte: //shared between MSB_multiple and MSByte
-        thisctr.inlatch=(thisctr.inlatch & 0xFF) | (data<<8);
-        thisctr.null_count=1;
-        thisctr.count_written=1;
+        thisctr.write_state = LSByte_multiple;
+        thisctr.inlatch |= (data << 8);
+        thisctr.count_written = 1;
+        break;
+      case MSByte:
+        thisctr.inlatch = (data << 8);
+        thisctr.count_written = 1;
         break;
       default:
         BX_ERROR(("write counter in invalid write state."));
         break;
+      }
+      if (thisctr.count_written) {
+        thisctr.null_count = 1;
+        set_count(thisctr, thisctr.inlatch);
       }
       switch(thisctr.mode) {
       case 0:
