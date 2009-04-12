@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: enh_dbg.h,v 1.12 2009-04-03 17:36:24 sshwarts Exp $
+// $Id: enh_dbg.h,v 1.13 2009-04-12 05:52:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  BOCHS ENHANCED DEBUGGER Ver 1.2
@@ -13,6 +13,11 @@
 #define BX_ENH_DBG_DEF_H
 
 #if BX_DEBUGGER && BX_DEBUGGER_GUI
+
+#ifndef IS_WIN98
+// workaround broken code if IS_WIN98 not defined
+#define IS_WIN98
+#endif
 
 #ifndef FALSE
 #define FALSE 0

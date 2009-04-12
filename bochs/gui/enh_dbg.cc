@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: enh_dbg.cc,v 1.14 2009-04-03 17:45:01 sshwarts Exp $
+// $Id: enh_dbg.cc,v 1.15 2009-04-12 05:52:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  BOCHS ENHANCED DEBUGGER Ver 1.2
@@ -1453,7 +1453,7 @@ void FillGDT()
 #ifndef IS_WIN98
             GroupId = j;            // use GroupIDs on XP and higher systems
 #else
-            cols[17] = GDTt2[j];    // otherwise, put descriptive text in "info" column
+            cols[17] = (char*)GDTt2[j];    // otherwise, put descriptive text in "info" column
 #endif
         }
 
