@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu.cc,v 1.53 2009-04-12 16:13:49 sshwarts Exp $
+// $Id: fpu.cc,v 1.54 2009-04-12 19:13:13 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -547,7 +547,7 @@ void BX_CPU_C::print_state_FPU(void)
     "32", "RES", "64", "80"
   };
   static const char* fp_class[] = {
-    "ZERO", "xNAN", "-INF", "+INF", "DENORMAL" "NORMAL"
+    "ZERO", "xNAN", "-INF", "+INF", "DENORMAL", "NORMAL"
   };
 
   Bit32u reg;
