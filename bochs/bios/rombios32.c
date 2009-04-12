@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios32.c,v 1.47 2009-04-10 16:36:34 vruppert Exp $
+// $Id: rombios32.c,v 1.48 2009-04-12 12:48:14 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  32 bit Bochs BIOS init code
@@ -383,6 +383,17 @@ int vsnprintf(char *buf, int buflen, const char *fmt, va_list args)
     return buf - buf0;
 }
 
+int snprintf(char * buf, size_t size, const char *fmt, ...)
+{
+    va_list args;
+    int i;
+
+    va_start(args, fmt);
+    i = vsnprintf(buf, size, fmt, args);
+    va_end(args);
+    return i;
+}
+
 void bios_printf(int flags, const char *fmt, ...)
 {
     va_list ap;
@@ -429,6 +440,7 @@ uint32_t cpuid_signature;
 uint32_t cpuid_features;
 uint32_t cpuid_ext_features;
 unsigned long ram_size;
+uint64_t ram_end;
 uint8_t bios_uuid[16];
 #ifdef BX_USE_EBDA_TABLES
 unsigned long ebda_cur_addr;
@@ -571,6 +583,14 @@ void ram_probe(void)
     ram_size = (cmos_readb(0x30) | (cmos_readb(0x31) << 8)) * 1024 +
         1 * 1024 * 1024;
   BX_INFO("ram_size=0x%08lx\n", ram_size);
+
+  if (cmos_readb(0x5b) | cmos_readb(0x5c) | cmos_readb(0x5d))
+    ram_end = (((uint64_t)cmos_readb(0x5b) << 16) |
+               ((uint64_t)cmos_readb(0x5c) << 24) |
+               ((uint64_t)cmos_readb(0x5d) << 32)) + (1ull << 32);
+  else
+    ram_end = ram_size;
+  BX_INFO("ram_end=%ldMB\n", ram_end >> 20);
 #ifdef BX_USE_EBDA_TABLES
   ebda_cur_addr = ((*(uint16_t *)(0x40e)) << 4) + 0x380;
   BX_INFO("ebda_cur_addr: 0x%08lx\n", ebda_cur_addr);
@@ -959,6 +979,8 @@ static void pci_bios_init_device(PCIDevice *d)
         /* PIIX4 Power Management device (for ACPI) */
         pm_io_base = PM_IO_BASE;
         smb_io_base = SMB_IO_BASE;
+        // acpi sci is hardwired to 9
+        pci_config_writeb(d, PCI_INTERRUPT_LINE, 9);
         pm_sci_int = pci_config_readb(d, PCI_INTERRUPT_LINE);
         piix4_pm_enable(d);
         acpi_enabled = 1;
@@ -1057,11 +1079,6 @@ static void mptable_init(void)
     int ioapic_id, i, len;
     int mp_config_table_size;
 
-#ifdef BX_QEMU
-    if (smp_cpus <= 1)
-        return;
-#endif
-
 #ifdef BX_USE_EBDA_TABLES
     mp_config_table = (uint8_t *)(ram_size - ACPI_DATA_SIZE - MPTABLE_MAX_SIZE);
 #else
@@ -1132,7 +1149,7 @@ static void mptable_init(void)
         putb(&q, 0); /* flags: po=0, el=0 */
         putb(&q, 0);
         putb(&q, 0); /* source bus ID = ISA */
-        putb(&q, i); /* source bus IRQ */
+        putb(&q, (i == 2) ? 0 : i); /* source bus IRQ */
         putb(&q, ioapic_id); /* dest I/O APIC ID */
         putb(&q, i); /* dest I/O APIC interrupt in */
     }
@@ -2037,7 +2054,7 @@ smbios_type_4_init(void *start, unsigned int cpu_number)
 
 /* Type 16 -- Physical Memory Array */
 static void *
-smbios_type_16_init(void *start, uint32_t memsize)
+smbios_type_16_init(void *start, uint32_t memsize, int nr_mem_devs)
 {
     struct smbios_type_16 *p = (struct smbios_type_16*)start;
 
@@ -2050,7 +2067,7 @@ smbios_type_16_init(void *start, uint32_t memsize)
     p->error_correction = 0x01; /* other */
     p->maximum_capacity = memsize * 1024;
     p->memory_error_information_handle = 0xfffe; /* none provided */
-    p->number_of_memory_devices = 1;
+    p->number_of_memory_devices = nr_mem_devs;
 
     start += sizeof(struct smbios_type_16);
     *((uint16_t *)start) = 0;
@@ -2060,20 +2077,19 @@ smbios_type_16_init(void *start, uint32_t memsize)
 
 /* Type 17 -- Memory Device */
 static void *
-smbios_type_17_init(void *start, uint32_t memory_size_mb)
+smbios_type_17_init(void *start, uint32_t memory_size_mb, int instance)
 {
     struct smbios_type_17 *p = (struct smbios_type_17 *)start;
 
     p->header.type = 17;
     p->header.length = sizeof(struct smbios_type_17);
-    p->header.handle = 0x1100;
+    p->header.handle = 0x1100 + instance;
 
     p->physical_memory_array_handle = 0x1000;
     p->total_width = 64;
     p->data_width = 64;
-    /* truncate memory_size_mb to 16 bits and clear most significant
-       bit [indicates size in MB] */
-    p->size = (uint16_t) memory_size_mb & 0x7fff;
+/* TODO: should assert in case something is wrong   ASSERT((memory_size_mb & ~0x7fff) == 0); */
+    p->size = memory_size_mb;
     p->form_factor = 0x09; /* DIMM */
     p->device_set = 0;
     p->device_locator_str = 1;
@@ -2082,8 +2098,8 @@ smbios_type_17_init(void *start, uint32_t memory_size_mb)
     p->type_detail = 0;
 
     start += sizeof(struct smbios_type_17);
-    memcpy((char *)start, "DIMM 1", 7);
-    start += 7;
+    snprintf(start, 8, "DIMM %d", instance);
+    start += strlen(start) + 1;
     *((uint8_t *)start) = 0;
 
     return start+1;
@@ -2091,16 +2107,16 @@ smbios_type_17_init(void *start, uint32_t memory_size_mb)
 
 /* Type 19 -- Memory Array Mapped Address */
 static void *
-smbios_type_19_init(void *start, uint32_t memory_size_mb)
+smbios_type_19_init(void *start, uint32_t memory_size_mb, int instance)
 {
     struct smbios_type_19 *p = (struct smbios_type_19 *)start;
 
     p->header.type = 19;
     p->header.length = sizeof(struct smbios_type_19);
-    p->header.handle = 0x1300;
+    p->header.handle = 0x1300 + instance;
 
-    p->starting_address = 0;
-    p->ending_address = (memory_size_mb * 1024) - 1;
+    p->starting_address = instance << 24;
+    p->ending_address = p->starting_address + (memory_size_mb << 10) - 1;
     p->memory_array_handle = 0x1000;
     p->partition_width = 1;
 
@@ -2112,18 +2128,18 @@ smbios_type_19_init(void *start, uint32_t memory_size_mb)
 
 /* Type 20 -- Memory Device Mapped Address */
 static void *
-smbios_type_20_init(void *start, uint32_t memory_size_mb)
+smbios_type_20_init(void *start, uint32_t memory_size_mb, int instance)
 {
     struct smbios_type_20 *p = (struct smbios_type_20 *)start;
 
     p->header.type = 20;
     p->header.length = sizeof(struct smbios_type_20);
-    p->header.handle = 0x1400;
+    p->header.handle = 0x1400 + instance;
 
-    p->starting_address = 0;
-    p->ending_address = (memory_size_mb * 1024) - 1;
-    p->memory_device_handle = 0x1100;
-    p->memory_array_mapped_address_handle = 0x1300;
+    p->starting_address = instance << 24;
+    p->ending_address = p->starting_address + (memory_size_mb << 10) - 1;
+    p->memory_device_handle = 0x1100 + instance;
+    p->memory_array_mapped_address_handle = 0x1300 + instance;
     p->partition_row_position = 1;
     p->interleave_position = 0;
     p->interleaved_data_depth = 0;
@@ -2172,7 +2188,9 @@ void smbios_init(void)
 {
     unsigned cpu_num, nr_structs = 0, max_struct_size = 0;
     char *start, *p, *q;
-    int memsize = ram_size / (1024 * 1024);
+    int memsize = (ram_end == ram_size) ? ram_size / (1024 * 1024) :
+                  (ram_end - (1ull << 32) + ram_size) / (1024 * 1024);
+    int i, nr_mem_devs;
 
 #ifdef BX_USE_EBDA_TABLES
     ebda_cur_addr = align(ebda_cur_addr, 16);
@@ -2184,23 +2202,32 @@ void smbios_init(void)
 
 	p = (char *)start + sizeof(struct smbios_entry_point);
 
-#define add_struct(fn) { \
+#define add_struct(fn) do { \
     q = (fn); \
     nr_structs++; \
     if ((q - p) > max_struct_size) \
         max_struct_size = q - p; \
     p = q; \
-}
+} while (0)
 
     add_struct(smbios_type_0_init(p));
     add_struct(smbios_type_1_init(p));
     add_struct(smbios_type_3_init(p));
     for (cpu_num = 1; cpu_num <= smp_cpus; cpu_num++)
         add_struct(smbios_type_4_init(p, cpu_num));
-    add_struct(smbios_type_16_init(p, memsize));
-    add_struct(smbios_type_17_init(p, memsize));
-    add_struct(smbios_type_19_init(p, memsize));
-    add_struct(smbios_type_20_init(p, memsize));
+
+    /* Each 'memory device' covers up to 16GB of address space. */
+    nr_mem_devs = (memsize + 0x3fff) >> 14;
+    add_struct(smbios_type_16_init(p, memsize, nr_mem_devs));
+    for ( i = 0; i < nr_mem_devs; i++ )
+    {
+        uint32_t dev_memsize = ((i == (nr_mem_devs - 1))
+                                ? (((memsize - 1) & 0x3fff) + 1) : 0x4000);
+        add_struct(smbios_type_17_init(p, dev_memsize, i));
+        add_struct(smbios_type_19_init(p, dev_memsize, i));
+        add_struct(smbios_type_20_init(p, dev_memsize, i));
+    }
+
     add_struct(smbios_type_32_init(p));
     add_struct(smbios_type_127_init(p));
 
