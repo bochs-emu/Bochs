@@ -1,4 +1,4 @@
-Changes after 2.3.7 release:
+Changes in 2.4.pre1 (not yet released):
 
 Brief summary :
 
@@ -8,6 +8,8 @@ Brief summary :
   - Support for > 32 bit physical address space and configurable MSRs
   - VMX, 1G pages in long mode, MOVBE instruction
 - Bugfixes for CPU emulation correctness, debugger and CPU instrumentation.
+- New config interface 'win32config' with start and runtime menu
+- USB: added OHCI support, external hub and cdrom
 - Added user plugin interface support.
 
 Detailed change log :
@@ -56,39 +58,55 @@ Detailed change log :
     The GUI debugger frontend is enabled by default with Bochs debugger.
   - Added configure option to enable/disable A20 pin support. Disabling the
     A20 pin support slightly speeds up the emulation.
+  - reduced dependencies between source files for faster code generation
 
 - BIOS
   - Added S3 (suspend to RAM) ACPI state to BIOS (patch by Gleb Natapov)
-  - Implemented MTRR support in the bios
+  - Implemented MTRR support in the bios (patches by Avi Kivity and Alex
+    Williamsion with additions by Sebastian Herbszt)
   - Bug fixes
 
 - I/O Devices
   - Added user plugin support
   - remaining devices converted to plugins: pit, ioapic, iodebug
-  - added bochsrc option to control the presence of optional plugin
-    devices without a separate option
+  - added 'plugin_ctrl' bochsrc option to control the presence of optional
+    device plugins without a separate option. By default all plugins are enabled.
+  - added register mechanism for removable mouse and keyboard devices
   - Hard drive / cdrom
     - PACKET-DMA feature now supported by all ATAPI commands
     - ATAPI command 0x1A added (based on the Qemu implementation)
   - sb16
-    - Added limited ALSA sound support on Linux (PCM/MIDI output)
+    - Added ALSA sound support on Linux (PCM/MIDI output)
     - FM synthesizer now usable with MIDI output (simple piano only)
       - Fixed OPL frequency to MIDI note translation
       - Fixed MIDI output command
   - keyboard
     - added keyboard controller commands 0xCA and 0xCB
   - USB
-    - initial USB OHCI support written by Ben Lunt (Win98SE can use
-      the USB mouse connected to OHCI)
+    - USB code reorganized to support more HC types and devices
+    - added USB OHCI support written by Ben Lunt
+    - added external USB hub support (initial code ported from Qemu)
+    - added USB cdrom support (SCSI layer ported from Qemu)
+    - added status bar indicators to show data transfer
   - VGA
     - VBE video memory increased to 16 MB
+    - implemented changeable VBE LFB base address (PCI only, requires latest
+      BIOS and VGABIOS images)
   - I/O APIC
     - implemented I/O APIC device hardware reset
 
-- General
+- Config interface
+  - new config interface 'win32config' with start and runtime menu is now
+    the default on Windows ('textconfig' is still available)
+  - win32 device config dialogs are now created dynamicly from a parameter list
+    (works like the wx ParamDialog)
+  - changes in textcofig and the wx ParamDialog for compatibility with the new
+    win32 dialog behaviour
   - Bochs param tree index keys are case independent now
+  - some other additions / bugfixes in the simulator interface code
 
 - Misc
+  - updated LGPL'd VGABIOS to version 0.6c
   - Updated Bochs TESTFORM to version 0.4
 
 - SF patches applied
