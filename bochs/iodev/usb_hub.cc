@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_hub.cc,v 1.11 2009-04-10 20:26:14 vruppert Exp $
+// $Id: usb_hub.cc,v 1.12 2009-04-12 07:26:58 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Volker Ruppert
@@ -83,20 +83,20 @@ static Bit32u serial_number = 1234;
 static const Bit8u bx_hub_dev_descriptor[] = {
   0x12,       /*  u8 bLength; */
   0x01,       /*  u8 bDescriptorType; Device */
-  0x10, 0x01, /*  u16 bcdUSB; v1.1 */
+  0x00, 0x02, /*  u16 bcdUSB; v2.0 */
 
   0x09,       /*  u8  bDeviceClass; HUB_CLASSCODE */
   0x00,       /*  u8  bDeviceSubClass; */
   0x00,       /*  u8  bDeviceProtocol; [ low/full speeds only ] */
-  0x08,       /*  u8  bMaxPacketSize0; 8 Bytes */
+  0x40,       /*  u8  bMaxPacketSize0; 64 Bytes */
 
-  0x00, 0x00, /*  u16 idVendor; */
-  0x00, 0x00, /*  u16 idProduct; */
-  0x01, 0x01, /*  u16 bcdDevice */
+  0x09, 0x04, /*  u16 idVendor; */
+  0x5A, 0x00, /*  u16 idProduct; */
+  0x00, 0x01, /*  u16 bcdDevice */
 
-  0x03,       /*  u8  iManufacturer; */
-  0x02,       /*  u8  iProduct; */
-  0x01,       /*  u8  iSerialNumber; */
+  0x00,       /*  u8  iManufacturer; */
+  0x00,       /*  u8  iProduct; */
+  0x00,       /*  u8  iSerialNumber; */
   0x01        /*  u8  bNumConfigurations; */
 };
 
@@ -110,12 +110,12 @@ static const Bit8u bx_hub_config_descriptor[] = {
   0x01,       /*  u8  bNumInterfaces; (1) */
   0x01,       /*  u8  bConfigurationValue; */
   0x00,       /*  u8  iConfiguration; */
-  0xc0,       /*  u8  bmAttributes;
+  0xE0,       /*  u8  bmAttributes;
                         Bit 7: must be set,
                             6: Self-powered,
                             5: Remote wakeup,
                          4..0: resvd */
-  0x00,       /*  u8  MaxPower; */
+  0x32,       /*  u8  MaxPower; */
 
   /* USB 1.1:
    * USB 2.0, single TT organization (mandatory):
@@ -153,10 +153,10 @@ static const Bit8u bx_hub_hub_descriptor[] =
   0x00,       /*  u8  bLength; patched in later */
   0x29,       /*  u8  bDescriptorType; Hub-descriptor */
   0x00,       /*  u8  bNbrPorts; (patched later) */
-  0x0a,       /* u16  wHubCharacteristics; */
+  0xa9,       /* u16  wHubCharacteristics; */
   0x00,       /*   (per-port OC, no power switching) */
-  0x01,       /*  u8  bPwrOn2pwrGood; 2ms */
-  0x00        /*  u8  bHubContrCurrent; 0 mA */
+  0x32,       /*  u8  bPwrOn2pwrGood; 2ms */
+  0x64        /*  u8  bHubContrCurrent; 0 mA */
 
   /* DeviceRemovable and PortPwrCtrlMask patched in later */
 };
@@ -334,11 +334,13 @@ int usb_hub_device_c::handle_control(int request, int value, int index, int leng
               ret = set_usb_string(data, "Bochs");
               break;
             default:
+              BX_ERROR(("unknown string descriptor type %i", value & 0xff));
               goto fail;
           }
           break;
         default:
-            goto fail;
+          BX_ERROR(("unknown descriptor type: 0x%02x", (value >> 8)));
+          goto fail;
       }
       break;
     case DeviceRequest | USB_REQ_GET_CONFIGURATION:
@@ -404,6 +406,7 @@ int usb_hub_device_c::handle_control(int request, int value, int index, int leng
         case PORT_POWER:
           break;
         default:
+          BX_ERROR(("Unknown SetPortFeature: %i", value));
           goto fail;
       }
       ret = 0;
@@ -435,6 +438,7 @@ int usb_hub_device_c::handle_control(int request, int value, int index, int leng
             hub.usb_port[n].PortChange &= ~PORT_STAT_C_RESET;
             break;
         default:
+            BX_ERROR(("Unknown ClearPortFeature: %i", value));
             goto fail;
       }
       ret = 0;
@@ -465,6 +469,7 @@ int usb_hub_device_c::handle_control(int request, int value, int index, int leng
           break;
         }
     default:
+      BX_ERROR(("handle_control: unknown request: 0x%04x", request));
     fail:
       d.stall = 1;
       ret = USB_RET_STALL;

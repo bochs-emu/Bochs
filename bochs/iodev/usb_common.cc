@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_common.cc,v 1.11 2009-04-10 20:26:14 vruppert Exp $
+// $Id: usb_common.cc,v 1.12 2009-04-12 07:26:58 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Benjamin D Lunt (fys at frontiernet net)
@@ -21,12 +21,6 @@
 // Experimental PCI USB adapter
 
 /* Notes:
-   - I have coded this to be able to use more than one HUB and each
-     device to have more than one function.  *However*, at the moment,
-     not all of the code will work with multiple hubs and/or functions.
-     I thought of removing this functionallity to make it easier, but
-     thought that later when multiple hubs and/or functions were desired,
-     it would already be half way there.
    - Currently, this code is quite messy.  This is for all of the debugging
      I have been doing.  Many BX_INFO()'s here and there.
    - My purpose of coding this emulation was/is to learn about the USB.
