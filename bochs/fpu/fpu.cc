@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu.cc,v 1.52 2009-03-10 21:43:11 sshwarts Exp $
+// $Id: fpu.cc,v 1.53 2009-04-12 16:13:49 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -533,6 +533,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FPLEGACY(bxInstruction_c *i)
 
 #if BX_SUPPORT_FPU
 
+#include "softfloatx80.h"
+
 #include <math.h>
 
 void BX_CPU_C::print_state_FPU(void)
@@ -543,6 +545,9 @@ void BX_CPU_C::print_state_FPU(void)
   };
   static const char* cw_precision_control[] = {
     "32", "RES", "64", "80"
+  };
+  static const char* fp_class[] = {
+    "ZERO", "xNAN", "-INF", "+INF", "DENORMAL" "NORMAL"
   };
 
   Bit32u reg;
@@ -602,11 +607,13 @@ void BX_CPU_C::print_state_FPU(void)
 #else
     f *= fp.fraction*scale_factor;
 #endif
-    fprintf(stderr, "%sFP%d ST%d(%c):        raw 0x%04x:%08lx%08lx (%.10f)\n",
+    float_class_t f_class = floatx80_class(fp);
+    fprintf(stderr, "%sFP%d ST%d(%c):        raw 0x%04x:%08lx%08lx (%.10f) (%s)\n",
           i==tos?"=>":"  ", i, (i-tos)&7,
           "v0se"[tag],
           fp.exp & 0xffff, GET32H(fp.fraction), GET32L(fp.fraction),
-          f);
+          f, (f_class == float_NaN) ? (floatx80_is_signaling_nan(fp) ? "SNAN" : "QNAN") : fp_class[f_class]);
   }
 }
+
 #endif
