@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth.cc,v 1.29 2009-02-08 09:05:52 vruppert Exp $
+// $Id: eth.cc,v 1.30 2009-04-13 13:33:11 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -89,13 +89,14 @@ extern class bx_vnet_locator_c bx_vnet_match;
 //
 eth_pktmover_c *
 eth_locator_c::create(const char *type, const char *netif,
-		      const char *macaddr,
-		      eth_rx_handler_t rxh, void *rxarg, const char *script)
+                      const char *macaddr,
+                      eth_rx_handler_t rxh, bx_devmodel_c *dev,
+                      const char *script)
 {
 #ifdef eth_static_constructors
   for (eth_locator_c *p = all; p != NULL; p = p->next) {
     if (strcmp(type, p->type) == 0)
-      return (p->allocate(netif, macaddr, rxh, rxarg, script));
+      return (p->allocate(netif, macaddr, rxh, dev, script));
   }
 #else
   eth_locator_c *ptr = 0;
@@ -153,7 +154,7 @@ eth_locator_c::create(const char *type, const char *netif,
       ptr = (eth_locator_c *) &bx_vnet_match;
   }
   if (ptr)
-    return (ptr->allocate(netif, macaddr, rxh, rxarg, script));
+    return (ptr->allocate(netif, macaddr, rxh, dev, script));
 #endif
 
   return (NULL);
@@ -165,11 +166,8 @@ extern "C" {
 #include <sys/wait.h>
 };
 
-#undef LOG_THIS
-#define LOG_THIS bx_devices.pluginNE2kDevice->
-
 // This is a utility script used for tuntap or ethertap
-int execute_script(const char* scriptname, char* arg1)
+int execute_script(bx_devmodel_c *netdev, const char* scriptname, char* arg1)
 {
   int pid,status;
 
@@ -185,7 +183,7 @@ int execute_script(const char* scriptname, char* arg1)
     }
 
     // execute the script
-    BX_INFO(("Executing script '%s %s'",filename,arg1));
+    netdev->info("Executing script '%s %s'",filename,arg1);
     execle(filename, scriptname, arg1, NULL, NULL);
 
     // if we get here there has been a problem

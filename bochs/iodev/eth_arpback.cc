@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_arpback.cc,v 1.22 2009-02-08 09:05:52 vruppert Exp $
+// $Id: eth_arpback.cc,v 1.23 2009-04-13 13:33:11 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -45,7 +45,7 @@
 #include "eth.h"
 #include "crc32.h"
 #include "eth_packetmaker.h"
-#define LOG_THIS bx_devices.pluginNE2kDevice->
+#define LOG_THIS netdev->
 
 
 //static const Bit8u external_mac[]={0xB0, 0xC4, 0x20, 0x20, 0x00, 0x00, 0x00};
@@ -60,8 +60,8 @@
 class bx_arpback_pktmover_c : public eth_pktmover_c {
 public:
   bx_arpback_pktmover_c(const char *netif, const char *macaddr,
-		     eth_rx_handler_t rxh,
-		     void *rxarg);
+                        eth_rx_handler_t rxh,
+                        bx_devmodel_c *dev);
   void sendpkt(void *buf, unsigned io_len);
 private:
   int rx_timer_index;
@@ -85,9 +85,9 @@ public:
   bx_arpback_locator_c(void) : eth_locator_c("arpback") {}
 protected:
   eth_pktmover_c *allocate(const char *netif, const char *macaddr,
-			   eth_rx_handler_t rxh,
-			   void *rxarg, const char *script) {
-    return (new bx_arpback_pktmover_c(netif, macaddr, rxh, rxarg, script));
+                           eth_rx_handler_t rxh,
+                           bx_devmodel_c *dev, const char *script) {
+    return (new bx_arpback_pktmover_c(netif, macaddr, rxh, dev, script));
   }
 } bx_arpback_match;
 
@@ -98,33 +98,34 @@ protected:
 
 // the constructor
 bx_arpback_pktmover_c::bx_arpback_pktmover_c(const char *netif,
-				       const char *macaddr,
-				       eth_rx_handler_t rxh,
-				       void *rxarg,
-				       const char *script)
+                                             const char *macaddr,
+                                             eth_rx_handler_t rxh,
+                                             bx_devmodel_c *dev,
+                                             const char *script)
 {
+  this->netdev = dev;
+  BX_INFO(("arpback network driver"));
   this->rx_timer_index =
     bx_pc_system.register_timer(this, this->rx_timer_handler, 1000,
-				1, 1, "eth_arpback"); // continuous, active
+                                1, 1, "eth_arpback"); // continuous, active
   this->rxh   = rxh;
-  this->rxarg = rxarg;
   //bufvalid=0;
   packetmaker.init();
 #if BX_ETH_NULL_LOGGING
   // Start the rx poll
   // eventually Bryce wants txlog to dump in pcap format so that
   // tcpdump -r FILE can read it and interpret packets.
-  txlog = fopen ("ne2k-tx.log", "wb");
-  if (!txlog) BX_PANIC (("open ne2k-tx.log failed"));
-  txlog_txt = fopen ("ne2k-txdump.txt", "wb");
-  if (!txlog_txt) BX_PANIC (("open ne2k-txdump.txt failed"));
-  fprintf (txlog_txt, "arpback packetmover readable log file\n");
-  fprintf (txlog_txt, "net IF = %s\n", netif);
-  fprintf (txlog_txt, "MAC address = ");
+  txlog = fopen("ne2k-tx.log", "wb");
+  if (!txlog) BX_PANIC(("open ne2k-tx.log failed"));
+  txlog_txt = fopen("ne2k-txdump.txt", "wb");
+  if (!txlog_txt) BX_PANIC(("open ne2k-txdump.txt failed"));
+  fprintf(txlog_txt, "arpback packetmover readable log file\n");
+  fprintf(txlog_txt, "net IF = %s\n", netif);
+  fprintf(txlog_txt, "MAC address = ");
   for (int i=0; i<6; i++)
-    fprintf (txlog_txt, "%02x%s", 0xff & macaddr[i], i<5?":" : "");
-  fprintf (txlog_txt, "\n--\n");
-  fflush (txlog_txt);
+    fprintf(txlog_txt, "%02x%s", 0xff & macaddr[i], i<5?":" : "");
+  fprintf(txlog_txt, "\n--\n");
+  fflush(txlog_txt);
 #endif
 }
 
@@ -157,30 +158,30 @@ bx_arpback_pktmover_c::sendpkt(void *buf, unsigned io_len)
     */
   }
 #if BX_ETH_NULL_LOGGING
-  BX_DEBUG (("sendpkt length %u", io_len));
+  BX_DEBUG(("sendpkt length %u", io_len));
   // dump raw bytes to a file, eventually dump in pcap format so that
   // tcpdump -r FILE can interpret them for us.
   int n = fwrite (buf, io_len, 1, txlog);
   if (n != 1) BX_ERROR (("fwrite to txlog failed, length %u", io_len));
   // dump packet in hex into an ascii log file
-  fprintf (txlog_txt, "NE2K transmitting a packet, length %u\n", io_len);
+  fprintf(txlog_txt, "transmitting a packet, length %u\n", io_len);
   Bit8u *charbuf = (Bit8u *)buf;
   for (n=0; n<(int)io_len; n++) {
     if (((n % 16) == 0) && n>0)
-      fprintf (txlog_txt, "\n");
-    fprintf (txlog_txt, "%02x ", charbuf[n]);
+      fprintf(txlog_txt, "\n");
+    fprintf(txlog_txt, "%02x ", charbuf[n]);
   }
-  fprintf (txlog_txt, "\n--\n");
+  fprintf(txlog_txt, "\n--\n");
   // flush log so that we see the packets as they arrive w/o buffering
-  fflush (txlog);
-  fflush (txlog_txt);
+  fflush(txlog);
+  fflush(txlog_txt);
 #endif
 }
 
 void bx_arpback_pktmover_c::rx_timer_handler (void * this_ptr)
 {
 #if BX_ETH_NULL_LOGGING
-  BX_DEBUG (("rx_timer_handler"));
+  BX_DEBUG(("rx_timer_handler"));
 #endif
   bx_arpback_pktmover_c *class_ptr = ((bx_arpback_pktmover_c *)this_ptr);
 
@@ -193,22 +194,22 @@ void bx_arpback_pktmover_c::rx_timer (void)
 //struct bpf_hdr *bhdr;
   eth_packet rubble;
 
-  if(packetmaker.getpacket(rubble)) {
+  if (packetmaker.getpacket(rubble)) {
     //bufvalid=0;
     void * buf=rubble.buf;
     unsigned io_len=rubble.len;
     Bit32u n;
-    fprintf (txlog_txt, "NE2K receiving a packet, length %u\n", io_len);
+    fprintf(txlog_txt, "receiving a packet, length %u\n", io_len);
     Bit8u *charbuf = (Bit8u *)buf;
     for (n=0; n<io_len; n++) {
       if (((n % 16) == 0) && n>0)
-	fprintf (txlog_txt, "\n");
-      fprintf (txlog_txt, "%02x ", charbuf[n]);
+        fprintf(txlog_txt, "\n");
+      fprintf(txlog_txt, "%02x ", charbuf[n]);
     }
-    fprintf (txlog_txt, "\n--\n");
-    fflush (txlog_txt);
+    fprintf(txlog_txt, "\n--\n");
+    fflush(txlog_txt);
 
-    (*rxh)(rxarg, buf, io_len);
+    (*rxh)(this->netdev, buf, io_len);
   }
 }
 

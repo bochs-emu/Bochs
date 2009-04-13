@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_null.cc,v 1.25 2009-02-08 09:05:52 vruppert Exp $
+// $Id: eth_null.cc,v 1.26 2009-04-13 13:33:11 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -44,7 +44,7 @@
 
 #include "eth.h"
 
-#define LOG_THIS bx_devices.pluginNE2kDevice->
+#define LOG_THIS netdev->
 
 
 //
@@ -53,8 +53,8 @@
 class bx_null_pktmover_c : public eth_pktmover_c {
 public:
   bx_null_pktmover_c(const char *netif, const char *macaddr,
-		     eth_rx_handler_t rxh,
-		     void *rxarg, const char *script);
+                     eth_rx_handler_t rxh,
+                     bx_devmodel_c *dev, const char *script);
   void sendpkt(void *buf, unsigned io_len);
 private:
   int rx_timer_index;
@@ -72,9 +72,9 @@ public:
   bx_null_locator_c(void) : eth_locator_c("null") {}
 protected:
   eth_pktmover_c *allocate(const char *netif, const char *macaddr,
-			   eth_rx_handler_t rxh,
-			   void *rxarg, const char *script) {
-    return (new bx_null_pktmover_c(netif, macaddr, rxh, rxarg, script));
+                           eth_rx_handler_t rxh,
+                           bx_devmodel_c *dev, const char *script) {
+    return (new bx_null_pktmover_c(netif, macaddr, rxh, dev, script));
   }
 } bx_null_match;
 
@@ -85,18 +85,19 @@ protected:
 
 // the constructor
 bx_null_pktmover_c::bx_null_pktmover_c(const char *netif,
-				       const char *macaddr,
-				       eth_rx_handler_t rxh,
-				       void *rxarg,
-				       const char *script)
+                                       const char *macaddr,
+                                       eth_rx_handler_t rxh,
+                                       bx_devmodel_c *dev,
+                                       const char *script)
 {
+  this->netdev = dev;
+  BX_INFO(("null network driver"));
 #if BX_ETH_NULL_LOGGING
   // Start the rx poll
   this->rx_timer_index =
     bx_pc_system.register_timer(this, this->rx_timer_handler, 1000,
-				1, 1, "eth_null"); // continuous, active
+                                1, 1, "eth_null"); // continuous, active
   this->rxh   = rxh;
-  this->rxarg = rxarg;
   // eventually Bryce wants txlog to dump in pcap format so that
   // tcpdump -r FILE can read it and interpret packets.
   txlog = fopen("ne2k-tx.log", "wb");
@@ -113,8 +114,7 @@ bx_null_pktmover_c::bx_null_pktmover_c(const char *netif,
 #endif
 }
 
-void
-bx_null_pktmover_c::sendpkt(void *buf, unsigned io_len)
+void bx_null_pktmover_c::sendpkt(void *buf, unsigned io_len)
 {
 #if BX_ETH_NULL_LOGGING
   BX_DEBUG (("sendpkt length %u", io_len));
@@ -123,7 +123,7 @@ bx_null_pktmover_c::sendpkt(void *buf, unsigned io_len)
   size_t n = fwrite (buf, io_len, 1, txlog);
   if (n != 1) BX_ERROR(("fwrite to txlog failed, io_len = %u", io_len));
   // dump packet in hex into an ascii log file
-  fprintf(txlog_txt, "NE2K transmitting a packet, length %u\n", io_len);
+  fprintf(txlog_txt, "transmitting a packet, length %u\n", io_len);
   Bit8u *charbuf = (Bit8u *)buf;
   for (n=0; n<io_len; n++) {
     if (((n % 16) == 0) && n>0)
@@ -142,21 +142,22 @@ void bx_null_pktmover_c::rx_timer_handler (void *this_ptr)
 #if BX_ETH_NULL_LOGGING
   /// hey wait there is no receive data with a NULL ethernet, is there....
 
+  bx_devmodel_c *netdev = ((bx_null_pktmover_c*)this_ptr)->netdev;
   int io_len = 0;
   Bit8u buf[1];
   bx_null_pktmover_c *class_ptr = (bx_null_pktmover_c *) this_ptr;
   if (io_len > 0) {
-    BX_DEBUG (("receive packet length %u", io_len));
+    BX_DEBUG(("receive packet length %u", io_len));
     // dump raw bytes to a file, eventually dump in pcap format so that
     // tcpdump -r FILE can interpret them for us.
     size_t n = fwrite (buf, io_len, 1, class_ptr->rxlog);
     if (n != 1) BX_ERROR(("fwrite to rxlog failed, io_len = %u", io_len));
     // dump packet in hex into an ascii log file
-    fprintf(class_ptr->rxlog_txt, "NE2K transmitting a packet, length %u\n", io_len);
+    fprintf(class_ptr->rxlog_txt, "receiveing a packet, length %u\n", io_len);
     Bit8u *charbuf = (Bit8u *)buf;
     for (n=0; n<(size_t)io_len; n++) {
       if (((n % 16) == 0) && n>0)
-	fprintf(class_ptr->rxlog_txt, "\n");
+        fprintf(class_ptr->rxlog_txt, "\n");
       fprintf(class_ptr->rxlog_txt, "%02x ", charbuf[n]);
     }
     fprintf(class_ptr->rxlog_txt, "\n--\n");

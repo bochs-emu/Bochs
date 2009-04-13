@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_vnet.cc,v 1.27 2009-02-09 17:04:30 vruppert Exp $
+// $Id: eth_vnet.cc,v 1.28 2009-04-13 13:33:11 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  The Bochs Project
@@ -40,7 +40,7 @@
 
 #include "eth.h"
 
-#define LOG_THIS bx_devices.pluginNE2kDevice->
+#define LOG_THIS netdev->
 
 #define BX_ETH_VNET_LOGGING 1
 #define BX_ETH_VNET_PCAP_LOGGING 0
@@ -148,7 +148,7 @@ public:
   bx_vnet_pktmover_c();
   void pktmover_init(
     const char *netif, const char *macaddr,
-    eth_rx_handler_t rxh, void *rxarg, const char *script);
+    eth_rx_handler_t rxh, bx_devmodel_c *dev, const char *script);
   void sendpkt(void *buf, unsigned io_len);
 private:
   void guest_to_host(const Bit8u *buf, unsigned io_len);
@@ -256,10 +256,10 @@ protected:
   eth_pktmover_c *allocate(
       const char *netif, const char *macaddr,
       eth_rx_handler_t rxh,
-      void *rxarg, const char *script) {
+      bx_devmodel_c *dev, const char *script) {
     bx_vnet_pktmover_c *pktmover;
     pktmover = new bx_vnet_pktmover_c();
-    pktmover->pktmover_init(netif, macaddr, rxh, rxarg, script);
+    pktmover->pktmover_init(netif, macaddr, rxh, dev, script);
     return pktmover;
   }
 } bx_vnet_match;
@@ -314,7 +314,7 @@ static Bit16u ip_checksum(const Bit8u *buf, unsigned buf_len)
 
 // duplicate the part of tftp_send_data() that constructs the filename
 // but ignore errors since tftp_send_data() will respond for us
-static size_t get_file_size(const char *tpath, const char *tname)
+static size_t get_file_size(bx_devmodel_c *netdev, const char *tpath, const char *tname)
 {
   struct stat stbuf;
   char path[BX_PATHNAME_LEN];
@@ -330,7 +330,7 @@ static size_t get_file_size(const char *tpath, const char *tname)
     return 0;
 
   BX_INFO(("tftp filesize: %lu", (unsigned long)stbuf.st_size));
-  return stbuf.st_size;
+  return (size_t)stbuf.st_size;
 }
 
 
@@ -340,11 +340,11 @@ bx_vnet_pktmover_c::bx_vnet_pktmover_c()
 
 void bx_vnet_pktmover_c::pktmover_init(
   const char *netif, const char *macaddr,
-  eth_rx_handler_t rxh, void *rxarg, const char *script)
+  eth_rx_handler_t rxh, bx_devmodel_c *dev, const char *script)
 {
-  BX_INFO(("ne2k vnet driver"));
+  this->netdev = dev;
+  BX_INFO(("vnet network driver"));
   this->rxh   = rxh;
-  this->rxarg = rxarg;
   strcpy(this->tftp_rootdir, netif);
   this->tftp_tid = 0;
   this->tftp_write = 0;
@@ -366,24 +366,24 @@ void bx_vnet_pktmover_c::pktmover_init(
                               	 0, 0, "eth_vnet");
 
 #if BX_ETH_VNET_LOGGING
-  pktlog_txt = fopen ("ne2k-pktlog.txt", "wb");
-  if (!pktlog_txt) BX_PANIC (("ne2k-pktlog.txt failed"));
-  fprintf (pktlog_txt, "vnet packetmover readable log file\n");
-  fprintf (pktlog_txt, "TFTP root = %s\n", netif);
-  fprintf (pktlog_txt, "host MAC address = ");
+  pktlog_txt = fopen("ne2k-pktlog.txt", "wb");
+  if (!pktlog_txt) BX_PANIC(("ne2k-pktlog.txt failed"));
+  fprintf(pktlog_txt, "vnet packetmover readable log file\n");
+  fprintf(pktlog_txt, "TFTP root = %s\n", netif);
+  fprintf(pktlog_txt, "host MAC address = ");
   int i;
   for (i=0; i<6; i++)
-    fprintf (pktlog_txt, "%02x%s", 0xff & host_macaddr[i], i<5?":" : "\n");
-  fprintf (pktlog_txt, "guest MAC address = ");
+    fprintf(pktlog_txt, "%02x%s", 0xff & host_macaddr[i], i<5?":" : "\n");
+  fprintf(pktlog_txt, "guest MAC address = ");
   for (i=0; i<6; i++)
-    fprintf (pktlog_txt, "%02x%s", 0xff & guest_macaddr[i], i<5?":" : "\n");
-  fprintf (pktlog_txt, "--\n");
-  fflush (pktlog_txt);
+    fprintf(pktlog_txt, "%02x%s", 0xff & guest_macaddr[i], i<5?":" : "\n");
+  fprintf(pktlog_txt, "--\n");
+  fflush(pktlog_txt);
 #endif
 #if BX_ETH_VNET_PCAP_LOGGING
-  pcapp = pcap_open_dead (DLT_EN10MB, BX_PACKET_BUFSIZE);
-  pktlog_pcap = pcap_dump_open (pcapp, "ne2k-pktlog.pcap");
-  if (pktlog_pcap == NULL) BX_PANIC (("ne2k-pktlog.pcap failed"));
+  pcapp = pcap_open_dead(DLT_EN10MB, BX_PACKET_BUFSIZE);
+  pktlog_pcap = pcap_dump_open(pcapp, "ne2k-pktlog.pcap");
+  if (pktlog_pcap == NULL) BX_PANIC(("ne2k-pktlog.pcap failed"));
 #endif
 }
 
@@ -395,16 +395,16 @@ void bx_vnet_pktmover_c::sendpkt(void *buf, unsigned io_len)
 void bx_vnet_pktmover_c::guest_to_host(const Bit8u *buf, unsigned io_len)
 {
 #if BX_ETH_VNET_LOGGING
-  fprintf (pktlog_txt, "a packet from guest to host, length %u\n", io_len);
+  fprintf(pktlog_txt, "a packet from guest to host, length %u\n", io_len);
   Bit8u *charbuf = (Bit8u *)buf;
   unsigned n;
   for (n=0; n<io_len; n++) {
     if (((n % 16) == 0) && n>0)
-      fprintf (pktlog_txt, "\n");
-    fprintf (pktlog_txt, "%02x ", (unsigned)charbuf[n]);
+      fprintf(pktlog_txt, "\n");
+    fprintf(pktlog_txt, "%02x ", (unsigned)charbuf[n]);
   }
-  fprintf (pktlog_txt, "\n--\n");
-  fflush (pktlog_txt);
+  fprintf(pktlog_txt, "\n--\n");
+  fflush(pktlog_txt);
 #endif
 #if BX_ETH_VNET_PCAP_LOGGING
   if (pktlog_pcap && !ferror((FILE *)pktlog_pcap)) {
@@ -446,18 +446,18 @@ void bx_vnet_pktmover_c::rx_timer_handler(void *this_ptr)
 
 void bx_vnet_pktmover_c::rx_timer(void)
 {
-  this->rxh(this->rxarg, (void *)packet_buffer, packet_len);
+  this->rxh(this->netdev, (void *)packet_buffer, packet_len);
 #if BX_ETH_VNET_LOGGING
-  fprintf (pktlog_txt, "a packet from host to guest, length %u\n", packet_len);
+  fprintf(pktlog_txt, "a packet from host to guest, length %u\n", packet_len);
   Bit8u *charbuf = (Bit8u *)packet_buffer;
   unsigned n;
   for (n=0; n<packet_len; n++) {
     if (((n % 16) == 0) && n>0)
-      fprintf (pktlog_txt, "\n");
-    fprintf (pktlog_txt, "%02x ", (unsigned)charbuf[n]);
+      fprintf(pktlog_txt, "\n");
+    fprintf(pktlog_txt, "%02x ", (unsigned)charbuf[n]);
   }
-  fprintf (pktlog_txt, "\n--\n");
-  fflush (pktlog_txt);
+  fprintf(pktlog_txt, "\n--\n");
+  fflush(pktlog_txt);
 #endif
 #if BX_ETH_VNET_PCAP_LOGGING
   if (pktlog_pcap && !ferror((FILE *)pktlog_pcap)) {
@@ -1252,7 +1252,7 @@ void bx_vnet_pktmover_c::udpipv4_tftp_handler_ns(
         strcpy(tftp_filename, (char*)buffer);
         BX_INFO(("tftp req: %s", tftp_filename));
         if (tsize_option) {
-          tsize_option = get_file_size(tftp_rootdir, tftp_filename);
+          tsize_option = get_file_size(netdev, tftp_rootdir, tftp_filename);
           if (tsize_option > 0) {
             // if tsize requested and file exists, send optack and return
             // optack ack will pick up where we leave off here.

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_win32.cc,v 1.30 2009-02-08 09:05:52 vruppert Exp $
+// $Id: eth_win32.cc,v 1.31 2009-04-13 13:33:11 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -51,7 +51,7 @@
 #include "eth.h"
 
 // windows.h included by bochs.h
-#define LOG_THIS bx_devices.pluginNE2kDevice->
+#define LOG_THIS netdev->
 
 #define BX_ETH_WIN32_LOGGING 0
 
@@ -175,11 +175,8 @@ char      buffer[256000];
 DWORD     dwVersion, dwMajorVersion;
 char      AdapterList[10][1024];
 char      cMacAddr[6];
-void      *rx_Arg;
-char      netdev[512];
+char      NetDev[512];
 BOOL      IsNT = FALSE;
-
-eth_rx_handler_t rx_handler;
 
 LPADAPTER (*PacketOpenAdapter)     (LPTSTR);
 VOID      (*PacketCloseAdapter)    (LPADAPTER);
@@ -213,7 +210,8 @@ static const struct bpf_insn macfilter[] = {
 class bx_win32_pktmover_c : public eth_pktmover_c {
 public:
   bx_win32_pktmover_c(const char *netif, const char *macaddr,
-	  eth_rx_handler_t rxh, void *rxarg, const char *script);
+                      eth_rx_handler_t rxh, bx_devmodel_c *dev,
+                      const char *script);
   void sendpkt(void *buf, unsigned io_len);
 private:
   struct bpf_insn filter[8];
@@ -235,8 +233,8 @@ public:
 protected:
   eth_pktmover_c *allocate(const char *netif, const char *macaddr,
                            eth_rx_handler_t rxh,
-                           void *rxarg, const char *script) {
-    return (new bx_win32_pktmover_c(netif, macaddr, rxh, rxarg, script));
+                           bx_devmodel_c *dev, const char *script) {
+    return (new bx_win32_pktmover_c(netif, macaddr, rxh, dev, script));
   }
 } bx_win32_match;
 
@@ -247,15 +245,15 @@ protected:
 // the constructor
 bx_win32_pktmover_c::bx_win32_pktmover_c(
   const char *netif, const char *macaddr,
-  eth_rx_handler_t rxh, void *rxarg, const char *script)
+  eth_rx_handler_t rxh, bx_devmodel_c *dev, const char *script)
 {
+  this->netdev = dev;
+  BX_INFO(("win32 network driver"));
   // Open Packet Driver Here.
   DWORD dwVersion;
   DWORD dwWindowsMajorVersion;
 
-  BX_INFO(("bx_win32_pktmover_c"));
-  rx_Arg     = rxarg;
-  rx_handler = rxh;
+  this->rxh = rxh;
 
   hPacket = LoadLibrary("PACKET.DLL");
   memcpy(cMacAddr, macaddr, 6);
@@ -276,19 +274,19 @@ bx_win32_pktmover_c::bx_win32_pktmover_c(
     BX_PANIC(("Could not load WPCap Drivers for ethernet support!"));
   }
 
-  memset(&netdev, 0, sizeof(netdev));
+  memset(&NetDev, 0, sizeof(NetDev));
   dwVersion=GetVersion();
   dwWindowsMajorVersion =  (DWORD)(LOBYTE(LOWORD(dwVersion)));
   if (!(dwVersion >= 0x80000000 && dwWindowsMajorVersion >= 4))
   {  // Windows NT/2k
     int nLen = MultiByteToWideChar(CP_ACP, 0, netif, -1, NULL, 0);
-    MultiByteToWideChar(CP_ACP, 0, netif, -1, (WCHAR *)netdev, nLen);
+    MultiByteToWideChar(CP_ACP, 0, netif, -1, (WCHAR *)NetDev, nLen);
     IsNT = TRUE;
   } else { // Win9x
-    strcpy(netdev, netif);
+    strcpy(NetDev, netif);
   }
 
-  lpAdapter = PacketOpenAdapter(netdev);
+  lpAdapter = PacketOpenAdapter(NetDev);
   if (!lpAdapter || (lpAdapter->hFile == INVALID_HANDLE_VALUE)) {
     BX_PANIC(("Could not open adapter for ethernet reception"));
     return;
@@ -324,33 +322,32 @@ bx_win32_pktmover_c::bx_win32_pktmover_c(
     bx_pc_system.register_timer(this, this->rx_timer_handler, 10000, 1, 1, "eth_win32");
 
 #if BX_ETH_WIN32_LOGGING
-  pktlog_txt = fopen ("ne2k-pktlog.txt", "wb");
-  if (!pktlog_txt) BX_PANIC (("ne2k-pktlog.txt failed"));
-  fprintf (pktlog_txt, "win32 packetmover readable log file\n");
-  fprintf (pktlog_txt, "host adapter = %s\n", netif);
-  fprintf (pktlog_txt, "guest MAC address = ");
+  pktlog_txt = fopen("ne2k-pktlog.txt", "wb");
+  if (!pktlog_txt) BX_PANIC(("ne2k-pktlog.txt failed"));
+  fprintf(pktlog_txt, "win32 packetmover readable log file\n");
+  fprintf(pktlog_txt, "host adapter = %s\n", netif);
+  fprintf(pktlog_txt, "guest MAC address = ");
   int i;
   for (i=0; i<6; i++)
-    fprintf (pktlog_txt, "%02x%s", 0xff & macaddr[i], i<5?":" : "\n");
-  fprintf (pktlog_txt, "--\n");
-  fflush (pktlog_txt);
+    fprintf(pktlog_txt, "%02x%s", 0xff & macaddr[i], i<5?":" : "\n");
+  fprintf(pktlog_txt, "--\n");
+  fflush(pktlog_txt);
 #endif
 }
 
-void
-bx_win32_pktmover_c::sendpkt(void *buf, unsigned io_len)
+void bx_win32_pktmover_c::sendpkt(void *buf, unsigned io_len)
 {
 #if BX_ETH_WIN32_LOGGING
-  fprintf (pktlog_txt, "a packet from guest to host, length %u\n", io_len);
+  fprintf(pktlog_txt, "a packet from guest to host, length %u\n", io_len);
   Bit8u *charbuf = (Bit8u *)buf;
   unsigned n;
   for (n=0; n<io_len; n++) {
     if (((n % 16) == 0) && n>0)
-      fprintf (pktlog_txt, "\n");
-    fprintf (pktlog_txt, "%02x ", (unsigned)charbuf[n]);
+      fprintf(pktlog_txt, "\n");
+    fprintf(pktlog_txt, "%02x ", (unsigned)charbuf[n]);
   }
-  fprintf (pktlog_txt, "\n--\n");
-  fflush (pktlog_txt);
+  fprintf(pktlog_txt, "\n--\n");
+  fflush(pktlog_txt);
 #endif
 
   // SendPacket Here.
@@ -393,18 +390,18 @@ void bx_win32_pktmover_c::rx_timer(void)
           pktlen = hdr->bh_caplen;
           if (pktlen < 60) pktlen = 60;
 #if BX_ETH_WIN32_LOGGING
-          fprintf (pktlog_txt, "a packet from host to guest, length %u\n", pktlen);
+          fprintf(pktlog_txt, "a packet from host to guest, length %u\n", pktlen);
           Bit8u *charbuf = (Bit8u *)pPacket;
           int n;
           for (n=0; n<pktlen; n++) {
             if (((n % 16) == 0) && n>0)
-              fprintf (pktlog_txt, "\n");
-            fprintf (pktlog_txt, "%02x ", (unsigned)charbuf[n]);
+              fprintf(pktlog_txt, "\n");
+            fprintf(pktlog_txt, "%02x ", (unsigned)charbuf[n]);
           }
-          fprintf (pktlog_txt, "\n--\n");
-          fflush (pktlog_txt);
+          fprintf(pktlog_txt, "\n--\n");
+          fflush(pktlog_txt);
 #endif
-          (*rx_handler)(rx_Arg, pPacket, pktlen);
+          (*this->rxh)(this->netdev, pPacket, pktlen);
         }
       }
       iOffset = Packet_WORDALIGN(iOffset + (hdr->bh_hdrlen + hdr->bh_caplen));

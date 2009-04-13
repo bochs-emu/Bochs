@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_tuntap.cc,v 1.31 2009-02-08 09:05:52 vruppert Exp $
+// $Id: eth_tuntap.cc,v 1.32 2009-04-13 13:33:11 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -40,7 +40,7 @@
 
 #include "eth.h"
 
-#define LOG_THIS bx_devices.pluginNE2kDevice->
+#define LOG_THIS netdev->
 
 #include <signal.h>
 #include <sys/param.h>
@@ -82,8 +82,8 @@ int tun_alloc(char *dev);
 class bx_tuntap_pktmover_c : public eth_pktmover_c {
 public:
   bx_tuntap_pktmover_c(const char *netif, const char *macaddr,
-		     eth_rx_handler_t rxh,
-		     void *rxarg, const char *script);
+                       eth_rx_handler_t rxh,
+                       bx_devmodel_c *dev, const char *script);
   void sendpkt(void *buf, unsigned io_len);
 private:
   int fd;
@@ -106,9 +106,9 @@ public:
   bx_tuntap_locator_c(void) : eth_locator_c("tuntap") {}
 protected:
   eth_pktmover_c *allocate(const char *netif, const char *macaddr,
-			   eth_rx_handler_t rxh,
-			   void *rxarg, const char *script) {
-    return (new bx_tuntap_pktmover_c(netif, macaddr, rxh, rxarg, script));
+                           eth_rx_handler_t rxh,
+                           bx_devmodel_c *dev, const char *script) {
+    return (new bx_tuntap_pktmover_c(netif, macaddr, rxh, dev, script));
   }
 } bx_tuntap_match;
 
@@ -119,45 +119,46 @@ protected:
 
 // the constructor
 bx_tuntap_pktmover_c::bx_tuntap_pktmover_c(const char *netif,
-				       const char *macaddr,
-				       eth_rx_handler_t rxh,
-				       void *rxarg,
-				       const char *script)
+                                           const char *macaddr,
+                                           eth_rx_handler_t rxh,
+                                           bx_devmodel_c *dev,
+                                           const char *script)
 {
   int flags;
 
+  this->netdev = dev;
 #ifdef NEVERDEF
   if (strncmp (netif, "tun", 3) != 0) {
-    BX_PANIC (("eth_tuntap: interface name (%s) must be tun", netif));
+    BX_PANIC(("eth_tuntap: interface name (%s) must be tun", netif));
   }
   char filename[BX_PATHNAME_LEN];
-  sprintf (filename, "/dev/net/%s", netif);
+  sprintf(filename, "/dev/net/%s", netif);
 
   // check if the TUN/TAP devices is running, and turn on ARP.  This is based
   // on code from the Mac-On-Linux project. http://http://www.maconlinux.org/
   int sock = socket(AF_INET, SOCK_DGRAM, 0);
   if (sock < 0) {
-    BX_PANIC (("socket creation: %s", strerror(errno)));
+    BX_PANIC(("socket creation: %s", strerror(errno)));
     return;
   }
   struct ifreq ifr;
   memset(&ifr, 0, sizeof(ifr));
   strncpy(ifr.ifr_name, netif, sizeof(ifr.ifr_name));
   if (ioctl(sock, SIOCGIFFLAGS, &ifr) < 0) {
-    BX_PANIC (("SIOCGIFFLAGS on %s: %s", netif, strerror (errno)));
+    BX_PANIC(("SIOCGIFFLAGS on %s: %s", netif, strerror (errno)));
     close(sock);
     return;
   }
   if (!(ifr.ifr_flags & IFF_RUNNING)) {
-    BX_PANIC (("%s device is not running", netif));
+    BX_PANIC(("%s device is not running", netif));
     close(sock);
     return;
   }
   if ((ifr.ifr_flags & IFF_NOARP)) {
-    BX_INFO (("turn on ARP for %s device", netif));
+    BX_INFO(("turn on ARP for %s device", netif));
     ifr.ifr_flags &= ~IFF_NOARP;
     if (ioctl(sock, SIOCSIFFLAGS, &ifr) < 0) {
-      BX_PANIC (("SIOCSIFFLAGS: %s", strerror(errno)));
+      BX_PANIC(("SIOCSIFFLAGS: %s", strerror(errno)));
       close(sock);
       return;
     }
@@ -176,67 +177,66 @@ bx_tuntap_pktmover_c::bx_tuntap_pktmover_c(const char *netif,
 
   /* set O_ASYNC flag so that we can poll with read() */
   if ((flags = fcntl(fd, F_GETFL)) < 0) {
-    BX_PANIC (("getflags on tun device: %s", strerror (errno)));
+    BX_PANIC(("getflags on tun device: %s", strerror (errno)));
   }
   flags |= O_NONBLOCK;
   if (fcntl(fd, F_SETFL, flags) < 0) {
     BX_PANIC(("set tun device flags: %s", strerror (errno)));
   }
 
-  BX_INFO(("eth_tuntap: opened %s device", netif));
+  BX_INFO(("tuntap network driver: opened %s device", netif));
 
   /* Execute the configuration script */
   if((script != NULL) && (strcmp(script, "") != 0) && (strcmp(script, "none") != 0))
   {
-    if (execute_script(script, intname) < 0)
-      BX_ERROR (("execute script '%s' on %s failed", script, intname));
+    if (execute_script(this->netdev, script, intname) < 0)
+      BX_ERROR(("execute script '%s' on %s failed", script, intname));
   }
 
   // Start the rx poll
   this->rx_timer_index =
     bx_pc_system.register_timer(this, this->rx_timer_handler, 1000,
-				1, 1, "eth_tuntap"); // continuous, active
+                                1, 1, "eth_tuntap"); // continuous, active
   this->rxh   = rxh;
-  this->rxarg = rxarg;
   memcpy(&guest_macaddr[0], macaddr, 6);
 #if BX_ETH_TUNTAP_LOGGING
   // eventually Bryce wants txlog to dump in pcap format so that
   // tcpdump -r FILE can read it and interpret packets.
-  txlog = fopen ("ne2k-tx.log", "wb");
-  if (!txlog) BX_PANIC (("open ne2k-tx.log failed"));
-  txlog_txt = fopen ("ne2k-txdump.txt", "wb");
-  if (!txlog_txt) BX_PANIC (("open ne2k-txdump.txt failed"));
-  fprintf (txlog_txt, "tuntap packetmover readable log file\n");
-  fprintf (txlog_txt, "net IF = %s\n", netif);
-  fprintf (txlog_txt, "MAC address = ");
+  txlog = fopen("ne2k-tx.log", "wb");
+  if (!txlog) BX_PANIC(("open ne2k-tx.log failed"));
+  txlog_txt = fopen("ne2k-txdump.txt", "wb");
+  if (!txlog_txt) BX_PANIC(("open ne2k-txdump.txt failed"));
+  fprintf(txlog_txt, "tuntap packetmover readable log file\n");
+  fprintf(txlog_txt, "net IF = %s\n", netif);
+  fprintf(txlog_txt, "MAC address = ");
   for (int i=0; i<6; i++)
-    fprintf (txlog_txt, "%02x%s", 0xff & macaddr[i], i<5?":" : "");
-  fprintf (txlog_txt, "\n--\n");
-  fflush (txlog_txt);
+    fprintf(txlog_txt, "%02x%s", 0xff & macaddr[i], i<5?":" : "");
+  fprintf(txlog_txt, "\n--\n");
+  fflush(txlog_txt);
 
-  rxlog = fopen ("ne2k-rx.log", "wb");
-  if (!rxlog) BX_PANIC (("open ne2k-rx.log failed"));
-  rxlog_txt = fopen ("ne2k-rxdump.txt", "wb");
-  if (!rxlog_txt) BX_PANIC (("open ne2k-rxdump.txt failed"));
-  fprintf (rxlog_txt, "tuntap packetmover readable log file\n");
-  fprintf (rxlog_txt, "net IF = %s\n", netif);
-  fprintf (rxlog_txt, "MAC address = ");
+  rxlog = fopen("ne2k-rx.log", "wb");
+  if (!rxlog) BX_PANIC(("open ne2k-rx.log failed"));
+  rxlog_txt = fopen("ne2k-rxdump.txt", "wb");
+  if (!rxlog_txt) BX_PANIC(("open ne2k-rxdump.txt failed"));
+  fprintf(rxlog_txt, "tuntap packetmover readable log file\n");
+  fprintf(rxlog_txt, "net IF = %s\n", netif);
+  fprintf(rxlog_txt, "MAC address = ");
   for (int i=0; i<6; i++)
-    fprintf (rxlog_txt, "%02x%s", 0xff & macaddr[i], i<5?":" : "");
-  fprintf (rxlog_txt, "\n--\n");
-  fflush (rxlog_txt);
+    fprintf(rxlog_txt, "%02x%s", 0xff & macaddr[i], i<5?":" : "");
+  fprintf(rxlog_txt, "\n--\n");
+  fflush(rxlog_txt);
 
 #endif
 }
 
 void bx_tuntap_pktmover_c::sendpkt(void *buf, unsigned io_len)
 {
-#ifdef __APPLE__	//FIXME
+#ifdef __APPLE__ //FIXME
   unsigned int size = write (fd, (char*)buf+14, io_len-14);
   if (size != io_len-14) {
-    BX_PANIC (("write on tuntap device: %s", strerror (errno)));
+    BX_PANIC(("write on tuntap device: %s", strerror (errno)));
   } else {
-    BX_DEBUG (("wrote %d bytes on tuntap - 14 bytes Ethernet header", io_len));
+    BX_DEBUG(("wrote %d bytes on tuntap - 14 bytes Ethernet header", io_len));
   }
 #elif NEVERDEF
   Bit8u txbuf[BX_PACKET_BUFSIZE];
@@ -245,36 +245,36 @@ void bx_tuntap_pktmover_c::sendpkt(void *buf, unsigned io_len)
   memcpy (txbuf+2, buf, io_len);
   unsigned int size = write (fd, txbuf, io_len+2);
   if (size != io_len+2) {
-    BX_PANIC (("write on tuntap device: %s", strerror (errno)));
+    BX_PANIC(("write on tuntap device: %s", strerror (errno)));
   } else {
-    BX_DEBUG (("wrote %d bytes + 2 byte pad on tuntap", io_len));
+    BX_DEBUG(("wrote %d bytes + 2 byte pad on tuntap", io_len));
   }
 #else
   unsigned int size = write (fd, buf, io_len);
   if (size != io_len) {
-    BX_PANIC (("write on tuntap device: %s", strerror (errno)));
+    BX_PANIC(("write on tuntap device: %s", strerror (errno)));
   } else {
-    BX_DEBUG (("wrote %d bytes on tuntap", io_len));
+    BX_DEBUG(("wrote %d bytes on tuntap", io_len));
   }
 #endif
 #if BX_ETH_TUNTAP_LOGGING
-  BX_DEBUG (("sendpkt length %u", io_len));
+  BX_DEBUG(("sendpkt length %u", io_len));
   // dump raw bytes to a file, eventually dump in pcap format so that
   // tcpdump -r FILE can interpret them for us.
-  int n = fwrite (buf, io_len, 1, txlog);
-  if (n != 1) BX_ERROR (("fwrite to txlog failed", io_len));
+  int n = fwrite(buf, io_len, 1, txlog);
+  if (n != 1) BX_ERROR(("fwrite to txlog failed", io_len));
   // dump packet in hex into an ascii log file
-  fprintf (txlog_txt, "NE2K transmitting a packet, length %u\n", io_len);
+  fprintf(txlog_txt, "transmitting a packet, length %u\n", io_len);
   Bit8u *charbuf = (Bit8u *)buf;
   for (n=0; n<io_len; n++) {
     if (((n % 16) == 0) && n>0)
-      fprintf (txlog_txt, "\n");
-    fprintf (txlog_txt, "%02x ", charbuf[n]);
+      fprintf(txlog_txt, "\n");
+    fprintf(txlog_txt, "%02x ", charbuf[n]);
   }
-  fprintf (txlog_txt, "\n--\n");
+  fprintf(txlog_txt, "\n--\n");
   // flush log so that we see the packets as they arrive w/o buffering
-  fflush (txlog);
-  fflush (txlog_txt);
+  fflush(txlog);
+  fflush(txlog_txt);
 #endif
 }
 
@@ -284,14 +284,14 @@ void bx_tuntap_pktmover_c::rx_timer_handler (void *this_ptr)
   class_ptr->rx_timer();
 }
 
-void bx_tuntap_pktmover_c::rx_timer ()
+void bx_tuntap_pktmover_c::rx_timer()
 {
   int nbytes;
   Bit8u buf[BX_PACKET_BUFSIZE];
   Bit8u *rxbuf;
   if (fd<0) return;
 
-#ifdef __APPLE__	//FIXME:hack
+#ifdef __APPLE__ //FIXME:hack
   nbytes = 14;
   bzero(buf, nbytes);
   buf[0] = buf[6] = 0xFE;
@@ -316,47 +316,47 @@ void bx_tuntap_pktmover_c::rx_timer ()
     rxbuf[5] = guest_macaddr[5];
   }
 
-#ifdef __APPLE__	//FIXME:hack
+#ifdef __APPLE__ //FIXME:hack
   if (nbytes>14)
 #else
   if (nbytes>0)
 #endif
-    BX_DEBUG (("tuntap read returned %d bytes", nbytes));
-#ifdef __APPLE__	//FIXME:hack
+    BX_DEBUG(("tuntap read returned %d bytes", nbytes));
+#ifdef __APPLE__ //FIXME:hack
   if (nbytes<14) {
 #else
   if (nbytes<0) {
 #endif
     if (errno != EAGAIN)
-      BX_ERROR (("tuntap read error: %s", strerror(errno)));
+      BX_ERROR(("tuntap read error: %s", strerror(errno)));
     return;
   }
 #if BX_ETH_TUNTAP_LOGGING
   if (nbytes > 0) {
-    BX_DEBUG (("receive packet length %u", nbytes));
+    BX_DEBUG(("receive packet length %u", nbytes));
     // dump raw bytes to a file, eventually dump in pcap format so that
     // tcpdump -r FILE can interpret them for us.
-    int n = fwrite (rxbuf, nbytes, 1, rxlog);
+    int n = fwrite(rxbuf, nbytes, 1, rxlog);
     if (n != 1) BX_ERROR (("fwrite to rxlog failed", nbytes));
     // dump packet in hex into an ascii log file
-    fprintf (rxlog_txt, "NE2K received a packet, length %u\n", nbytes);
+    fprintf(rxlog_txt, "received a packet, length %u\n", nbytes);
     for (n=0; n<nbytes; n++) {
       if (((n % 16) == 0) && n>0)
-	fprintf (rxlog_txt, "\n");
-      fprintf (rxlog_txt, "%02x ", rxbuf[n]);
+        fprintf(rxlog_txt, "\n");
+      fprintf(rxlog_txt, "%02x ", rxbuf[n]);
     }
-    fprintf (rxlog_txt, "\n--\n");
+    fprintf(rxlog_txt, "\n--\n");
     // flush log so that we see the packets as they arrive w/o buffering
-    fflush (rxlog);
-    fflush (rxlog_txt);
+    fflush(rxlog);
+    fflush(rxlog_txt);
   }
 #endif
   BX_DEBUG(("eth_tuntap: got packet: %d bytes, dst=%02x:%02x:%02x:%02x:%02x:%02x, src=%02x:%02x:%02x:%02x:%02x:%02x", nbytes, rxbuf[0], rxbuf[1], rxbuf[2], rxbuf[3], rxbuf[4], rxbuf[5], rxbuf[6], rxbuf[7], rxbuf[8], rxbuf[9], rxbuf[10], rxbuf[11]));
   if (nbytes < 60) {
-    BX_INFO (("packet too short (%d), padding to 60", nbytes));
+    BX_INFO(("packet too short (%d), padding to 60", nbytes));
     nbytes = 60;
   }
-  (*rxh)(rxarg, rxbuf, nbytes);
+  (*rxh)(this->netdev, rxbuf, nbytes);
 }
 
 int tun_alloc(char *dev)

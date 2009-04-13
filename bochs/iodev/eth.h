@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth.h,v 1.21 2009-02-08 09:05:52 vruppert Exp $
+// $Id: eth.h,v 1.22 2009-04-13 13:33:11 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -39,7 +39,7 @@ typedef void (*eth_rx_handler_t)(void *arg, const void *buf, unsigned len);
 
 static const Bit8u broadcast_macaddr[6] = {0xff,0xff,0xff,0xff,0xff,0xff};
 
-int execute_script(const char *name, char* arg1);
+int execute_script(bx_devmodel_c *netdev,  const char *name, char* arg1);
 
 //
 //  The eth_pktmover class is used by ethernet chip emulations
@@ -54,8 +54,8 @@ public:
   virtual void sendpkt(void *buf, unsigned io_len) = 0;
   virtual ~eth_pktmover_c () {}
 protected:
+  bx_devmodel_c *netdev;
   eth_rx_handler_t  rxh;   // receive callback
-  void *rxarg;
 };
 
 
@@ -67,18 +67,18 @@ protected:
 class eth_locator_c {
 public:
   static eth_pktmover_c *create(const char *type, const char *netif,
-				const char *macaddr,
-				eth_rx_handler_t rxh,
-				void *rxarg,
-				const char *script);
+                                const char *macaddr,
+                                eth_rx_handler_t rxh,
+                                bx_devmodel_c *dev,
+                                const char *script);
 protected:
   eth_locator_c(const char *type);
   virtual ~eth_locator_c() {}
   virtual eth_pktmover_c *allocate(const char *netif,
-				const char *macaddr,
-				eth_rx_handler_t rxh,
-				void *rxarg,
-				const char *script) = 0;
+                                   const char *macaddr,
+                                   eth_rx_handler_t rxh,
+                                   bx_devmodel_c *dev,
+                                   const char *script) = 0;
 private:
   static eth_locator_c *all;
   eth_locator_c *next;

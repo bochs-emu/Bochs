@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_fbsd.cc,v 1.37 2009-02-08 09:05:52 vruppert Exp $
+// $Id: eth_fbsd.cc,v 1.38 2009-04-13 13:33:11 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -61,7 +61,7 @@
 
 #include "eth.h"
 
-#define LOG_THIS bx_devices.pluginNE2kDevice->
+#define LOG_THIS netdev->
 
 extern "C" {
 #include <fcntl.h>
@@ -103,9 +103,9 @@ static const struct bpf_insn promiscfilter[] = {
 class bx_fbsd_pktmover_c : public eth_pktmover_c {
 public:
   bx_fbsd_pktmover_c(const char *netif,
-		     const char *macaddr,
-		     eth_rx_handler_t rxh,
-		     void *rxarg, const char *script);
+                     const char *macaddr,
+                     eth_rx_handler_t rxh,
+                     bx_devmodel_c *dev, const char *script);
   void sendpkt(void *buf, unsigned io_len);
 
 private:
@@ -128,10 +128,10 @@ public:
   bx_fbsd_locator_c(void) : eth_locator_c("fbsd") {}
 protected:
   eth_pktmover_c *allocate(const char *netif,
-			   const char *macaddr,
-			   eth_rx_handler_t rxh,
-			   void *rxarg, const char *script) {
-    return (new bx_fbsd_pktmover_c(netif, macaddr, rxh, rxarg, script));
+                           const char *macaddr,
+                           eth_rx_handler_t rxh,
+                           bx_devmodel_c *dev, const char *script) {
+    return (new bx_fbsd_pktmover_c(netif, macaddr, rxh, dev, script));
   }
 } bx_fbsd_match;
 
@@ -146,10 +146,10 @@ protected:
 // the specified netif (Replicates libpcap open code)
 //
 bx_fbsd_pktmover_c::bx_fbsd_pktmover_c(const char *netif,
-				       const char *macaddr,
-				       eth_rx_handler_t rxh,
-				       void *rxarg,
-				       const char *script)
+                                       const char *macaddr,
+                                       eth_rx_handler_t rxh,
+                                       bx_devmodel_c *dev,
+                                       const char *script)
 {
   char device[sizeof "/dev/bpf000"];
   int tmpfd;
@@ -159,14 +159,16 @@ bx_fbsd_pktmover_c::bx_fbsd_pktmover_c(const char *netif,
   struct bpf_program bp;
   u_int v;
 
+  this->netdev = dev;
+  BX_INFO(("freebsd network driver"));
   memcpy(fbsd_macaddr, macaddr, 6);
 
   do {
     (void)sprintf(device, "/dev/bpf%d", n++);
     this->bpf_fd = open(device, O_RDWR);
-	BX_DEBUG(("tried %s, returned %d (%s)",device,this->bpf_fd,strerror(errno)));
-	if(errno == EACCES)
-		break;
+    BX_DEBUG(("tried %s, returned %d (%s)",device,this->bpf_fd,strerror(errno)));
+    if(errno == EACCES)
+    break;
   } while (this->bpf_fd == -1);
 
   if (this->bpf_fd == -1) {
@@ -272,25 +274,24 @@ bx_fbsd_pktmover_c::bx_fbsd_pktmover_c(const char *netif,
   // Start the rx poll
   this->rx_timer_index =
     bx_pc_system.register_timer(this, this->rx_timer_handler, BX_BPF_POLL,
-				1, 1, "eth_fbsd"); // continuous, active
+                                1, 1, "eth_fbsd"); // continuous, active
 
   this->rxh   = rxh;
-  this->rxarg = rxarg;
 
 #if BX_ETH_FBSD_LOGGING
   // eventually Bryce wants ne2klog to dump in pcap format so that
   // tcpdump -r FILE can read it and interpret packets.
-  ne2klog = fopen ("ne2k.raw", "wb");
-  if (!ne2klog) BX_PANIC (("open ne2k-tx.log failed"));
-  ne2klog_txt = fopen ("ne2k.txt", "wb");
-  if (!ne2klog_txt) BX_PANIC (("open ne2k-txdump.txt failed"));
-  fprintf (ne2klog_txt, "null packetmover readable log file\n");
-  fprintf (ne2klog_txt, "net IF = %s\n", netif);
-  fprintf (ne2klog_txt, "MAC address = ");
+  ne2klog = fopen("ne2k.raw", "wb");
+  if (!ne2klog) BX_PANIC(("open ne2k-tx.log failed"));
+  ne2klog_txt = fopen("ne2k.txt", "wb");
+  if (!ne2klog_txt) BX_PANIC(("open ne2k-txdump.txt failed"));
+  fprintf(ne2klog_txt, "null packetmover readable log file\n");
+  fprintf(ne2klog_txt, "net IF = %s\n", netif);
+  fprintf(ne2klog_txt, "MAC address = ");
   for (int i=0; i<6; i++)
-    fprintf (ne2klog_txt, "%02x%s", 0xff & macaddr[i], i<5?":" : "");
-  fprintf (ne2klog_txt, "\n--\n");
-  fflush (ne2klog_txt);
+    fprintf(ne2klog_txt, "%02x%s", 0xff & macaddr[i], i<5?":" : "");
+  fprintf(ne2klog_txt, "\n--\n");
+  fflush(ne2klog_txt);
 #endif
 }
 
@@ -299,23 +300,23 @@ void
 bx_fbsd_pktmover_c::sendpkt(void *buf, unsigned io_len)
 {
 #if BX_ETH_FBSD_LOGGING
-  BX_DEBUG (("sendpkt length %u", io_len));
+  BX_DEBUG(("sendpkt length %u", io_len));
   // dump raw bytes to a file, eventually dump in pcap format so that
   // tcpdump -r FILE can interpret them for us.
-  int n = fwrite (buf, io_len, 1, ne2klog);
-  if (n != 1) BX_ERROR (("fwrite to ne2klog failed", io_len));
+  int n = fwrite(buf, io_len, 1, ne2klog);
+  if (n != 1) BX_ERROR(("fwrite to ne2klog failed", io_len));
   // dump packet in hex into an ascii log file
-  fprintf (ne2klog_txt, "NE2K TX packet, length %u\n", io_len);
+  fprintf(ne2klog_txt, "NE2K TX packet, length %u\n", io_len);
   Bit8u *charbuf = (Bit8u *)buf;
   for (n=0; n<io_len; n++) {
     if (((n % 16) == 0) && n>0)
-      fprintf (ne2klog_txt, "\n");
-    fprintf (ne2klog_txt, "%02x ", charbuf[n]);
+      fprintf(ne2klog_txt, "\n");
+    fprintf(ne2klog_txt, "%02x ", charbuf[n]);
   }
-  fprintf (ne2klog_txt, "\n--\n");
+  fprintf(ne2klog_txt, "\n--\n");
   // flush log so that we see the packets as they arrive w/o buffering
-  fflush (ne2klog);
-  fflush (ne2klog_txt);
+  fflush(ne2klog);
+  fflush(ne2klog_txt);
 #endif
   int status;
 
@@ -344,43 +345,43 @@ bx_fbsd_pktmover_c::rx_timer(void)
     int counter = 10;
 #define phdr ((unsigned char*)bhdr)
 
-    bhdr = (struct bpf_hdr *) rxbuf;
+  bhdr = (struct bpf_hdr *) rxbuf;
   nbytes = read(this->bpf_fd, rxbuf, sizeof(rxbuf));
 
-    while (phdr < (rxbuf + nbytes)) {
-	if (ioctl(this->bpf_fd, BIOCGSTATS, &bstat) < 0) {
-	    BX_PANIC(("eth_freebsd: could not stat filter: %s", strerror(errno)));
-	}
-	if (bstat.bs_drop > previous_bstat.bs_drop) {
-	    BX_INFO (("eth_freebsd: %d packets dropped by the kernel.",
-		      bstat.bs_drop - previous_bstat.bs_drop));
-	}
-	previous_bstat = bstat;
-	if (bhdr->bh_caplen < 20 || bhdr->bh_caplen > 1514) {
-	    BX_ERROR(("eth_freebsd: received too weird packet length: %d", bhdr->bh_caplen));
-	}
+  while (phdr < (rxbuf + nbytes)) {
+    if (ioctl(this->bpf_fd, BIOCGSTATS, &bstat) < 0) {
+      BX_PANIC(("eth_freebsd: could not stat filter: %s", strerror(errno)));
+    }
+    if (bstat.bs_drop > previous_bstat.bs_drop) {
+      BX_INFO(("eth_freebsd: %d packets dropped by the kernel.",
+               bstat.bs_drop - previous_bstat.bs_drop));
+    }
+    previous_bstat = bstat;
+    if (bhdr->bh_caplen < 20 || bhdr->bh_caplen > 1514) {
+      BX_ERROR(("eth_freebsd: received too weird packet length: %d", bhdr->bh_caplen));
+    }
 
     // filter out packets sourced from this node
-	if (memcmp(bhdr + bhdr->bh_hdrlen + 6, this->fbsd_macaddr, 6)) {
-	    (*rxh)(rxarg, phdr + bhdr->bh_hdrlen, bhdr->bh_caplen);
+    if (memcmp(bhdr + bhdr->bh_hdrlen + 6, this->fbsd_macaddr, 6)) {
+      (*rxh)(this->netdev, phdr + bhdr->bh_hdrlen, bhdr->bh_caplen);
     }
-	
+
 #if BX_ETH_FBSD_LOGGING
-  /// hey wait there is no receive data with a NULL ethernet, is there....
-    BX_DEBUG (("receive packet length %u", nbytes));
+    /// hey wait there is no receive data with a NULL ethernet, is there....
+    BX_DEBUG(("receive packet length %u", nbytes));
     // dump raw bytes to a file, eventually dump in pcap format so that
     // tcpdump -r FILE can interpret them for us.
-	if (1 != fwrite (bhdr, bhdr->bh_caplen, 1, ne2klog)) {
-	    BX_PANIC (("fwrite to ne2klog failed: %s", strerror(errno)));
-	}
+    if (1 != fwrite(bhdr, bhdr->bh_caplen, 1, ne2klog)) {
+      BX_PANIC(("fwrite to ne2klog failed: %s", strerror(errno)));
+    }
     // dump packet in hex into an ascii log file
-	fprintf (this->ne2klog_txt, "NE2K RX packet, length %u\n", bhdr->bh_caplen);
+    fprintf(this->ne2klog_txt, "RX packet, length %u\n", bhdr->bh_caplen);
     Bit8u *charrxbuf = (Bit8u *)rxbuf;
-	int n;
-	for (n=0; n<bhdr->bh_caplen; n++) {
+    int n;
+    for (n=0; n<bhdr->bh_caplen; n++) {
       if (((n % 16) == 0) && n>0)
-	fprintf (this->ne2klog_txt, "\n");
-	    fprintf (this->ne2klog_txt, "%02x ", phdr[n]);
+        fprintf (this->ne2klog_txt, "\n");
+      fprintf (this->ne2klog_txt, "%02x ", phdr[n]);
     }
     fprintf (this->ne2klog_txt, "\n--\n");
     // flush log so that we see the packets as they arrive w/o buffering
@@ -388,8 +389,8 @@ bx_fbsd_pktmover_c::rx_timer(void)
     fflush (this->ne2klog_txt);
 #endif
 
-	// Advance bhdr and phdr pointers to next packet
-	bhdr = (struct bpf_hdr*) ((char*) bhdr + BPF_WORDALIGN(bhdr->bh_hdrlen + bhdr->bh_caplen));
+    // Advance bhdr and phdr pointers to next packet
+    bhdr = (struct bpf_hdr*) ((char*) bhdr + BPF_WORDALIGN(bhdr->bh_hdrlen + bhdr->bh_caplen));
   }
 }
 
