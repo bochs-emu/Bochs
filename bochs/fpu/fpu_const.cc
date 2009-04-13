@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu_const.cc,v 1.15 2009-03-10 21:43:11 sshwarts Exp $
+// $Id: fpu_const.cc,v 1.16 2009-04-13 08:37:49 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -65,7 +65,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLDL2T(bxInstruction_c *i)
   }
   else {
     BX_CPU_THIS_PTR the_i387.FPU_push();
-    BX_WRITE_FPU_REG(FPU_round_const(Const_L2T, (FPU_CONTROL_WORD == FPU_RC_UP) ? 1 : 0), 0);
+    BX_WRITE_FPU_REG(FPU_round_const(Const_L2T, (FPU_CONTROL_WORD & FPU_CW_RC) == FPU_RC_UP), 0);
   }
 #else
   BX_INFO(("FLDL2T: required FPU, configure --enable-fpu"));
