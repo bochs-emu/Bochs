@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.185 2009-04-07 16:12:19 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.186 2009-04-14 09:45:22 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -88,7 +88,7 @@ int                     bx_infile_stack_index = 0;
 
 static int  bx_nest_infile(char *path);
 
-void bx_debug_ctrlc_handler(int signum);
+void CDECL bx_debug_ctrlc_handler(int signum);
 
 static void bx_unnest_infile(void);
 static void bx_get_command(void);
@@ -452,7 +452,7 @@ void bxerror(char *s)
   }
 }
 
-void bx_debug_ctrlc_handler(int signum)
+void CDECL bx_debug_ctrlc_handler(int signum)
 {
   UNUSED(signum);
   if (SIM->has_debug_gui()) {

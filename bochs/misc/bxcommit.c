@@ -1,6 +1,6 @@
 /*
  * misc/bximage.c
- * $Id: bxcommit.c,v 1.13 2008-02-05 22:57:42 sshwarts Exp $
+ * $Id: bxcommit.c,v 1.14 2009-04-14 09:45:22 sshwarts Exp $
  *
  * Commits a redolog file in a flat file for bochs images.
  *
@@ -30,14 +30,14 @@
 #include <stdarg.h>
 /* XXX use real snprintf */
 /* if they don't have snprintf, just use sprintf */
-int snprintf (char *s, size_t maxlen, const char *format, ...)
+int snprintf(char *s, size_t maxlen, const char *format, ...)
 {
   va_list arg;
   int done;
 
-  va_start (arg, format);
-  done = vsprintf (s, format, arg);
-  va_end (arg);
+  va_start(arg, format);
+  done = vsprintf(s, format, arg);
+  va_end(arg);
 
   return done;
 }
@@ -49,83 +49,80 @@ int snprintf (char *s, size_t maxlen, const char *format, ...)
 #include "../iodev/hdimage.h"
 
 char *EOF_ERR = "ERROR: End of input";
-char *rcsid = "$Id: bxcommit.c,v 1.13 2008-02-05 22:57:42 sshwarts Exp $";
+char *rcsid = "$Id: bxcommit.c,v 1.14 2009-04-14 09:45:22 sshwarts Exp $";
 char *divider = "========================================================================";
 
-void myexit (int code)
+void myexit(int code)
 {
 #ifdef WIN32
-  printf ("\nPress any key to continue\n");
+  printf("\nPress any key to continue\n");
   getch();
 #endif
   exit(code);
 }
 
 /* stolen from main.cc */
-void bx_center_print (FILE *file, char *line, int maxwidth)
+void bx_center_print(FILE *file, char *line, int maxwidth)
 {
   int imax;
   int i;
   imax = (maxwidth - strlen(line)) >> 1;
-  for (i=0; i<imax; i++) fputc (' ', file);
-  fputs (line, file);
+  for (i=0; i<imax; i++) fputc(' ', file);
+  fputs(line, file);
 }
 
-void
-print_banner ()
+void print_banner()
 {
-  printf ("%s\n", divider);
-  bx_center_print (stdout, "bxcommit\n", 72);
-  bx_center_print (stdout, "Undoable Disk Image Commit Tool for Bochs\n", 72);
-  bx_center_print (stdout, rcsid, 72);
-  printf ("\n%s\n", divider);
+  printf("%s\n", divider);
+  bx_center_print(stdout, "bxcommit\n", 72);
+  bx_center_print(stdout, "Undoable Disk Image Commit Tool for Bochs\n", 72);
+  bx_center_print(stdout, rcsid, 72);
+  printf("\n%s\n", divider);
 }
 
 /* this is how we crash */
-void fatal (char *c)
+void fatal(const char *c)
 {
-  printf ("%s\n", c);
-  myexit (1);
+  printf("%s\n", c);
+  myexit(1);
 }
 
 /* remove leading spaces, newline junk at end.  returns pointer to
  cleaned string, which is between s0 and the null */
-char *
-clean_string (char *s0)
+char *clean_string(char *s0)
 {
   char *s = s0;
   char *ptr;
   /* find first nonblank */
-  while (isspace (*s))
+  while (isspace(*s))
     s++;
   /* truncate string at first non-alphanumeric */
   ptr = s;
-  while (isprint (*ptr))
+  while (isprint(*ptr))
     ptr++;
   *ptr = 0;
   return s;
 }
 
 /* returns 0 on success, -1 on failure.  The value goes into out. */
-int
-ask_int (char *prompt, int min, int max, int the_default, int *out)
+int ask_int(const char *prompt, int min, int max, int the_default, int *out)
 {
   int n = max + 1;
   char buffer[1024];
   char *clean;
   int illegal;
   while (1) {
-    printf ("%s", prompt);
-    printf ("[%d] ", the_default);
-    if (!fgets (buffer, sizeof(buffer), stdin))
+    printf("%s", prompt);
+    printf("[%d] ", the_default);
+    if (!fgets(buffer, sizeof(buffer), stdin))
       return -1;
-    clean = clean_string (buffer);
+    clean = clean_string(buffer);
     if (strlen(clean) < 1) {
       // empty line, use the default
       *out = the_default;
       return 0;
     }
-    illegal = (1 != sscanf (buffer, "%d", &n));
+    illegal = (1 != sscanf(buffer, "%d", &n));
     if (illegal || n<min || n>max) {
       printf ("Your choice (%s) was not an integer between %d and %d.\n\n",
 	  clean, min, max);
@@ -137,26 +134,25 @@ ask_int (char *prompt, int min, int max, int the_default, int *out)
   }
 }
 
-int
-ask_menu (char *prompt, int n_choices, char *choice[], int the_default, int *out)
+int ask_menu(const char *prompt, int n_choices, char *choice[], int the_default, int *out)
 {
   char buffer[1024];
   char *clean;
   int i;
   *out = -1;
   while (1) {
-    printf ("%s", prompt);
-    printf ("[%s] ", choice[the_default]);
-    if (!fgets (buffer, sizeof(buffer), stdin))
+    printf("%s", prompt);
+    printf("[%s] ", choice[the_default]);
+    if (!fgets(buffer, sizeof(buffer), stdin))
       return -1;
-    clean = clean_string (buffer);
+    clean = clean_string(buffer);
     if (strlen(clean) < 1) {
       // empty line, use the default
       *out = the_default;
       return 0;
     }
     for (i=0; i<n_choices; i++) {
-      if (!strcmp (choice[i], clean)) {
+      if (!strcmp(choice[i], clean)) {
 	// matched, return the choice number
 	*out = i;
 	return 0;
@@ -164,25 +160,24 @@ ask_menu (char *prompt, int n_choices, char *choice[], int the_default, int *out
     }
     printf ("Your choice (%s) did not match any of the choices:\n", clean);
     for (i=0; i<n_choices; i++) {
-      if (i>0) printf (", ");
-      printf ("%s", choice[i]);
+      if (i>0) printf(", ");
+      printf("%s", choice[i]);
     }
-    printf ("\n");
+    printf("\n");
   }
 }
 
-int
-ask_yn (char *prompt, int the_default, int *out)
+int ask_yn(const char *prompt, int the_default, int *out)
 {
   char buffer[16];
   char *clean;
   *out = -1;
   while (1) {
-    printf ("%s", prompt);
-    printf ("[%s] ", the_default?"yes":"no");
-    if (!fgets (buffer, sizeof(buffer), stdin))
+    printf("%s", prompt);
+    printf("[%s] ", the_default?"yes":"no");
+    if (!fgets(buffer, sizeof(buffer), stdin))
       return -1;
-    clean = clean_string (buffer);
+    clean = clean_string(buffer);
     if (strlen(clean) < 1) {
       // empty line, use the default
       *out = the_default;
@@ -192,32 +187,31 @@ ask_yn (char *prompt, int the_default, int *out)
       case 'y': *out=1; return 0;
       case 'n': *out=0; return 0;
     }
-    printf ("Please type either yes or no.\n");
+    printf("Please type either yes or no.\n");
   }
 }
 
-int
-ask_string (char *prompt, char *the_default, char *out)
+int ask_string(const char *prompt, char *the_default, char *out)
 {
   char buffer[1024];
   char *clean;
   out[0] = 0;
-  printf ("%s", prompt);
-  printf ("[%s] ", the_default);
-  if (!fgets (buffer, sizeof(buffer), stdin))
+  printf("%s", prompt);
+  printf("[%s] ", the_default);
+  if (!fgets(buffer, sizeof(buffer), stdin))
     return -1;
-  clean = clean_string (buffer);
+  clean = clean_string(buffer);
   if (strlen(clean) < 1) {
     // empty line, use the default
-    strcpy (out, the_default);
+    strcpy(out, the_default);
     return 0;
   }
-  strcpy (out, clean);
+  strcpy(out, clean);
   return 0;
 }
 
 /* produce the image file */
-int commit_redolog (char *flatname, char *redologname )
+int commit_redolog(const char *flatname, const char *redologname)
 {
   int flatfd, redologfd;
   redolog_header_t header;
@@ -233,24 +227,24 @@ int commit_redolog (char *flatname, char *redologname )
 #endif
                   );
   if (flatfd<0) {
-    fatal ("ERROR: flat file not found or not writable");
+    fatal("ERROR: flat file not found or not writable");
   }
 
   // Check if redolog exists
   printf("%s\n",redologname);
-  redologfd = open (redologname, O_RDONLY
+  redologfd = open(redologname, O_RDONLY
 #ifdef O_BINARY
                          | O_BINARY
 #endif
                   );
   if (redologfd<0) {
-    fatal ("ERROR: redolog file not found");
+    fatal("ERROR: redolog file not found");
   }
 
   printf ("\nReading redolog header: [");
 
   if (read(redologfd, &header, STANDARD_HEADER_SIZE) != STANDARD_HEADER_SIZE)
-     fatal ("\nERROR: while reading redolog header!");
+     fatal("\nERROR: while reading redolog header!");
 
   // Print infos on redlog
   printf("Type='%s', Subtype='%s', Version=%d.%d] Done.",
@@ -258,19 +252,19 @@ int commit_redolog (char *flatname, char *redologname )
            dtoh32(header.standard.version)/0x10000,
            dtoh32(header.standard.version)%0x10000);
 
-  printf ("\nChecking redolog header: [");
+  printf("\nChecking redolog header: [");
 
   if (strcmp((char *)header.standard.magic, STANDARD_HEADER_MAGIC) != 0)
-     fatal ("\nERROR: bad magic in redolog header!");
+     fatal("\nERROR: bad magic in redolog header!");
 
   if (strcmp((char *)header.standard.type, REDOLOG_TYPE) != 0)
-     fatal ("\nERROR: bad type in redolog header!");
+     fatal("\nERROR: bad type in redolog header!");
 
   if (strcmp((char *)header.standard.subtype, REDOLOG_SUBTYPE_UNDOABLE) != 0)
-     fatal ("\nERROR: bad subtype in redolog header!");
+     fatal("\nERROR: bad subtype in redolog header!");
 
   if (header.standard.version != htod32(STANDARD_HEADER_VERSION))
-     fatal ("\nERROR: bad version in redolog header!");
+     fatal("\nERROR: bad version in redolog header!");
 
   printf("#entries=%d, bitmap size=%d, exent size = %d] Done.",
          dtoh32(header.specific.catalog),
@@ -279,80 +273,80 @@ int commit_redolog (char *flatname, char *redologname )
 
   catalog = (Bit32u*)malloc(dtoh32(header.specific.catalog) * sizeof(Bit32u));
   bitmap = (Bit8u*)malloc(dtoh32(header.specific.bitmap));
-  printf ("\nReading Catalog: [");
+  printf("\nReading Catalog: [");
 
   lseek(redologfd, dtoh32(header.standard.header), SEEK_SET);
 
   catalog_size = dtoh32(header.specific.catalog) * sizeof(Bit32u);
   if ((Bit32u) read(redologfd, catalog, catalog_size) != catalog_size)
-     fatal ("\nERROR: while reading redolog catalog!");
+     fatal("\nERROR: while reading redolog catalog!");
 
-  printf ("] Done.");
+  printf("] Done.");
 
-  printf ("\nCommitting changes to flat file: [  0%%]");
+  printf("\nCommitting changes to flat file: [  0%%]");
 
   bitmap_blocs = 1 + (dtoh32(header.specific.bitmap) - 1) / 512;
   extent_blocs = 1 + (dtoh32(header.specific.extent) - 1) / 512;
 
   for(i=0; i<dtoh32(header.specific.catalog); i++)
   {
-          printf("\x8\x8\x8\x8\x8%3d%%]", (i+1)*100/dtoh32(header.specific.catalog));
-          fflush(stdout);
+     printf("\x8\x8\x8\x8\x8%3d%%]", (i+1)*100/dtoh32(header.specific.catalog));
+     fflush(stdout);
 
-          if (dtoh32(catalog[i]) != REDOLOG_PAGE_NOT_ALLOCATED)
-          {
-                  Bit64s bitmap_offset;
-                  Bit32u bitmap_size, j;
+     if (dtoh32(catalog[i]) != REDOLOG_PAGE_NOT_ALLOCATED) {
+        Bit64s bitmap_offset;
+        Bit32u bitmap_size, j;
 
-                  bitmap_offset  = (Bit64s)STANDARD_HEADER_SIZE + (dtoh32(header.specific.catalog) * sizeof(Bit32u));
-                  bitmap_offset += (Bit64s)512 * dtoh32(catalog[i]) * (extent_blocs + bitmap_blocs);
+        bitmap_offset  = (Bit64s)STANDARD_HEADER_SIZE + (dtoh32(header.specific.catalog) * sizeof(Bit32u));
+        bitmap_offset += (Bit64s)512 * dtoh32(catalog[i]) * (extent_blocs + bitmap_blocs);
 
-                  // Read bitmap
-                  lseek(redologfd, bitmap_offset, SEEK_SET);
+        // Read bitmap
+        lseek(redologfd, bitmap_offset, SEEK_SET);
 
-                  bitmap_size = dtoh32(header.specific.bitmap);
-                  if ((Bit32u) read(redologfd, bitmap, bitmap_size) != bitmap_size)
-                          fatal ("\nERROR: while reading bitmap from redolog !");
+        bitmap_size = dtoh32(header.specific.bitmap);
+        if ((Bit32u) read(redologfd, bitmap, bitmap_size) != bitmap_size)
+           fatal("\nERROR: while reading bitmap from redolog !");
 
-                  for(j=0; j<dtoh32(header.specific.bitmap); j++)
-                  {
-                          Bit32u bit;
+        for(j=0; j<dtoh32(header.specific.bitmap); j++)
+        {
+           Bit32u bit;
 
-                          for(bit=0; bit<8; bit++)
-                          {
-                                  if ( (bitmap[j] & (1<<bit)) != 0)
-                                  {
-                                          Bit64s flat_offset, bloc_offset;
+           for(bit=0; bit<8; bit++)
+           {
+              if ( (bitmap[j] & (1<<bit)) != 0)
+              {
+                  Bit64s flat_offset, bloc_offset;
 
-                                          bloc_offset  = bitmap_offset + ((Bit64s)512 * (bitmap_blocs + ((j*8)+bit)));
+                  bloc_offset = bitmap_offset + ((Bit64s)512 * (bitmap_blocs + ((j*8)+bit)));
 
-                                          lseek(redologfd, (off_t)bloc_offset, SEEK_SET);
+                  lseek(redologfd, (off_t)bloc_offset, SEEK_SET);
 
-                                          if (read(redologfd, buffer, 512) != 512)
-                                                fatal ("\nERROR: while reading bloc from redolog !");
+                  if (read(redologfd, buffer, 512) != 512)
+                     fatal("\nERROR: while reading bloc from redolog !");
 
-                                          flat_offset  = (Bit64s)i * (dtoh32(header.specific.extent));
-                                          flat_offset += (Bit64s)512 * ((j * 8) + bit);
+                  flat_offset  = (Bit64s)i * (dtoh32(header.specific.extent));
+                  flat_offset += (Bit64s)512 * ((j * 8) + bit);
 
-                                          lseek(flatfd, (off_t)flat_offset, SEEK_SET);
+                  lseek(flatfd, (off_t)flat_offset, SEEK_SET);
 
-                                          if (write(flatfd, buffer, 512) != 512)
-                                                fatal ("\nERROR: while writing bloc in flatfile !");
-
-                                  }
-                          }
-                  }
-          }
+                  if (write(flatfd, buffer, 512) != 512)
+                     fatal("\nERROR: while writing bloc in flatfile !");
+               }
+           }
+        }
+     }
   }
-  printf (" Done.");
-  printf ("\n");
 
-  close (flatfd);
-  close (redologfd);
+  printf(" Done.");
+  printf("\n");
+
+  close(flatfd);
+  close(redologfd);
+
   return 0;
 }
 
-int main()
+int CDECL main()
 {
   char filename[256];
   char tmplogname[256];
@@ -364,21 +358,21 @@ int main()
   redologname[0] = 0;
 
   if (ask_string("\nWhat is the flat image name?\n", "c.img", filename) < 0)
-    fatal (EOF_ERR);
+    fatal(EOF_ERR);
 
   snprintf(tmplogname,256,"%s%s", filename, UNDOABLE_REDOLOG_EXTENSION);
 
   if (ask_string("\nWhat is the redolog name?\n", tmplogname, redologname) < 0)
-    fatal (EOF_ERR);
+    fatal(EOF_ERR);
 
   if (ask_yn("\nShall I remove the redolog afterwards?\n", 1, &remove) < 0)
-    fatal (EOF_ERR);
+    fatal(EOF_ERR);
 
   commit_redolog(filename, redologname);
 
   if (remove) {
     if (unlink(redologname) != 0)
-       fatal ("ERROR: while removing the redolog !\n");
+       fatal("ERROR: while removing the redolog !\n");
   }
 
   // make picky compilers (c++, gcc) happy,
