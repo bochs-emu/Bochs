@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: soft_int.cc,v 1.51 2009-04-05 19:09:44 sshwarts Exp $
+// $Id: soft_int.cc,v 1.52 2009-04-14 17:41:58 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -132,11 +132,19 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INT_Ib(bxInstruction_c *i)
     if (BX_CPU_THIS_PTR cr4.get_VME())
     {
       bx_address tr_base = BX_CPU_THIS_PTR tr.cache.u.segment.base;
+      if (BX_CPU_THIS_PTR tr.cache.u.segment.limit_scaled < 103) {
+        BX_ERROR(("INT_Ib(): TR.limit < 103 in VME"));
+        exception(BX_GP_EXCEPTION, 0, 0);
+      }
 
-      Bit16u io_base = system_read_word(tr_base + 102);
-      Bit8u vme_redirection_bitmap = system_read_byte(tr_base + io_base - 32 + (vector >> 3));
+      Bit32u io_base = system_read_word(tr_base + 102), offset = io_base - 32 + (vector >> 3);
+      if (offset >= BX_CPU_THIS_PTR tr.cache.u.segment.limit_scaled) {
+        BX_ERROR(("INT_Ib(): failed to fetch VME redirection bitmap"));
+        exception(BX_GP_EXCEPTION, 0, 0);
+      }
 
-      if (! (vme_redirection_bitmap & (1 << (vector & 7))))
+      Bit8u vme_redirection_bitmap = system_read_byte(tr_base + offset);
+      if (!(vme_redirection_bitmap & (1 << (vector & 7))))
       {
         // redirect interrupt through virtual-mode idt
         v86_redirect_interrupt(vector);
