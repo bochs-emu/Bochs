@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: call_far.cc,v 1.46 2009-04-14 09:23:36 sshwarts Exp $
+// $Id: call_far.cc,v 1.47 2009-04-14 13:43:20 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005 Stanislav Shwartsman
@@ -187,61 +187,7 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
         return;
 
       case BX_TASK_GATE:
-        // gate descriptor must be present else #NP(gate selector)
-        if (! IS_PRESENT(gate_descriptor)) {
-          BX_ERROR(("call_protected: gate not present"));
-          exception(BX_NP_EXCEPTION, cs_raw & 0xfffc, 0);
-        }
-
-        // examine selector to TSS, given in Task Gate descriptor
-        // must specify global in the local/global bit else #TS(TSS selector)
-        raw_tss_selector = gate_descriptor.u.taskgate.tss_selector;
-        parse_selector(raw_tss_selector, &tss_selector);
-
-        if (tss_selector.ti) {
-          BX_ERROR(("call_protected: tss_selector.ti=1"));
-          exception(BX_GP_EXCEPTION, raw_tss_selector & 0xfffc, 0);
-        }
-
-        // index must be within GDT limits else #TS(TSS selector)
-        fetch_raw_descriptor(&tss_selector, &dword1, &dword2, BX_GP_EXCEPTION);
-
-        parse_descriptor(dword1, dword2, &tss_descriptor);
-
-        // descriptor AR byte must specify available TSS
-        //   else #GP(TSS selector)
-        if (tss_descriptor.valid==0 || tss_descriptor.segment) {
-          BX_ERROR(("call_protected: TSS selector points to bad TSS"));
-          exception(BX_GP_EXCEPTION, raw_tss_selector & 0xfffc, 0);
-        }
-        if (tss_descriptor.type!=BX_SYS_SEGMENT_AVAIL_286_TSS &&
-            tss_descriptor.type!=BX_SYS_SEGMENT_AVAIL_386_TSS)
-        {
-          BX_ERROR(("call_protected: TSS selector points to bad TSS"));
-          exception(BX_GP_EXCEPTION, raw_tss_selector & 0xfffc, 0);
-        }
-
-        // task state segment must be present, else #NP(tss selector)
-        if (! IS_PRESENT(tss_descriptor)) {
-          BX_ERROR(("call_protected: task descriptor.p == 0"));
-          exception(BX_NP_EXCEPTION, raw_tss_selector & 0xfffc, 0);
-        }
-
-        // SWITCH_TASKS without nesting to TSS
-        task_switch(i, &tss_selector, &tss_descriptor,
-                    BX_TASK_FROM_CALL, dword1, dword2);
-
-        // EIP must be within code segment limit, else #TS(0)
-        if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b)
-          temp_eIP = EIP;
-        else
-          temp_eIP =  IP;
-
-        if (temp_eIP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled)
-        {
-          BX_ERROR(("call_protected: EIP > CS.limit"));
-          exception(BX_GP_EXCEPTION, 0, 0);
-        }
+        task_gate(i, &gate_selector, &gate_descriptor, BX_TASK_FROM_CALL);
         return;
 
       case BX_286_CALL_GATE:

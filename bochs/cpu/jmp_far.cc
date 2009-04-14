@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: jmp_far.cc,v 1.19 2009-04-14 09:23:36 sshwarts Exp $
+// $Id: jmp_far.cc,v 1.20 2009-04-14 13:43:21 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005 Stanislav Shwartsman
@@ -102,7 +102,7 @@ BX_CPU_C::jump_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
         return;
 
       case BX_TASK_GATE:
-        jmp_task_gate(i, &selector, &descriptor);
+        task_gate(i, &selector, &descriptor, BX_TASK_FROM_JUMP);
         return;
 
       case BX_286_CALL_GATE:
@@ -117,8 +117,7 @@ BX_CPU_C::jump_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
   }
 }
 
-  void BX_CPP_AttrRegparmN(3)
-BX_CPU_C::jmp_task_gate(bxInstruction_c *i, bx_selector_t *selector, bx_descriptor_t *gate_descriptor)
+void BX_CPU_C::task_gate(bxInstruction_c *i, bx_selector_t *selector, bx_descriptor_t *gate_descriptor, unsigned source)
 {
   Bit16u          raw_tss_selector;
   bx_selector_t   tss_selector;
@@ -128,7 +127,7 @@ BX_CPU_C::jmp_task_gate(bxInstruction_c *i, bx_selector_t *selector, bx_descript
 
   // task gate must be present else #NP(gate selector)
   if (! gate_descriptor->p) {
-    BX_ERROR(("jmp_task_gate: task gate not present"));
+    BX_ERROR(("task_gate: task gate not present"));
     exception(BX_NP_EXCEPTION, selector->value & 0xfffc, 0);
   }
 
@@ -138,7 +137,7 @@ BX_CPU_C::jmp_task_gate(bxInstruction_c *i, bx_selector_t *selector, bx_descript
   parse_selector(raw_tss_selector, &tss_selector);
 
   if (tss_selector.ti) {
-    BX_ERROR(("jmp_task_gate: tss_selector.ti=1"));
+    BX_ERROR(("task_gate: tss_selector.ti=1"));
     exception(BX_GP_EXCEPTION, raw_tss_selector & 0xfffc, 0);
   }
 
@@ -150,24 +149,24 @@ BX_CPU_C::jmp_task_gate(bxInstruction_c *i, bx_selector_t *selector, bx_descript
   parse_descriptor(dword1, dword2, &tss_descriptor);
 
   if (tss_descriptor.valid==0 || tss_descriptor.segment) {
-    BX_ERROR(("jmp_task_gate: TSS selector points to bad TSS"));
+    BX_ERROR(("task_gate: TSS selector points to bad TSS"));
     exception(BX_GP_EXCEPTION, raw_tss_selector & 0xfffc, 0);
   }
   if (tss_descriptor.type!=BX_SYS_SEGMENT_AVAIL_286_TSS &&
       tss_descriptor.type!=BX_SYS_SEGMENT_AVAIL_386_TSS)
   {
-    BX_ERROR(("jmp_task_gate: TSS selector points to bad TSS"));
+    BX_ERROR(("task_gate: TSS selector points to bad TSS"));
     exception(BX_GP_EXCEPTION, raw_tss_selector & 0xfffc, 0);
   }
 
   // task state segment must be present, else #NP(tss selector)
   if (! IS_PRESENT(tss_descriptor)) {
-    BX_ERROR(("jmp_task_gate: TSS descriptor.p == 0"));
+    BX_ERROR(("task_gate: TSS descriptor.p == 0"));
     exception(BX_NP_EXCEPTION, raw_tss_selector & 0xfffc, 0);
   }
 
   // SWITCH_TASKS _without_ nesting to TSS
-  task_switch(i, &tss_selector, &tss_descriptor, BX_TASK_FROM_JUMP, dword1, dword2);
+  task_switch(i, &tss_selector, &tss_descriptor, source, dword1, dword2);
 
   // EIP must be within code segment limit, else #GP(0)
   if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b)
@@ -176,7 +175,7 @@ BX_CPU_C::jmp_task_gate(bxInstruction_c *i, bx_selector_t *selector, bx_descript
     temp_eIP =  IP;
 
   if (temp_eIP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled) {
-    BX_ERROR(("jmp_task_gate: EIP > CS.limit"));
+    BX_ERROR(("task_gate: EIP > CS.limit"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 }
