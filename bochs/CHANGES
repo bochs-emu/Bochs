@@ -37,17 +37,17 @@ Detailed change log :
   - Implemented modern BIOSes mode limiting max reported CPUID function
     to 3 using .bochsrc CPU option. The mode is required in order to
     correctly install and boot WinNT.
+  - Added ability to configure CPUID vendor/brand strings through .bochsrc
+    (patch from @SF by Doug Reed).
   - Many bugfixes for CPU emulation correctness (both x86 and x86-64).
   - Updated CPU instrumentation callbacks.
   - Fixed Bochs internal debugger breakpoints/watchpoints handling.
 
 - Configure and compile
-  - Added ability to configure CPUID vendor/brand strings through .bochsrc
-    (patch from @SF by Doug Reed).
-  - Removed Peter Tattam's closed source external debugger interface from
-    the code.
   - Added ability to choose Bochs log file name and Bochs debugger log file
     name from Bochs command line (using new -log and -dbglog options)
+  - Removed Peter Tattam's closed source external debugger interface from
+    the code.
   - Removed --enable-guest2host-tlb configure option. The option is always
     enabled for any Bochs configuration.
   - Removed --enable-icache configure option. The option is always enabled

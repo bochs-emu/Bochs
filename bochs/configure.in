@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.394 2009-04-07 16:12:19 sshwarts Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.395 2009-04-14 11:05:55 sshwarts Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -919,7 +919,7 @@ AC_SUBST(NETLOW_OBJS)
 
 AC_MSG_CHECKING(for large pages support)
 AC_ARG_ENABLE(large-pages,
-  [  --enable-large-pages               support for large pages (2M/4M pages)],
+  [  --enable-large-pages              support for large pages (2M/4M pages)],
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
     AC_DEFINE(BX_SUPPORT_LARGE_PAGES, 1)
@@ -3041,7 +3041,7 @@ dnl // DEPRECATED configure options - force users to remove them
 
 AC_MSG_CHECKING(for guest to host TLB support (deprecated))
 AC_ARG_ENABLE(guest2host-tlb,
-  [  --enable-guest2host-tlb          enables guest to host addr TLB for speed (deprecated)],
+  [  --enable-guest2host-tlb           enables guest to host addr TLB for speed (deprecated)],
   [AC_MSG_RESULT($enableval)
    AC_MSG_ERROR([DEPRECATED - ALWAYS ON])
   ],
@@ -3061,29 +3061,9 @@ AC_ARG_ENABLE(icache,
 
 AC_MSG_CHECKING(for external debugger interface (deprecated))
 AC_ARG_ENABLE(external-debugger,
-  [  --enable-external-debugger       enables external debugger interface (deprecated)],
+  [  --enable-external-debugger        enables external debugger interface (deprecated)],
   [AC_MSG_RESULT($enableval)
    AC_MSG_ERROR([DEPRECATED - Peter Tattam's external debugger interface is not supported anymore])
-  ],
-  [
-   AC_MSG_RESULT(no)
-  ])
-
-AC_MSG_CHECKING(for magic breakpoints (deprecated))
-AC_ARG_ENABLE(magic-breakpoints,
-  [  --enable-magic-breakpoints        enables magic breakpoints (deprecated)],
-  [AC_MSG_RESULT($enableval)
-   AC_MSG_ERROR([DEPRECATED - magic breakpoints are always enabled with Bochs internal debugger])
-  ],
-  [
-   AC_MSG_RESULT(no)
-  ])
-
-AC_MSG_CHECKING(for save/restore (deprecated))
-AC_ARG_ENABLE(save-restore,
-  [  --enable-save-restore             enables save/restore (deprecated)],
-  [AC_MSG_RESULT($enableval)
-   AC_MSG_ERROR([DEPRECATED - save/restore feature is always enabled])
   ],
   [
    AC_MSG_RESULT(no)
