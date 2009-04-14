@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.591 2009-04-07 16:12:19 sshwarts Exp $
+// $Id: cpu.h,v 1.592 2009-04-14 09:23:36 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -3009,23 +3009,23 @@ public: // for now...
        bx_descriptor_t *descriptor, bx_address rip, Bit8u cpl);
 
 #if BX_SupportRepeatSpeedups
-  BX_SMF Bit32u FastRepMOVSB(bxInstruction_c *, unsigned srcSeg, bx_address srcOff,
+  BX_SMF Bit32u FastRepMOVSB(bxInstruction_c *i, unsigned srcSeg, bx_address srcOff,
        unsigned dstSeg, bx_address dstOff, Bit32u  byteCount);
-  BX_SMF Bit32u FastRepMOVSW(bxInstruction_c *, unsigned srcSeg, bx_address srcOff,
+  BX_SMF Bit32u FastRepMOVSW(bxInstruction_c *i, unsigned srcSeg, bx_address srcOff,
        unsigned dstSeg, bx_address dstOff, Bit32u  wordCount);
-  BX_SMF Bit32u FastRepMOVSD(bxInstruction_c *, unsigned srcSeg, bx_address srcOff,
+  BX_SMF Bit32u FastRepMOVSD(bxInstruction_c *i, unsigned srcSeg, bx_address srcOff,
        unsigned dstSeg, bx_address dstOff, Bit32u dwordCount);
 
-  BX_SMF Bit32u FastRepSTOSB(bxInstruction_c *, unsigned dstSeg, bx_address dstOff,
+  BX_SMF Bit32u FastRepSTOSB(bxInstruction_c *i, unsigned dstSeg, bx_address dstOff,
        Bit8u  val, Bit32u  byteCount);
-  BX_SMF Bit32u FastRepSTOSW(bxInstruction_c *, unsigned dstSeg, bx_address dstOff,
+  BX_SMF Bit32u FastRepSTOSW(bxInstruction_c *i, unsigned dstSeg, bx_address dstOff,
        Bit16u val, Bit32u  wordCount);
-  BX_SMF Bit32u FastRepSTOSD(bxInstruction_c *, unsigned dstSeg, bx_address dstOff,
+  BX_SMF Bit32u FastRepSTOSD(bxInstruction_c *i, unsigned dstSeg, bx_address dstOff,
        Bit32u val, Bit32u dwordCount);
 
-  BX_SMF Bit32u FastRepINSW(bxInstruction_c *, bx_address dstOff,
+  BX_SMF Bit32u FastRepINSW(bxInstruction_c *i, bx_address dstOff,
        Bit16u port, Bit32u wordCount);
-  BX_SMF Bit32u FastRepOUTSW(bxInstruction_c *, unsigned srcSeg, bx_address srcOff,
+  BX_SMF Bit32u FastRepOUTSW(bxInstruction_c *i, unsigned srcSeg, bx_address srcOff,
        Bit16u port, Bit32u wordCount);
 #endif
 
@@ -3101,17 +3101,17 @@ public: // for now...
   BX_SMF bx_bool relocate_apic(Bit64u val_64);
 #endif
 
-  BX_SMF void jump_protected(bxInstruction_c *, Bit16u cs, bx_address disp) BX_CPP_AttrRegparmN(3);
-  BX_SMF void jmp_task_gate(bxInstruction_c *, bx_descriptor_t *gate_descriptor) BX_CPP_AttrRegparmN(2);
-  BX_SMF void jmp_call_gate(bx_descriptor_t *gate_descriptor) BX_CPP_AttrRegparmN(1);
+  BX_SMF void jump_protected(bxInstruction_c *i, Bit16u cs, bx_address disp) BX_CPP_AttrRegparmN(3);
+  BX_SMF void jmp_task_gate(bxInstruction_c *i, bx_selector_t *selector, bx_descriptor_t *gate_descriptor) BX_CPP_AttrRegparmN(3);
+  BX_SMF void jmp_call_gate(bx_selector_t *selector, bx_descriptor_t *gate_descriptor) BX_CPP_AttrRegparmN(2);
 #if BX_SUPPORT_X86_64
   BX_SMF void jmp_call_gate64(bx_selector_t *selector) BX_CPP_AttrRegparmN(1);
 #endif
-  BX_SMF void call_protected(bxInstruction_c *, Bit16u cs, bx_address disp) BX_CPP_AttrRegparmN(3);
+  BX_SMF void call_protected(bxInstruction_c *i, Bit16u cs, bx_address disp) BX_CPP_AttrRegparmN(3);
 #if BX_SUPPORT_X86_64
   BX_SMF void call_gate64(bx_selector_t *selector) BX_CPP_AttrRegparmN(1);
 #endif
-  BX_SMF void return_protected(bxInstruction_c *, Bit16u pop_bytes) BX_CPP_AttrRegparmN(2);
+  BX_SMF void return_protected(bxInstruction_c *i, Bit16u pop_bytes) BX_CPP_AttrRegparmN(2);
   BX_SMF void iret_protected(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 #if BX_SUPPORT_X86_64
   BX_SMF void long_iret(bxInstruction_c *) BX_CPP_AttrRegparmN(1);

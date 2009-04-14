@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: call_far.cc,v 1.45 2009-03-15 16:52:54 sshwarts Exp $
+// $Id: call_far.cc,v 1.46 2009-04-14 09:23:36 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005 Stanislav Shwartsman
@@ -162,31 +162,6 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
         BX_ERROR(("call_protected: gate type %u unsupported in long mode", (unsigned) gate_descriptor.type));
         exception(BX_GP_EXCEPTION, cs_raw & 0xfffc, 0);
       }
-    }
-    else
-#endif
-    {
-      switch (gate_descriptor.type) {
-        case BX_SYS_SEGMENT_AVAIL_286_TSS:
-        case BX_SYS_SEGMENT_AVAIL_386_TSS:
-        case BX_TASK_GATE:
-        case BX_286_CALL_GATE:
-        case BX_386_CALL_GATE:
-          break;
-        default:
-          BX_ERROR(("call_protected(): gate.type(%u) unsupported", (unsigned) gate_descriptor.type));
-          exception(BX_GP_EXCEPTION, cs_raw & 0xfffc, 0);
-      }
-    }
-
-    // gate descriptor must be present else #NP(gate selector)
-    if (! IS_PRESENT(gate_descriptor)) {
-      BX_ERROR(("call_protected: gate not present"));
-      exception(BX_NP_EXCEPTION, cs_raw & 0xfffc, 0);
-    }
-
-#if BX_SUPPORT_X86_64
-    if (long_mode()) {
       call_gate64(&gate_selector);
       return;
     }
@@ -195,7 +170,6 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
     switch (gate_descriptor.type) {
       case BX_SYS_SEGMENT_AVAIL_286_TSS:
       case BX_SYS_SEGMENT_AVAIL_386_TSS:
-
         if (gate_descriptor.type==BX_SYS_SEGMENT_AVAIL_286_TSS)
           BX_DEBUG(("call_protected: 16bit available TSS"));
         else
@@ -213,6 +187,12 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
         return;
 
       case BX_TASK_GATE:
+        // gate descriptor must be present else #NP(gate selector)
+        if (! IS_PRESENT(gate_descriptor)) {
+          BX_ERROR(("call_protected: gate not present"));
+          exception(BX_NP_EXCEPTION, cs_raw & 0xfffc, 0);
+        }
+
         // examine selector to TSS, given in Task Gate descriptor
         // must specify global in the local/global bit else #TS(TSS selector)
         raw_tss_selector = gate_descriptor.u.taskgate.tss_selector;
@@ -268,6 +248,13 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
       case BX_386_CALL_GATE:
         // examine code segment selector in call gate descriptor
         BX_DEBUG(("call_protected: call gate"));
+
+        // gate descriptor must be present else #NP(gate selector)
+        if (! IS_PRESENT(gate_descriptor)) {
+          BX_ERROR(("call_protected: gate not present"));
+          exception(BX_NP_EXCEPTION, cs_raw & 0xfffc, 0);
+        }
+
         dest_selector = gate_descriptor.u.gate.dest_selector;
         new_EIP       = gate_descriptor.u.gate.dest_offset;
 
@@ -510,7 +497,7 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
         return;
 
       default: // can't get here
-        BX_PANIC(("call_protected: gate type %u unsupported", (unsigned) cs_descriptor.type));
+        BX_ERROR(("call_protected(): gate.type(%u) unsupported", (unsigned) gate_descriptor.type));
         exception(BX_GP_EXCEPTION, cs_raw & 0xfffc, 0);
     }
   }
@@ -529,6 +516,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::call_gate64(bx_selector_t *gate_selector)
 
   fetch_raw_descriptor_64(gate_selector, &dword1, &dword2, &dword3, BX_GP_EXCEPTION);
   parse_descriptor(dword1, dword2, &gate_descriptor);
+
+  // gate descriptor must be present else #NP(gate selector)
+  if (! IS_PRESENT(gate_descriptor)) {
+    BX_ERROR(("call_gate64: call gate not present"));
+    exception(BX_NP_EXCEPTION, gate_selector->value & 0xfffc, 0);
+  }
 
   Bit16u dest_selector = gate_descriptor.u.gate.dest_selector;
   // selector must not be null else #GP(0)

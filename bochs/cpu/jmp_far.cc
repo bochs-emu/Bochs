@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: jmp_far.cc,v 1.18 2009-01-31 10:43:23 sshwarts Exp $
+// $Id: jmp_far.cc,v 1.19 2009-04-14 09:23:36 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005 Stanislav Shwartsman
@@ -77,31 +77,6 @@ BX_CPU_C::jump_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
         BX_ERROR(("jump_protected: gate type %u unsupported in long mode", (unsigned) descriptor.type));
         exception(BX_GP_EXCEPTION, cs_raw & 0xfffc, 0);
       }
-    }
-    else
-#endif
-    {
-      switch (descriptor.type) {
-        case BX_SYS_SEGMENT_AVAIL_286_TSS:
-        case BX_SYS_SEGMENT_AVAIL_386_TSS:
-        case BX_286_CALL_GATE:
-        case BX_386_CALL_GATE:
-        case BX_TASK_GATE:
-          break;
-        default:
-          BX_ERROR(("jump_protected: gate type %u unsupported", (unsigned) descriptor.type));
-         exception(BX_GP_EXCEPTION, cs_raw & 0xfffc, 0);
-      }
-    }
-
-    // task gate must be present else #NP(gate selector)
-    if (! IS_PRESENT(descriptor)) {
-      BX_ERROR(("jump_protected: call gate.p == 0"));
-      exception(BX_NP_EXCEPTION, cs_raw & 0xfffc, 0);
-    }
-
-#if BX_SUPPORT_X86_64
-    if (long_mode()) {
       jmp_call_gate64(&selector);
       return;
     }
@@ -127,29 +102,35 @@ BX_CPU_C::jump_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
         return;
 
       case BX_TASK_GATE:
-        jmp_task_gate(i, &descriptor);
+        jmp_task_gate(i, &selector, &descriptor);
         return;
 
       case BX_286_CALL_GATE:
       case BX_386_CALL_GATE:
-        jmp_call_gate(&descriptor);
+        jmp_call_gate(&selector, &descriptor);
         return;
 
-      default: // can't get here
-        BX_PANIC(("jump_protected: gate type %u unsupported", (unsigned) descriptor.type));
+      default:
+        BX_ERROR(("jump_protected: gate type %u unsupported", (unsigned) descriptor.type));
         exception(BX_GP_EXCEPTION, cs_raw & 0xfffc, 0);
     }
   }
 }
 
-  void BX_CPP_AttrRegparmN(2)
-BX_CPU_C::jmp_task_gate(bxInstruction_c *i, bx_descriptor_t *gate_descriptor)
+  void BX_CPP_AttrRegparmN(3)
+BX_CPU_C::jmp_task_gate(bxInstruction_c *i, bx_selector_t *selector, bx_descriptor_t *gate_descriptor)
 {
   Bit16u          raw_tss_selector;
   bx_selector_t   tss_selector;
   bx_descriptor_t tss_descriptor;
   Bit32u dword1, dword2;
   Bit32u temp_eIP;
+
+  // task gate must be present else #NP(gate selector)
+  if (! gate_descriptor->p) {
+    BX_ERROR(("jmp_task_gate: task gate not present"));
+    exception(BX_NP_EXCEPTION, selector->value & 0xfffc, 0);
+  }
 
   // examine selector to TSS, given in Task Gate descriptor
   // must specify global in the local/global bit else #GP(TSS selector)
@@ -200,8 +181,8 @@ BX_CPU_C::jmp_task_gate(bxInstruction_c *i, bx_descriptor_t *gate_descriptor)
   }
 }
 
-  void BX_CPP_AttrRegparmN(1)
-BX_CPU_C::jmp_call_gate(bx_descriptor_t *gate_descriptor)
+  void BX_CPP_AttrRegparmN(2)
+BX_CPU_C::jmp_call_gate(bx_selector_t *selector, bx_descriptor_t *gate_descriptor)
 {
   bx_selector_t gate_cs_selector;
   bx_descriptor_t gate_cs_descriptor;
@@ -211,6 +192,12 @@ BX_CPU_C::jmp_call_gate(bx_descriptor_t *gate_descriptor)
     BX_DEBUG(("jmp_call_gate: jump to 286 CALL GATE"));
   else
     BX_DEBUG(("jmp_call_gate: jump to 386 CALL GATE"));
+
+  // task gate must be present else #NP(gate selector)
+  if (! gate_descriptor->p) {
+    BX_ERROR(("jmp_call_gate: call gate not present!"));
+    exception(BX_NP_EXCEPTION, selector->value & 0xfffc, 0);
+  }
 
   // examine selector to code segment given in call gate descriptor
   // selector must not be null, else #GP(0)
@@ -246,6 +233,12 @@ BX_CPU_C::jmp_call_gate64(bx_selector_t *gate_selector)
 
   fetch_raw_descriptor_64(gate_selector, &dword1, &dword2, &dword3, BX_GP_EXCEPTION);
   parse_descriptor(dword1, dword2, &gate_descriptor);
+
+  // gate must be present else #NP(gate selector)
+  if (! IS_PRESENT(gate_descriptor)) {
+    BX_ERROR(("jmp_call_gate64: call gate.p == 0"));
+    exception(BX_NP_EXCEPTION, gate_selector->value & 0xfffc, 0);
+  }
 
   Bit16u dest_selector = gate_descriptor.u.gate.dest_selector;
   // selector must not be null else #GP(0)

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: tasking.cc,v 1.69 2009-04-05 19:09:44 sshwarts Exp $
+// $Id: tasking.cc,v 1.70 2009-04-14 09:23:36 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -146,6 +146,11 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
   //   2) TSS DPL must be >= TSS selector RPL
   //   3) TSS descriptor is not busy.
 
+  if (tss_descriptor->valid==0 || tss_selector->ti) {
+    BX_ERROR(("task_switch: bad TSS selector !"));
+    exception(BX_GP_EXCEPTION, tss_selector->value & 0xfffc, 0);
+  }
+
   // TSS must be present, else #NP(TSS selector)
   if (tss_descriptor->p==0) {
     BX_ERROR(("task_switch: TSS descriptor is not present !"));
@@ -167,10 +172,7 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
   nbase32 = (Bit32u) tss_descriptor->u.segment.base;                 // new TSS.base
   new_TSS_limit = tss_descriptor->u.segment.limit_scaled;
 
-  // TSS must have valid limit, else #TS(TSS selector)
-  if (tss_selector->ti || tss_descriptor->valid==0 ||
-      new_TSS_limit < new_TSS_max)
-  {
+  if (new_TSS_limit < new_TSS_max) {
     BX_ERROR(("task_switch(): new TSS limit < %d", new_TSS_max));
     exception(BX_TS_EXCEPTION, tss_selector->value & 0xfffc, 0);
   }
