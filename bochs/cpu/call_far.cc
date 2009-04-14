@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: call_far.cc,v 1.47 2009-04-14 13:43:20 sshwarts Exp $
+// $Id: call_far.cc,v 1.48 2009-04-14 19:34:03 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005 Stanislav Shwartsman
@@ -138,10 +138,6 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
     bx_selector_t    gate_selector = cs_selector;
     Bit32u new_EIP;
     Bit16u dest_selector;
-    Bit16u          raw_tss_selector;
-    bx_selector_t   tss_selector;
-    bx_descriptor_t tss_descriptor;
-    Bit32u temp_eIP;
 
     // descriptor DPL must be >= CPL else #GP(gate selector)
     if (gate_descriptor.dpl < CPL) {
