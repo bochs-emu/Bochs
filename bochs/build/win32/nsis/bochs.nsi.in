@@ -1,5 +1,5 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; $Id: bochs.nsi.in,v 1.15 2007-09-28 17:58:48 vruppert Exp $
+; $Id: bochs.nsi.in,v 1.16 2009-04-15 17:23:50 vruppert Exp $
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ; Setup Script for NSIS Installer
@@ -8,7 +8,7 @@
 ;
 ; Based on Example Script by Joost Verburg
 ; also original BOCHS script by Robert (segra)
-; updated for NSIS 2.12 by Volker Ruppert
+; updated for NSIS 2.44 by Volker Ruppert
 ;
 ;---------------------
 ;Include Modern UI
@@ -33,7 +33,7 @@
 
 ;--------------------------------
 
-  ;General
+;General
   Name "${NAME}"
   OutFile Bochs-${VERSION}.exe
   SetOverwrite on
@@ -45,6 +45,9 @@
   ;Folder-select dialog
   InstallDir $PROGRAMFILES\Bochs-${VERSION}
   InstallDirRegKey HKLM "Software\${NAME}" ""
+
+  ;Request application privileges for Windows Vista
+  RequestExecutionLevel admin
 
 ;--------------------------------
 ;Interface Settings
@@ -218,17 +221,17 @@ SectionEnd
 
 Function .onInstSuccess
   MessageBox MB_YESNO|MB_ICONQUESTION \
-	     "Would you like to see a list of changes?" \
-	     IDNO NoChanges
-		ExecShell open '$INSTDIR\CHANGES.TXT'
+             "Would you like to see a list of changes?" \
+             IDNO NoChanges
+  ExecWait 'notepad.exe $INSTDIR\CHANGES.TXT'
   NoChanges:
   MessageBox MB_YESNO|MB_ICONQUESTION \
-             "Setup has completed. Read readme now?" \
+             "Setup has completed. Show README now?" \
              IDNO NoReadme
-    ExecShell open '$INSTDIR\readme.txt'
+  ExecWait 'notepad.exe $INSTDIR\README.txt'
 
   NoReadme:
-  DetailPrint "Thank you for installing Bochs, think inside the bochs."
+  MessageBox MB_OK "Thank you for installing Bochs, think inside the bochs."
 FunctionEnd
 
 ;--------------------------------
