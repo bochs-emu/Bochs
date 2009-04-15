@@ -404,7 +404,7 @@ pcivga.o: pcivga.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
   ../extplugin.h ../ltdl.h ../gui/gui.h ../instrument/stubs/instrument.h \
-  ../iodev/vga.h pci.h vga.h pcivga.h
+  ../iodev/vga.h pci.h pcivga.h
 pic.o: pic.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
@@ -483,27 +483,34 @@ usb_common.o: usb_common.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h 
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
   ../extplugin.h ../ltdl.h ../gui/gui.h ../instrument/stubs/instrument.h \
-  ../iodev/vga.h usb_common.h usb_hid.h usb_msd.h
+  ../iodev/vga.h usb_common.h usb_hid.h usb_hub.h usb_msd.h
 usb_hid.o: usb_hid.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
   ../extplugin.h ../ltdl.h ../gui/gui.h ../instrument/stubs/instrument.h \
   usb_common.h usb_hid.h
+usb_hub.o: usb_hub.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
+  ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
+  ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
+  ../extplugin.h ../ltdl.h ../gui/gui.h ../instrument/stubs/instrument.h \
+  usb_common.h usb_hub.h usb_msd.h
 usb_msd.o: usb_msd.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
   ../extplugin.h ../ltdl.h ../gui/gui.h ../instrument/stubs/instrument.h \
-  usb_common.h hdimage.h scsi_device.h usb_msd.h
+  usb_common.h cdrom.h hdimage.h scsi_device.h usb_msd.h
 usb_ohci.o: usb_ohci.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
   ../extplugin.h ../ltdl.h ../gui/gui.h ../instrument/stubs/instrument.h \
-  ../iodev/vga.h pci.h usb_common.h usb_hid.h usb_msd.h usb_ohci.h
+  ../iodev/vga.h pci.h usb_common.h usb_hid.h usb_hub.h usb_msd.h \
+  usb_ohci.h
 usb_uhci.o: usb_uhci.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
   ../extplugin.h ../ltdl.h ../gui/gui.h ../instrument/stubs/instrument.h \
-  ../iodev/vga.h pci.h usb_common.h usb_hid.h usb_msd.h usb_uhci.h
+  ../iodev/vga.h pci.h usb_common.h usb_hid.h usb_hub.h usb_msd.h \
+  usb_uhci.h
 vga.o: vga.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
@@ -701,7 +708,7 @@ pcivga.lo: pcivga.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
   ../extplugin.h ../ltdl.h ../gui/gui.h ../instrument/stubs/instrument.h \
-  ../iodev/vga.h pci.h vga.h pcivga.h
+  ../iodev/vga.h pci.h pcivga.h
 pic.lo: pic.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
@@ -780,27 +787,34 @@ usb_common.lo: usb_common.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
   ../extplugin.h ../ltdl.h ../gui/gui.h ../instrument/stubs/instrument.h \
-  ../iodev/vga.h usb_common.h usb_hid.h usb_msd.h
+  ../iodev/vga.h usb_common.h usb_hid.h usb_hub.h usb_msd.h
 usb_hid.lo: usb_hid.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
   ../extplugin.h ../ltdl.h ../gui/gui.h ../instrument/stubs/instrument.h \
   usb_common.h usb_hid.h
+usb_hub.lo: usb_hub.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
+  ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
+  ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
+  ../extplugin.h ../ltdl.h ../gui/gui.h ../instrument/stubs/instrument.h \
+  usb_common.h usb_hub.h usb_msd.h
 usb_msd.lo: usb_msd.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
   ../extplugin.h ../ltdl.h ../gui/gui.h ../instrument/stubs/instrument.h \
-  usb_common.h hdimage.h scsi_device.h usb_msd.h
+  usb_common.h cdrom.h hdimage.h scsi_device.h usb_msd.h
 usb_ohci.lo: usb_ohci.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
   ../extplugin.h ../ltdl.h ../gui/gui.h ../instrument/stubs/instrument.h \
-  ../iodev/vga.h pci.h usb_common.h usb_hid.h usb_msd.h usb_ohci.h
+  ../iodev/vga.h pci.h usb_common.h usb_hid.h usb_hub.h usb_msd.h \
+  usb_ohci.h
 usb_uhci.lo: usb_uhci.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
   ../extplugin.h ../ltdl.h ../gui/gui.h ../instrument/stubs/instrument.h \
-  ../iodev/vga.h pci.h usb_common.h usb_hid.h usb_msd.h usb_uhci.h
+  ../iodev/vga.h pci.h usb_common.h usb_hid.h usb_hub.h usb_msd.h \
+  usb_uhci.h
 vga.lo: vga.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
