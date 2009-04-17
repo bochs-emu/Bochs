@@ -65,7 +65,7 @@ these four paragraphs for those parts of this code that are retained.
 | indefinite value is returned.
 *----------------------------------------------------------------------------*/
 
-Bit32s roundAndPackInt32(int zSign, Bit64u absZ, float_status_t &status)
+Bit32s roundAndPackInt32(int zSign, Bit64u exactAbsZ, float_status_t &status)
 {
     int roundingMode = get_float_rounding_mode(status);
     int roundNearestEven = (roundingMode == float_round_nearest_even);
@@ -82,8 +82,8 @@ Bit32s roundAndPackInt32(int zSign, Bit64u absZ, float_status_t &status)
             }
         }
     }
-    int roundBits = (int)(absZ & 0x7F);
-    absZ = (absZ + roundIncrement)>>7;
+    int roundBits = (int)(exactAbsZ & 0x7F);
+    Bit64u absZ = (exactAbsZ + roundIncrement)>>7;
     absZ &= ~(((roundBits ^ 0x40) == 0) & roundNearestEven);
     Bit32s z = (Bit32s) absZ;
     if (zSign) z = -z;
@@ -91,7 +91,11 @@ Bit32s roundAndPackInt32(int zSign, Bit64u absZ, float_status_t &status)
         float_raise(status, float_flag_invalid);
         return (Bit32s)(int32_indefinite);
     }
-    if (roundBits) float_raise(status, float_flag_inexact);
+    if (roundBits) {
+        float_raise(status, float_flag_inexact);
+        if ((absZ << 7) > exactAbsZ)
+            set_float_rounding_up(status);
+    }
     return z;
 }
 
@@ -123,6 +127,7 @@ Bit64s roundAndPackInt64(int zSign, Bit64u absZ0, Bit64u absZ1, float_status_t &
             }
         }
     }
+    Bit64u exactAbsZ0 = absZ0;
     if (increment) {
         ++absZ0;
         if (absZ0 == 0) goto overflow;
@@ -135,7 +140,11 @@ Bit64s roundAndPackInt64(int zSign, Bit64u absZ0, Bit64u absZ1, float_status_t &
         float_raise(status, float_flag_invalid);
         return (Bit64s)(int64_indefinite);
     }
-    if (absZ1) float_raise(status, float_flag_inexact);
+    if (absZ1) {
+        float_raise(status, float_flag_inexact);
+        if (absZ0 > exactAbsZ0)
+            set_float_rounding_up(status);
+    }
     return z;
 }
 
