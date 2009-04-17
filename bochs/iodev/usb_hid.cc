@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_hid.cc,v 1.19 2009-04-10 20:26:14 vruppert Exp $
+// $Id: usb_hid.cc,v 1.20 2009-04-17 12:20:17 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Volker Ruppert
@@ -117,13 +117,13 @@ static const Bit8u bx_mouse_config_descriptor[] = {
   0x22,        /*  u8 type; Report */
   50, 0,       /*  u16 len */
 
-  /* one endpoint (status change endpoint) */
+  /* one endpoint */
   0x07,       /*  u8  ep_bLength; */
   0x05,       /*  u8  ep_bDescriptorType; Endpoint */
   0x81,       /*  u8  ep_bEndpointAddress; IN Endpoint 1 */
   0x03,       /*  u8  ep_bmAttributes; Interrupt */
   0x03, 0x00, /*  u16 ep_wMaxPacketSize; */
-  0x0a,       /*  u8  ep_bInterval; (255ms -- usb 2.0 spec) */
+  0x0a,       /*  u8  ep_bInterval; (0 - 255ms -- usb 2.0 spec) */
 };
 
 static const Bit8u bx_mouse_hid_descriptor[] = {
@@ -182,13 +182,13 @@ static const Bit8u bx_tablet_config_descriptor[] = {
   0x22,        /*  u8 type; Report */
   74, 0,       /*  u16 len */
 
-  /* one endpoint (status change endpoint) */
+  /* one endpoint */
   0x07,       /*  u8  ep_bLength; */
   0x05,       /*  u8  ep_bDescriptorType; Endpoint */
   0x81,       /*  u8  ep_bEndpointAddress; IN Endpoint 1 */
   0x03,       /*  u8  ep_bmAttributes; Interrupt */
   0x08, 0x00, /*  u16 ep_wMaxPacketSize; */
-  0x0a,       /*  u8  ep_bInterval; (255ms -- usb 2.0 spec) */
+  0x0a,       /*  u8  ep_bInterval; (0 - 255ms -- usb 2.0 spec) */
 };
 
 static const Bit8u bx_tablet_hid_descriptor[] = {
@@ -325,13 +325,13 @@ static const Bit8u bx_keypad_config_descriptor[] = {
   0x22,        /*  u8 type; Report */
   50, 0,       /*  u16 len */
 
-  /* one endpoint (status change endpoint) */
+  /* one endpoint */
   0x07,       /*  u8  ep_bLength; */
   0x05,       /*  u8  ep_bDescriptorType; Endpoint */
   0x82,       /*  u8  ep_bEndpointAddress; IN Endpoint 2 */
   0x03,       /*  u8  ep_bmAttributes; Interrupt */
   0x08, 0x00, /*  u16 ep_wMaxPacketSize; */
-  0x0a,       /*  u8  ep_bInterval; (255ms -- usb 2.0 spec) */
+  0x0a,       /*  u8  ep_bInterval; (0 - 255ms -- usb 2.0 spec) */
 };
 
 static const Bit8u bx_keypad_hid_descriptor[] = {
@@ -707,7 +707,6 @@ int usb_hid_device_c::mouse_poll(Bit8u *buf, int len)
     buf[0] = (Bit8u) s.b_state;
     buf[1] = (Bit8s) s.mouse_x;
     buf[2] = (Bit8s) s.mouse_y;
-    s.b_state = 0;
     s.mouse_x = 0;
     s.mouse_y = 0;
     l = 3;
