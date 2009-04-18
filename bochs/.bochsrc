@@ -62,6 +62,7 @@
 #display_library: win32, options="gui_debug" # use Win32 debugger gui
 #display_library: wx
 #display_library: x, options="hideIPS" # disable IPS output in status bar
+#display_library: x, options="gui_debug" # use X debugger gui
 
 #=======================================================================
 # ROMIMAGE:
