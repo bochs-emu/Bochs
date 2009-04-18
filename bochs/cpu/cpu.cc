@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.288 2009-04-11 17:00:28 sshwarts Exp $
+// $Id: cpu.cc,v 1.289 2009-04-18 21:09:50 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -128,11 +128,11 @@ void BX_CPU_C::cpu_loop(Bit32u max_instr_count)
 
 no_async_event:
 
-    Bit32u eipBiased = (Bit32u)(RIP + BX_CPU_THIS_PTR eipPageBias);
+    bx_address eipBiased = RIP + BX_CPU_THIS_PTR eipPageBias;
 
     if (eipBiased >= BX_CPU_THIS_PTR eipPageWindowSize) {
       prefetch();
-      eipBiased = (Bit32u)(RIP + BX_CPU_THIS_PTR eipPageBias);
+      eipBiased = RIP + BX_CPU_THIS_PTR eipPageBias;
     }
 
     bx_phy_address pAddr = BX_CPU_THIS_PTR pAddrPage + eipBiased;
@@ -151,7 +151,7 @@ no_async_event:
       // iCache miss. No validated instruction with matching fetch parameters
       // is in the iCache.
       InstrICache_Increment(iCacheMisses);
-      serveICacheMiss(entry, eipBiased, pAddr);
+      serveICacheMiss(entry, (Bit32u) eipBiased, pAddr);
       i = entry->i;
     }
 
