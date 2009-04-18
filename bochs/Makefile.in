@@ -441,9 +441,7 @@ v6workspace:
 ########
 win32_snap:
 	unzip $(V6WORKSPACE_ZIP)
-	$(SHELL) ./build/win32/cc2cpp
 	$(MAKE) zip
-	$(SHELL) ./build/win32/cpp2cc
 
 tar:
 	NAME=`pwd|$(SED) 's/.*\///'`; (cd ..; $(RM) -f $$NAME.zip; tar cf - $$NAME | $(GZIP_BIN) > $$NAME.tar.gz); ls -l ../$$NAME.tar.gz
