@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.250 2009-02-22 17:05:40 vruppert Exp $
+$Id: user.dbk,v 1.251 2009-04-18 09:51:46 sshwarts Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -6249,6 +6249,29 @@ From here, you may use the following commands:
 </section>
 
 <section>
+<title>Memory WatchPoints</title>
+<para>
+<screen>
+
+  watch read  addr            Insert a read watch point at physical address <varname>addr</varname>
+  watch r     addr            Insert a read watch point at physical address <varname>addr</varname>
+
+  watch write addr            Insert a write watch point at physical address <varname>addr</varname>
+  watch w     addr            Insert a write watch point at physical address <varname>addr</varname>
+
+  watch                       Display state of current current memory watchpoints
+
+  watch stop                  Stop simulation when a watchpoint is encountred (default)
+  watch continue              Do not stop simulation when a watchpoint is encountred
+
+  unwatch addr                Remove watchpoint to specific physical address
+  unwatch                     Remove all watch points
+
+</screen>
+</para>
+</section>
+
+<section>
 <title>Manipulating Memory</title>
 <para>
 <screen>
@@ -6291,13 +6314,14 @@ From here, you may use the following commands:
 <title>Info commands</title>
 <para>
 <screen>
-  info r|reg|regs|registers    List of CPU integer registers and their contents
+  r|reg|regs|registers         List of CPU integer registers and their contents
+  fp|fpu                       List of all FPU registers and their contents
+  mmx                          List of all MMX registers and their contents
+  sse                          List of all SSE registers and their contents
+  sreg                         Show segment registers and their contents
+  creg                         Show control registers and their contents
+
   info cpu                     List of all CPU registers and their contents
-  info fpu                     List of all FPU registers and their contents
-  info sse                     List of all SSE registers and their contents
-  info mmx                     List of all MMX registers and their contents
-  info creg                    Show CR0-CR4 registers and their contents
-  info sreg                    Show segment registers and their contents
   info eflags                  Show decoded EFLAGS register
   info break                   Information about current breakpoint status
   info tab                     Show paging address translation
@@ -6444,40 +6468,6 @@ was executed.
 Print the <varname>num words</varname> top 16-bit words on the stack. <varname>Num
 words</varname> defaults to 16. Only works reliably in protected mode when
 the base address of the stack segment is zero.
-
-<screen>watch stop</screen>
-
-Stop the simulation (and return to prompt) when a watch point is
-encountered.
-
-<screen>watch continue</screen>
-
-Do not stop the simulation when watch points are encountered. They will
-still be logged.
-
-<screen>watch</screen>
-
-Print current watch point status.
-
-<screen>unwatch</screen>
-
-Remove all watch points.
-
-<screen>watch read <varname>address</varname></screen>
-
-Insert a read watch point at physical address <varname>address</varname>.
-
-<screen>watch write address</screen>
-
-Insert a write watch point at physical address <varname>address</varname>.
-
-<screen>unwatch read <varname>address</varname></screen>
-
-Remove read watch point from physical address <varname>address</varname>.
-
-<screen>unwatch write <varname>address</varname></screen>
-
-Remove write watch point from physical address <varname>address</varname>.
 
 <screen>modebp</screen>
 
