@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios32.c,v 1.48 2009-04-12 12:48:14 vruppert Exp $
+// $Id: rombios32.c,v 1.49 2009-04-18 07:28:52 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  32 bit Bochs BIOS init code
@@ -1144,14 +1144,24 @@ static void mptable_init(void)
 
     /* irqs */
     for(i = 0; i < 16; i++) {
+#ifdef BX_QEMU
+        /* One entry per ioapic input. Input 2 is covered by 
+           irq0->inti2 override (i == 0). irq 2 is unused */
+        if (i == 2)
+            continue;
+#endif        
         putb(&q, 3); /* entry type = I/O interrupt */
         putb(&q, 0); /* interrupt type = vectored interrupt */
         putb(&q, 0); /* flags: po=0, el=0 */
         putb(&q, 0);
         putb(&q, 0); /* source bus ID = ISA */
-        putb(&q, (i == 2) ? 0 : i); /* source bus IRQ */
+        putb(&q, i); /* source bus IRQ */
         putb(&q, ioapic_id); /* dest I/O APIC ID */
+#ifdef BX_QEMU
+        putb(&q, i == 0 ? 2 : i); /* dest I/O APIC interrupt in */
+#else
         putb(&q, i); /* dest I/O APIC interrupt in */
+#endif        
     }
     /* patch length */
     len = q - mp_config_table;
