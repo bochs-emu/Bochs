@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: scsi_device.cc,v 1.17 2009-04-06 15:36:53 vruppert Exp $
+// $Id: scsi_device.cc,v 1.18 2009-04-19 19:25:50 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2007  Volker Ruppert
@@ -392,10 +392,18 @@ Bit32s scsi_device_t::scsi_send_command(Bit32u tag, Bit8u *buf, int lun)
       if (len < 4)
         goto fail;
       memset(outbuf, 0, 4);
+      r->buf_len = 4;
+      if ((sense == SENSE_NOT_READY) && (len >= 18)) {
+        memset(outbuf, 0, 18);
+        r->buf_len = 18;
+        outbuf[7] = 10;
+        /* asc 0x3a, ascq 0: Medium not present */
+        outbuf[12] = 0x3a;
+        outbuf[13] = 0;
+      }
       outbuf[0] = 0xf0;
       outbuf[1] = 0;
       outbuf[2] = sense;
-      r->buf_len = 4;
       break;
     case 0x12:
       BX_DEBUG(("inquiry (len %d)", len));
@@ -613,6 +621,13 @@ Bit32s scsi_device_t::scsi_send_command(Bit32u tag, Bit8u *buf, int lun)
       break;
     case 0x1b:
       BX_INFO(("Start Stop Unit"));
+      if (type == SCSIDEV_TYPE_CDROM && (buf[4] & 2)) {
+        if (!(buf[4] & 1)) {
+          // eject medium
+          cdrom->eject_cdrom();
+          inserted = 0;
+        }
+      }
       break;
     case 0x1e:
       BX_INFO(("Prevent Allow Medium Removal (prevent = %d)", buf[4] & 3));
