@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.251 2009-04-18 09:51:46 sshwarts Exp $
+$Id: user.dbk,v 1.252 2009-04-19 05:18:18 sshwarts Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -3489,8 +3489,9 @@ behaviour. See the examples below for currently supported options.
   display_library: rfb, options="timeout=60"  # time to wait for client
   display_library: sdl, options="fullscreen"  # startup in fullscreen mode
   display_library: win32, options="legacyF12" # use F12 to toggle mouse
-  display_library: win32, options="windebug" # use experimental debugger gui
+  display_library: win32, options="gui_debug" # use debugger gui frontend
   display_library: x, options="hideIPS" # disable IPS output in status bar
+  display_library: x, options="gui_debug"     # use debugger gui frontend
 </screen>
 </para>
 
