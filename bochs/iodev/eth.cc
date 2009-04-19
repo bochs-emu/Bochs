@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth.cc,v 1.30 2009-04-13 13:33:11 vruppert Exp $
+// $Id: eth.cc,v 1.31 2009-04-19 17:25:40 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -198,5 +198,24 @@ int execute_script(bx_devmodel_c *netdev, const char* scriptname, char* arg1)
 }
 
 #endif // (HAVE_ETHERTAP==1) || (HAVE_TUNTAP==1)
+
+void write_pktlog_txt(FILE *pktlog_txt, const Bit8u *buf, unsigned len, bx_bool host_to_guest)
+{
+  Bit8u *charbuf = (Bit8u *)buf;
+  unsigned n;
+
+  if (!host_to_guest) {
+    fprintf(pktlog_txt, "a packet from guest to host, length %u\n", len);
+  } else {
+    fprintf(pktlog_txt, "a packet from host to guest, length %u\n", len);
+  }
+  for (n = 0; n < len; n++) {
+    if (((n % 16) == 0) && (n > 0))
+      fprintf(pktlog_txt, "\n");
+    fprintf(pktlog_txt, "%02x ", (unsigned)charbuf[n]);
+  }
+  fprintf(pktlog_txt, "\n--\n");
+  fflush(pktlog_txt);
+}
 
 #endif /* if BX_NETWORKING */

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_null.cc,v 1.26 2009-04-13 13:33:11 vruppert Exp $
+// $Id: eth_null.cc,v 1.27 2009-04-19 17:25:40 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -123,17 +123,9 @@ void bx_null_pktmover_c::sendpkt(void *buf, unsigned io_len)
   size_t n = fwrite (buf, io_len, 1, txlog);
   if (n != 1) BX_ERROR(("fwrite to txlog failed, io_len = %u", io_len));
   // dump packet in hex into an ascii log file
-  fprintf(txlog_txt, "transmitting a packet, length %u\n", io_len);
-  Bit8u *charbuf = (Bit8u *)buf;
-  for (n=0; n<io_len; n++) {
-    if (((n % 16) == 0) && n>0)
-      fprintf(txlog_txt, "\n");
-    fprintf(txlog_txt, "%02x ", charbuf[n]);
-  }
-  fprintf(txlog_txt, "\n--\n");
+  write_pktlog_txt(txlog_txt, (const Bit8u *)buf, io_len, 0);
   // flush log so that we see the packets as they arrive w/o buffering
   fflush(txlog);
-  fflush(txlog_txt);
 #endif
 }
 
@@ -142,10 +134,10 @@ void bx_null_pktmover_c::rx_timer_handler (void *this_ptr)
 #if BX_ETH_NULL_LOGGING
   /// hey wait there is no receive data with a NULL ethernet, is there....
 
-  bx_devmodel_c *netdev = ((bx_null_pktmover_c*)this_ptr)->netdev;
   int io_len = 0;
   Bit8u buf[1];
   bx_null_pktmover_c *class_ptr = (bx_null_pktmover_c *) this_ptr;
+  bx_devmodel_c *netdev = class_ptr->netdev;
   if (io_len > 0) {
     BX_DEBUG(("receive packet length %u", io_len));
     // dump raw bytes to a file, eventually dump in pcap format so that
@@ -153,17 +145,9 @@ void bx_null_pktmover_c::rx_timer_handler (void *this_ptr)
     size_t n = fwrite (buf, io_len, 1, class_ptr->rxlog);
     if (n != 1) BX_ERROR(("fwrite to rxlog failed, io_len = %u", io_len));
     // dump packet in hex into an ascii log file
-    fprintf(class_ptr->rxlog_txt, "receiveing a packet, length %u\n", io_len);
-    Bit8u *charbuf = (Bit8u *)buf;
-    for (n=0; n<(size_t)io_len; n++) {
-      if (((n % 16) == 0) && n>0)
-        fprintf(class_ptr->rxlog_txt, "\n");
-      fprintf(class_ptr->rxlog_txt, "%02x ", charbuf[n]);
-    }
-    fprintf(class_ptr->rxlog_txt, "\n--\n");
+    write_pktlog_txt(class_ptr->rxlog_txt, buf, io_len, 1);
     // flush log so that we see the packets as they arrive w/o buffering
     fflush(class_ptr->rxlog);
-    fflush(class_ptr->rxlog_txt);
   }
 #endif
 }

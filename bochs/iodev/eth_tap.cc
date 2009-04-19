@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_tap.cc,v 1.35 2009-04-13 13:33:11 vruppert Exp $
+// $Id: eth_tap.cc,v 1.36 2009-04-19 17:25:40 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -346,17 +346,9 @@ void bx_tap_pktmover_c::sendpkt(void *buf, unsigned io_len)
   int n = fwrite(buf, io_len, 1, txlog);
   if (n != 1) BX_ERROR(("fwrite to txlog failed, io_len = %u", io_len));
   // dump packet in hex into an ascii log file
-  fprintf(txlog_txt, "transmitting a packet, length %u\n", io_len);
-  Bit8u *charbuf = (Bit8u *)buf;
-  for (n=0; n<(int)io_len; n++) {
-    if (((n % 16) == 0) && n>0)
-      fprintf(txlog_txt, "\n");
-    fprintf(txlog_txt, "%02x ", charbuf[n]);
-  }
-  fprintf(txlog_txt, "\n--\n");
+  write_pktlog_txt(txlog_txt, (const Bit8u *)buf, io_len, 0);
   // flush log so that we see the packets as they arrive w/o buffering
   fflush(txlog);
-  fflush(txlog_txt);
 #endif
 }
 
@@ -414,16 +406,9 @@ void bx_tap_pktmover_c::rx_timer()
     int n = fwrite(rxbuf, nbytes, 1, rxlog);
     if (n != 1) BX_ERROR(("fwrite to rxlog failed, nbytes = %d", nbytes));
     // dump packet in hex into an ascii log file
-    fprintf(rxlog_txt, "received a packet, length %u\n", nbytes);
-    for (n=0; n<nbytes; n++) {
-      if (((n % 16) == 0) && n>0)
-        fprintf(rxlog_txt, "\n");
-      fprintf(rxlog_txt, "%02x ", rxbuf[n]);
-    }
-    fprintf(rxlog_txt, "\n--\n");
+    write_pktlog_txt(rxlog_txt, rxbuf, nbytes, 1);
     // flush log so that we see the packets as they arrive w/o buffering
     fflush(rxlog);
-    fflush(rxlog_txt);
   }
 #endif
   BX_DEBUG(("eth_tap: got packet: %d bytes, dst=%x:%x:%x:%x:%x:%x, src=%x:%x:%x:%x:%x:%x\n", nbytes, rxbuf[0], rxbuf[1], rxbuf[2], rxbuf[3], rxbuf[4], rxbuf[5], rxbuf[6], rxbuf[7], rxbuf[8], rxbuf[9], rxbuf[10], rxbuf[11]));

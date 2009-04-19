@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_vnet.cc,v 1.28 2009-04-13 13:33:11 vruppert Exp $
+// $Id: eth_vnet.cc,v 1.29 2009-04-19 17:25:40 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  The Bochs Project
@@ -395,16 +395,7 @@ void bx_vnet_pktmover_c::sendpkt(void *buf, unsigned io_len)
 void bx_vnet_pktmover_c::guest_to_host(const Bit8u *buf, unsigned io_len)
 {
 #if BX_ETH_VNET_LOGGING
-  fprintf(pktlog_txt, "a packet from guest to host, length %u\n", io_len);
-  Bit8u *charbuf = (Bit8u *)buf;
-  unsigned n;
-  for (n=0; n<io_len; n++) {
-    if (((n % 16) == 0) && n>0)
-      fprintf(pktlog_txt, "\n");
-    fprintf(pktlog_txt, "%02x ", (unsigned)charbuf[n]);
-  }
-  fprintf(pktlog_txt, "\n--\n");
-  fflush(pktlog_txt);
+  write_pktlog_txt(pktlog_txt, buf, io_len, 0);
 #endif
 #if BX_ETH_VNET_PCAP_LOGGING
   if (pktlog_pcap && !ferror((FILE *)pktlog_pcap)) {
@@ -448,16 +439,7 @@ void bx_vnet_pktmover_c::rx_timer(void)
 {
   this->rxh(this->netdev, (void *)packet_buffer, packet_len);
 #if BX_ETH_VNET_LOGGING
-  fprintf(pktlog_txt, "a packet from host to guest, length %u\n", packet_len);
-  Bit8u *charbuf = (Bit8u *)packet_buffer;
-  unsigned n;
-  for (n=0; n<packet_len; n++) {
-    if (((n % 16) == 0) && n>0)
-      fprintf(pktlog_txt, "\n");
-    fprintf(pktlog_txt, "%02x ", (unsigned)charbuf[n]);
-  }
-  fprintf(pktlog_txt, "\n--\n");
-  fflush(pktlog_txt);
+  write_pktlog_txt(pktlog_txt, packet_buffer, packet_len, 1);
 #endif
 #if BX_ETH_VNET_PCAP_LOGGING
   if (pktlog_pcap && !ferror((FILE *)pktlog_pcap)) {

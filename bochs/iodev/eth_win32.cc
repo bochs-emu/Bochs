@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_win32.cc,v 1.31 2009-04-13 13:33:11 vruppert Exp $
+// $Id: eth_win32.cc,v 1.32 2009-04-19 17:25:40 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -338,16 +338,7 @@ bx_win32_pktmover_c::bx_win32_pktmover_c(
 void bx_win32_pktmover_c::sendpkt(void *buf, unsigned io_len)
 {
 #if BX_ETH_WIN32_LOGGING
-  fprintf(pktlog_txt, "a packet from guest to host, length %u\n", io_len);
-  Bit8u *charbuf = (Bit8u *)buf;
-  unsigned n;
-  for (n=0; n<io_len; n++) {
-    if (((n % 16) == 0) && n>0)
-      fprintf(pktlog_txt, "\n");
-    fprintf(pktlog_txt, "%02x ", (unsigned)charbuf[n]);
-  }
-  fprintf(pktlog_txt, "\n--\n");
-  fflush(pktlog_txt);
+  write_pktlog_txt(pktlog_txt, (const Bit8u *)buf, io_len, 0);
 #endif
 
   // SendPacket Here.
@@ -390,16 +381,7 @@ void bx_win32_pktmover_c::rx_timer(void)
           pktlen = hdr->bh_caplen;
           if (pktlen < 60) pktlen = 60;
 #if BX_ETH_WIN32_LOGGING
-          fprintf(pktlog_txt, "a packet from host to guest, length %u\n", pktlen);
-          Bit8u *charbuf = (Bit8u *)pPacket;
-          int n;
-          for (n=0; n<pktlen; n++) {
-            if (((n % 16) == 0) && n>0)
-              fprintf(pktlog_txt, "\n");
-            fprintf(pktlog_txt, "%02x ", (unsigned)charbuf[n]);
-          }
-          fprintf(pktlog_txt, "\n--\n");
-          fflush(pktlog_txt);
+          write_pktlog_txt(pktlog_txt, pPacket, pktlen, 1);
 #endif
           (*this->rxh)(this->netdev, pPacket, pktlen);
         }

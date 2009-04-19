@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_fbsd.cc,v 1.38 2009-04-13 13:33:11 vruppert Exp $
+// $Id: eth_fbsd.cc,v 1.39 2009-04-19 17:25:40 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -306,17 +306,9 @@ bx_fbsd_pktmover_c::sendpkt(void *buf, unsigned io_len)
   int n = fwrite(buf, io_len, 1, ne2klog);
   if (n != 1) BX_ERROR(("fwrite to ne2klog failed", io_len));
   // dump packet in hex into an ascii log file
-  fprintf(ne2klog_txt, "NE2K TX packet, length %u\n", io_len);
-  Bit8u *charbuf = (Bit8u *)buf;
-  for (n=0; n<io_len; n++) {
-    if (((n % 16) == 0) && n>0)
-      fprintf(ne2klog_txt, "\n");
-    fprintf(ne2klog_txt, "%02x ", charbuf[n]);
-  }
-  fprintf(ne2klog_txt, "\n--\n");
+  write_pktlog_txt(ne2klog_txt, (const Bit8u *)buf, io_len, 0);
   // flush log so that we see the packets as they arrive w/o buffering
   fflush(ne2klog);
-  fflush(ne2klog_txt);
 #endif
   int status;
 
@@ -367,7 +359,6 @@ bx_fbsd_pktmover_c::rx_timer(void)
     }
 
 #if BX_ETH_FBSD_LOGGING
-    /// hey wait there is no receive data with a NULL ethernet, is there....
     BX_DEBUG(("receive packet length %u", nbytes));
     // dump raw bytes to a file, eventually dump in pcap format so that
     // tcpdump -r FILE can interpret them for us.
@@ -375,18 +366,9 @@ bx_fbsd_pktmover_c::rx_timer(void)
       BX_PANIC(("fwrite to ne2klog failed: %s", strerror(errno)));
     }
     // dump packet in hex into an ascii log file
-    fprintf(this->ne2klog_txt, "RX packet, length %u\n", bhdr->bh_caplen);
-    Bit8u *charrxbuf = (Bit8u *)rxbuf;
-    int n;
-    for (n=0; n<bhdr->bh_caplen; n++) {
-      if (((n % 16) == 0) && n>0)
-        fprintf (this->ne2klog_txt, "\n");
-      fprintf (this->ne2klog_txt, "%02x ", phdr[n]);
-    }
-    fprintf (this->ne2klog_txt, "\n--\n");
+    write_pktlog_txt(ne2klog_txt, rxbuf, bhdr->bh_caplen, 1);
     // flush log so that we see the packets as they arrive w/o buffering
     fflush (this->ne2klog);
-    fflush (this->ne2klog_txt);
 #endif
 
     // Advance bhdr and phdr pointers to next packet

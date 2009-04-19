@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_arpback.cc,v 1.23 2009-04-13 13:33:11 vruppert Exp $
+// $Id: eth_arpback.cc,v 1.24 2009-04-19 17:25:40 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -67,7 +67,7 @@ private:
   int rx_timer_index;
   static void rx_timer_handler(void *);
   void rx_timer(void);
-  FILE *txlog, *txlog_txt;
+  FILE *pktlog, *pktlog_txt;
   //Bit8u arpbuf[MAX_FRAME_SIZE];
   //Bit32u buflen;
   //bx_bool bufvalid;
@@ -115,17 +115,17 @@ bx_arpback_pktmover_c::bx_arpback_pktmover_c(const char *netif,
   // Start the rx poll
   // eventually Bryce wants txlog to dump in pcap format so that
   // tcpdump -r FILE can read it and interpret packets.
-  txlog = fopen("ne2k-tx.log", "wb");
-  if (!txlog) BX_PANIC(("open ne2k-tx.log failed"));
-  txlog_txt = fopen("ne2k-txdump.txt", "wb");
-  if (!txlog_txt) BX_PANIC(("open ne2k-txdump.txt failed"));
-  fprintf(txlog_txt, "arpback packetmover readable log file\n");
-  fprintf(txlog_txt, "net IF = %s\n", netif);
-  fprintf(txlog_txt, "MAC address = ");
+  pktlog = fopen("ne2k-pkt.log", "wb");
+  if (!pktlog) BX_PANIC(("open ne2k-pkt.log failed"));
+  pktlog_txt = fopen("ne2k-pktlog.txt", "wb");
+  if (!pktlog_txt) BX_PANIC(("open ne2k-pktlog.txt failed"));
+  fprintf(pktlog_txt, "arpback packetmover readable log file\n");
+  fprintf(pktlog_txt, "net IF = %s\n", netif);
+  fprintf(pktlog_txt, "MAC address = ");
   for (int i=0; i<6; i++)
-    fprintf(txlog_txt, "%02x%s", 0xff & macaddr[i], i<5?":" : "");
-  fprintf(txlog_txt, "\n--\n");
-  fflush(txlog_txt);
+    fprintf(pktlog_txt, "%02x%s", 0xff & macaddr[i], i<5?":" : "");
+  fprintf(pktlog_txt, "\n--\n");
+  fflush(pktlog_txt);
 #endif
 }
 
@@ -161,20 +161,12 @@ bx_arpback_pktmover_c::sendpkt(void *buf, unsigned io_len)
   BX_DEBUG(("sendpkt length %u", io_len));
   // dump raw bytes to a file, eventually dump in pcap format so that
   // tcpdump -r FILE can interpret them for us.
-  int n = fwrite (buf, io_len, 1, txlog);
-  if (n != 1) BX_ERROR (("fwrite to txlog failed, length %u", io_len));
+  int n = fwrite (buf, io_len, 1, pktlog);
+  if (n != 1) BX_ERROR (("fwrite to pktlog failed, length %u", io_len));
   // dump packet in hex into an ascii log file
-  fprintf(txlog_txt, "transmitting a packet, length %u\n", io_len);
-  Bit8u *charbuf = (Bit8u *)buf;
-  for (n=0; n<(int)io_len; n++) {
-    if (((n % 16) == 0) && n>0)
-      fprintf(txlog_txt, "\n");
-    fprintf(txlog_txt, "%02x ", charbuf[n]);
-  }
-  fprintf(txlog_txt, "\n--\n");
+  write_pktlog_txt(pktlog_txt, (const Bit8u *)buf, io_len, 0);
   // flush log so that we see the packets as they arrive w/o buffering
-  fflush(txlog);
-  fflush(txlog_txt);
+  fflush(pktlog);
 #endif
 }
 
@@ -190,26 +182,13 @@ void bx_arpback_pktmover_c::rx_timer_handler (void * this_ptr)
 
 void bx_arpback_pktmover_c::rx_timer (void)
 {
-//int nbytes = 0;
-//struct bpf_hdr *bhdr;
   eth_packet rubble;
 
   if (packetmaker.getpacket(rubble)) {
-    //bufvalid=0;
-    void * buf=rubble.buf;
-    unsigned io_len=rubble.len;
-    Bit32u n;
-    fprintf(txlog_txt, "receiving a packet, length %u\n", io_len);
-    Bit8u *charbuf = (Bit8u *)buf;
-    for (n=0; n<io_len; n++) {
-      if (((n % 16) == 0) && n>0)
-        fprintf(txlog_txt, "\n");
-      fprintf(txlog_txt, "%02x ", charbuf[n]);
-    }
-    fprintf(txlog_txt, "\n--\n");
-    fflush(txlog_txt);
-
-    (*rxh)(this->netdev, buf, io_len);
+#if BX_ETH_NULL_LOGGING
+    write_pktlog_txt(pktlog_txt, rubble.buf, rubble.len, 1);
+#endif
+    (*rxh)(this->netdev, rubble.buf, rubble.len);
   }
 }
 
