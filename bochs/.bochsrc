@@ -6,17 +6,20 @@
 #
 # The configuration interface is a series of menus or dialog boxes that
 # allows you to change all the settings that control Bochs's behavior.
-# There are two choices of configuration interface: a text mode version
-# called "textconfig" and a graphical version called "wx".  The text
-# mode version uses stdin/stdout and is always compiled in.  The graphical
-# version is only available when you use "--with-wx" on the configure 
-# command.  If you do not write a config_interface line, Bochs will 
+# Depending on the platform there are up to 3 choices of configuration
+# interface: a text mode version called "textconfig" and two graphical versions
+# called "win32config" and "wx".  The text mode version uses stdin/stdout and
+# is always compiled in, unless Bochs is compiled for wx only. The choice
+# "win32config" is only available on win32 and it is the default there.
+# The choice "wx" is only available when you use "--with-wx" on the configure
+# command.  If you do not write a config_interface line, Bochs will
 # choose a default for you.
 #
 # NOTE: if you use the "wx" configuration interface, you must also use
 # the "wx" display library.
 #=======================================================================
 #config_interface: textconfig
+#config_interface: win32config
 #config_interface: wx
 
 #=======================================================================
@@ -62,7 +65,7 @@
 #display_library: win32, options="gui_debug" # use Win32 debugger gui
 #display_library: wx
 #display_library: x, options="hideIPS" # disable IPS output in status bar
-#display_library: x, options="gui_debug" # use X debugger gui
+#display_library: x, options="gui_debug" # use GTK debugger gui
 
 #=======================================================================
 # ROMIMAGE:
@@ -673,8 +676,9 @@ private_colormap: enabled=0
 # Example:
 # pnic: enabled=1, mac=MACADDR, ethmod=MODULE, ethdev=DEVICE, script=SCRIPT
 #
-# The pseudo-NIC accepts the same syntax and supports the same networking
-# modules as the NE2000 adapter. It must be assigned to a PCI slot.
+# The pseudo-NIC accepts the same syntax (for mac, ethmod, ethdev, script) and
+# supports the same networking modules as the NE2000 adapter. In addition to
+# this, it must be assigned to a PCI slot.
 #=======================================================================
 #pnic: enabled=1, mac=b0:c4:20:00:00:00, ethmod=vnet
 
@@ -828,6 +832,7 @@ i440fxsupport: enabled=1
 # USER_PLUGIN:
 # Load user-defined plugin. This option is available only if Bochs is
 # compiled with plugin support. Maximum 8 different plugins are supported.
+# See the example in the Bochs sources how to write a plugin device.
 #=======================================================================
 #user_plugin: name=testdev
 

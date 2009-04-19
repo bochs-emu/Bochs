@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.252 2009-04-19 05:18:18 sshwarts Exp $
+$Id: user.dbk,v 1.253 2009-04-19 13:10:50 vruppert Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -3212,16 +3212,18 @@ and 'cirrus' for Cirrus SVGA support (needs
 <para>
 Examples:
 <screen>
-2.88M 3.5" Floppy:
+2.88M 3.5" media:
   floppya: 2_88=a:, status=inserted
-1.44M 3.5" Floppy:
+1.44M 3.5" media:
   floppya: 1_44=floppya.img, status=inserted
-1.2M  5.25" Floppy:
+1.2M  5.25" media:
   floppyb: 1_2=/dev/fd0, status=inserted
-720K  3.5" Floppy:
+720K  3.5" media:
   floppya: 720k=/usr/local/bochs/images/win95.img, status=inserted
-auto-detect:
+auto-detect floppy media type:
   floppya: image=floppy.img, status=inserted
+1.44M 3.5" floppy drive, no media:
+  floppya: type=1_44
 </screen>
 Floppya is the first drive, and floppyb is the second drive. If you're booting
 from a floppy, floppya should point to a bootable disk.  To read from a disk
@@ -3230,15 +3232,19 @@ read directly from a raw floppy drive.  For raw disk access, use the device
 name (Unix systems) or the drive letter and a colon (Windows systems).
 </para>
 <para>
-Following floppy disk types are supported: 2_88, 1_44, 1_2, 720k, 360k, 320k, 180k,
-160k, as well as "image" to let Bochs auto-detect the type of floppy disk (does only
-work with images, not with raw floppy drives).
+Following floppy media types are supported: 2_88, 1_44, 1_2, 720k, 360k, 320k, 180k,
+160k, as well as "image" to let Bochs auto-detect the type of floppy media (does only
+work with images, not with raw floppy drives). In that case the size must match
+one of the supported types.
 </para>
 <para>
 You can set the initial status of the media to <constant>ejected</constant>
-or <constant>inserted</constant>.  Usually you will want to use
-<constant>inserted</constant>.  In fact Bryce can't think of any reason
-to ever write <constant>ejected</constant> in your <filename>bochsrc</filename>.
+or <constant>inserted</constant>. Usually you will want to use
+<constant>inserted</constant>.
+</para>
+<para>
+The parameter 'type' can be used to enable the floppy drive without media
+and status specified. Usually the drive type is set up based on the media type.
 </para>
 </section>
 
@@ -3436,12 +3442,14 @@ The check is enabled by default.
 <para>
 The configuration interface is a series of menus or dialog boxes that
 allows you to edit all the settings that control Bochs' behavior.
-There are two choices of configuration interface: a text mode version
-called "textconfig" and a graphical version called "wx".  The text
-mode version uses stdin/stdout and is always available while the graphical
-version is only available when Bochs is compiled with wxWidgets support, see
-<xref linkend="compile-wx">. If you do not use a config_interface line, Bochs
-will choose a default for you (usually textconfig).
+Depending on the platform there are up to 3 choices of configuration
+interface: a text mode version called "textconfig" and two graphical versions
+called "win32config" and "wx".  The text mode version uses stdin/stdout and
+is always compiled in, unless Bochs is compiled for wx only. The choice
+"win32config" is only available on win32 and it is the default there.
+The choice "wx" is only available when Bochs is compiled with wxWidgets support,
+see <xref linkend="compile-wx">. If you do not write a config_interface line,
+Bochs will choose a default for you (usually textconfig).
 </para>
 
 <note><para>
@@ -3455,6 +3463,7 @@ the "wx" display library, see
 Examples:
 <screen>
   config_interface: textconfig
+  config_interface: win32config
   config_interface: wx
 </screen>
 </para>
@@ -3489,9 +3498,9 @@ behaviour. See the examples below for currently supported options.
   display_library: rfb, options="timeout=60"  # time to wait for client
   display_library: sdl, options="fullscreen"  # startup in fullscreen mode
   display_library: win32, options="legacyF12" # use F12 to toggle mouse
-  display_library: win32, options="gui_debug" # use debugger gui frontend
-  display_library: x, options="hideIPS" # disable IPS output in status bar
-  display_library: x, options="gui_debug"     # use debugger gui frontend
+  display_library: win32, options="gui_debug" # use win32 debugger gui frontend
+  display_library: x, options="hideIPS"       # disable IPS output in status bar
+  display_library: x, options="gui_debug"     # use GTK debugger gui frontend
 </screen>
 </para>
 
@@ -3979,23 +3988,49 @@ Examples:
 <screen>
   usb_uhci: enabled=1, port1=mouse, port2=keypad
   usb_uhci: enabled=1, port1=tablet, port2=disk:usbdisk.img
+  usb_uhci: enabled=1, port1=hub:7, port2=cdrom:image.iso
 </screen>
 This option controls the presence of the USB root hub which is a part of the
 i440FX PCI chipset.
 </para>
 <para>
 With the port<replaceable>X</replaceable> option you can connect devices
-to the hub (currently supported: 'mouse', 'tablet', 'keypad' and 'disk').
+to the hub (currently supported: 'mouse', 'tablet', 'keypad', 'disk', 'cdrom'
+and 'hub').
+</para>
+<para>
 If you connect the mouse or tablet to one of the ports, Bochs forwards the
 mouse movement data to the USB device instead of the selected mouse type.
 When connecting the keypad to one of the ports, Bochs forwards the input of
 the numeric keypad to the USB device instead of the PS/2 keyboard.
+</para>
+<para>
 To connect a flat image as an USB hardisk you can use the 'disk' device with
-the path to the image separated with a colon (see above).
+the path to the image separated with a colon (see above). To emulate an USB
+cdrom you can use the 'cdrom' device name and the path to an ISO image or raw
+device name also separated with a colon.
+</para>
+<para>
+The device name 'hub' connects an external hub with max. 8 ports (default: 4)
+to the root hub. To specify the number of ports you have to add the value
+separated with a colon. Connecting devices to the external hub ports is only
+available in the runtime configuration.
 </para>
 <note><para>
 PCI support must be enabled.
 </para></note>
+</section>
+
+<section id="bochsopt-usb_ohci"><title>usb_ohci</title>
+<para>
+Example:
+<screen>
+  usb_ohci: enabled=1
+</screen>
+This option controls the presence of the USB OHCI host controller with a
+2-port hub. The portX option accepts the same device types with the same
+syntax as the UHCI controller (see the <link linkend="bochsopt-usb_uhci">usb_uhci option</link>).
+</para>
 </section>
 
 <section id="bochsopt-gdbstub">
@@ -4160,6 +4195,19 @@ version where this module was added.
 </table>
 </section>
 
+<section><title>pnic</title>
+<para>
+Example:
+<screen>
+  pnic: enabled=1, mac=b0:c4:20:00:00:00, ethmod=vnet
+</screen>
+To support the Bochs/Etherboot pseudo-NIC, Bochs must be compiled with the
+--enable-pnic configure option. It accepts the same syntax (for mac, ethmod,
+ethdev, script) and supports the same networking modules as the NE2000 adapter.
+In addition to this, it must be assigned to a PCI slot.
+</para>
+</section>
+
 <section><title>keyboard_mapping</title>
 <para>
 Examples:
@@ -4236,6 +4284,18 @@ Controls the presence of optional plugins without a separate option.
 By default all existing plugins are enabled. These plugins are currently
 supported: 'acpi', 'biosdev', 'extfpuirq', 'gameport', 'iodebug',
 'pci_ide', 'speaker' and 'unmapped'.
+</para>
+</section>
+
+<section><title>user_plugin</title>
+<para>
+Example:
+<screen>
+  user_plugin: name=testdev
+</screen>
+Load user-defined plugin. This option is available only if Bochs is
+compiled with plugin support. Maximum 8 different plugins are supported.
+See the example in the Bochs sources how to write a plugin device.
 </para>
 </section>
 
