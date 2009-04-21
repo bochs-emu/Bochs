@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.h,v 1.71 2009-04-10 14:41:29 vruppert Exp $
+// $Id: vga.h,v 1.72 2009-04-21 20:27:35 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -139,14 +139,17 @@ public:
   virtual Bit8u  mem_read(bx_phy_address addr);
   virtual void   mem_write(bx_phy_address addr, Bit8u value);
   virtual void   trigger_timer(void *this_ptr);
-  virtual void   dump_status(void);
   virtual void   register_state(void);
   virtual void   after_restore_state(void);
+#if BX_DEBUGGER
+  virtual void   debug_dump(void);
+#endif
+
 #if BX_SUPPORT_VBE
   virtual bx_bool vbe_set_base_addr(Bit32u *addr, Bit8u *pci_conf);
 
-  BX_VGA_SMF Bit8u   vbe_mem_read(bx_phy_address addr) BX_CPP_AttrRegparmN(1);
-  BX_VGA_SMF void    vbe_mem_write(bx_phy_address addr, Bit8u value) BX_CPP_AttrRegparmN(2);
+  BX_VGA_SMF Bit8u vbe_mem_read(bx_phy_address addr) BX_CPP_AttrRegparmN(1);
+  BX_VGA_SMF void  vbe_mem_write(bx_phy_address addr, Bit8u value) BX_CPP_AttrRegparmN(2);
 #endif
 
   virtual void   redraw_area(unsigned x0, unsigned y0,

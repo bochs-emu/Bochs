@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.163 2009-04-10 11:10:32 vruppert Exp $
+// $Id: vga.cc,v 1.164 2009-04-21 20:27:35 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -2828,7 +2828,7 @@ Bit8u bx_vga_c::get_actl_palette_idx(Bit8u index)
   return BX_VGA_THIS s.attribute_ctrl.palette_reg[index];
 }
 
-void bx_vga_c::dump_status(void)
+void bx_vga_c::debug_dump(void)
 {
 #if BX_DEBUGGER
   dbg_printf("s.misc_output.color_emulation = %u\n",

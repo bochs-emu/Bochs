@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.115 2009-04-10 14:41:29 vruppert Exp $
+// $Id: iodev.h,v 1.116 2009-04-21 20:27:35 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -75,6 +75,9 @@ class BOCHSAPI bx_devmodel_c : public logfunctions {
   virtual void reset(unsigned type) {}
   virtual void register_state(void) {}
   virtual void after_restore_state(void) {}
+#if BX_DEBUGGER
+  virtual void debug_dump(void) {}
+#endif
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -231,9 +234,6 @@ public:
   virtual Bit8u IAC(void) {
     STUBFUNC(pic, IAC); return 0;
   }
-  virtual void show_pic_state(void) {
-    STUBFUNC(pic, show_pic_state);
-  }
 };
 
 class BOCHSAPI bx_vga_stub_c : public bx_devmodel_c {
@@ -258,7 +258,6 @@ public:
   virtual Bit8u get_actl_palette_idx(Bit8u index) {
     return 0;
   }
-  virtual void dump_status(void) {}
   virtual bx_bool vbe_set_base_addr(Bit32u *addr, Bit8u *pci_conf) {
     return 0;
   }
@@ -290,7 +289,6 @@ public:
 
   virtual Bit8u rd_memType(Bit32u addr) { return 0; }
   virtual Bit8u wr_memType(Bit32u addr) { return 0; }
-  virtual void print_i440fx_state(void) {}
 };
 
 class BOCHSAPI bx_pci2isa_stub_c : public bx_devmodel_c, public bx_pci_device_stub_c {

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci.h,v 1.29 2009-02-08 09:05:52 vruppert Exp $
+// $Id: pci.h,v 1.30 2009-04-21 20:27:35 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -71,12 +71,15 @@ public:
                                   bx_write_handler_t f2, Bit32u *addr,
                                   Bit8u *pci_conf, unsigned size,
                                   const Bit8u *iomask, const char *name);
-  virtual void  print_i440fx_state(void);
-  virtual Bit8u rd_memType (Bit32u addr);
-  virtual Bit8u wr_memType (Bit32u addr);
+  virtual Bit8u rd_memType(Bit32u addr);
+  virtual Bit8u wr_memType(Bit32u addr);
 
   virtual Bit32u pci_read_handler(Bit8u address, unsigned io_len);
   virtual void   pci_write_handler(Bit8u address, Bit32u value, unsigned io_len);
+
+#if BX_DEBUGGER
+  virtual void debug_dump(void);
+#endif
 
 private:
   Bit8u pci_handler_id[0x100];  // 256 devices/functions

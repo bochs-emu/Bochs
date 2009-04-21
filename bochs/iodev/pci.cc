@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci.cc,v 1.62 2009-04-21 17:53:29 vruppert Exp $
+// $Id: pci.cc,v 1.63 2009-04-21 20:27:35 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -63,7 +63,7 @@ bx_pci_bridge_c::bx_pci_bridge_c()
 
 bx_pci_bridge_c::~bx_pci_bridge_c()
 {
-  print_i440fx_state();
+  debug_dump();
   BX_DEBUG(("Exit"));
 }
 
@@ -461,7 +461,7 @@ Bit8u bx_pci_bridge_c::wr_memType(Bit32u addr)
    return(0); // keep compiler happy
 }
 
-void bx_pci_bridge_c::print_i440fx_state()
+void bx_pci_bridge_c::debug_dump()
 {
   int i;
 

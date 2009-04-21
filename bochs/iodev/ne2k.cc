@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ne2k.cc,v 1.106 2009-04-21 17:53:29 vruppert Exp $
+// $Id: ne2k.cc,v 1.107 2009-04-21 20:27:35 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1416,7 +1416,7 @@ void bx_ne2k_c::init(void)
   Bit8u macaddr[6];
   bx_list_c *base;
 
-  BX_DEBUG(("Init $Id: ne2k.cc,v 1.106 2009-04-21 17:53:29 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: ne2k.cc,v 1.107 2009-04-21 20:27:35 sshwarts Exp $"));
 
   // Read in values from config interface
   base = (bx_list_c*) SIM->get_param(BXPN_NE2K);
@@ -1634,39 +1634,39 @@ void bx_ne2k_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len)
 #define BX_LOW_BYTE(x) (0x00ff & (x))
 #define BX_DUPLICATE(n) if (brief && num!=n) break;
 
-void bx_ne2k_c::print_info (FILE *fp, int page, int reg, int brief)
+void bx_ne2k_c::print_info(FILE *fp, int page, int reg, int brief)
 {
   int i;
   int n = 0;
   if (page < 0) {
     for (page=0; page<=2; page++)
-      theNE2kDevice->print_info (fp, page, reg, 1);
+      theNE2kDevice->print_info(fp, page, reg, 1);
     // tell them how to use this command
-    dbg_printf ("\nHow to use the info ne2k command:\n");
-    dbg_printf ("info ne2k - show all registers\n");
-    dbg_printf ("info ne2k page N - show registers in page N\n");
-    dbg_printf ("info ne2k page N reg M - show just one register\n");
+    dbg_printf("\nHow to use the info ne2k command:\n");
+    dbg_printf("info ne2k - show all registers\n");
+    dbg_printf("info ne2k page N - show registers in page N\n");
+    dbg_printf("info ne2k page N reg M - show just one register\n");
     return;
   }
   if (page > 2) {
-    dbg_printf ("NE2K has only pages 0, 1, and 2.  Page %d is out of range.\n", page);
+    dbg_printf("NE2K has only pages 0, 1, and 2.  Page %d is out of range.\n", page);
     return;
   }
   if (reg < 0) {
-    dbg_printf ("NE2K registers, page %d\n", page);
-    dbg_printf ("----------------------\n");
+    dbg_printf("NE2K registers, page %d\n", page);
+    dbg_printf("----------------------\n");
     for (reg=0; reg<=15; reg++)
       theNE2kDevice->print_info (fp, page, reg, 1);
-    dbg_printf ("----------------------\n");
+    dbg_printf("----------------------\n");
     return;
   }
   if (reg > 15) {
-    dbg_printf ("NE2K has only registers 0-15 (0x0-0xf).  Register %d is out of range.\n", reg);
+    dbg_printf("NE2K has only registers 0-15 (0x0-0xf).  Register %d is out of range.\n", reg);
     return;
   }
   if (!brief) {
-    dbg_printf ("NE2K Info - page %d, register 0x%02x\n", page, reg);
-    dbg_printf ("----------------------------------\n");
+    dbg_printf("NE2K Info - page %d, register 0x%02x\n", page, reg);
+    dbg_printf("----------------------------------\n");
   }
   int num = page*0x100 + reg;
   switch (num) {
@@ -1674,129 +1674,129 @@ void bx_ne2k_c::print_info (FILE *fp, int page, int reg, int brief)
     case 0x0100:
     case 0x0200:
       dbg_printf ("CR (Command register):\n  ");
-      SHOW_FIELD (CR, stop);
-      SHOW_FIELD (CR, start);
-      SHOW_FIELD (CR, tx_packet);
-      SHOW_FIELD (CR, rdma_cmd);
-      SHOW_FIELD (CR, pgsel);
-      dbg_printf ("\n");
+      SHOW_FIELD(CR, stop);
+      SHOW_FIELD(CR, start);
+      SHOW_FIELD(CR, tx_packet);
+      SHOW_FIELD(CR, rdma_cmd);
+      SHOW_FIELD(CR, pgsel);
+      dbg_printf("\n");
       break;
     case 0x0003:
-      dbg_printf ("BNRY = Boundary Pointer = 0x%02x\n", BX_NE2K_THIS s.bound_ptr);
+      dbg_printf("BNRY = Boundary Pointer = 0x%02x\n", BX_NE2K_THIS s.bound_ptr);
       break;
     case 0x0004:
-      dbg_printf ("TSR (Transmit Status Register), read-only:\n  ");
-      SHOW_FIELD (TSR, tx_ok);
-      SHOW_FIELD (TSR, reserved);
-      SHOW_FIELD (TSR, collided);
-      SHOW_FIELD (TSR, aborted);
-      SHOW_FIELD (TSR, no_carrier);
-      SHOW_FIELD (TSR, fifo_ur);
-      SHOW_FIELD (TSR, cd_hbeat);
-      SHOW_FIELD (TSR, ow_coll);
-      dbg_printf ("\n");
+      dbg_printf("TSR (Transmit Status Register), read-only:\n  ");
+      SHOW_FIELD(TSR, tx_ok);
+      SHOW_FIELD(TSR, reserved);
+      SHOW_FIELD(TSR, collided);
+      SHOW_FIELD(TSR, aborted);
+      SHOW_FIELD(TSR, no_carrier);
+      SHOW_FIELD(TSR, fifo_ur);
+      SHOW_FIELD(TSR, cd_hbeat);
+      SHOW_FIELD(TSR, ow_coll);
+      dbg_printf("\n");
       // fall through into TPSR, no break line.
     case 0x0204:
-      dbg_printf ("TPSR = Transmit Page Start = 0x%02x\n", BX_NE2K_THIS s.tx_page_start);
+      dbg_printf("TPSR = Transmit Page Start = 0x%02x\n", BX_NE2K_THIS s.tx_page_start);
       break;
     case 0x0005:
     case 0x0006:  BX_DUPLICATE(0x0005);
-      dbg_printf ("NCR = Number of Collisions Register (read-only) = 0x%02x\n", BX_NE2K_THIS s.num_coll);
-      dbg_printf ("TBCR1,TBCR0 = Transmit Byte Count = %02x %02x\n",
-	  BX_HIGH_BYTE (BX_NE2K_THIS s.tx_bytes),
-	  BX_LOW_BYTE (BX_NE2K_THIS s.tx_bytes));
-      dbg_printf ("FIFO = %02x\n", BX_NE2K_THIS s.fifo);
+      dbg_printf("NCR = Number of Collisions Register (read-only) = 0x%02x\n", BX_NE2K_THIS s.num_coll);
+      dbg_printf("TBCR1,TBCR0 = Transmit Byte Count = %02x %02x\n",
+	  BX_HIGH_BYTE(BX_NE2K_THIS s.tx_bytes),
+	  BX_LOW_BYTE(BX_NE2K_THIS s.tx_bytes));
+      dbg_printf("FIFO = %02x\n", BX_NE2K_THIS s.fifo);
       break;
     case 0x0007:
-      dbg_printf ("ISR (Interrupt Status Register):\n  ");
-      SHOW_FIELD (ISR, pkt_rx);
-      SHOW_FIELD (ISR, pkt_tx);
-      SHOW_FIELD (ISR, rx_err);
-      SHOW_FIELD (ISR, tx_err);
-      SHOW_FIELD (ISR, overwrite);
-      SHOW_FIELD (ISR, cnt_oflow);
-      SHOW_FIELD (ISR, rdma_done);
-      SHOW_FIELD (ISR, reset);
-      dbg_printf ("\n");
+      dbg_printf("ISR (Interrupt Status Register):\n  ");
+      SHOW_FIELD(ISR, pkt_rx);
+      SHOW_FIELD(ISR, pkt_tx);
+      SHOW_FIELD(ISR, rx_err);
+      SHOW_FIELD(ISR, tx_err);
+      SHOW_FIELD(ISR, overwrite);
+      SHOW_FIELD(ISR, cnt_oflow);
+      SHOW_FIELD(ISR, rdma_done);
+      SHOW_FIELD(ISR, reset);
+      dbg_printf("\n");
       break;
     case 0x0008:
     case 0x0009:  BX_DUPLICATE(0x0008);
-      dbg_printf ("CRDA1,0 = Current remote DMA address = %02x %02x\n",
-	  BX_HIGH_BYTE (BX_NE2K_THIS s.remote_dma),
-	  BX_LOW_BYTE (BX_NE2K_THIS s.remote_dma));
-      dbg_printf ("RSAR1,0 = Remote start address = %02x %02x\n",
+      dbg_printf("CRDA1,0 = Current remote DMA address = %02x %02x\n",
+	  BX_HIGH_BYTE(BX_NE2K_THIS s.remote_dma),
+	  BX_LOW_BYTE(BX_NE2K_THIS s.remote_dma));
+      dbg_printf("RSAR1,0 = Remote start address = %02x %02x\n",
 	  BX_HIGH_BYTE(s.remote_start),
 	  BX_LOW_BYTE(s.remote_start));
       break;
     case 0x000a:
     case 0x000b:  BX_DUPLICATE(0x000a);
-      dbg_printf ("RCBR1,0 = Remote byte count = %02x\n", BX_NE2K_THIS s.remote_bytes);
+      dbg_printf("RCBR1,0 = Remote byte count = %02x\n", BX_NE2K_THIS s.remote_bytes);
       break;
     case 0x000c:
-      dbg_printf ("RSR (Receive Status Register), read-only:\n  ");
-      SHOW_FIELD (RSR, rx_ok);
-      SHOW_FIELD (RSR, bad_crc);
-      SHOW_FIELD (RSR, bad_falign);
-      SHOW_FIELD (RSR, fifo_or);
-      SHOW_FIELD (RSR, rx_missed);
-      SHOW_FIELD (RSR, rx_mbit);
-      SHOW_FIELD (RSR, rx_disabled);
-      SHOW_FIELD (RSR, deferred);
-      dbg_printf ("\n");
+      dbg_printf("RSR (Receive Status Register), read-only:\n  ");
+      SHOW_FIELD(RSR, rx_ok);
+      SHOW_FIELD(RSR, bad_crc);
+      SHOW_FIELD(RSR, bad_falign);
+      SHOW_FIELD(RSR, fifo_or);
+      SHOW_FIELD(RSR, rx_missed);
+      SHOW_FIELD(RSR, rx_mbit);
+      SHOW_FIELD(RSR, rx_disabled);
+      SHOW_FIELD(RSR, deferred);
+      dbg_printf("\n");
       // fall through into RCR
     case 0x020c:
-      dbg_printf ("RCR (Receive Configuration Register):\n  ");
-      SHOW_FIELD (RCR, errors_ok);
-      SHOW_FIELD (RCR, runts_ok);
-      SHOW_FIELD (RCR, broadcast);
-      SHOW_FIELD (RCR, multicast);
-      SHOW_FIELD (RCR, promisc);
-      SHOW_FIELD (RCR, monitor);
-      SHOW_FIELD (RCR, reserved);
-      dbg_printf ("\n");
+      dbg_printf("RCR (Receive Configuration Register):\n  ");
+      SHOW_FIELD(RCR, errors_ok);
+      SHOW_FIELD(RCR, runts_ok);
+      SHOW_FIELD(RCR, broadcast);
+      SHOW_FIELD(RCR, multicast);
+      SHOW_FIELD(RCR, promisc);
+      SHOW_FIELD(RCR, monitor);
+      SHOW_FIELD(RCR, reserved);
+      dbg_printf("\n");
       break;
     case 0x000d:
-      dbg_printf ("CNTR0 = Tally Counter 0 (Frame alignment errors) = %02x\n",
+      dbg_printf("CNTR0 = Tally Counter 0 (Frame alignment errors) = %02x\n",
 	  BX_NE2K_THIS s.tallycnt_0);
       // fall through into TCR
     case 0x020d:
-      dbg_printf ("TCR (Transmit Configuration Register):\n  ");
-      SHOW_FIELD (TCR, crc_disable);
-      SHOW_FIELD (TCR, loop_cntl);
-      SHOW_FIELD (TCR, ext_stoptx);
-      SHOW_FIELD (TCR, coll_prio);
-      SHOW_FIELD (TCR, reserved);
-      dbg_printf ("\n");
+      dbg_printf("TCR (Transmit Configuration Register):\n  ");
+      SHOW_FIELD(TCR, crc_disable);
+      SHOW_FIELD(TCR, loop_cntl);
+      SHOW_FIELD(TCR, ext_stoptx);
+      SHOW_FIELD(TCR, coll_prio);
+      SHOW_FIELD(TCR, reserved);
+      dbg_printf("\n");
       break;
     case 0x000e:
-      dbg_printf ("CNTR1 = Tally Counter 1 (CRC Errors) = %02x\n",
+      dbg_printf("CNTR1 = Tally Counter 1 (CRC Errors) = %02x\n",
 	  BX_NE2K_THIS s.tallycnt_1);
       // fall through into DCR
     case 0x020e:
-      dbg_printf ("DCR (Data Configuration Register):\n  ");
-      SHOW_FIELD (DCR, wdsize);
-      SHOW_FIELD (DCR, endian);
-      SHOW_FIELD (DCR, longaddr);
-      SHOW_FIELD (DCR, loop);
-      SHOW_FIELD (DCR, auto_rx);
-      SHOW_FIELD (DCR, fifo_size);
-      dbg_printf ("\n");
+      dbg_printf("DCR (Data Configuration Register):\n  ");
+      SHOW_FIELD(DCR, wdsize);
+      SHOW_FIELD(DCR, endian);
+      SHOW_FIELD(DCR, longaddr);
+      SHOW_FIELD(DCR, loop);
+      SHOW_FIELD(DCR, auto_rx);
+      SHOW_FIELD(DCR, fifo_size);
+      dbg_printf("\n");
       break;
     case 0x000f:
-      dbg_printf ("CNTR2 = Tally Counter 2 (Missed Packet Errors) = %02x\n",
+      dbg_printf("CNTR2 = Tally Counter 2 (Missed Packet Errors) = %02x\n",
 	  BX_NE2K_THIS s.tallycnt_2);
       // fall through into IMR
     case 0x020f:
-      dbg_printf ("IMR (Interrupt Mask Register)\n  ");
-      SHOW_FIELD (IMR, rx_inte);
-      SHOW_FIELD (IMR, tx_inte);
-      SHOW_FIELD (IMR, rxerr_inte);
-      SHOW_FIELD (IMR, txerr_inte);
-      SHOW_FIELD (IMR, overw_inte);
-      SHOW_FIELD (IMR, cofl_inte);
-      SHOW_FIELD (IMR, rdma_inte);
-      SHOW_FIELD (IMR, reserved);
-      dbg_printf ("\n");
+      dbg_printf("IMR (Interrupt Mask Register)\n  ");
+      SHOW_FIELD(IMR, rx_inte);
+      SHOW_FIELD(IMR, tx_inte);
+      SHOW_FIELD(IMR, rxerr_inte);
+      SHOW_FIELD(IMR, txerr_inte);
+      SHOW_FIELD(IMR, overw_inte);
+      SHOW_FIELD(IMR, cofl_inte);
+      SHOW_FIELD(IMR, rdma_inte);
+      SHOW_FIELD(IMR, reserved);
+      dbg_printf("\n");
       break;
     case 0x0101:
     case 0x0102:  BX_DUPLICATE(0x0101);
@@ -1804,13 +1804,13 @@ void bx_ne2k_c::print_info (FILE *fp, int page, int reg, int brief)
     case 0x0104:  BX_DUPLICATE(0x0101);
     case 0x0105:  BX_DUPLICATE(0x0101);
     case 0x0106:  BX_DUPLICATE(0x0101);
-      dbg_printf ("MAC address registers are located at page 1, registers 1-6.\n");
-      dbg_printf ("The MAC address is ");
+      dbg_printf("MAC address registers are located at page 1, registers 1-6.\n");
+      dbg_printf("The MAC address is ");
       for (i=0; i<=5; i++)
-	dbg_printf ("%02x%c", BX_NE2K_THIS s.physaddr[i], i<5?':' : '\n');
+	dbg_printf("%02x%c", BX_NE2K_THIS s.physaddr[i], i<5?':' : '\n');
       break;
     case 0x0107:
-      dbg_printf ("Current page is 0x%02x\n", BX_NE2K_THIS s.curr_page);
+      dbg_printf("Current page is 0x%02x\n", BX_NE2K_THIS s.curr_page);
       break;
     case 0x0108:
     case 0x0109:  BX_DUPLICATE(0x0108);
@@ -1820,29 +1820,29 @@ void bx_ne2k_c::print_info (FILE *fp, int page, int reg, int brief)
     case 0x010D:  BX_DUPLICATE(0x0108);
     case 0x010E:  BX_DUPLICATE(0x0108);
     case 0x010F:  BX_DUPLICATE(0x0108);
-      dbg_printf ("MAR0-7 (Multicast address registers 0-7) are set to:\n");
-      for (i=0; i<8; i++) dbg_printf ("%02x ", BX_NE2K_THIS s.mchash[i]);
-      dbg_printf ("\nMAR0 is listed first.\n");
+      dbg_printf("MAR0-7 (Multicast address registers 0-7) are set to:\n");
+      for (i=0; i<8; i++) dbg_printf("%02x ", BX_NE2K_THIS s.mchash[i]);
+      dbg_printf("\nMAR0 is listed first.\n");
       break;
     case 0x0001:
     case 0x0002:  BX_DUPLICATE(0x0001);
     case 0x0201:  BX_DUPLICATE(0x0001);
     case 0x0202:  BX_DUPLICATE(0x0001);
-      dbg_printf ("PSTART = Page start register = %02x\n", BX_NE2K_THIS s.page_start);
-      dbg_printf ("PSTOP = Page stop register = %02x\n", BX_NE2K_THIS s.page_stop);
-      dbg_printf ("Local DMA address = %02x %02x\n",
+      dbg_printf("PSTART = Page start register = %02x\n", BX_NE2K_THIS s.page_start);
+      dbg_printf("PSTOP = Page stop register = %02x\n", BX_NE2K_THIS s.page_stop);
+      dbg_printf("Local DMA address = %02x %02x\n",
 	  BX_HIGH_BYTE(BX_NE2K_THIS s.local_dma),
 	  BX_LOW_BYTE(BX_NE2K_THIS s.local_dma));
       break;
     case 0x0203:
-      dbg_printf ("Remote Next Packet Pointer = %02x\n", BX_NE2K_THIS s.rempkt_ptr);
+      dbg_printf("Remote Next Packet Pointer = %02x\n", BX_NE2K_THIS s.rempkt_ptr);
       break;
     case 0x0205:
-      dbg_printf ("Local Next Packet Pointer = %02x\n", BX_NE2K_THIS s.localpkt_ptr);
+      dbg_printf("Local Next Packet Pointer = %02x\n", BX_NE2K_THIS s.localpkt_ptr);
       break;
     case 0x0206:
     case 0x0207:  BX_DUPLICATE(0x0206);
-      dbg_printf ("Address Counter= %02x %02x\n",
+      dbg_printf("Address Counter= %02x %02x\n",
 	 BX_HIGH_BYTE(BX_NE2K_THIS s.address_cnt),
 	 BX_LOW_BYTE(BX_NE2K_THIS s.address_cnt));
       break;
@@ -1852,14 +1852,14 @@ void bx_ne2k_c::print_info (FILE *fp, int page, int reg, int brief)
     case 0x020B:  BX_DUPLICATE(0x0208);
       if (!brief) dbg_printf ("Reserved\n");
     case 0xffff:
-      dbg_printf ("IMR (Interrupt Mask Register):\n  ");
-      dbg_printf ("\n");
+      dbg_printf("IMR (Interrupt Mask Register):\n  ");
+      dbg_printf("\n");
       break;
     default:
-      dbg_printf ("NE2K info: sorry, page %d register %d cannot be displayed.\n", page, reg);
+      dbg_printf("NE2K info: sorry, page %d register %d cannot be displayed.\n", page, reg);
   }
   if (!brief)
-    dbg_printf ("\n");
+    dbg_printf("\n");
 }
 
 #else

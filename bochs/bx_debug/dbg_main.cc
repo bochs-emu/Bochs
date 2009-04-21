@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.186 2009-04-14 09:45:22 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.187 2009-04-21 20:27:35 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -3227,7 +3227,7 @@ void bx_dbg_info_ne2k(int page, int reg)
  */
 void bx_dbg_info_pic()
 {
-  DEV_pic_show_pic_state();
+  DEV_pic_debug_dump();
 }
 
 /*
@@ -3236,7 +3236,7 @@ void bx_dbg_info_pic()
  */
 void bx_dbg_info_vga()
 {
-  DEV_vga_dump_status();
+  DEV_vga_debug_dump();
 }
 
 /*
@@ -3247,7 +3247,7 @@ void bx_dbg_info_pci()
 {
 #if BX_SUPPORT_PCI
   if (SIM->get_param_bool(BXPN_I440FX_SUPPORT)->get()) {
-    DEV_pci_print_i440fx_state();
+    DEV_pci_debug_dump();
   }
   else {
     dbg_printf("PCI support is disabled in .bochsrc\n");

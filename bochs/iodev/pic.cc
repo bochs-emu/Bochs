@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pic.cc,v 1.54 2009-02-22 10:44:50 vruppert Exp $
+// $Id: pic.cc,v 1.55 2009-04-21 20:27:35 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -872,16 +872,16 @@ Bit8u bx_pic_c::IAC(void)
   return(vector);
 }
 
-void bx_pic_c::show_pic_state(void)
+#if BX_DEBUGGER
+void bx_pic_c::debug_dump(void)
 {
-#if defined(BX_DEBUGGER) && (BX_DEBUGGER == 1)
-dbg_printf("s.master_pic.imr = %02x\n", BX_PIC_THIS s.master_pic.imr);
-dbg_printf("s.master_pic.isr = %02x\n", BX_PIC_THIS s.master_pic.isr);
-dbg_printf("s.master_pic.irr = %02x\n", BX_PIC_THIS s.master_pic.irr);
-dbg_printf("s.master_pic.irq = %02x\n", BX_PIC_THIS s.master_pic.irq);
-dbg_printf("s.slave_pic.imr = %02x\n", BX_PIC_THIS s.slave_pic.imr);
-dbg_printf("s.slave_pic.isr = %02x\n", BX_PIC_THIS s.slave_pic.isr);
-dbg_printf("s.slave_pic.irr = %02x\n", BX_PIC_THIS s.slave_pic.irr);
-dbg_printf("s.slave_pic.irq = %02x\n", BX_PIC_THIS s.slave_pic.irq);
-#endif
+  dbg_printf("s.master_pic.imr = %02x\n", BX_PIC_THIS s.master_pic.imr);
+  dbg_printf("s.master_pic.isr = %02x\n", BX_PIC_THIS s.master_pic.isr);
+  dbg_printf("s.master_pic.irr = %02x\n", BX_PIC_THIS s.master_pic.irr);
+  dbg_printf("s.master_pic.irq = %02x\n", BX_PIC_THIS s.master_pic.irq);
+  dbg_printf("s.slave_pic.imr = %02x\n", BX_PIC_THIS s.slave_pic.imr);
+  dbg_printf("s.slave_pic.isr = %02x\n", BX_PIC_THIS s.slave_pic.isr);
+  dbg_printf("s.slave_pic.irr = %02x\n", BX_PIC_THIS s.slave_pic.irr);
+  dbg_printf("s.slave_pic.irq = %02x\n", BX_PIC_THIS s.slave_pic.irq);
 }
+#endif

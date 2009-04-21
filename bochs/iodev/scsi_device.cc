@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: scsi_device.cc,v 1.19 2009-04-21 15:37:17 vruppert Exp $
+// $Id: scsi_device.cc,v 1.20 2009-04-21 20:27:35 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2007  Volker Ruppert
@@ -735,7 +735,6 @@ Bit32s scsi_device_t::scsi_send_command(Bit32u tag, Bit8u *buf, int lun)
       BX_INFO(("Verify"));
       break;
     case 0x23: {
-
       // USBMASS-UFI10.pdf  rev 1.0  Section 4.10
       BX_INFO(("READ FORMAT CAPACITIES (MMC)"));
 
@@ -785,7 +784,7 @@ Bit32s scsi_device_t::scsi_send_command(Bit32u tag, Bit8u *buf, int lun)
     return -len;
   } else {
     if (!r->sector_count)
-      r->sector_count = -1;
+      r->sector_count = (Bit32u) -1;
     return len;
   }
 }

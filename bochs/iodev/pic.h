@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pic.h,v 1.21 2009-02-08 09:05:52 vruppert Exp $
+// $Id: pic.h,v 1.22 2009-04-21 20:27:35 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -77,7 +77,9 @@ public:
   virtual void raise_irq(unsigned irq_no);
   virtual void set_mode(bx_bool ma_sl, Bit8u mode);
   virtual Bit8u IAC(void);
-  virtual void show_pic_state(void);
+#if BX_DEBUGGER
+  virtual void debug_dump(void);
+#endif
   virtual void register_state(void);
 
 private:

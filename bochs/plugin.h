@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: plugin.h,v 1.79 2009-04-10 14:41:29 vruppert Exp $
+// $Id: plugin.h,v 1.80 2009-04-21 20:27:35 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  The Bochs Project
@@ -120,6 +120,7 @@ extern "C" {
 #define DEV_reset_devices(type) {bx_devices.reset(type); }
 #define DEV_register_state() {bx_devices.register_state(); }
 #define DEV_after_restore_state() {bx_devices.after_restore_state(); }
+
 #define DEV_register_timer(a,b,c,d,e,f) bx_pc_system.register_timer(a,b,c,d,e,f)
 #define DEV_mouse_enabled_changed(en) (bx_devices.mouse_enabled_changed(en))
 #define DEV_mouse_motion(dx, dy, state) (bx_devices.mouse_motion(dx, dy, 0, state))
@@ -197,7 +198,7 @@ extern "C" {
 #define DEV_pic_raise_irq(b)  (bx_devices.pluginPicDevice->raise_irq(b))
 #define DEV_pic_set_mode(a,b) (bx_devices.pluginPicDevice->set_mode(a,b))
 #define DEV_pic_iac()         (bx_devices.pluginPicDevice->IAC())
-#define DEV_pic_show_pic_state() (bx_devices.pluginPicDevice->show_pic_state())
+#define DEV_pic_debug_dump()  (bx_devices.pluginPicDevice->debug_dump())
 
 ///////// VGA macros
 #define DEV_vga_mem_read(addr) (bx_devices.pluginVgaDevice->mem_read(addr))
@@ -209,7 +210,7 @@ extern "C" {
 #define DEV_vga_refresh() \
   (bx_devices.pluginVgaDevice->trigger_timer(bx_devices.pluginVgaDevice))
 #define DEV_vga_get_actl_pal_idx(index) (bx_devices.pluginVgaDevice->get_actl_palette_idx(index))
-#define DEV_vga_dump_status() (bx_devices.pluginVgaDevice->dump_status())
+#define DEV_vga_debug_dump() (bx_devices.pluginVgaDevice->debug_dump())
 #define DEV_vbe_set_base_addr(a,b) (bx_devices.pluginVgaDevice->vbe_set_base_addr(a,b))
 
 ///////// PCI macros
@@ -223,7 +224,7 @@ extern "C" {
   (bx_devices.pluginPciBridge->pci_set_base_io(a,b,c,d,e,f,g,h))
 #define DEV_pci_rd_memtype(addr) bx_devices.pluginPciBridge->rd_memType(addr)
 #define DEV_pci_wr_memtype(addr) bx_devices.pluginPciBridge->wr_memType(addr)
-#define DEV_pci_print_i440fx_state() bx_devices.pluginPciBridge->print_i440fx_state()
+#define DEV_pci_debug_dump() bx_devices.pluginPciBridge->debug_dump()
 #define DEV_ide_bmdma_present() bx_devices.pluginPciIdeController->bmdma_present()
 #define DEV_ide_bmdma_set_irq(a) bx_devices.pluginPciIdeController->bmdma_set_irq(a)
 #define DEV_acpi_generate_smi(a) bx_devices.pluginACPIController->generate_smi(a)
