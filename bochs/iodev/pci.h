@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci.h,v 1.30 2009-04-21 20:27:35 sshwarts Exp $
+// $Id: pci.h,v 1.31 2009-04-21 20:32:20 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -77,9 +77,7 @@ public:
   virtual Bit32u pci_read_handler(Bit8u address, unsigned io_len);
   virtual void   pci_write_handler(Bit8u address, Bit32u value, unsigned io_len);
 
-#if BX_DEBUGGER
   virtual void debug_dump(void);
-#endif
 
 private:
   Bit8u pci_handler_id[0x100];  // 256 devices/functions

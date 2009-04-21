@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.164 2009-04-21 20:27:35 sshwarts Exp $
+// $Id: vga.cc,v 1.165 2009-04-21 20:32:20 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -2828,9 +2828,9 @@ Bit8u bx_vga_c::get_actl_palette_idx(Bit8u index)
   return BX_VGA_THIS s.attribute_ctrl.palette_reg[index];
 }
 
+#if BX_DEBUGGER
 void bx_vga_c::debug_dump(void)
 {
-#if BX_DEBUGGER
   dbg_printf("s.misc_output.color_emulation = %u\n",
             (unsigned) BX_VGA_THIS s.misc_output.color_emulation);
   dbg_printf("s.misc_output.enable_ram = %u\n",
@@ -2889,8 +2889,8 @@ void bx_vga_c::debug_dump(void)
             (unsigned) BX_VGA_THIS s.attribute_ctrl.mode_ctrl.internal_palette_size);
   dbg_printf("s.attribute_ctrl.mode_ctrl.pixel_clock_select = %u\n",
             (unsigned) BX_VGA_THIS s.attribute_ctrl.mode_ctrl.pixel_clock_select);
-#endif
 }
+#endif
 
 void bx_vga_c::redraw_area(unsigned x0, unsigned y0, unsigned width,
                       unsigned height)
