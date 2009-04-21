@@ -1,0 +1,76 @@
+/////////////////////////////////////////////////////////////////////////
+// $Id: devices.txt,v 1.1 2009-04-21 17:25:07 sshwarts Exp $
+/////////////////////////////////////////////////////////////////////////
+
+MOTHER BOARD (i440FX Support)                                            devices.cc
+  |
+  +-------- PCI-to-ISA bridge (PIIX3)                                    pci2isa.cc
+  |             |
+  |             +-------- PIIX4 ACPI support                             acpi.cc
+  |             +-------- PCI IDE controller (PIIX3)                     pci_ide.cc
+  |
+  +-------- PMC/DBX emulation                                            pci.cc
+  |
+  +-------- PCI host device mapping (Linux only)                         pcidev.cc
+  |  
+  +-------- Integrated peripherals
+  |             |
+  |             +-------- 8259A PIC                                      pic.cc
+  |             +-------- 82093AA I/O APIC                               ioapic.cc
+  |             +-------- 8254/82C54 Programmable Interval Timer         pit_wrap.cc, virt_timer.cc, pit82c54.cc
+  |             +-------- 8237 DMA controller                            dma.cc
+  |             +-------- 82077A Floppy Drive Controller                 floppy.cc
+  |             +-------- CMOS device                                    cmos.cc
+  |             +-------- External circuit for #FERR pin                 extfpuirq.cc
+  |             +-------- Parallel ports emulation                       parallel.cc
+  |             +-------- UART 16550A Serial Port                        serial.cc
+  |             |                 |
+  |             |                 +-------- Host specific Modules        serial_raw.cc
+  |             |
+  |             +-------- Standard PC gameport                           gameport.cc
+  |
+  +---------------------- Debugging/Instrumentation                      iodebug.cc, unmapped.cc
+
+Attached devices
+  |
+  +-------- PS/2 Keyboard and Mouse                                      keyboard.cc, scancodes.cc, busmouse.cc
+  |
+  +-------- Harddrive + ATA controller                                   harddrv.cc, scsi_device.cc, hdimage.cc
+  |             |
+  |             +-------- CD/DVD-ROM device                              cdrom.cc
+  |                               |
+  |                               +-------- Host specific Modules        cdrom_amigaos.cc, cdrom_beos.cc
+  |
+  +-------- NE2000 Network adaptor                                       ne2k.cc, pcipnic.cc
+  |             |
+  |             +-------- Network protocols                              eth.cc, eth_arpback.cc, eth_null.cc, eth_packetmaker.cc
+  |             |                 |
+  |             |                 +-------- Host specific Modules        eth_fbsd.cc, eth_linux.cc, eth_win32.cc
+  |             |
+  |             +-------- TAP Interface                                  eth_tap.cc
+  |             +-------- TUN/TAP Interface                              eth_tuntap.cc
+  |             +-------- Virtual Distributed Ethernet Interface         eth_vde.cc
+  |             +-------- virtual Ethernet locator                       eth_vnet.cc
+  |
+  +-------- Graphics
+  |             |
+  |             +-------- VGA, PCI VGA adaptor                           vga.cc, pci_vga.cc
+  |             +-------- Cirrus Logic PCI/ISA CLGD5446 SVGA adaptor     svga_cirrus.cc
+  |
+  +-------- Sound Devices
+  |             |
+  |             +-------- PC Speaker                                     speaker.cc
+  |             +-------- Sound Blaster SB16                             sb16.cc
+  |                               |
+  |                               +-------- Host specific Modules        soundlnx.cc, soundosx.cc, soundwin.cc
+  |    
+  +-------- PCI USB adapter                                              usb_common.cc
+                |
+                +-------- USB OHCI adapter                               usb_ohci.cc
+                +-------- USB UHCI adapter                               usb_uhci.cc
+                +-------- USB HID emulation (mouse and tablet)           usb_hid.cc
+                +-------- USB HUB                                        usb_hub.cc
+                +-------- USB mass storage device                        usb_msd.cc
+
+
+TODO:
