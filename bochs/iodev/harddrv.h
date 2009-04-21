@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.h,v 1.54 2009-02-08 09:05:52 vruppert Exp $
+// $Id: harddrv.h,v 1.55 2009-04-21 10:18:42 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -38,6 +38,7 @@ typedef enum _asc {
       ASC_ILLEGAL_OPCODE = 0x20,
       ASC_LOGICAL_BLOCK_OOR = 0x21,
       ASC_INV_FIELD_IN_CMD_PACKET = 0x24,
+      ASC_MEDIUM_MAY_HAVE_CHANGED = 0x28,
       ASC_SAVING_PARAMETERS_NOT_SUPPORTED = 0x39,
       ASC_MEDIUM_NOT_PRESENT = 0x3a
 } asc_t;

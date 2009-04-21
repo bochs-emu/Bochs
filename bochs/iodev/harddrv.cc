@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.225 2009-04-05 16:28:02 vruppert Exp $
+// $Id: harddrv.cc,v 1.226 2009-04-21 10:18:42 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -173,7 +173,7 @@ void bx_hard_drive_c::init(void)
   char  ata_name[20];
   bx_list_c *base;
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.225 2009-04-05 16:28:02 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.226 2009-04-21 10:18:42 vruppert Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     sprintf(ata_name, "ata.%d.resources", channel);
@@ -1406,6 +1406,9 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
                   BX_SELECTED_CONTROLLER(channel).buffer[16] = BX_SELECTED_DRIVE(channel).sense.key_spec.arr[1];
                   BX_SELECTED_CONTROLLER(channel).buffer[17] = BX_SELECTED_DRIVE(channel).sense.key_spec.arr[2];
 
+                  if (BX_SELECTED_DRIVE(channel).sense.sense_key == SENSE_UNIT_ATTENTION) {
+                    BX_SELECTED_DRIVE(channel).sense.sense_key = SENSE_NONE;
+                  }
                   ready_to_send_atapi(channel);
                 }
                 break;
@@ -3343,7 +3346,7 @@ unsigned bx_hard_drive_c::set_cd_media_status(Bit32u handle, unsigned status)
       BX_INFO(("Capacity is %d sectors (%.2f MB)", capacity, (float)capacity / 512.0));
       SIM->get_param_bool("status", base)->set(1);
       BX_SELECTED_DRIVE(channel).sense.sense_key = SENSE_UNIT_ATTENTION;
-      BX_SELECTED_DRIVE(channel).sense.asc = 0;
+      BX_SELECTED_DRIVE(channel).sense.asc = ASC_MEDIUM_MAY_HAVE_CHANGED;
       BX_SELECTED_DRIVE(channel).sense.ascq = 0;
       raise_interrupt(channel);
     }
