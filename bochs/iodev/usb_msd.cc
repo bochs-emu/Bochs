@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_msd.cc,v 1.23 2009-04-10 20:26:14 vruppert Exp $
+// $Id: usb_msd.cc,v 1.24 2009-04-21 15:37:17 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Volker Ruppert
@@ -671,7 +671,7 @@ Bit64s usb_msd_device_c::cd_param_handler(bx_param_c *param, int set, Bit64s val
       path = SIM->get_param_string("path", param->get_parent())->getptr();
       val &= ((strlen(path) > 0) && (strcmp(path, "none")));
       if (val != cdrom->get_inserted()) {
-        cdrom->set_inserted(val);
+        cdrom->set_inserted((bx_bool)val);
       }
     } else {
       BX_PANIC(("cd_param_string_handler: cdrom not found"));

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cdrom.h,v 1.23 2009-03-09 12:18:40 vruppert Exp $
+// $Id: cdrom.h,v 1.24 2009-04-21 15:37:17 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -47,13 +47,13 @@ public:
   Bit32u capacity();
 
   // Read a single block from the CD. Returns 0 on failure.
-  bx_bool read_block(Bit8u* buf, int lba, int blocksize) BX_CPP_AttrRegparmN(3);
+  bx_bool read_block(Bit8u* buf, Bit32u lba, int blocksize) BX_CPP_AttrRegparmN(3);
 
   // Start (spin up) the CD.
   bx_bool start_cdrom();
 
   // Seek for new block address.
-  void seek(int lba);
+  void seek(Bit32u lba);
 
 private:
   int fd;

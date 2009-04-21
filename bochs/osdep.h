@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: osdep.h,v 1.31 2009-02-25 16:27:31 sshwarts Exp $
+// $Id: osdep.h,v 1.32 2009-04-21 15:37:16 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -84,6 +84,14 @@ extern "C" {
 #define lseek _lseeki64
 #define fstat _fstati64
 #define stat  _stati64
+#define read _read
+#define write _write
+#define open _open
+#define close _close
+#define unlink _unlink
+#define strdup _strdup
+#define strrev _strrev
+#define getch _getch
 #endif
 
 #else   /* __MINGW32__ defined */
@@ -215,7 +223,7 @@ extern Bit64u bx_get_realtime64_usec (void);
 #ifdef WIN32
 #undef BX_HAVE_MSLEEP
 #define BX_HAVE_MSLEEP 1
-#ifndef __MINGW32__
+#if !defined(__MINGW32__) && !defined(_MSC_VER)
 #define msleep(msec)	_sleep(msec)
 #else
 #define msleep(msec)	Sleep(msec)
