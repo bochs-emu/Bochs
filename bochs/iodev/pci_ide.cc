@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci_ide.cc,v 1.40 2009-02-08 09:05:52 vruppert Exp $
+// $Id: pci_ide.cc,v 1.41 2009-04-21 17:53:29 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -416,15 +416,11 @@ Bit32u bx_pci_ide_c::pci_read_handler(Bit8u address, unsigned io_len)
 {
   Bit32u value = 0;
 
-  if (io_len <= 4) {
-    for (unsigned i=0; i<io_len; i++) {
-      value |= (BX_PIDE_THIS s.pci_conf[address+i] << (i*8));
-    }
-    BX_DEBUG(("PIIX3 PCI IDE read register 0x%02x value 0x%08x", address, value));
-    return value;
-  } else {
-    return(0xffffffff);
+  for (unsigned i=0; i<io_len; i++) {
+    value |= (BX_PIDE_THIS s.pci_conf[address+i] << (i*8));
   }
+  BX_DEBUG(("PIIX3 PCI IDE read register 0x%02x value 0x%08x", address, value));
+  return value;
 }
 
 // pci configuration space write callback handler
@@ -436,35 +432,33 @@ void bx_pci_ide_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_le
   if (((address >= 0x10) && (address < 0x20)) ||
       ((address > 0x23) && (address < 0x40)))
     return;
-  if (io_len <= 4) {
-    for (unsigned i=0; i<io_len; i++) {
-      oldval = BX_PIDE_THIS s.pci_conf[address+i];
-      value8 = (value >> (i*8)) & 0xFF;
-      switch (address+i) {
-        case 0x05:
-        case 0x06:
-          break;
-        case 0x04:
-          BX_PIDE_THIS s.pci_conf[address+i] = value8 & 0x05;
-          break;
-        case 0x20:
-          value8 = (value8 & 0xfc) | 0x01;
-        case 0x21:
-        case 0x22:
-        case 0x23:
-          bmdma_change |= (value8 != oldval);
-        default:
-          BX_PIDE_THIS s.pci_conf[address+i] = value8;
-          BX_DEBUG(("PIIX3 PCI IDE write register 0x%02x value 0x%02x", address+i,
-                    value8));
-      }
+  for (unsigned i=0; i<io_len; i++) {
+    oldval = BX_PIDE_THIS s.pci_conf[address+i];
+    value8 = (value >> (i*8)) & 0xFF;
+    switch (address+i) {
+      case 0x05:
+      case 0x06:
+        break;
+      case 0x04:
+        BX_PIDE_THIS s.pci_conf[address+i] = value8 & 0x05;
+        break;
+      case 0x20:
+        value8 = (value8 & 0xfc) | 0x01;
+      case 0x21:
+      case 0x22:
+      case 0x23:
+        bmdma_change |= (value8 != oldval);
+      default:
+        BX_PIDE_THIS s.pci_conf[address+i] = value8;
+        BX_DEBUG(("PIIX3 PCI IDE write register 0x%02x value 0x%02x", address+i,
+                  value8));
     }
-    if (bmdma_change) {
-      if (DEV_pci_set_base_io(BX_PIDE_THIS_PTR, read_handler, write_handler,
-                              &BX_PIDE_THIS s.bmdma_addr, &BX_PIDE_THIS s.pci_conf[0x20],
-                              16, &bmdma_iomask[0], "PIIX3 PCI IDE controller")) {
-        BX_INFO(("new BM-DMA address: 0x%04x", BX_PIDE_THIS s.bmdma_addr));
-      }
+  }
+  if (bmdma_change) {
+    if (DEV_pci_set_base_io(BX_PIDE_THIS_PTR, read_handler, write_handler,
+                            &BX_PIDE_THIS s.bmdma_addr, &BX_PIDE_THIS s.pci_conf[0x20],
+                            16, &bmdma_iomask[0], "PIIX3 PCI IDE controller")) {
+      BX_INFO(("new BM-DMA address: 0x%04x", BX_PIDE_THIS s.bmdma_addr));
     }
   }
 }

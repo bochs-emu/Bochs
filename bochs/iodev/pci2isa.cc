@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci2isa.cc,v 1.50 2009-02-22 10:44:50 vruppert Exp $
+// $Id: pci2isa.cc,v 1.51 2009-04-21 17:53:29 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -340,15 +340,11 @@ Bit32u bx_piix3_c::pci_read_handler(Bit8u address, unsigned io_len)
 {
   Bit32u value = 0;
 
-  if (io_len <= 4) {
-    for (unsigned i=0; i<io_len; i++) {
-      value |= (BX_P2I_THIS s.pci_conf[address+i] << (i*8));
-    }
-    BX_DEBUG(("PIIX3 PCI-to-ISA read register 0x%02x value 0x%08x", address, value));
-    return value;
+  for (unsigned i=0; i<io_len; i++) {
+    value |= (BX_P2I_THIS s.pci_conf[address+i] << (i*8));
   }
-  else
-    return 0xffffffff;
+  BX_DEBUG(("PIIX3 PCI-to-ISA read register 0x%02x value 0x%08x", address, value));
+  return value;
 }
 
 // pci configuration space write callback handler
@@ -356,32 +352,30 @@ void bx_piix3_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len)
 {
   if ((address >= 0x10) && (address < 0x34))
     return;
-  if (io_len <= 4) {
-    for (unsigned i=0; i<io_len; i++) {
-      Bit8u value8 = (value >> (i*8)) & 0xFF;
-      switch (address+i) {
-        case 0x04:
-        case 0x06:
-          break;
-        case 0x60:
-        case 0x61:
-        case 0x62:
-        case 0x63:
-          if (value8 != BX_P2I_THIS s.pci_conf[address+i]) {
-            if (value8 >= 0x80) {
-              pci_unregister_irq((address+i) & 0x03);
-            } else {
-              pci_register_irq((address+i) & 0x03, value8);
-            }
-            BX_INFO(("PCI IRQ routing: PIRQ%c# set to 0x%02x", address+i-31,
-                     value8));
+  for (unsigned i=0; i<io_len; i++) {
+    Bit8u value8 = (value >> (i*8)) & 0xFF;
+    switch (address+i) {
+      case 0x04:
+      case 0x06:
+        break;
+      case 0x60:
+      case 0x61:
+      case 0x62:
+      case 0x63:
+        if (value8 != BX_P2I_THIS s.pci_conf[address+i]) {
+          if (value8 >= 0x80) {
+            pci_unregister_irq((address+i) & 0x03);
+          } else {
+            pci_register_irq((address+i) & 0x03, value8);
           }
-          break;
-        default:
-          BX_P2I_THIS s.pci_conf[address+i] = value8;
-          BX_DEBUG(("PIIX3 PCI-to-ISA write register 0x%02x value 0x%02x", address+i,
-                    value8));
-      }
+          BX_INFO(("PCI IRQ routing: PIRQ%c# set to 0x%02x", address+i-31,
+                   value8));
+        }
+        break;
+      default:
+        BX_P2I_THIS s.pci_conf[address+i] = value8;
+        BX_DEBUG(("PIIX3 PCI-to-ISA write register 0x%02x value 0x%02x", address+i,
+                  value8));
     }
   }
 }

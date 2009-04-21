@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci.cc,v 1.61 2009-02-08 09:05:52 vruppert Exp $
+// $Id: pci.cc,v 1.62 2009-04-21 17:53:29 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -273,15 +273,11 @@ Bit32u bx_pci_bridge_c::pci_read_handler(Bit8u address, unsigned io_len)
 {
   Bit32u val440fx = 0;
 
-  if (io_len <= 4) {
-    for (unsigned i=0; i<io_len; i++) {
-      val440fx |= (BX_PCI_THIS s.i440fx.pci_conf[address+i] << (i*8));
-    }
-    BX_DEBUG(("440FX PMC read register 0x%02x value 0x%08x", address, val440fx));
-    return val440fx;
+  for (unsigned i=0; i<io_len; i++) {
+    val440fx |= (BX_PCI_THIS s.i440fx.pci_conf[address+i] << (i*8));
   }
-  else
-    return(0xffffffff);
+  BX_DEBUG(("440FX PMC read register 0x%02x value 0x%08x", address, val440fx));
+  return val440fx;
 }
 
 // pci configuration space write callback handler
@@ -291,34 +287,32 @@ void bx_pci_bridge_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io
 
   if ((address >= 0x10) && (address < 0x34))
     return;
-  if (io_len <= 4) {
-    for (unsigned i=0; i<io_len; i++) {
-      value8 = (value >> (i*8)) & 0xFF;
-      switch (address+i) {
-        case 0x04:
-          BX_PCI_THIS s.i440fx.pci_conf[address+i] = (value8 & 0x40) | 0x06;
-          break;
-        case 0x06:
-        case 0x0c:
-          break;
-        case 0x59:
-        case 0x5A:
-        case 0x5B:
-        case 0x5C:
-        case 0x5D:
-        case 0x5E:
-        case 0x5F:
-          BX_INFO(("440FX PMC write to PAM register %x (TLB Flush)", address+i));
-          BX_PCI_THIS s.i440fx.pci_conf[address+i] = value8;
-          bx_pc_system.MemoryMappingChanged();
-          break;
-        case 0x72:
-          smram_control(value);  // SMRAM conrol register
-          break;
-        default:
-          BX_PCI_THIS s.i440fx.pci_conf[address+i] = value8;
-          BX_DEBUG(("440FX PMC write register 0x%02x value 0x%02x", address+i, value8));
-      }
+  for (unsigned i=0; i<io_len; i++) {
+    value8 = (value >> (i*8)) & 0xFF;
+    switch (address+i) {
+      case 0x04:
+        BX_PCI_THIS s.i440fx.pci_conf[address+i] = (value8 & 0x40) | 0x06;
+        break;
+      case 0x06:
+      case 0x0c:
+        break;
+      case 0x59:
+      case 0x5A:
+      case 0x5B:
+      case 0x5C:
+      case 0x5D:
+      case 0x5E:
+      case 0x5F:
+        BX_INFO(("440FX PMC write to PAM register %x (TLB Flush)", address+i));
+        BX_PCI_THIS s.i440fx.pci_conf[address+i] = value8;
+        bx_pc_system.MemoryMappingChanged();
+        break;
+      case 0x72:
+        smram_control(value);  // SMRAM conrol register
+        break;
+      default:
+        BX_PCI_THIS s.i440fx.pci_conf[address+i] = value8;
+        BX_DEBUG(("440FX PMC write register 0x%02x value 0x%02x", address+i, value8));
     }
   }
 }

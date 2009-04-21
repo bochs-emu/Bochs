@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pcivga.cc,v 1.26 2009-04-10 14:41:29 vruppert Exp $
+// $Id: pcivga.cc,v 1.27 2009-04-21 17:53:29 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002,2003 Mike Nordell
@@ -134,12 +134,6 @@ Bit32u bx_pcivga_c::pci_read_handler(Bit8u address, unsigned io_len)
 {
   Bit32u value = 0;
 
-  if (io_len > 4 || io_len == 0) {
-    BX_DEBUG(("Experimental PCIVGA read register 0x%02x, len=%u !",
-             (unsigned) address, (unsigned) io_len));
-    return 0xffffffff;
-  }
-
   const char* pszName = "                  ";
   switch (address) {
     case 0x00: if (io_len == 2) {
@@ -198,43 +192,41 @@ void bx_pcivga_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len
 
   if ((address >= 0x14) && (address < 0x34))
     return;
-  if (io_len <= 4) {
-    // This odd code is to display only what bytes actually were written.
-    char szTmp[9];
-    char szTmp2[3];
-    szTmp[0] = '\0';
-    szTmp2[0] = '\0';
-    for (i = 0; i < io_len; i++) {
-      write_addr = address + i;
-      old_value = BX_PCIVGA_THIS s.pci_conf[write_addr];
-      new_value = (Bit8u)(value & 0xff);
-      switch (write_addr) {
-        case 0x04: // disallowing write to command
-        case 0x06: // disallowing write to status lo-byte (is that expected?)
-          new_value = old_value;
-          strcpy(szTmp2, "..");
-          break;
-        case 0x10: // base address #0
-          new_value = (new_value & 0xf0) | (old_value & 0x0f);
-        case 0x11: case 0x12: case 0x13:
-          baseaddr_change |= (old_value != new_value);
-        default:
-          sprintf(szTmp2, "%02x", new_value);
-      }
-      BX_PCIVGA_THIS s.pci_conf[write_addr] = new_value;
-      value >>= 8;
-      strrev(szTmp2);
-      strcat(szTmp, szTmp2);
+  // This odd code is to display only what bytes actually were written.
+  char szTmp[9];
+  char szTmp2[3];
+  szTmp[0] = '\0';
+  szTmp2[0] = '\0';
+  for (i = 0; i < io_len; i++) {
+    write_addr = address + i;
+    old_value = BX_PCIVGA_THIS s.pci_conf[write_addr];
+    new_value = (Bit8u)(value & 0xff);
+    switch (write_addr) {
+      case 0x04: // disallowing write to command
+      case 0x06: // disallowing write to status lo-byte (is that expected?)
+        new_value = old_value;
+        strcpy(szTmp2, "..");
+        break;
+      case 0x10: // base address #0
+        new_value = (new_value & 0xf0) | (old_value & 0x0f);
+      case 0x11: case 0x12: case 0x13:
+        baseaddr_change |= (old_value != new_value);
+      default:
+        sprintf(szTmp2, "%02x", new_value);
     }
-    if (baseaddr_change) {
-      if (DEV_vbe_set_base_addr(&BX_PCIVGA_THIS s.base_address,
-                                &BX_PCIVGA_THIS s.pci_conf[0x10])) {
-        BX_INFO(("new base address: 0x%08x", BX_PCIVGA_THIS s.base_address));
-      }
-    }
-    strrev(szTmp);
-    BX_DEBUG(("Experimental PCIVGA write register 0x%02x value 0x%s", address, szTmp));
+    BX_PCIVGA_THIS s.pci_conf[write_addr] = new_value;
+    value >>= 8;
+    strrev(szTmp2);
+    strcat(szTmp, szTmp2);
   }
+  if (baseaddr_change) {
+    if (DEV_vbe_set_base_addr(&BX_PCIVGA_THIS s.base_address,
+                              &BX_PCIVGA_THIS s.pci_conf[0x10])) {
+      BX_INFO(("new base address: 0x%08x", BX_PCIVGA_THIS s.base_address));
+    }
+  }
+  strrev(szTmp);
+  BX_DEBUG(("Experimental PCIVGA write register 0x%02x value 0x%s", address, szTmp));
 }
 
 #endif // BX_SUPPORT_PCI && BX_SUPPORT_PCIVGA

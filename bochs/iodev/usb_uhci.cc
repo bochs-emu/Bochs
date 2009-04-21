@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_uhci.cc,v 1.23 2009-04-07 10:56:19 vruppert Exp $
+// $Id: usb_uhci.cc,v 1.24 2009-04-21 17:53:29 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Benjamin D Lunt (fys at frontiernet net)
@@ -943,12 +943,6 @@ Bit32u bx_usb_uhci_c::pci_read_handler(Bit8u address, unsigned io_len)
 {
   Bit32u value = 0;
 
-  if (io_len > 4 || io_len == 0) {
-    BX_ERROR(("Experimental USB UHCI read register 0x%02x, len=%u !",
-             (unsigned) address, (unsigned) io_len));
-    return 0xffffffff;
-  }
-
   const char* pszName = "                  ";
   switch (address) {
     case 0x00: if (io_len == 2) {
@@ -1010,50 +1004,48 @@ void bx_usb_uhci_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_l
   char szTmp2[3];
   szTmp[0] = '\0';
   szTmp2[0] = '\0';
-  if (io_len <= 4) {
-    for (unsigned i=0; i<io_len; i++) {
-      value8 = (value >> (i*8)) & 0xFF;
-      oldval = BX_UHCI_THIS hub.pci_conf[address+i];
-      switch (address+i) {
-        case 0x04:
-          value8 &= 0x05;
+  for (unsigned i=0; i<io_len; i++) {
+    value8 = (value >> (i*8)) & 0xFF;
+    oldval = BX_UHCI_THIS hub.pci_conf[address+i];
+    switch (address+i) {
+      case 0x04:
+        value8 &= 0x05;
+        BX_UHCI_THIS hub.pci_conf[address+i] = value8;
+        sprintf(szTmp2, "%02x", value8);
+        break;
+      case 0x3d: //
+      case 0x3e: //
+      case 0x3f: //
+      case 0x05: // disallowing write to command hi-byte
+      case 0x06: // disallowing write to status lo-byte (is that expected?)
+        strcpy(szTmp2, "..");
+        break;
+      case 0x3c:
+        if (value8 != oldval) {
+          BX_INFO(("new irq line = %d", value8));
           BX_UHCI_THIS hub.pci_conf[address+i] = value8;
-          sprintf(szTmp2, "%02x", value8);
-          break;
-        case 0x3d: //
-        case 0x3e: //
-        case 0x3f: //
-        case 0x05: // disallowing write to command hi-byte
-        case 0x06: // disallowing write to status lo-byte (is that expected?)
-          strcpy(szTmp2, "..");
-          break;
-        case 0x3c:
-          if (value8 != oldval) {
-            BX_INFO(("new irq line = %d", value8));
-            BX_UHCI_THIS hub.pci_conf[address+i] = value8;
-          }
-          sprintf(szTmp2, "%02x", value8);
-          break;
-        case 0x20:
-          value8 = (value8 & 0xfc) | 0x01;
-        case 0x21:
-        case 0x22:
-        case 0x23:
-          baseaddr_change |= (value8 != oldval);
-        default:
-          BX_UHCI_THIS hub.pci_conf[address+i] = value8;
-          sprintf(szTmp2, "%02x", value8);
-      }
-      strrev(szTmp2);
-      strcat(szTmp, szTmp2);
+        }
+        sprintf(szTmp2, "%02x", value8);
+        break;
+      case 0x20:
+        value8 = (value8 & 0xfc) | 0x01;
+      case 0x21:
+      case 0x22:
+      case 0x23:
+        baseaddr_change |= (value8 != oldval);
+      default:
+        BX_UHCI_THIS hub.pci_conf[address+i] = value8;
+        sprintf(szTmp2, "%02x", value8);
     }
-    if (baseaddr_change) {
-      if (DEV_pci_set_base_io(BX_UHCI_THIS_PTR, read_handler, write_handler,
-                             &BX_UHCI_THIS hub.base_ioaddr,
-                             &BX_UHCI_THIS hub.pci_conf[0x20],
-                             32, &uhci_iomask[0], "USB UHCI Hub")) {
-         BX_INFO(("new base address: 0x%04x", BX_UHCI_THIS hub.base_ioaddr));
-      }
+    strrev(szTmp2);
+    strcat(szTmp, szTmp2);
+  }
+  if (baseaddr_change) {
+    if (DEV_pci_set_base_io(BX_UHCI_THIS_PTR, read_handler, write_handler,
+                            &BX_UHCI_THIS hub.base_ioaddr,
+                            &BX_UHCI_THIS hub.pci_conf[0x20],
+                            32, &uhci_iomask[0], "USB UHCI Hub")) {
+      BX_INFO(("new base address: 0x%04x", BX_UHCI_THIS hub.base_ioaddr));
     }
   }
   strrev(szTmp);

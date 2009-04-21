@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: acpi.cc,v 1.21 2009-02-08 09:05:52 vruppert Exp $
+// $Id: acpi.cc,v 1.22 2009-04-21 17:53:29 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2006  Volker Ruppert
@@ -496,12 +496,6 @@ void bx_acpi_ctrl_c::timer()
 Bit32u bx_acpi_ctrl_c::pci_read_handler(Bit8u address, unsigned io_len)
 {
   Bit32u value = 0;
-
-  if (io_len > 4 || io_len == 0) {
-    BX_DEBUG(("ACPI controller read register 0x%02x, len=%u !",
-             (unsigned) address, (unsigned) io_len));
-    return 0xffffffff;
-  }
 
   const char* pszName = "                  ";
   switch (address) {

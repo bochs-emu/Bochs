@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: svga_cirrus.cc,v 1.50 2009-02-08 09:05:52 vruppert Exp $
+// $Id: svga_cirrus.cc,v 1.51 2009-04-21 17:53:29 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Copyright (c) 2004 Makoto Suzuki (suzu)
@@ -2357,15 +2357,6 @@ void bx_svga_cirrus_c::svga_init_pcihandlers(void)
 
 Bit32u bx_svga_cirrus_c::pci_read_handler(Bit8u address, unsigned io_len)
 {
-  if (io_len > 4) {
-    BX_PANIC(("pci_read: io_len > 4!"));
-    return 0xffffffff;
-  }
-  if (((unsigned)address + io_len) > 256) {
-    BX_PANIC(("pci_read: (address + io_len) > 256!"));
-    return 0xffffffff;
-  }
-
   Bit32u ret = 0;
   for (unsigned i = 0; i < io_len; i++) {
     ret |= (Bit32u)(BX_CIRRUS_THIS pci_conf[address + i]) << (i*8);
@@ -2390,69 +2381,66 @@ void bx_svga_cirrus_c::pci_write_handler(Bit8u address, Bit32u value, unsigned i
 
   if ((address > 0x17) && (address < 0x34))
     return;
-  if (io_len <= 4) {
-    for (i = 0; i < io_len; i++) {
-      write_addr = address + i;
-      old_value = BX_CIRRUS_THIS pci_conf[write_addr];
-      new_value = (Bit8u)(value & 0xff);
-      switch (write_addr) {
-        case 0x04: // command bit0-7
-          new_value &= PCI_COMMAND_IOACCESS | PCI_COMMAND_MEMACCESS;
-          new_value |= old_value & ~(PCI_COMMAND_IOACCESS | PCI_COMMAND_MEMACCESS);
-          break;
-        case 0x05: // command bit8-15
-          new_value = old_value;
-          break;
-        case 0x06: // status bit0-7
-          new_value = old_value & (~new_value);
-          break;
-        case 0x07: // status bit8-15
-          new_value = old_value & (~new_value);
-          break;
+  for (i = 0; i < io_len; i++) {
+    write_addr = address + i;
+    old_value = BX_CIRRUS_THIS pci_conf[write_addr];
+    new_value = (Bit8u)(value & 0xff);
+    switch (write_addr) {
+      case 0x04: // command bit0-7
+        new_value &= PCI_COMMAND_IOACCESS | PCI_COMMAND_MEMACCESS;
+        new_value |= old_value & ~(PCI_COMMAND_IOACCESS | PCI_COMMAND_MEMACCESS);
+        break;
+      case 0x05: // command bit8-15
+        new_value = old_value;
+        break;
+      case 0x06: // status bit0-7
+        new_value = old_value & (~new_value);
+        break;
+      case 0x07: // status bit8-15
+        new_value = old_value & (~new_value);
+        break;
+      case 0x10: // base address #0
+        new_value = (new_value & 0xf0) | (old_value & 0x0f);
+      case 0x11: case 0x12: case 0x13:
+        baseaddr0_change |= (old_value != new_value);
+        break;
+      case 0x14: // base address #1
+        new_value = (new_value & 0xf0) | (old_value & 0x0f);
+      case 0x15: case 0x16: case 0x17:
+        baseaddr1_change |= (old_value != new_value);
+        break;
 
-        case 0x10: // base address #0
-          new_value = (new_value & 0xf0) | (old_value & 0x0f);
-        case 0x11: case 0x12: case 0x13:
-          baseaddr0_change |= (old_value != new_value);
-          break;
-        case 0x14: // base address #1
-          new_value = (new_value & 0xf0) | (old_value & 0x0f);
-        case 0x15: case 0x16: case 0x17:
-          baseaddr1_change |= (old_value != new_value);
-          break;
-
-        // read-only.
-        case 0x00: case 0x01: // vendor
-        case 0x02: case 0x03: // device
-        case 0x08: // revision
-        case 0x09: case 0x0a: case 0x0b: // class
-        case 0x0e: // header type
-        case 0x0f: // built-in self test(unimplemented)
-          new_value = old_value;
-          break;
-        default:
-          break;
-      }
-      BX_CIRRUS_THIS pci_conf[write_addr] = new_value;
-      value >>= 8;
+      // read-only.
+      case 0x00: case 0x01: // vendor
+      case 0x02: case 0x03: // device
+      case 0x08: // revision
+      case 0x09: case 0x0a: case 0x0b: // class
+      case 0x0e: // header type
+      case 0x0f: // built-in self test(unimplemented)
+        new_value = old_value;
+        break;
+      default:
+        break;
     }
-    if (baseaddr0_change) {
-      if (DEV_pci_set_base_mem(BX_CIRRUS_THIS_PTR, cirrus_mem_read_handler,
-                               cirrus_mem_write_handler,
-                               &BX_CIRRUS_THIS pci_memaddr,
-                               &BX_CIRRUS_THIS pci_conf[0x10],
-                               0x2000000)) {
-        BX_INFO(("new pci_memaddr: 0x%04x", BX_CIRRUS_THIS pci_memaddr));
-      }
+    BX_CIRRUS_THIS pci_conf[write_addr] = new_value;
+    value >>= 8;
+  }
+  if (baseaddr0_change) {
+    if (DEV_pci_set_base_mem(BX_CIRRUS_THIS_PTR, cirrus_mem_read_handler,
+                             cirrus_mem_write_handler,
+                             &BX_CIRRUS_THIS pci_memaddr,
+                             &BX_CIRRUS_THIS pci_conf[0x10],
+                             0x2000000)) {
+      BX_INFO(("new pci_memaddr: 0x%04x", BX_CIRRUS_THIS pci_memaddr));
     }
-    if (baseaddr1_change) {
-      if (DEV_pci_set_base_mem(BX_CIRRUS_THIS_PTR, cirrus_mem_read_handler,
-                               cirrus_mem_write_handler,
-                               &BX_CIRRUS_THIS pci_mmioaddr,
-                               &BX_CIRRUS_THIS pci_conf[0x14],
-                               CIRRUS_PNPMMIO_SIZE)) {
-        BX_INFO(("new pci_mmioaddr = 0x%08x", BX_CIRRUS_THIS pci_mmioaddr));
-      }
+  }
+  if (baseaddr1_change) {
+    if (DEV_pci_set_base_mem(BX_CIRRUS_THIS_PTR, cirrus_mem_read_handler,
+                             cirrus_mem_write_handler,
+                             &BX_CIRRUS_THIS pci_mmioaddr,
+                             &BX_CIRRUS_THIS pci_conf[0x14],
+                             CIRRUS_PNPMMIO_SIZE)) {
+      BX_INFO(("new pci_mmioaddr = 0x%08x", BX_CIRRUS_THIS pci_mmioaddr));
     }
   }
 }
