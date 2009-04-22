@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci.cc,v 1.63 2009-04-21 20:27:35 sshwarts Exp $
+// $Id: pci.cc,v 1.64 2009-04-22 18:37:06 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -271,13 +271,13 @@ void bx_pci_bridge_c::write(Bit32u address, Bit32u value, unsigned io_len)
 // pci configuration space read callback handler
 Bit32u bx_pci_bridge_c::pci_read_handler(Bit8u address, unsigned io_len)
 {
-  Bit32u val440fx = 0;
+  Bit32u value = 0;
 
   for (unsigned i=0; i<io_len; i++) {
-    val440fx |= (BX_PCI_THIS s.i440fx.pci_conf[address+i] << (i*8));
+    value |= (BX_PCI_THIS s.i440fx.pci_conf[address+i] << (i*8));
   }
-  BX_DEBUG(("440FX PMC read register 0x%02x value 0x%08x", address, val440fx));
-  return val440fx;
+  BX_DEBUG(("440FX PMC read  register 0x%02x value 0x%08x", address, value));
+  return value;
 }
 
 // pci configuration space write callback handler

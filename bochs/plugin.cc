@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: plugin.cc,v 1.29 2009-01-10 11:30:20 vruppert Exp $
+// $Id: plugin.cc,v 1.30 2009-04-22 18:37:06 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  The Bochs Project
@@ -142,7 +142,7 @@ builtinRegisterIOReadHandler(void *thisPtr, ioReadHandler_t callback,
   int ret;
   BX_ASSERT(mask<8);
   ret = bx_devices.register_io_read_handler (thisPtr, callback, base, name, mask);
-  pluginlog->ldebug("plugin %s registered I/O read address at %04x", name, base);
+  pluginlog->ldebug("plugin %s registered I/O read  address at %04x", name, base);
   return ret;
 }
 

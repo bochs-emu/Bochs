@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci2isa.cc,v 1.51 2009-04-21 17:53:29 vruppert Exp $
+// $Id: pci2isa.cc,v 1.52 2009-04-22 18:37:06 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -343,7 +343,7 @@ Bit32u bx_piix3_c::pci_read_handler(Bit8u address, unsigned io_len)
   for (unsigned i=0; i<io_len; i++) {
     value |= (BX_P2I_THIS s.pci_conf[address+i] << (i*8));
   }
-  BX_DEBUG(("PIIX3 PCI-to-ISA read register 0x%02x value 0x%08x", address, value));
+  BX_DEBUG(("PIIX3 PCI-to-ISA read  register 0x%02x value 0x%08x", address, value));
   return value;
 }
 

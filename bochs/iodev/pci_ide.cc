@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci_ide.cc,v 1.41 2009-04-21 17:53:29 vruppert Exp $
+// $Id: pci_ide.cc,v 1.42 2009-04-22 18:37:06 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -419,7 +419,7 @@ Bit32u bx_pci_ide_c::pci_read_handler(Bit8u address, unsigned io_len)
   for (unsigned i=0; i<io_len; i++) {
     value |= (BX_PIDE_THIS s.pci_conf[address+i] << (i*8));
   }
-  BX_DEBUG(("PIIX3 PCI IDE read register 0x%02x value 0x%08x", address, value));
+  BX_DEBUG(("PIIX3 PCI IDE read  register 0x%02x value 0x%08x", address, value));
   return value;
 }
 

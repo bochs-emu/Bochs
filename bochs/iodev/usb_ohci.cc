@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_ohci.cc,v 1.30 2009-04-21 17:53:29 vruppert Exp $
+// $Id: usb_ohci.cc,v 1.31 2009-04-22 18:37:06 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Benjamin D Lunt (fys at frontiernet net)
@@ -1338,35 +1338,6 @@ Bit32u bx_usb_ohci_c::pci_read_handler(Bit8u address, unsigned io_len)
 {
   Bit32u value = 0;
 
-  const char* pszName = "                  ";
-  switch (address) {
-    case 0x00: if (io_len == 2) {
-                 pszName = "(vendor id)       ";
-               } else if (io_len == 4) {
-                 pszName = "(vendor + device) ";
-               }
-      break;
-    case 0x04: if (io_len == 2) {
-                 pszName = "(command)         ";
-               } else if (io_len == 4) {
-                 pszName = "(command+status)  ";
-               }
-      break;
-    case 0x08: if (io_len == 1) {
-                 pszName = "(revision id)     ";
-               } else if (io_len == 4) {
-                 pszName = "(rev.+class code) ";
-               }
-      break;
-    case 0x0c: pszName = "(cache line size) "; break;
-    case 0x10: pszName = "(base address)    "; break;
-    case 0x28: pszName = "(cardbus cis)     "; break;
-    case 0x2c: pszName = "(subsys. vendor+) "; break;
-    case 0x30: pszName = "(rom base)        "; break;
-    case 0x3c: pszName = "(interrupt line+) "; break;
-    case 0x3d: pszName = "(interrupt pin)   "; break;
-  }
-
   // This odd code is to display only what bytes actually were read.
   char szTmp[9];
   char szTmp2[3];
@@ -1379,7 +1350,7 @@ Bit32u bx_usb_ohci_c::pci_read_handler(Bit8u address, unsigned io_len)
     strcat(szTmp, szTmp2);
   }
   strrev(szTmp);
-  BX_DEBUG(("USB OHCI read  register 0x%02x %svalue 0x%s", address, pszName, szTmp));
+  BX_DEBUG(("USB OHCI read  register 0x%02x value 0x%s", address, szTmp));
   return value;
 }
 
@@ -1444,7 +1415,7 @@ void bx_usb_ohci_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_l
     }
   }
   strrev(szTmp);
-  BX_DEBUG(("USB OHCI write register 0x%02x                   value 0x%s", address, szTmp));
+  BX_DEBUG(("USB OHCI write register 0x%02x value 0x%s", address, szTmp));
 }
 
 void bx_usb_ohci_c::usb_set_connect_status(Bit8u port, int type, bx_bool connected)

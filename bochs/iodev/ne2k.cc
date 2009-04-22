@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ne2k.cc,v 1.107 2009-04-21 20:27:35 sshwarts Exp $
+// $Id: ne2k.cc,v 1.108 2009-04-22 18:37:06 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1416,7 +1416,7 @@ void bx_ne2k_c::init(void)
   Bit8u macaddr[6];
   bx_list_c *base;
 
-  BX_DEBUG(("Init $Id: ne2k.cc,v 1.107 2009-04-21 20:27:35 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: ne2k.cc,v 1.108 2009-04-22 18:37:06 vruppert Exp $"));
 
   // Read in values from config interface
   base = (bx_list_c*) SIM->get_param(BXPN_NE2K);
@@ -1563,7 +1563,7 @@ Bit32u bx_ne2k_c::pci_read_handler(Bit8u address, unsigned io_len)
   for (unsigned i=0; i<io_len; i++) {
     value |= (BX_NE2K_THIS s.pci_conf[address+i] << (i*8));
   }
-  BX_DEBUG(("NE2000 PCI NIC read register 0x%02x value 0x%08x", address, value));
+  BX_DEBUG(("NE2000 PCI NIC read  register 0x%02x value 0x%08x", address, value));
   return value;
 }
 
