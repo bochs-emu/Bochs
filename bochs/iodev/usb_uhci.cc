@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_uhci.cc,v 1.25 2009-04-22 18:37:06 vruppert Exp $
+// $Id: usb_uhci.cc,v 1.26 2009-04-22 19:11:01 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Benjamin D Lunt (fys at frontiernet net)
@@ -943,19 +943,19 @@ Bit32u bx_usb_uhci_c::pci_read_handler(Bit8u address, unsigned io_len)
 {
   Bit32u value = 0;
 
-  // This odd code is to display only what bytes actually were read.
-  char szTmp[9];
-  char szTmp2[3];
-  szTmp[0] = '\0';
-  szTmp2[0] = '\0';
   for (unsigned i=0; i<io_len; i++) {
     value |= (BX_UHCI_THIS hub.pci_conf[address+i] << (i*8));
-    sprintf(szTmp2, "%02x", (BX_UHCI_THIS hub.pci_conf[address+i]));
-    strrev(szTmp2);
-    strcat(szTmp, szTmp2);
   }
-  strrev(szTmp);
-  BX_DEBUG(("USB UHCI read  register 0x%02x value 0x%s", address, szTmp));
+
+  if (io_len == 1)
+    BX_DEBUG(("USB UHCI read  register 0x%02x value 0x%02x", address, value));
+  else if (io_len == 2)
+    BX_DEBUG(("USB UHCI read  register 0x%02x value 0x%04x", address, value));
+  else if (io_len == 4)
+    BX_DEBUG(("USB UHCI read  register 0x%02x value 0x%04x", address, value));
+  else 
+    BX_PANIC(("USB UHCI read  register 0x%02x unexpected io_len %d", address, io_len));
+
   return value;
 }
 

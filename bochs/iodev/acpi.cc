@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: acpi.cc,v 1.23 2009-04-22 18:37:06 vruppert Exp $
+// $Id: acpi.cc,v 1.24 2009-04-22 19:11:00 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2006  Volker Ruppert
@@ -497,20 +497,19 @@ Bit32u bx_acpi_ctrl_c::pci_read_handler(Bit8u address, unsigned io_len)
 {
   Bit32u value = 0;
 
-  // This odd code is to display only what bytes actually were read.
-  char szTmp[9];
-  char szTmp2[3];
-  szTmp[0] = '\0';
-  szTmp2[0] = '\0';
   for (unsigned i=0; i<io_len; i++) {
     value |= (BX_ACPI_THIS s.pci_conf[address+i] << (i*8));
-
-    sprintf(szTmp2, "%02x", (BX_ACPI_THIS s.pci_conf[address+i]));
-    strrev(szTmp2);
-    strcat(szTmp, szTmp2);
   }
-  strrev(szTmp);
-  BX_DEBUG(("ACPI controller read  register 0x%02x value 0x%s", address, szTmp));
+
+  if (io_len == 1)
+    BX_DEBUG(("ACPI controller read  register 0x%02x value 0x%02x", address, value));
+  else if (io_len == 2)
+    BX_DEBUG(("ACPI controller read  register 0x%02x value 0x%04x", address, value));
+  else if (io_len == 4)
+    BX_DEBUG(("ACPI controller read  register 0x%02x value 0x%08x", address, value));
+  else 
+    BX_PANIC(("ACPI controller read  register 0x%02x unexpected io_len %d", address, io_len));
+
   return value;
 }
 
