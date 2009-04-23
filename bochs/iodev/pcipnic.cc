@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pcipnic.cc,v 1.36 2009-04-22 19:11:00 sshwarts Exp $
+// $Id: pcipnic.cc,v 1.37 2009-04-23 15:52:53 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003  Fen Systems Ltd.
@@ -310,13 +310,11 @@ Bit32u bx_pcipnic_c::pci_read_handler(Bit8u address, unsigned io_len)
   }
 
   if (io_len == 1)
-    BX_DEBUG(("Experimental PNIC PCI read  register 0x%02x value 0x%02x", address, value));
+    BX_DEBUG(("read  PCI register 0x%02x value 0x%02x", address, value));
   else if (io_len == 2)
-    BX_DEBUG(("Experimental PNIC PCI read  register 0x%02x value 0x%04x", address, value));
+    BX_DEBUG(("read  PCI register 0x%02x value 0x%04x", address, value));
   else if (io_len == 4)
-    BX_DEBUG(("Experimental PNIC PCI read  register 0x%02x value 0x%08x", address, value));
-  else 
-    BX_PANIC(("Experimental PNIC PCI read  register 0x%02x unexpected io_len %d", address, io_len));
+    BX_DEBUG(("read  PCI register 0x%02x value 0x%08x", address, value));
 
   return value;
 }
@@ -332,11 +330,6 @@ void bx_pcipnic_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_le
       ((address > 0x23) && (address < 0x34)))
     return;
 
-  // This odd code is to display only what bytes actually were written.
-  char szTmp[9];
-  char szTmp2[3];
-  szTmp[0] = '\0';
-  szTmp2[0] = '\0';
   for (unsigned i=0; i<io_len; i++) {
     value8 = (value >> (i*8)) & 0xFF;
     oldval = BX_PNIC_THIS s.pci_conf[address+i];
@@ -344,7 +337,6 @@ void bx_pcipnic_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_le
       case 0x3d: //
       case 0x05: // disallowing write to command hi-byte
       case 0x06: // disallowing write to status lo-byte (is that expected?)
-        strcpy(szTmp2, "..");
         break;
       case 0x3c:
         if (value8 != oldval) {
@@ -360,10 +352,7 @@ void bx_pcipnic_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_le
         baseaddr_change = (value8 != oldval);
       default:
         BX_PNIC_THIS s.pci_conf[address+i] = value8;
-        sprintf(szTmp2, "%02x", value8);
     }
-    strrev(szTmp2);
-    strcat(szTmp, szTmp2);
   }
   if (baseaddr_change) {
     if (DEV_pci_set_base_io(BX_PNIC_THIS_PTR, read_handler, write_handler,
@@ -373,9 +362,13 @@ void bx_pcipnic_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_le
       BX_INFO(("new base address: 0x%04x", BX_PNIC_THIS s.base_ioaddr));
     }
   }
-  strrev(szTmp);
-  BX_DEBUG(("Experimental PNIC PCI write register 0x%02x value 0x%s",
-            address, szTmp));
+
+  if (io_len == 1)
+    BX_DEBUG(("write PCI register 0x%02x value 0x%02x", address, value));
+  else if (io_len == 2)
+    BX_DEBUG(("write PCI register 0x%02x value 0x%04x", address, value));
+  else if (io_len == 4)
+    BX_DEBUG(("write PCI register 0x%02x value 0x%08x", address, value));
 }
 
 
