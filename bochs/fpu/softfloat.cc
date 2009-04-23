@@ -2304,8 +2304,9 @@ floatx80 floatx80_round_to_int(floatx80 a, float_status_t &status)
         return a;
     }
     if (aExp < 0x3FFF) {
-        if ((aExp == 0) && ((Bit64u) (aSig<<1) == 0)) {
-            return a;
+        if (aExp == 0) {
+            if ((aSig<<1) == 0) return a;
+            float_raise(status, float_flag_denormal);
         }
         float_raise(status, float_flag_inexact);
         aSign = extractFloatx80Sign(a);
