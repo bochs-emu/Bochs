@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.243 2009-03-15 12:54:59 vruppert Exp $
+// $Id: bochs.h,v 1.244 2009-04-23 18:28:16 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -432,24 +432,18 @@ int bx_gdbstub_check(unsigned int eip);
 
 typedef struct {
   bx_bool floppy;
-  bx_bool keyboard;
-  bx_bool video;
   bx_bool disk;
-  bx_bool pit;
-  bx_bool pic;
-  bx_bool bios;
-  bx_bool cmos;
-  bx_bool a20;
   bx_bool interrupts;
   bx_bool exceptions;
   bx_bool debugger;
   bx_bool mouse;
+  bx_bool a20;
   bx_bool io;
   bx_bool dma;
   bx_bool unsupported_io;
-  bx_bool serial;
   bx_bool cdrom;
   bx_bool print_timestamps;
+  bx_bool port_e9_hack;
 #if BX_DEBUGGER
   bx_bool magic_break_enabled;
 #endif
@@ -458,7 +452,6 @@ typedef struct {
 #endif
 #if BX_SUPPORT_APIC
   bx_bool apic;
-  bx_bool ioapic;
 #endif
 #if BX_DEBUG_LINUX
   bx_bool linux_syscall;

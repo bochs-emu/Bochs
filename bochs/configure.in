@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.397 2009-04-21 07:20:25 vruppert Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.398 2009-04-23 18:28:17 sshwarts Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -1155,22 +1155,6 @@ AC_ARG_ENABLE(ignore-bad-msr,
   [
     AC_MSG_RESULT(yes)
     AC_DEFINE(BX_IGNORE_BAD_MSR, 1)
-    ]
-  )
-
-AC_MSG_CHECKING(for port e9 hack)
-AC_ARG_ENABLE(port-e9-hack,
-  [  --enable-port-e9-hack             writes to port e9 go to console],
-  [if test "$enableval" = yes; then
-    AC_MSG_RESULT(yes)
-    AC_DEFINE(BX_PORT_E9_HACK, 1)
-   else
-    AC_MSG_RESULT(no)
-    AC_DEFINE(BX_PORT_E9_HACK, 0)
-   fi],
-  [
-    AC_MSG_RESULT(yes)
-    AC_DEFINE(BX_PORT_E9_HACK, 1)
     ]
   )
 
@@ -3069,6 +3053,17 @@ AC_ARG_ENABLE(external-debugger,
   [
    AC_MSG_RESULT(no)
   ])
+
+AC_MSG_CHECKING(writes to port e9 go to console (deprecated))
+AC_ARG_ENABLE(port-e9-hack,
+  [  --enable-port-e9-hack             writes to port e9 go to console (deprecated)],
+  [AC_MSG_RESULT($enableval)
+   AC_MSG_ERROR([DEPRECATED - PORT_E9_HACK could be configured through .bochsrc])
+  ],
+  [
+   AC_MSG_RESULT(no)
+  ])
+
 
 # Create some subdirectories for when you run configure from some other
 # directory.

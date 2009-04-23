@@ -788,6 +788,21 @@ i440fxsupport: enabled=1
 #magic_break: enabled=1
 
 #=======================================================================
+# PORT_E9_HACK:
+# The 0xE9 port doesn't exists in normal ISA architecture. However, we
+# define a convention here, to display on the console of the system running
+# Bochs anything that is written to it. The idea is to provide debug output
+# very early when writing BIOS or OS code for example, without having to
+# bother with setting up a serial port or etc. Reading from port 0xE9 will
+# will return 0xe9 to let you know if the feature is available.
+# Leave this 0 unless you have a reason to use it.
+#
+# Example:
+#   port_e9_hack: enabled=1
+#=======================================================================
+#port_e9_hack: enabled=1
+
+#=======================================================================
 # DEBUG_SYMBOLS:
 # This loads symbols from the specified file for use in Bochs' internal
 # debugger. Symbols are loaded into global context. This is equivalent to

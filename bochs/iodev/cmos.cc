@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cmos.cc,v 1.69 2009-02-08 09:05:52 vruppert Exp $
+// $Id: cmos.cc,v 1.70 2009-04-23 18:28:17 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -145,7 +145,7 @@ bx_cmos_c::~bx_cmos_c(void)
 
 void bx_cmos_c::init(void)
 {
-  BX_DEBUG(("Init $Id: cmos.cc,v 1.69 2009-02-08 09:05:52 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: cmos.cc,v 1.70 2009-04-23 18:28:17 sshwarts Exp $"));
   // CMOS RAM & RTC
 
   DEV_register_ioread_handler(this, read_handler, 0x0070, "CMOS RAM", 1);
@@ -366,9 +366,7 @@ Bit32u bx_cmos_c::read(Bit32u address, unsigned io_len)
 #endif
   Bit8u ret8;
 
-  if (bx_dbg.cmos)
-    BX_INFO(("CMOS read of CMOS register 0x%02x",
-      (unsigned) BX_CMOS_THIS s.cmos_mem_address));
+  BX_DEBUG(("CMOS read of CMOS register 0x%02x", (unsigned) BX_CMOS_THIS s.cmos_mem_address));
 
   switch (address) {
     case 0x0070:

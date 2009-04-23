@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.174 2009-04-13 16:07:02 vruppert Exp $
+// $Id: config.cc,v 1.175 2009-04-23 18:28:16 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -2963,6 +2963,20 @@ static int parse_line_formatted(const char *context, int num_params, char *param
       PARSE_ERR(("%s: print_timestamps directive malformed.", context));
     }
   }
+  else if (!strcmp(params[0], "port_e9_hack")) {
+    if (num_params != 2) {
+      PARSE_ERR(("%s: port_e9_hack directive: wrong # args.", context));
+    }
+    if (strncmp(params[1], "enabled=", 8)) {
+      PARSE_ERR(("%s: port_e9_hack directive malformed.", context));
+    }
+    if (params[1][8] == '0' || params[1][8] == '1') {
+      bx_dbg.port_e9_hack = params[1][8] - '0';
+    }
+    else {
+      PARSE_ERR(("%s: port_e9_hack directive malformed.", context));
+    }
+  }
   else if (!strcmp(params[0], "ne2k")) {
     int tmp[6];
     char tmpchar[6];
@@ -3609,9 +3623,14 @@ int bx_write_configuration(const char *rc, int overwrite)
 #if BX_CONFIGURE_MSRS
   strptr = SIM->get_param_string(BXPN_CONFIGURABLE_MSRS_PATH)->getptr();
   if (strlen(strptr) > 0)
-    fprintf(fp, "msrs==\"%s\"", strptr);
+    fprintf(fp, ", msrs=\"%s\"", strptr);
 #endif  
   fprintf(fp, "\n");
+  fprintf(fp, "print_timestamps: enabled=%d\n", bx_dbg.print_timestamps);
+  fprintf(fp, "port_e9_hack: enabled=%d\n", bx_dbg.port_e9_hack);
+#if BX_DEBUGGER
+  fprintf(fp, "magic_break: enabled=%d\n", bx_dbg.magic_break_enabled);
+#endif
   fprintf(fp, "text_snapshot_check: enabled=%d\n", SIM->get_param_bool(BXPN_TEXT_SNAPSHOT_CHECK)->get());
   fprintf(fp, "private_colormap: enabled=%d\n", SIM->get_param_bool(BXPN_PRIVATE_COLORMAP)->get());
 #if BX_WITH_AMIGAOS

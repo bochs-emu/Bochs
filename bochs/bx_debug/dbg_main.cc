@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.187 2009-04-21 20:27:35 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.188 2009-04-23 18:28:17 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1313,17 +1313,11 @@ void bx_dbg_show_command(const char* arg)
       dbg_printf("Disable all show flags\n");
     } else if(!strcmp(arg,"dbg-all")) {
       bx_dbg.floppy = 1;
-      bx_dbg.keyboard = 1;
-      bx_dbg.video = 1;
       bx_dbg.disk = 1;
-      bx_dbg.pit = 1;
-      bx_dbg.pic = 1;
-      bx_dbg.bios = 1;
-      bx_dbg.cmos = 1;
-      bx_dbg.a20 = 1;
       bx_dbg.interrupts = 1;
       bx_dbg.exceptions = 1;
       bx_dbg.mouse = 1;
+      bx_dbg.a20 = 1;
       bx_dbg.io = 1;
       bx_dbg.debugger = 1;
       bx_dbg.dma = 1;
@@ -1333,17 +1327,11 @@ void bx_dbg_show_command(const char* arg)
       return;
     } else if(!strcmp(arg,"dbg-none")) {
       bx_dbg.floppy = 0;
-      bx_dbg.keyboard = 0;
-      bx_dbg.video = 0;
       bx_dbg.disk = 0;
-      bx_dbg.pit = 0;
-      bx_dbg.pic = 0;
-      bx_dbg.bios = 0;
-      bx_dbg.cmos = 0;
-      bx_dbg.a20 = 0;
       bx_dbg.interrupts = 0;
       bx_dbg.exceptions = 0;
       bx_dbg.mouse = 0;
+      bx_dbg.a20 = 0;
       bx_dbg.io = 0;
       bx_dbg.debugger = 0;
       bx_dbg.dma = 0;

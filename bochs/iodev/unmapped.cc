@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: unmapped.cc,v 1.32 2009-02-08 09:05:52 vruppert Exp $
+// $Id: unmapped.cc,v 1.33 2009-04-23 18:28:17 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -102,16 +102,21 @@ Bit32u bx_unmapped_c::read(Bit32u address, unsigned io_len)
     case 0x8e:
       retval = BX_UM_THIS s.port8e;
       break;
-#if BX_PORT_E9_HACK
+
     // Unused port on ISA - this can be used by the emulated code
     // to detect it is running inside Bochs and that the debugging
     // features are available (write 0xFF or something on unused
     // port 0x80, then read from 0xe9, if value is 0xe9, debug
     // output is available) (see write() for that) -- Andreas and Emmanuel
     case 0xe9:
-      retval = 0xe9;
+      if (bx_dbg.port_e9_hack) {
+         retval = 0xe9;
+      }
+      else {
+         retval = 0xffffffff;
+      }
       break;
-#endif
+
     case 0x03df:
       retval = 0xffffffff;
       BX_DEBUG(("unsupported IO read from port %04x (CGA)", address));
@@ -159,7 +164,7 @@ return_from_read:
       BX_DEBUG(("unmapped: 32-bit read from %04x = %08x", address, retval));
       break;
     default:
-      BX_DEBUG(("unmapped: %d-bit read from %04x = %x", io_len * 8, address, retval));
+      BX_PANIC(("unmapped: %d-bit read from %04x = %x", io_len * 8, address, retval));
     }
   }
 
@@ -200,7 +205,6 @@ void bx_unmapped_c::write(Bit32u address, Bit32u value, unsigned io_len)
       BX_UM_THIS s.port8e = value;
       break;
 
-#if BX_PORT_E9_HACK
     // This port doesn't exist on normal ISA architecture. However,
     // we define a convention here, to display on the console of the
     // system running Bochs, anything that is written to it. The
@@ -211,10 +215,11 @@ void bx_unmapped_c::write(Bit32u address, Bit32u value, unsigned io_len)
     // Idea by Andreas Beck (andreas.beck@ggi-project.org)
 
     case 0xe9:
-      putchar(value);
-      fflush(stdout);
+      if (bx_dbg.port_e9_hack) {
+        putchar(value);
+        fflush(stdout);
+      }
       break;
-#endif
 
     case 0xed: // Dummy port used as I/O delay
       break;

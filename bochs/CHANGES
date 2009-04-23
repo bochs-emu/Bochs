@@ -56,6 +56,8 @@ Detailed change log :
   - Added configure option to compile in GUI frontend for Bochs debugger,
     to enable configure with --enable-debugger-gui option.
     The GUI debugger frontend is enabled by default with Bochs debugger.
+  - Removed --enable-port-e9-hack configure option. The feature now could be
+    configured at runtime through .bochsrc.
   - Added configure option to enable/disable A20 pin support. Disabling the
     A20 pin support slightly speeds up the emulation.
   - reduced dependencies between source files for faster code generation

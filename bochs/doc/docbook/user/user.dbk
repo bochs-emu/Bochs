@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.253 2009-04-19 13:10:50 vruppert Exp $
+$Id: user.dbk,v 1.254 2009-04-23 18:28:17 sshwarts Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -4308,6 +4308,22 @@ Example:
 This enables the "magic breakpoint" feature when using the debugger.
 The useless cpu instruction XCHG BX, BX causes Bochs to enter the
 debugger mode. This might be useful for software development.
+</para>
+</section>
+
+<section><title>port_e9_hack</title>
+<para>
+Example:
+<screen>
+  port_e9_hack: enabled=1
+</screen>
+The 0xE9 port doesn't exists in normal ISA architecture. However, we
+define a convention here, to display on the console of the system running
+Bochs anything that is written to it. The idea is to provide debug output
+very early when writing BIOS or OS code for example, without having to
+bother with setting up a serial port or etc. Reading from port 0xE9 will
+will return 0xe9 to let you know if the feature is available. Leave  
+this 0 unless you have a reason to use it.
 </para>
 </section>
 

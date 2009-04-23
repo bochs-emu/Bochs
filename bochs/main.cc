@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.398 2009-03-26 09:51:22 sshwarts Exp $
+// $Id: main.cc,v 1.399 2009-04-23 18:28:17 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1156,31 +1156,7 @@ void bx_init_bx_dbg(void)
 #if BX_DEBUGGER
   bx_dbg_init_infile();
 #endif
-  bx_dbg.floppy = 0;
-  bx_dbg.keyboard = 0;
-  bx_dbg.video = 0;
-  bx_dbg.disk = 0;
-  bx_dbg.pit = 0;
-  bx_dbg.pic = 0;
-  bx_dbg.bios = 0;
-  bx_dbg.cmos = 0;
-  bx_dbg.a20 = 0;
-  bx_dbg.interrupts = 0;
-  bx_dbg.exceptions = 0;
-  bx_dbg.mouse = 0;
-  bx_dbg.io = 0;
-  bx_dbg.debugger = 0;
-  bx_dbg.dma = 0;
-  bx_dbg.unsupported_io = 0;
-  bx_dbg.record_io = 0;
-  bx_dbg.serial = 0;
-  bx_dbg.cdrom = 0;
-#if BX_DEBUGGER
-  bx_dbg.magic_break_enabled = 0;
-#endif
-#if BX_GDBSTUB
-  bx_dbg.gdbstub_enabled = 0;
-#endif
+  memset(&bx_dbg, 0, sizeof(bx_debug_t));
 }
 
 int bx_atexit(void)
