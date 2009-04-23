@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu_arith.cc,v 1.17 2009-03-10 21:43:11 sshwarts Exp $
+// $Id: fpu_arith.cc,v 1.18 2009-04-23 05:16:29 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -58,6 +58,98 @@ float_status_t FPU_pre_exception_handling(Bit16u control_word)
   status.flush_underflow_to_zero = 0;
 
   return status;
+}
+
+#include "softfloatx80.h"
+
+floatx80 FPU_handle_NaN(floatx80 a, int aIsNaN, float32 b32, int bIsNaN, float_status_t &status)
+{
+    int aIsSignalingNaN = floatx80_is_signaling_nan(a);
+    int bIsSignalingNaN = float32_is_signaling_nan(b32);
+
+    // propogate QNaN to SNaN
+    a = propagateFloatx80NaN(a, status);
+
+    // float32 is NaN so conversion will propagate SNaN to QNaN and raise
+    // appropriate exception flags
+    floatx80 b = float32_to_floatx80(b32, status);
+
+    if (aIsSignalingNaN | bIsSignalingNaN) float_raise(status, float_flag_invalid);
+    if (aIsSignalingNaN) {
+        if (bIsSignalingNaN) goto returnLargerSignificand;
+        return bIsNaN ? b : a;
+    }
+    else if (aIsNaN) {
+        if (bIsSignalingNaN | ! bIsNaN) return a;
+ returnLargerSignificand:
+        if (a.fraction < b.fraction) return b;
+        if (b.fraction < a.fraction) return a;
+        return (a.exp < b.exp) ? a : b;
+    }
+    else {
+        return b;
+    }
+}
+
+int FPU_handle_NaN(floatx80 a, float32 b, floatx80 &r, float_status_t &status)
+{
+  if (floatx80_is_unsupported(a)) {
+     float_raise(status, float_flag_invalid);
+     r = floatx80_default_nan;
+     return 1;
+  }
+
+  int aIsNaN = floatx80_is_nan(a), bIsNaN = float32_is_nan(b);
+  if (aIsNaN | bIsNaN) {
+     r = FPU_handle_NaN(a, aIsNaN, b, bIsNaN, status);
+     return 1;
+  }
+  return 0;
+}
+
+floatx80 FPU_handle_NaN(floatx80 a, int aIsNaN, float64 b64, int bIsNaN, float_status_t &status)
+{
+    int aIsSignalingNaN = floatx80_is_signaling_nan(a);
+    int bIsSignalingNaN = float64_is_signaling_nan(b64);
+
+    // propogate QNaN to SNaN
+    a = propagateFloatx80NaN(a, status);
+
+    // float64 is NaN so conversion will propagate SNaN to QNaN and raise
+    // appropriate exception flags
+    floatx80 b = float64_to_floatx80(b64, status);
+
+    if (aIsSignalingNaN | bIsSignalingNaN) float_raise(status, float_flag_invalid);
+    if (aIsSignalingNaN) {
+        if (bIsSignalingNaN) goto returnLargerSignificand;
+        return bIsNaN ? b : a;
+    }
+    else if (aIsNaN) {
+        if (bIsSignalingNaN | ! bIsNaN) return a;
+ returnLargerSignificand:
+        if (a.fraction < b.fraction) return b;
+        if (b.fraction < a.fraction) return a;
+        return (a.exp < b.exp) ? a : b;
+    }
+    else {
+        return b;
+    }
+}
+
+int FPU_handle_NaN(floatx80 a, float64 b, floatx80 &r, float_status_t &status)
+{
+  if (floatx80_is_unsupported(a)) {
+     float_raise(status, float_flag_invalid);
+     r = floatx80_default_nan;
+     return 1;
+  }
+
+  int aIsNaN = floatx80_is_nan(a), bIsNaN = float64_is_nan(b);
+  if (aIsNaN | bIsNaN) {
+     r = FPU_handle_NaN(a, aIsNaN, b, bIsNaN, status);
+     return 1;
+  }
+  return 0;
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::FADD_ST0_STj(bxInstruction_c *i)
@@ -138,8 +230,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FADD_SINGLE_REAL(bxInstruction_c *i)
   float_status_t status =
      FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
 
-  floatx80 result = floatx80_add(BX_READ_FPU_REG(0),
-                float32_to_floatx80(load_reg, status), status);
+  floatx80 a = BX_READ_FPU_REG(0), result;
+  if (! FPU_handle_NaN(a, load_reg, result, status))
+     result = floatx80_add(a, float32_to_floatx80(load_reg, status), status);
 
   if (! BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags))
      BX_WRITE_FPU_REG(result, 0);
@@ -165,8 +258,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FADD_DOUBLE_REAL(bxInstruction_c *i)
   float_status_t status =
      FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
 
-  floatx80 result = floatx80_add(BX_READ_FPU_REG(0),
-                float64_to_floatx80(load_reg, status), status);
+  floatx80 a = BX_READ_FPU_REG(0), result;
+  if (! FPU_handle_NaN(a, load_reg, result, status))
+     result = floatx80_add(a, float64_to_floatx80(load_reg, status), status);
 
   if (! BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags))
      BX_WRITE_FPU_REG(result, 0);
@@ -311,8 +405,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FMUL_SINGLE_REAL(bxInstruction_c *i)
   float_status_t status =
      FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
 
-  floatx80 result = floatx80_mul(BX_READ_FPU_REG(0),
-                float32_to_floatx80(load_reg, status), status);
+  floatx80 a = BX_READ_FPU_REG(0), result;
+  if (! FPU_handle_NaN(a, load_reg, result, status))
+     result = floatx80_mul(a, float32_to_floatx80(load_reg, status), status);
 
   if (! BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags))
      BX_WRITE_FPU_REG(result, 0);
@@ -338,8 +433,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FMUL_DOUBLE_REAL(bxInstruction_c *i)
   float_status_t status =
      FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
 
-  floatx80 result = floatx80_mul(BX_READ_FPU_REG(0),
-                float64_to_floatx80(load_reg, status), status);
+  floatx80 a = BX_READ_FPU_REG(0), result;
+  if (! FPU_handle_NaN(a, load_reg, result, status))
+     result = floatx80_mul(a, float64_to_floatx80(load_reg, status), status);
 
   if (! BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags))
      BX_WRITE_FPU_REG(result, 0);
@@ -545,8 +641,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FSUB_SINGLE_REAL(bxInstruction_c *i)
   float_status_t status =
      FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
 
-  floatx80 result = floatx80_sub(BX_READ_FPU_REG(0),
-                float32_to_floatx80(load_reg, status), status);
+  floatx80 a = BX_READ_FPU_REG(0), result;
+  if (! FPU_handle_NaN(a, load_reg, result, status))
+     result = floatx80_sub(a, float32_to_floatx80(load_reg, status), status);
 
   if (! BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags))
      BX_WRITE_FPU_REG(result, 0);
@@ -572,8 +669,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FSUBR_SINGLE_REAL(bxInstruction_c *i)
   float_status_t status =
      FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
 
-  floatx80 result = floatx80_sub(float32_to_floatx80(load_reg, status),
-                BX_READ_FPU_REG(0), status);
+  floatx80 b = BX_READ_FPU_REG(0), result;
+  if (! FPU_handle_NaN(b, load_reg, result, status))
+     result = floatx80_sub(float32_to_floatx80(load_reg, status), b, status);
 
   if (! BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags))
      BX_WRITE_FPU_REG(result, 0);
@@ -599,8 +697,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FSUB_DOUBLE_REAL(bxInstruction_c *i)
   float_status_t status =
      FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
 
-  floatx80 result = floatx80_sub(BX_READ_FPU_REG(0),
-                float64_to_floatx80(load_reg, status), status);
+  floatx80 a = BX_READ_FPU_REG(0), result;
+  if (! FPU_handle_NaN(a, load_reg, result, status))
+     result = floatx80_sub(a, float64_to_floatx80(load_reg, status), status);
 
   if (! BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags))
      BX_WRITE_FPU_REG(result, 0);
@@ -626,8 +725,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FSUBR_DOUBLE_REAL(bxInstruction_c *i)
   float_status_t status =
      FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
 
-  floatx80 result = floatx80_sub(float64_to_floatx80(load_reg, status),
-                BX_READ_FPU_REG(0), status);
+
+  floatx80 b = BX_READ_FPU_REG(0), result;
+  if (! FPU_handle_NaN(b, load_reg, result, status))
+     result = floatx80_sub(float64_to_floatx80(load_reg, status), b, status);
 
   if (! BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags))
      BX_WRITE_FPU_REG(result, 0);
@@ -892,8 +993,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FDIV_SINGLE_REAL(bxInstruction_c *i)
   float_status_t status =
      FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
 
-  floatx80 result = floatx80_div(BX_READ_FPU_REG(0),
-                float32_to_floatx80(load_reg, status), status);
+  floatx80 a = BX_READ_FPU_REG(0), result;
+  if (! FPU_handle_NaN(a, load_reg, result, status))
+     result = floatx80_div(a, float32_to_floatx80(load_reg, status), status);
 
   if (! BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags))
      BX_WRITE_FPU_REG(result, 0);
@@ -919,8 +1021,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FDIVR_SINGLE_REAL(bxInstruction_c *i)
   float_status_t status =
      FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
 
-  floatx80 result = floatx80_div(float32_to_floatx80(load_reg, status),
-                BX_READ_FPU_REG(0), status);
+  floatx80 b = BX_READ_FPU_REG(0), result;
+  if (! FPU_handle_NaN(b, load_reg, result, status))
+     result = floatx80_div(float32_to_floatx80(load_reg, status), b, status);
 
   if (! BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags))
      BX_WRITE_FPU_REG(result, 0);
@@ -946,8 +1049,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FDIV_DOUBLE_REAL(bxInstruction_c *i)
   float_status_t status =
      FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
 
-  floatx80 result = floatx80_div(BX_READ_FPU_REG(0),
-                float64_to_floatx80(load_reg, status), status);
+  floatx80 a = BX_READ_FPU_REG(0), result;
+  if (! FPU_handle_NaN(a, load_reg, result, status))
+     result = floatx80_div(a, float64_to_floatx80(load_reg, status), status);
 
   if (! BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags))
      BX_WRITE_FPU_REG(result, 0);
@@ -973,8 +1077,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FDIVR_DOUBLE_REAL(bxInstruction_c *i)
   float_status_t status =
      FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
 
-  floatx80 result = floatx80_div(float64_to_floatx80(load_reg, status),
-                BX_READ_FPU_REG(0), status);
+  floatx80 b = BX_READ_FPU_REG(0), result;
+  if (! FPU_handle_NaN(b, load_reg, result, status))
+     result = floatx80_div(float64_to_floatx80(load_reg, status), b, status);
 
   if (! BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags))
      BX_WRITE_FPU_REG(result, 0);
