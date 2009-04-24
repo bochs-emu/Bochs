@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: unmapped.cc,v 1.34 2009-04-24 08:16:06 sshwarts Exp $
+// $Id: unmapped.cc,v 1.35 2009-04-24 14:57:25 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -142,7 +142,6 @@ Bit32u bx_unmapped_c::read(Bit32u address, unsigned io_len)
     case 0x03fd: /* UART */
     case 0x17c6:
       retval = 0xffffffff;
-      BX_DEBUG(("unsupported IO read from port %04x", address));
       break;
     default:
       retval = 0xffffffff;
@@ -150,8 +149,7 @@ Bit32u bx_unmapped_c::read(Bit32u address, unsigned io_len)
 
 return_from_read:
 
-  if (bx_dbg.unsupported_io) {
-    switch (io_len) {
+  switch (io_len) {
     case 1:
       retval = (Bit8u)retval;
       BX_DEBUG(("unmapped: 8-bit read from %04x = %02x", address, retval));
@@ -165,7 +163,6 @@ return_from_read:
       break;
     default:
       BX_PANIC(("unmapped: %d-bit read from %04x = %x", io_len * 8, address, retval));
-    }
   }
 
   return retval;
@@ -253,10 +250,10 @@ void bx_unmapped_c::write(Bit32u address, Bit32u value, unsigned io_len)
         case 'n': if (BX_UM_THIS s.shutdown == 7) BX_UM_THIS s.shutdown = 8; break;
 #if BX_DEBUGGER
         // Very handy for debugging:
-	// output 'D' to port 8900, and bochs quits to debugger
+        // output 'D' to port 8900, and bochs quits to debugger
         case 'D': bx_debug_break(); break;
 #endif
-	default : BX_UM_THIS s.shutdown = 0; break;
+        default : BX_UM_THIS s.shutdown = 0; break;
       }
       if (BX_UM_THIS s.shutdown == 8) {
         bx_user_quit = 1;
@@ -276,20 +273,18 @@ void bx_unmapped_c::write(Bit32u address, Bit32u value, unsigned io_len)
 
 return_from_write:
 
-  if (bx_dbg.unsupported_io) {
-    switch (io_len) {
-      case 1:
-        BX_INFO(("unmapped: 8-bit write to %04x = %02x", address, value));
-        break;
-      case 2:
-        BX_INFO(("unmapped: 16-bit write to %04x = %04x", address, value));
-        break;
-      case 4:
-        BX_INFO(("unmapped: 32-bit write to %04x = %08x", address, value));
-        break;
-      default:
-        BX_PANIC(("unmapped: %d-bit write to %04x = %x", io_len * 8, address, value));
-        break;
-    }
+  switch (io_len) {
+    case 1:
+      BX_DEBUG(("unmapped: 8-bit write to %04x = %02x", address, value));
+      break;
+    case 2:
+      BX_DEBUG(("unmapped: 16-bit write to %04x = %04x", address, value));
+      break;
+    case 4:
+      BX_DEBUG(("unmapped: 32-bit write to %04x = %08x", address, value));
+      break;
+    default:
+      BX_PANIC(("unmapped: %d-bit write to %04x = %x", io_len * 8, address, value));
+      break;
   }
 }

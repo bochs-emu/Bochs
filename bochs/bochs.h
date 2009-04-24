@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.245 2009-04-24 08:16:06 sshwarts Exp $
+// $Id: bochs.h,v 1.246 2009-04-24 14:57:24 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -431,13 +431,11 @@ int bx_gdbstub_check(unsigned int eip);
 #endif
 
 typedef struct {
-  bx_bool floppy;
   bx_bool disk;
   bx_bool interrupts;
   bx_bool exceptions;
   bx_bool debugger;
   bx_bool mouse;
-  bx_bool unsupported_io;
   bx_bool cdrom;
   bx_bool print_timestamps;
   bx_bool port_e9_hack;

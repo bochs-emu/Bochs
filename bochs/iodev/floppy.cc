@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.cc,v 1.119 2009-03-25 18:33:43 vruppert Exp $
+// $Id: floppy.cc,v 1.120 2009-04-24 14:57:24 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -141,7 +141,7 @@ void bx_floppy_ctrl_c::init(void)
 {
   Bit8u i, devtype, cmos_value;
 
-  BX_DEBUG(("Init $Id: floppy.cc,v 1.119 2009-03-25 18:33:43 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: floppy.cc,v 1.120 2009-04-24 14:57:24 vruppert Exp $"));
   DEV_dma_register_8bit_channel(2, dma_read, dma_write, "Floppy Drive");
   DEV_register_irq(6, "Floppy Drive");
   for (unsigned addr=0x03F2; addr<=0x03F7; addr++) {
@@ -1016,12 +1016,8 @@ void bx_floppy_ctrl_c::floppy_xfer(Bit8u drive, Bit32u offset, Bit8u *buffer,
   if (BX_FD_THIS s.device_type[drive] == FDRIVE_NONE)
     BX_PANIC(("floppy_xfer: bad drive #%d", drive));
 
-  if (bx_dbg.floppy) {
-    BX_INFO(("drive=%u", (unsigned) drive));
-    BX_INFO(("offset=%u", (unsigned) offset));
-    BX_INFO(("bytes=%u", (unsigned) bytes));
-    BX_INFO(("direction=%s", (direction==FROM_FLOPPY)? "from" : "to"));
-  }
+  BX_DEBUG(("floppy_xfer: drive=%u, offset=%u, bytes=%u, direction=%s floppy",
+            drive, offset, bytes, (direction==FROM_FLOPPY)? "from" : "to"));
 
 #if BX_WITH_MACOS
   if (strcmp(SIM->get_param_string(BXPN_FLOPPYA_PATH)->getptr(), SuperDrive))
@@ -1157,14 +1153,12 @@ void bx_floppy_ctrl_c::timer()
         BX_FD_THIS s.status_reg1 = 0;
         BX_FD_THIS s.status_reg2 = 0;
 
-        if (bx_dbg.floppy) {
-          BX_INFO(("<<WRITE DONE>>"));
-          BX_INFO(("AFTER"));
-          BX_INFO(("  drive    = %u", (unsigned) drive));
-          BX_INFO(("  head     = %u", (unsigned) BX_FD_THIS s.head[drive]));
-          BX_INFO(("  cylinder = %u", (unsigned) BX_FD_THIS s.cylinder[drive]));
-          BX_INFO(("  sector   = %u", (unsigned) BX_FD_THIS s.sector[drive]));
-        }
+        BX_DEBUG(("<<WRITE DONE>>"));
+        BX_DEBUG(("AFTER"));
+        BX_DEBUG(("  drive    = %u", drive));
+        BX_DEBUG(("  head     = %u", BX_FD_THIS s.head[drive]));
+        BX_DEBUG(("  cylinder = %u", BX_FD_THIS s.cylinder[drive]));
+        BX_DEBUG(("  sector   = %u", BX_FD_THIS s.sector[drive]));
 
         enter_result_phase();
       } else {
@@ -1241,14 +1235,12 @@ void bx_floppy_ctrl_c::dma_write(Bit8u *data_byte)
       BX_FD_THIS s.status_reg1 = 0;
       BX_FD_THIS s.status_reg2 = 0;
 
-      if (bx_dbg.floppy) {
-        BX_INFO(("<<READ DONE>>"));
-        BX_INFO(("AFTER"));
-        BX_INFO(("  drive    = %u", (unsigned) drive));
-        BX_INFO(("  head     = %u", (unsigned) BX_FD_THIS s.head[drive]));
-        BX_INFO(("  cylinder = %u", (unsigned) BX_FD_THIS s.cylinder[drive]));
-        BX_INFO(("  sector   = %u", (unsigned) BX_FD_THIS s.sector[drive]));
-      }
+      BX_DEBUG(("<<READ DONE>>"));
+      BX_DEBUG(("AFTER"));
+      BX_DEBUG(("  drive    = %u", drive));
+      BX_DEBUG(("  head     = %u", BX_FD_THIS s.head[drive]));
+      BX_DEBUG(("  cylinder = %u", BX_FD_THIS s.cylinder[drive]));
+      BX_DEBUG(("  sector   = %u", BX_FD_THIS s.sector[drive]));
 
       if (!(BX_FD_THIS s.main_status_reg & FD_MS_NDMA)) {
         DEV_dma_set_drq(FLOPPY_DMA_CHAN, 0);
