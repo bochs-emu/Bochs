@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.254 2009-04-23 18:28:17 sshwarts Exp $
+$Id: user.dbk,v 1.255 2009-04-24 08:08:05 sshwarts Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -346,7 +346,7 @@ currently work with.
   <row>
     <entry>386,486,Pentium Emulation</entry>
     <entry>Yes</entry>
-    <entry>Bochs can be configured to emulate one of several families of Intel hardware. Some Pentium features are unsupported, such as MTRR or SMM (System Management Mode).</entry>
+    <entry>Bochs can be configured to emulate one of several families of Intel hardware. Some Pentium features are incomplete, such as SMM (System Management Mode).</entry>
   </row>
   <row>
     <entry>P6 and later CPU Emulation</entry>
@@ -369,9 +369,14 @@ currently work with.
     <entry>Command Line Debugger</entry>
     <entry>Yes</entry>
     <entry>Powerful command line debugger (optional) that lets you stop
-    execution and examine registers and memory, set breakpoints, etc. Unfortunatelly
-    the debugger still lacks x86-64 support and almost unusable for debugging
-    x86-64 workloads.
+    execution and examine registers and memory, set breakpoints, etc.
+    </entry>
+  </row>
+  <row>
+    <entry>GUI Debugger</entry>
+    <entry>Yes</entry>
+    <entry>Chourdakis Michael and Bruce Ewing contributed very powerful GUI frontend for Bochs internal debugger.
+    GUI debugger frontend is supported for Win32 and GTK hosts.
     </entry>
   </row>
   <row>
@@ -525,16 +530,6 @@ currently work with.
     <entry>Plugins</entry>
     <entry>Yes</entry>
     <entry>Plugins are supported on Linux, MacOS X, Solaris, and Cygwin.</entry>
-  </row>
-  <row>
-    <entry>16/32 bit addressing</entry>
-    <entry>Yes</entry>
-    <entry>16 or 32 bit operand sizes, stack size, and addressing</entry>
-  </row>
-  <row>
-    <entry>v8086/paging</entry>
-    <entry>Yes</entry>
-    <entry>Virtual-8086 mode including optional v8086 mode extensions (VME) and paging</entry>
   </row>
   <row>
     <entry>PIC</entry>
@@ -739,8 +734,8 @@ code that displays the Bochs VGA screen and handles keyboard and mouse events.
       With Kevin's help, in April 2001, the members of the bochs-developers
       mailing list set up a new official Bochs site hosted by <ulink
       url="http://sourcefourge.net">Source Forge</ulink>. The admins on this
-      project are Greg Alexander, Don Becker, Christophe Bothamy, and Bryce
-      Denney.
+      project are Greg Alexander, Don Becker, Christophe Bothamy, Bryce
+      Denney, Volker Vruppert and Stanislav Shwartsman.
      </para></answer>
   </qandaentry>
 
@@ -750,12 +745,10 @@ code that displays the Bochs VGA screen and handles keyboard and mouse events.
      </para></question>
      <answer><para>
      Because Bochs emulates every x86 instruction and all the devices in a PC
-     system, it does not reach high emulation speeds. Kevin reported
-     approximately 1.5MIPS using Bochs on a 400MHz PII Linux machine. Users
-     who have an x86 processor and want the highest emulation speeds may want
-     to consider PC virtualization software such as plex86 (free software)
-     or VMware (proprietary and commercial). Another related project is
-     <ulink url="http://fabrice.bellard.free.fr/qemu/">QEMU</ulink>.
+     system, it does not reach high emulation speeds. Users who have an x86
+     processor and want the highest emulation speeds may want to consider PC
+     virtualization software such as plex86 or VirtualBox (free software).
+     Another related project is <ulink url="http://fabrice.bellard.free.fr/qemu/">QEMU</ulink>.
      </para></answer>
   </qandaentry>
 
@@ -770,7 +763,7 @@ code that displays the Bochs VGA screen and handles keyboard and mouse events.
 
   <qandaentry>
      <question><para>
-     Why can't I use Bochs with my current Win95 installation?
+     Why can't I use Bochs with my current WinXP installation?
      </para></question>
      <answer><para>
      Think about this. If you had two different PC's, they would require different hardware drivers. So you may not be able to safely move a disk drive with Win95 on it, from one to the other. Bochs is no different. It emulates a certain set of hardware devices, and requires each OS be configured for those devices.
@@ -798,7 +791,7 @@ code that displays the Bochs VGA screen and handles keyboard and mouse events.
 
   <qandaentry>
      <question><para>
-     Do you know of any snapshots of Bochs running Win95?
+     Do you know of any snapshots of Bochs running Windows?
      </para></question>
      <answer><para>
      Yes! Look for "screen shots" on &bochs-sf-net; or on other Bochs sites.
@@ -1885,7 +1878,7 @@ In Bochs 1.3 and before, the X11 GUI was always the default.
   <row>
     <entry>win32 or Cygwin</entry>
     <entry>--with-win32</entry>
-    <entry>If using nmake method, compile using cl /nologo /G6 /MT /W3 /GX /DNDEBUG /DWIN32 /D_WINDOWS /O2.  If using Visual C++ workspace, see the workspace file for compile settings.  See <link linkend="compiling-win32">Compiling on Win32 with Microsoft VC++</link> for instructions.
+    <entry>If using nmake method, compile using cl /nologo /MT /W3 /EHs-c- /DNDEBUG /DWIN32 /D_WINDOWS /D_CRT_SECURE_NO_WARNINGS.  If using Visual C++ workspace, see the workspace file for compile settings.  See <link linkend="compiling-win32">Compiling on Win32 with Microsoft VC++</link> for instructions.
     </entry>
   </row>
   <row>
@@ -2044,8 +2037,7 @@ turn it off.
       <entry>5</entry>
       <entry>
       Select which CPU level to emulate.  Choices are 3,4,5,6 which mean to
-      target 386, 486, Pentium, or Pentium Pro emulation.  Pentium Pro support
-      is quite incomplete, so level 5 is the best choice for now.
+      target 386, 486, Pentium, or Pentium Pro and later emulation.
       </entry>
     </row>
     <row>
@@ -2146,19 +2138,14 @@ turn it off.
       </entry>
     </row>
     <row>
-      <entry>--enable-guest2host-tlb</entry>
-      <entry>no</entry>
-      <entry>support guest to host address TLB for speed</entry>
-    </row>
-    <row>
       <entry>--enable-repeat-speedups</entry>
       <entry>no</entry>
       <entry>support repeated I/O and memory copy speedups</entry>
     </row>
     <row>
-      <entry>--enable-icache</entry>
+      <entry>--enable-trace-cache</entry>
       <entry>no</entry>
-      <entry>support instruction cache for faster execution</entry>
+      <entry>support instruction trace cache for faster execution</entry>
     </row>
     <row>
       <entry>--enable-host-specific-asms</entry>
@@ -2176,9 +2163,8 @@ turn it off.
       <entry>
         Turn on the enables for all speed optimizations that the
         developers believe are safe to use:
-         --enable-guest2host-tlb,
+         --enable-trace-cache,
          --enable-repeat-speedups,
-         --enable-icache,
          --enable-host-specific-asms,
          --enable-fast-function-calls.
       </entry>
@@ -2192,9 +2178,7 @@ turn it off.
       <entry>--enable-x86-64</entry>
       <entry>no</entry>
       <entry>
-      Add support for AMD's x86-64 instruction set, written by Peter Tattam.
-      The AMD x86-64 support is about 90% complete and is still experimental.
-      The code has been tested on a limited number of test programs.
+      Add support for x86-64 instruction set, written by Peter Tattam and Stanislav Shwartsman.
       </entry>
     </row>
     <row>
@@ -2209,13 +2193,30 @@ turn it off.
       <entry>no</entry>
       <entry>
       Add support for SSE instructions, written by Stanislav Shwartsman.
-      Any of SSE/SSE2/SSE3/SSE3E/SSE4.1 instruction sets are supported.
+      Any of SSE/SSE2/SSE3/SSE3E/SSE4.1/SSE4.2 instruction sets are supported.
       </entry>
+    </row>
+    <row>
+      <entry>--enable-aes</entry>
+      <entry>no</entry>
+      <entry>
+      Add support for AES instructions, written by Stanislav Shwartsman.
+      </entry>
+    </row>
+    <row>
+      <entry>--enable-xsave</entry>
+      <entry>no</entry>
+      <entry>XSAVE support</entry>
     </row>
     <row>
       <entry>--enable-sep</entry>
       <entry>no</entry>
       <entry>SYSENTER/SYSEXIT support</entry>
+    </row>
+    <row>
+      <entry>--enable-vmx</entry>
+      <entry>no</entry>
+      <entry>Intel Virtualization Extensions (VMX) support</entry>
     </row>
     <row>
       <entry>--enable-vme</entry>
@@ -2297,7 +2298,7 @@ turn it off.
       <entry>no</entry>
       <entry>X86 debugger support.  If the software you run in bochs
           needs to use the x86 hardware debugging facilities such as
-          DR0..DR8, instruction and data breakpoints etc., then you
+          DR0..DR7, instruction and data breakpoints etc., then you
           should use this option.  Otherwise don't use it, as it
           will slow down the emulation.</entry>
     </row>
@@ -2324,7 +2325,7 @@ turn it off.
       </entry>
     </row>
     <row>
-      <entry>--enable-4meg-pages</entry>
+      <entry>--enable-large-pages</entry>
       <entry>no (yes for <link linkend="configure-enable-cpu-level">CPU</link> > 4)</entry>
       <entry>support 4 megabyte page extensions (PSE, page size extension)</entry>
     </row>
@@ -2334,15 +2335,14 @@ turn it off.
       <entry>support physical address extensions</entry>
     </row>
     <row>
+      <entry>--enable-1g-pages</entry>
+      <entry>no</entry>
+      <entry>support for 1G page externsions in x86-64 long mode</entry>
+    </row>
+    <row>
       <entry>--enable-global-pages</entry>
       <entry>no (yes for <link linkend="configure-enable-cpu-level">CPU</link> > 5)</entry>
       <entry>support global pages</entry>
-    </row>
-    <row>
-      <entry>--enable-port-e9-hack</entry>
-      <entry>yes</entry>
-      <entry>Writes to port e9 go to console.  Unless you know you want
-          this option, you don't.</entry>
     </row>
     <row>
       <entry>--enable-smp</entry>
@@ -2380,29 +2380,6 @@ turn it off.
       (hooks in bochs) to either call your library functions or not, depending
       upon whether you want to collect each piece of data.  [Kevin wrote: I
       broke some of the hooks when I recoded the fetch/decode loop.]
-      </entry>
-    </row>
-    <row>
-      <entry>--enable-simid={0, 1}</entry>
-      <entry>0</entry>
-      <entry>
-      CPU simulator ID.  You likely don't need this option.  If you are using
-      bochs to cosimulate, that is to run multiple simulators in parallel so
-      that you can compare results and check for divergence, each simulator
-      needs an ID.  When you only have one CPU simulator (as usual) the default
-      of 0 is fine.  [Kevin wrote: I use this option occasionally to run 2
-      versions of bochs against each other and check for divergence, to find
-      bugs etc.  This option gets broken more than not due to architectural
-      changes, and I usually end of fixing it each time I use it.]
-      </entry>
-    </row>
-    <row>
-      <entry>--enable-num-sim={1, 2}</entry>
-      <entry>1</entry>
-      <entry>
-      Number of CPU simulators.  The default of 1 is likely what you want, so
-      don't use this option.  It is for assigning an ID to the simulator, for
-      cosimulation described above.
       </entry>
     </row>
     <row>
@@ -3854,18 +3831,6 @@ consistently in Windows.
 </para>
 </section>
 
-<section><title>ips</title>
-<para>
-Examples:
-<screen>
-  ips: 2000000 # default
-  ips: 10000000
-</screen>
-Emulated Instructions Per Second.  This option is deprecated. Use the <command>ips</command>
-parameter of the <link linkend="bochsopt-cpu">cpu option</link> instead.
-</para>
-</section>
-
 <section id="bochsopt-clock"><title>clock</title>
 <para>
 This defines the parameters of the clock inside Bochs:
@@ -4821,6 +4786,14 @@ For other arguments, see section <link linkend="bochsrc">bochsrc</link>.
 <row>
   <entry>-f <replaceable>filename</replaceable></entry>
   <entry>specify configuration file</entry>
+</row>
+<row>
+  <entry>-log <replaceable>filename</replaceable></entry>
+  <entry>specify Bochs log file</entry>
+</row>
+<row>
+  <entry>-dbglog <replaceable>filename</replaceable></entry>
+  <entry>specify Bochs internal debugger log file</entry>
 </row>
 <row>
   <entry>-n</entry>
@@ -5920,13 +5893,12 @@ but you can't specify which processor you want to set the breakpoint for.
 
 <listitem><para>
 test on any possible SMP operating systems. Currently success reported for
-Knoppix 4.0.2 and WinNT 4.0 SMP.
+Knoppix 4.0.2, WinNT 4.0 and WinXP SMP.
 </para></listitem>
 
 <listitem><para>
 several parts of the APIC model which weren't needed before are not
-implemented yet and cause a panic.  If you boot linux 2.4.3 for
-example, it says "panic: cluster model addressing not implemented".
+implemented yet.
 </para></listitem>
 
 <listitem><para>
@@ -6343,6 +6315,8 @@ From here, you may use the following commands:
 
   unwatch addr                Remove watchpoint to specific physical address
   unwatch                     Remove all watch points
+
+  trace-mem on/off            Enable/Disable memory access tracing
 
 </screen>
 </para>
