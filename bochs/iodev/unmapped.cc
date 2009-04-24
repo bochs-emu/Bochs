@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: unmapped.cc,v 1.33 2009-04-23 18:28:17 sshwarts Exp $
+// $Id: unmapped.cc,v 1.34 2009-04-24 08:16:06 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -288,7 +288,7 @@ return_from_write:
         BX_INFO(("unmapped: 32-bit write to %04x = %08x", address, value));
         break;
       default:
-        BX_INFO(("unmapped: %d-bit write to %04x = %x", io_len * 8, address, value));
+        BX_PANIC(("unmapped: %d-bit write to %04x = %x", io_len * 8, address, value));
         break;
     }
   }

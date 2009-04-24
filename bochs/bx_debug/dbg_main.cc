@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.188 2009-04-23 18:28:17 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.189 2009-04-24 08:16:06 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1317,10 +1317,7 @@ void bx_dbg_show_command(const char* arg)
       bx_dbg.interrupts = 1;
       bx_dbg.exceptions = 1;
       bx_dbg.mouse = 1;
-      bx_dbg.a20 = 1;
-      bx_dbg.io = 1;
       bx_dbg.debugger = 1;
-      bx_dbg.dma = 1;
       bx_dbg.unsupported_io = 1;
       /* bx_dbg.record_io = 1; this is a pointer .. somewhere */
       dbg_printf("Turned ON all bx_dbg flags\n");
@@ -1331,10 +1328,7 @@ void bx_dbg_show_command(const char* arg)
       bx_dbg.interrupts = 0;
       bx_dbg.exceptions = 0;
       bx_dbg.mouse = 0;
-      bx_dbg.a20 = 0;
-      bx_dbg.io = 0;
       bx_dbg.debugger = 0;
-      bx_dbg.dma = 0;
       bx_dbg.unsupported_io = 0;
       /* bx_dbg.record_io = 0; this is a pointer .. somewhere */
       dbg_printf("Turned OFF all bx_dbg flags\n");
