@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.cc,v 1.144 2009-03-03 20:34:50 vruppert Exp $
+// $Id: keyboard.cc,v 1.145 2009-04-25 08:06:32 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -126,7 +126,7 @@ void bx_keyb_c::resetinternals(bx_bool powerup)
 
 void bx_keyb_c::init(void)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.144 2009-03-03 20:34:50 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.145 2009-04-25 08:06:32 vruppert Exp $"));
   Bit32u   i;
 
   DEV_register_irq(1, "8042 Keyboard controller");
@@ -1327,7 +1327,7 @@ void bx_keyb_c::kbd_ctrl_to_mouse(Bit8u value)
     switch (BX_KEY_THIS s.kbd_controller.last_mouse_command) {
       case 0xf3: // Set Mouse Sample Rate
         BX_KEY_THIS s.mouse.sample_rate = value;
-        BX_DEBUG(("[mouse] Sampling rate set: %d Hz", value));
+        BX_DEBUG(("mouse: sampling rate set: %d Hz", value));
         if ((value == 200) && (!BX_KEY_THIS s.mouse.im_request)) {
           BX_KEY_THIS s.mouse.im_request = 1;
         } else if ((value == 100) && (BX_KEY_THIS s.mouse.im_request == 1)) {
@@ -1361,10 +1361,10 @@ void bx_keyb_c::kbd_ctrl_to_mouse(Bit8u value)
             BX_KEY_THIS s.mouse.resolution_cpmm = 8;
             break;
           default:
-            BX_PANIC(("[mouse] Unknown resolution %d", value));
+            BX_PANIC(("mouse: unknown resolution %d", value));
             break;
         }
-        BX_DEBUG(("[mouse] Resolution set to %d counts per mm",
+        BX_DEBUG(("mouse: resolution set to %d counts per mm",
           BX_KEY_THIS s.mouse.resolution_cpmm));
 
         controller_enQ(0xFA, 1); // ack
@@ -1382,9 +1382,8 @@ void bx_keyb_c::kbd_ctrl_to_mouse(Bit8u value)
       // if not a reset command or reset wrap mode
       // then just echo the byte.
       if ((value != 0xff) && (value != 0xec)) {
-        if (bx_dbg.mouse)
-          BX_INFO(("[mouse] wrap mode: Ignoring command %0X02.",value));
-        controller_enQ(value,1);
+        BX_DEBUG(("mouse: wrap mode: ignoring command 0x%02x",value));
+        controller_enQ(value, 1);
         // bail out
         return;
       }
@@ -1393,13 +1392,13 @@ void bx_keyb_c::kbd_ctrl_to_mouse(Bit8u value)
       case 0xe6: // Set Mouse Scaling to 1:1
         controller_enQ(0xFA, 1); // ACK
         BX_KEY_THIS s.mouse.scaling = 2;
-        BX_DEBUG(("[mouse] Scaling set to 1:1"));
+        BX_DEBUG(("mouse: scaling set to 1:1"));
         break;
 
       case 0xe7: // Set Mouse Scaling to 2:1
         controller_enQ(0xFA, 1); // ACK
         BX_KEY_THIS s.mouse.scaling         = 2;
-        BX_DEBUG(("[mouse] Scaling set to 2:1"));
+        BX_DEBUG(("mouse: scaling set to 2:1"));
         break;
 
       case 0xe8: // Set Mouse Resolution
@@ -1408,8 +1407,7 @@ void bx_keyb_c::kbd_ctrl_to_mouse(Bit8u value)
         break;
 
       case 0xea: // Set Stream Mode
-        if (bx_dbg.mouse)
-          BX_INFO(("[mouse] Mouse stream mode on."));
+        BX_DEBUG(("mouse: stream mode on"));
         BX_KEY_THIS s.mouse.mode = MOUSE_MODE_STREAM;
         controller_enQ(0xFA, 1); // ACK
         break;
@@ -1417,8 +1415,7 @@ void bx_keyb_c::kbd_ctrl_to_mouse(Bit8u value)
       case 0xec: // Reset Wrap Mode
         // unless we are in wrap mode ignore the command
         if (BX_KEY_THIS s.mouse.mode == MOUSE_MODE_WRAP) {
-          if (bx_dbg.mouse)
-            BX_INFO(("[mouse] Mouse wrap mode off."));
+          BX_DEBUG(("mouse: wrap mode off"));
           // restore previous mode except disable stream mode reporting.
           // ### TODO disabling reporting in stream mode
           BX_KEY_THIS s.mouse.mode = BX_KEY_THIS s.mouse.saved_mode;
@@ -1428,16 +1425,14 @@ void bx_keyb_c::kbd_ctrl_to_mouse(Bit8u value)
       case 0xee: // Set Wrap Mode
         // ### TODO flush output queue.
         // ### TODO disable interrupts if in stream mode.
-        if (bx_dbg.mouse)
-          BX_INFO(("[mouse] Mouse wrap mode on."));
+        BX_DEBUG(("mouse: wrap mode on"));
         BX_KEY_THIS s.mouse.saved_mode = BX_KEY_THIS s.mouse.mode;
         BX_KEY_THIS s.mouse.mode = MOUSE_MODE_WRAP;
         controller_enQ(0xFA, 1); // ACK
         break;
 
       case 0xf0: // Set Remote Mode (polling mode, i.e. not stream mode.)
-        if (bx_dbg.mouse)
-          BX_INFO(("[mouse] Mouse remote mode on."));
+        BX_DEBUG(("mouse: remote mode on"));
         // ### TODO should we flush/discard/ignore any already queued packets?
         BX_KEY_THIS s.mouse.mode = MOUSE_MODE_REMOTE;
         controller_enQ(0xFA, 1); // ACK
@@ -1449,7 +1444,7 @@ void bx_keyb_c::kbd_ctrl_to_mouse(Bit8u value)
           controller_enQ(0x03, 1); // Device ID (wheel z-mouse)
         else
           controller_enQ(0x00, 1); // Device ID (standard)
-        BX_DEBUG(("[mouse] Read mouse ID"));
+        BX_DEBUG(("mouse: read mouse ID"));
         break;
 
       case 0xf3: // Set Mouse Sample Rate (sample rate written to port 60h)
@@ -1462,7 +1457,7 @@ void bx_keyb_c::kbd_ctrl_to_mouse(Bit8u value)
         if (is_ps2) {
           BX_KEY_THIS s.mouse.enable = 1;
           controller_enQ(0xFA, 1); // ACK
-          BX_DEBUG(("[mouse] Mouse enabled (stream mode)"));
+          BX_DEBUG(("mouse enabled (stream mode)"));
         } else {
           // a mouse isn't present.  We need to return a 0xFE (resend) instead of a 0xFA (ACK)
           controller_enQ(0xFE, 1); // RESEND
@@ -1473,7 +1468,7 @@ void bx_keyb_c::kbd_ctrl_to_mouse(Bit8u value)
       case 0xf5: // Disable (in stream mode)
         BX_KEY_THIS s.mouse.enable = 0;
         controller_enQ(0xFA, 1); // ACK
-        BX_DEBUG(("[mouse] Mouse disabled (stream mode)"));
+        BX_DEBUG(("mouse disabled (stream mode)"));
         break;
 
       case 0xf6: // Set Defaults
@@ -1483,7 +1478,7 @@ void bx_keyb_c::kbd_ctrl_to_mouse(Bit8u value)
         BX_KEY_THIS s.mouse.enable          = 0;
         BX_KEY_THIS s.mouse.mode            = MOUSE_MODE_STREAM;
         controller_enQ(0xFA, 1); // ACK
-        BX_DEBUG(("[mouse] Set Defaults"));
+        BX_DEBUG(("mouse: set defaults"));
         break;
 
       case 0xff: // Reset
@@ -1501,7 +1496,7 @@ void bx_keyb_c::kbd_ctrl_to_mouse(Bit8u value)
           controller_enQ(0xFA, 1); // ACK
           controller_enQ(0xAA, 1); // completion code
           controller_enQ(0x00, 1); // ID code (standard after reset)
-          BX_DEBUG(("[mouse] Mouse reset"));
+          BX_DEBUG(("mouse reset"));
         } else {
           // a mouse isn't present.  We need to return a 0xFE (resend) instead of a 0xFA (ACK)
           controller_enQ(0xFE, 1); // RESEND
@@ -1515,7 +1510,7 @@ void bx_keyb_c::kbd_ctrl_to_mouse(Bit8u value)
         controller_enQ(BX_KEY_THIS s.mouse.get_status_byte(), 1); // status
         controller_enQ(BX_KEY_THIS s.mouse.get_resolution_byte(), 1); // resolution
         controller_enQ(BX_KEY_THIS s.mouse.sample_rate, 1); // sample rate
-        BX_DEBUG(("[mouse] Get mouse information"));
+        BX_DEBUG(("mouse: get mouse information"));
         break;
 
       case 0xeb: // Read Data (send a packet when in Remote Mode)
@@ -1524,17 +1519,17 @@ void bx_keyb_c::kbd_ctrl_to_mouse(Bit8u value)
         mouse_enQ_packet(((BX_KEY_THIS s.mouse.button_status & 0x0f) | 0x08),
           0x00, 0x00, 0x00); // bit3 of first byte always set
         //assumed we really aren't in polling mode, a rather odd assumption.
-        BX_ERROR(("[mouse] Warning: Read Data command partially supported."));
+        BX_ERROR(("mouse: Warning: Read Data command partially supported."));
         break;
 
       case 0xbb: // OS/2 Warp 3 uses this command
-       BX_ERROR(("[mouse] ignoring 0xbb command"));
+       BX_ERROR(("mouse: ignoring 0xbb command"));
        break;
 
       default:
         // If PS/2 mouse present, send NACK for unknown commands, otherwise ignore
         if (is_ps2) {
-          BX_ERROR(("[mouse] kbd_ctrl_to_mouse(): got value of 0x%02x", value));
+          BX_ERROR(("kbd_ctrl_to_mouse(): got value of 0x%02x", value));
           controller_enQ(0xFE, 1); /* send NACK */
         }
     }

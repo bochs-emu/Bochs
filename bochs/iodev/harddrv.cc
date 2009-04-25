@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.226 2009-04-21 10:18:42 vruppert Exp $
+// $Id: harddrv.cc,v 1.227 2009-04-25 08:06:32 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -173,7 +173,7 @@ void bx_hard_drive_c::init(void)
   char  ata_name[20];
   bx_list_c *base;
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.226 2009-04-21 10:18:42 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.227 2009-04-25 08:06:32 vruppert Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     sprintf(ata_name, "ata.%d.resources", channel);
@@ -915,8 +915,7 @@ Bit32u bx_hard_drive_c::read(Bit32u address, unsigned io_len)
 
           if (BX_SELECTED_CONTROLLER(channel).buffer_index >= 512) {
             BX_SELECTED_CONTROLLER(channel).status.drq = 0;
-            if (bx_dbg.disk || (BX_SELECTED_IS_CD(channel) && bx_dbg.cdrom))
-              BX_INFO(("Read all drive ID Bytes ..."));
+            BX_DEBUG(("Read all drive ID Bytes ..."));
           }
           GOTO_RETURN_VALUE;
           break;
@@ -952,13 +951,11 @@ Bit32u bx_hard_drive_c::read(Bit32u address, unsigned io_len)
                   BX_SELECTED_DRIVE(channel).cdrom.next_lba++;
                   BX_SELECTED_DRIVE(channel).cdrom.remaining_blocks--;
 
-                  if (bx_dbg.disk || (BX_SELECTED_IS_CD(channel) && bx_dbg.cdrom)) {
-                    if (!BX_SELECTED_DRIVE(channel).cdrom.remaining_blocks) {
-                      BX_INFO(("Last READ block loaded {CDROM}"));
-                    } else {
-                      BX_INFO(("READ block loaded (%d remaining) {CDROM}",
-                               BX_SELECTED_DRIVE(channel).cdrom.remaining_blocks));
-                    }
+                  if (!BX_SELECTED_DRIVE(channel).cdrom.remaining_blocks) {
+                    BX_DEBUG(("CDROM: last READ block loaded"));
+                  } else {
+                    BX_DEBUG(("CDROM: READ block loaded (%d remaining)",
+                             BX_SELECTED_DRIVE(channel).cdrom.remaining_blocks));
                   }
                   // one block transfered, start at beginning
                   index = 0;
@@ -994,8 +991,7 @@ Bit32u bx_hard_drive_c::read(Bit32u address, unsigned io_len)
 
               if (BX_SELECTED_DRIVE(channel).atapi.total_bytes_remaining > 0) {
                 // one or more blocks remaining (works only for single block commands)
-                if (bx_dbg.disk || (BX_SELECTED_IS_CD(channel) && bx_dbg.cdrom))
-                  BX_INFO(("PACKET drq bytes read"));
+                BX_DEBUG(("PACKET drq bytes read"));
                 BX_SELECTED_CONTROLLER(channel).interrupt_reason.i_o = 1;
                 BX_SELECTED_CONTROLLER(channel).status.busy = 0;
                 BX_SELECTED_CONTROLLER(channel).status.drq = 1;
@@ -1010,8 +1006,7 @@ Bit32u bx_hard_drive_c::read(Bit32u address, unsigned io_len)
                 raise_interrupt(channel);
               } else {
                 // all bytes read
-                if (bx_dbg.disk || (BX_SELECTED_IS_CD(channel) && bx_dbg.cdrom))
-                  BX_INFO(("PACKET all bytes read"));
+                BX_DEBUG(("PACKET all bytes read"));
                 BX_SELECTED_CONTROLLER(channel).interrupt_reason.i_o = 1;
                 BX_SELECTED_CONTROLLER(channel).interrupt_reason.c_d = 1;
                 BX_SELECTED_CONTROLLER(channel).status.drive_ready = 1;
@@ -1988,36 +1983,30 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
 
     case 0x01: // hard disk write precompensation 0x1f1
       WRITE_FEATURES(channel,value);
-      if (bx_dbg.disk || (BX_SELECTED_IS_CD(channel) && bx_dbg.cdrom)) {
-        if (value == 0xff)
-          BX_INFO(("no precompensation {%s}", BX_SELECTED_TYPE_STRING(channel)));
-        else
-          BX_INFO(("precompensation value %02x {%s}", (unsigned) value, BX_SELECTED_TYPE_STRING(channel)));
-      }
+      if (value == 0xff)
+        BX_DEBUG(("no precompensation {%s}", BX_SELECTED_TYPE_STRING(channel)));
+      else
+        BX_DEBUG(("precompensation value %02x {%s}", value, BX_SELECTED_TYPE_STRING(channel)));
       break;
 
     case 0x02: // hard disk sector count 0x1f2
       WRITE_SECTOR_COUNT(channel,value);
-      if (bx_dbg.disk || (BX_SELECTED_IS_CD(channel) && bx_dbg.cdrom))
-        BX_INFO(("sector count = %u {%s}", (unsigned) value, BX_SELECTED_TYPE_STRING(channel)));
+      BX_DEBUG(("sector count = %u {%s}", value, BX_SELECTED_TYPE_STRING(channel)));
       break;
 
     case 0x03: // hard disk sector number 0x1f3
       WRITE_SECTOR_NUMBER(channel,value);
-      if (bx_dbg.disk || (BX_SELECTED_IS_CD(channel) && bx_dbg.cdrom))
-        BX_INFO(("sector number = %u {%s}", (unsigned) value, BX_SELECTED_TYPE_STRING(channel)));
+      BX_DEBUG(("sector number = %u {%s}", value, BX_SELECTED_TYPE_STRING(channel)));
       break;
 
     case 0x04: // hard disk cylinder low 0x1f4
       WRITE_CYLINDER_LOW(channel,value);
-      if (bx_dbg.disk || (BX_SELECTED_IS_CD(channel) && bx_dbg.cdrom))
-        BX_INFO(("cylinder low = %02xh {%s}", (unsigned) value, BX_SELECTED_TYPE_STRING(channel)));
+      BX_DEBUG(("cylinder low = %02xh {%s}", value, BX_SELECTED_TYPE_STRING(channel)));
       break;
 
     case 0x05: // hard disk cylinder high 0x1f5
       WRITE_CYLINDER_HIGH(channel,value);
-      if (bx_dbg.disk || (BX_SELECTED_IS_CD(channel) && bx_dbg.cdrom))
-        BX_INFO(("cylinder high = %02xh {%s}", (unsigned) value, BX_SELECTED_TYPE_STRING(channel)));
+      BX_DEBUG(("cylinder high = %02xh {%s}", value, BX_SELECTED_TYPE_STRING(channel)));
       break;
 
     case 0x06: // hard disk drive and head register 0x1f6
@@ -2247,8 +2236,7 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
           {
             Bit16u temp16;
 
-            if (bx_dbg.disk || (BX_SELECTED_IS_CD(channel) && bx_dbg.cdrom))
-              BX_INFO(("Drive ID Command issued : 0xec "));
+            BX_DEBUG(("Drive ID Command issued : 0xec "));
 
             if (!BX_SELECTED_IS_PRESENT(channel)) {
               BX_INFO(("disk ata%d-%d not present, aborting",channel,BX_SLAVE_SELECTED(channel)));
@@ -3245,22 +3233,15 @@ bx_hard_drive_c::ready_to_send_atapi(Bit8u channel)
   void BX_CPP_AttrRegparmN(1)
 bx_hard_drive_c::raise_interrupt(Bit8u channel)
 {
-  BX_DEBUG(("raise_interrupt called, disable_irq = %02x", BX_SELECTED_CONTROLLER(channel).control.disable_irq));
-  if (!BX_SELECTED_CONTROLLER(channel).control.disable_irq) {
-    BX_DEBUG(("raising interrupt"));
-  } else { 
-    BX_DEBUG(("Not raising interrupt"));
-  }
   if (!BX_SELECTED_CONTROLLER(channel).control.disable_irq) {
     Bit32u irq = BX_HD_THIS channels[channel].irq;
-    BX_DEBUG(("Raising interrupt %d {%s}", irq, BX_SELECTED_TYPE_STRING(channel)));
+    BX_DEBUG(("raising interrupt %d {%s}", irq, BX_SELECTED_TYPE_STRING(channel)));
 #if BX_SUPPORT_PCI
     DEV_ide_bmdma_set_irq(channel);
 #endif
     DEV_pic_raise_irq(irq);
   } else {
-    if (bx_dbg.disk || (BX_SELECTED_IS_CD(channel) && bx_dbg.cdrom))
-      BX_INFO(("Interrupt masked {%s}", BX_SELECTED_TYPE_STRING(channel)));
+    BX_DEBUG(("not raising interrupt {%s}", BX_SELECTED_TYPE_STRING(channel)));
   }
 }
 

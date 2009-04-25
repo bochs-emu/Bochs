@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.190 2009-04-24 14:57:24 vruppert Exp $
+// $Id: dbg_main.cc,v 1.191 2009-04-25 08:06:32 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1312,19 +1312,15 @@ void bx_dbg_show_command(const char* arg)
       dbg_show_mask = 0x0;
       dbg_printf("Disable all show flags\n");
     } else if(!strcmp(arg,"dbg-all")) {
-      bx_dbg.disk = 1;
       bx_dbg.interrupts = 1;
       bx_dbg.exceptions = 1;
-      bx_dbg.mouse = 1;
       bx_dbg.debugger = 1;
       /* bx_dbg.record_io = 1; this is a pointer .. somewhere */
       dbg_printf("Turned ON all bx_dbg flags\n");
       return;
     } else if(!strcmp(arg,"dbg-none")) {
-      bx_dbg.disk = 0;
       bx_dbg.interrupts = 0;
       bx_dbg.exceptions = 0;
-      bx_dbg.mouse = 0;
       bx_dbg.debugger = 0;
       /* bx_dbg.record_io = 0; this is a pointer .. somewhere */
       dbg_printf("Turned OFF all bx_dbg flags\n");

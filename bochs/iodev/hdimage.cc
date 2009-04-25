@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: hdimage.cc,v 1.18 2009-02-08 09:05:52 vruppert Exp $
+// $Id: hdimage.cc,v 1.19 2009-04-25 08:06:32 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -246,8 +246,7 @@ Bit64s concat_image_t::lseek(Bit64s offset, int whence)
 
 ssize_t concat_image_t::read(void* buf, size_t count)
 {
-  if (bx_dbg.disk)
-    BX_DEBUG(("concat_image_t.read %ld bytes", (long)count));
+  BX_DEBUG(("concat_image_t.read %ld bytes", (long)count));
   // notice if anyone does sequential read or write without seek in between.
   // This can be supported pretty easily, but needs additional checks for
   // end of a partial image.
@@ -570,8 +569,7 @@ ssize_t sparse_image_t::read(void* buf, size_t count)
   //showpagetable(pagetable, header.numpages);
   ssize_t total_read = 0;
 
-  if (bx_dbg.disk)
-    BX_DEBUG(("sparse_image_t.read %ld bytes", (long)count));
+  BX_DEBUG(("sparse_image_t.read %ld bytes", (long)count));
 
   while (count != 0)
   {
@@ -625,8 +623,7 @@ ssize_t sparse_image_t::write (const void* buf, size_t count)
   Bit32u update_pagetable_start = position_virtual_page;
   Bit32u update_pagetable_count = 0;
 
-  if (bx_dbg.disk)
-    BX_DEBUG(("sparse_image_t.write %ld bytes", (long)count));
+  BX_DEBUG(("sparse_image_t.write %ld bytes", (long)count));
 
   while (count != 0)
   {
