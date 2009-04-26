@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios32.c,v 1.49 2009-04-18 07:28:52 vruppert Exp $
+// $Id: rombios32.c,v 1.50 2009-04-26 17:17:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  32 bit Bochs BIOS init code
@@ -416,8 +416,11 @@ void delay_ms(int n)
     int i, j;
     for(i = 0; i < n; i++) {
 #ifdef BX_QEMU
+        volatile int k;
         /* approximative ! */
-        for(j = 0; j < 1000000; j++);
+        for(j = 0; j < 1000000; j++) {
+          k++;
+        }
 #else
         {
           int r1, r2;
