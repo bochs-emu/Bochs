@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: unmapped.h,v 1.15 2009-02-08 09:05:52 vruppert Exp $
+// $Id: unmapped.h,v 1.16 2009-04-26 06:56:28 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -55,6 +55,7 @@ private:
     Bit8u port80;
     Bit8u port8e;
     Bit8u shutdown;
+    bx_bool port_e9_hack;
   } s;  // state information
 };
 

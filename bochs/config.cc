@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.175 2009-04-23 18:28:16 sshwarts Exp $
+// $Id: config.cc,v 1.176 2009-04-26 06:56:27 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1554,12 +1554,20 @@ void bx_init_options()
   misc->set_options(misc->SHOW_PARENT);
   bx_param_num_c *gdbstub_opt;
 
+  // port e9 hack
+  new bx_param_bool_c(misc,
+      "port_e9_hack",
+      "Enable port 0xE9 hack",
+      "Debug messages written to i/o port 0xE9 will be displayed on console",
+      0);
+
   // text snapshot check panic
   new bx_param_bool_c(misc,
       "text_snapshot_check",
       "Enable text snapshot check panic",
       "Enable panic when text on screen matches snapchk.txt.\nUseful for regression testing.\nIn win32, turns off CR/LF in snapshots and cuts.",
       0);
+
   // GDB stub
   menu = new bx_list_c(misc, "gdbstub", "GDB Stub Options");
   menu->set_options(menu->SHOW_PARENT | menu->USE_BOX_TITLE);
@@ -2971,7 +2979,7 @@ static int parse_line_formatted(const char *context, int num_params, char *param
       PARSE_ERR(("%s: port_e9_hack directive malformed.", context));
     }
     if (params[1][8] == '0' || params[1][8] == '1') {
-      bx_dbg.port_e9_hack = params[1][8] - '0';
+      SIM->get_param_bool(BXPN_PORT_E9_HACK)->set(atoi(&params[1][8]));
     }
     else {
       PARSE_ERR(("%s: port_e9_hack directive malformed.", context));
@@ -3627,10 +3635,10 @@ int bx_write_configuration(const char *rc, int overwrite)
 #endif  
   fprintf(fp, "\n");
   fprintf(fp, "print_timestamps: enabled=%d\n", bx_dbg.print_timestamps);
-  fprintf(fp, "port_e9_hack: enabled=%d\n", bx_dbg.port_e9_hack);
 #if BX_DEBUGGER
   fprintf(fp, "magic_break: enabled=%d\n", bx_dbg.magic_break_enabled);
 #endif
+  fprintf(fp, "port_e9_hack: enabled=%d\n", SIM->get_param_bool(BXPN_PORT_E9_HACK)->get());
   fprintf(fp, "text_snapshot_check: enabled=%d\n", SIM->get_param_bool(BXPN_TEXT_SNAPSHOT_CHECK)->get());
   fprintf(fp, "private_colormap: enabled=%d\n", SIM->get_param_bool(BXPN_PRIVATE_COLORMAP)->get());
 #if BX_WITH_AMIGAOS

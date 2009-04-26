@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.247 2009-04-25 08:06:32 vruppert Exp $
+// $Id: bochs.h,v 1.248 2009-04-26 06:56:27 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -435,7 +435,6 @@ typedef struct {
   bx_bool exceptions;
   bx_bool debugger;
   bx_bool print_timestamps;
-  bx_bool port_e9_hack;
 #if BX_DEBUGGER
   bx_bool magic_break_enabled;
 #endif

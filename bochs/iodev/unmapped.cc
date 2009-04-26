@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: unmapped.cc,v 1.35 2009-04-24 14:57:25 vruppert Exp $
+// $Id: unmapped.cc,v 1.36 2009-04-26 06:56:28 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -67,6 +67,7 @@ void bx_unmapped_c::init(void)
   s.port80 = 0x00;
   s.port8e = 0x00;
   s.shutdown = 0;
+  s.port_e9_hack = SIM->get_param_bool(BXPN_PORT_E9_HACK)->get();
 }
 
 // static IO port read callback handler
@@ -109,7 +110,7 @@ Bit32u bx_unmapped_c::read(Bit32u address, unsigned io_len)
     // port 0x80, then read from 0xe9, if value is 0xe9, debug
     // output is available) (see write() for that) -- Andreas and Emmanuel
     case 0xe9:
-      if (bx_dbg.port_e9_hack) {
+      if (BX_UM_THIS s.port_e9_hack) {
          retval = 0xe9;
       }
       else {
@@ -212,7 +213,7 @@ void bx_unmapped_c::write(Bit32u address, Bit32u value, unsigned io_len)
     // Idea by Andreas Beck (andreas.beck@ggi-project.org)
 
     case 0xe9:
-      if (bx_dbg.port_e9_hack) {
+      if (BX_UM_THIS s.port_e9_hack) {
         putchar(value);
         fflush(stdout);
       }
