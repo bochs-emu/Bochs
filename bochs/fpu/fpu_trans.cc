@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu_trans.cc,v 1.21 2009-03-10 21:43:11 sshwarts Exp $
+// $Id: fpu_trans.cc,v 1.22 2009-04-27 14:00:55 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -38,6 +38,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::F2XM1(bxInstruction_c *i)
 {
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
+  BX_CPU_THIS_PTR FPU_update_last_instruction(i);
 
   clear_C1();
 
@@ -63,6 +64,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FYL2X(bxInstruction_c *i)
 {
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
+  BX_CPU_THIS_PTR FPU_update_last_instruction(i);
 
   clear_C1();
 
@@ -91,6 +93,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FPTAN(bxInstruction_c *i)
 {
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
+  BX_CPU_THIS_PTR FPU_update_last_instruction(i);
 
   clear_C1();
   clear_C2();
@@ -152,6 +155,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FPATAN(bxInstruction_c *i)
 {
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
+  BX_CPU_THIS_PTR FPU_update_last_instruction(i);
 
   clear_C1();
 
@@ -180,6 +184,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FXTRACT(bxInstruction_c *i)
 {
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
+  BX_CPU_THIS_PTR FPU_update_last_instruction(i);
 
   clear_C1();
 
@@ -222,6 +227,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FPREM1(bxInstruction_c *i)
 {
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
+  BX_CPU_THIS_PTR FPU_update_last_instruction(i);
 
   clear_C1();
 
@@ -262,6 +268,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FPREM(bxInstruction_c *i)
 {
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
+  BX_CPU_THIS_PTR FPU_update_last_instruction(i);
 
   clear_C1();
 
@@ -303,6 +310,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FYL2XP1(bxInstruction_c *i)
 {
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
+  BX_CPU_THIS_PTR FPU_update_last_instruction(i);
 
   clear_C1();
 
@@ -331,6 +339,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FSINCOS(bxInstruction_c *i)
 {
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
+  BX_CPU_THIS_PTR FPU_update_last_instruction(i);
 
   clear_C1();
   clear_C2();
@@ -379,6 +388,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FSCALE(bxInstruction_c *i)
 {
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
+  BX_CPU_THIS_PTR FPU_update_last_instruction(i);
 
   clear_C1();
 
@@ -405,6 +415,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FSIN(bxInstruction_c *i)
 {
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
+  BX_CPU_THIS_PTR FPU_update_last_instruction(i);
 
   clear_C1();
   clear_C2();
@@ -436,6 +447,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FCOS(bxInstruction_c *i)
 {
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
+  BX_CPU_THIS_PTR FPU_update_last_instruction(i);
 
   clear_C1();
   clear_C2();

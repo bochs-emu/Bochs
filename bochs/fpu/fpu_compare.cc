@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu_compare.cc,v 1.22 2009-04-12 22:07:59 sshwarts Exp $
+// $Id: fpu_compare.cc,v 1.23 2009-04-27 14:00:55 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -81,6 +81,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FCOM_STi(bxInstruction_c *i)
 {
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
+  BX_CPU_THIS_PTR FPU_update_last_instruction(i);
 
   int pop_stack = i->nnn() & 1;
   // handle special case of FSTP opcode @ 0xDE 0xD0..D7
@@ -121,6 +122,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FCOMI_ST0_STj(bxInstruction_c *i)
 {
 #if (BX_CPU_LEVEL >= 6) || (BX_CPU_LEVEL_HACKED >= 6)
   BX_CPU_THIS_PTR prepareFPU(i);
+  BX_CPU_THIS_PTR FPU_update_last_instruction(i);
 
   int pop_stack = i->b1() & 4;
 
@@ -159,6 +161,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FUCOMI_ST0_STj(bxInstruction_c *i)
 {
 #if (BX_CPU_LEVEL >= 6) || (BX_CPU_LEVEL_HACKED >= 6)
   BX_CPU_THIS_PTR prepareFPU(i);
+  BX_CPU_THIS_PTR FPU_update_last_instruction(i);
 
   int pop_stack = i->b1() & 4;
 
@@ -197,6 +200,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FUCOM_STi(bxInstruction_c *i)
 {
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
+  BX_CPU_THIS_PTR FPU_update_last_instruction(i);
 
   int pop_stack = i->nnn() & 1;
 
@@ -235,7 +239,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FCOM_SINGLE_REAL(bxInstruction_c *i)
 
   int pop_stack = i->nnn() & 1;
 
+  RMAddr(i) = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
   float32 load_reg = read_virtual_dword(i->seg(), RMAddr(i));
+
+  BX_CPU_THIS_PTR FPU_update_last_instruction(i);
 
   clear_C1();
 
@@ -275,7 +282,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FCOM_DOUBLE_REAL(bxInstruction_c *i)
 
   int pop_stack = i->nnn() & 1;
 
+  RMAddr(i) = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
   float64 load_reg = read_virtual_qword(i->seg(), RMAddr(i));
+
+  BX_CPU_THIS_PTR FPU_update_last_instruction(i);
 
   clear_C1();
 
@@ -315,7 +325,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FICOM_WORD_INTEGER(bxInstruction_c *i)
 
   int pop_stack = i->nnn() & 1;
 
+  RMAddr(i) = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
   Bit16s load_reg = (Bit16s) read_virtual_word(i->seg(), RMAddr(i));
+
+  BX_CPU_THIS_PTR FPU_update_last_instruction(i);
 
   clear_C1();
 
@@ -355,7 +368,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FICOM_DWORD_INTEGER(bxInstruction_c *i)
 
   int pop_stack = i->nnn() & 1;
 
+  RMAddr(i) = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
   Bit32s load_reg = (Bit32s) read_virtual_dword(i->seg(), RMAddr(i));
+
+  BX_CPU_THIS_PTR FPU_update_last_instruction(i);
 
   clear_C1();
 
@@ -392,6 +408,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FCOMPP(bxInstruction_c *i)
 {
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
+  BX_CPU_THIS_PTR FPU_update_last_instruction(i);
 
   clear_C1();
 
@@ -428,6 +445,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FUCOMPP(bxInstruction_c *i)
 {
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
+  BX_CPU_THIS_PTR FPU_update_last_instruction(i);
 
   if (IS_TAG_EMPTY(0) || IS_TAG_EMPTY(1))
   {
@@ -461,6 +479,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FCMOV_ST0_STj(bxInstruction_c *i)
 {
 #if (BX_CPU_LEVEL >= 6) || (BX_CPU_LEVEL_HACKED >= 6)
   BX_CPU_THIS_PTR prepareFPU(i);
+  BX_CPU_THIS_PTR FPU_update_last_instruction(i);
 
   if (IS_TAG_EMPTY(0) || IS_TAG_EMPTY(i->rm()))
   {
@@ -497,6 +516,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FTST(bxInstruction_c *i)
 {
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
+  BX_CPU_THIS_PTR FPU_update_last_instruction(i);
 
   clear_C1();
 
@@ -524,6 +544,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FXAM(bxInstruction_c *i)
 {
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
+  BX_CPU_THIS_PTR FPU_update_last_instruction(i);
 
   floatx80 reg = BX_READ_FPU_REG(0);
   int sign = floatx80_sign(reg);

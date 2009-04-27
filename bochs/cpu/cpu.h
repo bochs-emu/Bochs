@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.593 2009-04-14 13:43:21 sshwarts Exp $
+// $Id: cpu.h,v 1.594 2009-04-27 14:00:54 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -3268,8 +3268,9 @@ public: // for now...
 
 #if BX_SUPPORT_FPU
   BX_SMF void print_state_FPU(void);
-  BX_SMF void prepareFPU(bxInstruction_c *i, bx_bool = 1, bx_bool = 1);
+  BX_SMF void prepareFPU(bxInstruction_c *i, bx_bool = 1);
   BX_SMF void FPU_check_pending_exceptions(void);
+  BX_SMF void FPU_update_last_instruction(bxInstruction_c *i);
   BX_SMF void FPU_stack_underflow(int stnr, int pop_stack = 0);
   BX_SMF void FPU_stack_overflow(void);
   BX_SMF unsigned FPU_exception(unsigned exception, bx_bool is_mem = 0);

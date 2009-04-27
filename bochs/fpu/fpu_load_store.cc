@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu_load_store.cc,v 1.32 2009-03-10 21:43:11 sshwarts Exp $
+// $Id: fpu_load_store.cc,v 1.33 2009-04-27 14:00:55 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -36,6 +36,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLD_STi(bxInstruction_c *i)
 {
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
+  BX_CPU_THIS_PTR FPU_update_last_instruction(i);
 
   clear_C1();
 
@@ -70,7 +71,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLD_SINGLE_REAL(bxInstruction_c *i)
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
 
+  RMAddr(i) = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
   float32 load_reg = read_virtual_dword(i->seg(), RMAddr(i));
+
+  BX_CPU_THIS_PTR FPU_update_last_instruction(i);
 
   clear_C1();
 
@@ -99,7 +103,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLD_DOUBLE_REAL(bxInstruction_c *i)
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
 
+  RMAddr(i) = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
   float64 load_reg = read_virtual_qword(i->seg(), RMAddr(i));
+
+  BX_CPU_THIS_PTR FPU_update_last_instruction(i);
 
   clear_C1();
 
@@ -129,8 +136,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLD_EXTENDED_REAL(bxInstruction_c *i)
   BX_CPU_THIS_PTR prepareFPU(i);
 
   floatx80 result;
+
+  RMAddr(i) = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
   result.fraction = read_virtual_qword(i->seg(), RMAddr(i));
   result.exp      = read_virtual_word (i->seg(), RMAddr(i)+8);
+
+  BX_CPU_THIS_PTR FPU_update_last_instruction(i);
 
   clear_C1();
 
@@ -152,7 +163,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FILD_WORD_INTEGER(bxInstruction_c *i)
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
 
+  RMAddr(i) = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
   Bit16s load_reg = (Bit16s) read_virtual_word(i->seg(), RMAddr(i));
+
+  BX_CPU_THIS_PTR FPU_update_last_instruction(i);
 
   clear_C1();
 
@@ -175,7 +189,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FILD_DWORD_INTEGER(bxInstruction_c *i)
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
 
+  RMAddr(i) = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
   Bit32s load_reg = (Bit32s) read_virtual_dword(i->seg(), RMAddr(i));
+
+  BX_CPU_THIS_PTR FPU_update_last_instruction(i);
 
   clear_C1();
 
@@ -198,7 +215,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FILD_QWORD_INTEGER(bxInstruction_c *i)
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
 
+  RMAddr(i) = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
   Bit64s load_reg = (Bit64s) read_virtual_qword(i->seg(), RMAddr(i));
+
+  BX_CPU_THIS_PTR FPU_update_last_instruction(i);
 
   clear_C1();
 
@@ -221,9 +241,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FBLD_PACKED_BCD(bxInstruction_c *i)
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
 
-  // read packed bcd from memory
+  RMAddr(i) = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
   Bit16u hi2 = read_virtual_word (i->seg(), RMAddr(i) + 8);
   Bit64u lo8 = read_virtual_qword(i->seg(), RMAddr(i));
+
+  BX_CPU_THIS_PTR FPU_update_last_instruction(i);
 
   clear_C1();
 
@@ -262,6 +284,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FST_STi(bxInstruction_c *i)
 {
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
+  BX_CPU_THIS_PTR FPU_update_last_instruction(i);
 
   int pop_stack = i->nnn() & 1;
   // handle special case of FSTP opcode @ 0xDF 0xD0..D7
@@ -289,6 +312,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FST_SINGLE_REAL(bxInstruction_c *i)
 {
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
+
+  RMAddr(i) = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+
+  BX_CPU_THIS_PTR FPU_update_last_instruction(i);
 
   clear_C1();
 
@@ -327,6 +354,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FST_DOUBLE_REAL(bxInstruction_c *i)
 {
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
+
+  RMAddr(i) = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+
+  BX_CPU_THIS_PTR FPU_update_last_instruction(i);
 
   clear_C1();
 
@@ -367,6 +398,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FSTP_EXTENDED_REAL(bxInstruction_c *i)
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
 
+  RMAddr(i) = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+
+  BX_CPU_THIS_PTR FPU_update_last_instruction(i);
+
   clear_C1();
 
   floatx80 save_reg = floatx80_default_nan; /* The masked response */
@@ -396,6 +431,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FIST_WORD_INTEGER(bxInstruction_c *i)
 {
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
+
+  RMAddr(i) = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+
+  BX_CPU_THIS_PTR FPU_update_last_instruction(i);
 
   Bit16s save_reg = int16_indefinite;
 
@@ -435,6 +474,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FIST_DWORD_INTEGER(bxInstruction_c *i)
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
 
+  RMAddr(i) = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+
+  BX_CPU_THIS_PTR FPU_update_last_instruction(i);
+
   Bit32s save_reg = int32_indefinite; /* The masked response */
 
   int pop_stack = i->nnn() & 1;
@@ -473,6 +516,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FISTP_QWORD_INTEGER(bxInstruction_c *i)
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
 
+  RMAddr(i) = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+
+  BX_CPU_THIS_PTR FPU_update_last_instruction(i);
+
   Bit64s save_reg = int64_indefinite; /* The masked response */
 
   clear_C1();
@@ -506,6 +553,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FBSTP_PACKED_BCD(bxInstruction_c *i)
 {
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
+
+  RMAddr(i) = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+
+  BX_CPU_THIS_PTR FPU_update_last_instruction(i);
 
   /*
    * The packed BCD integer indefinite encoding (FFFFC000000000000000H)
@@ -579,6 +630,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FISTTP16(bxInstruction_c *i)
 #if BX_SUPPORT_SSE >= 3
   BX_CPU_THIS_PTR prepareFPU(i);
 
+  RMAddr(i) = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+
+  BX_CPU_THIS_PTR FPU_update_last_instruction(i);
+
   Bit16s save_reg = int16_indefinite; /* The masked response */
 
   clear_C1();
@@ -615,6 +670,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FISTTP32(bxInstruction_c *i)
 #if BX_SUPPORT_SSE >= 3
   BX_CPU_THIS_PTR prepareFPU(i);
 
+  RMAddr(i) = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+
+  BX_CPU_THIS_PTR FPU_update_last_instruction(i);
+
   Bit32s save_reg = int32_indefinite; /* The masked response */
 
   clear_C1();
@@ -650,6 +709,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FISTTP64(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 3
   BX_CPU_THIS_PTR prepareFPU(i);
+
+  RMAddr(i) = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+
+  BX_CPU_THIS_PTR FPU_update_last_instruction(i);
 
   Bit64s save_reg = int64_indefinite; /* The masked response */
 
