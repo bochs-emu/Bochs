@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ferr.cc,v 1.15 2009-02-08 17:29:34 sshwarts Exp $
+// $Id: ferr.cc,v 1.16 2009-04-27 17:58:17 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -54,10 +54,12 @@ void BX_CPU_C::FPU_stack_underflow(int stnr, int pop_stack)
 }
 
 /* Returns unmasked exceptions if occured */
-unsigned BX_CPU_C::FPU_exception(unsigned exception, bx_bool is_mem)
+unsigned BX_CPU_C::FPU_exception(unsigned exception, bx_bool is_store)
 {
   /* Extract only the bits which we use to set the status word */
   exception &= (FPU_SW_Exceptions_Mask);
+
+  Bit32u status = FPU_PARTIAL_STATUS;
 
   /* Set the corresponding exception bits */
   FPU_PARTIAL_STATUS |= exception;
@@ -81,12 +83,22 @@ unsigned BX_CPU_C::FPU_exception(unsigned exception, bx_bool is_mem)
   // written to the destination.
   unmasked &= ~FPU_CW_Precision;
 
-  // If unmasked overflow or underflow occurs and destination is a memory 
-  // location, the TOS and destination operands remain unchanged and no 
-  // result is stored in the memory. If the destination is in the register
-  // stack, adjusted resulting value is stored in the destination operand.
-  if (! is_mem)
-    unmasked &= ~(FPU_CW_Underflow | FPU_CW_Overflow);
+  if (unmasked & (FPU_CW_Underflow | FPU_CW_Overflow)) {
+    // If unmasked over- or underflow occurs and dest is a memory location:
+    //   - the TOS and destination operands remain unchanged
+    //   - the inexact-result condition is not reported and C1 flag is cleared
+    //   - no result is stored in the memory
+    // If the destination is in the register stack, adjusted resulting value
+    // is stored in the destination operand.
+    if (! is_store) {
+       unmasked &= ~(FPU_CW_Underflow | FPU_CW_Overflow);
+    }
+    else {
+       FPU_PARTIAL_STATUS &= ~FPU_SW_C1; // clear C1 flag
+       if (! (status & FPU_CW_Precision))
+          FPU_PARTIAL_STATUS &= ~FPU_CW_Precision;
+    }
+  }
 
   return unmasked;
 }
