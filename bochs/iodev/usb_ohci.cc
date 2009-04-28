@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_ohci.cc,v 1.33 2009-04-23 15:52:53 vruppert Exp $
+// $Id: usb_ohci.cc,v 1.34 2009-04-28 22:57:06 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Benjamin D Lunt (fys at frontiernet net)
@@ -1122,14 +1122,16 @@ void bx_usb_ohci_c::process_ed(struct OHCI_ED *ed, const Bit32u ed_address)
         BX_DEBUG(("Head: 0x%08X  Tail: 0x%08X  Next: 0x%08X", ED_GET_HEADP(ed), ED_GET_TAILP(ed), TD_GET_NEXTTD(&cur_td)));
         if (process_td(&cur_td, ed)) {
           const Bit32u temp = ED_GET_HEADP(ed);
-          ED_SET_HEADP(ed, TD_GET_NEXTTD(&cur_td));
-          TD_SET_NEXTTD(&cur_td, BX_OHCI_THIS hub.op_regs.HcDoneHead);
-          BX_OHCI_THIS hub.op_regs.HcDoneHead = temp;
+          if (TD_GET_CC(&cur_td) < NotAccessed) {
+            ED_SET_HEADP(ed, TD_GET_NEXTTD(&cur_td));
+            TD_SET_NEXTTD(&cur_td, BX_OHCI_THIS hub.op_regs.HcDoneHead);
+            BX_OHCI_THIS hub.op_regs.HcDoneHead = temp;
+            if (TD_GET_DI(&cur_td) < BX_OHCI_THIS hub.ohci_done_count)
+              BX_OHCI_THIS hub.ohci_done_count = TD_GET_DI(&cur_td);
+          }
           DEV_MEM_WRITE_PHYSICAL(temp,      4, (Bit8u*) &cur_td.dword0);
           DEV_MEM_WRITE_PHYSICAL(temp +  4, 4, (Bit8u*) &cur_td.dword1);
           DEV_MEM_WRITE_PHYSICAL(temp +  8, 4, (Bit8u*) &cur_td.dword2);
-          if (TD_GET_DI(&cur_td) < BX_OHCI_THIS hub.ohci_done_count)
-            BX_OHCI_THIS hub.ohci_done_count = TD_GET_DI(&cur_td);
         } else
           break;
       }
@@ -1140,7 +1142,7 @@ void bx_usb_ohci_c::process_ed(struct OHCI_ED *ed, const Bit32u ed_address)
 
 bx_bool bx_usb_ohci_c::process_td(struct OHCI_TD *td, struct OHCI_ED *ed)
 {
-  unsigned pid = 0, len = 0;
+  unsigned pid = 0, len = 0, len1, len2;
   int r, ret = 0;
   char buf_str[1025], temp_str[17];
 
@@ -1167,8 +1169,10 @@ bx_bool bx_usb_ohci_c::process_td(struct OHCI_TD *td, struct OHCI_ED *ed)
   if (TD_GET_CBP(td) && TD_GET_BE(td)) {
     if ((TD_GET_CBP(td) & 0xFFFFF000) != (TD_GET_BE(td) & 0xFFFFF000))
       len = (TD_GET_BE(td) & 0xFFF) + 0x1001 - (TD_GET_CBP(td) & 0xFFF);
-    else
+    else {
       len = (TD_GET_BE(td) - TD_GET_CBP(td)) + 1;
+      if (len < 0) len = 0x1001 + len;
+    }
   } else
     len = 0;
 
@@ -1186,14 +1190,13 @@ bx_bool bx_usb_ohci_c::process_td(struct OHCI_TD *td, struct OHCI_ED *ed)
       break;
   }
 
-  BX_DEBUG(("    pid = %s  addr = %i   endpnt = %i    len = %i  mps = %i (0x%08X   0x%08X)", 
+  BX_DEBUG(("    pid = %s  addr = %i   endpnt = %i    len = %i  mps = %i (td->cbp = 0x%08X, td->be = 0x%08X)", 
     (pid == USB_TOKEN_IN)? "IN" : (pid == USB_TOKEN_OUT) ? "OUT" : (pid == USB_TOKEN_SETUP) ? "SETUP" : "UNKNOWN", 
     ED_GET_FA(ed), ED_GET_EN(ed), len, ED_GET_MPS(ed), TD_GET_CBP(td), TD_GET_BE(td)));
   BX_DEBUG(("    td->t = %i  ed->c = %i  td->di = %i  td->r = %i", TD_GET_T(td), ED_GET_C(ed), TD_GET_DI(td), TD_GET_R(td)));
-  BX_DEBUG(("    td->cbp = 0x%08X", TD_GET_CBP(td)));
 
   /* set status bar conditions for device */
-  if (len > 0) {
+  if ((len > 0) && (BX_OHCI_THIS hub.statusbar_id >= 0)) {
     if (!BX_OHCI_THIS hub.iolight_counter) {
       if (pid == USB_TOKEN_OUT)
         bx_gui->statusbar_setitem(BX_OHCI_THIS hub.statusbar_id, 1, 1);  // write
@@ -1220,11 +1223,15 @@ bx_bool bx_usb_ohci_c::process_td(struct OHCI_TD *td, struct OHCI_ED *ed)
       break;
     case USB_TOKEN_IN:
       ret = BX_OHCI_THIS broadcast_packet(&BX_OHCI_THIS usb_packet);
-      if (ret >= 0) {
-        //if (ret > (int) ED_GET_MPS(ed))
-        //  ret = USB_RET_BABBLE;
-        if (ret > 0)
+      if (ret > 0) {
+        if (((TD_GET_CBP(td) & 0xfff) + ret) > 0x1000) {
+          len1 = 0x1000 - (TD_GET_CBP(td) & 0xfff);
+          len2 = ret - len1;
+          DEV_MEM_WRITE_PHYSICAL_BLOCK(TD_GET_CBP(td), len1, device_buffer);
+          DEV_MEM_WRITE_PHYSICAL_BLOCK((TD_GET_BE(td) & ~0xfff), len2, device_buffer+len1);
+        } else {
           DEV_MEM_WRITE_PHYSICAL_BLOCK(TD_GET_CBP(td), ret, device_buffer);
+        }
       } else
         ret = 0;
       break;
@@ -1255,10 +1262,11 @@ bx_bool bx_usb_ohci_c::process_td(struct OHCI_TD *td, struct OHCI_ED *ed)
     if (ret == (int)len)
       TD_SET_CBP(td, 0);
     else {
-      TD_SET_CBP(td, TD_GET_CBP(td) + ret);
-      if (((TD_GET_CBP(td) & 0x0FFF) + ret) > 0x0FFF) {
-        TD_SET_CBP(td, TD_GET_CBP(td) & 0x0FFF);
+      if (((TD_GET_CBP(td) & 0xfff) + ret) > 0x1000) {
+        TD_SET_CBP(td, (TD_GET_CBP(td) + ret) & 0x0FFF);
         TD_SET_CBP(td, TD_GET_CBP(td) | (TD_GET_BE(td) & ~0x0FFF));
+      } else {
+        TD_SET_CBP(td, TD_GET_CBP(td) + ret);
       }
     }
     if (TD_GET_T(td) & 2) {
@@ -1266,8 +1274,10 @@ bx_bool bx_usb_ohci_c::process_td(struct OHCI_TD *td, struct OHCI_ED *ed)
       ED_SET_C(ed, (TD_GET_T(td) & 1));
     } else
       ED_SET_C(ed, (ED_GET_C(ed) ^ 1));
-    TD_SET_CC(td, NoError);
-    TD_SET_EC(td, 0);
+    if ((pid != USB_TOKEN_OUT) || (ret == (int)len)) {
+      TD_SET_CC(td, NoError);
+      TD_SET_EC(td, 0);
+    }
   } else {
     if (ret >= 0)
       TD_SET_CC(td, DataUnderrun);
