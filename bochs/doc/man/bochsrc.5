@@ -631,7 +631,13 @@ This defines the parameters of the clock inside Bochs.
 
 sync
 
-TO BE COMPLETED (see Greg explanation in feature request #536329)
+This defines the method how to synchronize the Bochs internal time
+with realtime. With the value 'none' the Bochs time relies on the IPS
+value and no host time synchronization is used. The 'slowdown' method
+sacrifices performance to preserve reproducibility while allowing host
+time correlation. The 'realtime' method sacrifices reproducibility to
+preserve performance and host-time correlation.
+It is possible to enable both synchronization methods.
 
 time0
 

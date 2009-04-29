@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.256 2009-04-29 12:00:09 vruppert Exp $
+$Id: user.dbk,v 1.257 2009-04-29 18:07:56 vruppert Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -1876,9 +1876,11 @@ In Bochs 1.3 and before, the X11 GUI was always the default.
 </thead>
 <tbody>
   <row>
-    <entry>win32 or Cygwin</entry>
+    <entry>win32, Cygwin or MinGW/MSYS</entry>
     <entry>--with-win32</entry>
-    <entry>If using nmake method, compile using cl /nologo /MT /W3 /EHs-c- /DNDEBUG /DWIN32 /D_WINDOWS /D_CRT_SECURE_NO_WARNINGS.  If using Visual C++ workspace, see the workspace file for compile settings.  See <link linkend="compiling-win32">Compiling on Win32 with Microsoft VC++</link> for instructions.
+    <entry>If using nmake method, compile using cl /nologo /MT /W3 /EHs-c- /DNDEBUG /DWIN32 /D_WINDOWS /D_CRT_SECURE_NO_WARNINGS.
+    If using Visual C++ workspace, see the workspace file for compile settings.
+    See <link linkend="compiling-win32">Compiling on Win32 with Microsoft VC++</link> for instructions.
     </entry>
   </row>
   <row>
@@ -2488,13 +2490,13 @@ The current solution to this problem is that the Bochs
 configure script must be run on a different platform that does support
 shell scripts, with options that cause it to configure for a Win32
 platform instead of the native one.  Many people have access to a UNIX
-machine that could run the configure script, or you can use Cygwin to
-run the configure script
+machine that could run the configure script, or you can use Cygwin or
+MinGW/MSYS to run the configure script.
 <footnote>
 <para>
 Because Bochs depends so much on the configure script, if you are doing
-much win32 Bochs development, you should consider downloading Cygwin
-so that you can run the configure step natively.
+much win32 Bochs development, you should consider downloading Cygwin or
+MinGW/MSYS so that you can run the configure step natively.
 </para>
 </footnote>.
 </para>
@@ -2513,7 +2515,7 @@ workspace files, and pack it all into a .zip file in the directory above the
 source directory <footnote>
 <para>
 If the source directory is <filename>/home/joe/bochs-win32</filename>, the
-resulting .zip file is in <filename>/home/joe/bochs-win32.zip</filename>.
+resulting .zip file is in <filename>/home/joe/bochs-win32-msvc-src.zip</filename>.
 </para>
 </footnote>.  The .zip file is all ready to transfer to the target Windows
 machine to be unzipped and compiled.  Or, if you run the sh/make steps in
@@ -2523,21 +2525,20 @@ file.
 
 <para>
 When you have the Win32 sources transferred to a Windows machine with VC++,
-find the workspace file called <filename>bochs.dsw</filename> and load it in
-VC++.  Choose <command>Project:Set Active Project</command> and be sure that
-"bochs" is selected.  Then choose <command>Build:Build bochs.exe</command>.
+find the workspace file called <filename>bochs.sln</filename> in the folder
+"vs2008" and load it in VC++. Choose <command>Project:Set Active Project</command>
+and be sure that "bochs" is selected. Then choose <command>Build:Build bochs.exe</command>.
 This will build all the required libraries (iodev, cpu, etc.) and the auxiliary
 programs <filename>bximage.exe</filename>, <filename>bxcommit.exe</filename>
 and <filename>niclist.exe</filename>.
 </para>
 
 <para>
-Using workspaces is easy and intuitive, but there is one caveat.  The
-workspaces come directly out of a ZIP file in
-<filename>build/win32/workspace.zip</filename>, and they are not controlled by
-the configure script.  When you compile with certain configure options (e.g.
---with-sdl) you need to link with additional libraries.  For now you must
-add them to the VC++ workspace by hand.  In version 2.0, we have improved
+Using workspaces is easy and intuitive, but there is one caveat. The workspaces
+come directly out of a ZIP file in <filename>build/win32/vs2008ex-workspace.zip</filename>,
+and they are not controlled by the configure script. When you compile with certain
+configure options (e.g. --with-sdl) you need to link with additional libraries.
+For now you must add them to the VC++ workspace by hand. In version 2.0, we have improved
 the situation considerably by adding #if...#endif around every optional file
 and including nearly every Bochs source file in the workspace.  This solves the
 problem of having to manually add source files to the workspace when you turn
@@ -3837,7 +3838,13 @@ This defines the parameters of the clock inside Bochs:
 </para>
 <para><command>sync</command></para>
 <para>
-TO BE COMPLETED (see Greg's explanation in <ulink url="http://sourceforge.net/tracker/?group_id=12580&amp;atid=362580&amp;func=detail&amp;aid=536329">feature request #536329</ulink>)
+This defines the method how to synchronize the Bochs internal time
+with realtime. With the value 'none' the Bochs time relies on the IPS
+value and no host time synchronization is used. The 'slowdown' method
+sacrifices performance to preserve reproducibility while allowing host
+time correlation. The 'realtime' method sacrifices reproducibility to
+preserve performance and host-time correlation.
+It is possible to enable both synchronization methods.
 </para>
 <para><command>time0</command></para>
 <para>
