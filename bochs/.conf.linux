@@ -36,6 +36,7 @@ case $which_config in
                 --enable-acpi \
                 --enable-clgd54xx \
                 --enable-usb \
+                --enable-usb-ohci \
                 --enable-show-ips \
                 ${CONFIGURE_ARGS}
     ;;
@@ -55,6 +56,7 @@ case $which_config in
                 --enable-acpi \
                 --enable-clgd54xx \
                 --enable-usb \
+                --enable-usb-ohci \
                 --enable-plugins \
                 --enable-show-ips \
                 --with-all-libs \
