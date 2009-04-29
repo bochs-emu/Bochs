@@ -153,6 +153,7 @@ Detailed change log :
 
 - these S.F. bugs were closed
  [2695273] MSVC cpu.dsp failure in 2.3.7.zip
+  [616114] Snapshot/Copy crash on Win2K
  [2628318] 'VGABIOS-latest' bug
  [1945055] can't 'make install' lastest bochs on loepard
  [2031993] Mac OS X Makefile bug
