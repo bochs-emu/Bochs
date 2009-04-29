@@ -423,14 +423,11 @@ uninstall::
 	for i in $(MAN_PAGE_1_LIST); do $(RM) -f $(man1dir)/$$i.1.gz; done
 	for i in $(MAN_PAGE_5_LIST); do $(RM) -f $(man5dir)/$$i.5.gz; done
 
-V6WORKSPACE_ZIP=build/win32/workspace.zip
-V6WORKSPACE_FILES=bochs.dsw bochs.dsp bochs.opt cpu/cpu.dsp \
-	memory/memory.dsp iodev/iodev.dsp instrument/stubs/stubs.dsp \
-	gui/gui.dsp fpu/fpu.dsp disasm/disasm.dsp bx_debug/bx_debug.dsp \
-	misc/niclist.dsp bximage.dsp bxcommit.dsp
+VS2008_WORKSPACE_ZIP=build/win32/vs2008ex-workspace.zip
+VS2008_WORKSPACE_FILES=vs2008/bochs.sln vs2008/*.vcproj
 
-v6workspace:
-	zip $(V6WORKSPACE_ZIP) $(V6WORKSPACE_FILES)
+vs2008workspace:
+	zip $(VS2008_WORKSPACE_ZIP) $(VS2008_WORKSPACE_FILES)
 
 ########
 # the win32_snap target is used to create a ZIP of bochs sources configured
@@ -440,14 +437,14 @@ v6workspace:
 # "make win32_snap" to unzip the workspace files and create the ZIP.
 ########
 win32_snap:
-	unzip $(V6WORKSPACE_ZIP)
+	unzip $(VS2008_WORKSPACE_ZIP)
 	$(MAKE) zip
 
 tar:
 	NAME=`pwd|$(SED) 's/.*\///'`; (cd ..; $(RM) -f $$NAME.zip; tar cf - $$NAME | $(GZIP_BIN) > $$NAME.tar.gz); ls -l ../$$NAME.tar.gz
 
 zip:
-	NAME=`pwd|$(SED) 's/.*\///'`; (cd ..; $(RM) -f $$NAME.zip; $(ZIP) $$NAME.zip -r $$NAME -x \*CVS\* -x \*.cvsignore ); ls -l ../$$NAME.zip
+	NAME=`pwd|$(SED) 's/.*\///'`; (cd ..; $(RM) -f $$NAME-msvc-src.zip; $(ZIP) $$NAME-msvc-src.zip -r $$NAME -x \*CVS\* -x \*.cvsignore ); ls -l ../$$NAME-msvc-src.zip
 
 clean:
 	@RMCOMMAND@ *.o
