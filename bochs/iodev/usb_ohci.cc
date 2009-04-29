@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_ohci.cc,v 1.34 2009-04-28 22:57:06 vruppert Exp $
+// $Id: usb_ohci.cc,v 1.35 2009-04-29 18:16:31 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Benjamin D Lunt (fys at frontiernet net)
@@ -1262,7 +1262,7 @@ bx_bool bx_usb_ohci_c::process_td(struct OHCI_TD *td, struct OHCI_ED *ed)
     if (ret == (int)len)
       TD_SET_CBP(td, 0);
     else {
-      if (((TD_GET_CBP(td) & 0xfff) + ret) > 0x1000) {
+      if (((TD_GET_CBP(td) & 0xfff) + ret) >= 0x1000) {
         TD_SET_CBP(td, (TD_GET_CBP(td) + ret) & 0x0FFF);
         TD_SET_CBP(td, TD_GET_CBP(td) | (TD_GET_BE(td) & ~0x0FFF));
       } else {
