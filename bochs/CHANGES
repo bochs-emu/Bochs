@@ -152,6 +152,7 @@ Detailed change log :
  [1981505] Init PIIX4 PCI to ISA bridge and IDE by Sebastian
 
 - these S.F. bugs were closed
+ [2695273] MSVC cpu.dsp failure in 2.3.7.zip
  [2628318] 'VGABIOS-latest' bug
  [1945055] can't 'make install' lastest bochs on loepard
  [2031993] Mac OS X Makefile bug
@@ -186,6 +187,7 @@ Detailed change log :
  [1992138] Misspell in cpu/ia_opcodes.h
 
 - these S.F. feature requests were closed/implemented
+ [2175153] Update MSVC project files
   [658800] front end program and bios
  [1883370] Make cd and floppy images more usable
   [422783] change floppy size without restarting
