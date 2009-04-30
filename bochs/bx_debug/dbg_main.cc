@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.191 2009-04-25 08:06:32 vruppert Exp $
+// $Id: dbg_main.cc,v 1.192 2009-04-30 18:58:44 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -3000,7 +3000,7 @@ void bx_dbg_info_gdt_command(unsigned from, unsigned to)
 void bx_dbg_info_ldt_command(unsigned from, unsigned to)
 {
   bx_address ldtr_base = SIM->get_param_num("LDTR.base", dbg_cpu_list)->get64();
-  Bit32u ldtr_limit = SIM->get_param_num("LDTR.limit", dbg_cpu_list)->get();
+  Bit32u ldtr_limit = SIM->get_param_num("LDTR.limit_scaled", dbg_cpu_list)->get();
 
   bx_bool all = 0;
 
