@@ -151,7 +151,8 @@ Detailed change log :
  [1984467] two typos in a release! (2.3.7)
  [1981505] Init PIIX4 PCI to ISA bridge and IDE by Sebastian
 
-- these S.F. bugs were closed
+- these S.F. bugs were closed/fixed
+ [2784148] an integer overflow BUG of Bochs-2.3.7 source code
  [2695273] MSVC cpu.dsp failure in 2.3.7.zip
   [616114] Snapshot/Copy crash on Win2K
  [2628318] 'VGABIOS-latest' bug
