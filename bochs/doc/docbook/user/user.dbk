@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.258 2009-04-30 19:04:42 vruppert Exp $
+$Id: user.dbk,v 1.259 2009-05-01 20:31:10 vruppert Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -92,7 +92,7 @@ simulated machine sends a network packet to the local network, Bochs uses the
 host platform's network card to send the packet out into the real world.  These
 interactions between Bochs and the host operating system can be complicated,
 and in some cases they are host platform specific.  Sending a network packet in
-FreeBSD requires different code than sending the packet in Windows 95, for
+FreeBSD requires different code than sending the packet in Windows XP, for
 example.  For this reason, certain features are supported on some host
 platforms and not others.  On GNU/Linux, Bochs can simulate a network card that
 communicates with the world, but on BeOS the simulated network card may not
@@ -114,7 +114,6 @@ it and some more background information.
 </para>
 </footnote> Finally, in March 2000, MandrakeSoft (now called
 <ulink url="http://www.mandriva.com/">Mandriva</ulink>) bought Bochs
-(<ulink url="http://www.linux-mandrake.com/en/announce-bochs-20000323.php3">press release</ulink>)
 and made it open source under the GNU LGPL.
 
 <!--
@@ -232,8 +231,8 @@ programs.  This cannot be achieved with an "emulator" such as Wine.
 <para>
 Whether Bochs works for you depends on your host hardware, host operating
 system, guest operating system, guest software, and your ability to work in
-a command-line environment using documentation.  There is no gui or wizard
-to help you through the setup process.  You do not get a recovery or installation
+a command-line environment using documentation.  There is no wizard to help
+you through the setup process.  You do not get a recovery or installation
 disk to assist you in the process of installing a guest operating system.
 Bochs only provides you with the "virtual hardware", and it is up to you to do the rest.
 </para>
@@ -266,9 +265,8 @@ guest platform have been tried by other Bochs users. -->
 <para>
 Bochs is copyrighted by MandrakeSoft S.A.<footnote>
 <para>
-MandrakeSoft has web sites at
-<ulink url="http://mandrakesoft.com">http://mandrakesoft.com</ulink> and
-<ulink url="http://www.linux-mandrake.com">http://www.linux-mandrake.com</ulink>.
+Mandriva has a web site at
+<ulink url="http://mandriva.com">http://mandriva.com</ulink>
 </para>
 </footnote>
 and distributed under the
@@ -402,7 +400,7 @@ currently work with.
   <row>
     <entry>VBE (VESA) Support</entry>
     <entry>Yes</entry>
-    <entry>Currently resolutions up to 1024x768x32bpp are supported.
+    <entry>Currently resolutions up to 2560x1600x32bpp are supported.
     You must compile Bochs with VBE enabled and use the LGPL'd VGABIOS.
     For more information see <xref linkend="vesa-notes">.
     </entry>
@@ -435,7 +433,7 @@ currently work with.
     <entry>Yes</entry>
     <entry>Emulates ATA-6/IDE hard drives via image files.  Physical
     hard disk access is supported on some architecture, but NOT recommended, primarily for safety reasons.
-    Hard disk up to 127GB are supported, on any platform that support large files access.
+    Hard disks up to 127GB are supported, on any platform that support large files access.
     </entry>
   </row>
   <row>
@@ -452,8 +450,8 @@ currently work with.
     <entry>Keyboard</entry>
     <entry>Yes</entry>
     <entry>Emulates a PS/2 keyboard with North American key mappings. Optional keyboard layout
-    remapping files are provided to support localized keyboard in X11 (German, French, Italian, Spanish,
-    Danish, Swedish, Russian).
+    remapping files are provided to support localized keyboard in X11 (Belgian, Danish, French,
+    German, Italian, Russian, Slovenian, Spanish, Swedish, U.K.).
     </entry>
   </row>
   <row>
@@ -496,7 +494,7 @@ currently work with.
   <row>
     <entry>Serial Port</entry>
     <entry>Yes</entry>
-    <entry>The serial port (single 16550A UART emulation) is usable, on GNU/Linux,
+    <entry>The serial port (16550A UART emulation) is usable, on GNU/Linux,
     NetBSD, OpenBSD, FreeBSD and MacOSX as host and guest. On other OSes the
     emulation is present, but the connection to hard- or software of the host is
     not implemented yet. Up to 4 ports are available.
@@ -529,7 +527,8 @@ currently work with.
   <row>
     <entry>Plugins</entry>
     <entry>Yes</entry>
-    <entry>Plugins are supported on Linux, MacOS X, Solaris, Cygwin and MinGW/MSYS.</entry>
+    <entry>Compiling gui and devices as plugins is supported on Linux, MacOS X,
+    Solaris, Cygwin and MinGW/MSYS.</entry>
   </row>
   <row>
     <entry>PIC</entry>
@@ -540,7 +539,7 @@ currently work with.
   <row>
     <entry>CMOS functions</entry>
     <entry>Yes</entry>
-    <entry>CMOS functions</entry>
+    <entry>Real time clock (RTC) and CMOS RAM are available</entry>
   </row>
   <row>
     <entry>Dynamic Translation/Virtualization</entry>
@@ -612,7 +611,7 @@ code that displays the Bochs VGA screen and handles keyboard and mouse events.
       <entry>Win32</entry>
       <entry>
         This port was done by David Ross and is now maintained by
-        Don Becker. You can compile with Microsoft Visual C++ 5.0 or 6.0,
+        Don Becker. You can compile with Microsoft Visual C++,
         see <xref linkend="compiling-win32"> for compile instructions,
         or Cygwin, see <xref linkend="compile-cygwin">.
       </entry>
@@ -692,8 +691,7 @@ code that displays the Bochs VGA screen and handles keyboard and mouse events.
      <answer>
        <para>
        Yes! Bochs is released under the <ulink url="http://www.gnu.org/copyleft/lesser.html">GNU LGPL</ulink>,
-       much thanks to <ulink url="http://www.linux-mandrake.com">MandrakeSoft</ulink>, makers
-       of the Linux-Mandrake distribution.
+       much thanks to MandrakeSoft (now called <ulink url="http://www.mandriva.com">Mandriva</ulink>).
        </para>
      </answer>
   </qandaentry>
@@ -735,7 +733,7 @@ code that displays the Bochs VGA screen and handles keyboard and mouse events.
       mailing list set up a new official Bochs site hosted by <ulink
       url="http://sourcefourge.net">Source Forge</ulink>. The admins on this
       project are Greg Alexander, Don Becker, Christophe Bothamy, Bryce
-      Denney, Volker Vruppert and Stanislav Shwartsman.
+      Denney, Volker Ruppert and Stanislav Shwartsman.
      </para></answer>
   </qandaentry>
 
@@ -748,7 +746,7 @@ code that displays the Bochs VGA screen and handles keyboard and mouse events.
      system, it does not reach high emulation speeds. Users who have an x86
      processor and want the highest emulation speeds may want to consider PC
      virtualization software such as plex86 or VirtualBox (free software).
-     Another related project is <ulink url="http://fabrice.bellard.free.fr/qemu/">QEMU</ulink>.
+     Another related project is <ulink url="http://www.nongnu.org/qemu/">QEMU</ulink>.
      </para></answer>
   </qandaentry>
 
@@ -766,7 +764,10 @@ code that displays the Bochs VGA screen and handles keyboard and mouse events.
      Why can't I use Bochs with my current WinXP installation?
      </para></question>
      <answer><para>
-     Think about this. If you had two different PC's, they would require different hardware drivers. So you may not be able to safely move a disk drive with Win95 on it, from one to the other. Bochs is no different. It emulates a certain set of hardware devices, and requires each OS be configured for those devices.
+     Think about this. If you had two different PC's, they would require different
+     hardware drivers. So you may not be able to safely move a disk drive with WinXP
+     on it, from one to the other. Bochs is no different. It emulates a certain set
+     of hardware devices, and requires each OS be configured for those devices.
      </para></answer>
   </qandaentry>
 
@@ -794,7 +795,7 @@ code that displays the Bochs VGA screen and handles keyboard and mouse events.
      Do you know of any snapshots of Bochs running Windows?
      </para></question>
      <answer><para>
-     Yes! Look for "screen shots" on &bochs-sf-net; or on other Bochs sites.
+     Yes! Look for "Screen Shots" on &bochs-sf-net; or on other Bochs sites.
      </para></answer>
   </qandaentry>
 
@@ -803,9 +804,9 @@ code that displays the Bochs VGA screen and handles keyboard and mouse events.
      Does Bochs support a CD-ROM?
      </para></question>
      <answer><para>
-     Yes, a CD-ROM is supported in Linux, Windows, BeOS, and most BSDs.  The
-CD-ROM drivers for Bochs allow the guest operating system to access the
-host operating system's CD-ROM data directly.
+     Yes, a CD-ROM is supported in Linux, Windows, BeOS, and most BSDs. The
+     CD-ROM drivers for Bochs allow the guest operating system to access the
+     host operating system's CD-ROM data directly.
      </para></answer>
   </qandaentry>
 
@@ -881,7 +882,8 @@ to mention, running DOOM, though at then-pathetic speeds.
 
 <para>
 The change log is stored in the Bochs source code in a file called
-CHANGES.  Click <ulink url="http://cvs.sourceforge.net/viewcvs.py/bochs/bochs/CHANGES?rev=HEAD&amp;content-type=text/vnd.viewcvs-markup">here</ulink> to see the latest version of the CHANGES file.
+CHANGES.  Click <ulink url="http://bochs.cvs.sourceforge.net/bochs/bochs/CHANGES?view=markup&amp;content-type=text/vnd.viewcvs-markup&amp;rev=HEAD">here</ulink>
+to see the latest version of the CHANGES file.
 </para>
 <para>
 The link above is provided by Source Forge and might change one day.  If it
@@ -1737,7 +1739,6 @@ been tested in recent Bochs versions:
   .conf.macosx
   .conf.win32-vcpp
   .conf.win32-cygwin
-  .conf.AIX.4.3.1
   .conf.beos
 </screen>
 </para>
@@ -2096,7 +2097,7 @@ turn it off.
       <entry>Enable NE2000 network card support.  This requires a
       low-level component to be written for each OS.  The NE2000
       option is only supported on FreeBSD, OpenBSD, Linux, and Windows
-      95/98/NT/2K.  When enabled and configured, the NE2000 device model can
+      9x/NT/2K/XP.  When enabled and configured, the NE2000 device model can
       talk to any computer on the network EXCEPT FOR the local host.
       Exception: Under most circumstances, Bochs can talk to the local host
       on Windows, and in the ethertap interface for Linux.
@@ -2267,10 +2268,9 @@ turn it off.
       <entry>--enable-cpp</entry>
       <entry>no</entry>
       <entry>
-      Use .cpp as C++ suffix.  Renames all the .cc files to .cpp for use with
-      compilers which want that, like MS C++ compilers.  Don't use this option
-      unless you know you need it.  The configure shortcut script for
-      Win32 uses this option.
+      Use .cpp as C++ suffix. Renames all the .cc files to .cpp for use with
+      compilers which want that, like older MS C++ compilers. Don't use this
+      option unless you know you need it.
       </entry>
     </row>
     <row>
@@ -2828,7 +2828,7 @@ them as a normal user.
 <para>
 <screen>
 what if configure fails?
-- tar up config.* and send to bochs-testing@tlw.com
+- tar up config.* and send to bochs-developers
 - report the problem with a source forge bug report.
 
 what if make fails?
@@ -2929,11 +2929,7 @@ images are the size of a floppy disk (1 meg compressed) and others are gigantic
 <para> &FIXME; This should be completed </para>
 <para>
 <screen>
-  - (DONE )bochsrc, BIOS, VGABIOS, disk images.
   - BIOS/VGABIOS, what do they do?
-  - disk images
-    - (DONE) where to find one pre-made
-    - grab one from a real hard disk
 </screen>
 </para>
 </section>
@@ -4884,7 +4880,7 @@ The configuration interface 'textconfig' is the text mode version of the Bochs
 configuration system. It is a series of menus (using stdin/stdout) that allows
 you to edit all the settings that control Bochs' behavior. If you do not write
 a config_interface line, Bochs will choose it as the default for you (unless Bochs
-is compiled for wxWidgets only).
+is compiled for Win32 or wxWidgets only).
 </para>
 <para>
 It consists of these three parts:
@@ -4950,6 +4946,8 @@ behavoiur of Bochs at runtime if you click on one of these buttons:
 <para>
   Here you can toggle the status of the cdrom media (inserted/ejected). CD-ROM drives
   can be set up using <link linkend="bochsopt-ata-master-slave">ata(0-3)-master/-slave option</link>.
+  On some platforms this button brings a up a small dialog box for changing the
+  CD-ROM image.
 </para>
 </listitem>
 <listitem>
@@ -4958,6 +4956,8 @@ behavoiur of Bochs at runtime if you click on one of these buttons:
   Here you can enable the creation of mouse events by the host. Once mouse
   events are captured, you cannot reach the button anymore, in order to disable
   capturing again. In this case, use "Ctrl+3rd mouse button" to disable it.
+  On Win32 Bochs can be configured to use the legacy F12 button to toggle the
+  muse capture.
 </para>
 <para>&FIXME; Support for 2 button mouse to toggle the capture mode not yet complete.
   Some display libraries still don't support the new feature, but
@@ -5231,7 +5231,7 @@ it's not recommended.  If you aren't a subscriber, you might miss the response
 to your question.
 </para>
 <para>
-<ulink url="http://marc.theaimsgroup.com/?l=bochs-dev">Archive of bochs-developers messages</ulink>
+<ulink url="http://sourceforge.net/mailarchive/forum.php?forum_name=bochs-developers">Archive of bochs-developers messages</ulink>
 </para>
 </section>  <!-- End of bochs-developers mailing list -->
 
@@ -5263,7 +5263,7 @@ will get 2 copies of every announcement.
 </para>
 
 <para>
-<ulink url="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=Bochs+Announce+Archive&amp;url=http://sourceforge.net/mailarchive/forum.phpqmrkforum_ideq1855">Archive of bochs-announce messages</ulink>
+<ulink url="http://sourceforge.net/mailarchive/forum.php?forum_name=bochs-announce">Archive of bochs-announce messages</ulink>
 </para>
 
 </section>  <!-- End of bochs-announce mailing list -->
@@ -5275,7 +5275,7 @@ whenever someone does a checkin in the bochs cvs repository).
 </para>
 
 <para>
-<ulink url="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=Bochs+CVS+Mailing+List+Archive&amp;url=http://sourceforge.net/mailarchive/forum.phpqmrkforum_ideq8301">Archive of bochs-cvs messages</ulink>
+<ulink url="http://sourceforge.net/mailarchive/forum.php?forum_name=bochs-cvs">Archive of bochs-cvs messages</ulink>
 </para>
 
 </section>  <!-- End of bochs-cvs mailing list -->
