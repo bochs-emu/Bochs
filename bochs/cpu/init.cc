@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.208 2009-04-05 19:38:44 sshwarts Exp $
+// $Id: init.cc,v 1.209 2009-05-01 09:32:46 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -214,7 +214,6 @@ void BX_CPU_C::register_wx_state(void)
       DEFPARAM_NORMAL(DR6, dr6);
       DEFPARAM_NORMAL(DR7, dr7);
       DEFPARAM_NORMAL(CR0, cr0.val32);
-      DEFPARAM_NORMAL(CR1, cr1);
       DEFPARAM_NORMAL(CR2, cr2);
       DEFPARAM_NORMAL(CR3, cr3);
 #if BX_CPU_LEVEL >= 4
@@ -890,7 +889,6 @@ void BX_CPU_C::reset(unsigned source)
 #endif
 
 #if BX_CPU_LEVEL >= 3
-  BX_CPU_THIS_PTR cr1 = 0;
   BX_CPU_THIS_PTR cr2 = 0;
   BX_CPU_THIS_PTR cr3 = 0;
   BX_CPU_THIS_PTR cr3_masked = 0;

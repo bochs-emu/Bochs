@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.594 2009-04-27 14:00:54 sshwarts Exp $
+// $Id: cpu.h,v 1.595 2009-05-01 09:32:46 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -835,7 +835,6 @@ public: // for now...
 
   /* Control registers */
   bx_cr0_t       cr0;
-  Bit32u         cr1;
   bx_address     cr2;
   bx_address     cr3;
   bx_phy_address cr3_masked;
