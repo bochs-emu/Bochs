@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: devices.cc,v 1.145 2009-04-10 11:10:32 vruppert Exp $
+// $Id: devices.cc,v 1.146 2009-05-01 09:12:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -110,7 +110,7 @@ void bx_devices_c::init(BX_MEM_C *newmem)
   const char *plugname;
 #endif
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.145 2009-04-10 11:10:32 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.146 2009-05-01 09:12:07 sshwarts Exp $"));
   mem = newmem;
 
   /* set builtin default handlers, will be overwritten by the real default handler */
@@ -596,7 +596,7 @@ bx_bool bx_devices_c::register_io_read_handler(void *this_ptr, bx_read_handler_t
     if (curr->funct == f &&
         curr->mask == mask &&
         curr->this_ptr == this_ptr &&
-        curr->handler_name == name) { // really want the same name too
+        !strcmp(curr->handler_name, name)) { // really want the same name too
       io_read_handler = curr;
       break;
     }
@@ -648,7 +648,7 @@ bx_bool bx_devices_c::register_io_write_handler(void *this_ptr, bx_write_handler
     if (curr->funct == f &&
         curr->mask == mask &&
         curr->this_ptr == this_ptr &&
-        curr->handler_name == name) { // really want the same name too
+        !strcmp(curr->handler_name, name)) { // really want the same name too
       io_write_handler = curr;
       break;
     }
@@ -711,7 +711,7 @@ bx_bool bx_devices_c::register_io_read_handler_range(void *this_ptr, bx_read_han
     if (curr->funct == f &&
         curr->mask == mask &&
         curr->this_ptr == this_ptr &&
-        curr->handler_name == name) {
+        !strcmp(curr->handler_name, name)) {
       io_read_handler = curr;
       break;
     }
@@ -775,7 +775,7 @@ bx_bool bx_devices_c::register_io_write_handler_range(void *this_ptr, bx_write_h
     if (curr->funct == f &&
         curr->mask == mask &&
         curr->this_ptr == this_ptr &&
-        curr->handler_name == name) {
+        !strcmp(curr->handler_name, name)) {
       io_write_handler = curr;
       break;
     }
