@@ -112,6 +112,7 @@ Detailed change log :
   - Updated Bochs TESTFORM to version 0.4
 
 - SF patches applied
+ [2784858] IO Handler names are not compared properly
  [2712569] Legacy bios serial data buffer timeout bug by grybranix
  [2655090] 64 bit BSWAP with REX.W broken by M. Eby
  [2645919] CR8 bug when reading by M. Eby
