@@ -180,6 +180,7 @@ floatx80 floatx80_scale(floatx80 a, floatx80 b, float_status_t &status)
         return packFloatx80(aSign, 0x7FFF, BX_CONST64(0x8000000000000000));
     }
     if (aExp == 0) {
+        if (bSig && (bExp == 0)) float_raise(status, float_flag_denormal);
         if (aSig == 0) return a;
         float_raise(status, float_flag_denormal);
         normalizeFloatx80Subnormal(aSig, &aExp, &aSig);
