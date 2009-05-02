@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.260 2009-05-02 09:32:05 vruppert Exp $
+$Id: user.dbk,v 1.261 2009-05-02 11:25:34 sshwarts Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -57,7 +57,7 @@ the machine that runs the Bochs software.  The guest platform is the operating
 system and applications that Bochs is simulating.
 </para>
 </footnote>, including x86, PPC, Alpha, Sun, and MIPS.  No matter what the
-host platform is, Bochs still simulates x86 software.  In other words, it
+host platform is, Bochs still simulates x86 hardware.  In other words, it
 does not depend on the native instructions of the host machine at all.
 This is both a strength and a weakness, and it's the major difference between
 Bochs and many other x86 emulation software such as plex86, VMware, etc.
@@ -990,7 +990,6 @@ available at <ulink url="http://www.cygwin.com">www.cygwin.com</ulink>.
   user$ <command>cvs -z3 -d:pserver:anonymous@bochs.cvs.sourceforge.net:/cvsroot/bochs checkout bochs</command>
   cvs server: Updating bochs
   U bochs/.bochsrc
-  U bochs/.conf.AIX.4.3.1
   U bochs/.conf.beos-x86-R4
   U bochs/.conf.macos
      .
@@ -2347,7 +2346,7 @@ turn it off.
     <row>
       <entry>--enable-1g-pages</entry>
       <entry>no</entry>
-      <entry>support for 1G page externsions in x86-64 long mode</entry>
+      <entry>support for 1G page extensions in x86-64 long mode</entry>
     </row>
     <row>
       <entry>--enable-global-pages</entry>
@@ -3242,7 +3241,7 @@ ata3: enabled=1, ioaddr1=0x168, ioaddr2=0x360, irq=9
 
 These options enables up to 4 ata channels. For each channel
 the two base io addresses and the irq must be specified.
-ata0 and ata1 areenabled by default, with the values shown above.
+ata0 and ata1 are enabled by default, with the values shown above.
 
 </para>
 </section>
@@ -3791,7 +3790,7 @@ are in the usual "property=value" format.
    <listitem><para>
    dmatimer: Microseconds per second for a DMA cycle. Make it smaller to fix
    non-continuous sound. 750000 is usually a good value. This needs a reasonably
-   correct setting for the <command>ips</command> paramter of the
+   correct setting for the <command>ips</command> parameter of the
    <link linkend="bochsopt-cpu">cpu option</link>. It is possible to adjust the
    dmatimer value at runtime.
    </para></listitem>
@@ -3821,7 +3820,7 @@ Example:
   keyboard_serial_delay: 250 # default
 </screen>
 Approximate time in microseconds that it takes one character to be
-transfered from the keyboard to controller over the serial path.
+transferred from the keyboard to controller over the serial path.
 </para>
 </section>
 
@@ -3985,7 +3984,7 @@ When connecting the keypad to one of the ports, Bochs forwards the input of
 the numeric keypad to the USB device instead of the PS/2 keyboard.
 </para>
 <para>
-To connect a flat image as an USB hardisk you can use the 'disk' device with
+To connect a flat image as an USB hard disk you can use the 'disk' device with
 the path to the image separated with a colon (see above). To emulate an USB
 cdrom you can use the 'cdrom' device name and the path to an ISO image or raw
 device name also separated with a colon.
@@ -4439,7 +4438,7 @@ in that file (see <link linkend="sb16line">sb16 option</link>).
 
 <para>
 The source for the SB16CTRL program that is used to modify
-the runtime behaviour of the SB16 emulation is included in
+the runtime behavior of the SB16 emulation is included in
 <filename class="directory">misc/sb16/</filename>. It is a C
 program that can be run from inside the emulation.
 </para>
@@ -4957,7 +4956,7 @@ behavoiur of Bochs at runtime if you click on one of these buttons:
   events are captured, you cannot reach the button anymore, in order to disable
   capturing again. In this case, use "Ctrl+3rd mouse button" to disable it.
   On Win32 Bochs can be configured to use the legacy F12 button to toggle the
-  muse capture.
+  mouse capture.
 </para>
 <para>&FIXME; Support for 2 button mouse to toggle the capture mode not yet complete.
   Some display libraries still don't support the new feature, but
@@ -5096,7 +5095,7 @@ config file.
       functions in the BIOS), a notice is logged to the <link linkend="bochsopt-log">log file</link>
       and the emulation continues. If, however, the command looks important, Bochs
       panics, because the software being emulated might depend on the successful
-      execution of the given instruction or behaviour of the device.
+      execution of the given instruction or behavior of the device.
     </para>
     <para>
       A panic does not always mean that the software won't run inside of Bochs,
@@ -5616,7 +5615,7 @@ instructions specific to Bochs, we can add it right here.
 <section id="bochs-linux-disktools"><title>Bochs GNU/Linux DiskTools</title>
 <para>
 &FIXME;
-Bochs tools are external tools developped by ..., and useful to copy
+Bochs tools are external tools developed by ..., and useful to copy
 to / from guest partition from a GNU/Linux host.
 </para>
 </section>
@@ -5893,7 +5892,7 @@ What was required to make SMP work in Bochs?
 must be present in BIOS memory space. An SMP-aware operating system probes BIOS
 memory to find the structure, which contains information about how many
 processors, their IDs, interrupt sources, etc. Starting with Bochs 2.2.5 these
-structures are dynamicly created by Bochs.
+structures are dynamically created by Bochs.
 </para></listitem>
 <listitem><para> ACPI support is required to boot SMP system in most of modern
 operating systems. For example WinXP 64 bit require ACPI support even for
@@ -6328,10 +6327,10 @@ From here, you may use the following commands:
   watch write addr            Insert a write watch point at physical address <varname>addr</varname>
   watch w     addr            Insert a write watch point at physical address <varname>addr</varname>
 
-  watch                       Display state of current current memory watchpoints
+  watch                       Display state of current memory watchpoints
 
-  watch stop                  Stop simulation when a watchpoint is encountred (default)
-  watch continue              Do not stop simulation when a watchpoint is encountred
+  watch stop                  Stop simulation when a watchpoint is encountered (default)
+  watch continue              Do not stop simulation when a watchpoint is encountered
 
   unwatch addr                Remove watchpoint to specific physical address
   unwatch                     Remove all watch points
@@ -6904,7 +6903,7 @@ is what you get if the cd is not bootable.
 0x0B boot catalog : bootable flag not set
 </screen>
 
-now the cd is eltorito, but the boot catalog is currupt, or
+now the cd is eltorito, but the boot catalog is corrupted, or
 the cd was made to boot on a ppc system. This should not happen
 for a x86 bootable cd.
 </para>
@@ -6974,7 +6973,7 @@ in the "<command>ataX-xxxx: ..., translation='algorithm'</command>" section.
     a standard bitshift algorithm (named Extended-CHS)
     is used to translate the CHS between
     the int13h interface
-    and the ATA interface. The translation is acheived by
+    and the ATA interface. The translation is achieved by
     multiplying/dividing the cylinder/head count by a power of 2
     (2, 4 or 8).
     (a factor of 16 could not be used because the
@@ -7003,7 +7002,7 @@ in the "<command>ataX-xxxx: ..., translation='algorithm'</command>" section.
     and the ATA interface. First the number of physical heads is forced to
     15, and the number of cylinders is adjusted accordingly.
     Then, as in the simple extended CHS algorithm, the translation
-    is acheived by
+    is achieved by
     multiplying/dividing the cylinder/head count by a power of 2
     (2, 4, 8 or 16).
     The head count being forced to 15, it can safely be multiplied by 16
@@ -7023,7 +7022,7 @@ in the "<command>ataX-xxxx: ..., translation='algorithm'</command>" section.
     a LBA-assisted algorithm
     is used to translate the CHS between
     the int13h interface
-    and the ATA interface. The translation is acheived by
+    and the ATA interface. The translation is achieved by
     first computing the physical size of the disk (LBA=C*H*S).
     Then the sectors per track is forced to 63, and the head count
     to 255. Then the cylinder count is computed (C=LBA/(63*255))
@@ -7053,7 +7052,7 @@ was used. You must not set the translation to 'auto'.
 
         <note>
         <para>
-rechs translation should only be useful for compaq users who wants to
+rechs translation should only be useful for Compaq users who wants to
 use a disk as a block device. Please report if you know any other
 system that use such translation.
         </para>
@@ -7384,7 +7383,7 @@ with same tools as the 'flat' mode images.
 <para>
 If the partition sizes and file sizes are set up correctly, this allows you to
 store each partition in a separate file, which is very convenient if you want
-to operate on a single partition (e.g. mount with loopback, create filesystem,
+to operate on a single partition (e.g. mount with loopback, create file system,
 fsck, etc.).
 </para>
 </section>
@@ -7424,7 +7423,7 @@ compiled in, or an additional DLL linked to Bochs.
         <para>
         Multiple sparse drive images can be mounted on top of each other.
         Writes go to the top image.  This allows several similar configurations
-        to share a master "base" file, and also allows filesystem rollback or
+        to share a master "base" file, and also allows file system rollback or
         no-write options.  Up to 10 disk images can be layered on top of each other.
         </para>
       </listitem>
@@ -7467,7 +7466,7 @@ No external tool support Sparse disk images yet.
       <listitem>
         <para>
           Create a sparse disk image called "c.img.0".  Point .bochsrc at "c.img.0".
-          In bochs, install your favourite OS.  Switch off bochs.
+          In bochs, install your favorite OS.  Switch off bochs.
         </para>
       </listitem>
       <listitem>
@@ -7490,7 +7489,7 @@ No external tool support Sparse disk images yet.
       <listitem>
         <para>
           Create a sparse disk image called "c.img.0".  Point .bochsrc at "c.img.0".
-          In bochs, install your favourite OS.  Switch off bochs.
+          In bochs, install your favorite OS.  Switch off bochs.
         </para>
       </listitem>
       <listitem>
@@ -7499,7 +7498,7 @@ No external tool support Sparse disk images yet.
           Point .bochsrc at "c.img.1"
           "c.img.0" is visible, but all writes go to "c.img.1".
           After using bochs, if you want to keep the
-          changes, use the (currently non-existant) merge utility
+          changes, use the (currently non-existent) merge utility
           to make a single unified drive image.
         </para>
       </listitem>
@@ -7518,7 +7517,7 @@ No external tool support Sparse disk images yet.
       <listitem>
         <para>
           Create a sparse disk image called "base.img".  Point .bochsrc at "base.img".
-          In bochs, install your favourite OS.  Switch off bochs.
+          In bochs, install your favorite OS.  Switch off bochs.
         </para>
       </listitem>
       <listitem>
@@ -7626,7 +7625,7 @@ Only vmware versions 3 and 4 disk image files are supported.
 </para>
 <para>
     File size of the redolog can grow up to the total disk
-    size plus a small overhead due to internal data managment
+    size plus a small overhead due to internal data management
     (about 3% for a 32MiB disk,
     less than 0.5% for a 2GiB disk).
 </para>
@@ -7724,7 +7723,7 @@ The flat disk images must be created with the bximage utility
     </para>
     <para>
     File size of Growing disk images can go up to the total disk
-    size plus a small overhead due to internal data managment.
+    size plus a small overhead due to internal data management.
     (about 3% for a 32MiB disk,
     less than 0.5% for a 2GiB disk).
     </para>
@@ -7791,7 +7790,7 @@ before writing new data. If no disk space is available, a panic will occur.
 </para>
 <para>
     File size of the redolog can grow up to the total disk
-    size plus a small overhead due to internal data managment
+    size plus a small overhead due to internal data management
     (about 3% for a 32MiB disk,
     less than 0.5% for a 2GiB disk).
 </para>
@@ -8379,7 +8378,7 @@ cpu: cpuid_limit_winnt=1
 <para>You must read the message regarding software licenses in
 <xref linkend="thirdparty"> before you install Windows XP as a guest operating system in Bochs.</para>
         <para>
-        Windows XP has been reported to install from the cd, and run inside Bochs.
+        Windows XP has been reported to install from the CDROM, and run inside Bochs.
         The only known issue is to set the IPS to, at least, a value of 10000000.
         </para>
 </section>
