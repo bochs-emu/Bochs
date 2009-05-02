@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.259 2009-05-01 20:31:10 vruppert Exp $
+$Id: user.dbk,v 1.260 2009-05-02 09:32:05 vruppert Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -8025,18 +8025,41 @@ Shall I remove the redolog afterwards?
 
 <chapter id="guests"><title>Guest operating systems</title>
 <para>
+In the past several tweaks were necessary to install a guest OS inside of Bochs.
+Nowadays it's almost the same as installing it on a real machine. There are only
+a few Bochs specific issues you should know about. Note that we cannot give you
+a full installation guide if you don't know how to install an OS in the real
+world. The following remarks apply to all guest OS installations. Some specific
+issues are reported in the next sections.
+<itemizedlist>
+<listitem><para>
+First of all you need the installation media or image (floppy/CD/DVD).
+For platforms that don't support raw device access it might be necessary to
+create an image from the media. You must read the message regarding software
+licenses in <xref linkend="thirdparty"> before you install or use a commercial
+guest operating system in Bochs.
+</para></listitem>
+<listitem><para>Then you need to create a hard drive image with bximage. For the
+required size see the documentation of the OS you'd like to install. See
+<xref linkend="using-bximage"> how to create the image.
+</para></listitem>
+<listitem><para>Finally you have to create configuration for your guest OS. You can
+edit the sample configuration distributed with Bochs or use the configuration
+interface to adjust the settings. Check the documentation of your guest OS for
+the required memory size, cpu speed and supported hardware.
+</para></listitem>
+</itemizedlist>
+Now you should be able to run Bochs and start the installation process. Depending
+on the host cpu speed and the size of the guest OS it can take a few minutes or
+even some hours.
+</para>
+<para>
 <screen>
 What disk images are available.
-Installing from scratch.
 What works
 Known problems
 </screen>
 </para>
-
-<section id="guest-linux"><title>Linux</title>
-  <para>
-  </para>
-</section>
 
 <section id="guest-knoppix">
   <title>Knoppix</title>
@@ -8322,6 +8345,15 @@ will trap this key combination. You can either use the trick described in
 in you configuration file, for example:
 <programlisting>
 user_shortcut: keys=ctrl-alt-del
+</programlisting>
+</para>
+</listitem>
+<listitem>
+<para>
+For installing and using Windows NT it is necessary to limit the maximum CPUID
+to 3. In the configuration file you need to add a line like this:
+<programlisting>
+cpu: cpuid_limit_winnt=1
 </programlisting>
 </para>
 </listitem>
