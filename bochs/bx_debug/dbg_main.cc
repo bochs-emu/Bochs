@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.193 2009-05-03 19:21:38 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.194 2009-05-03 19:29:19 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1353,7 +1353,7 @@ void bx_dbg_show_command(const char* arg)
   }
 }
 
-void bx_dbg_show_param_command(char *param)
+void bx_dbg_show_param_command(const char *param)
 {
   dbg_printf("show param name: <%s>\n", param);
   bx_param_c *node = SIM->get_param(param, SIM->get_bochs_root());
@@ -2523,7 +2523,7 @@ void bx_dbg_setpmem_command(bx_phy_address paddr, unsigned len, Bit32u val)
   }
 }
 
-void bx_dbg_set_symbol_command(char *symbol, Bit32u val)
+void bx_dbg_set_symbol_command(const char *symbol, Bit32u val)
 {
   bx_bool is_OK = false;
   symbol++; // get past '$'
