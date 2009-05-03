@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.209 2009-05-01 09:32:46 sshwarts Exp $
+// $Id: init.cc,v 1.210 2009-05-03 13:02:14 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -675,6 +675,9 @@ void BX_CPU_C::after_restore_state(void)
     BX_PANIC(("Incorrect CR0 state !"));
   SetCR3(cr3);
   TLB_flush();
+#if BX_SUPPORT_VMX
+  set_VMCSPTR(BX_CPU_THIS_PTR vmcsptr);
+#endif
   assert_checks();
   invalidate_prefetch_q();
   debug(RIP);
@@ -1005,6 +1008,7 @@ void BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR in_event = 0;
   BX_CPU_THIS_PTR vmx_interrupt_window = 0;
   BX_CPU_THIS_PTR vmcsptr = BX_CONST64(0xFFFFFFFFFFFFFFFF);
+  BX_CPU_THIS_PTR vmcshostptr = 0;
 #endif
 
 #if BX_SUPPORT_SMP

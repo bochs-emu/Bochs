@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.595 2009-05-01 09:32:46 sshwarts Exp $
+// $Id: cpu.h,v 1.596 2009-05-03 13:02:14 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -884,6 +884,8 @@ public: // for now...
   bx_bool in_vmx_guest;
   bx_bool vmx_interrupt_window;
   Bit64u  vmcsptr;
+  bx_hostpageaddr_t vmcshostptr;
+  
   VMCS_CACHE vmcs;
 #endif
 
@@ -3272,7 +3274,7 @@ public: // for now...
   BX_SMF void FPU_update_last_instruction(bxInstruction_c *i);
   BX_SMF void FPU_stack_underflow(int stnr, int pop_stack = 0);
   BX_SMF void FPU_stack_overflow(void);
-  BX_SMF unsigned FPU_exception(unsigned exception, bx_bool is_mem = 0);
+  BX_SMF unsigned FPU_exception(unsigned exception, bx_bool = 0);
   BX_SMF bx_address fpu_save_environment(bxInstruction_c *i);
   BX_SMF bx_address fpu_load_environment(bxInstruction_c *i);
   BX_SMF Bit8u pack_FPU_TW(Bit16u tag_word);
@@ -3323,6 +3325,7 @@ public: // for now...
   BX_SMF void VMexitSaveGuestState(void);
   BX_SMF void VMexitSaveGuestMSRs(void);
   BX_SMF void VMexitLoadHostState(void);
+  BX_SMF void set_VMCSPTR(Bit64u vmxptr);
   BX_SMF bx_bool is_VMXON_PTR(Bit64u vmxptr);
   BX_SMF void init_VMCS(void);
   BX_SMF void register_vmx_state(bx_param_c *parent);

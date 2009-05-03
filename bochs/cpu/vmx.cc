@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmx.cc,v 1.14 2009-04-05 19:09:44 sshwarts Exp $
+// $Id: vmx.cc,v 1.15 2009-05-03 13:02:14 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2009 Stanislav Shwartsman
@@ -79,6 +79,16 @@ void BX_CPU_C::init_VMCS(void)
 #endif
 }
 
+void BX_CPU_C::set_VMCSPTR(Bit64u vmxptr)
+{
+  BX_CPU_THIS_PTR vmcsptr = vmxptr;
+
+  if (vmxptr != BX_INVALID_VMCSPTR)
+    BX_CPU_THIS_PTR vmcshostptr = (bx_hostpageaddr_t) BX_MEM(0)->getHostMemAddr(BX_CPU_THIS, vmxptr, BX_WRITE);
+  else
+    BX_CPU_THIS_PTR vmcshostptr = 0;
+}
+
 Bit32u BX_CPU_C::VMread32(unsigned encoding)
 {
   Bit32u field;
@@ -88,7 +98,13 @@ Bit32u BX_CPU_C::VMread32(unsigned encoding)
     BX_PANIC(("VMread32: can't access encoding 0x%08x, offset=0x%x", encoding, offset));
   bx_phy_address pAddr = BX_CPU_THIS_PTR vmcsptr + offset;
 
-  access_read_physical(pAddr, 4, (Bit8u*)(&field));
+  if (BX_CPU_THIS_PTR vmcshostptr) {
+    Bit32u *hostAddr = (Bit32u*) (BX_CPU_THIS_PTR vmcshostptr | offset);
+    ReadHostDWordFromLittleEndian(hostAddr, field);
+  }
+  else {
+    access_read_physical(pAddr, 4, (Bit8u*)(&field));
+  }
 
   BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pAddr, 4, BX_READ, (Bit8u*)(&field));
 
@@ -103,7 +119,14 @@ void BX_CPU_C::VMwrite32(unsigned encoding, Bit32u val_32)
     BX_PANIC(("VMwrite32: can't access encoding 0x%08x, offset=0x%x", encoding, offset));
   bx_phy_address pAddr = BX_CPU_THIS_PTR vmcsptr + offset;
 
-  access_write_physical(pAddr, 4, (Bit8u*)(&val_32));
+  if (BX_CPU_THIS_PTR vmcshostptr) {
+    Bit32u *hostAddr = (Bit32u*) (BX_CPU_THIS_PTR vmcshostptr | offset);
+    pageWriteStampTable.decWriteStamp(pAddr);
+    WriteHostDWordToLittleEndian(hostAddr, val_32);
+  }
+  else {
+    access_write_physical(pAddr, 4, (Bit8u*)(&val_32));
+  }
 
   BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pAddr, 4, BX_WRITE, (Bit8u*)(&val_32));
 }
@@ -119,7 +142,13 @@ Bit64u BX_CPU_C::VMread64(unsigned encoding)
     BX_PANIC(("VMread64: can't access encoding 0x%08x, offset=0x%x", encoding, offset));
   bx_phy_address pAddr = BX_CPU_THIS_PTR vmcsptr + offset;
 
-  access_read_physical(pAddr, 8, (Bit8u*)(&field));
+  if (BX_CPU_THIS_PTR vmcshostptr) {
+    Bit64u *hostAddr = (Bit64u*) (BX_CPU_THIS_PTR vmcshostptr | offset);
+    ReadHostQWordFromLittleEndian(hostAddr, field);
+  }
+  else {
+    access_read_physical(pAddr, 8, (Bit8u*)(&field));
+  }
 
   BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pAddr, 8, BX_READ, (Bit8u*)(&field));
 
@@ -136,7 +165,14 @@ void BX_CPU_C::VMwrite64(unsigned encoding, Bit64u val_64)
     BX_PANIC(("VMwrite64: can't access encoding 0x%08x, offset=0x%x", encoding, offset));
   bx_phy_address pAddr = BX_CPU_THIS_PTR vmcsptr + offset;
 
-  access_write_physical(pAddr, 8, (Bit8u*)(&val_64));
+  if (BX_CPU_THIS_PTR vmcshostptr) {
+    Bit64u *hostAddr = (Bit64u*) (BX_CPU_THIS_PTR vmcshostptr | offset);
+    pageWriteStampTable.decWriteStamp(pAddr);
+    WriteHostQWordToLittleEndian(hostAddr, val_64);
+  }
+  else {
+    access_write_physical(pAddr, 8, (Bit8u*)(&val_64));
+  }
 
   BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pAddr, 8, BX_WRITE, (Bit8u*)(&val_64));
 }
@@ -1689,6 +1725,7 @@ void BX_CPU_C::VMXON(bxInstruction_c *i)
     }
       
     BX_CPU_THIS_PTR vmcsptr = BX_INVALID_VMCSPTR;
+    BX_CPU_THIS_PTR vmcshostptr = 0;
     BX_CPU_THIS_PTR in_vmx = 1;
     BX_CPU_THIS_PTR disable_INIT = 1; // INIT is disabled in VMX root mode
     // block and disable A20M;
@@ -2020,7 +2057,7 @@ void BX_CPU_C::VMPTRLD(bxInstruction_c *i)
        return;
     }
 
-    BX_CPU_THIS_PTR vmcsptr = pAddr;
+    set_VMCSPTR(pAddr);
     VMsucceed();
   }
 #else
@@ -2651,8 +2688,10 @@ void BX_CPU_C::VMCLEAR(bxInstruction_c *i)
     BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pAddr + VMCS_LAUNCH_STATE_FIELD_ADDR, 4,
             BX_WRITE, (Bit8u*)(&launch_state));
 
-    if (pAddr == BX_CPU_THIS_PTR vmcsptr)
+    if (pAddr == BX_CPU_THIS_PTR vmcsptr) {
         BX_CPU_THIS_PTR vmcsptr = BX_INVALID_VMCSPTR;
+        BX_CPU_THIS_PTR vmcshostptr = 0;
+    }
 
     VMsucceed();
   }
