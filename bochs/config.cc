@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.176 2009-04-26 06:56:27 vruppert Exp $
+// $Id: config.cc,v 1.177 2009-05-03 19:21:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -2077,11 +2077,11 @@ static Bit32s parse_log_options(const char *context, char *loglev, char *param1)
   return 0;
 }
 
-static int parse_debug_symbols(const char *context, char **params, int num_params)
+static int parse_debug_symbols(const char *context, const char **params, int num_params)
 {
 #if BX_DEBUGGER
   Bit32u offset = 0;
-  char*  filename = 0;
+  const char *filename = 0;
 
   while (num_params > 0)
   {
@@ -2953,7 +2953,7 @@ static int parse_line_formatted(const char *context, int num_params, char *param
 #endif
   }
   else if (!strcmp(params[0], "debug_symbols")) {
-    if (parse_debug_symbols(context, params + 1, num_params - 1) < 0) {
+    if (parse_debug_symbols(context, (const char **)(params + 1), num_params - 1) < 0) {
       return -1;
     }
   }

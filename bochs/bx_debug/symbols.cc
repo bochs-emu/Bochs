@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: symbols.cc,v 1.16 2009-05-03 18:31:23 sshwarts Exp $
+// $Id: symbols.cc,v 1.17 2009-05-03 19:21:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -33,7 +33,7 @@
 
 static const char BX_HAVE_MAP_ERR[] = "context not implemented because BX_HAVE_MAP=0\n";
 
-char* bx_dbg_symbolic_address(Bit32u context, Bit32u eip, Bit32u base)
+const char* bx_dbg_symbolic_address(Bit32u context, Bit32u eip, Bit32u base)
 {
   static bx_bool first = true;
   if (first) {
@@ -43,35 +43,35 @@ char* bx_dbg_symbolic_address(Bit32u context, Bit32u eip, Bit32u base)
   return "unk. ctxt";
 }
 
-char* bx_dbg_symbolic_address_16bit(Bit32u eip, Bit32u cs)
+const char* bx_dbg_symbolic_address_16bit(Bit32u eip, Bit32u cs)
 {
   // just prints an error anyway
   return bx_dbg_symbolic_address (0,0,0);
 }
 
-int bx_dbg_symbol_command(char* filename, bx_bool global, Bit32u offset)
+int bx_dbg_symbol_command(const char* filename, bx_bool global, Bit32u offset)
 {
   dbg_printf(BX_HAVE_MAP_ERR);
   return -1;
 }
 
-void bx_dbg_info_symbols_command(char *Symbol)
+void bx_dbg_info_symbols_command(const char *Symbol)
 {
   dbg_printf(BX_HAVE_MAP_ERR);
 }
 
-int bx_dbg_lbreakpoint_symbol_command(char *Symbol)
+int bx_dbg_lbreakpoint_symbol_command(const char *Symbol)
 {
   dbg_printf(BX_HAVE_MAP_ERR);
   return -1;
 }
 
-Bit32u bx_dbg_get_symbol_value(char *Symbol)
+Bit32u bx_dbg_get_symbol_value(const char *Symbol)
 {
   return 0;
 }
 
-char* bx_dbg_disasm_symbolic_address(Bit32u eip, Bit32u base)
+const char* bx_dbg_disasm_symbolic_address(Bit32u eip, Bit32u base)
 {
   return 0;
 }
@@ -226,7 +226,7 @@ void symbol_entry_t::trim_quotes(void)
   }
 }
 
-Bit32u bx_dbg_get_symbol_value(char *Symbol)
+Bit32u bx_dbg_get_symbol_value(const char *Symbol)
 {
   context_t* cntx = context_t::get_context(0);
   if(!cntx) // Context not found
@@ -242,7 +242,7 @@ Bit32u bx_dbg_get_symbol_value(char *Symbol)
   return sym->start;
 }
 
-char* bx_dbg_symbolic_address(Bit32u context, Bit32u eip, Bit32u base)
+const char* bx_dbg_symbolic_address(Bit32u context, Bit32u eip, Bit32u base)
 {
   static char buf[80];
 #if 0
@@ -274,7 +274,7 @@ char* bx_dbg_symbolic_address(Bit32u context, Bit32u eip, Bit32u base)
   return buf;
 }
 
-char* bx_dbg_disasm_symbolic_address(Bit32u eip, Bit32u base)
+const char* bx_dbg_disasm_symbolic_address(Bit32u eip, Bit32u base)
 {
   static char buf[80];
 
@@ -293,7 +293,7 @@ char* bx_dbg_disasm_symbolic_address(Bit32u eip, Bit32u base)
   return buf;
 }
 
-char* bx_dbg_symbolic_address_16bit(Bit32u eip, Bit32u cs)
+const char* bx_dbg_symbolic_address_16bit(Bit32u eip, Bit32u cs)
 {
   // in 16-bit code, the segment selector and offset are combined into a
   // 20-bit linear address = (segment selector<<4) + offset.
@@ -302,10 +302,10 @@ char* bx_dbg_symbolic_address_16bit(Bit32u eip, Bit32u cs)
   return bx_dbg_symbolic_address (0, eip+(cs<<4), 0);
 }
 
-int bx_dbg_symbol_command(char* filename, bx_bool global, Bit32u offset)
+int bx_dbg_symbol_command(const char* filename, bx_bool global, Bit32u offset)
 {
-    symbol_entry_t file(0, filename);
-    file.trim_quotes();
+  symbol_entry_t file(0, filename);
+  file.trim_quotes();
 
   // Install symbols in correct context (page table)
   // The file format should be
@@ -378,7 +378,7 @@ static bool bx_dbg_strprefix(const char *s1, const char *s2)
   return strncmp(s1, s2, len)==0;
 }
 
-void bx_dbg_info_symbols_command(char *Symbol)
+void bx_dbg_info_symbols_command(const char *Symbol)
 {
   context_t* cntx = context_t::get_context(0);
 
@@ -426,7 +426,7 @@ void bx_dbg_info_symbols_command(char *Symbol)
   }
 }
 
-int bx_dbg_lbreakpoint_symbol_command(char *symbol)
+int bx_dbg_lbreakpoint_symbol_command(const char *symbol)
 {
   context_t* cntx = context_t::get_context(0);
   if(!cntx) {
