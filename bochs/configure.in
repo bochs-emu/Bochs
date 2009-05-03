@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.401 2009-05-03 08:43:40 vruppert Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.402 2009-05-03 18:31:23 sshwarts Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -256,18 +256,6 @@ AC_TRY_COMPILE([], [typedef struct { } __attribute__ ((packed)) junk;],
 
 AC_LANG_SAVE
 AC_LANG_CPLUSPLUS
-AC_MSG_CHECKING(for hash_map)
-AC_TRY_COMPILE([#include <hash_map>], [],
-   [
-     AC_MSG_RESULT(yes)
-     AC_DEFINE(BX_HAVE_HASH_MAP)
-   ], AC_MSG_RESULT(no))
-AC_MSG_CHECKING(for hash_map.h)
-AC_TRY_COMPILE([#include <hash_map.h>], [],
-   [
-     AC_MSG_RESULT(yes)
-     AC_DEFINE(BX_HAVE_HASH_MAP_H)
-   ], AC_MSG_RESULT(no))
 AC_MSG_CHECKING(for set)
 AC_TRY_COMPILE([#include <set>], [],
    [
@@ -279,6 +267,18 @@ AC_TRY_COMPILE([#include <set.h>], [],
    [
      AC_MSG_RESULT(yes)
      AC_DEFINE(BX_HAVE_SET_H)
+   ], AC_MSG_RESULT(no))
+AC_MSG_CHECKING(for map)
+AC_TRY_COMPILE([#include <map>], [],
+   [
+     AC_MSG_RESULT(yes)
+     AC_DEFINE(BX_HAVE_MAP)
+   ], AC_MSG_RESULT(no))
+AC_MSG_CHECKING(for map.h)
+AC_TRY_COMPILE([#include <map.h>], [],
+   [
+     AC_MSG_RESULT(yes)
+     AC_DEFINE(BX_HAVE_MAP_H)
    ], AC_MSG_RESULT(no))
 AC_LANG_RESTORE
 
@@ -2644,7 +2644,6 @@ case "$target" in
     AC_DEFINE(BX_NO_ATTRIBUTES, 1)
     AC_DEFINE(HAVE_TUNTAP, 0)
     AC_DEFINE(HAVE_ETHERTAP, 0)
-    AC_DEFINE(BX_HAVE_HASH_MAP, 0)
     ;;
   *-pc-windows*)
     INSTALL_TARGET='install_win32'
@@ -2683,8 +2682,6 @@ case "$target" in
     AC_DEFINE(inline, __forceinline)
     AC_DEFINE(BX_NO_EMPTY_STRUCTS, 1)
     AC_DEFINE(BX_NO_ATTRIBUTES, 1)
-    AC_DEFINE(BX_HAVE_HASH_MAP, 0)
-    AC_DEFINE(BX_HAVE_HASH_MAP_H, 0)
     AC_DEFINE(BX_HAVE_STRICMP, 0)
     AC_DEFINE(BX_HAVE_STRCASECMP, 0)
     AC_DEFINE(BX_HAVE_STRTOULL, 0)
