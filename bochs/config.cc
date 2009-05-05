@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.177 2009-05-03 19:21:38 sshwarts Exp $
+// $Id: config.cc,v 1.178 2009-05-05 17:16:31 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -2988,11 +2988,21 @@ static int parse_line_formatted(const char *context, int num_params, char *param
   else if (!strcmp(params[0], "ne2k")) {
     int tmp[6];
     char tmpchar[6];
+    char tmpdev[80];
     int valid = 0;
     int n;
     base = (bx_list_c*) SIM->get_param(BXPN_NE2K);
     if (!SIM->get_param_bool("enabled", base)->get()) {
       SIM->get_param_enum("ethmod", base)->set_by_name("null");
+    }
+    if (SIM->get_param_bool(BXPN_I440FX_SUPPORT)->get()) {
+      for (slot = 1; slot < 6; slot++) {
+        sprintf(tmpdev, "pci.slot.%d", slot);
+        if (!strcmp(SIM->get_param_string(tmpdev)->getptr(), "ne2k")) {
+          valid |= 0x03;
+          break;
+        }
+      }
     }
     for (i=1; i<num_params; i++) {
       if (!strncmp(params[i], "enabled=", 8)) {
@@ -3035,7 +3045,12 @@ static int parse_line_formatted(const char *context, int num_params, char *param
       if (valid == 0x07) {
         SIM->get_param_bool("enabled", base)->set(1);
       } else if (valid < 0x80) {
-        PARSE_ERR(("%s: ne2k directive incomplete (ioaddr, irq and mac are required)", context));
+        if ((valid & 0x03) != 0x03) {
+          PARSE_ERR(("%s: ne2k directive incomplete (ioaddr and irq are required)", context));
+        }
+        if ((valid & 0x04) == 0) {
+          PARSE_ERR(("%s: ne2k directive incomplete (mac address is required)", context));
+        }
       }
     } else {
       if (valid & 0x80) {
