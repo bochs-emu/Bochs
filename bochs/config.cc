@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.178 2009-05-05 17:16:31 vruppert Exp $
+// $Id: config.cc,v 1.179 2009-05-06 17:37:34 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -2637,15 +2637,6 @@ static int parse_line_formatted(const char *context, int num_params, char *param
     SIM->get_param_num(BXPN_KBD_PASTE_DELAY)->set(atol(params[1]));
     if (SIM->get_param_num(BXPN_KBD_PASTE_DELAY)->get() < 1000) {
       PARSE_ERR (("%s: keyboard_paste_delay not big enough!", context));
-    }
-  } else if (!strcmp(params[0], "ips")) {
-    PARSE_WARN(("%s: ips directive is DEPRECATED (use cpu directive parameter 'ips').", context));
-    if (num_params != 2) {
-      PARSE_ERR(("%s: ips directive: wrong # args.", context));
-    }
-    SIM->get_param_num(BXPN_IPS)->set(atol(params[1]));
-    if (SIM->get_param_num(BXPN_IPS)->get() < BX_MIN_IPS) {
-      PARSE_WARN(("%s: WARNING: ips is AWFULLY low!", context));
     }
   } else if (!strcmp(params[0], "text_snapshot_check")) {
     if (num_params != 2) {
