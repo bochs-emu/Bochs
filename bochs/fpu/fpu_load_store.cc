@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu_load_store.cc,v 1.33 2009-04-27 14:00:55 sshwarts Exp $
+// $Id: fpu_load_store.cc,v 1.34 2009-05-07 16:27:18 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -89,7 +89,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLD_SINGLE_REAL(bxInstruction_c *i)
   // convert to floatx80 format
   floatx80 result = float32_to_floatx80(load_reg, status);
 
-  if (! BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags)) {
+  unsigned unmasked = BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags);
+  if (! (unmasked & FPU_CW_Invalid)) {
     BX_CPU_THIS_PTR the_i387.FPU_push();
     BX_WRITE_FPU_REG(result, 0);
   }
@@ -121,7 +122,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLD_DOUBLE_REAL(bxInstruction_c *i)
   // convert to floatx80 format
   floatx80 result = float64_to_floatx80(load_reg, status);
 
-  if (! BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags)) {
+  unsigned unmasked = BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags);
+  if (! (unmasked & FPU_CW_Invalid)) {
     BX_CPU_THIS_PTR the_i387.FPU_push();
     BX_WRITE_FPU_REG(result, 0);
   }
