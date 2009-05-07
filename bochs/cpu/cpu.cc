@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.289 2009-04-18 21:09:50 sshwarts Exp $
+// $Id: cpu.cc,v 1.290 2009-05-07 12:00:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -656,11 +656,16 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
         BX_CPU_THIS_PTR debug_trap ||
         BX_HRQ ||
         BX_CPU_THIS_PTR get_TF()
-#if BX_X86_DEBUGGER
-        || (BX_CPU_THIS_PTR dr7 & 0xff)
-#endif
 #if BX_SUPPORT_VMX
-        || (BX_CPU_THIS_PTR vmx_interrupt_window)
+     || BX_CPU_THIS_PTR vmx_interrupt_window
+#endif
+#if BX_X86_DEBUGGER
+       // any debug code breakpoint is set
+     || ((BX_CPU_THIS_PTR dr7 & 0xff) &&
+           (((BX_CPU_THIS_PTR dr7 >> 16) & 3) == 0 ||
+            ((BX_CPU_THIS_PTR dr7 >> 20) & 3) == 0 ||
+            ((BX_CPU_THIS_PTR dr7 >> 24) & 3) == 0 ||
+            ((BX_CPU_THIS_PTR dr7 >> 28) & 3) == 0))
 #endif
         ))
     BX_CPU_THIS_PTR async_event = 0;

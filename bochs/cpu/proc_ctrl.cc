@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.295 2009-04-07 16:12:19 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.296 2009-05-07 12:00:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -345,10 +345,18 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_DdRd(bxInstruction_c *i)
       BX_CPU_THIS_PTR dr7 = (val_32 & 0xffff2fff) | 0x00000400;
 #endif
 #if BX_X86_DEBUGGER
-      // if we have breakpoints enabled then we must check
+      // if we have code breakpoints enabled then we must check
       // breakpoints condition in cpu loop
-      if(BX_CPU_THIS_PTR dr7 & 0xff)
-        BX_CPU_THIS_PTR async_event = 1;
+      if (BX_CPU_THIS_PTR dr7 & 0xff) {
+        if (((BX_CPU_THIS_PTR dr7 >> 16) & 3) == 0 ||
+            ((BX_CPU_THIS_PTR dr7 >> 20) & 3) == 0 ||
+            ((BX_CPU_THIS_PTR dr7 >> 24) & 3) == 0 ||
+            ((BX_CPU_THIS_PTR dr7 >> 28) & 3) == 0)
+        {
+          BX_INFO(("MOV_DdRd(): code breakpoint is set"));
+          BX_CPU_THIS_PTR async_event = 1;
+        }
+      }
 #endif
       break;
 
@@ -519,10 +527,18 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_DqRq(bxInstruction_c *i)
       BX_CPU_THIS_PTR dr7 = (val_64 & 0xffff2fff) | 0x00000400;
 
 #if BX_X86_DEBUGGER
-      // if we have breakpoints enabled then we must check
+      // if we have code breakpoints enabled then we must check
       // breakpoints condition in cpu loop
-      if(BX_CPU_THIS_PTR dr7 & 0xff)
-        BX_CPU_THIS_PTR async_event = 1;
+      if (BX_CPU_THIS_PTR dr7 & 0xff) {
+        if (((BX_CPU_THIS_PTR dr7 >> 16) & 3) == 0 ||
+            ((BX_CPU_THIS_PTR dr7 >> 20) & 3) == 0 ||
+            ((BX_CPU_THIS_PTR dr7 >> 24) & 3) == 0 ||
+            ((BX_CPU_THIS_PTR dr7 >> 28) & 3) == 0)
+        {
+          BX_INFO(("MOV_DdRd(): code breakpoint is set"));
+          BX_CPU_THIS_PTR async_event = 1;
+        }
+      }
 #endif
       break;
 

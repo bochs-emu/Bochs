@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: tasking.cc,v 1.71 2009-05-01 14:59:21 sshwarts Exp $
+// $Id: tasking.cc,v 1.72 2009-05-07 12:00:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -78,7 +78,7 @@
   // |                EBP                     | 3c  60  dynamic
   // |                ESP                     | 38  56  dynamic
   // |                EBX                     | 34  52  dynamic
-  // |                EDX                     | 30  48  dynamic
+  // |                EDX                     | 30  48  dyn amic
   // |                ECX                     | 2c  44  dynamic
   // |                EAX                     | 28  40  dynamic
   // |                EFLAGS                  | 24  36  dynamic
@@ -205,8 +205,6 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
   // used in the task switch are paged in.
   if (BX_CPU_THIS_PTR cr0.get_PG())
   {
-    dtranslate_linear(obase32, 0, BX_WRITE); // new TSS
-    dtranslate_linear(obase32 + old_TSS_max, 0, BX_WRITE);
     dtranslate_linear(nbase32, 0, BX_READ);  // old TSS
     dtranslate_linear(nbase32 + new_TSS_max, 0, BX_READ);
 
@@ -242,6 +240,12 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
   }
 
   if (BX_CPU_THIS_PTR tr.cache.type <= 3) {
+    // check that we won't page fault while writing
+    if (BX_CPU_THIS_PTR cr0.get_PG()) {
+      dtranslate_linear(Bit32u(obase32 + 14), 0, BX_WRITE);
+      dtranslate_linear(Bit32u(obase32 + 41), 0, BX_WRITE);
+    }
+
     temp16 = IP; access_write_linear(Bit32u(obase32 + 14), 2, 0, &temp16);
     temp16 = oldEFLAGS; access_write_linear(Bit32u(obase32 + 16), 2, 0, &temp16);
     temp16 = AX; access_write_linear(Bit32u(obase32 + 18), 2, 0, &temp16);
@@ -262,6 +266,12 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
                  access_write_linear(Bit32u(obase32 + 40), 2, 0, &temp16);
   }
   else {
+    // check that we won't page fault while writing
+    if (BX_CPU_THIS_PTR cr0.get_PG()) {
+      dtranslate_linear(Bit32u(obase32 + 0x20), 0, BX_WRITE);
+      dtranslate_linear(Bit32u(obase32 + 0x5d), 0, BX_WRITE);
+    }
+
     temp32 = EIP; access_write_linear(Bit32u(obase32 + 0x20), 4, 0, &temp32);
     temp32 = oldEFLAGS; access_write_linear(Bit32u(obase32 + 0x24), 4, 0, &temp32);
     temp32 = EAX; access_write_linear(Bit32u(obase32 + 0x28), 4, 0, &temp32);
