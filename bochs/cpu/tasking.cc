@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: tasking.cc,v 1.72 2009-05-07 12:00:02 sshwarts Exp $
+// $Id: tasking.cc,v 1.73 2009-05-07 12:02:34 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -78,7 +78,7 @@
   // |                EBP                     | 3c  60  dynamic
   // |                ESP                     | 38  56  dynamic
   // |                EBX                     | 34  52  dynamic
-  // |                EDX                     | 30  48  dyn amic
+  // |                EDX                     | 30  48  dynamic
   // |                ECX                     | 2c  44  dynamic
   // |                EAX                     | 28  40  dynamic
   // |                EFLAGS                  | 24  36  dynamic
