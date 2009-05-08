@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.181 2009-05-08 08:15:33 sshwarts Exp $
+// $Id: config.cc,v 1.182 2009-05-08 14:53:45 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -3467,9 +3467,6 @@ int bx_write_log_options(FILE *fp, bx_list_c *base)
 {
   fprintf(fp, "log: %s\n", SIM->get_param_string("filename", base)->getptr());
   fprintf(fp, "logprefix: %s\n", SIM->get_param_string("prefix", base)->getptr());
-#if BX_DEBUGGER
-  fprintf(fp, "debugger_log: %s\n", SIM->get_param_string("debugger_filename", base)->getptr());
-#endif
   fprintf(fp, "panic: action=%s\n",
       io->getaction(logfunctions::get_default_action(LOGLEV_PANIC)));
   fprintf(fp, "error: action=%s\n",
@@ -3492,6 +3489,27 @@ int bx_write_keyboard_options(FILE *fp)
     SIM->get_param_bool(BXPN_KBD_USEMAPPING)->get(),
     SIM->get_param_string(BXPN_KBD_KEYMAP)->getptr());
   fprintf(fp, "user_shortcut: keys=%s\n", SIM->get_param_string(BXPN_USER_SHORTCUT)->getptr());
+  return 0;
+}
+
+int bx_write_debugger_options(FILE *fp)
+{
+#if BX_DEBUGGER
+  fprintf(fp, "debugger_log: %s\n", SIM->get_param_string(BXPN_DEBUGGER_LOG_FILENAME)->getptr());
+  fprintf(fp, "magic_break: enabled=%d\n", bx_dbg.magic_break_enabled);
+  // TODO: debug symbols
+#endif
+#if BX_GDBSTUB
+  bx_list_c *base = (bx_list_c*) SIM->get_param(BXPN_GDBSTUB);
+  bx_bool enabled = SIM->get_param_bool("enabled", base)->get();
+  if (enabled) {
+    fprintf(fp, "gdbstub: enabled=%d, port=%d, text_base=%d, data_base=%d, bss_base=%d\n",
+            enabled, SIM->get_param_num("port", base)->get(), SIM->get_param_num("text_base", base)->get(),
+            SIM->get_param_num("data_base", base)->get(), SIM->get_param_num("bss_base", base)->get());
+  } else {
+    fprintf(fp, "# no gdb stub\n");
+  }
+#endif
   return 0;
 }
 
@@ -3525,6 +3543,15 @@ int bx_write_configuration(const char *rc, int overwrite)
     }
   }
 #endif
+
+  fprintf(fp, "plugin_ctrl: ");
+  base = (bx_list_c*) SIM->get_param(BXPN_PLUGIN_CTRL);
+  for (i=0; i<base->get_size(); i++) {
+    if (i > 0) fprintf(fp, ", ");
+    bx_param_bool_c *plugin = (bx_param_bool_c*)(base->get(i));
+    fprintf(fp, "%s=%d", plugin->get_name(), plugin->get());
+  }
+  fprintf(fp, "\n");
   fprintf(fp, "config_interface: %s\n", SIM->get_param_enum(BXPN_SEL_CONFIG_INTERFACE)->get_selected());
   fprintf(fp, "display_library: %s", SIM->get_param_enum(BXPN_SEL_DISPLAY_LIBRARY)->get_selected());
   strptr = SIM->get_param_string(BXPN_DISPLAYLIB_OPTIONS)->getptr();
@@ -3637,12 +3664,10 @@ int bx_write_configuration(const char *rc, int overwrite)
   strptr = SIM->get_param_string(BXPN_CONFIGURABLE_MSRS_PATH)->getptr();
   if (strlen(strptr) > 0)
     fprintf(fp, ", msrs=\"%s\"", strptr);
-#endif  
+#endif
   fprintf(fp, "\n");
   fprintf(fp, "print_timestamps: enabled=%d\n", bx_dbg.print_timestamps);
-#if BX_DEBUGGER
-  fprintf(fp, "magic_break: enabled=%d\n", bx_dbg.magic_break_enabled);
-#endif
+  bx_write_debugger_options(fp);
   fprintf(fp, "port_e9_hack: enabled=%d\n", SIM->get_param_bool(BXPN_PORT_E9_HACK)->get());
   fprintf(fp, "text_snapshot_check: enabled=%d\n", SIM->get_param_bool(BXPN_TEXT_SNAPSHOT_CHECK)->get());
   fprintf(fp, "private_colormap: enabled=%d\n", SIM->get_param_bool(BXPN_PRIVATE_COLORMAP)->get());
