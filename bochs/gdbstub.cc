@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gdbstub.cc,v 1.35 2008-12-05 22:34:42 sshwarts Exp $
+// $Id: gdbstub.cc,v 1.36 2009-05-09 07:38:12 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2006  The Bochs Project Team
@@ -95,7 +95,7 @@ static char get_debug_char(void)
 
 static const char hexchars[]="0123456789abcdef";
 
-static void put_reply(char* buffer)
+static void put_reply(const char* buffer)
 {
   unsigned char csum;
   int i;
@@ -192,9 +192,9 @@ void hex2mem(char* buf, unsigned char* mem, int count)
   }
 }
 
-char* mem2hex(char* mem, char* buf, int count)
+char* mem2hex(const Bit8u* mem, char* buf, int count)
 {
-  unsigned char ch;
+  Bit8u ch;
 
   for (int i = 0; i<count; i++)
   {
@@ -237,7 +237,7 @@ static int other_thread = 0;
 #if !BX_SUPPORT_X86_64
 #define NUMREGS (16)
 #define NUMREGSBYTES (NUMREGS * 4)
-static int registers[NUMREGS];
+static Bit32u registers[NUMREGS];
 #endif
 
 #define MAX_BREAKPOINTS (255)
@@ -432,9 +432,9 @@ static int access_linear(Bit64u laddress,
 static void debug_loop(void)
 {
   char buffer[255];
-  char obuf[255];
+  char obuf[1024];
   int ne = 0;
-  unsigned char mem[255];
+  Bit8u mem[255];
 
   while (ne == 0)
   {
@@ -557,7 +557,7 @@ static void debug_loop(void)
         BX_INFO(("addr %Lx len %x", addr, len));
 
         access_linear(addr, len, BX_READ, mem);
-        mem2hex((char *)mem, obuf, len);
+        mem2hex(mem, obuf, len);
         put_reply(obuf);
         break;
       }
@@ -569,7 +569,7 @@ static void debug_loop(void)
         char* ebuf;
 
         reg = strtoul(&buffer[1], &ebuf, 16);
-	++ebuf;
+        ++ebuf;
         value = read_little_endian_hex(ebuf);
 
         BX_INFO(("reg %d set to %Lx", reg, value));
@@ -699,40 +699,41 @@ static void debug_loop(void)
 
       case 'g':
 #if BX_SUPPORT_X86_64 == 0
-        registers[0] = EAX;
-        registers[1] = ECX;
-        registers[2] = EDX;
-        registers[3] = EBX;
-        registers[4] = ESP;
-        registers[5] = EBP;
-        registers[6] = ESI;
-        registers[7] = EDI;
+        WriteHostDWordToLittleEndian(registers + 0, EAX);
+        WriteHostDWordToLittleEndian(registers + 1, ECX);
+        WriteHostDWordToLittleEndian(registers + 2, EDX);
+        WriteHostDWordToLittleEndian(registers + 3, EBX);
+        WriteHostDWordToLittleEndian(registers + 4, ESP);
+        WriteHostDWordToLittleEndian(registers + 5, EBP);
+        WriteHostDWordToLittleEndian(registers + 6, ESI);
+        WriteHostDWordToLittleEndian(registers + 7, EDI);
         if (last_stop_reason == GDBSTUB_EXECUTION_BREAKPOINT)
         {
-          registers[8] = EIP + 1;
+          WriteHostDWordToLittleEndian(registers + 8, EIP + 1);
         }
         else
         {
-          registers[8] = EIP;
+          WriteHostDWordToLittleEndian(registers + 8, EIP);
         }
-        registers[9] = BX_CPU_THIS_PTR read_eflags();
-        registers[10] =
-          BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value;
-        registers[11] =
-          BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value;
-        registers[12] =
-          BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.value;
-        registers[13] =
-          BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.value;
-        registers[14] =
-          BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].selector.value;
-        registers[15] =
-          BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].selector.value;
-        mem2hex((char *)registers, obuf, NUMREGSBYTES);
+        WriteHostDWordToLittleEndian(registers + 9,
+                                     BX_CPU_THIS_PTR read_eflags());
+        WriteHostDWordToLittleEndian(registers + 10,
+          BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value);
+        WriteHostDWordToLittleEndian(registers + 11,
+          BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value);
+        WriteHostDWordToLittleEndian(registers + 12,
+          BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.value);
+        WriteHostDWordToLittleEndian(registers + 13,
+          BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.value);
+        WriteHostDWordToLittleEndian(registers + 14,
+          BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].selector.value);
+        WriteHostDWordToLittleEndian(registers + 15,
+          BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].selector.value);
+        mem2hex(registers, obuf, NUMREGSBYTES);
 #else
 #define PUTREG(buf, val, len) do { \
          Bit64u u = (val); \
-         (buf) = mem2hex((char*)&u, (buf), (len)); \
+         (buf) = mem2hex((Bit8u*)&u, (buf), (len)); \
       } while (0)
         char* buf;
         buf = obuf;
