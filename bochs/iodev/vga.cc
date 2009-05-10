@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.165 2009-04-21 20:32:20 sshwarts Exp $
+// $Id: vga.cc,v 1.166 2009-05-10 07:57:26 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -286,17 +286,15 @@ void bx_vga_c::init(void)
   // The following is for the vbe display extension
   BX_VGA_THIS vbe.enabled=0;
   BX_VGA_THIS vbe.dac_8bit=0;
+  BX_VGA_THIS vbe.base_address = 0x0000;
   if (!strcmp(extname, "vbe")) {
     for (addr=VBE_DISPI_IOPORT_INDEX; addr<=VBE_DISPI_IOPORT_DATA; addr++) {
       DEV_register_ioread_handler(this, vbe_read_handler, addr, "vga video", 7);
       DEV_register_iowrite_handler(this, vbe_write_handler, addr, "vga video", 7);
     }
 #if BX_SUPPORT_PCI
-    if ((SIM->get_param_bool(BXPN_I440FX_SUPPORT)->get()) &&
-        (DEV_is_pci_device(BX_PLUGIN_PCIVGA))) {
-      BX_VGA_THIS vbe.base_address = 0x0000;
-    }
-    else
+    if ((!SIM->get_param_bool(BXPN_I440FX_SUPPORT)->get()) ||
+        (!DEV_is_pci_device(BX_PLUGIN_PCIVGA)))
 #endif
     {
       BX_VGA_THIS vbe.base_address = VBE_DISPI_LFB_PHYSICAL_ADDRESS;
