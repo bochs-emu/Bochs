@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.231 2009-04-26 17:17:07 sshwarts Exp $
+// $Id: rombios.c,v 1.232 2009-05-10 08:25:58 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -937,7 +937,7 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.231 $ $Date: 2009-04-26 17:17:07 $";
+static char bios_cvs_version_string[] = "$Revision: 1.232 $ $Date: 2009-05-10 08:25:58 $";
 
 #define BIOS_COPYRIGHT_STRING "(c) 2002 MandrakeSoft S.A. Written by Kevin Lawton & the Bochs team."
 
@@ -3826,7 +3826,7 @@ int15_function(regs, ES, DS, FLAGS)
   Bit16u  base15_00;
   Bit8u   base23_16;
   Bit16u  ss;
-  Bit16u  CX,DX;
+  Bit16u  BX,CX,DX;
 
   Bit16u bRegister;
   Bit8u irqDisable;
@@ -4079,6 +4079,97 @@ ASM_END
 
       CLEAR_CF();
 #endif
+      break;
+
+  case 0x89:
+    // Switch to Protected Mode.
+    // ES:DI points to user-supplied GDT
+    // BH/BL contains starting interrupt numbers for PIC0/PIC1
+    // This subfunction does not return!
+
+// turn off interrupts
+ASM_START
+  cli
+ASM_END
+
+      set_enable_a20(1); // enable A20 line; we're supposed to fail if that fails
+
+      // Initialize CS descriptor for BIOS
+      write_word(ES, regs.u.r16.si+0x38+0, 0xffff);// limit 15:00 = normal 64K limit
+      write_word(ES, regs.u.r16.si+0x38+2, 0x0000);// base 15:00
+      write_byte(ES, regs.u.r16.si+0x38+4, 0x000f);// base 23:16 (hardcoded to f000:0000)
+      write_byte(ES, regs.u.r16.si+0x38+5, 0x9b);  // access
+      write_word(ES, regs.u.r16.si+0x38+6, 0x0000);// base 31:24/reserved/limit 19:16
+
+      BX = regs.u.r16.bx;
+ASM_START
+      // Compiler generates locals offset info relative to SP.
+      // Get BX (PIC offsets) from stack.
+      mov  bx, sp
+      SEG SS
+        mov  bx, _int15_function.BX [bx]
+
+      // Program PICs
+      mov al, #0x11 ; send initialisation commands
+      out 0x20, al
+      out 0xa0, al
+      mov al, bh
+      out 0x21, al
+      mov al, bl
+      out 0xa1, al
+      mov al, #0x04
+      out 0x21, al
+      mov al, #0x02
+      out 0xa1, al
+      mov al, #0x01
+      out 0x21, al
+      out 0xa1, al
+      mov  al, #0xff ; mask all IRQs, user must re-enable
+      out  0x21, al
+      out  0xa1, al
+
+      // Load GDT and IDT from supplied data
+      SEG ES
+        lgdt [si + 0x08]
+      SEG ES
+        lidt [si + 0x10]
+
+      // set PE bit in CR0
+      mov  eax, cr0
+      or   al, #0x01
+      mov  cr0, eax
+      // far jump to flush CPU queue after transition to protected mode
+      JMP_AP(0x0038, protmode_switch)
+
+protmode_switch:
+      ;; GDT points to valid descriptor table, now load SS, DS, ES
+      mov  ax, #0x28
+      mov  ss, ax
+      mov  ax, #0x18
+      mov  ds, ax
+      mov  ax, #0x20
+      mov  es, ax
+
+      // unwind the stack - this will break if calling sequence changes!
+      mov   sp,bp
+      add   sp,#4   ; skip return address
+      popa          ; restore regs
+      pop   ax      ; skip saved es
+      pop   ax      ; skip saved ds
+      pop   ax      ; skip saved flags
+
+      // return to caller - note that we do not use IRET because
+      // we cannot enable interrupts
+      pop   cx          ; get return offset
+      pop   ax          ; skip return segment
+      pop   ax          ; skip flags
+      mov   ax, #0x30   ; ah must be 0 on successful exit
+      push  ax
+      push  cx          ; re-create modified ret address on stack
+      retf
+
+ASM_END
+
       break;
 
     case 0x90:
