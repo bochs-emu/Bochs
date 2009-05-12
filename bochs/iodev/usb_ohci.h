@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_ohci.h,v 1.15 2009-04-06 09:30:25 vruppert Exp $
+// $Id: usb_ohci.h,v 1.16 2009-05-12 16:18:19 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Benjamin D Lunt (fys at frontiernet net)
@@ -136,7 +136,7 @@ struct OHCI_ISO_TD {
 
 
 typedef struct {
-  bx_phy_address base_addr;
+  Bit32u base_addr;
 
   int   frame_index;
   int   interval_index;
