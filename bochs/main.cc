@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.399 2009-04-23 18:28:17 sshwarts Exp $
+// $Id: main.cc,v 1.400 2009-05-13 17:26:45 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -62,10 +62,6 @@
 extern "C" {
 #include <signal.h>
 }
-
-#if defined(__MINGW32__) || defined(_MSC_VER)
-void alarm(int);
-#endif
 
 #if BX_GUI_SIGHANDLER
 bx_bool bx_gui_sighandler = 0;
@@ -1144,10 +1140,10 @@ void bx_init_hardware()
 #endif
 
 #if BX_SHOW_IPS
-#if !defined(__MINGW32__) && !defined(_MSC_VER)
+#if !defined(WIN32)
   signal(SIGALRM, bx_signal_handler);
-#endif
   alarm(1);
+#endif
 #endif
 }
 
@@ -1239,7 +1235,7 @@ void CDECL bx_signal_handler(int signum)
            (unsigned) ips_count, (unsigned) (ticks_count/counts), (unsigned) counts);
       }
     }
-#if !defined(__MINGW32__) && !defined(_MSC_VER)
+#if !defined(WIN32)
     signal(SIGALRM, bx_signal_handler);
     alarm(1);
 #endif
