@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wx.cc,v 1.100 2009-04-10 08:15:25 vruppert Exp $
+// $Id: wx.cc,v 1.101 2009-05-14 09:01:00 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxWidgets VGA display for Bochs.  wx.cc implements a custom
@@ -166,6 +166,13 @@ void MyPanel::OnTimer(wxTimerEvent& WXUNUSED(event))
     IFDBG_VGA(wxLogDebug(wxT("calling refresh")));
     Refresh(FALSE);
   }
+#if BX_SHOW_IPS && defined(WIN32)
+  static int i = 10;
+  if (--i <= 0) {
+    bx_signal_handler(SIGALRM);
+    i = 10;
+  }
+#endif
 }
 
 void MyPanel::OnPaint(wxPaintEvent& WXUNUSED(event))
@@ -1646,10 +1653,12 @@ int bx_wx_gui_c::set_clipboard_text(char *text_snapshot, Bit32u len)
 void bx_wx_gui_c::show_ips(Bit32u ips_count)
 {
   char ips_text[40];
-  wxMutexGuiEnter();
+  bx_bool is_main_thread = wxThread::IsMain();
+  bx_bool needmutex = !is_main_thread && SIM->is_sim_thread();
+  if (needmutex) wxMutexGuiEnter();
   sprintf(ips_text, "IPS: %9u", ips_count);
   theFrame->SetStatusText(wxString(ips_text, wxConvUTF8), 0);
-  wxMutexGuiLeave();
+  if (needmutex) wxMutexGuiLeave();
 }
 #endif
 
