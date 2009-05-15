@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.194 2009-05-03 19:29:19 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.195 2009-05-15 18:48:17 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -660,7 +660,22 @@ void bx_dbg_print_sse_state(void)
 {
 #if BX_SUPPORT_SSE
   Bit32u mxcsr = SIM->get_param_num("SSE.mxcsr", dbg_cpu_list)->get();
-  dbg_printf("MXCSR: 0x%08x\n", mxcsr);
+  dbg_printf("MXCSR: 0x%08x: %s %s RC:%d %s %s %s %s %s %s %s %s %s %s %s %s\n", mxcsr,
+     (mxcsr & (1<<17)) ? "MM" : "mm",
+     (mxcsr & (1<<15)) ? "FUZ" : "fuz",
+     (mxcsr >> 12) & 3,
+     (mxcsr & (1<<11)) ? "PM" : "pm",
+     (mxcsr & (1<<10)) ? "UM" : "um",
+     (mxcsr & (1<<9)) ? "OM" : "om",
+     (mxcsr & (1<<8)) ? "ZM" : "zm",
+     (mxcsr & (1<<7)) ? "DM" : "dm",
+     (mxcsr & (1<<6)) ? "IM" : "im",
+     (mxcsr & (1<<5)) ? "PE" : "pe",
+     (mxcsr & (1<<4)) ? "UE" : "ue",
+     (mxcsr & (1<<3)) ? "OE" : "oe",
+     (mxcsr & (1<<2)) ? "ZE" : "ze",
+     (mxcsr & (1<<1)) ? "DE" : "de",
+     (mxcsr & (1<<0)) ? "IE" : "ie");
 
   char param_name[20];
   for(unsigned i=0;i<BX_XMM_REGISTERS;i++) {
