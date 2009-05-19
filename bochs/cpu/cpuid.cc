@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpuid.cc,v 1.81 2009-05-19 15:46:07 sshwarts Exp $
+// $Id: cpuid.cc,v 1.82 2009-05-19 18:54:05 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007 Stanislav Shwartsman
@@ -244,6 +244,21 @@ Bit32u BX_CPU_C::get_std_cpuid_features(void)
   features |= (1<<8);             // support CMPXCHG8B instruction
 #endif
 
+#if BX_SUPPORT_APIC
+  // if MSR_APICBASE APIC Global Enable bit has been cleared,
+  // the CPUID feature flag for the APIC is set to 0.
+  if (BX_CPU_THIS_PTR msr.apicbase & 0x800)
+    features |= (1<<9); // APIC on chip
+#endif
+
+#if BX_SUPPORT_SEP
+  features |= (1<<11);  // SYSENTER/SYSEXIT
+#endif
+
+#if BX_SUPPORT_CLFLUSH
+  features |= (1<<19);  // Implement CLFLUSH instruction
+#endif
+
 #if BX_SUPPORT_MMX
   features |= (1<<23);  // support MMX
 #endif
@@ -252,28 +267,15 @@ Bit32u BX_CPU_C::get_std_cpuid_features(void)
   features |= (1<<24);  // Implement FSAVE/FXRSTOR instructions.
 #endif
 
-#if BX_SUPPORT_CLFLUSH
-  features |= (1<<19);  // Implement CLFLUSH instruction
-#endif
-
-#if BX_CPU_LEVEL >= 6
-  features |= (1<<15);  // Implement CMOV instructions.
-#if BX_SUPPORT_APIC
-  // if MSR_APICBASE APIC Global Enable bit has been cleared,
-  // the CPUID feature flag for the APIC is set to 0.
-  if (BX_CPU_THIS_PTR msr.apicbase & 0x800)
-    features |= (1<<9); // APIC on chip
-#endif
 #if BX_SUPPORT_SSE >= 1
   features |= (1<<25);  // support SSE
 #endif
 #if BX_SUPPORT_SSE >= 2
   features |= (1<<26);  // support SSE2
 #endif
-#endif
 
-#if BX_SUPPORT_SEP
-  features |= (1<<11);  // SYSENTER/SYSEXIT
+#if BX_CPU_LEVEL >= 6
+  features |= (1<<15);  // Implement CMOV instructions.
 #endif
 
 #if BX_SUPPORT_LARGE_PAGES
@@ -431,7 +433,6 @@ void BX_CPU_C::set_cpuid_defaults(void)
   //   [11:8]  Family: 4=486, 5=Pentium, 6=PPro, ...
   //   [13:12] Type: 0=OEM, 1=overdrive, 2=dual cpu, 3=reserved
   //   [31:14] Reserved
-
   cpuid->eax = get_cpu_version_information();
 
   // EBX:
@@ -684,7 +685,7 @@ void BX_CPU_C::set_cpuid_defaults(void)
 #if BX_SUPPORT_X86_64
   features |= (1 << 29) | (1 << 27) | (1 << 25) | (1 << 20) | (1 << 11);
 #if BX_SUPPORT_1G_PAGES
-  features |= (1 << 27);
+  features |= (1 << 26);
 #endif
 #endif
   cpuid->edx = features;
