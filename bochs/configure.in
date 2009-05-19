@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.403 2009-05-07 17:57:31 sshwarts Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.404 2009-05-19 18:07:42 sshwarts Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -1014,9 +1014,9 @@ if test "$bx_cpu_level" -lt 5 -a "$support_global_pages" = 1; then
   AC_MSG_ERROR([for Global Pages support the CPU level must be >= 5])
 fi
 
-AC_MSG_CHECKING(for MTRRs support)
+AC_MSG_CHECKING(for MTRR/PAT support)
 AC_ARG_ENABLE(mtrr,
-  [  --enable-mtrr                     support for MTRRs],
+  [  --enable-mtrr                     support for MTRR/PAT registers],
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
     AC_DEFINE(BX_SUPPORT_MTRR, 1)
