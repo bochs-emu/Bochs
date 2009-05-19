@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu_arith.cc,v 1.19 2009-04-27 14:00:55 sshwarts Exp $
+// $Id: fpu_arith.cc,v 1.20 2009-05-19 08:09:15 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -67,20 +67,24 @@ floatx80 FPU_handle_NaN(floatx80 a, int aIsNaN, float32 b32, int bIsNaN, float_s
     int aIsSignalingNaN = floatx80_is_signaling_nan(a);
     int bIsSignalingNaN = float32_is_signaling_nan(b32);
 
+    if (aIsSignalingNaN | bIsSignalingNaN)
+        float_raise(status, float_flag_invalid);
+
     // propogate QNaN to SNaN
     a = propagateFloatx80NaN(a, status);
+
+    if (aIsNaN & !bIsNaN) return a;
 
     // float32 is NaN so conversion will propagate SNaN to QNaN and raise
     // appropriate exception flags
     floatx80 b = float32_to_floatx80(b32, status);
 
-    if (aIsSignalingNaN | bIsSignalingNaN) float_raise(status, float_flag_invalid);
     if (aIsSignalingNaN) {
         if (bIsSignalingNaN) goto returnLargerSignificand;
         return bIsNaN ? b : a;
     }
     else if (aIsNaN) {
-        if (bIsSignalingNaN | ! bIsNaN) return a;
+        if (bIsSignalingNaN) return a;
  returnLargerSignificand:
         if (a.fraction < b.fraction) return b;
         if (b.fraction < a.fraction) return a;
@@ -112,20 +116,24 @@ floatx80 FPU_handle_NaN(floatx80 a, int aIsNaN, float64 b64, int bIsNaN, float_s
     int aIsSignalingNaN = floatx80_is_signaling_nan(a);
     int bIsSignalingNaN = float64_is_signaling_nan(b64);
 
+    if (aIsSignalingNaN | bIsSignalingNaN)
+        float_raise(status, float_flag_invalid);
+
     // propogate QNaN to SNaN
     a = propagateFloatx80NaN(a, status);
+
+    if (aIsNaN & !bIsNaN) return a;
 
     // float64 is NaN so conversion will propagate SNaN to QNaN and raise
     // appropriate exception flags
     floatx80 b = float64_to_floatx80(b64, status);
 
-    if (aIsSignalingNaN | bIsSignalingNaN) float_raise(status, float_flag_invalid);
     if (aIsSignalingNaN) {
         if (bIsSignalingNaN) goto returnLargerSignificand;
         return bIsNaN ? b : a;
     }
     else if (aIsNaN) {
-        if (bIsSignalingNaN | ! bIsNaN) return a;
+        if (bIsSignalingNaN) return a;
  returnLargerSignificand:
         if (a.fraction < b.fraction) return b;
         if (b.fraction < a.fraction) return a;
