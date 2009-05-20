@@ -2312,17 +2312,27 @@ floatx80 floatx80_round_to_int(floatx80 a, float_status_t &status)
         aSign = extractFloatx80Sign(a);
         switch (get_float_rounding_mode(status)) {
          case float_round_nearest_even:
-            if ((aExp == 0x3FFE) && (Bit64u) (aSig<<1))
+            if ((aExp == 0x3FFE) && (Bit64u) (aSig<<1)) {
+                set_float_rounding_up(status);
                 return packFloatx80(aSign, 0x3FFF, BX_CONST64(0x8000000000000000));
+            }
             break;
          case float_round_down:
-            return aSign ?
-                      packFloatx80(1, 0x3FFF, BX_CONST64(0x8000000000000000))
-		                : packFloatx80(0, 0, 0);
+            if (aSign) {
+                set_float_rounding_up(status);
+                return packFloatx80(1, 0x3FFF, BX_CONST64(0x8000000000000000));
+            }
+            else {
+                return packFloatx80(0, 0, 0);
+            }
          case float_round_up:
-            return aSign ?
-                      packFloatx80(1, 0, 0)
-        		        : packFloatx80(0, 0x3FFF, BX_CONST64(0x8000000000000000));
+            if (aSign) {
+                return packFloatx80(1, 0, 0);
+            }
+            else {
+                set_float_rounding_up(status);
+                return packFloatx80(0, 0x3FFF, BX_CONST64(0x8000000000000000));
+            }
         }
         return packFloatx80(aSign, 0, 0);
     }
@@ -2345,6 +2355,8 @@ floatx80 floatx80_round_to_int(floatx80 a, float_status_t &status)
         z.fraction = BX_CONST64(0x8000000000000000);
     }
     if (z.fraction != a.fraction) float_raise(status, float_flag_inexact);
+    if (z.fraction > a.fraction)
+        set_float_rounding_up(status);
     return z;
 }
 
