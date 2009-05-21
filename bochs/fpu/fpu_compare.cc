@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu_compare.cc,v 1.23 2009-04-27 14:00:55 sshwarts Exp $
+// $Id: fpu_compare.cc,v 1.24 2009-05-21 12:20:06 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -237,7 +237,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FCOM_SINGLE_REAL(bxInstruction_c *i)
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
 
-  int pop_stack = i->nnn() & 1;
+  int pop_stack = i->nnn() & 1, rc;
 
   RMAddr(i) = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
   float32 load_reg = read_virtual_dword(i->seg(), RMAddr(i));
@@ -262,8 +262,15 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FCOM_SINGLE_REAL(bxInstruction_c *i)
   float_status_t status =
       FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
 
-  int rc = floatx80_compare(BX_READ_FPU_REG(0),
-                      float32_to_floatx80(load_reg, status), status);
+  floatx80 a = BX_READ_FPU_REG(0);
+
+  if (floatx80_is_nan(a) || float32_is_nan(load_reg)) {
+    rc = float_relation_unordered;
+    float_raise(status, float_flag_invalid);
+  }
+  else {
+    rc = floatx80_compare(a, float32_to_floatx80(load_reg, status), status);
+  }
   setcc(status_word_flags_fpu_compare(rc));
 
   if (! BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags)) {
@@ -280,7 +287,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FCOM_DOUBLE_REAL(bxInstruction_c *i)
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
 
-  int pop_stack = i->nnn() & 1;
+  int pop_stack = i->nnn() & 1, rc;
 
   RMAddr(i) = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
   float64 load_reg = read_virtual_qword(i->seg(), RMAddr(i));
@@ -305,8 +312,15 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FCOM_DOUBLE_REAL(bxInstruction_c *i)
   float_status_t status =
       FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
 
-  int rc = floatx80_compare(BX_READ_FPU_REG(0),
-                       float64_to_floatx80(load_reg, status), status);
+  floatx80 a = BX_READ_FPU_REG(0);
+
+  if (floatx80_is_nan(a) || float64_is_nan(load_reg)) {
+    rc = float_relation_unordered;
+    float_raise(status, float_flag_invalid);
+  }
+  else {
+    rc = floatx80_compare(a, float64_to_floatx80(load_reg, status), status);
+  }
   setcc(status_word_flags_fpu_compare(rc));
 
   if (! BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags)) {
