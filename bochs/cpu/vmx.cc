@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmx.cc,v 1.15 2009-05-03 13:02:14 sshwarts Exp $
+// $Id: vmx.cc,v 1.16 2009-05-21 10:39:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2009 Stanislav Shwartsman
@@ -406,12 +406,12 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
   //
 
   if (~vm->vmentry_ctrls & VMX_MSR_VMX_VMENTRY_CTRLS_LO) {
-     BX_ERROR(("VMFAIL: VMCS EXEC CTRL: VMX ventry controls allowed 0-settings"));
+     BX_ERROR(("VMFAIL: VMCS EXEC CTRL: VMX vmentry controls allowed 0-settings"));
      return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
   }
 
   if (vm->vmentry_ctrls & ~VMX_MSR_VMX_VMENTRY_CTRLS_HI) {
-     BX_ERROR(("VMFAIL: VMCS EXEC CTRL: VMX ventry controls allowed 1-settings"));
+     BX_ERROR(("VMFAIL: VMCS EXEC CTRL: VMX vmentry controls allowed 1-settings"));
      return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
   }
 
@@ -1153,6 +1153,13 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
     }
   }
 
+  if (guest.interruptibility_state & BX_VMX_INTERRUPTS_BLOCKED_SMI_BLOCKED) {
+    if (! BX_CPU_THIS_PTR in_smm) {
+      BX_ERROR(("VMENTER FAIL: VMCS SMI blocked when not in SMM mode"));
+      return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
+    }
+  }
+
   //
   // Load Guest State -> VMENTER
   //
@@ -1436,8 +1443,8 @@ void BX_CPU_C::VMexitSaveGuestState(void)
   VMwrite64(VMCS_GUEST_PENDING_DBG_EXCEPTIONS, tmpDR6 & 0x0000500f);
   
   Bit32u interruptibility_state = 0;
-  if (BX_CPU_THIS_PTR inhibit_mask & BX_INHIBIT_INTERRUPTS) {
-     if (BX_CPU_THIS_PTR inhibit_mask & BX_INHIBIT_DEBUG)
+  if (BX_CPU_THIS_PTR inhibit_mask & BX_INHIBIT_INTERRUPTS_SHADOW) {
+     if (BX_CPU_THIS_PTR inhibit_mask & BX_INHIBIT_DEBUG_SHADOW)
         interruptibility_state |= BX_VMX_INTERRUPTS_BLOCKED_BY_MOV_SS;
      else
         interruptibility_state |= BX_VMX_INTERRUPTS_BLOCKED_BY_STI;
@@ -1890,7 +1897,7 @@ void BX_CPU_C::VMLAUNCH(bxInstruction_c *i)
     return;
   }
 
-  if (BX_CPU_THIS_PTR inhibit_mask == (BX_INHIBIT_INTERRUPTS | BX_INHIBIT_DEBUG)) {
+  if ((BX_CPU_THIS_PTR inhibit_mask & BX_INHIBIT_INTERRUPTS_BY_MOVSS_SHADOW) == BX_INHIBIT_INTERRUPTS_BY_MOVSS_SHADOW) {
     BX_ERROR(("VMFAIL: VMLAUNCH with interrupts blocked by MOV_SS !"));
     VMfail(VMXERR_VMENTRY_MOV_SS_BLOCKING);
     return;
@@ -2671,6 +2678,7 @@ void BX_CPU_C::VMCLEAR(bxInstruction_c *i)
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
   Bit64u pAddr = read_virtual_qword(i->seg(), eaddr); // keep 64-bit
   if ((pAddr & 0xfff) != 0 || ! IsValidPhyAddr(pAddr)) {
+    BX_ERROR(("VMFAIL: VMCLEAR with invalid physical address!"));
     VMfail(VMXERR_VMCLEAR_WITH_INVALID_ADDR);
     return;
   }

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.596 2009-05-03 13:02:14 sshwarts Exp $
+// $Id: cpu.h,v 1.597 2009-05-21 10:39:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -809,8 +809,16 @@ public: // for now...
   bx_address prev_rsp;
   bx_bool    speculative_rsp;
 
-#define BX_INHIBIT_INTERRUPTS 0x01
-#define BX_INHIBIT_DEBUG      0x02
+#define BX_INHIBIT_INTERRUPTS        0x01
+#define BX_INHIBIT_DEBUG             0x02
+#define BX_INHIBIT_INTERRUPTS_SHADOW 0x04
+#define BX_INHIBIT_DEBUG_SHADOW      0x08
+
+#define BX_INHIBIT_INTERRUPTS_BY_MOVSS        \
+    (BX_INHIBIT_INTERRUPTS | BX_INHIBIT_DEBUG)
+#define BX_INHIBIT_INTERRUPTS_BY_MOVSS_SHADOW \
+    (BX_INHIBIT_INTERRUPTS_SHADOW | BX_INHIBIT_DEBUG_SHADOW)
+
   // What events to inhibit at any given time.  Certain instructions
   // inhibit interrupts, some debug exceptions and single-step traps.
   unsigned inhibit_mask;

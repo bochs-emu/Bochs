@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.cc,v 1.128 2009-02-22 10:44:50 vruppert Exp $
+// $Id: apic.cc,v 1.129 2009-05-21 10:39:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (c) 2002 Zwane Mwaikambo, Stanislav Shwartsman
@@ -186,8 +186,6 @@ bx_local_apic_c::bx_local_apic_c(BX_CPU_C *mycpu, unsigned id)
 void bx_local_apic_c::reset(unsigned type)
 {
   int i;
-
-  BX_INFO(("local apic %d initializing", apic_id));
 
   // default address for a local APIC, can be moved
   base_addr = BX_LAPIC_BASE_ADDR;

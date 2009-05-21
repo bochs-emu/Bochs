@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.290 2009-05-07 12:00:02 sshwarts Exp $
+// $Id: cpu.cc,v 1.291 2009-05-21 10:39:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -469,6 +469,10 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
     return 1; // Return to caller of cpu_loop.
   }
 
+  // VMLAUNCH/VMRESUME cannot be executed with interrupts inhibited.
+  // Save inhibit interrupts state into shadow bits after clearing
+  BX_CPU_THIS_PTR inhibit_mask = (BX_CPU_THIS_PTR inhibit_mask << 2) & 0xF;
+
   // Priority 1: Hardware Reset and Machine Checks
   //   RESET
   //   Machine Check
@@ -506,7 +510,7 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
   //   Breakpoints
   //   Debug Trap Exceptions (TF flag set or data/IO breakpoint)
   if (BX_CPU_THIS_PTR debug_trap &&
-       !(BX_CPU_THIS_PTR inhibit_mask & BX_INHIBIT_DEBUG))
+       !(BX_CPU_THIS_PTR inhibit_mask & BX_INHIBIT_DEBUG_SHADOW))
   {
     // A trap may be inhibited on this boundary due to an instruction
     // which loaded SS.  If so we clear the inhibit_mask below
@@ -517,7 +521,7 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
   // Priority 5: External Interrupts
   //   NMI Interrupts
   //   Maskable Hardware Interrupts
-  if (BX_CPU_THIS_PTR inhibit_mask & BX_INHIBIT_INTERRUPTS) {
+  if (BX_CPU_THIS_PTR inhibit_mask & BX_INHIBIT_INTERRUPTS_SHADOW) {
     // Processing external interrupts is inhibited on this
     // boundary because of certain instructions like STI.
     // inhibit_mask is cleared below, in which case we will have
@@ -638,7 +642,7 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
         // If debug events are not inhibited on this boundary,
         // fire off a debug fault.  Otherwise handle it on the next
         // boundary. (becomes a trap)
-        if (! (BX_CPU_THIS_PTR inhibit_mask & BX_INHIBIT_DEBUG)) {
+        if (! (BX_CPU_THIS_PTR inhibit_mask & BX_INHIBIT_DEBUG_SHADOW)) {
           BX_ERROR(("#DB: x86 code breakpoint catched"));
           exception(BX_DB_EXCEPTION, 0, 0); // no error, not interrupt
         }
@@ -647,17 +651,12 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
   }
 #endif
 
-  // We have ignored processing of external interrupts and
-  // debug events on this boundary.  Reset the mask so they
-  // will be processed on the next boundary.
-  BX_CPU_THIS_PTR inhibit_mask = 0;
-
   if (!((BX_CPU_INTR && BX_CPU_THIS_PTR get_IF()) ||
         BX_CPU_THIS_PTR debug_trap ||
         BX_HRQ ||
         BX_CPU_THIS_PTR get_TF()
 #if BX_SUPPORT_VMX
-     || BX_CPU_THIS_PTR vmx_interrupt_window
+     || BX_CPU_THIS_PTR vmx_interrupt_window || BX_CPU_THIS_PTR inhibit_mask
 #endif
 #if BX_X86_DEBUGGER
        // any debug code breakpoint is set
