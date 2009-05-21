@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu_load_store.cc,v 1.34 2009-05-07 16:27:18 sshwarts Exp $
+// $Id: fpu_load_store.cc,v 1.35 2009-05-21 14:33:06 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -590,9 +590,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FBSTP_PACKED_BCD(bxInstruction_c *i)
      if (sign)
         save_val = -save_val;
 
-     if (save_val > BX_CONST64(999999999999999999))
-     {
-        float_raise(status, float_flag_invalid);
+     if (save_val > BX_CONST64(999999999999999999)) {
+        status.float_exception_flags = float_flag_invalid; // throw away other flags
      }
 
      if (! (status.float_exception_flags & float_flag_invalid))
@@ -600,8 +599,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FBSTP_PACKED_BCD(bxInstruction_c *i)
         save_reg_hi = (sign) ? 0x8000 : 0;
         save_reg_lo = 0;
 
-        for (int i=0; i<16; i++)
-        {
+        for (int i=0; i<16; i++) {
            save_reg_lo += ((Bit64u)(save_val % 10)) << (4*i);
            save_val /= 10;
         }
