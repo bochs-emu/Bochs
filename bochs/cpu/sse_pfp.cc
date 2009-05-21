@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_pfp.cc,v 1.54 2009-04-11 17:00:28 sshwarts Exp $
+// $Id: sse_pfp.cc,v 1.55 2009-05-21 11:44:59 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -3047,15 +3047,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROUNDPS_VpsWpsIb(bxInstruction_c *i)
     op.xmm32u(3) = float32_denormal_to_zero(op.xmm32u(3));
   }
 
-  for (unsigned j=0; j < 4; j++) {
-      if (float32_is_nan(op.xmm32u(j))) {
-          op.xmm32u(j) = propagateFloat32NaN(op.xmm32u(j), status_word);
-      }
-      else {
-          op.xmm32u(j) = float32_to_int32(op.xmm32u(j), status_word);
-          op.xmm32u(j) = int32_to_float32(op.xmm32u(j), status_word);
-      }
-  }
+  op.xmm32u(0) = float32_round_to_int(op.xmm32u(0), status_word);
+  op.xmm32u(1) = float32_round_to_int(op.xmm32u(1), status_word);
+  op.xmm32u(2) = float32_round_to_int(op.xmm32u(2), status_word);
+  op.xmm32u(3) = float32_round_to_int(op.xmm32u(3), status_word);
 
   // ignore precision exception result
   if (control & 0x8)
@@ -3100,15 +3095,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROUNDPD_VpdWpdIb(bxInstruction_c *i)
     op.xmm64u(1) = float64_denormal_to_zero(op.xmm64u(1));
   }
 
-  for (unsigned j=0; j < 2; j++) {
-      if (float64_is_nan(op.xmm64u(j))) {
-          op.xmm64u(j) = propagateFloat64NaN(op.xmm64u(j), status_word);
-      }
-      else {
-          op.xmm64u(j) = float64_to_int64(op.xmm64u(j), status_word);
-          op.xmm64u(j) = int64_to_float64(op.xmm64u(j), status_word);
-      }
-  }
+  op.xmm64u(0) = float64_round_to_int(op.xmm64u(0), status_word);
+  op.xmm64u(1) = float64_round_to_int(op.xmm64u(1), status_word);
 
   // ignore precision exception result
   if (control & 0x8)
@@ -3150,12 +3138,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROUNDSS_VssWssIb(bxInstruction_c *i)
 
   if (MXCSR.get_DAZ()) op = float32_denormal_to_zero(op);
 
-  if (float32_is_nan(op)) {
-      op = propagateFloat32NaN(op, status_word);
-  }
-  else {
-      op = int32_to_float32(float32_to_int32(op, status_word), status_word);
-  }
+  op = float32_round_to_int(op, status_word);
 
   // ignore precision exception result
   if (control & 0x8)
@@ -3197,10 +3180,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROUNDSD_VsdWsdIb(bxInstruction_c *i)
 
   if (MXCSR.get_DAZ()) op = float64_denormal_to_zero(op);
 
-  if (float64_is_nan(op))
-      op = propagateFloat64NaN(op, status_word);
-  else
-      op = int64_to_float64(float64_to_int64(op, status_word), status_word);
+  op = float64_round_to_int(op, status_word);
 
   // ignore precision exception result
   if (control & 0x8)
