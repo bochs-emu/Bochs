@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.210 2009-05-03 13:02:14 sshwarts Exp $
+// $Id: init.cc,v 1.211 2009-05-21 13:25:30 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -451,8 +451,8 @@ void BX_CPU_C::register_state(void)
   BXRS_HEX_PARAM_FIELD(MSR, mtrrphysmask7, msr.mtrrphys[15]);
 
   BXRS_HEX_PARAM_FIELD(MSR, mtrrfix64k_00000, msr.mtrrfix64k_00000);
-  BXRS_HEX_PARAM_FIELD(MSR, mtrrfix16k_80000, msr.mtrrfix16k_80000);
-  BXRS_HEX_PARAM_FIELD(MSR, mtrrfix16k_a0000, msr.mtrrfix16k_a0000);
+  BXRS_HEX_PARAM_FIELD(MSR, mtrrfix16k_80000, msr.mtrrfix16k[0]);
+  BXRS_HEX_PARAM_FIELD(MSR, mtrrfix16k_a0000, msr.mtrrfix16k[1]);
 
   BXRS_HEX_PARAM_FIELD(MSR, mtrrfix4k_c0000, msr.mtrrfix4k[0]);
   BXRS_HEX_PARAM_FIELD(MSR, mtrrfix4k_c8000, msr.mtrrfix4k[1]);
@@ -942,8 +942,8 @@ void BX_CPU_C::reset(unsigned source)
       BX_CPU_THIS_PTR msr.mtrrphys[n] = 0;
 
     BX_CPU_THIS_PTR msr.mtrrfix64k_00000 = 0; // all fix range MTRRs undefined according to manual
-    BX_CPU_THIS_PTR msr.mtrrfix16k_80000 = 0;
-    BX_CPU_THIS_PTR msr.mtrrfix16k_a0000 = 0;
+    BX_CPU_THIS_PTR msr.mtrrfix16k[0] = 0;
+    BX_CPU_THIS_PTR msr.mtrrfix16k[1] = 0;
 
     for (n=0; n<8; n++)
       BX_CPU_THIS_PTR msr.mtrrfix4k[n] = 0;
