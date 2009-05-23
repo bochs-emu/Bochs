@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rfb.cc,v 1.63 2009-02-08 09:05:52 vruppert Exp $
+// $Id: rfb.cc,v 1.64 2009-05-23 07:31:54 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2000  Psyon.Org!
@@ -24,7 +24,6 @@
 // RFB still to do :
 // - properly handle SetPixelFormat, including big/little-endian flag
 // - depth > 8bpp support
-// - full dimension update support (desktop size should be an option)
 // - optional compression support
 
 
@@ -95,6 +94,7 @@ typedef int SOCKET;
 
 static bool keep_alive;
 static bool client_connected;
+static bool desktop_resizable;
 
 #define BX_RFB_PORT_MIN 5900
 #define BX_RFB_PORT_MAX 5949
@@ -140,8 +140,10 @@ static struct {
     bool updated;
 } rfbUpdateRegion;
 
-#define BX_RFB_MAX_XDIM 720
-#define BX_RFB_MAX_YDIM 480
+#define BX_RFB_MAX_XDIM 1024
+#define BX_RFB_MAX_YDIM 768
+#define BX_RFB_DEF_XDIM 720
+#define BX_RFB_DEF_YDIM 480
 
 static char  *rfbScreen;
 static char  rfbPalette[256];
@@ -179,7 +181,7 @@ int  WriteExact(int sock, char *buf, int len);
 void DrawBitmap(int x, int y, int width, int height, char *bmap, char color, bool update_client);
 void DrawChar(int x, int y, int width, int height, int fonty, char *bmap, char color, bx_bool gfxchar);
 void UpdateScreen(unsigned char *newBits, int x, int y, int width, int height, bool update_client);
-void SendUpdate(int x, int y, int width, int height);
+void SendUpdate(int x, int y, int width, int height, Bit32u encoding);
 void StartThread();
 void rfbKeyPressed(Bit32u key, int press_release);
 void rfbMouseMove(int x, int y, int bmask);
@@ -221,8 +223,8 @@ void bx_rfb_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsi
   io->set_log_action(LOGLEV_PANIC, ACT_FATAL);
 
   rfbHeaderbarY = headerbar_y;
-  rfbDimensionX = BX_RFB_MAX_XDIM;
-  rfbDimensionY = BX_RFB_MAX_YDIM;
+  rfbDimensionX = BX_RFB_DEF_XDIM;
+  rfbDimensionY = BX_RFB_DEF_YDIM;
   rfbWindowX = rfbDimensionX;
   rfbWindowY = rfbDimensionY + rfbHeaderbarY + rfbStatusbarY;
   rfbTileX      = tilewidth;
@@ -256,6 +258,7 @@ void bx_rfb_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsi
 
   keep_alive = true;
   client_connected = false;
+  desktop_resizable = false;
   StartThread();
 
 #ifdef WIN32
@@ -422,214 +425,217 @@ end_of_thread:
 
 void HandleRfbClient(SOCKET sClient)
 {
-    char rfbName[] = "Bochs-RFB";
-    rfbProtocolVersionMessage pv;
-    int one = 1;
-    U32 auth;
-    rfbClientInitMessage cim;
-    rfbServerInitMessage sim;
+  char rfbName[] = "Bochs-RFB";
+  rfbProtocolVersionMessage pv;
+  int one = 1;
+  U32 auth;
+  rfbClientInitMessage cim;
+  rfbServerInitMessage sim;
 
-    client_connected = true;
-    setsockopt(sClient, IPPROTO_TCP, TCP_NODELAY, (const char *)&one, sizeof(one));
-    BX_INFO(("accepted client connection."));
-    snprintf(pv , rfbProtocolVersionMessageSize,
-              rfbProtocolVersionFormat,
-              rfbServerProtocolMajorVersion,
-              rfbServerProtocolMinorVersion);
+  client_connected = true;
+  setsockopt(sClient, IPPROTO_TCP, TCP_NODELAY, (const char *)&one, sizeof(one));
+  BX_INFO(("accepted client connection."));
+  snprintf(pv, rfbProtocolVersionMessageSize,
+           rfbProtocolVersionFormat,
+           rfbServerProtocolMajorVersion,
+           rfbServerProtocolMinorVersion);
 
-    if(WriteExact(sClient, pv, rfbProtocolVersionMessageSize) < 0) {
-        BX_ERROR(("could not send protocol version."));
-        return;
+  if(WriteExact(sClient, pv, rfbProtocolVersionMessageSize) < 0) {
+    BX_ERROR(("could not send protocol version."));
+    return;
+  }
+  if(ReadExact(sClient, pv, rfbProtocolVersionMessageSize) < 0) {
+    BX_ERROR(("could not receive client protocol version."));
+    return;
+  }
+  pv[rfbProtocolVersionMessageSize-1]=0; // Drop last character
+  BX_INFO(("Client protocol version is '%s'", pv));
+  // FIXME should check for version number
+
+  auth = htonl(rfbSecurityNone);
+
+  if(WriteExact(sClient, (char *)&auth, sizeof(auth)) < 0) {
+    BX_ERROR(("could not send authorization method."));
+    return;
+  }
+
+  if(ReadExact(sClient, (char *)&cim, rfbClientInitMessageSize) < 0) {
+    BX_ERROR(("could not receive client initialization message."));
+    return;
+  }
+
+  sim.framebufferWidth  = htons((short)rfbWindowX);
+  sim.framebufferHeight = htons((short)rfbWindowY);
+  sim.serverPixelFormat            = BGR233Format;
+  sim.serverPixelFormat.redMax     = htons(sim.serverPixelFormat.redMax);
+  sim.serverPixelFormat.greenMax   = htons(sim.serverPixelFormat.greenMax);
+  sim.serverPixelFormat.blueMax    = htons(sim.serverPixelFormat.blueMax);
+  sim.nameLength = strlen(rfbName);
+  sim.nameLength = htonl(sim.nameLength);
+  if(WriteExact(sClient, (char *)&sim, rfbServerInitMessageSize) < 0) {
+    BX_ERROR(("could send server initialization message."));
+    return;
+  }
+  if(WriteExact(sClient, rfbName, strlen(rfbName)) < 0) {
+    BX_ERROR (("could not send server name."));
+    return;
+  }
+
+  sGlobal = sClient;
+  while(keep_alive) {
+    U8 msgType;
+    int n;
+
+    if((n = recv(sClient, (char *)&msgType, 1, MSG_PEEK)) <= 0) {
+      if(n == 0) {
+        BX_ERROR(("client closed connection."));
+      } else {
+        BX_ERROR(("error receiving data."));
+      }
+      return;
     }
-    if(ReadExact(sClient, pv, rfbProtocolVersionMessageSize) < 0) {
-        BX_ERROR(("could not receive client protocol version."));
-        return;
-    }
-    pv[rfbProtocolVersionMessageSize-1]=0; // Drop last character
-    BX_INFO(("Client protocol version is '%s'", pv));
-    // FIXME should check for version number
 
-    auth = htonl(rfbSecurityNone);
+    switch(msgType) {
+      case rfbSetPixelFormat:
+        {
+          rfbSetPixelFormatMessage spf;
+          ReadExact(sClient, (char *)&spf, sizeof(rfbSetPixelFormatMessage));
 
-    if(WriteExact(sClient, (char *)&auth, sizeof(auth)) < 0) {
-        BX_ERROR(("could not send authorization method."));
-        return;
-    }
+          spf.pixelFormat.bitsPerPixel = spf.pixelFormat.bitsPerPixel;
+          spf.pixelFormat.depth = spf.pixelFormat.depth;
+          spf.pixelFormat.trueColourFlag = (spf.pixelFormat.trueColourFlag ? 1 : 0);
+          spf.pixelFormat.bigEndianFlag = (spf.pixelFormat.bigEndianFlag ? 1 : 0);
+          spf.pixelFormat.redMax = ntohs(spf.pixelFormat.redMax);
+          spf.pixelFormat.greenMax = ntohs(spf.pixelFormat.greenMax);
+          spf.pixelFormat.blueMax = ntohs(spf.pixelFormat.blueMax);
+          spf.pixelFormat.redShift = spf.pixelFormat.redShift;
+          spf.pixelFormat.greenShift = spf.pixelFormat.greenShift;
+          spf.pixelFormat.blueShift = spf.pixelFormat.blueShift;
 
-    if(ReadExact(sClient, (char *)&cim, rfbClientInitMessageSize) < 0) {
-        BX_ERROR(("could not receive client initialization message."));
-        return;
-    }
+          if (!PF_EQ(spf.pixelFormat, BGR233Format)) {
+            BX_ERROR(("client has wrong pixel format (%d %d %d %d %d %d %d %d %d)",
+                      spf.pixelFormat.bitsPerPixel,spf.pixelFormat.depth,spf.pixelFormat.trueColourFlag,
+                      spf.pixelFormat.bigEndianFlag,spf.pixelFormat.redMax,spf.pixelFormat.greenMax,
+                      spf.pixelFormat.blueMax,spf.pixelFormat.redShift,spf.pixelFormat.blueShift));
+            //return;
+          }
+          break;
+        }
+      case rfbFixColourMapEntries:
+        {
+          rfbFixColourMapEntriesMessage fcme;
+          ReadExact(sClient, (char *)&fcme, sizeof(rfbFixColourMapEntriesMessage));
+          break;
+        }
+      case rfbSetEncodings:
+        {
+          rfbSetEncodingsMessage se;
+          Bit32u                 i;
+          U32                    enc;
 
-    sim.framebufferWidth  = htons((short)rfbWindowX);
-    sim.framebufferHeight = htons((short)rfbWindowY);
-    sim.serverPixelFormat            = BGR233Format;
-    sim.serverPixelFormat.redMax     = htons(sim.serverPixelFormat.redMax);
-    sim.serverPixelFormat.greenMax   = htons(sim.serverPixelFormat.greenMax);
-    sim.serverPixelFormat.blueMax    = htons(sim.serverPixelFormat.blueMax);
-    sim.nameLength = strlen(rfbName);
-    sim.nameLength = htonl(sim.nameLength);
-    if(WriteExact(sClient, (char *)&sim, rfbServerInitMessageSize) < 0) {
-        BX_ERROR(("could send server initialization message."));
-        return;
-    }
-    if(WriteExact(sClient, rfbName, strlen(rfbName)) < 0) {
-        BX_ERROR (("could not send server name."));
-        return;
-    }
+          // free previously registered encodings
+          if (clientEncodings != NULL) {
+            delete [] clientEncodings;
+            clientEncodingsCount = 0;
+          }
 
-    sGlobal = sClient;
-    while(keep_alive) {
-        U8 msgType;
-        int n;
+          ReadExact(sClient, (char *)&se, sizeof(rfbSetEncodingsMessage));
 
-        if((n = recv(sClient, (char *)&msgType, 1, MSG_PEEK)) <= 0) {
-            if(n == 0) {
-                        BX_ERROR(("client closed connection."));
-            } else {
+          // Alloc new clientEncodings
+          clientEncodingsCount = ntohs(se.numberOfEncodings);
+          clientEncodings = new Bit32u[clientEncodingsCount];
+
+          for(i = 0; i < clientEncodingsCount; i++) {
+            if((n = ReadExact(sClient, (char *)&enc, sizeof(U32))) <= 0) {
+              if(n == 0) {
+                BX_ERROR(("client closed connection."));
+              } else {
                 BX_ERROR(("error receiving data."));
+              }
+              return;
             }
-            return;
+            clientEncodings[i]=ntohl(enc);
+          }
+
+          // print supported encodings
+          BX_INFO(("rfbSetEncodings : client supported encodings:"));
+          for (i = 0; i < clientEncodingsCount; i++) {
+            Bit32u j;
+            bx_bool found = 0;
+            for (j=0; j < rfbEncodingsCount; j ++) {
+              if (clientEncodings[i] == rfbEncodings[j].id) {
+                BX_INFO(("%08x %s", rfbEncodings[j].id, rfbEncodings[j].name));
+                found=1;
+                if (clientEncodings[i] == rfbEncodingDesktopSize) {
+                  desktop_resizable = true;
+                }
+                break;
+              }
+            }
+            if (!found) BX_INFO(("%08x Unknown", clientEncodings[i]));
+          }
+          break;
         }
+      case rfbFramebufferUpdateRequest:
+        {
+          rfbFramebufferUpdateRequestMessage fur;
 
-        switch(msgType) {
-        case rfbSetPixelFormat:
-            {
-                rfbSetPixelFormatMessage spf;
-                ReadExact(sClient, (char *)&spf, sizeof(rfbSetPixelFormatMessage));
-
-                spf.pixelFormat.bitsPerPixel = spf.pixelFormat.bitsPerPixel;
-                spf.pixelFormat.depth = spf.pixelFormat.depth;
-                spf.pixelFormat.trueColourFlag = (spf.pixelFormat.trueColourFlag ? 1 : 0);
-                spf.pixelFormat.bigEndianFlag = (spf.pixelFormat.bigEndianFlag ? 1 : 0);
-                spf.pixelFormat.redMax = ntohs(spf.pixelFormat.redMax);
-                spf.pixelFormat.greenMax = ntohs(spf.pixelFormat.greenMax);
-                spf.pixelFormat.blueMax = ntohs(spf.pixelFormat.blueMax);
-                spf.pixelFormat.redShift = spf.pixelFormat.redShift;
-                spf.pixelFormat.greenShift = spf.pixelFormat.greenShift;
-                spf.pixelFormat.blueShift = spf.pixelFormat.blueShift;
-
-                if (!PF_EQ(spf.pixelFormat, BGR233Format)) {
-                    BX_ERROR(("client has wrong pixel format (%d %d %d %d %d %d %d %d %d)",
-			      spf.pixelFormat.bitsPerPixel,spf.pixelFormat.depth,spf.pixelFormat.trueColourFlag,
-			      spf.pixelFormat.bigEndianFlag,spf.pixelFormat.redMax,spf.pixelFormat.greenMax,
-			      spf.pixelFormat.blueMax,spf.pixelFormat.redShift,spf.pixelFormat.blueShift));
-                    //return;
-                }
-                break;
-            }
-        case rfbFixColourMapEntries:
-            {
-                rfbFixColourMapEntriesMessage fcme;
-                ReadExact(sClient, (char *)&fcme, sizeof(rfbFixColourMapEntriesMessage));
-                break;
-            }
-        case rfbSetEncodings:
-            {
-                rfbSetEncodingsMessage se;
-                Bit32u                 i;
-                U32                    enc;
-
-                // free previously registered encodings
-                if (clientEncodings != NULL) {
-                    delete [] clientEncodings;
-                    clientEncodingsCount = 0;
-                }
-
-                ReadExact(sClient, (char *)&se, sizeof(rfbSetEncodingsMessage));
-
-                // Alloc new clientEncodings
-                clientEncodingsCount = ntohs(se.numberOfEncodings);
-                clientEncodings = new Bit32u[clientEncodingsCount];
-
-                for(i = 0; i < clientEncodingsCount; i++) {
-                    if((n = ReadExact(sClient, (char *)&enc, sizeof(U32))) <= 0) {
-                        if(n == 0) {
-                            BX_ERROR(("client closed connection."));
-                        } else {
-                            BX_ERROR(("error receiving data."));
-                        }
-                        return;
-                    }
-                    clientEncodings[i]=ntohl(enc);
-                }
-
-                // print supported encodings
-                BX_INFO(("rfbSetEncodings : client supported encodings:"));
-                for(i = 0; i < clientEncodingsCount; i++) {
-                    Bit32u j;
-                    bx_bool found = 0;
-                    for (j=0; j < rfbEncodingsCount; j ++) {
-                        if (clientEncodings[i] == rfbEncodings[j].id) {
-                             BX_INFO(("%08x %s", rfbEncodings[j].id, rfbEncodings[j].name));
-                             found=1;
-                             break;
-                             }
-                        }
-                    if (!found) BX_INFO(("%08x Unknown", clientEncodings[i]));
-                    }
-                break;
-            }
-        case rfbFramebufferUpdateRequest:
-            {
-                rfbFramebufferUpdateRequestMessage fur;
-
-                ReadExact(sClient, (char *)&fur, sizeof(rfbFramebufferUpdateRequestMessage));
-                if(!fur.incremental) {
-                    rfbUpdateRegion.x = 0;
-                    rfbUpdateRegion.y = 0;
-                    rfbUpdateRegion.width  = rfbWindowX;
-                    rfbUpdateRegion.height = rfbWindowY;
-                    rfbUpdateRegion.updated = true;
-                } //else {
-                //    if(fur.x < rfbUpdateRegion.x) rfbUpdateRegion.x = fur.x;
-                //    if(fur.y < rfbUpdateRegion.x) rfbUpdateRegion.y = fur.y;
-                //    if(((fur.x + fur.w) - rfbUpdateRegion.x) > rfbUpdateRegion.width) rfbUpdateRegion.width = ((fur.x + fur.w) - rfbUpdateRegion.x);
-                //    if(((fur.y + fur.h) - rfbUpdateRegion.y) > rfbUpdateRegion.height) rfbUpdateRegion.height = ((fur.y + fur.h) - rfbUpdateRegion.y);
-                //}
-                //rfbUpdateRegion.updated = true;
-                break;
-            }
-        case rfbKeyEvent:
-            {
-                rfbKeyEventMessage ke;
-                ReadExact(sClient, (char *)&ke, sizeof(rfbKeyEventMessage));
-                ke.key = ntohl(ke.key);
-                while(bKeyboardInUse);
-                bKeyboardInUse = true;
-                if (rfbKeyboardEvents >= MAX_KEY_EVENTS) break;
-                rfbKeyboardEvent[rfbKeyboardEvents].type = KEYBOARD;
-                rfbKeyboardEvent[rfbKeyboardEvents].key  = ke.key;
-                rfbKeyboardEvent[rfbKeyboardEvents].down = ke.downFlag;
-                rfbKeyboardEvents++;
-                bKeyboardInUse = false;
-                break;
-            }
-        case rfbPointerEvent:
-            {
-                rfbPointerEventMessage pe;
-                ReadExact(sClient, (char *)&pe, sizeof(rfbPointerEventMessage));
-                while(bKeyboardInUse);
-                bKeyboardInUse = true;
-                if (rfbKeyboardEvents >= MAX_KEY_EVENTS) break;
-                rfbKeyboardEvent[rfbKeyboardEvents].type = MOUSE;
-                rfbKeyboardEvent[rfbKeyboardEvents].x    = ntohs(pe.xPosition);
-                rfbKeyboardEvent[rfbKeyboardEvents].y    = ntohs(pe.yPosition);
-                rfbKeyboardEvent[rfbKeyboardEvents].down = (pe.buttonMask & 0x01)
-                                                           | ((pe.buttonMask>>1) & 0x02)
-                                                           | ((pe.buttonMask<<1) & 0x04);
-                rfbKeyboardEvents++;
-                bKeyboardInUse = false;
-                break;
-            }
-        case rfbClientCutText:
-            {
-                rfbClientCutTextMessage cct;
-                ReadExact(sClient, (char *)&cct, sizeof(rfbClientCutTextMessage));
-                break;
-            }
+          ReadExact(sClient, (char *)&fur, sizeof(rfbFramebufferUpdateRequestMessage));
+          if(!fur.incremental) {
+            rfbUpdateRegion.x = 0;
+            rfbUpdateRegion.y = 0;
+            rfbUpdateRegion.width  = rfbWindowX;
+            rfbUpdateRegion.height = rfbWindowY;
+            rfbUpdateRegion.updated = true;
+          } //else {
+          //    if(fur.x < rfbUpdateRegion.x) rfbUpdateRegion.x = fur.x;
+          //    if(fur.y < rfbUpdateRegion.x) rfbUpdateRegion.y = fur.y;
+          //    if(((fur.x + fur.w) - rfbUpdateRegion.x) > rfbUpdateRegion.width) rfbUpdateRegion.width = ((fur.x + fur.w) - rfbUpdateRegion.x);
+          //    if(((fur.y + fur.h) - rfbUpdateRegion.y) > rfbUpdateRegion.height) rfbUpdateRegion.height = ((fur.y + fur.h) - rfbUpdateRegion.y);
+          //}
+          //rfbUpdateRegion.updated = true;
+          break;
+        }
+      case rfbKeyEvent:
+        {
+          rfbKeyEventMessage ke;
+          ReadExact(sClient, (char *)&ke, sizeof(rfbKeyEventMessage));
+          ke.key = ntohl(ke.key);
+          while(bKeyboardInUse);
+          bKeyboardInUse = true;
+          if (rfbKeyboardEvents >= MAX_KEY_EVENTS) break;
+          rfbKeyboardEvent[rfbKeyboardEvents].type = KEYBOARD;
+          rfbKeyboardEvent[rfbKeyboardEvents].key  = ke.key;
+          rfbKeyboardEvent[rfbKeyboardEvents].down = ke.downFlag;
+          rfbKeyboardEvents++;
+          bKeyboardInUse = false;
+          break;
+        }
+      case rfbPointerEvent:
+        {
+          rfbPointerEventMessage pe;
+          ReadExact(sClient, (char *)&pe, sizeof(rfbPointerEventMessage));
+          while(bKeyboardInUse);
+          bKeyboardInUse = true;
+          if (rfbKeyboardEvents >= MAX_KEY_EVENTS) break;
+          rfbKeyboardEvent[rfbKeyboardEvents].type = MOUSE;
+          rfbKeyboardEvent[rfbKeyboardEvents].x    = ntohs(pe.xPosition);
+          rfbKeyboardEvent[rfbKeyboardEvents].y    = ntohs(pe.yPosition);
+          rfbKeyboardEvent[rfbKeyboardEvents].down = (pe.buttonMask & 0x01) |
+                                                     ((pe.buttonMask>>1) & 0x02) |
+                                                     ((pe.buttonMask<<1) & 0x04);
+          rfbKeyboardEvents++;
+          bKeyboardInUse = false;
+          break;
+        }
+      case rfbClientCutText:
+        {
+          rfbClientCutTextMessage cct;
+          ReadExact(sClient, (char *)&cct, sizeof(rfbClientCutTextMessage));
+          break;
         }
     }
+  }
 }
 // ::HANDLE_EVENTS()
 //
@@ -655,7 +661,8 @@ void bx_rfb_gui_c::handle_events(void)
     bKeyboardInUse = false;
 
     if(rfbUpdateRegion.updated) {
-        SendUpdate(rfbUpdateRegion.x, rfbUpdateRegion.y, rfbUpdateRegion.width, rfbUpdateRegion.height);
+        SendUpdate(rfbUpdateRegion.x, rfbUpdateRegion.y, rfbUpdateRegion.width,
+                   rfbUpdateRegion.height, rfbEncodingRaw);
         rfbUpdateRegion.x = rfbWindowX;
         rfbUpdateRegion.y = rfbWindowY;
         rfbUpdateRegion.width  = 0;
@@ -819,12 +826,15 @@ bx_bool bx_rfb_gui_c::palette_change(unsigned index, unsigned red, unsigned gree
 //       left of the window.
 void bx_rfb_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
 {
-    UpdateScreen(tile, x0, y0 + rfbHeaderbarY, rfbTileX, rfbTileY, false);
-    if(x0 < rfbUpdateRegion.x) rfbUpdateRegion.x = x0;
-    if((y0 + rfbHeaderbarY) < rfbUpdateRegion.y) rfbUpdateRegion.y = y0 + rfbHeaderbarY;
-    if(((y0 + rfbHeaderbarY + rfbTileY) - rfbUpdateRegion.y) > rfbUpdateRegion.height) rfbUpdateRegion.height =  ((y0 + rfbHeaderbarY + rfbTileY) - rfbUpdateRegion.y);
-    if(((x0 + rfbTileX) - rfbUpdateRegion.x) > rfbUpdateRegion.width) rfbUpdateRegion.width = ((x0 + rfbTileX) - rfbUpdateRegion.x);
-    rfbUpdateRegion.updated = true;
+  UpdateScreen(tile, x0, y0 + rfbHeaderbarY, rfbTileX, rfbTileY, false);
+  if(x0 < rfbUpdateRegion.x) rfbUpdateRegion.x = x0;
+  if((y0 + rfbHeaderbarY) < rfbUpdateRegion.y) rfbUpdateRegion.y = y0 + rfbHeaderbarY;
+  if(((y0 + rfbHeaderbarY + rfbTileY) - rfbUpdateRegion.y) > rfbUpdateRegion.height) rfbUpdateRegion.height =  ((y0 + rfbHeaderbarY + rfbTileY) - rfbUpdateRegion.y);
+  if(((x0 + rfbTileX) - rfbUpdateRegion.x) > rfbUpdateRegion.width) rfbUpdateRegion.width = ((x0 + rfbTileX) - rfbUpdateRegion.x);
+  if ((rfbUpdateRegion.x + rfbUpdateRegion.width) > rfbWindowX) {
+    rfbUpdateRegion.width = rfbWindowX - rfbUpdateRegion.x;
+  }
+  rfbUpdateRegion.updated = true;
 }
 
 bx_svga_tileinfo_t *bx_rfb_gui_c::graphics_tile_info(bx_svga_tileinfo_t *info)
@@ -881,6 +891,9 @@ void bx_rfb_gui_c::graphics_tile_update_in_place(unsigned x0, unsigned y0,
   if((y0 + rfbHeaderbarY) < rfbUpdateRegion.y) rfbUpdateRegion.y = y0 + rfbHeaderbarY;
   if(((y0 + rfbHeaderbarY + h) - rfbUpdateRegion.y) > rfbUpdateRegion.height) rfbUpdateRegion.height =  ((y0 + rfbHeaderbarY + h) - rfbUpdateRegion.y);
   if(((x0 + w) - rfbUpdateRegion.x) > rfbUpdateRegion.width) rfbUpdateRegion.width = ((x0 + h) - rfbUpdateRegion.x);
+  if ((rfbUpdateRegion.x + rfbUpdateRegion.width) > rfbWindowX) {
+    rfbUpdateRegion.width = rfbWindowX - rfbUpdateRegion.x;
+  }
   rfbUpdateRegion.updated = true;
 }
 
@@ -911,10 +924,20 @@ void bx_rfb_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, un
   if ((x > BX_RFB_MAX_XDIM) || (y > BX_RFB_MAX_YDIM)) {
     BX_PANIC(("dimension_update(): RFB doesn't support graphics mode %dx%d", x, y));
   } else if ((x != rfbDimensionX) || (x != rfbDimensionY)) {
-    clear_screen();
-    SendUpdate(0, rfbHeaderbarY, rfbDimensionX, rfbDimensionY);
-    rfbDimensionX = x;
-    rfbDimensionY = y;
+    if (desktop_resizable) {
+      rfbDimensionX = x;
+      rfbDimensionY = y;
+      rfbWindowX = rfbDimensionX;
+      rfbWindowY = rfbDimensionY + rfbHeaderbarY + rfbStatusbarY;
+      rfbScreen = (char *)realloc(rfbScreen, rfbWindowX * rfbWindowY);
+      SendUpdate(0, 0, rfbWindowX, rfbWindowY, rfbEncodingDesktopSize);
+      bx_gui->show_headerbar();
+    } else {
+      clear_screen();
+      SendUpdate(0, rfbHeaderbarY, rfbDimensionX, rfbDimensionY, rfbEncodingRaw);
+      rfbDimensionX = x;
+      rfbDimensionY = y;
+    }
   }
 }
 
@@ -1259,7 +1282,7 @@ void UpdateScreen(unsigned char *newBits, int x, int y, int width, int height, b
     }
 }
 
-void SendUpdate(int x, int y, int width, int height)
+void SendUpdate(int x, int y, int width, int height, Bit32u encoding)
 {
     char *newBits;
     int  i;
@@ -1278,19 +1301,20 @@ void SendUpdate(int x, int y, int width, int height)
         furh.r.yPosition = htons(y);
         furh.r.width = htons((short)width);
         furh.r.height = htons((short)height);
-        furh.r.encodingType = htonl(rfbEncodingRaw);
-
-        newBits = (char *)malloc(width * height);
-        for(i = 0; i < height; i++) {
-            memcpy(&newBits[i * width], &rfbScreen[y * rfbWindowX + x], width);
-            y++;
-        }
+        furh.r.encodingType = htonl(encoding);
 
         WriteExact(sGlobal, (char *)&fum, rfbFramebufferUpdateMessageSize);
         WriteExact(sGlobal, (char *)&furh, rfbFramebufferUpdateRectHeaderSize);
-        WriteExact(sGlobal, (char *)newBits, width * height);
 
-        free(newBits);
+        if (encoding == rfbEncodingRaw) {
+          newBits = (char *)malloc(width * height);
+          for(i = 0; i < height; i++) {
+            memcpy(&newBits[i * width], &rfbScreen[y * rfbWindowX + x], width);
+            y++;
+          }
+          WriteExact(sGlobal, (char *)newBits, width * height);
+          free(newBits);
+        }
     }
 }
 
@@ -1738,8 +1762,13 @@ void bx_rfb_gui_c::mouse_enabled_changed_specific (bx_bool val)
 
 void bx_rfb_gui_c::get_capabilities(Bit16u *xres, Bit16u *yres, Bit16u *bpp)
 {
-  *xres = BX_RFB_MAX_XDIM;
-  *yres = BX_RFB_MAX_YDIM;
+  if (desktop_resizable) {
+    *xres = BX_RFB_MAX_XDIM;
+    *yres = BX_RFB_MAX_YDIM;
+  } else {
+    *xres = BX_RFB_DEF_XDIM;
+    *yres = BX_RFB_DEF_YDIM;
+  }
   *bpp = 8;
 }
 
