@@ -71,7 +71,8 @@ static floatx80 do_fprem(floatx80 a, floatx80 b, Bit64u &q, int rounding_mode, f
         {
             return propagateFloatx80NaN(a, b, status);
         }
-        goto invalid;
+        float_raise(status, float_flag_invalid);
+        return floatx80_default_nan;
     }
     if (bExp == 0x7FFF) {
         if ((Bit64u) (bSig<<1)) return propagateFloatx80NaN(a, b, status);
@@ -79,7 +80,6 @@ static floatx80 do_fprem(floatx80 a, floatx80 b, Bit64u &q, int rounding_mode, f
     }
     if (bExp == 0) {
         if (bSig == 0) {
- invalid:
             float_raise(status, float_flag_invalid);
             return floatx80_default_nan;
         }

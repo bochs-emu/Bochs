@@ -639,7 +639,6 @@ float32 float32_div(float32 a, float32 b, float_status_t &status)
         if (aSig) return propagateFloat32NaN(a, b, status);
         if (bExp == 0xFF) {
             if (bSig) return propagateFloat32NaN(a, b, status);
-   invalid:
             float_raise(status, float_flag_invalid);
             return float32_default_nan;
         }
@@ -653,7 +652,10 @@ float32 float32_div(float32 a, float32 b, float_status_t &status)
     }
     if (bExp == 0) {
         if (bSig == 0) {
-            if ((aExp | aSig) == 0) goto invalid;
+            if ((aExp | aSig) == 0) {
+                float_raise(status, float_flag_invalid);
+                return float32_default_nan;
+            }
             float_raise(status, float_flag_divbyzero);
             return packFloat32(zSign, 0xFF, 0);
         }
@@ -1561,7 +1563,6 @@ float64 float64_div(float64 a, float64 b, float_status_t &status)
         if (aSig) return propagateFloat64NaN(a, b, status);
         if (bExp == 0x7FF) {
             if (bSig) return propagateFloat64NaN(a, b, status);
-   invalid:
             float_raise(status, float_flag_invalid);
             return float64_default_nan;
         }
@@ -1575,7 +1576,10 @@ float64 float64_div(float64 a, float64 b, float_status_t &status)
     }
     if (bExp == 0) {
         if (bSig == 0) {
-            if ((aExp | aSig) == 0) goto invalid;
+            if ((aExp | aSig) == 0) {
+                float_raise(status, float_flag_invalid);
+                return float64_default_nan;
+            }
             float_raise(status, float_flag_divbyzero);
             return packFloat64(zSign, 0x7FF, 0);
         }
@@ -2669,7 +2673,8 @@ floatx80 floatx80_div(floatx80 a, floatx80 b, float_status_t &status)
         if ((Bit64u) (aSig<<1)) return propagateFloatx80NaN(a, b, status);
         if (bExp == 0x7FFF) {
             if ((Bit64u) (bSig<<1)) return propagateFloatx80NaN(a, b, status);
-            goto invalid;
+            float_raise(status, float_flag_invalid);
+            return floatx80_default_nan;
         }
         if (bSig && (bExp == 0)) float_raise(status, float_flag_denormal);
         return packFloatx80(zSign, 0x7FFF, BX_CONST64(0x8000000000000000));
@@ -2682,7 +2687,6 @@ floatx80 floatx80_div(floatx80 a, floatx80 b, float_status_t &status)
     if (bExp == 0) {
         if (bSig == 0) {
             if ((aExp | aSig) == 0) {
- invalid:
                 float_raise(status, float_flag_invalid);
                 return floatx80_default_nan;
             }
@@ -2751,11 +2755,11 @@ floatx80 floatx80_sqrt(floatx80 a, float_status_t &status)
     if (aExp == 0x7FFF) {
         if ((Bit64u) (aSig0<<1)) return propagateFloatx80NaN(a, status);
         if (! aSign) return a;
-        goto invalid;
+        float_raise(status, float_flag_invalid);
+        return floatx80_default_nan;
     }
     if (aSign) {
         if ((aExp | aSig0) == 0) return a;
- invalid:
         float_raise(status, float_flag_invalid);
         return floatx80_default_nan;
     }
@@ -3148,17 +3152,18 @@ float128 float128_mul(float128 a, float128 b, float_status_t &status)
 
     zSign = aSign ^ bSign;
     if (aExp == 0x7FFF) {
-        if ((aSig0 | aSig1) || ((bExp == 0x7FFF) && (bSig0 | bSig1)))
-        {
+        if ((aSig0 | aSig1) || ((bExp == 0x7FFF) && (bSig0 | bSig1))) {
             return propagateFloat128NaN(a, b, status);
         }
-        if ((bExp | bSig0 | bSig1) == 0) goto invalid;
+        if ((bExp | bSig0 | bSig1) == 0) {
+            float_raise(status, float_flag_invalid);
+            return float128_default_nan;
+        }
         return packFloat128(zSign, 0x7FFF, 0, 0);
     }
     if (bExp == 0x7FFF) {
         if (bSig0 | bSig1) return propagateFloat128NaN(a, b, status);
         if ((aExp | aSig0 | aSig1) == 0) {
- invalid:
             float_raise(status, float_flag_invalid);
             return float128_default_nan;
         }
@@ -3214,7 +3219,8 @@ float128 float128_div(float128 a, float128 b, float_status_t &status)
         if (aSig0 | aSig1) return propagateFloat128NaN(a, b, status);
         if (bExp == 0x7FFF) {
             if (bSig0 | bSig1) return propagateFloat128NaN(a, b, status);
-            goto invalid;
+            float_raise(status, float_flag_invalid);
+            return float128_default_nan;
         }
         return packFloat128(zSign, 0x7FFF, 0, 0);
     }
@@ -3225,7 +3231,6 @@ float128 float128_div(float128 a, float128 b, float_status_t &status)
     if (bExp == 0) {
         if ((bSig0 | bSig1) == 0) {
             if ((aExp | aSig0 | aSig1) == 0) {
- invalid:
                 float_raise(status, float_flag_invalid);
                 return float128_default_nan;
             }
