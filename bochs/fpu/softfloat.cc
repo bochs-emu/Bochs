@@ -2358,9 +2358,11 @@ floatx80 floatx80_round_to_int(floatx80 a, float_status_t &status)
         z.exp++;
         z.fraction = BX_CONST64(0x8000000000000000);
     }
-    if (z.fraction != a.fraction) float_raise(status, float_flag_inexact);
-    if (z.fraction > a.fraction)
-        set_float_rounding_up(status);
+    if (z.fraction != a.fraction) {
+        float_raise(status, float_flag_inexact);
+        if (z.fraction > a.fraction || z.exp > a.exp)
+            set_float_rounding_up(status);
+    }
     return z;
 }
 
