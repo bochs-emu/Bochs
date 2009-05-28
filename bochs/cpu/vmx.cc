@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmx.cc,v 1.16 2009-05-21 10:39:40 sshwarts Exp $
+// $Id: vmx.cc,v 1.17 2009-05-28 08:26:17 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2009 Stanislav Shwartsman
@@ -34,9 +34,6 @@
 #endif
 
 #if BX_SUPPORT_VMX
-
-// VMCSPTR is always 64-bit variable
-#define BX_INVALID_VMCSPTR BX_CONST64(0xFFFFFFFFFFFFFFFF)
 
 #define VMCSPTR_VALID() (BX_CPU_THIS_PTR vmcsptr != BX_INVALID_VMCSPTR)
 
@@ -1688,16 +1685,11 @@ void BX_CPU_C::VMexit(bxInstruction_c *i, Bit32u reason, Bit64u qualification)
   longjmp(BX_CPU_THIS_PTR jmp_buf_env, 1); // go back to main decode loop
 }
 
+#endif // BX_SUPPORT_VMX
+
 ////////////////////////////////////////////////////////////
 // VMX instructions
 ////////////////////////////////////////////////////////////
-
-bx_bool BX_CPU_C::is_VMXON_PTR(Bit64u vmxptr)
-{
-  return 0;
-}
-
-#endif // BX_SUPPORT_VMX
 
 void BX_CPU_C::VMXON(bxInstruction_c *i)
 {
@@ -1733,6 +1725,7 @@ void BX_CPU_C::VMXON(bxInstruction_c *i)
       
     BX_CPU_THIS_PTR vmcsptr = BX_INVALID_VMCSPTR;
     BX_CPU_THIS_PTR vmcshostptr = 0;
+    BX_CPU_THIS_PTR vmxonptr = pAddr;
     BX_CPU_THIS_PTR in_vmx = 1;
     BX_CPU_THIS_PTR disable_INIT = 1; // INIT is disabled in VMX root mode
     // block and disable A20M;
@@ -1782,6 +1775,7 @@ void BX_CPU_C::VMXOFF(bxInstruction_c *i)
         else
 */
   {
+    BX_CPU_THIS_PTR vmxonptr = BX_INVALID_VMCSPTR;
     BX_CPU_THIS_PTR in_vmx = 0;  // leave VMX operation mode
     BX_CPU_THIS_PTR disable_INIT = 0;
      // unblock and enable A20M;
@@ -1826,6 +1820,7 @@ void BX_CPU_C::VMCALL(bxInstruction_c *i)
                      of the IntelR 64 and IA-32 Architectures Software Developer's Manual, Volume 3B);
 */
   if (! VMCSPTR_VALID()) {
+    BX_ERROR(("VMFAIL: VMCALL with invalid VMCS ptr"));
     VMfailInvalid();
     return;
   }
@@ -1836,6 +1831,7 @@ void BX_CPU_C::VMCALL(bxInstruction_c *i)
         BX_READ, (Bit8u*)(&launch_state));
 
   if (launch_state != VMCS_STATE_CLEAR) {
+    BX_ERROR(("VMFAIL: VMCALL with launched VMCS"));
     VMfail(VMXERR_VMCALL_NON_CLEAR_VMCS);
     return;
   }
@@ -1892,7 +1888,7 @@ void BX_CPU_C::VMLAUNCH(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0, 0);
 
   if (! VMCSPTR_VALID()) {
-    BX_ERROR(("VMFAIL: VMLAUNCH invalid VMCS ptr !"));
+    BX_ERROR(("VMFAIL: VMLAUNCH with invalid VMCS ptr !"));
     VMfailInvalid();
     return;
   }
@@ -2050,7 +2046,8 @@ void BX_CPU_C::VMPTRLD(bxInstruction_c *i)
     return;
   }
 
-  if (is_VMXON_PTR(pAddr)) {
+  if (pAddr == BX_CPU_THIS_PTR vmxonptr) {
+    BX_ERROR(("VMFAIL: VMPTRLD with VMXON ptr !"));
     VMfail(VMXERR_VMPTRLD_WITH_VMXON_PTR);
   }
   else {
@@ -2111,6 +2108,7 @@ void BX_CPU_C::VMREAD(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0, 0);
 
   if (! VMCSPTR_VALID()) {
+    BX_ERROR(("VMFAIL: VMREAD with invalid VMCS ptr !"));
     VMfailInvalid();
     return;
   }
@@ -2388,6 +2386,7 @@ void BX_CPU_C::VMWRITE(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0, 0);
 
   if (! VMCSPTR_VALID()) {
+    BX_ERROR(("VMFAIL: VMWRITE with invalid VMCS ptr !"));
     VMfailInvalid();
     return;
   }
@@ -2683,7 +2682,8 @@ void BX_CPU_C::VMCLEAR(bxInstruction_c *i)
     return;
   }
 
-  if (is_VMXON_PTR(pAddr)) {
+  if (pAddr == BX_CPU_THIS_PTR vmxonptr) {
+    BX_ERROR(("VMFAIL: VMLEAR with VMXON ptr !"));
     VMfail(VMXERR_VMCLEAR_WITH_VMXON_VMCS_PTR);
   }
   else {
@@ -2713,9 +2713,10 @@ void BX_CPU_C::VMCLEAR(bxInstruction_c *i)
 void BX_CPU_C::register_vmx_state(bx_param_c *parent)
 {
   // register VMX state for save/restore param tree
-  bx_list_c *vmx = new bx_list_c(parent, "VMX", 10);
+  bx_list_c *vmx = new bx_list_c(parent, "VMX", 6);
 
   BXRS_HEX_PARAM_FIELD(vmx, vmcsptr, BX_CPU_THIS_PTR vmcsptr);
+  BXRS_HEX_PARAM_FIELD(vmx, vmxonptr, BX_CPU_THIS_PTR vmxonptr);
   BXRS_PARAM_BOOL(vmx, in_vmx, BX_CPU_THIS_PTR in_vmx);
   BXRS_PARAM_BOOL(vmx, in_vmx_guest, BX_CPU_THIS_PTR in_vmx_guest);
   BXRS_PARAM_BOOL(vmx, vmx_interrupt_window, BX_CPU_THIS_PTR vmx_interrupt_window);

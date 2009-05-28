@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.598 2009-05-21 13:25:30 sshwarts Exp $
+// $Id: cpu.h,v 1.599 2009-05-28 08:26:17 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -892,6 +892,7 @@ public: // for now...
   bx_bool vmx_interrupt_window;
   Bit64u  vmcsptr;
   bx_hostpageaddr_t vmcshostptr;
+  Bit64u  vmxonptr;
   
   VMCS_CACHE vmcs;
 #endif
@@ -3333,7 +3334,6 @@ public: // for now...
   BX_SMF void VMexitSaveGuestMSRs(void);
   BX_SMF void VMexitLoadHostState(void);
   BX_SMF void set_VMCSPTR(Bit64u vmxptr);
-  BX_SMF bx_bool is_VMXON_PTR(Bit64u vmxptr);
   BX_SMF void init_VMCS(void);
   BX_SMF void register_vmx_state(bx_param_c *parent);
   BX_SMF Bit64s VMX_TSC_Offset(void);

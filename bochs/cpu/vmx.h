@@ -27,6 +27,9 @@
 #define VMX_VMCS_AREA_SIZE   4096
 #define VMX_VMCS_REVISION_ID 0x10
 
+// VMCS pointer is always 64-bit variable
+#define BX_INVALID_VMCSPTR BX_CONST64(0xFFFFFFFFFFFFFFFF)
+
 // VMX error codes
 enum VMX_error_code {
     VMXERR_NO_ERROR = 0,
