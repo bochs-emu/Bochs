@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu_arith.cc,v 1.20 2009-05-19 08:09:15 sshwarts Exp $
+// $Id: fpu_arith.cc,v 1.21 2009-05-28 19:25:33 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -170,7 +170,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FADD_ST0_STj(bxInstruction_c *i)
 
   if (IS_TAG_EMPTY(0) || IS_TAG_EMPTY(i->rm()))
   {
-     BX_CPU_THIS_PTR FPU_stack_underflow(0);
+     FPU_stack_underflow(0);
      return;
   }
 
@@ -182,7 +182,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FADD_ST0_STj(bxInstruction_c *i)
 
   floatx80 result = floatx80_add(a, b, status);
 
-  if (! BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags))
+  if (! FPU_exception(status.float_exception_flags))
      BX_WRITE_FPU_REG(result, 0);
 #else
   BX_INFO(("FADD_ST0_STj: required FPU, configure --enable-fpu"));
@@ -201,7 +201,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FADD_STi_ST0(bxInstruction_c *i)
 
   if (IS_TAG_EMPTY(0) || IS_TAG_EMPTY(i->rm()))
   {
-     BX_CPU_THIS_PTR FPU_stack_underflow(i->rm(), pop_stack);
+     FPU_stack_underflow(i->rm(), pop_stack);
      return;
   }
 
@@ -213,7 +213,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FADD_STi_ST0(bxInstruction_c *i)
 
   floatx80 result = floatx80_add(a, b, status);
 
-  if (! BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags)) {
+  if (! FPU_exception(status.float_exception_flags)) {
      BX_WRITE_FPU_REG(result, i->rm());
      if (pop_stack)
         BX_CPU_THIS_PTR the_i387.FPU_pop();
@@ -236,7 +236,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FADD_SINGLE_REAL(bxInstruction_c *i)
   clear_C1();
 
   if (IS_TAG_EMPTY(0)) {
-     BX_CPU_THIS_PTR FPU_stack_underflow(0);
+     FPU_stack_underflow(0);
      return;
   }
 
@@ -247,7 +247,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FADD_SINGLE_REAL(bxInstruction_c *i)
   if (! FPU_handle_NaN(a, load_reg, result, status))
      result = floatx80_add(a, float32_to_floatx80(load_reg, status), status);
 
-  if (! BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags))
+  if (! FPU_exception(status.float_exception_flags))
      BX_WRITE_FPU_REG(result, 0);
 #else
   BX_INFO(("FADD_SINGLE_REAL: required FPU, configure --enable-fpu"));
@@ -267,7 +267,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FADD_DOUBLE_REAL(bxInstruction_c *i)
   clear_C1();
 
   if (IS_TAG_EMPTY(0)) {
-     BX_CPU_THIS_PTR FPU_stack_underflow(0);
+     FPU_stack_underflow(0);
      return;
   }
 
@@ -278,7 +278,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FADD_DOUBLE_REAL(bxInstruction_c *i)
   if (! FPU_handle_NaN(a, load_reg, result, status))
      result = floatx80_add(a, float64_to_floatx80(load_reg, status), status);
 
-  if (! BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags))
+  if (! FPU_exception(status.float_exception_flags))
      BX_WRITE_FPU_REG(result, 0);
 #else
   BX_INFO(("FADD_DOUBLE_REAL: required FPU, configure --enable-fpu"));
@@ -298,7 +298,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FIADD_WORD_INTEGER(bxInstruction_c *i)
   clear_C1();
 
   if (IS_TAG_EMPTY(0)) {
-     BX_CPU_THIS_PTR FPU_stack_underflow(0);
+     FPU_stack_underflow(0);
      return;
   }
 
@@ -310,7 +310,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FIADD_WORD_INTEGER(bxInstruction_c *i)
 
   floatx80 result = floatx80_add(a, b, status);
 
-  if (! BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags))
+  if (! FPU_exception(status.float_exception_flags))
      BX_WRITE_FPU_REG(result, 0);
 #else
   BX_INFO(("FIADD_WORD_INTEGER: required FPU, configure --enable-fpu"));
@@ -330,7 +330,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FIADD_DWORD_INTEGER(bxInstruction_c *i)
   clear_C1();
 
   if (IS_TAG_EMPTY(0)) {
-     BX_CPU_THIS_PTR FPU_stack_underflow(0);
+     FPU_stack_underflow(0);
      return;
   }
 
@@ -342,7 +342,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FIADD_DWORD_INTEGER(bxInstruction_c *i)
 
   floatx80 result = floatx80_add(a, b, status);
 
-  if (! BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags))
+  if (! FPU_exception(status.float_exception_flags))
      BX_WRITE_FPU_REG(result, 0);
 #else
   BX_INFO(("FIADD_DWORD_INTEGER: required FPU, configure --enable-fpu"));
@@ -359,7 +359,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FMUL_ST0_STj(bxInstruction_c *i)
 
   if (IS_TAG_EMPTY(0) || IS_TAG_EMPTY(i->rm()))
   {
-     BX_CPU_THIS_PTR FPU_stack_underflow(0);
+     FPU_stack_underflow(0);
      return;
   }
 
@@ -371,7 +371,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FMUL_ST0_STj(bxInstruction_c *i)
 
   floatx80 result = floatx80_mul(a, b, status);
 
-  if (! BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags))
+  if (! FPU_exception(status.float_exception_flags))
      BX_WRITE_FPU_REG(result, 0);
 #else
   BX_INFO(("FMUL_ST0_STj: required FPU, configure --enable-fpu"));
@@ -390,7 +390,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FMUL_STi_ST0(bxInstruction_c *i)
 
   if (IS_TAG_EMPTY(0) || IS_TAG_EMPTY(i->rm()))
   {
-     BX_CPU_THIS_PTR FPU_stack_underflow(i->rm(), pop_stack);
+     FPU_stack_underflow(i->rm(), pop_stack);
      return;
   }
 
@@ -402,7 +402,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FMUL_STi_ST0(bxInstruction_c *i)
 
   floatx80 result = floatx80_mul(a, b, status);
 
-  if (! BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags)) {
+  if (! FPU_exception(status.float_exception_flags)) {
      BX_WRITE_FPU_REG(result, i->rm());
      if (pop_stack)
         BX_CPU_THIS_PTR the_i387.FPU_pop();
@@ -425,7 +425,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FMUL_SINGLE_REAL(bxInstruction_c *i)
   clear_C1();
 
   if (IS_TAG_EMPTY(0)) {
-     BX_CPU_THIS_PTR FPU_stack_underflow(0);
+     FPU_stack_underflow(0);
      return;
   }
 
@@ -436,7 +436,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FMUL_SINGLE_REAL(bxInstruction_c *i)
   if (! FPU_handle_NaN(a, load_reg, result, status))
      result = floatx80_mul(a, float32_to_floatx80(load_reg, status), status);
 
-  if (! BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags))
+  if (! FPU_exception(status.float_exception_flags))
      BX_WRITE_FPU_REG(result, 0);
 #else
   BX_INFO(("FMUL_SINGLE_REAL: required FPU, configure --enable-fpu"));
@@ -456,7 +456,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FMUL_DOUBLE_REAL(bxInstruction_c *i)
   clear_C1();
 
   if (IS_TAG_EMPTY(0)) {
-     BX_CPU_THIS_PTR FPU_stack_underflow(0);
+     FPU_stack_underflow(0);
      return;
   }
 
@@ -467,7 +467,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FMUL_DOUBLE_REAL(bxInstruction_c *i)
   if (! FPU_handle_NaN(a, load_reg, result, status))
      result = floatx80_mul(a, float64_to_floatx80(load_reg, status), status);
 
-  if (! BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags))
+  if (! FPU_exception(status.float_exception_flags))
      BX_WRITE_FPU_REG(result, 0);
 #else
   BX_INFO(("FMUL_DOUBLE_REAL: required FPU, configure --enable-fpu"));
@@ -487,7 +487,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FIMUL_WORD_INTEGER(bxInstruction_c *i)
   clear_C1();
 
   if (IS_TAG_EMPTY(0)) {
-     BX_CPU_THIS_PTR FPU_stack_underflow(0);
+     FPU_stack_underflow(0);
      return;
   }
 
@@ -499,7 +499,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FIMUL_WORD_INTEGER(bxInstruction_c *i)
 
   floatx80 result = floatx80_mul(a, b, status);
 
-  if (! BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags))
+  if (! FPU_exception(status.float_exception_flags))
      BX_WRITE_FPU_REG(result, 0);
 #else
   BX_INFO(("FIMUL_WORD_INTEGER: required FPU, configure --enable-fpu"));
@@ -519,7 +519,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FIMUL_DWORD_INTEGER(bxInstruction_c *i)
   clear_C1();
 
   if (IS_TAG_EMPTY(0)) {
-     BX_CPU_THIS_PTR FPU_stack_underflow(0);
+     FPU_stack_underflow(0);
      return;
   }
 
@@ -531,7 +531,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FIMUL_DWORD_INTEGER(bxInstruction_c *i)
 
   floatx80 result = floatx80_mul(a, b, status);
 
-  if (! BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags))
+  if (! FPU_exception(status.float_exception_flags))
      BX_WRITE_FPU_REG(result, 0);
 #else
   BX_INFO(("FIMUL_DWORD_INTEGER: required FPU, configure --enable-fpu"));
@@ -548,7 +548,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FSUB_ST0_STj(bxInstruction_c *i)
 
   if (IS_TAG_EMPTY(0) || IS_TAG_EMPTY(i->rm()))
   {
-     BX_CPU_THIS_PTR FPU_stack_underflow(0);
+     FPU_stack_underflow(0);
      return;
   }
 
@@ -560,7 +560,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FSUB_ST0_STj(bxInstruction_c *i)
 
   floatx80 result = floatx80_sub(a, b, status);
 
-  if (! BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags))
+  if (! FPU_exception(status.float_exception_flags))
      BX_WRITE_FPU_REG(result, 0);
 #else
   BX_INFO(("FSUB_ST0_STj: required FPU, configure --enable-fpu"));
@@ -577,7 +577,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FSUBR_ST0_STj(bxInstruction_c *i)
 
   if (IS_TAG_EMPTY(0) || IS_TAG_EMPTY(i->rm()))
   {
-     BX_CPU_THIS_PTR FPU_stack_underflow(0);
+     FPU_stack_underflow(0);
      return;
   }
 
@@ -589,7 +589,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FSUBR_ST0_STj(bxInstruction_c *i)
 
   floatx80 result = floatx80_sub(a, b, status);
 
-  if (! BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags))
+  if (! FPU_exception(status.float_exception_flags))
      BX_WRITE_FPU_REG(result, 0);
 #else
   BX_INFO(("FSUBR_ST0_STj: required FPU, configure --enable-fpu"));
@@ -608,7 +608,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FSUB_STi_ST0(bxInstruction_c *i)
 
   if (IS_TAG_EMPTY(0) || IS_TAG_EMPTY(i->rm()))
   {
-     BX_CPU_THIS_PTR FPU_stack_underflow(i->rm(), pop_stack);
+     FPU_stack_underflow(i->rm(), pop_stack);
      return;
   }
 
@@ -620,7 +620,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FSUB_STi_ST0(bxInstruction_c *i)
 
   floatx80 result = floatx80_sub(a, b, status);
 
-  if (! BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags)) {
+  if (! FPU_exception(status.float_exception_flags)) {
      BX_WRITE_FPU_REG(result, i->rm());
      if (pop_stack)
         BX_CPU_THIS_PTR the_i387.FPU_pop();
@@ -642,7 +642,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FSUBR_STi_ST0(bxInstruction_c *i)
 
   if (IS_TAG_EMPTY(0) || IS_TAG_EMPTY(i->rm()))
   {
-     BX_CPU_THIS_PTR FPU_stack_underflow(i->rm(), pop_stack);
+     FPU_stack_underflow(i->rm(), pop_stack);
      return;
   }
 
@@ -654,7 +654,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FSUBR_STi_ST0(bxInstruction_c *i)
 
   floatx80 result = floatx80_sub(a, b, status);
 
-  if (! BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags)) {
+  if (! FPU_exception(status.float_exception_flags)) {
      BX_WRITE_FPU_REG(result, i->rm());
      if (pop_stack)
         BX_CPU_THIS_PTR the_i387.FPU_pop();
@@ -677,7 +677,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FSUB_SINGLE_REAL(bxInstruction_c *i)
   clear_C1();
 
   if (IS_TAG_EMPTY(0)) {
-     BX_CPU_THIS_PTR FPU_stack_underflow(0);
+     FPU_stack_underflow(0);
      return;
   }
 
@@ -688,7 +688,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FSUB_SINGLE_REAL(bxInstruction_c *i)
   if (! FPU_handle_NaN(a, load_reg, result, status))
      result = floatx80_sub(a, float32_to_floatx80(load_reg, status), status);
 
-  if (! BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags))
+  if (! FPU_exception(status.float_exception_flags))
      BX_WRITE_FPU_REG(result, 0);
 #else
   BX_INFO(("FSUB_SINGLE_REAL: required FPU, configure --enable-fpu"));
@@ -708,7 +708,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FSUBR_SINGLE_REAL(bxInstruction_c *i)
   clear_C1();
 
   if (IS_TAG_EMPTY(0)) {
-     BX_CPU_THIS_PTR FPU_stack_underflow(0);
+     FPU_stack_underflow(0);
      return;
   }
 
@@ -719,7 +719,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FSUBR_SINGLE_REAL(bxInstruction_c *i)
   if (! FPU_handle_NaN(b, load_reg, result, status))
      result = floatx80_sub(float32_to_floatx80(load_reg, status), b, status);
 
-  if (! BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags))
+  if (! FPU_exception(status.float_exception_flags))
      BX_WRITE_FPU_REG(result, 0);
 #else
   BX_INFO(("FSUBR_SINGLE_REAL: required FPU, configure --enable-fpu"));
@@ -739,7 +739,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FSUB_DOUBLE_REAL(bxInstruction_c *i)
   clear_C1();
 
   if (IS_TAG_EMPTY(0)) {
-     BX_CPU_THIS_PTR FPU_stack_underflow(0);
+     FPU_stack_underflow(0);
      return;
   }
 
@@ -750,7 +750,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FSUB_DOUBLE_REAL(bxInstruction_c *i)
   if (! FPU_handle_NaN(a, load_reg, result, status))
      result = floatx80_sub(a, float64_to_floatx80(load_reg, status), status);
 
-  if (! BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags))
+  if (! FPU_exception(status.float_exception_flags))
      BX_WRITE_FPU_REG(result, 0);
 #else
   BX_INFO(("FSUB_DOUBLE_REAL: required FPU, configure --enable-fpu"));
@@ -770,7 +770,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FSUBR_DOUBLE_REAL(bxInstruction_c *i)
   clear_C1();
 
   if (IS_TAG_EMPTY(0)) {
-     BX_CPU_THIS_PTR FPU_stack_underflow(0);
+     FPU_stack_underflow(0);
      return;
   }
 
@@ -782,7 +782,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FSUBR_DOUBLE_REAL(bxInstruction_c *i)
   if (! FPU_handle_NaN(b, load_reg, result, status))
      result = floatx80_sub(float64_to_floatx80(load_reg, status), b, status);
 
-  if (! BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags))
+  if (! FPU_exception(status.float_exception_flags))
      BX_WRITE_FPU_REG(result, 0);
 #else
   BX_INFO(("FSUBR_DOUBLE_REAL: required FPU, configure --enable-fpu"));
@@ -802,7 +802,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FISUB_WORD_INTEGER(bxInstruction_c *i)
   clear_C1();
 
   if (IS_TAG_EMPTY(0)) {
-     BX_CPU_THIS_PTR FPU_stack_underflow(0);
+     FPU_stack_underflow(0);
      return;
   }
 
@@ -814,7 +814,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FISUB_WORD_INTEGER(bxInstruction_c *i)
 
   floatx80 result = floatx80_sub(a, b, status);
 
-  if (! BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags))
+  if (! FPU_exception(status.float_exception_flags))
      BX_WRITE_FPU_REG(result, 0);
 #else
   BX_INFO(("FISUB_WORD_INTEGER: required FPU, configure --enable-fpu"));
@@ -834,7 +834,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FISUBR_WORD_INTEGER(bxInstruction_c *i)
   clear_C1();
 
   if (IS_TAG_EMPTY(0)) {
-     BX_CPU_THIS_PTR FPU_stack_underflow(0);
+     FPU_stack_underflow(0);
      return;
   }
 
@@ -846,7 +846,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FISUBR_WORD_INTEGER(bxInstruction_c *i)
 
   floatx80 result = floatx80_sub(a, b, status);
 
-  if (! BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags))
+  if (! FPU_exception(status.float_exception_flags))
      BX_WRITE_FPU_REG(result, 0);
 #else
   BX_INFO(("FISUBR_WORD_INTEGER: required FPU, configure --enable-fpu"));
@@ -866,7 +866,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FISUB_DWORD_INTEGER(bxInstruction_c *i)
   clear_C1();
 
   if (IS_TAG_EMPTY(0)) {
-     BX_CPU_THIS_PTR FPU_stack_underflow(0);
+     FPU_stack_underflow(0);
      return;
   }
 
@@ -879,7 +879,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FISUB_DWORD_INTEGER(bxInstruction_c *i)
   floatx80 result = floatx80_sub(BX_READ_FPU_REG(0),
               int32_to_floatx80(load_reg), status);
 
-  if (! BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags))
+  if (! FPU_exception(status.float_exception_flags))
      BX_WRITE_FPU_REG(result, 0);
 #else
   BX_INFO(("FISUB_DWORD_INTEGER: required FPU, configure --enable-fpu"));
@@ -899,7 +899,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FISUBR_DWORD_INTEGER(bxInstruction_c *i)
   clear_C1();
 
   if (IS_TAG_EMPTY(0)) {
-     BX_CPU_THIS_PTR FPU_stack_underflow(0);
+     FPU_stack_underflow(0);
      return;
   }
 
@@ -911,7 +911,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FISUBR_DWORD_INTEGER(bxInstruction_c *i)
 
   floatx80 result = floatx80_sub(a, b, status);
 
-  if (! BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags))
+  if (! FPU_exception(status.float_exception_flags))
      BX_WRITE_FPU_REG(result, 0);
 #else
   BX_INFO(("FISUBR_DWORD_INTEGER: required FPU, configure --enable-fpu"));
@@ -928,7 +928,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FDIV_ST0_STj(bxInstruction_c *i)
 
   if (IS_TAG_EMPTY(0) || IS_TAG_EMPTY(i->rm()))
   {
-     BX_CPU_THIS_PTR FPU_stack_underflow(0);
+     FPU_stack_underflow(0);
      return;
   }
 
@@ -940,7 +940,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FDIV_ST0_STj(bxInstruction_c *i)
 
   floatx80 result = floatx80_div(a, b, status);
 
-  if (! BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags))
+  if (! FPU_exception(status.float_exception_flags))
      BX_WRITE_FPU_REG(result, 0);
 #else
   BX_INFO(("FDIV_ST0_STj: required FPU, configure --enable-fpu"));
@@ -957,7 +957,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FDIVR_ST0_STj(bxInstruction_c *i)
 
   if (IS_TAG_EMPTY(0) || IS_TAG_EMPTY(i->rm()))
   {
-     BX_CPU_THIS_PTR FPU_stack_underflow(0);
+     FPU_stack_underflow(0);
      return;
   }
 
@@ -969,7 +969,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FDIVR_ST0_STj(bxInstruction_c *i)
 
   floatx80 result = floatx80_div(a, b, status);
 
-  if (! BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags))
+  if (! FPU_exception(status.float_exception_flags))
      BX_WRITE_FPU_REG(result, 0);
 #else
   BX_INFO(("FDIVR_ST0_STj: required FPU, configure --enable-fpu"));
@@ -988,7 +988,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FDIV_STi_ST0(bxInstruction_c *i)
 
   if (IS_TAG_EMPTY(0) || IS_TAG_EMPTY(i->rm()))
   {
-     BX_CPU_THIS_PTR FPU_stack_underflow(i->rm(), pop_stack);
+     FPU_stack_underflow(i->rm(), pop_stack);
      return;
   }
 
@@ -1000,7 +1000,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FDIV_STi_ST0(bxInstruction_c *i)
 
   floatx80 result = floatx80_div(a, b, status);
 
-  if (! BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags)) {
+  if (! FPU_exception(status.float_exception_flags)) {
      BX_WRITE_FPU_REG(result, i->rm());
      if (pop_stack)
         BX_CPU_THIS_PTR the_i387.FPU_pop();
@@ -1022,7 +1022,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FDIVR_STi_ST0(bxInstruction_c *i)
 
   if (IS_TAG_EMPTY(0) || IS_TAG_EMPTY(i->rm()))
   {
-     BX_CPU_THIS_PTR FPU_stack_underflow(i->rm(), pop_stack);
+     FPU_stack_underflow(i->rm(), pop_stack);
      return;
   }
 
@@ -1034,7 +1034,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FDIVR_STi_ST0(bxInstruction_c *i)
 
   floatx80 result = floatx80_div(a, b, status);
 
-  if (! BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags)) {
+  if (! FPU_exception(status.float_exception_flags)) {
      BX_WRITE_FPU_REG(result, i->rm());
      if (pop_stack)
         BX_CPU_THIS_PTR the_i387.FPU_pop();
@@ -1057,7 +1057,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FDIV_SINGLE_REAL(bxInstruction_c *i)
   clear_C1();
 
   if (IS_TAG_EMPTY(0)) {
-     BX_CPU_THIS_PTR FPU_stack_underflow(0);
+     FPU_stack_underflow(0);
      return;
   }
 
@@ -1068,7 +1068,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FDIV_SINGLE_REAL(bxInstruction_c *i)
   if (! FPU_handle_NaN(a, load_reg, result, status))
      result = floatx80_div(a, float32_to_floatx80(load_reg, status), status);
 
-  if (! BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags))
+  if (! FPU_exception(status.float_exception_flags))
      BX_WRITE_FPU_REG(result, 0);
 #else
   BX_INFO(("FDIV_SINGLE_REAL: required FPU, configure --enable-fpu"));
@@ -1088,7 +1088,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FDIVR_SINGLE_REAL(bxInstruction_c *i)
   clear_C1();
 
   if (IS_TAG_EMPTY(0)) {
-     BX_CPU_THIS_PTR FPU_stack_underflow(0);
+     FPU_stack_underflow(0);
      return;
   }
 
@@ -1099,7 +1099,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FDIVR_SINGLE_REAL(bxInstruction_c *i)
   if (! FPU_handle_NaN(b, load_reg, result, status))
      result = floatx80_div(float32_to_floatx80(load_reg, status), b, status);
 
-  if (! BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags))
+  if (! FPU_exception(status.float_exception_flags))
      BX_WRITE_FPU_REG(result, 0);
 #else
   BX_INFO(("FDIVR_SINGLE_REAL: required FPU, configure --enable-fpu"));
@@ -1119,7 +1119,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FDIV_DOUBLE_REAL(bxInstruction_c *i)
   clear_C1();
 
   if (IS_TAG_EMPTY(0)) {
-     BX_CPU_THIS_PTR FPU_stack_underflow(0);
+     FPU_stack_underflow(0);
      return;
   }
 
@@ -1130,7 +1130,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FDIV_DOUBLE_REAL(bxInstruction_c *i)
   if (! FPU_handle_NaN(a, load_reg, result, status))
      result = floatx80_div(a, float64_to_floatx80(load_reg, status), status);
 
-  if (! BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags))
+  if (! FPU_exception(status.float_exception_flags))
      BX_WRITE_FPU_REG(result, 0);
 #else
   BX_INFO(("FDIV_DOUBLE_REAL: required FPU, configure --enable-fpu"));
@@ -1150,7 +1150,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FDIVR_DOUBLE_REAL(bxInstruction_c *i)
   clear_C1();
 
   if (IS_TAG_EMPTY(0)) {
-     BX_CPU_THIS_PTR FPU_stack_underflow(0);
+     FPU_stack_underflow(0);
      return;
   }
 
@@ -1161,7 +1161,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FDIVR_DOUBLE_REAL(bxInstruction_c *i)
   if (! FPU_handle_NaN(b, load_reg, result, status))
      result = floatx80_div(float64_to_floatx80(load_reg, status), b, status);
 
-  if (! BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags))
+  if (! FPU_exception(status.float_exception_flags))
      BX_WRITE_FPU_REG(result, 0);
 #else
   BX_INFO(("FDIVR_DOUBLE_REAL: required FPU, configure --enable-fpu"));
@@ -1181,7 +1181,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FIDIV_WORD_INTEGER(bxInstruction_c *i)
   clear_C1();
 
   if (IS_TAG_EMPTY(0)) {
-     BX_CPU_THIS_PTR FPU_stack_underflow(0);
+     FPU_stack_underflow(0);
      return;
   }
 
@@ -1193,7 +1193,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FIDIV_WORD_INTEGER(bxInstruction_c *i)
 
   floatx80 result = floatx80_div(a, b, status);
 
-  if (! BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags))
+  if (! FPU_exception(status.float_exception_flags))
      BX_WRITE_FPU_REG(result, 0);
 #else
   BX_INFO(("FIDIV_WORD_INTEGER: required FPU, configure --enable-fpu"));
@@ -1213,7 +1213,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FIDIVR_WORD_INTEGER(bxInstruction_c *i)
   clear_C1();
 
   if (IS_TAG_EMPTY(0)) {
-     BX_CPU_THIS_PTR FPU_stack_underflow(0);
+     FPU_stack_underflow(0);
      return;
   }
 
@@ -1225,7 +1225,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FIDIVR_WORD_INTEGER(bxInstruction_c *i)
 
   floatx80 result = floatx80_div(a, b, status);
 
-  if (! BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags))
+  if (! FPU_exception(status.float_exception_flags))
      BX_WRITE_FPU_REG(result, 0);
 #else
   BX_INFO(("FIDIVR_WORD_INTEGER: required FPU, configure --enable-fpu"));
@@ -1245,7 +1245,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FIDIV_DWORD_INTEGER(bxInstruction_c *i)
   clear_C1();
 
   if (IS_TAG_EMPTY(0)) {
-     BX_CPU_THIS_PTR FPU_stack_underflow(0);
+     FPU_stack_underflow(0);
      return;
   }
 
@@ -1257,7 +1257,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FIDIV_DWORD_INTEGER(bxInstruction_c *i)
 
   floatx80 result = floatx80_div(a, b, status);
 
-  if (! BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags))
+  if (! FPU_exception(status.float_exception_flags))
      BX_WRITE_FPU_REG(result, 0);
 #else
   BX_INFO(("FIDIV_DWORD_INTEGER: required FPU, configure --enable-fpu"));
@@ -1277,7 +1277,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FIDIVR_DWORD_INTEGER(bxInstruction_c *i)
   clear_C1();
 
   if (IS_TAG_EMPTY(0)) {
-     BX_CPU_THIS_PTR FPU_stack_underflow(0);
+     FPU_stack_underflow(0);
      return;
   }
 
@@ -1289,7 +1289,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FIDIVR_DWORD_INTEGER(bxInstruction_c *i)
 
   floatx80 result = floatx80_div(a, b, status);
 
-  if (! BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags))
+  if (! FPU_exception(status.float_exception_flags))
      BX_WRITE_FPU_REG(result, 0);
 #else
   BX_INFO(("FIDIVR_DWORD_INTEGER: required FPU, configure --enable-fpu"));
@@ -1305,7 +1305,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FSQRT(bxInstruction_c *i)
   clear_C1();
 
   if (IS_TAG_EMPTY(0)) {
-     BX_CPU_THIS_PTR FPU_stack_underflow(0);
+     FPU_stack_underflow(0);
      return;
   }
 
@@ -1314,7 +1314,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FSQRT(bxInstruction_c *i)
 
   floatx80 result = floatx80_sqrt(BX_READ_FPU_REG(0), status);
 
-  if (! BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags))
+  if (! FPU_exception(status.float_exception_flags))
      BX_WRITE_FPU_REG(result, 0);
 #else
   BX_INFO(("FSQRT: required FPU, configure --enable-fpu"));
@@ -1331,7 +1331,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FRNDINT(bxInstruction_c *i)
   clear_C1();
 
   if (IS_TAG_EMPTY(0)) {
-     BX_CPU_THIS_PTR FPU_stack_underflow(0);
+     FPU_stack_underflow(0);
      return;
   }
 
@@ -1340,7 +1340,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FRNDINT(bxInstruction_c *i)
 
   floatx80 result = floatx80_round_to_int(BX_READ_FPU_REG(0), status);
 
-  if (! BX_CPU_THIS_PTR FPU_exception(status.float_exception_flags))
+  if (! FPU_exception(status.float_exception_flags))
      BX_WRITE_FPU_REG(result, 0);
 #else
   BX_INFO(("FRNDINT: required FPU, configure --enable-fpu"));

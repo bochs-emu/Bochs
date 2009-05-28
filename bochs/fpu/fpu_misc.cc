@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu_misc.cc,v 1.18 2009-04-27 14:00:55 sshwarts Exp $
+// $Id: fpu_misc.cc,v 1.19 2009-05-28 19:25:33 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -47,7 +47,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FXCH_STi(bxInstruction_c *i)
 
   if (st0_tag == FPU_Tag_Empty || sti_tag == FPU_Tag_Empty)
   {
-      BX_CPU_THIS_PTR FPU_exception(FPU_EX_Stack_Underflow);
+      FPU_exception(FPU_EX_Stack_Underflow);
 
       if(BX_CPU_THIS_PTR the_i387.is_IA_masked())
       {
@@ -76,7 +76,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FCHS(bxInstruction_c *i)
   BX_CPU_THIS_PTR FPU_update_last_instruction(i);
 
   if (IS_TAG_EMPTY(0)) {
-     BX_CPU_THIS_PTR FPU_stack_underflow(0);
+     FPU_stack_underflow(0);
   }
   else {
      clear_C1();
@@ -96,7 +96,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FABS(bxInstruction_c *i)
   BX_CPU_THIS_PTR FPU_update_last_instruction(i);
 
   if (IS_TAG_EMPTY(0)) {
-     BX_CPU_THIS_PTR FPU_stack_underflow(0);
+     FPU_stack_underflow(0);
   }
   else {
      clear_C1();
