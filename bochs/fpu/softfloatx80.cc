@@ -182,6 +182,8 @@ floatx80 floatx80_scale(floatx80 a, floatx80 b, float_status_t &status)
         if (aSig == 0) return a;
         float_raise(status, float_flag_denormal);
         normalizeFloatx80Subnormal(aSig, &aExp, &aSig);
+        if (bExp < 0x3FFF)
+            return normalizeRoundAndPackFloatx80(80, aSign, aExp, aSig, 0, status);
     }
     if (bExp == 0) {
         if (bSig == 0) return a;
@@ -194,6 +196,7 @@ floatx80 floatx80_scale(floatx80 a, floatx80 b, float_status_t &status)
         return roundAndPackFloatx80(80, aSign,
                           bSign ? -0x3FFF : 0x7FFF, aSig, 0, status);
     }
+
     if (bExp < 0x3FFF) return a;
 
     int shiftCount = 0x403E - bExp;
