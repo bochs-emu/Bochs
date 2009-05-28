@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu_compare.cc,v 1.24 2009-05-21 12:20:06 sshwarts Exp $
+// $Id: fpu_compare.cc,v 1.25 2009-05-28 16:31:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -264,7 +264,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FCOM_SINGLE_REAL(bxInstruction_c *i)
 
   floatx80 a = BX_READ_FPU_REG(0);
 
-  if (floatx80_is_nan(a) || float32_is_nan(load_reg)) {
+  if (floatx80_is_nan(a) || floatx80_is_unsupported(a) || float32_is_nan(load_reg)) {
     rc = float_relation_unordered;
     float_raise(status, float_flag_invalid);
   }
@@ -314,7 +314,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FCOM_DOUBLE_REAL(bxInstruction_c *i)
 
   floatx80 a = BX_READ_FPU_REG(0);
 
-  if (floatx80_is_nan(a) || float64_is_nan(load_reg)) {
+  if (floatx80_is_nan(a) || floatx80_is_unsupported(a) || float64_is_nan(load_reg)) {
     rc = float_relation_unordered;
     float_raise(status, float_flag_invalid);
   }
