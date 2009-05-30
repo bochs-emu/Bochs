@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.599 2009-05-28 08:26:17 sshwarts Exp $
+// $Id: cpu.h,v 1.600 2009-05-30 15:09:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -3055,6 +3055,7 @@ public: // for now...
   BX_SMF bx_phy_address translate_linear(bx_address laddr, unsigned curr_pl, unsigned rw);
 #if BX_SUPPORT_PAE
   BX_SMF bx_phy_address translate_linear_PAE(bx_address laddr, bx_address &lpf_mask, Bit32u &combined_access, unsigned curr_pl, unsigned rw);
+  BX_SMF int check_entry_PAE(const char *s, Bit64u entry, Bit64u reserved, unsigned rw, bx_bool *nx_fault);
 #endif
 
   BX_SMF BX_CPP_INLINE bx_phy_address dtranslate_linear(bx_address laddr, unsigned curr_pl, unsigned rw)
@@ -3093,6 +3094,9 @@ public: // for now...
 #endif
   BX_SMF void pagingCR0Changed(Bit32u oldCR0, Bit32u newCR0) BX_CPP_AttrRegparmN(2);
   BX_SMF void pagingCR4Changed(Bit32u oldCR4, Bit32u newCR4) BX_CPP_AttrRegparmN(2);
+#if BX_SUPPORT_PAE
+  BX_SMF bx_bool CheckPDPTR(bx_bool pg, bx_bool pae, bx_address cr3_val);
+#endif
 
   BX_SMF void reset(unsigned source);
   BX_SMF void shutdown(void);

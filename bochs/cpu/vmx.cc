@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmx.cc,v 1.17 2009-05-28 08:26:17 sshwarts Exp $
+// $Id: vmx.cc,v 1.18 2009-05-30 15:09:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2009 Stanislav Shwartsman
@@ -244,6 +244,7 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
 
   vm->vm_tpr_threshold = VMread32(VMCS_32BIT_CONTROL_TPR_THRESHOLD);
   vm->virtual_apic_page_addr = (bx_phy_address) VMread64(VMCS_64BIT_CONTROL_VIRTUAL_APIC_PAGE_ADDR);
+  vm->executive_vmcsptr = (bx_phy_address) VMread64(VMCS_64BIT_CONTROL_EXECUTIVE_VMCS_PTR);
 
   //
   // Check VM-execution control fields
@@ -410,6 +411,13 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
   if (vm->vmentry_ctrls & ~VMX_MSR_VMX_VMENTRY_CTRLS_HI) {
      BX_ERROR(("VMFAIL: VMCS EXEC CTRL: VMX vmentry controls allowed 1-settings"));
      return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
+  }
+
+  if (vm->vmentry_ctrls & VMX_VMENTRY_CTRL1_DEACTIVATE_DUAL_MONITOR_TREATMENT) {
+     if (! BX_CPU_THIS_PTR in_smm) {
+       BX_ERROR(("VMFAIL: VMENTRY from outside SMM with dual-monitor treatment enabled"));
+       return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
+     }
   }
 
   if (vm->vmentry_msr_load_cnt > 0) {
@@ -1952,6 +1960,13 @@ void BX_CPU_C::VMLAUNCH(bxInstruction_c *i)
     VMexit(0, state_load_error | (1 << 31), qualification);
   }
 
+#if BX_SUPPORT_PAE
+  if (! CheckPDPTR(BX_CPU_THIS_PTR cr0.get_PG(), BX_CPU_THIS_PTR cr4.get_PAE(), BX_CPU_THIS_PTR cr3)) {
+    BX_ERROR(("VMEXIT: Guest State PDPTRs Checks Failed"));
+    VMexit(0, VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE | (1 << 31), VMENTER_ERR_GUEST_STATE_PDPTR_LOADING);
+  }
+#endif
+
   Bit32u msr = LoadMSRs(BX_CPU_THIS_PTR vmcs.vmentry_msr_load_cnt, BX_CPU_THIS_PTR vmcs.vmentry_msr_load_addr);
   if (msr) {
     BX_ERROR(("VMEXIT: Error when loading guest MSR 0x%08x", msr));
@@ -2042,6 +2057,7 @@ void BX_CPU_C::VMPTRLD(bxInstruction_c *i)
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
   Bit64u pAddr = read_virtual_qword(i->seg(), eaddr); // keep 64-bit
   if ((pAddr & 0xfff) != 0 || ! IsValidPhyAddr(pAddr)) {
+    BX_ERROR(("VMFAIL: invalid or not page aligned physical address !"));
     VMfail(VMXERR_VMPTRLD_INVALID_PHYSICAL_ADDRESS);
     return;
   }
@@ -2057,12 +2073,13 @@ void BX_CPU_C::VMPTRLD(bxInstruction_c *i)
             BX_READ, (Bit8u*)(&revision));
 
     if (revision != VMX_VMCS_REVISION_ID) {
+       BX_ERROR(("VMPTRLD: not expected (%d != %d) VMCS revision id !", revision, VMX_VMCS_REVISION_ID));
        VMfail(VMXERR_VMPTRLD_INCORRECT_VMCS_REVISION_ID);
-       return;
     }
-
-    set_VMCSPTR(pAddr);
-    VMsucceed();
+    else {
+       set_VMCSPTR(pAddr);
+       VMsucceed();
+    }
   }
 #else
   BX_INFO(("VMPTRLD: required VMX support, use --enable-vmx option"));
@@ -2407,6 +2424,7 @@ void BX_CPU_C::VMWRITE(bxInstruction_c *i)
        enc_64 = read_virtual_qword_64(i->seg(), eaddr);
     }
     if (enc_64 >> 32) {
+       BX_ERROR(("VMWRITE: not supported field !"));
        VMfail(VMXERR_UNSUPPORTED_VMCS_COMPONENT_ACCESS);
        return;
     }
@@ -2644,6 +2662,7 @@ void BX_CPU_C::VMWRITE(bxInstruction_c *i)
     case VMCS_IO_RDI:
     case VMCS_IO_RIP:
     case VMCS_GUEST_LINEAR_ADDR:
+      BX_ERROR(("VMWRITE: write to read/only field %08x", encoding));
       VMfail(VMXERR_VMWRITE_READ_ONLY_VMCS_COMPONENT);
       return;
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.296 2009-05-07 12:00:02 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.297 2009-05-30 15:09:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1429,11 +1429,11 @@ bx_address get_cr4_allow_mask(void)
   allowMask |= (1<<3);   /* DE  */
 
 #if BX_SUPPORT_LARGE_PAGES
-  allowMask |= (1<<4);
+  allowMask |= (1<<4);   /* PSE */
 #endif
 
 #if BX_SUPPORT_PAE
-  allowMask |= (1<<5);
+  allowMask |= (1<<5);   /* PAE */
 #endif
 
 #if BX_CPU_LEVEL >= 5
