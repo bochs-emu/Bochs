@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmx.cc,v 1.18 2009-05-30 15:09:38 sshwarts Exp $
+// $Id: vmx.cc,v 1.19 2009-05-31 07:49:04 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2009 Stanislav Shwartsman
@@ -1165,6 +1165,17 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
     }
   }
 
+#if BX_SUPPORT_PAE
+  if (! x86_64_guest && (guest.cr4 & (1 << 5)) != 0 /* PAE */) {
+    // CR0.PG is always set in VMX mode
+    if (! CheckPDPTR(guest.cr3)) {
+      *qualification = VMENTER_ERR_GUEST_STATE_PDPTR_LOADING;
+      BX_ERROR(("VMENTER: Guest State PDPTRs Checks Failed"));
+      return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
+    }
+  }
+#endif
+
   //
   // Load Guest State -> VMENTER
   //
@@ -1185,10 +1196,10 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
   if (!SetCR0((old_cr0 & VMX_KEEP_CR0_BITS) | (guest.cr0 & ~VMX_KEEP_CR0_BITS))) {
     BX_PANIC(("VMENTER CR0 is broken !"));
   }
-  SetCR3(guest.cr3);
-  if (!SetCR4(guest.cr4)) { // improssible if CR4 checks were correct
+  if (!SetCR4(guest.cr4)) { // cannot fail if CR4 checks were correct
     BX_PANIC(("VMENTER CR4 is broken !"));
   }
+  SetCR3(guest.cr3);
 
   if (vmentry_ctrls & VMX_VMENTRY_CTRL1_LOAD_DBG_CTRLS) {
     // always clear bits 15:14 and set bit 10
@@ -1487,10 +1498,10 @@ void BX_CPU_C::VMexitLoadHostState(void)
   if (!SetCR0((old_cr0 & VMX_KEEP_CR0_BITS) | (host_state->cr0 & ~VMX_KEEP_CR0_BITS))) {
     BX_PANIC(("VMEXIT CR0 is broken !"));
   }
-  SetCR3(host_state->cr3);
   if (!SetCR4(host_state->cr4)) {
     BX_PANIC(("VMEXIT CR4 is broken !"));
   }
+  SetCR3(host_state->cr3);
 
   BX_CPU_THIS_PTR dr7 = 0x00000400;
 
@@ -1959,13 +1970,6 @@ void BX_CPU_C::VMLAUNCH(bxInstruction_c *i)
     BX_ERROR(("VMEXIT: Guest State Checks Failed"));
     VMexit(0, state_load_error | (1 << 31), qualification);
   }
-
-#if BX_SUPPORT_PAE
-  if (! CheckPDPTR(BX_CPU_THIS_PTR cr0.get_PG(), BX_CPU_THIS_PTR cr4.get_PAE(), BX_CPU_THIS_PTR cr3)) {
-    BX_ERROR(("VMEXIT: Guest State PDPTRs Checks Failed"));
-    VMexit(0, VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE | (1 << 31), VMENTER_ERR_GUEST_STATE_PDPTR_LOADING);
-  }
-#endif
 
   Bit32u msr = LoadMSRs(BX_CPU_THIS_PTR vmcs.vmentry_msr_load_cnt, BX_CPU_THIS_PTR vmcs.vmentry_msr_load_addr);
   if (msr) {

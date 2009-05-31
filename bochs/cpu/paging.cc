@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.175 2009-05-30 15:09:38 sshwarts Exp $
+// $Id: paging.cc,v 1.176 2009-05-31 07:49:04 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -448,8 +448,7 @@ BX_CPU_C::pagingCR4Changed(Bit32u oldCR4, Bit32u newCR4)
 #endif
 }
 
-  void BX_CPP_AttrRegparmN(1)
-BX_CPU_C::SetCR3(bx_address val)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::SetCR3(bx_address val)
 {
   // flush TLB even if value does not change
 #if BX_SUPPORT_GLOBAL_PAGES
@@ -478,7 +477,9 @@ BX_CPU_C::SetCR3(bx_address val)
     }
     else
 #endif
+    {
       BX_CPU_THIS_PTR cr3_masked = val & 0xffffffe0;
+    }
   }
   else
 #endif
@@ -488,25 +489,27 @@ BX_CPU_C::SetCR3(bx_address val)
 }
 
 #if BX_SUPPORT_PAE
-bx_bool BX_CPU_C::CheckPDPTR(bx_bool pg, bx_bool pae, bx_address cr3_val)
+bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::CheckPDPTR(Bit32u cr3_val)
 {
-  if (pg && pae && !long_mode())
-  {
-     cr3_val &= 0xffffffe0;
+  cr3_val &= 0xffffffe0;
 
-     for (int n=0; n<4; n++) {
-        Bit64u pdptr;
-        // read PDPE cache entry
-        bx_phy_address entry_pdpe_addr = (bx_phy_address) (cr3_val | (n << 3));
-        access_read_physical(entry_pdpe_addr, 8, (Bit8u*)(&pdptr));
-        BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, entry_pdpe_addr, 8, BX_READ, (Bit8u*)(&pdptr));
+  for (int n=0; n<4; n++) {
+     // read PDPE cache entry
+     bx_phy_address entry_pdpe_addr = (bx_phy_address) (cr3_val | (n << 3));
+     access_read_physical(entry_pdpe_addr, 8, &(BX_CPU_THIS_PTR PDPE_CACHE.entry[n]));
+     BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, entry_pdpe_addr, 8, 
+         BX_READ, (Bit8u*)(&BX_CPU_THIS_PTR PDPE_CACHE.entry[n]));
 
-        if (pdptr & 0x1) {
-           if (pdptr & PAGING_PAE_PDPE_RESERVED_BITS)
-              return 0;
+     Bit64u pdptr = BX_CPU_THIS_PTR PDPE_CACHE.entry[n];
+     if (pdptr & 0x1) {
+        if (pdptr & PAGING_PAE_PDPE_RESERVED_BITS) {
+           BX_CPU_THIS_PTR PDPE_CACHE.valid = 0;
+           return 0;
         }
      }
   }
+
+  BX_CPU_THIS_PTR PDPE_CACHE.valid = 1;
 
   return 1; /* PDPTRs are fine */
 }

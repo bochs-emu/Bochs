@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.600 2009-05-30 15:09:38 sshwarts Exp $
+// $Id: cpu.h,v 1.601 2009-05-31 07:49:03 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -3095,7 +3095,7 @@ public: // for now...
   BX_SMF void pagingCR0Changed(Bit32u oldCR0, Bit32u newCR0) BX_CPP_AttrRegparmN(2);
   BX_SMF void pagingCR4Changed(Bit32u oldCR4, Bit32u newCR4) BX_CPP_AttrRegparmN(2);
 #if BX_SUPPORT_PAE
-  BX_SMF bx_bool CheckPDPTR(bx_bool pg, bx_bool pae, bx_address cr3_val);
+  BX_SMF bx_bool CheckPDPTR(Bit32u cr3_val) BX_CPP_AttrRegparmN(1);
 #endif
 
   BX_SMF void reset(unsigned source);
