@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ferr.cc,v 1.17 2009-05-24 15:29:43 sshwarts Exp $
+// $Id: ferr.cc,v 1.18 2009-06-01 10:39:34 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -62,6 +62,9 @@ unsigned BX_CPU_C::FPU_exception(unsigned exception, bx_bool is_store)
   Bit32u status = FPU_PARTIAL_STATUS;
 
   unsigned unmasked = exception & ~FPU_CONTROL_WORD & FPU_CW_Exceptions_Mask;
+  // if IE or DZ exception happen nothing else will be reported
+  if (exception & (FPU_EX_Invalid | FPU_EX_Zero_Div))
+      unmasked &= (FPU_EX_Invalid | FPU_EX_Zero_Div);
 
   /* Set summary bits iff exception isn't masked */
   if (unmasked)
@@ -80,16 +83,15 @@ unsigned BX_CPU_C::FPU_exception(unsigned exception, bx_bool is_store)
      return unmasked;
   }
 
+  if (exception & FPU_EX_Zero_Div) {
+     FPU_PARTIAL_STATUS |= FPU_EX_Zero_Div;
+     return unmasked;
+  }
+
   if (exception & FPU_EX_Denormal) {
      FPU_PARTIAL_STATUS |= FPU_EX_Denormal;
      if (unmasked & FPU_EX_Denormal)
-        return unmasked;
-  }
-
-  if (exception & FPU_EX_Zero_Div) {
-     FPU_PARTIAL_STATUS |= FPU_EX_Zero_Div;
-     if (unmasked & FPU_EX_Zero_Div)
-        return unmasked;
+        return unmasked & FPU_EX_Denormal;
   }
 
   /* Set the corresponding exception bits */
