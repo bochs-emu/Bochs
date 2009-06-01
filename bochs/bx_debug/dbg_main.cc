@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.196 2009-05-15 19:04:58 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.197 2009-06-01 14:50:19 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -663,13 +663,14 @@ void bx_dbg_print_sse_state(void)
   dbg_printf("MXCSR: 0x%08x: %s %s RC:%d %s %s %s %s %s %s %s %s %s %s %s %s\n", mxcsr,
      (mxcsr & (1<<17)) ? "ULE" : "ule",
      (mxcsr & (1<<15)) ? "FUZ" : "fuz",
-     (mxcsr >> 12) & 3,
-     (mxcsr & (1<<11)) ? "PM" : "pm",
-     (mxcsr & (1<<10)) ? "UM" : "um",
-     (mxcsr & (1<<9)) ? "OM" : "om",
-     (mxcsr & (1<<8)) ? "ZM" : "zm",
-     (mxcsr & (1<<7)) ? "DM" : "dm",
-     (mxcsr & (1<<6)) ? "IM" : "im",
+     (mxcsr >> 13) & 3,
+     (mxcsr & (1<<12)) ? "PM" : "pm",
+     (mxcsr & (1<<11)) ? "UM" : "um",
+     (mxcsr & (1<<10)) ? "OM" : "om",
+     (mxcsr & (1<<9)) ? "ZM" : "zm",
+     (mxcsr & (1<<8)) ? "DM" : "dm",
+     (mxcsr & (1<<7)) ? "IM" : "im",
+     (mxcsr & (1<<6)) ? "DAZ" : "daz",
      (mxcsr & (1<<5)) ? "PE" : "pe",
      (mxcsr & (1<<4)) ? "UE" : "ue",
      (mxcsr & (1<<3)) ? "OE" : "oe",
@@ -1180,7 +1181,7 @@ void bx_dbg_where_command()
   }
   Bit32u bp = BX_CPU(dbg_cpu)->get_reg32(BX_32BIT_REG_EBP);
   bx_address ip = BX_CPU(dbg_cpu)->get_instruction_pointer();
-  dbg_printf("(%d) 0x%08x\n", 0, ip);
+  dbg_printf("(%d) 0x%08x\n", dbg_cpu, ip);
   for (int i = 1; i < 50; i++) {
     // Up
     bx_phy_address paddr;
@@ -1760,7 +1761,7 @@ void bx_dbg_disassemble_current(int which_cpu, int print_time)
     // way out I have thought of would be to keep a prev_eax, prev_ebx, etc copies
     // in each cpu description (see cpu/cpu.h) and update/compare those "prev" values
     // from here. (eks)
-    if(BX_CPU(dbg_cpu)->trace_reg)
+    if(BX_CPU(which_cpu)->trace_reg)
       bx_dbg_info_registers_command(BX_INFO_GENERAL_PURPOSE_REGS);
 
     if (print_time)
