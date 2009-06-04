@@ -66,9 +66,7 @@ static floatx80 do_fprem(floatx80 a, floatx80 b, Bit64u &q, int rounding_mode, f
     bExp = extractFloatx80Exp(b);
 
     if (aExp == 0x7FFF) {
-        if ((Bit64u) (aSig0<<1)
-             || ((bExp == 0x7FFF) && (Bit64u) (bSig<<1)))
-        {
+        if ((Bit64u) (aSig0<<1) || ((bExp == 0x7FFF) && (Bit64u) (bSig<<1))) {
             return propagateFloatx80NaN(a, b, status);
         }
         float_raise(status, float_flag_invalid);
@@ -76,6 +74,12 @@ static floatx80 do_fprem(floatx80 a, floatx80 b, Bit64u &q, int rounding_mode, f
     }
     if (bExp == 0x7FFF) {
         if ((Bit64u) (bSig<<1)) return propagateFloatx80NaN(a, b, status);
+        if (aExp == 0 && aSig0) {
+            float_raise(status, float_flag_denormal);
+            normalizeFloatx80Subnormal(aSig0, &aExp, &aSig0);
+            return (a.fraction & BX_CONST64(0x8000000000000000)) ?
+                    packFloatx80(aSign, aExp, aSig0) : a;
+        }
         return a;
     }
     if (bExp == 0) {
@@ -87,7 +91,7 @@ static floatx80 do_fprem(floatx80 a, floatx80 b, Bit64u &q, int rounding_mode, f
         normalizeFloatx80Subnormal(bSig, &bExp, &bSig);
     }
     if (aExp == 0) {
-        if ((Bit64u) (aSig0<<1) == 0) return a;
+        if (aSig0 == 0) return a;
         float_raise(status, float_flag_denormal);
         normalizeFloatx80Subnormal(aSig0, &aExp, &aSig0);
     }
