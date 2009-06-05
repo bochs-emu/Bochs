@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu_load_store.cc,v 1.36 2009-05-28 19:25:33 sshwarts Exp $
+// $Id: fpu_load_store.cc,v 1.37 2009-06-05 12:24:20 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -28,6 +28,8 @@
 
 #if BX_SUPPORT_FPU
 
+#define swap_values(a, b) ((a)^=(b)^=(a)^=(b))
+
 extern float_status_t FPU_pre_exception_handling(Bit16u control_word);
 
 #include "softfloatx80.h"
@@ -36,7 +38,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLD_STi(bxInstruction_c *i)
 {
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
-  BX_CPU_THIS_PTR FPU_update_last_instruction(i);
+  FPU_update_last_instruction(i);
 
   clear_C1();
 
@@ -74,7 +76,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLD_SINGLE_REAL(bxInstruction_c *i)
   RMAddr(i) = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
   float32 load_reg = read_virtual_dword(i->seg(), RMAddr(i));
 
-  BX_CPU_THIS_PTR FPU_update_last_instruction(i);
+  FPU_update_last_instruction(i);
 
   clear_C1();
 
@@ -107,7 +109,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLD_DOUBLE_REAL(bxInstruction_c *i)
   RMAddr(i) = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
   float64 load_reg = read_virtual_qword(i->seg(), RMAddr(i));
 
-  BX_CPU_THIS_PTR FPU_update_last_instruction(i);
+  FPU_update_last_instruction(i);
 
   clear_C1();
 
@@ -143,7 +145,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLD_EXTENDED_REAL(bxInstruction_c *i)
   result.fraction = read_virtual_qword(i->seg(), RMAddr(i));
   result.exp      = read_virtual_word (i->seg(), RMAddr(i)+8);
 
-  BX_CPU_THIS_PTR FPU_update_last_instruction(i);
+  FPU_update_last_instruction(i);
 
   clear_C1();
 
@@ -168,7 +170,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FILD_WORD_INTEGER(bxInstruction_c *i)
   RMAddr(i) = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
   Bit16s load_reg = (Bit16s) read_virtual_word(i->seg(), RMAddr(i));
 
-  BX_CPU_THIS_PTR FPU_update_last_instruction(i);
+  FPU_update_last_instruction(i);
 
   clear_C1();
 
@@ -194,7 +196,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FILD_DWORD_INTEGER(bxInstruction_c *i)
   RMAddr(i) = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
   Bit32s load_reg = (Bit32s) read_virtual_dword(i->seg(), RMAddr(i));
 
-  BX_CPU_THIS_PTR FPU_update_last_instruction(i);
+  FPU_update_last_instruction(i);
 
   clear_C1();
 
@@ -220,7 +222,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FILD_QWORD_INTEGER(bxInstruction_c *i)
   RMAddr(i) = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
   Bit64s load_reg = (Bit64s) read_virtual_qword(i->seg(), RMAddr(i));
 
-  BX_CPU_THIS_PTR FPU_update_last_instruction(i);
+  FPU_update_last_instruction(i);
 
   clear_C1();
 
@@ -247,7 +249,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FBLD_PACKED_BCD(bxInstruction_c *i)
   Bit16u hi2 = read_virtual_word (i->seg(), RMAddr(i) + 8);
   Bit64u lo8 = read_virtual_qword(i->seg(), RMAddr(i));
 
-  BX_CPU_THIS_PTR FPU_update_last_instruction(i);
+  FPU_update_last_instruction(i);
 
   clear_C1();
 
@@ -286,7 +288,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FST_STi(bxInstruction_c *i)
 {
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
-  BX_CPU_THIS_PTR FPU_update_last_instruction(i);
+  FPU_update_last_instruction(i);
 
   int pop_stack = i->nnn() & 1;
   // handle special case of FSTP opcode @ 0xDF 0xD0..D7
@@ -317,7 +319,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FST_SINGLE_REAL(bxInstruction_c *i)
 
   RMAddr(i) = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  BX_CPU_THIS_PTR FPU_update_last_instruction(i);
+  FPU_update_last_instruction(i);
+
+  Bit16u x87_sw = FPU_PARTIAL_STATUS;
 
   clear_C1();
 
@@ -343,8 +347,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FST_SINGLE_REAL(bxInstruction_c *i)
         return;
   }
 
+  // store to the memory might generate an exception, in this case origial FPU_SW must be kept
+  swap_values(x87_sw, FPU_PARTIAL_STATUS);
+
   write_virtual_dword(i->seg(), RMAddr(i), save_reg);
 
+  FPU_PARTIAL_STATUS = x87_sw;
   if (pop_stack)
      BX_CPU_THIS_PTR the_i387.FPU_pop();
 #else
@@ -359,7 +367,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FST_DOUBLE_REAL(bxInstruction_c *i)
 
   RMAddr(i) = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  BX_CPU_THIS_PTR FPU_update_last_instruction(i);
+  FPU_update_last_instruction(i);
+
+  Bit16u x87_sw = FPU_PARTIAL_STATUS;
 
   clear_C1();
 
@@ -385,8 +395,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FST_DOUBLE_REAL(bxInstruction_c *i)
         return;
   }
 
+  // store to the memory might generate an exception, in this case origial FPU_SW must be kept
+  swap_values(x87_sw, FPU_PARTIAL_STATUS);
+
   write_virtual_qword(i->seg(), RMAddr(i), save_reg);
 
+  FPU_PARTIAL_STATUS = x87_sw;
   if (pop_stack)
      BX_CPU_THIS_PTR the_i387.FPU_pop();
 #else
@@ -402,7 +416,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FSTP_EXTENDED_REAL(bxInstruction_c *i)
 
   RMAddr(i) = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  BX_CPU_THIS_PTR FPU_update_last_instruction(i);
+  FPU_update_last_instruction(i);
 
   clear_C1();
 
@@ -436,7 +450,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FIST_WORD_INTEGER(bxInstruction_c *i)
 
   RMAddr(i) = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  BX_CPU_THIS_PTR FPU_update_last_instruction(i);
+  FPU_update_last_instruction(i);
+
+  Bit16u x87_sw = FPU_PARTIAL_STATUS;
 
   Bit16s save_reg = int16_indefinite;
 
@@ -462,8 +478,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FIST_WORD_INTEGER(bxInstruction_c *i)
         return;
   }
 
+  // store to the memory might generate an exception, in this case origial FPU_SW must be kept
+  swap_values(x87_sw, FPU_PARTIAL_STATUS);
+
   write_virtual_word(i->seg(), RMAddr(i), (Bit16u)(save_reg));
 
+  FPU_PARTIAL_STATUS = x87_sw;
   if (pop_stack)
      BX_CPU_THIS_PTR the_i387.FPU_pop();
 #else
@@ -478,7 +498,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FIST_DWORD_INTEGER(bxInstruction_c *i)
 
   RMAddr(i) = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  BX_CPU_THIS_PTR FPU_update_last_instruction(i);
+  FPU_update_last_instruction(i);
+
+  Bit16u x87_sw = FPU_PARTIAL_STATUS;
 
   Bit32s save_reg = int32_indefinite; /* The masked response */
 
@@ -504,8 +526,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FIST_DWORD_INTEGER(bxInstruction_c *i)
          return;
   }
 
+  // store to the memory might generate an exception, in this case origial FPU_SW must be kept
+  swap_values(x87_sw, FPU_PARTIAL_STATUS);
+
   write_virtual_dword(i->seg(), RMAddr(i), (Bit32u)(save_reg));
 
+  FPU_PARTIAL_STATUS = x87_sw;
   if (pop_stack)
      BX_CPU_THIS_PTR the_i387.FPU_pop();
 #else
@@ -520,7 +546,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FISTP_QWORD_INTEGER(bxInstruction_c *i)
 
   RMAddr(i) = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  BX_CPU_THIS_PTR FPU_update_last_instruction(i);
+  FPU_update_last_instruction(i);
+
+  Bit16u x87_sw = FPU_PARTIAL_STATUS;
 
   Bit64s save_reg = int64_indefinite; /* The masked response */
 
@@ -544,7 +572,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FISTP_QWORD_INTEGER(bxInstruction_c *i)
          return;
   }
 
+  // store to the memory might generate an exception, in this case origial FPU_SW must be kept
+  swap_values(x87_sw, FPU_PARTIAL_STATUS);
+
   write_virtual_qword(i->seg(), RMAddr(i), (Bit64u)(save_reg));
+
+  FPU_PARTIAL_STATUS = x87_sw;
+
   BX_CPU_THIS_PTR the_i387.FPU_pop();
 #else
   BX_INFO(("FISTP_QWORD_INTEGER: required FPU, configure --enable-fpu"));
@@ -558,7 +592,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FBSTP_PACKED_BCD(bxInstruction_c *i)
 
   RMAddr(i) = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  BX_CPU_THIS_PTR FPU_update_last_instruction(i);
+  FPU_update_last_instruction(i);
+
+  Bit16u x87_sw = FPU_PARTIAL_STATUS;
 
   /*
    * The packed BCD integer indefinite encoding (FFFFC000000000000000H)
@@ -614,9 +650,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FBSTP_PACKED_BCD(bxInstruction_c *i)
         return;
   }
 
+  // store to the memory might generate an exception, in this case origial FPU_SW must be kept
+  swap_values(x87_sw, FPU_PARTIAL_STATUS);
+
   // write packed bcd to memory
   write_virtual_qword(i->seg(), RMAddr(i),     save_reg_lo);
   write_virtual_word (i->seg(), RMAddr(i) + 8, save_reg_hi);
+
+  FPU_PARTIAL_STATUS = x87_sw;
 
   BX_CPU_THIS_PTR the_i387.FPU_pop();
 #else
@@ -632,7 +673,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FISTTP16(bxInstruction_c *i)
 
   RMAddr(i) = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  BX_CPU_THIS_PTR FPU_update_last_instruction(i);
+  FPU_update_last_instruction(i);
+
+  Bit16u x87_sw = FPU_PARTIAL_STATUS;
 
   Bit16s save_reg = int16_indefinite; /* The masked response */
 
@@ -656,7 +699,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FISTTP16(bxInstruction_c *i)
         return;
   }
 
+  // store to the memory might generate an exception, in this case origial FPU_SW must be kept
+  swap_values(x87_sw, FPU_PARTIAL_STATUS);
+
   write_virtual_word(i->seg(), RMAddr(i), (Bit16u)(save_reg));
+
+  FPU_PARTIAL_STATUS = x87_sw;
+
   BX_CPU_THIS_PTR the_i387.FPU_pop();
 #else
   BX_INFO(("FISTTP16: required SSE3, use --enable-sse option"));
@@ -672,7 +721,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FISTTP32(bxInstruction_c *i)
 
   RMAddr(i) = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  BX_CPU_THIS_PTR FPU_update_last_instruction(i);
+  FPU_update_last_instruction(i);
+
+  Bit16u x87_sw = FPU_PARTIAL_STATUS;
 
   Bit32s save_reg = int32_indefinite; /* The masked response */
 
@@ -696,7 +747,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FISTTP32(bxInstruction_c *i)
         return;
   }
 
+  // store to the memory might generate an exception, in this case origial FPU_SW must be kept
+  swap_values(x87_sw, FPU_PARTIAL_STATUS);
+
   write_virtual_dword(i->seg(), RMAddr(i), (Bit32u)(save_reg));
+
+  FPU_PARTIAL_STATUS = x87_sw;
+
   BX_CPU_THIS_PTR the_i387.FPU_pop();
 #else
   BX_INFO(("FISTTP32: required SSE3, use --enable-sse option"));
@@ -712,7 +769,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FISTTP64(bxInstruction_c *i)
 
   RMAddr(i) = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  BX_CPU_THIS_PTR FPU_update_last_instruction(i);
+  FPU_update_last_instruction(i);
+
+  Bit16u x87_sw = FPU_PARTIAL_STATUS;
 
   Bit64s save_reg = int64_indefinite; /* The masked response */
 
@@ -736,7 +795,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FISTTP64(bxInstruction_c *i)
         return;
   }
 
+  // store to the memory might generate an exception, in this case origial FPU_SW must be kept
+  swap_values(x87_sw, FPU_PARTIAL_STATUS);
+
   write_virtual_qword(i->seg(), RMAddr(i), (Bit64u)(save_reg));
+
+  FPU_PARTIAL_STATUS = x87_sw;
+
   BX_CPU_THIS_PTR the_i387.FPU_pop();
 #else
   BX_INFO(("FISTTP64: required SSE3, use --enable-sse option"));
