@@ -2603,9 +2603,7 @@ floatx80 floatx80_mul(floatx80 a, floatx80 b, float_status_t &status)
     zSign = aSign ^ bSign;
 
     if (aExp == 0x7FFF) {
-        if ((Bit64u) (aSig<<1)
-             || ((bExp == 0x7FFF) && (Bit64u) (bSig<<1)))
-        {
+        if ((Bit64u) (aSig<<1) || ((bExp == 0x7FFF) && (Bit64u) (bSig<<1))) {
             return propagateFloatx80NaN(a, b, status);
         }
         if (bExp == 0) {

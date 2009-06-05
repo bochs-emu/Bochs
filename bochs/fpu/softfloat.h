@@ -111,6 +111,7 @@ struct float_status_t
 #endif
     int float_rounding_mode;
     int float_exception_flags;
+    int float_exception_masks;
     int float_nan_handling_mode;	/* flag register */
     int flush_underflow_to_zero;	/* flag register */
 };

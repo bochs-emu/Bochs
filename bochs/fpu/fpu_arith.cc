@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu_arith.cc,v 1.21 2009-05-28 19:25:33 sshwarts Exp $
+// $Id: fpu_arith.cc,v 1.22 2009-06-05 17:48:55 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -56,6 +56,7 @@ float_status_t FPU_pre_exception_handling(Bit16u control_word)
   status.float_nan_handling_mode = float_first_operand_nan;
   status.float_rounding_mode = (control_word & FPU_CW_RC) >> 10;
   status.flush_underflow_to_zero = 0;
+  status.float_exception_masks = control_word & FPU_CW_Exceptions_Mask;
 
   return status;
 }
