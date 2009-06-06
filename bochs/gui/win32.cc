@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32.cc,v 1.132 2009-05-13 17:26:45 vruppert Exp $
+// $Id: win32.cc,v 1.133 2009-06-06 07:44:16 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1376,6 +1376,7 @@ void enq_mouse_event(void)
   if (ms_xdelta || ms_ydelta || ms_zdelta)
   {
     if (((tail+1) % SCANCODE_BUFSIZE) == head) {
+      LeaveCriticalSection(&stInfo.mouseCS);
       BX_ERROR(("enq_scancode: buffer full"));
       return;
     }
@@ -1447,13 +1448,13 @@ void bx_win32_gui_c::handle_events(void)
       DEV_kbd_gen_scancode(key_event);
     }
   }
+  LeaveCriticalSection(&stInfo.keyCS);
 #if BX_SHOW_IPS
   if (ipsUpdate) {
     SetStatusText(1, ipsText, 1);
     ipsUpdate = FALSE;
   }
 #endif
-  LeaveCriticalSection(&stInfo.keyCS);
 }
 
 
