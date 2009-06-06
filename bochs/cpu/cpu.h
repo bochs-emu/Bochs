@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.601 2009-05-31 07:49:03 sshwarts Exp $
+// $Id: cpu.h,v 1.602 2009-06-06 10:21:49 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -3329,6 +3329,7 @@ public: // for now...
   BX_SMF void VMabort(VMX_vmabort_code error_code);
   BX_SMF Bit32u LoadMSRs(Bit32u msr_cnt, bx_phy_address pAddr);
   BX_SMF Bit32u StoreMSRs(Bit32u msr_cnt, bx_phy_address pAddr);
+  BX_SMF unsigned VMXReadRevisionID(bx_phy_address pAddr);
   BX_SMF VMX_error_code VMenterLoadCheckVmControls(void);
   BX_SMF VMX_error_code VMenterLoadCheckHostState(void);
   BX_SMF Bit32u VMenterLoadCheckGuestState(Bit64u *qualification);

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmx.cc,v 1.19 2009-05-31 07:49:04 sshwarts Exp $
+// $Id: vmx.cc,v 1.20 2009-06-06 10:21:49 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2009 Stanislav Shwartsman
@@ -206,6 +206,16 @@ void BX_CPU_C::VMabort(VMX_vmabort_code error_code)
   access_write_physical(pAddr, 4, &abort);
   BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pAddr, 4, BX_WRITE, (Bit8u*)(&abort));
   shutdown();
+}
+
+unsigned BX_CPU_C::VMXReadRevisionID(bx_phy_address pAddr)
+{
+  Bit32u revision;
+  access_read_physical(pAddr + VMCS_REVISION_ID_FIELD_ADDR, 4, &revision);
+  BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pAddr + VMCS_REVISION_ID_FIELD_ADDR, 4,
+          BX_READ, (Bit8u*)(&revision));
+
+  return revision;
 }
 
 ////////////////////////////////////////////////////////////
@@ -1085,23 +1095,43 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
   //
 
   guest.link_pointer = VMread64(VMCS_64BIT_GUEST_LINK_POINTER);
-  if (guest.link_pointer != BX_CONST64(0xffffffffffffffff)) {
+  if (guest.link_pointer != BX_INVALID_VMCSPTR) {
     if ((guest.link_pointer & 0xfff) != 0 || ! IsValidPhyAddr(guest.link_pointer)) {
       *qualification = (Bit64u) VMENTER_ERR_GUEST_STATE_LINK_POINTER;
       BX_ERROR(("VMFAIL: VMCS link pointer malformed"));
       return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
     }
+
+    Bit32u revision = VMXReadRevisionID((bx_phy_address) guest.link_pointer);
+    if (revision != VMX_VMCS_REVISION_ID) {
+      *qualification = (Bit64u) VMENTER_ERR_GUEST_STATE_LINK_POINTER;
+      BX_ERROR(("VMFAIL: VMCS link pointer incorrect revision ID %d != %d", revision, VMX_VMCS_REVISION_ID));
+      return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
+    }
+
+    if (! BX_CPU_THIS_PTR in_smm || (vmentry_ctrls & VMX_VMENTRY_CTRL1_SMM_ENTER) != 0) {
+      if (guest.link_pointer == BX_CPU_THIS_PTR vmcsptr) {
+        *qualification = (Bit64u) VMENTER_ERR_GUEST_STATE_LINK_POINTER;
+        BX_ERROR(("VMFAIL: VMCS link pointer equal to current VMCS pointer"));
+        return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
+      }
+    }
+    else {
+      if (guest.link_pointer == BX_CPU_THIS_PTR vmxonptr) {
+        *qualification = (Bit64u) VMENTER_ERR_GUEST_STATE_LINK_POINTER;
+        BX_ERROR(("VMFAIL: VMCS link pointer equal to VMXON pointer"));
+        return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
+      }
+    }
   }
 
   guest.tmpDR6 = VMread64(VMCS_GUEST_PENDING_DBG_EXCEPTIONS);
-
   if (guest.tmpDR6 & BX_CONST64(0xFFFFFFFFFFFFAFF0)) {
     BX_ERROR(("VMENTER FAIL: VMCS guest tmpDR6 reserved bits"));
     return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
   }
 
   guest.activity_state = VMread32(VMCS_32BIT_GUEST_ACTIVITY_STATE);
-
   if (guest.activity_state >= BX_VMX_LAST_ACTIVITY_STATE) {
     BX_ERROR(("VMENTER FAIL: VMCS guest activity state %d", guest.activity_state));
     return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
@@ -1115,7 +1145,6 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
   }
 
   guest.interruptibility_state = VMread32(VMCS_32BIT_GUEST_INTERRUPTIBILITY_STATE);
-
   if (guest.interruptibility_state & ~BX_VMX_INTERRUPTIBILITY_STATE_MASK) {
     BX_ERROR(("VMENTER FAIL: VMCS guest interruptibility state broken"));
     return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
@@ -1731,11 +1760,7 @@ void BX_CPU_C::VMXON(bxInstruction_c *i)
        return;
     }
 
-    Bit32u revision;
-    access_read_physical(pAddr + VMCS_REVISION_ID_FIELD_ADDR, 4, &revision);
-    BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pAddr + VMCS_REVISION_ID_FIELD_ADDR, 4,
-          BX_READ, (Bit8u*)(&revision));
-
+    Bit32u revision = VMXReadRevisionID((bx_phy_address) pAddr);
     if (revision != VMX_VMCS_REVISION_ID) {
        BX_ERROR(("VMXON: not expected (%d != %d) VMCS revision id !", revision, VMX_VMCS_REVISION_ID));
        VMfailInvalid();
@@ -2071,11 +2096,7 @@ void BX_CPU_C::VMPTRLD(bxInstruction_c *i)
     VMfail(VMXERR_VMPTRLD_WITH_VMXON_PTR);
   }
   else {
-    Bit32u revision;
-    access_read_physical(pAddr + VMCS_REVISION_ID_FIELD_ADDR, 4, &revision);
-    BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pAddr + VMCS_REVISION_ID_FIELD_ADDR, 4,
-            BX_READ, (Bit8u*)(&revision));
-
+    Bit32u revision = VMXReadRevisionID((bx_phy_address) pAddr);
     if (revision != VMX_VMCS_REVISION_ID) {
        BX_ERROR(("VMPTRLD: not expected (%d != %d) VMCS revision id !", revision, VMX_VMCS_REVISION_ID));
        VMfail(VMXERR_VMPTRLD_INCORRECT_VMCS_REVISION_ID);
