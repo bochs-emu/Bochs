@@ -1,3 +1,17 @@
+Changes in 2.4.1 (coming soon):
+
+- Fixed bunch of CPUID issues
+  - Bochs is now able to install and boot 64-bit Windows images!
+    (special thanks to Mark Ebersole for his patch)
+- Several bugfixes in CPU emulation (mostly for x87 instructions)
+- Fixed two critical deadlock bugs in the Win32 gui (patches from @SF tracker)
+- The 'show ips' feature now works in wx on win32
+- RFB GUI: added support for resizable desktop (if supported by client)
+- Added support for gdb stub on big endian machine (patch by Godmar Back)
+- Rewritten obsolete hash_map code in dbg symbols module (patch from @SF)
+- BIOS: implemented INT 15h/89h (patch by Sebastian Herbszt)
+
+-------------------------------------------------------------------------
 Changes in 2.4 (May 3, 2009):
 
 Brief summary :
