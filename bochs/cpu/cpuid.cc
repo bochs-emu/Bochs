@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpuid.cc,v 1.82 2009-05-19 18:54:05 sshwarts Exp $
+// $Id: cpuid.cc,v 1.83 2009-06-06 10:40:11 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007 Stanislav Shwartsman
@@ -279,7 +279,7 @@ Bit32u BX_CPU_C::get_std_cpuid_features(void)
 #endif
 
 #if BX_SUPPORT_LARGE_PAGES
-  features |= (1<<3);   // support Page-Size Extension (4M pages)
+  features |= (1<<3) | (1<<17);  // support Page-Size Extension (4M pages)
 #endif
 #if BX_SUPPORT_PAE
   features |= (1<<6);   // support PAE
