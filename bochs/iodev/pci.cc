@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci.cc,v 1.64 2009-04-22 18:37:06 vruppert Exp $
+// $Id: pci.cc,v 1.64.2.1 2009-06-07 07:49:11 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -546,6 +546,10 @@ bx_bool bx_pci_bridge_c::pci_set_base_mem(void *this_ptr, memory_handler_t f1, m
   Bit32u oldbase = *addr;
   Bit32u mask = ~(size - 1);
   Bit8u pci_flags = pci_conf[0x00] & 0x0f;
+  if ((pci_flags & 0x06) > 0) {
+    BX_PANIC(("PCI base memory flag 0x%02x not supported", pci_flags));
+    return 0;
+  }
   pci_conf[0x00] &= (mask & 0xf0);
   pci_conf[0x01] &= (mask >> 8) & 0xff;
   pci_conf[0x02] &= (mask >> 16) & 0xff;

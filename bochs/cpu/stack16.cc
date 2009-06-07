@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack16.cc,v 1.45 2009-03-10 16:28:01 sshwarts Exp $
+// $Id: stack16.cc,v 1.45.2.1 2009-06-07 07:49:10 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -123,8 +123,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::POP16_SS(bxInstruction_c *i)
   // trap exceptions until the execution boundary following the
   // next instruction is reached.
   // Same code as MOV_SwEw()
-  BX_CPU_THIS_PTR inhibit_mask |=
-    BX_INHIBIT_INTERRUPTS | BX_INHIBIT_DEBUG;
+  BX_CPU_THIS_PTR inhibit_mask |= BX_INHIBIT_INTERRUPTS_BY_MOVSS;
   BX_CPU_THIS_PTR async_event = 1;
 }
 

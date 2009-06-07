@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32.cc,v 1.131 2009-04-08 06:31:38 sshwarts Exp $
+// $Id: win32.cc,v 1.131.2.1 2009-06-07 07:49:11 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -488,9 +488,8 @@ Bit32u win32_to_bx_key[2][0x100] =
 
 /* Macro to convert WM_ button state to BX button state */
 
-#if  defined(__MINGW32__) || defined(_MSC_VER)
-  VOID CALLBACK MyTimer(HWND,UINT,UINT,DWORD);
-  void alarm(int);
+#if BX_SHOW_IPS
+VOID CALLBACK MyTimer(HWND,UINT,UINT,DWORD);
 #endif
 
 static void processMouseXY(int x, int y, int z, int windows_state, int implied_state_change)
@@ -931,6 +930,10 @@ VOID CDECL UIThread(PVOID pvoid)
       if (gui_debug) {
         InitDebugDialog();
       }
+#endif
+#if BX_SHOW_IPS
+      UINT idTimer = 2;
+      SetTimer(stInfo.simWnd, idTimer, 1000, (TIMERPROC)MyTimer);
 #endif
       stInfo.UIinited = TRUE;
 
@@ -1373,6 +1376,7 @@ void enq_mouse_event(void)
   if (ms_xdelta || ms_ydelta || ms_zdelta)
   {
     if (((tail+1) % SCANCODE_BUFSIZE) == head) {
+      LeaveCriticalSection(&stInfo.mouseCS);
       BX_ERROR(("enq_scancode: buffer full"));
       return;
     }
@@ -1444,13 +1448,13 @@ void bx_win32_gui_c::handle_events(void)
       DEV_kbd_gen_scancode(key_event);
     }
   }
+  LeaveCriticalSection(&stInfo.keyCS);
 #if BX_SHOW_IPS
   if (ipsUpdate) {
     SetStatusText(1, ipsText, 1);
     ipsUpdate = FALSE;
   }
 #endif
-  LeaveCriticalSection(&stInfo.keyCS);
 }
 
 
@@ -2223,21 +2227,6 @@ void headerbar_click(int x)
   }
 }
 
-#if defined(__MINGW32__) || defined(_MSC_VER)
-#if BX_SHOW_IPS
-VOID CALLBACK MyTimer(HWND hwnd,UINT uMsg, UINT idEvent, DWORD dwTime)
-{
-  bx_signal_handler(SIGALRM);
-}
-
-void alarm(int time)
-{
-  UINT idTimer = 2;
-  SetTimer(stInfo.simWnd,idTimer,time*1000,(TIMERPROC)MyTimer);
-}
-#endif
-#endif
-
 void bx_win32_gui_c::mouse_enabled_changed_specific(bx_bool val)
 {
   if ((val != (bx_bool)mouseCaptureMode) && !mouseToggleReq) {
@@ -2265,6 +2254,11 @@ void bx_win32_gui_c::set_tooltip(unsigned hbar_id, const char *tip)
 }
 
 #if BX_SHOW_IPS
+VOID CALLBACK MyTimer(HWND hwnd,UINT uMsg, UINT idEvent, DWORD dwTime)
+{
+  bx_signal_handler(SIGALRM);
+}
+
 void bx_win32_gui_c::show_ips(Bit32u ips_count)
 {
   if (!ipsUpdate) {

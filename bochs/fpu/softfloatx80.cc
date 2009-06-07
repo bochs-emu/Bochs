@@ -46,9 +46,8 @@ Bit16s floatx80_to_int16(floatx80 a, float_status_t &status)
 
    Bit32s v32 = floatx80_to_int32(a, status);
 
-   if ((v32 > 32767) || (v32 < -32768))
-   {
-        float_raise(status, float_flag_invalid);
+   if ((v32 > 32767) || (v32 < -32768)) {
+        status.float_exception_flags = float_flag_invalid; // throw way other flags
         return int16_indefinite;
    }
 
@@ -74,9 +73,8 @@ Bit16s floatx80_to_int16_round_to_zero(floatx80 a, float_status_t &status)
 
    Bit32s v32 = floatx80_to_int32_round_to_zero(a, status);
 
-   if ((v32 > 32767) || (v32 < -32768))
-   {
-        float_raise(status, float_flag_invalid);
+   if ((v32 > 32767) || (v32 < -32768)) {
+        status.float_exception_flags = float_flag_invalid; // throw way other flags
         return int16_indefinite;
    }
 
@@ -184,6 +182,8 @@ floatx80 floatx80_scale(floatx80 a, floatx80 b, float_status_t &status)
         if (aSig == 0) return a;
         float_raise(status, float_flag_denormal);
         normalizeFloatx80Subnormal(aSig, &aExp, &aSig);
+        if (bExp < 0x3FFF)
+            return normalizeRoundAndPackFloatx80(80, aSign, aExp, aSig, 0, status);
     }
     if (bExp == 0) {
         if (bSig == 0) return a;
@@ -196,6 +196,7 @@ floatx80 floatx80_scale(floatx80 a, floatx80 b, float_status_t &status)
         return roundAndPackFloatx80(80, aSign,
                           bSign ? -0x3FFF : 0x7FFF, aSig, 0, status);
     }
+
     if (bExp < 0x3FFF) return a;
 
     int shiftCount = 0x403E - bExp;
@@ -263,24 +264,35 @@ int floatx80_compare(floatx80 a, floatx80 b, float_status_t &status)
         float_raise(status, float_flag_denormal);
     }
 
-    if ((a.fraction == b.fraction) && (a.exp == b.exp))
-    {
-        return float_relation_equal;
-    }
-
-    if (aClass == float_zero && bClass == float_zero)
-    {
-        return float_relation_equal;
-    }
-
     int aSign = extractFloatx80Sign(a);
     int bSign = extractFloatx80Sign(b);
-    if (aSign != bSign)
-        return (aSign) ? float_relation_less : float_relation_greater;
+
+    if (aClass == float_zero) {
+        if (bClass == float_zero) return float_relation_equal;
+        return bSign ? float_relation_greater : float_relation_less;
+    }
+
+    if (bClass == float_zero || aSign != bSign) {
+        return aSign ? float_relation_less : float_relation_greater;
+    }
+
+    Bit64u aSig = extractFloatx80Frac(a);
+    Bit32s aExp = extractFloatx80Exp(a);
+    Bit64u bSig = extractFloatx80Frac(b);
+    Bit32s bExp = extractFloatx80Exp(b);
+
+    if (aClass == float_denormal)
+        normalizeFloatx80Subnormal(aSig, &aExp, &aSig);
+
+    if (bClass == float_denormal)
+        normalizeFloatx80Subnormal(bSig, &bExp, &bSig);
+
+    if (aExp == bExp && aSig == bSig)
+        return float_relation_equal;
 
     int less_than =
-	aSign ? lt128(b.exp, b.fraction, a.exp, a.fraction)
-	      : lt128(a.exp, a.fraction, b.exp, b.fraction);
+        aSign ? ((bExp < aExp) || ((bExp == aExp) && (bSig < aSig)))
+              : ((aExp < bExp) || ((aExp == bExp) && (aSig < bSig)));
 
     if (less_than) return float_relation_less;
     return float_relation_greater;
@@ -316,24 +328,35 @@ int floatx80_compare_quiet(floatx80 a, floatx80 b, float_status_t &status)
         float_raise(status, float_flag_denormal);
     }
 
-    if ((a.fraction == b.fraction) && (a.exp == b.exp))
-    {
-        return float_relation_equal;
-    }
-
-    if (aClass == float_zero && bClass == float_zero)
-    {
-        return float_relation_equal;
-    }
-
     int aSign = extractFloatx80Sign(a);
     int bSign = extractFloatx80Sign(b);
-    if (aSign != bSign)
-        return (aSign) ? float_relation_less : float_relation_greater;
+
+    if (aClass == float_zero) {
+        if (bClass == float_zero) return float_relation_equal;
+        return bSign ? float_relation_greater : float_relation_less;
+    }
+
+    if (bClass == float_zero || aSign != bSign) {
+        return aSign ? float_relation_less : float_relation_greater;
+    }
+
+    Bit64u aSig = extractFloatx80Frac(a);
+    Bit32s aExp = extractFloatx80Exp(a);
+    Bit64u bSig = extractFloatx80Frac(b);
+    Bit32s bExp = extractFloatx80Exp(b);
+
+    if (aClass == float_denormal)
+        normalizeFloatx80Subnormal(aSig, &aExp, &aSig);
+
+    if (bClass == float_denormal)
+        normalizeFloatx80Subnormal(bSig, &bExp, &bSig);
+
+    if (aExp == bExp && aSig == bSig)
+        return float_relation_equal;
 
     int less_than =
-	aSign ? lt128(b.exp, b.fraction, a.exp, a.fraction)
-	      : lt128(a.exp, a.fraction, b.exp, b.fraction);
+        aSign ? ((bExp < aExp) || ((bExp == aExp) && (bSig < aSig)))
+              : ((aExp < bExp) || ((aExp == bExp) && (aSig < bSig)));
 
     if (less_than) return float_relation_less;
     return float_relation_greater;

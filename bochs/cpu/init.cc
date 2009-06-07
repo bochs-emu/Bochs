@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.209 2009-05-01 09:32:46 sshwarts Exp $
+// $Id: init.cc,v 1.209.2.1 2009-06-07 07:49:10 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -451,8 +451,8 @@ void BX_CPU_C::register_state(void)
   BXRS_HEX_PARAM_FIELD(MSR, mtrrphysmask7, msr.mtrrphys[15]);
 
   BXRS_HEX_PARAM_FIELD(MSR, mtrrfix64k_00000, msr.mtrrfix64k_00000);
-  BXRS_HEX_PARAM_FIELD(MSR, mtrrfix16k_80000, msr.mtrrfix16k_80000);
-  BXRS_HEX_PARAM_FIELD(MSR, mtrrfix16k_a0000, msr.mtrrfix16k_a0000);
+  BXRS_HEX_PARAM_FIELD(MSR, mtrrfix16k_80000, msr.mtrrfix16k[0]);
+  BXRS_HEX_PARAM_FIELD(MSR, mtrrfix16k_a0000, msr.mtrrfix16k[1]);
 
   BXRS_HEX_PARAM_FIELD(MSR, mtrrfix4k_c0000, msr.mtrrfix4k[0]);
   BXRS_HEX_PARAM_FIELD(MSR, mtrrfix4k_c8000, msr.mtrrfix4k[1]);
@@ -675,6 +675,9 @@ void BX_CPU_C::after_restore_state(void)
     BX_PANIC(("Incorrect CR0 state !"));
   SetCR3(cr3);
   TLB_flush();
+#if BX_SUPPORT_VMX
+  set_VMCSPTR(BX_CPU_THIS_PTR vmcsptr);
+#endif
   assert_checks();
   invalidate_prefetch_q();
   debug(RIP);
@@ -939,8 +942,8 @@ void BX_CPU_C::reset(unsigned source)
       BX_CPU_THIS_PTR msr.mtrrphys[n] = 0;
 
     BX_CPU_THIS_PTR msr.mtrrfix64k_00000 = 0; // all fix range MTRRs undefined according to manual
-    BX_CPU_THIS_PTR msr.mtrrfix16k_80000 = 0;
-    BX_CPU_THIS_PTR msr.mtrrfix16k_a0000 = 0;
+    BX_CPU_THIS_PTR msr.mtrrfix16k[0] = 0;
+    BX_CPU_THIS_PTR msr.mtrrfix16k[1] = 0;
 
     for (n=0; n<8; n++)
       BX_CPU_THIS_PTR msr.mtrrfix4k[n] = 0;
@@ -1004,7 +1007,8 @@ void BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR in_vmx = BX_CPU_THIS_PTR in_vmx_guest = 0;
   BX_CPU_THIS_PTR in_event = 0;
   BX_CPU_THIS_PTR vmx_interrupt_window = 0;
-  BX_CPU_THIS_PTR vmcsptr = BX_CONST64(0xFFFFFFFFFFFFFFFF);
+  BX_CPU_THIS_PTR vmcsptr = BX_CPU_THIS_PTR vmxonptr = BX_INVALID_VMCSPTR;
+  BX_CPU_THIS_PTR vmcshostptr = 0;
 #endif
 
 #if BX_SUPPORT_SMP

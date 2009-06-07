@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpuid.cc,v 1.80 2009-02-20 22:00:42 sshwarts Exp $
+// $Id: cpuid.cc,v 1.80.2.1 2009-06-07 07:49:10 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007 Stanislav Shwartsman
@@ -193,6 +193,39 @@ Bit32u BX_CPU_C::get_extended_cpuid_features(void)
 /* Get CPU feature flags. Returned by CPUID functions 1 and 80000001.  */
 Bit32u BX_CPU_C::get_std_cpuid_features(void)
 {
+  //   [0:0]   FPU on chip
+  //   [1:1]   VME: Virtual-8086 Mode enhancements
+  //   [2:2]   DE: Debug Extensions (I/O breakpoints)
+  //   [3:3]   PSE: Page Size Extensions
+  //   [4:4]   TSC: Time Stamp Counter
+  //   [5:5]   MSR: RDMSR and WRMSR support
+  //   [6:6]   PAE: Physical Address Extensions
+  //   [7:7]   MCE: Machine Check Exception
+  //   [8:8]   CXS: CMPXCHG8B instruction
+  //   [9:9]   APIC: APIC on Chip
+  //   [10:10] Reserved
+  //   [11:11] SYSENTER/SYSEXIT support
+  //   [12:12] MTRR: Memory Type Range Reg
+  //   [13:13] PGE/PTE Global Bit
+  //   [14:14] MCA: Machine Check Architecture
+  //   [15:15] CMOV: Cond Mov/Cmp Instructions
+  //   [16:16] PAT: Page Attribute Table
+  //   [17:17] PSE-36: Physical Address Extensions
+  //   [18:18] Processor Serial Number
+  //   [19:19] CLFLUSH: CLFLUSH Instruction support
+  //   [20:20] Reserved
+  //   [21:21] DS: Debug Store
+  //   [22:22] ACPI: Thermal Monitor and Software Controlled Clock Facilities
+  //   [23:23] MMX Technology
+  //   [24:24] FXSR: FXSAVE/FXRSTOR (also indicates CR4.OSFXSR is available)
+  //   [25:25] SSE: SSE Extensions
+  //   [26:26] SSE2: SSE2 Extensions
+  //   [27:27] Reserved
+  //   [28:28] Hyper Threading Technology
+  //   [29:29] TM: Thermal Monitor
+  //   [30:30] Reserved
+  //   [31:31] PBE: Pending Break Enable
+
   Bit32u features = 0;
 
 #if BX_SUPPORT_FPU
@@ -202,56 +235,60 @@ Bit32u BX_CPU_C::get_std_cpuid_features(void)
   features |= (1<<1);
 #endif
 
+  features |= (1<<2);   // support Debug Extensions
+
 #if (BX_CPU_LEVEL >= 5)
-  features |= (1<<4);   // implement TSC
-  features |= (1<<5);   // support RDMSR/WRMSR
-  features |= (1<<8);   // Support CMPXCHG8B instruction
-
-#if BX_SUPPORT_MMX
-  features |= (1<<23);  // support MMX
+  features |= (1<<4);             // support Time Stamp Counter
+  features |= (1<<5);             // support RDMSR/WRMSR
+  features |= (1<<7) | (1<<14);   // support Machine Check
+  features |= (1<<8);             // support CMPXCHG8B instruction
 #endif
 
-#endif
-
-#if BX_CPU_LEVEL >= 6
-  features |= (1<<24);  // Implement FSAVE/FXRSTOR instructions.
-#endif
-
-#if BX_SUPPORT_CLFLUSH
-  features |= (1<<19);  // Implement CLFLUSH instruction
-#endif
-
-#if BX_CPU_LEVEL >= 6
-  features |= (1<<15);  // Implement CMOV instructions.
 #if BX_SUPPORT_APIC
   // if MSR_APICBASE APIC Global Enable bit has been cleared,
   // the CPUID feature flag for the APIC is set to 0.
   if (BX_CPU_THIS_PTR msr.apicbase & 0x800)
     features |= (1<<9); // APIC on chip
 #endif
+
+#if BX_SUPPORT_SEP
+  features |= (1<<11);  // SYSENTER/SYSEXIT
+#endif
+
+#if BX_SUPPORT_CLFLUSH
+  features |= (1<<19);  // Implement CLFLUSH instruction
+#endif
+
+#if BX_SUPPORT_MMX
+  features |= (1<<23);  // support MMX
+#endif
+
+#if BX_CPU_LEVEL >= 6
+  features |= (1<<24);  // Implement FSAVE/FXRSTOR instructions.
+#endif
+
 #if BX_SUPPORT_SSE >= 1
   features |= (1<<25);  // support SSE
 #endif
 #if BX_SUPPORT_SSE >= 2
   features |= (1<<26);  // support SSE2
 #endif
+
+#if BX_CPU_LEVEL >= 6
+  features |= (1<<15);  // Implement CMOV instructions.
 #endif
 
-#if BX_SUPPORT_SEP
-  features |= (1<<11);  // SYSENTER/SYSEXIT
-#endif
-
-#if BX_SUPPORT_MTRR
-  features |= (1<<12);  // Implement MTRRs
-#endif
 #if BX_SUPPORT_LARGE_PAGES
-  features |= (1<< 3);  // Support Page-Size Extension (2M/4M pages)
-#endif
-#if BX_SUPPORT_GLOBAL_PAGES
-  features |= (1<<13);  // Support Global pages
+  features |= (1<<3) | (1<<17);  // support Page-Size Extension (4M pages)
 #endif
 #if BX_SUPPORT_PAE
-  features |= (1<<6);   // Support PAE
+  features |= (1<<6);   // support PAE
+#endif
+#if BX_SUPPORT_MTRR
+  features |= (1<<12) | (1<<16);  // Implement MTRRs and PAT
+#endif
+#if BX_SUPPORT_GLOBAL_PAGES
+  features |= (1<<13);  // support Global pages
 #endif
 
 #if BX_SUPPORT_SMP
@@ -396,7 +433,6 @@ void BX_CPU_C::set_cpuid_defaults(void)
   //   [11:8]  Family: 4=486, 5=Pentium, 6=PPro, ...
   //   [13:12] Type: 0=OEM, 1=overdrive, 2=dual cpu, 3=reserved
   //   [31:14] Reserved
-
   cpuid->eax = get_cpu_version_information();
 
   // EBX:
@@ -649,7 +685,7 @@ void BX_CPU_C::set_cpuid_defaults(void)
 #if BX_SUPPORT_X86_64
   features |= (1 << 29) | (1 << 27) | (1 << 25) | (1 << 20) | (1 << 11);
 #if BX_SUPPORT_1G_PAGES
-  features |= (1 << 27);
+  features |= (1 << 26);
 #endif
 #endif
   cpuid->edx = features;

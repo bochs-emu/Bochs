@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dis_groups.cc,v 1.41 2009-01-19 19:01:03 sshwarts Exp $
+// $Id: dis_groups.cc,v 1.41.2.1 2009-06-07 07:49:10 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #include <stdio.h>
@@ -85,9 +85,9 @@ void disassembler::Cq(const x86_insn *insn) { Cd(insn); }
 void disassembler::Dd(const x86_insn *insn)
 {
   if (intel_mode)
-    dis_sprintf  ("db%d", insn->nnn);
+    dis_sprintf  ("dr%d", insn->nnn);
   else
-    dis_sprintf("%%db%d", insn->nnn);
+    dis_sprintf("%%dr%d", insn->nnn);
 }
 
 void disassembler::Dq(const x86_insn *insn) { Dd(insn); }

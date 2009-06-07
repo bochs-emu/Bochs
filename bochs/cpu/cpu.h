@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.595 2009-05-01 09:32:46 sshwarts Exp $
+// $Id: cpu.h,v 1.595.2.1 2009-06-07 07:49:10 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -596,8 +596,7 @@ typedef struct
 #if BX_SUPPORT_MTRR
   Bit64u mtrrphys[16];
   Bit64u mtrrfix64k_00000;
-  Bit64u mtrrfix16k_80000;
-  Bit64u mtrrfix16k_a0000;
+  Bit64u mtrrfix16k[2];
   Bit64u mtrrfix4k[8];
   Bit16u mtrr_deftype;
   Bit64u pat;
@@ -809,8 +808,16 @@ public: // for now...
   bx_address prev_rsp;
   bx_bool    speculative_rsp;
 
-#define BX_INHIBIT_INTERRUPTS 0x01
-#define BX_INHIBIT_DEBUG      0x02
+#define BX_INHIBIT_INTERRUPTS        0x01
+#define BX_INHIBIT_DEBUG             0x02
+#define BX_INHIBIT_INTERRUPTS_SHADOW 0x04
+#define BX_INHIBIT_DEBUG_SHADOW      0x08
+
+#define BX_INHIBIT_INTERRUPTS_BY_MOVSS        \
+    (BX_INHIBIT_INTERRUPTS | BX_INHIBIT_DEBUG)
+#define BX_INHIBIT_INTERRUPTS_BY_MOVSS_SHADOW \
+    (BX_INHIBIT_INTERRUPTS_SHADOW | BX_INHIBIT_DEBUG_SHADOW)
+
   // What events to inhibit at any given time.  Certain instructions
   // inhibit interrupts, some debug exceptions and single-step traps.
   unsigned inhibit_mask;
@@ -884,6 +891,9 @@ public: // for now...
   bx_bool in_vmx_guest;
   bx_bool vmx_interrupt_window;
   Bit64u  vmcsptr;
+  bx_hostpageaddr_t vmcshostptr;
+  Bit64u  vmxonptr;
+  
   VMCS_CACHE vmcs;
 #endif
 
@@ -3045,6 +3055,7 @@ public: // for now...
   BX_SMF bx_phy_address translate_linear(bx_address laddr, unsigned curr_pl, unsigned rw);
 #if BX_SUPPORT_PAE
   BX_SMF bx_phy_address translate_linear_PAE(bx_address laddr, bx_address &lpf_mask, Bit32u &combined_access, unsigned curr_pl, unsigned rw);
+  BX_SMF int check_entry_PAE(const char *s, Bit64u entry, Bit64u reserved, unsigned rw, bx_bool *nx_fault);
 #endif
 
   BX_SMF BX_CPP_INLINE bx_phy_address dtranslate_linear(bx_address laddr, unsigned curr_pl, unsigned rw)
@@ -3083,6 +3094,9 @@ public: // for now...
 #endif
   BX_SMF void pagingCR0Changed(Bit32u oldCR0, Bit32u newCR0) BX_CPP_AttrRegparmN(2);
   BX_SMF void pagingCR4Changed(Bit32u oldCR4, Bit32u newCR4) BX_CPP_AttrRegparmN(2);
+#if BX_SUPPORT_PAE
+  BX_SMF bx_bool CheckPDPTR(Bit32u cr3_val) BX_CPP_AttrRegparmN(1);
+#endif
 
   BX_SMF void reset(unsigned source);
   BX_SMF void shutdown(void);
@@ -3272,7 +3286,7 @@ public: // for now...
   BX_SMF void FPU_update_last_instruction(bxInstruction_c *i);
   BX_SMF void FPU_stack_underflow(int stnr, int pop_stack = 0);
   BX_SMF void FPU_stack_overflow(void);
-  BX_SMF unsigned FPU_exception(unsigned exception, bx_bool is_mem = 0);
+  BX_SMF unsigned FPU_exception(unsigned exception, bx_bool = 0);
   BX_SMF bx_address fpu_save_environment(bxInstruction_c *i);
   BX_SMF bx_address fpu_load_environment(bxInstruction_c *i);
   BX_SMF Bit8u pack_FPU_TW(Bit16u tag_word);
@@ -3315,6 +3329,7 @@ public: // for now...
   BX_SMF void VMabort(VMX_vmabort_code error_code);
   BX_SMF Bit32u LoadMSRs(Bit32u msr_cnt, bx_phy_address pAddr);
   BX_SMF Bit32u StoreMSRs(Bit32u msr_cnt, bx_phy_address pAddr);
+  BX_SMF unsigned VMXReadRevisionID(bx_phy_address pAddr);
   BX_SMF VMX_error_code VMenterLoadCheckVmControls(void);
   BX_SMF VMX_error_code VMenterLoadCheckHostState(void);
   BX_SMF Bit32u VMenterLoadCheckGuestState(Bit64u *qualification);
@@ -3323,7 +3338,7 @@ public: // for now...
   BX_SMF void VMexitSaveGuestState(void);
   BX_SMF void VMexitSaveGuestMSRs(void);
   BX_SMF void VMexitLoadHostState(void);
-  BX_SMF bx_bool is_VMXON_PTR(Bit64u vmxptr);
+  BX_SMF void set_VMCSPTR(Bit64u vmxptr);
   BX_SMF void init_VMCS(void);
   BX_SMF void register_vmx_state(bx_param_c *parent);
   BX_SMF Bit64s VMX_TSC_Offset(void);

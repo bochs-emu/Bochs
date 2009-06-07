@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ferr.cc,v 1.16 2009-04-27 17:58:17 sshwarts Exp $
+// $Id: ferr.cc,v 1.16.2.1 2009-06-07 07:49:11 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -61,16 +61,43 @@ unsigned BX_CPU_C::FPU_exception(unsigned exception, bx_bool is_store)
 
   Bit32u status = FPU_PARTIAL_STATUS;
 
-  /* Set the corresponding exception bits */
-  FPU_PARTIAL_STATUS |= exception;
-
-  unsigned unmasked = FPU_PARTIAL_STATUS & ~FPU_CONTROL_WORD & FPU_CW_Exceptions_Mask;
+  unsigned unmasked = exception & ~FPU_CONTROL_WORD & FPU_CW_Exceptions_Mask;
+  // if IE or DZ exception happen nothing else will be reported
+  if (exception & (FPU_EX_Invalid | FPU_EX_Zero_Div))
+      unmasked &= (FPU_EX_Invalid | FPU_EX_Zero_Div);
 
   /* Set summary bits iff exception isn't masked */
   if (unmasked)
     FPU_PARTIAL_STATUS |= (FPU_SW_Summary | FPU_SW_Backward);
 
-  if (exception & (FPU_SW_Stack_Fault | FPU_EX_Precision))
+  if (exception & FPU_EX_Invalid) {
+     // FPU_EX_Invalid cannot come with any other exception but x87 stack fault
+     FPU_PARTIAL_STATUS |= exception;
+     if (exception & FPU_SW_Stack_Fault) {
+        if (! (exception & FPU_SW_C1)) {
+           /* This bit distinguishes over- from underflow for a stack fault,
+              and roundup from round-down for precision loss. */
+           FPU_PARTIAL_STATUS &= ~FPU_SW_C1;
+        }
+     }
+     return unmasked;
+  }
+
+  if (exception & FPU_EX_Zero_Div) {
+     FPU_PARTIAL_STATUS |= FPU_EX_Zero_Div;
+     return unmasked;
+  }
+
+  if (exception & FPU_EX_Denormal) {
+     FPU_PARTIAL_STATUS |= FPU_EX_Denormal;
+     if (unmasked & FPU_EX_Denormal)
+        return unmasked & FPU_EX_Denormal;
+  }
+
+  /* Set the corresponding exception bits */
+  FPU_PARTIAL_STATUS |= exception;
+
+  if (exception & FPU_EX_Precision)
   {
     if (! (exception & FPU_SW_C1)) {
       /* This bit distinguishes over- from underflow for a stack fault,
@@ -81,9 +108,9 @@ unsigned BX_CPU_C::FPU_exception(unsigned exception, bx_bool is_store)
 
   // If #P unmasked exception occured the result still has to be
   // written to the destination.
-  unmasked &= ~FPU_CW_Precision;
+  unmasked &= ~FPU_EX_Precision;
 
-  if (unmasked & (FPU_CW_Underflow | FPU_CW_Overflow)) {
+  if (unmasked & (FPU_EX_Underflow | FPU_EX_Overflow)) {
     // If unmasked over- or underflow occurs and dest is a memory location:
     //   - the TOS and destination operands remain unchanged
     //   - the inexact-result condition is not reported and C1 flag is cleared
@@ -91,12 +118,12 @@ unsigned BX_CPU_C::FPU_exception(unsigned exception, bx_bool is_store)
     // If the destination is in the register stack, adjusted resulting value
     // is stored in the destination operand.
     if (! is_store) {
-       unmasked &= ~(FPU_CW_Underflow | FPU_CW_Overflow);
+       unmasked &= ~(FPU_EX_Underflow | FPU_EX_Overflow);
     }
     else {
        FPU_PARTIAL_STATUS &= ~FPU_SW_C1; // clear C1 flag
-       if (! (status & FPU_CW_Precision))
-          FPU_PARTIAL_STATUS &= ~FPU_CW_Precision;
+       if (! (status & FPU_EX_Precision))
+          FPU_PARTIAL_STATUS &= ~FPU_EX_Precision;
     }
   }
 

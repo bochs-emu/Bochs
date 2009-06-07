@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dis_decode.cc,v 1.49 2009-01-27 21:01:21 sshwarts Exp $
+// $Id: dis_decode.cc,v 1.49.2.1 2009-06-07 07:49:10 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #include <stdio.h>
@@ -76,13 +76,13 @@ x86_insn disassembler::decode(bx_bool is_32, bx_bool is_64, bx_address base, bx_
 #define SSE_PREFIX_66   1
 #define SSE_PREFIX_F2   2
 #define SSE_PREFIX_F3   3      /* only one SSE prefix could be used */
-  unsigned sse_prefix = SSE_PREFIX_NONE;
-  unsigned rex_prefix = 0;
+  unsigned sse_prefix = SSE_PREFIX_NONE, sse_opcode = 0;
+  unsigned rex_prefix = 0, prefixes = 0;
 
   for(;;)
   {
     insn.b1 = fetch_byte();
-    insn.prefixes++;
+    prefixes++;
 
     switch(insn.b1) {
       case 0x40:     // rex
@@ -150,7 +150,6 @@ x86_insn disassembler::decode(bx_bool is_32, bx_bool is_64, bx_address base, bx_
         break;
     }
 
-    insn.prefixes--;
     break;
   }
 
@@ -206,7 +205,7 @@ x86_insn disassembler::decode(bx_bool is_32, bx_bool is_64, bx_address base, bx_
          break;
 
        case _GRPSSE:
-         if(sse_prefix) insn.prefixes--;
+         sse_opcode = 1;
          /* For SSE opcodes, look into another 4 entries table
             with the opcode prefixes (NONE, 0x66, 0xF2, 0xF3) */
          entry = &(OPCODE_TABLE(entry)[sse_prefix]);
@@ -257,7 +256,7 @@ x86_insn disassembler::decode(bx_bool is_32, bx_bool is_64, bx_address base, bx_
   unsigned branch_hint = 0;
 
   // print prefixes
-  for(unsigned i=0;i<insn.prefixes;i++)
+  for(unsigned i=0;i<prefixes;i++)
   {
     Bit8u prefix_byte = *(instr+i);
 
@@ -270,7 +269,7 @@ x86_insn disassembler::decode(bx_bool is_32, bx_bool is_64, bx_address base, bx_
       continue;
 
     if (prefix_byte == 0xF3 || prefix_byte == 0xF2) {
-      if (attr != _GRPSSE) {
+      if (! sse_opcode) {
         const BxDisasmOpcodeTable_t *prefix = &(opcode_table[prefix_byte]);
         dis_sprintf("%s ", OPCODE(prefix)->IntelOpcode);
       }

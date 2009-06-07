@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: devices.cc,v 1.146 2009-05-01 09:12:07 sshwarts Exp $
+// $Id: devices.cc,v 1.146.2.1 2009-06-07 07:49:11 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -110,7 +110,7 @@ void bx_devices_c::init(BX_MEM_C *newmem)
   const char *plugname;
 #endif
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.146 2009-05-01 09:12:07 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.146.2.1 2009-06-07 07:49:11 vruppert Exp $"));
   mem = newmem;
 
   /* set builtin default handlers, will be overwritten by the real default handler */
@@ -176,10 +176,15 @@ void bx_devices_c::init(BX_MEM_C *newmem)
 #if BX_SUPPORT_PCI
     PLUG_load_plugin(pci, PLUGTYPE_CORE);
     PLUG_load_plugin(pci2isa, PLUGTYPE_CORE);
+  } else {
+    plugin_ctrl = (bx_list_c*)SIM->get_param(BXPN_PLUGIN_CTRL);
+    SIM->get_param_bool(BX_PLUGIN_PCI_IDE, plugin_ctrl)->set(0);
+    SIM->get_param_bool(BX_PLUGIN_ACPI, plugin_ctrl)->set(0);
+  }
 #else
     BX_ERROR(("Bochs is not compiled with PCI support"));
-#endif
   }
+#endif
 
   // optional plugins not controlled by separate option
   plugin_ctrl = (bx_list_c*)SIM->get_param(BXPN_PLUGIN_CTRL);

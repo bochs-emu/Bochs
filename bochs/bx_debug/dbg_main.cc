@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.192 2009-04-30 18:58:44 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.192.2.1 2009-06-07 07:49:09 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -660,7 +660,23 @@ void bx_dbg_print_sse_state(void)
 {
 #if BX_SUPPORT_SSE
   Bit32u mxcsr = SIM->get_param_num("SSE.mxcsr", dbg_cpu_list)->get();
-  dbg_printf("MXCSR: 0x%08x\n", mxcsr);
+  dbg_printf("MXCSR: 0x%08x: %s %s RC:%d %s %s %s %s %s %s %s %s %s %s %s %s\n", mxcsr,
+     (mxcsr & (1<<17)) ? "ULE" : "ule",
+     (mxcsr & (1<<15)) ? "FUZ" : "fuz",
+     (mxcsr >> 13) & 3,
+     (mxcsr & (1<<12)) ? "PM" : "pm",
+     (mxcsr & (1<<11)) ? "UM" : "um",
+     (mxcsr & (1<<10)) ? "OM" : "om",
+     (mxcsr & (1<<9)) ? "ZM" : "zm",
+     (mxcsr & (1<<8)) ? "DM" : "dm",
+     (mxcsr & (1<<7)) ? "IM" : "im",
+     (mxcsr & (1<<6)) ? "DAZ" : "daz",
+     (mxcsr & (1<<5)) ? "PE" : "pe",
+     (mxcsr & (1<<4)) ? "UE" : "ue",
+     (mxcsr & (1<<3)) ? "OE" : "oe",
+     (mxcsr & (1<<2)) ? "ZE" : "ze",
+     (mxcsr & (1<<1)) ? "DE" : "de",
+     (mxcsr & (1<<0)) ? "IE" : "ie");
 
   char param_name[20];
   for(unsigned i=0;i<BX_XMM_REGISTERS;i++) {
@@ -1165,7 +1181,7 @@ void bx_dbg_where_command()
   }
   Bit32u bp = BX_CPU(dbg_cpu)->get_reg32(BX_32BIT_REG_EBP);
   bx_address ip = BX_CPU(dbg_cpu)->get_instruction_pointer();
-  dbg_printf("(%d) 0x%08x\n", 0, ip);
+  dbg_printf("(%d) 0x%08x\n", dbg_cpu, ip);
   for (int i = 1; i < 50; i++) {
     // Up
     bx_phy_address paddr;
@@ -1353,7 +1369,7 @@ void bx_dbg_show_command(const char* arg)
   }
 }
 
-void bx_dbg_show_param_command(char *param)
+void bx_dbg_show_param_command(const char *param)
 {
   dbg_printf("show param name: <%s>\n", param);
   bx_param_c *node = SIM->get_param(param, SIM->get_bochs_root());
@@ -1745,7 +1761,7 @@ void bx_dbg_disassemble_current(int which_cpu, int print_time)
     // way out I have thought of would be to keep a prev_eax, prev_ebx, etc copies
     // in each cpu description (see cpu/cpu.h) and update/compare those "prev" values
     // from here. (eks)
-    if(BX_CPU(dbg_cpu)->trace_reg)
+    if(BX_CPU(which_cpu)->trace_reg)
       bx_dbg_info_registers_command(BX_INFO_GENERAL_PURPOSE_REGS);
 
     if (print_time)
@@ -2523,7 +2539,7 @@ void bx_dbg_setpmem_command(bx_phy_address paddr, unsigned len, Bit32u val)
   }
 }
 
-void bx_dbg_set_symbol_command(char *symbol, Bit32u val)
+void bx_dbg_set_symbol_command(const char *symbol, Bit32u val)
 {
   bx_bool is_OK = false;
   symbol++; // get past '$'
@@ -2671,7 +2687,7 @@ void bx_dbg_disassemble_command(const char *format, Bit64u from, Bit64u to)
     unsigned ilen = bx_disassemble.disasm(dis_size==32, dis_size==64,
        (bx_address)(-1), (bx_address)(-1), bx_disasm_ibuf, bx_disasm_tbuf);
 
-    char *Sym=bx_dbg_disasm_symbolic_address((Bit32u)from, 0);
+    const char *Sym=bx_dbg_disasm_symbolic_address((Bit32u)from, 0);
 
     dbg_printf("%08x: ", (unsigned) from);
     dbg_printf("(%20s): ", Sym?Sym:"");

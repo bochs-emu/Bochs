@@ -910,9 +910,6 @@ typedef
 #define BX_HAVE_MVVLINE 0
 
 
-// set if your compiler does not permit an empty struct
-#define BX_NO_EMPTY_STRUCTS 0
-
 // set if your compiler does not understand __attribute__ after a struct
 #define BX_NO_ATTRIBUTES 0
 #if BX_NO_ATTRIBUTES
@@ -936,20 +933,17 @@ typedef
 #  define BX_CPP_AttrRegparmN(X) /* Not defined */
 #endif
 
-// set if your compiler does not allow label at the end of a {} block
-#define BX_NO_BLANK_LABELS 0
-
-// set if you do have <hash_map>, used in bx_debug/dbg_main.c
-#define BX_HAVE_HASH_MAP 0
-
-// set if you do have <hash_map.h>, used in bx_debug/dbg_main.c
-#define BX_HAVE_HASH_MAP_H 0
-
 // set if you do have <set>, used in bx_debug/dbg_main.c
 #define BX_HAVE_SET 0
 
 // set if you do have <set.h>, used in bx_debug/dbg_main.c
 #define BX_HAVE_SET_H 0
+
+// set if you do have <map>, used in bx_debug/dbg_main.c
+#define BX_HAVE_MAP 0
+
+// set if you do have <map.h>, used in bx_debug/dbg_main.c
+#define BX_HAVE_MAP_H 0
 
 // Support x86 hardware debugger registers and facilities.
 // These are the debug facilities offered by the x86 architecture,

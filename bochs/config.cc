@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.176 2009-04-26 06:56:27 vruppert Exp $
+// $Id: config.cc,v 1.176.2.1 2009-06-07 07:49:08 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -2077,11 +2077,11 @@ static Bit32s parse_log_options(const char *context, char *loglev, char *param1)
   return 0;
 }
 
-static int parse_debug_symbols(const char *context, char **params, int num_params)
+static int parse_debug_symbols(const char *context, const char **params, int num_params)
 {
 #if BX_DEBUGGER
   Bit32u offset = 0;
-  char*  filename = 0;
+  const char *filename = 0;
 
   while (num_params > 0)
   {
@@ -2561,8 +2561,7 @@ static int parse_line_formatted(const char *context, int num_params, char *param
     if (!strncmp(params[1], "file=", 5)) {
       SIM->get_param_string(BXPN_VGA_ROM_PATH)->set(&params[1][5]);
     } else {
-      BX_INFO(("WARNING: syntax has changed, please use 'vgaromimage: file=...' now"));
-      SIM->get_param_string(BXPN_VGA_ROM_PATH)->set(params[1]);
+      PARSE_ERR(("%s: vgaromimage directive malformed.", context));
     }
   } else if (!strncmp(params[0], "optromimage", 11)) {
     int num = atoi(&params[0][11]);
@@ -2637,15 +2636,6 @@ static int parse_line_formatted(const char *context, int num_params, char *param
     SIM->get_param_num(BXPN_KBD_PASTE_DELAY)->set(atol(params[1]));
     if (SIM->get_param_num(BXPN_KBD_PASTE_DELAY)->get() < 1000) {
       PARSE_ERR (("%s: keyboard_paste_delay not big enough!", context));
-    }
-  } else if (!strcmp(params[0], "ips")) {
-    PARSE_WARN(("%s: ips directive is DEPRECATED (use cpu directive parameter 'ips').", context));
-    if (num_params != 2) {
-      PARSE_ERR(("%s: ips directive: wrong # args.", context));
-    }
-    SIM->get_param_num(BXPN_IPS)->set(atol(params[1]));
-    if (SIM->get_param_num(BXPN_IPS)->get() < BX_MIN_IPS) {
-      PARSE_WARN(("%s: WARNING: ips is AWFULLY low!", context));
     }
   } else if (!strcmp(params[0], "text_snapshot_check")) {
     if (num_params != 2) {
@@ -2953,7 +2943,7 @@ static int parse_line_formatted(const char *context, int num_params, char *param
 #endif
   }
   else if (!strcmp(params[0], "debug_symbols")) {
-    if (parse_debug_symbols(context, params + 1, num_params - 1) < 0) {
+    if (parse_debug_symbols(context, (const char **)(params + 1), num_params - 1) < 0) {
       return -1;
     }
   }
@@ -2988,11 +2978,21 @@ static int parse_line_formatted(const char *context, int num_params, char *param
   else if (!strcmp(params[0], "ne2k")) {
     int tmp[6];
     char tmpchar[6];
+    char tmpdev[80];
     int valid = 0;
     int n;
     base = (bx_list_c*) SIM->get_param(BXPN_NE2K);
     if (!SIM->get_param_bool("enabled", base)->get()) {
       SIM->get_param_enum("ethmod", base)->set_by_name("null");
+    }
+    if (SIM->get_param_bool(BXPN_I440FX_SUPPORT)->get()) {
+      for (slot = 1; slot < 6; slot++) {
+        sprintf(tmpdev, "pci.slot.%d", slot);
+        if (!strcmp(SIM->get_param_string(tmpdev)->getptr(), "ne2k")) {
+          valid |= 0x03;
+          break;
+        }
+      }
     }
     for (i=1; i<num_params; i++) {
       if (!strncmp(params[i], "enabled=", 8)) {
@@ -3035,7 +3035,12 @@ static int parse_line_formatted(const char *context, int num_params, char *param
       if (valid == 0x07) {
         SIM->get_param_bool("enabled", base)->set(1);
       } else if (valid < 0x80) {
-        PARSE_ERR(("%s: ne2k directive incomplete (ioaddr, irq and mac are required)", context));
+        if ((valid & 0x03) != 0x03) {
+          PARSE_ERR(("%s: ne2k directive incomplete (ioaddr and irq are required)", context));
+        }
+        if ((valid & 0x04) == 0) {
+          PARSE_ERR(("%s: ne2k directive incomplete (mac address is required)", context));
+        }
       }
     } else {
       if (valid & 0x80) {
@@ -3359,7 +3364,7 @@ int bx_write_pnic_options(FILE *fp, bx_list_c *base)
   return 0;
 }
 
-int bx_write_ne2k_options (FILE *fp, bx_list_c *base)
+int bx_write_ne2k_options(FILE *fp, bx_list_c *base)
 {
   fprintf(fp, "ne2k: enabled=%d", SIM->get_param_bool("enabled", base)->get());
   if (SIM->get_param_bool("enabled", base)->get()) {
@@ -3381,7 +3386,7 @@ int bx_write_ne2k_options (FILE *fp, bx_list_c *base)
   return 0;
 }
 
-int bx_write_sb16_options (FILE *fp, bx_list_c *base)
+int bx_write_sb16_options(FILE *fp, bx_list_c *base)
 {
   fprintf(fp, "sb16: enabled=%d", SIM->get_param_bool("enabled", base)->get());
   if (SIM->get_param_bool("enabled", base)->get()) {
@@ -3462,9 +3467,6 @@ int bx_write_log_options(FILE *fp, bx_list_c *base)
 {
   fprintf(fp, "log: %s\n", SIM->get_param_string("filename", base)->getptr());
   fprintf(fp, "logprefix: %s\n", SIM->get_param_string("prefix", base)->getptr());
-#if BX_DEBUGGER
-  fprintf(fp, "debugger_log: %s\n", SIM->get_param_string("debugger_filename", base)->getptr());
-#endif
   fprintf(fp, "panic: action=%s\n",
       io->getaction(logfunctions::get_default_action(LOGLEV_PANIC)));
   fprintf(fp, "error: action=%s\n",
@@ -3487,6 +3489,27 @@ int bx_write_keyboard_options(FILE *fp)
     SIM->get_param_bool(BXPN_KBD_USEMAPPING)->get(),
     SIM->get_param_string(BXPN_KBD_KEYMAP)->getptr());
   fprintf(fp, "user_shortcut: keys=%s\n", SIM->get_param_string(BXPN_USER_SHORTCUT)->getptr());
+  return 0;
+}
+
+int bx_write_debugger_options(FILE *fp)
+{
+#if BX_DEBUGGER
+  fprintf(fp, "debugger_log: %s\n", SIM->get_param_string(BXPN_DEBUGGER_LOG_FILENAME)->getptr());
+  fprintf(fp, "magic_break: enabled=%d\n", bx_dbg.magic_break_enabled);
+  // TODO: debug symbols
+#endif
+#if BX_GDBSTUB
+  bx_list_c *base = (bx_list_c*) SIM->get_param(BXPN_GDBSTUB);
+  bx_bool enabled = SIM->get_param_bool("enabled", base)->get();
+  if (enabled) {
+    fprintf(fp, "gdbstub: enabled=%d, port=%d, text_base=%d, data_base=%d, bss_base=%d\n",
+            enabled, SIM->get_param_num("port", base)->get(), SIM->get_param_num("text_base", base)->get(),
+            SIM->get_param_num("data_base", base)->get(), SIM->get_param_num("bss_base", base)->get());
+  } else {
+    fprintf(fp, "# no gdb stub\n");
+  }
+#endif
   return 0;
 }
 
@@ -3520,6 +3543,15 @@ int bx_write_configuration(const char *rc, int overwrite)
     }
   }
 #endif
+
+  fprintf(fp, "plugin_ctrl: ");
+  base = (bx_list_c*) SIM->get_param(BXPN_PLUGIN_CTRL);
+  for (i=0; i<base->get_size(); i++) {
+    if (i > 0) fprintf(fp, ", ");
+    bx_param_bool_c *plugin = (bx_param_bool_c*)(base->get(i));
+    fprintf(fp, "%s=%d", plugin->get_name(), plugin->get());
+  }
+  fprintf(fp, "\n");
   fprintf(fp, "config_interface: %s\n", SIM->get_param_enum(BXPN_SEL_CONFIG_INTERFACE)->get_selected());
   fprintf(fp, "display_library: %s", SIM->get_param_enum(BXPN_SEL_DISPLAY_LIBRARY)->get_selected());
   strptr = SIM->get_param_string(BXPN_DISPLAYLIB_OPTIONS)->getptr();
@@ -3632,12 +3664,10 @@ int bx_write_configuration(const char *rc, int overwrite)
   strptr = SIM->get_param_string(BXPN_CONFIGURABLE_MSRS_PATH)->getptr();
   if (strlen(strptr) > 0)
     fprintf(fp, ", msrs=\"%s\"", strptr);
-#endif  
+#endif
   fprintf(fp, "\n");
   fprintf(fp, "print_timestamps: enabled=%d\n", bx_dbg.print_timestamps);
-#if BX_DEBUGGER
-  fprintf(fp, "magic_break: enabled=%d\n", bx_dbg.magic_break_enabled);
-#endif
+  bx_write_debugger_options(fp);
   fprintf(fp, "port_e9_hack: enabled=%d\n", SIM->get_param_bool(BXPN_PORT_E9_HACK)->get());
   fprintf(fp, "text_snapshot_check: enabled=%d\n", SIM->get_param_bool(BXPN_TEXT_SNAPSHOT_CHECK)->get());
   fprintf(fp, "private_colormap: enabled=%d\n", SIM->get_param_bool(BXPN_PRIVATE_COLORMAP)->get());

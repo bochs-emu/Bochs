@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmx.cc,v 1.14 2009-04-05 19:09:44 sshwarts Exp $
+// $Id: vmx.cc,v 1.14.2.1 2009-06-07 07:49:10 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2009 Stanislav Shwartsman
@@ -34,9 +34,6 @@
 #endif
 
 #if BX_SUPPORT_VMX
-
-// VMCSPTR is always 64-bit variable
-#define BX_INVALID_VMCSPTR BX_CONST64(0xFFFFFFFFFFFFFFFF)
 
 #define VMCSPTR_VALID() (BX_CPU_THIS_PTR vmcsptr != BX_INVALID_VMCSPTR)
 
@@ -79,6 +76,16 @@ void BX_CPU_C::init_VMCS(void)
 #endif
 }
 
+void BX_CPU_C::set_VMCSPTR(Bit64u vmxptr)
+{
+  BX_CPU_THIS_PTR vmcsptr = vmxptr;
+
+  if (vmxptr != BX_INVALID_VMCSPTR)
+    BX_CPU_THIS_PTR vmcshostptr = (bx_hostpageaddr_t) BX_MEM(0)->getHostMemAddr(BX_CPU_THIS, vmxptr, BX_WRITE);
+  else
+    BX_CPU_THIS_PTR vmcshostptr = 0;
+}
+
 Bit32u BX_CPU_C::VMread32(unsigned encoding)
 {
   Bit32u field;
@@ -88,7 +95,13 @@ Bit32u BX_CPU_C::VMread32(unsigned encoding)
     BX_PANIC(("VMread32: can't access encoding 0x%08x, offset=0x%x", encoding, offset));
   bx_phy_address pAddr = BX_CPU_THIS_PTR vmcsptr + offset;
 
-  access_read_physical(pAddr, 4, (Bit8u*)(&field));
+  if (BX_CPU_THIS_PTR vmcshostptr) {
+    Bit32u *hostAddr = (Bit32u*) (BX_CPU_THIS_PTR vmcshostptr | offset);
+    ReadHostDWordFromLittleEndian(hostAddr, field);
+  }
+  else {
+    access_read_physical(pAddr, 4, (Bit8u*)(&field));
+  }
 
   BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pAddr, 4, BX_READ, (Bit8u*)(&field));
 
@@ -103,7 +116,14 @@ void BX_CPU_C::VMwrite32(unsigned encoding, Bit32u val_32)
     BX_PANIC(("VMwrite32: can't access encoding 0x%08x, offset=0x%x", encoding, offset));
   bx_phy_address pAddr = BX_CPU_THIS_PTR vmcsptr + offset;
 
-  access_write_physical(pAddr, 4, (Bit8u*)(&val_32));
+  if (BX_CPU_THIS_PTR vmcshostptr) {
+    Bit32u *hostAddr = (Bit32u*) (BX_CPU_THIS_PTR vmcshostptr | offset);
+    pageWriteStampTable.decWriteStamp(pAddr);
+    WriteHostDWordToLittleEndian(hostAddr, val_32);
+  }
+  else {
+    access_write_physical(pAddr, 4, (Bit8u*)(&val_32));
+  }
 
   BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pAddr, 4, BX_WRITE, (Bit8u*)(&val_32));
 }
@@ -119,7 +139,13 @@ Bit64u BX_CPU_C::VMread64(unsigned encoding)
     BX_PANIC(("VMread64: can't access encoding 0x%08x, offset=0x%x", encoding, offset));
   bx_phy_address pAddr = BX_CPU_THIS_PTR vmcsptr + offset;
 
-  access_read_physical(pAddr, 8, (Bit8u*)(&field));
+  if (BX_CPU_THIS_PTR vmcshostptr) {
+    Bit64u *hostAddr = (Bit64u*) (BX_CPU_THIS_PTR vmcshostptr | offset);
+    ReadHostQWordFromLittleEndian(hostAddr, field);
+  }
+  else {
+    access_read_physical(pAddr, 8, (Bit8u*)(&field));
+  }
 
   BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pAddr, 8, BX_READ, (Bit8u*)(&field));
 
@@ -136,7 +162,14 @@ void BX_CPU_C::VMwrite64(unsigned encoding, Bit64u val_64)
     BX_PANIC(("VMwrite64: can't access encoding 0x%08x, offset=0x%x", encoding, offset));
   bx_phy_address pAddr = BX_CPU_THIS_PTR vmcsptr + offset;
 
-  access_write_physical(pAddr, 8, (Bit8u*)(&val_64));
+  if (BX_CPU_THIS_PTR vmcshostptr) {
+    Bit64u *hostAddr = (Bit64u*) (BX_CPU_THIS_PTR vmcshostptr | offset);
+    pageWriteStampTable.decWriteStamp(pAddr);
+    WriteHostQWordToLittleEndian(hostAddr, val_64);
+  }
+  else {
+    access_write_physical(pAddr, 8, (Bit8u*)(&val_64));
+  }
 
   BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pAddr, 8, BX_WRITE, (Bit8u*)(&val_64));
 }
@@ -175,6 +208,16 @@ void BX_CPU_C::VMabort(VMX_vmabort_code error_code)
   shutdown();
 }
 
+unsigned BX_CPU_C::VMXReadRevisionID(bx_phy_address pAddr)
+{
+  Bit32u revision;
+  access_read_physical(pAddr + VMCS_REVISION_ID_FIELD_ADDR, 4, &revision);
+  BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pAddr + VMCS_REVISION_ID_FIELD_ADDR, 4,
+          BX_READ, (Bit8u*)(&revision));
+
+  return revision;
+}
+
 ////////////////////////////////////////////////////////////
 // VMenter
 ////////////////////////////////////////////////////////////
@@ -211,6 +254,7 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
 
   vm->vm_tpr_threshold = VMread32(VMCS_32BIT_CONTROL_TPR_THRESHOLD);
   vm->virtual_apic_page_addr = (bx_phy_address) VMread64(VMCS_64BIT_CONTROL_VIRTUAL_APIC_PAGE_ADDR);
+  vm->executive_vmcsptr = (bx_phy_address) VMread64(VMCS_64BIT_CONTROL_EXECUTIVE_VMCS_PTR);
 
   //
   // Check VM-execution control fields
@@ -370,13 +414,20 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
   //
 
   if (~vm->vmentry_ctrls & VMX_MSR_VMX_VMENTRY_CTRLS_LO) {
-     BX_ERROR(("VMFAIL: VMCS EXEC CTRL: VMX ventry controls allowed 0-settings"));
+     BX_ERROR(("VMFAIL: VMCS EXEC CTRL: VMX vmentry controls allowed 0-settings"));
      return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
   }
 
   if (vm->vmentry_ctrls & ~VMX_MSR_VMX_VMENTRY_CTRLS_HI) {
-     BX_ERROR(("VMFAIL: VMCS EXEC CTRL: VMX ventry controls allowed 1-settings"));
+     BX_ERROR(("VMFAIL: VMCS EXEC CTRL: VMX vmentry controls allowed 1-settings"));
      return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
+  }
+
+  if (vm->vmentry_ctrls & VMX_VMENTRY_CTRL1_DEACTIVATE_DUAL_MONITOR_TREATMENT) {
+     if (! BX_CPU_THIS_PTR in_smm) {
+       BX_ERROR(("VMFAIL: VMENTRY from outside SMM with dual-monitor treatment enabled"));
+       return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
+     }
   }
 
   if (vm->vmentry_msr_load_cnt > 0) {
@@ -1044,23 +1095,43 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
   //
 
   guest.link_pointer = VMread64(VMCS_64BIT_GUEST_LINK_POINTER);
-  if (guest.link_pointer != BX_CONST64(0xffffffffffffffff)) {
+  if (guest.link_pointer != BX_INVALID_VMCSPTR) {
     if ((guest.link_pointer & 0xfff) != 0 || ! IsValidPhyAddr(guest.link_pointer)) {
       *qualification = (Bit64u) VMENTER_ERR_GUEST_STATE_LINK_POINTER;
       BX_ERROR(("VMFAIL: VMCS link pointer malformed"));
       return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
     }
+
+    Bit32u revision = VMXReadRevisionID((bx_phy_address) guest.link_pointer);
+    if (revision != VMX_VMCS_REVISION_ID) {
+      *qualification = (Bit64u) VMENTER_ERR_GUEST_STATE_LINK_POINTER;
+      BX_ERROR(("VMFAIL: VMCS link pointer incorrect revision ID %d != %d", revision, VMX_VMCS_REVISION_ID));
+      return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
+    }
+
+    if (! BX_CPU_THIS_PTR in_smm || (vmentry_ctrls & VMX_VMENTRY_CTRL1_SMM_ENTER) != 0) {
+      if (guest.link_pointer == BX_CPU_THIS_PTR vmcsptr) {
+        *qualification = (Bit64u) VMENTER_ERR_GUEST_STATE_LINK_POINTER;
+        BX_ERROR(("VMFAIL: VMCS link pointer equal to current VMCS pointer"));
+        return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
+      }
+    }
+    else {
+      if (guest.link_pointer == BX_CPU_THIS_PTR vmxonptr) {
+        *qualification = (Bit64u) VMENTER_ERR_GUEST_STATE_LINK_POINTER;
+        BX_ERROR(("VMFAIL: VMCS link pointer equal to VMXON pointer"));
+        return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
+      }
+    }
   }
 
   guest.tmpDR6 = VMread64(VMCS_GUEST_PENDING_DBG_EXCEPTIONS);
-
   if (guest.tmpDR6 & BX_CONST64(0xFFFFFFFFFFFFAFF0)) {
     BX_ERROR(("VMENTER FAIL: VMCS guest tmpDR6 reserved bits"));
     return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
   }
 
   guest.activity_state = VMread32(VMCS_32BIT_GUEST_ACTIVITY_STATE);
-
   if (guest.activity_state >= BX_VMX_LAST_ACTIVITY_STATE) {
     BX_ERROR(("VMENTER FAIL: VMCS guest activity state %d", guest.activity_state));
     return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
@@ -1074,7 +1145,6 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
   }
 
   guest.interruptibility_state = VMread32(VMCS_32BIT_GUEST_INTERRUPTIBILITY_STATE);
-
   if (guest.interruptibility_state & ~BX_VMX_INTERRUPTIBILITY_STATE_MASK) {
     BX_ERROR(("VMENTER FAIL: VMCS guest interruptibility state broken"));
     return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
@@ -1117,6 +1187,24 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
     }
   }
 
+  if (guest.interruptibility_state & BX_VMX_INTERRUPTS_BLOCKED_SMI_BLOCKED) {
+    if (! BX_CPU_THIS_PTR in_smm) {
+      BX_ERROR(("VMENTER FAIL: VMCS SMI blocked when not in SMM mode"));
+      return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
+    }
+  }
+
+#if BX_SUPPORT_PAE
+  if (! x86_64_guest && (guest.cr4 & (1 << 5)) != 0 /* PAE */) {
+    // CR0.PG is always set in VMX mode
+    if (! CheckPDPTR(guest.cr3)) {
+      *qualification = VMENTER_ERR_GUEST_STATE_PDPTR_LOADING;
+      BX_ERROR(("VMENTER: Guest State PDPTRs Checks Failed"));
+      return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
+    }
+  }
+#endif
+
   //
   // Load Guest State -> VMENTER
   //
@@ -1137,10 +1225,10 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
   if (!SetCR0((old_cr0 & VMX_KEEP_CR0_BITS) | (guest.cr0 & ~VMX_KEEP_CR0_BITS))) {
     BX_PANIC(("VMENTER CR0 is broken !"));
   }
-  SetCR3(guest.cr3);
-  if (!SetCR4(guest.cr4)) { // improssible if CR4 checks were correct
+  if (!SetCR4(guest.cr4)) { // cannot fail if CR4 checks were correct
     BX_PANIC(("VMENTER CR4 is broken !"));
   }
+  SetCR3(guest.cr3);
 
   if (vmentry_ctrls & VMX_VMENTRY_CTRL1_LOAD_DBG_CTRLS) {
     // always clear bits 15:14 and set bit 10
@@ -1400,8 +1488,8 @@ void BX_CPU_C::VMexitSaveGuestState(void)
   VMwrite64(VMCS_GUEST_PENDING_DBG_EXCEPTIONS, tmpDR6 & 0x0000500f);
   
   Bit32u interruptibility_state = 0;
-  if (BX_CPU_THIS_PTR inhibit_mask & BX_INHIBIT_INTERRUPTS) {
-     if (BX_CPU_THIS_PTR inhibit_mask & BX_INHIBIT_DEBUG)
+  if (BX_CPU_THIS_PTR inhibit_mask & BX_INHIBIT_INTERRUPTS_SHADOW) {
+     if (BX_CPU_THIS_PTR inhibit_mask & BX_INHIBIT_DEBUG_SHADOW)
         interruptibility_state |= BX_VMX_INTERRUPTS_BLOCKED_BY_MOV_SS;
      else
         interruptibility_state |= BX_VMX_INTERRUPTS_BLOCKED_BY_STI;
@@ -1439,10 +1527,10 @@ void BX_CPU_C::VMexitLoadHostState(void)
   if (!SetCR0((old_cr0 & VMX_KEEP_CR0_BITS) | (host_state->cr0 & ~VMX_KEEP_CR0_BITS))) {
     BX_PANIC(("VMEXIT CR0 is broken !"));
   }
-  SetCR3(host_state->cr3);
   if (!SetCR4(host_state->cr4)) {
     BX_PANIC(("VMEXIT CR4 is broken !"));
   }
+  SetCR3(host_state->cr3);
 
   BX_CPU_THIS_PTR dr7 = 0x00000400;
 
@@ -1645,16 +1733,11 @@ void BX_CPU_C::VMexit(bxInstruction_c *i, Bit32u reason, Bit64u qualification)
   longjmp(BX_CPU_THIS_PTR jmp_buf_env, 1); // go back to main decode loop
 }
 
+#endif // BX_SUPPORT_VMX
+
 ////////////////////////////////////////////////////////////
 // VMX instructions
 ////////////////////////////////////////////////////////////
-
-bx_bool BX_CPU_C::is_VMXON_PTR(Bit64u vmxptr)
-{
-  return 0;
-}
-
-#endif // BX_SUPPORT_VMX
 
 void BX_CPU_C::VMXON(bxInstruction_c *i)
 {
@@ -1677,11 +1760,7 @@ void BX_CPU_C::VMXON(bxInstruction_c *i)
        return;
     }
 
-    Bit32u revision;
-    access_read_physical(pAddr + VMCS_REVISION_ID_FIELD_ADDR, 4, &revision);
-    BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pAddr + VMCS_REVISION_ID_FIELD_ADDR, 4,
-          BX_READ, (Bit8u*)(&revision));
-
+    Bit32u revision = VMXReadRevisionID((bx_phy_address) pAddr);
     if (revision != VMX_VMCS_REVISION_ID) {
        BX_ERROR(("VMXON: not expected (%d != %d) VMCS revision id !", revision, VMX_VMCS_REVISION_ID));
        VMfailInvalid();
@@ -1689,6 +1768,8 @@ void BX_CPU_C::VMXON(bxInstruction_c *i)
     }
       
     BX_CPU_THIS_PTR vmcsptr = BX_INVALID_VMCSPTR;
+    BX_CPU_THIS_PTR vmcshostptr = 0;
+    BX_CPU_THIS_PTR vmxonptr = pAddr;
     BX_CPU_THIS_PTR in_vmx = 1;
     BX_CPU_THIS_PTR disable_INIT = 1; // INIT is disabled in VMX root mode
     // block and disable A20M;
@@ -1738,6 +1819,7 @@ void BX_CPU_C::VMXOFF(bxInstruction_c *i)
         else
 */
   {
+    BX_CPU_THIS_PTR vmxonptr = BX_INVALID_VMCSPTR;
     BX_CPU_THIS_PTR in_vmx = 0;  // leave VMX operation mode
     BX_CPU_THIS_PTR disable_INIT = 0;
      // unblock and enable A20M;
@@ -1782,6 +1864,7 @@ void BX_CPU_C::VMCALL(bxInstruction_c *i)
                      of the IntelR 64 and IA-32 Architectures Software Developer's Manual, Volume 3B);
 */
   if (! VMCSPTR_VALID()) {
+    BX_ERROR(("VMFAIL: VMCALL with invalid VMCS ptr"));
     VMfailInvalid();
     return;
   }
@@ -1792,6 +1875,7 @@ void BX_CPU_C::VMCALL(bxInstruction_c *i)
         BX_READ, (Bit8u*)(&launch_state));
 
   if (launch_state != VMCS_STATE_CLEAR) {
+    BX_ERROR(("VMFAIL: VMCALL with launched VMCS"));
     VMfail(VMXERR_VMCALL_NON_CLEAR_VMCS);
     return;
   }
@@ -1848,12 +1932,12 @@ void BX_CPU_C::VMLAUNCH(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0, 0);
 
   if (! VMCSPTR_VALID()) {
-    BX_ERROR(("VMFAIL: VMLAUNCH invalid VMCS ptr !"));
+    BX_ERROR(("VMFAIL: VMLAUNCH with invalid VMCS ptr !"));
     VMfailInvalid();
     return;
   }
 
-  if (BX_CPU_THIS_PTR inhibit_mask == (BX_INHIBIT_INTERRUPTS | BX_INHIBIT_DEBUG)) {
+  if ((BX_CPU_THIS_PTR inhibit_mask & BX_INHIBIT_INTERRUPTS_BY_MOVSS_SHADOW) == BX_INHIBIT_INTERRUPTS_BY_MOVSS_SHADOW) {
     BX_ERROR(("VMFAIL: VMLAUNCH with interrupts blocked by MOV_SS !"));
     VMfail(VMXERR_VMENTRY_MOV_SS_BLOCKING);
     return;
@@ -2002,26 +2086,25 @@ void BX_CPU_C::VMPTRLD(bxInstruction_c *i)
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
   Bit64u pAddr = read_virtual_qword(i->seg(), eaddr); // keep 64-bit
   if ((pAddr & 0xfff) != 0 || ! IsValidPhyAddr(pAddr)) {
+    BX_ERROR(("VMFAIL: invalid or not page aligned physical address !"));
     VMfail(VMXERR_VMPTRLD_INVALID_PHYSICAL_ADDRESS);
     return;
   }
 
-  if (is_VMXON_PTR(pAddr)) {
+  if (pAddr == BX_CPU_THIS_PTR vmxonptr) {
+    BX_ERROR(("VMFAIL: VMPTRLD with VMXON ptr !"));
     VMfail(VMXERR_VMPTRLD_WITH_VMXON_PTR);
   }
   else {
-    Bit32u revision;
-    access_read_physical(pAddr + VMCS_REVISION_ID_FIELD_ADDR, 4, &revision);
-    BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pAddr + VMCS_REVISION_ID_FIELD_ADDR, 4,
-            BX_READ, (Bit8u*)(&revision));
-
+    Bit32u revision = VMXReadRevisionID((bx_phy_address) pAddr);
     if (revision != VMX_VMCS_REVISION_ID) {
+       BX_ERROR(("VMPTRLD: not expected (%d != %d) VMCS revision id !", revision, VMX_VMCS_REVISION_ID));
        VMfail(VMXERR_VMPTRLD_INCORRECT_VMCS_REVISION_ID);
-       return;
     }
-
-    BX_CPU_THIS_PTR vmcsptr = pAddr;
-    VMsucceed();
+    else {
+       set_VMCSPTR(pAddr);
+       VMsucceed();
+    }
   }
 #else
   BX_INFO(("VMPTRLD: required VMX support, use --enable-vmx option"));
@@ -2067,6 +2150,7 @@ void BX_CPU_C::VMREAD(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0, 0);
 
   if (! VMCSPTR_VALID()) {
+    BX_ERROR(("VMFAIL: VMREAD with invalid VMCS ptr !"));
     VMfailInvalid();
     return;
   }
@@ -2344,6 +2428,7 @@ void BX_CPU_C::VMWRITE(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0, 0);
 
   if (! VMCSPTR_VALID()) {
+    BX_ERROR(("VMFAIL: VMWRITE with invalid VMCS ptr !"));
     VMfailInvalid();
     return;
   }
@@ -2364,6 +2449,7 @@ void BX_CPU_C::VMWRITE(bxInstruction_c *i)
        enc_64 = read_virtual_qword_64(i->seg(), eaddr);
     }
     if (enc_64 >> 32) {
+       BX_ERROR(("VMWRITE: not supported field !"));
        VMfail(VMXERR_UNSUPPORTED_VMCS_COMPONENT_ACCESS);
        return;
     }
@@ -2601,6 +2687,7 @@ void BX_CPU_C::VMWRITE(bxInstruction_c *i)
     case VMCS_IO_RDI:
     case VMCS_IO_RIP:
     case VMCS_GUEST_LINEAR_ADDR:
+      BX_ERROR(("VMWRITE: write to read/only field %08x", encoding));
       VMfail(VMXERR_VMWRITE_READ_ONLY_VMCS_COMPONENT);
       return;
 
@@ -2634,11 +2721,13 @@ void BX_CPU_C::VMCLEAR(bxInstruction_c *i)
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
   Bit64u pAddr = read_virtual_qword(i->seg(), eaddr); // keep 64-bit
   if ((pAddr & 0xfff) != 0 || ! IsValidPhyAddr(pAddr)) {
+    BX_ERROR(("VMFAIL: VMCLEAR with invalid physical address!"));
     VMfail(VMXERR_VMCLEAR_WITH_INVALID_ADDR);
     return;
   }
 
-  if (is_VMXON_PTR(pAddr)) {
+  if (pAddr == BX_CPU_THIS_PTR vmxonptr) {
+    BX_ERROR(("VMFAIL: VMLEAR with VMXON ptr !"));
     VMfail(VMXERR_VMCLEAR_WITH_VMXON_VMCS_PTR);
   }
   else {
@@ -2651,8 +2740,10 @@ void BX_CPU_C::VMCLEAR(bxInstruction_c *i)
     BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pAddr + VMCS_LAUNCH_STATE_FIELD_ADDR, 4,
             BX_WRITE, (Bit8u*)(&launch_state));
 
-    if (pAddr == BX_CPU_THIS_PTR vmcsptr)
+    if (pAddr == BX_CPU_THIS_PTR vmcsptr) {
         BX_CPU_THIS_PTR vmcsptr = BX_INVALID_VMCSPTR;
+        BX_CPU_THIS_PTR vmcshostptr = 0;
+    }
 
     VMsucceed();
   }
@@ -2666,9 +2757,10 @@ void BX_CPU_C::VMCLEAR(bxInstruction_c *i)
 void BX_CPU_C::register_vmx_state(bx_param_c *parent)
 {
   // register VMX state for save/restore param tree
-  bx_list_c *vmx = new bx_list_c(parent, "VMX", 10);
+  bx_list_c *vmx = new bx_list_c(parent, "VMX", 6);
 
   BXRS_HEX_PARAM_FIELD(vmx, vmcsptr, BX_CPU_THIS_PTR vmcsptr);
+  BXRS_HEX_PARAM_FIELD(vmx, vmxonptr, BX_CPU_THIS_PTR vmxonptr);
   BXRS_PARAM_BOOL(vmx, in_vmx, BX_CPU_THIS_PTR in_vmx);
   BXRS_PARAM_BOOL(vmx, in_vmx_guest, BX_CPU_THIS_PTR in_vmx_guest);
   BXRS_PARAM_BOOL(vmx, vmx_interrupt_window, BX_CPU_THIS_PTR vmx_interrupt_window);

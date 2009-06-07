@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debug.h,v 1.52 2009-04-07 16:12:19 sshwarts Exp $
+// $Id: debug.h,v 1.52.2.1 2009-06-07 07:49:09 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -309,17 +309,17 @@ void bx_dbg_check_memory_watchpoints(unsigned cpu, bx_phy_address phy, unsigned 
 
 // commands that work with Bochs param tree
 void bx_dbg_restore_command(const char *param_name, const char *path);
-void bx_dbg_show_param_command(char *param);
+void bx_dbg_show_param_command(const char *param);
 
 int bx_dbg_show_symbolic(void);
-void bx_dbg_set_symbol_command(char *symbol, Bit32u val);
-char* bx_dbg_symbolic_address(Bit32u context, Bit32u eip, Bit32u base);
-char* bx_dbg_symbolic_address_16bit(Bit32u eip, Bit32u cs);
-int bx_dbg_symbol_command(char* filename, bx_bool global, Bit32u offset);
-void bx_dbg_info_symbols_command(char *Symbol);
-int bx_dbg_lbreakpoint_symbol_command(char *Symbol);
-Bit32u bx_dbg_get_symbol_value(char *Symbol);
-char* bx_dbg_disasm_symbolic_address(Bit32u eip, Bit32u base);
+void bx_dbg_set_symbol_command(const char *symbol, Bit32u val);
+const char* bx_dbg_symbolic_address(Bit32u context, Bit32u eip, Bit32u base);
+const char* bx_dbg_symbolic_address_16bit(Bit32u eip, Bit32u cs);
+int bx_dbg_symbol_command(const char* filename, bx_bool global, Bit32u offset);
+void bx_dbg_info_symbols_command(const char *Symbol);
+int bx_dbg_lbreakpoint_symbol_command(const char *Symbol);
+Bit32u bx_dbg_get_symbol_value(const char *Symbol);
+const char* bx_dbg_disasm_symbolic_address(Bit32u eip, Bit32u base);
 
 #ifdef __cplusplus
 }

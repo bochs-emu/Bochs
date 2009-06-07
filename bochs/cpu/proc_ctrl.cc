@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.295 2009-04-07 16:12:19 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.295.2.1 2009-06-07 07:49:10 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -345,10 +345,18 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_DdRd(bxInstruction_c *i)
       BX_CPU_THIS_PTR dr7 = (val_32 & 0xffff2fff) | 0x00000400;
 #endif
 #if BX_X86_DEBUGGER
-      // if we have breakpoints enabled then we must check
+      // if we have code breakpoints enabled then we must check
       // breakpoints condition in cpu loop
-      if(BX_CPU_THIS_PTR dr7 & 0xff)
-        BX_CPU_THIS_PTR async_event = 1;
+      if (BX_CPU_THIS_PTR dr7 & 0xff) {
+        if (((BX_CPU_THIS_PTR dr7 >> 16) & 3) == 0 ||
+            ((BX_CPU_THIS_PTR dr7 >> 20) & 3) == 0 ||
+            ((BX_CPU_THIS_PTR dr7 >> 24) & 3) == 0 ||
+            ((BX_CPU_THIS_PTR dr7 >> 28) & 3) == 0)
+        {
+          BX_INFO(("MOV_DdRd(): code breakpoint is set"));
+          BX_CPU_THIS_PTR async_event = 1;
+        }
+      }
 #endif
       break;
 
@@ -519,10 +527,18 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_DqRq(bxInstruction_c *i)
       BX_CPU_THIS_PTR dr7 = (val_64 & 0xffff2fff) | 0x00000400;
 
 #if BX_X86_DEBUGGER
-      // if we have breakpoints enabled then we must check
+      // if we have code breakpoints enabled then we must check
       // breakpoints condition in cpu loop
-      if(BX_CPU_THIS_PTR dr7 & 0xff)
-        BX_CPU_THIS_PTR async_event = 1;
+      if (BX_CPU_THIS_PTR dr7 & 0xff) {
+        if (((BX_CPU_THIS_PTR dr7 >> 16) & 3) == 0 ||
+            ((BX_CPU_THIS_PTR dr7 >> 20) & 3) == 0 ||
+            ((BX_CPU_THIS_PTR dr7 >> 24) & 3) == 0 ||
+            ((BX_CPU_THIS_PTR dr7 >> 28) & 3) == 0)
+        {
+          BX_INFO(("MOV_DdRd(): code breakpoint is set"));
+          BX_CPU_THIS_PTR async_event = 1;
+        }
+      }
 #endif
       break;
 
@@ -634,7 +650,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CdRd(bxInstruction_c *i)
 #if BX_SUPPORT_VMX
       VMexit_CR3_Write(i, val_32);
 #endif
-      // Reserved bits take on value of MOV instruction
+      if (BX_CPU_THIS_PTR cr0.get_PG() && BX_CPU_THIS_PTR cr4.get_PAE() && !long_mode()) {
+        if (! CheckPDPTR(val_32)) {
+          BX_ERROR(("SetCR3(): PDPTR check failed !"));
+          exception(BX_GP_EXCEPTION, 0, 0);
+        }
+      }
       SetCR3(val_32);
       BX_INSTR_TLB_CNTRL(BX_CPU_ID, BX_INSTR_MOV_CR3, val_32);
       break;
@@ -643,6 +664,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CdRd(bxInstruction_c *i)
 #if BX_SUPPORT_VMX
       val_32 = VMexit_CR4_Write(i, val_32);
 #endif
+      if (BX_CPU_THIS_PTR cr0.get_PG() && (val_32 & (1<<5)) != 0 /* PAE */ && !long_mode()) {
+        if (! CheckPDPTR(BX_CPU_THIS_PTR cr3)) {
+          BX_ERROR(("SetCR4(): PDPTR check failed !"));
+          exception(BX_GP_EXCEPTION, 0, 0);
+        }
+      }
       // Protected mode: #GP(0) if attempt to write a 1 to
       // any reserved bit of CR4
       if (! SetCR4(val_32))
@@ -743,7 +770,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CqRq(bxInstruction_c *i)
 #if BX_SUPPORT_VMX
       VMexit_CR3_Write(i, val_64);
 #endif
-      // Reserved bits take on value of MOV instruction
+      // no PDPTR checks in long mode
       SetCR3(val_64);
       BX_INSTR_TLB_CNTRL(BX_CPU_ID, BX_INSTR_MOV_CR3, val_64);
       break;
@@ -752,6 +779,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CqRq(bxInstruction_c *i)
       val_64 = VMexit_CR4_Write(i, val_64);
 #endif
       BX_DEBUG(("MOV_CqRq: write to CR4 of %08x:%08x", GET32H(val_64), GET32L(val_64)));
+      // no PDPTR checks in long mode
       if (! SetCR4(val_64))
         exception(BX_GP_EXCEPTION, 0, 0);
       break;
@@ -1336,6 +1364,14 @@ bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::SetCR0(bx_address val)
       }
       BX_CPU_THIS_PTR efer.set_LMA(1);
     }
+#if BX_SUPPORT_PAE
+    if (BX_CPU_THIS_PTR cr4.get_PAE() && !long_mode()) {
+      if (! CheckPDPTR(BX_CPU_THIS_PTR cr3)) {
+        BX_ERROR(("SetCR0(): PDPTR check failed !"));
+        return 0;
+      }
+    }
+#endif
   }
   else if (prev_pg==1 && ! pg) {
     if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
@@ -1413,11 +1449,11 @@ bx_address get_cr4_allow_mask(void)
   allowMask |= (1<<3);   /* DE  */
 
 #if BX_SUPPORT_LARGE_PAGES
-  allowMask |= (1<<4);
+  allowMask |= (1<<4);   /* PSE */
 #endif
 
 #if BX_SUPPORT_PAE
-  allowMask |= (1<<5);
+  allowMask |= (1<<5);   /* PAE */
 #endif
 
 #if BX_CPU_LEVEL >= 5
@@ -1458,7 +1494,7 @@ bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::SetCR4(bx_address val)
   // need to GP(0) if LMA=1 and PAE=1->0
   if (BX_CPU_THIS_PTR efer.get_LMA()) {
     if(!(val & (1<<5)) && BX_CPU_THIS_PTR cr4.get_PAE()) {
-      BX_ERROR(("SetCR4: attempt to change PAE when EFER.LMA=1"));
+      BX_ERROR(("SetCR4(): attempt to change PAE when EFER.LMA=1"));
       return 0;
     }
   }
@@ -1466,7 +1502,7 @@ bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::SetCR4(bx_address val)
 
 #if BX_SUPPORT_VMX
   if (!(val & (1 << 13)) && BX_CPU_THIS_PTR in_vmx) {
-    BX_ERROR(("Attempt to clear CR4.VMXE in vmx mode"));
+    BX_ERROR(("SetCR4(): Attempt to clear CR4.VMXE in vmx mode"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 #endif

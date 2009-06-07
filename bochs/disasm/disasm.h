@@ -128,7 +128,7 @@ public:
   Bit8u extend8b;
   Bit8u rex_r, rex_x, rex_b;
   Bit8u seg_override;
-  unsigned b1, prefixes;
+  unsigned b1;
   unsigned ilen;
 
   Bit8u modrm, mod, nnn, rm;
@@ -160,7 +160,6 @@ BX_CPP_INLINE x86_insn::x86_insn(bx_bool is32, bx_bool is64)
   extend8b = 0;
   rex_r = rex_b = rex_x = 0;
   seg_override = NO_SEG_OVERRIDE;
-  prefixes = 0;
   ilen = 0;
   b1 = 0;
 

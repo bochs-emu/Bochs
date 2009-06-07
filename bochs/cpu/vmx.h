@@ -27,6 +27,9 @@
 #define VMX_VMCS_AREA_SIZE   4096
 #define VMX_VMCS_REVISION_ID 0x10
 
+// VMCS pointer is always 64-bit variable
+#define BX_INVALID_VMCSPTR BX_CONST64(0xFFFFFFFFFFFFFFFF)
+
 // VMX error codes
 enum VMX_error_code {
     VMXERR_NO_ERROR = 0,
@@ -588,13 +591,13 @@ typedef struct bx_VMCS
    // VM-Entry Control Fields
    //
 
-#define VMX_VMENTRY_CTRL1_LOAD_DBG_CTRLS            (1 <<  2) /* legacy must be '1 */
-#define VMX_VMENTRY_CTRL1_X86_64_GUEST              (1 <<  9)
-#define VMX_VMENTRY_CTRL1_SMM_ENTER                 (1 << 10)
-#define VMX_VMENTRY_CTRL1_DUAL_MONITOR_TREATMENT    (1 << 11)
-#define VMX_VMENTRY_CTRL1_LOAD_PERF_GLOBAL_CTRL_MSR (1 << 13)
-#define VMX_VMENTRY_CTRL1_LOAD_PAT_MSR              (1 << 14)
-#define VMX_VMENTRY_CTRL1_LOAD_EFER_MSR             (1 << 15)
+#define VMX_VMENTRY_CTRL1_LOAD_DBG_CTRLS                    (1 <<  2) /* legacy must be '1 */
+#define VMX_VMENTRY_CTRL1_X86_64_GUEST                      (1 <<  9)
+#define VMX_VMENTRY_CTRL1_SMM_ENTER                         (1 << 10)
+#define VMX_VMENTRY_CTRL1_DEACTIVATE_DUAL_MONITOR_TREATMENT (1 << 11)
+#define VMX_VMENTRY_CTRL1_LOAD_PERF_GLOBAL_CTRL_MSR         (1 << 13)
+#define VMX_VMENTRY_CTRL1_LOAD_PAT_MSR                      (1 << 14)
+#define VMX_VMENTRY_CTRL1_LOAD_EFER_MSR                     (1 << 15)
 
 #ifdef BX_VMX_ENABLE_ALL
 
@@ -606,7 +609,7 @@ typedef struct bx_VMCS
        (VMX_VMENTRY_CTRL1_LOAD_DBG_CTRLS | \
         VMX_VMENTRY_CTRL1_X86_64_GUEST | \
         VMX_VMENTRY_CTRL1_SMM_ENTER | \
-        VMX_VMENTRY_CTRL1_DUAL_MONITOR_TREATMENT)
+        VMX_VMENTRY_CTRL1_DEACTIVATE_DUAL_MONITOR_TREATMENT)
 
 #endif
    
