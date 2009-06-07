@@ -1,4 +1,4 @@
-Changes in 2.4.1 (coming soon):
+Changes in 2.4.1 (June 7, 2009):
 
 - Fixed bunch of CPUID issues
   - Bochs is now able to install and boot 64-bit Windows images!
