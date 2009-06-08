@@ -7,23 +7,24 @@
  <!--content starts here-->
  <img src="images/logo.gif" alt="A Window, Tux, and the BSD Daemon" width="160" height="175" align="right">
 
- <BR><font face="arial, helvetica" color="#1e029a" size="4"><b>Latest release:</b> Bochs 2.4</font><BR><BR>
+ <BR><font face="arial, helvetica" color="#1e029a" size="4"><b>Latest release:</b> Bochs 2.4.1</font><BR><BR>
 
-Eleven months after the last intermediate one we have a new stable release.
-<BR>
-Here is a brief summary of changes since version 2.3.7:
+Version 2.4.1 is a bugfix release. Here is the summary of changes :
 <ul>
-<li> Added graphical Bochs debugger frontend for most of the supported platforms.<br>
-     Thanks for Chourdakis Michael and Bruce Ewing.
-<li> Many new CPU features in emulation
+<li> Fixed bunch of CPUID issues
  <ul>
- <li> Support for > 32 bit physical address space and configurable MSRs
- <li> VMX, 1G pages in long mode, MOVBE instruction
+ <li> Bochs is now able to install and boot 64-bit Windows images! (special thanks to Mark Ebersole for his patch)
  </ul>
-<li> Bugfixes for CPU emulation correctness, debugger and CPU instrumentation.
-<li> New config interface 'win32config' with start and runtime menu
-<li> USB: added OHCI support, external hub and cdrom
-<li> Added user plugin interface support
+<li> Several bugfixes in CPU emulation (mostly for x87 instructions)
+<li> Fixed two critical deadlock bugs in the Win32 gui (patches from @SF tracker)
+<li> Fixes related to the 'show ips' feature
+ <ul>
+ <li> removed conflicting win32-specific alarm() functions ('win32' and 'sdl' gui)
+ <li> feature now works in wx on win32
+ </ul>
+<li> Added support for gdb stub on big endian machine (patch by Godmar Back)
+<li> Rewritten obsolete hash_map code in dbg symbols module (patch from @SF)
+<li> BIOS: implemented missing INT 15h/89h (patch by Sebastian Herbszt)
 </ul>
 
 The binary packages for Linux and Windows are built with these featues :
@@ -45,29 +46,34 @@ The binary packages for Linux and Windows are built with these featues :
 </ul>
 
 <BR/>
-<a href="http://bochs.cvs.sourceforge.net/bochs/bochs/CHANGES?view=markup&content-type=text/vnd.viewcvs-markup&revision=REL_2_4_FINAL">
-Details on what has changed since version 2.3.7
+<a href="http://bochs.cvs.sourceforge.net/bochs/bochs/CHANGES?view=markup&content-type=text/vnd.viewcvs-markup&revision=REL_2_4_1_FINAL">
+Details on what has changed since version 2.4
 </a>
 
 <BR/><BR/>
 
- <BR><font face="arial, helvetica" color="#1e029a" size="4"><b>Previous release:</b> Bochs 2.3.7</font><BR><BR>
+ <BR><font face="arial, helvetica" color="#1e029a" size="4"><b>Previous release:</b> Bochs 2.4</font><BR><BR>
 
-Version 2.3.7 is an intermediate (bugfix+) release. It includes a lot of bugfixes
-and a few new features.<BR>
-Here is a brief summary of changes :
+Eleven months after the last intermediate one we have a new stable release.
+<BR>
+Here is a brief summary of changes since version 2.3.7:
 <ul>
-<li> More optimizations in CPU code - <b>Bochs 2.3.7 is more than 2x faster than Bochs 2.3.5 build !</b>
-<li> Implemented LBA48 support in BIOS
-<li> Added memory access tracing for Bochs internal debugger
-<li> Implemented Intel(R) XSAVE/XRSTOR and AES instruction set extensions
-<li> Many fixes in CPU emulation and internal debugger. MenuetOS64 floppy images booting perfect again !
-<li> updated LGPL'd VGABIOS to version 0.6b
+<li> Added graphical Bochs debugger frontend for most of the supported platforms.<br>
+     Thanks for Chourdakis Michael and Bruce Ewing.
+<li> Many new CPU features in emulation
+ <ul>
+ <li> Support for > 32 bit physical address space and configurable MSRs
+ <li> VMX, 1G pages in long mode, MOVBE instruction
+ </ul>
+<li> Bugfixes for CPU emulation correctness, debugger and CPU instrumentation.
+<li> New config interface 'win32config' with start and runtime menu
+<li> USB: added OHCI support, external hub and cdrom
+<li> Added user plugin interface support
 </ul>
 
 <BR/>
-<a href="http://bochs.cvs.sourceforge.net/bochs/bochs/CHANGES?view=markup&content-type=text/vnd.viewcvs-markup&revision=REL_2_3_7_FINAL">
-Details on what has changed since version 2.3.6
+<a href="http://bochs.cvs.sourceforge.net/bochs/bochs/CHANGES?view=markup&content-type=text/vnd.viewcvs-markup&revision=REL_2_4_FINAL">
+Details on what has changed since version 2.3.7
 </a>
 
  <BR><BR>
