@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.291 2009-05-21 10:39:40 sshwarts Exp $
+// $Id: cpu.cc,v 1.292 2009-06-09 15:23:28 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -751,16 +751,16 @@ void BX_CPU_C::prefetch(void)
   else {
     BX_CPU_THIS_PTR eipFetchPtr = BX_MEM(0)->getHostMemAddr(BX_CPU_THIS,
         BX_CPU_THIS_PTR pAddrPage, BX_EXECUTE);
-  }
 
-  // Sanity checks
-  if (! BX_CPU_THIS_PTR eipFetchPtr) {
-    bx_phy_address pAddr = BX_CPU_THIS_PTR pAddrPage + pageOffset;
-    if (pAddr >= BX_MEM(0)->get_memory_len()) {
-      BX_PANIC(("prefetch: running in bogus memory, pAddr=0x" FMT_PHY_ADDRX, pAddr));
-    }
-    else {
-      BX_PANIC(("prefetch: getHostMemAddr vetoed direct read, pAddr=0x" FMT_PHY_ADDRX, pAddr));
+    // Sanity checks
+    if (! BX_CPU_THIS_PTR eipFetchPtr) {
+      bx_phy_address pAddr = BX_CPU_THIS_PTR pAddrPage + pageOffset;
+      if (pAddr >= BX_MEM(0)->get_memory_len()) {
+        BX_PANIC(("prefetch: running in bogus memory, pAddr=0x" FMT_PHY_ADDRX, pAddr));
+      }
+      else {
+        BX_PANIC(("prefetch: getHostMemAddr vetoed direct read, pAddr=0x" FMT_PHY_ADDRX, pAddr));
+      }
     }
   }
 
