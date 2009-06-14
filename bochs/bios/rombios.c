@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.233 2009-06-07 21:34:59 sshwarts Exp $
+// $Id: rombios.c,v 1.234 2009-06-14 06:00:36 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -937,7 +937,7 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.233 $ $Date: 2009-06-07 21:34:59 $";
+static char bios_cvs_version_string[] = "$Revision: 1.234 $ $Date: 2009-06-14 06:00:36 $";
 
 #define BIOS_COPYRIGHT_STRING "(c) 2002 MandrakeSoft S.A. Written by Kevin Lawton & the Bochs team."
 
@@ -10489,7 +10489,7 @@ post:
   ;; Examine CMOS shutdown status.
   mov al, bl
 
-  ;; 0x00, 0x09, 0x0D+ = normal startup
+  ;; 0x00, 0x0D+ = normal startup
   cmp AL, #0x00
   jz normal_post
   cmp AL, #0x0d
