@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: msr.cc,v 1.18 2009-05-21 13:25:30 sshwarts Exp $
+// $Id: msr.cc,v 1.19 2009-06-15 09:30:56 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008 Stanislav Shwartsman
@@ -53,7 +53,7 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
       break;
 #endif
 
-#if BX_SUPPORT_MTRR
+#if CPU_LEVEL >= 6
     case BX_MSR_MTRRCAP:   // read only MSR
       val64 = BX_CONST64(0x0000000000000508);
       break;
@@ -233,7 +233,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDMSR(bxInstruction_c *i)
 #endif
 }
 
-#if BX_SUPPORT_MTRR
+#if CPU_LEVEL >= 6
 BX_CPP_INLINE bx_bool isMemTypeValidMTRR(Bit8u memtype)
 {
   switch(memtype) {
@@ -290,7 +290,7 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
       break;
 #endif
 
-#if BX_SUPPORT_MTRR
+#if CPU_LEVEL >= 6
     case BX_MSR_MTRRCAP:
       BX_ERROR(("WRMSR: MTRRCAP is read only MSR"));
       return 0;

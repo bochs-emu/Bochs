@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpuid.cc,v 1.83 2009-06-06 10:40:11 sshwarts Exp $
+// $Id: cpuid.cc,v 1.84 2009-06-15 09:30:56 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007 Stanislav Shwartsman
@@ -278,17 +278,15 @@ Bit32u BX_CPU_C::get_std_cpuid_features(void)
   features |= (1<<15);  // Implement CMOV instructions.
 #endif
 
-#if BX_SUPPORT_LARGE_PAGES
-  features |= (1<<3) | (1<<17);  // support Page-Size Extension (4M pages)
+#if BX_CPU_LEVEL >= 5
+  features |= (1<<3);   // support PSE
 #endif
-#if BX_SUPPORT_PAE
+#if BX_CPU_LEVEL >= 6
   features |= (1<<6);   // support PAE
-#endif
-#if BX_SUPPORT_MTRR
-  features |= (1<<12) | (1<<16);  // Implement MTRRs and PAT
-#endif
-#if BX_SUPPORT_GLOBAL_PAGES
+  features |= (1<<12);  // support MTRRs
   features |= (1<<13);  // support Global pages
+  features |= (1<<16);  // support PAT
+  features |= (1<<17);  // support PSE-36
 #endif
 
 #if BX_SUPPORT_SMP

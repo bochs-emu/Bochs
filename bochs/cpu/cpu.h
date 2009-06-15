@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.602 2009-06-06 10:21:49 sshwarts Exp $
+// $Id: cpu.h,v 1.603 2009-06-15 09:30:56 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -302,7 +302,7 @@ struct BxExceptionInfo {
 #define BX_MSR_LASTBRANCHTOIP      0x1dc
 #define BX_MSR_LASTINTOIP          0x1dd
 
-#if BX_SUPPORT_MTRR
+#if CPU_LEVEL >= 6
   #define BX_MSR_MTRRCAP           0x0fe
   #define BX_MSR_MTRRPHYSBASE0     0x200
   #define BX_MSR_MTRRPHYSMASK0     0x201
@@ -593,7 +593,7 @@ typedef struct
   bx_address sysenter_eip_msr;
 #endif
 
-#if BX_SUPPORT_MTRR
+#if CPU_LEVEL >= 6
   Bit64u mtrrphys[16];
   Bit64u mtrrfix64k_00000;
   Bit64u mtrrfix16k[2];
@@ -967,12 +967,12 @@ public: // for now...
   // for paging
   struct {
     bx_TLB_entry entry[BX_TLB_SIZE] BX_CPP_AlignN(16);
-#if BX_SUPPORT_LARGE_PAGES
+#if BX_CPU_LEVEL >= 5
     bx_bool split_large;
 #endif
   } TLB;
 
-#if BX_SUPPORT_PAE
+#if BX_CPU_LEVEL >= 6
   struct {
     bx_bool valid;
     Bit64u entry[4];
@@ -3053,7 +3053,7 @@ public: // for now...
 
   // linear address for translate_linear expected to be canonical !
   BX_SMF bx_phy_address translate_linear(bx_address laddr, unsigned curr_pl, unsigned rw);
-#if BX_SUPPORT_PAE
+#if BX_CPU_LEVEL >= 6
   BX_SMF bx_phy_address translate_linear_PAE(bx_address laddr, bx_address &lpf_mask, Bit32u &combined_access, unsigned curr_pl, unsigned rw);
   BX_SMF int check_entry_PAE(const char *s, Bit64u entry, Bit64u reserved, unsigned rw, bx_bool *nx_fault);
 #endif
@@ -3063,7 +3063,7 @@ public: // for now...
     return translate_linear(laddr, curr_pl, rw);
   }
 
-#if BX_SUPPORT_GLOBAL_PAGES
+#if BX_CPU_LEVEL >= 6
   BX_SMF void TLB_flushNonGlobal(void);
 #endif
   BX_SMF void TLB_flush(void);
@@ -3094,7 +3094,7 @@ public: // for now...
 #endif
   BX_SMF void pagingCR0Changed(Bit32u oldCR0, Bit32u newCR0) BX_CPP_AttrRegparmN(2);
   BX_SMF void pagingCR4Changed(Bit32u oldCR4, Bit32u newCR4) BX_CPP_AttrRegparmN(2);
-#if BX_SUPPORT_PAE
+#if BX_CPU_LEVEL >= 6
   BX_SMF bx_bool CheckPDPTR(Bit32u cr3_val) BX_CPP_AttrRegparmN(1);
 #endif
 

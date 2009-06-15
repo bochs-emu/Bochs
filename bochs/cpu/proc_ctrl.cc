@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.299 2009-06-12 11:45:05 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.300 2009-06-15 09:30:56 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -650,7 +650,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CdRd(bxInstruction_c *i)
 #if BX_SUPPORT_VMX
       VMexit_CR3_Write(i, val_32);
 #endif
-#if BX_SUPPORT_PAE
+#if BX_CPU_LEVEL >= 6
       if (BX_CPU_THIS_PTR cr0.get_PG() && BX_CPU_THIS_PTR cr4.get_PAE() && !long_mode()) {
         if (! CheckPDPTR(val_32)) {
           BX_ERROR(("SetCR3(): PDPTR check failed !"));
@@ -666,7 +666,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CdRd(bxInstruction_c *i)
 #if BX_SUPPORT_VMX
       val_32 = VMexit_CR4_Write(i, val_32);
 #endif
-#if BX_SUPPORT_PAE
+#if BX_CPU_LEVEL >= 6
       if (BX_CPU_THIS_PTR cr0.get_PG() && (val_32 & (1<<5)) != 0 /* PAE */ && !long_mode()) {
         if (! CheckPDPTR(BX_CPU_THIS_PTR cr3)) {
           BX_ERROR(("SetCR4(): PDPTR check failed !"));
@@ -1368,7 +1368,7 @@ bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::SetCR0(bx_address val)
       }
       BX_CPU_THIS_PTR efer.set_LMA(1);
     }
-#if BX_SUPPORT_PAE
+#if BX_CPU_LEVEL >= 6
     if (BX_CPU_THIS_PTR cr4.get_PAE() && !long_mode()) {
       if (! CheckPDPTR(BX_CPU_THIS_PTR cr3)) {
         BX_ERROR(("SetCR0(): PDPTR check failed !"));
@@ -1452,11 +1452,11 @@ bx_address get_cr4_allow_mask(void)
 
   allowMask |= (1<<3);   /* DE  */
 
-#if BX_SUPPORT_LARGE_PAGES
+#if BX_CPU_LEVEL >= 5
   allowMask |= (1<<4);   /* PSE */
 #endif
 
-#if BX_SUPPORT_PAE
+#if BX_CPU_LEVEL >= 6
   allowMask |= (1<<5);   /* PAE */
 #endif
 
@@ -1465,11 +1465,8 @@ bx_address get_cr4_allow_mask(void)
   allowMask |= (1<<6);   /* MCE */
 #endif
 
-#if BX_SUPPORT_GLOBAL_PAGES
-  allowMask |= (1<<7);
-#endif
-
 #if BX_CPU_LEVEL >= 6
+  allowMask |= (1<<7);   /* PGE */
   allowMask |= (1<<8);   /* PCE */
   allowMask |= (1<<9);   /* OSFXSR */
 #endif

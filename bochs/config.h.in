@@ -714,11 +714,6 @@ typedef
 #define BX_SUPPORT_AES 0
 #define BX_SUPPORT_MOVBE 0
 #define BX_SUPPORT_VMX 0
-
-#define BX_SUPPORT_MTRR 0
-#define BX_SUPPORT_LARGE_PAGES 0
-#define BX_SUPPORT_GLOBAL_PAGES 0
-#define BX_SUPPORT_PAE 0
 #define BX_SUPPORT_1G_PAGES 0
 
 #define BX_SupportRepeatSpeedups 0
@@ -814,23 +809,6 @@ typedef
 #endif
 #endif
 
-#if (BX_CPU_LEVEL<6 && BX_SUPPORT_PAE)
-  #error "Physical Address Extensions (PAE) only supported with CPU_LEVEL >= 6 !"
-#endif
-#if (BX_CPU_LEVEL<6 && BX_SUPPORT_GLOBAL_PAGES)
-  #error "Page Global Extension (PGE) only supported with CPU_LEVEL >= 6 !"
-#endif
-#if (BX_CPU_LEVEL<5 && BX_SUPPORT_LARGE_PAGES)
-  #error "Page Size Extension (PSE) only supported with CPU_LEVEL >= 5 !"
-#endif
-#if (BX_CPU_LEVEL<6 && BX_SUPPORT_MTRR)
-  #error "MTRRs only supported with CPU_LEVEL >= 6 !"
-#endif
-
-#if (BX_SUPPORT_PAE && !BX_SUPPORT_LARGE_PAGES)
-  #error "Physical Address Extensions (PAE) requires large pages support !"
-#endif
-
 #if (!BX_SUPPORT_X86_64 && BX_SUPPORT_1G_PAGES)
   #error "1G only supported with x86-64 !"
 #endif
@@ -843,15 +821,6 @@ typedef
 #endif
 #if (BX_SUPPORT_SSE<2)
   #error "X86-64 requires SSE2 !"
-#endif
-#if !BX_SUPPORT_PAE
-  #error "X86-64 requires Physical Address Extensions (PAE) !"
-#endif
-#if !BX_SUPPORT_GLOBAL_PAGES
-  #error "X86-64 requires Page Global Extension (PGE) !"
-#endif
-#if !BX_SUPPORT_LARGE_PAGES
-  #error "X86-64 requires Page Size Extension (PSE) !"
 #endif
 #endif
 

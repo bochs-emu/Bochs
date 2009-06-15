@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.176 2009-05-31 07:49:04 sshwarts Exp $
+// $Id: paging.cc,v 1.177 2009-06-15 09:30:56 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -326,9 +326,19 @@ static unsigned priv_check[BX_PRIV_CHECK_SIZE];
 #define PAGING_PAE_PDE2M_RESERVED_BITS \
     (PAGING_PAE_PDE_RESERVED_BITS | BX_CONST64(0x001FE000))
 
-/* PSE PDE4M: bits [21:17] */
+#if BX_CPU_LEVEL >= 6
+
+/* PSE-36 PDE4M: bits [21:17] */
 #define PAGING_PSE_PDE4M_RESERVED_BITS \
     (BX_PHY_ADDRESS_RESERVED_BITS | BX_CONST64(0x003E0000))
+
+#else
+
+/* PSE PDE4M: bits [21:13] */
+#define PAGING_PSE_PDE4M_RESERVED_BITS \
+    (BX_PHY_ADDRESS_RESERVED_BITS | BX_CONST64(0x003FE000))
+
+#endif
 
 #define PAGE_DIRECTORY_NX_BIT (BX_CONST64(0x8000000000000000))
 
@@ -438,7 +448,7 @@ BX_CPU_C::pagingCR4Changed(Bit32u oldCR4, Bit32u newCR4)
   if ((oldCR4 & 0x000000b0) != (newCR4 & 0x000000b0))
     TLB_flush(); // Flush Global entries also.
 
-#if BX_SUPPORT_PAE
+#if BX_CPU_LEVEL >= 6
   if ((oldCR4 & 0x00000020) != (newCR4 & 0x00000020)) {
     if (BX_CPU_THIS_PTR cr4.get_PAE() && !long_mode())
       BX_CPU_THIS_PTR cr3_masked = BX_CPU_THIS_PTR cr3 & 0xffffffe0;
@@ -451,14 +461,14 @@ BX_CPU_C::pagingCR4Changed(Bit32u oldCR4, Bit32u newCR4)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::SetCR3(bx_address val)
 {
   // flush TLB even if value does not change
-#if BX_SUPPORT_GLOBAL_PAGES
+#if BX_CPU_LEVEL >= 6
   if (BX_CPU_THIS_PTR cr4.get_PGE())
     TLB_flushNonGlobal(); // Don't flush Global entries.
   else
 #endif
     TLB_flush();          // Flush Global entries also.
 
-#if BX_SUPPORT_PAE
+#if BX_CPU_LEVEL >= 6
   if (BX_CPU_THIS_PTR cr4.get_PAE()) {
 #if BX_SUPPORT_X86_64
     if (long_mode()) {
@@ -488,7 +498,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SetCR3(bx_address val)
   BX_CPU_THIS_PTR cr3 = val;
 }
 
-#if BX_SUPPORT_PAE
+#if BX_CPU_LEVEL >= 6
 bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::CheckPDPTR(Bit32u cr3_val)
 {
   cr3_val &= 0xffffffe0;
@@ -568,11 +578,11 @@ void BX_CPU_C::TLB_flush(void)
     BX_CPU_THIS_PTR TLB.entry[n].lpf = BX_INVALID_TLB_ENTRY;
   }
 
-#if BX_SUPPORT_PAE
+#if BX_CPU_LEVEL >= 6
   BX_CPU_THIS_PTR PDPE_CACHE.valid = 0;
 #endif
 
-#if BX_SUPPORT_LARGE_PAGES || BX_SUPPORT_PAE
+#if BX_CPU_LEVEL >= 5
   BX_CPU_THIS_PTR TLB.split_large = 0;  // flush whole TLB
 #endif
 
@@ -583,8 +593,7 @@ void BX_CPU_C::TLB_flush(void)
 #endif
 }
 
-#if BX_SUPPORT_GLOBAL_PAGES
-
+#if BX_CPU_LEVEL >= 6
 void BX_CPU_C::TLB_flushNonGlobal(void)
 {
 #if InstrumentTLB
@@ -598,15 +607,11 @@ void BX_CPU_C::TLB_flushNonGlobal(void)
     if (!(tlbEntry->accessBits & TLB_GlobalPage)) {
       tlbEntry->lpf = BX_INVALID_TLB_ENTRY;
     }
-#if BX_SUPPORT_LARGE_PAGES || BX_SUPPORT_PAE
     else if (~tlbEntry->lpf_mask > 0xfff)
       BX_CPU_THIS_PTR TLB.split_large = 1;
-#endif
   }
 
-#if BX_SUPPORT_PAE
   BX_CPU_THIS_PTR PDPE_CACHE.valid = 0;
-#endif
 
 #if BX_SUPPORT_MONITOR_MWAIT
   // invalidating of the TLB might change translation for monitored page
@@ -614,7 +619,6 @@ void BX_CPU_C::TLB_flushNonGlobal(void)
   BX_CPU_THIS_PTR monitor.reset_monitor();
 #endif
 }
-
 #endif
 
 void BX_CPU_C::TLB_invlpg(bx_address laddr)
@@ -623,7 +627,7 @@ void BX_CPU_C::TLB_invlpg(bx_address laddr)
 
   BX_DEBUG(("TLB_invlpg(0x"FMT_ADDRX"): invalidate TLB entry", laddr));
 
-#if BX_SUPPORT_LARGE_PAGES || BX_SUPPORT_PAE
+#if BX_CPU_LEVEL >= 5
   bx_bool large = 0;
 
   if (BX_CPU_THIS_PTR TLB.split_large) {
@@ -649,7 +653,7 @@ void BX_CPU_C::TLB_invlpg(bx_address laddr)
     }
   }
 
-#if BX_SUPPORT_PAE
+#if BX_CPU_LEVEL >= 6
   BX_CPU_THIS_PTR PDPE_CACHE.valid = 0;
 #endif
 
@@ -723,7 +727,7 @@ void BX_CPU_C::page_fault(unsigned fault, bx_address laddr, unsigned user, unsig
   exception(BX_PF_EXCEPTION, error_code, 0);
 }
 
-#if BX_SUPPORT_PAE
+#if BX_CPU_LEVEL >= 6
 
 int BX_CPU_C::check_entry_PAE(const char *s, Bit64u entry, Bit64u reserved, unsigned rw, bx_bool *nx_fault)
 {
@@ -900,7 +904,7 @@ bx_phy_address BX_CPU_C::translate_linear_PAE(bx_address laddr, bx_address &lpf_
     if (!priv_check[priv_index] || nx_fault)
       page_fault(ERROR_PROTECTION, laddr, pl, rw);
 
-#if BX_SUPPORT_GLOBAL_PAGES
+#if BX_CPU_LEVEL >= 6
     if (BX_CPU_THIS_PTR cr4.get_PGE())
       combined_access |= (pde & 0x100);      // G
 #endif
@@ -963,7 +967,7 @@ bx_phy_address BX_CPU_C::translate_linear_PAE(bx_address laddr, bx_address &lpf_
   if (!priv_check[priv_index] || nx_fault)
     page_fault(ERROR_PROTECTION, laddr, pl, rw);
 
-#if BX_SUPPORT_GLOBAL_PAGES
+#if BX_CPU_LEVEL >= 6
   if (BX_CPU_THIS_PTR cr4.get_PGE())
     combined_access |= (pte & 0x100);     // G
 #endif
@@ -1006,7 +1010,7 @@ bx_phy_address BX_CPU_C::translate_linear_PAE(bx_address laddr, bx_address &lpf_
   return ppf;
 }
 
-#endif // BX_SUPPORT_PAE
+#endif
 
 // Translate a linear address to a physical address
 bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned curr_pl, unsigned rw)
@@ -1048,13 +1052,13 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned curr_pl, un
 
   InstrTLB_Increment(tlbMisses);
 
-#if BX_SUPPORT_PAE
+#if BX_CPU_LEVEL >= 6
   if (BX_CPU_THIS_PTR cr4.get_PAE())
   {
     ppf = translate_linear_PAE(laddr, lpf_mask, combined_access, curr_pl, rw);
   }
   else
-#endif  // #if BX_SUPPORT_PAE
+#endif 
   {
     // CR4.PAE==0 (and EFER.LMA==0)
     Bit32u pde, pte;
@@ -1070,51 +1074,55 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned curr_pl, un
       page_fault(ERROR_NOT_PRESENT, laddr, pl, rw);
     }
 
-#if BX_SUPPORT_LARGE_PAGES
-    if ((pde & 0x80) && BX_CPU_THIS_PTR cr4.get_PSE())
-    {
-      // 4M paging
-      if (pde & PAGING_PSE_PDE4M_RESERVED_BITS) {
-        BX_DEBUG(("PSE PDE4M: reserved bit is set: PDE=0x%08x", pde));
-        page_fault(ERROR_RESERVED | ERROR_PROTECTION, laddr, pl, rw);
-      }
+    if (pde & 0x80) {
+#if BX_CPU_LEVEL >= 5
+      if (BX_CPU_THIS_PTR cr4.get_PSE()) {
+        // 4M paging
+        if (pde & PAGING_PSE_PDE4M_RESERVED_BITS) {
+          BX_DEBUG(("PSE PDE4M: reserved bit is set: PDE=0x%08x", pde));
+          page_fault(ERROR_RESERVED | ERROR_PROTECTION, laddr, pl, rw);
+        }
 
 #if BX_PHY_ADDRESS_WIDTH == 32
-      if (pde & 0x0001e000) {
-        BX_PANIC(("PSE PDE4M 0x%08x: Only 32 bit physical address space is emulated !", pde));
+        if (pde & 0x0001e000) {
+          BX_PANIC(("PSE PDE4M 0x%08x: Only 32 bit physical address space is emulated !", pde));
+        }
+#endif
+        // Combined access is just access from the pde (no pte involved).
+        combined_access = pde & 0x06; // U/S and R/W
+
+        priv_index =
+          (BX_CPU_THIS_PTR cr0.get_WP() << 4) |  // bit 4
+          (pl<<3) |                              // bit 3
+          (combined_access | isWrite);           // bit 2,1,0
+
+        if (!priv_check[priv_index])
+          page_fault(ERROR_PROTECTION, laddr, pl, rw);
+
+#if BX_CPU_LEVEL >= 6
+        if (BX_CPU_THIS_PTR cr4.get_PGE())
+          combined_access |= pde & 0x100;        // G
+#endif
+
+        // Update PDE A/D bits if needed.
+        if (((pde & 0x20)==0) || (isWrite && ((pde & 0x40)==0))) {
+          pde |= (0x20 | (isWrite<<6)); // Update A and possibly D bits
+          access_write_physical(pde_addr, 4, &pde);
+          BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pde_addr, 4, BX_WRITE, (Bit8u*)(&pde));
+        }
+
+        // make up the physical frame number
+        ppf = (pde & 0xffc00000) | (laddr & 0x003ff000);
+        lpf_mask = 0x3fffff;
       }
+      else
 #endif
-      // Combined access is just access from the pde (no pte involved).
-      combined_access = pde & 0x06; // U/S and R/W
-
-      priv_index =
-#if BX_CPU_LEVEL >= 4
-        (BX_CPU_THIS_PTR cr0.get_WP() << 4) |  // bit 4
-#endif
-        (pl<<3) |                              // bit 3
-        (combined_access | isWrite);           // bit 2,1,0
-
-      if (!priv_check[priv_index])
-        page_fault(ERROR_PROTECTION, laddr, pl, rw);
-
-#if BX_SUPPORT_GLOBAL_PAGES
-      if (BX_CPU_THIS_PTR cr4.get_PGE())
-        combined_access |= pde & 0x100;        // G
-#endif
-
-      // Update PDE A/D bits if needed.
-      if (((pde & 0x20)==0) || (isWrite && ((pde & 0x40)==0))) {
-        pde |= (0x20 | (isWrite<<6)); // Update A and possibly D bits
-        access_write_physical(pde_addr, 4, &pde);
-        BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pde_addr, 4, BX_WRITE, (Bit8u*)(&pde));
+      {
+        BX_DEBUG(("PDE: page size bit set when reserved"));
+        page_fault(ERROR_RESERVED | ERROR_PROTECTION, laddr, pl, rw);
       }
-
-      // make up the physical frame number
-      ppf = (pde & 0xffc00000) | (laddr & 0x003ff000);
-      lpf_mask = 0x3fffff;
     }
     else // else normal 4K page...
-#endif
     {
       // Get page table entry
       bx_phy_address pte_addr = (bx_phy_address)((pde & 0xfffff000) | ((laddr & 0x003ff000) >> 10));
@@ -1146,7 +1154,7 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned curr_pl, un
       if (!priv_check[priv_index])
         page_fault(ERROR_PROTECTION, laddr, pl, rw);
 
-#if BX_SUPPORT_GLOBAL_PAGES
+#if BX_CPU_LEVEL >= 6
       if (BX_CPU_THIS_PTR cr4.get_PGE())
         combined_access |= (pte & 0x100);      // G
 #endif
@@ -1173,7 +1181,7 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned curr_pl, un
   // Calculate physical memory address and fill in TLB cache entry
   paddress = ppf | poffset;
 
-#if BX_SUPPORT_LARGE_PAGES || BX_SUPPORT_PAE
+#if BX_CPU_LEVEL >= 5
   if (lpf_mask > 0xfff)
     BX_CPU_THIS_PTR TLB.split_large = 1;
 #endif
@@ -1198,7 +1206,7 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned curr_pl, un
     }
   }
 
-#if BX_SUPPORT_GLOBAL_PAGES
+#if BX_CPU_LEVEL >= 6
   if (combined_access & 0x100) // Global bit
     tlbEntry->accessBits |= TLB_GlobalPage;
 #endif
@@ -1244,7 +1252,7 @@ bx_bool BX_CPU_C::dbg_xlate_linear2phy(bx_address laddr, bx_phy_address *phy)
   bx_phy_address pt_address = BX_CPU_THIS_PTR cr3_masked;
   bx_address offset_mask = 0xfff;
 
-#if BX_SUPPORT_PAE
+#if BX_CPU_LEVEL >= 6
   if (BX_CPU_THIS_PTR cr4.get_PAE()) {
     int levels = 3;
 #if BX_SUPPORT_X86_64

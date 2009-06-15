@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.405 2009-06-07 09:47:33 vruppert Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.406 2009-06-15 09:30:56 sshwarts Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -901,84 +901,6 @@ fi
 
 AC_SUBST(NETLOW_OBJS)
 
-
-AC_MSG_CHECKING(for large pages support)
-AC_ARG_ENABLE(large-pages,
-  [  --enable-large-pages              support for large pages (2M/4M pages)],
-  [if test "$enableval" = yes; then
-    AC_MSG_RESULT(yes)
-    AC_DEFINE(BX_SUPPORT_LARGE_PAGES, 1)
-    support_large_pages=1
-   else
-    AC_MSG_RESULT(no)
-    AC_DEFINE(BX_SUPPORT_LARGE_PAGES, 0)
-    support_large_pages=0
-   fi],
-  [
-    if test "$bx_cpu_level" -gt 4; then
-      AC_MSG_RESULT(yes)
-      AC_DEFINE(BX_SUPPORT_LARGE_PAGES, 1)
-      support_large_pages=1
-    else
-      AC_MSG_RESULT(no)
-      AC_DEFINE(BX_SUPPORT_LARGE_PAGES, 0)
-      support_large_pages=0
-    fi
-    ]
-  )
-
-
-AC_MSG_CHECKING(for PAE support)
-AC_ARG_ENABLE(pae,
-  [  --enable-pae                      support Physical Address Extensions],
-  [if test "$enableval" = yes; then
-    AC_MSG_RESULT(yes)
-    AC_DEFINE(BX_SUPPORT_PAE, 1)
-    support_pae=1
-   else
-    AC_MSG_RESULT(no)
-    AC_DEFINE(BX_SUPPORT_PAE, 0)
-    support_pae=0
-   fi],
-  [
-    if test "$bx_cpu_level" -gt 5; then
-      AC_MSG_RESULT(yes)
-      AC_DEFINE(BX_SUPPORT_PAE, 1)
-      support_pae=1
-    else
-      AC_MSG_RESULT(no)
-      AC_DEFINE(BX_SUPPORT_PAE, 0)
-      support_pae=0
-    fi
-    ]
-  )
-
-AC_MSG_CHECKING(for global pages support)
-AC_ARG_ENABLE(global-pages,
-  [  --enable-global-pages             support for global pages in PDE/PTE],
-  [if test "$enableval" = yes; then
-    AC_MSG_RESULT(yes)
-    AC_DEFINE(BX_SUPPORT_GLOBAL_PAGES, 1)
-    support_global_pages=1
-   else
-    AC_MSG_RESULT(no)
-    AC_DEFINE(BX_SUPPORT_GLOBAL_PAGES, 0)
-    support_global_pages=0
-   fi],
-  [
-    if test "$bx_cpu_level" -gt 5; then
-      # enable by default
-      AC_MSG_RESULT(yes)
-      AC_DEFINE(BX_SUPPORT_GLOBAL_PAGES, 1)
-      support_global_pages=1
-    else
-      AC_MSG_RESULT(no)
-      AC_DEFINE(BX_SUPPORT_GLOBAL_PAGES, 0)
-      support_global_pages=0
-    fi
-    ]
-  )
-
 AC_MSG_CHECKING(for long mode 1G pages support)
 AC_ARG_ENABLE(1g-pages,
   [  --enable-1g-pages                 support for 1G pages in long mode],
@@ -1001,40 +923,6 @@ AC_ARG_ENABLE(1g-pages,
 if test "$support_1g_pages" = 1 -a "$use_x86_64" = 0; then
   AC_MSG_ERROR([x86-64 mode is required for 1G pages support])
 fi
-
-if test "$bx_cpu_level" -lt 4 -a "$support_large_pages" = 1; then
-  AC_MSG_ERROR([for large paging support the CPU level must be >= 4])
-fi
-
-if test "$bx_cpu_level" -lt 5 -a "$support_pae" = 1; then
-  AC_MSG_ERROR([for PAE support the CPU level must be >= 5])
-fi
-
-if test "$bx_cpu_level" -lt 5 -a "$support_global_pages" = 1; then
-  AC_MSG_ERROR([for Global Pages support the CPU level must be >= 5])
-fi
-
-AC_MSG_CHECKING(for MTRR/PAT support)
-AC_ARG_ENABLE(mtrr,
-  [  --enable-mtrr                     support for MTRR/PAT registers],
-  [if test "$enableval" = yes; then
-    AC_MSG_RESULT(yes)
-    AC_DEFINE(BX_SUPPORT_MTRR, 1)
-   else
-    AC_MSG_RESULT(no)
-    AC_DEFINE(BX_SUPPORT_MTRR, 0)
-   fi],
-  [
-    if test "$bx_cpu_level" -gt 5; then
-      # enable by default
-      AC_MSG_RESULT(yes)
-      AC_DEFINE(BX_SUPPORT_MTRR, 1)
-    else
-      AC_MSG_RESULT(no)
-      AC_DEFINE(BX_SUPPORT_MTRR, 0)
-    fi
-    ]
-  )
 
 AC_MSG_CHECKING(for repeated IO and mem copy speedups)
 AC_ARG_ENABLE(repeat-speedups,
@@ -3004,6 +2892,46 @@ fi
 
 dnl // DEPRECATED configure options - force users to remove them
 
+AC_MSG_CHECKING(for PAE support (deprecated))
+AC_ARG_ENABLE(pae,
+  [  --enable-pae                      enables PAE support (deprecated)],
+  [AC_MSG_RESULT($enableval)
+   AC_MSG_ERROR([DEPRECATED - enabled automatically for CPU_LEVEL >= 6])
+  ],
+  [
+   AC_MSG_RESULT(no)
+  ])
+
+AC_MSG_CHECKING(for MTRR/PAR support (deprecated))
+AC_ARG_ENABLE(mtrr,
+  [  --enable-mtrr                     enables MTRR/PAT support (deprecated)],
+  [AC_MSG_RESULT($enableval)
+   AC_MSG_ERROR([DEPRECATED - enabled automatically for CPU_LEVEL >= 6])
+  ],
+  [
+   AC_MSG_RESULT(no)
+  ])
+
+AC_MSG_CHECKING(for LARGE PAGES (PSE) support (deprecated))
+AC_ARG_ENABLE(large-pages,
+  [  --enable-large-pages              enables PSE support (deprecated)],
+  [AC_MSG_RESULT($enableval)
+   AC_MSG_ERROR([DEPRECATED - enabled automatically for CPU_LEVEL >= 5])
+  ],
+  [
+   AC_MSG_RESULT(no)
+  ])
+
+AC_MSG_CHECKING(for GLOBAL PAGES (PGE) support (deprecated))
+AC_ARG_ENABLE(global-pages,
+  [  --enable-global-pages             enables Global Pages support (deprecated)],
+  [AC_MSG_RESULT($enableval)
+   AC_MSG_ERROR([DEPRECATED - enabled automatically for CPU_LEVEL >= 6])
+  ],
+  [
+   AC_MSG_RESULT(no)
+  ])
+
 AC_MSG_CHECKING(for guest to host TLB support (deprecated))
 AC_ARG_ENABLE(guest2host-tlb,
   [  --enable-guest2host-tlb           enables guest to host addr TLB for speed (deprecated)],
@@ -3019,16 +2947,6 @@ AC_ARG_ENABLE(icache,
   [  --enable-icache                   support instruction cache (deprecated)],
   [AC_MSG_RESULT($enableval)
    AC_MSG_ERROR([DEPRECATED - ALWAYS ON])
-  ],
-  [
-   AC_MSG_RESULT(no)
-  ])
-
-AC_MSG_CHECKING(for external debugger interface (deprecated))
-AC_ARG_ENABLE(external-debugger,
-  [  --enable-external-debugger        enables external debugger interface (deprecated)],
-  [AC_MSG_RESULT($enableval)
-   AC_MSG_ERROR([DEPRECATED - Peter Tattam's external debugger interface is not supported anymore])
   ],
   [
    AC_MSG_RESULT(no)
