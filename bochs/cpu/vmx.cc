@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmx.cc,v 1.21 2009-06-15 09:30:56 sshwarts Exp $
+// $Id: vmx.cc,v 1.22 2009-06-15 15:10:05 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2009 Stanislav Shwartsman
@@ -2869,9 +2869,7 @@ void BX_CPU_C::register_vmx_state(bx_param_c *parent)
   BXRS_HEX_PARAM_FIELD(host, sysenter_esp_msr, BX_CPU_THIS_PTR vmcs.host_state.sysenter_esp_msr);
   BXRS_HEX_PARAM_FIELD(host, sysenter_eip_msr, BX_CPU_THIS_PTR vmcs.host_state.sysenter_eip_msr);
   BXRS_HEX_PARAM_FIELD(host, sysenter_cs_msr, BX_CPU_THIS_PTR vmcs.host_state.sysenter_cs_msr);
-#if CPU_LEVEL >= 6
   BXRS_HEX_PARAM_FIELD(host, pat_msr, BX_CPU_THIS_PTR vmcs.host_state.pat_msr);
-#endif
 #if BX_SUPPORT_X86_64
   BXRS_HEX_PARAM_FIELD(host, efer_msr, BX_CPU_THIS_PTR vmcs.host_state.efer_msr);
 #endif

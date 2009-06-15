@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.603 2009-06-15 09:30:56 sshwarts Exp $
+// $Id: cpu.h,v 1.604 2009-06-15 15:10:05 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -302,7 +302,7 @@ struct BxExceptionInfo {
 #define BX_MSR_LASTBRANCHTOIP      0x1dc
 #define BX_MSR_LASTINTOIP          0x1dd
 
-#if CPU_LEVEL >= 6
+#if BX_CPU_LEVEL >= 6
   #define BX_MSR_MTRRCAP           0x0fe
   #define BX_MSR_MTRRPHYSBASE0     0x200
   #define BX_MSR_MTRRPHYSMASK0     0x201
@@ -593,7 +593,7 @@ typedef struct
   bx_address sysenter_eip_msr;
 #endif
 
-#if CPU_LEVEL >= 6
+#if BX_CPU_LEVEL >= 6
   Bit64u mtrrphys[16];
   Bit64u mtrrfix64k_00000;
   Bit64u mtrrfix16k[2];
