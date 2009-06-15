@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.178 2009-06-15 09:34:49 sshwarts Exp $
+// $Id: paging.cc,v 1.179 2009-06-15 19:05:29 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1070,55 +1070,48 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned curr_pl, un
       page_fault(ERROR_NOT_PRESENT, laddr, pl, rw);
     }
 
-    if (pde & 0x80) {
 #if BX_CPU_LEVEL >= 5
-      if (BX_CPU_THIS_PTR cr4.get_PSE()) {
-        // 4M paging
-        if (pde & PAGING_PSE_PDE4M_RESERVED_BITS) {
-          BX_DEBUG(("PSE PDE4M: reserved bit is set: PDE=0x%08x", pde));
-          page_fault(ERROR_RESERVED | ERROR_PROTECTION, laddr, pl, rw);
-        }
-
-#if BX_PHY_ADDRESS_WIDTH == 32
-        if (pde & 0x0001e000) {
-          BX_PANIC(("PSE PDE4M 0x%08x: Only 32 bit physical address space is emulated !", pde));
-        }
-#endif
-        // Combined access is just access from the pde (no pte involved).
-        combined_access = pde & 0x06; // U/S and R/W
-
-        priv_index =
-          (BX_CPU_THIS_PTR cr0.get_WP() << 4) |  // bit 4
-          (pl<<3) |                              // bit 3
-          (combined_access | isWrite);           // bit 2,1,0
-
-        if (!priv_check[priv_index])
-          page_fault(ERROR_PROTECTION, laddr, pl, rw);
-
-#if BX_CPU_LEVEL >= 6
-        if (BX_CPU_THIS_PTR cr4.get_PGE())
-          combined_access |= pde & 0x100;        // G
-#endif
-
-        // Update PDE A/D bits if needed.
-        if (((pde & 0x20)==0) || (isWrite && ((pde & 0x40)==0))) {
-          pde |= (0x20 | (isWrite<<6)); // Update A and possibly D bits
-          access_write_physical(pde_addr, 4, &pde);
-          BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pde_addr, 4, BX_WRITE, (Bit8u*)(&pde));
-        }
-
-        // make up the physical frame number
-        ppf = (pde & 0xffc00000) | (laddr & 0x003ff000);
-        lpf_mask = 0x3fffff;
-      }
-      else
-#endif
-      {
-        BX_DEBUG(("PDE: page size bit set when reserved"));
+    if ((pde & 0x80) && BX_CPU_THIS_PTR cr4.get_PSE()) {
+      // 4M paging, only if CR4.PSE enabled, ignore PDE.PS otherwise
+      if (pde & PAGING_PSE_PDE4M_RESERVED_BITS) {
+        BX_DEBUG(("PSE PDE4M: reserved bit is set: PDE=0x%08x", pde));
         page_fault(ERROR_RESERVED | ERROR_PROTECTION, laddr, pl, rw);
       }
+
+#if BX_PHY_ADDRESS_WIDTH == 32
+      if (pde & 0x0001e000) {
+        BX_PANIC(("PSE PDE4M 0x%08x: Only 32 bit physical address space is emulated !", pde));
+      }
+#endif
+      // Combined access is just access from the pde (no pte involved).
+      combined_access = pde & 0x06; // U/S and R/W
+
+      priv_index =
+        (BX_CPU_THIS_PTR cr0.get_WP() << 4) |  // bit 4
+        (pl<<3) |                              // bit 3
+        (combined_access | isWrite);           // bit 2,1,0
+
+      if (!priv_check[priv_index])
+        page_fault(ERROR_PROTECTION, laddr, pl, rw);
+
+#if BX_CPU_LEVEL >= 6
+      if (BX_CPU_THIS_PTR cr4.get_PGE())
+        combined_access |= pde & 0x100;        // G
+#endif
+
+      // Update PDE A/D bits if needed.
+      if (((pde & 0x20)==0) || (isWrite && ((pde & 0x40)==0))) {
+        pde |= (0x20 | (isWrite<<6)); // Update A and possibly D bits
+        access_write_physical(pde_addr, 4, &pde);
+        BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pde_addr, 4, BX_WRITE, (Bit8u*)(&pde));
+      }
+
+      // make up the physical frame number
+      ppf = (pde & 0xffc00000) | (laddr & 0x003ff000);
+      lpf_mask = 0x3fffff;
     }
     else // else normal 4K page...
+#endif
     {
       // Get page table entry
       bx_phy_address pte_addr = (bx_phy_address)((pde & 0xfffff000) | ((laddr & 0x003ff000) >> 10));
