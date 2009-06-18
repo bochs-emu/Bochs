@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.261 2009-05-02 11:25:34 sshwarts Exp $
+$Id: user.dbk,v 1.262 2009-06-18 09:37:17 sshwarts Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -2184,6 +2184,11 @@ turn it off.
       </entry>
     </row>
     <row>
+      <entry>--enable-1g-pages</entry>
+      <entry>no</entry>
+      <entry>support for 1G page extensions in x86-64 long mode</entry>
+    </row>
+    <row>
       <entry>--enable-mmx</entry>
       <entry>no (yes for <link linkend="configure-enable-cpu-level">CPU</link> >= 5)</entry>
       <entry>
@@ -2332,26 +2337,6 @@ turn it off.
         Enable experimental USB OHCI support. The host controller with 2-port
         root hub is available (USB device types: same as UHCI).
       </entry>
-    </row>
-    <row>
-      <entry>--enable-large-pages</entry>
-      <entry>no (yes for <link linkend="configure-enable-cpu-level">CPU</link> > 4)</entry>
-      <entry>support 4 megabyte page extensions (PSE, page size extension)</entry>
-    </row>
-    <row>
-      <entry>--enable-pae</entry>
-      <entry>no (yes for <link linkend="configure-enable-cpu-level">CPU</link> > 5)</entry>
-      <entry>support physical address extensions</entry>
-    </row>
-    <row>
-      <entry>--enable-1g-pages</entry>
-      <entry>no</entry>
-      <entry>support for 1G page extensions in x86-64 long mode</entry>
-    </row>
-    <row>
-      <entry>--enable-global-pages</entry>
-      <entry>no (yes for <link linkend="configure-enable-cpu-level">CPU</link> > 5)</entry>
-      <entry>support global pages</entry>
     </row>
     <row>
       <entry>--enable-smp</entry>
