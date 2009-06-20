@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: shift32.cc,v 1.48 2009-01-16 18:18:58 sshwarts Exp $
+// $Id: shift32.cc,v 1.49 2009-06-20 20:39:51 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -55,7 +55,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHLD_EdGdM(bxInstruction_c *i)
 
   write_RMW_virtual_dword(result_32);
 
-  SET_FLAGS_OSZAPC_LOGIC_32(result_32); /* handle SF, ZF and AF flags */
+  SET_FLAGS_OSZAPC_LOGIC_32(result_32);
 
   cf = (op1_32 >> (32 - count)) & 0x1;
   of = cf ^ (result_32 >> 31); // of = cf ^ result31
@@ -83,7 +83,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHLD_EdGdR(bxInstruction_c *i)
 
   BX_WRITE_32BIT_REGZ(i->rm(), result_32);
 
-  SET_FLAGS_OSZAPC_LOGIC_32(result_32); /* handle SF, ZF and AF flags */
+  SET_FLAGS_OSZAPC_LOGIC_32(result_32);
 
   cf = (op1_32 >> (32 - count)) & 0x1;
   of = cf ^ (result_32 >> 31); // of = cf ^ result31
@@ -115,7 +115,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHRD_EdGdM(bxInstruction_c *i)
 
   write_RMW_virtual_dword(result_32);
 
-  SET_FLAGS_OSZAPC_LOGIC_32(result_32); /* handle SF, ZF and AF flags */
+  SET_FLAGS_OSZAPC_LOGIC_32(result_32);
 
   cf = (op1_32 >> (count - 1)) & 0x1;
   of = ((result_32 << 1) ^ result_32) >> 31; // of = result30 ^ result31
@@ -143,7 +143,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHRD_EdGdR(bxInstruction_c *i)
 
   BX_WRITE_32BIT_REGZ(i->rm(), result_32);
 
-  SET_FLAGS_OSZAPC_LOGIC_32(result_32); /* handle SF, ZF and AF flags */
+  SET_FLAGS_OSZAPC_LOGIC_32(result_32);
 
   cf = (op1_32 >> (count - 1)) & 0x1;
   of = ((result_32 << 1) ^ result_32) >> 31; // of = result30 ^ result31
@@ -411,7 +411,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHL_EdM(bxInstruction_c *i)
 
   cf = (op1_32 >> (32 - count)) & 0x1;
   of = cf ^ (result_32 >> 31);
-  SET_FLAGS_OSZAPC_LOGIC_32(result_32); /* handle SF, ZF and AF flags */
+  SET_FLAGS_OSZAPC_LOGIC_32(result_32);
   SET_FLAGS_OxxxxC(of, cf);
 }
 
@@ -438,7 +438,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHL_EdR(bxInstruction_c *i)
 
   BX_WRITE_32BIT_REGZ(i->rm(), result_32);
 
-  SET_FLAGS_OSZAPC_LOGIC_32(result_32); /* handle SF, ZF and AF flags */
+  SET_FLAGS_OSZAPC_LOGIC_32(result_32);
   SET_FLAGS_OxxxxC(of, cf);
 }
 
@@ -470,7 +470,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHR_EdM(bxInstruction_c *i)
   //            of == 0        if count >= 2
   of = ((result_32 << 1) ^ result_32) >> 31;
 
-  SET_FLAGS_OSZAPC_LOGIC_32(result_32); /* handle SF, ZF and AF flags */
+  SET_FLAGS_OSZAPC_LOGIC_32(result_32);
   SET_FLAGS_OxxxxC(of, cf);
 }
 
@@ -497,7 +497,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHR_EdR(bxInstruction_c *i)
   //            of == 0        if count >= 2
   of = ((result_32 << 1) ^ result_32) >> 31;
 
-  SET_FLAGS_OSZAPC_LOGIC_32(result_32); /* handle SF, ZF and AF flags */
+  SET_FLAGS_OSZAPC_LOGIC_32(result_32);
   SET_FLAGS_OxxxxC(of, cf);
 }
 
@@ -529,7 +529,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SAR_EdM(bxInstruction_c *i)
 
   write_RMW_virtual_dword(result_32);
 
-  SET_FLAGS_OSZAPC_LOGIC_32(result_32); /* handle SF, ZF and AF flags */
+  SET_FLAGS_OSZAPC_LOGIC_32(result_32);
   set_CF((op1_32 >> (count - 1)) & 1);
   clear_OF();  /* signed overflow cannot happen in SAR instruction */
 }
@@ -559,7 +559,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SAR_EdR(bxInstruction_c *i)
 
   BX_WRITE_32BIT_REGZ(i->rm(), result_32);
 
-  SET_FLAGS_OSZAPC_LOGIC_32(result_32); /* handle SF, ZF and AF flags */
+  SET_FLAGS_OSZAPC_LOGIC_32(result_32);
   set_CF((op1_32 >> (count - 1)) & 1);
   clear_OF();  /* signed overflow cannot happen in SAR instruction */
 }

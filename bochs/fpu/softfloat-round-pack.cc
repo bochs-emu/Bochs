@@ -543,18 +543,19 @@ floatx80 SoftFloatRoundAndPackFloatx80(int roundingPrecision,
 floatx80 roundAndPackFloatx80(int roundingPrecision,
         int zSign, Bit32s zExp, Bit64u zSig0, Bit64u zSig1, float_status_t &status)
 {
+    float_status_t round_status = status;
     floatx80 result = SoftFloatRoundAndPackFloatx80(roundingPrecision, zSign, zExp, zSig0, zSig1, status);
 
     // bias unmasked undeflow
-    if (! (status.float_exception_masks & float_flag_underflow)) {
-       if (status.float_exception_flags & float_flag_underflow)
-           return SoftFloatRoundAndPackFloatx80(roundingPrecision, zSign, zExp + 0x6000, zSig0, zSig1, status);
+    if (status.float_exception_flags & ~status.float_exception_masks & float_flag_underflow) {
+       float_raise(round_status, float_flag_underflow);
+       return SoftFloatRoundAndPackFloatx80(roundingPrecision, zSign, zExp + 0x6000, zSig0, zSig1, status = round_status);
     }
 
     // bias unmasked overflow
-    if (! (status.float_exception_masks & float_flag_overflow)) {
-       if (status.float_exception_flags & float_flag_overflow)
-           return SoftFloatRoundAndPackFloatx80(roundingPrecision, zSign, zExp - 0x6000, zSig0, zSig1, status);
+    if (status.float_exception_flags & ~status.float_exception_masks & float_flag_overflow) {
+       float_raise(round_status, float_flag_overflow);
+       return SoftFloatRoundAndPackFloatx80(roundingPrecision, zSign, zExp - 0x6000, zSig0, zSig1, status = round_status);
     }
 
     return result;

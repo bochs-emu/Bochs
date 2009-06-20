@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: shift8.cc,v 1.40 2009-06-20 09:10:48 sshwarts Exp $
+// $Id: shift8.cc,v 1.41 2009-06-20 20:39:51 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -264,7 +264,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHL_Eb(bxInstruction_c *i)
     write_RMW_virtual_byte(result_8);
   }
 
-  SET_FLAGS_OSZAPC_LOGIC_8(result_8); /* handle SF, ZF and AF flags */
+  SET_FLAGS_OSZAPC_LOGIC_8(result_8);
   SET_FLAGS_OxxxxC(of, cf);
 }
 
@@ -306,9 +306,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHR_Eb(bxInstruction_c *i)
   cf = (op1_8 >> (count - 1)) & 0x1;
   // note, that of == result7 if count == 1 and
   //            of == 0       if count >= 2
-  of = ((result_8 << 1) ^ result_8) >> 7;
+  of = (((result_8 << 1) ^ result_8) >> 7) & 0x1;
 
-  SET_FLAGS_OSZAPC_LOGIC_8(result_8); /* handle SF, ZF and AF flags */
+  SET_FLAGS_OSZAPC_LOGIC_8(result_8);
   SET_FLAGS_OxxxxC(of, cf);
 }
 
@@ -357,7 +357,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SAR_Eb(bxInstruction_c *i)
     cf = (result_8 & 0x1);
   }
 
-  SET_FLAGS_OSZAPC_LOGIC_8(result_8); /* handle SF, ZF and AF flags */
+  SET_FLAGS_OSZAPC_LOGIC_8(result_8);
   /* signed overflow cannot happen in SAR instruction */
   SET_FLAGS_OxxxxC(0, cf);
 

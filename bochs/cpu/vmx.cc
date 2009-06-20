@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmx.cc,v 1.22 2009-06-15 15:10:05 sshwarts Exp $
+// $Id: vmx.cc,v 1.23 2009-06-20 20:39:51 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2009 Stanislav Shwartsman
@@ -1306,7 +1306,9 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
 #endif
 
   invalidate_prefetch_q();
+#if BX_SUPPORT_ALIGNMENT_CHECK
   handleAlignmentCheck();
+#endif
   handleCpuModeChange();
 
   return VMXERR_NO_ERROR;
@@ -1653,7 +1655,9 @@ void BX_CPU_C::VMexitLoadHostState(void)
 #endif
 
   invalidate_prefetch_q();
+#if BX_SUPPORT_ALIGNMENT_CHECK
   handleAlignmentCheck();
+#endif
   handleCpuModeChange();
 }
 

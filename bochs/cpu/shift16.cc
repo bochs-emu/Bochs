@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: shift16.cc,v 1.49 2009-06-20 09:10:48 sshwarts Exp $
+// $Id: shift16.cc,v 1.50 2009-06-20 20:39:51 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -69,7 +69,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHLD_EwGwM(bxInstruction_c *i)
 
   write_RMW_virtual_word(result_16);
 
-  SET_FLAGS_OSZAPC_LOGIC_16(result_16); /* handle SF, ZF and AF flags */
+  SET_FLAGS_OSZAPC_LOGIC_16(result_16);
 
   cf = (temp_32 >> (32 - count)) & 0x1;
   of = cf ^ (result_16 >> 15); // of = cf ^ result15
@@ -111,7 +111,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHLD_EwGwR(bxInstruction_c *i)
 
   BX_WRITE_16BIT_REG(i->rm(), result_16);
 
-  SET_FLAGS_OSZAPC_LOGIC_16(result_16); /* handle SF, ZF and AF flags */
+  SET_FLAGS_OSZAPC_LOGIC_16(result_16);
 
   cf = (temp_32 >> (32 - count)) & 0x1;
   of = cf ^ (result_16 >> 15); // of = cf ^ result15
@@ -156,7 +156,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHRD_EwGwM(bxInstruction_c *i)
 
   write_RMW_virtual_word(result_16);
 
-  SET_FLAGS_OSZAPC_LOGIC_16(result_16); /* handle SF, ZF and AF flags */
+  SET_FLAGS_OSZAPC_LOGIC_16(result_16);
 
   cf = (op1_16 >> (count - 1)) & 0x1;
   of = (((result_16 << 1) ^ result_16) >> 15) & 0x1; // of = result14 ^ result15
@@ -197,7 +197,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHRD_EwGwR(bxInstruction_c *i)
 
   BX_WRITE_16BIT_REG(i->rm(), result_16);
 
-  SET_FLAGS_OSZAPC_LOGIC_16(result_16); /* handle SF, ZF and AF flags */
+  SET_FLAGS_OSZAPC_LOGIC_16(result_16);
 
   cf = (op1_16 >> (count - 1)) & 0x1;
   of = (((result_16 << 1) ^ result_16) >> 15) & 0x1; // of = result14 ^ result15
@@ -434,7 +434,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHL_Ew(bxInstruction_c *i)
     write_RMW_virtual_word(result_16);
   }
 
-  SET_FLAGS_OSZAPC_LOGIC_16(result_16); /* handle SF, ZF and AF flags */
+  SET_FLAGS_OSZAPC_LOGIC_16(result_16);
   SET_FLAGS_OxxxxC(of, cf);
 }
 
@@ -478,7 +478,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHR_Ew(bxInstruction_c *i)
   //            of == 0        if count >= 2
   of = ((result_16 << 1) ^ result_16) >> 15;
 
-  SET_FLAGS_OSZAPC_LOGIC_16(result_16); /* handle SF, ZF and AF flags */
+  SET_FLAGS_OSZAPC_LOGIC_16(result_16);
   SET_FLAGS_OxxxxC(of, cf);
 }
 
@@ -527,7 +527,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SAR_Ew(bxInstruction_c *i)
     cf = (result_16 & 0x1);
   }
 
-  SET_FLAGS_OSZAPC_LOGIC_16(result_16); /* handle SF, ZF and AF flags */
+  SET_FLAGS_OSZAPC_LOGIC_16(result_16);
   /* signed overflow cannot happen in SAR instruction */
   SET_FLAGS_OxxxxC(0, cf);
 
