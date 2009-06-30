@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pit82c54.cc,v 1.37 2009-04-11 07:04:52 vruppert Exp $
+// $Id: pit82c54.cc,v 1.38 2009-06-30 08:09:38 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  The Bochs Project
@@ -782,7 +782,7 @@ void pit_82C54::write(Bit8u address, Bit8u data)
         BX_ERROR(("write counter in invalid write state."));
         break;
       }
-      if (thisctr.count_written) {
+      if (thisctr.count_written && thisctr.write_state != MSByte_multiple) { 
         thisctr.null_count = 1;
         set_count(thisctr, thisctr.inlatch);
       }
