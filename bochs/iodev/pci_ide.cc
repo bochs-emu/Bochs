@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci_ide.cc,v 1.42 2009-04-22 18:37:06 vruppert Exp $
+// $Id: pci_ide.cc,v 1.43 2009-07-03 20:36:42 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -95,8 +95,8 @@ void bx_pci_ide_c::init(void)
     }
   }
 
-  BX_PIDE_THIS s.bmdma[0].buffer = new Bit8u[0x20000];
-  BX_PIDE_THIS s.bmdma[1].buffer = new Bit8u[0x20000];
+  BX_PIDE_THIS s.bmdma[0].buffer = new Bit8u[0x10000];
+  BX_PIDE_THIS s.bmdma[1].buffer = new Bit8u[0x10000];
 
   for (i=0; i<256; i++)
     BX_PIDE_THIS s.pci_conf[i] = 0x0;
@@ -147,8 +147,8 @@ void bx_pci_ide_c::register_state(void)
 
   register_pci_state(list, BX_PIDE_THIS s.pci_conf);
 
-  new bx_shadow_data_c(list, "buffer0", BX_PIDE_THIS s.bmdma[0].buffer, 0x20000);
-  new bx_shadow_data_c(list, "buffer1", BX_PIDE_THIS s.bmdma[1].buffer, 0x20000);
+  new bx_shadow_data_c(list, "buffer0", BX_PIDE_THIS s.bmdma[0].buffer, 0x10000);
+  new bx_shadow_data_c(list, "buffer1", BX_PIDE_THIS s.bmdma[1].buffer, 0x10000);
 
   for (unsigned i=0; i<2; i++) {
     sprintf(name, "%d", i);
@@ -310,6 +310,10 @@ void bx_pci_ide_c::timer()
     BX_PIDE_THIS s.bmdma[channel].prd_current += 8;
     DEV_MEM_READ_PHYSICAL(BX_PIDE_THIS s.bmdma[channel].prd_current, 4, (Bit8u *)&prd.addr);
     DEV_MEM_READ_PHYSICAL(BX_PIDE_THIS s.bmdma[channel].prd_current+4, 4, (Bit8u *)&prd.size);
+
+    BX_PIDE_THIS s.bmdma[channel].buffer_idx = BX_PIDE_THIS s.bmdma[channel].buffer;
+    BX_PIDE_THIS s.bmdma[channel].buffer_top = BX_PIDE_THIS s.bmdma[channel].buffer;
+
     size = prd.size & 0xfffe;
     if (size == 0) {
       size = 0x10000;
