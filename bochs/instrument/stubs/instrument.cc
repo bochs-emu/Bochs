@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: instrument.cc,v 1.32 2009-02-09 10:35:55 vruppert Exp $
+// $Id: instrument.cc,v 1.33 2009-07-03 15:05:44 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -40,9 +40,7 @@ void bx_instr_mwait(unsigned cpu, bx_phy_address addr, unsigned len, Bit32u flag
 void bx_instr_new_instruction(unsigned cpu) {}
 
 void bx_instr_debug_promt() {}
-void bx_instr_start() {}
-void bx_instr_stop() {}
-void bx_instr_print() {}
+void bx_instr_debug_cmd(const char *cmd) {}
 
 void bx_instr_cnear_branch_taken(unsigned cpu, bx_address new_eip) {}
 void bx_instr_cnear_branch_not_taken(unsigned cpu) {}

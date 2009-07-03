@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: instrument.h,v 1.33 2009-03-22 09:52:48 sshwarts Exp $
+// $Id: instrument.h,v 1.34 2009-07-03 15:05:44 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -142,9 +142,7 @@ extern bxInstrumentation *icpu;
 
 /* called from command line debugger */
 #define BX_INSTR_DEBUG_PROMPT()
-#define BX_INSTR_START()
-#define BX_INSTR_STOP()
-#define BX_INSTR_PRINT()
+#define BX_INSTR_DEBUG_CMD(cmd)
 
 /* branch resoultion */
 #define BX_INSTR_CNEAR_BRANCH_TAKEN(cpu_id, new_eip)       icpu[cpu_id].bx_instr_cnear_branch_taken(new_eip)
@@ -208,9 +206,7 @@ extern bxInstrumentation *icpu;
 
 /* called from command line debugger */
 #define BX_INSTR_DEBUG_PROMPT()
-#define BX_INSTR_START()
-#define BX_INSTR_STOP()
-#define BX_INSTR_PRINT()
+#define BX_INSTR_DEBUG_CMD(cmd)
 
 /* branch resoultion */
 #define BX_INSTR_CNEAR_BRANCH_TAKEN(cpu_id, new_eip)

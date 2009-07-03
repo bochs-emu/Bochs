@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.197 2009-06-01 14:50:19 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.198 2009-07-03 15:05:43 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2704,25 +2704,10 @@ void bx_dbg_disassemble_command(const char *format, Bit64u from, Bit64u to)
 void bx_dbg_instrument_command(const char *comm)
 {
 #if BX_INSTRUMENTATION
-  if (!strcmp(comm, "start")) {
-    BX_INSTR_START();
-  }
-  else if (!strcmp(comm, "stop")) {
-    BX_INSTR_STOP();
-  }
-  else if (!strcmp(comm, "reset")) {
-    BX_INSTR_RESET(dbg_cpu, BX_RESET_HARDWARE);
-  }
-  else if (!strcmp(comm, "print")) {
-    BX_INSTR_PRINT();
-  }
-  else {
-    dbg_printf("Error: command 'instrument %s' not recognized\n", comm);
-    bx_dbg_exit(1);
-  }
+  dbg_printf("Command '%s' passed to instrumentation module\n", comm);
+  bx_instr_debug_cmd(comm);
 #else
   UNUSED(comm);
-
   dbg_printf("Error: instrumentation not enabled.\n");
 #endif
 }
@@ -2731,8 +2716,6 @@ void bx_dbg_doit_command(unsigned n)
 {
   // generic command to add temporary hacks to
   // for debugging purposes
-  UNUSED(n);
-
   bx_dbg.interrupts = n;
   bx_dbg.exceptions = n;
 }

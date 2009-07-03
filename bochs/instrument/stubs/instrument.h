@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: instrument.h,v 1.41 2009-06-20 20:44:12 sshwarts Exp $
+// $Id: instrument.h,v 1.42 2009-07-03 15:05:44 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -69,9 +69,7 @@ void bx_instr_mwait(unsigned cpu, bx_phy_address addr, unsigned len, Bit32u flag
 void bx_instr_new_instruction(unsigned cpu);
 
 void bx_instr_debug_promt();
-void bx_instr_start();
-void bx_instr_stop();
-void bx_instr_print();
+void bx_instr_debug_command(const char *cmd);
 
 void bx_instr_cnear_branch_taken(unsigned cpu, bx_address new_eip);
 void bx_instr_cnear_branch_not_taken(unsigned cpu);
@@ -122,9 +120,7 @@ void bx_instr_wrmsr(unsigned cpu, unsigned addr, Bit64u value);
 
 /* called from command line debugger */
 #define BX_INSTR_DEBUG_PROMPT()          bx_instr_debug_promt()
-#define BX_INSTR_START()                 bx_instr_start()
-#define BX_INSTR_STOP()                  bx_instr_stop()
-#define BX_INSTR_PRINT()                 bx_instr_print()
+#define BX_INSTR_DEBUG_CMD(cmd)          bx_instr_debug_cmd(cmd)
 
 /* branch resoultion */
 #define BX_INSTR_CNEAR_BRANCH_TAKEN(cpu_id, new_eip)       bx_instr_cnear_branch_taken(cpu_id, new_eip)
@@ -189,9 +185,7 @@ void bx_instr_wrmsr(unsigned cpu, unsigned addr, Bit64u value);
 
 /* called from command line debugger */
 #define BX_INSTR_DEBUG_PROMPT()
-#define BX_INSTR_START()
-#define BX_INSTR_STOP()
-#define BX_INSTR_PRINT()
+#define BX_INSTR_DEBUG_CMD(cmd)
 
 /* branch resoultion */
 #define BX_INSTR_CNEAR_BRANCH_TAKEN(cpu_id, new_eip)
