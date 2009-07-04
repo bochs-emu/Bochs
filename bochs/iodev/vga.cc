@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.166 2009-05-10 07:57:26 vruppert Exp $
+// $Id: vga.cc,v 1.167 2009-07-04 07:40:46 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -2156,7 +2156,7 @@ void bx_vga_c::update(void)
     }
     rows = (VDE+1)/(MSL+1);
     if ((rows * tm_info.line_offset) > (1 << 17)) {
-      BX_PANIC(("update(): text mode: out of memory"));
+      BX_ERROR(("update(): text mode: out of memory"));
       return;
     }
     cWidth = ((BX_VGA_THIS s.sequencer.reg1 & 0x01) == 1) ? 8 : 9;
