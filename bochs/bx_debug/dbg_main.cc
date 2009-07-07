@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.198 2009-07-03 15:05:43 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.199 2009-07-07 04:56:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2705,7 +2705,7 @@ void bx_dbg_instrument_command(const char *comm)
 {
 #if BX_INSTRUMENTATION
   dbg_printf("Command '%s' passed to instrumentation module\n", comm);
-  bx_instr_debug_cmd(comm);
+  BX_INSTR_DEBUG_CMD(comm);
 #else
   UNUSED(comm);
   dbg_printf("Error: instrumentation not enabled.\n");
