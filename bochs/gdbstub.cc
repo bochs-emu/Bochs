@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gdbstub.cc,v 1.36 2009-05-09 07:38:12 vruppert Exp $
+// $Id: gdbstub.cc,v 1.37 2009-07-11 06:05:17 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2006  The Bochs Project Team
@@ -194,11 +194,9 @@ void hex2mem(char* buf, unsigned char* mem, int count)
 
 char* mem2hex(const Bit8u* mem, char* buf, int count)
 {
-  Bit8u ch;
-
   for (int i = 0; i<count; i++)
   {
-    ch = *mem++;
+    Bit8u ch = *mem++;
     *buf++ = hexchars[ch >> 4];
     *buf++ = hexchars[ch % 16];
   }
@@ -225,7 +223,7 @@ Bit64u read_little_endian_hex(char *&buf)
     byte = hexdigit(*buf++);
     if (isxdigit(*buf))
       byte = (byte << 4) | hexdigit(*buf++);
-    ret |= (unsigned long long)byte << (n*8);
+    ret |= (Bit64u)byte << (n*8);
     ++n;
   }
   return ret;
@@ -241,8 +239,8 @@ static Bit32u registers[NUMREGS];
 #endif
 
 #define MAX_BREAKPOINTS (255)
-static unsigned int breakpoints[MAX_BREAKPOINTS] = {0,};
-static unsigned int nr_breakpoints = 0;
+static unsigned breakpoints[MAX_BREAKPOINTS] = {0,};
+static unsigned nr_breakpoints = 0;
 
 static int stub_trace_flag = 0;
 static int instr_count = 0;
@@ -317,16 +315,14 @@ int bx_gdbstub_check(unsigned int eip)
   return GDBSTUB_STOP_NO_REASON;
 }
 
-static int remove_breakpoint(unsigned int addr, int len)
+static int remove_breakpoint(unsigned addr, int len)
 {
-  unsigned int i;
-
   if (len != 1)
   {
     return(0);
   }
 
-  for (i = 0; i < MAX_BREAKPOINTS; i++)
+  for (unsigned i = 0; i < MAX_BREAKPOINTS; i++)
   {
     if (breakpoints[i] == addr)
     {
@@ -338,7 +334,7 @@ static int remove_breakpoint(unsigned int addr, int len)
   return(0);
 }
 
-static void insert_breakpoint(unsigned int addr)
+static void insert_breakpoint(unsigned addr)
 {
   unsigned int i;
 
@@ -359,7 +355,7 @@ static void insert_breakpoint(unsigned int addr)
   BX_INFO(("No slot for breakpoint"));
 }
 
-static void do_pc_breakpoint(int insert, unsigned long long addr, int len)
+static void do_pc_breakpoint(int insert, Bit64u addr, int len)
 {
   for (int i = 0; i < len; ++i)
     if (insert)
@@ -372,7 +368,7 @@ static void do_breakpoint(int insert, char* buffer)
 {
   char* ebuf;
   unsigned long type = strtoul(buffer, &ebuf, 16);
-  unsigned long long addr = strtoull(ebuf+1, &ebuf, 16);
+  Bit64u addr = strtoull(ebuf+1, &ebuf, 16);
   unsigned long len = strtoul(ebuf+1, &ebuf, 16);
   switch (type) {
   case 0:
@@ -514,13 +510,11 @@ static void debug_loop(void)
 
       case 'M':
       {
-        Bit64u addr;
-        int len;
         unsigned char mem[255];
         char* ebuf;
 
-        addr = strtoull(&buffer[1], &ebuf, 16);
-        len = strtoul(ebuf + 1, &ebuf, 16);
+        Bit64u addr = strtoull(&buffer[1], &ebuf, 16);
+        int len = strtoul(ebuf + 1, &ebuf, 16);
         hex2mem(ebuf + 1, mem, len);
 
         if (len == 1 && mem[0] == 0xcc)
@@ -565,7 +559,7 @@ static void debug_loop(void)
       case 'P':
       {
         int reg;
-        unsigned long long value;
+        Bit64u value;
         char* ebuf;
 
         reg = strtoul(&buffer[1], &ebuf, 16);
@@ -729,14 +723,13 @@ static void debug_loop(void)
           BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].selector.value);
         WriteHostDWordToLittleEndian(registers + 15,
           BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].selector.value);
-        mem2hex(registers, obuf, NUMREGSBYTES);
+        mem2hex((const Bit8u*) registers, obuf, NUMREGSBYTES);
 #else
 #define PUTREG(buf, val, len) do { \
          Bit64u u = (val); \
-         (buf) = mem2hex((Bit8u*)&u, (buf), (len)); \
+         (buf) = mem2hex((const Bit8u*)&u, (buf), (len)); \
       } while (0)
-        char* buf;
-        buf = obuf;
+        char* buf = obuf;
         PUTREG(buf, RAX, 8);
         PUTREG(buf, RBX, 8);
         PUTREG(buf, RCX, 8);
