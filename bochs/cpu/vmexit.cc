@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmexit.cc,v 1.5 2009-02-17 19:20:47 sshwarts Exp $
+// $Id: vmexit.cc,v 1.6 2009-07-19 12:51:36 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2009 Stanislav Shwartsman
@@ -354,7 +354,7 @@ void BX_CPP_AttrRegparmN(3) BX_CPU_C::VMexit_MSR(bxInstruction_c *i, unsigned op
        if (msr > 0xC0001FFF) vmexit = 1;
        else {
          // check MSR-HI bitmaps
-         bx_phy_address pAddr = vm->msr_bitmap_addr + (msr >> 3) + 1024 + (op == VMX_VMEXIT_RDMSR) ? 0 : 2048;
+         bx_phy_address pAddr = vm->msr_bitmap_addr + (msr >> 3) + 1024 + ((op == VMX_VMEXIT_RDMSR) ? 0 : 2048);
          access_read_physical(pAddr, 1, &field);
          BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pAddr, 1, BX_READ, &field);
          if (field & (1 << (msr & 7)))
@@ -365,7 +365,7 @@ void BX_CPP_AttrRegparmN(3) BX_CPU_C::VMexit_MSR(bxInstruction_c *i, unsigned op
        if (msr > 0x00001FFF) vmexit = 1;
        else {
          // check MSR-LO bitmaps
-         bx_phy_address pAddr = vm->msr_bitmap_addr + (msr >> 3) + (op == VMX_VMEXIT_RDMSR) ? 0 : 2048;
+         bx_phy_address pAddr = vm->msr_bitmap_addr + (msr >> 3) + ((op == VMX_VMEXIT_RDMSR) ? 0 : 2048);
          access_read_physical(pAddr, 1, &field);
          BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pAddr, 1, BX_READ, &field);
          if (field & (1 << (msr & 7)))
