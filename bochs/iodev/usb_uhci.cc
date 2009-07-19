@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_uhci.cc,v 1.27 2009-04-23 15:52:53 vruppert Exp $
+// $Id: usb_uhci.cc,v 1.28 2009-07-19 17:49:27 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Benjamin D Lunt (fys at frontiernet net)
@@ -790,6 +790,10 @@ void bx_usb_uhci_c::usb_timer(void)
       BX_UHCI_THIS hub.usb_status.error_interrupt = stalled;
       set_irq_level(1);
     }
+
+    // The status.interrupt bit should be set regardless of the enable bits if a IOC or SPD is found
+    if (shortpacket || interrupt)
+      BX_UHCI_THIS hub.usb_status.interrupt = 1;
 
     BX_UHCI_THIS busy = 0;  // ready to do next frame item
   }  // end run schedule
