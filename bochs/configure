@@ -39099,8 +39099,8 @@ echo "${ECHO_T}no" >&6; }
 fi
 
 
-{ echo "$as_me:$LINENO: checking for MTRR/PAR support (deprecated)" >&5
-echo $ECHO_N "checking for MTRR/PAR support (deprecated)... $ECHO_C" >&6; }
+{ echo "$as_me:$LINENO: checking for MTRR/PAT support (deprecated)" >&5
+echo $ECHO_N "checking for MTRR/PAT support (deprecated)... $ECHO_C" >&6; }
 # Check whether --enable-mtrr was given.
 if test "${enable_mtrr+set}" = set; then
   enableval=$enable_mtrr; { echo "$as_me:$LINENO: result: $enableval" >&5
