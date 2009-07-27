@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: tasking.cc,v 1.74 2009-05-13 14:31:09 sshwarts Exp $
+// $Id: tasking.cc,v 1.75 2009-07-27 05:52:28 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -579,6 +579,8 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
         exception(BX_TS_EXCEPTION, raw_ss_selector & 0xfffc, 0);
       }
 
+      touch_segment(&ss_selector, &ss_descriptor);
+
       // All checks pass, fill in shadow cache
       BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache = ss_descriptor;
     }
@@ -647,6 +649,8 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
         BX_ERROR(("task_switch(exception after commit point): CS.p==0"));
         exception(BX_NP_EXCEPTION, raw_cs_selector & 0xfffc, 0);
       }
+
+      touch_segment(&cs_selector, &cs_descriptor);
 
       // All checks pass, fill in shadow cache
       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache = cs_descriptor;
@@ -717,6 +721,8 @@ void BX_CPU_C::task_switch_load_selector(bx_segment_reg_t *seg,
       BX_ERROR(("task_switch(%s): descriptor not present !", strseg(seg)));
       exception(BX_NP_EXCEPTION, raw_selector & 0xfffc, 0);
     }
+
+    touch_segment(selector, &descriptor);
 
     // All checks pass, fill in shadow cache
     seg->cache = descriptor;

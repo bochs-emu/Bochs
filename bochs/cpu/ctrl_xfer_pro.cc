@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer_pro.cc,v 1.77 2009-01-16 18:18:58 sshwarts Exp $
+// $Id: ctrl_xfer_pro.cc,v 1.78 2009-07-27 05:52:28 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -95,6 +95,8 @@ BX_CPU_C::load_cs(bx_selector_t *selector, bx_descriptor_t *descriptor, Bit8u cp
 {
   // Add cpl to the selector value.
   selector->value = (0xfffc & selector->value) | cpl;
+
+  touch_segment(selector, descriptor);
 
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector = *selector;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache = *descriptor;

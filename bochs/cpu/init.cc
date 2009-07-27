@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.214 2009-06-15 15:10:05 sshwarts Exp $
+// $Id: init.cc,v 1.215 2009-07-27 05:52:28 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -373,7 +373,7 @@ void BX_CPU_C::register_state(void)
            param_save_handler, param_restore_handler);
     BXRS_HEX_PARAM_FIELD(sreg, base, segment->cache.u.segment.base);
     BXRS_HEX_PARAM_FIELD(sreg, limit_scaled, segment->cache.u.segment.limit_scaled);
-    BXRS_PARAM_SPECIAL8 (sreg, ar_byte,
+    BXRS_PARAM_SPECIAL8 (sreg, get_ar_byte,
            param_save_handler, param_restore_handler);
     BXRS_PARAM_BOOL(sreg, granularity, segment->cache.u.segment.g);
     BXRS_PARAM_BOOL(sreg, d_b, segment->cache.u.segment.d_b);
@@ -395,7 +395,7 @@ void BX_CPU_C::register_state(void)
   BXRS_PARAM_SPECIAL16(LDTR, selector, param_save_handler, param_restore_handler);
   BXRS_HEX_PARAM_FIELD(LDTR, base,  ldtr.cache.u.segment.base);
   BXRS_HEX_PARAM_FIELD(LDTR, limit_scaled, ldtr.cache.u.segment.limit_scaled);
-  BXRS_PARAM_SPECIAL8 (LDTR, ar_byte, param_save_handler, param_restore_handler);
+  BXRS_PARAM_SPECIAL8 (LDTR, get_ar_byte, param_save_handler, param_restore_handler);
   BXRS_PARAM_BOOL(LDTR, granularity, ldtr.cache.u.segment.g);
   BXRS_PARAM_BOOL(LDTR, d_b, ldtr.cache.u.segment.d_b);
   BXRS_PARAM_BOOL(LDTR, avl, ldtr.cache.u.segment.avl);
@@ -404,7 +404,7 @@ void BX_CPU_C::register_state(void)
   BXRS_PARAM_SPECIAL16(TR, selector, param_save_handler, param_restore_handler);
   BXRS_HEX_PARAM_FIELD(TR, base,  tr.cache.u.segment.base);
   BXRS_HEX_PARAM_FIELD(TR, limit_scaled, tr.cache.u.segment.limit_scaled);
-  BXRS_PARAM_SPECIAL8 (TR, ar_byte, param_save_handler, param_restore_handler);
+  BXRS_PARAM_SPECIAL8 (TR, get_ar_byte, param_save_handler, param_restore_handler);
   BXRS_PARAM_BOOL(TR, granularity, tr.cache.u.segment.g);
   BXRS_PARAM_BOOL(TR, d_b, tr.cache.u.segment.d_b);
   BXRS_PARAM_BOOL(TR, avl, tr.cache.u.segment.avl);
@@ -585,7 +585,7 @@ Bit64s BX_CPU_C::param_save(bx_param_c *param, Bit64s val)
     }
     if (segment != NULL) {
       if (!strcmp(pname, "ar_byte")) {
-        val = ar_byte(&(segment->cache));
+        val = get_ar_byte(&(segment->cache));
       }
       else if (!strcmp(pname, "selector")) {
         val = segment->selector.value;

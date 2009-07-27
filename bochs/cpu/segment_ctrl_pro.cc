@@ -1,5 +1,5 @@
-/////////////////////////////////////////////////////////////////////////
-// $Id: segment_ctrl_pro.cc,v 1.113 2009-04-05 19:09:44 sshwarts Exp $
+//////a///////////////////////////////////////////////////////////////////
+// $Id: segment_ctrl_pro.cc,v 1.114 2009-07-27 05:52:28 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -90,21 +90,12 @@ BX_CPU_C::load_seg_reg(bx_segment_reg_t *seg, Bit16u new_value)
         exception(BX_SS_EXCEPTION, new_value & 0xfffc, 0);
       }
 
+      touch_segment(&ss_selector, &descriptor);
+
       /* load SS with selector, load SS cache with descriptor */
       BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector    = ss_selector;
       BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache       = descriptor;
       BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.valid = 1;
-
-      /* now set accessed bit in descriptor */
-      if (!(dword2 & 0x0100)) {
-        dword2 |= 0x0100;
-        if (ss_selector.ti == 0) { /* GDT */
-          access_write_linear(BX_CPU_THIS_PTR gdtr.base + ss_selector.index*8 + 4, 4, 0, &dword2);
-        }
-        else { /* LDT */
-          access_write_linear(BX_CPU_THIS_PTR ldtr.cache.u.segment.base + ss_selector.index*8 + 4, 4, 0, &dword2);
-        }
-      }
 
       return;
     }
@@ -159,25 +150,14 @@ BX_CPU_C::load_seg_reg(bx_segment_reg_t *seg, Bit16u new_value)
         exception(BX_NP_EXCEPTION, new_value & 0xfffc, 0);
       }
 
+      touch_segment(&selector, &descriptor);
+
       /* load segment register with selector */
       /* load segment register-cache with descriptor */
       seg->selector    = selector;
       seg->cache       = descriptor;
       seg->cache.valid = 1;
 
-      /* now set accessed bit in descriptor                   */
-      /* wmr: don't bother if it's already set (thus allowing */
-      /* GDT to be in read-only pages like real hdwe does)    */
-
-      if (!(dword2 & 0x0100)) {
-        dword2 |= 0x0100;
-        if (selector.ti == 0) { /* GDT */
-          access_write_linear(BX_CPU_THIS_PTR gdtr.base + selector.index*8 + 4, 4, 0, &dword2);
-        }
-        else { /* LDT */
-         access_write_linear(BX_CPU_THIS_PTR ldtr.cache.u.segment.base + selector.index*8 + 4, 4, 0, &dword2);
-        }
-      }
       return;
     }
     else {
@@ -318,10 +298,8 @@ BX_CPU_C::parse_selector(Bit16u raw_selector, bx_selector_t *selector)
 }
 
   Bit8u  BX_CPP_AttrRegparmN(1)
-BX_CPU_C::ar_byte(const bx_descriptor_t *d)
+BX_CPU_C::get_ar_byte(const bx_descriptor_t *d)
 {
-  if (d->valid == 0) return(0);
-
   return (d->type) |
          (d->segment << 4) |
          (d->dpl << 5) |
@@ -557,6 +535,23 @@ BX_CPU_C::parse_descriptor(Bit32u dword1, Bit32u dword2, bx_descriptor_t *temp)
   }
 }
 
+  void BX_CPP_AttrRegparmN(2)
+BX_CPU_C::touch_segment(bx_selector_t *selector, bx_descriptor_t *descriptor)
+{
+  if (! IS_SEGMENT_ACCESSED(descriptor->type)) {
+    Bit8u AR_byte = get_ar_byte(descriptor);
+    AR_byte |= 1;
+    descriptor->type |= 1;
+
+    if (selector->ti == 0) { /* GDT */
+       access_write_linear(BX_CPU_THIS_PTR gdtr.base + selector->index*8 + 5, 1, 0, &AR_byte);
+    }
+    else { /* LDT */
+       access_write_linear(BX_CPU_THIS_PTR ldtr.cache.u.segment.base + selector->index*8 + 5, 1, 0, &AR_byte);
+    }
+  }
+}
+
   void BX_CPP_AttrRegparmN(3)
 BX_CPU_C::load_ss(bx_selector_t *selector, bx_descriptor_t *descriptor, Bit8u cpl)
 {
@@ -566,6 +561,8 @@ BX_CPU_C::load_ss(bx_selector_t *selector, bx_descriptor_t *descriptor, Bit8u cp
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector = *selector;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache = *descriptor;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.rpl = cpl;
+
+  touch_segment(selector, descriptor);
 
 #if BX_SUPPORT_X86_64
   if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
