@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.139 2009-03-27 16:42:21 sshwarts Exp $
+// $Id: exception.cc,v 1.140 2009-07-28 04:42:49 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -882,15 +882,6 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code, unsigned unused)
 
   BX_DEBUG(("exception(0x%02x): error_code=%04x", vector, error_code));
 
-  // if not initial error, restore previous register values from
-  // previous attempt to handle exception
-  if (BX_CPU_THIS_PTR errorno) {
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS] = BX_CPU_THIS_PTR save_cs;
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS] = BX_CPU_THIS_PTR save_ss;
-    RIP = BX_CPU_THIS_PTR save_eip;
-    RSP = BX_CPU_THIS_PTR save_esp;
-  }
-
   unsigned exception_type = 0;
   unsigned exception_class = BX_EXCEPTION_CLASS_FAULT;
   bx_bool push_error = 0;
@@ -914,6 +905,13 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code, unsigned unused)
 #endif
 
   if (BX_CPU_THIS_PTR errorno > 0) {
+    // if not initial error, restore previous register values from
+    // previous attempt to handle exception
+    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS] = BX_CPU_THIS_PTR save_cs;
+    BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS] = BX_CPU_THIS_PTR save_ss;
+    RIP = BX_CPU_THIS_PTR save_eip;
+    RSP = BX_CPU_THIS_PTR save_esp;
+
     if (BX_CPU_THIS_PTR errorno > 2 || BX_CPU_THIS_PTR curr_exception == BX_ET_DOUBLE_FAULT) {
       debug(BX_CPU_THIS_PTR prev_rip); // print debug information to the log
 #if BX_SUPPORT_VMX
