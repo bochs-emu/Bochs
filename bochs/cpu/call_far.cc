@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: call_far.cc,v 1.48 2009-04-14 19:34:03 sshwarts Exp $
+// $Id: call_far.cc,v 1.49 2009-08-02 14:23:27 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005 Stanislav Shwartsman
@@ -240,8 +240,6 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
           bx_descriptor_t ss_descriptor;
           Bit16u   return_SS, return_CS;
           Bit32u   return_ESP, return_EIP;
-          Bit16u   parameter_word[32];
-          Bit32u   parameter_dword[32];
 
           BX_DEBUG(("CALL GATE TO MORE PRIVILEGE LEVEL"));
 
@@ -308,17 +306,6 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
           else
             return_EIP = IP;
 
-          if (gate_descriptor.type==BX_286_CALL_GATE) {
-            for (unsigned n=0; n<param_count; n++) {
-              parameter_word[n] = read_virtual_word_32(BX_SEG_REG_SS, return_ESP + n*2);
-            }
-          }
-          else {
-            for (unsigned n=0; n<param_count; n++) {
-              parameter_dword[n] = read_virtual_dword_32(BX_SEG_REG_SS, return_ESP + n*4);
-            }
-          }
-
           // Prepare new stack segment
           bx_segment_reg_t new_stack;
           new_stack.selector = ss_selector;
@@ -340,7 +327,8 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
 
               for (unsigned n=param_count; n>0; n--) {
                 temp_ESP -= 4;
-                write_new_stack_dword_32(&new_stack, temp_ESP, cs_descriptor.dpl, parameter_dword[n-1]);
+                Bit32u param = read_virtual_dword_32(BX_SEG_REG_SS, return_ESP + (n-1)*4);
+                write_new_stack_dword_32(&new_stack, temp_ESP, cs_descriptor.dpl, param);
               }
               // push return address onto new stack
               write_new_stack_dword_32(&new_stack, temp_ESP-4, cs_descriptor.dpl, return_CS);
@@ -354,7 +342,8 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
 
               for (unsigned n=param_count; n>0; n--) {
                 temp_ESP -= 2;
-                write_new_stack_word_32(&new_stack, temp_ESP, cs_descriptor.dpl, parameter_word[n-1]);
+                Bit16u param = read_virtual_word_32(BX_SEG_REG_SS, return_ESP + (n-1)*2);
+                write_new_stack_word_32(&new_stack, temp_ESP, cs_descriptor.dpl, param);
               }
               // push return address onto new stack
               write_new_stack_word_32(&new_stack, temp_ESP-2, cs_descriptor.dpl, return_CS);
@@ -375,7 +364,8 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
 
               for (unsigned n=param_count; n>0; n--) {
                 temp_SP -= 4;
-                write_new_stack_dword_32(&new_stack, temp_SP, cs_descriptor.dpl, parameter_dword[n-1]);
+                Bit32u param = read_virtual_dword_32(BX_SEG_REG_SS, return_ESP + (n-1)*4);
+                write_new_stack_dword_32(&new_stack, temp_SP, cs_descriptor.dpl, param);
               }
               // push return address onto new stack
               write_new_stack_dword_32(&new_stack, (Bit16u)(temp_SP-4), cs_descriptor.dpl, return_CS);
@@ -389,7 +379,8 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
 
               for (unsigned n=param_count; n>0; n--) {
                 temp_SP -= 2;
-                write_new_stack_word_32(&new_stack, temp_SP, cs_descriptor.dpl, parameter_word[n-1]);
+                Bit16u param = read_virtual_word_32(BX_SEG_REG_SS, return_ESP + (n-1)*2);
+                write_new_stack_word_32(&new_stack, temp_SP, cs_descriptor.dpl, param);
               }
               // push return address onto new stack
               write_new_stack_word_32(&new_stack, (Bit16u)(temp_SP-2), cs_descriptor.dpl, return_CS);
