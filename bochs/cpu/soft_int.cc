@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: soft_int.cc,v 1.52 2009-04-14 17:41:58 sshwarts Exp $
+// $Id: soft_int.cc,v 1.53 2009-08-04 16:19:15 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -138,7 +138,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INT_Ib(bxInstruction_c *i)
       }
 
       Bit32u io_base = system_read_word(tr_base + 102), offset = io_base - 32 + (vector >> 3);
-      if (offset >= BX_CPU_THIS_PTR tr.cache.u.segment.limit_scaled) {
+      if (offset > BX_CPU_THIS_PTR tr.cache.u.segment.limit_scaled) {
         BX_ERROR(("INT_Ib(): failed to fetch VME redirection bitmap"));
         exception(BX_GP_EXCEPTION, 0, 0);
       }
