@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: parser.y,v 1.34 2009-04-03 17:36:24 sshwarts Exp $
+// $Id: parser.y,v 1.35 2009-08-07 08:26:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 %{
@@ -65,6 +65,7 @@
 %token <sval> BX_TOKEN_TAB
 %token <sval> BX_TOKEN_DIRTY
 %token <sval> BX_TOKEN_LINUX
+%token <sval> BX_TOKEN_DEBUG_REGS
 %token <sval> BX_TOKEN_CONTROL_REGS
 %token <sval> BX_TOKEN_SEGMENT_REGS
 %token <sval> BX_TOKEN_EXAMINE
@@ -150,6 +151,7 @@ command:
     | mmx_regs_command
     | sse_regs_command
     | segment_regs_command
+    | debug_regs_command
     | control_regs_command
     | blist_command
     | slist_command
@@ -675,6 +677,14 @@ control_regs_command:
       BX_TOKEN_CONTROL_REGS '\n'
       {
         bx_dbg_info_control_regs_command();
+        free($1);
+      }
+    ;
+
+debug_regs_command:
+      BX_TOKEN_DEBUG_REGS '\n'
+      {
+        bx_dbg_info_debug_regs_command();
         free($1);
       }
     ;

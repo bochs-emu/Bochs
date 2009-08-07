@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: enh_dbg.cc,v 1.15 2009-04-12 05:52:38 sshwarts Exp $
+// $Id: enh_dbg.cc,v 1.16 2009-08-07 08:26:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  BOCHS ENHANCED DEBUGGER Ver 1.2
@@ -497,27 +497,7 @@ void UpdateStatus()
 // Note: laddr + len must not cross a 4K boundary -- otherwise, there are no limits
 bx_bool ReadBxLMem(Bit64u laddr, unsigned len, Bit8u *buf)
 {
-    bx_phy_address paddr;
-    bx_bool retval = TRUE;
-
-    // on same physical page as the last access?
-    if (laddr < ladrmin || laddr > ladrmax)
-    {
-        // No -- create a new translation offset for the new page.
-        if (laddr > (Bit64u) 0xffffffff && In64Mode == FALSE)
-            return FALSE;
-        bx_address la_4K = (bx_address) laddr & (~0xfff);
-        ladrmin = la_4K;
-        ladrmax = la_4K + 0xfff;
-        retval = BX_CPU(CurrentCPU)->dbg_xlate_linear2phy(la_4K, &paddr);
-        if (retval == FALSE)
-            return FALSE;
-        l_p_offset = la_4K - paddr;
-    }
-    paddr = (bx_phy_address)(laddr - l_p_offset);
-    if (len != 0)
-        retval = bx_mem.dbg_fetch_mem(BX_CPU(CurrentCPU), paddr, len, buf);
-    return retval;
+    return bx_dbg_read_linear(CurrentCPU, laddr, len, buf);
 }
 
 // binary conversion (and validity testing) on hex/decimal char string inputs
@@ -944,7 +924,7 @@ void FillAsm(Bit64u LAddr, int MaxLines)
             *(s++)= *(p++);
         // load buffer, up to the next 4k boundary
         len = 4096 - (((int) ReadAddr) & 0xfff);    // calculate read amount
-        Go = ReadBxLMem (ReadAddr, len, (Bit8u *) s);
+        Go = ReadBxLMem(ReadAddr, len, (Bit8u *) s);
         BufLen += len;
         ReadAddr += len;
         if (Go == FALSE)
@@ -982,8 +962,8 @@ void FillAsm(Bit64u LAddr, int MaxLines)
                 while (len-- > 0)
                 {
                     i = (unsigned char) *(p++);
-                    *(s++) = AsciiHex[ 2* i ];
-                    *(s++) = AsciiHex[ 1+ 2*i ];
+                    *(s++) = AsciiHex[2*i];
+                    *(s++) = AsciiHex[2*i+1];
                 }
                 *s = 0;     // zero terminate the "bytes" string
 
@@ -1528,8 +1508,8 @@ void FillIDT()
         k = 256;
     for(i = 0 ; i < k ; i++)
     {
-        idttxt[1] = AsciiHex[ 2* i ];
-        idttxt[2] = AsciiHex[ 1+ 2*i ];
+        idttxt[1] = AsciiHex[2*i];
+        idttxt[2] = AsciiHex[2*i+1];
         idttxt[3] = 0;
         if (ReadBxLMem(laddr, entrysize, idtbuf) == FALSE)      // abort the current IDT dump on a memory error
         {
@@ -1713,7 +1693,7 @@ void FillStack()
     {
         unsigned int ReadSize = 0x1000 - i;
         // read up to the 4K boundary, then try to read the last chunk
-        if (ReadBxLMem (StackLA, ReadSize, (Bit8u *) cp) == FALSE)
+        if (ReadBxLMem(StackLA, ReadSize, (Bit8u *) cp) == FALSE)
         {
             // no data to show -- just one error message
             sprintf (cols[17],"illegal address");
@@ -1722,12 +1702,12 @@ void FillStack()
             EndListUpdate(DUMP_WND);
             return;
         }
-        LglAddy = ReadBxLMem (StackLA + ReadSize, len + i - 0x1000, (Bit8u *) cp + ReadSize);
+        LglAddy = ReadBxLMem(StackLA + ReadSize, len + i - 0x1000, (Bit8u *) cp + ReadSize);
         if (LglAddy == FALSE)
             len = ReadSize;
     }
     else
-        ReadBxLMem (StackLA, len, (Bit8u *) cp);
+        ReadBxLMem(StackLA, len, (Bit8u *) cp);
 
     UpdateDisp = CpuModeChange;     // calculate which stack entries have changed
     cp = CurStack;
@@ -1995,8 +1975,8 @@ void FillDataX(char* t, char C, bx_bool doHex)
 
     if (doHex != FALSE)
     {
-        *d = AsciiHex[ 2* (unsigned char)C ];
-        d[1] = AsciiHex[ 1+ 2* (unsigned char)C ];
+        *d = AsciiHex[2* (unsigned char)C];
+        d[1] = AsciiHex[2* (unsigned char)C + 1];
         d[2] = 0;
         if (isLittleEndian != FALSE)    // little endian => reverse hex digits
         {
@@ -2320,9 +2300,9 @@ bx_bool InitDataDump(bx_bool isLinear, Bit64u newDS)
         unsigned int len = (int) newDS & 0xfff;
         unsigned int i = 4096 - len;
         Bit64u h = newDS + i;
-        retval = ReadBxLMem (newDS,i,(Bit8u *)DataDump);
+        retval = ReadBxLMem(newDS,i,(Bit8u *)DataDump);
         if (retval != FALSE && len != 0)
-            retval = ReadBxLMem (h,len,(Bit8u *)DataDump + i);
+            retval = ReadBxLMem(h,len,(Bit8u *)DataDump + i);
     }
     else
         retval = (bx_bool) bx_mem.dbg_fetch_mem( BX_CPU(CurrentCPU),
@@ -2756,7 +2736,7 @@ void SetMemLine(int L)
         if (LinearDump != FALSE)    // is h is a LINEAR address? Convert to physical!
         {
             // use the ReadBx function to calculate the lin->phys offset
-            if (ReadBxLMem (h,0,(Bit8u *)addrstr) == FALSE) // "read" 0 bytes
+            if (ReadBxLMem(h,0,(Bit8u *)addrstr) == FALSE) // "read" 0 bytes
                 err = 2;
             else
                 h -= l_p_offset;    // convert h to a physmem address

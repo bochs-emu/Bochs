@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.199 2009-07-07 04:56:07 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.200 2009-08-07 08:26:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -737,6 +737,23 @@ void bx_dbg_info_flags(void)
     BX_CPU(dbg_cpu)->get_CF() ? "CF" : "cf");
 }
 
+void bx_dbg_info_debug_regs_command(void)
+{
+  bx_address dr0 = SIM->get_param_num("DR0", dbg_cpu_list)->get();
+  bx_address dr1 = SIM->get_param_num("DR1", dbg_cpu_list)->get();
+  bx_address dr2 = SIM->get_param_num("DR1", dbg_cpu_list)->get();
+  bx_address dr3 = SIM->get_param_num("DR1", dbg_cpu_list)->get();
+  Bit32u dr6 = SIM->get_param_num("DR6", dbg_cpu_list)->get();
+  Bit32u dr7 = SIM->get_param_num("DR7", dbg_cpu_list)->get();
+
+  dbg_printf("DR0=0x" FMT_ADDRX "\n", dr0);
+  dbg_printf("DR1=0x" FMT_ADDRX "\n", dr1);
+  dbg_printf("DR2=0x" FMT_ADDRX "\n", dr2);
+  dbg_printf("DR3=0x" FMT_ADDRX "\n", dr3);
+  dbg_printf("DR6=0x08x\n", dr6);
+  dbg_printf("DR7=0x08x\n", dr7);
+}
+
 void bx_dbg_info_control_regs_command(void)
 {
   Bit32u cr0 = SIM->get_param_num("CR0", dbg_cpu_list)->get();
@@ -1131,7 +1148,7 @@ void bx_dbg_modebp_command()
     BX_CPU(dbg_cpu)->mode_break ? "enabled" : "disabled");
 }
 
-static bx_bool bx_dbg_read_linear(unsigned which_cpu, bx_address laddr, unsigned len, Bit8u *buf)
+bx_bool bx_dbg_read_linear(unsigned which_cpu, bx_address laddr, unsigned len, Bit8u *buf)
 {
   unsigned remainsInPage;
   bx_phy_address paddr;
@@ -2771,15 +2788,15 @@ void bx_dbg_print_descriptor(unsigned char desc[8])
     // either a code or a data segment. bit 11 (type file MSB) then says
     // 0=data segment, 1=code seg
     if (type&8) {
-      dbg_printf("Code segment, laddr=%08x, limit=%05x %s, %s%s%s, %d-bit\n",
-        base, limit, g ? "* 4Kbytes" : "bytes",
+      dbg_printf("Code segment, laddr=0x%08x, limit=0x%08x, %s%s%s, %d-bit\n",
+        base, g ? (limit * 4096 + 4095) : limit,
         (type&2)? "Execute/Read" : "Execute-Only",
         (type&4)? ", Conforming" : "",
         (type&1)? ", Accessed" : "",
         d_b ? 32 : 16);
     } else {
-      dbg_printf("Data segment, laddr=%08x, limit=%05x %s, %s%s%s\n",
-        base, limit, g ? "* 4Kbytes" : "bytes",
+      dbg_printf("Data segment, laddr=0x%08x, limit=0x%08x, %s%s%s\n",
+        base, g ? (limit * 4096 + 4095) : limit,
         (type&2)? "Read/Write" : "Read-Only",
         (type&4)? ", Expand-down" : "",
         (type&1)? ", Accessed" : "");

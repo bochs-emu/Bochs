@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debug.h,v 1.54 2009-05-03 19:29:19 sshwarts Exp $
+// $Id: debug.h,v 1.55 2009-08-07 08:26:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -205,6 +205,7 @@ extern void bxerror(char *s);
 
 #define EMPTY_ARG (-1)
 
+bx_bool bx_dbg_read_linear(unsigned which_cpu, bx_address laddr, unsigned len, Bit8u *buf);
 Bit16u bx_dbg_get_selector_value(unsigned int seg_no);
 Bit16u bx_dbg_get_ip (void);
 Bit32u bx_dbg_get_eip(void);
@@ -272,6 +273,7 @@ void bx_dbg_info_idt_command(unsigned from, unsigned to);
 void bx_dbg_info_gdt_command(unsigned from, unsigned to);
 void bx_dbg_info_ldt_command(unsigned from, unsigned to);
 void bx_dbg_info_tss_command(void);
+void bx_dbg_info_debug_regs_command(void);
 void bx_dbg_info_control_regs_command(void);
 void bx_dbg_info_segment_regs_command(void);
 void bx_dbg_info_flags(void);
