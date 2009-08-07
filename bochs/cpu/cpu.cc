@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.292 2009-06-09 15:23:28 sshwarts Exp $
+// $Id: cpu.cc,v 1.293 2009-08-07 05:55:45 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -617,14 +617,6 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
   //   Alignment check
   // (handled by rest of the code)
 
-  if (BX_CPU_THIS_PTR get_TF())
-  {
-    // TF is set before execution of next instruction.  Schedule
-    // a debug trap (#DB) after execution.  After completion of
-    // next instruction, the code above will invoke the trap.
-    BX_CPU_THIS_PTR debug_trap |= BX_DEBUG_SINGLE_STEP_BIT;
-  }
-
   // Now we can handle things which are synchronous to instruction
   // execution.
   if (BX_CPU_THIS_PTR get_RF()) {
@@ -651,10 +643,18 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
   }
 #endif
 
+  if (BX_CPU_THIS_PTR get_TF())
+  {
+    // TF is set before execution of next instruction.  Schedule
+    // a debug trap (#DB) after execution.  After completion of
+    // next instruction, the code above will invoke the trap.
+    BX_CPU_THIS_PTR debug_trap |= BX_DEBUG_SINGLE_STEP_BIT;
+  }
+
   if (!((BX_CPU_INTR && BX_CPU_THIS_PTR get_IF()) ||
         BX_CPU_THIS_PTR debug_trap ||
-        BX_HRQ ||
-        BX_CPU_THIS_PTR get_TF()
+//      BX_CPU_THIS_PTR get_TF() // implies debug_trap is set
+        BX_HRQ
 #if BX_SUPPORT_VMX
      || BX_CPU_THIS_PTR vmx_interrupt_window || BX_CPU_THIS_PTR inhibit_mask
 #endif
