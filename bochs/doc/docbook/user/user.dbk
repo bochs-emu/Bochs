@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.262 2009-06-18 09:37:17 sshwarts Exp $
+$Id: user.dbk,v 1.263 2009-08-07 08:30:41 sshwarts Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -6374,6 +6374,7 @@ From here, you may use the following commands:
   mmx                          List of all MMX registers and their contents
   sse                          List of all SSE registers and their contents
   sreg                         Show segment registers and their contents
+  dreg                         Show debug registers and their contents
   creg                         Show control registers and their contents
 
   info cpu                     List of all CPU registers and their contents
