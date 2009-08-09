@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.201 2009-08-07 08:37:30 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.202 2009-08-09 12:43:22 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -750,8 +750,8 @@ void bx_dbg_info_debug_regs_command(void)
   dbg_printf("DR1=0x" FMT_ADDRX "\n", dr1);
   dbg_printf("DR2=0x" FMT_ADDRX "\n", dr2);
   dbg_printf("DR3=0x" FMT_ADDRX "\n", dr3);
-  dbg_printf("DR6=0x08x\n", dr6);
-  dbg_printf("DR7=0x08x\n", dr7);
+  dbg_printf("DR6=0x%08x\n", dr6);
+  dbg_printf("DR7=0x%08x\n", dr7);
 }
 
 void bx_dbg_info_control_regs_command(void)
