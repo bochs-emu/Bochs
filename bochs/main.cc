@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.402 2009-08-10 08:08:25 sshwarts Exp $
+// $Id: main.cc,v 1.403 2009-08-10 15:30:43 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1030,7 +1030,8 @@ void bx_init_hardware()
   BX_INFO(("Devices configuration"));
   BX_INFO(("  ACPI support: %s",BX_SUPPORT_ACPI?"yes":"no"));
   BX_INFO(("  NE2000 support: %s",BX_SUPPORT_NE2K?"yes":"no"));
-  BX_INFO(("  PCI support: %s",BX_SUPPORT_PCI?"yes":"no"));
+  BX_INFO(("  PCI support: %s, enabled=%s",BX_SUPPORT_PCI?"yes":"no",
+    SIM->get_param_bool(BXPN_I440FX_SUPPORT)->get() ? "yes" : "no"));
   BX_INFO(("  SB16 support: %s",BX_SUPPORT_SB16?"yes":"no"));
   BX_INFO(("  USB support: %s",BX_SUPPORT_PCIUSB?"yes":"no"));
   BX_INFO(("  VGA extension support: %s %s",BX_SUPPORT_VBE?"vbe":"",
