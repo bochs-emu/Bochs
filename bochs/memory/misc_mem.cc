@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: misc_mem.cc,v 1.128 2009-08-03 15:01:07 sshwarts Exp $
+// $Id: misc_mem.cc,v 1.129 2009-08-10 07:51:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -73,7 +73,7 @@ void BX_MEM_C::init_memory(Bit32u memsize)
 {
   unsigned idx;
 
-  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.128 2009-08-03 15:01:07 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.129 2009-08-10 07:51:41 sshwarts Exp $"));
 
   if (BX_MEM_THIS actual_vector != NULL) {
     BX_INFO (("freeing existing memory vector"));
@@ -368,16 +368,14 @@ bx_bool BX_MEM_C::dbg_fetch_mem(BX_CPU_C *cpu, bx_phy_address addr, unsigned len
         *buf = DEV_vga_mem_read(addr);
     }
 #if BX_SUPPORT_PCI
-    else if (BX_MEM_THIS pci_enabled && ((addr & 0xfffc0000) == 0x000c0000))
+    else if (BX_MEM_THIS pci_enabled && (addr >= 0x000c0000 && addr < 0x00100000))
     {
       switch (DEV_pci_rd_memtype (addr)) {
         case 0x0:  // Read from ROM
-          if ((addr & 0xfffe0000) == 0x000e0000)
-          {
+          if ((addr & 0xfffe0000) == 0x000e0000) {
             *buf = BX_MEM_THIS rom[addr & BIOS_MASK];
           }
-          else
-          {
+          else {
             *buf = BX_MEM_THIS rom[(addr & EXROM_MASK) + BIOSROMSZ];
           }
           break;
@@ -391,20 +389,19 @@ bx_bool BX_MEM_C::dbg_fetch_mem(BX_CPU_C *cpu, bx_phy_address addr, unsigned len
 #endif  // #if BX_SUPPORT_PCI
     else if (addr < BX_MEM_THIS len)
     {
-      if ((addr & 0xfffc0000) != 0x000c0000) {
+      if (addr < 0x000c0000 || addr >= 0x00100000) {
         *buf = *(BX_MEM_THIS get_vector(addr));
       }
-      else if ((addr & 0xfffe0000) == 0x000e0000)
-      {
+      // must be in C0000 - FFFFF range
+      else if ((addr & 0xfffe0000) == 0x000e0000) {
         *buf = BX_MEM_THIS rom[addr & BIOS_MASK];
       }
-      else
-      {
+      else {
         *buf = BX_MEM_THIS rom[(addr & EXROM_MASK) + BIOSROMSZ];
       }
     }
 #if BX_PHY_ADDRESS_LONG
-    else if (addr >= BX_CONST64(0xFFFFFFFF)) {
+    else if (addr >= BX_CONST64(0xffffffff)) {
       *buf = 0xff;
       ret = 0; // error, beyond limits of memory
     }
@@ -440,7 +437,7 @@ bx_bool BX_MEM_C::dbg_set_mem(bx_phy_address addr, unsigned len, Bit8u *buf)
         DEV_vga_mem_write(addr, *buf);
     }
 #if BX_SUPPORT_PCI
-    else if (BX_MEM_THIS pci_enabled && ((addr & 0xfffc0000) == 0x000c0000))
+    else if (BX_MEM_THIS pci_enabled && (addr >= 0x000c0000 && addr < 0x00100000))
     {
       switch (DEV_pci_wr_memtype (addr)) {
         case 0x0:  // Ignore write to ROM
@@ -453,7 +450,7 @@ bx_bool BX_MEM_C::dbg_set_mem(bx_phy_address addr, unsigned len, Bit8u *buf)
       }
     }
 #endif  // #if BX_SUPPORT_PCI
-    else if ((addr & 0xfffc0000) != 0x000c0000 && (addr < (bx_phy_address)(~BIOS_MASK)))
+    else if ((addr < 0x000c0000 || addr >= 0x00100000) && (addr < (bx_phy_address)(~BIOS_MASK)))
     {
       *(BX_MEM_THIS get_vector(addr)) = *buf;
     }
@@ -534,9 +531,9 @@ Bit8u *BX_MEM_C::getHostMemAddr(BX_CPU_C *cpu, bx_phy_address addr, unsigned rw)
   }
 
 #if BX_SUPPORT_MONITOR_MWAIT
-  if (BX_MEM_THIS is_monitor(a20addr & ~0xfff, 0x1000)) {
+  if (write && BX_MEM_THIS is_monitor(a20addr & ~0xfff, 0x1000)) {
     // Vetoed! Write monitored page !
-    if (write) return(NULL);
+    return(NULL);
   }
 #endif
 
