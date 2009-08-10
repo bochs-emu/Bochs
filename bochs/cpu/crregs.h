@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: crregs.h,v 1.17 2009-01-31 10:43:23 sshwarts Exp $
+// $Id: crregs.h,v 1.18 2009-08-10 15:44:50 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007 Stanislav Shwartsman
@@ -78,7 +78,7 @@ struct bx_cr0_t {
 struct bx_cr4_t {
   Bit32u  val32; // 32bit value of register
 
-#if BX_SUPPORT_VME
+#if BX_CPU_LEVEL >= 5
   IMPLEMENT_CRREG_ACCESSORS(VME, 0);
   IMPLEMENT_CRREG_ACCESSORS(PVI, 1);
 #endif
@@ -105,7 +105,7 @@ struct bx_cr4_t {
 
 extern bx_address get_cr4_allow_mask(void);
 
-#if BX_SUPPORT_VME
+#if BX_CPU_LEVEL >= 5
   #define BX_CR4_VME_ENABLED (BX_CPU_THIS_PTR cr4.get_VME())
 #else
   #define BX_CR4_VME_ENABLED (0)

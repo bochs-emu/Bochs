@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpuid.cc,v 1.84 2009-06-15 09:30:56 sshwarts Exp $
+// $Id: cpuid.cc,v 1.85 2009-08-10 15:44:50 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007 Stanislav Shwartsman
@@ -231,13 +231,13 @@ Bit32u BX_CPU_C::get_std_cpuid_features(void)
 #if BX_SUPPORT_FPU
   features |= (1<<0);
 #endif
-#if BX_SUPPORT_VME
+#if BX_CPU_LEVEL >= 5
   features |= (1<<1);
 #endif
 
   features |= (1<<2);   // support Debug Extensions
 
-#if (BX_CPU_LEVEL >= 5)
+#if BX_CPU_LEVEL >= 5
   features |= (1<<4);             // support Time Stamp Counter
   features |= (1<<5);             // support RDMSR/WRMSR
   features |= (1<<7) | (1<<14);   // support Machine Check

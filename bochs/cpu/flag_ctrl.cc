@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: flag_ctrl.cc,v 1.45 2009-03-27 16:42:21 sshwarts Exp $
+// $Id: flag_ctrl.cc,v 1.46 2009-08-10 15:44:50 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -65,7 +65,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CLI(bxInstruction_c *i)
 
   if (protected_mode())
   {
-#if BX_SUPPORT_VME
+#if BX_CPU_LEVEL >= 5
     if (BX_CPU_THIS_PTR cr4.get_PVI() && (CPL == 3))
     {
       if (IOPL < 3) {
@@ -85,7 +85,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CLI(bxInstruction_c *i)
   else if (v8086_mode())
   {
     if (IOPL != 3) {
-#if BX_SUPPORT_VME
+#if BX_CPU_LEVEL >= 5
       if (BX_CR4_VME_ENABLED) {
         BX_CPU_THIS_PTR clear_VIF();
         return;
@@ -105,7 +105,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::STI(bxInstruction_c *i)
 
   if (protected_mode())
   {
-#if BX_SUPPORT_VME
+#if BX_CPU_LEVEL >= 5
     if (BX_CPU_THIS_PTR cr4.get_PVI())
     {
       if (CPL == 3 && IOPL < 3) {
@@ -128,7 +128,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::STI(bxInstruction_c *i)
   else if (v8086_mode())
   {
     if (IOPL != 3) {
-#if BX_SUPPORT_VME
+#if BX_CPU_LEVEL >= 5
       if (BX_CR4_VME_ENABLED && BX_CPU_THIS_PTR get_VIP() == 0)
       {
         BX_CPU_THIS_PTR assert_VIF();
@@ -171,7 +171,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUSHF_Fw(bxInstruction_c *i)
       BX_DEBUG(("PUSHFW: #GP(0) in v8086 (no VME) mode"));
       exception(BX_GP_EXCEPTION, 0, 0);
     }
-#if BX_SUPPORT_VME
+#if BX_CPU_LEVEL >= 5
     if (BX_CR4_VME_ENABLED && BX_CPU_THIS_PTR get_IOPL() < 3) {
       flags |= EFlagsIOPLMask;
       if (BX_CPU_THIS_PTR get_VIF())
@@ -209,7 +209,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::POPF_Fw(bxInstruction_c *i)
       BX_DEBUG(("POPFW: #GP(0) in v8086 (no VME) mode"));
       exception(BX_GP_EXCEPTION, 0, 0);
     }
-#if BX_SUPPORT_VME
+#if BX_CPU_LEVEL >= 5
     if (BX_CR4_VME_ENABLED && BX_CPU_THIS_PTR get_IOPL() < 3) {
 
       if (((flags16 & EFlagsIFMask) && BX_CPU_THIS_PTR get_VIP()) ||

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.403 2009-08-10 15:30:43 sshwarts Exp $
+// $Id: main.cc,v 1.404 2009-08-10 15:44:49 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1012,7 +1012,6 @@ void bx_init_hardware()
   else
     BX_INFO(("  SSE support: %d%s",BX_SUPPORT_SSE,BX_SUPPORT_SSE_EXTENSION?"E":""));
   BX_INFO(("  CLFLUSH support: %s",BX_SUPPORT_CLFLUSH?"yes":"no"));
-  BX_INFO(("  VME support: %s",BX_SUPPORT_VME?"yes":"no"));
   BX_INFO(("  3dnow! support: %s",BX_SUPPORT_3DNOW?"yes":"no"));
 #if BX_SUPPORT_X86_64
   BX_INFO(("  1G paging support: %s",BX_SUPPORT_1G_PAGES?"yes":"no"));

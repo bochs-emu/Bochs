@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: flag_ctrl_pro.cc,v 1.37 2009-02-13 20:09:56 sshwarts Exp $
+// $Id: flag_ctrl_pro.cc,v 1.38 2009-08-10 15:44:50 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -69,7 +69,7 @@ BX_CPU_C::writeEFlags(Bit32u flags, Bit32u changeMask)
 #if BX_CPU_LEVEL >= 4
   supportMask |= (EFlagsIDMask | EFlagsACMask); // ID/AC
 #endif
-#if BX_SUPPORT_VME
+#if BX_CPU_LEVEL >= 5
   supportMask |= (EFlagsVIPMask | EFlagsVIFMask); // VIP/VIF
 #endif
 

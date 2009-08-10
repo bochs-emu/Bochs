@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.409 2009-08-10 08:08:25 sshwarts Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.410 2009-08-10 15:44:49 sshwarts Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -1444,28 +1444,6 @@ AC_ARG_ENABLE(fpu,
     ]
   )
 AC_SUBST(FPU_VAR)
-
-AC_MSG_CHECKING(for VME support)
-AC_ARG_ENABLE(vme,
-  [  --enable-vme                      virtual 8086 mode extensions],
-  [if test "$enableval" = yes; then
-    AC_MSG_RESULT(yes)
-    AC_DEFINE(BX_SUPPORT_VME, 1)
-   elif test "$enableval" = no; then
-    AC_MSG_RESULT(no)
-    AC_DEFINE(BX_SUPPORT_VME, 0)
-   fi
-   ],
-  [
-    if test "$bx_cpu_level" -ge 5; then
-      AC_MSG_RESULT(yes)
-      AC_DEFINE(BX_SUPPORT_VME, 1)
-    else
-      AC_MSG_RESULT(no)
-      AC_DEFINE(BX_SUPPORT_VME, 0)
-    fi
-    ]
-  )
 
 AC_MSG_CHECKING(for VMX support)
 AC_ARG_ENABLE(vmx,
@@ -2913,6 +2891,16 @@ AC_ARG_ENABLE(daz,
   [  --enable-daz                      enables denormals-are-zeroes support (deprecated)],
   [AC_MSG_RESULT($enableval)
    AC_MSG_ERROR([DEPRECATED - enabled automatically for SSE level >= 2])
+  ],
+  [
+   AC_MSG_RESULT(no)
+  ])
+
+AC_MSG_CHECKING(for VME support)
+AC_ARG_ENABLE(vme,
+  [  --enable-vme                      virtual 8086 mode extensions (deprecated)],
+  [AC_MSG_RESULT($enableval)
+   AC_MSG_ERROR([DEPRECATED - enabled automatically for CPU_LEVEL >= 5])
   ],
   [
    AC_MSG_RESULT(no)

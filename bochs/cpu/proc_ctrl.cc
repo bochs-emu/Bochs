@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.300 2009-06-15 09:30:56 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.301 2009-08-10 15:44:50 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1442,7 +1442,7 @@ bx_address get_cr4_allow_mask(void)
   //   [1]     PVI: Protected-Mode Virtual Interrupts R/W
   //   [0]     VME: Virtual-8086 Mode Extensions R/W
 
-#if BX_SUPPORT_VME
+#if BX_CPU_LEVEL >= 5
   allowMask |= (1<<0) | (1<<1);  /* VME */
 #endif
 
