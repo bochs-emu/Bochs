@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.401 2009-06-15 09:30:56 sshwarts Exp $
+// $Id: main.cc,v 1.402 2009-08-10 08:08:25 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -67,13 +67,11 @@ extern "C" {
 bx_bool bx_gui_sighandler = 0;
 #endif
 
-#if BX_PROVIDE_DEVICE_MODELS==1
 // some prototypes from iodev/
 // I want to stay away from including iodev/iodev.h here
 Bit32u bx_unmapped_io_read_handler(Bit32u address, unsigned io_len);
 void   bx_unmapped_io_write_handler(Bit32u address, Bit32u value,
                                     unsigned io_len);
-#endif
 
 void bx_init_hardware(void);
 void bx_init_options(void);
@@ -91,9 +89,7 @@ Bit8u bx_cpu_count;
 
 #define LOG_THIS genlog->
 
-#if BX_PROVIDE_DEVICE_MODELS
 bx_pc_system_c bx_pc_system;
-#endif
 
 bx_debug_t bx_dbg;
 
@@ -107,9 +103,7 @@ BOCHSAPI BX_CPU_C_PTR *bx_cpu_array = NULL;
 BOCHSAPI BX_CPU_C bx_cpu;
 #endif
 
-#if BX_PROVIDE_CPU_MEMORY==1
 BOCHSAPI BX_MEM_C bx_mem;
-#endif
 
 char *bochsrc_filename = NULL;
 
@@ -1172,9 +1166,7 @@ int bx_atexit(void)
 
   BX_MEM(0)->cleanup_memory();
 
-#if BX_PROVIDE_DEVICE_MODELS
   bx_pc_system.exit();
-#endif
 
   // restore signal handling to defaults
 #if BX_DEBUGGER == 0

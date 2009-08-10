@@ -645,11 +645,6 @@ typedef
   #error Dissembler is required for BX_DEBUGGER !
 #endif
 
-#define BX_PROVIDE_CPU_MEMORY    1
-#define BX_PROVIDE_DEVICE_MODELS 1
-
-#define BX_PROVIDE_MAIN       1
-
 #define BX_INSTRUMENTATION    0
 
 // enable BX_DEBUG/BX_ERROR/BX_INFO messages

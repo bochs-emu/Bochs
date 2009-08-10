@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.182 2009-05-08 14:53:45 vruppert Exp $
+// $Id: config.cc,v 1.183 2009-08-10 08:08:25 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1776,7 +1776,6 @@ int bx_parse_cmdline(int arg, int argc, char *argv[])
   return 0;
 }
 
-#if BX_PROVIDE_MAIN
 char *bx_find_bochsrc()
 {
   FILE *fd = NULL;
@@ -3689,5 +3688,3 @@ int bx_write_configuration(const char *rc, int overwrite)
   fclose(fp);
   return 0;
 }
-
-#endif // #if BX_PROVIDE_MAIN

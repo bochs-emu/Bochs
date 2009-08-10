@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.cc,v 1.120 2009-04-24 14:57:24 vruppert Exp $
+// $Id: floppy.cc,v 1.121 2009-08-10 08:08:25 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -141,7 +141,7 @@ void bx_floppy_ctrl_c::init(void)
 {
   Bit8u i, devtype, cmos_value;
 
-  BX_DEBUG(("Init $Id: floppy.cc,v 1.120 2009-04-24 14:57:24 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: floppy.cc,v 1.121 2009-08-10 08:08:25 sshwarts Exp $"));
   DEV_dma_register_8bit_channel(2, dma_read, dma_write, "Floppy Drive");
   DEV_register_irq(6, "Floppy Drive");
   for (unsigned addr=0x03F2; addr<=0x03F7; addr++) {
@@ -669,10 +669,6 @@ void bx_floppy_ctrl_c::write(Bit32u address, Bit32u value, unsigned io_len)
 
 void bx_floppy_ctrl_c::floppy_command(void)
 {
-#if BX_PROVIDE_CPU_MEMORY==0
-  BX_PANIC(("floppy_command(): uses DMA: not supported for"
-           " external environment"));
-#else
   unsigned i;
   Bit8u motor_on;
   Bit8u head, drive, cylinder, sector, eot;
@@ -1005,7 +1001,6 @@ void bx_floppy_ctrl_c::floppy_command(void)
       BX_PANIC(("You should never get here! cmd = 0x%02x",
                 BX_FD_THIS s.command[0]));
   }
-#endif
 }
 
 void bx_floppy_ctrl_c::floppy_xfer(Bit8u drive, Bit32u offset, Bit8u *buffer,

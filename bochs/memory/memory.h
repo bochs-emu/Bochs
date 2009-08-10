@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: memory.h,v 1.56 2009-03-08 21:23:39 sshwarts Exp $
+// $Id: memory.h,v 1.57 2009-08-10 08:08:25 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -129,9 +129,7 @@ public:
   BX_MEM_SMF void register_state(void);
 };
 
-#if BX_PROVIDE_CPU_MEMORY
 BOCHSAPI extern BX_MEM_C bx_mem;
-#endif
 
 BX_CPP_INLINE Bit8u* BX_MEM_C::get_vector(void)
 {

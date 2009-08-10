@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.116 2009-04-21 20:27:35 sshwarts Exp $
+// $Id: iodev.h,v 1.117 2009-08-10 08:08:25 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -587,8 +587,6 @@ BX_CPP_INLINE void DEV_MEM_WRITE_PHYSICAL_BLOCK(bx_phy_address phy_addr, unsigne
 
 #endif /* NO_DEVICE_INCLUDES */
 
-#if BX_PROVIDE_DEVICE_MODELS
 BOCHSAPI extern bx_devices_c bx_devices;
-#endif
 
 #endif /* IODEV_H */

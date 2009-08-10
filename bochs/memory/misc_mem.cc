@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: misc_mem.cc,v 1.129 2009-08-10 07:51:41 sshwarts Exp $
+// $Id: misc_mem.cc,v 1.130 2009-08-10 08:08:25 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -36,8 +36,6 @@
 #define BX_MEM_VECTOR_ALIGN 4096
 #define BX_MEM_HANDLERS   ((BX_CONST64(1) << BX_PHY_ADDRESS_WIDTH) >> 20) /* one per megabyte */
 
-#if BX_PROVIDE_CPU_MEMORY
-
 BX_MEM_C::BX_MEM_C()
 {
   put("MEM0");
@@ -73,7 +71,7 @@ void BX_MEM_C::init_memory(Bit32u memsize)
 {
   unsigned idx;
 
-  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.129 2009-08-10 07:51:41 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.130 2009-08-10 08:08:25 sshwarts Exp $"));
 
   if (BX_MEM_THIS actual_vector != NULL) {
     BX_INFO (("freeing existing memory vector"));
@@ -351,8 +349,6 @@ void BX_MEM_C::load_RAM(const char *path, bx_phy_address ramaddress, Bit8u type)
 			(unsigned) stat_buf.st_size,
  			path));
 }
-#endif // #if BX_PROVIDE_CPU_MEMORY
-
 
 #if (BX_DEBUGGER || BX_DISASM || BX_GDBSTUB)
 bx_bool BX_MEM_C::dbg_fetch_mem(BX_CPU_C *cpu, bx_phy_address addr, unsigned len, Bit8u *buf)

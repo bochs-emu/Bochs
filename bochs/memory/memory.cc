@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: memory.cc,v 1.77 2009-08-03 15:01:03 sshwarts Exp $
+// $Id: memory.cc,v 1.78 2009-08-10 08:08:25 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -30,8 +30,6 @@
 #include "cpu/cpu.h"
 #include "iodev/iodev.h"
 #define LOG_THIS BX_MEM_THIS
-
-#if BX_PROVIDE_CPU_MEMORY
 
 //
 // Memory map inside the 1st megabyte:
@@ -356,5 +354,3 @@ inc_one:
     }
   }
 }
-
-#endif // #if BX_PROVIDE_CPU_MEMORY
