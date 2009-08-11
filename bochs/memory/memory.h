@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: memory.h,v 1.57 2009-08-10 08:08:25 sshwarts Exp $
+// $Id: memory.h,v 1.58 2009-08-11 15:56:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -42,9 +42,8 @@
 
 class BX_CPU_C;
 
-// alignment of memory vector, must be a power of 2
-#define BIOSROMSZ (1 << 19)  // 512KB BIOS ROM @0xfff80000, must be a power of 2
-#define EXROMSIZE 0x20000    // ROMs 0xc0000-0xdffff (area 0xe0000-0xfffff=bios mapped)
+#define BIOSROMSZ ((Bit32u)(1 << 19))  // 512KB BIOS ROM @0xfff80000, must be a power of 2
+#define EXROMSIZE  (0x20000)           // ROMs 0xc0000-0xdffff (area 0xe0000-0xfffff=bios mapped)
 #define BIOS_MASK (BIOSROMSZ-1)
 #define EXROM_MASK (EXROMSIZE-1)
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: misc_mem.cc,v 1.130 2009-08-10 08:08:25 sshwarts Exp $
+// $Id: misc_mem.cc,v 1.131 2009-08-11 15:56:09 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -33,6 +33,7 @@
 #include "iodev/iodev.h"
 #define LOG_THIS BX_MEM(0)->
 
+// alignment of memory vector, must be a power of 2
 #define BX_MEM_VECTOR_ALIGN 4096
 #define BX_MEM_HANDLERS   ((BX_CONST64(1) << BX_PHY_ADDRESS_WIDTH) >> 20) /* one per megabyte */
 
@@ -71,7 +72,7 @@ void BX_MEM_C::init_memory(Bit32u memsize)
 {
   unsigned idx;
 
-  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.130 2009-08-10 08:08:25 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.131 2009-08-11 15:56:09 sshwarts Exp $"));
 
   if (BX_MEM_THIS actual_vector != NULL) {
     BX_INFO (("freeing existing memory vector"));
@@ -397,7 +398,7 @@ bx_bool BX_MEM_C::dbg_fetch_mem(BX_CPU_C *cpu, bx_phy_address addr, unsigned len
       }
     }
 #if BX_PHY_ADDRESS_LONG
-    else if (addr >= BX_CONST64(0xffffffff)) {
+    else if (addr > BX_CONST64(0xffffffff)) {
       *buf = 0xff;
       ret = 0; // error, beyond limits of memory
     }
@@ -579,7 +580,7 @@ Bit8u *BX_MEM_C::getHostMemAddr(BX_CPU_C *cpu, bx_phy_address addr, unsigned rw)
       }
     }
 #if BX_PHY_ADDRESS_LONG
-    else if (a20addr >= BX_CONST64(0xffffffff)) {
+    else if (a20addr > BX_CONST64(0xffffffff)) {
       // Error, requested addr is out of bounds.
       return (Bit8u *) &BX_MEM_THIS bogus[a20addr & 0xfff];
     }

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: memory.cc,v 1.78 2009-08-10 08:08:25 sshwarts Exp $
+// $Id: memory.cc,v 1.79 2009-08-11 15:56:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -326,7 +326,7 @@ inc_one:
   else  // access outside limits of physical memory
   {
 #if BX_PHY_ADDRESS_LONG
-    if (a20addr >= BX_CONST64(0xffffffff)) {
+    if (a20addr > BX_CONST64(0xffffffff)) {
       memset(data, 0xFF, len);
       return;
     }
