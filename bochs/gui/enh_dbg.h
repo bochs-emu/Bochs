@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: enh_dbg.h,v 1.13 2009-04-12 05:52:38 sshwarts Exp $
+// $Id: enh_dbg.h,v 1.14 2009-08-14 20:20:46 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  BOCHS ENHANCED DEBUGGER Ver 1.2
@@ -250,7 +250,7 @@ extern int DViewMode;
 extern bx_bool LinearDump;     // FALSE = memdump uses physical addressing
 
 extern char *tmpcb;            // 512b is allocated in bigbuf
-extern char *AsciiHex;         // Unsigned char to printable hex xlat table
+extern char AsciiHex[512];     // Unsigned char to printable hex xlat table
 
 #define outbufSIZE      40960
 extern char bigbuf[outbufSIZE];    // 40K preallocated storage for all char buffers (see DoAllInit)
@@ -309,39 +309,40 @@ extern int CmdHInsert;                     // index of next history entry to sto
 #define LDTRnum     35
 #define TRRnum      36
 #define CR0_Rnum    37
-#define CR3_Rnum    38
-#define CR4_Rnum    39
-#define EFER_Rnum   40      // currently used to mark the last entry in rV[]
-#define ST0_Rnum    41
-#define ST1_Rnum    42
-#define ST2_Rnum    43
-#define ST3_Rnum    44
-#define ST4_Rnum    45
-#define ST5_Rnum    46
-#define ST6_Rnum    47
-#define ST7_Rnum    48
-#define XMM0_Rnum   49
-#define XMM1_Rnum   50
-#define XMM2_Rnum   51
-#define XMM3_Rnum   52
-#define XMM4_Rnum   53
-#define XMM5_Rnum   54
-#define XMM6_Rnum   55
-#define XMM7_Rnum   56
-#define XMM8_Rnum   57
-#define XMM9_Rnum   58
-#define XMMA_Rnum   59
-#define XMMB_Rnum   60
-#define XMMC_Rnum   61
-#define XMMD_Rnum   62
-#define XMME_Rnum   63
-#define XMMF_Rnum   64
-#define DR0_Rnum    65
-#define DR1_Rnum    66
-#define DR2_Rnum    67
-#define DR3_Rnum    68
-#define DR6_Rnum    69
-#define DR7_Rnum    70
+#define CR2_Rnum    38
+#define CR3_Rnum    39
+#define CR4_Rnum    40
+#define EFER_Rnum   41      // currently used to mark the last entry in rV[]
+#define ST0_Rnum    42
+#define ST1_Rnum    43
+#define ST2_Rnum    44
+#define ST3_Rnum    45
+#define ST4_Rnum    46
+#define ST5_Rnum    47
+#define ST6_Rnum    48
+#define ST7_Rnum    49
+#define XMM0_Rnum   50
+#define XMM1_Rnum   51
+#define XMM2_Rnum   52
+#define XMM3_Rnum   53
+#define XMM4_Rnum   54
+#define XMM5_Rnum   55
+#define XMM6_Rnum   56
+#define XMM7_Rnum   57
+#define XMM8_Rnum   58
+#define XMM9_Rnum   59
+#define XMMA_Rnum   60
+#define XMMB_Rnum   61
+#define XMMC_Rnum   62
+#define XMMD_Rnum   63
+#define XMME_Rnum   64
+#define XMMF_Rnum   65
+#define DR0_Rnum    66
+#define DR1_Rnum    67
+#define DR2_Rnum    68
+#define DR3_Rnum    69
+#define DR6_Rnum    70
+#define DR7_Rnum    71
 // #define TR0_Rnum 71  -- put Test Registers in here when they are supported
 #define TOT_REG_NUM 72
 // extra "register numbers" for registers that have more than one part

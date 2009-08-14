@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: enh_dbg.cc,v 1.16 2009-08-07 08:26:41 sshwarts Exp $
+// $Id: enh_dbg.cc,v 1.17 2009-08-14 20:20:45 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  BOCHS ENHANCED DEBUGGER Ver 1.2
@@ -50,7 +50,7 @@ bx_bool SeeReg[8] = {
     FALSE,  // show FPU (STi) / MMX registers
     FALSE,  // show XMM registers
     FALSE,  // show the Debug Registers (DR0, ...)
-    FALSE       // Test Registers not yet supported in bochs (2.3.7)
+    FALSE   // Test Registers not yet supported in bochs
 };
 
 bx_bool SingleCPU = FALSE;      // Display all SMP CPUs
@@ -122,10 +122,10 @@ static const char* RegLCName[EFER_Rnum + 1] = {
     "r8","r9","r10","r11","r12","r13","r14","r15",
     "eflags","eax","ebx","ecx","edx","esi","edi","ebp","esp","eip",
     "cs","ds","es","ss","fs","gs",
-    "gdtr","idtr","ldtr","tr","cr0","cr3","cr4","efer"
+    "gdtr","idtr","ldtr","tr","cr0","cr2","cr3","cr4","efer"
 };
-char* RDispName[EFER_Rnum + 1];
-bx_param_num_c *RegObject[BX_MAX_SMP_THREADS_SUPPORTED][TOT_REG_NUM + EXTRA_REGS];
+static char* RDispName[EFER_Rnum + 1];
+static bx_param_num_c *RegObject[BX_MAX_SMP_THREADS_SUPPORTED][TOT_REG_NUM + EXTRA_REGS];
 Bit64u rV[EFER_Rnum + 1];   // current values of registers
 Bit64u PV[EFER_Rnum + 1];   // previous values of registers
 Bit32s GDT_Len;             // "limits" (= bytesize-1) for GDT and IDT
@@ -148,9 +148,9 @@ int DViewMode = VIEW_MEMDUMP;
 bx_bool LinearDump = TRUE;     // FALSE = memdump uses physical addressing
 
 char *tmpcb;                   // 512b is allocated in bigbuf
-char *AsmData;                 // 5K for binary disassembly data
 char *CurStack;                // Stack workspace (400b usually)
-char *AsciiHex;                // Unsigned char to printable hex xlat table
+char AsciiHex[512];            // Unsigned char to printable hex xlat table
+static char UCtable[256];
 
 char bigbuf[outbufSIZE];       // 40K preallocated storage for all char buffers (see DoAllInit)
 char *DbgAppendPtr = bigbuf;
@@ -219,7 +219,6 @@ unsigned short WWPSnapCount;
 unsigned short RWPSnapCount;
 bx_phy_address WWP_Snapshot[16];
 bx_phy_address RWP_Snapshot[16];
-static char UCtable[256];
 
 short nDock[36] = {     // lookup table for alternate DockOrders
     0x231, 0x312, 0x231, 0x213, 0x132, 0x132,
@@ -893,6 +892,8 @@ int FillDebugRegs(int itemnum)
     return itemnum;
 }
 
+#define BX_GUI_DB_ASM_DATA (4400)
+
 // Disassemble a linear memory area, in a loop, loading text into ASM window
 // completely update the ASM display with new data
 void FillAsm(Bit64u LAddr, int MaxLines)
@@ -902,8 +903,8 @@ void FillAsm(Bit64u LAddr, int MaxLines)
     int i, len;
     bx_bool BufEmpty;
     bx_bool Go = TRUE;
-    char *s;
-    char *p = AsmData;  // just to avoid a compiler warning
+    char AsmData[BX_GUI_DB_ASM_DATA];  // 5K for binary disassembly data
+    char *s, *p = AsmData;  // just to avoid a compiler warning
     char *cols[3];
     char asmtxt[200];
 
@@ -1248,6 +1249,7 @@ void InitRegObjects()
         RegObject[j][LDTRnum]= SIM->get_param_num("LDTR.base", cpu_list);
         RegObject[j][TRRnum]= SIM->get_param_num("TR.base", cpu_list);
         RegObject[j][CR0_Rnum]= SIM->get_param_num("CR0", cpu_list);
+        RegObject[j][CR2_Rnum]= SIM->get_param_num("CR2", cpu_list);
         RegObject[j][CR3_Rnum]= SIM->get_param_num("CR3", cpu_list);
 #if BX_CPU_LEVEL >= 4
         RegObject[j][CR4_Rnum] = SIM->get_param_num("CR4", cpu_list);
@@ -1829,6 +1831,11 @@ void prtbrk (Bit32u seg, Bit64u addy, unsigned int id, bx_bool enabled, char *co
     sprintf (cols[0] + i,FMT_LLCAPX,addy);
 }
 
+extern unsigned num_write_watchpoints;
+extern unsigned num_read_watchpoints;
+extern bx_phy_address write_watchpoint[];   // currently 32bit only
+extern bx_phy_address read_watchpoint[];
+
 // Displays all Breakpoints and Watchpoints
 void FillBrkp()
 {
@@ -1836,10 +1843,6 @@ void FillBrkp()
     char *cols[18];
     char brktxt[60];
     unsigned int brktype;
-    extern unsigned num_write_watchpoints;
-    extern unsigned num_read_watchpoints;
-    extern bx_phy_address write_watchpoint[];   // currently 32bit only
-    extern bx_phy_address read_watchpoint[];
     extern bx_guard_t bx_guard;
 
     doDumpRefresh = FALSE;
@@ -2058,7 +2061,7 @@ void ShowData()
 void MakeRDnames()
 {
     char *p = RDispName[0];       // first storage location
-    for (int i=0; i < 41; i++)
+    for (int i=0; i <= EFER_Rnum; i++)
     {
         RDispName[i] = p;   // create the Name pointer
         const char *c = RegLCName[i];   // Register name in lower case
@@ -2095,8 +2098,6 @@ void DoAllInit()
     RDispName[0] = p;
     p -= 4096;
     DataDump = p;       // storage for 4K memory dumps
-    p -= 4400;          // 4K+ for disassembly data
-    AsmData = p;
     p -= OutWinCnt;     // 10K for Output Window buffer
     OutWindow = p;
     i = 64;
@@ -2111,7 +2112,6 @@ void DoAllInit()
     p -= STACK_ENTRIES * 8;     // and another one
     CurStack = p;
     p -= 512;
-    AsciiHex = p;       // storage for the binary->ascii table
     p -= 512;           // 2 "hex" bytes per byte value
     tmpcb = p;
 
@@ -2225,7 +2225,7 @@ void OnBreak()
         RefreshDataWin();
 }
 
-int HexFromAsk(char* ask,char* b)       // this routine converts a user-typed hex string into binary bytes
+static int HexFromAsk(const char* ask,char* b)       // this routine converts a user-typed hex string into binary bytes
 {                   // it ignores any bigendian issues -- binary is converted front to end as chars
     int y = 0;
     int i = 0;
@@ -2242,7 +2242,7 @@ int HexFromAsk(char* ask,char* b)       // this routine converts a user-typed he
     return y;
 }
 
-bx_bool FindHex(unsigned char* b1,int bs,unsigned char* b2,int by)
+static bx_bool FindHex(const unsigned char* b1,int bs,const unsigned char* b2,int by)
 {
     // search bs bytes of b1
     for(int i = 0 ; i < bs ; i++)       // TODO: this loop could be a little more efficient.
@@ -2465,7 +2465,6 @@ void TogglePTree()
     }
 }
 
-
 void doFind()
 {
     unsigned int i, L;
@@ -2570,7 +2569,6 @@ void doDisAsm()
         j = AsmLineCount;
     TopAsmLA = AsmLA[AsmLineCount - j];     //TopAsmLA is the scroll point
 }
-
 
 // Toggle all "selected" items as linear breakpoint on the ASM window
 void SetBreak(int OneEntry)
@@ -2685,8 +2683,7 @@ void ChangeReg()
     int i = RitemToRnum[L];
     if (i > EFER_Rnum)      // TODO: extend this to more reg -- need display names for all
         return;
-    char *d1;
-    d1 = RDispName[i];
+    char *d1 = RDispName[i];
 //  if (i > EFER_Rnum)
 //      *tmpcb = 0;
 //  else
@@ -2787,10 +2784,6 @@ void SetMemLine(int L)
 // Normal return value is 0, return != 0 has OS-specific meaning.
 int HotKey (int ww, int Alt, int Shift, int Control)
 {
-    extern unsigned num_write_watchpoints;
-    extern unsigned num_read_watchpoints;
-    extern bx_phy_address write_watchpoint[];
-    extern bx_phy_address read_watchpoint[];
     if (Alt < 0){
         if (ww == '1')
             doNewWSize(0);
@@ -3070,10 +3063,6 @@ int HotKey (int ww, int Alt, int Shift, int Control)
 void ActivateMenuItem (int cmd)
 {
     int i;
-    extern unsigned num_write_watchpoints;
-    extern unsigned num_read_watchpoints;
-    extern bx_phy_address write_watchpoint[];
-    extern bx_phy_address read_watchpoint[];
 
     switch(cmd)
     {
