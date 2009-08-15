@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.301 2009-08-10 15:44:50 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.302 2009-08-15 15:36:35 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1825,7 +1825,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSENTER(bxInstruction_c *i)
     }
     if (!IsCanonical(BX_CPU_THIS_PTR msr.sysenter_esp_msr)) {
       BX_ERROR(("SYSENTER with non-canonical SYSENTER_ESP_MSR !"));
-      exception(BX_SS_EXCEPTION, 0, 0);
+      exception(BX_GP_EXCEPTION, 0, 0);
     }
   }
 #endif
@@ -1914,7 +1914,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSEXIT(bxInstruction_c *i)
     }
     if (!IsCanonical(RCX)) {
       BX_ERROR(("SYSEXIT with non-canonical RCX (RSP) pointer !"));
-      exception(BX_SS_EXCEPTION, 0, 0);
+      exception(BX_GP_EXCEPTION, 0, 0);
     }
   }
 #endif
