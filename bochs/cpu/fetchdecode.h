@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.h,v 1.86 2009-05-16 09:26:16 sshwarts Exp $
+// $Id: fetchdecode.h,v 1.87 2009-08-15 15:43:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005 Stanislav Shwartsman
@@ -2951,16 +2951,16 @@ static const BxOpcodeInfo_t BxOpcodeInfoG7R[64] = {
   /* 0F 01 C5 */ { 0, BX_IA_ERROR },
   /* 0F 01 C6 */ { 0, BX_IA_ERROR },
   /* 0F 01 C7 */ { 0, BX_IA_ERROR },
-  /* 0F 01 C8 */ { 0, BX_IA_MONITOR },
-  /* 0F 01 C9 */ { BxTraceEnd, BX_IA_MWAIT },
+  /* 0F 01 C8 */ { BxPrefixSSE, BX_IA_MONITOR, BxOpcodeGroupSSE_ERR },
+  /* 0F 01 C9 */ { BxPrefixSSE | BxTraceEnd, BX_IA_MWAIT, BxOpcodeGroupSSE_ERR },
   /* 0F 01 CA */ { 0, BX_IA_ERROR },
   /* 0F 01 CB */ { 0, BX_IA_ERROR },
   /* 0F 01 CC */ { 0, BX_IA_ERROR },
   /* 0F 01 CD */ { 0, BX_IA_ERROR },
   /* 0F 01 CE */ { 0, BX_IA_ERROR },
   /* 0F 01 CF */ { 0, BX_IA_ERROR },
-  /* 0F 01 D0 */ { 0, BX_IA_XGETBV },
-  /* 0F 01 D1 */ { 0, BX_IA_XSETBV },
+  /* 0F 01 D0 */ { BxPrefixSSE, BX_IA_XGETBV, BxOpcodeGroupSSE_ERR },
+  /* 0F 01 D1 */ { BxPrefixSSE, BX_IA_XSETBV, BxOpcodeGroupSSE_ERR },
   /* 0F 01 D2 */ { 0, BX_IA_ERROR },
   /* 0F 01 D3 */ { 0, BX_IA_ERROR },
   /* 0F 01 D4 */ { 0, BX_IA_ERROR },
