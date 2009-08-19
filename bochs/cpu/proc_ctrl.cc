@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.302 2009-08-15 15:36:35 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.303 2009-08-19 09:59:30 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -244,6 +244,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CLFLUSH(bxInstruction_c *i)
   }
 
   BX_INSTR_CLFLUSH(BX_CPU_ID, laddr, paddr);
+
+#if BX_X86_DEBUGGER
+  hwbreakpoint_match(laddr, 1, BX_READ);
+#endif
 
 #else
   BX_INFO(("CLFLUSH: not supported, enable with SSE2"));

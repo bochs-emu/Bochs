@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.216 2009-07-28 14:52:19 sshwarts Exp $
+// $Id: init.cc,v 1.217 2009-08-19 09:59:30 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -853,7 +853,7 @@ void BX_CPU_C::reset(unsigned source)
   // DR0 - DR7 (Debug Registers)
 #if BX_CPU_LEVEL >= 3
   for (n=0; n<4; n++)
-    BX_CPU_THIS_PTR dr[n] = 0;   /* undefined */
+    BX_CPU_THIS_PTR dr[n] = 0;
 #endif
 
   BX_CPU_THIS_PTR dr7 = 0x00000400;
