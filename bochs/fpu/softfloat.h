@@ -127,6 +127,16 @@ BX_CPP_INLINE void float_raise(float_status_t &status, int flags)
 }
 
 /*----------------------------------------------------------------------------
+| Routine to check if any or all of the software IEC/IEEE floating-point
+| exceptions are masked.
+*----------------------------------------------------------------------------*/
+
+BX_CPP_INLINE int float_exception_masked(float_status_t &status, int flag)
+{
+    return status.float_exception_masks & flag;
+}
+
+/*----------------------------------------------------------------------------
 | Returns current floating point rounding mode specified by status word.
 *----------------------------------------------------------------------------*/
 

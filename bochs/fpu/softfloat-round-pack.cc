@@ -438,7 +438,10 @@ floatx80 SoftFloatRoundAndPackFloatx80(int roundingPrecision,
             zSigExact = zSig0;
             zExp = 0;
             roundBits = zSig0 & roundMask;
-            if (isTiny && roundBits) float_raise(status, float_flag_underflow);
+            if (isTiny) {
+                if (roundBits || (zSig0 && !float_exception_masked(status, float_flag_underflow)))
+                    float_raise(status, float_flag_underflow);
+            }
             if (roundBits) float_raise(status, float_flag_inexact);
             zSig0 += roundIncrement;
             if ((Bit64s) zSig0 < 0) zExp = 1;
@@ -502,7 +505,10 @@ floatx80 SoftFloatRoundAndPackFloatx80(int roundingPrecision,
                 || (zSig0 < BX_CONST64(0xFFFFFFFFFFFFFFFF));
             shift64ExtraRightJamming(zSig0, zSig1, 1 - zExp, &zSig0, &zSig1);
             zExp = 0;
-            if (isTiny && zSig1) float_raise(status, float_flag_underflow);
+            if (isTiny) {
+                if (zSig1 || (zSig0 && !float_exception_masked(status, float_flag_underflow)))
+                    float_raise(status, float_flag_underflow);
+            }
             if (zSig1) float_raise(status, float_flag_inexact);
             if (roundNearestEven) increment = ((Bit64s) zSig1 < 0);
             else {
