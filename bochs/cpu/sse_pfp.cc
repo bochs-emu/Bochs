@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_pfp.cc,v 1.58 2009-06-20 20:39:51 sshwarts Exp $
+// $Id: sse_pfp.cc,v 1.59 2009-08-20 19:53:05 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -105,8 +105,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTPI2PS_VpsQq(bxInstruction_c *i)
     MMXUQ(op) = read_virtual_qword(i->seg(), eaddr);
   }
 
-  BX_CPU_THIS_PTR prepareFPU2MMX(); /* FPU2MMX state transition */
-
   float_status_t status_word;
   mxcsr_to_softfloat_status_word(status_word, MXCSR);
 
@@ -114,6 +112,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTPI2PS_VpsQq(bxInstruction_c *i)
   result.xmm32u(1) = int32_to_float32(MMXUD1(op), status_word);
 
   check_exceptionsSSE(status_word.float_exception_flags);
+  prepareFPU2MMX(); /* cause FPU2MMX state transition */
   BX_WRITE_XMM_REG_LO_QWORD(i->nnn(), result.xmm64u(0));
 #else
   BX_INFO(("CVTPI2PS_VpsQq: required SSE, use --enable-sse option"));
@@ -303,8 +302,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTTPS2PI_PqWps(bxInstruction_c *i)
     op = read_virtual_qword(i->seg(), eaddr);
   }
 
-  BX_CPU_THIS_PTR prepareFPU2MMX(); /* FPU2MMX state transition */
-
   float_status_t status_word;
   mxcsr_to_softfloat_status_word(status_word, MXCSR);
 
@@ -320,6 +317,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTTPS2PI_PqWps(bxInstruction_c *i)
   MMXUD1(result) = float32_to_int32_round_to_zero(r1, status_word);
 
   check_exceptionsSSE(status_word.float_exception_flags);
+  prepareFPU2MMX(); /* cause FPU2MMX state transition */
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else
   BX_INFO(("CVTTPS2PI_PqWps: required SSE, use --enable-sse option"));
@@ -354,8 +352,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTTPD2PI_PqWpd(bxInstruction_c *i)
     readVirtualDQwordAligned(i->seg(), eaddr, (Bit8u *) &op);
   }
 
-  BX_CPU_THIS_PTR prepareFPU2MMX(); /* FPU2MMX state transition */
-
   float_status_t status_word;
   mxcsr_to_softfloat_status_word(status_word, MXCSR);
 
@@ -368,6 +364,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTTPD2PI_PqWpd(bxInstruction_c *i)
   MMXUD1(result) = float64_to_int32_round_to_zero(op.xmm64u(1), status_word);
 
   check_exceptionsSSE(status_word.float_exception_flags);
+  prepareFPU2MMX(); /* cause FPU2MMX state transition */
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else
   BX_INFO(("CVTTPD2PI_PqWpd: required SSE2, use --enable-sse option"));
@@ -499,8 +496,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTPS2PI_PqWps(bxInstruction_c *i)
     op = read_virtual_qword(i->seg(), eaddr);
   }
 
-  BX_CPU_THIS_PTR prepareFPU2MMX(); /* FPU2MMX state transition */
-
   float_status_t status_word;
   mxcsr_to_softfloat_status_word(status_word, MXCSR);
 
@@ -516,6 +511,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTPS2PI_PqWps(bxInstruction_c *i)
   MMXUD1(result) = float32_to_int32(r1, status_word);
 
   check_exceptionsSSE(status_word.float_exception_flags);
+  prepareFPU2MMX(); /* cause FPU2MMX state transition */
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else
   BX_INFO(("CVTPS2PI_PqWps: required SSE, use --enable-sse option"));
@@ -551,8 +547,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTPD2PI_PqWpd(bxInstruction_c *i)
     readVirtualDQwordAligned(i->seg(), eaddr, (Bit8u *) &op);
   }
 
-  BX_CPU_THIS_PTR prepareFPU2MMX(); /* FPU2MMX state transition */
-
   float_status_t status_word;
   mxcsr_to_softfloat_status_word(status_word, MXCSR);
 
@@ -565,6 +559,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTPD2PI_PqWpd(bxInstruction_c *i)
   MMXUD1(result) = float64_to_int32(op.xmm64u(1), status_word);
 
   check_exceptionsSSE(status_word.float_exception_flags);
+  prepareFPU2MMX(); /* cause FPU2MMX state transition */
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else
   BX_INFO(("CVTPD2PI_PqWpd: required SSE2, use --enable-sse option"));
@@ -853,8 +848,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTDQ2PS_VpsWdq(bxInstruction_c *i)
     /* pointer, segment address pair */
     readVirtualDQwordAligned(i->seg(), eaddr, (Bit8u *) &op);
   }
-
-  BX_CPU_THIS_PTR prepareFPU2MMX(); /* FPU2MMX state transition */
 
   float_status_t status_word;
   mxcsr_to_softfloat_status_word(status_word, MXCSR);
