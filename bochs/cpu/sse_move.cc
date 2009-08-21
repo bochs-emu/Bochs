@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_move.cc,v 1.98 2009-03-10 21:43:11 sshwarts Exp $
+// $Id: sse_move.cc,v 1.99 2009-08-21 13:44:51 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -827,7 +827,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MASKMOVDQU_VdqUdq(bxInstruction_c *i)
   if ((mask.xmm64u(0) | mask.xmm64u(1)) == 0) return;
 
   /* implement as read-modify-write for efficiency */
-  read_virtual_dqword(BX_SEG_REG_DS, rdi, (Bit8u *) &temp);
+  read_virtual_dqword(i->seg(), rdi, (Bit8u *) &temp);
 
   for(unsigned j=0; j<16; j++) {
     if(mask.xmmubyte(j) & 0x80) temp.xmmubyte(j) = op.xmmubyte(j);
