@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dis_groups.cc,v 1.42 2009-05-07 10:19:50 sshwarts Exp $
+// $Id: dis_groups.cc,v 1.43 2009-08-21 13:45:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #include <stdio.h>
@@ -579,6 +579,36 @@ void disassembler::Yb(const x86_insn *insn) { OP_Y(insn, B_SIZE); }
 void disassembler::Yw(const x86_insn *insn) { OP_Y(insn, W_SIZE); }
 void disassembler::Yd(const x86_insn *insn) { OP_Y(insn, D_SIZE); }
 void disassembler::Yq(const x86_insn *insn) { OP_Y(insn, Q_SIZE); }
+
+void disassembler::OP_sY(const x86_insn *insn, unsigned size)
+{
+  const char *rdi, *seg;
+
+  if (insn->as_64) {
+    rdi = general_64bit_regname[rDI_REG];
+  }
+  else {
+    if (insn->as_32)
+      rdi = general_32bit_regname[rDI_REG];
+    else
+      rdi = general_16bit_regname[rDI_REG];
+  }
+
+  print_datasize(size);
+
+  if (insn->is_seg_override())
+    seg = segment_name[insn->seg_override];
+  else
+    seg = segment_name[DS_REG];
+
+  if (intel_mode)
+    dis_sprintf("%s:[%s]", seg, rdi);
+  else
+    dis_sprintf("%s:(%s)", seg, rdi);
+}
+
+void disassembler::sYq(const x86_insn *insn) { OP_sY(insn, Q_SIZE); }
+void disassembler::sYdq(const x86_insn *insn) { OP_sY(insn, O_SIZE); }
 
 #define BX_JUMP_TARGET_NOT_REQ ((bx_address)(-1))
 

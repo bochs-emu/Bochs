@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dis_tables.h,v 1.35 2009-01-19 19:01:03 sshwarts Exp $
+// $Id: dis_tables.h,v 1.36 2009-08-21 13:45:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #ifndef _BX_DISASM_TABLES_
@@ -146,6 +146,9 @@
 #define Yw &disassembler::Yw
 #define Yd &disassembler::Yd
 #define Yq &disassembler::Yq
+
+#define sYq  &disassembler::sYq
+#define sYdq &disassembler::sYdq
 
 #define Jb &disassembler::Jb
 #define Jw &disassembler::Jw

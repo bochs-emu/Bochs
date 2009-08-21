@@ -528,6 +528,11 @@ public:
   void Yd(const x86_insn *insn);
   void Yq(const x86_insn *insn);
 
+  // maskmovdq/maskmovdqu
+  void OP_sY(const x86_insn *insn, unsigned size);
+  void sYq(const x86_insn *insn);
+  void sYdq(const x86_insn *insn);
+
   // jump offset
   void Jb(const x86_insn *insn);
   void Jw(const x86_insn *insn);
