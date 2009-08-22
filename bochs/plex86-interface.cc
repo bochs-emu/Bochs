@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////
-// $Id: plex86-interface.cc,v 1.17 2009-05-01 09:32:46 sshwarts Exp $
+// $Id: plex86-interface.cc,v 1.18 2009-08-22 19:30:23 sshwarts Exp $
 ///////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  Kevin P. Lawton
@@ -16,7 +16,7 @@
 //
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
-//  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+//  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 
 #include "bochs.h"
 #include <sys/ioctl.h>

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////
-// $Id: plex86-interface.h,v 1.5 2009-01-16 18:18:57 sshwarts Exp $
+// $Id: plex86-interface.h,v 1.6 2009-08-22 19:30:23 sshwarts Exp $
 ///////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  Kevin P. Lawton
@@ -16,7 +16,7 @@
 //
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
-//  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+//  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 ///////////////////////////////////////////////////////////////////////
 
 #include "plex86/plex86.h"
