@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_pfp.cc,v 1.59 2009-08-20 19:53:05 sshwarts Exp $
+// $Id: sse_pfp.cc,v 1.60 2009-08-22 11:02:45 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -88,15 +88,15 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTPI2PS_VpsQq(bxInstruction_c *i)
 #if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
 
-  /* check floating point status word for a pending FPU exceptions */
-  FPU_check_pending_exceptions();
-
   BxPackedMmxRegister op;
   BxPackedXmmRegister result;
 
   /* op is a register or memory reference */
   if (i->modC0()) {
+    /* check floating point status word for a pending FPU exceptions */
+    FPU_check_pending_exceptions();
     op = BX_READ_MMX_REG(i->rm());
+    prepareFPU2MMX(); /* cause FPU2MMX state transition */
   }
   else {
     // do not cause transition to MMX state if no MMX register touched
@@ -112,7 +112,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTPI2PS_VpsQq(bxInstruction_c *i)
   result.xmm32u(1) = int32_to_float32(MMXUD1(op), status_word);
 
   check_exceptionsSSE(status_word.float_exception_flags);
-  prepareFPU2MMX(); /* cause FPU2MMX state transition */
   BX_WRITE_XMM_REG_LO_QWORD(i->nnn(), result.xmm64u(0));
 #else
   BX_INFO(("CVTPI2PS_VpsQq: required SSE, use --enable-sse option"));
@@ -130,15 +129,15 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTPI2PD_VpdQq(bxInstruction_c *i)
 #if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
-  /* check floating point status word for a pending FPU exceptions */
-  FPU_check_pending_exceptions();
-
   BxPackedMmxRegister op;
   BxPackedXmmRegister result;
 
   /* op is a register or memory reference */
   if (i->modC0()) {
+    /* check floating point status word for a pending FPU exceptions */
+    FPU_check_pending_exceptions();
     op = BX_READ_MMX_REG(i->rm());
+    prepareFPU2MMX(); /* cause FPU2MMX state transition */
   }
   else {
     // do not cause transition to MMX state if no MMX register touched
@@ -146,8 +145,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTPI2PD_VpdQq(bxInstruction_c *i)
     /* pointer, segment address pair */
     MMXUQ(op) = read_virtual_qword(i->seg(), eaddr);
   }
-
-  BX_CPU_THIS_PTR prepareFPU2MMX(); /* FPU2MMX state transition */
 
   result.xmm64u(0) = int32_to_float64(MMXUD0(op));
   result.xmm64u(1) = int32_to_float64(MMXUD1(op));
