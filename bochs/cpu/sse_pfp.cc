@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_pfp.cc,v 1.60 2009-08-22 11:02:45 sshwarts Exp $
+// $Id: sse_pfp.cc,v 1.61 2009-08-22 11:47:42 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -83,7 +83,34 @@ static float64_compare_method compare64[4] = {
  * to rounding control bits in MXCSR register.
  * Possible floating point exceptions: #P
  */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTPI2PS_VpsQq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTPI2PS_VpsQqR(bxInstruction_c *i)
+{
+#if BX_SUPPORT_SSE >= 1
+  BX_CPU_THIS_PTR prepareSSE();
+
+  BxPackedXmmRegister result;
+
+  /* check floating point status word for a pending FPU exceptions */
+  FPU_check_pending_exceptions();
+
+  BxPackedMmxRegister op = BX_READ_MMX_REG(i->rm());
+
+  float_status_t status_word;
+  mxcsr_to_softfloat_status_word(status_word, MXCSR);
+
+  result.xmm32u(0) = int32_to_float32(MMXUD0(op), status_word);
+  result.xmm32u(1) = int32_to_float32(MMXUD1(op), status_word);
+
+  check_exceptionsSSE(status_word.float_exception_flags);
+  prepareFPU2MMX(); /* cause FPU2MMX state transition */
+  BX_WRITE_XMM_REG_LO_QWORD(i->nnn(), result.xmm64u(0));
+#else
+  BX_INFO(("CVTPI2PS_VpsQq: required SSE, use --enable-sse option"));
+  exception(BX_UD_EXCEPTION, 0, 0);
+#endif
+}
+
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTPI2PS_VpsQqM(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
@@ -91,19 +118,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTPI2PS_VpsQq(bxInstruction_c *i)
   BxPackedMmxRegister op;
   BxPackedXmmRegister result;
 
-  /* op is a register or memory reference */
-  if (i->modC0()) {
-    /* check floating point status word for a pending FPU exceptions */
-    FPU_check_pending_exceptions();
-    op = BX_READ_MMX_REG(i->rm());
-    prepareFPU2MMX(); /* cause FPU2MMX state transition */
-  }
-  else {
-    // do not cause transition to MMX state if no MMX register touched
-    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-    /* pointer, segment address pair */
-    MMXUQ(op) = read_virtual_qword(i->seg(), eaddr);
-  }
+  // do not cause transition to MMX state if no MMX register touched
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  MMXUQ(op) = read_virtual_qword(i->seg(), eaddr);
 
   float_status_t status_word;
   mxcsr_to_softfloat_status_word(status_word, MXCSR);
@@ -124,7 +141,30 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTPI2PS_VpsQq(bxInstruction_c *i)
  * Convert two 32bit signed integers from MMX/MEM to two double precision FP
  * Possible floating point exceptions: -
  */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTPI2PD_VpdQq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTPI2PD_VpdQqR(bxInstruction_c *i)
+{
+#if BX_SUPPORT_SSE >= 2
+  BX_CPU_THIS_PTR prepareSSE();
+
+  BxPackedXmmRegister result;
+
+  /* check floating point status word for a pending FPU exceptions */
+  FPU_check_pending_exceptions();
+  prepareFPU2MMX(); /* cause FPU2MMX state transition */
+
+  BxPackedMmxRegister op = BX_READ_MMX_REG(i->rm());
+
+  result.xmm64u(0) = int32_to_float64(MMXUD0(op));
+  result.xmm64u(1) = int32_to_float64(MMXUD1(op));
+
+  BX_WRITE_XMM_REG(i->nnn(), result);
+#else
+  BX_INFO(("CVTPI2PD_VpdQd: required SSE2, use --enable-sse option"));
+  exception(BX_UD_EXCEPTION, 0, 0);
+#endif
+}
+
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTPI2PD_VpdQqM(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
@@ -132,19 +172,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTPI2PD_VpdQq(bxInstruction_c *i)
   BxPackedMmxRegister op;
   BxPackedXmmRegister result;
 
-  /* op is a register or memory reference */
-  if (i->modC0()) {
-    /* check floating point status word for a pending FPU exceptions */
-    FPU_check_pending_exceptions();
-    op = BX_READ_MMX_REG(i->rm());
-    prepareFPU2MMX(); /* cause FPU2MMX state transition */
-  }
-  else {
-    // do not cause transition to MMX state if no MMX register touched
-    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-    /* pointer, segment address pair */
-    MMXUQ(op) = read_virtual_qword(i->seg(), eaddr);
-  }
+  // do not cause transition to MMX state if no MMX register touched
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  MMXUQ(op) = read_virtual_qword(i->seg(), eaddr);
 
   result.xmm64u(0) = int32_to_float64(MMXUD0(op));
   result.xmm64u(1) = int32_to_float64(MMXUD1(op));
@@ -161,7 +191,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTPI2PD_VpdQq(bxInstruction_c *i)
  * Convert one 32bit signed integer to one double precision FP
  * Possible floating point exceptions: -
  */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTSI2SD_VsdEd(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTSI2SD_VsdEdR(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
@@ -171,37 +201,41 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTSI2SD_VsdEd(bxInstruction_c *i)
   float64 result;
 
 #if BX_SUPPORT_X86_64
-  if (i->os64L())   /* 64 bit operand size mode */
+  if (i->os64L())   /* 64 bit operand size */
+    result = int64_to_float64(BX_READ_64BIT_REG(i->rm()), status_word);
+  else
+#endif
+    result = int32_to_float64(BX_READ_32BIT_REG(i->rm()));
+
+  check_exceptionsSSE(status_word.float_exception_flags);
+  BX_WRITE_XMM_REG_LO_QWORD(i->nnn(), result);
+#else
+  BX_INFO(("CVTSI2SD_VsdEd: required SSE2, use --enable-sse option"));
+  exception(BX_UD_EXCEPTION, 0, 0);
+#endif
+}
+
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTSI2SD_VsdEdM(bxInstruction_c *i)
+{
+#if BX_SUPPORT_SSE >= 2
+  BX_CPU_THIS_PTR prepareSSE();
+
+  float_status_t status_word;
+  mxcsr_to_softfloat_status_word(status_word, MXCSR);
+  float64 result;
+
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+
+#if BX_SUPPORT_X86_64
+  if (i->os64L())   /* 64 bit operand size */
   {
-    Bit64u op;
-
-    /* op is a register or memory reference */
-    if (i->modC0()) {
-      op = BX_READ_64BIT_REG(i->rm());
-    }
-    else {
-      bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-      /* pointer, segment address pair */
-      op = read_virtual_qword_64(i->seg(), eaddr);
-    }
-
+    Bit64u op = read_virtual_qword_64(i->seg(), eaddr);
     result = int64_to_float64(op, status_word);
   }
   else
 #endif
   {
-    Bit32u op;
-
-    /* op is a register or memory reference */
-    if (i->modC0()) {
-      op = BX_READ_32BIT_REG(i->rm());
-    }
-    else {
-      bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-      /* pointer, segment address pair */
-      op = read_virtual_dword(i->seg(), eaddr);
-    }
-
+    Bit32u op = read_virtual_dword(i->seg(), eaddr);
     result = int32_to_float64(op);
   }
 
@@ -220,7 +254,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTSI2SD_VsdEd(bxInstruction_c *i)
  * to rounding control bits in MXCSR register.
  * Possible floating point exceptions: #P
  */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTSI2SS_VssEd(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTSI2SS_VssEdR(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
@@ -230,37 +264,41 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTSI2SS_VssEd(bxInstruction_c *i)
   float32 result;
 
 #if BX_SUPPORT_X86_64
-  if (i->os64L())   /* 64 bit operand size mode */
+  if (i->os64L())   /* 64 bit operand size */
+    result = int64_to_float32(BX_READ_64BIT_REG(i->rm()), status_word);
+  else
+#endif
+    result = int32_to_float32(BX_READ_32BIT_REG(i->rm()), status_word);
+
+  check_exceptionsSSE(status_word.float_exception_flags);
+  BX_WRITE_XMM_REG_LO_DWORD(i->nnn(), result);
+#else
+  BX_INFO(("CVTSI2SS_VssEd: required SSE, use --enable-sse option"));
+  exception(BX_UD_EXCEPTION, 0, 0);
+#endif
+}
+
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTSI2SS_VssEdM(bxInstruction_c *i)
+{
+#if BX_SUPPORT_SSE >= 1
+  BX_CPU_THIS_PTR prepareSSE();
+
+  float_status_t status_word;
+  mxcsr_to_softfloat_status_word(status_word, MXCSR);
+  float32 result;
+
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+
+#if BX_SUPPORT_X86_64
+  if (i->os64L())   /* 64 bit operand size */
   {
-    Bit64u op;
-
-    /* op is a register or memory reference */
-    if (i->modC0()) {
-      op = BX_READ_64BIT_REG(i->rm());
-    }
-    else {
-      bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-      /* pointer, segment address pair */
-      op = read_virtual_qword_64(i->seg(), eaddr);
-    }
-
+    Bit64u op = read_virtual_qword_64(i->seg(), eaddr);
     result = int64_to_float32(op, status_word);
   }
   else
 #endif
   {
-    Bit32u op;
-
-    /* op is a register or memory reference */
-    if (i->modC0()) {
-      op = BX_READ_32BIT_REG(i->rm());
-    }
-    else {
-      bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-      /* pointer, segment address pair */
-      op = read_virtual_dword(i->seg(), eaddr);
-    }
-
+    Bit32u op = read_virtual_dword(i->seg(), eaddr);
     result = int32_to_float32(op, status_word);
   }
 

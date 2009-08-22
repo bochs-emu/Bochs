@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.607 2009-08-10 15:44:49 sshwarts Exp $
+// $Id: cpu.h,v 1.608 2009-08-22 11:47:42 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1953,8 +1953,10 @@ public: // for now...
   BX_SMF void MOVHPS_MqVps(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void MOVAPS_VpsWps(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void MOVAPS_WpsVps(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void CVTPI2PS_VpsQq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void CVTSI2SS_VssEd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CVTPI2PS_VpsQqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CVTPI2PS_VpsQqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CVTSI2SS_VssEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CVTSI2SS_VssEdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void MOVNTPS_MpsVps(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void CVTTPS2PI_PqWps(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void CVTTSS2SI_GdWss(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -2004,8 +2006,10 @@ public: // for now...
   /* SSE2 */
   BX_SMF void MOVSD_VsdWsd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void MOVSD_WsdVsd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void CVTPI2PD_VpdQq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void CVTSI2SD_VsdEd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CVTPI2PD_VpdQqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CVTPI2PD_VpdQqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CVTSI2SD_VsdEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CVTSI2SD_VsdEdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void CVTTPD2PI_PqWpd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void CVTTSD2SI_GdWsd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void CVTPD2PI_PqWpd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);

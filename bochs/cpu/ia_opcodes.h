@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ia_opcodes.h,v 1.27 2009-04-06 18:44:28 sshwarts Exp $
+// $Id: ia_opcodes.h,v 1.28 2009-08-22 11:47:42 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008 Stanislav Shwartsman
@@ -937,8 +937,10 @@ bx_define_opcode(BX_IA_MOVHPS_VpsMq, &BX_CPU_C::MOVHPS_VpsMq, NULL)
 bx_define_opcode(BX_IA_MOVHPS_MqVps, &BX_CPU_C::MOVHPS_MqVps, NULL)
 bx_define_opcode(BX_IA_MOVAPS_VpsWps, &BX_CPU_C::MOVAPS_VpsWps, NULL)
 bx_define_opcode(BX_IA_MOVAPS_WpsVps, &BX_CPU_C::MOVAPS_WpsVps, NULL)
-bx_define_opcode(BX_IA_CVTPI2PS_VpsQq, &BX_CPU_C::CVTPI2PS_VpsQq, NULL)
-bx_define_opcode(BX_IA_CVTSI2SS_VssEd, &BX_CPU_C::CVTSI2SS_VssEd, NULL)
+bx_define_opcode(BX_IA_CVTPI2PS_VpsQqR, &BX_CPU_C::CVTPI2PS_VpsQqR, NULL)
+bx_define_opcode(BX_IA_CVTPI2PS_VpsQqM, &BX_CPU_C::CVTPI2PS_VpsQqM, NULL)
+bx_define_opcode(BX_IA_CVTSI2SS_VssEdR, &BX_CPU_C::CVTSI2SS_VssEdR, NULL)
+bx_define_opcode(BX_IA_CVTSI2SS_VssEdM, &BX_CPU_C::CVTSI2SS_VssEdM, NULL)
 bx_define_opcode(BX_IA_MOVNTPS_MpsVps, &BX_CPU_C::MOVNTPS_MpsVps, NULL)
 bx_define_opcode(BX_IA_CVTTPS2PI_PqWps, &BX_CPU_C::CVTTPS2PI_PqWps, NULL)
 bx_define_opcode(BX_IA_CVTTSS2SI_GdWss, &BX_CPU_C::CVTTSS2SI_GdWss, NULL)
@@ -988,8 +990,10 @@ bx_define_opcode(BX_IA_MASKMOVQ_PqPRq, &BX_CPU_C::MASKMOVQ_PqPRq, NULL)
 // SSE2
 bx_define_opcode(BX_IA_MOVSD_VsdWsd, &BX_CPU_C::MOVSD_VsdWsd, NULL)
 bx_define_opcode(BX_IA_MOVSD_WsdVsd, &BX_CPU_C::MOVSD_WsdVsd, NULL)
-bx_define_opcode(BX_IA_CVTPI2PD_VpdQq, &BX_CPU_C::CVTPI2PD_VpdQq, NULL)
-bx_define_opcode(BX_IA_CVTSI2SD_VsdEd, &BX_CPU_C::CVTSI2SD_VsdEd, NULL)
+bx_define_opcode(BX_IA_CVTPI2PD_VpdQqR, &BX_CPU_C::CVTPI2PD_VpdQqR, NULL)
+bx_define_opcode(BX_IA_CVTPI2PD_VpdQqM, &BX_CPU_C::CVTPI2PD_VpdQqM, NULL)
+bx_define_opcode(BX_IA_CVTSI2SD_VsdEdR, &BX_CPU_C::CVTSI2SD_VsdEdR, NULL)
+bx_define_opcode(BX_IA_CVTSI2SD_VsdEdM, &BX_CPU_C::CVTSI2SD_VsdEdM, NULL)
 bx_define_opcode(BX_IA_CVTTPD2PI_PqWpd, &BX_CPU_C::CVTTPD2PI_PqWpd, NULL)
 bx_define_opcode(BX_IA_CVTTSD2SI_GdWsd, &BX_CPU_C::CVTTSD2SI_GdWsd, NULL)
 bx_define_opcode(BX_IA_CVTPD2PI_PqWpd, &BX_CPU_C::CVTPD2PI_PqWpd, NULL)
