@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: io.cc,v 1.78 2009-04-07 16:12:19 sshwarts Exp $
+// $Id: io.cc,v 1.79 2009-08-28 13:05:21 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -242,7 +242,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INSB16_YbDX(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::INSB32_YbDX(bxInstruction_c *i)
 {
   // trigger any segment or page faults before reading from IO port
-  Bit8u value8 = read_RMW_virtual_byte_32(BX_SEG_REG_ES, EDI);
+  Bit8u value8 = read_RMW_virtual_byte(BX_SEG_REG_ES, EDI);
 
   value8 = BX_INP(DX, 1);
 
@@ -342,7 +342,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INSW32_YwDX(bxInstruction_c *i)
     }
     else {
       // trigger any segment or page faults before reading from IO port
-      value16 = read_RMW_virtual_word_32(BX_SEG_REG_ES, edi);
+      value16 = read_RMW_virtual_word(BX_SEG_REG_ES, edi);
 
       value16 = BX_INP(DX, 2);
 
@@ -428,7 +428,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INSD16_YdDX(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::INSD32_YdDX(bxInstruction_c *i)
 {
   // trigger any segment or page faults before reading from IO port
-  Bit32u value32 = read_RMW_virtual_dword_32(BX_SEG_REG_ES, EDI);
+  Bit32u value32 = read_RMW_virtual_dword(BX_SEG_REG_ES, EDI);
 
   value32 = BX_INP(DX, 4);
 
