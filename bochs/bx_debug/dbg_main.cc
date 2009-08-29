@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.202 2009-08-09 12:43:22 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.203 2009-08-29 18:59:01 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2766,7 +2766,7 @@ void bx_dbg_info_dirty_command(void)
   }
 }
 
-void bx_dbg_print_descriptor(unsigned char desc[8])
+void bx_dbg_print_descriptor(Bit8u *desc)
 {
   Bit32u lo = (desc[3] << 24) | (desc[2] << 16) | (desc[1] << 8) | (desc[0]);
   Bit32u hi = (desc[7] << 24) | (desc[6] << 16) | (desc[5] << 8) | (desc[4]);
@@ -2853,7 +2853,7 @@ void bx_dbg_print_descriptor(unsigned char desc[8])
 }
 
 #if BX_SUPPORT_X86_64
-void bx_dbg_print_descriptor64(unsigned char desc[8])
+void bx_dbg_print_descriptor64(Bit8u *desc)
 {
   Bit32u lo1 = (desc[3]  << 24) | (desc[2]  << 16) | (desc[1]  << 8) | (desc[0]);
   Bit32u hi1 = (desc[7]  << 24) | (desc[6]  << 16) | (desc[5]  << 8) | (desc[4]);
