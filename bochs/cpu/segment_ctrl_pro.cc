@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: segment_ctrl_pro.cc,v 1.117 2009-08-05 14:47:33 sshwarts Exp $
+// $Id: segment_ctrl_pro.cc,v 1.118 2009-08-30 05:03:04 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -187,11 +187,11 @@ BX_CPU_C::load_seg_reg(bx_segment_reg_t *seg, Bit16u new_value)
   seg->cache.u.segment.base = new_value << 4;
   seg->cache.segment = 1; /* regular segment */
   seg->cache.p = 1; /* present */
-  seg->cache.type = BX_DATA_READ_WRITE_ACCESSED;
 
   /* Do not modify segment limit and AR bytes when in real mode */
   /* Support for big real mode */
   if (!real_mode()) {
+    seg->cache.type = BX_DATA_READ_WRITE_ACCESSED;
     seg->cache.dpl = 3; /* we are in v8086 mode */
     seg->cache.u.segment.limit_scaled = 0xffff;
 #if BX_CPU_LEVEL >= 3
