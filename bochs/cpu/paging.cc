@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.179 2009-06-15 19:05:29 sshwarts Exp $
+// $Id: paging.cc,v 1.180 2009-09-17 05:28:51 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -707,7 +707,7 @@ void BX_CPU_C::page_fault(unsigned fault, bx_address laddr, unsigned user, unsig
 
   error_code |= (user << 2) | (isWrite << 1);
 #if BX_SUPPORT_X86_64
-  if (BX_CPU_THIS_PTR efer.get_NXE() && (rw == BX_EXECUTE))
+  if (BX_CPU_THIS_PTR cr4.get_PAE() && BX_CPU_THIS_PTR efer.get_NXE() && rw == BX_EXECUTE)
     error_code |= ERROR_CODE_ACCESS; // I/D = 1
 #endif
 
