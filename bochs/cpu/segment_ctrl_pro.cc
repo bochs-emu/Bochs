@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: segment_ctrl_pro.cc,v 1.118 2009-08-30 05:03:04 sshwarts Exp $
+// $Id: segment_ctrl_pro.cc,v 1.119 2009-09-19 06:42:31 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -553,9 +553,10 @@ BX_CPU_C::touch_segment(bx_selector_t *selector, bx_descriptor_t *descriptor)
 BX_CPU_C::load_ss(bx_selector_t *selector, bx_descriptor_t *descriptor, Bit8u cpl)
 {
   // Add cpl to the selector value.
-  selector->value = (0xfffc & selector->value) | cpl;
+  selector->value = (BX_SELECTOR_RPL_MASK & selector->value) | cpl;
 
-  touch_segment(selector, descriptor);
+  if ((selector->value & BX_SELECTOR_RPL_MASK) != 0)
+    touch_segment(selector, descriptor);
 
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector = *selector;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache = *descriptor;
