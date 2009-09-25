@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.203 2009-08-29 18:59:01 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.204 2009-09-25 10:07:26 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -774,7 +774,7 @@ void bx_dbg_info_control_regs_command(void)
   dbg_printf("CR2=page fault laddr=0x" FMT_ADDRX "\n", cr2);
   dbg_printf("CR3=0x" FMT_PHY_ADDRX "\n", cr3);
   dbg_printf("    PCD=page-level cache disable=%d\n", (cr3>>4) & 1);
-  dbg_printf("    PWT=page-level writes transparent=%d\n", (cr3>>3) & 1);
+  dbg_printf("    PWT=page-level write-through=%d\n", (cr3>>3) & 1);
 #if BX_CPU_LEVEL >= 4
   Bit32u cr4 = SIM->get_param_num("CR4", dbg_cpu_list)->get();
   dbg_printf("CR4=0x%08x: %s %s %s %s %s %s %s %s %s %s %s %s %s %s\n", cr4,
