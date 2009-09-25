@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.180 2009-09-17 05:28:51 sshwarts Exp $
+// $Id: paging.cc,v 1.181 2009-09-25 14:25:24 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -312,9 +312,9 @@ static unsigned priv_check[BX_PRIV_CHECK_SIZE];
 #define PAGING_PAE_PDPE1G_RESERVED_BITS \
     (BX_PHY_ADDRESS_RESERVED_BITS | BX_CONST64(0x3FFFE000))
 
-/* PAE PDPE: bits [51 .. physical address width] */
+/* PAE PDPE: bits [51 .. physical address width], NX is reserved as well */
 #define PAGING_PAE_PDPE_RESERVED_BITS \
-    (BX_PHY_ADDRESS_RESERVED_BITS | BX_CONST64(0x1E6))
+    (BX_PHY_ADDRESS_RESERVED_BITS | BX_CONST64(0x80000000000001E6))
 
 /* PAE PDE: bits [51 .. physical address width] */
 #define PAGING_PAE_PDE_RESERVED_BITS (BX_PHY_ADDRESS_RESERVED_BITS)
@@ -509,7 +509,6 @@ bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::CheckPDPTR(Bit32u cr3_val)
      access_read_physical(entry_pdpe_addr, 8, &(BX_CPU_THIS_PTR PDPE_CACHE.entry[n]));
      BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, entry_pdpe_addr, 8, 
          BX_READ, (Bit8u*)(&BX_CPU_THIS_PTR PDPE_CACHE.entry[n]));
-
      Bit64u pdptr = BX_CPU_THIS_PTR PDPE_CACHE.entry[n];
      if (pdptr & 0x1) {
         if (pdptr & PAGING_PAE_PDPE_RESERVED_BITS) {
@@ -802,14 +801,10 @@ bx_phy_address BX_CPU_C::translate_linear_PAE(bx_address laddr, bx_address &lpf_
     pdpe_addr = (bx_phy_address) (BX_CPU_THIS_PTR cr3_masked | ((laddr & 0xc0000000) >> 27));
 
     if (! BX_CPU_THIS_PTR PDPE_CACHE.valid) {
-      for (int n=0; n<4; n++) {
-        // read PDPE cache entry
-        bx_phy_address entry_pdpe_addr = (bx_phy_address) (BX_CPU_THIS_PTR cr3_masked | (n << 3));
-        access_read_physical(entry_pdpe_addr, 8, &(BX_CPU_THIS_PTR PDPE_CACHE.entry[n]));
-        BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, entry_pdpe_addr, 8, 
-             BX_READ, (Bit8u*)(&BX_CPU_THIS_PTR PDPE_CACHE.entry[n]));
+      if (! CheckPDPTR(BX_CPU_THIS_PTR cr3_masked)) {
+        BX_ERROR(("translate_linear_PAE(): PDPTR check failed !"));
+        exception(BX_GP_EXCEPTION, 0, 0);
       }
-      BX_CPU_THIS_PTR PDPE_CACHE.valid = 1;
     }
 
     pdpe = BX_CPU_THIS_PTR PDPE_CACHE.entry[(laddr >> 30) & 3];
