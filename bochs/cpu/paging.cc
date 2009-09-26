@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.182 2009-09-26 06:05:23 sshwarts Exp $
+// $Id: paging.cc,v 1.183 2009-09-26 13:50:09 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -872,7 +872,7 @@ bx_phy_address BX_CPU_C::translate_linear_long_mode(bx_address laddr, bx_address
   access_read_physical(pdpe_addr, 8, &pdpe);
   BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pdpe_addr, 8, BX_READ, (Bit8u*)(&pdpe));
 
-  fault = check_entry_PAE("PDPE", pdpe, long_mode() ? BX_PHY_ADDRESS_RESERVED_BITS : PAGING_PAE_PDPTE_RESERVED_BITS, rw, &nx_fault);
+  fault = check_entry_PAE("PDPE", pdpe, BX_PHY_ADDRESS_RESERVED_BITS, rw, &nx_fault);
   if (fault >= 0)
     page_fault(fault, laddr, pl, rw);
 
@@ -904,9 +904,9 @@ bx_phy_address BX_CPU_C::translate_linear_long_mode(bx_address laddr, bx_address
       BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pml4_addr, 8, BX_WRITE, (Bit8u*)(&pml4));
     }
 
-    // Update PDPE A bit if needed.
-    if (!(pdpe & 0x20)) {
-      pdpe |= 0x20;
+    // Update PDPE A/D bits if needed.
+    if (((pdpe & 0x20)==0) || (isWrite && ((pdpe & 0x40)==0))) {
+      pdpe |= (0x20 | (isWrite<<6)); // Update A and possibly D bits
       access_write_physical(pdpe_addr, 8, &pdpe);
       BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pdpe_addr, 8, BX_WRITE, (Bit8u*)(&pdpe));
     }
@@ -1053,6 +1053,10 @@ bx_phy_address BX_CPU_C::translate_linear_PAE(bx_address laddr, bx_address &lpf_
   unsigned pl = (curr_pl == 3);
   int fault;
 
+  if (long_mode()) {
+    return translate_linear_long_mode(laddr, lpf_mask, combined_access, curr_pl, rw);
+  }
+
   combined_access = 0x06;
 
   pdpe_addr = (bx_phy_address) (BX_CPU_THIS_PTR cr3_masked | ((laddr & 0xc0000000) >> 27));
@@ -1066,14 +1070,9 @@ bx_phy_address BX_CPU_C::translate_linear_PAE(bx_address laddr, bx_address &lpf_
 
   pdpe = BX_CPU_THIS_PTR PDPE_CACHE.entry[(laddr >> 30) & 3];
 
-  fault = check_entry_PAE("PDPE", pdpe, long_mode() ? BX_PHY_ADDRESS_RESERVED_BITS : PAGING_PAE_PDPTE_RESERVED_BITS, rw, &nx_fault);
+  fault = check_entry_PAE("PDPE", pdpe, PAGING_PAE_PDPTE_RESERVED_BITS, rw, &nx_fault);
   if (fault >= 0)
     page_fault(fault, laddr, pl, rw);
-
-  if (pdpe & 0x80) {
-    BX_DEBUG(("PAE PDPE: page size bit set when reserved"));
-    page_fault(ERROR_RESERVED | ERROR_PROTECTION, laddr, pl, rw);
-  }
 
   bx_phy_address pde_addr = (bx_phy_address)((pdpe & BX_CONST64(0x000ffffffffff000))
                          | ((laddr & 0x3fe00000) >> 18));
@@ -1205,13 +1204,6 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned curr_pl, un
   BX_DEBUG(("page walk for address 0x" FMT_LIN_ADDRX, laddr));
 
   InstrTLB_Increment(tlbMisses);
-
-#if BX_SUPPORT_X86_64
-  if (long_mode()) {
-    ppf = translate_linear_long_mode(laddr, lpf_mask, combined_access, curr_pl, rw);
-  }
-  else
-#endif
 
 #if BX_CPU_LEVEL >= 6
   if (BX_CPU_THIS_PTR cr4.get_PAE())
@@ -1418,13 +1410,23 @@ bx_bool BX_CPU_C::dbg_xlate_linear2phy(bx_address laddr, bx_phy_address *phy)
       pt_address += 8 * ((laddr >> (12 + 9*level)) & 511);
       access_read_physical(pt_address, 8, &pte);
       if(!(pte & 1))
-	goto page_fault;
+        goto page_fault;
       if (pte & BX_PHY_ADDRESS_RESERVED_BITS)
-	goto page_fault;
+        goto page_fault;
       pt_address = bx_phy_address(pte & BX_CONST64(0x000ffffffffff000));
-      if (level == 1 && (pte & 0x80)) { // PSE page
-	offset_mask = 0x1fffff;
-	break;
+      if (pte & 0x80) {
+        if (level == 1) {                // 2M page
+          offset_mask = 0x1fffff;
+          break;
+        }
+#if BX_SUPPORT_1G_PAGES
+        if (level == 2 && long_mode()) { // 1G page
+          offset_mask = 0x3fffffff;
+          break;
+        }
+#endif
+        if (level != 0)
+          goto page_fault;
       }
     }
     paddress = pt_address + (bx_phy_address)(laddr & offset_mask);
