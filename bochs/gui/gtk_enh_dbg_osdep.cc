@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gtk_enh_dbg_osdep.cc,v 1.7 2009-04-03 17:36:24 sshwarts Exp $
+// $Id: gtk_enh_dbg_osdep.cc,v 1.8 2009-09-27 06:19:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  BOCHS ENHANCED DEBUGGER Ver 1.2
@@ -2143,6 +2143,7 @@ bx_bool OSInit()
     window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gtk_window_set_title(GTK_WINDOW(window), "Bochs Enhanced Debugger");
     gtk_window_set_default_size(GTK_WINDOW(window), 500, 500);
+    gtk_window_maximize(GTK_WINDOW(window));
 
     MainVbox = gtk_vbox_new(FALSE, 0);      // vbox that contains EVERYTHING
 
