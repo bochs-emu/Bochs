@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios32.c,v 1.50 2009-04-26 17:17:07 sshwarts Exp $
+// $Id: rombios32.c,v 1.51 2009-09-27 09:03:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  32 bit Bochs BIOS init code
@@ -948,11 +948,13 @@ static void pci_bios_init_device(PCIDevice *d)
             int ofs;
             uint32_t val, size ;
 
-            if (i == PCI_ROM_SLOT)
+            if (i == PCI_ROM_SLOT) {
                 ofs = 0x30;
-            else
+                pci_config_writel(d, ofs, 0xfffffffe);
+            } else {
                 ofs = 0x10 + i * 4;
-            pci_config_writel(d, ofs, 0xffffffff);
+                pci_config_writel(d, ofs, 0xffffffff);
+            }
             val = pci_config_readl(d, ofs);
             if (val != 0) {
                 size = (~(val & ~0xf)) + 1;
