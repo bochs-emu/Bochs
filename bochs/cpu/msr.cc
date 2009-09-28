@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: msr.cc,v 1.20 2009-06-15 15:10:05 sshwarts Exp $
+// $Id: msr.cc,v 1.21 2009-09-28 15:39:52 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008 Stanislav Shwartsman
@@ -234,7 +234,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDMSR(bxInstruction_c *i)
 }
 
 #if BX_CPU_LEVEL >= 6
-BX_CPP_INLINE bx_bool isMemTypeValidMTRR(Bit8u memtype)
+BX_CPP_INLINE bx_bool isMemTypeValidMTRR(unsigned memtype)
 {
   switch(memtype) {
   case BX_MEMTYPE_UC:
@@ -248,7 +248,7 @@ BX_CPP_INLINE bx_bool isMemTypeValidMTRR(Bit8u memtype)
   }
 }
 
-BX_CPP_INLINE bx_bool isMemTypeValidPAT(Bit8u memtype)
+BX_CPP_INLINE bx_bool isMemTypeValidPAT(unsigned memtype)
 {
   return (memtype == 0x07) /* UC- */ || isMemTypeValidMTRR(memtype);
 }
@@ -303,7 +303,8 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
     case BX_MSR_MTRRPHYSBASE5:
     case BX_MSR_MTRRPHYSBASE6:
     case BX_MSR_MTRRPHYSBASE7:
-      if (! isMemTypeValidMTRR(val32_lo & 0xFF)) {
+      // handle 8-11 reserved bits
+      if (! isMemTypeValidMTRR(val32_lo & 0xFFF)) {
         BX_ERROR(("WRMSR: attempt to write invalid Memory Type to BX_MSR_MTRRPHYSBASE"));
         return 0;
       }
@@ -315,6 +316,10 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
     case BX_MSR_MTRRPHYSMASK5:
     case BX_MSR_MTRRPHYSMASK6:
     case BX_MSR_MTRRPHYSMASK7:
+      if (! IsValidPhyAddr(val_64)) {
+        BX_ERROR(("WRMSR: attempt to write invalid phy addr to variable range MTRR"));
+        return 0;
+      }
       BX_CPU_THIS_PTR msr.mtrrphys[index - BX_MSR_MTRRPHYSBASE0] = val_64;
       break;
 
