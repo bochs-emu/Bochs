@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.234 2009-06-14 06:00:36 sshwarts Exp $
+// $Id: rombios.c,v 1.235 2009-09-28 16:36:02 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -937,7 +937,7 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.234 $ $Date: 2009-06-14 06:00:36 $";
+static char bios_cvs_version_string[] = "$Revision: 1.235 $ $Date: 2009-09-28 16:36:02 $";
 
 #define BIOS_COPYRIGHT_STRING "(c) 2002 MandrakeSoft S.A. Written by Kevin Lawton & the Bochs team."
 
@@ -11255,7 +11255,7 @@ int1a_handler:
   jne  int1a_normal
   call pcibios_real
   jc   pcibios_error
-  retf 2
+  iret
 pcibios_error:
   mov  bl, ah
   mov  ah, #0xb1
