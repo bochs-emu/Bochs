@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmx.cc,v 1.24 2009-07-21 11:56:26 sshwarts Exp $
+// $Id: vmx.cc,v 1.25 2009-09-30 05:57:21 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2009 Stanislav Shwartsman
@@ -365,6 +365,16 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
        BX_ERROR(("VMFAIL: VMCS EXEC CTRL: virtual apic phy addr malformed"));
        return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
      }
+
+     if (vm->vm_tpr_threshold & 0xfffffff0) {
+       BX_ERROR(("VMFAIL: VMCS EXEC CTRL: TPR threshold too big"));
+       return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
+     }
+
+     if (vm->vm_tpr_threshold > VMX_Read_TPR_Shadow()) {
+       BX_ERROR(("VMFAIL: VMCS EXEC CTRL: TPR threshold > TPR shadow"));
+       return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
+     }
   }
 
 /*
@@ -608,7 +618,7 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckHostState(void)
 
   host_state->cr3 = (bx_address) VMread64(VMCS_HOST_CR3);
 #if BX_SUPPORT_X86_64
-  if (host_state->cr3 & (BX_CONST64(0xfff0000000000000) | BX_PHY_ADDRESS_RESERVED_BITS)) {
+  if (! IsValidPhyAddr(host_state->cr3)) {
      BX_ERROR(("VMFAIL: VMCS host state invalid CR3"));
      return VMXERR_VMENTRY_INVALID_VM_HOST_STATE_FIELD;
   }
@@ -800,7 +810,7 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
 
   guest.cr3 = VMread64(VMCS_GUEST_CR3);
 #if BX_SUPPORT_X86_64
-  if (guest.cr3 & (BX_CONST64(0xfff0000000000000) | BX_PHY_ADDRESS_RESERVED_BITS)) {
+  if (! IsValidPhyAddr(guest.cr3)) {
      BX_ERROR(("VMENTER FAIL: VMCS guest invalid CR3"));
      return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
   }

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.303 2009-08-19 09:59:30 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.304 2009-09-30 05:57:21 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -805,6 +805,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CqRq(bxInstruction_c *i)
         BX_ERROR(("MOV_CqRq: Attempt to set reserved bits of CR8"));
         exception(BX_GP_EXCEPTION, 0, 0);
       }
+#if BX_SUPPORT_VMX
+      if (VMEXIT(VMX_VM_EXEC_CTRL2_TPR_SHADOW)) {
+        VMX_Write_TPR_Shadow(val_64 & 0xF);
+        break;
+      }
+#endif
       BX_CPU_THIS_PTR lapic.set_tpr((val_64 & 0xF) << 0x4);
       break;
 #endif
@@ -858,6 +864,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RqCq(bxInstruction_c *i)
     case 8: // CR8
 #if BX_SUPPORT_VMX
       VMexit_CR8_Read(i);
+      if (VMEXIT(VMX_VM_EXEC_CTRL2_TPR_SHADOW)) {
+         val_64 = VMX_Read_TPR_Shadow();
+         break;
+      }
 #endif
       // CR8 is aliased to APIC->TASK PRIORITY register
       //   APIC.TPR[7:4] = CR8[3:0]

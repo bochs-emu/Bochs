@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmexit.cc,v 1.7 2009-08-14 09:14:21 sshwarts Exp $
+// $Id: vmexit.cc,v 1.8 2009-09-30 05:57:21 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2009 Stanislav Shwartsman
@@ -28,6 +28,7 @@
 
 #if BX_SUPPORT_X86_64==0
 // Make life easier for merging cpu64 and cpu32 code.
+#define RIP EIP
 #define RDI EDI
 #define RSI ESI
 #endif
@@ -406,7 +407,7 @@ void BX_CPP_AttrRegparmN(3) BX_CPU_C::VMexit_IO(bxInstruction_c *i, unsigned por
         access_read_physical(pAddr, 2, (Bit8u*) &bitmap);
         BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pAddr, 2, BX_READ, (Bit8u*) &bitmap);
 
-        for (unsigned n = port; n < port + len; n++) {
+        for (unsigned n = port; n < (port + len); n++) {
            if (bitmap & (1 << (n & 15))) {
               vmexit = 1;
               break;
@@ -660,6 +661,33 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::VMexit_DR_Access(bxInstruction_c *i, unsig
        qualification |= (1 << 4);
 
     VMexit(i, VMX_VMEXIT_DR_ACCESS, qualification);
+  }
+}
+
+Bit32u BX_CPU_C::VMX_Read_TPR_Shadow(void)
+{
+  bx_phy_address pAddr = BX_CPU_THIS_PTR vmcs.virtual_apic_page_addr + 0x80;
+  Bit8u tpr_shadow;
+
+  access_read_physical(pAddr, 1, &tpr_shadow);
+  BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pAddr, 1, BX_READ, &tpr_shadow);
+
+  return (tpr_shadow >> 4) & 0xF;
+}
+
+void BX_CPU_C::VMX_Write_TPR_Shadow(Bit8u tpr_shadow)
+{
+  VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
+  bx_phy_address pAddr = vm->virtual_apic_page_addr + 0x80;
+  Bit8u field = tpr_shadow << 4;
+
+  access_write_physical(pAddr, 1, &field);
+  BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pAddr, 1, BX_WRITE, &field);
+
+  if (tpr_shadow < vm->vm_tpr_threshold) {
+    // commit current instruction to produce trap-like VMexit
+    BX_CPU_THIS_PTR prev_rip = RIP; // commit new RIP
+    VMexit(0, VMX_VMEXIT_TPR_THRESHOLD, 0);
   }
 }
 

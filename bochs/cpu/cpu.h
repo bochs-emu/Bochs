@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.609 2009-09-26 06:06:35 sshwarts Exp $
+// $Id: cpu.h,v 1.610 2009-09-30 05:57:21 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -389,7 +389,7 @@ extern const char* cpu_mode_string(unsigned cpu_mode);
 #define IsCanonical(offset) ((Bit64u)((((Bit64s)(offset)) >> (BX_LIN_ADDRESS_WIDTH-1)) + 1) < 2)
 #endif
 
-#define IsValidPhyAddr(addr) ((addr & BX_PHY_ADDRESS_RESERVED_BITS) == 0)
+#define IsValidPhyAddr(addr) ((addr & (BX_CONST64(0xfff0000000000000) | BX_PHY_ADDRESS_RESERVED_BITS)) == 0)
 
 #if BX_SUPPORT_X86_64
   #define Is64BitMode()     (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64)
@@ -3351,6 +3351,8 @@ public: // for now...
   BX_SMF void init_VMCS(void);
   BX_SMF void register_vmx_state(bx_param_c *parent);
   BX_SMF Bit64s VMX_TSC_Offset(void);
+  BX_SMF Bit32u VMX_Read_TPR_Shadow(void);
+  BX_SMF void VMX_Write_TPR_Shadow(Bit8u tpr_shadow);
   // vmexit reasons
   BX_SMF void VMexit_Instruction(bxInstruction_c *i, Bit32u reason) BX_CPP_AttrRegparmN(2);
   BX_SMF void VMexit_Event(bxInstruction_c *i, unsigned type, unsigned vector,
