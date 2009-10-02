@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: segment_ctrl_pro.cc,v 1.119 2009-09-19 06:42:31 sshwarts Exp $
+// $Id: segment_ctrl_pro.cc,v 1.120 2009-10-02 16:09:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -584,7 +584,7 @@ void BX_CPU_C::fetch_raw_descriptor(const bx_selector_t *selector,
 
   if (selector->ti == 0) { /* GDT */
     if ((index*8 + 7) > BX_CPU_THIS_PTR gdtr.limit) {
-      BX_ERROR(("fetch_raw_descriptor: GDT: index (%x)%x > limit (%x)",
+      BX_ERROR(("fetch_raw_descriptor: GDT: index (%x) %x > limit (%x)",
          index*8 + 7, index, BX_CPU_THIS_PTR gdtr.limit));
       exception(exception_no, selector->value & 0xfffc, 0);
     }
@@ -596,7 +596,7 @@ void BX_CPU_C::fetch_raw_descriptor(const bx_selector_t *selector,
       exception(exception_no, selector->value & 0xfffc, 0);
     }
     if ((index*8 + 7) > BX_CPU_THIS_PTR ldtr.cache.u.segment.limit_scaled) {
-      BX_ERROR(("fetch_raw_descriptor: LDT: index (%x)%x > limit (%x)",
+      BX_ERROR(("fetch_raw_descriptor: LDT: index (%x) %x > limit (%x)",
          index*8 + 7, index, BX_CPU_THIS_PTR ldtr.cache.u.segment.limit_scaled));
       exception(exception_no, selector->value & 0xfffc, 0);
     }
@@ -649,7 +649,7 @@ void BX_CPU_C::fetch_raw_descriptor_64(const bx_selector_t *selector,
 
   if (selector->ti == 0) { /* GDT */
     if ((index*8 + 15) > BX_CPU_THIS_PTR gdtr.limit) {
-      BX_ERROR(("fetch_raw_descriptor64: GDT: index (%x)%x > limit (%x)",
+      BX_ERROR(("fetch_raw_descriptor64: GDT: index (%x) %x > limit (%x)",
          index*8 + 15, index, BX_CPU_THIS_PTR gdtr.limit));
       exception(exception_no, selector->value & 0xfffc, 0);
     }
@@ -661,7 +661,7 @@ void BX_CPU_C::fetch_raw_descriptor_64(const bx_selector_t *selector,
       exception(exception_no, selector->value & 0xfffc, 0);
     }
     if ((index*8 + 15) > BX_CPU_THIS_PTR ldtr.cache.u.segment.limit_scaled) {
-      BX_ERROR(("fetch_raw_descriptor64: LDT: index (%x)%x > limit (%x)",
+      BX_ERROR(("fetch_raw_descriptor64: LDT: index (%x) %x > limit (%x)",
          index*8 + 15, index, BX_CPU_THIS_PTR ldtr.cache.u.segment.limit_scaled));
       exception(exception_no, selector->value & 0xfffc, 0);
     }
@@ -679,5 +679,48 @@ void BX_CPU_C::fetch_raw_descriptor_64(const bx_selector_t *selector,
   *dword1 = GET32L(raw_descriptor1);
   *dword2 = GET32H(raw_descriptor1);
   *dword3 = GET32L(raw_descriptor2);
+}
+
+bx_bool BX_CPU_C::fetch_raw_descriptor2_64(const bx_selector_t *selector,
+           Bit32u *dword1, Bit32u *dword2, Bit32u *dword3)
+{
+  Bit32u index = selector->index;
+  bx_address offset;
+  Bit64u raw_descriptor1, raw_descriptor2;
+
+  if (selector->ti == 0) { /* GDT */
+    if ((index*8 + 15) > BX_CPU_THIS_PTR gdtr.limit) {
+      BX_ERROR(("fetch_raw_descriptor2_64: GDT: index (%x) %x > limit (%x)",
+         index*8 + 15, index, BX_CPU_THIS_PTR gdtr.limit));
+      return 0;
+    }
+    offset = BX_CPU_THIS_PTR gdtr.base + index*8;
+  }
+  else { /* LDT */
+    if (BX_CPU_THIS_PTR ldtr.cache.valid==0) {
+      BX_ERROR(("fetch_raw_descriptor2_64: LDTR.valid=0"));
+      return 0;
+    }
+    if ((index*8 + 15) > BX_CPU_THIS_PTR ldtr.cache.u.segment.limit_scaled) {
+      BX_ERROR(("fetch_raw_descriptor2_64: LDT: index (%x) %x > limit (%x)",
+         index*8 + 15, index, BX_CPU_THIS_PTR ldtr.cache.u.segment.limit_scaled));
+      return 0;
+    }
+    offset = BX_CPU_THIS_PTR ldtr.cache.u.segment.base + index*8;
+  }
+
+  raw_descriptor1 = system_read_qword(offset);
+  raw_descriptor2 = system_read_qword(offset + 8);
+
+  if (raw_descriptor2 & BX_CONST64(0x00001F0000000000)) {
+    BX_ERROR(("fetch_raw_descriptor2_64: extended attributes DWORD4 TYPE != 0"));
+    return 0;
+  }
+
+  *dword1 = GET32L(raw_descriptor1);
+  *dword2 = GET32H(raw_descriptor1);
+  *dword3 = GET32L(raw_descriptor2);
+
+  return 1;
 }
 #endif

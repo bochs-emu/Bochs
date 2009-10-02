@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.610 2009-09-30 05:57:21 sshwarts Exp $
+// $Id: cpu.h,v 1.611 2009-10-02 16:09:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -3175,7 +3175,7 @@ public: // for now...
   BX_SMF void    load_ss(bx_selector_t *selector, bx_descriptor_t *descriptor, Bit8u cpl) BX_CPP_AttrRegparmN(3);
   BX_SMF void    touch_segment(bx_selector_t *selector, bx_descriptor_t *descriptor) BX_CPP_AttrRegparmN(2);
   BX_SMF void    fetch_raw_descriptor(const bx_selector_t *selector,
-                         Bit32u *dword1, Bit32u *dword2, unsigned exception);
+                         Bit32u *dword1, Bit32u *dword2, unsigned exception_no);
   BX_SMF bx_bool fetch_raw_descriptor2(const bx_selector_t *selector,
                          Bit32u *dword1, Bit32u *dword2) BX_CPP_AttrRegparmN(3);
   BX_SMF void    load_seg_reg(bx_segment_reg_t *seg, Bit16u new_value) BX_CPP_AttrRegparmN(2);
@@ -3183,6 +3183,8 @@ public: // for now...
 #if BX_SUPPORT_X86_64
   BX_SMF void    fetch_raw_descriptor_64(const bx_selector_t *selector,
                          Bit32u *dword1, Bit32u *dword2, Bit32u *dword3, unsigned exception_no);
+  BX_SMF bx_bool fetch_raw_descriptor2_64(const bx_selector_t *selector,
+                         Bit32u *dword1, Bit32u *dword2, Bit32u *dword3);
   BX_SMF void    loadSRegLMNominal(unsigned seg, unsigned selector, unsigned dpl);
 #endif
   BX_SMF void    push_16(Bit16u value16) BX_CPP_AttrRegparmN(1);

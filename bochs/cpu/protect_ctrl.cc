@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: protect_ctrl.cc,v 1.93 2009-04-05 19:09:44 sshwarts Exp $
+// $Id: protect_ctrl.cc,v 1.94 2009-10-02 16:09:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -74,6 +74,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LAR_GvEw(bxInstruction_c *i)
   bx_descriptor_t descriptor;
   bx_selector_t selector;
   Bit32u dword1, dword2;
+#if BX_SUPPORT_X86_64
+  Bit32u dword3 = 0;
+#endif
 
   if (real_mode() || v8086_mode()) {
     BX_ERROR(("LAR: not recognized in real or virtual-8086 mode"));
@@ -121,18 +124,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LAR_GvEw(bxInstruction_c *i)
       /* ignore DPL for conforming segments */
     }
     else {
-      if ((descriptor.dpl<CPL) || (descriptor.dpl<selector.rpl)) {
+      if (descriptor.dpl < CPL || descriptor.dpl < selector.rpl) {
         clear_ZF();
         return;
       }
-    }
-    assert_ZF();
-    if (i->os32L()) {
-      /* masked by 00FxFF00, where x is undefined */
-      BX_WRITE_32BIT_REGZ(i->nnn(), dword2 & 0x00ffff00);
-    }
-    else {
-      BX_WRITE_16BIT_REG(i->nnn(), dword2 & 0xff00);
     }
   }
   else { /* system or gate segment */
@@ -153,6 +148,15 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LAR_GvEw(bxInstruction_c *i)
       case BX_SYS_SEGMENT_BUSY_386_TSS:
       case BX_386_CALL_GATE:
 #endif
+#if BX_SUPPORT_X86_64
+        if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
+          if (!fetch_raw_descriptor2_64(&selector, &dword1, &dword2, &dword3)) {
+            BX_ERROR(("LAR: failed to fetch 64-bit descriptor"));
+            clear_ZF();
+            return;
+          }
+        }
+#endif
         break;
       default: /* rest not accepted types to LAR */
         BX_DEBUG(("LAR: not accepted descriptor type"));
@@ -160,18 +164,19 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LAR_GvEw(bxInstruction_c *i)
         return;
     }
 
-    if ((descriptor.dpl<CPL) || (descriptor.dpl<selector.rpl)) {
+    if (descriptor.dpl < CPL || descriptor.dpl < selector.rpl) {
       clear_ZF();
       return;
     }
-    assert_ZF();
-    if (i->os32L()) {
-      /* masked by 00FxFF00, where x is undefined ? */
-      BX_WRITE_32BIT_REGZ(i->nnn(), dword2 & 0x00ffff00);
-    }
-    else {
-      BX_WRITE_16BIT_REG(i->nnn(), dword2 & 0xff00);
-    }
+  }
+
+  assert_ZF();
+  if (i->os32L()) {
+    /* masked by 00FxFF00, where x is undefined */
+    BX_WRITE_32BIT_REGZ(i->nnn(), dword2 & 0x00ffff00);
+  }
+  else {
+    BX_WRITE_16BIT_REG(i->nnn(), dword2 & 0xff00);
   }
 }
 
@@ -182,6 +187,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LSL_GvEw(bxInstruction_c *i)
   Bit32u limit32;
   bx_selector_t selector;
   Bit32u dword1, dword2;
+#if BX_SUPPORT_X86_64
+  Bit32u dword3 = 0;
+#endif
 
   if (real_mode() || v8086_mode()) {
     BX_ERROR(("LSL: not recognized in real or virtual-8086 mode"));
@@ -206,6 +214,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LSL_GvEw(bxInstruction_c *i)
   parse_selector(raw_selector, &selector);
 
   if (!fetch_raw_descriptor2(&selector, &dword1, &dword2)) {
+    BX_DEBUG(("LSL: failed to fetch descriptor"));
     clear_ZF();
     return;
   }
@@ -225,7 +234,16 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LSL_GvEw(bxInstruction_c *i)
       case BX_SYS_SEGMENT_LDT:
       case BX_SYS_SEGMENT_AVAIL_386_TSS:
       case BX_SYS_SEGMENT_BUSY_386_TSS:
-        if ((descriptor_dpl<CPL) || (descriptor_dpl<selector.rpl)) {
+#if BX_SUPPORT_X86_64
+        if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
+          if (!fetch_raw_descriptor2_64(&selector, &dword1, &dword2, &dword3)) {
+            BX_ERROR(("LSL: failed to fetch 64-bit descriptor"));
+            clear_ZF();
+            return;
+          }
+        }
+#endif
+        if (descriptor_dpl < CPL || descriptor_dpl < selector.rpl) {
           clear_ZF();
           return;
         }
@@ -244,7 +262,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LSL_GvEw(bxInstruction_c *i)
       limit32 = (limit32 << 12) | 0x00000fff;
     if ((dword2 & 0x00000c00) != 0x00000c00) {
       // non-conforming code segment
-      if ((descriptor_dpl<CPL) || (descriptor_dpl<selector.rpl)) {
+      if (descriptor_dpl < CPL || descriptor_dpl < selector.rpl) {
         clear_ZF();
         return;
       }
