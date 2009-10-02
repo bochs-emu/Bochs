@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.207 2009-10-02 10:16:04 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.208 2009-10-02 15:11:23 akrisak Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1527,18 +1527,18 @@ void bx_dbg_print_stack_command(unsigned nwords)
 }
 
 void bx_dbg_print_watchpoints(void)
-{
+{ unsigned i;
   Bit8u buf[2];
 
   // print watch point info
-  for (unsigned i = 0; i < num_read_watchpoints; i++) {
+  for (i = 0; i < num_read_watchpoints; i++) {
     if (BX_MEM(0)->dbg_fetch_mem(BX_CPU(dbg_cpu), read_watchpoint[i], 2, buf))
       dbg_printf("rd 0x"FMT_PHY_ADDRX"   (%04x)\n",
           read_watchpoint[i], (int)buf[0] | ((int)buf[1] << 8));
     else
       dbg_printf("rd 0x"FMT_PHY_ADDRX"   (read error)\n", read_watchpoint[i]);
   }
-  for (unsigned i = 0; i < num_write_watchpoints; i++) {
+  for (i = 0; i < num_write_watchpoints; i++) {
     if (BX_MEM(0)->dbg_fetch_mem(BX_CPU(dbg_cpu), write_watchpoint[i], 2, buf))
       dbg_printf("wr 0x"FMT_PHY_ADDRX"   (%04x)\n",
           write_watchpoint[i], (int)buf[0] | ((int)buf[1] << 8));
@@ -1577,8 +1577,8 @@ void bx_dbg_unwatch_all()
 }
 
 void bx_dbg_unwatch(bx_phy_address address)
-{
-  for (unsigned i=0; i<num_read_watchpoints; i++) {
+{ unsigned i;
+  for (i=0; i<num_read_watchpoints; i++) {
     if (read_watchpoint[i] == address) {
       dbg_printf("read watchpoint at 0x" FMT_PHY_ADDRX " removed\n", address);
       // found watchpoint, delete it by shifting remaining entries left
@@ -1590,7 +1590,7 @@ void bx_dbg_unwatch(bx_phy_address address)
     }
   }
 
-  for (unsigned i=0; i<num_write_watchpoints; i++) {
+  for (i=0; i<num_write_watchpoints; i++) {
     if (write_watchpoint[i] == address) {
       dbg_printf("write watchpoint at 0x" FMT_PHY_ADDRX " removed\n", address);
       // found watchpoint, delete it by shifting remaining entries left
