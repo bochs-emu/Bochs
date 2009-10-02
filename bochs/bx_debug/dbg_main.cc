@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.206 2009-10-01 19:10:13 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.207 2009-10-02 10:16:04 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -56,6 +56,9 @@ bx_list_c *dbg_cpu_list = 0;
 
 extern const char* cpu_mode_string(unsigned cpu_mode);
 extern void bx_sr_after_restore_state(void);
+
+void bx_dbg_print_descriptor(Bit32u lo, Bit32u hi);
+void bx_dbg_print_descriptor64(Bit32u lo1, Bit32u hi1, Bit32u lo2, Bit32u hi2);
 
 static bx_param_bool_c *sim_running = NULL;
 
@@ -806,46 +809,29 @@ void bx_dbg_info_control_regs_command(void)
 
 void bx_dbg_info_segment_regs_command(void)
 {
+  static const char *segname[] = { "es", "cs", "ss", "ds", "fs", "gs" };
+
   bx_dbg_sreg_t sreg;
   bx_dbg_global_sreg_t global_sreg;
 
-  BX_CPU(dbg_cpu)->dbg_get_sreg(&sreg, BX_DBG_SREG_CS);
-  dbg_printf("cs:s=0x%04x, dh=0x%08x, dl=0x%08x, valid=%u\n",
-      (unsigned) sreg.sel, (unsigned) sreg.des_h,
-      (unsigned) sreg.des_l, (unsigned) sreg.valid);
-
-  BX_CPU(dbg_cpu)->dbg_get_sreg(&sreg, BX_DBG_SREG_DS);
-  dbg_printf("ds:s=0x%04x, dh=0x%08x, dl=0x%08x, valid=%u\n",
-      (unsigned) sreg.sel, (unsigned) sreg.des_h,
-      (unsigned) sreg.des_l, (unsigned) sreg.valid);
-
-  BX_CPU(dbg_cpu)->dbg_get_sreg(&sreg, BX_DBG_SREG_SS);
-  dbg_printf("ss:s=0x%04x, dh=0x%08x, dl=0x%08x, valid=%u\n",
-      (unsigned) sreg.sel, (unsigned) sreg.des_h,
-      (unsigned) sreg.des_l, (unsigned) sreg.valid);
-
-  BX_CPU(dbg_cpu)->dbg_get_sreg(&sreg, BX_DBG_SREG_ES);
-  dbg_printf("es:s=0x%04x, dh=0x%08x, dl=0x%08x, valid=%u\n",
-      (unsigned) sreg.sel, (unsigned) sreg.des_h,
-      (unsigned) sreg.des_l, (unsigned) sreg.valid);
-
-  BX_CPU(dbg_cpu)->dbg_get_sreg(&sreg, BX_DBG_SREG_FS);
-  dbg_printf("fs:s=0x%04x, dh=0x%08x, dl=0x%08x, valid=%u\n",
-      (unsigned) sreg.sel, (unsigned) sreg.des_h,
-      (unsigned) sreg.des_l, (unsigned) sreg.valid);
-
-  BX_CPU(dbg_cpu)->dbg_get_sreg(&sreg, BX_DBG_SREG_GS);
-  dbg_printf("gs:s=0x%04x, dh=0x%08x, dl=0x%08x, valid=%u\n",
-      (unsigned) sreg.sel, (unsigned) sreg.des_h,
-      (unsigned) sreg.des_l, (unsigned) sreg.valid);
+  for(int s=0;s<6;s++) {
+    BX_CPU(dbg_cpu)->dbg_get_sreg(&sreg, s);
+    dbg_printf("%s:0x%04x, dh=0x%08x, dl=0x%08x, valid=%u\n", segname[s],
+       (unsigned) sreg.sel, (unsigned) sreg.des_h,
+       (unsigned) sreg.des_l, (unsigned) sreg.valid);
+    if (sreg.valid) {
+       dbg_printf("\t");
+       bx_dbg_print_descriptor(sreg.des_l, sreg.des_h);
+    }
+  }
 
   BX_CPU(dbg_cpu)->dbg_get_ldtr(&sreg);
-  dbg_printf("ldtr:s=0x%04x, dh=0x%08x, dl=0x%08x, valid=%u\n",
+  dbg_printf("ldtr:0x%04x, dh=0x%08x, dl=0x%08x, valid=%u\n",
       (unsigned) sreg.sel, (unsigned) sreg.des_h,
       (unsigned) sreg.des_l, (unsigned) sreg.valid);
 
   BX_CPU(dbg_cpu)->dbg_get_tr(&sreg);
-  dbg_printf("tr:s=0x%04x, dh=0x%08x, dl=0x%08x, valid=%u\n",
+  dbg_printf("tr:0x%04x, dh=0x%08x, dl=0x%08x, valid=%u\n",
       (unsigned) sreg.sel, (unsigned) sreg.des_h,
       (unsigned) sreg.des_l, (unsigned) sreg.valid);
 
@@ -2766,10 +2752,8 @@ void bx_dbg_info_dirty_command(void)
   }
 }
 
-void bx_dbg_print_descriptor(Bit8u *desc)
+void bx_dbg_print_descriptor(Bit32u lo, Bit32u hi)
 {
-  Bit32u lo = (desc[3] << 24) | (desc[2] << 16) | (desc[1] << 8) | (desc[0]);
-  Bit32u hi = (desc[7] << 24) | (desc[6] << 16) | (desc[5] << 8) | (desc[4]);
   Bit32u base = ((lo >> 16) & 0xffff)
              | ((hi << 16) & 0xff0000)
              | (hi & 0xff000000);
@@ -2788,14 +2772,14 @@ void bx_dbg_print_descriptor(Bit8u *desc)
     // either a code or a data segment. bit 11 (type file MSB) then says
     // 0=data segment, 1=code seg
     if (type&8) {
-      dbg_printf("Code segment, laddr=0x%08x, limit=0x%08x, %s%s%s, %d-bit\n",
+      dbg_printf("Code segment, base=0x%08x, limit=0x%08x, %s%s%s, %d-bit\n",
         base, g ? (limit * 4096 + 4095) : limit,
         (type&2)? "Execute/Read" : "Execute-Only",
         (type&4)? ", Conforming" : "",
         (type&1)? ", Accessed" : "",
         d_b ? 32 : 16);
     } else {
-      dbg_printf("Data segment, laddr=0x%08x, limit=0x%08x, %s%s%s\n",
+      dbg_printf("Data segment, base=0x%08x, limit=0x%08x, %s%s%s\n",
         base, g ? (limit * 4096 + 4095) : limit,
         (type&2)? "Read/Write" : "Read-Only",
         (type&4)? ", Expand-down" : "",
@@ -2853,12 +2837,8 @@ void bx_dbg_print_descriptor(Bit8u *desc)
 }
 
 #if BX_SUPPORT_X86_64
-void bx_dbg_print_descriptor64(Bit8u *desc)
+void bx_dbg_print_descriptor64(Bit32u lo1, Bit32u hi1, Bit32u lo2, Bit32u hi2)
 {
-  Bit32u lo1 = (desc[3]  << 24) | (desc[2]  << 16) | (desc[1]  << 8) | (desc[0]);
-  Bit32u hi1 = (desc[7]  << 24) | (desc[6]  << 16) | (desc[5]  << 8) | (desc[4]);
-  Bit32u lo2 = (desc[11] << 24) | (desc[10] << 16) | (desc[9]  << 8) | (desc[8]);
-  Bit32u hi2 = (desc[15] << 24) | (desc[14] << 16) | (desc[13] << 8) | (desc[12]);
   Bit32u segment = (lo1 >> 16) & 0xffff;
   Bit64u offset = (lo1 & 0xffff) | (hi1 & 0xffff0000) | ((Bit64u)(lo2) << 32);
   unsigned type = (hi1 >> 8) & 0xf;
@@ -2948,7 +2928,13 @@ void bx_dbg_info_idt_command(unsigned from, unsigned to)
       if (16*n + 15 > idtr.limit) break;
       if (bx_dbg_read_linear(dbg_cpu, idtr.base + 16*n, 16, entry)) {
         dbg_printf("IDT[0x%02x]=", n);
-        bx_dbg_print_descriptor64(entry);
+
+        Bit32u lo1 = (entry[3]  << 24) | (entry[2]  << 16) | (entry[1]  << 8) | (entry[0]);
+        Bit32u hi1 = (entry[7]  << 24) | (entry[6]  << 16) | (entry[5]  << 8) | (entry[4]);
+        Bit32u lo2 = (entry[11] << 24) | (entry[10] << 16) | (entry[9]  << 8) | (entry[8]);
+        Bit32u hi2 = (entry[15] << 24) | (entry[14] << 16) | (entry[13] << 8) | (entry[12]);
+
+        bx_dbg_print_descriptor64(lo1, hi1, lo2, hi2);
       }
       else {
         dbg_printf("error: IDTR+16*%d points to invalid linear address 0x" FMT_ADDRX "\n", n, idtr.base);
@@ -2964,7 +2950,11 @@ void bx_dbg_info_idt_command(unsigned from, unsigned to)
       if (8*n + 7 > idtr.limit) break;
       if (bx_dbg_read_linear(dbg_cpu, idtr.base + 8*n, 8, entry)) {
         dbg_printf("IDT[0x%02x]=", n);
-        bx_dbg_print_descriptor(entry);
+
+        Bit32u lo = (entry[3]  << 24) | (entry[2]  << 16) | (entry[1]  << 8) | (entry[0]);
+        Bit32u hi = (entry[7]  << 24) | (entry[6]  << 16) | (entry[5]  << 8) | (entry[4]);
+
+        bx_dbg_print_descriptor(lo, hi);
       }
       else {
         dbg_printf("error: IDTR+8*%d points to invalid linear address 0x" FMT_ADDRX "\n", n, idtr.base);
@@ -3002,7 +2992,11 @@ void bx_dbg_info_gdt_command(unsigned from, unsigned to)
     if (8*n + 7 > gdtr.limit) break;
     if (bx_dbg_read_linear(dbg_cpu, gdtr.base + 8*n, 8, entry)) {
       dbg_printf("GDT[0x%02x]=", n);
-      bx_dbg_print_descriptor(entry);
+
+      Bit32u lo = (entry[3]  << 24) | (entry[2]  << 16) | (entry[1]  << 8) | (entry[0]);
+      Bit32u hi = (entry[7]  << 24) | (entry[6]  << 16) | (entry[5]  << 8) | (entry[4]);
+
+      bx_dbg_print_descriptor(lo, hi);
     }
     else {
       dbg_printf("error: GDTR+8*%d points to invalid linear address 0x" FMT_ADDRX "\n",
@@ -3040,7 +3034,11 @@ void bx_dbg_info_ldt_command(unsigned from, unsigned to)
     if (8*n + 7 > ldtr_limit) break;
     if (bx_dbg_read_linear(dbg_cpu, ldtr_base + 8*n, 8, entry)) {
       dbg_printf("LDT[0x%02x]=", n);
-      bx_dbg_print_descriptor(entry);
+
+      Bit32u lo = (entry[3]  << 24) | (entry[2]  << 16) | (entry[1]  << 8) | (entry[0]);
+      Bit32u hi = (entry[7]  << 24) | (entry[6]  << 16) | (entry[5]  << 8) | (entry[4]);
+
+      bx_dbg_print_descriptor(lo, hi);
     }
     else {
       dbg_printf("error: LDTR+8*%d points to invalid linear address 0x" FMT_ADDRX "\n",
