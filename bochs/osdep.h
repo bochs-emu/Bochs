@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: osdep.h,v 1.33 2009-08-22 19:30:23 sshwarts Exp $
+// $Id: osdep.h,v 1.34 2009-10-02 15:28:42 akrisak Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -91,6 +91,8 @@ extern "C" {
 #define unlink _unlink
 #define strdup _strdup
 #define strrev _strrev
+#undef BX_HAVE_STRREV
+#define BX_HAVE_STRREV 1
 #define getch _getch
 #endif
 
