@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: osdep.h,v 1.34 2009-10-02 15:28:42 akrisak Exp $
+// $Id: osdep.h,v 1.35 2009-10-02 16:11:06 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -91,8 +91,7 @@ extern "C" {
 #define unlink _unlink
 #define strdup _strdup
 #define strrev _strrev
-#undef BX_HAVE_STRREV
-#define BX_HAVE_STRREV 1
+#define stricmp _stricmp
 #define getch _getch
 #endif
 
@@ -171,12 +170,7 @@ extern "C" {
   extern char *bx_strrev(char *str);
 #endif
 
-#if defined(_MSC_VER) 
-  // MSDEV is a special case because configure script don't handle it
-#ifndef stricmp
-  #define stricmp _stricmp
-#endif
-#elif BX_HAVE_STRICMP
+#if BX_HAVE_STRICMP
   // great, just use the usual function
 #elif BX_HAVE_STRCASECMP
   #define stricmp strcasecmp
