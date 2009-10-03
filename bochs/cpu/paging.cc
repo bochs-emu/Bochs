@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.183 2009-09-26 13:50:09 sshwarts Exp $
+// $Id: paging.cc,v 1.184 2009-10-03 11:39:29 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1053,9 +1053,11 @@ bx_phy_address BX_CPU_C::translate_linear_PAE(bx_address laddr, bx_address &lpf_
   unsigned pl = (curr_pl == 3);
   int fault;
 
+#if BX_SUPPORT_X86_64
   if (long_mode()) {
     return translate_linear_long_mode(laddr, lpf_mask, combined_access, curr_pl, rw);
   }
+#endif
 
   combined_access = 0x06;
 
