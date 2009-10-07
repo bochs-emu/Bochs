@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.304 2009-09-30 05:57:21 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.305 2009-10-07 15:45:15 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1851,7 +1851,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSENTER(bxInstruction_c *i)
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.p       = 1;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.dpl     = 0;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.segment = 1;  /* data/code segment */
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.type    = BX_DATA_READ_WRITE_ACCESSED;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.type    = BX_CODE_EXEC_READ_ACCESSED;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.base         = 0;          // base address
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled = 0xFFFFFFFF; // scaled segment limit
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.g            = 1;          // 4k granularity
@@ -1944,7 +1944,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSEXIT(bxInstruction_c *i)
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.p       = 1;
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.dpl     = 3;
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.segment = 1;  /* data/code segment */
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.type    = BX_DATA_READ_WRITE_ACCESSED;
+    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.type    = BX_CODE_EXEC_READ_ACCESSED;
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.base         = 0;           // base address
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled = 0xFFFFFFFF;  // scaled segment limit
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.g            = 1;           // 4k granularity
@@ -1965,7 +1965,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSEXIT(bxInstruction_c *i)
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.p       = 1;
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.dpl     = 3;
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.segment = 1;  /* data/code segment */
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.type    = BX_DATA_READ_WRITE_ACCESSED;
+    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.type    = BX_CODE_EXEC_READ_ACCESSED;
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.base         = 0;           // base address
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled = 0xFFFFFFFF;  // scaled segment limit
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.g            = 1;           // 4k granularity
@@ -2047,7 +2047,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSCALL(bxInstruction_c *i)
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.p       = 1;
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.dpl     = 0;
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.segment = 1;  /* data/code segment */
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.type    = BX_DATA_READ_WRITE_ACCESSED;
+    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.type    = BX_CODE_EXEC_READ_ACCESSED;
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.base         = 0; /* base address */
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled = 0xFFFFFFFF;  /* scaled segment limit */
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.g            = 1; /* 4k granularity */
@@ -2095,7 +2095,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSCALL(bxInstruction_c *i)
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.p       = 1;
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.dpl     = 0;
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.segment = 1;  /* data/code segment */
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.type    = BX_DATA_READ_WRITE_ACCESSED;
+    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.type    = BX_CODE_EXEC_READ_ACCESSED;
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.base         = 0; /* base address */
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled = 0xFFFFFFFF;  /* scaled segment limit */
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.g            = 1; /* 4k granularity */
@@ -2170,7 +2170,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSRET(bxInstruction_c *i)
       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.p       = 1;
       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.dpl     = 3;
       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.segment = 1;  /* data/code segment */
-      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.type    = BX_DATA_READ_WRITE_ACCESSED;
+      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.type    = BX_CODE_EXEC_READ_ACCESSED;
       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.base         = 0; /* base address */
       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled = 0xFFFFFFFF;  /* scaled segment limit */
       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.g            = 1; /* 4k granularity */
@@ -2189,7 +2189,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSRET(bxInstruction_c *i)
       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.p       = 1;
       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.dpl     = 3;
       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.segment = 1;  /* data/code segment */
-      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.type    = BX_DATA_READ_WRITE_ACCESSED;
+      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.type    = BX_CODE_EXEC_READ_ACCESSED;
       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.base         = 0; /* base address */
       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled = 0xFFFFFFFF;  /* scaled segment limit */
       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.g            = 1; /* 4k granularity */
@@ -2227,7 +2227,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSRET(bxInstruction_c *i)
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.p       = 1;
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.dpl     = 3;
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.segment = 1;  /* data/code segment */
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.type    = BX_DATA_READ_WRITE_ACCESSED;
+    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.type    = BX_CODE_EXEC_READ_ACCESSED;
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.base         = 0; /* base address */
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled = 0xFFFFFFFF;  /* scaled segment limit */
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.g            = 1; /* 4k granularity */
