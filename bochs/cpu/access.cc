@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: access.cc,v 1.124 2009-03-13 18:48:08 sshwarts Exp $
+// $Id: access.cc,v 1.125 2009-10-08 18:07:50 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -331,6 +331,81 @@ BX_CPU_C::system_read_qword(bx_address laddr)
 
   access_read_linear(laddr, 8, 0, BX_READ, (void *) &data);
   return data;
+}
+
+  void BX_CPP_AttrRegparmN(2)
+BX_CPU_C::system_write_byte(bx_address laddr, Bit8u data)
+{
+  unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 0);
+  Bit32u lpf = LPFOf(laddr);
+  bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
+  if (tlbEntry->lpf == lpf) {
+    // See if the TLB entry privilege level allows us write access
+    // from this CPL.
+    if (! (tlbEntry->accessBits & 0x2)) {
+      bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
+      Bit32u pageOffset = PAGE_OFFSET(laddr);
+      BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr, tlbEntry->ppf | pageOffset, 1, BX_WRITE);
+      BX_DBG_LIN_MEMORY_ACCESS(BX_CPU_ID, laddr,
+              tlbEntry->ppf | pageOffset, 1, 0, BX_WRITE, (Bit8u*) &data);
+      Bit8u *hostAddr = (Bit8u*) (hostPageAddr | pageOffset);
+      pageWriteStampTable.decWriteStamp(tlbEntry->ppf);
+     *hostAddr = data;
+      return;
+    }
+  }
+
+  access_write_linear(laddr, 1, 0, (void *) &data);
+}
+
+  void BX_CPP_AttrRegparmN(2)
+BX_CPU_C::system_write_word(bx_address laddr, Bit16u data)
+{
+  unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 1);
+  Bit32u lpf = LPFOf(laddr);
+  bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
+  if (tlbEntry->lpf == lpf) {
+    // See if the TLB entry privilege level allows us write access
+    // from this CPL.
+    if (! (tlbEntry->accessBits & 0x2)) {
+      bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
+      Bit32u pageOffset = PAGE_OFFSET(laddr);
+      BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr, tlbEntry->ppf | pageOffset, 2, BX_WRITE);
+      BX_DBG_LIN_MEMORY_ACCESS(BX_CPU_ID, laddr,
+              tlbEntry->ppf | pageOffset, 2, 0, BX_WRITE, (Bit8u*) &data);
+      Bit16u *hostAddr = (Bit16u*) (hostPageAddr | pageOffset);
+      pageWriteStampTable.decWriteStamp(tlbEntry->ppf);
+      WriteHostWordToLittleEndian(hostAddr, data);
+      return;
+    }
+  }
+
+  access_write_linear(laddr, 2, 0, (void *) &data);
+}
+
+  void BX_CPP_AttrRegparmN(2)
+BX_CPU_C::system_write_dword(bx_address laddr, Bit32u data)
+{
+  unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 3);
+  Bit32u lpf = LPFOf(laddr);
+  bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
+  if (tlbEntry->lpf == lpf) {
+    // See if the TLB entry privilege level allows us write access
+    // from this CPL.
+    if (! (tlbEntry->accessBits & 0x2)) {
+      bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
+      Bit32u pageOffset = PAGE_OFFSET(laddr);
+      BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr, tlbEntry->ppf | pageOffset, 4, BX_WRITE);
+      BX_DBG_LIN_MEMORY_ACCESS(BX_CPU_ID, laddr,
+              tlbEntry->ppf | pageOffset, 4, 0, BX_WRITE, (Bit8u*) &data);
+      Bit32u *hostAddr = (Bit32u*) (hostPageAddr | pageOffset);
+      pageWriteStampTable.decWriteStamp(tlbEntry->ppf);
+      WriteHostDWordToLittleEndian(hostAddr, data);
+      return;
+    }
+  }
+
+  access_write_linear(laddr, 4, 0, (void *) &data);
 }
 
   Bit8u* BX_CPP_AttrRegparmN(2)

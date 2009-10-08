@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: tasking.cc,v 1.75 2009-07-27 05:52:28 sshwarts Exp $
+// $Id: tasking.cc,v 1.76 2009-10-08 18:07:50 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -120,7 +120,7 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
   Bit32u temp32, newCR3;
   Bit16u raw_cs_selector, raw_ss_selector, raw_ds_selector, raw_es_selector,
          raw_fs_selector, raw_gs_selector, raw_ldt_selector;
-  Bit16u temp16, trap_word;
+  Bit16u trap_word;
   bx_selector_t cs_selector, ss_selector, ds_selector, es_selector,
                 fs_selector, gs_selector, ldt_selector;
   bx_descriptor_t cs_descriptor, ss_descriptor, ldt_descriptor;
@@ -246,24 +246,25 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
       dtranslate_linear(Bit32u(obase32 + 41), 0, BX_WRITE);
     }
 
-    temp16 = IP; access_write_linear(Bit32u(obase32 + 14), 2, 0, &temp16);
-    temp16 = oldEFLAGS; access_write_linear(Bit32u(obase32 + 16), 2, 0, &temp16);
-    temp16 = AX; access_write_linear(Bit32u(obase32 + 18), 2, 0, &temp16);
-    temp16 = CX; access_write_linear(Bit32u(obase32 + 20), 2, 0, &temp16);
-    temp16 = DX; access_write_linear(Bit32u(obase32 + 22), 2, 0, &temp16);
-    temp16 = BX; access_write_linear(Bit32u(obase32 + 24), 2, 0, &temp16);
-    temp16 = SP; access_write_linear(Bit32u(obase32 + 26), 2, 0, &temp16);
-    temp16 = BP; access_write_linear(Bit32u(obase32 + 28), 2, 0, &temp16);
-    temp16 = SI; access_write_linear(Bit32u(obase32 + 30), 2, 0, &temp16);
-    temp16 = DI; access_write_linear(Bit32u(obase32 + 32), 2, 0, &temp16);
-    temp16 = BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.value;
-                 access_write_linear(Bit32u(obase32 + 34), 2, 0, &temp16);
-    temp16 = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value;
-                 access_write_linear(Bit32u(obase32 + 36), 2, 0, &temp16);
-    temp16 = BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value;
-                 access_write_linear(Bit32u(obase32 + 38), 2, 0, &temp16);
-    temp16 = BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.value;
-                 access_write_linear(Bit32u(obase32 + 40), 2, 0, &temp16);
+    system_write_word(Bit32u(obase32 + 14), IP);
+    system_write_word(Bit32u(obase32 + 16), oldEFLAGS);
+    system_write_word(Bit32u(obase32 + 18), AX);
+    system_write_word(Bit32u(obase32 + 20), CX);
+    system_write_word(Bit32u(obase32 + 22), DX);
+    system_write_word(Bit32u(obase32 + 24), BX);
+    system_write_word(Bit32u(obase32 + 26), SP);
+    system_write_word(Bit32u(obase32 + 28), BP);
+    system_write_word(Bit32u(obase32 + 30), SI);
+    system_write_word(Bit32u(obase32 + 32), DI);
+
+    system_write_word(Bit32u(obase32 + 34),
+           BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.value);
+    system_write_word(Bit32u(obase32 + 36),
+           BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value);
+    system_write_word(Bit32u(obase32 + 38),
+           BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value);
+    system_write_word(Bit32u(obase32 + 40),
+           BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.value);
   }
   else {
     // check that we won't page fault while writing
@@ -272,36 +273,36 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
       dtranslate_linear(Bit32u(obase32 + 0x5d), 0, BX_WRITE);
     }
 
-    temp32 = EIP; access_write_linear(Bit32u(obase32 + 0x20), 4, 0, &temp32);
-    temp32 = oldEFLAGS; access_write_linear(Bit32u(obase32 + 0x24), 4, 0, &temp32);
-    temp32 = EAX; access_write_linear(Bit32u(obase32 + 0x28), 4, 0, &temp32);
-    temp32 = ECX; access_write_linear(Bit32u(obase32 + 0x2c), 4, 0, &temp32);
-    temp32 = EDX; access_write_linear(Bit32u(obase32 + 0x30), 4, 0, &temp32);
-    temp32 = EBX; access_write_linear(Bit32u(obase32 + 0x34), 4, 0, &temp32);
-    temp32 = ESP; access_write_linear(Bit32u(obase32 + 0x38), 4, 0, &temp32);
-    temp32 = EBP; access_write_linear(Bit32u(obase32 + 0x3c), 4, 0, &temp32);
-    temp32 = ESI; access_write_linear(Bit32u(obase32 + 0x40), 4, 0, &temp32);
-    temp32 = EDI; access_write_linear(Bit32u(obase32 + 0x44), 4, 0, &temp32);
-    temp16 = BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.value;
-                  access_write_linear(Bit32u(obase32 + 0x48), 2, 0, &temp16);
-    temp16 = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value;
-                  access_write_linear(Bit32u(obase32 + 0x4c), 2, 0, &temp16);
-    temp16 = BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value;
-                  access_write_linear(Bit32u(obase32 + 0x50), 2, 0, &temp16);
-    temp16 = BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.value;
-                  access_write_linear(Bit32u(obase32 + 0x54), 2, 0, &temp16);
-    temp16 = BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].selector.value;
-                  access_write_linear(Bit32u(obase32 + 0x58), 2, 0, &temp16);
-    temp16 = BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].selector.value;
-                  access_write_linear(Bit32u(obase32 + 0x5c), 2, 0, &temp16);
+    system_write_dword(Bit32u(obase32 + 0x20), EIP);
+    system_write_dword(Bit32u(obase32 + 0x24), oldEFLAGS);
+    system_write_dword(Bit32u(obase32 + 0x28), EAX);
+    system_write_dword(Bit32u(obase32 + 0x2c), ECX);
+    system_write_dword(Bit32u(obase32 + 0x30), EDX);
+    system_write_dword(Bit32u(obase32 + 0x34), EBX);
+    system_write_dword(Bit32u(obase32 + 0x38), ESP);
+    system_write_dword(Bit32u(obase32 + 0x3c), EBP);
+    system_write_dword(Bit32u(obase32 + 0x40), ESI);
+    system_write_dword(Bit32u(obase32 + 0x44), EDI);
+
+    system_write_word(Bit32u(obase32 + 0x48),
+           BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.value);
+    system_write_word(Bit32u(obase32 + 0x4c),
+           BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value);
+    system_write_word(Bit32u(obase32 + 0x50),
+           BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value);
+    system_write_word(Bit32u(obase32 + 0x54),
+           BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.value);
+    system_write_word(Bit32u(obase32 + 0x58),
+           BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].selector.value);
+    system_write_word(Bit32u(obase32 + 0x5c),
+           BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].selector.value);
   }
 
   // effect on link field of new task
   if (source == BX_TASK_FROM_CALL || source == BX_TASK_FROM_INT)
   {
     // set to selector of old task's TSS
-    temp16 = BX_CPU_THIS_PTR tr.selector.value;
-    access_write_linear(nbase32, 2, 0, &temp16);
+    system_write_word(nbase32, BX_CPU_THIS_PTR tr.selector.value);
   }
 
   // STEP 4: The new-task state is loaded from the TSS
@@ -315,7 +316,7 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
     //   - upper word of eflags is zero'd
     //   - FS, GS are zero'd
     //   - upper word of eIP is zero'd
-    temp16 = system_read_word(Bit32u(nbase32 + 18));
+    Bit16u temp16 = system_read_word(Bit32u(nbase32 + 18));
       newEAX = 0xffff0000 | temp16;
     temp16 = system_read_word(Bit32u(nbase32 + 20));
       newECX = 0xffff0000 | temp16;
@@ -378,7 +379,7 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
   {
     // set the new task's busy bit
     Bit32u laddr = (Bit32u)(BX_CPU_THIS_PTR gdtr.base) + (tss_selector->index<<3) + 4;
-    access_read_linear(laddr, 4, 0, BX_READ, &dword2);
+    access_read_linear(laddr, 4, 0, BX_RW, &dword2);
     dword2 |= 0x200;
     access_write_linear(laddr, 4, 0, &dword2);
   }
@@ -390,7 +391,7 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
   if (source == BX_TASK_FROM_JUMP || source == BX_TASK_FROM_IRET) {
     // Bit is cleared
     Bit32u laddr = (Bit32u) BX_CPU_THIS_PTR gdtr.base + (BX_CPU_THIS_PTR tr.selector.index<<3) + 4;
-    access_read_linear(laddr, 4, 0, BX_READ, &temp32);
+    access_read_linear(laddr, 4, 0, BX_RW, &temp32);
     temp32 &= ~0x200;
     access_write_linear(laddr, 4, 0, &temp32);
   }
