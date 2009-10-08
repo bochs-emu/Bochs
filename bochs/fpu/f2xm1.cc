@@ -88,7 +88,7 @@ static float128 poly_exp(float128 x, float_status_t &status)
 
 // =================================================
 //                                  x
-// FX2P1                   Compute 2  - 1
+// FX2M1                   Compute 2  - 1
 // =================================================
 
 //
@@ -160,7 +160,7 @@ floatx80 f2xm1(floatx80 a, float_status_t &status)
     }
     else
     {
-        if ((a.exp == 0xBFFF) && (! (aSig<<1)))
+        if (a.exp == 0xBFFF && ! (aSig<<1))
            return floatx80_neghalf;
 
         return a;
