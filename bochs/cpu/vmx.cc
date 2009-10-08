@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmx.cc,v 1.25 2009-09-30 05:57:21 sshwarts Exp $
+// $Id: vmx.cc,v 1.26 2009-10-08 14:33:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2009 Stanislav Shwartsman
@@ -2503,36 +2503,35 @@ void BX_CPU_C::VMWRITE(bxInstruction_c *i)
     Bit64u enc_64;
 
     if (i->modC0()) {
-       enc_64 = BX_READ_64BIT_REG(i->nnn());
+       val_64 = BX_READ_64BIT_REG(i->rm());
     }
     else {
        Bit64u eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-       enc_64 = read_virtual_qword_64(i->seg(), eaddr);
+       val_64 = read_virtual_qword_64(i->seg(), eaddr);
     }
+
+    enc_64 = BX_READ_64BIT_REG(i->nnn());
     if (enc_64 >> 32) {
        BX_ERROR(("VMWRITE: not supported field !"));
        VMfail(VMXERR_UNSUPPORTED_VMCS_COMPONENT_ACCESS);
        return;
     }
-
     encoding = GET32L(enc_64);
-
-    val_64 = BX_READ_64BIT_REG(i->rm());
-    val_32 = GET32L(val_64);
+    val_32   = GET32L(val_64);
   }
   else
 #endif
   {
     if (i->modC0()) {
-       encoding = BX_READ_32BIT_REG(i->nnn());
+       val_32 = BX_READ_32BIT_REG(i->rm());
     }
     else {
        Bit32u eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-       encoding = read_virtual_dword_32(i->seg(), eaddr);
+       val_32 = read_virtual_dword_32(i->seg(), eaddr);
     }
 
-    val_32 = BX_READ_32BIT_REG(i->rm());
-    val_64 = (Bit64u) val_32;
+    encoding = BX_READ_32BIT_REG(i->nnn());
+    val_64   = (Bit64u) val_32;
   }
 /*
   if (VMCS_FIELD_TYPE(encoding) == VMCS_FIELD_TYPE_READ_ONLY)
