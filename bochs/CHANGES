@@ -1,3 +1,55 @@
+Changes for next bugfix+ release (coming soon):
+
+- CPU and internal debugger
+  - VMX: Implemented TPR shadow VMEXIT
+  - Bugfixes for CPU emulation correctness (mostly for VMX support).
+  - Updates for Bochs internal debugger.
+  - Bugfixes for > 32-bit physical address space.
+
+- Cleanup configure options
+  - All paging related options now will be automatically determined according
+    to  --enable-cpu-level option. Related configure options
+        --enable-global-pages, --enable-large-pages,
+        --enable-pae, --enable-mtrr
+    are deprecated now. Only 1G paging option still remains unchanged.
+  - Deprecate --enable-daz configure option. Denormals-are-zeros MXCSR control
+    will be enabled automatically iff SSE2 is supported (like in hardware).
+  - Deprecate --enable-vme configure option, now it will be supported iff
+    CPU_LEVEL >= 5 (like in hardware).
+
+- I/O Devices
+  - Bugfixes for 8254 PIT, VGA, Cirrus-Logic SVGA, USB UCHI
+
+- SF patches applied
+ [2874004] fix for VMWRITE instruction by Roberto Paleari
+ [2873999] fix CS segment type during fast syscall invocation by Roberto Paleari
+ [2864389] Debugger gui maximize on startup by Thomas Nilsen
+ [2817868] Rework loops in the memory code by Mark Marshall
+ [2812948] PIT bug by Derek
+
+- these S.F. bugs were closed/fixed
+ [2872290] compilation in AIX5.3 ML10 failes
+ [2867904] crash with cirrus bx_vga_c::mem_write
+ [2851495] BIOS PCI returns with INT flag = 0
+ [2860333] vista 64 guest STOP 109 (GDT modification)
+ [2849745] disassembler bug for 3DNow and SSE opcodes
+ [1066748] Wrong registers values after #RESET, #INIT
+ [2836893] Regression: Windows XP installer unable to format harddrive
+ [2812239] VMX: VM-Exit: Incorrect instruction length on software int
+ [2814130] bx_debug lex/yacc files incorrectly generated
+ [2813199] MP Tables Missing From BIOS
+ [2824093] VMX exception bug
+ [2811909] VMX : CS Access-rights Type.Accessed stays 0
+ [2810571] Compile Errors on OSX
+ [2823749] GCC regression or VM_EXIT RDMSR/WRMSR bug
+ [2815929] Vista/XP64 unnecessary panic
+ [2803519] Wrong example in man page bochsrc
+
+- these S.F. feature requests were closed/implemented
+ [1311287] Idea for a better GUI
+  [455971] USB support
+
+-------------------------------------------------------------------------
 Changes in 2.4.1 (June 7, 2009):
 
 - Fixed bunch of CPUID issues
