@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.228 2009-08-22 11:47:42 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.229 2009-10-10 09:17:53 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -189,6 +189,15 @@ bxIAOpcodeTable BxOpcodesTable[] = {
 #include "ia_opcodes.h"
 };
 #undef  bx_define_opcode
+
+#if BX_INSTRUMENTATION
+const char* BxOpcodeNamesTable[BX_IA_LAST] =
+{
+#define bx_define_opcode(a, b, c) #a,
+#include "ia_opcodes.h"
+};
+#undef  bx_define_opcode
+#endif
 
 /* ************************** */
 /* 512 entries for 16bit mode */
