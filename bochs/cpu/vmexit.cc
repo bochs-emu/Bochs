@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmexit.cc,v 1.9 2009-10-10 13:45:39 sshwarts Exp $
+// $Id: vmexit.cc,v 1.10 2009-10-11 21:23:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2009 Stanislav Shwartsman
@@ -405,18 +405,20 @@ void BX_CPP_AttrRegparmN(3) BX_CPU_C::VMexit_IO(bxInstruction_c *i, unsigned por
 
   if (VMEXIT(VMX_VM_EXEC_CTRL2_IO_BITMAPS)) {
      // always VMEXIT on port "wrap around" case
-     if (port + len > 0x10000) vmexit = 1;
+     if ((port + len) > 0x10000) vmexit = 1;
      else {
-        bx_phy_address pAddr = BX_CPU_THIS_PTR vmcs.io_bitmap_addr[(port >> 15) & 1] + ((port & 0x7fff) >> 4);
+        bx_phy_address pAddr = BX_CPU_THIS_PTR vmcs.io_bitmap_addr[(port >> 15) & 1] + ((port & 0x7fff) >> 3);
         Bit16u bitmap;
         access_read_physical(pAddr, 2, (Bit8u*) &bitmap);
         BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pAddr, 2, BX_READ, (Bit8u*) &bitmap);
 
-        for (unsigned n = port; n < (port + len); n++) {
-           if (bitmap & (1 << (n & 15))) {
+        unsigned mask = 1 << (port & 7);
+        for (unsigned n = 0; n < len; n++) {
+           if (bitmap & mask) {
               vmexit = 1;
               break;
            }
+           mask <<= 1;
         }
      }
   }
