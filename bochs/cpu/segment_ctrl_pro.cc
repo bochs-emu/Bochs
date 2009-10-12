@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: segment_ctrl_pro.cc,v 1.120 2009-10-02 16:09:08 sshwarts Exp $
+// $Id: segment_ctrl_pro.cc,v 1.121 2009-10-12 20:50:14 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -47,7 +47,7 @@ BX_CPU_C::load_seg_reg(bx_segment_reg_t *seg, Bit16u new_value)
 #if BX_SUPPORT_X86_64
         // allow SS = 0 in 64 bit mode only with cpl != 3 and rpl=cpl
         if (Is64BitMode() && CPL != 3 && ss_selector.rpl == CPL) {
-          load_null_selector(seg);
+          load_null_selector(seg, new_value);
           return;
         }
 #endif
@@ -112,7 +112,7 @@ BX_CPU_C::load_seg_reg(bx_segment_reg_t *seg, Bit16u new_value)
       Bit32u dword1, dword2;
 
       if ((new_value & 0xfffc) == 0) { /* null selector */
-        load_null_selector(seg);
+        load_null_selector(seg, new_value);
         return;
       }
 
@@ -213,13 +213,15 @@ BX_CPU_C::load_seg_reg(bx_segment_reg_t *seg, Bit16u new_value)
   }
 }
 
-  void BX_CPP_AttrRegparmN(1)
-BX_CPU_C::load_null_selector(bx_segment_reg_t *seg)
+  void BX_CPP_AttrRegparmN(2)
+BX_CPU_C::load_null_selector(bx_segment_reg_t *seg, unsigned value)
 {
+  BX_ASSERT((value & 0xfffc) == 0);
+
   seg->selector.index = 0;
   seg->selector.ti    = 0;
-  seg->selector.rpl   = 0;
-  seg->selector.value = 0;
+  seg->selector.rpl   = BX_SELECTOR_RPL(value);
+  seg->selector.value = value;
 
   seg->cache.valid    = 0; /* invalidate null selector */
   seg->cache.p        = 0;
