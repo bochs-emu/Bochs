@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.263 2009-08-07 08:30:41 sshwarts Exp $
+$Id: user.dbk,v 1.264 2009-10-12 21:20:08 sshwarts Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -2224,11 +2224,6 @@ turn it off.
       <entry>--enable-vmx</entry>
       <entry>no</entry>
       <entry>Intel Virtualization Extensions (VMX) support</entry>
-    </row>
-    <row>
-      <entry>--enable-vme</entry>
-      <entry>no (yes for <link linkend="configure-enable-cpu-level">CPU</link> >= 5)</entry>
-      <entry>Add support for VME (v8086 mode extensions)</entry>
     </row>
     <row>
       <entry>--enable-compressed-hd</entry>
