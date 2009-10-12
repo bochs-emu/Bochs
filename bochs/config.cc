@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.184 2009-08-22 19:30:23 sshwarts Exp $
+// $Id: config.cc,v 1.185 2009-10-12 20:53:00 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -242,7 +242,7 @@ void bx_init_options()
   bx_param_c *root_param = SIM->get_param(".");
 
   // general options subtree
-  menu = new bx_list_c(root_param, "general", "");
+  menu = new bx_list_c(root_param, "general", "", 10);
 
  // config interface option, set in bochsrc or command line
   static const char *config_interface_list[] = {
