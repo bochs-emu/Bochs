@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmexit.cc,v 1.10 2009-10-11 21:23:41 sshwarts Exp $
+// $Id: vmexit.cc,v 1.11 2009-10-12 16:30:52 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2009 Stanislav Shwartsman
@@ -412,14 +412,8 @@ void BX_CPP_AttrRegparmN(3) BX_CPU_C::VMexit_IO(bxInstruction_c *i, unsigned por
         access_read_physical(pAddr, 2, (Bit8u*) &bitmap);
         BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pAddr, 2, BX_READ, (Bit8u*) &bitmap);
 
-        unsigned mask = 1 << (port & 7);
-        for (unsigned n = 0; n < len; n++) {
-           if (bitmap & mask) {
-              vmexit = 1;
-              break;
-           }
-           mask <<= 1;
-        }
+        unsigned mask = ((1 << len) - 1) << (port & 7);
+        if (bitmap & mask) vmexit = 1;
      }
   }
   else if (VMEXIT(VMX_VM_EXEC_CTRL2_IO_VMEXIT)) vmexit = 1;
