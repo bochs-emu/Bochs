@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.210 2009-10-14 14:56:01 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.211 2009-10-14 16:05:44 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -753,6 +753,9 @@ void bx_dbg_info_debug_regs_command(void)
   dbg_printf("DR1=0x" FMT_ADDRX "\n", dr1);
   dbg_printf("DR2=0x" FMT_ADDRX "\n", dr2);
   dbg_printf("DR3=0x" FMT_ADDRX "\n", dr3);
+
+  static const char *dr_ln[4] = { "Byte", "Word", "QWord", "Dword" };
+  static const char *dr_rw[4] = { "Code", "DataW", "I/O", "DataRW" };
 
   dbg_printf("DR6=0x%08x: %s %s %s %s %s %s %s\n", dr6,
       (dr6 & (1<<15)) ? "BT" : "bt",
