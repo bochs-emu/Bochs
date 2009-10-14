@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.209 2009-10-12 20:53:00 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.210 2009-10-14 14:56:01 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -753,8 +753,32 @@ void bx_dbg_info_debug_regs_command(void)
   dbg_printf("DR1=0x" FMT_ADDRX "\n", dr1);
   dbg_printf("DR2=0x" FMT_ADDRX "\n", dr2);
   dbg_printf("DR3=0x" FMT_ADDRX "\n", dr3);
-  dbg_printf("DR6=0x%08x\n", dr6);
-  dbg_printf("DR7=0x%08x\n", dr7);
+
+  dbg_printf("DR6=0x%08x: %s %s %s %s %s %s %s\n", dr6,
+      (dr6 & (1<<15)) ? "BT" : "bt",
+      (dr6 & (1<<14)) ? "BS" : "bs",
+      (dr6 & (1<<13)) ? "BD" : "bd",
+      (dr6 & (1<<3)) ? "B3" : "b3",
+      (dr6 & (1<<2)) ? "B2" : "b2",
+      (dr6 & (1<<1)) ? "B1" : "b1",
+      (dr6 & (1<<0)) ? "B0" : "b0");
+
+  dbg_printf("DR7=0x%08x: DR3=%s-%s DR2=%s-%s DR1=%s-%s DR0=%s-%s %s | %s %s | %s %s %s %s %s %s %s %s\n", dr7,
+      dr_rw[(dr7 >> 28) & 3], dr_ln[(dr7 >> 30) & 3],
+      dr_rw[(dr7 >> 24) & 3], dr_ln[(dr7 >> 26) & 3],
+      dr_rw[(dr7 >> 20) & 3], dr_ln[(dr7 >> 22) & 3],
+      dr_rw[(dr7 >> 16) & 3], dr_ln[(dr7 >> 18) & 3],
+      (dr7 & (1<<13)) ? "GD" : "gd",
+      (dr7 & (1<<9)) ? "GE" : "ge",
+      (dr7 & (1<<8)) ? "LE" : "le",
+      (dr7 & (1<<7)) ? "G3" : "g3",
+      (dr7 & (1<<6)) ? "L3" : "l3",
+      (dr7 & (1<<5)) ? "G2" : "g2",
+      (dr7 & (1<<4)) ? "L2" : "l2",
+      (dr7 & (1<<3)) ? "G1" : "g1",
+      (dr7 & (1<<2)) ? "L1" : "l1",
+      (dr7 & (1<<1)) ? "G0" : "g0",
+      (dr7 & (1<<0)) ? "L0" : "l0");
 }
 
 void bx_dbg_info_control_regs_command(void)
