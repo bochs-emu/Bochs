@@ -11,7 +11,7 @@ Changes for next bugfix+ release (coming soon):
     to  --enable-cpu-level option. Related configure options
         --enable-global-pages, --enable-large-pages,
         --enable-pae, --enable-mtrr
-    are deprecated now. Only 1G paging option still remains unchanged.
+    are deprecated now. Only 1G paging option still remaining unchanged.
   - Deprecate --enable-daz configure option. Denormals-are-zeros MXCSR control
     will be enabled automatically iff SSE2 is supported (like in hardware).
   - Deprecate --enable-vme configure option, now it will be supported iff

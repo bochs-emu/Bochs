@@ -1,8 +1,8 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu_compare.cc,v 1.26 2009-05-28 19:25:33 sshwarts Exp $
+// $Id: fpu_compare.cc,v 1.27 2009-10-14 20:45:29 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2003 Stanislav Shwartsman
+//   Copyright (c) 2003-2009 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or

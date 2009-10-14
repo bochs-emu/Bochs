@@ -1,8 +1,8 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: descriptor.h,v 1.31 2009-04-05 19:09:44 sshwarts Exp $
+// $Id: descriptor.h,v 1.32 2009-10-14 20:45:29 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2007 Stanislav Shwartsman
+//   Copyright (c) 2007-2009 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or

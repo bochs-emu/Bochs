@@ -1,8 +1,8 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_string.cc,v 1.12 2009-01-16 18:18:59 sshwarts Exp $
+// $Id: sse_string.cc,v 1.13 2009-10-14 20:45:29 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2007 Stanislav Shwartsman
+//   Copyright (c) 2007-2009 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or

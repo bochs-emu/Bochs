@@ -1,8 +1,8 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: xmm.h,v 1.29 2009-07-08 14:02:41 sshwarts Exp $
+// $Id: xmm.h,v 1.30 2009-10-14 20:45:29 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2003 Stanislav Shwartsman
+//   Copyright (c) 2003-2009 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or

@@ -1,8 +1,8 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.h,v 1.88 2009-08-22 11:47:42 sshwarts Exp $
+// $Id: fetchdecode.h,v 1.89 2009-10-14 20:45:29 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2005 Stanislav Shwartsman
+//   Copyright (c) 2005-2009 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or

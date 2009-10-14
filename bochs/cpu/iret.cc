@@ -1,8 +1,8 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: iret.cc,v 1.45 2009-10-12 20:50:14 sshwarts Exp $
+// $Id: iret.cc,v 1.46 2009-10-14 20:45:29 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2005 Stanislav Shwartsman
+//   Copyright (c) 2005-2009 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or

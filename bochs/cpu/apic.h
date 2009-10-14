@@ -1,8 +1,8 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.h,v 1.48 2009-02-20 22:00:41 sshwarts Exp $
+// $Id: apic.h,v 1.49 2009-10-14 20:45:29 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2002 Zwane Mwaikambo, Stanislav Shwartsman
+//  Copyright (c) 2002-2009 Zwane Mwaikambo, Stanislav Shwartsman
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
