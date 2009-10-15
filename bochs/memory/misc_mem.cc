@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: misc_mem.cc,v 1.131 2009-08-11 15:56:09 sshwarts Exp $
+// $Id: misc_mem.cc,v 1.132 2009-10-15 20:50:33 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -72,7 +72,7 @@ void BX_MEM_C::init_memory(Bit32u memsize)
 {
   unsigned idx;
 
-  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.131 2009-08-11 15:56:09 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.132 2009-10-15 20:50:33 sshwarts Exp $"));
 
   if (BX_MEM_THIS actual_vector != NULL) {
     BX_INFO (("freeing existing memory vector"));
@@ -88,11 +88,6 @@ void BX_MEM_C::init_memory(Bit32u memsize)
   BX_MEM_THIS memory_handlers = new struct memory_handler_struct *[BX_MEM_HANDLERS];
   BX_MEM_THIS rom = &BX_MEM_THIS vector[memsize];
   BX_MEM_THIS bogus = &BX_MEM_THIS vector[memsize + BIOSROMSZ + EXROMSIZE];
-#if BX_DEBUGGER
-  unsigned pages = get_num_allocated_pages();
-  BX_MEM_THIS dbg_dirty_pages = new Bit8u[pages];
-  memset(BX_MEM_THIS dbg_dirty_pages, 0, pages);
-#endif
   memset(BX_MEM_THIS rom, 0xff, BIOSROMSZ + EXROMSIZE + 4096);
   for (idx = 0; idx < BX_MEM_HANDLERS; idx++)
     BX_MEM_THIS memory_handlers[idx] = NULL;
@@ -157,9 +152,6 @@ void BX_MEM_C::cleanup_memory()
       delete [] BX_MEM_THIS memory_handlers;
       BX_MEM_THIS memory_handlers = NULL;
     }
-#if BX_DEBUGGER
-    delete [] BX_MEM_THIS dbg_dirty_pages;
-#endif
   }
 }
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debug.h,v 1.55 2009-08-07 08:26:41 sshwarts Exp $
+// $Id: debug.h,v 1.56 2009-10-15 20:50:33 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -267,7 +267,6 @@ void bx_dbg_quit_command(void);
 #define BX_INFO_MMX_REGS 4
 #define BX_INFO_SSE_REGS 8
 void bx_dbg_info_registers_command(int);
-void bx_dbg_info_dirty_command(void);
 void bx_dbg_info_ivt_command(unsigned from, unsigned to);
 void bx_dbg_info_idt_command(unsigned from, unsigned to);
 void bx_dbg_info_gdt_command(unsigned from, unsigned to);

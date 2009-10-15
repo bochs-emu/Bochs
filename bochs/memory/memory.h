@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: memory.h,v 1.59 2009-10-15 16:14:30 sshwarts Exp $
+// $Id: memory.h,v 1.60 2009-10-15 20:50:33 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -82,10 +82,6 @@ private:
   Bit8u   *bogus;    // 4k for unexisting memory
 
 public:
-#if BX_DEBUGGER
-  Bit8u   *dbg_dirty_pages;
-#endif
-
   BX_MEM_C();
  ~BX_MEM_C();
 
@@ -142,9 +138,5 @@ BX_CPP_INLINE Bit32u BX_MEM_C::get_num_allocated_pages(void)
 {
   return(BX_MEM_THIS len >> 12);
 }
-
-#if BX_DEBUGGER
-  #define BX_DBG_DIRTY_PAGE(page) BX_MEM(0)->dbg_dirty_pages[page] = 1;
-#endif
 
 #endif

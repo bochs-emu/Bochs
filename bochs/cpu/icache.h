@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: icache.h,v 1.49 2009-10-14 20:45:29 sshwarts Exp $
+// $Id: icache.h,v 1.50 2009-10-15 20:50:33 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007-2009 Stanislav Shwartsman
@@ -90,9 +90,6 @@ public:
       // effectively invalidated.
       pageWriteStampTable[index] = (pageWriteStampTable[index] - 1) & ~ICacheWriteStampFetchModeMask;
     }
-#if BX_DEBUGGER
-    BX_DBG_DIRTY_PAGE(index);
-#endif
   }
 
   BX_CPP_INLINE void resetWriteStamps(void);

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.211 2009-10-14 16:05:44 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.212 2009-10-15 20:50:33 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2766,19 +2766,6 @@ void bx_dbg_crc_command(bx_phy_address addr1, bx_phy_address addr2)
   dbg_printf("0x%lx\n", crc1);
 }
 
-void bx_dbg_info_dirty_command(void)
-{
-  unsigned char *page_tbl = BX_MEM(0)->dbg_dirty_pages;
-  Bit32u page_tbl_size = BX_MEM(0)->get_num_allocated_pages();
-
-  for (unsigned i=0; i<page_tbl_size; i++) {
-    if (page_tbl[i]) {
-      dbg_printf("0x%x\n", i);
-      page_tbl[i] = 0; // reset to clean
-    }
-  }
-}
-
 void bx_dbg_print_descriptor(Bit32u lo, Bit32u hi)
 {
   Bit32u base = ((lo >> 16) & 0xffff)
@@ -3669,7 +3656,7 @@ bx_address bx_dbg_get_laddr(Bit16u sel, bx_address ofs)
       highaddr = descriptor.u.segment.limit_scaled;
     }
 
-    if ((ofs < lowaddr) || (ofs > highaddr)) {
+    if (ofs < lowaddr || ofs > highaddr) {
       dbg_printf("WARNING: Offset %08X is out of selector %04x limit (%08x...%08x)!\n",
         ofs, sel, lowaddr, highaddr);
     }

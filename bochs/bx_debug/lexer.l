@@ -1,6 +1,6 @@
 %{
 /////////////////////////////////////////////////////////////////////////
-// $Id: lexer.l,v 1.30 2009-08-07 08:26:41 sshwarts Exp $
+// $Id: lexer.l,v 1.31 2009-10-15 20:50:33 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #include <stdlib.h>
@@ -89,7 +89,6 @@ gdt		{ bxlval.sval = strdup(bxtext); return(BX_TOKEN_GDT); }
 ldt		{ bxlval.sval = strdup(bxtext); return(BX_TOKEN_LDT); }
 tss		{ bxlval.sval = strdup(bxtext); return(BX_TOKEN_TSS); }
 tab		{ bxlval.sval = strdup(bxtext); return(BX_TOKEN_TAB); }
-dirty           { bxlval.sval = strdup(bxtext); return(BX_TOKEN_DIRTY); }
 linux           { bxlval.sval = strdup(bxtext); return(BX_TOKEN_LINUX); }
 delete          |
 del             |

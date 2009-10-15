@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: parser.y,v 1.35 2009-08-07 08:26:41 sshwarts Exp $
+// $Id: parser.y,v 1.36 2009-10-15 20:50:33 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 %{
@@ -63,7 +63,6 @@
 %token <sval> BX_TOKEN_LDT
 %token <sval> BX_TOKEN_TSS
 %token <sval> BX_TOKEN_TAB
-%token <sval> BX_TOKEN_DIRTY
 %token <sval> BX_TOKEN_LINUX
 %token <sval> BX_TOKEN_DEBUG_REGS
 %token <sval> BX_TOKEN_CONTROL_REGS
@@ -540,11 +539,6 @@ info_command:
     | BX_TOKEN_INFO BX_TOKEN_CPU '\n'
       {
         bx_dbg_info_registers_command(BX_INFO_GENERAL_PURPOSE_REGS | BX_INFO_FPU_REGS | BX_INFO_SSE_REGS);
-        free($1); free($2);
-      }
-    | BX_TOKEN_INFO BX_TOKEN_DIRTY '\n'
-      {
-        bx_dbg_info_dirty_command();
         free($1); free($2);
       }
     | BX_TOKEN_INFO BX_TOKEN_IDT optional_numeric optional_numeric '\n'
@@ -1087,7 +1081,6 @@ help_command:
      | BX_TOKEN_HELP BX_TOKEN_INFO '\n'
        {
          dbg_printf("info break - show information about current breakpoint status\n");
-         dbg_printf("info dirty - show physical pages dirtied (written to) since last display\n");
          dbg_printf("info idt - show interrupt descriptor table\n");
          dbg_printf("info ivt - show interrupt vector table\n");
          dbg_printf("info gdt - show global descriptor table\n");
