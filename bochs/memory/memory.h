@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: memory.h,v 1.60 2009-10-15 20:50:33 sshwarts Exp $
+// $Id: memory.h,v 1.61 2009-10-15 20:53:30 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -109,7 +109,6 @@ public:
 		  memory_handler_t write_handler, bx_phy_address begin_addr, bx_phy_address end_addr);
   BX_MEM_SMF bx_bool unregisterMemoryHandlers(memory_handler_t read_handler, memory_handler_t write_handler,
 		  bx_phy_address begin_addr, bx_phy_address end_addr);
-  BX_MEM_SMF Bit32u  get_num_allocated_pages(void);
   BX_MEM_SMF Bit64u  get_memory_len(void);
 
 #if BX_SUPPORT_MONITOR_MWAIT
@@ -132,11 +131,6 @@ BX_CPP_INLINE Bit8u* BX_MEM_C::get_vector(bx_phy_address addr)
 BX_CPP_INLINE Bit64u BX_MEM_C::get_memory_len(void)
 {
   return(BX_MEM_THIS len);
-}
-
-BX_CPP_INLINE Bit32u BX_MEM_C::get_num_allocated_pages(void)
-{
-  return(BX_MEM_THIS len >> 12);
 }
 
 #endif
