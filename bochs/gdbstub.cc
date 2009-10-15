@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gdbstub.cc,v 1.37 2009-07-11 06:05:17 sshwarts Exp $
+// $Id: gdbstub.cc,v 1.38 2009-10-15 16:14:30 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2006  The Bochs Project Team
@@ -408,8 +408,7 @@ static int access_linear(Bit64u laddress,
     valid = access_linear(laddress,
                           len + (laddress & 0xfff) - 4096,
                           rw,
-                          (Bit8u *)((unsigned long)data +
-                                    4096 - (laddress & 0xfff)));
+                          (Bit8u *)(data + (4096 - (laddress & 0xfff))));
     return(valid);
   }
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: memory.h,v 1.58 2009-08-11 15:56:08 sshwarts Exp $
+// $Id: memory.h,v 1.59 2009-10-15 16:14:30 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -72,10 +72,10 @@ private:
 
 #if BX_SUPPORT_MONITOR_MWAIT
   bx_bool *monitor_active;
-  Bit32u   n_monitors;
+  unsigned n_monitors;
 #endif
 
-  Bit32u  len;
+  Bit64u  len;       // could be > 4G in future
   Bit8u   *actual_vector;
   Bit8u   *vector;   // aligned correctly
   Bit8u   *rom;      // 512k BIOS rom space + 128k expansion rom space
@@ -89,7 +89,6 @@ public:
   BX_MEM_C();
  ~BX_MEM_C();
 
-  BX_MEM_SMF Bit8u*  get_vector(void);
   BX_MEM_SMF Bit8u*  get_vector(bx_phy_address addr);
   BX_MEM_SMF void    init_memory(Bit32u memsize);
   BX_MEM_SMF void    cleanup_memory(void);
@@ -102,7 +101,6 @@ public:
                                        unsigned len, void *data);
   BX_MEM_SMF void    load_ROM(const char *path, bx_phy_address romaddress, Bit8u type);
   BX_MEM_SMF void    load_RAM(const char *path, bx_phy_address romaddress, Bit8u type);
-  BX_MEM_SMF Bit32u  get_memory_in_k(void);
 #if (BX_DEBUGGER || BX_DISASM || BX_GDBSTUB)
   BX_MEM_SMF bx_bool dbg_fetch_mem(BX_CPU_C *cpu, bx_phy_address addr, unsigned len, Bit8u *buf);
 #endif
@@ -116,7 +114,7 @@ public:
   BX_MEM_SMF bx_bool unregisterMemoryHandlers(memory_handler_t read_handler, memory_handler_t write_handler,
 		  bx_phy_address begin_addr, bx_phy_address end_addr);
   BX_MEM_SMF Bit32u  get_num_allocated_pages(void);
-  BX_MEM_SMF Bit32u  get_memory_len(void);
+  BX_MEM_SMF Bit64u  get_memory_len(void);
 
 #if BX_SUPPORT_MONITOR_MWAIT
   BX_MEM_SMF void    set_monitor(unsigned cpu);
@@ -130,24 +128,14 @@ public:
 
 BOCHSAPI extern BX_MEM_C bx_mem;
 
-BX_CPP_INLINE Bit8u* BX_MEM_C::get_vector(void)
-{
-  return (BX_MEM_THIS vector);
-}
-
 BX_CPP_INLINE Bit8u* BX_MEM_C::get_vector(bx_phy_address addr)
 {
   return (BX_MEM_THIS vector + addr);
 }
 
-BX_CPP_INLINE Bit32u BX_MEM_C::get_memory_len(void)
+BX_CPP_INLINE Bit64u BX_MEM_C::get_memory_len(void)
 {
   return(BX_MEM_THIS len);
-}
-
-BX_CPP_INLINE Bit32u BX_MEM_C::get_memory_in_k(void)
-{
-  return(BX_MEM_THIS len / 1024);
 }
 
 BX_CPP_INLINE Bit32u BX_MEM_C::get_num_allocated_pages(void)
