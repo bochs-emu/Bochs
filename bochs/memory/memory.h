@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: memory.h,v 1.61 2009-10-15 20:53:30 sshwarts Exp $
+// $Id: memory.h,v 1.62 2009-10-15 21:39:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -50,12 +50,12 @@ class BX_CPU_C;
 typedef bx_bool (*memory_handler_t)(bx_phy_address addr, unsigned len, void *data, void *param);
 
 struct memory_handler_struct {
-	struct memory_handler_struct *next;
-	void *param;
-	bx_phy_address begin;
-	bx_phy_address end;
-	memory_handler_t read_handler;
-	memory_handler_t write_handler;
+  struct memory_handler_struct *next;
+  void *param;
+  bx_phy_address begin;
+  bx_phy_address end;
+  memory_handler_t read_handler;
+  memory_handler_t write_handler;
 };
 
 #define SMRAM_CODE  1
@@ -130,7 +130,7 @@ BX_CPP_INLINE Bit8u* BX_MEM_C::get_vector(bx_phy_address addr)
 
 BX_CPP_INLINE Bit64u BX_MEM_C::get_memory_len(void)
 {
-  return(BX_MEM_THIS len);
+  return (BX_MEM_THIS len);
 }
 
 #endif

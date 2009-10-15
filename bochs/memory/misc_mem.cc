@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: misc_mem.cc,v 1.132 2009-10-15 20:50:33 sshwarts Exp $
+// $Id: misc_mem.cc,v 1.133 2009-10-15 21:39:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -72,7 +72,7 @@ void BX_MEM_C::init_memory(Bit32u memsize)
 {
   unsigned idx;
 
-  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.132 2009-10-15 20:50:33 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.133 2009-10-15 21:39:40 sshwarts Exp $"));
 
   if (BX_MEM_THIS actual_vector != NULL) {
     BX_INFO (("freeing existing memory vector"));
@@ -477,8 +477,7 @@ bx_bool BX_MEM_C::dbg_crc32(bx_phy_address addr1, bx_phy_address addr2, Bit32u *
 // Return a host address corresponding to the guest physical memory
 // address (with A20 already applied), given that the calling
 // code will perform an 'op' operation.  This address will be
-// used for direct access to guest memory as an acceleration by
-// a few instructions, like REP {MOV, INS, OUTS, etc}.
+// used for direct access to guest memory.
 // Values of 'op' are { BX_READ, BX_WRITE, BX_EXECUTE, BX_RW }.
 //
 // The other assumption is that the calling code _only_ accesses memory
@@ -589,7 +588,6 @@ Bit8u *BX_MEM_C::getHostMemAddr(BX_CPU_C *cpu, bx_phy_address addr, unsigned rw)
   }
   else
   { // op == {BX_WRITE, BX_RW}
-    Bit8u *retAddr;
     if (a20addr >= BX_MEM_THIS len)
       return(NULL); // Error, requested addr is out of bounds.
     else if (a20addr >= 0x000a0000 && a20addr < 0x000c0000)
@@ -609,14 +607,12 @@ Bit8u *BX_MEM_C::getHostMemAddr(BX_CPU_C *cpu, bx_phy_address addr, unsigned rw)
     else
     {
       if (a20addr < 0x000c0000 || a20addr >= 0x00100000) {
-        retAddr = BX_MEM_THIS get_vector(a20addr);
+        return BX_MEM_THIS get_vector(a20addr);
       }
       else {
         return(NULL);  // Vetoed!  ROMs
       }
     }
-
-    return retAddr;
   }
 }
 
