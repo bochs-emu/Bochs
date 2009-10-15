@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debug.h,v 1.56 2009-10-15 20:50:33 sshwarts Exp $
+// $Id: debug.h,v 1.57 2009-10-15 21:15:18 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -424,7 +424,6 @@ typedef struct {
     bx_bool irq;
     bx_bool a20;
     bx_bool io;
-    bx_bool ucmem;
     bx_bool dma;
   } report;
 
@@ -491,7 +490,6 @@ void bx_dbg_dma_report(bx_phy_address addr, unsigned len, unsigned what, Bit32u 
 void bx_dbg_iac_report(unsigned vector, unsigned irq);
 void bx_dbg_a20_report(unsigned val);
 void bx_dbg_io_report(Bit32u port, unsigned size, unsigned op, Bit32u val);
-void bx_dbg_ucmem_report(Bit32u addr, unsigned size, unsigned op, Bit32u val);
 void bx_dbg_disassemble_current(int which_cpu, int print_time);
 
 #endif // #ifdef __cplusplus

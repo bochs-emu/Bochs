@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.248 2009-04-26 06:56:27 vruppert Exp $
+// $Id: bochs.h,v 1.249 2009-10-15 21:15:18 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -238,8 +238,6 @@ void print_tree(bx_param_c *node, int level = 0);
         if (bx_guard.report.a20) bx_dbg_a20_report(val)
 #  define BX_DBG_IO_REPORT(port, size, op, val) \
         if (bx_guard.report.io) bx_dbg_io_report(port, size, op, val)
-#  define BX_DBG_UCMEM_REPORT(addr, size, op, val) \
-        if (bx_guard.report.ucmem) bx_dbg_ucmem_report(addr, size, op, val)
 #  define BX_DBG_LIN_MEMORY_ACCESS(cpu, lin, phy, len, pl, rw, data) \
         bx_dbg_lin_memory_access(cpu, lin, phy, len, pl, rw, data)
 #  define BX_DBG_PHY_MEMORY_ACCESS(cpu, phy, len, rw, data) \
@@ -251,8 +249,7 @@ void print_tree(bx_param_c *node, int level = 0);
 #  define BX_DBG_DMA_REPORT(addr, len, what, val)                    /* empty */
 #  define BX_DBG_IAC_REPORT(vector, irq)                             /* empty */
 #  define BX_DBG_A20_REPORT(val)                                     /* empty */
-#  define BX_DBG_IO_REPORT(addr, size, op, val)                      /* empty */
-#  define BX_DBG_UCMEM_REPORT(addr, size, op, val)                   /* empty */
+#  define BX_DBG_IO_REPORT(port, size, op, val)                      /* empty */
 #  define BX_DBG_LIN_MEMORY_ACCESS(cpu, lin, phy, len, pl, rw, data) /* empty */
 #  define BX_DBG_PHY_MEMORY_ACCESS(cpu, phy, len, rw, data)          /* empty */
 #endif  // #if BX_DEBUGGER

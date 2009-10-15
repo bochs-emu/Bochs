@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.212 2009-10-15 20:50:33 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.213 2009-10-15 21:15:18 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2621,7 +2621,6 @@ void bx_dbg_set_symbol_command(const char *symbol, Bit32u val)
     bx_guard.report.irq   = val;
     bx_guard.report.a20   = val;
     bx_guard.report.io    = val;
-    bx_guard.report.ucmem = val;
     bx_guard.report.dma   = val;
     return;
   }
@@ -3285,18 +3284,6 @@ void bx_dbg_io_report(Bit32u port, unsigned size, unsigned op, Bit32u val)
     dbg_printf("event at t=" FMT_LL "d IO addr=0x%x size=%u op=%s val=0x%x\n",
       bx_pc_system.time_ticks(),
       port,
-      size,
-      (op==BX_READ) ? "read" : "write",
-      (unsigned) val);
-  }
-}
-
-void bx_dbg_ucmem_report(bx_address addr, unsigned size, unsigned op, Bit32u val)
-{
-  if (bx_guard.report.ucmem) {
-    dbg_printf("event at t=" FMT_LL "d UCmem addr=0x" FMT_ADDRX " size=%u op=%s val=0x%x\n",
-      bx_pc_system.time_ticks(),
-      addr,
       size,
       (op==BX_READ) ? "read" : "write",
       (unsigned) val);
