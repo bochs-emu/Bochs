@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.213 2009-10-15 21:15:18 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.214 2009-10-15 21:24:22 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -3203,8 +3203,12 @@ void bx_dbg_info_tss_command(void)
       (unsigned) tr.sel, laddr, (unsigned) tr.valid);
 
   bx_phy_address paddr = 0;
-  BX_CPU(dbg_cpu)->dbg_xlate_linear2phy(laddr, &paddr);
-  bx_dbg_print_tss(BX_MEM(0)->get_vector(paddr), len);
+  if (BX_CPU(dbg_cpu)->dbg_xlate_linear2phy(laddr, &paddr)) {
+    bx_dbg_print_tss(BX_MEM(0)->get_vector(paddr), len);
+  }
+  else {
+    dbg_printf("bx_dbg_info_tss_command: failed to get physical address for TSS.BASE !");
+  }
 }
 
 /*
