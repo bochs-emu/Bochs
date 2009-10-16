@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.217 2009-08-19 09:59:30 sshwarts Exp $
+// $Id: init.cc,v 1.218 2009-10-16 18:29:45 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -540,20 +540,21 @@ void BX_CPU_C::register_state(void)
   BXRS_PARAM_BOOL(cpu, trace, trace);
 }
 
-Bit64s BX_CPU_C::param_save_handler(void *devptr, bx_param_c *param, Bit64s val)
+Bit64s BX_CPU_C::param_save_handler(void *devptr, bx_param_c *param)
 {
 #if !BX_USE_CPU_SMF
   BX_CPU_C *class_ptr = (BX_CPU_C *) devptr;
-  return class_ptr->param_save(param, val);
+  return class_ptr->param_save(param);
 }
 
-Bit64s BX_CPU_C::param_save(bx_param_c *param, Bit64s val)
+Bit64s BX_CPU_C::param_save(bx_param_c *param)
 {
 #else
   UNUSED(devptr);
 #endif // !BX_USE_CPU_SMF
   const char *pname, *segname;
   bx_segment_reg_t *segment = NULL;
+  Bit64s val = 0;
 
   pname = param->get_name();
   if (!strcmp(pname, "cpu_version")) {
@@ -598,14 +599,14 @@ Bit64s BX_CPU_C::param_save(bx_param_c *param, Bit64s val)
   return val;
 }
 
-Bit64s BX_CPU_C::param_restore_handler(void *devptr, bx_param_c *param, Bit64s val)
+void BX_CPU_C::param_restore_handler(void *devptr, bx_param_c *param, Bit64s val)
 {
 #if !BX_USE_CPU_SMF
   BX_CPU_C *class_ptr = (BX_CPU_C *) devptr;
-  return class_ptr->param_restore(param, val);
+  class_ptr->param_restore(param, val);
 }
 
-Bit64s BX_CPU_C::param_restore(bx_param_c *param, Bit64s val)
+void BX_CPU_C::param_restore(bx_param_c *param, Bit64s val)
 {
 #else
   UNUSED(devptr);
@@ -664,7 +665,6 @@ Bit64s BX_CPU_C::param_restore(bx_param_c *param, Bit64s val)
   else {
     BX_PANIC(("Unknown param %s in param_restore handler !", pname));
   }
-  return val;
 }
 
 void BX_CPU_C::after_restore_state(void)

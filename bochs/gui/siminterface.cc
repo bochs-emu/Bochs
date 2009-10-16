@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.206 2009-03-29 11:13:49 vruppert Exp $
+// $Id: siminterface.cc,v 1.207 2009-10-16 18:29:45 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  The Bochs Project
@@ -1412,11 +1412,11 @@ void bx_param_num_c::set_handler(param_event_handler handler)
   //set (get ());
 }
 
-void bx_param_num_c::set_sr_handlers(void *devptr, param_sr_handler save, param_sr_handler restore)
+void bx_param_num_c::set_sr_handlers(void *devptr, param_save_handler save, param_restore_handler restore)
 {
-  this->sr_devptr = devptr;
-  this->save_handler = save;
-  this->restore_handler = restore;
+  sr_devptr = devptr;
+  save_handler = save;
+  restore_handler = restore;
 }
 
 void bx_param_num_c::set_dependent_list(bx_list_c *l)
@@ -1428,7 +1428,7 @@ void bx_param_num_c::set_dependent_list(bx_list_c *l)
 Bit64s bx_param_num_c::get64()
 {
   if (save_handler) {
-    return (*save_handler)(sr_devptr, this, val.number);
+    return (*save_handler)(sr_devptr, this);
   }
   if (handler) {
     // the handler can decide what value to return and/or do some side effect

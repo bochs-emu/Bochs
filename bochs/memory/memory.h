@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: memory.h,v 1.63 2009-10-16 17:10:36 sshwarts Exp $
+// $Id: memory.h,v 1.64 2009-10-16 18:29:45 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -123,8 +123,8 @@ public:
 
   void register_state(void);
 
-  friend Bit64s memory_param_save_handler(void *devptr, bx_param_c *param, Bit64s val);
-  friend Bit64s memory_param_restore_handler(void *devptr, bx_param_c *param, Bit64s val);
+  friend Bit64s memory_param_save_handler(void *devptr, bx_param_c *param);
+  friend void memory_param_restore_handler(void *devptr, bx_param_c *param, Bit64s val);
 };
 
 BOCHSAPI extern BX_MEM_C bx_mem;

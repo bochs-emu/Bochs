@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci_ide.cc,v 1.44 2009-08-16 19:59:03 vruppert Exp $
+// $Id: pci_ide.cc,v 1.45 2009-10-16 18:29:45 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -175,19 +175,20 @@ void bx_pci_ide_c::after_restore_state(void)
   }
 }
 
-Bit64s bx_pci_ide_c::param_save_handler(void *devptr, bx_param_c *param, Bit64s val)
+Bit64s bx_pci_ide_c::param_save_handler(void *devptr, bx_param_c *param)
 {
 #if !BX_USE_PIDE_SMF
   bx_pci_ide_c *class_ptr = (bx_pci_ide_c *) devptr;
   return class_ptr->param_save(param, val);
 }
 
-Bit64s bx_pci_ide_c::param_save(bx_param_c *param, Bit64s val)
+Bit64s bx_pci_ide_c::param_save(bx_param_c *param)
 {
 #else
   UNUSED(devptr);
 #endif // !BX_USE_PIDE_SMF
   int chan = atoi(param->get_parent()->get_name());
+  Bit64s val = 0;
   if (!strcmp(param->get_name(), "buffer_top")) {
     val = (Bit32u)(BX_PIDE_THIS s.bmdma[chan].buffer_top - BX_PIDE_THIS s.bmdma[chan].buffer);
   } else if (!strcmp(param->get_name(), "buffer_idx")) {
@@ -196,14 +197,14 @@ Bit64s bx_pci_ide_c::param_save(bx_param_c *param, Bit64s val)
   return val;
 }
 
-Bit64s bx_pci_ide_c::param_restore_handler(void *devptr, bx_param_c *param, Bit64s val)
+void bx_pci_ide_c::param_restore_handler(void *devptr, bx_param_c *param, Bit64s val)
 {
 #if !BX_USE_PIDE_SMF
   bx_pci_ide_c *class_ptr = (bx_pci_ide_c *) devptr;
-  return class_ptr->param_restore(param, val);
+  class_ptr->param_restore(param, val);
 }
 
-Bit64s bx_pci_ide_c::param_restore(bx_param_c *param, Bit64s val)
+void bx_pci_ide_c::param_restore(bx_param_c *param, Bit64s val)
 {
 #else
   UNUSED(devptr);
@@ -214,7 +215,6 @@ Bit64s bx_pci_ide_c::param_restore(bx_param_c *param, Bit64s val)
   } else if (!strcmp(param->get_name(), "buffer_idx")) {
     BX_PIDE_THIS s.bmdma[chan].buffer_idx = BX_PIDE_THIS s.bmdma[chan].buffer + val;
   }
-  return val;
 }
 // save/restore code end
 

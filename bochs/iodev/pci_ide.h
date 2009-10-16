@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci_ide.h,v 1.14 2009-02-08 09:05:52 vruppert Exp $
+// $Id: pci_ide.h,v 1.15 2009-10-16 18:29:45 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -47,11 +47,11 @@ public:
   virtual void bmdma_set_irq(Bit8u channel);
   virtual void register_state(void);
   virtual void after_restore_state(void);
-  static  Bit64s param_save_handler(void *devptr, bx_param_c *param, Bit64s val);
-  static  Bit64s param_restore_handler(void *devptr, bx_param_c *param, Bit64s val);
+  static Bit64s param_save_handler(void *devptr, bx_param_c *param);
+  static void param_restore_handler(void *devptr, bx_param_c *param, Bit64s val);
 #if !BX_USE_PIDE_SMF
-  Bit64s param_save(bx_param_c *param, Bit64s val);
-  Bit64s param_restore(bx_param_c *param, Bit64s val);
+  Bit64s param_save(bx_param_c *param);
+  void param_restore(bx_param_c *param, Bit64s val);
 #endif
 
   virtual Bit32u pci_read_handler(Bit8u address, unsigned io_len);
