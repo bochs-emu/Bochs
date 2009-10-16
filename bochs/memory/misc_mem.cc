@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: misc_mem.cc,v 1.134 2009-10-16 17:10:36 sshwarts Exp $
+// $Id: misc_mem.cc,v 1.135 2009-10-16 17:21:49 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -74,7 +74,7 @@ void BX_MEM_C::init_memory(Bit64u guest, Bit64u host)
 {
   unsigned idx;
 
-  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.134 2009-10-16 17:10:36 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.135 2009-10-16 17:21:49 sshwarts Exp $"));
 
   // accept only memory size which is multiply of 1M
   BX_ASSERT((host & 0xfffff) == 0);
@@ -224,6 +224,9 @@ void BX_MEM_C::cleanup_memory()
     BX_MEM_THIS vector = NULL;
     BX_MEM_THIS rom = NULL;
     BX_MEM_THIS bogus = NULL;
+    delete [] BX_MEM_THIS blocks;
+    BX_MEM_THIS blocks = 0;
+    BX_MEM_THIS used_blocks = 0;
     if (BX_MEM_THIS memory_handlers != NULL) {
       for (idx = 0; idx < BX_MEM_HANDLERS; idx++) {
         struct memory_handler_struct *memory_handler = BX_MEM_THIS memory_handlers[idx];
