@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: misc_mem.cc,v 1.133 2009-10-15 21:39:40 sshwarts Exp $
+// $Id: misc_mem.cc,v 1.134 2009-10-16 17:10:36 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -43,7 +43,9 @@ BX_MEM_C::BX_MEM_C()
 
   vector = NULL;
   actual_vector = NULL;
+  blocks = NULL;
   len    = 0;
+  used_blocks = 0;
 
   memory_handlers = NULL;
 }
@@ -68,39 +70,65 @@ BX_MEM_C::~BX_MEM_C()
   cleanup_memory();
 }
 
-void BX_MEM_C::init_memory(Bit32u memsize)
+void BX_MEM_C::init_memory(Bit64u guest, Bit64u host)
 {
   unsigned idx;
 
-  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.133 2009-10-15 21:39:40 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.134 2009-10-16 17:10:36 sshwarts Exp $"));
+
+  // accept only memory size which is multiply of 1M
+  BX_ASSERT((host & 0xfffff) == 0);
+  BX_ASSERT((guest & 0xfffff) == 0);
 
   if (BX_MEM_THIS actual_vector != NULL) {
-    BX_INFO (("freeing existing memory vector"));
+    BX_INFO(("freeing existing memory vector"));
     delete [] BX_MEM_THIS actual_vector;
     BX_MEM_THIS actual_vector = NULL;
     BX_MEM_THIS vector = NULL;
+    BX_MEM_THIS blocks = NULL;
   }
-  BX_MEM_THIS vector = ::alloc_vector_aligned(&BX_MEM_THIS actual_vector, memsize + BIOSROMSZ + EXROMSIZE + 4096, BX_MEM_VECTOR_ALIGN);
-  BX_INFO (("allocated memory at %p. after alignment, vector=%p",
+  BX_MEM_THIS vector = ::alloc_vector_aligned(&BX_MEM_THIS actual_vector, host + BIOSROMSZ + EXROMSIZE + 4096, BX_MEM_VECTOR_ALIGN);
+  BX_INFO(("allocated memory at %p. after alignment, vector=%p",
 	BX_MEM_THIS actual_vector, BX_MEM_THIS vector));
 
-  BX_MEM_THIS len  = memsize;
-  BX_MEM_THIS memory_handlers = new struct memory_handler_struct *[BX_MEM_HANDLERS];
-  BX_MEM_THIS rom = &BX_MEM_THIS vector[memsize];
-  BX_MEM_THIS bogus = &BX_MEM_THIS vector[memsize + BIOSROMSZ + EXROMSIZE];
+  BX_MEM_THIS len = guest;
+  BX_MEM_THIS allocated = host;
+  BX_MEM_THIS rom = &BX_MEM_THIS vector[host];
+  BX_MEM_THIS bogus = &BX_MEM_THIS vector[host + BIOSROMSZ + EXROMSIZE];
   memset(BX_MEM_THIS rom, 0xff, BIOSROMSZ + EXROMSIZE + 4096);
-  for (idx = 0; idx < BX_MEM_HANDLERS; idx++)
-    BX_MEM_THIS memory_handlers[idx] = NULL;
   for (idx = 0; idx < 65; idx++)
     BX_MEM_THIS rom_present[idx] = 0;
+
+  // block must be large enough to fit num_blocks in 32-bit
+  BX_ASSERT((BX_MEM_THIS len / BX_MEM_BLOCK_LEN) <= 0xffffffff);
+
+  Bit32u num_blocks = BX_MEM_THIS len / BX_MEM_BLOCK_LEN;
+  BX_INFO(("%.2fMB", (float)(BX_MEM_THIS len / (1024.0*1024.0))));
+  BX_INFO(("mem block size = 0x%08x, blocks=%u", BX_MEM_BLOCK_LEN, num_blocks));
+  BX_MEM_THIS blocks = new Bit8u* [num_blocks];
+  if (0) {
+    // all guest memory is allocated, just map it
+    for (idx = 0; idx < num_blocks; idx++) {
+      BX_MEM_THIS blocks[idx] = BX_MEM_THIS vector + (idx * BX_MEM_BLOCK_LEN);
+    }
+    BX_MEM_THIS used_blocks = num_blocks;
+  }
+  else {
+    // host cannot allocate all requested guest memory
+    for (idx = 0; idx < num_blocks; idx++) {
+      BX_MEM_THIS blocks[idx] = NULL;
+    }
+    BX_MEM_THIS used_blocks = 0;
+  }
+
+  BX_MEM_THIS memory_handlers = new struct memory_handler_struct *[BX_MEM_HANDLERS];
+  for (idx = 0; idx < BX_MEM_HANDLERS; idx++)
+    BX_MEM_THIS memory_handlers[idx] = NULL;
+
   BX_MEM_THIS pci_enabled = SIM->get_param_bool(BXPN_I440FX_SUPPORT)->get();
   BX_MEM_THIS smram_available = 0;
   BX_MEM_THIS smram_enable = 0;
   BX_MEM_THIS smram_restricted = 0;
-
-  // accept only memory size which is multiply of 1M
-  BX_ASSERT((BX_MEM_THIS len & 0xfffff) == 0);
-  BX_INFO(("%.2fMB", (float)(BX_MEM_THIS len / (1024.0*1024.0))));
 
 #if BX_SUPPORT_MONITOR_MWAIT
   BX_MEM_THIS monitor_active = new bx_bool[BX_SMP_PROCESSORS];
@@ -110,14 +138,71 @@ void BX_MEM_C::init_memory(Bit32u memsize)
   BX_MEM_THIS n_monitors = 0;
 #endif
 
-  register_state();
+  BX_MEM_THIS register_state();
+}
+
+void BX_MEM_C::allocate_block(Bit32u block)
+{
+  Bit32u num_blocks = BX_MEM_THIS len / BX_MEM_BLOCK_LEN;
+  if (BX_MEM_THIS used_blocks >= num_blocks) {
+    BX_PANIC(("FATAL ERROR: all available memory is already allocated !"));
+  }
+  else {
+    BX_MEM_THIS blocks[block] = BX_MEM_THIS vector + (BX_MEM_THIS used_blocks * BX_MEM_BLOCK_LEN);
+    BX_MEM_THIS used_blocks++;
+  }
+}
+
+Bit64s memory_param_save_handler(void *devptr, bx_param_c *param, Bit64s val)
+{
+  const char *pname = param->get_name();
+  if (! strncmp(pname, "blk", 3)) {
+     Bit32u blk_index = atoi(pname + 3);
+     if (! BX_MEM(0)->blocks[blk_index]) {
+        return -1;
+     }
+     else {
+        val = (Bit32u) (BX_MEM(0)->blocks[blk_index] - BX_MEM(0)->vector);
+        if (val & (BX_MEM_BLOCK_LEN-1)) return -2;
+        return val / BX_MEM_BLOCK_LEN;
+     }
+  }
+
+  return -1;
+}
+
+Bit64s memory_param_restore_handler(void *devptr, bx_param_c *param, Bit64s val)
+{
+  const char *pname = param->get_name();
+  if (! strncmp(pname, "blk", 3)) {
+     Bit32u blk_index = atoi(pname + 3);
+     if(val < 0)
+        BX_MEM(0)->blocks[blk_index] = NULL;
+     else
+        BX_MEM(0)->blocks[blk_index] = BX_MEM(0)->vector + val * BX_MEM_BLOCK_LEN;
+  }
+
+  return -1;
 }
 
 void BX_MEM_C::register_state()
 {
-  bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "memory", "Memory State", 3);
-  new bx_shadow_data_c(list, "ram", BX_MEM_THIS vector, BX_MEM_THIS len);
+  bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "memory", "Memory State", 6);
+  new bx_shadow_data_c(list, "ram", BX_MEM_THIS vector, BX_MEM_THIS allocated);
   BXRS_DEC_PARAM_FIELD(list, len, BX_MEM_THIS len);
+  BXRS_DEC_PARAM_FIELD(list, allocated, BX_MEM_THIS allocated);
+  BXRS_DEC_PARAM_FIELD(list, used_blocks, BX_MEM_THIS used_blocks);
+
+  Bit32u num_blocks = BX_MEM_THIS len / BX_MEM_BLOCK_LEN;
+  bx_list_c *mapping = new bx_list_c(list, "mapping", num_blocks);
+  for (Bit32u blk=0; blk < num_blocks; blk++) {
+    char param_name[15];
+    sprintf(param_name, "blk%d", blk);
+    bx_param_num_c *param = new bx_param_num_c(mapping, param_name, "", "", 0, BX_MAX_BIT32U, 0);
+    param->set_base(BASE_DEC);
+    param->set_sr_handlers(this, memory_param_save_handler, memory_param_restore_handler);
+  }
+
 #if BX_SUPPORT_MONITOR_MWAIT
   bx_list_c *monitors = new bx_list_c(list, "monitors", BX_SMP_PROCESSORS+1);
   BXRS_PARAM_BOOL(monitors, n_monitors, BX_MEM_THIS n_monitors);

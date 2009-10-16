@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: memory.h,v 1.62 2009-10-15 21:39:40 sshwarts Exp $
+// $Id: memory.h,v 1.63 2009-10-16 17:10:36 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -75,18 +75,20 @@ private:
   unsigned n_monitors;
 #endif
 
-  Bit64u  len;       // could be > 4G in future
+  Bit64u  len, allocated;  // could be > 4G
   Bit8u   *actual_vector;
   Bit8u   *vector;   // aligned correctly
+  Bit8u  **blocks;
   Bit8u   *rom;      // 512k BIOS rom space + 128k expansion rom space
   Bit8u   *bogus;    // 4k for unexisting memory
+  unsigned used_blocks;
 
 public:
   BX_MEM_C();
  ~BX_MEM_C();
 
   BX_MEM_SMF Bit8u*  get_vector(bx_phy_address addr);
-  BX_MEM_SMF void    init_memory(Bit32u memsize);
+  BX_MEM_SMF void    init_memory(Bit64u guest, Bit64u host);
   BX_MEM_SMF void    cleanup_memory(void);
   BX_MEM_SMF void    enable_smram(bx_bool enable, bx_bool restricted);
   BX_MEM_SMF void    disable_smram(void);
@@ -110,6 +112,7 @@ public:
   BX_MEM_SMF bx_bool unregisterMemoryHandlers(memory_handler_t read_handler, memory_handler_t write_handler,
 		  bx_phy_address begin_addr, bx_phy_address end_addr);
   BX_MEM_SMF Bit64u  get_memory_len(void);
+  BX_MEM_SMF void allocate_block(Bit32u index);
 
 #if BX_SUPPORT_MONITOR_MWAIT
   BX_MEM_SMF void    set_monitor(unsigned cpu);
@@ -118,14 +121,29 @@ public:
   BX_MEM_SMF void    check_monitor(bx_phy_address addr, unsigned len);
 #endif
 
-  BX_MEM_SMF void register_state(void);
+  void register_state(void);
+
+  friend Bit64s memory_param_save_handler(void *devptr, bx_param_c *param, Bit64s val);
+  friend Bit64s memory_param_restore_handler(void *devptr, bx_param_c *param, Bit64s val);
 };
 
 BOCHSAPI extern BX_MEM_C bx_mem;
 
+// must be power of two
+#define BX_MEM_BLOCK_LEN (2*1024*1024) /* 2M blocks */
+
+/*
 BX_CPP_INLINE Bit8u* BX_MEM_C::get_vector(bx_phy_address addr)
 {
   return (BX_MEM_THIS vector + addr);
+}
+*/
+
+BX_CPP_INLINE Bit8u* BX_MEM_C::get_vector(bx_phy_address addr)
+{
+  Bit32u block = addr / BX_MEM_BLOCK_LEN;
+  if (! BX_MEM_THIS blocks[block]) allocate_block(block);
+  return BX_MEM_THIS blocks[block] + (Bit32u)(addr & (BX_MEM_BLOCK_LEN-1));
 }
 
 BX_CPP_INLINE Bit64u BX_MEM_C::get_memory_len(void)
