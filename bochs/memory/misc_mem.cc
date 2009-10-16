@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: misc_mem.cc,v 1.136 2009-10-16 18:29:45 sshwarts Exp $
+// $Id: misc_mem.cc,v 1.137 2009-10-16 21:54:00 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -74,7 +74,7 @@ void BX_MEM_C::init_memory(Bit64u guest, Bit64u host)
 {
   unsigned idx;
 
-  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.136 2009-10-16 18:29:45 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.137 2009-10-16 21:54:00 sshwarts Exp $"));
 
   // accept only memory size which is multiply of 1M
   BX_ASSERT((host & 0xfffff) == 0);
@@ -176,7 +176,7 @@ void memory_param_restore_handler(void *devptr, bx_param_c *param, Bit64s val)
   const char *pname = param->get_name();
   if (! strncmp(pname, "blk", 3)) {
      Bit32u blk_index = atoi(pname + 3);
-     if(val < 0)
+     if((Bit32s) val < 0)
         BX_MEM(0)->blocks[blk_index] = NULL;
      else
         BX_MEM(0)->blocks[blk_index] = BX_MEM(0)->vector + val * BX_MEM_BLOCK_LEN;
