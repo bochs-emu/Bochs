@@ -4,7 +4,11 @@ Changes for next bugfix+ release (coming soon):
   - VMX: Implemented TPR shadow VMEXIT
   - Bugfixes for CPU emulation correctness (mostly for VMX support).
   - Updates for Bochs internal debugger.
+
+- Memory
   - Bugfixes for > 32-bit physical address space.
+  - Allow to emulate more physical memory than host actually could or would
+    like to allocate. For more details look for new .bochsrc 'memory' option.
 
 - Cleanup configure options
   - All paging related options now will be automatically determined according

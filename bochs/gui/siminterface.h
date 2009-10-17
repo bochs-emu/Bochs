@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.243 2009-10-16 18:29:45 sshwarts Exp $
+// $Id: siminterface.h,v 1.244 2009-10-17 17:38:58 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  The Bochs Project
@@ -155,6 +155,7 @@ typedef enum {
 #define BXPN_VENDOR_STRING               "cpu.vendor_string"
 #define BXPN_BRAND_STRING                "cpu.brand_string"
 #define BXPN_MEM_SIZE                    "memory.standard.ram.size"
+#define BXPN_HOST_MEM_SIZE               "memory.standard.ram.host_size"
 #define BXPN_ROM_PATH                    "memory.standard.rom.path"
 #define BXPN_ROM_ADDRESS                 "memory.standard.rom.addr"
 #define BXPN_VGA_ROM_PATH                "memory.standard.vgarom.path"

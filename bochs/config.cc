@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.185 2009-10-12 20:53:00 sshwarts Exp $
+// $Id: config.cc,v 1.186 2009-10-17 17:38:58 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -396,6 +396,15 @@ void bx_init_options()
       BX_DEFAULT_MEM_MEGS);
   ramsize->set_ask_format("Enter memory size (MB): [%d] ");
   ramsize->set_options(ramsize->USE_SPIN_CONTROL);
+
+  bx_param_num_c *host_ramsize = new bx_param_num_c(ram,
+      "host_size",
+      "Host allocated memory size (megabytes)",
+      "Amount of host allocated memory in megabytes",
+      1, 4096,
+      BX_DEFAULT_MEM_MEGS);
+  host_ramsize->set_ask_format("Enter memory size (MB): [%d] ");
+  host_ramsize->set_options(ramsize->USE_SPIN_CONTROL);
 
   path = new bx_param_filename_c(rom,
       "path",
@@ -2532,6 +2541,20 @@ static int parse_line_formatted(const char *context, int num_params, char *param
       PARSE_ERR(("%s: megs directive: wrong # args.", context));
     }
     SIM->get_param_num(BXPN_MEM_SIZE)->set(atol(params[1]));
+    SIM->get_param_num(BXPN_HOST_MEM_SIZE)->set(atol(params[1]));
+  } else if (!strcmp(params[0], "memory")) {
+    if (num_params < 3) {
+      PARSE_ERR(("%s: memory directive malformed.", context));
+    }
+    for (i=1; i<num_params; i++) {
+      if (!strncmp(params[i], "host=", 5)) {
+        SIM->get_param_num(BXPN_HOST_MEM_SIZE)->set(atol(&params[i][5]));
+      } else if (!strncmp(params[i], "guest=", 6)) {
+        SIM->get_param_num(BXPN_MEM_SIZE)->set(atol(&params[i][6]));
+      } else {
+        PARSE_ERR(("%s: memory directive malformed.", context));
+      }
+    }
   } else if (!strcmp(params[0], "romimage")) {
     if ((num_params < 2) || (num_params > 3)) {
       PARSE_ERR(("%s: romimage directive: wrong # args.", context));
@@ -3558,7 +3581,8 @@ int bx_write_configuration(const char *rc, int overwrite)
     fprintf(fp, ", options=\"%s\"\n", strptr);
   else
     fprintf(fp, "\n");
-  fprintf(fp, "megs: %d\n", SIM->get_param_num(BXPN_MEM_SIZE)->get());
+  fprintf(fp, "memory: host=%d, guest=%d\n", SIM->get_param_num(BXPN_HOST_MEM_SIZE)->get(),
+    SIM->get_param_num(BXPN_MEM_SIZE)->get());
   strptr = SIM->get_param_string(BXPN_ROM_PATH)->getptr();
   if (strlen(strptr) > 0) {
     fprintf(fp, "romimage: file=\"%s\"", strptr);

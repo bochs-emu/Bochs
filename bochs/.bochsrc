@@ -145,17 +145,23 @@ romimage: file=$BXSHARE/BIOS-bochs-latest
 cpu: count=1, ips=50000000, reset_on_triple_fault=1, cpuid_limit_winnt=0, msrs="msrs.def"
 
 #=======================================================================
-# MEGS
-# Set the number of Megabytes of physical memory you want to emulate. 
-# The default is 32MB, most OS's won't need more than that.
-# The maximum amount of memory supported is 2048Mb.
+# MEMORY
+# Set the amount of physical memory you want to emulate.
+#
+# GUEST:
+# Set amount of guest physical memory to emulate. The default is 32MB,
+# the maximum amount limited only by physical address space limitations.
+#
+# HOST:
+# Set amount of host memory you want to allocate for guest RAM emulation.
+# It is possible to allocate less memory than you want to emulate in guest
+# system. This will fake guest to see the non-existing memory. Once guest
+# system touches new memory block it will be dynamically taken from the
+# memory pool. You will be warned (by FATAL PANIC) in case guest already
+# used all allocated host memory and wants more.
+#
 #=======================================================================
-#megs: 256
-#megs: 128
-#megs: 64
-megs: 32
-#megs: 16
-#megs: 8
+memory: guest=512, host=256
 
 #=======================================================================
 # OPTROMIMAGE[1-4]:
@@ -867,3 +873,17 @@ i440fxsupport: enabled=1
 # romimage: file=:bios:BIOS-bochs-latest, address=0xf0000
 # floppya: 1_44=[fd:], status=inserted
 #=======================================================================
+
+#=======================================================================
+# MEGS
+# Set the number of Megabytes of physical memory you want to emulate. 
+# The default is 32MB, most OS's won't need more than that.
+# The maximum amount of memory supported is 2048Mb.
+# The 'MEGS' option is deprecated. Use 'MEMORY' option instead.
+#=======================================================================
+#megs: 256
+#megs: 128
+#megs: 64
+megs: 32
+#megs: 16
+#megs: 8
