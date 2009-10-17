@@ -50,6 +50,7 @@ Changes for next bugfix+ release (coming soon):
  [2803519] Wrong example in man page bochsrc
 
 - these S.F. feature requests were closed/implemented
+  [422766] Large Memory configurations
  [1311287] Idea for a better GUI
   [455971] USB support
 
