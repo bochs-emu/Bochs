@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: misc_mem.cc,v 1.137 2009-10-16 21:54:00 sshwarts Exp $
+// $Id: misc_mem.cc,v 1.138 2009-10-17 18:42:15 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -74,7 +74,7 @@ void BX_MEM_C::init_memory(Bit64u guest, Bit64u host)
 {
   unsigned idx;
 
-  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.137 2009-10-16 21:54:00 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.138 2009-10-17 18:42:15 sshwarts Exp $"));
 
   // accept only memory size which is multiply of 1M
   BX_ASSERT((host & 0xfffff) == 0);
@@ -585,6 +585,11 @@ Bit8u *BX_MEM_C::getHostMemAddr(BX_CPU_C *cpu, bx_phy_address addr, unsigned rw)
 {
   bx_phy_address a20addr = A20ADDR(addr);
 
+  bx_bool is_bios = (a20addr >= (bx_phy_address)~BIOS_MASK);
+#if BX_PHY_ADDRESS_LONG
+  if (a20addr > BX_CONST64(0xffffffff)) is_bios = 0;
+#endif
+
 #if BX_SUPPORT_APIC
   if (cpu != NULL) {
     if (cpu->lapic.is_selected(a20addr))
@@ -643,7 +648,7 @@ Bit8u *BX_MEM_C::getHostMemAddr(BX_CPU_C *cpu, bx_phy_address addr, unsigned rw)
       }
     }
 #endif
-    else if(a20addr < BX_MEM_THIS len)
+    else if(a20addr < BX_MEM_THIS len && ! is_bios)
     {
       if (a20addr < 0x000c0000 || a20addr >= 0x00100000) {
         return BX_MEM_THIS get_vector(a20addr);
@@ -674,13 +679,10 @@ Bit8u *BX_MEM_C::getHostMemAddr(BX_CPU_C *cpu, bx_phy_address addr, unsigned rw)
   }
   else
   { // op == {BX_WRITE, BX_RW}
-    if (a20addr >= BX_MEM_THIS len)
+    if (a20addr >= BX_MEM_THIS len || is_bios)
       return(NULL); // Error, requested addr is out of bounds.
     else if (a20addr >= 0x000a0000 && a20addr < 0x000c0000)
       return(NULL); // Vetoed!  Mem mapped IO (VGA)
-    else if (a20addr >= (bx_phy_address)~BIOS_MASK)
-      return(NULL); // Vetoed!  ROMs
-
 #if BX_SUPPORT_PCI
     else if (BX_MEM_THIS pci_enabled && (a20addr >= 0x000c0000 && a20addr < 0x00100000))
     {
