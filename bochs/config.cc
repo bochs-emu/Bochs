@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.186 2009-10-17 17:38:58 sshwarts Exp $
+// $Id: config.cc,v 1.187 2009-10-17 17:52:26 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -392,7 +392,7 @@ void bx_init_options()
       "size",
       "Memory size (megabytes)",
       "Amount of RAM in megabytes",
-      1, 2048,
+      1, ((Bit64u)(1) << BX_PHY_ADDRESS_WIDTH) / (1024*1024),
       BX_DEFAULT_MEM_MEGS);
   ramsize->set_ask_format("Enter memory size (MB): [%d] ");
   ramsize->set_options(ramsize->USE_SPIN_CONTROL);
@@ -401,7 +401,7 @@ void bx_init_options()
       "host_size",
       "Host allocated memory size (megabytes)",
       "Amount of host allocated memory in megabytes",
-      1, 4096,
+      1, 2048,
       BX_DEFAULT_MEM_MEGS);
   host_ramsize->set_ask_format("Enter memory size (MB): [%d] ");
   host_ramsize->set_options(ramsize->USE_SPIN_CONTROL);
