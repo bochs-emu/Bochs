@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: xsave.cc,v 1.18 2009-10-18 17:11:25 sshwarts Exp $
+// $Id: xsave.cc,v 1.19 2009-10-18 17:16:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008-2009 Stanislav Shwartsman
@@ -317,7 +317,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XGETBV(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::XSETBV(bxInstruction_c *i)
 {
 #if BX_SUPPORT_XSAVE
-  if (real_mode()) {
+  if (v8086_mode()) {
     BX_ERROR(("XSETBV: not recognized in real or virtual-8086 mode"));
     exception(BX_UD_EXCEPTION, 0, 0);
   }
