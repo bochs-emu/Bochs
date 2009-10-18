@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: xsave.cc,v 1.19 2009-10-18 17:16:08 sshwarts Exp $
+// $Id: xsave.cc,v 1.20 2009-10-18 17:33:35 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008-2009 Stanislav Shwartsman
@@ -260,6 +260,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
     Bit32u new_mxcsr = read_virtual_dword(i->seg(), eaddr + 24);
     if(new_mxcsr & ~MXCSR_MASK)
        exception(BX_GP_EXCEPTION, 0, 0);
+    BX_MXCSR_REGISTER = new_mxcsr;
 
     if (header1 & BX_XCR0_SSE_MASK) {
       // load SSE state from XSAVE area
