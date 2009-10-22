@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.614 2009-10-16 18:29:45 sshwarts Exp $
+// $Id: cpu.h,v 1.615 2009-10-22 13:33:13 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -363,6 +363,7 @@ enum {
   #define BX_MSR_VMX_TRUE_PROCBASED_CTRLS 0x48e
   #define BX_MSR_VMX_TRUE_VMEXIT_CTRLS    0x48f
   #define BX_MSR_VMX_TRUE_VMENTRY_CTRLS   0x490
+  #define BX_MSR_IA32_SMM_MONITOR_CTL     0x09B
 #endif
 
 #if BX_SUPPORT_X86_64
