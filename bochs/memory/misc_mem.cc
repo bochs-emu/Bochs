@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: misc_mem.cc,v 1.139 2009-10-23 08:50:07 sshwarts Exp $
+// $Id: misc_mem.cc,v 1.140 2009-10-23 13:23:31 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -50,18 +50,22 @@ BX_MEM_C::BX_MEM_C()
   memory_handlers = NULL;
 }
 
-Bit8u* alloc_vector_aligned(Bit8u **actual_vector, Bit32u bytes, Bit32u alignment)
+Bit8u* BX_MEM_C::alloc_vector_aligned(Bit32u bytes, Bit32u alignment)
 {
   Bit64u test_mask = alignment - 1;
-  *actual_vector = new Bit8u [(Bit32u)(bytes + test_mask)];
+  BX_MEM_THIS actual_vector = new Bit8u [(Bit32u)(bytes + test_mask)];
+  if (BX_MEM_THIS actual_vector == 0) {
+    BX_PANIC(("alloc_vector_aligned: unable to allocate host RAM !"));
+    return 0;
+  }
   // round address forward to nearest multiple of alignment.  Alignment
   // MUST BE a power of two for this to work.
-  Bit64u masked = ((Bit64u)(*actual_vector + test_mask)) & ~test_mask;
+  Bit64u masked = ((Bit64u)(BX_MEM_THIS actual_vector + test_mask)) & ~test_mask;
   Bit8u *vector = (Bit8u *) masked;
   // sanity check: no lost bits during pointer conversion
-  BX_ASSERT (sizeof(masked) >= sizeof(vector));
+  assert(sizeof(masked) >= sizeof(vector));
   // sanity check: after realignment, everything fits in allocated space
-  BX_ASSERT (vector+bytes <= *actual_vector+bytes+test_mask);
+  assert(vector+bytes <= BX_MEM_THIS actual_vector+bytes+test_mask);
   return vector;
 }
 
@@ -74,7 +78,7 @@ void BX_MEM_C::init_memory(Bit64u guest, Bit64u host)
 {
   unsigned idx;
 
-  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.139 2009-10-23 08:50:07 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.140 2009-10-23 13:23:31 sshwarts Exp $"));
 
   // accept only memory size which is multiply of 1M
   BX_ASSERT((host & 0xfffff) == 0);
@@ -87,7 +91,7 @@ void BX_MEM_C::init_memory(Bit64u guest, Bit64u host)
     BX_MEM_THIS vector = NULL;
     BX_MEM_THIS blocks = NULL;
   }
-  BX_MEM_THIS vector = ::alloc_vector_aligned(&BX_MEM_THIS actual_vector, host + BIOSROMSZ + EXROMSIZE + 4096, BX_MEM_VECTOR_ALIGN);
+  BX_MEM_THIS vector = alloc_vector_aligned(host + BIOSROMSZ + EXROMSIZE + 4096, BX_MEM_VECTOR_ALIGN);
   BX_INFO(("allocated memory at %p. after alignment, vector=%p",
 	BX_MEM_THIS actual_vector, BX_MEM_THIS vector));
 

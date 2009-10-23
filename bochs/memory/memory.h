@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: memory.h,v 1.64 2009-10-16 18:29:45 sshwarts Exp $
+// $Id: memory.h,v 1.65 2009-10-23 13:23:30 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -113,6 +113,7 @@ public:
 		  bx_phy_address begin_addr, bx_phy_address end_addr);
   BX_MEM_SMF Bit64u  get_memory_len(void);
   BX_MEM_SMF void allocate_block(Bit32u index);
+  BX_MEM_SMF Bit8u* alloc_vector_aligned(Bit32u bytes, Bit32u alignment);
 
 #if BX_SUPPORT_MONITOR_MWAIT
   BX_MEM_SMF void    set_monitor(unsigned cpu);
