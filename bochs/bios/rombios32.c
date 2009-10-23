@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios32.c,v 1.51 2009-09-27 09:03:02 sshwarts Exp $
+// $Id: rombios32.c,v 1.52 2009-10-23 15:32:45 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  32 bit Bochs BIOS init code
@@ -82,6 +82,12 @@ typedef unsigned long long uint64_t;
 
 #define MTRRphysBase_MSR(reg) (0x200 + 2 * (reg))
 #define MTRRphysMask_MSR(reg) (0x200 + 2 * (reg) + 1)
+
+#define MTRR_MEMTYPE_UC 0
+#define MTRR_MEMTYPE_WC 1
+#define MTRR_MEMTYPE_WT 4
+#define MTRR_MEMTYPE_WP 5
+#define MTRR_MEMTYPE_WB 6
 
 static inline void outl(int addr, int val)
 {
@@ -572,9 +578,10 @@ void setup_mtrr(void)
     wrmsr_smp(MSR_MTRRfix4K_F0000, 0);
     wrmsr_smp(MSR_MTRRfix4K_F8000, 0);
     /* Mark 3.5-4GB as UC, anything not specified defaults to WB */
-    wrmsr_smp(MTRRphysBase_MSR(0), 0xe0000000ull | 0);
-    wrmsr_smp(MTRRphysMask_MSR(0), ~(0x20000000ull - 1) | 0x800);
-    wrmsr_smp(MSR_MTRRdefType, 0xc06);
+    wrmsr_smp(MTRRphysBase_MSR(0), 0xe0000000 | MTRR_MEMTYPE_UC);
+    /* Make sure no reserved bit set to '1 in MTRRphysMask_MSR */
+    wrmsr_smp(MTRRphysMask_MSR(0), ~(0x20000000 - 1) | 0x800);
+    wrmsr_smp(MSR_MTRRdefType, 0xc00 | MTRR_MEMTYPE_UC);
 }
 
 void ram_probe(void)
