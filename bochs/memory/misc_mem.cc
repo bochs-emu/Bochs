@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: misc_mem.cc,v 1.138 2009-10-17 18:42:15 sshwarts Exp $
+// $Id: misc_mem.cc,v 1.139 2009-10-23 08:50:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -74,7 +74,7 @@ void BX_MEM_C::init_memory(Bit64u guest, Bit64u host)
 {
   unsigned idx;
 
-  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.138 2009-10-17 18:42:15 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.139 2009-10-23 08:50:07 sshwarts Exp $"));
 
   // accept only memory size which is multiply of 1M
   BX_ASSERT((host & 0xfffff) == 0);
@@ -143,14 +143,15 @@ void BX_MEM_C::init_memory(Bit64u guest, Bit64u host)
 
 void BX_MEM_C::allocate_block(Bit32u block)
 {
-  Bit32u num_blocks = BX_MEM_THIS len / BX_MEM_BLOCK_LEN;
-  if (BX_MEM_THIS used_blocks >= num_blocks) {
+  Bit32u max_blocks = BX_MEM_THIS allocated / BX_MEM_BLOCK_LEN;
+  if (BX_MEM_THIS used_blocks >= max_blocks) {
     BX_PANIC(("FATAL ERROR: all available memory is already allocated !"));
   }
   else {
     BX_MEM_THIS blocks[block] = BX_MEM_THIS vector + (BX_MEM_THIS used_blocks * BX_MEM_BLOCK_LEN);
     BX_MEM_THIS used_blocks++;
   }
+  BX_DEBUG(("allocate_block: used_blocks=%d of %d", BX_MEM_THIS used_blocks, max_blocks));
 }
 
 Bit64s memory_param_save_handler(void *devptr, bx_param_c *param)
