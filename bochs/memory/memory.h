@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: memory.h,v 1.65 2009-10-23 13:23:30 sshwarts Exp $
+// $Id: memory.h,v 1.66 2009-10-24 14:37:44 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -131,7 +131,7 @@ public:
 BOCHSAPI extern BX_MEM_C bx_mem;
 
 // must be power of two
-#define BX_MEM_BLOCK_LEN (2*1024*1024) /* 2M blocks */
+#define BX_MEM_BLOCK_LEN (1024*1024) /* 1M blocks */
 
 /*
 BX_CPP_INLINE Bit8u* BX_MEM_C::get_vector(bx_phy_address addr)
