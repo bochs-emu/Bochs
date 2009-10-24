@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sdl.cc,v 1.85 2009-05-13 17:26:45 vruppert Exp $
+// $Id: sdl.cc,v 1.86 2009-10-24 13:17:33 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -50,7 +50,7 @@
 
 class bx_sdl_gui_c : public bx_gui_c {
 public:
-  bx_sdl_gui_c(void);
+  bx_sdl_gui_c() {}
   DECLARE_GUI_VIRTUAL_METHODS()
   DECLARE_GUI_NEW_VIRTUAL_METHODS()
   virtual void set_display_mode(disp_mode_t newmode);
@@ -260,10 +260,6 @@ Uint32 SDLCALL sdlTimer(Uint32 interval)
 #endif
 #endif
 
-bx_sdl_gui_c::bx_sdl_gui_c ()
-{
-}
-
 #ifdef __MORPHOS__
 void bx_sdl_morphos_exit(void)
 {
@@ -444,9 +440,7 @@ void bx_sdl_gui_c::statusbar_setitem(int element, bx_bool active, bx_bool w)
   }
 }
 
-void bx_sdl_gui_c::text_update(
-    Bit8u *old_text,
-    Bit8u *new_text,
+void bx_sdl_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
     unsigned long cursor_x,
     unsigned long cursor_y,
     bx_vga_tminfo_t tm_info)
@@ -732,9 +726,7 @@ bx_svga_tileinfo_t *bx_sdl_gui_c::graphics_tile_info(bx_svga_tileinfo_t *info)
 {
   if (!info) {
     info = (bx_svga_tileinfo_t *)malloc(sizeof(bx_svga_tileinfo_t));
-    if (!info) {
-      return NULL;
-    }
+    if (!info) return NULL;
   }
 
   if (sdl_screen) {
@@ -769,8 +761,7 @@ bx_svga_tileinfo_t *bx_sdl_gui_c::graphics_tile_info(bx_svga_tileinfo_t *info)
   return info;
 }
 
-Bit8u *bx_sdl_gui_c::graphics_tile_get(unsigned x0, unsigned y0,
-                            unsigned *w, unsigned *h)
+Bit8u *bx_sdl_gui_c::graphics_tile_get(unsigned x0, unsigned y0, unsigned *w, unsigned *h)
 {
   if (x0+tilewidth > res_x) {
     *w = res_x - x0;
@@ -1210,14 +1201,10 @@ bx_bool bx_sdl_gui_c::palette_change(unsigned index, unsigned red, unsigned gree
   return 1;
 }
 
-void bx_sdl_gui_c::dimension_update(
-    unsigned x,
-    unsigned y,
-    unsigned fheight,
-    unsigned fwidth,
-    unsigned bpp)
+void bx_sdl_gui_c::dimension_update(unsigned x, unsigned y,
+    unsigned fheight, unsigned fwidth, unsigned bpp)
 {
-  if ((bpp == 8) || (bpp == 15) || (bpp == 16) || (bpp == 24) || (bpp == 32)) {
+  if (bpp == 8 || bpp == 15 || bpp == 16 || bpp == 24 || bpp == 32) {
     vga_bpp = bpp;
   }
   else
@@ -1280,10 +1267,8 @@ void bx_sdl_gui_c::dimension_update(
   bx_gui->show_headerbar();
 }
 
-unsigned bx_sdl_gui_c::create_bitmap(const unsigned char *bmap,
-    unsigned xdim, unsigned ydim)
+unsigned bx_sdl_gui_c::create_bitmap(const unsigned char *bmap, unsigned xdim, unsigned ydim)
 {
-  bitmaps *tmp = new bitmaps;
   Uint32 *buf, *buf_row;
   Uint32 disp;
   unsigned char pixels;
@@ -1292,6 +1277,8 @@ unsigned bx_sdl_gui_c::create_bitmap(const unsigned char *bmap,
     BX_PANIC(("too many SDL bitmaps. To fix, increase MAX_SDL_BITMAPS"));
     return 0;
   }
+
+  bitmaps *tmp = new bitmaps;
 
   tmp->surface = SDL_CreateRGBSurface(
       SDL_SWSURFACE,
@@ -1310,6 +1297,7 @@ unsigned bx_sdl_gui_c::create_bitmap(const unsigned char *bmap,
       0x00000000
 #endif
       );
+
   if(!tmp->surface)
   {
     delete tmp;
@@ -1317,6 +1305,7 @@ unsigned bx_sdl_gui_c::create_bitmap(const unsigned char *bmap,
     LOG_THIS setonoff(LOGLEV_PANIC, ACT_FATAL);
     BX_PANIC(("Unable to create requested bitmap"));
   }
+
   tmp->src.w = xdim;
   tmp->src.h = ydim;
   tmp->src.x = 0;
@@ -1328,6 +1317,7 @@ unsigned bx_sdl_gui_c::create_bitmap(const unsigned char *bmap,
   tmp->cb = NULL;
   buf = (Uint32 *)tmp->surface->pixels;
   disp = tmp->surface->pitch/4;
+
   do
   {
     buf_row = buf;
@@ -1346,18 +1336,14 @@ unsigned bx_sdl_gui_c::create_bitmap(const unsigned char *bmap,
     } while(--xdim);
     buf = buf_row + disp;
   } while(--ydim);
-  SDL_UpdateRect(
-      tmp->surface,
-      0, 0,
-      tmp->src.w,
-      tmp->src.h);
+
+  SDL_UpdateRect(tmp->surface, 0, 0, tmp->src.w, tmp->src.h);
   sdl_bitmaps[n_sdl_bitmaps] = tmp;
+
   return n_sdl_bitmaps++;
 }
 
-unsigned bx_sdl_gui_c::headerbar_bitmap(
-    unsigned bmap_id,
-    unsigned alignment,
+unsigned bx_sdl_gui_c::headerbar_bitmap(unsigned bmap_id, unsigned alignment,
     void (*f)(void))
 {
   unsigned hb_index;
@@ -1373,6 +1359,7 @@ unsigned bx_sdl_gui_c::headerbar_bitmap(
   hb_entry[hb_index].bmp_id = bmap_id;
   hb_entry[hb_index].alignment = alignment;
   hb_entry[hb_index].f = f;
+
   if (alignment == BX_GRAVITY_LEFT) {
     sdl_bitmaps[bmap_id]->dst.x = bx_bitmap_left_xorigin;
     bx_bitmap_left_xorigin += sdl_bitmaps[bmap_id]->src.w;
@@ -1380,12 +1367,11 @@ unsigned bx_sdl_gui_c::headerbar_bitmap(
     bx_bitmap_right_xorigin += sdl_bitmaps[bmap_id]->src.w;
     sdl_bitmaps[bmap_id]->dst.x = bx_bitmap_right_xorigin;
   }
+
   return hb_index;
 }
 
-void bx_sdl_gui_c::replace_bitmap(
-    unsigned hbar_id,
-    unsigned bmap_id)
+void bx_sdl_gui_c::replace_bitmap(unsigned hbar_id, unsigned bmap_id)
 {
   SDL_Rect hb_dst;
   unsigned old_id;
@@ -1609,7 +1595,7 @@ void bx_sdl_gui_c::show_ips(Bit32u ips_count)
 
 #include "enh_dbg.h"
 
-BxEvent *sdl_notify_callback (void *unused, BxEvent *event)
+BxEvent *sdl_notify_callback(void *unused, BxEvent *event)
 {
   switch (event->type)
   {
@@ -1645,6 +1631,6 @@ BxEvent *sdl_notify_callback (void *unused, BxEvent *event)
       return (*old_callback)(old_callback_arg, event);
   }
 }
-#endif /* if BX_DEBUGGER */
+#endif /* if BX_DEBUGGER && BX_DEBUGGER_GUI */
 
 #endif /* if BX_WITH_SDL */
