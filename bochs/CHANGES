@@ -25,6 +25,7 @@ Changes for next bugfix+ release (coming soon):
   - Bugfixes for 8254 PIT, VGA, Cirrus-Logic SVGA, USB UCHI
 
 - SF patches applied
+ [2817840] Make old_callback static by Mark Marshall
  [2874004] fix for VMWRITE instruction by Roberto Paleari
  [2873999] fix CS segment type during fast syscall invocation by Roberto Paleari
  [2864389] Debugger gui maximize on startup by Thomas Nilsen
@@ -32,6 +33,7 @@ Changes for next bugfix+ release (coming soon):
  [2812948] PIT bug by Derek
 
 - these S.F. bugs were closed/fixed
+ [2885383] SDL GUI memory leak
  [2872290] compilation in AIX5.3 ML10 failes
  [2867904] crash with cirrus bx_vga_c::mem_write
  [2851495] BIOS PCI returns with INT flag = 0
