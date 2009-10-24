@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.294 2009-10-19 19:59:10 sshwarts Exp $
+// $Id: cpu.cc,v 1.295 2009-10-24 11:24:21 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -624,14 +624,13 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
   }
 #if BX_X86_DEBUGGER
   else {
-    // only bother comparing if any breakpoints enabled
-    if (BX_CPU_THIS_PTR dr7 & 0x000000ff) {
-      bx_address iaddr = get_laddr(BX_SEG_REG_CS, BX_CPU_THIS_PTR prev_rip);
-      Bit32u dr6_bits = hwdebug_compare(iaddr, 1, BX_HWDebugInstruction, BX_HWDebugInstruction);
-      if (dr6_bits) {
-        // If debug events are not inhibited on this boundary,
-        // fire off a debug fault.
-        if (! (BX_CPU_THIS_PTR inhibit_mask & BX_INHIBIT_DEBUG_SHADOW)) {
+    // only bother comparing if any breakpoints enabled and
+    // debug events are not inhibited on this boundary.
+    if (! (BX_CPU_THIS_PTR inhibit_mask & BX_INHIBIT_DEBUG_SHADOW)) {
+      if (BX_CPU_THIS_PTR dr7 & 0x000000ff) {
+        bx_address iaddr = get_laddr(BX_SEG_REG_CS, BX_CPU_THIS_PTR prev_rip);
+        Bit32u dr6_bits = hwdebug_compare(iaddr, 1, BX_HWDebugInstruction, BX_HWDebugInstruction);
+        if (dr6_bits) {
           // Add to the list of debug events thus far.
           BX_CPU_THIS_PTR debug_trap |= dr6_bits;
           BX_ERROR(("#DB: x86 code breakpoint catched"));
