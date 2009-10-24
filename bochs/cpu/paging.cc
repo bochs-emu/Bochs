@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.184 2009-10-03 11:39:29 sshwarts Exp $
+// $Id: paging.cc,v 1.185 2009-10-24 21:00:43 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -401,19 +401,26 @@ static unsigned priv_check[BX_PRIV_CHECK_SIZE];
 
 #define PAGING_PAE_PTE_RESERVED_BITS (BX_PHY_ADDRESS_RESERVED_BITS)
 
-#if BX_CPU_LEVEL >= 6
+//           Format of a PDE that Maps a 4-MByte Page
+// -----------------------------------------------------------
+// 00    | Present (P)
+// 01    | R/W
+// 02    | U/S
+// 03    | Page-Level Write-Through (PWT)
+// 04    | Page-Level Cache-Disable (PCD)
+// 05    | Accessed (A)
+// 06    | Dirty (D)
+// 07    | Page size, must be 1 to indicate 4-Mbyte page
+// 08    | Global (G) (if CR4.PGE=1, ignored otherwise)
+// 11-09 | (ignored)
+// 12    | PAT (if PAT is supported, reserved otherwise)
+// PA-13 | Bits PA-32 of physical address of the 4-MByte page
+// 21-PA | Reserved (must be zero)
+// 31-22 | Bits 31-22 of physical address of the 4-MByte page
+// -----------------------------------------------------------
 
-/* PSE-36 PDE4M: bits [21:17] */
-#define PAGING_PSE_PDE4M_RESERVED_BITS \
-    (BX_PHY_ADDRESS_RESERVED_BITS | BX_CONST64(0x003E0000))
-
-#else
-
-/* PSE PDE4M: bits [21:13] */
-#define PAGING_PSE_PDE4M_RESERVED_BITS \
-    (BX_PHY_ADDRESS_RESERVED_BITS | BX_CONST64(0x003FE000))
-
-#endif
+#define PAGING_PDE4M_RESERVED_BITS \
+    ((41-BX_PHY_ADDRESS_WIDTH)-1) << (13 + BX_PHY_ADDRESS_WIDTH - 32)
 
 #define PAGE_DIRECTORY_NX_BIT (BX_CONST64(0x8000000000000000))
 
@@ -1232,16 +1239,11 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned curr_pl, un
 #if BX_CPU_LEVEL >= 5
     if ((pde & 0x80) && BX_CPU_THIS_PTR cr4.get_PSE()) {
       // 4M paging, only if CR4.PSE enabled, ignore PDE.PS otherwise
-      if (pde & PAGING_PSE_PDE4M_RESERVED_BITS) {
+      if (pde & PAGING_PDE4M_RESERVED_BITS) {
         BX_DEBUG(("PSE PDE4M: reserved bit is set: PDE=0x%08x", pde));
         page_fault(ERROR_RESERVED | ERROR_PROTECTION, laddr, pl, rw);
       }
 
-#if BX_PHY_ADDRESS_WIDTH == 32
-      if (pde & 0x0001e000) {
-        BX_PANIC(("PSE PDE4M 0x%08x: Only 32 bit physical address space is emulated !", pde));
-      }
-#endif
       // Combined access is just access from the pde (no pte involved).
       combined_access = pde & 0x06; // U/S and R/W
 
@@ -1267,6 +1269,9 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned curr_pl, un
 
       // make up the physical frame number
       ppf = (pde & 0xffc00000) | (laddr & 0x003ff000);
+#if BX_PHY_ADDRESS_WIDTH > 32
+      ppf |= ((bx_phy_address)(pde & 0x003f7000)) << 19;
+#endif
       lpf_mask = 0x3fffff;
     }
     else // else normal 4K page...
@@ -1445,6 +1450,9 @@ bx_bool BX_CPU_C::dbg_xlate_linear2phy(bx_address laddr, bx_phy_address *phy)
       pt_address = pte & 0xfffff000;
       if (level == 1 && (pte & 0x80)) { // PSE page
 	offset_mask = 0x3fffff;
+#if BX_PHY_ADDRESS_WIDTH > 32
+        pt_address += ((bx_phy_address)(pte & 0x003f7000)) << 19;
+#endif
 	break;
       }
     }
