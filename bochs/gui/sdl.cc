@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sdl.cc,v 1.86 2009-10-24 13:17:33 sshwarts Exp $
+// $Id: sdl.cc,v 1.87 2009-10-24 13:22:36 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -145,8 +145,8 @@ static void headerbar_click(int x);
 
 #if !defined(WIN32) && BX_DEBUGGER && BX_DEBUGGER_GUI
 BxEvent *sdl_notify_callback (void *unused, BxEvent *event);
-bxevent_handler old_callback = NULL;
-void *old_callback_arg = NULL;
+static bxevent_handler old_callback = NULL;
+static void *old_callback_arg = NULL;
 #endif
 
 #if BX_SHOW_IPS

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: x.cc,v 1.126 2009-03-22 20:18:17 vruppert Exp $
+// $Id: x.cc,v 1.127 2009-10-24 13:22:36 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -312,8 +312,8 @@ unsigned curr_foreground, curr_background;
 static unsigned x_tilesize, y_tilesize;
 
 BxEvent *x11_notify_callback (void *unused, BxEvent *event);
-bxevent_handler old_callback = NULL;
-void *old_callback_arg = NULL;
+static bxevent_handler old_callback = NULL;
+static void *old_callback_arg = NULL;
 
 
 // Try to allocate NCOLORS at once in the colormap provided.  If it can
