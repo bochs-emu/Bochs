@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_move.cc,v 1.100 2009-10-14 20:45:29 sshwarts Exp $
+// $Id: sse_move.cc,v 1.101 2009-10-24 11:17:51 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003-2009 Stanislav Shwartsman
@@ -395,22 +395,16 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FXRSTOR(bxInstruction_c *i)
 /* MOVUPS:    0F 10 */
 /* MOVUPD: 66 0F 10 */
 /* MOVDQU: F3 0F 6F */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVUPS_VpsWps(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVUPS_VpsWpsM(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op;
 
-  /* op is a register or memory reference */
-  if (i->modC0()) {
-    op = BX_READ_XMM_REG(i->rm());
-  }
-  else {
-    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-    /* pointer, segment address pair */
-    read_virtual_dqword(i->seg(), eaddr, (Bit8u *) &op);
-  }
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  /* pointer, segment address pair */
+  read_virtual_dqword(i->seg(), eaddr, (Bit8u *) &op);
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), op);
@@ -423,22 +417,16 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVUPS_VpsWps(bxInstruction_c *i)
 /* MOVUPS:    0F 11 */
 /* MOVUPD: 66 0F 11 */
 /* MOVDQU: F3 0F 7F */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVUPS_WpsVps(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVUPS_WpsVpsM(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op = BX_READ_XMM_REG(i->nnn());
 
-  /* op is a register or memory reference */
-  if (i->modC0()) {
-    BX_WRITE_XMM_REG(i->rm(), op);
-  }
-  else {
-    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-    /* pointer, segment address pair */
-    write_virtual_dqword(i->seg(), eaddr, (Bit8u *) &op);
-  }
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  /* pointer, segment address pair */
+  write_virtual_dqword(i->seg(), eaddr, (Bit8u *) &op);
 #else
   BX_INFO(("MOVUPS_WpsVps: required SSE, use --enable-sse option"));
   exception(BX_UD_EXCEPTION, 0, 0);
@@ -448,22 +436,27 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVUPS_WpsVps(bxInstruction_c *i)
 /* MOVAPS:    0F 28 */
 /* MOVAPD: 66 0F 28 */
 /* MOVDQA: F3 0F 6F */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVAPS_VpsWps(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVAPS_VpsWpsR(bxInstruction_c *i)
+{
+#if BX_SUPPORT_SSE >= 1
+  BX_CPU_THIS_PTR prepareSSE();
+  BX_WRITE_XMM_REG(i->nnn(), BX_READ_XMM_REG(i->rm()));
+#else
+  BX_INFO(("MOVAPS_VpsWps: required SSE, use --enable-sse option"));
+  exception(BX_UD_EXCEPTION, 0, 0);
+#endif
+}
+
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVAPS_VpsWpsM(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op;
 
-  /* op is a register or memory reference */
-  if (i->modC0()) {
-    op = BX_READ_XMM_REG(i->rm());
-  }
-  else {
-    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-    /* pointer, segment address pair */
-    read_virtual_dqword_aligned(i->seg(), eaddr, (Bit8u *) &op);
-  }
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  /* pointer, segment address pair */
+  read_virtual_dqword_aligned(i->seg(), eaddr, (Bit8u *) &op);
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), op);
@@ -476,22 +469,28 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVAPS_VpsWps(bxInstruction_c *i)
 /* MOVAPS:    0F 29 */
 /* MOVAPD: 66 0F 29 */
 /* MOVDQA: F3 0F 7F */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVAPS_WpsVps(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVAPS_WpsVpsR(bxInstruction_c *i)
+{
+#if BX_SUPPORT_SSE >= 1
+  BX_CPU_THIS_PTR prepareSSE();
+
+  BX_WRITE_XMM_REG(i->rm(), BX_READ_XMM_REG(i->nnn()));
+#else
+  BX_INFO(("MOVAPS_WpsVps: required SSE, use --enable-sse option"));
+  exception(BX_UD_EXCEPTION, 0, 0);
+#endif
+}
+
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVAPS_WpsVpsM(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op = BX_READ_XMM_REG(i->nnn());
 
-  /* op is a register or memory reference */
-  if (i->modC0()) {
-    BX_WRITE_XMM_REG(i->rm(), op);
-  }
-  else {
-    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-    /* pointer, segment address pair */
-    write_virtual_dqword_aligned(i->seg(), eaddr, (Bit8u *) &op);
-  }
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  /* pointer, segment address pair */
+  write_virtual_dqword_aligned(i->seg(), eaddr, (Bit8u *) &op);
 #else
   BX_INFO(("MOVAPS_WpsVps: required SSE, use --enable-sse option"));
   exception(BX_UD_EXCEPTION, 0, 0);

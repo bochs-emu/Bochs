@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: mmx.cc,v 1.86 2009-10-14 20:45:29 sshwarts Exp $
+// $Id: mmx.cc,v 1.87 2009-10-24 11:17:51 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2002-2009 Stanislav Shwartsman
@@ -1025,21 +1025,28 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVD_PqEd(bxInstruction_c *i)
 /* 0F 6E */
 #if BX_SUPPORT_X86_64
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVQ_PqEq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVQ_PqEqR(bxInstruction_c *i)
+{
+  BX_CPU_THIS_PTR prepareMMX();
+  BX_CPU_THIS_PTR prepareFPU2MMX(); /* FPU2MMX transition */
+
+  BxPackedMmxRegister op;
+
+  MMXUQ(op) = BX_READ_64BIT_REG(i->rm());
+
+  /* now write result back to destination */
+  BX_WRITE_MMX_REG(i->nnn(), op);
+}
+
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVQ_PqEqM(bxInstruction_c *i)
 {
   BX_CPU_THIS_PTR prepareMMX();
 
   BxPackedMmxRegister op;
 
-  /* op is a register or memory reference */
-  if (i->modC0()) {
-    MMXUQ(op) = BX_READ_64BIT_REG(i->rm());
-  }
-  else {
-    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-    /* pointer, segment address pair */
-    MMXUQ(op) = read_virtual_qword_64(i->seg(), eaddr);
-  }
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  /* pointer, segment address pair */
+  MMXUQ(op) = read_virtual_qword_64(i->seg(), eaddr);
 
   BX_CPU_THIS_PTR prepareFPU2MMX(); /* FPU2MMX transition */
 
