@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.185 2009-10-24 21:00:43 sshwarts Exp $
+// $Id: paging.cc,v 1.186 2009-10-26 21:16:04 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -420,7 +420,7 @@ static unsigned priv_check[BX_PRIV_CHECK_SIZE];
 // -----------------------------------------------------------
 
 #define PAGING_PDE4M_RESERVED_BITS \
-    ((41-BX_PHY_ADDRESS_WIDTH)-1) << (13 + BX_PHY_ADDRESS_WIDTH - 32)
+    (((1 << (41-BX_PHY_ADDRESS_WIDTH))-1) << (13 + BX_PHY_ADDRESS_WIDTH - 32))
 
 #define PAGE_DIRECTORY_NX_BIT (BX_CONST64(0x8000000000000000))
 
@@ -1269,8 +1269,9 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned curr_pl, un
 
       // make up the physical frame number
       ppf = (pde & 0xffc00000) | (laddr & 0x003ff000);
+printf("extra: %08x\n", pde & 0x003fe000);
 #if BX_PHY_ADDRESS_WIDTH > 32
-      ppf |= ((bx_phy_address)(pde & 0x003f7000)) << 19;
+      ppf |= ((bx_phy_address)(pde & 0x003fe000)) << 19;
 #endif
       lpf_mask = 0x3fffff;
     }
