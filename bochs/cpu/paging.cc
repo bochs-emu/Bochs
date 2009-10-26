@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.186 2009-10-26 21:16:04 sshwarts Exp $
+// $Id: paging.cc,v 1.187 2009-10-26 21:19:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1269,7 +1269,6 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned curr_pl, un
 
       // make up the physical frame number
       ppf = (pde & 0xffc00000) | (laddr & 0x003ff000);
-printf("extra: %08x\n", pde & 0x003fe000);
 #if BX_PHY_ADDRESS_WIDTH > 32
       ppf |= ((bx_phy_address)(pde & 0x003fe000)) << 19;
 #endif
