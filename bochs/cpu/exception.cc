@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.141 2009-10-03 07:25:03 sshwarts Exp $
+// $Id: exception.cc,v 1.142 2009-10-26 15:53:24 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -68,10 +68,10 @@ void BX_CPU_C::long_mode_int(Bit8u vector, unsigned is_INT, bx_bool push_error, 
   bx_selector_t cs_selector;
 
   // interrupt vector must be within IDT table limits,
-  // else #GP(vector number*16 + 2 + EXT)
+  // else #GP(vector number*8 + 2 + EXT)
   if ((vector*16 + 15) > BX_CPU_THIS_PTR idtr.limit) {
     BX_ERROR(("interrupt(long mode): vector must be within IDT table limits, IDT.limit = 0x%x", BX_CPU_THIS_PTR idtr.limit));
-    exception(BX_GP_EXCEPTION, vector*16 + 2, 0);
+    exception(BX_GP_EXCEPTION, vector*8 + 2, 0);
   }
 
   desctmp1 = system_read_qword(BX_CPU_THIS_PTR idtr.base + vector*16);
@@ -79,7 +79,7 @@ void BX_CPU_C::long_mode_int(Bit8u vector, unsigned is_INT, bx_bool push_error, 
 
   if (desctmp2 & BX_CONST64(0x00001F0000000000)) {
     BX_ERROR(("interrupt(long mode): IDT entry extended attributes DWORD4 TYPE != 0"));
-    exception(BX_GP_EXCEPTION, vector*16 + 2, 0);
+    exception(BX_GP_EXCEPTION, vector*8+ 2, 0);
   }
 
   Bit32u dword1 = GET32L(desctmp1);
@@ -91,7 +91,7 @@ void BX_CPU_C::long_mode_int(Bit8u vector, unsigned is_INT, bx_bool push_error, 
   if ((gate_descriptor.valid==0) || gate_descriptor.segment)
   {
     BX_ERROR(("interrupt(long mode): gate descriptor is not valid sys seg"));
-    exception(BX_GP_EXCEPTION, vector*16 + 2, 0);
+    exception(BX_GP_EXCEPTION, vector*8 + 2, 0);
   }
 
   // descriptor AR byte must indicate interrupt gate, trap gate,
@@ -101,7 +101,7 @@ void BX_CPU_C::long_mode_int(Bit8u vector, unsigned is_INT, bx_bool push_error, 
   {
     BX_ERROR(("interrupt(long mode): unsupported gate type %u",
         (unsigned) gate_descriptor.type));
-    exception(BX_GP_EXCEPTION, vector*16 + 2, 0);
+    exception(BX_GP_EXCEPTION, vector*8 + 2, 0);
   }
 
   // if software interrupt, then gate descripor DPL must be >= CPL,
@@ -109,13 +109,13 @@ void BX_CPU_C::long_mode_int(Bit8u vector, unsigned is_INT, bx_bool push_error, 
   if (is_INT && (gate_descriptor.dpl < CPL))
   {
     BX_ERROR(("interrupt(long mode): is_INT && gate.dpl < CPL"));
-    exception(BX_GP_EXCEPTION, vector*16 + 2, 0);
+    exception(BX_GP_EXCEPTION, vector*8 + 2, 0);
   }
 
   // Gate must be present, else #NP(vector * 16 + 2 + EXT)
   if (! IS_PRESENT(gate_descriptor)) {
     BX_ERROR(("interrupt(long mode): gate.p == 0"));
-    exception(BX_NP_EXCEPTION, vector*16 + 2, 0);
+    exception(BX_NP_EXCEPTION, vector*8 + 2, 0);
   }
 
   Bit16u gate_dest_selector = gate_descriptor.u.gate.dest_selector;
