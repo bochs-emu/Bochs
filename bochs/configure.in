@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.411 2009-10-02 16:11:06 sshwarts Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.412 2009-10-27 18:30:13 sshwarts Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -2898,7 +2898,7 @@ AC_ARG_ENABLE(daz,
    AC_MSG_RESULT(no)
   ])
 
-AC_MSG_CHECKING(for VME support)
+AC_MSG_CHECKING(for VME support (deprecated))
 AC_ARG_ENABLE(vme,
   [  --enable-vme                      virtual 8086 mode extensions (deprecated)],
   [AC_MSG_RESULT($enableval)

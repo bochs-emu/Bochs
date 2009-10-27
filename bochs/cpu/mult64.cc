@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: mult64.cc,v 1.35 2009-10-24 17:23:19 sshwarts Exp $
+// $Id: mult64.cc,v 1.36 2009-10-27 18:30:13 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -253,10 +253,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::IMUL_RAXEqR(bxInstruction_c *i)
    *   RDX:RAX = sign-extend of RAX
    */
 
-  SET_FLAGS_OSZAPC_LOGIC_64(product_128.lo);
-  if(!(((Bit64s)(product_128.lo) >= 0 && product_128.hi == 0) ||
-       ((Bit64s)(product_128.lo) <  0 && product_128.hi == (Bit64s) BX_CONST64(0xffffffffffffffff))))
-  {
+  /* magic compare between RDX:RAX and sign extended RAX */
+
+  if (((Bit64u)(product_128.hi) + (product_128.lo >> 63)) != 0) {
     ASSERT_FLAGS_OxxxxC();
   }
 }
@@ -346,9 +345,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::IMUL_GqEqIdR(bxInstruction_c *i)
   BX_WRITE_64BIT_REG(i->nnn(), product_128.lo);
 
   SET_FLAGS_OSZAPC_LOGIC_64(product_128.lo);
-  if(!(((Bit64s)(product_128.lo) >= 0 && product_128.hi == 0) ||
-       ((Bit64s)(product_128.lo) <  0 && product_128.hi == (Bit64s) BX_CONST64(0xffffffffffffffff))))
-  {
+
+  if (((Bit64u)(product_128.hi) + (product_128.lo >> 63)) != 0) {
     ASSERT_FLAGS_OxxxxC();
   }
 }
@@ -366,9 +364,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::IMUL_GqEqR(bxInstruction_c *i)
   BX_WRITE_64BIT_REG(i->nnn(), product_128.lo);
 
   SET_FLAGS_OSZAPC_LOGIC_64(product_128.lo);
-  if(!(((Bit64s)(product_128.lo) >= 0 && product_128.hi == 0) ||
-       ((Bit64s)(product_128.lo) <  0 && product_128.hi == (Bit64s) BX_CONST64(0xffffffffffffffff))))
-  {
+
+  if (((Bit64u)(product_128.hi) + (product_128.lo >> 63)) != 0) {
     ASSERT_FLAGS_OxxxxC();
   }
 }
