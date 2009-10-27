@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_move.cc,v 1.101 2009-10-24 11:17:51 sshwarts Exp $
+// $Id: sse_move.cc,v 1.102 2009-10-27 20:03:35 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003-2009 Stanislav Shwartsman
@@ -357,6 +357,16 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FXRSTOR(bxInstruction_c *i)
   }
 
   BX_CPU_THIS_PTR the_i387.twd = unpack_FPU_TW(tag_byte);
+
+  /* check for unmasked exceptions */
+  if (FPU_PARTIAL_STATUS & ~FPU_CONTROL_WORD & FPU_CW_Exceptions_Mask) {
+    /* set the B and ES bits in the status-word */
+    FPU_PARTIAL_STATUS |= FPU_SW_Summary | FPU_SW_Backward;
+  }
+  else {
+    /* clear the B and ES bits in the status-word */
+    FPU_PARTIAL_STATUS &= ~(FPU_SW_Summary | FPU_SW_Backward);
+  }
 
 #if BX_SUPPORT_X86_64
   if (BX_CPU_THIS_PTR efer.get_FFXSR() && CPL == 0 && Is64BitMode())

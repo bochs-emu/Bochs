@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu.cc,v 1.57 2009-10-14 20:45:29 sshwarts Exp $
+// $Id: fpu.cc,v 1.58 2009-10-27 20:03:35 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003-2009 Stanislav Shwartsman
@@ -312,8 +312,7 @@ bx_address BX_CPU_C::fpu_load_environment(bxInstruction_c *i)
         /* set the B and ES bits in the status-word */
         FPU_PARTIAL_STATUS |= FPU_SW_Summary | FPU_SW_Backward;
     }
-    else
-    {
+    else {
         /* clear the B and ES bits in the status-word */
         FPU_PARTIAL_STATUS &= ~(FPU_SW_Summary | FPU_SW_Backward);
     }
@@ -582,12 +581,12 @@ void BX_CPU_C::print_state_FPU(void)
   fprintf(stderr, "tag word:     0x%04x\n", reg);
   reg = BX_CPU_THIS_PTR the_i387.foo;
   fprintf(stderr, "operand:      0x%04x\n", reg);
-  reg = (Bit32u)(BX_CPU_THIS_PTR the_i387.fip) & 0xffffffff;
-  fprintf(stderr, "fip:          0x%08x\n", reg);
+  fprintf(stderr, "fip:          0x" FMT_ADDRX "\n",
+        BX_CPU_THIS_PTR the_i387.fip);
   reg = BX_CPU_THIS_PTR the_i387.fcs;
   fprintf(stderr, "fcs:          0x%04x\n", reg);
-  reg = (Bit32u)(BX_CPU_THIS_PTR the_i387.fdp) & 0xffffffff;
-  fprintf(stderr, "fdp:          0x%08x\n", reg);
+  fprintf(stderr, "fdp:          0x" FMT_ADDRX "\n",
+        BX_CPU_THIS_PTR the_i387.fdp);
   reg = BX_CPU_THIS_PTR the_i387.fds;
   fprintf(stderr, "fds:          0x%04x\n", reg);
 
