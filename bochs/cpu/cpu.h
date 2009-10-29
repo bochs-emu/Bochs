@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.616 2009-10-24 11:17:51 sshwarts Exp $
+// $Id: cpu.h,v 1.617 2009-10-29 15:49:50 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2761,7 +2761,6 @@ public: // for now...
   BX_SMF void       dbg_force_interrupt(unsigned vector);
   BX_SMF void       dbg_take_dma(void);
   BX_SMF bx_bool    dbg_set_reg(unsigned reg, Bit32u val);
-  BX_SMF bx_address dbg_get_reg(unsigned reg);
   BX_SMF bx_bool    dbg_get_sreg(bx_dbg_sreg_t *sreg, unsigned sreg_no);
   BX_SMF void       dbg_get_tr(bx_dbg_sreg_t *sreg);
   BX_SMF void       dbg_get_ldtr(bx_dbg_sreg_t *sreg);

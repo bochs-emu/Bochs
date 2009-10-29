@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.214 2009-10-15 21:24:22 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.215 2009-10-29 15:49:50 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -935,7 +935,7 @@ void bx_dbg_info_registers_command(int which_regs_mask)
     dbg_printf("rip: 0x%08x:%08x\n", GET32H(reg), GET32L(reg));
 #endif
     reg = BX_CPU(dbg_cpu)->read_eflags();
-    dbg_printf("eflags 0x%08x\n", (unsigned) reg);
+    dbg_printf("eflags 0x%08x: ", (unsigned) reg);
     bx_dbg_info_flags();
   }
 
@@ -1715,8 +1715,13 @@ one_more:
   goto one_more;
 }
 
-void bx_dbg_stepN_command(Bit32u count)
+void bx_dbg_stepN_command(int cpu, Bit32u count)
 {
+  if (cpu != -1 && cpu >= BX_SMP_PROCESSORS) {
+    dbg_printf("Error: stepN: unknown cpu=%d\n", cpu);
+    return;
+  }
+
   if (count == 0) {
     dbg_printf("Error: stepN: count=0\n");
     return;
@@ -1732,23 +1737,23 @@ void bx_dbg_stepN_command(Bit32u count)
     BX_CPU(n)->guard_found.time_tick = bx_pc_system.time_ticks();
   }
 
-  if (BX_SMP_PROCESSORS == 1) {
+  if (cpu >= 0 || BX_SUPPORT_SMP==0) {
     bx_guard.interrupt_requested = 0;
-    BX_CPU(0)->guard_found.guard_found = 0;
-    BX_CPU(0)->cpu_loop(count);
+    BX_CPU(cpu)->guard_found.guard_found = 0;
+    BX_CPU(cpu)->cpu_loop(count);
   }
 #if BX_SUPPORT_SMP
   else {
     int stop = 0;
     // for now, step each CPU one instruction at a time
     for (unsigned cycle=0; !stop && cycle < count; cycle++) {
-      for (unsigned cpu=0; cpu < BX_SMP_PROCESSORS; cpu++) {
+      for (unsigned ncpu=0; ncpu < BX_SMP_PROCESSORS; ncpu++) {
         bx_guard.interrupt_requested = 0;
-        BX_CPU(cpu)->guard_found.guard_found = 0;
-        BX_CPU(cpu)->cpu_loop(1);
+        BX_CPU(ncpu)->guard_found.guard_found = 0;
+        BX_CPU(ncpu)->cpu_loop(1);
         // set stop flag if a guard found other than icount or halted
-        unsigned found = BX_CPU(cpu)->guard_found.guard_found;
-        stop_reason_t reason = (stop_reason_t) BX_CPU(cpu)->stop_reason;
+        unsigned found = BX_CPU(ncpu)->guard_found.guard_found;
+        stop_reason_t reason = (stop_reason_t) BX_CPU(ncpu)->stop_reason;
         if (found || (reason != STOP_NO_REASON && reason != STOP_CPU_HALTED))
           stop = 1;
       }
@@ -2580,24 +2585,6 @@ void bx_dbg_set_symbol_command(const char *symbol, Bit32u val)
   else if (!strcmp(symbol, "eflags")) {
     is_OK = BX_CPU(dbg_cpu)->dbg_set_reg(BX_DBG_REG_EFLAGS, val);
   }
-  else if (!strcmp(symbol, "cs")) {
-    is_OK = BX_CPU(dbg_cpu)->dbg_set_reg(BX_DBG_REG_CS, val);
-  }
-  else if (!strcmp(symbol, "ss")) {
-    is_OK = BX_CPU(dbg_cpu)->dbg_set_reg(BX_DBG_REG_SS, val);
-  }
-  else if (!strcmp(symbol, "ds")) {
-    is_OK = BX_CPU(dbg_cpu)->dbg_set_reg(BX_DBG_REG_DS, val);
-  }
-  else if (!strcmp(symbol, "es")) {
-    is_OK = BX_CPU(dbg_cpu)->dbg_set_reg(BX_DBG_REG_ES, val);
-  }
-  else if (!strcmp(symbol, "fs")) {
-    is_OK = BX_CPU(dbg_cpu)->dbg_set_reg(BX_DBG_REG_FS, val);
-  }
-  else if (!strcmp(symbol, "gs")) {
-    is_OK = BX_CPU(dbg_cpu)->dbg_set_reg(BX_DBG_REG_GS, val);
-  }
   else if (!strcmp(symbol, "cpu")) {
     if (val >= BX_SMP_PROCESSORS) {
       dbg_printf("invalid cpu id number %d\n", val);
@@ -3195,15 +3182,18 @@ void bx_dbg_info_tss_command(void)
   bx_dbg_sreg_t tr;
   BX_CPU(dbg_cpu)->dbg_get_tr(&tr);
 
-  Bit32u laddr = (tr.des_l>>16) |
-                ((tr.des_h<<16)&0x00ff0000) | (tr.des_h & 0xff000000);
+  bx_address base = (tr.des_l>>16) |
+                   ((tr.des_h<<16)&0x00ff0000) | (tr.des_h & 0xff000000);
+#if BX_SUPPORT_X86_64
+  base |= (Bit64u)(tr.dword3) << 32;
+#endif
   Bit32u len = (tr.des_l & 0xffff) + 1;
 
-  dbg_printf("tr:s=0x%x, base=0x%x, valid=%u\n",
-      (unsigned) tr.sel, laddr, (unsigned) tr.valid);
+  dbg_printf("tr:s=0x%x, base=0x" FMT_ADDRX ", valid=%u\n",
+      (unsigned) tr.sel, base, (unsigned) tr.valid);
 
   bx_phy_address paddr = 0;
-  if (BX_CPU(dbg_cpu)->dbg_xlate_linear2phy(laddr, &paddr)) {
+  if (BX_CPU(dbg_cpu)->dbg_xlate_linear2phy(base, &paddr)) {
     bx_dbg_print_tss(BX_MEM(0)->get_vector(paddr), len);
   }
   else {
@@ -3439,7 +3429,7 @@ void bx_dbg_print_help(void)
   dbg_printf("    help, q|quit|exit, set, instrument, show, trace, trace-reg,\n");
   dbg_printf("    trace-mem, record, playback, ldsym, slist\n");
   dbg_printf("-*- Execution control -*-\n");
-  dbg_printf("    c|cont|continue, s|step|stepi, p|n|next, modebp\n");
+  dbg_printf("    c|cont|continue, s|step, p|n|next, modebp\n");
   dbg_printf("-*- Breakpoint management -*-\n");
   dbg_printf("    vb|vbreak, lb|lbreak, pb|pbreak|b|break, sb, sba, blist,\n");
   dbg_printf("    bpe, bpd, d|del|delete\n");
@@ -3734,7 +3724,7 @@ void bx_dbg_step_over_command()
     case 0xEA:
     // jmp short
     case 0xEB:
-      bx_dbg_stepN_command(1);
+      bx_dbg_stepN_command(dbg_cpu, 1);
       return;
     // jmp absolute indirect
     case 0xFF:
@@ -3743,7 +3733,7 @@ void bx_dbg_step_over_command()
         case 4:
         // far
         case 5:
-         bx_dbg_stepN_command(1);
+         bx_dbg_stepN_command(dbg_cpu, 1);
          return;
       }
   }

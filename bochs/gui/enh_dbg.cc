@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: enh_dbg.cc,v 1.17 2009-08-14 20:20:45 sshwarts Exp $
+// $Id: enh_dbg.cc,v 1.18 2009-10-29 15:49:50 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  BOCHS ENHANCED DEBUGGER Ver 1.2
@@ -2536,7 +2536,7 @@ void doStepN()
     PrevStepNSize = i;
     AtBreak = FALSE;
     StatusChange = TRUE;
-    bx_dbg_stepN_command(i);
+    bx_dbg_stepN_command(CurrentCPU, i);
     AtBreak = TRUE;
     StatusChange = TRUE;
     OnBreak();
@@ -2761,7 +2761,7 @@ void SetMemLine(int L)
             {
                 // convert the hex to a byte, and try to store the byte in bochs physmem
                 sscanf (s,"%2X", (unsigned int*)&newval);
-                if ( bx_mem.dbg_set_mem( (bx_phy_address) h, 1, &newval) == FALSE )
+                if (bx_mem.dbg_set_mem( (bx_phy_address) h, 1, &newval) == FALSE)
                     err = 2;
                 ++h;                    // bump to the next mem address
                 while (*x == ' ')       // scan past whitespace
@@ -2990,7 +2990,7 @@ int HotKey (int ww, int Alt, int Shift, int Control)
         case VK_F11:
             if (AtBreak != FALSE && debug_cmd_ready == FALSE)
             {
-                bx_dbg_stepN_command(1);        // singlestep
+                bx_dbg_stepN_command(CurrentCPU, 1);        // singlestep
                 StatusChange = TRUE;
                 OnBreak();
             }
@@ -3033,7 +3033,7 @@ int HotKey (int ww, int Alt, int Shift, int Control)
                 StatusChange = TRUE;
                 if (*tmpcb == 0)            // Hitting <CR> on a blank line means SINGLESTEP
                 {
-                    bx_dbg_stepN_command(1);        // singlestep
+                    bx_dbg_stepN_command(CurrentCPU, 1);        // singlestep
                     OnBreak();
                 }
                 else
@@ -3082,7 +3082,7 @@ void ActivateMenuItem (int cmd)
         case CMD_STEP1: // step 1
             if (AtBreak != FALSE && debug_cmd_ready == FALSE)
             {
-                bx_dbg_stepN_command(1);        // singlestep
+                bx_dbg_stepN_command(CurrentCPU, 1);        // singlestep
                 StatusChange = TRUE;
                 OnBreak();
             }

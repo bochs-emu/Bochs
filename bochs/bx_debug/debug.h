@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debug.h,v 1.57 2009-10-15 21:15:18 sshwarts Exp $
+// $Id: debug.h,v 1.58 2009-10-29 15:49:50 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -245,7 +245,7 @@ void bx_dbg_watch(int type, bx_phy_address address);
 void bx_dbg_unwatch_all(void);
 void bx_dbg_unwatch(bx_phy_address handle);
 void bx_dbg_continue_command(void);
-void bx_dbg_stepN_command(Bit32u count);
+void bx_dbg_stepN_command(int cpu, Bit32u count);
 void bx_dbg_set_auto_disassemble(bx_bool enable);
 void bx_dbg_disassemble_switch_mode(void);
 void bx_dbg_set_disassemble_size(unsigned size);
@@ -479,6 +479,9 @@ void bx_dbg_interpret_line(char *cmd);
 typedef struct {
   Bit16u sel;
   Bit32u des_l, des_h, valid;
+#if BX_SUPPORT_X86_64
+  Bit32u dword3;
+#endif
 } bx_dbg_sreg_t;
 
 typedef struct {

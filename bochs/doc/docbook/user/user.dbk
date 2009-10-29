@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.265 2009-10-15 20:50:33 sshwarts Exp $
+$Id: user.dbk,v 1.266 2009-10-29 15:49:50 sshwarts Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -6247,11 +6247,17 @@ From here, you may use the following commands:
 <para>
 <screen>
   c                           continue executing
+  cont
   continue
 
   s     [count]               execute count instructions, default is 1
   step  [count]
-  stepi [count]
+
+  s     [cpu] [count]         for SMP simulation, execute count instructions on cpu, default is 1
+  step  [cpu] [count]
+
+  s     all <count>           for SMP simulation, execute count instructions on all cpus
+  step  all <count>
 
   Ctrl-C                      stop execution, and return to command line prompt
   Ctrl-D                      if at empty line on command line, exit

@@ -1,6 +1,6 @@
 %{
 /////////////////////////////////////////////////////////////////////////
-// $Id: lexer.l,v 1.31 2009-10-15 20:50:33 sshwarts Exp $
+// $Id: lexer.l,v 1.32 2009-10-29 15:49:50 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #include <stdlib.h>
@@ -57,7 +57,6 @@ crc             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_CRC); }
 c               |
 cont            |
 continue        { bxlval.sval = strdup(bxtext); return(BX_TOKEN_CONTINUE); }
-stepi           |
 step            |
 s               { bxlval.sval = strdup(bxtext); return(BX_TOKEN_STEPN); }
 next            |
@@ -141,6 +140,7 @@ ne2k|ne2000     { bxlval.sval = strdup(bxtext); return(BX_TOKEN_NE2000); }
 page            { bxlval.sval = strdup(bxtext); return(BX_TOKEN_PAGE); }
 vga             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_VGA); }
 pci             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_PCI); }
+all             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_ALL); }
 al              { bxlval.uval = BX_DBG_REG8L_AL; return(BX_TOKEN_8BL_REG);}
 bl              { bxlval.uval = BX_DBG_REG8L_BL; return(BX_TOKEN_8BL_REG);}
 cl              { bxlval.uval = BX_DBG_REG8L_CL; return(BX_TOKEN_8BL_REG);}

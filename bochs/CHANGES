@@ -3,7 +3,8 @@ Changes for next bugfix+ release (coming soon):
 - CPU and internal debugger
   - VMX: Implemented TPR shadow VMEXIT
   - Bugfixes for CPU emulation correctness (mostly for VMX support).
-  - Updates for Bochs internal debugger.
+  - Bugfixes and updates for Bochs internal debugger
+    - On SMP system stepN command now affects only current processor
 
 - Memory
   - Bugfixes for > 32-bit physical address space.
@@ -33,6 +34,7 @@ Changes for next bugfix+ release (coming soon):
  [2812948] PIT bug by Derek
 
 - these S.F. bugs were closed/fixed
+ [2872244] BIOS writes not allowed value to MTRR MSR causing #GP
  [2885383] SDL GUI memory leak
  [2872290] compilation in AIX5.3 ML10 failes
  [2867904] crash with cirrus bx_vga_c::mem_write

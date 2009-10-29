@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: linux.cc,v 1.10 2009-01-30 21:47:42 sshwarts Exp $
+// $Id: linux.cc,v 1.11 2009-10-29 15:49:50 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 #include <stdio.h>
@@ -16,15 +16,15 @@
 #define KERNEL_CS 0x10
 #define USER_CS 0x18
 
-void bx_dbg_info_linux_command (void)
+void bx_dbg_info_linux_command(void)
 {
   BX_INFO (("Info linux"));
   bx_dbg_sreg_t cs;
-  Bit32u cr0 = BX_CPU(dbg_cpu)->dbg_get_reg(BX_DBG_REG_CR0);
   BX_CPU(dbg_cpu)->dbg_get_sreg(&cs, BX_DBG_SREG_CS);
+  int cpu_mode = BX_CPU(dbg_cpu)->get_cpu_mode();
 
   int mode;
-  if (cr0 & 1) {
+  if (cpu_mode >= BX_MODE_IA32_PROTECTED) {
     // protected mode
     if (cs.sel == KERNEL_CS) {
       mode = 'k';
@@ -79,7 +79,7 @@ const char *syscall_names_t::get_name(int n)
 
 syscall_names_t syscall_names;
 
-void bx_dbg_linux_syscall (unsigned which_cpu)
+void bx_dbg_linux_syscall(unsigned which_cpu)
 {
   Bit32u eax = BX_CPU(which_cpu)->get_reg32(BX_32BIT_REG_EAX);
   const char *name = syscall_names.get_name(eax);

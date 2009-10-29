@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: parser.y,v 1.36 2009-10-15 20:50:33 sshwarts Exp $
+// $Id: parser.y,v 1.37 2009-10-29 15:49:50 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 %{
@@ -63,6 +63,7 @@
 %token <sval> BX_TOKEN_LDT
 %token <sval> BX_TOKEN_TSS
 %token <sval> BX_TOKEN_TAB
+%token <sval> BX_TOKEN_ALL
 %token <sval> BX_TOKEN_LINUX
 %token <sval> BX_TOKEN_DEBUG_REGS
 %token <sval> BX_TOKEN_CONTROL_REGS
@@ -415,12 +416,22 @@ continue_command:
 stepN_command:
       BX_TOKEN_STEPN '\n'
       {
-        bx_dbg_stepN_command(1);
+        bx_dbg_stepN_command(dbg_cpu, 1);
         free($1);
       }
     | BX_TOKEN_STEPN BX_TOKEN_NUMERIC '\n'
       {
-        bx_dbg_stepN_command($2);
+        bx_dbg_stepN_command(dbg_cpu, $2);
+        free($1);
+      }
+    | BX_TOKEN_STEPN BX_TOKEN_ALL BX_TOKEN_NUMERIC '\n'
+      {
+        bx_dbg_stepN_command(-1, $2);
+        free($1); free($2);
+      }
+    | BX_TOKEN_STEPN BX_TOKEN_NUMERIC BX_TOKEN_NUMERIC '\n'
+      {
+        bx_dbg_stepN_command($2, $3);
         free($1);
       }
     ;
@@ -864,7 +875,9 @@ help_command:
        }
      | BX_TOKEN_HELP BX_TOKEN_STEPN '\n'
        {
-         dbg_printf("s|step|stepi [count] - execute #count instructions (default is one instruction)\n");
+         dbg_printf("s|step [count] - execute #count instructions on current processor (default is one instruction)\n");
+         dbg_printf("s|step [cpu] <count> - execute #count instructions on processor #cpu\n");
+         dbg_printf("s|step all <count> - execute #count instructions on all the processors\n");
          free($1);free($2);
        }
      | BX_TOKEN_HELP BX_TOKEN_STEP_OVER '\n'

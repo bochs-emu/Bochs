@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debugstuff.cc,v 1.105 2009-04-07 16:12:19 sshwarts Exp $
+// $Id: debugstuff.cc,v 1.106 2009-10-29 15:49:50 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -273,37 +273,6 @@ void BX_CPU_C::debug(bx_address offset)
 
 
 #if BX_DEBUGGER
-bx_address BX_CPU_C::dbg_get_reg(unsigned reg)
-{
-  Bit32u return_val32;
-
-  switch (reg) {
-    case BX_DBG_REG_EIP: return(EIP);
-    case BX_DBG_REG_EFLAGS:
-      return_val32 = BX_CPU_THIS_PTR read_eflags();
-      return(return_val32);
-    case BX_DBG_REG_CS: return(BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value);
-    case BX_DBG_REG_SS: return(BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value);
-    case BX_DBG_REG_DS: return(BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.value);
-    case BX_DBG_REG_ES: return(BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.value);
-    case BX_DBG_REG_FS: return(BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].selector.value);
-    case BX_DBG_REG_GS: return(BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].selector.value);
-    case BX_DBG_REG_CR0:
-      return BX_CPU_THIS_PTR cr0.get32();
-    case BX_DBG_REG_CR2:
-      return BX_CPU_THIS_PTR cr2;
-    case BX_DBG_REG_CR3:
-      return BX_CPU_THIS_PTR cr3;
-#if BX_CPU_LEVEL >= 4
-    case BX_DBG_REG_CR4:
-      return BX_CPU_THIS_PTR cr4.get32();
-#endif
-    default:
-      BX_PANIC(("get_reg: request for unknown register"));
-      return(0);
-  }
-}
-
 bx_bool BX_CPU_C::dbg_set_reg(unsigned reg, Bit32u val)
 {
   // returns 1=OK, 0=can't change
@@ -311,7 +280,10 @@ bx_bool BX_CPU_C::dbg_set_reg(unsigned reg, Bit32u val)
   Bit32u current_sys_bits;
 
   switch (reg) {
-    case BX_DBG_REG_EIP: EIP = val; return(1);
+    case BX_DBG_REG_EIP:
+      EIP = val;
+      invalidate_prefetch_q();
+      return(1);
     case BX_DBG_REG_EFLAGS:
       BX_INFO(("dbg_set_reg: can not handle eflags yet."));
       if (val & 0xffff0000) {
@@ -337,45 +309,9 @@ bx_bool BX_CPU_C::dbg_set_reg(unsigned reg, Bit32u val)
       if (BX_CPU_THIS_PTR get_IF())
         BX_CPU_THIS_PTR async_event = 1;
       return(1);
-    case BX_DBG_REG_CS:
-      seg = &BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS];
-      break;
-    case BX_DBG_REG_SS:
-      seg = &BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS];
-      break;
-    case BX_DBG_REG_DS:
-      seg = &BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS];
-      break;
-    case BX_DBG_REG_ES:
-      seg = &BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES];
-      break;
-    case BX_DBG_REG_FS:
-      seg = &BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS];
-      break;
-    case BX_DBG_REG_GS:
-      seg = &BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS];
-      break;
-    default:
-      BX_PANIC(("dbg_set_reg: unrecognized register ID (%u)", reg));
-      return(0);
   }
 
-  if (real_mode()) {
-    seg->selector.value = val;
-    seg->cache.valid = 1;
-    seg->cache.p = 1;
-    seg->cache.dpl = 0;
-    seg->cache.segment = 1; // regular segment
-    seg->cache.type = BX_DATA_READ_WRITE_ACCESSED;
-    seg->cache.u.segment.base = val << 4;
-    seg->cache.u.segment.limit_scaled = 0xffff;
-    seg->cache.u.segment.g     = 0;      // byte granular
-    seg->cache.u.segment.d_b   = 0;      // default 16bit size
-    seg->cache.u.segment.avl   = 0;
-    return(1); // ok
-  }
-
-  return(0); // can't change when not in real mode
+  return(0);
 }
 
 unsigned BX_CPU_C::dbg_query_pending(void)
@@ -397,27 +333,36 @@ bx_bool BX_CPU_C::dbg_get_sreg(bx_dbg_sreg_t *sreg, unsigned sreg_no)
 {
   if (sreg_no > 5)
     return(0);
+  sreg->valid = BX_CPU_THIS_PTR sregs[sreg_no].cache.valid;
   sreg->sel   = BX_CPU_THIS_PTR sregs[sreg_no].selector.value;
   sreg->des_l = get_descriptor_l(&BX_CPU_THIS_PTR sregs[sreg_no].cache);
   sreg->des_h = get_descriptor_h(&BX_CPU_THIS_PTR sregs[sreg_no].cache);
-  sreg->valid = BX_CPU_THIS_PTR sregs[sreg_no].cache.valid;
+#if BX_SUPPORT_X86_64
+  sreg->dword3 = BX_CPU_THIS_PTR sregs[sreg_no].cache.u.segment.base >> 32;
+#endif
   return(1);
 }
 
 void BX_CPU_C::dbg_get_tr(bx_dbg_sreg_t *sreg)
 {
+  sreg->valid = BX_CPU_THIS_PTR tr.cache.valid;
   sreg->sel   = BX_CPU_THIS_PTR tr.selector.value;
   sreg->des_l = get_descriptor_l(&BX_CPU_THIS_PTR tr.cache);
   sreg->des_h = get_descriptor_h(&BX_CPU_THIS_PTR tr.cache);
-  sreg->valid = BX_CPU_THIS_PTR tr.cache.valid;
+#if BX_SUPPORT_X86_64
+  sreg->dword3 = BX_CPU_THIS_PTR tr.cache.u.segment.base >> 32;
+#endif
 }
 
 void BX_CPU_C::dbg_get_ldtr(bx_dbg_sreg_t *sreg)
 {
+  sreg->valid = BX_CPU_THIS_PTR ldtr.cache.valid;
   sreg->sel   = BX_CPU_THIS_PTR ldtr.selector.value;
   sreg->des_l = get_descriptor_l(&BX_CPU_THIS_PTR ldtr.cache);
   sreg->des_h = get_descriptor_h(&BX_CPU_THIS_PTR ldtr.cache);
-  sreg->valid = BX_CPU_THIS_PTR ldtr.cache.valid;
+#if BX_SUPPORT_X86_64
+  sreg->dword3 = BX_CPU_THIS_PTR ldtr.cache.u.segment.base >> 32;
+#endif
 }
 
 void BX_CPU_C::dbg_get_gdtr(bx_dbg_global_sreg_t *sreg)
