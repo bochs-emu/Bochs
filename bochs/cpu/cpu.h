@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.617 2009-10-29 15:49:50 sshwarts Exp $
+// $Id: cpu.h,v 1.618 2009-10-30 09:13:18 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -922,6 +922,9 @@ public: // for now...
   #define BX_ASYNC_EVENT_STOP_TRACE (0x80000000)
 #endif
 
+#if BX_X86_DEBUGGER
+  bx_bool  in_repeat;
+#endif
   bx_bool  in_smm;
   unsigned cpu_mode;
   bx_bool  user_pl;

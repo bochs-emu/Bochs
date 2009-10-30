@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.295 2009-10-24 11:24:21 sshwarts Exp $
+// $Id: cpu.cc,v 1.296 2009-10-30 09:13:18 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -218,6 +218,10 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::repeat(bxInstruction_c *i, BxExecutePtr_tR
     return;
   }
 
+#if BX_X86_DEBUGGER
+  BX_CPU_THIS_PTR in_repeat = 0;
+#endif
+
 #if BX_SUPPORT_X86_64
   if (i->as64L()) {
     while(1) {
@@ -274,6 +278,10 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::repeat(bxInstruction_c *i, BxExecutePtr_tR
     }
   }
 
+#if BX_X86_DEBUGGER
+  BX_CPU_THIS_PTR in_repeat = 1;
+#endif
+
   RIP = BX_CPU_THIS_PTR prev_rip; // repeat loop not done, restore RIP
 
 #if BX_SUPPORT_TRACE_CACHE
@@ -291,6 +299,10 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::repeat_ZF(bxInstruction_c *i, BxExecutePtr
     BX_CPU_CALL_METHOD(execute, (i));
     return;
   }
+
+#if BX_X86_DEBUGGER
+  BX_CPU_THIS_PTR in_repeat = 0;
+#endif
 
   if (rep == 3) { /* repeat prefix 0xF3 */
 #if BX_SUPPORT_X86_64
@@ -406,6 +418,10 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::repeat_ZF(bxInstruction_c *i, BxExecutePtr
       }
     }
   }
+
+#if BX_X86_DEBUGGER
+  BX_CPU_THIS_PTR in_repeat = 1;
+#endif
 
   RIP = BX_CPU_THIS_PTR prev_rip; // repeat loop not done, restore RIP
 
@@ -626,7 +642,7 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
   else {
     // only bother comparing if any breakpoints enabled and
     // debug events are not inhibited on this boundary.
-    if (! (BX_CPU_THIS_PTR inhibit_mask & BX_INHIBIT_DEBUG_SHADOW)) {
+    if (! (BX_CPU_THIS_PTR inhibit_mask & BX_INHIBIT_DEBUG_SHADOW) && ! BX_CPU_THIS_PTR in_repeat) {
       if (BX_CPU_THIS_PTR dr7 & 0x000000ff) {
         bx_address iaddr = get_laddr(BX_SEG_REG_CS, BX_CPU_THIS_PTR prev_rip);
         Bit32u dr6_bits = hwdebug_compare(iaddr, 1, BX_HWDebugInstruction, BX_HWDebugInstruction);

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.218 2009-10-16 18:29:45 sshwarts Exp $
+// $Id: init.cc,v 1.219 2009-10-30 09:13:19 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -528,8 +528,12 @@ void BX_CPU_C::register_state(void)
 #endif
 
   BXRS_HEX_PARAM_SIMPLE32(cpu, async_event);
-
   BXRS_PARAM_BOOL(cpu, INTR, INTR);
+
+#if BX_X86_DEBUGGER
+  BXRS_PARAM_BOOL(cpu, in_repeat, in_repeat);
+#endif
+
   BXRS_PARAM_BOOL(cpu, in_smm, in_smm);
   BXRS_PARAM_BOOL(cpu, disable_SMI, disable_SMI);
   BXRS_PARAM_BOOL(cpu, pending_SMI, pending_SMI);
@@ -869,6 +873,9 @@ void BX_CPU_C::reset(unsigned source)
 #  error "DR6: CPU > 6"
 #endif
 
+#if BX_X86_DEBUGGER
+  BX_CPU_THIS_PTR in_repeat = 0;
+#endif
   BX_CPU_THIS_PTR in_smm = 0;
   BX_CPU_THIS_PTR disable_SMI = 0;
   BX_CPU_THIS_PTR pending_SMI = 0;

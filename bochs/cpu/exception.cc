@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.142 2009-10-26 15:53:24 sshwarts Exp $
+// $Id: exception.cc,v 1.143 2009-10-30 09:13:19 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -838,6 +838,10 @@ void BX_CPU_C::interrupt(Bit8u vector, unsigned type, bx_bool push_error, Bit16u
        protected_mode_int(vector, is_INT, push_error, error_code);
     }
   }
+
+#if BX_X86_DEBUGGER
+  BX_CPU_THIS_PTR in_repeat = 0;
+#endif
 
 #if BX_SUPPORT_VMX
   BX_CPU_THIS_PTR in_event = 0;

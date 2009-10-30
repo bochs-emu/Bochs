@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.305 2009-10-07 15:45:15 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.306 2009-10-30 09:13:19 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1491,6 +1491,10 @@ bx_address get_cr4_allow_mask(void)
 
 #if BX_SUPPORT_VMX
   allowMask |= (1<<13);  /* VMX Enable */
+#endif
+
+#if BX_SUPPORT_SMX
+  allowMask |= (1<<14);  /* SMX Enable */
 #endif
 
 #if BX_SUPPORT_XSAVE

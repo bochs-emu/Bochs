@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debugstuff.cc,v 1.106 2009-10-29 15:49:50 sshwarts Exp $
+// $Id: debugstuff.cc,v 1.107 2009-10-30 09:13:19 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -276,7 +276,6 @@ void BX_CPU_C::debug(bx_address offset)
 bx_bool BX_CPU_C::dbg_set_reg(unsigned reg, Bit32u val)
 {
   // returns 1=OK, 0=can't change
-  bx_segment_reg_t *seg;
   Bit32u current_sys_bits;
 
   switch (reg) {
