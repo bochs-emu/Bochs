@@ -34,6 +34,7 @@ Changes for next bugfix+ release (coming soon):
  [2812948] PIT bug by Derek
 
 - these S.F. bugs were closed/fixed
+ [2833504] GUI debugger bug-about GDT display
  [2872244] BIOS writes not allowed value to MTRR MSR causing #GP
  [2885383] SDL GUI memory leak
  [2872290] compilation in AIX5.3 ML10 failes
