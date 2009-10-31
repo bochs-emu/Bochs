@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: enh_dbg.cc,v 1.18 2009-10-29 15:49:50 sshwarts Exp $
+// $Id: enh_dbg.cc,v 1.19 2009-10-31 16:01:29 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  BOCHS ENHANCED DEBUGGER Ver 1.2
@@ -875,7 +875,7 @@ int FillDebugRegs(int itemnum)
     cols[0] = drtxt;
     cols[1] = drtxt + 4;
 
-    for(i = 0 ; i < 6 ; i++)
+    for(i = 0; i < 6; i++)
     {
         bxp = RegObject[CurrentCPU][DR0_Rnum + i];
         val = 0;
@@ -1003,11 +1003,11 @@ void LoadRegList()
     if (In64Mode != FALSE)
     {
         showEreg = SeeReg[0];       // get user option setting for EAX, etc.
-        for (i = RAX_Rnum ; i <= R15_Rnum ; i++)
+        for (i = RAX_Rnum; i <= R15_Rnum; i++)
         {
             RitemToRnum[itemnum] = i;   // always recreate the register -> itemnum mapping
-            sprintf(regtxt,Fmt64b[UprCase],rV[i]);  // print the hex column
-            sprintf(cols[2], FMT_LL "d",rV[i]);     // and decimal
+            sprintf(regtxt,Fmt64b[UprCase], rV[i]);  // print the hex column
+            sprintf(cols[2], FMT_LL "d", rV[i]);     // and decimal
             cols[0] = RDispName[i];
             InsertListRow(cols, 3, REG_WND, itemnum, 0);    // 3 cols, group 0
             ++itemnum;
@@ -1017,11 +1017,11 @@ void LoadRegList()
     // then 32bit GP registers (if appropriate)
     if (showEreg != FALSE)
     {
-        for (i = EAX_Rnum ; i <= EIP_Rnum ; i++)
+        for (i = EAX_Rnum; i <= EIP_Rnum; i++)
         {
             RitemToRnum[itemnum] = i;
-            sprintf(regtxt,Fmt32b[UprCase],(Bit32u)rV[i]);  // print the hex column
-            sprintf(cols[2], FMT_LL "d",rV[i]);     // and decimal
+            sprintf(regtxt, Fmt32b[UprCase], (Bit32u)rV[i]);  // print the hex column
+            sprintf(cols[2], FMT_LL "d", rV[i]);     // and decimal
             cols[0] = RDispName[i];
 
             if (In32Mode == FALSE && i == 26)   // Check for Real Mode (Pmode is TRUE in Long Mode)
@@ -1046,10 +1046,10 @@ void LoadRegList()
     // display Segment registers (if requested)
     if (SeeReg[1])
     {
-        for(i = CS_Rnum ; i <= GS_Rnum ; i++)       // segment registers
+        for(i = CS_Rnum; i <= GS_Rnum; i++)       // segment registers
         {
             RitemToRnum[itemnum] = i;
-            sprintf(regtxt,Fmt16b[UprCase], rV[i] & 0xffff);
+            sprintf(regtxt, Fmt16b[UprCase], rV[i] & 0xffff);
             cols[0] = RDispName[i];
             InsertListRow(cols, 2, REG_WND, itemnum, 1);    // 2 cols, group 1
             ++itemnum;
@@ -1062,7 +1062,7 @@ void LoadRegList()
         int j = TRRnum;
         if (In32Mode == FALSE)      // don't show lgdt or tr in Real mode
             j= IDTRnum;
-        for(i = GDTRnum ; i <= j ; i++)
+        for(i = GDTRnum; i <= j; i++)
         {
             RitemToRnum[itemnum] = i;
             if (i == GDTRnum || i == IDTRnum)
@@ -1087,7 +1087,7 @@ void LoadRegList()
     // display Control Registers (if requested)
     if (SeeReg[3])
     {
-        for(i = CR0_Rnum ; i <= EFER_Rnum ; i++)
+        for(i = CR0_Rnum; i <= EFER_Rnum; i++)
         {
             RitemToRnum[itemnum] = i;
             sprintf(regtxt,"%08X",(Bit32u)rV[i]);
@@ -1197,7 +1197,7 @@ void InitRegObjects()
     // get the param tree interface objects for every single register on all CPUs
     while (--j >= 0)
     {
-    // RegObject[j]s are all initted to NULL when allocated in the BSS area
+    // RegObject[j]s are all initialized to NULL when allocated in the BSS area
     // but it doesn't hurt anything to do it again, once
         int i = TOT_REG_NUM + EXTRA_REGS;
         while (--i >= 0)
@@ -1235,89 +1235,89 @@ void InitRegObjects()
         RegObject[j][R14_Rnum] = SIM->get_param_num("R14", cpu_list);
         RegObject[j][R15_Rnum] = SIM->get_param_num("R15", cpu_list);
 #endif
-        RegObject[j][EFL_Rnum]= SIM->get_param_num("EFLAGS", cpu_list);
-        RegObject[j][CS_Rnum]= SIM->get_param_num("CS.selector", cpu_list);
-        RegObject[j][DS_Rnum]= SIM->get_param_num("DS.selector", cpu_list);
-        RegObject[j][ES_Rnum]= SIM->get_param_num("ES.selector", cpu_list);
-        RegObject[j][SS_Rnum]= SIM->get_param_num("SS.selector", cpu_list);
-        RegObject[j][FS_Rnum]= SIM->get_param_num("FS.selector", cpu_list);
-        RegObject[j][GS_Rnum]= SIM->get_param_num("GS.selector", cpu_list);
-        RegObject[j][GDTRnum]= SIM->get_param_num("GDTR.base", cpu_list);
-        RegObject[j][GDTR_Lim]= SIM->get_param_num("GDTR.limit", cpu_list);
-        RegObject[j][IDTRnum]= SIM->get_param_num("IDTR.base", cpu_list);
-        RegObject[j][IDTR_Lim]= SIM->get_param_num("IDTR.limit", cpu_list);
-        RegObject[j][LDTRnum]= SIM->get_param_num("LDTR.base", cpu_list);
-        RegObject[j][TRRnum]= SIM->get_param_num("TR.base", cpu_list);
-        RegObject[j][CR0_Rnum]= SIM->get_param_num("CR0", cpu_list);
-        RegObject[j][CR2_Rnum]= SIM->get_param_num("CR2", cpu_list);
-        RegObject[j][CR3_Rnum]= SIM->get_param_num("CR3", cpu_list);
+        RegObject[j][EFL_Rnum] = SIM->get_param_num("EFLAGS", cpu_list);
+        RegObject[j][CS_Rnum] = SIM->get_param_num("CS.selector", cpu_list);
+        RegObject[j][DS_Rnum] = SIM->get_param_num("DS.selector", cpu_list);
+        RegObject[j][ES_Rnum] = SIM->get_param_num("ES.selector", cpu_list);
+        RegObject[j][SS_Rnum] = SIM->get_param_num("SS.selector", cpu_list);
+        RegObject[j][FS_Rnum] = SIM->get_param_num("FS.selector", cpu_list);
+        RegObject[j][GS_Rnum] = SIM->get_param_num("GS.selector", cpu_list);
+        RegObject[j][GDTRnum] = SIM->get_param_num("GDTR.base", cpu_list);
+        RegObject[j][GDTR_Lim] = SIM->get_param_num("GDTR.limit", cpu_list);
+        RegObject[j][IDTRnum] = SIM->get_param_num("IDTR.base", cpu_list);
+        RegObject[j][IDTR_Lim] = SIM->get_param_num("IDTR.limit", cpu_list);
+        RegObject[j][LDTRnum] = SIM->get_param_num("LDTR.base", cpu_list);
+        RegObject[j][TRRnum] = SIM->get_param_num("TR.base", cpu_list);
+        RegObject[j][CR0_Rnum] = SIM->get_param_num("CR0", cpu_list);
+        RegObject[j][CR2_Rnum] = SIM->get_param_num("CR2", cpu_list);
+        RegObject[j][CR3_Rnum] = SIM->get_param_num("CR3", cpu_list);
 #if BX_CPU_LEVEL >= 4
         RegObject[j][CR4_Rnum] = SIM->get_param_num("CR4", cpu_list);
 #endif
 #if BX_SUPPORT_X86_64
-        RegObject[j][EFER_Rnum]= SIM->get_param_num("MSR.EFER", cpu_list);
+        RegObject[j][EFER_Rnum] = SIM->get_param_num("MSR.EFER", cpu_list);
 #endif
 #if BX_SUPPORT_FPU
-        RegObject[j][ST0_Rnum]= SIM->get_param_num("FPU.st0.fraction", cpu_list);
-        RegObject[j][ST1_Rnum]= SIM->get_param_num("FPU.st1.fraction", cpu_list);
-        RegObject[j][ST2_Rnum]= SIM->get_param_num("FPU.st2.fraction", cpu_list);
-        RegObject[j][ST3_Rnum]= SIM->get_param_num("FPU.st3.fraction", cpu_list);
-        RegObject[j][ST4_Rnum]= SIM->get_param_num("FPU.st4.fraction", cpu_list);
-        RegObject[j][ST5_Rnum]= SIM->get_param_num("FPU.st5.fraction", cpu_list);
-        RegObject[j][ST6_Rnum]= SIM->get_param_num("FPU.st6.fraction", cpu_list);
-        RegObject[j][ST7_Rnum]= SIM->get_param_num("FPU.st7.fraction", cpu_list);
-        RegObject[j][ST0_exp]= SIM->get_param_num("FPU.st0.exp", cpu_list);
-        RegObject[j][ST1_exp]= SIM->get_param_num("FPU.st1.exp", cpu_list);
-        RegObject[j][ST2_exp]= SIM->get_param_num("FPU.st2.exp", cpu_list);
-        RegObject[j][ST3_exp]= SIM->get_param_num("FPU.st3.exp", cpu_list);
-        RegObject[j][ST4_exp]= SIM->get_param_num("FPU.st4.exp", cpu_list);
-        RegObject[j][ST5_exp]= SIM->get_param_num("FPU.st5.exp", cpu_list);
-        RegObject[j][ST6_exp]= SIM->get_param_num("FPU.st6.exp", cpu_list);
-        RegObject[j][ST7_exp]= SIM->get_param_num("FPU.st7.exp", cpu_list);
+        RegObject[j][ST0_Rnum] = SIM->get_param_num("FPU.st0.fraction", cpu_list);
+        RegObject[j][ST1_Rnum] = SIM->get_param_num("FPU.st1.fraction", cpu_list);
+        RegObject[j][ST2_Rnum] = SIM->get_param_num("FPU.st2.fraction", cpu_list);
+        RegObject[j][ST3_Rnum] = SIM->get_param_num("FPU.st3.fraction", cpu_list);
+        RegObject[j][ST4_Rnum] = SIM->get_param_num("FPU.st4.fraction", cpu_list);
+        RegObject[j][ST5_Rnum] = SIM->get_param_num("FPU.st5.fraction", cpu_list);
+        RegObject[j][ST6_Rnum] = SIM->get_param_num("FPU.st6.fraction", cpu_list);
+        RegObject[j][ST7_Rnum] = SIM->get_param_num("FPU.st7.fraction", cpu_list);
+        RegObject[j][ST0_exp] = SIM->get_param_num("FPU.st0.exp", cpu_list);
+        RegObject[j][ST1_exp] = SIM->get_param_num("FPU.st1.exp", cpu_list);
+        RegObject[j][ST2_exp] = SIM->get_param_num("FPU.st2.exp", cpu_list);
+        RegObject[j][ST3_exp] = SIM->get_param_num("FPU.st3.exp", cpu_list);
+        RegObject[j][ST4_exp] = SIM->get_param_num("FPU.st4.exp", cpu_list);
+        RegObject[j][ST5_exp] = SIM->get_param_num("FPU.st5.exp", cpu_list);
+        RegObject[j][ST6_exp] = SIM->get_param_num("FPU.st6.exp", cpu_list);
+        RegObject[j][ST7_exp] = SIM->get_param_num("FPU.st7.exp", cpu_list);
 #endif
 #if BX_SUPPORT_SSE
-        RegObject[j][XMM0_Rnum]= SIM->get_param_num("SSE.xmm00_lo", cpu_list);
-        RegObject[j][XMM1_Rnum]= SIM->get_param_num("SSE.xmm01_lo", cpu_list);
-        RegObject[j][XMM2_Rnum]= SIM->get_param_num("SSE.xmm02_lo", cpu_list);
-        RegObject[j][XMM3_Rnum]= SIM->get_param_num("SSE.xmm03_lo", cpu_list);
-        RegObject[j][XMM4_Rnum]= SIM->get_param_num("SSE.xmm04_lo", cpu_list);
-        RegObject[j][XMM5_Rnum]= SIM->get_param_num("SSE.xmm05_lo", cpu_list);
-        RegObject[j][XMM6_Rnum]= SIM->get_param_num("SSE.xmm06_lo", cpu_list);
-        RegObject[j][XMM7_Rnum]= SIM->get_param_num("SSE.xmm07_lo", cpu_list);
-        RegObject[j][XMM0_hi]= SIM->get_param_num("SSE.xmm00_hi", cpu_list);
-        RegObject[j][XMM1_hi]= SIM->get_param_num("SSE.xmm01_hi", cpu_list);
-        RegObject[j][XMM2_hi]= SIM->get_param_num("SSE.xmm02_hi", cpu_list);
-        RegObject[j][XMM3_hi]= SIM->get_param_num("SSE.xmm03_hi", cpu_list);
-        RegObject[j][XMM4_hi]= SIM->get_param_num("SSE.xmm04_hi", cpu_list);
-        RegObject[j][XMM5_hi]= SIM->get_param_num("SSE.xmm05_hi", cpu_list);
-        RegObject[j][XMM6_hi]= SIM->get_param_num("SSE.xmm06_hi", cpu_list);
-        RegObject[j][XMM7_hi]= SIM->get_param_num("SSE.xmm07_hi", cpu_list);
+        RegObject[j][XMM0_Rnum] = SIM->get_param_num("SSE.xmm00_lo", cpu_list);
+        RegObject[j][XMM1_Rnum] = SIM->get_param_num("SSE.xmm01_lo", cpu_list);
+        RegObject[j][XMM2_Rnum] = SIM->get_param_num("SSE.xmm02_lo", cpu_list);
+        RegObject[j][XMM3_Rnum] = SIM->get_param_num("SSE.xmm03_lo", cpu_list);
+        RegObject[j][XMM4_Rnum] = SIM->get_param_num("SSE.xmm04_lo", cpu_list);
+        RegObject[j][XMM5_Rnum] = SIM->get_param_num("SSE.xmm05_lo", cpu_list);
+        RegObject[j][XMM6_Rnum] = SIM->get_param_num("SSE.xmm06_lo", cpu_list);
+        RegObject[j][XMM7_Rnum] = SIM->get_param_num("SSE.xmm07_lo", cpu_list);
+        RegObject[j][XMM0_hi] = SIM->get_param_num("SSE.xmm00_hi", cpu_list);
+        RegObject[j][XMM1_hi] = SIM->get_param_num("SSE.xmm01_hi", cpu_list);
+        RegObject[j][XMM2_hi] = SIM->get_param_num("SSE.xmm02_hi", cpu_list);
+        RegObject[j][XMM3_hi] = SIM->get_param_num("SSE.xmm03_hi", cpu_list);
+        RegObject[j][XMM4_hi] = SIM->get_param_num("SSE.xmm04_hi", cpu_list);
+        RegObject[j][XMM5_hi] = SIM->get_param_num("SSE.xmm05_hi", cpu_list);
+        RegObject[j][XMM6_hi] = SIM->get_param_num("SSE.xmm06_hi", cpu_list);
+        RegObject[j][XMM7_hi] = SIM->get_param_num("SSE.xmm07_hi", cpu_list);
 
 #if BX_SUPPORT_X86_64
-        RegObject[j][XMM8_Rnum]= SIM->get_param_num("SSE.xmm08_lo", cpu_list);
-        RegObject[j][XMM9_Rnum]= SIM->get_param_num("SSE.xmm09_lo", cpu_list);
-        RegObject[j][XMMA_Rnum]= SIM->get_param_num("SSE.xmm10_lo", cpu_list);
-        RegObject[j][XMMB_Rnum]= SIM->get_param_num("SSE.xmm11_lo", cpu_list);
-        RegObject[j][XMMC_Rnum]= SIM->get_param_num("SSE.xmm12_lo", cpu_list);
-        RegObject[j][XMMD_Rnum]= SIM->get_param_num("SSE.xmm13_lo", cpu_list);
-        RegObject[j][XMME_Rnum]= SIM->get_param_num("SSE.xmm14_lo", cpu_list);
-        RegObject[j][XMMF_Rnum]= SIM->get_param_num("SSE.xmm15_lo", cpu_list);
-        RegObject[j][XMM8_hi]= SIM->get_param_num("SSE.xmm08_hi", cpu_list);
-        RegObject[j][XMM9_hi]= SIM->get_param_num("SSE.xmm09_hi", cpu_list);
-        RegObject[j][XMMA_hi]= SIM->get_param_num("SSE.xmm00_hi", cpu_list);
-        RegObject[j][XMMB_hi]= SIM->get_param_num("SSE.xmm11_hi", cpu_list);
-        RegObject[j][XMMC_hi]= SIM->get_param_num("SSE.xmm12_hi", cpu_list);
-        RegObject[j][XMMD_hi]= SIM->get_param_num("SSE.xmm13_hi", cpu_list);
-        RegObject[j][XMME_hi]= SIM->get_param_num("SSE.xmm14_hi", cpu_list);
-        RegObject[j][XMMF_hi]= SIM->get_param_num("SSE.xmm15_hi", cpu_list);
+        RegObject[j][XMM8_Rnum] = SIM->get_param_num("SSE.xmm08_lo", cpu_list);
+        RegObject[j][XMM9_Rnum] = SIM->get_param_num("SSE.xmm09_lo", cpu_list);
+        RegObject[j][XMMA_Rnum] = SIM->get_param_num("SSE.xmm10_lo", cpu_list);
+        RegObject[j][XMMB_Rnum] = SIM->get_param_num("SSE.xmm11_lo", cpu_list);
+        RegObject[j][XMMC_Rnum] = SIM->get_param_num("SSE.xmm12_lo", cpu_list);
+        RegObject[j][XMMD_Rnum] = SIM->get_param_num("SSE.xmm13_lo", cpu_list);
+        RegObject[j][XMME_Rnum] = SIM->get_param_num("SSE.xmm14_lo", cpu_list);
+        RegObject[j][XMMF_Rnum] = SIM->get_param_num("SSE.xmm15_lo", cpu_list);
+        RegObject[j][XMM8_hi] = SIM->get_param_num("SSE.xmm08_hi", cpu_list);
+        RegObject[j][XMM9_hi] = SIM->get_param_num("SSE.xmm09_hi", cpu_list);
+        RegObject[j][XMMA_hi] = SIM->get_param_num("SSE.xmm00_hi", cpu_list);
+        RegObject[j][XMMB_hi] = SIM->get_param_num("SSE.xmm11_hi", cpu_list);
+        RegObject[j][XMMC_hi] = SIM->get_param_num("SSE.xmm12_hi", cpu_list);
+        RegObject[j][XMMD_hi] = SIM->get_param_num("SSE.xmm13_hi", cpu_list);
+        RegObject[j][XMME_hi] = SIM->get_param_num("SSE.xmm14_hi", cpu_list);
+        RegObject[j][XMMF_hi] = SIM->get_param_num("SSE.xmm15_hi", cpu_list);
 #endif      // 64bit
 #endif      // SSE
-        RegObject[j][DR0_Rnum]= SIM->get_param_num("DR0", cpu_list);
-        RegObject[j][DR1_Rnum]= SIM->get_param_num("DR1", cpu_list);
-        RegObject[j][DR2_Rnum]= SIM->get_param_num("DR2", cpu_list);
-        RegObject[j][DR3_Rnum]= SIM->get_param_num("DR3", cpu_list);
-        RegObject[j][DR6_Rnum]= SIM->get_param_num("DR6", cpu_list);
-        RegObject[j][DR7_Rnum]= SIM->get_param_num("DR7", cpu_list);
+        RegObject[j][DR0_Rnum] = SIM->get_param_num("DR0", cpu_list);
+        RegObject[j][DR1_Rnum] = SIM->get_param_num("DR1", cpu_list);
+        RegObject[j][DR2_Rnum] = SIM->get_param_num("DR2", cpu_list);
+        RegObject[j][DR3_Rnum] = SIM->get_param_num("DR3", cpu_list);
+        RegObject[j][DR6_Rnum] = SIM->get_param_num("DR6", cpu_list);
+        RegObject[j][DR7_Rnum] = SIM->get_param_num("DR7", cpu_list);
 // is there an #if for whether the test registers are supported?
 //  RegObject[j][71]= SIM->get_param_num("TR3", cpu_list);
 // {"TR3","TR4","TR5","TR6","TR7"};
@@ -1360,7 +1360,6 @@ void doUpdate()
 // Fill the GDT ListView, reading GDT data directly from bochs linear mem
 void FillGDT()
 {
-    Bit64u laddr;
     unsigned int i, j, GroupId;
     unsigned int k = (GDT_Len + 1) / 8;
     Bit8u gdtbuf[8];
@@ -1368,7 +1367,7 @@ void FillGDT()
     char gdttxt[90];
     doDumpRefresh = FALSE;
 
-    laddr = rV[GDTRnum] & (~7);         // recover the GDT base address (force 8b align)
+    Bit64u laddr = rV[GDTRnum];
     StartListUpdate(DUMP_WND);
 
     *gdttxt = 0;
@@ -1389,10 +1388,11 @@ void FillGDT()
     cols[14]= gdttxt;
     cols[15]= gdttxt;
     cols[16]= gdttxt;
-    for(i = 0 ; i < k ; i++)
+
+    for(i = 0; i < k; i++)
     {
         // read 2 dwords from bochs linear mem into "buffer"
-        sprintf(cols[0],"%02u (Selector 0x%04X)",i,i << 3);
+        sprintf(cols[0], "%02u (Selector 0x%04X)", i, i << 3);
         if (ReadBxLMem(laddr, 8, gdtbuf) == FALSE)      // abort the current GDT dump on a memory error
         {
             cols[1]= gdttxt;    // ERROR - blank out cols #2 - 4 for this new row
@@ -1410,8 +1410,8 @@ void FillGDT()
         // enforce proper littleendianness on the gdtbuf bytes
         Bit32u limit = gdtbuf[0] | ((Bit32u) gdtbuf[1] << 8);
         limit |= ((Bit32u)gdtbuf[6] & 0xf) << 16;
-        if ((gdtbuf[6] & 0x80) != 0)    // 'Granularity' bit = 4K limit multiplier
-            limit = limit * 4096 + 4095;    // and the bottom 12 bits aren't tested
+        if ((gdtbuf[6] & 0x80) != 0)       // 'Granularity' bit = 4K limit multiplier
+            limit = limit * 4096 + 4095;   // and the bottom 12 bits aren't tested
 
         GroupId = 8;        // default to "blank" group
         cols[17]= (char*)GDTsT[0]; // default info string is blank
@@ -1458,6 +1458,7 @@ void FillGDT()
             cols[17] = (char*)GDTt2[7];    // call "Null" selector "unused"
         InsertListRow(cols, 18, DUMP_WND, i, GroupId);  // 18 cols
     }
+
     RedrawColumns(DUMP_WND);
     EndListUpdate(DUMP_WND);
 }
@@ -1499,7 +1500,7 @@ void FillIDT()
     cols[15]= idttxt;
     cols[16]= idttxt;
     cols[17]= idttxt + 10;
-    entrysize = 4 << mode ;     // calculate the bytesize of the entries
+    entrysize = 4 << mode; // calculate the bytesize of the entries
     unsigned int k = (IDT_Len + 1) / entrysize;
     StartListUpdate(DUMP_WND);
 
@@ -1508,7 +1509,7 @@ void FillIDT()
 
     if (k > 256)    // if IDT_Len is unreasonably large, set a reasonable maximum
         k = 256;
-    for(i = 0 ; i < k ; i++)
+    for(i = 0; i < k; i++)
     {
         idttxt[1] = AsciiHex[2*i];
         idttxt[2] = AsciiHex[2*i+1];
@@ -2021,7 +2022,7 @@ void ShowData()
     StartListUpdate(DUMP_WND);
 
     x = DataDump;       // data dumps are ALWAYS 4K
-    for(i = 0 ; i < 4096 ; i += 16)
+    for(i = 0; i < 4096; i += 16)
     {
         if (In64Mode == FALSE)
             sprintf(cols[0],"0x%08X",(Bit32u) (DumpStart + i));
@@ -2030,7 +2031,7 @@ void ShowData()
 
         *tmphex = 0;
         *cols[17] = 0;
-        for(unsigned int y = 0 ; y < 16 ; y++)
+        for(unsigned y = 0; y < 16; y++)
         {
             if ((DumpInAsciiMode & 1) != 0)
                 // verify the char is printable, then append it to the "ascii" column
@@ -2245,10 +2246,10 @@ static int HexFromAsk(const char* ask,char* b)       // this routine converts a 
 static bx_bool FindHex(const unsigned char* b1,int bs,const unsigned char* b2,int by)
 {
     // search bs bytes of b1
-    for(int i = 0 ; i < bs ; i++)       // TODO: this loop could be a little more efficient.
+    for(int i = 0; i < bs; i++)       // TODO: this loop could be a little more efficient.
     {                       // -- it just scans an input byte string against DataDump memory
         bx_bool Match = TRUE;
-        for(int y = 0 ; y < by ; y++)
+        for(int y = 0; y < by; y++)
         {
             if (b1[i + y] != b2[y])
             {
@@ -2485,11 +2486,11 @@ void doFind()
 
         if (UprCase != FALSE)   // convert search string to uppercase if ASM is that way
             upr(srchstr);
-        for(i = 0 ; i < (unsigned) AsmLineCount ; i++)
+        for(i = 0; i < (unsigned) AsmLineCount; i++)
         {
-            GetLIText(ASM_WND,i,2,tmpcb);       // retrieve the ASM column 2 text for row i
+            GetLIText(ASM_WND, i, 2, tmpcb);       // retrieve the ASM column 2 text for row i
             Select = FALSE;
-            if (IsMatching(tmpcb,srchstr,TRUE) != FALSE)
+            if (IsMatching(tmpcb, srchstr, TRUE) != FALSE)
                 Select = TRUE;
             SetLIState(ASM_WND, i, Select);
         }
@@ -2503,7 +2504,7 @@ void doFind()
         int by = HexFromAsk(tmpcb,srchstr);     // by = len of binary search string
 
         // Find in all rows of 16 bytes -- must do rows, so they can be selected
-        for(i = 0,L = 0 ; i < 4096 ; i += 16, L++)
+        for(i = 0, L = 0; i < 4096; i += 16, L++)
         {
             Select = FALSE;
             if (by != 0 && FindHex((unsigned char *)DataDump + i,16,(unsigned char *)srchstr,by))
@@ -2514,7 +2515,7 @@ void doFind()
         // Try ascii for additional matches and selected lines
         Select = TRUE;          // this loop, only add selected lines to the display
         by = strlen(tmpcb);
-        for(i = 0,L = 0 ; i < 4096 ; i += 16, L++)
+        for(i = 0, L = 0; i < 4096; i += 16, L++)
         {
             if (by != 0 && FindHex((unsigned char *)DataDump + i,16,(unsigned char *)tmpcb,by))
                 SetLIState(DUMP_WND, L, Select);
@@ -2665,8 +2666,7 @@ void SetWatchpoint(unsigned * num_watchpoints, bx_phy_address * watchpoint)
     {
         // Set a watchpoint to last clicked address -- the list is not sorted
         if (*num_watchpoints >= BX_DBG_MAX_WATCHPONTS)
-            DispMessage ("Too many of that type of watchpoint. Max: 16",
-                "Table Overflow") ;
+            DispMessage("Too many of that type of watchpoint. Max: 16", "Table Overflow");
         else
             watchpoint[(*num_watchpoints)++] = (bx_phy_address) SelectedDataAddress;
     }
@@ -2699,7 +2699,7 @@ void ChangeReg()
         RegObject[CurrentCPU][i]->set(val);         // the set function should be a bool, not a void
 //      bx_bool worked = RegObject[CurrentCPU][i]->set(val);
 //      if (worked == FALSE)
-//          DispMessage ("Bochs does not allow you to set that register","Selection Error") ;
+//          DispMessage ("Bochs does not allow you to set that register","Selection Error");
 //      else
             LoadRegList();      // update the register window
     }
