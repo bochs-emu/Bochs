@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.266 2009-10-29 15:49:50 sshwarts Exp $
+$Id: user.dbk,v 1.267 2009-10-31 17:46:12 sshwarts Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -241,7 +241,7 @@ Bochs only provides you with the "virtual hardware", and it is up to you to do t
 If you are running on x86 hardware, you have a range of choices.
 Check the installation section for your host platform to see what options
 Bochs supports on your platform.  If the most important factor is speed,
-you may want to try a virtualization product instead of Bochs (VMware, plex86).
+you may want to try a virtualization product instead of Bochs (VMware, VirtualBox, plex86).
 </para>
 
 <para>
@@ -361,7 +361,7 @@ currently work with.
   <row>
     <entry>x86-64 Extensions Emulation</entry>
     <entry>Yes</entry>
-    <entry>Bochs can be configured to emulate x86-64 with all Intel (CMPXCHG16B instruction) or AMD (RDTSCP instruction) extensions.</entry>
+    <entry>Bochs can be configured to emulate x86-64 with many recent Intel or AMD extensions.</entry>
   </row>
   <row>
     <entry>Command Line Debugger</entry>
@@ -553,8 +553,8 @@ currently work with.
     <entry>Simulate a Multiprocessor</entry>
     <entry>Yes</entry>
     <entry>Bochs can be configured to simulate up to 8 processors.  This
-    feature is still experimental, but it can boot Linux 2.2 kernels with SMP
-    support.  Please note that this does NOT mean that Bochs can run
+    feature is still experimental, but it can boot several Linux or Windows guests
+    with SMP support.  Please note that this does NOT mean that Bochs can run
     faster on a physical SMP machine.
     </entry>
   </row>
@@ -643,7 +643,7 @@ code that displays the Bochs VGA screen and handles keyboard and mouse events.
     </row>
 
     <row>
-      <entry>Macintosh</entry>
+      <entry>PowerPC-Macintosh</entry>
       <entry>
         David Batterham<!-- <email>drbatter@socs.uts.edu.au</email> or <email>drbatter@yahoo.com</email> -->
         ported Bochs to the Mac. He compiled with CodeWarrior Pro R1 (CW12)
@@ -1165,6 +1165,14 @@ The tag tells which release you want, and it can be one of the following:
     </thead>
     <tbody>
       <row>
+        <entry>2.4.1</entry>
+        <entry>REL_2_4_1_FINAL</entry>
+      </row>
+      <row>
+        <entry>2.4</entry>
+        <entry>REL_2_4_FINAL</entry>
+      </row>
+      <row>
         <entry>2.3.7</entry>
         <entry>REL_2_3_7_FINAL</entry>
       </row>
@@ -1247,10 +1255,6 @@ The tag tells which release you want, and it can be one of the following:
       <row>
         <entry>1.1 (bugfix1)</entry>
         <entry>REL_1_1_BASE</entry>
-      </row>
-      <row>
-        <entry>March 25, 2000</entry>
-        <entry>REL-bochs-2000-03-25</entry>
       </row>
     </tbody>
    </tgroup>
@@ -6480,10 +6484,7 @@ the "instrument/stubs" directory to it, then customize it.  Use:
 <title>Instrumentation commands</title>
 <para>
 <screen>
-  instrument start            calls bx_instr_start()
-  instrument stop             calls bx_instr_stop()
-  instrument reset            calls bx_instr_reset()
-  instrument print            calls bx_instr_print()
+  instrument <command>        calls BX_INSTR_DEBUG_CMD instrumentation callback with <command>
 </screen>
 </para>
 </section>

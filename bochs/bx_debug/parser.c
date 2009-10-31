@@ -762,12 +762,12 @@ static const yytype_uint16 yyrline[] =
      883,   888,   893,   898,   903,   908,   913,   918,   923,   928,
      933,   939,   945,   951,   959,   964,   969,   974,   979,   984,
      989,   994,   999,  1004,  1009,  1014,  1019,  1024,  1029,  1034,
-    1043,  1052,  1058,  1071,  1079,  1089,  1094,  1110,  1122,  1132,
-    1137,  1145,  1163,  1164,  1165,  1166,  1167,  1168,  1169,  1170,
-    1171,  1172,  1173,  1174,  1175,  1176,  1177,  1178,  1179,  1180,
-    1181,  1182,  1183,  1184,  1189,  1190,  1191,  1192,  1193,  1194,
-    1195,  1196,  1197,  1198,  1199,  1200,  1201,  1202,  1203,  1204,
-    1205,  1206,  1207,  1208,  1209,  1210,  1211,  1212
+    1043,  1052,  1058,  1071,  1076,  1086,  1091,  1107,  1119,  1129,
+    1134,  1142,  1160,  1161,  1162,  1163,  1164,  1165,  1166,  1167,
+    1168,  1169,  1170,  1171,  1172,  1173,  1174,  1175,  1176,  1177,
+    1178,  1179,  1180,  1181,  1186,  1187,  1188,  1189,  1190,  1191,
+    1192,  1193,  1194,  1195,  1196,  1197,  1198,  1199,  1200,  1201,
+    1202,  1203,  1204,  1205,  1206,  1207,  1208,  1209
 };
 #endif
 
@@ -3246,7 +3246,7 @@ yyreduce:
   case 193:
 #line 1005 "parser.y"
     {
-         dbg_printf("fp|fpu| - print FPU state\n");
+         dbg_printf("fp|fpu - print FPU state\n");
          free((yyvsp[(1) - (3)].sval));free((yyvsp[(2) - (3)].sval));
        }
     break;
@@ -3343,16 +3343,13 @@ yyreduce:
   case 203:
 #line 1072 "parser.y"
     {
-         dbg_printf("instrument start - calls bx_instr_start() callback\n");
-         dbg_printf("instrument stop  - calls bx_instr_stop () callback\n");
-         dbg_printf("instrument reset - calls bx_instr_reset() callback\n");
-         dbg_printf("instrument print - calls bx_instr_print() callback\n");
+         dbg_printf("instrument <command> - calls BX_INSTR_DEBUG_CMD instrumentation callback with <command>\n");
          free((yyvsp[(1) - (3)].sval));free((yyvsp[(2) - (3)].sval));
        }
     break;
 
   case 204:
-#line 1080 "parser.y"
+#line 1077 "parser.y"
     {
          dbg_printf("set <regname> = <expr> - set register value to expression\n");
          dbg_printf("set $reg = val - set CPU register to value val\n");
@@ -3365,7 +3362,7 @@ yyreduce:
     break;
 
   case 205:
-#line 1090 "parser.y"
+#line 1087 "parser.y"
     {
          dbg_printf("page <laddr> - show linear to physical xlation for linear address laddr\n");
          free((yyvsp[(1) - (3)].sval));free((yyvsp[(2) - (3)].sval));
@@ -3373,7 +3370,7 @@ yyreduce:
     break;
 
   case 206:
-#line 1095 "parser.y"
+#line 1092 "parser.y"
     {
          dbg_printf("info break - show information about current breakpoint status\n");
          dbg_printf("info idt - show interrupt descriptor table\n");
@@ -3392,7 +3389,7 @@ yyreduce:
     break;
 
   case 207:
-#line 1111 "parser.y"
+#line 1108 "parser.y"
     {
          dbg_printf("show <command> - toggles show symbolic info (calls to begin with)\n");
          dbg_printf("show - shows current show mode\n");
@@ -3407,7 +3404,7 @@ yyreduce:
     break;
 
   case 208:
-#line 1123 "parser.y"
+#line 1120 "parser.y"
     {
          dbg_printf("calc|? <expr> - calculate a expression and display the result.\n");
          dbg_printf("    'expr' can reference any general-purpose and segment\n");
@@ -3420,7 +3417,7 @@ yyreduce:
     break;
 
   case 209:
-#line 1133 "parser.y"
+#line 1130 "parser.y"
     {
          bx_dbg_print_help();
          free((yyvsp[(1) - (3)].sval));free((yyvsp[(2) - (3)].sval));
@@ -3428,7 +3425,7 @@ yyreduce:
     break;
 
   case 210:
-#line 1138 "parser.y"
+#line 1135 "parser.y"
     {
          bx_dbg_print_help();
          free((yyvsp[(1) - (2)].sval));
@@ -3436,7 +3433,7 @@ yyreduce:
     break;
 
   case 211:
-#line 1146 "parser.y"
+#line 1143 "parser.y"
     {
      bx_dbg_calc_command((yyvsp[(2) - (3)].uval));
      free((yyvsp[(1) - (3)].sval));
@@ -3444,238 +3441,238 @@ yyreduce:
     break;
 
   case 212:
-#line 1163 "parser.y"
+#line 1160 "parser.y"
     { (yyval.uval) = (yyvsp[(1) - (1)].uval); }
     break;
 
   case 213:
-#line 1164 "parser.y"
+#line 1161 "parser.y"
     { (yyval.uval) = bx_dbg_get_reg8l_value((yyvsp[(1) - (1)].uval)); }
     break;
 
   case 214:
-#line 1165 "parser.y"
+#line 1162 "parser.y"
     { (yyval.uval) = bx_dbg_get_reg8h_value((yyvsp[(1) - (1)].uval)); }
     break;
 
   case 215:
-#line 1166 "parser.y"
+#line 1163 "parser.y"
     { (yyval.uval) = bx_dbg_get_reg16_value((yyvsp[(1) - (1)].uval)); }
     break;
 
   case 216:
-#line 1167 "parser.y"
+#line 1164 "parser.y"
     { (yyval.uval) = bx_dbg_get_reg32_value((yyvsp[(1) - (1)].uval)); }
     break;
 
   case 217:
-#line 1168 "parser.y"
+#line 1165 "parser.y"
     { (yyval.uval) = bx_dbg_get_reg64_value((yyvsp[(1) - (1)].uval)); }
     break;
 
   case 218:
-#line 1169 "parser.y"
+#line 1166 "parser.y"
     { (yyval.uval) = bx_dbg_get_selector_value((yyvsp[(1) - (1)].uval)); }
     break;
 
   case 219:
-#line 1170 "parser.y"
+#line 1167 "parser.y"
     { (yyval.uval) = bx_dbg_get_ip (); }
     break;
 
   case 220:
-#line 1171 "parser.y"
+#line 1168 "parser.y"
     { (yyval.uval) = bx_dbg_get_eip(); }
     break;
 
   case 221:
-#line 1172 "parser.y"
+#line 1169 "parser.y"
     { (yyval.uval) = bx_dbg_get_instruction_pointer(); }
     break;
 
   case 222:
-#line 1173 "parser.y"
+#line 1170 "parser.y"
     { (yyval.uval) = (yyvsp[(1) - (3)].uval) + (yyvsp[(3) - (3)].uval); }
     break;
 
   case 223:
-#line 1174 "parser.y"
+#line 1171 "parser.y"
     { (yyval.uval) = (yyvsp[(1) - (3)].uval) - (yyvsp[(3) - (3)].uval); }
     break;
 
   case 224:
-#line 1175 "parser.y"
+#line 1172 "parser.y"
     { (yyval.uval) = (yyvsp[(1) - (3)].uval) * (yyvsp[(3) - (3)].uval); }
     break;
 
   case 225:
-#line 1176 "parser.y"
+#line 1173 "parser.y"
     { (yyval.uval) = (yyvsp[(1) - (3)].uval) / (yyvsp[(3) - (3)].uval); }
     break;
 
   case 226:
-#line 1177 "parser.y"
+#line 1174 "parser.y"
     { (yyval.uval) = (yyvsp[(1) - (3)].uval) >> (yyvsp[(3) - (3)].uval); }
     break;
 
   case 227:
-#line 1178 "parser.y"
+#line 1175 "parser.y"
     { (yyval.uval) = (yyvsp[(1) - (3)].uval) << (yyvsp[(3) - (3)].uval); }
     break;
 
   case 228:
-#line 1179 "parser.y"
+#line 1176 "parser.y"
     { (yyval.uval) = (yyvsp[(1) - (3)].uval) | (yyvsp[(3) - (3)].uval); }
     break;
 
   case 229:
-#line 1180 "parser.y"
+#line 1177 "parser.y"
     { (yyval.uval) = (yyvsp[(1) - (3)].uval) ^ (yyvsp[(3) - (3)].uval); }
     break;
 
   case 230:
-#line 1181 "parser.y"
+#line 1178 "parser.y"
     { (yyval.uval) = (yyvsp[(1) - (3)].uval) & (yyvsp[(3) - (3)].uval); }
     break;
 
   case 231:
-#line 1182 "parser.y"
+#line 1179 "parser.y"
     { (yyval.uval) = !(yyvsp[(2) - (2)].uval); }
     break;
 
   case 232:
-#line 1183 "parser.y"
+#line 1180 "parser.y"
     { (yyval.uval) = -(yyvsp[(2) - (2)].uval); }
     break;
 
   case 233:
-#line 1184 "parser.y"
+#line 1181 "parser.y"
     { (yyval.uval) = (yyvsp[(2) - (3)].uval); }
     break;
 
   case 234:
-#line 1189 "parser.y"
+#line 1186 "parser.y"
     { (yyval.uval) = (yyvsp[(1) - (1)].uval); }
     break;
 
   case 235:
-#line 1190 "parser.y"
+#line 1187 "parser.y"
     { (yyval.uval) = bx_dbg_get_symbol_value((yyvsp[(1) - (1)].sval)); free((yyvsp[(1) - (1)].sval));}
     break;
 
   case 236:
-#line 1191 "parser.y"
+#line 1188 "parser.y"
     { (yyval.uval) = bx_dbg_get_reg8l_value((yyvsp[(1) - (1)].uval)); }
     break;
 
   case 237:
-#line 1192 "parser.y"
+#line 1189 "parser.y"
     { (yyval.uval) = bx_dbg_get_reg8h_value((yyvsp[(1) - (1)].uval)); }
     break;
 
   case 238:
-#line 1193 "parser.y"
+#line 1190 "parser.y"
     { (yyval.uval) = bx_dbg_get_reg16_value((yyvsp[(1) - (1)].uval)); }
     break;
 
   case 239:
-#line 1194 "parser.y"
+#line 1191 "parser.y"
     { (yyval.uval) = bx_dbg_get_reg32_value((yyvsp[(1) - (1)].uval)); }
     break;
 
   case 240:
-#line 1195 "parser.y"
+#line 1192 "parser.y"
     { (yyval.uval) = bx_dbg_get_reg64_value((yyvsp[(1) - (1)].uval)); }
     break;
 
   case 241:
-#line 1196 "parser.y"
+#line 1193 "parser.y"
     { (yyval.uval) = bx_dbg_get_selector_value((yyvsp[(1) - (1)].uval)); }
     break;
 
   case 242:
-#line 1197 "parser.y"
+#line 1194 "parser.y"
     { (yyval.uval) = bx_dbg_get_ip (); }
     break;
 
   case 243:
-#line 1198 "parser.y"
+#line 1195 "parser.y"
     { (yyval.uval) = bx_dbg_get_eip(); }
     break;
 
   case 244:
-#line 1199 "parser.y"
+#line 1196 "parser.y"
     { (yyval.uval) = bx_dbg_get_instruction_pointer(); }
     break;
 
   case 245:
-#line 1200 "parser.y"
+#line 1197 "parser.y"
     { (yyval.uval) = bx_dbg_get_laddr ((yyvsp[(1) - (3)].uval), (yyvsp[(3) - (3)].uval)); }
     break;
 
   case 246:
-#line 1201 "parser.y"
+#line 1198 "parser.y"
     { (yyval.uval) = (yyvsp[(1) - (3)].uval) + (yyvsp[(3) - (3)].uval); }
     break;
 
   case 247:
-#line 1202 "parser.y"
+#line 1199 "parser.y"
     { (yyval.uval) = (yyvsp[(1) - (3)].uval) - (yyvsp[(3) - (3)].uval); }
     break;
 
   case 248:
-#line 1203 "parser.y"
+#line 1200 "parser.y"
     { (yyval.uval) = (yyvsp[(1) - (3)].uval) * (yyvsp[(3) - (3)].uval); }
     break;
 
   case 249:
-#line 1204 "parser.y"
+#line 1201 "parser.y"
     { (yyval.uval) = ((yyvsp[(3) - (3)].uval) != 0) ? (yyvsp[(1) - (3)].uval) / (yyvsp[(3) - (3)].uval) : 0; }
     break;
 
   case 250:
-#line 1205 "parser.y"
+#line 1202 "parser.y"
     { (yyval.uval) = (yyvsp[(1) - (3)].uval) >> (yyvsp[(3) - (3)].uval); }
     break;
 
   case 251:
-#line 1206 "parser.y"
+#line 1203 "parser.y"
     { (yyval.uval) = (yyvsp[(1) - (3)].uval) << (yyvsp[(3) - (3)].uval); }
     break;
 
   case 252:
-#line 1207 "parser.y"
+#line 1204 "parser.y"
     { (yyval.uval) = (yyvsp[(1) - (3)].uval) | (yyvsp[(3) - (3)].uval); }
     break;
 
   case 253:
-#line 1208 "parser.y"
+#line 1205 "parser.y"
     { (yyval.uval) = (yyvsp[(1) - (3)].uval) ^ (yyvsp[(3) - (3)].uval); }
     break;
 
   case 254:
-#line 1209 "parser.y"
+#line 1206 "parser.y"
     { (yyval.uval) = (yyvsp[(1) - (3)].uval) & (yyvsp[(3) - (3)].uval); }
     break;
 
   case 255:
-#line 1210 "parser.y"
+#line 1207 "parser.y"
     { (yyval.uval) = !(yyvsp[(2) - (2)].uval); }
     break;
 
   case 256:
-#line 1211 "parser.y"
+#line 1208 "parser.y"
     { (yyval.uval) = -(yyvsp[(2) - (2)].uval); }
     break;
 
   case 257:
-#line 1212 "parser.y"
+#line 1209 "parser.y"
     { (yyval.uval) = (yyvsp[(2) - (3)].uval); }
     break;
 
 
 /* Line 1267 of yacc.c.  */
-#line 3679 "y.tab.c"
+#line 3676 "y.tab.c"
       default: break;
     }
   YY_SYMBOL_PRINT ("-> $$ =", yyr1[yyn], &yyval, &yyloc);
@@ -3889,7 +3886,7 @@ yyreturn:
 }
 
 
-#line 1215 "parser.y"
+#line 1212 "parser.y"
 
 
 #endif  /* if BX_DEBUGGER */
