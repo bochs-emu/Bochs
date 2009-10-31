@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.296 2009-10-30 09:13:18 sshwarts Exp $
+// $Id: cpu.cc,v 1.297 2009-10-31 20:16:21 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -783,8 +783,8 @@ void BX_CPU_C::prefetch(void)
 
 void BX_CPU_C::boundaryFetch(const Bit8u *fetchPtr, unsigned remainingInPage, bxInstruction_c *i)
 {
-  unsigned j;
-  Bit8u fetchBuffer[16]; // Really only need 15
+  unsigned j, k;
+  Bit8u fetchBuffer[32];
   unsigned ret;
 
   if (remainingInPage >= 15) {
@@ -806,7 +806,7 @@ void BX_CPU_C::boundaryFetch(const Bit8u *fetchPtr, unsigned remainingInPage, bx
 
   unsigned fetchBufferLimit = 15;
   if (BX_CPU_THIS_PTR eipPageWindowSize < 15) {
-    BX_DEBUG(("boundaryFetch: small window size after prefetch - %d bytes", BX_CPU_THIS_PTR eipPageWindowSize));
+    BX_DEBUG(("boundaryFetch: small window size after prefetch=%d bytes, remainingInPage=%d bytes", BX_CPU_THIS_PTR eipPageWindowSize, remainingInPage));
     fetchBufferLimit = BX_CPU_THIS_PTR eipPageWindowSize;
   }
 
@@ -814,9 +814,10 @@ void BX_CPU_C::boundaryFetch(const Bit8u *fetchPtr, unsigned remainingInPage, bx
   fetchPtr = BX_CPU_THIS_PTR eipFetchPtr;
 
   // read leftover bytes in next page
-  for (; j<fetchBufferLimit; j++) {
+  for (k=0; k<fetchBufferLimit; k++, j++) {
     fetchBuffer[j] = *fetchPtr++;
   }
+
 #if BX_SUPPORT_X86_64
   if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64)
     ret = fetchDecode64(fetchBuffer, i, remainingInPage+fetchBufferLimit);
