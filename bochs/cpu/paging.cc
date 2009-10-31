@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.188 2009-10-26 22:05:00 sshwarts Exp $
+// $Id: paging.cc,v 1.189 2009-10-31 19:16:09 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -262,6 +262,9 @@
 
 static unsigned priv_check[BX_PRIV_CHECK_SIZE];
 
+#define BX_PAGING_PHY_ADDRESS_RESERVED_BITS \
+    (BX_PHY_ADDRESS_RESERVED_BITS & BX_CONST64(0xfffffffffffff))
+
 //                    Format of a PML4 Entry
 // -----------------------------------------------------------
 // 00    | Present (P)
@@ -280,7 +283,7 @@ static unsigned priv_check[BX_PRIV_CHECK_SIZE];
 // -----------------------------------------------------------
 
 #define PAGING_PAE_PML4_RESERVED_BITS \
-    (BX_PHY_ADDRESS_RESERVED_BITS | BX_CONST64(0x80))
+    (BX_PAGING_PHY_ADDRESS_RESERVED_BITS | BX_CONST64(0x80))
 
 //          Format of Legacy PAE PDPTR entry (PDPTE)
 // -----------------------------------------------------------
@@ -295,7 +298,7 @@ static unsigned priv_check[BX_PRIV_CHECK_SIZE];
 // -----------------------------------------------------------
 
 #define PAGING_PAE_PDPTE_RESERVED_BITS \
-    (BX_PHY_ADDRESS_RESERVED_BITS | BX_CONST64(0xFFF00000000001E6))
+    (BX_PAGING_PHY_ADDRESS_RESERVED_BITS | BX_CONST64(0xFFF00000000001E6))
 
 //          Format of a Long Mode PDPTR entry (PDPTE)
 // -----------------------------------------------------------
@@ -314,7 +317,7 @@ static unsigned priv_check[BX_PRIV_CHECK_SIZE];
 // 63    | Execute-Disable (XD) (if EFER.NXE=1, reserved otherwise)
 // -----------------------------------------------------------
 
-#define PAGING_LONG_MODE_PDPTE_RESERVED_BITS (BX_PHY_ADDRESS_RESERVED_BITS)
+#define PAGING_LONG_MODE_PDPTE_RESERVED_BITS (BX_PAGING_PHY_ADDRESS_RESERVED_BITS)
 
 //       Format of a PDPTE that References a 1-GByte Page
 // -----------------------------------------------------------
@@ -337,7 +340,7 @@ static unsigned priv_check[BX_PRIV_CHECK_SIZE];
 // -----------------------------------------------------------
 
 #define PAGING_PAE_PDPTE1G_RESERVED_BITS \
-    (BX_PHY_ADDRESS_RESERVED_BITS | BX_CONST64(0x3FFFE000))
+    (BX_PAGING_PHY_ADDRESS_RESERVED_BITS | BX_CONST64(0x3FFFE000))
 
 //      Format of a PAE PDE that References a Page Table
 // -----------------------------------------------------------
@@ -356,7 +359,7 @@ static unsigned priv_check[BX_PRIV_CHECK_SIZE];
 // 63    | Execute-Disable (XD) (if EFER.NXE=1, reserved otherwise)
 // -----------------------------------------------------------
 
-#define PAGING_PAE_PDE_RESERVED_BITS (BX_PHY_ADDRESS_RESERVED_BITS)
+#define PAGING_PAE_PDE_RESERVED_BITS (BX_PAGING_PHY_ADDRESS_RESERVED_BITS)
 
 //        Format of a PAE PDE that Maps a 2-MByte Page
 // -----------------------------------------------------------
@@ -379,7 +382,7 @@ static unsigned priv_check[BX_PRIV_CHECK_SIZE];
 // -----------------------------------------------------------
 
 #define PAGING_PAE_PDE2M_RESERVED_BITS \
-    (BX_PHY_ADDRESS_RESERVED_BITS | BX_CONST64(0x001FE000))
+    (BX_PAGING_PHY_ADDRESS_RESERVED_BITS | BX_CONST64(0x001FE000))
 
 //        Format of a PAE PTE that Maps a 4-KByte Page
 // -----------------------------------------------------------
@@ -399,7 +402,7 @@ static unsigned priv_check[BX_PRIV_CHECK_SIZE];
 // 63    | Execute-Disable (XD) (if EFER.NXE=1, reserved otherwise)
 // -----------------------------------------------------------
 
-#define PAGING_PAE_PTE_RESERVED_BITS (BX_PHY_ADDRESS_RESERVED_BITS)
+#define PAGING_PAE_PTE_RESERVED_BITS (BX_PAGING_PHY_ADDRESS_RESERVED_BITS)
 
 //           Format of a PDE that Maps a 4-MByte Page
 // -----------------------------------------------------------
@@ -554,13 +557,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SetCR3(bx_address val)
   if (BX_CPU_THIS_PTR cr4.get_PAE()) {
 #if BX_SUPPORT_X86_64
     if (long_mode()) {
-#if BX_PHY_ADDRESS_WIDTH == 32
-      if (val & BX_CONST64(0x000fffff00000000)) {
-        BX_PANIC(("SetCR3() 0x%08x%08x: Only 32 bit physical address space is emulated !", GET32H(val), GET32L(val)));
-      }
-#endif
-      // bits [63-52], [11-5], [2-0] are reserved
-      if (val & (BX_CONST64(0xfff0000000000000) | BX_PHY_ADDRESS_RESERVED_BITS)) {
+      if (! IsValidPhyAddr(val)) {
         BX_ERROR(("SetCR3(): Attempt to write to reserved bits of CR3"));
         exception(BX_GP_EXCEPTION, 0, 0);
       }
@@ -879,7 +876,7 @@ bx_phy_address BX_CPU_C::translate_linear_long_mode(bx_address laddr, bx_address
   access_read_physical(pdpe_addr, 8, &pdpe);
   BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pdpe_addr, 8, BX_READ, (Bit8u*)(&pdpe));
 
-  fault = check_entry_PAE("PDPE", pdpe, BX_PHY_ADDRESS_RESERVED_BITS, rw, &nx_fault);
+  fault = check_entry_PAE("PDPE", pdpe, BX_PAGING_PHY_ADDRESS_RESERVED_BITS, rw, &nx_fault);
   if (fault >= 0)
     page_fault(fault, laddr, pl, rw);
 
@@ -1418,7 +1415,7 @@ bx_bool BX_CPU_C::dbg_xlate_linear2phy(bx_address laddr, bx_phy_address *phy)
       access_read_physical(pt_address, 8, &pte);
       if(!(pte & 1))
         goto page_fault;
-      if (pte & BX_PHY_ADDRESS_RESERVED_BITS)
+      if (pte & BX_PAGING_PHY_ADDRESS_RESERVED_BITS)
         goto page_fault;
       pt_address = bx_phy_address(pte & BX_CONST64(0x000ffffffffff000));
       if (pte & 0x80) {
