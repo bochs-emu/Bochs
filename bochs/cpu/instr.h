@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: instr.h,v 1.21 2009-10-14 20:45:29 sshwarts Exp $
+// $Id: instr.h,v 1.22 2009-10-31 20:02:44 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008-2009 Stanislav Shwartsman
@@ -24,6 +24,8 @@
 #ifndef BX_INSTR_H
 #  define BX_INSTR_H 1
 
+#define BX_INSTRUMENT_IA_OPCODE 0
+
 class bxInstruction_c;
 
 // <TAG-TYPE-EXECUTEPTR-START>
@@ -46,7 +48,7 @@ public:
   BxExecutePtr_tR execute;
   BxExecutePtr_tR execute2;
   BxResolvePtr_tR ResolveModrm;
-#if BX_INSTRUMENTATION
+#if BX_INSTRUMENT_IA_OPCODE
   Bit16u ia_opcode;
 #endif
 
@@ -283,5 +285,9 @@ public:
 #endif
 };
 // <TAG-CLASS-INSTRUCTION-END>
+
+#if BX_INSTRUMENT_IA_OPCODE
+extern const char* BxOpcodeNamesTable[];
+#endif
 
 #endif

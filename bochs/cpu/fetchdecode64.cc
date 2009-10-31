@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.232 2009-10-24 11:17:51 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.233 2009-10-31 20:02:44 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -3873,7 +3873,7 @@ modrm_done:
   i->setB1(b1);
   i->setILen(ilen);
 
-#if BX_INSTRUMENTATION
+#if BX_INSTRUMENT_IA_OPCODE
   i->ia_opcode = ia_opcode;
 #endif
 
