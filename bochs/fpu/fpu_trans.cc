@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu_trans.cc,v 1.25 2009-10-14 20:45:29 sshwarts Exp $
+// $Id: fpu_trans.cc,v 1.26 2009-11-01 17:37:14 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003-2009 Stanislav Shwartsman
@@ -70,7 +70,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FYL2X(bxInstruction_c *i)
 
   if (IS_TAG_EMPTY(0) || IS_TAG_EMPTY(1))
   {
-     FPU_stack_underflow(0, 1);
+     FPU_stack_underflow(1, 1 /* pop_stack */);
      return;
   }
 
@@ -161,7 +161,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FPATAN(bxInstruction_c *i)
 
   if (IS_TAG_EMPTY(0) || IS_TAG_EMPTY(1))
   {
-     FPU_stack_underflow(0, 1);
+     FPU_stack_underflow(1, 1 /* pop_stack */);
      return;
   }
 
@@ -318,7 +318,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FYL2XP1(bxInstruction_c *i)
 
   if (IS_TAG_EMPTY(0) || IS_TAG_EMPTY(1))
   {
-     FPU_stack_underflow(0, 1);
+     FPU_stack_underflow(1, 1 /* pop_stack */);
      return;
   }
 
