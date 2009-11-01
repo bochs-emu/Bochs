@@ -137,7 +137,7 @@ static float128 poly_atan(float128 x1, float_status_t &status)
 floatx80 fpatan(floatx80 a, floatx80 b, float_status_t &status)
 {
     // handle unsupported extended double-precision floating encodings
-    if (floatx80_is_unsupported(a)) {
+    if (floatx80_is_unsupported(a) || floatx80_is_unsupported(b)) {
         float_raise(status, float_flag_invalid);
         return floatx80_default_nan;
     }

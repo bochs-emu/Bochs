@@ -137,7 +137,7 @@ static float128 poly_l2p1(float128 x, float_status_t &status)
 floatx80 fyl2x(floatx80 a, floatx80 b, float_status_t &status)
 {
     // handle unsupported extended double-precision floating encodings
-    if (floatx80_is_unsupported(a)) {
+    if (floatx80_is_unsupported(a) || floatx80_is_unsupported(b)) {
 invalid:
         float_raise(status, float_flag_invalid);
         return floatx80_default_nan;
@@ -254,7 +254,7 @@ floatx80 fyl2xp1(floatx80 a, floatx80 b, float_status_t &status)
     int aSign, bSign;
 
     // handle unsupported extended double-precision floating encodings
-    if (floatx80_is_unsupported(a)) {
+    if (floatx80_is_unsupported(a) || floatx80_is_unsupported(b)) {
 invalid:
         float_raise(status, float_flag_invalid);
         return floatx80_default_nan;
