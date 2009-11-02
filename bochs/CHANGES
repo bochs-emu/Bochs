@@ -58,6 +58,7 @@ Changes for next bugfix+ release (coming soon):
   [422766] Large Memory configurations
  [1311287] Idea for a better GUI
   [455971] USB support
+  [615363] debugger shortcut for repeat last cmd
 
 -------------------------------------------------------------------------
 Changes in 2.4.1 (June 7, 2009):
