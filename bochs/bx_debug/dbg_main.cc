@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.215 2009-10-29 15:49:50 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.216 2009-11-02 14:56:26 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -267,7 +267,7 @@ reparse:
               (tmp_buf_ptr[include_cmd_len] == ' ' ||
                tmp_buf_ptr[include_cmd_len] == '\t'))
     {
-      char *ptr = tmp_buf_ptr + include_cmd_len+1;
+      char *ptr = tmp_buf_ptr + include_cmd_len + 1;
       while(*ptr==' ' || *ptr=='\t')
         ptr++;
 
@@ -282,7 +282,7 @@ reparse:
       }
       ptr[len-1] = 0; // get rid of newline
       reti = bx_nest_infile(ptr);
-      if ((reti==0) && (bx_infile_stack_index > 0)) {
+      if (reti==0 && bx_infile_stack_index > 0) {
         dbg_printf("%s: ERROR in source file causes exit.\n", argv0);
         bx_dbg_exit(1);
       }
@@ -338,16 +338,14 @@ void bx_get_command(void)
       charptr_ret = &tmp_buf[0];
     }
   } else {
-    charptr_ret = fgets(tmp_buf, sizeof(tmp_buf),
-      bx_infile_stack[bx_infile_stack_index].fp);
+    charptr_ret = fgets(tmp_buf, sizeof(tmp_buf), bx_infile_stack[bx_infile_stack_index].fp);
   }
 #else /* !HAVE_LIBREADLINE */
   else {
     if (bx_infile_stack_index == 0)
       dbg_printf("%s", prompt);
-      strncpy(tmp_buf_prev, tmp_buf, sizeof(tmp_buf));
-    charptr_ret = fgets(tmp_buf, sizeof(tmp_buf),
-      bx_infile_stack[bx_infile_stack_index].fp);
+    strncpy(tmp_buf_prev, tmp_buf, sizeof(tmp_buf));
+    charptr_ret = fgets(tmp_buf, sizeof(tmp_buf), bx_infile_stack[bx_infile_stack_index].fp);
   }
 #endif
   if (charptr_ret == NULL) {
@@ -422,8 +420,7 @@ int bx_nest_infile(char *path)
 void bx_unnest_infile(void)
 {
   if (bx_infile_stack_index <= 0) {
-    dbg_printf("%s: ERROR: unnest_infile(): nesting level = 0.\n",
-      argv0);
+    dbg_printf("%s: ERROR: unnest_infile(): nesting level = 0\n", argv0);
     bx_dbg_exit(1);
   }
 
@@ -433,7 +430,7 @@ void bx_unnest_infile(void)
 
 int bxwrap(void)
 {
-  dbg_printf("%s: ERROR: bxwrap() called.\n", argv0);
+  dbg_printf("%s: ERROR: bxwrap() called\n", argv0);
   bx_dbg_exit(1);
   return(0); // keep compiler quiet
 }
@@ -444,13 +441,11 @@ char* bxtext;
 
 void bxerror(char *s)
 {
-  dbg_printf("%s:%d: %s at '%s'\n",
-    bx_infile_stack[bx_infile_stack_index].fname,
-    bx_infile_stack[bx_infile_stack_index].lineno,
-    s, bxtext);
+  dbg_printf("%s:%d: %s at '%s'\n", bx_infile_stack[bx_infile_stack_index].fname,
+    bx_infile_stack[bx_infile_stack_index].lineno, s, bxtext);
 
   if (bx_infile_stack_index > 0) {
-    dbg_printf("%s: ERROR in source file causes exit.\n", argv0);
+    dbg_printf("%s: ERROR in source file causes exit\n", argv0);
     bx_dbg_exit(1);
   }
 }
