@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: flag_ctrl.cc,v 1.46 2009-08-10 15:44:50 sshwarts Exp $
+// $Id: flag_ctrl.cc,v 1.47 2009-11-02 15:00:47 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -86,7 +86,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CLI(bxInstruction_c *i)
   {
     if (IOPL != 3) {
 #if BX_CPU_LEVEL >= 5
-      if (BX_CR4_VME_ENABLED) {
+      if (BX_CPU_THIS_PTR cr4.get_VME()) {
         BX_CPU_THIS_PTR clear_VIF();
         return;
       }
@@ -129,7 +129,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::STI(bxInstruction_c *i)
   {
     if (IOPL != 3) {
 #if BX_CPU_LEVEL >= 5
-      if (BX_CR4_VME_ENABLED && BX_CPU_THIS_PTR get_VIP() == 0)
+      if (BX_CPU_THIS_PTR cr4.get_VME() && BX_CPU_THIS_PTR get_VIP() == 0)
       {
         BX_CPU_THIS_PTR assert_VIF();
         return;
@@ -167,19 +167,22 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUSHF_Fw(bxInstruction_c *i)
   Bit16u flags = (Bit16u) read_eflags();
 
   if (v8086_mode()) {
-    if ((BX_CPU_THIS_PTR get_IOPL() < 3) && (BX_CR4_VME_ENABLED == 0)) {
-      BX_DEBUG(("PUSHFW: #GP(0) in v8086 (no VME) mode"));
-      exception(BX_GP_EXCEPTION, 0, 0);
-    }
+    if (BX_CPU_THIS_PTR get_IOPL() < 3) {
 #if BX_CPU_LEVEL >= 5
-    if (BX_CR4_VME_ENABLED && BX_CPU_THIS_PTR get_IOPL() < 3) {
-      flags |= EFlagsIOPLMask;
-      if (BX_CPU_THIS_PTR get_VIF())
-        flags |=  EFlagsIFMask;
+      if (BX_CPU_THIS_PTR cr4.get_VME()) {
+        flags |= EFlagsIOPLMask;
+        if (BX_CPU_THIS_PTR get_VIF())
+          flags |=  EFlagsIFMask;
+        else
+          flags &= ~EFlagsIFMask;
+      }
       else
-        flags &= ~EFlagsIFMask;
-    }
 #endif
+      {
+        BX_DEBUG(("PUSHFW: #GP(0) in v8086 (no VME) mode"));
+        exception(BX_GP_EXCEPTION, 0, 0);
+      }
+    }
   }
 
   push_16(flags);
@@ -189,10 +192,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::POPF_Fw(bxInstruction_c *i)
 {
   // Build a mask of the following bits:
   // x,NT,IOPL,OF,DF,IF,TF,SF,ZF,x,AF,x,PF,x,CF
-  Bit32u changeMask = EFlagsOSZAPCMask | EFlagsTFMask | EFlagsDFMask;
-#if BX_CPU_LEVEL >= 3
-  changeMask |= EFlagsNTMask;     // NT could be modified
-#endif
+  Bit32u changeMask = EFlagsOSZAPCMask | EFlagsTFMask | EFlagsDFMask | EFlagsNTMask;
 
   RSP_SPECULATIVE;
 
@@ -205,31 +205,31 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::POPF_Fw(bxInstruction_c *i)
       changeMask |= EFlagsIFMask;
   }
   else if (v8086_mode()) {
-    if ((BX_CPU_THIS_PTR get_IOPL() < 3) && (BX_CR4_VME_ENABLED == 0)) {
+    if (BX_CPU_THIS_PTR get_IOPL() < 3) {
+#if BX_CPU_LEVEL >= 5
+      if (BX_CPU_THIS_PTR cr4.get_VME()) {
+
+        if (((flags16 & EFlagsIFMask) && BX_CPU_THIS_PTR get_VIP()) ||
+             (flags16 & EFlagsTFMask))
+        {
+          BX_ERROR(("POPFW: #GP(0) in VME mode"));
+          exception(BX_GP_EXCEPTION, 0, 0);
+        }
+
+        // IF, IOPL unchanged, EFLAGS.VIF = TMP_FLAGS.IF
+        changeMask |= EFlagsVIFMask;
+        Bit32u flags32 = (Bit32u) flags16;
+        if (BX_CPU_THIS_PTR get_IF()) flags32 |= EFlagsVIFMask;
+        writeEFlags(flags32, changeMask);
+        RSP_COMMIT;
+        return;
+      }
+#endif
       BX_DEBUG(("POPFW: #GP(0) in v8086 (no VME) mode"));
       exception(BX_GP_EXCEPTION, 0, 0);
     }
-#if BX_CPU_LEVEL >= 5
-    if (BX_CR4_VME_ENABLED && BX_CPU_THIS_PTR get_IOPL() < 3) {
 
-      if (((flags16 & EFlagsIFMask) && BX_CPU_THIS_PTR get_VIP()) ||
-           (flags16 & EFlagsTFMask))
-      {
-        BX_ERROR(("POPFW: #GP(0) in VME mode"));
-        exception(BX_GP_EXCEPTION, 0, 0);
-      }
-
-      // IF, IOPL unchanged, EFLAGS.VIF = TMP_FLAGS.IF
-      changeMask |= EFlagsVIFMask;
-      Bit32u flags32 = (Bit32u) flags16;
-      if (BX_CPU_THIS_PTR get_IF()) flags32 |= EFlagsVIFMask;
-      writeEFlags(flags32, changeMask);
-      RSP_COMMIT;
-      return;
-    }
-#endif
     changeMask |= EFlagsIFMask;
-
   }
   else {
     // All non-reserved flags can be modified

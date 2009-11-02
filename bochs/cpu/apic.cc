@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.cc,v 1.130 2009-10-14 20:45:29 sshwarts Exp $
+// $Id: apic.cc,v 1.131 2009-11-02 15:00:47 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (c) 2002-2009 Zwane Mwaikambo, Stanislav Shwartsman
@@ -991,6 +991,7 @@ void bx_local_apic_c::register_state(bx_param_c *parent)
   BXRS_HEX_PARAM_SIMPLE(lapic, timer_current);
   BXRS_HEX_PARAM_SIMPLE(lapic, timer_divconf);
   BXRS_DEC_PARAM_SIMPLE(lapic, timer_divide_factor);
+  BXRS_DEC_PARAM_SIMPLE(lapic, timer_handle);
   BXRS_PARAM_BOOL(lapic, timer_active, timer_active);
   BXRS_HEX_PARAM_SIMPLE(lapic, ticksInitial);
   BXRS_PARAM_BOOL(lapic, INTR, INTR);

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: crregs.h,v 1.19 2009-10-14 20:45:29 sshwarts Exp $
+// $Id: crregs.h,v 1.20 2009-11-02 15:00:47 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007-2009 Stanislav Shwartsman
@@ -104,12 +104,6 @@ struct bx_cr4_t {
 #endif  // #if BX_CPU_LEVEL >= 4
 
 extern bx_address get_cr4_allow_mask(void);
-
-#if BX_CPU_LEVEL >= 5
-  #define BX_CR4_VME_ENABLED (BX_CPU_THIS_PTR cr4.get_VME())
-#else
-  #define BX_CR4_VME_ENABLED (0)
-#endif
 
 #if BX_SUPPORT_X86_64
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bit.cc,v 1.63 2009-03-22 21:23:12 sshwarts Exp $
+// $Id: bit.cc,v 1.64 2009-11-02 15:00:47 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -437,7 +437,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVBE_EqGq(bxInstruction_c *i)
   }
   else {
     bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-    write_virtual_qword(i->seg(), eaddr, val64);
+    write_virtual_qword_64(i->seg(), eaddr, val64);
   }
 #else
   BX_INFO(("MOVBE_EqGq: required MOVBE support, use --enable-movbe option"));
