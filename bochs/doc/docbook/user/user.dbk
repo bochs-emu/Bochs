@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.267 2009-10-31 17:46:12 sshwarts Exp $
+$Id: user.dbk,v 1.268 2009-11-03 09:10:17 sshwarts Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -4979,6 +4979,12 @@ using the fixed filename "snapshot.txt".</para>
 <listitem>
 <para>reset button</para>
 <para>Press this button to trigger a hardware reset.</para>
+</listitem>
+<listitem>
+<para>suspend button</para>
+<para>Press this button to save current simulation state to a disk. The simulation
+could be restored back using bochs -r command. For more details read
+"Save and restore simulation" section of the user manual.</para>
 </listitem>
 <listitem>
 <para>power button</para>
