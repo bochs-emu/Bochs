@@ -42,7 +42,7 @@ be less than the protection and address translation code. We would have
 to try it to find out. I'm also sure there can be some nasty hurdles to
 overcome.
 Status:
-Third party proup started a para-Bochs project exacly to reach above goals,
+Third party group started a para-Bochs project exactly to reach above goals,
 some beta version is already released.
 The home page of the project: http://grid.hust.edu.cn/cluster/VirtualMachine/main.html
 
@@ -148,14 +148,12 @@ Status:
 The pnic device is present in CVS, but the status is unknown.
 
 10. Bios
-10.1 our bios is quite heavy on stack space (notably during int13 functions).
-Some parts can be rewritten in assembler, to save stack space and
-make code smaller.
-Status:
-New BIOS supporting ACPI was introduced in Bochs 2.3.5 release.
-
-10.2 add "jump table placeholder" and log missing function calls in the bios.
+10.1 add "jump table placeholder" and log missing function calls in the bios.
 Check completness with Ralf Brown interrupt list.
+Status:
+Not done yet.
+10.2 use Coreboot or SeaBios as possible alternatives/extensions to
+Bochs Bios ROM we have.
 Status:
 Not done yet.
 
@@ -218,7 +216,12 @@ bidirectional parallel port won't work.
 Status:
 Not done yet.
 
-17. Patches / Bug reports
+17. Guest-To-Host Communication
+Try to adapt VirtualBox guest-to-host communication methods into Bochs.
+Having VirtualBox Shared Folders or VNAT support in Bochs could very 
+simplify its usage.
+
+18. Patches / Bug reports
 There are dozens of patches floating around. Some are outdated,
 don't apply cleanly, are obsolete/unneeded. We could try to do
 some clean-up, and keep only relevent ones.
@@ -227,13 +230,13 @@ very old and we asked for more information with no response.
 Status:
 There is some progress, but still a lot of work to do.
 
-18. Positions
+19. Positions
 If you want to help without coding, here are available positions :
-18.1 Webmaster : update website (Jan Bruun Andersen offered to help)
-18.2 patch coordonator : look at incoming patches (sourceforge and
+19.1 Webmaster : update website (Jan Bruun Andersen offered to help)
+19.2 patch coordonator : look at incoming patches (sourceforge and
 mailing list) and upload / update in the cvs patches directory.
-18.3 platform maintainers for macos / win32
-18.4 disk image maintainer : create and maintain our collection
+19.3 platform maintainers for macos / win32
+19.4 disk image maintainer : create and maintain our collection
 of disk images. Usually, only the configuration file needs to be
 updated, and old bios files have to be removed.  Some packages
 still contain very old bios files, they should definitely have
@@ -241,7 +244,7 @@ to be removed.
 Status:
 More active developers are needed to do the things described above.
 
-19. Bochs demo cd/dvd
+20. Bochs demo cd/dvd
 With version 2.1, it is now technically possible to use disk images
 on a read-only media, with a journal files on a read/write media.
 It would be great to create a demo cd/dvd with executables for
@@ -251,7 +254,7 @@ directory on the harddisk.
 Status:
 Not done yet.
 
-20. Other CPU architectures : arm, ppc
+21. Other CPU architectures : arm, ppc
 This has been asked in the mailing list. I'm not really
 interested, but other people might be. Should we propose to
 host the new CPUs code in our source tree, or should we let
