@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32.cc,v 1.133 2009-06-06 07:44:16 vruppert Exp $
+// $Id: win32.cc,v 1.134 2009-11-03 20:38:03 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -184,12 +184,12 @@ static BOOL gui_debug = FALSE;
 static HWND hotKeyReceiver = NULL;
 static HWND saveParent = NULL;
 
-static char *szMouseEnable = "CTRL + 3rd button enables mouse ";
-static char *szMouseDisable = "CTRL + 3rd button disables mouse";
-static char *szMouseTooltip = "Enable mouse capture\nUse CTRL + 3rd button to release";
+static const char *szMouseEnable = "CTRL + 3rd button enables mouse ";
+static const char *szMouseDisable = "CTRL + 3rd button disables mouse";
+static const char *szMouseTooltip = "Enable mouse capture\nUse CTRL + 3rd button to release";
 
-static char szAppName[] = "Bochs for Windows";
-static char szWindowName[] = "Bochs for Windows - Display";
+static const char szAppName[] = "Bochs for Windows";
+static const char szWindowName[] = "Bochs for Windows - Display";
 
 typedef struct {
   HINSTANCE hInstance;
