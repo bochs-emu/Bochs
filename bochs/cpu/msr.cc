@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: msr.cc,v 1.26 2009-10-25 10:24:47 vruppert Exp $
+// $Id: msr.cc,v 1.27 2009-11-03 12:34:36 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008-2009 Stanislav Shwartsman
@@ -325,6 +325,10 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
         BX_ERROR(("WRMSR[0x%08x]: attempt to write invalid phy addr to variable range MTRR %08x:%08x", index, val32_hi, val32_lo));
         return 0;
       }
+      if (val32_lo & 0x7ff) {
+        BX_ERROR(("WRMSR[0x%08x]: variable range MTRR reserved bits violation %08x:%08x", index, val32_hi, val32_lo));
+        return 0;
+      }
       BX_CPU_THIS_PTR msr.mtrrphys[index - BX_MSR_MTRRPHYSBASE0] = val_64;
       break;
 
@@ -403,6 +407,10 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
     case BX_MSR_MTRR_DEFTYPE:
       if (! isMemTypeValidMTRR(val32_lo & 0xFF)) {
         BX_ERROR(("WRMSR: attempt to write invalid Memory Type to MSR_MTRR_DEFTYPE"));
+        return 0;
+      }
+      if (val32_hi || (val32_lo & 0xfffff300)) {
+        BX_ERROR(("WRMSR: attempt to reserved bits in MSR_MTRR_DEFTYPE"));
         return 0;
       }
       BX_CPU_THIS_PTR msr.mtrr_deftype = val32_lo;
