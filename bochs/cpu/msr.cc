@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: msr.cc,v 1.27 2009-11-03 12:34:36 sshwarts Exp $
+// $Id: msr.cc,v 1.28 2009-11-04 06:46:04 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008-2009 Stanislav Shwartsman
@@ -313,6 +313,8 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
         BX_ERROR(("WRMSR: attempt to write invalid Memory Type to BX_MSR_MTRRPHYSBASE"));
         return 0;
       }
+      BX_CPU_THIS_PTR msr.mtrrphys[index - BX_MSR_MTRRPHYSBASE0] = val_64;
+      break;
     case BX_MSR_MTRRPHYSMASK0:
     case BX_MSR_MTRRPHYSMASK1:
     case BX_MSR_MTRRPHYSMASK2:
