@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: instrument.cc,v 1.1 2009-11-04 15:48:28 sshwarts Exp $
+// $Id: instrument.cc,v 1.2 2009-11-04 15:52:01 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2009 Stanislav Shwartsman
@@ -88,7 +88,7 @@ void bx_instr_before_execution(unsigned cpu, bxInstruction_c *i)
                 ia_stats[cpu].ia_cnt[n] = 0;
             }
         }
-        ia_stats[cpu].total_cnt = 0;
+        ia_stats[cpu].interrupts = ia_stats[cpu].exceptions = ia_stats[cpu].total_cnt = 0;
     }
   }
 }
