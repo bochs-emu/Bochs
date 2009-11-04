@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.h,v 1.90 2009-10-24 11:17:51 sshwarts Exp $
+// $Id: fetchdecode.h,v 1.91 2009-11-04 15:48:27 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005-2009 Stanislav Shwartsman
@@ -63,13 +63,6 @@ struct bxIAOpcodeTable {
   BxExecutePtr_tR execute1;
   BxExecutePtr_tR execute2;
 };
-
-enum {
-#define bx_define_opcode(a, b, c) a,
-#include "ia_opcodes.h"
-   BX_IA_LAST
-};
-#undef  bx_define_opcode
 
 //
 // Common FetchDecode Opcode Tables
