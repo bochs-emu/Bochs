@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: instrument.cc,v 1.2 2009-11-04 15:52:01 sshwarts Exp $
+// $Id: instrument.cc,v 1.3 2009-11-05 15:39:56 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2009 Stanislav Shwartsman
@@ -25,13 +25,13 @@
 #include "bochs.h"
 #include "cpu/cpu.h"
 
-struct {
+struct bx_instr_ia_stats {
    bx_bool active;
    Bit32u ia_cnt[BX_IA_LAST];
    Bit32u total_cnt;
    Bit32u interrupts;
    Bit32u exceptions;
-} ia_stats[BX_SMP_PROCESSORS];
+} *ia_stats;
 
 static logfunctions *instrument_log = new logfunctions ();
 #define LOG_THIS instrument_log->
@@ -40,13 +40,17 @@ void bx_instr_initialize(unsigned cpu)
 {
   assert(cpu < BX_SMP_PROCESSORS);
 
-  ia_stats[cpu].active = 1;
+  if (ia_stats == NULL)
+      ia_stats = new bx_instr_ia_stats[BX_SMP_PROCESSORS];
+
+  ia_stats[cpu].active = 0;
 
   fprintf(stderr, "Initialize cpu %d instrumentation module\n", cpu);
 }
 
 void bx_instr_reset(unsigned cpu, unsigned type)
 {
+  ia_stats[cpu].active    = 1;
   ia_stats[cpu].total_cnt = 0;
 
   for(int n=0; n < BX_IA_LAST; n++)
@@ -76,19 +80,19 @@ void bx_instr_before_execution(unsigned cpu, bxInstruction_c *i)
 {
   if(ia_stats[cpu].active) {
     ia_stats[cpu].ia_cnt[i->ia_opcode]++;
-        ia_stats[cpu].total_cnt++;
+    ia_stats[cpu].total_cnt++;
 
     if (ia_stats[cpu].total_cnt > IA_CNT_DUMP_THRESHOLD) {
-        printf("Dump IA stats for CPU %d\n", cpu);
-        printf("----------------------------------------------------------\n");
-        printf("Interrupts: %d, Exceptions: %d\n", ia_stats[cpu].interrupts, ia_stats[cpu].exceptions);
-        for (int n=0;n < BX_IA_LAST; n++) {
-            if (ia_stats[cpu].ia_cnt[n] > 0) {
-                printf("%s: %f%%\n", BxOpcodeNamesTable[n], ia_stats[cpu].ia_cnt[n] * 100.0 / ia_stats[cpu].total_cnt);
-                ia_stats[cpu].ia_cnt[n] = 0;
-            }
+      printf("Dump IA stats for CPU %d\n", cpu);
+      printf("----------------------------------------------------------\n");
+      printf("Interrupts: %d, Exceptions: %d\n", ia_stats[cpu].interrupts, ia_stats[cpu].exceptions);
+      for (int n=0;n < BX_IA_LAST; n++) {
+        if (ia_stats[cpu].ia_cnt[n] > 0) {
+           printf("%s: %f%%\n", BxOpcodeNamesTable[n], ia_stats[cpu].ia_cnt[n] * 100.0 / ia_stats[cpu].total_cnt);
+           ia_stats[cpu].ia_cnt[n] = 0;
         }
-        ia_stats[cpu].interrupts = ia_stats[cpu].exceptions = ia_stats[cpu].total_cnt = 0;
+      }
+      ia_stats[cpu].interrupts = ia_stats[cpu].exceptions = ia_stats[cpu].total_cnt = 0;
     }
   }
 }
