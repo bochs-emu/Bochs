@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.233 2009-10-31 20:02:44 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.234 2009-11-05 21:07:18 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1968,7 +1968,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo64M[512*3] = {
   /* C5 /wm */ { 0, BX_IA_ERROR },
   /* C6 /wm */ { BxGroup11, BX_IA_ERROR, BxOpcodeInfoG11EbM },
   /* C7 /wm */ { BxGroup11, BX_IA_ERROR, BxOpcodeInfoG11EwM },
-  /* C8 /wm */ { BxImmediate_IwIb, BX_IA_ENTER16_IwIb },
+  /* C8 /wm */ { BxImmediate_IwIb, BX_IA_ENTER64_IwIb },
   /* C9 /wm */ { 0, BX_IA_LEAVE64 },
   /* CA /wm */ { BxImmediate_Iw | BxTraceEnd, BX_IA_RETfar16_Iw },
   /* CB /wm */ { BxTraceEnd,                  BX_IA_RETfar16 },
@@ -3810,19 +3810,13 @@ modrm_done:
         }
         break;
       case BxImmediate_IwIb:
-        if ((ilen+1) < remain) {
+        if ((ilen+2) < remain) {
           i->IxIxForm.Iw = FetchWORD(iptr);
           iptr += 2;
-          ilen += 2;
+          i->IxIxForm.Ib2 = *iptr;
+          ilen += 3;
         }
         else return(0);
-        if (ilen < remain) {
-          i->IxIxForm.Ib2 = *iptr;
-          ilen++;
-        }
-        else {
-          return(0);
-        }
         break;
       case BxImmediate_O:
         // For is which embed the address in the opcode.  Note

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.231 2009-10-31 20:02:44 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.232 2009-11-05 21:07:18 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2890,51 +2890,33 @@ modrm_done:
         }
         break;
       case BxImmediate_IwIb:
-        if ((ilen+1) < remain) {
-          i->IxIxForm.Iw = FetchWORD(iptr);
+        if ((ilen+2) < remain) {
+          i->IxIxForm.Iw  = FetchWORD(iptr);
           iptr += 2;
-          ilen += 2;
-        }
-        else {
-          return(0);
-        }
-        if (ilen < remain) {
           i->IxIxForm.Ib2 = *iptr;
-          ilen++;
+          ilen += 3;
         }
         else {
           return(0);
         }
         break;
       case BxImmediate_IwIw: // CALL_Ap
-        if ((ilen+1) < remain) {
-          i->IxIxForm.Iw = FetchWORD(iptr);
+        if ((ilen+3) < remain) {
+          i->IxIxForm.Iw  = FetchWORD(iptr);
           iptr += 2;
-          ilen += 2;
-        }
-        else {
-          return(0);
-        }
-        if ((ilen+1) < remain) {
           i->IxIxForm.Iw2 = FetchWORD(iptr);
-          ilen += 2;
+          ilen += 4;
         }
         else {
           return(0);
         }
         break;
       case BxImmediate_IdIw: // CALL_Ap
-        if ((ilen+3) < remain) {
+        if ((ilen+5) < remain) {
           i->IxIxForm.Id = FetchDWORD(iptr);
           iptr += 4;
-          ilen += 4;
-        }
-        else {
-          return(0);
-        }
-        if ((ilen+1) < remain) {
           i->IxIxForm.Iw2 = FetchWORD(iptr);
-          ilen += 2;
+          ilen += 6;
         }
         else {
           return(0);
