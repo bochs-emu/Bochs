@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.217 2009-11-07 20:07:04 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.218 2009-11-07 20:30:39 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -858,12 +858,12 @@ void bx_dbg_info_segment_regs_command(void)
       (unsigned) sreg.des_l, (unsigned) sreg.valid);
 
   BX_CPU(dbg_cpu)->dbg_get_gdtr(&global_sreg);
-  dbg_printf("gdtr:base=0x%08x, limit=0x%x\n",
-      (unsigned) global_sreg.base, (unsigned) global_sreg.limit);
+  dbg_printf("gdtr:base=0x"FMT_ADDRX", limit=0x%x\n",
+      global_sreg.base, (unsigned) global_sreg.limit);
 
   BX_CPU(dbg_cpu)->dbg_get_idtr(&global_sreg);
-  dbg_printf("idtr:base=0x%08x, limit=0x%x\n",
-      (unsigned) global_sreg.base, (unsigned) global_sreg.limit);
+  dbg_printf("idtr:base=0x"FMT_ADDRX", limit=0x%x\n",
+      global_sreg.base, (unsigned) global_sreg.limit);
 }
 
 void bx_dbg_info_registers_command(int which_regs_mask)
@@ -3583,7 +3583,7 @@ bx_address bx_dbg_get_laddr(Bit16u sel, bx_address ofs)
     if (selector.ti) {
       // LDT
       if (((Bit32u)selector.index*8 + 7) > BX_CPU(dbg_cpu)->ldtr.cache.u.segment.limit_scaled) {
-        dbg_printf("ERROR: selector (%04x) > GDT size limit\n", selector.index*8);
+        dbg_printf("ERROR: selector (%04x) > LDT size limit\n", selector.index*8);
         return 0;
       }
       desc_base = BX_CPU(dbg_cpu)->ldtr.cache.u.segment.base;
