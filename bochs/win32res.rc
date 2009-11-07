@@ -2,7 +2,8 @@
 #include <windows.h>
 #include "gui\win32res.h"
 
-ICON_BOCHS ICON build\win32\nsis\bochs.ico
+ICON_BOCHS ICON build\win32\nsis\logo.ico
+1 ICON build\win32\nsis\bochs.ico
 
 // Manifest for WinXP & Win2003
 1 24 build\win32\bochs.manifest
