@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.306 2009-10-30 09:13:19 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.307 2009-11-08 21:03:59 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -539,7 +539,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_DqRq(bxInstruction_c *i)
             ((BX_CPU_THIS_PTR dr7 >> 24) & 3) == 0 ||
             ((BX_CPU_THIS_PTR dr7 >> 28) & 3) == 0)
         {
-          BX_INFO(("MOV_DdRd(): code breakpoint is set"));
+          BX_INFO(("MOV_DqRq(): code breakpoint is set"));
           BX_CPU_THIS_PTR async_event = 1;
         }
       }
