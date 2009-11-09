@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debug.h,v 1.58 2009-10-29 15:49:50 sshwarts Exp $
+// $Id: debug.h,v 1.59 2009-11-09 21:26:09 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -31,8 +31,6 @@
 
 #define BX_DBG_NO_HANDLE 1000
 
-extern Bit32u dbg_cpu;
-
 Bit32u crc32(const Bit8u *buf, int len);
 
 #if BX_DEBUGGER
@@ -41,6 +39,8 @@ Bit32u crc32(const Bit8u *buf, int len);
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+extern Bit32u dbg_cpu;
 
 void dbg_printf (const char *fmt, ...);
 
