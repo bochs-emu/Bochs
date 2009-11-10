@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.268 2009-11-03 09:10:17 sshwarts Exp $
+$Id: user.dbk,v 1.269 2009-11-10 18:10:37 vruppert Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -6266,8 +6266,8 @@ From here, you may use the following commands:
   s     [cpu] [count]         for SMP simulation, execute count instructions on cpu, default is 1
   step  [cpu] [count]
 
-  s     all <count>           for SMP simulation, execute count instructions on all cpus
-  step  all <count>
+  s     all [count]           for SMP simulation, execute count instructions on all cpus
+  step  all [count]
 
   Ctrl-C                      stop execution, and return to command line prompt
   Ctrl-D                      if at empty line on command line, exit
@@ -6490,7 +6490,7 @@ the "instrument/stubs" directory to it, then customize it.  Use:
 <title>Instrumentation commands</title>
 <para>
 <screen>
-  instrument <command>        calls BX_INSTR_DEBUG_CMD instrumentation callback with <command>
+  instrument [command]        calls BX_INSTR_DEBUG_CMD instrumentation callback with [command]
 </screen>
 </para>
 </section>
