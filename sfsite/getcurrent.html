@@ -7,25 +7,36 @@
  <!--content starts here-->
  <img src="images/logo.gif" alt="A Window, Tux, and the BSD Daemon" width="160" height="175" align="right">
 
- <BR><font face="arial, helvetica" color="#1e029a" size="4"><b>Latest release:</b> Bochs 2.4.1</font><BR><BR>
+ <BR><font face="arial, helvetica" color="#1e029a" size="4"><b>Latest release:</b> Bochs 2.4.2</font><BR><BR>
 
-Version 2.4.1 is a bugfix release. Here is the summary of changes :
+Version 2.4.2 is a bugfix release. Here is the summary of changes :
+
 <ul>
-<li> Fixed bunch of CPUID issues
- <ul>
- <li> Bochs is now able to install and boot 64-bit Windows images! (special thanks to Mark Ebersole for his patch)
+<li> CPU and internal debugger
+ <ul> 
+ <li> VMX: implemented TPR shadow VMEXIT
+ <li> Bugfixes for CPU emulation correctness (mostly for VMX support).
+ <li> Bugfixes and updates for Bochs internal debugger
+ <ul> 
+ <li> On SMP system stepN command now affects only current processor
  </ul>
-<li> Several bugfixes in CPU emulation (mostly for x87 instructions)
-<li> Fixed two critical deadlock bugs in the Win32 gui (patches from @SF tracker)
-<li> Fixes related to the 'show ips' feature
- <ul>
- <li> removed conflicting win32-specific alarm() functions ('win32' and 'sdl' gui)
- <li> feature now works in wx on win32
  </ul>
-<li> Added support for gdb stub on big endian machine (patch by Godmar Back)
-<li> Rewritten obsolete hash_map code in dbg symbols module (patch from @SF)
-<li> BIOS: implemented missing INT 15h/89h (patch by Sebastian Herbszt)
+<li> Memory modelling
+ <ul> 
+ <li> Bugfixes for > 32-bit physical address space.
+ <li> Allow to emulate more physical memory than host actually could or would like to allocate.
+ </ul>
+<li> I/O Devices Bugfixes
+ <ul> 
+ <li> Bugfixes for 8254 PIT, VGA, Cirrus-Logic SVGA, USB UCHI
+ </ul>
+<li> Cleanup configure options
+ <ul> 
+ <li> Many configure options are deprecated and determined automatically from the others
+ </ul>
 </ul>
+
+<BR>
 
 The binary packages for Linux and Windows are built with these featues :
 <ul>
@@ -45,35 +56,35 @@ The binary packages for Linux and Windows are built with these featues :
  </ul>
 </ul>
 
-<BR/>
-<a href="http://bochs.cvs.sourceforge.net/bochs/bochs/CHANGES?view=markup&content-type=text/vnd.viewcvs-markup&revision=REL_2_4_1_FINAL">
-Details on what has changed since version 2.4
+<a href="http://bochs.cvs.sourceforge.net/bochs/bochs/CHANGES?view=markup&content-type=text/vnd.viewcvs-markup&revision=REL_2_4_2_FINAL">
+Details on what has changed since version 2.4.1
 </a>
 
 <BR/><BR/>
 
- <BR><font face="arial, helvetica" color="#1e029a" size="4"><b>Previous release:</b> Bochs 2.4</font><BR><BR>
+ <BR><font face="arial, helvetica" color="#1e029a" size="4"><b>Previous release:</b> Bochs 2.4.1</font><BR><BR>
 
-Eleven months after the last intermediate one we have a new stable release.
 <BR>
-Here is a brief summary of changes since version 2.3.7:
+Here is a brief summary of changes since version 2.4:
 <ul>
-<li> Added graphical Bochs debugger frontend for most of the supported platforms.<br>
-     Thanks for Chourdakis Michael and Bruce Ewing.
-<li> Many new CPU features in emulation
+<li> Fixed bunch of CPUID issues
  <ul>
- <li> Support for > 32 bit physical address space and configurable MSRs
- <li> VMX, 1G pages in long mode, MOVBE instruction
+ <li> Bochs is now able to install and boot 64-bit Windows images! (special thanks to Mark Ebersole for his patch)
  </ul>
-<li> Bugfixes for CPU emulation correctness, debugger and CPU instrumentation.
-<li> New config interface 'win32config' with start and runtime menu
-<li> USB: added OHCI support, external hub and cdrom
-<li> Added user plugin interface support
+<li> Several bugfixes in CPU emulation (mostly for x87 instructions)
+<li> Fixed two critical deadlock bugs in the Win32 gui (patches from @SF tracker)
+<li> Fixes related to the 'show ips' feature
+ <ul>
+ <li> removed conflicting win32-specific alarm() functions ('win32' and 'sdl' gui)
+ <li> feature now works in wx on win32
+ </ul>
+<li> Added support for gdb stub on big endian machine (patch by Godmar Back)
+<li> Rewritten obsolete hash_map code in dbg symbols module (patch from @SF)
+<li> BIOS: implemented missing INT 15h/89h (patch by Sebastian Herbszt)
 </ul>
 
-<BR/>
-<a href="http://bochs.cvs.sourceforge.net/bochs/bochs/CHANGES?view=markup&content-type=text/vnd.viewcvs-markup&revision=REL_2_4_FINAL">
-Details on what has changed since version 2.3.7
+<a href="http://bochs.cvs.sourceforge.net/bochs/bochs/CHANGES?view=markup&content-type=text/vnd.viewcvs-markup&revision=REL_2_4_1_FINAL">
+Details on what has changed since version 2.4
 </a>
 
  <BR><BR>
