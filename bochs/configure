@@ -3106,10 +3106,10 @@ ac_config_headers="$ac_config_headers config.h"
 ac_config_headers="$ac_config_headers ltdlconf.h"
 
 
-VERSION="2.4.2"
-VER_STRING="2.4.2"
-WIN_VER_STRING="2, 4, 2, 0"
-REL_STRING="Build from CVS snapshot on November 12, 2009"
+VERSION="2.4.2.cvs"
+VER_STRING="2.4.2.cvs"
+WIN_VER_STRING="2, 4, 2, 1"
+REL_STRING="Build from CVS snapshot, after release 2.4.2"
 
 
 
