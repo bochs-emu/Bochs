@@ -1,4 +1,4 @@
-Changes in 2.4.2 (November 10, 2009):
+Changes in 2.4.2 (November 12, 2009):
 
 - CPU and internal debugger
   - VMX: Implemented TPR shadow VMEXIT
