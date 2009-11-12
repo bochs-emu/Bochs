@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: parser.y,v 1.38 2009-10-31 17:46:12 sshwarts Exp $
+// $Id: parser.y,v 1.39 2009-11-12 21:06:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 %{
@@ -426,7 +426,7 @@ stepN_command:
       }
     | BX_TOKEN_STEPN BX_TOKEN_ALL BX_TOKEN_NUMERIC '\n'
       {
-        bx_dbg_stepN_command(-1, $2);
+        bx_dbg_stepN_command(-1, $3);
         free($1); free($2);
       }
     | BX_TOKEN_STEPN BX_TOKEN_NUMERIC BX_TOKEN_NUMERIC '\n'

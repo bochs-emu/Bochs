@@ -2454,7 +2454,7 @@ yyreduce:
   case 93:
 #line 428 "parser.y"
     {
-        bx_dbg_stepN_command(-1, (yyvsp[(2) - (4)].sval));
+        bx_dbg_stepN_command(-1, (yyvsp[(3) - (4)].uval));
         free((yyvsp[(1) - (4)].sval)); free((yyvsp[(2) - (4)].sval));
       }
     break;
