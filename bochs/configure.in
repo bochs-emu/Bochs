@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.415 2009-11-10 18:12:46 vruppert Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.416 2009-11-12 12:44:19 vruppert Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -14,7 +14,7 @@ dnl // WIN_VER_STRING format is "a, b, c, d"
 dnl // c should be > 90 for pre-release of next version otherwise patch level
 dnl // d should be 0 for release and 1 for cvs version
 WIN_VER_STRING="2, 4, 2, 0"
-REL_STRING="Build from CVS snapshot on November 10, 2009"
+REL_STRING="Build from CVS snapshot on November 12, 2009"
 
 changequote(<<, >>)
 changequote([, ])
