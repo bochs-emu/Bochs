@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: mmx.cc,v 1.87 2009-10-24 11:17:51 sshwarts Exp $
+// $Id: mmx.cc,v 1.88 2009-11-13 09:55:22 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2002-2009 Stanislav Shwartsman
@@ -2617,10 +2617,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MASKMOVQ_PqPRq(bxInstruction_c *i)
       rdi = DI;
   }
 
-  if (MMXUQ(mask) == 0) return;
-
   /* do read-modify-write for efficiency */
   MMXUQ(tmp) = read_RMW_virtual_qword(i->seg(), rdi);
+
+  if (MMXUQ(mask) == 0) return;
 
   if(MMXUB0(mask) & 0x80) MMXUB0(tmp) = MMXUB0(op);
   if(MMXUB1(mask) & 0x80) MMXUB1(tmp) = MMXUB1(op);
