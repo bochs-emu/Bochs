@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.220 2009-11-13 15:55:46 sshwarts Exp $
+// $Id: init.cc,v 1.221 2009-11-13 16:01:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -542,6 +542,10 @@ void BX_CPU_C::register_state(void)
   BXRS_PARAM_BOOL(cpu, disable_INIT, disable_INIT);
   BXRS_PARAM_BOOL(cpu, pending_INIT, pending_INIT);
   BXRS_PARAM_BOOL(cpu, trace, trace);
+
+#if BX_CPU_LEVEL >= 5
+  BXRS_PARAM_BOOL(cpu, ignore_bad_msrs, ignore_bad_msrs);
+#endif
 }
 
 Bit64s BX_CPU_C::param_save_handler(void *devptr, bx_param_c *param)
