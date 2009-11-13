@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.187 2009-10-17 17:52:26 sshwarts Exp $
+// $Id: config.cc,v 1.188 2009-11-13 15:55:46 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -307,7 +307,7 @@ void bx_init_options()
 #endif
 
   // cpu subtree
-  bx_list_c *cpu_param = new bx_list_c(root_param, "cpu", "CPU Options", 9 + BX_SUPPORT_SMP);
+  bx_list_c *cpu_param = new bx_list_c(root_param, "cpu", "CPU Options", 10 + BX_SUPPORT_SMP);
 
   // cpu options
   bx_param_num_c *nprocessors = new bx_param_num_c(cpu_param,
@@ -344,6 +344,12 @@ void bx_init_options()
       "reset_on_triple_fault", "Enable CPU reset on triple fault",
       "Enable CPU reset if triple fault occured (highly recommended)",
       1);
+#if BX_CPU_LEVEL >= 5
+  new bx_param_bool_c(cpu_param,
+      "ignore_bad_msrs", "Ignore RDMSR/WRMSR to unknown MSR register",
+      "Ignore RDMSR/WRMSR to unknown MSR register",
+      1);
+#endif
   new bx_param_bool_c(cpu_param,
       "cpuid_limit_winnt", "Limit max CPUID function to 3",
       "Limit max CPUID function reported to 3 to workaround WinNT issue",
@@ -2514,6 +2520,14 @@ static int parse_line_formatted(const char *context, int num_params, char *param
         } else {
           PARSE_ERR(("%s: cpu directive malformed.", context));
         }
+#if BX_CPU_LEVEL >= 5
+      } else if (!strncmp(params[i], "ignore_bad_msrs=", 16)) {
+        if (params[i][16] == '0' || params[i][16] == '1') {
+          SIM->get_param_bool(BXPN_IGNORE_BAD_MSRS)->set(params[i][16] - '0');
+        } else {
+          PARSE_ERR(("%s: cpu directive malformed.", context));
+        }
+#endif
       } else if (!strncmp(params[i], "cpuid_limit_winnt=", 18)) {
         if (params[i][18] == '0' || params[i][18] == '1') {
           SIM->get_param_bool(BXPN_CPUID_LIMIT_WINNT)->set(params[i][18] - '0');
@@ -3683,6 +3697,9 @@ int bx_write_configuration(const char *rc, int overwrite)
   fprintf(fp, "reset_on_triple_fault=%d, cpuid_limit_winnt=%d",
     SIM->get_param_bool(BXPN_RESET_ON_TRIPLE_FAULT)->get(),
     SIM->get_param_bool(BXPN_CPUID_LIMIT_WINNT)->get());
+#if BX_CPU_LEVEL >= 5
+  fprintf(fp, ", ignore_bad_msrs=%d", SIM->get_param_bool(BXPN_IGNORE_BAD_MSRS)->get());
+#endif
 #if BX_CONFIGURE_MSRS
   strptr = SIM->get_param_string(BXPN_CONFIGURABLE_MSRS_PATH)->getptr();
   if (strlen(strptr) > 0)

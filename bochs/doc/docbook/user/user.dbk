@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.269 2009-11-10 18:10:37 vruppert Exp $
+$Id: user.dbk,v 1.270 2009-11-13 15:55:46 sshwarts Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -2176,11 +2176,6 @@ turn it off.
       </entry>
     </row>
     <row>
-      <entry>--enable-ignore-bad-msr</entry>
-      <entry>yes</entry>
-      <entry>ignore MSR references that Bochs does not understand, instead of doing a panic</entry>
-    </row>
-    <row>
       <entry>--enable-x86-64</entry>
       <entry>no</entry>
       <entry>
@@ -3040,6 +3035,12 @@ to workaround WinNT installation and boot issues.
 <para>
 Define path to user CPU Model Specific Registers (MSRs) specification.
 See example in msrs.def.
+</para>
+<para><command>ignore_bad_msrs</command></para>
+<para>
+Ignore MSR references that Bochs does not understand; print a warning message
+instead of generating #GP exception. This option is enabled by default but 
+will not be avaiable if configurable MSRs are enabled.
 </para>
 <para><command>vendor_string</command></para>
 <para>

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.619 2009-10-31 19:16:09 sshwarts Exp $
+// $Id: cpu.h,v 1.620 2009-11-13 15:55:46 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -935,6 +935,9 @@ public: // for now...
   bx_bool  disable_SMI;
   bx_bool  disable_NMI;
   bx_bool  disable_INIT;
+#if BX_CPU_LEVEL >= 5
+  bx_bool  ignore_bad_msrs;
+#endif
 
   // for exceptions
   jmp_buf jmp_buf_env;

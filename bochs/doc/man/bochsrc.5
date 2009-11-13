@@ -150,6 +150,12 @@ msrs:
 Define path to user CPU Model Specific Registers (MSRs) specification.
 See example in msrs.def.
 
+ignore_bad_msrs:
+
+Ignore MSR references that Bochs does not understand; print a warning
+message instead of generating #GP exception. This option is enabled
+by default but will not be avaiable if configurable MSRs are enabled.
+
 vendor_string:
 
 Set the CPUID vendor string returned by CPUID(0x0).  This should be a
@@ -191,7 +197,7 @@ configuration  in addition  to processor clock
 speed.
 
 Example:
-  cpu: count=2, ips=10000000
+  cpu: count=2, ips=10000000, msrs="msrs.def"
 
 .TP
 .I "megs:"

@@ -9,7 +9,6 @@
   --enable-all-optimizations \
   --enable-long-phy-address \
   --enable-1g-pages \
-  --enable-ignore-bad-msr \
   --enable-configurable-msrs \
   --enable-debugger \
   --enable-disasm \

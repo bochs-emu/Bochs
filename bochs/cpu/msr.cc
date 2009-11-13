@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: msr.cc,v 1.29 2009-11-04 17:04:28 sshwarts Exp $
+// $Id: msr.cc,v 1.30 2009-11-13 15:55:46 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008-2009 Stanislav Shwartsman
@@ -202,9 +202,8 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
       // failed to find the MSR, could #GP or ignore it silently
       BX_ERROR(("RDMSR: Unknown register %#x", index));
 
-#if BX_IGNORE_BAD_MSR == 0
-      return 0; // will result in #GP fault due to unknown MSR
-#endif
+      if (! BX_CPU_THIS_PTR ignore_bad_msrs)
+        return 0; // will result in #GP fault due to unknown MSR
   }
 
   *msr = val64;
@@ -538,9 +537,8 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
 #endif
       // failed to find the MSR, could #GP or ignore it silently
       BX_ERROR(("WRMSR: Unknown register %#x", index));
-#if BX_IGNORE_BAD_MSR == 0
-      return 0;
-#endif
+      if (! BX_CPU_THIS_PTR ignore_bad_msrs)
+        return 0; // will result in #GP fault due to unknown MSR
   }
 
   return 1;
