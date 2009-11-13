@@ -723,9 +723,6 @@ typedef
 #define BX_CPUID_VENDOR_LEN 12
 #define BX_CPUID_BRAND_LEN  48
 
-// if 1, don't do gpf on MSRs that we don't implement
-#define BX_IGNORE_BAD_MSR 0
-
 #define BX_CONFIGURE_MSRS 0
 
 // CLFLUSH was introduced together with SSE2 instruction set
