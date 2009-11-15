@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rfb.cc,v 1.65 2009-06-03 17:05:22 vruppert Exp $
+// $Id: rfb.cc,v 1.66 2009-11-15 19:53:56 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2000  Psyon.Org!
@@ -652,11 +652,10 @@ void HandleRfbClient(SOCKET sClient)
 
 void bx_rfb_gui_c::handle_events(void)
 {
-    unsigned int i = 0;
     while(bKeyboardInUse);
     bKeyboardInUse = true;
     if(rfbKeyboardEvents > 0) {
-        for(i = 0; i < rfbKeyboardEvents; i++) {
+        for(unsigned i = 0; i < rfbKeyboardEvents; i++) {
             if(rfbKeyboardEvent[i].type == KEYBOARD) {
                 rfbKeyPressed(rfbKeyboardEvent[i].key, rfbKeyboardEvent[i].down);
             } else { //type == MOUSE;
@@ -1118,16 +1117,14 @@ void bx_rfb_gui_c::exit(void)
 
 int ReadExact(int sock, char *buf, int len)
 {
-    int n;
-
     while (len > 0) {
-    n = recv(sock, buf, len, 0);
-    if (n > 0) {
+      int n = recv(sock, buf, len, 0);
+      if (n > 0) {
         buf += n;
         len -= n;
-        } else {
-            return n;
-    }
+      } else {
+        return n;
+      }
     }
     return 1;
 }
@@ -1140,52 +1137,48 @@ int ReadExact(int sock, char *buf, int len)
 
 int WriteExact(int sock, char *buf, int len)
 {
-    int n;
-
     while (len > 0) {
-    n = send(sock, buf, len,0);
+      int n = send(sock, buf, len,0);
 
-    if (n > 0) {
+      if (n > 0) {
         buf += n;
         len -= n;
-    } else if (n == 0) {
-            BX_ERROR(("WriteExact: write returned 0?"));
-            return n;
-        } else {
-            return n;
-        }
+      } else {
+        if (n == 0) BX_ERROR(("WriteExact: write returned 0?"));
+        return n;
+      }
     }
     return 1;
 }
 
 void DrawBitmap(int x, int y, int width, int height, char *bmap, char color, bool update_client)
 {
-    int  i;
     unsigned char *newBits;
     char fgcolor, bgcolor;
-    char vgaPalette[] = {(char)0x00, //Black
-                         (char)0x01, //Dark Blue
-                         (char)0x02, //Dark Green
-                         (char)0x03, //Dark Cyan
-                         (char)0x04, //Dark Red
-                         (char)0x05, //Dark Magenta
-                         (char)0x06, //Brown
-                         (char)0x07, //Light Gray
-                         (char)0x38, //Dark Gray
-                         (char)0x09, //Light Blue
-                         (char)0x12, //Green
-                         (char)0x1B, //Cyan
-                         (char)0x24, //Light Red
-                         (char)0x2D, //Magenta
-                         (char)0x36, //Yellow
-                         (char)0x3F  //White
-                        };
+    static char vgaPalette[] = {
+       (char)0x00, //Black
+       (char)0x01, //Dark Blue
+       (char)0x02, //Dark Green
+       (char)0x03, //Dark Cyan
+       (char)0x04, //Dark Red
+       (char)0x05, //Dark Magenta
+       (char)0x06, //Brown
+       (char)0x07, //Light Gray
+       (char)0x38, //Dark Gray
+       (char)0x09, //Light Blue
+       (char)0x12, //Green
+       (char)0x1B, //Cyan
+       (char)0x24, //Light Red
+       (char)0x2D, //Magenta
+       (char)0x36, //Yellow
+       (char)0x3F  //White
+    };
 
     bgcolor = vgaPalette[(color >> 4) & 0xF];
     fgcolor = vgaPalette[color & 0xF];
     newBits = (unsigned char *)malloc(width * height);
     memset(newBits, 0, (width * height));
-    for(i = 0; i < (width * height) / 8; i++) {
+    for(int i = 0; i < (width * height) / 8; i++) {
         newBits[i * 8 + 0] = (bmap[i] & 0x01) ? fgcolor : bgcolor;
         newBits[i * 8 + 1] = (bmap[i] & 0x02) ? fgcolor : bgcolor;
         newBits[i * 8 + 2] = (bmap[i] & 0x04) ? fgcolor : bgcolor;
@@ -1206,23 +1199,24 @@ void DrawChar(int x, int y, int width, int height, int fonty, char *bmap, char c
   unsigned char mask;
   int bytes = width * height;
   char fgcolor, bgcolor;
-  char vgaPalette[] = {(char)0x00, //Black
-                       (char)0x01, //Dark Blue
-                       (char)0x02, //Dark Green
-                       (char)0x03, //Dark Cyan
-                       (char)0x04, //Dark Red
-                       (char)0x05, //Dark Magenta
-                       (char)0x06, //Brown
-                       (char)0x07, //Light Gray
-                       (char)0x38, //Dark Gray
-                       (char)0x09, //Light Blue
-                       (char)0x12, //Green
-                       (char)0x1B, //Cyan
-                       (char)0x24, //Light Red
-                       (char)0x2D, //Magenta
-                       (char)0x36, //Yellow
-                       (char)0x3F  //White
-                     };
+  static char vgaPalette[] = {
+       (char)0x00, //Black
+       (char)0x01, //Dark Blue
+       (char)0x02, //Dark Green
+       (char)0x03, //Dark Cyan
+       (char)0x04, //Dark Red
+       (char)0x05, //Dark Magenta
+       (char)0x06, //Brown
+       (char)0x07, //Light Gray
+       (char)0x38, //Dark Gray
+       (char)0x09, //Light Blue
+       (char)0x12, //Green
+       (char)0x1B, //Cyan
+       (char)0x24, //Light Red
+       (char)0x2D, //Magenta
+       (char)0x36, //Yellow
+       (char)0x3F  //White
+  };
 
   bgcolor = vgaPalette[(color >> 4) & 0xF];
   fgcolor = vgaPalette[color & 0xF];
@@ -1292,7 +1286,6 @@ void UpdateScreen(unsigned char *newBits, int x, int y, int width, int height, b
 void SendUpdate(int x, int y, int width, int height, Bit32u encoding)
 {
     char *newBits;
-    int  i;
 
     if(x < 0 || y < 0 || (x + width) > (int)rfbWindowX || (y + height) > (int)rfbWindowY) {
         BX_ERROR(("Dimensions out of bounds.  x=%i y=%i w=%i h=%i", x, y, width, height));
@@ -1315,7 +1308,7 @@ void SendUpdate(int x, int y, int width, int height, Bit32u encoding)
 
         if (encoding == rfbEncodingRaw) {
           newBits = (char *)malloc(width * height);
-          for(i = 0; i < height; i++) {
+          for(int i = 0; i < height; i++) {
             memcpy(&newBits[i * width], &rfbScreen[y * rfbWindowX + x], width);
             y++;
           }
@@ -1660,7 +1653,7 @@ void rfbMouseMove(int x, int y, int bmask)
   }
 }
 
-void bx_rfb_gui_c::mouse_enabled_changed_specific (bx_bool val)
+void bx_rfb_gui_c::mouse_enabled_changed_specific(bx_bool val)
 {
 }
 
