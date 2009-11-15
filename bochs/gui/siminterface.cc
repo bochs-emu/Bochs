@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.208 2009-11-08 20:47:03 sshwarts Exp $
+// $Id: siminterface.cc,v 1.209 2009-11-15 20:38:17 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  The Bochs Project
@@ -64,6 +64,7 @@ class bx_real_sim_c : public bx_simulator_interface_c {
   jmp_buf *quit_context;
   int exit_code;
   unsigned param_id;
+  bx_bool wx_debug_gui;
 public:
   bx_real_sim_c();
   virtual ~bx_real_sim_c() {}
@@ -147,9 +148,8 @@ public:
   virtual int begin_simulation(int argc, char *argv[]);
   virtual void set_sim_thread_func(is_sim_thread_func_t func) {}
   virtual bx_bool is_sim_thread();
-  bx_bool debug_gui;
-  virtual void set_debug_gui(bx_bool val) { debug_gui = val; }
-  virtual bx_bool has_debug_gui() { return debug_gui; }
+  virtual void set_debug_gui(bx_bool val) { wx_debug_gui = val; }
+  virtual bx_bool has_debug_gui() const { return wx_debug_gui; }
   // provide interface to bx_gui->set_display_mode() method for config
   // interfaces to use.
   virtual void set_display_mode(disp_mode_t newmode) {
@@ -308,7 +308,7 @@ bx_real_sim_c::bx_real_sim_c()
   ci_callback = NULL;
   ci_callback_data = NULL;
   is_sim_thread_func = NULL;
-  debug_gui = 0;
+  wx_debug_gui = 0;
 
   enabled = 1;
   init_done = 0;
@@ -759,9 +759,9 @@ int bx_real_sim_c::configuration_interface(const char *ignore, ci_command_t comm
     return -1;
   }
   if (!strcmp(name, "wx"))
-    debug_gui = 1;
+    wx_debug_gui = 1;
   else
-    debug_gui = 0;
+    wx_debug_gui = 0;
   // enter configuration mode, just while running the configuration interface
   set_display_mode(DISP_MODE_CONFIG);
   int retval = (*ci_callback)(ci_callback_data, command);

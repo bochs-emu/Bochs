@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.245 2009-11-13 15:55:46 sshwarts Exp $
+// $Id: siminterface.h,v 1.246 2009-11-15 20:38:17 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  The Bochs Project
@@ -1252,7 +1252,7 @@ public:
   }
   virtual bx_bool is_sim_thread() {return 1;}
   virtual void set_debug_gui(bx_bool val) {}
-  virtual bx_bool has_debug_gui() {return 0;}
+  virtual bx_bool has_debug_gui() const {return 0;}
   // provide interface to bx_gui->set_display_mode() method for config
   // interfaces to use.
   virtual void set_display_mode(disp_mode_t newmode) {}
