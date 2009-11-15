@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.249 2009-10-15 21:15:18 sshwarts Exp $
+// $Id: bochs.h,v 1.250 2009-11-15 20:50:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -456,6 +456,10 @@ BOCHSAPI extern bx_debug_t bx_dbg;
 #define BX_WRITE        1
 #define BX_EXECUTE      2
 #define BX_RW           3
+
+// types of reset
+#define BX_RESET_SOFTWARE 10
+#define BX_RESET_HARDWARE 11
 
 #include "memory/memory.h"
 #include "pc_system.h"
