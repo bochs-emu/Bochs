@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/development/development.dbk
-$Id: development.dbk,v 1.32 2009-11-09 18:10:29 sshwarts Exp $
+$Id: development.dbk,v 1.33 2009-11-16 17:44:07 vruppert Exp $
 
 This is the top level file for the Bochs Developers Manual.
 ================================================================
@@ -2259,22 +2259,22 @@ with non-interesting ones.</para></listitem>
 <para>
 Update version number and strings in configure.in.
 <screen>
-VERSION="2.4.1"
-VER_STRING="2.4.1"
+VERSION="2.4"
+VER_STRING="2.4"
 REL_STRING="Build from CVS snapshot on June 7, 2009"
 </screen>
 In the README file you have to update version number and date. Add some
 information about new features if necessary.
 <screen>
 Bochs x86 Pentium+ Emulator
-Updated: Fri Mar 25 10:33:15 CET 2005
-Version: 2.4.1
+Updated: Sat May 3 07:34:00 CEST 2009
+Version: 2.4
 </screen>
 Check date, update/sumup info in CHANGES. Run autoconf to regenerate configure and check them in.
 Create a CVS tag to mark which revision of each file was used in the release.
 For prereleases I make a normal CVS tag like this:
 <screen>
-  cvs tag REL_2_4_1_FINAL
+  cvs tag REL_2_4_pre1
 </screen>
 But for a real release, I make a CVS branch tag AND a normal tag.
 <screen>
@@ -2286,11 +2286,11 @@ This is very useful in maintaining the branch since you can do diffs
 against it.
 <screen>
    cvs diff -r REL_2_4_BASE -r HEAD
-   cvs diff -r REL_2_4_BASE -r REL_2_0
+   cvs diff -r REL_2_4_BASE -r REL_2_4
    cvs upd -j REL_2_4_BASE -j HEAD file
    etc.
 </screen>
-The release and all bugfix releases after it are on the REL_2_2 branch.
+The release and all bugfix releases after it are on the REL_2_4 branch.
 When the release is actually finalized, you can do this:
 <screen>
   cvs tag REL_2_4_FINAL
@@ -2346,23 +2346,23 @@ cd doc/docbook; touch */*.html
 </screen>
 Do make install_win32 into /tmp or someplace:
 <screen>
-make install_win32 prefix=/tmp/bochs-2.4.1
+make install_win32 prefix=/tmp/bochs-2.4
 </screen>
-This copies all the files into /tmp/bochs-2.4.1 and then creates a
-binary ZIP at /tmp/bochs-2.4.1.zip. Rename that bochs-2.4.1.win32-bin.zip.
+This copies all the files into /tmp/bochs-2.4 and then creates a
+binary ZIP at /tmp/bochs-2.4.zip. Rename that bochs-2.4.win32-bin.zip.
 </para>
 <para>
-Now make the NSIS installer package (the current script is known to work with NSIS 2.03)
+Now make the NSIS installer package (the current script is known to work with NSIS 2.44)
 <screen>
 cd build/win32/nsis
 </screen>
 Unzip the binary ZIP file into bochs-$VERSION (must match Makefile) and
 then run make.
 <screen>
-unzip ~/bochs-2.4.1.zip
+unzip ~/bochs-2.4.zip
 make
 </screen>
-That gives an installer called <filename>Bochs-2.4.1.exe</filename>. Test and upload it.
+That gives an installer called <filename>Bochs-2.4.exe</filename>. Test and upload it.
 </para>
 </section>
 <section><title>Building the release on Linux</title>
@@ -2378,39 +2378,33 @@ cvs -z3 -d:pserver:anonymous@bochs.cvs.sourceforge.net:/cvsroot/bochs \
 Start with clean-anon which tracks the CVS head.  Change its sticky tag
 so that it sticks to the release tag.
 <screen>
-cp -a clean-anon bochs-2.4.1
-cd bochs-2.4.1
-cvs upd -P -r REL_2_4_1_FINAL
+cp -a clean-anon bochs-2.4
+cd bochs-2.4
+cvs upd -P -r REL_2_4_FINAL
 cd ..
-tar czvf bochs-2.4.1.tar.gz --exclude CVS --exclude .cvsignore bochs-2.4.1
+tar czvf bochs-2.4.tar.gz --exclude CVS --exclude .cvsignore bochs-2.4
 </screen>
-The source TAR file bochs-2.4.1.tar.gz is ready to upload.
+The source TAR file bochs-2.4.tar.gz is ready to upload.
 </para>
 <para>
 The RPM will be building using the configuration in .conf.linux with
-a few parameters from build/redhat/make-rpm.  Make any last minute changes
-to .conf.linux.  Any changes will go into the source RPM.
-WARNING : do not build in /tmp/bochs-XXX...
+a few parameters from <command>build/redhat/make-rpm</command>.  Make any last minute changes
+to .conf.linux.  Any changes will go into the source RPM. The DLX Linux demo package
+will be downloaded to the Bochs root directory if it is not already present there.
 <screen>
 ./build/redhat/make-rpm | tee ../build.txt
 </screen>
 This produces two rpm files in the current directory.  Test and upload.
 </para>
 </section>
-<section><title>Uploading files and creating a file release on SF</title>
+<section><title>Creating a file release and uploading files on SF</title>
 <para>
-When you are ready with creating release packages you have to upload them to SF.
-Using the SF webupload feature is the easiest way to do this.
-<screen>
-https://frs.sourceforge.net/webupload
-</screen>
-Note that you cannot modify or delete files after uploading them. If you don't do
-anything with the uploaded files, they will be deleted by SF after 7 to 14 days.
-</para>
-<para>
-To create or edit a file release you have to log in to the <command>Admin</command>
-section on the SF project page of Bochs. Then you have to go to the
-<command>File Releases</command> page and follow the instructions there.
+When you are ready with creating release packages you have to upload them using
+the SF file manager feature. Create a subdirectory with the version number in
+the <filename>bochs</filename> directory. Point the download destination to the
+new directory and start uploading packages. The top of the <filename>CHANGES</filename>
+file should be used as the release notes. After setting up the file properties the
+new release is ready for download.
 </para>
 </section>
 
