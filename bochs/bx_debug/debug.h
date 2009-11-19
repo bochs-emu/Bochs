@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debug.h,v 1.59 2009-11-09 21:26:09 sshwarts Exp $
+// $Id: debug.h,v 1.60 2009-11-19 21:28:25 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -408,7 +408,7 @@ typedef struct {
 #if (BX_DBG_MAX_PHY_BPOINTS > 0)
     unsigned num_physical;
     struct {
-      bx_phy_address addr; // physical address is 32 bits only
+      bx_phy_address addr;
       unsigned bpoint_id;
       bx_bool enabled;
     } phy[BX_DBG_MAX_PHY_BPOINTS];
@@ -465,6 +465,14 @@ typedef struct bx_guard_found_t {
   Bit64u  time_tick; // time tick when guard reached
 } bx_guard_found_t;
 
+struct bx_watchpoint {
+  bx_phy_address addr;
+};
+
+extern unsigned num_write_watchpoints;
+extern unsigned num_read_watchpoints;
+extern bx_watchpoint write_watchpoint[BX_DBG_MAX_WATCHPONTS];
+extern bx_watchpoint read_watchpoint[BX_DBG_MAX_WATCHPONTS];
 extern bx_guard_t bx_guard;
 
 #define IS_CODE_32(code_32_64) ((code_32_64 & 1) != 0)

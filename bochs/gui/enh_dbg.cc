@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: enh_dbg.cc,v 1.20 2009-11-19 17:24:26 sshwarts Exp $
+// $Id: enh_dbg.cc,v 1.21 2009-11-19 21:28:25 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  BOCHS ENHANCED DEBUGGER Ver 1.2
@@ -1678,8 +1678,8 @@ void FillStack()
     doDumpRefresh = FALSE;
     StackLA = (Bit64u) BX_CPU(CurrentCPU)->get_laddr(BX_SEG_REG_SS, (bx_address) rV[RSP_Rnum]);
 
-    if (PStackLA == 1)              // illegal value requests a full refresh
-        PStackLA = StackLA ^ 0x4000;    // force a non-match below (kludge)
+    if (PStackLA == 1)               // illegal value requests a full refresh
+        PStackLA = StackLA ^ 0x4000; // force a non-match below (kludge)
 
     wordsize = 4;       // assume Pmode
     if (In32Mode == FALSE)
@@ -1691,8 +1691,8 @@ void FillStack()
     // TODO: enforce that cp is wordsize aligned
     // also -- enforce that StackLA is wordsize aligned
     cp = CurStack;
-    i = (unsigned int) StackLA & 0xfff; // where is stack bottom, in its 4K memory page?
-    if (i > 0x1000 - len)               // does len cross a 4K boundary?
+    i = (unsigned) StackLA & 0xfff; // where is stack bottom, in its 4K memory page?
+    if (i > 0x1000 - len)           // does len cross a 4K boundary?
     {
         unsigned int ReadSize = 0x1000 - i;
         // read up to the 4K boundary, then try to read the last chunk
@@ -1832,11 +1832,6 @@ void prtbrk (Bit32u seg, Bit64u addy, unsigned int id, bx_bool enabled, char *co
     sprintf (cols[0] + i,FMT_LLCAPX,addy);
 }
 
-extern unsigned num_write_watchpoints;
-extern unsigned num_read_watchpoints;
-extern bx_phy_address write_watchpoint[];   // currently 32bit only
-extern bx_phy_address read_watchpoint[];
-
 // Displays all Breakpoints and Watchpoints
 void FillBrkp()
 {
@@ -1943,8 +1938,8 @@ void FillBrkp()
             WWPSnapCount = num_write_watchpoints;
             for (i = 0; i < totqty; i++)
             {
-                WWP_Snapshot[i] = write_watchpoint[i];
-                sprintf (cols[0],"%08X",write_watchpoint[i]);
+                WWP_Snapshot[i] = write_watchpoint[i].addr;
+                sprintf (cols[0],"%08X",write_watchpoint[i].addr);
                 InsertListRow(cols, 18, DUMP_WND, LineCount++, 8);
             }
         }
@@ -1955,8 +1950,8 @@ void FillBrkp()
             RWPSnapCount = num_read_watchpoints;
             for (i = 0; i < totqty; i++)
             {
-                RWP_Snapshot[i] = read_watchpoint[i];
-                sprintf (cols[0],"%08X",read_watchpoint[i]);
+                RWP_Snapshot[i] = read_watchpoint[i].addr;
+                sprintf (cols[0],"%08X",read_watchpoint[i].addr);
                 InsertListRow(cols, 18, DUMP_WND, LineCount++, 8);
             }
         }
@@ -2633,14 +2628,14 @@ void SetBreak(int OneEntry)
     Invalidate(ASM_WND);    // redraw the ASM window -- colors may have changed
 }
 
-void DelWatchpoint(bx_phy_address *wp_array, unsigned *TotEntries, int i)
+void DelWatchpoint(bx_watchpoint *wp_array, unsigned *TotEntries, int i)
 {
     while (++i < (int) *TotEntries)
         wp_array[i-1] = wp_array[i];
     -- *TotEntries;
 }
 
-void SetWatchpoint(unsigned *num_watchpoints, bx_phy_address *watchpoint)
+void SetWatchpoint(unsigned *num_watchpoints, bx_watchpoint *watchpoint)
 {
     int iExist1 = -1;
     int i = (int) *num_watchpoints;
@@ -2649,7 +2644,7 @@ void SetWatchpoint(unsigned *num_watchpoints, bx_phy_address *watchpoint)
     // the list is unsorted -- test all of them
     while (--i >= 0)
     {
-        if (watchpoint[i] == SelectedDataAddress)
+        if (watchpoint[i].addr == SelectedDataAddress)
         {
             iExist1 = i;
             i = 0;
@@ -2666,7 +2661,7 @@ void SetWatchpoint(unsigned *num_watchpoints, bx_phy_address *watchpoint)
         if (*num_watchpoints >= BX_DBG_MAX_WATCHPONTS)
             DispMessage("Too many of that type of watchpoint. Max: 16", "Table Overflow");
         else
-            watchpoint[(*num_watchpoints)++] = (bx_phy_address) SelectedDataAddress;
+            watchpoint[(*num_watchpoints)++].addr = (bx_phy_address) SelectedDataAddress;
     }
     Invalidate(DUMP_WND);   // redraw the MemDump window -- colors may have changed
 }

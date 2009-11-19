@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.168 2009-09-27 18:37:02 vruppert Exp $
+// $Id: vga.cc,v 1.169 2009-11-19 21:28:25 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -2354,7 +2354,7 @@ bx_bool bx_vga_c::mem_write_handler(bx_phy_address addr, unsigned len, void *dat
 void bx_vga_c::mem_write(bx_phy_address addr, Bit8u value)
 {
   Bit32u offset;
-  Bit8u new_val[4];
+  Bit8u new_val[4] = {0,0,0,0};
   unsigned start_addr;
   Bit8u *plane0, *plane1, *plane2, *plane3;
 

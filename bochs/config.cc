@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.188 2009-11-13 15:55:46 sshwarts Exp $
+// $Id: config.cc,v 1.189 2009-11-19 21:28:25 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1921,7 +1921,7 @@ static int parse_line_unformatted(const char *context, char *line)
   // if passed nothing but whitespace, just return
   for (i=0; i<strlen(line); i++) {
     if (!isspace(line[i])) break;
-    }
+  }
   if (i>=strlen(line))
     return 0;
 

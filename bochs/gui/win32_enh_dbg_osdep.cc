@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32_enh_dbg_osdep.cc,v 1.16 2009-11-19 17:24:26 sshwarts Exp $
+// $Id: win32_enh_dbg_osdep.cc,v 1.17 2009-11-19 21:28:25 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  BOCHS ENHANCED DEBUGGER Ver 1.2
@@ -85,7 +85,6 @@ void RefreshDataWin();
 void OnBreak();
 void ParseBkpt();
 void SetBreak(int i);
-void SetWatchpoint(unsigned *num_watchpoints, bx_phy_address *watchpoint);
 void ChangeReg();
 int HotKey (int ww, int Alt, int Shift, int Control);
 void ActivateMenuItem (int LW);
@@ -1254,11 +1253,7 @@ bx_bool NewFont()
 // Main Window Proc for our Dialog
 LRESULT CALLBACK B_WP(HWND hh,UINT mm,WPARAM ww,LPARAM ll)
 {
-    unsigned int i;
-    extern unsigned num_write_watchpoints;
-    extern unsigned num_read_watchpoints;
-    extern bx_phy_address write_watchpoint[];
-    extern bx_phy_address read_watchpoint[];
+    unsigned i;
     extern bx_bool vgaw_refresh;
 
     switch(mm)
@@ -1613,7 +1608,7 @@ LRESULT CALLBACK B_WP(HWND hh,UINT mm,WPARAM ww,LPARAM ll)
                         int i = num_read_watchpoints;
                         while (j > 0)
                         {
-                            if (write_watchpoint[--j] == h)
+                            if (write_watchpoint[--j].addr == h)
                             {
                                 d->clrTextBk = RGB(0,0,0);      // black background
                                 d->clrText = RGB(255,0,150);    // write watchpoint
@@ -1622,9 +1617,9 @@ LRESULT CALLBACK B_WP(HWND hh,UINT mm,WPARAM ww,LPARAM ll)
                         }
                         while (--i >= 0)
                         {
-                            if (read_watchpoint[i] == h)
+                            if (read_watchpoint[i].addr == h)
                             {
-                                if (j < 0)          // BOTH read and write
+                                if (j < 0)      // BOTH read and write
                                     d->clrText = RGB(0,170,255);
                                 else
                                 {
@@ -1699,12 +1694,12 @@ LRESULT CALLBACK B_WP(HWND hh,UINT mm,WPARAM ww,LPARAM ll)
                         i = SelectedBID & 0xf;
                         if (SelectedBID >= 0x80000)         // read watchpoint
                         {
-                            if (RWP_Snapshot[i] == read_watchpoint[i])
+                            if (RWP_Snapshot[i] == read_watchpoint[i].addr)
                                 DelWatchpoint(read_watchpoint, &num_read_watchpoints, i);
                         }
                         else if (SelectedBID >= 0x40000)    // write watchpoint
                         {
-                            if (WWP_Snapshot[i] == write_watchpoint[i])
+                            if (WWP_Snapshot[i] == write_watchpoint[i].addr)
                                 DelWatchpoint(write_watchpoint, &num_write_watchpoints, i);
                         }
                         else

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gtk_enh_dbg_osdep.cc,v 1.9 2009-11-19 17:24:26 sshwarts Exp $
+// $Id: gtk_enh_dbg_osdep.cc,v 1.10 2009-11-19 21:28:25 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  BOCHS ENHANCED DEBUGGER Ver 1.2
@@ -58,7 +58,6 @@ void RefreshDataWin();
 void OnBreak();
 void ParseBkpt();
 void SetBreak(int i);
-void SetWatchpoint(unsigned *num_watchpoints, bx_phy_address *watchpoint);
 void ChangeReg();
 int HotKey (int ww, int Alt, int Shift, int Control);
 void ActivateMenuItem (int LW);
@@ -207,11 +206,6 @@ unsigned int CurScrX;
 char SelMem[260];       // flag array for which list rows are "selected"
 char SelAsm[MAX_ASM];
 char SelReg[TOT_REG_NUM + EXTRA_REGS];
-
-extern unsigned num_write_watchpoints;
-extern unsigned num_read_watchpoints;
-extern bx_phy_address write_watchpoint[];
-extern bx_phy_address read_watchpoint[];
 
 // "run" the standard dialog box -- get text from the user
 bx_bool ShowAskDialog()
@@ -1519,13 +1513,13 @@ void Mem_DblClick (GtkTreeView *treeview, GtkTreePath *path, GtkTreeViewColumn *
         {
             // if a watchpoint was clicked, get its index (0 to 15)
             int i = DumpSelRow - WWP_BaseEntry;
-            if (WWP_Snapshot[i] == write_watchpoint[i])
+            if (WWP_Snapshot[i] == write_watchpoint[i].addr)
                 DelWatchpoint(write_watchpoint, &num_write_watchpoints, i);
         }
         else if (DumpSelRow >= RWP_BaseEntry && DumpSelRow < RWP_BaseEntry + RWPSnapCount)
         {
             int i = DumpSelRow - RWP_BaseEntry;
-            if (RWP_Snapshot[i] == read_watchpoint[i])
+            if (RWP_Snapshot[i] == read_watchpoint[i].addr)
                 DelWatchpoint(read_watchpoint, &num_read_watchpoints, i);
         }
         RefreshDataWin();       // show the NEW set of break/watchpoints
@@ -1988,7 +1982,7 @@ void ListClr_PaintCb(GtkTreeViewColumn *col,
             int i = num_read_watchpoints;
             while (j > 0)
             {
-                if (write_watchpoint[--j] == h)
+                if (write_watchpoint[--j].addr == h)
                 {
                     DmpClrNum = 1;  // write watchpoint
                     j = -1;         // on a match j<0 -- else j == 0
@@ -1996,7 +1990,7 @@ void ListClr_PaintCb(GtkTreeViewColumn *col,
             }
             while (--i >= 0)
             {
-                if (read_watchpoint[i] == h)
+                if (read_watchpoint[i].addr == h)
                 {
                     if (j < 0)         // BOTH read and write
                         DmpClrNum = 2;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.218 2009-11-07 20:30:39 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.219 2009-11-19 21:28:25 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -121,11 +121,11 @@ static disassembler bx_disassemble;
 static Bit8u bx_disasm_ibuf[32];
 static char  bx_disasm_tbuf[512];
 
+bx_bool watchpoint_continue = 0;
 unsigned num_write_watchpoints = 0;
 unsigned num_read_watchpoints = 0;
-bx_phy_address write_watchpoint[BX_DBG_MAX_WATCHPONTS];
-bx_phy_address read_watchpoint[BX_DBG_MAX_WATCHPONTS];
-bx_bool watchpoint_continue = 0;
+bx_watchpoint write_watchpoint[BX_DBG_MAX_WATCHPONTS];
+bx_watchpoint read_watchpoint[BX_DBG_MAX_WATCHPONTS];
 
 #define DBG_PRINTF_BUFFER_LEN 1024
 
@@ -536,7 +536,7 @@ void bx_dbg_check_memory_watchpoints(unsigned cpu, bx_phy_address phy, unsigned 
   if (rw & 1) {
     // Check for physical write watch points
     for (unsigned i = 0; i < num_write_watchpoints; i++) {
-      if (write_watchpoint[i] >= phy && write_watchpoint[i] < (phy + len)) {
+      if (write_watchpoint[i].addr >= phy && write_watchpoint[i].addr < (phy + len)) {
         BX_CPU(cpu)->watchpoint  = phy;
         BX_CPU(cpu)->break_point = BREAK_POINT_WRITE;
         break;
@@ -546,7 +546,7 @@ void bx_dbg_check_memory_watchpoints(unsigned cpu, bx_phy_address phy, unsigned 
   else {
     // Check for physical read watch points
     for (unsigned i = 0; i < num_read_watchpoints; i++) {
-      if (read_watchpoint[i] >= phy && read_watchpoint[i] < (phy + len)) {
+      if (read_watchpoint[i].addr >= phy && read_watchpoint[i].addr < (phy + len)) {
         BX_CPU(cpu)->watchpoint  = phy;
         BX_CPU(cpu)->break_point = BREAK_POINT_READ;
         break;
@@ -1554,18 +1554,18 @@ void bx_dbg_print_watchpoints(void)
 
   // print watch point info
   for (i = 0; i < num_read_watchpoints; i++) {
-    if (BX_MEM(0)->dbg_fetch_mem(BX_CPU(dbg_cpu), read_watchpoint[i], 2, buf))
+    if (BX_MEM(0)->dbg_fetch_mem(BX_CPU(dbg_cpu), read_watchpoint[i].addr, 2, buf))
       dbg_printf("rd 0x"FMT_PHY_ADDRX"   (%04x)\n",
-          read_watchpoint[i], (int)buf[0] | ((int)buf[1] << 8));
+          read_watchpoint[i].addr, (int)buf[0] | ((int)buf[1] << 8));
     else
-      dbg_printf("rd 0x"FMT_PHY_ADDRX"   (read error)\n", read_watchpoint[i]);
+      dbg_printf("rd 0x"FMT_PHY_ADDRX"   (read error)\n", read_watchpoint[i].addr);
   }
   for (i = 0; i < num_write_watchpoints; i++) {
-    if (BX_MEM(0)->dbg_fetch_mem(BX_CPU(dbg_cpu), write_watchpoint[i], 2, buf))
+    if (BX_MEM(0)->dbg_fetch_mem(BX_CPU(dbg_cpu), write_watchpoint[i].addr, 2, buf))
       dbg_printf("wr 0x"FMT_PHY_ADDRX"   (%04x)\n",
-          write_watchpoint[i], (int)buf[0] | ((int)buf[1] << 8));
+          write_watchpoint[i].addr, (int)buf[0] | ((int)buf[1] << 8));
     else
-      dbg_printf("wr 0x"FMT_PHY_ADDRX"   (read error)\n", write_watchpoint[i]);
+      dbg_printf("wr 0x"FMT_PHY_ADDRX"   (read error)\n", write_watchpoint[i].addr);
   }
 }
 
@@ -1576,7 +1576,7 @@ void bx_dbg_watch(int type, bx_phy_address address)
       dbg_printf("Too many read watchpoints (%d)\n", BX_DBG_MAX_WATCHPONTS);
       return;
     }
-    read_watchpoint[num_read_watchpoints++] = address;
+    read_watchpoint[num_read_watchpoints++].addr = address;
     dbg_printf("read watchpoint at 0x" FMT_PHY_ADDRX " inserted\n", address);
   }
   else if (type == BX_WRITE) {
@@ -1584,7 +1584,7 @@ void bx_dbg_watch(int type, bx_phy_address address)
       dbg_printf("Too many write watchpoints (%d)\n", BX_DBG_MAX_WATCHPONTS);
       return;
     }
-    write_watchpoint[num_write_watchpoints++] = address;
+    write_watchpoint[num_write_watchpoints++].addr = address;
     dbg_printf("write watchpoint at 0x" FMT_PHY_ADDRX " inserted\n", address);
   }
   else {
@@ -1601,7 +1601,7 @@ void bx_dbg_unwatch_all()
 void bx_dbg_unwatch(bx_phy_address address)
 { unsigned i;
   for (i=0; i<num_read_watchpoints; i++) {
-    if (read_watchpoint[i] == address) {
+    if (read_watchpoint[i].addr == address) {
       dbg_printf("read watchpoint at 0x" FMT_PHY_ADDRX " removed\n", address);
       // found watchpoint, delete it by shifting remaining entries left
       for (unsigned j=i; j<(num_read_watchpoints-1); j++) {
@@ -1613,7 +1613,7 @@ void bx_dbg_unwatch(bx_phy_address address)
   }
 
   for (i=0; i<num_write_watchpoints; i++) {
-    if (write_watchpoint[i] == address) {
+    if (write_watchpoint[i].addr == address) {
       dbg_printf("write watchpoint at 0x" FMT_PHY_ADDRX " removed\n", address);
       // found watchpoint, delete it by shifting remaining entries left
       for (unsigned j=i; j<(num_write_watchpoints-1); j++) {
@@ -2475,7 +2475,7 @@ void bx_dbg_examine_command(char *command, char *format, bx_bool format_passed,
 
       case 2:
 #ifdef BX_LITTLE_ENDIAN
-        data16 = * (Bit16u *) databuf;
+        data16 = * ((Bit16u *) databuf);
 #else
         data16 = (databuf[1]<<8) | databuf[0];
 #endif
@@ -2503,7 +2503,7 @@ void bx_dbg_examine_command(char *command, char *format, bx_bool format_passed,
 
       case 4:
 #ifdef BX_LITTLE_ENDIAN
-        data32 = * (Bit32u *) databuf;
+        data32 = * ((Bit32u *) databuf);
 #else
         data32 = (databuf[3]<<24) | (databuf[2]<<16) |
                  (databuf[1]<<8)  |  databuf[0];

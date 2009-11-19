@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: enh_dbg.h,v 1.14 2009-08-14 20:20:46 sshwarts Exp $
+// $Id: enh_dbg.h,v 1.15 2009-11-19 21:28:25 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  BOCHS ENHANCED DEBUGGER Ver 1.2
@@ -49,7 +49,8 @@ void SetOutWinTxt();
 void ShowFW();
 void GetInputEntry(char *buf);
 void SelectHistory(int UpDown);
-void DelWatchpoint(bx_phy_address *wp_array, unsigned *TotEntries, int i);
+void DelWatchpoint(bx_watchpoint *wp_array, unsigned *TotEntries, int i);
+void SetWatchpoint(unsigned *num_watchpoints, bx_watchpoint *watchpoint);
 
 void HideTree();
 void FillPTree();
