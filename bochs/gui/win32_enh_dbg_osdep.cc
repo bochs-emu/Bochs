@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32_enh_dbg_osdep.cc,v 1.15 2009-04-12 05:52:38 sshwarts Exp $
+// $Id: win32_enh_dbg_osdep.cc,v 1.16 2009-11-19 17:24:26 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  BOCHS ENHANCED DEBUGGER Ver 1.2
@@ -85,7 +85,7 @@ void RefreshDataWin();
 void OnBreak();
 void ParseBkpt();
 void SetBreak(int i);
-void SetWatchpoint(unsigned * num_watchpoints, bx_phy_address * watchpoint);
+void SetWatchpoint(unsigned *num_watchpoints, bx_phy_address *watchpoint);
 void ChangeReg();
 int HotKey (int ww, int Alt, int Shift, int Control);
 void ActivateMenuItem (int LW);
