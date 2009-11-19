@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.233 2009-11-06 18:19:01 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.234 2009-11-19 20:00:34 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2767,9 +2767,6 @@ modrm_done:
       switch(group) {
         case BxGroupN:
           OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[nnn]);
-          break;
-        case BxRMGroup:
-          OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[rm]);
           break;
 #if (BX_SUPPORT_SSE >= 4) || (BX_SUPPORT_SSE >= 3 && BX_SUPPORT_SSE_EXTENSION > 0)
         case Bx3ByteOp:
