@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ioapic.h,v 1.33 2009-02-22 10:44:50 vruppert Exp $
+// $Id: ioapic.h,v 1.34 2009-11-20 14:58:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -28,6 +28,8 @@
 
 #ifndef BX_DEVICES_IOAPIC_H
 #define BX_DEVICES_IOAPIC_H
+
+#if BX_SUPPORT_APIC
 
 extern int apic_bus_deliver_lowest_priority(Bit8u vector, Bit8u dest, bx_bool trig_mode, bx_bool broadcast);
 extern int apic_bus_deliver_interrupt(Bit8u vector, Bit8u dest, Bit8u delivery_mode, bx_bool logical_dest, bx_bool level, bx_bool trig_mode);
@@ -109,5 +111,7 @@ private:
 
   bx_io_redirect_entry_t ioredtbl[BX_IOAPIC_NUM_PINS];  // table of redirections
 };
+
+#endif
 
 #endif

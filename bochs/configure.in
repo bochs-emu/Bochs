@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.418 2009-11-13 15:55:46 sshwarts Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.419 2009-11-20 14:58:48 sshwarts Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -599,38 +599,6 @@ AC_ARG_ENABLE(cpu-level,
   ]
   )
 
-
-AC_MSG_CHECKING(for APIC support)
-AC_ARG_ENABLE(apic,
-  [  --enable-apic                     enable APIC support],
-  [if test "$enableval" = yes; then
-    AC_MSG_RESULT(yes)
-    AC_DEFINE(BX_SUPPORT_APIC, 1)
-    IOAPIC_OBJS='ioapic.o'
-   else
-    AC_MSG_RESULT(no)
-    if test "$use_smp" = 1; then
-      echo "ERROR: With SMP configuration you must use --enable-apic"
-      exit 1
-    fi
-    AC_DEFINE(BX_SUPPORT_APIC, 0)
-    IOAPIC_OBJS=''
-   fi
-   ],
-  [
-    if test "$use_smp" = 1 -o "$bx_cpu_level" -gt 5; then
-      # enable APIC by default, if SMP configuration or if cpulevel>5
-      AC_MSG_RESULT(yes)
-      AC_DEFINE(BX_SUPPORT_APIC, 1)
-      IOAPIC_OBJS='ioapic.o'
-    else
-      AC_MSG_RESULT(no)
-      AC_DEFINE(BX_SUPPORT_APIC, 0)
-      IOAPIC_OBJS=''
-     fi
-   ]
-  )
-AC_SUBST(IOAPIC_OBJS)
 
 AC_CHECK_HEADER(zlib.h, [AC_CHECK_LIB(z, gzopen, AC_DEFINE(BX_HAVE_ZLIB,1))] )
 
@@ -2831,6 +2799,16 @@ if test "$with_rfb" = yes -a "$cross_configure" = 0; then
 fi
 
 dnl // DEPRECATED configure options - force users to remove them
+
+AC_MSG_CHECKING(for APIC support (deprecated))
+AC_ARG_ENABLE(apic,
+  [  --enable-apic                     enable APIC support (deprecated)],
+  [AC_MSG_RESULT($enableval)
+   AC_MSG_ERROR([DEPRECATED - enabled automatically with SMP or when CPU_LEVEL >= 5])
+  ],
+  [
+   AC_MSG_RESULT(no)
+  ])
 
 AC_MSG_CHECKING(whether to ignore bad MSR references (deprecated))
 AC_ARG_ENABLE(ignore-bad-msr,

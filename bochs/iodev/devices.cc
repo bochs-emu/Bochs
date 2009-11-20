@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: devices.cc,v 1.148 2009-10-15 16:14:30 sshwarts Exp $
+// $Id: devices.cc,v 1.149 2009-11-20 14:58:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -92,7 +92,7 @@ void bx_devices_c::init_stubs()
 #if BX_SUPPORT_IODEBUG
   pluginIODebug = &stubIODebug;
 #endif
-#if BX_SUPPORT_IOAPIC
+#if BX_SUPPORT_APIC
   pluginIOAPIC = &stubIOAPIC;
 #endif
 #if 0
@@ -110,7 +110,7 @@ void bx_devices_c::init(BX_MEM_C *newmem)
   const char *plugname;
 #endif
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.148 2009-10-15 16:14:30 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.149 2009-11-20 14:58:48 sshwarts Exp $"));
   mem = newmem;
 
   /* set builtin default handlers, will be overwritten by the real default handler */

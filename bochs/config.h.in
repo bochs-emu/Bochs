@@ -810,7 +810,11 @@ typedef
 #endif
 
 // include in APIC models, required for a multiprocessor system.
-#define BX_SUPPORT_APIC 0
+#if BX_SUPPORT_SMP || BX_CPU_LEVEL >= 5
+  #define BX_SUPPORT_APIC 1
+#else
+  #define BX_SUPPORT_APIC 0
+#endif
 
 #if BX_CPU_LEVEL == 6 && BX_SUPPORT_SSE >= 2
   #define BX_IMPLEMENT_XAPIC 1
@@ -836,14 +840,6 @@ typedef
 
 // leave APIC ID for I/O APIC
 #define BX_MAX_SMP_THREADS_SUPPORTED (APIC_MAX_ID-1)
-
-#if (BX_SUPPORT_SMP && !BX_SUPPORT_APIC)
-  #error For multiprocessor simulation, BX_SUPPORT_APIC is required !
-#endif
-
-#if (BX_SUPPORT_APIC && BX_CPU_LEVEL < 5)
-  #error APIC cannot be supported on less than 586 cpu !
-#endif
 
 #define BX_HAVE_GETENV 0
 #define BX_HAVE_SETENV 0
