@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.219 2009-11-19 21:28:25 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.220 2009-11-20 12:02:57 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -121,7 +121,7 @@ static disassembler bx_disassemble;
 static Bit8u bx_disasm_ibuf[32];
 static char  bx_disasm_tbuf[512];
 
-bx_bool watchpoint_continue = 0;
+static bx_bool watchpoint_continue = 0;
 unsigned num_write_watchpoints = 0;
 unsigned num_read_watchpoints = 0;
 bx_watchpoint write_watchpoint[BX_DBG_MAX_WATCHPONTS];
@@ -531,26 +531,39 @@ void bx_dbg_halt(unsigned cpu)
   }
 }
 
+void bx_dbg_watchpoint_continue(bx_bool watch_continue)
+{
+  watchpoint_continue = watch_continue;
+  if (watchpoint_continue) {
+     dbg_printf("Will stop on watch points\n");
+  }
+  else {
+     dbg_printf("Will not stop on watch points (they will still be logged)\n");
+  }
+}
+
 void bx_dbg_check_memory_watchpoints(unsigned cpu, bx_phy_address phy, unsigned len, unsigned rw)
 {
+  bx_phy_address phy_end = phy + len - 1;
+
   if (rw & 1) {
     // Check for physical write watch points
     for (unsigned i = 0; i < num_write_watchpoints; i++) {
-      if (write_watchpoint[i].addr >= phy && write_watchpoint[i].addr < (phy + len)) {
-        BX_CPU(cpu)->watchpoint  = phy;
-        BX_CPU(cpu)->break_point = BREAK_POINT_WRITE;
-        break;
-      }
+      bx_phy_address watch_end = write_watchpoint[i].addr + write_watchpoint[i].len - 1;
+      if (watch_end < phy || phy_end < write_watchpoint[i].addr) continue;
+      BX_CPU(cpu)->watchpoint  = phy;
+      BX_CPU(cpu)->break_point = BREAK_POINT_WRITE;
+      break;
     }
   }
   else {
     // Check for physical read watch points
     for (unsigned i = 0; i < num_read_watchpoints; i++) {
-      if (read_watchpoint[i].addr >= phy && read_watchpoint[i].addr < (phy + len)) {
-        BX_CPU(cpu)->watchpoint  = phy;
-        BX_CPU(cpu)->break_point = BREAK_POINT_READ;
-        break;
-      }
+      bx_phy_address watch_end = read_watchpoint[i].addr + read_watchpoint[i].len - 1;
+      if (watch_end < phy || phy_end < read_watchpoint[i].addr) continue;
+      BX_CPU(cpu)->watchpoint  = phy;
+      BX_CPU(cpu)->break_point = BREAK_POINT_READ;
+      break;
     }
   }
 }
@@ -1555,37 +1568,43 @@ void bx_dbg_print_watchpoints(void)
   // print watch point info
   for (i = 0; i < num_read_watchpoints; i++) {
     if (BX_MEM(0)->dbg_fetch_mem(BX_CPU(dbg_cpu), read_watchpoint[i].addr, 2, buf))
-      dbg_printf("rd 0x"FMT_PHY_ADDRX"   (%04x)\n",
-          read_watchpoint[i].addr, (int)buf[0] | ((int)buf[1] << 8));
+      dbg_printf("rd 0x"FMT_PHY_ADDRX" len=%d\t\t(%04x)\n",
+          read_watchpoint[i].addr, read_watchpoint[i].len, (int)buf[0] | ((int)buf[1] << 8));
     else
-      dbg_printf("rd 0x"FMT_PHY_ADDRX"   (read error)\n", read_watchpoint[i].addr);
+      dbg_printf("rd 0x"FMT_PHY_ADDRX" len=%d\t\t(read error)\n",
+          read_watchpoint[i].addr, read_watchpoint[i].len);
   }
   for (i = 0; i < num_write_watchpoints; i++) {
     if (BX_MEM(0)->dbg_fetch_mem(BX_CPU(dbg_cpu), write_watchpoint[i].addr, 2, buf))
-      dbg_printf("wr 0x"FMT_PHY_ADDRX"   (%04x)\n",
-          write_watchpoint[i].addr, (int)buf[0] | ((int)buf[1] << 8));
+      dbg_printf("wr 0x"FMT_PHY_ADDRX" len=%d\t\t(%04x)\n",
+          write_watchpoint[i].addr, write_watchpoint[i].len, (int)buf[0] | ((int)buf[1] << 8));
     else
-      dbg_printf("wr 0x"FMT_PHY_ADDRX"   (read error)\n", write_watchpoint[i].addr);
+      dbg_printf("rd 0x"FMT_PHY_ADDRX" len=%d\t\t(read error)\n",
+          write_watchpoint[i].addr, write_watchpoint[i].len);
   }
 }
 
-void bx_dbg_watch(int type, bx_phy_address address)
+void bx_dbg_watch(int type, bx_phy_address address, Bit32u len)
 {
   if (type == BX_READ) {
     if (num_read_watchpoints == BX_DBG_MAX_WATCHPONTS) {
       dbg_printf("Too many read watchpoints (%d)\n", BX_DBG_MAX_WATCHPONTS);
       return;
     }
-    read_watchpoint[num_read_watchpoints++].addr = address;
-    dbg_printf("read watchpoint at 0x" FMT_PHY_ADDRX " inserted\n", address);
+    read_watchpoint[num_read_watchpoints].addr = address;
+    read_watchpoint[num_read_watchpoints].len = len;
+    num_read_watchpoints++;
+    dbg_printf("read watchpoint at 0x" FMT_PHY_ADDRX " len=%d inserted\n", address, len);
   }
   else if (type == BX_WRITE) {
     if (num_write_watchpoints == BX_DBG_MAX_WATCHPONTS) {
       dbg_printf("Too many write watchpoints (%d)\n", BX_DBG_MAX_WATCHPONTS);
       return;
     }
-    write_watchpoint[num_write_watchpoints++].addr = address;
-    dbg_printf("write watchpoint at 0x" FMT_PHY_ADDRX " inserted\n", address);
+    write_watchpoint[num_write_watchpoints].addr = address;
+    write_watchpoint[num_write_watchpoints].len = len;
+    num_write_watchpoints++;
+    dbg_printf("write watchpoint at 0x" FMT_PHY_ADDRX " len=%d inserted\n", address, len);
   }
   else {
     dbg_printf("bx_dbg_watch: broken watchpoint type");
@@ -2277,7 +2296,7 @@ void bx_dbg_examine_command(char *command, char *format, bx_bool format_passed,
   Bit32u  data32;
   unsigned columns, per_line, offset;
   bx_bool is_linear;
-  unsigned char databuf[8];
+  Bit8u databuf[8];
 
   dbg_printf("[bochs]:\n");
 
@@ -2474,11 +2493,8 @@ void bx_dbg_examine_command(char *command, char *format, bx_bool format_passed,
         break;
 
       case 2:
-#ifdef BX_LITTLE_ENDIAN
-        data16 = * ((Bit16u *) databuf);
-#else
-        data16 = (databuf[1]<<8) | databuf[0];
-#endif
+        ReadHostWordFromLittleEndian(databuf, data16);
+
         if (memory_dump)
           switch (display_format) {
 	    case 'd': dbg_printf("%05d ", data16); break;
@@ -2502,12 +2518,8 @@ void bx_dbg_examine_command(char *command, char *format, bx_bool format_passed,
         break;
 
       case 4:
-#ifdef BX_LITTLE_ENDIAN
-        data32 = * ((Bit32u *) databuf);
-#else
-        data32 = (databuf[3]<<24) | (databuf[2]<<16) |
-                 (databuf[1]<<8)  |  databuf[0];
-#endif
+        ReadHostDWordFromLittleEndian(databuf, data32);
+
         if (memory_dump)
           switch (display_format) {
 	    case 'd': dbg_printf("%10d ", data32); break;
@@ -3097,8 +3109,7 @@ static const char* bx_dbg_ivt_desc(int intnum)
 void bx_dbg_info_ivt_command(unsigned from, unsigned to)
 {
   unsigned char buff[4];
-  Bit16u seg;
-  Bit16u off;
+  unsigned seg, off;
   bx_bool all = 0;
   bx_dbg_global_sreg_t idtr;
 
@@ -3122,17 +3133,12 @@ void bx_dbg_info_ivt_command(unsigned from, unsigned to)
 
     for (unsigned i = from; i <= to; i++)
     {
-      BX_MEM(0)->dbg_fetch_mem(BX_CPU(dbg_cpu), (bx_phy_address)(idtr.base + i*4), sizeof(buff), buff);
-#ifdef BX_LITTLE_ENDIAN
-      seg = *(Bit16u*)(&buff[2]);
-      off = *(Bit16u*)(&buff[0]);
-#else
-      seg = (buff[3] << 8) | buff[2];
-      off = (buff[1] << 8) | buff[0];
-#endif
-      BX_MEM(0)->dbg_fetch_mem(BX_CPU(dbg_cpu), ((seg << 4) + off), sizeof(buff), buff);
-      dbg_printf("INT# %02x > %04X:%04X (" FMT_ADDRX ") %s%s\n", i, seg, off,
-         ((seg << 4) + off), bx_dbg_ivt_desc(i),
+      bx_dbg_read_linear(dbg_cpu, idtr.base + i*4, 4, buff);
+      seg = ((Bit32u) buff[3] << 8) | buff[2];
+      off = ((Bit32u) buff[1] << 8) | buff[0];
+      bx_dbg_read_linear(dbg_cpu, (seg << 4) + off, 1, buff);
+      dbg_printf("INT# %02x > %04X:%04X (0x%08x) %s%s\n", i, seg, off,
+         (unsigned) ((seg << 4) + off), bx_dbg_ivt_desc(i),
          (buff[0] == 0xcf) ? " ; dummy iret" : "");
     }
     if (all) dbg_printf("You can list individual entries with 'info ivt [NUM]' or groups with 'info ivt [NUM] [NUM]'\n");
@@ -3427,11 +3433,11 @@ void bx_dbg_print_help(void)
   dbg_printf("    c|cont|continue, s|step, p|n|next, modebp\n");
   dbg_printf("-*- Breakpoint management -*-\n");
   dbg_printf("    vb|vbreak, lb|lbreak, pb|pbreak|b|break, sb, sba, blist,\n");
-  dbg_printf("    bpe, bpd, d|del|delete\n");
+  dbg_printf("    bpe, bpd, d|del|delete, watch, unwatch\n");
   dbg_printf("-*- CPU and memory contents -*-\n");
   dbg_printf("    x, xp, u|disasm|disassemble, setpmem, crc,\n");
   dbg_printf("    r|reg|regs|registers, fp|fpu, mmx, sse, sreg, dreg, creg, info,\n");
-  dbg_printf("    page, set, ptime, print-stack, watch, unwatch, ?|calc\n");
+  dbg_printf("    page, set, ptime, print-stack, ?|calc\n");
   dbg_printf("-*- Working with bochs param tree -*-\n");
   dbg_printf("    show \"param\", restore\n");
 }

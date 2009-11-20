@@ -1,6 +1,6 @@
 %{
 /////////////////////////////////////////////////////////////////////////
-// $Id: lexer.l,v 1.32 2009-10-29 15:49:50 sshwarts Exp $
+// $Id: lexer.l,v 1.33 2009-11-20 12:02:57 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #include <stdlib.h>
@@ -99,6 +99,7 @@ exit            |
 q               { bxlval.sval = strdup(bxtext); return(BX_TOKEN_QUIT); }
 x               |
 xp              { BEGIN(EXAMINE); bxlval.sval = strdup(bxtext); return(BX_TOKEN_EXAMINE); }
+save            { bxlval.sval = strdup(bxtext); return(BX_TOKEN_SAVE); }
 restore         { bxlval.sval = strdup(bxtext); return(BX_TOKEN_RESTORE); }
 setpmem         { bxlval.sval = strdup(bxtext); return(BX_TOKEN_SETPMEM); }
 query           { bxlval.sval = strdup(bxtext); return(BX_TOKEN_QUERY); }
