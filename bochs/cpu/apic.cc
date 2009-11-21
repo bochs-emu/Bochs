@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.cc,v 1.131 2009-11-02 15:00:47 sshwarts Exp $
+// $Id: apic.cc,v 1.132 2009-11-21 10:09:35 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (c) 2002-2009 Zwane Mwaikambo, Stanislav Shwartsman
@@ -32,7 +32,7 @@
 #define BX_CPU_APIC(i) (&(BX_CPU(i)->lapic))
 
 #define BX_LAPIC_FIRST_VECTOR	0x10
-#define BX_LAPIC_LAST_VECTOR	0xfe
+#define BX_LAPIC_LAST_VECTOR	0xff
 
 ///////////// APIC BUS /////////////
 
