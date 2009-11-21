@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.307 2009-11-08 21:03:59 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.308 2009-11-21 09:57:10 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2211,7 +2211,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSRET(bxInstruction_c *i)
 #endif
 
     // SS base, limit, attributes unchanged
-    parse_selector((Bit16u)((MSR_STAR >> 48) + 8),
+    parse_selector((Bit16u)(((MSR_STAR >> 48) + 8) | 3),
                        &BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector);
 
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.valid   = SegValidCache | SegAccessROK | SegAccessWOK;
@@ -2246,7 +2246,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSRET(bxInstruction_c *i)
 #endif
 
     // SS base, limit, attributes unchanged
-    parse_selector((Bit16u)((MSR_STAR >> 48) + 8),
+    parse_selector((Bit16u)(((MSR_STAR >> 48) + 8) | 3),
                      &BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector);
 
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.valid   = SegValidCache | SegAccessROK | SegAccessWOK;
