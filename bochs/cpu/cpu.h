@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.621 2009-11-19 20:00:34 sshwarts Exp $
+// $Id: cpu.h,v 1.622 2009-11-23 18:21:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1952,8 +1952,9 @@ public: // for now...
   BX_SMF void ANDNPS_VpsWps(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void MOVUPS_VpsWpsM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void MOVUPS_WpsVpsM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void MOVSS_VssWss(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void MOVSS_WssVss(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void MOVSS_VssWssR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void MOVSS_VssWssM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void MOVSS_WssVssM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void MOVLPS_VpsMq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void MOVLPS_MqVps(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void MOVHPS_VpsMq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -2013,8 +2014,8 @@ public: // for now...
   /* SSE */
 
   /* SSE2 */
-  BX_SMF void MOVSD_VsdWsd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void MOVSD_WsdVsd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void MOVSD_VsdWsdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void MOVSD_WsdVsdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void CVTPI2PD_VpdQqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void CVTPI2PD_VpdQqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void CVTSI2SD_VsdEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -2061,14 +2062,16 @@ public: // for now...
   BX_SMF void PACKSSDW_VdqWdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void PUNPCKLQDQ_VdqWdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void PUNPCKHQDQ_VdqWdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void MOVD_VdqEd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void MOVD_VdqEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void PSHUFD_VdqWdqIb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void PSHUFHW_VdqWdqIb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void PCMPEQB_VdqWdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void PCMPEQW_VdqWdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void PCMPEQD_VdqWdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void MOVD_EdVd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void MOVQ_VqWq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void MOVD_EdVdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void MOVD_EdVdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void MOVQ_VqWqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void MOVQ_VqWqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void CMPPD_VpdWpdIb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void CMPSD_VsdWsdIb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void MOVNTI_MdGd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -2730,10 +2733,10 @@ public: // for now...
   BX_SMF void JRCXZ_Jb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
   BX_SMF void MOVQ_EqPq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void MOVQ_EqVq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void MOVQ_EqVqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void MOVQ_PqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void MOVQ_PqEqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void MOVQ_VdqEq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void MOVQ_VdqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void MOVNTI_MqGq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 #endif  // #if BX_SUPPORT_X86_64
 
