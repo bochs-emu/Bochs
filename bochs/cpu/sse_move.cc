@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_move.cc,v 1.104 2009-11-23 18:21:23 sshwarts Exp $
+// $Id: sse_move.cc,v 1.105 2009-11-25 20:49:47 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003-2009 Stanislav Shwartsman
@@ -561,19 +561,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSD_VsdWsdR(bxInstruction_c *i)
 #endif
 }
 
-/* F2 0F 11 */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSD_WsdVsdM(bxInstruction_c *i)
-{
-#if BX_SUPPORT_SSE >= 2
-  BX_CPU_THIS_PTR prepareSSE();
-  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-  write_virtual_qword(i->seg(), eaddr, BX_READ_XMM_REG_LO_QWORD(i->nnn()));
-#else
-  BX_INFO(("MOVSD_WsdVsd: required SSE2, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
-}
-
 /* MOVLPS:    0F 12 */
 /* MOVLPD: 66 0F 12 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVLPS_VpsMq(bxInstruction_c *i)
@@ -931,7 +918,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVQ_VqWqR(bxInstruction_c *i)
   op.xmm64u(0) = BX_READ_XMM_REG_LO_QWORD(i->rm());
   op.xmm64u(1) = 0; /* zero-extension to 128 bit */
 
-  /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), op);
 #else
   BX_INFO(("MOVQ_VqWq: required SSE2, use --enable-sse option"));
@@ -959,25 +945,27 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVQ_VqWqM(bxInstruction_c *i)
 }
 
 /* 66 0F D6 */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVQ_WqVq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVQ_WqVqR(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
-  Bit64u val64 = BX_READ_XMM_REG_LO_QWORD(i->nnn());
+  BxPackedXmmRegister op;
+  op.xmm64u(0) = BX_READ_XMM_REG_LO_QWORD(i->nnn());
+  op.xmm64u(1) = 0; /* zero-extension to 128 bit */
+  BX_WRITE_XMM_REG(i->rm(), op);
+#else
+  BX_INFO(("MOVQ_WqVq: required SSE2, use --enable-sse option"));
+  exception(BX_UD_EXCEPTION, 0, 0);
+#endif
+}
 
-  if (i->modC0())
-  {
-    BxPackedXmmRegister op;
-    op.xmm64u(0) = val64;
-    op.xmm64u(1) = 0; /* zero-extension to 128 bits */
-    BX_WRITE_XMM_REG(i->rm(), op);
-  }
-  else {
-    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-    /* pointer, segment address pair */
-    write_virtual_qword(i->seg(), eaddr, val64);
-  }
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVQ_WqVqM(bxInstruction_c *i)
+{
+#if BX_SUPPORT_SSE >= 2
+  BX_CPU_THIS_PTR prepareSSE();
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  write_virtual_qword(i->seg(), eaddr, BX_READ_XMM_REG_LO_QWORD(i->nnn()));
 #else
   BX_INFO(("MOVQ_WqVq: required SSE2, use --enable-sse option"));
   exception(BX_UD_EXCEPTION, 0, 0);
