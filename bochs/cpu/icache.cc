@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: icache.cc,v 1.27 2009-11-05 16:51:06 sshwarts Exp $
+// $Id: icache.cc,v 1.28 2009-11-29 21:01:26 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007-2009 Stanislav Shwartsman
@@ -158,7 +158,7 @@ bx_bool BX_CPU_C::fetchInstruction(bxInstruction_c *iStorage, Bit32u eipBiased)
 
 #if BX_INSTRUMENTATION
   BX_INSTR_OPCODE(BX_CPU_ID, fetchPtr, iStorage->ilen(),
-       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b, Is64BitMode());
+       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b, long64_mode());
 #endif
 
   return 1;

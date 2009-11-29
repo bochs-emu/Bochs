@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.623 2009-11-25 20:49:46 sshwarts Exp $
+// $Id: cpu.h,v 1.624 2009-11-29 21:01:26 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -391,14 +391,6 @@ extern const char* cpu_mode_string(unsigned cpu_mode);
 #endif
 
 #define IsValidPhyAddr(addr) ((addr & BX_PHY_ADDRESS_RESERVED_BITS) == 0)
-
-#if BX_SUPPORT_X86_64
-  #define Is64BitMode()     (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64)
-#else
-  #define Is64BitMode()     (0)
-#endif
-
-#define StackAddrSize64() Is64BitMode()
 
 #if BX_SUPPORT_APIC
   #define BX_CPU_INTR  (BX_CPU_THIS_PTR INTR || BX_CPU_THIS_PTR lapic.INTR)
@@ -3293,7 +3285,10 @@ public: // for now...
   BX_SMF BX_CPP_INLINE bx_bool protected_mode(void);
   BX_SMF BX_CPP_INLINE bx_bool v8086_mode(void);
   BX_SMF BX_CPP_INLINE bx_bool long_mode(void);
+  BX_SMF BX_CPP_INLINE bx_bool long64_mode(void);
   BX_SMF BX_CPP_INLINE unsigned get_cpu_mode(void);
+
+#define StackAddrSize64() long64_mode()
 
 #if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
   BX_SMF BX_CPP_INLINE bx_bool alignment_check(void);
@@ -3434,7 +3429,7 @@ BX_CPP_INLINE void BX_CPU_C::prepareSSE(void)
 #if BX_SUPPORT_XSAVE
 BX_CPP_INLINE void BX_CPU_C::prepareXSAVE(void)
 {
-  if(! (BX_CPU_THIS_PTR cr4.get_OSXSAVE()))
+  if(! BX_CPU_THIS_PTR cr4.get_OSXSAVE())
     exception(BX_UD_EXCEPTION, 0, 0);
 
   if(BX_CPU_THIS_PTR cr0.get_TS())
@@ -3612,6 +3607,15 @@ BX_CPP_INLINE bx_bool BX_CPU_C::long_mode(void)
 {
 #if BX_SUPPORT_X86_64
   return BX_CPU_THIS_PTR efer.get_LMA();
+#else
+  return 0;
+#endif
+}
+
+BX_CPP_INLINE bx_bool BX_CPU_C::long64_mode(void)
+{
+#if BX_SUPPORT_X86_64
+  return (BX_CPU_THIS_PTR cpu_mode >= BX_MODE_LONG_64);
 #else
   return 0;
 #endif

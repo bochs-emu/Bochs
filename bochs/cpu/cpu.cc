@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.298 2009-11-05 16:06:57 sshwarts Exp $
+// $Id: cpu.cc,v 1.299 2009-11-29 21:01:26 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -162,7 +162,7 @@ no_async_event:
 
 #if BX_INSTRUMENTATION
       BX_INSTR_OPCODE(BX_CPU_ID, BX_CPU_THIS_PTR eipFetchPtr + (RIP + BX_CPU_THIS_PTR eipPageBias),
-         i->ilen(), BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b, Is64BitMode());
+         i->ilen(), BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b, long64_mode());
 #endif
 
 #if BX_DISASM
@@ -698,7 +698,7 @@ void BX_CPU_C::prefetch(void)
   unsigned pageOffset;
 
 #if BX_SUPPORT_X86_64
-  if (Is64BitMode()) {
+  if (long64_mode()) {
     if (! IsCanonical(RIP)) {
       BX_ERROR(("prefetch: #GP(0): RIP crossed canonical boundary"));
       exception(BX_GP_EXCEPTION, 0, 0);
@@ -837,7 +837,7 @@ void BX_CPU_C::boundaryFetch(const Bit8u *fetchPtr, unsigned remainingInPage, bx
   // invalidate_prefetch_q();
 
   BX_INSTR_OPCODE(BX_CPU_ID, fetchBuffer, i->ilen(),
-      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b, Is64BitMode());
+      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b, long64_mode());
 }
 
 void BX_CPU_C::deliver_SIPI(unsigned vector)
