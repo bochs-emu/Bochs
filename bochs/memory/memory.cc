@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: memory.cc,v 1.80 2009-10-17 18:42:15 sshwarts Exp $
+// $Id: memory.cc,v 1.81 2009-11-29 17:24:29 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -234,7 +234,7 @@ void BX_MEM_C::readPhysicalPage(BX_CPU_C *cpu, bx_phy_address addr, unsigned len
 
 mem_read:
 
-  if (a20addr <= BX_MEM_THIS len && ! is_bios) {
+  if (a20addr < BX_MEM_THIS len && ! is_bios) {
     // all of data is within limits of physical memory
     if (a20addr < 0x000a0000 || a20addr >= 0x00100000)
     {
