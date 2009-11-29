@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu_load_store.cc,v 1.38 2009-10-14 20:45:29 sshwarts Exp $
+// $Id: fpu_load_store.cc,v 1.39 2009-11-29 21:00:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003-2009 Stanislav Shwartsman
@@ -28,7 +28,7 @@
 
 #if BX_SUPPORT_FPU
 
-#define swap_values(a, b) ((a)^=(b)^=(a)^=(b))
+#define swap_values16u(a, b) { Bit16u tmp = a; a = b; b = tmp; }
 
 extern float_status_t FPU_pre_exception_handling(Bit16u control_word);
 
@@ -348,7 +348,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FST_SINGLE_REAL(bxInstruction_c *i)
   }
 
   // store to the memory might generate an exception, in this case origial FPU_SW must be kept
-  swap_values(x87_sw, FPU_PARTIAL_STATUS);
+  swap_values16u(x87_sw, FPU_PARTIAL_STATUS);
 
   write_virtual_dword(i->seg(), RMAddr(i), save_reg);
 
@@ -396,7 +396,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FST_DOUBLE_REAL(bxInstruction_c *i)
   }
 
   // store to the memory might generate an exception, in this case origial FPU_SW must be kept
-  swap_values(x87_sw, FPU_PARTIAL_STATUS);
+  swap_values16u(x87_sw, FPU_PARTIAL_STATUS);
 
   write_virtual_qword(i->seg(), RMAddr(i), save_reg);
 
@@ -479,7 +479,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FIST_WORD_INTEGER(bxInstruction_c *i)
   }
 
   // store to the memory might generate an exception, in this case origial FPU_SW must be kept
-  swap_values(x87_sw, FPU_PARTIAL_STATUS);
+  swap_values16u(x87_sw, FPU_PARTIAL_STATUS);
 
   write_virtual_word(i->seg(), RMAddr(i), (Bit16u)(save_reg));
 
@@ -527,7 +527,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FIST_DWORD_INTEGER(bxInstruction_c *i)
   }
 
   // store to the memory might generate an exception, in this case origial FPU_SW must be kept
-  swap_values(x87_sw, FPU_PARTIAL_STATUS);
+  swap_values16u(x87_sw, FPU_PARTIAL_STATUS);
 
   write_virtual_dword(i->seg(), RMAddr(i), (Bit32u)(save_reg));
 
@@ -573,7 +573,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FISTP_QWORD_INTEGER(bxInstruction_c *i)
   }
 
   // store to the memory might generate an exception, in this case origial FPU_SW must be kept
-  swap_values(x87_sw, FPU_PARTIAL_STATUS);
+  swap_values16u(x87_sw, FPU_PARTIAL_STATUS);
 
   write_virtual_qword(i->seg(), RMAddr(i), (Bit64u)(save_reg));
 
@@ -651,7 +651,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FBSTP_PACKED_BCD(bxInstruction_c *i)
   }
 
   // store to the memory might generate an exception, in this case origial FPU_SW must be kept
-  swap_values(x87_sw, FPU_PARTIAL_STATUS);
+  swap_values16u(x87_sw, FPU_PARTIAL_STATUS);
 
   // write packed bcd to memory
   write_virtual_qword(i->seg(), RMAddr(i),     save_reg_lo);
@@ -700,7 +700,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FISTTP16(bxInstruction_c *i)
   }
 
   // store to the memory might generate an exception, in this case origial FPU_SW must be kept
-  swap_values(x87_sw, FPU_PARTIAL_STATUS);
+  swap_values16u(x87_sw, FPU_PARTIAL_STATUS);
 
   write_virtual_word(i->seg(), RMAddr(i), (Bit16u)(save_reg));
 
@@ -748,7 +748,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FISTTP32(bxInstruction_c *i)
   }
 
   // store to the memory might generate an exception, in this case origial FPU_SW must be kept
-  swap_values(x87_sw, FPU_PARTIAL_STATUS);
+  swap_values16u(x87_sw, FPU_PARTIAL_STATUS);
 
   write_virtual_dword(i->seg(), RMAddr(i), (Bit32u)(save_reg));
 
@@ -796,7 +796,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FISTTP64(bxInstruction_c *i)
   }
 
   // store to the memory might generate an exception, in this case origial FPU_SW must be kept
-  swap_values(x87_sw, FPU_PARTIAL_STATUS);
+  swap_values16u(x87_sw, FPU_PARTIAL_STATUS);
 
   write_virtual_qword(i->seg(), RMAddr(i), (Bit64u)(save_reg));
 
