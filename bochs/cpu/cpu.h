@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.624 2009-11-29 21:01:26 sshwarts Exp $
+// $Id: cpu.h,v 1.625 2009-11-29 21:05:59 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -3615,7 +3615,7 @@ BX_CPP_INLINE bx_bool BX_CPU_C::long_mode(void)
 BX_CPP_INLINE bx_bool BX_CPU_C::long64_mode(void)
 {
 #if BX_SUPPORT_X86_64
-  return (BX_CPU_THIS_PTR cpu_mode >= BX_MODE_LONG_64);
+  return (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64);
 #else
   return 0;
 #endif
