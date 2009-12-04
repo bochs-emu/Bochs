@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_printer.cc,v 1.1 2009-12-04 13:01:41 sshwarts Exp $
+// $Id: usb_printer.cc,v 1.2 2009-12-04 17:50:10 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Benjamin David Lunt
@@ -119,7 +119,7 @@ usb_printer_device_c::usb_printer_device_c(usbdev_type type, const char *filenam
   
   memset((void*)&s, 0, sizeof(s));
   strncpy(s.fname, filename, 255);
-  s.fp = fopen(s.fname, "a+b");
+  s.fp = fopen(s.fname, "w+b");
   if (s.fp == NULL)
     BX_PANIC(("Could not create/open %s", s.fname));
   
@@ -134,34 +134,17 @@ usb_printer_device_c::~usb_printer_device_c(void)
 void usb_printer_device_c::register_state_specific(bx_list_c *parent)
 {
 /*
-  bx_list_c *key;
-  Bit8u i;
-  char name[6];
-
-  bx_list_c *list = new bx_list_c(parent, "s", "USB HID Device State", 9);
-  new bx_shadow_num_c(list, "mouse_delayed_dx", &s.mouse_delayed_dx);
-  new bx_shadow_num_c(list, "mouse_delayed_dy", &s.mouse_delayed_dy);
-  new bx_shadow_num_c(list, "mouse_delayed_dz", &s.mouse_delayed_dz);
-  new bx_shadow_num_c(list, "mouse_x", &s.mouse_x);
-  new bx_shadow_num_c(list, "mouse_y", &s.mouse_y);
-  new bx_shadow_num_c(list, "mouse_z", &s.mouse_z);
-  new bx_shadow_num_c(list, "b_state", &s.b_state, BASE_HEX);
-  key = new bx_list_c(list, "saved_key", 8);
-  for (i=0; i<8; i++) {
-    sprintf(name, "0x%02x", i);
-    new bx_shadow_num_c(key, name, &s.saved_key[i], BASE_HEX);
-  }
-  key = new bx_list_c(list, "key_pad_packet", 8);
-  for (i=0; i<8; i++) {
-    sprintf(name, "0x%02x", i);
-    new bx_shadow_num_c(key, name, &s.key_pad_packet[i], BASE_HEX);
-  }
+  bx_param_string_c *path;
+  bx_list_c *list = new bx_list_c(parent, "s", "USB PRINTER Device State", 3);
+  new bx_shadow_num_c(list, "printer_status", &s.printer_status);
+  path = new bx_param_string_c(list, "fname", "File", "", "", BX_PATHNAME_LEN);
+  path->set(s.fname);
 */
 }
 
 void usb_printer_device_c::handle_reset()
 {
-  BX_INFO(("Openned: %s for USB HP Deskjet 920C printer emulation.", s.fname));
+  BX_INFO(("Opened %s for USB HP Deskjet 920C printer emulation.", s.fname));
   BX_DEBUG(("Reset"));
 }
 
@@ -256,7 +239,7 @@ int usb_printer_device_c::handle_control(int request, int value, int index, int 
       data[0] = 0;
       ret = 1;
       break;
-    case DeviceOutRequest | USB_REQ_SET_INTERFACE:
+    case EndpointOutRequest | USB_REQ_SET_INTERFACE:
       ret = 0;
       break;
     
