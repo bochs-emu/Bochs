@@ -1,14 +1,8 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.117 2009-08-10 08:08:25 sshwarts Exp $
+// $Id: iodev.h,v 1.118 2009-12-04 19:50:28 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002  MandrakeSoft S.A.
-//
-//    MandrakeSoft S.A.
-//    43, rue d'Aboukir
-//    75002 Paris - France
-//    http://www.linux-mandrake.com/
-//    http://www.mandrakesoft.com/
+//  Copyright (C) 2002-2009  The Bochs Project
 //
 //  I/O port handlers API Copyright (C) 2003 by Frank Cornelis
 //

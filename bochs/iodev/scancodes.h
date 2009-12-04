@@ -1,8 +1,8 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: scancodes.h,v 1.8 2009-02-08 09:05:52 vruppert Exp $
+// $Id: scancodes.h,v 1.9 2009-12-04 19:50:29 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002  MandrakeSoft S.A.
+//  Copyright (C) 2002-2009  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public

@@ -1,14 +1,8 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: busmouse.cc,v 1.14 2009-03-03 20:34:50 vruppert Exp $
+// $Id: busmouse.cc,v 1.15 2009-12-04 19:50:26 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2004  MandrakeSoft S.A.
-//
-//    MandrakeSoft S.A.
-//    43, rue d'Aboukir
-//    75002 Paris - France
-//    http://www.linux-mandrake.com/
-//    http://www.mandrakesoft.com/
+//  Copyright (C) 2004-2009  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -67,7 +61,7 @@ bx_busm_c::~bx_busm_c()
 
 void bx_busm_c::init(void)
 {
-  BX_DEBUG(("Init $Id: busmouse.cc,v 1.14 2009-03-03 20:34:50 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: busmouse.cc,v 1.15 2009-12-04 19:50:26 sshwarts Exp $"));
 
   DEV_register_irq(BUS_MOUSE_IRQ, "Bus Mouse");
 

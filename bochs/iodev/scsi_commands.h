@@ -1,7 +1,7 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: scsi_commands.h,v 1.3 2001-10-03 13:10:38 bdenney Exp $
+// $Id: scsi_commands.h,v 1.4 2009-12-04 19:50:29 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
-//
+
 /* scsi/commands.h
    Used only in cdrom_amigaos.cc.
 
@@ -10,9 +10,7 @@
    30 Nov 94   Peter Urbanec    Created file
    10 Jan 95   Peter Urbanec    Added SCSI_ prefix to all commands
    31 Jan 95   Peter Urbanec    Released to public
-
 */
-
 
 /* All device types */
 

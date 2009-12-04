@@ -1,14 +1,8 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.cc,v 1.145 2009-04-25 08:06:32 vruppert Exp $
+// $Id: keyboard.cc,v 1.146 2009-12-04 19:50:28 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002  MandrakeSoft S.A.
-//
-//    MandrakeSoft S.A.
-//    43, rue d'Aboukir
-//    75002 Paris - France
-//    http://www.linux-mandrake.com/
-//    http://www.mandrakesoft.com/
+//  Copyright (C) 2002-2009  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -126,7 +120,7 @@ void bx_keyb_c::resetinternals(bx_bool powerup)
 
 void bx_keyb_c::init(void)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.145 2009-04-25 08:06:32 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.146 2009-12-04 19:50:28 sshwarts Exp $"));
   Bit32u   i;
 
   DEV_register_irq(1, "8042 Keyboard controller");

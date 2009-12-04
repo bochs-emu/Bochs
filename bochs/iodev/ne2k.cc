@@ -1,14 +1,8 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ne2k.cc,v 1.108 2009-04-22 18:37:06 vruppert Exp $
+// $Id: ne2k.cc,v 1.109 2009-12-04 19:50:28 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002  MandrakeSoft S.A.
-//
-//    MandrakeSoft S.A.
-//    43, rue d'Aboukir
-//    75002 Paris - France
-//    http://www.linux-mandrake.com/
-//    http://www.mandrakesoft.com/
+//  Copyright (C) 2001-2009  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -1416,7 +1410,7 @@ void bx_ne2k_c::init(void)
   Bit8u macaddr[6];
   bx_list_c *base;
 
-  BX_DEBUG(("Init $Id: ne2k.cc,v 1.108 2009-04-22 18:37:06 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: ne2k.cc,v 1.109 2009-12-04 19:50:28 sshwarts Exp $"));
 
   // Read in values from config interface
   base = (bx_list_c*) SIM->get_param(BXPN_NE2K);

@@ -1,14 +1,8 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: parallel.cc,v 1.39 2009-02-08 09:05:52 vruppert Exp $
+// $Id: parallel.cc,v 1.40 2009-12-04 19:50:28 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002  MandrakeSoft S.A.
-//
-//    MandrakeSoft S.A.
-//    43, rue d'Aboukir
-//    75002 Paris - France
-//    http://www.linux-mandrake.com/
-//    http://www.mandrakesoft.com/
+//  Copyright (C) 2001-2009  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -77,7 +71,7 @@ void bx_parallel_c::init(void)
   char name[16], pname[20];
   bx_list_c *base;
 
-  BX_DEBUG(("Init $Id: parallel.cc,v 1.39 2009-02-08 09:05:52 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: parallel.cc,v 1.40 2009-12-04 19:50:28 sshwarts Exp $"));
 
   for (unsigned i=0; i<BX_N_PARALLEL_PORTS; i++) {
     sprintf(pname, "ports.parallel.%d", i+1);

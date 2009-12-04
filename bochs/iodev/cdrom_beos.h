@@ -1,14 +1,8 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cdrom_beos.h,v 1.3 2009-02-08 09:05:52 vruppert Exp $
+// $Id: cdrom_beos.h,v 1.4 2009-12-04 19:50:26 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2000  MandrakeSoft S.A.
-//
-//    MandrakeSoft S.A.
-//    43, rue d'Aboukir
-//    75002 Paris - France
-//    http://www.linux-mandrake.com/
-//    http://www.mandrakesoft.com/
+//  Copyright (C) 2000-2009  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -23,11 +17,14 @@
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
+//
+/////////////////////////////////////////////////////////////////////////
+
 
 #ifndef CDROM_BEOS_H
 #define CDROM_BEOS_H
 
-#include <stddef.h> //for off_t
+#include <stddef.h> // for off_t
 
 off_t GetNumDeviceBlocks(int fd, int block_size);
 int GetLogicalBlockSize(int fd);

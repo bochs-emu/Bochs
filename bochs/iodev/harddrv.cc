@@ -1,14 +1,8 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.228 2009-04-30 07:30:13 sshwarts Exp $
+// $Id: harddrv.cc,v 1.229 2009-12-04 19:50:27 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002  MandrakeSoft S.A.
-//
-//    MandrakeSoft S.A.
-//    43, rue d'Aboukir
-//    75002 Paris - France
-//    http://www.linux-mandrake.com/
-//    http://www.mandrakesoft.com/
+//  Copyright (C) 2002-2009  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -173,7 +167,7 @@ void bx_hard_drive_c::init(void)
   char  ata_name[20];
   bx_list_c *base;
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.228 2009-04-30 07:30:13 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.229 2009-12-04 19:50:27 sshwarts Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     sprintf(ata_name, "ata.%d.resources", channel);

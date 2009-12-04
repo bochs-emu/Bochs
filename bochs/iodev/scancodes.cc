@@ -1,8 +1,8 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: scancodes.cc,v 1.9 2009-02-08 09:05:52 vruppert Exp $
+// $Id: scancodes.cc,v 1.10 2009-12-04 19:50:29 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002  MandrakeSoft S.A.
+//  Copyright (C) 2002-2009  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -17,6 +17,9 @@
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
+//
+/////////////////////////////////////////////////////////////////////////
+
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
 // platforms that require a special tag on exported symbols, BX_PLUGGABLE

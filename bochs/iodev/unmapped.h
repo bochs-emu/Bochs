@@ -1,14 +1,8 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: unmapped.h,v 1.16 2009-04-26 06:56:28 vruppert Exp $
+// $Id: unmapped.h,v 1.17 2009-12-04 19:50:29 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001  MandrakeSoft S.A.
-//
-//    MandrakeSoft S.A.
-//    43, rue d'Aboukir
-//    75002 Paris - France
-//    http://www.linux-mandrake.com/
-//    http://www.mandrakesoft.com/
+//  Copyright (C) 2001-2009  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public

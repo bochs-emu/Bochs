@@ -1,14 +1,8 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dma.cc,v 1.51 2009-02-08 09:05:52 vruppert Exp $
+// $Id: dma.cc,v 1.52 2009-12-04 19:50:26 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002  MandrakeSoft S.A.
-//
-//    MandrakeSoft S.A.
-//    43, rue d'Aboukir
-//    75002 Paris - France
-//    http://www.linux-mandrake.com/
-//    http://www.mandrakesoft.com/
+//  Copyright (C) 2002-2009  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -123,7 +117,7 @@ unsigned bx_dma_c::get_TC(void)
 void bx_dma_c::init(void)
 {
   unsigned c, i, j;
-  BX_DEBUG(("Init $Id: dma.cc,v 1.51 2009-02-08 09:05:52 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: dma.cc,v 1.52 2009-12-04 19:50:26 sshwarts Exp $"));
 
   /* 8237 DMA controller */
 

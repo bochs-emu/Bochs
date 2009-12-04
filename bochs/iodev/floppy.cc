@@ -1,14 +1,8 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.cc,v 1.121 2009-08-10 08:08:25 sshwarts Exp $
+// $Id: floppy.cc,v 1.122 2009-12-04 19:50:27 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002  MandrakeSoft S.A.
-//
-//    MandrakeSoft S.A.
-//    43, rue d'Aboukir
-//    75002 Paris - France
-//    http://www.linux-mandrake.com/
-//    http://www.mandrakesoft.com/
+//  Copyright (C) 2002-2009  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -141,7 +135,7 @@ void bx_floppy_ctrl_c::init(void)
 {
   Bit8u i, devtype, cmos_value;
 
-  BX_DEBUG(("Init $Id: floppy.cc,v 1.121 2009-08-10 08:08:25 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: floppy.cc,v 1.122 2009-12-04 19:50:27 sshwarts Exp $"));
   DEV_dma_register_8bit_channel(2, dma_read, dma_write, "Floppy Drive");
   DEV_register_irq(6, "Floppy Drive");
   for (unsigned addr=0x03F2; addr<=0x03F7; addr++) {

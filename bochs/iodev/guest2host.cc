@@ -1,14 +1,8 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: guest2host.cc,v 1.20 2009-02-08 09:05:52 vruppert Exp $
+// $Id: guest2host.cc,v 1.21 2009-12-04 19:50:27 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001  MandrakeSoft S.A.
-//
-//    MandrakeSoft S.A.
-//    43, rue d'Aboukir
-//    75002 Paris - France
-//    http://www.linux-mandrake.com/
-//    http://www.mandrakesoft.com/
+//  Copyright (C) 2001-2009  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -50,7 +44,7 @@ bx_g2h_c::~bx_g2h_c()
 
 void bx_g2h_c::init(void)
 {
-  BX_DEBUG(("Init $Id: guest2host.cc,v 1.20 2009-02-08 09:05:52 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: guest2host.cc,v 1.21 2009-12-04 19:50:27 sshwarts Exp $"));
   // Reserve a dword port for this interface
   for (Bit32u addr=BX_G2H_PORT; addr<=(BX_G2H_PORT+3); addr++) {
     bx_devices.register_io_read_handler(&bx_g2h,

@@ -1,14 +1,8 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cdrom.cc,v 1.98 2009-04-21 15:37:16 vruppert Exp $
+// $Id: cdrom.cc,v 1.99 2009-12-04 19:50:26 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002  MandrakeSoft S.A.
-//
-//    MandrakeSoft S.A.
-//    43, rue d'Aboukir
-//    75002 Paris - France
-//    http://www.linux-mandrake.com/
-//    http://www.mandrakesoft.com/
+//  Copyright (C) 2002-2009  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -527,7 +521,7 @@ cdrom_interface::cdrom_interface(const char *dev)
 
 void cdrom_interface::init(void)
 {
-  BX_DEBUG(("Init $Id: cdrom.cc,v 1.98 2009-04-21 15:37:16 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: cdrom.cc,v 1.99 2009-12-04 19:50:26 sshwarts Exp $"));
   BX_INFO(("file = '%s'",path));
 }
 

@@ -1,11 +1,9 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: scsipt.h,v 1.5 2008-02-15 22:05:43 sshwarts Exp $
+// $Id: scsipt.h,v 1.6 2009-12-04 19:50:29 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
-//
+  
 //
 // iodev/scsipt.h
-// $Id: scsipt.h,v 1.5 2008-02-15 22:05:43 sshwarts Exp $
-//
 // This file was copied from ... ?
 //
 // distilled information from various header files from Microsoft's

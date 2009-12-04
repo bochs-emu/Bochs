@@ -1,14 +1,8 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cmos.cc,v 1.70 2009-04-23 18:28:17 sshwarts Exp $
+// $Id: cmos.cc,v 1.71 2009-12-04 19:50:26 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002  MandrakeSoft S.A.
-//
-//    MandrakeSoft S.A.
-//    43, rue d'Aboukir
-//    75002 Paris - France
-//    http://www.linux-mandrake.com/
-//    http://www.mandrakesoft.com/
+//  Copyright (C) 2002-2009  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -23,7 +17,7 @@
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
-
+/////////////////////////////////////////////////////////////////////////
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
 // platforms that require a special tag on exported symbols, BX_PLUGGABLE
@@ -145,7 +139,7 @@ bx_cmos_c::~bx_cmos_c(void)
 
 void bx_cmos_c::init(void)
 {
-  BX_DEBUG(("Init $Id: cmos.cc,v 1.70 2009-04-23 18:28:17 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: cmos.cc,v 1.71 2009-12-04 19:50:26 sshwarts Exp $"));
   // CMOS RAM & RTC
 
   DEV_register_ioread_handler(this, read_handler, 0x0070, "CMOS RAM", 1);
