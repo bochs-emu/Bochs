@@ -756,19 +756,27 @@ i440fxsupport: enabled=1
 # This option controls the presence of the USB root hub which is a part
 # of the i440FX PCI chipset. With the portX option you can connect devices
 # to the hub (currently supported: 'mouse', 'tablet', 'keypad', 'disk', 'cdrom'
-# and 'hub').
+# 'hub' and 'printer').
+#
 # If you connect the mouse or tablet to one of the ports, Bochs forwards the
 # mouse movement data to the USB device instead of the selected mouse type.
 # When connecting the keypad to one of the ports, Bochs forwards the input of
 # the numeric keypad to the USB device instead of the PS/2 keyboard.
+#
 # To connect a flat image as an USB hardisk you can use the 'disk' device with
 # the path to the image separated with a colon (see below). To emulate an USB
 # cdrom you can use the 'cdrom' device name and the path to an ISO image or raw
 # device name also separated with a colon.
+#
 # The device name 'hub' connects an external hub with max. 8 ports (default: 4)
 # to the root hub. To specify the number of ports you have to add the value
 # separated with a colon. Connecting devices to the external hub ports is only
 # available in the runtime configuration.
+#
+# The device 'printer' emulates the HP Deskjet 920C printer. The PCL data is
+# sent to a file specified in bochsrc.txt. The current code appends the PCL
+# code to the file if the file already existed. It would probably be nice to
+# overwrite the file instead, asking user first.
 #=======================================================================
 #usb_uhci: enabled=1
 #usb_uhci: enabled=1, port1=mouse, port2=disk:usbdisk.img
@@ -782,6 +790,7 @@ i440fxsupport: enabled=1
 # a PCI slot.
 #=======================================================================
 #usb_ohci: enabled=1
+#usb_ohci: enabled=1, port1=printer:usbprinter.bin
 
 #=======================================================================
 # CMOSIMAGE:
