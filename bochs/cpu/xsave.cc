@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: xsave.cc,v 1.23 2009-11-29 21:01:26 sshwarts Exp $
+// $Id: xsave.cc,v 1.24 2009-12-04 21:27:17 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008-2009 Stanislav Shwartsman
@@ -311,7 +311,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::XGETBV(bxInstruction_c *i)
 {
 #if BX_SUPPORT_XSAVE
-  if(! (BX_CPU_THIS_PTR cr4.get_OSXSAVE())) {
+  if(! BX_CPU_THIS_PTR cr4.get_OSXSAVE()) {
     BX_ERROR(("XGETBV: OSXSAVE feature is not enabled in CR4!"));
     exception(BX_UD_EXCEPTION, 0, 0);
   }
@@ -335,7 +335,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XGETBV(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::XSETBV(bxInstruction_c *i)
 {
 #if BX_SUPPORT_XSAVE
-  if(! (BX_CPU_THIS_PTR cr4.get_OSXSAVE())) {
+  if(! BX_CPU_THIS_PTR cr4.get_OSXSAVE()) {
     BX_ERROR(("XSETBV: OSXSAVE feature is not enabled in CR4!"));
     exception(BX_UD_EXCEPTION, 0, 0);
   }
