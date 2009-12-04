@@ -1,14 +1,8 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: carbon.cc,v 1.42 2009-02-23 11:06:53 vruppert Exp $
+// $Id: carbon.cc,v 1.43 2009-12-04 20:02:12 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001  MandrakeSoft S.A.
-//
-//    MandrakeSoft S.A.
-//    43, rue d'Aboukir
-//    75002 Paris - France
-//    http://www.linux-mandrake.com/
-//    http://www.mandrakesoft.com/
+//  Copyright (C) 2001-2009  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public

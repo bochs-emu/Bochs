@@ -1,6 +1,8 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: svga.cc,v 1.19 2009-02-08 09:05:52 vruppert Exp $
+// $Id: svga.cc,v 1.20 2009-12-04 20:02:12 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
+//
+//  Copyright (C) 2009  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public

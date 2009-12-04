@@ -1,7 +1,7 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: power.h,v 1.2 2001-10-03 13:10:37 bdenney Exp $
+// $Id: power.h,v 1.3 2009-12-04 20:02:12 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
-//
+
 #define BX_POWER_BMAP_X 32
 #define BX_POWER_BMAP_Y 32
 
@@ -17,4 +17,4 @@ static const unsigned char bx_power_bmap[(BX_POWER_BMAP_X * BX_POWER_BMAP_Y)/8] 
   0xe0, 0xe0, 0xe0, 0x00, 0xc0, 0x00, 0x60, 0x00, 0x80, 0x03, 0x38, 0x00,
   0x00, 0x0f, 0x1e, 0x00, 0x00, 0xfe, 0x0f, 0x00, 0x00, 0xf8, 0x03, 0x00,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-  };
+};

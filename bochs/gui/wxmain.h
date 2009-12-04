@@ -1,6 +1,7 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.h,v 1.60 2009-03-27 22:22:07 vruppert Exp $
+// $Id: wxmain.h,v 1.61 2009-12-04 20:02:12 sshwarts Exp $
 /////////////////////////////////////////////////////////////////
+
 // This file defines variables and classes that the wxWidgets .cc files
 // share.  It should be included only by wx.cc and wxmain.cc.
 

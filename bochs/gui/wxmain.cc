@@ -1,6 +1,8 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.162 2009-03-27 22:22:07 vruppert Exp $
+// $Id: wxmain.cc,v 1.163 2009-12-04 20:02:12 sshwarts Exp $
 /////////////////////////////////////////////////////////////////
+//
+//  Copyright (C) 2009  The Bochs Project
 //
 // wxmain.cc implements the wxWidgets frame, toolbar, menus, and dialogs.
 // When the application starts, the user is given a chance to choose/edit/save

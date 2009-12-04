@@ -1,7 +1,7 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: snapshot.h,v 1.2 2001-10-03 13:10:37 bdenney Exp $
+// $Id: snapshot.h,v 1.3 2009-12-04 20:02:12 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
-//
+
 #define BX_SNAPSHOT_BMAP_X 32
 #define BX_SNAPSHOT_BMAP_Y 32
 
@@ -17,4 +17,4 @@ static const unsigned char bx_snapshot_bmap[(BX_SNAPSHOT_BMAP_X * BX_SNAPSHOT_BM
   0xff, 0x56, 0x55, 0xff, 0xfe, 0xae, 0x6a, 0x7f, 0x00, 0x55, 0xb5, 0x00,
   0x00, 0xbd, 0xba, 0x00, 0x00, 0xfa, 0x5f, 0x00, 0x00, 0xe4, 0x27, 0x00,
   0x00, 0x18, 0x18, 0x00, 0x00, 0xe0, 0x07, 0x00
-  };
+};

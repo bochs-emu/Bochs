@@ -1,6 +1,7 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: userbutton.h,v 1.2 2008-02-05 22:57:41 sshwarts Exp $
+// $Id: userbutton.h,v 1.3 2009-12-04 20:02:12 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
+
 #define BX_USER_BMAP_X 32
 #define BX_USER_BMAP_Y 32
 
@@ -16,4 +17,4 @@ static const unsigned char bx_user_bmap[BX_USER_BMAP_X*BX_USER_BMAP_Y/8] = {
   0x52, 0x55, 0x01, 0x25, 0xaa, 0xaa, 0x82, 0x2a, 0x52, 0x55, 0x11, 0x25,
   0xaa, 0xbf, 0xaa, 0x2a, 0x02, 0x00, 0x00, 0x20, 0xfe, 0xff, 0xff, 0x3f,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-  };
+};

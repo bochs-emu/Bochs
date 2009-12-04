@@ -1,7 +1,7 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: reset.h,v 1.2 2001-10-03 13:10:37 bdenney Exp $
+// $Id: reset.h,v 1.3 2009-12-04 20:02:12 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
-//
+
 #define BX_RESET_BMAP_X 32
 #define BX_RESET_BMAP_Y 32
 
@@ -17,4 +17,4 @@ static const unsigned char bx_reset_bmap[(BX_RESET_BMAP_X * BX_RESET_BMAP_Y)/8] 
   0x00, 0x07, 0x38, 0x00, 0x00, 0xff, 0x3f, 0x00, 0x00, 0xfe, 0x1f, 0x00,
   0x00, 0xfc, 0x0f, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-  };
+};

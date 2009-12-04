@@ -1,8 +1,8 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keymap.h,v 1.13 2009-02-08 09:05:52 vruppert Exp $
+// $Id: keymap.h,v 1.14 2009-12-04 20:02:12 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002  MandrakeSoft S.A.
+//  Copyright (C) 2002-2009  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -17,6 +17,8 @@
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
+//
+/////////////////////////////////////////////////////////////////////////
 
 /////////////////////////////////////////////////////////////////////////
 //
@@ -52,16 +54,16 @@ typedef struct BOCHSAPI {
   Bit32u modKey;   // modifier key that must be held down
   Bit32s ascii;    // ascii equivalent, if any
   Bit32u hostKey;  // value that the host's OS or library recognizes
-  } BXKeyEntry;
+} BXKeyEntry;
 
 class BOCHSAPI bx_keymap_c : public logfunctions {
 public:
   bx_keymap_c(void);
-  ~bx_keymap_c(void);
+ ~bx_keymap_c(void);
 
   void   loadKeymap(Bit32u(*)(const char*));
   void   loadKeymap(Bit32u(*)(const char*),const char *filename);
-  bx_bool isKeymapLoaded ();
+  bx_bool isKeymapLoaded();
 
   BXKeyEntry *findHostKey(Bit32u hostkeynum);
   BXKeyEntry *findAsciiChar(Bit8u ascii);
@@ -72,6 +74,6 @@ private:
 
   BXKeyEntry *keymapTable;
   Bit16u   keymapCount;
-  };
+};
 
 BOCHSAPI extern bx_keymap_c bx_keymap;
