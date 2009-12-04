@@ -1,101 +1,99 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: devices.txt,v 1.2 2009-04-21 19:10:13 vruppert Exp $
+// $Id: devices.txt,v 1.3 2009-12-04 13:01:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
-MOTHER BOARD (i440FX Support)                                            devices.cc
+MOTHER BOARD (i440FX Support)                                        devices.cc
   |
-  +-------- 82441FX (PMC) and 82442 (DBX) emulation                      pci.cc
+  +---- 82441FX (PMC) and 82442 (DBX) emulation                      pci.cc
   |
-  +-------- 82371SB (PIIX3) PCI ISA IDE XCELERATOR
+  +---- 82371SB (PIIX3) PCI ISA IDE XCELERATOR
   |             |
-  |             +-------- PCI-to-ISA bridge                              pci2isa.cc
-  |             +-------- PCI IDE controller                             pci_ide.cc
+  |             +---- PCI-to-ISA bridge                              pci2isa.cc
+  |             +---- PCI IDE controller                             pci_ide.cc
   |             |
-  |             +-------- PIIX4 ACPI support                             acpi.cc
+  |             +---- PIIX4 ACPI support                             acpi.cc
   |
-  +-------- PCI host device mapping (Linux only)                         pcidev.cc
+  +---- PCI host device mapping (Linux only)                         pcidev.cc
   |
-  +-------- Integrated peripherals
+  +---- Integrated peripherals
   |             |
-  |             +-------- 8259A PIC                                      pic.cc
-  |             +-------- 82093AA I/O APIC                               ioapic.cc
-  |             +-------- 8254/82C54 Programmable Interval Timer         pit_wrap.cc, pit82c54.cc
+  |             +---- 8259A PIC                                      pic.cc
+  |             +---- 82093AA I/O APIC                               ioapic.cc
+  |             +---- 8254/82C54 Programmable Interval Timer         pit_wrap.cc, pit82c54.cc
   |             |                 |
-  |             |                 +-------- PC Speaker (lowlevel)        speaker.cc
-  |             +-------- 8237 DMA controller                            dma.cc
-  |             +-------- 82077A Floppy Drive Controller                 floppy.cc
-  |             +-------- CMOS device                                    cmos.cc
-  |             +-------- External circuit for #FERR pin                 extfpuirq.cc
-  |             +-------- Parallel ports emulation                       parallel.cc
-  |             +-------- UART 16550A Serial Port                        serial.cc
+  |             |                 +---- PC Speaker (lowlevel)        speaker.cc
+  |             +---- 8237 DMA controller                            dma.cc
+  |             +---- 82077A Floppy Drive Controller                 floppy.cc
+  |             +---- CMOS device                                    cmos.cc
+  |             +---- External circuit for #FERR pin                 extfpuirq.cc
+  |             +---- Parallel ports emulation                       parallel.cc
+  |             +---- UART 16550A Serial Port                        serial.cc
   |             |                 |
-  |             |                 +-------- Host specific Modules        serial_raw.cc
-  |             |
-  |             +-------- Standard PC gameport                           gameport.cc
+  |             |                 +---- Host specific Modules        serial_raw.cc
+  |             +---- Standard PC gameport                           gameport.cc
   |
-  +---------------------- Debugging/Instrumentation                      biosdev.cc, iodebug.cc, unmapped.cc
+  +-------------- Debugging/Instrumentation                          biosdev.cc, iodebug.cc, unmapped.cc
 
 Attached devices
   |
-  +-------- PS/2 Keyboard and Mouse                                      keyboard.cc, scancodes.cc
+  +---- PS/2 Keyboard and Mouse                                      keyboard.cc, scancodes.cc
   |
-  +-------- Bus Mouse (not complete)                                     busmouse.cc
+  +---- Bus Mouse (not complete)                                     busmouse.cc
   |
-  +-------- Hard Drive + ATA controller                                  harddrv.cc
+  +---- Hard Drive + ATA controller                                  harddrv.cc
   |             |
-  |             +-------- Hard Drive image support (*)                   hdimage.cc, vmware3.cc, vmware4.cc
+  |             +---- Hard Drive image support (*)                   hdimage.cc, vmware3.cc, vmware4.cc
   |             |
-  |             +-------- CD/DVD-ROM image / device access (*)           cdrom.cc
+  |             +---- CD/DVD-ROM image / device access (*)           cdrom.cc
   |                               |
-  |                               +-------- Host specific Modules        cdrom_amigaos.cc, cdrom_beos.cc
-  |
-  +-------- Network Support
+  |                               +---- Host specific Modules        cdrom_amigaos.cc, cdrom_beos.cc
+  +---- Network Support
   |             |
-  |             +-------- Network Devices
+  |             +---- Network Devices
   |             |                 |
-  |             |                 +-------- NE2000 (ISA/PCI)             ne2k.cc, pcipnic.cc
-  |             |                 +-------- PCI Pseudo NIC               pcipnic.cc
+  |             |                 +---- NE2000 (ISA/PCI)             ne2k.cc, pcipnic.cc
+  |             |                 +---- PCI Pseudo NIC               pcipnic.cc
   |             |
-  |             +-------- Networking Modules                             eth.cc
+  |             +---- Networking Modules                             eth.cc
   |                               |
-  |                               +-------- Dummy module                 eth_null.cc
-  |                               +-------- ARP simulator                eth_arpback.cc, eth_packetmaker.cc, crc32.cc
-  |                               +-------- Host specific Modules        eth_fbsd.cc, eth_linux.cc, eth_win32.cc
-  |                               +-------- TAP Interface                eth_tap.cc
-  |                               +-------- TUN/TAP Interface            eth_tuntap.cc
-  |                               +-------- VDE Interface                eth_vde.cc
-  |                               +-------- virtual Ethernet locator     eth_vnet.cc
+  |                               +---- Dummy module                 eth_null.cc
+  |                               +---- ARP simulator                eth_arpback.cc, eth_packetmaker.cc, crc32.cc
+  |                               +---- Host specific Modules        eth_fbsd.cc, eth_linux.cc, eth_win32.cc
+  |                               +---- TAP Interface                eth_tap.cc
+  |                               +---- TUN/TAP Interface            eth_tuntap.cc
+  |                               +---- VDE Interface                eth_vde.cc
+  |                               +---- virtual Ethernet locator     eth_vnet.cc
   |
-  +-------- Graphics
+  +---- Graphics
   |             |
-  |             +-------- VGA, PCI VGA adapter                           vga.cc, pci_vga.cc
-  |             +-------- Cirrus Logic PCI/ISA CLGD5446 SVGA adapter     svga_cirrus.cc
+  |             +---- VGA, PCI VGA adapter                           vga.cc, pci_vga.cc
+  |             +---- Cirrus Logic PCI/ISA CLGD5446 SVGA adapter     svga_cirrus.cc
   |
-  +-------- Sound support
+  +---- Sound support
   |             |
-  |             +-------- Sound Blaster SB16                             sb16.cc
+  |             +---- Sound Blaster SB16                             sb16.cc
   |                               |
-  |                               +-------- Host specific Modules        soundlnx.cc, soundosx.cc, soundwin.cc
+  |                               +---- Host specific Modules        soundlnx.cc, soundosx.cc, soundwin.cc
   |
-  +-------- PCI USB adapter                                              usb_common.cc
+  +---- PCI USB adapter                                              usb_common.cc
                 |
-                +-------- Host Controllers
+                +---- Host Controllers
                 |                 |
-                |                 +-------- USB OHCI adapter             usb_ohci.cc
-                |                 +-------- USB UHCI adapter (PIIX3)     usb_uhci.cc
+                |                 +---- USB OHCI adapter             usb_ohci.cc
+                |                 +---- USB UHCI adapter (PIIX3)     usb_uhci.cc
                 |
-                +-------- Attached USB devices                           usb_common.cc
+                +---- Attached USB devices                           usb_common.cc
                                   |
-                                  +-------- USB HID emulation            usb_hid.cc
-                                  +-------- USB external HUB             usb_hub.cc
-                                  +-------- USB mass storage device (*)  usb_msd.cc, scsi_device.cc
+                                  +---- USB HID emulation            usb_hid.cc
+                                  +---- USB external HUB             usb_hub.cc
+                                  +---- USB mass storage device (*)  usb_msd.cc, scsi_device.cc
+                                  +---- USB HP DeskJet 920C printer  usb_printer.cc
 
 (*) USB MSD uses hdimage.cc and cdrom.cc for image / device access
 
 BOCHS timer sycronisation modules
   |
-  +-------- Slowdown timer                                               slowdown_timer.cc
-  |
-  +-------- Virtual timer                                                virt_timer.cc
+  +---- Slowdown timer                                               slowdown_timer.cc
+  +---- Virtual timer                                                virt_timer.cc
 
 TODO:

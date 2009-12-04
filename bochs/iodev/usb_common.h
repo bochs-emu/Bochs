@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_common.h,v 1.10 2009-04-10 20:26:14 vruppert Exp $
+// $Id: usb_common.h,v 1.11 2009-12-04 13:01:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Benjamin D Lunt (fys at frontiernet net)
@@ -19,7 +19,6 @@
 //  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 //
 /////////////////////////////////////////////////////////////////////////
-
 
 #ifndef BX_IODEV_USB_COMMON_H
 #define BX_IODEV_USB_COMMON_H
@@ -68,16 +67,16 @@
 #define DeviceRequest ((USB_DIR_IN|USB_TYPE_STANDARD|USB_RECIP_DEVICE)<<8)
 #define DeviceOutRequest ((USB_DIR_OUT|USB_TYPE_STANDARD|USB_RECIP_DEVICE)<<8)
 #define InterfaceRequest \
-        ((USB_DIR_IN|USB_TYPE_STANDARD|USB_RECIP_INTERFACE)<<8)
+   ((USB_DIR_IN|USB_TYPE_STANDARD|USB_RECIP_INTERFACE)<<8)
 #define InterfaceInClassRequest \
-        ((USB_DIR_IN|USB_TYPE_CLASS|USB_RECIP_INTERFACE)<<8)
+   ((USB_DIR_IN|USB_TYPE_CLASS|USB_RECIP_INTERFACE)<<8)
 #define InterfaceOutRequest \
-        ((USB_DIR_OUT|USB_TYPE_STANDARD|USB_RECIP_INTERFACE)<<8)
+   ((USB_DIR_OUT|USB_TYPE_STANDARD|USB_RECIP_INTERFACE)<<8)
 #define InterfaceOutClassRequest \
-        ((USB_DIR_OUT|USB_TYPE_CLASS|USB_RECIP_INTERFACE)<<8)
+   ((USB_DIR_OUT|USB_TYPE_CLASS|USB_RECIP_INTERFACE)<<8)
 #define EndpointRequest ((USB_DIR_IN|USB_TYPE_STANDARD|USB_RECIP_ENDPOINT)<<8)
 #define EndpointOutRequest \
-        ((USB_DIR_OUT|USB_TYPE_STANDARD|USB_RECIP_ENDPOINT)<<8)
+   ((USB_DIR_OUT|USB_TYPE_STANDARD|USB_RECIP_ENDPOINT)<<8)
 
 #define USB_REQ_GET_STATUS		0x00
 #define USB_REQ_CLEAR_FEATURE		0x01
@@ -123,16 +122,16 @@ enum usbdev_type {
   USB_DEV_TYPE_KEYPAD,
   USB_DEV_TYPE_DISK,
   USB_DEV_TYPE_CDROM,
-  USB_DEV_TYPE_HUB
+  USB_DEV_TYPE_HUB,
+  USB_DEV_TYPE_PRINTER
 };
 
 usbdev_type usb_init_device(const char *devname, logfunctions *hc, usb_device_c **device);
 
-
 class usb_device_c : public logfunctions {
 public:
   usb_device_c(void);
-  virtual ~usb_device_c(void) {}
+  virtual ~usb_device_c() {}
 
   virtual int handle_packet(USBPacket *p);
   virtual void handle_reset() {}
@@ -173,12 +172,12 @@ protected:
   int set_usb_string(Bit8u *buf, const char *str);
 };
 
-static inline void usb_defer_packet(USBPacket *p, usb_device_c *dev)
+static BX_CPP_INLINE void usb_defer_packet(USBPacket *p, usb_device_c *dev)
 {
   p->dev = dev;
 }
 
-static inline void usb_cancel_packet(USBPacket *p)
+static BX_CPP_INLINE void usb_cancel_packet(USBPacket *p)
 {
   p->dev->cancel_packet(p);
 }
