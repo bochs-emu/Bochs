@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_printer.h,v 1.1 2009-12-04 13:01:41 sshwarts Exp $
+// $Id: usb_printer.h,v 1.2 2009-12-04 17:54:22 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Benjamin David Lunt
@@ -35,7 +35,7 @@ public:
 private:
   struct {
     Bit8u printer_status;
-    char fname[256];
+    char fname[BX_PATHNAME_LEN];
     FILE *fp;
   } s;
 };
