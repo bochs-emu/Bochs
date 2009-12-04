@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.270 2009-11-13 15:55:46 sshwarts Exp $
+$Id: user.dbk,v 1.271 2009-12-04 13:50:24 sshwarts Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -2199,7 +2199,7 @@ turn it off.
       <entry>no</entry>
       <entry>
       Add support for SSE instructions, written by Stanislav Shwartsman.
-      Any of SSE/SSE2/SSE3/SSE3E/SSE4.1/SSE4.2 instruction sets are supported.
+      Any of SSE/SSE2/SSE3/SSSE3/SSE4_1/SSE4_2 instruction sets are supported.
       </entry>
     </row>
     <row>

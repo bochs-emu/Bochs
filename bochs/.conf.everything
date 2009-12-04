@@ -15,8 +15,7 @@
   --enable-vbe \
   --enable-mmx \
   --enable-fpu \
-  --enable-sse=4 \
-  --enable-sse-extension \
+  --enable-sse=sse4_2 \
   --enable-misaligned-sse \
   --enable-alignment-check \
   --enable-popcnt \
