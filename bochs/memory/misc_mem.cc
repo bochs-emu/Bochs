@@ -1,14 +1,8 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: misc_mem.cc,v 1.140 2009-10-23 13:23:31 sshwarts Exp $
+// $Id: misc_mem.cc,v 1.141 2009-12-04 16:53:12 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002  MandrakeSoft S.A.
-//
-//    MandrakeSoft S.A.
-//    43, rue d'Aboukir
-//    75002 Paris - France
-//    http://www.linux-mandrake.com/
-//    http://www.mandrakesoft.com/
+//  Copyright (C) 2001-2009  The Bochs Project
 //
 //  I/O memory handlers API Copyright (C) 2003 by Frank Cornelis
 //
@@ -78,7 +72,7 @@ void BX_MEM_C::init_memory(Bit64u guest, Bit64u host)
 {
   unsigned idx;
 
-  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.140 2009-10-23 13:23:31 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.141 2009-12-04 16:53:12 sshwarts Exp $"));
 
   // accept only memory size which is multiply of 1M
   BX_ASSERT((host & 0xfffff) == 0);

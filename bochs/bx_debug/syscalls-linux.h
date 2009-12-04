@@ -1,17 +1,17 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: syscalls-linux.h,v 1.1 2003-11-28 15:07:25 danielg4 Exp $
+// $Id: syscalls-linux.h,v 1.2 2009-12-04 16:53:11 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
-//
+  
 //////////////////////////////////////////////////////////////////////////////
 // Linux system call table
 //////////////////////////////////////////////////////////////////////////////
-//
+  
 // Format for each entry:
 //   DEF_LINUX_SYSCALL(syscall_number, "syscall_name")
 // This file can be regenerated with the following command:
 //
 //    ./make-syscalls-linux.pl < /usr/include/asm/unistd.h > syscalls-linux.h
-//
+  
 DEF_SYSCALL(1, "exit")
 DEF_SYSCALL(2, "fork")
 DEF_SYSCALL(3, "read")

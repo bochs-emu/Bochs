@@ -1,14 +1,8 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: shift8.cc,v 1.41 2009-06-20 20:39:51 sshwarts Exp $
+// $Id: shift8.cc,v 1.42 2009-12-04 16:53:12 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001  MandrakeSoft S.A.
-//
-//    MandrakeSoft S.A.
-//    43, rue d'Aboukir
-//    75002 Paris - France
-//    http://www.linux-mandrake.com/
-//    http://www.mandrakesoft.com/
+//  Copyright (C) 2001-2009  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
