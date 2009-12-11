@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios32.c,v 1.53 2009-10-25 10:24:46 vruppert Exp $
+// $Id: rombios32.c,v 1.54 2009-12-11 07:44:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  32 bit Bochs BIOS init code
@@ -581,7 +581,7 @@ void setup_mtrr(void)
     wrmsr_smp(MTRRphysBase_MSR(0), 0xe0000000 | MTRR_MEMTYPE_UC);
     /* Make sure no reserved bit set to '1 in MTRRphysMask_MSR */
     wrmsr_smp(MTRRphysMask_MSR(0), (uint32_t)(~(0x20000000 - 1)) | 0x800);
-    wrmsr_smp(MSR_MTRRdefType, 0xc00 | MTRR_MEMTYPE_UC);
+    wrmsr_smp(MSR_MTRRdefType, 0xc00 | MTRR_MEMTYPE_WB);
 }
 
 void ram_probe(void)
