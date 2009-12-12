@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.235 2009-09-28 16:36:02 vruppert Exp $
+// $Id: rombios.c,v 1.236 2009-12-12 08:29:01 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -937,7 +937,7 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.235 $ $Date: 2009-09-28 16:36:02 $";
+static char bios_cvs_version_string[] = "$Revision: 1.236 $ $Date: 2009-12-12 08:29:01 $";
 
 #define BIOS_COPYRIGHT_STRING "(c) 2002 MandrakeSoft S.A. Written by Kevin Lawton & the Bochs team."
 
@@ -10448,6 +10448,55 @@ post_init_pic:
   out  0xa1, AL ;slave  pic: unmask IRQ 12, 13, 14
   ret
 
+post_init_ivt:
+  ;; set all interrupts to default handler
+  xor  bx, bx         ;; offset index
+  mov  cx, #0x0100    ;; counter (256 interrupts)
+  mov  ax, #dummy_iret_handler
+  mov  dx, #0xF000
+
+post_default_ints:
+  mov  [bx], ax
+  add  bx, #2
+  mov  [bx], dx
+  add  bx, #2
+  loop post_default_ints
+
+  ;; Printer Services vector
+  SET_INT_VECTOR(0x17, #0xF000, #int17_handler)
+
+  ;; Bootstrap failure vector
+  SET_INT_VECTOR(0x18, #0xF000, #int18_handler)
+
+  ;; Bootstrap Loader vector
+  SET_INT_VECTOR(0x19, #0xF000, #int19_handler)
+
+  ;; User Timer Tick vector
+  SET_INT_VECTOR(0x1c, #0xF000, #int1c_handler)
+
+  ;; Memory Size Check vector
+  SET_INT_VECTOR(0x12, #0xF000, #int12_handler)
+
+  ;; Equipment Configuration Check vector
+  SET_INT_VECTOR(0x11, #0xF000, #int11_handler)
+
+  ;; System Services
+  SET_INT_VECTOR(0x15, #0xF000, #int15_handler)
+
+  ;; set vectors 0x60 - 0x66h to zero (0:180..0:19b)
+  xor  ax, ax
+  mov  cx, #0x000E ;; 14 words
+  mov  di, #0x0180
+  cld
+  rep
+    stosw
+
+  ;; set vector 0x79 to zero
+  ;; this is used by 'gardian angel' protection system
+  SET_INT_VECTOR(0x79, #0, #0)
+
+  ret
+
 ;; the following area can be used to write dynamically generated tables
   .align 16
 bios_table_area_start:
@@ -10556,27 +10605,11 @@ normal_post:
 
   call _log_bios_start
 
-  ;; set all interrupts to default handler
-  xor  bx, bx         ;; offset index
-  mov  cx, #0x0100    ;; counter (256 interrupts)
-  mov  ax, #dummy_iret_handler
-  mov  dx, #0xF000
-
-post_default_ints:
-  mov  [bx], ax
-  add  bx, #2
-  mov  [bx], dx
-  add  bx, #2
-  loop post_default_ints
-
-  ;; set vector 0x79 to zero
-  ;; this is used by 'gardian angel' protection system
-  SET_INT_VECTOR(0x79, #0, #0)
+  call post_init_ivt
 
   ;; base memory in K 40:13 (word)
   mov  ax, #BASE_MEM_IN_K
   mov  0x0413, ax
-
 
   ;; Manufacturing Test 40:12
   ;;   zerod out above
@@ -10584,28 +10617,6 @@ post_default_ints:
   ;; Warm Boot Flag 0040:0072
   ;;   value of 1234h = skip memory checks
   ;;   zerod out above
-
-
-  ;; Printer Services vector
-  SET_INT_VECTOR(0x17, #0xF000, #int17_handler)
-
-  ;; Bootstrap failure vector
-  SET_INT_VECTOR(0x18, #0xF000, #int18_handler)
-
-  ;; Bootstrap Loader vector
-  SET_INT_VECTOR(0x19, #0xF000, #int19_handler)
-
-  ;; User Timer Tick vector
-  SET_INT_VECTOR(0x1c, #0xF000, #int1c_handler)
-
-  ;; Memory Size Check vector
-  SET_INT_VECTOR(0x12, #0xF000, #int12_handler)
-
-  ;; Equipment Configuration Check vector
-  SET_INT_VECTOR(0x11, #0xF000, #int11_handler)
-
-  ;; System Services
-  SET_INT_VECTOR(0x15, #0xF000, #int15_handler)
 
   ;; EBDA setup
   call ebda_post
