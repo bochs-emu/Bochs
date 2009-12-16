@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: icache.cc,v 1.28 2009-11-29 21:01:26 sshwarts Exp $
+// $Id: icache.cc,v 1.29 2009-12-16 12:32:51 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007-2009 Stanislav Shwartsman
@@ -172,6 +172,7 @@ void BX_CPU_C::serveICacheMiss(bxICacheEntry_c *entry, Bit32u eipBiased, bx_phy_
   if (fetchInstruction(entry->i, eipBiased)) {
     entry->pAddr = pAddr;
     entry->writeStamp = *(BX_CPU_THIS_PTR currPageWriteStampPtr);
+    pageWriteStampTable.markICache(pAddr);
   }
 }
 
