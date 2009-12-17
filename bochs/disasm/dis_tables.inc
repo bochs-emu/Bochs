@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dis_tables.inc,v 1.27 2009-10-14 20:45:29 sshwarts Exp $
+// $Id: dis_tables.inc,v 1.28 2009-12-17 09:13:34 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005-2009 Stanislav Shwartsman
@@ -701,6 +701,13 @@ static BxDisasmOpcodeTable_t BxDisasmGroupSSE_0f3a41[4] = {
 static BxDisasmOpcodeTable_t BxDisasmGroupSSE_0f3a42[4] = {
   /* -- */ { 0, &Ia_Invalid },          // SSE4
   /* 66 */ { 0, &Ia_mpsadbw_Vdq_Wdq_Ib },
+  /* F2 */ { 0, &Ia_Invalid },
+  /* F3 */ { 0, &Ia_Invalid }
+};
+
+static BxDisasmOpcodeTable_t BxDisasmGroupSSE_0f3a44[4] = {
+  /* -- */ { 0, &Ia_Invalid },
+  /* 66 */ { 0, &Ia_pclmulqdq_Vdq_Wdq_Ib },
   /* F2 */ { 0, &Ia_Invalid },
   /* F3 */ { 0, &Ia_Invalid }
 };
@@ -3382,7 +3389,7 @@ static BxDisasmOpcodeTable_t BxDisasm3ByteOpTable0f3a[256] = {
   /* 41 */ { GRPSSE(0f3a41) },
   /* 42 */ { GRPSSE(0f3a42) },
   /* 43 */ { 0, &Ia_Invalid },
-  /* 44 */ { 0, &Ia_Invalid },
+  /* 44 */ { GRPSSE(0f3a44) },
   /* 45 */ { 0, &Ia_Invalid },
   /* 46 */ { 0, &Ia_Invalid },
   /* 47 */ { 0, &Ia_Invalid },

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: disasm.h,v 1.50 2009-10-14 20:45:29 sshwarts Exp $
+// $Id: disasm.h,v 1.51 2009-12-17 09:13:35 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005-2009 Stanislav Shwartsman
@@ -39,7 +39,6 @@
 }
 
 /* Instruction set attributes */
-#define IA_386              0x00000000        /* 386 instruction */
 #define IA_486              0x00000001        /* 486 new instruction */
 #define IA_PENTIUM          0x00000002        /* Pentium new instruction */
 #define IA_P6               0x00000004        /* P6 new instruction */
@@ -56,17 +55,17 @@
 #define IA_SSE4_1           0x00002000        /* SSE4_1 instruction */
 #define IA_SSE4_2           0x00004000        /* SSE4_2 instruction */
 #define IA_SSE4A            0x00008000        /* SSE4A instruction */
-#define IA_SSE5A            0x00010000        /* SSE5A instruction */
-#define IA_X86_64           0x00020000        /* x86-64 instruction */
-#define IA_SYSCALL_SYSRET   0x00040000        /* SYSCALL/SYSRET instruction */
-#define IA_SYSENTER_SYSEXIT 0x00080000        /* SYSENTER/SYSEXIT instruction */
-#define IA_VMX              0x00100000        /* VMX instruction */
-#define IA_SMX              0x00200000        /* SMX instruction */
-#define IA_SVM              0x00400000        /* SVM instruction */
-#define IA_XSAVE            0x00800000        /* XSAVE/XRSTOR extensions instruction */
-#define IA_AES              0x01000000        /* AES instruction */
-#define IA_AVX              0x02000000        /* AVX instruction */
-#define IA_MOVBE            0x04000000        /* MOVBE Intel Atom(R) instruction */
+#define IA_X86_64           0x00010000        /* x86-64 instruction */
+#define IA_SYSCALL_SYSRET   0x00020000        /* SYSCALL/SYSRET instruction */
+#define IA_SYSENTER_SYSEXIT 0x00040000        /* SYSENTER/SYSEXIT instruction */
+#define IA_VMX              0x00080000        /* VMX instruction */
+#define IA_SMX              0x00100000        /* SMX instruction */
+#define IA_SVM              0x00200000        /* SVM instruction */
+#define IA_XSAVE            0x00400000        /* XSAVE/XRSTOR extensions instruction */
+#define IA_AES              0x00800000        /* AES instruction */
+#define IA_PCLMULQDQ        0x01000000        /* PCLMULQDQ instruction */
+#define IA_MOVBE            0x02000000        /* MOVBE Intel Atom(R) instruction */
+#define IA_AVX              0x04000000        /* AVX instruction */
 #define IA_LEGACY           0x80000000        /* legacy instruction */
 
 /* general purpose bit register */

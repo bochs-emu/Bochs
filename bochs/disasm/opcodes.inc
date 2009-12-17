@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: opcodes.inc,v 1.27 2009-10-14 20:45:29 sshwarts Exp $
+// $Id: opcodes.inc,v 1.28 2009-12-17 09:13:35 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005-2009 Stanislav Shwartsman
@@ -714,6 +714,7 @@ Ia_movzbw_Gw_Eb = { "movzx", "movzbw", Gw, Eb, XX, XX, 0 },
 Ia_movzwl_Gd_Ew = { "movzx", "movzwl", Gd, Ew, XX, XX, 0 },
 Ia_movzwq_Gq_Ew = { "movzx", "movzwq", Gq, Ew, XX, XX, IA_X86_64 },
 Ia_mpsadbw_Vdq_Wdq_Ib = { "mpsadbw", "mpsadbw", Vdq, Wdq, Ib, XX, IA_SSE4_1 },
+Ia_pclmulqdq_Vdq_Wdq_Ib = { "pclmulqdq", "pclmulqdq", Vdq, Wdq, Ib, XX, IA_PCLMULQDQ },
 Ia_mulb_AL_Eb = { "mul", "mulb", AL_Reg, Eb, XX, XX, 0 },
 Ia_mull_EAX_Ed = { "mul", "mull", EAX_Reg, Ed, XX, XX, 0 },
 Ia_mulpd_Vpd_Wpd = { "mulpd", "mulpd", Vpd, Wpd, XX, XX, IA_SSE2 },
