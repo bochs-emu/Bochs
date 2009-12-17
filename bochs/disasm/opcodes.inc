@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: opcodes.inc,v 1.28 2009-12-17 09:13:35 sshwarts Exp $
+// $Id: opcodes.inc,v 1.29 2009-12-17 09:17:45 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005-2009 Stanislav Shwartsman
@@ -714,7 +714,6 @@ Ia_movzbw_Gw_Eb = { "movzx", "movzbw", Gw, Eb, XX, XX, 0 },
 Ia_movzwl_Gd_Ew = { "movzx", "movzwl", Gd, Ew, XX, XX, 0 },
 Ia_movzwq_Gq_Ew = { "movzx", "movzwq", Gq, Ew, XX, XX, IA_X86_64 },
 Ia_mpsadbw_Vdq_Wdq_Ib = { "mpsadbw", "mpsadbw", Vdq, Wdq, Ib, XX, IA_SSE4_1 },
-Ia_pclmulqdq_Vdq_Wdq_Ib = { "pclmulqdq", "pclmulqdq", Vdq, Wdq, Ib, XX, IA_PCLMULQDQ },
 Ia_mulb_AL_Eb = { "mul", "mulb", AL_Reg, Eb, XX, XX, 0 },
 Ia_mull_EAX_Ed = { "mul", "mull", EAX_Reg, Ed, XX, XX, 0 },
 Ia_mulpd_Vpd_Wpd = { "mulpd", "mulpd", Vpd, Wpd, XX, XX, IA_SSE2 },
@@ -806,6 +805,7 @@ Ia_pavgw_Pq_Qq = { "pavgw", "pavgw", Pq, Qq, XX, XX, IA_MMX },
 Ia_pavgw_Vdq_Wdq = { "pavgw", "pavgw", Vdq, Wdq, XX, XX, IA_SSE },
 Ia_pblendvb_Vdq_Wdq = { "pblendvb", "pblendvb", Vdq, Wdq, XX, XX, IA_SSE4_1 },
 Ia_pblendw_Vdq_Wdq_Ib = { "pblendw", "pblendw", Vdq, Wdq, Ib, XX, IA_SSE4_1 },
+Ia_pclmulqdq_Vdq_Wdq_Ib = { "pclmulqdq", "pclmulqdq", Vdq, Wdq, Ib, XX, IA_PCLMULQDQ },
 Ia_pcmpeqb_Pq_Qq = { "pcmpeqb", "pcmpeqb", Pq, Qq, XX, XX, IA_MMX },
 Ia_pcmpeqb_Vdq_Wdq = { "pcmpeqb", "pcmpeqb", Vdq, Wdq, XX, XX, IA_SSE2 },
 Ia_pcmpeqd_Pq_Qq = { "pcmpeqd", "pcmpeqd", Pq, Qq, XX, XX, IA_MMX },
