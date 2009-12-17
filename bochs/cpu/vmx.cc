@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmx.cc,v 1.27 2009-12-10 07:57:32 sshwarts Exp $
+// $Id: vmx.cc,v 1.28 2009-12-17 11:11:58 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2009 Stanislav Shwartsman
@@ -1297,6 +1297,13 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
   // set flags directly, avoid setEFlags side effects
   BX_CPU_THIS_PTR eflags = (Bit32u) guest.rflags;
   BX_CPU_THIS_PTR lf_flags_status = 0; // OSZAPC flags are known.
+
+#if BX_SUPPORT_TRACE_CACHE
+  // Handle special case of CS.LIMIT demotion (new descriptor limit is
+  // smaller than current one)
+  if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled > guest.sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled)
+    BX_CPU_THIS_PTR iCache.flushICacheEntries();
+#endif
   
   for(unsigned segreg=0; segreg<6; segreg++)
     BX_CPU_THIS_PTR sregs[segreg] = guest.sregs[segreg];

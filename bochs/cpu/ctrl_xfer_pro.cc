@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer_pro.cc,v 1.79 2009-12-04 16:53:12 sshwarts Exp $
+// $Id: ctrl_xfer_pro.cc,v 1.80 2009-12-17 11:11:58 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -91,6 +91,13 @@ BX_CPU_C::load_cs(bx_selector_t *selector, bx_descriptor_t *descriptor, Bit8u cp
   selector->value = (0xfffc & selector->value) | cpl;
 
   touch_segment(selector, descriptor);
+
+#if BX_SUPPORT_TRACE_CACHE
+  // Handle special case of CS.LIMIT demotion (new descriptor limit is
+  // smaller than current one)
+  if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled > descriptor->u.segment.limit_scaled)
+    BX_CPU_THIS_PTR iCache.flushICacheEntries();
+#endif
 
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector = *selector;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache = *descriptor;
