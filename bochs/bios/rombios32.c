@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios32.c,v 1.54 2009-12-11 07:44:48 sshwarts Exp $
+// $Id: rombios32.c,v 1.55 2009-12-19 17:31:43 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  32 bit Bochs BIOS init code
@@ -686,7 +686,6 @@ typedef struct PCIDevice {
 
 static uint32_t pci_bios_io_addr;
 static uint32_t pci_bios_mem_addr;
-static uint32_t pci_bios_bigmem_addr;
 /* host irqs corresponding to PCI irqs A-D */
 static uint8_t pci_irqs[4] = { 11, 9, 11, 9 };
 static PCIDevice i440_pcidev;
@@ -967,8 +966,6 @@ static void pci_bios_init_device(PCIDevice *d)
                 size = (~(val & ~0xf)) + 1;
                 if (val & PCI_ADDRESS_SPACE_IO)
                     paddr = &pci_bios_io_addr;
-                else if (size >= 0x04000000)
-                    paddr = &pci_bios_bigmem_addr;
                 else
                     paddr = &pci_bios_mem_addr;
                 *paddr = (*paddr + size - 1) & ~(size - 1);
@@ -1022,9 +1019,6 @@ void pci_bios_init(void)
 {
     pci_bios_io_addr = 0xc000;
     pci_bios_mem_addr = 0xc0000000;
-    pci_bios_bigmem_addr = ram_size;
-    if (pci_bios_bigmem_addr < 0x90000000)
-        pci_bios_bigmem_addr = 0x90000000;
 
     pci_for_each_device(pci_bios_init_bridges);
 
