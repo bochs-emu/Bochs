@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ia_opcodes.h,v 1.33 2009-12-14 11:55:42 sshwarts Exp $
+// $Id: ia_opcodes.h,v 1.34 2009-12-20 09:00:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008-2009 Stanislav Shwartsman
@@ -1292,6 +1292,7 @@ bx_define_opcode(BX_IA_AESENCLAST_VdqWdq, &BX_CPU_C::AESENCLAST_VdqWdq, NULL)
 bx_define_opcode(BX_IA_AESDEC_VdqWdq, &BX_CPU_C::AESDEC_VdqWdq, NULL)
 bx_define_opcode(BX_IA_AESDECLAST_VdqWdq, &BX_CPU_C::AESDECLAST_VdqWdq, NULL)
 bx_define_opcode(BX_IA_AESKEYGENASSIST_VdqWdqIb, &BX_CPU_C::AESKEYGENASSIST_VdqWdqIb, NULL)
+bx_define_opcode(BX_IA_PCLMULQDQ_VdqWdqIb, &BX_CPU_C::PCLMULQDQ_VdqWdqIb, NULL)
 
 #if BX_SUPPORT_X86_64
 bx_define_opcode(BX_IA_ADD_GqEqM, &BX_CPU_C::LOAD_Eq, &BX_CPU_C::ADD_GqEqR)

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpuid.cc,v 1.86 2009-10-14 20:45:29 sshwarts Exp $
+// $Id: cpuid.cc,v 1.87 2009-12-20 09:00:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007-2009 Stanislav Shwartsman
@@ -180,7 +180,7 @@ Bit32u BX_CPU_C::get_extended_cpuid_features(void)
 #endif
 
 #if BX_SUPPORT_AES
-  features |= (1<<25);           // support AES instructions
+  features |= (1<<1)  | (1<<25); // support AES and PCLMULQDQ instructions
 #endif
 
 #if BX_SUPPORT_XSAVE

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: aes.cc,v 1.6 2009-10-14 20:45:29 sshwarts Exp $
+// $Id: aes.cc,v 1.7 2009-12-20 09:00:39 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008-2009 Stanislav Shwartsman
@@ -470,6 +470,56 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::AESKEYGENASSIST_VdqWdqIb(bxInstruction_c *
   BX_WRITE_XMM_REG(i->nnn(), result);
 #else
   BX_INFO(("AESKEYGENASSIST_VdqWdqIb: required AES support, use --enable-aes option"));
+  exception(BX_UD_EXCEPTION, 0, 0);
+#endif
+}
+
+/* 66 0F 3A 44 */
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::PCLMULQDQ_VdqWdqIb(bxInstruction_c *i)
+{
+#if BX_SUPPORT_AES
+  BX_CPU_THIS_PTR prepareSSE();
+
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, r, a;
+
+  /* op is a register or memory reference */
+  if (i->modC0()) {
+    op2 = BX_READ_XMM_REG(i->rm());
+  }
+  else {
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    /* pointer, segment address pair */
+    readVirtualDQwordAligned(i->seg(), eaddr, (Bit8u *) &op2);
+  }
+
+  Bit8u imm8 = i->Ib();
+
+  //
+  // Iniailize sources for Carry Less Multiplication [R = A MUL B]
+
+  // A determined by imm8[0]
+  a.xmm64u(0) = op1.xmm64u(imm8 & 1);
+  a.xmm64u(1) = 0;
+
+  // A determined by imm8[4]
+  Bit64u b = op2.xmm64u((imm8 >> 4) & 1);
+
+  r.xmm64u(0) = 0;
+  r.xmm64u(1) = 0;
+
+  for (int i = 0; b && i < 64; i++) {
+      if (b & 1) {
+          r.xmm64u(0) ^= a.xmm64u(0);
+          r.xmm64u(1) ^= a.xmm64u(1);
+      }
+      a.xmm64u(1) = (a.xmm64u(1) << 1) | (a.xmm64u(0) >> 63);
+      a.xmm64u(0) <<= 1;
+      b >>= 1;
+  }
+
+  BX_WRITE_XMM_REG(i->nnn(), r);
+#else
+  BX_INFO(("PCLMULQDQ_VdqWdqIb: required AES support, use --enable-aes option"));
   exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }

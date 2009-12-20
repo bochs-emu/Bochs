@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.h,v 1.93 2009-11-25 20:49:47 sshwarts Exp $
+// $Id: fetchdecode.h,v 1.94 2009-12-20 09:00:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005-2009 Stanislav Shwartsman
@@ -2301,7 +2301,7 @@ static const BxOpcodeInfo_t BxOpcode3ByteTable0f3a[256] = {
   /* 41 */ { BxPrefixSSE66, BX_IA_DPPD_VpdWpdIb, BxOpcodeGroupSSE_ERR },
   /* 42 */ { BxPrefixSSE66, BX_IA_MPSADBW_VdqWdqIb, BxOpcodeGroupSSE_ERR },
   /* 43 */ { 0, BX_IA_ERROR },
-  /* 44 */ { 0, BX_IA_ERROR },
+  /* 44 */ { BxPrefixSSE66, BX_IA_PCLMULQDQ_VdqWdqIb, BxOpcodeGroupSSE_ERR },
   /* 45 */ { 0, BX_IA_ERROR },
   /* 46 */ { 0, BX_IA_ERROR },
   /* 47 */ { 0, BX_IA_ERROR },

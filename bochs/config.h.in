@@ -102,14 +102,9 @@
 
 #define BX_DEFAULT_MEM_MEGS 32
 
-// CPU level emulation.  Default level is set in
-// the configure script.  BX_CPU_LEVEL defines the CPU level
-// to emulate.  BX_CPU_LEVEL_HACKED is a hack to define the
-// level of some instructions, so they can be tested before
-// the rest of the emulation is up to that level.
-
+// CPU level emulation. Default level is set in the configure script.
+// BX_CPU_LEVEL defines the CPU level to emulate.
 #define BX_CPU_LEVEL 0
-#define BX_CPU_LEVEL_HACKED 0
 
 // emulate x86-64 instruction set?
 #define BX_SUPPORT_X86_64 0
@@ -754,10 +749,6 @@ typedef
   #error "3DNow! cannot be compiled without MMX support !"
 #endif
 
-#if (BX_SUPPORT_AES && !BX_SUPPORT_SSE)
-  #error "AES cannot be compiled without SSE support !"
-#endif
-
 #if (BX_SUPPORT_XSAVE && !BX_SUPPORT_SSE)
   #error "XSAVE cannot be compiled without SSE support !"
 #endif
@@ -783,9 +774,14 @@ typedef
 #endif
 
 #if (BX_SUPPORT_SSE < 3) || (BX_SUPPORT_SSE == 3 && BX_SUPPORT_SSE_EXTENSION == 0)
+
 #if BX_SUPPORT_MOVBE
-  #error "MOVBE only supported with SSE3E !"
+  #error "MOVBE only supported with SSE3E or above !"
 #endif
+#if BX_SUPPORT_AES
+  #error "MOVBE only supported with SSE3E or above !"
+#endif
+
 #endif
 
 #if (!BX_SUPPORT_X86_64 && BX_SUPPORT_1G_PAGES)
