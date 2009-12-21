@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.h,v 1.9 2009-01-26 09:21:00 vruppert Exp $
+// $Id: rombios.h,v 1.10 2009-12-21 08:08:24 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2006 Volker Ruppert
@@ -61,8 +61,12 @@
   // Define the application NAME
 #if defined(BX_QEMU)
 #  define BX_APPNAME "QEMU"
-#elif defined(PLEX86)
-#  define BX_APPNAME "Plex86"
 #else
 #  define BX_APPNAME "Bochs"
 #endif
+
+#define E820_RAM          1
+#define E820_RESERVED     2
+#define E820_ACPI         3
+#define E820_NVS          4
+#define E820_UNUSABLE     5
