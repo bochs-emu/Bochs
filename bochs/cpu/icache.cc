@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: icache.cc,v 1.29 2009-12-16 12:32:51 sshwarts Exp $
+// $Id: icache.cc,v 1.30 2009-12-21 13:38:06 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007-2009 Stanislav Shwartsman
@@ -66,7 +66,7 @@ void BX_CPU_C::serveICacheMiss(bxICacheEntry_c *entry, Bit32u eipBiased, bx_phy_
 
   unsigned remainingInPage = BX_CPU_THIS_PTR eipPageWindowSize - eipBiased;
   const Bit8u *fetchPtr = BX_CPU_THIS_PTR eipFetchPtr + eipBiased;
-  unsigned ret;
+  int ret;
 
   bxInstruction_c *i = entry->i;
 
@@ -79,7 +79,7 @@ void BX_CPU_C::serveICacheMiss(bxICacheEntry_c *entry, Bit32u eipBiased, bx_phy_
 #endif
       ret = fetchDecode32(fetchPtr, i, remainingInPage);
 
-    if (ret==0) {
+    if (ret < 0) {
       // Fetching instruction on segment/page boundary
       if (n > 0) {
          // The trace is already valid, it has several instructions inside,
@@ -101,7 +101,7 @@ void BX_CPU_C::serveICacheMiss(bxICacheEntry_c *entry, Bit32u eipBiased, bx_phy_
 
     // continue to the next instruction
     remainingInPage -= iLen;
-    if (i->getStopTraceAttr() || remainingInPage == 0) break;
+    if (ret != 0 /* stop trace indication */ || remainingInPage == 0) break;
     pAddr += iLen;
     fetchPtr += iLen;
     i++;
@@ -141,7 +141,7 @@ bx_bool BX_CPU_C::fetchInstruction(bxInstruction_c *iStorage, Bit32u eipBiased)
 {
   unsigned remainingInPage = BX_CPU_THIS_PTR eipPageWindowSize - eipBiased;
   const Bit8u *fetchPtr = BX_CPU_THIS_PTR eipFetchPtr + eipBiased;
-  unsigned ret;
+  int ret;
 
 #if BX_SUPPORT_X86_64
   if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64)
@@ -150,7 +150,7 @@ bx_bool BX_CPU_C::fetchInstruction(bxInstruction_c *iStorage, Bit32u eipBiased)
 #endif
     ret = fetchDecode32(fetchPtr, iStorage, remainingInPage);
 
-  if (ret==0) {
+  if (ret < 0) {
     // handle instrumentation callback inside boundaryFetch
     boundaryFetch(fetchPtr, remainingInPage, iStorage);
     return 0;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.240 2009-12-14 11:55:42 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.241 2009-12-21 13:38:06 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -3351,7 +3351,7 @@ enum {
   BX_RESOLVE_NONE
 };
 
-  unsigned BX_CPP_AttrRegparmN(3)
+  int BX_CPP_AttrRegparmN(3)
 BX_CPU_C::fetchDecode64(const Bit8u *iptr, bxInstruction_c *i, unsigned remainingInPage)
 {
   // remain must be at least 1
@@ -3400,14 +3400,14 @@ fetch_b1:
       if (ilen < remain) {
         goto fetch_b1;
       }
-      return(0);
+      return(-1);
     case 0x0f: // 2 byte escape
       if (ilen < remain) {
         ilen++;
         b1 = 0x100 | *iptr++;
         break;
       }
-      return(0);
+      return(-1);
     case 0xf2: // REPNE/REPNZ
     case 0xf3: // REP/REPE/REPZ
       rex_prefix = 0;
@@ -3416,7 +3416,7 @@ fetch_b1:
       if (ilen < remain) {
         goto fetch_b1;
       }
-      return(0);
+      return(-1);
     case 0x2e: // CS:
     case 0x26: // ES:
     case 0x36: // SS:
@@ -3426,7 +3426,7 @@ fetch_b1:
       if (ilen < remain) {
         goto fetch_b1;
       }
-      return(0);
+      return(-1);
     case 0x64: // FS:
     case 0x65: // GS:
       rex_prefix = 0;
@@ -3434,7 +3434,7 @@ fetch_b1:
       if (ilen < remain) {
         goto fetch_b1;
       }
-      return(0);
+      return(-1);
     case 0x66: // OpSize
       rex_prefix = 0;
       if(!sse_prefix) sse_prefix = SSE_PREFIX_66;
@@ -3443,21 +3443,21 @@ fetch_b1:
       if (ilen < remain) {
         goto fetch_b1;
       }
-      return(0);
+      return(-1);
     case 0x67: // AddrSize
       rex_prefix = 0;
       i->setAs64B(0);
       if (ilen < remain) {
         goto fetch_b1;
       }
-      return(0);
+      return(-1);
     case 0xf0: // LOCK:
       rex_prefix = 0;
       lock = 1;
       if (ilen < remain) {
         goto fetch_b1;
       }
-      return(0);
+      return(-1);
     default:
       break;
   }
@@ -3487,7 +3487,7 @@ fetch_b1:
         b3 = *iptr++;
       }
       else
-        return(0);
+        return(-1);
     }
 #endif
 
@@ -3497,7 +3497,7 @@ fetch_b1:
       b2 = *iptr++;
     }
     else
-      return(0);
+      return(-1);
 
     // Parse mod-nnn-rm and related bytes
     mod = b2 & 0xc0;
@@ -3538,7 +3538,7 @@ get_32bit_displ:
               ilen += 4;
               goto modrm_done;
             }
-            else return(0);
+            else return(-1);
           }
           // mod==00b, rm!=4, rm!=5
           goto modrm_done;
@@ -3552,7 +3552,7 @@ get_8bit_displ:
             ilen++;
             goto modrm_done;
           }
-          else return(0);
+          else return(-1);
         }
         // (mod == 0x80) mod == 10b
         goto get_32bit_displ;
@@ -3564,7 +3564,7 @@ get_8bit_displ:
           ilen++;
         }
         else {
-          return(0);
+          return(-1);
         }
         base  = (sib & 0x7) | rex_b; sib >>= 3;
         index = (sib & 0x7) | rex_x; sib >>= 3;
@@ -3618,7 +3618,7 @@ get_8bit_displ:
           ilen++;
         }
         else {
-          return(0);
+          return(-1);
         }
         base  = (sib & 0x7) | rex_b; sib >>= 3;
         index = (sib & 0x7) | rex_x; sib >>= 3;
@@ -3748,7 +3748,7 @@ modrm_done:
           ilen++;
         }
         else {
-          return(0);
+          return(-1);
         }
         break;
       case BxImmediate_Ib_SE: // Sign extend to OS size
@@ -3761,7 +3761,7 @@ modrm_done:
           ilen++;
         }
         else {
-          return(0);
+          return(-1);
         }
         break;
       case BxImmediate_Iw:
@@ -3770,7 +3770,7 @@ modrm_done:
           ilen += 2;
         }
         else {
-          return(0);
+          return(-1);
         }
         break;
       case BxImmediate_Id:
@@ -3779,7 +3779,7 @@ modrm_done:
           ilen += 4;
         }
         else {
-          return(0);
+          return(-1);
         }
         break;
       case BxImmediate_Iq: // MOV Rx,imm64
@@ -3788,7 +3788,7 @@ modrm_done:
           ilen += 8;
         }
         else {
-          return(0);
+          return(-1);
         }
         break;
       case BxImmediate_BrOff8:
@@ -3797,7 +3797,7 @@ modrm_done:
           ilen++;
         }
         else {
-          return(0);
+          return(-1);
         }
         break;
       case BxImmediate_IwIb:
@@ -3807,7 +3807,7 @@ modrm_done:
           i->IxIxForm.Ib2 = *iptr;
           ilen += 3;
         }
-        else return(0);
+        else return(-1);
         break;
       case BxImmediate_O:
         // For is which embed the address in the opcode.  Note
@@ -3817,14 +3817,14 @@ modrm_done:
             i->IqForm.Iq = FetchQWORD(iptr);
             ilen += 8;
           }
-          else return(0);
+          else return(-1);
         }
         else { // as32
           if ((ilen+3) < remain) {
             i->IqForm.Iq = (Bit64u) FetchDWORD(iptr);
             ilen += 4;
           }
-          else return(0);
+          else return(-1);
         }
         break;
       default:
@@ -3842,11 +3842,6 @@ modrm_done:
      seg = seg_override;
   i->setSeg(seg);
 
-#if BX_SUPPORT_TRACE_CACHE
-  if ((attr & BxTraceEnd) || ia_opcode == BX_IA_ERROR)
-     i->setStopTraceAttr();
-#endif
-
   if (attr & BxArithDstRM) {
     i->setRm(nnn);
     i->setNnn(rm);
@@ -3862,7 +3857,12 @@ modrm_done:
   i->ia_opcode = ia_opcode;
 #endif
 
-  return(1);
+#if BX_SUPPORT_TRACE_CACHE
+  if ((attr & BxTraceEnd) || ia_opcode == BX_IA_ERROR)
+     return(1);
+#endif
+
+  return(0);
 }
 
 #endif /* if BX_SUPPORT_X86_64 */

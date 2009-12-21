@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.238 2009-12-14 11:55:42 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.239 2009-12-21 13:38:06 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -2466,7 +2466,7 @@ enum {
   BX_RESOLVE_NONE
 };
 
-  unsigned BX_CPP_AttrRegparmN(3)
+  int BX_CPP_AttrRegparmN(3)
 BX_CPU_C::fetchDecode32(const Bit8u *iptr, bxInstruction_c *i, unsigned remainingInPage)
 {
   // remain must be at least 1
@@ -2504,7 +2504,7 @@ fetch_b1:
         b1 = 0x100 | *iptr++;
         break;
       }
-      return(0);
+      return(-1);
     case 0x66: // OpSize
       os_32 = !is_32;
       offset = os_32 << 9;
@@ -2513,13 +2513,13 @@ fetch_b1:
       if (ilen < remain) {
         goto fetch_b1;
       }
-      return(0);
+      return(-1);
     case 0x67: // AddrSize
       i->setAs32B(!is_32);
       if (ilen < remain) {
         goto fetch_b1;
       }
-      return(0);
+      return(-1);
     case 0xf2: // REPNE/REPNZ
     case 0xf3: // REP/REPE/REPZ
       sse_prefix = b1 & 3;
@@ -2527,7 +2527,7 @@ fetch_b1:
       if (ilen < remain) {
         goto fetch_b1;
       }
-      return(0);
+      return(-1);
     case 0x26: // ES:
     case 0x2e: // CS:
     case 0x36: // SS:
@@ -2536,20 +2536,20 @@ fetch_b1:
       if (ilen < remain) {
         goto fetch_b1;
       }
-      return(0);
+      return(-1);
     case 0x64: // FS:
     case 0x65: // GS:
       seg_override = (b1 & 0xf);
       if (ilen < remain) {
         goto fetch_b1;
       }
-      return(0);
+      return(-1);
     case 0xf0: // LOCK:
       lock = 1;
       if (ilen < remain) {
         goto fetch_b1;
       }
-      return(0);
+      return(-1);
     default:
       break;
   }
@@ -2567,7 +2567,7 @@ fetch_b1:
         b3 = *iptr++;
       }
       else
-        return(0);
+        return(-1);
     }
 #endif
 
@@ -2577,7 +2577,7 @@ fetch_b1:
       b2 = *iptr++;
     }
     else
-      return(0);
+      return(-1);
 
     // Parse mod-nnn-rm and related bytes
     mod = b2 & 0xc0; // leave unshifted
@@ -2616,7 +2616,7 @@ fetch_b1:
               iptr += 4;
               ilen += 4;
             }
-            else return(0);
+            else return(-1);
           }
           // mod==00b, rm!=4, rm!=5
           goto modrm_done;
@@ -2629,7 +2629,7 @@ fetch_b1:
             ilen++;
             goto modrm_done;
           }
-          else return(0);
+          else return(-1);
         }
         // (mod == 0x80) mod == 10b
         if ((ilen+3) < remain) {
@@ -2638,7 +2638,7 @@ fetch_b1:
           ilen += 4;
         }
         else {
-          return(0);
+          return(-1);
         }
         goto modrm_done;
       }
@@ -2649,7 +2649,7 @@ fetch_b1:
           ilen++;
         }
         else {
-          return(0);
+          return(-1);
         }
         base  = sib & 0x7; sib >>= 3;
         index = sib & 0x7; sib >>= 3;
@@ -2671,7 +2671,7 @@ fetch_b1:
               ilen += 4;
             }
             else {
-              return(0);
+              return(-1);
             }
           }
           // mod==00b, rm==4, base!=5
@@ -2686,7 +2686,7 @@ fetch_b1:
             goto modrm_done;
           }
           else {
-            return(0);
+            return(-1);
           }
           goto modrm_done;
         }
@@ -2697,7 +2697,7 @@ fetch_b1:
           ilen += 4;
         }
         else {
-          return(0);
+          return(-1);
         }
         goto modrm_done;
       }
@@ -2718,7 +2718,7 @@ fetch_b1:
             ilen += 2;
             goto modrm_done;
           }
-          else return(0);
+          else return(-1);
         }
         goto modrm_done;
       }
@@ -2730,7 +2730,7 @@ fetch_b1:
           ilen++;
           goto modrm_done;
         }
-        else return(0);
+        else return(-1);
       }
       // (mod == 0x80)      mod == 10b
       if ((ilen+1) < remain) {
@@ -2738,7 +2738,7 @@ fetch_b1:
         iptr += 2;
         ilen += 2;
       }
-      else return(0);
+      else return(-1);
     }
 
 modrm_done:
@@ -2837,7 +2837,7 @@ modrm_done:
           ilen++;
         }
         else {
-          return(0);
+          return(-1);
         }
         break;
       case BxImmediate_Ib_SE: // Sign extend to OS size
@@ -2850,7 +2850,7 @@ modrm_done:
           ilen++;
         }
         else {
-          return(0);
+          return(-1);
         }
         break;
       case BxImmediate_Iw:
@@ -2859,7 +2859,7 @@ modrm_done:
           ilen += 2;
         }
         else {
-          return(0);
+          return(-1);
         }
         break;
       case BxImmediate_Id:
@@ -2868,7 +2868,7 @@ modrm_done:
           ilen += 4;
         }
         else {
-          return(0);
+          return(-1);
         }
         break;
       case BxImmediate_BrOff8:
@@ -2877,7 +2877,7 @@ modrm_done:
           ilen++;
         }
         else {
-          return(0);
+          return(-1);
         }
         break;
       case BxImmediate_IwIb:
@@ -2888,7 +2888,7 @@ modrm_done:
           ilen += 3;
         }
         else {
-          return(0);
+          return(-1);
         }
         break;
       case BxImmediate_IwIw: // CALL_Ap
@@ -2899,7 +2899,7 @@ modrm_done:
           ilen += 4;
         }
         else {
-          return(0);
+          return(-1);
         }
         break;
       case BxImmediate_IdIw: // CALL_Ap
@@ -2910,7 +2910,7 @@ modrm_done:
           ilen += 6;
         }
         else {
-          return(0);
+          return(-1);
         }
         break;
       case BxImmediate_O:
@@ -2921,7 +2921,7 @@ modrm_done:
             i->modRMForm.Id = FetchDWORD(iptr);
             ilen += 4;
           }
-          else return(0);
+          else return(-1);
         }
         else {
           // fetch 16bit address into Id
@@ -2929,7 +2929,7 @@ modrm_done:
             i->modRMForm.Id = (Bit32u) FetchWORD(iptr);
             ilen += 2;
           }
-          else return(0);
+          else return(-1);
         }
         break;
       default:
@@ -2947,11 +2947,6 @@ modrm_done:
      seg = seg_override;
   i->setSeg(seg);
 
-#if BX_SUPPORT_TRACE_CACHE
-  if ((attr & BxTraceEnd) || ia_opcode == BX_IA_ERROR)
-     i->setStopTraceAttr();
-#endif
-
   if (attr & BxArithDstRM) {
     i->setRm(nnn);
     i->setNnn(rm);
@@ -2967,7 +2962,12 @@ modrm_done:
   i->ia_opcode = ia_opcode;
 #endif
 
-  return(1);
+#if BX_SUPPORT_TRACE_CACHE
+  if ((attr & BxTraceEnd) || ia_opcode == BX_IA_ERROR)
+     return(1);
+#endif
+
+  return(0);
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::BxError(bxInstruction_c *i)
