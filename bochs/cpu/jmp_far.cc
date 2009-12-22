@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: jmp_far.cc,v 1.21 2009-10-14 20:45:29 sshwarts Exp $
+// $Id: jmp_far.cc,v 1.22 2009-12-22 11:58:26 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005-2009 Stanislav Shwartsman
@@ -77,6 +77,12 @@ BX_CPU_C::jump_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
         BX_ERROR(("jump_protected: gate type %u unsupported in long mode", (unsigned) descriptor.type));
         exception(BX_GP_EXCEPTION, cs_raw & 0xfffc, 0);
       }
+      // gate must be present else #NP(gate selector)
+      if (! IS_PRESENT(descriptor)) {
+        BX_ERROR(("jump_protected: call gate not present!"));
+        exception(BX_NP_EXCEPTION, cs_raw & 0xfffc, 0);
+      }
+
       jmp_call_gate64(&selector);
       return;
     }
@@ -232,12 +238,6 @@ BX_CPU_C::jmp_call_gate64(bx_selector_t *gate_selector)
 
   fetch_raw_descriptor_64(gate_selector, &dword1, &dword2, &dword3, BX_GP_EXCEPTION);
   parse_descriptor(dword1, dword2, &gate_descriptor);
-
-  // gate must be present else #NP(gate selector)
-  if (! IS_PRESENT(gate_descriptor)) {
-    BX_ERROR(("jmp_call_gate64: call gate.p == 0"));
-    exception(BX_NP_EXCEPTION, gate_selector->value & 0xfffc, 0);
-  }
 
   Bit16u dest_selector = gate_descriptor.u.gate.dest_selector;
   // selector must not be null else #GP(0)
