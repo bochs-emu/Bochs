@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: call_far.cc,v 1.51 2009-12-22 11:58:25 sshwarts Exp $
+// $Id: call_far.cc,v 1.52 2009-12-22 12:11:09 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005-2009 Stanislav Shwartsman
@@ -197,7 +197,7 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
           BX_ERROR(("call_protected: gate not present"));
           exception(BX_NP_EXCEPTION, cs_raw & 0xfffc, 0);
         }
-        call_gate(&gate_selector, &gate_descriptor);
+        call_gate(&gate_descriptor);
         return;
 
       default: // can't get here
@@ -207,7 +207,7 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
   }
 }
 
-void BX_CPP_AttrRegparmN(2) BX_CPU_C::call_gate(bx_selector_t *gate_selector, bx_descriptor_t *gate_descriptor)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::call_gate(bx_descriptor_t *gate_descriptor)
 {
   bx_selector_t cs_selector;
   Bit32u dword1, dword2;
