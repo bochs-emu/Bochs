@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ia_opcodes.h,v 1.34 2009-12-20 09:00:40 sshwarts Exp $
+// $Id: ia_opcodes.h,v 1.35 2009-12-23 07:26:14 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008-2009 Stanislav Shwartsman
@@ -128,7 +128,7 @@ bx_define_opcode(BX_IA_BTS_EwIbR, &BX_CPU_C::BTS_EwIbR, NULL)
 bx_define_opcode(BX_IA_ERROR, &BX_CPU_C::BxError, NULL)
 bx_define_opcode(BX_IA_CALL_EdM, &BX_CPU_C::LOAD_Ed, &BX_CPU_C::CALL_EdR)
 bx_define_opcode(BX_IA_CALL_EdR, &BX_CPU_C::CALL_EdR, NULL)
-bx_define_opcode(BX_IA_CALL_EwM, &BX_CPU_C::LOAD_Ed, &BX_CPU_C::CALL_EwR)
+bx_define_opcode(BX_IA_CALL_EwM, &BX_CPU_C::LOAD_Ew, &BX_CPU_C::CALL_EwR)
 bx_define_opcode(BX_IA_CALL_EwR, &BX_CPU_C::CALL_EwR, NULL)
 bx_define_opcode(BX_IA_CALL_Jd, &BX_CPU_C::CALL_Jd, NULL)
 bx_define_opcode(BX_IA_CALL_Jw, &BX_CPU_C::CALL_Jw, NULL)
