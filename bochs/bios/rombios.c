@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.238 2009-12-21 08:08:24 sshwarts Exp $
+// $Id: rombios.c,v 1.239 2009-12-27 17:03:14 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -183,20 +183,14 @@
 #define IPL_TYPE_BEV         0x80
 
   // Sanity Checks
-#if BX_USE_ATADRV && BX_CPU<3
-#    error The ATA/ATAPI Driver can only to be used with a 386+ cpu
+#if BX_CPU<3
+#    error Only 386+ cpu supported
 #endif
 #if BX_USE_ATADRV && !BX_USE_EBDA
 #    error ATA/ATAPI Driver can only be used if EBDA is available
 #endif
 #if BX_ELTORITO_BOOT && !BX_USE_ATADRV
 #    error El-Torito Boot can only be use if ATA/ATAPI Driver is available
-#endif
-#if BX_PCIBIOS && BX_CPU<3
-#    error PCI BIOS can only be used with 386+ cpu
-#endif
-#if BX_APM && BX_CPU<3
-#    error APM BIOS can only be used with 386+ cpu
 #endif
 
 // define this if you want to make PCIBIOS working on a specific bridge only
@@ -227,11 +221,7 @@ ASM_START
 
 .org 0x0000
 
-#if BX_CPU >= 3
 use16 386
-#else
-use16 286
-#endif
 
 MACRO HALT
   ;; the HALT macro is called with the line number of the HALT call.
@@ -937,7 +927,7 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.238 $ $Date: 2009-12-21 08:08:24 $";
+static char bios_cvs_version_string[] = "$Revision: 1.239 $ $Date: 2009-12-27 17:03:14 $";
 
 #define BIOS_COPYRIGHT_STRING "(c) 2002 MandrakeSoft S.A. Written by Kevin Lawton & the Bochs team."
 
@@ -3870,11 +3860,7 @@ BX_DEBUG_INT15("int15 AX=%04x\n",regs.u.r16.ax);
 
     case 0x4f:
       /* keyboard intercept */
-#if BX_CPU < 2
-      regs.u.r8.ah = UNSUPPORTED_FUNCTION;
-#else
       // nop
-#endif
       SET_CF();
       break;
 
@@ -3921,9 +3907,6 @@ BX_DEBUG_INT15("int15 AX=%04x\n",regs.u.r16.ax);
     }
 
     case 0x87:
-#if BX_CPU < 3
-#  error "Int15 function 87h not supported on < 80386"
-#endif
       // +++ should probably have descriptor checks
       // +++ should have exception handlers
 
@@ -4065,10 +4048,6 @@ ASM_END
 
     case 0x88:
       // Get the amount of extended memory (above 1M)
-#if BX_CPU < 2
-      regs.u.r8.ah = UNSUPPORTED_FUNCTION;
-      SET_CF();
-#else
       regs.u.r8.al = inb_cmos(0x30);
       regs.u.r8.ah = inb_cmos(0x31);
 
@@ -4078,7 +4057,6 @@ ASM_END
         regs.u.r16.ax = 0xffc0;
 
       CLEAR_CF();
-#endif
       break;
 
   case 0x89:
@@ -4915,13 +4893,8 @@ dequeue_key(scan_code, ascii_code, incr)
   Bit16u ss;
   Bit8u  acode, scode;
 
-#if BX_CPU < 2
-  buffer_start = 0x001E;
-  buffer_end   = 0x003E;
-#else
   buffer_start = read_word(0x0040, 0x0080);
   buffer_end   = read_word(0x0040, 0x0082);
-#endif
 
   buffer_head = read_word(0x0040, 0x001a);
   buffer_tail = read_word(0x0040, 0x001c);
@@ -5223,13 +5196,8 @@ enqueue_key(scan_code, ascii_code)
 {
   Bit16u buffer_start, buffer_end, buffer_head, buffer_tail, temp_tail;
 
-#if BX_CPU < 2
-  buffer_start = 0x001E;
-  buffer_end   = 0x003E;
-#else
   buffer_start = read_word(0x0040, 0x0080);
   buffer_end   = read_word(0x0040, 0x0082);
-#endif
 
   buffer_head = read_word(0x0040, 0x001A);
   buffer_tail = read_word(0x0040, 0x001C);
