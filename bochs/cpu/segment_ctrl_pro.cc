@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: segment_ctrl_pro.cc,v 1.124 2009-12-27 16:38:09 sshwarts Exp $
+// $Id: segment_ctrl_pro.cc,v 1.125 2009-12-27 16:53:35 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -292,8 +292,7 @@ void parse_selector(Bit16u raw_selector, bx_selector_t *selector)
   selector->rpl   = raw_selector & 0x03;
 }
 
-  Bit8u  BX_CPP_AttrRegparmN(1)
-BX_CPU_C::get_ar_byte(const bx_descriptor_t *d)
+Bit8u get_ar_byte(const bx_descriptor_t *d)
 {
   return (d->type) |
          (d->segment << 4) |
@@ -301,8 +300,7 @@ BX_CPU_C::get_ar_byte(const bx_descriptor_t *d)
          (d->p << 7);
 }
 
-  void BX_CPP_AttrRegparmN(2)
-BX_CPU_C::set_ar_byte(bx_descriptor_t *d, Bit8u ar_byte)
+void set_ar_byte(bx_descriptor_t *d, Bit8u ar_byte)
 {
   d->p        = (ar_byte >> 7) & 0x01;
   d->dpl      = (ar_byte >> 5) & 0x03;
