@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: descriptor.h,v 1.32 2009-10-14 20:45:29 sshwarts Exp $
+// $Id: descriptor.h,v 1.33 2009-12-27 16:38:09 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007-2009 Stanislav Shwartsman
@@ -183,13 +183,11 @@ typedef struct {
   bx_descriptor_t  cache;
 } bx_segment_reg_t;
 
-#if BX_CPU_LEVEL < 2
-  /* no GDTR or IDTR register in an 8086 */
-#else
 typedef struct {
   bx_address       base;   /* base address: 24bits=286,32bits=386,64bits=x86-64 */
   Bit16u           limit;  /* limit, 16bits */
 } bx_global_segment_reg_t;
-#endif
+
+void parse_selector(Bit16u raw_selector, bx_selector_t *selector);
 
 #endif

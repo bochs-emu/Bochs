@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debugstuff.cc,v 1.109 2009-12-04 16:53:12 sshwarts Exp $
+// $Id: debugstuff.cc,v 1.110 2009-12-27 16:38:09 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -331,6 +331,19 @@ bx_bool BX_CPU_C::dbg_get_sreg(bx_dbg_sreg_t *sreg, unsigned sreg_no)
   sreg->dword3 = BX_CPU_THIS_PTR sregs[sreg_no].cache.u.segment.base >> 32;
 #endif
   return(1);
+}
+
+bx_bool BX_CPU_C::dbg_set_sreg(unsigned sreg_no, bx_segment_reg_t *sreg)
+{
+  if (sreg_no < 6) {
+    BX_CPU_THIS_PTR sregs[sreg_no] = *sreg;
+    if (sreg_no == BX_SEG_REG_CS)
+      invalidate_prefetch_q();
+
+    return 1;
+  }
+
+  return 0;
 }
 
 void BX_CPU_C::dbg_get_tr(bx_dbg_sreg_t *sreg)

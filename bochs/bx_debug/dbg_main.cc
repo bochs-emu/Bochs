@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.221 2009-12-04 16:53:11 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.222 2009-12-27 16:38:09 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -3561,66 +3561,120 @@ bx_address bx_dbg_get_instruction_pointer(void)
   return BX_CPU(dbg_cpu)->get_instruction_pointer();
 }
 
+bx_bool bx_dbg_read_pmode_descriptor(Bit16u sel, bx_descriptor_t *descriptor)
+{
+  bx_selector_t selector;
+  Bit32u dword1, dword2;
+  bx_address desc_base;
+
+  /* if selector is NULL, error */
+  if ((sel & 0xfffc) == 0) {
+    dbg_printf("bx_dbg_read_pmode_descriptor: Dereferencing a NULL selector!\n");
+    return 0;
+  }
+
+  /* parse fields in selector */
+  parse_selector(sel, &selector);
+
+  if (selector.ti) {
+    // LDT
+    if (((Bit32u)selector.index*8 + 7) > BX_CPU(dbg_cpu)->ldtr.cache.u.segment.limit_scaled) {
+      dbg_printf("bx_dbg_read_pmode_descriptor: selector (0x%04x) > LDT size limit\n", selector.index*8);
+      return 0;
+    }
+    desc_base = BX_CPU(dbg_cpu)->ldtr.cache.u.segment.base;
+  }
+  else {
+    // GDT
+    if (((Bit32u)selector.index*8 + 7) > BX_CPU(dbg_cpu)->gdtr.limit) {
+      dbg_printf("bx_dbg_read_pmode_descriptor: selector (0x%04x) > GDT size limit\n", selector.index*8);
+      return 0;
+    }
+    desc_base = BX_CPU(dbg_cpu)->gdtr.base;
+  }
+
+  if (! bx_dbg_read_linear(dbg_cpu, desc_base + selector.index * 8,     4, (Bit8u*) &dword1)) {
+    dbg_printf("bx_dbg_read_pmode_descriptor: cannot read selector 0x%04x (index=0x%04x)\n", sel, selector.index);
+    return 0;
+  }
+  if (! bx_dbg_read_linear(dbg_cpu, desc_base + selector.index * 8 + 4, 4, (Bit8u*) &dword2)) {
+    dbg_printf("bx_dbg_read_pmode_descriptor: cannot read selector 0x%04x (index=0x%04x)\n", sel, selector.index);
+    return 0;
+  }
+
+  memset (descriptor, 0, sizeof (descriptor));
+  BX_CPU(dbg_cpu)->parse_descriptor(dword1, dword2, descriptor);
+
+  if (!descriptor->segment) {
+    dbg_printf("bx_dbg_read_pmode_descriptor: selector 0x%04x points to a system descriptor and is not supported!\n", sel);
+    return 0;
+  }
+
+  /* #NP(selector) if descriptor is not present */
+  if (descriptor->p==0) {
+    dbg_printf("bx_dbg_read_pmode_descriptor: descriptor 0x%04x not present!\n", sel);
+    return 0;
+  }
+
+  return 1;
+}
+
+void bx_dbg_load_segreg(unsigned seg_no, unsigned value)
+{
+  bx_segment_reg_t sreg;
+
+  if (seg_no > 6) {
+    dbg_printf("bx_dbg_load_segreg: unknown segment register !");
+    return;
+  }
+
+  if (value > 0xffff) {
+    dbg_printf("bx_dbg_load_segreg: segment selector out of limits !");
+    return;
+  }
+
+  unsigned cpu_mode = BX_CPU(dbg_cpu)->get_cpu_mode();
+  if (cpu_mode == BX_MODE_LONG_64) {
+    dbg_printf("bx_dbg_load_segreg: not supported in long64 mode !");
+    return;
+  }
+
+  if (! BX_CPU(dbg_cpu)->protected_mode()) {
+    parse_selector(value, &sreg.selector);
+
+    sreg.cache.valid   = SegValidCache;
+    sreg.cache.p       = 1;
+    sreg.cache.dpl     = (cpu_mode == BX_MODE_IA32_V8086);
+    sreg.cache.segment = 1;
+    sreg.cache.type    = BX_DATA_READ_WRITE_ACCESSED;
+
+    sreg.cache.u.segment.base = sreg.selector.value << 4;
+    sreg.cache.u.segment.limit_scaled = 0xffff;
+    sreg.cache.u.segment.g            = 0;
+    sreg.cache.u.segment.d_b          = 0;
+    sreg.cache.u.segment.avl          = 0;
+    sreg.selector.rpl                 = (cpu_mode == BX_MODE_IA32_V8086);
+
+    BX_CPU(dbg_cpu)->dbg_set_sreg(seg_no, &sreg);
+  }
+  else {
+    parse_selector(value, &sreg.selector);
+    if (bx_dbg_read_pmode_descriptor(value, &sreg.cache)) {
+      BX_CPU(dbg_cpu)->dbg_set_sreg(seg_no, &sreg);
+    }
+  }
+}
+
 bx_address bx_dbg_get_laddr(Bit16u sel, bx_address ofs)
 {
   bx_address laddr;
 
   if (BX_CPU(dbg_cpu)->protected_mode()) {
     bx_descriptor_t descriptor;
-    bx_selector_t selector;
-    Bit32u dword1, dword2;
-
-    /* if selector is NULL, error */
-    if ((sel & 0xfffc) == 0) {
-      dbg_printf("ERROR: Dereferencing a NULL selector!\n");
-      return 0;
-    }
-
-    /* parse fields in selector */
-    BX_CPU(dbg_cpu)->parse_selector(sel, &selector);
-
-    bx_address desc_base;
-    if (selector.ti) {
-      // LDT
-      if (((Bit32u)selector.index*8 + 7) > BX_CPU(dbg_cpu)->ldtr.cache.u.segment.limit_scaled) {
-        dbg_printf("ERROR: selector (%04x) > LDT size limit\n", selector.index*8);
-        return 0;
-      }
-      desc_base = BX_CPU(dbg_cpu)->ldtr.cache.u.segment.base;
-    }
-    else {
-      // GDT
-      if (((Bit32u)selector.index*8 + 7) > BX_CPU(dbg_cpu)->gdtr.limit) {
-        dbg_printf("ERROR: selector (%04x) > GDT size limit\n", selector.index*8);
-        return 0;
-      }
-      desc_base = BX_CPU(dbg_cpu)->gdtr.base;
-    }
-
-    if (! bx_dbg_read_linear(dbg_cpu, desc_base + selector.index * 8,     4, (Bit8u*) &dword1)) {
-      dbg_printf("ERROR: cannot read selector (0x%04x)\n", selector.index);
-      return 0;
-    }
-    if (! bx_dbg_read_linear(dbg_cpu, desc_base + selector.index * 8 + 4, 4, (Bit8u*) &dword2)) {
-      dbg_printf("ERROR: cannot read selector (0x%04x)\n", selector.index);
-      return 0;
-    }
-
-    memset (&descriptor, 0, sizeof (descriptor));
-    BX_CPU(dbg_cpu)->parse_descriptor(dword1, dword2, &descriptor);
-
-    if (!descriptor.segment) {
-      dbg_printf("ERROR: selector %04x points to a system descriptor and is not supported!\n", sel);
-      return 0;
-    }
-
-    /* #NP(selector) if descriptor is not present */
-    if (descriptor.p==0) {
-      dbg_printf("ERROR: descriptor %04x not present!\n", sel);
-      return 0;
-    }
-
     Bit32u lowaddr, highaddr;
+
+    if (! bx_dbg_read_pmode_descriptor(sel, &descriptor))
+      return 0;
 
     // expand-down
     if (IS_DATA_SEGMENT(descriptor.type) && IS_DATA_SEGMENT_EXPAND_DOWN(descriptor.type)) {

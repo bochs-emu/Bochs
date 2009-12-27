@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: segment_ctrl_pro.cc,v 1.123 2009-12-04 16:53:12 sshwarts Exp $
+// $Id: segment_ctrl_pro.cc,v 1.124 2009-12-27 16:38:09 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -284,8 +284,7 @@ void BX_CPU_C::validate_seg_regs(void)
   validate_seg_reg(BX_SEG_REG_GS);
 }
 
-  void BX_CPP_AttrRegparmN(2)
-BX_CPU_C::parse_selector(Bit16u raw_selector, bx_selector_t *selector)
+void parse_selector(Bit16u raw_selector, bx_selector_t *selector)
 {
   selector->value = raw_selector;
   selector->index = raw_selector >> 3;
