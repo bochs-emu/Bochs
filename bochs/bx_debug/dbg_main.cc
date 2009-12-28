@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.223 2009-12-28 09:26:22 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.224 2009-12-28 13:44:31 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -2227,6 +2227,11 @@ void bx_dbg_disassemble_switch_mode()
   bx_disassemble.toggle_syntax_mode();
 }
 
+void bx_dbg_disassemble_hex_mode_switch(int mode)
+{
+  bx_disassemble.set_offset_mode_hex(mode);
+}
+
 void bx_dbg_take_command(const char *what, unsigned n)
 {
   if (! strcmp(what, "dma")) {
@@ -3422,15 +3427,15 @@ void bx_dbg_print_help(void)
   dbg_printf("h|help command - show short command description\n");
   dbg_printf("-*- Debugger control -*-\n");
   dbg_printf("    help, q|quit|exit, set, instrument, show, trace, trace-reg,\n");
-  dbg_printf("    trace-mem, record, playback, ldsym, slist\n");
+  dbg_printf("    trace-mem, u|disasm, record, playback, ldsym, slist\n");
   dbg_printf("-*- Execution control -*-\n");
   dbg_printf("    c|cont|continue, s|step, p|n|next, modebp\n");
   dbg_printf("-*- Breakpoint management -*-\n");
   dbg_printf("    vb|vbreak, lb|lbreak, pb|pbreak|b|break, sb, sba, blist,\n");
   dbg_printf("    bpe, bpd, d|del|delete, watch, unwatch\n");
   dbg_printf("-*- CPU and memory contents -*-\n");
-  dbg_printf("    x, xp, u|disasm|disassemble, setpmem, crc,\n");
-  dbg_printf("    r|reg|regs|registers, fp|fpu, mmx, sse, sreg, dreg, creg, info,\n");
+  dbg_printf("    x, xp, setpmem, crc, info,\n");
+  dbg_printf("    r|reg|regs|registers, fp|fpu, mmx, sse, sreg, dreg, creg,\n");
   dbg_printf("    page, set, ptime, print-stack, ?|calc\n");
   dbg_printf("-*- Working with bochs param tree -*-\n");
   dbg_printf("    show \"param\", restore\n");

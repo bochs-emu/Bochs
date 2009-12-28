@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: parser.y,v 1.42 2009-12-27 16:38:09 sshwarts Exp $
+// $Id: parser.y,v 1.43 2009-12-28 13:44:31 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 %{
@@ -79,7 +79,8 @@
 %token <sval> BX_TOKEN_TAKE
 %token <sval> BX_TOKEN_DMA
 %token <sval> BX_TOKEN_IRQ
-%token <sval> BX_TOKEN_DISASSEMBLE
+%token <sval> BX_TOKEN_HEX
+%token <sval> BX_TOKEN_DISASM
 %token <sval> BX_TOKEN_INSTRUMENT
 %token <sval> BX_TOKEN_STRING
 %token <sval> BX_TOKEN_STOP
@@ -458,7 +459,7 @@ step_over_command:
     ;
 
 set_command:
-      BX_TOKEN_SET BX_TOKEN_DISASSEMBLE BX_TOKEN_TOGGLE_ON_OFF '\n'
+      BX_TOKEN_SET BX_TOKEN_DISASM BX_TOKEN_TOGGLE_ON_OFF '\n'
       {
         bx_dbg_set_auto_disassemble($3);
         free($1); free($2);
@@ -808,42 +809,47 @@ take_command:
     ;
 
 disassemble_command:
-      BX_TOKEN_DISASSEMBLE '\n'
+      BX_TOKEN_DISASM '\n'
       {
         bx_dbg_disassemble_current(NULL);
         free($1);
       }
-    | BX_TOKEN_DISASSEMBLE expression '\n'
+    | BX_TOKEN_DISASM expression '\n'
       {
         bx_dbg_disassemble_command(NULL, $2, $2);
         free($1);
       }
-    | BX_TOKEN_DISASSEMBLE expression expression '\n'
+    | BX_TOKEN_DISASM expression expression '\n'
       {
         bx_dbg_disassemble_command(NULL, $2, $3);
         free($1);
       }
-    | BX_TOKEN_DISASSEMBLE BX_TOKEN_DISFORMAT '\n'
+    | BX_TOKEN_DISASM BX_TOKEN_DISFORMAT '\n'
       {
         bx_dbg_disassemble_current($2);
         free($1); free($2);
       }
-    | BX_TOKEN_DISASSEMBLE BX_TOKEN_DISFORMAT expression '\n'
+    | BX_TOKEN_DISASM BX_TOKEN_DISFORMAT expression '\n'
       {
         bx_dbg_disassemble_command($2, $3, $3);
         free($1); free($2);
       }
-    | BX_TOKEN_DISASSEMBLE BX_TOKEN_DISFORMAT expression expression '\n'
+    | BX_TOKEN_DISASM BX_TOKEN_DISFORMAT expression expression '\n'
       {
         bx_dbg_disassemble_command($2, $3, $4);
         free($1); free($2);
       }
-    | BX_TOKEN_DISASSEMBLE BX_TOKEN_SWITCH_MODE '\n'
+    | BX_TOKEN_DISASM BX_TOKEN_SWITCH_MODE '\n'
       {
         bx_dbg_disassemble_switch_mode();
         free($1); free($2);
       }
-    | BX_TOKEN_DISASSEMBLE BX_TOKEN_SIZE '=' BX_TOKEN_NUMERIC '\n'
+    | BX_TOKEN_DISASM BX_TOKEN_HEX BX_TOKEN_TOGGLE_ON_OFF '\n'
+      {
+        bx_dbg_disassemble_hex_mode_switch($3);
+        free($1); free($2);
+      }
+    | BX_TOKEN_DISASM BX_TOKEN_SIZE '=' BX_TOKEN_NUMERIC '\n'
       {
         bx_dbg_set_disassemble_size($4);
         free($1); free($2);
@@ -1048,12 +1054,13 @@ help_command:
          dbg_printf("setpmem <addr> <datasize> <val> - set physical memory location of size 'datasize' to value 'val'\n");
          free($1);free($2);
        }
-     | BX_TOKEN_HELP BX_TOKEN_DISASSEMBLE '\n'
+     | BX_TOKEN_HELP BX_TOKEN_DISASM '\n'
        {
-         dbg_printf("u|disasm|disassemble [/count] <start> <end> - disassemble instructions for given linear address\n");
+         dbg_printf("u|disasm [/count] <start> <end> - disassemble instructions for given linear address\n");
          dbg_printf("    Optional 'count' is the number of disassembled instructions\n");
-         dbg_printf("u|disasm|disassemble switch-mode - switch between Intel and AT&T disassembler syntax\n");
-         dbg_printf("u|disasm|disassemble size = n - tell debugger what segment size [16|32|64] to use\n");
+         dbg_printf("u|disasm switch-mode - switch between Intel and AT&T disassembler syntax\n");
+         dbg_printf("u|disasm hex on/off - control disasm offsets and displacements format\n");
+         dbg_printf("u|disasm size = n - tell debugger what segment size [16|32|64] to use\n");
          dbg_printf("       when \"disassemble\" command is used.\n");
          free($1);free($2);
        }

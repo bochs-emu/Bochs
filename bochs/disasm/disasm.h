@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: disasm.h,v 1.51 2009-12-17 09:13:35 sshwarts Exp $
+// $Id: disasm.h,v 1.52 2009-12-28 13:44:32 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005-2009 Stanislav Shwartsman
@@ -192,7 +192,7 @@ BX_CPP_INLINE x86_insn::x86_insn(bx_bool is32, bx_bool is64)
 
 class disassembler {
 public:
-  disassembler() { set_syntax_intel(); }
+  disassembler(): offset_mode_hex(0) { set_syntax_intel(); }
 
   unsigned disasm(bx_bool is_32, bx_bool is_64, bx_address base, bx_address ip, const Bit8u *instr, char *disbuf);
 
@@ -217,12 +217,14 @@ public:
     { return decode(1, 1, base, ip, instr, disbuf); }
 
   void set_syntax_intel();
-  void set_syntax_att  ();
+  void set_syntax_att();
+
+  void set_offset_mode_hex(bx_bool mode) { offset_mode_hex = mode; }
 
   void toggle_syntax_mode();
 
 private:
-  bx_bool intel_mode;
+  bx_bool intel_mode, offset_mode_hex;
 
   const char **general_16bit_regname;
   const char **general_8bit_regname;
@@ -304,7 +306,7 @@ private:
 
   void initialize_modrm_segregs();
 
-  void print_datasize (unsigned mode);
+  void print_datasize(unsigned mode);
 
   void print_memory_access16(int datasize,
           const char *seg, const char *index, Bit16u disp);
