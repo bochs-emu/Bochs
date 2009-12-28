@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: disasm.h,v 1.52 2009-12-28 13:44:32 sshwarts Exp $
+// $Id: disasm.h,v 1.53 2009-12-28 13:52:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005-2009 Stanislav Shwartsman
@@ -310,9 +310,10 @@ private:
 
   void print_memory_access16(int datasize,
           const char *seg, const char *index, Bit16u disp);
-  void print_memory_access  (int datasize,
-          const char *seg, const char *base, const char *index, int scale,
-          Bit32s disp, bx_bool disp64 = 0);
+  void print_memory_access32(int datasize,
+          const char *seg, const char *base, const char *index, int scale, Bit32s disp);
+  void print_memory_access64(int datasize,
+          const char *seg, const char *base, const char *index, int scale, Bit32s disp);
 
   void print_disassembly_intel(const x86_insn *insn, const BxDisasmOpcodeInfo_t *entry);
   void print_disassembly_att  (const x86_insn *insn, const BxDisasmOpcodeInfo_t *entry);
