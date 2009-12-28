@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////
-// $Id: plex86-interface.cc,v 1.18 2009-08-22 19:30:23 sshwarts Exp $
+// $Id: plex86-interface.cc,v 1.19 2009-12-28 09:26:22 sshwarts Exp $
 ///////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  Kevin P. Lawton
@@ -381,7 +381,8 @@ void copyPlex86DescriptorToBochs(BX_CPU_C *cpu,
   /* We can assume little endian, since we're running an x86 VM. */
   dword1 = dwordPtr[0];
   dword2 = dwordPtr[1];
-  cpu->parse_descriptor(dword1, dword2, bochsDesc);
+
+  parse_descriptor(dword1, dword2, bochsDesc);
 }
 
 unsigned plex86RegisterGuestMemory(Bit8u *vector, unsigned bytes)

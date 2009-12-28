@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: segment_ctrl_pro.cc,v 1.125 2009-12-27 16:53:35 sshwarts Exp $
+// $Id: segment_ctrl_pro.cc,v 1.126 2009-12-28 09:26:22 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -433,8 +433,7 @@ bx_bool BX_CPU_C::set_segment_ar_data(bx_segment_reg_t *seg, bx_bool valid,
 }
 #endif
 
-  void BX_CPP_AttrRegparmN(3)
-BX_CPU_C::parse_descriptor(Bit32u dword1, Bit32u dword2, bx_descriptor_t *temp)
+void parse_descriptor(Bit32u dword1, Bit32u dword2, bx_descriptor_t *temp)
 {
   Bit8u AR_byte;
   Bit32u limit;
@@ -467,13 +466,6 @@ BX_CPU_C::parse_descriptor(Bit32u dword1, Bit32u dword2, bx_descriptor_t *temp)
   }
   else { // system & gate segment descriptors
     switch (temp->type) {
-      case  0: // reserved
-      case  8: // reserved
-      case 10: // reserved
-      case 13: // reserved
-        temp->valid    = 0;
-        break;
-
       case BX_286_CALL_GATE:
       case BX_286_INTERRUPT_GATE:
       case BX_286_TRAP_GATE:
@@ -507,7 +499,7 @@ BX_CPU_C::parse_descriptor(Bit32u dword1, Bit32u dword2, bx_descriptor_t *temp)
       case BX_SYS_SEGMENT_BUSY_386_TSS:
         limit = (dword1 & 0xffff) | (dword2 & 0x000F0000);
         temp->u.segment.base  = (dword1 >> 16) |
-                              ((dword2 & 0xff) << 16) | (dword2 & 0xff000000);
+                               ((dword2 & 0xff) << 16) | (dword2 & 0xff000000);
         temp->u.segment.g     = (dword2 & 0x00800000) > 0;
         temp->u.segment.d_b   = (dword2 & 0x00400000) > 0;
         temp->u.segment.avl   = (dword2 & 0x00100000) > 0;
@@ -518,9 +510,9 @@ BX_CPU_C::parse_descriptor(Bit32u dword1, Bit32u dword2, bx_descriptor_t *temp)
         temp->valid = 1;
         break;
 
-      default:
-        BX_PANIC(("parse_descriptor(): case %u unfinished", (unsigned) temp->type));
-        temp->valid = 0;
+      default: // reserved
+        temp->valid    = 0;
+        break;
     }
   }
 }

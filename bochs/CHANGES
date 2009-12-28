@@ -7,6 +7,7 @@ Changes after 2.4.2:
 
 - Internal Debugger
   - Introduced range read/write physical watchpoints
+  - Allow reloading of segment registers from internal debugger
 
 - Cleanup configure options
   - Make --ignore-bad-msrs runtime option in .bochsrc. Old --ignore-bad-msrs

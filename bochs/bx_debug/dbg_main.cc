@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.222 2009-12-27 16:38:09 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.223 2009-12-28 09:26:22 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -3603,7 +3603,7 @@ bx_bool bx_dbg_read_pmode_descriptor(Bit16u sel, bx_descriptor_t *descriptor)
   }
 
   memset (descriptor, 0, sizeof (descriptor));
-  BX_CPU(dbg_cpu)->parse_descriptor(dword1, dword2, descriptor);
+  parse_descriptor(dword1, dword2, descriptor);
 
   if (!descriptor->segment) {
     dbg_printf("bx_dbg_read_pmode_descriptor: selector 0x%04x points to a system descriptor and is not supported!\n", sel);
