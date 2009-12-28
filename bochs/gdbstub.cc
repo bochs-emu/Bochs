@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gdbstub.cc,v 1.39 2009-12-04 20:02:12 sshwarts Exp $
+// $Id: gdbstub.cc,v 1.40 2009-12-28 20:07:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2006  The Bochs Project Team
@@ -819,6 +819,11 @@ static void debug_loop(void)
         break;
       case 'k':
         BX_PANIC(("Debugger asked us to quit"));
+        break;
+      case 'D':
+        BX_INFO(("Debugger detached"));
+        put_reply("OK");
+        return;
         break;
 
       default:
