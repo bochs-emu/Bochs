@@ -1,9 +1,9 @@
 Changes after 2.4.2:
 
 - CPU
+  - Implemented PCLMULQDQ AES instruction
   - Bugfixes for CPU emulation correctness
   - Fixed Bochs crash when accessing the first byte above emulated memory size
-  - Implemented PCLMULQDQ AES instruction
 
 - Internal Debugger
   - Introduced range read/write physical watchpoints
@@ -27,7 +27,13 @@ Changes after 2.4.2:
   - Fix interrupt vectors for INT 60h-66h (reserved for user interrupt) by
     setting them to zero
 
+- SF patches applied
+ [2914433] makesym.perl misses symbols by John R. Jackson
+ [2908481] USB Printer by Ben Lunt
+
 - these S.F. bugs were closed/fixed
+ [2923680] "help dregs" is a syntax error
+ [2919661] CPU may fail to do 16bit near call
  [2790768] Memory corruption with SMP > 32, Panic BIOS Keyboard Error
  [2902118] interrupts vectors 0x60 to 67 should be NULL !
  [2912502] Instruction Pointer behaving erratically
@@ -36,6 +42,10 @@ Changes after 2.4.2:
  [2901481] Instruction SYSRET and SS(PL)
  [2900632] Broken long mode RETF to outer priviledge with null SS
  [1429011] Use bx_phyaddr_t for physaddr vars and bx_adress for lin adr
+
+- these S.F. feature requests were closed/implemented
+ [2878861] numerics in the disassembler output
+ [2900619] make more CPU state changeable
 
 -------------------------------------------------------------------------
 Changes in 2.4.2 (November 12, 2009):
