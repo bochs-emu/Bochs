@@ -1,31 +1,43 @@
 #!/usr/bin/perl
 #
-# $Id: makesym.perl,v 1.2 2008-01-26 09:15:27 sshwarts Exp $
+# $Id: makesym.perl,v 1.3 2009-12-30 20:28:23 sshwarts Exp $
 #
 # Read output file from as86 (e.g. rombios.txt) and write out a symbol
 # table suitable for the Bochs debugger.
 #
 
-$WHERE_BEFORE_SYM_TABLE = 0;
-$WHERE_IN_SYM_TABLE = 1;
-$WHERE_AFTER_SYM_TABLE = 2;
+use strict;
+use warnings;
 
-$where = $WHERE_BEFORE_SYM_TABLE;
+my $WHERE_BEFORE_SYM_TABLE = 0;
+my $WHERE_IN_SYM_TABLE = 1;
+my $WHERE_AFTER_SYM_TABLE = 2;
+
+my $where = $WHERE_BEFORE_SYM_TABLE;
 while (<STDIN>) {
   chop;
-  if ($where == WHERE_BEFORE_SYM_TABLE && /^Symbols:/) {
+  if ($where == $WHERE_BEFORE_SYM_TABLE && /^Symbols:/) {
     $where = $WHERE_IN_SYM_TABLE;
   } elsif ($where == $WHERE_IN_SYM_TABLE && /^$/) {
     $where = $WHERE_AFTER_SYM_TABLE;
   }
   if ($where == $WHERE_IN_SYM_TABLE) {
-    @F = split (/\s+/);
-    ($name[0], $junk, $addr[0], $junk, $name[1], $junk, $addr[1]) = @F;
-    foreach $col (0,1) {
-      next if length $addr[$col] < 1;
-      $addr[$col] =~ tr/A-Z/a-z/;
-      $addr[$col] = "000f" . $addr[$col];
-      print "$addr[$col] $name[$col]\n";
+    my $name;
+    my $junk;
+    foreach my $f (split(/\s+/)) {
+      if ($f =~ /^[[:xdigit:]]{4,}$/) {
+        if (defined($name)) {
+	  print '000f', lc($f), ' ', $name, "\n";
+	  undef($name);
+	  undef($junk);
+	  next;
+	}
+      }
+      $name = $junk
+        if (defined($junk));
+      $junk = $f;
     }
   }
 }
+
+exit(0);
