@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.239 2009-12-27 17:03:14 sshwarts Exp $
+// $Id: rombios.c,v 1.240 2009-12-30 19:21:46 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -169,14 +169,14 @@
 #define EBDA_SIZE          1              // In KiB
 #define BASE_MEM_IN_K   (640 - EBDA_SIZE)
 
-/* 256 bytes at 0x9ff00 -- 0x9ffff is used for the IPL boot table. */
+/* IPL_SIZE bytes at 0x9ff00 are used for the IPL boot table. */
 #define IPL_SEG              0x9ff0
 #define IPL_TABLE_OFFSET     0x0000
 #define IPL_TABLE_ENTRIES    8
 #define IPL_COUNT_OFFSET     0x0080  /* u16: number of valid table entries */
 #define IPL_SEQUENCE_OFFSET  0x0082  /* u16: next boot device */
 #define IPL_BOOTFIRST_OFFSET 0x0084  /* u16: user selected device */
-#define IPL_SIZE             0xff
+#define IPL_SIZE             0x86
 #define IPL_TYPE_FLOPPY      0x01
 #define IPL_TYPE_HARDDISK    0x02
 #define IPL_TYPE_CDROM       0x03
@@ -927,7 +927,7 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.239 $ $Date: 2009-12-27 17:03:14 $";
+static char bios_cvs_version_string[] = "$Revision: 1.240 $ $Date: 2009-12-30 19:21:46 $";
 
 #define BIOS_COPYRIGHT_STRING "(c) 2002 MandrakeSoft S.A. Written by Kevin Lawton & the Bochs team."
 
