@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: parser.y,v 1.43 2009-12-28 13:44:31 sshwarts Exp $
+// $Id: parser.y,v 1.44 2009-12-30 19:20:27 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 %{
@@ -1047,6 +1047,11 @@ help_command:
      | BX_TOKEN_HELP BX_TOKEN_CONTROL_REGS '\n'
        {
          dbg_printf("creg - show control registers\n");
+         free($1);free($2);
+       }
+     | BX_TOKEN_HELP BX_TOKEN_DEBUG_REGS '\n'
+       {
+         dbg_printf("dreg - show debug registers\n");
          free($1);free($2);
        }
      | BX_TOKEN_HELP BX_TOKEN_SETPMEM '\n'
