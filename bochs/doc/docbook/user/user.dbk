@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.271 2009-12-04 13:50:24 sshwarts Exp $
+$Id: user.dbk,v 1.272 2010-01-02 11:27:54 sshwarts Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -2047,6 +2047,116 @@ turn it off.
       </entry>
     </row>
     <row>
+      <entry>--enable-smp</entry>
+      <entry>no</entry>
+      <entry>
+      Compile in support for SMP simulation.  This allows you to boot Linux and
+      maybe other OSes in SMP mode, and bochs will simulate all the different
+      CPUs and communication between them.  Do not expect this option to speed
+      up your simulation!  On the contrary, it has to spend extra time simulating
+      the different CPUs (even if they're mostly idle) and the communication
+      between them. Use it to try out an SMP OS if you don't have an SMP machine,
+      or to debug SMP OS drivers. Refer to <xref linkend="SMP"> for more details
+      on SMP in Bochs.
+      </entry>
+    </row>
+    <row>
+      <entry>--enable-fpu</entry>
+      <entry>yes</entry>
+      <entry>If you want to compile Bochs to make use of the FPU emulator
+          written by Stanislav Shwartsman, use this option.
+      </entry>
+    </row>
+    <row>
+      <entry>--enable-x86-64</entry>
+      <entry>no</entry>
+      <entry>
+      Add support for x86-64 instruction set, written by Peter Tattam and Stanislav Shwartsman.
+      </entry>
+    </row>
+    <row>
+      <entry>--enable-1g-pages</entry>
+      <entry>no</entry>
+      <entry>support for 1G page extensions in x86-64 long mode</entry>
+    </row>
+    <row>
+      <entry>--enable-mmx</entry>
+      <entry>no (yes for <link linkend="configure-enable-cpu-level">CPU</link> >= 5)</entry>
+      <entry>
+      Add support for MMX instructions, written by Stanislav Shwartsman.
+      </entry>
+    </row>
+    <row>
+      <entry>--enable-sse=LEVEL</entry>
+      <entry>no</entry>
+      <entry>
+      Add support for SSE instructions, written by Stanislav Shwartsman.
+      Any of SSE/SSE2/SSE3/SSSE3/SSE4_1/SSE4_2 instruction sets are supported.
+      </entry>
+    </row>
+    <row>
+      <entry>--enable-aes</entry>
+      <entry>no</entry>
+      <entry>
+      Add support for AES instructions, written by Stanislav Shwartsman.
+      </entry>
+    </row>
+    <row>
+      <entry>--enable-xsave</entry>
+      <entry>no</entry>
+      <entry>XSAVE support</entry>
+    </row>
+    <row>
+      <entry>--enable-sep</entry>
+      <entry>no</entry>
+      <entry>SYSENTER/SYSEXIT support</entry>
+    </row>
+    <row>
+      <entry>--enable-vmx</entry>
+      <entry>no</entry>
+      <entry>Intel Virtualization Extensions (VMX) support</entry>
+    </row>
+    <row>
+      <entry>--enable-x86-debugger</entry>
+      <entry>no</entry>
+      <entry>X86 debugger support.  If the software you run in bochs
+          needs to use the x86 hardware debugging facilities such as
+          DR0..DR7, instruction and data breakpoints etc., then you
+          should use this option.  Otherwise don't use it, as it
+          will slow down the emulation.</entry>
+    </row>
+    <row>
+      <entry>--enable-monitor-mwait</entry>
+      <entry>no</entry>
+      <entry>MONITOR/MWAIT instructions support (still experimental)</entry>
+    </row>
+    <row>
+      <entry>--enable-movbe</entry>
+      <entry>no</entry>
+      <entry>support for MOVBE Intel Atom(R) instruction</entry>
+    </row>
+    <row>
+      <entry>--enable-popcnt</entry>
+      <entry>no</entry>
+      <entry>support for POPCNT instruction</entry>
+    </row>
+    <row>
+      <entry>--enable-misaligned-sse</entry>
+      <entry>no</entry>
+      <entry>support for AMD's misaligned SSE extension</entry>
+    </row>
+    <row>
+      <entry>--enable-configurable-msrs</entry>
+      <entry>no</entry>
+      <entry>support for user configurations of emulated MSR registers
+          (see example in msrs.def)</entry>
+    </row>
+    <row>
+      <entry>--enable-long-phy-address</entry>
+      <entry>no</entry>
+      <entry>support for guest physical address larger than 32 bit</entry>
+    </row>
+    <row>
       <entry>--enable-cdrom</entry>
       <entry>yes</entry>
       <entry>
@@ -2126,13 +2236,6 @@ turn it off.
       </entry>
     </row>
     <row>
-      <entry>--enable-fpu</entry>
-      <entry>yes</entry>
-      <entry>If you want to compile Bochs to make use of the FPU emulator
-          written by Stanislav Shwartsman, use this option.
-      </entry>
-    </row>
-    <row>
       <entry>--enable-plugins</entry>
       <entry>no</entry>
       <entry>
@@ -2173,63 +2276,6 @@ turn it off.
          --enable-repeat-speedups,
          --enable-host-specific-asms,
          --enable-fast-function-calls.
-      </entry>
-    </row>
-    <row>
-      <entry>--enable-x86-64</entry>
-      <entry>no</entry>
-      <entry>
-      Add support for x86-64 instruction set, written by Peter Tattam and Stanislav Shwartsman.
-      </entry>
-    </row>
-    <row>
-      <entry>--enable-1g-pages</entry>
-      <entry>no</entry>
-      <entry>support for 1G page extensions in x86-64 long mode</entry>
-    </row>
-    <row>
-      <entry>--enable-mmx</entry>
-      <entry>no (yes for <link linkend="configure-enable-cpu-level">CPU</link> >= 5)</entry>
-      <entry>
-      Add support for MMX instructions, written by Stanislav Shwartsman.
-      </entry>
-    </row>
-    <row>
-      <entry>--enable-sse=LEVEL</entry>
-      <entry>no</entry>
-      <entry>
-      Add support for SSE instructions, written by Stanislav Shwartsman.
-      Any of SSE/SSE2/SSE3/SSSE3/SSE4_1/SSE4_2 instruction sets are supported.
-      </entry>
-    </row>
-    <row>
-      <entry>--enable-aes</entry>
-      <entry>no</entry>
-      <entry>
-      Add support for AES instructions, written by Stanislav Shwartsman.
-      </entry>
-    </row>
-    <row>
-      <entry>--enable-xsave</entry>
-      <entry>no</entry>
-      <entry>XSAVE support</entry>
-    </row>
-    <row>
-      <entry>--enable-sep</entry>
-      <entry>no</entry>
-      <entry>SYSENTER/SYSEXIT support</entry>
-    </row>
-    <row>
-      <entry>--enable-vmx</entry>
-      <entry>no</entry>
-      <entry>Intel Virtualization Extensions (VMX) support</entry>
-    </row>
-    <row>
-      <entry>--enable-compressed-hd</entry>
-      <entry>no</entry>
-      <entry>
-      Add support for compressed disk (not implemented yet).
-      zlib must be installed on your system, as it will be dynamically linked to Bochs.
       </entry>
     </row>
     <row>
@@ -2294,13 +2340,12 @@ turn it off.
       </entry>
     </row>
     <row>
-      <entry>--enable-x86-debugger</entry>
+      <entry>--enable-compressed-hd</entry>
       <entry>no</entry>
-      <entry>X86 debugger support.  If the software you run in bochs
-          needs to use the x86 hardware debugging facilities such as
-          DR0..DR7, instruction and data breakpoints etc., then you
-          should use this option.  Otherwise don't use it, as it
-          will slow down the emulation.</entry>
+      <entry>
+      Add support for compressed disk (not implemented yet).
+      zlib must be installed on your system, as it will be dynamically linked to Bochs.
+      </entry>
     </row>
     <row>
       <entry>--enable-pci</entry>
@@ -2330,32 +2375,6 @@ turn it off.
       <entry>
         Enable experimental USB OHCI support. The host controller with 2-port
         root hub is available (USB device types: same as UHCI).
-      </entry>
-    </row>
-    <row>
-      <entry>--enable-smp</entry>
-      <entry>no</entry>
-      <entry>
-      Compile in support for SMP simulation.  This allows you to boot Linux and
-      maybe other OSes in SMP mode, and bochs will simulate all the different
-      CPUs and communication between them.  Do not expect this option to speed
-      up your simulation!  On the contrary, it has to spend extra time simulating
-      the different CPUs (even if they're mostly idle) and the communication
-      between them. Use it to try out an SMP OS if you don't have an SMP machine,
-      or to debug SMP OS drivers. Refer to <xref linkend="SMP"> for more details
-      on SMP in Bochs.
-      </entry>
-    </row>
-    <row>
-      <entry>--enable-apic</entry>
-      <entry>no</entry>
-      <entry>
-      In an SMP machine, there is an APIC (Advanced Programmable Interrupt
-      Controller) built into each processor and a separate I/O APIC.  The
-      APICs are used for inter-processor communication, so they must be
-      enabled for SMP to work.  The default is "no" when there is one
-      processor and "yes" when there is more than one processor.  Normally,
-      the default is correct and you would never need to type this option.
       </entry>
     </row>
     <row>
