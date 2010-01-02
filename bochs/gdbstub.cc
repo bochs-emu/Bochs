@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gdbstub.cc,v 1.40 2009-12-28 20:07:41 sshwarts Exp $
+// $Id: gdbstub.cc,v 1.41 2010-01-02 22:36:20 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2006  The Bochs Project Team
@@ -807,7 +807,7 @@ static void debug_loop(void)
         }
         else
         {
-          put_reply("Eff");
+          put_reply(""); /* not supported */
         }
         break;
 
