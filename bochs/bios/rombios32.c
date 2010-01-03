@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios32.c,v 1.59 2010-01-02 22:35:45 sshwarts Exp $
+// $Id: rombios32.c,v 1.60 2010-01-03 19:23:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  32 bit Bochs BIOS init code
@@ -32,11 +32,6 @@ typedef unsigned short uint16_t;
 typedef unsigned int   uint32_t;
 typedef unsigned long long uint64_t;
 
-/* if true, put the MP float table and ACPI RSDT in EBDA and the MP
-   table in RAM. Unfortunately, Linux has bugs with that, so we prefer
-   to modify the BIOS in shadow RAM */
-//#define BX_USE_EBDA_TABLES
-
 /* define it if the (emulated) hardware supports SMM mode */
 #define BX_USE_SMM
 
@@ -61,7 +56,6 @@ typedef unsigned long long uint64_t;
 
 #define AP_BOOT_ADDR 0x9f000
 
-#define MPTABLE_MAX_SIZE  0x00002000
 #define SMI_CMD_IO_ADDR   0xb2
 
 #define BIOS_TMP_STORAGE  0x00030000 /* 64 KB used to copy the BIOS to shadow RAM */

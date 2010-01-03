@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.240 2009-12-30 19:21:46 sshwarts Exp $
+// $Id: rombios.c,v 1.241 2010-01-03 19:23:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -927,7 +927,7 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.240 $ $Date: 2009-12-30 19:21:46 $";
+static char bios_cvs_version_string[] = "$Revision: 1.241 $ $Date: 2010-01-03 19:23:02 $";
 
 #define BIOS_COPYRIGHT_STRING "(c) 2002 MandrakeSoft S.A. Written by Kevin Lawton & the Bochs team."
 
@@ -4646,33 +4646,46 @@ ASM_END
                         break;
                     case 3:
 #if BX_ROMBIOS32
+#ifdef BX_USE_EBDA_TABLES
                         set_e820_range(ES, regs.u.r16.di,
                                        0x00100000L,
-                                       extended_memory_size - ACPI_DATA_SIZE, 0, 0, E820_RAM);
+                                       extended_memory_size - ACPI_DATA_SIZE - MPTABLE_MAX_SIZE, 0, 0, E820_RAM);
                         regs.u.r32.ebx = 4;
 #else
                         set_e820_range(ES, regs.u.r16.di,
                                        0x00100000L,
-                                       extended_memory_size, 0, 0, E820_RAM);
+                                       extended_memory_size - ACPI_DATA_SIZE, 0, 0, E820_RAM);
                         regs.u.r32.ebx = 5;
+#endif
+#else
+                        set_e820_range(ES, regs.u.r16.di,
+                                       0x00100000L,
+                                       extended_memory_size, 0, 0, E820_RAM);
+                        regs.u.r32.ebx = 6;
 #endif
                         break;
                     case 4:
                         set_e820_range(ES, regs.u.r16.di,
-                                       extended_memory_size - ACPI_DATA_SIZE,
-                                       extended_memory_size, 0, 0, E820_ACPI);
+                                       extended_memory_size - ACPI_DATA_SIZE - MPTABLE_MAX_SIZE,
+                                       extended_memory_size - ACPI_DATA_SIZE, 0, 0, E820_RESERVED);
                         regs.u.r32.ebx = 5;
                         break;
                     case 5:
+                        set_e820_range(ES, regs.u.r16.di,
+                                       extended_memory_size - ACPI_DATA_SIZE,
+                                       extended_memory_size, 0, 0, E820_ACPI);
+                        regs.u.r32.ebx = 6;
+                        break;
+                    case 6:
                         /* 256KB BIOS area at the end of 4 GB */
                         set_e820_range(ES, regs.u.r16.di,
                                        0xfffc0000L, 0x00000000L, 0, 0, E820_RESERVED);
                         if (extra_highbits_memory_size || extra_lowbits_memory_size)
-                            regs.u.r32.ebx = 6;
+                            regs.u.r32.ebx = 7;
                         else
                             regs.u.r32.ebx = 0;
                         break;
-                    case 6:
+                    case 7:
                         /* Maping of memory above 4 GB */
                         set_e820_range(ES, regs.u.r16.di, 0x00000000L,
                             extra_lowbits_memory_size, 1, extra_highbits_memory_size

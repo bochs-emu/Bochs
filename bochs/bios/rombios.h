@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.h,v 1.10 2009-12-21 08:08:24 sshwarts Exp $
+// $Id: rombios.h,v 1.11 2010-01-03 19:23:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2006 Volker Ruppert
@@ -53,7 +53,13 @@
 #define BX_INFO(format, p...)   bios_printf(BIOS_PRINTF_INFO, format, ##p)
 #define BX_PANIC(format, p...)  bios_printf(BIOS_PRINTF_DEBHALT, format, ##p)
 
+/* if true, put the MP float table and ACPI RSDT in EBDA and the MP
+   table in RAM. Unfortunately, Linux has bugs with that, so we prefer
+   to modify the BIOS in shadow RAM */
+//#define BX_USE_EBDA_TABLES
+
 #define ACPI_DATA_SIZE    0x00010000L
+#define MPTABLE_MAX_SIZE  0x00002000
 #define PM_IO_BASE        0xb000
 #define SMB_IO_BASE       0xb100
 #define SMP_MSR_ADDR      0x0510
