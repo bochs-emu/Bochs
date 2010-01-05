@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios32.c,v 1.60 2010-01-03 19:23:02 sshwarts Exp $
+// $Id: rombios32.c,v 1.61 2010-01-05 08:20:05 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  32 bit Bochs BIOS init code
@@ -1080,6 +1080,10 @@ static void mptable_init(void)
     int mp_config_table_size;
 
 #ifdef BX_USE_EBDA_TABLES
+    if (ram_size - ACPI_DATA_SIZE - MPTABLE_MAX_SIZE < 0x100000) {
+        BX_INFO("Not enough memory for MPC table\n");
+        return;
+    }
     mp_config_table = (uint8_t *)(ram_size - ACPI_DATA_SIZE - MPTABLE_MAX_SIZE);
 #else
     bios_table_cur_addr = align(bios_table_cur_addr, 16);
@@ -1561,6 +1565,11 @@ void acpi_bios_init(void)
     uint32_t base_addr, rsdt_addr, fadt_addr, addr, facs_addr, dsdt_addr, ssdt_addr;
     uint32_t acpi_tables_size, madt_addr, madt_size;
     int i;
+
+    if (ram_size - ACPI_DATA_SIZE < 0x100000) {
+        BX_INFO("Not enough memory for ACPI tables\n");
+        return;
+    }
 
     /* reserve memory space for tables */
 #ifdef BX_USE_EBDA_TABLES
