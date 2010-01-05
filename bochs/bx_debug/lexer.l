@@ -1,6 +1,6 @@
 %{
 /////////////////////////////////////////////////////////////////////////
-// $Id: lexer.l,v 1.35 2009-12-28 13:44:31 sshwarts Exp $
+// $Id: lexer.l,v 1.36 2010-01-05 13:59:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #include <stdlib.h>
@@ -235,6 +235,7 @@ calc            { bxlval.sval = strdup(bxtext); return(BX_TOKEN_CALC); }
 "|"             { return ('|'); }
 "^"             { return ('^'); }
 "!"             { return ('!'); }
+"@"             { return ('@'); }
 "("             { return ('('); }
 ")"             { return (')'); }
 \'([^\\\'\n]|(\\.))*\'    |       /* throw away leading and trailing \" */

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: parser.y,v 1.44 2009-12-30 19:20:27 sshwarts Exp $
+// $Id: parser.y,v 1.45 2010-01-05 13:59:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 %{
@@ -130,7 +130,7 @@
 
 %left '+' '-' '|' '^'
 %left '*' '/' '&' BX_TOKEN_LSHIFT BX_TOKEN_RSHIFT
-%left NOT NEG
+%left NOT NEG INDIRECT
 
 %start commands
 
@@ -1213,7 +1213,8 @@ vexpression:
    | '(' vexpression ')'             { $$ = $2; }
 ;
 
-/* Same as vexpression but includes the ':' operator - used in most commands */
+/* Same as vexpression but includes the ':' operator and unary '*' and '@'
++   operators - used in most commands */
 expression:
      BX_TOKEN_NUMERIC                { $$ = $1; }
    | BX_TOKEN_STRING                 { $$ = bx_dbg_get_symbol_value($1); free($1);}
@@ -1238,6 +1239,8 @@ expression:
    | expression '&' expression       { $$ = $1 & $3; }
    | '!' expression %prec NOT        { $$ = !$2; }
    | '-' expression %prec NEG        { $$ = -$2; }
+   | '*' expression %prec INDIRECT   { $$ = bx_dbg_lin_indirect($2); }
+   | '@' expression %prec INDIRECT   { $$ = bx_dbg_phy_indirect($2); }
    | '(' expression ')'              { $$ = $2; }
 ;
 

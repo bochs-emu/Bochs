@@ -141,8 +141,9 @@
      BX_TOKEN_REG_IP = 357,
      BX_TOKEN_REG_EIP = 358,
      BX_TOKEN_REG_RIP = 359,
-     NEG = 360,
-     NOT = 361
+     INDIRECT = 360,
+     NEG = 361,
+     NOT = 362
    };
 #endif
 /* Tokens.  */
@@ -248,8 +249,9 @@
 #define BX_TOKEN_REG_IP 357
 #define BX_TOKEN_REG_EIP 358
 #define BX_TOKEN_REG_RIP 359
-#define NEG 360
-#define NOT 361
+#define INDIRECT 360
+#define NEG 361
+#define NOT 362
 
 
 
@@ -263,7 +265,7 @@ typedef union YYSTYPE
   bx_bool  bval;
 }
 /* Line 1489 of yacc.c.  */
-#line 267 "y.tab.h"
+#line 269 "y.tab.h"
 	YYSTYPE;
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
 # define YYSTYPE_IS_DECLARED 1

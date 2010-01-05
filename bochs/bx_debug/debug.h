@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debug.h,v 1.64 2009-12-28 13:44:31 sshwarts Exp $
+// $Id: debug.h,v 1.65 2010-01-05 13:59:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -275,6 +275,8 @@ void bx_dbg_info_flags(void);
 void bx_dbg_info_linux_command(void);
 void bx_dbg_examine_command(char *command, char *format, bx_bool format_passed,
                     bx_address addr, bx_bool addr_passed);
+Bit32u bx_dbg_lin_indirect(bx_address addr);
+Bit32u bx_dbg_phy_indirect(bx_phy_address addr);
 void bx_dbg_setpmem_command(bx_phy_address addr, unsigned len, Bit32u val);
 void bx_dbg_query_command(const char *);
 void bx_dbg_take_command(const char *, unsigned n);
