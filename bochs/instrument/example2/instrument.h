@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: instrument.h,v 1.1 2009-11-04 15:48:28 sshwarts Exp $
+// $Id: instrument.h,v 1.2 2010-01-09 15:11:32 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2009 Stanislav Shwartsman
@@ -45,8 +45,6 @@
 #define BX_INSTR_PREFETCH_T0  1
 #define BX_INSTR_PREFETCH_T1  2
 #define BX_INSTR_PREFETCH_T2  3
-
-#define BX_INSTRUMENT_IA_OPCODE 1
 
 #if BX_INSTRUMENTATION
 

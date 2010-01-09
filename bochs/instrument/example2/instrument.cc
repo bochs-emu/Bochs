@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: instrument.cc,v 1.3 2009-11-05 15:39:56 sshwarts Exp $
+// $Id: instrument.cc,v 1.4 2010-01-09 15:11:32 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2009 Stanislav Shwartsman
@@ -79,7 +79,7 @@ void bx_instr_hwinterrupt(unsigned cpu, unsigned vector, Bit16u cs, bx_address e
 void bx_instr_before_execution(unsigned cpu, bxInstruction_c *i)
 {
   if(ia_stats[cpu].active) {
-    ia_stats[cpu].ia_cnt[i->ia_opcode]++;
+    ia_stats[cpu].ia_cnt[i->getIaOpcode()]++;
     ia_stats[cpu].total_cnt++;
 
     if (ia_stats[cpu].total_cnt > IA_CNT_DUMP_THRESHOLD) {
@@ -88,7 +88,7 @@ void bx_instr_before_execution(unsigned cpu, bxInstruction_c *i)
       printf("Interrupts: %d, Exceptions: %d\n", ia_stats[cpu].interrupts, ia_stats[cpu].exceptions);
       for (int n=0;n < BX_IA_LAST; n++) {
         if (ia_stats[cpu].ia_cnt[n] > 0) {
-           printf("%s: %f%%\n", BxOpcodeNamesTable[n], ia_stats[cpu].ia_cnt[n] * 100.0 / ia_stats[cpu].total_cnt);
+           printf("%s: %f%%\n", get_bx_opcode_name(n), ia_stats[cpu].ia_cnt[n] * 100.0 / ia_stats[cpu].total_cnt);
            ia_stats[cpu].ia_cnt[n] = 0;
         }
       }

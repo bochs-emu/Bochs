@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: instr.h,v 1.24 2009-12-21 13:38:06 sshwarts Exp $
+// $Id: instr.h,v 1.25 2010-01-09 15:11:32 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008-2009 Stanislav Shwartsman
@@ -24,10 +24,6 @@
 #ifndef BX_INSTR_H
 #define BX_INSTR_H
 
-#ifndef BX_INSTRUMENT_IA_OPCODE
-  #define BX_INSTRUMENT_IA_OPCODE 0
-#endif
-
 class bxInstruction_c;
 
 // <TAG-TYPE-EXECUTEPTR-START>
@@ -50,16 +46,10 @@ public:
   BxExecutePtr_tR execute;
   BxExecutePtr_tR execute2;
   BxResolvePtr_tR ResolveModrm;
-#if BX_INSTRUMENT_IA_OPCODE
-  Bit16u ia_opcode;
-#endif
 
   struct {
-    //  7...0 (unused)
-    Bit8u metaInfo4;
-
-    //  7...0 b1 - opcode byte
-    Bit8u metaInfo3;
+    //  15..0 opcode
+    Bit16u ia_opcode;
 
     //  7...4 (unused)
     //  3...0 ilen (0..15)
@@ -76,7 +66,7 @@ public:
   } metaInfo;
 
 #define BX_INSTR_METADATA_SEG   0
-#define BX_INSTR_METADATA_DEST  1
+#define BX_INSTR_METADATA_B1    1
 #define BX_INSTR_METADATA_NNN   2
 #define BX_INSTR_METADATA_RM    3
 #define BX_INSTR_METADATA_BASE  4
@@ -121,16 +111,18 @@ public:
 #endif
   };
 
-  BX_CPP_INLINE unsigned modC0() const
-  {
-    // This is a cheaper way to test for modRM instructions where
-    // the mod field is 0xc0.  FetchDecode flags this condition since
-    // it is quite common to be tested for.
-    return metaInfo.metaInfo1 & (1<<2);
+  BX_CPP_INLINE unsigned seg(void) const {
+    return metaData[BX_INSTR_METADATA_SEG];
   }
-  BX_CPP_INLINE unsigned assertModC0()
-  {
-    return metaInfo.metaInfo1 |= (1<<2);
+  BX_CPP_INLINE void setSeg(unsigned val) {
+    metaData[BX_INSTR_METADATA_SEG] = val;
+  }
+
+  BX_CPP_INLINE unsigned b1(void) const {
+    return metaData[BX_INSTR_METADATA_B1];
+  }
+  BX_CPP_INLINE void setB1(unsigned b1) {
+    metaData[BX_INSTR_METADATA_B1] = b1 & 0xff;
   }
   BX_CPP_INLINE void setOpcodeReg(unsigned opreg) {
     // The opcodeReg form (low 3 bits of the opcode byte (extended
@@ -195,13 +187,6 @@ public:
   BX_CPP_INLINE void init(unsigned os32, unsigned as32, unsigned os64, unsigned as64)
   {
     metaInfo.metaInfo1 = (os32<<3) | (as32<<4) | (os64<<5) | (as64<<6);
-    metaInfo.metaInfo4 = 0;
-  }
-  BX_CPP_INLINE unsigned seg(void) const {
-    return metaData[BX_INSTR_METADATA_SEG];
-  }
-  BX_CPP_INLINE void setSeg(unsigned val) {
-    metaData[BX_INSTR_METADATA_SEG] = val;
   }
 
   BX_CPP_INLINE unsigned os32L(void) const {
@@ -259,6 +244,13 @@ public:
     metaInfo.metaInfo2 = ilen;
   }
 
+  BX_CPP_INLINE unsigned getIaOpcode(void) const {
+    return metaInfo.ia_opcode;
+  }
+  BX_CPP_INLINE void setIaOpcode(Bit16u op) {
+    metaInfo.ia_opcode = op;
+  }
+
   BX_CPP_INLINE unsigned repUsedL(void) const {
     return metaInfo.metaInfo1 & 3;
   }
@@ -269,18 +261,21 @@ public:
     metaInfo.metaInfo1 = (metaInfo.metaInfo1 & ~3) | (value);
   }
 
-  BX_CPP_INLINE unsigned b1(void) const {
-    return metaInfo.metaInfo3;
+  BX_CPP_INLINE unsigned modC0() const
+  {
+    // This is a cheaper way to test for modRM instructions where
+    // the mod field is 0xc0.  FetchDecode flags this condition since
+    // it is quite common to be tested for.
+    return metaInfo.metaInfo1 & (1<<2);
   }
-  BX_CPP_INLINE void setB1(unsigned b1) {
-    metaInfo.metaInfo3 = b1 & 0xff;
+  BX_CPP_INLINE unsigned assertModC0()
+  {
+    return metaInfo.metaInfo1 |= (1<<2);
   }
 };
 // <TAG-CLASS-INSTRUCTION-END>
 
-#if BX_INSTRUMENT_IA_OPCODE
-extern const char* BxOpcodeNamesTable[];
-#endif
+const char *get_bx_opcode_name(Bit16u ia_opcode);
 
 enum {
 #define bx_define_opcode(a, b, c) a,

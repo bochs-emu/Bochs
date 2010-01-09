@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.241 2009-12-21 13:38:06 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.242 2010-01-09 15:11:32 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -3852,10 +3852,7 @@ modrm_done:
 
   i->setB1(b1);
   i->setILen(ilen);
-
-#if BX_INSTRUMENT_IA_OPCODE
-  i->ia_opcode = ia_opcode;
-#endif
+  i->setIaOpcode(ia_opcode);
 
 #if BX_SUPPORT_TRACE_CACHE
   if ((attr & BxTraceEnd) || ia_opcode == BX_IA_ERROR)
