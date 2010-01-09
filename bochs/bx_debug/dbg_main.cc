@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.225 2010-01-05 13:59:08 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.226 2010-01-09 20:28:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -1056,6 +1056,15 @@ Bit32u conv_4xBit8u_to_Bit32u(const Bit8u* buf)
   return ret;
 }
 
+Bit16u conv_2xBit8u_to_Bit16u(const Bit8u* buf)
+{
+  Bit16u ret = 0;
+  for (int i = 0; i < 2; i++) {
+    ret |= (buf[i] << (8 * i));
+  }
+  return ret;
+}
+
 void bx_dbg_record_command(char* path_quoted)
 {
   // skip beginning double quote
@@ -1547,7 +1556,7 @@ void bx_dbg_print_stack_command(unsigned nwords)
       }
       else {
         dbg_printf(" | STACK 0x%04x [0x%04x]\n",
-          (unsigned) linear_sp, (unsigned) conv_4xBit8u_to_Bit32u(buf));
+          (unsigned) linear_sp, (unsigned) conv_2xBit8u_to_Bit16u(buf));
       }
     }
 
