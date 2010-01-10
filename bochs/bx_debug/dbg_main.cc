@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.226 2010-01-09 20:28:07 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.227 2010-01-10 14:11:53 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -1520,18 +1520,14 @@ void bx_dbg_print_stack_command(unsigned nwords)
   {
     if (BX_CPU(dbg_cpu)->sregs[BX_SEG_REG_SS].cache.u.segment.d_b) {
       linear_sp = BX_CPU(dbg_cpu)->get_reg32(BX_32BIT_REG_ESP);
-
-      if (BX_CPU(dbg_cpu)->protected_mode()) {
-        linear_sp += BX_CPU(dbg_cpu)->sregs[BX_SEG_REG_SS].cache.u.segment.base;
-        linear_sp &= 0xffffffff;
-      }
-
       len = 4;
     }
     else {
       linear_sp = BX_CPU(dbg_cpu)->get_reg16(BX_16BIT_REG_SP);
       len = 2;
     }
+
+    linear_sp = BX_CPU(dbg_cpu)->get_laddr(BX_SEG_REG_SS, linear_sp);
   }
 
   Bit8u buf[8];
