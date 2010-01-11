@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dis_tables.inc,v 1.28 2009-12-17 09:13:34 sshwarts Exp $
+// $Id: dis_tables.inc,v 1.29 2010-01-11 21:27:59 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005-2009 Stanislav Shwartsman
@@ -3896,7 +3896,7 @@ static BxDisasmOpcodeTable_t BxDisasmOpcodes16[256*2] = {
   /* 0F 34 */ { 0, &Ia_sysenter },
   /* 0F 35 */ { 0, &Ia_sysexit },
   /* 0F 36 */ { 0, &Ia_Invalid },
-  /* 0F 37 */ { 0, &Ia_Invalid },
+  /* 0F 37 */ { 0, &Ia_getsec },
   /* 0F 38 */ { GR3BTAB(0f38) },
   /* 0F 39 */ { 0, &Ia_Invalid  },
   /* 0F 3A */ { GR3BTAB(0f3a) },
@@ -4417,7 +4417,7 @@ static BxDisasmOpcodeTable_t BxDisasmOpcodes32[256*2] = {
   /* 0F 34 */ { 0, &Ia_sysenter },
   /* 0F 35 */ { 0, &Ia_sysexit },
   /* 0F 36 */ { 0, &Ia_Invalid },
-  /* 0F 37 */ { 0, &Ia_Invalid },
+  /* 0F 37 */ { 0, &Ia_getsec },
   /* 0F 38 */ { GR3BTAB(0f38) },
   /* 0F 39 */ { 0, &Ia_Invalid  },
   /* 0F 3A */ { GR3BTAB(0f3a) },
@@ -4938,7 +4938,7 @@ static BxDisasmOpcodeTable_t BxDisasmOpcodes64w[256*2] = {
   /* 0F 34 */ { 0, &Ia_sysenter },
   /* 0F 35 */ { 0, &Ia_sysexit },
   /* 0F 36 */ { 0, &Ia_Invalid },
-  /* 0F 37 */ { 0, &Ia_Invalid },
+  /* 0F 37 */ { 0, &Ia_getsec },
   /* 0F 38 */ { GR3BTAB(0f38) },
   /* 0F 39 */ { 0, &Ia_Invalid  },
   /* 0F 3A */ { GR3BTAB(0f3a) },
@@ -5456,7 +5456,7 @@ static BxDisasmOpcodeTable_t BxDisasmOpcodes64d[256*2] = {
   /* 0F 34 */ { 0, &Ia_sysenter },
   /* 0F 35 */ { 0, &Ia_sysexit },
   /* 0F 36 */ { 0, &Ia_Invalid },
-  /* 0F 37 */ { 0, &Ia_Invalid },
+  /* 0F 37 */ { 0, &Ia_getsec },
   /* 0F 38 */ { GR3BTAB(0f38) },
   /* 0F 39 */ { 0, &Ia_Invalid  },
   /* 0F 3A */ { GR3BTAB(0f3a) },
@@ -5974,7 +5974,7 @@ static BxDisasmOpcodeTable_t BxDisasmOpcodes64q[256*2] = {
   /* 0F 34 */ { 0, &Ia_sysenter },
   /* 0F 35 */ { 0, &Ia_sysexit },
   /* 0F 36 */ { 0, &Ia_Invalid },
-  /* 0F 37 */ { 0, &Ia_Invalid },
+  /* 0F 37 */ { 0, &Ia_getsec },
   /* 0F 38 */ { GR3BTAB(0f38) },
   /* 0F 39 */ { 0, &Ia_Invalid  },
   /* 0F 3A */ { GR3BTAB(0f3a) },

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: opcodes.inc,v 1.29 2009-12-17 09:17:45 sshwarts Exp $
+// $Id: opcodes.inc,v 1.30 2010-01-11 21:27:59 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005-2009 Stanislav Shwartsman
@@ -434,6 +434,7 @@ Ia_fxsave = { "fxsave", "fxsave", Mx, XX, XX, XX, IA_P6 },
 Ia_fxtract = { "fxtract", "fxtract", XX, XX, XX, XX, IA_X87 },
 Ia_fyl2x = { "fyl2x", "fyl2x", XX, XX, XX, XX, IA_X87 },
 Ia_fyl2xp1 = { "fyl2xp1", "fyl2xp1", XX, XX, XX, XX, IA_X87 },
+Ia_getsec = { "getsec", "getsec", XX, XX, XX, XX, IA_SMX },
 Ia_haddpd_Vpd_Wpd = { "haddpd", "haddpd", Vpd, Wpd, XX, XX, IA_SSE3 },
 Ia_haddps_Vps_Wps = { "haddps", "haddps", Vps, Wps, XX, XX, IA_SSE3 },
 Ia_hlt = { "hlt", "hlt", XX, XX, XX, XX, 0 },
