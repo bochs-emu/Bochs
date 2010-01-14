@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios32.c,v 1.61 2010-01-05 08:20:05 sshwarts Exp $
+// $Id: rombios32.c,v 1.62 2010-01-14 07:04:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  32 bit Bochs BIOS init code
@@ -1513,10 +1513,12 @@ int acpi_build_processor_ssdt(uint8_t *ssdt)
     // build processor scope header
     *(ssdt_ptr++) = 0x10; // ScopeOp
     if (length <= 0x3e) {
+        /* Handle 1-4 CPUs with one byte encoding */
         *(ssdt_ptr++) = length + 1;
     } else {
-        *(ssdt_ptr++) = 0x7F;
-        *(ssdt_ptr++) = (length + 2) >> 6;
+        /* Handle 5-314 CPUs with two byte encoding */
+        *(ssdt_ptr++) = 0x40 | ((length + 2) & 0xf);
+        *(ssdt_ptr++) = (length + 2) >> 4;
     }
     *(ssdt_ptr++) = '_'; // Name
     *(ssdt_ptr++) = 'P';
