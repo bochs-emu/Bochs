@@ -1,5 +1,5 @@
 /*
- * $Id: biossums.c,v 1.4 2007-05-28 08:09:13 vruppert Exp $
+ * $Id: biossums.c,v 1.5 2010-01-18 20:04:44 sshwarts Exp $
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -83,6 +83,15 @@ byte chksum__pir_calc_value( byte* data, long offset );
 byte chksum__pir_get_value(  byte* data, long offset );
 void chksum__pir_set_value(  byte* data, long offset, byte value );
 
+#define _PNP_LEN         5
+#define _PNP_CHKSUM      8
+
+#define _PNP_MINHDR     32
+
+long chksum__pnp_get_offset( byte *data, long offset );
+byte chksum__pnp_calc_value( byte* data, long offset );
+byte chksum__pnp_get_value(  byte* data, long offset );
+void chksum__pnp_set_value(  byte* data, long offset, byte value );
 
 byte bios_data[LEN_BIOS_DATA];
 long bios_len;
@@ -209,6 +218,28 @@ int main(int argc, char* argv[]) {
     printf( "\n" );
   }
 
+
+  hits   = 0;
+  offset = 0L;
+  while( (tmp_offset = chksum__pnp_get_offset( bios_data, offset )) != -1L ) {
+    offset  = tmp_offset;
+    cur_val = chksum__pnp_get_value(  bios_data, offset );
+    new_val = chksum__pnp_calc_value( bios_data, offset );
+    printf( "\n\n$PnP header at:     0x%4lX\n", offset  );
+    printf( "Current checksum:     0x%02X\n",   cur_val );
+    printf( "Calculated checksum:  0x%02X\n  ",  new_val );
+    hits++;
+  }
+  if( hits == 1 && cur_val != new_val ) {
+    printf( "Setting checksum." );
+    chksum__pnp_set_value( bios_data, offset, new_val );
+  }
+  if( hits >= 2 ) {
+    printf( "Warning! Multiple $PnP headers. No checksum set." );
+  }
+  if( hits ) {
+    printf( "\n" );
+  }
 
   offset  = 0L;
   offset  = chksum_bios_get_offset( bios_data, offset );
@@ -500,5 +531,59 @@ void chksum__pir_set_value( byte* data, long offset, byte value ) {
 
   check( offset + _PIR_CHKSUM <= MAX_OFFSET, "$PIR checksum out of bounds" );
   *( data + offset + _PIR_CHKSUM ) = value;
+}
+
+
+byte chksum__pnp_calc_value( byte* data, long offset ) {
+
+  int   i;
+  int   len;
+  byte  sum;
+
+  check( offset + _PNP_MINHDR <= MAX_OFFSET, "$PnP header out of bounds" );
+  len  =   *( data + offset + _PNP_LEN );
+  check( offset + len <= MAX_OFFSET, "$PnP header-length out of bounds" );
+  sum = 0;
+  for( i = 0; i < len; i++ ) {
+    if( i != _PNP_CHKSUM ) {
+      sum = sum + *( data + offset + i );
+    }
+  }
+  sum = -sum;
+  return( sum );
+}
+
+
+long chksum__pnp_get_offset( byte* data, long offset ) {
+
+  long result = -1L;
+
+  offset = offset + 0x0F;
+  offset = offset & ~( 0x0F );
+  while( offset + 16 < MAX_OFFSET ) {
+    offset = offset + 16;
+    if( *( data + offset + 0 ) == '$' && \
+        *( data + offset + 1 ) == 'P' && \
+        *( data + offset + 2 ) == 'n' && \
+        *( data + offset + 3 ) == 'P' ) {
+      result = offset;
+      break;
+    }
+  }
+  return( result );
+}
+
+
+byte chksum__pnp_get_value( byte* data, long offset ) {
+
+  check( offset + _PNP_CHKSUM <= MAX_OFFSET, "$PnP checksum out of bounds" );
+  return(  *( data + offset + _PNP_CHKSUM ) );
+}
+
+
+void chksum__pnp_set_value( byte* data, long offset, byte value ) {
+
+  check( offset + _PNP_CHKSUM <= MAX_OFFSET, "$PnP checksum out of bounds" );
+  *( data + offset + _PNP_CHKSUM ) = value;
 }
 

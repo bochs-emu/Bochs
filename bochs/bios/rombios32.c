@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios32.c,v 1.62 2010-01-14 07:04:40 sshwarts Exp $
+// $Id: rombios32.c,v 1.63 2010-01-18 20:04:44 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  32 bit Bochs BIOS init code
@@ -574,7 +574,7 @@ void setup_mtrr(void)
     /* Mark 3-4GB as UC, anything not specified defaults to WB */
     wrmsr_smp(MTRRphysBase_MSR(0), 0xc0000000 | MTRR_MEMTYPE_UC);
     /* Make sure no reserved bit set to '1 in MTRRphysMask_MSR */
-    wrmsr_smp(MTRRphysMask_MSR(0), (uint32_t)(~(0x20000000 - 1)) | 0x800);
+    wrmsr_smp(MTRRphysMask_MSR(0), (uint32_t)(~(0x40000000 - 1)) | 0x800);
     wrmsr_smp(MSR_MTRRdefType, 0xc00 | MTRR_MEMTYPE_WB);
 }
 

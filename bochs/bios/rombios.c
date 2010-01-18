@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.243 2010-01-14 07:04:39 sshwarts Exp $
+// $Id: rombios.c,v 1.244 2010-01-18 20:04:44 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -143,6 +143,7 @@
 #define BX_FLOPPY_ON_CNT 37   /* 2 seconds */
 #define BX_PCIBIOS       1
 #define BX_APM           1
+#define BX_PNPBIOS       1
 
 #define BX_USE_ATADRV    1
 #define BX_ELTORITO_BOOT 1
@@ -927,7 +928,7 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.243 $ $Date: 2010-01-14 07:04:39 $";
+static char bios_cvs_version_string[] = "$Revision: 1.244 $ $Date: 2010-01-18 20:04:44 $";
 
 #define BIOS_COPYRIGHT_STRING "(c) 2002 MandrakeSoft S.A. Written by Kevin Lawton & the Bochs team."
 
@@ -1924,6 +1925,9 @@ print_bios_banner()
 #endif
 #if BX_PCIBIOS
   "pcibios "
+#endif
+#if BX_PNPBIOS
+  "pnpbios "
 #endif
 #if BX_ELTORITO_BOOT
   "eltorito "
@@ -10271,13 +10275,53 @@ checksum_out:
   ret
 
 
-;; We need a copy of this string, but we are not actually a PnP BIOS,
-;; so make sure it is *not* aligned, so OSes will not see it if they scan.
 .align 16
+#if !BX_PNPBIOS
+;; Make sure the pnpbios structure is *not* aligned, so OSes will not see it if
+;; they scan.
   db 0
-pnp_string:
+#endif
+pnpbios_structure:
   .ascii "$PnP"
+  db 0x10 ;; version
+  db 0x21 ;; length
+  dw 0x0 ;; control field
+  db 0xd1 ;; checksum
+  dd 0xf0000 ;; event notification flag address
+  dw pnpbios_real ;; real mode 16 bit offset
+  dw 0xf000 ;; real mode 16 bit segment
+  dw pnpbios_prot ;; 16 bit protected mode offset
+  dd 0xf0000 ;; 16 bit protected mode segment base
+  dd 0x0 ;; OEM device identifier
+  dw 0xf000 ;; real mode 16 bit data segment
+  dd 0xf0000 ;; 16 bit protected mode segment base
 
+pnpbios_prot:
+  push ebp
+  mov  ebp, esp
+  jmp  pnpbios_code
+pnpbios_real:
+  push ebp
+  movzx ebp, sp
+pnpbios_code:
+  mov  ax, 8[ebp]
+  cmp  ax, #0x60 ;; Get Version and Installation Check
+  jnz  pnpbios_fail
+  push ds
+  push di
+  mov  ds, 12[bp]
+  mov  di, 10[bp]
+  mov  ax, #0x0101
+  mov  [di], ax
+  pop  di
+  pop  ds
+  xor  ax, ax ;; SUCCESS
+  jmp  pnpbios_exit
+pnpbios_fail:
+  mov  ax, #0x82 ;; FUNCTION_NOT_SUPPORTED
+pnpbios_exit:
+  pop ebp
+  retf
 
 rom_scan:
   ;; Scan for existence of valid expansion ROMS.
@@ -10322,7 +10366,7 @@ block_count_rounded:
   ;; That should stop it grabbing INT 19h; we will use its BEV instead.
   mov  ax, #0xf000
   mov  es, ax
-  lea  di, pnp_string
+  lea  di, pnpbios_structure
 
   mov  bp, sp   ;; Call ROM init routine using seg:off on stack
   db   0xff     ;; call_far ss:[bp+0]
@@ -10355,7 +10399,7 @@ block_count_rounded:
   ;; Point ES:DI at "$PnP", which tells the ROM that we are a PnP BIOS.
   mov  bx, #0xf000
   mov  es, bx
-  lea  di, pnp_string
+  lea  di, pnpbios_structure
   /* jump to BCV function entry pointer */
   mov  bp, sp   ;; Call ROM BCV routine using seg:off on stack
   db   0xff     ;; call_far ss:[bp+0]
