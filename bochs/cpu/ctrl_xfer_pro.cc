@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer_pro.cc,v 1.80 2009-12-17 11:11:58 sshwarts Exp $
+// $Id: ctrl_xfer_pro.cc,v 1.81 2010-01-19 14:43:47 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -106,9 +106,6 @@ BX_CPU_C::load_cs(bx_selector_t *selector, bx_descriptor_t *descriptor, Bit8u cp
 
 #if BX_SUPPORT_X86_64
   if (long_mode()) {
-    if (descriptor->u.segment.l) {
-      loadSRegLMNominal(BX_SEG_REG_CS, selector->value, cpl);
-    }
     handleCpuModeChange();
   }
 #endif

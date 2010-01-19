@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.634 2009-12-28 09:26:22 sshwarts Exp $
+// $Id: cpu.h,v 1.635 2010-01-19 14:43:46 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -3186,7 +3186,6 @@ public: // for now...
                          Bit32u *dword1, Bit32u *dword2, Bit32u *dword3, unsigned exception_no);
   BX_SMF bx_bool fetch_raw_descriptor2_64(const bx_selector_t *selector,
                          Bit32u *dword1, Bit32u *dword2, Bit32u *dword3);
-  BX_SMF void    loadSRegLMNominal(unsigned seg, unsigned selector, unsigned dpl);
 #endif
   BX_SMF void    push_16(Bit16u value16) BX_CPP_AttrRegparmN(1);
   BX_SMF void    push_32(Bit32u value32) BX_CPP_AttrRegparmN(1);

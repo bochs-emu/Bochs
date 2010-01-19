@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: ret_far.cc,v 1.23 2009-11-19 20:00:35 sshwarts Exp $
+// $Id: ret_far.cc,v 1.24 2010-01-19 14:43:47 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005-2009 Stanislav Shwartsman
@@ -216,7 +216,7 @@ BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
     else {
       // we are in 64-bit mode !
       load_null_selector(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS], raw_ss_selector);
-      loadSRegLMNominal(BX_SEG_REG_SS, raw_ss_selector, cs_selector.rpl);
+//    loadSRegLMNominal(BX_SEG_REG_SS, raw_ss_selector, cs_selector.rpl);
     }
 
     if (StackAddrSize64())

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: segment_ctrl_pro.cc,v 1.126 2009-12-28 09:26:22 sshwarts Exp $
+// $Id: segment_ctrl_pro.cc,v 1.127 2010-01-19 14:43:47 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -232,21 +232,6 @@ BX_CPU_C::load_null_selector(bx_segment_reg_t *seg, unsigned value)
   seg->cache.u.segment.l            = 0;
 #endif
 }
-
-#if BX_SUPPORT_X86_64
-void BX_CPU_C::loadSRegLMNominal(unsigned segI, unsigned selector, unsigned dpl)
-{
-  bx_segment_reg_t *seg = & BX_CPU_THIS_PTR sregs[segI];
-
-  // Load a segment register in long-mode with nominal values,
-  // so descriptor cache values are compatible with existing checks.
-  seg->cache.u.segment.base = 0;
-  seg->cache.valid = 1;
-  seg->cache.dpl = dpl;
-
-  seg->selector.value = selector;
-}
-#endif
 
 BX_CPP_INLINE void BX_CPU_C::validate_seg_reg(unsigned seg)
 {
@@ -546,18 +531,7 @@ BX_CPU_C::load_ss(bx_selector_t *selector, bx_descriptor_t *descriptor, Bit8u cp
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector = *selector;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache = *descriptor;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.rpl = cpl;
-
-#if BX_SUPPORT_X86_64
-  if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
-    loadSRegLMNominal(BX_SEG_REG_SS, selector->value, cpl);
-    return;
-  }
-#endif
-  if ((BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value & 0xfffc) == 0)
-    BX_PANIC(("load_ss(): null selector passed"));
-
-  if (!BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.valid)
-    BX_PANIC(("load_ss(): invalid selector/descriptor passed."));
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.valid = 1;
 }
 
 void BX_CPU_C::fetch_raw_descriptor(const bx_selector_t *selector,
