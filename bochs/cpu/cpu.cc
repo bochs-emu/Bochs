@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.301 2009-12-21 13:38:06 sshwarts Exp $
+// $Id: cpu.cc,v 1.302 2010-01-24 12:48:42 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -146,8 +146,6 @@ no_async_event:
       i = entry->i;
     }
 
-    BxExecutePtr_tR execute = i->execute;
-
 #if BX_SUPPORT_TRACE_CACHE
     bxInstruction_c *last = i + (entry->ilen);
 
@@ -166,20 +164,17 @@ no_async_event:
       }
 #endif
 
-      // decoding instruction compeleted -> continue with execution
+      // instruction decoding completed -> continue with execution
+      // want to allow changing of the instruction inside instrumentation callback
       BX_INSTR_BEFORE_EXECUTION(BX_CPU_ID, i);
       RIP += i->ilen();
-      BX_CPU_CALL_METHOD(execute, (i)); // might iterate repeat instruction
+      BX_CPU_CALL_METHOD(i->execute, (i)); // might iterate repeat instruction
       BX_CPU_THIS_PTR prev_rip = RIP; // commit new RIP
       BX_INSTR_AFTER_EXECUTION(BX_CPU_ID, i);
       BX_TICK1_IF_SINGLE_PROCESSOR();
 
       // inform instrumentation about new instruction
       BX_INSTR_NEW_INSTRUCTION(BX_CPU_ID);
-
-#if BX_SUPPORT_TRACE_CACHE
-      execute = (++i)->execute;
-#endif
 
       // note instructions generating exceptions never reach this point
 #if BX_DEBUGGER || BX_GDBSTUB
@@ -195,7 +190,7 @@ no_async_event:
         break;
       }
 
-      if (i == last) goto no_async_event;
+      if (++i == last) goto no_async_event;
     }
 #endif
   }  // while (1)
