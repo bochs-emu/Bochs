@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32.cc,v 1.135 2009-12-04 20:02:12 sshwarts Exp $
+// $Id: win32.cc,v 1.136 2010-01-24 12:46:42 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2009  The Bochs Project
@@ -133,8 +133,8 @@ static int FontId = 2;
 
 // Headerbar stuff
 HWND hwndTB, hwndSB;
-unsigned bx_bitmap_entries;
-struct {
+static unsigned bx_bitmap_entries;
+static struct {
   HBITMAP bmap;
   unsigned xdim;
   unsigned ydim;

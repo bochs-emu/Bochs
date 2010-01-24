@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: beos.cc,v 1.35 2009-12-04 20:02:12 sshwarts Exp $
+// $Id: beos.cc,v 1.36 2010-01-24 12:46:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -168,12 +168,12 @@ unsigned col_vals[256], curr_foreground, curr_background;
 
 static unsigned x_tilesize, y_tilesize;
 
-struct {
+static struct {
   BBitmap *bmap;
   unsigned xdim;
   unsigned ydim;
 } bx_bitmaps[BX_MAX_PIXMAPS];
-unsigned bx_bitmap_entries = 0;
+static unsigned bx_bitmap_entries = 0;
 
 static struct {
   BBitmap   *bitmap;
@@ -183,7 +183,8 @@ static struct {
   unsigned yorigin;
   unsigned alignment;
   void (*f)(void);
-  } bx_headerbar_entry[BX_MAX_HEADERBAR_ENTRIES];
+} bx_headerbar_entry[BX_MAX_HEADERBAR_ENTRIES];
+
 static unsigned bx_headerbar_y = 0;
 static unsigned bx_headerbar_entries = 0;
 static unsigned bx_bitmap_left_xorigin = 0;  // pixels from left
@@ -194,8 +195,7 @@ static unsigned char reverse_bitorder(unsigned char b);
 static void create_vga_font(void);
 static BBitmap *vgafont[256];
 
-  void
-bx_beos_gui_c::specific_init(int argc, char **argv,
+void bx_beos_gui_c::specific_init(int argc, char **argv,
                         unsigned tilewidth, unsigned tileheight,
                         unsigned header_bar_y)
 {

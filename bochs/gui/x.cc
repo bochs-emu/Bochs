@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: x.cc,v 1.128 2009-12-04 20:02:12 sshwarts Exp $
+// $Id: x.cc,v 1.129 2010-01-24 12:46:42 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2009  The Bochs Project
@@ -127,12 +127,12 @@ static bx_bool x_init_done = false;
 
 static Pixmap vgafont[256];
 
+static unsigned bx_bitmap_entries = 0;
 static struct {
   Pixmap bmap;
   unsigned xdim;
   unsigned ydim;
-  } bx_bitmaps[BX_MAX_PIXMAPS];
-unsigned bx_bitmap_entries = 0;
+} bx_bitmaps[BX_MAX_PIXMAPS];
 
 static struct {
   Pixmap   bitmap;
@@ -142,7 +142,8 @@ static struct {
   unsigned yorigin;
   unsigned alignment;
   void (*f)(void);
-  } bx_headerbar_entry[BX_MAX_HEADERBAR_ENTRIES];
+} bx_headerbar_entry[BX_MAX_HEADERBAR_ENTRIES];
+
 static unsigned bx_headerbar_y = 0;
 static unsigned bx_headerbar_entries = 0;
 static unsigned bx_bitmap_left_xorigin = 0;  // pixels from left
@@ -151,7 +152,7 @@ static unsigned bx_bitmap_right_xorigin = 0; // pixels from right
 static unsigned bx_statusbar_y = 18;
 static unsigned bx_statusitem_pos[12] = {
   0, 200, 240, 280, 320, 360, 400, 440, 480, 520, 560, 600
-  };
+};
 static bx_bool bx_statusitem_active[12];
 static long bx_status_led_green, bx_status_led_red, bx_status_graytext;
 static char bx_status_info_text[34];
