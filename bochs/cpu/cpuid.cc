@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpuid.cc,v 1.87 2009-12-20 09:00:40 sshwarts Exp $
+// $Id: cpuid.cc,v 1.88 2010-01-24 20:21:47 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007-2009 Stanislav Shwartsman
@@ -718,6 +718,8 @@ void BX_CPU_C::set_cpuid_defaults(void)
 #if BX_SUPPORT_X86_64
   // ------------------------------------------------------
   // CPUID function 0x80000005
+
+#if BX_CPU_VENDOR_INTEL == 0
   cpuid = &(BX_CPU_THIS_PTR cpuid_ext_function[5]);
 
   /* cache info (L1 cache) */
@@ -725,6 +727,7 @@ void BX_CPU_C::set_cpuid_defaults(void)
   cpuid->ebx = 0x01ff01ff;
   cpuid->ecx = 0x40020140;
   cpuid->edx = 0x40020140;
+#endif
 
   // ------------------------------------------------------
   // CPUID function 0x80000006
