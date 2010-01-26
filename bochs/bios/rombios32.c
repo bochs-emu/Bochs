@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios32.c,v 1.63 2010-01-18 20:04:44 sshwarts Exp $
+// $Id: rombios32.c,v 1.64 2010-01-26 07:41:49 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  32 bit Bochs BIOS init code
@@ -2083,7 +2083,7 @@ smbios_type_16_init(void *start, uint32_t memsize, int nr_mem_devs)
     p->header.length = sizeof(struct smbios_type_16);
     p->header.handle = 0x1000;
 
-    p->location = 0x01; /* other */
+    p->location = 0x03; /* system board or motherboard */
     p->use = 0x03; /* system memory */
     p->error_correction = 0x01; /* other */
     p->maximum_capacity = memsize * 1024;
@@ -2107,6 +2107,7 @@ smbios_type_17_init(void *start, uint32_t memory_size_mb, int instance)
     p->header.handle = 0x1100 + instance;
 
     p->physical_memory_array_handle = 0x1000;
+    p->memory_error_information_handle = 0xfffe; /* none provided */
     p->total_width = 64;
     p->data_width = 64;
 /* TODO: should assert in case something is wrong   ASSERT((memory_size_mb & ~0x7fff) == 0); */
