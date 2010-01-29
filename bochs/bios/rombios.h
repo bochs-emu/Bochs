@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.h,v 1.12 2010-01-17 17:35:04 sshwarts Exp $
+// $Id: rombios.h,v 1.13 2010-01-29 20:57:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2006 Volker Ruppert
@@ -66,8 +66,10 @@
   // Define the application NAME
 #if defined(BX_QEMU)
 #  define BX_APPNAME "QEMU"
+#  define BX_APPVENDOR "QEMU"
 #else
 #  define BX_APPNAME "Bochs"
+#  define BX_APPVENDOR "The Bochs Project"
 #endif
 
 #define E820_RAM          1

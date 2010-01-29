@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios32.c,v 1.64 2010-01-26 07:41:49 sshwarts Exp $
+// $Id: rombios32.c,v 1.65 2010-01-29 20:57:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  32 bit Bochs BIOS init code
@@ -1952,9 +1952,9 @@ smbios_type_0_init(void *start)
     p->header.handle = 0;
 
     p->vendor_str = 1;
-    p->bios_version_str = 1;
+    p->bios_version_str = 2;
     p->bios_starting_address_segment = 0xe800;
-    p->bios_release_date_str = 2;
+    p->bios_release_date_str = 3;
     p->bios_rom_size = 0; /* FIXME */
 
     memset(p->bios_characteristics, 0, 8);
@@ -1968,6 +1968,8 @@ smbios_type_0_init(void *start)
     p->embedded_controller_minor_release = 0xff;
 
     start += sizeof(struct smbios_type_0);
+    memcpy((char *)start, BX_APPVENDOR, sizeof(BX_APPVENDOR));
+    start += sizeof(BX_APPVENDOR);
     memcpy((char *)start, BX_APPNAME, sizeof(BX_APPNAME));
     start += sizeof(BX_APPNAME);
     memcpy((char *)start, RELEASE_DATE_STR, sizeof(RELEASE_DATE_STR));
