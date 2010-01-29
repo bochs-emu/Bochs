@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios32.c,v 1.65 2010-01-29 20:57:07 sshwarts Exp $
+// $Id: rombios32.c,v 1.66 2010-01-29 21:09:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  32 bit Bochs BIOS init code
@@ -1953,9 +1953,9 @@ smbios_type_0_init(void *start)
 
     p->vendor_str = 1;
     p->bios_version_str = 2;
-    p->bios_starting_address_segment = 0xe800;
+    p->bios_starting_address_segment = 0xe000;
     p->bios_release_date_str = 3;
-    p->bios_rom_size = 0; /* FIXME */
+    p->bios_rom_size = 1; /* 128 kB */
 
     memset(p->bios_characteristics, 0, 8);
     p->bios_characteristics[0] = 0x08; /* BIOS characteristics not supported */
