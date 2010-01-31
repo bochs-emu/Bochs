@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.309 2009-12-04 16:53:12 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.310 2010-01-31 18:06:44 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -1274,14 +1274,14 @@ void BX_CPU_C::handleAlignmentCheck(void)
     if (BX_CPU_THIS_PTR alignment_check_mask == 0) {
       BX_CPU_THIS_PTR alignment_check_mask = 0xF;
       BX_INFO(("Enable alignment check (#AC exception)"));
-      BX_CPU_THIS_PTR iCache.flushICacheEntries();
+//    BX_CPU_THIS_PTR iCache.flushICacheEntries();
     }
   }
   else {
     if (BX_CPU_THIS_PTR alignment_check_mask != 0) {
       BX_CPU_THIS_PTR alignment_check_mask = 0;
       BX_INFO(("Disable alignment check (#AC exception)"));
-      BX_CPU_THIS_PTR iCache.flushICacheEntries();
+//    BX_CPU_THIS_PTR iCache.flushICacheEntries();
     }
   }
 }

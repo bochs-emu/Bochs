@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.244 2010-01-31 09:45:27 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.245 2010-01-31 18:06:44 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -106,25 +106,6 @@ static const Bit8u BxOpcodeHasModrm64[512] = {
 // In 64-bit mode the CS, DS, ES, and SS segment overrides are ignored.
 
 // decoding instructions; accessing seg reg's by index
-static unsigned sreg_mod01or10_rm32[16] = {
-  BX_SEG_REG_DS,
-  BX_SEG_REG_DS,
-  BX_SEG_REG_DS,
-  BX_SEG_REG_DS,
-  BX_SEG_REG_NULL, // escape to SIB-byte
-  BX_SEG_REG_SS,
-  BX_SEG_REG_DS,
-  BX_SEG_REG_DS,
-  BX_SEG_REG_DS,
-  BX_SEG_REG_DS,
-  BX_SEG_REG_DS,
-  BX_SEG_REG_DS,
-  BX_SEG_REG_NULL, // escape to SIB-byte
-  BX_SEG_REG_DS,
-  BX_SEG_REG_DS,
-  BX_SEG_REG_DS,
-};
-
 static unsigned sreg_mod0_base32[16] = {
   BX_SEG_REG_DS,
   BX_SEG_REG_DS,
@@ -3543,7 +3524,7 @@ get_32bit_displ:
           // mod==00b, rm!=4, rm!=5
           goto modrm_done;
         }
-        seg = sreg_mod01or10_rm32[rm];
+        seg = sreg_mod1or2_base32[rm];
         if (mod == 0x40) { // mod == 01b
 get_8bit_displ:
           if (ilen < remain) {
@@ -3605,7 +3586,7 @@ get_8bit_displ:
           // mod==00b, rm!=4, rm!=5
           goto modrm_done;
         }
-        seg = sreg_mod01or10_rm32[rm];
+        seg = sreg_mod1or2_base32[rm];
         if (mod == 0x40) // mod == 01b
           goto get_8bit_displ;
         // (mod == 0x80)    mod == 10b

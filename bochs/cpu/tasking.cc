@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: tasking.cc,v 1.78 2009-12-17 11:11:58 sshwarts Exp $
+// $Id: tasking.cc,v 1.79 2010-01-31 18:06:45 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -647,7 +647,7 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
 
       touch_segment(&cs_selector, &cs_descriptor);
 
-#if BX_SUPPORT_TRACE_CACHE
+#ifdef BX_SUPPORT_CS_LIMIT_DEMOTION
       // Handle special case of CS.LIMIT demotion (new descriptor limit is
       // smaller than current one)
       if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled > cs_descriptor.u.segment.limit_scaled)
