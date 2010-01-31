@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: disasm.h,v 1.53 2009-12-28 13:52:40 sshwarts Exp $
+// $Id: disasm.h,v 1.54 2010-01-31 09:45:27 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005-2009 Stanislav Shwartsman
@@ -66,7 +66,6 @@
 #define IA_PCLMULQDQ        0x01000000        /* PCLMULQDQ instruction */
 #define IA_MOVBE            0x02000000        /* MOVBE Intel Atom(R) instruction */
 #define IA_AVX              0x04000000        /* AVX instruction */
-#define IA_LEGACY           0x80000000        /* legacy instruction */
 
 /* general purpose bit register */
 enum {

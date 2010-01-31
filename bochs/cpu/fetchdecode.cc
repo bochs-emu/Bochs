@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.241 2010-01-29 10:16:28 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.242 2010-01-31 09:45:27 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -2937,7 +2937,7 @@ modrm_done:
 
 #if BX_SUPPORT_3DNOW
   if(b1 == 0x10f)
-     ia_opcode = Bx3DNowOpcodeInfo[i->modRMForm.Ib].IA;
+     ia_opcode = Bx3DNowOpcode[i->modRMForm.Ib];
 #endif
 
   if (! BX_NULL_SEG_REG(seg_override))

@@ -23,15 +23,20 @@ Changes after 2.4.2:
   - USB HP DeskJet 920C printer device emulation (Ben Lunt)
 
 - BIOS
-  - Fix MSR_MTRRdefType configuration (prevented boot of modern Linux kernels)
+  - Fix MTRR configuration (prevented boot of modern Linux kernels)
   - Fix interrupt vectors for INT 60h-66h (reserved for user interrupt) by
     setting them to zero
 
 - SF patches applied
+ [2938273] allow instrumentation to change execute by Konrad Grochowski
+ [2926072] Indirection operators in expressions by Derek Peschel
  [2914433] makesym.perl misses symbols by John R. Jackson
  [2908481] USB Printer by Ben Lunt
 
 - these S.F. bugs were closed/fixed
+ [1921294] extended memory less than 1M wrong size
+ [1947249] BX_USE_EBDA_TABLES and MP table placement
+ [1933859] BX_USE_EBDA_TABLES and memory overlapping
  [2923680] "help dregs" is a syntax error
  [2919661] CPU may fail to do 16bit near call
  [2790768] Memory corruption with SMP > 32, Panic BIOS Keyboard Error

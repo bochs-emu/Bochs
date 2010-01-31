@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: opcodes.inc,v 1.30 2010-01-11 21:27:59 sshwarts Exp $
+// $Id: opcodes.inc,v 1.31 2010-01-31 09:45:27 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005-2009 Stanislav Shwartsman
@@ -323,7 +323,7 @@ Ia_fcomps_Md = { "fcomp", "fcomps", Md, XX, XX, XX, IA_X87 },
 Ia_fcoms_Md = { "fcom", "fcoms", Md, XX, XX, XX, IA_X87 },
 Ia_fcos = { "fcos", "fcos", XX, XX, XX, XX, IA_X87 },
 Ia_fdecstp = { "fdecstp", "fdecstp", XX, XX, XX, XX, IA_X87 },
-Ia_fdisi = { "fdisi (287 legacy)", "fdisi (287 legacy)", XX, XX, XX, XX, IA_X87 | IA_LEGACY },
+Ia_fdisi = { "fdisi (287 legacy)", "fdisi (287 legacy)", XX, XX, XX, XX, IA_X87 },
 Ia_fdiv_ST0_STi = { "fdiv", "fdiv", ST0, STi, XX, XX, IA_X87 },
 Ia_fdiv_STi_ST0 = { "fdiv", "fdiv", STi, ST0, XX, XX, IA_X87 },
 Ia_fdivl_Mq = { "fdiv", "fdivl", Mq, XX, XX, XX, IA_X87 },
@@ -335,7 +335,7 @@ Ia_fdivrp_STi_ST0 = { "fdivrp", "fdivrp", STi, ST0, XX, XX, IA_X87 },
 Ia_fdivrs_Md = { "fdivr", "fdivrs", Md, XX, XX, XX, IA_X87 },
 Ia_fdivs_Md = { "fdiv", "fdivs", Md, XX, XX, XX, IA_X87 },
 Ia_femms = { "femms", "femms", XX, XX, XX, XX, IA_3DNOW },
-Ia_feni = { "feni (287 legacy)", "feni(287 legacy)", XX, XX, XX, XX, IA_X87 | IA_LEGACY },
+Ia_feni = { "feni (287 legacy)", "feni(287 legacy)", XX, XX, XX, XX, IA_X87 },
 Ia_ffree_STi = { "ffree", "ffree", STi, XX, XX, XX, IA_X87 },
 Ia_ffreep_STi = { "ffreep", "ffreep", STi, XX, XX, XX, IA_X87 },
 Ia_fiaddl_Md = { "fiadd", "fiaddl", Md, XX, XX, XX, IA_X87 },
@@ -399,7 +399,7 @@ Ia_fptan = { "fptan", "fptan", XX, XX, XX, XX, IA_X87 },
 Ia_frndint = { "frndint", "frndint", XX, XX, XX, XX, IA_X87 },
 Ia_frstor = { "frstor", "frstor", Mx, XX, XX, XX, IA_X87 },
 Ia_fscale = { "fscale", "fscale", XX, XX, XX, XX, IA_X87 },
-Ia_fsetpm = { "fsetpm (287 legacy)", "fsetpm (287 legacy)", XX, XX, XX, XX, IA_X87 | IA_LEGACY },
+Ia_fsetpm = { "fsetpm (287 legacy)", "fsetpm (287 legacy)", XX, XX, XX, XX, IA_X87 },
 Ia_fsin = { "fsin", "fsin", XX, XX, XX, XX, IA_X87 },
 Ia_fsincos = { "fsincos", "fsincos", XX, XX, XX, XX, IA_X87 },
 Ia_fsqrt = { "fsqrt", "fsqrt", XX, XX, XX, XX, IA_X87 },

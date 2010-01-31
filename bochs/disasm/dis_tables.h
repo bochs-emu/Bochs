@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dis_tables.h,v 1.37 2009-10-14 20:45:29 sshwarts Exp $
+// $Id: dis_tables.h,v 1.38 2010-01-31 09:45:27 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005-2009 Stanislav Shwartsman
@@ -28,12 +28,16 @@
 #define _GRPFP         3
 #define _GRP3DNOW      4
 #define _GRPSSE        5
-#define _GRPRM         6
-#define _GRP3BOP       7
-#define _GRP64B        8
+#define _GRPSSE66      6
+#define _GRPSSEF2      7
+#define _GRPRM         8
+#define _GRP3BOP       9
+#define _GRP64B        10
 
 /* ************************************************************************ */
 #define GRPSSE(n)       _GRPSSE,   BxDisasmGroupSSE_##n
+#define GRPSSE66(n)     _GRPSSE66, BxDisasmGroupSSE_ERR
+#define GRPSSEF2(n)     _GRPSSEF2, BxDisasmGroupSSE_ERR
 #define GRPN(n)         _GROUPN,   BxDisasmGroup##n
 #define GRPRM(n)        _GRPRM,    BxDisasmGroupRm##n
 #define GRPMOD(n)       _SPLIT11B, BxDisasmGroupMod##n

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dis_decode.cc,v 1.52 2009-10-14 20:45:29 sshwarts Exp $
+// $Id: dis_decode.cc,v 1.53 2010-01-31 09:45:27 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005-2009 Stanislav Shwartsman
@@ -219,6 +219,20 @@ x86_insn disassembler::decode(bx_bool is_32, bx_bool is_64, bx_address base, bx_
     switch(attr) {
        case _GROUPN:
          entry = &(OPCODE_TABLE(entry)[insn.nnn & 7]);
+         break;
+
+       case _GRPSSE66:
+         /* SSE opcode group with only prefix 0x66 allowed */
+         sse_opcode = 1;
+         if (sse_prefix != SSE_PREFIX_66)
+             entry = &(OPCODE_TABLE(entry)[sse_prefix]);
+         break;
+
+       case _GRPSSEF2:
+         /* SSE opcode group with only prefix 0xF2 allowed */
+         sse_opcode = 1;
+         if (sse_prefix != SSE_PREFIX_F2)
+             entry = &(OPCODE_TABLE(entry)[sse_prefix]);
          break;
 
        case _GRPSSE:
