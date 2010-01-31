@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dis_tables.h,v 1.38 2010-01-31 09:45:27 sshwarts Exp $
+// $Id: dis_tables.h,v 1.39 2010-01-31 10:17:42 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005-2009 Stanislav Shwartsman
@@ -36,8 +36,6 @@
 
 /* ************************************************************************ */
 #define GRPSSE(n)       _GRPSSE,   BxDisasmGroupSSE_##n
-#define GRPSSE66(n)     _GRPSSE66, BxDisasmGroupSSE_ERR
-#define GRPSSEF2(n)     _GRPSSEF2, BxDisasmGroupSSE_ERR
 #define GRPN(n)         _GROUPN,   BxDisasmGroup##n
 #define GRPRM(n)        _GRPRM,    BxDisasmGroupRm##n
 #define GRPMOD(n)       _SPLIT11B, BxDisasmGroupMod##n
@@ -45,6 +43,11 @@
 #define GRP3DNOW        _GRP3DNOW, BxDisasm3DNowGroup
 #define GR3BTAB(n)      _GRP3BOP,  BxDisasm3ByteOpTable##n
 #define GR64BIT(n)      _GRP64B,   BxDisasmGrpOs64B_##n
+/* ************************************************************************ */
+
+/* ************************************************************************ */
+#define GRPSSE66(n)     _GRPSSE66, &n
+#define GRPSSEF2(n)     _GRPSSEF2, &n
 /* ************************************************************************ */
 
 #define Apw &disassembler::Apw
