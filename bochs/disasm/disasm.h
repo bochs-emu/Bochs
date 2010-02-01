@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: disasm.h,v 1.54 2010-01-31 09:45:27 sshwarts Exp $
+// $Id: disasm.h,v 1.55 2010-02-01 07:59:21 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005-2009 Stanislav Shwartsman
@@ -234,7 +234,6 @@ private:
   const char **segment_name;
   const char **index16;
 
-  const char *sreg_mod01or10_rm32[16];
   const char *sreg_mod00_base32[16];
   const char *sreg_mod01or10_base32[16];
   const char *sreg_mod00_rm16[8];

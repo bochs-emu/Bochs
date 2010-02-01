@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: resolve.cc,v 1.20 2009-12-28 13:52:40 sshwarts Exp $
+// $Id: resolve.cc,v 1.21 2010-02-01 07:59:22 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005-2009 Stanislav Shwartsman
@@ -209,7 +209,7 @@ void disassembler::resolve32_mod1or2(const x86_insn *insn, unsigned mode)
   if (insn->is_seg_override())
     seg = segment_name[insn->seg_override];
   else
-    seg = sreg_mod01or10_rm32[insn->rm];
+    seg = sreg_mod01or10_base32[insn->rm];
 
   print_memory_access32(mode, seg,
       general_32bit_regname[insn->rm], NULL, 0, insn->displacement.displ32);
@@ -277,7 +277,7 @@ void disassembler::resolve64_mod1or2(const x86_insn *insn, unsigned mode)
   if (insn->is_seg_override())
     seg = segment_name[insn->seg_override];
   else
-    seg = sreg_mod01or10_rm32[insn->rm];
+    seg = sreg_mod01or10_base32[insn->rm];
 
   print_memory_access64(mode, seg,
       general_64bit_regname[insn->rm], NULL, 0, (Bit32s) insn->displacement.displ32);
