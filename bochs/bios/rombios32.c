@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios32.c,v 1.66 2010-01-29 21:09:38 sshwarts Exp $
+// $Id: rombios32.c,v 1.67 2010-02-01 21:05:42 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  32 bit Bochs BIOS init code
@@ -1958,8 +1958,32 @@ smbios_type_0_init(void *start)
     p->bios_rom_size = 1; /* 128 kB */
 
     memset(p->bios_characteristics, 0, 8);
-    p->bios_characteristics[0] = 0x08; /* BIOS characteristics not supported */
-    p->bios_characteristics_extension_bytes[0] = 0;
+    p->bios_characteristics[0] |= 1 << 4; /* Bit 4 - ISA is supported */
+#if BX_PCIBIOS
+    p->bios_characteristics[0] |= 1 << 7; /* Bit 7 - PCI is supported */
+#endif
+#if BX_APM
+    p->bios_characteristics[1] |= 1 << 2; /* Bit 10 - APM is supported */
+#endif
+    p->bios_characteristics[1] |= 1 << 3; /* Bit 11 - BIOS is Upgradeable (Flash) */
+    p->bios_characteristics[1] |= 1 << 4; /* Bit 12 - BIOS shadowing is allowed */
+#if BX_ELTORITO_BOOT && BX_USE_ATADRV
+    p->bios_characteristics[1] |= 1 << 7; /* Bit 15 - Boot from CD is supported */
+    p->bios_characteristics[2] |= 1 << 0; /* Bit 16 - Selectable Boot is supported */
+#endif
+#if BX_USE_ATADRV
+    p->bios_characteristics[2] |= 1 << 3; /* Bit 19 - EDD (Enhanced Disk Drive) Specification is supported */
+#endif
+#if BX_SUPPORT_FLOPPY
+    p->bios_characteristics[2] |= 1 << 6; /* Bit 22 - Int 13h - 5.25" / 360 KB Floppy Services are supported */
+    p->bios_characteristics[2] |= 1 << 7; /* Bit 23 - Int 13h - 5.25" / 1.2 MB Floppy Services are supported */
+    p->bios_characteristics[3] |= 1 << 0; /* Bit 24 - Int 13h - 3.5" / 720 KB Floppy Services are supported */
+    p->bios_characteristics[3] |= 1 << 1; /* Bit 25 - Int 13h - 3.5" / 2.88 MB Floppy Services are supported */
+#endif
+    p->bios_characteristics[3] |= 1 << 3; /* Bit 27 - Int 9h, 8042 Keyboard services are supported */
+    p->bios_characteristics[3] |= 1 << 4; /* Bit 28 - Int 14h, Serial Services are supported */
+    p->bios_characteristics[3] |= 1 << 5; /* Bit 29 - Int 17h, Printer Services are supported */
+    p->bios_characteristics_extension_bytes[0] = 1; /* Bit 0 - ACPI supported */
     p->bios_characteristics_extension_bytes[1] = 0;
 
     p->system_bios_major_release = 1;
