@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dis_tables.inc,v 1.30 2010-01-31 09:45:27 sshwarts Exp $
+// $Id: dis_tables.inc,v 1.31 2010-02-02 13:06:13 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005-2009 Stanislav Shwartsman
@@ -2885,6 +2885,7 @@ static BxDisasmOpcodeTable_t BxDisasm3ByteOpTable0f38[256] = {
   /* EC */ { 0, &Ia_Invalid },
   /* ED */ { 0, &Ia_Invalid },
   /* EE */ { 0, &Ia_Invalid },
+  /* EF */ { 0, &Ia_Invalid },
   /* F0 */ { GRPSSE(0f38f0) },
   /* F1 */ { GRPSSE(0f38f1) },
   /* F2 */ { 0, &Ia_Invalid },
@@ -3146,6 +3147,7 @@ static BxDisasmOpcodeTable_t BxDisasm3ByteOpTable0f3a[256] = {
   /* EC */ { 0, &Ia_Invalid },
   /* ED */ { 0, &Ia_Invalid },
   /* EE */ { 0, &Ia_Invalid },
+  /* EF */ { 0, &Ia_Invalid },
   /* F0 */ { 0, &Ia_Invalid },
   /* F1 */ { 0, &Ia_Invalid },
   /* F2 */ { 0, &Ia_Invalid },
