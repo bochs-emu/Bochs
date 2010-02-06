@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.245 2010-02-01 07:59:21 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.246 2010-02-06 09:59:52 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -2602,25 +2602,6 @@ fetch_b1:
           goto modrm_done;
         }
         seg = sreg_mod1or2_base32[rm];
-        if (mod == 0x40) { // mod == 01b
-          if (ilen < remain) {
-            // 8 sign extended to 32
-            i->modRMForm.displ32u = (Bit8s) *iptr++;
-            ilen++;
-            goto modrm_done;
-          }
-          else return(-1);
-        }
-        // (mod == 0x80) mod == 10b
-        if ((ilen+3) < remain) {
-          i->modRMForm.displ32u = FetchDWORD(iptr);
-          iptr += 4;
-          ilen += 4;
-        }
-        else {
-          return(-1);
-        }
-        goto modrm_done;
       }
       else { // mod!=11b, rm==4, s-i-b byte follows
         unsigned sib, base, index, scale;
@@ -2643,7 +2624,7 @@ fetch_b1:
         }
         if (mod == 0x00) { // mod==00b, rm==4
           seg = sreg_mod0_base32[base];
-          if (base == 0x05) {
+          if (base == 5) {
             i->setSibBase(BX_NIL_REGISTER);
             if ((ilen+3) < remain) {
               i->modRMForm.displ32u = FetchDWORD(iptr);
@@ -2658,28 +2639,28 @@ fetch_b1:
           goto modrm_done;
         }
         seg = sreg_mod1or2_base32[base];
-        if (mod == 0x40) { // mod==01b, rm==4
-          if (ilen < remain) {
-            // 8 sign extended to 32
-            i->modRMForm.displ32u = (Bit8s) *iptr++;
-            ilen++;
-            goto modrm_done;
-          }
-          else {
-            return(-1);
-          }
+      }
+
+      if (mod == 0x40) { // mod==01b
+        if (ilen < remain) {
+          // 8 sign extended to 32
+          i->modRMForm.displ32u = (Bit8s) *iptr++;
+          ilen++;
           goto modrm_done;
-        }
-        // (mod == 0x80),   mod==10b, rm==4
-        if ((ilen+3) < remain) {
-          i->modRMForm.displ32u = FetchDWORD(iptr);
-          iptr += 4;
-          ilen += 4;
         }
         else {
           return(-1);
         }
-        goto modrm_done;
+      }
+
+      // (mod == 0x80),     mod==10b
+      if ((ilen+3) < remain) {
+        i->modRMForm.displ32u = FetchDWORD(iptr);
+        iptr += 4;
+        ilen += 4;
+      }
+      else {
+        return(-1);
       }
     }
     else {
@@ -2690,7 +2671,7 @@ fetch_b1:
       i->setSibIndex(Resolve16IndexReg[rm]);
       if (mod == 0x00) { // mod == 00b
         seg = sreg_mod00_rm16[rm];
-        if (rm == 0x06) {
+        if (rm == 6) {
           i->setSibBase(BX_NIL_REGISTER);
           if ((ilen+1) < remain) {
             i->modRMForm.displ16u = FetchWORD(iptr);
@@ -2710,7 +2691,9 @@ fetch_b1:
           ilen++;
           goto modrm_done;
         }
-        else return(-1);
+        else {
+          return(-1);
+        }
       }
       // (mod == 0x80)      mod == 10b
       if ((ilen+1) < remain) {
@@ -2718,7 +2701,9 @@ fetch_b1:
         iptr += 2;
         ilen += 2;
       }
-      else return(-1);
+      else {
+        return(-1);
+      }
     }
 
 modrm_done:

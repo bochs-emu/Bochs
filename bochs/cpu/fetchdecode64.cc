@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.247 2010-02-01 07:59:21 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.248 2010-02-06 09:59:52 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -3512,31 +3512,13 @@ fetch_b1:
         if (mod == 0x00) { // mod == 00b
           if ((rm & 0x7) == 5) {
             i->setSibBase(BX_64BIT_REG_RIP);
-get_32bit_displ:
-            if ((ilen+3) < remain) {
-              i->modRMForm.displ32u = FetchDWORD(iptr);
-              iptr += 4;
-              ilen += 4;
-              goto modrm_done;
-            }
-            else return(-1);
+            goto get_32bit_displ;
           }
           // mod==00b, rm!=4, rm!=5
           goto modrm_done;
         }
+        // (mod == 0x40), mod==01b or (mod == 0x80), mod==10b
         seg = sreg_mod1or2_base32[rm];
-        if (mod == 0x40) { // mod == 01b
-get_8bit_displ:
-          if (ilen < remain) {
-            // 8 sign extended to 32
-            i->modRMForm.displ32u = (Bit8s) *iptr++;
-            ilen++;
-            goto modrm_done;
-          }
-          else return(-1);
-        }
-        // (mod == 0x80) mod == 10b
-        goto get_32bit_displ;
       }
       else { // mod!=11b, rm==4, s-i-b byte follows
         unsigned sib, base, index, scale;
@@ -3566,11 +3548,8 @@ get_8bit_displ:
           // mod==00b, rm==4, base!=5
           goto modrm_done;
         }
+        // (mod == 0x40), mod==01b or (mod == 0x80), mod==10b
         seg = sreg_mod1or2_base32[base];
-        if (mod == 0x40) // mod==01b, rm==4
-          goto get_8bit_displ;
-        // (mod == 0x80),   mod==10b, rm==4
-        goto get_32bit_displ;
       }
     }
     else {
@@ -3586,11 +3565,8 @@ get_8bit_displ:
           // mod==00b, rm!=4, rm!=5
           goto modrm_done;
         }
+        // (mod == 0x40), mod==01b or (mod == 0x80), mod==10b
         seg = sreg_mod1or2_base32[rm];
-        if (mod == 0x40) // mod == 01b
-          goto get_8bit_displ;
-        // (mod == 0x80)    mod == 10b
-        goto get_32bit_displ;
       }
       else { // mod!=11b, rm==4, s-i-b byte follows
         unsigned sib, base, index, scale;
@@ -3620,11 +3596,34 @@ get_8bit_displ:
           // mod==00b, rm==4, base!=5
           goto modrm_done;
         }
+        // (mod == 0x40), mod==01b or (mod == 0x80), mod==10b
         seg = sreg_mod1or2_base32[base];
-        if (mod == 0x40) // mod==01b, rm==4
-          goto get_8bit_displ;
-        // (mod == 0x80),   mod==10b, rm==4
-        goto get_32bit_displ;
+      }
+
+      // (mod == 0x40), mod==01b
+      if (mod == 0x40) {
+        if (ilen < remain) {
+          // 8 sign extended to 32
+          i->modRMForm.displ32u = (Bit8s) *iptr++;
+          ilen++;
+          goto modrm_done;
+        }
+        else {
+          return(-1);
+        }
+      }
+
+get_32bit_displ:
+
+      // (mod == 0x80), mod==10b
+      if ((ilen+3) < remain) {
+        i->modRMForm.displ32u = FetchDWORD(iptr);
+        iptr += 4;
+        ilen += 4;
+        goto modrm_done;
+      }
+      else {
+        return(-1);
       }
     }
 
