@@ -1,8 +1,8 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dis_tables.h,v 1.39 2010-01-31 10:17:42 sshwarts Exp $
+// $Id: dis_tables.h,v 1.40 2010-02-08 15:11:58 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2005-2009 Stanislav Shwartsman
+//   Copyright (c) 2005-2010 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -182,6 +182,8 @@
 
 const struct BxDisasmOpcodeInfo_t
 #include "opcodes.inc"
+#include "dis_tables_x87.inc"
+#include "dis_tables_sse.inc"
 #include "dis_tables.inc"
 
 #undef XX
