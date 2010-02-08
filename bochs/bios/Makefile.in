@@ -100,7 +100,7 @@ rombios32.bin: rombios32.out rombios.h
 rombios32.out: rombios32start.o rombios32.o rombios32.ld
 	ld -o $@ -T $(srcdir)/rombios32.ld rombios32start.o rombios32.o
 
-rombios32.o: rombios32.c acpi-dsdt.hex
+rombios32.o: rombios32.c acpi-dsdt.hex rombios.h
 	$(GCC32) -O2 -Wall -c -o $@ $<
 
 ifeq ("1", "0")
