@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: speaker.cc,v 1.15 2009-04-10 08:15:25 vruppert Exp $
+// $Id: speaker.cc,v 1.16 2010-02-08 14:53:31 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright 2003 by David N. Welton <davidw@dedasys.com>.
@@ -112,7 +112,7 @@ void bx_speaker_c::beep_on(float frequency)
 
 #if defined(WIN32)
 
-struct {
+static struct {
   DWORD frequency;
   DWORD msec;
 } beep_info;
