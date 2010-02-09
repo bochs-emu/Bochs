@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dis_groups.cc,v 1.47 2010-02-09 19:44:25 sshwarts Exp $
+// $Id: dis_groups.cc,v 1.48 2010-02-09 20:28:12 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005-2009 Stanislav Shwartsman
@@ -425,13 +425,7 @@ void disassembler::Vpd(const x86_insn *insn) { Vq(insn); }
 
 void disassembler::Ww(const x86_insn *insn)
 {
-  if (insn->mod == 3)
-  {
-    if (intel_mode)
-      dis_sprintf  ("xmm%d", insn->rm);
-    else
-      dis_sprintf("%%xmm%d", insn->rm);
-  }
+  if (insn->mod == 3) Udq(insn);
   else
     (this->*resolve_modrm)(insn, W_SIZE);
 }

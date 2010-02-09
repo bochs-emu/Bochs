@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dis_tables_sse.inc,v 1.2 2010-02-09 19:44:25 sshwarts Exp $
+// $Id: dis_tables_sse.inc,v 1.3 2010-02-09 20:28:12 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005-2010 Stanislav Shwartsman
@@ -46,13 +46,13 @@ static BxDisasmOpcodeTable_t BxDisasmGroupSSE_0f11[4] = {
 };
 
 static BxDisasmOpcodeTable_t BxDisasmGroupModMOVHLPS[2] = {
-  /* R */ { 0, &Ia_movhlps_Vps_Uq },
-  /* M */ { 0, &Ia_movlps_Vps_Mq  }
+  /* R */ { 0, &Ia_movhlps_Vps_Udq },
+  /* M */ { 0, &Ia_movlps_Vps_Mq }
 };
 
 static BxDisasmOpcodeTable_t BxDisasmGroupModMOVHLPD[2] = {
-  /* R */ { 0, &Ia_movhlpd_Vpd_Uq },
-  /* M */ { 0, &Ia_movlpd_Vpd_Mq  }
+  /* R */ { 0, &Ia_movhlpd_Vpd_Udq },
+  /* M */ { 0, &Ia_movlpd_Vpd_Mq }
 };
 
 static BxDisasmOpcodeTable_t BxDisasmGroupSSE_0f12[4] = {
@@ -84,13 +84,13 @@ static BxDisasmOpcodeTable_t BxDisasmGroupSSE_0f15[4] = {
 };
 
 static BxDisasmOpcodeTable_t BxDisasmGroupModMOVLHPS[2] = {
-  /* R */ { 0, &Ia_movlhps_Vps_Uq },
-  /* M */ { 0, &Ia_movhps_Vps_Mq  }
+  /* R */ { 0, &Ia_movlhps_Vps_Udq },
+  /* M */ { 0, &Ia_movhps_Vps_Mq }
 };
 
 static BxDisasmOpcodeTable_t BxDisasmGroupModMOVLHPD[2] = {
-  /* R */ { 0, &Ia_movlhpd_Vpd_Uq },
-  /* M */ { 0, &Ia_movhpd_Vpd_Mq  }
+  /* R */ { 0, &Ia_movlhpd_Vpd_Udq },
+  /* M */ { 0, &Ia_movhpd_Vpd_Mq }
 };
 
 static BxDisasmOpcodeTable_t BxDisasmGroupSSE_0f16[4] = {
@@ -442,7 +442,7 @@ static BxDisasmOpcodeTable_t BxDisasmGroupRmEXTRQ[8] = {
 
 static BxDisasmOpcodeTable_t BxDisasmGroupSSE_0f78[4] = {
   /* -- */ { 0, &Ia_vmread_Ed_Gd },         // VMX
-  /* 66 */ { GRPRM(EXTRQ)   },              // SSE4A
+  /* 66 */ { GRPRM(EXTRQ) },                // SSE4A
   /* F2 */ { 0, &Ia_insertq_Vdq_Udq_IbIb }, // SSE4A
   /* F3 */ { 0, &Ia_Invalid }
 };

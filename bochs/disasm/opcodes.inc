@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: opcodes.inc,v 1.31 2010-01-31 09:45:27 sshwarts Exp $
+// $Id: opcodes.inc,v 1.32 2010-02-09 20:28:12 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005-2009 Stanislav Shwartsman
@@ -627,8 +627,8 @@ Ia_movdqa_Vdq_Wdq = { "movdqa", "movdqa", Vdq, Wdq, XX, XX, IA_SSE2 },
 Ia_movdqa_Wdq_Vdq = { "movdqa", "movdqa", Wdq, Vdq, XX, XX, IA_SSE2 },
 Ia_movdqu_Vdq_Wdq = { "movdqu", "movdqu", Vdq, Wdq, XX, XX, IA_SSE2 },
 Ia_movdqu_Wdq_Vdq = { "movdqu", "movdqu", Wdq, Vdq, XX, XX, IA_SSE2 },
-Ia_movhlpd_Vpd_Uq = { "movhlpd", "movhlpd", Vpd, Udq, XX, XX, IA_SSE2 },
-Ia_movhlps_Vps_Uq = { "movhlps", "movhlps", Vps, Udq, XX, XX, IA_SSE },
+Ia_movhlpd_Vpd_Udq = { "movhlpd", "movhlpd", Vpd, Udq, XX, XX, IA_SSE2 },
+Ia_movhlps_Vps_Udq = { "movhlps", "movhlps", Vps, Udq, XX, XX, IA_SSE },
 Ia_movhpd_Mq_Vpd = { "movhpd", "movhpd", Mq, Vpd, XX, XX, IA_SSE2 },
 Ia_movhpd_Vpd_Mq = { "movhpd", "movhpd", Vpd, Mq, XX, XX, IA_SSE2 },
 Ia_movhps_Mq_Vps = { "movhps", "movhps", Mq, Vps, XX, XX, IA_SSE },
@@ -645,8 +645,8 @@ Ia_movl_Rd_Cd = { "mov", "movl", Rd, Cd, XX, XX, 0 },
 Ia_movl_Rd_Dd = { "mov", "movl", Rd, Dd, XX, XX, 0 },
 Ia_movl_Rd_Td = { "mov", "movl", Rd, Td, XX, XX, 0 },
 Ia_movl_Td_Rd = { "mov", "movl", Td, Rd, XX, XX, 0 },
-Ia_movlhpd_Vpd_Uq = { "movlhpd", "movlhpd", Vpd, Udq, XX, XX, IA_SSE2 },
-Ia_movlhps_Vps_Uq = { "movlhps", "movlhps", Vps, Udq, XX, XX, IA_SSE },
+Ia_movlhpd_Vpd_Udq = { "movlhpd", "movlhpd", Vpd, Udq, XX, XX, IA_SSE2 },
+Ia_movlhps_Vps_Udq = { "movlhps", "movlhps", Vps, Udq, XX, XX, IA_SSE },
 Ia_movlpd_Mq_Vpd = { "movlpd", "movlpd", Mq, Vpd, XX, XX, IA_SSE2 },
 Ia_movlpd_Vpd_Mq = { "movlpd", "movlpd", Vpd, Mq, XX, XX, IA_SSE2 },
 Ia_movlps_Mq_Vps = { "movlps", "movlps", Mq, Vps, XX, XX, IA_SSE },
