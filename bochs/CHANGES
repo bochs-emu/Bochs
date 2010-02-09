@@ -34,6 +34,7 @@ Changes after 2.4.2:
  [2908481] USB Printer by Ben Lunt
 
 - these S.F. bugs were closed/fixed
+ [2374455] shtudown/reset type 05 should reinit the PICs
  [1921294] extended memory less than 1M wrong size
  [1947249] BX_USE_EBDA_TABLES and MP table placement
  [1933859] BX_USE_EBDA_TABLES and memory overlapping

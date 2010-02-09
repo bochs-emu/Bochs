@@ -91,52 +91,26 @@ be manageable.
 Status:
 Not done yet.
 
-6. CPU
-6.1 This was asked in the ml, and I believe it's a good idea to provide
-a configure switch to set the cpu model, for example :
---with-cpu-386
---with-cpu-486dx
---with-cpu-pentium
---with-cpu-pentium-mmx
---with-cpu-k6-iii
---with-cpu-amd64
-and so on. The main difficulty here is to set up the list of features
-by cpu model. I started such a list, available at
-http://cbothamy.free.fr/projects/bochs/CPU_Features.sxc
-The configure script will then set up constants on features to compile in,
-ISA, FPU, MMX, 3DNOW, SSE, etc... Most of the feature flags already
-exists in config.h, so this should be easy. It would also be a good
-idea to clean up the cpuid function beased on those flags.
-We also have to keep in mind that some features are also enablable
-by the guest os.
-Please note the all features are still not supported/complete in Bochs.
-6.2 Stanislav thinks that configure --with-cpu-pentium-mmx --enable-cpu-level-4
-would create lots of conflicts in the generated config.h. He suggests
-that we should write an external GUI configure script that would propose
-standard or custom cpus and would detect conflicts.
-Status:
-Not done yet.
-
-7. VGA
+6. VGA
 For SVGA emulation we have Bochs VBE and the Cirrus adapter. We should have
 a look at the voodoo3 (specs http://v3tv.sourceforge.net/docs.php).
 Status:
 Not done yet.
 
-8. Random thoughts on disk emulation improvements :
-8.1 lba48 support
-8.2 autodetection of disk size / geometry
-8.3 uml cow disk image support
-8.4 compressed disk image support
-8.5 extend redolog-disk specification to add coherency check of the flat
+7. Random thoughts on disk emulation improvements :
+7.1 lba48 support
+7.2 autodetection of disk size / geometry
+7.3 uml cow disk image support
+7.4 compressed disk image support
+7.5 extend redolog-disk specification to add coherency check of the flat
 image file, by storing its fstat-mtime field in the redolog.
 Status:
 Autodetection now works for all image types created with bximage and vmware3
 images. LBA48 and vmware4 disk images support was added in Bochs 2.3.5 release.
 The other items are not done yet.
 
-9. net
-9.1 bootable ethernet rom ?
+8. net
+8.1 bootable ethernet rom ?
 see etherboot, Micheal Brown wrote :
 This already works; you can build an Etherboot rom image with the pnic
 driver, specify it as an option ROM in bochsrc and it will boot.  I'm
@@ -147,17 +121,17 @@ instructions on getting this working.
 Status:
 The pnic device is present in CVS, but the status is unknown.
 
-10. Bios
-10.1 add "jump table placeholder" and log missing function calls in the bios.
+9. Bios
+9.1 add "jump table placeholder" and log missing function calls in the bios.
 Check completness with Ralf Brown interrupt list.
 Status:
 Not done yet.
-10.2 use Coreboot or SeaBios as possible alternatives/extensions to
+9.2 use Coreboot or SeaBios as possible alternatives/extensions to
 Bochs Bios ROM we have.
 Status:
 Not done yet.
 
-11. LGPL VGABios
+10. LGPL VGABios
 11.1 Video parameters table
 There is a very nice parameter table in 3dfx banshee document
 http://www2.lm-sensors.nu/~lm78/pdfs/Banshee_2d_spec.PDF
@@ -166,21 +140,21 @@ Status:
 The new version 0.6a of the LGPL'd VGABIOS has minimal support for the video
 parameter table.
 
-12. Optimized Guest drivers still needed : VGA, IDE, NET
+11. Optimized Guest drivers still needed : VGA, IDE, NET
 We have a specific VGA driver for winNT/2K, but still
 lack drivers for other OSes.
 Status:
 Not done yet.
 
-13. USB support
+12. USB support
 Ben Lunt has been working on USB support. The USB mouse and keypad code
 is present in Bochs and almost stable. USB flash disk support has been
 started and the runtime device change support should be completed.
 Status:
 Under construction.
 
-14. Config file and dynamic menu
-14.1 Benjamen R. Meyer wrote :
+13. Config file and dynamic menu
+13.1 Benjamen R. Meyer wrote :
 I think we should rework the .bochsrc file to be more standard across all
 devices. I like how the USB configuration is done in it, and think we should
 put something similar together for everything else. In otherwords, create
@@ -192,19 +166,19 @@ something that is based on a standard approach to the configuration.
 The result should be something that would be able to easily auto-configured
 by another program (a configuration editor?) with minimal changes necessary
 when new devices/features are added.
-14.2  Franck Cornelis wrote : the config system needs some work...
+13.2  Franck Cornelis wrote : the config system needs some work...
 e.g. the main menu is static while it could be generated at run-time...
 the main menu text lives somewhere in a file... while it should be generated
 at run-time by iterating the main menu objects
 Status:
 The config options handling has been rewritten to a parameter tree.
 
-15. lowlevel serial support for Windows.
+14. lowlevel serial support for Windows.
 Volker is currently working on this.
 Status:
 Not yet complete (transmit works, receive is losing data).
 
-16. Parallel port
+15. Parallel port
 Conn Clark wrote :
 I would like to see better parallel port support so I can use a dongle.
 This is something I would find very useful as it would mean I wouldn't
@@ -216,12 +190,12 @@ bidirectional parallel port won't work.
 Status:
 Not done yet.
 
-17. Guest-To-Host Communication
+16. Guest-To-Host Communication
 Try to adapt VirtualBox guest-to-host communication methods into Bochs.
 Having VirtualBox Shared Folders or VNAT support in Bochs could very 
 simplify its usage.
 
-18. Patches / Bug reports
+17. Patches / Bug reports
 There are dozens of patches floating around. Some are outdated,
 don't apply cleanly, are obsolete/unneeded. We could try to do
 some clean-up, and keep only relevent ones.
@@ -230,7 +204,7 @@ very old and we asked for more information with no response.
 Status:
 There is some progress, but still a lot of work to do.
 
-19. Positions
+18. Positions
 If you want to help without coding, here are available positions :
 19.1 Webmaster : update website (Jan Bruun Andersen offered to help)
 19.2 patch coordonator : look at incoming patches (sourceforge and
@@ -244,7 +218,7 @@ to be removed.
 Status:
 More active developers are needed to do the things described above.
 
-20. Bochs demo cd/dvd
+19. Bochs demo cd/dvd
 With version 2.1, it is now technically possible to use disk images
 on a read-only media, with a journal files on a read/write media.
 It would be great to create a demo cd/dvd with executables for
@@ -254,7 +228,7 @@ directory on the harddisk.
 Status:
 Not done yet.
 
-21. Other CPU architectures : arm, ppc
+20. Other CPU architectures : arm, ppc
 This has been asked in the mailing list. I'm not really
 interested, but other people might be. Should we propose to
 host the new CPUs code in our source tree, or should we let
