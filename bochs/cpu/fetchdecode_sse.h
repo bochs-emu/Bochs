@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode_sse.h,v 1.3 2010-02-08 15:22:53 sshwarts Exp $
+// $Id: fetchdecode_sse.h,v 1.4 2010-02-09 19:44:25 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005-2010 Stanislav Shwartsman
@@ -665,12 +665,6 @@ static const BxOpcodeInfo_t BxOpcodeGroupSSE_0fee[3] = {
 static const BxOpcodeInfo_t BxOpcodeGroupSSE_0fef[3] = {
   /* 66 */ { 0, BX_IA_PXOR_VdqWdq },
   /* F2 */ { 0, BX_IA_ERROR },
-  /* F3 */ { 0, BX_IA_ERROR }
-};
-
-static const BxOpcodeInfo_t BxOpcodeGroupSSE_0ff0M[3] = {
-  /* 66 */ { 0, BX_IA_ERROR },
-  /* F2 */ { 0, BX_IA_LDDQU_VdqMdq },	// SSE3
   /* F3 */ { 0, BX_IA_ERROR }
 };
 

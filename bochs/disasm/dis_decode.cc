@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dis_decode.cc,v 1.54 2010-01-31 10:17:42 sshwarts Exp $
+// $Id: dis_decode.cc,v 1.55 2010-02-09 19:44:25 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005-2009 Stanislav Shwartsman
@@ -82,7 +82,6 @@ x86_insn disassembler::decode(bx_bool is_32, bx_bool is_64, bx_address base, bx_
   x86_insn insn(is_32, is_64);
   const Bit8u *instruction_begin = instruction = instr;
   resolve_modrm = NULL;
-  unsigned b3 = 0;
 
   db_eip = ip;
   db_base = base; // cs linear base (base for PM & cs<<4 for RM & VM)
@@ -206,9 +205,10 @@ x86_insn disassembler::decode(bx_bool is_32, bx_bool is_64, bx_address base, bx_
 
   if (instruction_has_modrm[insn.b1])
   {
-    // will require 3rd byte for 3-byte opcode
-    if (entry->Attr == _GRP3BOP)
-      b3 = fetch_byte();
+    // take 3rd byte for 3-byte opcode
+    if (entry->Attr == _GRP3BOP) {
+      entry = &(OPCODE_TABLE(entry)[fetch_byte()]);
+    }
 
     decode_modrm(&insn);
   }
@@ -233,6 +233,14 @@ x86_insn disassembler::decode(bx_bool is_32, bx_bool is_64, bx_address base, bx_
          /* SSE opcode group with only prefix 0xF2 allowed */
          sse_opcode = 1;
          if (sse_prefix != SSE_PREFIX_F2)
+             entry = &(BxDisasmGroupSSE_ERR[sse_prefix]);
+         attr = 0;
+         continue;
+
+       case _GRPSSEF3:
+         /* SSE opcode group with only prefix 0xF3 allowed */
+         sse_opcode = 1;
+         if (sse_prefix != SSE_PREFIX_F3)
              entry = &(BxDisasmGroupSSE_ERR[sse_prefix]);
          attr = 0;
          continue;
@@ -264,10 +272,6 @@ x86_insn disassembler::decode(bx_bool is_32, bx_bool is_64, bx_address base, bx_
 
        case _GRP3DNOW:
          entry = &(BxDisasm3DNowGroup[fetch_byte()]);
-         break;
-
-       case _GRP3BOP:
-         entry = &(OPCODE_TABLE(entry)[b3]);
          break;
 
        case _GRP64B:

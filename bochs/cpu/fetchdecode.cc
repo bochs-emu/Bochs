@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.249 2010-02-08 14:54:26 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.250 2010-02-09 19:44:25 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -1858,7 +1858,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo32M[512*2] = {
   /* 0F ED /wm */ { BxPrefixSSE, BX_IA_PADDSW_PqQq, BxOpcodeGroupSSE_0fed },
   /* 0F EE /wm */ { BxPrefixSSE, BX_IA_PMAXSW_PqQq, BxOpcodeGroupSSE_0fee },
   /* 0F EF /wm */ { BxPrefixSSE, BX_IA_PXOR_PqQq, BxOpcodeGroupSSE_0fef },
-  /* 0F F0 /wm */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0ff0M },
+  /* 0F F0 /wm */ { BxPrefixSSEF2, BX_IA_LDDQU_VdqMdq },
   /* 0F F1 /wm */ { BxPrefixSSE, BX_IA_PSLLW_PqQq, BxOpcodeGroupSSE_0ff1 },
   /* 0F F2 /wm */ { BxPrefixSSE, BX_IA_PSLLD_PqQq, BxOpcodeGroupSSE_0ff2 },
   /* 0F F3 /wm */ { BxPrefixSSE, BX_IA_PSLLQ_PqQq, BxOpcodeGroupSSE_0ff3 },
@@ -2421,7 +2421,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo32M[512*2] = {
   /* 0F ED /dm */ { BxPrefixSSE, BX_IA_PADDSW_PqQq, BxOpcodeGroupSSE_0fed },
   /* 0F EE /dm */ { BxPrefixSSE, BX_IA_PMAXSW_PqQq, BxOpcodeGroupSSE_0fee },
   /* 0F EF /dm */ { BxPrefixSSE, BX_IA_PXOR_PqQq, BxOpcodeGroupSSE_0fef },
-  /* 0F F0 /dm */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0ff0M },
+  /* 0F F0 /wm */ { BxPrefixSSEF2, BX_IA_LDDQU_VdqMdq },
   /* 0F F1 /dm */ { BxPrefixSSE, BX_IA_PSLLW_PqQq, BxOpcodeGroupSSE_0ff1 },
   /* 0F F2 /dm */ { BxPrefixSSE, BX_IA_PSLLD_PqQq, BxOpcodeGroupSSE_0ff2 },
   /* 0F F3 /dm */ { BxPrefixSSE, BX_IA_PSLLQ_PqQq, BxOpcodeGroupSSE_0ff3 },
@@ -2746,6 +2746,12 @@ modrm_done:
         case BxPrefixSSE66:
           /* For SSE opcodes with prefix 66 only */
           if (sse_prefix != SSE_PREFIX_66) {
+            OpcodeInfoPtr = &BxOpcodeGroupSSE_ERR[0]; // BX_IA_ERROR
+          }
+          continue;
+        case BxPrefixSSEF2:
+          /* For SSE opcodes with prefix F2 only */
+          if (sse_prefix != SSE_PREFIX_F2) {
             OpcodeInfoPtr = &BxOpcodeGroupSSE_ERR[0]; // BX_IA_ERROR
           }
           continue;

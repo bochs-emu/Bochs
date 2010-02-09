@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.636 2010-01-29 10:16:28 sshwarts Exp $
+// $Id: cpu.h,v 1.637 2010-02-09 19:44:25 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -3888,10 +3888,11 @@ enum {
 #define BxGroupN            0x0010 // Group encoding: 0001
 #define BxPrefixSSE         0x0020 // Group encoding: 0010
 #define BxPrefixSSE66       0x0030 // Group encoding: 0011
-#define BxPrefixSSEF3       0x0040 // Group encoding: 0100
-#define BxFPEscape          0x0050 // Group encoding: 0101
-#define Bx3ByteOp           0x0060 // Group encoding: 0110
-#define BxOSizeGrp          0x0070 // Group encoding: 0111
+#define BxPrefixSSEF2       0x0040 // Group encoding: 0100
+#define BxPrefixSSEF3       0x0050 // Group encoding: 0101
+#define BxFPEscape          0x0060 // Group encoding: 0110
+#define Bx3ByteOp           0x0070 // Group encoding: 0111
+#define BxOSizeGrp          0x0080 // Group encoding: 1000
 
 #define BxLockable          0x0100 // bit 8
 #define BxArithDstRM        0x0200 // bit 9
