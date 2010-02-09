@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.190 2009-12-04 20:02:12 sshwarts Exp $
+// $Id: config.cc,v 1.191 2010-02-09 22:14:54 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2009  The Bochs Project
@@ -2969,7 +2969,7 @@ static int parse_line_formatted(const char *context, int num_params, char *param
       PARSE_ERR(("%s: magic_break directive malformed.", context));
     }
 #else
-    PARSE_ERR(("%s: Bochs is not compiled with internal debugger support", context));
+    PARSE_WARN(("%s: Bochs is not compiled with internal debugger support", context));
 #endif
   }
   else if (!strcmp(params[0], "debug_symbols")) {
