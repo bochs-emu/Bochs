@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.250 2010-02-09 19:44:25 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.251 2010-02-10 17:21:14 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -595,7 +595,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo32R[512*2] = {
   /* 0F 6B /wr */ { BxPrefixSSE, BX_IA_PACKSSDW_PqQq, BxOpcodeGroupSSE_0f6b },
   /* 0F 6C /wr */ { BxPrefixSSE66, BX_IA_PUNPCKLQDQ_VdqWdq },
   /* 0F 6D /wr */ { BxPrefixSSE66, BX_IA_PUNPCKHQDQ_VdqWdq },
-  /* 0F 6E /wr */ { BxPrefixSSE, BX_IA_MOVD_PqEd, BxOpcodeGroupSSE_0f6eR },
+  /* 0F 6E /wr */ { BxPrefixSSE, BX_IA_MOVD_PqEdR, BxOpcodeGroupSSE_0f6eR },
   /* 0F 6F /wr */ { BxPrefixSSE, BX_IA_MOVQ_PqQqR, BxOpcodeGroupSSE_0f6fR },
   /* 0F 70 /wr */ { BxPrefixSSE | BxImmediate_Ib, BX_IA_PSHUFW_PqQqIb, BxOpcodeGroupSSE_0f70 },
   /* 0F 71 /wr */ { BxGroup12, BX_IA_ERROR, BxOpcodeInfoG12R },
@@ -611,8 +611,8 @@ static const BxOpcodeInfo_t BxOpcodeInfo32R[512*2] = {
   /* 0F 7B /wr */ { 0, BX_IA_ERROR },
   /* 0F 7C /wr */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0f7c },
   /* 0F 7D /wr */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0f7d },
-  /* 0F 7E /wr */ { BxPrefixSSE, BX_IA_MOVD_EdPd, BxOpcodeGroupSSE_0f7eR },
-  /* 0F 7F /wr */ { BxPrefixSSE, BX_IA_MOVQ_QqPq, BxOpcodeGroupSSE_0f7fR },
+  /* 0F 7E /wr */ { BxPrefixSSE, BX_IA_MOVD_EdPdR, BxOpcodeGroupSSE_0f7eR },
+  /* 0F 7F /wr */ { BxPrefixSSE, BX_IA_MOVQ_QqPqR, BxOpcodeGroupSSE_0f7fR },
   /* 0F 80 /wr */ { BxImmediate_BrOff16 | BxTraceJCC, BX_IA_JO_Jw },
   /* 0F 81 /wr */ { BxImmediate_BrOff16 | BxTraceJCC, BX_IA_JNO_Jw },
   /* 0F 82 /wr */ { BxImmediate_BrOff16 | BxTraceJCC, BX_IA_JB_Jw },
@@ -1158,7 +1158,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo32R[512*2] = {
   /* 0F 6B /dr */ { BxPrefixSSE, BX_IA_PACKSSDW_PqQq, BxOpcodeGroupSSE_0f6b },
   /* 0F 6C /dr */ { BxPrefixSSE66, BX_IA_PUNPCKLQDQ_VdqWdq },
   /* 0F 6D /dr */ { BxPrefixSSE66, BX_IA_PUNPCKHQDQ_VdqWdq },
-  /* 0F 6E /dr */ { BxPrefixSSE, BX_IA_MOVD_PqEd, BxOpcodeGroupSSE_0f6eR },
+  /* 0F 6E /dr */ { BxPrefixSSE, BX_IA_MOVD_PqEdR, BxOpcodeGroupSSE_0f6eR },
   /* 0F 6F /dr */ { BxPrefixSSE, BX_IA_MOVQ_PqQqR, BxOpcodeGroupSSE_0f6fR },
   /* 0F 70 /dr */ { BxPrefixSSE | BxImmediate_Ib, BX_IA_PSHUFW_PqQqIb, BxOpcodeGroupSSE_0f70 },
   /* 0F 71 /dr */ { BxGroup12, BX_IA_ERROR, BxOpcodeInfoG12R },
@@ -1174,8 +1174,8 @@ static const BxOpcodeInfo_t BxOpcodeInfo32R[512*2] = {
   /* 0F 7B /dr */ { 0, BX_IA_ERROR },
   /* 0F 7C /dr */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0f7c },
   /* 0F 7D /dr */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0f7d },
-  /* 0F 7E /dr */ { BxPrefixSSE, BX_IA_MOVD_EdPd, BxOpcodeGroupSSE_0f7eR },
-  /* 0F 7F /dr */ { BxPrefixSSE, BX_IA_MOVQ_QqPq, BxOpcodeGroupSSE_0f7fR },
+  /* 0F 7E /dr */ { BxPrefixSSE, BX_IA_MOVD_EdPdR, BxOpcodeGroupSSE_0f7eR },
+  /* 0F 7F /dr */ { BxPrefixSSE, BX_IA_MOVQ_QqPqR, BxOpcodeGroupSSE_0f7fR },
   /* 0F 80 /dr */ { BxImmediate_BrOff32 | BxTraceJCC, BX_IA_JO_Jd },
   /* 0F 81 /dr */ { BxImmediate_BrOff32 | BxTraceJCC, BX_IA_JNO_Jd },
   /* 0F 82 /dr */ { BxImmediate_BrOff32 | BxTraceJCC, BX_IA_JB_Jd },
@@ -1728,7 +1728,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo32M[512*2] = {
   /* 0F 6B /wm */ { BxPrefixSSE, BX_IA_PACKSSDW_PqQq, BxOpcodeGroupSSE_0f6b },
   /* 0F 6C /wm */ { BxPrefixSSE66, BX_IA_PUNPCKLQDQ_VdqWdq },
   /* 0F 6D /wm */ { BxPrefixSSE66, BX_IA_PUNPCKHQDQ_VdqWdq },
-  /* 0F 6E /wm */ { BxPrefixSSE, BX_IA_MOVD_PqEd, BxOpcodeGroupSSE_0f6eM },
+  /* 0F 6E /wm */ { BxPrefixSSE, BX_IA_MOVD_PqEdM, BxOpcodeGroupSSE_0f6eM },
   /* 0F 6F /wm */ { BxPrefixSSE, BX_IA_MOVQ_PqQqM, BxOpcodeGroupSSE_0f6fM },
   /* 0F 70 /wm */ { BxPrefixSSE | BxImmediate_Ib, BX_IA_PSHUFW_PqQqIb, BxOpcodeGroupSSE_0f70 },
   /* 0F 71 /wm */ { 0, BX_IA_ERROR }, // SSE Group G12
@@ -1744,8 +1744,8 @@ static const BxOpcodeInfo_t BxOpcodeInfo32M[512*2] = {
   /* 0F 7B /wm */ { 0, BX_IA_ERROR },
   /* 0F 7C /wm */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0f7c },
   /* 0F 7D /wm */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0f7d },
-  /* 0F 7E /wm */ { BxPrefixSSE, BX_IA_MOVD_EdPd, BxOpcodeGroupSSE_0f7eM },
-  /* 0F 7F /wm */ { BxPrefixSSE, BX_IA_MOVQ_QqPq, BxOpcodeGroupSSE_0f7fM },
+  /* 0F 7E /wm */ { BxPrefixSSE, BX_IA_MOVD_EdPdM, BxOpcodeGroupSSE_0f7eM },
+  /* 0F 7F /wm */ { BxPrefixSSE, BX_IA_MOVQ_QqPqM, BxOpcodeGroupSSE_0f7fM },
   /* 0F 80 /wm */ { BxImmediate_BrOff16 | BxTraceJCC, BX_IA_JO_Jw },
   /* 0F 81 /wm */ { BxImmediate_BrOff16 | BxTraceJCC, BX_IA_JNO_Jw },
   /* 0F 82 /wm */ { BxImmediate_BrOff16 | BxTraceJCC, BX_IA_JB_Jw },
@@ -2291,7 +2291,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo32M[512*2] = {
   /* 0F 6B /dm */ { BxPrefixSSE, BX_IA_PACKSSDW_PqQq, BxOpcodeGroupSSE_0f6b },
   /* 0F 6C /dm */ { BxPrefixSSE66, BX_IA_PUNPCKLQDQ_VdqWdq },
   /* 0F 6D /dm */ { BxPrefixSSE66, BX_IA_PUNPCKHQDQ_VdqWdq },
-  /* 0F 6E /dm */ { BxPrefixSSE, BX_IA_MOVD_PqEd, BxOpcodeGroupSSE_0f6eM },
+  /* 0F 6E /dm */ { BxPrefixSSE, BX_IA_MOVD_PqEdM, BxOpcodeGroupSSE_0f6eM },
   /* 0F 6F /dm */ { BxPrefixSSE, BX_IA_MOVQ_PqQqM, BxOpcodeGroupSSE_0f6fM },
   /* 0F 70 /dm */ { BxPrefixSSE | BxImmediate_Ib, BX_IA_PSHUFW_PqQqIb, BxOpcodeGroupSSE_0f70 },
   /* 0F 71 /dm */ { 0, BX_IA_ERROR }, // SSE Group G12
@@ -2307,8 +2307,8 @@ static const BxOpcodeInfo_t BxOpcodeInfo32M[512*2] = {
   /* 0F 7B /dm */ { 0, BX_IA_ERROR },
   /* 0F 7C /dm */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0f7c },
   /* 0F 7D /dm */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0f7d },
-  /* 0F 7E /dm */ { BxPrefixSSE, BX_IA_MOVD_EdPd, BxOpcodeGroupSSE_0f7eM },
-  /* 0F 7F /dm */ { BxPrefixSSE, BX_IA_MOVQ_QqPq, BxOpcodeGroupSSE_0f7fM },
+  /* 0F 7E /dm */ { BxPrefixSSE, BX_IA_MOVD_EdPdM, BxOpcodeGroupSSE_0f7eM },
+  /* 0F 7F /dm */ { BxPrefixSSE, BX_IA_MOVQ_QqPqM, BxOpcodeGroupSSE_0f7fM },
   /* 0F 80 /dm */ { BxImmediate_BrOff32 | BxTraceJCC, BX_IA_JO_Jd },
   /* 0F 81 /dm */ { BxImmediate_BrOff32 | BxTraceJCC, BX_IA_JNO_Jd },
   /* 0F 82 /dm */ { BxImmediate_BrOff32 | BxTraceJCC, BX_IA_JB_Jd },

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: mmx.cc,v 1.89 2009-12-14 11:55:42 sshwarts Exp $
+// $Id: mmx.cc,v 1.90 2010-02-10 17:21:15 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2002-2009 Stanislav Shwartsman
@@ -993,24 +993,35 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PACKSSDW_PqQq(bxInstruction_c *i)
 }
 
 /* 0F 6E */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVD_PqEd(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVD_PqEdR(bxInstruction_c *i)
+{
+#if BX_SUPPORT_MMX
+  BX_CPU_THIS_PTR prepareMMX();
+  BX_CPU_THIS_PTR prepareFPU2MMX(); /* FPU2MMX transition */
+
+  BxPackedMmxRegister op;
+
+  MMXUD0(op) = BX_READ_32BIT_REG(i->rm());
+  MMXUD1(op) = 0;
+
+  /* now write result back to destination */
+  BX_WRITE_MMX_REG(i->nnn(), op);
+#else
+  BX_INFO(("MOVD_PqEd: required MMX, use --enable-mmx option"));
+  exception(BX_UD_EXCEPTION, 0, 0);
+#endif
+}
+
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVD_PqEdM(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
   BX_CPU_THIS_PTR prepareMMX();
 
   BxPackedMmxRegister op;
 
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  MMXUD0(op) = read_virtual_dword(i->seg(), eaddr);
   MMXUD1(op) = 0;
-
-  /* op is a register or memory reference */
-  if (i->modC0()) {
-    MMXUD0(op) = BX_READ_32BIT_REG(i->rm());
-  }
-  else {
-    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-    /* pointer, segment address pair */
-    MMXUD0(op) = read_virtual_dword(i->seg(), eaddr);
-  }
 
   BX_CPU_THIS_PTR prepareFPU2MMX(); /* FPU2MMX transition */
 
@@ -1045,8 +1056,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVQ_PqQqR(bxInstruction_c *i)
   BX_CPU_THIS_PTR prepareMMX();
   BX_CPU_THIS_PTR prepareFPU2MMX(); /* FPU2MMX transition */
 
-  BxPackedMmxRegister op = BX_READ_MMX_REG(i->rm());
-  BX_WRITE_MMX_REG(i->nnn(), op);
+  BX_WRITE_MMX_REG(i->nnn(), BX_READ_MMX_REG(i->rm()));
 #else
   BX_INFO(("MOVQ_PqQq: required MMX, use --enable-mmx option"));
   exception(BX_UD_EXCEPTION, 0, 0);
@@ -1061,7 +1071,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVQ_PqQqM(bxInstruction_c *i)
   BxPackedMmxRegister op;
 
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-  /* pointer, segment address pair */
   MMXUQ(op) = read_virtual_qword(i->seg(), eaddr);
 
   BX_CPU_THIS_PTR prepareFPU2MMX(); /* FPU2MMX transition */
@@ -1223,22 +1232,30 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::EMMS(bxInstruction_c *i)
 }
 
 /* 0F 7E */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVD_EdPd(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVD_EdPdR(bxInstruction_c *i)
+{
+#if BX_SUPPORT_MMX
+  BX_CPU_THIS_PTR prepareMMX();
+  BX_CPU_THIS_PTR prepareFPU2MMX();
+
+  BxPackedMmxRegister op = BX_READ_MMX_REG(i->nnn());
+  BX_WRITE_32BIT_REGZ(i->rm(), MMXUD0(op));
+#else
+  BX_INFO(("MOVD_EdPd: required MMX, use --enable-mmx option"));
+  exception(BX_UD_EXCEPTION, 0, 0);
+#endif
+}
+
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVD_EdPdM(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
   BX_CPU_THIS_PTR prepareMMX();
 
   BxPackedMmxRegister op = BX_READ_MMX_REG(i->nnn());
 
-  /* destination is a register or memory reference */
-  if (i->modC0()) {
-    BX_WRITE_32BIT_REGZ(i->rm(), MMXUD0(op));
-  }
-  else {
-    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-    /* pointer, segment address pair */
-    write_virtual_dword(i->seg(), eaddr, MMXUD0(op));
-  }
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  /* pointer, segment address pair */
+  write_virtual_dword(i->seg(), eaddr, MMXUD0(op));
 
   // do not cause FPU2MMX transition if memory write faults
   BX_CPU_THIS_PTR prepareFPU2MMX();
@@ -1251,45 +1268,41 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVD_EdPd(bxInstruction_c *i)
 #if BX_SUPPORT_X86_64
 
 /* 0F 7E */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVQ_EqPq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVQ_EqPqR(bxInstruction_c *i)
 {
   BX_CPU_THIS_PTR prepareMMX();
+  BX_CPU_THIS_PTR prepareFPU2MMX();
 
   BxPackedMmxRegister op = BX_READ_MMX_REG(i->nnn());
-
-  /* destination is a register or memory reference */
-  if (i->modC0()) {
-    BX_WRITE_64BIT_REG(i->rm(), MMXUQ(op));
-  }
-  else {
-    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-    /* pointer, segment address pair */
-    write_virtual_qword_64(i->seg(), eaddr, MMXUQ(op));
-  }
-
-  // do not cause FPU2MMX transition if memory write faults
-  BX_CPU_THIS_PTR prepareFPU2MMX();
+  BX_WRITE_64BIT_REG(i->rm(), MMXUQ(op));
 }
 
 #endif
 
 /* 0F 7F */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVQ_QqPq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVQ_QqPqR(bxInstruction_c *i)
+{
+#if BX_SUPPORT_MMX
+  BX_CPU_THIS_PTR prepareMMX();
+  BX_CPU_THIS_PTR prepareFPU2MMX();
+
+  BX_WRITE_MMX_REG(i->rm(), BX_READ_MMX_REG(i->nnn()));
+#else
+  BX_INFO(("MOVQ_QqPq: required MMX, use --enable-mmx option"));
+  exception(BX_UD_EXCEPTION, 0, 0);
+#endif
+}
+
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVQ_QqPqM(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MMX
   BX_CPU_THIS_PTR prepareMMX();
 
   BxPackedMmxRegister op = BX_READ_MMX_REG(i->nnn());
 
-  /* op is a register or memory reference */
-  if (i->modC0()) {
-    BX_WRITE_MMX_REG(i->rm(), op);
-  }
-  else {
-    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-    /* pointer, segment address pair */
-    write_virtual_qword(i->seg(), eaddr, MMXUQ(op));
-  }
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  /* pointer, segment address pair */
+  write_virtual_qword(i->seg(), eaddr, MMXUQ(op));
 
   // do not cause FPU2MMX transition if memory write faults
   BX_CPU_THIS_PTR prepareFPU2MMX();

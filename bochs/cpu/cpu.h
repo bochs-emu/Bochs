@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.637 2010-02-09 19:44:25 sshwarts Exp $
+// $Id: cpu.h,v 1.638 2010-02-10 17:21:14 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -1850,15 +1850,18 @@ public: // for now...
   BX_SMF void PUNPCKHWD_PqQq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void PUNPCKHDQ_PqQq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void PACKSSDW_PqQq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void MOVD_PqEd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void MOVD_PqEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void MOVD_PqEdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void MOVQ_PqQqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void MOVQ_PqQqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void PCMPEQB_PqQq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void PCMPEQW_PqQq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void PCMPEQD_PqQq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void EMMS(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void MOVD_EdPd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void MOVQ_QqPq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void MOVD_EdPdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void MOVD_EdPdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void MOVQ_QqPqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void MOVQ_QqPqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void PSRLW_PqQq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void PSRLD_PqQq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void PSRLQ_PqQq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -2720,7 +2723,7 @@ public: // for now...
   BX_SMF void LOOP64_Jb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void JRCXZ_Jb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
-  BX_SMF void MOVQ_EqPq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void MOVQ_EqPqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void MOVQ_EqVqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void MOVQ_PqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void MOVQ_VdqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
