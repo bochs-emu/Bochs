@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: tasking.cc,v 1.80 2010-02-08 14:22:39 sshwarts Exp $
+// $Id: tasking.cc,v 1.81 2010-02-11 08:06:25 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -218,11 +218,22 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
 
   // Privilege and busy checks done in CALL, JUMP, INT, IRET
 
-  // STEP 3: Save the current task state in the TSS. Up to this point,
-  //         any exception that occurs aborts the task switch without
-  //         changing the processor state.
+  // Step 3: If JMP or IRET, clear busy bit in old task TSS descriptor,
+  //         otherwise leave set.
 
-  /* save current machine state in old task's TSS */
+  // effect on Busy bit of old task
+  if (source == BX_TASK_FROM_JUMP || source == BX_TASK_FROM_IRET) {
+    // Bit is cleared
+    Bit32u laddr = (Bit32u) BX_CPU_THIS_PTR gdtr.base + (BX_CPU_THIS_PTR tr.selector.index<<3) + 4;
+    access_read_linear(laddr, 4, 0, BX_RW, &temp32);
+    temp32 &= ~0x200;
+    access_write_linear(laddr, 4, 0, &temp32);
+  }
+
+  // STEP 4: If the task switch was initiated with an IRET instruction,
+  //         clears the NT flag in a temporarily saved EFLAGS image;
+  //         if initiated with a CALL or JMP instruction, an exception, or
+  //         an interrupt, the NT flag is left unchanged.
 
   Bit32u oldEFLAGS = read_eflags();
 
@@ -232,6 +243,12 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
   {
     oldEFLAGS &= ~EFlagsNTMask;
   }
+
+  // STEP 5: Save the current task state in the TSS. Up to this point,
+  //         any exception that occurs aborts the task switch without
+  //         changing the processor state.
+
+  /* save current machine state in old task's TSS */
 
   if (BX_CPU_THIS_PTR tr.cache.type <= 3) {
     // check that we won't page fault while writing
@@ -299,7 +316,7 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
     system_write_word(nbase32, BX_CPU_THIS_PTR tr.selector.value);
   }
 
-  // STEP 4: The new-task state is loaded from the TSS
+  // STEP 6: The new-task state is loaded from the TSS
 
   if (tss_descriptor->type <= 3) {
     newEIP    = system_read_word(Bit32u(nbase32 + 14));
@@ -366,7 +383,7 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
     trap_word        = system_read_word(Bit32u(nbase32 + 0x64));
   }
 
-  // Step 5: If CALL, interrupt, or JMP, set busy flag in new task's
+  // Step 7: If CALL, interrupt, or JMP, set busy flag in new task's
   //         TSS descriptor.  If IRET, leave set.
 
   if (source != BX_TASK_FROM_IRET)
@@ -378,18 +395,6 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
     access_write_linear(laddr, 4, 0, &dword2);
   }
 
-  // Step 6: If JMP or IRET, clear busy bit in old task TSS descriptor,
-  //         otherwise leave set.
-
-  // effect on Busy bit of old task
-  if (source == BX_TASK_FROM_JUMP || source == BX_TASK_FROM_IRET) {
-    // Bit is cleared
-    Bit32u laddr = (Bit32u) BX_CPU_THIS_PTR gdtr.base + (BX_CPU_THIS_PTR tr.selector.index<<3) + 4;
-    access_read_linear(laddr, 4, 0, BX_RW, &temp32);
-    temp32 &= ~0x200;
-    access_write_linear(laddr, 4, 0, &temp32);
-  }
-
   //
   // Commit point.  At this point, we commit to the new
   // context.  If an unrecoverable error occurs in further
@@ -399,29 +404,29 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
   // execution of the new task.
   //
 
-  // Step 7: Load the task register with the segment selector and
-  //        descriptor for the new task TSS.
+  // Step 8: Load the task register with the segment selector and
+  //         descriptor for the new task TSS.
 
   BX_CPU_THIS_PTR tr.selector = *tss_selector;
   BX_CPU_THIS_PTR tr.cache    = *tss_descriptor;
   BX_CPU_THIS_PTR tr.cache.type |= 2; // mark TSS in TR as busy
 
-  // Step 8: Set TS flag in the CR0 image stored in the new task TSS.
+  // Step 9: Set TS flag in the CR0 image stored in the new task TSS.
   BX_CPU_THIS_PTR cr0.set_TS(1);
 
   // Task switch clears LE/L3/L2/L1/L0 in DR7
   BX_CPU_THIS_PTR dr7 &= ~0x00000155;
 
-  // Step 9: If call or interrupt, set the NT flag in the eflags
-  //         image stored in new task's TSS.  If IRET or JMP,
-  //         NT is restored from new TSS eflags image. (no change)
+  // Step 10: If call or interrupt, set the NT flag in the eflags
+  //          image stored in new task's TSS.  If IRET or JMP,
+  //          NT is restored from new TSS eflags image. (no change)
 
   // effect on NT flag of new task
   if (source == BX_TASK_FROM_CALL || source == BX_TASK_FROM_INT) {
     newEFLAGS |= EFlagsNTMask; // NT flag is set
   }
 
-  // Step 10: Load the new task (dynamic) state from new TSS.
+  // Step 11: Load the new task (dynamic) state from new TSS.
   //          Any errors associated with loading and qualification of
   //          segment descriptors in this step occur in the new task's
   //          context.  State loaded here includes LDTR, CR3,
@@ -673,14 +678,14 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
   }
 
 
-  if ((tss_descriptor->type>=9) && (trap_word & 0x1)) {
+  if (tss_descriptor->type >= 9 && (trap_word & 0x1)) {
     BX_CPU_THIS_PTR debug_trap |= BX_DEBUG_TRAP_TASK_SWITCH_BIT; // BT flag
     BX_CPU_THIS_PTR async_event = 1; // so processor knows to check
     BX_INFO(("task_switch: T bit set in new TSS"));
   }
 
   //
-  // Step 14: Begin execution of new task.
+  // Step 12: Begin execution of new task.
   //
   BX_DEBUG(("TASKING: LEAVE"));
 }
@@ -763,8 +768,7 @@ void BX_CPU_C::get_SS_ESP_from_TSS(unsigned pl, Bit16u *ss, Bit32u *esp)
     *esp = (Bit32u) system_read_word(BX_CPU_THIS_PTR tr.cache.u.segment.base + TSSstackaddr);
   }
   else {
-    BX_PANIC(("get_SS_ESP_from_TSS: TR is bogus type (%u)",
-             (unsigned) BX_CPU_THIS_PTR tr.cache.type));
+    BX_PANIC(("get_SS_ESP_from_TSS: TR is bogus type (%u)", (unsigned) BX_CPU_THIS_PTR tr.cache.type));
   }
 }
 
