@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmexit.cc,v 1.11 2009-10-12 16:30:52 sshwarts Exp $
+// $Id: vmexit.cc,v 1.12 2010-02-11 14:19:11 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2009 Stanislav Shwartsman
@@ -475,6 +475,14 @@ void BX_CPP_AttrRegparmN(3) BX_CPU_C::VMexit_IO(bxInstruction_c *i, unsigned por
           laddr = BX_CPU_THIS_PTR get_laddr(i->seg(), RSI & asize_mask);
 
        VMwrite64(VMCS_GUEST_LINEAR_ADDR, laddr);
+
+       Bit32u instruction_info = i->seg() << 15;
+       if (i->as64L())
+         instruction_info |= (1 << 8);
+       else if (i->as32L())
+         instruction_info |= (1 << 7);
+
+       VMwrite32(VMCS_32BIT_VMEXIT_INSTRUCTION_INFO, instruction_info);
      }
 
      VMexit(i, VMX_VMEXIT_IO_INSTRUCTION, qualification | (len-1) | (port << 16));

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmx.h,v 1.7 2009-10-14 20:45:29 sshwarts Exp $
+// $Id: vmx.h,v 1.8 2010-02-11 14:19:11 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2009 Stanislav Shwartsman
@@ -689,7 +689,7 @@ enum VMX_Activity_State {
 
 #define VMX_MSR_VMX_BASIC_LO (VMX_VMCS_REVISION_ID)
 #define VMX_MSR_VMX_BASIC_HI \
-     (VMX_VMCS_AREA_SIZE | ((!BX_SUPPORT_X86_64) << 16) | (BX_MEMTYPE_WB << 18))
+     (VMX_VMCS_AREA_SIZE | ((!BX_SUPPORT_X86_64) << 16) | (BX_MEMTYPE_WB << 18) | (1<<22))
 
 #define VMX_MSR_VMX_BASIC \
    ((((Bit64u) VMX_MSR_VMX_BASIC_HI) << 32) | VMX_MSR_VMX_BASIC_LO)
