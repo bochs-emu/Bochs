@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: icache.h,v 1.50 2009-10-15 20:50:33 sshwarts Exp $
+// $Id: icache.h,v 1.51 2010-02-13 09:41:51 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007-2009 Stanislav Shwartsman
@@ -117,7 +117,7 @@ struct bxICacheEntry_c
   Bit32u writeStamp;    // Generation ID. Each write to a physical page
                         // decrements this value
 #if BX_SUPPORT_TRACE_CACHE
-  Bit32u ilen;          // Trace length in instructions
+  Bit32u tlen;          // Trace length in instructions
   bxInstruction_c *i;
 #else
   // ... define as array of 1 to simplify merge with trace cache code
@@ -149,7 +149,7 @@ public:
       flushICacheEntries();
     }
     e->i = &mpool[mpindex];
-    e->ilen = 0;
+    e->tlen = 0;
   }
 
   BX_CPP_INLINE void commit_trace(unsigned len) { mpindex += len; }

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.302 2010-01-24 12:48:42 sshwarts Exp $
+// $Id: cpu.cc,v 1.303 2010-02-13 09:41:51 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -147,7 +147,7 @@ no_async_event:
     }
 
 #if BX_SUPPORT_TRACE_CACHE
-    bxInstruction_c *last = i + (entry->ilen);
+    bxInstruction_c *last = i + (entry->tlen);
 
     for(;;) {
 #endif

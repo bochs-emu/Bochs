@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: icache.cc,v 1.30 2009-12-21 13:38:06 sshwarts Exp $
+// $Id: icache.cc,v 1.31 2010-02-13 09:41:51 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007-2009 Stanislav Shwartsman
@@ -90,14 +90,14 @@ void BX_CPU_C::serveICacheMiss(bxICacheEntry_c *entry, Bit32u eipBiased, bx_phy_
       // First instruction is boundary fetch, leave the trace cache entry 
       // invalid and do not cache the instruction.
       entry->writeStamp = ICacheWriteStampInvalid;
-      entry->ilen = 1;
+      entry->tlen = 1;
       boundaryFetch(fetchPtr, remainingInPage, i);
       return;
     }
 
     // add instruction to the trace
     unsigned iLen = i->ilen();
-    entry->ilen++;
+    entry->tlen++;
 
     // continue to the next instruction
     remainingInPage -= iLen;
@@ -110,7 +110,7 @@ void BX_CPU_C::serveICacheMiss(bxICacheEntry_c *entry, Bit32u eipBiased, bx_phy_
     if (mergeTraces(entry, i, pAddr)) break;
   }
 
-  BX_CPU_THIS_PTR iCache.commit_trace(entry->ilen);
+  BX_CPU_THIS_PTR iCache.commit_trace(entry->tlen);
 }
 
 bx_bool BX_CPU_C::mergeTraces(bxICacheEntry_c *entry, bxInstruction_c *i, bx_phy_address pAddr)
@@ -120,14 +120,14 @@ bx_bool BX_CPU_C::mergeTraces(bxICacheEntry_c *entry, bxInstruction_c *i, bx_phy
   if ((e->pAddr == pAddr) && (e->writeStamp == entry->writeStamp))
   {
     // determine max amount of instruction to take from another entry
-    unsigned max_length = e->ilen;
-    if (max_length + entry->ilen > BX_MAX_TRACE_LENGTH)
-        max_length = BX_MAX_TRACE_LENGTH - entry->ilen;
+    unsigned max_length = e->tlen;
+    if (max_length + entry->tlen > BX_MAX_TRACE_LENGTH)
+        max_length = BX_MAX_TRACE_LENGTH - entry->tlen;
     if(max_length == 0) return 0;
 
     memcpy(i, e->i, sizeof(bxInstruction_c)*max_length);
-    entry->ilen += max_length;
-    BX_ASSERT(entry->ilen <= BX_MAX_TRACE_LENGTH);
+    entry->tlen += max_length;
+    BX_ASSERT(entry->tlen <= BX_MAX_TRACE_LENGTH);
 
     return 1;
   }
