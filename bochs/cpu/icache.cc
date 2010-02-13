@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: icache.cc,v 1.31 2010-02-13 09:41:51 sshwarts Exp $
+// $Id: icache.cc,v 1.32 2010-02-13 10:35:51 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007-2009 Stanislav Shwartsman
@@ -25,6 +25,11 @@
 #include "bochs.h"
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
+
+// Make code more tidy with a few macros.
+#if BX_SUPPORT_X86_64==0
+#define RIP EIP
+#endif
 
 bxPageWriteStampTable pageWriteStampTable;
 
@@ -177,3 +182,65 @@ void BX_CPU_C::serveICacheMiss(bxICacheEntry_c *entry, Bit32u eipBiased, bx_phy_
 }
 
 #endif
+
+void BX_CPU_C::boundaryFetch(const Bit8u *fetchPtr, unsigned remainingInPage, bxInstruction_c *i)
+{
+  unsigned j, k;
+  Bit8u fetchBuffer[32];
+  int ret;
+
+  if (remainingInPage >= 15) {
+    BX_ERROR(("boundaryFetch #GP(0): too many instruction prefixes"));
+    exception(BX_GP_EXCEPTION, 0, 0);
+  }
+
+  // Read all leftover bytes in current page up to boundary.
+  for (j=0; j<remainingInPage; j++) {
+    fetchBuffer[j] = *fetchPtr++;
+  }
+
+  // The 2nd chunk of the instruction is on the next page.
+  // Set RIP to the 0th byte of the 2nd page, and force a
+  // prefetch so direct access of that physical page is possible, and
+  // all the associated info is updated.
+  RIP += remainingInPage;
+  prefetch();
+
+  unsigned fetchBufferLimit = 15;
+  if (BX_CPU_THIS_PTR eipPageWindowSize < 15) {
+    BX_DEBUG(("boundaryFetch: small window size after prefetch=%d bytes, remainingInPage=%d bytes", BX_CPU_THIS_PTR eipPageWindowSize, remainingInPage));
+    fetchBufferLimit = BX_CPU_THIS_PTR eipPageWindowSize;
+  }
+
+  // We can fetch straight from the 0th byte, which is eipFetchPtr;
+  fetchPtr = BX_CPU_THIS_PTR eipFetchPtr;
+
+  // read leftover bytes in next page
+  for (k=0; k<fetchBufferLimit; k++, j++) {
+    fetchBuffer[j] = *fetchPtr++;
+  }
+
+#if BX_SUPPORT_X86_64
+  if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64)
+    ret = fetchDecode64(fetchBuffer, i, remainingInPage+fetchBufferLimit);
+  else
+#endif
+    ret = fetchDecode32(fetchBuffer, i, remainingInPage+fetchBufferLimit);
+
+  if (ret < 0) {
+    BX_INFO(("boundaryFetch #GP(0): failed to complete instruction decoding"));
+    exception(BX_GP_EXCEPTION, 0, 0);
+  }
+
+  // Restore EIP since we fudged it to start at the 2nd page boundary.
+  RIP = BX_CPU_THIS_PTR prev_rip;
+
+  // Since we cross an instruction boundary, note that we need a prefetch()
+  // again on the next instruction.  Perhaps we can optimize this to
+  // eliminate the extra prefetch() since we do it above, but have to
+  // think about repeated instructions, etc.
+  // invalidate_prefetch_q();
+
+  BX_INSTR_OPCODE(BX_CPU_ID, fetchBuffer, i->ilen(),
+      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b, long64_mode());
+}
