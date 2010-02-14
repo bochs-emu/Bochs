@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gdbstub.cc,v 1.41 2010-01-02 22:36:20 sshwarts Exp $
+// $Id: gdbstub.cc,v 1.42 2010-02-14 15:17:14 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2006  The Bochs Project Team
@@ -693,6 +693,7 @@ static void debug_loop(void)
       }
 
       case 'g':
+      {
 #if BX_SUPPORT_X86_64 == 0
         WriteHostDWordToLittleEndian(registers + 0, EAX);
         WriteHostDWordToLittleEndian(registers + 1, ECX);
@@ -764,6 +765,7 @@ static void debug_loop(void)
 #endif
         put_reply(obuf);
         break;
+      }
 
       case '?':
         sprintf(obuf, "S%02x", SIGTRAP);
