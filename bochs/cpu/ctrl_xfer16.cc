@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer16.cc,v 1.69 2009-12-04 16:53:12 sshwarts Exp $
+// $Id: ctrl_xfer16.cc,v 1.70 2010-02-15 08:42:56 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -118,12 +118,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RETfar16_Iw(bxInstruction_c *i)
 
   Bit16s imm16 = (Bit16s) i->Iw();
 
-  RSP_SPECULATIVE;
-
   if (protected_mode()) {
     return_protected(i, imm16);
     goto done;
   }
+
+  RSP_SPECULATIVE;
 
   ip     = pop_16();
   cs_raw = pop_16();
@@ -142,8 +142,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RETfar16_Iw(bxInstruction_c *i)
   else
      SP += imm16;
 
-done:
   RSP_COMMIT;
+
+done:
 
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_RET,
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, EIP);
@@ -159,12 +160,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RETfar16(bxInstruction_c *i)
   BX_CPU_THIS_PTR show_flag |= Flag_ret;
 #endif
 
-  RSP_SPECULATIVE;
-
   if (protected_mode()) {
     return_protected(i, 0);
     goto done;
   }
+
+  RSP_SPECULATIVE;
 
   ip     = pop_16();
   cs_raw = pop_16();
@@ -178,8 +179,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RETfar16(bxInstruction_c *i)
   load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], cs_raw);
   EIP = (Bit32u) ip;
 
-done:
   RSP_COMMIT;
+
+done:
 
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_RET,
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, EIP);

@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: call_far.cc,v 1.52 2009-12-22 12:11:09 sshwarts Exp $
+// $Id: call_far.cc,v 1.53 2010-02-15 08:42:56 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005-2009 Stanislav Shwartsman
@@ -37,7 +37,6 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
   bx_selector_t cs_selector;
   Bit32u dword1, dword2;
   bx_descriptor_t cs_descriptor;
-  Bit32u temp_RSP;
 
   /* new cs selector must not be null, else #GP(0) */
   if ((cs_raw & 0xfffc) == 0) {
@@ -86,6 +85,8 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
     else
 #endif
     {
+      Bit32u temp_RSP;
+
       // moving to legacy mode, push return address onto 32-bit stack
       if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b)
         temp_RSP = ESP;
@@ -174,6 +175,17 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
           BX_DEBUG(("call_protected: 16bit available TSS"));
         else
           BX_DEBUG(("call_protected: 32bit available TSS"));
+
+        if (gate_descriptor.valid==0 || gate_selector.ti) {
+          BX_ERROR(("call_protected: call bad TSS selector !"));
+          exception(BX_GP_EXCEPTION, cs_raw & 0xfffc, 0);
+        }
+
+        // TSS must be present, else #NP(TSS selector)
+        if (! IS_PRESENT(gate_descriptor)) {
+          BX_ERROR(("call_protected: call not present TSS !"));
+          exception(BX_NP_EXCEPTION, cs_raw & 0xfffc, 0);
+        }
 
         // SWITCH_TASKS _without_ nesting to TSS
         task_switch(i, &gate_selector, &gate_descriptor,

@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: ret_far.cc,v 1.24 2010-01-19 14:43:47 sshwarts Exp $
+// $Id: ret_far.cc,v 1.25 2010-02-15 08:42:57 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005-2009 Stanislav Shwartsman
@@ -122,7 +122,6 @@ BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
       else
          SP += stack_param_offset + pop_bytes;
     }
-    return;
   }
   /* RETURN TO OUTER PRIVILEGE LEVEL */
   else {
@@ -216,7 +215,6 @@ BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
     else {
       // we are in 64-bit mode !
       load_null_selector(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS], raw_ss_selector);
-//    loadSRegLMNominal(BX_SEG_REG_SS, raw_ss_selector, cs_selector.rpl);
     }
 
     if (StackAddrSize64())
@@ -224,9 +222,9 @@ BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
     else
 #endif
     if (ss_descriptor.u.segment.d_b)
-      RSP = (Bit32u) return_RSP + pop_bytes;
+      RSP = (Bit32u)(return_RSP + pop_bytes);
     else
-      SP  = (Bit16u) return_RSP + pop_bytes;
+      SP  = (Bit16u)(return_RSP + pop_bytes);
 
     /* check ES, DS, FS, GS for validity */
     validate_seg_regs();

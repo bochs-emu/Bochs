@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: tasking.cc,v 1.81 2010-02-11 08:06:25 sshwarts Exp $
+// $Id: tasking.cc,v 1.82 2010-02-15 08:42:57 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -140,17 +140,6 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
   //   2) TSS DPL must be >= TSS selector RPL
   //   3) TSS descriptor is not busy.
 
-  if (tss_descriptor->valid==0 || tss_selector->ti) {
-    BX_ERROR(("task_switch: bad TSS selector !"));
-    exception(BX_GP_EXCEPTION, tss_selector->value & 0xfffc, 0);
-  }
-
-  // TSS must be present, else #NP(TSS selector)
-  if (tss_descriptor->p==0) {
-    BX_ERROR(("task_switch: TSS descriptor is not present !"));
-    exception(BX_NP_EXCEPTION, tss_selector->value & 0xfffc, 0);
-  }
-
   // STEP 2: The processor performs limit-checking on the target TSS
   //         to verify that the TSS limit is greater than or equal
   //         to 67h (2Bh for 16-bit TSS).
@@ -163,7 +152,7 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
     new_TSS_max = 0x67;
   }
 
-  nbase32 = (Bit32u) tss_descriptor->u.segment.base;                 // new TSS.base
+  nbase32 = (Bit32u) tss_descriptor->u.segment.base;
   new_TSS_limit = tss_descriptor->u.segment.limit_scaled;
 
   if (new_TSS_limit < new_TSS_max) {

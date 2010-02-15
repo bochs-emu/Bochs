@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: jmp_far.cc,v 1.22 2009-12-22 11:58:26 sshwarts Exp $
+// $Id: jmp_far.cc,v 1.23 2010-02-15 08:42:57 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005-2009 Stanislav Shwartsman
@@ -96,6 +96,17 @@ BX_CPU_C::jump_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
           BX_DEBUG(("jump_protected: jump to 286 TSS"));
         else
           BX_DEBUG(("jump_protected: jump to 386 TSS"));
+
+        if (descriptor.valid==0 || selector.ti) {
+          BX_ERROR(("jump_protected: jump to bad TSS selector !"));
+          exception(BX_GP_EXCEPTION, cs_raw & 0xfffc, 0);
+        }
+
+        // TSS must be present, else #NP(TSS selector)
+        if (! IS_PRESENT(descriptor)) {
+          BX_ERROR(("jump_protected: jump to not present TSS !"));
+          exception(BX_NP_EXCEPTION, cs_raw & 0xfffc, 0);
+        }
 
         // SWITCH_TASKS _without_ nesting to TSS
         task_switch(i, &selector, &descriptor, BX_TASK_FROM_JUMP, dword1, dword2);

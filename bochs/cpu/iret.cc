@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: iret.cc,v 1.47 2010-01-19 14:43:47 sshwarts Exp $
+// $Id: iret.cc,v 1.48 2010-02-15 08:42:57 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005-2009 Stanislav Shwartsman
@@ -82,7 +82,9 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
       BX_ERROR(("iret: TSS selector points to bad TSS"));
       exception(BX_TS_EXCEPTION, raw_link_selector & 0xfffc, 0);
     }
-    if ((tss_descriptor.type!=11) && (tss_descriptor.type!=3)) {
+    if (tss_descriptor.type != BX_SYS_SEGMENT_BUSY_286_TSS &&
+        tss_descriptor.type != BX_SYS_SEGMENT_BUSY_386_TSS)
+    {
       BX_ERROR(("iret: TSS selector points to bad TSS"));
       exception(BX_TS_EXCEPTION, raw_link_selector & 0xfffc, 0);
     }
@@ -542,7 +544,6 @@ BX_CPU_C::long_iret(bxInstruction_c *i)
     else {
       // we are in 64-bit mode !
       load_null_selector(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS], raw_ss_selector);
-//    loadSRegLMNominal(BX_SEG_REG_SS, raw_ss_selector, cs_selector.rpl);
     }
 
     if (StackAddrSize64()) RSP = new_rsp;
