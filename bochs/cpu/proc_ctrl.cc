@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.310 2010-01-31 18:06:44 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.311 2010-02-15 14:04:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -1170,21 +1170,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOADALL(bxInstruction_c *i)
   {
     BX_PANIC(("loadall: ES invalid"));
   }
-
-#if 0
-  BX_INFO(("cs.dpl = %02x", (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.dpl));
-  BX_INFO(("ss.dpl = %02x", (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.dpl));
-  BX_INFO(("BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].dpl = 0x%02x", (unsigned) BX_CPU_THIS_PTR ds.cache.dpl));
-  BX_INFO(("BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].dpl = 0x%02x", (unsigned) BX_CPU_THIS_PTR es.cache.dpl));
-  BX_INFO(("LOADALL: setting cs.selector.rpl to %u",
-    (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.rpl));
-  BX_INFO(("LOADALL: setting ss.selector.rpl to %u",
-    (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.rpl));
-  BX_INFO(("LOADALL: setting ds.selector.rpl to %u",
-    (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.rpl));
-  BX_INFO(("LOADALL: setting es.selector.rpl to %u",
-    (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.rpl));
-#endif
 
   BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x826, 2, &DI);
   BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x828, 2, &SI);

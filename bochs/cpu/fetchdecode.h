@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.h,v 1.98 2010-02-08 15:22:53 sshwarts Exp $
+// $Id: fetchdecode.h,v 1.99 2010-02-15 14:04:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005-2010 Stanislav Shwartsman
@@ -573,8 +573,8 @@ static const BxOpcodeInfo_t BxOpcodeInfo64G5qR[8] = {
 static const BxOpcodeInfo_t BxOpcodeInfoG6[8] = {
   /* 0 */ { 0, BX_IA_SLDT_Ew },
   /* 1 */ { 0, BX_IA_STR_Ew },
-  /* 2 */ { BxTraceEnd, BX_IA_LLDT_Ew },
-  /* 3 */ { BxTraceEnd, BX_IA_LTR_Ew },
+  /* 2 */ { 0, BX_IA_LLDT_Ew },
+  /* 3 */ { 0, BX_IA_LTR_Ew },
   /* 4 */ { 0, BX_IA_VERR_Ew },
   /* 5 */ { 0, BX_IA_VERW_Ew },
   /* 6 */ { 0, BX_IA_ERROR },
@@ -661,8 +661,8 @@ static const BxOpcodeInfo_t BxOpcodeInfoG7M[8] = {
   // attributes defined in main area
   /* 0 */ { 0, BX_IA_SGDT_Ms },
   /* 1 */ { 0, BX_IA_SIDT_Ms },
-  /* 2 */ { BxTraceEnd, BX_IA_LGDT_Ms },
-  /* 3 */ { BxTraceEnd, BX_IA_LIDT_Ms },
+  /* 2 */ { 0, BX_IA_LGDT_Ms },
+  /* 3 */ { 0, BX_IA_LIDT_Ms },
   /* 4 */ { 0, BX_IA_SMSW_EwM },
   /* 5 */ { 0, BX_IA_ERROR },
   /* 6 */ { BxTraceEnd, BX_IA_LMSW_Ew },
@@ -673,8 +673,8 @@ static const BxOpcodeInfo_t BxOpcodeInfoG7M[8] = {
 static const BxOpcodeInfo_t BxOpcodeInfo64G7M[8] = {
   /* 0 */ { 0, BX_IA_SGDT64_Ms },
   /* 1 */ { 0, BX_IA_SIDT64_Ms },
-  /* 2 */ { BxTraceEnd, BX_IA_LGDT64_Ms },
-  /* 3 */ { BxTraceEnd, BX_IA_LIDT64_Ms },
+  /* 2 */ { 0, BX_IA_LGDT64_Ms },
+  /* 3 */ { 0, BX_IA_LIDT64_Ms },
   /* 4 */ { 0, BX_IA_SMSW_EwM },
   /* 5 */ { 0, BX_IA_ERROR },
   /* 6 */ { BxTraceEnd, BX_IA_LMSW_Ew },
@@ -765,8 +765,8 @@ static const BxOpcodeInfo_t BxOpcodeInfoG9M[8] = {
   /* 3 */ { 0, BX_IA_ERROR },
   /* 4 */ { 0, BX_IA_ERROR },
   /* 5 */ { 0, BX_IA_ERROR },
-  /* 6 */ { BxTraceEnd | BxPrefixSSE, BX_IA_VMPTRLD_Mq, BxOpcodeGroupSSE_G9VMX6 },
-  /* 7 */ { BxTraceEnd | BxPrefixSSE, BX_IA_VMPTRST_Mq, BxOpcodeGroupSSE_ERR }
+  /* 6 */ { BxPrefixSSE, BX_IA_VMPTRLD_Mq, BxOpcodeGroupSSE_G9VMX6 },
+  /* 7 */ { BxPrefixSSE, BX_IA_VMPTRST_Mq, BxOpcodeGroupSSE_ERR }
 };
 
 #if BX_SUPPORT_X86_64
@@ -777,8 +777,8 @@ static const BxOpcodeInfo_t BxOpcodeInfo64G9qM[8] = {
   /* 3 */ { 0, BX_IA_ERROR },
   /* 4 */ { 0, BX_IA_ERROR },
   /* 5 */ { 0, BX_IA_ERROR },
-  /* 6 */ { BxTraceEnd | BxPrefixSSE, BX_IA_VMPTRLD_Mq, BxOpcodeGroupSSE_G9VMX6 },
-  /* 7 */ { BxTraceEnd | BxPrefixSSE, BX_IA_VMPTRST_Mq, BxOpcodeGroupSSE_ERR }
+  /* 6 */ { BxPrefixSSE, BX_IA_VMPTRLD_Mq, BxOpcodeGroupSSE_G9VMX6 },
+  /* 7 */ { BxPrefixSSE, BX_IA_VMPTRST_Mq, BxOpcodeGroupSSE_ERR }
 };
 #endif
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: protect_ctrl.cc,v 1.97 2009-12-04 16:53:12 sshwarts Exp $
+// $Id: protect_ctrl.cc,v 1.98 2010-02-15 14:04:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -351,8 +351,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LLDT_Ew(bxInstruction_c *i)
     raw_selector = read_virtual_word(i->seg(), eaddr);
   }
 
-  invalidate_prefetch_q();
-
   /* if selector is NULL, invalidate and done */
   if ((raw_selector & 0xfffc) == 0) {
     BX_CPU_THIS_PTR ldtr.selector.value = raw_selector;
@@ -439,8 +437,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LTR_Ew(bxInstruction_c *i)
     /* pointer, segment address pair */
     raw_selector = read_virtual_word(i->seg(), eaddr);
   }
-
-  invalidate_prefetch_q();
 
   /* if selector is NULL, invalidate and done */
   if ((raw_selector & BX_SELECTOR_RPL_MASK) == 0) {
@@ -718,8 +714,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LGDT_Ms(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
-  invalidate_prefetch_q();
-
   Bit32u eaddr = (Bit32u) BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
   Bit16u limit_16 = read_virtual_word_32(i->seg(), eaddr);
@@ -744,8 +738,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LIDT_Ms(bxInstruction_c *i)
     BX_ERROR(("LIDT: CPL!=0 in protected mode"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
-
-  invalidate_prefetch_q();
 
   Bit32u eaddr = (Bit32u) BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
@@ -795,8 +787,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LGDT64_Ms(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
-  invalidate_prefetch_q();
-
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
   Bit64u base_64 = read_virtual_qword_64(i->seg(), eaddr + 2);
@@ -818,8 +808,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LIDT64_Ms(bxInstruction_c *i)
     BX_ERROR(("LIDT64_Ms: CPL != 0 in long mode"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
-
-  invalidate_prefetch_q();
 
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
