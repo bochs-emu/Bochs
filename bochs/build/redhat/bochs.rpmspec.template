@@ -14,9 +14,9 @@ Bochs is a highly portable open source IA-32 (x86) PC emulator written
 in C++, that runs on most popular platforms. It includes emulation of
 the Intel x86 CPU, common I/O devices, and a custom BIOS. Currently,
 Bochs can be compiled to emulate a 386, 486, Pentium, Pentium Pro or
-AMD64 CPU, including optional MMX, SSE, SSE2 and 3DNow! instructions.
+AMD64 CPU, including optional MMX, SSEx and 3DNow! instructions.
 Bochs is capable of running most Operating Systems inside the emulation
-including Linux, DOS, Windows® 95/98 and Windows® NT/2000.
+including Linux, DOS, Windows 9X/NT/2000/XP or Windows 7.
 
 %define pkg_name bochs
 
@@ -76,6 +76,6 @@ including Linux, DOS, Windows® 95/98 and Windows® NT/2000.
 %preun
 	# clean up the bochsout.txt that is always produced if you 
 	# run bochs-dlx.
-	rm -rf /usr/share/bochs/dlxlinux/bochsout.txt core
+	rm -rf /usr/share/bochs/dlxlinux/bochsout.txt
 %postun
 	rmdir /usr/share/bochs > /dev/null 2>&1
