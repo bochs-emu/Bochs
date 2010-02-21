@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer32.cc,v 1.87 2010-02-15 08:42:56 sshwarts Exp $
+// $Id: ctrl_xfer32.cc,v 1.88 2010-02-21 06:56:47 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -623,9 +623,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::IRET32(bxInstruction_c *i)
 {
   BX_ASSERT(BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64);
 
-  Bit32u eip, eflags32;
-  Bit16u cs_raw;
-
   invalidate_prefetch_q();
 
 #if BX_SUPPORT_VMX
@@ -637,35 +634,36 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::IRET32(bxInstruction_c *i)
   BX_CPU_THIS_PTR show_flag |= Flag_iret;
 #endif
 
-  RSP_SPECULATIVE;
-
-  if (v8086_mode()) {
-    // IOPL check in stack_return_from_v86()
-    iret32_stack_return_from_v86(i);
-    goto done;
-  }
-
   if (protected_mode()) {
     iret_protected(i);
     goto done;
   }
 
-  eip      =          pop_32();
-  cs_raw   = (Bit16u) pop_32(); // #SS has higher priority
-  eflags32 =          pop_32();
+  RSP_SPECULATIVE;
 
-  // CS.LIMIT can't change when in real/v8086 mode
-  if (eip > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled) {
-    BX_ERROR(("IRET32: instruction pointer not within code segment limits"));
-    exception(BX_GP_EXCEPTION, 0, 0);
+  if (v8086_mode()) {
+    // IOPL check in stack_return_from_v86()
+    iret32_stack_return_from_v86(i);
+  }
+  else {
+    Bit32u eip      =          pop_32();
+    Bit16u cs_raw   = (Bit16u) pop_32(); // #SS has higher priority
+    Bit32u eflags32 =          pop_32();
+
+    // CS.LIMIT can't change when in real/v8086 mode
+    if (eip > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled) {
+      BX_ERROR(("IRET32: instruction pointer not within code segment limits"));
+      exception(BX_GP_EXCEPTION, 0, 0);
+    }
+
+    load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], cs_raw);
+    EIP = eip;
+    writeEFlags(eflags32, 0x00257fd5); // VIF, VIP, VM unchanged
   }
 
-  load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], cs_raw);
-  EIP = eip;
-  writeEFlags(eflags32, 0x00257fd5); // VIF, VIP, VM unchanged
+  RSP_COMMIT;
 
 done:
-  RSP_COMMIT;
 
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_IRET,
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, EIP);

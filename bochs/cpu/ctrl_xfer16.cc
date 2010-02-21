@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer16.cc,v 1.70 2010-02-15 08:42:56 sshwarts Exp $
+// $Id: ctrl_xfer16.cc,v 1.71 2010-02-21 06:56:47 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -135,7 +135,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RETfar16_Iw(bxInstruction_c *i)
   }
 
   load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], cs_raw);
-  RIP = (Bit32u) ip;
+  EIP = (Bit32u) ip;
 
   if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b)
     ESP += imm16;
@@ -581,8 +581,6 @@ done:
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::IRET16(bxInstruction_c *i)
 {
-  Bit16u ip, cs_raw, flags;
-
   invalidate_prefetch_q();
 
 #if BX_SUPPORT_VMX
@@ -594,35 +592,36 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::IRET16(bxInstruction_c *i)
   BX_CPU_THIS_PTR show_flag |= Flag_iret;
 #endif
 
-  RSP_SPECULATIVE;
-
-  if (v8086_mode()) {
-    // IOPL check in stack_return_from_v86()
-    iret16_stack_return_from_v86(i);
-    goto done;
-  }
-
   if (protected_mode()) {
     iret_protected(i);
     goto done;
   }
 
-  ip     = pop_16();
-  cs_raw = pop_16(); // #SS has higher priority
-  flags  = pop_16();
+  RSP_SPECULATIVE;
 
-  // CS.LIMIT can't change when in real/v8086 mode
-  if(ip > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled) {
-    BX_ERROR(("IRET16: instruction pointer not within code segment limits"));
-    exception(BX_GP_EXCEPTION, 0, 0);
+  if (v8086_mode()) {
+    // IOPL check in stack_return_from_v86()
+    iret16_stack_return_from_v86(i);
+  }
+  else {
+    Bit16u ip     = pop_16();
+    Bit16u cs_raw = pop_16(); // #SS has higher priority
+    Bit16u flags  = pop_16();
+
+    // CS.LIMIT can't change when in real/v8086 mode
+    if(ip > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled) {
+      BX_ERROR(("IRET16: instruction pointer not within code segment limits"));
+      exception(BX_GP_EXCEPTION, 0, 0);
+    }
+
+    load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], cs_raw);
+    EIP = (Bit32u) ip;
+    write_flags(flags, /* change IOPL? */ 1, /* change IF? */ 1);
   }
 
-  load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], cs_raw);
-  RIP = (Bit32u) ip;
-  write_flags(flags, /* change IOPL? */ 1, /* change IF? */ 1);
+  RSP_COMMIT;
 
 done:
-  RSP_COMMIT;
 
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_IRET,
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, EIP);

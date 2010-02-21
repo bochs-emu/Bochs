@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.144 2009-12-04 16:53:12 sshwarts Exp $
+// $Id: exception.cc,v 1.145 2010-02-21 06:56:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -200,18 +200,11 @@ void BX_CPU_C::long_mode_int(Bit8u vector, unsigned is_INT, bx_bool push_error, 
       write_new_stack_qword_64(RSP_for_cpl_x, cs_descriptor.dpl, error_code);
     }
 
-    bx_selector_t ss_selector;
-    bx_descriptor_t ss_descriptor;
-
-    // set up a null descriptor
-    parse_selector(0, &ss_selector);
-    parse_descriptor(0, 0, &ss_descriptor);
-
     // load CS:RIP (guaranteed to be in 64 bit mode)
     branch_far64(&cs_selector, &cs_descriptor, gate_dest_offset, cs_descriptor.dpl);
 
     // set up null SS descriptor
-    load_ss(&ss_selector, &ss_descriptor, cs_descriptor.dpl);
+    load_null_selector(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS], cs_descriptor.dpl);
     RSP = RSP_for_cpl_x;
 
     // if INTERRUPT GATE set IF to 0

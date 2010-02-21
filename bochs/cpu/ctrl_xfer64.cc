@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer64.cc,v 1.82 2010-02-15 08:42:57 sshwarts Exp $
+// $Id: ctrl_xfer64.cc,v 1.83 2010-02-21 06:56:47 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -91,7 +91,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RETfar64_Iw(bxInstruction_c *i)
 
   BX_ASSERT(protected_mode());
 
-  // return_protected is not RSP safe
+  // return_protected is RSP safe
   return_protected(i, i->Iw());
 
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_RET,
@@ -159,12 +159,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CALL64_Ep(bxInstruction_c *i)
 
   BX_ASSERT(protected_mode());
 
-  RSP_SPECULATIVE;
-
-  // call_protected is not RSP safe
+  // call_protected is RSP safe for 64-bit mode
   call_protected(i, cs_raw, op1_64);
-
-  RSP_COMMIT;
 
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_CALL,
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, RIP);
@@ -439,12 +435,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::IRET64(bxInstruction_c *i)
 
   BX_ASSERT(long_mode());
 
-  RSP_SPECULATIVE;
-
-  // long_iret is not RSP safe
   long_iret(i);
-
-  RSP_COMMIT;
 
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_IRET,
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, RIP);

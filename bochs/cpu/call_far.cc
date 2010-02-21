@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: call_far.cc,v 1.53 2010-02-15 08:42:56 sshwarts Exp $
+// $Id: call_far.cc,v 1.54 2010-02-21 06:56:47 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005-2009 Stanislav Shwartsman
@@ -62,25 +62,33 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
 
 #if BX_SUPPORT_X86_64
     if (cs_descriptor.u.segment.l) {
+      Bit64u temp_rsp = RSP; 
       // moving to long mode, push return address onto 64-bit stack
       if (i->os64L()) {
-        write_new_stack_qword_64(RSP -  8, cs_descriptor.dpl,
+        write_new_stack_qword_64(temp_rsp -  8, cs_descriptor.dpl,
              BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value);
-        write_new_stack_qword_64(RSP - 16, cs_descriptor.dpl, RIP);
-        RSP -= 16;
+        write_new_stack_qword_64(temp_rsp - 16, cs_descriptor.dpl, RIP);
+        temp_rsp -= 16;
       }
       else if (i->os32L()) {
-        write_new_stack_dword_64(RSP - 4, cs_descriptor.dpl,
+        write_new_stack_dword_64(temp_rsp - 4, cs_descriptor.dpl,
              BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value);
-        write_new_stack_dword_64(RSP - 8, cs_descriptor.dpl, EIP);
-        RSP -= 8;
+        write_new_stack_dword_64(temp_rsp - 8, cs_descriptor.dpl, EIP);
+        temp_rsp -= 8;
       }
       else {
-        write_new_stack_word_64(RSP - 2, cs_descriptor.dpl,
+        write_new_stack_word_64(temp_rsp - 2, cs_descriptor.dpl,
              BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value);
-        write_new_stack_word_64(RSP - 4, cs_descriptor.dpl, IP);
-        RSP -= 4;
+        write_new_stack_word_64(temp_rsp - 4, cs_descriptor.dpl, IP);
+        temp_rsp -= 4;
       }
+
+      // load code segment descriptor into CS cache
+      // load CS with new code segment selector
+      // set RPL of CS to CPL
+      branch_far64(&cs_selector, &cs_descriptor, disp, CPL);
+
+      RSP = temp_rsp;
     }
     else
 #endif
@@ -121,16 +129,16 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
         temp_RSP -= 4;
       }
 
+      // load code segment descriptor into CS cache
+      // load CS with new code segment selector
+      // set RPL of CS to CPL
+      branch_far64(&cs_selector, &cs_descriptor, disp, CPL);
+
       if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b)
         ESP = (Bit32u) temp_RSP;
       else
          SP = (Bit16u) temp_RSP;
     }
-
-    // load code segment descriptor into CS cache
-    // load CS with new code segment selector
-    // set RPL of CS to CPL
-    branch_far64(&cs_selector, &cs_descriptor, disp, CPL);
 
     return;
   }
@@ -546,19 +554,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::call_gate64(bx_selector_t *gate_selector)
     write_new_stack_qword_64(RSP_for_cpl_x - 32, cs_descriptor.dpl, old_RIP);
     RSP_for_cpl_x -= 32;
 
-    // prepare new stack null SS selector
-    bx_selector_t ss_selector;
-    bx_descriptor_t ss_descriptor;
-
-    // set up a null descriptor
-    parse_selector(0, &ss_selector);
-    parse_descriptor(0, 0, &ss_descriptor);
-
     // load CS:RIP (guaranteed to be in 64 bit mode)
     branch_far64(&cs_selector, &cs_descriptor, new_RIP, cs_descriptor.dpl);
 
     // set up null SS descriptor
-    load_ss(&ss_selector, &ss_descriptor, cs_descriptor.dpl);
+    load_null_selector(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS], cs_descriptor.dpl);
+
     RSP = RSP_for_cpl_x;
   }
   else
@@ -568,10 +569,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::call_gate64(bx_selector_t *gate_selector)
     // push to 64-bit stack, switch to long64 guaranteed
     write_new_stack_qword_64(RSP -  8, CPL, old_CS);
     write_new_stack_qword_64(RSP - 16, CPL, old_RIP);
-    RSP -= 16;
 
     // load CS:RIP (guaranteed to be in 64 bit mode)
     branch_far64(&cs_selector, &cs_descriptor, new_RIP, CPL);
+
+    RSP -= 16;
   }
 }
 #endif
