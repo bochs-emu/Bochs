@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.145 2010-02-21 06:56:48 sshwarts Exp $
+// $Id: exception.cc,v 1.146 2010-02-21 18:23:50 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -967,14 +967,11 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code, unsigned unused)
   BX_CPU_THIS_PTR errorno++;
 
   if (real_mode()) {
-    // not INT, no error code pushed
-    BX_CPU_THIS_PTR interrupt(vector, BX_HARDWARE_EXCEPTION, 0, 0);
-    BX_CPU_THIS_PTR errorno = 0; // error resolved
-    longjmp(BX_CPU_THIS_PTR jmp_buf_env, 1); // go back to main decode loop
+    push_error = 0; // not INT, no error code pushed
+    error_code = 0;
   }
-  else {
-    BX_CPU_THIS_PTR interrupt(vector, BX_HARDWARE_EXCEPTION, push_error, error_code);
-    BX_CPU_THIS_PTR errorno = 0; // error resolved
-    longjmp(BX_CPU_THIS_PTR jmp_buf_env, 1); // go back to main decode loop
-  }
+
+  interrupt(vector, BX_HARDWARE_EXCEPTION, push_error, error_code);
+  BX_CPU_THIS_PTR errorno = 0; // error resolved
+  longjmp(BX_CPU_THIS_PTR jmp_buf_env, 1); // go back to main decode loop
 }
