@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: crc32.cc,v 1.3 2009-10-14 20:45:29 sshwarts Exp $
+// $Id: crc32.cc,v 1.4 2010-02-24 19:27:50 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008-2009 Stanislav Shwartsman
@@ -98,7 +98,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CRC32_GdEb(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_32BIT_REGZ(i->nnn(), BitReflect32(op2));
 #else
-  BX_INFO(("CRC32_GdEb: required SSE4_2 support, use --enable-sse and --enable-sse-extension options"));
+  BX_INFO(("CRC32_GdEb: required SSE4_2 support, use --enable-sse option"));
   exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
@@ -127,7 +127,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CRC32_GdEw(bxInstruction_c *i)
   BX_WRITE_32BIT_REGZ(i->nnn(), BitReflect32(op2));
 
 #else
-  BX_INFO(("CRC32_GdEw: required SSE4_2 support, use --enable-sse and --enable-sse-extension options"));
+  BX_INFO(("CRC32_GdEw: required SSE4_2 support, use --enable-sse option"));
   exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
@@ -156,7 +156,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CRC32_GdEd(bxInstruction_c *i)
   BX_WRITE_32BIT_REGZ(i->nnn(), BitReflect32(op2));
 
 #else
-  BX_INFO(("CRC32_GdEd: required SSE4_2 support, use --enable-sse and --enable-sse-extension options"));
+  BX_INFO(("CRC32_GdEd: required SSE4_2 support, use --enable-sse option"));
   exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
@@ -191,7 +191,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CRC32_GdEq(bxInstruction_c *i)
   BX_WRITE_32BIT_REGZ(i->nnn(), BitReflect32(op2));
 
 #else
-  BX_INFO(("CRC32_GdEq: required SSE4_2 support, use --enable-sse and --enable-sse-extension options"));
+  BX_INFO(("CRC32_GdEq: required SSE4_2 support, use --enable-sse option"));
   exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }

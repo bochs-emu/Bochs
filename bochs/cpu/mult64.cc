@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: mult64.cc,v 1.37 2009-12-04 16:53:12 sshwarts Exp $
+// $Id: mult64.cc,v 1.38 2010-02-24 19:27:51 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -86,8 +86,7 @@ void long_imul(Bit128s *product, Bit64s op1, Bit64s op2)
 
 void long_shl(Bit128u *a)
 {
-  Bit64u c;
-  c = a->lo >> 63;
+  Bit64u c = a->lo >> 63;
   a->lo <<= 1;
   a->hi <<= 1;
   a->hi |= c;
@@ -121,7 +120,7 @@ int long_le(Bit128u *a,Bit128u *b)
   }
 }
 
-void long_div(Bit128u *quotient,Bit64u *remainder,Bit128u *dividend,Bit64u divisor)
+void long_div(Bit128u *quotient,Bit64u *remainder,const Bit128u *dividend,Bit64u divisor)
 {
   /*
   n := 0;

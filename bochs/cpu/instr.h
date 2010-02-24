@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: instr.h,v 1.25 2010-01-09 15:11:32 sshwarts Exp $
+// $Id: instr.h,v 1.26 2010-02-24 19:27:51 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008-2009 Stanislav Shwartsman
@@ -278,7 +278,7 @@ public:
 const char *get_bx_opcode_name(Bit16u ia_opcode);
 
 enum {
-#define bx_define_opcode(a, b, c) a,
+#define bx_define_opcode(a, b, c, d) a,
 #include "ia_opcodes.h"
    BX_IA_LAST
 };

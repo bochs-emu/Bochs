@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.251 2010-02-10 17:21:14 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.252 2010-02-24 19:27:50 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -168,7 +168,7 @@ static unsigned sreg_mod1or2_base32[8] = {
 
 // table of all Bochs opcodes
 bxIAOpcodeTable BxOpcodesTable[] = {
-#define bx_define_opcode(a, b, c) { b, c },
+#define bx_define_opcode(a, b, c, d) { b, c },
 #include "ia_opcodes.h"
 };
 #undef  bx_define_opcode
@@ -472,7 +472,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo32R[512*2] = {
   /* 0F 0B /wr */ { BxTraceEnd, BX_IA_UD2A },
   /* 0F 0C /wr */ { 0, BX_IA_ERROR },
 #if BX_SUPPORT_X86_64 || BX_SUPPORT_3DNOW
-  /* 0F 0D /wr */ { 0, BX_IA_NOP },             // 3DNow! PREFETCH on AMD, NOP on Intel
+  /* 0F 0D /wr */ { 0, BX_IA_PREFETCHW },       // 3DNow! PREFETCH on AMD, NOP on Intel
 #else
   /* 0F 0D /wr */ { 0, BX_IA_ERROR },
 #endif
@@ -1035,7 +1035,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo32R[512*2] = {
   /* 0F 0B /dr */ { BxTraceEnd, BX_IA_UD2A },
   /* 0F 0C /dr */ { 0, BX_IA_ERROR },
 #if BX_SUPPORT_X86_64 || BX_SUPPORT_3DNOW
-  /* 0F 0D /dr */ { 0, BX_IA_NOP },             // 3DNow! PREFETCH on AMD, NOP on Intel
+  /* 0F 0D /dr */ { 0, BX_IA_PREFETCHW },       // 3DNow! PREFETCH on AMD, NOP on Intel
 #else
   /* 0F 0D /dr */ { 0, BX_IA_ERROR },
 #endif
@@ -1605,7 +1605,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo32M[512*2] = {
   /* 0F 0B /wm */ { BxTraceEnd, BX_IA_UD2A },
   /* 0F 0C /wm */ { 0, BX_IA_ERROR },
 #if BX_SUPPORT_X86_64 || BX_SUPPORT_3DNOW
-  /* 0F 0D /wm */ { 0, BX_IA_NOP },             // 3DNow! PREFETCH on AMD, NOP on Intel
+  /* 0F 0D /wm */ { 0, BX_IA_PREFETCHW },       // 3DNow! PREFETCH on AMD, NOP on Intel
 #else
   /* 0F 0D /wm */ { 0, BX_IA_ERROR },
 #endif
@@ -2168,7 +2168,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo32M[512*2] = {
   /* 0F 0B /dm */ { BxTraceEnd, BX_IA_UD2A },
   /* 0F 0C /dm */ { 0, BX_IA_ERROR },
 #if BX_SUPPORT_X86_64 || BX_SUPPORT_3DNOW
-  /* 0F 0D /dm */ { 0, BX_IA_NOP },             // 3DNow! PREFETCH on AMD, NOP on Intel
+  /* 0F 0D /dm */ { 0, BX_IA_PREFETCHW },       // 3DNow! PREFETCH on AMD, NOP on Intel
 #else
   /* 0F 0D /dm */ { 0, BX_IA_ERROR },
 #endif
@@ -2961,7 +2961,7 @@ const char *get_bx_opcode_name(Bit16u ia_opcode)
 {
   static const char* BxOpcodeNamesTable[BX_IA_LAST] =
   {
-#define bx_define_opcode(a, b, c) #a,
+#define bx_define_opcode(a, b, c, d) #a,
 #include "ia_opcodes.h"
   };
 #undef  bx_define_opcode

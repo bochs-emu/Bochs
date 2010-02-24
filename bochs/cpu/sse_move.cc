@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_move.cc,v 1.106 2009-11-29 21:01:26 sshwarts Exp $
+// $Id: sse_move.cc,v 1.107 2010-02-24 19:27:51 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003-2009 Stanislav Shwartsman
@@ -1550,7 +1550,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PALIGNR_VdqWdqIb(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), result);
 #else
-  BX_INFO(("PALIGNR_VdqWdqIb: required SSE3E, use --enable-sse and --enable-sse-extension options"));
+  BX_INFO(("PALIGNR_VdqWdqIb: required SSSE3, use --enable-sse option"));
   exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }

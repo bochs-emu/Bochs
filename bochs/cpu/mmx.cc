@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: mmx.cc,v 1.90 2010-02-10 17:21:15 sshwarts Exp $
+// $Id: mmx.cc,v 1.91 2010-02-24 19:27:51 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2002-2009 Stanislav Shwartsman
@@ -77,7 +77,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSHUFB_PqQq(bxInstruction_c *i)
 
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else
-  BX_INFO(("PSHUFB_PqQq: required SSE3E, use --enable-sse and --enable-sse-extension options"));
+  BX_INFO(("PSHUFB_PqQq: required SSSE3, use --enable-sse option"));
   exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
@@ -109,7 +109,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PHADDW_PqQq(bxInstruction_c *i)
 
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else
-  BX_INFO(("PHADDW_PqQq: required SSE3E, use --enable-sse and --enable-sse-extension options"));
+  BX_INFO(("PHADDW_PqQq: required SSSE3, use --enable-sse option"));
   exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
@@ -139,7 +139,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PHADDD_PqQq(bxInstruction_c *i)
 
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else
-  BX_INFO(("PHADDD_PqQq: required SSE3E, use --enable-sse and --enable-sse-extension options"));
+  BX_INFO(("PHADDD_PqQq: required SSSE3, use --enable-sse option"));
   exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
@@ -172,7 +172,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PHADDSW_PqQq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else
-  BX_INFO(("PHADDSW_PqQq: required SSE3E, use --enable-sse and --enable-sse-extension options"));
+  BX_INFO(("PHADDSW_PqQq: required SSSE3, use --enable-sse option"));
   exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
@@ -208,7 +208,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMADDUBSW_PqQq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else
-  BX_INFO(("PMADDUBSW_PqQq: required SSE3E, use --enable-sse and --enable-sse-extension options"));
+  BX_INFO(("PMADDUBSW_PqQq: required SSSE3, use --enable-sse option"));
   exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
@@ -241,7 +241,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PHSUBSW_PqQq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else
-  BX_INFO(("PHSUBSW_PqQq: required SSE3E, use --enable-sse and --enable-sse-extension options"));
+  BX_INFO(("PHSUBSW_PqQq: required SSSE3, use --enable-sse option"));
   exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
@@ -273,7 +273,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PHSUBW_PqQq(bxInstruction_c *i)
 
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else
-  BX_INFO(("PHSUBW_PqQq: required SSE3E, use --enable-sse and --enable-sse-extension options"));
+  BX_INFO(("PHSUBW_PqQq: required SSSE3, use --enable-sse option"));
   exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
@@ -303,7 +303,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PHSUBD_PqQq(bxInstruction_c *i)
 
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else
-  BX_INFO(("PHSUBD_PqQq: required SSE3E, use --enable-sse and --enable-sse-extension options"));
+  BX_INFO(("PHSUBD_PqQq: required SSSE3, use --enable-sse option"));
   exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
@@ -335,7 +335,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSIGNB_PqQq(bxInstruction_c *i)
 
   BX_WRITE_MMX_REG(i->nnn(), op1);
 #else
-  BX_INFO(("PSIGNB_PqQq: required SSE3E, use --enable-sse and --enable-sse-extension options"));
+  BX_INFO(("PSIGNB_PqQq: required SSSE3, use --enable-sse option"));
   exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
@@ -367,7 +367,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSIGNW_PqQq(bxInstruction_c *i)
 
   BX_WRITE_MMX_REG(i->nnn(), op1);
 #else
-  BX_INFO(("PSIGNW_PqQq: required SSE3E, use --enable-sse and --enable-sse-extension options"));
+  BX_INFO(("PSIGNW_PqQq: required SSSE3, use --enable-sse option"));
   exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
@@ -401,7 +401,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSIGND_PqQq(bxInstruction_c *i)
 
   BX_WRITE_MMX_REG(i->nnn(), op1);
 #else
-  BX_INFO(("PSIGND_PqQq: required SSE3E, use --enable-sse and --enable-sse-extension options"));
+  BX_INFO(("PSIGND_PqQq: required SSSE3, use --enable-sse option"));
   exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
@@ -439,7 +439,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMULHRSW_PqQq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else
-  BX_INFO(("PMULHRSW_PqQq: required SSE3E, use --enable-sse and --enable-sse-extension options"));
+  BX_INFO(("PMULHRSW_PqQq: required SSSE3, use --enable-sse option"));
   exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
@@ -475,7 +475,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PABSB_PqQq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), op);
 #else
-  BX_INFO(("PABSB_PqQq: required SSE3E, use --enable-sse and --enable-sse-extension options"));
+  BX_INFO(("PABSB_PqQq: required SSSE3, use --enable-sse option"));
   exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
@@ -507,7 +507,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PABSW_PqQq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), op);
 #else
-  BX_INFO(("PABSW_PqQq: required SSE3E, use --enable-sse and --enable-sse-extension options"));
+  BX_INFO(("PABSW_PqQq: required SSSE3, use --enable-sse option"));
   exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
@@ -537,7 +537,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PABSD_PqQq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), op);
 #else
-  BX_INFO(("PABSD_PqQq: required SSE3E, use --enable-sse and --enable-sse-extension options"));
+  BX_INFO(("PABSD_PqQq: required SSSE3, use --enable-sse option"));
   exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
@@ -576,7 +576,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PALIGNR_PqQqIb(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), result);
 #else
-  BX_INFO(("PALIGNR_PqQqIb: required SSE3E, use --enable-sse and --enable-sse-extension options"));
+  BX_INFO(("PALIGNR_PqQqIb: required SSSE3, use --enable-sse option"));
   exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
