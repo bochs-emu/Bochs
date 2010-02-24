@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ia_opcodes.h,v 1.37 2010-02-24 19:27:51 sshwarts Exp $
+// $Id: ia_opcodes.h,v 1.38 2010-02-24 20:59:49 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008-2009 Stanislav Shwartsman
@@ -20,6 +20,8 @@
 //  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA B 02110-1301 USA
 //
 /////////////////////////////////////////////////////////////////////////
+
+bx_define_opcode(BX_IA_ERROR, &BX_CPU_C::BxError, NULL, 0)
 
 bx_define_opcode(BX_IA_AAA, &BX_CPU_C::AAA, NULL, 0)
 bx_define_opcode(BX_IA_AAD, &BX_CPU_C::AAD, NULL, 0)
@@ -124,7 +126,6 @@ bx_define_opcode(BX_IA_BTS_EwGwM, &BX_CPU_C::BTS_EwGwM, NULL, 0)
 bx_define_opcode(BX_IA_BTS_EwGwR, &BX_CPU_C::BTS_EwGwR, NULL, 0)
 bx_define_opcode(BX_IA_BTS_EwIbM, &BX_CPU_C::BTS_EwIbM, NULL, 0)
 bx_define_opcode(BX_IA_BTS_EwIbR, &BX_CPU_C::BTS_EwIbR, NULL, 0)
-bx_define_opcode(BX_IA_ERROR, &BX_CPU_C::BxError, NULL, 0)
 bx_define_opcode(BX_IA_CALL_EdM, &BX_CPU_C::LOAD_Ed, &BX_CPU_C::CALL_EdR, 0)
 bx_define_opcode(BX_IA_CALL_EdR, &BX_CPU_C::CALL_EdR, NULL, 0)
 bx_define_opcode(BX_IA_CALL_EwM, &BX_CPU_C::LOAD_Ew, &BX_CPU_C::CALL_EwR, 0)

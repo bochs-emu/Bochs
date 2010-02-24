@@ -5,6 +5,7 @@
 ./configure \
   --enable-smp \
   --enable-x86-64 \
+  --enable-xapic \
   --enable-all-optimizations \
   --enable-long-phy-address \
   --enable-1g-pages \

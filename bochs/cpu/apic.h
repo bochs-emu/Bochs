@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.h,v 1.49 2009-10-14 20:45:29 sshwarts Exp $
+// $Id: apic.h,v 1.50 2010-02-24 20:59:49 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (c) 2002-2009 Zwane Mwaikambo, Stanislav Shwartsman
@@ -28,7 +28,7 @@
 #define APIC_LEVEL_TRIGGERED	1
 #define APIC_EDGE_TRIGGERED	0
 
-#ifdef BX_IMPLEMENT_XAPIC
+#if BX_SUPPORT_XAPIC
 #  define BX_LAPIC_VERSION_ID 0x00050014  // P4 has 6 LVT entries
 #else
 #  define BX_LAPIC_VERSION_ID 0x00040010  // P6 has 4 LVT entries

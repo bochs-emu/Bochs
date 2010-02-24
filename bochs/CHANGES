@@ -9,15 +9,20 @@ Changes after 2.4.2:
   - Introduced range read/write physical watchpoints
   - Allow reloading of segment registers from internal debugger
 
-- Cleanup configure options
+- Configure options
   - Make --ignore-bad-msrs runtime option in .bochsrc. Old --ignore-bad-msrs
     configure option is deprecated and should not be used anymore.
-  - Local APIC configure option --enable-apic is deprecated and should not
-    be used anymore. The LAPIC option now automatically determined from
-    other configure options.
   - Extended --enable-sse configure option to accept any of possible existing
     SSE configurations (sse1/sse2/sse3/ssse3/sse4_1/sse4_2). Configure option
     --enable-sse-extension is deprecated and should not be used anymore.
+  - Local APIC configure option --enable-apic is deprecated and should not
+    be used anymore. The LAPIC option now automatically determined from
+    other configure options.
+  - Introduce new configure option --enable-xapic. The option is used to
+    differentiate between legacy APIC and Pentium4 XAPIC implementations.
+    The XAPIC will be automatically enabled by configure if Pentium4 like 
+    configuration is requested. The option will be extended in future to
+    configure X2APIC emulation.
 
 - I/O Devices
   - USB HP DeskJet 920C printer device emulation (Ben Lunt)
@@ -51,6 +56,8 @@ Changes after 2.4.2:
  [1429011] Use bx_phyaddr_t for physaddr vars and bx_adress for lin adr
 
 - these S.F. feature requests were closed/implemented
+ [2955911] RPM preuninstall scriptlet removes /core
+ [2947863] don't abort on unrecognised options
  [2878861] numerics in the disassembler output
  [2900619] make more CPU state changeable
 

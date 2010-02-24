@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.272 2010-01-02 11:27:54 sshwarts Exp $
+$Id: user.dbk,v 1.273 2010-02-24 20:59:49 sshwarts Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -2078,6 +2078,11 @@ turn it off.
       <entry>--enable-1g-pages</entry>
       <entry>no</entry>
       <entry>support for 1G page extensions in x86-64 long mode</entry>
+    </row>
+    <row>
+      <entry>--enable-xapic</entry>
+      <entry>no</entry>
+      <entry>support for XAPIC extensions</entry>
     </row>
     <row>
       <entry>--enable-mmx</entry>

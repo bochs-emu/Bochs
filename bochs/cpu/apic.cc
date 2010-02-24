@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.cc,v 1.132 2009-11-21 10:09:35 sshwarts Exp $
+// $Id: apic.cc,v 1.133 2010-02-24 20:59:49 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (c) 2002-2009 Zwane Mwaikambo, Stanislav Shwartsman
@@ -90,7 +90,7 @@ int apic_bus_deliver_lowest_priority(Bit8u vector, Bit8u dest, bx_bool trig_mode
 {
   int i;
 
-#ifndef BX_IMPLEMENT_XAPIC
+#if BX_SUPPORT_XAPIC == 0
   // search for if focus processor exists
   for (i=0; i<BX_NUM_LOCAL_APICS; i++) {
     if(BX_CPU_APIC(i)->is_focus(vector)) {
@@ -105,10 +105,10 @@ int apic_bus_deliver_lowest_priority(Bit8u vector, Bit8u dest, bx_bool trig_mode
 
   for (i=0; i<BX_NUM_LOCAL_APICS; i++) {
     if(broadcast || BX_CPU_APIC(i)->match_logical_addr(dest)) {
-#ifndef BX_IMPLEMENT_XAPIC
-      int priority = BX_CPU_APIC(i)->get_apr();
-#else
+#if BX_SUPPORT_XAPIC
       int priority = BX_CPU_APIC(i)->get_tpr();
+#else
+      int priority = BX_CPU_APIC(i)->get_apr();
 #endif
       if(priority < lowest_priority) {
         lowest_priority = priority;
@@ -479,7 +479,7 @@ void bx_local_apic_c::write_spurious_interrupt_register(Bit32u value)
 {
   BX_DEBUG(("write of %08x to spurious interrupt register", value));
 
-#ifdef BX_IMPLEMENT_XAPIC
+#if BX_SUPPORT_XAPIC
   spurious_vector = value & 0xff;
 #else
   // bits 0-3 of the spurious vector hardwired to '1
