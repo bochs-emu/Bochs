@@ -776,10 +776,10 @@ typedef
 #if (BX_SUPPORT_SSE < 3) || (BX_SUPPORT_SSE == 3 && BX_SUPPORT_SSE_EXTENSION == 0)
 
 #if BX_SUPPORT_MOVBE
-  #error "MOVBE only supported with SSE3E or above !"
+  #error "MOVBE only supported with SSSE3 or above !"
 #endif
 #if BX_SUPPORT_AES
-  #error "MOVBE only supported with SSE3E or above !"
+  #error "AES only supported with SSSE3 or above !"
 #endif
 
 #endif
