@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.227 2010-01-10 14:11:53 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.228 2010-02-24 19:41:32 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -212,9 +212,9 @@ int bx_dbg_main(void)
   // in the disassembly code to decide what instruction to print.
   for (int i=0; i<BX_SMP_PROCESSORS; i++) {
     BX_CPU(i)->guard_found.cs = BX_CPU(i)->sregs[BX_SEG_REG_CS].selector.value;
-    BX_CPU(i)->guard_found.eip = BX_CPU(i)->prev_rip;
+    BX_CPU(i)->guard_found.eip = BX_CPU(i)->get_instruction_pointer()
     BX_CPU(i)->guard_found.laddr =
-      BX_CPU(i)->get_laddr(BX_SEG_REG_CS, BX_CPU(i)->prev_rip);
+      BX_CPU(i)->get_laddr(BX_SEG_REG_CS, BX_CPU(i)->guard_found.eip);
     // 00 - 16 bit, 01 - 32 bit, 10 - 64-bit, 11 - illegal
     if (BX_CPU(i)->sregs[BX_SEG_REG_CS].cache.u.segment.d_b)
       BX_CPU(i)->guard_found.code_32_64 |= 0x1;
