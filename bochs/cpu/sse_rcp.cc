@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_rcp.cc,v 1.22 2009-10-14 20:45:29 sshwarts Exp $
+// $Id: sse_rcp.cc,v 1.23 2010-02-25 22:04:31 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003-2009 Stanislav Shwartsman
@@ -25,8 +25,6 @@
 #include "bochs.h"
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
-
-#if BX_SUPPORT_SSE
 
 #include "fpu/softfloat-specialize.h"
 
@@ -337,8 +335,6 @@ static float32 approximate_rcp(float32 op)
   return packFloat32(sign, exp, (Bit32u)(rcp_table[fraction >> 12]) << 8);
 }
 
-#endif
-
 /*
  * Opcode: 0F 53
  * Approximate reciprocals of packed single precision FP values from XMM2/MEM.
@@ -346,7 +342,6 @@ static float32 approximate_rcp(float32 op)
  */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::RCPPS_VpsWps(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
   BxPackedXmmRegister op;
 
@@ -366,11 +361,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RCPPS_VpsWps(bxInstruction_c *i)
   op.xmm32u(3) = approximate_rcp(op.xmm32u(3));
 
   BX_WRITE_XMM_REG(i->nnn(), op);
-
-#else
-  BX_INFO(("RCPPS_VpsWps: required SSE, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /*
@@ -380,7 +370,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RCPPS_VpsWps(bxInstruction_c *i)
  */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::RCPSS_VssWss(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
   float32 op;
 
@@ -396,14 +385,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RCPSS_VssWss(bxInstruction_c *i)
 
   op = approximate_rcp(op);
   BX_WRITE_XMM_REG_LO_DWORD(i->nnn(), op);
-
-#else
-  BX_INFO(("RCPSS_VssWss: required SSE, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
-
-#if BX_SUPPORT_SSE
 
 Bit16u rsqrt_table0[1024] =
 {
@@ -720,8 +702,6 @@ static float32 approximate_rsqrt(float32 op)
   return packFloat32(sign, exp, (Bit32u)(rsqrt_table[fraction >> 13]) << 8);
 }
 
-#endif
-
 /*
  * Opcode: F3 0F 52
  * Approximate reciprocal of square root of scalar single precision FP value
@@ -730,7 +710,6 @@ static float32 approximate_rsqrt(float32 op)
  */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::RSQRTSS_VssWss(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
   float32 op;
 
@@ -746,11 +725,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RSQRTSS_VssWss(bxInstruction_c *i)
 
   op = approximate_rsqrt(op);
   BX_WRITE_XMM_REG_LO_DWORD(i->nnn(), op);
-
-#else
-  BX_INFO(("RSQRTSS_VssWss: required SSE, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /*
@@ -761,7 +735,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RSQRTSS_VssWss(bxInstruction_c *i)
  */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::RSQRTPS_VpsWps(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
   BxPackedXmmRegister op;
 
@@ -781,8 +754,4 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RSQRTPS_VpsWps(bxInstruction_c *i)
   op.xmm32u(3) = approximate_rsqrt(op.xmm32u(3));
 
   BX_WRITE_XMM_REG(i->nnn(), op);
-#else
-  BX_INFO(("RSQRTPS_VpsWps: required SSE, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }

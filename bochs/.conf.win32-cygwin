@@ -19,7 +19,6 @@ export CXXFLAGS
             --enable-all-optimizations \
             --enable-cpu-level=6 \
             --enable-x86-64 \
-            --enable-sse=2 \
             --enable-pci \
             --enable-acpi \
             --enable-clgd54xx \

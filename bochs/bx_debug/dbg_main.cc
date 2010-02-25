@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.229 2010-02-24 19:43:40 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.230 2010-02-25 22:04:30 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -663,38 +663,41 @@ void bx_dbg_exit(int code)
 
 void bx_dbg_print_sse_state(void)
 {
-#if BX_SUPPORT_SSE
-  Bit32u mxcsr = SIM->get_param_num("SSE.mxcsr", dbg_cpu_list)->get();
-  dbg_printf("MXCSR: 0x%08x: %s %s RC:%d %s %s %s %s %s %s %s %s %s %s %s %s %s\n", mxcsr,
-     (mxcsr & (1<<17)) ? "ULE" : "ule",
-     (mxcsr & (1<<15)) ? "FUZ" : "fuz",
-     (mxcsr >> 13) & 3,
-     (mxcsr & (1<<12)) ? "PM" : "pm",
-     (mxcsr & (1<<11)) ? "UM" : "um",
-     (mxcsr & (1<<10)) ? "OM" : "om",
-     (mxcsr & (1<<9)) ? "ZM" : "zm",
-     (mxcsr & (1<<8)) ? "DM" : "dm",
-     (mxcsr & (1<<7)) ? "IM" : "im",
-     (mxcsr & (1<<6)) ? "DAZ" : "daz",
-     (mxcsr & (1<<5)) ? "PE" : "pe",
-     (mxcsr & (1<<4)) ? "UE" : "ue",
-     (mxcsr & (1<<3)) ? "OE" : "oe",
-     (mxcsr & (1<<2)) ? "ZE" : "ze",
-     (mxcsr & (1<<1)) ? "DE" : "de",
-     (mxcsr & (1<<0)) ? "IE" : "ie");
+  Bit32u cpuid_features_bitmask = SIM->get_param_num("cpuid_features_bitmask", dbg_cpu_list)->get();
 
-  char param_name[20];
-  for(unsigned i=0;i<BX_XMM_REGISTERS;i++) {
-    sprintf(param_name, "SSE.xmm%02d_hi", i);
-    Bit64u hi = SIM->get_param_num(param_name, dbg_cpu_list)->get64();
-    sprintf(param_name, "SSE.xmm%02d_lo", i);
-    Bit64u lo = SIM->get_param_num(param_name, dbg_cpu_list)->get64();
-    dbg_printf("XMM[%02u]: %08x:%08x:%08x:%08x\n", i,
-       GET32H(hi), GET32L(hi), GET32H(lo), GET32L(lo));
+  if ((cpuid_features_bitmask & BX_CPU_SSE) == 0) {
+    dbg_printf("The CPU doesn't support SSE state !\n");
   }
-#else
-  dbg_printf("The CPU doesn't support SSE state !\n");
-#endif
+  else {
+    Bit32u mxcsr = SIM->get_param_num("SSE.mxcsr", dbg_cpu_list)->get();
+    dbg_printf("MXCSR: 0x%08x: %s %s RC:%d %s %s %s %s %s %s %s %s %s %s %s %s %s\n", mxcsr,
+       (mxcsr & (1<<17)) ? "ULE" : "ule",
+       (mxcsr & (1<<15)) ? "FUZ" : "fuz",
+       (mxcsr >> 13) & 3,
+       (mxcsr & (1<<12)) ? "PM" : "pm",
+       (mxcsr & (1<<11)) ? "UM" : "um",
+       (mxcsr & (1<<10)) ? "OM" : "om",
+       (mxcsr & (1<<9)) ? "ZM" : "zm",
+       (mxcsr & (1<<8)) ? "DM" : "dm",
+       (mxcsr & (1<<7)) ? "IM" : "im",
+       (mxcsr & (1<<6)) ? "DAZ" : "daz",
+       (mxcsr & (1<<5)) ? "PE" : "pe",
+       (mxcsr & (1<<4)) ? "UE" : "ue",
+       (mxcsr & (1<<3)) ? "OE" : "oe",
+       (mxcsr & (1<<2)) ? "ZE" : "ze",
+       (mxcsr & (1<<1)) ? "DE" : "de",
+       (mxcsr & (1<<0)) ? "IE" : "ie");
+
+    char param_name[20];
+    for(unsigned i=0;i<BX_XMM_REGISTERS;i++) {
+      sprintf(param_name, "SSE.xmm%02d_hi", i);
+      Bit64u hi = SIM->get_param_num(param_name, dbg_cpu_list)->get64();
+      sprintf(param_name, "SSE.xmm%02d_lo", i);
+      Bit64u lo = SIM->get_param_num(param_name, dbg_cpu_list)->get64();
+      dbg_printf("XMM[%02u]: %08x:%08x:%08x:%08x\n", i,
+         GET32H(hi), GET32L(hi), GET32H(lo), GET32L(lo));
+    }
+  }
 }
 
 void bx_dbg_print_mmx_state(void)

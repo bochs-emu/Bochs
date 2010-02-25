@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32_enh_dbg_osdep.cc,v 1.17 2009-11-19 21:28:25 sshwarts Exp $
+// $Id: win32_enh_dbg_osdep.cc,v 1.18 2010-02-25 22:04:31 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  BOCHS ENHANCED DEBUGGER Ver 1.2
@@ -636,9 +636,8 @@ void SpecialInit()
     EnableMenuItem (hOptMenu, CMD_FPUR, MF_GRAYED);
 #endif
 
-#if BX_SUPPORT_SSE == 0
-    EnableMenuItem (hOptMenu, CMD_XMMR, MF_GRAYED);
-#endif
+    if (! bx_cpu_support_sse)
+      EnableMenuItem (hOptMenu, CMD_XMMR, MF_GRAYED);
 }
 
 // append a whole row of text into a ListView, all at once

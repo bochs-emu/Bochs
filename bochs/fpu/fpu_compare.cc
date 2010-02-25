@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu_compare.cc,v 1.28 2009-12-20 09:00:40 sshwarts Exp $
+// $Id: fpu_compare.cc,v 1.29 2010-02-25 22:04:31 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003-2009 Stanislav Shwartsman
@@ -51,7 +51,6 @@ static int status_word_flags_fpu_compare(int float_relation)
   return (-1);        // should never get here
 }
 
-#if BX_SUPPORT_FPU || BX_SUPPORT_SSE >= 1
 void BX_CPU_C::write_eflags_fpu_compare(int float_relation)
 {
   switch(float_relation) {
@@ -75,11 +74,9 @@ void BX_CPU_C::write_eflags_fpu_compare(int float_relation)
       BX_PANIC(("write_eflags: unknown floating point compare relation"));
   }
 }
-#endif
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::FCOM_STi(bxInstruction_c *i)
 {
-#if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
   BX_CPU_THIS_PTR FPU_update_last_instruction(i);
 
@@ -113,14 +110,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FCOM_STi(bxInstruction_c *i)
      if (pop_stack)
         BX_CPU_THIS_PTR the_i387.FPU_pop();
   }
-#else
-  BX_INFO(("FCOM(P)_STi: required FPU, configure --enable-fpu"));
-#endif
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::FCOMI_ST0_STj(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL >= 6
   BX_CPU_THIS_PTR prepareFPU(i);
   BX_CPU_THIS_PTR FPU_update_last_instruction(i);
 
@@ -151,15 +144,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FCOMI_ST0_STj(bxInstruction_c *i)
      if (pop_stack)
          BX_CPU_THIS_PTR the_i387.FPU_pop();
   }
-#else
-  BX_INFO(("FCOMI(P)_ST0_STj: required P6 FPU, configure --enable-fpu, cpu-level=6"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::FUCOMI_ST0_STj(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL >= 6
   BX_CPU_THIS_PTR prepareFPU(i);
   BX_CPU_THIS_PTR FPU_update_last_instruction(i);
 
@@ -190,15 +178,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FUCOMI_ST0_STj(bxInstruction_c *i)
      if (pop_stack)
          BX_CPU_THIS_PTR the_i387.FPU_pop();
   }
-#else
-  BX_INFO(("FUCOMI(P)_ST0_STj: required P6 FPU, configure --enable-fpu, cpu-level=6"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::FUCOM_STi(bxInstruction_c *i)
 {
-#if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
   BX_CPU_THIS_PTR FPU_update_last_instruction(i);
 
@@ -227,14 +210,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FUCOM_STi(bxInstruction_c *i)
      if (pop_stack)
          BX_CPU_THIS_PTR the_i387.FPU_pop();
   }
-#else
-  BX_INFO(("FUCOM(P)_STi: required FPU, configure --enable-fpu"));
-#endif
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::FCOM_SINGLE_REAL(bxInstruction_c *i)
 {
-#if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
 
   int pop_stack = i->nnn() & 1, rc;
@@ -277,14 +256,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FCOM_SINGLE_REAL(bxInstruction_c *i)
      if (pop_stack)
          BX_CPU_THIS_PTR the_i387.FPU_pop();
   }
-#else
-  BX_INFO(("FCOM(P)_SINGLE_REAL: required FPU, configure --enable-fpu"));
-#endif
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::FCOM_DOUBLE_REAL(bxInstruction_c *i)
 {
-#if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
 
   int pop_stack = i->nnn() & 1, rc;
@@ -327,14 +302,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FCOM_DOUBLE_REAL(bxInstruction_c *i)
      if (pop_stack)
          BX_CPU_THIS_PTR the_i387.FPU_pop();
   }
-#else
-  BX_INFO(("FCOM(P)_DOUBLE_REAL: required FPU, configure --enable-fpu"));
-#endif
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::FICOM_WORD_INTEGER(bxInstruction_c *i)
 {
-#if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
 
   int pop_stack = i->nnn() & 1;
@@ -370,14 +341,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FICOM_WORD_INTEGER(bxInstruction_c *i)
      if (pop_stack)
          BX_CPU_THIS_PTR the_i387.FPU_pop();
   }
-#else
-  BX_INFO(("FICOM(P)_WORD_INTEGER: required FPU, configure --enable-fpu"));
-#endif
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::FICOM_DWORD_INTEGER(bxInstruction_c *i)
 {
-#if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
 
   int pop_stack = i->nnn() & 1;
@@ -412,15 +379,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FICOM_DWORD_INTEGER(bxInstruction_c *i)
      if (pop_stack)
          BX_CPU_THIS_PTR the_i387.FPU_pop();
   }
-#else
-  BX_INFO(("FICOM(P)_DWORD_INTEGER: required FPU, configure --enable-fpu"));
-#endif
 }
 
 /* DE D9 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::FCOMPP(bxInstruction_c *i)
 {
-#if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
   BX_CPU_THIS_PTR FPU_update_last_instruction(i);
 
@@ -449,15 +412,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FCOMPP(bxInstruction_c *i)
      BX_CPU_THIS_PTR the_i387.FPU_pop();
      BX_CPU_THIS_PTR the_i387.FPU_pop();
   }
-#else
-  BX_INFO(("FCOMPP: required FPU, configure --enable-fpu"));
-#endif
 }
 
 /* DA E9 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::FUCOMPP(bxInstruction_c *i)
 {
-#if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
   BX_CPU_THIS_PTR FPU_update_last_instruction(i);
 
@@ -484,14 +443,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FUCOMPP(bxInstruction_c *i)
      BX_CPU_THIS_PTR the_i387.FPU_pop();
      BX_CPU_THIS_PTR the_i387.FPU_pop();
   }
-#else
-  BX_INFO(("FUCOMPP: required FPU, configure --enable-fpu"));
-#endif
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::FCMOV_ST0_STj(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL >= 6
   BX_CPU_THIS_PTR prepareFPU(i);
   BX_CPU_THIS_PTR FPU_update_last_instruction(i);
 
@@ -518,17 +473,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FCMOV_ST0_STj(bxInstruction_c *i)
 
   if (condition)
      BX_WRITE_FPU_REG(sti_reg, 0);
-
-#else
-  BX_INFO(("FCMOV_ST0_STj: required P6 FPU, configure --enable-fpu, cpu-level=6"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* D9 E4 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::FTST(bxInstruction_c *i)
 {
-#if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
   BX_CPU_THIS_PTR FPU_update_last_instruction(i);
 
@@ -548,15 +497,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FTST(bxInstruction_c *i)
      setcc(status_word_flags_fpu_compare(rc));
      FPU_exception(status.float_exception_flags);
   }
-#else
-  BX_INFO(("FTST: required FPU, configure --enable-fpu"));
-#endif
 }
 
 /* D9 E5 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::FXAM(bxInstruction_c *i)
 {
-#if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
   BX_CPU_THIS_PTR FPU_update_last_instruction(i);
 
@@ -613,10 +558,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FXAM(bxInstruction_c *i)
    */
   if (! sign)
     clear_C1();
-
-#else
-  BX_INFO(("FXAM: required FPU, configure --enable-fpu"));
-#endif
 }
 
 #endif

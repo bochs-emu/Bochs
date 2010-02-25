@@ -104,10 +104,6 @@ romimage: file=$BXSHARE/BIOS-bochs-latest
 #  PANIC. Remember that if you trying to continue after triple fault the 
 #  simulation will be completely bogus !
 #
-#  CPUID_LIMIT_WINNT:
-#  Determine whether to limit maximum CPUID function to 3. This mode is
-#  required to workaround WinNT installation and boot issues.
-#
 #  MSRS:
 #  Define path to user CPU Model Specific Registers (MSRs) specification.
 #  See example in msrs.def.
@@ -116,14 +112,6 @@ romimage: file=$BXSHARE/BIOS-bochs-latest
 #  Ignore MSR references that Bochs does not understand; print a warning
 #  message instead of generating #GP exception. This option is enabled
 #  by default but will not be avaiable if configurable MSRs are enabled.
-#
-#  VENDOR_STRING:
-#  Set the CPUID vendor string returned by CPUID(0x0). This should be a
-#  twelve-character ASCII string.  
-#
-#  BRAND_STRING:
-#  Set the CPUID vendor string returned by CPUID(0x80000002 .. 0x80000004).  
-#  This should be at most a forty-eight-character ASCII string.  
 #
 #  IPS:
 #  Emulated Instructions Per Second. This is the number of IPS that bochs
@@ -147,7 +135,38 @@ romimage: file=$BXSHARE/BIOS-bochs-latest
 #  2.2.6 2.1Ghz Athlon XP with Linux 2.6/g++ 3.4         12 to 15 Mips
 #  2.0.1 1.6Ghz Intel P4 with Win2000/g++ 3.3             5 to  7 Mips
 #=======================================================================
-cpu: count=1, ips=50000000, reset_on_triple_fault=1, cpuid_limit_winnt=0, ignore_bad_msrs=1, msrs="msrs.def"
+cpu: count=1, ips=50000000, reset_on_triple_fault=1, ignore_bad_msrs=1, msrs="msrs.def"
+
+#=======================================================================
+# CPUID:
+#
+# This defines features and functionality supported by Bochs emulated CPU:
+#
+#  SSE: Select SSE instruction set support.
+#  Any of SSE/SSE2/SSE3/SSSE3/SSE4_1/SSE4_2 could be selected.
+#  This option exists only if Bochs compiled with BX_CPU_LEVEL >= 6.
+#
+#  AES:
+#  Select AES instruction set support.
+#  This option exists only if Bochs compiled with BX_CPU_LEVEL >= 6.
+#
+#  MOVBE:
+#  Select MOVBE Intel(R) Atom instruction support.
+#  This option exists only if Bochs compiled with BX_CPU_LEVEL >= 6.
+#
+#  VENDOR_STRING:
+#  Set the CPUID vendor string returned by CPUID(0x0). This should be a
+#  twelve-character ASCII string.  
+#
+#  BRAND_STRING:
+#  Set the CPUID vendor string returned by CPUID(0x80000002 .. 0x80000004).  
+#  This should be at most a forty-eight-character ASCII string.  
+#
+#  CPUID_LIMIT_WINNT:
+#  Determine whether to limit maximum CPUID function to 3. This mode is
+#  required to workaround WinNT installation and boot issues.
+#=======================================================================
+cpuid: sse=sse4_2, aes=1, movbe=1, cpuid_limit_winnt=0
 
 #=======================================================================
 # MEMORY

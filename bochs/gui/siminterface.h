@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.247 2009-11-15 20:50:41 sshwarts Exp $
+// $Id: siminterface.h,v 1.248 2010-02-25 22:04:31 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  The Bochs Project
@@ -927,56 +927,59 @@ enum {
 #define BX_FLOPPY_AUTO     19 // autodetect image size
 #define BX_FLOPPY_UNKNOWN  20 // image size doesn't match one of the types above
 
-#define BX_ATA_DEVICE_DISK      0
-#define BX_ATA_DEVICE_CDROM     1
-#define BX_ATA_DEVICE_LAST      1
+#define BX_ATA_DEVICE_DISK       0
+#define BX_ATA_DEVICE_CDROM      1
+#define BX_ATA_DEVICE_LAST       1
 
-#define BX_ATA_BIOSDETECT_NONE      0
-#define BX_ATA_BIOSDETECT_AUTO      1
-#define BX_ATA_BIOSDETECT_CMOS      2
+#define BX_ATA_BIOSDETECT_NONE   0
+#define BX_ATA_BIOSDETECT_AUTO   1
+#define BX_ATA_BIOSDETECT_CMOS   2
 
-#define BX_ATA_TRANSLATION_NONE      0
-#define BX_ATA_TRANSLATION_LBA       1
-#define BX_ATA_TRANSLATION_LARGE     2
-#define BX_ATA_TRANSLATION_RECHS     3
-#define BX_ATA_TRANSLATION_AUTO      4
-#define BX_ATA_TRANSLATION_LAST      4
+#define BX_ATA_TRANSLATION_NONE  0
+#define BX_ATA_TRANSLATION_LBA   1
+#define BX_ATA_TRANSLATION_LARGE 2
+#define BX_ATA_TRANSLATION_RECHS 3
+#define BX_ATA_TRANSLATION_AUTO  4
+#define BX_ATA_TRANSLATION_LAST  4
 
-#define BX_ATA_MODE_FLAT        0
-#define BX_ATA_MODE_CONCAT      1
-#define BX_ATA_MODE_EXTDISKSIM  2
-#define BX_ATA_MODE_DLL_HD      3
-#define BX_ATA_MODE_SPARSE      4
-#define BX_ATA_MODE_VMWARE3     5
-#define BX_ATA_MODE_VMWARE4     6
-#define BX_ATA_MODE_UNDOABLE    7
-#define BX_ATA_MODE_GROWING     8
-#define BX_ATA_MODE_VOLATILE    9
+#define BX_ATA_MODE_FLAT         0
+#define BX_ATA_MODE_CONCAT       1
+#define BX_ATA_MODE_EXTDISKSIM   2
+#define BX_ATA_MODE_DLL_HD       3
+#define BX_ATA_MODE_SPARSE       4
+#define BX_ATA_MODE_VMWARE3      5
+#define BX_ATA_MODE_VMWARE4      6
+#define BX_ATA_MODE_UNDOABLE     7
+#define BX_ATA_MODE_GROWING      8
+#define BX_ATA_MODE_VOLATILE     9
 #define BX_ATA_MODE_Z_UNDOABLE  10
 #define BX_ATA_MODE_Z_VOLATILE  11
 #define BX_ATA_MODE_LAST        11
 
-#define BX_CLOCK_SYNC_NONE     0
-#define BX_CLOCK_SYNC_REALTIME 1
-#define BX_CLOCK_SYNC_SLOWDOWN 2
-#define BX_CLOCK_SYNC_BOTH     3
-#define BX_CLOCK_SYNC_LAST     3
+#define BX_CLOCK_SYNC_NONE       0
+#define BX_CLOCK_SYNC_REALTIME   1
+#define BX_CLOCK_SYNC_SLOWDOWN   2
+#define BX_CLOCK_SYNC_BOTH       3
+#define BX_CLOCK_SYNC_LAST       3
+
+#define BX_CPUID_SUPPORT_NOSSE   0
+#define BX_CPUID_SUPPORT_SSE     1
+#define BX_CPUID_SUPPORT_SSE2    2
+#define BX_CPUID_SUPPORT_SSE3    3
+#define BX_CPUID_SUPPORT_SSSE3   4
+#define BX_CPUID_SUPPORT_SSE4_1  5
+#define BX_CPUID_SUPPORT_SSE4_2  6
 
 #define BX_CLOCK_TIME0_LOCAL     1
 #define BX_CLOCK_TIME0_UTC       2
 
-BOCHSAPI extern const char *bochs_start_names[];
 BOCHSAPI extern const char *floppy_devtype_names[];
 BOCHSAPI extern const char *floppy_type_names[];
 BOCHSAPI extern int floppy_type_n_sectors[];
 BOCHSAPI extern const char *bochs_bootdisk_names[];
 BOCHSAPI extern const char *loader_os_names[];
 BOCHSAPI extern const char *keyboard_type_names[];
-BOCHSAPI extern const char *atadevice_type_names[];
 BOCHSAPI extern const char *atadevice_mode_names[];
-BOCHSAPI extern const char *atadevice_biosdetect_names[];
-BOCHSAPI extern const char *atadevice_translation_names[];
-BOCHSAPI extern const char *clock_sync_names[];
 
 ////////////////////////////////////////////////////////////////////
 // base class simulator interface, contains just virtual functions.
@@ -1171,3 +1174,5 @@ typedef struct BOCHSAPI {
 BOCHSAPI extern bx_startup_flags_t bx_startup_flags;
 BOCHSAPI extern bx_bool bx_user_quit;
 BOCHSAPI extern Bit8u bx_cpu_count;
+// for GUI debugger
+BOCHSAPI extern bx_bool bx_cpu_support_sse;

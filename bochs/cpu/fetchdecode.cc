@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.252 2010-02-24 19:27:50 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.253 2010-02-25 22:04:30 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -533,17 +533,9 @@ static const BxOpcodeInfo_t BxOpcodeInfo32R[512*2] = {
   /* 0F 35 /wr */ { BxTraceEnd, BX_IA_SYSEXIT },
   /* 0F 36 /wr */ { 0, BX_IA_ERROR },
   /* 0F 37 /wr */ { 0, BX_IA_ERROR },
-#if (BX_SUPPORT_SSE >= 4) || (BX_SUPPORT_SSE >= 3 && BX_SUPPORT_SSE_EXTENSION > 0)
   /* 0F 38 /wr */ { Bx3ByteOp, BX_IA_ERROR, BxOpcode3ByteTable0f38 }, // 3-byte escape
-#else
-  /* 0F 38 /wr */ { 0, BX_IA_ERROR },
-#endif
   /* 0F 39 /wr */ { 0, BX_IA_ERROR },
-#if (BX_SUPPORT_SSE >= 4) || (BX_SUPPORT_SSE >= 3 && BX_SUPPORT_SSE_EXTENSION > 0)
   /* 0F 3A /wr */ { Bx3ByteOp | BxImmediate_Ib, BX_IA_ERROR, BxOpcode3ByteTable0f3a }, // 3-byte escape
-#else
-  /* 0F 3A /wr */ { 0, BX_IA_ERROR },
-#endif
   /* 0F 3B /wr */ { 0, BX_IA_ERROR },
   /* 0F 3C /wr */ { 0, BX_IA_ERROR },
   /* 0F 3D /wr */ { 0, BX_IA_ERROR },
@@ -1096,17 +1088,9 @@ static const BxOpcodeInfo_t BxOpcodeInfo32R[512*2] = {
   /* 0F 35 /dr */ { BxTraceEnd, BX_IA_SYSEXIT },
   /* 0F 36 /dr */ { 0, BX_IA_ERROR },
   /* 0F 37 /dr */ { 0, BX_IA_ERROR },
-#if (BX_SUPPORT_SSE >= 4) || (BX_SUPPORT_SSE >= 3 && BX_SUPPORT_SSE_EXTENSION > 0)
   /* 0F 38 /dr */ { Bx3ByteOp, BX_IA_ERROR, BxOpcode3ByteTable0f38 }, // 3-byte escape
-#else
-  /* 0F 38 /dr */ { 0, BX_IA_ERROR },
-#endif
   /* 0F 39 /dr */ { 0, BX_IA_ERROR },
-#if (BX_SUPPORT_SSE >= 4) || (BX_SUPPORT_SSE >= 3 && BX_SUPPORT_SSE_EXTENSION > 0)
   /* 0F 3A /dr */ { Bx3ByteOp | BxImmediate_Ib, BX_IA_ERROR, BxOpcode3ByteTable0f3a }, // 3-byte escape
-#else
-  /* 0F 3A /dr */ { 0, BX_IA_ERROR },
-#endif
   /* 0F 3B /dr */ { 0, BX_IA_ERROR },
   /* 0F 3C /dr */ { 0, BX_IA_ERROR },
   /* 0F 3D /dr */ { 0, BX_IA_ERROR },
@@ -1666,17 +1650,9 @@ static const BxOpcodeInfo_t BxOpcodeInfo32M[512*2] = {
   /* 0F 35 /wm */ { BxTraceEnd, BX_IA_SYSEXIT },
   /* 0F 36 /wm */ { 0, BX_IA_ERROR },
   /* 0F 37 /wm */ { 0, BX_IA_ERROR },
-#if (BX_SUPPORT_SSE >= 4) || (BX_SUPPORT_SSE >= 3 && BX_SUPPORT_SSE_EXTENSION > 0)
   /* 0F 38 /wm */ { Bx3ByteOp, BX_IA_ERROR, BxOpcode3ByteTable0f38 }, // 3-byte escape
-#else
-  /* 0F 38 /wm */ { 0, BX_IA_ERROR },
-#endif
   /* 0F 39 /wm */ { 0, BX_IA_ERROR },
-#if (BX_SUPPORT_SSE >= 4) || (BX_SUPPORT_SSE >= 3 && BX_SUPPORT_SSE_EXTENSION > 0)
   /* 0F 3A /wm */ { Bx3ByteOp | BxImmediate_Ib, BX_IA_ERROR, BxOpcode3ByteTable0f3a }, // 3-byte escape
-#else
-  /* 0F 3A /wm */ { 0, BX_IA_ERROR },
-#endif
   /* 0F 3B /wm */ { 0, BX_IA_ERROR },
   /* 0F 3C /wm */ { 0, BX_IA_ERROR },
   /* 0F 3D /wm */ { 0, BX_IA_ERROR },
@@ -2229,17 +2205,9 @@ static const BxOpcodeInfo_t BxOpcodeInfo32M[512*2] = {
   /* 0F 35 /dm */ { BxTraceEnd, BX_IA_SYSEXIT },
   /* 0F 36 /dm */ { 0, BX_IA_ERROR },
   /* 0F 37 /dm */ { 0, BX_IA_ERROR },
-#if (BX_SUPPORT_SSE >= 4) || (BX_SUPPORT_SSE >= 3 && BX_SUPPORT_SSE_EXTENSION > 0)
   /* 0F 38 /dm */ { Bx3ByteOp, BX_IA_ERROR, BxOpcode3ByteTable0f38 }, // 3-byte escape
-#else
-  /* 0F 38 /dm */ { 0, BX_IA_ERROR },
-#endif
   /* 0F 39 /dm */ { 0, BX_IA_ERROR },
-#if (BX_SUPPORT_SSE >= 4) || (BX_SUPPORT_SSE >= 3 && BX_SUPPORT_SSE_EXTENSION > 0)
   /* 0F 3A /dm */ { Bx3ByteOp | BxImmediate_Ib, BX_IA_ERROR, BxOpcode3ByteTable0f3a }, // 3-byte escape
-#else
-  /* 0F 3A /dm */ { 0, BX_IA_ERROR },
-#endif
   /* 0F 3B /dm */ { 0, BX_IA_ERROR },
   /* 0F 3C /dm */ { 0, BX_IA_ERROR },
   /* 0F 3D /dm */ { 0, BX_IA_ERROR },
@@ -2538,7 +2506,6 @@ fetch_b1:
 
   if (BxOpcodeHasModrm32[b1]) {
 
-#if (BX_SUPPORT_SSE >= 4) || (BX_SUPPORT_SSE >= 3 && BX_SUPPORT_SSE_EXTENSION > 0)
     unsigned b3 = 0;
     // handle 3-byte escape
     if ((attr & BxGroupX) == Bx3ByteOp) {
@@ -2549,7 +2516,6 @@ fetch_b1:
       else
         return(-1);
     }
-#endif
 
     // opcode requires modrm byte
     if (ilen < remain) {
@@ -2727,11 +2693,9 @@ modrm_done:
         case BxGroupN:
           OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[nnn]);
           break;
-#if (BX_SUPPORT_SSE >= 4) || (BX_SUPPORT_SSE >= 3 && BX_SUPPORT_SSE_EXTENSION > 0)
         case Bx3ByteOp:
           OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[b3]);
           break;
-#endif
         case BxOSizeGrp:
           OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[os_32]);
           break;
@@ -2946,13 +2910,20 @@ modrm_done:
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::BxError(bxInstruction_c *i)
 {
-  BX_DEBUG(("BxError: Encountered an unknown instruction b1=0x%02x (signalling #UD)", i->b1()));
-  BX_DEBUG(("modrm was 0x%02x, nnn was %u, rm was %u", i->modrm(), i->nnn(), i->rm()));
+  unsigned ia_opcode = i->getIaOpcode();
+ 
+  if (ia_opcode == BX_IA_ERROR) {
+    BX_DEBUG(("BxError: Encountered an unknown instruction b1=0x%02x (signalling #UD)", i->b1()));
+    BX_DEBUG(("modrm was 0x%02x, nnn was %u, rm was %u", i->modrm(), i->nnn(), i->rm()));
 
 #if BX_DISASM && BX_DEBUGGER == 0 // with debugger it easy to see the #UD
-  if (LOG_THIS getonoff(LOGLEV_DEBUG))
-    debug_disasm_instruction(BX_CPU_THIS_PTR prev_rip);
+    if (LOG_THIS getonoff(LOGLEV_DEBUG))
+      debug_disasm_instruction(BX_CPU_THIS_PTR prev_rip);
 #endif
+  }
+  else {
+    BX_INFO(("%s: instruction not supported (signalling #UD)", get_bx_opcode_name(ia_opcode)));
+  }
 
   exception(BX_UD_EXCEPTION, 0, 0);
 }
@@ -2967,4 +2938,26 @@ const char *get_bx_opcode_name(Bit16u ia_opcode)
 #undef  bx_define_opcode
 
   return (ia_opcode < BX_IA_LAST) ? BxOpcodeNamesTable[ia_opcode] : 0;
+}
+
+void BX_CPU_C::init_FetchDecodeTables(void)
+{
+  static Bit32u BxOpcodeFeatures[BX_IA_LAST] =
+  {
+#define bx_define_opcode(a, b, c, d) d,
+#include "ia_opcodes.h"
+  };
+#undef  bx_define_opcode
+
+  Bit32u features = BX_CPU_THIS_PTR cpuid_features_bitmask;
+  if (! features)
+    BX_PANIC(("init_FetchDecodeTables: CPU features bitmask is empty !"));
+  
+  for (unsigned n=0; n < BX_IA_LAST; n++) {
+    Bit32u ia_opcode_features = BxOpcodeFeatures[n];
+    if (ia_opcode_features) {
+      if ((ia_opcode_features & features) == 0)
+        BxOpcodesTable[n].execute1 = &BX_CPU_C::BxError;
+    }
+  }
 }

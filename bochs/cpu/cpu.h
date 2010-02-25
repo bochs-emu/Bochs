@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.639 2010-02-24 19:27:50 sshwarts Exp $
+// $Id: cpu.h,v 1.640 2010-02-25 22:04:30 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -787,6 +787,11 @@ public: // for now...
   cpuid_function_t cpuid_std_function[MAX_STD_CPUID_FUNCTION];
   cpuid_function_t cpuid_ext_function[MAX_EXT_CPUID_FUNCTION];
 
+  Bit32u cpuid_features_bitmask;
+
+#define BX_CPU_SUPPORT_FEATURE(feature) \
+   (BX_CPU_THIS_PTR cpuid_features_bitmask & (feature))
+
   // General register set
   // rax: accumulator
   // rbx: base
@@ -887,10 +892,9 @@ public: // for now...
   i387_t the_i387;
 #endif
 
-#if BX_SUPPORT_SSE
   bx_xmm_reg_t xmm[BX_XMM_REGISTERS]; // need TMP XMM register ?
   bx_mxcsr_t mxcsr;
-#endif
+  Bit32u mxcsr_mask;
 
 #if BX_SUPPORT_MONITOR_MWAIT
   monitor_addr_t monitor;
@@ -2168,8 +2172,6 @@ public: // for now...
   BX_SMF void LDDQU_VdqMdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   /* SSE3 */
 
-  // 3-byte opcodes
-#if (BX_SUPPORT_SSE >= 4) || (BX_SUPPORT_SSE >= 3 && BX_SUPPORT_SSE_EXTENSION > 0)
   /* SSSE3 */
   BX_SMF void PSHUFB_PqQq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void PHADDW_PqQq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -2269,7 +2271,6 @@ public: // for now...
   BX_SMF void PCMPISTRM_VdqWdqIb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void PCMPISTRI_VdqWdqIb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   /* SSE4.2 */
-#endif
 
   /* MOVBE Intel Atom(R) instruction */
   BX_SMF void MOVBE_GwEw(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -2341,18 +2342,6 @@ public: // for now...
   BX_SMF void MOVHPD_MqVsd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void MOVNTPD_MdqVpd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void MOVNTDQ_MdqVdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-#endif
-
-#if BX_SUPPORT_SSE >= 2
-  #define BX_SSE2_ALIAS(i) i
-#else
-  #define BX_SSE2_ALIAS(i) &BX_CPU_C::BxError
-#endif
-
-#if BX_SUPPORT_3DNOW
-  #define BX_3DNOW_ALIAS(i) i
-#else
-  #define BX_3DNOW_ALIAS(i) &BX_CPU_C::BxError
 #endif
 
   BX_SMF void CMPXCHG_XBTS(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -3190,9 +3179,7 @@ public: // for now...
 #endif
   BX_SMF void write_flags(Bit16u flags, bx_bool change_IOPL, bx_bool change_IF) BX_CPP_AttrRegparmN(3);
   BX_SMF void writeEFlags(Bit32u eflags, Bit32u changeMask) BX_CPP_AttrRegparmN(2); // Newer variant.
-#if BX_SUPPORT_FPU || BX_SUPPORT_SSE >= 1
   BX_SMF void write_eflags_fpu_compare(int float_relation);
-#endif
   BX_SMF Bit32u force_flags(void);
   BX_SMF Bit32u read_eflags(void) { return BX_CPU_THIS_PTR force_flags(); }
 
@@ -3251,6 +3238,9 @@ public: // for now...
   BX_SMF Bit32u get_extended_cpuid_features(void);
   BX_SMF Bit32u get_std_cpuid_features(void);
   BX_SMF void set_cpuid_defaults(void);
+
+  BX_SMF void init_cpu_features_bitmask(void);
+  BX_SMF void init_FetchDecodeTables(void);
 
   BX_SMF BX_CPP_INLINE unsigned which_cpu(void) { return BX_CPU_THIS_PTR bx_cpuid; }
   BX_SMF BX_CPP_INLINE const bx_gen_reg_t *get_gen_regfile() { return BX_CPU_THIS_PTR gen_reg; }
@@ -3336,17 +3326,13 @@ public: // for now...
   BX_SMF Bit16u unpack_FPU_TW(Bit16u tag_byte);
 #endif
 
-#if BX_SUPPORT_MMX || BX_SUPPORT_SSE
   BX_SMF void prepareMMX(void);
   BX_SMF void prepareFPU2MMX(void); /* cause transition from FPU to MMX technology state */
   BX_SMF void print_state_MMX(void);
-#endif
 
-#if BX_SUPPORT_SSE
   BX_SMF void prepareSSE(void);
   BX_SMF void check_exceptionsSSE(int);
   BX_SMF void print_state_SSE(void);
-#endif
 
 #if BX_SUPPORT_XSAVE
   BX_SMF void prepareXSAVE(void);
@@ -3438,7 +3424,6 @@ BX_CPP_INLINE void BX_CPU_C::prepareMMX(void)
 }
 #endif
 
-#if BX_SUPPORT_SSE
 BX_CPP_INLINE void BX_CPU_C::prepareSSE(void)
 {
   if(BX_CPU_THIS_PTR cr0.get_EM() || !BX_CPU_THIS_PTR cr4.get_OSFXSR())
@@ -3447,7 +3432,6 @@ BX_CPP_INLINE void BX_CPU_C::prepareSSE(void)
   if(BX_CPU_THIS_PTR cr0.get_TS())
     exception(BX_NM_EXCEPTION, 0, 0);
 }
-#endif
 
 #if BX_SUPPORT_XSAVE
 BX_CPP_INLINE void BX_CPU_C::prepareXSAVE(void)

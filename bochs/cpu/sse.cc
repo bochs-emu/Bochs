@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse.cc,v 1.67 2010-02-24 19:27:51 sshwarts Exp $
+// $Id: sse.cc,v 1.68 2010-02-25 22:04:31 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003-2009 Stanislav Shwartsman
@@ -30,13 +30,9 @@
 /* SSE Integer Operations (128bit MMX extensions) */
 /* ********************************************** */
 
-// for 3-byte opcodes
-#if (BX_SUPPORT_SSE >= 4) || (BX_SUPPORT_SSE >= 3 && BX_SUPPORT_SSE_EXTENSION > 0)
-
 /* 66 0F 38 00 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSHUFB_VdqWdq(bxInstruction_c *i)
 {
-#if (BX_SUPPORT_SSE >= 4) || (BX_SUPPORT_SSE >= 3 && BX_SUPPORT_SSE_EXTENSION > 0)
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
@@ -61,16 +57,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSHUFB_VdqWdq(bxInstruction_c *i)
   }
 
   BX_WRITE_XMM_REG(i->nnn(), result);
-#else
-  BX_INFO(("PSHUFB_VdqWdq: required SSSE3, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* 66 0F 38 01 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PHADDW_VdqWdq(bxInstruction_c *i)
 {
-#if (BX_SUPPORT_SSE >= 4) || (BX_SUPPORT_SSE >= 3 && BX_SUPPORT_SSE_EXTENSION > 0)
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
@@ -96,16 +87,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PHADDW_VdqWdq(bxInstruction_c *i)
   result.xmm16u(7) = op2.xmm16u(6) + op2.xmm16u(7);
 
   BX_WRITE_XMM_REG(i->nnn(), result);
-#else
-  BX_INFO(("PHADDW_VdqWdq: required SSSE3, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* 66 0F 38 02 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PHADDD_VdqWdq(bxInstruction_c *i)
 {
-#if (BX_SUPPORT_SSE >= 4) || (BX_SUPPORT_SSE >= 3 && BX_SUPPORT_SSE_EXTENSION > 0)
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
@@ -126,16 +112,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PHADDD_VdqWdq(bxInstruction_c *i)
   result.xmm32u(3) = op2.xmm32u(2) + op2.xmm32u(3);
 
   BX_WRITE_XMM_REG(i->nnn(), result);
-#else
-  BX_INFO(("PHADDD_VdqWdq: required SSSE3, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* 66 0F 38 03 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PHADDSW_VdqWdq(bxInstruction_c *i)
 {
-#if (BX_SUPPORT_SSE >= 4) || (BX_SUPPORT_SSE >= 3 && BX_SUPPORT_SSE_EXTENSION > 0)
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
@@ -162,16 +143,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PHADDSW_VdqWdq(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), result);
-#else
-  BX_INFO(("PHADDSW_VdqWdq: required SSSE3, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* 66 0F 38 04 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMADDUBSW_VdqWdq(bxInstruction_c *i)
 {
-#if (BX_SUPPORT_SSE >= 4) || (BX_SUPPORT_SSE >= 3 && BX_SUPPORT_SSE_EXTENSION > 0)
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
@@ -196,16 +172,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMADDUBSW_VdqWdq(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), result);
-#else
-  BX_INFO(("PMADDUBSW_VdqWdq: required SSSE3, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* 66 0F 38 05 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PHSUBSW_VdqWdq(bxInstruction_c *i)
 {
-#if (BX_SUPPORT_SSE >= 4) || (BX_SUPPORT_SSE >= 3 && BX_SUPPORT_SSE_EXTENSION > 0)
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
@@ -232,16 +203,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PHSUBSW_VdqWdq(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), result);
-#else
-  BX_INFO(("PHSUBSW_VdqWdq: required SSSE3, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* 66 0F 38 05 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PHSUBW_VdqWdq(bxInstruction_c *i)
 {
-#if (BX_SUPPORT_SSE >= 4) || (BX_SUPPORT_SSE >= 3 && BX_SUPPORT_SSE_EXTENSION > 0)
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
@@ -267,16 +233,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PHSUBW_VdqWdq(bxInstruction_c *i)
   result.xmm16u(7) = op2.xmm16u(6) - op2.xmm16u(7);
 
   BX_WRITE_XMM_REG(i->nnn(), result);
-#else
-  BX_INFO(("PHSUBW_VdqWdq: required SSSE3, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* 66 0F 38 06 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PHSUBD_VdqWdq(bxInstruction_c *i)
 {
-#if (BX_SUPPORT_SSE >= 4) || (BX_SUPPORT_SSE >= 3 && BX_SUPPORT_SSE_EXTENSION > 0)
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
@@ -297,16 +258,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PHSUBD_VdqWdq(bxInstruction_c *i)
   result.xmm32u(3) = op2.xmm32u(2) - op2.xmm32u(3);
 
   BX_WRITE_XMM_REG(i->nnn(), result);
-#else
-  BX_INFO(("PHSUBD_VdqWdq: required SSSE3, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* 66 0F 38 08 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSIGNB_VdqWdq(bxInstruction_c *i)
 {
-#if (BX_SUPPORT_SSE >= 4) || (BX_SUPPORT_SSE >= 3 && BX_SUPPORT_SSE_EXTENSION > 0)
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
@@ -327,16 +283,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSIGNB_VdqWdq(bxInstruction_c *i)
   }
 
   BX_WRITE_XMM_REG(i->nnn(), op1);
-#else
-  BX_INFO(("PSIGNB_VdqWdq: required SSSE3, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* 66 0F 38 09 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSIGNW_VdqWdq(bxInstruction_c *i)
 {
-#if (BX_SUPPORT_SSE >= 4) || (BX_SUPPORT_SSE >= 3 && BX_SUPPORT_SSE_EXTENSION > 0)
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
@@ -357,16 +308,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSIGNW_VdqWdq(bxInstruction_c *i)
   }
 
   BX_WRITE_XMM_REG(i->nnn(), op1);
-#else
-  BX_INFO(("PSIGNW_VdqWdq: required SSSE3, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* 66 0F 38 0A */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSIGND_VdqWdq(bxInstruction_c *i)
 {
-#if (BX_SUPPORT_SSE >= 4) || (BX_SUPPORT_SSE >= 3 && BX_SUPPORT_SSE_EXTENSION > 0)
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
@@ -387,16 +333,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSIGND_VdqWdq(bxInstruction_c *i)
   }
 
   BX_WRITE_XMM_REG(i->nnn(), op1);
-#else
-  BX_INFO(("PSIGND_VdqWdq: required SSSE3, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* 66 0F 38 0B */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMULHRSW_VdqWdq(bxInstruction_c *i)
 {
-#if (BX_SUPPORT_SSE >= 4) || (BX_SUPPORT_SSE >= 3 && BX_SUPPORT_SSE_EXTENSION > 0)
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
@@ -422,16 +363,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMULHRSW_VdqWdq(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), op1);
-#else
-  BX_INFO(("PMULHRSW_VdqWdq: required SSSE3, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* 66 0F 38 1C */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PABSB_VdqWdq(bxInstruction_c *i)
 {
-#if (BX_SUPPORT_SSE >= 4) || (BX_SUPPORT_SSE >= 3 && BX_SUPPORT_SSE_EXTENSION > 0)
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op;
@@ -464,16 +400,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PABSB_VdqWdq(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), op);
-#else
-  BX_INFO(("PABSB_VdqWdq: required SSSE3, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* 66 0F 38 1D */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PABSW_VdqWdq(bxInstruction_c *i)
 {
-#if (BX_SUPPORT_SSE >= 4) || (BX_SUPPORT_SSE >= 3 && BX_SUPPORT_SSE_EXTENSION > 0)
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op;
@@ -498,16 +429,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PABSW_VdqWdq(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), op);
-#else
-  BX_INFO(("PABSW_VdqWdq: required SSSE3, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* 66 0F 38 1E */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PABSD_VdqWdq(bxInstruction_c *i)
 {
-#if (BX_SUPPORT_SSE >= 4) || (BX_SUPPORT_SSE >= 3 && BX_SUPPORT_SSE_EXTENSION > 0)
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op;
@@ -528,16 +454,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PABSD_VdqWdq(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), op);
-#else
-  BX_INFO(("PABSD_VdqWdq: required SSSE3, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* 66 0F 38 10 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PBLENDVB_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 4
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2,
@@ -558,16 +479,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PBLENDVB_VdqWdq(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), op1);
-#else
-  BX_INFO(("PBLENDVB_VdqWdq: required SSE4, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* 66 0F 38 14 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::BLENDVPS_VpsWps(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 4
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2,
@@ -590,16 +506,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BLENDVPS_VpsWps(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), op1);
-#else
-  BX_INFO(("BLENDVPS_VpsWps: required SSE4, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* 66 0F 38 15 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::BLENDVPD_VpdWpd(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 4
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2,
@@ -620,16 +531,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BLENDVPD_VpdWpd(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), op1);
-#else
-  BX_INFO(("BLENDVPD_VpdWpd: required SSE4, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* 66 0F 38 17 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PTEST_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 4
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
@@ -652,16 +558,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PTEST_VdqWdq(bxInstruction_c *i)
       (op2.xmm64u(1) & ~op1.xmm64u(1)) == 0) result |= EFlagsCFMask;
 
   setEFlagsOSZAPC(result);
-#else
-  BX_INFO(("PTEST_VdqWdq: required SSE4, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* 66 0F 38 28 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMULDQ_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 4
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
@@ -681,16 +582,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMULDQ_VdqWdq(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), result);
-#else
-  BX_INFO(("PMULDQ_VdqWdq: required SSE4, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* 66 0F 38 29 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PCMPEQQ_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 4
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
@@ -713,16 +609,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PCMPEQQ_VdqWdq(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), op1);
-#else
-  BX_INFO(("PCMPEQQ_VdqWdq: required SSE4, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* 66 0F 38 2B */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PACKUSDW_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 4
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
@@ -748,16 +639,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PACKUSDW_VdqWdq(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), result);
-#else
-  BX_INFO(("PACKUSDW_VdqWdq: required SSE4, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* 66 0F 38 37 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PCMPGTQ_VdqWdq(bxInstruction_c *i)
 {
-#if (BX_SUPPORT_SSE > 4) || (BX_SUPPORT_SSE >= 4 && BX_SUPPORT_SSE_EXTENSION > 0)
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
@@ -780,16 +666,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PCMPGTQ_VdqWdq(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), op1);
-#else
-  BX_INFO(("PCMPGTQ_VdqWdq: required SSE4.2, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* 66 0F 38 38 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMINSB_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 4
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
@@ -810,16 +691,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMINSB_VdqWdq(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), op1);
-#else
-  BX_INFO(("PMINSB_VdqWdq: required SSE4, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* 66 0F 38 39 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMINSD_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 4
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
@@ -841,16 +717,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMINSD_VdqWdq(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), op1);
-#else
-  BX_INFO(("PMINSD_VdqWdq: required SSE4, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* 66 0F 38 3A */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMINUW_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 4
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
@@ -876,16 +747,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMINUW_VdqWdq(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), op1);
-#else
-  BX_INFO(("PMINUW_VdqWdq: required SSE4, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* 66 0F 38 3B */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMINUD_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 4
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
@@ -907,16 +773,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMINUD_VdqWdq(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), op1);
-#else
-  BX_INFO(("PMINUD_VdqWdq: required SSE4, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* 66 0F 38 3C */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMAXSB_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 4
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
@@ -937,16 +798,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMAXSB_VdqWdq(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), op1);
-#else
-  BX_INFO(("PMAXSB_VdqWdq: required SSE4, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* 66 0F 38 3D */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMAXSD_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 4
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
@@ -968,16 +824,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMAXSD_VdqWdq(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), op1);
-#else
-  BX_INFO(("PMAXSD_VdqWdq: required SSE4, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* 66 0F 38 3E */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMAXUW_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 4
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
@@ -1003,16 +854,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMAXUW_VdqWdq(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), op1);
-#else
-  BX_INFO(("PMAXUW_VdqWdq: required SSE4, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* 66 0F 38 3F */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMAXUD_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 4
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
@@ -1034,16 +880,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMAXUD_VdqWdq(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), op1);
-#else
-  BX_INFO(("PMAXUD_VdqWdq: required SSE4, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* 66 0F 38 40 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMULLD_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 4
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
@@ -1070,16 +911,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMULLD_VdqWdq(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), op1);
-#else
-  BX_INFO(("PMULLD_VdqWdq: required SSE4, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* 66 0F 38 41 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PHMINPOSUW_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 4
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op, result;
@@ -1107,16 +943,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PHMINPOSUW_VdqWdq(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), result);
-#else
-  BX_INFO(("PHMINPOSUW_VdqWdq: required SSE4, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* 66 0F 3A 0C */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::BLENDPS_VpsWpsIb(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 4
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
@@ -1139,16 +970,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BLENDPS_VpsWpsIb(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), op1);
-#else
-  BX_INFO(("BLENDPS_VpsWpsIb: required SSE4, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* 66 0F 3A 0D */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::BLENDPD_VpdWpdIb(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 4
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
@@ -1169,16 +995,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BLENDPD_VpdWpdIb(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), op1);
-#else
-  BX_INFO(("BLENDPD_VpdWpdIb: required SSE4, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* 66 0F 3A 0E */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PBLENDW_VdqWdqIb(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 4
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
@@ -1205,16 +1026,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PBLENDW_VdqWdqIb(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), op1);
-#else
-  BX_INFO(("PBLENDW_VdqWdqIb: required SSE4, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* 66 0F 3A 14 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PEXTRB_HbdUdqIb(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 4
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op = BX_READ_XMM_REG(i->rm());
@@ -1229,16 +1045,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PEXTRB_HbdUdqIb(bxInstruction_c *i)
     /* pointer, segment address pair */
     write_virtual_byte(i->seg(), eaddr, result);
   }
-#else
-  BX_INFO(("PEXTRB_HbdUdqIb: required SSE4, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* 66 0F 3A 15 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PEXTRW_HwdUdqIb(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 4
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op = BX_READ_XMM_REG(i->rm());
@@ -1253,16 +1064,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PEXTRW_HwdUdqIb(bxInstruction_c *i)
     /* pointer, segment address pair */
     write_virtual_word(i->seg(), eaddr, result);
   }
-#else
-  BX_INFO(("PEXTRW_HwdUdqIb: required SSE4, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* 66 0F 3A 16 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PEXTRD_HdUdqIb(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 4
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op = BX_READ_XMM_REG(i->rm());
@@ -1297,16 +1103,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PEXTRD_HdUdqIb(bxInstruction_c *i)
        write_virtual_dword(i->seg(), eaddr, result);
      }
   }
-#else
-  BX_INFO(("PEXTRD_HdUdqIb: required SSE4, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* 66 0F 3A 17 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::EXTRACTPS_HdUpsIb(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 4
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op = BX_READ_XMM_REG(i->rm());
@@ -1321,16 +1122,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::EXTRACTPS_HdUpsIb(bxInstruction_c *i)
     /* pointer, segment address pair */
     write_virtual_dword(i->seg(), eaddr, result);
   }
-#else
-  BX_INFO(("EXTRACTPS_HdUpsIb: required SSE4, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* 66 0F 3A 20 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PINSRB_VdqEbIb(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 4
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn());
@@ -1350,16 +1146,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PINSRB_VdqEbIb(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), op1);
-#else
-  BX_INFO(("PINSRB_VdqEbIb: required SSE4, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* 66 0F 3A 21 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::INSERTPS_VpsWssIb(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 4
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn());
@@ -1386,16 +1177,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INSERTPS_VpsWssIb(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), op1);
-#else
-  BX_INFO(("INSERTPS_VpsWssIb: required SSE4, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* 66 0F 3A 22 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PINSRD_VdqEdIb(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 4
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn());
@@ -1437,16 +1223,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PINSRD_VdqEdIb(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), op1);
-#else
-  BX_INFO(("PINSRD_VdqEdIb: required SSE4, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* 66 0F 3A 42 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MPSADBW_VdqWdqIb(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 4
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
@@ -1479,18 +1260,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MPSADBW_VdqWdqIb(bxInstruction_c *i)
   }
 
   BX_WRITE_XMM_REG(i->nnn(), result);
-#else
-  BX_INFO(("MPSADBW_VdqWdqIb: required SSE4, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
-
-#endif // (BX_SUPPORT_SSE >= 4 || (BX_SUPPORT_SSE >= 3 && BX_SUPPORT_SSE_EXTENSION > 0)
 
 /* 66 0F 60 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUNPCKLBW_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
@@ -1524,16 +1298,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUNPCKLBW_VdqWdq(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), result);
-#else
-  BX_INFO(("PUNPCKLBW_VdqWdq: required SSE2, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* 66 0F 61 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUNPCKLWD_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
@@ -1559,17 +1328,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUNPCKLWD_VdqWdq(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), result);
-#else
-  BX_INFO(("PUNPCKLWD_VdqWdq: required SSE2, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* UNPCKLPS:     0F 14 */
 /* PUNPCKLDQ: 66 0F 62 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::UNPCKLPS_VpsWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
@@ -1591,16 +1355,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::UNPCKLPS_VpsWdq(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), result);
-#else
-  BX_INFO(("UNPCKLPS_VpsWdq: required SSE, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* 66 0F 63 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PACKSSWB_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
@@ -1635,16 +1394,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PACKSSWB_VdqWdq(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), result);
-#else
-  BX_INFO(("PACKSSWB_VdqWdq: required SSE2, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* 66 0F 64 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PCMPGTB_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
@@ -1665,16 +1419,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PCMPGTB_VdqWdq(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), op1);
-#else
-  BX_INFO(("PCMPGTB_VdqWdq: required SSE2, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* 66 0F 65 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PCMPGTW_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
@@ -1700,16 +1449,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PCMPGTW_VdqWdq(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), op1);
-#else
-  BX_INFO(("PCMPGTW_VdqWdq: required SSE2, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* 66 0F 66 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PCMPGTD_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
@@ -1731,16 +1475,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PCMPGTD_VdqWdq(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), op1);
-#else
-  BX_INFO(("PCMPGTD_VdqWdq: required SSE2, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* 66 0F 67 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PACKUSWB_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
@@ -1775,16 +1514,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PACKUSWB_VdqWdq(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), result);
-#else
-  BX_INFO(("PACKUSWB_VdqWdq: required SSE2, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* 66 0F 68 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUNPCKHBW_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
@@ -1818,16 +1552,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUNPCKHBW_VdqWdq(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), result);
-#else
-  BX_INFO(("PUNPCKHBW_VdqWdq: required SSE2, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* 66 0F 69 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUNPCKHWD_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
@@ -1853,17 +1582,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUNPCKHWD_VdqWdq(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), result);
-#else
-  BX_INFO(("PUNPCKHWD_VdqWdq: required SSE2, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* UNPCKHPS:     0F 15 */
 /* PUNPCKHDQ: 66 0F 6A */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::UNPCKHPS_VpsWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
@@ -1885,16 +1609,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::UNPCKHPS_VpsWdq(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), result);
-#else
-  BX_INFO(("UNPCKHPS_VpsWdq: required SSE, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* 66 0F 6B */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PACKSSDW_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
@@ -1921,17 +1640,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PACKSSDW_VdqWdq(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), result);
-#else
-  BX_INFO(("PACKSSDW_VdqWdq: required SSE2, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* UNPCKLPD:   66 0F 14 */
 /* PUNPCKLQDQ: 66 0F 6C */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUNPCKLQDQ_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
@@ -1950,17 +1664,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUNPCKLQDQ_VdqWdq(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), op1);
-#else
-  BX_INFO(("PUNPCKLQDQ_VdqWdq: required SSE2, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* UNPCKHPD:   66 0F 15 */
 /* PUNPCKHQDQ: 66 0F 6D */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUNPCKHQDQ_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
@@ -1980,16 +1689,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUNPCKHQDQ_VdqWdq(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), result);
-#else
-  BX_INFO(("PUNPCKHQDQ_VdqWdq: required SSE2, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* 66 0F 70 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSHUFD_VdqWdqIb(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op, result;
@@ -2012,16 +1716,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSHUFD_VdqWdqIb(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), result);
-#else
-  BX_INFO(("PSHUFD_VdqWdqIb: required SSE2, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* F2 0F 70 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSHUFHW_VdqWdqIb(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op, result;
@@ -2045,16 +1744,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSHUFHW_VdqWdqIb(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), result);
-#else
-  BX_INFO(("PSHUFHW_VdqWdqIb: required SSE2, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* F3 0F 70 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSHUFLW_VdqWdqIb(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op, result;
@@ -2078,16 +1772,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSHUFLW_VdqWdqIb(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), result);
-#else
-  BX_INFO(("PSHUFLW_VdqWdqIb: required SSE, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* 66 0F 74 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PCMPEQB_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
@@ -2108,16 +1797,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PCMPEQB_VdqWdq(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), op1);
-#else
-  BX_INFO(("PCMPEQB_VdqWdq: required SSE2, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* 66 0F 75 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PCMPEQW_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
@@ -2143,16 +1827,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PCMPEQW_VdqWdq(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), op1);
-#else
-  BX_INFO(("PCMPEQW_VdqWdq: required SSE2, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* 66 0F 76 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PCMPEQD_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
@@ -2174,16 +1853,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PCMPEQD_VdqWdq(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), op1);
-#else
-  BX_INFO(("PCMPEQD_VdqWdq: required SSE2, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* 66 0F C4 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PINSRW_VdqEwIb(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn());
@@ -2204,16 +1878,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PINSRW_VdqEwIb(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), op1);
-#else
-  BX_INFO(("PINSRW_VdqEdIb: required SSE2, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* 66 0F C5 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PEXTRW_GdUdqIb(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op = BX_READ_XMM_REG(i->rm());
@@ -2221,16 +1890,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PEXTRW_GdUdqIb(bxInstruction_c *i)
   Bit32u result = (Bit32u) op.xmm16u(count);
 
   BX_WRITE_32BIT_REGZ(i->nnn(), result);
-#else
-  BX_INFO(("PEXTRW_GdUdqIb: required SSE2, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* 0F C6 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHUFPS_VpsWpsIb(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
@@ -2253,16 +1917,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHUFPS_VpsWpsIb(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), result);
-#else
-  BX_INFO(("SHUFPS_VpsWpsIb: required SSE, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* 66 0F C6 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHUFPD_VpdWpdIb(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
@@ -2283,16 +1942,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHUFPD_VpdWpdIb(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), result);
-#else
-  BX_INFO(("SHUFPD_VpdWpdIb: required SSE2, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* 66 0F D1 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSRLW_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
@@ -2328,16 +1982,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSRLW_VdqWdq(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), op1);
-#else
-  BX_INFO(("PSRLW_VdqWdq: required SSE2, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* 66 0F D2 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSRLD_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
@@ -2369,16 +2018,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSRLD_VdqWdq(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), op1);
-#else
-  BX_INFO(("PSRLD_VdqWdq: required SSE2, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* 66 0F D3 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSRLQ_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
@@ -2408,16 +2052,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSRLQ_VdqWdq(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), op1);
-#else
-  BX_INFO(("PSRLQ_VdqWdq: required SSE2, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* 66 0F D4 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PADDQ_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
@@ -2437,16 +2076,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PADDQ_VdqWdq(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), op1);
-#else
-  BX_INFO(("PADDQ_VdqWdq: required SSE2, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* 66 0F D5 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMULLW_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
@@ -2481,16 +2115,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMULLW_VdqWdq(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), op1);
-#else
-  BX_INFO(("PMULLW_VdqWdq: required SSE2, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* 66 0F D8 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSUBUSB_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
@@ -2517,16 +2146,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSUBUSB_VdqWdq(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), result);
-#else
-  BX_INFO(("PSUBUSB_VdqWdq: required SSE2, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* 66 0F D9 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSUBUSW_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
@@ -2553,16 +2177,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSUBUSW_VdqWdq(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), result);
-#else
-  BX_INFO(("PSUBUSW_VdqWdq: required SSE2, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* 66 0F DA */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMINUB_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
@@ -2583,10 +2202,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMINUB_VdqWdq(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), op1);
-#else
-  BX_INFO(("PMINUB_VdqWdq: required SSE2, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* ANDPS:    0F 54 */
@@ -2594,7 +2209,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMINUB_VdqWdq(bxInstruction_c *i)
 /* PAND:  66 0F DB */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::ANDPS_VpsWps(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
@@ -2614,16 +2228,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ANDPS_VpsWps(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), op1);
-#else
-  BX_INFO(("ANDPS_VpsWps: required SSE, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* 66 0F DC */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PADDUSB_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
@@ -2644,16 +2253,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PADDUSB_VdqWdq(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), op1);
-#else
-  BX_INFO(("PADDUSB_VdqWdq: required SSE2, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* 66 0F DD */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PADDUSW_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
@@ -2679,16 +2283,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PADDUSW_VdqWdq(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), op1);
-#else
-  BX_INFO(("PADDUSW_VdqWdq: required SSE2, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* 66 0F DE */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMAXUB_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
@@ -2709,10 +2308,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMAXUB_VdqWdq(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), op1);
-#else
-  BX_INFO(("PMAXUB_VdqWdq: required SSE2, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* ANDNPS:    0F 55 */
@@ -2720,7 +2315,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMAXUB_VdqWdq(bxInstruction_c *i)
 /* PANDN:  66 0F DF */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::ANDNPS_VpsWps(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
@@ -2740,16 +2334,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ANDNPS_VpsWps(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), op1);
-#else
-  BX_INFO(("ANDNPS_VpsWps: required SSE, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* 66 0F E0 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PAVGB_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
@@ -2770,16 +2359,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PAVGB_VdqWdq(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), op1);
-#else
-  BX_INFO(("PAVGB_VdqWdq: required SSE, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* 66 0F E1 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSRAW_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
@@ -2832,16 +2416,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSRAW_VdqWdq(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), result);
-#else
-  BX_INFO(("PSRAW_VdqWdq: required SSE2, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* 66 0F E2 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSRAD_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
@@ -2882,16 +2461,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSRAD_VdqWdq(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), result);
-#else
-  BX_INFO(("PSRAD_VdqWdq: required SSE2, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* 66 0F E3 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PAVGW_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
@@ -2917,16 +2491,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PAVGW_VdqWdq(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), op1);
-#else
-  BX_INFO(("PAVGW_VdqWdq: required SSE, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* 66 0F E4 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMULHUW_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
@@ -2961,16 +2530,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMULHUW_VdqWdq(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), op1);
-#else
-  BX_INFO(("PMULHUW_VdqWdq: required SSE2, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* 66 0F E5 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMULHW_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
@@ -3005,16 +2569,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMULHW_VdqWdq(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), op1);
-#else
-  BX_INFO(("PMULHW_VdqWdq: required SSE2, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* 66 0F E8 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSUBSB_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
@@ -3035,16 +2594,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSUBSB_VdqWdq(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), op1);
-#else
-  BX_INFO(("PSUBSB_VdqWdq: required SSE2, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* 66 0F E9 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSUBSW_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
@@ -3070,16 +2624,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSUBSW_VdqWdq(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), op1);
-#else
-  BX_INFO(("PSUBSW_VdqWdq: required SSE2, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* 66 0F EA */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMINSW_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
@@ -3105,10 +2654,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMINSW_VdqWdq(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), op1);
-#else
-  BX_INFO(("PMINSW_VdqWdq: required SSE2, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* ORPS:    0F 56 */
@@ -3116,7 +2661,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMINSW_VdqWdq(bxInstruction_c *i)
 /* POR:  66 0F EB */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::ORPS_VpsWps(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
@@ -3136,16 +2680,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ORPS_VpsWps(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), op1);
-#else
-  BX_INFO(("ORPS_VpsWps: required SSE, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* 66 0F EC */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PADDSB_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
@@ -3166,16 +2705,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PADDSB_VdqWdq(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), op1);
-#else
-  BX_INFO(("PADDSB_VdqWdq: required SSE2, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* 66 0F ED */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PADDSW_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
@@ -3201,16 +2735,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PADDSW_VdqWdq(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), op1);
-#else
-  BX_INFO(("PADDSW_VdqWdq: required SSE2, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* 66 0F EE */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMAXSW_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
@@ -3236,10 +2765,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMAXSW_VdqWdq(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), op1);
-#else
-  BX_INFO(("PMAXSW_VdqWdq: required SSE2, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* XORPS:    0F 57 */
@@ -3247,7 +2772,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMAXSW_VdqWdq(bxInstruction_c *i)
 /* PXOR:  66 0F EF */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::XORPS_VpsWps(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
@@ -3267,16 +2791,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XORPS_VpsWps(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), op1);
-#else
-  BX_INFO(("XORPS_VpsWps: required SSE, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* 66 0F F1 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSLLW_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
@@ -3312,16 +2831,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSLLW_VdqWdq(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), op1);
-#else
-  BX_INFO(("PSLLW_VdqWdq: required SSE2, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* 66 0F F2 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSLLD_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
@@ -3353,16 +2867,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSLLD_VdqWdq(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), op1);
-#else
-  BX_INFO(("PSLLD_VdqWdq: required SSE2, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* 66 0F F3 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSLLQ_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
@@ -3392,16 +2901,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSLLQ_VdqWdq(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), op1);
-#else
-  BX_INFO(("PSLLQ_VdqWdq: required SSE2, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* 66 0F F4 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMULUDQ_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
@@ -3421,16 +2925,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMULUDQ_VdqWdq(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), result);
-#else
-  BX_INFO(("PMULUDQ_VdqWdq: required SSE2, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* 66 0F F5 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMADDWD_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
@@ -3459,16 +2958,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMADDWD_VdqWdq(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), result);
-#else
-  BX_INFO(("PMADDWD_VdqWdq: required SSE2, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* 66 0F F6 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSADBW_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
@@ -3507,16 +3001,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSADBW_VdqWdq(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), op1);
-#else
-  BX_INFO(("PSADBW_VdqWdq: required SSE2, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* 66 0F F8 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSUBB_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
@@ -3537,16 +3026,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSUBB_VdqWdq(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), op1);
-#else
-  BX_INFO(("PSUBB_VdqWdq: required SSE2, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* 66 0F F9 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSUBW_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
@@ -3572,16 +3056,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSUBW_VdqWdq(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), op1);
-#else
-  BX_INFO(("PSUBW_VdqWdq: required SSE2, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* 66 0F FA */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSUBD_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
@@ -3603,16 +3082,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSUBD_VdqWdq(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), op1);
-#else
-  BX_INFO(("PSUBD_VdqWdq: required SSE2, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* 66 0F FB */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSUBQ_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
@@ -3632,16 +3106,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSUBQ_VdqWdq(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), op1);
-#else
-  BX_INFO(("PSUBQ_VdqWdq: required SSE2, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* 66 0F FC */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PADDB_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
@@ -3662,16 +3131,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PADDB_VdqWdq(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), op1);
-#else
-  BX_INFO(("PADDB_VdqWdq: required SSE2, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* 66 0F FD */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PADDW_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
@@ -3697,16 +3161,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PADDW_VdqWdq(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), op1);
-#else
-  BX_INFO(("PADDW_VdqWdq: required SSE2, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* 66 0F FE */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PADDD_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
@@ -3728,16 +3187,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PADDD_VdqWdq(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), op1);
-#else
-  BX_INFO(("PADDD_VdqWdq: required SSE2, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* 66 0F 71 Grp12 010 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSRLW_UdqIb(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op = BX_READ_XMM_REG(i->rm());
@@ -3760,16 +3214,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSRLW_UdqIb(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->rm(), op);
-#else
-  BX_INFO(("PSRLW_UdqIb: required SSE2, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* 0F 71 Grp12 100 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSRAW_UdqIb(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op = BX_READ_XMM_REG(i->rm()), result;
@@ -3809,16 +3258,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSRAW_UdqIb(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->rm(), result);
-#else
-  BX_INFO(("PSRAW_UdqIb: required SSE2, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* 66 0F 71 Grp12 110 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSLLW_UdqIb(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op = BX_READ_XMM_REG(i->rm());
@@ -3841,16 +3285,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSLLW_UdqIb(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->rm(), op);
-#else
-  BX_INFO(("PSLLW_UdqIb: required SSE2, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* 66 0F 72 Grp13 010 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSRLD_UdqIb(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op = BX_READ_XMM_REG(i->rm());
@@ -3869,16 +3308,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSRLD_UdqIb(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->rm(), op);
-#else
-  BX_INFO(("PSRLD_UdqIb: required SSE2, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* 0F 72 Grp13 100 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSRAD_UdqIb(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op = BX_READ_XMM_REG(i->rm()), result;
@@ -3906,16 +3340,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSRAD_UdqIb(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->rm(), result);
-#else
-  BX_INFO(("PSRAD_UdqIb: required SSE2, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* 66 0F 72 Grp13 110 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSLLD_UdqIb(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op = BX_READ_XMM_REG(i->rm());
@@ -3934,16 +3363,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSLLD_UdqIb(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->rm(), op);
-#else
-  BX_INFO(("PSLLD_UdqIb: required SSE2, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* 66 0F 73 Grp14 010 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSRLQ_UdqIb(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op = BX_READ_XMM_REG(i->rm());
@@ -3960,16 +3384,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSRLQ_UdqIb(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->rm(), op);
-#else
-  BX_INFO(("PSRLQ_UdqIb: required SSE2, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* 66 0F 73 Grp14 011 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSRLDQ_UdqIb(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op = BX_READ_XMM_REG(i->rm()), result;
@@ -3983,16 +3402,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSRLDQ_UdqIb(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->rm(), result);
-#else
-  BX_INFO(("PSRLDQ_UdqIb: required SSE2, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* 66 0F 73 Grp14 110 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSLLQ_UdqIb(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op = BX_READ_XMM_REG(i->rm());
@@ -4009,16 +3423,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSLLQ_UdqIb(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->rm(), op);
-#else
-  BX_INFO(("PSLLQ_UdqIb: required SSE2, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* 66 0F 73 Grp14 111 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSLLDQ_UdqIb(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op = BX_READ_XMM_REG(i->rm()), result;
@@ -4032,8 +3441,4 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSLLDQ_UdqIb(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->rm(), result);
-#else
-  BX_INFO(("PSLLDQ_UdqIb: required SSE2, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }

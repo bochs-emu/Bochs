@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.191 2010-02-09 22:14:54 sshwarts Exp $
+// $Id: config.cc,v 1.192 2010-02-25 22:04:30 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2009  The Bochs Project
@@ -236,7 +236,7 @@ void bx_init_options()
   bx_param_c *root_param = SIM->get_param(".");
 
   // general options subtree
-  menu = new bx_list_c(root_param, "general", "", 10);
+  menu = new bx_list_c(root_param, "general", "", 11);
 
  // config interface option, set in bochsrc or command line
   static const char *config_interface_list[] = {
@@ -258,6 +258,8 @@ void bx_init_options()
     0,
     0);
   sel_config->set_by_name(BX_DEFAULT_CONFIG_INTERFACE);
+
+  static const char *bochs_start_names[] = { "quick", "load", "edit", "run" };
 
   // quick start option, set by command line arg
   new bx_param_enum_c(menu,
@@ -301,7 +303,7 @@ void bx_init_options()
 #endif
 
   // cpu subtree
-  bx_list_c *cpu_param = new bx_list_c(root_param, "cpu", "CPU Options", 10 + BX_SUPPORT_SMP);
+  bx_list_c *cpu_param = new bx_list_c(root_param, "cpu", "CPU Options", 8 + BX_SUPPORT_SMP);
 
   // cpu options
   bx_param_num_c *nprocessors = new bx_param_num_c(cpu_param,
@@ -344,10 +346,6 @@ void bx_init_options()
       "Ignore RDMSR/WRMSR to unknown MSR register",
       1);
 #endif
-  new bx_param_bool_c(cpu_param,
-      "cpuid_limit_winnt", "Limit max CPUID function to 3",
-      "Limit max CPUID function reported to 3 to workaround WinNT issue",
-      0);
 #if BX_CONFIGURE_MSRS
   new bx_param_string_c(cpu_param,
       "msrs",
@@ -355,7 +353,18 @@ void bx_init_options()
       "Set path to the configurable MSR definition file",
       "", BX_PATHNAME_LEN);
 #endif
-  new bx_param_string_c(cpu_param,
+
+  cpu_param->set_options(menu->SHOW_PARENT);
+
+  // cpuid subtree
+  bx_list_c *cpuid_param = new bx_list_c(root_param, "cpuid", "CPUID Options", 7);
+
+  new bx_param_bool_c(cpuid_param,
+      "cpuid_limit_winnt", "Limit max CPUID function to 3",
+      "Limit max CPUID function reported to 3 to workaround WinNT issue",
+      0);
+
+  new bx_param_string_c(cpuid_param,
       "vendor_string",
       "CPUID vendor string",
       "Set the CPUID vendor string",
@@ -365,7 +374,7 @@ void bx_init_options()
       "AuthenticAMD", 
 #endif
       BX_CPUID_VENDOR_LEN+1);
-  new bx_param_string_c(cpu_param,
+  new bx_param_string_c(cpuid_param,
       "brand_string",
       "CPUID brand string",
       "Set the CPUID brand string",
@@ -376,7 +385,26 @@ void bx_init_options()
 #endif
       BX_CPUID_BRAND_LEN+1);
 
-  cpu_param->set_options(menu->SHOW_PARENT);
+#if BX_CPU_LEVEL >= 6
+  static const char *sse_names[] = { "none", "sse", "sse2", "sse3", "ssse3", "sse4_1", "sse4_2", NULL };
+
+  new bx_param_enum_c(cpuid_param,
+      "sse", "Support for SSE instruction set",
+      "Support for SSE/SSE2/SSE3/SSSE3/SSE4_1/SSE4_2 instruction set",
+      sse_names,
+      BX_CPUID_SUPPORT_NOSSE,
+      BX_CPUID_SUPPORT_NOSSE);
+  new bx_param_bool_c(cpuid_param,
+      "movbe", "Support for MOVBE instruction",
+      "Support for MOVBE instruction",
+      0);
+  new bx_param_bool_c(cpuid_param,
+      "aes", "Support for AES instruction set",
+      "Support for AES instruction set",
+      0);
+#endif
+
+  cpuid_param->set_options(menu->SHOW_PARENT);
 
   // memory subtree
   bx_list_c *memory = new bx_list_c(root_param, "memory", "Memory Options");
@@ -510,6 +538,8 @@ void bx_init_options()
   bx_list_c *clock_cmos = new bx_list_c(root_param, "clock_cmos", "Clock & CMOS Options");
 
   // clock & cmos options
+  static const char *clock_sync_names[] = { "none", "realtime", "slowdown", "both", NULL };
+
   bx_param_enum_c *clock_sync = new bx_param_enum_c(clock_cmos,
       "clock_sync", "Synchronisation method",
       "Host to guest time synchronization method",
@@ -1063,6 +1093,8 @@ void bx_init_options()
         0);
       present->set_ask_format("Device is enabled: [%s] ");
 
+      static const char *atadevice_type_names[] = { "disk", "cdrom", NULL };
+
       type = new bx_param_enum_c(menu,
         "type",
         "Type of ATA device",
@@ -1137,6 +1169,8 @@ void bx_init_options()
         "Generic 1234", 41);
       model->set_ask_format("Enter new model name: [%s]");
 
+      static const char *atadevice_biosdetect_names[] = { "none", "auto", "cmos", NULL };
+
       bx_param_enum_c *biosdetect = new bx_param_enum_c(menu,
         "biosdetect",
         "BIOS Detection",
@@ -1145,6 +1179,8 @@ void bx_init_options()
         BX_ATA_BIOSDETECT_AUTO,
         BX_ATA_BIOSDETECT_NONE);
       biosdetect->set_ask_format("Enter bios detection type: [%s]");
+
+      static const char *atadevice_translation_names[] = { "none", "lba", "large", "rechs", "auto", NULL };
 
       bx_param_enum_c *translation = new bx_param_enum_c(menu,
         "translation",
@@ -1705,6 +1741,9 @@ void bx_reset_options()
 {
   // cpu
   SIM->get_param("cpu")->reset();
+
+  // cpuid
+  SIM->get_param("cpuid")->reset();
 
   // memory (ram & rom)
   SIM->get_param("memory")->reset();
@@ -2522,26 +2561,52 @@ static int parse_line_formatted(const char *context, int num_params, char *param
           PARSE_ERR(("%s: cpu directive malformed.", context));
         }
 #endif
-      } else if (!strncmp(params[i], "cpuid_limit_winnt=", 18)) {
-        if (params[i][18] == '0' || params[i][18] == '1') {
-          SIM->get_param_bool(BXPN_CPUID_LIMIT_WINNT)->set(params[i][18] - '0');
-        } else {
-          PARSE_ERR(("%s: cpu directive malformed.", context));
-        }
       } else if (!strncmp(params[i], "msrs=", 5)) {
         SIM->get_param_string(BXPN_CONFIGURABLE_MSRS_PATH)->set(&params[i][5]);
-      } else if (!strncmp(params[i], "vendor_string=", 14)) {
+      } else {
+        PARSE_ERR(("%s: cpu directive malformed.", context));
+      }
+    }
+  } else if (!strcmp(params[0], "cpuid")) {
+    if (num_params < 2) {
+      PARSE_ERR(("%s: cpuid directive malformed.", context));
+    }
+    for (i=1; i<num_params; i++) {
+      if (!strncmp(params[i], "vendor_string=", 14)) {
         if (strlen(&params[i][14]) != BX_CPUID_VENDOR_LEN) {
-          PARSE_ERR(("%s: cpu directive malformed.", context));
+          PARSE_ERR(("%s: cpuid directive malformed.", context));
         }
         SIM->get_param_string(BXPN_VENDOR_STRING)->set(&params[i][14]);
       } else if (!strncmp(params[i], "brand_string=", 13)) {
         if (strlen(&params[i][13]) > BX_CPUID_BRAND_LEN) {
-          PARSE_ERR(("%s: cpu directive malformed.", context));
+          PARSE_ERR(("%s: cpuid directive malformed.", context));
         } 
         SIM->get_param_string(BXPN_BRAND_STRING)->set(&params[i][13]);
+      } else if (!strncmp(params[i], "cpuid_limit_winnt=", 18)) {
+        if (params[i][18] == '0' || params[i][18] == '1') {
+          SIM->get_param_bool(BXPN_CPUID_LIMIT_WINNT)->set(params[i][18] - '0');
+        } else {
+          PARSE_ERR(("%s: cpuid directive malformed.", context));
+        }
+#if BX_CPU_LEVEL >= 6
+      } else if (!strncmp(params[i], "sse=", 4)) {
+        if (! SIM->get_param_enum(BXPN_CPUID_SSE)->set_by_name(&params[i][4]))
+          PARSE_ERR(("%s: unsupported sse option.", context));
+      } else if (!strncmp(params[i], "aes=", 4)) {
+        if (params[i][4] == '0' || params[i][4] == '1') {
+          SIM->get_param_bool(BXPN_CPUID_MOVBE)->set(params[i][4] - '0');
+        } else {
+          PARSE_ERR(("%s: cpuid directive malformed.", context));
+        }
+      } else if (!strncmp(params[i], "movbe=", 6)) {
+        if (params[i][6] == '0' || params[i][6] == '1') {
+          SIM->get_param_bool(BXPN_CPUID_MOVBE)->set(params[i][6] - '0');
+        } else {
+          PARSE_ERR(("%s: cpuid directive malformed.", context));
+        }
+#endif
       } else {
-        PARSE_ERR(("%s: cpu directive malformed.", context));
+        PARSE_ERR(("%s: cpuid directive malformed.", context));
       }
     }
   } else if (!strcmp(params[0], "megs")) {
@@ -3688,9 +3753,8 @@ int bx_write_configuration(const char *rc, int overwrite)
 #else
   fprintf(fp, "cpu: count=1, ips=%u, ", SIM->get_param_num(BXPN_IPS)->get());
 #endif
-  fprintf(fp, "reset_on_triple_fault=%d, cpuid_limit_winnt=%d",
-    SIM->get_param_bool(BXPN_RESET_ON_TRIPLE_FAULT)->get(),
-    SIM->get_param_bool(BXPN_CPUID_LIMIT_WINNT)->get());
+  fprintf(fp, "reset_on_triple_fault=%d",
+    SIM->get_param_bool(BXPN_RESET_ON_TRIPLE_FAULT)->get());
 #if BX_CPU_LEVEL >= 5
   fprintf(fp, ", ignore_bad_msrs=%d", SIM->get_param_bool(BXPN_IGNORE_BAD_MSRS)->get());
 #endif
@@ -3698,6 +3762,14 @@ int bx_write_configuration(const char *rc, int overwrite)
   strptr = SIM->get_param_string(BXPN_CONFIGURABLE_MSRS_PATH)->getptr();
   if (strlen(strptr) > 0)
     fprintf(fp, ", msrs=\"%s\"", strptr);
+#endif
+  fprintf(fp, "\n");
+  fprintf(fp, "cpuid: cpuid_limit_winnt=%d", SIM->get_param_bool(BXPN_CPUID_LIMIT_WINNT)->get());
+#if BX_CPU_LEVEL >= 6
+  fprintf(fp, ", sse=%s, aes=%d, movbe=%d",
+    SIM->get_param_enum(BXPN_CPUID_SSE)->get_selected(),
+    SIM->get_param_bool(BXPN_CPUID_AES)->get(),
+    SIM->get_param_bool(BXPN_CPUID_MOVBE)->get());
 #endif
   fprintf(fp, "\n");
   fprintf(fp, "print_timestamps: enabled=%d\n", bx_dbg.print_timestamps);

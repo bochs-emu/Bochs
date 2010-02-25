@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.311 2010-02-15 14:04:48 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.312 2010-02-25 22:04:30 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -197,7 +197,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::WBINVD(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::CLFLUSH(bxInstruction_c *i)
 {
-#if BX_SUPPORT_CLFLUSH
   bx_segment_reg_t *seg = &BX_CPU_THIS_PTR sregs[i->seg()];
 
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
@@ -241,11 +240,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CLFLUSH(bxInstruction_c *i)
 
 #if BX_X86_DEBUGGER
   hwbreakpoint_match(laddr, 1, BX_READ);
-#endif
-
-#else
-  BX_INFO(("CLFLUSH: not supported, enable with SSE2"));
-  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -1462,10 +1456,10 @@ bx_address get_cr4_allow_mask(void)
   allowMask |= (1<<7);   /* PGE */
   allowMask |= (1<<8);   /* PCE */
   allowMask |= (1<<9);   /* OSFXSR */
-#endif
 
-#if BX_SUPPORT_SSE
-  allowMask |= (1<<10);  /* OSXMMECPT */
+  /* OSXMMECPT */
+  if (BX_CPU_SUPPORT_FEATURE(BX_CPU_SSE))
+    allowMask |= (1<<10);
 #endif
 
 #if BX_SUPPORT_VMX
@@ -1537,13 +1531,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDPMC(bxInstruction_c *i)
      * limited to 40 bits.
      */
 
-#if (BX_CPU_LEVEL == 6 && BX_SUPPORT_SSE >= 2) // Pentium 4 processor (see cpuid.cc)
-    if ((ECX & 0x7fffffff) >= 18)
-      exception(BX_GP_EXCEPTION, 0, 0);
-#else //
     if ((ECX & 0xffffffff) >= 2)
       exception(BX_GP_EXCEPTION, 0, 0);
-#endif
+
     // Most counters are for hardware specific details, which
     // we anyhow do not emulate (like pipeline stalls etc)
 

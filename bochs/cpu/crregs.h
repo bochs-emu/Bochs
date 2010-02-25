@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: crregs.h,v 1.20 2009-11-02 15:00:47 sshwarts Exp $
+// $Id: crregs.h,v 1.21 2010-02-25 22:04:30 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007-2009 Stanislav Shwartsman
@@ -137,9 +137,7 @@ struct xcr0_t {
 #define BX_XCR0_SSE_MASK (1<<BX_XCR0_SSE_BIT)
 
   IMPLEMENT_CRREG_ACCESSORS(FPU, BX_XCR0_FPU_BIT);
-#if BX_SUPPORT_SSE
   IMPLEMENT_CRREG_ACCESSORS(SSE, BX_XCR0_SSE_BIT);
-#endif
 
   BX_CPP_INLINE Bit32u get32() { return val32; }
   BX_CPP_INLINE void set32(Bit32u val) { val32 = val; }

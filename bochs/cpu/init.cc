@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.223 2009-12-04 16:53:12 sshwarts Exp $
+// $Id: init.cc,v 1.224 2010-02-25 22:04:30 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -148,7 +148,10 @@ static Bit64s cpu_param_handler(bx_param_c *param, int set, Bit64s val)
 // BX_CPU_C constructor
 void BX_CPU_C::initialize(void)
 {
-  BX_CPU_THIS_PTR set_INTR (0);
+  BX_CPU_THIS_PTR set_INTR(0);
+
+  init_cpu_features_bitmask();
+  init_FetchDecodeTables(); // must be called after init_cpu_features_bitmask()
 
 #if BX_CONFIGURE_MSRS
   for (unsigned n=0; n < BX_MSR_MAX_INDEX; n++) {
@@ -307,6 +310,7 @@ void BX_CPU_C::register_state(void)
   BXRS_PARAM_SPECIAL32(cpu, cpu_version, param_save_handler, param_restore_handler);
   BXRS_PARAM_SPECIAL32(cpu, cpuid_std,   param_save_handler, param_restore_handler);
   BXRS_PARAM_SPECIAL32(cpu, cpuid_ext,   param_save_handler, param_restore_handler);
+  BXRS_HEX_PARAM_SIMPLE(cpu, cpuid_features_bitmask);
   BXRS_DEC_PARAM_SIMPLE(cpu, cpu_mode);
   BXRS_HEX_PARAM_SIMPLE(cpu, activity_state);
   BXRS_HEX_PARAM_SIMPLE(cpu, inhibit_mask);
@@ -495,16 +499,16 @@ void BX_CPU_C::register_state(void)
   BXRS_DEC_PARAM_FIELD(fpu, tos, the_i387.tos);
 #endif
 
-#if BX_SUPPORT_SSE
-  bx_list_c *sse = new bx_list_c(cpu, "SSE", 2*BX_XMM_REGISTERS+1);
-  BXRS_HEX_PARAM_FIELD(sse, mxcsr, mxcsr.mxcsr);
-  for (n=0; n<BX_XMM_REGISTERS; n++) {
-    sprintf(name, "xmm%02d_hi", n);
-    new bx_shadow_num_c(sse, name, &xmm[n].xmm64u(1), BASE_HEX);
-    sprintf(name, "xmm%02d_lo", n);
-    new bx_shadow_num_c(sse, name, &xmm[n].xmm64u(0), BASE_HEX);
+  if (BX_CPU_SUPPORT_FEATURE(BX_CPU_SSE)) {
+    bx_list_c *sse = new bx_list_c(cpu, "SSE", 2*BX_XMM_REGISTERS+1);
+    BXRS_HEX_PARAM_FIELD(sse, mxcsr, mxcsr.mxcsr);
+    for (n=0; n<BX_XMM_REGISTERS; n++) {
+      sprintf(name, "xmm%02d_hi", n);
+      new bx_shadow_num_c(sse, name, &xmm[n].xmm64u(1), BASE_HEX);
+      sprintf(name, "xmm%02d_lo", n);
+      new bx_shadow_num_c(sse, name, &xmm[n].xmm64u(0), BASE_HEX);
+    }
   }
-#endif
 
 #if BX_SUPPORT_MONITOR_MWAIT
   bx_list_c *monitor_list = new bx_list_c(cpu, "MONITOR", 3);
@@ -998,8 +1002,7 @@ void BX_CPU_C::reset(unsigned source)
   }
 #endif
 
-  // Reset XMM state
-#if BX_SUPPORT_SSE >= 1  // unchanged on #INIT
+  // Reset XMM state - unchanged on #INIT
   if (source == BX_RESET_HARDWARE) {
     for(n=0; n<BX_XMM_REGISTERS; n++)
     {
@@ -1008,8 +1011,12 @@ void BX_CPU_C::reset(unsigned source)
     }
 
     BX_CPU_THIS_PTR mxcsr.mxcsr = MXCSR_RESET;
+    BX_CPU_THIS_PTR mxcsr_mask = 0x0000FFBF;
+    if (BX_CPU_SUPPORT_FEATURE(BX_CPU_SSE2))
+      BX_CPU_THIS_PTR mxcsr_mask |= MXCSR_DAZ;
+    if (BX_SUPPORT_MISALIGNED_SSE)
+      BX_CPU_THIS_PTR mxcsr_mask |= MXCSR_MISALIGNED_EXCEPTION_MASK;
   }
-#endif
 
 #if BX_SUPPORT_VMX
   BX_CPU_THIS_PTR in_vmx = BX_CPU_THIS_PTR in_vmx_guest = 0;

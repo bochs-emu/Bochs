@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bit64.cc,v 1.22 2010-02-09 19:44:25 sshwarts Exp $
+// $Id: bit64.cc,v 1.23 2010-02-25 22:04:30 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -318,7 +318,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BTR_EqIbR(bxInstruction_c *i)
 /* F3 0F B8 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::POPCNT_GqEqR(bxInstruction_c *i)
 {
-#if BX_SUPPORT_POPCNT || (BX_SUPPORT_SSE > 4) || (BX_SUPPORT_SSE >= 4 && BX_SUPPORT_SSE_EXTENSION > 0)
   Bit64u op2_64 = BX_READ_64BIT_REG(i->rm());
 
   Bit64u op1_64 = 0;
@@ -332,10 +331,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::POPCNT_GqEqR(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_64BIT_REG(i->nnn(), op1_64);
-#else
-  BX_INFO(("POPCNT_GqEq: required POPCNT support, use --enable-popcnt option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 #endif // BX_SUPPORT_X86_64

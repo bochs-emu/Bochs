@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: textconfig.cc,v 1.84 2009-12-04 20:02:12 sshwarts Exp $
+// $Id: textconfig.cc,v 1.85 2010-02-25 22:04:31 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  The Bochs Project
@@ -287,18 +287,19 @@ static const char *startup_options_prompt =
 "2. Log options for all devices\n"
 "3. Log options for individual devices\n"
 "4. CPU options\n"
-"5. Memory options\n"
-"6. Clock & CMOS options\n"
-"7. PCI options\n"
-"8. Bochs Display & Interface options\n"
-"9. Keyboard & Mouse options\n"
-"10. Disk options\n"
-"11. Serial / Parallel / USB options\n"
-"12. Network card options\n"
-"13. Sound Blaster 16 options\n"
-"14. Other options\n"
+"5. CPU options\n"
+"6. Memory options\n"
+"7. Clock & CMOS options\n"
+"8. PCI options\n"
+"9. Bochs Display & Interface options\n"
+"10. Keyboard & Mouse options\n"
+"11. Disk options\n"
+"12. Serial / Parallel / USB options\n"
+"13. Network card options\n"
+"14. Sound Blaster 16 options\n"
+"15. Other options\n"
 #if BX_PLUGINS
-"15. User-defined options\n"
+"16. User-defined options\n"
 #endif
 "\n"
 "Please choose one: [0] ";

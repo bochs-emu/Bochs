@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu_const.cc,v 1.19 2009-10-14 20:45:29 sshwarts Exp $
+// $Id: fpu_const.cc,v 1.20 2010-02-25 22:04:31 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003-2009 Stanislav Shwartsman
@@ -54,7 +54,6 @@ BX_CPP_INLINE floatx80 FPU_round_const(const floatx80 &a, int adj)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLDL2T(bxInstruction_c *i)
 {
-#if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
   BX_CPU_THIS_PTR FPU_update_last_instruction(i);
 
@@ -68,14 +67,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLDL2T(bxInstruction_c *i)
     BX_CPU_THIS_PTR the_i387.FPU_push();
     BX_WRITE_FPU_REG(FPU_round_const(Const_L2T, (FPU_CONTROL_WORD & FPU_CW_RC) == FPU_RC_UP), 0);
   }
-#else
-  BX_INFO(("FLDL2T: required FPU, configure --enable-fpu"));
-#endif
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLDL2E(bxInstruction_c *i)
 {
-#if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
   BX_CPU_THIS_PTR FPU_update_last_instruction(i);
 
@@ -89,14 +84,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLDL2E(bxInstruction_c *i)
     BX_CPU_THIS_PTR the_i387.FPU_push();
     BX_WRITE_FPU_REG(FPU_round_const(Const_L2E, DOWN_OR_CHOP() ? -1 : 0), 0);
   }
-#else
-  BX_INFO(("FLDL2E: required FPU, configure --enable-fpu"));
-#endif
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLDPI(bxInstruction_c *i)
 {
-#if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
   BX_CPU_THIS_PTR FPU_update_last_instruction(i);
 
@@ -110,14 +101,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLDPI(bxInstruction_c *i)
     BX_CPU_THIS_PTR the_i387.FPU_push();
     BX_WRITE_FPU_REG(FPU_round_const(Const_PI, DOWN_OR_CHOP() ? -1 : 0), 0);
   }
-#else
-  BX_INFO(("FLDPI: required FPU, configure --enable-fpu"));
-#endif
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLDLG2(bxInstruction_c *i)
 {
-#if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
   BX_CPU_THIS_PTR FPU_update_last_instruction(i);
 
@@ -131,14 +118,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLDLG2(bxInstruction_c *i)
     BX_CPU_THIS_PTR the_i387.FPU_push();
     BX_WRITE_FPU_REG(FPU_round_const(Const_LG2, DOWN_OR_CHOP() ? -1 : 0), 0);
   }
-#else
-  BX_INFO(("FLDLG2: required FPU, configure --enable-fpu"));
-#endif
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLDLN2(bxInstruction_c *i)
 {
-#if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
   BX_CPU_THIS_PTR FPU_update_last_instruction(i);
 
@@ -152,14 +135,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLDLN2(bxInstruction_c *i)
     BX_CPU_THIS_PTR the_i387.FPU_push();
     BX_WRITE_FPU_REG(FPU_round_const(Const_LN2, DOWN_OR_CHOP() ? -1 : 0), 0);
   }
-#else
-  BX_INFO(("FLDLN2: required FPU, configure --enable-fpu"));
-#endif
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLD1(bxInstruction_c *i)
 {
-#if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
   BX_CPU_THIS_PTR FPU_update_last_instruction(i);
 
@@ -173,14 +152,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLD1(bxInstruction_c *i)
     BX_CPU_THIS_PTR the_i387.FPU_push();
     BX_WRITE_FPU_REG(Const_1, 0);
   }
-#else
-  BX_INFO(("FLD1: required FPU, configure --enable-fpu"));
-#endif
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLDZ(bxInstruction_c *i)
 {
-#if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i);
   BX_CPU_THIS_PTR FPU_update_last_instruction(i);
 
@@ -194,9 +169,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLDZ(bxInstruction_c *i)
     BX_CPU_THIS_PTR the_i387.FPU_push();
     BX_WRITE_FPU_REG(Const_Z, 0);
   }
-#else
-  BX_INFO(("FLDZ: required FPU, configure --enable-fpu"));
-#endif
 }
 
 #endif

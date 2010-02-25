@@ -685,15 +685,10 @@ typedef
 #define BX_SUPPORT_FPU 0
 #define BX_SUPPORT_MMX 0
 #define BX_SUPPORT_3DNOW 0
-#define BX_SUPPORT_SSE 0
-#define BX_SUPPORT_SSE_EXTENSION 0
 #define BX_SUPPORT_MISALIGNED_SSE 0
 #define BX_SUPPORT_SEP 0
-#define BX_SUPPORT_POPCNT 0
 #define BX_SUPPORT_MONITOR_MWAIT 0
 #define BX_SUPPORT_XSAVE 0
-#define BX_SUPPORT_AES 0
-#define BX_SUPPORT_MOVBE 0
 #define BX_SUPPORT_VMX 0
 #define BX_SUPPORT_1G_PAGES 0
 #define BX_SUPPORT_XAPIC 0
@@ -714,13 +709,6 @@ typedef
 #define BX_CPUID_BRAND_LEN  48
 
 #define BX_CONFIGURE_MSRS 0
-
-// CLFLUSH was introduced together with SSE2 instruction set
-#if BX_SUPPORT_SSE >= 2
-  #define BX_SUPPORT_CLFLUSH 1
-#else
-  #define BX_SUPPORT_CLFLUSH 0
-#endif
 
 #if (BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL < 4)
   #error Alignment exception check is not supported in i386 !
@@ -750,18 +738,6 @@ typedef
   #error "3DNow! cannot be compiled without MMX support !"
 #endif
 
-#if (BX_SUPPORT_XSAVE && !BX_SUPPORT_SSE)
-  #error "XSAVE cannot be compiled without SSE support !"
-#endif
-
-#if (BX_SUPPORT_SSE && !BX_SUPPORT_MMX)
-  #error "SSE cannot be compiled without FPU+MMX support !"
-#endif
-
-#if (BX_CPU_LEVEL<6 && BX_SUPPORT_SSE)
-  #error "SSE is only supported with CPU_LEVEL >= 6 !"
-#endif
-
 #if (BX_CPU_LEVEL<6 && BX_SUPPORT_SEP)
   #error "SYSENTER/SYSEXIT only supported with CPU_LEVEL >= 6 !"
 #endif
@@ -770,22 +746,11 @@ typedef
   #error "VMX only supported with CPU_LEVEL >= 6 !"
 #endif
 
-#if (BX_SUPPORT_VMX && !BX_SUPPORT_SEP)
+#if (BX_SUPPORT_VMX && BX_SUPPORT_SEP == 0)
   #error "SYSENTER/SYSEXIT is required for VMX support !"
 #endif
 
-#if (BX_SUPPORT_SSE < 3) || (BX_SUPPORT_SSE == 3 && BX_SUPPORT_SSE_EXTENSION == 0)
-
-#if BX_SUPPORT_MOVBE
-  #error "MOVBE only supported with SSSE3 or above !"
-#endif
-#if BX_SUPPORT_AES
-  #error "AES only supported with SSSE3 or above !"
-#endif
-
-#endif
-
-#if (!BX_SUPPORT_X86_64 && BX_SUPPORT_1G_PAGES)
+#if (BX_SUPPORT_X86_64 == 0 && BX_SUPPORT_1G_PAGES)
   #error "1G only supported with x86-64 !"
 #endif
 
@@ -794,9 +759,6 @@ typedef
 
 #if BX_CPU_LEVEL < 6
   #error "X86-64 requires cpu level 6 or greater !"
-#endif
-#if (BX_SUPPORT_SSE<2)
-  #error "X86-64 requires SSE2 !"
 #endif
 #if BX_SUPPORT_XAPIC == 0
   #error "X86-64 requires XAPIC enabled !"

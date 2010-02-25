@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: param_names.h,v 1.1 2009-11-15 20:50:41 sshwarts Exp $
+// $Id: param_names.h,v 1.2 2010-02-25 22:04:31 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  The Bochs Project
@@ -39,10 +39,13 @@
 #define BXPN_SMP_QUANTUM                 "cpu.quantum"
 #define BXPN_RESET_ON_TRIPLE_FAULT       "cpu.reset_on_triple_fault"
 #define BXPN_IGNORE_BAD_MSRS             "cpu.ignore_bad_msrs"
-#define BXPN_CPUID_LIMIT_WINNT           "cpu.cpuid_limit_winnt"
 #define BXPN_CONFIGURABLE_MSRS_PATH      "cpu.msrs"
-#define BXPN_VENDOR_STRING               "cpu.vendor_string"
-#define BXPN_BRAND_STRING                "cpu.brand_string"
+#define BXPN_VENDOR_STRING               "cpuid.vendor_string"
+#define BXPN_BRAND_STRING                "cpuid.brand_string"
+#define BXPN_CPUID_LIMIT_WINNT           "cpuid.cpuid_limit_winnt"
+#define BXPN_CPUID_SSE                   "cpuid.sse"
+#define BXPN_CPUID_AES                   "cpuid.aes"
+#define BXPN_CPUID_MOVBE                 "cpuid.movbe"
 #define BXPN_MEM_SIZE                    "memory.standard.ram.size"
 #define BXPN_HOST_MEM_SIZE               "memory.standard.ram.host_size"
 #define BXPN_ROM_PATH                    "memory.standard.rom.path"

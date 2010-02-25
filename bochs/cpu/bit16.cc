@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bit16.cc,v 1.18 2010-02-09 19:44:25 sshwarts Exp $
+// $Id: bit16.cc,v 1.19 2010-02-25 22:04:30 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -333,7 +333,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BTR_EwIbR(bxInstruction_c *i)
 /* F3 0F B8 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::POPCNT_GwEwR(bxInstruction_c *i)
 {
-#if BX_SUPPORT_POPCNT || (BX_SUPPORT_SSE > 4) || (BX_SUPPORT_SSE >= 4 && BX_SUPPORT_SSE_EXTENSION > 0)
   Bit16u op2_16 = BX_READ_16BIT_REG(i->rm());
 
   Bit16u op1_16 = 0;
@@ -347,10 +346,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::POPCNT_GwEwR(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_16BIT_REG(i->nnn(), op1_16);
-#else
-  BX_INFO(("POPCNT_GwEw: required POPCNT support, use --enable-popcnt option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 #endif // (BX_CPU_LEVEL >= 3)

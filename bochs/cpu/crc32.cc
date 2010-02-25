@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: crc32.cc,v 1.4 2010-02-24 19:27:50 sshwarts Exp $
+// $Id: crc32.cc,v 1.5 2010-02-25 22:04:30 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008-2009 Stanislav Shwartsman
@@ -27,11 +27,9 @@
 #define LOG_THIS BX_CPU_THIS_PTR
 
 // 3-byte opcodes
-#if (BX_SUPPORT_SSE >= 4) || (BX_SUPPORT_SSE >= 3 && BX_SUPPORT_SSE_EXTENSION > 0)
 
 #define CRC32_POLYNOMIAL BX_CONST64(0x11edc6f41)
 
-#if (BX_SUPPORT_SSE > 4) || (BX_SUPPORT_SSE >= 4 && BX_SUPPORT_SSE_EXTENSION > 0)
 // primitives for CRC32 usage
 BX_CPP_INLINE Bit8u BitReflect8(Bit8u val8)
 {
@@ -71,11 +69,9 @@ static Bit32u mod2_64bit(Bit64u divisor, Bit64u dividend)
 
   return remainder;
 }
-#endif // (BX_SUPPORT_SSE > 4) || (BX_SUPPORT_SSE >= 4 && BX_SUPPORT_SSE_EXTENSION > 0)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::CRC32_GdEb(bxInstruction_c *i)
 {
-#if (BX_SUPPORT_SSE > 4) || (BX_SUPPORT_SSE >= 4 && BX_SUPPORT_SSE_EXTENSION > 0)
   Bit8u op1;
 
   if (i->modC0()) {
@@ -97,15 +93,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CRC32_GdEb(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_32BIT_REGZ(i->nnn(), BitReflect32(op2));
-#else
-  BX_INFO(("CRC32_GdEb: required SSE4_2 support, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::CRC32_GdEw(bxInstruction_c *i)
 {
-#if (BX_SUPPORT_SSE > 4) || (BX_SUPPORT_SSE >= 4 && BX_SUPPORT_SSE_EXTENSION > 0)
   Bit32u op2 = BX_READ_32BIT_REG(i->nnn());
   op2 = BitReflect32(op2);
   Bit16u op1;
@@ -125,16 +116,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CRC32_GdEw(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_32BIT_REGZ(i->nnn(), BitReflect32(op2));
-
-#else
-  BX_INFO(("CRC32_GdEw: required SSE4_2 support, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::CRC32_GdEd(bxInstruction_c *i)
 {
-#if (BX_SUPPORT_SSE > 4) || (BX_SUPPORT_SSE >= 4 && BX_SUPPORT_SSE_EXTENSION > 0)
   Bit32u op2 = BX_READ_32BIT_REG(i->nnn());
   op2 = BitReflect32(op2);
   Bit32u op1;
@@ -154,18 +139,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CRC32_GdEd(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_32BIT_REGZ(i->nnn(), BitReflect32(op2));
-
-#else
-  BX_INFO(("CRC32_GdEd: required SSE4_2 support, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 #if BX_SUPPORT_X86_64
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::CRC32_GdEq(bxInstruction_c *i)
 {
-#if (BX_SUPPORT_SSE > 4) || (BX_SUPPORT_SSE >= 4 && BX_SUPPORT_SSE_EXTENSION > 0)
   Bit32u op2 = BX_READ_32BIT_REG(i->nnn());
   op2 = BitReflect32(op2);
   Bit64u op1;
@@ -189,13 +168,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CRC32_GdEq(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_32BIT_REGZ(i->nnn(), BitReflect32(op2));
-
-#else
-  BX_INFO(("CRC32_GdEq: required SSE4_2 support, use --enable-sse option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 #endif // BX_SUPPORT_X86_64
-
-#endif // (BX_SUPPORT_SSE >= 4) || (BX_SUPPORT_SSE >= 3 && BX_SUPPORT_SSE_EXTENSION > 0)

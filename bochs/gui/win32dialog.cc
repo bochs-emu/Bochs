@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32dialog.cc,v 1.89 2009-04-11 13:53:14 vruppert Exp $
+// $Id: win32dialog.cc,v 1.90 2010-02-25 22:04:31 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  The Bochs Project
@@ -501,6 +501,7 @@ edit_opts_t start_options[] = {
   {"Logfile", "log"},
   {"Log Options", "*"},
   {"CPU", "cpu"},
+  {"CPUID", "cpuid"},
   {"Memory", "memory"},
   {"Clock & CMOS", "clock_cmos"},
   {"PCI", "pci"},

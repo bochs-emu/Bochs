@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ia_opcodes.h,v 1.38 2010-02-24 20:59:49 sshwarts Exp $
+// $Id: ia_opcodes.h,v 1.39 2010-02-25 22:04:30 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008-2009 Stanislav Shwartsman
@@ -832,7 +832,7 @@ bx_define_opcode(BX_IA_MOVQ_EqPqM, &BX_CPU_C::MOVQ_QqPqM, NULL, BX_CPU_MMX | BX_
 #endif
 // MMX
 
-bx_define_opcode(BX_IA_FEMMS, BX_3DNOW_ALIAS(&BX_CPU_C::EMMS), NULL, BX_CPU_3DNOW)
+bx_define_opcode(BX_IA_FEMMS, &BX_CPU_C::EMMS, NULL, BX_CPU_3DNOW)
 #if BX_SUPPORT_3DNOW
 bx_define_opcode(BX_IA_PF2ID_PqQq, &BX_CPU_C::PF2ID_PqQq, NULL, BX_CPU_3DNOW)
 bx_define_opcode(BX_IA_PF2IW_PqQq, &BX_CPU_C::PF2IW_PqQq, NULL, BX_CPU_3DNOW)
@@ -930,8 +930,8 @@ bx_define_opcode(BX_IA_CMOVZ_GwEwM, &BX_CPU_C::LOAD_Ew, &BX_CPU_C::CMOVZ_GwEwR, 
 bx_define_opcode(BX_IA_CMOVZ_GwEwR, &BX_CPU_C::CMOVZ_GwEwR, NULL, BX_CPU_P6)
 
 bx_define_opcode(BX_IA_RDPMC, &BX_CPU_C::RDPMC, NULL, BX_CPU_P6)
-bx_define_opcode(BX_IA_UD2A, &BX_CPU_C::UndefinedOpcode, NULL, BX_CPU_P6)
-bx_define_opcode(BX_IA_UD2B, &BX_CPU_C::UndefinedOpcode, NULL, BX_CPU_P6)
+bx_define_opcode(BX_IA_UD2A, &BX_CPU_C::UndefinedOpcode, NULL, 0)
+bx_define_opcode(BX_IA_UD2B, &BX_CPU_C::UndefinedOpcode, NULL, 0)
 // P6 new instructions
 
 // SSE
@@ -1048,38 +1048,38 @@ bx_define_opcode(BX_IA_MAXPD_VpdWpd, &BX_CPU_C::MAXPD_VpdWpd, NULL, BX_CPU_SSE2)
 bx_define_opcode(BX_IA_MAXSD_VsdWsd, &BX_CPU_C::MAXSD_VsdWsd, NULL, BX_CPU_SSE2)
 bx_define_opcode(BX_IA_UNPCKHPD_VpdWdq, &BX_CPU_C::PUNPCKHQDQ_VdqWdq, NULL, BX_CPU_SSE2)
 bx_define_opcode(BX_IA_UNPCKLPD_VpdWdq, &BX_CPU_C::PUNPCKLQDQ_VdqWdq, NULL, BX_CPU_SSE2)
-bx_define_opcode(BX_IA_PUNPCKHDQ_VdqWdq, BX_SSE2_ALIAS(&BX_CPU_C::UNPCKHPS_VpsWdq), NULL, BX_CPU_SSE2)
-bx_define_opcode(BX_IA_PUNPCKLDQ_VdqWdq, BX_SSE2_ALIAS(&BX_CPU_C::UNPCKLPS_VpsWdq), NULL, BX_CPU_SSE2)
-bx_define_opcode(BX_IA_MOVAPD_VpdWpdR, BX_SSE2_ALIAS(&BX_CPU_C::MOVAPS_VpsWpsR), NULL, BX_CPU_SSE2)
-bx_define_opcode(BX_IA_MOVAPD_VpdWpdM, BX_SSE2_ALIAS(&BX_CPU_C::MOVAPS_VpsWpsM), NULL, BX_CPU_SSE2)
-bx_define_opcode(BX_IA_MOVAPD_WpdVpdR, BX_SSE2_ALIAS(&BX_CPU_C::MOVAPS_WpsVpsR), NULL, BX_CPU_SSE2)
-bx_define_opcode(BX_IA_MOVAPD_WpdVpdM, BX_SSE2_ALIAS(&BX_CPU_C::MOVAPS_WpsVpsM), NULL, BX_CPU_SSE2)
-bx_define_opcode(BX_IA_MOVDQA_VdqWdqR, BX_SSE2_ALIAS(&BX_CPU_C::MOVAPS_VpsWpsR), NULL, BX_CPU_SSE2)
-bx_define_opcode(BX_IA_MOVDQA_VdqWdqM, BX_SSE2_ALIAS(&BX_CPU_C::MOVAPS_VpsWpsM), NULL, BX_CPU_SSE2)
-bx_define_opcode(BX_IA_MOVDQA_WdqVdqR, BX_SSE2_ALIAS(&BX_CPU_C::MOVAPS_WpsVpsR), NULL, BX_CPU_SSE2)
-bx_define_opcode(BX_IA_MOVDQA_WdqVdqM, BX_SSE2_ALIAS(&BX_CPU_C::MOVAPS_WpsVpsM), NULL, BX_CPU_SSE2)
-bx_define_opcode(BX_IA_MOVDQU_VdqWdqR, BX_SSE2_ALIAS(&BX_CPU_C::MOVAPS_VpsWpsR), NULL, BX_CPU_SSE2)
-bx_define_opcode(BX_IA_MOVDQU_VdqWdqM, BX_SSE2_ALIAS(&BX_CPU_C::MOVUPS_VpsWpsM), NULL, BX_CPU_SSE2)
-bx_define_opcode(BX_IA_MOVDQU_WdqVdqR, BX_SSE2_ALIAS(&BX_CPU_C::MOVAPS_WpsVpsR), NULL, BX_CPU_SSE2)
-bx_define_opcode(BX_IA_MOVDQU_WdqVdqM, BX_SSE2_ALIAS(&BX_CPU_C::MOVUPS_WpsVpsM), NULL, BX_CPU_SSE2)
-bx_define_opcode(BX_IA_MOVHPD_MqVsd, BX_SSE2_ALIAS(&BX_CPU_C::MOVHPS_MqVps), NULL, BX_CPU_SSE2)
-bx_define_opcode(BX_IA_MOVHPD_VsdMq, BX_SSE2_ALIAS(&BX_CPU_C::MOVHPS_VpsMq), NULL, BX_CPU_SSE2)
-bx_define_opcode(BX_IA_MOVLPD_MqVsd, BX_SSE2_ALIAS(&BX_CPU_C::MOVLPS_MqVps), NULL, BX_CPU_SSE2)
-bx_define_opcode(BX_IA_MOVLPD_VsdMq, BX_SSE2_ALIAS(&BX_CPU_C::MOVLPS_VpsMq), NULL, BX_CPU_SSE2)
-bx_define_opcode(BX_IA_MOVNTDQ_MdqVdq, BX_SSE2_ALIAS(&BX_CPU_C::MOVNTPS_MpsVps), NULL, BX_CPU_SSE2)
-bx_define_opcode(BX_IA_MOVNTPD_MpdVpd, BX_SSE2_ALIAS(&BX_CPU_C::MOVNTPS_MpsVps), NULL, BX_CPU_SSE2)
-bx_define_opcode(BX_IA_MOVUPD_VpdWpdR, BX_SSE2_ALIAS(&BX_CPU_C::MOVAPS_VpsWpsR), NULL, BX_CPU_SSE2)
-bx_define_opcode(BX_IA_MOVUPD_VpdWpdM, BX_SSE2_ALIAS(&BX_CPU_C::MOVUPS_VpsWpsM), NULL, BX_CPU_SSE2)
-bx_define_opcode(BX_IA_MOVUPD_WpdVpdR, BX_SSE2_ALIAS(&BX_CPU_C::MOVAPS_WpsVpsR), NULL, BX_CPU_SSE2)
-bx_define_opcode(BX_IA_MOVUPD_WpdVpdM, BX_SSE2_ALIAS(&BX_CPU_C::MOVUPS_WpsVpsM), NULL, BX_CPU_SSE2)
-bx_define_opcode(BX_IA_ANDNPD_VpdWpd, BX_SSE2_ALIAS(&BX_CPU_C::ANDNPS_VpsWps), NULL, BX_CPU_SSE2)
-bx_define_opcode(BX_IA_ANDPD_VpdWpd, BX_SSE2_ALIAS(&BX_CPU_C::ANDPS_VpsWps), NULL, BX_CPU_SSE2)
-bx_define_opcode(BX_IA_ORPD_VpdWpd, BX_SSE2_ALIAS(&BX_CPU_C::ORPS_VpsWps), NULL, BX_CPU_SSE2)
-bx_define_opcode(BX_IA_PAND_VdqWdq, BX_SSE2_ALIAS(&BX_CPU_C::ANDPS_VpsWps), NULL, BX_CPU_SSE2)
-bx_define_opcode(BX_IA_PANDN_VdqWdq, BX_SSE2_ALIAS(&BX_CPU_C::ANDNPS_VpsWps), NULL, BX_CPU_SSE2)
-bx_define_opcode(BX_IA_POR_VdqWdq, BX_SSE2_ALIAS(&BX_CPU_C::ORPS_VpsWps), NULL, BX_CPU_SSE2)
-bx_define_opcode(BX_IA_PXOR_VdqWdq, BX_SSE2_ALIAS(&BX_CPU_C::XORPS_VpsWps), NULL, BX_CPU_SSE2)
-bx_define_opcode(BX_IA_XORPD_VpdWpd, BX_SSE2_ALIAS(&BX_CPU_C::XORPS_VpsWps), NULL, BX_CPU_SSE2)
+bx_define_opcode(BX_IA_PUNPCKHDQ_VdqWdq, &BX_CPU_C::UNPCKHPS_VpsWdq, NULL, BX_CPU_SSE2)
+bx_define_opcode(BX_IA_PUNPCKLDQ_VdqWdq, &BX_CPU_C::UNPCKLPS_VpsWdq, NULL, BX_CPU_SSE2)
+bx_define_opcode(BX_IA_MOVAPD_VpdWpdR, &BX_CPU_C::MOVAPS_VpsWpsR, NULL, BX_CPU_SSE2)
+bx_define_opcode(BX_IA_MOVAPD_VpdWpdM, &BX_CPU_C::MOVAPS_VpsWpsM, NULL, BX_CPU_SSE2)
+bx_define_opcode(BX_IA_MOVAPD_WpdVpdR, &BX_CPU_C::MOVAPS_WpsVpsR, NULL, BX_CPU_SSE2)
+bx_define_opcode(BX_IA_MOVAPD_WpdVpdM, &BX_CPU_C::MOVAPS_WpsVpsM, NULL, BX_CPU_SSE2)
+bx_define_opcode(BX_IA_MOVDQA_VdqWdqR, &BX_CPU_C::MOVAPS_VpsWpsR, NULL, BX_CPU_SSE2)
+bx_define_opcode(BX_IA_MOVDQA_VdqWdqM, &BX_CPU_C::MOVAPS_VpsWpsM, NULL, BX_CPU_SSE2)
+bx_define_opcode(BX_IA_MOVDQA_WdqVdqR, &BX_CPU_C::MOVAPS_WpsVpsR, NULL, BX_CPU_SSE2)
+bx_define_opcode(BX_IA_MOVDQA_WdqVdqM, &BX_CPU_C::MOVAPS_WpsVpsM, NULL, BX_CPU_SSE2)
+bx_define_opcode(BX_IA_MOVDQU_VdqWdqR, &BX_CPU_C::MOVAPS_VpsWpsR, NULL, BX_CPU_SSE2)
+bx_define_opcode(BX_IA_MOVDQU_VdqWdqM, &BX_CPU_C::MOVUPS_VpsWpsM, NULL, BX_CPU_SSE2)
+bx_define_opcode(BX_IA_MOVDQU_WdqVdqR, &BX_CPU_C::MOVAPS_WpsVpsR, NULL, BX_CPU_SSE2)
+bx_define_opcode(BX_IA_MOVDQU_WdqVdqM, &BX_CPU_C::MOVUPS_WpsVpsM, NULL, BX_CPU_SSE2)
+bx_define_opcode(BX_IA_MOVHPD_MqVsd, &BX_CPU_C::MOVHPS_MqVps, NULL, BX_CPU_SSE2)
+bx_define_opcode(BX_IA_MOVHPD_VsdMq, &BX_CPU_C::MOVHPS_VpsMq, NULL, BX_CPU_SSE2)
+bx_define_opcode(BX_IA_MOVLPD_MqVsd, &BX_CPU_C::MOVLPS_MqVps, NULL, BX_CPU_SSE2)
+bx_define_opcode(BX_IA_MOVLPD_VsdMq, &BX_CPU_C::MOVLPS_VpsMq, NULL, BX_CPU_SSE2)
+bx_define_opcode(BX_IA_MOVNTDQ_MdqVdq, &BX_CPU_C::MOVNTPS_MpsVps, NULL, BX_CPU_SSE2)
+bx_define_opcode(BX_IA_MOVNTPD_MpdVpd, &BX_CPU_C::MOVNTPS_MpsVps, NULL, BX_CPU_SSE2)
+bx_define_opcode(BX_IA_MOVUPD_VpdWpdR, &BX_CPU_C::MOVAPS_VpsWpsR, NULL, BX_CPU_SSE2)
+bx_define_opcode(BX_IA_MOVUPD_VpdWpdM, &BX_CPU_C::MOVUPS_VpsWpsM, NULL, BX_CPU_SSE2)
+bx_define_opcode(BX_IA_MOVUPD_WpdVpdR, &BX_CPU_C::MOVAPS_WpsVpsR, NULL, BX_CPU_SSE2)
+bx_define_opcode(BX_IA_MOVUPD_WpdVpdM, &BX_CPU_C::MOVUPS_WpsVpsM, NULL, BX_CPU_SSE2)
+bx_define_opcode(BX_IA_ANDNPD_VpdWpd, &BX_CPU_C::ANDNPS_VpsWps, NULL, BX_CPU_SSE2)
+bx_define_opcode(BX_IA_ANDPD_VpdWpd, &BX_CPU_C::ANDPS_VpsWps, NULL, BX_CPU_SSE2)
+bx_define_opcode(BX_IA_ORPD_VpdWpd, &BX_CPU_C::ORPS_VpsWps, NULL, BX_CPU_SSE2)
+bx_define_opcode(BX_IA_PAND_VdqWdq, &BX_CPU_C::ANDPS_VpsWps, NULL, BX_CPU_SSE2)
+bx_define_opcode(BX_IA_PANDN_VdqWdq, &BX_CPU_C::ANDNPS_VpsWps, NULL, BX_CPU_SSE2)
+bx_define_opcode(BX_IA_POR_VdqWdq, &BX_CPU_C::ORPS_VpsWps, NULL, BX_CPU_SSE2)
+bx_define_opcode(BX_IA_PXOR_VdqWdq, &BX_CPU_C::XORPS_VpsWps, NULL, BX_CPU_SSE2)
+bx_define_opcode(BX_IA_XORPD_VpdWpd, &BX_CPU_C::XORPS_VpsWps, NULL, BX_CPU_SSE2)
 bx_define_opcode(BX_IA_PUNPCKLBW_VdqWdq, &BX_CPU_C::PUNPCKLBW_VdqWdq, NULL, BX_CPU_SSE2)
 bx_define_opcode(BX_IA_PUNPCKLWD_VdqWdq, &BX_CPU_C::PUNPCKLWD_VdqWdq, NULL, BX_CPU_SSE2)
 bx_define_opcode(BX_IA_UNPCKLPS_VpsWdq, &BX_CPU_C::UNPCKLPS_VpsWdq, NULL, BX_CPU_SSE2)
@@ -1095,7 +1095,7 @@ bx_define_opcode(BX_IA_PACKSSDW_VdqWdq, &BX_CPU_C::PACKSSDW_VdqWdq, NULL, BX_CPU
 bx_define_opcode(BX_IA_PUNPCKLQDQ_VdqWdq, &BX_CPU_C::PUNPCKLQDQ_VdqWdq, NULL, BX_CPU_SSE2)
 bx_define_opcode(BX_IA_PUNPCKHQDQ_VdqWdq, &BX_CPU_C::PUNPCKHQDQ_VdqWdq, NULL, BX_CPU_SSE2)
 bx_define_opcode(BX_IA_MOVD_VdqEdR, &BX_CPU_C::MOVD_VdqEdR, NULL, BX_CPU_SSE2)
-bx_define_opcode(BX_IA_MOVD_VdqEdM, BX_SSE2_ALIAS(&BX_CPU_C::MOVSS_VssWssM), NULL, BX_CPU_SSE2)
+bx_define_opcode(BX_IA_MOVD_VdqEdM, &BX_CPU_C::MOVSS_VssWssM, NULL, BX_CPU_SSE2)
 bx_define_opcode(BX_IA_PSHUFD_VdqWdqIb, &BX_CPU_C::PSHUFD_VdqWdqIb, NULL, BX_CPU_SSE2)
 bx_define_opcode(BX_IA_PSHUFHW_VdqWdqIb, &BX_CPU_C::PSHUFHW_VdqWdqIb, NULL, BX_CPU_SSE2)
 bx_define_opcode(BX_IA_PCMPEQB_VdqWdq, &BX_CPU_C::PCMPEQB_VdqWdq, NULL, BX_CPU_SSE2)
@@ -1184,7 +1184,6 @@ bx_define_opcode(BX_IA_ADDSUBPS_VpsWps, &BX_CPU_C::ADDSUBPS_VpsWps, NULL, BX_CPU
 bx_define_opcode(BX_IA_LDDQU_VdqMdq, &BX_CPU_C::LDDQU_VdqMdq, NULL, BX_CPU_SSE3)
 // SSE3
 
-#if (BX_SUPPORT_SSE >= 4) || (BX_SUPPORT_SSE >= 3 && BX_SUPPORT_SSE_EXTENSION > 0)
 // SSSE3
 bx_define_opcode(BX_IA_PSHUFB_PqQq, &BX_CPU_C::PSHUFB_PqQq, NULL, BX_CPU_SSSE3)
 bx_define_opcode(BX_IA_PHADDW_PqQq, &BX_CPU_C::PHADDW_PqQq, NULL, BX_CPU_SSSE3)
@@ -1294,16 +1293,15 @@ bx_define_opcode(BX_IA_MOVBE_GqEq, &BX_CPU_C::MOVBE_GqEq, NULL, BX_CPU_MOVBE | B
 bx_define_opcode(BX_IA_MOVBE_EqGq, &BX_CPU_C::MOVBE_EqGq, NULL, BX_CPU_MOVBE | BX_CPU_X86_64)
 #endif
 // MOVBE instruction
-#endif
 
 // POPCNT instruction
-bx_define_opcode(BX_IA_POPCNT_GdEdR, &BX_CPU_C::POPCNT_GdEdR, NULL, BX_CPU_POPCNT)
-bx_define_opcode(BX_IA_POPCNT_GdEdM, &BX_CPU_C::LOAD_Ed, &BX_CPU_C::POPCNT_GdEdR, BX_CPU_POPCNT)
-bx_define_opcode(BX_IA_POPCNT_GwEwR, &BX_CPU_C::POPCNT_GwEwR, NULL, BX_CPU_POPCNT)
-bx_define_opcode(BX_IA_POPCNT_GwEwM, &BX_CPU_C::LOAD_Ew, &BX_CPU_C::POPCNT_GwEwR, BX_CPU_POPCNT)
+bx_define_opcode(BX_IA_POPCNT_GdEdR, &BX_CPU_C::POPCNT_GdEdR, NULL, BX_CPU_SSE4_2)
+bx_define_opcode(BX_IA_POPCNT_GdEdM, &BX_CPU_C::LOAD_Ed, &BX_CPU_C::POPCNT_GdEdR, BX_CPU_SSE4_2)
+bx_define_opcode(BX_IA_POPCNT_GwEwR, &BX_CPU_C::POPCNT_GwEwR, NULL, BX_CPU_SSE4_2)
+bx_define_opcode(BX_IA_POPCNT_GwEwM, &BX_CPU_C::LOAD_Ew, &BX_CPU_C::POPCNT_GwEwR, BX_CPU_SSE4_2)
 #if BX_SUPPORT_X86_64
-bx_define_opcode(BX_IA_POPCNT_GqEqR, &BX_CPU_C::POPCNT_GqEqR, NULL, BX_CPU_POPCNT | BX_CPU_X86_64)
-bx_define_opcode(BX_IA_POPCNT_GqEqM, &BX_CPU_C::LOAD_Eq, &BX_CPU_C::POPCNT_GqEqR, BX_CPU_POPCNT | BX_CPU_X86_64)
+bx_define_opcode(BX_IA_POPCNT_GqEqR, &BX_CPU_C::POPCNT_GqEqR, NULL, BX_CPU_SSE4_2 | BX_CPU_X86_64)
+bx_define_opcode(BX_IA_POPCNT_GqEqM, &BX_CPU_C::LOAD_Eq, &BX_CPU_C::POPCNT_GqEqR, BX_CPU_SSE4_2 | BX_CPU_X86_64)
 #endif
 // POPCNT instruction
 

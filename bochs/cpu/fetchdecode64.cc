@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.254 2010-02-24 19:27:51 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.255 2010-02-25 22:04:30 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -473,17 +473,9 @@ static const BxOpcodeInfo_t BxOpcodeInfo64R[512*3] = {
   /* 0F 35 /wr */ { BxTraceEnd, BX_IA_SYSEXIT },
   /* 0F 36 /wr */ { 0, BX_IA_ERROR },
   /* 0F 37 /wr */ { 0, BX_IA_ERROR },
-#if (BX_SUPPORT_SSE >= 4) || (BX_SUPPORT_SSE >= 3 && BX_SUPPORT_SSE_EXTENSION > 0)
   /* 0F 38 /wr */ { Bx3ByteOp, BX_IA_ERROR, BxOpcode3ByteTable0f38 }, // 3-byte escape
-#else
-  /* 0F 38 /wr */ { 0, BX_IA_ERROR },
-#endif
   /* 0F 39 /wr */ { 0, BX_IA_ERROR },
-#if (BX_SUPPORT_SSE >= 4) || (BX_SUPPORT_SSE >= 3 && BX_SUPPORT_SSE_EXTENSION > 0)
   /* 0F 3A /wr */ { Bx3ByteOp | BxImmediate_Ib, BX_IA_ERROR, BxOpcode3ByteTable0f3a }, // 3-byte escape
-#else
-  /* 0F 3A /wr */ { 0, BX_IA_ERROR },
-#endif
   /* 0F 3B /wr */ { 0, BX_IA_ERROR },
   /* 0F 3C /wr */ { 0, BX_IA_ERROR },
   /* 0F 3D /wr */ { 0, BX_IA_ERROR },
@@ -1000,17 +992,9 @@ static const BxOpcodeInfo_t BxOpcodeInfo64R[512*3] = {
   /* 0F 35 /dr */ { BxTraceEnd, BX_IA_SYSEXIT },
   /* 0F 36 /dr */ { 0, BX_IA_ERROR },
   /* 0F 37 /dr */ { 0, BX_IA_ERROR },
-#if (BX_SUPPORT_SSE >= 4) || (BX_SUPPORT_SSE >= 3 && BX_SUPPORT_SSE_EXTENSION > 0)
   /* 0F 38 /dr */ { Bx3ByteOp, BX_IA_ERROR, BxOpcode3ByteTable0f38 }, // 3-byte escape
-#else
-  /* 0F 38 /dr */ { 0, BX_IA_ERROR },
-#endif
   /* 0F 39 /dr */ { 0, BX_IA_ERROR },
-#if (BX_SUPPORT_SSE >= 4) || (BX_SUPPORT_SSE >= 3 && BX_SUPPORT_SSE_EXTENSION > 0)
   /* 0F 3A /dr */ { Bx3ByteOp | BxImmediate_Ib, BX_IA_ERROR, BxOpcode3ByteTable0f3a }, // 3-byte escape
-#else
-  /* 0F 3A /dr */ { 0, BX_IA_ERROR },
-#endif
   /* 0F 3B /dr */ { 0, BX_IA_ERROR },
   /* 0F 3C /dr */ { 0, BX_IA_ERROR },
   /* 0F 3D /dr */ { 0, BX_IA_ERROR },
@@ -1527,17 +1511,9 @@ static const BxOpcodeInfo_t BxOpcodeInfo64R[512*3] = {
   /* 0F 35 /qr */ { BxTraceEnd, BX_IA_SYSEXIT },
   /* 0F 36 /qr */ { 0, BX_IA_ERROR },
   /* 0F 37 /qr */ { 0, BX_IA_ERROR },
-#if (BX_SUPPORT_SSE >= 4) || (BX_SUPPORT_SSE >= 3 && BX_SUPPORT_SSE_EXTENSION > 0)
   /* 0F 38 /qr */ { Bx3ByteOp, BX_IA_ERROR, BxOpcode3ByteTable0f38 }, // 3-byte escape
-#else
-  /* 0F 38 /qr */ { 0, BX_IA_ERROR },
-#endif
   /* 0F 39 /qr */ { 0, BX_IA_ERROR },
-#if (BX_SUPPORT_SSE >= 4) || (BX_SUPPORT_SSE >= 3 && BX_SUPPORT_SSE_EXTENSION > 0)
   /* 0F 3A /qr */ { Bx3ByteOp | BxImmediate_Ib, BX_IA_ERROR, BxOpcode3ByteTable0f3a }, // 3-byte escape
-#else
-  /* 0F 3A /qr */ { 0, BX_IA_ERROR },
-#endif
   /* 0F 3B /qr */ { 0, BX_IA_ERROR },
   /* 0F 3C /qr */ { 0, BX_IA_ERROR },
   /* 0F 3D /qr */ { 0, BX_IA_ERROR },
@@ -2060,17 +2036,9 @@ static const BxOpcodeInfo_t BxOpcodeInfo64M[512*3] = {
   /* 0F 35 /wm */ { BxTraceEnd, BX_IA_SYSEXIT },
   /* 0F 36 /wm */ { 0, BX_IA_ERROR },
   /* 0F 37 /wm */ { 0, BX_IA_ERROR },
-#if (BX_SUPPORT_SSE >= 4) || (BX_SUPPORT_SSE >= 3 && BX_SUPPORT_SSE_EXTENSION > 0)
   /* 0F 38 /wm */ { Bx3ByteOp, BX_IA_ERROR, BxOpcode3ByteTable0f38 }, // 3-byte escape
-#else
-  /* 0F 38 /wm */ { 0, BX_IA_ERROR },
-#endif
   /* 0F 39 /wm */ { 0, BX_IA_ERROR },
-#if (BX_SUPPORT_SSE >= 4) || (BX_SUPPORT_SSE >= 3 && BX_SUPPORT_SSE_EXTENSION > 0)
   /* 0F 3A /wm */ { Bx3ByteOp | BxImmediate_Ib, BX_IA_ERROR, BxOpcode3ByteTable0f3a }, // 3-byte escape
-#else
-  /* 0F 3A /wm */ { 0, BX_IA_ERROR },
-#endif
   /* 0F 3B /wm */ { 0, BX_IA_ERROR },
   /* 0F 3C /wm */ { 0, BX_IA_ERROR },
   /* 0F 3D /wm */ { 0, BX_IA_ERROR },
@@ -2587,17 +2555,9 @@ static const BxOpcodeInfo_t BxOpcodeInfo64M[512*3] = {
   /* 0F 35 /dm */ { BxTraceEnd, BX_IA_SYSEXIT },
   /* 0F 36 /dm */ { 0, BX_IA_ERROR },
   /* 0F 37 /dm */ { 0, BX_IA_ERROR },
-#if (BX_SUPPORT_SSE >= 4) || (BX_SUPPORT_SSE >= 3 && BX_SUPPORT_SSE_EXTENSION > 0)
   /* 0F 38 /dm */ { Bx3ByteOp, BX_IA_ERROR, BxOpcode3ByteTable0f38 }, // 3-byte escape
-#else
-  /* 0F 38 /dm */ { 0, BX_IA_ERROR },
-#endif
   /* 0F 39 /dm */ { 0, BX_IA_ERROR },
-#if (BX_SUPPORT_SSE >= 4) || (BX_SUPPORT_SSE >= 3 && BX_SUPPORT_SSE_EXTENSION > 0)
   /* 0F 3A /dm */ { Bx3ByteOp | BxImmediate_Ib, BX_IA_ERROR, BxOpcode3ByteTable0f3a }, // 3-byte escape
-#else
-  /* 0F 3A /dm */ { 0, BX_IA_ERROR },
-#endif
   /* 0F 3B /dm */ { 0, BX_IA_ERROR },
   /* 0F 3C /dm */ { 0, BX_IA_ERROR },
   /* 0F 3D /dm */ { 0, BX_IA_ERROR },
@@ -3114,17 +3074,9 @@ static const BxOpcodeInfo_t BxOpcodeInfo64M[512*3] = {
   /* 0F 35 /qm */ { BxTraceEnd, BX_IA_SYSEXIT },
   /* 0F 36 /qm */ { 0, BX_IA_ERROR },
   /* 0F 37 /qm */ { 0, BX_IA_ERROR },
-#if (BX_SUPPORT_SSE >= 4) || (BX_SUPPORT_SSE >= 3 && BX_SUPPORT_SSE_EXTENSION > 0)
   /* 0F 38 /qm */ { Bx3ByteOp, BX_IA_ERROR, BxOpcode3ByteTable0f38 }, // 3-byte escape
-#else
-  /* 0F 38 /qm */ { 0, BX_IA_ERROR },
-#endif
   /* 0F 39 /qm */ { 0, BX_IA_ERROR },
-#if (BX_SUPPORT_SSE >= 4) || (BX_SUPPORT_SSE >= 3 && BX_SUPPORT_SSE_EXTENSION > 0)
   /* 0F 3A /qm */ { Bx3ByteOp | BxImmediate_Ib, BX_IA_ERROR, BxOpcode3ByteTable0f3a }, // 3-byte escape
-#else
-  /* 0F 3A /qm */ { 0, BX_IA_ERROR },
-#endif
   /* 0F 3B /qm */ { 0, BX_IA_ERROR },
   /* 0F 3C /qm */ { 0, BX_IA_ERROR },
   /* 0F 3D /qm */ { 0, BX_IA_ERROR },
@@ -3459,7 +3411,6 @@ fetch_b1:
 
   if (BxOpcodeHasModrm64[b1]) {
 
-#if (BX_SUPPORT_SSE >= 4) || (BX_SUPPORT_SSE >= 3 && BX_SUPPORT_SSE_EXTENSION > 0)
     unsigned b3 = 0;
     // handle 3-byte escape
     if ((attr & BxGroupX) == Bx3ByteOp) {
@@ -3470,7 +3421,6 @@ fetch_b1:
       else
         return(-1);
     }
-#endif
 
     // opcode requires modrm byte
     if (ilen < remain) {
@@ -3648,11 +3598,9 @@ modrm_done:
         case BxGroupN:
           OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[nnn & 0x7]);
           break;
-#if (BX_SUPPORT_SSE >= 4) || (BX_SUPPORT_SSE >= 3 && BX_SUPPORT_SSE_EXTENSION > 0)
         case Bx3ByteOp:
           OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[b3]);
           break;
-#endif
         case BxOSizeGrp:
           OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[offset >> 8]);
           break;

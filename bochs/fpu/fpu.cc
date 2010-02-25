@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu.cc,v 1.60 2009-11-17 20:57:15 sshwarts Exp $
+// $Id: fpu.cc,v 1.61 2010-02-25 22:04:31 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003-2009 Stanislav Shwartsman
@@ -321,7 +321,6 @@ bx_address BX_CPU_C::fpu_load_environment(bxInstruction_c *i)
 /* D9 /5 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLDCW(bxInstruction_c *i)
 {
-#if BX_SUPPORT_FPU
   prepareFPU(i, CHECK_PENDING_EXCEPTIONS);
 
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
@@ -340,15 +339,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLDCW(bxInstruction_c *i)
       /* clear the B and ES bits in the status-word */
       FPU_PARTIAL_STATUS &= ~(FPU_SW_Summary | FPU_SW_Backward);
   }
-#else
-  BX_INFO(("FLDCW: required FPU, configure --enable-fpu"));
-#endif
 }
 
 /* D9 /7 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::FNSTCW(bxInstruction_c *i)
 {
-#if BX_SUPPORT_FPU
   prepareFPU(i, !CHECK_PENDING_EXCEPTIONS);
 
   Bit16u cwd = BX_CPU_THIS_PTR the_i387.get_control_word();
@@ -356,15 +351,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FNSTCW(bxInstruction_c *i)
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
   write_virtual_word(i->seg(), eaddr, cwd);
-#else
-  BX_INFO(("FNSTCW: required FPU, configure --enable-fpu"));
-#endif
 }
 
 /* DD /7 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::FNSTSW(bxInstruction_c *i)
 {
-#if BX_SUPPORT_FPU
   prepareFPU(i, !CHECK_PENDING_EXCEPTIONS);
 
   Bit16u swd = BX_CPU_THIS_PTR the_i387.get_status_word();
@@ -372,26 +363,18 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FNSTSW(bxInstruction_c *i)
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
   write_virtual_word(i->seg(), eaddr, swd);
-#else
-  BX_INFO(("FNSTSW: required FPU, configure --enable-fpu"));
-#endif
 }
 
 /* DF E0 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::FNSTSW_AX(bxInstruction_c *i)
 {
-#if BX_SUPPORT_FPU
   prepareFPU(i, !CHECK_PENDING_EXCEPTIONS);
   AX = BX_CPU_THIS_PTR the_i387.get_status_word();
-#else
-  BX_INFO(("FNSTSW_AX: required FPU, configure --enable-fpu"));
-#endif
 }
 
 /* DD /4 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::FRSTOR(bxInstruction_c *i)
 {
-#if BX_SUPPORT_FPU
   prepareFPU(i, CHECK_PENDING_EXCEPTIONS);
 
   bx_address offset = fpu_load_environment(i);
@@ -407,15 +390,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FRSTOR(bxInstruction_c *i)
      BX_WRITE_FPU_REGISTER_AND_TAG(tmp,
               IS_TAG_EMPTY(n) ? FPU_Tag_Empty : FPU_tagof(tmp), n);
   }
-#else
-  BX_INFO(("FRSTOR: required FPU, configure --enable-fpu"));
-#endif
 }
 
 /* DD /6 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::FNSAVE(bxInstruction_c *i)
 {
-#if BX_SUPPORT_FPU
   prepareFPU(i, !CHECK_PENDING_EXCEPTIONS);
 
   bx_address offset = fpu_save_environment(i);
@@ -429,15 +408,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FNSAVE(bxInstruction_c *i)
   }
 
   BX_CPU_THIS_PTR the_i387.init();
-#else
-  BX_INFO(("FNSAVE: required FPU, configure --enable-fpu"));
-#endif
 }
 
 /* 9B E2 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::FNCLEX(bxInstruction_c *i)
 {
-#if BX_SUPPORT_FPU
   prepareFPU(i, !CHECK_PENDING_EXCEPTIONS);
 
   FPU_PARTIAL_STATUS &= ~(FPU_SW_Backward|FPU_SW_Summary|FPU_SW_Stack_Fault|FPU_SW_Precision|
@@ -445,26 +420,18 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FNCLEX(bxInstruction_c *i)
                    FPU_SW_Invalid);
 
   // do not update last fpu instruction pointer
-#else
-  BX_INFO(("FNCLEX: required FPU, configure --enable-fpu"));
-#endif
 }
 
 /* DB E3 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::FNINIT(bxInstruction_c *i)
 {
-#if BX_SUPPORT_FPU
   prepareFPU(i, !CHECK_PENDING_EXCEPTIONS);
   BX_CPU_THIS_PTR the_i387.init();
-#else
-  BX_INFO(("FNINIT: required FPU, configure --enable-fpu"));
-#endif
 }
 
 /* D9 /4 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLDENV(bxInstruction_c *i)
 {
-#if BX_SUPPORT_FPU
   prepareFPU(i, CHECK_PENDING_EXCEPTIONS);
   fpu_load_environment(i);
 
@@ -476,51 +443,36 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLDENV(bxInstruction_c *i)
          BX_CPU_THIS_PTR the_i387.FPU_settagi(tag, n);
      }
   }
-#else
-  BX_INFO(("FLDENV: required FPU, configure --enable-fpu"));
-#endif
 }
 
 /* D9 /6 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::FNSTENV(bxInstruction_c *i)
 {
-#if BX_SUPPORT_FPU
   prepareFPU(i, !CHECK_PENDING_EXCEPTIONS);
   fpu_save_environment(i);
   /* mask all floating point exceptions */
   FPU_CONTROL_WORD |= FPU_CW_Exceptions_Mask;
   /* clear the B and ES bits in the status word */
   FPU_PARTIAL_STATUS &= ~(FPU_SW_Backward|FPU_SW_Summary);
-#else
-  BX_INFO(("FNSTENV: required FPU, configure --enable-fpu"));
-#endif
 }
 
 /* D9 D0 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::FNOP(bxInstruction_c *i)
 {
-#if BX_SUPPORT_FPU
   prepareFPU(i, CHECK_PENDING_EXCEPTIONS);
   FPU_update_last_instruction(i);
 
   // Perform no FPU operation. This instruction takes up space in the
   // instruction stream but does not affect the FPU or machine
   // context, except the EIP register.
-#else
-  BX_INFO(("FNOP: required FPU, configure --enable-fpu"));
-#endif
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::FPLEGACY(bxInstruction_c *i)
 {
-#if BX_SUPPORT_FPU
   prepareFPU(i, !CHECK_PENDING_EXCEPTIONS);
 
   // FPU performs no specific operation and no internal x87 states
   // are affected
-#else
-  BX_INFO(("legacy FPU opcodes: required FPU, configure --enable-fpu"));
-#endif
 }
 
 #endif
