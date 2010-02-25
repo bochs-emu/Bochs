@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ia_opcodes.h,v 1.39 2010-02-25 22:04:30 sshwarts Exp $
+// $Id: ia_opcodes.h,v 1.40 2010-02-25 22:44:46 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008-2009 Stanislav Shwartsman
@@ -858,7 +858,7 @@ bx_define_opcode(BX_IA_PI2FW_PqQq, &BX_CPU_C::PI2FW_PqQq, NULL, BX_CPU_3DNOW)
 bx_define_opcode(BX_IA_PMULHRW_PqQq, &BX_CPU_C::PMULHRW_PqQq, NULL, BX_CPU_3DNOW)
 bx_define_opcode(BX_IA_PSWAPD_PqQq, &BX_CPU_C::PSWAPD_PqQq, NULL, BX_CPU_3DNOW)
 #endif
-bx_define_opcode(BX_IA_PREFETCHW, &BX_CPU_C::NOP, NULL, 0)
+bx_define_opcode(BX_IA_PREFETCHW, &BX_CPU_C::NOP, NULL, BX_CPU_3DNOW | BX_CPU_X86_64)
 
 // P6 new instructions
 bx_define_opcode(BX_IA_FXSAVE, &BX_CPU_C::FXSAVE, NULL, BX_CPU_P6)
