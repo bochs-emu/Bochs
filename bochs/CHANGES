@@ -1,5 +1,39 @@
 Changes after 2.4.2:
 
+Brief summary :
+- Major configure/cpu rework allowing to enable/disable CPU options at runtime
+  through .bochsrc
+- Bugfixes for CPU emulation correctness and stability
+- Implemented PCLMULQDQ AES instruction
+- Extended Bochs internal debugger functionality
+- USB HP DeskJet 920C printer device emulation (Ben Lunt)
+
+Detailed change log :
+
+- Configure rework
+  - Local APIC configure option --enable-apic is deprecated and should not
+    be used anymore. The LAPIC option now automatically determined from
+    other configure options.
+
+  - Introduced new configure option --enable-xapic. The option is used to
+    differentiate between legacy APIC and Pentium4 XAPIC implementations.
+    The XAPIC will be automatically enabled by configure for x86-64 only.
+    Make sure that you add XAPIC option explicitly for Pentium4 like
+    configurations. The option will be extended in future to configure
+    X2APIC emulation as well.
+
+  - Deprecate --enable-popcnt configure option. POPCNT instruction will be 
+    enabled automatically iff SSE4_2 is supported (like in hardware).
+
+  - Make --ignore-bad-msrs runtime option in .bochsrc. Old --ignore-bad-msrs
+    configure option is deprecated and should not be used anymore.
+
+  - Enable changing of part of CPU functionality at runtime through .bochsrc
+    instead of configure time. Now you could choose to emulate any of
+    SSE/AES/MOVBE instruction sets using new CPUID option in .bochsrc.
+    Configure options --enable-sse, --enable-aes, --enable-movbe are
+    deprecated and should not be used anymore.
+
 - CPU
   - Implemented PCLMULQDQ AES instruction
   - Bugfixes for CPU emulation correctness
@@ -9,28 +43,13 @@ Changes after 2.4.2:
   - Introduced range read/write physical watchpoints
   - Allow reloading of segment registers from internal debugger
 
-- Configure options
-  - Make --ignore-bad-msrs runtime option in .bochsrc. Old --ignore-bad-msrs
-    configure option is deprecated and should not be used anymore.
-  - Extended --enable-sse configure option to accept any of possible existing
-    SSE configurations (sse1/sse2/sse3/ssse3/sse4_1/sse4_2). Configure option
-    --enable-sse-extension is deprecated and should not be used anymore.
-  - Local APIC configure option --enable-apic is deprecated and should not
-    be used anymore. The LAPIC option now automatically determined from
-    other configure options.
-  - Introduce new configure option --enable-xapic. The option is used to
-    differentiate between legacy APIC and Pentium4 XAPIC implementations.
-    The XAPIC will be automatically enabled by configure if Pentium4 like 
-    configuration is requested. The option will be extended in future to
-    configure X2APIC emulation.
-
-- I/O Devices
-  - USB HP DeskJet 920C printer device emulation (Ben Lunt)
-
 - BIOS
   - Fix MTRR configuration (prevented boot of modern Linux kernels)
   - Fix interrupt vectors for INT 60h-66h (reserved for user interrupt) by
     setting them to zero
+
+- I/O Devices
+  - USB HP DeskJet 920C printer device emulation (Ben Lunt)
 
 - SF patches applied
  [2938273] allow instrumentation to change execute by Konrad Grochowski

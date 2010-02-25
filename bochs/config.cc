@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.192 2010-02-25 22:04:30 sshwarts Exp $
+// $Id: config.cc,v 1.193 2010-02-25 22:34:56 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2009  The Bochs Project
@@ -2594,7 +2594,7 @@ static int parse_line_formatted(const char *context, int num_params, char *param
           PARSE_ERR(("%s: unsupported sse option.", context));
       } else if (!strncmp(params[i], "aes=", 4)) {
         if (params[i][4] == '0' || params[i][4] == '1') {
-          SIM->get_param_bool(BXPN_CPUID_MOVBE)->set(params[i][4] - '0');
+          SIM->get_param_bool(BXPN_CPUID_AES)->set(params[i][4] - '0');
         } else {
           PARSE_ERR(("%s: cpuid directive malformed.", context));
         }
