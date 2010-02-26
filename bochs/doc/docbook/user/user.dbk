@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.274 2010-02-26 11:44:50 sshwarts Exp $
+$Id: user.dbk,v 1.275 2010-02-26 22:53:43 sshwarts Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -2090,11 +2090,6 @@ turn it off.
       <entry>
       Add support for MMX instructions, written by Stanislav Shwartsman.
       </entry>
-    </row>
-    <row>
-      <entry>--enable-xsave</entry>
-      <entry>no</entry>
-      <entry>XSAVE support</entry>
     </row>
     <row>
       <entry>--enable-vmx</entry>

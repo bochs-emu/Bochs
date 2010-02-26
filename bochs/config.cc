@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.195 2010-02-26 14:18:18 sshwarts Exp $
+// $Id: config.cc,v 1.196 2010-02-26 22:53:43 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2009  The Bochs Project
@@ -358,7 +358,7 @@ void bx_init_options()
   cpu_param->set_options(menu->SHOW_PARENT);
 
   // cpuid subtree
-  bx_list_c *cpuid_param = new bx_list_c(root_param, "cpuid", "CPUID Options", 7);
+  bx_list_c *cpuid_param = new bx_list_c(root_param, "cpuid", "CPUID Options", 8);
 
   new bx_param_bool_c(cpuid_param,
       "cpuid_limit_winnt", "Limit max CPUID function to 3",
@@ -407,6 +407,10 @@ void bx_init_options()
       "sep", "Support for SYSENTER/SYSEXIT instructions",
       "Support for SYSENTER/SYSEXIT instructions",
       (BX_CPU_LEVEL >= 6 && BX_SUPPORT_MMX) || BX_SUPPORT_X86_64);
+  new bx_param_bool_c(cpuid_param,
+      "xsave", "Support for XSAVE extensions",
+      "Support for XSAVE extensions",
+      0);
 #endif
 
   cpuid_param->set_options(menu->SHOW_PARENT);
@@ -851,6 +855,9 @@ void bx_init_options()
 
   // loader hack
   bx_list_c *load32bitos = new bx_list_c(boot_params, "load32bitos", "32-bit OS Loader Hack");
+
+  static const char *loader_os_names[] = { "none", "linux", "nullkernel", NULL };
+
   bx_param_enum_c *whichOS = new bx_param_enum_c(load32bitos,
       "which",
       "Which operating system?",
@@ -2615,6 +2622,12 @@ static int parse_line_formatted(const char *context, int num_params, char *param
         } else {
           PARSE_ERR(("%s: cpuid directive malformed.", context));
         }
+      } else if (!strncmp(params[i], "xsave=", 6)) {
+        if (params[i][6] == '0' || params[i][6] == '1') {
+          SIM->get_param_bool(BXPN_CPUID_XSAVE)->set(params[i][6] - '0');
+        } else {
+          PARSE_ERR(("%s: cpuid directive malformed.", context));
+        }
 #endif
       } else {
         PARSE_ERR(("%s: cpuid directive malformed.", context));
@@ -3777,10 +3790,11 @@ int bx_write_configuration(const char *rc, int overwrite)
   fprintf(fp, "\n");
   fprintf(fp, "cpuid: cpuid_limit_winnt=%d", SIM->get_param_bool(BXPN_CPUID_LIMIT_WINNT)->get());
 #if BX_CPU_LEVEL >= 6
-  fprintf(fp, ", sse=%s, sep=%d, aes=%d, movbe=%d",
+  fprintf(fp, ", sse=%s, sep=%d, aes=%d, xsave=%d, movbe=%d",
     SIM->get_param_enum(BXPN_CPUID_SSE)->get_selected(),
     SIM->get_param_bool(BXPN_CPUID_SEP)->get(),
     SIM->get_param_bool(BXPN_CPUID_AES)->get(),
+    SIM->get_param_bool(BXPN_CPUID_XSAVE)->get(),
     SIM->get_param_bool(BXPN_CPUID_MOVBE)->get());
 #endif
   fprintf(fp, "\n");

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: xsave.cc,v 1.24 2009-12-04 21:27:17 sshwarts Exp $
+// $Id: xsave.cc,v 1.25 2010-02-26 22:53:43 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008-2009 Stanislav Shwartsman
@@ -35,7 +35,7 @@
 /* 0F AE /4 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVE(bxInstruction_c *i)
 {
-#if BX_SUPPORT_XSAVE
+#if BX_CPU_LEVEL >= 6
   unsigned index;
   BxPackedXmmRegister xmm;
 
@@ -150,16 +150,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVE(bxInstruction_c *i)
 
   // always update header to 'dirty' state
   write_virtual_qword(i->seg(), eaddr + 512, header1);
-#else
-  BX_INFO(("XSAVE: required XSAVE support, use --enable-xsave option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
 /* 0F AE /5 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
 {
-#if BX_SUPPORT_XSAVE
+#if BX_CPU_LEVEL >= 6
   unsigned index;
   BxPackedXmmRegister xmm;
 
@@ -301,16 +298,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
        }
     }
   }
-#else
-  BX_INFO(("XRSTOR: required XSAVE support, use --enable-xsave option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
 /* 0F 01 D0 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::XGETBV(bxInstruction_c *i)
 {
-#if BX_SUPPORT_XSAVE
+#if BX_CPU_LEVEL >= 6
   if(! BX_CPU_THIS_PTR cr4.get_OSXSAVE()) {
     BX_ERROR(("XGETBV: OSXSAVE feature is not enabled in CR4!"));
     exception(BX_UD_EXCEPTION, 0, 0);
@@ -325,16 +319,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XGETBV(bxInstruction_c *i)
 
   RDX = 0;
   RAX = BX_CPU_THIS_PTR xcr0.get32();
-#else
-  BX_INFO(("XGETBV: required XSAVE support, use --enable-xsave option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
 /* 0F 01 D1 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::XSETBV(bxInstruction_c *i)
 {
-#if BX_SUPPORT_XSAVE
+#if BX_CPU_LEVEL >= 6
   if(! BX_CPU_THIS_PTR cr4.get_OSXSAVE()) {
     BX_ERROR(("XSETBV: OSXSAVE feature is not enabled in CR4!"));
     exception(BX_UD_EXCEPTION, 0, 0);
@@ -358,8 +349,5 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XSETBV(bxInstruction_c *i)
   }
 
   BX_CPU_THIS_PTR xcr0.set32(EAX);
-#else
-  BX_INFO(("XSETBV: required XSAVE support, use --enable-xsave option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }

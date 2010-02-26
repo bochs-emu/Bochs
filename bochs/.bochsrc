@@ -159,6 +159,10 @@ cpu: count=1, ips=50000000, reset_on_triple_fault=1, ignore_bad_msrs=1, msrs="ms
 #  Select MOVBE Intel(R) Atom instruction support.
 #  This option exists only if Bochs compiled with BX_CPU_LEVEL >= 6.
 #
+#  XSAVE:
+#  Select XSAVE extensions support.
+#  This option exists only if Bochs compiled with BX_CPU_LEVEL >= 6.
+#
 #  VENDOR_STRING:
 #  Set the CPUID vendor string returned by CPUID(0x0). This should be a
 #  twelve-character ASCII string.  
@@ -171,7 +175,7 @@ cpu: count=1, ips=50000000, reset_on_triple_fault=1, ignore_bad_msrs=1, msrs="ms
 #  Determine whether to limit maximum CPUID function to 3. This mode is
 #  required to workaround WinNT installation and boot issues.
 #=======================================================================
-cpuid: sep=1, sse=sse4_2, aes=1, movbe=1, cpuid_limit_winnt=0
+cpuid: sep=1, sse=sse4_2, aes=1, movbe=1, xsave=1, cpuid_limit_winnt=0
 
 #=======================================================================
 # MEMORY

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: crregs.h,v 1.21 2010-02-25 22:04:30 sshwarts Exp $
+// $Id: crregs.h,v 1.22 2010-02-26 22:53:43 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007-2009 Stanislav Shwartsman
@@ -94,7 +94,7 @@ struct bx_cr4_t {
 #if BX_SUPPORT_VMX
   IMPLEMENT_CRREG_ACCESSORS(VMXE, 13);
 #endif
-#if BX_SUPPORT_XSAVE
+#if BX_CPU_LEVEL >= 6
   IMPLEMENT_CRREG_ACCESSORS(OSXSAVE, 18);
 #endif
 
@@ -125,7 +125,7 @@ struct bx_efer_t {
 
 #endif
 
-#if BX_SUPPORT_XSAVE
+#if BX_CPU_LEVEL >= 6
 struct xcr0_t {
   Bit32u  val32; // 32bit value of register
 

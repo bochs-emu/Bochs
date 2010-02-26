@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpuid.cc,v 1.93 2010-02-26 14:18:18 sshwarts Exp $
+// $Id: cpuid.cc,v 1.94 2010-02-26 22:53:43 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007-2009 Stanislav Shwartsman
@@ -241,7 +241,7 @@ Bit32u BX_CPU_C::get_std_cpuid_features(void)
 #if BX_CPU_LEVEL >= 5
   if (BX_CPU_THIS_PTR cpuid_features_bitmask & BX_CPU_PENTIUM) {
     // Pentium only features
-    features |= (1<<1);
+    features |= (1<<1);             // support VME
     features |= (1<<3);             // support PSE
     features |= (1<<4);             // support Time Stamp Counter
     features |= (1<<5);             // support RDMSR/WRMSR
@@ -299,9 +299,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CPUID(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 4
   Bit32u function    = EAX;
-#if BX_SUPPORT_XSAVE
   Bit32u subfunction = ECX;
-#endif
 
 #if BX_SUPPORT_VMX
   if (BX_CPU_THIS_PTR in_vmx_guest) {
@@ -324,14 +322,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CPUID(bxInstruction_c *i)
           RDX &= ~(1<<9); // APIC on chip
       }
 #endif
-#if BX_SUPPORT_XSAVE
       if (function == 0xD && subfunction > 0) {
         RAX = 0;
         RBX = 0;
         RCX = 0;
         RDX = 0;
       }
-#endif
       return;
     }
   }
@@ -408,7 +404,7 @@ void BX_CPU_C::set_cpuid_defaults(void)
   if (! cpuid_limit_winnt) {
     if (BX_SUPPORT_MONITOR_MWAIT)
       cpuid->eax = 0x5;
-    if (BX_SUPPORT_XSAVE)
+    if (BX_CPU_SUPPORT_FEATURE(BX_CPU_XSAVE))
       cpuid->eax = 0xD;
   }
 #endif
@@ -572,23 +568,24 @@ void BX_CPU_C::set_cpuid_defaults(void)
   cpuid->edx = 0;
 #endif
 
-#if BX_SUPPORT_XSAVE
   // ------------------------------------------------------
   // CPUID function 0x0000000D
-  cpuid = &(BX_CPU_THIS_PTR cpuid_std_function[0xD]);
+  if (BX_CPU_SUPPORT_FEATURE(BX_CPU_XSAVE))
+  {
+    cpuid = &(BX_CPU_THIS_PTR cpuid_std_function[0xD]);
 
-  // EAX - XCR0 lower 32 bits
-  // EBX - Maximum size (in bytes) required by enabled features
-  // ECX - Maximum size (in bytes) required by CPU supported features
-  // EDX - XCR0 upper 32 bits
-  cpuid->eax = BX_CPU_THIS_PTR xcr0.get32();
-  cpuid->ebx = 512+64;
-  cpuid->ecx = 512+64;
-  cpuid->edx = 0;
-#endif
+    // EAX - XCR0 lower 32 bits
+    // EBX - Maximum size (in bytes) required by enabled features
+    // ECX - Maximum size (in bytes) required by CPU supported features
+    // EDX - XCR0 upper 32 bits
+    cpuid->eax = BX_CPU_THIS_PTR xcr0.get32();
+    cpuid->ebx = 512+64;
+    cpuid->ecx = 512+64;
+    cpuid->edx = 0;
+  }
 
   // do not report Pentium 4 extended functions if not needed
-  if ((BX_CPU_THIS_PTR cpuid_features_bitmask & BX_CPU_SSE2) == 0)
+  if (! BX_CPU_SUPPORT_FEATURE(BX_CPU_SSE2))
     return;
 
   // ------------------------------------------------------
@@ -769,6 +766,7 @@ void BX_CPU_C::init_cpu_features_bitmask(void)
   bx_bool sep_enabled = SIM->get_param_bool(BXPN_CPUID_SEP)->get();
   bx_bool aes_enabled = SIM->get_param_bool(BXPN_CPUID_AES)->get();
   bx_bool movbe_enabled = SIM->get_param_bool(BXPN_CPUID_MOVBE)->get();
+  bx_bool xsave_enabled = SIM->get_param_bool(BXPN_CPUID_XSAVE)->get();
   unsigned sse_enabled = SIM->get_param_enum(BXPN_CPUID_SSE)->get();
 
   // sanity checks
@@ -802,7 +800,7 @@ void BX_CPU_C::init_cpu_features_bitmask(void)
      }
   }
   else {
-     if (BX_SUPPORT_XSAVE) {
+     if (xsave_enabled) {
        BX_PANIC(("PANIC: XSAVE emulation requires SSE support !"));
        return;
      }
@@ -870,23 +868,19 @@ void BX_CPU_C::init_cpu_features_bitmask(void)
 
   if (sep_enabled)
     features_bitmask |= BX_CPU_SYSENTER_SYSEXIT;
+
+  if (xsave_enabled)
+    features_bitmask |= BX_CPU_XSAVE;
+
+  if (aes_enabled)
+    features_bitmask |= BX_CPU_AES | BX_CPU_PCLMULQDQ;
+
+  if (movbe_enabled)
+    features_bitmask |= BX_CPU_MOVBE;
 #endif
 
 #if BX_SUPPORT_VMX
   features_bitmask |= BX_CPU_VMX;
-#endif
-#if BX_SUPPORT_XSAVE
-  features_bitmask |= BX_CPU_XSAVE;
-#endif
-
-#if BX_CPU_LEVEL >= 6
-  if (aes_enabled) {
-    features_bitmask |= BX_CPU_AES;
-    features_bitmask |= BX_CPU_PCLMULQDQ;
-  }
-
-  if (movbe_enabled)
-    features_bitmask |= BX_CPU_MOVBE;
 #endif
 
 #if BX_SUPPORT_X86_64

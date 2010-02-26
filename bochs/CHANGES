@@ -17,8 +17,8 @@ Detailed change log :
 
   - Introduced new configure option --enable-xapic. The option is used to
     differentiate between legacy APIC and Pentium4 XAPIC implementations.
-    The XAPIC will be automatically enabled by configure for x86-64 only.
-    Make sure that you add XAPIC option explicitly for Pentium4 like
+    The XAPIC will be automatically enabled by configure for x86-64 only,
+    make sure that you add XAPIC option explicitly for Pentium4 like
     configurations. The option will be extended in future to configure
     X2APIC emulation as well.
 
@@ -29,10 +29,10 @@ Detailed change log :
     configure option is deprecated and should not be used anymore.
 
   - Enable changing part of CPU functionality at runtime through .bochsrc.
-    Now you could enable/disable any of SSEx/AES/MOVBE/SYSENTER_SYSEXIT 
+    Now you could enable/disable any of SSEx/AES/MOVBE/SYSENTER_SYSEXIT/XSAVE
     instruction sets using new CPUID option in .bochsrc.
     Configure options:
-       --enable-sse, --enable-aes, --enable-movbe, --enable-sep
+       --enable-sse, --enable-aes, --enable-movbe, --enable-sep, --enable-xsave
     are deprecated and should not be used anymore.
 
 - CPU

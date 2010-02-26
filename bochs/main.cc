@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.413 2010-02-26 14:18:18 sshwarts Exp $
+// $Id: main.cc,v 1.414 2010-02-26 22:53:43 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -987,6 +987,7 @@ void bx_init_hardware()
   bx_bool aes_enabled = SIM->get_param_bool(BXPN_CPUID_AES)->get();
   bx_bool movbe_enabled = SIM->get_param_bool(BXPN_CPUID_MOVBE)->get();
   bx_bool sep_enabled = SIM->get_param_bool(BXPN_CPUID_SEP)->get();
+  bx_bool xsave_enabled = SIM->get_param_bool(BXPN_CPUID_XSAVE)->get();
 
   // Output to the log file the cpu and device settings
   // This will by handy for bug reports
@@ -1019,7 +1020,7 @@ void bx_init_hardware()
   BX_INFO(("  x86-64 support: %s",BX_SUPPORT_X86_64?"yes":"no"));
   BX_INFO(("  SEP support: %s",sep_enabled?"yes":"no"));
   BX_INFO(("  MWAIT support: %s",BX_SUPPORT_MONITOR_MWAIT?"yes":"no"));
-  BX_INFO(("  XSAVE support: %s",BX_SUPPORT_XSAVE?"yes":"no"));
+  BX_INFO(("  XSAVE support: %s",xsave_enabled?"yes":"no"));
   BX_INFO(("  AES support: %s",aes_enabled?"yes":"no"));
   BX_INFO(("  MOVBE support: %s",movbe_enabled?"yes":"no"));
   BX_INFO(("  VMX support: %s",BX_SUPPORT_VMX?"yes":"no"));

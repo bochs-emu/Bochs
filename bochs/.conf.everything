@@ -19,7 +19,6 @@
   --enable-alignment-check \
   --enable-3dnow \
   --enable-monitor-mwait \
-  --enable-xsave \
   --enable-vmx \
   --enable-x86-debugger \
   --enable-a20-pin \

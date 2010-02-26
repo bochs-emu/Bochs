@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.641 2010-02-26 11:44:50 sshwarts Exp $
+// $Id: cpu.h,v 1.642 2010-02-26 22:53:43 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -755,9 +755,6 @@ typedef struct {
 
 #if BX_SUPPORT_FPU
 #include "cpu/i387.h"
-#endif
-
-#if BX_CPU_LEVEL >= 6
 #include "cpu/xmm.h"
 #endif
 
@@ -876,7 +873,7 @@ public: // for now...
   bx_efer_t efer;
 #endif
 
-#if BX_SUPPORT_XSAVE
+#if BX_CPU_LEVEL >= 6
   xcr0_t xcr0;
 #endif
 
@@ -2875,18 +2872,18 @@ public: // for now...
 
 #if BX_SUPPORT_MISALIGNED_SSE
 
-#define readVirtualDQwordAligned(s, off, data)   \
-  if (! MXCSR.get_misaligned_exception_mask()) { \
-    read_virtual_dqword_aligned(s, off, data);   \
-  }                                              \
-  else {                                         \
-    read_virtual_dqword(s, off, data);           \
+#define readVirtualDQwordAligned(s, off, data)                   \
+  if (! BX_CPU_THIS_PTR mxcsr.get_misaligned_exception_mask()) { \
+    read_virtual_dqword_aligned(s, off, data);                   \
+  }                                                              \
+  else {                                                         \
+    read_virtual_dqword(s, off, data);                           \
   }
 
 #else // BX_SUPPORT_MISALIGNED_SSE = 0
 
-#define readVirtualDQwordAligned(s, off, data) { \
-  read_virtual_dqword_aligned(s, off, data);     \
+#define readVirtualDQwordAligned(s, off, data) {                 \
+  read_virtual_dqword_aligned(s, off, data);                     \
 }
 
 #endif
@@ -3341,7 +3338,7 @@ public: // for now...
   BX_SMF void print_state_SSE(void);
 #endif
 
-#if BX_SUPPORT_XSAVE
+#if BX_CPU_LEVEL >= 6
   BX_SMF void prepareXSAVE(void);
 #endif
 
@@ -3442,7 +3439,7 @@ BX_CPP_INLINE void BX_CPU_C::prepareSSE(void)
 }
 #endif
 
-#if BX_SUPPORT_XSAVE
+#if BX_CPU_LEVEL >= 6
 BX_CPP_INLINE void BX_CPU_C::prepareXSAVE(void)
 {
   if(! BX_CPU_THIS_PTR cr4.get_OSXSAVE())
