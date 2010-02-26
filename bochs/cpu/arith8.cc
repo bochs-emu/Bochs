@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith8.cc,v 1.62 2009-12-04 16:53:12 sshwarts Exp $
+// $Id: arith8.cc,v 1.63 2010-02-26 11:44:50 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -245,7 +245,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMP_ALIb(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::XADD_EbGbM(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL >= 4
   Bit8u op1, op2, sum;
 
   /* XADD dst(r/m8), src(r8)
@@ -265,15 +264,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XADD_EbGbM(bxInstruction_c *i)
   BX_WRITE_8BIT_REGx(i->nnn(), i->extend8bitL(), op1);
 
   SET_FLAGS_OSZAPC_ADD_8(op1, op2, sum);
-#else
-  BX_INFO(("XADD_EbGb: not supported on < 80486"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::XADD_EbGbR(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL >= 4
   Bit8u op1, op2, sum;
 
   /* XADD dst(r/m8), src(r8)
@@ -294,10 +288,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XADD_EbGbR(bxInstruction_c *i)
   BX_WRITE_8BIT_REGx(i->rm(), i->extend8bitL(), sum);
 
   SET_FLAGS_OSZAPC_ADD_8(op1, op2, sum);
-#else
-  BX_INFO(("XADD_EbGb: not supported on < 80486"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::ADD_EbIbM(bxInstruction_c *i)

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.254 2010-02-25 22:44:46 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.255 2010-02-26 11:44:50 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -2906,7 +2906,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BxError(bxInstruction_c *i)
 #endif
   }
   else {
-    BX_INFO(("%s: instruction not supported (signalling #UD)", get_bx_opcode_name(ia_opcode)));
+    BX_INFO(("%s: instruction not supported - signalling #UD (features bitmask: 0x%08x)",
+      get_bx_opcode_name(ia_opcode), BX_CPU_THIS_PTR cpuid_features_bitmask));
   }
 
   exception(BX_UD_EXCEPTION, 0, 0);

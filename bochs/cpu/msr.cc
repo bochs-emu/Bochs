@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: msr.cc,v 1.30 2009-11-13 15:55:46 sshwarts Exp $
+// $Id: msr.cc,v 1.31 2010-02-26 11:44:50 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008-2009 Stanislav Shwartsman
@@ -39,16 +39,34 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
 
   switch(index) {
 
-#if BX_SUPPORT_SEP
+#if BX_CPU_LEVEL >= 6
     case BX_MSR_SYSENTER_CS:
+      if (! BX_CPU_SUPPORT_FEATURE(BX_CPU_SYSENTER_SYSEXIT)) {
+        // failed to find the MSR, could #GP or ignore it silently
+        BX_ERROR(("RDMSR MSR_SYSENTER_CS: SYSENTER/SYSEXIT feature not enabled !"));
+        if (! BX_CPU_THIS_PTR ignore_bad_msrs)
+          return 0; // will result in #GP fault due to unknown MSR
+      }
       val64 = BX_CPU_THIS_PTR msr.sysenter_cs_msr;
       break;
 
     case BX_MSR_SYSENTER_ESP:
+      if (! BX_CPU_SUPPORT_FEATURE(BX_CPU_SYSENTER_SYSEXIT)) {
+        // failed to find the MSR, could #GP or ignore it silently
+        BX_ERROR(("RDMSR MSR_SYSENTER_ESP: SYSENTER/SYSEXIT feature not enabled !"));
+        if (! BX_CPU_THIS_PTR ignore_bad_msrs)
+          return 0; // will result in #GP fault due to unknown MSR
+      }
       val64 = BX_CPU_THIS_PTR msr.sysenter_esp_msr;
       break;
 
     case BX_MSR_SYSENTER_EIP:
+      if (! BX_CPU_SUPPORT_FEATURE(BX_CPU_SYSENTER_SYSEXIT)) {
+        // failed to find the MSR, could #GP or ignore it silently
+        BX_ERROR(("RDMSR MSR_SYSENTER_EIP: SYSENTER/SYSEXIT feature not enabled !"));
+        if (! BX_CPU_THIS_PTR ignore_bad_msrs)
+          return 0; // will result in #GP fault due to unknown MSR
+      }
       val64 = BX_CPU_THIS_PTR msr.sysenter_eip_msr;
       break;
 #endif
@@ -268,12 +286,24 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
 
   switch(index) {
 
-#if BX_SUPPORT_SEP
+#if BX_CPU_LEVEL >= 6
     case BX_MSR_SYSENTER_CS:
+      if (! BX_CPU_SUPPORT_FEATURE(BX_CPU_SYSENTER_SYSEXIT)) {
+        // failed to find the MSR, could #GP or ignore it silently
+        BX_ERROR(("WRMSR MSR_SYSENTER_CS: SYSENTER/SYSEXIT feature not enabled !"));
+        if (! BX_CPU_THIS_PTR ignore_bad_msrs)
+          return 0; // will result in #GP fault due to unknown MSR
+      }
       BX_CPU_THIS_PTR msr.sysenter_cs_msr = val32_lo;
       break;
 
     case BX_MSR_SYSENTER_ESP:
+      if (! BX_CPU_SUPPORT_FEATURE(BX_CPU_SYSENTER_SYSEXIT)) {
+        // failed to find the MSR, could #GP or ignore it silently
+        BX_ERROR(("WRMSR MSR_SYSENTER_ESP: SYSENTER/SYSEXIT feature not enabled !"));
+        if (! BX_CPU_THIS_PTR ignore_bad_msrs)
+          return 0; // will result in #GP fault due to unknown MSR
+      }
 #if BX_SUPPORT_X86_64
       if (! IsCanonical(val_64)) {
         BX_ERROR(("WRMSR: attempt to write non-canonical value to MSR_SYSENTER_ESP !"));
@@ -284,6 +314,12 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
       break;
 
     case BX_MSR_SYSENTER_EIP:
+      if (! BX_CPU_SUPPORT_FEATURE(BX_CPU_SYSENTER_SYSEXIT)) {
+        // failed to find the MSR, could #GP or ignore it silently
+        BX_ERROR(("WRMSR MSR_SYSENTER_EIP: SYSENTER/SYSEXIT feature not enabled !"));
+        if (! BX_CPU_THIS_PTR ignore_bad_msrs)
+          return 0; // will result in #GP fault due to unknown MSR
+      }
 #if BX_SUPPORT_X86_64
       if (! IsCanonical(val_64)) {
         BX_ERROR(("WRMSR: attempt to write non-canonical value to MSR_SYSENTER_EIP !"));

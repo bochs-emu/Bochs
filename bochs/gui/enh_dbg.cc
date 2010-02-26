@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: enh_dbg.cc,v 1.23 2010-02-25 22:04:31 sshwarts Exp $
+// $Id: enh_dbg.cc,v 1.24 2010-02-26 11:44:50 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  BOCHS ENHANCED DEBUGGER Ver 1.2
@@ -728,6 +728,7 @@ void ParseBkpt()
 // -- but it might not be "turned on", either
 int FillSSE(int LineCount)
 {
+#if BX_CPU_LEVEL >= 6
     if (! bx_cpu_support_sse)
         return (LineCount);
 
@@ -783,7 +784,7 @@ int FillSSE(int LineCount)
         InsertListRow(cols, 3, REG_WND, LineCount, 4);  // 3 cols, group 4
         ++LineCount;
     }
-
+#endif
     return (LineCount);
 }
 
@@ -1276,6 +1277,7 @@ void InitRegObjects()
         RegObject[j][ST7_exp] = SIM->get_param_num("FPU.st7.exp", cpu_list);
 #endif
 
+#if BX_CPU_LEVEL >= 6
         if (! bx_cpu_support_sse) {
             RegObject[j][XMM0_Rnum] = SIM->get_param_num("SSE.xmm00_lo", cpu_list);
             RegObject[j][XMM1_Rnum] = SIM->get_param_num("SSE.xmm01_lo", cpu_list);
@@ -1313,6 +1315,7 @@ void InitRegObjects()
             RegObject[j][XMMF_hi] = SIM->get_param_num("SSE.xmm15_hi", cpu_list);
 #endif
         }
+#endif
 
         RegObject[j][DR0_Rnum] = SIM->get_param_num("DR0", cpu_list);
         RegObject[j][DR1_Rnum] = SIM->get_param_num("DR1", cpu_list);

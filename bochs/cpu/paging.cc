@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.190 2009-12-04 16:53:12 sshwarts Exp $
+// $Id: paging.cc,v 1.191 2010-02-26 11:44:50 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -737,7 +737,6 @@ void BX_CPU_C::TLB_invlpg(bx_address laddr)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::INVLPG(bxInstruction_c* i)
 {
-#if BX_CPU_LEVEL >= 4
   if (!real_mode() && CPL!=0) {
     BX_ERROR(("INVLPG: priveledge check failed, generate #GP(0)"));
     exception(BX_GP_EXCEPTION, 0, 0);
@@ -759,10 +758,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INVLPG(bxInstruction_c* i)
 
   BX_INSTR_TLB_CNTRL(BX_CPU_ID, BX_INSTR_INVLPG, laddr);
   TLB_invlpg(laddr);
-#else
-  BX_INFO(("INVLPG: required i486, use --enable-cpu=4 option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 // error checking order - page not present, reserved bits, protection

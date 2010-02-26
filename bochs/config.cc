@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.193 2010-02-25 22:34:56 sshwarts Exp $
+// $Id: config.cc,v 1.194 2010-02-26 11:44:49 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2009  The Bochs Project
@@ -392,7 +392,7 @@ void bx_init_options()
       "sse", "Support for SSE instruction set",
       "Support for SSE/SSE2/SSE3/SSSE3/SSE4_1/SSE4_2 instruction set",
       sse_names,
-      BX_CPUID_SUPPORT_NOSSE,
+      BX_CPUID_SUPPORT_SSE2,
       BX_CPUID_SUPPORT_NOSSE);
   new bx_param_bool_c(cpuid_param,
       "movbe", "Support for MOVBE instruction",
@@ -402,6 +402,10 @@ void bx_init_options()
       "aes", "Support for AES instruction set",
       "Support for AES instruction set",
       0);
+  new bx_param_bool_c(cpuid_param,
+      "sep", "Support for SYSENTER/SYSEXIT instructions",
+      "Support for SYSENTER/SYSEXIT instructions",
+      (BX_CPU_LEVEL >= 6 && BX_SUPPORT_MMX) || BX_SUPPORT_X86_64);
 #endif
 
   cpuid_param->set_options(menu->SHOW_PARENT);
@@ -2604,6 +2608,12 @@ static int parse_line_formatted(const char *context, int num_params, char *param
         } else {
           PARSE_ERR(("%s: cpuid directive malformed.", context));
         }
+      } else if (!strncmp(params[i], "sep=", 4)) {
+        if (params[i][4] == '0' || params[i][4] == '1') {
+          SIM->get_param_bool(BXPN_CPUID_SEP)->set(params[i][4] - '0');
+        } else {
+          PARSE_ERR(("%s: cpuid directive malformed.", context));
+        }
 #endif
       } else {
         PARSE_ERR(("%s: cpuid directive malformed.", context));
@@ -3766,8 +3776,9 @@ int bx_write_configuration(const char *rc, int overwrite)
   fprintf(fp, "\n");
   fprintf(fp, "cpuid: cpuid_limit_winnt=%d", SIM->get_param_bool(BXPN_CPUID_LIMIT_WINNT)->get());
 #if BX_CPU_LEVEL >= 6
-  fprintf(fp, ", sse=%s, aes=%d, movbe=%d",
+  fprintf(fp, ", sse=%s, sep=%d, aes=%d, movbe=%d",
     SIM->get_param_enum(BXPN_CPUID_SSE)->get_selected(),
+    SIM->get_param_bool(BXPN_CPUID_SEP)->get(),
     SIM->get_param_bool(BXPN_CPUID_AES)->get(),
     SIM->get_param_bool(BXPN_CPUID_MOVBE)->get());
 #endif

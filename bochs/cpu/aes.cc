@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: aes.cc,v 1.9 2010-02-25 22:04:30 sshwarts Exp $
+// $Id: aes.cc,v 1.10 2010-02-26 11:44:50 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008-2009 Stanislav Shwartsman
@@ -25,6 +25,8 @@
 #include "bochs.h"
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
+
+#if BX_CPU_LEVEL >= 6
 
 //
 // XMM - Byte Representation of a 128-bit AES State
@@ -285,9 +287,12 @@ BX_CPP_INLINE Bit32u AES_RotWord(Bit32u x)
   return (x >> 8) | (x << 24);
 }
 
+#endif
+
 /* 66 0F 38 DB */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::AESIMC_VdqWdq(bxInstruction_c *i)
 {
+#if BX_CPU_LEVEL >= 6
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op;
@@ -305,11 +310,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::AESIMC_VdqWdq(bxInstruction_c *i)
   AES_InverseMixColumns(op);
 
   BX_WRITE_XMM_REG(i->nnn(), op);
+#endif
 }
 
 /* 66 0F 38 DC */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::AESENC_VdqWdq(bxInstruction_c *i)
 {
+#if BX_CPU_LEVEL >= 6
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
@@ -332,11 +339,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::AESENC_VdqWdq(bxInstruction_c *i)
   op1.xmm64u(1) ^= op2.xmm64u(1);
 
   BX_WRITE_XMM_REG(i->nnn(), op1);
+#endif
 }
 
 /* 66 0F 38 DD */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::AESENCLAST_VdqWdq(bxInstruction_c *i)
 {
+#if BX_CPU_LEVEL >= 6
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
@@ -358,11 +367,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::AESENCLAST_VdqWdq(bxInstruction_c *i)
   op1.xmm64u(1) ^= op2.xmm64u(1);
 
   BX_WRITE_XMM_REG(i->nnn(), op1);
+#endif
 }
 
 /* 66 0F 38 DE */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::AESDEC_VdqWdq(bxInstruction_c *i)
 {
+#if BX_CPU_LEVEL >= 6
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
@@ -385,11 +396,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::AESDEC_VdqWdq(bxInstruction_c *i)
   op1.xmm64u(1) ^= op2.xmm64u(1);
 
   BX_WRITE_XMM_REG(i->nnn(), op1);
+#endif
 }
 
 /* 66 0F 38 DF */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::AESDECLAST_VdqWdq(bxInstruction_c *i)
 {
+#if BX_CPU_LEVEL >= 6
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
@@ -411,11 +424,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::AESDECLAST_VdqWdq(bxInstruction_c *i)
   op1.xmm64u(1) ^= op2.xmm64u(1);
 
   BX_WRITE_XMM_REG(i->nnn(), op1);
+#endif
 }
 
 /* 66 0F 3A DF */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::AESKEYGENASSIST_VdqWdqIb(bxInstruction_c *i)
 {
+#if BX_CPU_LEVEL >= 6
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op, result;
@@ -438,11 +453,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::AESKEYGENASSIST_VdqWdqIb(bxInstruction_c *
   result.xmm32u(3) = AES_RotWord(result.xmm32u(2)) ^ rcon32;
 
   BX_WRITE_XMM_REG(i->nnn(), result);
+#endif
 }
 
 /* 66 0F 3A 44 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PCLMULQDQ_VdqWdqIb(bxInstruction_c *i)
 {
+#if BX_CPU_LEVEL >= 6
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, r, a;
@@ -484,4 +501,5 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PCLMULQDQ_VdqWdqIb(bxInstruction_c *i)
   }
 
   BX_WRITE_XMM_REG(i->nnn(), r);
+#endif
 }

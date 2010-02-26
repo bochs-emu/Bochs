@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.273 2010-02-24 20:59:49 sshwarts Exp $
+$Id: user.dbk,v 1.274 2010-02-26 11:44:50 sshwarts Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -2092,29 +2092,9 @@ turn it off.
       </entry>
     </row>
     <row>
-      <entry>--enable-sse=LEVEL</entry>
-      <entry>no</entry>
-      <entry>
-      Add support for SSE instructions, written by Stanislav Shwartsman.
-      Any of SSE/SSE2/SSE3/SSSE3/SSE4_1/SSE4_2 instruction sets are supported.
-      </entry>
-    </row>
-    <row>
-      <entry>--enable-aes</entry>
-      <entry>no</entry>
-      <entry>
-      Add support for AES instructions, written by Stanislav Shwartsman.
-      </entry>
-    </row>
-    <row>
       <entry>--enable-xsave</entry>
       <entry>no</entry>
       <entry>XSAVE support</entry>
-    </row>
-    <row>
-      <entry>--enable-sep</entry>
-      <entry>no</entry>
-      <entry>SYSENTER/SYSEXIT support</entry>
     </row>
     <row>
       <entry>--enable-vmx</entry>
@@ -2134,16 +2114,6 @@ turn it off.
       <entry>--enable-monitor-mwait</entry>
       <entry>no</entry>
       <entry>MONITOR/MWAIT instructions support (still experimental)</entry>
-    </row>
-    <row>
-      <entry>--enable-movbe</entry>
-      <entry>no</entry>
-      <entry>support for MOVBE Intel Atom(R) instruction</entry>
-    </row>
-    <row>
-      <entry>--enable-popcnt</entry>
-      <entry>no</entry>
-      <entry>support for POPCNT instruction</entry>
     </row>
     <row>
       <entry>--enable-misaligned-sse</entry>
@@ -8369,7 +8339,7 @@ user_shortcut: keys=ctrl-alt-del
 For installing and using Windows NT it is necessary to limit the maximum CPUID
 to 3. In the configuration file you need to add a line like this:
 <programlisting>
-cpu: cpuid_limit_winnt=1
+cpuid: cpuid_limit_winnt=1
 </programlisting>
 </para>
 </listitem>

@@ -29,10 +29,11 @@ Detailed change log :
     configure option is deprecated and should not be used anymore.
 
   - Enable changing of part of CPU functionality at runtime through .bochsrc
-    instead of configure time. Now you could choose to emulate any of
-    SSE/AES/MOVBE instruction sets using new CPUID option in .bochsrc.
-    Configure options --enable-sse, --enable-aes, --enable-movbe are
-    deprecated and should not be used anymore.
+    Now you could enable/disable any of SSEx/AES/MOVBE/SYSENTER_SYSEXIT 
+    instruction sets using new CPUID option in .bochsrc.
+    Configure options
+       --enable-sse, --enable-aes, --enable-movbe, --enable-sep
+    are deprecated and should not be used anymore.
 
 - CPU
   - Implemented PCLMULQDQ AES instruction

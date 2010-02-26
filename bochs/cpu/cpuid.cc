@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpuid.cc,v 1.91 2010-02-25 22:44:46 sshwarts Exp $
+// $Id: cpuid.cc,v 1.92 2010-02-26 11:44:50 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007-2009 Stanislav Shwartsman
@@ -764,6 +764,7 @@ void BX_CPU_C::init_cpu_features_bitmask(void)
 {
   Bit32u features_bitmask = 0;
 
+  bx_bool sep_enabled = SIM->get_param_bool(BXPN_CPUID_SEP)->get();
   bx_bool aes_enabled = SIM->get_param_bool(BXPN_CPUID_AES)->get();
   bx_bool movbe_enabled = SIM->get_param_bool(BXPN_CPUID_MOVBE)->get();
   unsigned sse_enabled = SIM->get_param_enum(BXPN_CPUID_SSE)->get();
@@ -808,6 +809,13 @@ void BX_CPU_C::init_cpu_features_bitmask(void)
 #if BX_SUPPORT_X86_64
   if (sse_enabled < BX_CPUID_SUPPORT_SSE2) {
     BX_PANIC(("PANIC: x86-64 emulation requires SSE2 support !"));
+    return;
+  }
+#endif
+
+#if BX_SUPPORT_VMX
+  if (! sep_enabled) {
+    BX_PANIC(("PANIC: VMX emulation requires SYSENTER/SYSEXIT support !"));
     return;
   }
 #endif
@@ -857,11 +865,11 @@ void BX_CPU_C::init_cpu_features_bitmask(void)
     default:
       break;
   };
+
+  if (sep_enabled)
+    features_bitmask |= BX_CPU_SYSENTER_SYSEXIT;
 #endif
 
-#if BX_SUPPORT_SEP
-  features_bitmask |= BX_CPU_SYSENTER_SYSEXIT;
-#endif
 #if BX_SUPPORT_VMX
   features_bitmask |= BX_CPU_VMX;
 #endif

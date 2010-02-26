@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.225 2010-02-25 22:34:56 sshwarts Exp $
+// $Id: init.cc,v 1.226 2010-02-26 11:44:50 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -425,12 +425,10 @@ void BX_CPU_C::register_state(void)
   BXRS_HEX_PARAM_FIELD(MSR, tsc_aux, msr.tsc_aux);
 #endif
   BXRS_HEX_PARAM_FIELD(MSR, tsc_last_reset, msr.tsc_last_reset);
-#if BX_SUPPORT_SEP
+#if BX_CPU_LEVEL >= 6
   BXRS_HEX_PARAM_FIELD(MSR, sysenter_cs_msr,  msr.sysenter_cs_msr);
   BXRS_HEX_PARAM_FIELD(MSR, sysenter_esp_msr, msr.sysenter_esp_msr);
   BXRS_HEX_PARAM_FIELD(MSR, sysenter_eip_msr, msr.sysenter_eip_msr);
-#endif
-#if BX_CPU_LEVEL >= 6
   BXRS_HEX_PARAM_FIELD(MSR, mtrrphysbase0, msr.mtrrphys[0]);
   BXRS_HEX_PARAM_FIELD(MSR, mtrrphysmask0, msr.mtrrphys[1]);
   BXRS_HEX_PARAM_FIELD(MSR, mtrrphysbase1, msr.mtrrphys[2]);
@@ -499,6 +497,7 @@ void BX_CPU_C::register_state(void)
   BXRS_DEC_PARAM_FIELD(fpu, tos, the_i387.tos);
 #endif
 
+#if BX_CPU_LEVEL >= 6
   if (BX_CPU_SUPPORT_FEATURE(BX_CPU_SSE)) {
     bx_list_c *sse = new bx_list_c(cpu, "SSE", 2*BX_XMM_REGISTERS+1);
     BXRS_HEX_PARAM_FIELD(sse, mxcsr, mxcsr.mxcsr);
@@ -509,6 +508,7 @@ void BX_CPU_C::register_state(void)
       new bx_shadow_num_c(sse, name, &xmm[n].xmm64u(0), BASE_HEX);
     }
   }
+#endif
 
 #if BX_SUPPORT_MONITOR_MWAIT
   bx_list_c *monitor_list = new bx_list_c(cpu, "MONITOR", 3);
@@ -941,7 +941,7 @@ void BX_CPU_C::reset(unsigned source)
   }
 #endif
 
-#if BX_SUPPORT_SEP
+#if BX_CPU_LEVEL >= 6
   BX_CPU_THIS_PTR msr.sysenter_cs_msr  = 0;
   BX_CPU_THIS_PTR msr.sysenter_esp_msr = 0;
   BX_CPU_THIS_PTR msr.sysenter_eip_msr = 0;
@@ -1002,6 +1002,7 @@ void BX_CPU_C::reset(unsigned source)
   }
 #endif
 
+#if BX_CPU_LEVEL >= 6
   // Reset XMM state - unchanged on #INIT
   if (source == BX_RESET_HARDWARE) {
     for(n=0; n<BX_XMM_REGISTERS; n++)
@@ -1017,6 +1018,7 @@ void BX_CPU_C::reset(unsigned source)
     if (BX_SUPPORT_MISALIGNED_SSE)
       BX_CPU_THIS_PTR mxcsr_mask |= MXCSR_MISALIGNED_EXCEPTION_MASK;
   }
+#endif
 
 #if BX_SUPPORT_VMX
   BX_CPU_THIS_PTR in_vmx = BX_CPU_THIS_PTR in_vmx_guest = 0;

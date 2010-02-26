@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.312 2010-02-25 22:04:30 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.313 2010-02-26 11:44:50 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -149,7 +149,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CLTS(bxInstruction_c *i)
 /* 0F 08 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::INVD(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL >= 4
   if (!real_mode() && CPL!=0) {
     BX_ERROR(("INVD: priveledge check failed, generate #GP(0)"));
     exception(BX_GP_EXCEPTION, 0, 0);
@@ -168,16 +167,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INVD(bxInstruction_c *i)
   BX_INSTR_CACHE_CNTRL(BX_CPU_ID, BX_INSTR_INVD);
 
   flushICaches();
-#else
-  BX_INFO(("INVD: required 486 support, use --enable-cpu-level=4 option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 /* 0F 09 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::WBINVD(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL >= 4
   if (!real_mode() && CPL!=0) {
     BX_ERROR(("INVD/WBINVD: priveledge check failed, generate #GP(0)"));
     exception(BX_GP_EXCEPTION, 0, 0);
@@ -189,10 +183,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::WBINVD(bxInstruction_c *i)
   BX_INSTR_CACHE_CNTRL(BX_CPU_ID, BX_INSTR_WBINVD);
 
   flushICaches();
-#else
-  BX_INFO(("WBINVD: required 486 support, use --enable-cpu-level=4 option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::CLFLUSH(bxInstruction_c *i)
@@ -1514,12 +1504,8 @@ bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::SetCR4(bx_address val)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDPMC(bxInstruction_c *i)
 {
-/* We need to be Pentium with MMX or later */
-#if (BX_CPU_LEVEL >= 6) || (BX_SUPPORT_MMX && BX_CPU_LEVEL == 5)
-  bx_bool pce = BX_CPU_THIS_PTR cr4.get_PCE();
-
-  if ((pce==1) || (CPL==0) || real_mode())
-  {
+#if BX_CPU_LEVEL >= 5
+  if (BX_CPU_THIS_PTR cr4.get_PCE() || CPL==0 || real_mode()) {
 
 #if BX_SUPPORT_VMX
     VMexit_RDPMC(i);
@@ -1531,8 +1517,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDPMC(bxInstruction_c *i)
      * limited to 40 bits.
      */
 
-    if ((ECX & 0xffffffff) >= 2)
-      exception(BX_GP_EXCEPTION, 0, 0);
+    if (BX_CPU_SUPPORT_FEATURE(BX_CPU_SSE2)) { // Pentium 4 processor (see cpuid.cc)
+      if ((ECX & 0x7fffffff) >= 18)
+        exception(BX_GP_EXCEPTION, 0, 0);
+    }
+    else {
+      if ((ECX & 0xffffffff) >= 2)
+        exception(BX_GP_EXCEPTION, 0, 0);
+    }
 
     // Most counters are for hardware specific details, which
     // we anyhow do not emulate (like pipeline stalls etc)
@@ -1549,8 +1541,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDPMC(bxInstruction_c *i)
     // not allowed to use RDPMC!
     exception(BX_GP_EXCEPTION, 0, 0);
   }
-#else
-  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -1594,9 +1584,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDTSC(bxInstruction_c *i)
     BX_ERROR(("RDTSC: not allowed to use instruction !"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
-#else
-  BX_INFO(("RDTSC: Pentium CPU required, use --enable-cpu=5"));
-  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -1788,7 +1775,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MWAIT(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSENTER(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SEP
+#if BX_CPU_LEVEL >= 6
   if (real_mode()) {
     BX_ERROR(("SYSENTER not recognized in real mode !"));
     exception(BX_GP_EXCEPTION, 0, 0);
@@ -1875,15 +1862,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSENTER(bxInstruction_c *i)
 
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_SYSENTER,
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, RIP);
-#else
-  BX_INFO(("SYSENTER: use --enable-sep to enable SYSENTER/SYSEXIT support"));
-  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSEXIT(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SEP
+#if BX_CPU_LEVEL >= 6
   if (real_mode() || CPL != 0) {
     BX_ERROR(("SYSEXIT from real mode or with CPL<>0 !"));
     exception(BX_GP_EXCEPTION, 0, 0);
@@ -1981,9 +1965,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSEXIT(bxInstruction_c *i)
 
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_SYSEXIT,
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, RIP);
-#else
-  BX_INFO(("SYSEXIT: use --enable-sep to enable SYSENTER/SYSEXIT support"));
-  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 

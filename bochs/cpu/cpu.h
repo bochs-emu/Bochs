@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.640 2010-02-25 22:04:30 sshwarts Exp $
+// $Id: cpu.h,v 1.641 2010-02-26 11:44:50 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -285,10 +285,10 @@ struct BxExceptionInfo {
 #define BX_MSR_TSC                 0x010
 #define BX_MSR_APICBASE            0x01b
 
-#if BX_SUPPORT_SEP
-#  define BX_MSR_SYSENTER_CS       0x174
-#  define BX_MSR_SYSENTER_ESP      0x175
-#  define BX_MSR_SYSENTER_EIP      0x176
+#if BX_CPU_LEVEL >= 6
+  #define BX_MSR_SYSENTER_CS       0x174
+  #define BX_MSR_SYSENTER_ESP      0x175
+  #define BX_MSR_SYSENTER_EIP      0x176
 #endif
 
 #define BX_MSR_DEBUGCTLMSR         0x1d9
@@ -574,7 +574,7 @@ typedef struct
   Bit64u tsc_last_reset;
 
   // SYSENTER/SYSEXIT instruction msr's
-#if BX_SUPPORT_SEP
+#if BX_CPU_LEVEL >= 6
   Bit32u sysenter_cs_msr;
   bx_address sysenter_esp_msr;
   bx_address sysenter_eip_msr;
@@ -755,6 +755,9 @@ typedef struct {
 
 #if BX_SUPPORT_FPU
 #include "cpu/i387.h"
+#endif
+
+#if BX_CPU_LEVEL >= 6
 #include "cpu/xmm.h"
 #endif
 
@@ -892,9 +895,11 @@ public: // for now...
   i387_t the_i387;
 #endif
 
+#if BX_CPU_LEVEL >= 6
   bx_xmm_reg_t xmm[BX_XMM_REGISTERS]; // need TMP XMM register ?
   bx_mxcsr_t mxcsr;
   Bit32u mxcsr_mask;
+#endif
 
 #if BX_SUPPORT_MONITOR_MWAIT
   monitor_addr_t monitor;
@@ -3330,9 +3335,11 @@ public: // for now...
   BX_SMF void prepareFPU2MMX(void); /* cause transition from FPU to MMX technology state */
   BX_SMF void print_state_MMX(void);
 
+#if BX_CPU_LEVEL >= 6
   BX_SMF void prepareSSE(void);
   BX_SMF void check_exceptionsSSE(int);
   BX_SMF void print_state_SSE(void);
+#endif
 
 #if BX_SUPPORT_XSAVE
   BX_SMF void prepareXSAVE(void);
@@ -3424,6 +3431,7 @@ BX_CPP_INLINE void BX_CPU_C::prepareMMX(void)
 }
 #endif
 
+#if BX_CPU_LEVEL >= 6
 BX_CPP_INLINE void BX_CPU_C::prepareSSE(void)
 {
   if(BX_CPU_THIS_PTR cr0.get_EM() || !BX_CPU_THIS_PTR cr4.get_OSFXSR())
@@ -3432,6 +3440,7 @@ BX_CPP_INLINE void BX_CPU_C::prepareSSE(void)
   if(BX_CPU_THIS_PTR cr0.get_TS())
     exception(BX_NM_EXCEPTION, 0, 0);
 }
+#endif
 
 #if BX_SUPPORT_XSAVE
 BX_CPP_INLINE void BX_CPU_C::prepareXSAVE(void)
