@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.146 2010-02-21 18:23:50 sshwarts Exp $
+// $Id: exception.cc,v 1.147 2010-02-26 14:18:18 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -25,6 +25,7 @@
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
+#include "param_names.h"
 #include "iodev/iodev.h"
 
 #if BX_SUPPORT_X86_64==0

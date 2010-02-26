@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: x.cc,v 1.129 2010-01-24 12:46:42 sshwarts Exp $
+// $Id: x.cc,v 1.130 2010-02-26 14:18:18 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2009  The Bochs Project
@@ -27,6 +27,7 @@
 #define BX_PLUGGABLE
 
 #include "bochs.h"
+#include "param_names.h"
 #include "keymap.h"
 #include "iodev.h"
 #include "enh_dbg.h"

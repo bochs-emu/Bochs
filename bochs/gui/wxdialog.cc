@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxdialog.cc,v 1.113 2009-04-05 08:33:26 vruppert Exp $
+// $Id: wxdialog.cc,v 1.114 2010-02-26 14:18:18 sshwarts Exp $
 /////////////////////////////////////////////////////////////////
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
@@ -8,6 +8,8 @@
 #define BX_PLUGGABLE
 
 #include "config.h"              // definitions based on configure script
+#include "param_names.h"
+
 #if BX_WITH_WX
 
 // For compilers that support precompilation, includes <wx/wx.h>.

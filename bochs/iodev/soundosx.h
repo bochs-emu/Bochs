@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: soundosx.h,v 1.3 2009-02-08 09:05:52 vruppert Exp $
+// $Id: soundosx.h,v 1.4 2010-02-26 14:18:19 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  The Bochs Project
@@ -24,12 +24,6 @@
 #ifdef macintosh
 
 #include "bochs.h"
-
-// Do not include OSX sound headers here;
-// They define types Float64 and Float32,
-// which are already used elsewhere in bochs.
-// All OSX-specific types are hidden inside
-// soundosx.cc, where nobody else has to see them.
 
 // uncomment one of these two:
 #if BX_WITH_MACOS

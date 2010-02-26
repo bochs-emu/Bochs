@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: misc_mem.cc,v 1.141 2009-12-04 16:53:12 sshwarts Exp $
+// $Id: misc_mem.cc,v 1.142 2010-02-26 14:18:19 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -23,6 +23,7 @@
 /////////////////////////////////////////////////////////////////////////
 
 #include "bochs.h"
+#include "param_names.h"
 #include "cpu/cpu.h"
 #include "iodev/iodev.h"
 #define LOG_THIS BX_MEM(0)->
@@ -72,7 +73,7 @@ void BX_MEM_C::init_memory(Bit64u guest, Bit64u host)
 {
   unsigned idx;
 
-  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.141 2009-12-04 16:53:12 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.142 2010-02-26 14:18:19 sshwarts Exp $"));
 
   // accept only memory size which is multiply of 1M
   BX_ASSERT((host & 0xfffff) == 0);

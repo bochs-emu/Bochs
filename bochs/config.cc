@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.194 2010-02-26 11:44:49 sshwarts Exp $
+// $Id: config.cc,v 1.195 2010-02-26 14:18:18 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2009  The Bochs Project
@@ -20,6 +20,7 @@
 
 #include "bochs.h"
 #include "iodev/iodev.h"
+#include "param_names.h"
 #include <assert.h>
 
 #ifdef HAVE_LOCALE_H

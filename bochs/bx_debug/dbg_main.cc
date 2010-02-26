@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.231 2010-02-26 12:10:17 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.232 2010-02-26 14:18:18 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -24,6 +24,7 @@ extern "C" {
 }
 
 #include "bochs.h"
+#include "param_names.h"
 #include "cpu/cpu.h"
 #include "iodev/iodev.h"
 

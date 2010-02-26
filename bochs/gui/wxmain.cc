@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.163 2009-12-04 20:02:12 sshwarts Exp $
+// $Id: wxmain.cc,v 1.164 2010-02-26 14:18:18 sshwarts Exp $
 /////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  The Bochs Project
@@ -41,6 +41,8 @@
 #define BX_PLUGGABLE
 
 #include "config.h"              // definitions based on configure script
+#include "param_names.h"
+
 #if BX_WITH_WX
 
 // For compilers that support precompilation, includes "wx/wx.h".

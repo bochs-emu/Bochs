@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.226 2010-02-26 11:44:50 sshwarts Exp $
+// $Id: init.cc,v 1.227 2010-02-26 14:18:18 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -24,6 +24,8 @@
 #include "bochs.h"
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
+
+#include "param_names.h"
 
 #if BX_SUPPORT_X86_64==0
 // Make life easier merging cpu64 & cpu code.

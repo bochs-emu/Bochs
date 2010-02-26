@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.412 2010-02-26 11:44:50 sshwarts Exp $
+// $Id: main.cc,v 1.413 2010-02-26 14:18:18 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -19,6 +19,7 @@
 //  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 
 #include "bochs.h"
+#include "param_names.h"
 #include "gui/textconfig.h"
 #if BX_USE_TEXTCONFIG && defined(WIN32)
 #include "gui/win32dialog.h"

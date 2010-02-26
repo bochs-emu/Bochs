@@ -666,7 +666,7 @@ install_macosx: all download_dlx install_man @INSTALL_DOCBOOK_VAR@
 #  gcc -MM -I. -Iinstrument/stubs *.cc | sed -e 's/\.cc/.@CPP_SUFFIX@/g' -e 's,cpu/,cpu/,g'
 ###########################################
 config.o: config.@CPP_SUFFIX@ bochs.h config.h osdep.h bx_debug/debug.h config.h \
-  osdep.h bxversion.h gui/siminterface.h memory/memory.h pc_system.h \
+  osdep.h bxversion.h gui/siminterface.h param_names.h memory/memory.h pc_system.h \
   plugin.h extplugin.h ltdl.h gui/gui.h instrument/stubs/instrument.h \
   iodev/iodev.h bochs.h iodev/vga.h
 crc.o: crc.@CPP_SUFFIX@ config.h
@@ -678,7 +678,7 @@ gdbstub.o: gdbstub.@CPP_SUFFIX@ bochs.h config.h osdep.h bx_debug/debug.h config
   fpu/status_w.h fpu/control_w.h cpu/xmm.h cpu/stack.h iodev/iodev.h \
   bochs.h iodev/vga.h
 load32bitOShack.o: load32bitOShack.@CPP_SUFFIX@ bochs.h config.h osdep.h \
-  bx_debug/debug.h config.h osdep.h bxversion.h gui/siminterface.h \
+  bx_debug/debug.h config.h osdep.h bxversion.h gui/siminterface.h param_names.h \
   memory/memory.h pc_system.h plugin.h extplugin.h ltdl.h gui/gui.h \
   instrument/stubs/instrument.h cpu/cpu.h cpu/crregs.h cpu/descriptor.h \
   cpu/instr.h cpu/lazy_flags.h cpu/icache.h cpu/apic.h cpu/i387.h \
@@ -692,7 +692,7 @@ logio.o: logio.@CPP_SUFFIX@ bochs.h config.h osdep.h bx_debug/debug.h config.h \
   fpu/status_w.h fpu/control_w.h cpu/xmm.h iodev/iodev.h bochs.h \
   iodev/vga.h
 main.o: main.@CPP_SUFFIX@ bochs.h config.h osdep.h bx_debug/debug.h config.h \
-  osdep.h bxversion.h gui/siminterface.h memory/memory.h pc_system.h \
+  osdep.h bxversion.h gui/siminterface.h param_names.h memory/memory.h pc_system.h \
   plugin.h extplugin.h ltdl.h gui/gui.h instrument/stubs/instrument.h \
   gui/textconfig.h cpu/cpu.h cpu/crregs.h cpu/descriptor.h cpu/instr.h \
   cpu/lazy_flags.h cpu/icache.h cpu/apic.h cpu/i387.h fpu/softfloat.h \

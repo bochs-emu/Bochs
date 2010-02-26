@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: beos.cc,v 1.36 2010-01-24 12:46:41 sshwarts Exp $
+// $Id: beos.cc,v 1.37 2010-02-26 14:18:18 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -29,6 +29,7 @@
 #include <ctype.h>
 #include <string.h>
 
+#include "param_names.h"
 #include "bochs.h"
 #include "iodev.h"
 #if BX_WITH_BEOS

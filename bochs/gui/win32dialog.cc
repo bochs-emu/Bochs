@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32dialog.cc,v 1.90 2010-02-25 22:04:31 sshwarts Exp $
+// $Id: win32dialog.cc,v 1.91 2010-02-26 14:18:18 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  The Bochs Project
@@ -23,6 +23,7 @@
 #if BX_USE_TEXTCONFIG && defined(WIN32) && (BX_WITH_WIN32 || BX_WITH_SDL)
 
 #include "bochs.h"
+#include "param_names.h"
 #include "win32res.h"
 #include "win32paramdlg.h"
 

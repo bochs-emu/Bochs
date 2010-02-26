@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.170 2009-12-04 19:50:29 sshwarts Exp $
+// $Id: vga.cc,v 1.171 2010-02-26 14:18:19 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2009  The Bochs Project
@@ -26,6 +26,7 @@
 #define BX_PLUGGABLE
 
 #include "iodev.h"
+#include "param_names.h"
 #include "vga.h"
 
 #define LOG_THIS theVga->

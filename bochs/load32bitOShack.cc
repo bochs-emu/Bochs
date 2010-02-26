@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: load32bitOShack.cc,v 1.34 2009-04-05 18:16:29 sshwarts Exp $
+// $Id: load32bitOShack.cc,v 1.35 2010-02-26 14:18:18 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -24,12 +24,11 @@
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-
 #include "bochs.h"
+#include "param_names.h"
 #include "cpu/cpu.h"
 #include "iodev/iodev.h"
 #define LOG_THIS genlog->
-
 
 static void bx_load_linux_hack(void);
 static void bx_load_null_kernel_hack(void);

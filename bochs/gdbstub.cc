@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gdbstub.cc,v 1.42 2010-02-14 15:17:14 sshwarts Exp $
+// $Id: gdbstub.cc,v 1.43 2010-02-26 14:18:18 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2006  The Bochs Project Team
@@ -38,6 +38,7 @@
 #define NEED_CPU_REG_SHORTCUTS 1
 
 #include "bochs.h"
+#include "param_names.h"
 #include "cpu/cpu.h"
 #include "iodev/iodev.h"
 

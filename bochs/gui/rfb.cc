@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rfb.cc,v 1.66 2009-11-15 19:53:56 sshwarts Exp $
+// $Id: rfb.cc,v 1.67 2010-02-26 14:18:18 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2000  Psyon.Org!
@@ -32,6 +32,7 @@
 // is used to know when we are exporting symbols and when we are importing.
 #define BX_PLUGGABLE
 
+#include "param_names.h"
 #include "iodev.h"
 #include "keymap.h"
 #if BX_WITH_RFB

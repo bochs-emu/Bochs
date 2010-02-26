@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: nogui.cc,v 1.30 2009-12-04 20:02:12 sshwarts Exp $
+// $Id: nogui.cc,v 1.31 2010-02-26 14:18:18 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -25,6 +25,8 @@
 #define BX_PLUGGABLE
 
 #include "bochs.h"
+#include "param_names.h"
+
 #if BX_WITH_NOGUI
 #include "icon_bochs.h"
 

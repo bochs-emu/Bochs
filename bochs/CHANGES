@@ -2,7 +2,7 @@ Changes after 2.4.2:
 
 Brief summary :
 - Major configure/cpu rework allowing to enable/disable CPU options at runtime
-  through .bochsrc
+  through .bochsrc (Stanislav)
 - Bugfixes for CPU emulation correctness and stability
 - Implemented PCLMULQDQ AES instruction
 - Extended Bochs internal debugger functionality
@@ -28,10 +28,10 @@ Detailed change log :
   - Make --ignore-bad-msrs runtime option in .bochsrc. Old --ignore-bad-msrs
     configure option is deprecated and should not be used anymore.
 
-  - Enable changing of part of CPU functionality at runtime through .bochsrc
+  - Enable changing part of CPU functionality at runtime through .bochsrc.
     Now you could enable/disable any of SSEx/AES/MOVBE/SYSENTER_SYSEXIT 
     instruction sets using new CPUID option in .bochsrc.
-    Configure options
+    Configure options:
        --enable-sse, --enable-aes, --enable-movbe, --enable-sep
     are deprecated and should not be used anymore.
 

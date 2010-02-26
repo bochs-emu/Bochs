@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.248 2010-02-25 22:04:31 sshwarts Exp $
+// $Id: siminterface.h,v 1.249 2010-02-26 14:18:18 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  The Bochs Project
@@ -134,8 +134,6 @@ typedef enum {
   BXT_PARAM_DATA,
   BXT_LIST
 } bx_objtype;
-
-#include "param_names.h"
 
 // base value for generated new parameter id
 #define BXP_NEW_PARAM_ID 1001

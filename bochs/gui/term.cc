@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: term.cc,v 1.45 2009-12-04 20:02:12 sshwarts Exp $
+// $Id: term.cc,v 1.46 2010-02-26 14:18:18 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2000-2009  The Bochs Project
@@ -24,6 +24,7 @@
 #define BX_PLUGGABLE
 
 #include "bochs.h"
+#include "param_names.h"
 #include "iodev.h"
 #if BX_WITH_TERM
 

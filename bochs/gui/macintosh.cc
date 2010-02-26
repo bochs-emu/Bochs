@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: macintosh.cc,v 1.32 2009-12-04 20:02:12 sshwarts Exp $
+// $Id: macintosh.cc,v 1.33 2010-02-26 14:18:18 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -30,6 +30,8 @@
 
 // BOCHS INCLUDES
 #include <MacTypes.h>
+
+#include "param_names.h"
 #include "bochs.h"
 #include "iodev.h"
 

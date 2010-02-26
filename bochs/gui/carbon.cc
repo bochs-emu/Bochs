@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: carbon.cc,v 1.43 2009-12-04 20:02:12 sshwarts Exp $
+// $Id: carbon.cc,v 1.44 2010-02-26 14:18:18 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -35,13 +35,11 @@
 
 
 // BOCHS INCLUDES
-#define Float32 KLUDGE_Float32
-#define Float64 KLUDGE_Float64
 #include "bochs.h"
 #include "keymap.h"
 #include "iodev.h"
-#undef Float32
-#undef Float64
+
+#include "param_names.h"
 
 #if BX_WITH_CARBON
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpuid.cc,v 1.92 2010-02-26 11:44:50 sshwarts Exp $
+// $Id: cpuid.cc,v 1.93 2010-02-26 14:18:18 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007-2009 Stanislav Shwartsman
@@ -25,6 +25,8 @@
 #include "bochs.h"
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
+
+#include "param_names.h"
 
 #if BX_SUPPORT_X86_64==0
 // Make life easier for merging code.

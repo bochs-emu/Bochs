@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keymap.cc,v 1.27 2009-12-04 20:02:12 sshwarts Exp $
+// $Id: keymap.cc,v 1.28 2010-02-26 14:18:18 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2009  The Bochs Project
@@ -25,6 +25,7 @@
 //  . Tables look-up should be optimised.
 //
 
+#include "param_names.h"
 #include "bochs.h"
 #include "keymap.h"
 

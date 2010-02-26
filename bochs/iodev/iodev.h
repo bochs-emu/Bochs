@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.118 2009-12-04 19:50:28 sshwarts Exp $
+// $Id: iodev.h,v 1.119 2010-02-26 14:18:19 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2009  The Bochs Project
@@ -26,6 +26,7 @@
 #define IODEV_H
 
 #include "bochs.h"
+#include "param_names.h"
 
 /* number of IRQ lines supported.  In an ISA PC there are two
    PIC chips cascaded together.  each has 8 IRQ lines, so there

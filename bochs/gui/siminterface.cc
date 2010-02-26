@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.211 2010-02-25 22:04:31 sshwarts Exp $
+// $Id: siminterface.cc,v 1.212 2010-02-26 14:18:18 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  The Bochs Project
@@ -24,6 +24,7 @@
 // Basically, the siminterface is visible from both the simulator and
 // the configuration user interface, and allows them to talk to each other.
 
+#include "param_names.h"
 #include "iodev.h"
 
 bx_simulator_interface_c *SIM = NULL;

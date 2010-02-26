@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sb16.cc,v 1.69 2009-12-04 19:50:29 sshwarts Exp $
+// $Id: sb16.cc,v 1.70 2010-02-26 14:18:19 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -28,6 +28,8 @@
 #define BX_PLUGGABLE
 
 #include "iodev.h"
+#include "param_names.h"
+
 #if BX_SUPPORT_SB16
 
 #include "sb16.h"

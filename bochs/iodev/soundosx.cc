@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: soundosx.cc,v 1.11 2009-02-08 09:05:52 vruppert Exp $
+// $Id: soundosx.cc,v 1.12 2010-02-26 14:18:19 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  The Bochs Project
@@ -22,17 +22,12 @@
 
 #ifdef PARANOID
 #include <MacTypes.h>
-#else
-#define Float32 KLUDGE_Float32
-#define Float64 KLUDGE_Float64
 #endif
 
 #define NO_DEVICE_INCLUDES
 #include "iodev.h"
 #define BX_SOUNDLOW
 #include "sb16.h"
-#undef Float32
-#undef Float64
 
 #if defined(macintosh) && BX_SUPPORT_SB16
 

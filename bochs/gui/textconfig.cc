@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: textconfig.cc,v 1.85 2010-02-25 22:04:31 sshwarts Exp $
+// $Id: textconfig.cc,v 1.86 2010-02-26 14:18:18 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  The Bochs Project
@@ -49,6 +49,7 @@ extern "C" {
 #endif
 
 #include "osdep.h"
+#include "param_names.h"
 #include "textconfig.h"
 #include "siminterface.h"
 #include "extplugin.h"
