@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.230 2010-02-25 22:04:30 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.231 2010-02-26 12:10:17 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -663,12 +663,10 @@ void bx_dbg_exit(int code)
 
 void bx_dbg_print_sse_state(void)
 {
+#if BX_CPU_LEVEL >= 6
   Bit32u cpuid_features_bitmask = SIM->get_param_num("cpuid_features_bitmask", dbg_cpu_list)->get();
 
-  if ((cpuid_features_bitmask & BX_CPU_SSE) == 0) {
-    dbg_printf("The CPU doesn't support SSE state !\n");
-  }
-  else {
+  if ((cpuid_features_bitmask & BX_CPU_SSE) != 0) {
     Bit32u mxcsr = SIM->get_param_num("SSE.mxcsr", dbg_cpu_list)->get();
     dbg_printf("MXCSR: 0x%08x: %s %s RC:%d %s %s %s %s %s %s %s %s %s %s %s %s %s\n", mxcsr,
        (mxcsr & (1<<17)) ? "ULE" : "ule",
@@ -697,6 +695,11 @@ void bx_dbg_print_sse_state(void)
       dbg_printf("XMM[%02u]: %08x:%08x:%08x:%08x\n", i,
          GET32H(hi), GET32L(hi), GET32H(lo), GET32L(lo));
     }
+  }
+  else
+#endif
+  {
+    dbg_printf("The CPU doesn't support SSE state !\n");
   }
 }
 

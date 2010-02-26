@@ -13,12 +13,10 @@
   --enable-debugger \
   --enable-disasm \
   --enable-debugger-gui \
-  --enable-vbe \
   --enable-mmx \
   --enable-fpu \
   --enable-misaligned-sse \
   --enable-alignment-check \
-  --enable-sep \
   --enable-3dnow \
   --enable-monitor-mwait \
   --enable-xsave \
@@ -26,6 +24,7 @@
   --enable-x86-debugger \
   --enable-a20-pin \
   --enable-instrumentation=instrument/example1 \
+  --enable-vbe \
   --enable-ne2000 \
   --enable-pci \
   --enable-acpi \
