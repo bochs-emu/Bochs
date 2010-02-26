@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: shift16.cc,v 1.52 2009-12-04 16:53:12 sshwarts Exp $
+// $Id: shift16.cc,v 1.53 2010-02-26 23:09:30 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -153,7 +153,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHRD_EwGwM(bxInstruction_c *i)
   SET_FLAGS_OSZAPC_LOGIC_16(result_16);
 
   cf = (op1_16 >> (count - 1)) & 0x1;
-  of = (((result_16 << 1) ^ result_16) >> 15) & 0x1; // of = result14 ^ result15
+  of = ((Bit16u)((result_16 << 1) ^ result_16) >> 15) & 0x1; // of = result14 ^ result15
   SET_FLAGS_OxxxxC(of, cf);
 }
 
@@ -194,7 +194,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHRD_EwGwR(bxInstruction_c *i)
   SET_FLAGS_OSZAPC_LOGIC_16(result_16);
 
   cf = (op1_16 >> (count - 1)) & 0x1;
-  of = (((result_16 << 1) ^ result_16) >> 15) & 0x1; // of = result14 ^ result15
+  of = ((Bit16u)((result_16 << 1) ^ result_16) >> 15) & 0x1; // of = result14 ^ result15
   SET_FLAGS_OxxxxC(of, cf);
 }
 
@@ -382,7 +382,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RCR_Ew(bxInstruction_c *i)
   }
 
   cf = (op1_16 >> (count - 1)) & 0x1;
-  of = (((result_16 << 1) ^ result_16) >> 15) & 0x1; // of = result15 ^ result14
+  of = ((Bit16u)((result_16 << 1) ^ result_16) >> 15) & 0x1; // of = result15 ^ result14
   SET_FLAGS_OxxxxC(of, cf);
 }
 
@@ -470,7 +470,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHR_Ew(bxInstruction_c *i)
   cf = (op1_16 >> (count - 1)) & 0x1;
   // note, that of == result15 if count == 1 and
   //            of == 0        if count >= 2
-  of = (((result_16 << 1) ^ result_16) >> 15) & 0x1;
+  of = ((Bit16u)((result_16 << 1) ^ result_16) >> 15) & 0x1;
 
   SET_FLAGS_OSZAPC_LOGIC_16(result_16);
   SET_FLAGS_OxxxxC(of, cf);
