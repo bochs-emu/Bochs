@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.cc,v 1.133 2010-02-24 20:59:49 sshwarts Exp $
+// $Id: apic.cc,v 1.134 2010-02-28 14:52:16 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (c) 2002-2009 Zwane Mwaikambo, Stanislav Shwartsman
@@ -27,6 +27,8 @@
 
 #if BX_SUPPORT_APIC
 
+extern Bit32u apic_id_mask;
+
 #define LOG_THIS this->
 
 #define BX_CPU_APIC(i) (&(BX_CPU(i)->lapic))
@@ -53,8 +55,8 @@ int apic_bus_deliver_interrupt(Bit8u vector, Bit8u dest, Bit8u delivery_mode, bx
   // determine destination local apics and deliver
   if(! logical_dest) {
     // physical destination mode
-    if((dest & APIC_ID_MASK) == APIC_MAX_ID) {
-       return apic_bus_broadcast_interrupt(vector, delivery_mode, trig_mode, APIC_MAX_ID);
+    if((dest & apic_id_mask) == apic_id_mask) {
+       return apic_bus_broadcast_interrupt(vector, delivery_mode, trig_mode, apic_id_mask);
     }
     else {
        // the destination is single agent
@@ -90,26 +92,25 @@ int apic_bus_deliver_lowest_priority(Bit8u vector, Bit8u dest, bx_bool trig_mode
 {
   int i;
 
-#if BX_SUPPORT_XAPIC == 0
-  // search for if focus processor exists
-  for (i=0; i<BX_NUM_LOCAL_APICS; i++) {
-    if(BX_CPU_APIC(i)->is_focus(vector)) {
-      BX_CPU_APIC(i)->deliver(vector, APIC_DM_LOWPRI, trig_mode);
-      return 1;
+  if (! BX_CPU_APIC(0)->is_xapic()) {
+    // search for if focus processor exists
+    for (i=0; i<BX_NUM_LOCAL_APICS; i++) {
+      if(BX_CPU_APIC(i)->is_focus(vector)) {
+        BX_CPU_APIC(i)->deliver(vector, APIC_DM_LOWPRI, trig_mode);
+        return 1;
+      }
     }
   }
-#endif
 
   // focus processor not found, looking for lowest priority agent
-  int lowest_priority_agent = -1, lowest_priority = 0x100;
+  int lowest_priority_agent = -1, lowest_priority = 0x100, priority;
 
   for (i=0; i<BX_NUM_LOCAL_APICS; i++) {
     if(broadcast || BX_CPU_APIC(i)->match_logical_addr(dest)) {
-#if BX_SUPPORT_XAPIC
-      int priority = BX_CPU_APIC(i)->get_tpr();
-#else
-      int priority = BX_CPU_APIC(i)->get_apr();
-#endif
+      if (BX_CPU_APIC(i)->is_xapic())
+        priority = BX_CPU_APIC(i)->get_tpr();
+      else
+        priority = BX_CPU_APIC(i)->get_apr();
       if(priority < lowest_priority) {
         lowest_priority = priority;
         lowest_priority_agent = i;
@@ -169,7 +170,13 @@ bx_local_apic_c::bx_local_apic_c(BX_CPU_C *mycpu, unsigned id)
   : base_addr(BX_LAPIC_BASE_ADDR), cpu(mycpu)
 {
   apic_id = id;
-  BX_ASSERT(apic_id < APIC_MAX_ID);
+#if BX_SUPORT_SMP
+  if (apic_id >= bx_cpu_count)
+    BX_PANIC(("PANIC: invalid APIC_ID assigned %d (max = %d)", apic_id, bx_cpu_count));
+#else
+  if (apic_id != 0)
+    BX_PANIC(("PANIC: invalid APIC_ID assigned %d", apic_id));
+#endif
 
   char buffer[16];
   sprintf(buffer, "APIC%x", apic_id);
@@ -222,6 +229,11 @@ void bx_local_apic_c::reset(unsigned type)
   mode = BX_APIC_XAPIC_MODE;
 
   INTR = 0;
+
+  if (xapic)
+    apic_version_id = 0x00050014; // P4 has 6 LVT entries
+  else 
+    apic_version_id = 0x00040010; // P6 has 4 LVT entries
 }
 
 void bx_local_apic_c::set_base(bx_phy_address newbase)
@@ -343,7 +355,7 @@ void bx_local_apic_c::write_aligned(bx_phy_address addr, Bit32u value)
       receive_EOI(value);
       break;
     case BX_LAPIC_LDR: // logical destination
-      ldr = (value >> 24) & APIC_ID_MASK;
+      ldr = (value >> 24) & apic_id_mask;
       BX_DEBUG(("set logical destination to %08x", ldr));
       break;
     case BX_LAPIC_DESTINATION_FORMAT:
@@ -460,7 +472,7 @@ void bx_local_apic_c::send_ipi(void)
     accepted = 1;
     break;
   case 2:  // all including self
-    accepted = apic_bus_broadcast_interrupt(vector, delivery_mode, trig_mode, APIC_MAX_ID);
+    accepted = apic_bus_broadcast_interrupt(vector, delivery_mode, trig_mode, apic_id_mask);
     break;
   case 3:  // all but self
     accepted = apic_bus_broadcast_interrupt(vector, delivery_mode, trig_mode, get_id());
@@ -479,12 +491,11 @@ void bx_local_apic_c::write_spurious_interrupt_register(Bit32u value)
 {
   BX_DEBUG(("write of %08x to spurious interrupt register", value));
 
-#if BX_SUPPORT_XAPIC
-  spurious_vector = value & 0xff;
-#else
-  // bits 0-3 of the spurious vector hardwired to '1
-  spurious_vector = (value & 0xf0) | 0xf;
-#endif
+  if (xapic)
+    spurious_vector = value & 0xff;
+  else
+    // bits 0-3 of the spurious vector hardwired to '1
+    spurious_vector = (value & 0xf0) | 0xf;
 
   software_enabled = (value >> 8) & 1;
   focus_disable    = (value >> 9) & 1;
@@ -533,7 +544,7 @@ Bit32u bx_local_apic_c::read_aligned(bx_phy_address addr)
   case BX_LAPIC_ID:      // local APIC id
     data = apic_id << 24; break;
   case BX_LAPIC_VERSION: // local APIC version
-    data = BX_LAPIC_VERSION_ID; break;
+    data = apic_version_id; break;
   case BX_LAPIC_TPR:     // task priority
     data = task_priority & 0xff; break;
   case BX_LAPIC_ARBITRATION_PRIORITY:
@@ -548,7 +559,7 @@ Bit32u bx_local_apic_c::read_aligned(bx_phy_address addr)
      */
     break;
   case BX_LAPIC_LDR:     // logical destination
-    data = (ldr & APIC_ID_MASK) << 24; break;
+    data = (ldr & apic_id_mask) << 24; break;
   case BX_LAPIC_DESTINATION_FORMAT:
     data = ((dest_format & 0xf) << 28) | 0x0fffffff; break;
   case BX_LAPIC_SPURIOUS_VECTOR:
@@ -718,7 +729,7 @@ void bx_local_apic_c::trigger_irq(Bit8u vector, unsigned trigger_mode, bx_bool b
 {
   BX_DEBUG(("trigger interrupt vector=0x%02x", vector));
 
-  if(vector > BX_LAPIC_LAST_VECTOR || vector < BX_LAPIC_FIRST_VECTOR) {
+  if(/* vector > BX_LAPIC_LAST_VECTOR || */ vector < BX_LAPIC_FIRST_VECTOR) {
     shadow_error_status |= APIC_ERR_RX_ILLEGAL_VEC;
     BX_INFO(("bogus vector %#x, ignoring ...", vector));
     return;

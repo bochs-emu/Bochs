@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.197 2010-02-28 06:22:24 sshwarts Exp $
+// $Id: config.cc,v 1.198 2010-02-28 14:52:16 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2009  The Bochs Project
@@ -358,7 +358,7 @@ void bx_init_options()
   cpu_param->set_options(menu->SHOW_PARENT);
 
   // cpuid subtree
-  bx_list_c *cpuid_param = new bx_list_c(root_param, "cpuid", "CPUID Options", 8);
+  bx_list_c *cpuid_param = new bx_list_c(root_param, "cpuid", "CPUID Options", 9);
 
   new bx_param_bool_c(cpuid_param,
       "cpuid_limit_winnt", "Limit max CPUID function to 3",
@@ -387,14 +387,23 @@ void bx_init_options()
       BX_CPUID_BRAND_LEN+1);
 
 #if BX_CPU_LEVEL >= 6
+  // configure defaults to CPU_LEVEL = 6 with SSE2 enabled
   static const char *sse_names[] = { "none", "sse", "sse2", "sse3", "ssse3", "sse4_1", "sse4_2", NULL };
 
   new bx_param_enum_c(cpuid_param,
       "sse", "Support for SSE instruction set",
       "Support for SSE/SSE2/SSE3/SSSE3/SSE4_1/SSE4_2 instruction set",
       sse_names,
-      BX_SUPPORT_XAPIC ? BX_CPUID_SUPPORT_SSE2 : BX_CPUID_SUPPORT_SSE,
+      BX_CPUID_SUPPORT_SSE2,
       BX_CPUID_SUPPORT_NOSSE);
+  new bx_param_bool_c(cpuid_param,
+      "xapic", "Support for XAPIC extensions",
+      "Support for XAPIC extensions",
+      1);
+  new bx_param_bool_c(cpuid_param,
+      "sep", "Support for SYSENTER/SYSEXIT instructions",
+      "Support for SYSENTER/SYSEXIT instructions",
+      1);
   new bx_param_bool_c(cpuid_param,
       "movbe", "Support for MOVBE instruction",
       "Support for MOVBE instruction",
@@ -403,10 +412,6 @@ void bx_init_options()
       "aes", "Support for AES instruction set",
       "Support for AES instruction set",
       0);
-  new bx_param_bool_c(cpuid_param,
-      "sep", "Support for SYSENTER/SYSEXIT instructions",
-      "Support for SYSENTER/SYSEXIT instructions",
-      (BX_CPU_LEVEL >= 6 && BX_SUPPORT_MMX) || BX_SUPPORT_X86_64);
   new bx_param_bool_c(cpuid_param,
       "xsave", "Support for XSAVE extensions",
       "Support for XSAVE extensions",
@@ -2543,10 +2548,6 @@ static int parse_line_formatted(const char *context, int num_params, char *param
         unsigned processors = 1, cores = 1, threads = 1;
         sscanf(&params[i][6], "%u:%u:%u", &processors, &cores, &threads);
         unsigned smp_threads = cores*threads*processors;
-        if (smp_threads > BX_MAX_SMP_THREADS_SUPPORTED) {
-          PARSE_ERR(("%s: too many SMP threads defined, only %u threads supported",
-            context, BX_MAX_SMP_THREADS_SUPPORTED));
-        }
         if (smp_threads < 1) {
           PARSE_ERR(("%s: at least one CPU thread should be defined, cpu directive malformed", context));
         }
@@ -2625,6 +2626,12 @@ static int parse_line_formatted(const char *context, int num_params, char *param
       } else if (!strncmp(params[i], "xsave=", 6)) {
         if (params[i][6] == '0' || params[i][6] == '1') {
           SIM->get_param_bool(BXPN_CPUID_XSAVE)->set(params[i][6] - '0');
+        } else {
+          PARSE_ERR(("%s: cpuid directive malformed.", context));
+        }
+      } else if (!strncmp(params[i], "xapic=", 6)) {
+        if (params[i][6] == '0' || params[i][6] == '1') {
+          SIM->get_param_bool(BXPN_CPUID_XAPIC)->set(params[i][6] - '0');
         } else {
           PARSE_ERR(("%s: cpuid directive malformed.", context));
         }
@@ -3790,8 +3797,9 @@ int bx_write_configuration(const char *rc, int overwrite)
   fprintf(fp, "\n");
   fprintf(fp, "cpuid: cpuid_limit_winnt=%d", SIM->get_param_bool(BXPN_CPUID_LIMIT_WINNT)->get());
 #if BX_CPU_LEVEL >= 6
-  fprintf(fp, ", sse=%s, sep=%d, aes=%d, xsave=%d, movbe=%d",
+  fprintf(fp, ", sse=%s, xapic=%d, sep=%d, aes=%d, xsave=%d, movbe=%d",
     SIM->get_param_enum(BXPN_CPUID_SSE)->get_selected(),
+    SIM->get_param_bool(BXPN_CPUID_XAPIC)->get(),
     SIM->get_param_bool(BXPN_CPUID_SEP)->get(),
     SIM->get_param_bool(BXPN_CPUID_AES)->get(),
     SIM->get_param_bool(BXPN_CPUID_XSAVE)->get(),

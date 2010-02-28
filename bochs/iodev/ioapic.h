@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ioapic.h,v 1.35 2009-12-04 19:50:28 sshwarts Exp $
+// $Id: ioapic.h,v 1.36 2010-02-28 14:52:17 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2009  The Bochs Project
@@ -34,13 +34,15 @@ extern int apic_bus_broadcast_interrupt(Bit8u vector, Bit8u delivery_mode, bx_bo
 // use the same version as 82093 IOAPIC (0x00170011)
 #define BX_IOAPIC_VERSION_ID (((BX_IOAPIC_NUM_PINS - 1) << 16) | 0x11)
 
+extern Bit32u apic_id_mask;
+
 class bx_io_redirect_entry_t {
   Bit32u hi, lo;
 
 public:
   bx_io_redirect_entry_t(): hi(0), lo(0x10000) {}
 
-  Bit8u destination() const { return (Bit8u)((hi >> 24) & APIC_ID_MASK); }
+  Bit8u destination() const { return (Bit8u)((hi >> 24) & apic_id_mask); }
   bx_bool is_masked() const { return (bx_bool)((lo >> 16) & 1); }
   Bit8u trigger_mode() const { return (Bit8u)((lo >> 15) & 1); }
   bx_bool remote_irr() const { return (bx_bool)((lo >> 14) & 1); }
@@ -69,8 +71,7 @@ public:
   void register_state(bx_param_c *parent);
 };
 
-class bx_ioapic_c : public bx_ioapic_stub_c
-{
+class bx_ioapic_c : public bx_ioapic_stub_c {
 public:
   bx_ioapic_c();
   virtual ~bx_ioapic_c() {}

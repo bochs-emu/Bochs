@@ -1,5 +1,5 @@
 -------------------------------------------------------------
-BOCHS TESTING FORM Version 0.4
+BOCHS TESTING FORM Version 0.5
 -------------------------------------------------------------
 
 Because of the variety of platforms and configurations that Bochs
@@ -41,7 +41,7 @@ Redhat Linux 6.2 with 2.2.16 kernel.
 [__]
 
 What version of bochs are you using?
-   [ ] compiled from version 2.3.7
+   [ ] compiled from version 2.4.2
    [ ] compiled from version [_____]
    [ ] I compiled it from the CVS sources from date: [__]
    [ ] other source distribution from URL: [__]
@@ -77,9 +77,11 @@ End of compile-specific questions!
 What guest operating system are you using inside bochs?
 [__]
 
-Are you booting from a floppy or hard disk?
+Are you booting from a floppy, hard disk or cdrom image ?
   [ ] floppy image
   [ ] raw floppy drive
+  [ ] cdrom
+  [ ] cdrom image
   [ ] hard drive image
   [ ] raw hard drive         (is this even possible?)
   [ ] other [__]
@@ -120,6 +122,7 @@ sb16               [X]      [ ]     [ ]     [__]
 ne2000             [X]      [ ]     [ ]     [__]
 i440FX pci         [X]      [ ]     [ ]     [__]
 debugger           [X]      [ ]     [ ]     [__]
+gui debugger       [X]      [ ]     [ ]     [__]
 external loader    [X]      [ ]     [ ]     [__]
 save/restore       [X]      [ ]     [ ]     [__]
 VGA                [X]      [ ]     [ ]     [__]

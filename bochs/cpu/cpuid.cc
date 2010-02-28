@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpuid.cc,v 1.94 2010-02-26 22:53:43 sshwarts Exp $
+// $Id: cpuid.cc,v 1.95 2010-02-28 14:52:16 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007-2009 Stanislav Shwartsman
@@ -767,6 +767,7 @@ void BX_CPU_C::init_cpu_features_bitmask(void)
   bx_bool aes_enabled = SIM->get_param_bool(BXPN_CPUID_AES)->get();
   bx_bool movbe_enabled = SIM->get_param_bool(BXPN_CPUID_MOVBE)->get();
   bx_bool xsave_enabled = SIM->get_param_bool(BXPN_CPUID_XSAVE)->get();
+  bx_bool xapic_enabled = SIM->get_param_bool(BXPN_CPUID_XAPIC)->get();
   unsigned sse_enabled = SIM->get_param_enum(BXPN_CPUID_SSE)->get();
 
   // sanity checks
@@ -786,6 +787,13 @@ void BX_CPU_C::init_cpu_features_bitmask(void)
      }
   }
 
+  if (xapic_enabled) {
+     if (! BX_SUPPORT_APIC) {
+       BX_PANIC(("PANIC: XAPIC enabled when APIC is not compiled in !"));
+       return;
+     }
+  }
+
   if (sse_enabled) {
      if (BX_SUPPORT_MMX == 0 || BX_CPU_LEVEL < 6) {
        BX_PANIC(("PANIC: SSE support requires P6 emulation with MMX enabled !"));
@@ -793,8 +801,8 @@ void BX_CPU_C::init_cpu_features_bitmask(void)
      }
 
      if (sse_enabled >= BX_CPUID_SUPPORT_SSE2) {
-       if (! BX_SUPPORT_XAPIC) {
-         BX_PANIC(("PANIC: SSE2 is enabled and XAPIC is not configured in !"));
+       if (! xapic_enabled) {
+         BX_PANIC(("PANIC: SSE2 is enabled and without XAPIC !"));
          return;
        }
      }

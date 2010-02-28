@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.h,v 1.50 2010-02-24 20:59:49 sshwarts Exp $
+// $Id: apic.h,v 1.51 2010-02-28 14:52:16 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (c) 2002-2009 Zwane Mwaikambo, Stanislav Shwartsman
@@ -28,12 +28,6 @@
 #define APIC_LEVEL_TRIGGERED	1
 #define APIC_EDGE_TRIGGERED	0
 
-#if BX_SUPPORT_XAPIC
-#  define BX_LAPIC_VERSION_ID 0x00050014  // P4 has 6 LVT entries
-#else
-#  define BX_LAPIC_VERSION_ID 0x00040010  // P6 has 4 LVT entries
-#endif
-
 #define BX_LAPIC_BASE_ADDR  0xfee00000  // default Local APIC address
 #define BX_NUM_LOCAL_APICS  BX_SMP_PROCESSORS
 #define BX_LAPIC_MAX_INTS   256
@@ -47,7 +41,9 @@ class BOCHSAPI bx_local_apic_c : public logfunctions
 {
   bx_phy_address base_addr;
   unsigned mode;
+  bx_bool xapic;
   Bit32u apic_id;               //  4 bit in legacy mode, 8 bit in XAPIC mode
+  Bit32u apic_version_id;
 
   bx_bool software_enabled;
   Bit8u  spurious_vector;
@@ -123,6 +119,7 @@ public:
   bx_phy_address get_base(void) const { return base_addr; }
   void set_base(bx_phy_address newbase);
   Bit32u get_id() const { return apic_id; }
+  bx_bool is_xapic() const { return xapic; }
   bx_bool is_selected(bx_phy_address addr);
   void read(bx_phy_address addr, void *data, unsigned len);
   void write(bx_phy_address addr, void *data, unsigned len);

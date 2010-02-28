@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.414 2010-02-26 22:53:43 sshwarts Exp $
+// $Id: main.cc,v 1.415 2010-02-28 14:52:16 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -79,8 +79,7 @@ logfunctions *pluginlog = &thePluginLog;
 bx_startup_flags_t bx_startup_flags;
 bx_bool bx_user_quit;
 Bit8u bx_cpu_count;
-// for GUI debugger
-bx_bool bx_cpu_support_sse;
+Bit32u apic_id_mask; // determinted by XAPIC option
 
 /* typedefs */
 
@@ -866,11 +865,20 @@ int bx_begin_simulation (int argc, char *argv[])
                  SIM->get_param_num(BXPN_CPU_NCORES)->get() *
                  SIM->get_param_num(BXPN_CPU_NTHREADS)->get();
 
-  BX_ASSERT(bx_cpu_count <= BX_MAX_SMP_THREADS_SUPPORTED);
-  BX_ASSERT(bx_cpu_count >  0);
+  bx_bool xapic = SIM->get_param_bool(BXPN_CPUID_XAPIC)->get();
 
-  // for GUI debugger
-  bx_cpu_support_sse = SIM->get_param_enum(BXPN_CPUID_SSE)->get();
+  // For P6 and Pentium family processors the local APIC ID feild is 4 bits
+  // APIC_MAX_ID indicate broadcast so it can't be used as valid APIC ID
+  apic_id_mask = xapic ? 0xFF : 0xF;
+
+  // leave one APIC ID to I/O APIC
+  unsigned max_smp_threads = apic_id_mask - 1;
+  if (bx_cpu_count > max_smp_threads) {
+    BX_PANIC(("cpu: too many SMP threads defined, only %u threads supported by %sAPIC",
+      max_smp_threads, xapic ? "x" : "legacy "));
+  }
+
+  BX_ASSERT(bx_cpu_count > 0);
 
   bx_init_hardware();
 

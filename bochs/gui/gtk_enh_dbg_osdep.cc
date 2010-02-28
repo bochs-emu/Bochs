@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gtk_enh_dbg_osdep.cc,v 1.11 2010-02-25 22:04:31 sshwarts Exp $
+// $Id: gtk_enh_dbg_osdep.cc,v 1.12 2010-02-28 14:52:17 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  BOCHS ENHANCED DEBUGGER Ver 1.2
@@ -775,7 +775,7 @@ void SpecialInit()
     GrayMenuItem (0, CMD_FPUR);
 #endif
 
-    if (! bx_cpu_support_sse)
+    if (! CpuSupportSSE)
       GrayMenuItem (0, CMD_XMMR);
 
     doOneTimeInit = FALSE;      // make sure this function is never called again

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.250 2010-02-26 22:53:43 sshwarts Exp $
+// $Id: siminterface.h,v 1.251 2010-02-28 14:52:17 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  The Bochs Project
@@ -1171,5 +1171,3 @@ typedef struct BOCHSAPI {
 BOCHSAPI extern bx_startup_flags_t bx_startup_flags;
 BOCHSAPI extern bx_bool bx_user_quit;
 BOCHSAPI extern Bit8u bx_cpu_count;
-// for GUI debugger
-BOCHSAPI extern bx_bool bx_cpu_support_sse;

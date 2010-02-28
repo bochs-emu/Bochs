@@ -151,6 +151,10 @@ cpu: count=1, ips=50000000, reset_on_triple_fault=1, ignore_bad_msrs=1, msrs="ms
 #  Any of NONE/SSE/SSE2/SSE3/SSSE3/SSE4_1/SSE4_2 could be selected.
 #  This option exists only if Bochs compiled with BX_CPU_LEVEL >= 6.
 #
+#  XAPIC:
+#  Select XAPIC extensions support.
+#  This option exists only if Bochs compiled with BX_CPU_LEVEL >= 6.
+#
 #  AES:
 #  Select AES instruction set support.
 #  This option exists only if Bochs compiled with BX_CPU_LEVEL >= 6.
@@ -175,7 +179,7 @@ cpu: count=1, ips=50000000, reset_on_triple_fault=1, ignore_bad_msrs=1, msrs="ms
 #  Determine whether to limit maximum CPUID function to 3. This mode is
 #  required to workaround WinNT installation and boot issues.
 #=======================================================================
-cpuid: sep=1, sse=sse4_2, aes=1, movbe=1, xsave=1, cpuid_limit_winnt=0
+cpuid: sep=1, sse=sse4_2, xapic=1, aes=1, movbe=1, xsave=1, cpuid_limit_winnt=0
 
 #=======================================================================
 # MEMORY
