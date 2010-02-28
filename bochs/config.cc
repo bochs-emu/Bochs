@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.196 2010-02-26 22:53:43 sshwarts Exp $
+// $Id: config.cc,v 1.197 2010-02-28 06:22:24 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2009  The Bochs Project
@@ -393,7 +393,7 @@ void bx_init_options()
       "sse", "Support for SSE instruction set",
       "Support for SSE/SSE2/SSE3/SSSE3/SSE4_1/SSE4_2 instruction set",
       sse_names,
-      BX_CPUID_SUPPORT_SSE2,
+      BX_SUPPORT_XAPIC ? BX_CPUID_SUPPORT_SSE2 : BX_CPUID_SUPPORT_SSE,
       BX_CPUID_SUPPORT_NOSSE);
   new bx_param_bool_c(cpuid_param,
       "movbe", "Support for MOVBE instruction",

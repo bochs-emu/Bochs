@@ -148,7 +148,7 @@ cpu: count=1, ips=50000000, reset_on_triple_fault=1, ignore_bad_msrs=1, msrs="ms
 #
 #  SSE:
 #  Select SSE instruction set support.
-#  Any of SSE/SSE2/SSE3/SSSE3/SSE4_1/SSE4_2 could be selected.
+#  Any of NONE/SSE/SSE2/SSE3/SSSE3/SSE4_1/SSE4_2 could be selected.
 #  This option exists only if Bochs compiled with BX_CPU_LEVEL >= 6.
 #
 #  AES:
