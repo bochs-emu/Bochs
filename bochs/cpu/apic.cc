@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.cc,v 1.134 2010-02-28 14:52:16 sshwarts Exp $
+// $Id: apic.cc,v 1.135 2010-03-01 17:35:49 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (c) 2002-2009 Zwane Mwaikambo, Stanislav Shwartsman
@@ -170,7 +170,7 @@ bx_local_apic_c::bx_local_apic_c(BX_CPU_C *mycpu, unsigned id)
   : base_addr(BX_LAPIC_BASE_ADDR), cpu(mycpu)
 {
   apic_id = id;
-#if BX_SUPORT_SMP
+#if BX_SUPPORT_SMP
   if (apic_id >= bx_cpu_count)
     BX_PANIC(("PANIC: invalid APIC_ID assigned %d (max = %d)", apic_id, bx_cpu_count));
 #else

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.642 2010-02-26 22:53:43 sshwarts Exp $
+// $Id: cpu.h,v 1.643 2010-03-01 17:35:49 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -623,6 +623,7 @@ typedef struct
 #define BX_CPU_AVX              0x00800000        /* AVX instruction */
 #define BX_CPU_AVX_FMA          0x01000000        /* AVX FMA instruction */
 #define BX_CPU_X86_64           0x02000000        /* x86-64 instruction */
+#define BX_CPU_XAPIC            0x04000000        /* XAPIC extensions */
 
 struct cpuid_function_t {
   Bit32u eax;

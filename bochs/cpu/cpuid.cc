@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpuid.cc,v 1.95 2010-02-28 14:52:16 sshwarts Exp $
+// $Id: cpuid.cc,v 1.96 2010-03-01 17:35:49 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007-2009 Stanislav Shwartsman
@@ -885,6 +885,9 @@ void BX_CPU_C::init_cpu_features_bitmask(void)
 
   if (movbe_enabled)
     features_bitmask |= BX_CPU_MOVBE;
+
+  if (xapic_enabled)
+    features_bitmask |= BX_CPU_XAPIC;
 #endif
 
 #if BX_SUPPORT_VMX
