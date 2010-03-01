@@ -21,7 +21,8 @@ Detailed change log :
     Now you could enable/disable any of SSEx/AES/MOVBE/SYSENTER_SYSEXIT/XSAVE
     instruction sets using new CPUID option in .bochsrc.
     Configure options:
-       --enable-sse, --enable-aes, --enable-movbe, --enable-sep, --enable-xsave
+       --enable-mmx, --enable-sse, --enable-movbe, --enable-xsave,
+       --enable-sep, --enable-aes
     are deprecated and should not be used anymore.
 
   - Local APIC configure option --enable-apic is deprecated and should not
@@ -48,6 +49,9 @@ Detailed change log :
 
 - I/O Devices
   - USB HP DeskJet 920C printer device emulation (Ben Lunt)
+
+- Misc
+  - Updated Bochs TESTFORM to version 0.5
 
 - SF patches applied
  [2938273] allow instrumentation to change execute by Konrad Grochowski

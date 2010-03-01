@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.643 2010-03-01 17:35:49 sshwarts Exp $
+// $Id: cpu.h,v 1.644 2010-03-01 18:53:53 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -889,7 +889,7 @@ public: // for now...
   MSR *msrs[BX_MSR_MAX_INDEX];
 #endif
 
-#if BX_SUPPORT_FPU || BX_SUPPORT_MMX
+#if BX_SUPPORT_FPU
   i387_t the_i387;
 #endif
 
@@ -3329,9 +3329,11 @@ public: // for now...
   BX_SMF Bit16u unpack_FPU_TW(Bit16u tag_byte);
 #endif
 
+#if BX_CPU_LEVEL >= 5
   BX_SMF void prepareMMX(void);
   BX_SMF void prepareFPU2MMX(void); /* cause transition from FPU to MMX technology state */
   BX_SMF void print_state_MMX(void);
+#endif
 
 #if BX_CPU_LEVEL >= 6
   BX_SMF void prepareSSE(void);
@@ -3415,7 +3417,7 @@ public: // for now...
 #endif
 };
 
-#if BX_SUPPORT_MMX
+#if BX_CPU_LEVEL >= 5
 BX_CPP_INLINE void BX_CPU_C::prepareMMX(void)
 {
   if(BX_CPU_THIS_PTR cr0.get_EM())

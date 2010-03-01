@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: param_names.h,v 1.3 2010-02-28 14:52:16 sshwarts Exp $
+// $Id: param_names.h,v 1.4 2010-03-01 18:53:53 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  The Bochs Project
@@ -43,6 +43,7 @@
 #define BXPN_VENDOR_STRING               "cpuid.vendor_string"
 #define BXPN_BRAND_STRING                "cpuid.brand_string"
 #define BXPN_CPUID_LIMIT_WINNT           "cpuid.cpuid_limit_winnt"
+#define BXPN_CPUID_MMX                   "cpuid.mmx"
 #define BXPN_CPUID_SSE                   "cpuid.sse"
 #define BXPN_CPUID_AES                   "cpuid.aes"
 #define BXPN_CPUID_MOVBE                 "cpuid.movbe"

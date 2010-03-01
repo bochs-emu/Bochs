@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.275 2010-02-26 22:53:43 sshwarts Exp $
+$Id: user.dbk,v 1.276 2010-03-01 18:53:53 sshwarts Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -2040,7 +2040,7 @@ turn it off.
   <tbody>
     <row id="configure-enable-cpu-level">
       <entry>--enable-cpu-level={<option>3,4,5,6</option>}</entry>
-      <entry>5</entry>
+      <entry>6</entry>
       <entry>
       Select which CPU level to emulate.  Choices are 3,4,5,6 which mean to
       target 386, 486, Pentium, or Pentium Pro and later emulation.
@@ -2078,18 +2078,6 @@ turn it off.
       <entry>--enable-1g-pages</entry>
       <entry>no</entry>
       <entry>support for 1G page extensions in x86-64 long mode</entry>
-    </row>
-    <row>
-      <entry>--enable-xapic</entry>
-      <entry>no</entry>
-      <entry>support for XAPIC extensions</entry>
-    </row>
-    <row>
-      <entry>--enable-mmx</entry>
-      <entry>no (yes for <link linkend="configure-enable-cpu-level">CPU</link> >= 5)</entry>
-      <entry>
-      Add support for MMX instructions, written by Stanislav Shwartsman.
-      </entry>
     </row>
     <row>
       <entry>--enable-vmx</entry>

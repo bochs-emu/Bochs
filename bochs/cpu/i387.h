@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: i387.h,v 1.39 2009-10-14 20:45:29 sshwarts Exp $
+// $Id: i387.h,v 1.40 2010-03-01 18:53:53 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2004-2009 Stanislav Shwartsman
@@ -178,8 +178,6 @@ BX_CPP_INLINE void i387_t::reset()
   memset(st_space, 0, sizeof(floatx80)*8);
 }
 
-#if BX_SUPPORT_MMX
-
 typedef union bx_packed_mmx_reg_t {
    Bit8s   _sbyte[8];
    Bit16s  _s16[4];
@@ -259,8 +257,6 @@ typedef union bx_packed_mmx_reg_t {
    (BX_FPU_REG(index)).fraction = MMXUQ(value);				\
    (BX_FPU_REG(index)).exp = 0xffff;       				\
 }
-
-#endif 		/* BX_SUPPORT_MMX */
 
 #endif		/* BX_SUPPORT_FPU */
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.415 2010-02-28 14:52:16 sshwarts Exp $
+// $Id: main.cc,v 1.416 2010-03-01 18:53:53 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -992,10 +992,15 @@ void bx_init_hardware()
 
   io->set_log_prefix(SIM->get_param_string(BXPN_LOG_PREFIX)->getptr());
 
+#if BX_CPU_LEVEL >= 5
+  bx_bool mmx_enabled = SIM->get_param_bool(BXPN_CPUID_MMX)->get();
+#endif
+#if BX_CPU_LEVEL >= 6
   bx_bool aes_enabled = SIM->get_param_bool(BXPN_CPUID_AES)->get();
   bx_bool movbe_enabled = SIM->get_param_bool(BXPN_CPUID_MOVBE)->get();
   bx_bool sep_enabled = SIM->get_param_bool(BXPN_CPUID_SEP)->get();
   bx_bool xsave_enabled = SIM->get_param_bool(BXPN_CPUID_XSAVE)->get();
+#endif
 
   // Output to the log file the cpu and device settings
   // This will by handy for bug reports
@@ -1019,19 +1024,23 @@ void bx_init_hardware()
 #endif
   BX_INFO(("  APIC support: %s",BX_SUPPORT_APIC?"yes":"no"));
   BX_INFO(("  FPU support: %s",BX_SUPPORT_FPU?"yes":"no"));
-  BX_INFO(("  MMX support: %s",BX_SUPPORT_MMX?"yes":"no"));
-  BX_INFO(("  SSE support: %s", SIM->get_param_enum(BXPN_CPUID_SSE)->get_selected()));
+#if BX_CPU_LEVEL >= 5
+  BX_INFO(("  MMX support: %s",mmx_enabled?"yes":"no"));
   BX_INFO(("  3dnow! support: %s",BX_SUPPORT_3DNOW?"yes":"no"));
+#endif
+#if BX_CPU_LEVEL >= 6
+  BX_INFO(("  SEP support: %s",sep_enabled?"yes":"no"));
+  BX_INFO(("  SSE support: %s", SIM->get_param_enum(BXPN_CPUID_SSE)->get_selected()));
+  BX_INFO(("  XSAVE support: %s",xsave_enabled?"yes":"no"));
+  BX_INFO(("  AES support: %s",aes_enabled?"yes":"no"));
+  BX_INFO(("  MOVBE support: %s",movbe_enabled?"yes":"no"));
 #if BX_SUPPORT_X86_64
   BX_INFO(("  1G paging support: %s",BX_SUPPORT_1G_PAGES?"yes":"no"));
 #endif
   BX_INFO(("  x86-64 support: %s",BX_SUPPORT_X86_64?"yes":"no"));
-  BX_INFO(("  SEP support: %s",sep_enabled?"yes":"no"));
   BX_INFO(("  MWAIT support: %s",BX_SUPPORT_MONITOR_MWAIT?"yes":"no"));
-  BX_INFO(("  XSAVE support: %s",xsave_enabled?"yes":"no"));
-  BX_INFO(("  AES support: %s",aes_enabled?"yes":"no"));
-  BX_INFO(("  MOVBE support: %s",movbe_enabled?"yes":"no"));
   BX_INFO(("  VMX support: %s",BX_SUPPORT_VMX?"yes":"no"));
+#endif
   BX_INFO(("Optimization configuration"));
   BX_INFO(("  RepeatSpeedups support: %s",BX_SupportRepeatSpeedups?"yes":"no"));
   BX_INFO(("  Trace cache support: %s",BX_SUPPORT_TRACE_CACHE?"yes":"no"));

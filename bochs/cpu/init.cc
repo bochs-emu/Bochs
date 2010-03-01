@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.228 2010-02-26 22:53:43 sshwarts Exp $
+// $Id: init.cc,v 1.229 2010-03-01 18:53:53 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -482,7 +482,7 @@ void BX_CPU_C::register_state(void)
 #endif
 #endif
 
-#if BX_SUPPORT_FPU || BX_SUPPORT_MMX
+#if BX_SUPPORT_FPU
   bx_list_c *fpu = new bx_list_c(cpu, "FPU", 17);
   BXRS_HEX_PARAM_FIELD(fpu, cwd, the_i387.cwd);
   BXRS_HEX_PARAM_FIELD(fpu, swd, the_i387.swd);

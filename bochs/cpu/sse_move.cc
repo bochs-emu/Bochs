@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_move.cc,v 1.109 2010-02-26 11:44:50 sshwarts Exp $
+// $Id: sse_move.cc,v 1.110 2010-03-01 18:53:53 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003-2009 Stanislav Shwartsman
@@ -159,13 +159,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FXSAVE(bxInstruction_c *i)
 
   BX_DEBUG(("FXSAVE: save FPU/MMX/SSE state"));
 
-#if BX_SUPPORT_MMX
-  if(BX_CPU_THIS_PTR cr0.get_TS())
-    exception(BX_NM_EXCEPTION, 0, 0);
+  if (BX_CPU_SUPPORT_FEATURE(BX_CPU_MMX))
+  {
+    if(BX_CPU_THIS_PTR cr0.get_TS())
+      exception(BX_NM_EXCEPTION, 0, 0);
 
-  if(BX_CPU_THIS_PTR cr0.get_EM())
-    exception(BX_UD_EXCEPTION, 0, 0);
-#endif
+    if(BX_CPU_THIS_PTR cr0.get_EM())
+      exception(BX_UD_EXCEPTION, 0, 0);
+  }
 
   xmm.xmm16u(0) = BX_CPU_THIS_PTR the_i387.get_control_word();
   xmm.xmm16u(1) = BX_CPU_THIS_PTR the_i387.get_status_word();
@@ -278,13 +279,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FXRSTOR(bxInstruction_c *i)
 
   BX_DEBUG(("FXRSTOR: restore FPU/MMX/SSE state"));
 
-#if BX_SUPPORT_MMX
-  if(BX_CPU_THIS_PTR cr0.get_TS())
-    exception(BX_NM_EXCEPTION, 0, 0);
+  if (BX_CPU_SUPPORT_FEATURE(BX_CPU_MMX)) {
+    if(BX_CPU_THIS_PTR cr0.get_TS())
+      exception(BX_NM_EXCEPTION, 0, 0);
 
-  if(BX_CPU_THIS_PTR cr0.get_EM())
-    exception(BX_UD_EXCEPTION, 0, 0);
-#endif
+    if(BX_CPU_THIS_PTR cr0.get_EM())
+      exception(BX_UD_EXCEPTION, 0, 0);
+  }
 
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 

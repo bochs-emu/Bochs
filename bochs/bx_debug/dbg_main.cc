@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.232 2010-02-26 14:18:18 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.233 2010-03-01 18:53:53 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -706,16 +706,22 @@ void bx_dbg_print_sse_state(void)
 
 void bx_dbg_print_mmx_state(void)
 {
-#if BX_SUPPORT_MMX
-  char param_name[20];
-  for(unsigned i=0;i<8;i++) {
-    sprintf(param_name, "FPU.st%d.fraction", i);
-    Bit64u mmreg = SIM->get_param_num(param_name, dbg_cpu_list)->get64();
-    dbg_printf("MM[%d]: %08x:%08x\n", i, GET32H(mmreg), GET32L(mmreg));
+#if BX_CPU_LEVEL >= 5
+  Bit32u cpuid_features_bitmask = SIM->get_param_num("cpuid_features_bitmask", dbg_cpu_list)->get();
+
+  if ((cpuid_features_bitmask & BX_CPU_MMX) != 0) {
+    char param_name[20];
+    for(unsigned i=0;i<8;i++) {
+      sprintf(param_name, "FPU.st%d.fraction", i);
+      Bit64u mmreg = SIM->get_param_num(param_name, dbg_cpu_list)->get64();
+      dbg_printf("MM[%d]: %08x:%08x\n", i, GET32H(mmreg), GET32L(mmreg));
+    }
   }
-#else
-  dbg_printf("The CPU doesn't support MMX state !\n");
+  else
 #endif
+  {
+    dbg_printf("The CPU doesn't support MMX state !\n");
+  }
 }
 
 void bx_dbg_print_fpu_state(void)

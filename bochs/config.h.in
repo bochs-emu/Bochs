@@ -683,7 +683,6 @@ typedef
 
 #define BX_SUPPORT_ALIGNMENT_CHECK 0
 #define BX_SUPPORT_FPU 0
-#define BX_SUPPORT_MMX 0
 #define BX_SUPPORT_3DNOW 0
 #define BX_SUPPORT_MISALIGNED_SSE 0
 #define BX_SUPPORT_MONITOR_MWAIT 0
@@ -715,24 +714,12 @@ typedef
   #error MSRs are supported only with CPU level >= 5 !
 #endif
 
-#if (BX_SUPPORT_MMX && BX_CPU_LEVEL < 5)
-  #error With CPU level < 5, you must disable MMX support !
-#endif
-
 #if (!BX_SUPPORT_FPU && BX_CPU_LEVEL > 4)
   #error With CPU level > 4, you must enable FPU support !
 #endif
 
-#if (BX_SUPPORT_MMX && !BX_SUPPORT_FPU)
-  #error "MMX cannot be compiled without FPU support !"
-#endif
-
 #if (BX_SUPPORT_FPU && BX_CPU_LEVEL < 3)
   #error "FPU cannot be compiled without cpu level >= 3 !"
-#endif
-
-#if (BX_SUPPORT_3DNOW && !BX_SUPPORT_MMX)
-  #error "3DNow! cannot be compiled without MMX support !"
 #endif
 
 #if (BX_CPU_LEVEL<6 && BX_SUPPORT_VMX)

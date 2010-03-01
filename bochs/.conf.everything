@@ -12,7 +12,6 @@
   --enable-debugger \
   --enable-disasm \
   --enable-debugger-gui \
-  --enable-mmx \
   --enable-fpu \
   --enable-misaligned-sse \
   --enable-alignment-check \

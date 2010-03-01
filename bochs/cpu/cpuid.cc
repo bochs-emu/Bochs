@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpuid.cc,v 1.96 2010-03-01 17:35:49 sshwarts Exp $
+// $Id: cpuid.cc,v 1.97 2010-03-01 18:53:53 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007-2009 Stanislav Shwartsman
@@ -66,11 +66,12 @@ Bit32u BX_CPU_C::get_cpu_version_information(void)
 
 #elif BX_CPU_LEVEL == 5	
   family   = 5;
-#if BX_SUPPORT_MMX
-  model    = 4;         // Pentium MMX
-#else
-  model    = 1;         // Pentium 60/66
-#endif
+
+  if (BX_CPU_SUPPORT_FEATURE(BX_CPU_MMX))
+    model = 4; // Pentium MMX
+  else
+    model = 1; // Pentium 60/66
+
   stepping = 3;
 
   /* ****** */
@@ -265,8 +266,10 @@ Bit32u BX_CPU_C::get_std_cpuid_features(void)
   if (BX_CPU_THIS_PTR cpuid_features_bitmask & BX_CPU_CLFLUSH)
     features |= (1<<19);
 
+#if BX_CPU_LEVEL >= 5
   if (BX_CPU_THIS_PTR cpuid_features_bitmask & BX_CPU_MMX)
     features |= (1<<23);
+#endif
 
 #if BX_CPU_LEVEL >= 6
   if (BX_CPU_THIS_PTR cpuid_features_bitmask & BX_CPU_P6) {
@@ -763,6 +766,7 @@ void BX_CPU_C::init_cpu_features_bitmask(void)
 {
   Bit32u features_bitmask = 0;
 
+  bx_bool mmx_enabled = SIM->get_param_bool(BXPN_CPUID_MMX)->get();
   bx_bool sep_enabled = SIM->get_param_bool(BXPN_CPUID_SEP)->get();
   bx_bool aes_enabled = SIM->get_param_bool(BXPN_CPUID_AES)->get();
   bx_bool movbe_enabled = SIM->get_param_bool(BXPN_CPUID_MOVBE)->get();
@@ -771,6 +775,13 @@ void BX_CPU_C::init_cpu_features_bitmask(void)
   unsigned sse_enabled = SIM->get_param_enum(BXPN_CPUID_SSE)->get();
 
   // sanity checks
+#if BX_SUPPORT_3DNOW
+  if (! mmx_enabled) {
+    BX_PANIC(("PANIC: 3DNOW emulation requires MMX support !"));
+    return;
+  }
+#endif
+
   if (aes_enabled) {
      // AES required 3-byte opcode (SSS3E support or more)
      if (sse_enabled < BX_CPUID_SUPPORT_SSSE3) {
@@ -795,7 +806,7 @@ void BX_CPU_C::init_cpu_features_bitmask(void)
   }
 
   if (sse_enabled) {
-     if (BX_SUPPORT_MMX == 0 || BX_CPU_LEVEL < 6) {
+     if (mmx_enabled == 0 || BX_CPU_LEVEL < 6) {
        BX_PANIC(("PANIC: SSE support requires P6 emulation with MMX enabled !"));
        return;
      }
@@ -836,12 +847,9 @@ void BX_CPU_C::init_cpu_features_bitmask(void)
 #endif
 #if BX_CPU_LEVEL >= 5
   features_bitmask |= BX_CPU_PENTIUM;
-#endif
-#if BX_CPU_LEVEL >= 6
-  features_bitmask |= BX_CPU_P6;
-#endif
-#if BX_SUPPORT_MMX
-  features_bitmask |= BX_CPU_MMX;
+
+  if (mmx_enabled)
+    features_bitmask |= BX_CPU_MMX;
 #endif
 #if BX_SUPPORT_3DNOW
   features_bitmask |= BX_CPU_3DNOW;
@@ -851,6 +859,8 @@ void BX_CPU_C::init_cpu_features_bitmask(void)
 #endif
 
 #if BX_CPU_LEVEL >= 6
+  features_bitmask |= BX_CPU_P6;
+
   // enabled CLFLUSH only when SSE2 or higher is enabled
   if (sse_enabled >= BX_CPUID_SUPPORT_SSE2)
     features_bitmask |= BX_CPU_CLFLUSH;
