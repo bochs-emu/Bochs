@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32_enh_dbg_osdep.cc,v 1.19 2010-02-28 14:52:17 sshwarts Exp $
+// $Id: win32_enh_dbg_osdep.cc,v 1.20 2010-03-02 20:01:33 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  BOCHS ENHANCED DEBUGGER Ver 1.2
@@ -1173,7 +1173,6 @@ void ShowMemData(bx_bool initting)
 void FillPTree()
 {
     HTREEITEM h_PTroot;
-    int i;
     extern bx_list_c *root_param;
     // Note: don't multithread this display -- the user expects it to complete
     doDumpRefresh = FALSE;
@@ -1191,7 +1190,7 @@ void FillPTree()
     tvis.item.stateMask = TVIS_EXPANDED;
     h_PTroot = TreeView_InsertItem(hT,&tvis);
     tvis.item.mask = TVIF_TEXT | TVIF_CHILDREN; // don't expand any other layers
-    i = root_param->get_size();
+    iny i = root_param->get_size();
     while (--i >= 0)
         MakeBL(&h_PTroot, root_param->get(i));
     ShowWindow(hT,SW_SHOW);

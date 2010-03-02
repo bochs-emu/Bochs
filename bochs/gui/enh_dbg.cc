@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: enh_dbg.cc,v 1.25 2010-02-28 14:52:17 sshwarts Exp $
+// $Id: enh_dbg.cc,v 1.26 2010-03-02 20:01:32 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  BOCHS ENHANCED DEBUGGER Ver 1.2
@@ -452,13 +452,13 @@ void UpdateStatus()
         if (CpuModeChange != FALSE)     // Did CR0 bits or EFER bits change value?
         {
             CpuModeChange = FALSE;
-            *tmpcb = 0;
+            char mode[32];
             switch (CpuMode) {
                 case BX_MODE_IA32_REAL:
                     if (In32Mode == FALSE)
-                        strcpy (tmpcb, "CPU: Real Mode (16)");
+                        strcpy (mode, "CPU: Real Mode (16)");
                     else
-                        strcpy (tmpcb, "CPU: Real Mode (32)");
+                        strcpy (mode, "CPU: Real Mode (32)");
                     break;
                 case BX_MODE_IA32_V8086:
                     strcpy (tmpcb, "CPU: V8086 Mode");
@@ -466,25 +466,25 @@ void UpdateStatus()
                 case BX_MODE_IA32_PROTECTED:
                     if (In32Mode == FALSE) {
                         if (InPaging != 0)
-                            strcpy (tmpcb, "CPU: PMode (16) (PG)");
+                            strcpy (mode, "CPU: PMode (16) (PG)");
                         else
-                            strcpy (tmpcb, "CPU: PMode (16)");
+                            strcpy (mode, "CPU: PMode (16)");
                     }
                     else {
                         if (InPaging != 0)
-                            strcpy (tmpcb, "CPU: PMode (32) (PG)");
+                            strcpy (mode, "CPU: PMode (32) (PG)");
                         else
-                            strcpy (tmpcb, "CPU: PMode (32)");
+                            strcpy (mode, "CPU: PMode (32)");
                     }
                     break;
                 case BX_MODE_LONG_COMPAT:
-                    strcpy (tmpcb, "CPU: Compatibility Mode");
+                    strcpy (mode, "CPU: Compatibility Mode");
                     break;
                 case BX_MODE_LONG_64:
-                    strcpy (tmpcb, "CPU: Long Mode");
+                    strcpy (mode, "CPU: Long Mode");
                     break;
             }
-            SetStatusText(1, tmpcb);    // display CPU mode in status col#1
+            SetStatusText(1, mode);    // display CPU mode in status col#1
         }
     }
 
@@ -1200,13 +1200,16 @@ void InitRegObjects()
     // get the param tree interface objects for every single register on all CPUs
     while (--cpu >= 0)
     {
-    // RegObject[j]s are all initialized to NULL when allocated in the BSS area
-    // but it doesn't hurt anything to do it again, once
+        // RegObject[j]s are all initialized to NULL when allocated in the BSS area
+        // but it doesn't hurt anything to do it again, once
         int i = TOT_REG_NUM + EXTRA_REGS;
         while (--i >= 0)
             RegObject[cpu][i] = (bx_param_num_c *) NULL;
-        sprintf (tmpcb,"bochs.cpu%d", cpu);    // set the "cpu number" for cpu_list
-        cpu_list = (bx_list_c *) SIM->get_param(tmpcb,root_param);
+
+        char pname[16];
+        sprintf (pname,"bochs.cpu%d", cpu);    // set the "cpu number" for cpu_list
+        cpu_list = (bx_list_c *) SIM->get_param(pname, root_param);
+
         // TODO: in the next version, put all the names in an array, and loop
         // -- but that method is not compatible with bochs 2.3.7 or earlier
 #if BX_SUPPORT_X86_64 == 0
