@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.cc,v 1.122 2009-12-04 19:50:27 sshwarts Exp $
+// $Id: floppy.cc,v 1.123 2010-03-02 07:07:57 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2009  The Bochs Project
@@ -135,7 +135,7 @@ void bx_floppy_ctrl_c::init(void)
 {
   Bit8u i, devtype, cmos_value;
 
-  BX_DEBUG(("Init $Id: floppy.cc,v 1.122 2009-12-04 19:50:27 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: floppy.cc,v 1.123 2010-03-02 07:07:57 sshwarts Exp $"));
   DEV_dma_register_8bit_channel(2, dma_read, dma_write, "Floppy Drive");
   DEV_register_irq(6, "Floppy Drive");
   for (unsigned addr=0x03F2; addr<=0x03F7; addr++) {
@@ -675,7 +675,7 @@ void bx_floppy_ctrl_c::floppy_command(void)
   for (i=0; i<BX_FD_THIS s.command_size; i++) {
     p += sprintf(p, "[%02x] ", (unsigned) BX_FD_THIS s.command[i]);
   }
-  BX_DEBUG((buf));
+  BX_DEBUG(("%s", buf));
 
   BX_FD_THIS s.pending_command = BX_FD_THIS s.command[0];
   switch (BX_FD_THIS s.pending_command) {
@@ -1801,7 +1801,7 @@ void bx_floppy_ctrl_c::enter_result_phase(void)
   for (i=0; i<BX_FD_THIS s.result_size; i++) {
     p += sprintf(p, "[%02x] ", (unsigned) BX_FD_THIS s.result[i]);
   }
-  BX_DEBUG((buf));
+  BX_DEBUG(("%s", buf));
 }
 
 void bx_floppy_ctrl_c::enter_idle_phase(void)

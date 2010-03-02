@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gtk_enh_dbg_osdep.cc,v 1.12 2010-02-28 14:52:17 sshwarts Exp $
+// $Id: gtk_enh_dbg_osdep.cc,v 1.13 2010-03-02 07:07:57 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  BOCHS ENHANCED DEBUGGER Ver 1.2
@@ -985,7 +985,7 @@ void DispMessage(const char *msg, const char *title)
         GTK_DIALOG_DESTROY_WITH_PARENT,
         GTK_MESSAGE_WARNING,
         GTK_BUTTONS_OK,
-        msg);
+        "%s", msg);
     gtk_window_set_title(GTK_WINDOW(dialog), title);
     gtk_dialog_run(GTK_DIALOG(dialog));
     gtk_widget_destroy(dialog);

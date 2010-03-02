@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: hdimage.cc,v 1.20 2009-12-04 19:50:28 sshwarts Exp $
+// $Id: hdimage.cc,v 1.21 2010-03-02 07:07:57 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2009  The Bochs Project
@@ -605,7 +605,7 @@ void sparse_image_t::panic(const char * message)
   {
     snprintf(buffer, sizeof(buffer), "error with sparse disk image %s - %s", pathname, message);
   }
-  BX_PANIC((buffer));
+  BX_PANIC(("%s", buffer));
 }
 
 ssize_t sparse_image_t::write (const void* buf, size_t count)
