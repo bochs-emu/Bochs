@@ -54,6 +54,7 @@ Detailed change log :
   - Updated Bochs TESTFORM to version 0.5
 
 - SF patches applied
+ [2960379] Fix build with -Wformat -Werror=format-security by Per Oyvind Karlsen
  [2938273] allow instrumentation to change execute by Konrad Grochowski
  [2926072] Indirection operators in expressions by Derek Peschel
  [2914433] makesym.perl misses symbols by John R. Jackson
