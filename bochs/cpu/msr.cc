@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: msr.cc,v 1.31 2010-02-26 11:44:50 sshwarts Exp $
+// $Id: msr.cc,v 1.32 2010-03-03 14:33:35 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008-2009 Stanislav Shwartsman
@@ -585,13 +585,13 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
 bx_bool BX_CPU_C::relocate_apic(Bit64u val_64)
 {
   /* MSR_APICBASE
-   *  0:7    Reserved
-   *  8      This is set if CPU is BSP
-   *  9      Reserved
-   *  10     X2APIC mode bit (1=enabled 0=disabled)
-   *  11     APIC Global Enable bit (1=enabled 0=disabled)
-   *  12:35  APIC Base Address (physical)
-   *  36:63  Reserved
+   *  [0:7]  Reserved
+   *    [8]  This is set if CPU is BSP
+   *    [9]  Reserved
+   *   [10]  X2APIC mode bit (1=enabled 0=disabled)
+   *   [11]  APIC Global Enable bit (1=enabled 0=disabled)
+   * [12:M]  APIC Base Address (physical)
+   * [M:63]  Reserved
    */
 
 #define BX_MSR_APICBASE_RESERVED_BITS 0x6ff
@@ -613,6 +613,12 @@ bx_bool BX_CPU_C::relocate_apic(Bit64u val_64)
     BX_CPU_THIS_PTR lapic.set_base(BX_CPU_THIS_PTR msr.apicbase);
     // TLB flush is required for emulation correctness
     TLB_flush();  // don't care about performance of apic relocation
+
+    if ((val32_lo & 0x800) == 0) {
+      // APIC global enable bit cleared, clear APIC on chip CPUID feature flag
+      BX_CPU_THIS_PTR cpuid_std_function[0x1].edx &= ~(1<<9);
+      BX_CPU_THIS_PTR cpuid_ext_function[0x1].edx &= ~(1<<9);
+    }
   }
   else {
     BX_INFO(("WRMSR: MSR_APICBASE APIC global enable bit cleared !"));

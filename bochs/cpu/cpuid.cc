@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpuid.cc,v 1.97 2010-03-01 18:53:53 sshwarts Exp $
+// $Id: cpuid.cc,v 1.98 2010-03-03 14:33:35 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007-2009 Stanislav Shwartsman
@@ -36,7 +36,16 @@
 #define RDX EDX
 #endif
 
-/* Get CPU version information. */
+/*
+ * Get CPU version information:
+ *
+ * [3:0]   Stepping ID
+ * [7:4]   Model: starts at 1
+ * [11:8]  Family: 4=486, 5=Pentium, 6=PPro, ...
+ * [13:12] Type: 0=OEM, 1=overdrive, 2=dual cpu, 3=reserved
+ * [31:14] Reserved
+ */
+
 Bit32u BX_CPU_C::get_cpu_version_information(void)
 {
   Bit32u family = 0, model = 0, stepping = 0;
@@ -124,14 +133,14 @@ Bit32u BX_CPU_C::get_extended_cpuid_features(void)
 {
   // [0:0]   SSE3: SSE3 Instructions
   // [1:1]   PCLMULQDQ Instruction support
-  // [2:2]   reserved
+  // [2:2]   DTES64: 64-bit DS area
   // [3:3]   MONITOR/MWAIT support
   // [4:4]   DS-CPL: CPL qualified debug store
   // [5:5]   VMX: Virtual Machine Technology
   // [6:6]   SMX: Secure Virtual Machine Technology
   // [7:7]   EST: Enhanced Intel SpeedStep Technology
   // [8:8]   TM2: Thermal Monitor 2
-  // [9:9]   SSE3E: SSE3E Instructions (Intel Core Duo 2 new instructions)
+  // [9:9]   SSSE3: SSSE3 Instructions
   // [10:10] CNXT-ID: L1 context ID
   // [11:11] reserved
   // [12:12] FMA Instructions support
@@ -219,7 +228,7 @@ Bit32u BX_CPU_C::get_std_cpuid_features(void)
   //   [15:15] CMOV: Cond Mov/Cmp Instructions
   //   [16:16] PAT: Page Attribute Table
   //   [17:17] PSE-36: Physical Address Extensions
-  //   [18:18] Processor Serial Number
+  //   [18:18] PSN: Processor Serial Number
   //   [19:19] CLFLUSH: CLFLUSH Instruction support
   //   [20:20] Reserved
   //   [21:21] DS: Debug Store
@@ -228,7 +237,7 @@ Bit32u BX_CPU_C::get_std_cpuid_features(void)
   //   [24:24] FXSR: FXSAVE/FXRSTOR (also indicates CR4.OSFXSR is available)
   //   [25:25] SSE: SSE Extensions
   //   [26:26] SSE2: SSE2 Extensions
-  //   [27:27] Reserved
+  //   [27:27] Self Snoop
   //   [28:28] Hyper Threading Technology
   //   [29:29] TM: Thermal Monitor
   //   [30:30] Reserved
@@ -311,20 +320,15 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CPUID(bxInstruction_c *i)
   }
 #endif
 
+  unsigned max_std_function = BX_CPU_THIS_PTR cpuid_std_function[0].eax - 1;
+  unsigned max_ext_function = BX_CPU_THIS_PTR cpuid_ext_function[0].eax - 1;
+
   if(function < 0x80000000) {
-    if(function < MAX_STD_CPUID_FUNCTION) {
+    if(function <= max_std_function) {
       RAX = BX_CPU_THIS_PTR cpuid_std_function[function].eax;
       RBX = BX_CPU_THIS_PTR cpuid_std_function[function].ebx;
       RCX = BX_CPU_THIS_PTR cpuid_std_function[function].ecx;
       RDX = BX_CPU_THIS_PTR cpuid_std_function[function].edx;
-#if BX_SUPPORT_APIC
-      if (function == 1) {
-        // if MSR_APICBASE APIC Global Enable bit has been cleared,
-        // the CPUID feature flag for the APIC is set to 0.
-        if ((BX_CPU_THIS_PTR msr.apicbase & 0x800) == 0)
-          RDX &= ~(1<<9); // APIC on chip
-      }
-#endif
       if (function == 0xD && subfunction > 0) {
         RAX = 0;
         RBX = 0;
@@ -336,31 +340,20 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CPUID(bxInstruction_c *i)
   }
   else {
     function -= 0x80000000;
-    if(function < MAX_EXT_CPUID_FUNCTION) {
+    if(function <= max_ext_function) {
       RAX = BX_CPU_THIS_PTR cpuid_ext_function[function].eax;
       RBX = BX_CPU_THIS_PTR cpuid_ext_function[function].ebx;
       RCX = BX_CPU_THIS_PTR cpuid_ext_function[function].ecx;
       RDX = BX_CPU_THIS_PTR cpuid_ext_function[function].edx;
-#if BX_SUPPORT_APIC
-      if (function == 1) {
-        // if MSR_APICBASE APIC Global Enable bit has been cleared,
-        // the CPUID feature flag for the APIC is set to 0.
-        if ((BX_CPU_THIS_PTR msr.apicbase & 0x800) == 0)
-          RDX &= ~(1<<9); // APIC on chip
-      }
-#endif
       return;
     }
   }
 
-  // unknown CPUID function
-  RAX = 0;
-  RBX = 0;
-  RCX = 0;
-  RDX = 0;
-#else
-  BX_INFO(("CPUID: not available on < 486"));
-  exception(BX_UD_EXCEPTION, 0, 0);
+  // unknown CPUID function - return maximum standard leaf
+  RAX = BX_CPU_THIS_PTR cpuid_ext_function[max_std_function].eax;
+  RBX = BX_CPU_THIS_PTR cpuid_ext_function[max_std_function].ebx;
+  RCX = BX_CPU_THIS_PTR cpuid_ext_function[max_std_function].ecx;
+  RDX = BX_CPU_THIS_PTR cpuid_ext_function[max_std_function].edx;
 #endif
 }
 
@@ -402,7 +395,7 @@ void BX_CPU_C::set_cpuid_defaults(void)
 #else
   // for Pentium Pro, Pentium II, Pentium 4 processors
   cpuid->eax = 2;
-  // do not report CPUID functions above 0x3 if cpuid_limit_winnt is set
+  // do not report CPUID functions above 0x2 if cpuid_limit_winnt is set
   // to workaround WinNT issue.
   if (! cpuid_limit_winnt) {
     if (BX_SUPPORT_MONITOR_MWAIT)
@@ -436,9 +429,6 @@ void BX_CPU_C::set_cpuid_defaults(void)
   //   [31:24] Local Apic ID
 
   cpuid->ebx = 0;
-#if BX_SUPPORT_APIC
-  cpuid->ebx |= ((BX_CPU_THIS_PTR lapic.get_id() & 0xff) << 24);
-#endif
   if (BX_CPU_SUPPORT_FEATURE(BX_CPU_CLFLUSH)) {
     cpuid->ebx |= (CACHE_LINE_SIZE / 8) << 8;
   }
@@ -447,18 +437,21 @@ void BX_CPU_C::set_cpuid_defaults(void)
   if (n_logical_processors > 1)
     cpuid->ebx |= (n_logical_processors << 16);
 #endif
+#if BX_SUPPORT_APIC
+  cpuid->ebx |= ((BX_CPU_THIS_PTR lapic.get_id() & 0xff) << 24);
+#endif
 
   // ECX:       Extended Feature Flags
   //   [0:0]   SSE3: SSE3 Instructions
   //   [1:1]   PCLMULQDQ Instruction support
-  //   [2:2]   reserved
+  //   [2:2]   DTES64: 64-bit DS area
   //   [3:3]   MONITOR/MWAIT support
   //   [4:4]   DS-CPL: CPL qualified debug store
   //   [5:5]   VMX: Virtual Machine Technology
   //   [6:6]   SMX: Secure Virtual Machine Technology
   //   [7:7]   EST: Enhanced Intel SpeedStep Technology
   //   [8:8]   TM2: Thermal Monitor 2
-  //   [9:9]   SSE3E: SSE3E Instructions (Intel Core Duo 2 new instructions)
+  //   [9:9]   SSSE3: SSSE3 Instructions
   //   [10:10] CNXT-ID: L1 context ID
   //   [11:11] reserved
   //   [12:12] FMA Instructions support
@@ -479,7 +472,6 @@ void BX_CPU_C::set_cpuid_defaults(void)
   //   [31:29] reserved
   cpuid->ecx = get_extended_cpuid_features();
 
-  // EDX:       Feature Flags
   //   [0:0]   FPU on chip
   //   [1:1]   VME: Virtual-8086 Mode enhancements
   //   [2:2]   DE: Debug Extensions (I/O breakpoints)
@@ -498,7 +490,7 @@ void BX_CPU_C::set_cpuid_defaults(void)
   //   [15:15] CMOV: Cond Mov/Cmp Instructions
   //   [16:16] PAT: Page Attribute Table
   //   [17:17] PSE-36: Physical Address Extensions
-  //   [18:18] Processor Serial Number
+  //   [18:18] PSN: Processor Serial Number
   //   [19:19] CLFLUSH: CLFLUSH Instruction support
   //   [20:20] Reserved
   //   [21:21] DS: Debug Store
@@ -507,7 +499,7 @@ void BX_CPU_C::set_cpuid_defaults(void)
   //   [24:24] FXSR: FXSAVE/FXRSTOR (also indicates CR4.OSFXSR is available)
   //   [25:25] SSE: SSE Extensions
   //   [26:26] SSE2: SSE2 Extensions
-  //   [27:27] Reserved
+  //   [27:27] Self Snoop
   //   [28:28] Hyper Threading Technology
   //   [29:29] TM: Thermal Monitor
   //   [30:30] Reserved
@@ -531,6 +523,10 @@ void BX_CPU_C::set_cpuid_defaults(void)
   cpuid->edx = 0;
 #endif
 
+  // do not report CPUID functions above 0x2 if cpuid_limit_winnt is set
+  // to workaround WinNT issue.
+  if (cpuid_limit_winnt) return;
+
   // ------------------------------------------------------
   // CPUID function 0x00000003 - Processor Serial Number
   cpuid = &(BX_CPU_THIS_PTR cpuid_std_function[3]);
@@ -539,10 +535,6 @@ void BX_CPU_C::set_cpuid_defaults(void)
   cpuid->ebx = 0;
   cpuid->ecx = 0;
   cpuid->edx = 0;
-
-  // do not report CPUID functions above 0x3 if cpuid_limit_winnt is set
-  // to workaround WinNT issue.
-  if (cpuid_limit_winnt) return;
 
   // ------------------------------------------------------
   // CPUID function 0x00000004 - Deterministic Cache Parameters
@@ -605,7 +597,7 @@ void BX_CPU_C::set_cpuid_defaults(void)
   cpuid->edx = 0;          // Reserved for Intel
   cpuid->ecx = 0;
 #else
-  memcpy(&(cpuid->ebx), vendor_string    , 4);
+  memcpy(&(cpuid->ebx), vendor_string,     4);
   memcpy(&(cpuid->edx), vendor_string + 4, 4);
   memcpy(&(cpuid->ecx), vendor_string + 8, 4);
 #endif

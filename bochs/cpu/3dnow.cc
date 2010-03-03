@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: 3dnow.cc,v 1.28 2009-10-14 20:45:29 sshwarts Exp $
+// $Id: 3dnow.cc,v 1.29 2010-03-03 14:33:31 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2002-2009 Stanislav Shwartsman
@@ -44,6 +44,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PFPNACC_PqQq(bxInstruction_c *i)
 /* 0F 0F /r 0C */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PI2FW_PqQq(bxInstruction_c *i)
 {
+#if BX_CPU_LEVEL >= 5
   BxPackedMmxRegister result, op;
 
   BX_CPU_THIS_PTR prepareMMX();
@@ -70,11 +71,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PI2FW_PqQq(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), result);
+#endif
 }
 
 /* 0F 0F /r 0D */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PI2FD_PqQq(bxInstruction_c *i)
 {
+#if BX_CPU_LEVEL >= 5
   BxPackedMmxRegister result, op;
 
   BX_CPU_THIS_PTR prepareMMX();
@@ -101,6 +104,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PI2FD_PqQq(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), result);
+#endif
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PF2IW_PqQq(bxInstruction_c *i)
@@ -111,6 +115,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PF2IW_PqQq(bxInstruction_c *i)
 /* 0F 0F /r 1D */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PF2ID_PqQq(bxInstruction_c *i)
 {
+#if BX_CPU_LEVEL >= 5
   BxPackedMmxRegister result, op;
 
   BX_CPU_THIS_PTR prepareMMX();
@@ -137,6 +142,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PF2ID_PqQq(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), result);
+#endif
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PFNACC_PqQq(bxInstruction_c *i)
@@ -222,6 +228,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PFRCPIT2_PqQq(bxInstruction_c *i)
 /* 0F 0F /r B7 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMULHRW_PqQq(bxInstruction_c *i)
 {
+#if BX_CPU_LEVEL >= 5
   BX_CPU_THIS_PTR prepareMMX();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2, result;
@@ -250,11 +257,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMULHRW_PqQq(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), result);
+#endif
 }
 
 /* 0F 0F /r BB */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSWAPD_PqQq(bxInstruction_c *i)
 {
+#if BX_CPU_LEVEL >= 5
   BX_CPU_THIS_PTR prepareMMX();
 
   BxPackedMmxRegister result, op;
@@ -276,6 +285,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSWAPD_PqQq(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), result);
+#endif
 }
 
 #endif
