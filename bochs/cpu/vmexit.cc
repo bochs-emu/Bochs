@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmexit.cc,v 1.13 2010-03-03 14:33:35 sshwarts Exp $
+// $Id: vmexit.cc,v 1.14 2010-03-03 15:12:44 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2009 Stanislav Shwartsman
@@ -133,7 +133,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMexit_HLT(bxInstruction_c *i)
 
   if (VMEXIT(VMX_VM_EXEC_CTRL2_HLT_VMEXIT))
   {
-    BX_INFO(("VMEXIT: HLT"));
+    BX_ERROR(("VMEXIT: HLT"));
     VMexit(i, VMX_VMEXIT_HLT, 0);
   }
 }
@@ -144,7 +144,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMexit_PAUSE(bxInstruction_c *i)
 
   if (VMEXIT(VMX_VM_EXEC_CTRL2_PAUSE_VMEXIT))
   {
-    BX_INFO(("VMEXIT: PAUSE"));
+    BX_ERROR(("VMEXIT: PAUSE"));
     VMexit(i, VMX_VMEXIT_PAUSE, 0);
   }
 }
@@ -155,7 +155,7 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::VMexit_INVLPG(bxInstruction_c *i, bx_addre
 
   if (VMEXIT(VMX_VM_EXEC_CTRL2_INVLPG_VMEXIT))
   {
-    BX_INFO(("VMEXIT: INVLPG 0x" FMT_ADDRX, laddr));
+    BX_ERROR(("VMEXIT: INVLPG 0x" FMT_ADDRX, laddr));
     VMexit(i, VMX_VMEXIT_INVLPG, laddr);
   }
 }
@@ -177,7 +177,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMexit_RDTSC(bxInstruction_c *i)
 
   if (VMEXIT(VMX_VM_EXEC_CTRL2_RDTSC_VMEXIT))
   {
-    BX_INFO(("VMEXIT: RDTSC"));
+    BX_ERROR(("VMEXIT: RDTSC"));
     VMexit(i, VMX_VMEXIT_RDTSC, 0);
   }
 }
@@ -188,7 +188,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMexit_RDPMC(bxInstruction_c *i)
 
   if (VMEXIT(VMX_VM_EXEC_CTRL2_RDPMC_VMEXIT))
   {
-    BX_INFO(("VMEXIT: RDPMC"));
+    BX_ERROR(("VMEXIT: RDPMC"));
     VMexit(i, VMX_VMEXIT_RDPMC, 0);
   }
 }
@@ -200,7 +200,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMexit_MONITOR(bxInstruction_c *i)
 
   if (VMEXIT(VMX_VM_EXEC_CTRL2_MONITOR_VMEXIT))
   {
-    BX_INFO(("VMEXIT: MONITOR"));
+    BX_ERROR(("VMEXIT: MONITOR"));
     VMexit(i, VMX_VMEXIT_MONITOR, 0);
   }
 }
@@ -211,7 +211,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMexit_MWAIT(bxInstruction_c *i)
 
   if (VMEXIT(VMX_VM_EXEC_CTRL2_MWAIT_VMEXIT))
   {
-    BX_INFO(("VMEXIT: MWAIT"));
+    BX_ERROR(("VMEXIT: MWAIT"));
     VMexit(i, VMX_VMEXIT_MWAIT, 0);
   }
 }
@@ -269,7 +269,7 @@ void BX_CPU_C::VMexit_Event(bxInstruction_c *i, unsigned type, unsigned vector, 
       break; // no VMEXIT on software interrupt
 
     default:
-      BX_INFO(("VMexit_Event: unknown event type %d", type));
+      BX_ERROR(("VMexit_Event: unknown event type %d", type));
   }
 
   // ----------------------------------------------------
@@ -296,7 +296,7 @@ void BX_CPU_C::VMexit_Event(bxInstruction_c *i, unsigned type, unsigned vector, 
     return;
   }
 
-  BX_INFO(("VMEXIT: exception 0x%02x error code = 0x%04x", vector, errcode));
+  BX_ERROR(("VMEXIT: exception 0x%02x error code = 0x%04x", vector, errcode));
 
   // VMEXIT is not considered to occur during event delivery if it results
   // in a double fault exception that causes VMEXIT directly
@@ -327,7 +327,7 @@ void BX_CPU_C::VMexit_TripleFault(void)
 {
   if (! BX_CPU_THIS_PTR in_vmx_guest) return;
 
-  BX_INFO(("VMEXIT: triple fault"));
+  BX_ERROR(("VMEXIT: triple fault"));
 
   // VMEXIT is not considered to occur during event delivery if it results
   // in a triple fault exception (that causes VMEXIT directly)
@@ -340,7 +340,7 @@ void BX_CPP_AttrRegparmN(3) BX_CPU_C::VMexit_TaskSwitch(bxInstruction_c *i, Bit1
 {
   if (! BX_CPU_THIS_PTR in_vmx_guest) return;
 
-  BX_INFO(("VMEXIT: task switch"));
+  BX_ERROR(("VMEXIT: task switch"));
 
   VMexit(i, VMX_VMEXIT_TASK_SWITCH, tss_selector | (source << 30));
 }
@@ -385,7 +385,7 @@ void BX_CPP_AttrRegparmN(3) BX_CPU_C::VMexit_MSR(bxInstruction_c *i, unsigned op
   }
 
   if (vmexit) {
-     BX_INFO(("VMEXIT: %sMSR 0x%08x", (op == VMX_VMEXIT_RDMSR) ? "RD" : "WR", msr));
+     BX_ERROR(("VMEXIT: %sMSR 0x%08x", (op == VMX_VMEXIT_RDMSR) ? "RD" : "WR", msr));
      VMexit(i, op, 0);
   }
 }
@@ -419,7 +419,7 @@ void BX_CPP_AttrRegparmN(3) BX_CPU_C::VMexit_IO(bxInstruction_c *i, unsigned por
   else if (VMEXIT(VMX_VM_EXEC_CTRL2_IO_VMEXIT)) vmexit = 1;
 
   if (vmexit) {
-     BX_INFO(("VMEXIT: I/O port 0x%04x", port));
+     BX_ERROR(("VMEXIT: I/O port 0x%04x", port));
 
      Bit32u qualification = 0;
 
@@ -511,7 +511,7 @@ bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::VMexit_CLTS(bxInstruction_c *i)
 
   if (vm->vm_cr0_mask & vm->vm_cr0_read_shadow & 0x8)
   {
-    BX_INFO(("VMEXIT: CLTS"));
+    BX_ERROR(("VMEXIT: CLTS"));
 
     // all rest of the fields cleared to zero
     Bit64u qualification = VMX_VMEXIT_CR_ACCESS_CLTS << 4;
@@ -540,7 +540,7 @@ Bit32u BX_CPP_AttrRegparmN(2) BX_CPU_C::VMexit_LMSW(bxInstruction_c *i, Bit32u m
     vmexit = 1;
 
   if (vmexit) {
-    BX_INFO(("VMEXIT: CR0 write by LMSW of value 0x%04x", msw));
+    BX_ERROR(("VMEXIT: CR0 write by LMSW of value 0x%04x", msw));
 
     Bit64u qualification = VMX_VMEXIT_CR_ACCESS_LMSW << 4;
     qualification |= msw << 16;
@@ -564,7 +564,7 @@ bx_address BX_CPP_AttrRegparmN(2) BX_CPU_C::VMexit_CR0_Write(bxInstruction_c *i,
 
   if ((vm->vm_cr0_mask & vm->vm_cr0_read_shadow) != (vm->vm_cr0_mask & val))
   {
-    BX_INFO(("VMEXIT: CR0 write"));
+    BX_ERROR(("VMEXIT: CR0 write"));
     Bit64u qualification = i->rm() << 8;
     VMexit(i, VMX_VMEXIT_CR_ACCESS, qualification);
   }
@@ -578,7 +578,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMexit_CR3_Read(bxInstruction_c *i)
   if (! BX_CPU_THIS_PTR in_vmx_guest) return;
 
   if (VMEXIT(VMX_VM_EXEC_CTRL2_CR3_READ_VMEXIT)) {
-    BX_INFO(("VMEXIT: CR3 read"));
+    BX_ERROR(("VMEXIT: CR3 read"));
 
     Bit64u qualification = 3 | (VMX_VMEXIT_CR_ACCESS_CR_READ << 4);
     qualification |= (i->rm() << 8);
@@ -598,7 +598,7 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::VMexit_CR3_Write(bxInstruction_c *i, bx_ad
       if (vm->vm_cr3_target_value[n] == val) return;
     }
 
-    BX_INFO(("VMEXIT: CR3 write"));
+    BX_ERROR(("VMEXIT: CR3 write"));
     Bit64u qualification = 3 | (i->rm() << 8);
     VMexit(i, VMX_VMEXIT_CR_ACCESS, qualification);
   }
@@ -612,7 +612,7 @@ bx_address BX_CPP_AttrRegparmN(2) BX_CPU_C::VMexit_CR4_Write(bxInstruction_c *i,
 
   if ((vm->vm_cr4_mask & vm->vm_cr4_read_shadow) != (vm->vm_cr4_mask & val))
   {
-    BX_INFO(("VMEXIT: CR4 write"));
+    BX_ERROR(("VMEXIT: CR4 write"));
     Bit64u qualification = 4 | (i->rm() << 8);
     VMexit(i, VMX_VMEXIT_CR_ACCESS, qualification);
   }
@@ -626,7 +626,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMexit_CR8_Read(bxInstruction_c *i)
   if (! BX_CPU_THIS_PTR in_vmx_guest) return;
 
   if (VMEXIT(VMX_VM_EXEC_CTRL2_CR8_READ_VMEXIT)) {
-    BX_INFO(("VMEXIT: CR8 read"));
+    BX_ERROR(("VMEXIT: CR8 read"));
 
     Bit64u qualification = 8 | (VMX_VMEXIT_CR_ACCESS_CR_READ << 4);
     qualification |= (i->rm() << 8);
@@ -640,7 +640,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMexit_CR8_Write(bxInstruction_c *i)
   if (! BX_CPU_THIS_PTR in_vmx_guest) return;
 
   if (VMEXIT(VMX_VM_EXEC_CTRL2_CR8_WRITE_VMEXIT)) {
-    BX_INFO(("VMEXIT: CR8 write"));
+    BX_ERROR(("VMEXIT: CR8 write"));
     Bit64u qualification = 8 | (i->rm() << 8);
     VMexit(i, VMX_VMEXIT_CR_ACCESS, qualification);
   }
@@ -663,7 +663,7 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::VMexit_DR_Access(bxInstruction_c *i, unsig
 
   if (VMEXIT(VMX_VM_EXEC_CTRL2_DRx_ACCESS_VMEXIT))
   {
-    BX_INFO(("VMEXIT: DR%d %s access", i->nnn(), read ? "READ" : "WRITE"));
+    BX_ERROR(("VMEXIT: DR%d %s access", i->nnn(), read ? "READ" : "WRITE"));
 
     Bit64u qualification = i->nnn() | (i->rm() << 8);
     if (read)
