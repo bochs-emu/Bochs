@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.148 2010-03-05 08:54:07 sshwarts Exp $
+// $Id: exception.cc,v 1.149 2010-03-05 19:52:18 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -139,7 +139,7 @@ void BX_CPU_C::long_mode_int(Bit8u vector, unsigned is_INT, bx_bool push_error, 
       IS_DATA_SEGMENT(cs_descriptor.type) ||
       cs_descriptor.dpl>CPL)
   {
-    BX_ERROR(("interrupt(long mode): not accessable or not code segment"));
+    BX_ERROR(("interrupt(long mode): not accessible or not code segment"));
     exception(BX_GP_EXCEPTION, cs_selector.value & 0xfffc, 0);
   }
 
@@ -424,7 +424,7 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, unsigned is_INT, bx_bool push_er
         IS_DATA_SEGMENT(cs_descriptor.type) ||
         cs_descriptor.dpl>CPL)
     {
-      BX_ERROR(("interrupt(): not accessable or not code segment cs=0x%04x", cs_selector.value));
+      BX_ERROR(("interrupt(): not accessible or not code segment cs=0x%04x", cs_selector.value));
       exception(BX_GP_EXCEPTION, cs_selector.value & 0xfffc, 0);
     }
 
