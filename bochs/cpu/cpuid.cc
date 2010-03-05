@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpuid.cc,v 1.99 2010-03-05 14:26:23 sshwarts Exp $
+// $Id: cpuid.cc,v 1.100 2010-03-05 15:19:15 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007-2009 Stanislav Shwartsman
@@ -394,10 +394,14 @@ void BX_CPU_C::set_cpuid_defaults(void)
   cpuid->eax = 1;
 #else
   // for Pentium Pro, Pentium II, Pentium 4 processors
-  cpuid->eax = 2;
+
   // do not report CPUID functions above 0x2 if cpuid_limit_winnt is set
   // to workaround WinNT issue.
-  if (! cpuid_limit_winnt) {
+  if (cpuid_limit_winnt) {
+    cpuid->eax = 2;
+  }
+  else {
+    cpuid->eax = 3;
     if (BX_SUPPORT_MONITOR_MWAIT)
       cpuid->eax = 0x5;
     if (BX_CPU_SUPPORT_FEATURE(BX_CPU_XSAVE))
@@ -820,6 +824,10 @@ void BX_CPU_C::init_cpu_features_bitmask(void)
 #if BX_SUPPORT_X86_64
   if (sse_enabled < BX_CPUID_SUPPORT_SSE2) {
     BX_PANIC(("PANIC: x86-64 emulation requires SSE2 support !"));
+    return;
+  }
+  if (! xapic_enabled) {
+    BX_PANIC(("PANIC: x86-64 emulation requires XAPIC support !"));
     return;
   }
 #endif
