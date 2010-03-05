@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpuid.cc,v 1.102 2010-03-05 20:42:10 sshwarts Exp $
+// $Id: cpuid.cc,v 1.103 2010-03-05 20:43:56 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007-2009 Stanislav Shwartsman
@@ -865,6 +865,10 @@ void BX_CPU_C::init_cpu_features_bitmask(void)
   }
   if (! xapic_enabled) {
     BX_PANIC(("PANIC: x86-64 emulation requires XAPIC support !"));
+    return;
+  }
+  if (! sep_enabled) {
+    BX_PANIC(("PANIC: x86-64 emulation requires SYSENTER/SYSEXIT support !"));
     return;
   }
 #endif
