@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.416 2010-03-01 18:53:53 sshwarts Exp $
+// $Id: main.cc,v 1.417 2010-03-05 20:42:10 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -865,7 +865,11 @@ int bx_begin_simulation (int argc, char *argv[])
                  SIM->get_param_num(BXPN_CPU_NCORES)->get() *
                  SIM->get_param_num(BXPN_CPU_NTHREADS)->get();
 
+#if BX_CPU_LEVEL >= 6
   bx_bool xapic = SIM->get_param_bool(BXPN_CPUID_XAPIC)->get();
+#else
+  bx_bool xapic = 0;
+#endif
 
   // For P6 and Pentium family processors the local APIC ID feild is 4 bits
   // APIC_MAX_ID indicate broadcast so it can't be used as valid APIC ID

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpuid.cc,v 1.101 2010-03-05 15:49:44 sshwarts Exp $
+// $Id: cpuid.cc,v 1.102 2010-03-05 20:42:10 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007-2009 Stanislav Shwartsman
@@ -790,13 +790,22 @@ void BX_CPU_C::init_cpu_features_bitmask(void)
 {
   Bit32u features_bitmask = 0;
 
-  bx_bool mmx_enabled = SIM->get_param_bool(BXPN_CPUID_MMX)->get();
-  bx_bool sep_enabled = SIM->get_param_bool(BXPN_CPUID_SEP)->get();
-  bx_bool aes_enabled = SIM->get_param_bool(BXPN_CPUID_AES)->get();
-  bx_bool movbe_enabled = SIM->get_param_bool(BXPN_CPUID_MOVBE)->get();
-  bx_bool xsave_enabled = SIM->get_param_bool(BXPN_CPUID_XSAVE)->get();
-  bx_bool xapic_enabled = SIM->get_param_bool(BXPN_CPUID_XAPIC)->get();
-  unsigned sse_enabled = SIM->get_param_enum(BXPN_CPUID_SSE)->get();
+  bx_bool mmx_enabled = 0, movbe_enabled = 0;
+  bx_bool sep_enabled = 0, xsave_enabled = 0;
+  bx_bool aes_enabled = 0, xapic_enabled = 0;
+  unsigned sse_enabled = 0;
+
+#if BX_CPU_LEVEL >= 5
+  mmx_enabled = SIM->get_param_bool(BXPN_CPUID_MMX)->get();
+#endif
+#if BX_CPU_LEVEL >= 6
+  sep_enabled = SIM->get_param_bool(BXPN_CPUID_SEP)->get();
+  aes_enabled = SIM->get_param_bool(BXPN_CPUID_AES)->get();
+  movbe_enabled = SIM->get_param_bool(BXPN_CPUID_MOVBE)->get();
+  xsave_enabled = SIM->get_param_bool(BXPN_CPUID_XSAVE)->get();
+  xapic_enabled = SIM->get_param_bool(BXPN_CPUID_XAPIC)->get();
+  sse_enabled = SIM->get_param_enum(BXPN_CPUID_SSE)->get();
+#endif
 
   // sanity checks
 #if BX_SUPPORT_3DNOW

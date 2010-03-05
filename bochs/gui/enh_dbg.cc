@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: enh_dbg.cc,v 1.26 2010-03-02 20:01:32 sshwarts Exp $
+// $Id: enh_dbg.cc,v 1.27 2010-03-05 20:42:10 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  BOCHS ENHANCED DEBUGGER Ver 1.2
@@ -84,7 +84,7 @@ Bit32u PrevStepNSize = 50;  // cpu_loop control variables
 Bit64u PrevPtime = 9;       // any number other than 0
 Bit64u NewPtime;            // used to test whether sim has "updated"
 unsigned TotCPUs;           // # of CPUs in a multi-CPU simulation
-unsigned CpuSupportSSE;     // cpu supports SSE
+unsigned CpuSupportSSE = 0; // cpu supports SSE
 unsigned CurrentCPU;        // cpu that is being displayed
 
 struct ASKTEXT ask_str;
@@ -2096,7 +2096,9 @@ void DoAllInit()
         TotCPUs = 1;
 
     // for GUI debugger
+#if BX_CPU_LEVEL >= 6
     CpuSupportSSE = SIM->get_param_enum(BXPN_CPUID_SSE)->get();
+#endif
 
     // divide up the pre-allocated char buffer into smaller pieces
     p = bigbuf + outbufSIZE;    // point at the end of preallocated mem
