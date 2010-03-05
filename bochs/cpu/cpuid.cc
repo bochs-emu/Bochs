@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpuid.cc,v 1.98 2010-03-03 14:33:35 sshwarts Exp $
+// $Id: cpuid.cc,v 1.99 2010-03-05 14:26:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007-2009 Stanislav Shwartsman
@@ -339,8 +339,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CPUID(bxInstruction_c *i)
     }
   }
   else {
-    function -= 0x80000000;
     if(function <= max_ext_function) {
+      function -= 0x80000000;
       RAX = BX_CPU_THIS_PTR cpuid_ext_function[function].eax;
       RBX = BX_CPU_THIS_PTR cpuid_ext_function[function].ebx;
       RCX = BX_CPU_THIS_PTR cpuid_ext_function[function].ecx;
