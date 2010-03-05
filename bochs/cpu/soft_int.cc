@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: soft_int.cc,v 1.56 2009-12-04 16:53:12 sshwarts Exp $
+// $Id: soft_int.cc,v 1.57 2010-03-05 20:24:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -59,18 +59,19 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BOUND_GdMa(bxInstruction_c *i)
   }
 }
 
+// This is an undocumented instrucion (opcode 0xf1) which
+// is useful for an ICE system
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::INT1(bxInstruction_c *i)
 {
 #if BX_SUPPORT_VMX
   VMexit_Event(i, BX_PRIVILEGED_SOFTWARE_INTERRUPT, 1, 0, 0);
 #endif
 
-  // This is an undocumented instrucion (opcode 0xf1)
-  // which is useful for an ICE system.
-
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR show_flag |= Flag_softint;
 #endif
+
+  BX_CPU_THIS_PTR EXT = 1;
 
   RSP_SPECULATIVE;
 
@@ -78,6 +79,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INT1(bxInstruction_c *i)
   interrupt(1, BX_PRIVILEGED_SOFTWARE_INTERRUPT, 0, 0);
 
   RSP_COMMIT;
+
+  BX_CPU_THIS_PTR EXT = 0;
 
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_INT,
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value,
