@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: tasking.cc,v 1.83 2010-03-03 14:33:35 sshwarts Exp $
+// $Id: tasking.cc,v 1.84 2010-03-05 08:54:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -435,7 +435,8 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
 
   BX_CPU_THIS_PTR speculative_rsp = 0;
 
-  BX_CPU_THIS_PTR errorno = 0;
+  BX_CPU_THIS_PTR save_eip = EIP;
+  BX_CPU_THIS_PTR save_esp = ESP;
 
   writeEFlags(newEFLAGS, EFlagsValidMask);
 

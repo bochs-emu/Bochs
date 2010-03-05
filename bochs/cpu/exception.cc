@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.147 2010-02-26 14:18:18 sshwarts Exp $
+// $Id: exception.cc,v 1.148 2010-03-05 08:54:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -224,36 +224,38 @@ void BX_CPU_C::long_mode_int(Bit8u vector, unsigned is_INT, bx_bool push_error, 
   {
     BX_DEBUG(("interrupt(long mode): INTERRUPT TO SAME PRIVILEGE"));
 
-    Bit64u old_RSP = RSP;
+    Bit64u old_RSP = RSP, temp_RSP = RSP;
 
     // check selector and descriptor for new stack in current TSS
     if (ist > 0) {
       BX_DEBUG(("interrupt(long mode): trap to IST, vector = %d", ist));
-      RSP = get_RSP_from_TSS(ist+3);
+      temp_RSP = get_RSP_from_TSS(ist+3);
     }
 
     // align stack
-    RSP &= BX_CONST64(0xfffffffffffffff0);
+    temp_RSP &= BX_CONST64(0xfffffffffffffff0);
 
     // push flags onto stack
     // push current CS selector onto stack
     // push return offset onto stack
-    write_new_stack_qword_64(RSP - 8,  cs_descriptor.dpl,
+    write_new_stack_qword_64(temp_RSP - 8,  cs_descriptor.dpl,
          BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value);
-    write_new_stack_qword_64(RSP - 16, cs_descriptor.dpl, old_RSP);
-    write_new_stack_qword_64(RSP - 24, cs_descriptor.dpl, read_eflags());
-    write_new_stack_qword_64(RSP - 32, cs_descriptor.dpl,
+    write_new_stack_qword_64(temp_RSP - 16, cs_descriptor.dpl, old_RSP);
+    write_new_stack_qword_64(temp_RSP - 24, cs_descriptor.dpl, read_eflags());
+    write_new_stack_qword_64(temp_RSP - 32, cs_descriptor.dpl,
          BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value);
-    write_new_stack_qword_64(RSP - 40, cs_descriptor.dpl, RIP);
-    RSP -= 40;
+    write_new_stack_qword_64(temp_RSP - 40, cs_descriptor.dpl, RIP);
+    temp_RSP -= 40;
 
     if (push_error) {
-      RSP -= 8;
-      write_new_stack_qword_64(RSP, cs_descriptor.dpl, error_code);
+      temp_RSP -= 8;
+      write_new_stack_qword_64(temp_RSP, cs_descriptor.dpl, error_code);
     }
 
     // set the RPL field of CS to CPL
     branch_far64(&cs_selector, &cs_descriptor, gate_dest_offset, CPL);
+
+    RSP = temp_RSP;
 
     // if interrupt gate then set IF to 0
     if (!(gate_descriptor.type & 1)) // even is int-gate
@@ -643,13 +645,14 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, unsigned is_INT, bx_bool push_er
         SP = temp_SP;
       }
 
-      // load new SS:eSP values from TSS
-      load_ss(&ss_selector, &ss_descriptor, cs_descriptor.dpl);
-
       // load new CS:eIP values from gate
       // set CPL to new code segment DPL
       // set RPL of CS to CPL
       load_cs(&cs_selector, &cs_descriptor, cs_descriptor.dpl);
+
+      // load new SS:eSP values from TSS
+      load_ss(&ss_selector, &ss_descriptor, cs_descriptor.dpl);
+
       EIP = gate_dest_offset;
 
       // if INTERRUPT GATE set IF to 0
@@ -803,8 +806,8 @@ void BX_CPU_C::interrupt(Bit8u vector, unsigned type, bx_bool push_error, Bit16u
   BX_CPU_THIS_PTR debug_trap = 0;
   BX_CPU_THIS_PTR inhibit_mask = 0;
 
-  BX_CPU_THIS_PTR save_cs = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS];
-  BX_CPU_THIS_PTR save_ss = BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS];
+//BX_CPU_THIS_PTR save_cs = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS];
+//BX_CPU_THIS_PTR save_ss = BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS];
   BX_CPU_THIS_PTR save_eip = RIP;
   BX_CPU_THIS_PTR save_esp = RSP;
 
@@ -899,8 +902,8 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code, unsigned unused)
   if (BX_CPU_THIS_PTR errorno > 0) {
     // if not initial error, restore previous register values from
     // previous attempt to handle exception
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS] = BX_CPU_THIS_PTR save_cs;
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS] = BX_CPU_THIS_PTR save_ss;
+//  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS] = BX_CPU_THIS_PTR save_cs;
+//  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS] = BX_CPU_THIS_PTR save_ss;
     RIP = BX_CPU_THIS_PTR save_eip;
     RSP = BX_CPU_THIS_PTR save_esp;
 

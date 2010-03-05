@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: msr.cc,v 1.32 2010-03-03 14:33:35 sshwarts Exp $
+// $Id: msr.cc,v 1.33 2010-03-05 08:54:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008-2009 Stanislav Shwartsman
@@ -249,9 +249,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDMSR(bxInstruction_c *i)
 
   RAX = GET32L(val64);
   RDX = GET32H(val64);
-#else
-  BX_INFO(("RDMSR: Pentium CPU required, use --enable-cpu-level=5"));
-  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 
@@ -645,9 +642,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRMSR(bxInstruction_c *i)
 
   if (! wrmsr(index, val_64))
     exception(BX_GP_EXCEPTION, 0, 0);
-#else
-  BX_INFO(("WRMSR: Pentium CPU required, use --enable-cpu-level=5"));
-  exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 }
 

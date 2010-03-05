@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.229 2010-03-01 18:53:53 sshwarts Exp $
+// $Id: init.cc,v 1.230 2010-03-05 08:54:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -747,7 +747,7 @@ void BX_CPU_C::reset(unsigned source)
   BX_WRITE_32BIT_REGZ(BX_NIL_REGISTER, 0);
 
   // status and control flags register set
-  BX_CPU_THIS_PTR setEFlags(0x2); // Bit1 is always set
+  setEFlags(0x2); // Bit1 is always set
 
   BX_CPU_THIS_PTR inhibit_mask = 0;
   BX_CPU_THIS_PTR activity_state = BX_ACTIVITY_STATE_ACTIVE;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith8.cc,v 1.63 2010-02-26 11:44:50 sshwarts Exp $
+// $Id: arith8.cc,v 1.64 2010-03-05 08:54:06 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -454,7 +454,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::DEC_EbR(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPXCHG_EbGbM(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL >= 4
   Bit8u op1_8, op2_8, diff_8;
 
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
@@ -472,16 +471,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPXCHG_EbGbM(bxInstruction_c *i)
     // accumulator <-- dest
     AL = op1_8;
   }
-
-#else
-  BX_INFO(("CMPXCHG_EbGb: not supported for cpulevel <= 3"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPXCHG_EbGbR(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL >= 4
   Bit8u op1_8, op2_8, diff_8;
 
   op1_8 = BX_READ_8BIT_REGx(i->rm(), i->extend8bitL());
@@ -497,9 +490,4 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPXCHG_EbGbR(bxInstruction_c *i)
     // accumulator <-- dest
     AL = op1_8;
   }
-
-#else
-  BX_INFO(("CMPXCHG_EbGb: not supported for cpulevel <= 3"));
-  exception(BX_UD_EXCEPTION, 0, 0);
-#endif
 }
