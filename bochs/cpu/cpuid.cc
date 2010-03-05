@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpuid.cc,v 1.100 2010-03-05 15:19:15 sshwarts Exp $
+// $Id: cpuid.cc,v 1.101 2010-03-05 15:49:44 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007-2009 Stanislav Shwartsman
@@ -394,13 +394,11 @@ void BX_CPU_C::set_cpuid_defaults(void)
   cpuid->eax = 1;
 #else
   // for Pentium Pro, Pentium II, Pentium 4 processors
+  cpuid->eax = 2;
 
   // do not report CPUID functions above 0x2 if cpuid_limit_winnt is set
   // to workaround WinNT issue.
-  if (cpuid_limit_winnt) {
-    cpuid->eax = 2;
-  }
-  else {
+  if (! cpuid_limit_winnt) {
     cpuid->eax = 3;
     if (BX_SUPPORT_MONITOR_MWAIT)
       cpuid->eax = 0x5;
@@ -410,9 +408,11 @@ void BX_CPU_C::set_cpuid_defaults(void)
 #endif
 
   // CPUID vendor string (e.g. GenuineIntel, AuthenticAMD, CentaurHauls, ...)
-  memcpy(&(cpuid->ebx), vendor_string    , 4);
+  memcpy(&(cpuid->ebx), vendor_string,     4);
   memcpy(&(cpuid->edx), vendor_string + 4, 4);
   memcpy(&(cpuid->ecx), vendor_string + 8, 4);
+
+  BX_INFO(("CPUID[0x00000000]: %08x %08x %08x %08x", cpuid->eax, cpuid->ebx, cpuid->ecx, cpuid->edx));
 
   // ------------------------------------------------------
   // CPUID function 0x00000001
@@ -436,11 +436,9 @@ void BX_CPU_C::set_cpuid_defaults(void)
   if (BX_CPU_SUPPORT_FEATURE(BX_CPU_CLFLUSH)) {
     cpuid->ebx |= (CACHE_LINE_SIZE / 8) << 8;
   }
-#if BX_SUPPORT_SMP
   unsigned n_logical_processors = SIM->get_param_num(BXPN_CPU_NCORES)->get()*SIM->get_param_num(BXPN_CPU_NTHREADS)->get();
   if (n_logical_processors > 1)
     cpuid->ebx |= (n_logical_processors << 16);
-#endif
 #if BX_SUPPORT_APIC
   cpuid->ebx |= ((BX_CPU_THIS_PTR lapic.get_id() & 0xff) << 24);
 #endif
@@ -510,6 +508,8 @@ void BX_CPU_C::set_cpuid_defaults(void)
   //   [31:31] PBE: Pending Break Enable
   cpuid->edx = get_std_cpuid_features();
 
+  BX_INFO(("CPUID[0x00000001]: %08x %08x %08x %08x", cpuid->eax, cpuid->ebx, cpuid->ecx, cpuid->edx));
+
 #if BX_CPU_LEVEL >= 6
   // ------------------------------------------------------
   // CPUID function 0x00000002 - Cache and TLB Descriptors
@@ -527,6 +527,8 @@ void BX_CPU_C::set_cpuid_defaults(void)
   cpuid->edx = 0;
 #endif
 
+  BX_INFO(("CPUID[0x00000002]: %08x %08x %08x %08x", cpuid->eax, cpuid->ebx, cpuid->ecx, cpuid->edx));
+
   // do not report CPUID functions above 0x2 if cpuid_limit_winnt is set
   // to workaround WinNT issue.
   if (cpuid_limit_winnt) return;
@@ -540,6 +542,8 @@ void BX_CPU_C::set_cpuid_defaults(void)
   cpuid->ecx = 0;
   cpuid->edx = 0;
 
+  BX_INFO(("CPUID[0x00000003]: %08x %08x %08x %08x", cpuid->eax, cpuid->ebx, cpuid->ecx, cpuid->edx));
+
   // ------------------------------------------------------
   // CPUID function 0x00000004 - Deterministic Cache Parameters
   cpuid = &(BX_CPU_THIS_PTR cpuid_std_function[4]);
@@ -548,6 +552,8 @@ void BX_CPU_C::set_cpuid_defaults(void)
   cpuid->ebx = 0;
   cpuid->ecx = 0;
   cpuid->edx = 0;
+
+  BX_INFO(("CPUID[0x00000004]: %08x %08x %08x %08x", cpuid->eax, cpuid->ebx, cpuid->ecx, cpuid->edx));
 
 #if BX_SUPPORT_MONITOR_MWAIT
   // ------------------------------------------------------
@@ -565,6 +571,8 @@ void BX_CPU_C::set_cpuid_defaults(void)
   cpuid->ebx = CACHE_LINE_SIZE;
   cpuid->ecx = 3;
   cpuid->edx = 0;
+
+  BX_INFO(("CPUID[0x00000005]: %08x %08x %08x %08x", cpuid->eax, cpuid->ebx, cpuid->ecx, cpuid->edx));
 #endif
 
   // ------------------------------------------------------
@@ -581,6 +589,8 @@ void BX_CPU_C::set_cpuid_defaults(void)
     cpuid->ebx = 512+64;
     cpuid->ecx = 512+64;
     cpuid->edx = 0;
+
+    BX_INFO(("CPUID[0x0000000D]: %08x %08x %08x %08x", cpuid->eax, cpuid->ebx, cpuid->ecx, cpuid->edx));
   }
 
   // do not report Pentium 4 extended functions if not needed
@@ -605,6 +615,8 @@ void BX_CPU_C::set_cpuid_defaults(void)
   memcpy(&(cpuid->edx), vendor_string + 4, 4);
   memcpy(&(cpuid->ecx), vendor_string + 8, 4);
 #endif
+
+  BX_INFO(("CPUID[0x80000000]: %08x %08x %08x %08x", cpuid->eax, cpuid->ebx, cpuid->ecx, cpuid->edx));
 
   // ------------------------------------------------------
   // CPUID function 0x80000001
@@ -683,6 +695,8 @@ void BX_CPU_C::set_cpuid_defaults(void)
 #endif
   cpuid->edx = features;
 
+  BX_INFO(("CPUID[0x80000001]: %08x %08x %08x %08x", cpuid->eax, cpuid->ebx, cpuid->ecx, cpuid->edx));
+
   // Processor Brand String, use the value that is returned
   // by the first processor in the Pentium 4 family
   // (according to Intel manual or the AMD manual)
@@ -696,6 +710,8 @@ void BX_CPU_C::set_cpuid_defaults(void)
   memcpy(&(cpuid->ecx), brand_string +  8, 4);
   memcpy(&(cpuid->edx), brand_string + 12, 4);
 
+  BX_INFO(("CPUID[0x80000002]: %08x %08x %08x %08x", cpuid->eax, cpuid->ebx, cpuid->ecx, cpuid->edx));
+
   // CPUID function 0x80000003
   cpuid = &(BX_CPU_THIS_PTR cpuid_ext_function[3]);
   memcpy(&(cpuid->eax), brand_string + 16, 4);
@@ -703,12 +719,16 @@ void BX_CPU_C::set_cpuid_defaults(void)
   memcpy(&(cpuid->ecx), brand_string + 24, 4);
   memcpy(&(cpuid->edx), brand_string + 28, 4);
 
+  BX_INFO(("CPUID[0x80000003]: %08x %08x %08x %08x", cpuid->eax, cpuid->ebx, cpuid->ecx, cpuid->edx));
+
   // CPUID function 0x80000004
   cpuid = &(BX_CPU_THIS_PTR cpuid_ext_function[4]);
   memcpy(&(cpuid->eax), brand_string + 32, 4);
   memcpy(&(cpuid->ebx), brand_string + 36, 4);
   memcpy(&(cpuid->ecx), brand_string + 40, 4);
   memcpy(&(cpuid->edx), brand_string + 44, 4);
+
+  BX_INFO(("CPUID[0x80000004]: %08x %08x %08x %08x", cpuid->eax, cpuid->ebx, cpuid->ecx, cpuid->edx));
 
 #if BX_SUPPORT_X86_64
   // ------------------------------------------------------
@@ -722,6 +742,8 @@ void BX_CPU_C::set_cpuid_defaults(void)
   cpuid->ebx = 0x01ff01ff;
   cpuid->ecx = 0x40020140;
   cpuid->edx = 0x40020140;
+
+  BX_INFO(("CPUID[0x80000005]: %08x %08x %08x %08x", cpuid->eax, cpuid->ebx, cpuid->ecx, cpuid->edx));
 #endif
 
   // ------------------------------------------------------
@@ -734,6 +756,8 @@ void BX_CPU_C::set_cpuid_defaults(void)
   cpuid->ecx = 0x02008140;
   cpuid->edx = 0;
 
+  BX_INFO(("CPUID[0x80000006]: %08x %08x %08x %08x", cpuid->eax, cpuid->ebx, cpuid->ecx, cpuid->edx));
+
   // ------------------------------------------------------
   // CPUID function 0x00000007
   cpuid = &(BX_CPU_THIS_PTR cpuid_ext_function[7]);
@@ -742,6 +766,8 @@ void BX_CPU_C::set_cpuid_defaults(void)
   cpuid->ebx = 0;
   cpuid->ecx = 0;
   cpuid->edx = 0;
+
+  BX_INFO(("CPUID[0x80000007]: %08x %08x %08x %08x", cpuid->eax, cpuid->ebx, cpuid->ecx, cpuid->edx));
 
   // ------------------------------------------------------
   // CPUID function 0x80000008
@@ -752,6 +778,8 @@ void BX_CPU_C::set_cpuid_defaults(void)
   cpuid->ebx = 0;
   cpuid->ecx = 0; // Reserved, undefined
   cpuid->edx = 0;
+
+  BX_INFO(("CPUID[0x80000008]: %08x %08x %08x %08x", cpuid->eax, cpuid->ebx, cpuid->ecx, cpuid->edx));
 
 #endif // BX_SUPPORT_X86_64
 
