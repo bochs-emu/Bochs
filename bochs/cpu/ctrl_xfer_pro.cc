@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer_pro.cc,v 1.82 2010-01-31 18:06:44 sshwarts Exp $
+// $Id: ctrl_xfer_pro.cc,v 1.83 2010-03-05 19:49:22 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -150,6 +150,8 @@ void BX_CPU_C::branch_far64(bx_selector_t *selector,
   else
 #endif
   {
+    rip &= 0xffffffff;
+
     /* instruction pointer must be in code segment limit else #GP(0) */
     if (rip > descriptor->u.segment.limit_scaled) {
       BX_ERROR(("branch_far64: RIP > limit"));
