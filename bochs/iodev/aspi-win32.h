@@ -1,6 +1,6 @@
 //
 // iodev/aspi-win32.h
-// $Id: aspi-win32.h,v 1.2 2001-06-25 12:52:37 bdenney Exp $
+// $Id: aspi-win32.h,v 1.3 2010-03-06 21:41:26 sshwarts Exp $
 //
 // This file was copied from cdrecord 1.9 under libscg/scg/aspi-win32.h.
 // The only modification is related to use of the PACKED keyword.  
