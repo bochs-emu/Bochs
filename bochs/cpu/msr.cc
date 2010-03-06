@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: msr.cc,v 1.34 2010-03-06 16:59:05 sshwarts Exp $
+// $Id: msr.cc,v 1.35 2010-03-06 17:07:25 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008-2009 Stanislav Shwartsman
@@ -476,10 +476,12 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
         BX_ERROR(("WRMSR: IA32_FEATURE_CONTROL_MSR VMX lock bit is set !"));
         return 0;
       }
+/*
       if (val_64 & ~((Bit64u)(BX_IA32_FEATURE_CONTROL_BITS))) {
         BX_ERROR(("WRMSR: attempt to set reserved bits of IA32_FEATURE_CONTROL_MSR !"));
         return 0;
       }
+*/
       BX_CPU_THIS_PTR msr.ia32_feature_ctrl = val32_lo;
 
     case BX_MSR_VMX_BASIC:
