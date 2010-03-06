@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.645 2010-03-05 08:54:07 sshwarts Exp $
+// $Id: cpu.h,v 1.646 2010-03-06 16:59:04 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -357,6 +357,7 @@ enum {
   #define BX_MSR_VMX_TRUE_PROCBASED_CTRLS 0x48e
   #define BX_MSR_VMX_TRUE_VMEXIT_CTRLS    0x48f
   #define BX_MSR_VMX_TRUE_VMENTRY_CTRLS   0x490
+  #define BX_MSR_IA32_FEATURE_CONTROL     0x03A
   #define BX_MSR_IA32_SMM_MONITOR_CTL     0x09B
 #endif
 
@@ -587,6 +588,10 @@ typedef struct
   Bit64u mtrrfix4k[8];
   Bit16u mtrr_deftype;
   Bit64u pat;
+#endif
+
+#if BX_SUPPORT_VMX
+  Bit32u ia32_feature_ctrl;
 #endif
 
   /* TODO finish of the others */

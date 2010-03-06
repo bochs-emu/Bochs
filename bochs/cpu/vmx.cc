@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmx.cc,v 1.30 2010-02-06 20:52:27 sshwarts Exp $
+// $Id: vmx.cc,v 1.31 2010-03-06 16:59:05 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2009 Stanislav Shwartsman
@@ -1817,24 +1817,27 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMXON(bxInstruction_c *i)
 
   if (! BX_CPU_THIS_PTR in_vmx) {
     if (CPL != 0 || ! BX_CPU_THIS_PTR cr0.get_NE() || 
-            ! BX_CPU_THIS_PTR cr0.get_PE() || BX_GET_ENABLE_A20() == 0 /* ||
-                   (bit 0 (lock bit) of IA32_FEATURE_CONTROL MSR is clear) ||
-                   (bit 2 of IA32_FEATURE_CONTROL MSR is clear)*/)
-    exception(BX_GP_EXCEPTION, 0, 0);
+        ! (BX_CPU_THIS_PTR cr0.get_PE()) || BX_GET_ENABLE_A20() == 0 ||
+        ! (BX_CPU_THIS_PTR msr.ia32_feature_ctrl & BX_IA32_FEATURE_CONTROL_LOCK_BIT) ||
+        ! (BX_CPU_THIS_PTR msr.ia32_feature_ctrl & BX_IA32_FEATURE_CONTROL_VMX_ENABLE_BIT))
+    {
+      BX_ERROR(("#GP: VMXON is not allowed !"));
+      exception(BX_GP_EXCEPTION, 0, 0);
+    }
 
     bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     Bit64u pAddr = read_virtual_qword(i->seg(), eaddr); // keep 64-bit
     if ((pAddr & 0xfff) != 0 || ! IsValidPhyAddr(pAddr)) {
-       BX_ERROR(("VMXON: invalid or not page aligned physical address !"));
-       VMfailInvalid();
-       return;
+      BX_ERROR(("VMXON: invalid or not page aligned physical address !"));
+      VMfailInvalid();
+      return;
     }
 
     Bit32u revision = VMXReadRevisionID((bx_phy_address) pAddr);
     if (revision != VMX_VMCS_REVISION_ID) {
-       BX_ERROR(("VMXON: not expected (%d != %d) VMCS revision id !", revision, VMX_VMCS_REVISION_ID));
-       VMfailInvalid();
-       return;
+      BX_ERROR(("VMXON: not expected (%d != %d) VMCS revision id !", revision, VMX_VMCS_REVISION_ID));
+      VMfailInvalid();
+      return;
     }
       
     BX_CPU_THIS_PTR vmcsptr = BX_INVALID_VMCSPTR;

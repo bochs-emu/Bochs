@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmx.h,v 1.8 2010-02-11 14:19:11 sshwarts Exp $
+// $Id: vmx.h,v 1.9 2010-03-06 16:59:05 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2009 Stanislav Shwartsman
@@ -29,6 +29,13 @@
 
 // VMCS pointer is always 64-bit variable
 #define BX_INVALID_VMCSPTR BX_CONST64(0xFFFFFFFFFFFFFFFF)
+
+// bits supported in IA32_FEATURE_CONTROL MSR
+#define BX_IA32_FEATURE_CONTROL_LOCK_BIT       0x1
+#define BX_IA32_FEATURE_CONTROL_VMX_ENABLE_BIT 0x4
+
+#define BX_IA32_FEATURE_CONTROL_BITS \
+   (BX_IA32_FEATURE_CONTROL_LOCK_BIT | BX_IA32_FEATURE_CONTROL_VMX_ENABLE_BIT)
 
 // VMX error codes
 enum VMX_error_code {

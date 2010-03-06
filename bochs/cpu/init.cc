@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.230 2010-03-05 08:54:07 sshwarts Exp $
+// $Id: init.cc,v 1.231 2010-03-06 16:59:05 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -1030,6 +1030,8 @@ void BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR vmx_interrupt_window = 0;
   BX_CPU_THIS_PTR vmcsptr = BX_CPU_THIS_PTR vmxonptr = BX_INVALID_VMCSPTR;
   BX_CPU_THIS_PTR vmcshostptr = 0;
+  BX_CPU_THIS_PTR msr.ia32_feature_ctrl = 0x4; /* enable VMX, should be done in BIOS instead */
+
 #endif
 
 #if BX_SUPPORT_SMP

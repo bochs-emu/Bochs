@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: msr.cc,v 1.33 2010-03-05 08:54:07 sshwarts Exp $
+// $Id: msr.cc,v 1.34 2010-03-06 16:59:05 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008-2009 Stanislav Shwartsman
@@ -140,6 +140,9 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
       BX_PANIC(("Dual-monitor treatment of SMI and SMM is not implemented"));
       break;
 */
+    case BX_MSR_IA32_FEATURE_CONTROL:
+      val64 = BX_CPU_THIS_PTR msr.ia32_feature_ctrl;
+      break;
     case BX_MSR_VMX_BASIC:
       val64 = VMX_MSR_VMX_BASIC;
       break;
@@ -467,6 +470,18 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
 #endif
 
 #if BX_SUPPORT_VMX
+    // Support only two bits: lock bit (bit 0) and VMX enable (bit 2)
+    case BX_MSR_IA32_FEATURE_CONTROL:
+      if (BX_CPU_THIS_PTR msr.ia32_feature_ctrl & 0x1) {
+        BX_ERROR(("WRMSR: IA32_FEATURE_CONTROL_MSR VMX lock bit is set !"));
+        return 0;
+      }
+      if (val_64 & ~((Bit64u)(BX_IA32_FEATURE_CONTROL_BITS))) {
+        BX_ERROR(("WRMSR: attempt to set reserved bits of IA32_FEATURE_CONTROL_MSR !"));
+        return 0;
+      }
+      BX_CPU_THIS_PTR msr.ia32_feature_ctrl = val32_lo;
+
     case BX_MSR_VMX_BASIC:
     case BX_MSR_VMX_PINBASED_CTRLS:
     case BX_MSR_VMX_PROCBASED_CTRLS:
