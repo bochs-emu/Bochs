@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: msr.cc,v 1.35 2010-03-06 17:07:25 sshwarts Exp $
+// $Id: msr.cc,v 1.36 2010-03-06 17:09:25 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008-2009 Stanislav Shwartsman
@@ -483,6 +483,7 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
       }
 */
       BX_CPU_THIS_PTR msr.ia32_feature_ctrl = val32_lo;
+      break;
 
     case BX_MSR_VMX_BASIC:
     case BX_MSR_VMX_PINBASED_CTRLS:
