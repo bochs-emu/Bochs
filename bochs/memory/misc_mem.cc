@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: misc_mem.cc,v 1.142 2010-02-26 14:18:19 sshwarts Exp $
+// $Id: misc_mem.cc,v 1.143 2010-03-07 09:16:24 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -73,7 +73,7 @@ void BX_MEM_C::init_memory(Bit64u guest, Bit64u host)
 {
   unsigned idx;
 
-  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.142 2010-02-26 14:18:19 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.143 2010-03-07 09:16:24 sshwarts Exp $"));
 
   // accept only memory size which is multiply of 1M
   BX_ASSERT((host & 0xfffff) == 0);
@@ -128,14 +128,6 @@ void BX_MEM_C::init_memory(Bit64u guest, Bit64u host)
   BX_MEM_THIS smram_available = 0;
   BX_MEM_THIS smram_enable = 0;
   BX_MEM_THIS smram_restricted = 0;
-
-#if BX_SUPPORT_MONITOR_MWAIT
-  BX_MEM_THIS monitor_active = new bx_bool[BX_SMP_PROCESSORS];
-  for (int i=0; i<BX_SMP_PROCESSORS;i++) {
-    BX_MEM_THIS monitor_active[i] = 0;
-  }
-  BX_MEM_THIS n_monitors = 0;
-#endif
 
   BX_MEM_THIS register_state();
 }
@@ -200,16 +192,6 @@ void BX_MEM_C::register_state()
     param->set_base(BASE_DEC);
     param->set_sr_handlers(this, memory_param_save_handler, memory_param_restore_handler);
   }
-
-#if BX_SUPPORT_MONITOR_MWAIT
-  bx_list_c *monitors = new bx_list_c(list, "monitors", BX_SMP_PROCESSORS+1);
-  BXRS_PARAM_BOOL(monitors, n_monitors, BX_MEM_THIS n_monitors);
-  for (int i=0;i<BX_SMP_PROCESSORS;i++) {
-    char param_name[15];
-    sprintf(param_name, "cpu%d_monitor", i);
-    new bx_shadow_bool_c(monitors, param_name, &BX_MEM_THIS monitor_active[i]);
-  }
-#endif
 }
 
 void BX_MEM_C::cleanup_memory()
@@ -788,36 +770,11 @@ bx_bool BX_MEM_C::is_smram_accessible(void)
 // MONITOR/MWAIT - x86arch way to optimize idle loops in CPU
 //
 
-void BX_MEM_C::set_monitor(unsigned cpu)
-{
-  BX_ASSERT(cpu < BX_SMP_PROCESSORS);
-  if (! BX_MEM_THIS monitor_active[cpu]) {
-    BX_MEM_THIS monitor_active[cpu] = 1;
-    BX_MEM_THIS n_monitors++;
-    BX_DEBUG(("activate monitor for cpu=%d", cpu));
-  }
-  else {
-    BX_DEBUG(("monitor for cpu=%d already active !", cpu));
-  }
-}
-
-void BX_MEM_C::clear_monitor(unsigned cpu)
-{
-  BX_ASSERT(cpu < BX_SMP_PROCESSORS);
-  BX_MEM_THIS monitor_active[cpu] = 0;
-  BX_MEM_THIS n_monitors--;
-  BX_DEBUG(("deactivate monitor for cpu=%d", cpu));
-}
-
 bx_bool BX_MEM_C::is_monitor(bx_phy_address begin_addr, unsigned len)
 {
-  if (BX_MEM_THIS n_monitors == 0) return 0;
-
   for (int i=0; i<BX_SMP_PROCESSORS;i++) {
-    if (BX_MEM_THIS monitor_active[i]) {
-      if (BX_CPU(i)->is_monitor(begin_addr, len))
-        return 1;
-    }
+    if (BX_CPU(i)->is_monitor(begin_addr, len))
+      return 1;
   }
 
   return 0; // // this is NOT monitored page
@@ -825,12 +782,8 @@ bx_bool BX_MEM_C::is_monitor(bx_phy_address begin_addr, unsigned len)
 
 void BX_MEM_C::check_monitor(bx_phy_address begin_addr, unsigned len)
 {
-  if (BX_MEM_THIS n_monitors == 0) return;
-
   for (int i=0; i<BX_SMP_PROCESSORS;i++) {
-    if (BX_MEM_THIS monitor_active[i]) {
-      BX_CPU(i)->check_monitor(begin_addr, len);
-    }
+    BX_CPU(i)->check_monitor(begin_addr, len);
   }
 }
 

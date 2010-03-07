@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.315 2010-03-03 14:33:35 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.316 2010-03-07 09:16:24 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -1600,6 +1600,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDTSCP(bxInstruction_c *i)
 #if BX_SUPPORT_MONITOR_MWAIT
 bx_bool BX_CPU_C::is_monitor(bx_phy_address begin_addr, unsigned len)
 {
+  if (! BX_CPU_THIS_PTR monitor.armed) return 0;
+
   bx_phy_address end_addr = begin_addr + len;
   if (begin_addr >= BX_CPU_THIS_PTR monitor.monitor_end || end_addr <= BX_CPU_THIS_PTR monitor.monitor_begin)
     return 0;
@@ -1611,12 +1613,11 @@ void BX_CPU_C::check_monitor(bx_phy_address begin_addr, unsigned len)
 {
   if (is_monitor(begin_addr, len)) {
     // wakeup from MWAIT state
-    BX_ASSERT(BX_CPU_THIS_PTR activity_state >= BX_ACTIVITY_STATE_MWAIT);
-    BX_CPU_THIS_PTR activity_state = BX_ACTIVITY_STATE_ACTIVE;
+    if(BX_CPU_THIS_PTR activity_state >= BX_ACTIVITY_STATE_MWAIT)
+       BX_CPU_THIS_PTR activity_state = BX_ACTIVITY_STATE_ACTIVE;
     // clear monitor
-    BX_MEM(0)->clear_monitor(BX_CPU_THIS_PTR bx_cpuid);
     BX_CPU_THIS_PTR monitor.reset_monitor();
- }
+  }
 }
 #endif
 
@@ -1693,16 +1694,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MONITOR(bxInstruction_c *i)
     paddr = A20ADDR(laddr);
   }
 
-  BX_CPU_THIS_PTR monitor.monitor_begin = paddr;
-  BX_CPU_THIS_PTR monitor.monitor_end   = paddr + CACHE_LINE_SIZE;
-
   // Set the monitor immediately.  If monitor is still armed when we MWAIT,
   // the processor will stall.
   bx_pc_system.invlpg(BX_CPU_THIS_PTR monitor.monitor_begin);
   if ((BX_CPU_THIS_PTR monitor.monitor_end & ~0xfff) != (BX_CPU_THIS_PTR monitor.monitor_begin & ~0xfff))
     bx_pc_system.invlpg(BX_CPU_THIS_PTR monitor.monitor_end);
+
+  BX_CPU_THIS_PTR monitor.arm(paddr);
   BX_DEBUG(("MONITOR for phys_addr=0x" FMT_PHY_ADDRX, BX_CPU_THIS_PTR monitor.monitor_begin));
-  BX_MEM(0)->set_monitor(BX_CPU_THIS_PTR bx_cpuid);
 #else
   BX_INFO(("MONITOR: use --enable-monitor-mwait to enable MONITOR/MWAIT support"));
   exception(BX_UD_EXCEPTION, 0, 0);
@@ -1730,15 +1729,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MWAIT(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
-  // Do not enter optimized state if MONITOR wasn't properly set
-  if (BX_CPU_THIS_PTR monitor.monitor_begin == BX_CPU_THIS_PTR monitor.monitor_end) {
-    BX_DEBUG(("MWAIT: incorrect MONITOR settings"));
-    return;
-  }
-
   // If monitor has already triggered, we just return.
-  if (!BX_CPU_THIS_PTR monitor.armed) {
-    BX_DEBUG(("MWAIT: the MONITOR was already triggered"));
+  if (! BX_CPU_THIS_PTR monitor.armed) {
+    BX_DEBUG(("MWAIT: the MONITOR was not armed or already triggered"));
     return;
   }
 

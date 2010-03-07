@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: memory.h,v 1.67 2009-12-04 16:53:12 sshwarts Exp $
+// $Id: memory.h,v 1.68 2010-03-07 09:16:24 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -64,11 +64,6 @@ private:
   bx_bool smram_enable;
   bx_bool smram_restricted;
 
-#if BX_SUPPORT_MONITOR_MWAIT
-  bx_bool *monitor_active;
-  unsigned n_monitors;
-#endif
-
   Bit64u  len, allocated;  // could be > 4G
   Bit8u   *actual_vector;
   Bit8u   *vector;   // aligned correctly
@@ -110,8 +105,6 @@ public:
   BX_MEM_SMF Bit8u* alloc_vector_aligned(Bit32u bytes, Bit32u alignment);
 
 #if BX_SUPPORT_MONITOR_MWAIT
-  BX_MEM_SMF void    set_monitor(unsigned cpu);
-  BX_MEM_SMF void    clear_monitor(unsigned cpu);
   BX_MEM_SMF bx_bool is_monitor(bx_phy_address begin_addr, unsigned len);
   BX_MEM_SMF void    check_monitor(bx_phy_address addr, unsigned len);
 #endif
