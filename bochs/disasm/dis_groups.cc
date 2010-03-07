@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dis_groups.cc,v 1.48 2010-02-09 20:28:12 sshwarts Exp $
+// $Id: dis_groups.cc,v 1.49 2010-03-07 08:08:39 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005-2009 Stanislav Shwartsman
@@ -173,6 +173,12 @@ void disassembler::Eq(const x86_insn *insn)
     dis_sprintf("%s", general_64bit_regname[insn->rm]);
   else
     (this->*resolve_modrm)(insn, Q_SIZE);
+}
+
+void disassembler::Ey(const x86_insn *insn)
+{
+  if (insn->os_64) Eq(insn);
+  else Ed(insn);
 }
 
 void disassembler::Hbd(const x86_insn *insn)

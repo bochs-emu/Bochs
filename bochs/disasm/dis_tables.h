@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dis_tables.h,v 1.41 2010-02-09 19:44:25 sshwarts Exp $
+// $Id: dis_tables.h,v 1.42 2010-03-07 08:08:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005-2010 Stanislav Shwartsman
@@ -89,6 +89,7 @@
 #define Ew &disassembler::Ew
 #define Ed &disassembler::Ed
 #define Eq &disassembler::Eq
+#define Ey &disassembler::Ey
 
 #define Gb &disassembler::Gb
 #define Gw &disassembler::Gw
