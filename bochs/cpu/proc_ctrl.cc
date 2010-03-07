@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.316 2010-03-07 09:16:24 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.317 2010-03-07 09:41:12 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -1672,7 +1672,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MONITOR(bxInstruction_c *i)
   {
     // check if we could access the memory segment
     if (!(seg->cache.valid & SegAccessROK)) {
-      if (! read_virtual_checks(seg, offset, 1))
+      if (! execute_virtual_checks(seg, offset, 1))
         exception(int_number(i->seg()), 0, 0);
     }
     else {
