@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmexit.cc,v 1.14 2010-03-03 15:12:44 sshwarts Exp $
+// $Id: vmexit.cc,v 1.15 2010-03-12 20:30:12 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2009 Stanislav Shwartsman
@@ -673,6 +673,8 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::VMexit_DR_Access(bxInstruction_c *i, unsig
   }
 }
 
+#if BX_SUPPORT_X86_64
+
 Bit32u BX_CPU_C::VMX_Read_TPR_Shadow(void)
 {
   bx_phy_address pAddr = BX_CPU_THIS_PTR vmcs.virtual_apic_page_addr + 0x80;
@@ -699,5 +701,7 @@ void BX_CPU_C::VMX_Write_TPR_Shadow(Bit8u tpr_shadow)
     VMexit(0, VMX_VMEXIT_TPR_THRESHOLD, 0);
   }
 }
+
+#endif
 
 #endif // BX_SUPPORT_VMX

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.647 2010-03-07 09:16:24 sshwarts Exp $
+// $Id: cpu.h,v 1.648 2010-03-12 20:30:12 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -3390,8 +3390,10 @@ public: // for now...
   BX_SMF void init_VMCS(void);
   BX_SMF void register_vmx_state(bx_param_c *parent);
   BX_SMF Bit64s VMX_TSC_Offset(void);
+#if BX_SUPPORT_X86_64
   BX_SMF Bit32u VMX_Read_TPR_Shadow(void);
   BX_SMF void VMX_Write_TPR_Shadow(Bit8u tpr_shadow);
+#endif
   // vmexit reasons
   BX_SMF void VMexit_Instruction(bxInstruction_c *i, Bit32u reason) BX_CPP_AttrRegparmN(2);
   BX_SMF void VMexit_Event(bxInstruction_c *i, unsigned type, unsigned vector,
