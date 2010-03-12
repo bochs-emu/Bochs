@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack64.cc,v 1.45 2009-12-04 16:53:12 sshwarts Exp $
+// $Id: stack64.cc,v 1.46 2010-03-12 20:59:05 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -98,36 +98,36 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ENTER64_IwIb(bxInstruction_c *i)
   Bit8u level = i->Ib2();
   level &= 0x1F;
 
-  RSP_SPECULATIVE;
+  Bit64u temp_RSP = RSP, temp_RBP = RBP;
 
-  push_64(RBP);
+  temp_RSP -= 8;
+  write_virtual_qword_64(BX_SEG_REG_SS, temp_RSP, temp_RBP);
 
-  Bit64u frame_ptr64 = RSP;
+  Bit64u frame_ptr64 = temp_RSP;
 
   if (level > 0) {
     /* do level-1 times */
     while (--level) {
-      RBP -= 8;
-      Bit64u temp64 = read_virtual_qword_64(BX_SEG_REG_SS, RBP);
-      RSP -= 8;
-      write_virtual_qword_64(BX_SEG_REG_SS, RSP, temp64);
+      temp_RBP -= 8;
+      Bit64u temp64 = read_virtual_qword_64(BX_SEG_REG_SS, temp_RBP);
+      temp_RSP -= 8;
+      write_virtual_qword_64(BX_SEG_REG_SS, temp_RSP, temp64);
     } /* while (--level) */
 
     /* push(frame pointer) */
-    RSP -= 8;
-    write_virtual_qword_64(BX_SEG_REG_SS, RSP, frame_ptr64);
+    temp_RSP -= 8;
+    write_virtual_qword_64(BX_SEG_REG_SS, temp_RSP, frame_ptr64);
   } /* if (level > 0) ... */
 
-  RSP -= i->Iw();
+  temp_RSP -= i->Iw();
 
   // ENTER finishes with memory write check on the final stack pointer
   // the memory is touched but no write actually occurs
   // emulate it by doing RMW read access from SS:RSP
-  read_RMW_virtual_qword_64(BX_SEG_REG_SS, RSP);
+  read_RMW_virtual_qword_64(BX_SEG_REG_SS, temp_RSP);
 
   RBP = frame_ptr64;
-
-  RSP_COMMIT;
+  RSP = temp_RSP;
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::LEAVE64(bxInstruction_c *i)
