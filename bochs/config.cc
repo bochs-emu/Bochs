@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.199 2010-03-01 18:53:53 sshwarts Exp $
+// $Id: config.cc,v 1.200 2010-03-12 11:28:59 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2009  The Bochs Project
@@ -423,6 +423,12 @@ void bx_init_options()
       "xsave", "Support for XSAVE extensions",
       "Support for XSAVE extensions",
       0);
+#if BX_SUPPORT_MONITOR_MWAIT
+  new bx_param_bool_c(cpuid_param,
+      "mwait_is_nop", "MWAIT enter CPU to sleep state",
+      "Don't put CPU to sleep state by MWAIT",
+      0);
+#endif
 #endif
 
   cpuid_param->set_options(menu->SHOW_PARENT);
@@ -2638,6 +2644,12 @@ static int parse_line_formatted(const char *context, int num_params, char *param
         if (parse_param_bool(params[i], 6, BXPN_CPUID_XAPIC) < 0) {
           PARSE_ERR(("%s: cpuid directive malformed.", context));
         }
+#if BX_SUPPORT_MONITOR_MWAIT
+      } else if (!strncmp(params[i], "mwait_is_nop=", 13)) {
+        if (parse_param_bool(params[i], 14, BXPN_CPUID_MWAIT_IS_NOP) < 0) {
+          PARSE_ERR(("%s: cpuid directive malformed.", context));
+        }
+#endif
 #endif
       } else {
         PARSE_ERR(("%s: cpuid directive malformed.", context));
@@ -3801,6 +3813,9 @@ int bx_write_configuration(const char *rc, int overwrite)
     SIM->get_param_bool(BXPN_CPUID_AES)->get(),
     SIM->get_param_bool(BXPN_CPUID_XSAVE)->get(),
     SIM->get_param_bool(BXPN_CPUID_MOVBE)->get());
+#if BX_SUPPORT_MONITOR_MWAIT
+  fprintf(fp, ", mwait_is_nop=%d", SIM->get_param_bool(BXPN_CPUID_MWAIT_IS_NOP)->get());
+#endif
 #endif
   fprintf(fp, "\n");
   fprintf(fp, "print_timestamps: enabled=%d\n", bx_dbg.print_timestamps);

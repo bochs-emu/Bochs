@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.317 2010-03-07 09:41:12 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.318 2010-03-12 11:28:59 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -1732,6 +1732,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MWAIT(bxInstruction_c *i)
   // If monitor has already triggered, we just return.
   if (! BX_CPU_THIS_PTR monitor.armed) {
     BX_DEBUG(("MWAIT: the MONITOR was not armed or already triggered"));
+    return;
+  }
+
+  static bool mwait_is_nop = SIM->get_param_bool(BXPN_CPUID_MWAIT_IS_NOP)->get();
+  if (mwait_is_nop) {
+    BX_DEBUG(("MWAIT: stay awake"));
     return;
   }
 

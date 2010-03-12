@@ -1,4 +1,4 @@
-$Id: PARAM_TREE.txt,v 1.27 2010-03-01 18:53:53 sshwarts Exp $
+$Id: PARAM_TREE.txt,v 1.28 2010-03-12 11:28:59 sshwarts Exp $
 
 Starting from Bochs 2.3 the parameters are organized in a tree structure
 instead of a huge flat list. The parameter tree was required for implementing
@@ -36,6 +36,7 @@ cpuid
   movbe
   xsave
   xapic
+  mwait_is_nop
 
 memory
   standard

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: msr.cc,v 1.36 2010-03-06 17:09:25 sshwarts Exp $
+// $Id: msr.cc,v 1.37 2010-03-12 11:28:59 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008-2009 Stanislav Shwartsman
@@ -362,10 +362,12 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
     case BX_MSR_MTRRPHYSMASK5:
     case BX_MSR_MTRRPHYSMASK6:
     case BX_MSR_MTRRPHYSMASK7:
+/*
       if (! IsValidPhyAddr(val_64)) {
         BX_ERROR(("WRMSR[0x%08x]: attempt to write invalid phy addr to variable range MTRR %08x:%08x", index, val32_hi, val32_lo));
         return 0;
       }
+*/
       // handle 10-0 reserved bits
       if (val32_lo & 0x7ff) {
         BX_ERROR(("WRMSR[0x%08x]: variable range MTRR reserved bits violation %08x:%08x", index, val32_hi, val32_lo));
