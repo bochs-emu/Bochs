@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmx.h,v 1.9 2010-03-06 16:59:05 sshwarts Exp $
+// $Id: vmx.h,v 1.10 2010-03-12 21:20:42 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2009 Stanislav Shwartsman
@@ -549,7 +549,7 @@ typedef struct bx_VMCS
 #define VMX_CR3_TARGET_MAX_CNT 4
 
    Bit32u vm_cr3_target_cnt;
-   bx_address vm_cr3_target_value[4];
+   bx_address vm_cr3_target_value[VMX_CR3_TARGET_MAX_CNT];
 
    bx_phy_address virtual_apic_page_addr;
    Bit32u vm_tpr_threshold;
@@ -779,6 +779,18 @@ enum VMX_Activity_State {
 #define VMX_MSR_VMX_VMENTRY_CTRLS \
    ((((Bit64u) VMX_MSR_VMX_VMENTRY_CTRLS_HI) << 32) | VMX_MSR_VMX_VMENTRY_CTRLS_LO)
 
+
+// IA32_MSR_VMX_MISC MSR (0x485)
+// -----------------
+
+// bit     6 - support VMENTER to HLT state
+// bit     7 - support VMENTER to SHUTDOWN state
+// bit     8 - support VMENTER to WAIT_FOR_SIPI state
+// bit 24:16 - number of CR3 target values supported
+// bit 27:25 - (N+1)*512 - recommended maximum MSRs in MSR store list
+// bit 63:32 - MSEG revision ID used by processor
+
+#define VMX_MSR_MISC (VMX_CR3_TARGET_MAX_CNT << 16)
 
 //
 // IA32_VMX_CR0_FIXED0 MSR (0x486)   IA32_VMX_CR0_FIXED1 MSR (0x487)
