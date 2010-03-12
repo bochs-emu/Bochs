@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.318 2010-03-12 11:28:59 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.319 2010-03-12 11:35:34 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -22,6 +22,7 @@
 
 #define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"
+#include "param_names.h"
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
