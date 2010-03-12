@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.200 2010-03-12 11:28:59 sshwarts Exp $
+// $Id: config.cc,v 1.201 2010-03-12 11:42:34 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2009  The Bochs Project
@@ -358,7 +358,7 @@ void bx_init_options()
   cpu_param->set_options(menu->SHOW_PARENT);
 
   // cpuid subtree
-  bx_list_c *cpuid_param = new bx_list_c(root_param, "cpuid", "CPUID Options", 10);
+  bx_list_c *cpuid_param = new bx_list_c(root_param, "cpuid", "CPUID Options", 11);
 
   new bx_param_bool_c(cpuid_param,
       "cpuid_limit_winnt", "Limit max CPUID function to 3",
@@ -2646,7 +2646,7 @@ static int parse_line_formatted(const char *context, int num_params, char *param
         }
 #if BX_SUPPORT_MONITOR_MWAIT
       } else if (!strncmp(params[i], "mwait_is_nop=", 13)) {
-        if (parse_param_bool(params[i], 14, BXPN_CPUID_MWAIT_IS_NOP) < 0) {
+        if (parse_param_bool(params[i], 13, BXPN_CPUID_MWAIT_IS_NOP) < 0) {
           PARSE_ERR(("%s: cpuid directive malformed.", context));
         }
 #endif
