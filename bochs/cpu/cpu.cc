@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.305 2010-03-07 09:22:20 sshwarts Exp $
+// $Id: cpu.cc,v 1.306 2010-03-14 15:51:26 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -483,7 +483,7 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
   // Priority 2: Trap on Task Switch
   //   T flag in TSS is set
   if (BX_CPU_THIS_PTR debug_trap & BX_DEBUG_TRAP_TASK_SWITCH_BIT)
-    exception(BX_DB_EXCEPTION, 0, 0); // no error, not interrupt
+    exception(BX_DB_EXCEPTION, 0); // no error, not interrupt
 
   // Priority 3: External Hardware Interventions
   //   FLUSH
@@ -517,7 +517,7 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
     // A trap may be inhibited on this boundary due to an instruction
     // which loaded SS.  If so we clear the inhibit_mask below
     // and don't execute this code until the next boundary.
-    exception(BX_DB_EXCEPTION, 0, 0); // no error, not interrupt
+    exception(BX_DB_EXCEPTION, 0); // no error, not interrupt
   }
 
   // Priority 5: External Interrupts
@@ -636,7 +636,7 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
           // Add to the list of debug events thus far.
           BX_CPU_THIS_PTR debug_trap |= dr6_bits;
           BX_ERROR(("#DB: x86 code breakpoint catched"));
-          exception(BX_DB_EXCEPTION, 0, 0); // no error, not interrupt
+          exception(BX_DB_EXCEPTION, 0); // no error, not interrupt
         }
       }
     }
@@ -690,7 +690,7 @@ void BX_CPU_C::prefetch(void)
   if (long64_mode()) {
     if (! IsCanonical(RIP)) {
       BX_ERROR(("prefetch: #GP(0): RIP crossed canonical boundary"));
-      exception(BX_GP_EXCEPTION, 0, 0);
+      exception(BX_GP_EXCEPTION, 0);
     }
 
     // linear address is equal to RIP in 64-bit long mode
@@ -714,7 +714,7 @@ void BX_CPU_C::prefetch(void)
     Bit32u limit = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled;
     if (EIP > limit) {
       BX_ERROR(("prefetch: EIP [%08x] > CS.limit [%08x]", EIP, limit));
-      exception(BX_GP_EXCEPTION, 0, 0);
+      exception(BX_GP_EXCEPTION, 0);
     }
 
     BX_CPU_THIS_PTR eipPageWindowSize = 4096;

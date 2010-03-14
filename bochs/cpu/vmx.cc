@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmx.cc,v 1.31 2010-03-06 16:59:05 sshwarts Exp $
+// $Id: vmx.cc,v 1.32 2010-03-14 15:51:27 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2009 Stanislav Shwartsman
@@ -1813,7 +1813,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMXON(bxInstruction_c *i)
 {
 #if BX_SUPPORT_VMX
   if (! BX_CPU_THIS_PTR cr4.get_VMXE() || ! protected_mode() || BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_COMPAT)
-    exception(BX_UD_EXCEPTION, 0, 0);
+    exception(BX_UD_EXCEPTION, 0);
 
   if (! BX_CPU_THIS_PTR in_vmx) {
     if (CPL != 0 || ! BX_CPU_THIS_PTR cr0.get_NE() || 
@@ -1822,7 +1822,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMXON(bxInstruction_c *i)
         ! (BX_CPU_THIS_PTR msr.ia32_feature_ctrl & BX_IA32_FEATURE_CONTROL_VMX_ENABLE_BIT))
     {
       BX_ERROR(("#GP: VMXON is not allowed !"));
-      exception(BX_GP_EXCEPTION, 0, 0);
+      exception(BX_GP_EXCEPTION, 0);
     }
 
     bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
@@ -1862,13 +1862,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMXON(bxInstruction_c *i)
   else {
     // in VMX root operation mode
     if (CPL != 0)
-      exception(BX_GP_EXCEPTION, 0, 0);
+      exception(BX_GP_EXCEPTION, 0);
 
     VMfail(VMXERR_VMXON_IN_VMX_ROOT_OPERATION);
   }
 #else
   BX_INFO(("VMXON: required VMX support, use --enable-vmx option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
+  exception(BX_UD_EXCEPTION, 0);
 #endif  
 }
 
@@ -1876,7 +1876,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMXOFF(bxInstruction_c *i)
 {
 #if BX_SUPPORT_VMX
   if (! BX_CPU_THIS_PTR in_vmx || BX_CPU_THIS_PTR get_VM() || BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_COMPAT)
-    exception(BX_UD_EXCEPTION, 0, 0);
+    exception(BX_UD_EXCEPTION, 0);
 
   if (BX_CPU_THIS_PTR in_vmx_guest) {
     BX_ERROR(("VMEXIT: VMXOFF in VMX non-root operation"));
@@ -1884,7 +1884,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMXOFF(bxInstruction_c *i)
   }
 
   if (CPL != 0)
-    exception(BX_GP_EXCEPTION, 0, 0);
+    exception(BX_GP_EXCEPTION, 0);
 
 /*
         if dual-monitor treatment of SMIs and SMM is active
@@ -1903,7 +1903,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMXOFF(bxInstruction_c *i)
   }
 #else
   BX_INFO(("VMXOFF: required VMX support, use --enable-vmx option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
+  exception(BX_UD_EXCEPTION, 0);
 #endif  
 }
 
@@ -1911,7 +1911,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMCALL(bxInstruction_c *i)
 {
 #if BX_SUPPORT_VMX
   if (! BX_CPU_THIS_PTR in_vmx)
-    exception(BX_UD_EXCEPTION, 0, 0);
+    exception(BX_UD_EXCEPTION, 0);
 
   if (BX_CPU_THIS_PTR in_vmx_guest) {
     BX_ERROR(("VMEXIT: VMCALL in VMX non-root operation"));
@@ -1919,10 +1919,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMCALL(bxInstruction_c *i)
   }
 
   if (BX_CPU_THIS_PTR get_VM() || BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_COMPAT)
-    exception(BX_UD_EXCEPTION, 0, 0);
+    exception(BX_UD_EXCEPTION, 0);
 
   if (CPL != 0)
-    exception(BX_GP_EXCEPTION, 0, 0);
+    exception(BX_GP_EXCEPTION, 0);
 
   if (BX_CPU_THIS_PTR in_smm /*|| 
         (the logical processor does not support the dual-monitor treatment of SMIs and SMM) ||
@@ -1980,7 +1980,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMCALL(bxInstruction_c *i)
 */
 #else
   BX_INFO(("VMCALL: required VMX support, use --enable-vmx option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
+  exception(BX_UD_EXCEPTION, 0);
 #endif  
 }
 
@@ -1988,7 +1988,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMLAUNCH(bxInstruction_c *i)
 {
 #if BX_SUPPORT_VMX
   if (! BX_CPU_THIS_PTR in_vmx || BX_CPU_THIS_PTR get_VM() || BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_COMPAT)
-    exception(BX_UD_EXCEPTION, 0, 0);
+    exception(BX_UD_EXCEPTION, 0);
 
   unsigned vmlaunch = 0;
   if ((i->rm() & 0x7) == 0x2) {
@@ -2002,7 +2002,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMLAUNCH(bxInstruction_c *i)
   }
 
   if (CPL != 0)
-    exception(BX_GP_EXCEPTION, 0, 0);
+    exception(BX_GP_EXCEPTION, 0);
 
   if (! VMCSPTR_VALID()) {
     BX_ERROR(("VMFAIL: VMLAUNCH with invalid VMCS ptr !"));
@@ -2138,7 +2138,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMLAUNCH(bxInstruction_c *i)
 
 #else
   BX_INFO(("VMLAUNCH/VMRESUME: required VMX support, use --enable-vmx option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
+  exception(BX_UD_EXCEPTION, 0);
 #endif  
 }
 
@@ -2146,7 +2146,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMPTRLD(bxInstruction_c *i)
 {
 #if BX_SUPPORT_VMX
   if (! BX_CPU_THIS_PTR in_vmx || BX_CPU_THIS_PTR get_VM() || BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_COMPAT)
-    exception(BX_UD_EXCEPTION, 0, 0);
+    exception(BX_UD_EXCEPTION, 0);
 
   if (BX_CPU_THIS_PTR in_vmx_guest) {
     BX_ERROR(("VMEXIT: VMPTRLD in VMX non-root operation"));
@@ -2154,7 +2154,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMPTRLD(bxInstruction_c *i)
   }
 
   if (CPL != 0)
-    exception(BX_GP_EXCEPTION, 0, 0);
+    exception(BX_GP_EXCEPTION, 0);
 
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
   Bit64u pAddr = read_virtual_qword(i->seg(), eaddr); // keep 64-bit
@@ -2181,7 +2181,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMPTRLD(bxInstruction_c *i)
   }
 #else
   BX_INFO(("VMPTRLD: required VMX support, use --enable-vmx option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
+  exception(BX_UD_EXCEPTION, 0);
 #endif  
 }
 
@@ -2189,7 +2189,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMPTRST(bxInstruction_c *i)
 {
 #if BX_SUPPORT_VMX
   if (! BX_CPU_THIS_PTR in_vmx || BX_CPU_THIS_PTR get_VM() || BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_COMPAT)
-    exception(BX_UD_EXCEPTION, 0, 0);
+    exception(BX_UD_EXCEPTION, 0);
 
   if (BX_CPU_THIS_PTR in_vmx_guest) {
     BX_ERROR(("VMEXIT: VMPTRST in VMX non-root operation"));
@@ -2197,14 +2197,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMPTRST(bxInstruction_c *i)
   }
 
   if (CPL != 0)
-    exception(BX_GP_EXCEPTION, 0, 0);
+    exception(BX_GP_EXCEPTION, 0);
 
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
   write_virtual_qword(i->seg(), eaddr, BX_CPU_THIS_PTR vmcsptr);
   VMsucceed();
 #else         
   BX_INFO(("VMPTRST: required VMX support, use --enable-vmx option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
+  exception(BX_UD_EXCEPTION, 0);
 #endif  
 }
 
@@ -2212,7 +2212,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMREAD(bxInstruction_c *i)
 {
 #if BX_SUPPORT_VMX
   if (! BX_CPU_THIS_PTR in_vmx || BX_CPU_THIS_PTR get_VM() || BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_COMPAT)
-    exception(BX_UD_EXCEPTION, 0, 0);
+    exception(BX_UD_EXCEPTION, 0);
 
   if (BX_CPU_THIS_PTR in_vmx_guest) {
     BX_ERROR(("VMEXIT: VMREAD in VMX non-root operation"));
@@ -2220,7 +2220,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMREAD(bxInstruction_c *i)
   }
 
   if (CPL != 0)
-    exception(BX_GP_EXCEPTION, 0, 0);
+    exception(BX_GP_EXCEPTION, 0);
 
   if (! VMCSPTR_VALID()) {
     BX_ERROR(("VMFAIL: VMREAD with invalid VMCS ptr !"));
@@ -2483,7 +2483,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMREAD(bxInstruction_c *i)
   VMsucceed();
 #else         
   BX_INFO(("VMREAD: required VMX support, use --enable-vmx option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
+  exception(BX_UD_EXCEPTION, 0);
 #endif  
 }
 
@@ -2491,7 +2491,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMWRITE(bxInstruction_c *i)
 {
 #if BX_SUPPORT_VMX
   if (! BX_CPU_THIS_PTR in_vmx || BX_CPU_THIS_PTR get_VM() || BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_COMPAT)
-    exception(BX_UD_EXCEPTION, 0, 0);
+    exception(BX_UD_EXCEPTION, 0);
 
   if (BX_CPU_THIS_PTR in_vmx_guest) {
     BX_ERROR(("VMEXIT: VMWRITE in VMX non-root operation"));
@@ -2499,7 +2499,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMWRITE(bxInstruction_c *i)
   }
 
   if (CPL != 0)
-    exception(BX_GP_EXCEPTION, 0, 0);
+    exception(BX_GP_EXCEPTION, 0);
 
   if (! VMCSPTR_VALID()) {
     BX_ERROR(("VMFAIL: VMWRITE with invalid VMCS ptr !"));
@@ -2774,7 +2774,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMWRITE(bxInstruction_c *i)
   VMsucceed();
 #else         
   BX_INFO(("VMWRITE: required VMX support, use --enable-vmx option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
+  exception(BX_UD_EXCEPTION, 0);
 #endif  
 }
 
@@ -2782,7 +2782,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMCLEAR(bxInstruction_c *i)
 {
 #if BX_SUPPORT_VMX
   if (! BX_CPU_THIS_PTR in_vmx || BX_CPU_THIS_PTR get_VM() || BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_COMPAT)
-    exception(BX_UD_EXCEPTION, 0, 0);
+    exception(BX_UD_EXCEPTION, 0);
 
   if (BX_CPU_THIS_PTR in_vmx_guest) {
     BX_ERROR(("VMEXIT: VMCLEAR in VMX non-root operation"));
@@ -2790,7 +2790,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMCLEAR(bxInstruction_c *i)
   }
 
   if (CPL != 0)
-    exception(BX_GP_EXCEPTION, 0, 0);
+    exception(BX_GP_EXCEPTION, 0);
 
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
   Bit64u pAddr = read_virtual_qword(i->seg(), eaddr); // keep 64-bit
@@ -2823,7 +2823,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMCLEAR(bxInstruction_c *i)
   }
 #else         
   BX_INFO(("VMCLEAR: required VMX support, use --enable-vmx option"));
-  exception(BX_UD_EXCEPTION, 0, 0);
+  exception(BX_UD_EXCEPTION, 0);
 #endif  
 }
 

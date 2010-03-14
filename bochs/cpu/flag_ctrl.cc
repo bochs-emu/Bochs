@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: flag_ctrl.cc,v 1.48 2009-12-04 16:53:12 sshwarts Exp $
+// $Id: flag_ctrl.cc,v 1.49 2010-03-14 15:51:26 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2009  The Bochs Project
@@ -72,7 +72,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CLI(bxInstruction_c *i)
     {
       if (IOPL < CPL) {
         BX_DEBUG(("CLI: IOPL < CPL in protected mode"));
-        exception(BX_GP_EXCEPTION, 0, 0);
+        exception(BX_GP_EXCEPTION, 0);
       }
     }
   }
@@ -86,7 +86,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CLI(bxInstruction_c *i)
       }
 #endif
       BX_DEBUG(("CLI: IOPL != 3 in v8086 mode"));
-      exception(BX_GP_EXCEPTION, 0, 0);
+      exception(BX_GP_EXCEPTION, 0);
     }
   }
 
@@ -110,13 +110,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::STI(bxInstruction_c *i)
         }
 
         BX_DEBUG(("STI: #GP(0) in VME mode"));
-        exception(BX_GP_EXCEPTION, 0, 0);
+        exception(BX_GP_EXCEPTION, 0);
       }
     }
 #endif
     if (CPL > IOPL) {
       BX_DEBUG(("STI: CPL > IOPL in protected mode"));
-      exception(BX_GP_EXCEPTION, 0, 0);
+      exception(BX_GP_EXCEPTION, 0);
     }
   }
   else if (v8086_mode())
@@ -130,7 +130,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::STI(bxInstruction_c *i)
       }
 #endif
       BX_DEBUG(("STI: IOPL != 3 in v8086 mode"));
-      exception(BX_GP_EXCEPTION, 0, 0);
+      exception(BX_GP_EXCEPTION, 0);
     }
   }
 
@@ -174,7 +174,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUSHF_Fw(bxInstruction_c *i)
 #endif
       {
         BX_DEBUG(("PUSHFW: #GP(0) in v8086 (no VME) mode"));
-        exception(BX_GP_EXCEPTION, 0, 0);
+        exception(BX_GP_EXCEPTION, 0);
       }
     }
   }
@@ -207,7 +207,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::POPF_Fw(bxInstruction_c *i)
              (flags16 & EFlagsTFMask))
         {
           BX_ERROR(("POPFW: #GP(0) in VME mode"));
-          exception(BX_GP_EXCEPTION, 0, 0);
+          exception(BX_GP_EXCEPTION, 0);
         }
 
         // IF, IOPL unchanged, EFLAGS.VIF = TMP_FLAGS.IF
@@ -220,7 +220,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::POPF_Fw(bxInstruction_c *i)
       }
 #endif
       BX_DEBUG(("POPFW: #GP(0) in v8086 (no VME) mode"));
-      exception(BX_GP_EXCEPTION, 0, 0);
+      exception(BX_GP_EXCEPTION, 0);
     }
 
     changeMask |= EFlagsIFMask;
@@ -241,7 +241,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUSHF_Fd(bxInstruction_c *i)
 {
   if (v8086_mode() && (BX_CPU_THIS_PTR get_IOPL()<3)) {
     BX_DEBUG(("PUSHFD: #GP(0) in v8086 mode"));
-    exception(BX_GP_EXCEPTION, 0, 0);
+    exception(BX_GP_EXCEPTION, 0);
   }
 
   // VM & RF flags cleared in image stored on the stack
@@ -274,7 +274,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::POPF_Fd(bxInstruction_c *i)
   else if (v8086_mode()) {
     if (BX_CPU_THIS_PTR get_IOPL() < 3) {
       BX_ERROR(("POPFD: #GP(0) in v8086 mode"));
-      exception(BX_GP_EXCEPTION, 0, 0);
+      exception(BX_GP_EXCEPTION, 0);
     }
     // v8086-mode: VM, IOPL, VIP, VIF are unaffected
     changeMask |= EFlagsIFMask;

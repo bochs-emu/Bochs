@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vm8086.cc,v 1.58 2009-12-04 16:53:12 sshwarts Exp $
+// $Id: vm8086.cc,v 1.59 2010-03-14 15:51:27 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -103,7 +103,7 @@ void BX_CPU_C::iret16_stack_return_from_v86(bxInstruction_c *i)
   if ((BX_CPU_THIS_PTR get_IOPL() < 3) && (BX_CR4_VME_ENABLED == 0)) {
     // trap to virtual 8086 monitor
     BX_DEBUG(("IRET in vm86 with IOPL != 3, VME = 0"));
-    exception(BX_GP_EXCEPTION, 0, 0);
+    exception(BX_GP_EXCEPTION, 0);
   }
 
   Bit16u ip, cs_raw, flags16;
@@ -119,7 +119,7 @@ void BX_CPU_C::iret16_stack_return_from_v86(bxInstruction_c *i)
          (flags16 & EFlagsTFMask))
     {
       BX_DEBUG(("iret16_stack_return_from_v86(): #GP(0) in VME mode"));
-      exception(BX_GP_EXCEPTION, 0, 0);
+      exception(BX_GP_EXCEPTION, 0);
     }
 
     load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], cs_raw);
@@ -146,7 +146,7 @@ void BX_CPU_C::iret32_stack_return_from_v86(bxInstruction_c *i)
   if (BX_CPU_THIS_PTR get_IOPL() < 3) {
     // trap to virtual 8086 monitor
     BX_DEBUG(("IRET in vm86 with IOPL != 3, VME = 0"));
-    exception(BX_GP_EXCEPTION, 0, 0);
+    exception(BX_GP_EXCEPTION, 0);
   }
 
   Bit32u eip, cs_raw, flags32;

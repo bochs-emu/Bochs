@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: protect_ctrl.cc,v 1.98 2010-02-15 14:04:48 sshwarts Exp $
+// $Id: protect_ctrl.cc,v 1.99 2010-03-14 15:51:26 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -30,7 +30,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ARPL_EwGw(bxInstruction_c *i)
 
   if (! protected_mode()) {
     BX_DEBUG(("ARPL: not recognized in real or virtual-8086 mode"));
-    exception(BX_UD_EXCEPTION, 0, 0);
+    exception(BX_UD_EXCEPTION, 0);
   }
 
   /* op1_16 is a register or memory reference */
@@ -74,7 +74,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LAR_GvEw(bxInstruction_c *i)
 
   if (! protected_mode()) {
     BX_ERROR(("LAR: not recognized in real or virtual-8086 mode"));
-    exception(BX_UD_EXCEPTION, 0, 0);
+    exception(BX_UD_EXCEPTION, 0);
   }
 
   if (i->modC0()) {
@@ -187,7 +187,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LSL_GvEw(bxInstruction_c *i)
 
   if (! protected_mode()) {
     BX_ERROR(("LSL: not recognized in real or virtual-8086 mode"));
-    exception(BX_UD_EXCEPTION, 0, 0);
+    exception(BX_UD_EXCEPTION, 0);
   }
 
   if (i->modC0()) {
@@ -279,7 +279,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SLDT_Ew(bxInstruction_c *i)
 {
   if (! protected_mode()) {
     BX_ERROR(("SLDT: not recognized in real or virtual-8086 mode"));
-    exception(BX_UD_EXCEPTION, 0, 0);
+    exception(BX_UD_EXCEPTION, 0);
   }
 
   Bit16u val16 = BX_CPU_THIS_PTR ldtr.selector.value;
@@ -302,7 +302,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::STR_Ew(bxInstruction_c *i)
 {
   if (! protected_mode()) {
     BX_ERROR(("STR: not recognized in real or virtual-8086 mode"));
-    exception(BX_UD_EXCEPTION, 0, 0);
+    exception(BX_UD_EXCEPTION, 0);
   }
 
   Bit16u val16 = BX_CPU_THIS_PTR tr.selector.value;
@@ -334,12 +334,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LLDT_Ew(bxInstruction_c *i)
 
   if (! protected_mode()) {
     BX_ERROR(("LLDT: not recognized in real or virtual-8086 mode"));
-    exception(BX_UD_EXCEPTION, 0, 0);
+    exception(BX_UD_EXCEPTION, 0);
   }
 
   if (CPL != 0) {
     BX_ERROR(("LLDT: The current priveledge level is not 0"));
-    exception(BX_GP_EXCEPTION, 0, 0);
+    exception(BX_GP_EXCEPTION, 0);
   }
 
   if (i->modC0()) {
@@ -364,7 +364,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LLDT_Ew(bxInstruction_c *i)
   // #GP(selector) if the selector operand does not point into GDT
   if (selector.ti != 0) {
     BX_ERROR(("LLDT: selector.ti != 0"));
-    exception(BX_GP_EXCEPTION, raw_selector & 0xfffc, 0);
+    exception(BX_GP_EXCEPTION, raw_selector & 0xfffc);
   }
 
   /* fetch descriptor; call handles out of limits checks */
@@ -385,13 +385,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LLDT_Ew(bxInstruction_c *i)
          descriptor.type != BX_SYS_SEGMENT_LDT)
   {
     BX_ERROR(("LLDT: doesn't point to an LDT descriptor!"));
-    exception(BX_GP_EXCEPTION, raw_selector & 0xfffc, 0);
+    exception(BX_GP_EXCEPTION, raw_selector & 0xfffc);
   }
 
   /* #NP(selector) if LDT descriptor is not present */
   if (! IS_PRESENT(descriptor)) {
     BX_ERROR(("LLDT: LDT descriptor not present!"));
-    exception(BX_NP_EXCEPTION, raw_selector & 0xfffc, 0);
+    exception(BX_NP_EXCEPTION, raw_selector & 0xfffc);
   }
 
 #if BX_SUPPORT_X86_64
@@ -400,7 +400,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LLDT_Ew(bxInstruction_c *i)
      GET32H(descriptor.u.segment.base), GET32L(descriptor.u.segment.base)));
   if (!IsCanonical(descriptor.u.segment.base)) {
     BX_ERROR(("LLDT: non-canonical LDT descriptor base!"));
-    exception(BX_GP_EXCEPTION, raw_selector & 0xfffc, 0);
+    exception(BX_GP_EXCEPTION, raw_selector & 0xfffc);
   }
 #endif
 
@@ -421,12 +421,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LTR_Ew(bxInstruction_c *i)
 
   if (! protected_mode()) {
     BX_ERROR(("LTR: not recognized in real or virtual-8086 mode"));
-    exception(BX_UD_EXCEPTION, 0, 0);
+    exception(BX_UD_EXCEPTION, 0);
   }
 
   if (CPL != 0) {
     BX_ERROR(("LTR: The current priveledge level is not 0"));
-    exception(BX_GP_EXCEPTION, 0, 0);
+    exception(BX_GP_EXCEPTION, 0);
   }
 
   if (i->modC0()) {
@@ -441,7 +441,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LTR_Ew(bxInstruction_c *i)
   /* if selector is NULL, invalidate and done */
   if ((raw_selector & BX_SELECTOR_RPL_MASK) == 0) {
     BX_ERROR(("LTR: loading with NULL selector!"));
-    exception(BX_GP_EXCEPTION, 0, 0);
+    exception(BX_GP_EXCEPTION, 0);
   }
 
   /* parse fields in selector, then check for null selector */
@@ -449,7 +449,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LTR_Ew(bxInstruction_c *i)
 
   if (selector.ti) {
     BX_ERROR(("LTR: selector.ti != 0"));
-    exception(BX_GP_EXCEPTION, raw_selector & 0xfffc, 0);
+    exception(BX_GP_EXCEPTION, raw_selector & 0xfffc);
   }
 
   /* fetch descriptor; call handles out of limits checks */
@@ -471,20 +471,20 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LTR_Ew(bxInstruction_c *i)
           descriptor.type!=BX_SYS_SEGMENT_AVAIL_386_TSS))
   {
     BX_ERROR(("LTR: doesn't point to an available TSS descriptor!"));
-    exception(BX_GP_EXCEPTION, raw_selector & 0xfffc, 0);
+    exception(BX_GP_EXCEPTION, raw_selector & 0xfffc);
   }
 
 #if BX_SUPPORT_X86_64
   if (long_mode() && descriptor.type!=BX_SYS_SEGMENT_AVAIL_386_TSS) {
     BX_ERROR(("LTR: doesn't point to an available TSS386 descriptor in long mode!"));
-    exception(BX_GP_EXCEPTION, raw_selector & 0xfffc, 0);
+    exception(BX_GP_EXCEPTION, raw_selector & 0xfffc);
   }
 #endif
 
   /* #NP(selector) if TSS descriptor is not present */
   if (! IS_PRESENT(descriptor)) {
     BX_ERROR(("LTR: TSS descriptor not present!"));
-    exception(BX_NP_EXCEPTION, raw_selector & 0xfffc, 0);
+    exception(BX_NP_EXCEPTION, raw_selector & 0xfffc);
   }
 
 #if BX_SUPPORT_X86_64
@@ -493,7 +493,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LTR_Ew(bxInstruction_c *i)
      GET32H(descriptor.u.segment.base), GET32L(descriptor.u.segment.base)));
   if (!IsCanonical(descriptor.u.segment.base)) {
     BX_ERROR(("LTR: non-canonical TSS descriptor base!"));
-    exception(BX_GP_EXCEPTION, raw_selector & 0xfffc, 0);
+    exception(BX_GP_EXCEPTION, raw_selector & 0xfffc);
   }
 #endif
 
@@ -522,7 +522,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VERR_Ew(bxInstruction_c *i)
 
   if (! protected_mode()) {
     BX_ERROR(("VERR: not recognized in real or virtual-8086 mode"));
-    exception(BX_UD_EXCEPTION, 0, 0);
+    exception(BX_UD_EXCEPTION, 0);
   }
 
   if (i->modC0()) {
@@ -612,7 +612,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VERW_Ew(bxInstruction_c *i)
 
   if (! protected_mode()) {
     BX_ERROR(("VERW: not recognized in real or virtual-8086 mode"));
-    exception(BX_UD_EXCEPTION, 0, 0);
+    exception(BX_UD_EXCEPTION, 0);
   }
 
   if (i->modC0()) {
@@ -706,12 +706,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LGDT_Ms(bxInstruction_c *i)
 
   if (v8086_mode()) {
     BX_ERROR(("LGDT: not recognized in virtual-8086 mode"));
-    exception(BX_GP_EXCEPTION, 0, 0);
+    exception(BX_GP_EXCEPTION, 0);
   }
 
   if (!real_mode() && CPL!=0) {
     BX_ERROR(("LGDT: CPL!=0 in protected mode"));
-    exception(BX_GP_EXCEPTION, 0, 0);
+    exception(BX_GP_EXCEPTION, 0);
   }
 
   Bit32u eaddr = (Bit32u) BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
@@ -731,12 +731,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LIDT_Ms(bxInstruction_c *i)
 
   if (v8086_mode()) {
     BX_ERROR(("LIDT: not recognized in virtual-8086 mode"));
-    exception(BX_GP_EXCEPTION, 0, 0);
+    exception(BX_GP_EXCEPTION, 0);
   }
 
   if (!real_mode() && CPL!=0) {
     BX_ERROR(("LIDT: CPL!=0 in protected mode"));
-    exception(BX_GP_EXCEPTION, 0, 0);
+    exception(BX_GP_EXCEPTION, 0);
   }
 
   Bit32u eaddr = (Bit32u) BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
@@ -784,7 +784,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LGDT64_Ms(bxInstruction_c *i)
 
   if (CPL!=0) {
     BX_ERROR(("LGDT64_Ms: CPL != 0 in long mode"));
-    exception(BX_GP_EXCEPTION, 0, 0);
+    exception(BX_GP_EXCEPTION, 0);
   }
 
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
@@ -792,7 +792,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LGDT64_Ms(bxInstruction_c *i)
   Bit64u base_64 = read_virtual_qword_64(i->seg(), eaddr + 2);
   if (! IsCanonical(base_64)) {
     BX_ERROR(("LGDT64_Ms: loaded base64 address is not in canonical form!"));
-    exception(BX_GP_EXCEPTION, 0, 0);
+    exception(BX_GP_EXCEPTION, 0);
   }
   Bit16u limit_16 = read_virtual_word_64(i->seg(), eaddr);
 
@@ -806,7 +806,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LIDT64_Ms(bxInstruction_c *i)
 
   if (CPL != 0) {
     BX_ERROR(("LIDT64_Ms: CPL != 0 in long mode"));
-    exception(BX_GP_EXCEPTION, 0, 0);
+    exception(BX_GP_EXCEPTION, 0);
   }
 
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
@@ -814,7 +814,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LIDT64_Ms(bxInstruction_c *i)
   Bit64u base_64 = read_virtual_qword_64(i->seg(), eaddr + 2);
   if (! IsCanonical(base_64)) {
     BX_ERROR(("LIDT64_Ms: loaded base64 address is not in canonical form!"));
-    exception(BX_GP_EXCEPTION, 0, 0);
+    exception(BX_GP_EXCEPTION, 0);
   }
   Bit16u limit_16 = read_virtual_word_64(i->seg(), eaddr);
 

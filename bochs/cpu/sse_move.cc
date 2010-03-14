@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_move.cc,v 1.110 2010-03-01 18:53:53 sshwarts Exp $
+// $Id: sse_move.cc,v 1.111 2010-03-14 15:51:26 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003-2009 Stanislav Shwartsman
@@ -130,7 +130,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LDMXCSR(bxInstruction_c *i)
 
   Bit32u new_mxcsr = read_virtual_dword(i->seg(), eaddr);
   if(new_mxcsr & ~MXCSR_MASK)
-      exception(BX_GP_EXCEPTION, 0, 0);
+      exception(BX_GP_EXCEPTION, 0);
 
   BX_MXCSR_REGISTER = new_mxcsr;
 #endif
@@ -162,10 +162,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FXSAVE(bxInstruction_c *i)
   if (BX_CPU_SUPPORT_FEATURE(BX_CPU_MMX))
   {
     if(BX_CPU_THIS_PTR cr0.get_TS())
-      exception(BX_NM_EXCEPTION, 0, 0);
+      exception(BX_NM_EXCEPTION, 0);
 
     if(BX_CPU_THIS_PTR cr0.get_EM())
-      exception(BX_UD_EXCEPTION, 0, 0);
+      exception(BX_UD_EXCEPTION, 0);
   }
 
   xmm.xmm16u(0) = BX_CPU_THIS_PTR the_i387.get_control_word();
@@ -281,10 +281,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FXRSTOR(bxInstruction_c *i)
 
   if (BX_CPU_SUPPORT_FEATURE(BX_CPU_MMX)) {
     if(BX_CPU_THIS_PTR cr0.get_TS())
-      exception(BX_NM_EXCEPTION, 0, 0);
+      exception(BX_NM_EXCEPTION, 0);
 
     if(BX_CPU_THIS_PTR cr0.get_EM())
-      exception(BX_UD_EXCEPTION, 0, 0);
+      exception(BX_UD_EXCEPTION, 0);
   }
 
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
@@ -336,7 +336,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FXRSTOR(bxInstruction_c *i)
   {
     Bit32u new_mxcsr = xmm.xmm32u(2);
     if(new_mxcsr & ~MXCSR_MASK)
-       exception(BX_GP_EXCEPTION, 0, 0);
+       exception(BX_GP_EXCEPTION, 0);
 
     BX_MXCSR_REGISTER = new_mxcsr;
   }
@@ -1153,7 +1153,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVNTDQA_VdqMdq(bxInstruction_c *i)
   /* source must be memory reference */
   if (i->modC0()) {
     BX_INFO(("MOVNTDQA_VdqMdq: must be memory reference"));
-    exception(BX_UD_EXCEPTION, 0, 0);
+    exception(BX_UD_EXCEPTION, 0);
   }
 
   BX_CPU_THIS_PTR prepareSSE();

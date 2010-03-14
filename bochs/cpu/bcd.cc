@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bcd.cc,v 1.27 2009-12-04 16:53:12 sshwarts Exp $
+// $Id: bcd.cc,v 1.28 2010-03-14 15:51:26 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -105,7 +105,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::AAM(bxInstruction_c *i)
   Bit8u al, imm8 = i->Ib();
 
   if (imm8 == 0)
-    exception(BX_DE_EXCEPTION, 0, 0);
+    exception(BX_DE_EXCEPTION, 0);
 
   al = AL;
   AH = al / imm8;

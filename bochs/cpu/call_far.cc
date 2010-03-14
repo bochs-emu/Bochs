@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: call_far.cc,v 1.54 2010-02-21 06:56:47 sshwarts Exp $
+// $Id: call_far.cc,v 1.55 2010-03-14 15:51:26 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005-2009 Stanislav Shwartsman
@@ -41,7 +41,7 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
   /* new cs selector must not be null, else #GP(0) */
   if ((cs_raw & 0xfffc) == 0) {
     BX_ERROR(("call_protected: CS selector null"));
-    exception(BX_GP_EXCEPTION, 0, 0);
+    exception(BX_GP_EXCEPTION, 0);
   }
 
   parse_selector(cs_raw, &cs_selector);
@@ -53,7 +53,7 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
   // examine AR byte of selected descriptor for various legal values
   if (cs_descriptor.valid==0) {
     BX_ERROR(("call_protected: invalid CS descriptor"));
-    exception(BX_GP_EXCEPTION, cs_raw & 0xfffc, 0);
+    exception(BX_GP_EXCEPTION, cs_raw & 0xfffc);
   }
 
   if (cs_descriptor.segment)   // normal segment
@@ -149,13 +149,13 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
     // descriptor DPL must be >= CPL else #GP(gate selector)
     if (gate_descriptor.dpl < CPL) {
       BX_ERROR(("call_protected: descriptor.dpl < CPL"));
-      exception(BX_GP_EXCEPTION, cs_raw & 0xfffc, 0);
+      exception(BX_GP_EXCEPTION, cs_raw & 0xfffc);
     }
 
     // descriptor DPL must be >= gate selector RPL else #GP(gate selector)
     if (gate_descriptor.dpl < gate_selector.rpl) {
       BX_ERROR(("call_protected: descriptor.dpl < selector.rpl"));
-      exception(BX_GP_EXCEPTION, cs_raw & 0xfffc, 0);
+      exception(BX_GP_EXCEPTION, cs_raw & 0xfffc);
     }
 
 #if BX_SUPPORT_X86_64
@@ -163,12 +163,12 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
       // call gate type is higher priority than non-present bit check
       if (gate_descriptor.type != BX_386_CALL_GATE) {
         BX_ERROR(("call_protected: gate type %u unsupported in long mode", (unsigned) gate_descriptor.type));
-        exception(BX_GP_EXCEPTION, cs_raw & 0xfffc, 0);
+        exception(BX_GP_EXCEPTION, cs_raw & 0xfffc);
       }
       // gate descriptor must be present else #NP(gate selector)
       if (! IS_PRESENT(gate_descriptor)) {
         BX_ERROR(("call_protected: call gate not present"));
-        exception(BX_NP_EXCEPTION, cs_raw & 0xfffc, 0);
+        exception(BX_NP_EXCEPTION, cs_raw & 0xfffc);
       }
 
       call_gate64(&gate_selector);
@@ -186,13 +186,13 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
 
         if (gate_descriptor.valid==0 || gate_selector.ti) {
           BX_ERROR(("call_protected: call bad TSS selector !"));
-          exception(BX_GP_EXCEPTION, cs_raw & 0xfffc, 0);
+          exception(BX_GP_EXCEPTION, cs_raw & 0xfffc);
         }
 
         // TSS must be present, else #NP(TSS selector)
         if (! IS_PRESENT(gate_descriptor)) {
           BX_ERROR(("call_protected: call not present TSS !"));
-          exception(BX_NP_EXCEPTION, cs_raw & 0xfffc, 0);
+          exception(BX_NP_EXCEPTION, cs_raw & 0xfffc);
         }
 
         // SWITCH_TASKS _without_ nesting to TSS
@@ -202,7 +202,7 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
         // EIP must be in code seg limit, else #GP(0)
         if (EIP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled) {
           BX_ERROR(("call_protected: EIP not within CS limits"));
-          exception(BX_GP_EXCEPTION, 0, 0);
+          exception(BX_GP_EXCEPTION, 0);
         }
         return;
 
@@ -215,14 +215,14 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
         // gate descriptor must be present else #NP(gate selector)
         if (! IS_PRESENT(gate_descriptor)) {
           BX_ERROR(("call_protected: gate not present"));
-          exception(BX_NP_EXCEPTION, cs_raw & 0xfffc, 0);
+          exception(BX_NP_EXCEPTION, cs_raw & 0xfffc);
         }
         call_gate(&gate_descriptor);
         return;
 
       default: // can't get here
         BX_ERROR(("call_protected(): gate.type(%u) unsupported", (unsigned) gate_descriptor.type));
-        exception(BX_GP_EXCEPTION, cs_raw & 0xfffc, 0);
+        exception(BX_GP_EXCEPTION, cs_raw & 0xfffc);
     }
   }
 }
@@ -242,7 +242,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::call_gate(bx_descriptor_t *gate_descriptor
   // selector must not be null else #GP(0)
   if ((dest_selector & 0xfffc) == 0) {
     BX_ERROR(("call_protected: selector in gate null"));
-    exception(BX_GP_EXCEPTION, 0, 0);
+    exception(BX_GP_EXCEPTION, 0);
   }
 
   parse_selector(dest_selector, &cs_selector);
@@ -259,13 +259,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::call_gate(bx_descriptor_t *gate_descriptor
       IS_DATA_SEGMENT(cs_descriptor.type) || cs_descriptor.dpl > CPL)
   {
     BX_ERROR(("call_protected: selected descriptor is not code"));
-    exception(BX_GP_EXCEPTION, dest_selector & 0xfffc, 0);
+    exception(BX_GP_EXCEPTION, dest_selector & 0xfffc);
   }
 
   // code segment must be present else #NP(selector)
   if (! IS_PRESENT(cs_descriptor)) {
     BX_ERROR(("call_protected: code segment not present !"));
-    exception(BX_NP_EXCEPTION, dest_selector & 0xfffc, 0);
+    exception(BX_NP_EXCEPTION, dest_selector & 0xfffc);
   }
 
   // CALL GATE TO MORE PRIVILEGE
@@ -288,7 +288,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::call_gate(bx_descriptor_t *gate_descriptor
     // selector must not be null, else #TS(0)
     if ((SS_for_cpl_x & 0xfffc) == 0) {
       BX_ERROR(("call_protected: new SS null"));
-      exception(BX_TS_EXCEPTION, 0, 0);
+      exception(BX_TS_EXCEPTION, 0);
     }
 
     // selector index must be within its descriptor table limits,
@@ -301,14 +301,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::call_gate(bx_descriptor_t *gate_descriptor
     //   else #TS(SS selector)
     if (ss_selector.rpl != cs_descriptor.dpl) {
       BX_ERROR(("call_protected: SS selector.rpl != CS descr.dpl"));
-      exception(BX_TS_EXCEPTION, SS_for_cpl_x & 0xfffc, 0);
+      exception(BX_TS_EXCEPTION, SS_for_cpl_x & 0xfffc);
     }
 
     // stack segment DPL must equal DPL of code segment,
     //   else #TS(SS selector)
     if (ss_descriptor.dpl != cs_descriptor.dpl) {
       BX_ERROR(("call_protected: SS descr.rpl != CS descr.dpl"));
-      exception(BX_TS_EXCEPTION, SS_for_cpl_x & 0xfffc, 0);
+      exception(BX_TS_EXCEPTION, SS_for_cpl_x & 0xfffc);
     }
 
     // descriptor must indicate writable data segment,
@@ -317,13 +317,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::call_gate(bx_descriptor_t *gate_descriptor
         IS_CODE_SEGMENT(ss_descriptor.type) || !IS_DATA_SEGMENT_WRITEABLE(ss_descriptor.type))
     {
       BX_ERROR(("call_protected: ss descriptor is not writable data seg"));
-      exception(BX_TS_EXCEPTION, SS_for_cpl_x & 0xfffc, 0);
+      exception(BX_TS_EXCEPTION, SS_for_cpl_x & 0xfffc);
     }
 
     // segment must be present, else #SS(SS selector)
     if (! IS_PRESENT(ss_descriptor)) {
       BX_ERROR(("call_protected: ss descriptor not present"));
-      exception(BX_SS_EXCEPTION, SS_for_cpl_x & 0xfffc, 0);
+      exception(BX_SS_EXCEPTION, SS_for_cpl_x & 0xfffc);
     }
 
     // get word count from call gate, mask to 5 bits
@@ -431,7 +431,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::call_gate(bx_descriptor_t *gate_descriptor
     // new eIP must be in code segment limit else #GP(0)
     if (new_EIP > cs_descriptor.u.segment.limit_scaled) {
       BX_ERROR(("call_protected: EIP not within CS limits"));
-      exception(BX_GP_EXCEPTION, 0, 0);
+      exception(BX_GP_EXCEPTION, 0);
     }
 
     /* load SS descriptor */
@@ -484,7 +484,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::call_gate64(bx_selector_t *gate_selector)
   // selector must not be null else #GP(0)
   if ((dest_selector & 0xfffc) == 0) {
     BX_ERROR(("call_gate64: selector in gate null"));
-    exception(BX_GP_EXCEPTION, 0, 0);
+    exception(BX_GP_EXCEPTION, 0);
   }
 
   parse_selector(dest_selector, &cs_selector);
@@ -506,7 +506,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::call_gate64(bx_selector_t *gate_selector)
       cs_descriptor.dpl > CPL)
   {
     BX_ERROR(("call_gate64: selected descriptor is not code"));
-    exception(BX_GP_EXCEPTION, dest_selector & 0xfffc, 0);
+    exception(BX_GP_EXCEPTION, dest_selector & 0xfffc);
   }
 
   // In long mode, only 64-bit call gates are allowed, and they must point
@@ -514,13 +514,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::call_gate64(bx_selector_t *gate_selector)
   if (! IS_LONG64_SEGMENT(cs_descriptor) || cs_descriptor.u.segment.d_b)
   {
     BX_ERROR(("call_gate64: not 64-bit code segment in call gate 64"));
-    exception(BX_GP_EXCEPTION, dest_selector & 0xfffc, 0);
+    exception(BX_GP_EXCEPTION, dest_selector & 0xfffc);
   }
 
   // code segment must be present else #NP(selector)
   if (! IS_PRESENT(cs_descriptor)) {
     BX_ERROR(("call_gate64: code segment not present !"));
-    exception(BX_NP_EXCEPTION, dest_selector & 0xfffc, 0);
+    exception(BX_NP_EXCEPTION, dest_selector & 0xfffc);
   }
 
   Bit64u old_CS  = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value;
@@ -543,7 +543,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::call_gate64(bx_selector_t *gate_selector)
       // #SS(selector) when changing priviledge level
       BX_ERROR(("call_gate64: canonical address failure %08x%08x",
          GET32H(RSP_for_cpl_x), GET32L(RSP_for_cpl_x)));
-      exception(BX_SS_EXCEPTION, old_SS & 0xfffc, 0);
+      exception(BX_SS_EXCEPTION, old_SS & 0xfffc);
     }
 
     // push old stack long pointer onto new stack

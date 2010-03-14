@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.649 2010-03-13 21:06:56 sshwarts Exp $
+// $Id: cpu.h,v 1.650 2010-03-14 15:51:26 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -3124,7 +3124,7 @@ public: // for now...
   BX_SMF void long_mode_int(Bit8u vector, unsigned is_INT, bx_bool push_error,
                  Bit16u error_code);
 #endif
-  BX_SMF void exception(unsigned vector, Bit16u error_code, unsigned unused)
+  BX_SMF void exception(unsigned vector, Bit16u error_code)
                   BX_CPP_AttrNoReturn();
   BX_SMF void init_SMRAM(void);
   BX_SMF void smram_save_state(Bit32u *smm_saved_state);
@@ -3433,10 +3433,10 @@ public: // for now...
 BX_CPP_INLINE void BX_CPU_C::prepareMMX(void)
 {
   if(BX_CPU_THIS_PTR cr0.get_EM())
-    exception(BX_UD_EXCEPTION, 0, 0);
+    exception(BX_UD_EXCEPTION, 0);
 
   if(BX_CPU_THIS_PTR cr0.get_TS())
-    exception(BX_NM_EXCEPTION, 0, 0);
+    exception(BX_NM_EXCEPTION, 0);
 
   /* check floating point status word for a pending FPU exceptions */
   FPU_check_pending_exceptions();
@@ -3447,10 +3447,10 @@ BX_CPP_INLINE void BX_CPU_C::prepareMMX(void)
 BX_CPP_INLINE void BX_CPU_C::prepareSSE(void)
 {
   if(BX_CPU_THIS_PTR cr0.get_EM() || !BX_CPU_THIS_PTR cr4.get_OSFXSR())
-    exception(BX_UD_EXCEPTION, 0, 0);
+    exception(BX_UD_EXCEPTION, 0);
 
   if(BX_CPU_THIS_PTR cr0.get_TS())
-    exception(BX_NM_EXCEPTION, 0, 0);
+    exception(BX_NM_EXCEPTION, 0);
 }
 #endif
 
@@ -3458,10 +3458,10 @@ BX_CPP_INLINE void BX_CPU_C::prepareSSE(void)
 BX_CPP_INLINE void BX_CPU_C::prepareXSAVE(void)
 {
   if(! BX_CPU_THIS_PTR cr4.get_OSXSAVE())
-    exception(BX_UD_EXCEPTION, 0, 0);
+    exception(BX_UD_EXCEPTION, 0);
 
   if(BX_CPU_THIS_PTR cr0.get_TS())
-    exception(BX_NM_EXCEPTION, 0, 0);
+    exception(BX_NM_EXCEPTION, 0);
 }
 #endif
 

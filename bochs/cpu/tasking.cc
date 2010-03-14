@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: tasking.cc,v 1.84 2010-03-05 08:54:07 sshwarts Exp $
+// $Id: tasking.cc,v 1.85 2010-03-14 15:51:27 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -157,7 +157,7 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
 
   if (new_TSS_limit < new_TSS_max) {
     BX_ERROR(("task_switch(): new TSS limit < %d", new_TSS_max));
-    exception(BX_TS_EXCEPTION, tss_selector->value & 0xfffc, 0);
+    exception(BX_TS_EXCEPTION, tss_selector->value & 0xfffc);
   }
 
 #if BX_SUPPORT_VMX
@@ -177,7 +177,7 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
 
   if (old_TSS_limit < old_TSS_max) {
     BX_ERROR(("task_switch(): old TSS limit < %d", old_TSS_max));
-    exception(BX_TS_EXCEPTION, BX_CPU_THIS_PTR tr.selector.value & 0xfffc, 0);
+    exception(BX_TS_EXCEPTION, BX_CPU_THIS_PTR tr.selector.value & 0xfffc);
   }
 
   if (obase32 == nbase32) {
@@ -485,14 +485,14 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
   if (ldt_selector.ti) {
     // LDT selector must be in GDT
     BX_INFO(("task_switch(exception after commit point): bad LDT selector TI=1"));
-    exception(BX_TS_EXCEPTION, raw_ldt_selector & 0xfffc, 0);
+    exception(BX_TS_EXCEPTION, raw_ldt_selector & 0xfffc);
   }
 
   if ((raw_ldt_selector & 0xfffc) != 0) {
     bx_bool good = fetch_raw_descriptor2(&ldt_selector, &dword1, &dword2);
     if (!good) {
       BX_ERROR(("task_switch(exception after commit point): bad LDT fetch"));
-      exception(BX_TS_EXCEPTION, raw_ldt_selector & 0xfffc, 0);
+      exception(BX_TS_EXCEPTION, raw_ldt_selector & 0xfffc);
     }
 
     parse_descriptor(dword1, dword2, &ldt_descriptor);
@@ -503,13 +503,13 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
         ldt_descriptor.segment)
     {
       BX_ERROR(("task_switch(exception after commit point): bad LDT segment"));
-      exception(BX_TS_EXCEPTION, raw_ldt_selector & 0xfffc, 0);
+      exception(BX_TS_EXCEPTION, raw_ldt_selector & 0xfffc);
     }
 
     // LDT of new task is present in memory, else #TS(new tasks's LDT)
     if (! IS_PRESENT(ldt_descriptor)) {
       BX_ERROR(("task_switch(exception after commit point): LDT not present"));
-      exception(BX_TS_EXCEPTION, raw_ldt_selector & 0xfffc, 0);
+      exception(BX_TS_EXCEPTION, raw_ldt_selector & 0xfffc);
     }
 
     // All checks pass, fill in LDTR shadow cache
@@ -537,7 +537,7 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
       bx_bool good = fetch_raw_descriptor2(&ss_selector, &dword1, &dword2);
       if (!good) {
         BX_ERROR(("task_switch(exception after commit point): bad SS fetch"));
-        exception(BX_TS_EXCEPTION, raw_ss_selector & 0xfffc, 0);
+        exception(BX_TS_EXCEPTION, raw_ss_selector & 0xfffc);
       }
 
       parse_descriptor(dword1, dword2, &ss_descriptor);
@@ -550,7 +550,7 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
           !IS_DATA_SEGMENT_WRITEABLE(ss_descriptor.type))
       {
         BX_ERROR(("task_switch(exception after commit point): SS not valid or writeable segment"));
-        exception(BX_TS_EXCEPTION, raw_ss_selector & 0xfffc, 0);
+        exception(BX_TS_EXCEPTION, raw_ss_selector & 0xfffc);
       }
 
       //
@@ -558,19 +558,19 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
       //
       if (! IS_PRESENT(ss_descriptor)) {
         BX_ERROR(("task_switch(exception after commit point): SS not present"));
-        exception(BX_SS_EXCEPTION, raw_ss_selector & 0xfffc, 0);
+        exception(BX_SS_EXCEPTION, raw_ss_selector & 0xfffc);
       }
 
       // Stack segment DPL matches CS.RPL, else #TS(new stack segment)
       if (ss_descriptor.dpl != cs_selector.rpl) {
         BX_ERROR(("task_switch(exception after commit point): SS.rpl != CS.RPL"));
-        exception(BX_TS_EXCEPTION, raw_ss_selector & 0xfffc, 0);
+        exception(BX_TS_EXCEPTION, raw_ss_selector & 0xfffc);
       }
 
       // Stack segment DPL matches selector RPL, else #TS(new stack segment)
       if (ss_descriptor.dpl != ss_selector.rpl) {
         BX_ERROR(("task_switch(exception after commit point): SS.dpl != SS.rpl"));
-        exception(BX_TS_EXCEPTION, raw_ss_selector & 0xfffc, 0);
+        exception(BX_TS_EXCEPTION, raw_ss_selector & 0xfffc);
       }
 
       touch_segment(&ss_selector, &ss_descriptor);
@@ -581,7 +581,7 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
     else {
       // SS selector is valid, else #TS(new stack segment)
       BX_ERROR(("task_switch(exception after commit point): SS NULL"));
-      exception(BX_TS_EXCEPTION, raw_ss_selector & 0xfffc, 0);
+      exception(BX_TS_EXCEPTION, raw_ss_selector & 0xfffc);
     }
 
     CPL = save_CPL;
@@ -609,7 +609,7 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
       bx_bool good = fetch_raw_descriptor2(&cs_selector, &dword1, &dword2);
       if (!good) {
         BX_ERROR(("task_switch(exception after commit point): bad CS fetch"));
-        exception(BX_TS_EXCEPTION, raw_cs_selector & 0xfffc, 0);
+        exception(BX_TS_EXCEPTION, raw_cs_selector & 0xfffc);
       }
 
       parse_descriptor(dword1, dword2, &cs_descriptor);
@@ -619,7 +619,7 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
           IS_DATA_SEGMENT(cs_descriptor.type))
       {
         BX_ERROR(("task_switch(exception after commit point): CS not valid executable seg"));
-        exception(BX_TS_EXCEPTION, raw_cs_selector & 0xfffc, 0);
+        exception(BX_TS_EXCEPTION, raw_cs_selector & 0xfffc);
       }
 
       // if non-conforming then DPL must equal selector RPL else #TS(CS)
@@ -627,7 +627,7 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
           cs_descriptor.dpl != cs_selector.rpl)
       {
         BX_ERROR(("task_switch(exception after commit point): non-conforming: CS.dpl!=CS.RPL"));
-        exception(BX_TS_EXCEPTION, raw_cs_selector & 0xfffc, 0);
+        exception(BX_TS_EXCEPTION, raw_cs_selector & 0xfffc);
       }
 
       // if conforming then DPL must be <= selector RPL else #TS(CS)
@@ -635,13 +635,13 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
           cs_descriptor.dpl > cs_selector.rpl)
       {
         BX_ERROR(("task_switch(exception after commit point): conforming: CS.dpl>RPL"));
-        exception(BX_TS_EXCEPTION, raw_cs_selector & 0xfffc, 0);
+        exception(BX_TS_EXCEPTION, raw_cs_selector & 0xfffc);
       }
 
       // Code segment is present in memory, else #NP(new code segment)
       if (! IS_PRESENT(cs_descriptor)) {
         BX_ERROR(("task_switch(exception after commit point): CS.p==0"));
-        exception(BX_NP_EXCEPTION, raw_cs_selector & 0xfffc, 0);
+        exception(BX_NP_EXCEPTION, raw_cs_selector & 0xfffc);
       }
 
       touch_segment(&cs_selector, &cs_descriptor);
@@ -659,7 +659,7 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
     else {
       // If new cs selector is null #TS(CS)
       BX_ERROR(("task_switch(exception after commit point): CS NULL"));
-      exception(BX_TS_EXCEPTION, raw_cs_selector & 0xfffc, 0);
+      exception(BX_TS_EXCEPTION, raw_cs_selector & 0xfffc);
     }
 
     updateFetchModeMask();
@@ -694,7 +694,7 @@ void BX_CPU_C::task_switch_load_selector(bx_segment_reg_t *seg,
     bx_bool good = fetch_raw_descriptor2(selector, &dword1, &dword2);
     if (!good) {
       BX_ERROR(("task_switch(%s): bad selector fetch !", strseg(seg)));
-      exception(BX_TS_EXCEPTION, raw_selector & 0xfffc, 0);
+      exception(BX_TS_EXCEPTION, raw_selector & 0xfffc);
     }
 
     parse_descriptor(dword1, dword2, &descriptor);
@@ -704,7 +704,7 @@ void BX_CPU_C::task_switch_load_selector(bx_segment_reg_t *seg,
         IS_CODE_SEGMENT_READABLE(descriptor.type) == 0))
     {
       BX_ERROR(("task_switch(%s): not data or readable code !", strseg(seg)));
-      exception(BX_TS_EXCEPTION, raw_selector & 0xfffc, 0);
+      exception(BX_TS_EXCEPTION, raw_selector & 0xfffc);
     }
 
     /* If data or non-conforming code, then both the RPL and the CPL
@@ -714,13 +714,13 @@ void BX_CPU_C::task_switch_load_selector(bx_segment_reg_t *seg,
     {
       if ((selector->rpl > descriptor.dpl) || (cs_rpl > descriptor.dpl)) {
         BX_ERROR(("load_seg_reg(%s): RPL & CPL must be <= DPL", strseg(seg)));
-        exception(BX_TS_EXCEPTION, raw_selector & 0xfffc, 0);
+        exception(BX_TS_EXCEPTION, raw_selector & 0xfffc);
       }
     }
 
     if (! IS_PRESENT(descriptor)) {
       BX_ERROR(("task_switch(%s): descriptor not present !", strseg(seg)));
-      exception(BX_NP_EXCEPTION, raw_selector & 0xfffc, 0);
+      exception(BX_NP_EXCEPTION, raw_selector & 0xfffc);
     }
 
     touch_segment(selector, &descriptor);
@@ -742,7 +742,7 @@ void BX_CPU_C::get_SS_ESP_from_TSS(unsigned pl, Bit16u *ss, Bit32u *esp)
     Bit32u TSSstackaddr = 8*pl + 4;
     if ((TSSstackaddr+7) > BX_CPU_THIS_PTR tr.cache.u.segment.limit_scaled) {
       BX_DEBUG(("get_SS_ESP_from_TSS(386): TSSstackaddr > TSS.LIMIT"));
-      exception(BX_TS_EXCEPTION, BX_CPU_THIS_PTR tr.selector.value & 0xfffc, 0);
+      exception(BX_TS_EXCEPTION, BX_CPU_THIS_PTR tr.selector.value & 0xfffc);
     }
     *ss  = system_read_word (BX_CPU_THIS_PTR tr.cache.u.segment.base + TSSstackaddr + 4);
     *esp = system_read_dword(BX_CPU_THIS_PTR tr.cache.u.segment.base + TSSstackaddr);
@@ -754,7 +754,7 @@ void BX_CPU_C::get_SS_ESP_from_TSS(unsigned pl, Bit16u *ss, Bit32u *esp)
     Bit32u TSSstackaddr = 4*pl + 2;
     if ((TSSstackaddr+3) > BX_CPU_THIS_PTR tr.cache.u.segment.limit_scaled) {
       BX_DEBUG(("get_SS_ESP_from_TSS(286): TSSstackaddr > TSS.LIMIT"));
-      exception(BX_TS_EXCEPTION, BX_CPU_THIS_PTR tr.selector.value & 0xfffc, 0);
+      exception(BX_TS_EXCEPTION, BX_CPU_THIS_PTR tr.selector.value & 0xfffc);
     }
     *ss  =          system_read_word(BX_CPU_THIS_PTR tr.cache.u.segment.base + TSSstackaddr + 2);
     *esp = (Bit32u) system_read_word(BX_CPU_THIS_PTR tr.cache.u.segment.base + TSSstackaddr);
@@ -774,7 +774,7 @@ Bit64u BX_CPU_C::get_RSP_from_TSS(unsigned pl)
   Bit32u TSSstackaddr = 8*pl + 4;
   if ((TSSstackaddr+7) > BX_CPU_THIS_PTR tr.cache.u.segment.limit_scaled) {
     BX_DEBUG(("get_RSP_from_TSS(): TSSstackaddr > TSS.LIMIT"));
-    exception(BX_TS_EXCEPTION, BX_CPU_THIS_PTR tr.selector.value & 0xfffc, 0);
+    exception(BX_TS_EXCEPTION, BX_CPU_THIS_PTR tr.selector.value & 0xfffc);
   }
 
   Bit64u rsp = system_read_qword(BX_CPU_THIS_PTR tr.cache.u.segment.base + TSSstackaddr);

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: soft_int.cc,v 1.57 2010-03-05 20:24:08 sshwarts Exp $
+// $Id: soft_int.cc,v 1.58 2010-03-14 15:51:26 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -40,7 +40,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BOUND_GwMa(bxInstruction_c *i)
 
   if (op1_16 < bound_min || op1_16 > bound_max) {
     BX_INFO(("BOUND_GdMa: fails bounds test"));
-    exception(BX_BR_EXCEPTION, 0, 0);
+    exception(BX_BR_EXCEPTION, 0);
   }
 }
 
@@ -55,7 +55,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BOUND_GdMa(bxInstruction_c *i)
 
   if (op1_32 < bound_min || op1_32 > bound_max) {
     BX_INFO(("BOUND_GdMa: fails bounds test"));
-    exception(BX_BR_EXCEPTION, 0, 0);
+    exception(BX_BR_EXCEPTION, 0);
   }
 }
 
@@ -129,13 +129,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INT_Ib(bxInstruction_c *i)
       bx_address tr_base = BX_CPU_THIS_PTR tr.cache.u.segment.base;
       if (BX_CPU_THIS_PTR tr.cache.u.segment.limit_scaled < 103) {
         BX_ERROR(("INT_Ib(): TR.limit < 103 in VME"));
-        exception(BX_GP_EXCEPTION, 0, 0);
+        exception(BX_GP_EXCEPTION, 0);
       }
 
       Bit32u io_base = system_read_word(tr_base + 102), offset = io_base - 32 + (vector >> 3);
       if (offset > BX_CPU_THIS_PTR tr.cache.u.segment.limit_scaled) {
         BX_ERROR(("INT_Ib(): failed to fetch VME redirection bitmap"));
-        exception(BX_GP_EXCEPTION, 0, 0);
+        exception(BX_GP_EXCEPTION, 0);
       }
 
       Bit8u vme_redirection_bitmap = system_read_byte(tr_base + offset);
@@ -151,7 +151,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INT_Ib(bxInstruction_c *i)
     if (BX_CPU_THIS_PTR get_IOPL() < 3)
     {
       BX_DEBUG(("INT_Ib(): Interrupt cannot be redirected, generate #GP(0)"));
-      exception(BX_GP_EXCEPTION, 0, 0);
+      exception(BX_GP_EXCEPTION, 0);
     }
   }
 

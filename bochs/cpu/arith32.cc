@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith32.cc,v 1.85 2010-02-26 11:44:50 sshwarts Exp $
+// $Id: arith32.cc,v 1.86 2010-03-14 15:51:26 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -304,13 +304,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CDQ(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPXCHG_XBTS(bxInstruction_c *i)
 {
   BX_INFO(("CMPXCHG_XBTS: Generate #UD exception"));
-  exception(BX_UD_EXCEPTION, 0, 0);
+  exception(BX_UD_EXCEPTION, 0);
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPXCHG_IBTS(bxInstruction_c *i)
 {
   BX_INFO(("CMPXCHG_IBTS: Generate #UD exception"));
-  exception(BX_UD_EXCEPTION, 0, 0);
+  exception(BX_UD_EXCEPTION, 0);
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::XADD_EdGdM(bxInstruction_c *i)

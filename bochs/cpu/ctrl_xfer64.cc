@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer64.cc,v 1.83 2010-02-21 06:56:47 sshwarts Exp $
+// $Id: ctrl_xfer64.cc,v 1.84 2010-03-14 15:51:26 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -32,7 +32,7 @@ BX_CPP_INLINE void BX_CPP_AttrRegparmN(1) BX_CPU_C::branch_near64(bxInstruction_
 
   if (! IsCanonical(new_RIP)) {
     BX_ERROR(("branch_near64: canonical RIP violation"));
-    exception(BX_GP_EXCEPTION, 0, 0);
+    exception(BX_GP_EXCEPTION, 0);
   }
 
   RIP = new_RIP;
@@ -53,7 +53,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RETnear64_Iw(bxInstruction_c *i)
 
   if (! IsCanonical(return_RIP)) {
     BX_ERROR(("RETnear64_Iw: canonical RIP violation"));
-    exception(BX_GP_EXCEPTION, 0, 0);
+    exception(BX_GP_EXCEPTION, 0);
   }
 
   RIP = return_RIP;
@@ -72,7 +72,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RETnear64(bxInstruction_c *i)
 
   if (! IsCanonical(return_RIP)) {
     BX_ERROR(("RETnear64: canonical RIP violation %08x%08x", GET32H(return_RIP), GET32L(return_RIP)));
-    exception(BX_GP_EXCEPTION, 0, 0);
+    exception(BX_GP_EXCEPTION, 0);
   }
 
   RIP = return_RIP;
@@ -111,7 +111,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CALL_Jq(bxInstruction_c *i)
 
   if (! IsCanonical(new_RIP)) {
     BX_ERROR(("CALL_Jq: canonical RIP violation"));
-    exception(BX_GP_EXCEPTION, 0, 0);
+    exception(BX_GP_EXCEPTION, 0);
   }
 
   RIP = new_RIP;
@@ -134,7 +134,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CALL_EqR(bxInstruction_c *i)
   if (! IsCanonical(new_RIP))
   {
     BX_ERROR(("CALL_Eq: canonical RIP violation"));
-    exception(BX_GP_EXCEPTION, 0, 0);
+    exception(BX_GP_EXCEPTION, 0);
   }
 
   RIP = new_RIP;
@@ -172,7 +172,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::JMP_Jq(bxInstruction_c *i)
 
   if (! IsCanonical(new_RIP)) {
     BX_ERROR(("JMP_Jq: canonical RIP violation"));
-    exception(BX_GP_EXCEPTION, 0, 0);
+    exception(BX_GP_EXCEPTION, 0);
   }
 
   RIP = new_RIP;
@@ -394,7 +394,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::JMP_EqR(bxInstruction_c *i)
 
   if (! IsCanonical(op1_64)) {
     BX_ERROR(("JMP_Eq: canonical RIP violation"));
-    exception(BX_GP_EXCEPTION, 0, 0);
+    exception(BX_GP_EXCEPTION, 0);
   }
 
   RIP = op1_64;

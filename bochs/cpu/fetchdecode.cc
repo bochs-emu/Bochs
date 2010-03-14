@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.257 2010-03-05 20:42:10 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.258 2010-03-14 15:51:26 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -2910,7 +2910,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BxError(bxInstruction_c *i)
       get_bx_opcode_name(ia_opcode), BX_CPU_THIS_PTR cpuid_features_bitmask));
   }
 
-  exception(BX_UD_EXCEPTION, 0, 0);
+  exception(BX_UD_EXCEPTION, 0);
 }
 
 const char *get_bx_opcode_name(Bit16u ia_opcode)

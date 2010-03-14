@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: access32.cc,v 1.26 2009-10-14 20:45:29 sshwarts Exp $
+// $Id: access32.cc,v 1.27 2010-03-14 15:51:26 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008-2009 Stanislav Shwartsman
@@ -62,12 +62,12 @@ accessOK:
     }
     else {
       BX_ERROR(("write_virtual_byte_32(): segment limit violation"));
-      exception(int_number(s), 0, 0);
+      exception(int_number(s), 0);
     }
   }
 
   if (!write_virtual_checks(seg, offset, 1))
-    exception(int_number(s), 0, 0);
+    exception(int_number(s), 0);
   goto accessOK;
 }
 
@@ -111,7 +111,7 @@ accessOK:
       if (BX_CPU_THIS_PTR alignment_check()) {
         if (laddr & 1) {
           BX_ERROR(("write_virtual_word_32(): #AC misaligned access"));
-          exception(BX_AC_EXCEPTION, 0, 0);
+          exception(BX_AC_EXCEPTION, 0);
         }
       }
 #endif
@@ -121,12 +121,12 @@ accessOK:
     }
     else {
       BX_ERROR(("write_virtual_word_32(): segment limit violation"));
-      exception(int_number(s), 0, 0);
+      exception(int_number(s), 0);
     }
   }
 
   if (!write_virtual_checks(seg, offset, 2))
-    exception(int_number(s), 0, 0);
+    exception(int_number(s), 0);
   goto accessOK;
 }
 
@@ -170,7 +170,7 @@ accessOK:
       if (BX_CPU_THIS_PTR alignment_check()) {
         if (laddr & 3) {
           BX_ERROR(("write_virtual_dword_32(): #AC misaligned access"));
-          exception(BX_AC_EXCEPTION, 0, 0);
+          exception(BX_AC_EXCEPTION, 0);
         }
       }
 #endif
@@ -180,12 +180,12 @@ accessOK:
     }
     else {
       BX_ERROR(("write_virtual_dword_32(): segment limit violation"));
-      exception(int_number(s), 0, 0);
+      exception(int_number(s), 0);
     }
   }
 
   if (!write_virtual_checks(seg, offset, 4))
-    exception(int_number(s), 0, 0);
+    exception(int_number(s), 0);
   goto accessOK;
 }
 
@@ -229,7 +229,7 @@ accessOK:
       if (BX_CPU_THIS_PTR alignment_check()) {
         if (laddr & 7) {
           BX_ERROR(("write_virtual_qword_32(): #AC misaligned access"));
-          exception(BX_AC_EXCEPTION, 0, 0);
+          exception(BX_AC_EXCEPTION, 0);
         }
       }
 #endif
@@ -239,12 +239,12 @@ accessOK:
     }
     else {
       BX_ERROR(("write_virtual_qword_32(): segment limit violation"));
-      exception(int_number(s), 0, 0);
+      exception(int_number(s), 0);
     }
   }
 
   if (!write_virtual_checks(seg, offset, 8))
-    exception(int_number(s), 0, 0);
+    exception(int_number(s), 0);
   goto accessOK;
 }
 
@@ -288,12 +288,12 @@ accessOK:
     }
     else {
       BX_ERROR(("write_virtual_dqword_32(): segment limit violation"));
-      exception(int_number(s), 0, 0);
+      exception(int_number(s), 0);
     }
   }
 
   if (!write_virtual_checks(seg, offset, 16))
-    exception(int_number(s), 0, 0);
+    exception(int_number(s), 0);
   goto accessOK;
 }
 
@@ -331,19 +331,19 @@ accessOK:
       }
       if (laddr & 15) {
         BX_ERROR(("write_virtual_dqword_aligned_32(): #GP misaligned access"));
-        exception(BX_GP_EXCEPTION, 0, 0);
+        exception(BX_GP_EXCEPTION, 0);
       }
       access_write_linear(laddr, 16, CPL, (void *) data);
       return;
     }
     else {
       BX_ERROR(("write_virtual_dqword_aligned_32(): segment limit violation"));
-      exception(int_number(s), 0, 0);
+      exception(int_number(s), 0);
     }
   }
 
   if (!write_virtual_checks(seg, offset, 16))
-    exception(int_number(s), 0, 0);
+    exception(int_number(s), 0);
   goto accessOK;
 }
 
@@ -385,12 +385,12 @@ accessOK:
     }
     else {
       BX_ERROR(("read_virtual_byte_32(): segment limit violation"));
-      exception(int_number(s), 0, 0);
+      exception(int_number(s), 0);
     }
   }
 
   if (!read_virtual_checks(seg, offset, 1))
-    exception(int_number(s), 0, 0);
+    exception(int_number(s), 0);
   goto accessOK;
 }
 
@@ -434,7 +434,7 @@ accessOK:
       if (BX_CPU_THIS_PTR alignment_check()) {
         if (laddr & 1) {
           BX_ERROR(("read_virtual_word_32(): #AC misaligned access"));
-          exception(BX_AC_EXCEPTION, 0, 0);
+          exception(BX_AC_EXCEPTION, 0);
         }
       }
 #endif
@@ -444,12 +444,12 @@ accessOK:
     }
     else {
       BX_ERROR(("read_virtual_word_32(): segment limit violation"));
-      exception(int_number(s), 0, 0);
+      exception(int_number(s), 0);
     }
   }
 
   if (!read_virtual_checks(seg, offset, 2))
-    exception(int_number(s), 0, 0);
+    exception(int_number(s), 0);
   goto accessOK;
 }
 
@@ -493,7 +493,7 @@ accessOK:
       if (BX_CPU_THIS_PTR alignment_check()) {
         if (laddr & 3) {
           BX_ERROR(("read_virtual_dword_32(): #AC misaligned access"));
-          exception(BX_AC_EXCEPTION, 0, 0);
+          exception(BX_AC_EXCEPTION, 0);
         }
       }
 #endif
@@ -503,12 +503,12 @@ accessOK:
     }
     else {
       BX_ERROR(("read_virtual_dword_32(): segment limit violation"));
-      exception(int_number(s), 0, 0);
+      exception(int_number(s), 0);
     }
   }
 
   if (!read_virtual_checks(seg, offset, 4))
-    exception(int_number(s), 0, 0);
+    exception(int_number(s), 0);
   goto accessOK;
 }
 
@@ -552,7 +552,7 @@ accessOK:
       if (BX_CPU_THIS_PTR alignment_check()) {
         if (laddr & 7) {
           BX_ERROR(("read_virtual_qword_32(): #AC misaligned access"));
-          exception(BX_AC_EXCEPTION, 0, 0);
+          exception(BX_AC_EXCEPTION, 0);
         }
       }
 #endif
@@ -562,12 +562,12 @@ accessOK:
     }
     else {
       BX_ERROR(("read_virtual_qword_32(): segment limit violation"));
-      exception(int_number(s), 0, 0);
+      exception(int_number(s), 0);
     }
   }
 
   if (!read_virtual_checks(seg, offset, 8))
-    exception(int_number(s), 0, 0);
+    exception(int_number(s), 0);
   goto accessOK;
 }
 
@@ -609,12 +609,12 @@ accessOK:
     }
     else {
       BX_ERROR(("read_virtual_dqword_32(): segment limit violation"));
-      exception(int_number(s), 0, 0);
+      exception(int_number(s), 0);
     }
   }
 
   if (!read_virtual_checks(seg, offset, 16))
-    exception(int_number(s), 0, 0);
+    exception(int_number(s), 0);
   goto accessOK;
 }
 
@@ -651,19 +651,19 @@ accessOK:
       }
       if (laddr & 15) {
         BX_ERROR(("read_virtual_dqword_aligned_32(): #GP misaligned access"));
-        exception(BX_GP_EXCEPTION, 0, 0);
+        exception(BX_GP_EXCEPTION, 0);
       }
       access_read_linear(laddr, 16, CPL, BX_READ, (void *) data);
       return;
     }
     else {
       BX_ERROR(("read_virtual_dqword_aligned_32(): segment limit violation"));
-      exception(int_number(s), 0, 0);
+      exception(int_number(s), 0);
     }
   }
 
   if (!read_virtual_checks(seg, offset, 16))
-    exception(int_number(s), 0, 0);
+    exception(int_number(s), 0);
   goto accessOK;
 }
 
@@ -712,12 +712,12 @@ accessOK:
     }
     else {
       BX_ERROR(("read_RMW_virtual_byte_32(): segment limit violation"));
-      exception(int_number(s), 0, 0);
+      exception(int_number(s), 0);
     }
   }
 
   if (!write_virtual_checks(seg, offset, 1))
-    exception(int_number(s), 0, 0);
+    exception(int_number(s), 0);
   goto accessOK;
 }
 
@@ -763,7 +763,7 @@ accessOK:
       if (BX_CPU_THIS_PTR alignment_check()) {
         if (laddr & 1) {
           BX_ERROR(("read_RMW_virtual_word_32(): #AC misaligned access"));
-          exception(BX_AC_EXCEPTION, 0, 0);
+          exception(BX_AC_EXCEPTION, 0);
         }
       }
 #endif
@@ -773,12 +773,12 @@ accessOK:
     }
     else {
       BX_ERROR(("read_RMW_virtual_word_32(): segment limit violation"));
-      exception(int_number(s), 0, 0);
+      exception(int_number(s), 0);
     }
   }
 
   if (!write_virtual_checks(seg, offset, 2))
-    exception(int_number(s), 0, 0);
+    exception(int_number(s), 0);
   goto accessOK;
 }
 
@@ -824,7 +824,7 @@ accessOK:
       if (BX_CPU_THIS_PTR alignment_check()) {
         if (laddr & 3) {
           BX_ERROR(("read_RMW_virtual_dword_32(): #AC misaligned access"));
-          exception(BX_AC_EXCEPTION, 0, 0);
+          exception(BX_AC_EXCEPTION, 0);
         }
       }
 #endif
@@ -834,12 +834,12 @@ accessOK:
     }
     else {
       BX_ERROR(("read_RMW_virtual_dword_32(): segment limit violation"));
-      exception(int_number(s), 0, 0);
+      exception(int_number(s), 0);
     }
   }
 
   if (!write_virtual_checks(seg, offset, 4))
-    exception(int_number(s), 0, 0);
+    exception(int_number(s), 0);
   goto accessOK;
 }
 
@@ -885,7 +885,7 @@ accessOK:
       if (BX_CPU_THIS_PTR alignment_check()) {
         if (laddr & 7) {
           BX_ERROR(("read_RMW_virtual_qword_32(): #AC misaligned access"));
-          exception(BX_AC_EXCEPTION, 0, 0);
+          exception(BX_AC_EXCEPTION, 0);
         }
       }
 #endif
@@ -895,12 +895,12 @@ accessOK:
     }
     else {
       BX_ERROR(("read_RMW_virtual_qword_32(): segment limit violation"));
-      exception(int_number(s), 0, 0);
+      exception(int_number(s), 0);
     }
   }
 
   if (!write_virtual_checks(seg, offset, 8))
-    exception(int_number(s), 0, 0);
+    exception(int_number(s), 0);
   goto accessOK;
 }
 
@@ -1089,7 +1089,7 @@ accessOK:
       if (BX_CPU_THIS_PTR alignment_check() && user) {
         if (laddr & 1) {
           BX_ERROR(("write_new_stack_word_32(): #AC misaligned access"));
-          exception(BX_AC_EXCEPTION, 0, 0);
+          exception(BX_AC_EXCEPTION, 0);
         }
       }
 #endif
@@ -1100,14 +1100,14 @@ accessOK:
     else {
       BX_ERROR(("write_new_stack_word_32(): segment limit violation"));
       exception(BX_SS_EXCEPTION, 
-         seg->selector.rpl != CPL ? (seg->selector.value & 0xfffc) : 0, 0);
+         seg->selector.rpl != CPL ? (seg->selector.value & 0xfffc) : 0);
     }
   }
 
   // add error code when segment violation occurs when pushing into new stack
   if (!write_virtual_checks(seg, offset, 2))
     exception(BX_SS_EXCEPTION, 
-         seg->selector.rpl != CPL ? (seg->selector.value & 0xfffc) : 0, 0);
+         seg->selector.rpl != CPL ? (seg->selector.value & 0xfffc) : 0);
   goto accessOK;
 }
 
@@ -1148,7 +1148,7 @@ accessOK:
       if (BX_CPU_THIS_PTR alignment_check() && user) {
         if (laddr & 3) {
           BX_ERROR(("write_new_stack_dword_32(): #AC misaligned access"));
-          exception(BX_AC_EXCEPTION, 0, 0);
+          exception(BX_AC_EXCEPTION, 0);
         }
       }
 #endif
@@ -1159,14 +1159,14 @@ accessOK:
     else {
       BX_ERROR(("write_new_stack_dword_32(): segment limit violation"));
       exception(BX_SS_EXCEPTION, 
-         seg->selector.rpl != CPL ? (seg->selector.value & 0xfffc) : 0, 0);
+         seg->selector.rpl != CPL ? (seg->selector.value & 0xfffc) : 0);
     }
   }
 
   // add error code when segment violation occurs when pushing into new stack
   if (!write_virtual_checks(seg, offset, 4))
     exception(BX_SS_EXCEPTION, 
-         seg->selector.rpl != CPL ? (seg->selector.value & 0xfffc) : 0, 0);
+         seg->selector.rpl != CPL ? (seg->selector.value & 0xfffc) : 0);
   goto accessOK;
 }
 
@@ -1207,7 +1207,7 @@ accessOK:
       if (BX_CPU_THIS_PTR alignment_check() && user) {
         if (laddr & 7) {
           BX_ERROR(("write_new_stack_qword_32(): #AC misaligned access"));
-          exception(BX_AC_EXCEPTION, 0, 0);
+          exception(BX_AC_EXCEPTION, 0);
         }
       }
 #endif
@@ -1218,13 +1218,13 @@ accessOK:
     else {
       BX_ERROR(("write_new_stack_qword_32(): segment limit violation"));
       exception(BX_SS_EXCEPTION, 
-         seg->selector.rpl != CPL ? (seg->selector.value & 0xfffc) : 0, 0);
+         seg->selector.rpl != CPL ? (seg->selector.value & 0xfffc) : 0);
     }
   }
 
   // add error code when segment violation occurs when pushing into new stack
   if (!write_virtual_checks(seg, offset, 8))
     exception(BX_SS_EXCEPTION, 
-        seg->selector.rpl != CPL ? (seg->selector.value & 0xfffc) : 0, 0);
+        seg->selector.rpl != CPL ? (seg->selector.value & 0xfffc) : 0);
   goto accessOK;
 }

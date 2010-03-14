@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: ret_far.cc,v 1.25 2010-02-15 08:42:57 sshwarts Exp $
+// $Id: ret_far.cc,v 1.26 2010-03-14 15:51:26 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005-2009 Stanislav Shwartsman
@@ -82,7 +82,7 @@ BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
   // selector must be non-null else #GP(0)
   if ((raw_cs_selector & 0xfffc) == 0) {
     BX_ERROR(("return_protected: CS selector null"));
-    exception(BX_GP_EXCEPTION, 0, 0);
+    exception(BX_GP_EXCEPTION, 0);
   }
 
   parse_selector(raw_cs_selector, &cs_selector);
@@ -97,7 +97,7 @@ BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
   // return selector RPL must be >= CPL, else #GP(return selector)
   if (cs_selector.rpl < CPL) {
     BX_ERROR(("return_protected: CS.rpl < CPL"));
-    exception(BX_GP_EXCEPTION, raw_cs_selector & 0xfffc, 0);
+    exception(BX_GP_EXCEPTION, raw_cs_selector & 0xfffc);
   }
 
   // check code-segment descriptor
@@ -160,13 +160,13 @@ BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
       if (long_mode()) {
         if (! IS_LONG64_SEGMENT(cs_descriptor) || (cs_selector.rpl == 3)) {
           BX_ERROR(("return_protected: SS selector null"));
-          exception(BX_GP_EXCEPTION, 0, 0);
+          exception(BX_GP_EXCEPTION, 0);
         }
       }
       else // not in long or compatibility mode
       {
         BX_ERROR(("return_protected: SS selector null"));
-        exception(BX_GP_EXCEPTION, 0, 0);
+        exception(BX_GP_EXCEPTION, 0);
       }
     }
     else {
@@ -177,7 +177,7 @@ BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
        * else #GP(selector) */
       if (ss_selector.rpl != cs_selector.rpl) {
         BX_ERROR(("return_protected: ss.rpl != cs.rpl"));
-        exception(BX_GP_EXCEPTION, raw_ss_selector & 0xfffc, 0);
+        exception(BX_GP_EXCEPTION, raw_ss_selector & 0xfffc);
       }
 
       /* descriptor AR byte must indicate a writable data segment,
@@ -187,20 +187,20 @@ BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
           !IS_DATA_SEGMENT_WRITEABLE(ss_descriptor.type))
       {
         BX_ERROR(("return_protected: SS.AR byte not writable data"));
-        exception(BX_GP_EXCEPTION, raw_ss_selector & 0xfffc, 0);
+        exception(BX_GP_EXCEPTION, raw_ss_selector & 0xfffc);
       }
 
       /* descriptor dpl must = RPL of the return CS selector,
        * else #GP(selector) */
       if (ss_descriptor.dpl != cs_selector.rpl) {
         BX_ERROR(("return_protected: SS.dpl != cs.rpl"));
-        exception(BX_GP_EXCEPTION, raw_ss_selector & 0xfffc, 0);
+        exception(BX_GP_EXCEPTION, raw_ss_selector & 0xfffc);
       }
 
       /* segment must be present else #SS(selector) */
       if (! IS_PRESENT(ss_descriptor)) {
         BX_ERROR(("return_protected: ss.present == 0"));
-        exception(BX_SS_EXCEPTION, raw_ss_selector & 0xfffc, 0);
+        exception(BX_SS_EXCEPTION, raw_ss_selector & 0xfffc);
       }
     }
 

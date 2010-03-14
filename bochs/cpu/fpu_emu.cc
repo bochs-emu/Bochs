@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu_emu.cc,v 1.11 2010-03-03 14:33:35 sshwarts Exp $
+// $Id: fpu_emu.cc,v 1.12 2010-03-14 15:51:26 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2004-2009 Stanislav Shwartsman
@@ -30,7 +30,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FWAIT(bxInstruction_c *i)
 {
 #if BX_SUPPORT_FPU
   if (BX_CPU_THIS_PTR cr0.get_TS() && BX_CPU_THIS_PTR cr0.get_MP())
-    exception(BX_NM_EXCEPTION, 0, 0);
+    exception(BX_NM_EXCEPTION, 0);
 
   BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 #endif
@@ -41,6 +41,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FWAIT(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::FPU_ESC(bxInstruction_c *i)
 {
   if (BX_CPU_THIS_PTR cr0.get_EM() || BX_CPU_THIS_PTR cr0.get_TS())
-    exception(BX_NM_EXCEPTION, 0, 0);
+    exception(BX_NM_EXCEPTION, 0);
 }
 #endif

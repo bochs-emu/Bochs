@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: data_xfer16.cc,v 1.67 2010-02-26 11:44:50 sshwarts Exp $
+// $Id: data_xfer16.cc,v 1.68 2010-03-14 15:51:26 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -61,7 +61,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_EwSwR(bxInstruction_c *i)
   /* Illegal to use nonexisting segments */
   if (i->nnn() >= 6) {
     BX_INFO(("MOV_EwSw: using of nonexisting segment register %d", i->nnn()));
-    exception(BX_UD_EXCEPTION, 0, 0);
+    exception(BX_UD_EXCEPTION, 0);
   }
 
   Bit16u seg_reg = BX_CPU_THIS_PTR sregs[i->nnn()].selector.value;
@@ -79,7 +79,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_EwSwM(bxInstruction_c *i)
   /* Illegal to use nonexisting segments */
   if (i->nnn() >= 6) {
     BX_INFO(("MOV_EwSw: using of nonexisting segment register %d", i->nnn()));
-    exception(BX_UD_EXCEPTION, 0, 0);
+    exception(BX_UD_EXCEPTION, 0);
   }
 
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
@@ -95,7 +95,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_SwEw(bxInstruction_c *i)
   /* Attempt to load CS or nonexisting segment register */
   if (i->nnn() >= 6 || i->nnn() == BX_SEG_REG_CS) {
     BX_INFO(("MOV_EwSw: can't use this segment register %d", i->nnn()));
-    exception(BX_UD_EXCEPTION, 0, 0);
+    exception(BX_UD_EXCEPTION, 0);
   }
 
   if (i->modC0()) {

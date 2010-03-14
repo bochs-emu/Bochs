@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.191 2010-02-26 11:44:50 sshwarts Exp $
+// $Id: paging.cc,v 1.192 2010-03-14 15:51:26 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -553,7 +553,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SetCR3(bx_address val)
     if (long_mode()) {
       if (! IsValidPhyAddr(val)) {
         BX_ERROR(("SetCR3(): Attempt to write to reserved bits of CR3"));
-        exception(BX_GP_EXCEPTION, 0, 0);
+        exception(BX_GP_EXCEPTION, 0);
       }
 
       BX_CPU_THIS_PTR cr3_masked = val & BX_CONST64(0x000ffffffffff000);
@@ -739,7 +739,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INVLPG(bxInstruction_c* i)
 {
   if (!real_mode() && CPL!=0) {
     BX_ERROR(("INVLPG: priveledge check failed, generate #GP(0)"));
-    exception(BX_GP_EXCEPTION, 0, 0);
+    exception(BX_GP_EXCEPTION, 0);
   }
 
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
@@ -752,7 +752,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INVLPG(bxInstruction_c* i)
 #if BX_SUPPORT_X86_64
   if (! IsCanonical(laddr)) {
     BX_ERROR(("INVLPG: non-canonical access !"));
-    exception(int_number(i->seg()), 0, 0);
+    exception(int_number(i->seg()), 0);
   }
 #endif
 
@@ -790,7 +790,7 @@ void BX_CPU_C::page_fault(unsigned fault, bx_address laddr, unsigned user, unsig
   BX_DEBUG(("page fault for address %08x @ %08x", laddr, EIP));
 #endif
 
-  exception(BX_PF_EXCEPTION, error_code, 0);
+  exception(BX_PF_EXCEPTION, error_code);
 }
 
 #if BX_CPU_LEVEL >= 6
@@ -1059,7 +1059,7 @@ bx_phy_address BX_CPU_C::translate_linear_PAE(bx_address laddr, bx_address &lpf_
   if (! BX_CPU_THIS_PTR PDPE_CACHE.valid) {
     if (! CheckPDPTR(BX_CPU_THIS_PTR cr3_masked)) {
       BX_ERROR(("translate_linear_PAE(): PDPTR check failed !"));
-      exception(BX_GP_EXCEPTION, 0, 0);
+      exception(BX_GP_EXCEPTION, 0);
     }
   }
 

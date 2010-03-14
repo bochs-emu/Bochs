@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_pfp.cc,v 1.64 2010-02-26 11:44:50 sshwarts Exp $
+// $Id: sse_pfp.cc,v 1.65 2010-03-14 15:51:27 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003-2009 Stanislav Shwartsman
@@ -39,9 +39,9 @@ void BX_CPU_C::check_exceptionsSSE(int exceptions_flags)
   if (unmasked)
   {
      if(BX_CPU_THIS_PTR cr4.get_OSXMMEXCPT())
-        exception(BX_XM_EXCEPTION, 0, 0);
+        exception(BX_XM_EXCEPTION, 0);
      else
-        exception(BX_UD_EXCEPTION, 0, 0);
+        exception(BX_UD_EXCEPTION, 0);
   }
 }
 

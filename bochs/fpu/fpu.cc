@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu.cc,v 1.61 2010-02-25 22:04:31 sshwarts Exp $
+// $Id: fpu.cc,v 1.62 2010-03-14 15:51:27 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003-2009 Stanislav Shwartsman
@@ -35,7 +35,7 @@
 void BX_CPU_C::prepareFPU(bxInstruction_c *i, bx_bool check_pending_exceptions)
 {
   if (BX_CPU_THIS_PTR cr0.get_EM() || BX_CPU_THIS_PTR cr0.get_TS())
-    exception(BX_NM_EXCEPTION, 0, 0);
+    exception(BX_NM_EXCEPTION, 0);
 
   if (check_pending_exceptions)
     BX_CPU_THIS_PTR FPU_check_pending_exceptions();
@@ -63,7 +63,7 @@ void BX_CPU_C::FPU_check_pending_exceptions(void)
      // handling, which generates an IRQ 13 via the PIC chip.
 #if BX_CPU_LEVEL >= 4
      if (BX_CPU_THIS_PTR cr0.get_NE() != 0) {
-         exception(BX_MF_EXCEPTION, 0, 0);
+         exception(BX_MF_EXCEPTION, 0);
      }
      else
 #endif

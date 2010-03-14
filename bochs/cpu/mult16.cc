@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: mult16.cc,v 1.34 2009-12-04 16:53:12 sshwarts Exp $
+// $Id: mult16.cc,v 1.35 2010-03-14 15:51:26 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -73,7 +73,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::DIV_AXEwR(bxInstruction_c *i)
 {
   Bit16u op2_16 = BX_READ_16BIT_REG(i->rm());
   if (op2_16 == 0)
-    exception(BX_DE_EXCEPTION, 0, 0);
+    exception(BX_DE_EXCEPTION, 0);
 
   Bit32u op1_32 = (((Bit32u) DX) << 16) | ((Bit32u) AX);
 
@@ -82,7 +82,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::DIV_AXEwR(bxInstruction_c *i)
   Bit16u quotient_16l = quotient_32 & 0xFFFF;
 
   if (quotient_32 != quotient_16l)
-    exception(BX_DE_EXCEPTION, 0, 0);
+    exception(BX_DE_EXCEPTION, 0);
 
   /* now write quotient back to destination */
   AX = quotient_16l;
@@ -95,19 +95,19 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::IDIV_AXEwR(bxInstruction_c *i)
 
   /* check MIN_INT case */
   if (op1_32 == ((Bit32s)0x80000000))
-    exception(BX_DE_EXCEPTION, 0, 0);
+    exception(BX_DE_EXCEPTION, 0);
 
   Bit16s op2_16 = BX_READ_16BIT_REG(i->rm());
 
   if (op2_16 == 0)
-    exception(BX_DE_EXCEPTION, 0, 0);
+    exception(BX_DE_EXCEPTION, 0);
 
   Bit32s quotient_32  = op1_32 / op2_16;
   Bit16s remainder_16 = op1_32 % op2_16;
   Bit16s quotient_16l = quotient_32 & 0xFFFF;
 
   if (quotient_32 != quotient_16l)
-    exception(BX_DE_EXCEPTION, 0, 0);
+    exception(BX_DE_EXCEPTION, 0);
 
   /* now write quotient back to destination */
   AX = quotient_16l;

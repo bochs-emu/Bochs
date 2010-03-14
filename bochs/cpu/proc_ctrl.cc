@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.319 2010-03-12 11:35:34 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.320 2010-03-14 15:51:26 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -37,7 +37,7 @@
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::UndefinedOpcode(bxInstruction_c *i)
 {
   BX_DEBUG(("UndefinedOpcode: b1 = 0x%02x causes #UD exception", i->b1()));
-  exception(BX_UD_EXCEPTION, 0, 0);
+  exception(BX_UD_EXCEPTION, 0);
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::NOP(bxInstruction_c *i)
@@ -98,7 +98,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::HLT(bxInstruction_c *i)
   if (!real_mode() && CPL!=0) {
     BX_DEBUG(("HLT: %s priveledge check failed, CPL=%d, generate #GP(0)",
         cpu_mode_string(BX_CPU_THIS_PTR cpu_mode), CPL));
-    exception(BX_GP_EXCEPTION, 0, 0);
+    exception(BX_GP_EXCEPTION, 0);
   }
 
   if (! BX_CPU_THIS_PTR get_IF()) {
@@ -137,7 +137,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CLTS(bxInstruction_c *i)
 {
   if (!real_mode() && CPL!=0) {
     BX_ERROR(("CLTS: priveledge check failed, generate #GP(0)"));
-    exception(BX_GP_EXCEPTION, 0, 0);
+    exception(BX_GP_EXCEPTION, 0);
   }
 
 #if BX_SUPPORT_VMX
@@ -152,7 +152,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INVD(bxInstruction_c *i)
 {
   if (!real_mode() && CPL!=0) {
     BX_ERROR(("INVD: priveledge check failed, generate #GP(0)"));
-    exception(BX_GP_EXCEPTION, 0, 0);
+    exception(BX_GP_EXCEPTION, 0);
   }
 
 #if BX_SUPPORT_VMX
@@ -175,7 +175,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::WBINVD(bxInstruction_c *i)
 {
   if (!real_mode() && CPL!=0) {
     BX_ERROR(("INVD/WBINVD: priveledge check failed, generate #GP(0)"));
-    exception(BX_GP_EXCEPTION, 0, 0);
+    exception(BX_GP_EXCEPTION, 0);
   }
 
   invalidate_prefetch_q();
@@ -197,7 +197,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CLFLUSH(bxInstruction_c *i)
   if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
     if (! IsCanonical(laddr)) {
       BX_ERROR(("CLFLUSH: non-canonical access !"));
-      exception(int_number(i->seg()), 0, 0);
+      exception(int_number(i->seg()), 0);
     }
   }
   else
@@ -206,12 +206,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CLFLUSH(bxInstruction_c *i)
     // check if we could access the memory segment
     if (!(seg->cache.valid & SegAccessROK)) {
       if (! execute_virtual_checks(seg, (Bit32u) eaddr, 1))
-        exception(int_number(i->seg()), 0, 0);
+        exception(int_number(i->seg()), 0);
     }
     else {
       if (eaddr > seg->cache.u.segment.limit_scaled) {
         BX_ERROR(("CLFLUSH: segment limit violation"));
-        exception(int_number(i->seg()), 0, 0);
+        exception(int_number(i->seg()), 0);
       }
     }
   }
@@ -244,7 +244,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_DdRd(bxInstruction_c *i)
   if (BX_CPU_THIS_PTR cr4.get_DE()) {
     if ((i->nnn() & 0xE) == 4) {
       BX_ERROR(("MOV_DdRd: access to DR4/DR5 causes #UD"));
-      exception(BX_UD_EXCEPTION, 0, 0);
+      exception(BX_UD_EXCEPTION, 0);
     }
   }
 #endif
@@ -254,12 +254,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_DdRd(bxInstruction_c *i)
   if (BX_CPU_THIS_PTR dr7 & 0x2000) { // GD bit set
     BX_ERROR(("MOV_DdRd: DR7 GD bit is set"));
     BX_CPU_THIS_PTR debug_trap |= BX_DEBUG_DR_ACCESS_BIT;
-    exception(BX_DB_EXCEPTION, 0, 0);
+    exception(BX_DB_EXCEPTION, 0);
   }
 
   if (!real_mode() && CPL!=0) {
     BX_ERROR(("MOV_DdRd: CPL!=0 not in real mode"));
-    exception(BX_GP_EXCEPTION, 0, 0);
+    exception(BX_GP_EXCEPTION, 0);
   }
 
   /* NOTES:
@@ -345,7 +345,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_DdRd(bxInstruction_c *i)
 
     default:
       BX_ERROR(("MOV_DdRd: #UD - register index out of range"));
-      exception(BX_UD_EXCEPTION, 0, 0);
+      exception(BX_UD_EXCEPTION, 0);
   }
 }
 
@@ -361,7 +361,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RdDd(bxInstruction_c *i)
   if (BX_CPU_THIS_PTR cr4.get_DE()) {
     if ((i->nnn() & 0xE) == 4) {
       BX_ERROR(("MOV_RdDd: access to DR4/DR5 causes #UD"));
-      exception(BX_UD_EXCEPTION, 0, 0);
+      exception(BX_UD_EXCEPTION, 0);
     }
   }
 #endif
@@ -371,12 +371,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RdDd(bxInstruction_c *i)
   if (BX_CPU_THIS_PTR dr7 & 0x2000) { // GD bit set
     BX_ERROR(("MOV_RdDd: DR7 GD bit is set"));
     BX_CPU_THIS_PTR debug_trap |= BX_DEBUG_DR_ACCESS_BIT;
-    exception(BX_DB_EXCEPTION, 0, 0);
+    exception(BX_DB_EXCEPTION, 0);
   }
 
   if (!real_mode() && CPL!=0) {
     BX_ERROR(("MOV_RdDd: CPL!=0 not in real mode"));
-    exception(BX_GP_EXCEPTION, 0, 0);
+    exception(BX_GP_EXCEPTION, 0);
   }
 
   /* This instruction is always treated as a register-to-register,
@@ -409,7 +409,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RdDd(bxInstruction_c *i)
 
     default:
       BX_ERROR(("MOV_RdDd: #UD - register index out of range"));
-      exception(BX_UD_EXCEPTION, 0, 0);
+      exception(BX_UD_EXCEPTION, 0);
   }
 
   BX_WRITE_32BIT_REGZ(i->rm(), val_32);
@@ -431,7 +431,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_DqRq(bxInstruction_c *i)
   if (BX_CPU_THIS_PTR cr4.get_DE()) {
     if ((i->nnn() & 0xE) == 4) {
       BX_ERROR(("MOV_DqRq: access to DR4/DR5 causes #UD"));
-      exception(BX_UD_EXCEPTION, 0, 0);
+      exception(BX_UD_EXCEPTION, 0);
     }
   }
 
@@ -440,13 +440,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_DqRq(bxInstruction_c *i)
   if (BX_CPU_THIS_PTR dr7 & 0x2000) { // GD bit set
     BX_ERROR(("MOV_DqRq: DR7 GD bit is set"));
     BX_CPU_THIS_PTR debug_trap |= BX_DEBUG_DR_ACCESS_BIT;
-    exception(BX_DB_EXCEPTION, 0, 0);
+    exception(BX_DB_EXCEPTION, 0);
   }
 
   /* #GP(0) if CPL is not 0 */
   if (CPL != 0) {
     BX_ERROR(("MOV_DqRq: #GP(0) if CPL is not 0"));
-    exception(BX_GP_EXCEPTION, 0, 0);
+    exception(BX_GP_EXCEPTION, 0);
   }
 
   invalidate_prefetch_q();
@@ -474,7 +474,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_DqRq(bxInstruction_c *i)
     case 6: // DR6
       if (GET32H(val_64)) {
         BX_ERROR(("MOV_DqRq: attempt to set upper part of DR6"));
-        exception(BX_GP_EXCEPTION, 0, 0);
+        exception(BX_GP_EXCEPTION, 0);
       }
       // On Pentium+, bit12 is always zero
       BX_CPU_THIS_PTR dr6 = (BX_CPU_THIS_PTR dr6 & 0xffff0ff0) |
@@ -491,7 +491,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_DqRq(bxInstruction_c *i)
 
       if (GET32H(val_64)) {
         BX_ERROR(("MOV_DqRq: attempt to set upper part of DR7"));
-        exception(BX_GP_EXCEPTION, 0, 0);
+        exception(BX_GP_EXCEPTION, 0);
       }
 
       // Some sanity checks...
@@ -527,7 +527,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_DqRq(bxInstruction_c *i)
 
     default:
       BX_ERROR(("MOV_DqRq: #UD - register index out of range"));
-      exception(BX_UD_EXCEPTION, 0, 0);
+      exception(BX_UD_EXCEPTION, 0);
   }
 }
 
@@ -542,7 +542,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RqDq(bxInstruction_c *i)
   if (BX_CPU_THIS_PTR cr4.get_DE()) {
     if ((i->nnn() & 0xE) == 4) {
       BX_ERROR(("MOV_RqDq: access to DR4/DR5 causes #UD"));
-      exception(BX_UD_EXCEPTION, 0, 0);
+      exception(BX_UD_EXCEPTION, 0);
     }
   }
 
@@ -551,13 +551,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RqDq(bxInstruction_c *i)
   if (BX_CPU_THIS_PTR dr7 & 0x2000) { // GD bit set
     BX_ERROR(("MOV_RqDq: DR7 GD bit is set"));
     BX_CPU_THIS_PTR debug_trap |= BX_DEBUG_DR_ACCESS_BIT;
-    exception(BX_DB_EXCEPTION, 0, 0);
+    exception(BX_DB_EXCEPTION, 0);
   }
 
   /* #GP(0) if CPL is not 0 */
   if (CPL != 0) {
     BX_ERROR(("MOV_RqDq: #GP(0) if CPL is not 0"));
-    exception(BX_GP_EXCEPTION, 0, 0);
+    exception(BX_GP_EXCEPTION, 0);
   }
 
   /* This instruction is always treated as a register-to-register,
@@ -590,7 +590,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RqDq(bxInstruction_c *i)
 
     default:
       BX_ERROR(("MOV_RqDq: #UD - register index out of range"));
-      exception(BX_UD_EXCEPTION, 0, 0);
+      exception(BX_UD_EXCEPTION, 0);
   }
 
   BX_WRITE_64BIT_REG(i->rm(), val_64);
@@ -601,7 +601,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CdRd(bxInstruction_c *i)
 {
   if (!real_mode() && CPL!=0) {
     BX_ERROR(("MOV_CdRd: CPL!=0 not in real mode"));
-    exception(BX_GP_EXCEPTION, 0, 0);
+    exception(BX_GP_EXCEPTION, 0);
   }
 
   /* NOTES:
@@ -624,7 +624,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CdRd(bxInstruction_c *i)
       val_32 = VMexit_CR0_Write(i, val_32);
 #endif
       if (! SetCR0(val_32))
-        exception(BX_GP_EXCEPTION, 0, 0);
+        exception(BX_GP_EXCEPTION, 0);
       break;
     case 2: /* CR2 */
       BX_CPU_THIS_PTR cr2 = val_32;
@@ -637,7 +637,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CdRd(bxInstruction_c *i)
       if (BX_CPU_THIS_PTR cr0.get_PG() && BX_CPU_THIS_PTR cr4.get_PAE() && !long_mode()) {
         if (! CheckPDPTR(val_32)) {
           BX_ERROR(("SetCR3(): PDPTR check failed !"));
-          exception(BX_GP_EXCEPTION, 0, 0);
+          exception(BX_GP_EXCEPTION, 0);
         }
       }
 #endif
@@ -653,19 +653,19 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CdRd(bxInstruction_c *i)
       if (BX_CPU_THIS_PTR cr0.get_PG() && (val_32 & (1<<5)) != 0 /* PAE */ && !long_mode()) {
         if (! CheckPDPTR(BX_CPU_THIS_PTR cr3)) {
           BX_ERROR(("SetCR4(): PDPTR check failed !"));
-          exception(BX_GP_EXCEPTION, 0, 0);
+          exception(BX_GP_EXCEPTION, 0);
         }
       }
 #endif
       // Protected mode: #GP(0) if attempt to write a 1 to
       // any reserved bit of CR4
       if (! SetCR4(val_32))
-        exception(BX_GP_EXCEPTION, 0, 0);
+        exception(BX_GP_EXCEPTION, 0);
       break;
 #endif
     default:
       BX_ERROR(("MOV_CdRd: #UD - control register %d index out of range", i->nnn()));
-      exception(BX_UD_EXCEPTION, 0, 0);
+      exception(BX_UD_EXCEPTION, 0);
   }
 }
 
@@ -676,7 +676,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RdCd(bxInstruction_c *i)
 
   if (!real_mode() && CPL!=0) {
     BX_ERROR(("MOV_RdCd: CPL!=0 not in real mode"));
-    exception(BX_GP_EXCEPTION, 0, 0);
+    exception(BX_GP_EXCEPTION, 0);
   }
 
   /* NOTES:
@@ -711,7 +711,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RdCd(bxInstruction_c *i)
 #endif
     default:
       BX_ERROR(("MOV_RdCd: #UD - control register %d index out of range", i->nnn()));
-      exception(BX_UD_EXCEPTION, 0, 0);
+      exception(BX_UD_EXCEPTION, 0);
   }
 
   BX_WRITE_32BIT_REGZ(i->rm(), val_32);
@@ -731,7 +731,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CqRq(bxInstruction_c *i)
   /* #GP(0) if CPL is not 0 */
   if (CPL!=0) {
     BX_ERROR(("MOV_CqRq: #GP(0) if CPL is not 0"));
-    exception(BX_GP_EXCEPTION, 0, 0);
+    exception(BX_GP_EXCEPTION, 0);
   }
 
   /* This instruction is always treated as a register-to-register,
@@ -748,7 +748,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CqRq(bxInstruction_c *i)
       val_64 = VMexit_CR0_Write(i, val_64);
 #endif
       if (! SetCR0(val_64))
-        exception(BX_GP_EXCEPTION, 0, 0);
+        exception(BX_GP_EXCEPTION, 0);
       break;
     case 2: /* CR2 */
       BX_CPU_THIS_PTR cr2 = val_64;
@@ -768,7 +768,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CqRq(bxInstruction_c *i)
       BX_DEBUG(("MOV_CqRq: write to CR4 of %08x:%08x", GET32H(val_64), GET32L(val_64)));
       // no PDPTR checks in long mode
       if (! SetCR4(val_64))
-        exception(BX_GP_EXCEPTION, 0, 0);
+        exception(BX_GP_EXCEPTION, 0);
       break;
     case 8: // CR8
 #if BX_SUPPORT_VMX
@@ -782,7 +782,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CqRq(bxInstruction_c *i)
 #if BX_SUPPORT_APIC
       if (val_64 & BX_CONST64(0xfffffffffffffff0)) {
         BX_ERROR(("MOV_CqRq: Attempt to set reserved bits of CR8"));
-        exception(BX_GP_EXCEPTION, 0, 0);
+        exception(BX_GP_EXCEPTION, 0);
       }
 #if BX_SUPPORT_VMX
       if (VMEXIT(VMX_VM_EXEC_CTRL2_TPR_SHADOW)) {
@@ -795,7 +795,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CqRq(bxInstruction_c *i)
 #endif
     default:
       BX_ERROR(("MOV_CqRq: #UD - control register %d index out of range", i->nnn()));
-      exception(BX_UD_EXCEPTION, 0, 0);
+      exception(BX_UD_EXCEPTION, 0);
   }
 }
 
@@ -815,7 +815,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RqCq(bxInstruction_c *i)
   /* #GP(0) if CPL is not 0 */
   if (CPL!=0) {
     BX_ERROR(("MOV_RqCq: #GP(0) if CPL is not 0"));
-    exception(BX_GP_EXCEPTION, 0, 0);
+    exception(BX_GP_EXCEPTION, 0);
   }
 
   /* This instruction is always treated as a register-to-register,
@@ -859,7 +859,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RqCq(bxInstruction_c *i)
 #endif
     default:
       BX_ERROR(("MOV_RqCq: #UD - control register %d index out of range", i->nnn()));
-      exception(BX_UD_EXCEPTION, 0, 0);
+      exception(BX_UD_EXCEPTION, 0);
   }
 
   BX_WRITE_64BIT_REG(i->rm(), val_64);
@@ -872,7 +872,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LMSW_Ew(bxInstruction_c *i)
 
   if (!real_mode() && CPL!=0) {
     BX_ERROR(("LMSW: CPL!=0 not in real mode"));
-    exception(BX_GP_EXCEPTION, 0, 0);
+    exception(BX_GP_EXCEPTION, 0);
   }
 
   if (i->modC0()) {
@@ -899,7 +899,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LMSW_Ew(bxInstruction_c *i)
 
   Bit32u cr0 = (BX_CPU_THIS_PTR cr0.get32() & 0xfffffff0) | msw;
   if (! SetCR0(cr0))
-    exception(BX_GP_EXCEPTION, 0, 0);
+    exception(BX_GP_EXCEPTION, 0);
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::SMSW_EwR(bxInstruction_c *i)
@@ -928,7 +928,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_TdRd(bxInstruction_c *i)
 #else
   // Pentium+ does not have TRx.  They were redesigned using the MSRs.
   BX_INFO(("MOV_TdRd: causes #UD"));
-  exception(BX_UD_EXCEPTION, 0, 0);
+  exception(BX_UD_EXCEPTION, 0);
 #endif
 }
 
@@ -939,7 +939,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RdTd(bxInstruction_c *i)
 #else
   // Pentium+ does not have TRx.  They were redesigned using the MSRs.
   BX_INFO(("MOV_RdTd: causes #UD"));
-  exception(BX_UD_EXCEPTION, 0, 0);
+  exception(BX_UD_EXCEPTION, 0);
 #endif
 }
 
@@ -1488,7 +1488,7 @@ bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::SetCR4(bx_address val)
 #if BX_SUPPORT_VMX
   if (!(val & (1 << 13)) && BX_CPU_THIS_PTR in_vmx) {
     BX_ERROR(("SetCR4(): Attempt to clear CR4.VMXE in vmx mode"));
-    exception(BX_GP_EXCEPTION, 0, 0);
+    exception(BX_GP_EXCEPTION, 0);
   }
 #endif
 
@@ -1522,11 +1522,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDPMC(bxInstruction_c *i)
 
     if (BX_CPU_SUPPORT_FEATURE(BX_CPU_SSE2)) { // Pentium 4 processor (see cpuid.cc)
       if ((ECX & 0x7fffffff) >= 18)
-        exception(BX_GP_EXCEPTION, 0, 0);
+        exception(BX_GP_EXCEPTION, 0);
     }
     else {
       if ((ECX & 0xffffffff) >= 2)
-        exception(BX_GP_EXCEPTION, 0, 0);
+        exception(BX_GP_EXCEPTION, 0);
     }
 
     // Most counters are for hardware specific details, which
@@ -1542,7 +1542,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDPMC(bxInstruction_c *i)
     BX_ERROR(("RDPMC: Performance Counters Support not reasonably implemented yet"));
   } else {
     // not allowed to use RDPMC!
-    exception(BX_GP_EXCEPTION, 0, 0);
+    exception(BX_GP_EXCEPTION, 0);
   }
 #endif
 }
@@ -1585,7 +1585,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDTSC(bxInstruction_c *i)
 
   } else {
     BX_ERROR(("RDTSC: not allowed to use instruction !"));
-    exception(BX_GP_EXCEPTION, 0, 0);
+    exception(BX_GP_EXCEPTION, 0);
   }
 #endif
 }
@@ -1627,7 +1627,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MONITOR(bxInstruction_c *i)
 #if BX_SUPPORT_MONITOR_MWAIT
   if (!real_mode() && CPL != 0) {
     BX_DEBUG(("MWAIT instruction not recognized when CPL != 0"));
-    exception(BX_UD_EXCEPTION, 0, 0);
+    exception(BX_UD_EXCEPTION, 0);
   }
 
   BX_DEBUG(("MONITOR instruction executed EAX = 0x08x", (unsigned) EAX));
@@ -1638,7 +1638,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MONITOR(bxInstruction_c *i)
 
   if (RCX != 0) {
     BX_ERROR(("MONITOR: no optional extensions supported"));
-    exception(BX_GP_EXCEPTION, 0, 0);
+    exception(BX_GP_EXCEPTION, 0);
   }
 
   bx_segment_reg_t *seg = &BX_CPU_THIS_PTR sregs[i->seg()];
@@ -1665,7 +1665,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MONITOR(bxInstruction_c *i)
   if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
     if (! IsCanonical(laddr)) {
       BX_ERROR(("MONITOR: non-canonical access !"));
-      exception(int_number(i->seg()), 0, 0);
+      exception(int_number(i->seg()), 0);
     }
   }
   else
@@ -1674,12 +1674,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MONITOR(bxInstruction_c *i)
     // check if we could access the memory segment
     if (!(seg->cache.valid & SegAccessROK)) {
       if (! execute_virtual_checks(seg, offset, 1))
-        exception(int_number(i->seg()), 0, 0);
+        exception(int_number(i->seg()), 0);
     }
     else {
       if (offset > seg->cache.u.segment.limit_scaled) {
         BX_ERROR(("MONITOR: segment limit violation"));
-        exception(int_number(i->seg()), 0, 0);
+        exception(int_number(i->seg()), 0);
       }
     }
   }
@@ -1705,7 +1705,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MONITOR(bxInstruction_c *i)
   BX_DEBUG(("MONITOR for phys_addr=0x" FMT_PHY_ADDRX, BX_CPU_THIS_PTR monitor.monitor_begin));
 #else
   BX_INFO(("MONITOR: use --enable-monitor-mwait to enable MONITOR/MWAIT support"));
-  exception(BX_UD_EXCEPTION, 0, 0);
+  exception(BX_UD_EXCEPTION, 0);
 #endif
 }
 
@@ -1714,7 +1714,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MWAIT(bxInstruction_c *i)
 #if BX_SUPPORT_MONITOR_MWAIT
   if (!real_mode() && CPL != 0) {
     BX_DEBUG(("MWAIT instruction not recognized when CPL != 0"));
-    exception(BX_UD_EXCEPTION, 0, 0);
+    exception(BX_UD_EXCEPTION, 0);
   }
 
   BX_DEBUG(("MWAIT instruction executed ECX = 0x%08x", ECX));
@@ -1727,7 +1727,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MWAIT(bxInstruction_c *i)
   //   ECX[0] - interrupt MWAIT even if EFLAGS.IF = 0
   if (RCX & ~(BX_CONST64(1))) {
     BX_ERROR(("MWAIT: incorrect optional extensions in RCX"));
-    exception(BX_GP_EXCEPTION, 0, 0);
+    exception(BX_GP_EXCEPTION, 0);
   }
 
   // If monitor has already triggered, we just return.
@@ -1771,7 +1771,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MWAIT(bxInstruction_c *i)
 
 #else
   BX_INFO(("MWAIT: use --enable-monitor-mwait to enable MONITOR/MWAIT support"));
-  exception(BX_UD_EXCEPTION, 0, 0);
+  exception(BX_UD_EXCEPTION, 0);
 #endif
 }
 
@@ -1780,11 +1780,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSENTER(bxInstruction_c *i)
 #if BX_CPU_LEVEL >= 6
   if (real_mode()) {
     BX_ERROR(("SYSENTER not recognized in real mode !"));
-    exception(BX_GP_EXCEPTION, 0, 0);
+    exception(BX_GP_EXCEPTION, 0);
   }
   if ((BX_CPU_THIS_PTR msr.sysenter_cs_msr & BX_SELECTOR_RPL_MASK) == 0) {
     BX_ERROR(("SYSENTER with zero sysenter_cs_msr !"));
-    exception(BX_GP_EXCEPTION, 0, 0);
+    exception(BX_GP_EXCEPTION, 0);
   }
 
   invalidate_prefetch_q();
@@ -1797,11 +1797,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSENTER(bxInstruction_c *i)
   if (long_mode()) {
     if (!IsCanonical(BX_CPU_THIS_PTR msr.sysenter_eip_msr)) {
       BX_ERROR(("SYSENTER with non-canonical SYSENTER_EIP_MSR !"));
-      exception(BX_GP_EXCEPTION, 0, 0);
+      exception(BX_GP_EXCEPTION, 0);
     }
     if (!IsCanonical(BX_CPU_THIS_PTR msr.sysenter_esp_msr)) {
       BX_ERROR(("SYSENTER with non-canonical SYSENTER_ESP_MSR !"));
-      exception(BX_GP_EXCEPTION, 0, 0);
+      exception(BX_GP_EXCEPTION, 0);
     }
   }
 #endif
@@ -1872,22 +1872,22 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSEXIT(bxInstruction_c *i)
 #if BX_CPU_LEVEL >= 6
   if (real_mode() || CPL != 0) {
     BX_ERROR(("SYSEXIT from real mode or with CPL<>0 !"));
-    exception(BX_GP_EXCEPTION, 0, 0);
+    exception(BX_GP_EXCEPTION, 0);
   }
   if ((BX_CPU_THIS_PTR msr.sysenter_cs_msr & BX_SELECTOR_RPL_MASK) == 0) {
     BX_ERROR(("SYSEXIT with zero sysenter_cs_msr !"));
-    exception(BX_GP_EXCEPTION, 0, 0);
+    exception(BX_GP_EXCEPTION, 0);
   }
 
 #if BX_SUPPORT_X86_64
   if (i->os64L()) {
     if (!IsCanonical(RDX)) {
       BX_ERROR(("SYSEXIT with non-canonical RDX (RIP) pointer !"));
-      exception(BX_GP_EXCEPTION, 0, 0);
+      exception(BX_GP_EXCEPTION, 0);
     }
     if (!IsCanonical(RCX)) {
       BX_ERROR(("SYSEXIT with non-canonical RCX (RSP) pointer !"));
-      exception(BX_GP_EXCEPTION, 0, 0);
+      exception(BX_GP_EXCEPTION, 0);
     }
   }
 #endif
@@ -1978,7 +1978,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSCALL(bxInstruction_c *i)
   BX_DEBUG(("Execute SYSCALL instruction"));
 
   if (!BX_CPU_THIS_PTR efer.get_SCE()) {
-    exception(BX_UD_EXCEPTION, 0, 0);
+    exception(BX_UD_EXCEPTION, 0);
   }
 
   invalidate_prefetch_q();
@@ -2098,18 +2098,18 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSRET(bxInstruction_c *i)
   BX_DEBUG(("Execute SYSRET instruction"));
 
   if (!BX_CPU_THIS_PTR efer.get_SCE()) {
-    exception(BX_UD_EXCEPTION, 0, 0);
+    exception(BX_UD_EXCEPTION, 0);
   }
 
   if(!protected_mode() || CPL != 0) {
     BX_ERROR(("SYSRET: priveledge check failed, generate #GP(0)"));
-    exception(BX_GP_EXCEPTION, 0, 0);
+    exception(BX_GP_EXCEPTION, 0);
   }
 
 #if BX_SUPPORT_X86_64
   if (!IsCanonical(RCX)) {
     BX_ERROR(("SYSRET: canonical failure for RCX (RIP)"));
-    exception(BX_GP_EXCEPTION, 0, 0);
+    exception(BX_GP_EXCEPTION, 0);
   }
 #endif
 
@@ -2226,7 +2226,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SWAPGS(bxInstruction_c *i)
   BX_ASSERT(protected_mode());
 
   if(CPL != 0)
-    exception(BX_GP_EXCEPTION, 0, 0);
+    exception(BX_GP_EXCEPTION, 0);
 
   temp_GS_base = MSR_GSBASE;
   MSR_GSBASE = MSR_KERNELGSBASE;

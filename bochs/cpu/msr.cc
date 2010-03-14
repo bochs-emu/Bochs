@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: msr.cc,v 1.39 2010-03-12 21:20:42 sshwarts Exp $
+// $Id: msr.cc,v 1.40 2010-03-14 15:51:26 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008-2009 Stanislav Shwartsman
@@ -240,7 +240,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDMSR(bxInstruction_c *i)
 #if BX_CPU_LEVEL >= 5
   if (!real_mode() && CPL != 0) {
     BX_ERROR(("RDMSR: CPL != 0 not in real mode"));
-    exception(BX_GP_EXCEPTION, 0, 0);
+    exception(BX_GP_EXCEPTION, 0);
   }
 
   Bit32u index = ECX;
@@ -251,7 +251,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDMSR(bxInstruction_c *i)
 #endif
 
   if (!rdmsr(index, &val64))
-    exception(BX_GP_EXCEPTION, 0, 0);
+    exception(BX_GP_EXCEPTION, 0);
 
   RAX = GET32L(val64);
   RDX = GET32H(val64);
@@ -651,7 +651,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRMSR(bxInstruction_c *i)
 #if BX_CPU_LEVEL >= 5
   if (!real_mode() && CPL != 0) {
     BX_ERROR(("WRMSR: CPL != 0 not in real mode"));
-    exception(BX_GP_EXCEPTION, 0, 0);
+    exception(BX_GP_EXCEPTION, 0);
   }
 
   Bit64u val_64 = ((Bit64u) EDX << 32) | EAX;
@@ -662,7 +662,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRMSR(bxInstruction_c *i)
 #endif
 
   if (! wrmsr(index, val_64))
-    exception(BX_GP_EXCEPTION, 0, 0);
+    exception(BX_GP_EXCEPTION, 0);
 #endif
 }
 
