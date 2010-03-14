@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.150 2010-03-14 15:51:26 sshwarts Exp $
+// $Id: exception.cc,v 1.151 2010-03-14 16:02:42 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -33,25 +33,6 @@
 #define RIP EIP
 #define RSP ESP
 #endif
-
-/* Exception classes.  These are used as indexes into the 'is_exception_OK'
- * array below, and are stored in the 'exception' array also
- */
-#define BX_ET_BENIGN       0
-#define BX_ET_CONTRIBUTORY 1
-#define BX_ET_PAGE_FAULT   2
-
-#define BX_ET_DOUBLE_FAULT 10
-
-static const bx_bool is_exception_OK[3][3] = {
-    { 1, 1, 1 }, /* 1st exception is BENIGN */
-    { 1, 0, 1 }, /* 1st exception is CONTRIBUTORY */
-    { 1, 0, 0 }  /* 1st exception is PAGE_FAULT */
-};
-
-#define BX_EXCEPTION_CLASS_TRAP  0
-#define BX_EXCEPTION_CLASS_FAULT 1
-#define BX_EXCEPTION_CLASS_ABORT 2
 
 #if BX_SUPPORT_X86_64
 void BX_CPU_C::long_mode_int(Bit8u vector, unsigned is_INT, bx_bool push_error, Bit16u error_code)
@@ -838,6 +819,25 @@ void BX_CPU_C::interrupt(Bit8u vector, unsigned type, bx_bool push_error, Bit16u
   BX_CPU_THIS_PTR in_event = 0;
 #endif
 }
+
+/* Exception classes.  These are used as indexes into the 'is_exception_OK'
+ * array below, and are stored in the 'exception' array also
+ */
+#define BX_ET_BENIGN       0
+#define BX_ET_CONTRIBUTORY 1
+#define BX_ET_PAGE_FAULT   2
+
+#define BX_ET_DOUBLE_FAULT 10
+
+static const bx_bool is_exception_OK[3][3] = {
+    { 1, 1, 1 }, /* 1st exception is BENIGN */
+    { 1, 0, 1 }, /* 1st exception is CONTRIBUTORY */
+    { 1, 0, 0 }  /* 1st exception is PAGE_FAULT */
+};
+
+#define BX_EXCEPTION_CLASS_TRAP  0
+#define BX_EXCEPTION_CLASS_FAULT 1
+#define BX_EXCEPTION_CLASS_ABORT 2
 
 struct BxExceptionInfo exceptions_info[BX_CPU_HANDLED_EXCEPTIONS+1] = {
   /* DE */ { BX_ET_CONTRIBUTORY, BX_EXCEPTION_CLASS_FAULT, 0 },
