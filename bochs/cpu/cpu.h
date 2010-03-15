@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.651 2010-03-15 13:22:14 sshwarts Exp $
+// $Id: cpu.h,v 1.652 2010-03-15 13:54:54 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -353,6 +353,7 @@ enum {
   #define BX_MSR_VMX_CR4_FIXED0           0x488
   #define BX_MSR_VMX_CR4_FIXED1           0x489
   #define BX_MSR_VMX_VMCS_ENUM            0x48a
+  #define BX_MSR_VMX_PROCBASED_CTRLS2     0x48b
   #define BX_MSR_VMX_TRUE_PINBASED_CTRLS  0x48d
   #define BX_MSR_VMX_TRUE_PROCBASED_CTRLS 0x48e
   #define BX_MSR_VMX_TRUE_VMEXIT_CTRLS    0x48f

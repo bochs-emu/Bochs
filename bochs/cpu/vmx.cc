@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmx.cc,v 1.34 2010-03-15 13:47:18 sshwarts Exp $
+// $Id: vmx.cc,v 1.35 2010-03-15 13:54:54 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2009 Stanislav Shwartsman
@@ -282,6 +282,8 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
 
   vm->vmexec_ctrls1 = VMread32(VMCS_32BIT_CONTROL_PIN_BASED_EXEC_CONTROLS);
   vm->vmexec_ctrls2 = VMread32(VMCS_32BIT_CONTROL_PROCESSOR_BASED_VMEXEC_CONTROLS);
+  if (VMEXIT(VMX_VM_EXEC_CTRL2_SECONDARY_CONTROLS))
+    vm->vmexec_ctrls3 = VMread32(VMCS_32BIT_CONTROL_SECONDARY_VMEXEC_CONTROLS);
   vm->vm_exceptions_bitmap = VMread32(VMCS_32BIT_CONTROL_EXECUTION_BITMAP);
   vm->vm_pf_mask = VMread32(VMCS_32BIT_CONTROL_PAGE_FAULT_ERR_CODE_MASK);
   vm->vm_pf_match = VMread32(VMCS_32BIT_CONTROL_PAGE_FAULT_ERR_CODE_MATCH);
