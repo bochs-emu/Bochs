@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmx.h,v 1.10 2010-03-12 21:20:42 sshwarts Exp $
+// $Id: vmx.h,v 1.11 2010-03-15 13:47:18 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2009 Stanislav Shwartsman
@@ -200,6 +200,13 @@ enum VMX_vmabort_code {
 #define VMCS_64BIT_CONTROL_VIRTUAL_APIC_PAGE_ADDR_HI       0x00002013
 #define VMCS_64BIT_CONTROL_APIC_ACCESS_ADDR                0x00002014
 #define VMCS_64BIT_CONTROL_APIC_ACCESS_ADDR_HI             0x00002015
+#define VMCS_64BIT_CONTROL_EPTPTR                          0x0000201A
+#define VMCS_64BIT_CONTROL_EPTPTR_HI                       0x0000201B
+
+/* VMCS 64-bit read only data fields */
+/* binary 0010_01xx_xxxx_xxx0 */
+#define VMCS_64BIT_GUEST_PHYSICAL_ADDRESS                  0x00002400
+#define VMCS_64BIT_GUEST_PHYSICAL_ADDRESS_HI               0x00002401
 
 /* VMCS 64-bit guest state fields */
 /* binary 0010_10xx_xxxx_xxx0 */
@@ -211,6 +218,16 @@ enum VMX_vmabort_code {
 #define VMCS_64BIT_GUEST_IA32_PAT_HI                       0x00002805
 #define VMCS_64BIT_GUEST_IA32_EFER                         0x00002806
 #define VMCS_64BIT_GUEST_IA32_EFER_HI                      0x00002807
+#define VMCS_64BIT_GUEST_IA32_PERF_GLOBAL_CTRL             0x00002808
+#define VMCS_64BIT_GUEST_IA32_PERF_GLOBAL_CTRL_HI          0x00002809
+#define VMCS_64BIT_GUEST_IA32_PDPTE0                       0x0000280A
+#define VMCS_64BIT_GUEST_IA32_PDPTE0_HI                    0x0000280B
+#define VMCS_64BIT_GUEST_IA32_PDPTE1                       0x0000280C
+#define VMCS_64BIT_GUEST_IA32_PDPTE1_HI                    0x0000280D
+#define VMCS_64BIT_GUEST_IA32_PDPTE2                       0x0000280E
+#define VMCS_64BIT_GUEST_IA32_PDPTE2_HI                    0x0000280F
+#define VMCS_64BIT_GUEST_IA32_PDPTE3                       0x00002810
+#define VMCS_64BIT_GUEST_IA32_PDPTE3_HI                    0x00002811
 
 /* VMCS 64-bit host state fields */
 /* binary 0010_11xx_xxxx_xxx0 */
@@ -218,11 +235,13 @@ enum VMX_vmabort_code {
 #define VMCS_64BIT_HOST_IA32_PAT_HI                        0x00002C01
 #define VMCS_64BIT_HOST_IA32_EFER                          0x00002C02
 #define VMCS_64BIT_HOST_IA32_EFER_HI                       0x00002C03
+#define VMCS_64BIT_HOST_IA32_PERF_GLOBAL_CTRL              0x00002C04
+#define VMCS_64BIT_HOST_IA32_PERF_GLOBAL_CTRL_HI           0x00002C05
 
 /* VMCS 32_bit control fields */
 /* binary 0100_00xx_xxxx_xxx0 */
 #define VMCS_32BIT_CONTROL_PIN_BASED_EXEC_CONTROLS         0x00004000
-#define VMCS_32BIT_CONTROL_PROCESSOR_BASED_EXEC_CONTROLS   0x00004002
+#define VMCS_32BIT_CONTROL_PROCESSOR_BASED_VMEXEC_CONTROLS 0x00004002
 #define VMCS_32BIT_CONTROL_EXECUTION_BITMAP                0x00004004
 #define VMCS_32BIT_CONTROL_PAGE_FAULT_ERR_CODE_MASK        0x00004006
 #define VMCS_32BIT_CONTROL_PAGE_FAULT_ERR_CODE_MATCH       0x00004008
@@ -236,6 +255,7 @@ enum VMX_vmabort_code {
 #define VMCS_32BIT_CONTROL_VMENTRY_EXCEPTION_ERR_CODE      0x00004018
 #define VMCS_32BIT_CONTROL_VMENTRY_INSTRUCTION_LENGTH      0x0000401A
 #define VMCS_32BIT_CONTROL_TPR_THRESHOLD                   0x0000401C
+#define VMCS_32BIT_CONTROL_SECONDARY_VMEXEC_CONTROLS       0x0000401E
 
 /* VMCS 32-bit read only data fields */
 /* binary 0100_01xx_xxxx_xxx0 */
@@ -534,6 +554,19 @@ typedef struct bx_VMCS
 #endif
 
    Bit32u vmexec_ctrls2;
+
+#define VMX_VM_EXEC_CTRL3_VIRTUALIZE_APIC_ACCESSES  (1 << 0)
+#define VMX_VM_EXEC_CTRL3_EPT_ENABLE                (1 << 1)
+#define VMX_VM_EXEC_CTRL3_DESCRIPTOR_TABLE_VMEXIT   (1 << 2)
+#define VMX_VM_EXEC_CTRL3_RDTSCP                    (1 << 3)
+#define VMX_VM_EXEC_CTRL3_VIRTUALIZE_X2APIC_MODE    (1 << 4)
+#define VMX_VM_EXEC_CTRL3_VPID_ENABLE               (1 << 5)
+#define VMX_VM_EXEC_CTRL3_WBINVD_VMEXIT             (1 << 6)
+#define VMX_VM_EXEC_CTRL3_UNRESTRICTED_GUEST        (1 << 7)
+#define VMX_VM_EXEC_CTRL3_PAUSE_LOOP_VMEXIT         (1 << 10)
+
+   Bit32u vmexec_ctrls3;
+
    Bit32u vm_exceptions_bitmap;
    Bit32u vm_pf_mask;
    Bit32u vm_pf_match;
@@ -665,6 +698,9 @@ enum VMX_Activity_State {
 
 #define PIN_VMEXIT(ctrl) (BX_CPU_THIS_PTR vmcs.vmexec_ctrls1 & (ctrl))
 #define     VMEXIT(ctrl) (BX_CPU_THIS_PTR vmcs.vmexec_ctrls2 & (ctrl))
+
+#define SECONDARY_VMEXEC_CONTROL(ctrl) \
+  (VMEXIT(VMX_VM_EXEC_CTRL2_SECONDARY_CONTROLS) && (BX_CPU_THIS_PTR vmcs.vmexec_ctrls3 & (ctrl)))
 
 #define BX_VMX_INTERRUPTS_BLOCKED_BY_STI      (1 << 0)
 #define BX_VMX_INTERRUPTS_BLOCKED_BY_MOV_SS   (1 << 1)

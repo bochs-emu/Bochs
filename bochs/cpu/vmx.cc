@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmx.cc,v 1.33 2010-03-15 13:22:14 sshwarts Exp $
+// $Id: vmx.cc,v 1.34 2010-03-15 13:47:18 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2009 Stanislav Shwartsman
@@ -281,7 +281,7 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
   //
 
   vm->vmexec_ctrls1 = VMread32(VMCS_32BIT_CONTROL_PIN_BASED_EXEC_CONTROLS);
-  vm->vmexec_ctrls2 = VMread32(VMCS_32BIT_CONTROL_PROCESSOR_BASED_EXEC_CONTROLS);
+  vm->vmexec_ctrls2 = VMread32(VMCS_32BIT_CONTROL_PROCESSOR_BASED_VMEXEC_CONTROLS);
   vm->vm_exceptions_bitmap = VMread32(VMCS_32BIT_CONTROL_EXECUTION_BITMAP);
   vm->vm_pf_mask = VMread32(VMCS_32BIT_CONTROL_PAGE_FAULT_ERR_CODE_MASK);
   vm->vm_pf_match = VMread32(VMCS_32BIT_CONTROL_PAGE_FAULT_ERR_CODE_MATCH);
@@ -2282,7 +2282,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMREAD(bxInstruction_c *i)
     /* VMCS 32_bit control fields */
     /* binary 0100_00xx_xxxx_xxx0 */
     case VMCS_32BIT_CONTROL_PIN_BASED_EXEC_CONTROLS:
-    case VMCS_32BIT_CONTROL_PROCESSOR_BASED_EXEC_CONTROLS:
+    case VMCS_32BIT_CONTROL_PROCESSOR_BASED_VMEXEC_CONTROLS:
     case VMCS_32BIT_CONTROL_EXECUTION_BITMAP:
     case VMCS_32BIT_CONTROL_PAGE_FAULT_ERR_CODE_MASK:
     case VMCS_32BIT_CONTROL_PAGE_FAULT_ERR_CODE_MATCH:
@@ -2595,7 +2595,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMWRITE(bxInstruction_c *i)
     /* VMCS 32_bit control fields */
     /* binary 0100_00xx_xxxx_xxx0 */
     case VMCS_32BIT_CONTROL_PIN_BASED_EXEC_CONTROLS:
-    case VMCS_32BIT_CONTROL_PROCESSOR_BASED_EXEC_CONTROLS:
+    case VMCS_32BIT_CONTROL_PROCESSOR_BASED_VMEXEC_CONTROLS:
     case VMCS_32BIT_CONTROL_EXECUTION_BITMAP:
     case VMCS_32BIT_CONTROL_PAGE_FAULT_ERR_CODE_MASK:
     case VMCS_32BIT_CONTROL_PAGE_FAULT_ERR_CODE_MATCH:
