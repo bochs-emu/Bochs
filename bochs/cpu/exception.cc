@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.151 2010-03-14 16:02:42 sshwarts Exp $
+// $Id: exception.cc,v 1.152 2010-03-15 14:18:36 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -787,8 +787,6 @@ void BX_CPU_C::interrupt(Bit8u vector, unsigned type, bx_bool push_error, Bit16u
   BX_CPU_THIS_PTR debug_trap = 0;
   BX_CPU_THIS_PTR inhibit_mask = 0;
 
-//BX_CPU_THIS_PTR save_cs = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS];
-//BX_CPU_THIS_PTR save_ss = BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS];
   BX_CPU_THIS_PTR save_eip = RIP;
   BX_CPU_THIS_PTR save_esp = RSP;
 
@@ -902,8 +900,6 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code)
   if (BX_CPU_THIS_PTR errorno > 0) {
     // if not initial error, restore previous register values from
     // previous attempt to handle exception
-//  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS] = BX_CPU_THIS_PTR save_cs;
-//  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS] = BX_CPU_THIS_PTR save_ss;
     RIP = BX_CPU_THIS_PTR save_eip;
     RSP = BX_CPU_THIS_PTR save_esp;
 
