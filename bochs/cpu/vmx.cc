@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmx.cc,v 1.38 2010-03-15 16:34:03 sshwarts Exp $
+// $Id: vmx.cc,v 1.39 2010-03-15 22:58:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2009 Stanislav Shwartsman
@@ -1758,6 +1758,10 @@ void BX_CPU_C::VMexit(bxInstruction_c *i, Bit32u reason, Bit64u qualification)
 {
   VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
 
+  if (!BX_CPU_THIS_PTR in_vmx || !BX_CPU_THIS_PTR in_vmx_guest) {
+    BX_PANIC(("PANIC: VMEXIT not in VMX guest mode !"));
+  }
+
   // VMEXITs are FAULT-like: restore RIP/RSP to value before VMEXIT occurred
   RIP = BX_CPU_THIS_PTR prev_rip;
   if (BX_CPU_THIS_PTR speculative_rsp)
@@ -2162,7 +2166,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMLAUNCH(bxInstruction_c *i)
   ///////////////////////////////////////////////////////
 
   VMenterInjectEvents();
-
 #else
   BX_INFO(("VMLAUNCH/VMRESUME: required VMX support, use --enable-vmx option"));
   exception(BX_UD_EXCEPTION, 0);

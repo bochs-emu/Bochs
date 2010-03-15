@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: smm.cc,v 1.63 2010-03-14 15:51:26 sshwarts Exp $
+// $Id: smm.cc,v 1.64 2010-03-15 22:58:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2006-2009 Stanislav Shwartsman
@@ -73,9 +73,15 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RSM(bxInstruction_c *i)
   }
 
 #if BX_SUPPORT_VMX
-  if (BX_CPU_THIS_PTR in_vmx_guest) {
-    BX_ERROR(("VMEXIT: RSM in VMX non-root operation"));
-    VMexit(i, VMX_VMEXIT_RSM, 0);
+  if (BX_CPU_THIS_PTR in_vmx) {
+    if (BX_CPU_THIS_PTR in_vmx_guest) {
+      BX_ERROR(("VMEXIT: RSM in VMX non-root operation"));
+      VMexit(i, VMX_VMEXIT_RSM, 0);
+    }
+    else {
+      BX_ERROR(("RSM in VMX root operation !"));
+      exception(BX_UD_EXCEPTION, 0);
+    }
   }
 #endif
 
