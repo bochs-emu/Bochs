@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.322 2010-03-15 14:18:36 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.323 2010-03-15 15:48:01 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -177,6 +177,15 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::WBINVD(bxInstruction_c *i)
     BX_ERROR(("INVD/WBINVD: priveledge check failed, generate #GP(0)"));
     exception(BX_GP_EXCEPTION, 0);
   }
+
+#if BX_SUPPORT_VMX
+  if (BX_CPU_THIS_PTR in_vmx_guest) {
+    if (! SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_WBINVD_VMEXIT)) {
+      BX_ERROR(("VMEXIT: WBINVD in VMX non-root operation"));
+      VMexit(i, VMX_VMEXIT_WBINVD, 0);
+    }
+  }
+#endif
 
   invalidate_prefetch_q();
 
@@ -1594,9 +1603,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDTSC(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDTSCP(bxInstruction_c *i)
 {
 #if BX_SUPPORT_VMX
-  if (! SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_RDTSCP)) {
-    BX_ERROR(("RDTSCP: not allowed to use instruction !"));
-    exception(BX_UD_EXCEPTION, 0);
+  if (BX_CPU_THIS_PTR in_vmx_guest) {
+    if (! SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_RDTSCP)) {
+       BX_ERROR(("RDTSCP in VMX guest: not allowed to use instruction !"));
+       exception(BX_UD_EXCEPTION, 0);
+    }
   }
 #endif
 

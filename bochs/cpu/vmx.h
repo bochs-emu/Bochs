@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmx.h,v 1.12 2010-03-15 13:57:12 sshwarts Exp $
+// $Id: vmx.h,v 1.13 2010-03-15 15:48:01 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2009 Stanislav Shwartsman
@@ -549,7 +549,8 @@ typedef struct bx_VMCS
         VMX_VM_EXEC_CTRL2_IO_BITMAPS | \
         VMX_VM_EXEC_CTRL2_MSR_BITMAPS | \
         VMX_VM_EXEC_CTRL2_MONITOR_VMEXIT | \
-        VMX_VM_EXEC_CTRL2_PAUSE_VMEXIT)
+        VMX_VM_EXEC_CTRL2_PAUSE_VMEXIT | \
+        VMX_VM_EXEC_CTRL2_SECONDARY_CONTROLS)
 
 #endif
 
@@ -564,6 +565,18 @@ typedef struct bx_VMCS
 #define VMX_VM_EXEC_CTRL3_WBINVD_VMEXIT             (1 << 6)
 #define VMX_VM_EXEC_CTRL3_UNRESTRICTED_GUEST        (1 << 7)
 #define VMX_VM_EXEC_CTRL3_PAUSE_LOOP_VMEXIT         (1 << 10)
+
+#ifdef BX_VMX_ENABLE_ALL
+
+#define VMX_VM_EXEC_CTRL3_SUPPORTED_BITS (0x0000008f)
+
+#else // only really supported features
+
+#define VMX_VM_EXEC_CTRL3_SUPPORTED_BITS \
+       (VMX_VM_EXEC_CTRL3_RDTSCP | \
+        VMX_VM_EXEC_CTRL3_WBINVD_VMEXIT)
+
+#endif
 
    Bit32u vmexec_ctrls3;
 
@@ -884,5 +897,17 @@ enum VMX_Activity_State {
 #define VMX_MSR_VMCS_ENUM \
    ((((Bit64u) VMX_MSR_VMCS_ENUM_HI) << 32) | VMX_MSR_VMCS_ENUM_LO)
 
+
+// IA32_VMX_MSR_PROCBASED_CTRLS2 MSR (0x48b)
+// -----------------------------
+
+// Allowed 0-settings (must be '1 bits)
+#define VMX_MSR_VMX_PROCBASED_CTRLS2_LO (0x00000000)
+// Allowed 1-settings
+#define VMX_MSR_VMX_PROCBASED_CTRLS2_HI \
+       (VMX_VM_EXEC_CTRL3_SUPPORTED_BITS | VMX_MSR_VMX_PROCBASED_CTRLS2_LO)
+
+#define VMX_MSR_VMX_PROCBASED_CTRLS2 \
+   ((((Bit64u) VMX_MSR_VMX_PROCBASED_CTRLS2_HI) << 32) | VMX_MSR_VMX_PROCBASED_CTRLS2_LO)
 
 #endif // _BX_VMX_INTEL_H_

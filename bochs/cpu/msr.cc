@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: msr.cc,v 1.40 2010-03-14 15:51:26 sshwarts Exp $
+// $Id: msr.cc,v 1.41 2010-03-15 15:48:01 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008-2009 Stanislav Shwartsman
@@ -157,6 +157,9 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
       break;
     case BX_MSR_VMX_VMENTRY_CTRLS:
       val64 = VMX_MSR_VMX_VMENTRY_CTRLS;
+      break;
+    case BX_MSR_VMX_PROCBASED_CTRLS2:
+      val64 = VMX_MSR_VMX_PROCBASED_CTRLS2;
       break;
     case BX_MSR_VMX_MISC:
       val64 = VMX_MSR_MISC;
@@ -501,6 +504,7 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
     case BX_MSR_VMX_VMCS_ENUM:
     case BX_MSR_VMX_TRUE_PINBASED_CTRLS:
     case BX_MSR_VMX_TRUE_PROCBASED_CTRLS:
+    case BX_MSR_VMX_PROCBASED_CTRLS2:
     case BX_MSR_VMX_TRUE_VMEXIT_CTRLS:
     case BX_MSR_VMX_TRUE_VMENTRY_CTRLS:
       BX_ERROR(("WRMSR: VMX read only MSR"));

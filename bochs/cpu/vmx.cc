@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmx.cc,v 1.36 2010-03-15 13:57:12 sshwarts Exp $
+// $Id: vmx.cc,v 1.37 2010-03-15 15:48:01 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2009 Stanislav Shwartsman
@@ -327,6 +327,16 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
 
   if (vm->vmexec_ctrls2 & ~VMX_MSR_VMX_PROCBASED_CTRLS_HI) {
      BX_ERROR(("VMFAIL: VMCS EXEC CTRL: VMX proc-based controls allowed 1-settings"));
+     return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
+  }
+
+  if (~vm->vmexec_ctrls3 & VMX_MSR_VMX_PROCBASED_CTRLS2_LO) {
+     BX_ERROR(("VMFAIL: VMCS EXEC CTRL: VMX secondary proc-based controls allowed 0-settings"));
+     return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
+  }
+
+  if (vm->vmexec_ctrls3 & ~VMX_MSR_VMX_PROCBASED_CTRLS2_HI) {
+     BX_ERROR(("VMFAIL: VMCS EXEC CTRL: VMX secondary proc-based controls allowed 1-settings"));
      return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
   }
 
@@ -2300,6 +2310,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMREAD(bxInstruction_c *i)
     case VMCS_32BIT_CONTROL_VMENTRY_EXCEPTION_ERR_CODE:
     case VMCS_32BIT_CONTROL_VMENTRY_INSTRUCTION_LENGTH:
     case VMCS_32BIT_CONTROL_TPR_THRESHOLD:
+    case VMCS_32BIT_CONTROL_SECONDARY_VMEXEC_CONTROLS:
       // fall through
 
     /* VMCS 32-bit read only data fields */
@@ -2613,6 +2624,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMWRITE(bxInstruction_c *i)
     case VMCS_32BIT_CONTROL_VMENTRY_EXCEPTION_ERR_CODE:
     case VMCS_32BIT_CONTROL_VMENTRY_INSTRUCTION_LENGTH:
     case VMCS_32BIT_CONTROL_TPR_THRESHOLD:
+    case VMCS_32BIT_CONTROL_SECONDARY_VMEXEC_CONTROLS:
       // fall through
 
     /* VMCS 32-bit guest-state fields */
