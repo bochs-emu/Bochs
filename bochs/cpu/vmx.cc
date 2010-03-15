@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmx.cc,v 1.32 2010-03-14 15:51:27 sshwarts Exp $
+// $Id: vmx.cc,v 1.33 2010-03-15 13:22:14 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2009 Stanislav Shwartsman
@@ -1428,7 +1428,20 @@ void BX_CPU_C::VMenterInjectEvents(void)
   vm->idt_vector_info = vm->vmentry_interr_info & ~0x80000000;
   vm->idt_vector_error_code = error_code;
 
+  RSP_SPECULATIVE;
+
+  if (type == BX_SOFTWARE_INTERRUPT) {
+     if (v8086_mode()) {
+       // redirect interrupt through virtual-mode idt
+       if (v86_redirect_interrupt(vector)) goto done;
+     }
+  }
+
   interrupt(vector, type, push_error, error_code);
+
+done:
+
+  RSP_COMMIT;
 
   BX_CPU_THIS_PTR errorno = 0; // injection success
   BX_CPU_THIS_PTR EXT = 0;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.650 2010-03-14 15:51:26 sshwarts Exp $
+// $Id: cpu.h,v 1.651 2010-03-15 13:22:14 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -3178,9 +3178,7 @@ public: // for now...
   BX_SMF void stack_return_to_v86(Bit32u new_eip, Bit32u raw_cs_selector, Bit32u flags32);
   BX_SMF void iret16_stack_return_from_v86(bxInstruction_c *);
   BX_SMF void iret32_stack_return_from_v86(bxInstruction_c *);
-#if BX_CPU_LEVEL >= 5
-  BX_SMF void v86_redirect_interrupt(Bit32u vector);
-#endif
+  BX_SMF int  v86_redirect_interrupt(Bit8u vector);
   BX_SMF void init_v8086_mode(void);
   BX_SMF void task_switch_load_selector(bx_segment_reg_t *seg,
                  bx_selector_t *selector, Bit16u raw_selector, Bit8u cs_rpl);
