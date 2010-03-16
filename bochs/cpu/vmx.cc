@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmx.cc,v 1.41 2010-03-16 15:11:03 sshwarts Exp $
+// $Id: vmx.cc,v 1.42 2010-03-16 21:09:11 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2009 Stanislav Shwartsman
@@ -2235,6 +2235,16 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMPTRST(bxInstruction_c *i)
 #endif  
 }
 
+BX_CPP_INLINE Bit32u rotate_r(Bit32u val_32)
+{
+  return (val_32 >> 8) | (val_32 << 24);
+}
+
+BX_CPP_INLINE Bit32u rotate_l(Bit32u val_32)
+{
+  return (val_32 << 8) | (val_32 >> 24);
+}
+
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMREAD(bxInstruction_c *i)
 {
 #if BX_SUPPORT_VMX
@@ -2354,7 +2364,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMREAD(bxInstruction_c *i)
     case VMCS_32BIT_GUEST_GS_ACCESS_RIGHTS:
     case VMCS_32BIT_GUEST_LDTR_ACCESS_RIGHTS:
     case VMCS_32BIT_GUEST_TR_ACCESS_RIGHTS:
-      field_64 = VMread32(encoding) >> 8;
+      field_64 = rotate_r(VMread32(encoding));
       break;
 
     /* VMCS 32-bit host-state fields */
@@ -2658,7 +2668,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMWRITE(bxInstruction_c *i)
     case VMCS_32BIT_GUEST_GS_ACCESS_RIGHTS:
     case VMCS_32BIT_GUEST_LDTR_ACCESS_RIGHTS:
     case VMCS_32BIT_GUEST_TR_ACCESS_RIGHTS:
-      VMwrite32(encoding, val_32 << 8);
+      VMwrite32(encoding, rotate_l(val_32));
       break;
 
     /* VMCS 32-bit host-state fields */
