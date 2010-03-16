@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmexit.cc,v 1.17 2010-03-16 14:51:20 sshwarts Exp $
+// $Id: vmexit.cc,v 1.18 2010-03-16 14:55:58 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2009 Stanislav Shwartsman
@@ -670,8 +670,8 @@ Bit32u BX_CPU_C::VMX_Read_VTPR(void)
 {
   bx_phy_address pAddr = BX_CPU_THIS_PTR vmcs.virtual_apic_page_addr + 0x80;
   Bit32u vtpr;
-  access_read_physical(pAddr, 4, &vtpr);
-  BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pAddr, 4, BX_READ, &vtpr);
+  access_read_physical(pAddr, 4, (Bit8u*)(&vtpr));
+  BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pAddr, 4, BX_READ, (Bit8u*)(&vtpr));
   return vtpr;
 }
 
@@ -681,8 +681,8 @@ void BX_CPU_C::VMX_Write_TPR_Shadow(Bit8u tpr_shadow)
   bx_phy_address pAddr = vm->virtual_apic_page_addr + 0x80;
   Bit32u field32 = tpr_shadow << 4;
 
-  access_write_physical(pAddr, 4, &field32);
-  BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pAddr, 4, BX_WRITE, &field32);
+  access_write_physical(pAddr, 4, (Bit8u*)(&field32));
+  BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pAddr, 4, BX_WRITE, (Bit8u*)(&field32));
 
   if (tpr_shadow < vm->vm_tpr_threshold) {
     // commit current instruction to produce trap-like VMexit
