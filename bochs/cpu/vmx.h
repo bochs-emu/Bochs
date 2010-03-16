@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmx.h,v 1.14 2010-03-15 15:49:55 sshwarts Exp $
+// $Id: vmx.h,v 1.15 2010-03-16 14:51:20 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2009 Stanislav Shwartsman
@@ -152,6 +152,12 @@ enum VMX_vmabort_code {
    VMABORT_LOADING_HOST_MSRS,
    VMABORT_VMEXIT_MACHINE_CHECK_ERROR
 };
+
+// VMX APIC ACCESS VMEXIT qualification
+#define VMX_APIC_READ_INSTRUCTION_EXECUTION   0x0000
+#define VMX_APIC_WRITE_INSTRUCTION_EXECUTION  0x1000
+#define VMX_APIC_INSTRUCTION_FETCH            0x2000 /* won't happen because cpu::prefetch will crash */
+#define VMX_APIC_ACCESS_DURING_EVENT_DELIVERY 0x3000
 
 // =============
 //  VMCS fields
@@ -573,7 +579,8 @@ typedef struct bx_VMCS
 #else // only really supported features
 
 #define VMX_VM_EXEC_CTRL3_SUPPORTED_BITS \
-       (VMX_VM_EXEC_CTRL3_RDTSCP | \
+       (VMX_VM_EXEC_CTRL3_VIRTUALIZE_APIC_ACCESSES | \
+        VMX_VM_EXEC_CTRL3_RDTSCP | \
         VMX_VM_EXEC_CTRL3_WBINVD_VMEXIT)
 
 #endif
@@ -599,6 +606,7 @@ typedef struct bx_VMCS
 
    bx_phy_address virtual_apic_page_addr;
    Bit32u vm_tpr_threshold;
+   bx_phy_address apic_access_page;
 
    Bit64u executive_vmcsptr;
 
@@ -889,7 +897,7 @@ enum VMX_Activity_State {
 // 63:10 reserved, must be zero
 //
 
-#define VMX_HIGHEST_VMCS_ENCODING 0x2A
+#define VMX_HIGHEST_VMCS_ENCODING 0x2C
 
 #define VMX_MSR_VMCS_ENUM_LO (VMX_HIGHEST_VMCS_ENCODING)
 #define VMX_MSR_VMCS_ENUM_HI (0x00000000)

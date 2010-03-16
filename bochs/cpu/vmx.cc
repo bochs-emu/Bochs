@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmx.cc,v 1.39 2010-03-15 22:58:41 sshwarts Exp $
+// $Id: vmx.cc,v 1.40 2010-03-16 14:51:20 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2009 Stanislav Shwartsman
@@ -81,7 +81,7 @@ void BX_CPU_C::set_VMCSPTR(Bit64u vmxptr)
   BX_CPU_THIS_PTR vmcsptr = vmxptr;
 
   if (vmxptr != BX_INVALID_VMCSPTR)
-    BX_CPU_THIS_PTR vmcshostptr = (bx_hostpageaddr_t) BX_MEM(0)->getHostMemAddr(BX_CPU_THIS, vmxptr, BX_WRITE);
+    BX_CPU_THIS_PTR vmcshostptr = BX_CPU_THIS_PTR getHostMemAddr(vmxptr, BX_WRITE);
   else
     BX_CPU_THIS_PTR vmcshostptr = 0;
 }
@@ -305,6 +305,7 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
   vm->vm_tpr_threshold = VMread32(VMCS_32BIT_CONTROL_TPR_THRESHOLD);
   vm->virtual_apic_page_addr = (bx_phy_address) VMread64(VMCS_64BIT_CONTROL_VIRTUAL_APIC_PAGE_ADDR);
   vm->executive_vmcsptr = (bx_phy_address) VMread64(VMCS_64BIT_CONTROL_EXECUTIVE_VMCS_PTR);
+  vm->apic_access_page = (bx_phy_address) VMread64(VMCS_64BIT_CONTROL_APIC_ACCESS_ADDR);
 
   //
   // Check VM-execution control fields
@@ -385,41 +386,21 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
        return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
      }
 
-     if (vm->vm_tpr_threshold > VMX_Read_TPR_Shadow()) {
-       BX_ERROR(("VMFAIL: VMCS EXEC CTRL: TPR threshold > TPR shadow"));
-       return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
+     if (! (vm->vmexec_ctrls3 & VMX_VM_EXEC_CTRL3_VIRTUALIZE_APIC_ACCESSES)) {
+       Bit8u tpr_shadow = (VMX_Read_VTPR() >> 4) & 0xf;
+       if (vm->vm_tpr_threshold > tpr_shadow) {
+         BX_ERROR(("VMFAIL: VMCS EXEC CTRL: TPR threshold > TPR shadow"));
+         return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
+       }
      }
   }
 
-/*
-  VM entries perform the following checks on the VM-execution control fields:
-
-       If the "use TPR shadow" VM-execution control is 1, the virtual-APIC address must
-        satisfy the following checks:
-        The following items describe the treatment of bytes 81H-83H on the virtual-
-        APIC page (see Section 20.6.8) if all of the above checks are satisfied and the
-        "use TPR shadow" VM-execution control is 1, treatment depends upon the
-        setting of the "virtualize APIC accesses" VM-execution control:2
-        - If the "virtualize APIC accesses" VM-execution control is 0, the bytes may be
-        cleared. (If the bytes are not cleared, they are left unmodified.)
-        - If the "virtualize APIC accesses" VM-execution control is 1, the bytes are
-        cleared.
-        - Any clearing of the bytes occurs even if the VM entry subsequently fails.
-         If the "use TPR shadow" VM-execution control is 1, bits 31:4 of the TPR threshold
-        VM-execution control field must be 0.
-       The following check is performed if the "use TPR shadow" VM-execution control is
-        1 and the "virtualize APIC accesses" VM-execution control is 0: the value of
-        bits 3:0 of the TPR threshold VM-execution control field should not be greater
-        than the value of bits 7:4 in byte 80H on the virtual-APIC page (see Section
-        20.6.8).
-       If the "virtualize APIC-accesses" VM-execution control is 1, the APIC-access
-        address must satisfy the following checks:
-        - Bits 11:0 of the address must be 0.
-        - On processors that support Intel 64 architecture, the address should not set
-        any bits beyond the processor's physical-address width.
-        - On processors that support the IA-32 architecture, the address should not set
-        any bits in the range 63:32.
-*/
+  if (vm->vmexec_ctrls3 & VMX_VM_EXEC_CTRL3_VIRTUALIZE_APIC_ACCESSES) {
+     if ((vm->apic_access_page & 0xfff) != 0 || ! IsValidPhyAddr(vm->apic_access_page)) {
+       BX_ERROR(("VMFAIL: VMCS EXEC CTRL: apic access page phy addr malformed"));
+       return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
+     }
+  }
 
   //
   // Load VM-exit control fields to VMCS Cache
@@ -1300,6 +1281,9 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
   }
   SetCR3(guest.cr3);
 
+  // flush TLB to invalidate possible APIC ACCESS PAGE caching by host
+  TLB_flush();
+
   if (vmentry_ctrls & VMX_VMENTRY_CTRL1_LOAD_DBG_CTRLS) {
     // always clear bits 15:14 and set bit 10
     BX_CPU_THIS_PTR dr7 = (guest.dr7 & ~0xc000) | 0400;
@@ -1892,8 +1876,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMXON(bxInstruction_c *i)
   }
   else {
     // in VMX root operation mode
-    if (CPL != 0)
+    if (CPL != 0) {
+      BX_ERROR(("VMXON with CPL!=0 will cause #GP(0)"));
       exception(BX_GP_EXCEPTION, 0);
+    }
 
     VMfail(VMXERR_VMXON_IN_VMX_ROOT_OPERATION);
   }
@@ -1914,8 +1900,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMXOFF(bxInstruction_c *i)
     VMexit_Instruction(i, VMX_VMEXIT_VMXOFF);
   }
 
-  if (CPL != 0)
+  if (CPL != 0) {
+    BX_ERROR(("VMXOFF with CPL!=0 will cause #GP(0)"));
     exception(BX_GP_EXCEPTION, 0);
+  }
 
 /*
         if dual-monitor treatment of SMIs and SMM is active
@@ -1952,8 +1940,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMCALL(bxInstruction_c *i)
   if (BX_CPU_THIS_PTR get_VM() || BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_COMPAT)
     exception(BX_UD_EXCEPTION, 0);
 
-  if (CPL != 0)
+  if (CPL != 0) {
+    BX_ERROR(("VMCALL with CPL!=0 will cause #GP(0)"));
     exception(BX_GP_EXCEPTION, 0);
+  }
 
   if (BX_CPU_THIS_PTR in_smm /*|| 
         (the logical processor does not support the dual-monitor treatment of SMIs and SMM) ||
@@ -2032,8 +2022,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMLAUNCH(bxInstruction_c *i)
     VMexit_Instruction(i, vmlaunch ? VMX_VMEXIT_VMLAUNCH : VMX_VMEXIT_VMRESUME);
   }
 
-  if (CPL != 0)
+  if (CPL != 0) {
+    BX_ERROR(("VMLAUNCH/VMRESUME with CPL!=0 will cause #GP(0)"));
     exception(BX_GP_EXCEPTION, 0);
+  }
 
   if (! VMCSPTR_VALID()) {
     BX_ERROR(("VMFAIL: VMLAUNCH with invalid VMCS ptr !"));
@@ -2183,8 +2175,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMPTRLD(bxInstruction_c *i)
     VMexit_Instruction(i, VMX_VMEXIT_VMPTRLD);
   }
 
-  if (CPL != 0)
+  if (CPL != 0) {
+    BX_ERROR(("VMPTRLD with CPL!=0 will cause #GP(0)"));
     exception(BX_GP_EXCEPTION, 0);
+  }
 
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
   Bit64u pAddr = read_virtual_qword(i->seg(), eaddr); // keep 64-bit
@@ -2226,8 +2220,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMPTRST(bxInstruction_c *i)
     VMexit_Instruction(i, VMX_VMEXIT_VMPTRST);
   }
 
-  if (CPL != 0)
+  if (CPL != 0) {
+    BX_ERROR(("VMPTRST with CPL!=0 will cause #GP(0)"));
     exception(BX_GP_EXCEPTION, 0);
+  }
 
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
   write_virtual_qword(i->seg(), eaddr, BX_CPU_THIS_PTR vmcsptr);
@@ -2249,8 +2245,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMREAD(bxInstruction_c *i)
     VMexit_Instruction(i, VMX_VMEXIT_VMREAD);
   }
 
-  if (CPL != 0)
+  if (CPL != 0) {
+    BX_ERROR(("VMREAD with CPL!=0 will cause #GP(0)"));
     exception(BX_GP_EXCEPTION, 0);
+  }
 
   if (! VMCSPTR_VALID()) {
     BX_ERROR(("VMFAIL: VMREAD with invalid VMCS ptr !"));
@@ -2529,8 +2527,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMWRITE(bxInstruction_c *i)
     VMexit_Instruction(i, VMX_VMEXIT_VMWRITE);
   }
 
-  if (CPL != 0)
+  if (CPL != 0) {
+    BX_ERROR(("VMWRITE with CPL!=0 will cause #GP(0)"));
     exception(BX_GP_EXCEPTION, 0);
+  }
 
   if (! VMCSPTR_VALID()) {
     BX_ERROR(("VMFAIL: VMWRITE with invalid VMCS ptr !"));
@@ -2821,8 +2821,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMCLEAR(bxInstruction_c *i)
     VMexit_Instruction(i, VMX_VMEXIT_VMCLEAR);
   }
 
-  if (CPL != 0)
+  if (CPL != 0) {
+    BX_ERROR(("VMCLEAR with CPL!=0 will cause #GP(0)"));
     exception(BX_GP_EXCEPTION, 0);
+  }
 
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
   Bit64u pAddr = read_virtual_qword(i->seg(), eaddr); // keep 64-bit
@@ -2863,12 +2865,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMCLEAR(bxInstruction_c *i)
 void BX_CPU_C::register_vmx_state(bx_param_c *parent)
 {
   // register VMX state for save/restore param tree
-  bx_list_c *vmx = new bx_list_c(parent, "VMX", 6);
+  bx_list_c *vmx = new bx_list_c(parent, "VMX", 8);
 
   BXRS_HEX_PARAM_FIELD(vmx, vmcsptr, BX_CPU_THIS_PTR vmcsptr);
   BXRS_HEX_PARAM_FIELD(vmx, vmxonptr, BX_CPU_THIS_PTR vmxonptr);
   BXRS_PARAM_BOOL(vmx, in_vmx, BX_CPU_THIS_PTR in_vmx);
   BXRS_PARAM_BOOL(vmx, in_vmx_guest, BX_CPU_THIS_PTR in_vmx_guest);
+  BXRS_PARAM_BOOL(vmx, in_smm_vmx, BX_CPU_THIS_PTR in_smm_vmx);
+  BXRS_PARAM_BOOL(vmx, in_smm_vmx_guest, BX_CPU_THIS_PTR in_smm_vmx_guest);
   BXRS_PARAM_BOOL(vmx, vmx_interrupt_window, BX_CPU_THIS_PTR vmx_interrupt_window);
 
   bx_list_c *vmcache = new bx_list_c(vmx, "VMCS_CACHE", 5);
@@ -2877,7 +2881,7 @@ void BX_CPU_C::register_vmx_state(bx_param_c *parent)
   // VM-Execution Control Fields
   //
 
-  bx_list_c *vmexec_ctrls = new bx_list_c(vmcache, "VMEXEC_CTRLS", 22);
+  bx_list_c *vmexec_ctrls = new bx_list_c(vmcache, "VMEXEC_CTRLS", 23);
 
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, vmexec_ctrls1, BX_CPU_THIS_PTR vmcs.vmexec_ctrls1);
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, vmexec_ctrls2, BX_CPU_THIS_PTR vmcs.vmexec_ctrls2);
@@ -2900,6 +2904,7 @@ void BX_CPU_C::register_vmx_state(bx_param_c *parent)
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, vm_cr3_target_value4, BX_CPU_THIS_PTR vmcs.vm_cr3_target_value[3]);
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, virtual_apic_page_addr, BX_CPU_THIS_PTR vmcs.virtual_apic_page_addr);
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, vm_tpr_threshold, BX_CPU_THIS_PTR vmcs.vm_tpr_threshold);
+  BXRS_HEX_PARAM_FIELD(vmexec_ctrls, apic_access_page, BX_CPU_THIS_PTR vmcs.apic_access_page);
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, executive_vmcsptr, BX_CPU_THIS_PTR vmcs.executive_vmcsptr);
 
   //

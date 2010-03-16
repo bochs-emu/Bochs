@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.306 2010-03-14 15:51:26 sshwarts Exp $
+// $Id: cpu.cc,v 1.307 2010-03-16 14:51:20 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -749,8 +749,7 @@ void BX_CPU_C::prefetch(void)
     BX_CPU_THIS_PTR eipFetchPtr = fetchPtr;
   }
   else {
-    BX_CPU_THIS_PTR eipFetchPtr = BX_MEM(0)->getHostMemAddr(BX_CPU_THIS,
-        BX_CPU_THIS_PTR pAddrPage, BX_EXECUTE);
+    BX_CPU_THIS_PTR eipFetchPtr = (const Bit8u*) getHostMemAddr(BX_CPU_THIS_PTR pAddrPage, BX_EXECUTE);
 
     // Sanity checks
     if (! BX_CPU_THIS_PTR eipFetchPtr) {

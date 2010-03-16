@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.323 2010-03-15 15:48:01 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.324 2010-03-16 14:51:20 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -179,12 +179,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::WBINVD(bxInstruction_c *i)
   }
 
 #if BX_SUPPORT_VMX
-  if (BX_CPU_THIS_PTR in_vmx_guest) {
-    if (! SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_WBINVD_VMEXIT)) {
-      BX_ERROR(("VMEXIT: WBINVD in VMX non-root operation"));
-      VMexit(i, VMX_VMEXIT_WBINVD, 0);
-    }
-  }
+  VMexit_WBINVD(i);
 #endif
 
   invalidate_prefetch_q();
@@ -853,7 +848,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RqCq(bxInstruction_c *i)
 #if BX_SUPPORT_VMX
       VMexit_CR8_Read(i);
       if (BX_CPU_THIS_PTR in_vmx_guest && VMEXIT(VMX_VM_EXEC_CTRL2_TPR_SHADOW)) {
-         val_64 = VMX_Read_TPR_Shadow();
+         val_64 = (VMX_Read_VTPR() >> 4) & 0xf;
          break;
       }
 #endif
@@ -1495,9 +1490,17 @@ bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::SetCR4(bx_address val)
 #endif
 
 #if BX_SUPPORT_VMX
-  if (!(val & (1 << 13)) && BX_CPU_THIS_PTR in_vmx) {
-    BX_ERROR(("SetCR4(): Attempt to clear CR4.VMXE in vmx mode"));
-    exception(BX_GP_EXCEPTION, 0);
+  if (!(val & (1 << 13))) {
+    if (BX_CPU_THIS_PTR in_vmx) {
+      BX_ERROR(("SetCR4(): Attempt to clear CR4.VMXE in vmx mode"));
+      return 0;
+    }
+  }
+  else {
+    if (BX_CPU_THIS_PTR in_smm) {
+      BX_ERROR(("SetCR4(): Attempt to set CR4.VMXE in smm mode"));
+      return 0;
+    }
   }
 #endif
 

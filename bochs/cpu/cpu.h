@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.653 2010-03-15 14:18:35 sshwarts Exp $
+// $Id: cpu.h,v 1.654 2010-03-16 14:51:20 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -922,6 +922,8 @@ public: // for now...
   bx_bool in_event;
   bx_bool in_vmx;
   bx_bool in_vmx_guest;
+  bx_bool in_smm_vmx; // save in_vmx and in_vmx_guest flags when in SMM mode
+  bx_bool in_smm_vmx_guest;
   bx_bool vmx_interrupt_window;
   Bit64u  vmcsptr;
   bx_hostpageaddr_t vmcshostptr;
@@ -3091,6 +3093,8 @@ public: // for now...
   BX_SMF void access_read_physical(bx_phy_address paddr, unsigned len, void *data);
   BX_SMF void access_write_physical(bx_phy_address paddr, unsigned len, void *data);
 
+  BX_SMF bx_hostpageaddr_t getHostMemAddr(bx_phy_address addr, unsigned rw);
+
   // linear address for translate_linear expected to be canonical !
   BX_SMF bx_phy_address translate_linear(bx_address laddr, unsigned curr_pl, unsigned rw);
 #if BX_CPU_LEVEL >= 6
@@ -3386,11 +3390,12 @@ public: // for now...
   BX_SMF void set_VMCSPTR(Bit64u vmxptr);
   BX_SMF void init_VMCS(void);
   BX_SMF void register_vmx_state(bx_param_c *parent);
+  BX_SMF bx_bool is_virtual_apic_page(bx_phy_address paddr) BX_CPP_AttrRegparmN(1);
   BX_SMF Bit64s VMX_TSC_Offset(void);
-  BX_SMF Bit32u VMX_Read_TPR_Shadow(void);
-#if BX_SUPPORT_X86_64
+  BX_SMF Bit32u VMX_Read_VTPR(void);
   BX_SMF void VMX_Write_TPR_Shadow(Bit8u tpr_shadow);
-#endif
+  BX_SMF void VMX_Virtual_Apic_Read(bx_phy_address paddr, unsigned len, void *data);
+  BX_SMF void VMX_Virtual_Apic_Write(bx_phy_address paddr, unsigned len, void *data);
   // vmexit reasons
   BX_SMF void VMexit_Instruction(bxInstruction_c *i, Bit32u reason) BX_CPP_AttrRegparmN(2);
   BX_SMF void VMexit_Event(bxInstruction_c *i, unsigned type, unsigned vector,
@@ -3404,6 +3409,7 @@ public: // for now...
   BX_SMF void VMexit_INVLPG(bxInstruction_c *i, bx_address laddr) BX_CPP_AttrRegparmN(2);
   BX_SMF void VMexit_RDTSC(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
   BX_SMF void VMexit_RDPMC(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VMexit_WBINVD(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
   BX_SMF bx_bool VMexit_CLTS(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
   BX_SMF void VMexit_MSR(bxInstruction_c *i, unsigned op, Bit32u msr) BX_CPP_AttrRegparmN(3);
   BX_SMF void VMexit_IO(bxInstruction_c *i, unsigned port, unsigned len) BX_CPP_AttrRegparmN(3);

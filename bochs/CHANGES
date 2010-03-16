@@ -4,6 +4,7 @@ Brief summary :
 - Major configure/cpu rework allowing to enable/disable CPU options at runtime
   through .bochsrc (Stanislav)
 - Bugfixes for CPU emulation correctness and stability
+- Implemented VMX Apic Virtualization
 - Implemented PCLMULQDQ AES instruction
 - Extended Bochs internal debugger functionality
 - USB HP DeskJet 920C printer device emulation (Ben Lunt)
@@ -35,6 +36,10 @@ Detailed change log :
 
 - CPU
   - Implemented PCLMULQDQ AES instruction
+  - VMX: Enabled secondary proc-based vmexec controls
+    - Implemented APIC virtualization
+    - Implemented WBINVD VMEXIT control
+    - Implemented RDTSCP VMEXIT control
   - Bugfixes for CPU emulation correctness
   - Fixed Bochs crash when accessing the first byte above emulated memory size
 
@@ -61,6 +66,7 @@ Detailed change log :
  [2908481] USB Printer by Ben Lunt
 
 - these S.F. bugs were closed/fixed
+ [2964824] bad newline sequence in aspi-win32.h
   [913419] configure options and build process needs some work
  [2938398] gdbstub compile error with x86_64 enabled
  [2374455] shutdown/reset type 05 should reinit the PICs

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: smm.cc,v 1.64 2010-03-15 22:58:41 sshwarts Exp $
+// $Id: smm.cc,v 1.65 2010-03-16 14:51:20 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2006-2009 Stanislav Shwartsman
@@ -120,6 +120,36 @@ void BX_CPU_C::enter_system_management_mode(void)
   BX_INFO(("Enter to System Management Mode"));
 
   // debug(BX_CPU_THIS_PTR prev_rip);
+
+  //
+  // Processors that support VMX operation perform SMI delivery as follows:
+  //
+
+#if BX_SUPPORT_VMX
+  // Enter SMM
+  // save the following internal to the processor:
+  //   * CR4.VMXE
+  //   * an indication of whether the logical processor was in VMX operation (root or non-root)
+  // IF the logical processor is in VMX operation
+  // THEN
+  //   leave VMX operation;
+  //   save VMX-critical state defined below;
+  //   preserve current VMCS pointer as noted below;
+  // FI;
+  // CR4.VMXE = 0;
+
+  BX_CPU_THIS_PTR cr4.set_VMXE(0);
+  BX_CPU_THIS_PTR in_smm_vmx = BX_CPU_THIS_PTR in_vmx;
+  BX_CPU_THIS_PTR in_smm_vmx_guest = BX_CPU_THIS_PTR in_vmx_guest;
+  BX_CPU_THIS_PTR in_vmx = 0;
+  BX_CPU_THIS_PTR in_vmx_guest = 0;
+
+  BX_INFO(("enter_system_management_mode: temporary disable VMX while in SMM mode"));
+
+  // perform ordinary SMI delivery:
+  //   * save processor state in SMRAM;
+  //   * set processor state to standard SMM values
+#endif
 
   BX_CPU_THIS_PTR in_smm = 1;
   BX_CPU_THIS_PTR disable_NMI = 1;
@@ -470,6 +500,47 @@ bx_bool BX_CPU_C::smram_restore_state(const Bit32u *saved_state)
   Bit32u temp_cr0    = SMRAM_FIELD(saved_state, SMRAM_FIELD_CR0);
   Bit32u temp_eflags = SMRAM_FIELD(saved_state, SMRAM_FIELD_EFLAGS);
   Bit32u temp_efer   = SMRAM_FIELD(saved_state, SMRAM_FIELD_EFER);
+  Bit32u temp_cr4    = SMRAM_FIELD(saved_state, SMRAM_FIELD_CR4);
+
+  // Processors that support VMX operation perform RSM as follows:
+#if BX_SUPPORT_VMX
+  // IF VMXE=1 in CR4 image in SMRAM
+  // THEN
+  //   fail and enter shutdown state;
+
+  if (temp_cr4 & (1 << 13)) {
+    BX_PANIC(("SMM restore: CR4.VMXE is set in restore image !"));
+    return 0;
+  }
+
+  // restore state normally from SMRAM;
+  // CR4.VMXE = value stored internally;
+  // IF internal storage indicates that the logical processor had been in VMX operation (root or non-root)
+  // THEN
+  //   enter VMX operation (root or non-root);
+  //   restore VMX-critical state
+  //   set CR0.PE, CR0.NE, and CR0.PG to 1;
+  //   IF RFLAGS.VM = 0
+  //   THEN
+  //     CS.RPL = SS.DPL;
+  //     SS.RPL = SS.DPL;
+  //   FI;
+  //   If necessary, restore current VMCS pointer;
+  //   Leave SMM; Deassert SMMEM on subsequent bus transactions;
+  //   IF logical processor will be in VMX operation after RSM
+  //   THEN
+  //     block A20M and leave A20M mode;
+  //   FI;
+
+  if (BX_CPU_THIS_PTR in_smm_vmx) {
+    BX_CPU_THIS_PTR in_vmx = 1;
+    BX_CPU_THIS_PTR in_vmx_guest = BX_CPU_THIS_PTR in_smm_vmx_guest;
+    BX_INFO(("SMM Restore: enable VMX %s mode", BX_CPU_THIS_PTR in_vmx_guest ? "guest" : "host"));
+    temp_cr4 |= (1<<13); /* set VMXE */
+    temp_cr0 |= (1<<31)  /* PG */ | (1 << 5) /* NE */ | 0x1 /* PE */;
+    // block and disable A20M;
+  }
+#endif
 
   bx_bool pe = (temp_cr0 & 0x1);
   bx_bool nw = (temp_cr0 >> 29) & 0x1;
@@ -488,7 +559,7 @@ bx_bool BX_CPU_C::smram_restore_state(const Bit32u *saved_state)
   }
 
   // shutdown if write to reserved CR4 bits
-  if (! SetCR4(SMRAM_FIELD(saved_state, SMRAM_FIELD_CR4))) {
+  if (! SetCR4(temp_cr4)) {
     BX_PANIC(("SMM restore: incorrect CR4 state !"));
     return 0;
   }

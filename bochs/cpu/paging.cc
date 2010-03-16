@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.192 2010-03-14 15:51:26 sshwarts Exp $
+// $Id: paging.cc,v 1.193 2010-03-16 14:51:20 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -1353,8 +1353,7 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned curr_pl, un
   // Attempt to get a host pointer to this physical page. Put that
   // pointer in the TLB cache. Note if the request is vetoed, NULL
   // will be returned, and it's OK to OR zero in anyways.
-  tlbEntry->hostPageAddr = (bx_hostpageaddr_t) BX_MEM(0)->getHostMemAddr(BX_CPU_THIS, ppf, rw);
-
+  tlbEntry->hostPageAddr = BX_CPU_THIS_PTR getHostMemAddr(ppf, rw);
   if (tlbEntry->hostPageAddr) {
     // All access allowed also via direct pointer
 #if BX_X86_DEBUGGER
@@ -1551,9 +1550,7 @@ void BX_CPU_C::access_write_linear(bx_address laddr, unsigned len, unsigned curr
           // We haven't seen this page, or it's been bumped before.
 
           // Request a direct write pointer so we can do either R or W.
-          bx_hostpageaddr_t hostPageAddr = (bx_hostpageaddr_t)
-            BX_MEM(0)->getHostMemAddr(BX_CPU_THIS, lpf, BX_WRITE);
-
+          bx_hostpageaddr_t hostPageAddr = BX_CPU_THIS_PTR getHostMemAddr(lpf, BX_WRITE);
           if (hostPageAddr) {
             tlbEntry->lpf = lpf; // Got direct write pointer OK
             tlbEntry->ppf = (bx_phy_address) lpf;
@@ -1714,9 +1711,7 @@ void BX_CPU_C::access_read_linear(bx_address laddr, unsigned len, unsigned curr_
           // We haven't seen this page, or it's been bumped before.
 
           // Request a direct write pointer so we can do either R or W.
-          bx_hostpageaddr_t hostPageAddr = (bx_hostpageaddr_t)
-              BX_MEM(0)->getHostMemAddr(BX_CPU_THIS, lpf, BX_READ);
-
+          bx_hostpageaddr_t hostPageAddr = BX_CPU_THIS_PTR getHostMemAddr(lpf, BX_READ);
           if (hostPageAddr) {
             tlbEntry->lpf = lpf; // Got direct read pointer OK.
             tlbEntry->ppf = (bx_phy_address) lpf;
@@ -1784,6 +1779,13 @@ void BX_CPU_C::access_read_linear(bx_address laddr, unsigned len, unsigned curr_
 
 void BX_CPU_C::access_write_physical(bx_phy_address paddr, unsigned len, void *data)
 {
+#if BX_SUPPORT_VMX
+  if (is_virtual_apic_page(paddr)) {
+    VMX_Virtual_Apic_Write(paddr, len, data);
+    return;
+  }
+#endif
+
 #if BX_SUPPORT_APIC
   if (BX_CPU_THIS_PTR lapic.is_selected(paddr)) {
     BX_CPU_THIS_PTR lapic.write(paddr, data, len);
@@ -1796,6 +1798,13 @@ void BX_CPU_C::access_write_physical(bx_phy_address paddr, unsigned len, void *d
 
 void BX_CPU_C::access_read_physical(bx_phy_address paddr, unsigned len, void *data)
 {
+#if BX_SUPPORT_VMX
+  if (is_virtual_apic_page(paddr)) {
+    VMX_Virtual_Apic_Read(paddr, len, data);
+    return;
+  }
+#endif
+
 #if BX_SUPPORT_APIC
   if (BX_CPU_THIS_PTR lapic.is_selected(paddr)) {
     BX_CPU_THIS_PTR lapic.read(paddr, data, len);
@@ -1804,4 +1813,19 @@ void BX_CPU_C::access_read_physical(bx_phy_address paddr, unsigned len, void *da
 #endif
 
   BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, paddr, len, data);
+}
+
+bx_hostpageaddr_t BX_CPU_C::getHostMemAddr(bx_phy_address ppf, unsigned rw)
+{
+#if BX_SUPPORT_VMX
+  if (is_virtual_apic_page(ppf))
+    return 0; // Do not allow direct access to virtual apic page
+#endif
+
+#if BX_SUPPORT_APIC
+  if (BX_CPU_THIS_PTR lapic.is_selected(ppf))
+    return 0; // Vetoed!  APIC address space
+#endif
+
+  return (bx_hostpageaddr_t) BX_MEM(0)->getHostMemAddr(BX_CPU_THIS, ppf, rw);
 }

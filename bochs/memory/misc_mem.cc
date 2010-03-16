@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: misc_mem.cc,v 1.143 2010-03-07 09:16:24 sshwarts Exp $
+// $Id: misc_mem.cc,v 1.144 2010-03-16 14:51:20 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -73,7 +73,7 @@ void BX_MEM_C::init_memory(Bit64u guest, Bit64u host)
 {
   unsigned idx;
 
-  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.143 2010-03-07 09:16:24 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.144 2010-03-16 14:51:20 sshwarts Exp $"));
 
   // accept only memory size which is multiply of 1M
   BX_ASSERT((host & 0xfffff) == 0);
@@ -572,13 +572,6 @@ Bit8u *BX_MEM_C::getHostMemAddr(BX_CPU_C *cpu, bx_phy_address addr, unsigned rw)
   if (a20addr > BX_CONST64(0xffffffff)) is_bios = 0;
 #endif
 
-#if BX_SUPPORT_APIC
-  if (cpu != NULL) {
-    if (cpu->lapic.is_selected(a20addr))
-      return(NULL); // Vetoed!  APIC address space
-  }
-#endif
-
   bx_bool write = rw & 1;
 
   // allow direct access to SMRAM memory space for code and veto data
@@ -592,7 +585,7 @@ Bit8u *BX_MEM_C::getHostMemAddr(BX_CPU_C *cpu, bx_phy_address addr, unsigned rw)
   }
 
 #if BX_SUPPORT_MONITOR_MWAIT
-  if (write && BX_MEM_THIS is_monitor(a20addr & ~0xfff, 0x1000)) {
+  if (write && BX_MEM_THIS is_monitor(a20addr & ~((bx_phy_address)(0xfff)), 0xfff)) {
     // Vetoed! Write monitored page !
     return(NULL);
   }
