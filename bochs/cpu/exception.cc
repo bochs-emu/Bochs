@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.152 2010-03-15 14:18:36 sshwarts Exp $
+// $Id: exception.cc,v 1.153 2010-03-17 21:55:18 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -35,11 +35,8 @@
 #endif
 
 #if BX_SUPPORT_X86_64
-void BX_CPU_C::long_mode_int(Bit8u vector, unsigned is_INT, bx_bool push_error, Bit16u error_code)
+void BX_CPU_C::long_mode_int(Bit8u vector, unsigned soft_int, bx_bool push_error, Bit16u error_code)
 {
-  // long mode interrupt
-  Bit64u desctmp1, desctmp2;
-
   bx_descriptor_t gate_descriptor, cs_descriptor;
   bx_selector_t cs_selector;
 
@@ -50,8 +47,8 @@ void BX_CPU_C::long_mode_int(Bit8u vector, unsigned is_INT, bx_bool push_error, 
     exception(BX_GP_EXCEPTION, vector*8 + 2);
   }
 
-  desctmp1 = system_read_qword(BX_CPU_THIS_PTR idtr.base + vector*16);
-  desctmp2 = system_read_qword(BX_CPU_THIS_PTR idtr.base + vector*16 + 8);
+  Bit64u desctmp1 = system_read_qword(BX_CPU_THIS_PTR idtr.base + vector*16);
+  Bit64u desctmp2 = system_read_qword(BX_CPU_THIS_PTR idtr.base + vector*16 + 8);
 
   if (desctmp2 & BX_CONST64(0x00001F0000000000)) {
     BX_ERROR(("interrupt(long mode): IDT entry extended attributes DWORD4 TYPE != 0"));
@@ -82,9 +79,9 @@ void BX_CPU_C::long_mode_int(Bit8u vector, unsigned is_INT, bx_bool push_error, 
 
   // if software interrupt, then gate descripor DPL must be >= CPL,
   // else #GP(vector * 16 + 2 + EXT)
-  if (is_INT && (gate_descriptor.dpl < CPL))
+  if (soft_int && gate_descriptor.dpl < CPL)
   {
-    BX_ERROR(("interrupt(long mode): is_INT && gate.dpl < CPL"));
+    BX_ERROR(("interrupt(long mode): soft_int && gate.dpl < CPL"));
     exception(BX_GP_EXCEPTION, vector*8 + 2);
   }
 
@@ -256,10 +253,8 @@ void BX_CPU_C::long_mode_int(Bit8u vector, unsigned is_INT, bx_bool push_error, 
 }
 #endif
 
-void BX_CPU_C::protected_mode_int(Bit8u vector, unsigned is_INT, bx_bool push_error, Bit16u error_code)
+void BX_CPU_C::protected_mode_int(Bit8u vector, unsigned soft_int, bx_bool push_error, Bit16u error_code)
 {
-  // protected mode interrupt
-  Bit32u dword1, dword2;
   bx_descriptor_t gate_descriptor, cs_descriptor;
   bx_selector_t cs_selector;
 
@@ -279,8 +274,8 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, unsigned is_INT, bx_bool push_er
 
   Bit64u desctmp = system_read_qword(BX_CPU_THIS_PTR idtr.base + vector*8);
 
-  dword1 = GET32L(desctmp);
-  dword2 = GET32H(desctmp);
+  Bit32u dword1 = GET32L(desctmp);
+  Bit32u dword2 = GET32H(desctmp);
 
   parse_descriptor(dword1, dword2, &gate_descriptor);
 
@@ -306,8 +301,8 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, unsigned is_INT, bx_bool push_er
 
   // if software interrupt, then gate descripor DPL must be >= CPL,
   // else #GP(vector * 8 + 2 + EXT)
-  if (is_INT && (gate_descriptor.dpl < CPL)) {
-    BX_ERROR(("interrupt(): is_INT && (gate.dpl < CPL)"));
+  if (soft_int && gate_descriptor.dpl < CPL) {
+    BX_ERROR(("interrupt(): soft_int && (gate.dpl < CPL)"));
     exception(BX_GP_EXCEPTION, vector*8 + 2);
   }
 
@@ -714,11 +709,8 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, unsigned is_INT, bx_bool push_er
   }
 }
 
-void BX_CPU_C::real_mode_int(Bit8u vector, unsigned is_INT, bx_bool push_error, Bit16u error_code)
+void BX_CPU_C::real_mode_int(Bit8u vector, bx_bool push_error, Bit16u error_code)
 {
-  // real mode interrupt
-  Bit16u cs_selector;
-
   if ((vector*4+3) > BX_CPU_THIS_PTR idtr.limit) {
     BX_ERROR(("interrupt(real mode) vector > idtr.limit"));
     exception(BX_GP_EXCEPTION, 0);
@@ -734,7 +726,8 @@ void BX_CPU_C::real_mode_int(Bit8u vector, unsigned is_INT, bx_bool push_error, 
     BX_ERROR(("interrupt(real mode): instruction pointer not within code segment limits"));
     exception(BX_GP_EXCEPTION, 0);
   }
-  cs_selector = system_read_word(BX_CPU_THIS_PTR idtr.base + 4 * vector + 2);
+
+  Bit16u cs_selector = system_read_word(BX_CPU_THIS_PTR idtr.base + 4 * vector + 2);
   load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], cs_selector);
   EIP = new_ip;
 
@@ -763,11 +756,11 @@ void BX_CPU_C::interrupt(Bit8u vector, unsigned type, bx_bool push_error, Bit16u
 
   invalidate_prefetch_q();
 
-  bx_bool is_INT = 0;
+  bx_bool soft_int = 0;
   switch(type) {
     case BX_SOFTWARE_INTERRUPT:
     case BX_SOFTWARE_EXCEPTION:
-      is_INT = 1;
+      soft_int = 1;
       break;
     case BX_PRIVILEGED_SOFTWARE_INTERRUPT:
     case BX_EXTERNAL_INTERRUPT:
@@ -796,16 +789,16 @@ void BX_CPU_C::interrupt(Bit8u vector, unsigned type, bx_bool push_error, Bit16u
 
 #if BX_SUPPORT_X86_64
   if (long_mode()) {
-    long_mode_int(vector, is_INT, push_error, error_code);
+    long_mode_int(vector, soft_int, push_error, error_code);
   }
   else
 #endif
   {
     if(real_mode()) {
-       real_mode_int(vector, is_INT, push_error, error_code);
+       real_mode_int(vector, push_error, error_code);
     }
     else {
-       protected_mode_int(vector, is_INT, push_error, error_code);
+       protected_mode_int(vector, soft_int, push_error, error_code);
     }
   }
 
