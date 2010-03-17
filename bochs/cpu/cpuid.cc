@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpuid.cc,v 1.104 2010-03-06 07:00:05 sshwarts Exp $
+// $Id: cpuid.cc,v 1.105 2010-03-17 20:25:13 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007-2009 Stanislav Shwartsman
@@ -394,12 +394,11 @@ void BX_CPU_C::set_cpuid_defaults(void)
   cpuid->eax = 1;
 #else
   // for Pentium Pro, Pentium II, Pentium 4 processors
-  cpuid->eax = 2;
+  cpuid->eax = 3;
 
-  // do not report CPUID functions above 0x2 if cpuid_limit_winnt is set
+  // do not report CPUID functions above 0x3 if cpuid_limit_winnt is set
   // to workaround WinNT issue.
   if (! cpuid_limit_winnt) {
-    cpuid->eax = 3;
     if (BX_SUPPORT_MONITOR_MWAIT)
       cpuid->eax = 0x5;
     if (BX_CPU_SUPPORT_FEATURE(BX_CPU_XSAVE))
@@ -529,10 +528,6 @@ void BX_CPU_C::set_cpuid_defaults(void)
 
   BX_INFO(("CPUID[0x00000002]: %08x %08x %08x %08x", cpuid->eax, cpuid->ebx, cpuid->ecx, cpuid->edx));
 
-  // do not report CPUID functions above 0x2 if cpuid_limit_winnt is set
-  // to workaround WinNT issue.
-  if (cpuid_limit_winnt) return;
-
   // ------------------------------------------------------
   // CPUID function 0x00000003 - Processor Serial Number
   cpuid = &(BX_CPU_THIS_PTR cpuid_std_function[3]);
@@ -543,6 +538,10 @@ void BX_CPU_C::set_cpuid_defaults(void)
   cpuid->edx = 0;
 
   BX_INFO(("CPUID[0x00000003]: %08x %08x %08x %08x", cpuid->eax, cpuid->ebx, cpuid->ecx, cpuid->edx));
+
+  // do not report CPUID functions above 0x3 if cpuid_limit_winnt is set
+  // to workaround WinNT issue.
+  if (cpuid_limit_winnt) return;
 
   // ------------------------------------------------------
   // CPUID function 0x00000004 - Deterministic Cache Parameters
