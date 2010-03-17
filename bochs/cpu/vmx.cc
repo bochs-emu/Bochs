@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmx.cc,v 1.42 2010-03-16 21:09:11 sshwarts Exp $
+// $Id: vmx.cc,v 1.43 2010-03-17 21:08:21 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2009 Stanislav Shwartsman
@@ -289,10 +289,7 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
   vm->vm_exceptions_bitmap = VMread32(VMCS_32BIT_CONTROL_EXECUTION_BITMAP);
   vm->vm_pf_mask = VMread32(VMCS_32BIT_CONTROL_PAGE_FAULT_ERR_CODE_MASK);
   vm->vm_pf_match = VMread32(VMCS_32BIT_CONTROL_PAGE_FAULT_ERR_CODE_MATCH);
-  vm->io_bitmap_addr[0] = VMread64(VMCS_64BIT_CONTROL_IO_BITMAP_A);
-  vm->io_bitmap_addr[1] = VMread64(VMCS_64BIT_CONTROL_IO_BITMAP_B);
   vm->tsc_offset = VMread64(VMCS_64BIT_CONTROL_TSC_OFFSET);
-  vm->msr_bitmap_addr = (bx_phy_address) VMread64(VMCS_64BIT_CONTROL_MSR_BITMAPS);
   vm->vm_cr0_mask = VMread64(VMCS_CONTROL_CR0_GUEST_HOST_MASK);
   vm->vm_cr4_mask = VMread64(VMCS_CONTROL_CR4_GUEST_HOST_MASK);
   vm->vm_cr0_read_shadow = VMread64(VMCS_CONTROL_CR0_READ_SHADOW);
@@ -302,10 +299,7 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
   for (int n=0; n<VMX_CR3_TARGET_MAX_CNT; n++)
     vm->vm_cr3_target_value[n] = VMread64(VMCS_CR3_TARGET0 + 2*n);
 
-  vm->vm_tpr_threshold = VMread32(VMCS_32BIT_CONTROL_TPR_THRESHOLD);
-  vm->virtual_apic_page_addr = (bx_phy_address) VMread64(VMCS_64BIT_CONTROL_VIRTUAL_APIC_PAGE_ADDR);
   vm->executive_vmcsptr = (bx_phy_address) VMread64(VMCS_64BIT_CONTROL_EXECUTIVE_VMCS_PTR);
-  vm->apic_access_page = (bx_phy_address) VMread64(VMCS_64BIT_CONTROL_APIC_ACCESS_ADDR);
 
   //
   // Check VM-execution control fields
@@ -347,6 +341,8 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
   }
 
   if (vm->vmexec_ctrls2 & VMX_VM_EXEC_CTRL2_IO_BITMAPS) {
+     vm->io_bitmap_addr[0] = VMread64(VMCS_64BIT_CONTROL_IO_BITMAP_A);
+     vm->io_bitmap_addr[1] = VMread64(VMCS_64BIT_CONTROL_IO_BITMAP_B);
      // I/O bitmaps control enabled
      for (int bitmap=0; bitmap < 2; bitmap++) {
        if (vm->io_bitmap_addr[bitmap] & 0xfff) {
@@ -362,6 +358,7 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
 
   if (vm->vmexec_ctrls2 & VMX_VM_EXEC_CTRL2_MSR_BITMAPS) {
      // MSR bitmaps control enabled
+     vm->msr_bitmap_addr = (bx_phy_address) VMread64(VMCS_64BIT_CONTROL_MSR_BITMAPS);
      if ((vm->msr_bitmap_addr & 0xfff) != 0 || ! IsValidPhyAddr(vm->msr_bitmap_addr)) {
        BX_ERROR(("VMFAIL: VMCS EXEC CTRL: MSR bitmap phy addr malformed"));
        return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
@@ -376,6 +373,9 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
   }
 
   if (vm->vmexec_ctrls2 & VMX_VM_EXEC_CTRL2_TPR_SHADOW) {
+     vm->virtual_apic_page_addr = (bx_phy_address) VMread64(VMCS_64BIT_CONTROL_VIRTUAL_APIC_PAGE_ADDR);
+     vm->vm_tpr_threshold = VMread32(VMCS_32BIT_CONTROL_TPR_THRESHOLD);
+
      if ((vm->virtual_apic_page_addr & 0xfff) != 0 || ! IsValidPhyAddr(vm->virtual_apic_page_addr)) {
        BX_ERROR(("VMFAIL: VMCS EXEC CTRL: virtual apic phy addr malformed"));
        return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
@@ -396,6 +396,7 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
   }
 
   if (vm->vmexec_ctrls3 & VMX_VM_EXEC_CTRL3_VIRTUALIZE_APIC_ACCESSES) {
+     vm->apic_access_page = (bx_phy_address) VMread64(VMCS_64BIT_CONTROL_APIC_ACCESS_ADDR);
      if ((vm->apic_access_page & 0xfff) != 0 || ! IsValidPhyAddr(vm->apic_access_page)) {
        BX_ERROR(("VMFAIL: VMCS EXEC CTRL: apic access page phy addr malformed"));
        return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
