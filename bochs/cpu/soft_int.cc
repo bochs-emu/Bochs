@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: soft_int.cc,v 1.59 2010-03-15 13:22:14 sshwarts Exp $
+// $Id: soft_int.cc,v 1.60 2010-03-18 15:19:16 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -73,12 +73,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INT1(bxInstruction_c *i)
 
   BX_CPU_THIS_PTR EXT = 1;
 
-  RSP_SPECULATIVE;
-
   // interrupt is not RSP safe
   interrupt(1, BX_PRIVILEGED_SOFTWARE_INTERRUPT, 0, 0);
-
-  RSP_COMMIT;
 
   BX_CPU_THIS_PTR EXT = 0;
 
@@ -99,12 +95,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INT3(bxInstruction_c *i)
   BX_CPU_THIS_PTR show_flag |= Flag_softint;
 #endif
 
-  RSP_SPECULATIVE;
-
   // interrupt is not RSP safe
   interrupt(3, BX_SOFTWARE_EXCEPTION, 0, 0);
-
-  RSP_COMMIT;
 
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_INT,
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value,
@@ -160,12 +152,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INTO(bxInstruction_c *i)
     BX_CPU_THIS_PTR show_flag |= Flag_softint;
 #endif
 
-    RSP_SPECULATIVE;
-
     // interrupt is not RSP safe
     interrupt(4, BX_SOFTWARE_EXCEPTION, 0, 0);
-
-    RSP_COMMIT;
 
     BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_INT,
                         BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value,

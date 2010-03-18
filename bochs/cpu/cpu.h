@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.655 2010-03-17 21:55:18 sshwarts Exp $
+// $Id: cpu.h,v 1.656 2010-03-18 15:19:16 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -976,9 +976,6 @@ public: // for now...
   // for exceptions
   jmp_buf jmp_buf_env;
   Bit8u curr_exception;
-
-  bx_address save_eip;
-  bx_address save_esp;
 
   // Boundaries of current page, based on EIP
   bx_address eipPageBias;

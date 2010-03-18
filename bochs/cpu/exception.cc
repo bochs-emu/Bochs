@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.153 2010-03-17 21:55:18 sshwarts Exp $
+// $Id: exception.cc,v 1.154 2010-03-18 15:19:16 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -354,6 +354,8 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, unsigned soft_int, bx_bool push_
     task_switch(0, &tss_selector, &tss_descriptor,
                     BX_TASK_FROM_INT, dword1, dword2);
 
+    RSP_SPECULATIVE;
+
     // if interrupt was caused by fault with error code
     //   stack limits must allow push of 2 more bytes, else #SS(0)
     // push error code onto stack
@@ -370,6 +372,8 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, unsigned soft_int, bx_bool push_
       BX_ERROR(("interrupt(): EIP > CS.limit"));
       exception(BX_GP_EXCEPTION, 0);
     }
+
+    RSP_COMMIT;
 
     return;
 
@@ -780,9 +784,6 @@ void BX_CPU_C::interrupt(Bit8u vector, unsigned type, bx_bool push_error, Bit16u
   BX_CPU_THIS_PTR debug_trap = 0;
   BX_CPU_THIS_PTR inhibit_mask = 0;
 
-  BX_CPU_THIS_PTR save_eip = RIP;
-  BX_CPU_THIS_PTR save_esp = RSP;
-
 #if BX_SUPPORT_VMX
   BX_CPU_THIS_PTR in_event = 1;
 #endif
@@ -794,12 +795,16 @@ void BX_CPU_C::interrupt(Bit8u vector, unsigned type, bx_bool push_error, Bit16u
   else
 #endif
   {
+    RSP_SPECULATIVE;
+
     if(real_mode()) {
        real_mode_int(vector, push_error, error_code);
     }
     else {
        protected_mode_int(vector, soft_int, push_error, error_code);
     }
+
+    RSP_COMMIT;
   }
 
 #if BX_X86_DEBUGGER
@@ -891,11 +896,6 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code)
 #endif
 
   if (BX_CPU_THIS_PTR errorno > 0) {
-    // if not initial error, restore previous register values from
-    // previous attempt to handle exception
-    RIP = BX_CPU_THIS_PTR save_eip;
-    RSP = BX_CPU_THIS_PTR save_esp;
-
     if (BX_CPU_THIS_PTR errorno > 2 || BX_CPU_THIS_PTR curr_exception == BX_ET_DOUBLE_FAULT) {
       debug(BX_CPU_THIS_PTR prev_rip); // print debug information to the log
 #if BX_SUPPORT_VMX
