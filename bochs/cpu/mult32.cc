@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: mult32.cc,v 1.34 2010-03-14 15:51:26 sshwarts Exp $
+// $Id: mult32.cc,v 1.35 2010-03-18 22:19:10 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -128,8 +128,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::IDIV_EAXEdR(bxInstruction_c *i)
    */
 
   /* now write quotient back to destination */
-  RAX = quotient_32l;
-  RDX = remainder_32;
+  RAX = (Bit32u) quotient_32l;
+  RDX = (Bit32u) remainder_32;
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::IMUL_GdEdIdR(bxInstruction_c *i)
