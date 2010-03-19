@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: msr.cc,v 1.41 2010-03-15 15:48:01 sshwarts Exp $
+// $Id: msr.cc,v 1.42 2010-03-19 21:04:00 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008-2009 Stanislav Shwartsman
@@ -36,6 +36,9 @@
 bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
 {
   Bit64u val64 = 0;
+
+  if ((index & 0x3FFFFFFF) >= BX_MSR_MAX_INDEX)
+    return 0;
 
   switch(index) {
 
@@ -289,6 +292,9 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
   Bit32u val32_hi = GET32H(val_64);
 
   BX_INSTR_WRMSR(BX_CPU_ID, index, val_64);
+
+  if ((index & 0x3FFFFFFF) >= BX_MSR_MAX_INDEX)
+    return 0;
 
   switch(index) {
 
