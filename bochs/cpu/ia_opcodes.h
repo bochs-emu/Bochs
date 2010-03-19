@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ia_opcodes.h,v 1.40 2010-02-25 22:44:46 sshwarts Exp $
+// $Id: ia_opcodes.h,v 1.41 2010-03-19 10:00:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008-2009 Stanislav Shwartsman
@@ -739,6 +739,7 @@ bx_define_opcode(BX_IA_FPU_ESC, &BX_CPU_C::FPU_ESC, NULL, 0)
 
 // 486 new instructions
 bx_define_opcode(BX_IA_CPUID, &BX_CPU_C::CPUID, NULL, BX_CPU_486)
+bx_define_opcode(BX_IA_BSWAP_RX, &BX_CPU_C::BSWAP_RX, NULL, BX_CPU_486)
 bx_define_opcode(BX_IA_BSWAP_ERX, &BX_CPU_C::BSWAP_ERX, NULL, BX_CPU_486)
 bx_define_opcode(BX_IA_INVD, &BX_CPU_C::INVD, NULL, BX_CPU_486)
 bx_define_opcode(BX_IA_WBINVD, &BX_CPU_C::WBINVD, NULL, BX_CPU_486)

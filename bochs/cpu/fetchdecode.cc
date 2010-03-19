@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.258 2010-03-14 15:51:26 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.259 2010-03-19 10:00:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -673,14 +673,14 @@ static const BxOpcodeInfo_t BxOpcodeInfo32R[512*2] = {
   /* 0F C5 /wr */ { BxPrefixSSE | BxImmediate_Ib, BX_IA_PEXTRW_GdPqIb, BxOpcodeGroupSSE_0fc5R },
   /* 0F C6 /wr */ { BxPrefixSSE | BxImmediate_Ib, BX_IA_SHUFPS_VpsWpsIb, BxOpcodeGroupSSE_0fc6 },
   /* 0F C7 /wr */ { 0, BX_IA_ERROR }, // CMPXCHG8B G9 group
-  /* 0F C8 /wr */ { 0, BX_IA_BSWAP_ERX },
-  /* 0F C9 /wr */ { 0, BX_IA_BSWAP_ERX },
-  /* 0F CA /wr */ { 0, BX_IA_BSWAP_ERX },
-  /* 0F CB /wr */ { 0, BX_IA_BSWAP_ERX },
-  /* 0F CC /wr */ { 0, BX_IA_BSWAP_ERX },
-  /* 0F CD /wr */ { 0, BX_IA_BSWAP_ERX },
-  /* 0F CE /wr */ { 0, BX_IA_BSWAP_ERX },
-  /* 0F CF /wr */ { 0, BX_IA_BSWAP_ERX },
+  /* 0F C8 /wr */ { 0, BX_IA_BSWAP_RX },
+  /* 0F C9 /wr */ { 0, BX_IA_BSWAP_RX },
+  /* 0F CA /wr */ { 0, BX_IA_BSWAP_RX },
+  /* 0F CB /wr */ { 0, BX_IA_BSWAP_RX },
+  /* 0F CC /wr */ { 0, BX_IA_BSWAP_RX },
+  /* 0F CD /wr */ { 0, BX_IA_BSWAP_RX },
+  /* 0F CE /wr */ { 0, BX_IA_BSWAP_RX },
+  /* 0F CF /wr */ { 0, BX_IA_BSWAP_RX },
   /* 0F D0 /wr */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0fd0 },
   /* 0F D1 /wr */ { BxPrefixSSE, BX_IA_PSRLW_PqQq, BxOpcodeGroupSSE_0fd1 },
   /* 0F D2 /wr */ { BxPrefixSSE, BX_IA_PSRLD_PqQq, BxOpcodeGroupSSE_0fd2 },
@@ -1782,14 +1782,14 @@ static const BxOpcodeInfo_t BxOpcodeInfo32M[512*2] = {
   /* 0F C5 /wm */ { 0, BX_IA_ERROR }, // PEXTRW SSE group
   /* 0F C6 /wm */ { BxPrefixSSE | BxImmediate_Ib, BX_IA_SHUFPS_VpsWpsIb, BxOpcodeGroupSSE_0fc6 },
   /* 0F C7 /wm */ { BxGroup9, BX_IA_ERROR, BxOpcodeInfoG9M },
-  /* 0F C8 /wm */ { 0, BX_IA_BSWAP_ERX },
-  /* 0F C9 /wm */ { 0, BX_IA_BSWAP_ERX },
-  /* 0F CA /wm */ { 0, BX_IA_BSWAP_ERX },
-  /* 0F CB /wm */ { 0, BX_IA_BSWAP_ERX },
-  /* 0F CC /wm */ { 0, BX_IA_BSWAP_ERX },
-  /* 0F CD /wm */ { 0, BX_IA_BSWAP_ERX },
-  /* 0F CE /wm */ { 0, BX_IA_BSWAP_ERX },
-  /* 0F CF /wm */ { 0, BX_IA_BSWAP_ERX },
+  /* 0F C8 /wm */ { 0, BX_IA_BSWAP_RX },
+  /* 0F C9 /wm */ { 0, BX_IA_BSWAP_RX },
+  /* 0F CA /wm */ { 0, BX_IA_BSWAP_RX },
+  /* 0F CB /wm */ { 0, BX_IA_BSWAP_RX },
+  /* 0F CC /wm */ { 0, BX_IA_BSWAP_RX },
+  /* 0F CD /wm */ { 0, BX_IA_BSWAP_RX },
+  /* 0F CE /wm */ { 0, BX_IA_BSWAP_RX },
+  /* 0F CF /wm */ { 0, BX_IA_BSWAP_RX },
   /* 0F D0 /wm */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0fd0 },
   /* 0F D1 /wm */ { BxPrefixSSE, BX_IA_PSRLW_PqQq, BxOpcodeGroupSSE_0fd1 },
   /* 0F D2 /wm */ { BxPrefixSSE, BX_IA_PSRLD_PqQq, BxOpcodeGroupSSE_0fd2 },
