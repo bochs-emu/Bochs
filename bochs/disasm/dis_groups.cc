@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dis_groups.cc,v 1.49 2010-03-07 08:08:39 sshwarts Exp $
+// $Id: dis_groups.cc,v 1.50 2010-03-19 14:43:13 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005-2009 Stanislav Shwartsman
@@ -414,6 +414,9 @@ void disassembler::Udq(const x86_insn *insn)
   else
     dis_sprintf("%%xmm%d", insn->rm);
 }
+
+void disassembler::Ups(const x86_insn *insn) { Udq(insn); }
+void disassembler::Upd(const x86_insn *insn) { Udq(insn); }
 
 void disassembler::Vq(const x86_insn *insn)
 {

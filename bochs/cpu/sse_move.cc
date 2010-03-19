@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_move.cc,v 1.112 2010-03-19 10:44:02 sshwarts Exp $
+// $Id: sse_move.cc,v 1.113 2010-03-19 14:43:12 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003-2009 Stanislav Shwartsman
@@ -730,7 +730,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVMSKPS_GdVRps(bxInstruction_c *i)
 #if BX_CPU_LEVEL >= 6
   BX_CPU_THIS_PTR prepareSSE();
 
-  BxPackedXmmRegister op = BX_READ_XMM_REG(i->nnn());
+  BxPackedXmmRegister op = BX_READ_XMM_REG(i->rm());
   Bit32u val32 = 0;
 
   if(op.xmm32u(0) & 0x80000000) val32 |= 0x1;
@@ -738,7 +738,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVMSKPS_GdVRps(bxInstruction_c *i)
   if(op.xmm32u(2) & 0x80000000) val32 |= 0x4;
   if(op.xmm32u(3) & 0x80000000) val32 |= 0x8;
 
-  BX_WRITE_32BIT_REGZ(i->rm(), val32);
+  BX_WRITE_32BIT_REGZ(i->nnn(), val32);
 #endif
 }
 
@@ -748,13 +748,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVMSKPD_GdVRpd(bxInstruction_c *i)
 #if BX_CPU_LEVEL >= 6
   BX_CPU_THIS_PTR prepareSSE();
 
-  BxPackedXmmRegister op = BX_READ_XMM_REG(i->nnn());
+  BxPackedXmmRegister op = BX_READ_XMM_REG(i->rm());
   Bit32u val32 = 0;
 
   if(op.xmm32u(1) & 0x80000000) val32 |= 0x1;
   if(op.xmm32u(3) & 0x80000000) val32 |= 0x2;
 
-  BX_WRITE_32BIT_REGZ(i->rm(), val32);
+  BX_WRITE_32BIT_REGZ(i->nnn(), val32);
 #endif
 }
 

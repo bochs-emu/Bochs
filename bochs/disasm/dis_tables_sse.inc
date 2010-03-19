@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dis_tables_sse.inc,v 1.4 2010-03-19 10:43:38 sshwarts Exp $
+// $Id: dis_tables_sse.inc,v 1.5 2010-03-19 14:43:13 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005-2010 Stanislav Shwartsman
@@ -185,8 +185,8 @@ static BxDisasmOpcodeTable_t BxDisasmGroupSSE_0f2f[4] = {
 };
 
 static BxDisasmOpcodeTable_t BxDisasmGroupSSE_0f50[4] = {
-  /* -- */ { 0, &Ia_movmskps_Gd_Vps },
-  /* 66 */ { 0, &Ia_movmskpd_Gd_Vpd },
+  /* -- */ { 0, &Ia_movmskps_Gd_Ups },
+  /* 66 */ { 0, &Ia_movmskpd_Gd_Upd },
   /* F2 */ { 0, &Ia_Invalid },
   /* F3 */ { 0, &Ia_Invalid }
 };

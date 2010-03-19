@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: opcodes.inc,v 1.34 2010-03-19 10:43:38 sshwarts Exp $
+// $Id: opcodes.inc,v 1.35 2010-03-19 14:43:13 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005-2009 Stanislav Shwartsman
@@ -651,8 +651,8 @@ Ia_movlpd_Mq_Vpd = { "movlpd", "movlpd", Mq, Vpd, XX, XX, IA_SSE2 },
 Ia_movlpd_Vpd_Mq = { "movlpd", "movlpd", Vpd, Mq, XX, XX, IA_SSE2 },
 Ia_movlps_Mq_Vps = { "movlps", "movlps", Mq, Vps, XX, XX, IA_SSE },
 Ia_movlps_Vps_Mq = { "movlps", "movlps", Vps, Mq, XX, XX, IA_SSE },
-Ia_movmskpd_Gd_Vpd = { "movmskpd", "movmskpd", Gd, Vpd, XX, XX, IA_SSE2 },
-Ia_movmskps_Gd_Vps = { "movmskps", "movmskps", Gd, Vps, XX, XX, IA_SSE },
+Ia_movmskpd_Gd_Upd = { "movmskpd", "movmskpd", Gd, Upd, XX, XX, IA_SSE2 },
+Ia_movmskps_Gd_Ups = { "movmskps", "movmskps", Gd, Ups, XX, XX, IA_SSE },
 Ia_movntdq_Mdq_Vdq = { "movntdq", "movntdq", Mdq, Vdq, XX, XX, IA_SSE2 },
 Ia_movntdqa_Vdq_Mdq = { "movntdqa", "movntdqa", Vdq, Mdq, XX, XX, IA_SSE4_1 },
 Ia_movnti_Md_Gd = { "movnti", "movnti", Md, Gd, XX, XX, IA_SSE2 },

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dis_tables.h,v 1.42 2010-03-07 08:08:40 sshwarts Exp $
+// $Id: dis_tables.h,v 1.43 2010-03-19 14:43:13 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005-2010 Stanislav Shwartsman
@@ -133,6 +133,9 @@
 #define Vsd &disassembler::Vsd
 #define Vps &disassembler::Vps
 #define Vpd &disassembler::Vpd
+
+#define Ups &disassembler::Ups
+#define Upd &disassembler::Upd
 #define Udq &disassembler::Udq
 
 #define  Ww &disassembler::Ww
