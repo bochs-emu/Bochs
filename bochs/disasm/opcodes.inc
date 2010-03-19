@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: opcodes.inc,v 1.33 2010-02-24 19:27:50 sshwarts Exp $
+// $Id: opcodes.inc,v 1.34 2010-03-19 10:43:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005-2009 Stanislav Shwartsman
@@ -622,7 +622,7 @@ Ia_movd_Ed_Vd = { "movd", "movd", Ed, Vdq, XX, XX, IA_SSE2 },
 Ia_movd_Pq_Ed = { "movd", "movd", Pq, Ed, XX, XX, IA_MMX },
 Ia_movd_Vdq_Ed = { "movd", "movd", Vdq, Ed, XX, XX, IA_SSE2 },
 Ia_movddup_Vdq_Wq = { "movddup", "movddup", Vdq, Wq, XX, XX, IA_SSE3 },
-Ia_movdq2q_Pq_Vq = { "movdq2q", "movdq2q", Pq, Vq, XX, XX, IA_SSE2 },
+Ia_movdq2q_Pq_Udq = { "movdq2q", "movdq2q", Pq, Udq, XX, XX, IA_SSE2 },
 Ia_movdqa_Vdq_Wdq = { "movdqa", "movdqa", Vdq, Wdq, XX, XX, IA_SSE2 },
 Ia_movdqa_Wdq_Vdq = { "movdqa", "movdqa", Wdq, Vdq, XX, XX, IA_SSE2 },
 Ia_movdqu_Vdq_Wdq = { "movdqu", "movdqu", Vdq, Wdq, XX, XX, IA_SSE2 },

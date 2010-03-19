@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_move.cc,v 1.111 2010-03-14 15:51:26 sshwarts Exp $
+// $Id: sse_move.cc,v 1.112 2010-03-19 10:44:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003-2009 Stanislav Shwartsman
@@ -883,9 +883,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVDQ2Q_PqVRq(bxInstruction_c *i)
   BX_CPU_THIS_PTR prepareFPU2MMX();
 
   BxPackedMmxRegister mm;
-  MMXUQ(mm) = BX_READ_XMM_REG_LO_QWORD(i->nnn());
+  MMXUQ(mm) = BX_READ_XMM_REG_LO_QWORD(i->rm());
 
-  BX_WRITE_MMX_REG(i->rm(), mm);
+  BX_WRITE_MMX_REG(i->nnn(), mm);
 #endif
 }
 
