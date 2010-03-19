@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.324 2010-03-16 14:51:20 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.325 2010-03-19 17:00:05 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -220,16 +220,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CLFLUSH(bxInstruction_c *i)
     }
   }
 
-  bx_phy_address paddr;
-
-  if (BX_CPU_THIS_PTR cr0.get_PG()) {
-    paddr = dtranslate_linear(laddr, CPL, BX_READ);
-    paddr = A20ADDR(paddr);
-  }
-  else
-  {
-    paddr = A20ADDR(laddr);
-  }
+#if BX_INSTRUMENTATION
+  bx_phy_address paddr =
+#endif
+    A20ADDR(dtranslate_linear(laddr, CPL, BX_READ));
 
   BX_INSTR_CLFLUSH(BX_CPU_ID, laddr, paddr);
 
@@ -1705,16 +1699,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MONITOR(bxInstruction_c *i)
     }
   }
 
-  bx_phy_address paddr;
-
-  if (BX_CPU_THIS_PTR cr0.get_PG()) {
-    paddr = dtranslate_linear(laddr, CPL, BX_READ);
-    paddr = A20ADDR(paddr);
-  }
-  else
-  {
-    paddr = A20ADDR(laddr);
-  }
+  bx_phy_address paddr = A20ADDR(dtranslate_linear(laddr, CPL, BX_READ));
 
   // Set the monitor immediately.  If monitor is still armed when we MWAIT,
   // the processor will stall.
