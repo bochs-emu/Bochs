@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: flag_ctrl.cc,v 1.49 2010-03-14 15:51:26 sshwarts Exp $
+// $Id: flag_ctrl.cc,v 1.50 2010-03-20 13:58:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2009  The Bochs Project
@@ -213,7 +213,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::POPF_Fw(bxInstruction_c *i)
         // IF, IOPL unchanged, EFLAGS.VIF = TMP_FLAGS.IF
         changeMask |= EFlagsVIFMask;
         Bit32u flags32 = (Bit32u) flags16;
-        if (BX_CPU_THIS_PTR get_IF()) flags32 |= EFlagsVIFMask;
+        if (flags32 & EFlagsIFMask) flags32 |= EFlagsVIFMask;
         writeEFlags(flags32, changeMask);
         RSP_COMMIT;
         return;
