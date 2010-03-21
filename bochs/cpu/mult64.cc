@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: mult64.cc,v 1.39 2010-03-14 15:51:26 sshwarts Exp $
+// $Id: mult64.cc,v 1.40 2010-03-21 06:53:14 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -194,7 +194,7 @@ void long_idiv(Bit128s *quotient,Bit64s *remainder,Bit128s *dividend,Bit64s divi
   if (s1 ^ s2) {
     long_neg(quotient);
   }
-  if (s2) {
+  if (s1) {
     *remainder = -*remainder;
   }
 }
