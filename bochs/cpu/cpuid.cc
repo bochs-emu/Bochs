@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpuid.cc,v 1.105 2010-03-17 20:25:13 sshwarts Exp $
+// $Id: cpuid.cc,v 1.106 2010-03-21 20:52:36 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007-2009 Stanislav Shwartsman
@@ -350,10 +350,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CPUID(bxInstruction_c *i)
   }
 
   // unknown CPUID function - return maximum standard leaf
-  RAX = BX_CPU_THIS_PTR cpuid_ext_function[max_std_function].eax;
-  RBX = BX_CPU_THIS_PTR cpuid_ext_function[max_std_function].ebx;
-  RCX = BX_CPU_THIS_PTR cpuid_ext_function[max_std_function].ecx;
-  RDX = BX_CPU_THIS_PTR cpuid_ext_function[max_std_function].edx;
+  RAX = BX_CPU_THIS_PTR cpuid_std_function[max_std_function].eax;
+  RBX = BX_CPU_THIS_PTR cpuid_std_function[max_std_function].ebx;
+  RCX = BX_CPU_THIS_PTR cpuid_std_function[max_std_function].ecx;
+  RDX = BX_CPU_THIS_PTR cpuid_std_function[max_std_function].edx;
 #endif
 }
 
