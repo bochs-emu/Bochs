@@ -33,7 +33,17 @@ static const floatx80 floatx80_neghalf = packFloatx80(1, 0x3ffe, BX_CONST64(0x80
 static const float128 float128_ln2     =
     packFloat128(BX_CONST64(0x3ffe62e42fefa39e), BX_CONST64(0xf35793c7673007e6));
 
-#define LN2_SIG        BX_CONST64(0xb17217f7d1cf79ac)
+#ifdef BETTER_THAN_PENTIUM
+
+#define LN2_SIG_HI BX_CONST64(0xb17217f7d1cf79ab)
+#define LN2_SIG_LO BX_CONST64(0xc9e3b39800000000)  /* 96 bit precision */
+
+#else
+
+#define LN2_SIG_HI BX_CONST64(0xb17217f7d1cf79ab)
+#define LN2_SIG_LO BX_CONST64(0xc000000000000000)  /* 67-bit precision */
+
+#endif
 
 #define EXP_ARR_SIZE 15
 
@@ -107,7 +117,7 @@ static float128 poly_exp(float128 x, float_status_t &status)
 
 floatx80 f2xm1(floatx80 a, float_status_t &status)
 {
-    Bit64u zSig0, zSig1;
+    Bit64u zSig0, zSig1, zSig2;
 
     // handle unsupported extended double-precision floating encodings
     if (floatx80_is_unsupported(a))
@@ -133,7 +143,7 @@ floatx80 f2xm1(floatx80 a, float_status_t &status)
         normalizeFloatx80Subnormal(aSig, &aExp, &aSig);
 
     tiny_argument:
-        mul64To128(aSig, LN2_SIG, &zSig0, &zSig1);
+        mul128By64To192(LN2_SIG_HI, LN2_SIG_LO, aSig, &zSig0, &zSig1, &zSig2);
         if (0 < (Bit64s) zSig0) {
             shortShift128Left(zSig0, zSig1, 1, &zSig0, &zSig1);
             --aExp;
