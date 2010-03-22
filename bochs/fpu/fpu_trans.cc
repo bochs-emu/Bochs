@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu_trans.cc,v 1.28 2010-03-22 18:09:40 sshwarts Exp $
+// $Id: fpu_trans.cc,v 1.29 2010-03-22 22:11:00 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003-2009 Stanislav Shwartsman
@@ -224,13 +224,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FPREM1(bxInstruction_c *i)
 
   floatx80 a = BX_READ_FPU_REG(0);
   floatx80 b = BX_READ_FPU_REG(1);
+  floatx80 result;
 
-  floatx80 result = floatx80_ieee754_remainder(a, b, quotient, status);
+  int flags = floatx80_ieee754_remainder(a, b, result, quotient, status);
 
   if (! FPU_exception(status.float_exception_flags)) {
-     if (! floatx80_is_nan(result)) {
+     if (flags >= 0) {
         int cc = 0;
-        if (quotient == (Bit64u) -1) cc = FPU_SW_C2;
+        if (flags) cc = FPU_SW_C2;
         else {
            if (quotient & 1) cc |= FPU_SW_C1;
            if (quotient & 2) cc |= FPU_SW_C3;
@@ -264,13 +265,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FPREM(bxInstruction_c *i)
 
   floatx80 a = BX_READ_FPU_REG(0);
   floatx80 b = BX_READ_FPU_REG(1);
+  floatx80 result;
 
-  floatx80 result = floatx80_remainder(a, b, quotient, status);
+  int flags = floatx80_remainder(a, b, result, quotient, status);
 
   if (! FPU_exception(status.float_exception_flags)) {
-     if (! floatx80_is_nan(result)) {
+     if (flags >= 0) {
         int cc = 0;
-        if (quotient == (Bit64u) -1) cc = FPU_SW_C2;
+        if (flags) cc = FPU_SW_C2;
         else {
            if (quotient & 1) cc |= FPU_SW_C1;
            if (quotient & 2) cc |= FPU_SW_C3;
