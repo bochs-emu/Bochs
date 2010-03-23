@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.308 2010-03-19 17:00:05 sshwarts Exp $
+// $Id: cpu.cc,v 1.309 2010-03-23 19:58:20 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -728,7 +728,7 @@ void BX_CPU_C::prefetch(void)
   bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[TLB_index];
   Bit8u *fetchPtr = 0;
 
-  if ((tlbEntry->lpf == lpf) && !(tlbEntry->accessBits & USER_PL)) {
+  if ((tlbEntry->lpf == lpf) && !(tlbEntry->accessBits & (0x4 | USER_PL))) {
     BX_CPU_THIS_PTR pAddrPage = tlbEntry->ppf;
     fetchPtr = (Bit8u*) tlbEntry->hostPageAddr;
   }  

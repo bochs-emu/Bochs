@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.194 2010-03-19 17:00:05 sshwarts Exp $
+// $Id: paging.cc,v 1.195 2010-03-23 19:58:20 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -454,12 +454,18 @@ static unsigned priv_check[BX_PRIV_CHECK_SIZE];
 //       value, necessitating a TLB flush when CR0.WP changes.
 //
 //       The test is:
-//         OK = (accessBits & ((W<<1) | U)) <> 0  [W:1=Write, 0=Read, U:1=CPL3,0=CPL0-2]
+//         OK = (accessBits & ((E<<2) | (W<<1) | U)) <> 0
+//
+//       where E:1=Execute, 0=Data;
+//             W:1=Write, 0=Read;
+//             U:1=CPL3, 0=CPL0-2
 //
 //       Thus for reads, it is:
 //         OK =       (          U )
-//       And for writes:
+//       for writes:
 //         OK = 0x2 | (          U )
+//       and for code fetches:
+//         OK = 0x4 | (          U )
 //
 //       Note, that the TLB should have TLB_HostPtr bit set when direct
 //       access through host pointer is NOT allowed for the page. A memory
@@ -470,6 +476,7 @@ static unsigned priv_check[BX_PRIV_CHECK_SIZE];
 
 #define TLB_SysOnly     (0x1)
 #define TLB_ReadOnly    (0x2)
+#define TLB_NoExecute   (0x4)
 
 #define TLB_HostPtr     (0x800) /* set this bit when direct access is NOT allowed */
 
@@ -1181,7 +1188,8 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned curr_pl, un
   {
     paddress = tlbEntry->ppf | poffset;
 
-    if (! (tlbEntry->accessBits & ((isWrite<<1) | pl)))
+//  bx_bool isExecute = (rw == BX_EXECUTE);
+    if (! (tlbEntry->accessBits & (/* (isExecute<<2) |*/ (isWrite<<1) | pl)))
       return paddress;
 
     // The current access does not have permission according to the info
@@ -1350,6 +1358,12 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned curr_pl, un
 #if BX_CPU_LEVEL >= 6
   if (combined_access & 0x100) // Global bit
     tlbEntry->accessBits |= TLB_GlobalPage;
+#endif
+
+#if BX_SUPPORT_X86_64
+  // EFER.NXE change won't flush TLB
+  if (BX_CPU_THIS_PTR cr4.get_PAE() && rw != BX_EXECUTE)
+    tlbEntry->accessBits |= TLB_NoExecute;
 #endif
 
   // Attempt to get a host pointer to this physical page. Put that
