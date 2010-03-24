@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: soft_int.cc,v 1.60 2010-03-18 15:19:16 sshwarts Exp $
+// $Id: soft_int.cc,v 1.61 2010-03-24 21:26:13 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -112,13 +112,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INT_Ib(bxInstruction_c *i)
 
   Bit8u vector = i->Ib();
 
-  RSP_SPECULATIVE;
-
-  if (v8086_mode()) {
-    // redirect interrupt through virtual-mode idt
-    if (v86_redirect_interrupt(vector)) goto done;
-  }
-
 #if BX_SUPPORT_VMX
   VMexit_Event(i, BX_SOFTWARE_INTERRUPT, vector, 0, 0);
 #endif
@@ -128,6 +121,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INT_Ib(bxInstruction_c *i)
     BX_INFO(("INT 21/4C called AL=0x%02x, BX=0x%04x", (unsigned) AL, (unsigned) BX));
   }
 #endif
+
+  RSP_SPECULATIVE;
+
+  if (v8086_mode()) {
+    // redirect interrupt through virtual-mode idt
+    if (v86_redirect_interrupt(vector)) goto done;
+  }
 
   interrupt(vector, BX_SOFTWARE_INTERRUPT, 0, 0);
 
