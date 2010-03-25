@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: tasking.cc,v 1.88 2010-03-25 21:38:33 sshwarts Exp $
+// $Id: tasking.cc,v 1.89 2010-03-25 21:57:26 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2010  The Bochs Project
@@ -467,9 +467,17 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
   if ((tss_descriptor->type >= 9) && BX_CPU_THIS_PTR cr0.get_PG()) {
     // change CR3 only if it actually modified
     if (newCR3 != BX_CPU_THIS_PTR cr3) {
+      BX_DEBUG(("task_switch changing CR3 to 0x" FMT_PHY_ADDRX, newCR3));
+#if BX_CPU_LEVEL >= 6
+      if (BX_CPU_THIS_PTR cr0.get_PG() && BX_CPU_THIS_PTR cr4.get_PAE()) {
+        if (! CheckPDPTR(newCR3)) {
+          BX_ERROR(("task_switch(): PDPTR check failed !"));
+          exception(BX_GP_EXCEPTION, 0);
+        }
+      }
+#endif
       if (! SetCR3(newCR3)) // Tell paging unit about new cr3 value
         exception(BX_GP_EXCEPTION, 0);
-      BX_DEBUG(("task_switch changing CR3 to 0x" FMT_PHY_ADDRX, newCR3));
       BX_INSTR_TLB_CNTRL(BX_CPU_ID, BX_INSTR_TASKSWITCH, newCR3);
     }
   }
