@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.658 2010-03-25 21:33:06 sshwarts Exp $
+// $Id: cpu.h,v 1.659 2010-03-25 22:04:31 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2010  The Bochs Project
@@ -1012,7 +1012,7 @@ public: // for now...
   struct {
     bx_bool valid;
     Bit64u entry[4];
-  } PDPE_CACHE;
+  } PDPTR_CACHE;
 #endif
 
 #if BX_SUPPORT_X86_64

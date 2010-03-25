@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.196 2010-03-25 21:33:07 sshwarts Exp $
+// $Id: paging.cc,v 1.197 2010-03-25 22:04:31 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2010  The Bochs Project
@@ -526,19 +526,19 @@ bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::CheckPDPTR(Bit32u cr3_val)
   for (int n=0; n<4; n++) {
      // read PDPTE cache entry
      bx_phy_address entry_pdpe_addr = (bx_phy_address) (cr3_val | (n << 3));
-     access_read_physical(entry_pdpe_addr, 8, &(BX_CPU_THIS_PTR PDPE_CACHE.entry[n]));
+     access_read_physical(entry_pdpe_addr, 8, &(BX_CPU_THIS_PTR PDPTR_CACHE.entry[n]));
      BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, entry_pdpe_addr, 8, 
-         BX_READ, (Bit8u*)(&BX_CPU_THIS_PTR PDPE_CACHE.entry[n]));
-     Bit64u pdptr = BX_CPU_THIS_PTR PDPE_CACHE.entry[n];
+         BX_READ, (Bit8u*)(&BX_CPU_THIS_PTR PDPTR_CACHE.entry[n]));
+     Bit64u pdptr = BX_CPU_THIS_PTR PDPTR_CACHE.entry[n];
      if (pdptr & 0x1) {
         if (pdptr & PAGING_PAE_PDPTE_RESERVED_BITS) {
-           BX_CPU_THIS_PTR PDPE_CACHE.valid = 0;
+           BX_CPU_THIS_PTR PDPTR_CACHE.valid = 0;
            return 0;
         }
      }
   }
 
-  BX_CPU_THIS_PTR PDPE_CACHE.valid = 1;
+  BX_CPU_THIS_PTR PDPTR_CACHE.valid = 1;
 
   return 1; /* PDPTRs are fine */
 }
@@ -598,7 +598,7 @@ void BX_CPU_C::TLB_flush(void)
   }
 
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_THIS_PTR PDPE_CACHE.valid = 0;
+  BX_CPU_THIS_PTR PDPTR_CACHE.valid = 0;
 #endif
 
 #if BX_CPU_LEVEL >= 5
@@ -630,7 +630,7 @@ void BX_CPU_C::TLB_flushNonGlobal(void)
       BX_CPU_THIS_PTR TLB.split_large = 1;
   }
 
-  BX_CPU_THIS_PTR PDPE_CACHE.valid = 0;
+  BX_CPU_THIS_PTR PDPTR_CACHE.valid = 0;
 
 #if BX_SUPPORT_MONITOR_MWAIT
   // invalidating of the TLB might change translation for monitored page
@@ -671,10 +671,6 @@ void BX_CPU_C::TLB_invlpg(bx_address laddr)
       tlbEntry->lpf = BX_INVALID_TLB_ENTRY;
     }
   }
-
-#if BX_CPU_LEVEL >= 6
-  BX_CPU_THIS_PTR PDPE_CACHE.valid = 0;
-#endif
 
 #if BX_SUPPORT_MONITOR_MWAIT
   // invalidating of the TLB entry might change translation for monitored
@@ -1000,14 +996,14 @@ bx_phy_address BX_CPU_C::translate_linear_PAE(bx_address laddr, bx_address &lpf_
 
   pdpe_addr = (bx_phy_address) (BX_CPU_THIS_PTR cr3_masked | ((laddr & 0xc0000000) >> 27));
 
-  if (! BX_CPU_THIS_PTR PDPE_CACHE.valid) {
+  if (! BX_CPU_THIS_PTR PDPTR_CACHE.valid) {
     if (! CheckPDPTR(BX_CPU_THIS_PTR cr3_masked)) {
       BX_ERROR(("translate_linear_PAE(): PDPTR check failed !"));
       exception(BX_GP_EXCEPTION, 0);
     }
   }
 
-  pdpe = BX_CPU_THIS_PTR PDPE_CACHE.entry[(laddr >> 30) & 3];
+  pdpe = BX_CPU_THIS_PTR PDPTR_CACHE.entry[(laddr >> 30) & 3];
 
   fault = check_entry_PAE("PDPE", pdpe, PAGING_PAE_PDPTE_RESERVED_BITS, rw, &nx_fault);
   if (fault >= 0)

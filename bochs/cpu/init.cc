@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.233 2010-03-25 21:33:07 sshwarts Exp $
+// $Id: init.cc,v 1.234 2010-03-25 22:04:31 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -413,6 +413,15 @@ void BX_CPU_C::register_state(void)
 
   BXRS_HEX_PARAM_SIMPLE(cpu, smbase);
 
+#if BX_CPU_LEVEL >= 6
+  bx_list_c *PDPTRS = new bx_list_c(cpu, "PDPTR_CACHE", 5);
+  BXRS_PARAM_BOOL(PDPTRS, valid, PDPTR_CACHE.valid);
+  BXRS_HEX_PARAM_FIELD(PDPTRS, entry0, PDPTR_CACHE.entry[0]);
+  BXRS_HEX_PARAM_FIELD(PDPTRS, entry1, PDPTR_CACHE.entry[1]);
+  BXRS_HEX_PARAM_FIELD(PDPTRS, entry2, PDPTR_CACHE.entry[2]);
+  BXRS_HEX_PARAM_FIELD(PDPTRS, entry3, PDPTR_CACHE.entry[3]);
+#endif
+
 #if BX_CPU_LEVEL >= 5
   bx_list_c *MSR = new bx_list_c(cpu, "MSR", 45);
 
@@ -467,7 +476,7 @@ void BX_CPU_C::register_state(void)
   BXRS_HEX_PARAM_FIELD(MSR, mtrr_deftype, msr.mtrr_deftype);
 #endif
 #if BX_CONFIGURE_MSRS
-  bx_list_c *MSRS = new bx_list_c(cpu, "MSRS", BX_MSR_MAX_INDEX);
+  bx_list_c *MSRS = new bx_list_c(cpu, "USER_MSR", BX_MSR_MAX_INDEX);
   for(n=0; n < BX_MSR_MAX_INDEX; n++) {
     if (! msrs[n]) continue;
     sprintf(name, "msr_0x%03x", n);
