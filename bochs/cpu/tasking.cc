@@ -1,8 +1,8 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: tasking.cc,v 1.86 2010-03-18 15:19:16 sshwarts Exp $
+// $Id: tasking.cc,v 1.87 2010-03-25 21:33:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2009  The Bochs Project
+//  Copyright (C) 2001-2010  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public

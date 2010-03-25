@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: smm.cc,v 1.65 2010-03-16 14:51:20 sshwarts Exp $
+// $Id: smm.cc,v 1.66 2010-03-25 21:33:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2006-2009 Stanislav Shwartsman
@@ -178,12 +178,12 @@ void BX_CPU_C::enter_system_management_mode(void)
   BX_CPU_THIS_PTR cr0.set_TS(0); // no task switch (bit 3)
   BX_CPU_THIS_PTR cr0.set_PG(0); // paging disabled (bit 31)
 
-  // paging mode was changed - flush TLB
-  TLB_flush(); //  Flush Global entries also
-
 #if BX_CPU_LEVEL >= 4
   BX_CPU_THIS_PTR cr4.set32(0);
 #endif
+
+  // paging mode was changed - flush TLB
+  TLB_flush(); //  Flush Global entries also
 
 #if BX_SUPPORT_X86_64
   BX_CPU_THIS_PTR efer.set32(0);
@@ -600,7 +600,10 @@ bx_bool BX_CPU_C::smram_restore_state(const Bit32u *saved_state)
   setEFlags(temp_eflags);
 
   bx_phy_address temp_cr3 = (bx_phy_address) SMRAM_FIELD64(saved_state, SMRAM_FIELD_CR3_HI32, SMRAM_FIELD_CR3);
-  SetCR3(temp_cr3);
+  if (!SetCR3(temp_cr3)) {
+    BX_PANIC(("SMM restore: failed to restore CR3 !"));
+    return 0;
+  }
 
   for (int n=0; n<BX_GENERAL_REGISTERS; n++) {
     Bit64u val_64 = SMRAM_FIELD64(saved_state,

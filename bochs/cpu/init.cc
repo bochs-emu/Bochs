@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.232 2010-03-16 14:51:20 sshwarts Exp $
+// $Id: init.cc,v 1.233 2010-03-25 21:33:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -686,7 +686,8 @@ void BX_CPU_C::after_restore_state(void)
 
   if (!SetCR0(cr0.val32))
     BX_PANIC(("Incorrect CR0 state !"));
-  SetCR3(cr3);
+  if (!SetCR3(cr3))
+    BX_PANIC(("Incorrect CR3 value !"));
   TLB_flush();
 #if BX_SUPPORT_VMX
   set_VMCSPTR(BX_CPU_THIS_PTR vmcsptr);
@@ -1179,13 +1180,12 @@ void BX_CPU_C::assert_checks(void)
   }
 
   // check CR0 consistency
-  if (BX_CPU_THIS_PTR cr0.get_PG() && ! BX_CPU_THIS_PTR cr0.get_PE())
-    BX_PANIC(("assert_checks: CR0.PG=1 with CR0.PE=0 !"));
-#if BX_CPU_LEVEL >= 4
-  if (BX_CPU_THIS_PTR cr0.get_NW() && ! BX_CPU_THIS_PTR cr0.get_CD())
-    BX_PANIC(("assert_checks: CR0.NW=1 with CR0.CD=0 !"));
-#endif
+  if (! check_CR0(BX_CPU_THIS_PTR cr0.val32))
+    BX_PANIC(("assert_checks: CR0 consistency checks failed !"));
 
+  // check CR4 consistency
+  if (! check_CR4(BX_CPU_THIS_PTR cr4.val32))
+    BX_PANIC(("assert_checks: CR4 consistency checks failed !"));
 
 #if BX_SUPPORT_X86_64
   // VM should be OFF in long mode

@@ -1,8 +1,8 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.657 2010-03-19 10:00:48 sshwarts Exp $
+// $Id: cpu.h,v 1.658 2010-03-25 21:33:06 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2009  The Bochs Project
+//  Copyright (C) 2001-2010  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -3131,12 +3131,12 @@ public: // for now...
   BX_SMF bx_bool smram_restore_state(const Bit32u *smm_saved_state);
   BX_SMF int  int_number(unsigned s);
   BX_SMF bx_bool SetCR0(bx_address val) BX_CPP_AttrRegparmN(1);
-  BX_SMF void SetCR3(bx_address val) BX_CPP_AttrRegparmN(1);
+  BX_SMF bx_bool check_CR0(bx_address val) BX_CPP_AttrRegparmN(1);
+  BX_SMF bx_bool SetCR3(bx_address val) BX_CPP_AttrRegparmN(1);
 #if BX_CPU_LEVEL >= 4
   BX_SMF bx_bool SetCR4(bx_address val) BX_CPP_AttrRegparmN(1);
+  BX_SMF bx_bool check_CR4(bx_address val) BX_CPP_AttrRegparmN(1);
 #endif
-  BX_SMF void pagingCR0Changed(Bit32u oldCR0, Bit32u newCR0) BX_CPP_AttrRegparmN(2);
-  BX_SMF void pagingCR4Changed(Bit32u oldCR4, Bit32u newCR4) BX_CPP_AttrRegparmN(2);
 #if BX_CPU_LEVEL >= 6
   BX_SMF bx_bool CheckPDPTR(Bit32u cr3_val) BX_CPP_AttrRegparmN(1);
 #endif

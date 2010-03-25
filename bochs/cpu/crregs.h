@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: crregs.h,v 1.22 2010-02-26 22:53:43 sshwarts Exp $
+// $Id: crregs.h,v 1.23 2010-03-25 21:33:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007-2009 Stanislav Shwartsman
@@ -64,8 +64,8 @@ struct bx_cr0_t {
   IMPLEMENT_CRREG_ACCESSORS(NE, 5);
   IMPLEMENT_CRREG_ACCESSORS(WP, 16);
   IMPLEMENT_CRREG_ACCESSORS(AM, 18);
-  IMPLEMENT_CRREG_ACCESSORS(CD, 29);
-  IMPLEMENT_CRREG_ACCESSORS(NW, 30);
+  IMPLEMENT_CRREG_ACCESSORS(NW, 29);
+  IMPLEMENT_CRREG_ACCESSORS(CD, 30);
 #endif
   IMPLEMENT_CRREG_ACCESSORS(PG, 31);
 

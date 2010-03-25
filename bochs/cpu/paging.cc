@@ -1,8 +1,8 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.195 2010-03-23 19:58:20 sshwarts Exp $
+// $Id: paging.cc,v 1.196 2010-03-25 21:33:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2009  The Bochs Project
+//  Copyright (C) 2001-2010  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -516,65 +516,6 @@ static unsigned tlbNonGlobalFlushes=0;
 #endif
 
 // ==============================================================
-
-  void BX_CPP_AttrRegparmN(2)
-BX_CPU_C::pagingCR0Changed(Bit32u oldCR0, Bit32u newCR0)
-{
-  // Modification of PG,PE flushes TLB cache according to docs.
-  // Additionally, the TLB strategy is based on the current value of
-  // WP, so if that changes we must also flush the TLB.
-  if ((oldCR0 & 0x80010001) != (newCR0 & 0x80010001))
-    TLB_flush(); // Flush Global entries also.
-}
-
-  void BX_CPP_AttrRegparmN(2)
-BX_CPU_C::pagingCR4Changed(Bit32u oldCR4, Bit32u newCR4)
-{
-  // Modification of PGE,PAE,PSE flushes TLB cache according to docs.
-  if ((oldCR4 & 0x000000b0) != (newCR4 & 0x000000b0))
-    TLB_flush(); // Flush Global entries also.
-
-#if BX_CPU_LEVEL >= 6
-  if ((oldCR4 & 0x00000020) != (newCR4 & 0x00000020)) {
-    if (BX_CPU_THIS_PTR cr4.get_PAE() && !long_mode())
-      BX_CPU_THIS_PTR cr3_masked = BX_CPU_THIS_PTR cr3 & 0xffffffe0;
-    else
-      BX_CPU_THIS_PTR cr3_masked = BX_CPU_THIS_PTR cr3 & BX_CONST64(0x000ffffffffff000);
-  }
-#endif
-}
-
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::SetCR3(bx_address val)
-{
-  // flush TLB even if value does not change
-#if BX_CPU_LEVEL >= 6
-  if (BX_CPU_THIS_PTR cr4.get_PGE())
-    TLB_flushNonGlobal(); // Don't flush Global entries.
-  else
-#endif
-    TLB_flush();          // Flush Global entries also.
-
-#if BX_CPU_LEVEL >= 6
-  if (BX_CPU_THIS_PTR cr4.get_PAE()) {
-#if BX_SUPPORT_X86_64
-    if (long_mode()) {
-      if (! IsValidPhyAddr(val)) {
-        BX_ERROR(("SetCR3(): Attempt to write to reserved bits of CR3"));
-        exception(BX_GP_EXCEPTION, 0);
-      }
-
-      BX_CPU_THIS_PTR cr3_masked = val & BX_CONST64(0x000ffffffffff000);
-    }
-    else
-#endif
-      BX_CPU_THIS_PTR cr3_masked = val & 0xffffffe0;
-  }
-  else
-#endif
-    BX_CPU_THIS_PTR cr3_masked = val & 0xfffff000;
-
-  BX_CPU_THIS_PTR cr3 = val;
-}
 
 #if BX_CPU_LEVEL >= 6
 

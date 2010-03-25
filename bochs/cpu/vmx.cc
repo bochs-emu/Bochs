@@ -1,8 +1,8 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmx.cc,v 1.45 2010-03-19 11:38:21 sshwarts Exp $
+// $Id: vmx.cc,v 1.46 2010-03-25 21:33:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2009 Stanislav Shwartsman
+//   Copyright (c) 2009-2010 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -1269,20 +1269,28 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
      BX_CPU_THIS_PTR efer.set32(BX_CPU_THIS_PTR efer.get32() & ~((1 << 8) | (1 << 10)));
 #endif
 
-  Bit32u old_cr0 = BX_CPU_THIS_PTR cr0.get32();
-
+// keep bits ET(4), reserved bits 15:6, 17, 28:19, NW(29), CD(30)
 #define VMX_KEEP_CR0_BITS 0x7FFAFFD0
 
-  // load CR0, keep bits ET(4), reserved bits 15:6, 17, 28:19, NW(29), CD(30)
-  if (!SetCR0((old_cr0 & VMX_KEEP_CR0_BITS) | (guest.cr0 & ~VMX_KEEP_CR0_BITS))) {
+  Bit32u old_cr0 = BX_CPU_THIS_PTR cr0.get32();
+  guest.cr0 = (old_cr0 & VMX_KEEP_CR0_BITS) | (guest.cr0 & ~VMX_KEEP_CR0_BITS);
+
+  if (! check_CR0(guest.cr0)) {
     BX_PANIC(("VMENTER CR0 is broken !"));
   }
-  if (!SetCR4(guest.cr4)) { // cannot fail if CR4 checks were correct
+  if (! check_CR4(guest.cr4)) {
     BX_PANIC(("VMENTER CR4 is broken !"));
   }
-  SetCR3(guest.cr3);
 
-  // flush TLB to invalidate possible APIC ACCESS PAGE caching by host
+  BX_CPU_THIS_PTR cr0.set32(guest.cr0);
+  BX_CPU_THIS_PTR cr4.set32(guest.cr4);
+
+  if (! SetCR3(guest.cr3)) {
+    BX_PANIC(("VMENTER CR3 is broken !"));
+  }
+
+  // flush TLB is always needed to invalidate possible
+  // APIC ACCESS PAGE caching by host
   TLB_flush();
 
   if (vmentry_ctrls & VMX_VMENTRY_CTRL1_LOAD_DBG_CTRLS) {
@@ -1607,13 +1615,23 @@ void BX_CPU_C::VMexitLoadHostState(void)
   Bit32u old_cr0 = BX_CPU_THIS_PTR cr0.get32();
 
   // ET, CD, NW, 28:19, 17, 15:6, and VMX fixed bits not modified Section 19.8
-  if (!SetCR0((old_cr0 & VMX_KEEP_CR0_BITS) | (host_state->cr0 & ~VMX_KEEP_CR0_BITS))) {
+  host_state->cr0 = (old_cr0 & VMX_KEEP_CR0_BITS) | (host_state->cr0 & ~VMX_KEEP_CR0_BITS);
+
+  if (! check_CR0(host_state->cr0)) {
     BX_PANIC(("VMEXIT CR0 is broken !"));
   }
-  if (!SetCR4(host_state->cr4)) {
+  if (! check_CR4(host_state->cr4)) {
     BX_PANIC(("VMEXIT CR4 is broken !"));
   }
-  SetCR3(host_state->cr3);
+
+  BX_CPU_THIS_PTR cr0.set32(host_state->cr0);
+  BX_CPU_THIS_PTR cr4.set32(host_state->cr4);
+
+  TLB_flush(); // CR0/CR4 updated
+
+  if (! SetCR3(host_state->cr3)) {
+    BX_PANIC(("VMEXIT CR3 is broken !"));
+  }
 
   BX_CPU_THIS_PTR dr7 = 0x00000400;
 

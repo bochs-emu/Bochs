@@ -1,8 +1,8 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.155 2010-03-20 13:58:02 sshwarts Exp $
+// $Id: exception.cc,v 1.156 2010-03-25 21:33:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2009  The Bochs Project
+//  Copyright (C) 2001-2010  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
