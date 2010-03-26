@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.cc,v 1.135 2010-03-01 17:35:49 sshwarts Exp $
+// $Id: apic.cc,v 1.136 2010-03-26 11:17:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (c) 2002-2009 Zwane Mwaikambo, Stanislav Shwartsman
@@ -375,7 +375,7 @@ void bx_local_apic_c::write_aligned(bx_phy_address addr, Bit32u value)
       break;
     case BX_LAPIC_ICR_LO: // interrupt command reg 0-31
       icr_lo = value & ~(1<<12);  // force delivery status bit = 0(idle)
-      send_ipi();
+      send_ipi((icr_hi >> 24) & 0xff, icr_lo);
       break;
     case BX_LAPIC_ICR_HI: // interrupt command reg 31-63
       icr_hi = value & 0xff000000;
@@ -440,15 +440,14 @@ void bx_local_apic_c::write_aligned(bx_phy_address addr, Bit32u value)
   }
 }
 
-void bx_local_apic_c::send_ipi(void)
+void bx_local_apic_c::send_ipi(Bit8u dest, Bit32u lo_cmd)
 {
-  int dest = (icr_hi >> 24) & 0xff;
-  int dest_shorthand = (icr_lo >> 18) & 3;
-  int trig_mode = (icr_lo >> 15) & 1;
-  int level = (icr_lo >> 14) & 1;
-  int logical_dest = (icr_lo >> 11) & 1;
-  int delivery_mode = (icr_lo >> 8) & 7;
-  int vector = (icr_lo & 0xff);
+  int dest_shorthand = (lo_cmd >> 18) & 3;
+  int trig_mode = (lo_cmd >> 15) & 1;
+  int level = (lo_cmd >> 14) & 1;
+  int logical_dest = (lo_cmd >> 11) & 1;
+  int delivery_mode = (lo_cmd >> 8) & 7;
+  int vector = (lo_cmd & 0xff);
   int accepted = 0;
 
   if(delivery_mode == APIC_DM_INIT)

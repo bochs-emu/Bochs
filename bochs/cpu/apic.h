@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.h,v 1.51 2010-02-28 14:52:16 sshwarts Exp $
+// $Id: apic.h,v 1.52 2010-03-26 11:17:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (c) 2002-2009 Zwane Mwaikambo, Stanislav Shwartsman
@@ -134,7 +134,7 @@ public:
   Bit8u acknowledge_int(void);  // only the local CPU should call this
   int highest_priority_int(Bit8u *array);
   void receive_EOI(Bit32u value);
-  void send_ipi(void);
+  void send_ipi(Bit8u dest, Bit32u lo_cmd);
   void write_spurious_interrupt_register(Bit32u value);
   void service_local_apic(void);
   void print_status(void);
