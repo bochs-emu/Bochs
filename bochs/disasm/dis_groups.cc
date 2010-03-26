@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dis_groups.cc,v 1.50 2010-03-19 14:43:13 sshwarts Exp $
+// $Id: dis_groups.cc,v 1.51 2010-03-26 10:39:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005-2009 Stanislav Shwartsman
@@ -235,6 +235,12 @@ void disassembler::Gd(const x86_insn *insn)
 void disassembler::Gq(const x86_insn *insn)
 {
   dis_sprintf("%s", general_64bit_regname[insn->nnn]);
+}
+
+void disassembler::Gy(const x86_insn *insn)
+{
+  if (insn->os_64) Gq(insn);
+  else Gd(insn);
 }
 
 // immediate

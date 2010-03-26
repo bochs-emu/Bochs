@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: opcodes.inc,v 1.35 2010-03-19 14:43:13 sshwarts Exp $
+// $Id: opcodes.inc,v 1.36 2010-03-26 10:39:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005-2009 Stanislav Shwartsman
@@ -479,7 +479,9 @@ Ia_int3 = { "int3", "int3", XX, XX, XX, XX, 0 },
 Ia_into = { "into", "into", XX, XX, XX, XX, 0 },
 Ia_Invalid = { "(invalid)", "(invalid)", XX, XX, XX, XX, 0 },
 Ia_invd = { "invd", "invd", XX, XX, XX, XX, IA_486 },
+Ia_invept_Gy_Mdq = { "invept", "invept", Gy, Mdq, XX, XX, IA_VMX },
 Ia_invlpg = { "invlpg", "invlpg", Mx, XX, XX, XX, IA_486 },
+Ia_invvpid_Gy_Mdq = { "invvpid", "invvpid", Gy, Mdq, XX, XX, IA_VMX },
 Ia_inw_AX_DX = { "in", "inw", AX_Reg, DX_Reg, XX, XX, 0 },
 Ia_inw_AX_Ib = { "in", "inw", AX_Reg, Ib, XX, XX, 0 },
 Ia_iretl = { "iretd", "iretd", XX, XX, XX, XX, 0 },

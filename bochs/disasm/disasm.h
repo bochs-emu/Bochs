@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: disasm.h,v 1.58 2010-03-19 14:43:13 sshwarts Exp $
+// $Id: disasm.h,v 1.59 2010-03-26 10:39:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005-2009 Stanislav Shwartsman
@@ -455,6 +455,7 @@ public:
   void Gw(const x86_insn *insn);
   void Gd(const x86_insn *insn);
   void Gq(const x86_insn *insn);
+  void Gy(const x86_insn *insn);
 
   void Hbd(const x86_insn *insn);
   void Hwd(const x86_insn *insn);

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dis_tables_sse.inc,v 1.6 2010-03-21 20:03:17 sshwarts Exp $
+// $Id: dis_tables_sse.inc,v 1.7 2010-03-26 10:39:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005-2010 Stanislav Shwartsman
@@ -1225,8 +1225,8 @@ static BxDisasmOpcodeTable_t BxDisasm3ByteOpTable0f38[256] = {
   /* 7D */ { 0, &Ia_Invalid },
   /* 7E */ { 0, &Ia_Invalid },
   /* 7F */ { 0, &Ia_Invalid },
-  /* 80 */ { 0, &Ia_Invalid },
-  /* 81 */ { 0, &Ia_Invalid },
+  /* 80 */ { GRPSSE66(Ia_invept_Gy_Mdq) },
+  /* 81 */ { GRPSSE66(Ia_invvpid_Gy_Mdq) },
   /* 82 */ { 0, &Ia_Invalid },
   /* 83 */ { 0, &Ia_Invalid },
   /* 84 */ { 0, &Ia_Invalid },
