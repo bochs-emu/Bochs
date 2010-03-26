@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ioapic.h,v 1.36 2010-02-28 14:52:17 sshwarts Exp $
+// $Id: ioapic.h,v 1.37 2010-03-26 13:00:14 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2009  The Bochs Project
@@ -25,8 +25,8 @@
 
 #if BX_SUPPORT_APIC
 
-extern int apic_bus_deliver_lowest_priority(Bit8u vector, Bit8u dest, bx_bool trig_mode, bx_bool broadcast);
-extern int apic_bus_deliver_interrupt(Bit8u vector, Bit8u dest, Bit8u delivery_mode, bx_bool logical_dest, bx_bool level, bx_bool trig_mode);
+extern int apic_bus_deliver_lowest_priority(Bit8u vector, Bit32u dest, bx_bool trig_mode, bx_bool broadcast);
+extern int apic_bus_deliver_interrupt(Bit8u vector, Bit32u dest, Bit8u delivery_mode, bx_bool logical_dest, bx_bool level, bx_bool trig_mode);
 extern int apic_bus_broadcast_interrupt(Bit8u vector, Bit8u delivery_mode, bx_bool trig_mode, int exclude_cpu);
 
 #define BX_IOAPIC_NUM_PINS   (0x18)
