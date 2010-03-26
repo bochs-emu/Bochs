@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: msr.cc,v 1.42 2010-03-19 21:04:00 sshwarts Exp $
+// $Id: msr.cc,v 1.43 2010-03-26 21:26:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008-2009 Stanislav Shwartsman
@@ -283,6 +283,34 @@ BX_CPP_INLINE bx_bool isMemTypeValidPAT(unsigned memtype)
 {
   return (memtype == 0x07) /* UC- */ || isMemTypeValidMTRR(memtype);
 }
+
+bx_bool isValidMSR_PAT(Bit64u pat_msr)
+{
+  if (! isMemTypeValidPAT(pat_msr & 0xFF) ||
+      ! isMemTypeValidPAT((pat_msr >>  8) & 0xFF) || 
+      ! isMemTypeValidPAT((pat_msr >> 16) & 0xFF) || 
+      ! isMemTypeValidPAT((pat_msr >> 24) & 0xFF) ||
+      ! isMemTypeValidPAT((pat_msr >> 32) & 0xFF) ||
+      ! isMemTypeValidPAT((pat_msr >> 40) & 0xFF) || 
+      ! isMemTypeValidPAT((pat_msr >> 48) & 0xFF) || 
+      ! isMemTypeValidPAT(pat_msr >> 56)) return 0;
+
+  return 1;
+}
+
+bx_bool isValidMSR_FixedMTRR(Bit64u fixed_mtrr_msr)
+{
+  if (! isMemTypeValidMTRR(fixed_mtrr_msr & 0xFF) ||
+      ! isMemTypeValidMTRR((fixed_mtrr_msr >>  8) & 0xFF) || 
+      ! isMemTypeValidMTRR((fixed_mtrr_msr >> 16) & 0xFF) || 
+      ! isMemTypeValidMTRR((fixed_mtrr_msr >> 24) & 0xFF) ||
+      ! isMemTypeValidMTRR((fixed_mtrr_msr >> 32) & 0xFF) ||
+      ! isMemTypeValidMTRR((fixed_mtrr_msr >> 40) & 0xFF) || 
+      ! isMemTypeValidMTRR((fixed_mtrr_msr >> 48) & 0xFF) || 
+      ! isMemTypeValidMTRR(fixed_mtrr_msr >> 56)) return 0;
+
+  return 1;
+}
 #endif
 
 #if BX_CPU_LEVEL >= 5
@@ -387,15 +415,7 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
       break;
 
     case BX_MSR_MTRRFIX64K_00000:
-      if (! isMemTypeValidMTRR(val32_lo & 0xFF) ||
-          ! isMemTypeValidMTRR((val32_lo >>  8) & 0xFF) || 
-          ! isMemTypeValidMTRR((val32_lo >> 16) & 0xFF) || 
-          ! isMemTypeValidMTRR(val32_lo >> 24) ||
-          ! isMemTypeValidMTRR(val32_hi & 0xFF) ||
-          ! isMemTypeValidMTRR((val32_hi >>  8) & 0xFF) || 
-          ! isMemTypeValidMTRR((val32_hi >> 16) & 0xFF) || 
-          ! isMemTypeValidMTRR(val32_hi >> 24))
-      {
+      if (! isValidMSR_FixedMTRR(val_64)) {
         BX_ERROR(("WRMSR: attempt to write invalid Memory Type to MSR_MTRRFIX64K_00000 !"));
         return 0;
       }
@@ -403,15 +423,7 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
       break;
     case BX_MSR_MTRRFIX16K_80000:
     case BX_MSR_MTRRFIX16K_A0000:
-      if (! isMemTypeValidMTRR(val32_lo & 0xFF) ||
-          ! isMemTypeValidMTRR((val32_lo >>  8) & 0xFF) || 
-          ! isMemTypeValidMTRR((val32_lo >> 16) & 0xFF) || 
-          ! isMemTypeValidMTRR(val32_lo >> 24) ||
-          ! isMemTypeValidMTRR(val32_hi & 0xFF) ||
-          ! isMemTypeValidMTRR((val32_hi >>  8) & 0xFF) || 
-          ! isMemTypeValidMTRR((val32_hi >> 16) & 0xFF) || 
-          ! isMemTypeValidMTRR(val32_hi >> 24))
-      {
+      if (! isValidMSR_FixedMTRR(val_64)) {
         BX_ERROR(("WRMSR: attempt to write invalid Memory Type to MSR_MTRRFIX16K regsiter !"));
         return 0;
       }
@@ -426,15 +438,7 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
     case BX_MSR_MTRRFIX4K_E8000:
     case BX_MSR_MTRRFIX4K_F0000:
     case BX_MSR_MTRRFIX4K_F8000:
-      if (! isMemTypeValidMTRR(val32_lo & 0xFF) ||
-          ! isMemTypeValidMTRR((val32_lo >>  8) & 0xFF) || 
-          ! isMemTypeValidMTRR((val32_lo >> 16) & 0xFF) || 
-          ! isMemTypeValidMTRR(val32_lo >> 24) ||
-          ! isMemTypeValidMTRR(val32_hi & 0xFF) ||
-          ! isMemTypeValidMTRR((val32_hi >>  8) & 0xFF) || 
-          ! isMemTypeValidMTRR((val32_hi >> 16) & 0xFF) || 
-          ! isMemTypeValidMTRR(val32_hi >> 24))
-      {
+      if (! isValidMSR_FixedMTRR(val_64)) {
         BX_ERROR(("WRMSR: attempt to write invalid Memory Type to fixed memory range MTRR !"));
         return 0;
       }
@@ -442,15 +446,7 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
       break;
 
     case BX_MSR_PAT:
-      if (! isMemTypeValidPAT(val32_lo & 0xFF) ||
-          ! isMemTypeValidPAT((val32_lo >>  8) & 0xFF) || 
-          ! isMemTypeValidPAT((val32_lo >> 16) & 0xFF) || 
-          ! isMemTypeValidPAT(val32_lo >> 24) ||
-          ! isMemTypeValidPAT(val32_hi & 0xFF) ||
-          ! isMemTypeValidPAT((val32_hi >>  8) & 0xFF) || 
-          ! isMemTypeValidPAT((val32_hi >> 16) & 0xFF) || 
-          ! isMemTypeValidPAT(val32_hi >> 24))
-      {
+      if (! isValidMSR_PAT(val_64)) {
         BX_ERROR(("WRMSR: attempt to write invalid Memory Type to MSR_PAT"));
         return 0;
       }

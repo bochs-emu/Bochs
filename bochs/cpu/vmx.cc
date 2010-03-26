@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmx.cc,v 1.46 2010-03-25 21:33:07 sshwarts Exp $
+// $Id: vmx.cc,v 1.47 2010-03-26 21:26:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2009-2010 Stanislav Shwartsman
@@ -36,6 +36,8 @@
 #if BX_SUPPORT_VMX
 
 #define VMCSPTR_VALID() (BX_CPU_THIS_PTR vmcsptr != BX_INVALID_VMCSPTR)
+
+extern bx_bool isValidMSR_PAT(Bit64u pat_msr);
 
 ////////////////////////////////////////////////////////////
 // VMCS access
@@ -704,6 +706,14 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckHostState(void)
   }
 #endif
 
+  if (vmexit_ctrls & VMX_VMEXIT_CTRL1_LOAD_PAT_MSR) {
+    host_state->pat_msr = VMread64(VMCS_64BIT_HOST_IA32_PAT);
+    if (! isValidMSR_PAT(host_state->pat_msr)) {
+      BX_ERROR(("VMFAIL: invalid Memory Type in host MSR_PAT"));
+      return VMXERR_VMENTRY_INVALID_VM_HOST_STATE_FIELD;
+    }
+  }
+
   host_state->rsp = (bx_address) VMread64(VMCS_HOST_RSP);
   host_state->rip = (bx_address) VMread64(VMCS_HOST_RIP);
 
@@ -1130,6 +1140,14 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
   }
 #endif
 
+  if (vmentry_ctrls & VMX_VMENTRY_CTRL1_LOAD_PAT_MSR) {
+    guest.pat_msr = VMread64(VMCS_64BIT_GUEST_IA32_PAT);
+    if (! isValidMSR_PAT(guest.pat_msr)) {
+      BX_ERROR(("VMENTER FAIL: invalid Memory Type in guest MSR_PAT"));
+      return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
+    }
+  }
+
   guest.rip = VMread64(VMCS_GUEST_RIP);
   guest.rsp = VMread64(VMCS_GUEST_RSP);
 
@@ -1328,6 +1346,10 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
   BX_CPU_THIS_PTR msr.sysenter_esp_msr = guest.sysenter_esp_msr;
   BX_CPU_THIS_PTR msr.sysenter_eip_msr = guest.sysenter_eip_msr;
   BX_CPU_THIS_PTR msr.sysenter_cs_msr  = guest.sysenter_cs_msr;
+
+  if (vmentry_ctrls & VMX_VMENTRY_CTRL1_LOAD_PAT_MSR) {
+    BX_CPU_THIS_PTR msr.pat = guest.pat_msr;
+  }
 
   //
   // Load Guest Non-Registers State -> VMENTER
@@ -1574,6 +1596,9 @@ void BX_CPU_C::VMexitSaveGuestState(void)
   VMwrite64(VMCS_GUEST_IA32_SYSENTER_EIP_MSR, BX_CPU_THIS_PTR msr.sysenter_eip_msr);
   VMwrite32(VMCS_32BIT_GUEST_IA32_SYSENTER_CS_MSR, BX_CPU_THIS_PTR msr.sysenter_cs_msr);
 
+  if (vm->vmexit_ctrls & VMX_VMEXIT_CTRL1_STORE_PAT_MSR)
+    VMwrite64(VMCS_64BIT_GUEST_IA32_PAT, BX_CPU_THIS_PTR msr.pat);
+
   Bit32u tmpDR6 = BX_CPU_THIS_PTR debug_trap;
   if (tmpDR6 & 0xf) tmpDR6 |= (1 << 12);
   VMwrite64(VMCS_GUEST_PENDING_DBG_EXCEPTIONS, tmpDR6 & 0x0000500f);
@@ -1638,6 +1663,10 @@ void BX_CPU_C::VMexitLoadHostState(void)
   BX_CPU_THIS_PTR msr.sysenter_cs_msr = host_state->sysenter_cs_msr;
   BX_CPU_THIS_PTR msr.sysenter_esp_msr = host_state->sysenter_esp_msr;
   BX_CPU_THIS_PTR msr.sysenter_eip_msr = host_state->sysenter_eip_msr;
+
+  if (vmexit_ctrls & VMX_VMEXIT_CTRL1_LOAD_PAT_MSR) {
+    BX_CPU_THIS_PTR msr.pat = host_state->pat_msr;
+  }
 
   // CS selector loaded from VMCS
   //    valid   <= 1
