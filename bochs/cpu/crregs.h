@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: crregs.h,v 1.23 2010-03-25 21:33:07 sshwarts Exp $
+// $Id: crregs.h,v 1.24 2010-03-26 11:09:12 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007-2009 Stanislav Shwartsman
@@ -101,9 +101,10 @@ struct bx_cr4_t {
   BX_CPP_INLINE Bit32u get32() { return val32; }
   BX_CPP_INLINE void set32(Bit32u val) { val32 = val; }
 };
-#endif  // #if BX_CPU_LEVEL >= 4
 
-extern bx_address get_cr4_allow_mask(void);
+extern bx_address get_cr4_allow_mask(Bit32u);
+
+#endif  // #if BX_CPU_LEVEL >= 4
 
 #if BX_SUPPORT_X86_64
 

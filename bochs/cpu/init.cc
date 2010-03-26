@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.234 2010-03-25 22:04:31 sshwarts Exp $
+// $Id: init.cc,v 1.235 2010-03-26 11:09:12 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -1192,9 +1192,11 @@ void BX_CPU_C::assert_checks(void)
   if (! check_CR0(BX_CPU_THIS_PTR cr0.val32))
     BX_PANIC(("assert_checks: CR0 consistency checks failed !"));
 
+#if BX_CPU_LEVEL > 3
   // check CR4 consistency
   if (! check_CR4(BX_CPU_THIS_PTR cr4.val32))
     BX_PANIC(("assert_checks: CR4 consistency checks failed !"));
+#endif
 
 #if BX_SUPPORT_X86_64
   // VM should be OFF in long mode

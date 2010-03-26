@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: crregs.cc,v 1.1 2010-03-25 21:33:07 sshwarts Exp $
+// $Id: crregs.cc,v 1.2 2010-03-26 11:09:12 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2010 Stanislav Shwartsman
@@ -517,8 +517,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RdCd(bxInstruction_c *i)
 #if BX_SUPPORT_X86_64
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CqRq(bxInstruction_c *i)
 {
-  BX_ASSERT(protected_mode());
-
   /* NOTES:
    *   64bit operands always used
    *   r/m field specifies general register
@@ -606,8 +604,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RqCq(bxInstruction_c *i)
 {
   // mov control register data to register
   Bit64u val_64 = 0;
-
-  BX_ASSERT(protected_mode());
 
   /* NOTES:
    *   64bit operands always used
@@ -893,7 +889,7 @@ bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::SetCR0(bx_address val)
 }
 
 #if BX_CPU_LEVEL >= 4
-bx_address get_cr4_allow_mask(void)
+bx_address get_cr4_allow_mask(Bit32u cpuid_features_bitmask)
 {
   bx_address allowMask = 0;
 
@@ -945,7 +941,7 @@ bx_address get_cr4_allow_mask(void)
   allowMask |= (1<<9);   /* OSFXSR */
 
   /* OSXMMECPT */
-  if (BX_CPU_SUPPORT_FEATURE(BX_CPU_SSE))
+  if (cpuid_features_bitmask & BX_CPU_SSE)
     allowMask |= (1<<10);
 #endif
 
@@ -959,7 +955,7 @@ bx_address get_cr4_allow_mask(void)
 
 #if BX_CPU_LEVEL >= 6
   /* OSXSAVE */
-  if (BX_CPU_SUPPORT_FEATURE(BX_CPU_XSAVE))
+  if (cpuid_features_bitmask & BX_CPU_XSAVE)
     allowMask |= (1<<18);
 #endif
 
@@ -969,7 +965,7 @@ bx_address get_cr4_allow_mask(void)
 bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::check_CR4(bx_address cr4_val)
 {
   bx_cr4_t temp_cr4;
-  bx_address cr4_allow_mask = get_cr4_allow_mask();
+  bx_address cr4_allow_mask = get_cr4_allow_mask(BX_CPU_THIS_PTR cpuid_features_bitmask);
   temp_cr4.val32 = (Bit32u) cr4_val;
 
 #if BX_SUPPORT_X86_64
