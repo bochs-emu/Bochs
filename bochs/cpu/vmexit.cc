@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmexit.cc,v 1.19 2010-03-25 21:33:07 sshwarts Exp $
+// $Id: vmexit.cc,v 1.20 2010-03-27 11:14:19 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2009-2010 Stanislav Shwartsman
@@ -215,7 +215,8 @@ void BX_CPU_C::VMexit_ExtInterrupt(void)
   if (! BX_CPU_THIS_PTR in_vmx_guest) return;
 
   if (PIN_VMEXIT(VMX_VM_EXEC_CTRL1_EXTERNAL_INTERRUPT_VMEXIT)) {
-    if (! PIN_VMEXIT(VMX_VMEXIT_CTRL1_INTA_ON_VMEXIT)) {
+    VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
+    if (! (vm->vmexit_ctrls & VMX_VMEXIT_CTRL1_INTA_ON_VMEXIT)) {
        // interrupt wasn't acknowledged and still pending, interruption info is invalid
        VMwrite32(VMCS_32BIT_VMEXIT_INTERRUPTION_INFO, 0);
        VMexit(0, VMX_VMEXIT_EXTERNAL_INTERRUPT, 0);
@@ -289,7 +290,7 @@ void BX_CPU_C::VMexit_Event(bxInstruction_c *i, unsigned type, unsigned vector, 
     return;
   }
 
-  BX_ERROR(("VMEXIT: exception 0x%02x error code = 0x%04x", vector, errcode));
+  BX_ERROR(("VMEXIT: event vector 0x%02x error code 0x%04x", vector, errcode));
 
   // VMEXIT is not considered to occur during event delivery if it results
   // in a double fault exception that causes VMEXIT directly

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmx.cc,v 1.48 2010-03-27 09:27:40 sshwarts Exp $
+// $Id: vmx.cc,v 1.49 2010-03-27 11:14:19 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2009-2010 Stanislav Shwartsman
@@ -1856,7 +1856,7 @@ void BX_CPU_C::VMexit(bxInstruction_c *i, Bit32u reason, Bit64u qualification)
 
   reason &= 0xffff; /* keep only basic VMEXIT reason */
 
-  if (reason != VMX_VMEXIT_EXCEPTION_NMI) {
+  if (reason != VMX_VMEXIT_EXCEPTION_NMI && reason != VMX_VMEXIT_EXTERNAL_INTERRUPT) {
     VMwrite32(VMCS_32BIT_VMEXIT_INTERRUPTION_INFO, 0);
   }
 
