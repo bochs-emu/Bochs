@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.326 2010-03-25 21:33:07 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.327 2010-03-27 16:30:01 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2010  The Bochs Project
@@ -1262,14 +1262,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSRET(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::SWAPGS(bxInstruction_c *i)
 {
-  Bit64u temp_GS_base;
-
-  BX_ASSERT(protected_mode());
-
   if(CPL != 0)
     exception(BX_GP_EXCEPTION, 0);
 
-  temp_GS_base = MSR_GSBASE;
+  Bit64u temp_GS_base = MSR_GSBASE;
   MSR_GSBASE = MSR_KERNELGSBASE;
   MSR_KERNELGSBASE = temp_GS_base;
 }
