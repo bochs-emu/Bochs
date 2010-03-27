@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.cc,v 1.137 2010-03-26 13:00:14 sshwarts Exp $
+// $Id: apic.cc,v 1.138 2010-03-27 09:56:30 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (c) 2002-2009 Zwane Mwaikambo, Stanislav Shwartsman
@@ -38,7 +38,7 @@ extern Bit32u apic_id_mask;
 
 ///////////// APIC BUS /////////////
 
-int apic_bus_deliver_interrupt(Bit8u vector, Bit32u dest, Bit8u delivery_mode, bx_bool logical_dest, bx_bool level, bx_bool trig_mode)
+int apic_bus_deliver_interrupt(Bit8u vector, apic_dest_t dest, Bit8u delivery_mode, bx_bool logical_dest, bx_bool level, bx_bool trig_mode)
 {
   if(delivery_mode == APIC_DM_LOWPRI)
   {
@@ -88,7 +88,7 @@ int apic_bus_deliver_interrupt(Bit8u vector, Bit32u dest, Bit8u delivery_mode, b
   }
 }
 
-int apic_bus_deliver_lowest_priority(Bit8u vector, Bit32u dest, bx_bool trig_mode, bx_bool broadcast)
+int apic_bus_deliver_lowest_priority(Bit8u vector, apic_dest_t dest, bx_bool trig_mode, bx_bool broadcast)
 {
   int i;
 
@@ -440,7 +440,7 @@ void bx_local_apic_c::write_aligned(bx_phy_address addr, Bit32u value)
   }
 }
 
-void bx_local_apic_c::send_ipi(Bit32u dest, Bit32u lo_cmd)
+void bx_local_apic_c::send_ipi(apic_dest_t dest, Bit32u lo_cmd)
 {
   int dest_shorthand = (lo_cmd >> 18) & 3;
   int trig_mode = (lo_cmd >> 15) & 1;
@@ -801,7 +801,7 @@ void bx_local_apic_c::print_status(void)
   BX_INFO(("}"));
 }
 
-bx_bool bx_local_apic_c::match_logical_addr(Bit32u address)
+bx_bool bx_local_apic_c::match_logical_addr(apic_dest_t address)
 {
   bx_bool match = 0;
 

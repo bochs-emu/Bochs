@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.h,v 1.53 2010-03-26 13:00:14 sshwarts Exp $
+// $Id: apic.h,v 1.54 2010-03-27 09:56:30 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (c) 2002-2009 Zwane Mwaikambo, Stanislav Shwartsman
@@ -36,6 +36,8 @@
 #define BX_APIC_STATE_INVALID     1
 #define BX_APIC_XAPIC_MODE        2
 #define BX_APIC_X2APIC_MODE       3
+
+typedef Bit32u apic_dest_t; /* same definition in ioapic.h */
 
 class BOCHSAPI bx_local_apic_c : public logfunctions
 {
@@ -135,11 +137,11 @@ public:
   Bit8u acknowledge_int(void);  // only the local CPU should call this
   int highest_priority_int(Bit8u *array);
   void receive_EOI(Bit32u value);
-  void send_ipi(Bit32u dest, Bit32u lo_cmd);
+  void send_ipi(apic_dest_t dest, Bit32u lo_cmd);
   void write_spurious_interrupt_register(Bit32u value);
   void service_local_apic(void);
   void print_status(void);
-  bx_bool match_logical_addr(Bit32u address);
+  bx_bool match_logical_addr(apic_dest_t address);
   bx_bool deliver(Bit8u vector, Bit8u delivery_mode, Bit8u trig_mode);
   Bit8u get_tpr(void) { return task_priority; }
   void  set_tpr(Bit8u tpr);
@@ -153,8 +155,8 @@ public:
   void register_state(bx_param_c *parent);
 };
 
-int apic_bus_deliver_lowest_priority(Bit8u vector, Bit32u dest, bx_bool trig_mode, bx_bool broadcast);
-int apic_bus_deliver_interrupt(Bit8u vector, Bit32u dest, Bit8u delivery_mode, bx_bool logical_dest, bx_bool level, bx_bool trig_mode);
+int apic_bus_deliver_lowest_priority(Bit8u vector, apic_dest_t dest, bx_bool trig_mode, bx_bool broadcast);
+int apic_bus_deliver_interrupt(Bit8u vector, apic_dest_t dest, Bit8u delivery_mode, bx_bool logical_dest, bx_bool level, bx_bool trig_mode);
 int apic_bus_broadcast_interrupt(Bit8u vector, Bit8u delivery_mode, bx_bool trig_mode, int exclude_cpu);
 
 #endif // if BX_SUPPORT_APIC
