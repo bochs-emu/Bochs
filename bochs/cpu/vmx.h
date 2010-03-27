@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmx.h,v 1.18 2010-03-27 09:27:40 sshwarts Exp $
+// $Id: vmx.h,v 1.19 2010-03-27 10:42:43 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2009 Stanislav Shwartsman
@@ -547,9 +547,9 @@ typedef struct bx_VMCS
         VMX_VM_EXEC_CTRL2_RDTSC_VMEXIT | \
         VMX_VM_EXEC_CTRL2_CR3_WRITE_VMEXIT | \
         VMX_VM_EXEC_CTRL2_CR3_READ_VMEXIT | \
-       (BX_SUPPORT_X86_64) ? (VMX_VM_EXEC_CTRL2_CR8_WRITE_VMEXIT) : (0) | \
-       (BX_SUPPORT_X86_64) ? (VMX_VM_EXEC_CTRL2_CR8_READ_VMEXIT) : (0) | \
-       (BX_SUPPORT_X86_64) ? (VMX_VM_EXEC_CTRL2_TPR_SHADOW) : (0) | \
+       (BX_SUPPORT_X86_64 ? VMX_VM_EXEC_CTRL2_CR8_WRITE_VMEXIT : 0) | \
+       (BX_SUPPORT_X86_64 ? VMX_VM_EXEC_CTRL2_CR8_READ_VMEXIT : 0) | \
+       (BX_SUPPORT_X86_64 ? VMX_VM_EXEC_CTRL2_TPR_SHADOW : 0) | \
         VMX_VM_EXEC_CTRL2_NMI_WINDOW_VMEXIT | \
         VMX_VM_EXEC_CTRL2_DRx_ACCESS_VMEXIT | \
         VMX_VM_EXEC_CTRL2_IO_VMEXIT | \
@@ -633,12 +633,12 @@ typedef struct bx_VMCS
 
 #define VMX_VMEXIT_CTRL1_SUPPORTED_BITS \
        (VMX_VMEXIT_CTRL1_SAVE_DBG_CTRLS | \
-       (BX_SUPPORT_X86_64) ? (VMX_VMEXIT_CTRL1_HOST_ADDR_SPACE_SIZE) : (0) | \
+       (BX_SUPPORT_X86_64 ? VMX_VMEXIT_CTRL1_HOST_ADDR_SPACE_SIZE : 0) | \
         VMX_VMEXIT_CTRL1_INTA_ON_VMEXIT | \
         VMX_VMEXIT_CTRL1_STORE_PAT_MSR | \
         VMX_VMEXIT_CTRL1_LOAD_PAT_MSR | \
-       (BX_SUPPORT_X86_64) ? (VMX_VMEXIT_CTRL1_STORE_EFER_MSR) : (0) | \
-       (BX_SUPPORT_X86_64) ? (VMX_VMEXIT_CTRL1_LOAD_EFER_MSR) : (0))
+       (BX_SUPPORT_X86_64 ? VMX_VMEXIT_CTRL1_STORE_EFER_MSR : 0) | \
+       (BX_SUPPORT_X86_64 ? VMX_VMEXIT_CTRL1_LOAD_EFER_MSR : 0))
 
 #endif
 
@@ -669,11 +669,11 @@ typedef struct bx_VMCS
 
 #define VMX_VMENTRY_CTRL1_SUPPORTED_BITS \
        (VMX_VMENTRY_CTRL1_LOAD_DBG_CTRLS | \
-       (BX_SUPPORT_X86_64) ? (VMX_VMENTRY_CTRL1_X86_64_GUEST) : (0) | \
+       (BX_SUPPORT_X86_64 ? VMX_VMENTRY_CTRL1_X86_64_GUEST : 0) \
         VMX_VMENTRY_CTRL1_SMM_ENTER | \
         VMX_VMENTRY_CTRL1_DEACTIVATE_DUAL_MONITOR_TREATMENT | \
         VMX_VMENTRY_CTRL1_LOAD_PAT_MSR | \
-       (BX_SUPPORT_X86_64) ? (VMX_VMENTRY_CTRL1_LOAD_EFER_MSR) : (0))
+       (BX_SUPPORT_X86_64 ? VMX_VMENTRY_CTRL1_LOAD_EFER_MSR : 0))
 
 #endif
    
