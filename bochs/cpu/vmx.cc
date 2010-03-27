@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmx.cc,v 1.47 2010-03-26 21:26:08 sshwarts Exp $
+// $Id: vmx.cc,v 1.48 2010-03-27 09:27:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2009-2010 Stanislav Shwartsman
@@ -718,6 +718,20 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckHostState(void)
   host_state->rip = (bx_address) VMread64(VMCS_HOST_RIP);
 
 #if BX_SUPPORT_X86_64
+  if (vmexit_ctrls & VMX_VMEXIT_CTRL1_LOAD_EFER_MSR) {
+    host_state->efer_msr = VMread64(VMCS_64BIT_HOST_IA32_EFER);
+    if (host_state->efer_msr & ~BX_EFER_SUPPORTED_BITS) {
+      BX_ERROR(("VMFAIL: VMCS host EFER reserved bits set !"));
+      return VMXERR_VMENTRY_INVALID_VM_HOST_STATE_FIELD;
+    }
+    bx_bool lme = (host_state->efer_msr >>  8) & 0x1;
+    bx_bool lma = (host_state->efer_msr >> 10) & 0x1;
+    if (lma != lme || lma != x86_64_host) {
+      BX_ERROR(("VMFAIL: VMCS host EFER (0x%08x) inconsistent value !", host_state->efer_msr));
+      return VMXERR_VMENTRY_INVALID_VM_HOST_STATE_FIELD;
+    }
+  }
+
   if (x86_64_host) {
      if ((host_state->cr4 & (1<<5)) == 0) { // PAE
         BX_ERROR(("VMFAIL: VMCS host CR4.PAE=0 with x86-64 host"));
@@ -1152,6 +1166,20 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
   guest.rsp = VMread64(VMCS_GUEST_RSP);
 
 #if BX_SUPPORT_X86_64
+  if (vmentry_ctrls & VMX_VMENTRY_CTRL1_LOAD_EFER_MSR) {
+    guest.efer_msr = VMread64(VMCS_64BIT_GUEST_IA32_EFER);
+    if (guest.efer_msr & ~BX_EFER_SUPPORTED_BITS) {
+      BX_ERROR(("VMENTER FAIL: VMCS guest EFER reserved bits set !"));
+      return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
+    }
+    bx_bool lme = (guest.efer_msr >>  8) & 0x1;
+    bx_bool lma = (guest.efer_msr >> 10) & 0x1;
+    if (lma != lme || lma != x86_64_guest) {
+      BX_ERROR(("VMENTER FAIL: VMCS guest EFER (0x%08x) inconsistent value !", guest.efer_msr));
+      return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
+    }
+  }
+
   if (! x86_64_guest || !guest.sregs[BX_SEG_REG_CS].cache.u.segment.l) {
     if (GET32H(guest.rip) != 0) {
        BX_ERROR(("VMENTER FAIL: VMCS guest RIP > 32 bit"));
@@ -1280,11 +1308,16 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
   //
 
 #if BX_SUPPORT_X86_64
-  // set EFER.LMA and EFER.LME before write to CR4
-  if (x86_64_guest)
-     BX_CPU_THIS_PTR efer.set32(BX_CPU_THIS_PTR efer.get32() |  ((1 << 8) | (1 << 10)));
-  else
-     BX_CPU_THIS_PTR efer.set32(BX_CPU_THIS_PTR efer.get32() & ~((1 << 8) | (1 << 10)));
+  if (vmentry_ctrls & VMX_VMENTRY_CTRL1_LOAD_EFER_MSR) {
+     BX_CPU_THIS_PTR efer.set32(guest.efer_msr);
+  }
+  else {
+    // set EFER.LMA and EFER.LME before write to CR4
+    if (x86_64_guest)
+       BX_CPU_THIS_PTR efer.set32(BX_CPU_THIS_PTR efer.get32() |  ((1 << 8) | (1 << 10)));
+    else
+       BX_CPU_THIS_PTR efer.set32(BX_CPU_THIS_PTR efer.get32() & ~((1 << 8) | (1 << 10)));
+  }
 #endif
 
 // keep bits ET(4), reserved bits 15:6, 17, 28:19, NW(29), CD(30)
@@ -1599,6 +1632,9 @@ void BX_CPU_C::VMexitSaveGuestState(void)
   if (vm->vmexit_ctrls & VMX_VMEXIT_CTRL1_STORE_PAT_MSR)
     VMwrite64(VMCS_64BIT_GUEST_IA32_PAT, BX_CPU_THIS_PTR msr.pat);
 
+  if (vm->vmexit_ctrls & VMX_VMEXIT_CTRL1_STORE_EFER_MSR)
+    VMwrite64(VMCS_64BIT_GUEST_IA32_EFER, BX_CPU_THIS_PTR efer.get32());
+
   Bit32u tmpDR6 = BX_CPU_THIS_PTR debug_trap;
   if (tmpDR6 & 0xf) tmpDR6 |= (1 << 12);
   VMwrite64(VMCS_GUEST_PENDING_DBG_EXCEPTIONS, tmpDR6 & 0x0000500f);
@@ -1630,11 +1666,16 @@ void BX_CPU_C::VMexitLoadHostState(void)
 #endif  
 
 #if BX_SUPPORT_X86_64
-  // set EFER.LMA and EFER.LME before write to CR4
-  if (x86_64_host)
-     BX_CPU_THIS_PTR efer.set32(BX_CPU_THIS_PTR efer.get32() |  ((1 << 8) | (1 << 10)));
-  else
-     BX_CPU_THIS_PTR efer.set32(BX_CPU_THIS_PTR efer.get32() & ~((1 << 8) | (1 << 10)));
+  if (vmexit_ctrls & VMX_VMEXIT_CTRL1_LOAD_EFER_MSR) {
+     BX_CPU_THIS_PTR efer.set32(host_state->efer_msr);
+  }
+  else {
+    // set EFER.LMA and EFER.LME before write to CR4
+    if (x86_64_host)
+       BX_CPU_THIS_PTR efer.set32(BX_CPU_THIS_PTR efer.get32() |  ((1 << 8) | (1 << 10)));
+    else
+       BX_CPU_THIS_PTR efer.set32(BX_CPU_THIS_PTR efer.get32() & ~((1 << 8) | (1 << 10)));
+  }
 #endif
 
   Bit32u old_cr0 = BX_CPU_THIS_PTR cr0.get32();

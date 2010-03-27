@@ -36,6 +36,7 @@ Detailed change log :
 
 - CPU
   - Implemented PCLMULQDQ AES instruction
+  - VMX: Implemented VMX controls for loading/storing of MSR_PAT and MSR_EFER
   - VMX: Enabled secondary proc-based vmexec controls
     - Implemented APIC virtualization
     - Implemented WBINVD VMEXIT control
