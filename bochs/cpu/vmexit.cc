@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmexit.cc,v 1.20 2010-03-27 11:14:19 sshwarts Exp $
+// $Id: vmexit.cc,v 1.21 2010-03-29 08:29:14 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2009-2010 Stanislav Shwartsman
@@ -290,7 +290,7 @@ void BX_CPU_C::VMexit_Event(bxInstruction_c *i, unsigned type, unsigned vector, 
     return;
   }
 
-  BX_ERROR(("VMEXIT: event vector 0x%02x error code 0x%04x", vector, errcode));
+  BX_ERROR(("VMEXIT: event vector 0x%02x type %d error code=0x%04x", vector, type, errcode));
 
   // VMEXIT is not considered to occur during event delivery if it results
   // in a double fault exception that causes VMEXIT directly
