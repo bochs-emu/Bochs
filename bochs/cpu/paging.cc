@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.197 2010-03-25 22:04:31 sshwarts Exp $
+// $Id: paging.cc,v 1.198 2010-03-30 16:56:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2010  The Bochs Project
@@ -1125,8 +1125,8 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned curr_pl, un
   {
     paddress = tlbEntry->ppf | poffset;
 
-//  bx_bool isExecute = (rw == BX_EXECUTE);
-    if (! (tlbEntry->accessBits & (/* (isExecute<<2) |*/ (isWrite<<1) | pl)))
+    bx_bool isExecute = (rw == BX_EXECUTE);
+    if (! (tlbEntry->accessBits & ((isExecute<<2) | (isWrite<<1) | pl)))
       return paddress;
 
     // The current access does not have permission according to the info
