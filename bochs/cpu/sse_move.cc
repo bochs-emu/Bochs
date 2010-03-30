@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_move.cc,v 1.114 2010-03-19 15:07:04 sshwarts Exp $
+// $Id: sse_move.cc,v 1.115 2010-03-30 18:12:18 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003-2009 Stanislav Shwartsman
@@ -329,10 +329,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FXRSTOR(bxInstruction_c *i)
     BX_CPU_THIS_PTR the_i387.fds = xmm.xmm16u(2);
   }
 
-#if BX_CPU_LEVEL >= 6
-  /* If the OSFXSR bit in CR4 is not set, the FXRSTOR instruction does
-     not restore the states of the XMM and MXCSR registers. */
-  if(BX_CPU_THIS_PTR cr4.get_OSFXSR())
+  if(/* BX_CPU_THIS_PTR cr4.get_OSFXSR() && */BX_CPU_SUPPORT_FEATURE(BX_CPU_SSE))
   {
     Bit32u new_mxcsr = xmm.xmm32u(2);
     if(new_mxcsr & ~MXCSR_MASK)
@@ -340,7 +337,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FXRSTOR(bxInstruction_c *i)
 
     BX_MXCSR_REGISTER = new_mxcsr;
   }
-#endif
 
   /* load i387 register file */
   for(index=0; index < 8; index++)
@@ -368,10 +364,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FXRSTOR(bxInstruction_c *i)
     return; // skip restore of the XMM state
 #endif
 
-#if BX_CPU_LEVEL >= 6
   /* If the OSFXSR bit in CR4 is not set, the FXRSTOR instruction does
      not restore the states of the XMM and MXCSR registers. */
-  if(BX_CPU_THIS_PTR cr4.get_OSFXSR())
+  if(BX_CPU_THIS_PTR cr4.get_OSFXSR() && BX_CPU_SUPPORT_FEATURE(BX_CPU_SSE))
   {
     /* load XMM register file */
     for(index=0; index < BX_XMM_REGISTERS; index++)
@@ -383,8 +378,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FXRSTOR(bxInstruction_c *i)
       }
     }
   }
-#endif
-
 #endif
 }
 

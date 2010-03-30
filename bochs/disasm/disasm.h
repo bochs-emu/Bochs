@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: disasm.h,v 1.59 2010-03-26 10:39:40 sshwarts Exp $
+// $Id: disasm.h,v 1.60 2010-03-30 18:12:19 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005-2009 Stanislav Shwartsman
@@ -45,22 +45,22 @@
 #define IA_P6               0x00000008        /* P6 new instruction */
 #define IA_MMX              0x00000010        /* MMX instruction */
 #define IA_3DNOW            0x00000020        /* 3DNow! instruction */
-#define IA_MONITOR_MWAIT    0x00000040        /* MONITOR/MWAIT instruction */
-#define IA_CLFLUSH          0x00000080        /* CLFLUSH instruction */
-#define IA_SSE              0x00000100        /* SSE  instruction */
-#define IA_SSE2             0x00000200        /* SSE2 instruction */
-#define IA_SSE3             0x00000400        /* SSE3 instruction */
-#define IA_SSSE3            0x00000800        /* SSSE3 instruction */
-#define IA_SSE4_1           0x00001000        /* SSE4_1 instruction */
-#define IA_SSE4_2           0x00002000        /* SSE4_2 instruction */
-#define IA_SSE4A            0x00004000        /* SSE4A instruction */
-#define IA_SYSENTER_SYSEXIT 0x00008000        /* SYSENTER/SYSEXIT instruction */
-#define IA_VMX              0x00010000        /* VMX instruction */
-#define IA_SMX              0x00020000        /* SMX instruction */
-#define IA_SVM              0x00040000        /* SVM instruction */
-#define IA_XSAVE            0x00080000        /* XSAVE/XRSTOR extensions instruction */
-#define IA_AES              0x00100000        /* AES instruction */
-#define IA_PCLMULQDQ        0x00200000        /* PCLMULQDQ instruction */
+#define IA_FXSAVE_FXRSTOR   0x00000040        /* SYSENTER/SYSEXIT instruction */
+#define IA_SYSENTER_SYSEXIT 0x00000080        /* SYSENTER/SYSEXIT instruction */
+#define IA_CLFLUSH          0x00000100        /* CLFLUSH instruction */
+#define IA_SSE              0x00000200        /* SSE  instruction */
+#define IA_SSE2             0x00000400        /* SSE2 instruction */
+#define IA_SSE3             0x00000800        /* SSE3 instruction */
+#define IA_SSSE3            0x00001000        /* SSSE3 instruction */
+#define IA_SSE4_1           0x00002000        /* SSE4_1 instruction */
+#define IA_SSE4_2           0x00004000        /* SSE4_2 instruction */
+#define IA_SSE4A            0x00008000        /* SSE4A instruction */
+#define IA_MONITOR_MWAIT    0x00010000        /* MONITOR/MWAIT instruction */
+#define IA_VMX              0x00020000        /* VMX instruction */
+#define IA_SMX              0x00040000        /* SMX instruction */
+#define IA_SVM              0x00080000        /* SVM instruction */
+#define IA_XSAVE            0x00100000        /* XSAVE/XRSTOR extensions instruction */
+#define IA_AES_PCLMULQDQ    0x00200000        /* AES+PCLMULQDQ instructions */
 #define IA_MOVBE            0x00400000        /* MOVBE Intel Atom(R) instruction */
 #define IA_AVX              0x00800000        /* AVX instruction */
 #define IA_AVX_FMA          0x01000000        /* AVX FMA instruction */
