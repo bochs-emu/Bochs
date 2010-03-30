@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.256 2010-03-19 10:00:48 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.257 2010-03-30 15:01:09 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -2060,7 +2060,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo64M[512*3] = {
   /* 0F 4D /wm */ { 0, BX_IA_CMOVNL_GwEwM },
   /* 0F 4E /wm */ { 0, BX_IA_CMOVLE_GwEwM },
   /* 0F 4F /wm */ { 0, BX_IA_CMOVNLE_GwEwM },
-  /* 0F 50 /wm */ { BxPrefixSSE, BX_IA_MOVMSKPS_GdVRps, BxOpcodeGroupSSE_0f50 },
+  /* 0F 50 /wm */ { 0, BX_IA_ERROR }, // MOVMSKPS/PD
   /* 0F 51 /wm */ { BxPrefixSSE, BX_IA_SQRTPS_VpsWps, BxOpcodeGroupSSE_0f51 },
   /* 0F 52 /wm */ { BxPrefixSSE, BX_IA_RSQRTPS_VpsWps, BxOpcodeGroupSSE_0f52 },
   /* 0F 53 /wm */ { BxPrefixSSE, BX_IA_RCPPS_VpsWps, BxOpcodeGroupSSE_0f53 },
@@ -2194,8 +2194,8 @@ static const BxOpcodeInfo_t BxOpcodeInfo64M[512*3] = {
   /* 0F D3 /wm */ { BxPrefixSSE, BX_IA_PSRLQ_PqQq, BxOpcodeGroupSSE_0fd3 },
   /* 0F D4 /wm */ { BxPrefixSSE, BX_IA_PADDQ_PqQq, BxOpcodeGroupSSE_0fd4 },
   /* 0F D5 /wm */ { BxPrefixSSE, BX_IA_PMULLW_PqQq, BxOpcodeGroupSSE_0fd5 },
-  /* 0F D6 /wm */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0fd6M },
-  /* 0F D7 /wm */ { BxPrefixSSE, BX_IA_PMOVMSKB_GdPRq, BxOpcodeGroupSSE_0fd7 },
+  /* 0F D6 /wm */ { BxPrefixSSE66, BX_IA_MOVQ_WqVqM },
+  /* 0F D7 /wm */ { 0, BX_IA_ERROR }, // PMOVMSKB is reg/reg form only
   /* 0F D8 /wm */ { BxPrefixSSE, BX_IA_PSUBUSB_PqQq, BxOpcodeGroupSSE_0fd8 },
   /* 0F D9 /wm */ { BxPrefixSSE, BX_IA_PSUBUSW_PqQq, BxOpcodeGroupSSE_0fd9 },
   /* 0F DA /wm */ { BxPrefixSSE, BX_IA_PMINUB_PqQq, BxOpcodeGroupSSE_0fda },
@@ -2579,7 +2579,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo64M[512*3] = {
   /* 0F 4D /dm */ { 0, BX_IA_CMOVNL_GdEdM },
   /* 0F 4E /dm */ { 0, BX_IA_CMOVLE_GdEdM },
   /* 0F 4F /dm */ { 0, BX_IA_CMOVNLE_GdEdM },
-  /* 0F 50 /dm */ { BxPrefixSSE, BX_IA_MOVMSKPS_GdVRps, BxOpcodeGroupSSE_0f50 },
+  /* 0F 50 /dm */ { 0, BX_IA_ERROR }, // MOVMSKPS/PD
   /* 0F 51 /dm */ { BxPrefixSSE, BX_IA_SQRTPS_VpsWps, BxOpcodeGroupSSE_0f51 },
   /* 0F 52 /dm */ { BxPrefixSSE, BX_IA_RSQRTPS_VpsWps, BxOpcodeGroupSSE_0f52 },
   /* 0F 53 /dm */ { BxPrefixSSE, BX_IA_RCPPS_VpsWps, BxOpcodeGroupSSE_0f53 },
@@ -2713,8 +2713,8 @@ static const BxOpcodeInfo_t BxOpcodeInfo64M[512*3] = {
   /* 0F D3 /dm */ { BxPrefixSSE, BX_IA_PSRLQ_PqQq, BxOpcodeGroupSSE_0fd3 },
   /* 0F D4 /dm */ { BxPrefixSSE, BX_IA_PADDQ_PqQq, BxOpcodeGroupSSE_0fd4 },
   /* 0F D5 /dm */ { BxPrefixSSE, BX_IA_PMULLW_PqQq, BxOpcodeGroupSSE_0fd5 },
-  /* 0F D6 /dm */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0fd6M },
-  /* 0F D7 /dm */ { BxPrefixSSE, BX_IA_PMOVMSKB_GdPRq, BxOpcodeGroupSSE_0fd7 },
+  /* 0F D6 /dm */ { BxPrefixSSE66, BX_IA_MOVQ_WqVqM },
+  /* 0F D7 /dm */ { 0, BX_IA_ERROR }, // PMOVMSKB is reg/reg form only
   /* 0F D8 /dm */ { BxPrefixSSE, BX_IA_PSUBUSB_PqQq, BxOpcodeGroupSSE_0fd8 },
   /* 0F D9 /dm */ { BxPrefixSSE, BX_IA_PSUBUSW_PqQq, BxOpcodeGroupSSE_0fd9 },
   /* 0F DA /dm */ { BxPrefixSSE, BX_IA_PMINUB_PqQq, BxOpcodeGroupSSE_0fda },
@@ -3098,7 +3098,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo64M[512*3] = {
   /* 0F 4D /qm */ { 0, BX_IA_CMOVNL_GqEqM },
   /* 0F 4E /qm */ { 0, BX_IA_CMOVLE_GqEqM },
   /* 0F 4F /qm */ { 0, BX_IA_CMOVNLE_GqEqM },
-  /* 0F 50 /qm */ { BxPrefixSSE, BX_IA_MOVMSKPS_GdVRps, BxOpcodeGroupSSE_0f50 },
+  /* 0F 50 /qm */ { 0, BX_IA_ERROR }, // MOVMSKPS/PD
   /* 0F 51 /qm */ { BxPrefixSSE, BX_IA_SQRTPS_VpsWps, BxOpcodeGroupSSE_0f51 },
   /* 0F 52 /qm */ { BxPrefixSSE, BX_IA_RSQRTPS_VpsWps, BxOpcodeGroupSSE_0f52 },
   /* 0F 53 /qm */ { BxPrefixSSE, BX_IA_RCPPS_VpsWps, BxOpcodeGroupSSE_0f53 },
@@ -3232,8 +3232,8 @@ static const BxOpcodeInfo_t BxOpcodeInfo64M[512*3] = {
   /* 0F D3 /qm */ { BxPrefixSSE, BX_IA_PSRLQ_PqQq, BxOpcodeGroupSSE_0fd3 },
   /* 0F D4 /qm */ { BxPrefixSSE, BX_IA_PADDQ_PqQq, BxOpcodeGroupSSE_0fd4 },
   /* 0F D5 /qm */ { BxPrefixSSE, BX_IA_PMULLW_PqQq, BxOpcodeGroupSSE_0fd5 },
-  /* 0F D6 /qm */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupSSE_0fd6M },
-  /* 0F D7 /qm */ { BxPrefixSSE, BX_IA_PMOVMSKB_GdPRq, BxOpcodeGroupSSE_0fd7 },
+  /* 0F D6 /qm */ { BxPrefixSSE66, BX_IA_MOVQ_WqVqM },
+  /* 0F D7 /qm */ { 0, BX_IA_ERROR }, // PMOVMSKB is reg/reg form only
   /* 0F D8 /qm */ { BxPrefixSSE, BX_IA_PSUBUSB_PqQq, BxOpcodeGroupSSE_0fd8 },
   /* 0F D9 /qm */ { BxPrefixSSE, BX_IA_PSUBUSW_PqQq, BxOpcodeGroupSSE_0fd9 },
   /* 0F DA /qm */ { BxPrefixSSE, BX_IA_PMINUB_PqQq, BxOpcodeGroupSSE_0fda },
