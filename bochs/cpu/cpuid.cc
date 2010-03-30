@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpuid.cc,v 1.108 2010-03-30 18:12:18 sshwarts Exp $
+// $Id: cpuid.cc,v 1.109 2010-03-30 18:16:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007-2010 Stanislav Shwartsman
@@ -284,14 +284,16 @@ Bit32u BX_CPU_C::get_std_cpuid_features(void)
 
 #if BX_CPU_LEVEL >= 6
   if (BX_CPU_THIS_PTR cpuid_features_bitmask & BX_CPU_P6) {
-    features |= (1<<15);  // Implement CMOV instructions
-    features |= (1<<24);  // Implement FSAVE/FXRSTOR instructions
     features |= (1<<6);   // support PAE
     features |= (1<<12);  // support MTRRs
     features |= (1<<13);  // support Global pages
+    features |= (1<<15);  // support CMOV instructions
     features |= (1<<16);  // support PAT
     features |= (1<<17);  // support PSE-36
   }
+
+  if (BX_CPU_THIS_PTR cpuid_features_bitmask & BX_CPU_FXSAVE_FXRSTOR)
+    features |= (1<<24);  // support FSAVE/FXRSTOR instructions
 
   if (BX_CPU_THIS_PTR cpuid_features_bitmask & BX_CPU_SSE)
     features |= (1<<25);
@@ -902,6 +904,10 @@ void BX_CPU_C::init_cpu_features_bitmask(void)
 
 #if BX_CPU_LEVEL >= 6
   features_bitmask |= BX_CPU_P6;
+
+  // FXSAVE/FXRSTOR support come with Pentium II
+  if (mmx_enabled)
+    features_bitmask |= BX_CPU_FXSAVE_FXRSTOR;
 
   // enabled CLFLUSH only when SSE2 or higher is enabled
   if (sse_enabled >= BX_CPUID_SUPPORT_SSE2)
