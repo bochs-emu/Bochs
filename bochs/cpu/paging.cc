@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.198 2010-03-30 16:56:41 sshwarts Exp $
+// $Id: paging.cc,v 1.199 2010-03-31 14:17:51 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2010  The Bochs Project
@@ -1353,7 +1353,7 @@ bx_bool BX_CPU_C::dbg_xlate_linear2phy(bx_address laddr, bx_phy_address *phy)
     for (int level = levels - 1; level >= 0; --level) {
       Bit64u pte;
       pt_address += 8 * ((laddr >> (12 + 9*level)) & 511);
-      access_read_physical(pt_address, 8, &pte);
+      BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, pt_address, 8, &pte);
       if(!(pte & 1))
         goto page_fault;
       if (pte & BX_PAGING_PHY_ADDRESS_RESERVED_BITS)
@@ -1382,7 +1382,7 @@ bx_bool BX_CPU_C::dbg_xlate_linear2phy(bx_address laddr, bx_phy_address *phy)
     for (int level = 1; level >= 0; --level) {
       Bit32u pte;
       pt_address += 4 * ((laddr >> (12 + 10*level)) & 1023);
-      access_read_physical(pt_address, 4, &pte);
+      BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, pt_address, 4, &pte);
       if (!(pte & 1))
 	goto page_fault;
       pt_address = pte & 0xfffff000;
@@ -1404,6 +1404,7 @@ page_fault:
   *phy = 0;
   return 0;
 }
+
 #endif
 
 void BX_CPU_C::access_write_linear(bx_address laddr, unsigned len, unsigned curr_pl, void *data)
