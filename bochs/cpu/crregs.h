@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: crregs.h,v 1.25 2010-03-27 09:27:40 sshwarts Exp $
+// $Id: crregs.h,v 1.26 2010-03-31 14:00:46 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007-2009 Stanislav Shwartsman
@@ -95,6 +95,7 @@ struct bx_cr4_t {
   IMPLEMENT_CRREG_ACCESSORS(VMXE, 13);
 #endif
 #if BX_CPU_LEVEL >= 6
+  IMPLEMENT_CRREG_ACCESSORS(PCIDE, 17);
   IMPLEMENT_CRREG_ACCESSORS(OSXSAVE, 18);
 #endif
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.233 2010-03-01 18:53:53 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.234 2010-03-31 14:00:46 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -822,8 +822,9 @@ void bx_dbg_info_control_regs_command(void)
   dbg_printf("    PWT=page-level write-through=%d\n", (cr3>>3) & 1);
 #if BX_CPU_LEVEL >= 4
   Bit32u cr4 = SIM->get_param_num("CR4", dbg_cpu_list)->get();
-  dbg_printf("CR4=0x%08x: %s %s %s %s %s %s %s %s %s %s %s %s %s %s\n", cr4,
+  dbg_printf("CR4=0x%08x: %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s\n", cr4,
     (cr4 & (1<<18)) ? "OSXSAVE" : "osxsave",
+    (cr4 & (1<<17)) ? "PCID" : "pcid",
     (cr4 & (1<<14)) ? "SMX" : "smx",
     (cr4 & (1<<13)) ? "VMX" : "vmx",
     (cr4 & (1<<10)) ? "OSXMMEXCPT" : "osxmmexcpt",

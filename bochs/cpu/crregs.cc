@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: crregs.cc,v 1.3 2010-03-30 18:12:18 sshwarts Exp $
+// $Id: crregs.cc,v 1.4 2010-03-31 14:00:46 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2010 Stanislav Shwartsman
@@ -896,7 +896,8 @@ bx_address get_cr4_allow_mask(Bit32u cpuid_features_bitmask)
   // CR4 bits definitions:
   //   [31-19] Reserved, Must be Zero
   //   [18]    OSXSAVE: Operating System XSAVE Support R/W
-  //   [17-15] Reserved, Must be Zero
+  //   [17]    PCIDE: PCID Support R/W
+  //   [16-15] Reserved, Must be Zero
   //   [14]    SMXE: SMX Extensions R/W
   //   [13]    VMXE: VMX Extensions R/W
   //   [12-11] Reserved, Must be Zero
