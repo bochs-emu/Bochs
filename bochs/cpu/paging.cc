@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.201 2010-04-01 11:53:22 sshwarts Exp $
+// $Id: paging.cc,v 1.202 2010-04-01 12:23:52 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2010  The Bochs Project
@@ -160,7 +160,6 @@
 //   1: Present
 // ==========================================
 
-
 // Combined page directory/page table protection:
 // ==============================================
 // There is one column for the combined effect on a 386
@@ -259,166 +258,6 @@ static unsigned priv_check[BX_PRIV_CHECK_SIZE];
 #define BX_PAGING_PHY_ADDRESS_RESERVED_BITS \
     (BX_PHY_ADDRESS_RESERVED_BITS & BX_CONST64(0xfffffffffffff))
 
-//                    Format of a PML4 Entry
-// -----------------------------------------------------------
-// 00    | Present (P)
-// 01    | R/W
-// 02    | U/S
-// 03    | Page-Level Write-Through (PWT)
-// 04    | Page-Level Cache-Disable (PCD)
-// 05    | Accessed (A)
-// 06    | (ignored)
-// 07    | Page Size (PS), must be 0 for PML4 Entry
-// 11-08 | (ignored)
-// PA-12 | Physical address of 4-KByte aligned page-directory-pointer table
-// 51-PA | Reserved (must be zero)
-// 62-52 | (ignored)
-// 63    | Execute-Disable (XD) (if EFER.NXE=1, reserved otherwise)
-// -----------------------------------------------------------
-
-#define PAGING_PAE_PML4_RESERVED_BITS \
-    (BX_PAGING_PHY_ADDRESS_RESERVED_BITS | BX_CONST64(0x80))
-
-//          Format of Legacy PAE PDPTR entry (PDPTE)
-// -----------------------------------------------------------
-// 00    | Present (P)
-// 02-01 | Reserved (must be zero)
-// 03    | Page-Level Write-Through (PWT) (486+), 0=reserved otherwise
-// 04    | Page-Level Cache-Disable (PCD) (486+), 0=reserved otherwise
-// 08-05 | Reserved (must be zero)
-// 11-09 | (ignored)
-// PA-12 | Physical address of 4-KByte aligned page directory
-// 63-PA | Reserved (must be zero)
-// -----------------------------------------------------------
-
-#define PAGING_PAE_PDPTE_RESERVED_BITS \
-    (BX_PAGING_PHY_ADDRESS_RESERVED_BITS | BX_CONST64(0xFFF00000000001E6))
-
-//          Format of a Long Mode PDPTR entry (PDPTE)
-// -----------------------------------------------------------
-// 00    | Present (P)
-// 01    | R/W
-// 02    | U/S
-// 03    | Page-Level Write-Through (PWT)
-// 04    | Page-Level Cache-Disable (PCD)
-// 05    | Accessed (A)
-// 06    | (ignored)
-// 07    | Page Size, reserved if 1-GByte pages are disabled
-// 11-08 | (ignored)
-// PA-12 | Physical address of 4-KByte aligned page-directory-pointer table
-// 51-PA | Reserved (must be zero)
-// 62-52 | (ignored)
-// 63    | Execute-Disable (XD) (if EFER.NXE=1, reserved otherwise)
-// -----------------------------------------------------------
-
-#define PAGING_LONG_MODE_PDPTE_RESERVED_BITS (BX_PAGING_PHY_ADDRESS_RESERVED_BITS)
-
-//       Format of a PDPTE that References a 1-GByte Page
-// -----------------------------------------------------------
-// 00    | Present (P)
-// 01    | R/W
-// 02    | U/S
-// 03    | Page-Level Write-Through (PWT)
-// 04    | Page-Level Cache-Disable (PCD)
-// 05    | Accessed (A)
-// 06    | (ignored)
-// 07    | Page Size, must be 1 to indicate a 1-GByte Page
-// 08    | Global (G) (if CR4.PGE=1, ignored otherwise)
-// 11-09 | (ignored)
-// 12    | PAT (if PAT is supported, reserved otherwise)
-// 29-13 | Reserved (must be zero)
-// PA-30 | Physical address of the 1-Gbyte Page
-// 51-PA | Reserved (must be zero)
-// 62-52 | (ignored)
-// 63    | Execute-Disable (XD) (if EFER.NXE=1, reserved otherwise)
-// -----------------------------------------------------------
-
-#define PAGING_PAE_PDPTE1G_RESERVED_BITS \
-    (BX_PAGING_PHY_ADDRESS_RESERVED_BITS | BX_CONST64(0x3FFFE000))
-
-//      Format of a PAE PDE that References a Page Table
-// -----------------------------------------------------------
-// 00    | Present (P)
-// 01    | R/W
-// 02    | U/S
-// 03    | Page-Level Write-Through (PWT)
-// 04    | Page-Level Cache-Disable (PCD)
-// 05    | Accessed (A)
-// 06    | (ignored)
-// 07    | Page Size (PS), must be 0, otherwise entry maps a 2-MByte Page
-// 11-08 | (ignored)
-// PA-12 | Physical address of 4-KByte aligned page table
-// 51-PA | Reserved (must be zero)
-// 62-52 | ignored in long mode, reserved (must be 0) in legacy PAE mode
-// 63    | Execute-Disable (XD) (if EFER.NXE=1, reserved otherwise)
-// -----------------------------------------------------------
-
-#define PAGING_PAE_PDE_RESERVED_BITS (BX_PAGING_PHY_ADDRESS_RESERVED_BITS)
-
-//        Format of a PAE PDE that Maps a 2-MByte Page
-// -----------------------------------------------------------
-// 00    | Present (P)
-// 01    | R/W
-// 02    | U/S
-// 03    | Page-Level Write-Through (PWT)
-// 04    | Page-Level Cache-Disable (PCD)
-// 05    | Accessed (A)
-// 06    | Dirty (D)
-// 07    | Page Size (PS), must be 1 to indicate a 2-MByte Page
-// 08    | Global (G) (if CR4.PGE=1, ignored otherwise)
-// 11-09 | (ignored)
-// 12    | PAT (if PAT is supported, reserved otherwise)
-// 20-13 | Reserved (must be zero)
-// PA-21 | Physical address of the 2-MByte page
-// 51-PA | Reserved (must be zero)
-// 62-52 | ignored in long mode, reserved (must be 0) in legacy PAE mode
-// 63    | Execute-Disable (XD) (if EFER.NXE=1, reserved otherwise)
-// -----------------------------------------------------------
-
-#define PAGING_PAE_PDE2M_RESERVED_BITS \
-    (BX_PAGING_PHY_ADDRESS_RESERVED_BITS | BX_CONST64(0x001FE000))
-
-//        Format of a PAE PTE that Maps a 4-KByte Page
-// -----------------------------------------------------------
-// 00    | Present (P)
-// 01    | R/W
-// 02    | U/S
-// 03    | Page-Level Write-Through (PWT)
-// 04    | Page-Level Cache-Disable (PCD)
-// 05    | Accessed (A)
-// 06    | Dirty (D)
-// 07    | PAT (if PAT is supported, reserved otherwise)
-// 08    | Global (G) (if CR4.PGE=1, ignored otherwise)
-// 11-09 | (ignored)
-// PA-12 | Physical address of the 4-KByte page
-// 51-PA | Reserved (must be zero)
-// 62-52 | ignored in long mode, reserved (must be 0) in legacy PAE mode
-// 63    | Execute-Disable (XD) (if EFER.NXE=1, reserved otherwise)
-// -----------------------------------------------------------
-
-#define PAGING_PAE_PTE_RESERVED_BITS (BX_PAGING_PHY_ADDRESS_RESERVED_BITS)
-
-//           Format of a PDE that Maps a 4-MByte Page
-// -----------------------------------------------------------
-// 00    | Present (P)
-// 01    | R/W
-// 02    | U/S
-// 03    | Page-Level Write-Through (PWT)
-// 04    | Page-Level Cache-Disable (PCD)
-// 05    | Accessed (A)
-// 06    | Dirty (D)
-// 07    | Page size, must be 1 to indicate 4-Mbyte page
-// 08    | Global (G) (if CR4.PGE=1, ignored otherwise)
-// 11-09 | (ignored)
-// 12    | PAT (if PAT is supported, reserved otherwise)
-// PA-13 | Bits PA-32 of physical address of the 4-MByte page
-// 21-PA | Reserved (must be zero)
-// 31-22 | Bits 31-22 of physical address of the 4-MByte page
-// -----------------------------------------------------------
-
-#define PAGING_PDE4M_RESERVED_BITS \
-    (((1 << (41-BX_PHY_ADDRESS_WIDTH))-1) << (13 + BX_PHY_ADDRESS_WIDTH - 32))
-
 #define PAGE_DIRECTORY_NX_BIT (BX_CONST64(0x8000000000000000))
 
 // Each entry in the TLB cache has 3 entries:
@@ -474,13 +313,13 @@ static unsigned priv_check[BX_PRIV_CHECK_SIZE];
 //       when the direct access is not allowed.
 //
 
-#define TLB_SysOnly     (0x1)
-#define TLB_ReadOnly    (0x2)
-#define TLB_NoExecute   (0x4)
-
 #define TLB_HostPtr     (0x800) /* set this bit when direct access is NOT allowed */
 
 #define TLB_GlobalPage  (0x80000000)
+
+#define TLB_SysOnly     (0x1)
+#define TLB_ReadOnly    (0x2)
+#define TLB_NoExecute   (0x4)
 
 // === TLB Instrumentation section ==============================
 
@@ -516,33 +355,6 @@ static unsigned tlbNonGlobalFlushes=0;
 #endif
 
 // ==============================================================
-
-#if BX_CPU_LEVEL >= 6
-
-bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::CheckPDPTR(Bit32u cr3_val)
-{
-  cr3_val &= 0xffffffe0;
-
-  for (int n=0; n<4; n++) {
-     // read PDPTE cache entry
-     bx_phy_address entry_pdpe_addr = (bx_phy_address) (cr3_val | (n << 3));
-     access_read_physical(entry_pdpe_addr, 8, &(BX_CPU_THIS_PTR PDPTR_CACHE.entry[n]));
-     BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, entry_pdpe_addr, 8, 
-         BX_READ, (Bit8u*)(&BX_CPU_THIS_PTR PDPTR_CACHE.entry[n]));
-     Bit64u pdptr = BX_CPU_THIS_PTR PDPTR_CACHE.entry[n];
-     if (pdptr & 0x1) {
-        if (pdptr & PAGING_PAE_PDPTE_RESERVED_BITS) {
-           BX_CPU_THIS_PTR PDPTR_CACHE.valid = 0;
-           return 0;
-        }
-     }
-  }
-
-  BX_CPU_THIS_PTR PDPTR_CACHE.valid = 1;
-
-  return 1; /* PDPTRs are fine */
-}
-#endif
 
 // Called to initialize the TLB upon startup.
 // Unconditional initialization of all TLB entries.
@@ -788,6 +600,89 @@ static const char *bx_paging_level[4] = { "PTE", "PDE", "PDPE", "PML4" };
 
 #if BX_SUPPORT_X86_64
 
+//                Format of a Long Mode Non-Leaf Entry
+// -----------------------------------------------------------
+// 00    | Present (P)
+// 01    | R/W
+// 02    | U/S
+// 03    | Page-Level Write-Through (PWT)
+// 04    | Page-Level Cache-Disable (PCD)
+// 05    | Accessed (A)
+// 06    | (ignored)
+// 07    | Page Size (PS), must be 0 if no Large Page on the level
+// 11-08 | (ignored)
+// PA-12 | Physical address of 4-KByte aligned page-directory-pointer table
+// 51-PA | Reserved (must be zero)
+// 62-52 | (ignored)
+// 63    | Execute-Disable (XD) (if EFER.NXE=1, reserved otherwise)
+// -----------------------------------------------------------
+
+#define PAGING_PAE_RESERVED_BITS (BX_PAGING_PHY_ADDRESS_RESERVED_BITS)
+
+//       Format of a PDPTE that References a 1-GByte Page
+// -----------------------------------------------------------
+// 00    | Present (P)
+// 01    | R/W
+// 02    | U/S
+// 03    | Page-Level Write-Through (PWT)
+// 04    | Page-Level Cache-Disable (PCD)
+// 05    | Accessed (A)
+// 06    | (ignored)
+// 07    | Page Size, must be 1 to indicate a 1-GByte Page
+// 08    | Global (G) (if CR4.PGE=1, ignored otherwise)
+// 11-09 | (ignored)
+// 12    | PAT (if PAT is supported, reserved otherwise)
+// 29-13 | Reserved (must be zero)
+// PA-30 | Physical address of the 1-Gbyte Page
+// 51-PA | Reserved (must be zero)
+// 62-52 | (ignored)
+// 63    | Execute-Disable (XD) (if EFER.NXE=1, reserved otherwise)
+// -----------------------------------------------------------
+
+#define PAGING_PAE_PDPTE1G_RESERVED_BITS \
+    (BX_PAGING_PHY_ADDRESS_RESERVED_BITS | BX_CONST64(0x3FFFE000))
+
+//        Format of a PAE PDE that Maps a 2-MByte Page
+// -----------------------------------------------------------
+// 00    | Present (P)
+// 01    | R/W
+// 02    | U/S
+// 03    | Page-Level Write-Through (PWT)
+// 04    | Page-Level Cache-Disable (PCD)
+// 05    | Accessed (A)
+// 06    | Dirty (D)
+// 07    | Page Size (PS), must be 1 to indicate a 2-MByte Page
+// 08    | Global (G) (if CR4.PGE=1, ignored otherwise)
+// 11-09 | (ignored)
+// 12    | PAT (if PAT is supported, reserved otherwise)
+// 20-13 | Reserved (must be zero)
+// PA-21 | Physical address of the 2-MByte page
+// 51-PA | Reserved (must be zero)
+// 62-52 | ignored in long mode, reserved (must be 0) in legacy PAE mode
+// 63    | Execute-Disable (XD) (if EFER.NXE=1, reserved otherwise)
+// -----------------------------------------------------------
+
+#define PAGING_PAE_PDE2M_RESERVED_BITS \
+    (BX_PAGING_PHY_ADDRESS_RESERVED_BITS | BX_CONST64(0x001FE000))
+
+//        Format of a PAE PTE that Maps a 4-KByte Page
+// -----------------------------------------------------------
+// 00    | Present (P)
+// 01    | R/W
+// 02    | U/S
+// 03    | Page-Level Write-Through (PWT)
+// 04    | Page-Level Cache-Disable (PCD)
+// 05    | Accessed (A)
+// 06    | Dirty (D)
+// 07    | PAT (if PAT is supported, reserved otherwise)
+// 08    | Global (G) (if CR4.PGE=1, ignored otherwise)
+// 11-09 | (ignored)
+// PA-12 | Physical address of the 4-KByte page
+// 51-PA | Reserved (must be zero)
+// 62-52 | ignored in long mode, reserved (must be 0) in legacy PAE mode
+// 63    | Execute-Disable (XD) (if EFER.NXE=1, reserved otherwise)
+// -----------------------------------------------------------
+
 // Translate a linear address to a physical address in long mode
 bx_phy_address BX_CPU_C::translate_linear_long_mode(bx_address laddr, bx_address &lpf_mask, Bit32u &combined_access, unsigned curr_pl, unsigned rw)
 {
@@ -795,17 +690,17 @@ bx_phy_address BX_CPU_C::translate_linear_long_mode(bx_address laddr, bx_address
   Bit64u entry[4];
   bx_bool nx_fault = 0;
   unsigned pl = (curr_pl == 3);
-  int level, leaf = BX_LEVEL_PTE;
+  int leaf = BX_LEVEL_PTE;
   combined_access = 0x06;
 
-  for (level = BX_LEVEL_PML4;; --level) {
-    entry_addr[level] = pbase + 8 * ((laddr >> (12 + 9*level)) & 511);
-    access_read_physical(entry_addr[level], 8, &entry[level]);
-    BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, entry_addr[level], 8, BX_READ, (Bit8u*)(&entry[level]));
+  for (leaf = BX_LEVEL_PML4;; --leaf) {
+    entry_addr[leaf] = pbase + 8 * ((laddr >> (12 + 9*leaf)) & 511);
+    access_read_physical(entry_addr[leaf], 8, &entry[leaf]);
+    BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, entry_addr[leaf], 8, BX_READ, (Bit8u*)(&entry[leaf]));
 
-    Bit64u curr_entry = entry[level];
+    Bit64u curr_entry = entry[leaf];
 
-    int fault = check_entry_PAE(bx_paging_level[level], curr_entry, BX_PAGING_PHY_ADDRESS_RESERVED_BITS, rw, &nx_fault);
+    int fault = check_entry_PAE(bx_paging_level[leaf], curr_entry, PAGING_PAE_RESERVED_BITS, rw, &nx_fault);
     if (fault >= 0)
       page_fault(fault, laddr, pl, rw);
 
@@ -813,37 +708,31 @@ bx_phy_address BX_CPU_C::translate_linear_long_mode(bx_address laddr, bx_address
 
     pbase = curr_entry & BX_CONST64(0x000ffffffffff000);
 
-    if (level == BX_LEVEL_PTE) {
+    if (leaf == BX_LEVEL_PTE) {
       // Make up the physical page frame address.
       ppf = (bx_phy_address)(curr_entry & BX_CONST64(0x000ffffffffff000));
       break;
     }
 
     if (curr_entry & 0x80) {
-      if (level == BX_LEVEL_PML4) {
-        BX_DEBUG(("PML4: PS bit set !"));
+      if (leaf > (BX_LEVEL_PDE + BX_SUPPORT_1G_PAGES)) {
+        BX_DEBUG(("%s: PS bit set !"));
         page_fault(ERROR_RESERVED | ERROR_PROTECTION, laddr, pl, rw);
       }
 
-      if (level == BX_LEVEL_PDPE) {
-#if BX_SUPPORT_1G_PAGES
+      if (leaf == BX_LEVEL_PDPE) {
         if (curr_entry & PAGING_PAE_PDPTE1G_RESERVED_BITS) {
-           BX_DEBUG(("PAE 1G PDPE: reserved bit is set: PDPE=%08x:%08x", GET32H(curr_entry), GET32L(curr_entry)));
+           BX_DEBUG(("PAE PDPE1G: reserved bit is set: PDPE=%08x:%08x", GET32H(curr_entry), GET32L(curr_entry)));
            page_fault(ERROR_RESERVED | ERROR_PROTECTION, laddr, pl, rw);
         }
 
         // Make up the physical page frame address.
         ppf = (bx_phy_address)((curr_entry & BX_CONST64(0x000fffffc0000000)) | (laddr & 0x3ffff000));
         lpf_mask = 0x3fffffff;
-        leaf = level;
         break;
-#else
-        BX_DEBUG(("PAE PDPE: page size bit set when reserved"));
-        page_fault(ERROR_RESERVED | ERROR_PROTECTION, laddr, pl, rw);
-#endif
       }
 
-      if (level == BX_LEVEL_PDE) {
+      if (leaf == BX_LEVEL_PDE) {
         if (curr_entry & PAGING_PAE_PDE2M_RESERVED_BITS) {
           BX_DEBUG(("PAE PDE2M: reserved bit is set PDE=%08x:%08x", GET32H(curr_entry), GET32L(curr_entry)));
           page_fault(ERROR_RESERVED | ERROR_PROTECTION, laddr, pl, rw);
@@ -852,7 +741,6 @@ bx_phy_address BX_CPU_C::translate_linear_long_mode(bx_address laddr, bx_address
         // Make up the physical page frame address.
         ppf = (bx_phy_address)((curr_entry & BX_CONST64(0x000fffffffe00000)) | (laddr & 0x001ff000));
         lpf_mask = 0x1fffff;
-        leaf = level;
         break;
       }
     }
@@ -871,7 +759,7 @@ bx_phy_address BX_CPU_C::translate_linear_long_mode(bx_address laddr, bx_address
     combined_access |= (entry[leaf] & 0x100); // G
 
   // Update A bit if needed.
-  for (level=BX_LEVEL_PML4; level > leaf; level--) {
+  for (int level=BX_LEVEL_PML4; level > leaf; level--) {
     if (!(entry[level] & 0x20)) {
       entry[level] |= 0x20;
       access_write_physical(entry_addr[level], 8, &entry[level]);
@@ -890,6 +778,45 @@ bx_phy_address BX_CPU_C::translate_linear_long_mode(bx_address laddr, bx_address
 }
 
 #endif
+
+//          Format of Legacy PAE PDPTR entry (PDPTE)
+// -----------------------------------------------------------
+// 00    | Present (P)
+// 02-01 | Reserved (must be zero)
+// 03    | Page-Level Write-Through (PWT) (486+), 0=reserved otherwise
+// 04    | Page-Level Cache-Disable (PCD) (486+), 0=reserved otherwise
+// 08-05 | Reserved (must be zero)
+// 11-09 | (ignored)
+// PA-12 | Physical address of 4-KByte aligned page directory
+// 63-PA | Reserved (must be zero)
+// -----------------------------------------------------------
+
+#define PAGING_PAE_PDPTE_RESERVED_BITS \
+    (BX_PAGING_PHY_ADDRESS_RESERVED_BITS | BX_CONST64(0xFFF00000000001E6))
+
+bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::CheckPDPTR(Bit32u cr3_val)
+{
+  cr3_val &= 0xffffffe0;
+
+  for (int n=0; n<4; n++) {
+     // read PDPTE cache entry
+     bx_phy_address entry_pdpe_addr = (bx_phy_address) (cr3_val | (n << 3));
+     access_read_physical(entry_pdpe_addr, 8, &(BX_CPU_THIS_PTR PDPTR_CACHE.entry[n]));
+     BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, entry_pdpe_addr, 8, 
+         BX_READ, (Bit8u*)(&BX_CPU_THIS_PTR PDPTR_CACHE.entry[n]));
+     Bit64u pdptr = BX_CPU_THIS_PTR PDPTR_CACHE.entry[n];
+     if (pdptr & 0x1) {
+        if (pdptr & PAGING_PAE_PDPTE_RESERVED_BITS) {
+           BX_CPU_THIS_PTR PDPTR_CACHE.valid = 0;
+           return 0;
+        }
+     }
+  }
+
+  BX_CPU_THIS_PTR PDPTR_CACHE.valid = 1;
+
+  return 1; /* PDPTRs are fine */
+}
 
 // Translate a linear address to a physical address in PAE paging mode
 bx_phy_address BX_CPU_C::translate_linear_PAE(bx_address laddr, bx_address &lpf_mask, Bit32u &combined_access, unsigned curr_pl, unsigned rw)
@@ -929,7 +856,7 @@ bx_phy_address BX_CPU_C::translate_linear_PAE(bx_address laddr, bx_address &lpf_
   access_read_physical(entry_addr[BX_LEVEL_PDE], 8, &entry[BX_LEVEL_PDE]);
   BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, entry_addr[BX_LEVEL_PDE], 8, BX_READ, (Bit8u*)(&entry[BX_LEVEL_PDE]));
 
-  fault = check_entry_PAE("PDE", entry[BX_LEVEL_PDE], PAGING_PAE_PDE_RESERVED_BITS, rw, &nx_fault);
+  fault = check_entry_PAE("PDE", entry[BX_LEVEL_PDE], PAGING_PAE_RESERVED_BITS, rw, &nx_fault);
   if (fault >= 0)
     page_fault(fault, laddr, pl, rw);
 
@@ -974,7 +901,7 @@ bx_phy_address BX_CPU_C::translate_linear_PAE(bx_address laddr, bx_address &lpf_
   access_read_physical(entry_addr[BX_LEVEL_PTE], 8, &entry[BX_LEVEL_PTE]);
   BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, entry_addr[BX_LEVEL_PTE], 8, BX_READ, (Bit8u*)(&entry[BX_LEVEL_PTE]));
 
-  fault = check_entry_PAE("PTE", entry[BX_LEVEL_PTE], PAGING_PAE_PTE_RESERVED_BITS, rw, &nx_fault);
+  fault = check_entry_PAE("PTE", entry[BX_LEVEL_PTE], PAGING_PAE_RESERVED_BITS, rw, &nx_fault);
   if (fault >= 0)
     page_fault(fault, laddr, pl, rw);
 
@@ -1012,6 +939,27 @@ bx_phy_address BX_CPU_C::translate_linear_PAE(bx_address laddr, bx_address &lpf_
 }
 
 #endif
+
+//           Format of a PDE that Maps a 4-MByte Page
+// -----------------------------------------------------------
+// 00    | Present (P)
+// 01    | R/W
+// 02    | U/S
+// 03    | Page-Level Write-Through (PWT)
+// 04    | Page-Level Cache-Disable (PCD)
+// 05    | Accessed (A)
+// 06    | Dirty (D)
+// 07    | Page size, must be 1 to indicate 4-Mbyte page
+// 08    | Global (G) (if CR4.PGE=1, ignored otherwise)
+// 11-09 | (ignored)
+// 12    | PAT (if PAT is supported, reserved otherwise)
+// PA-13 | Bits PA-32 of physical address of the 4-MByte page
+// 21-PA | Reserved (must be zero)
+// 31-22 | Bits 31-22 of physical address of the 4-MByte page
+// -----------------------------------------------------------
+
+#define PAGING_PDE4M_RESERVED_BITS \
+    (((1 << (41-BX_PHY_ADDRESS_WIDTH))-1) << (13 + BX_PHY_ADDRESS_WIDTH - 32))
 
 // Translate a linear address to a physical address
 bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned curr_pl, unsigned rw)
