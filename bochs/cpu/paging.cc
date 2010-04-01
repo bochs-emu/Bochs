@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.203 2010-04-01 20:06:09 sshwarts Exp $
+// $Id: paging.cc,v 1.204 2010-04-01 20:08:57 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2010  The Bochs Project
@@ -1101,9 +1101,6 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned curr_pl, un
       }
     }
 
-    // Calculate physical memory address and fill in TLB cache entry
-    paddress = ppf | poffset;
-
 #if BX_CPU_LEVEL >= 5
     if (lpf_mask > 0xfff)
       BX_CPU_THIS_PTR TLB.split_large = 1;
@@ -1111,9 +1108,11 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned curr_pl, un
   }
   else {
     // no paging
-    ppf = lpf;
-    paddress = lpf | poffset;
+    ppf = (bx_phy_address) lpf;
   }
+
+  // Calculate physical memory address and fill in TLB cache entry
+  paddress = ppf | poffset;
 
   // direct memory access is NOT allowed by default
   tlbEntry->lpf = lpf | TLB_HostPtr;
@@ -1188,11 +1187,7 @@ bx_bool BX_CPU_C::dbg_xlate_linear2phy(bx_address laddr, bx_phy_address *phy)
 
 #if BX_CPU_LEVEL >= 6
   if (BX_CPU_THIS_PTR cr4.get_PAE()) {
-    int levels = 3;
-#if BX_SUPPORT_X86_64
-    if (long_mode())
-      levels = 4;
-#endif
+    int levels = 3 + long_mode();
     for (int level = levels - 1; level >= 0; --level) {
       Bit64u pte;
       pt_address += 8 * ((laddr >> (12 + 9*level)) & 511);

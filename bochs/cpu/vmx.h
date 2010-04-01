@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmx.h,v 1.20 2010-04-01 11:43:45 sshwarts Exp $
+// $Id: vmx.h,v 1.21 2010-04-01 20:08:57 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2009 Stanislav Shwartsman
@@ -575,7 +575,7 @@ typedef struct bx_VMCS
 
 #ifdef BX_VMX_ENABLE_ALL
 
-#define VMX_VM_EXEC_CTRL3_SUPPORTED_BITS (0x0000004f)
+#define VMX_VM_EXEC_CTRL3_SUPPORTED_BITS (0x000004ff)
 
 #else // only really supported features
 
