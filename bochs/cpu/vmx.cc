@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmx.cc,v 1.50 2010-03-27 16:30:01 sshwarts Exp $
+// $Id: vmx.cc,v 1.51 2010-04-01 11:43:45 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2009-2010 Stanislav Shwartsman
@@ -2476,6 +2476,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMREAD(bxInstruction_c *i)
     case VMCS_64BIT_CONTROL_EXECUTIVE_VMCS_PTR:
     case VMCS_64BIT_CONTROL_TSC_OFFSET:
     case VMCS_64BIT_CONTROL_VIRTUAL_APIC_PAGE_ADDR:
+    case VMCS_64BIT_CONTROL_APIC_ACCESS_ADDR:
       field_64 = VMread64(encoding);
       break;
 
@@ -2488,6 +2489,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMREAD(bxInstruction_c *i)
     case VMCS_64BIT_CONTROL_EXECUTIVE_VMCS_PTR_HI:
     case VMCS_64BIT_CONTROL_TSC_OFFSET_HI:
     case VMCS_64BIT_CONTROL_VIRTUAL_APIC_PAGE_ADDR_HI:
+    case VMCS_64BIT_CONTROL_APIC_ACCESS_ADDR_HI:
       field_64 = VMread32(encoding);
       break;
 
@@ -2780,6 +2782,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMWRITE(bxInstruction_c *i)
     case VMCS_64BIT_CONTROL_EXECUTIVE_VMCS_PTR_HI:
     case VMCS_64BIT_CONTROL_TSC_OFFSET_HI:
     case VMCS_64BIT_CONTROL_VIRTUAL_APIC_PAGE_ADDR_HI:
+    case VMCS_64BIT_CONTROL_APIC_ACCESS_ADDR_HI:
       // fall through
 
     /* VMCS 64-bit guest state fields */
@@ -2808,6 +2811,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMWRITE(bxInstruction_c *i)
     case VMCS_64BIT_CONTROL_EXECUTIVE_VMCS_PTR:
     case VMCS_64BIT_CONTROL_TSC_OFFSET:
     case VMCS_64BIT_CONTROL_VIRTUAL_APIC_PAGE_ADDR:
+    case VMCS_64BIT_CONTROL_APIC_ACCESS_ADDR:
       // fall through
 
     /* VMCS 64-bit guest state fields */

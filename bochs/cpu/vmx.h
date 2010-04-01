@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmx.h,v 1.19 2010-03-27 10:42:43 sshwarts Exp $
+// $Id: vmx.h,v 1.20 2010-04-01 11:43:45 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2009 Stanislav Shwartsman
@@ -211,8 +211,8 @@ enum VMX_vmabort_code {
 
 /* VMCS 64-bit read only data fields */
 /* binary 0010_01xx_xxxx_xxx0 */
-#define VMCS_64BIT_GUEST_PHYSICAL_ADDRESS                  0x00002400
-#define VMCS_64BIT_GUEST_PHYSICAL_ADDRESS_HI               0x00002401
+#define VMCS_64BIT_GUEST_PHYSICAL_ADDR                     0x00002400
+#define VMCS_64BIT_GUEST_PHYSICAL_ADDR_HI                  0x00002401
 
 /* VMCS 64-bit guest state fields */
 /* binary 0010_10xx_xxxx_xxx0 */
