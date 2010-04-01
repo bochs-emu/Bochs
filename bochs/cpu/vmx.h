@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmx.h,v 1.21 2010-04-01 20:08:57 sshwarts Exp $
+// $Id: vmx.h,v 1.22 2010-04-01 21:32:25 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2009 Stanislav Shwartsman
@@ -66,7 +66,8 @@ enum VMX_error_code {
     VMXERR_VMCALL_WITH_INVALID_SMM_MONITOR_FEATURES = 24,
     VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD_IN_EXECUTIVE_VMCS = 25,
     VMXERR_VMENTRY_MOV_SS_BLOCKING = 26,
-    VMXERR_RESERVED27 = 27
+    VMXERR_RESERVED27 = 27,
+    VMXERR_INVALID_INVEPT_INVVPID = 28
 };
 
 enum VMX_vmexit_reason {
@@ -669,7 +670,7 @@ typedef struct bx_VMCS
 
 #define VMX_VMENTRY_CTRL1_SUPPORTED_BITS \
        (VMX_VMENTRY_CTRL1_LOAD_DBG_CTRLS | \
-       (BX_SUPPORT_X86_64 ? VMX_VMENTRY_CTRL1_X86_64_GUEST : 0) \
+       (BX_SUPPORT_X86_64 ? VMX_VMENTRY_CTRL1_X86_64_GUEST : 0) | \
         VMX_VMENTRY_CTRL1_SMM_ENTER | \
         VMX_VMENTRY_CTRL1_DEACTIVATE_DUAL_MONITOR_TREATMENT | \
         VMX_VMENTRY_CTRL1_LOAD_PAT_MSR | \
@@ -786,7 +787,7 @@ enum VMX_Activity_State {
 
 // Allowed 0-settings: VMentry fail if a bit is '0 in pin-based vmexec controls
 // but set to '1 in this MSR
-#define VMX_MSR_VMX_PINBASED_CTRLS_LO  (0x00000016)
+#define VMX_MSR_VMX_PINBASED_CTRLS_LO (0x00000016)
 // Allowed 1-settings: VMentry fail if a bit is '1 in pin-based vmexec controls
 // but set to '0 in this MSR.
 #define VMX_MSR_VMX_PINBASED_CTRLS_HI \
@@ -794,6 +795,17 @@ enum VMX_Activity_State {
 
 #define VMX_MSR_VMX_PINBASED_CTRLS \
    ((((Bit64u) VMX_MSR_VMX_PINBASED_CTRLS_HI) << 32) | VMX_MSR_VMX_PINBASED_CTRLS_LO)
+
+
+// IA32_MSR_VMX_TRUE_PINBASED_CTRLS MSR (0x48d)
+// --------------------------------
+
+// no changes from original IA32_MSR_VMX_PINBASED_CTRLS
+#define VMX_MSR_VMX_TRUE_PINBASED_CTRLS_LO (VMX_MSR_VMX_PINBASED_CTRLS_LO)
+#define VMX_MSR_VMX_TRUE_PINBASED_CTRLS_HI (VMX_MSR_VMX_PINBASED_CTRLS_HI)
+
+#define VMX_MSR_VMX_TRUE_PINBASED_CTRLS \
+   ((((Bit64u) VMX_MSR_VMX_TRUE_PINBASED_CTRLS_HI) << 32) | VMX_MSR_VMX_TRUE_PINBASED_CTRLS_LO)
 
 
 // IA32_MSR_VMX_PROCBASED_CTRLS MSR (0x482)
@@ -813,13 +825,24 @@ enum VMX_Activity_State {
    ((((Bit64u) VMX_MSR_VMX_PROCBASED_CTRLS_HI) << 32) | VMX_MSR_VMX_PROCBASED_CTRLS_LO)
 
 
+// IA32_MSR_VMX_TRUE_PROCBASED_CTRLS MSR (0x48e)
+// ---------------------------------
+
+// Bits 15 and 16 no longer must be '1
+#define VMX_MSR_VMX_TRUE_PROCBASED_CTRLS_LO (0x04006172)
+#define VMX_MSR_VMX_TRUE_PROCBASED_CTRLS_HI (VMX_MSR_VMX_PROCBASED_CTRLS_HI)
+
+#define VMX_MSR_VMX_TRUE_PROCBASED_CTRLS \
+   ((((Bit64u) VMX_MSR_VMX_TRUE_PROCBASED_CTRLS_HI) << 32) | VMX_MSR_VMX_TRUE_PROCBASED_CTRLS_LO)
+
+
 // IA32_MSR_VMX_VMEXIT_CTRLS MSR (0x483)
 // -------------------------
 
 // Bits 0-8, 10, 11, 13, 14, 16, 17 must be '1
 
 // Allowed 0-settings (must be '1 bits)
-#define VMX_MSR_VMX_VMEXIT_CTRLS_LO    (0x00036DFF)
+#define VMX_MSR_VMX_VMEXIT_CTRLS_LO (0x00036DFF)
 // Allowed 1-settings
 #define VMX_MSR_VMX_VMEXIT_CTRLS_HI \
        (VMX_VMEXIT_CTRL1_SUPPORTED_BITS | VMX_MSR_VMX_VMEXIT_CTRLS_LO)
@@ -828,30 +851,52 @@ enum VMX_Activity_State {
    ((((Bit64u) VMX_MSR_VMX_VMEXIT_CTRLS_HI) << 32) | VMX_MSR_VMX_VMEXIT_CTRLS_LO)
 
 
+// IA32_MSR_VMX_TRUE_VMEXIT_CTRLS MSR (0x48f)
+// ------------------------------
+
+// Bit 2 no longer must be '1
+#define VMX_MSR_VMX_TRUE_VMEXIT_CTRLS_LO (0x00036DFB)
+#define VMX_MSR_VMX_TRUE_VMEXIT_CTRLS_HI (VMX_MSR_VMX_VMEXIT_CTRLS_HI)
+
+#define VMX_MSR_VMX_TRUE_VMEXIT_CTRLS \
+   ((((Bit64u) VMX_MSR_VMX_TRUE_VMEXIT_CTRLS_HI) << 32) | VMX_MSR_VMX_TRUE_VMEXIT_CTRLS_LO)
+
+
 // IA32_MSR_VMX_VMENTRY_CTRLS MSR (0x484)
 // --------------------------
 
 // Bits 0-8, 12 must be '1
 
 // Allowed 0-settings (must be '1 bits)
-#define VMX_MSR_VMX_VMENTRY_CTRLS_LO   (0x000011FF)
+#define VMX_MSR_VMX_VMENTRY_CTRLS_LO (0x000011FF)
 // Allowed 1-settings
 #define VMX_MSR_VMX_VMENTRY_CTRLS_HI \
-       (VMX_VMEXIT_CTRL1_SUPPORTED_BITS | VMX_MSR_VMX_VMENTRY_CTRLS_LO)
+       (VMX_VMENTRY_CTRL1_SUPPORTED_BITS | VMX_MSR_VMX_VMENTRY_CTRLS_LO)
 
 #define VMX_MSR_VMX_VMENTRY_CTRLS \
    ((((Bit64u) VMX_MSR_VMX_VMENTRY_CTRLS_HI) << 32) | VMX_MSR_VMX_VMENTRY_CTRLS_LO)
 
 
+// IA32_MSR_VMX_TRUE_VMENTRY_CTRLS MSR (0x490)
+// -------------------------------
+
+// Bit 2 is longer must be '1
+#define VMX_MSR_VMX_TRUE_VMENTRY_CTRLS_LO (0x000011FB)
+#define VMX_MSR_VMX_TRUE_VMENTRY_CTRLS_HI (VMX_MSR_VMX_VMENTRY_CTRLS_HI)
+
+#define VMX_MSR_VMX_TRUE_VMENTRY_CTRLS \
+   ((((Bit64u) VMX_MSR_VMX_TRUE_VMENTRY_CTRLS_HI) << 32) | VMX_MSR_VMX_TRUE_VMENTRY_CTRLS_LO)
+
+
 // IA32_MSR_VMX_MISC MSR (0x485)
 // -----------------
 
-// bit     6 - support VMENTER to HLT state
-// bit     7 - support VMENTER to SHUTDOWN state
-// bit     8 - support VMENTER to WAIT_FOR_SIPI state
-// bit 24:16 - number of CR3 target values supported
-// bit 27:25 - (N+1)*512 - recommended maximum MSRs in MSR store list
-// bit 63:32 - MSEG revision ID used by processor
+//     [6] - support VMENTER to HLT state
+//     [7] - support VMENTER to SHUTDOWN state
+//     [8] - support VMENTER to WAIT_FOR_SIPI state
+// [24:16] - number of CR3 target values supported
+// [27:25] - (N+1)*512 - recommended maximum MSRs in MSR store list
+// [63:32] - MSEG revision ID used by processor
 
 #define VMX_MSR_MISC (VMX_CR3_TARGET_MAX_CNT << 16)
 
@@ -861,19 +906,18 @@ enum VMX_Activity_State {
 
 // allowed 0-setting in CR0 in VMX mode
 // bits PE(0), NE(5) and PG(31) required to be set in CR0 to enter VMX mode
-#define VMX_MSR_CR0_FIXED0_LO          (0x80000021)
-#define VMX_MSR_CR0_FIXED0_HI          (0x00000000)
+#define VMX_MSR_CR0_FIXED0_LO (0x80000021)
+#define VMX_MSR_CR0_FIXED0_HI (0x00000000)
 
 #define VMX_MSR_CR0_FIXED0 \
    ((((Bit64u) VMX_MSR_CR0_FIXED0_HI) << 32) | VMX_MSR_CR0_FIXED0_LO)
 
 // allowed 1-setting in CR0 in VMX mode
-#define VMX_MSR_CR0_FIXED1_LO          (0xFFFFFFFF)
-#define VMX_MSR_CR0_FIXED1_HI          (0x00000000)
+#define VMX_MSR_CR0_FIXED1_LO (0xFFFFFFFF)
+#define VMX_MSR_CR0_FIXED1_HI (0x00000000)
 
 #define VMX_MSR_CR0_FIXED1 \
    ((((Bit64u) VMX_MSR_CR0_FIXED1_HI) << 32) | VMX_MSR_CR0_FIXED1_LO)
-
 
 //
 // IA32_VMX_CR4_FIXED0 MSR (0x488)   IA32_VMX_CR4_FIXED1 MSR (0x489)
@@ -881,8 +925,8 @@ enum VMX_Activity_State {
 
 // allowed 0-setting in CR0 in VMX mode
 // bit VMXE(13) required to be set in CR4 to enter VMX mode
-#define VMX_MSR_CR4_FIXED0_LO          (0x00002000)
-#define VMX_MSR_CR4_FIXED0_HI          (0x00000000)
+#define VMX_MSR_CR4_FIXED0_LO (0x00002000)
+#define VMX_MSR_CR4_FIXED0_HI (0x00000000)
 
 #define VMX_MSR_CR4_FIXED0 \
    ((((Bit64u) VMX_MSR_CR4_FIXED0_HI) << 32) | VMX_MSR_CR4_FIXED0_LO)
@@ -896,7 +940,7 @@ enum VMX_Activity_State {
 
 
 //
-// IA32_VMX_VMCS_ENUM MSR (0x48A)
+// IA32_VMX_VMCS_ENUM MSR (0x48a)
 // ------------------
 
 //
