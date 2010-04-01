@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmx.cc,v 1.51 2010-04-01 11:43:45 sshwarts Exp $
+// $Id: vmx.cc,v 1.52 2010-04-01 12:32:11 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2009-2010 Stanislav Shwartsman
@@ -1292,7 +1292,6 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
     }
   }
 
-#if BX_CPU_LEVEL >= 6
   if (! x86_64_guest && (guest.cr4 & (1 << 5)) != 0 /* PAE */) {
     // CR0.PG is always set in VMX mode
     if (! CheckPDPTR(guest.cr3)) {
@@ -1301,7 +1300,6 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
       return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
     }
   }
-#endif
 
   //
   // Load Guest State -> VMENTER
