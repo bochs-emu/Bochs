@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.204 2010-04-01 20:08:57 sshwarts Exp $
+// $Id: paging.cc,v 1.205 2010-04-01 20:53:55 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2010  The Bochs Project
@@ -596,10 +596,6 @@ int BX_CPU_C::check_entry_PAE(const char *s, Bit64u entry, Bit64u reserved, unsi
 #define BX_LEVEL_PDE  1
 #define BX_LEVEL_PTE  0
 
-static const char *bx_paging_level[4] = { "PTE", "PDE", "PDPE", "PML4" };
-
-#if BX_SUPPORT_X86_64
-
 //                Format of a Long Mode Non-Leaf Entry
 // -----------------------------------------------------------
 // 00    | Present (P)
@@ -682,6 +678,10 @@ static const char *bx_paging_level[4] = { "PTE", "PDE", "PDPE", "PML4" };
 // 62-52 | ignored in long mode, reserved (must be 0) in legacy PAE mode
 // 63    | Execute-Disable (XD) (if EFER.NXE=1, reserved otherwise)
 // -----------------------------------------------------------
+
+#if BX_SUPPORT_X86_64
+
+static const char *bx_paging_level[4] = { "PTE", "PDE", "PDPE", "PML4" };
 
 // Translate a linear address to a physical address in long mode
 bx_phy_address BX_CPU_C::translate_linear_long_mode(bx_address laddr, bx_address &lpf_mask, Bit32u &combined_access, unsigned curr_pl, unsigned rw)
