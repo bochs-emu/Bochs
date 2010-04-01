@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.202 2010-04-01 12:23:52 sshwarts Exp $
+// $Id: paging.cc,v 1.203 2010-04-01 20:06:09 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2010  The Bochs Project
@@ -699,13 +699,11 @@ bx_phy_address BX_CPU_C::translate_linear_long_mode(bx_address laddr, bx_address
     BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, entry_addr[leaf], 8, BX_READ, (Bit8u*)(&entry[leaf]));
 
     Bit64u curr_entry = entry[leaf];
-
     int fault = check_entry_PAE(bx_paging_level[leaf], curr_entry, PAGING_PAE_RESERVED_BITS, rw, &nx_fault);
     if (fault >= 0)
       page_fault(fault, laddr, pl, rw);
 
     combined_access &= curr_entry & 0x06; // U/S and R/W
-
     pbase = curr_entry & BX_CONST64(0x000ffffffffff000);
 
     if (leaf == BX_LEVEL_PTE) {
@@ -823,10 +821,9 @@ bx_phy_address BX_CPU_C::translate_linear_PAE(bx_address laddr, bx_address &lpf_
 {
   bx_phy_address entry_addr[3], ppf;
   Bit64u entry[3];
-  unsigned priv_index;
-  bx_bool nx_fault = 0, isWrite = (rw & 1); // write or r-m-w
+  bx_bool nx_fault = 0;
   unsigned pl = (curr_pl == 3);
-  int fault;
+  int leaf = BX_LEVEL_PTE;
   combined_access = 0x06;
 
 #if BX_SUPPORT_X86_64
@@ -846,7 +843,7 @@ bx_phy_address BX_CPU_C::translate_linear_PAE(bx_address laddr, bx_address &lpf_
 
   entry[BX_LEVEL_PDPE] = BX_CPU_THIS_PTR PDPTR_CACHE.entry[(laddr >> 30) & 3];
 
-  fault = check_entry_PAE("PDPE", entry[BX_LEVEL_PDPE], PAGING_PAE_PDPTE_RESERVED_BITS, rw, &nx_fault);
+  int fault = check_entry_PAE("PDPE", entry[BX_LEVEL_PDPE], PAGING_PAE_PDPTE_RESERVED_BITS, rw, &nx_fault);
   if (fault >= 0)
     page_fault(fault, laddr, pl, rw);
 
@@ -869,71 +866,56 @@ bx_phy_address BX_CPU_C::translate_linear_PAE(bx_address laddr, bx_address &lpf_
       page_fault(ERROR_RESERVED | ERROR_PROTECTION, laddr, pl, rw);
     }
 
-    priv_index =
-      (BX_CPU_THIS_PTR cr0.get_WP() << 4) |  // bit 4
-      (pl<<3) |                              // bit 3
-      (combined_access | isWrite);           // bit 2,1,0
-
-    if (!priv_check[priv_index] || nx_fault)
-      page_fault(ERROR_PROTECTION, laddr, pl, rw);
-
-    if (BX_CPU_THIS_PTR cr4.get_PGE())
-      combined_access |= (entry[BX_LEVEL_PDE] & 0x100);      // G
-
-    // Update PDE A/D bits if needed.
-    if (!(entry[BX_LEVEL_PDE] & 0x20) || (isWrite && !(entry[BX_LEVEL_PDE] & 0x40))) {
-      entry[BX_LEVEL_PDE] |= (0x20 | (isWrite<<6)); // Update A and possibly D bits
-      access_write_physical(entry_addr[BX_LEVEL_PDE], 8, &entry[BX_LEVEL_PDE]);
-      BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, entry_addr[BX_LEVEL_PDE], 8, BX_WRITE, (Bit8u*)(&entry[BX_LEVEL_PDE]));
-    }
-
-    // Make up the physical page frame address.
     ppf = (bx_phy_address)((entry[BX_LEVEL_PDE] & BX_CONST64(0x000fffffffe00000)) | (laddr & 0x001ff000));
     lpf_mask = 0x1fffff;
-
-    return ppf;
+    leaf = BX_LEVEL_PDE;
   }
-
-  // 4k pages, Get page table entry
-  entry_addr[BX_LEVEL_PTE] = (bx_phy_address)((entry[BX_LEVEL_PDE] & BX_CONST64(0x000ffffffffff000)) |
+  else {
+    // 4k pages, Get page table entry.
+    entry_addr[BX_LEVEL_PTE] = (bx_phy_address)((entry[BX_LEVEL_PDE] & BX_CONST64(0x000ffffffffff000)) |
                            ((laddr & 0x001ff000) >> 9));
   
-  access_read_physical(entry_addr[BX_LEVEL_PTE], 8, &entry[BX_LEVEL_PTE]);
-  BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, entry_addr[BX_LEVEL_PTE], 8, BX_READ, (Bit8u*)(&entry[BX_LEVEL_PTE]));
+    access_read_physical(entry_addr[BX_LEVEL_PTE], 8, &entry[BX_LEVEL_PTE]);
+    BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, entry_addr[BX_LEVEL_PTE], 8, BX_READ, (Bit8u*)(&entry[BX_LEVEL_PTE]));
 
-  fault = check_entry_PAE("PTE", entry[BX_LEVEL_PTE], PAGING_PAE_RESERVED_BITS, rw, &nx_fault);
-  if (fault >= 0)
-    page_fault(fault, laddr, pl, rw);
+    fault = check_entry_PAE("PTE", entry[BX_LEVEL_PTE], PAGING_PAE_RESERVED_BITS, rw, &nx_fault);
+    if (fault >= 0)
+      page_fault(fault, laddr, pl, rw);
 
-  combined_access &= entry[BX_LEVEL_PTE] & 0x06; // U/S and R/W
+    combined_access &= entry[BX_LEVEL_PTE] & 0x06; // U/S and R/W
 
-  priv_index =
-   (BX_CPU_THIS_PTR cr0.get_WP() << 4) |  // bit 4
-   (pl<<3) |                              // bit 3
-   (combined_access | isWrite);           // bit 2,1,0
+    // Make up the physical page frame address.
+    ppf = (bx_phy_address)(entry[leaf] & BX_CONST64(0x000ffffffffff000));
+    lpf_mask = 0xfff;
+  }
+
+  bx_bool isWrite = (rw & 1); // write or r-m-w
+
+  unsigned priv_index = (BX_CPU_THIS_PTR cr0.get_WP() << 4) | // bit 4
+                        (pl<<3) |                             // bit 3
+                        (combined_access | isWrite);          // bit 2,1,0
 
   if (!priv_check[priv_index] || nx_fault)
     page_fault(ERROR_PROTECTION, laddr, pl, rw);
 
   if (BX_CPU_THIS_PTR cr4.get_PGE())
-    combined_access |= (entry[BX_LEVEL_PTE] & 0x100);     // G
+    combined_access |= (entry[leaf] & 0x100);     // G
 
-  // Update PDE A bit if needed.
-  if (!(entry[BX_LEVEL_PDE] & 0x20)) {
-    entry[BX_LEVEL_PDE] |= 0x20;
-    access_write_physical(entry_addr[BX_LEVEL_PDE], 8, &entry[BX_LEVEL_PDE]);
-    BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, entry_addr[BX_LEVEL_PDE], 8, BX_WRITE, (Bit8u*)(&entry[BX_LEVEL_PDE]));
+  if (leaf == BX_LEVEL_PTE) {
+    // Update PDE A bit if needed.
+    if (!(entry[BX_LEVEL_PDE] & 0x20)) {
+      entry[BX_LEVEL_PDE] |= 0x20;
+      access_write_physical(entry_addr[BX_LEVEL_PDE], 8, &entry[BX_LEVEL_PDE]);
+      BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, entry_addr[BX_LEVEL_PDE], 8, BX_WRITE, (Bit8u*)(&entry[BX_LEVEL_PDE]));
+    }
   }
 
-  // Update PTE A/D bits if needed.
-  if (!(entry[BX_LEVEL_PTE] & 0x20) || (isWrite && !(entry[BX_LEVEL_PTE] & 0x40))) {
-    entry[BX_LEVEL_PTE] |= (0x20 | (isWrite<<6)); // Update A and possibly D bits
-    access_write_physical(entry_addr[BX_LEVEL_PTE], 8, &entry[BX_LEVEL_PTE]);
-    BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, entry_addr[BX_LEVEL_PTE], 8, BX_WRITE, (Bit8u*)(&entry[BX_LEVEL_PTE]));
+  // Update A/D bits if needed.
+  if (!(entry[leaf] & 0x20) || (isWrite && !(entry[leaf] & 0x40))) {
+    entry[leaf] |= (0x20 | (isWrite<<6)); // Update A and possibly D bits
+    access_write_physical(entry_addr[leaf], 8, &entry[leaf]);
+    BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, entry_addr[leaf], 8, BX_WRITE, (Bit8u*)(&entry[leaf]));
   }
-
-  // Make up the physical page frame address.
-  ppf = (bx_phy_address)(entry[BX_LEVEL_PTE] & BX_CONST64(0x000ffffffffff000));
 
   return ppf;
 }
