@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.327 2010-03-27 16:30:01 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.328 2010-04-02 21:22:17 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2010  The Bochs Project
@@ -920,23 +920,19 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSEXIT(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0);
   }
 
-#if BX_SUPPORT_X86_64
-  if (i->os64L()) {
-    if (!IsCanonical(RDX)) {
-      BX_ERROR(("SYSEXIT with non-canonical RDX (RIP) pointer !"));
-      exception(BX_GP_EXCEPTION, 0);
-    }
-    if (!IsCanonical(RCX)) {
-      BX_ERROR(("SYSEXIT with non-canonical RCX (RSP) pointer !"));
-      exception(BX_GP_EXCEPTION, 0);
-    }
-  }
-#endif
-
   invalidate_prefetch_q();
 
 #if BX_SUPPORT_X86_64
   if (i->os64L()) {
+    if (!IsCanonical(RDX)) {
+       BX_ERROR(("SYSEXIT with non-canonical RDX (RIP) pointer !"));
+       exception(BX_GP_EXCEPTION, 0);
+    }
+    if (!IsCanonical(RCX)) {
+       BX_ERROR(("SYSEXIT with non-canonical RCX (RSP) pointer !"));
+       exception(BX_GP_EXCEPTION, 0);
+    }
+
     parse_selector(((BX_CPU_THIS_PTR msr.sysenter_cs_msr + 32) & BX_SELECTOR_RPL_MASK) | 3,
             &BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector);
 
@@ -1147,18 +1143,16 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSRET(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0);
   }
 
-#if BX_SUPPORT_X86_64
-  if (!IsCanonical(RCX)) {
-    BX_ERROR(("SYSRET: canonical failure for RCX (RIP)"));
-    exception(BX_GP_EXCEPTION, 0);
-  }
-#endif
-
   invalidate_prefetch_q();
 
   if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64)
   {
     if (i->os64L()) {
+      if (!IsCanonical(RCX)) {
+        BX_ERROR(("SYSRET: canonical failure for RCX (RIP)"));
+        exception(BX_GP_EXCEPTION, 0);
+      }
+
       // Return to 64-bit mode, set up CS segment, flat, 64-bit DPL=3
       parse_selector((((MSR_STAR >> 48) + 16) & BX_SELECTOR_RPL_MASK) | 3,
                        &BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector);

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: protect_ctrl.cc,v 1.100 2010-04-02 19:53:29 sshwarts Exp $
+// $Id: protect_ctrl.cc,v 1.101 2010-04-02 21:22:17 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -227,7 +227,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LSL_GvEw(bxInstruction_c *i)
       case BX_SYS_SEGMENT_AVAIL_386_TSS:
       case BX_SYS_SEGMENT_BUSY_386_TSS:
 #if BX_SUPPORT_X86_64
-        if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
+        if (long64_mode()) {
           if (!fetch_raw_descriptor2_64(&selector, &dword1, &dword2, &dword3)) {
             BX_ERROR(("LSL: failed to fetch 64-bit descriptor"));
             clear_ZF();
@@ -393,12 +393,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LLDT_Ew(bxInstruction_c *i)
   }
 
 #if BX_SUPPORT_X86_64
-  descriptor.u.segment.base |= ((Bit64u)(dword3) << 32);
-  BX_DEBUG(("64 bit LDT base = 0x%08x%08x",
-     GET32H(descriptor.u.segment.base), GET32L(descriptor.u.segment.base)));
-  if (!IsCanonical(descriptor.u.segment.base)) {
-    BX_ERROR(("LLDT: non-canonical LDT descriptor base!"));
-    exception(BX_GP_EXCEPTION, raw_selector & 0xfffc);
+  if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
+    descriptor.u.segment.base |= ((Bit64u)(dword3) << 32);
+    BX_DEBUG(("64 bit LDT base = 0x%08x%08x",
+       GET32H(descriptor.u.segment.base), GET32L(descriptor.u.segment.base)));
+    if (!IsCanonical(descriptor.u.segment.base)) {
+      BX_ERROR(("LLDT: non-canonical LDT descriptor base!"));
+      exception(BX_GP_EXCEPTION, raw_selector & 0xfffc);
+    }
   }
 #endif
 
@@ -486,12 +488,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LTR_Ew(bxInstruction_c *i)
   }
 
 #if BX_SUPPORT_X86_64
-  descriptor.u.segment.base |= ((Bit64u)(dword3) << 32);
-  BX_DEBUG(("64 bit TSS base = 0x%08x%08x",
-     GET32H(descriptor.u.segment.base), GET32L(descriptor.u.segment.base)));
-  if (!IsCanonical(descriptor.u.segment.base)) {
-    BX_ERROR(("LTR: non-canonical TSS descriptor base!"));
-    exception(BX_GP_EXCEPTION, raw_selector & 0xfffc);
+  if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
+    descriptor.u.segment.base |= ((Bit64u)(dword3) << 32);
+    BX_DEBUG(("64 bit TSS base = 0x%08x%08x",
+       GET32H(descriptor.u.segment.base), GET32L(descriptor.u.segment.base)));
+    if (!IsCanonical(descriptor.u.segment.base)) {
+      BX_ERROR(("LTR: non-canonical TSS descriptor base!"));
+      exception(BX_GP_EXCEPTION, raw_selector & 0xfffc);
+    }
   }
 #endif
 
