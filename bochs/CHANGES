@@ -67,6 +67,7 @@ Detailed change log :
  [2908481] USB Printer by Ben Lunt
 
 - these S.F. bugs were closed/fixed
+ [2981161] Allow DMA transfers to continue when CPU is in HALT state
  [2795115] NX fault could be missed
  [2964824] bad newline sequence in aspi-win32.h
   [913419] configure options and build process needs some work
