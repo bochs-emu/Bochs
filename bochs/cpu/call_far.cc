@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: call_far.cc,v 1.55 2010-03-14 15:51:26 sshwarts Exp $
+// $Id: call_far.cc,v 1.56 2010-04-02 18:24:27 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005-2009 Stanislav Shwartsman
@@ -61,7 +61,7 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
     check_cs(&cs_descriptor, cs_raw, BX_SELECTOR_RPL(cs_raw), CPL);
 
 #if BX_SUPPORT_X86_64
-    if (cs_descriptor.u.segment.l) {
+    if (long_mode() && cs_descriptor.u.segment.l) {
       Bit64u temp_rsp = RSP; 
       // moving to long mode, push return address onto 64-bit stack
       if (i->os64L()) {
