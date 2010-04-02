@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmx.cc,v 1.52 2010-04-01 12:32:11 sshwarts Exp $
+// $Id: vmx.cc,v 1.53 2010-04-02 08:03:04 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2009-2010 Stanislav Shwartsman
@@ -1630,8 +1630,10 @@ void BX_CPU_C::VMexitSaveGuestState(void)
   if (vm->vmexit_ctrls & VMX_VMEXIT_CTRL1_STORE_PAT_MSR)
     VMwrite64(VMCS_64BIT_GUEST_IA32_PAT, BX_CPU_THIS_PTR msr.pat);
 
+#if BX_SUPPORT_X86_64
   if (vm->vmexit_ctrls & VMX_VMEXIT_CTRL1_STORE_EFER_MSR)
     VMwrite64(VMCS_64BIT_GUEST_IA32_EFER, BX_CPU_THIS_PTR efer.get32());
+#endif
 
   Bit32u tmpDR6 = BX_CPU_THIS_PTR debug_trap;
   if (tmpDR6 & 0xf) tmpDR6 |= (1 << 12);
@@ -1655,15 +1657,14 @@ void BX_CPU_C::VMexitLoadHostState(void)
 {
   VMCS_HOST_STATE *host_state = &BX_CPU_THIS_PTR vmcs.host_state;
   bx_bool x86_64_host = 0;
-#if BX_SUPPORT_X86_64
   Bit32u vmexit_ctrls = BX_CPU_THIS_PTR vmcs.vmexit_ctrls;
+
+#if BX_SUPPORT_X86_64
   if (vmexit_ctrls & VMX_VMEXIT_CTRL1_HOST_ADDR_SPACE_SIZE) {
      BX_DEBUG(("VMEXIT to x86-64 host"));
      x86_64_host = 1;
   }
-#endif  
 
-#if BX_SUPPORT_X86_64
   if (vmexit_ctrls & VMX_VMEXIT_CTRL1_LOAD_EFER_MSR) {
      BX_CPU_THIS_PTR efer.set32(host_state->efer_msr);
   }
