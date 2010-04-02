@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: protect_ctrl.cc,v 1.99 2010-03-14 15:51:26 sshwarts Exp $
+// $Id: protect_ctrl.cc,v 1.100 2010-04-02 19:53:29 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -137,13 +137,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LAR_GvEw(bxInstruction_c *i)
         }
         /* fall through */
       case BX_SYS_SEGMENT_LDT:
-#if BX_CPU_LEVEL >= 3
       case BX_SYS_SEGMENT_AVAIL_386_TSS:
       case BX_SYS_SEGMENT_BUSY_386_TSS:
       case BX_386_CALL_GATE:
-#endif
 #if BX_SUPPORT_X86_64
-        if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
+        if (long64_mode() || (descriptor.type == BX_386_CALL_GATE && long_mode()) ) {
           if (!fetch_raw_descriptor2_64(&selector, &dword1, &dword2, &dword3)) {
             BX_ERROR(("LAR: failed to fetch 64-bit descriptor"));
             clear_ZF();
@@ -245,7 +243,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LSL_GvEw(bxInstruction_c *i)
         if (dword2 & 0x00800000)
           limit32 = (limit32 << 12) | 0x00000fff;
         break;
-      default:
+      default: /* rest not accepted types to LSL */
         clear_ZF();
         return;
     }
