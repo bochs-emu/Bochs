@@ -81,6 +81,7 @@
 # Bochs. The start address optional, since it can be calculated from image size.
 #=======================================================================
 romimage: file=$BXSHARE/BIOS-bochs-latest 
+#romimage: file=bios/seabios-0.5.1.bin
 #romimage: file=mybios.bin, address=0xfff80000 # 512k at memory top
 
 #=======================================================================
