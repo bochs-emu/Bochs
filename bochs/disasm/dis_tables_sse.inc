@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dis_tables_sse.inc,v 1.7 2010-03-26 10:39:40 sshwarts Exp $
+// $Id: dis_tables_sse.inc,v 1.8 2010-04-02 19:01:16 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005-2010 Stanislav Shwartsman
@@ -1068,9 +1068,9 @@ static BxDisasmOpcodeTable_t BxDisasmGroupSSE_0f3a0f[4] = {
 };
 
 static BxDisasmOpcodeTable_t BxDisasmGrpOs64B_pextr[3] = {
-  /* 16 */ { 0, &Ia_pextrd_Hd_Udq_Ib },
-  /* 32 */ { 0, &Ia_pextrd_Hd_Udq_Ib },
-  /* 64 */ { 0, &Ia_pextrq_Hq_Udq_Ib },
+  /* 16 */ { 0, &Ia_pextrd_Ed_Vdq_Ib },
+  /* 32 */ { 0, &Ia_pextrd_Ed_Vdq_Ib },
+  /* 64 */ { 0, &Ia_pextrq_Eq_Vdq_Ib },
 };
 
 static BxDisasmOpcodeTable_t BxDisasmGroupSSE_0f3a16[4] = {
@@ -1379,10 +1379,10 @@ static BxDisasmOpcodeTable_t BxDisasm3ByteOpTable0f3a[256] = {
   /* 11 */ { 0, &Ia_Invalid },
   /* 12 */ { 0, &Ia_Invalid },
   /* 13 */ { 0, &Ia_Invalid },
-  /* 14 */ { GRPSSE66(Ia_pextrb_Hbd_Udq_Ib) },
-  /* 15 */ { GRPSSE66(Ia_pextrw_Hwd_Udq_Ib) },
+  /* 14 */ { GRPSSE66(Ia_pextrb_Ebd_Vdq_Ib) },
+  /* 15 */ { GRPSSE66(Ia_pextrw_Ewd_Vdq_Ib) },
   /* 16 */ { GRPSSE(0f3a16) },
-  /* 17 */ { GRPSSE66(Ia_extractps_Hd_Udq_Ib) },
+  /* 17 */ { GRPSSE66(Ia_extractps_Ed_Vdq_Ib) },
   /* 18 */ { 0, &Ia_Invalid },
   /* 19 */ { 0, &Ia_Invalid },
   /* 1A */ { 0, &Ia_Invalid },

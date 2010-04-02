@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dis_tables.h,v 1.44 2010-03-26 10:39:40 sshwarts Exp $
+// $Id: dis_tables.h,v 1.45 2010-04-02 19:01:16 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005-2010 Stanislav Shwartsman
@@ -85,22 +85,19 @@
 #define  ERX &disassembler::ERX
 #define  RRX &disassembler::RRX
 
-#define Eb &disassembler::Eb
-#define Ew &disassembler::Ew
-#define Ed &disassembler::Ed
-#define Eq &disassembler::Eq
-#define Ey &disassembler::Ey
+#define Eb  &disassembler::Eb
+#define Ew  &disassembler::Ew
+#define Ed  &disassembler::Ed
+#define Eq  &disassembler::Eq
+#define Ey  &disassembler::Ey
+#define Ebd &disassembler::Ebd
+#define Ewd &disassembler::Ewd
 
 #define Gb &disassembler::Gb
 #define Gw &disassembler::Gw
 #define Gd &disassembler::Gd
 #define Gq &disassembler::Gq
 #define Gy &disassembler::Gy
-
-#define Hbd &disassembler::Hbd
-#define Hwd &disassembler::Hwd
-#define  Hd &disassembler::Hd
-#define  Hq &disassembler::Hq
 
 #define I1 &disassembler::I1
 #define Ib &disassembler::Ib

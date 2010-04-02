@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: disasm.h,v 1.60 2010-03-30 18:12:19 sshwarts Exp $
+// $Id: disasm.h,v 1.61 2010-04-02 19:01:17 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005-2009 Stanislav Shwartsman
@@ -331,10 +331,6 @@ public:
  *      selects a general register.
  * F  - Flags Register.
  * G  - The reg field of the ModR/M byte selects a general register.
- * H  - A ModR/M byte follows the opcode and specifies the operand. The
- *      operand is either a general-purpose register or a memory address.
- *      In case of the register operand, the reg field of the ModR/M byte
- *      selects a general register.
  * I  - Immediate data. The operand value is encoded in subsequent bytes of
  *      the instruction.
  * J  - The instruction contains a relative offset to be added to the
@@ -449,6 +445,8 @@ public:
   void Ed(const x86_insn *insn);
   void Eq(const x86_insn *insn);
   void Ey(const x86_insn *insn);
+  void Ebd(const x86_insn *insn);
+  void Ewd(const x86_insn *insn);
 
   // general purpose register
   void Gb(const x86_insn *insn);
@@ -456,11 +454,6 @@ public:
   void Gd(const x86_insn *insn);
   void Gq(const x86_insn *insn);
   void Gy(const x86_insn *insn);
-
-  void Hbd(const x86_insn *insn);
-  void Hwd(const x86_insn *insn);
-  void  Hd(const x86_insn *insn);
-  void  Hq(const x86_insn *insn);
 
   // immediate
   void I1(const x86_insn *insn);

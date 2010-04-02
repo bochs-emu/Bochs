@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: opcodes.inc,v 1.37 2010-03-30 18:12:19 sshwarts Exp $
+// $Id: opcodes.inc,v 1.38 2010-04-02 19:01:17 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005-2009 Stanislav Shwartsman
@@ -291,7 +291,7 @@ Ia_dpps_Vps_Wps_Ib = { "dpps", "dpps", Vps, Wps, Ib, XX, IA_SSE4_1 },
 Ia_emms = { "emms", "emms", XX, XX, XX, XX, IA_MMX },
 Ia_enter = { "enter", "enter", IwIb, XX, XX, XX, 0 },
 Ia_error = { "(error)", "(error)", XX, XX, XX, XX, 0 },
-Ia_extractps_Hd_Udq_Ib = { "extractps", "extractps", Hd, Udq, Ib, XX, IA_SSE4_1 },
+Ia_extractps_Ed_Vdq_Ib = { "extractps", "extractps", Ed, Vdq, Ib, XX, IA_SSE4_1 },
 Ia_extrq_Vdq_IbIb = { "extrq", "extrq", Vdq, IbIb, XX, XX, IA_SSE4A },
 Ia_extrq_Vdq_Udq = { "extrq", "extrq", Vdq, Udq, XX, XX, IA_SSE4A },
 Ia_f2xm1 = { "f2xm1", "f2xm1", XX, XX, XX, XX, IA_X87 },
@@ -827,12 +827,12 @@ Ia_pcmpgtw_Pq_Qq = { "pcmpgtw", "pcmpgtw", Pq, Qq, XX, XX, IA_MMX },
 Ia_pcmpgtw_Vdq_Wdq = { "pcmpgtw", "pcmpgtw", Vdq, Wdq, XX, XX, IA_SSE2 },
 Ia_pcmpistri_Vdq_Wdq_Ib = { "pcmpistri", "pcmpistri", Vdq, Wdq, Ib, XX, IA_SSE4_2 },
 Ia_pcmpistrm_Vdq_Wdq_Ib = { "pcmpistrm", "pcmpistrm", Vdq, Wdq, Ib, XX, IA_SSE4_2 },
-Ia_pextrb_Hbd_Udq_Ib = { "pextrb", "pextrb", Hbd, Udq, Ib, XX, IA_SSE4_1 },
-Ia_pextrd_Hd_Udq_Ib = { "pextrd", "pextrd", Hd, Udq, Ib, XX, IA_SSE4_1 },
-Ia_pextrq_Hq_Udq_Ib = { "pextrq", "pextrq", Hq, Udq, Ib, XX, IA_SSE4_1 },
+Ia_pextrb_Ebd_Vdq_Ib = { "pextrb", "pextrb", Ebd, Vdq, Ib, XX, IA_SSE4_1 },
+Ia_pextrd_Ed_Vdq_Ib = { "pextrd", "pextrd", Ed, Vdq, Ib, XX, IA_SSE4_1 },
+Ia_pextrq_Eq_Vdq_Ib = { "pextrq", "pextrq", Eq, Vdq, Ib, XX, IA_SSE4_1 },
+Ia_pextrw_Ewd_Vdq_Ib = { "pextrw", "pextrw", Ewd, Vdq, Ib, XX, IA_SSE4_1 },
 Ia_pextrw_Gd_Nq_Ib = { "pextrw", "pextrw", Gd, Nq, Ib, XX, IA_3DNOW | IA_SSE },
 Ia_pextrw_Gd_Udq_Ib = { "pextrw", "pextrw", Gd, Udq, Ib, XX, IA_SSE2 },
-Ia_pextrw_Hwd_Udq_Ib = { "pextrw", "pextrw", Hwd, Udq, Ib, XX, IA_SSE4_1 },
 Ia_pf2id_Pq_Qq = { "pf2id", "pf2id", Pq, Qq, XX, XX, IA_3DNOW },
 Ia_pf2iw_Pq_Qq = { "pf2iw", "pf2iw", Pq, Qq, XX, XX, IA_3DNOW },
 Ia_pfacc_Pq_Qq = { "pfacc", "pfacc", Pq, Qq, XX, XX, IA_3DNOW },
