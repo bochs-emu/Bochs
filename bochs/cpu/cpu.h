@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.660 2010-03-30 18:12:18 sshwarts Exp $
+// $Id: cpu.h,v 1.661 2010-04-02 19:03:47 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2010  The Bochs Project
@@ -2258,10 +2258,10 @@ public: // for now...
   BX_SMF void BLENDPS_VpsWpsIb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void BLENDPD_VpdWpdIb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void PBLENDW_VdqWdqIb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void PEXTRB_HbdUdqIb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void PEXTRW_HwdUdqIb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void PEXTRD_HdUdqIb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void EXTRACTPS_HdUpsIb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void PEXTRB_EbdVdqIb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void PEXTRW_EwdVdqIb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void PEXTRD_EdVdqIb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void EXTRACTPS_EdVpsIb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void PINSRB_VdqEbIb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void INSERTPS_VpsWssIb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void PINSRD_VdqEdIb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);

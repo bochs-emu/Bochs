@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse.cc,v 1.69 2010-02-26 11:44:50 sshwarts Exp $
+// $Id: sse.cc,v 1.70 2010-04-02 19:03:47 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003-2009 Stanislav Shwartsman
@@ -1101,17 +1101,17 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PBLENDW_VdqWdqIb(bxInstruction_c *i)
 }
 
 /* 66 0F 3A 14 */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::PEXTRB_HbdUdqIb(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::PEXTRB_EbdVdqIb(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
   BX_CPU_THIS_PTR prepareSSE();
 
-  BxPackedXmmRegister op = BX_READ_XMM_REG(i->rm());
+  BxPackedXmmRegister op = BX_READ_XMM_REG(i->nnn());
   Bit8u result = op.xmmubyte(i->Ib() & 0xF);
 
   /* result is a register or memory reference */
   if (i->modC0()) {
-    BX_WRITE_32BIT_REGZ(i->nnn(), result);
+    BX_WRITE_32BIT_REGZ(i->rm(), result);
   }
   else {
     bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
@@ -1122,17 +1122,17 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PEXTRB_HbdUdqIb(bxInstruction_c *i)
 }
 
 /* 66 0F 3A 15 */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::PEXTRW_HwdUdqIb(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::PEXTRW_EwdVdqIb(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
   BX_CPU_THIS_PTR prepareSSE();
 
-  BxPackedXmmRegister op = BX_READ_XMM_REG(i->rm());
+  BxPackedXmmRegister op = BX_READ_XMM_REG(i->nnn());
   Bit16u result = op.xmm16u(i->Ib() & 7);
 
   /* result is a register or memory reference */
   if (i->modC0()) {
-    BX_WRITE_32BIT_REGZ(i->nnn(), result);
+    BX_WRITE_32BIT_REGZ(i->rm(), result);
   }
   else {
     bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
@@ -1143,12 +1143,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PEXTRW_HwdUdqIb(bxInstruction_c *i)
 }
 
 /* 66 0F 3A 16 */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::PEXTRD_HdUdqIb(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::PEXTRD_EdVdqIb(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
   BX_CPU_THIS_PTR prepareSSE();
 
-  BxPackedXmmRegister op = BX_READ_XMM_REG(i->rm());
+  BxPackedXmmRegister op = BX_READ_XMM_REG(i->nnn());
 
 #if BX_SUPPORT_X86_64
   if (i->os64L())  /* 64 bit operand size mode */
@@ -1157,7 +1157,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PEXTRD_HdUdqIb(bxInstruction_c *i)
 
      /* result is a register or memory reference */
      if (i->modC0()) {
-       BX_WRITE_64BIT_REG(i->nnn(), result);
+       BX_WRITE_64BIT_REG(i->rm(), result);
      }
      else {
        bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
@@ -1172,7 +1172,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PEXTRD_HdUdqIb(bxInstruction_c *i)
 
      /* result is a register or memory reference */
      if (i->modC0()) {
-       BX_WRITE_32BIT_REGZ(i->nnn(), result);
+       BX_WRITE_32BIT_REGZ(i->rm(), result);
      }
      else {
        bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
@@ -1184,17 +1184,17 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PEXTRD_HdUdqIb(bxInstruction_c *i)
 }
 
 /* 66 0F 3A 17 */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::EXTRACTPS_HdUpsIb(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::EXTRACTPS_EdVpsIb(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
   BX_CPU_THIS_PTR prepareSSE();
 
-  BxPackedXmmRegister op = BX_READ_XMM_REG(i->rm());
+  BxPackedXmmRegister op = BX_READ_XMM_REG(i->nnn());
   Bit32u result = op.xmm32u(i->Ib() & 3);
 
   /* result is a register or memory reference */
   if (i->modC0()) {
-    BX_WRITE_32BIT_REGZ(i->nnn(), result);
+    BX_WRITE_32BIT_REGZ(i->rm(), result);
   }
   else {
     bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));

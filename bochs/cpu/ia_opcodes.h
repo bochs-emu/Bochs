@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ia_opcodes.h,v 1.42 2010-03-30 18:12:18 sshwarts Exp $
+// $Id: ia_opcodes.h,v 1.43 2010-04-02 19:03:47 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008-2009 Stanislav Shwartsman
@@ -1258,10 +1258,10 @@ bx_define_opcode(BX_IA_ROUNDSD_VsdWsdIb, &BX_CPU_C::ROUNDSD_VsdWsdIb, NULL, BX_C
 bx_define_opcode(BX_IA_BLENDPS_VpsWpsIb, &BX_CPU_C::BLENDPS_VpsWpsIb, NULL, BX_CPU_SSE4_1)
 bx_define_opcode(BX_IA_BLENDPD_VpdWpdIb, &BX_CPU_C::BLENDPD_VpdWpdIb, NULL, BX_CPU_SSE4_1)
 bx_define_opcode(BX_IA_PBLENDW_VdqWdqIb, &BX_CPU_C::PBLENDW_VdqWdqIb, NULL, BX_CPU_SSE4_1)
-bx_define_opcode(BX_IA_PEXTRB_HbdUdqIb, &BX_CPU_C::PEXTRB_HbdUdqIb, NULL, BX_CPU_SSE4_1)
-bx_define_opcode(BX_IA_PEXTRW_HwdUdqIb, &BX_CPU_C::PEXTRW_HwdUdqIb, NULL, BX_CPU_SSE4_1)
-bx_define_opcode(BX_IA_PEXTRD_HdUdqIb, &BX_CPU_C::PEXTRD_HdUdqIb, NULL, BX_CPU_SSE4_1)
-bx_define_opcode(BX_IA_EXTRACTPS_HdUpsIb, &BX_CPU_C::EXTRACTPS_HdUpsIb, NULL, BX_CPU_SSE4_1)
+bx_define_opcode(BX_IA_PEXTRB_EbdVdqIb, &BX_CPU_C::PEXTRB_EbdVdqIb, NULL, BX_CPU_SSE4_1)
+bx_define_opcode(BX_IA_PEXTRW_EwdVdqIb, &BX_CPU_C::PEXTRW_EwdVdqIb, NULL, BX_CPU_SSE4_1)
+bx_define_opcode(BX_IA_PEXTRD_EdVdqIb, &BX_CPU_C::PEXTRD_EdVdqIb, NULL, BX_CPU_SSE4_1)
+bx_define_opcode(BX_IA_EXTRACTPS_EdVpsIb, &BX_CPU_C::EXTRACTPS_EdVpsIb, NULL, BX_CPU_SSE4_1)
 bx_define_opcode(BX_IA_PINSRB_VdqEbIb, &BX_CPU_C::PINSRB_VdqEbIb, NULL, BX_CPU_SSE4_1)
 bx_define_opcode(BX_IA_INSERTPS_VpsWssIb, &BX_CPU_C::INSERTPS_VpsWssIb, NULL, BX_CPU_SSE4_1)
 bx_define_opcode(BX_IA_PINSRD_VdqEdIb, &BX_CPU_C::PINSRD_VdqEdIb, NULL, BX_CPU_SSE4_1)
