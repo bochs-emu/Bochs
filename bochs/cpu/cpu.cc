@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.309 2010-03-23 19:58:20 sshwarts Exp $
+// $Id: cpu.cc,v 1.310 2010-04-02 17:15:14 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -440,9 +440,15 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
         BX_CPU_THIS_PTR inhibit_mask = 0; // clear inhibits for after resume
         break;
       }
+
       if (BX_CPU_THIS_PTR activity_state == BX_ACTIVITY_STATE_ACTIVE) {
         BX_INFO(("handleAsyncEvent: reset detected in HLT state"));
         break;
+      }
+
+      if (BX_HRQ && BX_DBG_ASYNC_DMA) {
+        // handle DMA also when CPU is halted
+        DEV_dma_raise_hlda();
       }
 
       // for multiprocessor simulation, even if this CPU is halted we still
