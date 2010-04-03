@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.418 2010-04-03 10:14:42 sshwarts Exp $
+// $Id: main.cc,v 1.419 2010-04-03 13:30:58 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -1047,7 +1047,7 @@ void bx_init_hardware()
 #if BX_SUPPORT_VMX
   BX_INFO(("  VMX support: %d",BX_SUPPORT_VMX));
 #else
-  BX_INFO(("  VMX support: no",));
+  BX_INFO(("  VMX support: no"));
 #endif
 #endif
   BX_INFO(("Optimization configuration"));
