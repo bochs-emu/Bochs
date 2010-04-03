@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmx.cc,v 1.54 2010-04-03 07:30:23 sshwarts Exp $
+// $Id: vmx.cc,v 1.55 2010-04-03 16:52:33 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2009-2010 Stanislav Shwartsman
@@ -1737,7 +1737,8 @@ void BX_CPU_C::VMexitLoadHostState(void)
   TLB_flush(); // CR0/CR4 updated
 
   if (! SetCR3(host_state->cr3)) {
-    BX_PANIC(("VMEXIT CR3 is broken !"));
+    BX_ERROR(("VMABORT: host CR3 is broken !"));
+    VMabort(VMABORT_HOST_PDPTR_CORRUPTED);
   }
 
   BX_CPU_THIS_PTR dr7 = 0x00000400;
