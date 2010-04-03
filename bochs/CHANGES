@@ -4,7 +4,7 @@ Brief summary :
 - Major configure/cpu rework allowing to enable/disable CPU options at runtime
   through .bochsrc (Stanislav)
 - Bugfixes for CPU emulation correctness and stability
-- Implemented VMX Apic Virtualization
+- Implemented Intel VMXx2 extensions (Stanislav)
 - Implemented PCLMULQDQ AES instruction
 - Extended Bochs internal debugger functionality
 - USB HP DeskJet 920C printer device emulation (Ben Lunt)
