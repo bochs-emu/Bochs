@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.209 2010-04-03 18:00:28 sshwarts Exp $
+// $Id: paging.cc,v 1.210 2010-04-03 19:21:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2010  The Bochs Project
@@ -547,6 +547,11 @@ void BX_CPU_C::page_fault(unsigned fault, bx_address laddr, unsigned user, unsig
   exception(BX_PF_EXCEPTION, error_code);
 }
 
+#define BX_LEVEL_PML4 3
+#define BX_LEVEL_PDPE 2
+#define BX_LEVEL_PDE  1
+#define BX_LEVEL_PTE  0
+
 #if BX_CPU_LEVEL >= 6
 
 int BX_CPU_C::check_entry_PAE(const char *s, Bit64u entry, Bit64u reserved, unsigned rw, bx_bool *nx_fault)
@@ -583,11 +588,6 @@ int BX_CPU_C::check_entry_PAE(const char *s, Bit64u entry, Bit64u reserved, unsi
 
   return -1;
 }
-
-#define BX_LEVEL_PML4 3
-#define BX_LEVEL_PDPE 2
-#define BX_LEVEL_PDE  1
-#define BX_LEVEL_PTE  0
 
 //                Format of a Long Mode Non-Leaf Entry
 // -----------------------------------------------------------
