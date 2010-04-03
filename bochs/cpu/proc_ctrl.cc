@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.329 2010-04-03 05:59:07 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.330 2010-04-03 07:30:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2010  The Bochs Project
@@ -178,7 +178,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::WBINVD(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0);
   }
 
-#if BX_SUPPORT_VMX
+#if BX_SUPPORT_VMX >= 2
   VMexit_WBINVD(i);
 #endif
 
@@ -635,6 +635,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDTSC(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDTSCP(bxInstruction_c *i)
 {
 #if BX_SUPPORT_VMX
+  // RDTSCP will always #UD in legacy VMX mode
   if (BX_CPU_THIS_PTR in_vmx_guest) {
     if (! SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_RDTSCP)) {
        BX_ERROR(("RDTSCP in VMX guest: not allowed to use instruction !"));

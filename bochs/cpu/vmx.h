@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmx.h,v 1.23 2010-04-03 05:59:07 sshwarts Exp $
+// $Id: vmx.h,v 1.24 2010-04-03 07:30:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2009 Stanislav Shwartsman
@@ -449,9 +449,11 @@ typedef struct bx_VMCS_GUEST_STATE
 
    Bit64u link_pointer;
 
-   Bit64u pat_msr;
+#if BX_SUPPORT_VMX >= 2
 #if BX_SUPPORT_X86_64
    Bit64u efer_msr;
+#endif
+   Bit64u pat_msr;
 #endif
 } VMCS_GUEST_STATE;
 
@@ -479,9 +481,11 @@ typedef struct bx_VMCS_HOST_STATE
    bx_address sysenter_eip_msr;
    Bit32u sysenter_cs_msr;
 
-   Bit64u pat_msr;
+#if BX_SUPPORT_VMX >= 2
 #if BX_SUPPORT_X86_64
    Bit64u efer_msr;
+#endif
+   Bit64u pat_msr;
 #endif
 } VMCS_HOST_STATE;
 
@@ -503,8 +507,8 @@ typedef struct bx_VMCS
 #else // only really supported features
 
 #define VMX_VM_EXEC_CTRL1_SUPPORTED_BITS \
-       (VMX_VM_EXEC_CTRL1_EXTERNAL_INTERRUPT_VMEXIT | \
-        VMX_VM_EXEC_CTRL1_NMI_VMEXIT)
+  (VMX_VM_EXEC_CTRL1_EXTERNAL_INTERRUPT_VMEXIT | \
+   VMX_VM_EXEC_CTRL1_NMI_VMEXIT)
 
 #endif
 
@@ -539,26 +543,26 @@ typedef struct bx_VMCS
 #else // only really supported features
 
 #define VMX_VM_EXEC_CTRL2_SUPPORTED_BITS \
-       (VMX_VM_EXEC_CTRL2_INTERRUPT_WINDOW_VMEXIT | \
-        VMX_VM_EXEC_CTRL2_TSC_OFFSET | \
-        VMX_VM_EXEC_CTRL2_HLT_VMEXIT | \
-        VMX_VM_EXEC_CTRL2_INVLPG_VMEXIT | \
-        VMX_VM_EXEC_CTRL2_MWAIT_VMEXIT | \
-        VMX_VM_EXEC_CTRL2_RDPMC_VMEXIT | \
-        VMX_VM_EXEC_CTRL2_RDTSC_VMEXIT | \
-        VMX_VM_EXEC_CTRL2_CR3_WRITE_VMEXIT | \
-        VMX_VM_EXEC_CTRL2_CR3_READ_VMEXIT | \
-       (BX_SUPPORT_X86_64 ? VMX_VM_EXEC_CTRL2_CR8_WRITE_VMEXIT : 0) | \
-       (BX_SUPPORT_X86_64 ? VMX_VM_EXEC_CTRL2_CR8_READ_VMEXIT : 0) | \
-       (BX_SUPPORT_X86_64 ? VMX_VM_EXEC_CTRL2_TPR_SHADOW : 0) | \
-        VMX_VM_EXEC_CTRL2_NMI_WINDOW_VMEXIT | \
-        VMX_VM_EXEC_CTRL2_DRx_ACCESS_VMEXIT | \
-        VMX_VM_EXEC_CTRL2_IO_VMEXIT | \
-        VMX_VM_EXEC_CTRL2_IO_BITMAPS | \
-        VMX_VM_EXEC_CTRL2_MSR_BITMAPS | \
-        VMX_VM_EXEC_CTRL2_MONITOR_VMEXIT | \
-        VMX_VM_EXEC_CTRL2_PAUSE_VMEXIT | \
-        VMX_VM_EXEC_CTRL2_SECONDARY_CONTROLS)
+   (VMX_VM_EXEC_CTRL2_INTERRUPT_WINDOW_VMEXIT | \
+    VMX_VM_EXEC_CTRL2_TSC_OFFSET | \
+    VMX_VM_EXEC_CTRL2_HLT_VMEXIT | \
+    VMX_VM_EXEC_CTRL2_INVLPG_VMEXIT | \
+    VMX_VM_EXEC_CTRL2_MWAIT_VMEXIT | \
+    VMX_VM_EXEC_CTRL2_RDPMC_VMEXIT | \
+    VMX_VM_EXEC_CTRL2_RDTSC_VMEXIT | \
+    VMX_VM_EXEC_CTRL2_CR3_WRITE_VMEXIT | \
+    VMX_VM_EXEC_CTRL2_CR3_READ_VMEXIT | \
+   (BX_SUPPORT_X86_64 ? VMX_VM_EXEC_CTRL2_CR8_WRITE_VMEXIT : 0) | \
+   (BX_SUPPORT_X86_64 ? VMX_VM_EXEC_CTRL2_CR8_READ_VMEXIT : 0) | \
+   (BX_SUPPORT_X86_64 ? VMX_VM_EXEC_CTRL2_TPR_SHADOW : 0) | \
+    VMX_VM_EXEC_CTRL2_NMI_WINDOW_VMEXIT | \
+    VMX_VM_EXEC_CTRL2_DRx_ACCESS_VMEXIT | \
+    VMX_VM_EXEC_CTRL2_IO_VMEXIT | \
+    VMX_VM_EXEC_CTRL2_IO_BITMAPS | \
+    VMX_VM_EXEC_CTRL2_MSR_BITMAPS | \
+    VMX_VM_EXEC_CTRL2_MONITOR_VMEXIT | \
+    VMX_VM_EXEC_CTRL2_PAUSE_VMEXIT | \
+   ((BX_SUPPORT_VMX >= 2) ? VMX_VM_EXEC_CTRL2_SECONDARY_CONTROLS : 0))
 
 #endif
 
@@ -581,9 +585,9 @@ typedef struct bx_VMCS
 #else // only really supported features
 
 #define VMX_VM_EXEC_CTRL3_SUPPORTED_BITS \
-       (VMX_VM_EXEC_CTRL3_VIRTUALIZE_APIC_ACCESSES | \
-        VMX_VM_EXEC_CTRL3_RDTSCP | \
-        VMX_VM_EXEC_CTRL3_WBINVD_VMEXIT)
+   (VMX_VM_EXEC_CTRL3_VIRTUALIZE_APIC_ACCESSES | \
+    VMX_VM_EXEC_CTRL3_RDTSCP | \
+    VMX_VM_EXEC_CTRL3_WBINVD_VMEXIT)
 
 #endif
 
@@ -608,7 +612,9 @@ typedef struct bx_VMCS
 
    bx_phy_address virtual_apic_page_addr;
    Bit32u vm_tpr_threshold;
+#if BX_SUPPORT_VMX >= 2
    bx_phy_address apic_access_page;
+#endif
 
    Bit64u executive_vmcsptr;
 
@@ -633,13 +639,13 @@ typedef struct bx_VMCS
 #else // only really supported features
 
 #define VMX_VMEXIT_CTRL1_SUPPORTED_BITS \
-       (VMX_VMEXIT_CTRL1_SAVE_DBG_CTRLS | \
-       (BX_SUPPORT_X86_64 ? VMX_VMEXIT_CTRL1_HOST_ADDR_SPACE_SIZE : 0) | \
-        VMX_VMEXIT_CTRL1_INTA_ON_VMEXIT | \
-        VMX_VMEXIT_CTRL1_STORE_PAT_MSR | \
-        VMX_VMEXIT_CTRL1_LOAD_PAT_MSR | \
-       (BX_SUPPORT_X86_64 ? VMX_VMEXIT_CTRL1_STORE_EFER_MSR : 0) | \
-       (BX_SUPPORT_X86_64 ? VMX_VMEXIT_CTRL1_LOAD_EFER_MSR : 0))
+   (VMX_VMEXIT_CTRL1_SAVE_DBG_CTRLS | \
+   (BX_SUPPORT_X86_64 ? VMX_VMEXIT_CTRL1_HOST_ADDR_SPACE_SIZE : 0) | \
+    VMX_VMEXIT_CTRL1_INTA_ON_VMEXIT | \
+   ((BX_SUPPORT_VMX >= 2) ? VMX_VMEXIT_CTRL1_STORE_PAT_MSR : 0) | \
+   ((BX_SUPPORT_VMX >= 2) ? VMX_VMEXIT_CTRL1_LOAD_PAT_MSR : 0) | \
+   ((BX_SUPPORT_VMX >= 2 && BX_SUPPORT_X86_64) ? VMX_VMEXIT_CTRL1_STORE_EFER_MSR : 0) | \
+   ((BX_SUPPORT_VMX >= 2 && BX_SUPPORT_X86_64) ? VMX_VMEXIT_CTRL1_LOAD_EFER_MSR : 0))
 
 #endif
 
@@ -669,12 +675,12 @@ typedef struct bx_VMCS
 #else // only really supported features
 
 #define VMX_VMENTRY_CTRL1_SUPPORTED_BITS \
-       (VMX_VMENTRY_CTRL1_LOAD_DBG_CTRLS | \
-       (BX_SUPPORT_X86_64 ? VMX_VMENTRY_CTRL1_X86_64_GUEST : 0) | \
-        VMX_VMENTRY_CTRL1_SMM_ENTER | \
-        VMX_VMENTRY_CTRL1_DEACTIVATE_DUAL_MONITOR_TREATMENT | \
-        VMX_VMENTRY_CTRL1_LOAD_PAT_MSR | \
-       (BX_SUPPORT_X86_64 ? VMX_VMENTRY_CTRL1_LOAD_EFER_MSR : 0))
+   (VMX_VMENTRY_CTRL1_LOAD_DBG_CTRLS | \
+   (BX_SUPPORT_X86_64 ? VMX_VMENTRY_CTRL1_X86_64_GUEST : 0) | \
+    VMX_VMENTRY_CTRL1_SMM_ENTER | \
+    VMX_VMENTRY_CTRL1_DEACTIVATE_DUAL_MONITOR_TREATMENT | \
+   ((BX_SUPPORT_VMX >= 2) ? VMX_VMENTRY_CTRL1_LOAD_PAT_MSR : 0) | \
+   ((BX_SUPPORT_VMX >= 2 && BX_SUPPORT_X86_64) ? VMX_VMENTRY_CTRL1_LOAD_EFER_MSR : 0))
 
 #endif
    
@@ -760,7 +766,8 @@ enum VMX_Activity_State {
 
 #define VMX_MSR_VMX_BASIC_LO (VMX_VMCS_REVISION_ID)
 #define VMX_MSR_VMX_BASIC_HI \
-     (VMX_VMCS_AREA_SIZE | ((!BX_SUPPORT_X86_64) << 16) | (BX_MEMTYPE_WB << 18) | (1<<22))
+     (VMX_VMCS_AREA_SIZE | ((!BX_SUPPORT_X86_64) << 16) | \
+     (BX_MEMTYPE_WB << 18) | (1<<22)) | ((BX_SUPPORT_VMX >= 2) ? (1<<23) : 0)
 
 #define VMX_MSR_VMX_BASIC \
    ((((Bit64u) VMX_MSR_VMX_BASIC_HI) << 32) | VMX_MSR_VMX_BASIC_LO)
@@ -796,7 +803,6 @@ enum VMX_Activity_State {
 #define VMX_MSR_VMX_PINBASED_CTRLS \
    ((((Bit64u) VMX_MSR_VMX_PINBASED_CTRLS_HI) << 32) | VMX_MSR_VMX_PINBASED_CTRLS_LO)
 
-
 // IA32_MSR_VMX_TRUE_PINBASED_CTRLS MSR (0x48d)
 // --------------------------------
 
@@ -824,7 +830,6 @@ enum VMX_Activity_State {
 #define VMX_MSR_VMX_PROCBASED_CTRLS \
    ((((Bit64u) VMX_MSR_VMX_PROCBASED_CTRLS_HI) << 32) | VMX_MSR_VMX_PROCBASED_CTRLS_LO)
 
-
 // IA32_MSR_VMX_TRUE_PROCBASED_CTRLS MSR (0x48e)
 // ---------------------------------
 
@@ -850,7 +855,6 @@ enum VMX_Activity_State {
 #define VMX_MSR_VMX_VMEXIT_CTRLS \
    ((((Bit64u) VMX_MSR_VMX_VMEXIT_CTRLS_HI) << 32) | VMX_MSR_VMX_VMEXIT_CTRLS_LO)
 
-
 // IA32_MSR_VMX_TRUE_VMEXIT_CTRLS MSR (0x48f)
 // ------------------------------
 
@@ -875,7 +879,6 @@ enum VMX_Activity_State {
 
 #define VMX_MSR_VMX_VMENTRY_CTRLS \
    ((((Bit64u) VMX_MSR_VMX_VMENTRY_CTRLS_HI) << 32) | VMX_MSR_VMX_VMENTRY_CTRLS_LO)
-
 
 // IA32_MSR_VMX_TRUE_VMENTRY_CTRLS MSR (0x490)
 // -------------------------------

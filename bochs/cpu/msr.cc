@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: msr.cc,v 1.44 2010-04-03 05:59:07 sshwarts Exp $
+// $Id: msr.cc,v 1.45 2010-04-03 07:30:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008-2009 Stanislav Shwartsman
@@ -161,9 +161,23 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
     case BX_MSR_VMX_VMENTRY_CTRLS:
       val64 = VMX_MSR_VMX_VMENTRY_CTRLS;
       break;
+#if BX_SUPPORT_VMX >= 2
     case BX_MSR_VMX_PROCBASED_CTRLS2:
       val64 = VMX_MSR_VMX_PROCBASED_CTRLS2;
       break;
+    case BX_MSR_VMX_TRUE_PINBASED_CTRLS:
+      val64 = VMX_MSR_VMX_TRUE_PINBASED_CTRLS;
+      break;
+    case BX_MSR_VMX_TRUE_PROCBASED_CTRLS:
+      val64 = VMX_MSR_VMX_TRUE_PROCBASED_CTRLS;
+      break;
+    case BX_MSR_VMX_TRUE_VMEXIT_CTRLS:
+      val64 = VMX_MSR_VMX_TRUE_VMEXIT_CTRLS;
+      break;
+    case BX_MSR_VMX_TRUE_VMENTRY_CTRLS:
+      val64 = VMX_MSR_VMX_TRUE_VMENTRY_CTRLS;
+      break;
+#endif
     case BX_MSR_VMX_MISC:
       val64 = VMX_MSR_MISC;
       break;
@@ -496,6 +510,7 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
     case BX_MSR_VMX_BASIC:
     case BX_MSR_VMX_PINBASED_CTRLS:
     case BX_MSR_VMX_PROCBASED_CTRLS:
+    case BX_MSR_VMX_PROCBASED_CTRLS2:
     case BX_MSR_VMX_VMEXIT_CTRLS:
     case BX_MSR_VMX_VMENTRY_CTRLS:
     case BX_MSR_VMX_MISC:
@@ -506,7 +521,6 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
     case BX_MSR_VMX_VMCS_ENUM:
     case BX_MSR_VMX_TRUE_PINBASED_CTRLS:
     case BX_MSR_VMX_TRUE_PROCBASED_CTRLS:
-    case BX_MSR_VMX_PROCBASED_CTRLS2:
     case BX_MSR_VMX_TRUE_VMEXIT_CTRLS:
     case BX_MSR_VMX_TRUE_VMENTRY_CTRLS:
       BX_ERROR(("WRMSR: VMX read only MSR"));

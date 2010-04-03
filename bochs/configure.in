@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.431 2010-04-02 08:00:57 sshwarts Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.432 2010-04-03 07:30:23 sshwarts Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -1391,15 +1391,28 @@ AC_SUBST(FPU_VAR)
 support_vmx=0
 AC_MSG_CHECKING(for VMX support)
 AC_ARG_ENABLE(vmx,
-  [  --enable-vmx                      virtualization extensions],
-  [if test "$enableval" = yes; then
-    AC_MSG_RESULT(yes)
-    AC_DEFINE(BX_SUPPORT_VMX, 1)
-    support_vmx=1
-   elif test "$enableval" = no; then
-    AC_MSG_RESULT(no)
-    AC_DEFINE(BX_SUPPORT_VMX, 0)
-   fi
+  [  --enable-vmx                      VMX (virtualization extensions) emulation (--enable-vmx=[no|1|2])],
+  [case "$enableval" in
+    no | 0)
+      support_vmx=0
+      AC_MSG_RESULT(no)
+      AC_DEFINE(BX_SUPPORT_VMX, 0)
+      ;;
+    yes | 1)
+      support_vmx=1
+      AC_MSG_RESULT(1)
+      AC_DEFINE(BX_SUPPORT_VMX, 1)
+      ;;
+    2)
+      support_vmx=2
+      AC_MSG_RESULT(2)
+      AC_DEFINE(BX_SUPPORT_VMX, 2)
+      ;;
+    *)
+      echo "ERROR: --enable-vmx=$enableval not understood. Use --enable-vmx=[no|1|2]"
+      exit 1
+      ;;
+   esac
    ],
   [
     AC_MSG_RESULT(no)

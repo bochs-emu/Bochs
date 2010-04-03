@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmx.cc,v 1.53 2010-04-02 08:03:04 sshwarts Exp $
+// $Id: vmx.cc,v 1.54 2010-04-03 07:30:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2009-2010 Stanislav Shwartsman
@@ -274,6 +274,26 @@ extern struct BxExceptionInfo exceptions_info[];
 
 #define VMENTRY_INJECTING_EVENT(vmentry_interr_info) (vmentry_interr_info & 0x80000000)
 
+#define VMX_CHECKS_USE_MSR_VMX_PINBASED_CTRLS_LO \
+  ((BX_SUPPORT_VMX >= 2) ? VMX_MSR_VMX_TRUE_PINBASED_CTRLS_LO : VMX_MSR_VMX_PINBASED_CTRLS_LO)
+#define VMX_CHECKS_USE_MSR_VMX_PINBASED_CTRLS_HI \
+  ((BX_SUPPORT_VMX >= 2) ? VMX_MSR_VMX_TRUE_PINBASED_CTRLS_HI : VMX_MSR_VMX_PINBASED_CTRLS_HI)
+
+#define VMX_CHECKS_USE_MSR_VMX_PROCBASED_CTRLS_LO \
+  ((BX_SUPPORT_VMX >= 2) ? VMX_MSR_VMX_TRUE_PROCBASED_CTRLS_LO : VMX_MSR_VMX_PROCBASED_CTRLS_LO)
+#define VMX_CHECKS_USE_MSR_VMX_PROCBASED_CTRLS_HI \
+  ((BX_SUPPORT_VMX >= 2) ? VMX_MSR_VMX_TRUE_PROCBASED_CTRLS_HI : VMX_MSR_VMX_PROCBASED_CTRLS_HI)
+
+#define VMX_CHECKS_USE_MSR_VMX_VMEXIT_CTRLS_LO \
+  ((BX_SUPPORT_VMX >= 2) ? VMX_MSR_VMX_TRUE_VMEXIT_CTRLS_LO : VMX_MSR_VMX_VMEXIT_CTRLS_LO)
+#define VMX_CHECKS_USE_MSR_VMX_VMEXIT_CTRLS_HI \
+  ((BX_SUPPORT_VMX >= 2) ? VMX_MSR_VMX_TRUE_VMEXIT_CTRLS_HI : VMX_MSR_VMX_VMEXIT_CTRLS_HI)
+
+#define VMX_CHECKS_USE_MSR_VMX_VMENTRY_CTRLS_LO \
+  ((BX_SUPPORT_VMX >= 2) ? VMX_MSR_VMX_TRUE_VMENTRY_CTRLS_LO : VMX_MSR_VMX_VMENTRY_CTRLS_LO)
+#define VMX_CHECKS_USE_MSR_VMX_VMENTRY_CTRLS_HI \
+  ((BX_SUPPORT_VMX >= 2) ? VMX_MSR_VMX_TRUE_VMENTRY_CTRLS_HI : VMX_MSR_VMX_VMENTRY_CTRLS_HI)
+
 VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
 {
   VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
@@ -284,9 +304,11 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
 
   vm->vmexec_ctrls1 = VMread32(VMCS_32BIT_CONTROL_PIN_BASED_EXEC_CONTROLS);
   vm->vmexec_ctrls2 = VMread32(VMCS_32BIT_CONTROL_PROCESSOR_BASED_VMEXEC_CONTROLS);
+#if BX_SUPPORT_VMX >= 2
   if (VMEXIT(VMX_VM_EXEC_CTRL2_SECONDARY_CONTROLS))
     vm->vmexec_ctrls3 = VMread32(VMCS_32BIT_CONTROL_SECONDARY_VMEXEC_CONTROLS);
   else
+#endif
     vm->vmexec_ctrls3 = 0;
   vm->vm_exceptions_bitmap = VMread32(VMCS_32BIT_CONTROL_EXECUTION_BITMAP);
   vm->vm_pf_mask = VMread32(VMCS_32BIT_CONTROL_PAGE_FAULT_ERR_CODE_MASK);
@@ -307,26 +329,27 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
   // Check VM-execution control fields
   //
 
-  if (~vm->vmexec_ctrls1 & VMX_MSR_VMX_PINBASED_CTRLS_LO) {
+  if (~vm->vmexec_ctrls1 & VMX_CHECKS_USE_MSR_VMX_PINBASED_CTRLS_LO) {
      BX_ERROR(("VMFAIL: VMCS EXEC CTRL: VMX pin-based controls allowed 0-settings"));
      return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
   }
 
-  if (vm->vmexec_ctrls1 & ~VMX_MSR_VMX_PINBASED_CTRLS_HI) {
+  if (vm->vmexec_ctrls1 & ~VMX_CHECKS_USE_MSR_VMX_PINBASED_CTRLS_HI) {
      BX_ERROR(("VMFAIL: VMCS EXEC CTRL: VMX pin-based controls allowed 1-settings"));
      return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
   }
 
-  if (~vm->vmexec_ctrls2 & VMX_MSR_VMX_PROCBASED_CTRLS_LO) {
+  if (~vm->vmexec_ctrls2 & VMX_CHECKS_USE_MSR_VMX_PROCBASED_CTRLS_LO) {
      BX_ERROR(("VMFAIL: VMCS EXEC CTRL: VMX proc-based controls allowed 0-settings"));
      return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
   }
 
-  if (vm->vmexec_ctrls2 & ~VMX_MSR_VMX_PROCBASED_CTRLS_HI) {
+  if (vm->vmexec_ctrls2 & ~VMX_CHECKS_USE_MSR_VMX_PROCBASED_CTRLS_HI) {
      BX_ERROR(("VMFAIL: VMCS EXEC CTRL: VMX proc-based controls allowed 1-settings"));
      return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
   }
 
+#if BX_SUPPORT_VMX >= 2
   if (~vm->vmexec_ctrls3 & VMX_MSR_VMX_PROCBASED_CTRLS2_LO) {
      BX_ERROR(("VMFAIL: VMCS EXEC CTRL: VMX secondary proc-based controls allowed 0-settings"));
      return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
@@ -336,6 +359,7 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
      BX_ERROR(("VMFAIL: VMCS EXEC CTRL: VMX secondary proc-based controls allowed 1-settings"));
      return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
   }
+#endif
 
   if (vm->vm_cr3_target_cnt > VMX_CR3_TARGET_MAX_CNT) {
      BX_ERROR(("VMFAIL: VMCS EXEC CTRL: too may CR3 targets %d", vm->vm_cr3_target_cnt));
@@ -397,6 +421,7 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
      }
   }
 
+#if BX_SUPPORT_VMX >= 2
   if (vm->vmexec_ctrls3 & VMX_VM_EXEC_CTRL3_VIRTUALIZE_APIC_ACCESSES) {
      vm->apic_access_page = (bx_phy_address) VMread64(VMCS_64BIT_CONTROL_APIC_ACCESS_ADDR);
      if ((vm->apic_access_page & 0xfff) != 0 || ! IsValidPhyAddr(vm->apic_access_page)) {
@@ -404,6 +429,7 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
        return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
      }
   }
+#endif
 
   //
   // Load VM-exit control fields to VMCS Cache
@@ -417,12 +443,12 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
   // Check VM-exit control fields
   //
 
-  if (~vm->vmexit_ctrls & VMX_MSR_VMX_VMEXIT_CTRLS_LO) {
+  if (~vm->vmexit_ctrls & VMX_CHECKS_USE_MSR_VMX_VMEXIT_CTRLS_LO) {
      BX_ERROR(("VMFAIL: VMCS EXEC CTRL: VMX vmexit controls allowed 0-settings"));
      return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
   }
 
-  if (vm->vmexit_ctrls & ~VMX_MSR_VMX_VMEXIT_CTRLS_HI) {
+  if (vm->vmexit_ctrls & ~VMX_CHECKS_USE_MSR_VMX_VMEXIT_CTRLS_HI) {
      BX_ERROR(("VMFAIL: VMCS EXEC CTRL: VMX vmexit controls allowed 1-settings"));
      return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
   }
@@ -466,12 +492,12 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
   // Check VM-entry control fields
   //
 
-  if (~vm->vmentry_ctrls & VMX_MSR_VMX_VMENTRY_CTRLS_LO) {
+  if (~vm->vmentry_ctrls & VMX_CHECKS_USE_MSR_VMX_VMENTRY_CTRLS_LO) {
      BX_ERROR(("VMFAIL: VMCS EXEC CTRL: VMX vmentry controls allowed 0-settings"));
      return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
   }
 
-  if (vm->vmentry_ctrls & ~VMX_MSR_VMX_VMENTRY_CTRLS_HI) {
+  if (vm->vmentry_ctrls & ~VMX_CHECKS_USE_MSR_VMX_VMENTRY_CTRLS_HI) {
      BX_ERROR(("VMFAIL: VMCS EXEC CTRL: VMX vmentry controls allowed 1-settings"));
      return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
   }
@@ -706,6 +732,7 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckHostState(void)
   }
 #endif
 
+#if BX_SUPPORT_VMX >= 2
   if (vmexit_ctrls & VMX_VMEXIT_CTRL1_LOAD_PAT_MSR) {
     host_state->pat_msr = VMread64(VMCS_64BIT_HOST_IA32_PAT);
     if (! isValidMSR_PAT(host_state->pat_msr)) {
@@ -713,11 +740,14 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckHostState(void)
       return VMXERR_VMENTRY_INVALID_VM_HOST_STATE_FIELD;
     }
   }
+#endif
 
   host_state->rsp = (bx_address) VMread64(VMCS_HOST_RSP);
   host_state->rip = (bx_address) VMread64(VMCS_HOST_RIP);
 
 #if BX_SUPPORT_X86_64
+
+#if BX_SUPPORT_VMX >= 2
   if (vmexit_ctrls & VMX_VMEXIT_CTRL1_LOAD_EFER_MSR) {
     host_state->efer_msr = VMread64(VMCS_64BIT_HOST_IA32_EFER);
     if (host_state->efer_msr & ~BX_EFER_SUPPORTED_BITS) {
@@ -731,6 +761,7 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckHostState(void)
       return VMXERR_VMENTRY_INVALID_VM_HOST_STATE_FIELD;
     }
   }
+#endif
 
   if (x86_64_host) {
      if ((host_state->cr4 & (1<<5)) == 0) { // PAE
@@ -1154,6 +1185,7 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
   }
 #endif
 
+#if BX_SUPPORT_VMX >= 2
   if (vmentry_ctrls & VMX_VMENTRY_CTRL1_LOAD_PAT_MSR) {
     guest.pat_msr = VMread64(VMCS_64BIT_GUEST_IA32_PAT);
     if (! isValidMSR_PAT(guest.pat_msr)) {
@@ -1161,11 +1193,12 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
       return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
     }
   }
+#endif
 
   guest.rip = VMread64(VMCS_GUEST_RIP);
   guest.rsp = VMread64(VMCS_GUEST_RSP);
 
-#if BX_SUPPORT_X86_64
+#if BX_SUPPORT_VMX >= 2 && BX_SUPPORT_X86_64
   if (vmentry_ctrls & VMX_VMENTRY_CTRL1_LOAD_EFER_MSR) {
     guest.efer_msr = VMread64(VMCS_64BIT_GUEST_IA32_EFER);
     if (guest.efer_msr & ~BX_EFER_SUPPORTED_BITS) {
@@ -1306,10 +1339,13 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
   //
 
 #if BX_SUPPORT_X86_64
+#if BX_SUPPORT_VMX >= 2
   if (vmentry_ctrls & VMX_VMENTRY_CTRL1_LOAD_EFER_MSR) {
      BX_CPU_THIS_PTR efer.set32(guest.efer_msr);
   }
-  else {
+  else
+#endif
+  {
     // set EFER.LMA and EFER.LME before write to CR4
     if (x86_64_guest)
        BX_CPU_THIS_PTR efer.set32(BX_CPU_THIS_PTR efer.get32() |  ((1 << 8) | (1 << 10)));
@@ -1378,9 +1414,11 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
   BX_CPU_THIS_PTR msr.sysenter_eip_msr = guest.sysenter_eip_msr;
   BX_CPU_THIS_PTR msr.sysenter_cs_msr  = guest.sysenter_cs_msr;
 
+#if BX_SUPPORT_VMX >= 2
   if (vmentry_ctrls & VMX_VMENTRY_CTRL1_LOAD_PAT_MSR) {
     BX_CPU_THIS_PTR msr.pat = guest.pat_msr;
   }
+#endif
 
   //
   // Load Guest Non-Registers State -> VMENTER
@@ -1627,12 +1665,13 @@ void BX_CPU_C::VMexitSaveGuestState(void)
   VMwrite64(VMCS_GUEST_IA32_SYSENTER_EIP_MSR, BX_CPU_THIS_PTR msr.sysenter_eip_msr);
   VMwrite32(VMCS_32BIT_GUEST_IA32_SYSENTER_CS_MSR, BX_CPU_THIS_PTR msr.sysenter_cs_msr);
 
+#if BX_SUPPORT_VMX >= 2
   if (vm->vmexit_ctrls & VMX_VMEXIT_CTRL1_STORE_PAT_MSR)
     VMwrite64(VMCS_64BIT_GUEST_IA32_PAT, BX_CPU_THIS_PTR msr.pat);
-
 #if BX_SUPPORT_X86_64
   if (vm->vmexit_ctrls & VMX_VMEXIT_CTRL1_STORE_EFER_MSR)
     VMwrite64(VMCS_64BIT_GUEST_IA32_EFER, BX_CPU_THIS_PTR efer.get32());
+#endif
 #endif
 
   Bit32u tmpDR6 = BX_CPU_THIS_PTR debug_trap;
@@ -1665,10 +1704,13 @@ void BX_CPU_C::VMexitLoadHostState(void)
      x86_64_host = 1;
   }
 
+#if BX_SUPPORT_VMX >= 2
   if (vmexit_ctrls & VMX_VMEXIT_CTRL1_LOAD_EFER_MSR) {
      BX_CPU_THIS_PTR efer.set32(host_state->efer_msr);
   }
-  else {
+  else
+#endif
+  {
     // set EFER.LMA and EFER.LME before write to CR4
     if (x86_64_host)
        BX_CPU_THIS_PTR efer.set32(BX_CPU_THIS_PTR efer.get32() |  ((1 << 8) | (1 << 10)));
@@ -1704,9 +1746,11 @@ void BX_CPU_C::VMexitLoadHostState(void)
   BX_CPU_THIS_PTR msr.sysenter_esp_msr = host_state->sysenter_esp_msr;
   BX_CPU_THIS_PTR msr.sysenter_eip_msr = host_state->sysenter_eip_msr;
 
+#if BX_SUPPORT_VMX >= 2
   if (vmexit_ctrls & VMX_VMEXIT_CTRL1_LOAD_PAT_MSR) {
     BX_CPU_THIS_PTR msr.pat = host_state->pat_msr;
   }
+#endif
 
   // CS selector loaded from VMCS
   //    valid   <= 1
@@ -3010,7 +3054,9 @@ void BX_CPU_C::register_vmx_state(bx_param_c *parent)
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, vm_cr3_target_value4, BX_CPU_THIS_PTR vmcs.vm_cr3_target_value[3]);
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, virtual_apic_page_addr, BX_CPU_THIS_PTR vmcs.virtual_apic_page_addr);
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, vm_tpr_threshold, BX_CPU_THIS_PTR vmcs.vm_tpr_threshold);
+#if BX_SUPPORT_VMX >= 2
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, apic_access_page, BX_CPU_THIS_PTR vmcs.apic_access_page);
+#endif
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, executive_vmcsptr, BX_CPU_THIS_PTR vmcs.executive_vmcsptr);
 
   //
@@ -3087,9 +3133,11 @@ void BX_CPU_C::register_vmx_state(bx_param_c *parent)
   BXRS_HEX_PARAM_FIELD(host, sysenter_esp_msr, BX_CPU_THIS_PTR vmcs.host_state.sysenter_esp_msr);
   BXRS_HEX_PARAM_FIELD(host, sysenter_eip_msr, BX_CPU_THIS_PTR vmcs.host_state.sysenter_eip_msr);
   BXRS_HEX_PARAM_FIELD(host, sysenter_cs_msr, BX_CPU_THIS_PTR vmcs.host_state.sysenter_cs_msr);
+#if BX_SUPPORT_VMX >= 2
   BXRS_HEX_PARAM_FIELD(host, pat_msr, BX_CPU_THIS_PTR vmcs.host_state.pat_msr);
 #if BX_SUPPORT_X86_64
   BXRS_HEX_PARAM_FIELD(host, efer_msr, BX_CPU_THIS_PTR vmcs.host_state.efer_msr);
+#endif
 #endif
 }
 

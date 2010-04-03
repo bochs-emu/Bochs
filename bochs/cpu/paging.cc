@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.206 2010-04-02 16:56:59 sshwarts Exp $
+// $Id: paging.cc,v 1.207 2010-04-03 07:30:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2010  The Bochs Project
@@ -1390,7 +1390,7 @@ void BX_CPU_C::access_read_linear(bx_address laddr, unsigned len, unsigned curr_
 
 void BX_CPU_C::access_write_physical(bx_phy_address paddr, unsigned len, void *data)
 {
-#if BX_SUPPORT_VMX
+#if BX_SUPPORT_VMX >= 2
   if (is_virtual_apic_page(paddr)) {
     VMX_Virtual_Apic_Write(paddr, len, data);
     return;
@@ -1409,7 +1409,7 @@ void BX_CPU_C::access_write_physical(bx_phy_address paddr, unsigned len, void *d
 
 void BX_CPU_C::access_read_physical(bx_phy_address paddr, unsigned len, void *data)
 {
-#if BX_SUPPORT_VMX
+#if BX_SUPPORT_VMX >= 2
   if (is_virtual_apic_page(paddr)) {
     VMX_Virtual_Apic_Read(paddr, len, data);
     return;
@@ -1428,7 +1428,7 @@ void BX_CPU_C::access_read_physical(bx_phy_address paddr, unsigned len, void *da
 
 bx_hostpageaddr_t BX_CPU_C::getHostMemAddr(bx_phy_address ppf, unsigned rw)
 {
-#if BX_SUPPORT_VMX
+#if BX_SUPPORT_VMX >= 2
   if (is_virtual_apic_page(ppf))
     return 0; // Do not allow direct access to virtual apic page
 #endif

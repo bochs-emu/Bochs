@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.662 2010-04-03 05:59:07 sshwarts Exp $
+// $Id: cpu.h,v 1.663 2010-04-03 07:30:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2010  The Bochs Project
@@ -3386,12 +3386,14 @@ public: // for now...
   BX_SMF void set_VMCSPTR(Bit64u vmxptr);
   BX_SMF void init_VMCS(void);
   BX_SMF void register_vmx_state(bx_param_c *parent);
+#if BX_SUPPORT_VMX >= 2
   BX_SMF bx_bool is_virtual_apic_page(bx_phy_address paddr) BX_CPP_AttrRegparmN(1);
-  BX_SMF Bit64s VMX_TSC_Offset(void);
-  BX_SMF Bit32u VMX_Read_VTPR(void);
-  BX_SMF void VMX_Write_TPR_Shadow(Bit8u tpr_shadow);
   BX_SMF void VMX_Virtual_Apic_Read(bx_phy_address paddr, unsigned len, void *data);
   BX_SMF void VMX_Virtual_Apic_Write(bx_phy_address paddr, unsigned len, void *data);
+#endif
+  BX_SMF Bit32u VMX_Read_VTPR(void);
+  BX_SMF void VMX_Write_TPR_Shadow(Bit8u tpr_shadow);
+  BX_SMF Bit64s VMX_TSC_Offset(void);
   // vmexit reasons
   BX_SMF void VMexit_Instruction(bxInstruction_c *i, Bit32u reason) BX_CPP_AttrRegparmN(2);
   BX_SMF void VMexit_Event(bxInstruction_c *i, unsigned type, unsigned vector,
@@ -3405,7 +3407,9 @@ public: // for now...
   BX_SMF void VMexit_INVLPG(bxInstruction_c *i, bx_address laddr) BX_CPP_AttrRegparmN(2);
   BX_SMF void VMexit_RDTSC(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
   BX_SMF void VMexit_RDPMC(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
+#if BX_SUPPORT_VMX >= 2
   BX_SMF void VMexit_WBINVD(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
+#endif
   BX_SMF bx_bool VMexit_CLTS(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
   BX_SMF void VMexit_MSR(bxInstruction_c *i, unsigned op, Bit32u msr) BX_CPP_AttrRegparmN(3);
   BX_SMF void VMexit_IO(bxInstruction_c *i, unsigned port, unsigned len) BX_CPP_AttrRegparmN(3);
