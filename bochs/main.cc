@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.417 2010-03-05 20:42:10 sshwarts Exp $
+// $Id: main.cc,v 1.418 2010-04-03 10:14:42 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -80,6 +80,7 @@ bx_startup_flags_t bx_startup_flags;
 bx_bool bx_user_quit;
 Bit8u bx_cpu_count;
 Bit32u apic_id_mask; // determinted by XAPIC option
+bx_bool simulate_xapic;
 
 /* typedefs */
 
@@ -866,20 +867,20 @@ int bx_begin_simulation (int argc, char *argv[])
                  SIM->get_param_num(BXPN_CPU_NTHREADS)->get();
 
 #if BX_CPU_LEVEL >= 6
-  bx_bool xapic = SIM->get_param_bool(BXPN_CPUID_XAPIC)->get();
+  simulate_xapic = SIM->get_param_bool(BXPN_CPUID_XAPIC)->get();
 #else
-  bx_bool xapic = 0;
+  simulate_xapic = 0;
 #endif
 
   // For P6 and Pentium family processors the local APIC ID feild is 4 bits
   // APIC_MAX_ID indicate broadcast so it can't be used as valid APIC ID
-  apic_id_mask = xapic ? 0xFF : 0xF;
+  apic_id_mask = simulate_xapic ? 0xFF : 0xF;
 
   // leave one APIC ID to I/O APIC
   unsigned max_smp_threads = apic_id_mask - 1;
   if (bx_cpu_count > max_smp_threads) {
     BX_PANIC(("cpu: too many SMP threads defined, only %u threads supported by %sAPIC",
-      max_smp_threads, xapic ? "x" : "legacy "));
+      max_smp_threads, simulate_xapic ? "x" : "legacy "));
   }
 
   BX_ASSERT(bx_cpu_count > 0);
@@ -1043,7 +1044,11 @@ void bx_init_hardware()
 #endif
   BX_INFO(("  x86-64 support: %s",BX_SUPPORT_X86_64?"yes":"no"));
   BX_INFO(("  MWAIT support: %s",BX_SUPPORT_MONITOR_MWAIT?"yes":"no"));
-  BX_INFO(("  VMX support: %s",BX_SUPPORT_VMX?"yes":"no"));
+#if BX_SUPPORT_VMX
+  BX_INFO(("  VMX support: %d",BX_SUPPORT_VMX));
+#else
+  BX_INFO(("  VMX support: no",));
+#endif
 #endif
   BX_INFO(("Optimization configuration"));
   BX_INFO(("  RepeatSpeedups support: %s",BX_SupportRepeatSpeedups?"yes":"no"));
