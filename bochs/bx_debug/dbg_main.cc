@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.234 2010-03-31 14:00:46 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.235 2010-04-03 05:59:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -665,9 +665,9 @@ void bx_dbg_exit(int code)
 void bx_dbg_print_sse_state(void)
 {
 #if BX_CPU_LEVEL >= 6
-  Bit32u cpuid_features_bitmask = SIM->get_param_num("cpuid_features_bitmask", dbg_cpu_list)->get();
+  Bit32u isa_extensions_bitmask = SIM->get_param_num("isa_extensions_bitmask", dbg_cpu_list)->get();
 
-  if ((cpuid_features_bitmask & BX_CPU_SSE) != 0) {
+  if ((isa_extensions_bitmask & BX_CPU_SSE) != 0) {
     Bit32u mxcsr = SIM->get_param_num("SSE.mxcsr", dbg_cpu_list)->get();
     dbg_printf("MXCSR: 0x%08x: %s %s RC:%d %s %s %s %s %s %s %s %s %s %s %s %s %s\n", mxcsr,
        (mxcsr & (1<<17)) ? "ULE" : "ule",
@@ -707,9 +707,9 @@ void bx_dbg_print_sse_state(void)
 void bx_dbg_print_mmx_state(void)
 {
 #if BX_CPU_LEVEL >= 5
-  Bit32u cpuid_features_bitmask = SIM->get_param_num("cpuid_features_bitmask", dbg_cpu_list)->get();
+  Bit32u isa_extensions_bitmask = SIM->get_param_num("isa_extensions_bitmask", dbg_cpu_list)->get();
 
-  if ((cpuid_features_bitmask & BX_CPU_MMX) != 0) {
+  if ((isa_extensions_bitmask & BX_CPU_MMX) != 0) {
     char param_name[20];
     for(unsigned i=0;i<8;i++) {
       sprintf(param_name, "FPU.st%d.fraction", i);

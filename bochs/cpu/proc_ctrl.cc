@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.328 2010-04-02 21:22:17 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.329 2010-04-03 05:59:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2010  The Bochs Project
@@ -561,7 +561,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDPMC(bxInstruction_c *i)
      * limited to 40 bits.
      */
 
-    if (BX_CPU_SUPPORT_FEATURE(BX_CPU_SSE2)) { // Pentium 4 processor (see cpuid.cc)
+    if (BX_CPU_SUPPORT_ISA_EXTENSION(BX_CPU_SSE2)) { // Pentium 4 processor (see cpuid.cc)
       if ((ECX & 0x7fffffff) >= 18)
         exception(BX_GP_EXCEPTION, 0);
     }

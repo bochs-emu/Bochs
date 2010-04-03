@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.235 2010-03-26 11:09:12 sshwarts Exp $
+// $Id: init.cc,v 1.236 2010-04-03 05:59:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -152,8 +152,8 @@ void BX_CPU_C::initialize(void)
 {
   BX_CPU_THIS_PTR set_INTR(0);
 
-  init_cpu_features_bitmask();
-  init_FetchDecodeTables(); // must be called after init_cpu_features_bitmask()
+  init_isa_features_bitmask();
+  init_FetchDecodeTables(); // must be called after init_isa_features_bitmask()
 
 #if BX_CONFIGURE_MSRS
   for (unsigned n=0; n < BX_MSR_MAX_INDEX; n++) {
@@ -312,7 +312,7 @@ void BX_CPU_C::register_state(void)
   BXRS_PARAM_SPECIAL32(cpu, cpu_version, param_save_handler, param_restore_handler);
   BXRS_PARAM_SPECIAL32(cpu, cpuid_std,   param_save_handler, param_restore_handler);
   BXRS_PARAM_SPECIAL32(cpu, cpuid_ext,   param_save_handler, param_restore_handler);
-  BXRS_HEX_PARAM_SIMPLE(cpu, cpuid_features_bitmask);
+  BXRS_HEX_PARAM_SIMPLE(cpu, isa_extensions_bitmask);
   BXRS_DEC_PARAM_SIMPLE(cpu, cpu_mode);
   BXRS_HEX_PARAM_SIMPLE(cpu, activity_state);
   BXRS_HEX_PARAM_SIMPLE(cpu, inhibit_mask);
@@ -363,7 +363,7 @@ void BX_CPU_C::register_state(void)
   BXRS_HEX_PARAM_FIELD(cpu, CR4, cr4.val32);
 #endif
 #if BX_CPU_LEVEL >= 6
-  if (BX_CPU_SUPPORT_FEATURE(BX_CPU_XSAVE)) {
+  if (BX_CPU_SUPPORT_ISA_EXTENSION(BX_CPU_XSAVE)) {
     BXRS_HEX_PARAM_FIELD(cpu, XCR0, xcr0.val32);
   }
 #endif
@@ -511,7 +511,7 @@ void BX_CPU_C::register_state(void)
 #endif
 
 #if BX_CPU_LEVEL >= 6
-  if (BX_CPU_SUPPORT_FEATURE(BX_CPU_SSE)) {
+  if (BX_CPU_SUPPORT_ISA_EXTENSION(BX_CPU_SSE)) {
     bx_list_c *sse = new bx_list_c(cpu, "SSE", 2*BX_XMM_REGISTERS+1);
     BXRS_HEX_PARAM_FIELD(sse, mxcsr, mxcsr.mxcsr);
     for (n=0; n<BX_XMM_REGISTERS; n++) {
@@ -1027,7 +1027,7 @@ void BX_CPU_C::reset(unsigned source)
 
     BX_CPU_THIS_PTR mxcsr.mxcsr = MXCSR_RESET;
     BX_CPU_THIS_PTR mxcsr_mask = 0x0000FFBF;
-    if (BX_CPU_SUPPORT_FEATURE(BX_CPU_SSE2))
+    if (BX_CPU_SUPPORT_ISA_EXTENSION(BX_CPU_SSE2))
       BX_CPU_THIS_PTR mxcsr_mask |= MXCSR_DAZ;
     if (BX_SUPPORT_MISALIGNED_SSE)
       BX_CPU_THIS_PTR mxcsr_mask |= MXCSR_MISALIGNED_EXCEPTION_MASK;

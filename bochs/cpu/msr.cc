@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: msr.cc,v 1.43 2010-03-26 21:26:08 sshwarts Exp $
+// $Id: msr.cc,v 1.44 2010-04-03 05:59:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008-2009 Stanislav Shwartsman
@@ -44,7 +44,7 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
 
 #if BX_CPU_LEVEL >= 6
     case BX_MSR_SYSENTER_CS:
-      if (! BX_CPU_SUPPORT_FEATURE(BX_CPU_SYSENTER_SYSEXIT)) {
+      if (! BX_CPU_SUPPORT_ISA_EXTENSION(BX_CPU_SYSENTER_SYSEXIT)) {
         // failed to find the MSR, could #GP or ignore it silently
         BX_ERROR(("RDMSR MSR_SYSENTER_CS: SYSENTER/SYSEXIT feature not enabled !"));
         if (! BX_CPU_THIS_PTR ignore_bad_msrs)
@@ -54,7 +54,7 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
       break;
 
     case BX_MSR_SYSENTER_ESP:
-      if (! BX_CPU_SUPPORT_FEATURE(BX_CPU_SYSENTER_SYSEXIT)) {
+      if (! BX_CPU_SUPPORT_ISA_EXTENSION(BX_CPU_SYSENTER_SYSEXIT)) {
         // failed to find the MSR, could #GP or ignore it silently
         BX_ERROR(("RDMSR MSR_SYSENTER_ESP: SYSENTER/SYSEXIT feature not enabled !"));
         if (! BX_CPU_THIS_PTR ignore_bad_msrs)
@@ -64,7 +64,7 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
       break;
 
     case BX_MSR_SYSENTER_EIP:
-      if (! BX_CPU_SUPPORT_FEATURE(BX_CPU_SYSENTER_SYSEXIT)) {
+      if (! BX_CPU_SUPPORT_ISA_EXTENSION(BX_CPU_SYSENTER_SYSEXIT)) {
         // failed to find the MSR, could #GP or ignore it silently
         BX_ERROR(("RDMSR MSR_SYSENTER_EIP: SYSENTER/SYSEXIT feature not enabled !"));
         if (! BX_CPU_THIS_PTR ignore_bad_msrs)
@@ -328,7 +328,7 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
 
 #if BX_CPU_LEVEL >= 6
     case BX_MSR_SYSENTER_CS:
-      if (! BX_CPU_SUPPORT_FEATURE(BX_CPU_SYSENTER_SYSEXIT)) {
+      if (! BX_CPU_SUPPORT_ISA_EXTENSION(BX_CPU_SYSENTER_SYSEXIT)) {
         // failed to find the MSR, could #GP or ignore it silently
         BX_ERROR(("WRMSR MSR_SYSENTER_CS: SYSENTER/SYSEXIT feature not enabled !"));
         if (! BX_CPU_THIS_PTR ignore_bad_msrs)
@@ -338,7 +338,7 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
       break;
 
     case BX_MSR_SYSENTER_ESP:
-      if (! BX_CPU_SUPPORT_FEATURE(BX_CPU_SYSENTER_SYSEXIT)) {
+      if (! BX_CPU_SUPPORT_ISA_EXTENSION(BX_CPU_SYSENTER_SYSEXIT)) {
         // failed to find the MSR, could #GP or ignore it silently
         BX_ERROR(("WRMSR MSR_SYSENTER_ESP: SYSENTER/SYSEXIT feature not enabled !"));
         if (! BX_CPU_THIS_PTR ignore_bad_msrs)
@@ -354,7 +354,7 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
       break;
 
     case BX_MSR_SYSENTER_EIP:
-      if (! BX_CPU_SUPPORT_FEATURE(BX_CPU_SYSENTER_SYSEXIT)) {
+      if (! BX_CPU_SUPPORT_ISA_EXTENSION(BX_CPU_SYSENTER_SYSEXIT)) {
         // failed to find the MSR, could #GP or ignore it silently
         BX_ERROR(("WRMSR MSR_SYSENTER_EIP: SYSENTER/SYSEXIT feature not enabled !"));
         if (! BX_CPU_THIS_PTR ignore_bad_msrs)

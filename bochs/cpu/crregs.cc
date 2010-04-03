@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: crregs.cc,v 1.4 2010-03-31 14:00:46 sshwarts Exp $
+// $Id: crregs.cc,v 1.5 2010-04-03 05:59:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2010 Stanislav Shwartsman
@@ -889,7 +889,7 @@ bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::SetCR0(bx_address val)
 }
 
 #if BX_CPU_LEVEL >= 4
-bx_address get_cr4_allow_mask(Bit32u cpuid_features_bitmask)
+bx_address get_cr4_allow_mask(Bit32u isa_extensions_bitmask)
 {
   bx_address allowMask = 0;
 
@@ -941,11 +941,11 @@ bx_address get_cr4_allow_mask(Bit32u cpuid_features_bitmask)
   allowMask |= (1<<8);   /* PCE */
 
   /* OSFXSR */
-  if (cpuid_features_bitmask & BX_CPU_FXSAVE_FXRSTOR)
+  if (isa_extensions_bitmask & BX_CPU_FXSAVE_FXRSTOR)
     allowMask |= (1<<9);   /* OSFXSR */
 
   /* OSXMMECPT */
-  if (cpuid_features_bitmask & BX_CPU_SSE)
+  if (isa_extensions_bitmask & BX_CPU_SSE)
     allowMask |= (1<<10);
 #endif
 
@@ -959,7 +959,7 @@ bx_address get_cr4_allow_mask(Bit32u cpuid_features_bitmask)
 
 #if BX_CPU_LEVEL >= 6
   /* OSXSAVE */
-  if (cpuid_features_bitmask & BX_CPU_XSAVE)
+  if (isa_extensions_bitmask & BX_CPU_XSAVE)
     allowMask |= (1<<18);
 #endif
 
@@ -969,7 +969,7 @@ bx_address get_cr4_allow_mask(Bit32u cpuid_features_bitmask)
 bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::check_CR4(bx_address cr4_val)
 {
   bx_cr4_t temp_cr4;
-  bx_address cr4_allow_mask = get_cr4_allow_mask(BX_CPU_THIS_PTR cpuid_features_bitmask);
+  bx_address cr4_allow_mask = get_cr4_allow_mask(BX_CPU_THIS_PTR isa_extensions_bitmask);
   temp_cr4.val32 = (Bit32u) cr4_val;
 
 #if BX_SUPPORT_X86_64

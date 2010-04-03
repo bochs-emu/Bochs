@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpuid.cc,v 1.110 2010-03-31 14:00:46 sshwarts Exp $
+// $Id: cpuid.cc,v 1.111 2010-04-03 05:59:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007-2010 Stanislav Shwartsman
@@ -76,7 +76,7 @@ Bit32u BX_CPU_C::get_cpu_version_information(void)
 #elif BX_CPU_LEVEL == 5	
   family   = 5;
 
-  if (BX_CPU_SUPPORT_FEATURE(BX_CPU_MMX))
+  if (BX_CPU_SUPPORT_ISA_EXTENSION(BX_CPU_MMX))
     model = 4; // Pentium MMX
   else
     model = 1; // Pentium 60/66
@@ -164,47 +164,47 @@ Bit32u BX_CPU_C::get_extended_cpuid_features(void)
   Bit32u features = 0;
 
   // support SSE3
-  if (BX_CPU_THIS_PTR cpuid_features_bitmask & BX_CPU_SSE3)
+  if (BX_CPU_THIS_PTR isa_extensions_bitmask & BX_CPU_SSE3)
     features |= (1<<0);
 
   // support for PCLMULQDQ
-  if (BX_CPU_THIS_PTR cpuid_features_bitmask & BX_CPU_AES_PCLMULQDQ)
+  if (BX_CPU_THIS_PTR isa_extensions_bitmask & BX_CPU_AES_PCLMULQDQ)
     features |= (1<<1);
 
-  if (BX_CPU_THIS_PTR cpuid_features_bitmask & BX_CPU_MONITOR_MWAIT)
+  if (BX_CPU_THIS_PTR isa_extensions_bitmask & BX_CPU_MONITOR_MWAIT)
     features |= (1<<3);
 
-  if (BX_CPU_THIS_PTR cpuid_features_bitmask & BX_CPU_VMX)
+  if (BX_CPU_THIS_PTR isa_extensions_bitmask & BX_CPU_VMX)
     features |= (1<<5);
 
-  if (BX_CPU_THIS_PTR cpuid_features_bitmask & BX_CPU_SSSE3)
+  if (BX_CPU_THIS_PTR isa_extensions_bitmask & BX_CPU_SSSE3)
     features |= (1<<9);
 
 #if BX_SUPPORT_X86_64
   // support CMPXCHG16B
-  if (BX_CPU_THIS_PTR cpuid_features_bitmask & BX_CPU_X86_64)
+  if (BX_CPU_THIS_PTR isa_extensions_bitmask & BX_CPU_X86_64)
     features |= (1<<13);
 #endif
 
-  if (BX_CPU_THIS_PTR cpuid_features_bitmask & BX_CPU_SSE4_1)
+  if (BX_CPU_THIS_PTR isa_extensions_bitmask & BX_CPU_SSE4_1)
     features |= (1<<19);
 
-  if (BX_CPU_THIS_PTR cpuid_features_bitmask & BX_CPU_SSE4_2)
+  if (BX_CPU_THIS_PTR isa_extensions_bitmask & BX_CPU_SSE4_2)
     features |= (1<<20);
 
-  if (BX_CPU_THIS_PTR cpuid_features_bitmask & BX_CPU_MOVBE)
+  if (BX_CPU_THIS_PTR isa_extensions_bitmask & BX_CPU_MOVBE)
     features |= (1<<22);
 
   // enable POPCNT if SSE4_2 is enabled
-  if (BX_CPU_THIS_PTR cpuid_features_bitmask & BX_CPU_SSE4_2)
+  if (BX_CPU_THIS_PTR isa_extensions_bitmask & BX_CPU_SSE4_2)
     features |= (1<<23);
 
   // support for AES
-  if (BX_CPU_THIS_PTR cpuid_features_bitmask & BX_CPU_AES_PCLMULQDQ)
+  if (BX_CPU_THIS_PTR isa_extensions_bitmask & BX_CPU_AES_PCLMULQDQ)
     features |= (1<<25);
 
   // support XSAVE extensions
-  if (BX_CPU_THIS_PTR cpuid_features_bitmask & BX_CPU_XSAVE)
+  if (BX_CPU_THIS_PTR isa_extensions_bitmask & BX_CPU_XSAVE)
     features |= (1<<26) | (1<<27);
 
   return features;
@@ -248,11 +248,11 @@ Bit32u BX_CPU_C::get_std_cpuid_features(void)
 
   Bit32u features = 0;
 
-  if (BX_CPU_THIS_PTR cpuid_features_bitmask & BX_CPU_X87)
+  if (BX_CPU_THIS_PTR isa_extensions_bitmask & BX_CPU_X87)
     features |= (1<<0);
 
 #if BX_CPU_LEVEL >= 5
-  if (BX_CPU_THIS_PTR cpuid_features_bitmask & BX_CPU_PENTIUM) {
+  if (BX_CPU_THIS_PTR isa_extensions_bitmask & BX_CPU_PENTIUM) {
     // Pentium only features
     features |= (1<<1);             // support VME
     features |= (1<<3);             // support PSE
@@ -272,19 +272,19 @@ Bit32u BX_CPU_C::get_std_cpuid_features(void)
     features |= (1<<9); // APIC on chip
 #endif
 
-  if (BX_CPU_THIS_PTR cpuid_features_bitmask & BX_CPU_SYSENTER_SYSEXIT)
+  if (BX_CPU_THIS_PTR isa_extensions_bitmask & BX_CPU_SYSENTER_SYSEXIT)
     features |= (1<<11);
 
-  if (BX_CPU_THIS_PTR cpuid_features_bitmask & BX_CPU_CLFLUSH)
+  if (BX_CPU_THIS_PTR isa_extensions_bitmask & BX_CPU_CLFLUSH)
     features |= (1<<19);
 
 #if BX_CPU_LEVEL >= 5
-  if (BX_CPU_THIS_PTR cpuid_features_bitmask & BX_CPU_MMX)
+  if (BX_CPU_THIS_PTR isa_extensions_bitmask & BX_CPU_MMX)
     features |= (1<<23);
 #endif
 
 #if BX_CPU_LEVEL >= 6
-  if (BX_CPU_THIS_PTR cpuid_features_bitmask & BX_CPU_P6) {
+  if (BX_CPU_THIS_PTR isa_extensions_bitmask & BX_CPU_P6) {
     features |= (1<<6);   // support PAE
     features |= (1<<12);  // support MTRRs
     features |= (1<<13);  // support Global pages
@@ -293,13 +293,13 @@ Bit32u BX_CPU_C::get_std_cpuid_features(void)
     features |= (1<<17);  // support PSE-36
   }
 
-  if (BX_CPU_THIS_PTR cpuid_features_bitmask & BX_CPU_FXSAVE_FXRSTOR)
+  if (BX_CPU_THIS_PTR isa_extensions_bitmask & BX_CPU_FXSAVE_FXRSTOR)
     features |= (1<<24);  // support FSAVE/FXRSTOR instructions
 
-  if (BX_CPU_THIS_PTR cpuid_features_bitmask & BX_CPU_SSE)
+  if (BX_CPU_THIS_PTR isa_extensions_bitmask & BX_CPU_SSE)
     features |= (1<<25);
 
-  if (BX_CPU_THIS_PTR cpuid_features_bitmask & BX_CPU_SSE2)
+  if (BX_CPU_THIS_PTR isa_extensions_bitmask & BX_CPU_SSE2)
     features |= (1<<26);
 #endif
 
@@ -406,7 +406,7 @@ void BX_CPU_C::set_cpuid_defaults(void)
   if (! cpuid_limit_winnt) {
     if (BX_SUPPORT_MONITOR_MWAIT)
       cpuid->eax = 0x5;
-    if (BX_CPU_SUPPORT_FEATURE(BX_CPU_XSAVE))
+    if (BX_CPU_SUPPORT_ISA_EXTENSION(BX_CPU_XSAVE))
       cpuid->eax = 0xD;
   }
 #endif
@@ -437,7 +437,7 @@ void BX_CPU_C::set_cpuid_defaults(void)
   //   [31:24] Local Apic ID
 
   cpuid->ebx = 0;
-  if (BX_CPU_SUPPORT_FEATURE(BX_CPU_CLFLUSH)) {
+  if (BX_CPU_SUPPORT_ISA_EXTENSION(BX_CPU_CLFLUSH)) {
     cpuid->ebx |= (CACHE_LINE_SIZE / 8) << 8;
   }
   unsigned n_logical_processors = SIM->get_param_num(BXPN_CPU_NCORES)->get()*SIM->get_param_num(BXPN_CPU_NTHREADS)->get();
@@ -583,7 +583,7 @@ void BX_CPU_C::set_cpuid_defaults(void)
 
   // ------------------------------------------------------
   // CPUID function 0x0000000D
-  if (BX_CPU_SUPPORT_FEATURE(BX_CPU_XSAVE))
+  if (BX_CPU_SUPPORT_ISA_EXTENSION(BX_CPU_XSAVE))
   {
     cpuid = &(BX_CPU_THIS_PTR cpuid_std_function[0xD]);
 
@@ -600,7 +600,7 @@ void BX_CPU_C::set_cpuid_defaults(void)
   }
 
   // do not report Pentium 4 extended functions if not needed
-  if (! BX_CPU_SUPPORT_FEATURE(BX_CPU_SSE2))
+  if (! BX_CPU_SUPPORT_ISA_EXTENSION(BX_CPU_SSE2))
     return;
 
   // ------------------------------------------------------
@@ -792,7 +792,7 @@ void BX_CPU_C::set_cpuid_defaults(void)
 #endif // BX_CPU_LEVEL >= 6
 }
 
-void BX_CPU_C::init_cpu_features_bitmask(void)
+void BX_CPU_C::init_isa_features_bitmask(void)
 {
   Bit32u features_bitmask = 0;
 
@@ -946,9 +946,6 @@ void BX_CPU_C::init_cpu_features_bitmask(void)
 
   if (movbe_enabled)
     features_bitmask |= BX_CPU_MOVBE;
-
-  if (xapic_enabled)
-    features_bitmask |= BX_CPU_XAPIC;
 #endif
 
 #if BX_SUPPORT_VMX
@@ -959,5 +956,5 @@ void BX_CPU_C::init_cpu_features_bitmask(void)
   features_bitmask |= BX_CPU_X86_64;
 #endif
 
-  BX_CPU_THIS_PTR cpuid_features_bitmask = features_bitmask;
+  BX_CPU_THIS_PTR isa_extensions_bitmask = features_bitmask;
 }

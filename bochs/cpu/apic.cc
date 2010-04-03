@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.cc,v 1.138 2010-03-27 09:56:30 sshwarts Exp $
+// $Id: apic.cc,v 1.139 2010-04-03 05:59:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (c) 2002-2009 Zwane Mwaikambo, Stanislav Shwartsman
@@ -186,6 +186,12 @@ bx_local_apic_c::bx_local_apic_c(BX_CPU_C *mycpu, unsigned id)
   timer_handle = bx_pc_system.register_timer_ticks(this,
             BX_CPU(0)->lapic.periodic_smf, 0, 0, 0, "lapic");
   timer_active = 0;
+
+#if BX_CPU_LEVEL >= 6
+  xapic = SIM->get_param_bool(BXPN_CPUID_XAPIC)->get();
+#else
+  xapic = 0;
+#endif
 
   reset(BX_RESET_HARDWARE);
 }

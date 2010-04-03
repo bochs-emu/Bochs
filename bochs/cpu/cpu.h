@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.661 2010-04-02 19:03:47 sshwarts Exp $
+// $Id: cpu.h,v 1.662 2010-04-03 05:59:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2010  The Bochs Project
@@ -629,8 +629,6 @@ typedef struct
 #define BX_CPU_AVX              0x00800000        /* AVX instruction */
 #define BX_CPU_AVX_FMA          0x01000000        /* AVX FMA instruction */
 #define BX_CPU_X86_64           0x02000000        /* x86-64 instruction */
-#define BX_CPU_XAPIC            0x04000000        /* XAPIC extensions */
-#define BX_CPU_X2APIC           0x08000000        /* X2APIC extensions */
 
 struct cpuid_function_t {
   Bit32u eax;
@@ -800,10 +798,10 @@ public: // for now...
   cpuid_function_t cpuid_std_function[MAX_STD_CPUID_FUNCTION];
   cpuid_function_t cpuid_ext_function[MAX_EXT_CPUID_FUNCTION];
 
-  Bit32u cpuid_features_bitmask;
+  Bit32u isa_extensions_bitmask;
 
-#define BX_CPU_SUPPORT_FEATURE(feature) \
-   (BX_CPU_THIS_PTR cpuid_features_bitmask & (feature))
+#define BX_CPU_SUPPORT_ISA_EXTENSION(feature) \
+   (BX_CPU_THIS_PTR isa_extensions_bitmask & (feature))
 
   // General register set
   // rax: accumulator
@@ -3251,7 +3249,7 @@ public: // for now...
   BX_SMF Bit32u get_std_cpuid_features(void);
   BX_SMF void set_cpuid_defaults(void);
 
-  BX_SMF void init_cpu_features_bitmask(void);
+  BX_SMF void init_isa_features_bitmask(void);
   BX_SMF void init_FetchDecodeTables(void);
 
   BX_SMF BX_CPP_INLINE unsigned which_cpu(void) { return BX_CPU_THIS_PTR bx_cpuid; }
