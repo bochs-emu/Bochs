@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: crregs.cc,v 1.6 2010-04-03 16:52:32 sshwarts Exp $
+// $Id: crregs.cc,v 1.7 2010-04-03 18:00:27 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2010 Stanislav Shwartsman
@@ -427,6 +427,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CdRd(bxInstruction_c *i)
 #if BX_SUPPORT_VMX
       VMexit_CR3_Write(i, val_32);
 #endif
+#if BX_CPU_LEVEL >= 6
+      if (BX_CPU_THIS_PTR cr0.get_PG() && BX_CPU_THIS_PTR cr4.get_PAE() && !long_mode()) {
+        if (! CheckPDPTR(val_32)) {
+          BX_ERROR(("SetCR3(): PDPTR check failed !"));
+          exception(BX_GP_EXCEPTION, 0);
+        }
+      }
+#endif
       if (! SetCR3(val_32))
         exception(BX_GP_EXCEPTION, 0);
       BX_INSTR_TLB_CNTRL(BX_CPU_ID, BX_INSTR_MOV_CR3, val_32);
@@ -546,6 +554,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CqRq(bxInstruction_c *i)
 #if BX_SUPPORT_VMX
       VMexit_CR3_Write(i, val_64);
 #endif
+      // no PDPTR checks in long mode
       if (! SetCR3(val_64))
         exception(BX_GP_EXCEPTION, 0);
       BX_INSTR_TLB_CNTRL(BX_CPU_ID, BX_INSTR_MOV_CR3, val_64);
@@ -1036,17 +1045,7 @@ bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::SetCR3(bx_address val)
     }
     else
 #endif
-    {
-      // legacy PAE mode - check PDPTRs validity
-      if (BX_CPU_THIS_PTR cr0.get_PG()) {
-        if (! CheckPDPTR(val)) {
-          BX_ERROR(("SetCR3(): PDPTR check failed !"));
-          return 0;
-        }
-      }
-
       BX_CPU_THIS_PTR cr3_masked = val & 0xffffffe0;
-    }
   }
   else
 #endif
