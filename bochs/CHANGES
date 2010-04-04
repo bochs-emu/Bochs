@@ -57,6 +57,7 @@ Detailed change log :
   - Fix MTRR configuration (prevented boot of modern Linux kernels)
   - Fix interrupt vectors for INT 60h-66h (reserved for user interrupt) by
     setting them to zero
+  - Fix BIOS INT13 function 08 when the number of cylinders on the disk = 1
 
 - I/O Devices
   - USB HP DeskJet 920C printer device emulation (Ben Lunt)
@@ -77,7 +78,7 @@ Detailed change log :
  [2964824] bad newline sequence in aspi-win32.h
   [913419] configure options and build process needs some work
  [2938398] gdbstub compile error with x86_64 enabled
- [2374455] shutdown/reset type 05 should reinit the PICs
+ [2734455] shutdown/reset type 05 should reinit the PICs
  [1921294] extended memory less than 1M wrong size
  [1947249] BX_USE_EBDA_TABLES and MP table placement
  [1933859] BX_USE_EBDA_TABLES and memory overlapping
