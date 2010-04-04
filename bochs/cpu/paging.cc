@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.211 2010-04-04 09:04:12 sshwarts Exp $
+// $Id: paging.cc,v 1.212 2010-04-04 09:05:21 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2010  The Bochs Project
@@ -1162,7 +1162,7 @@ bx_bool BX_CPU_C::dbg_xlate_linear2phy(bx_address laddr, bx_phy_address *phy)
   }
 
   bx_phy_address paddress;
-  bx_phy_address pt_address = BX_CPU_THIS_PTR cr3;
+  bx_phy_address pt_address = BX_CPU_THIS_PTR cr3 & BX_CR3_PAGING_MASK;
   bx_address offset_mask = 0xfff;
 
   // see if page is in the TLB first
@@ -1214,7 +1214,6 @@ bx_bool BX_CPU_C::dbg_xlate_linear2phy(bx_address laddr, bx_phy_address *phy)
   else   // not PAE
 #endif
   {
-    pt_address &= BX_CR3_PAGING_MASK;
     for (int level = 1; level >= 0; --level) {
       Bit32u pte;
       pt_address += ((laddr >> (10 + 10*level)) & 0xffc);
