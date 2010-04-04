@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmx.cc,v 1.57 2010-04-03 19:18:38 sshwarts Exp $
+// $Id: vmx.cc,v 1.58 2010-04-04 09:04:12 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2009-2010 Stanislav Shwartsman
@@ -1369,10 +1369,7 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
 
   BX_CPU_THIS_PTR cr0.set32(guest.cr0);
   BX_CPU_THIS_PTR cr4.set32(guest.cr4);
-
-  if (! SetCR3(guest.cr3)) {
-    BX_PANIC(("VMENTER CR3 is broken !"));
-  }
+  BX_CPU_THIS_PTR cr3 = guest.cr3;
 
   // flush TLB is always needed to invalidate possible
   // APIC ACCESS PAGE caching by host
@@ -1733,6 +1730,7 @@ void BX_CPU_C::VMexitLoadHostState(void)
 
   BX_CPU_THIS_PTR cr0.set32(host_state->cr0);
   BX_CPU_THIS_PTR cr4.set32(host_state->cr4);
+  BX_CPU_THIS_PTR cr3 = host_state->cr3;
 
   TLB_flush(); // CR0/CR4 updated
 
@@ -1741,10 +1739,6 @@ void BX_CPU_C::VMexitLoadHostState(void)
       BX_ERROR(("VMABORT: host PDPTRs are corrupted !"));
       VMabort(VMABORT_HOST_PDPTR_CORRUPTED);
     }
-  }
-
-  if (! SetCR3(host_state->cr3)) {
-    BX_PANIC(("VMEXIT CR3 is broken !"));
   }
 
   BX_CPU_THIS_PTR dr7 = 0x00000400;

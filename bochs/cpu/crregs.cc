@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: crregs.cc,v 1.7 2010-04-03 18:00:27 sshwarts Exp $
+// $Id: crregs.cc,v 1.8 2010-04-04 09:04:12 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2010 Stanislav Shwartsman
@@ -1013,13 +1013,6 @@ bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::SetCR4(bx_address val)
   BX_CPU_THIS_PTR cr4.set32(val);
 
 #if BX_CPU_LEVEL >= 6
-  if ((oldCR4 & 0x00000020) != (BX_CPU_THIS_PTR cr4.val32 & 0x00000020)) {
-    if (BX_CPU_THIS_PTR cr4.get_PAE() && !long_mode())
-      BX_CPU_THIS_PTR cr3_masked = BX_CPU_THIS_PTR cr3 & 0xffffffe0;
-    else
-      BX_CPU_THIS_PTR cr3_masked = BX_CPU_THIS_PTR cr3 & BX_CONST64(0x000ffffffffff000);
-  }
-
   // Modification of PGE,PAE,PSE flushes TLB cache according to docs.
   if ((oldCR4 & 0x000000b0) != (BX_CPU_THIS_PTR cr4.val32 & 0x000000b0)) {
     TLB_flush(); // Flush Global entries also.
@@ -1032,24 +1025,14 @@ bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::SetCR4(bx_address val)
 
 bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::SetCR3(bx_address val)
 {
-#if BX_CPU_LEVEL >= 6
-  if (BX_CPU_THIS_PTR cr4.get_PAE()) {
 #if BX_SUPPORT_X86_64
-    if (long_mode()) {
-      if (! IsValidPhyAddr(val)) {
-        BX_ERROR(("SetCR3(): Attempt to write to reserved bits of CR3 !"));
-        return 0;
-      }
-
-      BX_CPU_THIS_PTR cr3_masked = val & BX_CONST64(0x000ffffffffff000);
+  if (long_mode()) {
+    if (! IsValidPhyAddr(val)) {
+      BX_ERROR(("SetCR3(): Attempt to write to reserved bits of CR3 !"));
+      return 0;
     }
-    else
-#endif
-      BX_CPU_THIS_PTR cr3_masked = val & 0xffffffe0;
   }
-  else
 #endif
-    BX_CPU_THIS_PTR cr3_masked = val & 0xfffff000;
 
   BX_CPU_THIS_PTR cr3 = val;
 

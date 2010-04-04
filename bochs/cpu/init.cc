@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.236 2010-04-03 05:59:07 sshwarts Exp $
+// $Id: init.cc,v 1.237 2010-04-04 09:04:12 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -695,8 +695,6 @@ void BX_CPU_C::after_restore_state(void)
 
   if (!SetCR0(cr0.val32))
     BX_PANIC(("Incorrect CR0 state !"));
-  if (!SetCR3(cr3))
-    BX_PANIC(("Incorrect CR3 value !"));
   TLB_flush();
 #if BX_SUPPORT_VMX
   set_VMCSPTR(BX_CPU_THIS_PTR vmcsptr);
@@ -920,7 +918,6 @@ void BX_CPU_C::reset(unsigned source)
 #if BX_CPU_LEVEL >= 3
   BX_CPU_THIS_PTR cr2 = 0;
   BX_CPU_THIS_PTR cr3 = 0;
-  BX_CPU_THIS_PTR cr3_masked = 0;
 #endif
 
 #if BX_CPU_LEVEL >= 4
