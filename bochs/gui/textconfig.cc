@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: textconfig.cc,v 1.86 2010-02-26 14:18:18 sshwarts Exp $
+// $Id: textconfig.cc,v 1.87 2010-04-04 11:28:33 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  The Bochs Project
@@ -288,7 +288,7 @@ static const char *startup_options_prompt =
 "2. Log options for all devices\n"
 "3. Log options for individual devices\n"
 "4. CPU options\n"
-"5. CPU options\n"
+"5. CPUID options\n"
 "6. Memory options\n"
 "7. Clock & CMOS options\n"
 "8. PCI options\n"
@@ -464,25 +464,26 @@ int bx_config_interface(int menu)
         }
         break;
       case BX_CI_START_OPTS:
-        if (ask_uint(startup_options_prompt, "", 0, 14+BX_PLUGINS, 0, &choice, 10) < 0) return -1;
+        if (ask_uint(startup_options_prompt, "", 0, 15+BX_PLUGINS, 0, &choice, 10) < 0) return -1;
         switch (choice) {
           case 0: return 0;
           case 2: bx_log_options(0); break;
           case 3: bx_log_options(1); break;
           case 1: do_menu("log"); break;
           case 4: do_menu("cpu"); break;
-          case 5: do_menu(BXPN_MENU_MEMORY); break;
-          case 6: do_menu("clock_cmos"); break;
-          case 7: do_menu("pci"); break;
-          case 8: do_menu("display"); break;
-          case 9: do_menu("keyboard_mouse"); break;
-          case 10: do_menu(BXPN_MENU_DISK); break;
-          case 11: do_menu("ports"); break;
-          case 12: do_menu("network"); break;
-          case 13: do_menu(BXPN_SB16); break;
-          case 14: do_menu("misc"); break;
+          case 5: do_menu("cpuid"); break;
+          case 6: do_menu(BXPN_MENU_MEMORY); break;
+          case 7: do_menu("clock_cmos"); break;
+          case 8: do_menu("pci"); break;
+          case 9: do_menu("display"); break;
+          case 10: do_menu("keyboard_mouse"); break;
+          case 11: do_menu(BXPN_MENU_DISK); break;
+          case 12: do_menu("ports"); break;
+          case 13: do_menu("network"); break;
+          case 14: do_menu(BXPN_SB16); break;
+          case 15: do_menu("misc"); break;
 #if BX_PLUGINS
-          case 15: do_menu("user"); break;
+          case 16: do_menu("user"); break;
 #endif
           default: BAD_OPTION(menu, choice);
         }
