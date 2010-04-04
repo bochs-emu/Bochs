@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.432 2010-04-03 07:30:23 sshwarts Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.433 2010-04-04 18:37:53 sshwarts Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -1422,6 +1422,10 @@ AC_ARG_ENABLE(vmx,
 
 if test "$support_vmx" -gt 0 -a "$bx_cpu_level" -lt 6; then
   AC_MSG_ERROR([for VMX support the CPU level must be set to 6])
+fi
+
+if test "$support_vmx" -gt 1 -a "$use_x86_64" = 0; then
+  AC_MSG_ERROR([VMXx2 support require x86-64 enabled])
 fi
 
 AC_MSG_CHECKING(for 3DNow! support)
