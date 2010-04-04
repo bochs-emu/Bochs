@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios32.c,v 1.68 2010-02-09 21:23:17 sshwarts Exp $
+// $Id: rombios32.c,v 1.69 2010-04-04 19:33:50 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  32 bit Bochs BIOS init code
@@ -2371,7 +2371,7 @@ void rombios32_init(uint32_t *s3_resume_vector, uint8_t *shutdown_flag)
 
     pci_bios_init();
 
-    if (bios_table_cur_addr != 0) {
+    if (bios_table_cur_addr != 0 && i440_pcidev.bus != -1) {
 
         mptable_init();
 
