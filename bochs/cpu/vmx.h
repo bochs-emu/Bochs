@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmx.h,v 1.25 2010-04-04 18:46:03 sshwarts Exp $
+// $Id: vmx.h,v 1.26 2010-04-04 19:23:47 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2009 Stanislav Shwartsman
@@ -586,6 +586,7 @@ typedef struct bx_VMCS
 
 #define VMX_VM_EXEC_CTRL3_SUPPORTED_BITS \
    (VMX_VM_EXEC_CTRL3_VIRTUALIZE_APIC_ACCESSES | \
+    VMX_VM_EXEC_CTRL3_DESCRIPTOR_TABLE_VMEXIT | \
     VMX_VM_EXEC_CTRL3_RDTSCP | \
     VMX_VM_EXEC_CTRL3_WBINVD_VMEXIT)
 

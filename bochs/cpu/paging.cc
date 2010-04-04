@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.212 2010-04-04 09:05:21 sshwarts Exp $
+// $Id: paging.cc,v 1.213 2010-04-04 19:23:47 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2010  The Bochs Project
@@ -979,8 +979,7 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned curr_pl, un
     BX_DEBUG(("page walk for address 0x" FMT_LIN_ADDRX, laddr));
 
 #if BX_CPU_LEVEL >= 6
-    if (BX_CPU_THIS_PTR cr4.get_PAE())
-    {
+    if (BX_CPU_THIS_PTR cr4.get_PAE()) {
       ppf = translate_linear_PAE(laddr, lpf_mask, combined_access, curr_pl, rw);
     }
     else

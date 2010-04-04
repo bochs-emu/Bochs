@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: protect_ctrl.cc,v 1.101 2010-04-02 21:22:17 sshwarts Exp $
+// $Id: protect_ctrl.cc,v 1.102 2010-04-04 19:23:47 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -280,6 +280,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SLDT_Ew(bxInstruction_c *i)
     exception(BX_UD_EXCEPTION, 0);
   }
 
+#if BX_SUPPORT_VMX >= 2
+  if (BX_CPU_THIS_PTR in_vmx_guest)
+    if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_DESCRIPTOR_TABLE_VMEXIT))
+      VMexit_Instruction(i, VMX_VMEXIT_LDTR_TR_ACCESS);
+#endif
+
   Bit16u val16 = BX_CPU_THIS_PTR ldtr.selector.value;
   if (i->modC0()) {
     if (i->os32L()) {
@@ -302,6 +308,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::STR_Ew(bxInstruction_c *i)
     BX_ERROR(("STR: not recognized in real or virtual-8086 mode"));
     exception(BX_UD_EXCEPTION, 0);
   }
+
+#if BX_SUPPORT_VMX >= 2
+  if (BX_CPU_THIS_PTR in_vmx_guest)
+    if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_DESCRIPTOR_TABLE_VMEXIT))
+      VMexit_Instruction(i, VMX_VMEXIT_LDTR_TR_ACCESS);
+#endif
 
   Bit16u val16 = BX_CPU_THIS_PTR tr.selector.value;
   if (i->modC0()) {
@@ -339,6 +351,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LLDT_Ew(bxInstruction_c *i)
     BX_ERROR(("LLDT: The current priveledge level is not 0"));
     exception(BX_GP_EXCEPTION, 0);
   }
+
+#if BX_SUPPORT_VMX >= 2
+  if (BX_CPU_THIS_PTR in_vmx_guest)
+    if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_DESCRIPTOR_TABLE_VMEXIT))
+      VMexit_Instruction(i, VMX_VMEXIT_LDTR_TR_ACCESS);
+#endif
 
   if (i->modC0()) {
     raw_selector = BX_READ_16BIT_REG(i->rm());
@@ -428,6 +446,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LTR_Ew(bxInstruction_c *i)
     BX_ERROR(("LTR: The current priveledge level is not 0"));
     exception(BX_GP_EXCEPTION, 0);
   }
+
+#if BX_SUPPORT_VMX >= 2
+  if (BX_CPU_THIS_PTR in_vmx_guest)
+    if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_DESCRIPTOR_TABLE_VMEXIT))
+      VMexit_Instruction(i, VMX_VMEXIT_LDTR_TR_ACCESS);
+#endif
 
   if (i->modC0()) {
     raw_selector = BX_READ_16BIT_REG(i->rm());
@@ -680,6 +704,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SGDT_Ms(bxInstruction_c *i)
 {
   BX_ASSERT(BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64);
 
+#if BX_SUPPORT_VMX >= 2
+  if (BX_CPU_THIS_PTR in_vmx_guest)
+    if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_DESCRIPTOR_TABLE_VMEXIT))
+      VMexit_Instruction(i, VMX_VMEXIT_GDTR_IDTR_ACCESS);
+#endif
+
   Bit16u limit_16 = BX_CPU_THIS_PTR gdtr.limit;
   Bit32u base_32  = (Bit32u) BX_CPU_THIS_PTR gdtr.base;
 
@@ -692,6 +722,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SGDT_Ms(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::SIDT_Ms(bxInstruction_c *i)
 {
   BX_ASSERT(BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64);
+
+#if BX_SUPPORT_VMX >= 2
+  if (BX_CPU_THIS_PTR in_vmx_guest)
+    if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_DESCRIPTOR_TABLE_VMEXIT))
+      VMexit_Instruction(i, VMX_VMEXIT_GDTR_IDTR_ACCESS);
+#endif
 
   Bit16u limit_16 = BX_CPU_THIS_PTR idtr.limit;
   Bit32u base_32  = (Bit32u) BX_CPU_THIS_PTR idtr.base;
@@ -715,6 +751,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LGDT_Ms(bxInstruction_c *i)
     BX_ERROR(("LGDT: CPL!=0 in protected mode"));
     exception(BX_GP_EXCEPTION, 0);
   }
+
+#if BX_SUPPORT_VMX >= 2
+  if (BX_CPU_THIS_PTR in_vmx_guest)
+    if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_DESCRIPTOR_TABLE_VMEXIT))
+      VMexit_Instruction(i, VMX_VMEXIT_GDTR_IDTR_ACCESS);
+#endif
 
   Bit32u eaddr = (Bit32u) BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
@@ -741,6 +783,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LIDT_Ms(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0);
   }
 
+#if BX_SUPPORT_VMX >= 2
+  if (BX_CPU_THIS_PTR in_vmx_guest)
+    if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_DESCRIPTOR_TABLE_VMEXIT))
+      VMexit_Instruction(i, VMX_VMEXIT_GDTR_IDTR_ACCESS);
+#endif
+
   Bit32u eaddr = (Bit32u) BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
   Bit32u base_32 = read_virtual_dword_32(i->seg(), eaddr + 2);
@@ -758,6 +806,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SGDT64_Ms(bxInstruction_c *i)
 {
   BX_ASSERT(BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64);
 
+#if BX_SUPPORT_VMX >= 2
+  if (BX_CPU_THIS_PTR in_vmx_guest)
+    if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_DESCRIPTOR_TABLE_VMEXIT))
+      VMexit_Instruction(i, VMX_VMEXIT_GDTR_IDTR_ACCESS);
+#endif
+
   Bit16u limit_16 = BX_CPU_THIS_PTR gdtr.limit;
   Bit64u base_64  = BX_CPU_THIS_PTR gdtr.base;
 
@@ -770,6 +824,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SGDT64_Ms(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::SIDT64_Ms(bxInstruction_c *i)
 {
   BX_ASSERT(BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64);
+
+#if BX_SUPPORT_VMX >= 2
+  if (BX_CPU_THIS_PTR in_vmx_guest)
+    if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_DESCRIPTOR_TABLE_VMEXIT))
+      VMexit_Instruction(i, VMX_VMEXIT_GDTR_IDTR_ACCESS);
+#endif
 
   Bit16u limit_16 = BX_CPU_THIS_PTR idtr.limit;
   Bit64u base_64  = BX_CPU_THIS_PTR idtr.base;
@@ -788,6 +848,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LGDT64_Ms(bxInstruction_c *i)
     BX_ERROR(("LGDT64_Ms: CPL != 0 in long mode"));
     exception(BX_GP_EXCEPTION, 0);
   }
+
+#if BX_SUPPORT_VMX >= 2
+  if (BX_CPU_THIS_PTR in_vmx_guest)
+    if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_DESCRIPTOR_TABLE_VMEXIT))
+      VMexit_Instruction(i, VMX_VMEXIT_GDTR_IDTR_ACCESS);
+#endif
 
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
@@ -810,6 +876,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LIDT64_Ms(bxInstruction_c *i)
     BX_ERROR(("LIDT64_Ms: CPL != 0 in long mode"));
     exception(BX_GP_EXCEPTION, 0);
   }
+
+#if BX_SUPPORT_VMX >= 2
+  if (BX_CPU_THIS_PTR in_vmx_guest)
+    if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_DESCRIPTOR_TABLE_VMEXIT))
+      VMexit_Instruction(i, VMX_VMEXIT_GDTR_IDTR_ACCESS);
+#endif
 
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 

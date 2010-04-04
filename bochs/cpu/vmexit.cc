@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmexit.cc,v 1.22 2010-04-03 07:30:23 sshwarts Exp $
+// $Id: vmexit.cc,v 1.23 2010-04-04 19:23:47 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2009-2010 Stanislav Shwartsman
@@ -42,6 +42,10 @@ Bit32u gen_instruction_info(bxInstruction_c *i, Bit32u reason)
   switch(reason) {
     case VMX_VMEXIT_VMREAD:
     case VMX_VMEXIT_VMWRITE:
+#if BX_SUPPORT_VMX >= 2
+    case VMX_VMEXIT_GDTR_IDTR_ACCESS:
+    case VMX_VMEXIT_LDTR_TR_ACCESS:
+#endif
       instr_info |= i->nnn() << 28;
       break;
 
@@ -110,6 +114,10 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::VMexit_Instruction(bxInstruction_c *i, Bit
     case VMX_VMEXIT_VMPTRST:
     case VMX_VMEXIT_VMCLEAR:
     case VMX_VMEXIT_VMXON:
+#if BX_SUPPORT_VMX >= 2
+    case VMX_VMEXIT_GDTR_IDTR_ACCESS:
+    case VMX_VMEXIT_LDTR_TR_ACCESS:
+#endif
       qualification = (Bit64u) ((bx_address) i->displ32s());
 #if BX_SUPPORT_X86_64
       if (i->sibBase() == BX_64BIT_REG_RIP)

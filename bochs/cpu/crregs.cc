@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: crregs.cc,v 1.8 2010-04-04 09:04:12 sshwarts Exp $
+// $Id: crregs.cc,v 1.9 2010-04-04 19:23:47 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2010 Stanislav Shwartsman
@@ -834,14 +834,6 @@ bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::SetCR0(bx_address val)
       }
       BX_CPU_THIS_PTR efer.set_LMA(1);
     }
-#if BX_CPU_LEVEL >= 6
-    if (BX_CPU_THIS_PTR cr4.get_PAE() && !long_mode()) {
-      if (! CheckPDPTR(BX_CPU_THIS_PTR cr3)) {
-        BX_ERROR(("SetCR0(): PDPTR check failed !"));
-        return 0;
-      }
-    }
-#endif
   }
   else if (BX_CPU_THIS_PTR cr0.get_PG() && ! pg) {
     if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
@@ -858,6 +850,15 @@ bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::SetCR0(bx_address val)
 #endif  // #if BX_SUPPORT_X86_64
 
   Bit32u oldCR0 = BX_CPU_THIS_PTR cr0.get32();
+
+#if BX_CPU_LEVEL >= 6
+  if (pg && BX_CPU_THIS_PTR cr4.get_PAE() && !long_mode()) {
+    if (! CheckPDPTR(BX_CPU_THIS_PTR cr3)) {
+      BX_ERROR(("SetCR0(): PDPTR check failed !"));
+      return 0;
+    }
+  }
+#endif
 
   // handle reserved bits behaviour
 #if BX_CPU_LEVEL == 3

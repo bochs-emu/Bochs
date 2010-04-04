@@ -42,9 +42,10 @@ Detailed change log :
     - Enabled secondary proc-based vmexec controls:
        - Implemented APIC virtualization
        - Implemented WBINVD VMEXIT control
+       - Implemented Descriptor Table Access VMEXIT control
        - Implemented RDTSCP VMEXIT control
-    In order to enable emulation of above VMX extensions configure with
-        --enable-vmx=2 option
+    In order to enable emulation of VMXx2 extensions configure with
+        --enable-vmx=2 option (x86-64 must be enabled)
   - Bugfixes for CPU emulation correctness
   - Fixed Bochs crash when accessing the first byte above emulated memory size
 
