@@ -1,8 +1,8 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: aes.cc,v 1.10 2010-02-26 11:44:50 sshwarts Exp $
+// $Id: aes.cc,v 1.11 2010-04-04 19:56:55 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2008-2009 Stanislav Shwartsman
+//   Copyright (c) 2008-2010 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
