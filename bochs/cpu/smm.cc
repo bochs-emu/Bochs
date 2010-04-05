@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: smm.cc,v 1.67 2010-03-25 21:39:34 sshwarts Exp $
+// $Id: smm.cc,v 1.68 2010-04-05 09:49:26 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2006-2009 Stanislav Shwartsman
@@ -543,18 +543,16 @@ bx_bool BX_CPU_C::smram_restore_state(const Bit32u *saved_state)
 #endif
 
   bx_bool pe = (temp_cr0 & 0x1);
-  bx_bool nw = (temp_cr0 >> 29) & 0x1;
-  bx_bool cd = (temp_cr0 >> 30) & 0x1;
   bx_bool pg = (temp_cr0 >> 31) & 0x1;
 
   // check CR0 conditions for entering to shutdown state
-  if (pg && !pe) {
-    BX_PANIC(("SMM restore: attempt to set CR0.PG with CR0.PE cleared !"));
+  if (!check_CR0(temp_cr0)) {
+    BX_PANIC(("SMM restore: CR0 consistency check failed !"));
     return 0;
   }
 
-  if (nw && !cd) {
-    BX_PANIC(("SMM restore: attempt to set CR0.NW with CR0.CD cleared !"));
+  if (!check_CR4(temp_cr4)) {
+    BX_PANIC(("SMM restore: CR4 consistency check failed !"));
     return 0;
   }
 
@@ -733,41 +731,39 @@ void BX_CPU_C::smram_save_state(Bit32u *saved_state)
 bx_bool BX_CPU_C::smram_restore_state(const Bit32u *saved_state)
 {
   Bit32u temp_cr0    = SMRAM_FIELD(saved_state, SMRAM_FIELD_CR0);
-  Bit32u temp_eflags = SMRAM_FIELD(saved_state, SMRAM_FIELD_EFLAGS);
   Bit32u temp_cr3    = SMRAM_FIELD(saved_state, SMRAM_FIELD_CR3);
-
-  bx_bool pe = (temp_cr0 & 0x01);
-  bx_bool nw = (temp_cr0 >> 29) & 0x01;
-  bx_bool cd = (temp_cr0 >> 30) & 0x01;
-  bx_bool pg = (temp_cr0 >> 31) & 0x01;
+  Bit32u temp_cr4    = SMRAM_FIELD(saved_state, SMRAM_FIELD_CR4);
+  Bit32u temp_eflags = SMRAM_FIELD(saved_state, SMRAM_FIELD_EFLAGS);
 
   // check conditions for entering to shutdown state
-  if (pg && !pe) {
-    BX_PANIC(("SMM restore: attempt to set CR0.PG with CR0.PE cleared !"));
+  if (!check_CR0(temp_cr0)) {
+    BX_PANIC(("SMM restore: CR0 consistency check failed !"));
     return 0;
   }
 
-  if (nw && !cd) {
-    BX_PANIC(("SMM restore: attempt to set CR0.NW with CR0.CD cleared !"));
+#if BX_CPU_LEVEL >= 4
+  if (! check_CR4(temp_cr4)) {
+    BX_PANIC(("SMM restore: CR4 consistency check failed !"));
     return 0;
   }
+#endif
 
   if (!SetCR0(temp_cr0)) {
     BX_PANIC(("SMM restore: failed to restore CR0 !"));
     return 0;
   }
+#if BX_CPU_LEVEL >= 4
+  if (!SetCR4(temp_cr4)) {
+    BX_PANIC(("SMM restore: incorrect CR4 state !"));
+    return 0;
+  }
+#endif
+
   if (!SetCR3(temp_cr3)) {
     BX_PANIC(("SMM restore: failed to restore CR3 !"));
     return 0;
   }
   setEFlags(temp_eflags);
-
-#if BX_CPU_LEVEL >= 4
-  if (! SetCR4(SMRAM_FIELD(saved_state, SMRAM_FIELD_CR4))) {
-    BX_PANIC(("SMM restore: incorrect CR4 state !"));
-    return 0;
-  }
-#endif
 
   for (int n=0; n<BX_GENERAL_REGISTERS; n++) {
     Bit32u val_32 = SMRAM_FIELD(saved_state, SMRAM_FIELD_EAX + n);
