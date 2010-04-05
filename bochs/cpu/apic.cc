@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.cc,v 1.141 2010-04-04 19:48:18 sshwarts Exp $
+// $Id: apic.cc,v 1.142 2010-04-05 09:36:17 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (c) 2002-2009 Zwane Mwaikambo, Stanislav Shwartsman
@@ -236,7 +236,7 @@ void bx_local_apic_c::reset(unsigned type)
   if (xapic)
     apic_version_id = 0x00050014; // P4 has 6 LVT entries
   else 
-    apic_version_id = 0x00040010; // P6 has 5 LVT entries
+    apic_version_id = 0x00030010; // P6 has 4 LVT entries
 }
 
 void bx_local_apic_c::set_base(bx_phy_address newbase)
