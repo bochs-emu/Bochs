@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.237 2010-04-04 09:04:12 sshwarts Exp $
+// $Id: init.cc,v 1.238 2010-04-06 19:26:03 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -693,12 +693,17 @@ void BX_CPU_C::after_restore_state(void)
     if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_IA32_V8086) CPL = 3;
   }
 
-  if (!SetCR0(cr0.val32))
-    BX_PANIC(("Incorrect CR0 state !"));
   TLB_flush();
+
+#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
+  handleAlignmentCheck();
+#endif
+  handleCpuModeChange();
+
 #if BX_SUPPORT_VMX
   set_VMCSPTR(BX_CPU_THIS_PTR vmcsptr);
 #endif
+
   assert_checks();
   invalidate_prefetch_q();
   debug(RIP);

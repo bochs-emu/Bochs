@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: smm.cc,v 1.68 2010-04-05 09:49:26 sshwarts Exp $
+// $Id: smm.cc,v 1.69 2010-04-06 19:26:03 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2006-2009 Stanislav Shwartsman
@@ -557,7 +557,7 @@ bx_bool BX_CPU_C::smram_restore_state(const Bit32u *saved_state)
   }
 
   // shutdown if write to reserved CR4 bits
-  if (! SetCR4(temp_cr4)) {
+  if (!SetCR4(temp_cr4)) {
     BX_PANIC(("SMM restore: incorrect CR4 state !"));
     return 0;
   }
@@ -601,6 +601,13 @@ bx_bool BX_CPU_C::smram_restore_state(const Bit32u *saved_state)
   if (!SetCR3(temp_cr3)) {
     BX_PANIC(("SMM restore: failed to restore CR3 !"));
     return 0;
+  }
+
+  if (BX_CPU_THIS_PTR cr0.get_PG() && BX_CPU_THIS_PTR cr4.get_PAE() && !long_mode()) {
+    if (! CheckPDPTR(temp_cr3)) {
+      BX_ERROR(("SMM restore: PDPTR check failed !"));
+      return 0;
+    }
   }
 
   for (int n=0; n<BX_GENERAL_REGISTERS; n++) {
@@ -763,6 +770,16 @@ bx_bool BX_CPU_C::smram_restore_state(const Bit32u *saved_state)
     BX_PANIC(("SMM restore: failed to restore CR3 !"));
     return 0;
   }
+
+#if BX_CPU_LEVEL >= 6
+  if (BX_CPU_THIS_PTR cr0.get_PG() && BX_CPU_THIS_PTR cr4.get_PAE()) {
+    if (! CheckPDPTR(temp_cr3)) {
+      BX_ERROR(("SMM restore: PDPTR check failed !"));
+      return 0;
+    }
+  }
+#endif
+
   setEFlags(temp_eflags);
 
   for (int n=0; n<BX_GENERAL_REGISTERS; n++) {

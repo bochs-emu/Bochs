@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.213 2010-04-04 19:23:47 sshwarts Exp $
+// $Id: paging.cc,v 1.214 2010-04-06 19:26:03 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2010  The Bochs Project
@@ -412,10 +412,6 @@ void BX_CPU_C::TLB_flush(void)
   for (unsigned n=0; n<BX_TLB_SIZE; n++) {
     BX_CPU_THIS_PTR TLB.entry[n].lpf = BX_INVALID_TLB_ENTRY;
   }
-
-#if BX_CPU_LEVEL >= 6
-  BX_CPU_THIS_PTR PDPTR_CACHE.valid = 0;
-#endif
 
 #if BX_CPU_LEVEL >= 5
   BX_CPU_THIS_PTR TLB.split_large = 0;  // flush whole TLB

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: crregs.cc,v 1.9 2010-04-04 19:23:47 sshwarts Exp $
+// $Id: crregs.cc,v 1.10 2010-04-06 19:26:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2010 Stanislav Shwartsman
@@ -445,16 +445,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CdRd(bxInstruction_c *i)
 #if BX_SUPPORT_VMX
       val_32 = VMexit_CR4_Write(i, val_32);
 #endif
-#if BX_CPU_LEVEL >= 6
-      if (BX_CPU_THIS_PTR cr0.get_PG() && (val_32 & (1<<5)) != 0 /* PAE */ && !long_mode()) {
-        if (! CheckPDPTR(BX_CPU_THIS_PTR cr3)) {
-          BX_ERROR(("SetCR4(): PDPTR check failed !"));
-          exception(BX_GP_EXCEPTION, 0);
-        }
-      }
-#endif
-      // Protected mode: #GP(0) if attempt to write a 1 to
-      // any reserved bit of CR4
       if (! SetCR4(val_32))
         exception(BX_GP_EXCEPTION, 0);
       break;
@@ -565,7 +555,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CqRq(bxInstruction_c *i)
       val_64 = VMexit_CR4_Write(i, val_64);
 #endif
       BX_DEBUG(("MOV_CqRq: write to CR4 of %08x:%08x", GET32H(val_64), GET32L(val_64)));
-      // no PDPTR checks in long mode
       if (! SetCR4(val_64))
         exception(BX_GP_EXCEPTION, 0);
       break;
@@ -1010,15 +999,21 @@ bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::SetCR4(bx_address val)
 {
   if (! check_CR4(val)) return 0;
 
-  Bit32u oldCR4 = BX_CPU_THIS_PTR cr4.get32();
-  BX_CPU_THIS_PTR cr4.set32(val);
-
 #if BX_CPU_LEVEL >= 6
   // Modification of PGE,PAE,PSE flushes TLB cache according to docs.
-  if ((oldCR4 & 0x000000b0) != (BX_CPU_THIS_PTR cr4.val32 & 0x000000b0)) {
+  if ((val & 0x000000b0) != (BX_CPU_THIS_PTR cr4.val32 & 0x000000b0)) {
+    // reload PDPTR if PGE,PAE or PSE changed
+    if (BX_CPU_THIS_PTR cr0.get_PG() && (val & (1<<5)) != 0 /* PAE */ && !long_mode()) {
+      if (! CheckPDPTR(BX_CPU_THIS_PTR cr3)) {
+        BX_ERROR(("SetCR4(): PDPTR check failed !"));
+        return 0;
+      }
+    }
     TLB_flush(); // Flush Global entries also.
   }
 #endif
+
+  BX_CPU_THIS_PTR cr4.set32(val);
 
   return 1;
 }
