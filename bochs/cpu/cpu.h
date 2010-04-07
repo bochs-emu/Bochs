@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.664 2010-04-04 09:04:11 sshwarts Exp $
+// $Id: cpu.h,v 1.665 2010-04-07 14:38:53 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2010  The Bochs Project
@@ -659,10 +659,10 @@ typedef bx_ptr_equiv_t bx_hostpageaddr_t;
 
 typedef struct {
   bx_address lpf;       // linear page frame
-  bx_address lpf_mask;  // linear address mask of the page size
   bx_phy_address ppf;   // physical page frame
-  Bit32u accessBits;
   bx_hostpageaddr_t hostPageAddr;
+  Bit32u accessBits;
+  Bit32u lpf_mask;      // linear address mask of the page size
 } bx_TLB_entry;
 
 // general purpose register
@@ -3094,11 +3094,11 @@ public: // for now...
   // linear address for translate_linear expected to be canonical !
   BX_SMF bx_phy_address translate_linear(bx_address laddr, unsigned curr_pl, unsigned rw);
 #if BX_CPU_LEVEL >= 6
-  BX_SMF bx_phy_address translate_linear_PAE(bx_address laddr, bx_address &lpf_mask, Bit32u &combined_access, unsigned curr_pl, unsigned rw);
+  BX_SMF bx_phy_address translate_linear_PAE(bx_address laddr, Bit32u &lpf_mask, Bit32u &combined_access, unsigned curr_pl, unsigned rw);
   BX_SMF int check_entry_PAE(const char *s, Bit64u entry, Bit64u reserved, unsigned rw, bx_bool *nx_fault);
 #endif
 #if BX_SUPPORT_X86_64
-  BX_SMF bx_phy_address translate_linear_long_mode(bx_address laddr, bx_address &lpf_mask, Bit32u &combined_access, unsigned curr_pl, unsigned rw);
+  BX_SMF bx_phy_address translate_linear_long_mode(bx_address laddr, Bit32u &lpf_mask, Bit32u &combined_access, unsigned curr_pl, unsigned rw);
 #endif
   BX_SMF BX_CPP_INLINE bx_phy_address dtranslate_linear(bx_address laddr, unsigned curr_pl, unsigned rw)
   {

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.214 2010-04-06 19:26:03 sshwarts Exp $
+// $Id: paging.cc,v 1.215 2010-04-07 14:38:53 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2010  The Bochs Project
@@ -433,13 +433,17 @@ void BX_CPU_C::TLB_flushNonGlobal(void)
 
   invalidate_prefetch_q();
 
+  BX_CPU_THIS_PTR TLB.split_large = 0;
+
   for (unsigned n=0; n<BX_TLB_SIZE; n++) {
     bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[n];
     if (!(tlbEntry->accessBits & TLB_GlobalPage)) {
       tlbEntry->lpf = BX_INVALID_TLB_ENTRY;
     }
-    else if (~tlbEntry->lpf_mask > 0xfff)
-      BX_CPU_THIS_PTR TLB.split_large = 1;
+    else {
+      if (tlbEntry->lpf_mask > 0xfff)
+        BX_CPU_THIS_PTR TLB.split_large = 1;
+    }
   }
 
 #if BX_SUPPORT_MONITOR_MWAIT
@@ -463,10 +467,13 @@ void BX_CPU_C::TLB_invlpg(bx_address laddr)
     // make sure INVLPG handles correctly large pages
     for (unsigned n=0; n<BX_TLB_SIZE; n++) {
       bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[n];
-      if ((laddr & tlbEntry->lpf_mask) == (tlbEntry->lpf & tlbEntry->lpf_mask)) {
+      bx_address lpf_mask = tlbEntry->lpf_mask;
+      if ((laddr & ~lpf_mask) == (tlbEntry->lpf & ~lpf_mask)) {
         tlbEntry->lpf = BX_INVALID_TLB_ENTRY;
       }
-      else if (~tlbEntry->lpf_mask > 0xfff) large = 1;
+      else {
+        if (lpf_mask > 0xfff) large = 1;
+      }
     }
 
     BX_CPU_THIS_PTR TLB.split_large = large;
@@ -677,7 +684,7 @@ int BX_CPU_C::check_entry_PAE(const char *s, Bit64u entry, Bit64u reserved, unsi
 static const char *bx_paging_level[4] = { "PTE", "PDE", "PDPE", "PML4" };
 
 // Translate a linear address to a physical address in long mode
-bx_phy_address BX_CPU_C::translate_linear_long_mode(bx_address laddr, bx_address &lpf_mask, Bit32u &combined_access, unsigned curr_pl, unsigned rw)
+bx_phy_address BX_CPU_C::translate_linear_long_mode(bx_address laddr, Bit32u &lpf_mask, Bit32u &combined_access, unsigned curr_pl, unsigned rw)
 {
   bx_phy_address entry_addr[4];
   bx_phy_address ppf = BX_CPU_THIS_PTR cr3 & BX_CR3_PAGING_MASK;
@@ -809,7 +816,7 @@ bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::CheckPDPTR(Bit32u cr3_val)
 }
 
 // Translate a linear address to a physical address in PAE paging mode
-bx_phy_address BX_CPU_C::translate_linear_PAE(bx_address laddr, bx_address &lpf_mask, Bit32u &combined_access, unsigned curr_pl, unsigned rw)
+bx_phy_address BX_CPU_C::translate_linear_PAE(bx_address laddr, Bit32u &lpf_mask, Bit32u &combined_access, unsigned curr_pl, unsigned rw)
 {
   bx_phy_address entry_addr[3], ppf;
   Bit64u entry[3];
@@ -937,7 +944,7 @@ bx_phy_address BX_CPU_C::translate_linear_PAE(bx_address laddr, bx_address &lpf_
 bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned curr_pl, unsigned rw)
 {
   Bit32u combined_access = 0x06;
-  bx_address lpf_mask = 0xfff; // 4K pages
+  Bit32u lpf_mask = 0xfff; // 4K pages
   unsigned priv_index;
 
   // note - we assume physical memory < 4gig so for brevity & speed, we'll use
@@ -1103,7 +1110,7 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned curr_pl, un
 
   // direct memory access is NOT allowed by default
   tlbEntry->lpf = lpf | TLB_HostPtr;
-  tlbEntry->lpf_mask = ~((bx_address) lpf_mask);
+  tlbEntry->lpf_mask = lpf_mask;
   tlbEntry->ppf = ppf;
   tlbEntry->accessBits = 0;
 
