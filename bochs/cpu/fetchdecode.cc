@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.263 2010-04-03 05:59:07 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.264 2010-04-07 16:02:52 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -2935,8 +2935,10 @@ void BX_CPU_C::init_FetchDecodeTables(void)
 #undef  bx_define_opcode
 
   Bit32u features = BX_CPU_THIS_PTR isa_extensions_bitmask;
+#if BX_CPU_LEVEL > 3
   if (! features)
     BX_PANIC(("init_FetchDecodeTables: CPU features bitmask is empty !"));
+#endif
 
   if (BX_IA_LAST > 0xffff)
     BX_PANIC(("init_FetchDecodeTables: too many opcodes defined !"));
