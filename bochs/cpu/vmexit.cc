@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmexit.cc,v 1.23 2010-04-04 19:23:47 sshwarts Exp $
+// $Id: vmexit.cc,v 1.24 2010-04-07 17:12:17 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2009-2010 Stanislav Shwartsman
@@ -45,6 +45,8 @@ Bit32u gen_instruction_info(bxInstruction_c *i, Bit32u reason)
 #if BX_SUPPORT_VMX >= 2
     case VMX_VMEXIT_GDTR_IDTR_ACCESS:
     case VMX_VMEXIT_LDTR_TR_ACCESS:
+    case VMX_VMEXIT_INVEPT:
+    case VMX_VMEXIT_INVVPID:
 #endif
       instr_info |= i->nnn() << 28;
       break;
@@ -117,6 +119,8 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::VMexit_Instruction(bxInstruction_c *i, Bit
 #if BX_SUPPORT_VMX >= 2
     case VMX_VMEXIT_GDTR_IDTR_ACCESS:
     case VMX_VMEXIT_LDTR_TR_ACCESS:
+    case VMX_VMEXIT_INVEPT:
+    case VMX_VMEXIT_INVVPID:
 #endif
       qualification = (Bit64u) ((bx_address) i->displ32s());
 #if BX_SUPPORT_X86_64
@@ -763,6 +767,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMexit_WBINVD(bxInstruction_c *i)
     BX_ERROR(("VMEXIT: WBINVD in VMX non-root operation"));
     VMexit(i, VMX_VMEXIT_WBINVD, 0);
   }
+}
+
+Bit16u BX_CPU_C::VMX_Get_Current_VPID(void)
+{
+  if (! BX_CPU_THIS_PTR in_vmx_guest || !SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_VPID_ENABLE))
+    return 0;
+
+  return BX_CPU_THIS_PTR vmcs.vpid;
 }
 #endif
 

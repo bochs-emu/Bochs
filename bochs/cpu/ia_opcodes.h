@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ia_opcodes.h,v 1.44 2010-04-04 19:56:55 sshwarts Exp $
+// $Id: ia_opcodes.h,v 1.45 2010-04-07 17:12:17 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008-2010 Stanislav Shwartsman
@@ -1621,4 +1621,6 @@ bx_define_opcode(BX_IA_VMWRITE_GdEd, &BX_CPU_C::VMWRITE, NULL, BX_CPU_VMX)
 bx_define_opcode(BX_IA_VMREAD_EqGq, &BX_CPU_C::VMREAD, NULL, BX_CPU_X86_64 | BX_CPU_VMX)
 bx_define_opcode(BX_IA_VMWRITE_GqEq, &BX_CPU_C::VMWRITE, NULL, BX_CPU_X86_64 | BX_CPU_VMX)
 #endif
+bx_define_opcode(BX_IA_INVEPT, &BX_CPU_C::INVEPT, NULL, BX_CPU_X86_64 | BX_CPU_VMX)
+bx_define_opcode(BX_IA_INVVPID, &BX_CPU_C::INVVPID, NULL, BX_CPU_X86_64 | BX_CPU_VMX)
 // VMX

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: msr.cc,v 1.46 2010-04-04 19:56:55 sshwarts Exp $
+// $Id: msr.cc,v 1.47 2010-04-07 17:12:17 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008-2010 Stanislav Shwartsman
@@ -177,6 +177,9 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
     case BX_MSR_VMX_TRUE_VMENTRY_CTRLS:
       val64 = VMX_MSR_VMX_TRUE_VMENTRY_CTRLS;
       break;
+    case BX_MSR_VMX_MSR_VMX_EPT_VPID_CAP:
+      val64 = VMX_MSR_VMX_EPT_VPID_CAP;
+      break;
 #endif
     case BX_MSR_VMX_MISC:
       val64 = VMX_MSR_MISC;
@@ -279,7 +282,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDMSR(bxInstruction_c *i)
 }
 
 #if BX_CPU_LEVEL >= 6
-BX_CPP_INLINE bx_bool isMemTypeValidMTRR(unsigned memtype)
+bx_bool isMemTypeValidMTRR(unsigned memtype)
 {
   switch(memtype) {
   case BX_MEMTYPE_UC:
@@ -519,6 +522,7 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
     case BX_MSR_VMX_CR4_FIXED0:
     case BX_MSR_VMX_CR4_FIXED1:
     case BX_MSR_VMX_VMCS_ENUM:
+    case BX_MSR_VMX_MSR_VMX_EPT_VPID_CAP:
     case BX_MSR_VMX_TRUE_PINBASED_CTRLS:
     case BX_MSR_VMX_TRUE_PROCBASED_CTRLS:
     case BX_MSR_VMX_TRUE_VMEXIT_CTRLS:

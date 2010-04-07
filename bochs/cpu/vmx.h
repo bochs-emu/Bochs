@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmx.h,v 1.26 2010-04-04 19:23:47 sshwarts Exp $
+// $Id: vmx.h,v 1.27 2010-04-07 17:12:17 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2009 Stanislav Shwartsman
@@ -163,6 +163,10 @@ enum VMX_vmabort_code {
 // =============
 //  VMCS fields
 // =============
+
+/* VMCS 16-bit control fields */
+/* binary 0000_00xx_xxxx_xxx0 */
+#define VMCS_16BIT_CONTROL_VPID                            0x00000000
 
 /* VMCS 16-bit guest-state fields */
 /* binary 0000_10xx_xxxx_xxx0 */
@@ -454,6 +458,7 @@ typedef struct bx_VMCS_GUEST_STATE
    Bit64u efer_msr;
 #endif
    Bit64u pat_msr;
+   Bit64u pdptr[4];
 #endif
 } VMCS_GUEST_STATE;
 
@@ -586,8 +591,10 @@ typedef struct bx_VMCS
 
 #define VMX_VM_EXEC_CTRL3_SUPPORTED_BITS \
    (VMX_VM_EXEC_CTRL3_VIRTUALIZE_APIC_ACCESSES | \
+    VMX_VM_EXEC_CTRL3_EPT_ENABLE | \
     VMX_VM_EXEC_CTRL3_DESCRIPTOR_TABLE_VMEXIT | \
     VMX_VM_EXEC_CTRL3_RDTSCP | \
+    VMX_VM_EXEC_CTRL3_VPID_ENABLE | \
     VMX_VM_EXEC_CTRL3_WBINVD_VMEXIT)
 
 #endif
@@ -615,6 +622,8 @@ typedef struct bx_VMCS
    Bit32u vm_tpr_threshold;
 #if BX_SUPPORT_VMX >= 2
    bx_phy_address apic_access_page;
+   Bit64u eptptr;
+   Bit16u vpid;
 #endif
 
    Bit64u executive_vmcsptr;
@@ -645,8 +654,8 @@ typedef struct bx_VMCS
     VMX_VMEXIT_CTRL1_INTA_ON_VMEXIT | \
    ((BX_SUPPORT_VMX >= 2) ? VMX_VMEXIT_CTRL1_STORE_PAT_MSR : 0) | \
    ((BX_SUPPORT_VMX >= 2) ? VMX_VMEXIT_CTRL1_LOAD_PAT_MSR : 0) | \
-   ((BX_SUPPORT_VMX >= 2 && BX_SUPPORT_X86_64) ? VMX_VMEXIT_CTRL1_STORE_EFER_MSR : 0) | \
-   ((BX_SUPPORT_VMX >= 2 && BX_SUPPORT_X86_64) ? VMX_VMEXIT_CTRL1_LOAD_EFER_MSR : 0))
+   ((BX_SUPPORT_VMX >= 2) ? VMX_VMEXIT_CTRL1_STORE_EFER_MSR : 0) | \
+   ((BX_SUPPORT_VMX >= 2) ? VMX_VMEXIT_CTRL1_LOAD_EFER_MSR : 0))
 
 #endif
 
@@ -681,7 +690,7 @@ typedef struct bx_VMCS
     VMX_VMENTRY_CTRL1_SMM_ENTER | \
     VMX_VMENTRY_CTRL1_DEACTIVATE_DUAL_MONITOR_TREATMENT | \
    ((BX_SUPPORT_VMX >= 2) ? VMX_VMENTRY_CTRL1_LOAD_PAT_MSR : 0) | \
-   ((BX_SUPPORT_VMX >= 2 && BX_SUPPORT_X86_64) ? VMX_VMENTRY_CTRL1_LOAD_EFER_MSR : 0))
+   ((BX_SUPPORT_VMX >= 2) ? VMX_VMENTRY_CTRL1_LOAD_EFER_MSR : 0))
 
 #endif
    
@@ -703,6 +712,9 @@ typedef struct bx_VMCS
    Bit32u vmexit_instr_info;
    Bit32u vmexit_instr_length;
    bx_address vmexit_guest_laddr;
+#if BX_SUPPORT_VMX >= 2
+   bx_phy_address vmexit_guest_paddr;
+#endif
    Bit32u vmexit_excep_info;
    Bit32u vmexit_excep_error_code;
 
@@ -964,6 +976,8 @@ enum VMX_Activity_State {
    ((((Bit64u) VMX_MSR_VMCS_ENUM_HI) << 32) | VMX_MSR_VMCS_ENUM_LO)
 
 
+#if BX_SUPPORT_VMX >= 2
+
 // IA32_VMX_MSR_PROCBASED_CTRLS2 MSR (0x48b)
 // -----------------------------
 
@@ -975,5 +989,41 @@ enum VMX_Activity_State {
 
 #define VMX_MSR_VMX_PROCBASED_CTRLS2 \
    ((((Bit64u) VMX_MSR_VMX_PROCBASED_CTRLS2_HI) << 32) | VMX_MSR_VMX_PROCBASED_CTRLS2_LO)
+
+
+// IA32_VMX_EPT_VPID_CAP MSR (0x48c)
+// ---------------------
+
+enum VMX_INVEPT_INVVPID_type {
+  BX_INVEPT_INVVPID_INDIVIDUAL_ADDRESS_INVALIDATION = 0,
+  BX_INVEPT_INVVPID_SINGLE_CONTEXT_INVALIDATION,
+  BX_INVEPT_INVVPID_ALL_CONTEXT_INVALIDATION,
+  BX_INVEPT_INVVPID_SINGLE_CONTEXT_NON_GLOBAL_INVALIDATION
+};
+
+//  [0] - BX_EPT_ENTRY_EXECUTE_ONLY support
+//  [6] - 4-levels page walk length
+//  [8] - allow UC EPT paging structure memory type
+// [14] - allow WB EPT paging structure memory type
+// [16] - EPT 2M pages support
+// [17] - EPT 1G pages support
+// [20] - INVEPT instruction supported
+// [25] - INVEPT single-context invalidation supported
+// [26] - INVEPT all-context invalidation supported
+
+#define VMX_MSR_VMX_EPT_VPID_CAP_LO (0x06114141 | (BX_SUPPORT_1G_PAGES << 17))
+
+// [32] - INVVPID instruction supported
+// [40] - individual-address INVVPID is supported
+// [41] - single-context INVVPID is supported
+// [42] - all-context INVVPID is supported
+// [43] - single-context-retaining-globals INVVPID is supported
+
+#define VMX_MSR_VMX_EPT_VPID_CAP_HI (0x00000f01)
+
+#define VMX_MSR_VMX_EPT_VPID_CAP \
+   ((((Bit64u) VMX_MSR_VMX_EPT_VPID_CAP_HI) << 32) | VMX_MSR_VMX_EPT_VPID_CAP_LO)
+
+#endif
 
 #endif // _BX_VMX_INTEL_H_

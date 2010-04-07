@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode_sse.h,v 1.10 2010-04-02 19:03:47 sshwarts Exp $
+// $Id: fetchdecode_sse.h,v 1.11 2010-04-07 17:12:17 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005-2010 Stanislav Shwartsman
@@ -1082,8 +1082,8 @@ static const BxOpcodeInfo_t BxOpcode3ByteTable0f38[256] = {
   /* 7D */ { 0, BX_IA_ERROR },
   /* 7E */ { 0, BX_IA_ERROR },
   /* 7F */ { 0, BX_IA_ERROR },
-  /* 80 */ { 0, BX_IA_ERROR },
-  /* 81 */ { 0, BX_IA_ERROR },
+  /* 80 */ { BxPrefixSSE66 | BxTraceEnd, BX_IA_INVEPT },
+  /* 81 */ { BxPrefixSSE66 | BxTraceEnd, BX_IA_INVVPID },
   /* 82 */ { 0, BX_IA_ERROR },
   /* 83 */ { 0, BX_IA_ERROR },
   /* 84 */ { 0, BX_IA_ERROR },

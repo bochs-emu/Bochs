@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmx.cc,v 1.58 2010-04-04 09:04:12 sshwarts Exp $
+// $Id: vmx.cc,v 1.59 2010-04-07 17:12:17 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2009-2010 Stanislav Shwartsman
@@ -266,6 +266,27 @@ unsigned BX_CPU_C::VMXReadRevisionID(bx_phy_address pAddr)
   return revision;
 }
 
+#if BX_SUPPORT_VMX >= 2
+BX_CPP_INLINE bx_bool is_eptptr_valid(Bit64u eptptr)
+{
+  // [2:0] EPT paging-structure memory type
+  //       0 = Uncacheable (UC)
+  //       6 = Write-back (WB)
+  Bit32u memtype = eptptr & 7;
+  if (memtype != BX_MEMTYPE_UC && memtype != BX_MEMTYPE_WB) return 0;
+
+  // [5:3] This value is 1 less than the EPT page-walk length
+  Bit32u walk_length = (eptptr >> 3) & 7;
+  if (walk_length != 3) return 0;
+
+#define BX_EPTPTR_RESERVED_BITS 0xfc0 /* bits 11:6 are reserved */
+  if (eptptr & BX_EPTPTR_RESERVED_BITS) return 0;
+
+  if (! IsValidPhyAddr(eptptr)) return 0;
+  return 1;
+}
+#endif
+
 ////////////////////////////////////////////////////////////
 // VMenter
 ////////////////////////////////////////////////////////////
@@ -333,7 +354,6 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
      BX_ERROR(("VMFAIL: VMCS EXEC CTRL: VMX pin-based controls allowed 0-settings"));
      return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
   }
-
   if (vm->vmexec_ctrls1 & ~VMX_CHECKS_USE_MSR_VMX_PINBASED_CTRLS_HI) {
      BX_ERROR(("VMFAIL: VMCS EXEC CTRL: VMX pin-based controls allowed 1-settings"));
      return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
@@ -343,7 +363,6 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
      BX_ERROR(("VMFAIL: VMCS EXEC CTRL: VMX proc-based controls allowed 0-settings"));
      return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
   }
-
   if (vm->vmexec_ctrls2 & ~VMX_CHECKS_USE_MSR_VMX_PROCBASED_CTRLS_HI) {
      BX_ERROR(("VMFAIL: VMCS EXEC CTRL: VMX proc-based controls allowed 1-settings"));
      return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
@@ -354,7 +373,6 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
      BX_ERROR(("VMFAIL: VMCS EXEC CTRL: VMX secondary proc-based controls allowed 0-settings"));
      return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
   }
-
   if (vm->vmexec_ctrls3 & ~VMX_MSR_VMX_PROCBASED_CTRLS2_HI) {
      BX_ERROR(("VMFAIL: VMCS EXEC CTRL: VMX secondary proc-based controls allowed 1-settings"));
      return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
@@ -431,6 +449,24 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
   }
 #endif
 
+#if BX_SUPPORT_VMX >= 2
+  if (vm->vmexec_ctrls3 & VMX_VM_EXEC_CTRL3_EPT_ENABLE) {
+     vm->eptptr = (bx_phy_address) VMread64(VMCS_64BIT_CONTROL_EPTPTR);
+     if (! is_eptptr_valid(vm->eptptr)) {
+       BX_ERROR(("VMFAIL: VMCS EXEC CTRL: invalid EPTPTR value"));
+       return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
+     }
+  }
+
+  if (vm->vmexec_ctrls3 & VMX_VM_EXEC_CTRL3_VPID_ENABLE) {
+     vm->vpid = VMread16(VMCS_16BIT_CONTROL_VPID);
+     if (vm->vpid != 0) {
+       BX_ERROR(("VMFAIL: VMCS EXEC CTRL: guest VPID != 0"));
+       return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
+     }
+  }
+#endif
+
   //
   // Load VM-exit control fields to VMCS Cache
   //
@@ -447,7 +483,6 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
      BX_ERROR(("VMFAIL: VMCS EXEC CTRL: VMX vmexit controls allowed 0-settings"));
      return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
   }
-
   if (vm->vmexit_ctrls & ~VMX_CHECKS_USE_MSR_VMX_VMEXIT_CTRLS_HI) {
      BX_ERROR(("VMFAIL: VMCS EXEC CTRL: VMX vmexit controls allowed 1-settings"));
      return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
@@ -496,7 +531,6 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
      BX_ERROR(("VMFAIL: VMCS EXEC CTRL: VMX vmentry controls allowed 0-settings"));
      return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
   }
-
   if (vm->vmentry_ctrls & ~VMX_CHECKS_USE_MSR_VMX_VMENTRY_CTRLS_HI) {
      BX_ERROR(("VMFAIL: VMCS EXEC CTRL: VMX vmentry controls allowed 1-settings"));
      return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
@@ -808,6 +842,7 @@ BX_CPP_INLINE bx_bool IsLimitAccessRightsConsistent(Bit32u limit, Bit32u ar)
 Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
 {
   static const char *segname[] = { "ES", "CS", "SS", "DS", "FS", "GS" };
+  int n;
 
   VMCS_GUEST_STATE guest;
   VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
@@ -899,7 +934,7 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
   // Load and Check Guest State from VMCS - Segment Registers
   //
 
-  for (int n=0; n<6; n++) {
+  for (n=0; n<6; n++) {
      Bit16u selector = VMread16(VMCS_16BIT_GUEST_ES_SELECTOR + 2*n);
      bx_address base = (bx_address) VMread64(VMCS_GUEST_ES_BASE + 2*n);
      Bit32u limit = VMread32(VMCS_32BIT_GUEST_ES_LIMIT + 2*n);
@@ -1327,10 +1362,25 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
 
   if (! x86_64_guest && (guest.cr4 & (1 << 5)) != 0 /* PAE */) {
     // CR0.PG is always set in VMX mode
-    if (! CheckPDPTR(guest.cr3)) {
-      *qualification = VMENTER_ERR_GUEST_STATE_PDPTR_LOADING;
-      BX_ERROR(("VMENTER: Guest State PDPTRs Checks Failed"));
-      return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
+#if BX_SUPPORT_VMX >= 2
+    if (vm->vmexec_ctrls3 & VMX_VM_EXEC_CTRL3_EPT_ENABLE) {
+      for (n=0;n<4;n++)
+         guest.pdptr[n] = VMread64(VMCS_64BIT_GUEST_IA32_PDPTE0 + 2*n);
+
+      if (! CheckPDPTR(guest.pdptr)) {
+         *qualification = VMENTER_ERR_GUEST_STATE_PDPTR_LOADING;
+         BX_ERROR(("VMENTER: Guest State PDPTRs Checks Failed"));
+         return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
+      }
+    }
+    else
+#endif
+    {
+      if (! CheckPDPTR(guest.cr3)) {
+         *qualification = VMENTER_ERR_GUEST_STATE_PDPTR_LOADING;
+         BX_ERROR(("VMENTER: Guest State PDPTRs Checks Failed"));
+         return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
+      }
     }
   }
 
@@ -1374,6 +1424,17 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
   // flush TLB is always needed to invalidate possible
   // APIC ACCESS PAGE caching by host
   TLB_flush();
+
+#if BX_SUPPORT_VMX >= 2
+  if (vm->vmexec_ctrls3 & VMX_VM_EXEC_CTRL3_EPT_ENABLE) {
+    // load PDPTR only in PAE legacy mode
+    if (BX_CPU_THIS_PTR cr0.get_PG() && BX_CPU_THIS_PTR cr4.get_PAE() && !x86_64_guest) {
+      BX_CPU_THIS_PTR PDPTR_CACHE.valid = 1;
+      for (n = 0; n < 4; n++)
+        BX_CPU_THIS_PTR PDPTR_CACHE.entry[n] = guest.pdptr[n];
+    }
+  }
+#endif
 
   if (vmentry_ctrls & VMX_VMENTRY_CTRL1_LOAD_DBG_CTRLS) {
     // always clear bits 15:14 and set bit 10
@@ -1606,17 +1667,34 @@ Bit32u BX_CPU_C::StoreMSRs(Bit32u msr_cnt, bx_phy_address pAddr)
 void BX_CPU_C::VMexitSaveGuestState(void)
 {
   VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
+  int n;
 
   VMwrite64(VMCS_GUEST_CR0, BX_CPU_THIS_PTR cr0.get32());
   VMwrite64(VMCS_GUEST_CR3, BX_CPU_THIS_PTR cr3);
   VMwrite64(VMCS_GUEST_CR4, BX_CPU_THIS_PTR cr4.get32());
+
+#if BX_SUPPORT_VMX >= 2
+  if (vm->vmexec_ctrls3 & VMX_VM_EXEC_CTRL3_EPT_ENABLE) {
+    // save only if guest running in legacy PAE mode
+    if (BX_CPU_THIS_PTR cr0.get_PG() && BX_CPU_THIS_PTR cr4.get_PAE() && !long_mode()) {
+      if (! BX_CPU_THIS_PTR PDPTR_CACHE.valid) {
+        if (! CheckPDPTR(BX_CPU_THIS_PTR cr3))
+          BX_PANIC(("VMEXIT: PDPTR cache is not valid !"));
+      }
+      for(n=0; n<4; n++)
+        VMwrite64(VMCS_64BIT_GUEST_IA32_PDPTE0 + 2*n, BX_CPU_THIS_PTR PDPTR_CACHE.entry[n]);
+    }
+  }
+#endif
+
   if (vm->vmexit_ctrls & VMX_VMEXIT_CTRL1_SAVE_DBG_CTRLS)
      VMwrite64(VMCS_GUEST_DR7, BX_CPU_THIS_PTR dr7);
+
   VMwrite64(VMCS_GUEST_RIP, RIP);
   VMwrite64(VMCS_GUEST_RSP, RSP);
   VMwrite64(VMCS_GUEST_RFLAGS, BX_CPU_THIS_PTR read_eflags());
 
-  for (int n=0; n<6; n++) {
+  for (n=0; n<6; n++) {
      Bit32u selector = BX_CPU_THIS_PTR sregs[n].selector.value;
      bx_bool invalid = !BX_CPU_THIS_PTR sregs[n].cache.valid;
      bx_address base = BX_CPU_THIS_PTR sregs[n].cache.u.segment.base;
@@ -1929,6 +2007,8 @@ void BX_CPU_C::VMexit(bxInstruction_c *i, Bit32u reason, Bit64u qualification)
     }
   }
 
+  BX_CPU_THIS_PTR in_vmx_guest = 0;
+
   //
   // STEP 2: Load Host State
   //
@@ -1949,7 +2029,6 @@ void BX_CPU_C::VMexit(bxInstruction_c *i, Bit32u reason, Bit64u qualification)
   //
 
   BX_CPU_THIS_PTR disable_INIT = 1; // INIT is disabled in VMX root mode
-  BX_CPU_THIS_PTR in_vmx_guest = 0;
   BX_CPU_THIS_PTR vmx_interrupt_window = 0;
 
   longjmp(BX_CPU_THIS_PTR jmp_buf_env, 1); // go back to main decode loop
@@ -2417,6 +2496,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMREAD(bxInstruction_c *i)
   Bit64u field_64;
 
   switch(encoding) {
+    /* VMCS 16-bit control fields */
+    /* binary 0000_00xx_xxxx_xxx0 */
+    case VMCS_16BIT_CONTROL_VPID:
+      // fall through
+
     /* VMCS 16-bit guest-state fields */
     /* binary 0000_10xx_xxxx_xxx0 */
     case VMCS_16BIT_GUEST_ES_SELECTOR:
@@ -2521,6 +2605,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMREAD(bxInstruction_c *i)
     case VMCS_64BIT_CONTROL_TSC_OFFSET:
     case VMCS_64BIT_CONTROL_VIRTUAL_APIC_PAGE_ADDR:
     case VMCS_64BIT_CONTROL_APIC_ACCESS_ADDR:
+#if BX_SUPPORT_VMX >= 2
+    case VMCS_64BIT_CONTROL_EPTPTR:
+#endif
       field_64 = VMread64(encoding);
       break;
 
@@ -2534,8 +2621,23 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMREAD(bxInstruction_c *i)
     case VMCS_64BIT_CONTROL_TSC_OFFSET_HI:
     case VMCS_64BIT_CONTROL_VIRTUAL_APIC_PAGE_ADDR_HI:
     case VMCS_64BIT_CONTROL_APIC_ACCESS_ADDR_HI:
+#if BX_SUPPORT_VMX >= 2
+    case VMCS_64BIT_CONTROL_EPTPTR_HI:
+#endif
       field_64 = VMread32(encoding);
       break;
+
+#if BX_SUPPORT_VMX >= 2
+    /* VMCS 64-bit read only data fields */
+    /* binary 0010_01xx_xxxx_xxx0 */
+    case VMCS_64BIT_GUEST_PHYSICAL_ADDR:
+      field_64 = VMread64(encoding);
+      break;
+
+    case VMCS_64BIT_GUEST_PHYSICAL_ADDR_HI:
+      field_64 = VMread32(encoding);
+      break;
+#endif
 
     /* VMCS 64-bit guest state fields */
     /* binary 0010_10xx_xxxx_xxx0 */
@@ -2543,6 +2645,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMREAD(bxInstruction_c *i)
     case VMCS_64BIT_GUEST_IA32_DEBUGCTL:
     case VMCS_64BIT_GUEST_IA32_PAT:
     case VMCS_64BIT_GUEST_IA32_EFER:
+#if BX_SUPPORT_VMX >= 2
+    case VMCS_64BIT_GUEST_IA32_PDPTE0:
+    case VMCS_64BIT_GUEST_IA32_PDPTE1:
+    case VMCS_64BIT_GUEST_IA32_PDPTE2:
+    case VMCS_64BIT_GUEST_IA32_PDPTE3:
+#endif
       field_64 = VMread64(encoding);
       break;
 
@@ -2550,6 +2658,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMREAD(bxInstruction_c *i)
     case VMCS_64BIT_GUEST_IA32_DEBUGCTL_HI:
     case VMCS_64BIT_GUEST_IA32_PAT_HI:
     case VMCS_64BIT_GUEST_IA32_EFER_HI:
+#if BX_SUPPORT_VMX >= 2
+    case VMCS_64BIT_GUEST_IA32_PDPTE0_HI:
+    case VMCS_64BIT_GUEST_IA32_PDPTE1_HI:
+    case VMCS_64BIT_GUEST_IA32_PDPTE2_HI:
+    case VMCS_64BIT_GUEST_IA32_PDPTE3_HI:
+#endif
       field_64 = VMread32(encoding);
       break;
 
@@ -2735,6 +2849,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMWRITE(bxInstruction_c *i)
   }
 */
   switch(encoding) {
+    /* VMCS 16-bit control fields */
+    /* binary 0000_00xx_xxxx_xxx0 */
+    case VMCS_16BIT_CONTROL_VPID:
+      // fall through
+
     /* VMCS 16-bit guest-state fields */
     /* binary 0000_10xx_xxxx_xxx0 */
     case VMCS_16BIT_GUEST_ES_SELECTOR:
@@ -2827,6 +2946,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMWRITE(bxInstruction_c *i)
     case VMCS_64BIT_CONTROL_TSC_OFFSET_HI:
     case VMCS_64BIT_CONTROL_VIRTUAL_APIC_PAGE_ADDR_HI:
     case VMCS_64BIT_CONTROL_APIC_ACCESS_ADDR_HI:
+#if BX_SUPPORT_VMX >= 2
+    case VMCS_64BIT_CONTROL_EPTPTR_HI:
+#endif
       // fall through
 
     /* VMCS 64-bit guest state fields */
@@ -2835,6 +2957,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMWRITE(bxInstruction_c *i)
     case VMCS_64BIT_GUEST_IA32_DEBUGCTL_HI:
     case VMCS_64BIT_GUEST_IA32_PAT_HI:
     case VMCS_64BIT_GUEST_IA32_EFER_HI:
+#if BX_SUPPORT_VMX >= 2
+    case VMCS_64BIT_GUEST_IA32_PDPTE0_HI:
+    case VMCS_64BIT_GUEST_IA32_PDPTE1_HI:
+    case VMCS_64BIT_GUEST_IA32_PDPTE2_HI:
+    case VMCS_64BIT_GUEST_IA32_PDPTE3_HI:
+#endif
       // fall through
 
     /* VMCS 64-bit host state fields */
@@ -2856,6 +2984,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMWRITE(bxInstruction_c *i)
     case VMCS_64BIT_CONTROL_TSC_OFFSET:
     case VMCS_64BIT_CONTROL_VIRTUAL_APIC_PAGE_ADDR:
     case VMCS_64BIT_CONTROL_APIC_ACCESS_ADDR:
+#if BX_SUPPORT_VMX >= 2
+    case VMCS_64BIT_CONTROL_EPTPTR:
+#endif
       // fall through
 
     /* VMCS 64-bit guest state fields */
@@ -2864,6 +2995,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMWRITE(bxInstruction_c *i)
     case VMCS_64BIT_GUEST_IA32_DEBUGCTL:
     case VMCS_64BIT_GUEST_IA32_PAT:
     case VMCS_64BIT_GUEST_IA32_EFER:
+#if BX_SUPPORT_VMX >= 2
+    case VMCS_64BIT_GUEST_IA32_PDPTE0:
+    case VMCS_64BIT_GUEST_IA32_PDPTE1:
+    case VMCS_64BIT_GUEST_IA32_PDPTE2:
+    case VMCS_64BIT_GUEST_IA32_PDPTE3:
+#endif
       // fall through
 
     /* VMCS 64-bit host state fields */
@@ -2924,6 +3061,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMWRITE(bxInstruction_c *i)
     case VMCS_HOST_RIP:
       VMwrite64(encoding, val_64);
       break;
+
+#if BX_SUPPORT_VMX >= 2
+    /* VMCS 64-bit read only data fields */
+    /* binary 0010_01xx_xxxx_xxx0 */
+    case VMCS_64BIT_GUEST_PHYSICAL_ADDR:
+    case VMCS_64BIT_GUEST_PHYSICAL_ADDR_HI:
+      // fall through
+#endif
 
     /* VMCS 32-bit read only data fields */
     /* binary 0100_01xx_xxxx_xxx0 */
@@ -3012,6 +3157,152 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMCLEAR(bxInstruction_c *i)
 #endif  
 }
 
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::INVEPT(bxInstruction_c *i)
+{
+#if BX_SUPPORT_VMX >= 2
+  if (! BX_CPU_THIS_PTR in_vmx || BX_CPU_THIS_PTR get_VM() || BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_COMPAT)
+    exception(BX_UD_EXCEPTION, 0);
+
+  /* source must be memory reference */
+  if (i->modC0()) {
+    BX_INFO(("INVEPT: must be memory reference"));
+    exception(BX_UD_EXCEPTION, 0);
+  }
+
+  if (BX_CPU_THIS_PTR in_vmx_guest) {
+    BX_ERROR(("VMEXIT: INVEPT in VMX non-root operation"));
+    VMexit_Instruction(i, VMX_VMEXIT_INVEPT);
+  }
+
+  if (CPL != 0) {
+    BX_ERROR(("INVEPT with CPL!=0 will cause #GP(0)"));
+    exception(BX_GP_EXCEPTION, 0);
+  }
+
+  bx_address type;
+  if (i->os64L()) {
+    type = BX_READ_64BIT_REG(i->nnn());
+  }
+  else
+  {
+    type = BX_READ_32BIT_REG(i->nnn());
+  }
+
+  BxPackedXmmRegister inv_eptp;
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  read_virtual_dqword(i->seg(), eaddr, (Bit8u *) &inv_eptp);
+
+  switch(type) {
+  case BX_INVEPT_INVVPID_SINGLE_CONTEXT_INVALIDATION:
+     if (! is_eptptr_valid(inv_eptp.xmm64u(0))) {
+       BX_ERROR(("INVEPT: invalid EPTPTR value !"));
+       VMfail(VMXERR_INVALID_INVEPT_INVVPID);
+       return;
+     }
+     TLB_flush();
+     break;
+
+  case BX_INVEPT_INVVPID_ALL_CONTEXT_INVALIDATION:
+     TLB_flush();
+     break;
+
+  default:
+     BX_ERROR(("INVEPT: not supported type !"));
+     VMfail(VMXERR_INVALID_INVEPT_INVVPID);
+     return;
+  }
+
+  VMsucceed();
+#else
+  BX_INFO(("INVEPT: required VMXx2 support, use --enable-vmx=2 option"));
+  exception(BX_UD_EXCEPTION, 0);
+#endif
+}
+
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::INVVPID(bxInstruction_c *i)
+{
+#if BX_SUPPORT_VMX >= 2
+  if (! BX_CPU_THIS_PTR in_vmx || BX_CPU_THIS_PTR get_VM() || BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_COMPAT)
+    exception(BX_UD_EXCEPTION, 0);
+
+  /* source must be memory reference */
+  if (i->modC0()) {
+    BX_INFO(("INVVPID: must be memory reference"));
+    exception(BX_UD_EXCEPTION, 0);
+  }
+
+  if (BX_CPU_THIS_PTR in_vmx_guest) {
+    BX_ERROR(("VMEXIT: INVVPID in VMX non-root operation"));
+    VMexit_Instruction(i, VMX_VMEXIT_INVVPID);
+  }
+
+  if (CPL != 0) {
+    BX_ERROR(("INVVPID with CPL!=0 will cause #GP(0)"));
+    exception(BX_GP_EXCEPTION, 0);
+  }
+
+  bx_address type;
+  if (i->os64L()) {
+    type = BX_READ_64BIT_REG(i->nnn());
+  }
+  else
+  {
+    type = BX_READ_32BIT_REG(i->nnn());
+  }
+
+  BxPackedXmmRegister invvpid_desc;
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  read_virtual_dqword(i->seg(), eaddr, (Bit8u *) &invvpid_desc);
+
+  if (invvpid_desc.xmm64u(0) > 0xffff) {
+    BX_ERROR(("INVVPID: INVVPID_DESC reserved bits are set"));
+    VMfail(VMXERR_INVALID_INVEPT_INVVPID);
+    return;
+  }
+
+  Bit16u vpid = invvpid_desc.xmm16u(0);
+  if (vpid == 0 && type != BX_INVEPT_INVVPID_ALL_CONTEXT_INVALIDATION) {
+    BX_ERROR(("INVVPID with VPID=0"));
+    VMfail(VMXERR_INVALID_INVEPT_INVVPID);
+    return;
+  }
+
+  switch(type) {
+  case BX_INVEPT_INVVPID_INDIVIDUAL_ADDRESS_INVALIDATION:
+    if (! IsCanonical(invvpid_desc.xmm64u(1))) {
+      BX_ERROR(("INVVPID: non canonical LADDR single context invalidation"));
+      VMfail(VMXERR_INVALID_INVEPT_INVVPID);
+      return;
+    }
+
+    TLB_flush(); // invalidate all mappings for address LADDR tagged with VPID
+    break;
+
+  case BX_INVEPT_INVVPID_SINGLE_CONTEXT_INVALIDATION:
+    TLB_flush(); // invalidate all mappings tagged with VPID
+    break;
+
+  case BX_INVEPT_INVVPID_ALL_CONTEXT_INVALIDATION:
+    TLB_flush(); // invalidate all mappings tagged with VPID <> 0
+    break;
+   
+  case BX_INVEPT_INVVPID_SINGLE_CONTEXT_NON_GLOBAL_INVALIDATION:
+    TLB_flush(); // invalidate all mappings tagged with VPID except globals
+    break;
+
+  default:
+     BX_ERROR(("INVVPID: not supported type !"));
+     VMfail(VMXERR_INVALID_INVEPT_INVVPID);
+     return;
+  }
+
+  VMsucceed();
+#else
+  BX_INFO(("INVVPID: required VMXx2 support, use --enable-vmx=2 option"));
+  exception(BX_UD_EXCEPTION, 0);
+#endif
+}
+
 #if BX_SUPPORT_VMX
 void BX_CPU_C::register_vmx_state(bx_param_c *parent)
 {
@@ -3032,7 +3323,7 @@ void BX_CPU_C::register_vmx_state(bx_param_c *parent)
   // VM-Execution Control Fields
   //
 
-  bx_list_c *vmexec_ctrls = new bx_list_c(vmcache, "VMEXEC_CTRLS", 23);
+  bx_list_c *vmexec_ctrls = new bx_list_c(vmcache, "VMEXEC_CTRLS", 25);
 
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, vmexec_ctrls1, BX_CPU_THIS_PTR vmcs.vmexec_ctrls1);
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, vmexec_ctrls2, BX_CPU_THIS_PTR vmcs.vmexec_ctrls2);
@@ -3057,6 +3348,8 @@ void BX_CPU_C::register_vmx_state(bx_param_c *parent)
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, vm_tpr_threshold, BX_CPU_THIS_PTR vmcs.vm_tpr_threshold);
 #if BX_SUPPORT_VMX >= 2
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, apic_access_page, BX_CPU_THIS_PTR vmcs.apic_access_page);
+  BXRS_HEX_PARAM_FIELD(vmexec_ctrls, eptptr, BX_CPU_THIS_PTR vmcs.eptptr);
+  BXRS_HEX_PARAM_FIELD(vmexec_ctrls, vpid, BX_CPU_THIS_PTR vmcs.vpid);
 #endif
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, executive_vmcsptr, BX_CPU_THIS_PTR vmcs.executive_vmcsptr);
 
@@ -3089,7 +3382,7 @@ void BX_CPU_C::register_vmx_state(bx_param_c *parent)
   // VM-Exit Information Fields
   //
 /*
-  bx_list_c *vmexit_info = new bx_list_c(vmcache, "VMEXIT_INFO", 14);
+  bx_list_c *vmexit_info = new bx_list_c(vmcache, "VMEXIT_INFO", 15);
 
   BXRS_HEX_PARAM_FIELD(vmexit_info, vmexit_reason, BX_CPU_THIS_PTR vmcs.vmexit_reason);
   BXRS_HEX_PARAM_FIELD(vmexit_info, vmexit_qualification, BX_CPU_THIS_PTR vmcs.vmexit_qualification);
@@ -3100,6 +3393,9 @@ void BX_CPU_C::register_vmx_state(bx_param_c *parent)
   BXRS_HEX_PARAM_FIELD(vmexit_info, vmexit_instr_info, BX_CPU_THIS_PTR vmcs.vmexit_instr_info);
   BXRS_HEX_PARAM_FIELD(vmexit_info, vmexit_instr_length, BX_CPU_THIS_PTR vmcs.vmexit_instr_length);
   BXRS_HEX_PARAM_FIELD(vmexit_info, vmexit_guest_laddr, BX_CPU_THIS_PTR vmcs.vmexit_guest_laddr);
+#if BX_SUPPORT_VMX >= 2
+  BXRS_HEX_PARAM_FIELD(vmexit_info, vmexit_guest_paddr, BX_CPU_THIS_PTR vmcs.vmexit_guest_paddr);
+#endif
   BXRS_HEX_PARAM_FIELD(vmexit_info, vmexit_io_rcx, BX_CPU_THIS_PTR vmcs.vmexit_io_rcx);
   BXRS_HEX_PARAM_FIELD(vmexit_info, vmexit_io_rsi, BX_CPU_THIS_PTR vmcs.vmexit_io_rsi);
   BXRS_HEX_PARAM_FIELD(vmexit_info, vmexit_io_rdi, BX_CPU_THIS_PTR vmcs.vmexit_io_rdi);

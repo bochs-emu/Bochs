@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.665 2010-04-07 14:38:53 sshwarts Exp $
+// $Id: cpu.h,v 1.666 2010-04-07 17:12:17 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2010  The Bochs Project
@@ -354,6 +354,7 @@ enum {
   #define BX_MSR_VMX_CR4_FIXED1           0x489
   #define BX_MSR_VMX_VMCS_ENUM            0x48a
   #define BX_MSR_VMX_PROCBASED_CTRLS2     0x48b
+  #define BX_MSR_VMX_MSR_VMX_EPT_VPID_CAP 0x48c
   #define BX_MSR_VMX_TRUE_PINBASED_CTRLS  0x48d
   #define BX_MSR_VMX_TRUE_PROCBASED_CTRLS 0x48e
   #define BX_MSR_VMX_TRUE_VMEXIT_CTRLS    0x48f
@@ -2321,6 +2322,11 @@ public: // for now...
   BX_SMF void VMWRITE(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   /* VMX instructions */
 
+  /* VMXx2 */
+  BX_SMF void INVEPT(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void INVVPID(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  /* VMXx2 */
+
   /*** Duplicate SSE instructions ***/
   // Although in implementation, these instructions are aliased to the
   // another function, it's nice to have them call a separate function when
@@ -2800,6 +2806,9 @@ public: // for now...
 #endif
 #if BX_DEBUGGER || BX_DISASM || BX_INSTRUMENTATION || BX_GDBSTUB
   BX_SMF bx_bool  dbg_xlate_linear2phy(bx_address linear, bx_phy_address *phy);
+#if BX_SUPPORT_VMX >= 2
+  BX_SMF bx_bool dbg_translate_guest_physical(bx_phy_address guest_paddr, bx_phy_address *phy);
+#endif
 #endif
   BX_SMF void     atexit(void);
 
@@ -3100,6 +3109,9 @@ public: // for now...
 #if BX_SUPPORT_X86_64
   BX_SMF bx_phy_address translate_linear_long_mode(bx_address laddr, Bit32u &lpf_mask, Bit32u &combined_access, unsigned curr_pl, unsigned rw);
 #endif
+#if BX_SUPPORT_VMX >= 2
+  BX_SMF bx_phy_address translate_guest_physical(bx_phy_address guest_paddr, bx_address guest_laddr, bx_bool guest_laddr_valid, bx_bool is_page_walk, unsigned rw);
+#endif
   BX_SMF BX_CPP_INLINE bx_phy_address dtranslate_linear(bx_address laddr, unsigned curr_pl, unsigned rw)
   {
     return translate_linear(laddr, curr_pl, rw);
@@ -3136,7 +3148,10 @@ public: // for now...
   BX_SMF bx_bool check_CR4(bx_address val) BX_CPP_AttrRegparmN(1);
 #endif
 #if BX_CPU_LEVEL >= 6
-  BX_SMF bx_bool CheckPDPTR(Bit32u cr3_val) BX_CPP_AttrRegparmN(1);
+  BX_SMF bx_bool CheckPDPTR(bx_phy_address cr3_val) BX_CPP_AttrRegparmN(1);
+#endif
+#if BX_SUPPORT_VMX >= 2
+  BX_SMF bx_bool CheckPDPTR(Bit64u *pdptr) BX_CPP_AttrRegparmN(1);
 #endif
 
   BX_SMF void reset(unsigned source);
@@ -3389,6 +3404,7 @@ public: // for now...
   BX_SMF bx_bool is_virtual_apic_page(bx_phy_address paddr) BX_CPP_AttrRegparmN(1);
   BX_SMF void VMX_Virtual_Apic_Read(bx_phy_address paddr, unsigned len, void *data);
   BX_SMF void VMX_Virtual_Apic_Write(bx_phy_address paddr, unsigned len, void *data);
+  BX_SMF Bit16u VMX_Get_Current_VPID(void);
 #endif
   BX_SMF Bit32u VMX_Read_VTPR(void);
   BX_SMF void VMX_Write_TPR_Shadow(Bit8u tpr_shadow);
