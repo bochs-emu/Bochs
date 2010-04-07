@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.h,v 1.100 2010-04-04 18:46:02 sshwarts Exp $
+// $Id: fetchdecode.h,v 1.101 2010-04-07 14:49:18 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005-2010 Stanislav Shwartsman
@@ -642,8 +642,13 @@ static const BxOpcodeInfo_t BxOpcodeInfoG7R[64] = {
   /* 0F 01 F5 */ { BxTraceEnd, BX_IA_LMSW_Ew },
   /* 0F 01 F6 */ { BxTraceEnd, BX_IA_LMSW_Ew },
   /* 0F 01 F7 */ { BxTraceEnd, BX_IA_LMSW_Ew },
+#if BX_SUPPORT_X86_64
   /* 0F 01 F8 */ { 0, BX_IA_SWAPGS },
   /* 0F 01 F9 */ { 0, BX_IA_RDTSCP },
+#else
+  /* 0F 01 F8 */ { 0, BX_IA_ERROR },
+  /* 0F 01 F9 */ { 0, BX_IA_ERROR },
+#endif
   /* 0F 01 FA */ { 0, BX_IA_ERROR },
   /* 0F 01 FB */ { 0, BX_IA_ERROR },
   /* 0F 01 FC */ { 0, BX_IA_ERROR },
