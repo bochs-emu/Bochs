@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_move.cc,v 1.116 2010-04-03 05:59:07 sshwarts Exp $
+// $Id: sse_move.cc,v 1.117 2010-04-08 17:35:32 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003-2009 Stanislav Shwartsman
@@ -516,23 +516,25 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSD_VsdWsdR(bxInstruction_c *i)
 #endif
 }
 
+/* MOVHLPS:   0F 12 */
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVHLPS_VpsWpsR(bxInstruction_c *i)
+{
+#if BX_CPU_LEVEL >= 6
+  BX_CPU_THIS_PTR prepareSSE();
+  BX_WRITE_XMM_REG_LO_QWORD(i->nnn(), BX_READ_XMM_REG_HI_QWORD(i->rm()));
+#endif
+}
+
 /* MOVLPS:    0F 12 */
 /* MOVLPD: 66 0F 12 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVLPS_VpsMq(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
   BX_CPU_THIS_PTR prepareSSE();
-  Bit64u val64;
 
-  if (i->modC0()) /* MOVHLPS xmm1, xmm2 opcode */
-  {
-    val64 = BX_READ_XMM_REG_HI_QWORD(i->rm());
-  }
-  else {
-    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-    /* pointer, segment address pair */
-    val64 = read_virtual_qword(i->seg(), eaddr);
-  }
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  /* pointer, segment address pair */
+  Bit64u val64 = read_virtual_qword(i->seg(), eaddr);
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG_LO_QWORD(i->nnn(), val64);
@@ -630,23 +632,25 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVLPS_MqVps(bxInstruction_c *i)
 #endif
 }
 
+/* MOVLHPS:   0F 16 */
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVLHPS_VpsWpsR(bxInstruction_c *i)
+{
+#if BX_CPU_LEVEL >= 6
+  BX_CPU_THIS_PTR prepareSSE();
+  BX_WRITE_XMM_REG_HI_QWORD(i->nnn(), BX_READ_XMM_REG_LO_QWORD(i->rm()));
+#endif
+}
+
 /* MOVHPS:    0F 16 */
 /* MOVHPD: 66 0F 16 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVHPS_VpsMq(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
   BX_CPU_THIS_PTR prepareSSE();
-  Bit64u val64;
 
-  if (i->modC0()) /* MOVLHPS xmm1, xmm2 opcode */
-  {
-    val64 = BX_READ_XMM_REG_LO_QWORD(i->rm());
-  }
-  else {
-    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-    /* pointer, segment address pair */
-    val64 = read_virtual_qword(i->seg(), eaddr);
-  }
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  /* pointer, segment address pair */
+  Bit64u val64 = read_virtual_qword(i->seg(), eaddr);
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG_HI_QWORD(i->nnn(), val64);

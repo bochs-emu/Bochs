@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.264 2010-04-07 16:02:52 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.265 2010-04-08 17:35:32 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -480,11 +480,11 @@ static const BxOpcodeInfo_t BxOpcodeInfo32R[512*2] = {
 #endif
   /* 0F 10 /wr */ { BxPrefixSSE, BX_IA_MOVUPS_VpsWpsR, BxOpcodeGroupSSE_0f10R },
   /* 0F 11 /wr */ { BxPrefixSSE, BX_IA_MOVUPS_WpsVpsR, BxOpcodeGroupSSE_0f11R },
-  /* 0F 12 /wr */ { BxPrefixSSE, BX_IA_MOVLPS_VpsMq, BxOpcodeGroupSSE_0f12R },
+  /* 0F 12 /wr */ { BxPrefixSSE, BX_IA_MOVHLPS_VpsWpsR, BxOpcodeGroupSSE_0f12R },
   /* 0F 13 /wr */ { 0, BX_IA_ERROR },  // MOVLPS/PD SSE group
   /* 0F 14 /wr */ { BxPrefixSSE, BX_IA_UNPCKLPS_VpsWdq, BxOpcodeGroupSSE_0f14 },
   /* 0F 15 /wr */ { BxPrefixSSE, BX_IA_UNPCKHPS_VpsWdq, BxOpcodeGroupSSE_0f15 },
-  /* 0F 16 /wr */ { BxPrefixSSE, BX_IA_MOVHPS_VpsMq, BxOpcodeGroupSSE_0f16R },
+  /* 0F 16 /wr */ { BxPrefixSSE, BX_IA_MOVLHPS_VpsWpsR, BxOpcodeGroupSSE_0f16R },
   /* 0F 17 /wr */ { 0, BX_IA_ERROR },  // MOHLPS/PD SSE group
 #if BX_CPU_LEVEL >= 6
   /* 0F 18 /wr */ { 0, BX_IA_NOP },    // PREFETCH HINT
@@ -1031,11 +1031,11 @@ static const BxOpcodeInfo_t BxOpcodeInfo32R[512*2] = {
 #endif
   /* 0F 10 /dr */ { BxPrefixSSE, BX_IA_MOVUPS_VpsWpsR, BxOpcodeGroupSSE_0f10R },
   /* 0F 11 /dr */ { BxPrefixSSE, BX_IA_MOVUPS_WpsVpsR, BxOpcodeGroupSSE_0f11R },
-  /* 0F 12 /dr */ { BxPrefixSSE, BX_IA_MOVLPS_VpsMq, BxOpcodeGroupSSE_0f12R },
+  /* 0F 12 /dr */ { BxPrefixSSE, BX_IA_MOVHLPS_VpsWpsR, BxOpcodeGroupSSE_0f12R },
   /* 0F 13 /dr */ { 0, BX_IA_ERROR },  // MOVLPS/PD SSE group
   /* 0F 14 /dr */ { BxPrefixSSE, BX_IA_UNPCKLPS_VpsWdq, BxOpcodeGroupSSE_0f14 },
   /* 0F 15 /dr */ { BxPrefixSSE, BX_IA_UNPCKHPS_VpsWdq, BxOpcodeGroupSSE_0f15 },
-  /* 0F 16 /dr */ { BxPrefixSSE, BX_IA_MOVHPS_VpsMq, BxOpcodeGroupSSE_0f16R },
+  /* 0F 16 /dr */ { BxPrefixSSE, BX_IA_MOVLHPS_VpsWpsR, BxOpcodeGroupSSE_0f16R },
   /* 0F 17 /dr */ { 0, BX_IA_ERROR },  // MOHLPS/PD SSE group
 #if BX_CPU_LEVEL >= 6
   /* 0F 18 /dr */ { 0, BX_IA_NOP },    // PREFETCH HINT

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ia_opcodes.h,v 1.45 2010-04-07 17:12:17 sshwarts Exp $
+// $Id: ia_opcodes.h,v 1.46 2010-04-08 17:35:32 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008-2010 Stanislav Shwartsman
@@ -954,8 +954,10 @@ bx_define_opcode(BX_IA_MOVUPS_WpsVpsM, &BX_CPU_C::MOVUPS_WpsVpsM, NULL, BX_CPU_S
 bx_define_opcode(BX_IA_MOVSS_VssWssR, &BX_CPU_C::MOVSS_VssWssR, NULL, BX_CPU_SSE)
 bx_define_opcode(BX_IA_MOVSS_VssWssM, &BX_CPU_C::MOVSS_VssWssM, NULL, BX_CPU_SSE)
 bx_define_opcode(BX_IA_MOVSS_WssVssM, &BX_CPU_C::MOVSS_WssVssM, NULL, BX_CPU_SSE)
+bx_define_opcode(BX_IA_MOVHLPS_VpsWpsR, &BX_CPU_C::MOVHLPS_VpsWpsR, NULL, BX_CPU_SSE)
 bx_define_opcode(BX_IA_MOVLPS_VpsMq, &BX_CPU_C::MOVLPS_VpsMq, NULL, BX_CPU_SSE)
 bx_define_opcode(BX_IA_MOVLPS_MqVps, &BX_CPU_C::MOVLPS_MqVps, NULL, BX_CPU_SSE)
+bx_define_opcode(BX_IA_MOVLHPS_VpsWpsR, &BX_CPU_C::MOVLHPS_VpsWpsR, NULL, BX_CPU_SSE)
 bx_define_opcode(BX_IA_MOVHPS_VpsMq, &BX_CPU_C::MOVHPS_VpsMq, NULL, BX_CPU_SSE)
 bx_define_opcode(BX_IA_MOVHPS_MqVps, &BX_CPU_C::MOVHPS_MqVps, NULL, BX_CPU_SSE)
 bx_define_opcode(BX_IA_MOVAPS_VpsWpsR, &BX_CPU_C::MOVAPS_VpsWpsR, NULL, BX_CPU_SSE)
