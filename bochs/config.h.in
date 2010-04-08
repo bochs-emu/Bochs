@@ -761,6 +761,12 @@ typedef
   #define BX_SUPPORT_APIC 0
 #endif
 
+#define BX_SUPPORT_X2APIC 0
+
+#if (BX_SUPPORT_X2APIC && !BX_SUPPORT_APIC)
+  #error APIC is required for X2APIC emulation !
+#endif
+
 #define BX_HAVE_GETENV 0
 #define BX_HAVE_SETENV 0
 #define BX_HAVE_SELECT 0

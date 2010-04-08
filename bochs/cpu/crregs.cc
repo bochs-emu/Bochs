@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: crregs.cc,v 1.10 2010-04-06 19:26:02 sshwarts Exp $
+// $Id: crregs.cc,v 1.11 2010-04-08 15:50:39 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2010 Stanislav Shwartsman
@@ -575,11 +575,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CqRq(bxInstruction_c *i)
       }
 #if BX_SUPPORT_VMX
       if (BX_CPU_THIS_PTR in_vmx_guest && VMEXIT(VMX_VM_EXEC_CTRL2_TPR_SHADOW)) {
-        VMX_Write_TPR_Shadow(val_64 & 0xF);
+        VMX_Write_VTPR((val_64 & 0xF) << 4);
         break;
       }
 #endif
-      BX_CPU_THIS_PTR lapic.set_tpr((val_64 & 0xF) << 0x4);
+      BX_CPU_THIS_PTR lapic.set_tpr((val_64 & 0xF) << 4);
       break;
 #endif
 

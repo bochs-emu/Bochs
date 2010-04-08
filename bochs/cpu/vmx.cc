@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmx.cc,v 1.59 2010-04-07 17:12:17 sshwarts Exp $
+// $Id: vmx.cc,v 1.60 2010-04-08 15:50:39 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2009-2010 Stanislav Shwartsman
@@ -447,9 +447,16 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
        return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
      }
   }
-#endif
 
-#if BX_SUPPORT_VMX >= 2
+  if (vm->vmexec_ctrls3 & VMX_VM_EXEC_CTRL3_VIRTUALIZE_X2APIC_MODE) {
+     // 'use TPR shadow' must be set and "virtualize APIC accesses" must be clear
+     if (!(vm->vmexec_ctrls2 & VMX_VM_EXEC_CTRL2_TPR_SHADOW) || 
+          (vm->vmexec_ctrls3 & VMX_VM_EXEC_CTRL3_VIRTUALIZE_APIC_ACCESSES)) {
+       BX_ERROR(("VMFAIL: VMCS EXEC CTRL: virtualize X2APIC mode misconfigured"));
+       return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
+     }
+  }
+
   if (vm->vmexec_ctrls3 & VMX_VM_EXEC_CTRL3_EPT_ENABLE) {
      vm->eptptr = (bx_phy_address) VMread64(VMCS_64BIT_CONTROL_EPTPTR);
      if (! is_eptptr_valid(vm->eptptr)) {
@@ -1626,6 +1633,11 @@ Bit32u BX_CPU_C::LoadMSRs(Bit32u msr_cnt, bx_phy_address pAddr)
       return msr;
 #endif
 
+#if BX_SUPPORT_X2APIC
+    if ((index & 0xfffff800) == 0x800) // X2APIC range
+      return msr;
+#endif
+
     if (! wrmsr(index, msr_hi))
       return msr;
 
@@ -1647,6 +1659,11 @@ Bit32u BX_CPU_C::StoreMSRs(Bit32u msr_cnt, bx_phy_address pAddr)
       return msr;
 
     Bit32u index = GET32L(msr_lo);
+
+#if BX_SUPPORT_X2APIC
+    if ((index & 0xfffff800) == 0x800) // X2APIC range
+      return msr;
+#endif
 
     if (! rdmsr(index, &msr_hi))
       return msr;
@@ -3183,8 +3200,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INVEPT(bxInstruction_c *i)
   if (i->os64L()) {
     type = BX_READ_64BIT_REG(i->nnn());
   }
-  else
-  {
+  else {
     type = BX_READ_32BIT_REG(i->nnn());
   }
 
@@ -3245,8 +3261,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INVVPID(bxInstruction_c *i)
   if (i->os64L()) {
     type = BX_READ_64BIT_REG(i->nnn());
   }
-  else
-  {
+  else {
     type = BX_READ_32BIT_REG(i->nnn());
   }
 

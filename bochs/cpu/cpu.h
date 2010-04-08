@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.666 2010-04-07 17:12:17 sshwarts Exp $
+// $Id: cpu.h,v 1.667 2010-04-08 15:50:39 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2010  The Bochs Project
@@ -610,7 +610,7 @@ typedef struct
 #define BX_CPU_P6               0x00000008        /* P6 new instruction */
 #define BX_CPU_MMX              0x00000010        /* MMX instruction */
 #define BX_CPU_3DNOW            0x00000020        /* 3DNow! instruction */
-#define BX_CPU_FXSAVE_FXRSTOR   0x00000040        /* SYSENTER/SYSEXIT instruction */
+#define BX_CPU_FXSAVE_FXRSTOR   0x00000040        /* FXSAVE/FXRSTOR instruction */
 #define BX_CPU_SYSENTER_SYSEXIT 0x00000080        /* SYSENTER/SYSEXIT instruction */
 #define BX_CPU_CLFLUSH          0x00000100        /* CLFLUSH instruction */
 #define BX_CPU_SSE              0x00000200        /* SSE  instruction */
@@ -3122,7 +3122,6 @@ public: // for now...
 #endif
   BX_SMF void TLB_flush(void);
   BX_SMF void TLB_invlpg(bx_address laddr);
-  BX_SMF void TLB_init(void);
   BX_SMF void set_INTR(bx_bool value);
   BX_SMF const char *strseg(bx_segment_reg_t *seg);
   BX_SMF void interrupt(Bit8u vector, unsigned type, bx_bool push_error,
@@ -3265,6 +3264,10 @@ public: // for now...
 
   BX_SMF void init_isa_features_bitmask(void);
   BX_SMF void init_FetchDecodeTables(void);
+#if BX_SUPPORT_X2APIC
+  BX_SMF void bx_cpuid_extended_topology_leaf(Bit32u subfunction);
+#endif
+  BX_SMF void bx_cpuid_xsave_leaf(Bit32u subfunction);
 
   BX_SMF BX_CPP_INLINE unsigned which_cpu(void) { return BX_CPU_THIS_PTR bx_cpuid; }
   BX_SMF BX_CPP_INLINE const bx_gen_reg_t *get_gen_regfile() { return BX_CPU_THIS_PTR gen_reg; }
@@ -3407,7 +3410,7 @@ public: // for now...
   BX_SMF Bit16u VMX_Get_Current_VPID(void);
 #endif
   BX_SMF Bit32u VMX_Read_VTPR(void);
-  BX_SMF void VMX_Write_TPR_Shadow(Bit8u tpr_shadow);
+  BX_SMF void VMX_Write_VTPR(Bit8u vtpr);
   BX_SMF Bit64s VMX_TSC_Offset(void);
   // vmexit reasons
   BX_SMF void VMexit_Instruction(bxInstruction_c *i, Bit32u reason) BX_CPP_AttrRegparmN(2);

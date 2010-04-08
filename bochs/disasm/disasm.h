@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: disasm.h,v 1.61 2010-04-02 19:01:17 sshwarts Exp $
+// $Id: disasm.h,v 1.62 2010-04-08 15:50:39 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005-2009 Stanislav Shwartsman
@@ -45,7 +45,7 @@
 #define IA_P6               0x00000008        /* P6 new instruction */
 #define IA_MMX              0x00000010        /* MMX instruction */
 #define IA_3DNOW            0x00000020        /* 3DNow! instruction */
-#define IA_FXSAVE_FXRSTOR   0x00000040        /* SYSENTER/SYSEXIT instruction */
+#define IA_FXSAVE_FXRSTOR   0x00000040        /* FXSAVE/FXRSTOR instruction */
 #define IA_SYSENTER_SYSEXIT 0x00000080        /* SYSENTER/SYSEXIT instruction */
 #define IA_CLFLUSH          0x00000100        /* CLFLUSH instruction */
 #define IA_SSE              0x00000200        /* SSE  instruction */

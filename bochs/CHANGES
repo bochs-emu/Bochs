@@ -4,6 +4,7 @@ Brief summary :
 - Major configure/cpu rework allowing to enable/disable CPU options at runtime
   through .bochsrc (Stanislav)
 - Bugfixes for CPU emulation correctness and stability
+- Implemented X2APIC extensions (Stanislav)
 - Implemented Intel VMXx2 extensions (Stanislav)
   - Extended VMX capability MSRs, APIC Virtualization,
     Extended Page Tables (EPT), VPID, new VMX controls support
@@ -38,6 +39,7 @@ Detailed change log :
 
 - CPU
   - Implemented PCLMULQDQ AES instruction
+  - Implemented X2APIC extensions / enable extended topology CPUID leaf (0xb)
   - Implemented Intel VMXx2 extensions:
     - Enabled extended VMX capability MSRs
     - Implemented VMX controls for loading/storing of MSR_PAT and MSR_EFER
@@ -46,6 +48,7 @@ Detailed change log :
        - Implemented Extended Page Tables (EPT) mode
        - Implemented Descriptor Table Access VMEXIT control
        - Implemented RDTSCP VMEXIT control
+       - Implemented Virtualize X2APIC mode control
        - Implemented Virtual Process ID (VPID)
        - Implemented WBINVD VMEXIT control
     In order to enable emulation of VMXx2 extensions configure with
@@ -70,6 +73,7 @@ Detailed change log :
   - Updated Bochs TESTFORM to version 0.5
 
 - SF patches applied
+ [2864402] outstanding x2apic patches by Stanislav
  [2960379] Fix build with -Wformat -Werror=format-security by Per Oyvind Karlsen
  [2938273] allow instrumentation to change execute by Konrad Grochowski
  [2926072] Indirection operators in expressions by Derek Peschel

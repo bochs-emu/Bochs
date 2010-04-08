@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmexit.cc,v 1.24 2010-04-07 17:12:17 sshwarts Exp $
+// $Id: vmexit.cc,v 1.25 2010-04-08 15:50:39 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2009-2010 Stanislav Shwartsman
@@ -688,15 +688,16 @@ Bit32u BX_CPU_C::VMX_Read_VTPR(void)
   return vtpr;
 }
 
-void BX_CPU_C::VMX_Write_TPR_Shadow(Bit8u tpr_shadow)
+void BX_CPU_C::VMX_Write_VTPR(Bit8u vtpr)
 {
   VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
   bx_phy_address pAddr = vm->virtual_apic_page_addr + 0x80;
-  Bit32u field32 = tpr_shadow << 4;
+  Bit32u field32 = vtpr;
 
   access_write_physical(pAddr, 4, (Bit8u*)(&field32));
   BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pAddr, 4, BX_WRITE, (Bit8u*)(&field32));
 
+  Bit8u tpr_shadow = vtpr >> 4;
   if (tpr_shadow < vm->vm_tpr_threshold) {
     // commit current instruction to produce trap-like VMexit
     BX_CPU_THIS_PTR prev_rip = RIP; // commit new RIP
@@ -750,7 +751,7 @@ void BX_CPU_C::VMX_Virtual_Apic_Write(bx_phy_address paddr, unsigned len, void *
 
   if (VMEXIT(VMX_VM_EXEC_CTRL2_TPR_SHADOW) && offset == 0x80 && len <= 4) {
     // VTPR access
-    VMX_Write_TPR_Shadow(*((Bit8u *) data));
+    VMX_Write_VTPR(*((Bit8u *) data));
     return;
   }
 

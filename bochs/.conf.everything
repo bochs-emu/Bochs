@@ -4,6 +4,7 @@
 
 ./configure \
   --enable-smp \
+  --enable-x2apic \
   --enable-x86-64 \
   --enable-all-optimizations \
   --enable-long-phy-address \

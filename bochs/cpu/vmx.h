@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmx.h,v 1.27 2010-04-07 17:12:17 sshwarts Exp $
+// $Id: vmx.h,v 1.28 2010-04-08 15:50:39 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2009 Stanislav Shwartsman
@@ -594,6 +594,7 @@ typedef struct bx_VMCS
     VMX_VM_EXEC_CTRL3_EPT_ENABLE | \
     VMX_VM_EXEC_CTRL3_DESCRIPTOR_TABLE_VMEXIT | \
     VMX_VM_EXEC_CTRL3_RDTSCP | \
+    VMX_VM_EXEC_CTRL3_VIRTUALIZE_X2APIC_MODE | \
     VMX_VM_EXEC_CTRL3_VPID_ENABLE | \
     VMX_VM_EXEC_CTRL3_WBINVD_VMEXIT)
 

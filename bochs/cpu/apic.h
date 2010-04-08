@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.h,v 1.54 2010-03-27 09:56:30 sshwarts Exp $
+// $Id: apic.h,v 1.55 2010-04-08 15:50:39 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (c) 2002-2009 Zwane Mwaikambo, Stanislav Shwartsman
@@ -71,6 +71,7 @@ class BOCHSAPI bx_local_apic_c : public logfunctions
 #define APIC_ERR_ILLEGAL_ADDR    0x80
 #define APIC_ERR_RX_ILLEGAL_VEC  0x40
 #define APIC_ERR_TX_ILLEGAL_VEC  0x20
+#define X2APIC_ERR_REDIRECTIBLE_IPI 0x08
 #define APIC_ERR_RX_ACCEPT_ERR   0x08
 #define APIC_ERR_TX_ACCEPT_ERR   0x04
 #define APIC_ERR_RX_CHECKSUM     0x02
@@ -128,7 +129,10 @@ public:
   void write(bx_phy_address addr, void *data, unsigned len);
   void write_aligned(bx_phy_address addr, Bit32u data);
   Bit32u read_aligned(bx_phy_address address);
-  void startup_msg(Bit8u vector);
+#if BX_SUPPORT_X2APIC
+  bx_bool read_x2apic(unsigned index, Bit64u *msr);
+  bx_bool write_x2apic(unsigned index, Bit64u msr);
+#endif
   // on local APIC, trigger means raise the CPU's INTR line. For now
   // I also have to raise pc_system.INTR but that should be replaced
   // with the cpu-specific INTR signals.
@@ -152,6 +156,7 @@ public:
   void periodic(void);
   void set_divide_configuration(Bit32u value);
   void set_initial_timer_count(Bit32u value);
+  void startup_msg(Bit8u vector);
   void register_state(bx_param_c *parent);
 };
 
