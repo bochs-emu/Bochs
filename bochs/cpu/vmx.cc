@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmx.cc,v 1.60 2010-04-08 15:50:39 sshwarts Exp $
+// $Id: vmx.cc,v 1.61 2010-04-08 17:00:55 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2009-2010 Stanislav Shwartsman
@@ -2125,7 +2125,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMXON(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMXOFF(bxInstruction_c *i)
 {
 #if BX_SUPPORT_VMX
-  if (! BX_CPU_THIS_PTR in_vmx || BX_CPU_THIS_PTR get_VM() || BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_COMPAT)
+  if (! BX_CPU_THIS_PTR in_vmx || ! protected_mode() || BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_COMPAT)
     exception(BX_UD_EXCEPTION, 0);
 
   if (BX_CPU_THIS_PTR in_vmx_guest) {
@@ -2241,7 +2241,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMCALL(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMLAUNCH(bxInstruction_c *i)
 {
 #if BX_SUPPORT_VMX
-  if (! BX_CPU_THIS_PTR in_vmx || BX_CPU_THIS_PTR get_VM() || BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_COMPAT)
+  if (! BX_CPU_THIS_PTR in_vmx || ! protected_mode() || BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_COMPAT)
     exception(BX_UD_EXCEPTION, 0);
 
   unsigned vmlaunch = 0;
@@ -2400,7 +2400,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMLAUNCH(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMPTRLD(bxInstruction_c *i)
 {
 #if BX_SUPPORT_VMX
-  if (! BX_CPU_THIS_PTR in_vmx || BX_CPU_THIS_PTR get_VM() || BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_COMPAT)
+  if (! BX_CPU_THIS_PTR in_vmx || ! protected_mode() || BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_COMPAT)
     exception(BX_UD_EXCEPTION, 0);
 
   if (BX_CPU_THIS_PTR in_vmx_guest) {
@@ -2445,7 +2445,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMPTRLD(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMPTRST(bxInstruction_c *i)
 {
 #if BX_SUPPORT_VMX
-  if (! BX_CPU_THIS_PTR in_vmx || BX_CPU_THIS_PTR get_VM() || BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_COMPAT)
+  if (! BX_CPU_THIS_PTR in_vmx || ! protected_mode() || BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_COMPAT)
     exception(BX_UD_EXCEPTION, 0);
 
   if (BX_CPU_THIS_PTR in_vmx_guest) {
@@ -2480,7 +2480,7 @@ BX_CPP_INLINE Bit32u rotate_l(Bit32u val_32)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMREAD(bxInstruction_c *i)
 {
 #if BX_SUPPORT_VMX
-  if (! BX_CPU_THIS_PTR in_vmx || BX_CPU_THIS_PTR get_VM() || BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_COMPAT)
+  if (! BX_CPU_THIS_PTR in_vmx || ! protected_mode() || BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_COMPAT)
     exception(BX_UD_EXCEPTION, 0);
 
   if (BX_CPU_THIS_PTR in_vmx_guest) {
@@ -2799,7 +2799,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMREAD(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMWRITE(bxInstruction_c *i)
 {
 #if BX_SUPPORT_VMX
-  if (! BX_CPU_THIS_PTR in_vmx || BX_CPU_THIS_PTR get_VM() || BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_COMPAT)
+  if (! BX_CPU_THIS_PTR in_vmx || ! protected_mode() || BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_COMPAT)
     exception(BX_UD_EXCEPTION, 0);
 
   if (BX_CPU_THIS_PTR in_vmx_guest) {
@@ -3126,7 +3126,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMWRITE(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMCLEAR(bxInstruction_c *i)
 {
 #if BX_SUPPORT_VMX
-  if (! BX_CPU_THIS_PTR in_vmx || BX_CPU_THIS_PTR get_VM() || BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_COMPAT)
+  if (! BX_CPU_THIS_PTR in_vmx || ! protected_mode() || BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_COMPAT)
     exception(BX_UD_EXCEPTION, 0);
 
   if (BX_CPU_THIS_PTR in_vmx_guest) {
@@ -3177,7 +3177,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMCLEAR(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::INVEPT(bxInstruction_c *i)
 {
 #if BX_SUPPORT_VMX >= 2
-  if (! BX_CPU_THIS_PTR in_vmx || BX_CPU_THIS_PTR get_VM() || BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_COMPAT)
+  if (! BX_CPU_THIS_PTR in_vmx || ! protected_mode() || BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_COMPAT)
     exception(BX_UD_EXCEPTION, 0);
 
   /* source must be memory reference */
@@ -3238,7 +3238,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INVEPT(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::INVVPID(bxInstruction_c *i)
 {
 #if BX_SUPPORT_VMX >= 2
-  if (! BX_CPU_THIS_PTR in_vmx || BX_CPU_THIS_PTR get_VM() || BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_COMPAT)
+  if (! BX_CPU_THIS_PTR in_vmx || ! protected_mode() || BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_COMPAT)
     exception(BX_UD_EXCEPTION, 0);
 
   /* source must be memory reference */
