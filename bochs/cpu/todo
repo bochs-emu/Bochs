@@ -38,6 +38,9 @@ TODO (know issues in CPU model):
     not implemented correctly for system memory accesses (like descriptor
     tables and etc)
 
+[!] 16-bit address size wrap might be not implemented correctly for
+    instructons with multiple memory accesses.
+
 [!] AMD and Intel x86_64 implementations are different.
     Currently Bochs emulation is according to Intel version.
     Do we need to support both ?
@@ -48,6 +51,5 @@ TODO (know issues in CPU model):
 
    - Dual-monitor treatment of SMIs and SMM not implemented yet
    - VMENTER to not-active state not supported yet
-   - No advanced features like Extended Page Tables (EPT) or VPID
 
 [!] SSE4A, SMX, SVM, AVX
