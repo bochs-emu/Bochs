@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmx.cc,v 1.61 2010-04-08 17:00:55 sshwarts Exp $
+// $Id: vmx.cc,v 1.62 2010-04-09 11:31:55 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2009-2010 Stanislav Shwartsman
@@ -464,6 +464,12 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
        return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
      }
   }
+  else {
+     if (vm->vmexec_ctrls3 & VMX_VM_EXEC_CTRL3_UNRESTRICTED_GUEST) {
+       BX_ERROR(("VMFAIL: VMCS EXEC CTRL: unrestricted guest without EPT"));
+       return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
+     }
+  }
 
   if (vm->vmexec_ctrls3 & VMX_VM_EXEC_CTRL3_VPID_ENABLE) {
      vm->vpid = VMread16(VMCS_16BIT_CONTROL_VPID);
@@ -622,9 +628,12 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
      }
 
      if (push_error != push_error_reference) {
-        BX_ERROR(("VMFAIL: VMENTRY bad injected event vector %d", vector));
-        return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
+        if (! (vm->vmexec_ctrls3 & VMX_VM_EXEC_CTRL3_UNRESTRICTED_GUEST)) {
+          BX_ERROR(("VMFAIL: VMENTRY injected event vector %d should push error", vector));
+          return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
+        }
      }
+
      if (error_code & 0x7fff0000) {
         BX_ERROR(("VMFAIL: VMENTRY bad error code 0x%08x for injected event %d", error_code, vector));
         return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
@@ -891,15 +900,40 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
   }
 
   guest.cr0 = VMread64(VMCS_GUEST_CR0);
-  if (~guest.cr0 & VMX_MSR_CR0_FIXED0) {
-     BX_ERROR(("VMENTER FAIL: VMCS guest invalid CR0"));
-     return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
+
+#if BX_SUPPORT_VMX >= 2
+  if (vm->vmexec_ctrls3 & VMX_VM_EXEC_CTRL3_UNRESTRICTED_GUEST) {
+     if (~guest.cr0 & (VMX_MSR_CR0_FIXED0 & ~0x80000001 /* PG and PE bits */)) {
+        BX_ERROR(("VMENTER FAIL: VMCS guest invalid CR0"));
+        return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
+     }
+
+     bx_bool pe =  guest.cr0 & 0x1;
+     bx_bool pg = (guest.cr0 >> 31) & 0x1;
+     if (pg && !pe) {
+        BX_ERROR(("VMENTER FAIL: VMCS unrestricted guest CR0.PG without CR0.PE"));
+        return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
+     }
+  }
+  else
+#endif
+  {
+     if (~guest.cr0 & VMX_MSR_CR0_FIXED0) {
+        BX_ERROR(("VMENTER FAIL: VMCS guest invalid CR0"));
+        return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
+     }
   }
 
   if (guest.cr0 & ~VMX_MSR_CR0_FIXED1) {
      BX_ERROR(("VMENTER FAIL: VMCS guest invalid CR0"));
      return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
   }
+
+#if BX_SUPPORT_VMX >= 2
+  bx_bool real_mode_guest = 0;
+  if (! (guest.cr0 & 0x1))
+     real_mode_guest = 1;
+#endif
 
   guest.cr3 = VMread64(VMCS_GUEST_CR3);
 #if BX_SUPPORT_X86_64
@@ -1018,7 +1052,7 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
           case BX_CODE_EXEC_ONLY_ACCESSED:
           case BX_CODE_EXEC_READ_ACCESSED:
              // non-conforming segment
-             if (guest.sregs[n].selector.rpl != guest.sregs[n].cache.dpl) {
+             if (guest.sregs[BX_SEG_REG_CS].selector.rpl != guest.sregs[BX_SEG_REG_CS].cache.dpl) {
                BX_ERROR(("VMENTER FAIL: VMCS guest non-conforming CS.RPL <> CS.DPL"));
                return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
              }
@@ -1026,11 +1060,22 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
           case BX_CODE_EXEC_ONLY_CONFORMING_ACCESSED:
           case BX_CODE_EXEC_READ_CONFORMING_ACCESSED:
              // conforming segment
-             if (guest.sregs[n].selector.rpl < guest.sregs[n].cache.dpl) {
+             if (guest.sregs[BX_SEG_REG_CS].selector.rpl < guest.sregs[BX_SEG_REG_CS].cache.dpl) {
                BX_ERROR(("VMENTER FAIL: VMCS guest non-conforming CS.RPL < CS.DPL"));
                return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
              }
              break;
+#if BX_SUPPORT_VMX >= 2
+          case BX_DATA_READ_WRITE_ACCESSED:
+             if (vm->vmexec_ctrls3 & VMX_VM_EXEC_CTRL3_UNRESTRICTED_GUEST) {
+               if (guest.sregs[BX_SEG_REG_CS].cache.dpl != 0) {
+                 BX_ERROR(("VMENTER FAIL: VMCS unrestricted guest CS.DPL != 0"));
+                 return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
+               }
+               break;
+             }
+             // fall through
+#endif
           default:
              BX_ERROR(("VMENTER FAIL: VMCS guest CS.TYPE"));
              return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
@@ -1070,26 +1115,39 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
            }
         }
 
-        if (guest.sregs[n].cache.type < 11) {
-           // data segment or non-conforming code segment
-           if (guest.sregs[n].selector.rpl > guest.sregs[n].cache.dpl) {
-             BX_ERROR(("VMENTER FAIL: VMCS guest non-conforming %s.RPL < %s.DPL", segname[n], segname[n]));
-             return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
+        if (! (vm->vmexec_ctrls3 & VMX_VM_EXEC_CTRL3_UNRESTRICTED_GUEST)) {
+           if (guest.sregs[n].cache.type < 11) {
+              // data segment or non-conforming code segment
+              if (guest.sregs[n].selector.rpl > guest.sregs[n].cache.dpl) {
+                BX_ERROR(("VMENTER FAIL: VMCS guest non-conforming %s.RPL < %s.DPL", segname[n], segname[n]));
+                return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
+              }
            }
         }
      }
   }
 
   if (! v8086_guest) {
-     if (guest.sregs[BX_SEG_REG_SS].selector.rpl != guest.sregs[BX_SEG_REG_CS].selector.rpl) {
-        BX_ERROR(("VMENTER FAIL: VMCS guest CS.RPL != SS.RPL"));
-        return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
+     if (! (vm->vmexec_ctrls3 & VMX_VM_EXEC_CTRL3_UNRESTRICTED_GUEST)) {
+        if (guest.sregs[BX_SEG_REG_SS].selector.rpl != guest.sregs[BX_SEG_REG_CS].selector.rpl) {
+           BX_ERROR(("VMENTER FAIL: VMCS guest CS.RPL != SS.RPL"));
+           return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
+        }
+        if (guest.sregs[BX_SEG_REG_SS].selector.rpl != guest.sregs[BX_SEG_REG_SS].cache.dpl) {
+           BX_ERROR(("VMENTER FAIL: VMCS guest SS.RPL <> SS.DPL"));
+           return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
+        }
      }
-
-     if (guest.sregs[BX_SEG_REG_SS].selector.rpl != guest.sregs[BX_SEG_REG_SS].cache.dpl) {
-        BX_ERROR(("VMENTER FAIL: VMCS guest SS.RPL <> SS.DPL"));
-        return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
+#if BX_SUPPORT_VMX >= 2
+     else { // unrestricted guest
+        if (real_mode_guest || guest.sregs[BX_SEG_REG_CS].cache.type == BX_DATA_READ_WRITE_ACCESSED) {
+           if (guest.sregs[BX_SEG_REG_SS].cache.dpl != 0) {
+             BX_ERROR(("VMENTER FAIL: VMCS unrestricted guest SS.DPL != 0"));
+             return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
+           }
+        }
      }
+#endif
   }
 
   //
@@ -1782,6 +1840,19 @@ void BX_CPU_C::VMexitSaveGuestState(void)
   if (BX_CPU_THIS_PTR disable_NMI)
     interruptibility_state |= BX_VMX_INTERRUPTS_BLOCKED_NMI_BLOCKED;
   VMwrite32(VMCS_32BIT_GUEST_INTERRUPTIBILITY_STATE, interruptibility_state);
+
+#if BX_SUPPORT_VMX >= 2
+  if (VMX_MSR_MISC & 0x20) {
+    // VMEXITs store the value of EFER.LMA into the “x86-64 guest" VMENTRY control
+    // must be set if unrestricted guest is supported
+    if (long_mode())
+       vm->vmentry_ctrls |=  VMX_VMENTRY_CTRL1_X86_64_GUEST;
+    else
+       vm->vmentry_ctrls &= ~VMX_VMENTRY_CTRL1_X86_64_GUEST;
+      
+    VMwrite32(VMCS_32BIT_CONTROL_VMENTRY_CONTROLS, vm->vmentry_ctrls);
+  }
+#endif
 }
 
 void BX_CPU_C::VMexitLoadHostState(void)

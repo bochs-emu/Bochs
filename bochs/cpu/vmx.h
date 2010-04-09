@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmx.h,v 1.28 2010-04-08 15:50:39 sshwarts Exp $
+// $Id: vmx.h,v 1.29 2010-04-09 11:31:55 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2009 Stanislav Shwartsman
@@ -596,7 +596,8 @@ typedef struct bx_VMCS
     VMX_VM_EXEC_CTRL3_RDTSCP | \
     VMX_VM_EXEC_CTRL3_VIRTUALIZE_X2APIC_MODE | \
     VMX_VM_EXEC_CTRL3_VPID_ENABLE | \
-    VMX_VM_EXEC_CTRL3_WBINVD_VMEXIT)
+    VMX_VM_EXEC_CTRL3_WBINVD_VMEXIT | \
+    VMX_VM_EXEC_CTRL3_UNRESTRICTED_GUEST)
 
 #endif
 
@@ -910,7 +911,7 @@ enum VMX_Activity_State {
 
 //   [4:0] - TSC:VMX_PREEMPTION_TIMER ratio
 //     [5] - VMEXITs store the value of EFER.LMA into the “x86-64 guest"
-//           VMENTRY control (set to '1 if 'unrestricted guest' is supported)
+//           VMENTRY control (must set to '1 if 'unrestricted guest' is supported)
 //     [6] - support VMENTER to HLT state
 //     [7] - support VMENTER to SHUTDOWN state
 //     [8] - support VMENTER to WAIT_FOR_SIPI state
@@ -918,7 +919,14 @@ enum VMX_Activity_State {
 // [27:25] - (N+1)*512 - recommended maximum MSRs in MSR store list
 // [63:32] - MSEG revision ID used by processor
 
-#define VMX_MSR_MISC (VMX_CR3_TARGET_MAX_CNT << 16)
+#if BX_SUPPORT_VMX >= 2
+  #define VMX_MISC_STORE_LMA_TO_X86_64_GUEST_VMENTRY_CONTROL (1<<5)
+#else
+  #define VMX_MISC_STORE_LMA_TO_X86_64_GUEST_VMENTRY_CONTROL (0)
+#endif
+
+#define VMX_MSR_MISC ((VMX_CR3_TARGET_MAX_CNT << 16) | \
+            VMX_MISC_STORE_LMA_TO_X86_64_GUEST_VMENTRY_CONTROL)
 
 //
 // IA32_VMX_CR0_FIXED0 MSR (0x486)   IA32_VMX_CR0_FIXED1 MSR (0x487)

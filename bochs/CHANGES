@@ -7,7 +7,8 @@ Brief summary :
 - Implemented X2APIC extensions (Stanislav)
 - Implemented Intel VMXx2 extensions (Stanislav)
   - Extended VMX capability MSRs, APIC Virtualization,
-    Extended Page Tables (EPT), VPID, new VMX controls support
+    X2APIC Virtualization, Extended Page Tables (EPT),
+    VPID, Unrestricted Guests, new VMX controls.
 - Implemented PCLMULQDQ AES instruction
 - Extended Bochs internal debugger functionality
 - USB HP DeskJet 920C printer device emulation (Ben Lunt)
@@ -52,6 +53,7 @@ Detailed change log :
        - Implemented Virtualize X2APIC mode control
        - Implemented Virtual Process ID (VPID)
        - Implemented WBINVD VMEXIT control
+       - Implemented Unrestricted Guest mode
     In order to enable emulation of VMXx2 extensions configure with
         --enable-vmx=2 option (x86-64 must be enabled)
   - Bugfixes for CPU emulation correctness

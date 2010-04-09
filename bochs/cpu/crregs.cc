@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: crregs.cc,v 1.11 2010-04-08 15:50:39 sshwarts Exp $
+// $Id: crregs.cc,v 1.12 2010-04-09 11:31:55 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2010 Stanislav Shwartsman
@@ -788,9 +788,15 @@ bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::check_CR0(bx_address cr0_val)
 
 #if BX_SUPPORT_VMX
   if (BX_CPU_THIS_PTR in_vmx) {
-    if (!temp_cr0.get_PE() || !temp_cr0.get_NE() || !temp_cr0.get_PG()) {
-      BX_ERROR(("check_CR0(0x%08x): attempt to clear CR0.PE/CR0.NE/CR0.PG in vmx mode !", temp_cr0.get32()));
+    if (!temp_cr0.get_NE()) {
+      BX_ERROR(("check_CR0(0x%08x): attempt to clear CR0.NE in vmx mode !", temp_cr0.get32()));
       return 0;
+    }
+    if (!BX_CPU_THIS_PTR in_vmx_guest && !SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_UNRESTRICTED_GUEST)) {
+      if (!temp_cr0.get_PE() || !temp_cr0.get_PG()) {
+        BX_ERROR(("check_CR0(0x%08x): attempt to clear CR0.PE/CR0.PG in vmx mode !", temp_cr0.get32()));
+        return 0;
+      }
     }
   }
 #endif
