@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmx.cc,v 1.62 2010-04-09 11:31:55 sshwarts Exp $
+// $Id: vmx.cc,v 1.63 2010-04-09 11:34:52 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2009-2010 Stanislav Shwartsman
@@ -1842,7 +1842,7 @@ void BX_CPU_C::VMexitSaveGuestState(void)
   VMwrite32(VMCS_32BIT_GUEST_INTERRUPTIBILITY_STATE, interruptibility_state);
 
 #if BX_SUPPORT_VMX >= 2
-  if (VMX_MSR_MISC & 0x20) {
+  if (VMX_MSR_MISC & VMX_MISC_STORE_LMA_TO_X86_64_GUEST_VMENTRY_CONTROL) {
     // VMEXITs store the value of EFER.LMA into the “x86-64 guest" VMENTRY control
     // must be set if unrestricted guest is supported
     if (long_mode())
