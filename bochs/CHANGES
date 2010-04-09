@@ -39,7 +39,8 @@ Detailed change log :
 
 - CPU
   - Implemented PCLMULQDQ AES instruction
-  - Implemented X2APIC extensions / enable extended topology CPUID leaf (0xb)
+  - Implemented X2APIC extensions / enable extended topology CPUID leaf (0xb),
+    in order to enable X2APIC configure with --enable-x2apic
   - Implemented Intel VMXx2 extensions:
     - Enabled extended VMX capability MSRs
     - Implemented VMX controls for loading/storing of MSR_PAT and MSR_EFER
