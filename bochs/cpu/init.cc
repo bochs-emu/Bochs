@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.239 2010-04-08 15:50:39 sshwarts Exp $
+// $Id: init.cc,v 1.240 2010-04-09 07:15:54 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -994,7 +994,9 @@ void BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR EXT = 0;
 
   TLB_flush();
+#if BX_CPU_LEVEL >= 6
   BX_CPU_THIS_PTR PDPTR_CACHE.valid = 0;
+#endif
 
   // invalidate the prefetch queue
   BX_CPU_THIS_PTR eipPageBias = 0;
