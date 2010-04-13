@@ -62,6 +62,7 @@ Detailed change log :
 - Internal Debugger
   - Introduced range read/write physical watchpoints
   - Allow reloading of segment registers from internal debugger
+  - Improved verbose physical memory access tracing
 
 - BIOS
   - Fix MTRR configuration (prevented boot of modern Linux kernels)

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.252 2010-02-11 22:12:17 sshwarts Exp $
+// $Id: bochs.h,v 1.253 2010-04-13 17:56:50 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -450,6 +450,27 @@ BOCHSAPI extern bx_debug_t bx_dbg;
 #define BX_WRITE        1
 #define BX_EXECUTE      2
 #define BX_RW           3
+
+// to be used in concatenation with BX_READ/BX_WRITE/BX_EXECUTE/BX_RW
+#define BX_PDPTR0_ACCESS          0x010
+#define BX_PDPTR1_ACCESS          0x020
+#define BX_PDPTR2_ACCESS          0x030
+#define BX_PDPTR3_ACCESS          0x040
+#define BX_PTE_ACCESS             0x050
+#define BX_PDE_ACCESS             0x060
+#define BX_PDPTE_ACCESS           0x070
+#define BX_PML4E_ACCESS           0x080
+#define BX_EPT_PTE_ACCESS         0x090
+#define BX_EPT_PDE_ACCESS         0x0a0
+#define BX_EPT_PDPTE_ACCESS       0x0b0
+#define BX_EPT_PML4E_ACCESS       0x0c0
+#define BX_VMCS_ACCESS            0x0d0
+#define BX_VMX_MSR_BITMAP_ACCESS  0x0e0
+#define BX_VMX_IO_BITMAP_ACCESS   0x0f0
+#define BX_VMX_LOAD_MSR_ACCESS    0x100
+#define BX_VMX_STORE_MSR_ACCESS   0x110
+#define BX_VMX_VTPR_ACCESS        0x120
+#define BX_SMRAM_ACCESS           0x130
 
 // types of reset
 #define BX_RESET_SOFTWARE 10

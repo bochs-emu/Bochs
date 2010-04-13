@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmexit.cc,v 1.25 2010-04-08 15:50:39 sshwarts Exp $
+// $Id: vmexit.cc,v 1.26 2010-04-13 17:56:50 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2009-2010 Stanislav Shwartsman
@@ -372,7 +372,7 @@ void BX_CPP_AttrRegparmN(3) BX_CPU_C::VMexit_MSR(bxInstruction_c *i, unsigned op
          // check MSR-HI bitmaps
          bx_phy_address pAddr = vm->msr_bitmap_addr + (msr >> 3) + 1024 + ((op == VMX_VMEXIT_RDMSR) ? 0 : 2048);
          access_read_physical(pAddr, 1, &field);
-         BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pAddr, 1, BX_READ, &field);
+         BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pAddr, 1, BX_VMX_MSR_BITMAP_ACCESS | BX_READ, &field);
          if (field & (1 << (msr & 7)))
             vmexit = 1;
        }
@@ -383,7 +383,7 @@ void BX_CPP_AttrRegparmN(3) BX_CPU_C::VMexit_MSR(bxInstruction_c *i, unsigned op
          // check MSR-LO bitmaps
          bx_phy_address pAddr = vm->msr_bitmap_addr + (msr >> 3) + ((op == VMX_VMEXIT_RDMSR) ? 0 : 2048);
          access_read_physical(pAddr, 1, &field);
-         BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pAddr, 1, BX_READ, &field);
+         BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pAddr, 1, BX_VMX_MSR_BITMAP_ACCESS | BX_READ, &field);
          if (field & (1 << (msr & 7)))
             vmexit = 1;
        }
@@ -416,7 +416,7 @@ void BX_CPP_AttrRegparmN(3) BX_CPU_C::VMexit_IO(bxInstruction_c *i, unsigned por
         bx_phy_address pAddr = BX_CPU_THIS_PTR vmcs.io_bitmap_addr[(port >> 15) & 1] + ((port & 0x7fff) >> 3);
         Bit16u bitmap;
         access_read_physical(pAddr, 2, (Bit8u*) &bitmap);
-        BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pAddr, 2, BX_READ, (Bit8u*) &bitmap);
+        BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pAddr, 2, BX_VMX_IO_BITMAP_ACCESS | BX_READ, (Bit8u*) &bitmap);
 
         unsigned mask = ((1 << len) - 1) << (port & 7);
         if (bitmap & mask) vmexit = 1;
@@ -684,7 +684,7 @@ Bit32u BX_CPU_C::VMX_Read_VTPR(void)
   bx_phy_address pAddr = BX_CPU_THIS_PTR vmcs.virtual_apic_page_addr + 0x80;
   Bit32u vtpr;
   access_read_physical(pAddr, 4, (Bit8u*)(&vtpr));
-  BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pAddr, 4, BX_READ, (Bit8u*)(&vtpr));
+  BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pAddr, 4, BX_VMX_VTPR_ACCESS | BX_READ, (Bit8u*)(&vtpr));
   return vtpr;
 }
 
@@ -695,7 +695,7 @@ void BX_CPU_C::VMX_Write_VTPR(Bit8u vtpr)
   Bit32u field32 = vtpr;
 
   access_write_physical(pAddr, 4, (Bit8u*)(&field32));
-  BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pAddr, 4, BX_WRITE, (Bit8u*)(&field32));
+  BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, pAddr, 4, BX_VMX_VTPR_ACCESS | BX_WRITE, (Bit8u*)(&field32));
 
   Bit8u tpr_shadow = vtpr >> 4;
   if (tpr_shadow < vm->vm_tpr_threshold) {
