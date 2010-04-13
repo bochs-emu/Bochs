@@ -939,6 +939,6 @@ i440fxsupport: enabled=1
 #megs: 256
 #megs: 128
 #megs: 64
-megs: 32
+#megs: 32
 #megs: 16
 #megs: 8
