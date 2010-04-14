@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: tasking.cc,v 1.91 2010-04-03 18:00:30 sshwarts Exp $
+// $Id: tasking.cc,v 1.92 2010-04-14 17:33:19 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2010  The Bochs Project
@@ -471,7 +471,7 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
 #if BX_CPU_LEVEL >= 6
       if (BX_CPU_THIS_PTR cr0.get_PG() && BX_CPU_THIS_PTR cr4.get_PAE()) {
         if (! CheckPDPTR(newCR3)) {
-          BX_ERROR(("task_switch(): PDPTR check failed !"));
+          BX_ERROR(("task_switch(exception after commit point): PDPTR check failed !"));
           exception(BX_GP_EXCEPTION, 0);
         }
       }

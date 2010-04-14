@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmexit.cc,v 1.26 2010-04-13 17:56:50 sshwarts Exp $
+// $Id: vmexit.cc,v 1.27 2010-04-14 17:33:19 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2009-2010 Stanislav Shwartsman
@@ -122,13 +122,17 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::VMexit_Instruction(bxInstruction_c *i, Bit
     case VMX_VMEXIT_INVEPT:
     case VMX_VMEXIT_INVVPID:
 #endif
-      qualification = (Bit64u) ((bx_address) i->displ32s());
 #if BX_SUPPORT_X86_64
-      if (i->sibBase() == BX_64BIT_REG_RIP)
-        qualification += RIP;
+      if (long64_mode()) {
+        qualification = (Bit64u) i->displ32s();
+        if (i->sibBase() == BX_64BIT_REG_RIP)
+          qualification += RIP;
+      }
+      else
 #endif
-      instr_info = gen_instruction_info(i, reason);
+        qualification = (Bit64u) ((Bit32u) i->displ32s());
 
+      instr_info = gen_instruction_info(i, reason);
       VMwrite32(VMCS_32BIT_VMEXIT_INSTRUCTION_INFO, instr_info);
       break;
 
