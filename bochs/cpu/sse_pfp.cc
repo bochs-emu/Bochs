@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_pfp.cc,v 1.65 2010-03-14 15:51:27 sshwarts Exp $
+// $Id: sse_pfp.cc,v 1.66 2010-04-14 20:20:17 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003-2009 Stanislav Shwartsman
@@ -34,6 +34,8 @@ void BX_CPU_C::check_exceptionsSSE(int exceptions_flags)
 {
   exceptions_flags &= MXCSR_EXCEPTIONS;
   int unmasked = ~(MXCSR.get_exceptions_masks()) & exceptions_flags;
+  // unmasked pre-computational exception detected (#IA, #DE or #DZ)
+  if (unmasked & 0x7) exceptions_flags &= 0x7;
   MXCSR.set_exceptions(exceptions_flags);
 
   if (unmasked)
