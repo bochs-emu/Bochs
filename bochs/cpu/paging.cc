@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.218 2010-04-13 17:56:50 sshwarts Exp $
+// $Id: paging.cc,v 1.219 2010-04-14 15:41:57 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2010  The Bochs Project
@@ -1384,11 +1384,17 @@ bx_bool BX_CPU_C::dbg_xlate_linear2phy(bx_address laddr, bx_phy_address *phy)
 #if BX_CPU_LEVEL >= 6
   if (BX_CPU_THIS_PTR cr4.get_PAE()) {
     Bit64u offset_mask = BX_CONST64(0x0000ffffffffffff);
+
+    int level = 3;
     if (! long_mode()) {
-      pt_address &= BX_CR3_LEGACY_PAE_PAGING_MASK;
-      offset_mask >>= 9;
+      if (! BX_CPU_THIS_PTR PDPTR_CACHE.valid)
+         goto page_fault;
+      pt_address = BX_CPU_THIS_PTR PDPTR_CACHE.entry[(laddr >> 30) & 3] & BX_CONST64(0x000ffffffffff000);
+      offset_mask >>= 18;
+      level = 1;
     }
-    for (int level = 2 + long_mode(); level >= 0; --level) {
+
+    for (; level >= 0; --level) {
       Bit64u pte;
       pt_address += ((laddr >> (9 + 9*level)) & 0xff8);
       offset_mask >>= 9;
