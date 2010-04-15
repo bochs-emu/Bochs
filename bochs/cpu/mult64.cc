@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: mult64.cc,v 1.40 2010-03-21 06:53:14 sshwarts Exp $
+// $Id: mult64.cc,v 1.41 2010-04-15 19:50:57 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -246,8 +246,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::IMUL_RAXEqR(bxInstruction_c *i)
    *   RDX:RAX = sign-extend of RAX
    */
 
-  /* magic compare between RDX:RAX and sign extended RAX */
+  SET_FLAGS_OSZAPC_LOGIC_64(product_128.lo);
 
+  /* magic compare between RDX:RAX and sign extended RAX */
   if (((Bit64u)(product_128.hi) + (product_128.lo >> 63)) != 0) {
     ASSERT_FLAGS_OxxxxC();
   }
