@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode_x87.h,v 1.2 2010-04-16 19:52:44 sshwarts Exp $
+// $Id: fetchdecode_x87.h,v 1.3 2010-04-16 20:09:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005-2010 Stanislav Shwartsman
@@ -310,7 +310,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo_FPGroupDC[8] = {
 };
 
 // DC (modrm is outside 00h - BFh) (mod == 11)
-static const BxOpcodeInfo_t BxOpcodeInfo_FloatingPointDC[64] = {
+static const BxOpcodeInfo_t BxOpcodeInfo_FloatingPointDC[8] = {
   /* 0 */ { 0, BX_IA_FADD_STi_ST0 },
   /* 1 */ { 0, BX_IA_FMUL_STi_ST0 },
   /* 2 */ { 0, BX_IA_FCOM_STi },                 // undocumented
@@ -334,7 +334,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo_FPGroupDD[8] = {
 };
 
 // DD (modrm is outside 00h - BFh) (mod == 11)
-static const BxOpcodeInfo_t BxOpcodeInfo_FloatingPointDD[64] = {
+static const BxOpcodeInfo_t BxOpcodeInfo_FloatingPointDD[8] = {
   /* 0 */ { 0, BX_IA_FFREE_STi },
   /* 1 */ { 0, BX_IA_FXCH_STi },               // undocumented
   /* 2 */ { 0, BX_IA_FST_STi },
