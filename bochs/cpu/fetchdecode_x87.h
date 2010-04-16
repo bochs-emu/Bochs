@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode_x87.h,v 1.1 2010-02-08 10:39:30 sshwarts Exp $
+// $Id: fetchdecode_x87.h,v 1.2 2010-04-16 19:52:44 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005-2010 Stanislav Shwartsman
@@ -33,177 +33,44 @@
 /* ************************************************************************ */
 /* FPU Opcodes */
 
-// floating point instructions when mod!=11b.
-// the following tables will be accessed like groups using the nnn (reg) field of
-// the modrm byte. (the first byte is D8-DF)
-
-  // D8 (modrm is outside 00h - BFh) (mod != 11)
+// D8 (modrm is outside 00h - BFh) (mod != 11)
 static const BxOpcodeInfo_t BxOpcodeInfo_FPGroupD8[8] = {
   /* 0 */ { 0, BX_IA_FADD_SINGLE_REAL  },
   /* 1 */ { 0, BX_IA_FMUL_SINGLE_REAL  },
   /* 2 */ { 0, BX_IA_FCOM_SINGLE_REAL  },
-  /* 3 */ { 0, BX_IA_FCOM_SINGLE_REAL  },	// FCOMP_SINGLE_REAL
+  /* 3 */ { 0, BX_IA_FCOMP_SINGLE_REAL },
   /* 4 */ { 0, BX_IA_FSUB_SINGLE_REAL  },
   /* 5 */ { 0, BX_IA_FSUBR_SINGLE_REAL },
   /* 6 */ { 0, BX_IA_FDIV_SINGLE_REAL  },
   /* 7 */ { 0, BX_IA_FDIVR_SINGLE_REAL }
 };
 
-  // D9 (modrm is outside 00h - BFh) (mod != 11)
+// D8 (modrm is outside 00h - BFh) (mod == 11)
+static const BxOpcodeInfo_t BxOpcodeInfo_FloatingPointD8[8] = {
+  /* 0 */ { 0, BX_IA_FADD_ST0_STj  },
+  /* 1 */ { 0, BX_IA_FMUL_ST0_STj  },
+  /* 2 */ { 0, BX_IA_FCOM_STi      },
+  /* 3 */ { 0, BX_IA_FCOMP_STi     },
+  /* 4 */ { 0, BX_IA_FSUB_ST0_STj  },
+  /* 5 */ { 0, BX_IA_FSUBR_ST0_STj },
+  /* 6 */ { 0, BX_IA_FDIV_ST0_STj  },
+  /* 7 */ { 0, BX_IA_FDIVR_ST0_STj }
+};
+
+// D9 (modrm is outside 00h - BFh) (mod != 11)
 static const BxOpcodeInfo_t BxOpcodeInfo_FPGroupD9[8] = {
   /* 0 */ { 0, BX_IA_FLD_SINGLE_REAL },
-  /* 1 */ { 0, BX_IA_ERROR           },
+  /* 1 */ { 0, BX_IA_ERROR },
   /* 2 */ { 0, BX_IA_FST_SINGLE_REAL },
-  /* 3 */ { 0, BX_IA_FST_SINGLE_REAL },	 	// FSTP_SINGLE_REAL
-  /* 4 */ { 0, BX_IA_FLDENV          },
-  /* 5 */ { 0, BX_IA_FLDCW           },
-  /* 6 */ { 0, BX_IA_FNSTENV         },
-  /* 7 */ { 0, BX_IA_FNSTCW          }
+  /* 3 */ { 0, BX_IA_FSTP_SINGLE_REAL },
+  /* 4 */ { 0, BX_IA_FLDENV },
+  /* 5 */ { 0, BX_IA_FLDCW },
+  /* 6 */ { 0, BX_IA_FNSTENV },
+  /* 7 */ { 0, BX_IA_FNSTCW }
 };
 
-  // DA (modrm is outside 00h - BFh) (mod != 11)
-static const BxOpcodeInfo_t BxOpcodeInfo_FPGroupDA[8] = {
-  /* 0 */ { 0, BX_IA_FIADD_DWORD_INTEGER  },
-  /* 1 */ { 0, BX_IA_FIMUL_DWORD_INTEGER  },
-  /* 2 */ { 0, BX_IA_FICOM_DWORD_INTEGER  },
-  /* 3 */ { 0, BX_IA_FICOM_DWORD_INTEGER  },	// FICOMP_DWORD_INTEGER
-  /* 4 */ { 0, BX_IA_FISUB_DWORD_INTEGER  },
-  /* 5 */ { 0, BX_IA_FISUBR_DWORD_INTEGER },
-  /* 6 */ { 0, BX_IA_FIDIV_DWORD_INTEGER  },
-  /* 7 */ { 0, BX_IA_FIDIVR_DWORD_INTEGER }
-};
-
-  // DB (modrm is outside 00h - BFh) (mod != 11)
-static const BxOpcodeInfo_t BxOpcodeInfo_FPGroupDB[8] = {
-  /* 0 */ { 0, BX_IA_FILD_DWORD_INTEGER },
-  /* 1 */ { 0, BX_IA_FISTTP32           },
-  /* 2 */ { 0, BX_IA_FIST_DWORD_INTEGER },
-  /* 3 */ { 0, BX_IA_FIST_DWORD_INTEGER },	// FISTP_DWORD_INTEGER
-  /* 4 */ { 0, BX_IA_ERROR              },
-  /* 5 */ { 0, BX_IA_FLD_EXTENDED_REAL  },
-  /* 6 */ { 0, BX_IA_ERROR              },
-  /* 7 */ { 0, BX_IA_FSTP_EXTENDED_REAL }
-};
-
-  // DC (modrm is outside 00h - BFh) (mod != 11)
-static const BxOpcodeInfo_t BxOpcodeInfo_FPGroupDC[8] = {
-  /* 0 */ { 0, BX_IA_FADD_DOUBLE_REAL  },
-  /* 1 */ { 0, BX_IA_FMUL_DOUBLE_REAL  },
-  /* 2 */ { 0, BX_IA_FCOM_DOUBLE_REAL  },
-  /* 3 */ { 0, BX_IA_FCOM_DOUBLE_REAL  },	// FCOMP_DOUBLE_REAL
-  /* 4 */ { 0, BX_IA_FSUB_DOUBLE_REAL  },
-  /* 5 */ { 0, BX_IA_FSUBR_DOUBLE_REAL },
-  /* 6 */ { 0, BX_IA_FDIV_DOUBLE_REAL  },
-  /* 7 */ { 0, BX_IA_FDIVR_DOUBLE_REAL }
-};
-
-  // DD (modrm is outside 00h - BFh) (mod != 11)
-static const BxOpcodeInfo_t BxOpcodeInfo_FPGroupDD[8] = {
-  /* 0 */ { 0, BX_IA_FLD_DOUBLE_REAL },
-  /* 1 */ { 0, BX_IA_FISTTP64        },
-  /* 2 */ { 0, BX_IA_FST_DOUBLE_REAL },
-  /* 3 */ { 0, BX_IA_FST_DOUBLE_REAL },		// FSTP_DOUBLE_REAL
-  /* 4 */ { 0, BX_IA_FRSTOR          },
-  /* 5 */ { 0, BX_IA_ERROR           },
-  /* 6 */ { 0, BX_IA_FNSAVE          },
-  /* 7 */ { 0, BX_IA_FNSTSW          }
-};
-
-  // DE (modrm is outside 00h - BFh) (mod != 11)
-static const BxOpcodeInfo_t BxOpcodeInfo_FPGroupDE[8] = {
-  /* 0 */ { 0, BX_IA_FIADD_WORD_INTEGER  },
-  /* 1 */ { 0, BX_IA_FIMUL_WORD_INTEGER  },
-  /* 2 */ { 0, BX_IA_FICOM_WORD_INTEGER  },
-  /* 3 */ { 0, BX_IA_FICOM_WORD_INTEGER  },	// FICOMP_WORD_INTEGER
-  /* 4 */ { 0, BX_IA_FISUB_WORD_INTEGER  },
-  /* 5 */ { 0, BX_IA_FISUBR_WORD_INTEGER },
-  /* 6 */ { 0, BX_IA_FIDIV_WORD_INTEGER  },
-  /* 7 */ { 0, BX_IA_FIDIVR_WORD_INTEGER }
-};
-
-  // DF (modrm is outside 00h - BFh) (mod != 11)
-static const BxOpcodeInfo_t BxOpcodeInfo_FPGroupDF[8] = {
-  /* 0 */ { 0, BX_IA_FILD_WORD_INTEGER   },
-  /* 1 */ { 0, BX_IA_FISTTP16            },
-  /* 2 */ { 0, BX_IA_FIST_WORD_INTEGER   },
-  /* 3 */ { 0, BX_IA_FIST_WORD_INTEGER   },	// FISTP_WORD_INTEGER
-  /* 4 */ { 0, BX_IA_FBLD_PACKED_BCD     },
-  /* 5 */ { 0, BX_IA_FILD_QWORD_INTEGER  },
-  /* 6 */ { 0, BX_IA_FBSTP_PACKED_BCD    },
-  /* 7 */ { 0, BX_IA_FISTP_QWORD_INTEGER }
-};
-
-// 512 entries for second byte of floating point instructions. (when mod==11b)
-static const BxOpcodeInfo_t BxOpcodeInfo_FloatingPointD8[64] = {
-  // D8 (modrm is outside 00h - BFh) (mod == 11)
-  /* D8 C0 */ { 0, BX_IA_FADD_ST0_STj  },
-  /* D8 C1 */ { 0, BX_IA_FADD_ST0_STj  },
-  /* D8 C2 */ { 0, BX_IA_FADD_ST0_STj  },
-  /* D8 C3 */ { 0, BX_IA_FADD_ST0_STj  },
-  /* D8 C4 */ { 0, BX_IA_FADD_ST0_STj  },
-  /* D8 C5 */ { 0, BX_IA_FADD_ST0_STj  },
-  /* D8 C6 */ { 0, BX_IA_FADD_ST0_STj  },
-  /* D8 C7 */ { 0, BX_IA_FADD_ST0_STj  },
-  /* D8 C8 */ { 0, BX_IA_FMUL_ST0_STj  },
-  /* D8 C9 */ { 0, BX_IA_FMUL_ST0_STj  },
-  /* D8 CA */ { 0, BX_IA_FMUL_ST0_STj  },
-  /* D8 CB */ { 0, BX_IA_FMUL_ST0_STj  },
-  /* D8 CC */ { 0, BX_IA_FMUL_ST0_STj  },
-  /* D8 CD */ { 0, BX_IA_FMUL_ST0_STj  },
-  /* D8 CE */ { 0, BX_IA_FMUL_ST0_STj  },
-  /* D8 CF */ { 0, BX_IA_FMUL_ST0_STj  },
-  /* D8 D0 */ { 0, BX_IA_FCOM_STi      },
-  /* D8 D1 */ { 0, BX_IA_FCOM_STi      },
-  /* D8 D2 */ { 0, BX_IA_FCOM_STi      },
-  /* D8 D3 */ { 0, BX_IA_FCOM_STi      },
-  /* D8 D4 */ { 0, BX_IA_FCOM_STi      },
-  /* D8 D5 */ { 0, BX_IA_FCOM_STi      },
-  /* D8 D6 */ { 0, BX_IA_FCOM_STi      },
-  /* D8 D7 */ { 0, BX_IA_FCOM_STi      },
-  /* D8 D8 */ { 0, BX_IA_FCOM_STi      },	// FCOMP_STi
-  /* D8 D9 */ { 0, BX_IA_FCOM_STi      },	// FCOMP_STi
-  /* D8 DA */ { 0, BX_IA_FCOM_STi      },	// FCOMP_STi
-  /* D8 DB */ { 0, BX_IA_FCOM_STi      },	// FCOMP_STi
-  /* D8 DC */ { 0, BX_IA_FCOM_STi      },	// FCOMP_STi
-  /* D8 DD */ { 0, BX_IA_FCOM_STi      },	// FCOMP_STi
-  /* D8 DE */ { 0, BX_IA_FCOM_STi      },	// FCOMP_STi
-  /* D8 DF */ { 0, BX_IA_FCOM_STi      },	// FCOMP_STi
-  /* D8 E0 */ { 0, BX_IA_FSUB_ST0_STj  },
-  /* D8 E1 */ { 0, BX_IA_FSUB_ST0_STj  },
-  /* D8 E2 */ { 0, BX_IA_FSUB_ST0_STj  },
-  /* D8 E3 */ { 0, BX_IA_FSUB_ST0_STj  },
-  /* D8 E4 */ { 0, BX_IA_FSUB_ST0_STj  },
-  /* D8 E5 */ { 0, BX_IA_FSUB_ST0_STj  },
-  /* D8 E6 */ { 0, BX_IA_FSUB_ST0_STj  },
-  /* D8 E7 */ { 0, BX_IA_FSUB_ST0_STj  },
-  /* D8 E8 */ { 0, BX_IA_FSUBR_ST0_STj },
-  /* D8 E9 */ { 0, BX_IA_FSUBR_ST0_STj },
-  /* D8 EA */ { 0, BX_IA_FSUBR_ST0_STj },
-  /* D8 EB */ { 0, BX_IA_FSUBR_ST0_STj },
-  /* D8 EC */ { 0, BX_IA_FSUBR_ST0_STj },
-  /* D8 ED */ { 0, BX_IA_FSUBR_ST0_STj },
-  /* D8 EE */ { 0, BX_IA_FSUBR_ST0_STj },
-  /* D8 EF */ { 0, BX_IA_FSUBR_ST0_STj },
-  /* D8 F0 */ { 0, BX_IA_FDIV_ST0_STj  },
-  /* D8 F1 */ { 0, BX_IA_FDIV_ST0_STj  },
-  /* D8 F2 */ { 0, BX_IA_FDIV_ST0_STj  },
-  /* D8 F3 */ { 0, BX_IA_FDIV_ST0_STj  },
-  /* D8 F4 */ { 0, BX_IA_FDIV_ST0_STj  },
-  /* D8 F5 */ { 0, BX_IA_FDIV_ST0_STj  },
-  /* D8 F6 */ { 0, BX_IA_FDIV_ST0_STj  },
-  /* D8 F7 */ { 0, BX_IA_FDIV_ST0_STj  },
-  /* D8 F8 */ { 0, BX_IA_FDIVR_ST0_STj },
-  /* D8 F9 */ { 0, BX_IA_FDIVR_ST0_STj },
-  /* D8 FA */ { 0, BX_IA_FDIVR_ST0_STj },
-  /* D8 FB */ { 0, BX_IA_FDIVR_ST0_STj },
-  /* D8 FC */ { 0, BX_IA_FDIVR_ST0_STj },
-  /* D8 FD */ { 0, BX_IA_FDIVR_ST0_STj },
-  /* D8 FE */ { 0, BX_IA_FDIVR_ST0_STj },
-  /* D8 FF */ { 0, BX_IA_FDIVR_ST0_STj }
-};
-
+// D9 (modrm is outside 00h - BFh) (mod == 11)
 static const BxOpcodeInfo_t BxOpcodeInfo_FloatingPointD9[64] = {
-  // D9 (modrm is outside 00h - BFh) (mod == 11)
   /* D9 C0 */ { 0, BX_IA_FLD_STi  },
   /* D9 C1 */ { 0, BX_IA_FLD_STi  },
   /* D9 C2 */ { 0, BX_IA_FLD_STi  },
@@ -228,14 +95,14 @@ static const BxOpcodeInfo_t BxOpcodeInfo_FloatingPointD9[64] = {
   /* D9 D5 */ { 0, BX_IA_ERROR },
   /* D9 D6 */ { 0, BX_IA_ERROR },
   /* D9 D7 */ { 0, BX_IA_ERROR },
-  /* D9 D8 */ { 0, BX_IA_FST_STi },	// FSTP_STi, undocumented
-  /* D9 D9 */ { 0, BX_IA_FST_STi },	// FSTP_STi, undocumented
-  /* D9 DA */ { 0, BX_IA_FST_STi },	// FSTP_STi, undocumented
-  /* D9 DB */ { 0, BX_IA_FST_STi },	// FSTP_STi, undocumented
-  /* D9 DC */ { 0, BX_IA_FST_STi },	// FSTP_STi, undocumented
-  /* D9 DD */ { 0, BX_IA_FST_STi },	// FSTP_STi, undocumented
-  /* D9 DE */ { 0, BX_IA_FST_STi },	// FSTP_STi, undocumented
-  /* D9 DF */ { 0, BX_IA_FST_STi },	// FSTP_STi, undocumented
+  /* D9 D8 */ { 0, BX_IA_FSTP_STi },	// undocumented
+  /* D9 D9 */ { 0, BX_IA_FSTP_STi },	// undocumented
+  /* D9 DA */ { 0, BX_IA_FSTP_STi },	// undocumented
+  /* D9 DB */ { 0, BX_IA_FSTP_STi },	// undocumented
+  /* D9 DC */ { 0, BX_IA_FSTP_STi },	// undocumented
+  /* D9 DD */ { 0, BX_IA_FSTP_STi },	// undocumented
+  /* D9 DE */ { 0, BX_IA_FSTP_STi },	// undocumented
+  /* D9 DF */ { 0, BX_IA_FSTP_STi },	// undocumented
   /* D9 E0 */ { 0, BX_IA_FCHS  },
   /* D9 E1 */ { 0, BX_IA_FABS  },
   /* D9 E2 */ { 0, BX_IA_ERROR },
@@ -270,8 +137,20 @@ static const BxOpcodeInfo_t BxOpcodeInfo_FloatingPointD9[64] = {
   /* D9 FF */ { 0, BX_IA_FCOS    }
 };
 
+// DA (modrm is outside 00h - BFh) (mod != 11)
+static const BxOpcodeInfo_t BxOpcodeInfo_FPGroupDA[8] = {
+  /* 0 */ { 0, BX_IA_FIADD_DWORD_INTEGER  },
+  /* 1 */ { 0, BX_IA_FIMUL_DWORD_INTEGER  },
+  /* 2 */ { 0, BX_IA_FICOM_DWORD_INTEGER  },
+  /* 3 */ { 0, BX_IA_FICOMP_DWORD_INTEGER },
+  /* 4 */ { 0, BX_IA_FISUB_DWORD_INTEGER  },
+  /* 5 */ { 0, BX_IA_FISUBR_DWORD_INTEGER },
+  /* 6 */ { 0, BX_IA_FIDIV_DWORD_INTEGER  },
+  /* 7 */ { 0, BX_IA_FIDIVR_DWORD_INTEGER }
+};
+
+// DA (modrm is outside 00h - BFh) (mod == 11)
 static const BxOpcodeInfo_t BxOpcodeInfo_FloatingPointDA[64] = {
-  // DA (modrm is outside 00h - BFh) (mod == 11)
   /* DA C0 */ { 0, BX_IA_FCMOV_ST0_STj },
   /* DA C1 */ { 0, BX_IA_FCMOV_ST0_STj },
   /* DA C2 */ { 0, BX_IA_FCMOV_ST0_STj },
@@ -338,8 +217,20 @@ static const BxOpcodeInfo_t BxOpcodeInfo_FloatingPointDA[64] = {
   /* DA FF */ { 0, BX_IA_ERROR }
 };
 
+// DB (modrm is outside 00h - BFh) (mod != 11)
+static const BxOpcodeInfo_t BxOpcodeInfo_FPGroupDB[8] = {
+  /* 0 */ { 0, BX_IA_FILD_DWORD_INTEGER },
+  /* 1 */ { 0, BX_IA_FISTTP32 },
+  /* 2 */ { 0, BX_IA_FIST_DWORD_INTEGER },
+  /* 3 */ { 0, BX_IA_FISTP_DWORD_INTEGER },
+  /* 4 */ { 0, BX_IA_ERROR },
+  /* 5 */ { 0, BX_IA_FLD_EXTENDED_REAL },
+  /* 6 */ { 0, BX_IA_ERROR },
+  /* 7 */ { 0, BX_IA_FSTP_EXTENDED_REAL }
+};
+
+// DB (modrm is outside 00h - BFh) (mod == 11)
 static const BxOpcodeInfo_t BxOpcodeInfo_FloatingPointDB[64] = {
-  // DB (modrm is outside 00h - BFh) (mod == 11)
   /* DB C0 */ { 0, BX_IA_FCMOV_ST0_STj },
   /* DB C1 */ { 0, BX_IA_FCMOV_ST0_STj },
   /* DB C2 */ { 0, BX_IA_FCMOV_ST0_STj },
@@ -406,144 +297,68 @@ static const BxOpcodeInfo_t BxOpcodeInfo_FloatingPointDB[64] = {
   /* DB FF */ { 0, BX_IA_ERROR }
 };
 
+// DC (modrm is outside 00h - BFh) (mod != 11)
+static const BxOpcodeInfo_t BxOpcodeInfo_FPGroupDC[8] = {
+  /* 0 */ { 0, BX_IA_FADD_DOUBLE_REAL  },
+  /* 1 */ { 0, BX_IA_FMUL_DOUBLE_REAL  },
+  /* 2 */ { 0, BX_IA_FCOM_DOUBLE_REAL  },
+  /* 3 */ { 0, BX_IA_FCOMP_DOUBLE_REAL },
+  /* 4 */ { 0, BX_IA_FSUB_DOUBLE_REAL  },
+  /* 5 */ { 0, BX_IA_FSUBR_DOUBLE_REAL },
+  /* 6 */ { 0, BX_IA_FDIV_DOUBLE_REAL  },
+  /* 7 */ { 0, BX_IA_FDIVR_DOUBLE_REAL }
+};
+
+// DC (modrm is outside 00h - BFh) (mod == 11)
 static const BxOpcodeInfo_t BxOpcodeInfo_FloatingPointDC[64] = {
-  // DC (modrm is outside 00h - BFh) (mod == 11)
-  /* DC C0 */ { 0, BX_IA_FADD_STi_ST0 },
-  /* DC C1 */ { 0, BX_IA_FADD_STi_ST0 },
-  /* DC C2 */ { 0, BX_IA_FADD_STi_ST0 },
-  /* DC C3 */ { 0, BX_IA_FADD_STi_ST0 },
-  /* DC C4 */ { 0, BX_IA_FADD_STi_ST0 },
-  /* DC C5 */ { 0, BX_IA_FADD_STi_ST0 },
-  /* DC C6 */ { 0, BX_IA_FADD_STi_ST0 },
-  /* DC C7 */ { 0, BX_IA_FADD_STi_ST0 },
-  /* DC C8 */ { 0, BX_IA_FMUL_STi_ST0 },
-  /* DC C9 */ { 0, BX_IA_FMUL_STi_ST0 },
-  /* DC CA */ { 0, BX_IA_FMUL_STi_ST0 },
-  /* DC CB */ { 0, BX_IA_FMUL_STi_ST0 },
-  /* DC CC */ { 0, BX_IA_FMUL_STi_ST0 },
-  /* DC CD */ { 0, BX_IA_FMUL_STi_ST0 },
-  /* DC CE */ { 0, BX_IA_FMUL_STi_ST0 },
-  /* DC CF */ { 0, BX_IA_FMUL_STi_ST0 },
-  /* D8 D0 */ { 0, BX_IA_FCOM_STi     },        // undocumented
-  /* D8 D1 */ { 0, BX_IA_FCOM_STi     },        // undocumented
-  /* D8 D2 */ { 0, BX_IA_FCOM_STi     },        // undocumented
-  /* D8 D3 */ { 0, BX_IA_FCOM_STi     },        // undocumented
-  /* D8 D4 */ { 0, BX_IA_FCOM_STi     },        // undocumented
-  /* D8 D5 */ { 0, BX_IA_FCOM_STi     },        // undocumented
-  /* D8 D6 */ { 0, BX_IA_FCOM_STi     },        // undocumented
-  /* D8 D7 */ { 0, BX_IA_FCOM_STi     },        // undocumented
-  /* D8 D8 */ { 0, BX_IA_FCOM_STi     },	// undocumented, FCOMP_STi
-  /* D8 D9 */ { 0, BX_IA_FCOM_STi     },	// undocumented, FCOMP_STi
-  /* D8 DA */ { 0, BX_IA_FCOM_STi     },	// undocumented, FCOMP_STi
-  /* D8 DB */ { 0, BX_IA_FCOM_STi     },	// undocumented, FCOMP_STi
-  /* D8 DC */ { 0, BX_IA_FCOM_STi     },	// undocumented, FCOMP_STi
-  /* D8 DD */ { 0, BX_IA_FCOM_STi     },	// undocumented, FCOMP_STi
-  /* D8 DE */ { 0, BX_IA_FCOM_STi     },	// undocumented, FCOMP_STi
-  /* D8 DF */ { 0, BX_IA_FCOM_STi     },	// undocumented, FCOMP_STi
-  /* DC E0 */ { 0, BX_IA_FSUBR_STi_ST0 },
-  /* DC E1 */ { 0, BX_IA_FSUBR_STi_ST0 },
-  /* DC E2 */ { 0, BX_IA_FSUBR_STi_ST0 },
-  /* DC E3 */ { 0, BX_IA_FSUBR_STi_ST0 },
-  /* DC E4 */ { 0, BX_IA_FSUBR_STi_ST0 },
-  /* DC E5 */ { 0, BX_IA_FSUBR_STi_ST0 },
-  /* DC E6 */ { 0, BX_IA_FSUBR_STi_ST0 },
-  /* DC E7 */ { 0, BX_IA_FSUBR_STi_ST0 },
-  /* DC E8 */ { 0, BX_IA_FSUB_STi_ST0  },
-  /* DC E9 */ { 0, BX_IA_FSUB_STi_ST0  },
-  /* DC EA */ { 0, BX_IA_FSUB_STi_ST0  },
-  /* DC EB */ { 0, BX_IA_FSUB_STi_ST0  },
-  /* DC EC */ { 0, BX_IA_FSUB_STi_ST0  },
-  /* DC ED */ { 0, BX_IA_FSUB_STi_ST0  },
-  /* DC EE */ { 0, BX_IA_FSUB_STi_ST0  },
-  /* DC EF */ { 0, BX_IA_FSUB_STi_ST0  },
-  /* DC F0 */ { 0, BX_IA_FDIVR_STi_ST0 },
-  /* DC F1 */ { 0, BX_IA_FDIVR_STi_ST0 },
-  /* DC F2 */ { 0, BX_IA_FDIVR_STi_ST0 },
-  /* DC F3 */ { 0, BX_IA_FDIVR_STi_ST0 },
-  /* DC F4 */ { 0, BX_IA_FDIVR_STi_ST0 },
-  /* DC F5 */ { 0, BX_IA_FDIVR_STi_ST0 },
-  /* DC F6 */ { 0, BX_IA_FDIVR_STi_ST0 },
-  /* DC F7 */ { 0, BX_IA_FDIVR_STi_ST0 },
-  /* DC F8 */ { 0, BX_IA_FDIV_STi_ST0  },
-  /* DC F9 */ { 0, BX_IA_FDIV_STi_ST0  },
-  /* DC FA */ { 0, BX_IA_FDIV_STi_ST0  },
-  /* DC FB */ { 0, BX_IA_FDIV_STi_ST0  },
-  /* DC FC */ { 0, BX_IA_FDIV_STi_ST0  },
-  /* DC FD */ { 0, BX_IA_FDIV_STi_ST0  },
-  /* DC FE */ { 0, BX_IA_FDIV_STi_ST0  },
-  /* DC FF */ { 0, BX_IA_FDIV_STi_ST0  }
+  /* 0 */ { 0, BX_IA_FADD_STi_ST0 },
+  /* 1 */ { 0, BX_IA_FMUL_STi_ST0 },
+  /* 2 */ { 0, BX_IA_FCOM_STi },                 // undocumented
+  /* 3 */ { 0, BX_IA_FCOMP_STi },                // undocumented
+  /* 4 */ { 0, BX_IA_FSUBR_STi_ST0 },
+  /* 5 */ { 0, BX_IA_FSUB_STi_ST0  },
+  /* 6 */ { 0, BX_IA_FDIVR_STi_ST0 },
+  /* 7 */ { 0, BX_IA_FDIV_STi_ST0  }
 };
 
+// DD (modrm is outside 00h - BFh) (mod != 11)
+static const BxOpcodeInfo_t BxOpcodeInfo_FPGroupDD[8] = {
+  /* 0 */ { 0, BX_IA_FLD_DOUBLE_REAL },
+  /* 1 */ { 0, BX_IA_FISTTP64 },
+  /* 2 */ { 0, BX_IA_FST_DOUBLE_REAL },
+  /* 3 */ { 0, BX_IA_FSTP_DOUBLE_REAL },
+  /* 4 */ { 0, BX_IA_FRSTOR },
+  /* 5 */ { 0, BX_IA_ERROR },
+  /* 6 */ { 0, BX_IA_FNSAVE },
+  /* 7 */ { 0, BX_IA_FNSTSW }
+};
+
+// DD (modrm is outside 00h - BFh) (mod == 11)
 static const BxOpcodeInfo_t BxOpcodeInfo_FloatingPointDD[64] = {
-  // DD (modrm is outside 00h - BFh) (mod == 11)
-  /* DD C0 */ { 0, BX_IA_FFREE_STi },
-  /* DD C1 */ { 0, BX_IA_FFREE_STi },
-  /* DD C2 */ { 0, BX_IA_FFREE_STi },
-  /* DD C3 */ { 0, BX_IA_FFREE_STi },
-  /* DD C4 */ { 0, BX_IA_FFREE_STi },
-  /* DD C5 */ { 0, BX_IA_FFREE_STi },
-  /* DD C6 */ { 0, BX_IA_FFREE_STi },
-  /* DD C7 */ { 0, BX_IA_FFREE_STi },
-  /* DD C8 */ { 0, BX_IA_FXCH_STi },    // undocumented
-  /* DD C9 */ { 0, BX_IA_FXCH_STi },    // undocumented
-  /* DD CA */ { 0, BX_IA_FXCH_STi },    // undocumented
-  /* DD CB */ { 0, BX_IA_FXCH_STi },    // undocumented
-  /* DD CC */ { 0, BX_IA_FXCH_STi },    // undocumented
-  /* DD CD */ { 0, BX_IA_FXCH_STi },    // undocumented
-  /* DD CE */ { 0, BX_IA_FXCH_STi },    // undocumented
-  /* DD CF */ { 0, BX_IA_FXCH_STi },    // undocumented
-  /* DD D0 */ { 0, BX_IA_FST_STi },
-  /* DD D1 */ { 0, BX_IA_FST_STi },
-  /* DD D2 */ { 0, BX_IA_FST_STi },
-  /* DD D3 */ { 0, BX_IA_FST_STi },
-  /* DD D4 */ { 0, BX_IA_FST_STi },
-  /* DD D5 */ { 0, BX_IA_FST_STi },
-  /* DD D6 */ { 0, BX_IA_FST_STi },
-  /* DD D7 */ { 0, BX_IA_FST_STi },
-  /* DD D8 */ { 0, BX_IA_FST_STi },	// FSTP_STi
-  /* DD D9 */ { 0, BX_IA_FST_STi },	// FSTP_STi
-  /* DD DA */ { 0, BX_IA_FST_STi },	// FSTP_STi
-  /* DD DB */ { 0, BX_IA_FST_STi },	// FSTP_STi
-  /* DD DC */ { 0, BX_IA_FST_STi },	// FSTP_STi
-  /* DD DD */ { 0, BX_IA_FST_STi },	// FSTP_STi
-  /* DD DE */ { 0, BX_IA_FST_STi },	// FSTP_STi
-  /* DD DF */ { 0, BX_IA_FST_STi },	// FSTP_STi
-  /* DD E0 */ { 0, BX_IA_FUCOM_STi },
-  /* DD E1 */ { 0, BX_IA_FUCOM_STi },
-  /* DD E2 */ { 0, BX_IA_FUCOM_STi },
-  /* DD E3 */ { 0, BX_IA_FUCOM_STi },
-  /* DD E4 */ { 0, BX_IA_FUCOM_STi },
-  /* DD E5 */ { 0, BX_IA_FUCOM_STi },
-  /* DD E6 */ { 0, BX_IA_FUCOM_STi },
-  /* DD E7 */ { 0, BX_IA_FUCOM_STi },
-  /* DD E8 */ { 0, BX_IA_FUCOM_STi },	// FUCOMP_STi
-  /* DD E9 */ { 0, BX_IA_FUCOM_STi },	// FUCOMP_STi
-  /* DD EA */ { 0, BX_IA_FUCOM_STi },	// FUCOMP_STi
-  /* DD EB */ { 0, BX_IA_FUCOM_STi },	// FUCOMP_STi
-  /* DD EC */ { 0, BX_IA_FUCOM_STi },	// FUCOMP_STi
-  /* DD ED */ { 0, BX_IA_FUCOM_STi },	// FUCOMP_STi
-  /* DD EE */ { 0, BX_IA_FUCOM_STi },	// FUCOMP_STi
-  /* DD EF */ { 0, BX_IA_FUCOM_STi },	// FUCOMP_STi
-  /* DD F0 */ { 0, BX_IA_ERROR },
-  /* DD F1 */ { 0, BX_IA_ERROR },
-  /* DD F2 */ { 0, BX_IA_ERROR },
-  /* DD F3 */ { 0, BX_IA_ERROR },
-  /* DD F4 */ { 0, BX_IA_ERROR },
-  /* DD F5 */ { 0, BX_IA_ERROR },
-  /* DD F6 */ { 0, BX_IA_ERROR },
-  /* DD F7 */ { 0, BX_IA_ERROR },
-  /* DD F8 */ { 0, BX_IA_ERROR },
-  /* DD F9 */ { 0, BX_IA_ERROR },
-  /* DD FA */ { 0, BX_IA_ERROR },
-  /* DD FB */ { 0, BX_IA_ERROR },
-  /* DD FC */ { 0, BX_IA_ERROR },
-  /* DD FD */ { 0, BX_IA_ERROR },
-  /* DD FE */ { 0, BX_IA_ERROR },
-  /* DD FF */ { 0, BX_IA_ERROR }
+  /* 0 */ { 0, BX_IA_FFREE_STi },
+  /* 1 */ { 0, BX_IA_FXCH_STi },               // undocumented
+  /* 2 */ { 0, BX_IA_FST_STi },
+  /* 3 */ { 0, BX_IA_FSTP_STi },
+  /* 4 */ { 0, BX_IA_FUCOM_STi },
+  /* 5 */ { 0, BX_IA_FUCOMP_STi },
+  /* 6 */ { 0, BX_IA_ERROR },
+  /* 7 */ { 0, BX_IA_ERROR }
 };
 
+// DE (modrm is outside 00h - BFh) (mod != 11)
+static const BxOpcodeInfo_t BxOpcodeInfo_FPGroupDE[8] = {
+  /* 0 */ { 0, BX_IA_FIADD_WORD_INTEGER  },
+  /* 1 */ { 0, BX_IA_FIMUL_WORD_INTEGER  },
+  /* 2 */ { 0, BX_IA_FICOM_WORD_INTEGER  },
+  /* 3 */ { 0, BX_IA_FICOMP_WORD_INTEGER },
+  /* 4 */ { 0, BX_IA_FISUB_WORD_INTEGER  },
+  /* 5 */ { 0, BX_IA_FISUBR_WORD_INTEGER },
+  /* 6 */ { 0, BX_IA_FIDIV_WORD_INTEGER  },
+  /* 7 */ { 0, BX_IA_FIDIVR_WORD_INTEGER }
+};
+
+// DE (modrm is outside 00h - BFh) (mod == 11)
 static const BxOpcodeInfo_t BxOpcodeInfo_FloatingPointDE[64] = {
-  // DE (modrm is outside 00h - BFh) (mod == 11)
   // all instructions pop FPU stack
   /* DE C0 */ { 0, BX_IA_FADD_STi_ST0 },
   /* DE C1 */ { 0, BX_IA_FADD_STi_ST0 },
@@ -561,14 +376,14 @@ static const BxOpcodeInfo_t BxOpcodeInfo_FloatingPointDE[64] = {
   /* DE CD */ { 0, BX_IA_FMUL_STi_ST0 },
   /* DE CE */ { 0, BX_IA_FMUL_STi_ST0 },
   /* DE CF */ { 0, BX_IA_FMUL_STi_ST0 },
-  /* DE D0 */ { 0, BX_IA_FCOM_STi     },	// FCOMP_STi, undocumented, special FPSTACK pop case
-  /* DE D1 */ { 0, BX_IA_FCOM_STi     },	// FCOMP_STi, undocumented, special FPSTACK pop case
-  /* DE D2 */ { 0, BX_IA_FCOM_STi     },	// FCOMP_STi, undocumented, special FPSTACK pop case
-  /* DE D3 */ { 0, BX_IA_FCOM_STi     },	// FCOMP_STi, undocumented, special FPSTACK pop case
-  /* DE D4 */ { 0, BX_IA_FCOM_STi     },	// FCOMP_STi, undocumented, special FPSTACK pop case
-  /* DE D5 */ { 0, BX_IA_FCOM_STi     },	// FCOMP_STi, undocumented, special FPSTACK pop case
-  /* DE D6 */ { 0, BX_IA_FCOM_STi     },	// FCOMP_STi, undocumented, special FPSTACK pop case
-  /* DE D7 */ { 0, BX_IA_FCOM_STi     },	// FCOMP_STi, undocumented, special FPSTACK pop case
+  /* DE D0 */ { 0, BX_IA_FCOMP_STi },           // undocumented, special FPSTACK pop case
+  /* DE D1 */ { 0, BX_IA_FCOMP_STi },           // undocumented, special FPSTACK pop case
+  /* DE D2 */ { 0, BX_IA_FCOMP_STi },           // undocumented, special FPSTACK pop case
+  /* DE D3 */ { 0, BX_IA_FCOMP_STi },           // undocumented, special FPSTACK pop case
+  /* DE D4 */ { 0, BX_IA_FCOMP_STi },           // undocumented, special FPSTACK pop case
+  /* DE D5 */ { 0, BX_IA_FCOMP_STi },           // undocumented, special FPSTACK pop case
+  /* DE D6 */ { 0, BX_IA_FCOMP_STi },           // undocumented, special FPSTACK pop case
+  /* DE D7 */ { 0, BX_IA_FCOMP_STi },           // undocumented, special FPSTACK pop case
   /* DE D8 */ { 0, BX_IA_ERROR  },
   /* DE D9 */ { 0, BX_IA_FCOMPP },
   /* DE DA */ { 0, BX_IA_ERROR  },
@@ -611,8 +426,20 @@ static const BxOpcodeInfo_t BxOpcodeInfo_FloatingPointDE[64] = {
   /* DE FF */ { 0, BX_IA_FDIV_STi_ST0  }
 };
 
+// DF (modrm is outside 00h - BFh) (mod != 11)
+static const BxOpcodeInfo_t BxOpcodeInfo_FPGroupDF[8] = {
+  /* 0 */ { 0, BX_IA_FILD_WORD_INTEGER   },
+  /* 1 */ { 0, BX_IA_FISTTP16            },
+  /* 2 */ { 0, BX_IA_FIST_WORD_INTEGER   },
+  /* 3 */ { 0, BX_IA_FISTP_WORD_INTEGER  },
+  /* 4 */ { 0, BX_IA_FBLD_PACKED_BCD     },
+  /* 5 */ { 0, BX_IA_FILD_QWORD_INTEGER  },
+  /* 6 */ { 0, BX_IA_FBSTP_PACKED_BCD    },
+  /* 7 */ { 0, BX_IA_FISTP_QWORD_INTEGER }
+};
+
+// DF (modrm is outside 00h - BFh) (mod == 11)
 static const BxOpcodeInfo_t BxOpcodeInfo_FloatingPointDF[64] = {
-  // DF (modrm is outside 00h - BFh) (mod == 11)
   /* DF C0 */ { 0, BX_IA_FFREEP_STi },   // 287+ compatibility opcode
   /* DF C1 */ { 0, BX_IA_FFREEP_STi },
   /* DF C2 */ { 0, BX_IA_FFREEP_STi },
@@ -629,22 +456,22 @@ static const BxOpcodeInfo_t BxOpcodeInfo_FloatingPointDF[64] = {
   /* DF CD */ { 0, BX_IA_FXCH_STi },    // undocumented
   /* DF CE */ { 0, BX_IA_FXCH_STi },    // undocumented
   /* DF CF */ { 0, BX_IA_FXCH_STi },    // undocumented
-  /* DF D0 */ { 0, BX_IA_FST_STi },	// FSTP_STi, undocumented, special FPSTACK pop case
-  /* DF D1 */ { 0, BX_IA_FST_STi },	// FSTP_STi, undocumented, special FPSTACK pop case
-  /* DF D2 */ { 0, BX_IA_FST_STi },	// FSTP_STi, undocumented, special FPSTACK pop case
-  /* DF D3 */ { 0, BX_IA_FST_STi },	// FSTP_STi, undocumented, special FPSTACK pop case
-  /* DF D4 */ { 0, BX_IA_FST_STi },	// FSTP_STi, undocumented, special FPSTACK pop case
-  /* DF D5 */ { 0, BX_IA_FST_STi },	// FSTP_STi, undocumented, special FPSTACK pop case
-  /* DF D6 */ { 0, BX_IA_FST_STi },	// FSTP_STi, undocumented, special FPSTACK pop case
-  /* DF D7 */ { 0, BX_IA_FST_STi },	// FSTP_STi, undocumented, special FPSTACK pop case
-  /* DF D8 */ { 0, BX_IA_FST_STi },	// FSTP_STi, undocumented
-  /* DF D9 */ { 0, BX_IA_FST_STi },	// FSTP_STi, undocumented
-  /* DF DA */ { 0, BX_IA_FST_STi },	// FSTP_STi, undocumented
-  /* DF DB */ { 0, BX_IA_FST_STi },	// FSTP_STi, undocumented
-  /* DF DC */ { 0, BX_IA_FST_STi },	// FSTP_STi, undocumented
-  /* DF DD */ { 0, BX_IA_FST_STi },	// FSTP_STi, undocumented
-  /* DF DE */ { 0, BX_IA_FST_STi },	// FSTP_STi, undocumented
-  /* DF DF */ { 0, BX_IA_FST_STi },	// FSTP_STi, undocumented
+  /* DF D0 */ { 0, BX_IA_FSTP_STi },	// undocumented, special FPSTACK pop case
+  /* DF D1 */ { 0, BX_IA_FSTP_STi },	// undocumented, special FPSTACK pop case
+  /* DF D2 */ { 0, BX_IA_FSTP_STi },	// undocumented, special FPSTACK pop case
+  /* DF D3 */ { 0, BX_IA_FSTP_STi },	// undocumented, special FPSTACK pop case
+  /* DF D4 */ { 0, BX_IA_FSTP_STi },	// undocumented, special FPSTACK pop case
+  /* DF D5 */ { 0, BX_IA_FSTP_STi },	// undocumented, special FPSTACK pop case
+  /* DF D6 */ { 0, BX_IA_FSTP_STi },	// undocumented, special FPSTACK pop case
+  /* DF D7 */ { 0, BX_IA_FSTP_STi },	// undocumented, special FPSTACK pop case
+  /* DF D8 */ { 0, BX_IA_FSTP_STi },	// undocumented
+  /* DF D9 */ { 0, BX_IA_FSTP_STi },	// undocumented
+  /* DF DA */ { 0, BX_IA_FSTP_STi },	// undocumented
+  /* DF DB */ { 0, BX_IA_FSTP_STi },	// undocumented
+  /* DF DC */ { 0, BX_IA_FSTP_STi },	// undocumented
+  /* DF DD */ { 0, BX_IA_FSTP_STi },	// undocumented
+  /* DF DE */ { 0, BX_IA_FSTP_STi },	// undocumented
+  /* DF DF */ { 0, BX_IA_FSTP_STi },	// undocumented
   /* DF E0 */ { 0, BX_IA_FNSTSW_AX },
   /* DF E1 */ { 0, BX_IA_ERROR },
   /* DF E2 */ { 0, BX_IA_ERROR },
@@ -653,22 +480,22 @@ static const BxOpcodeInfo_t BxOpcodeInfo_FloatingPointDF[64] = {
   /* DF E5 */ { 0, BX_IA_ERROR },
   /* DF E6 */ { 0, BX_IA_ERROR },
   /* DF E7 */ { 0, BX_IA_ERROR },
-  /* DF E8 */ { 0, BX_IA_FUCOMI_ST0_STj },	// FUCOMIP
-  /* DF E9 */ { 0, BX_IA_FUCOMI_ST0_STj },	// FUCOMIP
-  /* DF EA */ { 0, BX_IA_FUCOMI_ST0_STj },	// FUCOMIP
-  /* DF EB */ { 0, BX_IA_FUCOMI_ST0_STj },	// FUCOMIP
-  /* DF EC */ { 0, BX_IA_FUCOMI_ST0_STj },	// FUCOMIP
-  /* DF ED */ { 0, BX_IA_FUCOMI_ST0_STj },	// FUCOMIP
-  /* DF EE */ { 0, BX_IA_FUCOMI_ST0_STj },	// FUCOMIP
-  /* DF EF */ { 0, BX_IA_FUCOMI_ST0_STj },	// FUCOMIP
-  /* DF F0 */ { 0, BX_IA_FCOMI_ST0_STj  },	// FCOMIP
-  /* DF F1 */ { 0, BX_IA_FCOMI_ST0_STj  },	// FCOMIP
-  /* DF F2 */ { 0, BX_IA_FCOMI_ST0_STj  },	// FCOMIP
-  /* DF F3 */ { 0, BX_IA_FCOMI_ST0_STj  },	// FCOMIP
-  /* DF F4 */ { 0, BX_IA_FCOMI_ST0_STj  },	// FCOMIP
-  /* DF F5 */ { 0, BX_IA_FCOMI_ST0_STj  },	// FCOMIP
-  /* DF F6 */ { 0, BX_IA_FCOMI_ST0_STj  },	// FCOMIP
-  /* DF F7 */ { 0, BX_IA_FCOMI_ST0_STj  },	// FCOMIP
+  /* DF E8 */ { 0, BX_IA_FUCOMIP_ST0_STj },
+  /* DF E9 */ { 0, BX_IA_FUCOMIP_ST0_STj },
+  /* DF EA */ { 0, BX_IA_FUCOMIP_ST0_STj },
+  /* DF EB */ { 0, BX_IA_FUCOMIP_ST0_STj },
+  /* DF EC */ { 0, BX_IA_FUCOMIP_ST0_STj },
+  /* DF ED */ { 0, BX_IA_FUCOMIP_ST0_STj },
+  /* DF EE */ { 0, BX_IA_FUCOMIP_ST0_STj },
+  /* DF EF */ { 0, BX_IA_FUCOMIP_ST0_STj },
+  /* DF F0 */ { 0, BX_IA_FCOMIP_ST0_STj },
+  /* DF F1 */ { 0, BX_IA_FCOMIP_ST0_STj },
+  /* DF F2 */ { 0, BX_IA_FCOMIP_ST0_STj },
+  /* DF F3 */ { 0, BX_IA_FCOMIP_ST0_STj },
+  /* DF F4 */ { 0, BX_IA_FCOMIP_ST0_STj },
+  /* DF F5 */ { 0, BX_IA_FCOMIP_ST0_STj },
+  /* DF F6 */ { 0, BX_IA_FCOMIP_ST0_STj },
+  /* DF F7 */ { 0, BX_IA_FCOMIP_ST0_STj },
   /* DF F8 */ { 0, BX_IA_ERROR },
   /* DF F9 */ { 0, BX_IA_ERROR },
   /* DF FA */ { 0, BX_IA_ERROR },

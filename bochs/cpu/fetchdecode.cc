@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.265 2010-04-08 17:35:32 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.266 2010-04-16 19:52:44 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -397,12 +397,12 @@ static const BxOpcodeInfo_t BxOpcodeInfo32R[512*2] = {
   /* D6 /wr */ { 0, BX_IA_SALC },
   /* D7 /wr */ { 0, BX_IA_XLAT },
 #if BX_SUPPORT_FPU
-  /* D8 /wr */ { BxFPEscape, BX_IA_ERROR, BxOpcodeInfo_FloatingPointD8 },
+  /* D8 /wr */ { BxGroupN, BX_IA_ERROR, BxOpcodeInfo_FloatingPointD8 },
   /* D9 /wr */ { BxFPEscape, BX_IA_ERROR, BxOpcodeInfo_FloatingPointD9 },
   /* DA /wr */ { BxFPEscape, BX_IA_ERROR, BxOpcodeInfo_FloatingPointDA },
   /* DB /wr */ { BxFPEscape, BX_IA_ERROR, BxOpcodeInfo_FloatingPointDB },
-  /* DC /wr */ { BxFPEscape, BX_IA_ERROR, BxOpcodeInfo_FloatingPointDC },
-  /* DD /wr */ { BxFPEscape, BX_IA_ERROR, BxOpcodeInfo_FloatingPointDD },
+  /* DC /wr */ { BxGroupN, BX_IA_ERROR, BxOpcodeInfo_FloatingPointDC },
+  /* DD /wr */ { BxGroupN, BX_IA_ERROR, BxOpcodeInfo_FloatingPointDD },
   /* DE /wr */ { BxFPEscape, BX_IA_ERROR, BxOpcodeInfo_FloatingPointDE },
   /* DF /wr */ { BxFPEscape, BX_IA_ERROR, BxOpcodeInfo_FloatingPointDF },
 #else
@@ -948,12 +948,12 @@ static const BxOpcodeInfo_t BxOpcodeInfo32R[512*2] = {
   /* D6 /dr */ { 0, BX_IA_SALC },
   /* D7 /dr */ { 0, BX_IA_XLAT },
 #if BX_SUPPORT_FPU
-  /* D8 /dr */ { BxFPEscape, BX_IA_ERROR, BxOpcodeInfo_FloatingPointD8 },
+  /* D8 /dr */ { BxGroupN, BX_IA_ERROR, BxOpcodeInfo_FloatingPointD8 },
   /* D9 /dr */ { BxFPEscape, BX_IA_ERROR, BxOpcodeInfo_FloatingPointD9 },
   /* DA /dr */ { BxFPEscape, BX_IA_ERROR, BxOpcodeInfo_FloatingPointDA },
   /* DB /dr */ { BxFPEscape, BX_IA_ERROR, BxOpcodeInfo_FloatingPointDB },
-  /* DC /dr */ { BxFPEscape, BX_IA_ERROR, BxOpcodeInfo_FloatingPointDC },
-  /* DD /dr */ { BxFPEscape, BX_IA_ERROR, BxOpcodeInfo_FloatingPointDD },
+  /* DC /dr */ { BxGroupN, BX_IA_ERROR, BxOpcodeInfo_FloatingPointDC },
+  /* DD /dr */ { BxGroupN, BX_IA_ERROR, BxOpcodeInfo_FloatingPointDD },
   /* DE /dr */ { BxFPEscape, BX_IA_ERROR, BxOpcodeInfo_FloatingPointDE },
   /* DF /dr */ { BxFPEscape, BX_IA_ERROR, BxOpcodeInfo_FloatingPointDF },
 #else
