@@ -85,6 +85,7 @@ Detailed change log :
  [2908481] USB Printer by Ben Lunt
 
 - these S.F. bugs were closed/fixed
+ [2861662] dbg_xlate_linear2phy needs to be updated
  [2956217] INT13 AH=8 returns wrong values when cylinders=1
  [2981161] Allow DMA transfers to continue when CPU is in HALT state
  [2795115] NX fault could be missed
