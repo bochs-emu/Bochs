@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ia_opcodes.h,v 1.47 2010-04-16 19:52:44 sshwarts Exp $
+// $Id: ia_opcodes.h,v 1.48 2010-04-18 09:21:24 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008-2010 Stanislav Shwartsman
@@ -1186,6 +1186,9 @@ bx_define_opcode(BX_IA_PSRLQ_UdqIb, &BX_CPU_C::PSRLQ_UdqIb, NULL, BX_CPU_SSE2)
 bx_define_opcode(BX_IA_PSRLDQ_UdqIb, &BX_CPU_C::PSRLDQ_UdqIb, NULL, BX_CPU_SSE2)
 bx_define_opcode(BX_IA_PSLLQ_UdqIb, &BX_CPU_C::PSLLQ_UdqIb, NULL, BX_CPU_SSE2)
 bx_define_opcode(BX_IA_PSLLDQ_UdqIb, &BX_CPU_C::PSLLDQ_UdqIb, NULL, BX_CPU_SSE2)
+bx_define_opcode(BX_IA_LFENCE, &BX_CPU_C::NOP, NULL, BX_CPU_SSE2)
+bx_define_opcode(BX_IA_SFENCE, &BX_CPU_C::NOP, NULL, BX_CPU_SSE2)
+bx_define_opcode(BX_IA_MFENCE, &BX_CPU_C::NOP, NULL, BX_CPU_SSE2)
 // SSE2
 
 // SSE3
