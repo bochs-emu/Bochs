@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.241 2010-04-10 07:32:48 sshwarts Exp $
+// $Id: init.cc,v 1.242 2010-04-19 11:09:35 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -992,6 +992,7 @@ void BX_CPU_C::reset(unsigned source)
 #endif
 
   BX_CPU_THIS_PTR EXT = 0;
+  BX_CPU_THIS_PTR errorno = 0;
 
   TLB_flush();
 #if BX_CPU_LEVEL >= 6

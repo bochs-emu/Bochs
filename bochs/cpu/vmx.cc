@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmx.cc,v 1.65 2010-04-13 17:56:50 sshwarts Exp $
+// $Id: vmx.cc,v 1.66 2010-04-19 11:09:35 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2009-2010 Stanislav Shwartsman
@@ -2123,6 +2123,8 @@ void BX_CPU_C::VMexit(bxInstruction_c *i, Bit32u reason, Bit64u qualification)
 
   BX_CPU_THIS_PTR disable_INIT = 1; // INIT is disabled in VMX root mode
   BX_CPU_THIS_PTR vmx_interrupt_window = 0;
+  BX_CPU_THIS_PTR errorno = 0;
+  BX_CPU_THIS_PTR EXT = 0;
 
   longjmp(BX_CPU_THIS_PTR jmp_buf_env, 1); // go back to main decode loop
 }

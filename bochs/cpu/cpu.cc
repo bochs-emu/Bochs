@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.310 2010-04-02 17:15:14 sshwarts Exp $
+// $Id: cpu.cc,v 1.311 2010-04-19 11:09:35 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -548,7 +548,6 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
   else if (BX_CPU_THIS_PTR pending_NMI && ! BX_CPU_THIS_PTR disable_NMI) {
     BX_CPU_THIS_PTR pending_NMI = 0;
     BX_CPU_THIS_PTR disable_NMI = 1;
-    BX_CPU_THIS_PTR errorno = 0;
     BX_CPU_THIS_PTR EXT = 1; /* external event */
 #if BX_SUPPORT_VMX
     VMexit_Event(0, BX_NMI, 2, 0, 0);
@@ -577,7 +576,6 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
 #endif
       // if no local APIC, always acknowledge the PIC.
       vector = DEV_pic_iac(); // may set INTR with next interrupt
-    BX_CPU_THIS_PTR errorno = 0;
     BX_CPU_THIS_PTR EXT = 1; /* external event */
 #if BX_SUPPORT_VMX
     VMexit_Event(0, BX_EXTERNAL_INTERRUPT, vector, 0, 0);
@@ -593,7 +591,6 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
     BX_CPU_THIS_PTR prev_rip = RIP; // commit new RIP
     BX_CPU_THIS_PTR speculative_rsp = 0;
     BX_CPU_THIS_PTR EXT = 0;
-    BX_CPU_THIS_PTR errorno = 0;
   }
   else if (BX_HRQ && BX_DBG_ASYNC_DMA) {
     // NOTE: similar code in ::take_dma()
@@ -933,7 +930,6 @@ void BX_CPU_C::dbg_take_irq(void)
     if (setjmp(BX_CPU_THIS_PTR jmp_buf_env) == 0) {
       // normal return from setjmp setup
       unsigned vector = DEV_pic_iac(); // may set INTR with next interrupt
-      BX_CPU_THIS_PTR errorno = 0;
       BX_CPU_THIS_PTR EXT = 1; // external event
       BX_CPU_THIS_PTR async_event = 1; // set in case INTR is triggered
       interrupt(vector, BX_EXTERNAL_INTERRUPT, 0, 0);
@@ -948,7 +944,6 @@ void BX_CPU_C::dbg_force_interrupt(unsigned vector)
 
   if (setjmp(BX_CPU_THIS_PTR jmp_buf_env) == 0) {
     // normal return from setjmp setup
-    BX_CPU_THIS_PTR errorno = 0;
     BX_CPU_THIS_PTR EXT = 1; // external event
     BX_CPU_THIS_PTR async_event = 1; // probably don't need this
     interrupt(vector, BX_EXTERNAL_INTERRUPT, 0, 0);
