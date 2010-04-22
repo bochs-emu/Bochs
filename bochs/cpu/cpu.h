@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.669 2010-04-15 05:51:00 sshwarts Exp $
+// $Id: cpu.h,v 1.670 2010-04-22 18:48:39 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2010  The Bochs Project
@@ -3269,7 +3269,9 @@ public: // for now...
 #if BX_SUPPORT_X2APIC
   BX_SMF void bx_cpuid_extended_topology_leaf(Bit32u subfunction);
 #endif
+#if BX_CPU_LEVEL >= 6
   BX_SMF void bx_cpuid_xsave_leaf(Bit32u subfunction);
+#endif
 
   BX_SMF BX_CPP_INLINE unsigned which_cpu(void) { return BX_CPU_THIS_PTR bx_cpuid; }
   BX_SMF BX_CPP_INLINE const bx_gen_reg_t *get_gen_regfile() { return BX_CPU_THIS_PTR gen_reg; }
