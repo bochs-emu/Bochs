@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: flag_ctrl_pro.cc,v 1.39 2009-12-04 16:53:12 sshwarts Exp $
+// $Id: flag_ctrl_pro.cc,v 1.40 2010-04-22 17:51:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -48,7 +48,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::setEFlags(Bit32u val)
   BX_CPU_THIS_PTR lf_flags_status = 0; // OSZAPC flags are known.
 
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
-  handleAlignmentCheck();
+  handleAlignmentCheck(/* EFLAGS.AC reloaded */);
 #endif
 
   handleCpuModeChange(); // VM flag might be changed

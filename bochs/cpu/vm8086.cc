@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vm8086.cc,v 1.60 2010-03-15 13:22:14 sshwarts Exp $
+// $Id: vm8086.cc,v 1.61 2010-04-22 17:51:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -256,7 +256,7 @@ void BX_CPU_C::init_v8086_mode(void)
   handleCpuModeChange();
 
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
-  handleAlignmentCheck(); // CPL was modified
+  handleAlignmentCheck(/* CPL change */);
 #endif
 }
 

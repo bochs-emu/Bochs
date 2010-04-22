@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: crregs.cc,v 1.12 2010-04-09 11:31:55 sshwarts Exp $
+// $Id: crregs.cc,v 1.13 2010-04-22 17:51:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2010 Stanislav Shwartsman
@@ -870,7 +870,7 @@ bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::SetCR0(bx_address val)
   BX_CPU_THIS_PTR cr0.set32(val_32);
 
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
-  handleAlignmentCheck();
+  handleAlignmentCheck(/* CR0.AC reloaded */);
 #endif
 
   handleCpuModeChange();

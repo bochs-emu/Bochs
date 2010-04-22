@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.332 2010-04-08 16:38:41 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.333 2010-04-22 17:51:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2010  The Bochs Project
@@ -533,14 +533,12 @@ void BX_CPU_C::handleAlignmentCheck(void)
     if (BX_CPU_THIS_PTR alignment_check_mask == 0) {
       BX_CPU_THIS_PTR alignment_check_mask = 0xF;
       BX_INFO(("Enable alignment check (#AC exception)"));
-//    BX_CPU_THIS_PTR iCache.flushICacheEntries();
     }
   }
   else {
     if (BX_CPU_THIS_PTR alignment_check_mask != 0) {
       BX_CPU_THIS_PTR alignment_check_mask = 0;
       BX_INFO(("Disable alignment check (#AC exception)"));
-//    BX_CPU_THIS_PTR iCache.flushICacheEntries();
     }
   }
 }
@@ -868,7 +866,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSENTER(bxInstruction_c *i)
 #if BX_SUPPORT_X86_64
   handleCpuModeChange(); // mode change could happen only when in long_mode()
 #else
-  updateFetchModeMask();
+  updateFetchModeMask(/* CS reloaded */);
 #endif
 
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
@@ -979,11 +977,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSEXIT(bxInstruction_c *i)
 #if BX_SUPPORT_X86_64
   handleCpuModeChange(); // mode change could happen only when in long_mode()
 #else
-  updateFetchModeMask();
+  updateFetchModeMask(/* CS reloaded */);
 #endif
 
-#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
-  handleAlignmentCheck(); // CPL was modified
+#if BX_SUPPORT_ALIGNMENT_CHECK
+  handleAlignmentCheck(/* CPL change */);
 #endif
 
   parse_selector(((BX_CPU_THIS_PTR msr.sysenter_cs_msr + (i->os64L() ? 40:24)) & BX_SELECTOR_RPL_MASK) | 3,
@@ -1097,7 +1095,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSCALL(bxInstruction_c *i)
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.l            = 0; /* 32-bit code */
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.avl          = 0; /* available for use by system */
 
-    updateFetchModeMask();
+    updateFetchModeMask(/* CS reloaded */);
 
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
     BX_CPU_THIS_PTR alignment_check_mask = 0; // CPL=0
@@ -1194,8 +1192,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSRET(bxInstruction_c *i)
 
     handleCpuModeChange(); // mode change could only happen when in long64 mode
 
-#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
-    handleAlignmentCheck(); // CPL was modified
+#if BX_SUPPORT_ALIGNMENT_CHECK
+    handleAlignmentCheck(/* CPL change */);
 #endif
 
     // SS base, limit, attributes unchanged
@@ -1227,10 +1225,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSRET(bxInstruction_c *i)
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.l            = 0; /* 32-bit code */
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.avl          = 0; /* available for use by system */
 
-    updateFetchModeMask();
+    updateFetchModeMask(/* CS reloaded */);
 
-#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
-    handleAlignmentCheck(); // CPL was modified
+#if BX_SUPPORT_ALIGNMENT_CHECK
+    handleAlignmentCheck(/* CPL change */);
 #endif
 
     // SS base, limit, attributes unchanged

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debugstuff.cc,v 1.111 2009-12-28 10:56:23 sshwarts Exp $
+// $Id: debugstuff.cc,v 1.112 2010-04-22 17:51:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -340,7 +340,7 @@ bx_bool BX_CPU_C::dbg_set_sreg(unsigned sreg_no, bx_segment_reg_t *sreg)
     if (sreg_no == BX_SEG_REG_CS) {
       handleCpuModeChange();
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
-      handleAlignmentCheck(); // CPL was modified
+      handleAlignmentCheck(/* CPL change */);
 #endif
       invalidate_prefetch_q();
       return 1;

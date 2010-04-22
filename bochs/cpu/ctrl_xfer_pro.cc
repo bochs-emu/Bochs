@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer_pro.cc,v 1.85 2010-04-02 21:22:17 sshwarts Exp $
+// $Id: ctrl_xfer_pro.cc,v 1.86 2010-04-22 17:51:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -107,10 +107,10 @@ BX_CPU_C::load_cs(bx_selector_t *selector, bx_descriptor_t *descriptor, Bit8u cp
   }
 #endif
 
-  updateFetchModeMask();
+  updateFetchModeMask(/* CS reloaded */);
 
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
-  handleAlignmentCheck(); // CPL was modified
+  handleAlignmentCheck(/* CPL change */);
 #endif
 
   // Loading CS will invalidate the EIP fetch window.

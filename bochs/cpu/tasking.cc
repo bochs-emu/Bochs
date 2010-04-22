@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: tasking.cc,v 1.92 2010-04-14 17:33:19 sshwarts Exp $
+// $Id: tasking.cc,v 1.93 2010-04-22 17:51:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2010  The Bochs Project
@@ -668,7 +668,7 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
       exception(BX_TS_EXCEPTION, raw_cs_selector & 0xfffc);
     }
 
-    updateFetchModeMask();
+    updateFetchModeMask(/* CS reloaded */);
 
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
     handleAlignmentCheck(); // task switch, CPL was modified
