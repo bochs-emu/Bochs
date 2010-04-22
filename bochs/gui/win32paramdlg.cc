@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32paramdlg.cc,v 1.15 2009-03-29 20:48:17 vruppert Exp $
+// $Id: win32paramdlg.cc,v 1.16 2010-04-22 17:30:11 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Volker Ruppert
@@ -419,7 +419,11 @@ HWND CreateInput(HWND hDlg, UINT cid, UINT xpos, UINT ypos, BOOL hide, bx_param_
                          style, r.left, r.top, r.right-r.left+1,
                          r.bottom-r.top+1, hDlg, (HMENU)code, NULL, NULL);
   if (hexedit) {
+#ifndef _WIN64
     DefEditWndProc = (WNDPROC)SetWindowLong(Input, GWL_WNDPROC, (long)EditHexWndProc);
+#else
+    DefEditWndProc = (WNDPROC)SetWindowLongPtr(Input, GWLP_WNDPROC, (LONG_PTR)EditHexWndProc);
+#endif
   }
   if (spinctrl) {
     style = WS_CHILD | WS_BORDER | WS_VISIBLE | UDS_NOTHOUSANDS | UDS_ARROWKEYS |
@@ -572,7 +576,8 @@ void SetParamList(HWND hDlg, bx_list_c *list)
   bx_param_num_c *nparam;
   bx_param_enum_c *eparam;
   bx_param_string_c *sparam;
-  int j, val;
+  int j;
+  LRESULT val;
   const char *src;
   char buffer[512], rawbuf[512];
   UINT cid, i, items, lid;
@@ -728,7 +733,9 @@ static BOOL CALLBACK ParamDlgProc(HWND Window, UINT AMessage, WPARAM wParam, LPA
   bx_param_c *param;
   bx_param_string_c *sparam;
   bx_list_c *tmplist;
-  int cid, code, i, j, k;
+  int cid;
+  UINT_PTR code;
+  UINT i, j, k;
   RECT r, r2;
   SIZE size;
   NMHDR tcinfo;
@@ -779,7 +786,7 @@ static BOOL CALLBACK ParamDlgProc(HWND Window, UINT AMessage, WPARAM wParam, LPA
           break;
         default:
           if ((code >= ID_BROWSE) && (code < (int)(ID_BROWSE + nextDlgID))) {
-            i = code - ID_BROWSE;
+            i = (UINT)(code - ID_BROWSE);
             sparam = (bx_param_string_c *)findParamFromDlgID(i);
             if (sparam != NULL) {
               GetDlgItemText(Window, ID_PARAM + i, fname, BX_PATHNAME_LEN);
@@ -790,7 +797,7 @@ static BOOL CALLBACK ParamDlgProc(HWND Window, UINT AMessage, WPARAM wParam, LPA
               }
             }
           } else if ((code >= ID_PARAM) && (code < (int)(ID_PARAM + nextDlgID))) {
-            i = code - ID_PARAM;
+            i = (UINT)(code - ID_PARAM);
             param = findParamFromDlgID(i);
             if (param != NULL) {
               ProcessDependentList(Window, param, TRUE);
@@ -802,10 +809,10 @@ static BOOL CALLBACK ParamDlgProc(HWND Window, UINT AMessage, WPARAM wParam, LPA
       tcinfo = *(LPNMHDR)lParam;
       if (tcinfo.code == (UINT)TCN_SELCHANGE) {
         code = tcinfo.idFrom;
-        j = code - ID_PARAM;
+        j = (UINT)(code - ID_PARAM);
         tmplist = (bx_list_c *)findParamFromDlgID(j);
         if (tmplist != NULL) {
-          k = TabCtrl_GetCurSel(GetDlgItem(Window, code));
+          k = (UINT)TabCtrl_GetCurSel(GetDlgItem(Window, code));
           cid = findDlgListBaseID(tmplist);
           for (i = 0; i < tmplist->get_size(); i++) {
             ShowParamList(Window, cid + i, (i == k), (bx_list_c*)tmplist->get(i));
@@ -823,7 +830,7 @@ static BOOL CALLBACK ParamDlgProc(HWND Window, UINT AMessage, WPARAM wParam, LPA
 
 int win32ParamDialog(HWND parent, const char *menu)
 {
-  int ret;
+  INT_PTR ret;
 
   InitDlgFont();
   ret = DialogBoxParam(NULL, MAKEINTRESOURCE(PARAM_DLG), parent, (DLGPROC)ParamDlgProc, (LPARAM)menu);
