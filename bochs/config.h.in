@@ -687,7 +687,6 @@ typedef
 #define BX_SUPPORT_MISALIGNED_SSE 0
 #define BX_SUPPORT_MONITOR_MWAIT 0
 #define BX_SUPPORT_VMX 0
-#define BX_SUPPORT_1G_PAGES 0
 
 #if BX_SUPPORT_VMX >= 2 && BX_SUPPORT_X86_64 == 0
   #error "VMXx2 require x86-64 support"
@@ -728,10 +727,6 @@ typedef
 
 #if (BX_CPU_LEVEL<6 && BX_SUPPORT_VMX)
   #error "VMX only supported with CPU_LEVEL >= 6 !"
-#endif
-
-#if (BX_SUPPORT_X86_64 == 0 && BX_SUPPORT_1G_PAGES)
-  #error "1G only supported with x86-64 !"
 #endif
 
 #if BX_SUPPORT_X86_64

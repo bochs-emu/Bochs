@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.276 2010-03-01 18:53:53 sshwarts Exp $
+$Id: user.dbk,v 1.277 2010-04-24 09:36:04 sshwarts Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -2073,11 +2073,6 @@ turn it off.
       <entry>
       Add support for x86-64 instruction set, written by Peter Tattam and Stanislav Shwartsman.
       </entry>
-    </row>
-    <row>
-      <entry>--enable-1g-pages</entry>
-      <entry>no</entry>
-      <entry>support for 1G page extensions in x86-64 long mode</entry>
     </row>
     <row>
       <entry>--enable-vmx</entry>

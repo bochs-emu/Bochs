@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpuid.cc,v 1.113 2010-04-22 18:48:39 sshwarts Exp $
+// $Id: cpuid.cc,v 1.114 2010-04-24 09:36:04 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007-2010 Stanislav Shwartsman
@@ -377,6 +377,9 @@ void BX_CPU_C::set_cpuid_defaults(void)
   Bit8u *vendor_string = (Bit8u *)SIM->get_param_string(BXPN_VENDOR_STRING)->getptr();
   Bit8u *brand_string = (Bit8u *)SIM->get_param_string(BXPN_BRAND_STRING)->getptr();
   bool cpuid_limit_winnt = SIM->get_param_bool(BXPN_CPUID_LIMIT_WINNT)->get();
+#if BX_SUPPORT_X86_64
+  bx_bool xlarge_pages_enabled = SIM->get_param_bool(BXPN_CPUID_1G_PAGES)->get();
+#endif
 
   cpuid_function_t *cpuid;
   int i;
@@ -708,9 +711,8 @@ void BX_CPU_C::set_cpuid_defaults(void)
 #endif
 #if BX_SUPPORT_X86_64
   features |= (1 << 29) | (1 << 27) | (1 << 25) | (1 << 20) | (1 << 11);
-#if BX_SUPPORT_1G_PAGES
-  features |= (1 << 26);
-#endif
+  if (xlarge_pages_enabled)
+    features |= (1 << 26);
 #endif
   cpuid->edx = features;
 

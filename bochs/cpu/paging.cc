@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.219 2010-04-14 15:41:57 sshwarts Exp $
+// $Id: paging.cc,v 1.220 2010-04-24 09:36:04 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2010  The Bochs Project
@@ -682,7 +682,7 @@ bx_phy_address BX_CPU_C::translate_linear_long_mode(bx_address laddr, Bit32u &lp
     if (leaf == BX_LEVEL_PTE) break;
 
     if (curr_entry & 0x80) {
-      if (leaf > (BX_LEVEL_PDE + BX_SUPPORT_1G_PAGES)) {
+      if (leaf > (BX_LEVEL_PDE + bx_cpuid_support_1g_paging())) {
         BX_DEBUG(("%s: PS bit set !"));
         page_fault(ERROR_RESERVED | ERROR_PROTECTION, laddr, pl, rw);
       }
@@ -1263,7 +1263,7 @@ bx_phy_address BX_CPU_C::translate_guest_physical(bx_phy_address guest_paddr, bx
     }
 
     if (curr_entry & 0x80) {
-      if (leaf > (BX_LEVEL_PDE + BX_SUPPORT_1G_PAGES)) {
+      if (leaf > (BX_LEVEL_PDE + bx_cpuid_support_1g_paging())) {
         BX_DEBUG(("EPT %s: PS bit set !"));
         vmexit_reason = VMX_VMEXIT_EPT_VIOLATION;
         break;
@@ -1346,7 +1346,7 @@ bx_bool BX_CPU_C::dbg_translate_guest_physical(bx_phy_address guest_paddr, bx_ph
     if (level == BX_LEVEL_PTE) break;
 
     if (pte & 0x80) {
-       if (level > (BX_LEVEL_PDE + BX_SUPPORT_1G_PAGES))
+       if (level > (BX_LEVEL_PDE + bx_cpuid_support_1g_paging()))
          return 0;
 
         pt_address &= BX_CONST64(0x000fffffffffe000);
@@ -1414,20 +1414,20 @@ bx_bool BX_CPU_C::dbg_xlate_linear2phy(bx_address laddr, bx_phy_address *phy)
       pt_address = bx_phy_address(pte & BX_CONST64(0x000ffffffffff000));
       if (level == BX_LEVEL_PTE) break;
       if (pte & 0x80) {
-        if (level == BX_LEVEL_PDE) {                // 2M page
+        // 2M page
+        if (level == BX_LEVEL_PDE) {
           pt_address &= BX_CONST64(0x000fffffffffe000);
           if (pt_address & offset_mask)
             goto page_fault;
           break;
         }
-#if BX_SUPPORT_1G_PAGES
-        if (level == BX_LEVEL_PDPE && long_mode()) { // 1G page
+        // 1G page
+        if (bx_cpuid_support_1g_paging() && level == BX_LEVEL_PDPE && long_mode()) {
           pt_address &= BX_CONST64(0x000fffffffffe000);
           if (pt_address & offset_mask)
             goto page_fault;
           break;
         }
-#endif
         goto page_fault;
       }
     }

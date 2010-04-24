@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.670 2010-04-22 18:48:39 sshwarts Exp $
+// $Id: cpu.h,v 1.671 2010-04-24 09:36:04 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2010  The Bochs Project
@@ -3273,6 +3273,8 @@ public: // for now...
   BX_SMF void bx_cpuid_xsave_leaf(Bit32u subfunction);
 #endif
 
+  BX_SMF BX_CPP_INLINE int bx_cpuid_support_1g_paging(void);
+
   BX_SMF BX_CPP_INLINE unsigned which_cpu(void) { return BX_CPU_THIS_PTR bx_cpuid; }
   BX_SMF BX_CPP_INLINE const bx_gen_reg_t *get_gen_regfile() { return BX_CPU_THIS_PTR gen_reg; }
 
@@ -3685,6 +3687,15 @@ BX_CPP_INLINE bx_bool BX_CPU_C::alignment_check(void)
   return BX_CPU_THIS_PTR alignment_check_mask;
 }
 #endif
+
+BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_1g_paging(void)
+{
+#if BX_SUPPORT_X86_64
+  return (BX_CPU_THIS_PTR cpuid_ext_function[1].edx >> 26) & 0x1;
+#else
+  return 0;
+#endif
+}
 
 BOCHSAPI extern const Bit8u bx_parity_lookup[256];
 

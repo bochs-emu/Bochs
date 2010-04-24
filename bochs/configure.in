@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.435 2010-04-10 06:15:32 sshwarts Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.436 2010-04-24 09:36:04 sshwarts Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -875,29 +875,6 @@ AC_ARG_ENABLE(x2apic,
     AC_DEFINE(BX_SUPPORT_X2APIC, 0)
     ]
   )
-
-AC_MSG_CHECKING(for long mode 1G pages support)
-AC_ARG_ENABLE(1g-pages,
-  [  --enable-1g-pages                 support for 1G pages in long mode],
-  [if test "$enableval" = yes; then
-    AC_MSG_RESULT(yes)
-    AC_DEFINE(BX_SUPPORT_1G_PAGES, 1)
-    support_1g_pages=1
-   else
-    AC_MSG_RESULT(no)
-    AC_DEFINE(BX_SUPPORT_1G_PAGES, 0)
-    support_1g_pages=0
-   fi],
-  [
-    AC_MSG_RESULT(no)
-    AC_DEFINE(BX_SUPPORT_1G_PAGES, 0)
-    support_1g_pages=0
-    ]
-  )
-
-if test "$support_1g_pages" = 1 -a "$use_x86_64" = 0; then
-  AC_MSG_ERROR([x86-64 mode is required for 1G pages support])
-fi
 
 AC_MSG_CHECKING(for repeated IO and mem copy speedups)
 AC_ARG_ENABLE(repeat-speedups,
@@ -2719,6 +2696,16 @@ AC_ARG_ENABLE(ignore-bad-msr,
    AC_MSG_RESULT(no)
   ])
 
+AC_MSG_CHECKING(for long mode 1G pages support)
+AC_ARG_ENABLE(1g-pages,
+  [  --enable-1g-pages                 support for 1G pages in long mode (deprecated)],
+  [AC_MSG_RESULT($enableval)
+   AC_MSG_ERROR([DEPRECATED - moved to runtime option in .bochsrc])
+  ],
+  [
+   AC_MSG_RESULT(no)
+  ])
+
 AC_MSG_CHECKING(for PAE support (deprecated))
 AC_ARG_ENABLE(pae,
   [  --enable-pae                      enables PAE support (deprecated)],
@@ -2738,6 +2725,7 @@ AC_ARG_ENABLE(mtrr,
   [
    AC_MSG_RESULT(no)
   ])
+
 
 AC_MSG_CHECKING(for LARGE PAGES (PSE) support (deprecated))
 AC_ARG_ENABLE(large-pages,

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.419 2010-04-03 13:30:58 sshwarts Exp $
+// $Id: main.cc,v 1.420 2010-04-24 09:36:04 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -1006,6 +1006,9 @@ void bx_init_hardware()
   bx_bool sep_enabled = SIM->get_param_bool(BXPN_CPUID_SEP)->get();
   bx_bool xsave_enabled = SIM->get_param_bool(BXPN_CPUID_XSAVE)->get();
 #endif
+#if BX_SUPPORT_X86_64
+  bx_bool xlarge_pages_enabled = SIM->get_param_bool(BXPN_CPUID_1G_PAGES)->get();
+#endif
 
   // Output to the log file the cpu and device settings
   // This will by handy for bug reports
@@ -1039,10 +1042,10 @@ void bx_init_hardware()
   BX_INFO(("  XSAVE support: %s",xsave_enabled?"yes":"no"));
   BX_INFO(("  AES support: %s",aes_enabled?"yes":"no"));
   BX_INFO(("  MOVBE support: %s",movbe_enabled?"yes":"no"));
-#if BX_SUPPORT_X86_64
-  BX_INFO(("  1G paging support: %s",BX_SUPPORT_1G_PAGES?"yes":"no"));
-#endif
   BX_INFO(("  x86-64 support: %s",BX_SUPPORT_X86_64?"yes":"no"));
+#if BX_SUPPORT_X86_64
+  BX_INFO(("  1G paging support: %s",xlarge_pages_enabled?"yes":"no"));
+#endif
   BX_INFO(("  MWAIT support: %s",BX_SUPPORT_MONITOR_MWAIT?"yes":"no"));
 #if BX_SUPPORT_VMX
   BX_INFO(("  VMX support: %d",BX_SUPPORT_VMX));
