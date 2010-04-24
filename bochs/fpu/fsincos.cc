@@ -85,8 +85,8 @@ static int reduce_trig_arg(int expDiff, int &zSign, Bit64u &aSig0, Bit64u &aSig1
     return (int)(q & 3);
 }
 
-#define SIN_ARR_SIZE 10
-#define COS_ARR_SIZE 10
+#define SIN_ARR_SIZE 11
+#define COS_ARR_SIZE 11
 
 static float128 sin_arr[SIN_ARR_SIZE] =
 {
@@ -99,7 +99,8 @@ static float128 sin_arr[SIN_ARR_SIZE] =
     PACK_FLOAT_128(0x3fde6124613a86d0, 0x97ca38331d23af68), /* 13 */
     PACK_FLOAT_128(0xbfd6ae7f3e733b81, 0xf11d8656b0ee8cb0), /* 15 */
     PACK_FLOAT_128(0x3fce952c77030ad4, 0xa6b2605197771b00), /* 17 */
-    PACK_FLOAT_128(0xbfc62f49b4681415, 0x724ca1ec3b7b9675)  /* 19 */
+    PACK_FLOAT_128(0xbfc62f49b4681415, 0x724ca1ec3b7b9675), /* 19 */
+    PACK_FLOAT_128(0x3fbd71b8ef6dcf57, 0x18bef146fcee6e45)  /* 21 */
 };
 
 static float128 cos_arr[COS_ARR_SIZE] =
@@ -113,7 +114,8 @@ static float128 cos_arr[COS_ARR_SIZE] =
     PACK_FLOAT_128(0x3fe21eed8eff8d89, 0x7b544da987acfe85), /* 12 */
     PACK_FLOAT_128(0xbfda93974a8c07c9, 0xd20badf145dfa3e5), /* 14 */
     PACK_FLOAT_128(0x3fd2ae7f3e733b81, 0xf11d8656b0ee8cb0), /* 16 */
-    PACK_FLOAT_128(0xbfca6827863b97d9, 0x77bb004886a2c2ab)  /* 18 */
+    PACK_FLOAT_128(0xbfca6827863b97d9, 0x77bb004886a2c2ab), /* 18 */
+    PACK_FLOAT_128(0x3fc1e542ba402022, 0x507a9cad2bf8f0bb)  /* 20 */
 };
 
 extern float128 OddPoly (float128 x, float128 *arr, unsigned n, float_status_t &status);
