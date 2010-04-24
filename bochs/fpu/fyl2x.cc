@@ -218,7 +218,7 @@ invalid:
     shift128Right(aSig<<1, 0, 16, &zSig0, &zSig1);
     float128 x = packFloat128(0, aExp+0x3FFF, zSig0, zSig1);
     x = poly_l2(x, status);
-    x = float128_add(x, floatx80_to_float128(int32_to_floatx80(ExpDiff), status), status);
+    x = float128_add(x, int64_to_float128((Bit64s) ExpDiff), status);
     return floatx80_mul(b, x, status);
 }
 

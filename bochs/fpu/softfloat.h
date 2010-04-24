@@ -335,6 +335,8 @@ struct float128 {
 float128 floatx80_to_float128(floatx80 a, float_status_t &status);
 floatx80 float128_to_floatx80(float128 a, float_status_t &status);
 
+float128 int64_to_float128(Bit64s a);
+
 /*----------------------------------------------------------------------------
 | Software IEC/IEEE extended double-precision operations.
 *----------------------------------------------------------------------------*/

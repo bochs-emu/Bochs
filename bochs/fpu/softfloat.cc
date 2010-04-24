@@ -3278,4 +3278,32 @@ float128 float128_div(float128 a, float128 b, float_status_t &status)
     return roundAndPackFloat128(zSign, zExp, zSig0, zSig1, zSig2, status);
 }
 
+/*----------------------------------------------------------------------------
+| Returns the result of converting the 64-bit two's complement integer `a' to
+| the quadruple-precision floating-point format.  The conversion is performed
+| according to the IEC/IEEE Standard for Binary Floating-Point Arithmetic.
+*----------------------------------------------------------------------------*/
+
+float128 int64_to_float128(Bit64s a)
+{
+    Bit64u zSig0, zSig1;
+
+    if (a == 0) return packFloat128(0, 0, 0, 0);
+    int zSign = (a < 0);
+    Bit64u absA = zSign ? - a : a;
+    Bit8u shiftCount = countLeadingZeros64(absA) + 49;
+    Bit32s zExp = 0x406E - shiftCount;
+    if (64 <= shiftCount) {
+        zSig1 = 0;
+        zSig0 = absA;
+        shiftCount -= 64;
+    }
+    else {
+        zSig1 = absA;
+        zSig0 = 0;
+    }
+    shortShift128Left(zSig0, zSig1, shiftCount, &zSig0, &zSig1);
+    return packFloat128(zSign, zExp, zSig0, zSig1);
+}
+
 #endif
