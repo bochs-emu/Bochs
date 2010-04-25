@@ -7,9 +7,51 @@
  <!--content starts here-->
  <img src="images/logo.gif" alt="A Window, Tux, and the BSD Daemon" width="160" height="175" align="right">
 
- <BR><font face="arial, helvetica" color="#1e029a" size="4"><b>Latest release:</b> Bochs 2.4.2</font><BR><BR>
+ <BR><font face="arial, helvetica" color="#1e029a" size="4"><b>Latest release:</b> Bochs 2.4.5</font><BR><BR>
 
-Version 2.4.2 is a bugfix release. Here is the summary of changes :
+Version 2.4.5 is a bugfix+ release. Here is the summary of changes :
+
+<ul>
+<li> Major configure/cpu rework allowing to enable/disable CPU options at runtime
+  through .bochsrc (Stanislav)
+<li> Bugfixes for CPU emulation correctness and stability
+<li> Implemented X2APIC extensions (Stanislav)
+<li> Implemented Intel VMXx2 extensions (Stanislav)
+<ul>
+  <li> Extended VMX capability MSRs, APIC Virtualization,
+    X2APIC Virtualization, Extended Page Tables (EPT),
+    VPID, Unrestricted Guests, new VMX controls.
+  </ul>
+<li> Implemented PCLMULQDQ AES instruction
+<li> Extended Bochs internal debugger functionality
+<li> USB HP DeskJet 920C printer device emulation (Ben Lunt)
+</ul>
+
+The binary packages for Linux and Windows are built with these featues :
+<ul>
+<li> x86-64 emulation with all optimizations enabled
+<li> devices:
+ <ul>
+ <li> chipset: PCI, ACPI
+ <li> video: Bochs VBE and Cirrus SVGA
+ <li> sound: SB16
+ <li> network: NE2000 (ISA/PCI)
+ <li> USB: OHCI, UHCI and 6 device types
+ </ul>
+<li> Display libraries:
+ <ul>
+ <li> Linux: nogui, rfb, sdl, term, x
+ <li> Windows: nogui, rfb, win32
+ </ul>
+</ul>
+
+<a href="http://bochs.cvs.sourceforge.net/bochs/bochs/CHANGES?view=markup&content-type=text/vnd.viewcvs-markup&revision=REL_2_4_5_FINAL">
+Details on what has changed since version 2.4.2
+</a>
+
+<BR/><BR/>
+
+ <BR><font face="arial, helvetica" color="#1e029a" size="4"><b>Previous release:</b> Bochs 2.4.2</font><BR><BR>
 
 <ul>
 <li> CPU and internal debugger
@@ -38,53 +80,8 @@ Version 2.4.2 is a bugfix release. Here is the summary of changes :
 
 <BR>
 
-The binary packages for Linux and Windows are built with these featues :
-<ul>
-<li> x86-64 emulation with all optimizations enabled
-<li> devices:
- <ul>
- <li> chipset: PCI, ACPI
- <li> video: Bochs VBE and Cirrus SVGA
- <li> sound: SB16
- <li> network: NE2000 (ISA/PCI)
- <li> USB: OHCI, UHCI and 6 device types
- </ul>
-<li> Display libraries:
- <ul>
- <li> Linux: nogui, rfb, sdl, term, x
- <li> Windows: nogui, rfb, win32
- </ul>
-</ul>
-
 <a href="http://bochs.cvs.sourceforge.net/bochs/bochs/CHANGES?view=markup&content-type=text/vnd.viewcvs-markup&revision=REL_2_4_2_FINAL">
 Details on what has changed since version 2.4.1
-</a>
-
-<BR/><BR/>
-
- <BR><font face="arial, helvetica" color="#1e029a" size="4"><b>Previous release:</b> Bochs 2.4.1</font><BR><BR>
-
-<BR>
-Here is a brief summary of changes since version 2.4:
-<ul>
-<li> Fixed bunch of CPUID issues
- <ul>
- <li> Bochs is now able to install and boot 64-bit Windows images! (special thanks to Mark Ebersole for his patch)
- </ul>
-<li> Several bugfixes in CPU emulation (mostly for x87 instructions)
-<li> Fixed two critical deadlock bugs in the Win32 gui (patches from @SF tracker)
-<li> Fixes related to the 'show ips' feature
- <ul>
- <li> removed conflicting win32-specific alarm() functions ('win32' and 'sdl' gui)
- <li> feature now works in wx on win32
- </ul>
-<li> Added support for gdb stub on big endian machine (patch by Godmar Back)
-<li> Rewritten obsolete hash_map code in dbg symbols module (patch from @SF)
-<li> BIOS: implemented missing INT 15h/89h (patch by Sebastian Herbszt)
-</ul>
-
-<a href="http://bochs.cvs.sourceforge.net/bochs/bochs/CHANGES?view=markup&content-type=text/vnd.viewcvs-markup&revision=REL_2_4_1_FINAL">
-Details on what has changed since version 2.4
 </a>
 
  <BR><BR>
@@ -92,8 +89,7 @@ Details on what has changed since version 2.4
 The latest release of Bochs is available in these file formats :<BR>
 <ul>
 <li> Win32 binary NSIS installer package (EXE)
-<li> Win32 binary with P4 CPU support (ZIP) - Bochs installation is required
-<li> Win32 binary with P4 + SMP support (ZIP) - Bochs installation is required
+<li> Win32 binary with x86-64 CPU + SMP support (ZIP) - Bochs installation is required
 <li> Linux binary RPM
 <li> Platform independant source package (TAR.GZ)
 <li> Win32 specific source package prepared for MSVC (ZIP)
