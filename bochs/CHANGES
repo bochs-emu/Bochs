@@ -1,4 +1,4 @@
-Changes after 2.4.2:
+Changes in 2.4.5 (April 25, 2010):
 
 Brief summary :
 - Major configure/cpu rework allowing to enable/disable CPU options at runtime
