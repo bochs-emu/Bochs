@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: ret_far.cc,v 1.26 2010-03-14 15:51:26 sshwarts Exp $
+// $Id: ret_far.cc,v 1.27 2010-04-29 19:56:10 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005-2009 Stanislav Shwartsman
@@ -157,6 +157,7 @@ BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
     parse_selector(raw_ss_selector, &ss_selector);
 
     if ((raw_ss_selector & 0xfffc) == 0) {
+#if BX_SUPPORT_X86_64
       if (long_mode()) {
         if (! IS_LONG64_SEGMENT(cs_descriptor) || (cs_selector.rpl == 3)) {
           BX_ERROR(("return_protected: SS selector null"));
@@ -164,6 +165,7 @@ BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
         }
       }
       else // not in long or compatibility mode
+#endif
       {
         BX_ERROR(("return_protected: SS selector null"));
         exception(BX_GP_EXCEPTION, 0);
@@ -213,7 +215,7 @@ BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
     }
 #if BX_SUPPORT_X86_64
     else {
-      // we are in 64-bit mode !
+      // we are in 64-bit mode (checked above)
       load_null_selector(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS], raw_ss_selector);
     }
 
@@ -221,10 +223,12 @@ BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
       RSP = return_RSP + pop_bytes;
     else
 #endif
-    if (ss_descriptor.u.segment.d_b)
-      RSP = (Bit32u)(return_RSP + pop_bytes);
-    else
-      SP  = (Bit16u)(return_RSP + pop_bytes);
+    {
+      if (ss_descriptor.u.segment.d_b)
+        RSP = (Bit32u)(return_RSP + pop_bytes);
+      else
+        SP  = (Bit16u)(return_RSP + pop_bytes);
+    }
 
     /* check ES, DS, FS, GS for validity */
     validate_seg_regs();
