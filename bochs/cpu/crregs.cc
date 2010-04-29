@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: crregs.cc,v 1.13 2010-04-22 17:51:37 sshwarts Exp $
+// $Id: crregs.cc,v 1.14 2010-04-29 19:34:32 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2010 Stanislav Shwartsman
@@ -836,6 +836,10 @@ bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::SetCR0(bx_address val)
       return 0;
     }
     if (BX_CPU_THIS_PTR efer.get_LMA()) {
+      if (BX_CPU_THIS_PTR cr4.get_PCIDE()) {
+        BX_ERROR(("SetCR0(): attempt to leave 64 bit mode with CR4.PCIDE set !"));
+        return 0;
+      }
       if (BX_CPU_THIS_PTR gen_reg[BX_64BIT_REG_RIP].dword.hrx != 0) {
         BX_PANIC(("SetCR0(): attempt to leave x86-64 LONG mode with RIP upper != 0 !!!"));
       }
@@ -885,7 +889,7 @@ bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::SetCR0(bx_address val)
 }
 
 #if BX_CPU_LEVEL >= 4
-bx_address get_cr4_allow_mask(Bit32u isa_extensions_bitmask)
+Bit32u BX_CPU_C::get_cr4_allow_mask(void)
 {
   bx_address allowMask = 0;
 
@@ -910,53 +914,58 @@ bx_address get_cr4_allow_mask(Bit32u isa_extensions_bitmask)
   //   [0]     VME: Virtual-8086 Mode Extensions R/W
 
 #if BX_CPU_LEVEL >= 5
-  allowMask |= (1<<0) | (1<<1);  /* VME */
+  allowMask |= BX_CR4_VME_MASK | BX_CR4_PVI_MASK;  /* VME */
 #endif
 
 #if BX_CPU_LEVEL >= 5
-  allowMask |= (1<<2);   /* TSD */
+  allowMask |= BX_CR4_TSD_MASK;
 #endif
 
-  allowMask |= (1<<3);   /* DE  */
+  allowMask |= BX_CR4_DE_MASK;
 
 #if BX_CPU_LEVEL >= 5
-  allowMask |= (1<<4);   /* PSE */
+  allowMask |= BX_CR4_PSE_MASK;
 #endif
 
 #if BX_CPU_LEVEL >= 6
-  allowMask |= (1<<5);   /* PAE */
+  allowMask |= BX_CR4_PAE_MASK;
 #endif
 
 #if BX_CPU_LEVEL >= 5
   // NOTE: exception 18 (#MC) never appears in Bochs
-  allowMask |= (1<<6);   /* MCE */
+  allowMask |= BX_CR4_MCE_MASK;
 #endif
 
 #if BX_CPU_LEVEL >= 6
-  allowMask |= (1<<7);   /* PGE */
-  allowMask |= (1<<8);   /* PCE */
+  allowMask |= BX_CR4_PGE_MASK;
+  allowMask |= BX_CR4_PCE_MASK;
 
   /* OSFXSR */
-  if (isa_extensions_bitmask & BX_CPU_FXSAVE_FXRSTOR)
-    allowMask |= (1<<9);   /* OSFXSR */
+  if (BX_CPU_SUPPORT_ISA_EXTENSION(BX_CPU_FXSAVE_FXRSTOR))
+    allowMask |= BX_CR4_OSFXSR_MASK;
 
-  /* OSXMMECPT */
-  if (isa_extensions_bitmask & BX_CPU_SSE)
-    allowMask |= (1<<10);
+  /* OSXMMEXCPT */
+  if (BX_CPU_SUPPORT_ISA_EXTENSION(BX_CPU_SSE))
+    allowMask |= BX_CR4_OSXMMEXCPT_MASK;
 #endif
 
 #if BX_SUPPORT_VMX
-  allowMask |= (1<<13);  /* VMX Enable */
+  allowMask |= BX_CR4_VMXE_MASK;
 #endif
 
 #if BX_SUPPORT_SMX
-  allowMask |= (1<<14);  /* SMX Enable */
+  allowMask |= BX_CR4_SMXE_MASK;
+#endif
+
+#if BX_SUPPORT_X86_64
+  if (bx_cpuid_support_pcid())
+    allowMask |= BX_CR4_PCIDE_MASK;
 #endif
 
 #if BX_CPU_LEVEL >= 6
   /* OSXSAVE */
-  if (isa_extensions_bitmask & BX_CPU_XSAVE)
-    allowMask |= (1<<18);
+  if (BX_CPU_SUPPORT_ISA_EXTENSION(BX_CPU_XSAVE))
+    allowMask |= BX_CR4_OSXSAVE_MASK;
 #endif
 
   return allowMask;
@@ -965,13 +974,20 @@ bx_address get_cr4_allow_mask(Bit32u isa_extensions_bitmask)
 bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::check_CR4(bx_address cr4_val)
 {
   bx_cr4_t temp_cr4;
-  bx_address cr4_allow_mask = get_cr4_allow_mask(BX_CPU_THIS_PTR isa_extensions_bitmask);
+  bx_address cr4_allow_mask = get_cr4_allow_mask();
   temp_cr4.val32 = (Bit32u) cr4_val;
 
 #if BX_SUPPORT_X86_64
   if (long_mode()) {
     if(! temp_cr4.get_PAE()) {
       BX_ERROR(("check_CR4(): attempt to clear CR4.PAE when EFER.LMA=1"));
+      return 0;
+    }
+  }
+
+  if (temp_cr4.get_PCIDE()) {
+    if (! long_mode()) {
+      BX_ERROR(("check_CR4(): attempt to set CR4.PCIDE when EFER.LMA=0"));
       return 0;
     }
   }
@@ -1006,15 +1022,26 @@ bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::SetCR4(bx_address val)
   if (! check_CR4(val)) return 0;
 
 #if BX_CPU_LEVEL >= 6
-  // Modification of PGE,PAE,PSE flushes TLB cache according to docs.
-  if ((val & 0x000000b0) != (BX_CPU_THIS_PTR cr4.val32 & 0x000000b0)) {
+  // Modification of PGE,PAE,PSE,PCIDE flushes TLB cache according to docs.
+  if ((val & BX_CR4_FLUSH_TLB_MASK) != (BX_CPU_THIS_PTR cr4.val32 & BX_CR4_FLUSH_TLB_MASK)) {
     // reload PDPTR if PGE,PAE or PSE changed
-    if (BX_CPU_THIS_PTR cr0.get_PG() && (val & (1<<5)) != 0 /* PAE */ && !long_mode()) {
+    if (BX_CPU_THIS_PTR cr0.get_PG() && (val & BX_CR4_PAE_MASK) != 0 && !long_mode()) {
       if (! CheckPDPTR(BX_CPU_THIS_PTR cr3)) {
         BX_ERROR(("SetCR4(): PDPTR check failed !"));
         return 0;
       }
     }
+#if BX_SUPPORT_X86_64
+    else {
+      // if trying to enable CR4.PCIDE
+      if (! BX_CPU_THIS_PTR cr4.get_PCIDE() && (val & BX_CR4_PCIDE_MASK)) {
+        if (BX_CPU_THIS_PTR cr3 & 0xfff) {
+          BX_ERROR(("SetCR4(): Attempt to enable CR4.PCIDE with non-zero PCID !"));
+          return 0;
+        }
+      }
+    }
+#endif
     TLB_flush(); // Flush Global entries also.
   }
 #endif

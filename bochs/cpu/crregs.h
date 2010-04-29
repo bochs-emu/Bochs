@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: crregs.h,v 1.26 2010-03-31 14:00:46 sshwarts Exp $
+// $Id: crregs.h,v 1.27 2010-04-29 19:34:32 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007-2009 Stanislav Shwartsman
@@ -75,6 +75,23 @@ struct bx_cr0_t {
 };
 
 #if BX_CPU_LEVEL >= 4
+
+#define BX_CR4_VME_MASK        (1 << 0)
+#define BX_CR4_PVI_MASK        (1 << 1)
+#define BX_CR4_TSD_MASK        (1 << 2)
+#define BX_CR4_DE_MASK         (1 << 3)
+#define BX_CR4_PSE_MASK        (1 << 4)
+#define BX_CR4_PAE_MASK        (1 << 5)
+#define BX_CR4_MCE_MASK        (1 << 6)
+#define BX_CR4_PGE_MASK        (1 << 7)
+#define BX_CR4_PCE_MASK        (1 << 8)
+#define BX_CR4_OSFXSR_MASK     (1 << 9)
+#define BX_CR4_OSXMMEXCPT_MASK (1 << 10)
+#define BX_CR4_VMXE_MASK       (1 << 13)
+#define BX_CR4_SMXE_MASK       (1 << 14)
+#define BX_CR4_PCIDE_MASK      (1 << 17)
+#define BX_CR4_OSXSAVE_MASK    (1 << 18)
+
 struct bx_cr4_t {
   Bit32u  val32; // 32bit value of register
 
@@ -94,8 +111,10 @@ struct bx_cr4_t {
 #if BX_SUPPORT_VMX
   IMPLEMENT_CRREG_ACCESSORS(VMXE, 13);
 #endif
-#if BX_CPU_LEVEL >= 6
+#if BX_SUPPORT_X86_64
   IMPLEMENT_CRREG_ACCESSORS(PCIDE, 17);
+#endif
+#if BX_CPU_LEVEL >= 6
   IMPLEMENT_CRREG_ACCESSORS(OSXSAVE, 18);
 #endif
 
@@ -103,7 +122,8 @@ struct bx_cr4_t {
   BX_CPP_INLINE void set32(Bit32u val) { val32 = val; }
 };
 
-extern bx_address get_cr4_allow_mask(Bit32u);
+#define BX_CR4_FLUSH_TLB_MASK \
+   (BX_CR4_PSE_MASK | BX_CR4_PAE_MASK | BX_CR4_PGE_MASK | BX_CR4_PCIDE_MASK)
 
 #endif  // #if BX_CPU_LEVEL >= 4
 

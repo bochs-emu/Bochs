@@ -176,6 +176,10 @@ cpu: count=1, ips=50000000, reset_on_triple_fault=1, ignore_bad_msrs=1, msrs="ms
 #  Enable 1G page size support in long mode.
 #  This option exists only if Bochs compiled with x86-64 support.
 #
+#  PCID:
+#  Enable Process-Context Identifiers (PCID) support in long mode.
+#  This option exists only if Bochs compiled with x86-64 support.
+#
 #  MWAIT_IS_NOP:
 #  When this option is enabled MWAIT will not put the CPU into a sleep state.
 #  This option exists only if Bochs compiled with --enable-monitor-mwait.

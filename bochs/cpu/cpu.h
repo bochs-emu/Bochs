@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.671 2010-04-24 09:36:04 sshwarts Exp $
+// $Id: cpu.h,v 1.672 2010-04-29 19:34:32 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2010  The Bochs Project
@@ -3147,6 +3147,7 @@ public: // for now...
 #if BX_CPU_LEVEL >= 4
   BX_SMF bx_bool SetCR4(bx_address val) BX_CPP_AttrRegparmN(1);
   BX_SMF bx_bool check_CR4(bx_address val) BX_CPP_AttrRegparmN(1);
+  BX_SMF Bit32u get_cr4_allow_mask(void);
 #endif
 #if BX_CPU_LEVEL >= 6
   BX_SMF bx_bool CheckPDPTR(bx_phy_address cr3_val) BX_CPP_AttrRegparmN(1);
@@ -3274,6 +3275,7 @@ public: // for now...
 #endif
 
   BX_SMF BX_CPP_INLINE int bx_cpuid_support_1g_paging(void);
+  BX_SMF BX_CPP_INLINE int bx_cpuid_support_pcid(void);
 
   BX_SMF BX_CPP_INLINE unsigned which_cpu(void) { return BX_CPU_THIS_PTR bx_cpuid; }
   BX_SMF BX_CPP_INLINE const bx_gen_reg_t *get_gen_regfile() { return BX_CPU_THIS_PTR gen_reg; }
@@ -3692,6 +3694,15 @@ BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_1g_paging(void)
 {
 #if BX_SUPPORT_X86_64
   return (BX_CPU_THIS_PTR cpuid_ext_function[1].edx >> 26) & 0x1;
+#else
+  return 0;
+#endif
+}
+
+BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_pcid(void)
+{
+#if BX_SUPPORT_X86_64
+  return (BX_CPU_THIS_PTR cpuid_std_function[1].ecx >> 17) & 0x1;
 #else
   return 0;
 #endif

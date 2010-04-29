@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmx.h,v 1.30 2010-04-24 09:36:04 sshwarts Exp $
+// $Id: vmx.h,v 1.31 2010-04-29 19:34:32 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2009 Stanislav Shwartsman
@@ -960,8 +960,8 @@ enum VMX_Activity_State {
    ((((Bit64u) VMX_MSR_CR4_FIXED0_HI) << 32) | VMX_MSR_CR4_FIXED0_LO)
 
 // allowed 1-setting in CR0 in VMX mode
-#define VMX_MSR_CR4_FIXED1_LO GET32L(get_cr4_allow_mask(BX_CPU_THIS_PTR isa_extensions_bitmask))
-#define VMX_MSR_CR4_FIXED1_HI GET32H(get_cr4_allow_mask(BX_CPU_THIS_PTR isa_extensions_bitmask))
+#define VMX_MSR_CR4_FIXED1_LO GET32L(get_cr4_allow_mask())
+#define VMX_MSR_CR4_FIXED1_HI GET32H(get_cr4_allow_mask())
 
 #define VMX_MSR_CR4_FIXED1 \
    ((((Bit64u) VMX_MSR_CR4_FIXED1_HI) << 32) | VMX_MSR_CR4_FIXED1_LO)

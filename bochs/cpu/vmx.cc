@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmx.cc,v 1.66 2010-04-19 11:09:35 sshwarts Exp $
+// $Id: vmx.cc,v 1.67 2010-04-29 19:34:32 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2009-2010 Stanislav Shwartsman
@@ -814,7 +814,7 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckHostState(void)
 #endif
 
   if (x86_64_host) {
-     if ((host_state->cr4 & (1<<5)) == 0) { // PAE
+     if ((host_state->cr4 & BX_CR4_PAE_MASK) == 0) {
         BX_ERROR(("VMFAIL: VMCS host CR4.PAE=0 with x86-64 host"));
         return VMXERR_VMENTRY_INVALID_VM_HOST_STATE_FIELD;
      }
@@ -826,6 +826,10 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckHostState(void)
   else {
      if (GET32H(host_state->rip) != 0) {
         BX_ERROR(("VMFAIL: VMCS host RIP > 32 bit"));
+        return VMXERR_VMENTRY_INVALID_VM_HOST_STATE_FIELD;
+     }
+     if (host_state->cr4 & BX_CR4_PCIDE_MASK) {
+        BX_ERROR(("VMFAIL: VMCS host CR4.PCIDE set"));
         return VMXERR_VMENTRY_INVALID_VM_HOST_STATE_FIELD;
      }
   }
@@ -955,9 +959,17 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
   }
 
 #if BX_SUPPORT_X86_64
-  if (x86_64_guest && (guest.cr4 & (1<<5)) == 0) { // PAE
-     BX_ERROR(("VMENTER FAIL: VMCS guest CR4.PAE=0 in x86-64 mode"));
-     return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
+  if (x86_64_guest) {
+     if ((guest.cr4 & BX_CR4_PAE_MASK) == 0) {
+        BX_ERROR(("VMENTER FAIL: VMCS guest CR4.PAE=0 in x86-64 mode"));
+        return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
+     }
+  }
+  else {
+     if (guest.cr4 & BX_CR4_PCIDE_MASK) {
+        BX_ERROR(("VMENTER FAIL: VMCS CR4.PCIDE set in 32-bit guest"));
+        return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
+     }
   }
 #endif
 
@@ -1425,7 +1437,7 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
     }
   }
 
-  if (! x86_64_guest && (guest.cr4 & (1 << 5)) != 0 /* PAE */) {
+  if (! x86_64_guest && (guest.cr4 & BX_CR4_PAE_MASK) != 0) {
     // CR0.PG is always set in VMX mode
 #if BX_SUPPORT_VMX >= 2
     if (vm->vmexec_ctrls3 & VMX_VM_EXEC_CTRL3_EPT_ENABLE) {

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: smm.cc,v 1.71 2010-04-13 17:56:50 sshwarts Exp $
+// $Id: smm.cc,v 1.72 2010-04-29 19:34:32 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2006-2009 Stanislav Shwartsman
@@ -508,7 +508,7 @@ bx_bool BX_CPU_C::smram_restore_state(const Bit32u *saved_state)
   // THEN
   //   fail and enter shutdown state;
 
-  if (temp_cr4 & (1 << 13)) {
+  if (temp_cr4 & BX_CR4_VMXE_MASK) {
     BX_PANIC(("SMM restore: CR4.VMXE is set in restore image !"));
     return 0;
   }
@@ -536,7 +536,7 @@ bx_bool BX_CPU_C::smram_restore_state(const Bit32u *saved_state)
     BX_CPU_THIS_PTR in_vmx = 1;
     BX_CPU_THIS_PTR in_vmx_guest = BX_CPU_THIS_PTR in_smm_vmx_guest;
     BX_INFO(("SMM Restore: enable VMX %s mode", BX_CPU_THIS_PTR in_vmx_guest ? "guest" : "host"));
-    temp_cr4 |= (1<<13); /* set VMXE */
+    temp_cr4 |= BX_CR4_VMXE_MASK; /* set VMXE */
     temp_cr0 |= (1<<31)  /* PG */ | (1 << 5) /* NE */ | 0x1 /* PE */;
     // block and disable A20M;
   }
@@ -577,6 +577,12 @@ bx_bool BX_CPU_C::smram_restore_state(const Bit32u *saved_state)
 
     if (!BX_CPU_THIS_PTR cr4.get_PAE() || !pg || !pe || !BX_CPU_THIS_PTR efer.get_LME()) {
       BX_PANIC(("SMM restore: If EFER.LMA = 1 <=> CR4.PAE, CR0.PG, CR0.PE, EFER.LME=1 !"));
+      return 0;
+    }
+  }
+  else {
+    if (BX_CPU_THIS_PTR cr4.get_PCIDE()) {
+      BX_PANIC(("SMM restore: CR4.PCIDE must be clear when not in long mode !"));
       return 0;
     }
   }

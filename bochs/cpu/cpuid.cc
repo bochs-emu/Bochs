@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpuid.cc,v 1.114 2010-04-24 09:36:04 sshwarts Exp $
+// $Id: cpuid.cc,v 1.115 2010-04-29 19:34:32 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007-2010 Stanislav Shwartsman
@@ -184,6 +184,9 @@ Bit32u BX_CPU_C::get_extended_cpuid_features(void)
   // support CMPXCHG16B
   if (BX_CPU_SUPPORT_ISA_EXTENSION(BX_CPU_X86_64))
     features |= (1<<13);
+
+  if (SIM->get_param_bool(BXPN_CPUID_PCID)->get())
+    features |= (1<<17);
 #endif
 
   if (BX_CPU_SUPPORT_ISA_EXTENSION(BX_CPU_SSE4_1))

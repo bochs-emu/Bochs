@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.202 2010-04-24 09:36:04 sshwarts Exp $
+// $Id: config.cc,v 1.203 2010-04-29 19:34:31 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2009  The Bochs Project
@@ -358,7 +358,7 @@ void bx_init_options()
   cpu_param->set_options(menu->SHOW_PARENT);
 
   // cpuid subtree
-  bx_list_c *cpuid_param = new bx_list_c(root_param, "cpuid", "CPUID Options", 12);
+  bx_list_c *cpuid_param = new bx_list_c(root_param, "cpuid", "CPUID Options", 13);
 
   new bx_param_bool_c(cpuid_param,
       "cpuid_limit_winnt", "Limit max CPUID function to 3",
@@ -427,6 +427,10 @@ void bx_init_options()
   new bx_param_bool_c(cpuid_param,
       "1g_pages", "1G pages support in long mode",
       "Support for 1G pages in long mode",
+      0);
+  new bx_param_bool_c(cpuid_param,
+      "pcid", "PCID support in long mode",
+      "Support for process context ID (PCID) in long mode",
       0);
 #endif
 #if BX_SUPPORT_MONITOR_MWAIT
@@ -2655,6 +2659,10 @@ static int parse_line_formatted(const char *context, int num_params, char *param
         if (parse_param_bool(params[i], 9, BXPN_CPUID_1G_PAGES) < 0) {
           PARSE_ERR(("%s: cpuid directive malformed.", context));
         }
+      } else if (!strncmp(params[i], "pcid=", 5)) {
+        if (parse_param_bool(params[i], 5, BXPN_CPUID_PCID) < 0) {
+          PARSE_ERR(("%s: cpuid directive malformed.", context));
+        }
 #endif
 #if BX_SUPPORT_MONITOR_MWAIT
       } else if (!strncmp(params[i], "mwait_is_nop=", 13)) {
@@ -3826,7 +3834,9 @@ int bx_write_configuration(const char *rc, int overwrite)
     SIM->get_param_bool(BXPN_CPUID_XSAVE)->get(),
     SIM->get_param_bool(BXPN_CPUID_MOVBE)->get());
 #if BX_SUPPORT_X86_64
-  fprintf(fp, ", 1g_pages=%d", SIM->get_param_bool(BXPN_CPUID_1G_PAGES)->get());
+  fprintf(fp, ", 1g_pages=%d, pcid=%d",
+    SIM->get_param_bool(BXPN_CPUID_1G_PAGES)->get(),
+    SIM->get_param_bool(BXPN_CPUID_PCID)->get());
 #endif
 #if BX_SUPPORT_MONITOR_MWAIT
   fprintf(fp, ", mwait_is_nop=%d", SIM->get_param_bool(BXPN_CPUID_MWAIT_IS_NOP)->get());
