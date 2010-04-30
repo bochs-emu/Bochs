@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack32.cc,v 1.64 2009-12-04 16:53:12 sshwarts Exp $
+// $Id: stack32.cc,v 1.65 2010-04-30 09:12:52 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -57,32 +57,92 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::POP_ERX(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUSH32_CS(bxInstruction_c *i)
 {
-  push_32(BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value);
+  Bit16u val_16 = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value;
+
+  if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b) {
+    write_virtual_word_32(BX_SEG_REG_SS, (Bit32u) (ESP-4), val_16);
+    ESP -= 4;
+  }
+  else
+  {
+    write_virtual_word_32(BX_SEG_REG_SS, (Bit16u) (SP-4), val_16);
+    SP -= 4;
+  }
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUSH32_DS(bxInstruction_c *i)
 {
-  push_32(BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.value);
+  Bit16u val_16 = BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.value;
+
+  if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b) {
+    write_virtual_word_32(BX_SEG_REG_SS, (Bit32u) (ESP-4), val_16);
+    ESP -= 4;
+  }
+  else
+  {
+    write_virtual_word_32(BX_SEG_REG_SS, (Bit16u) (SP-4), val_16);
+    SP -= 4;
+  }
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUSH32_ES(bxInstruction_c *i)
 {
-  push_32(BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.value);
+  Bit16u val_16 = BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.value;
+
+  if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b) {
+    write_virtual_word_32(BX_SEG_REG_SS, (Bit32u) (ESP-4), val_16);
+    ESP -= 4;
+  }
+  else
+  {
+    write_virtual_word_32(BX_SEG_REG_SS, (Bit16u) (SP-4), val_16);
+    SP -= 4;
+  }
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUSH32_FS(bxInstruction_c *i)
 {
-  push_32(BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].selector.value);
+  Bit16u val_16 = BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].selector.value;
+
+  if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b) {
+    write_virtual_word_32(BX_SEG_REG_SS, (Bit32u) (ESP-4), val_16);
+    ESP -= 4;
+  }
+  else
+  {
+    write_virtual_word_32(BX_SEG_REG_SS, (Bit16u) (SP-4), val_16);
+    SP -= 4;
+  }
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUSH32_GS(bxInstruction_c *i)
 {
-  push_32(BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].selector.value);
+  Bit16u val_16 = BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].selector.value;
+
+  if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b) {
+    write_virtual_word_32(BX_SEG_REG_SS, (Bit32u) (ESP-4), val_16);
+    ESP -= 4;
+  }
+  else
+  {
+    write_virtual_word_32(BX_SEG_REG_SS, (Bit16u) (SP-4), val_16);
+    SP -= 4;
+  }
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUSH32_SS(bxInstruction_c *i)
 {
-  push_32(BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value);
+  Bit16u val_16 = BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value;
+
+  if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b) {
+    write_virtual_word_32(BX_SEG_REG_SS, (Bit32u) (ESP-4), val_16);
+    ESP -= 4;
+  }
+  else
+  {
+    write_virtual_word_32(BX_SEG_REG_SS, (Bit16u) (SP-4), val_16);
+    SP -= 4;
+  }
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::POP32_DS(bxInstruction_c *i)
