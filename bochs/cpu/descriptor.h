@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: descriptor.h,v 1.35 2009-12-28 09:26:22 sshwarts Exp $
+// $Id: descriptor.h,v 1.36 2010-05-02 15:11:39 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007-2009 Stanislav Shwartsman
@@ -40,13 +40,11 @@
 
 typedef struct { /* bx_selector_t */
   Bit16u value;   /* the 16bit value of the selector */
-#if BX_CPU_LEVEL >= 2
-    /* the following fields are extracted from the value field in protected
-       mode only.  They're used for sake of efficiency */
+  /* the following fields are extracted from the value field in protected
+     mode only.  They're used for sake of efficiency */
   Bit16u index;   /* 13bit index extracted from value in protected mode */
   Bit8u  ti;      /* table indicator bit extracted from value */
   Bit8u  rpl;     /* RPL extracted from value */
-#endif
 } bx_selector_t;
 
 #define BX_SELECTOR_RPL(selector) ((selector) & 0x03)
@@ -129,14 +127,12 @@ union {
                             * limit for byte granular, and
                             * (limit << 12) | 0xfff for page granular seg's
                             */
-#if BX_CPU_LEVEL >= 3
     bx_bool g;             /* granularity: 0=byte, 1=4K (page) */
     bx_bool d_b;           /* default size: 0=16bit, 1=32bit */
 #if BX_SUPPORT_X86_64
     bx_bool l;             /* long mode: 0=compat, 1=64 bit */
 #endif
     bx_bool avl;           /* available for use by system */
-#endif
   } segment;
   struct {
     Bit8u   param_count;   /* 5bits (0..31) #words/dword to copy from caller's

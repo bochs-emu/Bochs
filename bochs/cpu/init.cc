@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.242 2010-04-19 11:09:35 sshwarts Exp $
+// $Id: init.cc,v 1.243 2010-05-02 15:11:39 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -1198,7 +1198,7 @@ void BX_CPU_C::assert_checks(void)
   if (! check_CR0(BX_CPU_THIS_PTR cr0.val32))
     BX_PANIC(("assert_checks: CR0 consistency checks failed !"));
 
-#if BX_CPU_LEVEL > 3
+#if BX_CPU_LEVEL >= 4
   // check CR4 consistency
   if (! check_CR4(BX_CPU_THIS_PTR cr4.val32))
     BX_PANIC(("assert_checks: CR4 consistency checks failed !"));

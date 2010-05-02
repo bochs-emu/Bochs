@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: segment_ctrl_pro.cc,v 1.129 2010-04-22 17:51:37 sshwarts Exp $
+// $Id: segment_ctrl_pro.cc,v 1.130 2010-05-02 15:11:39 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -94,11 +94,9 @@ BX_CPU_C::load_seg_reg(bx_segment_reg_t *seg, Bit16u new_value)
       return;
     }
     else if ((seg==&BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS]) ||
-             (seg==&BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES])
-#if BX_CPU_LEVEL >= 3
-          || (seg==&BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS]) ||
+             (seg==&BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES]) ||
+             (seg==&BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS]) ||
              (seg==&BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS])
-#endif
             )
     {
       bx_descriptor_t descriptor;
@@ -188,14 +186,12 @@ BX_CPU_C::load_seg_reg(bx_segment_reg_t *seg, Bit16u new_value)
     seg->cache.type = BX_DATA_READ_WRITE_ACCESSED;
     seg->cache.dpl = 3; /* we are in v8086 mode */
     seg->cache.u.segment.limit_scaled = 0xffff;
-#if BX_CPU_LEVEL >= 3
     seg->cache.u.segment.g     = 0; /* byte granular */
     seg->cache.u.segment.d_b   = 0; /* default 16bit size */
 #if BX_SUPPORT_X86_64
     seg->cache.u.segment.l     = 0; /* default 16bit size */
 #endif
     seg->cache.u.segment.avl   = 0;
-#endif
   }
 
   if (seg == &BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS]) {
@@ -369,7 +365,6 @@ BX_CPU_C::get_descriptor_h(const bx_descriptor_t *d)
   }
 }
 
-#if BX_CPU_LEVEL >= 3
 bx_bool BX_CPU_C::set_segment_ar_data(bx_segment_reg_t *seg, bx_bool valid,
             Bit16u raw_selector, bx_address base, Bit32u limit_scaled, Bit16u ar_data)
 {
@@ -416,7 +411,6 @@ bx_bool BX_CPU_C::set_segment_ar_data(bx_segment_reg_t *seg, bx_bool valid,
 
   return d->valid;
 }
-#endif
 
 void parse_descriptor(Bit32u dword1, Bit32u dword2, bx_descriptor_t *temp)
 {
