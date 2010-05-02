@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: access32.cc,v 1.27 2010-03-14 15:51:26 sshwarts Exp $
+// $Id: access32.cc,v 1.28 2010-05-02 17:00:05 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008-2009 Stanislav Shwartsman
@@ -300,18 +300,24 @@ accessOK:
   void BX_CPP_AttrRegparmN(3)
 BX_CPU_C::write_virtual_dqword_aligned_32(unsigned s, Bit32u offset, const BxPackedXmmRegister *data)
 {
-  Bit32u laddr;
   bx_segment_reg_t *seg = &BX_CPU_THIS_PTR sregs[s];
   BX_INSTR_MEM_DATA_ACCESS(BX_CPU_ID, s, offset, 16, BX_WRITE);
 
   BX_ASSERT(BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64);
 
+  Bit32u laddr = BX_CPU_THIS_PTR get_laddr32(s, offset);
+  // must check alignment here because #GP on misaligned access is higher
+  // priority than other segment related faults
+  if (laddr & 15) {
+    BX_ERROR(("write_virtual_dqword_aligned_32(): #GP misaligned access"));
+    exception(BX_GP_EXCEPTION, 0);
+  }
+
   if (seg->cache.valid & SegAccessWOK) {
     if (offset <= (seg->cache.u.segment.limit_scaled-15)) {
 accessOK:
-      laddr = BX_CPU_THIS_PTR get_laddr32(s, offset);
       unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 0);
-      Bit32u lpf = AlignedAccessLPFOf(laddr, 15);
+      Bit32u lpf = LPFOf(laddr);
       bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
       if (tlbEntry->lpf == lpf) {
         // See if the TLB entry privilege level allows us write access
@@ -328,10 +334,6 @@ accessOK:
           WriteHostQWordToLittleEndian(hostAddr+1, data->xmm64u(1));
           return;
         }
-      }
-      if (laddr & 15) {
-        BX_ERROR(("write_virtual_dqword_aligned_32(): #GP misaligned access"));
-        exception(BX_GP_EXCEPTION, 0);
       }
       access_write_linear(laddr, 16, CPL, (void *) data);
       return;
@@ -621,16 +623,22 @@ accessOK:
   void BX_CPP_AttrRegparmN(3)
 BX_CPU_C::read_virtual_dqword_aligned_32(unsigned s, Bit32u offset, BxPackedXmmRegister *data)
 {
-  Bit32u laddr;
   bx_segment_reg_t *seg = &BX_CPU_THIS_PTR sregs[s];
   BX_INSTR_MEM_DATA_ACCESS(BX_CPU_ID, s, offset, 16, BX_READ);
 
   BX_ASSERT(BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64);
 
+  Bit32u laddr = BX_CPU_THIS_PTR get_laddr32(s, offset);
+  // must check alignment here because #GP on misaligned access is higher
+  // priority than other segment related faults
+  if (laddr & 15) {
+    BX_ERROR(("read_virtual_dqword_aligned_32(): #GP misaligned access"));
+    exception(BX_GP_EXCEPTION, 0);
+  }
+
   if (seg->cache.valid & SegAccessROK) {
     if (offset <= (seg->cache.u.segment.limit_scaled-15)) {
 accessOK:
-      laddr = BX_CPU_THIS_PTR get_laddr32(s, offset);
       unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 0);
       Bit32u lpf = AlignedAccessLPFOf(laddr, 15);
       bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
@@ -648,10 +656,6 @@ accessOK:
               tlbEntry->ppf | pageOffset, 16, CPL, BX_READ, (Bit8u*) data);
           return;
         }
-      }
-      if (laddr & 15) {
-        BX_ERROR(("read_virtual_dqword_aligned_32(): #GP misaligned access"));
-        exception(BX_GP_EXCEPTION, 0);
       }
       access_read_linear(laddr, 16, CPL, BX_READ, (void *) data);
       return;
