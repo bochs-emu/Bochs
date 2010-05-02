@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/development/development.dbk
-$Id: development.dbk,v 1.33 2009-11-16 17:44:07 vruppert Exp $
+$Id: development.dbk,v 1.34 2010-05-02 11:04:42 vruppert Exp $
 
 This is the top level file for the Bochs Developers Manual.
 ================================================================
@@ -34,7 +34,7 @@ lists, etc.
 </para>
 
 
-<section><title>Setting up CVS write access</title>
+<section id="cvs-write-access-setup"><title>Setting up CVS write access</title>
 <para>
 If you are an official SourceForge developer, then you can use CVS with write
 access.  The CVS contains the most recent copy of the source code, and with
@@ -2414,18 +2414,23 @@ new release is ready for download.
 
 <chapter id="webmastering"><title>Webmastering</title>
 
-      <section id="websites"><title>websites</title>
-      <para>
-      &FIXME;
-      </para>
-      </section>
-
-<section id="update-cvs-snapshot"><title>Updating the CVS snapshot</title>
+<section id="project-webspace"><title>Bochs project webspace</title>
 <para>
-The CVS snapshot can be updated with SF shell access using SSH. There is a script
-called <command>update-snapshots.sh</command> that can do all the required steps
-(checking out CVS, packing the source tree into one archive, updating the website
-link).
+&FIXME; directory structure
+</para>
+</section>
+
+<section id="update-website"><title>Updating the Bochs website content</title>
+<para>
+The main HTML content of the Bochs website (except online documentation) is stored
+in the <filename>sfsite</filename> module of the Bochs CVS repository. Unlike
+other SF projects you don't need to upload these files to the Bochs project webspace.
+Running a simple CVS update on the SF shell is enough after the files have been
+updated in the repository. Please see <link linkend="cvs-write-access-setup">Setting
+up CVS write access</link> for general instructions. The only difference is the
+module name <filename>sfsite</filename> instead of <filename>bochs</filename>.
+The example below shows how to start the SF shell with SSH and to update the
+HTML files.
 <screen>
 ssh -t vruppert,bochs@shell.sourceforge.net create
 vruppert,bochs@shell.sourceforge.net's password:
@@ -2438,12 +2443,19 @@ Use the "timeleft" command to see how much time remains before shutdown.
 Use the "shutdown" command to destroy the shell before the time limit.
 For path information and login help, type "sf-help".
 
-[vruppert@shell-24002 ~]$ cd /home/groups/b/bo/bochs/sitebin/
-[vruppert@shell-24002 sitebin]$ ./update-snapshots.sh
-[vruppert@shell-24002 sitebin]$ shutdown
+[vruppert@shell-24002 ~]$ cd /home/groups/b/bo/bochs/htdocs/
+[vruppert@shell-24002 htdocs]$ cvs update
+cvs update: Updating .
+U index.html
+cvs update: Updating images
+cvs update: Updating includes
+cvs update: Updating networking
+cvs update: Updating testing-forms
+cvs update: Updating docs-html
+[vruppert@shell-24002 htdocs]$ shutdown
 Requesting that your shell be shut down.
 This request will be processed soon.
-[vruppert@shell-24002 sitebin]$
+[vruppert@shell-24002 htdocs]$
 Broadcast message from root (Sat Nov 15 08:36:01 2008):
 
 The system is going down for system halt NOW!
@@ -2454,9 +2466,27 @@ Connection to shell.sourceforge.net closed.
 </para>
 </section>
 
+<section id="update-cvs-snapshot"><title>Updating the CVS snapshot</title>
+<para>
+The CVS snapshot
+<footnote>
+<para>The CVS snapshot link can be found on the bottom of the page
+<filename>getcurrent.html</filename>.</para>
+</footnote>
+can be updated with SF shell access using SSH. There is a script
+called <command>update-snapshots.sh</command> that can do all the required steps
+(checking out CVS, packing the source tree into one archive, updating the website
+link). See previous section how to create a shell.
+<screen>
+cd /home/groups/b/bo/bochs/sitebin/
+./update-snapshots.sh
+</screen>
+</para>
+</section>
+
 <section id="update-online-docs"><title>Updating the online documentation</title>
 <para>
-To update the online documentation, a file called<filename>bochsdoc.tar.gz</filename>
+To update the online documentation, a file called <filename>bochsdoc.tar.gz</filename>
 must be generated with the <command>make</command>. This file must be uploaded
 to the location of the online documentation on SF using <command>scp</command>.
 <screen>
@@ -2465,25 +2495,15 @@ make bochsdoc.tar.gz
 scp bochsdoc.tar.gz vruppert,bochs@web.sf.net:htdocs/doc/docbook
 </screen>
 After a successful upload, the HTML files must be unpacked from the SF shell.
-See previous section how to create a shell.
+See section <link linkend="update-website">Updating the Bochs website content</link>
+how to create a shell.
 <screen>
 cd /home/groups/b/bo/bochs/htdocs/doc/docbook
 tar xvzf bochsdoc.tar.gz
 </screen>
+The updated files can be accessed from the sidebar of the Bochs website.
 </para>
 </section>
-
-      <section id="repository"><title>website html repository</title>
-      <para>
-      &FIXME;
-      </para>
-      </section>
-
-      <section id="site-update"><title>automatic site update</title>
-      <para>
-      &FIXME;
-      </para>
-      </section>
 
       <section id="other-content"><title>other content</title>
       <para>
