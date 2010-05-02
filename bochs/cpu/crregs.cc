@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: crregs.cc,v 1.14 2010-04-29 19:34:32 sshwarts Exp $
+// $Id: crregs.cc,v 1.15 2010-05-02 15:10:27 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2010 Stanislav Shwartsman
@@ -53,12 +53,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_DdRd(bxInstruction_c *i)
     BX_ERROR(("MOV_DdRd: CPL!=0 not in real mode"));
     exception(BX_GP_EXCEPTION, 0);
   }
-
-  /* NOTES:
-   *   32bit operands always used
-   *   r/m field specifies general register
-   *   reg field specifies which special register
-   */
 
   invalidate_prefetch_q();
 
@@ -214,17 +208,16 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_DqRq(bxInstruction_c *i)
   VMexit_DR_Access(i, 0 /* write */);
 #endif
 
-  /* NOTES:
-   *   64bit operands always used
-   *   r/m field specifies general register
-   *   reg field specifies which special register
-   */
-
   if (BX_CPU_THIS_PTR cr4.get_DE()) {
     if ((i->nnn() & 0xE) == 4) {
       BX_ERROR(("MOV_DqRq: access to DR4/DR5 causes #UD"));
       exception(BX_UD_EXCEPTION, 0);
     }
+  }
+
+  if (i->nnn() >= 8) {
+    BX_ERROR(("MOV_DqRq: #UD - register index out of range"));
+    exception(BX_UD_EXCEPTION, 0);
   }
 
   // Note: processor clears GD upon entering debug exception
@@ -338,6 +331,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RqDq(bxInstruction_c *i)
     }
   }
 
+  if (i->nnn() >= 8) {
+    BX_ERROR(("MOV_RqDq: #UD - register index out of range"));
+    exception(BX_UD_EXCEPTION, 0);
+  }
+
   // Note: processor clears GD upon entering debug exception
   // handler, to allow access to the debug registers
   if (BX_CPU_THIS_PTR dr7 & 0x2000) { // GD bit set
@@ -391,16 +389,22 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RqDq(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CdRd(bxInstruction_c *i)
 {
+  unsigned cr_ok = 0x0d;
+#if BX_CPU_LEVEL >= 4
+  cr_ok |= 0x10;
+#endif
+
+  if (! (cr_ok & (1 << i->nnn()))) {
+    BX_ERROR(("MOV_CdRd: #UD - register index out of range"));
+    exception(BX_UD_EXCEPTION, 0);
+  }
+
   if (!real_mode() && CPL!=0) {
     BX_ERROR(("MOV_CdRd: CPL!=0 not in real mode"));
     exception(BX_GP_EXCEPTION, 0);
   }
 
-  /* NOTES:
-   *   32bit operands always used
-   *   r/m field specifies general register
-   *   reg field specifies which special register
-   */
+  invalidate_prefetch_q();
 
   /* This instruction is always treated as a register-to-register,
    * regardless of the encoding of the MOD field in the MODRM byte.
@@ -461,16 +465,20 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RdCd(bxInstruction_c *i)
   // mov control register data to register
   Bit32u val_32 = 0;
 
+  unsigned cr_ok = 0x0d;
+#if BX_CPU_LEVEL >= 4
+  cr_ok |= 0x10;
+#endif
+
+  if (! (cr_ok & (1 << i->nnn()))) {
+    BX_ERROR(("MOV_RdCd: #UD - register index out of range"));
+    exception(BX_UD_EXCEPTION, 0);
+  }
+
   if (!real_mode() && CPL!=0) {
     BX_ERROR(("MOV_RdCd: CPL!=0 not in real mode"));
     exception(BX_GP_EXCEPTION, 0);
   }
-
-  /* NOTES:
-   *   32bit operands always used
-   *   r/m field specifies general register
-   *   reg field specifies which special register
-   */
 
   /* This instruction is always treated as a register-to-register,
    * regardless of the encoding of the MOD field in the MODRM byte.
@@ -507,17 +515,20 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RdCd(bxInstruction_c *i)
 #if BX_SUPPORT_X86_64
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CqRq(bxInstruction_c *i)
 {
-  /* NOTES:
-   *   64bit operands always used
-   *   r/m field specifies general register
-   *   reg field specifies which special register
-   */
+  unsigned cr_ok = 0x011d;
+
+  if (! (cr_ok & (1 << i->nnn()))) {
+    BX_ERROR(("MOV_CqRq: #UD - register index out of range"));
+    exception(BX_UD_EXCEPTION, 0);
+  }
 
   /* #GP(0) if CPL is not 0 */
   if (CPL!=0) {
     BX_ERROR(("MOV_CqRq: #GP(0) if CPL is not 0"));
     exception(BX_GP_EXCEPTION, 0);
   }
+
+  invalidate_prefetch_q();
 
   /* This instruction is always treated as a register-to-register,
    * regardless of the encoding of the MOD field in the MODRM byte.
@@ -591,14 +602,15 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CqRq(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RqCq(bxInstruction_c *i)
 {
+  unsigned cr_ok = 0x011d;
+
+  if (! (cr_ok & (1 << i->nnn()))) {
+    BX_ERROR(("MOV_RqCq: #UD - register index out of range"));
+    exception(BX_UD_EXCEPTION, 0);
+  }
+
   // mov control register data to register
   Bit64u val_64 = 0;
-
-  /* NOTES:
-   *   64bit operands always used
-   *   r/m field specifies general register
-   *   reg field specifies which special register
-   */
 
   /* #GP(0) if CPL is not 0 */
   if (CPL!=0) {
