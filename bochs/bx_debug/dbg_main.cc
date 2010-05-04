@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.236 2010-04-13 17:56:50 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.237 2010-05-04 20:17:26 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -1338,7 +1338,7 @@ void bx_dbg_xlate_address(bx_lin_address laddr)
   bx_phy_address paddr;
   laddr &= BX_CONST64(0xfffffffffffff000);
 
-  bx_bool paddr_valid = BX_CPU(dbg_cpu)->dbg_xlate_linear2phy(laddr, &paddr);
+  bx_bool paddr_valid = BX_CPU(dbg_cpu)->dbg_xlate_linear2phy(laddr, &paddr, 1);
   if (paddr_valid) {
     dbg_printf("linear page 0x" FMT_ADDRX " maps to physical page 0x" FMT_PHY_ADDRX "\n", laddr, paddr);
   }
