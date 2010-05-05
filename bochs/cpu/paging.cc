@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.222 2010-05-04 20:16:38 sshwarts Exp $
+// $Id: paging.cc,v 1.223 2010-05-05 20:10:15 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2010  The Bochs Project
@@ -1335,33 +1335,30 @@ bx_phy_address BX_CPU_C::translate_guest_physical(bx_phy_address guest_paddr, bx
 
 #if BX_DEBUGGER
 
-void dbg_print_pae_paging_pte(int level, Bit64u entry)
+void dbg_print_paging_pte(int level, Bit64u entry)
 {
-  dbg_printf("%5s: 0x%08x%08x", bx_paging_level[level], GET32H(entry), GET32L(entry));
+  dbg_printf("%4s: 0x%08x%08x", bx_paging_level[level], GET32H(entry), GET32L(entry));
 
-  if (level != BX_LEVEL_PTE && (entry & 0x80))
-    dbg_printf(" PS");
-  else
-    dbg_printf("   ");
+  if (level == BX_LEVEL_PTE) {
+    dbg_printf("    %s %s %s",
+      (entry & 0x0100) ? "G" : "g",
+      (entry & 0x0080) ? "PAT" : "pat",
+      (entry & 0x0040) ? "D" : "d");
+  }
+  else {
+    if (entry & 0x80) {
+      dbg_printf(" PS %s %s %s",
+        (entry & 0x0100) ? "G" : "g",
+        (entry & 0x1000) ? "PAT" : "pat",
+        (entry & 0x0040) ? "D" : "d");
+    }
+    else {
+      dbg_printf(" ps        ");
+    }
+  }
 
-  dbg_printf(" %s %s %s %s %s\n",
-    (entry & 0x10) ? "PCD" : "pcd",
-    (entry & 0x08) ? "PWT" : "pwt",
-    (entry & 0x04) ? "U" : "S",
-    (entry & 0x02) ? "W" : "R",
-    (entry & 0x01) ? "P" : "p");
-}
-
-void dbg_print_legacy_paging_pte(int level, Bit32u entry)
-{
-  dbg_printf("%4s: 0x%08x", bx_paging_level[level], entry);
-
-  if (level != BX_LEVEL_PTE && (entry & 0x80))
-    dbg_printf(" PS");
-  else
-    dbg_printf("   ");
-
-  dbg_printf(" %s %s %s %s %s\n",
+  dbg_printf(" %s %s %s %s %s %s\n",
+    (entry & 0x20) ? "A" : "a",
     (entry & 0x10) ? "PCD" : "pcd",
     (entry & 0x08) ? "PWT" : "pwt",
     (entry & 0x04) ? "U" : "S",
@@ -1372,7 +1369,7 @@ void dbg_print_legacy_paging_pte(int level, Bit32u entry)
 #if BX_SUPPORT_VMX >= 2
 void dbg_print_ept_paging_pte(int level, Bit64u entry)
 {
-  dbg_printf("EPT %5s: 0x%08x%08x", bx_paging_level[level], GET32H(entry), GET32L(entry));
+  dbg_printf("EPT %4s: 0x%08x%08x", bx_paging_level[level], GET32H(entry), GET32L(entry));
 
   if (level != BX_LEVEL_PTE && (entry & 0x80))
     dbg_printf(" PS");
@@ -1483,7 +1480,7 @@ bx_bool BX_CPU_C::dbg_xlate_linear2phy(bx_address laddr, bx_phy_address *phy, bx
       BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, pt_address, 8, &pte);
 #if BX_DEBUGGER
       if (verbose)
-        dbg_print_pae_paging_pte(level, pte);
+        dbg_print_paging_pte(level, pte);
 #endif
       if(!(pte & 1))
         goto page_fault;
@@ -1529,7 +1526,7 @@ bx_bool BX_CPU_C::dbg_xlate_linear2phy(bx_address laddr, bx_phy_address *phy, bx
       BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, pt_address, 4, &pte);
 #if BX_DEBUGGER
       if (verbose)
-        dbg_print_legacy_paging_pte(level, pte);
+        dbg_print_paging_pte(level, pte);
 #endif
       if (!(pte & 1)) 
         goto page_fault;
