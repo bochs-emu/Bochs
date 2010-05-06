@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.672 2010-04-29 19:34:32 sshwarts Exp $
+// $Id: cpu.h,v 1.673 2010-05-06 21:46:39 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2010  The Bochs Project
@@ -2807,9 +2807,9 @@ public: // for now...
   BX_SMF bx_bool  dbg_instruction_epilog(void);
 #endif
 #if BX_DEBUGGER || BX_DISASM || BX_INSTRUMENTATION || BX_GDBSTUB
-  BX_SMF bx_bool  dbg_xlate_linear2phy(bx_address linear, bx_phy_address *phy);
+  BX_SMF bx_bool  dbg_xlate_linear2phy(bx_address linear, bx_phy_address *phy, bx_bool verbose = 0);
 #if BX_SUPPORT_VMX >= 2
-  BX_SMF bx_bool dbg_translate_guest_physical(bx_phy_address guest_paddr, bx_phy_address *phy);
+  BX_SMF bx_bool dbg_translate_guest_physical(bx_phy_address guest_paddr, bx_phy_address *phy, bx_bool verbose = 0);
 #endif
 #endif
   BX_SMF void     atexit(void);
@@ -3275,6 +3275,10 @@ public: // for now...
 #endif
 
   BX_SMF BX_CPP_INLINE int bx_cpuid_support_1g_paging(void);
+  BX_SMF BX_CPP_INLINE int bx_cpuid_support_vme(void);
+  BX_SMF BX_CPP_INLINE int bx_cpuid_support_pae(void);
+  BX_SMF BX_CPP_INLINE int bx_cpuid_support_pge(void);
+  BX_SMF BX_CPP_INLINE int bx_cpuid_support_pse36(void);
   BX_SMF BX_CPP_INLINE int bx_cpuid_support_pcid(void);
 
   BX_SMF BX_CPP_INLINE unsigned which_cpu(void) { return BX_CPU_THIS_PTR bx_cpuid; }
@@ -3690,15 +3694,6 @@ BX_CPP_INLINE bx_bool BX_CPU_C::alignment_check(void)
 }
 #endif
 
-BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_1g_paging(void)
-{
-#if BX_SUPPORT_X86_64
-  return (BX_CPU_THIS_PTR cpuid_ext_function[1].edx >> 26) & 0x1;
-#else
-  return 0;
-#endif
-}
-
 BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_pcid(void)
 {
 #if BX_SUPPORT_X86_64
@@ -3708,7 +3703,34 @@ BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_pcid(void)
 #endif
 }
 
-BOCHSAPI extern const Bit8u bx_parity_lookup[256];
+BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_vme(void)
+{
+  return (BX_CPU_THIS_PTR cpuid_std_function[1].edx >>  1) & 0x1;
+}
+
+BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_pae(void)
+{
+  return (BX_CPU_THIS_PTR cpuid_std_function[1].edx >>  6) & 0x1;
+}
+
+BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_pge(void)
+{
+  return (BX_CPU_THIS_PTR cpuid_std_function[1].edx >> 13) & 0x1;
+}
+
+BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_pse36(void)
+{
+  return (BX_CPU_THIS_PTR cpuid_std_function[1].edx >> 17) & 0x1;
+}
+
+BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_1g_paging(void)
+{
+#if BX_SUPPORT_X86_64
+  return (BX_CPU_THIS_PTR cpuid_ext_function[1].edx >> 26) & 0x1;
+#else
+  return 0;
+#endif
+}
 
 BX_CPP_INLINE void BX_CPU_C::set_PF_base(Bit8u val)
 {

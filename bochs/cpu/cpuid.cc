@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpuid.cc,v 1.115 2010-04-29 19:34:32 sshwarts Exp $
+// $Id: cpuid.cc,v 1.116 2010-05-06 21:46:39 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007-2010 Stanislav Shwartsman
@@ -298,6 +298,7 @@ Bit32u BX_CPU_C::get_std_cpuid_features(void)
     features |= (1<<15);  // support CMOV instructions
     features |= (1<<16);  // support PAT
     features |= (1<<17);  // support PSE-36
+    features |= (1<<22);  // support ACPI
   }
 
   if (BX_CPU_SUPPORT_ISA_EXTENSION(BX_CPU_FXSAVE_FXRSTOR))

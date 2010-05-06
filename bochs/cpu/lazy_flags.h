@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: lazy_flags.h,v 1.38 2010-04-15 05:51:00 sshwarts Exp $
+// $Id: lazy_flags.h,v 1.39 2010-05-06 21:46:39 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -248,5 +248,7 @@ typedef struct {
 #define SET_FLAGS_OSZAPC_DEC_64(result) \
   SET_FLAGS_OSZAP_RESULT_SIZE(64, (result), BX_LF_INSTR_DEC64)
 #endif
+
+BOCHSAPI extern const Bit8u bx_parity_lookup[256];
 
 #endif // BX_LAZY_FLAGS_DEF

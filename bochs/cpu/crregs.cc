@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: crregs.cc,v 1.15 2010-05-02 15:10:27 sshwarts Exp $
+// $Id: crregs.cc,v 1.16 2010-05-06 21:46:39 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2010 Stanislav Shwartsman
@@ -926,7 +926,9 @@ Bit32u BX_CPU_C::get_cr4_allow_mask(void)
   //   [0]     VME: Virtual-8086 Mode Extensions R/W
 
 #if BX_CPU_LEVEL >= 5
-  allowMask |= BX_CR4_VME_MASK | BX_CR4_PVI_MASK;  /* VME */
+  /* VME */
+  if (bx_cpuid_support_vme())
+    allowMask |= BX_CR4_VME_MASK | BX_CR4_PVI_MASK;
 #endif
 
 #if BX_CPU_LEVEL >= 5
@@ -936,11 +938,13 @@ Bit32u BX_CPU_C::get_cr4_allow_mask(void)
   allowMask |= BX_CR4_DE_MASK;
 
 #if BX_CPU_LEVEL >= 5
-  allowMask |= BX_CR4_PSE_MASK;
+  if (bx_cpuid_support_pse36())
+    allowMask |= BX_CR4_PSE_MASK;
 #endif
 
 #if BX_CPU_LEVEL >= 6
-  allowMask |= BX_CR4_PAE_MASK;
+  if (bx_cpuid_support_pae())
+    allowMask |= BX_CR4_PAE_MASK;
 #endif
 
 #if BX_CPU_LEVEL >= 5
@@ -949,7 +953,9 @@ Bit32u BX_CPU_C::get_cr4_allow_mask(void)
 #endif
 
 #if BX_CPU_LEVEL >= 6
-  allowMask |= BX_CR4_PGE_MASK;
+  if (bx_cpuid_support_pge())
+    allowMask |= BX_CR4_PGE_MASK;
+
   allowMask |= BX_CR4_PCE_MASK;
 
   /* OSFXSR */
