@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/development/development.dbk
-$Id: development.dbk,v 1.34 2010-05-02 11:04:42 vruppert Exp $
+$Id: development.dbk,v 1.35 2010-05-06 16:59:44 vruppert Exp $
 
 This is the top level file for the Bochs Developers Manual.
 ================================================================
@@ -2416,7 +2416,40 @@ new release is ready for download.
 
 <section id="project-webspace"><title>Bochs project webspace</title>
 <para>
-&FIXME; directory structure
+The Bochs project webspace is stored under the SF directory <filename>/home/groups/b/bo/bochs</filename>.
+It can be accessed from the SF shell using SSH or with the commands <command>sftp</command>,
+<command>scp</command> and <command>rsync</command>. Some parts of the directory
+structure must be updated from the local CVS repository, others from Bochs CVS
+(modules <filename>bochs</filename> and <filename>sfsite</filename>).
+The online documentation, disk images and screenshots must be uploaded manually.
+<table>
+<title>Directory structure</title>
+<tgroup cols="2">
+<thead>
+<row>
+<entry>Location</entry>
+<entry>Meaning</entry>
+<entry>Update</entry>
+</row>
+</thead>
+<tbody>
+<row><entry>cgi-bin</entry><entry>CGI scripts for the website</entry></row>
+<row><entry>htdocs</entry><entry>root directory of the website</entry></row>
+<row><entry>htdocs/cvs-snapshot</entry><entry>link to current snapshot</entry></row>
+<row><entry>htdocs/doc/docbook</entry><entry>Bochs online documentation</entry></row>
+<row><entry>htdocs/docs-html</entry><entry>old Bochs documentation</entry></row>
+<row><entry>htdocs/guestos</entry><entry>disk images directly stored on the Bochs website</entry></row>
+<row><entry>htdocs/screenshot</entry><entry>screenshots of Bochs running several guest operating systems</entry></row>
+<row><entry>htdocs/techspec</entry><entry>technical specifications of several hardware components</entry></row>
+<row><entry>lxr</entry><entry>Bochs source browser</entry></row>
+<row><entry>sfsite-cvsroot</entry><entry>local CVS repository</entry></row>
+<row><entry>sitebin</entry><entry>shell scripts (e.g. for snapshot generation)</entry></row>
+<row><entry>siteman</entry><entry>website manual pages</entry></row>
+<row><entry>snapshot</entry><entry>CVS snapshot storage area</entry></row>
+<row><entry>tmp</entry><entry>temp directory for shell scripts</entry></row>
+</tbody>
+</tgroup>
+</table>
 </para>
 </section>
 
