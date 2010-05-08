@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.673 2010-05-06 21:46:39 sshwarts Exp $
+// $Id: cpu.h,v 1.674 2010-05-08 08:30:04 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2010  The Bochs Project
@@ -642,7 +642,6 @@ struct cpuid_function_t {
 #include "descriptor.h"
 #include "instr.h"
 #include "lazy_flags.h"
-#include "icache.h"
 
 // BX_TLB_SIZE: Number of entries in TLB
 // BX_TLB_INDEX_OF(lpf): This macro is passed the linear page frame
@@ -665,6 +664,19 @@ typedef struct {
   Bit32u accessBits;
   Bit32u lpf_mask;      // linear address mask of the page size
 } bx_TLB_entry;
+
+#if BX_SUPPORT_X86_64
+  #define LPF_MASK BX_CONST64(0xfffffffffffff000)
+#else
+  #define LPF_MASK (0xfffff000)
+#endif
+
+#define LPFOf(laddr)               ((laddr) & LPF_MASK)
+#define AlignedAccessLPFOf(laddr, alignment_mask) \
+                                   ((laddr) & (LPF_MASK | (alignment_mask)))
+#define PAGE_OFFSET(laddr) ((Bit32u)(laddr) & 0xfff)
+
+#include "icache.h"
 
 // general purpose register
 #if BX_SUPPORT_X86_64
@@ -1013,17 +1025,6 @@ public: // for now...
     Bit64u entry[4];
   } PDPTR_CACHE;
 #endif
-
-#if BX_SUPPORT_X86_64
-  #define LPF_MASK BX_CONST64(0xfffffffffffff000)
-#else
-  #define LPF_MASK (0xfffff000)
-#endif
-
-#define LPFOf(laddr)               ((laddr) & LPF_MASK)
-#define AlignedAccessLPFOf(laddr, alignment_mask) \
-                                   ((laddr) & (LPF_MASK | (alignment_mask)))
-#define PAGE_OFFSET(laddr) ((Bit32u)(laddr) & 0xfff)
 
   // An instruction cache.  Each entry should be exactly 32 bytes, and
   // this structure should be aligned on a 32-byte boundary to be friendly

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: icache.cc,v 1.33 2010-03-14 15:51:26 sshwarts Exp $
+// $Id: icache.cc,v 1.34 2010-05-08 08:30:04 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007-2009 Stanislav Shwartsman
@@ -53,10 +53,12 @@ void purgeICaches(void)
 
 #if BX_SUPPORT_TRACE_CACHE
 
-void handleSMC(void)
+void handleSMC(bx_phy_address pAddr)
 {
-  for (unsigned i=0; i<BX_SMP_PROCESSORS; i++)
+  for (unsigned i=0; i<BX_SMP_PROCESSORS; i++) {
     BX_CPU(i)->async_event |= BX_ASYNC_EVENT_STOP_TRACE;
+    BX_CPU(i)->iCache.handleSMC(pAddr);
+  }
 }
 
 void BX_CPU_C::serveICacheMiss(bxICacheEntry_c *entry, Bit32u eipBiased, bx_phy_address pAddr)
@@ -93,10 +95,14 @@ void BX_CPU_C::serveICacheMiss(bxICacheEntry_c *entry, Bit32u eipBiased, bx_phy_
          break;
       }
       // First instruction is boundary fetch, leave the trace cache entry 
-      // invalid and do not cache the instruction.
+      // invalid for now because boundaryFetch() can fault
       entry->writeStamp = ICacheWriteStampInvalid;
       entry->tlen = 1;
       boundaryFetch(fetchPtr, remainingInPage, i);
+
+      // Add the instruction to trace cache
+      entry->writeStamp = *(BX_CPU_THIS_PTR currPageWriteStampPtr);
+      BX_CPU_THIS_PTR iCache.commit_page_split_trace(BX_CPU_THIS_PTR pAddrPage, entry);
       return;
     }
 
@@ -112,7 +118,8 @@ void BX_CPU_C::serveICacheMiss(bxICacheEntry_c *entry, Bit32u eipBiased, bx_phy_
     i++;
 
     // try to find a trace starting from current pAddr and merge
-    if (mergeTraces(entry, i, pAddr)) break;
+    if (remainingInPage >= 15) // avoid merging with page split trace
+      if (mergeTraces(entry, i, pAddr)) break;
   }
 
   BX_CPU_THIS_PTR iCache.commit_trace(entry->tlen);

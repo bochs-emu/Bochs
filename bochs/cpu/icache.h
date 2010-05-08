@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: icache.h,v 1.51 2010-02-13 09:41:51 sshwarts Exp $
+// $Id: icache.h,v 1.52 2010-05-08 08:30:04 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007-2009 Stanislav Shwartsman
@@ -30,7 +30,7 @@ const Bit32u ICacheWriteStampStart    = 0x7fffffff;
 const Bit32u ICacheWriteStampFetchModeMask = ~ICacheWriteStampStart;
 
 #if BX_SUPPORT_TRACE_CACHE
-extern void handleSMC(void);
+extern void handleSMC(bx_phy_address pAddr);
 #endif
 
 class bxPageWriteStampTable
@@ -84,7 +84,7 @@ public:
     Bit32u index = hash(pAddr);
     if (pageWriteStampTable[index] & ICacheWriteStampFetchModeMask) {
 #if BX_SUPPORT_TRACE_CACHE
-      handleSMC(); // one of the CPUs might be running trace from this page
+      handleSMC(pAddr); // one of the CPUs might be running trace from this page
 #endif
       // Decrement page write stamp, so iCache entries with older stamps are
       // effectively invalidated.
@@ -125,12 +125,21 @@ struct bxICacheEntry_c
 #endif
 };
 
+#define BX_ICACHE_INVALID_PHY_ADDRESS (bx_phy_address(-1))
+
 class BOCHSAPI bxICache_c {
 public:
   bxICacheEntry_c entry[BxICacheEntries];
 #if BX_SUPPORT_TRACE_CACHE
   bxInstruction_c mpool[BxICacheMemPool];
   unsigned mpindex;
+
+#define BX_ICACHE_PAGE_SPLIT_ENTRIES 8 /* must be power of two */
+  struct pageSplitEntryIndex {
+    bx_phy_address ppf; // Physical address of 2nd page of the trace 
+    bxICacheEntry_c *e; // Pointer to icache entry
+  } pageSplitIndex[BX_ICACHE_PAGE_SPLIT_ENTRIES];
+  int nextPageSplitIndex;
 #endif
 
 public:
@@ -153,6 +162,22 @@ public:
   }
 
   BX_CPP_INLINE void commit_trace(unsigned len) { mpindex += len; }
+
+  BX_CPP_INLINE void commit_page_split_trace(bx_phy_address paddr, bxICacheEntry_c *entry)
+  {
+    mpindex++;  // commit_trace(1)
+
+    // register page split entry
+    if (pageSplitIndex[nextPageSplitIndex].ppf != BX_ICACHE_INVALID_PHY_ADDRESS)
+      pageSplitIndex[nextPageSplitIndex].e->writeStamp = ICacheWriteStampInvalid;
+
+    pageSplitIndex[nextPageSplitIndex].ppf = paddr;
+    pageSplitIndex[nextPageSplitIndex].e = entry;
+
+    nextPageSplitIndex = (nextPageSplitIndex+1) & (BX_ICACHE_PAGE_SPLIT_ENTRIES-1);
+  }
+
+  BX_CPP_INLINE void handleSMC(bx_phy_address pAddr);
 #endif
 
   BX_CPP_INLINE void purgeICacheEntries(void);
@@ -168,13 +193,33 @@ public:
 BX_CPP_INLINE void bxICache_c::flushICacheEntries(void)
 {
   bxICacheEntry_c* e = entry;
-  for (unsigned i=0; i<BxICacheEntries; i++, e++) {
+  unsigned i;
+
+  for (i=0; i<BxICacheEntries; i++, e++)
     e->writeStamp = ICacheWriteStampInvalid;
-  }
+
 #if BX_SUPPORT_TRACE_CACHE
+  for (i=0;i<BX_ICACHE_PAGE_SPLIT_ENTRIES;i++)
+    pageSplitIndex[i].ppf = BX_ICACHE_INVALID_PHY_ADDRESS;
+
+  nextPageSplitIndex = 0;
   mpindex = 0;
 #endif
 }
+
+#if BX_SUPPORT_TRACE_CACHE
+BX_CPP_INLINE void bxICache_c::handleSMC(bx_phy_address pAddr)
+{
+  pAddr = LPFOf(pAddr);
+
+  for (unsigned i=0;i<BX_ICACHE_PAGE_SPLIT_ENTRIES;i++) {
+    if (pAddr == pageSplitIndex[i].ppf) {
+      pageSplitIndex[i].e->writeStamp = ICacheWriteStampInvalid;
+      pageSplitIndex[i].ppf = BX_ICACHE_INVALID_PHY_ADDRESS;
+    }
+  }
+}
+#endif
 
 // Since the write stamps may overflow if we always simply decrese them,
 // this function has to be called often enough that we can reset them.
