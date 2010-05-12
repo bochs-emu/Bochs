@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: crregs.h,v 1.28 2010-05-12 18:48:51 sshwarts Exp $
+// $Id: crregs.h,v 1.29 2010-05-12 21:33:04 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007-2009 Stanislav Shwartsman
@@ -28,12 +28,12 @@ struct bx_cr0_t {
   Bit32u  val32; // 32bit value of register
 
   // Accessors for all cr0 bitfields.
-#define IMPLEMENT_CRREG_ACCESSORS(name,bitnum)               \
-  BX_CPP_INLINE bx_bool get_##name () {                      \
-    return 1 & (val32 >> bitnum);                            \
-  }                                                          \
-  BX_CPP_INLINE void set_##name (Bit8u val) {                \
-    val32 = (val32&~(1<<bitnum)) | (val ? (1<<bitnum) : 0);  \
+#define IMPLEMENT_CRREG_ACCESSORS(name, bitnum)            \
+  BX_CPP_INLINE bx_bool get_##name () {                    \
+    return 1 & (val32 >> bitnum);                          \
+  }                                                        \
+  BX_CPP_INLINE void set_##name (Bit8u val) {              \
+    val32 = (val32 & ~(1<<bitnum)) | ((!!val) << bitnum);  \
   }
 
 // CR0 notes:
@@ -112,9 +112,7 @@ struct bx_cr4_t {
 #if BX_SUPPORT_X86_64
   IMPLEMENT_CRREG_ACCESSORS(PCIDE, 17);
 #endif
-#if BX_CPU_LEVEL >= 6
   IMPLEMENT_CRREG_ACCESSORS(OSXSAVE, 18);
-#endif
 
   BX_CPP_INLINE Bit32u get32() { return val32; }
   BX_CPP_INLINE void set32(Bit32u val) { val32 = val; }
@@ -127,6 +125,12 @@ struct bx_cr4_t {
 
 #if BX_SUPPORT_X86_64
 
+#define BX_EFER_SCE_MASK       (1 <<  0)
+#define BX_EFER_LME_MASK       (1 <<  8)
+#define BX_EFER_LMA_MASK       (1 << 10)
+#define BX_EFER_NXE_MASK       (1 << 11)
+#define BX_EFER_FFXSR_MASK     (1 << 14)
+
 struct bx_efer_t {
   Bit32u val32; // 32bit value of register
 
@@ -134,15 +138,17 @@ struct bx_efer_t {
   IMPLEMENT_CRREG_ACCESSORS(LME,    8);
   IMPLEMENT_CRREG_ACCESSORS(LMA,   10);
   IMPLEMENT_CRREG_ACCESSORS(NXE,   11);
+  IMPLEMENT_CRREG_ACCESSORS(SVME,  12); /* AMD Secure Virtual Machine */
+  IMPLEMENT_CRREG_ACCESSORS(LMSLE, 13); /* AMD Long Mode Segment Limit */
   IMPLEMENT_CRREG_ACCESSORS(FFXSR, 14);
 
   BX_CPP_INLINE Bit32u get32() { return val32; }
   BX_CPP_INLINE void set32(Bit32u val) { val32 = val; }
 };
 
-#define BX_EFER_LME_MASK       (1 <<  8)
-#define BX_EFER_LMA_MASK       (1 << 10)
-#define BX_EFER_SUPPORTED_BITS BX_CONST64(0x00004d01)
+#define BX_EFER_SUPPORTED_BITS \
+   ((Bit64u) (BX_EFER_SCE_MASK | BX_EFER_LME_MASK | \
+              BX_EFER_LMA_MASK | BX_EFER_NXE_MASK | BX_EFER_FFXSR_MASK))
 
 #endif
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.675 2010-05-12 14:55:12 sshwarts Exp $
+// $Id: cpu.h,v 1.676 2010-05-12 21:33:04 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2010  The Bochs Project
@@ -3280,6 +3280,7 @@ public: // for now...
   BX_SMF BX_CPP_INLINE int bx_cpuid_support_vme(void);
   BX_SMF BX_CPP_INLINE int bx_cpuid_support_pae(void);
   BX_SMF BX_CPP_INLINE int bx_cpuid_support_pge(void);
+  BX_SMF BX_CPP_INLINE int bx_cpuid_support_pse(void);
   BX_SMF BX_CPP_INLINE int bx_cpuid_support_pse36(void);
   BX_SMF BX_CPP_INLINE int bx_cpuid_support_pcid(void);
 
@@ -3713,6 +3714,11 @@ BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_vme(void)
 BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_debug_extensions(void)
 {
   return (BX_CPU_THIS_PTR cpuid_std_function[1].edx >>  2) & 0x1;
+}
+
+BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_pse(void)
+{
+  return (BX_CPU_THIS_PTR cpuid_std_function[1].edx >>  3) & 0x1;
 }
 
 BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_pae(void)
