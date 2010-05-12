@@ -466,7 +466,11 @@ typedef bx_address bx_lin_address;
 
 #if BX_PHY_ADDRESS_LONG
 typedef Bit64u bx_phy_address;
-#define BX_PHY_ADDRESS_WIDTH 40
+#if BX_CPU_LEVEL == 5
+  #define BX_PHY_ADDRESS_WIDTH 36
+#else
+  #define BX_PHY_ADDRESS_WIDTH 40
+#endif
 #else
 typedef Bit32u bx_phy_address;
 #define BX_PHY_ADDRESS_WIDTH 32

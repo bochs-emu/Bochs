@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: icache.h,v 1.52 2010-05-08 08:30:04 sshwarts Exp $
+// $Id: icache.h,v 1.53 2010-05-12 14:55:12 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007-2009 Stanislav Shwartsman
@@ -51,12 +51,8 @@ public:
  ~bxPageWriteStampTable() { delete [] pageWriteStampTable; }
 
   BX_CPP_INLINE Bit32u hash(bx_phy_address pAddr) const {
-#if BX_PHY_ADDRESS_LONG
-    // can share writeStamps between multiple pages
-    return (Bit32u) ((pAddr >> 12) & (PHY_MEM_PAGES-1));
-#else
-    return (Bit32u) (pAddr) >> 12;
-#endif
+    // can share writeStamps between multiple pages if >32 bit phy address
+    return ((Bit32u) pAddr) >> 12;
   }
 
   BX_CPP_INLINE Bit32u getPageWriteStamp(bx_phy_address pAddr) const

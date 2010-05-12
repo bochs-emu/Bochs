@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.438 2010-04-29 19:22:02 sshwarts Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.439 2010-05-12 14:55:11 sshwarts Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -530,23 +530,6 @@ AC_ARG_ENABLE(smp,
     ]
   )
 
-AC_MSG_CHECKING(for larger than 32 bit physical address emulation)
-AC_ARG_ENABLE(long-phy-address,
-  [  --enable-long-phy-address         compile in support for physical address larger than 32 bit],
-  [if test "$enableval" = yes; then
-    AC_MSG_RESULT(yes)
-    AC_DEFINE(BX_PHY_ADDRESS_LONG, 1)
-   else
-    AC_MSG_RESULT(no)
-    AC_DEFINE(BX_PHY_ADDRESS_LONG, 0)
-   fi
-   ],
-  [
-    AC_MSG_RESULT(no)
-    AC_DEFINE(BX_PHY_ADDRESS_LONG, 0)
-    ]
-  )
-
 AC_MSG_CHECKING(for cpu level)
 AC_ARG_ENABLE(cpu-level,
   [  --enable-cpu-level                select cpu level (3,4,5,6)],
@@ -588,6 +571,28 @@ AC_ARG_ENABLE(cpu-level,
     AC_DEFINE(BX_CPU_LEVEL, 6)
     bx_cpu_level=6
   ]
+  )
+
+AC_MSG_CHECKING(for larger than 32 bit physical address emulation)
+AC_ARG_ENABLE(long-phy-address,
+  [  --enable-long-phy-address         compile in support for physical address larger than 32 bit],
+  [if test "$enableval" = yes; then
+    AC_MSG_RESULT(yes)
+    AC_DEFINE(BX_PHY_ADDRESS_LONG, 1)
+   else
+    AC_MSG_RESULT(no)
+    AC_DEFINE(BX_PHY_ADDRESS_LONG, 0)
+   fi
+   ],
+  [
+    if test "$bx_cpu_level" -ge 5; then
+      AC_MSG_RESULT(yes)
+      AC_DEFINE(BX_PHY_ADDRESS_LONG, 1)
+    else
+      AC_MSG_RESULT(no)
+      AC_DEFINE(BX_PHY_ADDRESS_LONG, 0)
+    fi
+    ]
   )
 
 

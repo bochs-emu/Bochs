@@ -8,7 +8,6 @@
   --enable-x86-64 \
   --enable-all-optimizations \
   --enable-long-phy-address \
-  --enable-1g-pages \
   --enable-configurable-msrs \
   --enable-debugger \
   --enable-disasm \

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: crregs.cc,v 1.16 2010-05-06 21:46:39 sshwarts Exp $
+// $Id: crregs.cc,v 1.17 2010-05-12 14:55:12 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2010 Stanislav Shwartsman
@@ -853,7 +853,7 @@ bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::SetCR0(bx_address val)
         return 0;
       }
       if (BX_CPU_THIS_PTR gen_reg[BX_64BIT_REG_RIP].dword.hrx != 0) {
-        BX_PANIC(("SetCR0(): attempt to leave x86-64 LONG mode with RIP upper != 0 !!!"));
+        BX_PANIC(("SetCR0(): attempt to leave x86-64 LONG mode with RIP upper != 0"));
       }
       BX_CPU_THIS_PTR efer.set_LMA(0);
     }
@@ -935,7 +935,8 @@ Bit32u BX_CPU_C::get_cr4_allow_mask(void)
   allowMask |= BX_CR4_TSD_MASK;
 #endif
 
-  allowMask |= BX_CR4_DE_MASK;
+  if (bx_cpuid_support_debug_extensions())
+    allowMask |= BX_CR4_DE_MASK;
 
 #if BX_CPU_LEVEL >= 5
   if (bx_cpuid_support_pse36())
