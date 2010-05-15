@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/development/development.dbk
-$Id: development.dbk,v 1.35 2010-05-06 16:59:44 vruppert Exp $
+$Id: development.dbk,v 1.36 2010-05-15 19:35:41 sshwarts Exp $
 
 This is the top level file for the Bochs Developers Manual.
 ================================================================
@@ -352,8 +352,7 @@ And iodev/pic.cc:
 ...
 bx_pic_c *thePic = NULL;
 ...
-  void
-bx_pic_c::service_master_pic(void)
+void bx_pic_c::service_master_pic(void)
 {
   Bit8u unmasked_requests;
   int irq;
@@ -364,14 +363,14 @@ bx_pic_c::service_master_pic(void)
 
   if (BX_PIC_THIS s.master_pic.INT) { /* last interrupt still not acknowleged */
     return;
-    }
+  }
 
   if (BX_PIC_THIS s.master_pic.special_mask) {
     /* all priorities may be enabled.  check all IRR bits except ones
      * which have corresponding ISR bits set
      */
     max_irq = highest_priority;
-    }
+  }
   else { /* normal mode */
     /* Find the highest priority IRQ that is enabled due to current ISR */
     isr = BX_PIC_THIS s.master_pic.isr;
@@ -657,7 +656,7 @@ LOC	NOTES	MEANING
 0x2b	S,U	hd1:landing zone - high
 0x2c	S,U	hd1:sectors per track
 
-0x2d	S	boot from (bit5: 0:fd, 1:hd)
+0x2d	S	boot from (bit5: 0:hd, 1:fd)
 
 0x2e	S,U	standard cmos checksum (0x10->0x2d) - high
 0x2f	S,U	standard cmos checksum (0x10->0x2d) - low
