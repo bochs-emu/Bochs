@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.253 2010-04-13 17:56:50 sshwarts Exp $
+// $Id: bochs.h,v 1.254 2010-05-15 09:23:50 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -444,6 +444,9 @@ typedef struct {
 void CDECL bx_signal_handler(int signum);
 int bx_atexit(void);
 BOCHSAPI extern bx_debug_t bx_dbg;
+
+// determinted by XAPIC option
+BOCHSAPI extern Bit32u apic_id_mask;
 
 // memory access type (read/write/execute/rw)
 #define BX_READ         0

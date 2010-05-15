@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.cc,v 1.143 2010-04-08 15:50:39 sshwarts Exp $
+// $Id: apic.cc,v 1.144 2010-05-15 09:23:50 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (c) 2002-2009 Zwane Mwaikambo, Stanislav Shwartsman
@@ -27,7 +27,6 @@
 
 #if BX_SUPPORT_APIC
 
-extern Bit32u apic_id_mask;
 extern bx_bool simulate_xapic;
 
 #define LOG_THIS this->

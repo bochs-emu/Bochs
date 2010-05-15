@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ioapic.cc,v 1.52 2010-05-14 12:10:00 sshwarts Exp $
+// $Id: ioapic.cc,v 1.53 2010-05-15 09:23:50 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2009  The Bochs Project
@@ -33,8 +33,6 @@
 #define LOG_THIS theIOAPIC->
 
 bx_ioapic_c *theIOAPIC = NULL;
-
-extern Bit32u apic_id_mask;
 
 int libioapic_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
 {
