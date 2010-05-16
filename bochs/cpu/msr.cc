@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: msr.cc,v 1.48 2010-04-08 15:50:39 sshwarts Exp $
+// $Id: msr.cc,v 1.49 2010-05-16 13:56:22 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008-2010 Stanislav Shwartsman
@@ -262,6 +262,8 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
         return 0; // will result in #GP fault due to unknown MSR
   }
 
+  BX_DEBUG(("RDMSR: read %08x:%08x from MSR %x", GET32H(val64), GET32L(val64), index));
+
   *msr = val64;
   return 1;
 }
@@ -356,6 +358,8 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
   Bit32u val32_hi = GET32H(val_64);
 
   BX_INSTR_WRMSR(BX_CPU_ID, index, val_64);
+
+  BX_DEBUG(("WRMSR: write %08x:%08x to MSR %x", val32_hi, val32_lo, index));
 
   if ((index & 0x3FFFFFFF) >= BX_MSR_MAX_INDEX)
     return 0;
