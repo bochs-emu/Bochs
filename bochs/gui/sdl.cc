@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sdl.cc,v 1.89 2010-02-26 14:18:18 sshwarts Exp $
+// $Id: sdl.cc,v 1.90 2010-05-16 09:01:36 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2009  The Bochs Project
@@ -957,6 +957,7 @@ void bx_sdl_gui_c::handle_events(void)
   Bit32u key_event;
   Bit8u mouse_state;
   int wheel_status;
+  bx_bool mouse_toggle = 0;
 
   while(SDL_PollEvent(&sdl_event))
   {
@@ -1002,27 +1003,25 @@ void bx_sdl_gui_c::handle_events(void)
 	break;
 
       case SDL_MOUSEBUTTONDOWN:
-        if((sdl_event.button.button == SDL_BUTTON_MIDDLE)
-            && ((SDL_GetModState() & KMOD_CTRL) > 0)
-            && (sdl_fullscreen_toggle == 0))
-	{
-	  if(sdl_grab == 0)
-	  {
-	    SDL_ShowCursor(0);
-	    SDL_WM_GrabInput(SDL_GRAB_ON);
-	  }
-	  else
-	  {
-	    SDL_ShowCursor(1);
-	    SDL_WM_GrabInput(SDL_GRAB_OFF);
-	  }
-	  sdl_grab = ~sdl_grab;
-	  toggle_mouse_enable();
-	  break;
-	} else if (sdl_event.button.y < headerbar_height) {
-	  headerbar_click(sdl_event.button.x);
-	  break;
-	}
+        // mouse capture toggle-check
+        if ((sdl_event.button.button == SDL_BUTTON_MIDDLE)
+            && (sdl_fullscreen_toggle == 0)) {
+          if (mouse_toggle_check(BX_MT_MBUTTON, 1)) {
+            if (sdl_grab == 0) {
+              SDL_ShowCursor(0);
+              SDL_WM_GrabInput(SDL_GRAB_ON);
+            } else {
+              SDL_ShowCursor(1);
+              SDL_WM_GrabInput(SDL_GRAB_OFF);
+            }
+            sdl_grab = ~sdl_grab;
+            toggle_mouse_enable();
+          }
+          break;
+        } else if (sdl_event.button.y < headerbar_height) {
+          headerbar_click(sdl_event.button.x);
+          break;
+        }
 #ifdef SDL_BUTTON_WHEELUP
         // get the wheel status
         if (sdl_event.button.button == SDL_BUTTON_WHEELUP) {
@@ -1033,76 +1032,103 @@ void bx_sdl_gui_c::handle_events(void)
         }
 #endif
       case SDL_MOUSEBUTTONUP:
-	// figure out mouse state
-	new_mousex = (int)(sdl_event.button.x);
-	new_mousey = (int)(sdl_event.button.y);
-	// SDL_GetMouseState() returns the state of all buttons
-	mouse_state = SDL_GetMouseState(NULL, NULL);
-	new_mousebuttons =
-	  (mouse_state & 0x01)    |
-	  ((mouse_state>>1)&0x02) |
-	  ((mouse_state<<1)&0x04);
-	// filter out middle button if not fullscreen
-	if(sdl_fullscreen_toggle == 0)
-	  new_mousebuttons &= 0x07;
+        if ((sdl_event.button.button == SDL_BUTTON_MIDDLE)
+            && (sdl_fullscreen_toggle == 0)) {
+          mouse_toggle_check(BX_MT_MBUTTON, 0);
+        }
+        // figure out mouse state
+        new_mousex = (int)(sdl_event.button.x);
+        new_mousey = (int)(sdl_event.button.y);
+        // SDL_GetMouseState() returns the state of all buttons
+        mouse_state = SDL_GetMouseState(NULL, NULL);
+        new_mousebuttons =
+          (mouse_state & 0x01)    |
+          ((mouse_state>>1)&0x02) |
+          ((mouse_state<<1)&0x04);
+        // filter out middle button if not fullscreen
+        if(sdl_fullscreen_toggle == 0)
+          new_mousebuttons &= 0x07;
         // send motion information
         DEV_mouse_motion_ext(
             new_mousex - old_mousex,
             -(new_mousey - old_mousey),
             wheel_status,
             new_mousebuttons);
-	// mark current state to diff with next packet
-	old_mousebuttons = new_mousebuttons;
-	old_mousex = new_mousex;
-	old_mousey = new_mousey;
-	break;
+        // mark current state to diff with next packet
+        old_mousebuttons = new_mousebuttons;
+        old_mousex = new_mousex;
+        old_mousey = new_mousey;
+        break;
 
       case SDL_KEYDOWN:
-
-	// Windows/Fullscreen toggle-check
-	if(sdl_event.key.keysym.sym == SDLK_SCROLLOCK)
-	{
-//	  SDL_WM_ToggleFullScreen(sdl_screen);
-	  sdl_fullscreen_toggle = ~sdl_fullscreen_toggle;
-	  if(sdl_fullscreen_toggle == 0)
-	    switch_to_windowed();
-	  else
-	    switch_to_fullscreen();
-	  bx_gui->show_headerbar();
-	  bx_gui->flush();
-	  break;
-	}
-
-	// convert sym->bochs code
-	if (sdl_event.key.keysym.sym > SDLK_LAST) break;
-        if (!SIM->get_param_bool(BXPN_KBD_USEMAPPING)->get()) {
-	  key_event = sdl_sym_to_bx_key (sdl_event.key.keysym.sym);
-	  BX_DEBUG(("keypress scancode=%d, sym=%d, bx_key = %d", sdl_event.key.keysym.scancode, sdl_event.key.keysym.sym, key_event));
-	} else {
-	  /* use mapping */
-	  BXKeyEntry *entry = bx_keymap.findHostKey (sdl_event.key.keysym.sym);
-	  if (!entry) {
-	    BX_ERROR(("host key %d (0x%x) not mapped!",
-		  (unsigned) sdl_event.key.keysym.sym,
-		  (unsigned) sdl_event.key.keysym.sym));
-	    break;
-	  }
-	  key_event = entry->baseKey;
-	}
-	if (key_event == BX_KEY_UNHANDLED) break;
-	DEV_kbd_gen_scancode( key_event);
-        if ((key_event == BX_KEY_NUM_LOCK) || (key_event == BX_KEY_CAPS_LOCK)) {
-	  DEV_kbd_gen_scancode(key_event | BX_KEY_RELEASED);
+        // mouse capture toggle-check
+        if (sdl_fullscreen_toggle == 0) {
+          if ((sdl_event.key.keysym.sym == SDLK_LCTRL) ||
+              (sdl_event.key.keysym.sym == SDLK_RCTRL)) {
+            mouse_toggle = mouse_toggle_check(BX_MT_KEY_CTRL, 1);
+          } else if (sdl_event.key.keysym.sym == SDLK_LALT) {
+            mouse_toggle = mouse_toggle_check(BX_MT_KEY_ALT, 1);
+          } else if (sdl_event.key.keysym.sym == SDLK_F10) {
+            mouse_toggle = mouse_toggle_check(BX_MT_KEY_F10, 1);
+          }
+          if (mouse_toggle) {
+            toggle_mouse_enable();
+          }
         }
-	break;
+
+        // Windows/Fullscreen toggle-check
+        if (sdl_event.key.keysym.sym == SDLK_SCROLLOCK) {
+//        SDL_WM_ToggleFullScreen(sdl_screen);
+          sdl_fullscreen_toggle = ~sdl_fullscreen_toggle;
+          if(sdl_fullscreen_toggle == 0)
+            switch_to_windowed();
+          else
+            switch_to_fullscreen();
+          bx_gui->show_headerbar();
+          bx_gui->flush();
+          break;
+        }
+
+        // convert sym->bochs code
+        if (sdl_event.key.keysym.sym > SDLK_LAST) break;
+        if (!SIM->get_param_bool(BXPN_KBD_USEMAPPING)->get()) {
+          key_event = sdl_sym_to_bx_key (sdl_event.key.keysym.sym);
+          BX_DEBUG(("keypress scancode=%d, sym=%d, bx_key = %d", sdl_event.key.keysym.scancode, sdl_event.key.keysym.sym, key_event));
+        } else {
+          /* use mapping */
+          BXKeyEntry *entry = bx_keymap.findHostKey (sdl_event.key.keysym.sym);
+          if (!entry) {
+            BX_ERROR(("host key %d (0x%x) not mapped!",
+                      (unsigned) sdl_event.key.keysym.sym,
+                      (unsigned) sdl_event.key.keysym.sym));
+            break;
+          }
+          key_event = entry->baseKey;
+        }
+        if (key_event == BX_KEY_UNHANDLED) break;
+        DEV_kbd_gen_scancode( key_event);
+        if ((key_event == BX_KEY_NUM_LOCK) || (key_event == BX_KEY_CAPS_LOCK)) {
+          DEV_kbd_gen_scancode(key_event | BX_KEY_RELEASED);
+        }
+        break;
 
       case SDL_KEYUP:
 
-	// filter out release of Windows/Fullscreen toggle and unsupported keys
-	if ((sdl_event.key.keysym.sym != SDLK_SCROLLOCK)
-	    && (sdl_event.key.keysym.sym < SDLK_LAST))
-	{
-	  // convert sym->bochs code
+        // mouse capture toggle-check
+        if ((sdl_event.key.keysym.sym == SDLK_LCTRL) ||
+            (sdl_event.key.keysym.sym == SDLK_RCTRL)) {
+          mouse_toggle_check(BX_MT_KEY_CTRL, 0);
+        } else if (sdl_event.key.keysym.sym == SDLK_LALT) {
+          mouse_toggle_check(BX_MT_KEY_ALT, 0);
+        } else if (sdl_event.key.keysym.sym == SDLK_F10) {
+          mouse_toggle_check(BX_MT_KEY_F10, 0);
+        }
+
+        // filter out release of Windows/Fullscreen toggle and unsupported keys
+        if ((sdl_event.key.keysym.sym != SDLK_SCROLLOCK)
+           && (sdl_event.key.keysym.sym < SDLK_LAST))
+        {
+          // convert sym->bochs code
           if (!SIM->get_param_bool(BXPN_KBD_USEMAPPING)->get()) {
             key_event = sdl_sym_to_bx_key (sdl_event.key.keysym.sym);
           } else {
@@ -1110,23 +1136,23 @@ void bx_sdl_gui_c::handle_events(void)
             BXKeyEntry *entry = bx_keymap.findHostKey (sdl_event.key.keysym.sym);
             if (!entry) {
               BX_ERROR(("host key %d (0x%x) not mapped!",
-		    (unsigned) sdl_event.key.keysym.sym,
-		    (unsigned) sdl_event.key.keysym.sym));
+                    (unsigned) sdl_event.key.keysym.sym,
+                    (unsigned) sdl_event.key.keysym.sym));
               break;
             }
             key_event = entry->baseKey;
           }
-	  if (key_event == BX_KEY_UNHANDLED) break;
+          if (key_event == BX_KEY_UNHANDLED) break;
           if ((key_event == BX_KEY_NUM_LOCK) || (key_event == BX_KEY_CAPS_LOCK)) {
             DEV_kbd_gen_scancode(key_event);
           }
-	  DEV_kbd_gen_scancode(key_event | BX_KEY_RELEASED);
-	}
-	break;
+          DEV_kbd_gen_scancode(key_event | BX_KEY_RELEASED);
+        }
+        break;
 
       case SDL_QUIT:
-	LOG_THIS setonoff(LOGLEV_PANIC, ACT_FATAL);
-	BX_PANIC(("User requested shutdown."));
+        LOG_THIS setonoff(LOGLEV_PANIC, ACT_FATAL);
+        BX_PANIC(("User requested shutdown."));
     }
   }
 #if BX_SHOW_IPS

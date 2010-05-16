@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.h,v 1.62 2009-12-04 20:02:12 sshwarts Exp $
+// $Id: gui.h,v 1.63 2010-05-16 09:01:36 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2009  The Bochs Project
@@ -31,6 +31,15 @@
 #define BX_TEXT_BLINK_MODE      0x01
 #define BX_TEXT_BLINK_TOGGLE    0x02
 #define BX_TEXT_BLINK_STATE     0x04
+
+#define BX_MT_KEY_CTRL          0x01
+#define BX_MT_KEY_ALT           0x02
+#define BX_MT_KEY_F10           0x04
+#define BX_MT_MBUTTON           0x08
+
+#define BX_GUI_MT_CTRL_MB       0x09
+#define BX_GUI_MT_CTRL_F10      0x05
+#define BX_GUI_MT_CTRL_ALT      0x03
 
 typedef struct {
   Bit16u  start_address;
@@ -131,7 +140,8 @@ public:
   int register_statusitem(const char *text);
   static void init_signal_handlers();
   static void toggle_mouse_enable(void);
-
+  bx_bool mouse_toggle_check(Bit32u key, bx_bool pressed);
+  const char* get_toggle_info(void);
 
 protected:
   // And these are defined and used privately in gui.cc
@@ -178,6 +188,9 @@ protected:
   Bit8u host_bpp;
   Bit8u *framebuffer;
   Bit32u dialog_caps;
+  Bit8u toggle_method;
+  Bit32u toggle_keystate;
+  char mouse_toggle_text[20];
 };
 
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: param_names.h,v 1.7 2010-04-29 19:34:31 sshwarts Exp $
+// $Id: param_names.h,v 1.8 2010-05-16 09:01:36 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  The Bochs Project
@@ -97,6 +97,7 @@
 #define BXPN_USER_SHORTCUT               "keyboard_mouse.keyboard.user_shortcut"
 #define BXPN_MOUSE_TYPE                  "keyboard_mouse.mouse.type"
 #define BXPN_MOUSE_ENABLED               "keyboard_mouse.mouse.enabled"
+#define BXPN_MOUSE_TOGGLE                "keyboard_mouse.mouse.toggle"
 #define BXPN_BOOTDRIVE1                  "boot_params.boot_drive1"
 #define BXPN_BOOTDRIVE2                  "boot_params.boot_drive2"
 #define BXPN_BOOTDRIVE3                  "boot_params.boot_drive3"

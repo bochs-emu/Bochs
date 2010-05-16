@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.251 2010-02-28 14:52:17 sshwarts Exp $
+// $Id: siminterface.h,v 1.252 2010-05-16 09:01:36 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  The Bochs Project
@@ -902,6 +902,12 @@ enum {
   BX_MOUSE_TYPE_SERIAL,
   BX_MOUSE_TYPE_SERIAL_WHEEL,
   BX_MOUSE_TYPE_SERIAL_MSYS
+};
+
+enum {
+  BX_MOUSE_TOGGLE_CTRL_MB,
+  BX_MOUSE_TOGGLE_CTRL_F10,
+  BX_MOUSE_TOGGLE_CTRL_ALT
 };
 
 #define BX_FDD_NONE  0 // floppy not present

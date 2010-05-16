@@ -641,23 +641,34 @@ keyboard_paste_delay: 100000
 
 #=======================================================================
 # MOUSE:
-# The Bochs gui creates mouse "events" unless the 'enabled' option is
-# set to 0. The hardware emulation itself is not disabled by this.
-# Unless you have a particular reason for enabling the mouse by default,
-# it is recommended that you leave it off. You can also toggle the mouse
-# usage at runtime (control key + middle mouse button on X11, SDL,
-# wxWidgets and Win32).
-# With the mouse type option you can select the type of mouse to emulate.
-# The default value is 'ps2'. The other choices are 'imps2' (wheel mouse
-# on PS/2), 'serial', 'serial_wheel' and 'serial_msys' (one com port requires
-# setting 'mode=mouse'). To connect a mouse to an USB port, see the 'usb_uhci'
-# or 'usb_ohci' option (requires PCI and USB support).
+# This defines parameters for the emulated mouse type, the initial status
+# of the mouse capture and the runtime method to toggle it.
+#
+#  TYPE:
+#  With the mouse type option you can select the type of mouse to emulate.
+#  The default value is 'ps2'. The other choices are 'imps2' (wheel mouse
+#  on PS/2), 'serial', 'serial_wheel' and 'serial_msys' (one com port requires
+#  setting 'mode=mouse'). To connect a mouse to an USB port, see the 'usb_uhci'
+#  or 'usb_ohci' option (requires PCI and USB support).
+#
+#  ENABLED:
+#  The Bochs gui creates mouse "events" unless the 'enabled' option is
+#  set to 0. The hardware emulation itself is not disabled by this.
+#  Unless you have a particular reason for enabling the mouse by default,
+#  it is recommended that you leave it off. You can also toggle the mouse
+#  usage at runtime (X11, SDL, wxWidgets and Win32 - see below).
+#
+#  TOGGLE:
+#  The default method to toggle the mouse capture at runtime is to press the
+#  CTRL key and the middle mouse button ('ctrl+mbutton'). This option allows
+#  to change the method to 'ctrl+f10' (like DOSBox) or 'ctrl+alt' (like QEMU).
+#  NOTE: currently implemented in the X11 and SDL guis only!
 #
 # Examples:
 #   mouse: enabled=1
-#   mouse: enabled=1, type=imps2
-#   mouse: enabled=1, type=serial
-#   mouse: enabled=0
+#   mouse: type=imps2, enabled=1
+#   mouse: type=serial, enabled=1
+#   mouse: enabled=0, toggle=ctrl+f10
 #=======================================================================
 mouse: enabled=0
 

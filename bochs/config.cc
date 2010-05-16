@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.203 2010-04-29 19:34:31 sshwarts Exp $
+// $Id: config.cc,v 1.204 2010-05-16 09:01:36 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2009  The Bochs Project
@@ -229,7 +229,7 @@ void bx_init_options()
   bx_list_c *deplist;
   bx_param_num_c *ioaddr, *ioaddr2, *irq;
   bx_param_bool_c *enabled, *status;
-  bx_param_enum_c *mode, *type, *ethmod;
+  bx_param_enum_c *mode, *type, *ethmod, *toggle;
   bx_param_string_c *macaddr, *ethdev;
   bx_param_filename_c *path;
   char name[BX_PATHNAME_LEN], descr[512], group[16], label[512];
@@ -853,6 +853,20 @@ void bx_init_options()
       0);
   enabled->set_handler(bx_param_handler);
   enabled->set_runtime_param(1);
+
+  static const char *mouse_toggle_list[] = {
+    "ctrl+mbutton",
+    "ctrl+f10",
+    "ctrl+alt",
+    NULL
+  };
+  toggle = new bx_param_enum_c(mouse,
+      "toggle", "Mouse toggle method",
+      "The mouse toggle method can be one of these: 'ctrl+mbutton', 'ctrl+f10', 'ctrl+alt'",
+      mouse_toggle_list,
+      BX_MOUSE_TOGGLE_CTRL_MB,
+      BX_MOUSE_TOGGLE_CTRL_MB);
+  toggle->set_ask_format("Choose the mouse toggle method [%s] ");
 
   kbd_mouse->set_options(kbd_mouse->SHOW_PARENT);
   keyboard->set_options(keyboard->SHOW_PARENT);
@@ -2821,6 +2835,9 @@ static int parse_line_formatted(const char *context, int num_params, char *param
       } else if (!strncmp(params[i], "type=", 5)) {
         if (!SIM->get_param_enum(BXPN_MOUSE_TYPE)->set_by_name(&params[i][5]))
           PARSE_ERR(("%s: mouse type '%s' not available", context, &params[i][5]));
+      } else if (!strncmp(params[i], "toggle=", 7)) {
+        if (!SIM->get_param_enum(BXPN_MOUSE_TOGGLE)->set_by_name(&params[i][7]))
+          PARSE_ERR(("%s: mouse toggle method '%s' not available", context, &params[i][7]));
       } else {
         PARSE_ERR(("%s: mouse directive malformed.", context));
       }
@@ -3859,9 +3876,10 @@ int bx_write_configuration(const char *rc, int overwrite)
   bx_write_loader_options(fp);
   bx_write_log_options(fp, (bx_list_c*) SIM->get_param("log"));
   bx_write_keyboard_options(fp);
-  fprintf(fp, "mouse: enabled=%d, type=%s\n",
+  fprintf(fp, "mouse: enabled=%d, type=%s, toggle=%s\n",
     SIM->get_param_bool(BXPN_MOUSE_ENABLED)->get(),
-    SIM->get_param_enum(BXPN_MOUSE_TYPE)->get_selected());
+    SIM->get_param_enum(BXPN_MOUSE_TYPE)->get_selected(),
+    SIM->get_param_enum(BXPN_MOUSE_TOGGLE)->get_selected());
   SIM->save_user_options(fp);
   fclose(fp);
   return 0;
