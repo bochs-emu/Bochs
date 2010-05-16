@@ -1,5 +1,5 @@
 .\"Document Author:  Timothy R. Butler   -   tbutler@uninetsolutions.com"
-.TH bochsrc 5 "30 April 2009" "bochsrc" "The Bochs Project"
+.TH bochsrc 5 "16 May 2010" "bochsrc" "The Bochs Project"
 .\"SKIP_SECTION"
 .SH NAME
 bochsrc \- Configuration file for Bochs.
@@ -140,11 +140,6 @@ Reset the CPU when triple fault occur (highly recommended) rather than
 PANIC. Remember that if you trying to continue after triple fault the
 simulation will be completely bogus !
 
-cpuid_limit_winnt:
-
-Determine whether to limit maximum CPUID function to 3. This mode is
-required to workaround WinNT installation and boot issues.
-
 msrs:
 
 Define path to user CPU Model Specific Registers (MSRs) specification.
@@ -155,16 +150,6 @@ ignore_bad_msrs:
 Ignore MSR references that Bochs does not understand; print a warning
 message instead of generating #GP exception. This option is enabled
 by default but will not be avaiable if configurable MSRs are enabled.
-
-vendor_string:
-
-Set the CPUID vendor string returned by CPUID(0x0).  This should be a
-twelve-character ASCII string.  
-
-brand_string:
-
-Set the CPUID vendor string returned by CPUID(0x80000002 .. 0x80000004).  
-This should be at most a forty-eight-character ASCII string.  
 
 ips:
 
@@ -198,6 +183,79 @@ speed.
 
 Example:
   cpu: count=2, ips=10000000, msrs="msrs.def"
+
+.TP
+.I "cpuid:"
+This defines features and functionality supported by Bochs emulated CPU:
+
+mmx:
+
+Select MMX instruction set support.
+This option exists only if Bochs compiled with BX_CPU_LEVEL >= 5.
+
+sep:
+
+Select SYSENTER/SYSEXIT instruction set support.
+This option exists only if Bochs compiled with BX_CPU_LEVEL >= 6.
+
+sse:
+
+Select SSE instruction set support.
+Any of NONE/SSE/SSE2/SSE3/SSSE3/SSE4_1/SSE4_2 could be selected.
+This option exists only if Bochs compiled with BX_CPU_LEVEL >= 6.
+
+xapic:
+
+Select XAPIC extensions support.
+This option exists only if Bochs compiled with BX_CPU_LEVEL >= 6.
+
+aes:
+
+Select AES instruction set support.
+This option exists only if Bochs compiled with BX_CPU_LEVEL >= 6.
+
+movbe:
+
+Select MOVBE Intel(R) Atom instruction support.
+This option exists only if Bochs compiled with BX_CPU_LEVEL >= 6.
+
+xsave:
+
+Select XSAVE extensions support.
+This option exists only if Bochs compiled with BX_CPU_LEVEL >= 6.
+
+1g_pages:
+
+Enable 1G page size support in long mode.
+This option exists only if Bochs compiled with x86-64 support.
+
+pcid:
+
+Enable Process-Context Identifiers (PCID) support in long mode.
+This option exists only if Bochs compiled with x86-64 support.
+
+mwait_is_nop:
+
+When this option is enabled MWAIT will not put the CPU into a sleep state.
+This option exists only if Bochs compiled with --enable-monitor-mwait.
+
+vendor_string:
+
+Set the CPUID vendor string returned by CPUID(0x0).  This should be a
+twelve-character ASCII string.
+
+brand_string:
+
+Set the CPUID vendor string returned by CPUID(0x80000002 .. 0x80000004).
+This should be at most a forty-eight-character ASCII string.
+
+cpuid_limit_winnt:
+
+Determine whether to limit maximum CPUID function to 3. This mode is
+required to workaround WinNT installation and boot issues.
+
+Example:
+  cpuid: mmx=1, sep=1, sse=sse4_2, xapic=1, aes=1, movbe=1, xsave=1, cpuid_limit_winnt=0
 
 .TP
 .I "megs:"
@@ -665,20 +723,36 @@ Example:
 
 .TP
 .I "mouse:"
-The Bochs gui creates mouse "events" unless the 'enabled' option is
-set to 0. The hardware emulation itself is not disabled by this.
-Unless you have a particular reason for enabling the mouse by default,
-it is recommended that you leave it off. You can also toggle the mouse
-usage at runtime (control key + middle mouse button).
+This defines parameters for the emulated mouse type, the initial status
+of the mouse capture and the runtime method to toggle it.
+
+type
+
 With the mouse type option you can select the type of mouse to emulate.
 The default value is 'ps2'. The other choices are 'imps2' (wheel mouse
 on PS/2), 'serial', 'serial_wheel' and 'serial_msys' (one com port requires
 setting 'mode=mouse'). To connect a mouse to an USB port, see the 'usb_uhci'
 or 'usb_ohci' option (requires PCI and USB support).
 
+enabled
+
+The Bochs gui creates mouse "events" unless the 'enabled' option is
+set to 0. The hardware emulation itself is not disabled by this.
+Unless you have a particular reason for enabling the mouse by default,
+it is recommended that you leave it off. You can also toggle the mouse
+usage at runtime (X11, SDL, wxWidgets and Win32 - see below).
+
+toggle
+
+The default method to toggle the mouse capture at runtime is to press the
+CTRL key and the middle mouse button ('ctrl+mbutton'). This option allows
+to change the method to 'ctrl+f10' (like DOSBox) or 'ctrl+alt' (like QEMU).
+
 Examples:
-  mouse: enabled=0
-  mouse: enabled=1, type=imps2
+  mouse: enabled=1
+  mouse: type=imps2, enabled=1
+  mouse: type=serial, enabled=1
+  mouse: enabled=0, toggle=ctrl+f10
 
 .TP
 .I "private_colormap:"
