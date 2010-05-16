@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wx.cc,v 1.103 2010-02-26 14:18:18 sshwarts Exp $
+// $Id: wx.cc,v 1.104 2010-05-16 14:40:53 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  The Bochs Project
@@ -246,9 +246,13 @@ void MyPanel::OnMouse(wxMouseEvent& event)
     }
   )
 
-  if (event.MiddleDown() && event.ControlDown()) {
-    ToggleMouse (false);
-    return;
+  if (event.MiddleDown()) {
+    if (bx_gui->mouse_toggle_check(BX_MT_MBUTTON, 1)) {
+      ToggleMouse(false);
+      return;
+    }
+  } else if (event.MiddleUp()) {
+    bx_gui->mouse_toggle_check(BX_MT_MBUTTON, 0);
   }
 
   if (!mouse_captured)
@@ -750,26 +754,37 @@ bx_bool MyPanel::fillBxKeyEvent_GTK (wxKeyEvent& wxev, BxKeyEvent& bxev, bx_bool
 #endif
 }
 
-bx_bool MyPanel::fillBxKeyEvent (wxKeyEvent& wxev, BxKeyEvent& bxev, bx_bool release)
+bx_bool MyPanel::fillBxKeyEvent(wxKeyEvent& wxev, BxKeyEvent& bxev, bx_bool release)
 {
-  // Use raw codes if they are available.  Raw codes are a nonstandard addition
-  // to the wxWidgets library.  At present, the only way to use the "RAW_CODES"
-  // mode is to apply Bryce's "patch.wx-raw-keycodes" patch to the wxWidgets
-  // sources and recompile.  This patch, or something like it, should appear in
-  // future wxWidgets versions.
+  Bit32u key = wxev.m_keyCode;
+  bx_bool mouse_toggle = 0;
+
+  if (key == WXK_CONTROL) {
+    mouse_toggle = bx_gui->mouse_toggle_check(BX_MT_KEY_CTRL, !release);
+  } else if (key == WXK_ALT) {
+    mouse_toggle = bx_gui->mouse_toggle_check(BX_MT_KEY_ALT, !release);
+  } else if (key == WXK_F10) {
+    mouse_toggle = bx_gui->mouse_toggle_check(BX_MT_KEY_F10, !release);
+  }
+  if (mouse_toggle) {
+    ToggleMouse(false);
+    return false;
+  }
+
+  // Use raw codes if they are available.  Raw codes are an addition to the
+  // wxWidgets library introduced in version 2.3.3.
 
 #if defined (wxHAS_RAW_KEY_CODES) && defined(__WXMSW__)
-  return fillBxKeyEvent_MSW (wxev, bxev, release);
+  return fillBxKeyEvent_MSW(wxev, bxev, release);
 #endif
 
 #if defined (wxHAS_RAW_KEY_CODES) && defined(__WXGTK__)
-  return fillBxKeyEvent_GTK (wxev, bxev, release);
+  return fillBxKeyEvent_GTK(wxev, bxev, release);
 #endif
 
   // otherwise fall back to using portable WXK_* keycodes.  Not all keys
   // can be mapped correctly using WXK_* codes but it should be usable.
   IFDBG_KEY (wxLogDebug (wxT ("fillBxKeyEvent. key code %ld", wxev.m_keyCode)));
-  Bit32u key = wxev.m_keyCode;
   Bit32u bx_key;
 
   if(key >= WXK_SPACE && key < WXK_DELETE) {
