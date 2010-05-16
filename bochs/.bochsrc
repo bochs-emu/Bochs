@@ -662,7 +662,6 @@ keyboard_paste_delay: 100000
 #  The default method to toggle the mouse capture at runtime is to press the
 #  CTRL key and the middle mouse button ('ctrl+mbutton'). This option allows
 #  to change the method to 'ctrl+f10' (like DOSBox) or 'ctrl+alt' (like QEMU).
-#  NOTE: currently implemented in the X11, SDL and wxWidgets guis only!
 #
 # Examples:
 #   mouse: enabled=1
