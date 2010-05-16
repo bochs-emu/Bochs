@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.h,v 1.15 2010-05-10 05:24:39 sshwarts Exp $
+// $Id: rombios.h,v 1.16 2010-05-16 14:35:22 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2006 Volker Ruppert
@@ -98,6 +98,8 @@
 #define BX_PCIBIOS       1
 #define BX_APM           1
 #define BX_PNPBIOS       1
+/* define it if the (emulated) hardware supports SMM mode */
+#define BX_USE_SMM
 
 #define BX_USE_ATADRV    1
 #define BX_ELTORITO_BOOT 1
@@ -166,3 +168,81 @@
 #define PORT_FD_DOR            0x03f2
 #define PORT_FD_STATUS         0x03f4
 #define PORT_FD_DATA           0x03f5
+
+#define CPUID_MSR (1 << 5)
+#define CPUID_APIC (1 << 9)
+#define CPUID_MTRR (1 << 12)
+
+#define APIC_BASE    ((uint8_t *)0xfee00000)
+#define APIC_ICR_LOW 0x300
+#define APIC_SVR     0x0F0
+#define APIC_ID      0x020
+#define APIC_LVT3    0x370
+
+#define APIC_ENABLED 0x0100
+
+#define AP_BOOT_ADDR 0x9f000
+
+#define SMI_CMD_IO_ADDR   0xb2
+
+#define BIOS_TMP_STORAGE  0x00030000 /* 64 KB used to copy the BIOS to shadow RAM */
+
+#define MSR_MTRRcap                     0x000000fe
+#define MSR_MTRRfix64K_00000            0x00000250
+#define MSR_MTRRfix16K_80000            0x00000258
+#define MSR_MTRRfix16K_A0000            0x00000259
+#define MSR_MTRRfix4K_C0000             0x00000268
+#define MSR_MTRRfix4K_C8000             0x00000269
+#define MSR_MTRRfix4K_D0000             0x0000026a
+#define MSR_MTRRfix4K_D8000             0x0000026b
+#define MSR_MTRRfix4K_E0000             0x0000026c
+#define MSR_MTRRfix4K_E8000             0x0000026d
+#define MSR_MTRRfix4K_F0000             0x0000026e
+#define MSR_MTRRfix4K_F8000             0x0000026f
+#define MSR_MTRRdefType                 0x000002ff
+
+#define MTRRphysBase_MSR(reg) (0x200 + 2 * (reg))
+#define MTRRphysMask_MSR(reg) (0x200 + 2 * (reg) + 1)
+
+#define MTRR_MEMTYPE_UC 0
+#define MTRR_MEMTYPE_WC 1
+#define MTRR_MEMTYPE_WT 4
+#define MTRR_MEMTYPE_WP 5
+#define MTRR_MEMTYPE_WB 6
+
+#define QEMU_CFG_CTL_PORT 0x510
+#define QEMU_CFG_DATA_PORT 0x511
+#define QEMU_CFG_SIGNATURE  0x00
+#define QEMU_CFG_ID         0x01
+#define QEMU_CFG_UUID       0x02
+
+#define PCI_ADDRESS_SPACE_MEM		0x00
+#define PCI_ADDRESS_SPACE_IO		0x01
+#define PCI_ADDRESS_SPACE_MEM_PREFETCH	0x08
+
+#define PCI_ROM_SLOT 6
+#define PCI_NUM_REGIONS 7
+
+#define PCI_DEVICES_MAX 64
+
+#define PCI_VENDOR_ID		0x00	/* 16 bits */
+#define PCI_DEVICE_ID		0x02	/* 16 bits */
+#define PCI_COMMAND		0x04	/* 16 bits */
+#define  PCI_COMMAND_IO		0x1	/* Enable response in I/O space */
+#define  PCI_COMMAND_MEMORY	0x2	/* Enable response in Memory space */
+#define PCI_CLASS_DEVICE        0x0a    /* Device class */
+#define PCI_INTERRUPT_LINE	0x3c	/* 8 bits */
+#define PCI_INTERRUPT_PIN	0x3d	/* 8 bits */
+#define PCI_MIN_GNT		0x3e	/* 8 bits */
+#define PCI_MAX_LAT		0x3f	/* 8 bits */
+
+#define PCI_VENDOR_ID_INTEL             0x8086
+#define PCI_DEVICE_ID_INTEL_82441       0x1237
+#define PCI_DEVICE_ID_INTEL_82371SB_0   0x7000
+#define PCI_DEVICE_ID_INTEL_82371SB_1   0x7010
+#define PCI_DEVICE_ID_INTEL_82371AB_0   0x7110
+#define PCI_DEVICE_ID_INTEL_82371AB     0x7111
+#define PCI_DEVICE_ID_INTEL_82371AB_3   0x7113
+
+#define PCI_VENDOR_ID_IBM               0x1014
+#define PCI_VENDOR_ID_APPLE             0x106b
