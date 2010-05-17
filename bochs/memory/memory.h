@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: memory.h,v 1.68 2010-03-07 09:16:24 sshwarts Exp $
+// $Id: memory.h,v 1.69 2010-05-17 19:42:30 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -58,7 +58,6 @@ struct memory_handler_struct {
 class BOCHSAPI BX_MEM_C : public logfunctions {
 private:
   struct memory_handler_struct **memory_handlers;
-  bx_bool rom_present[65];
   bx_bool pci_enabled;
   bx_bool smram_available;
   bx_bool smram_enable;
