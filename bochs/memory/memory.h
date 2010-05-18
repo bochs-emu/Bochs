@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: memory.h,v 1.70 2010-05-18 08:54:01 sshwarts Exp $
+// $Id: memory.h,v 1.71 2010-05-18 09:01:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -37,12 +37,12 @@
 class BX_CPU_C;
 
                                        // 512K BIOS ROM @0xfff80000
-#define BIOSROMSZ ((Bit32u)(1 << 19))  //   2M BIOS ROM @0xffe00000, must be a power of 2
+#define BIOSROMSZ ((Bit32u)(1 << 21))  //   2M BIOS ROM @0xffe00000, must be a power of 2
 #define EXROMSIZE  (0x20000)           // ROMs 0xc0000-0xdffff (area 0xe0000-0xfffff=bios mapped)
 #define BIOS_MASK (BIOSROMSZ-1)
 #define EXROM_MASK (EXROMSIZE-1)
 
-#define BIOS_MAP_LAST128K(addr) ((addr) & BIOS_MASK)
+#define BIOS_MAP_LAST128K(addr) (((addr) | 0xfff00000) & BIOS_MASK)
 
 typedef bx_bool (*memory_handler_t)(bx_phy_address addr, unsigned len, void *data, void *param);
 
