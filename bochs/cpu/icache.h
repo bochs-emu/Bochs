@@ -1,8 +1,8 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: icache.h,v 1.53 2010-05-12 14:55:12 sshwarts Exp $
+// $Id: icache.h,v 1.54 2010-05-18 07:28:04 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2007-2009 Stanislav Shwartsman
+//   Copyright (c) 2007-2010 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or

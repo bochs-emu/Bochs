@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.676 2010-05-12 21:33:04 sshwarts Exp $
+// $Id: cpu.h,v 1.677 2010-05-18 07:28:04 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2010  The Bochs Project
@@ -1645,21 +1645,37 @@ public: // for now...
   BX_SMF void NEG_EwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void NEG_EdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
-  BX_SMF void ROL_Eb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void ROR_Eb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void RCL_Eb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void RCR_Eb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void SHL_Eb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void SHR_Eb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void SAR_Eb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void ROL_EbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void ROR_EbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void RCL_EbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void RCR_EbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SHL_EbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SHR_EbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SAR_EbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
-  BX_SMF void ROL_Ew(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void ROR_Ew(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void RCL_Ew(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void RCR_Ew(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void SHL_Ew(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void SHR_Ew(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void SAR_Ew(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void ROL_EbM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void ROR_EbM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void RCL_EbM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void RCR_EbM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SHL_EbM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SHR_EbM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SAR_EbM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void ROL_EwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void ROR_EwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void RCL_EwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void RCR_EwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SHL_EwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SHR_EwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SAR_EwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void ROL_EwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void ROR_EwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void RCL_EwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void RCR_EwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SHL_EwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SHR_EwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SAR_EwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
   BX_SMF void ROL_EdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void ROR_EdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);

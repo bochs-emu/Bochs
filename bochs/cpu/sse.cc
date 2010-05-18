@@ -1,8 +1,8 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse.cc,v 1.70 2010-04-02 19:03:47 sshwarts Exp $
+// $Id: sse.cc,v 1.71 2010-05-18 07:28:05 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2003-2009 Stanislav Shwartsman
+//   Copyright (c) 2003-2010 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -2560,23 +2560,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSRAW_VdqWdq(bxInstruction_c *i)
   {
     Bit8u shift = op2.xmmubyte(0);
 
-    result.xmm16u(0) = op1.xmm16u(0) >> shift;
-    result.xmm16u(1) = op1.xmm16u(1) >> shift;
-    result.xmm16u(2) = op1.xmm16u(2) >> shift;
-    result.xmm16u(3) = op1.xmm16u(3) >> shift;
-    result.xmm16u(4) = op1.xmm16u(4) >> shift;
-    result.xmm16u(5) = op1.xmm16u(5) >> shift;
-    result.xmm16u(6) = op1.xmm16u(6) >> shift;
-    result.xmm16u(7) = op1.xmm16u(7) >> shift;
-
-    if(op1.xmm16u(0) & 0x8000) result.xmm16u(0) |= (0xffff << (16 - shift));
-    if(op1.xmm16u(1) & 0x8000) result.xmm16u(1) |= (0xffff << (16 - shift));
-    if(op1.xmm16u(2) & 0x8000) result.xmm16u(2) |= (0xffff << (16 - shift));
-    if(op1.xmm16u(3) & 0x8000) result.xmm16u(3) |= (0xffff << (16 - shift));
-    if(op1.xmm16u(4) & 0x8000) result.xmm16u(4) |= (0xffff << (16 - shift));
-    if(op1.xmm16u(5) & 0x8000) result.xmm16u(5) |= (0xffff << (16 - shift));
-    if(op1.xmm16u(6) & 0x8000) result.xmm16u(6) |= (0xffff << (16 - shift));
-    if(op1.xmm16u(7) & 0x8000) result.xmm16u(7) |= (0xffff << (16 - shift));
+    result.xmm16u(0) = (Bit16u)(op1.xmm16s(0) >> shift);
+    result.xmm16u(1) = (Bit16u)(op1.xmm16s(1) >> shift);
+    result.xmm16u(2) = (Bit16u)(op1.xmm16s(2) >> shift);
+    result.xmm16u(3) = (Bit16u)(op1.xmm16s(3) >> shift);
+    result.xmm16u(4) = (Bit16u)(op1.xmm16s(4) >> shift);
+    result.xmm16u(5) = (Bit16u)(op1.xmm16s(5) >> shift);
+    result.xmm16u(6) = (Bit16u)(op1.xmm16s(6) >> shift);
+    result.xmm16u(7) = (Bit16u)(op1.xmm16s(7) >> shift);
   }
 
   /* now write result back to destination */
@@ -2615,15 +2606,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSRAD_VdqWdq(bxInstruction_c *i)
   {
     Bit8u shift = op2.xmmubyte(0);
 
-    result.xmm32u(0) = op1.xmm32u(0) >> shift;
-    result.xmm32u(1) = op1.xmm32u(1) >> shift;
-    result.xmm32u(2) = op1.xmm32u(2) >> shift;
-    result.xmm32u(3) = op1.xmm32u(3) >> shift;
-
-    if(op1.xmm32u(0) & 0x80000000) result.xmm32u(0) |= (0xffffffff << (32-shift));
-    if(op1.xmm32u(1) & 0x80000000) result.xmm32u(1) |= (0xffffffff << (32-shift));
-    if(op1.xmm32u(2) & 0x80000000) result.xmm32u(2) |= (0xffffffff << (32-shift));
-    if(op1.xmm32u(3) & 0x80000000) result.xmm32u(3) |= (0xffffffff << (32-shift));
+    result.xmm32u(0) = (Bit32u)(op1.xmm32s(0) >> shift);
+    result.xmm32u(1) = (Bit32u)(op1.xmm32s(1) >> shift);
+    result.xmm32u(2) = (Bit32u)(op1.xmm32s(2) >> shift);
+    result.xmm32u(3) = (Bit32u)(op1.xmm32s(3) >> shift);
   }
 
   /* now write result back to destination */
@@ -3456,23 +3442,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSRAW_UdqIb(bxInstruction_c *i)
     result.xmm16u(7) = (op.xmm16u(7) & 0x8000) ? 0xffff : 0;
   }
   else {
-    result.xmm16u(0) = op.xmm16u(0) >> shift;
-    result.xmm16u(1) = op.xmm16u(1) >> shift;
-    result.xmm16u(2) = op.xmm16u(2) >> shift;
-    result.xmm16u(3) = op.xmm16u(3) >> shift;
-    result.xmm16u(4) = op.xmm16u(4) >> shift;
-    result.xmm16u(5) = op.xmm16u(5) >> shift;
-    result.xmm16u(6) = op.xmm16u(6) >> shift;
-    result.xmm16u(7) = op.xmm16u(7) >> shift;
-
-    if(op.xmm16u(0) & 0x8000) result.xmm16u(0) |= (0xffff << (16 - shift));
-    if(op.xmm16u(1) & 0x8000) result.xmm16u(1) |= (0xffff << (16 - shift));
-    if(op.xmm16u(2) & 0x8000) result.xmm16u(2) |= (0xffff << (16 - shift));
-    if(op.xmm16u(3) & 0x8000) result.xmm16u(3) |= (0xffff << (16 - shift));
-    if(op.xmm16u(4) & 0x8000) result.xmm16u(4) |= (0xffff << (16 - shift));
-    if(op.xmm16u(5) & 0x8000) result.xmm16u(5) |= (0xffff << (16 - shift));
-    if(op.xmm16u(6) & 0x8000) result.xmm16u(6) |= (0xffff << (16 - shift));
-    if(op.xmm16u(7) & 0x8000) result.xmm16u(7) |= (0xffff << (16 - shift));
+    result.xmm16u(0) = (Bit16u)(op.xmm16s(0) >> shift);
+    result.xmm16u(1) = (Bit16u)(op.xmm16s(1) >> shift);
+    result.xmm16u(2) = (Bit16u)(op.xmm16s(2) >> shift);
+    result.xmm16u(3) = (Bit16u)(op.xmm16s(3) >> shift);
+    result.xmm16u(4) = (Bit16u)(op.xmm16s(4) >> shift);
+    result.xmm16u(5) = (Bit16u)(op.xmm16s(5) >> shift);
+    result.xmm16u(6) = (Bit16u)(op.xmm16s(6) >> shift);
+    result.xmm16u(7) = (Bit16u)(op.xmm16s(7) >> shift);
   }
 
   /* now write result back to destination */
@@ -3552,15 +3529,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSRAD_UdqIb(bxInstruction_c *i)
     result.xmm32u(3) = (op.xmm32u(3) & 0x80000000) ? 0xffffffff : 0;
   }
   else {
-    result.xmm32u(0) = op.xmm32u(0) >> shift;
-    result.xmm32u(1) = op.xmm32u(1) >> shift;
-    result.xmm32u(2) = op.xmm32u(2) >> shift;
-    result.xmm32u(3) = op.xmm32u(3) >> shift;
-
-    if(op.xmm32u(0) & 0x80000000) result.xmm32u(0) |= (0xffffffff << (32-shift));
-    if(op.xmm32u(1) & 0x80000000) result.xmm32u(1) |= (0xffffffff << (32-shift));
-    if(op.xmm32u(2) & 0x80000000) result.xmm32u(2) |= (0xffffffff << (32-shift));
-    if(op.xmm32u(3) & 0x80000000) result.xmm32u(3) |= (0xffffffff << (32-shift));
+    result.xmm32u(0) = (Bit32u)(op.xmm32s(0) >> shift);
+    result.xmm32u(1) = (Bit32u)(op.xmm32s(1) >> shift);
+    result.xmm32u(2) = (Bit32u)(op.xmm32s(2) >> shift);
+    result.xmm32u(3) = (Bit32u)(op.xmm32s(3) >> shift);
   }
 
   /* now write result back to destination */

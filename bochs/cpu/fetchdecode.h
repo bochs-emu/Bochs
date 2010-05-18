@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.h,v 1.102 2010-04-18 09:21:24 sshwarts Exp $
+// $Id: fetchdecode.h,v 1.103 2010-05-18 07:28:04 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005-2010 Stanislav Shwartsman
@@ -252,28 +252,52 @@ static const BxOpcodeInfo_t BxOpcodeInfo64G1AEqM[8] = {
 /* Group 2 */
 /* ******* */
 
-static const BxOpcodeInfo_t BxOpcodeInfoG2Eb[8] = {
+static const BxOpcodeInfo_t BxOpcodeInfoG2EbR[8] = {
   // attributes defined in main area
-  /* 0 */ { 0, BX_IA_ROL_Eb },
-  /* 1 */ { 0, BX_IA_ROR_Eb },
-  /* 2 */ { 0, BX_IA_RCL_Eb },
-  /* 3 */ { 0, BX_IA_RCR_Eb },
-  /* 4 */ { 0, BX_IA_SHL_Eb },
-  /* 5 */ { 0, BX_IA_SHR_Eb },
-  /* 6 */ { 0, BX_IA_SHL_Eb },
-  /* 7 */ { 0, BX_IA_SAR_Eb }
+  /* 0 */ { 0, BX_IA_ROL_EbR },
+  /* 1 */ { 0, BX_IA_ROR_EbR },
+  /* 2 */ { 0, BX_IA_RCL_EbR },
+  /* 3 */ { 0, BX_IA_RCR_EbR },
+  /* 4 */ { 0, BX_IA_SHL_EbR },
+  /* 5 */ { 0, BX_IA_SHR_EbR },
+  /* 6 */ { 0, BX_IA_SHL_EbR },
+  /* 7 */ { 0, BX_IA_SAR_EbR }
 };
 
-static const BxOpcodeInfo_t BxOpcodeInfoG2Ew[8] = {
+static const BxOpcodeInfo_t BxOpcodeInfoG2EbM[8] = {
   // attributes defined in main area
-  /* 0 */ { 0, BX_IA_ROL_Ew },
-  /* 1 */ { 0, BX_IA_ROR_Ew },
-  /* 2 */ { 0, BX_IA_RCL_Ew },
-  /* 3 */ { 0, BX_IA_RCR_Ew },
-  /* 4 */ { 0, BX_IA_SHL_Ew },
-  /* 5 */ { 0, BX_IA_SHR_Ew },
-  /* 6 */ { 0, BX_IA_SHL_Ew },
-  /* 7 */ { 0, BX_IA_SAR_Ew }
+  /* 0 */ { 0, BX_IA_ROL_EbM },
+  /* 1 */ { 0, BX_IA_ROR_EbM },
+  /* 2 */ { 0, BX_IA_RCL_EbM },
+  /* 3 */ { 0, BX_IA_RCR_EbM },
+  /* 4 */ { 0, BX_IA_SHL_EbM },
+  /* 5 */ { 0, BX_IA_SHR_EbM },
+  /* 6 */ { 0, BX_IA_SHL_EbM },
+  /* 7 */ { 0, BX_IA_SAR_EbM }
+};
+
+static const BxOpcodeInfo_t BxOpcodeInfoG2EwR[8] = {
+  // attributes defined in main area
+  /* 0 */ { 0, BX_IA_ROL_EwR },
+  /* 1 */ { 0, BX_IA_ROR_EwR },
+  /* 2 */ { 0, BX_IA_RCL_EwR },
+  /* 3 */ { 0, BX_IA_RCR_EwR },
+  /* 4 */ { 0, BX_IA_SHL_EwR },
+  /* 5 */ { 0, BX_IA_SHR_EwR },
+  /* 6 */ { 0, BX_IA_SHL_EwR },
+  /* 7 */ { 0, BX_IA_SAR_EwR }
+};
+
+static const BxOpcodeInfo_t BxOpcodeInfoG2EwM[8] = {
+  // attributes defined in main area
+  /* 0 */ { 0, BX_IA_ROL_EwM },
+  /* 1 */ { 0, BX_IA_ROR_EwM },
+  /* 2 */ { 0, BX_IA_RCL_EwM },
+  /* 3 */ { 0, BX_IA_RCR_EwM },
+  /* 4 */ { 0, BX_IA_SHL_EwM },
+  /* 5 */ { 0, BX_IA_SHR_EwM },
+  /* 6 */ { 0, BX_IA_SHL_EwM },
+  /* 7 */ { 0, BX_IA_SAR_EwM }
 };
 
 static const BxOpcodeInfo_t BxOpcodeInfoG2EdM[8] = {

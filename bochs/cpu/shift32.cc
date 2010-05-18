@@ -1,8 +1,8 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: shift32.cc,v 1.50 2009-12-04 16:53:12 sshwarts Exp $
+// $Id: shift32.cc,v 1.51 2010-05-18 07:28:05 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2009  The Bochs Project
+//  Copyright (C) 2001-2010  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -514,12 +514,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SAR_EdM(bxInstruction_c *i)
   if (!count) return;
 
   /* count < 32, since only lower 5 bits used */
-  if (op1_32 & 0x80000000) {
-    result_32 = (op1_32 >> count) | (0xffffffff << (32 - count));
-  }
-  else {
-    result_32 = (op1_32 >> count);
-  }
+  result_32 = ((Bit32s) op1_32) >> count;
 
   write_RMW_virtual_dword(result_32);
 
@@ -544,12 +539,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SAR_EdR(bxInstruction_c *i)
   op1_32 = BX_READ_32BIT_REG(i->rm());
 
   /* count < 32, since only lower 5 bits used */
-  if (op1_32 & 0x80000000) {
-    result_32 = (op1_32 >> count) | (0xffffffff << (32 - count));
-  }
-  else {
-    result_32 = (op1_32 >> count);
-  }
+  result_32 = ((Bit32s) op1_32) >> count;
 
   BX_WRITE_32BIT_REGZ(i->rm(), result_32);
 
