@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: memory.cc,v 1.82 2009-12-04 16:53:12 sshwarts Exp $
+// $Id: memory.cc,v 1.83 2010-05-18 07:44:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -290,6 +290,7 @@ mem_read:
         switch (DEV_pci_rd_memtype(a20addr)) {
           case 0x0:  // Read from ROM
             if ((a20addr & 0xfffe0000) == 0x000e0000) {
+              // last 128K of BIOS ROM mapped to 0xE0000-0xFFFFF
               *data_ptr = BX_MEM_THIS rom[a20addr & BIOS_MASK];
             }
             else {
@@ -310,6 +311,7 @@ mem_read:
           *data_ptr = *(BX_MEM_THIS get_vector(a20addr));
         }
         else if ((a20addr & 0xfffe0000) == 0x000e0000) {
+          // last 128K of BIOS ROM mapped to 0xE0000-0xFFFFF
           *data_ptr = BX_MEM_THIS rom[a20addr & BIOS_MASK];
         }
         else {

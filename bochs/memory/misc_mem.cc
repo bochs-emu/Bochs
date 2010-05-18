@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: misc_mem.cc,v 1.145 2010-05-17 19:42:30 sshwarts Exp $
+// $Id: misc_mem.cc,v 1.146 2010-05-18 07:44:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -73,7 +73,7 @@ void BX_MEM_C::init_memory(Bit64u guest, Bit64u host)
 {
   unsigned idx;
 
-  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.145 2010-05-17 19:42:30 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.146 2010-05-18 07:44:37 sshwarts Exp $"));
 
   // accept only memory size which is multiply of 1M
   BX_ASSERT((host & 0xfffff) == 0);
@@ -430,6 +430,7 @@ bx_bool BX_MEM_C::dbg_fetch_mem(BX_CPU_C *cpu, bx_phy_address addr, unsigned len
       switch (DEV_pci_rd_memtype (addr)) {
         case 0x0:  // Read from ROM
           if ((addr & 0xfffe0000) == 0x000e0000) {
+            // last 128K of BIOS ROM mapped to 0xE0000-0xFFFFF
             *buf = BX_MEM_THIS rom[addr & BIOS_MASK];
           }
           else {
@@ -451,6 +452,7 @@ bx_bool BX_MEM_C::dbg_fetch_mem(BX_CPU_C *cpu, bx_phy_address addr, unsigned len
       }
       // must be in C0000 - FFFFF range
       else if ((addr & 0xfffe0000) == 0x000e0000) {
+        // last 128K of BIOS ROM mapped to 0xE0000-0xFFFFF
         *buf = BX_MEM_THIS rom[addr & BIOS_MASK];
       }
       else {
@@ -609,6 +611,7 @@ Bit8u *BX_MEM_C::getHostMemAddr(BX_CPU_C *cpu, bx_phy_address addr, unsigned rw)
       switch (DEV_pci_rd_memtype (a20addr)) {
         case 0x0:   // Read from ROM
           if ((a20addr & 0xfffe0000) == 0x000e0000) {
+            // last 128K of BIOS ROM mapped to 0xE0000-0xFFFFF
             return (Bit8u *) &BX_MEM_THIS rom[a20addr & BIOS_MASK];
           }
           else {
@@ -630,6 +633,7 @@ Bit8u *BX_MEM_C::getHostMemAddr(BX_CPU_C *cpu, bx_phy_address addr, unsigned rw)
       }
       // must be in C0000 - FFFFF range
       else if ((a20addr & 0xfffe0000) == 0x000e0000) {
+        // last 128K of BIOS ROM mapped to 0xE0000-0xFFFFF
         return (Bit8u *) &BX_MEM_THIS rom[a20addr & BIOS_MASK];
       }
       else {
