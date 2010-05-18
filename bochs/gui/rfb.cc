@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rfb.cc,v 1.67 2010-02-26 14:18:18 sshwarts Exp $
+// $Id: rfb.cc,v 1.68 2010-05-18 15:33:41 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2000  Psyon.Org!
@@ -439,6 +439,7 @@ void HandleRfbClient(SOCKET sClient)
   U32 auth;
   rfbClientInitMessage cim;
   rfbServerInitMessage sim;
+  bx_bool mouse_toggle = 0;
 
   client_connected = true;
   setsockopt(sClient, IPPROTO_TCP, TCP_NODELAY, (const char *)&one, sizeof(one));
@@ -610,13 +611,27 @@ void HandleRfbClient(SOCKET sClient)
           ReadExact(sClient, (char *)&ke, sizeof(rfbKeyEventMessage));
           ke.key = ntohl(ke.key);
           while(bKeyboardInUse);
-          bKeyboardInUse = true;
-          if (rfbKeyboardEvents >= MAX_KEY_EVENTS) break;
-          rfbKeyboardEvent[rfbKeyboardEvents].type = KEYBOARD;
-          rfbKeyboardEvent[rfbKeyboardEvents].key  = ke.key;
-          rfbKeyboardEvent[rfbKeyboardEvents].down = ke.downFlag;
-          rfbKeyboardEvents++;
-          bKeyboardInUse = false;
+
+          if ((ke.key == XK_Control_L) || (ke.key == XK_Control_R)) {
+            mouse_toggle = bx_gui->mouse_toggle_check(BX_MT_KEY_CTRL, ke.downFlag);
+          } else if (ke.key == XK_Alt_L) {
+            mouse_toggle = bx_gui->mouse_toggle_check(BX_MT_KEY_ALT, ke.downFlag);
+          } else if (ke.key == XK_F10) {
+            mouse_toggle = bx_gui->mouse_toggle_check(BX_MT_KEY_F10, ke.downFlag);
+          } else if (ke.key == XK_F12) {
+            mouse_toggle = bx_gui->mouse_toggle_check(BX_MT_KEY_F12, ke.downFlag);
+          }
+          if (mouse_toggle) {
+            bx_gui->toggle_mouse_enable();
+          } else {
+            bKeyboardInUse = true;
+            if (rfbKeyboardEvents >= MAX_KEY_EVENTS) break;
+            rfbKeyboardEvent[rfbKeyboardEvents].type = KEYBOARD;
+            rfbKeyboardEvent[rfbKeyboardEvents].key  = ke.key;
+            rfbKeyboardEvent[rfbKeyboardEvents].down = ke.downFlag;
+            rfbKeyboardEvents++;
+            bKeyboardInUse = false;
+          }
           break;
         }
       case rfbPointerEvent:
@@ -624,16 +639,21 @@ void HandleRfbClient(SOCKET sClient)
           rfbPointerEventMessage pe;
           ReadExact(sClient, (char *)&pe, sizeof(rfbPointerEventMessage));
           while(bKeyboardInUse);
-          bKeyboardInUse = true;
-          if (rfbKeyboardEvents >= MAX_KEY_EVENTS) break;
-          rfbKeyboardEvent[rfbKeyboardEvents].type = MOUSE;
-          rfbKeyboardEvent[rfbKeyboardEvents].x    = ntohs(pe.xPosition);
-          rfbKeyboardEvent[rfbKeyboardEvents].y    = ntohs(pe.yPosition);
-          rfbKeyboardEvent[rfbKeyboardEvents].down = (pe.buttonMask & 0x01) |
-                                                     ((pe.buttonMask>>1) & 0x02) |
-                                                     ((pe.buttonMask<<1) & 0x04);
-          rfbKeyboardEvents++;
-          bKeyboardInUse = false;
+
+          if (bx_gui->mouse_toggle_check(BX_MT_MBUTTON, (pe.buttonMask & 0x02) > 0)) {
+            bx_gui->toggle_mouse_enable();
+          } else {
+            bKeyboardInUse = true;
+            if (rfbKeyboardEvents >= MAX_KEY_EVENTS) break;
+            rfbKeyboardEvent[rfbKeyboardEvents].type = MOUSE;
+            rfbKeyboardEvent[rfbKeyboardEvents].x    = ntohs(pe.xPosition);
+            rfbKeyboardEvent[rfbKeyboardEvents].y    = ntohs(pe.yPosition);
+            rfbKeyboardEvent[rfbKeyboardEvents].down = (pe.buttonMask & 0x01) |
+                                                       ((pe.buttonMask>>1) & 0x02) |
+                                                       ((pe.buttonMask<<1) & 0x04);
+            rfbKeyboardEvents++;
+            bKeyboardInUse = false;
+          }
           break;
         }
       case rfbClientCutText:

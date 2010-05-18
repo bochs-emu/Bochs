@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.252 2010-05-16 09:01:36 vruppert Exp $
+// $Id: siminterface.h,v 1.253 2010-05-18 15:33:41 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  The Bochs Project
@@ -907,7 +907,8 @@ enum {
 enum {
   BX_MOUSE_TOGGLE_CTRL_MB,
   BX_MOUSE_TOGGLE_CTRL_F10,
-  BX_MOUSE_TOGGLE_CTRL_ALT
+  BX_MOUSE_TOGGLE_CTRL_ALT,
+  BX_MOUSE_TOGGLE_F12
 };
 
 #define BX_FDD_NONE  0 // floppy not present

@@ -1,5 +1,5 @@
 .\"Document Author:  Timothy R. Butler   -   tbutler@uninetsolutions.com"
-.TH bochsrc 5 "16 May 2010" "bochsrc" "The Bochs Project"
+.TH bochsrc 5 "18 May 2010" "bochsrc" "The Bochs Project"
 .\"SKIP_SECTION"
 .SH NAME
 bochsrc \- Configuration file for Bochs.
@@ -740,13 +740,14 @@ The Bochs gui creates mouse "events" unless the 'enabled' option is
 set to 0. The hardware emulation itself is not disabled by this.
 Unless you have a particular reason for enabling the mouse by default,
 it is recommended that you leave it off. You can also toggle the mouse
-usage at runtime (X11, SDL, wxWidgets and Win32 - see below).
+usage at runtime (RFB, SDL, Win32, wxWidgets and X11 - see below).
 
 toggle
 
 The default method to toggle the mouse capture at runtime is to press the
 CTRL key and the middle mouse button ('ctrl+mbutton'). This option allows
-to change the method to 'ctrl+f10' (like DOSBox) or 'ctrl+alt' (like QEMU).
+to change the method to 'ctrl+f10' (like DOSBox), 'ctrl+alt' (like QEMU)
+or 'f12' (replaces win32 'legacyF12' option).
 
 Examples:
   mouse: enabled=1

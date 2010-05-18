@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.278 2010-05-16 20:44:08 vruppert Exp $
+$Id: user.dbk,v 1.279 2010-05-18 15:33:41 vruppert Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -519,9 +519,9 @@ currently work with.
     <entry>USB</entry>
     <entry>incomplete</entry>
     <entry>Two types of host controllers (UHCI and OHCI) and the devices 'mouse',
-    'tablet', 'keypad', 'disk', 'cdrom' and 'hub' are available. Plugging in and
-    removing devices at runtime is possible. Access to real hardware is not
-    implemented yet.
+    'tablet', 'keypad', 'disk', 'cdrom', 'hub' and 'printer'. are available.
+    Plugging in and removing devices at runtime is possible. Access to real
+    hardware is not implemented yet.
     </entry>
   </row>
   <row>
@@ -3500,7 +3500,6 @@ behaviour. See the examples below for currently supported options.
 <screen>
   display_library: rfb, options="timeout=60"  # time to wait for client
   display_library: sdl, options="fullscreen"  # startup in fullscreen mode
-  display_library: win32, options="legacyF12" # use F12 to toggle mouse
   display_library: win32, options="gui_debug" # use win32 debugger gui frontend
   display_library: x, options="hideIPS"       # disable IPS output in status bar
   display_library: x, options="gui_debug"     # use GTK debugger gui frontend
@@ -3935,7 +3934,8 @@ and the 'toggle' option below).
 <para>
 The default method to toggle the mouse capture at runtime is to press the
 CTRL key and the middle mouse button ('ctrl+mbutton'). This option allows
-to change the method to 'ctrl+f10' (like DOSBox) or 'ctrl+alt' (like QEMU).
+to change the method to 'ctrl+f10' (like DOSBox) or 'ctrl+alt' (like QEMU)
+or 'f12' (replaces win32 'legacyF12' option).
 </para>
 </section>
 
@@ -4005,8 +4005,8 @@ i440FX PCI chipset.
 </para>
 <para>
 With the port<replaceable>X</replaceable> option you can connect devices
-to the hub (currently supported: 'mouse', 'tablet', 'keypad', 'disk', 'cdrom'
-and 'hub').
+to the hub (currently supported: 'mouse', 'tablet', 'keypad', 'disk', 'cdrom',
+'hub' and 'printer').
 </para>
 <para>
 If you connect the mouse or tablet to one of the ports, Bochs forwards the
@@ -4025,6 +4025,12 @@ The device name 'hub' connects an external hub with max. 8 ports (default: 4)
 to the root hub. To specify the number of ports you have to add the value
 separated with a colon. Connecting devices to the external hub ports is only
 available in the runtime configuration.
+</para>
+<para>
+The device 'printer' emulates the HP Deskjet 920C printer. The PCL data is
+sent to a file specified in bochsrc.txt. The current code appends the PCL
+code to the file if the file already existed. It would probably be nice to
+overwrite the file instead, asking user first.
 </para>
 <note><para>
 PCI support must be enabled.
@@ -4941,8 +4947,9 @@ You can also start bochs with the -q option to skip these menus.
 2. Read options from...
 3. Edit options
 4. Save options to...
-5. Begin simulation
-6. Quit now
+5. Restore the Bochs state from...
+6. Begin simulation
+7. Quit now
 
 Please choose one: [5]
 </screen>
@@ -4987,12 +4994,11 @@ behavoiur of Bochs at runtime if you click on one of these buttons:
   events are captured, you cannot reach the button anymore, in order to disable
   capturing again. By default you can enable and disable the mouse capture pressing
   the CTRL key and the third (middle) mouse button. See the <link linkend="bochsopt-mouse">mouse option</link>
-  parameter 'toggle' for other methods to toggle the mouse capture. The win32 display
-  library can be configured to use the legacy F12 key instead.
+  parameter 'toggle' for other methods to toggle the mouse capture.
 </para>
 <para>&FIXME; Support for 2 button mouse to toggle the capture mode not yet complete.
   Some display libraries still don't support changing the mouse capture at runtime,
-  but it is already supported on X11, SDL, wxWidgets and Win32.</para>
+  but it is already supported on RFB, SDL, Win32, wxWidgets and X11.</para>
 </listitem>
 <listitem>
 <para>user button</para>
@@ -5061,13 +5067,11 @@ Bochs Runtime Options
 7. (not implemented)
 8. Log options for all devices
 9. Log options for individual devices
-10. VGA Update Interval: 100000
-11. Mouse: disabled
-12. Keyboard paste delay: 100000
-13. Userbutton shortcut: ctrlaltdel
-14. Instruction tracing: off (doesn't exist yet)
-15. Continue simulation
-16. Quit now
+10. Instruction tracing: off (doesn't exist yet)
+11. USB runtime options
+12. Misc runtime options
+13. Continue simulation
+14. Quit now
 
 Please choose one:  [15]
 </screen>

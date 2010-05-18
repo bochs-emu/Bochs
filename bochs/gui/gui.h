@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.h,v 1.63 2010-05-16 09:01:36 vruppert Exp $
+// $Id: gui.h,v 1.64 2010-05-18 15:33:41 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2009  The Bochs Project
@@ -28,17 +28,24 @@
 #define BX_GUI_DLG_SAVE_RESTORE 0x20
 #define BX_GUI_DLG_ALL          0x3F
 
+// text mode blink feature
 #define BX_TEXT_BLINK_MODE      0x01
 #define BX_TEXT_BLINK_TOGGLE    0x02
 #define BX_TEXT_BLINK_STATE     0x04
 
+// mouse capture toggle feature
 #define BX_MT_KEY_CTRL          0x01
 #define BX_MT_KEY_ALT           0x02
 #define BX_MT_KEY_F10           0x04
-#define BX_MT_MBUTTON           0x08
+#define BX_MT_KEY_F12           0x08
+#define BX_MT_MBUTTON           0x10
+#define BX_MT_LBUTTON           0x20
+#define BX_MT_RBUTTON           0x40
 
-#define BX_GUI_MT_CTRL_MB       0x09
+#define BX_GUI_MT_CTRL_MB       0x11
+#define BX_GUI_MT_CTRL_LRB      0x61
 #define BX_GUI_MT_CTRL_F10      0x05
+#define BX_GUI_MT_F12           0x08
 #define BX_GUI_MT_CTRL_ALT      0x03
 
 typedef struct {

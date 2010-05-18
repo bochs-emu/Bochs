@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32.cc,v 1.138 2010-05-16 20:44:08 vruppert Exp $
+// $Id: win32.cc,v 1.139 2010-05-18 15:33:41 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2009  The Bochs Project
@@ -171,7 +171,6 @@ static unsigned dimension_x, dimension_y, current_bpp;
 static unsigned stretched_x, stretched_y;
 static unsigned stretch_factor=1;
 static BOOL BxTextMode = TRUE;
-static BOOL legacyF12 = FALSE;
 static BOOL fix_size = FALSE;
 #if BX_DEBUGGER && BX_DEBUGGER_GUI
 static BOOL gui_debug = FALSE;
@@ -642,7 +641,7 @@ void bx_win32_gui_c::specific_init(int argc, char **argv, unsigned
     for (i = 1; i < argc; i++) {
       BX_INFO(("option %d: %s", i, argv[i]));
       if (!strcmp(argv[i], "legacyF12")) {
-        legacyF12 = TRUE;
+        BX_PANIC(("The option 'legacyF12' is now deprecated - use 'mouse: toggle=f12' instead"));
 #if BX_DEBUGGER && BX_DEBUGGER_GUI
       } else if (!strcmp(argv[i], "gui_debug")) {
         if (gui_ci) {
@@ -658,23 +657,17 @@ void bx_win32_gui_c::specific_init(int argc, char **argv, unsigned
     }
   }
 
-  if (legacyF12) {
-    lstrcpy(szMouseEnable, "Press F12 to enable mouse");
-    lstrcpy(szMouseDisable, "Press F12 to disable mouse");
-    lstrcpy(szMouseTooltip, "Enable mouse capture\nUse F12 to release");
+  mouse_buttons = GetSystemMetrics(SM_CMOUSEBUTTONS);
+  BX_INFO(("Number of Mouse Buttons = %d", mouse_buttons));
+  if ((SIM->get_param_enum(BXPN_MOUSE_TOGGLE)->get() == BX_MOUSE_TOGGLE_CTRL_MB) &&
+      (mouse_buttons == 2)) {
+    lstrcpy(szMouseEnable, "CTRL + Lbutton + Rbutton enables mouse ");
+    lstrcpy(szMouseDisable, "CTRL + Lbutton + Rbutton disables mouse");
+    lstrcpy(szMouseTooltip, "Enable mouse capture\nUse CTRL + Lbutton + Rbutton to release");
   } else {
-    mouse_buttons = GetSystemMetrics(SM_CMOUSEBUTTONS);
-    BX_INFO(("Number of Mouse Buttons = %d", mouse_buttons));
-    if ((SIM->get_param_enum(BXPN_MOUSE_TOGGLE)->get() == BX_MOUSE_TOGGLE_CTRL_MB) &&
-        (mouse_buttons == 2)) {
-      lstrcpy(szMouseEnable, "CTRL + Lbutton + Rbutton enables mouse ");
-      lstrcpy(szMouseDisable, "CTRL + Lbutton + Rbutton disables mouse");
-      lstrcpy(szMouseTooltip, "Enable mouse capture\nUse CTRL + Lbutton + Rbutton to release");
-    } else {
-      wsprintf(szMouseEnable, "%s enables mouse ", get_toggle_info());
-      wsprintf(szMouseDisable, "%s disables mouse", get_toggle_info());
-      wsprintf(szMouseTooltip, "Enable mouse capture\nUse %s to release", get_toggle_info());
-    }
+    wsprintf(szMouseEnable, "%s enables mouse ", get_toggle_info());
+    wsprintf(szMouseDisable, "%s disables mouse", get_toggle_info());
+    wsprintf(szMouseTooltip, "Enable mouse capture\nUse %s to release", get_toggle_info());
   }
 
   stInfo.hInstance = GetModuleHandle(NULL);
@@ -1176,14 +1169,14 @@ LRESULT CALLBACK simWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
   case WM_LBUTTONDBLCLK:
   case WM_LBUTTONUP:
     if (mouse_buttons == 2) {
-      if ((wParam & (MK_LBUTTON | MK_RBUTTON)) == (MK_LBUTTON | MK_RBUTTON)) {
-        if (bx_gui->mouse_toggle_check(BX_MT_MBUTTON, 1)) {
+      if ((wParam & MK_LBUTTON) == MK_LBUTTON) {
+        if (bx_gui->mouse_toggle_check(BX_MT_LBUTTON, 1)) {
           mouseCaptureMode = !mouseCaptureMode;
           SetMouseCapture();
           mouseModeChange = TRUE;
         }
       } else if (mouseModeChange && (iMsg == WM_LBUTTONUP)) {
-        bx_gui->mouse_toggle_check(BX_MT_MBUTTON, 0);
+        bx_gui->mouse_toggle_check(BX_MT_LBUTTON, 0);
         mouseModeChange = FALSE;
       } else {
         processMouseXY(LOWORD(lParam), HIWORD(lParam), 0, wParam, 1);
@@ -1214,14 +1207,14 @@ LRESULT CALLBACK simWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
   case WM_RBUTTONDBLCLK:
   case WM_RBUTTONUP:
     if (mouse_buttons == 2) {
-      if ((wParam & (MK_LBUTTON | MK_RBUTTON)) == (MK_LBUTTON | MK_RBUTTON)) {
-        if (bx_gui->mouse_toggle_check(BX_MT_MBUTTON, 1)) {
+      if ((wParam & MK_RBUTTON) == MK_RBUTTON) {
+        if (bx_gui->mouse_toggle_check(BX_MT_RBUTTON, 1)) {
           mouseCaptureMode = !mouseCaptureMode;
           SetMouseCapture();
           mouseModeChange = TRUE;
         }
       } else if (mouseModeChange && (iMsg == WM_RBUTTONUP)) {
-        bx_gui->mouse_toggle_check(BX_MT_MBUTTON, 0);
+        bx_gui->mouse_toggle_check(BX_MT_RBUTTON, 0);
         mouseModeChange = FALSE;
       } else {
         processMouseXY(LOWORD(lParam), HIWORD(lParam), 0, wParam, 2);
@@ -1244,16 +1237,14 @@ LRESULT CALLBACK simWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 
   case WM_KEYDOWN:
   case WM_SYSKEYDOWN:
-    if (legacyF12) {
-      if (wParam == VK_F12) {
-        mouse_toggle = 1;
-      }
-    } else if (wParam == VK_CONTROL) {
+    if (wParam == VK_CONTROL) {
       mouse_toggle = bx_gui->mouse_toggle_check(BX_MT_KEY_CTRL, 1);
     } else if (wParam == VK_MENU) {
       mouse_toggle = bx_gui->mouse_toggle_check(BX_MT_KEY_ALT, 1);
     } else if (wParam == VK_F10) {
       mouse_toggle = bx_gui->mouse_toggle_check(BX_MT_KEY_F10, 1);
+    } else if (wParam == VK_F12) {
+      mouse_toggle = bx_gui->mouse_toggle_check(BX_MT_KEY_F12, 1);
     }
     if (mouse_toggle) {
       mouseCaptureMode = !mouseCaptureMode;

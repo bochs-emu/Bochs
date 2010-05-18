@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: x.cc,v 1.131 2010-05-16 09:01:36 vruppert Exp $
+// $Id: x.cc,v 1.132 2010-05-18 15:33:41 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2009  The Bochs Project
@@ -1021,6 +1021,8 @@ void xkeypress(KeySym keysym, int press_release)
      mouse_toggle = bx_gui->mouse_toggle_check(BX_MT_KEY_ALT, !press_release);
   } else if (keysym == XK_F10) {
      mouse_toggle = bx_gui->mouse_toggle_check(BX_MT_KEY_F10, !press_release);
+  } else if (keysym == XK_F12) {
+     mouse_toggle = bx_gui->mouse_toggle_check(BX_MT_KEY_F12, !press_release);
   }
   if (mouse_toggle) {
     bx_gui->toggle_mouse_enable();

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wx.cc,v 1.104 2010-05-16 14:40:53 vruppert Exp $
+// $Id: wx.cc,v 1.105 2010-05-18 15:33:41 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  The Bochs Project
@@ -765,6 +765,8 @@ bx_bool MyPanel::fillBxKeyEvent(wxKeyEvent& wxev, BxKeyEvent& bxev, bx_bool rele
     mouse_toggle = bx_gui->mouse_toggle_check(BX_MT_KEY_ALT, !release);
   } else if (key == WXK_F10) {
     mouse_toggle = bx_gui->mouse_toggle_check(BX_MT_KEY_F10, !release);
+  } else if (key == WXK_F12) {
+    mouse_toggle = bx_gui->mouse_toggle_check(BX_MT_KEY_F12, !release);
   }
   if (mouse_toggle) {
     ToggleMouse(false);

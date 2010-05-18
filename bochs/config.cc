@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.204 2010-05-16 09:01:36 vruppert Exp $
+// $Id: config.cc,v 1.205 2010-05-18 15:33:41 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2009  The Bochs Project
@@ -858,6 +858,7 @@ void bx_init_options()
     "ctrl+mbutton",
     "ctrl+f10",
     "ctrl+alt",
+    "f12",
     NULL
   };
   toggle = new bx_param_enum_c(mouse,

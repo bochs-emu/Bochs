@@ -61,7 +61,6 @@
 #display_library: rfb, options="timeout=60" # time to wait for client
 #display_library: sdl, options="fullscreen" # startup in fullscreen mode
 #display_library: term
-#display_library: win32, options="legacyF12" # use F12 to toggle mouse
 #display_library: win32, options="gui_debug" # use Win32 debugger gui
 #display_library: wx
 #display_library: x, options="hideIPS" # disable IPS output in status bar
@@ -656,12 +655,13 @@ keyboard_paste_delay: 100000
 #  set to 0. The hardware emulation itself is not disabled by this.
 #  Unless you have a particular reason for enabling the mouse by default,
 #  it is recommended that you leave it off. You can also toggle the mouse
-#  usage at runtime (X11, SDL, wxWidgets and Win32 - see below).
+#  usage at runtime (RFB, SDL, Win32, wxWidgets and X11 - see below).
 #
 #  TOGGLE:
 #  The default method to toggle the mouse capture at runtime is to press the
 #  CTRL key and the middle mouse button ('ctrl+mbutton'). This option allows
-#  to change the method to 'ctrl+f10' (like DOSBox) or 'ctrl+alt' (like QEMU).
+#  to change the method to 'ctrl+f10' (like DOSBox), 'ctrl+alt' (like QEMU)
+#  or 'f12' (replaces win32 'legacyF12' option).
 #
 # Examples:
 #   mouse: enabled=1
