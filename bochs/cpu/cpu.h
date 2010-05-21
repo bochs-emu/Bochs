@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.677 2010-05-18 07:28:04 sshwarts Exp $
+// $Id: cpu.h,v 1.678 2010-05-21 21:17:32 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2010  The Bochs Project
@@ -3860,11 +3860,11 @@ enum {
 // Lookup for opcode and attributes in another opcode tables
 // Totally 15 opcode groups supported
 #define BxGroupX            0x00f0 // bits 7..4: opcode groups definition
-#define BxGroupN            0x0010 // Group encoding: 0001
-#define BxPrefixSSE         0x0020 // Group encoding: 0010
-#define BxPrefixSSE66       0x0030 // Group encoding: 0011
-#define BxPrefixSSEF2       0x0040 // Group encoding: 0100
-#define BxPrefixSSEF3       0x0050 // Group encoding: 0101
+#define BxPrefixSSE66       0x0010 // Group encoding: 0001, SSE_PREFIX_66
+#define BxPrefixSSEF2       0x0020 // Group encoding: 0010, SSE_PREFIX_F2
+#define BxPrefixSSEF3       0x0030 // Group encoding: 0011, SSE_PREFIX_F3
+#define BxPrefixSSE         0x0040 // Group encoding: 0100
+#define BxGroupN            0x0050 // Group encoding: 0101
 #define BxFPEscape          0x0060 // Group encoding: 0110
 #define Bx3ByteOp           0x0070 // Group encoding: 0111
 #define BxOSizeGrp          0x0080 // Group encoding: 1000

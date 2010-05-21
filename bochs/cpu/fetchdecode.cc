@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.269 2010-05-18 07:28:04 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.270 2010-05-21 21:17:32 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2010  The Bochs Project
@@ -2615,6 +2615,16 @@ modrm_done:
       Bit32u group = attr & BxGroupX;
       attr &= ~BxGroupX;
 
+      if (group < BxPrefixSSE) {
+        /* For opcodes with only one allowed SSE prefix */
+        if (sse_prefix != (group >> 4)) {
+          OpcodeInfoPtr = &BxOpcodeGroupSSE_ERR[0]; // BX_IA_ERROR
+        }
+        /* get additional attributes from group table */
+        attr |= OpcodeInfoPtr->Attr;
+        break;
+      }
+
       switch(group) {
         case BxGroupN:
           OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[nnn]);
@@ -2631,24 +2641,6 @@ modrm_done:
           if (sse_prefix) {
             OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[sse_prefix-1]);
             break;
-          }
-          continue;
-        case BxPrefixSSE66:
-          /* For SSE opcodes with prefix 66 only */
-          if (sse_prefix != SSE_PREFIX_66) {
-            OpcodeInfoPtr = &BxOpcodeGroupSSE_ERR[0]; // BX_IA_ERROR
-          }
-          continue;
-        case BxPrefixSSEF2:
-          /* For SSE opcodes with prefix F2 only */
-          if (sse_prefix != SSE_PREFIX_F2) {
-            OpcodeInfoPtr = &BxOpcodeGroupSSE_ERR[0]; // BX_IA_ERROR
-          }
-          continue;
-        case BxPrefixSSEF3:
-          /* For SSE opcodes with prefix F3 only */
-          if (sse_prefix != SSE_PREFIX_F3) {
-            OpcodeInfoPtr = &BxOpcodeGroupSSE_ERR[0]; // BX_IA_ERROR
           }
           continue;
         case BxFPEscape:
