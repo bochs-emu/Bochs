@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_vnet.cc,v 1.29 2009-04-19 17:25:40 vruppert Exp $
+// $Id: eth_vnet.cc,v 1.30 2010-05-22 10:15:58 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  The Bochs Project
@@ -872,7 +872,7 @@ void bx_vnet_pktmover_c::udpipv4_dhcp_handler_ns(
   char *hostname = NULL;
   unsigned hostname_len = 0;
 
-  if (data_len < (236U+64U)) return;
+  if (data_len < (236U+4U)) return;
   if (data[0] != BOOTREQUEST) return;
   if (data[1] != 1 || data[2] != 6) return;
   if (memcmp(&data[28U],guest_macaddr,6)) return;
@@ -976,6 +976,8 @@ void bx_vnet_pktmover_c::udpipv4_dhcp_handler_ns(
   switch (dhcpmsgtype) {
   case DHCPDISCOVER:
     BX_INFO(("dhcp server: DHCPDISCOVER"));
+    // reset guest address; answer must be broadcasted to unconfigured IP
+    memcpy(guest_ipv4addr,broadcast_ipv4addr[1],4);
     *replyopts ++ = BOOTPOPT_DHCP_MESSAGETYPE;
     *replyopts ++ = 1;
     *replyopts ++ = DHCPOFFER;
