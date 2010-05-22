@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.678 2010-05-21 21:17:32 sshwarts Exp $
+// $Id: cpu.h,v 1.679 2010-05-22 10:43:39 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2010  The Bochs Project
@@ -2345,39 +2345,6 @@ public: // for now...
   BX_SMF void INVEPT(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void INVVPID(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   /* VMXx2 */
-
-  /*** Duplicate SSE instructions ***/
-  // Although in implementation, these instructions are aliased to the
-  // another function, it's nice to have them call a separate function when
-  // the decoder is being tested in stand-alone mode.
-#ifdef STAND_ALONE_DECODER
-  BX_SMF void MOVUPD_VpdWpd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void MOVUPD_WpdVpd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void MOVAPD_VpdWpd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void MOVAPD_WpdVpd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void MOVDQU_VdqWdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void MOVDQU_WdqVdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void MOVDQA_VdqWdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void MOVDQA_WdqVdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void PUNPCKHDQ_VdqWdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void PUNPCKLDQ_VdqWdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void ANDPD_VpdWpd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void ANDNPD_VpdWpd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void ORPD_VpdWpd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void XORPD_VpdWpd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void PAND_VdqWdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void PANDN_VdqWdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void POR_VdqWdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void PXOR_VdqWdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void UNPCKHPD_VpdWdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void UNPCKLPD_VpdWdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void MOVLPD_VsdMq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void MOVLPD_MqVsd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void MOVHPD_VsdMq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void MOVHPD_MqVsd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void MOVNTPD_MdqVpd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void MOVNTDQ_MdqVdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-#endif
 
   BX_SMF void CMPXCHG_XBTS(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void CMPXCHG_IBTS(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
