@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dis_tables_sse.inc,v 1.10 2010-05-23 20:05:14 sshwarts Exp $
+// $Id: dis_tables_sse.inc,v 1.11 2010-05-23 20:30:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005-2010 Stanislav Shwartsman
@@ -50,14 +50,9 @@ static BxDisasmOpcodeTable_t BxDisasmGroupModMOVHLPS[2] = {
   /* M */ { 0, &Ia_movlps_Vps_Mq }
 };
 
-static BxDisasmOpcodeTable_t BxDisasmGroupModMOVHLPD[2] = {
-  /* R */ { 0, &Ia_movhlpd_Vpd_Udq },
-  /* M */ { 0, &Ia_movlpd_Vpd_Mq }
-};
-
 static BxDisasmOpcodeTable_t BxDisasmGroupSSE_0f12[4] = {
   /* -- */ { GRPMOD(MOVHLPS) },
-  /* 66 */ { GRPMOD(MOVHLPD) },
+  /* 66 */ { 0, &Ia_movlpd_Vpd_Mq },
   /* F3 */ { 0, &Ia_movsldup_Vdq_Wdq },
   /* F2 */ { 0, &Ia_movddup_Vdq_Wq }
 };
@@ -88,14 +83,9 @@ static BxDisasmOpcodeTable_t BxDisasmGroupModMOVLHPS[2] = {
   /* M */ { 0, &Ia_movhps_Vps_Mq }
 };
 
-static BxDisasmOpcodeTable_t BxDisasmGroupModMOVLHPD[2] = {
-  /* R */ { 0, &Ia_movlhpd_Vpd_Udq },
-  /* M */ { 0, &Ia_movhpd_Vpd_Mq }
-};
-
 static BxDisasmOpcodeTable_t BxDisasmGroupSSE_0f16[4] = {
   /* -- */ { GRPMOD(MOVLHPS) },
-  /* 66 */ { GRPMOD(MOVLHPD) },
+  /* 66 */ { 0, &Ia_movhpd_Vpd_Mq },
   /* F3 */ { 0, &Ia_movshdup_Vdq_Wdq },
   /* F2 */ { 0, &Ia_Invalid }
 };
