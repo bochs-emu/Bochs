@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: opcodes.inc,v 1.38 2010-04-02 19:01:17 sshwarts Exp $
+// $Id: opcodes.inc,v 1.39 2010-05-23 20:05:14 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005-2009 Stanislav Shwartsman
@@ -250,24 +250,18 @@ Ia_cvtpi2ps_Vps_Qq = { "cvtpi2ps", "cvtpi2ps", Vps, Qq, XX, XX, IA_SSE },
 Ia_cvtps2dq_Vdq_Wps = { "cvtps2dq", "cvtps2dq", Vdq, Wps, XX, XX, IA_SSE2 },
 Ia_cvtps2pd_Vpd_Wps = { "cvtps2pd", "cvtps2pd", Vpd, Wps, XX, XX, IA_SSE2 },
 Ia_cvtps2pi_Pq_Wps = { "cvtps2pi", "cvtps2pi", Pq, Wps, XX, XX, IA_SSE },
-Ia_cvtsd2si_Gd_Wsd = { "cvtsd2si", "cvtsd2si", Gd, Wsd, XX, XX, IA_SSE2 },
-Ia_cvtsd2si_Gq_Wsd = { "cvtsd2si", "cvtsd2si", Gq, Wsd, XX, XX, IA_X86_64 },
+Ia_cvtsd2si_Gy_Wsd = { "cvtsd2si", "cvtsd2si", Gy, Wsd, XX, XX, IA_SSE2 },
 Ia_cvtsd2ss_Vss_Wsd = { "cvtsd2ss", "cvtsd2ss", Vss, Wsd, XX, XX, IA_SSE2 },
-Ia_cvtsi2sd_Vsd_Ed = { "cvtsi2sd", "cvtsi2sd", Vsd, Ed, XX, XX, IA_SSE2 },
-Ia_cvtsi2sd_Vsd_Eq = { "cvtsi2sd", "cvtsi2sd", Vsd, Eq, XX, XX, IA_X86_64 },
-Ia_cvtsi2ss_Vss_Ed = { "cvtsi2ss", "cvtsi2ss", Vss, Ed, XX, XX, IA_SSE },
-Ia_cvtsi2ss_Vss_Eq = { "cvtsi2ss", "cvtsi2ss", Vss, Eq, XX, XX, IA_X86_64 },
+Ia_cvtsi2sd_Vsd_Ey = { "cvtsi2sd", "cvtsi2sd", Vsd, Ey, XX, XX, IA_SSE2 },
+Ia_cvtsi2ss_Vss_Ey = { "cvtsi2ss", "cvtsi2ss", Vss, Ey, XX, XX, IA_SSE },
 Ia_cvtss2sd_Vsd_Wss = { "cvtss2sd", "cvtss2sd", Vsd, Wss, XX, XX, IA_SSE2 },
-Ia_cvtss2si_Gd_Wss = { "cvtss2si", "cvtss2si", Gd, Wss, XX, XX, IA_SSE },
-Ia_cvtss2si_Gq_Wss = { "cvtss2si", "cvtss2si", Gq, Wss, XX, XX, IA_X86_64 },
+Ia_cvtss2si_Gy_Wss = { "cvtss2si", "cvtss2si", Gy, Wss, XX, XX, IA_SSE },
 Ia_cvttpd2dq_Vq_Wpd = { "cvttpd2dq", "cvttpd2dq", Vq, Wpd, XX, XX, IA_SSE2 },
 Ia_cvttpd2pi_Pq_Wpd = { "cvttpd2pi", "cvttpd2pi", Pq, Wpd, XX, XX, IA_SSE2 },
 Ia_cvttps2dq_Vdq_Wps = { "cvttps2dq", "cvttps2dq", Vdq, Wps, XX, XX, IA_SSE2 },
 Ia_cvttps2pi_Pq_Wps = { "cvttps2pi", "cvttps2pi", Pq, Wps, XX, XX, IA_SSE },
-Ia_cvttsd2si_Gd_Wsd = { "cvttsd2si", "cvttsd2si", Gd, Wsd, XX, XX, IA_SSE2 },
-Ia_cvttsd2si_Gq_Wsd = { "cvttsd2si", "cvttsd2si", Gq, Wsd, XX, XX, IA_X86_64 },
-Ia_cvttss2si_Gd_Wss = { "cvttss2si", "cvttss2si", Gd, Wss, XX, XX, IA_SSE },
-Ia_cvttss2si_Gq_Wss = { "cvttss2si", "cvttss2si", Gq, Wss, XX, XX, IA_X86_64 },
+Ia_cvttsd2si_Gy_Wsd = { "cvttsd2si", "cvttsd2si", Gy, Wsd, XX, XX, IA_SSE2 },
+Ia_cvttss2si_Gy_Wss = { "cvttss2si", "cvttss2si", Gy, Wss, XX, XX, IA_SSE },
 Ia_cwd = { "cwd", "cwtd", XX, XX, XX, XX, 0 },
 Ia_cwde = { "cwde", "cwtl", XX, XX, XX, XX, 0 },
 Ia_daa = { "daa", "daa", XX, XX, XX, XX, 0 },

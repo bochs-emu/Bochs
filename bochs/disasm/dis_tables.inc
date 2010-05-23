@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dis_tables.inc,v 1.34 2010-05-23 19:17:41 sshwarts Exp $
+// $Id: dis_tables.inc,v 1.35 2010-05-23 20:05:14 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005-2010 Stanislav Shwartsman
@@ -3020,10 +3020,10 @@ static BxDisasmOpcodeTable_t BxDisasmOpcodes64q[256*2] = {
   /* 0F 27 */ { 0, &Ia_Invalid    },
   /* 0F 28 */ { GRPSSE(0f28) },
   /* 0F 29 */ { GRPSSE(0f29) },
-  /* 0F 2A */ { GRPSSE(0f2aQ) },
-  /* 0F 2B */ { GRPSSE(0f2b)  },
-  /* 0F 2C */ { GRPSSE(0f2cQ) },
-  /* 0F 2D */ { GRPSSE(0f2dQ) },
+  /* 0F 2A */ { GRPSSE(0f2a) },
+  /* 0F 2B */ { GRPSSE(0f2b) },
+  /* 0F 2C */ { GRPSSE(0f2c) },
+  /* 0F 2D */ { GRPSSE(0f2d) },
   /* 0F 2E */ { GRPSSE(0f2e) },
   /* 0F 2F */ { GRPSSE(0f2f) },
   /* 0F 30 */ { 0, &Ia_wrmsr },
