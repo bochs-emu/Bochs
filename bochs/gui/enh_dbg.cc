@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: enh_dbg.cc,v 1.27 2010-03-05 20:42:10 sshwarts Exp $
+// $Id: enh_dbg.cc,v 1.28 2010-05-23 17:59:50 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  BOCHS ENHANCED DEBUGGER Ver 1.2
@@ -1511,8 +1511,8 @@ void FillIDT()
     unsigned int k = (IDT_Len + 1) / entrysize;
     StartListUpdate(DUMP_WND);
 
-    // recover the IDT linear base address (aligned)
-    laddr = rV[IDTRnum] & (~(entrysize - 1));
+    // recover the IDT linear base address
+    laddr = rV[IDTRnum];
 
     if (k > 256)    // if IDT_Len is unreasonably large, set a reasonable maximum
         k = 256;
