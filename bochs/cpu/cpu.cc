@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.313 2010-05-22 10:17:58 sshwarts Exp $
+// $Id: cpu.cc,v 1.314 2010-05-23 05:32:00 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -469,7 +469,7 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
         return 1; // Return to caller of cpu_loop.
 #endif
 
-      BX_TICKN(10); // when in HLT tun time faster for single CPU
+      BX_TICKN(10); // when in HLT run time faster for single CPU
     }
   } else if (bx_pc_system.kill_bochs_request) {
     // setting kill_bochs_request causes the cpu loop to return ASAP.
