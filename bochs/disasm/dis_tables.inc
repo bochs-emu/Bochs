@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dis_tables.inc,v 1.33 2010-02-09 19:44:25 sshwarts Exp $
+// $Id: dis_tables.inc,v 1.34 2010-05-23 19:17:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005-2010 Stanislav Shwartsman
@@ -399,8 +399,8 @@ static BxDisasmOpcodeTable_t BxDisasmGroupRmG7VMX[8] = {
 static BxDisasmOpcodeTable_t BxDisasmGroupSSE_G7VMX[4] = {
   /* -- */ { GRPRM(G7VMX)   },
   /* 66 */ { 0, &Ia_Invalid },
-  /* F2 */ { 0, &Ia_Invalid },
-  /* F3 */ { 0, &Ia_Invalid }
+  /* F3 */ { 0, &Ia_Invalid },
+  /* F2 */ { 0, &Ia_Invalid }
 };
 
 static BxDisasmOpcodeTable_t BxDisasmGroupRmMONITOR[8] = {
@@ -481,16 +481,16 @@ static BxDisasmOpcodeTable_t BxDisasmGroupG8EqIb[8] = {
 static BxDisasmOpcodeTable_t BxDisasmGroupSSE_G9VMX6[4] = {
   /* -- */ { 0, &Ia_vmptrld_Mq },
   /* 66 */ { 0, &Ia_vmclear_Mq },
-  /* F2 */ { 0, &Ia_Invalid  },
-  /* F3 */ { 0, &Ia_vmxon_Mq }
+  /* F3 */ { 0, &Ia_vmxon_Mq },
+  /* F2 */ { 0, &Ia_Invalid  }
 };
 
 /* VMX */
 static BxDisasmOpcodeTable_t BxDisasmGroupSSE_G9VMX7[4] = {
   /* -- */ { 0, &Ia_vmptrst_Mq },
   /* 66 */ { 0, &Ia_Invalid },
-  /* F2 */ { 0, &Ia_Invalid },
-  /* F3 */ { 0, &Ia_Invalid }
+  /* F3 */ { 0, &Ia_Invalid },
+  /* F2 */ { 0, &Ia_Invalid }
 };
 
 static BxDisasmOpcodeTable_t BxDisasmGroupG9[8] = {
