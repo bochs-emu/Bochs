@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.224 2010-05-16 05:23:18 sshwarts Exp $
+// $Id: paging.cc,v 1.225 2010-05-25 18:52:01 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2010  The Bochs Project
@@ -1531,6 +1531,7 @@ bx_bool BX_CPU_C::dbg_xlate_linear2phy(bx_address laddr, bx_phy_address *phy, bx
       if (!(pte & 1)) 
         goto page_fault;
       pt_address = pte & 0xfffff000;
+#if BX_CPU_LEVEL >= 6
       if (level == BX_LEVEL_PDE && (pte & 0x80) != 0 && BX_CPU_THIS_PTR cr4.get_PSE()) {
         offset_mask = 0x3fffff;
         pt_address = pte & 0xffc00000;
@@ -1539,6 +1540,7 @@ bx_bool BX_CPU_C::dbg_xlate_linear2phy(bx_address laddr, bx_phy_address *phy, bx
 #endif
         break;
       }
+#endif
     }
     paddress = pt_address + (bx_phy_address)(laddr & offset_mask);
   }
