@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.267 2010-05-23 19:17:40 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.268 2010-05-26 18:34:25 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2010  The Bochs Project
@@ -3240,10 +3240,10 @@ static const BxOpcodeInfo_t BxOpcodeInfo64[512*3*2] = {
   int BX_CPP_AttrRegparmN(3)
 BX_CPU_C::fetchDecode64(const Bit8u *iptr, bxInstruction_c *i, unsigned remainingInPage)
 {
-  // remain must be at least 1
-  unsigned remain = (remainingInPage < 15) ? remainingInPage : 15;
+  if (remainingInPage > 15) remainingInPage = 15;
 
-  unsigned b1, b2, ilen=0, attr, lock=0, ia_opcode = 0;
+  unsigned remain = remainingInPage; // remain must be at least 1
+  unsigned b1, b2, attr, lock=0, ia_opcode = 0;
   unsigned imm_mode, offset = 512, rex_r = 0, rex_x = 0, rex_b = 0;
   unsigned rm = 0, mod = 0, nnn = 0, index = 0;
   unsigned seg = BX_SEG_REG_DS, seg_override = BX_SEG_REG_NULL;
@@ -3263,7 +3263,7 @@ BX_CPU_C::fetchDecode64(const Bit8u *iptr, bxInstruction_c *i, unsigned remainin
 
 fetch_b1:
   b1 = *iptr++;
-  ilen++;
+  remain--;
 
   switch (b1) {
     case 0x40:
@@ -3283,13 +3283,13 @@ fetch_b1:
     case 0x4E:
     case 0x4F:
       rex_prefix = b1;
-      if (ilen < remain) {
+      if (remain != 0) {
         goto fetch_b1;
       }
       return(-1);
     case 0x0f: // 2 byte escape
-      if (ilen < remain) {
-        ilen++;
+      if (remain != 0) {
+        remain--;
         b1 = 0x100 | *iptr++;
         break;
       }
@@ -3299,7 +3299,7 @@ fetch_b1:
       rex_prefix = 0;
       sse_prefix = (b1 & 3) ^ 1;
       i->setRepUsed(b1 & 3);
-      if (ilen < remain) {
+      if (remain != 0) {
         goto fetch_b1;
       }
       return(-1);
@@ -3309,7 +3309,7 @@ fetch_b1:
     case 0x3e: // DS:
       /* ignore segment override prefix */
       rex_prefix = 0;
-      if (ilen < remain) {
+      if (remain != 0) {
         goto fetch_b1;
       }
       return(-1);
@@ -3317,7 +3317,7 @@ fetch_b1:
     case 0x65: // GS:
       rex_prefix = 0;
       seg_override = b1 & 0xf;
-      if (ilen < remain) {
+      if (remain != 0) {
         goto fetch_b1;
       }
       return(-1);
@@ -3326,21 +3326,21 @@ fetch_b1:
       if(!sse_prefix) sse_prefix = SSE_PREFIX_66;
       i->setOs32B(0);
       offset = 0;
-      if (ilen < remain) {
+      if (remain != 0) {
         goto fetch_b1;
       }
       return(-1);
     case 0x67: // AddrSize
       rex_prefix = 0;
       i->setAs64B(0);
-      if (ilen < remain) {
+      if (remain != 0) {
         goto fetch_b1;
       }
       return(-1);
     case 0xf0: // LOCK:
       rex_prefix = 0;
       lock = 1;
-      if (ilen < remain) {
+      if (remain != 0) {
         goto fetch_b1;
       }
       return(-1);
@@ -3369,8 +3369,8 @@ fetch_b1:
     unsigned b3 = 0;
     // handle 3-byte escape
     if ((attr & BxGroupX) == Bx3ByteOp) {
-      if (ilen < remain) {
-        ilen++;
+      if (remain != 0) {
+        remain--;
         b3 = *iptr++;
       }
       else
@@ -3378,8 +3378,8 @@ fetch_b1:
     }
 
     // opcode requires modrm byte
-    if (ilen < remain) {
-      ilen++;
+    if (remain != 0) {
+      remain--;
       b2 = *iptr++;
     }
     else
@@ -3428,9 +3428,9 @@ fetch_b1:
       }
       else { // mod!=11b, rm==4, s-i-b byte follows
         unsigned sib, base, index, scale;
-        if (ilen < remain) {
+        if (remain != 0) {
           sib = *iptr++;
-          ilen++;
+          remain--;
         }
         else {
           return(-1);
@@ -3474,9 +3474,9 @@ fetch_b1:
       }
       else { // mod!=11b, rm==4, s-i-b byte follows
         unsigned sib, base, index, scale;
-        if (ilen < remain) {
+        if (remain != 0) {
           sib = *iptr++;
-          ilen++;
+          remain--;
         }
         else {
           return(-1);
@@ -3506,10 +3506,10 @@ fetch_b1:
 
     // (mod == 0x40), mod==01b
     if (mod == 0x40) {
-      if (ilen < remain) {
+      if (remain != 0) {
         // 8 sign extended to 32
         i->modRMForm.displ32u = (Bit8s) *iptr++;
-        ilen++;
+        remain--;
       }
       else {
         return(-1);
@@ -3520,10 +3520,10 @@ fetch_b1:
 get_32bit_displ:
 
       // (mod == 0x80), mod==10b
-      if ((ilen+3) < remain) {
+      if (remain > 3) {
         i->modRMForm.displ32u = FetchDWORD(iptr);
         iptr += 4;
-        ilen += 4;
+        remain -= 4;
       }
       else {
         return(-1);
@@ -3607,7 +3607,7 @@ modrm_done:
     // lock prefix not allowed or destination operand is not memory
     // mod == 0xc0 can't be BxLockable in fetchdecode tables
     if (/*(mod == 0xc0) ||*/ !(attr & BxLockable)) {
-      BX_INFO(("LOCK prefix unallowed (op1=0x%x, mod=%u, nnn=%u)", b1, mod, nnn));
+      BX_INFO(("LOCK prefix unallowed (op1=0x%x, modrm=0x%02x)", b1, b2));
       // replace execution function with undefined-opcode
       ia_opcode = BX_IA_ERROR;
     }
@@ -3621,69 +3621,69 @@ modrm_done:
         i->modRMForm.Ib = 1;
         break;
       case BxImmediate_Ib:
-        if (ilen < remain) {
+        if (remain != 0) {
           i->modRMForm.Ib = *iptr;
-          ilen++;
+          remain--;
         }
         else {
           return(-1);
         }
         break;
       case BxImmediate_Ib_SE: // Sign extend to OS size
-        if (ilen < remain) {
+        if (remain != 0) {
           Bit8s temp8s = *iptr;
           if (i->os32L())
             i->modRMForm.Id = (Bit32s) temp8s;
           else
             i->modRMForm.Iw = (Bit16s) temp8s;
-          ilen++;
+          remain--;
         }
         else {
           return(-1);
         }
         break;
       case BxImmediate_Iw:
-        if ((ilen+1) < remain) {
+        if (remain > 1) {
           i->modRMForm.Iw = FetchWORD(iptr);
-          ilen += 2;
+          remain -= 2;
         }
         else {
           return(-1);
         }
         break;
       case BxImmediate_Id:
-        if ((ilen+3) < remain) {
+        if (remain > 3) {
           i->modRMForm.Id = FetchDWORD(iptr);
-          ilen += 4;
+          remain -= 4;
         }
         else {
           return(-1);
         }
         break;
       case BxImmediate_Iq: // MOV Rx,imm64
-        if ((ilen+7) < remain) {
+        if (remain > 7) {
           i->IqForm.Iq = FetchQWORD(iptr);
-          ilen += 8;
+          remain -= 8;
         }
         else {
           return(-1);
         }
         break;
       case BxImmediate_BrOff8:
-        if (ilen < remain) {
+        if (remain != 0) {
           i->modRMForm.Id = (Bit8s) (*iptr);
-          ilen++;
+          remain--;
         }
         else {
           return(-1);
         }
         break;
       case BxImmediate_IwIb:
-        if ((ilen+2) < remain) {
+        if (remain > 2) {
           i->IxIxForm.Iw = FetchWORD(iptr);
           iptr += 2;
           i->IxIxForm.Ib2 = *iptr;
-          ilen += 3;
+          remain -= 3;
         }
         else return(-1);
         break;
@@ -3691,16 +3691,16 @@ modrm_done:
         // For is which embed the address in the opcode.  Note
         // there is only 64/32-bit addressing available in long-mode.
         if (i->as64L()) {
-          if ((ilen+7) < remain) {
+          if (remain > 7) {
             i->IqForm.Iq = FetchQWORD(iptr);
-            ilen += 8;
+            remain -= 8;
           }
           else return(-1);
         }
         else { // as32
-          if ((ilen+3) < remain) {
+          if (remain > 3) {
             i->IqForm.Iq = (Bit64u) FetchDWORD(iptr);
-            ilen += 4;
+            remain -= 4;
           }
           else return(-1);
         }
@@ -3729,7 +3729,7 @@ modrm_done:
   i->execute2 = BxOpcodesTable[ia_opcode].execute2;
 
   i->setB1(b1);
-  i->setILen(ilen);
+  i->setILen(remainingInPage - remain);
   i->setIaOpcode(ia_opcode);
 
 #if BX_SUPPORT_TRACE_CACHE
