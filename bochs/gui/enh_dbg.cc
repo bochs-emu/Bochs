@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: enh_dbg.cc,v 1.28 2010-05-23 17:59:50 sshwarts Exp $
+// $Id: enh_dbg.cc,v 1.29 2010-05-29 18:55:59 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  BOCHS ENHANCED DEBUGGER Ver 1.2
@@ -411,7 +411,7 @@ void upr(char* d)
 // create EFLAGS display for Status line
 void ShowEflags(char *buf)
 {
-    static const char * EflBName[16] = {
+    static const char *EflBName[16] = {
         "cf", "pf", "af", "zf", "sf", "tf", "if", "df", "of", "nt", "rf", "vm", "ac", "vif", "vip", "id"
     };
     static const int EflBNameLen[16] = {
@@ -446,8 +446,9 @@ void UpdateStatus()
 
     if (AtBreak != FALSE)   // modify status line only during a break
     {
-        ShowEflags(tmpcb);          // prints out eflags
-        SetStatusText(3, tmpcb);    // display eflags
+        char eflags_bug[80];
+        ShowEflags(eflags_bug);         // prints out eflags
+        SetStatusText(3, eflags_bug);   // display eflags
 
         if (CpuModeChange != FALSE)     // Did CR0 bits or EFER bits change value?
         {
@@ -461,7 +462,7 @@ void UpdateStatus()
                         strcpy (mode, "CPU: Real Mode (32)");
                     break;
                 case BX_MODE_IA32_V8086:
-                    strcpy (tmpcb, "CPU: V8086 Mode");
+                    strcpy (mode, "CPU: V8086 Mode");
                     break;
                 case BX_MODE_IA32_PROTECTED:
                     if (In32Mode == FALSE) {
@@ -2190,8 +2191,9 @@ void OnBreak()
         return;
     }
     // display the new ptime on the status bar
-    sprintf (tmpcb,"t= " FMT_LL "d",NewPtime);
-    SetStatusText (2, tmpcb);
+    char time_buf[20];
+    sprintf (time_buf,"t= " FMT_LL "d", NewPtime);
+    SetStatusText (2, time_buf);
     PrevPtime = NewPtime;
 
     // remember register values from before the last run
@@ -2233,7 +2235,7 @@ void OnBreak()
         RefreshDataWin();
 }
 
-static int HexFromAsk(const char* ask,char* b)       // this routine converts a user-typed hex string into binary bytes
+static int HexFromAsk(const char* ask, char* b)       // this routine converts a user-typed hex string into binary bytes
 {                   // it ignores any bigendian issues -- binary is converted front to end as chars
     int y = 0;
     int i = 0;
