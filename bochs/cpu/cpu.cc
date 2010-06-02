@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.314 2010-05-23 05:32:00 sshwarts Exp $
+// $Id: cpu.cc,v 1.315 2010-06-02 05:44:12 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -561,7 +561,12 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
     VMexit(0, VMX_VMEXIT_INTERRUPT_WINDOW, 0);
   }
 #endif
-  else if (BX_CPU_INTR && BX_CPU_THIS_PTR get_IF() && BX_DBG_ASYNC_INTR)
+  else if (BX_CPU_INTR && BX_DBG_ASYNC_INTR && 
+          (BX_CPU_THIS_PTR get_IF()
+#if BX_SUPPORT_VMX
+       || (BX_CPU_THIS_PTR in_vmx_guest && PIN_VMEXIT(VMX_VM_EXEC_CTRL1_EXTERNAL_INTERRUPT_VMEXIT))
+#endif
+          ))
   {
     Bit8u vector;
 #if BX_SUPPORT_VMX
