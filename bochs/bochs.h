@@ -1,8 +1,8 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.254 2010-05-15 09:23:50 vruppert Exp $
+// $Id: bochs.h,v 1.255 2010-06-10 15:59:04 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2009  The Bochs Project
+//  Copyright (C) 2001-2010  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -328,23 +328,9 @@ public:
   void add_logfn(logfunc_t *fn);
   void remove_logfn(logfunc_t *fn);
   void set_log_action(int loglevel, int action);
-  const char *getlevel(int i) {
-    static const char *loglevel[N_LOGLEV] = {
-      "DEBUG",
-      "INFO",
-      "ERROR",
-      "PANIC",
-      "PASS"
-    };
-    if (i>=0 && i<N_LOGLEV) return loglevel[i];
-    else return "?";
-  }
-  char *getaction(int i) {
-    static const char *name[] = { "ignore", "report", "ask", "fatal" };
-    assert (i>=ACT_IGNORE && i<N_ACT);
-    return (char *) name[i];
-  }
-
+  const char *getlevel(int i);
+  char *getaction(int i);
+  
 protected:
   int n_logfn;
 #define MAX_LOGFNS 512

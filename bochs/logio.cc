@@ -1,8 +1,8 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logio.cc,v 1.75 2009-12-04 20:02:12 sshwarts Exp $
+// $Id: logio.cc,v 1.76 2010-06-10 15:59:04 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2009  The Bochs Project
+//  Copyright (C) 2001-2010  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -36,6 +36,27 @@
 // Just for the iofunctions
 
 static int Allocio=0;
+
+const char* iofunctions::getlevel(int i)
+{
+  static const char *loglevel[N_LOGLEV] = {
+    "DEBUG",
+    "INFO",
+    "ERROR",
+    "PANIC",
+    "PASS"
+  };
+
+  if (i>=0 && i<N_LOGLEV) return loglevel[i];
+  else return "?";
+}
+
+char* iofunctions::getaction(int i)
+{
+  static const char *name[] = { "ignore", "report", "ask", "fatal" };
+  assert (i>=ACT_IGNORE && i<N_ACT);
+  return (char *) name[i];
+}
 
 void iofunctions::flush(void)
 {
