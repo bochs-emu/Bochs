@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.h,v 1.34 2009-12-04 19:50:27 sshwarts Exp $
+// $Id: floppy.h,v 1.35 2010-06-18 17:23:50 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2009  The Bochs Project
@@ -54,7 +54,6 @@ public:
   virtual void init(void);
   virtual void reset(unsigned type);
   virtual unsigned set_media_status(unsigned drive, unsigned status);
-  virtual unsigned get_media_status(unsigned drive);
   virtual void register_state(void);
 
 private:

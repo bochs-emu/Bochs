@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.119 2010-02-26 14:18:19 sshwarts Exp $
+// $Id: iodev.h,v 1.120 2010-06-18 17:23:50 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2009  The Bochs Project
@@ -159,9 +159,6 @@ public:
 
 class BOCHSAPI bx_floppy_stub_c : public bx_devmodel_c {
 public:
-  virtual unsigned get_media_status(unsigned drive) {
-    STUBFUNC(floppy,  get_media_status); return 0;
-  }
   virtual unsigned set_media_status(unsigned drive, unsigned status) {
     STUBFUNC(floppy, set_media_status); return 0;
   }

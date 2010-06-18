@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: plugin.h,v 1.81 2009-08-22 19:30:23 sshwarts Exp $
+// $Id: plugin.h,v 1.82 2010-06-18 17:23:50 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  The Bochs Project
@@ -175,7 +175,6 @@ extern "C" {
 #define DEV_bulk_io_host_addr() (bx_devices.bulkIOHostAddr)
 
 ///////// FLOPPY macros
-#define DEV_floppy_get_media_status(drive) bx_devices.pluginFloppyDevice->get_media_status(drive)
 #define DEV_floppy_set_media_status(drive, status)  bx_devices.pluginFloppyDevice->set_media_status(drive, status)
 #define DEV_floppy_present() (bx_devices.pluginFloppyDevice != &bx_devices.stubFloppy)
 

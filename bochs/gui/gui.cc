@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.cc,v 1.116 2010-05-18 15:33:41 vruppert Exp $
+// $Id: gui.cc,v 1.117 2010-06-18 17:23:50 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2009  The Bochs Project
@@ -167,7 +167,7 @@ void bx_gui_c::init(int argc, char **argv, unsigned tilewidth, unsigned tileheig
   // when that bitmap is clicked on
 
   // Floppy A:
-  BX_GUI_THIS floppyA_status = DEV_floppy_get_media_status(0);
+  BX_GUI_THIS floppyA_status = SIM->get_param_bool(BXPN_FLOPPYA_STATUS)->get();
   if (BX_GUI_THIS floppyA_status)
     BX_GUI_THIS floppyA_hbar_id = headerbar_bitmap(BX_GUI_THIS floppyA_bmap_id,
                           BX_GRAVITY_LEFT, floppyA_handler);
@@ -177,7 +177,7 @@ void bx_gui_c::init(int argc, char **argv, unsigned tilewidth, unsigned tileheig
   BX_GUI_THIS set_tooltip(BX_GUI_THIS floppyA_hbar_id, "Change floppy A: media");
 
   // Floppy B:
-  BX_GUI_THIS floppyB_status = DEV_floppy_get_media_status(1);
+  BX_GUI_THIS floppyB_status = SIM->get_param_bool(BXPN_FLOPPYB_STATUS)->get();
   if (BX_GUI_THIS floppyB_status)
     BX_GUI_THIS floppyB_hbar_id = headerbar_bitmap(BX_GUI_THIS floppyB_bmap_id,
                           BX_GRAVITY_LEFT, floppyB_handler);
@@ -257,10 +257,8 @@ void bx_gui_c::cleanup(void)
 
 void bx_gui_c::update_drive_status_buttons(void)
 {
-  BX_GUI_THIS floppyA_status = DEV_floppy_get_media_status(0)
-    && (SIM->get_param_bool(BXPN_FLOPPYA_STATUS)->get());
-  BX_GUI_THIS floppyB_status = DEV_floppy_get_media_status(1)
-    && (SIM->get_param_bool(BXPN_FLOPPYB_STATUS)->get());
+  BX_GUI_THIS floppyA_status = SIM->get_param_bool(BXPN_FLOPPYA_STATUS)->get();
+  BX_GUI_THIS floppyB_status = SIM->get_param_bool(BXPN_FLOPPYB_STATUS)->get();
   Bit32u handle = DEV_hd_get_first_cd_handle();
   BX_GUI_THIS cdromD_status = DEV_hd_get_cd_media_status(handle);
   if (BX_GUI_THIS floppyA_status)
