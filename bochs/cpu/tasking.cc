@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: tasking.cc,v 1.93 2010-04-22 17:51:37 sshwarts Exp $
+// $Id: tasking.cc,v 1.94 2010-06-18 14:15:53 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2010  The Bochs Project
@@ -467,7 +467,7 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
   if ((tss_descriptor->type >= 9) && BX_CPU_THIS_PTR cr0.get_PG()) {
     // change CR3 only if it actually modified
     if (newCR3 != BX_CPU_THIS_PTR cr3) {
-      BX_DEBUG(("task_switch changing CR3 to 0x" FMT_PHY_ADDRX, newCR3));
+      BX_DEBUG(("task_switch changing CR3 to 0x08x", newCR3));
 #if BX_CPU_LEVEL >= 6
       if (BX_CPU_THIS_PTR cr0.get_PG() && BX_CPU_THIS_PTR cr4.get_PAE()) {
         if (! CheckPDPTR(newCR3)) {
