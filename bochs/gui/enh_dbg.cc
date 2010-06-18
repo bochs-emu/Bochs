@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: enh_dbg.cc,v 1.29 2010-05-29 18:55:59 sshwarts Exp $
+// $Id: enh_dbg.cc,v 1.30 2010-06-18 18:47:21 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  BOCHS ENHANCED DEBUGGER Ver 1.2
@@ -446,9 +446,9 @@ void UpdateStatus()
 
     if (AtBreak != FALSE)   // modify status line only during a break
     {
-        char eflags_bug[80];
-        ShowEflags(eflags_bug);         // prints out eflags
-        SetStatusText(3, eflags_bug);   // display eflags
+        char eflags_buf[80];
+        ShowEflags(eflags_buf);         // prints out eflags
+        SetStatusText(3, eflags_buf);   // display eflags
 
         if (CpuModeChange != FALSE)     // Did CR0 bits or EFER bits change value?
         {
