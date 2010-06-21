@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: tasking.cc,v 1.95 2010-06-18 14:24:45 sshwarts Exp $
+// $Id: tasking.cc,v 1.96 2010-06-21 05:35:45 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2010  The Bochs Project
@@ -784,6 +784,12 @@ Bit64u BX_CPU_C::get_RSP_from_TSS(unsigned pl)
   }
 
   Bit64u rsp = system_read_qword(BX_CPU_THIS_PTR tr.cache.u.segment.base + TSSstackaddr);
+
+  if (! IsCanonical(rsp)) {
+    BX_ERROR(("get_RSP_from_TSS: canonical address failure 0x%08x%08x", GET32H(rsp), GET32L(rsp)));
+    exception(BX_SS_EXCEPTION, BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value & 0xfffc);
+  }
+
   return rsp;
 }
 #endif  // #if BX_SUPPORT_X86_64

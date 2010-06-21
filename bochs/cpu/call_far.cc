@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: call_far.cc,v 1.56 2010-04-02 18:24:27 sshwarts Exp $
+// $Id: call_far.cc,v 1.57 2010-06-21 05:35:45 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005-2009 Stanislav Shwartsman
@@ -530,21 +530,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::call_gate64(bx_selector_t *gate_selector)
   // if non-conforming code segment and DPL < CPL then
   if (IS_CODE_SEGMENT_NON_CONFORMING(cs_descriptor.type) && (cs_descriptor.dpl < CPL))
   {
-    Bit64u RSP_for_cpl_x;
-
     BX_DEBUG(("CALL GATE TO MORE PRIVILEGE LEVEL"));
 
     // get new RSP for new privilege level from TSS
-    RSP_for_cpl_x  = get_RSP_from_TSS(cs_descriptor.dpl);
+    Bit64u RSP_for_cpl_x  = get_RSP_from_TSS(cs_descriptor.dpl);
     Bit64u old_SS  = BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value;
     Bit64u old_RSP = RSP;
-
-    if (! IsCanonical(RSP_for_cpl_x)) {
-      // #SS(selector) when changing priviledge level
-      BX_ERROR(("call_gate64: canonical address failure %08x%08x",
-         GET32H(RSP_for_cpl_x), GET32L(RSP_for_cpl_x)));
-      exception(BX_SS_EXCEPTION, old_SS & 0xfffc);
-    }
 
     // push old stack long pointer onto new stack
     write_new_stack_qword_64(RSP_for_cpl_x -  8, cs_descriptor.dpl, old_SS);

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.157 2010-04-14 17:33:19 sshwarts Exp $
+// $Id: exception.cc,v 1.158 2010-06-21 05:35:45 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2010  The Bochs Project
@@ -41,7 +41,7 @@ void BX_CPU_C::long_mode_int(Bit8u vector, unsigned soft_int, bx_bool push_error
   bx_selector_t cs_selector;
 
   // interrupt vector must be within IDT table limits,
-  // else #GP(vector number*8 + 2 + EXT)
+  // else #GP(vector*8 + 2 + EXT)
   if ((vector*16 + 15) > BX_CPU_THIS_PTR idtr.limit) {
     BX_ERROR(("interrupt(long mode): vector must be within IDT table limits, IDT.limit = 0x%x", BX_CPU_THIS_PTR idtr.limit));
     exception(BX_GP_EXCEPTION, vector*8 + 2);
@@ -52,7 +52,7 @@ void BX_CPU_C::long_mode_int(Bit8u vector, unsigned soft_int, bx_bool push_error
 
   if (desctmp2 & BX_CONST64(0x00001F0000000000)) {
     BX_ERROR(("interrupt(long mode): IDT entry extended attributes DWORD4 TYPE != 0"));
-    exception(BX_GP_EXCEPTION, vector*8+ 2);
+    exception(BX_GP_EXCEPTION, vector*8 + 2);
   }
 
   Bit32u dword1 = GET32L(desctmp1);
@@ -68,7 +68,7 @@ void BX_CPU_C::long_mode_int(Bit8u vector, unsigned soft_int, bx_bool push_error
   }
 
   // descriptor AR byte must indicate interrupt gate, trap gate,
-  // or task gate, else #GP(vector*16 + 2 + EXT)
+  // or task gate, else #GP(vector*8 + 2 + EXT)
   if (gate_descriptor.type != BX_386_INTERRUPT_GATE &&
       gate_descriptor.type != BX_386_TRAP_GATE)
   {
@@ -78,14 +78,14 @@ void BX_CPU_C::long_mode_int(Bit8u vector, unsigned soft_int, bx_bool push_error
   }
 
   // if software interrupt, then gate descripor DPL must be >= CPL,
-  // else #GP(vector * 16 + 2 + EXT)
+  // else #GP(vector * 8 + 2 + EXT)
   if (soft_int && gate_descriptor.dpl < CPL)
   {
     BX_ERROR(("interrupt(long mode): soft_int && gate.dpl < CPL"));
     exception(BX_GP_EXCEPTION, vector*8 + 2);
   }
 
-  // Gate must be present, else #NP(vector * 16 + 2 + EXT)
+  // Gate must be present, else #NP(vector * 8 + 2 + EXT)
   if (! IS_PRESENT(gate_descriptor)) {
     BX_ERROR(("interrupt(long mode): gate.p == 0"));
     exception(BX_NP_EXCEPTION, vector*8 + 2);
@@ -115,7 +115,7 @@ void BX_CPU_C::long_mode_int(Bit8u vector, unsigned soft_int, bx_bool push_error
   // and code segment descriptor DPL<=CPL, else #GP(selector+EXT)
   if (cs_descriptor.valid==0 || cs_descriptor.segment==0 ||
       IS_DATA_SEGMENT(cs_descriptor.type) ||
-      cs_descriptor.dpl>CPL)
+      cs_descriptor.dpl > CPL)
   {
     BX_ERROR(("interrupt(long mode): not accessible or not code segment"));
     exception(BX_GP_EXCEPTION, cs_selector.value & 0xfffc);
@@ -133,17 +133,22 @@ void BX_CPU_C::long_mode_int(Bit8u vector, unsigned soft_int, bx_bool push_error
     BX_ERROR(("interrupt(long mode): segment not present"));
     exception(BX_NP_EXCEPTION, cs_selector.value & 0xfffc);
   }
+ 
+  Bit64u RSP_for_cpl_x;
+
+  Bit64u old_CS  = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value;
+  Bit64u old_RIP = RIP;
+  Bit64u old_SS  = BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value;
+  Bit64u old_RSP = RSP;
 
   // if code segment is non-conforming and DPL < CPL then
   // INTERRUPT TO INNER PRIVILEGE:
-  if (IS_CODE_SEGMENT_NON_CONFORMING(cs_descriptor.type) && cs_descriptor.dpl<CPL)
+  if (IS_CODE_SEGMENT_NON_CONFORMING(cs_descriptor.type) && cs_descriptor.dpl < CPL)
   {
-    Bit64u RSP_for_cpl_x;
-
     BX_DEBUG(("interrupt(long mode): INTERRUPT TO INNER PRIVILEGE"));
 
     // check selector and descriptor for new stack in current TSS
-    if (ist != 0) {
+    if (ist > 0) {
       BX_DEBUG(("interrupt(long mode): trap to IST, vector = %d", ist));
       RSP_for_cpl_x = get_RSP_from_TSS(ist+3);
     }
@@ -151,19 +156,8 @@ void BX_CPU_C::long_mode_int(Bit8u vector, unsigned soft_int, bx_bool push_error
       RSP_for_cpl_x = get_RSP_from_TSS(cs_descriptor.dpl);
     }
 
+    // align stack
     RSP_for_cpl_x &= BX_CONST64(0xfffffffffffffff0);
-
-    Bit64u old_CS  = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value;
-    Bit64u old_RIP = RIP;
-    Bit64u old_SS  = BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value;
-    Bit64u old_RSP = RSP;
-
-    if (! IsCanonical(RSP_for_cpl_x)) {
-      // #SS(selector) when changing priviledge level
-      BX_ERROR(("interrupt(long mode): canonical address failure %08x%08x",
-         GET32H(RSP_for_cpl_x), GET32L(RSP_for_cpl_x)));
-      exception(BX_SS_EXCEPTION, old_SS & 0xfffc);
-    }
 
     // push old stack long pointer onto new stack
     write_new_stack_qword_64(RSP_for_cpl_x -  8, cs_descriptor.dpl, old_SS);
@@ -184,72 +178,60 @@ void BX_CPU_C::long_mode_int(Bit8u vector, unsigned soft_int, bx_bool push_error
 
     // set up null SS descriptor
     load_null_selector(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS], cs_descriptor.dpl);
-    RSP = RSP_for_cpl_x;
-
-    // if INTERRUPT GATE set IF to 0
-    if (!(gate_descriptor.type & 1)) // even is int-gate
-      BX_CPU_THIS_PTR clear_IF();
-    BX_CPU_THIS_PTR clear_TF();
-    BX_CPU_THIS_PTR clear_VM();
-    BX_CPU_THIS_PTR clear_RF();
-    BX_CPU_THIS_PTR clear_NT();
-    return;
   }
-
-  // if code segment is conforming OR code segment DPL = CPL then
-  // INTERRUPT TO SAME PRIVILEGE LEVEL:
-  if (IS_CODE_SEGMENT_CONFORMING(cs_descriptor.type) || cs_descriptor.dpl==CPL)
+  else if(IS_CODE_SEGMENT_CONFORMING(cs_descriptor.type) || cs_descriptor.dpl==CPL) 
   {
-    BX_DEBUG(("interrupt(long mode): INTERRUPT TO SAME PRIVILEGE"));
+    // if code segment is conforming OR code segment DPL = CPL then
+    // INTERRUPT TO SAME PRIVILEGE LEVEL:
 
-    Bit64u old_RSP = RSP, temp_RSP = RSP;
+    BX_DEBUG(("interrupt(long mode): INTERRUPT TO SAME PRIVILEGE"));
 
     // check selector and descriptor for new stack in current TSS
     if (ist > 0) {
       BX_DEBUG(("interrupt(long mode): trap to IST, vector = %d", ist));
-      temp_RSP = get_RSP_from_TSS(ist+3);
+      RSP_for_cpl_x = get_RSP_from_TSS(ist+3);
+    }
+    else {
+      RSP_for_cpl_x = RSP;
     }
 
     // align stack
-    temp_RSP &= BX_CONST64(0xfffffffffffffff0);
+    RSP_for_cpl_x &= BX_CONST64(0xfffffffffffffff0);
 
     // push flags onto stack
     // push current CS selector onto stack
     // push return offset onto stack
-    write_new_stack_qword_64(temp_RSP - 8,  cs_descriptor.dpl,
-         BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value);
-    write_new_stack_qword_64(temp_RSP - 16, cs_descriptor.dpl, old_RSP);
-    write_new_stack_qword_64(temp_RSP - 24, cs_descriptor.dpl, read_eflags());
-    write_new_stack_qword_64(temp_RSP - 32, cs_descriptor.dpl,
-         BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value);
-    write_new_stack_qword_64(temp_RSP - 40, cs_descriptor.dpl, RIP);
-    temp_RSP -= 40;
+    write_new_stack_qword_64(RSP_for_cpl_x - 8,  cs_descriptor.dpl, old_SS);
+    write_new_stack_qword_64(RSP_for_cpl_x - 16, cs_descriptor.dpl, old_RSP);
+    write_new_stack_qword_64(RSP_for_cpl_x - 24, cs_descriptor.dpl, read_eflags());
+    // push long pointer to return address onto new stack
+    write_new_stack_qword_64(RSP_for_cpl_x - 32, cs_descriptor.dpl, old_CS);
+    write_new_stack_qword_64(RSP_for_cpl_x - 40, cs_descriptor.dpl, old_RIP);
+    RSP_for_cpl_x -= 40;
 
     if (push_error) {
-      temp_RSP -= 8;
-      write_new_stack_qword_64(temp_RSP, cs_descriptor.dpl, error_code);
+      RSP_for_cpl_x -= 8;
+      write_new_stack_qword_64(RSP_for_cpl_x, cs_descriptor.dpl, error_code);
     }
 
     // set the RPL field of CS to CPL
     branch_far64(&cs_selector, &cs_descriptor, gate_dest_offset, CPL);
-
-    RSP = temp_RSP;
-
-    // if interrupt gate then set IF to 0
-    if (!(gate_descriptor.type & 1)) // even is int-gate
-      BX_CPU_THIS_PTR clear_IF();
-    BX_CPU_THIS_PTR clear_TF();
-    BX_CPU_THIS_PTR clear_VM();
-    BX_CPU_THIS_PTR clear_RF();
-    BX_CPU_THIS_PTR clear_NT();
-    return;
+  }
+  else {
+    BX_ERROR(("interrupt(long mode): bad descriptor type %u (CS.DPL=%u CPL=%u)",
+      (unsigned) cs_descriptor.type, (unsigned) cs_descriptor.dpl, (unsigned) CPL));
+    exception(BX_GP_EXCEPTION, cs_selector.value & 0xfffc);
   }
 
-  // else #GP(CS selector + ext)
-  BX_ERROR(("interrupt(long mode): bad descriptor type=%u, descriptor.dpl=%u, CPL=%u",
-    (unsigned) cs_descriptor.type, (unsigned) cs_descriptor.dpl, (unsigned) CPL));
-  BX_ERROR(("cs.segment = %u", (unsigned) cs_descriptor.segment));
-  exception(BX_GP_EXCEPTION, cs_selector.value & 0xfffc);
+  RSP = RSP_for_cpl_x;
+
+  // if interrupt gate then set IF to 0
+  if (!(gate_descriptor.type & 1)) // even is int-gate
+    BX_CPU_THIS_PTR clear_IF();
+  BX_CPU_THIS_PTR clear_TF();
+//BX_CPU_THIS_PTR clear_VM(); // VM is clear in long mode
+  BX_CPU_THIS_PTR clear_RF();
+  BX_CPU_THIS_PTR clear_NT();
 }
 #endif
 
@@ -266,7 +248,7 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, unsigned soft_int, bx_bool push_
   Bit32u gate_dest_offset;
 
   // interrupt vector must be within IDT table limits,
-  // else #GP(vector number*8 + 2 + EXT)
+  // else #GP(vector*8 + 2 + EXT)
   if ((vector*8 + 7) > BX_CPU_THIS_PTR idtr.limit) {
     BX_ERROR(("interrupt(): vector must be within IDT table limits, IDT.limit = 0x%x", BX_CPU_THIS_PTR idtr.limit));
     exception(BX_GP_EXCEPTION, vector*8 + 2);
@@ -402,7 +384,7 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, unsigned soft_int, bx_bool push_
     // and code segment descriptor DPL<=CPL, else #GP(selector+EXT)
     if (cs_descriptor.valid==0 || cs_descriptor.segment==0 ||
         IS_DATA_SEGMENT(cs_descriptor.type) ||
-        cs_descriptor.dpl>CPL)
+        cs_descriptor.dpl > CPL)
     {
       BX_ERROR(("interrupt(): not accessible or not code segment cs=0x%04x", cs_selector.value));
       exception(BX_GP_EXCEPTION, cs_selector.value & 0xfffc);
@@ -414,14 +396,9 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, unsigned soft_int, bx_bool push_
       exception(BX_NP_EXCEPTION, cs_selector.value & 0xfffc);
     }
 
-    if (cs_descriptor.dpl > CPL) {
-      BX_ERROR(("interrupt(): code segment DPL(%d) > CPL", cs_descriptor.dpl));
-      exception(BX_GP_EXCEPTION, cs_selector.value & 0xfffc);
-    }
-
     // if code segment is non-conforming and DPL < CPL then
     // INTERRUPT TO INNER PRIVILEGE
-    if(IS_CODE_SEGMENT_NON_CONFORMING(cs_descriptor.type) && (cs_descriptor.dpl < CPL))
+    if(IS_CODE_SEGMENT_NON_CONFORMING(cs_descriptor.type) && cs_descriptor.dpl < CPL)
     {
       Bit16u old_SS, old_CS, SS_for_cpl_x;
       Bit32u ESP_for_cpl_x, old_EIP, old_ESP;
@@ -633,16 +610,6 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, unsigned soft_int, bx_bool push_
       // load new SS:eSP values from TSS
       load_ss(&ss_selector, &ss_descriptor, cs_descriptor.dpl);
 
-      EIP = gate_dest_offset;
-
-      // if INTERRUPT GATE set IF to 0
-      if (!(gate_descriptor.type & 1)) // even is int-gate
-        BX_CPU_THIS_PTR clear_IF();
-      BX_CPU_THIS_PTR clear_TF();
-      BX_CPU_THIS_PTR clear_VM();
-      BX_CPU_THIS_PTR clear_RF();
-      BX_CPU_THIS_PTR clear_NT();
-
       if (is_v8086_mode)
       {
         BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.valid = 0;
@@ -654,8 +621,6 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, unsigned soft_int, bx_bool push_
         BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.valid = 0;
         BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.value = 0;
       }
-
-      return;
     }
     else
     {
@@ -695,17 +660,18 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, unsigned soft_int, bx_bool push_
       // load CS descriptor
       // set the RPL field of CS to CPL
       load_cs(&cs_selector, &cs_descriptor, CPL);
-      EIP = gate_dest_offset;
-
-      // if interrupt gate then set IF to 0
-      if (!(gate_descriptor.type & 1)) // even is int-gate
-        BX_CPU_THIS_PTR clear_IF();
-      BX_CPU_THIS_PTR clear_TF();
-      BX_CPU_THIS_PTR clear_NT();
-      BX_CPU_THIS_PTR clear_VM();
-      BX_CPU_THIS_PTR clear_RF();
-      return;
     }
+
+    EIP = gate_dest_offset;
+
+    // if interrupt gate then set IF to 0
+    if (!(gate_descriptor.type & 1)) // even is int-gate
+      BX_CPU_THIS_PTR clear_IF();
+    BX_CPU_THIS_PTR clear_TF();
+    BX_CPU_THIS_PTR clear_NT();
+    BX_CPU_THIS_PTR clear_VM();
+    BX_CPU_THIS_PTR clear_RF();
+    return;
 
   default:
     BX_PANIC(("bad descriptor type in interrupt()!"));
