@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: instr.h,v 1.26 2010-02-24 19:27:51 sshwarts Exp $
+// $Id: instr.h,v 1.27 2010-06-29 19:38:56 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008-2009 Stanislav Shwartsman
@@ -57,8 +57,8 @@ public:
 
     //  7...7 extend8bit
     //  6...6 as64
-    //  5...5 os64
-    //  4...4 as32
+    //  5...5 as32
+    //  4...4 os64
     //  3...3 os32
     //  2...2 mod==c0 (modrm)
     //  1...0 repUsed (0=none, 2=0xF2, 3=0xF3)
@@ -186,7 +186,7 @@ public:
   // code, when a strict 0 or 1 is not necessary.
   BX_CPP_INLINE void init(unsigned os32, unsigned as32, unsigned os64, unsigned as64)
   {
-    metaInfo.metaInfo1 = (os32<<3) | (as32<<4) | (os64<<5) | (as64<<6);
+    metaInfo.metaInfo1 = (os32<<3) | (os64<<4) | (as32<<5) | (as64<<6);
   }
 
   BX_CPP_INLINE unsigned os32L(void) const {
@@ -200,18 +200,18 @@ public:
   }
 
   BX_CPP_INLINE unsigned as32L(void) const {
-    return metaInfo.metaInfo1 & (1<<4);
+    return metaInfo.metaInfo1 & (1<<5);
   }
   BX_CPP_INLINE void setAs32B(unsigned bit) {
-    metaInfo.metaInfo1 = (metaInfo.metaInfo1 & ~(1<<4)) | (bit<<4);
+    metaInfo.metaInfo1 = (metaInfo.metaInfo1 & ~(1<<5)) | (bit<<5);
   }
 
 #if BX_SUPPORT_X86_64
   BX_CPP_INLINE unsigned os64L(void) const {
-    return metaInfo.metaInfo1 & (1<<5);
+    return metaInfo.metaInfo1 & (1<<4);
   }
   BX_CPP_INLINE void assertOs64(void) {
-    metaInfo.metaInfo1 |= (1<<5);
+    metaInfo.metaInfo1 |= (1<<4);
   }
 #else
   BX_CPP_INLINE unsigned os64L(void) const { return 0; }
