@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_move.cc,v 1.117 2010-04-08 17:35:32 sshwarts Exp $
+// $Id: sse_move.cc,v 1.118 2010-07-01 20:00:33 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003-2009 Stanislav Shwartsman
@@ -238,7 +238,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FXSAVE(bxInstruction_c *i)
   /* store i387 register file */
   for(index=0; index < 8; index++)
   {
-    const floatx80 &fp = BX_FPU_REG(index);
+    const floatx80 &fp = BX_READ_FPU_REG(index);
 
     xmm.xmm64u(0) = fp.fraction;
     xmm.xmm64u(1) = 0;
@@ -344,7 +344,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FXRSTOR(bxInstruction_c *i)
     floatx80 reg;
     reg.fraction = read_virtual_qword(i->seg(), eaddr+index*16+32);
     reg.exp      = read_virtual_word (i->seg(), eaddr+index*16+40);
-    BX_FPU_REG(index) = reg;
+
+    // update tag only if it is not empty
+    BX_WRITE_FPU_REGISTER_AND_TAG(reg,
+              IS_TAG_EMPTY(index) ? FPU_Tag_Empty : FPU_tagof(reg), index);
   }
 
   BX_CPU_THIS_PTR the_i387.twd = unpack_FPU_TW(tag_byte);

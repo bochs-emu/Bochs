@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: xsave.cc,v 1.26 2010-03-14 15:51:27 sshwarts Exp $
+// $Id: xsave.cc,v 1.27 2010-07-01 20:00:33 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008-2009 Stanislav Shwartsman
@@ -117,7 +117,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVE(bxInstruction_c *i)
     /* store i387 register file */
     for(index=0; index < 8; index++)
     {
-      const floatx80 &fp = BX_FPU_REG(index);
+      const floatx80 &fp = BX_READ_FPU_REG(index);
 
       xmm.xmm64u(0) = fp.fraction;
       xmm.xmm64u(1) = 0;
@@ -241,7 +241,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
         floatx80 reg;
         reg.fraction = read_virtual_qword(i->seg(), eaddr+index*16+32);
         reg.exp      = read_virtual_word (i->seg(), eaddr+index*16+40);
-        BX_FPU_REG(index) = reg;
+
+        // update tag only if it is not empty
+        BX_WRITE_FPU_REGISTER_AND_TAG(reg,
+              IS_TAG_EMPTY(index) ? FPU_Tag_Empty : FPU_tagof(reg), index);
       }
 
       /* Restore floating point tag word - see desription for FXRSTOR instruction */
