@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.206 2010-07-03 05:34:27 vruppert Exp $
+// $Id: config.cc,v 1.207 2010-07-03 11:13:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2009  The Bochs Project
@@ -3426,7 +3426,7 @@ static const char *fdtypes[] = {
 
 int bx_write_floppy_options(FILE *fp, int drive)
 {
-  char devtype[80], path[80], type[80], status[80];
+  char devtype[80], path[80], type[80], status[80], readonly[80];
   int ftype;
 
   BX_ASSERT(drive==0 || drive==1);
@@ -3434,6 +3434,7 @@ int bx_write_floppy_options(FILE *fp, int drive)
   sprintf(path, "floppy.%d.path", drive);
   sprintf(type, "floppy.%d.type", drive);
   sprintf(status, "floppy.%d.status", drive);
+  sprintf(readonly, "floppy.%d.readonly", drive);
   ftype = SIM->get_param_enum(devtype)->get();
   if (ftype == BX_FDD_NONE) {
     fprintf(fp, "# no floppy%c\n", (char)'a'+drive);
@@ -3454,10 +3455,11 @@ int bx_write_floppy_options(FILE *fp, int drive)
   }
   if ((SIM->get_param_enum(type)->get() > BX_FLOPPY_NONE) &&
       (SIM->get_param_enum(type)->get() <= BX_FLOPPY_LAST)) {
-    fprintf(fp, ", %s=\"%s\", status=%s",
+    fprintf(fp, ", %s=\"%s\", status=%s, write_protected=%d",
       fdtypes[SIM->get_param_enum(type)->get() - BX_FLOPPY_NONE],
       SIM->get_param_string(path)->getptr(),
-      SIM->get_param_bool(status)->get() ? "inserted":"ejected");
+      SIM->get_param_bool(status)->get() ? "inserted":"ejected",
+      SIM->get_param_bool(readonly)->get());
   }
   fprintf(fp, "\n");
   return 0;
