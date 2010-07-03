@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////
-// $Id: wxdialog.h,v 1.77 2009-12-04 20:02:12 sshwarts Exp $
+// $Id: wxdialog.h,v 1.78 2010-07-03 05:34:27 vruppert Exp $
 ////////////////////////////////////////////////////////////////////
   
 // wxWidgets dialogs for Bochs
@@ -330,7 +330,7 @@ class FloppyConfigDialog : public ParamDialog
 {
 private:
   wxButton *createButton;
-  ParamStruct *pstrDevice, *pstrPath, *pstrMedia, *pstrStatus;
+  ParamStruct *pstrDevice, *pstrPath, *pstrMedia, *pstrStatus, *pstrReadonly;
 public:
   FloppyConfigDialog(wxWindow* parent, wxWindowID id);
   void Setup(bx_list_c *list);

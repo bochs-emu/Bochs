@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.205 2010-05-18 15:33:41 vruppert Exp $
+// $Id: config.cc,v 1.206 2010-07-03 05:34:27 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2009  The Bochs Project
@@ -118,6 +118,14 @@ static Bit64s bx_param_handler(bx_param_c *param, int set, Bit64s val)
         DEV_floppy_set_media_status(1, val);
         bx_gui->update_drive_status_buttons();
       }
+    } else if (!strcmp(pname, BXPN_FLOPPYA_READONLY)) {
+      if (set) {
+        DEV_floppy_set_media_readonly(0, val);
+      }
+    } else if (!strcmp(pname, BXPN_FLOPPYB_READONLY)) {
+      if (set) {
+        DEV_floppy_set_media_readonly(1, val);
+      }
     } else if (!strcmp(pname, BXPN_MOUSE_ENABLED)) {
       if ((set) && (SIM->get_init_done())) {
         bx_gui->mouse_enabled_changed(val!=0);
@@ -228,7 +236,7 @@ void bx_init_options()
   bx_list_c *menu;
   bx_list_c *deplist;
   bx_param_num_c *ioaddr, *ioaddr2, *irq;
-  bx_param_bool_c *enabled, *status;
+  bx_param_bool_c *enabled, *readonly, *status;
   bx_param_enum_c *mode, *type, *ethmod, *toggle;
   bx_param_string_c *macaddr, *ethdev;
   bx_param_filename_c *path;
@@ -971,6 +979,15 @@ void bx_init_options()
   type->set_handler(bx_param_handler);
   type->set_runtime_param(1);
 
+  readonly = new bx_param_bool_c(floppya,
+      "readonly",
+      "Write Protection",
+      "Floppy media write protection",
+      0);
+  readonly->set_ask_format("Is media write protected? [%s] ");
+  readonly->set_handler(bx_param_handler);
+  readonly->set_runtime_param(1);
+
   status = new bx_param_bool_c(floppya,
       "status",
       "Inserted",
@@ -985,8 +1002,9 @@ void bx_init_options()
   devtype->set_dependent_list(deplist, 1);
   devtype->set_dependent_bitmap(BX_FDD_NONE, 0);
 
-  deplist = new bx_list_c(NULL, 2);
+  deplist = new bx_list_c(NULL, 3);
   deplist->add(type);
+  deplist->add(readonly);
   deplist->add(status);
   path->set_dependent_list(deplist);
 
@@ -1023,6 +1041,15 @@ void bx_init_options()
   type->set_handler(bx_param_handler);
   type->set_runtime_param(1);
 
+  readonly = new bx_param_bool_c(floppyb,
+      "readonly",
+      "Write Protection",
+      "Floppy media write protection",
+      0);
+  readonly->set_ask_format("Is media write protected? [%s] ");
+  readonly->set_handler(bx_param_handler);
+  readonly->set_runtime_param(1);
+
   status = new bx_param_bool_c(floppyb,
       "status",
       "Inserted",
@@ -1037,8 +1064,9 @@ void bx_init_options()
   devtype->set_dependent_list(deplist, 1);
   devtype->set_dependent_bitmap(BX_FDD_NONE, 0);
 
-  deplist = new bx_list_c(NULL, 2);
+  deplist = new bx_list_c(NULL, 3);
   deplist->add(type);
+  deplist->add(readonly);
   deplist->add(status);
   path->set_dependent_list(deplist);
 
@@ -2321,6 +2349,9 @@ static int parse_line_formatted(const char *context, int num_params, char *param
       }
       else if (!strcmp(params[i], "status=ejected")) {
         SIM->get_param_bool("status", base)->set(0);
+      }
+      else if (!strncmp(params[i], "write_protected=", 16)) {
+        SIM->get_param_bool("readonly", base)->set(atol(&params[i][16]));
       }
       else {
         PARSE_ERR(("%s: %s attribute '%s' not understood.", context, params[0],

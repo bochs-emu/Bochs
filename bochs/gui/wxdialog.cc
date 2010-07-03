@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxdialog.cc,v 1.114 2010-02-26 14:18:18 sshwarts Exp $
+// $Id: wxdialog.cc,v 1.115 2010-07-03 05:34:27 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
@@ -1428,17 +1428,19 @@ FloppyConfigDialog::FloppyConfigDialog(
 
 void FloppyConfigDialog::Setup(bx_list_c *list)
 {
-  int devtype_id, path_id, media_id, status_id;
+  int devtype_id, path_id, media_id, status_id, readonly_id;
 
   devtype_id = list->get_by_name("devtype")->get_id();
   path_id = list->get_by_name("path")->get_id();
   media_id = list->get_by_name("type")->get_id();
   status_id = list->get_by_name("status")->get_id();
+  readonly_id = list->get_by_name("readonly")->get_id();
   AddParam(list);
   pstrDevice = (ParamStruct*) paramHash->Get(devtype_id);
   pstrPath = (ParamStruct*) paramHash->Get(path_id);
   pstrMedia = (ParamStruct*) paramHash->Get(media_id);
   pstrStatus = (ParamStruct*) paramHash->Get(status_id);
+  pstrReadonly = (ParamStruct*) paramHash->Get(readonly_id);
 }
 
 void FloppyConfigDialog::OnEvent(wxCommandEvent& event)

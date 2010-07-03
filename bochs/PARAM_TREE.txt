@@ -1,4 +1,4 @@
-$Id: PARAM_TREE.txt,v 1.30 2010-04-29 19:34:31 sshwarts Exp $
+$Id: PARAM_TREE.txt,v 1.31 2010-07-03 05:34:27 vruppert Exp $
 
 Starting from Bochs 2.3 the parameters are organized in a tree structure
 instead of a huge flat list. The parameter tree was required for implementing
@@ -133,11 +133,13 @@ floppy
     devtype
     path
     type
+    readonly
     status
   1
     devtype
     path
     type
+    readonly
     status
 
 ata

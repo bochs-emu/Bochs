@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.cc,v 1.124 2010-06-18 17:23:50 vruppert Exp $
+// $Id: floppy.cc,v 1.125 2010-07-03 05:34:27 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2009  The Bochs Project
@@ -135,7 +135,7 @@ void bx_floppy_ctrl_c::init(void)
 {
   Bit8u i, devtype, cmos_value;
 
-  BX_DEBUG(("Init $Id: floppy.cc,v 1.124 2010-06-18 17:23:50 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: floppy.cc,v 1.125 2010-07-03 05:34:27 vruppert Exp $"));
   DEV_dma_register_8bit_channel(2, dma_read, dma_write, "Floppy Drive");
   DEV_register_irq(6, "Floppy Drive");
   for (unsigned addr=0x03F2; addr<=0x03F7; addr++) {
@@ -175,13 +175,16 @@ void bx_floppy_ctrl_c::init(void)
 
   if (SIM->get_param_enum(BXPN_FLOPPYA_TYPE)->get() != BX_FLOPPY_NONE) {
     if (SIM->get_param_bool(BXPN_FLOPPYA_STATUS)->get()) {
+      BX_FD_THIS s.media[0].write_protected = SIM->get_param_bool(BXPN_FLOPPYA_READONLY)->get();
       if (evaluate_media(BX_FD_THIS s.device_type[0], SIM->get_param_enum(BXPN_FLOPPYA_TYPE)->get(),
                          SIM->get_param_string(BXPN_FLOPPYA_PATH)->getptr(), & BX_FD_THIS s.media[0])) {
         BX_FD_THIS s.media_present[0] = 1;
 #define MED (BX_FD_THIS s.media[0])
         BX_INFO(("fd0: '%s' ro=%d, h=%d,t=%d,spt=%d",
-        SIM->get_param_string(BXPN_FLOPPYA_PATH)->getptr(),
-        MED.write_protected, MED.heads, MED.tracks, MED.sectors_per_track));
+          SIM->get_param_string(BXPN_FLOPPYA_PATH)->getptr(),
+          MED.write_protected, MED.heads, MED.tracks, MED.sectors_per_track));
+        if (MED.write_protected)
+          SIM->get_param_bool(BXPN_FLOPPYA_READONLY)->set(1);
 #undef MED
       } else {
         SIM->get_param_bool(BXPN_FLOPPYA_STATUS)->set(0);
@@ -205,13 +208,16 @@ void bx_floppy_ctrl_c::init(void)
 
   if (SIM->get_param_enum(BXPN_FLOPPYB_TYPE)->get() != BX_FLOPPY_NONE) {
     if (SIM->get_param_bool(BXPN_FLOPPYB_STATUS)->get()) {
+      BX_FD_THIS s.media[1].write_protected = SIM->get_param_bool(BXPN_FLOPPYB_READONLY)->get();
       if (evaluate_media(BX_FD_THIS s.device_type[1], SIM->get_param_enum(BXPN_FLOPPYB_TYPE)->get(),
                          SIM->get_param_string(BXPN_FLOPPYB_PATH)->getptr(), & BX_FD_THIS s.media[1])) {
         BX_FD_THIS s.media_present[1] = 1;
 #define MED (BX_FD_THIS s.media[1])
         BX_INFO(("fd1: '%s' ro=%d, h=%d,t=%d,spt=%d",
-        SIM->get_param_string(BXPN_FLOPPYB_PATH)->getptr(),
-        MED.write_protected, MED.heads, MED.tracks, MED.sectors_per_track));
+          SIM->get_param_string(BXPN_FLOPPYB_PATH)->getptr(),
+          MED.write_protected, MED.heads, MED.tracks, MED.sectors_per_track));
+        if (MED.write_protected)
+          SIM->get_param_bool(BXPN_FLOPPYB_READONLY)->set(1);
 #undef MED
       } else {
         SIM->get_param_bool(BXPN_FLOPPYB_STATUS)->set(0);
@@ -1389,6 +1395,11 @@ void bx_floppy_ctrl_c::increment_sector(void)
   }
 }
 
+void bx_floppy_ctrl_c::set_media_readonly(unsigned drive, unsigned status)
+{
+  BX_FD_THIS s.media[drive].write_protected = status;
+}
+
 unsigned bx_floppy_ctrl_c::set_media_status(unsigned drive, unsigned status)
 {
   char *path;
@@ -1431,14 +1442,20 @@ unsigned bx_floppy_ctrl_c::set_media_status(unsigned drive, unsigned status)
       BX_FD_THIS s.media_present[drive] = 1;
       if (drive == 0) {
 #define MED (BX_FD_THIS s.media[0])
-        BX_INFO(("fd0: '%s' ro=%d, h=%d,t=%d,spt=%d", SIM->get_param_string(BXPN_FLOPPYA_PATH)->getptr(),
-        MED.write_protected, MED.heads, MED.tracks, MED.sectors_per_track));
+        BX_INFO(("fd0: '%s' ro=%d, h=%d,t=%d,spt=%d",
+          SIM->get_param_string(BXPN_FLOPPYA_PATH)->getptr(),
+          MED.write_protected, MED.heads, MED.tracks, MED.sectors_per_track));
+        if (MED.write_protected)
+          SIM->get_param_bool(BXPN_FLOPPYA_READONLY)->set(1);
 #undef MED
         SIM->get_param_bool(BXPN_FLOPPYA_STATUS)->set(1);
       } else {
 #define MED (BX_FD_THIS s.media[1])
-        BX_INFO(("fd1: '%s' ro=%d, h=%d,t=%d,spt=%d", SIM->get_param_string(BXPN_FLOPPYB_PATH)->getptr(),
-        MED.write_protected, MED.heads, MED.tracks, MED.sectors_per_track));
+        BX_INFO(("fd1: '%s' ro=%d, h=%d,t=%d,spt=%d",
+          SIM->get_param_string(BXPN_FLOPPYB_PATH)->getptr(),
+          MED.write_protected, MED.heads, MED.tracks, MED.sectors_per_track));
+        if (MED.write_protected)
+          SIM->get_param_bool(BXPN_FLOPPYB_READONLY)->set(1);
 #undef MED
         SIM->get_param_bool(BXPN_FLOPPYB_STATUS)->set(1);
       }
@@ -1505,7 +1522,6 @@ bx_bool bx_floppy_ctrl_c::evaluate_media(Bit8u devtype, Bit8u type, char *path, 
   }
 
   // open media file (image file or device)
-  media->write_protected = 0;
   media->raw_floppy_win95 = 0;
 #ifdef macintosh
   media->fd = 0;
@@ -1542,7 +1558,7 @@ bx_bool bx_floppy_ctrl_c::evaluate_media(Bit8u devtype, Bit8u type, char *path, 
           tracks = params.cylinders;
           heads  = params.num_heads;
           spt    = params.sects_per_track;
-        } else {				
+        } else {
           CloseHandle(hFile);
           return(0);
         }
@@ -1559,18 +1575,28 @@ bx_bool bx_floppy_ctrl_c::evaluate_media(Bit8u devtype, Bit8u type, char *path, 
       }
       CloseHandle(hFile);
       // if using Win95 direct access, don't open the file
-      if (!media->raw_floppy_win95)
-        media->fd = open(sTemp, BX_RDWR);
+      if (!media->raw_floppy_win95) {
+        if (!media->write_protected)
+          media->fd = open(sTemp, BX_RDWR);
+        else
+          media->fd = open(sTemp, BX_RDONLY);
+      }
     } else {
-      media->fd = open(path, BX_RDWR);
+      if (!media->write_protected)
+        media->fd = open(path, BX_RDWR);
+      else
+        media->fd = open(path, BX_RDONLY);
     }
 #else
-    media->fd = open(path, BX_RDWR);
+    if (!media->write_protected)
+      media->fd = open(path, BX_RDWR);
+    else
+      media->fd = open(path, BX_RDONLY);
 #endif
 
   // Don't open the handle if using Win95 style direct access
   if (!media->raw_floppy_win95) {
-    if (media->fd < 0) {
+    if ((!media->write_protected) && (media->fd < 0)) {
       BX_INFO(("tried to open '%s' read/write: %s",path,strerror(errno)));
       // try opening the file read-only
       media->write_protected = 1;

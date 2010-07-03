@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: plugin.h,v 1.82 2010-06-18 17:23:50 vruppert Exp $
+// $Id: plugin.h,v 1.83 2010-07-03 05:34:27 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  The Bochs Project
@@ -176,6 +176,7 @@ extern "C" {
 
 ///////// FLOPPY macros
 #define DEV_floppy_set_media_status(drive, status)  bx_devices.pluginFloppyDevice->set_media_status(drive, status)
+#define DEV_floppy_set_media_readonly(drive, status)  bx_devices.pluginFloppyDevice->set_media_readonly(drive, status)
 #define DEV_floppy_present() (bx_devices.pluginFloppyDevice != &bx_devices.stubFloppy)
 
 ///////// DMA macros

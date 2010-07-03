@@ -41,6 +41,7 @@
 #define IDMEDIATX   2235
 #define IDMEDIATYPE 2240
 #define IDSTATUS    2250
+#define IDREADONLY  2255
 #define IDCREATE    2260
 #define IDCHANGETX  2265
 #define PARAM_DLG   2800

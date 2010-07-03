@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: param_names.h,v 1.8 2010-05-16 09:01:36 vruppert Exp $
+// $Id: param_names.h,v 1.9 2010-07-03 05:34:27 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  The Bochs Project
@@ -110,11 +110,13 @@
 #define BXPN_FLOPPYA_DEVTYPE             "floppy.0.devtype"
 #define BXPN_FLOPPYA_PATH                "floppy.0.path"
 #define BXPN_FLOPPYA_TYPE                "floppy.0.type"
+#define BXPN_FLOPPYA_READONLY            "floppy.0.readonly"
 #define BXPN_FLOPPYA_STATUS              "floppy.0.status"
 #define BXPN_FLOPPYB                     "floppy.1"
 #define BXPN_FLOPPYB_DEVTYPE             "floppy.1.devtype"
 #define BXPN_FLOPPYB_PATH                "floppy.1.path"
 #define BXPN_FLOPPYB_TYPE                "floppy.1.type"
+#define BXPN_FLOPPYB_READONLY            "floppy.1.readonly"
 #define BXPN_FLOPPYB_STATUS              "floppy.1.status"
 #define BXPN_ATA0_RES                    "ata.0.resources"
 #define BXPN_ATA1_RES                    "ata.1.resources"

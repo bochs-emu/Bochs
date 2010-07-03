@@ -45,6 +45,7 @@ BEGIN
     LTEXT           "Media Type", IDMEDIATX, 5, 52, 45, 14
     COMBOBOX        IDMEDIATYPE, 50, 50, 40, 14, CBS_DROPDOWNLIST | WS_TABSTOP
     AUTOCHECKBOX    "Inserted", IDSTATUS, 50, 70, 50, 14
+    AUTOCHECKBOX    "Write Protection", IDREADONLY, 116, 70, 70, 14
     LTEXT           "Clicking OK signals a media change for this drive.",
                     IDCHANGETX, 35, 90, 185, 8
     PUSHBUTTON      "Create Image", IDCREATE, 35, 105, 50, 14

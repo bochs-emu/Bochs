@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32dialog.cc,v 1.91 2010-02-26 14:18:18 sshwarts Exp $
+// $Id: win32dialog.cc,v 1.92 2010-07-03 05:34:27 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  The Bochs Project
@@ -202,7 +202,7 @@ static BOOL CALLBACK StringParamProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM 
 static BOOL CALLBACK FloppyDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   static bx_param_filename_c *param;
-  static bx_param_bool_c *status;
+  static bx_param_bool_c *status, *readonly;
   static bx_param_enum_c *devtype;
   static bx_param_enum_c *mediatype;
   char mesg[MAX_PATH];
@@ -217,10 +217,12 @@ static BOOL CALLBACK FloppyDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lP
       param->get_param_path(pname, 80);
       if (!strcmp(pname, BXPN_FLOPPYA_PATH)) {
         status = SIM->get_param_bool(BXPN_FLOPPYA_STATUS);
+        readonly = SIM->get_param_bool(BXPN_FLOPPYA_READONLY);
         devtype = SIM->get_param_enum(BXPN_FLOPPYA_DEVTYPE);
         mediatype = SIM->get_param_enum(BXPN_FLOPPYA_TYPE);
       } else {
         status = SIM->get_param_bool(BXPN_FLOPPYB_STATUS);
+        readonly = SIM->get_param_bool(BXPN_FLOPPYB_READONLY);
         devtype = SIM->get_param_enum(BXPN_FLOPPYB_DEVTYPE);
         mediatype = SIM->get_param_enum(BXPN_FLOPPYB_TYPE);
       }
@@ -236,6 +238,9 @@ static BOOL CALLBACK FloppyDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lP
       SendMessage(GetDlgItem(hDlg, IDMEDIATYPE), CB_SETCURSEL, cap, 0);
       if (status->get()) {
         SendMessage(GetDlgItem(hDlg, IDSTATUS), BM_SETCHECK, BST_CHECKED, 0);
+      }
+      if (readonly->get()) {
+        SendMessage(GetDlgItem(hDlg, IDREADONLY), BM_SETCHECK, BST_CHECKED, 0);
       }
       lstrcpy(path, param->getptr());
       title = param->get_label();
@@ -272,6 +277,7 @@ static BOOL CALLBACK FloppyDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lP
           } else {
             lstrcpy(path, "none");
           }
+          readonly->set(SendMessage(GetDlgItem(hDlg, IDREADONLY), BM_GETCHECK, 0, 0) == BST_CHECKED);
           param->set(path);
           i = SendMessage(GetDlgItem(hDlg, IDMEDIATYPE), CB_GETCURSEL, 0, 0);
           cap = SendMessage(GetDlgItem(hDlg, IDMEDIATYPE), CB_GETITEMDATA, i, 0);
