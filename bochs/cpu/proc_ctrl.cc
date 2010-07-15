@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.333 2010-04-22 17:51:37 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.334 2010-07-15 20:18:03 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2010  The Bochs Project
@@ -789,10 +789,19 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MWAIT(bxInstruction_c *i)
   // the execution. Any far control transfer between MONITOR and MWAIT
   // resets the monitoring logic.
 
-  if (ECX & 1)
+  if (ECX & 1) {
+#if BX_SUPPORT_VMX
+    // When "interrupt window exiting" VMX control is set MWAIT instruction
+    // won't cause the processor to enter BX_ACTIVITY_STATE_MWAIT_IF sleep
+    // state with EFLAGS.IF = 0
+    if (BX_CPU_THIS_PTR vmx_interrupt_window && ! BX_CPU_THIS_PTR get_IF())
+      return;
+#endif
     BX_CPU_THIS_PTR activity_state = BX_ACTIVITY_STATE_MWAIT_IF;
-  else
+  }
+  else {
     BX_CPU_THIS_PTR activity_state = BX_ACTIVITY_STATE_MWAIT;
+  }
 
   BX_CPU_THIS_PTR async_event = 1; // so processor knows to check
   // Execution of this instruction completes.  The processor
