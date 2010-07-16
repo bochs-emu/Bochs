@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpuid.cc,v 1.119 2010-07-15 20:18:03 sshwarts Exp $
+// $Id: cpuid.cc,v 1.120 2010-07-16 21:03:52 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007-2010 Stanislav Shwartsman
@@ -48,7 +48,9 @@
 
 Bit32u BX_CPU_C::get_cpu_version_information(void)
 {
-  Bit32u family = 0, model = 0, stepping = 0;
+  Bit32u stepping = SIM->get_param_num(BXPN_CPUID_STEPPING)->get();
+
+  Bit32u family = 0, model = 0;
   Bit32u extended_model = 0;
   Bit32u extended_family = 0;
 
@@ -63,10 +65,8 @@ Bit32u BX_CPU_C::get_cpu_version_information(void)
 
 #if BX_SUPPORT_FPU
   model = 1;            // 486dx
-  stepping = 3;
 #else
   model = 2;            // 486sx
-  stepping = 3;
 #endif
 
   /* **************** */
@@ -80,8 +80,6 @@ Bit32u BX_CPU_C::get_cpu_version_information(void)
     model = 4; // Pentium MMX
   else
     model = 1; // Pentium 60/66
-
-  stepping = 3;
 
   /* ****** */
   /*  i686  */
@@ -103,7 +101,6 @@ Bit32u BX_CPU_C::get_cpu_version_information(void)
 */
     model    = 0;
     family   = 0xf;
-    stepping = 0;
 
 #if BX_SUPPORT_X86_64
     model    = 2;       // Hammer returns what?
@@ -113,7 +110,6 @@ Bit32u BX_CPU_C::get_cpu_version_information(void)
   else {                // Pentium Pro/Pentium II/Pentium III processor
     family   = 6;
     model    = 8;
-    stepping = 3;
   }
 
 #else

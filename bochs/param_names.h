@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: param_names.h,v 1.9 2010-07-03 05:34:27 vruppert Exp $
+// $Id: param_names.h,v 1.10 2010-07-16 21:03:52 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  The Bochs Project
@@ -42,6 +42,7 @@
 #define BXPN_CONFIGURABLE_MSRS_PATH      "cpu.msrs"
 #define BXPN_VENDOR_STRING               "cpuid.vendor_string"
 #define BXPN_BRAND_STRING                "cpuid.brand_string"
+#define BXPN_CPUID_STEPPING              "cpuid.stepping"
 #define BXPN_CPUID_LIMIT_WINNT           "cpuid.cpuid_limit_winnt"
 #define BXPN_CPUID_MMX                   "cpuid.mmx"
 #define BXPN_CPUID_SSE                   "cpuid.sse"

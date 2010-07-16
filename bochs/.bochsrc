@@ -191,6 +191,9 @@ cpu: count=1, ips=50000000, reset_on_triple_fault=1, ignore_bad_msrs=1, msrs="ms
 #  Set the CPUID vendor string returned by CPUID(0x80000002 .. 0x80000004).  
 #  This should be at most a forty-eight-character ASCII string.  
 #
+#  STEPPING:
+#  Set stepping information returned by CPUID. Default stepping value is 3.
+#
 #  CPUID_LIMIT_WINNT:
 #  Determine whether to limit maximum CPUID function to 3. This mode is
 #  required to workaround WinNT installation and boot issues.

@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.280 2010-07-03 05:34:27 vruppert Exp $
+$Id: user.dbk,v 1.281 2010-07-16 21:03:52 sshwarts Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -3107,6 +3107,10 @@ This option exists only if Bochs compiled with x86-64 support.
 <para>
 When this option is enabled MWAIT will not put the CPU into a sleep state.
 This option exists only if Bochs compiled with --enable-monitor-mwait.
+</para>
+<para><command>stepping</command></para>
+<para>
+Set stepping information returned by CPUID. Default stepping value is 3.
 </para>
 <para><command>vendor_string</command></para>
 <para>
