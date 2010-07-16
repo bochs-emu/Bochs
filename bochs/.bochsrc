@@ -198,7 +198,9 @@ cpu: count=1, ips=50000000, reset_on_triple_fault=1, ignore_bad_msrs=1, msrs="ms
 #  Determine whether to limit maximum CPUID function to 3. This mode is
 #  required to workaround WinNT installation and boot issues.
 #=======================================================================
-cpuid: mmx=1, sep=1, sse=sse4_2, xapic=1, aes=1, movbe=1, xsave=1, cpuid_limit_winnt=0
+cpuid: mmx=1, sep=1, sse=sse4_2, xapic=1, aes=1, movbe=1, xsave=1
+cpuid: stepping=5
+cpuid: cpuid_limit_winnt=0
 
 #=======================================================================
 # MEMORY

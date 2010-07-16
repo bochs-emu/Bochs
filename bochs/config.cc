@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.208 2010-07-16 21:03:52 sshwarts Exp $
+// $Id: config.cc,v 1.209 2010-07-16 21:10:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2009  The Bochs Project
@@ -3901,15 +3901,15 @@ int bx_write_configuration(const char *rc, int overwrite)
   fprintf(fp, ", mwait_is_nop=%d", SIM->get_param_bool(BXPN_CPUID_MWAIT_IS_NOP)->get());
 #endif
 #endif
-  fprintf(fp, ", stepping=%d", SIM->get_param_num(BXPN_CPUID_STEPPING)->get());
+  fprintf(fp, "\n");
 
+  fprintf(fp, "cpuid: stepping=%d", SIM->get_param_num(BXPN_CPUID_STEPPING)->get());
   const char *vendor_string = SIM->get_param_string(BXPN_VENDOR_STRING)->getptr();
   if (vendor_string)
     fprintf(fp, ", vendor_string=\"%s\"", vendor_string);
   const char *brand_string = SIM->get_param_string(BXPN_BRAND_STRING)->getptr();
   if (brand_string)
     fprintf(fp, ", brand_string=\"%s\"", brand_string);
-
   fprintf(fp, "\n");
 
   fprintf(fp, "print_timestamps: enabled=%d\n", bx_dbg.print_timestamps);
