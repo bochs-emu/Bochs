@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.269 2010-05-26 18:37:54 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.270 2010-07-22 16:41:59 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2010  The Bochs Project
@@ -1017,7 +1017,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo64[512*3*2] = {
   /* 0F AC /wm */ { BxImmediate_Ib, BX_IA_SHRD_EwGwM },
   /* 0F AD /wr */ { 0,              BX_IA_SHRD_EwGwR },
   /* 0F AD /wm */ { 0,              BX_IA_SHRD_EwGwM },
-  /* 0F AE /wr */ { BxGroup15, BX_IA_ERROR, BxOpcodeInfoG15R },
+  /* 0F AE /wr */ { BxGroup15, BX_IA_ERROR, BxOpcodeInfoG15R64 },
   /* 0F AE /wm */ { BxGroup15, BX_IA_ERROR, BxOpcodeInfoG15M },
   /* 0F AF /wr */ { 0, BX_IA_IMUL_GwEwR },
   /* 0F AF /wm */ { 0, BX_IA_IMUL_GwEwM },
@@ -2044,7 +2044,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo64[512*3*2] = {
   /* 0F AC /dm */ { BxImmediate_Ib, BX_IA_SHRD_EdGdM },
   /* 0F AD /dr */ { 0,              BX_IA_SHRD_EdGdR },
   /* 0F AD /dm */ { 0,              BX_IA_SHRD_EdGdM },
-  /* 0F AE /dr */ { BxGroup15, BX_IA_ERROR, BxOpcodeInfoG15R },
+  /* 0F AE /dr */ { BxGroup15, BX_IA_ERROR, BxOpcodeInfoG15R64 },
   /* 0F AE /dm */ { BxGroup15, BX_IA_ERROR, BxOpcodeInfoG15M },
   /* 0F AF /dr */ { 0, BX_IA_IMUL_GdEdR },
   /* 0F AF /dm */ { 0, BX_IA_IMUL_GdEdM },
@@ -3071,7 +3071,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo64[512*3*2] = {
   /* 0F AC /qm */ { BxImmediate_Ib, BX_IA_SHRD_EqGqM },
   /* 0F AD /qr */ { 0,              BX_IA_SHRD_EqGqR },
   /* 0F AD /qm */ { 0,              BX_IA_SHRD_EqGqM },
-  /* 0F AE /qr */ { BxGroup15, BX_IA_ERROR, BxOpcodeInfoG15R },
+  /* 0F AE /qr */ { BxGroup15, BX_IA_ERROR, BxOpcodeInfoG15R64 },
   /* 0F AE /qm */ { BxGroup15, BX_IA_ERROR, BxOpcodeInfoG15M },
   /* 0F AF /qr */ { 0, BX_IA_IMUL_GqEqR },
   /* 0F AF /qm */ { 0, BX_IA_IMUL_GqEqM },

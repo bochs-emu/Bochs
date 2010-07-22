@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpuid.cc,v 1.121 2010-07-22 15:12:08 sshwarts Exp $
+// $Id: cpuid.cc,v 1.122 2010-07-22 16:41:59 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007-2010 Stanislav Shwartsman
@@ -218,9 +218,14 @@ Bit32u BX_CPU_C::get_extended_cpuid_features(void)
 
 Bit32u BX_CPU_C::get_ext2_cpuid_features(void)
 {
-  //   [0:0]   FS/GS BASE access instructions
+  Bit32u features = 0;
 
-  return 0;
+  //   [0:0]  FS/GS BASE access instructions
+  //  [31:1]  Reserved
+  if (BX_CPU_SUPPORT_ISA_EXTENSION(BX_CPU_FSGSBASE))
+    features |= 1;
+
+  return features;
 }
 
 /* Get CPU feature flags. Returned by CPUID functions 1 and 80000001.  */
@@ -561,6 +566,7 @@ void BX_CPU_C::set_cpuid_defaults(void)
   else
     cpuid->eax = 0; /* leaf 7 not supported */
   
+  BX_INFO(("CPUID[0x00000007]: %08x %08x %08x %08x", cpuid->eax, cpuid->ebx, cpuid->ecx, cpuid->edx));
 
   // ------------------------------------------------------
   // CPUID function 0x0000000d
@@ -932,6 +938,9 @@ void BX_CPU_C::init_isa_features_bitmask(void)
   xapic_enabled = SIM->get_param_bool(BXPN_CPUID_XAPIC)->get();
   sse_enabled = SIM->get_param_enum(BXPN_CPUID_SSE)->get();
 #endif
+#if BX_SUPPORT_X86_64
+  bx_bool fsgsbase_enabled = SIM->get_param_bool(BXPN_CPUID_FSGSBASE)->get();
+#endif
 
   // sanity checks
 #if BX_SUPPORT_3DNOW
@@ -1074,6 +1083,9 @@ void BX_CPU_C::init_isa_features_bitmask(void)
 
 #if BX_SUPPORT_X86_64
   features_bitmask |= BX_CPU_X86_64;
+
+  if (fsgsbase_enabled)
+    features_bitmask |= BX_CPU_FSGSBASE;
 #endif
 
   BX_CPU_THIS_PTR isa_extensions_bitmask = features_bitmask;

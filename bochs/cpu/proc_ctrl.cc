@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.334 2010-07-15 20:18:03 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.335 2010-07-22 16:41:59 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2010  The Bochs Project
@@ -1273,5 +1273,73 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SWAPGS(bxInstruction_c *i)
   Bit64u temp_GS_base = MSR_GSBASE;
   MSR_GSBASE = MSR_KERNELGSBASE;
   MSR_KERNELGSBASE = temp_GS_base;
+}
+
+/* F3 0F AE /0 */
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDFSBASE(bxInstruction_c *i)
+{
+  if (! BX_CPU_THIS_PTR cr4.get_FSGSBASE())
+    exception(BX_UD_EXCEPTION, 0);
+
+  if (i->os64L()) {
+    BX_WRITE_64BIT_REG(i->rm(), MSR_FSBASE);
+  }
+  else {
+    BX_WRITE_32BIT_REGZ(i->rm(), (Bit32u) MSR_FSBASE);
+  }
+}
+
+/* F3 0F AE /1 */
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDGSBASE(bxInstruction_c *i)
+{
+  if (! BX_CPU_THIS_PTR cr4.get_FSGSBASE())
+    exception(BX_UD_EXCEPTION, 0);
+
+  if (i->os64L()) {
+    BX_WRITE_64BIT_REG(i->rm(), MSR_GSBASE);
+  }
+  else {
+    BX_WRITE_32BIT_REGZ(i->rm(), (Bit32u) MSR_GSBASE);
+  }
+}
+
+/* F3 0F AE /2 */
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRFSBASE(bxInstruction_c *i)
+{
+  if (! BX_CPU_THIS_PTR cr4.get_FSGSBASE())
+    exception(BX_UD_EXCEPTION, 0);
+
+  if (i->os64L()) {
+    Bit64u fsbase = BX_READ_64BIT_REG(i->rm());
+    if (!IsCanonical(fsbase)) {
+      BX_ERROR(("WRFSBASE: canonical failure !"));
+      exception(BX_GP_EXCEPTION, 0);
+    }
+    MSR_FSBASE = fsbase;
+  }
+  else {
+    // 32-bit value is always canonical
+    MSR_FSBASE = BX_READ_32BIT_REG(i->rm());
+  }
+}
+
+/* F3 0F AE /3 */
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRGSBASE(bxInstruction_c *i)
+{
+  if (! BX_CPU_THIS_PTR cr4.get_FSGSBASE())
+    exception(BX_UD_EXCEPTION, 0);
+
+  if (i->os64L()) {
+    Bit64u gsbase = BX_READ_64BIT_REG(i->rm());
+    if (!IsCanonical(gsbase)) {
+      BX_ERROR(("WRGSBASE: canonical failure !"));
+      exception(BX_GP_EXCEPTION, 0);
+    }
+    MSR_GSBASE = gsbase;
+  }
+  else {
+    // 32-bit value is always canonical
+    MSR_GSBASE = BX_READ_32BIT_REG(i->rm());
+  }
 }
 #endif

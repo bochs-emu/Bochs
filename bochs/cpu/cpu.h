@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.681 2010-07-22 15:12:08 sshwarts Exp $
+// $Id: cpu.h,v 1.682 2010-07-22 16:41:58 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2010  The Bochs Project
@@ -2735,9 +2735,14 @@ public: // for now...
 
   BX_SMF void SYSCALL(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void SYSRET(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void SWAPGS(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void RDTSCP(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void CMPXCHG16B(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void SWAPGS(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void RDFSBASE(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void RDGSBASE(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void WRFSBASE(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void WRGSBASE(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
   BX_SMF void LOOPNE64_Jb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void LOOPE64_Jb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -3270,6 +3275,7 @@ public: // for now...
   BX_SMF BX_CPP_INLINE int bx_cpuid_support_pse(void);
   BX_SMF BX_CPP_INLINE int bx_cpuid_support_pse36(void);
   BX_SMF BX_CPP_INLINE int bx_cpuid_support_pcid(void);
+  BX_SMF BX_CPP_INLINE int bx_cpuid_support_fsgsbase(void);
 
   BX_SMF BX_CPP_INLINE unsigned which_cpu(void) { return BX_CPU_THIS_PTR bx_cpuid; }
   BX_SMF BX_CPP_INLINE const bx_gen_reg_t *get_gen_regfile() { return BX_CPU_THIS_PTR gen_reg; }
@@ -3688,6 +3694,15 @@ BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_pcid(void)
 {
 #if BX_SUPPORT_X86_64
   return (BX_CPU_THIS_PTR cpuid_std_function[1].ecx >> 17) & 0x1;
+#else
+  return 0;
+#endif
+}
+
+BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_fsgsbase(void)
+{
+#if BX_SUPPORT_X86_64
+  return BX_CPU_THIS_PTR cpuid_std_function[7].ecx & 0x1;
 #else
   return 0;
 #endif

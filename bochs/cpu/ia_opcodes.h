@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ia_opcodes.h,v 1.49 2010-05-18 07:28:04 sshwarts Exp $
+// $Id: ia_opcodes.h,v 1.50 2010-07-22 16:41:59 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008-2010 Stanislav Shwartsman
@@ -1620,7 +1620,6 @@ bx_define_opcode(BX_IA_SGDT64_Ms, &BX_CPU_C::SGDT64_Ms, NULL, BX_CPU_X86_64)
 bx_define_opcode(BX_IA_SIDT64_Ms, &BX_CPU_C::SIDT64_Ms, NULL, BX_CPU_X86_64)
 bx_define_opcode(BX_IA_LGDT64_Ms, &BX_CPU_C::LGDT64_Ms, NULL, BX_CPU_X86_64)
 bx_define_opcode(BX_IA_LIDT64_Ms, &BX_CPU_C::LIDT64_Ms, NULL, BX_CPU_X86_64)
-bx_define_opcode(BX_IA_SWAPGS, &BX_CPU_C::SWAPGS, NULL, BX_CPU_X86_64)
 bx_define_opcode(BX_IA_RDTSCP, &BX_CPU_C::RDTSCP, NULL, BX_CPU_X86_64)
 bx_define_opcode(BX_IA_CMPXCHG16B, &BX_CPU_C::CMPXCHG16B, NULL, BX_CPU_X86_64)
 bx_define_opcode(BX_IA_LOOPNE64_Jb, &BX_CPU_C::LOOPNE64_Jb, NULL, BX_CPU_X86_64)
@@ -1636,6 +1635,11 @@ bx_define_opcode(BX_IA_MOVQ_VdqEqM, &BX_CPU_C::MOVQ_VqWqM, NULL, BX_CPU_X86_64)
 bx_define_opcode(BX_IA_MOVNTI_MqGq, &BX_CPU_C::MOVNTI_MqGq, NULL, BX_CPU_X86_64)
 bx_define_opcode(BX_IA_SYSCALL, &BX_CPU_C::SYSCALL, NULL, BX_CPU_X86_64)
 bx_define_opcode(BX_IA_SYSRET, &BX_CPU_C::SYSRET, NULL, BX_CPU_X86_64)
+bx_define_opcode(BX_IA_SWAPGS, &BX_CPU_C::SWAPGS, NULL, BX_CPU_X86_64)
+bx_define_opcode(BX_IA_RDFSBASE, &BX_CPU_C::RDFSBASE, NULL, BX_CPU_X86_64 | BX_CPU_FSGSBASE)
+bx_define_opcode(BX_IA_RDGSBASE, &BX_CPU_C::RDGSBASE, NULL, BX_CPU_X86_64 | BX_CPU_FSGSBASE)
+bx_define_opcode(BX_IA_WRFSBASE, &BX_CPU_C::WRFSBASE, NULL, BX_CPU_X86_64 | BX_CPU_FSGSBASE)
+bx_define_opcode(BX_IA_WRGSBASE, &BX_CPU_C::WRGSBASE, NULL, BX_CPU_X86_64 | BX_CPU_FSGSBASE)
 #endif
 
 // VMX

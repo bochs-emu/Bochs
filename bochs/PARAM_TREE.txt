@@ -1,4 +1,4 @@
-$Id: PARAM_TREE.txt,v 1.31 2010-07-03 05:34:27 vruppert Exp $
+$Id: PARAM_TREE.txt,v 1.32 2010-07-22 16:41:57 sshwarts Exp $
 
 Starting from Bochs 2.3 the parameters are organized in a tree structure
 instead of a huge flat list. The parameter tree was required for implementing
@@ -27,6 +27,7 @@ cpu
 
 cpuid
   cpuid_limit_winnt
+  stepping
   vendor_string
   brand_string
   mmx
@@ -38,6 +39,7 @@ cpuid
   xapic
   1g_pages
   pcid
+  fsgsbase
   mwait_is_nop
 
 memory

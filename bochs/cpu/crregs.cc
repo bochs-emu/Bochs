@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: crregs.cc,v 1.18 2010-05-12 21:33:04 sshwarts Exp $
+// $Id: crregs.cc,v 1.19 2010-07-22 16:41:59 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2010 Stanislav Shwartsman
@@ -909,7 +909,8 @@ Bit32u BX_CPU_C::get_cr4_allow_mask(void)
   //   [31-19] Reserved, Must be Zero
   //   [18]    OSXSAVE: Operating System XSAVE Support R/W
   //   [17]    PCIDE: PCID Support R/W
-  //   [16-15] Reserved, Must be Zero
+  //   [16]    FSGSBASE: FS/GS BASE access R/W
+  //   [15]    Reserved, Must be Zero
   //   [14]    SMXE: SMX Extensions R/W
   //   [13]    VMXE: VMX Extensions R/W
   //   [12-11] Reserved, Must be Zero
@@ -975,6 +976,9 @@ Bit32u BX_CPU_C::get_cr4_allow_mask(void)
 #if BX_SUPPORT_X86_64
   if (bx_cpuid_support_pcid())
     allowMask |= BX_CR4_PCIDE_MASK;
+
+  if (bx_cpuid_support_fsgsbase())
+    allowMask |= BX_CR4_FSGSBASE_MASK;
 #endif
 
 #if BX_CPU_LEVEL >= 6
