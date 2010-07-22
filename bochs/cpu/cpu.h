@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.682 2010-07-22 16:41:58 sshwarts Exp $
+// $Id: cpu.h,v 1.683 2010-07-22 20:19:00 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2010  The Bochs Project
@@ -3702,7 +3702,7 @@ BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_pcid(void)
 BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_fsgsbase(void)
 {
 #if BX_SUPPORT_X86_64
-  return BX_CPU_THIS_PTR cpuid_std_function[7].ecx & 0x1;
+  return BX_CPU_THIS_PTR cpuid_std_function[7].ebx & 0x1;
 #else
   return 0;
 #endif
