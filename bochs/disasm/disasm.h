@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: disasm.h,v 1.62 2010-04-08 15:50:39 sshwarts Exp $
+// $Id: disasm.h,v 1.63 2010-07-22 15:12:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005-2009 Stanislav Shwartsman
@@ -60,11 +60,13 @@
 #define IA_SMX              0x00040000        /* SMX instruction */
 #define IA_SVM              0x00080000        /* SVM instruction */
 #define IA_XSAVE            0x00100000        /* XSAVE/XRSTOR extensions instruction */
-#define IA_AES_PCLMULQDQ    0x00200000        /* AES+PCLMULQDQ instructions */
-#define IA_MOVBE            0x00400000        /* MOVBE Intel Atom(R) instruction */
-#define IA_AVX              0x00800000        /* AVX instruction */
-#define IA_AVX_FMA          0x01000000        /* AVX FMA instruction */
-#define IA_X86_64           0x02000000        /* x86-64 instruction */
+#define IA_XSAVEOPT         0x00200000        /* XSAVEOPT instruction */
+#define IA_AES_PCLMULQDQ    0x00400000        /* AES+PCLMULQDQ instructions */
+#define IA_MOVBE            0x00800000        /* MOVBE Intel Atom(R) instruction */
+#define IA_FSGSBASE         0x01000000        /* FS/GS BASE access instructions */
+#define IA_AVX              0x02000000        /* AVX instruction */
+#define IA_AVX_FMA          0x04000000        /* AVX FMA instruction */
+#define IA_X86_64           0x08000000        /* x86-64 instruction */
 
 /* general purpose bit register */
 enum {
@@ -480,6 +482,7 @@ public:
   void Rw(const x86_insn *insn);
   void Rd(const x86_insn *insn);
   void Rq(const x86_insn *insn);
+  void Ry(const x86_insn *insn);
 
   // mmx register
   void Pq(const x86_insn *insn);

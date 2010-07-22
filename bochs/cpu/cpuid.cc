@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpuid.cc,v 1.120 2010-07-16 21:03:52 sshwarts Exp $
+// $Id: cpuid.cc,v 1.121 2010-07-22 15:12:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007-2010 Stanislav Shwartsman
@@ -142,7 +142,8 @@ Bit32u BX_CPU_C::get_extended_cpuid_features(void)
   // [12:12] FMA Instructions support
   // [13:13] CMPXCHG16B: CMPXCHG16B instruction support
   // [14:14] xTPR update control
-  // [16:15] reserved
+  // [15:15] PDCM - Perfon and Debug Capability MSR
+  // [16:16] reserved
   // [17:17] PCID: Process Context Identifiers
   // [18:18] DCA - Direct Cache Access
   // [19:19] SSE4.1 Instructions
@@ -155,7 +156,9 @@ Bit32u BX_CPU_C::get_extended_cpuid_features(void)
   // [26:26] XSAVE extensions support
   // [27:27] OSXSAVE support
   // [28:28] AVX extensions support
-  // [31:29] reserved
+  // [29:29] F16C - Float16 conversion support
+  // [30:30] RDRAND instruction
+  // [31:31] reserved
 
   Bit32u features = 0;
 
@@ -211,6 +214,13 @@ Bit32u BX_CPU_C::get_extended_cpuid_features(void)
     features |= (1<<26) | (1<<27);
 
   return features;
+}
+
+Bit32u BX_CPU_C::get_ext2_cpuid_features(void)
+{
+  //   [0:0]   FS/GS BASE access instructions
+
+  return 0;
 }
 
 /* Get CPU feature flags. Returned by CPUID functions 1 and 80000001.  */
@@ -340,6 +350,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CPUID(bxInstruction_c *i)
       }
 #endif
 #if BX_CPU_LEVEL >= 6
+      if (function == 0x7) {
+        bx_cpuid_extended_cpuid_leaf(subfunction);
+        return;
+      }
       if (function == 0xd) {
         bx_cpuid_xsave_leaf(subfunction);
         return;
@@ -462,71 +476,10 @@ void BX_CPU_C::set_cpuid_defaults(void)
   cpuid->ebx |= ((BX_CPU_THIS_PTR lapic.get_id() & 0xff) << 24);
 #endif
 
-  // ECX:       Extended Feature Flags
-  //   [0:0]   SSE3: SSE3 Instructions
-  //   [1:1]   PCLMULQDQ Instruction support
-  //   [2:2]   DTES64: 64-bit DS area
-  //   [3:3]   MONITOR/MWAIT support
-  //   [4:4]   DS-CPL: CPL qualified debug store
-  //   [5:5]   VMX: Virtual Machine Technology
-  //   [6:6]   SMX: Secure Virtual Machine Technology
-  //   [7:7]   EST: Enhanced Intel SpeedStep Technology
-  //   [8:8]   TM2: Thermal Monitor 2
-  //   [9:9]   SSSE3: SSSE3 Instructions
-  //   [10:10] CNXT-ID: L1 context ID
-  //   [11:11] reserved
-  //   [12:12] FMA Instructions support
-  //   [13:13] CMPXCHG16B: CMPXCHG16B instruction support
-  //   [14:14] xTPR update control
-  //   [16:15] reserved
-  //   [17:17] PCID: Process Context Identifiers
-  //   [18:18] DCA - Direct Cache Access
-  //   [19:19] SSE4.1 Instructions
-  //   [20:20] SSE4.2 Instructions
-  //   [21:21] X2APIC
-  //   [22:22] MOVBE instruction
-  //   [23:23] POPCNT instruction
-  //   [24:24] TSC Deadline
-  //   [25:25] AES Instructions
-  //   [26:26] XSAVE extensions support
-  //   [27:27] OSXSAVE support
-  //   [28:28] AVX extensions support
-  //   [31:29] reserved
+  // ECX: Extended Feature Flags
   cpuid->ecx = get_extended_cpuid_features();
 
-  // EDX:       Standard Feature Flags
-  //   [0:0]   FPU on chip
-  //   [1:1]   VME: Virtual-8086 Mode enhancements
-  //   [2:2]   DE: Debug Extensions (I/O breakpoints)
-  //   [3:3]   PSE: Page Size Extensions
-  //   [4:4]   TSC: Time Stamp Counter
-  //   [5:5]   MSR: RDMSR and WRMSR support
-  //   [6:6]   PAE: Physical Address Extensions
-  //   [7:7]   MCE: Machine Check Exception
-  //   [8:8]   CXS: CMPXCHG8B instruction
-  //   [9:9]   APIC: APIC on Chip
-  //   [10:10] Reserved
-  //   [11:11] SYSENTER/SYSEXIT support
-  //   [12:12] MTRR: Memory Type Range Reg
-  //   [13:13] PGE/PTE Global Bit
-  //   [14:14] MCA: Machine Check Architecture
-  //   [15:15] CMOV: Cond Mov/Cmp Instructions
-  //   [16:16] PAT: Page Attribute Table
-  //   [17:17] PSE-36: Physical Address Extensions
-  //   [18:18] PSN: Processor Serial Number
-  //   [19:19] CLFLUSH: CLFLUSH Instruction support
-  //   [20:20] Reserved
-  //   [21:21] DS: Debug Store
-  //   [22:22] ACPI: Thermal Monitor and Software Controlled Clock Facilities
-  //   [23:23] MMX Technology
-  //   [24:24] FXSR: FXSAVE/FXRSTOR (also indicates CR4.OSFXSR is available)
-  //   [25:25] SSE: SSE Extensions
-  //   [26:26] SSE2: SSE2 Extensions
-  //   [27:27] Self Snoop
-  //   [28:28] Hyper Threading Technology
-  //   [29:29] TM: Thermal Monitor
-  //   [30:30] Reserved
-  //   [31:31] PBE: Pending Break Enable
+  // EDX: Standard Feature Flags
   cpuid->edx = get_std_cpuid_features();
 
   BX_INFO(("CPUID[0x00000001]: %08x %08x %08x %08x", cpuid->eax, cpuid->ebx, cpuid->ecx, cpuid->edx));
@@ -595,6 +548,19 @@ void BX_CPU_C::set_cpuid_defaults(void)
 
   BX_INFO(("CPUID[0x00000005]: %08x %08x %08x %08x", cpuid->eax, cpuid->ebx, cpuid->ecx, cpuid->edx));
 #endif
+
+  // ------------------------------------------------------
+  // CPUID function 0x00000007
+  cpuid = &(BX_CPU_THIS_PTR cpuid_std_function[7]);
+
+  cpuid->ebx = get_ext2_cpuid_features();
+  cpuid->ecx = 0;
+  cpuid->edx = 0;
+  if (cpuid->ebx)
+    cpuid->eax = 1; /* report max sub-leaves that are supported in leaf 7 */
+  else
+    cpuid->eax = 0; /* leaf 7 not supported */
+  
 
   // ------------------------------------------------------
   // CPUID function 0x0000000d
@@ -912,6 +878,22 @@ void BX_CPU_C::bx_cpuid_extended_topology_leaf(Bit32u subfunction)
 #endif
 
 #if BX_CPU_LEVEL >= 6
+void BX_CPU_C::bx_cpuid_extended_cpuid_leaf(Bit32u subfunction)
+{
+  if (subfunction == 0) {
+    RAX = BX_CPU_THIS_PTR cpuid_std_function[0x7].eax;
+    RBX = BX_CPU_THIS_PTR cpuid_std_function[0x7].ebx;
+    RCX = BX_CPU_THIS_PTR cpuid_std_function[0x7].ecx;
+    RDX = BX_CPU_THIS_PTR cpuid_std_function[0x7].edx;
+  }
+  else {
+    RAX = 0; // reserved
+    RBX = 0; // reserved
+    RCX = 0; // reserved
+    RDX = 0; // reserved
+  }
+}
+
 void BX_CPU_C::bx_cpuid_xsave_leaf(Bit32u subfunction)
 {
   BX_ASSERT(BX_CPU_SUPPORT_ISA_EXTENSION(BX_CPU_XSAVE));

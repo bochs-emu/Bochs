@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: crregs.h,v 1.29 2010-05-12 21:33:04 sshwarts Exp $
+// $Id: crregs.h,v 1.30 2010-07-22 15:12:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007-2009 Stanislav Shwartsman
@@ -89,6 +89,7 @@ struct bx_cr0_t {
 #define BX_CR4_OSXMMEXCPT_MASK (1 << 10)
 #define BX_CR4_VMXE_MASK       (1 << 13)
 #define BX_CR4_SMXE_MASK       (1 << 14)
+#define BX_CR4_FSGSBASE_MASK   (1 << 16)
 #define BX_CR4_PCIDE_MASK      (1 << 17)
 #define BX_CR4_OSXSAVE_MASK    (1 << 18)
 
@@ -110,6 +111,7 @@ struct bx_cr4_t {
   IMPLEMENT_CRREG_ACCESSORS(VMXE, 13);
 #endif
 #if BX_SUPPORT_X86_64
+  IMPLEMENT_CRREG_ACCESSORS(FSGSBASE, 16);
   IMPLEMENT_CRREG_ACCESSORS(PCIDE, 17);
 #endif
   IMPLEMENT_CRREG_ACCESSORS(OSXSAVE, 18);

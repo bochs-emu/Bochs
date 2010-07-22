@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dis_groups.cc,v 1.52 2010-04-02 19:01:16 sshwarts Exp $
+// $Id: dis_groups.cc,v 1.53 2010-07-22 15:12:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005-2009 Stanislav Shwartsman
@@ -351,6 +351,12 @@ void disassembler::Rd(const x86_insn *insn)
 void disassembler::Rq(const x86_insn *insn)
 {
   dis_sprintf("%s", general_64bit_regname[insn->rm]);
+}
+
+void disassembler::Ry(const x86_insn *insn)
+{
+  if (insn->os_64) Rq(insn);
+  else Rd(insn);
 }
 
 // mmx register

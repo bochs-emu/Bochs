@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dis_tables.h,v 1.45 2010-04-02 19:01:16 sshwarts Exp $
+// $Id: dis_tables.h,v 1.46 2010-07-22 15:12:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005-2010 Stanislav Shwartsman
@@ -119,6 +119,7 @@
 #define Rw &disassembler::Rw
 #define Rd &disassembler::Rd
 #define Rq &disassembler::Rq
+#define Ry &disassembler::Ry
 
 #define Pq &disassembler::Pq
 #define Qd &disassembler::Qd

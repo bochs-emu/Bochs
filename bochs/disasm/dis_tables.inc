@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dis_tables.inc,v 1.35 2010-05-23 20:05:14 sshwarts Exp $
+// $Id: dis_tables.inc,v 1.36 2010-07-22 15:12:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005-2010 Stanislav Shwartsman
@@ -495,7 +495,7 @@ static BxDisasmOpcodeTable_t BxDisasmGroupSSE_G9VMX7[4] = {
 
 static BxDisasmOpcodeTable_t BxDisasmGroupG9[8] = {
   /* 0 */ { 0, &Ia_Invalid },
-  /* 1 */ { 0, &Ia_cmpxchg8b },
+  /* 1 */ { 0, &Ia_cmpxchg8b_Mq },
   /* 2 */ { 0, &Ia_Invalid },
   /* 3 */ { 0, &Ia_Invalid },
   /* 4 */ { 0, &Ia_Invalid },
@@ -506,7 +506,7 @@ static BxDisasmOpcodeTable_t BxDisasmGroupG9[8] = {
 
 static BxDisasmOpcodeTable_t BxDisasmGroupG9q[8] = {
   /* 0 */ { 0, &Ia_Invalid },
-  /* 1 */ { 0, &Ia_cmpxchg16b },
+  /* 1 */ { 0, &Ia_cmpxchg16b_Mdq },
   /* 2 */ { 0, &Ia_Invalid },
   /* 3 */ { 0, &Ia_Invalid },
   /* 4 */ { 0, &Ia_Invalid },
@@ -598,21 +598,21 @@ static BxDisasmOpcodeTable_t BxDisasmGroupG14[8] = {
 
 /* Group15 */
 static BxDisasmOpcodeTable_t BxDisasmGroupG15M[8] = {
-  /* 0 */ { 0, &Ia_fxsave  },
-  /* 1 */ { 0, &Ia_fxrstor },
-  /* 2 */ { 0, &Ia_ldmxcsr },
-  /* 3 */ { 0, &Ia_stmxcsr },
-  /* 4 */ { 0, &Ia_xsave   },
-  /* 5 */ { 0, &Ia_xrstor  },
-  /* 6 */ { 0, &Ia_Invalid },
-  /* 7 */ { 0, &Ia_cflush  }
+  /* 0 */ { 0, &Ia_fxsave   },
+  /* 1 */ { 0, &Ia_fxrstor  },
+  /* 2 */ { 0, &Ia_ldmxcsr  },
+  /* 3 */ { 0, &Ia_stmxcsr  },
+  /* 4 */ { 0, &Ia_xsave    },
+  /* 5 */ { 0, &Ia_xrstor   },
+  /* 6 */ { 0, &Ia_xsaveopt },
+  /* 7 */ { 0, &Ia_cflush   }
 };
 
 static BxDisasmOpcodeTable_t BxDisasmGroupG15R[8] = {
-  /* 0 */ { 0, &Ia_Invalid },
-  /* 1 */ { 0, &Ia_Invalid },
-  /* 2 */ { 0, &Ia_Invalid },
-  /* 3 */ { 0, &Ia_Invalid },
+  /* 0 */ { GRPSSEF3(Ia_rdfsbase_Ry) },
+  /* 1 */ { GRPSSEF3(Ia_rdgsbase_Ry) },
+  /* 2 */ { GRPSSEF3(Ia_wrfsbase_Ry) },
+  /* 3 */ { GRPSSEF3(Ia_wrgsbase_Ry) },
   /* 4 */ { 0, &Ia_Invalid },
   /* 5 */ { 0, &Ia_lfence },
   /* 6 */ { 0, &Ia_mfence },

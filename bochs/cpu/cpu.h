@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.680 2010-05-23 19:17:40 sshwarts Exp $
+// $Id: cpu.h,v 1.681 2010-07-22 15:12:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2010  The Bochs Project
@@ -625,11 +625,13 @@ typedef struct
 #define BX_CPU_SMX              0x00040000        /* SMX instruction */
 #define BX_CPU_SVM              0x00080000        /* SVM instruction */
 #define BX_CPU_XSAVE            0x00100000        /* XSAVE/XRSTOR extensions instruction */
-#define BX_CPU_AES_PCLMULQDQ    0x00200000        /* AES+PCLMULQDQ instructions */
-#define BX_CPU_MOVBE            0x00400000        /* MOVBE Intel Atom(R) instruction */
-#define BX_CPU_AVX              0x00800000        /* AVX instruction */
-#define BX_CPU_AVX_FMA          0x01000000        /* AVX FMA instruction */
-#define BX_CPU_X86_64           0x02000000        /* x86-64 instruction */
+#define BX_CPU_XSAVEOPT         0x00200000        /* XSAVEOPT instruction */
+#define BX_CPU_AES_PCLMULQDQ    0x00400000        /* AES+PCLMULQDQ instructions */
+#define BX_CPU_MOVBE            0x00800000        /* MOVBE Intel Atom(R) instruction */
+#define BX_CPU_FSGSBASE         0x01000000        /* FS/GS BASE access instructions */
+#define BX_CPU_AVX              0x02000000        /* AVX instruction */
+#define BX_CPU_AVX_FMA          0x04000000        /* AVX FMA instruction */
+#define BX_CPU_X86_64           0x08000000        /* x86-64 instruction */
 
 struct cpuid_function_t {
   Bit32u eax;
@@ -3246,6 +3248,7 @@ public: // for now...
 
   BX_SMF Bit32u get_cpu_version_information(void);
   BX_SMF Bit32u get_extended_cpuid_features(void);
+  BX_SMF Bit32u get_ext2_cpuid_features(void);
   BX_SMF Bit32u get_std_cpuid_features(void);
   BX_SMF void set_cpuid_defaults(void);
 
@@ -3256,6 +3259,7 @@ public: // for now...
 #endif
 #if BX_CPU_LEVEL >= 6
   BX_SMF void bx_cpuid_xsave_leaf(Bit32u subfunction);
+  BX_SMF void bx_cpuid_extended_cpuid_leaf(Bit32u subfunction);
 #endif
 
   BX_SMF BX_CPP_INLINE int bx_cpuid_support_debug_extensions(void);

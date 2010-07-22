@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: opcodes.inc,v 1.39 2010-05-23 20:05:14 sshwarts Exp $
+// $Id: opcodes.inc,v 1.40 2010-07-22 15:12:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005-2009 Stanislav Shwartsman
@@ -226,8 +226,8 @@ Ia_cmpw_Ew_Gw = { "cmp", "cmpw", Ew, Gw, XX, XX, 0 },
 Ia_cmpw_Ew_Iw = { "cmp", "cmpw", Ew, Iw, XX, XX, 0 },
 Ia_cmpw_Ew_sIb = { "cmp", "cmpw", Ew, sIbw, XX, XX, 0 },
 Ia_cmpw_Gw_Ew = { "cmp", "cmpw", Gw, Ew, XX, XX, 0 },
-Ia_cmpxchg16b = { "cmpxchg16b", "cmpxchg16b", Mdq, XX, XX, XX, IA_X86_64 },
-Ia_cmpxchg8b = { "cmpxchg8b", "cmpxchg8b", Mq, XX, XX, XX, IA_PENTIUM },
+Ia_cmpxchg16b_Mdq = { "cmpxchg16b", "cmpxchg16b", Mdq, XX, XX, XX, IA_X86_64 },
+Ia_cmpxchg8b_Mq = { "cmpxchg8b", "cmpxchg8b", Mq, XX, XX, XX, IA_PENTIUM },
 Ia_cmpxchgb_Eb_Gb = { "cmpxchg", "cmpxchgb", Eb, Gb, XX, XX, IA_486 },
 Ia_cmpxchgl_Ed_Gd = { "cmpxchg", "cmpxchgl", Ed, Gd, XX, XX, IA_486 },
 Ia_cmpxchgq_Eq_Gq = { "cmpxchg", "cmpxchgq", Eq, Gq, XX, XX, IA_X86_64 },
@@ -1098,6 +1098,8 @@ Ia_rcrq_Eq_Ib = { "rcr", "rcrq", Eq, Ib, XX, XX, IA_X86_64 },
 Ia_rcrw_Ew_CL = { "rcr", "rcrw", Ew, CL_Reg, XX, XX, 0 },
 Ia_rcrw_Ew_I1 = { "rcr", "rcrw", Ew, I1, XX, XX, 0 },
 Ia_rcrw_Ew_Ib = { "rcr", "rcrw", Ew, Ib, XX, XX, 0 },
+Ia_rdfsbase_Ry = { "rdfsbase", "rdfsbase", Ry, XX, XX, XX, IA_FSGSBASE },
+Ia_rdgsbase_Ry = { "rdgsbase", "rdgsbase", Ry, XX, XX, XX, IA_FSGSBASE },
 Ia_rdmsr = { "rdmsr", "rdmsr", XX, XX, XX, XX, IA_PENTIUM },
 Ia_rdpmc = { "rdpmc", "rdpmc", XX, XX, XX, XX, IA_P6 },
 Ia_rdtsc = { "rdtsc", "rdtsc", XX, XX, XX, XX, IA_PENTIUM },
@@ -1307,6 +1309,8 @@ Ia_vmwrite_Gq_Eq = { "vmwrite", "vmwrite", Gq, Eq, XX, XX, IA_VMX },
 Ia_vmxoff = { "vmxoff", "vmxoff", XX, XX, XX, XX, IA_VMX },
 Ia_vmxon_Mq = { "vmxon", "vmxon", Mq, XX, XX, XX, IA_VMX },
 Ia_wbinvd = { "wbinvd", "wbinvd", XX, XX, XX, XX, IA_486 },
+Ia_wrfsbase_Ry = { "wrfsbase", "wrfsbase", Ry, XX, XX, XX, IA_FSGSBASE },
+Ia_wrgsbase_Ry = { "wrgsbase", "wrgsbase", Ry, XX, XX, XX, IA_FSGSBASE },
 Ia_wrmsr = { "wrmsr", "wrmsr", XX, XX, XX, XX, IA_PENTIUM },
 Ia_xaddb_Eb_Gb = { "xadd", "xaddb", Eb, Gb, XX, XX, IA_486 },
 Ia_xaddl_Ed_Gd = { "xadd", "xaddl", Ed, Gd, XX, XX, IA_486 },
@@ -1344,4 +1348,5 @@ Ia_xorw_Ew_sIb = { "xor", "xorw", Ew, sIbw, XX, XX, 0 },
 Ia_xorw_Gw_Ew = { "xor", "xorw", Gw, Ew, XX, XX, 0 },
 Ia_xrstor = { "xrstor", "xrstor", Mx, XX, XX, XX, IA_XSAVE },
 Ia_xsave = { "xsave", "xsave", Mx, XX, XX, XX, IA_XSAVE },
+Ia_xsaveopt = { "xsaveopt", "xsaveopt", Mx, XX, XX, XX, IA_XSAVEOPT },
 Ia_xsetbv = { "xsetbv", "xsetbv", XX, XX, XX, XX, IA_XSAVE };
