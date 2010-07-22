@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.274 2010-05-26 18:37:54 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.275 2010-07-22 20:12:25 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2010  The Bochs Project
@@ -2645,6 +2645,11 @@ modrm_done:
     }
 
     ia_opcode = OpcodeInfoPtr->IA;
+
+    if (attr & BxArithDstRM) {
+      i->setRm(nnn);
+      i->setNnn(rm);
+    }
   }
   else {
     // Opcode does not require a MODRM byte.
@@ -2795,11 +2800,6 @@ modrm_done:
   if (! BX_NULL_SEG_REG(seg_override))
      seg = seg_override;
   i->setSeg(seg);
-
-  if (attr & BxArithDstRM) {
-    i->setRm(nnn);
-    i->setNnn(rm);
-  }
 
   i->execute  = BxOpcodesTable[ia_opcode].execute1;
   i->execute2 = BxOpcodesTable[ia_opcode].execute2;

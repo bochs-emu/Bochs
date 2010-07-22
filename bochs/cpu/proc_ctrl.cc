@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.335 2010-07-22 16:41:59 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.336 2010-07-22 20:12:25 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2010  The Bochs Project
@@ -1058,7 +1058,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSCALL(bxInstruction_c *i)
 
     handleCpuModeChange(); // mode change could only happen when in long_mode()
 
-#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
+#if BX_SUPPORT_ALIGNMENT_CHECK
     BX_CPU_THIS_PTR alignment_check_mask = 0; // CPL=0
 #endif
 
@@ -1106,7 +1106,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSCALL(bxInstruction_c *i)
 
     updateFetchModeMask(/* CS reloaded */);
 
-#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
+#if BX_SUPPORT_ALIGNMENT_CHECK
     BX_CPU_THIS_PTR alignment_check_mask = 0; // CPL=0
 #endif
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: access.cc,v 1.126 2009-12-04 16:53:12 sshwarts Exp $
+// $Id: access.cc,v 1.127 2010-07-22 20:12:24 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2005-2009  The Bochs Project
@@ -254,6 +254,13 @@ BX_CPU_C::system_read_byte(bx_address laddr)
     return data;
   }
 
+#if BX_SUPPORT_X86_64
+  if (! IsCanonical(laddr)) {
+    BX_ERROR(("system_read_byte(): canonical failure"));
+    exception(BX_GP_EXCEPTION, 0);
+  }
+#endif
+
   access_read_linear(laddr, 1, 0, BX_READ, (void *) &data);
   return data;
 }
@@ -276,6 +283,13 @@ BX_CPU_C::system_read_word(bx_address laddr)
         tlbEntry->ppf | pageOffset, 2, 0, BX_READ, (Bit8u*) &data);
     return data;
   }
+
+#if BX_SUPPORT_X86_64
+  if (! IsCanonical(laddr) || ! IsCanonical(laddr+1)) {
+    BX_ERROR(("system_read_word(): canonical failure"));
+    exception(BX_GP_EXCEPTION, 0);
+  }
+#endif
 
   access_read_linear(laddr, 2, 0, BX_READ, (void *) &data);
   return data;
@@ -300,6 +314,13 @@ BX_CPU_C::system_read_dword(bx_address laddr)
     return data;
   }
 
+#if BX_SUPPORT_X86_64
+  if (! IsCanonical(laddr) || ! IsCanonical(laddr+3)) {
+    BX_ERROR(("system_read_dword(): canonical failure"));
+    exception(BX_GP_EXCEPTION, 0);
+  }
+#endif
+
   access_read_linear(laddr, 4, 0, BX_READ, (void *) &data);
   return data;
 }
@@ -322,6 +343,13 @@ BX_CPU_C::system_read_qword(bx_address laddr)
         tlbEntry->ppf | pageOffset, 8, 0, BX_READ, (Bit8u*) &data);
     return data;
   }
+
+#if BX_SUPPORT_X86_64
+  if (! IsCanonical(laddr) || ! IsCanonical(laddr+7)) {
+    BX_ERROR(("system_read_qword(): canonical failure"));
+    exception(BX_GP_EXCEPTION, 0);
+  }
+#endif
 
   access_read_linear(laddr, 8, 0, BX_READ, (void *) &data);
   return data;
@@ -349,6 +377,13 @@ BX_CPU_C::system_write_byte(bx_address laddr, Bit8u data)
     }
   }
 
+#if BX_SUPPORT_X86_64
+  if (! IsCanonical(laddr)) {
+    BX_ERROR(("system_write_byte(): canonical failure"));
+    exception(BX_GP_EXCEPTION, 0);
+  }
+#endif
+
   access_write_linear(laddr, 1, 0, (void *) &data);
 }
 
@@ -374,6 +409,13 @@ BX_CPU_C::system_write_word(bx_address laddr, Bit16u data)
     }
   }
 
+#if BX_SUPPORT_X86_64
+  if (! IsCanonical(laddr) || ! IsCanonical(laddr+1)) {
+    BX_ERROR(("system_write_word(): canonical failure"));
+    exception(BX_GP_EXCEPTION, 0);
+  }
+#endif
+
   access_write_linear(laddr, 2, 0, (void *) &data);
 }
 
@@ -398,6 +440,13 @@ BX_CPU_C::system_write_dword(bx_address laddr, Bit32u data)
       return;
     }
   }
+
+#if BX_SUPPORT_X86_64
+  if (! IsCanonical(laddr) || ! IsCanonical(laddr+3)) {
+    BX_ERROR(("system_write_dword(): canonical failure"));
+    exception(BX_GP_EXCEPTION, 0);
+  }
+#endif
 
   access_write_linear(laddr, 4, 0, (void *) &data);
 }
