@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.248 2010-05-10 05:24:38 sshwarts Exp $
+// $Id: rombios.c,v 1.249 2010-08-01 21:54:32 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -869,7 +869,7 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.248 $ $Date: 2010-05-10 05:24:38 $";
+static char bios_cvs_version_string[] = "$Revision: 1.249 $ $Date: 2010-08-01 21:54:32 $";
 
 #define BIOS_COPYRIGHT_STRING "(c) 2002 MandrakeSoft S.A. Written by Kevin Lawton & the Bochs team."
 
@@ -5457,11 +5457,11 @@ int13_harddisk(EHAX, DS, ES, DI, SI, BP, ELDX, BX, DX, CX, AX, IP, CS, FLAGS)
       size=read_word(DS,SI+(Bit16u)&Int13DPT->size);
 
       // Buffer is too small
-      if(size < 0x1a)
+      if(size < 26)
         goto int13_fail;
 
       // EDD 1.x
-      if(size >= 0x1a) {
+      if(size >= 26) {
         Bit16u   blksize;
 
         npc     = read_word(ebda_seg, &EbdaData->ata.devices[device].pchs.cylinders);
@@ -5471,7 +5471,7 @@ int13_harddisk(EHAX, DS, ES, DI, SI, BP, ELDX, BX, DX, CX, AX, IP, CS, FLAGS)
         lba_high = read_dword(ebda_seg, &EbdaData->ata.devices[device].sectors_high);
         blksize = read_word(ebda_seg, &EbdaData->ata.devices[device].blksize);
 
-        write_word(DS, SI+(Bit16u)&Int13DPT->size, 0x1a);
+        write_word(DS, SI+(Bit16u)&Int13DPT->size, 26);
         if (lba_high || (lba_low/npspt)/nph > 0x3fff)
         {
           write_word(DS, SI+(Bit16u)&Int13DPT->infos, 0x00); // geometry is invalid
@@ -5479,7 +5479,7 @@ int13_harddisk(EHAX, DS, ES, DI, SI, BP, ELDX, BX, DX, CX, AX, IP, CS, FLAGS)
         }
         else
         {
-          write_word(DS, SI+(Bit16u)&Int13DPT->infos, 0x02); // geometry is valid
+          write_word(DS, SI+(Bit16u)&Int13DPT->infos, 1 << 1); // geometry is valid
           write_dword(DS, SI+(Bit16u)&Int13DPT->cylinders, (Bit32u)npc);
         }
         write_dword(DS, SI+(Bit16u)&Int13DPT->heads, (Bit32u)nph);
@@ -5490,11 +5490,11 @@ int13_harddisk(EHAX, DS, ES, DI, SI, BP, ELDX, BX, DX, CX, AX, IP, CS, FLAGS)
       }
 
       // EDD 2.x
-      if(size >= 0x1e) {
+      if(size >= 30) {
         Bit8u  channel, dev, irq, mode, checksum, i, translation;
         Bit16u iobase1, iobase2, options;
 
-        write_word(DS, SI+(Bit16u)&Int13DPT->size, 0x1e);
+        write_word(DS, SI+(Bit16u)&Int13DPT->size, 30);
 
         write_word(DS, SI+(Bit16u)&Int13DPT->dpte_segment, ebda_seg);
         write_word(DS, SI+(Bit16u)&Int13DPT->dpte_offset, &EbdaData->ata.dpte);
@@ -5523,19 +5523,19 @@ int13_harddisk(EHAX, DS, ES, DI, SI, BP, ELDX, BX, DX, CX, AX, IP, CS, FLAGS)
         write_byte(ebda_seg, &EbdaData->ata.dpte.pio, 0 );
         write_word(ebda_seg, &EbdaData->ata.dpte.options, options);
         write_word(ebda_seg, &EbdaData->ata.dpte.reserved, 0);
-        if (size >=0x42)
+        if (size >= 66)
           write_byte(ebda_seg, &EbdaData->ata.dpte.revision, 0x11);
         else
           write_byte(ebda_seg, &EbdaData->ata.dpte.revision, 0x10);
 
         checksum=0;
         for (i=0; i<15; i++) checksum+=read_byte(ebda_seg, ((Bit8u*)(&EbdaData->ata.dpte)) + i);
-        checksum = ~checksum;
+        checksum = -checksum;
         write_byte(ebda_seg, &EbdaData->ata.dpte.checksum, checksum);
       }
 
       // EDD 3.x
-      if(size >= 0x42) {
+      if(size >= 66) {
         Bit8u channel, iface, checksum, i;
         Bit16u iobase1;
 
@@ -5543,9 +5543,9 @@ int13_harddisk(EHAX, DS, ES, DI, SI, BP, ELDX, BX, DX, CX, AX, IP, CS, FLAGS)
         iface = read_byte(ebda_seg, &EbdaData->ata.channels[channel].iface);
         iobase1 = read_word(ebda_seg, &EbdaData->ata.channels[channel].iobase1);
 
-        write_word(DS, SI+(Bit16u)&Int13DPT->size, 0x42);
+        write_word(DS, SI+(Bit16u)&Int13DPT->size, 66);
         write_word(DS, SI+(Bit16u)&Int13DPT->key, 0xbedd);
-        write_byte(DS, SI+(Bit16u)&Int13DPT->dpi_length, 0x24);
+        write_byte(DS, SI+(Bit16u)&Int13DPT->dpi_length, 36);
         write_byte(DS, SI+(Bit16u)&Int13DPT->reserved1, 0);
         write_word(DS, SI+(Bit16u)&Int13DPT->reserved2, 0);
 
@@ -5577,8 +5577,8 @@ int13_harddisk(EHAX, DS, ES, DI, SI, BP, ELDX, BX, DX, CX, AX, IP, CS, FLAGS)
         write_dword(DS, SI+(Bit16u)&Int13DPT->device_path[4], 0L);
 
         checksum=0;
-        for (i=30; i<64; i++) checksum+=read_byte(DS, SI + i);
-        checksum = ~checksum;
+        for (i=30; i<65; i++) checksum+=read_byte(DS, SI + i);
+        checksum = -checksum;
         write_byte(DS, SI+(Bit16u)&Int13DPT->checksum, checksum);
       }
 
