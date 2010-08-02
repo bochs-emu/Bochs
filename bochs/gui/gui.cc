@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.cc,v 1.117 2010-06-18 17:23:50 vruppert Exp $
+// $Id: gui.cc,v 1.118 2010-08-02 19:26:13 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2009  The Bochs Project
@@ -128,6 +128,7 @@ void bx_gui_c::init(int argc, char **argv, unsigned tilewidth, unsigned tileheig
       break;
     case BX_MOUSE_TOGGLE_CTRL_ALT:
       strcpy(mouse_toggle_text, "CTRL + ALT");
+      break;
     case BX_MOUSE_TOGGLE_F12:
       strcpy(mouse_toggle_text, "F12");
       break;
