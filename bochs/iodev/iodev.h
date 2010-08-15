@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.121 2010-07-03 05:34:27 vruppert Exp $
+// $Id: iodev.h,v 1.122 2010-08-15 19:57:50 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2009  The Bochs Project
@@ -237,10 +237,10 @@ public:
                            unsigned width, unsigned height) {
     STUBFUNC(vga, redraw_area);
   }
-  virtual Bit8u mem_read(Bit32u addr) {
+  virtual Bit8u mem_read(bx_phy_address addr) {
     STUBFUNC(vga, mem_read);  return 0;
   }
-  virtual void mem_write(Bit32u addr, Bit8u value) {
+  virtual void mem_write(bx_phy_address addr, Bit8u value) {
     STUBFUNC(vga, mem_write);
   }
   virtual void get_text_snapshot(Bit8u **text_snapshot,

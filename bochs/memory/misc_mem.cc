@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: misc_mem.cc,v 1.147 2010-05-18 08:54:01 sshwarts Exp $
+// $Id: misc_mem.cc,v 1.148 2010-08-15 19:57:49 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -73,7 +73,7 @@ void BX_MEM_C::init_memory(Bit64u guest, Bit64u host)
 {
   unsigned idx;
 
-  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.147 2010-05-18 08:54:01 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.148 2010-08-15 19:57:49 sshwarts Exp $"));
 
   // accept only memory size which is multiply of 1M
   BX_ASSERT((host & 0xfffff) == 0);
@@ -99,7 +99,7 @@ void BX_MEM_C::init_memory(Bit64u guest, Bit64u host)
   // block must be large enough to fit num_blocks in 32-bit
   BX_ASSERT((BX_MEM_THIS len / BX_MEM_BLOCK_LEN) <= 0xffffffff);
 
-  Bit32u num_blocks = BX_MEM_THIS len / BX_MEM_BLOCK_LEN;
+  Bit32u num_blocks = (Bit32u)(BX_MEM_THIS len / BX_MEM_BLOCK_LEN);
   BX_INFO(("%.2fMB", (float)(BX_MEM_THIS len / (1024.0*1024.0))));
   BX_INFO(("mem block size = 0x%08x, blocks=%u", BX_MEM_BLOCK_LEN, num_blocks));
   BX_MEM_THIS blocks = new Bit8u* [num_blocks];
@@ -320,7 +320,7 @@ void BX_MEM_C::load_ROM(const char *path, bx_phy_address romaddress, Bit8u type)
     }
     if (romaddress < 0xe0000) {
       offset = (romaddress & EXROM_MASK) + BIOSROMSZ;
-      start_idx = ((romaddress - 0xc0000) >> 11);
+      start_idx = (((Bit32u)romaddress - 0xc0000) >> 11);
       end_idx = start_idx + (size >> 11) + (((size % 2048) > 0) ? 1 : 0);
     } else {
       offset = romaddress & BIOS_MASK;
@@ -371,7 +371,7 @@ void BX_MEM_C::load_RAM(const char *path, bx_phy_address ramaddress, Bit8u type)
 {
   struct stat stat_buf;
   int fd, ret;
-  unsigned long size, offset;
+  Bit32u size, offset;
 
   if (*path == '\0') {
     BX_PANIC(("RAM: Optional RAM image undefined"));
@@ -696,7 +696,7 @@ BX_MEM_C::registerMemoryHandlers(void *param, memory_handler_t read_handler,
   if (!read_handler || !write_handler)
     return 0;
   BX_INFO(("Register memory access handlers: 0x" FMT_PHY_ADDRX " - 0x" FMT_PHY_ADDRX, begin_addr, end_addr));
-  for (unsigned page_idx = begin_addr >> 20; page_idx <= end_addr >> 20; page_idx++) {
+  for (unsigned page_idx = (Bit32u)(begin_addr >> 20); page_idx <= (Bit32u)(end_addr >> 20); page_idx++) {
     struct memory_handler_struct *memory_handler = new struct memory_handler_struct;
     memory_handler->next = BX_MEM_THIS memory_handlers[page_idx];
     BX_MEM_THIS memory_handlers[page_idx] = memory_handler;
@@ -715,7 +715,7 @@ BX_MEM_C::unregisterMemoryHandlers(memory_handler_t read_handler, memory_handler
 {
   bx_bool ret = 1;
   BX_INFO(("Memory access handlers unregistered: 0x" FMT_PHY_ADDRX " - 0x" FMT_PHY_ADDRX, begin_addr, end_addr));
-  for (unsigned page_idx = begin_addr >> 20; page_idx <= end_addr >> 20; page_idx++) {
+  for (unsigned page_idx = (Bit32u)(begin_addr >> 20); page_idx <= (Bit32u)(end_addr >> 20); page_idx++) {
     struct memory_handler_struct *memory_handler = BX_MEM_THIS memory_handlers[page_idx];
     struct memory_handler_struct *prev = NULL;
     while (memory_handler &&
