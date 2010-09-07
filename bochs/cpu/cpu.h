@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.683 2010-07-22 20:19:00 sshwarts Exp $
+// $Id: cpu.h,v 1.684 2010-09-07 19:54:49 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2010  The Bochs Project
@@ -3835,13 +3835,13 @@ enum {
 #define BxImmediate_IdIw    0x0008 // call_Ap, not encodable in 64-bit mode
 #define BxImmediate_Id      0x0009 // 32 bit
 #define BxImmediate_O       0x000A // MOV_ALOd, mov_OdAL, mov_eAXOv, mov_OveAX
-#define BxImmediate_BrOff8  0x000B // Relative branch offset byte
 #if BX_SUPPORT_X86_64
-#define BxImmediate_Iq      0x000C // 64 bit override
+#define BxImmediate_Iq      0x000B // 64 bit override
 #endif
 
-#define BxImmediate_BrOff16 BxImmediate_Iw // Relative branch offset word, not encodable in 64-bit mode
-#define BxImmediate_BrOff32 BxImmediate_Id // Relative branch offset dword
+#define BxImmediate_BrOff8  BxImmediate_Ib_SE // Relative branch offset byte
+#define BxImmediate_BrOff16 BxImmediate_Iw    // Relative branch offset word, not encodable in 64-bit mode
+#define BxImmediate_BrOff32 BxImmediate_Id    // Relative branch offset dword
 
 // Lookup for opcode and attributes in another opcode tables
 // Totally 15 opcode groups supported

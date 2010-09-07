@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.275 2010-07-22 20:12:25 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.276 2010-09-07 19:54:49 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2010  The Bochs Project
@@ -2696,11 +2696,7 @@ modrm_done:
         break;
       case BxImmediate_Ib_SE: // Sign extend to OS size
         if (remain != 0) {
-          Bit8s temp8s = *iptr;
-          if (i->os32L())
-            i->modRMForm.Id = (Bit32s) temp8s;
-          else
-            i->modRMForm.Iw = (Bit16s) temp8s;
+          i->modRMForm.Id = (Bit8s) (*iptr);
           remain--;
         }
         else {
@@ -2720,15 +2716,6 @@ modrm_done:
         if (remain > 3) {
           i->modRMForm.Id = FetchDWORD(iptr);
           remain -= 4;
-        }
-        else {
-          return(-1);
-        }
-        break;
-      case BxImmediate_BrOff8:
-        if (remain != 0) {
-          i->modRMForm.Id = (Bit8s) (*iptr);
-          remain--;
         }
         else {
           return(-1);
