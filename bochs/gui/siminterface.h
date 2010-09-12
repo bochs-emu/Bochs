@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.253 2010-05-18 15:33:41 vruppert Exp $
+// $Id: siminterface.h,v 1.254 2010-09-12 20:47:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  The Bochs Project
@@ -982,7 +982,6 @@ BOCHSAPI extern const char *floppy_devtype_names[];
 BOCHSAPI extern const char *floppy_type_names[];
 BOCHSAPI extern int floppy_type_n_sectors[];
 BOCHSAPI extern const char *bochs_bootdisk_names[];
-BOCHSAPI extern const char *keyboard_type_names[];
 BOCHSAPI extern const char *atadevice_mode_names[];
 
 ////////////////////////////////////////////////////////////////////

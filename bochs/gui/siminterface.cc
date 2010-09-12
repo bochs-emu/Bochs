@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.213 2010-02-26 22:53:43 sshwarts Exp $
+// $Id: siminterface.cc,v 1.214 2010-09-12 20:47:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  The Bochs Project
@@ -467,7 +467,6 @@ const char *floppy_devtype_names[] = { "none", "5.25\" 360K", "5.25\" 1.2M", "3.
 const char *floppy_type_names[] = { "none", "1.2M", "1.44M", "2.88M", "720K", "360K", "160K", "180K", "320K", "auto", NULL };
 int floppy_type_n_sectors[] = { -1, 80*2*15, 80*2*18, 80*2*36, 80*2*9, 40*2*9, 40*1*8, 40*1*9, 40*2*8, -1 };
 const char *bochs_bootdisk_names[] = { "none", "floppy", "disk","cdrom", "network", NULL };
-const char *keyboard_type_names[] = { "xt", "at", "mf", NULL };
 
 const char *atadevice_mode_names[] = { 
   "flat",
@@ -1318,34 +1317,34 @@ void bx_param_c::set_description(const char *text)
 
 void bx_param_c::set_label(const char *text)
 {
-  delete [] this->label;
+  delete [] label;
   if (text) {
-    this->label = new char[strlen(text)+1];
-    strcpy(this->label, text);
+    label = new char[strlen(text)+1];
+    strcpy(label, text);
   } else {
-    this->label = NULL;
+    label = NULL;
   }
 }
 
 void bx_param_c::set_ask_format(const char *format)
 {
-  delete [] this->ask_format;
+  delete [] ask_format;
   if (format) {
-    this->ask_format = new char[strlen(format)+1];
-    strcpy(this->ask_format, format);
+    ask_format = new char[strlen(format)+1];
+    strcpy(ask_format, format);
   } else {
-    this->ask_format = NULL;
+    ask_format = NULL;
   }
 }
 
 void bx_param_c::set_group(const char *group)
 {
-  delete [] this->group_name;
+  delete [] group_name;
   if (group) {
-    this->group_name = new char[strlen(group)+1];
-    strcpy(this->group_name, group);
+    group_name = new char[strlen(group)+1];
+    strcpy(group_name, group);
   } else {
-    this->group_name = NULL;
+    group_name = NULL;
   }
 }
 
@@ -2108,7 +2107,7 @@ bx_list_c::bx_list_c(bx_param_c *parent, const char *name, const char *title, bx
 bx_list_c::~bx_list_c()
 {
   if (list != NULL) {
-    for (int i=0; i<this->size; i++) {
+    for (int i=0; i<size; i++) {
       delete list[i];
     }
     delete [] list;
@@ -2143,8 +2142,8 @@ void bx_list_c::set_parent(bx_param_c *newparent)
   }
   if (newparent) {
     BX_ASSERT(newparent->get_type() == BXT_LIST);
-    this->parent = (bx_list_c *)newparent;
-    this->parent->add(this);
+    parent = (bx_list_c *)newparent;
+    parent->add(this);
   }
 }
 

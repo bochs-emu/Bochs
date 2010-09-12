@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.210 2010-07-22 16:41:58 sshwarts Exp $
+// $Id: config.cc,v 1.211 2010-09-12 20:47:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2009  The Bochs Project
@@ -801,6 +801,8 @@ void bx_init_options()
   bx_list_c *kbd_mouse = new bx_list_c(root_param, "keyboard_mouse", "Keyboard & Mouse Options");
   bx_list_c *keyboard = new bx_list_c(kbd_mouse, "keyboard", "Keyboard Options");
   bx_list_c *mouse = new bx_list_c(kbd_mouse, "mouse", "Mouse Options");
+
+  static const char *keyboard_type_names[] = { "xt", "at", "mf", NULL };
 
   // keyboard & mouse options
   type = new bx_param_enum_c(keyboard,
