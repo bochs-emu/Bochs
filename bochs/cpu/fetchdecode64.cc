@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.272 2010-09-07 19:54:50 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.273 2010-09-12 17:33:34 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2010  The Bochs Project
@@ -3636,7 +3636,12 @@ modrm_done:
         break;
       case BxImmediate_Ib_SE: // Sign extend to OS size
         if (remain != 0) {
-          i->modRMForm.Id = (Bit8s) (*iptr);
+          Bit8s temp8s = *iptr;
+          // this code works correctly both for LE and BE hosts
+          if (i->os32L())
+            i->modRMForm.Id = (Bit32s) temp8s;
+          else
+            i->modRMForm.Iw = (Bit16s) temp8s;
           remain--;
         }
         else {
