@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.255 2010-06-10 15:59:04 sshwarts Exp $
+// $Id: bochs.h,v 1.256 2010-09-20 20:43:16 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2010  The Bochs Project
@@ -598,5 +598,27 @@ void bx_center_print(FILE *file, const char *line, unsigned maxwidth);
 }
 
 #endif
+
+BX_CPP_INLINE Bit32u bx_bswap32(Bit32u val32)
+{
+  Bit32u b0 = val32 & 0xff; val32 >>= 8;
+  Bit32u b1 = val32 & 0xff; val32 >>= 8;
+  Bit32u b2 = val32 & 0xff; val32 >>= 8;
+  Bit32u b3 = val32;
+  return (b0<<24) | (b1<<16) | (b2<<8) | b3;
+}
+
+BX_CPP_INLINE Bit64u bx_bswap64(Bit64u val64)
+{
+  Bit64u b0 = val64 & 0xff; val64 >>= 8;
+  Bit64u b1 = val64 & 0xff; val64 >>= 8;
+  Bit64u b2 = val64 & 0xff; val64 >>= 8;
+  Bit64u b3 = val64 & 0xff; val64 >>= 8;
+  Bit64u b4 = val64 & 0xff; val64 >>= 8;
+  Bit64u b5 = val64 & 0xff; val64 >>= 8;
+  Bit64u b6 = val64 & 0xff; val64 >>= 8;
+  Bit64u b7 = val64;
+  return (b0<<56) | (b1<<48) | (b2<<40) | (b3<<32) | (b4<<24) | (b5<<16) | (b6<<8) | b7;
+}
 
 #endif  /* BX_BOCHS_H */

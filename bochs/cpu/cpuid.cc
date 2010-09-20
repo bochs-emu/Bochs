@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpuid.cc,v 1.122 2010-07-22 16:41:59 sshwarts Exp $
+// $Id: cpuid.cc,v 1.123 2010-09-20 20:43:16 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007-2010 Stanislav Shwartsman
@@ -449,6 +449,11 @@ void BX_CPU_C::set_cpuid_defaults(void)
   memcpy(&(cpuid->ebx), vendor_string,     4);
   memcpy(&(cpuid->edx), vendor_string + 4, 4);
   memcpy(&(cpuid->ecx), vendor_string + 8, 4);
+#ifdef BX_BIG_ENDIAN
+  cpuid->ebx = bx_bswap32(cpuid->ebx);
+  cpuid->ecx = bx_bswap32(cpuid->ecx);
+  cpuid->edx = bx_bswap32(cpuid->edx);
+#endif
 
   BX_INFO(("CPUID[0x00000000]: %08x %08x %08x %08x", cpuid->eax, cpuid->ebx, cpuid->ecx, cpuid->edx));
 
@@ -609,6 +614,12 @@ void BX_CPU_C::set_cpuid_defaults(void)
   memcpy(&(cpuid->ecx), vendor_string + 8, 4);
 #endif
 
+#ifdef BX_BIG_ENDIAN
+  cpuid->ebx = bx_bswap32(cpuid->ebx);
+  cpuid->ecx = bx_bswap32(cpuid->ecx);
+  cpuid->edx = bx_bswap32(cpuid->edx);
+#endif
+
   BX_INFO(("CPUID[0x80000000]: %08x %08x %08x %08x", cpuid->eax, cpuid->ebx, cpuid->ecx, cpuid->edx));
 
   // ------------------------------------------------------
@@ -701,6 +712,12 @@ void BX_CPU_C::set_cpuid_defaults(void)
   memcpy(&(cpuid->ebx), brand_string +  4, 4);
   memcpy(&(cpuid->ecx), brand_string +  8, 4);
   memcpy(&(cpuid->edx), brand_string + 12, 4);
+#ifdef BX_BIG_ENDIAN
+  cpuid->eax = bx_bswap32(cpuid->eax);
+  cpuid->ebx = bx_bswap32(cpuid->ebx);
+  cpuid->ecx = bx_bswap32(cpuid->ecx);
+  cpuid->edx = bx_bswap32(cpuid->edx);
+#endif
 
   BX_INFO(("CPUID[0x80000002]: %08x %08x %08x %08x", cpuid->eax, cpuid->ebx, cpuid->ecx, cpuid->edx));
 
@@ -710,6 +727,12 @@ void BX_CPU_C::set_cpuid_defaults(void)
   memcpy(&(cpuid->ebx), brand_string + 20, 4);
   memcpy(&(cpuid->ecx), brand_string + 24, 4);
   memcpy(&(cpuid->edx), brand_string + 28, 4);
+#ifdef BX_BIG_ENDIAN
+  cpuid->eax = bx_bswap32(cpuid->eax);
+  cpuid->ebx = bx_bswap32(cpuid->ebx);
+  cpuid->ecx = bx_bswap32(cpuid->ecx);
+  cpuid->edx = bx_bswap32(cpuid->edx);
+#endif
 
   BX_INFO(("CPUID[0x80000003]: %08x %08x %08x %08x", cpuid->eax, cpuid->ebx, cpuid->ecx, cpuid->edx));
 
@@ -719,6 +742,12 @@ void BX_CPU_C::set_cpuid_defaults(void)
   memcpy(&(cpuid->ebx), brand_string + 36, 4);
   memcpy(&(cpuid->ecx), brand_string + 40, 4);
   memcpy(&(cpuid->edx), brand_string + 44, 4);
+#ifdef BX_BIG_ENDIAN
+  cpuid->eax = bx_bswap32(cpuid->eax);
+  cpuid->ebx = bx_bswap32(cpuid->ebx);
+  cpuid->ecx = bx_bswap32(cpuid->ecx);
+  cpuid->edx = bx_bswap32(cpuid->edx);
+#endif
 
   BX_INFO(("CPUID[0x80000004]: %08x %08x %08x %08x", cpuid->eax, cpuid->ebx, cpuid->ecx, cpuid->edx));
 
