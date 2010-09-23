@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: instr.h,v 1.27 2010-06-29 19:38:56 sshwarts Exp $
+// $Id: instr.h,v 1.28 2010-09-23 20:38:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008-2009 Stanislav Shwartsman
@@ -53,7 +53,7 @@ public:
 
     //  7...4 (unused)
     //  3...0 ilen (0..15)
-    Bit8u metaInfo2;
+    Bit8u ilen;
 
     //  7...7 extend8bit
     //  6...6 as64
@@ -238,10 +238,10 @@ public:
 #endif
 
   BX_CPP_INLINE unsigned ilen(void) const {
-    return metaInfo.metaInfo2;
+    return metaInfo.ilen;
   }
   BX_CPP_INLINE void setILen(unsigned ilen) {
-    metaInfo.metaInfo2 = ilen;
+    metaInfo.ilen = ilen;
   }
 
   BX_CPP_INLINE unsigned getIaOpcode(void) const {
