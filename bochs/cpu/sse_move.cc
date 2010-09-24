@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_move.cc,v 1.118 2010-07-01 20:00:33 sshwarts Exp $
+// $Id: sse_move.cc,v 1.119 2010-09-24 21:15:16 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003-2009 Stanislav Shwartsman
@@ -261,7 +261,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FXSAVE(bxInstruction_c *i)
       // save XMM8-XMM15 only in 64-bit mode
       if (index < 8 || long64_mode()) {
          write_virtual_dqword(i->seg(),
-             eaddr+index*16+160, (Bit8u *) &(BX_CPU_THIS_PTR xmm[index]));
+             eaddr+index*16+160, (Bit8u *)(&BX_READ_XMM_REG(index)));
       }
     }
   }
@@ -377,7 +377,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FXRSTOR(bxInstruction_c *i)
       // restore XMM8-XMM15 only in 64-bit mode
       if (index < 8 || long64_mode()) {
          read_virtual_dqword(i->seg(),
-             eaddr+index*16+160, (Bit8u *) &(BX_CPU_THIS_PTR xmm[index]));
+             eaddr+index*16+160, (Bit8u *)(&BX_READ_XMM_REG(index)));
+
       }
     }
   }
@@ -698,15 +699,15 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MASKMOVDQU_VdqUdq(bxInstruction_c *i)
 
 #if BX_SUPPORT_X86_64
   if (i->as64L()) { 	/* 64 bit address mode */
-      rdi = RDI;
+    rdi = RDI;
   }
   else
 #endif
   if (i->as32L()) {
-      rdi = EDI;
+    rdi = EDI;
   }
   else {                /* 16 bit address mode */
-      rdi = DI;
+    rdi = DI;
   }
 
   /* implement as read-modify-write for efficiency */

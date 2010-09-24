@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmx.cc,v 1.68 2010-04-29 20:03:03 sshwarts Exp $
+// $Id: vmx.cc,v 1.69 2010-09-24 21:15:16 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2009-2010 Stanislav Shwartsman
@@ -2754,8 +2754,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMREAD(bxInstruction_c *i)
     case VMCS_64BIT_GUEST_LINK_POINTER:
     case VMCS_64BIT_GUEST_IA32_DEBUGCTL:
     case VMCS_64BIT_GUEST_IA32_PAT:
-    case VMCS_64BIT_GUEST_IA32_EFER:
 #if BX_SUPPORT_VMX >= 2
+    case VMCS_64BIT_GUEST_IA32_EFER:
     case VMCS_64BIT_GUEST_IA32_PDPTE0:
     case VMCS_64BIT_GUEST_IA32_PDPTE1:
     case VMCS_64BIT_GUEST_IA32_PDPTE2:
@@ -2767,8 +2767,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMREAD(bxInstruction_c *i)
     case VMCS_64BIT_GUEST_LINK_POINTER_HI:
     case VMCS_64BIT_GUEST_IA32_DEBUGCTL_HI:
     case VMCS_64BIT_GUEST_IA32_PAT_HI:
-    case VMCS_64BIT_GUEST_IA32_EFER_HI:
 #if BX_SUPPORT_VMX >= 2
+    case VMCS_64BIT_GUEST_IA32_EFER_HI:
     case VMCS_64BIT_GUEST_IA32_PDPTE0_HI:
     case VMCS_64BIT_GUEST_IA32_PDPTE1_HI:
     case VMCS_64BIT_GUEST_IA32_PDPTE2_HI:
@@ -2780,12 +2780,16 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMREAD(bxInstruction_c *i)
     /* VMCS 64-bit host state fields */
     /* binary 0010_11xx_xxxx_xxx0 */
     case VMCS_64BIT_HOST_IA32_PAT:
+#if BX_SUPPORT_VMX >= 2
     case VMCS_64BIT_HOST_IA32_EFER:
+#endif
       field_64 = VMread64(encoding);
       break;
 
     case VMCS_64BIT_HOST_IA32_PAT_HI:
+#if BX_SUPPORT_VMX >= 2
     case VMCS_64BIT_HOST_IA32_EFER_HI:
+#endif
       field_64 = VMread32(encoding);
       break;
 
@@ -3066,8 +3070,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMWRITE(bxInstruction_c *i)
     case VMCS_64BIT_GUEST_LINK_POINTER_HI:
     case VMCS_64BIT_GUEST_IA32_DEBUGCTL_HI:
     case VMCS_64BIT_GUEST_IA32_PAT_HI:
-    case VMCS_64BIT_GUEST_IA32_EFER_HI:
 #if BX_SUPPORT_VMX >= 2
+    case VMCS_64BIT_GUEST_IA32_EFER_HI:
     case VMCS_64BIT_GUEST_IA32_PDPTE0_HI:
     case VMCS_64BIT_GUEST_IA32_PDPTE1_HI:
     case VMCS_64BIT_GUEST_IA32_PDPTE2_HI:
@@ -3078,7 +3082,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMWRITE(bxInstruction_c *i)
     /* VMCS 64-bit host state fields */
     /* binary 0010_11xx_xxxx_xxx0 */
     case VMCS_64BIT_HOST_IA32_PAT_HI:
+#if BX_SUPPORT_VMX >= 2
     case VMCS_64BIT_HOST_IA32_EFER_HI:
+#endif
       VMwrite32(encoding, val_32);
       break;
 
@@ -3104,8 +3110,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMWRITE(bxInstruction_c *i)
     case VMCS_64BIT_GUEST_LINK_POINTER:
     case VMCS_64BIT_GUEST_IA32_DEBUGCTL:
     case VMCS_64BIT_GUEST_IA32_PAT:
-    case VMCS_64BIT_GUEST_IA32_EFER:
 #if BX_SUPPORT_VMX >= 2
+    case VMCS_64BIT_GUEST_IA32_EFER:
     case VMCS_64BIT_GUEST_IA32_PDPTE0:
     case VMCS_64BIT_GUEST_IA32_PDPTE1:
     case VMCS_64BIT_GUEST_IA32_PDPTE2:
@@ -3116,7 +3122,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMWRITE(bxInstruction_c *i)
     /* VMCS 64-bit host state fields */
     /* binary 0010_11xx_xxxx_xxx0 */
     case VMCS_64BIT_HOST_IA32_PAT:
+#if BX_SUPPORT_VMX >= 2
     case VMCS_64BIT_HOST_IA32_EFER:
+#endif
       // fall through
 
     /* VMCS natural width control fields */

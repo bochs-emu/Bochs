@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmexit.cc,v 1.28 2010-07-01 16:31:46 sshwarts Exp $
+// $Id: vmexit.cc,v 1.29 2010-09-24 21:15:16 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2009-2010 Stanislav Shwartsman
@@ -190,7 +190,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMexit_RDTSC(bxInstruction_c *i)
 
   if (VMEXIT(VMX_VM_EXEC_CTRL2_RDTSC_VMEXIT)) {
     BX_ERROR(("VMEXIT: RDTSC"));
-    VMexit(i, (i->b1() == 0x31) ? VMX_VMEXIT_RDTSC : VMX_VMEXIT_RDTSCP, 0);
+    VMexit(i, (i->getIaOpcode() == BX_IA_RDTSC) ? VMX_VMEXIT_RDTSC : VMX_VMEXIT_RDTSCP, 0);
   }
 }
 
@@ -433,43 +433,49 @@ void BX_CPP_AttrRegparmN(3) BX_CPU_C::VMexit_IO(bxInstruction_c *i, unsigned por
 
      Bit32u qualification = 0;
 
-     switch(i->b1()) {
-       case 0xe4: // IN_ALIb
-       case 0xe5: // IN_AXIb, IN_EAXIb
+     switch(i->getIaOpcode()) {
+       case BX_IA_IN_ALIb:
+       case BX_IA_IN_AXIb:
+       case BX_IA_IN_EAXIb:
          qualification = VMX_VMEXIT_IO_PORTIN | VMX_VMEXIT_IO_INSTR_IMM;
          break;
 
-       case 0xe6: // OUT_IbAL
-       case 0xe7: // OUT_IbAX, OUT_IbEAX
+       case BX_IA_OUT_IbAL:
+       case BX_IA_OUT_IbAX:
+       case BX_IA_OUT_IbEAX:
          qualification = VMX_VMEXIT_IO_INSTR_IMM;
          break;
 
-       case 0xec: // IN_ALDX
-       case 0xed: // IN_AXDX, IN_EAXDX
+       case BX_IA_IN_ALDX:
+       case BX_IA_IN_AXDX:
+       case BX_IA_IN_EAXDX:
          qualification = VMX_VMEXIT_IO_PORTIN; // no immediate
          break;
 
-       case 0xee: // OUT_DXAL
-       case 0xef: // OUT_DXAX, OUT_DXEAX
+       case BX_IA_OUT_DXAL:
+       case BX_IA_OUT_DXAX:
+       case BX_IA_OUT_DXEAX:
          qualification = 0; // PORTOUT, no immediate
          break;
 
-       case 0x6c: // INSB_YbDX
-       case 0x6d: // INSW_YwDX, INSD_YdDX
+       case BX_IA_REP_INSB_YbDX:
+       case BX_IA_REP_INSW_YwDX:
+       case BX_IA_REP_INSD_YdDX:
          qualification = VMX_VMEXIT_IO_PORTIN | VMX_VMEXIT_IO_INSTR_STRING;
          if (i->repUsedL())
             qualification |= VMX_VMEXIT_IO_INSTR_REP;
          break;
 
-       case 0x6e: // OUTSB_DXXb
-       case 0x6f: // OUTSW_DXXw, OUTSD_DXXd
+       case BX_IA_REP_OUTSB_DXXb:
+       case BX_IA_REP_OUTSW_DXXw:
+       case BX_IA_REP_OUTSD_DXXd:
          qualification = VMX_VMEXIT_IO_INSTR_STRING; // PORTOUT
          if (i->repUsedL())
             qualification |= VMX_VMEXIT_IO_INSTR_REP;
          break;
 
        default:
-         BX_PANIC(("VMexit_IO: I/O instruction b1()=%x unknown", i->b1()));
+         BX_PANIC(("VMexit_IO: I/O instruction %s unknown", get_bx_opcode_name(i->getIaOpcode())));
      }
 
      if (qualification & VMX_VMEXIT_IO_INSTR_STRING) {

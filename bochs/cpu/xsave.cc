@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: xsave.cc,v 1.27 2010-07-01 20:00:33 sshwarts Exp $
+// $Id: xsave.cc,v 1.28 2010-09-24 21:15:16 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008-2009 Stanislav Shwartsman
@@ -141,7 +141,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVE(bxInstruction_c *i)
       // save XMM8-XMM15 only in 64-bit mode
       if (index < 8 || long64_mode()) {
         write_virtual_dqword(i->seg(),
-           eaddr+index*16+160, (Bit8u *) &(BX_CPU_THIS_PTR xmm[index]));
+           eaddr+index*16+160, (Bit8u *)(&BX_READ_XMM_REG(index)));
       }
     }
 
@@ -286,7 +286,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
          // restore XMM8-XMM15 only in 64-bit mode
          if (index < 8 || long64_mode()) {
            read_virtual_dqword(i->seg(),
-               eaddr+index*16+160, (Bit8u *) &(BX_CPU_THIS_PTR xmm[index]));
+               eaddr+index*16+160, (Bit8u *)(&BX_READ_XMM_REG(index)));
          }
       }
     }
