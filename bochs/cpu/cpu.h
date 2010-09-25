@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.684 2010-09-07 19:54:49 sshwarts Exp $
+// $Id: cpu.h,v 1.685 2010-09-25 09:55:39 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2010  The Bochs Project
@@ -3822,24 +3822,20 @@ enum {
 //
 
 // If the BxImmediate mask is set, the lowest 4 bits of the attribute
-// specify which kinds of immediate data a required by instruction.
+// specify which kinds of immediate data required by instruction.
 
 #define BxImmediate         0x000f // bits 3..0: any immediate
 #define BxImmediate_I1      0x0001 // imm8 = 1
 #define BxImmediate_Ib      0x0002 // 8 bit
 #define BxImmediate_Ib_SE   0x0003 // sign extend to OS size
 #define BxImmediate_Iw      0x0004 // 16 bit
-#define BxImmediate_IbIb    0x0005 // SSE4A
-#define BxImmediate_IwIb    0x0006 // enter_IwIb
-#define BxImmediate_IwIw    0x0007 // call_Ap, not encodable in 64-bit mode
-#define BxImmediate_IdIw    0x0008 // call_Ap, not encodable in 64-bit mode
-#define BxImmediate_Id      0x0009 // 32 bit
-#define BxImmediate_O       0x000A // MOV_ALOd, mov_OdAL, mov_eAXOv, mov_OveAX
+#define BxImmediate_Id      0x0005 // 32 bit
+#define BxImmediate_O       0x0006 // MOV_ALOd, mov_OdAL, mov_eAXOv, mov_OveAX
 #if BX_SUPPORT_X86_64
-#define BxImmediate_Iq      0x000B // 64 bit override
+#define BxImmediate_Iq      0x0007 // 64 bit override
 #endif
+#define BxImmediate_BrOff8  0x0008 // Relative branch offset byte
 
-#define BxImmediate_BrOff8  BxImmediate_Ib_SE // Relative branch offset byte
 #define BxImmediate_BrOff16 BxImmediate_Iw    // Relative branch offset word, not encodable in 64-bit mode
 #define BxImmediate_BrOff32 BxImmediate_Id    // Relative branch offset dword
 
@@ -3855,11 +3851,18 @@ enum {
 #define Bx3ByteOp           0x0070 // Group encoding: 0111
 #define BxOSizeGrp          0x0080 // Group encoding: 1000
 
-#define BxLockable          0x0100 // bit 8
-#define BxArithDstRM        0x0200 // bit 9
+// The BxImmediate2 mask specifies kind of second immediate data
+// required by instruction.
+#define BxImmediate2        0x0300 // bits 8.9: any immediate
+#define BxImmediate_Ib2     0x0100
+#define BxImmediate_Iw2     0x0200
+#define BxImmediate_Id2     0x0300
+
+#define BxLockable          0x0400 // bit 10
+#define BxArithDstRM        0x0800 // bit 11
 
 #if BX_SUPPORT_TRACE_CACHE
-  #define BxTraceEnd        0x0400 // bit 10
+  #define BxTraceEnd        0x1000 // bit 12
 #else
   #define BxTraceEnd        0
 #endif

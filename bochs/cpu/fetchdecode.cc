@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.278 2010-09-23 20:38:02 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.279 2010-09-25 09:55:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2010  The Bochs Project
@@ -488,8 +488,8 @@ static const BxOpcodeInfo_t BxOpcodeInfo32[512*2*2] = {
   /* 98 /wm */ { 0, BX_IA_CBW },
   /* 99 /wr */ { 0, BX_IA_CWD },
   /* 99 /wm */ { 0, BX_IA_CWD },
-  /* 9A /wr */ { BxImmediate_IwIw | BxTraceEnd, BX_IA_CALL16_Ap },
-  /* 9A /wm */ { BxImmediate_IwIw | BxTraceEnd, BX_IA_CALL16_Ap },
+  /* 9A /wr */ { BxImmediate_Iw | BxImmediate_Iw2 | BxTraceEnd, BX_IA_CALL16_Ap },
+  /* 9A /wm */ { BxImmediate_Iw | BxImmediate_Iw2 | BxTraceEnd, BX_IA_CALL16_Ap },
   /* 9B /wr */ { 0, BX_IA_FWAIT },
   /* 9B /wm */ { 0, BX_IA_FWAIT },
   /* 9C /wr */ { 0, BX_IA_PUSHF_Fw },
@@ -580,8 +580,8 @@ static const BxOpcodeInfo_t BxOpcodeInfo32[512*2*2] = {
   /* C6 /wm */ { BxGroup11, BX_IA_ERROR, BxOpcodeInfoG11EbM },
   /* C7 /wr */ { BxGroup11, BX_IA_ERROR, BxOpcodeInfoG11EwR },
   /* C7 /wm */ { BxGroup11, BX_IA_ERROR, BxOpcodeInfoG11EwM },
-  /* C8 /wr */ { BxImmediate_IwIb, BX_IA_ENTER16_IwIb },
-  /* C8 /wm */ { BxImmediate_IwIb, BX_IA_ENTER16_IwIb },
+  /* C8 /wr */ { BxImmediate_Iw | BxImmediate_Ib2, BX_IA_ENTER16_IwIb },
+  /* C8 /wm */ { BxImmediate_Iw | BxImmediate_Ib2, BX_IA_ENTER16_IwIb },
   /* C9 /wr */ { 0, BX_IA_LEAVE16 },
   /* C9 /wm */ { 0, BX_IA_LEAVE16 },
   /* CA /wr */ { BxImmediate_Iw | BxTraceEnd, BX_IA_RETfar16_Iw },
@@ -667,8 +667,8 @@ static const BxOpcodeInfo_t BxOpcodeInfo32[512*2*2] = {
   /* E8 /wm */ { BxImmediate_BrOff16 | BxTraceEnd, BX_IA_CALL_Jw },
   /* E9 /wr */ { BxImmediate_BrOff16 | BxTraceEnd, BX_IA_JMP_Jw },
   /* E9 /wm */ { BxImmediate_BrOff16 | BxTraceEnd, BX_IA_JMP_Jw },
-  /* EA /wr */ { BxImmediate_IwIw | BxTraceEnd, BX_IA_JMP_Ap },
-  /* EA /wm */ { BxImmediate_IwIw | BxTraceEnd, BX_IA_JMP_Ap },
+  /* EA /wr */ { BxImmediate_Iw | BxImmediate_Iw2 | BxTraceEnd, BX_IA_JMP_Ap },
+  /* EA /wm */ { BxImmediate_Iw | BxImmediate_Iw2 | BxTraceEnd, BX_IA_JMP_Ap },
   /* EB /wr */ { BxImmediate_BrOff8 | BxTraceEnd, BX_IA_JMP_Jw },
   /* EB /wm */ { BxImmediate_BrOff8 | BxTraceEnd, BX_IA_JMP_Jw },
   /* EC /wr */ { 0, BX_IA_IN_ALDX },
@@ -1566,8 +1566,8 @@ static const BxOpcodeInfo_t BxOpcodeInfo32[512*2*2] = {
   /* 98 /dm */ { 0, BX_IA_CWDE },
   /* 99 /dr */ { 0, BX_IA_CDQ },
   /* 99 /dm */ { 0, BX_IA_CDQ },
-  /* 9A /dr */ { BxImmediate_IdIw | BxTraceEnd, BX_IA_CALL32_Ap },
-  /* 9A /dm */ { BxImmediate_IdIw | BxTraceEnd, BX_IA_CALL32_Ap },
+  /* 9A /dr */ { BxImmediate_Id | BxImmediate_Iw2 | BxTraceEnd, BX_IA_CALL32_Ap },
+  /* 9A /dm */ { BxImmediate_Id | BxImmediate_Iw2 | BxTraceEnd, BX_IA_CALL32_Ap },
   /* 9B /dr */ { 0, BX_IA_FWAIT },
   /* 9B /dm */ { 0, BX_IA_FWAIT },
   /* 9C /dr */ { 0, BX_IA_PUSHF_Fd },
@@ -1658,8 +1658,8 @@ static const BxOpcodeInfo_t BxOpcodeInfo32[512*2*2] = {
   /* C6 /dm */ { BxGroup11, BX_IA_ERROR, BxOpcodeInfoG11EbM },
   /* C7 /dr */ { BxGroup11, BX_IA_ERROR, BxOpcodeInfoG11EdR },
   /* C7 /dm */ { BxGroup11, BX_IA_ERROR, BxOpcodeInfoG11EdM },
-  /* C8 /dr */ { BxImmediate_IwIb, BX_IA_ENTER32_IwIb },
-  /* C8 /dm */ { BxImmediate_IwIb, BX_IA_ENTER32_IwIb },
+  /* C8 /dr */ { BxImmediate_Iw | BxImmediate_Ib2, BX_IA_ENTER32_IwIb },
+  /* C8 /dm */ { BxImmediate_Iw | BxImmediate_Ib2, BX_IA_ENTER32_IwIb },
   /* C9 /dr */ { 0, BX_IA_LEAVE32 },
   /* C9 /dm */ { 0, BX_IA_LEAVE32 },
   /* CA /dr */ { BxImmediate_Iw | BxTraceEnd, BX_IA_RETfar32_Iw },
@@ -1745,8 +1745,8 @@ static const BxOpcodeInfo_t BxOpcodeInfo32[512*2*2] = {
   /* E8 /dm */ { BxImmediate_BrOff32 | BxTraceEnd, BX_IA_CALL_Jd },
   /* E9 /dr */ { BxImmediate_BrOff32 | BxTraceEnd, BX_IA_JMP_Jd },
   /* E9 /dm */ { BxImmediate_BrOff32 | BxTraceEnd, BX_IA_JMP_Jd },
-  /* EA /dr */ { BxImmediate_IdIw | BxTraceEnd, BX_IA_JMP_Ap },
-  /* EA /dm */ { BxImmediate_IdIw | BxTraceEnd, BX_IA_JMP_Ap },
+  /* EA /dr */ { BxImmediate_Id | BxImmediate_Iw2 | BxTraceEnd, BX_IA_JMP_Ap },
+  /* EA /dm */ { BxImmediate_Id | BxImmediate_Iw2 | BxTraceEnd, BX_IA_JMP_Ap },
   /* EB /dr */ { BxImmediate_BrOff8 | BxTraceEnd, BX_IA_JMP_Jd },
   /* EB /dm */ { BxImmediate_BrOff8 | BxTraceEnd, BX_IA_JMP_Jd },
   /* EC /dr */ { 0, BX_IA_IN_ALDX },
@@ -2344,7 +2344,7 @@ BX_CPU_C::fetchDecode32(const Bit8u *iptr, bxInstruction_c *i, unsigned remainin
   unsigned remain = remainingInPage; // remain must be at least 1
   bx_bool is_32, lock=0;
   unsigned b1, b2 = 0, attr, os_32, ia_opcode = 0;
-  unsigned imm_mode, offset, index = 0;
+  unsigned offset, index = 0;
   unsigned rm = 0, mod=0, nnn=0;
   unsigned seg = BX_SEG_REG_DS, seg_override = BX_SEG_REG_NULL;
 
@@ -2683,21 +2683,23 @@ modrm_done:
   }
 
   i->modRMForm.Id = 0;
-  imm_mode = attr & BxImmediate;
+  unsigned imm_mode = attr & BxImmediate;
   if (imm_mode) {
+    // make sure iptr was advanced after Ib(), Iw() and Id()
     switch (imm_mode) {
       case BxImmediate_I1:
         i->modRMForm.Ib = 1;
         break;
       case BxImmediate_Ib:
         if (remain != 0) {
-          i->modRMForm.Ib = *iptr;
+          i->modRMForm.Ib = *iptr++;
           remain--;
         }
         else {
           return(-1);
         }
         break;
+      case BxImmediate_BrOff8:
       case BxImmediate_Ib_SE: // Sign extend to OS size
         if (remain != 0) {
           Bit8s temp8s = *iptr;
@@ -2715,6 +2717,7 @@ modrm_done:
       case BxImmediate_Iw:
         if (remain > 1) {
           i->modRMForm.Iw = FetchWORD(iptr);
+          iptr += 2;
           remain -= 2;
         }
         else {
@@ -2724,47 +2727,15 @@ modrm_done:
       case BxImmediate_Id:
         if (remain > 3) {
           i->modRMForm.Id = FetchDWORD(iptr);
-          remain -= 4;
-        }
-        else {
-          return(-1);
-        }
-        break;
-      case BxImmediate_IwIb:
-        if (remain > 1) {
-          i->IxIxForm.Iw  = FetchWORD(iptr);
-          iptr += 2;
-          i->IxIxForm.Ib2 = *iptr;
-          remain -= 3;
-        }
-        else {
-          return(-1);
-        }
-        break;
-      case BxImmediate_IwIw: // CALL_Ap
-        if (remain > 3) {
-          i->IxIxForm.Iw  = FetchWORD(iptr);
-          iptr += 2;
-          i->IxIxForm.Iw2 = FetchWORD(iptr);
-          remain -= 4;
-        }
-        else {
-          return(-1);
-        }
-        break;
-      case BxImmediate_IdIw: // CALL_Ap
-        if (remain > 5) {
-          i->IxIxForm.Id = FetchDWORD(iptr);
           iptr += 4;
-          i->IxIxForm.Iw2 = FetchWORD(iptr);
-          remain -= 6;
+          remain -= 4;
         }
         else {
           return(-1);
         }
         break;
       case BxImmediate_O:
-        // For is which embed the address in the opcode.
+        // For instructions which embed the address in the opcode.
         if (i->as32L()) {
           // fetch 32bit address into Id
           if (remain > 3) {
@@ -2785,6 +2756,33 @@ modrm_done:
       default:
         BX_INFO(("b1 was %x", b1));
         BX_PANIC(("fetchdecode: imm_mode = %u", imm_mode));
+    }
+  }
+
+  unsigned imm_mode2 = attr & BxImmediate2;
+  if (imm_mode2) {
+    switch (imm_mode2) {
+      case BxImmediate_Ib2:
+        if (remain != 0) {
+          i->modRMForm.Ib2 = *iptr;
+          remain--;
+        }
+        else {
+          return(-1);
+        }
+        break;
+      case BxImmediate_Iw2:
+        if (remain > 1) {
+          i->modRMForm.Iw2 = FetchWORD(iptr);
+          remain -= 2;
+        }
+        else {
+          return(-1);
+        }
+        break;
+      default:
+        BX_INFO(("b1 was %x", b1));
+        BX_PANIC(("fetchdecode: imm_mode2 = %u", imm_mode2));
     }
   }
 

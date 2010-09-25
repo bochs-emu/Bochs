@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.274 2010-09-23 20:38:02 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.275 2010-09-25 09:55:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2010  The Bochs Project
@@ -556,8 +556,8 @@ static const BxOpcodeInfo_t BxOpcodeInfo64[512*3*2] = {
   /* C6 /wm */ { BxGroup11, BX_IA_ERROR, BxOpcodeInfoG11EbM },
   /* C7 /wr */ { BxGroup11, BX_IA_ERROR, BxOpcodeInfoG11EwR },
   /* C7 /wm */ { BxGroup11, BX_IA_ERROR, BxOpcodeInfoG11EwM },
-  /* C8 /wr */ { BxImmediate_IwIb, BX_IA_ENTER64_IwIb },
-  /* C8 /wm */ { BxImmediate_IwIb, BX_IA_ENTER64_IwIb },
+  /* C8 /wr */ { BxImmediate_Iw | BxImmediate_Ib2, BX_IA_ENTER64_IwIb },
+  /* C8 /wm */ { BxImmediate_Iw | BxImmediate_Ib2, BX_IA_ENTER64_IwIb },
   /* C9 /wr */ { 0, BX_IA_LEAVE64 },
   /* C9 /wm */ { 0, BX_IA_LEAVE64 },
   /* CA /wr */ { BxImmediate_Iw | BxTraceEnd, BX_IA_RETfar16_Iw },
@@ -1583,8 +1583,8 @@ static const BxOpcodeInfo_t BxOpcodeInfo64[512*3*2] = {
   /* C6 /dm */ { BxGroup11, BX_IA_ERROR, BxOpcodeInfoG11EbM },
   /* C7 /dr */ { BxGroup11, BX_IA_ERROR, BxOpcodeInfoG11EdR },
   /* C7 /dm */ { BxGroup11, BX_IA_ERROR, BxOpcodeInfoG11EdM },
-  /* C8 /dr */ { BxImmediate_IwIb, BX_IA_ENTER64_IwIb },
-  /* C8 /dm */ { BxImmediate_IwIb, BX_IA_ENTER64_IwIb },
+  /* C8 /dr */ { BxImmediate_Iw | BxImmediate_Ib2, BX_IA_ENTER64_IwIb },
+  /* C8 /dm */ { BxImmediate_Iw | BxImmediate_Ib2, BX_IA_ENTER64_IwIb },
   /* C9 /dr */ { 0, BX_IA_LEAVE64 },
   /* C9 /dm */ { 0, BX_IA_LEAVE64 },
   /* CA /dr */ { BxImmediate_Iw | BxTraceEnd, BX_IA_RETfar32_Iw },
@@ -2610,8 +2610,8 @@ static const BxOpcodeInfo_t BxOpcodeInfo64[512*3*2] = {
   /* C6 /qm */ { BxGroup11, BX_IA_ERROR, BxOpcodeInfoG11EbM },
   /* C7 /qr */ { BxGroup11, BX_IA_ERROR, BxOpcodeInfo64G11EqR },
   /* C7 /qm */ { BxGroup11, BX_IA_ERROR, BxOpcodeInfo64G11EqM },
-  /* C8 /qr */ { BxImmediate_IwIb, BX_IA_ENTER64_IwIb },
-  /* C8 /qm */ { BxImmediate_IwIb, BX_IA_ENTER64_IwIb },
+  /* C8 /qr */ { BxImmediate_Iw | BxImmediate_Ib2, BX_IA_ENTER64_IwIb },
+  /* C8 /qm */ { BxImmediate_Iw | BxImmediate_Ib2, BX_IA_ENTER64_IwIb },
   /* C9 /qr */ { 0, BX_IA_LEAVE64 },
   /* C9 /qm */ { 0, BX_IA_LEAVE64 },
   /* CA /qr */ { BxImmediate_Iw | BxTraceEnd, BX_IA_RETfar64_Iw },
@@ -3244,7 +3244,7 @@ BX_CPU_C::fetchDecode64(const Bit8u *iptr, bxInstruction_c *i, unsigned remainin
 
   unsigned remain = remainingInPage; // remain must be at least 1
   unsigned b1, b2 = 0, attr, lock=0, ia_opcode = 0;
-  unsigned imm_mode, offset = 512, rex_r = 0, rex_x = 0, rex_b = 0;
+  unsigned offset = 512, rex_r = 0, rex_x = 0, rex_b = 0;
   unsigned rm = 0, mod = 0, nnn = 0, index = 0;
   unsigned seg = BX_SEG_REG_DS, seg_override = BX_SEG_REG_NULL;
 
@@ -3623,15 +3623,16 @@ modrm_done:
   }
 
   i->modRMForm.Id = 0;
-  imm_mode = attr & BxImmediate;
+  unsigned imm_mode = attr & BxImmediate;
   if (imm_mode) {
+    // make sure iptr was advanced after Ib(), Iw() and Id()
     switch (imm_mode) {
       case BxImmediate_I1:
         i->modRMForm.Ib = 1;
         break;
       case BxImmediate_Ib:
         if (remain != 0) {
-          i->modRMForm.Ib = *iptr;
+          i->modRMForm.Ib = *iptr++;
           remain--;
         }
         else {
@@ -3655,6 +3656,7 @@ modrm_done:
       case BxImmediate_Iw:
         if (remain > 1) {
           i->modRMForm.Iw = FetchWORD(iptr);
+          iptr += 2;
           remain -= 2;
         }
         else {
@@ -3664,6 +3666,7 @@ modrm_done:
       case BxImmediate_Id:
         if (remain > 3) {
           i->modRMForm.Id = FetchDWORD(iptr);
+          iptr += 4;
           remain -= 4;
         }
         else {
@@ -3679,18 +3682,19 @@ modrm_done:
           return(-1);
         }
         break;
-      case BxImmediate_IwIb:
-        if (remain > 2) {
-          i->IxIxForm.Iw = FetchWORD(iptr);
-          iptr += 2;
-          i->IxIxForm.Ib2 = *iptr;
-          remain -= 3;
+      case BxImmediate_BrOff8:
+        if (remain != 0) {
+          Bit8s temp8s = *iptr;
+          i->modRMForm.Id = (Bit32s) temp8s;
+          remain--;
         }
-        else return(-1);
+        else {
+          return(-1);
+        }
         break;
       case BxImmediate_O:
-        // For is which embed the address in the opcode.  Note
-        // there is only 64/32-bit addressing available in long-mode.
+        // For instructions which embed the address in the opcode.
+        // There is only 64/32-bit addressing available in long64 mode.
         if (i->as64L()) {
           if (remain > 7) {
             i->IqForm.Iq = FetchQWORD(iptr);
@@ -3709,6 +3713,23 @@ modrm_done:
       default:
         BX_INFO(("b1 was %x", b1));
         BX_PANIC(("fetchdecode: imm_mode = %u", imm_mode));
+    }
+  }
+
+  unsigned imm_mode2 = attr & BxImmediate2;
+  if (imm_mode2) {
+    if (imm_mode2 == BxImmediate_Ib2) {
+      if (remain != 0) {
+        i->modRMForm.Ib2 = *iptr;
+        remain--;
+      }
+      else {
+        return(-1);
+      }
+    }
+    else {
+      BX_INFO(("b1 was %x", b1));
+      BX_PANIC(("fetchdecode: imm_mode2 = %u", imm_mode2));
     }
   }
 

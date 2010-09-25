@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: instr.h,v 1.28 2010-09-23 20:38:02 sshwarts Exp $
+// $Id: instr.h,v 1.29 2010-09-25 09:55:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008-2009 Stanislav Shwartsman
@@ -88,21 +88,11 @@ public:
       union {
         Bit16u displ16u; // for 16-bit modrm forms
         Bit32u displ32u; // for 32-bit modrm forms
-      };
-    } modRMForm;
 
-    struct {
-      union {
-        Bit32u Id;
-        Bit16u Iw;
-        Bit8u  Ib;
-      };
-      union {
-        Bit32u Id2; // Not used (for alignment)
         Bit16u Iw2;
         Bit8u  Ib2;
       };
-    } IxIxForm;
+    } modRMForm;
 
 #if BX_SUPPORT_X86_64
     struct {
@@ -125,8 +115,8 @@ public:
     metaData[BX_INSTR_METADATA_B1] = b1 & 0xff;
   }
   BX_CPP_INLINE void setOpcodeReg(unsigned opreg) {
-    // The opcodeReg form (low 3 bits of the opcode byte (extended
-    // by REX.B on x86-64) to be used with IxIxForm or IqForm.
+    // The opcodeReg form (low 3 bits of the opcode byte
+    // (extended by REX.B on x86-64) 
     metaData[BX_INSTR_METADATA_RM] = opreg;
   }
   BX_CPP_INLINE unsigned opcodeReg() const {
@@ -173,8 +163,8 @@ public:
   BX_CPP_INLINE Bit32u Id() const  { return modRMForm.Id; }
   BX_CPP_INLINE Bit16u Iw() const  { return modRMForm.Iw; }
   BX_CPP_INLINE Bit8u  Ib() const  { return modRMForm.Ib; }
-  BX_CPP_INLINE Bit16u Iw2() const { return IxIxForm.Iw2; } // Legacy
-  BX_CPP_INLINE Bit8u  Ib2() const { return IxIxForm.Ib2; } // Legacy
+  BX_CPP_INLINE Bit16u Iw2() const { return modRMForm.Iw2; }
+  BX_CPP_INLINE Bit8u  Ib2() const { return modRMForm.Ib2; }
 #if BX_SUPPORT_X86_64
   BX_CPP_INLINE Bit64u Iq() const  { return IqForm.Iq; }
 #endif
