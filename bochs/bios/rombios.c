@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.251 2010-09-25 07:21:25 sshwarts Exp $
+// $Id: rombios.c,v 1.252 2010-09-26 18:38:58 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -869,7 +869,7 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.251 $ $Date: 2010-09-25 07:21:25 $";
+static char bios_cvs_version_string[] = "$Revision: 1.252 $ $Date: 2010-09-26 18:38:58 $";
 
 #define BIOS_COPYRIGHT_STRING "(c) 2002 MandrakeSoft S.A. Written by Kevin Lawton & the Bochs team."
 
@@ -5229,6 +5229,174 @@ BX_DEBUG_INT74("int74_function: make_farcall=1\n");
 
 #if BX_USE_ATADRV
 
+  int
+int13_edd(DS, SI, device)
+  Bit16u DS, SI;
+  Bit8u device;
+{
+  Bit32u lba_low, lba_high;
+  Bit16u npc, nph, npspt, size;
+  Bit16u ebda_seg=read_word(0x0040,0x000E);
+  Bit8u type=read_byte(ebda_seg,&EbdaData->ata.devices[device].type);
+
+  size=read_word(DS,SI+(Bit16u)&Int13DPT->size);
+
+  // Buffer is too small
+  if(size < 26)
+    return 1;
+
+  // EDD 1.x
+  if(size >= 26) {
+    Bit16u   blksize, infos;
+
+    write_word(DS, SI+(Bit16u)&Int13DPT->size, 26);
+
+    blksize = read_word(ebda_seg, &EbdaData->ata.devices[device].blksize);
+
+    if (type == ATA_TYPE_ATA)
+    {
+      npc     = read_word(ebda_seg, &EbdaData->ata.devices[device].pchs.cylinders);
+      nph     = read_word(ebda_seg, &EbdaData->ata.devices[device].pchs.heads);
+      npspt   = read_word(ebda_seg, &EbdaData->ata.devices[device].pchs.spt);
+      lba_low = read_dword(ebda_seg, &EbdaData->ata.devices[device].sectors_low);
+      lba_high = read_dword(ebda_seg, &EbdaData->ata.devices[device].sectors_high);
+
+      if (lba_high || (lba_low/npspt)/nph > 0x3fff)
+      {
+        infos = 0 << 1; // geometry is invalid
+        npc = 0x3fff;
+      }
+      else
+      {
+        infos = 1 << 1; // geometry is valid
+      }
+    }
+
+    if (type == ATA_TYPE_ATAPI)
+    {
+      npc     = 0xffffffff;
+      nph     = 0xffffffff;
+      npspt   = 0xffffffff;
+      lba_low = 0xffffffff;
+      lba_high = 0xffffffff;
+
+      infos =  1 << 2 /* removable */ | 1 << 4 /* media change */ |
+               1 << 5 /* lockable */ | 1 << 6; /* max values */
+    }
+
+    write_word(DS, SI+(Bit16u)&Int13DPT->infos, infos);
+    write_dword(DS, SI+(Bit16u)&Int13DPT->cylinders, (Bit32u)npc);
+    write_dword(DS, SI+(Bit16u)&Int13DPT->heads, (Bit32u)nph);
+    write_dword(DS, SI+(Bit16u)&Int13DPT->spt, (Bit32u)npspt);
+    write_dword(DS, SI+(Bit16u)&Int13DPT->sector_count1, lba_low);
+    write_dword(DS, SI+(Bit16u)&Int13DPT->sector_count2, lba_high);
+    write_word(DS, SI+(Bit16u)&Int13DPT->blksize, blksize);
+  }
+
+  // EDD 2.x
+  if(size >= 30) {
+    Bit8u  channel, dev, irq, mode, checksum, i, translation;
+    Bit16u iobase1, iobase2, options;
+
+    write_word(DS, SI+(Bit16u)&Int13DPT->size, 30);
+
+    write_word(DS, SI+(Bit16u)&Int13DPT->dpte_segment, ebda_seg);
+    write_word(DS, SI+(Bit16u)&Int13DPT->dpte_offset, &EbdaData->ata.dpte);
+
+    // Fill in dpte
+    channel = device / 2;
+    iobase1 = read_word(ebda_seg, &EbdaData->ata.channels[channel].iobase1);
+    iobase2 = read_word(ebda_seg, &EbdaData->ata.channels[channel].iobase2);
+    irq = read_byte(ebda_seg, &EbdaData->ata.channels[channel].irq);
+    mode = read_byte(ebda_seg, &EbdaData->ata.devices[device].mode);
+    translation = read_byte(ebda_seg, &EbdaData->ata.devices[device].translation);
+
+    options = (1<<4); // lba translation
+    options |= (mode==ATA_MODE_PIO32?1:0)<<7;
+
+    if (type == ATA_TYPE_ATA)
+    {
+      options |= (translation==ATA_TRANSLATION_NONE?0:1)<<3; // chs translation
+      options |= (translation==ATA_TRANSLATION_LBA?1:0)<<9;
+      options |= (translation==ATA_TRANSLATION_RECHS?3:0)<<9;
+    }
+
+    if (type == ATA_TYPE_ATAPI)
+    {
+      options |= (1<<5); // removable device
+      options |= (1<<6); // atapi device
+    }
+
+    write_word(ebda_seg, &EbdaData->ata.dpte.iobase1, iobase1);
+    write_word(ebda_seg, &EbdaData->ata.dpte.iobase2, iobase2 + ATA_CB_DC);
+    write_byte(ebda_seg, &EbdaData->ata.dpte.prefix, (0xe | (device % 2))<<4 );
+    write_byte(ebda_seg, &EbdaData->ata.dpte.unused, 0xcb );
+    write_byte(ebda_seg, &EbdaData->ata.dpte.irq, irq );
+    write_byte(ebda_seg, &EbdaData->ata.dpte.blkcount, 1 );
+    write_byte(ebda_seg, &EbdaData->ata.dpte.dma, 0 );
+    write_byte(ebda_seg, &EbdaData->ata.dpte.pio, 0 );
+    write_word(ebda_seg, &EbdaData->ata.dpte.options, options);
+    write_word(ebda_seg, &EbdaData->ata.dpte.reserved, 0);
+    write_byte(ebda_seg, &EbdaData->ata.dpte.revision, 0x11);
+
+    checksum=0;
+    for (i=0; i<15; i++) checksum+=read_byte(ebda_seg, ((Bit8u*)(&EbdaData->ata.dpte)) + i);
+    checksum = -checksum;
+    write_byte(ebda_seg, &EbdaData->ata.dpte.checksum, checksum);
+  }
+
+  // EDD 3.x
+  if(size >= 66) {
+    Bit8u channel, iface, checksum, i;
+    Bit16u iobase1;
+
+    channel = device / 2;
+    iface = read_byte(ebda_seg, &EbdaData->ata.channels[channel].iface);
+    iobase1 = read_word(ebda_seg, &EbdaData->ata.channels[channel].iobase1);
+
+    write_word(DS, SI+(Bit16u)&Int13DPT->key, 0xbedd);
+    write_byte(DS, SI+(Bit16u)&Int13DPT->dpi_length, 36);
+    write_byte(DS, SI+(Bit16u)&Int13DPT->reserved1, 0);
+    write_word(DS, SI+(Bit16u)&Int13DPT->reserved2, 0);
+
+    if (iface==ATA_IFACE_ISA) {
+      write_byte(DS, SI+(Bit16u)&Int13DPT->host_bus[0], 'I');
+      write_byte(DS, SI+(Bit16u)&Int13DPT->host_bus[1], 'S');
+      write_byte(DS, SI+(Bit16u)&Int13DPT->host_bus[2], 'A');
+      write_byte(DS, SI+(Bit16u)&Int13DPT->host_bus[3], 0);
+    }
+    else {
+      // FIXME PCI
+    }
+    write_byte(DS, SI+(Bit16u)&Int13DPT->iface_type[0], 'A');
+    write_byte(DS, SI+(Bit16u)&Int13DPT->iface_type[1], 'T');
+    write_byte(DS, SI+(Bit16u)&Int13DPT->iface_type[2], 'A');
+    write_byte(DS, SI+(Bit16u)&Int13DPT->iface_type[3], 0);
+
+    if (iface==ATA_IFACE_ISA) {
+      write_word(DS, SI+(Bit16u)&Int13DPT->iface_path[0], iobase1);
+      write_word(DS, SI+(Bit16u)&Int13DPT->iface_path[2], 0);
+      write_dword(DS, SI+(Bit16u)&Int13DPT->iface_path[4], 0L);
+    }
+    else {
+      // FIXME PCI
+    }
+    write_byte(DS, SI+(Bit16u)&Int13DPT->device_path[0], device%2);
+    write_byte(DS, SI+(Bit16u)&Int13DPT->device_path[1], 0);
+    write_word(DS, SI+(Bit16u)&Int13DPT->device_path[2], 0);
+    write_dword(DS, SI+(Bit16u)&Int13DPT->device_path[4], 0L);
+
+    write_byte(DS, SI+(Bit16u)&Int13DPT->reserved3, 0);
+
+    checksum=0;
+    for (i=30; i<65; i++) checksum+=read_byte(DS, SI + i);
+    checksum = -checksum;
+    write_byte(DS, SI+(Bit16u)&Int13DPT->checksum, checksum);
+  }
+
+  return 0;
+}
+
   void
 int13_harddisk(EHAX, DS, ES, DI, SI, BP, ELDX, BX, DX, CX, AX, IP, CS, FLAGS)
   Bit16u EHAX, DS, ES, DI, SI, BP, ELDX, BX, DX, CX, AX, IP, CS, FLAGS;
@@ -5454,131 +5622,8 @@ int13_harddisk(EHAX, DS, ES, DI, SI, BP, ELDX, BX, DX, CX, AX, IP, CS, FLAGS)
       break;
 
     case 0x48: // IBM/MS get drive parameters
-      size=read_word(DS,SI+(Bit16u)&Int13DPT->size);
-
-      // Buffer is too small
-      if(size < 26)
+      if (int13_edd(DS, SI, device))
         goto int13_fail;
-
-      // EDD 1.x
-      if(size >= 26) {
-        Bit16u   blksize;
-
-        npc     = read_word(ebda_seg, &EbdaData->ata.devices[device].pchs.cylinders);
-        nph     = read_word(ebda_seg, &EbdaData->ata.devices[device].pchs.heads);
-        npspt   = read_word(ebda_seg, &EbdaData->ata.devices[device].pchs.spt);
-        lba_low = read_dword(ebda_seg, &EbdaData->ata.devices[device].sectors_low);
-        lba_high = read_dword(ebda_seg, &EbdaData->ata.devices[device].sectors_high);
-        blksize = read_word(ebda_seg, &EbdaData->ata.devices[device].blksize);
-
-        write_word(DS, SI+(Bit16u)&Int13DPT->size, 26);
-        if (lba_high || (lba_low/npspt)/nph > 0x3fff)
-        {
-          write_word(DS, SI+(Bit16u)&Int13DPT->infos, 0x00); // geometry is invalid
-          write_dword(DS, SI+(Bit16u)&Int13DPT->cylinders, 0x3fff);
-        }
-        else
-        {
-          write_word(DS, SI+(Bit16u)&Int13DPT->infos, 1 << 1); // geometry is valid
-          write_dword(DS, SI+(Bit16u)&Int13DPT->cylinders, (Bit32u)npc);
-        }
-        write_dword(DS, SI+(Bit16u)&Int13DPT->heads, (Bit32u)nph);
-        write_dword(DS, SI+(Bit16u)&Int13DPT->spt, (Bit32u)npspt);
-        write_dword(DS, SI+(Bit16u)&Int13DPT->sector_count1, lba_low);
-        write_dword(DS, SI+(Bit16u)&Int13DPT->sector_count2, lba_high);
-        write_word(DS, SI+(Bit16u)&Int13DPT->blksize, blksize);
-      }
-
-      // EDD 2.x
-      if(size >= 30) {
-        Bit8u  channel, dev, irq, mode, checksum, i, translation;
-        Bit16u iobase1, iobase2, options;
-
-        write_word(DS, SI+(Bit16u)&Int13DPT->size, 30);
-
-        write_word(DS, SI+(Bit16u)&Int13DPT->dpte_segment, ebda_seg);
-        write_word(DS, SI+(Bit16u)&Int13DPT->dpte_offset, &EbdaData->ata.dpte);
-
-        // Fill in dpte
-        channel = device / 2;
-        iobase1 = read_word(ebda_seg, &EbdaData->ata.channels[channel].iobase1);
-        iobase2 = read_word(ebda_seg, &EbdaData->ata.channels[channel].iobase2);
-        irq = read_byte(ebda_seg, &EbdaData->ata.channels[channel].irq);
-        mode = read_byte(ebda_seg, &EbdaData->ata.devices[device].mode);
-        translation = read_byte(ebda_seg, &EbdaData->ata.devices[device].translation);
-
-        options  = (translation==ATA_TRANSLATION_NONE?0:1)<<3; // chs translation
-        options |= (1<<4); // lba translation
-        options |= (mode==ATA_MODE_PIO32?1:0)<<7;
-        options |= (translation==ATA_TRANSLATION_LBA?1:0)<<9;
-        options |= (translation==ATA_TRANSLATION_RECHS?3:0)<<9;
-
-        write_word(ebda_seg, &EbdaData->ata.dpte.iobase1, iobase1);
-        write_word(ebda_seg, &EbdaData->ata.dpte.iobase2, iobase2 + ATA_CB_DC);
-        write_byte(ebda_seg, &EbdaData->ata.dpte.prefix, (0xe | (device % 2))<<4 );
-        write_byte(ebda_seg, &EbdaData->ata.dpte.unused, 0xcb );
-        write_byte(ebda_seg, &EbdaData->ata.dpte.irq, irq );
-        write_byte(ebda_seg, &EbdaData->ata.dpte.blkcount, 1 );
-        write_byte(ebda_seg, &EbdaData->ata.dpte.dma, 0 );
-        write_byte(ebda_seg, &EbdaData->ata.dpte.pio, 0 );
-        write_word(ebda_seg, &EbdaData->ata.dpte.options, options);
-        write_word(ebda_seg, &EbdaData->ata.dpte.reserved, 0);
-        write_byte(ebda_seg, &EbdaData->ata.dpte.revision, 0x11);
-
-        checksum=0;
-        for (i=0; i<15; i++) checksum+=read_byte(ebda_seg, ((Bit8u*)(&EbdaData->ata.dpte)) + i);
-        checksum = -checksum;
-        write_byte(ebda_seg, &EbdaData->ata.dpte.checksum, checksum);
-      }
-
-      // EDD 3.x
-      if(size >= 66) {
-        Bit8u channel, iface, checksum, i;
-        Bit16u iobase1;
-
-        channel = device / 2;
-        iface = read_byte(ebda_seg, &EbdaData->ata.channels[channel].iface);
-        iobase1 = read_word(ebda_seg, &EbdaData->ata.channels[channel].iobase1);
-
-        write_word(DS, SI+(Bit16u)&Int13DPT->key, 0xbedd);
-        write_byte(DS, SI+(Bit16u)&Int13DPT->dpi_length, 36);
-        write_byte(DS, SI+(Bit16u)&Int13DPT->reserved1, 0);
-        write_word(DS, SI+(Bit16u)&Int13DPT->reserved2, 0);
-
-        if (iface==ATA_IFACE_ISA) {
-          write_byte(DS, SI+(Bit16u)&Int13DPT->host_bus[0], 'I');
-          write_byte(DS, SI+(Bit16u)&Int13DPT->host_bus[1], 'S');
-          write_byte(DS, SI+(Bit16u)&Int13DPT->host_bus[2], 'A');
-          write_byte(DS, SI+(Bit16u)&Int13DPT->host_bus[3], 0);
-        }
-        else {
-          // FIXME PCI
-        }
-        write_byte(DS, SI+(Bit16u)&Int13DPT->iface_type[0], 'A');
-        write_byte(DS, SI+(Bit16u)&Int13DPT->iface_type[1], 'T');
-        write_byte(DS, SI+(Bit16u)&Int13DPT->iface_type[2], 'A');
-        write_byte(DS, SI+(Bit16u)&Int13DPT->iface_type[3], 0);
-
-        if (iface==ATA_IFACE_ISA) {
-          write_word(DS, SI+(Bit16u)&Int13DPT->iface_path[0], iobase1);
-          write_word(DS, SI+(Bit16u)&Int13DPT->iface_path[2], 0);
-          write_dword(DS, SI+(Bit16u)&Int13DPT->iface_path[4], 0L);
-        }
-        else {
-          // FIXME PCI
-        }
-        write_byte(DS, SI+(Bit16u)&Int13DPT->device_path[0], device%2);
-        write_byte(DS, SI+(Bit16u)&Int13DPT->device_path[1], 0);
-        write_word(DS, SI+(Bit16u)&Int13DPT->device_path[2], 0);
-        write_dword(DS, SI+(Bit16u)&Int13DPT->device_path[4], 0L);
-
-        write_byte(DS, SI+(Bit16u)&Int13DPT->reserved3, 0);
-
-        checksum=0;
-        for (i=30; i<65; i++) checksum+=read_byte(DS, SI + i);
-        checksum = -checksum;
-        write_byte(DS, SI+(Bit16u)&Int13DPT->checksum, checksum);
-      }
 
       goto int13_success;
       break;
@@ -5817,120 +5862,8 @@ int13_cdrom_rme_end:
       break;
 
     case 0x48: // IBM/MS get drive parameters
-      size = read_word(DS,SI+(Bit16u)&Int13Ext->size);
-
-      // Buffer is too small
-      if(size < 26)
+      if (int13_edd(DS, SI, device))
         goto int13_fail;
-
-      // EDD 1.x
-      if(size >= 26) {
-        Bit16u   cylinders, heads, spt, blksize;
-
-        blksize   = read_word(ebda_seg, &EbdaData->ata.devices[device].blksize);
-
-        write_word(DS, SI+(Bit16u)&Int13DPT->size, 26);
-        write_word(DS, SI+(Bit16u)&Int13DPT->infos, 1 << 2 | /* removable */
-                                                    1 << 4 | /* media change */
-                                                    1 << 5 | /* lockable */
-                                                    1 << 6); /* max values */
-        write_dword(DS, SI+(Bit16u)&Int13DPT->cylinders, 0xffffffff);
-        write_dword(DS, SI+(Bit16u)&Int13DPT->heads, 0xffffffff);
-        write_dword(DS, SI+(Bit16u)&Int13DPT->spt, 0xffffffff);
-        write_dword(DS, SI+(Bit16u)&Int13DPT->sector_count1, 0xffffffff);  // FIXME should be Bit64
-        write_dword(DS, SI+(Bit16u)&Int13DPT->sector_count2, 0xffffffff);
-        write_word(DS, SI+(Bit16u)&Int13DPT->blksize, blksize);
-      }
-
-      // EDD 2.x
-      if(size >= 30) {
-        Bit8u  channel, dev, irq, mode, checksum, i;
-        Bit16u iobase1, iobase2, options;
-
-        write_word(DS, SI+(Bit16u)&Int13DPT->size, 30);
-
-        write_word(DS, SI+(Bit16u)&Int13DPT->dpte_segment, ebda_seg);
-        write_word(DS, SI+(Bit16u)&Int13DPT->dpte_offset, &EbdaData->ata.dpte);
-
-        // Fill in dpte
-        channel = device / 2;
-        iobase1 = read_word(ebda_seg, &EbdaData->ata.channels[channel].iobase1);
-        iobase2 = read_word(ebda_seg, &EbdaData->ata.channels[channel].iobase2);
-        irq = read_byte(ebda_seg, &EbdaData->ata.channels[channel].irq);
-        mode = read_byte(ebda_seg, &EbdaData->ata.devices[device].mode);
-
-        // FIXME atapi device
-        options  = (1<<4); // lba translation
-        options |= (1<<5); // removable device
-        options |= (1<<6); // atapi device
-        options |= (mode==ATA_MODE_PIO32?1:0<<7);
-
-        write_word(ebda_seg, &EbdaData->ata.dpte.iobase1, iobase1);
-        write_word(ebda_seg, &EbdaData->ata.dpte.iobase2, iobase2 + ATA_CB_DC);
-        write_byte(ebda_seg, &EbdaData->ata.dpte.prefix, (0xe | (device % 2))<<4 );
-        write_byte(ebda_seg, &EbdaData->ata.dpte.unused, 0xcb );
-        write_byte(ebda_seg, &EbdaData->ata.dpte.irq, irq );
-        write_byte(ebda_seg, &EbdaData->ata.dpte.blkcount, 1 );
-        write_byte(ebda_seg, &EbdaData->ata.dpte.dma, 0 );
-        write_byte(ebda_seg, &EbdaData->ata.dpte.pio, 0 );
-        write_word(ebda_seg, &EbdaData->ata.dpte.options, options);
-        write_word(ebda_seg, &EbdaData->ata.dpte.reserved, 0);
-        write_byte(ebda_seg, &EbdaData->ata.dpte.revision, 0x11);
-
-        checksum=0;
-        for (i=0; i<15; i++) checksum+=read_byte(ebda_seg, ((Bit8u*)(&EbdaData->ata.dpte)) + i);
-        checksum = -checksum;
-        write_byte(ebda_seg, &EbdaData->ata.dpte.checksum, checksum);
-      }
-
-      // EDD 3.x
-      if(size >= 66) {
-        Bit8u channel, iface, checksum, i;
-        Bit16u iobase1;
-
-        channel = device / 2;
-        iface = read_byte(ebda_seg, &EbdaData->ata.channels[channel].iface);
-        iobase1 = read_word(ebda_seg, &EbdaData->ata.channels[channel].iobase1);
-
-        write_word(DS, SI+(Bit16u)&Int13DPT->key, 0xbedd);
-        write_byte(DS, SI+(Bit16u)&Int13DPT->dpi_length, 36);
-        write_byte(DS, SI+(Bit16u)&Int13DPT->reserved1, 0);
-        write_word(DS, SI+(Bit16u)&Int13DPT->reserved2, 0);
-
-        if (iface==ATA_IFACE_ISA) {
-          write_byte(DS, SI+(Bit16u)&Int13DPT->host_bus[0], 'I');
-          write_byte(DS, SI+(Bit16u)&Int13DPT->host_bus[1], 'S');
-          write_byte(DS, SI+(Bit16u)&Int13DPT->host_bus[2], 'A');
-          write_byte(DS, SI+(Bit16u)&Int13DPT->host_bus[3], 0);
-        }
-        else {
-          // FIXME PCI
-        }
-        write_byte(DS, SI+(Bit16u)&Int13DPT->iface_type[0], 'A');
-        write_byte(DS, SI+(Bit16u)&Int13DPT->iface_type[1], 'T');
-        write_byte(DS, SI+(Bit16u)&Int13DPT->iface_type[2], 'A');
-        write_byte(DS, SI+(Bit16u)&Int13DPT->iface_type[3], 0);
-
-        if (iface==ATA_IFACE_ISA) {
-          write_word(DS, SI+(Bit16u)&Int13DPT->iface_path[0], iobase1);
-          write_word(DS, SI+(Bit16u)&Int13DPT->iface_path[2], 0);
-          write_dword(DS, SI+(Bit16u)&Int13DPT->iface_path[4], 0L);
-        }
-        else {
-          // FIXME PCI
-        }
-        write_byte(DS, SI+(Bit16u)&Int13DPT->device_path[0], device%2);
-        write_byte(DS, SI+(Bit16u)&Int13DPT->device_path[1], 0);
-        write_word(DS, SI+(Bit16u)&Int13DPT->device_path[2], 0);
-        write_dword(DS, SI+(Bit16u)&Int13DPT->device_path[4], 0L);
-
-        write_byte(DS, SI+(Bit16u)&Int13DPT->reserved3, 0);
-
-        checksum=0;
-        for (i=30; i<65; i++) checksum+=read_byte(DS, SI + i);
-        checksum = -checksum;
-        write_byte(DS, SI+(Bit16u)&Int13DPT->checksum, checksum);
-      }
 
       goto int13_success;
       break;
