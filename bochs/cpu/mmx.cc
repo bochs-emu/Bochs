@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: mmx.cc,v 1.95 2010-03-02 06:49:41 sshwarts Exp $
+// $Id: mmx.cc,v 1.96 2010-09-26 20:20:27 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2002-2009 Stanislav Shwartsman
@@ -1206,7 +1206,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PINSRW_PqEwIb(bxInstruction_c *i)
 
   BX_CPU_THIS_PTR prepareFPU2MMX(); /* FPU2MMX transition */
 
-  op1.xmm16u(i->Ib() & 0x3) = op2;
+  op1.mmx16u(i->Ib() & 0x3) = op2;
 
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), op1);
