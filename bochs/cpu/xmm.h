@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: xmm.h,v 1.31 2010-02-25 22:04:31 sshwarts Exp $
+// $Id: xmm.h,v 1.32 2010-09-26 20:35:24 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003-2009 Stanislav Shwartsman
@@ -27,34 +27,34 @@
 /* XMM REGISTER */
 
 typedef union bx_xmm_reg_t {
-   Bit8s   _sbyte[16];
-   Bit16s  _s16[8];
-   Bit32s  _s32[4];
-   Bit64s  _s64[2];
-   Bit8u   _ubyte[16];
-   Bit16u  _u16[8];
-   Bit32u  _u32[4];
-   Bit64u  _u64[2];
+   Bit8s   xmm_sbyte[16];
+   Bit16s  xmm_s16[8];
+   Bit32s  xmm_s32[4];
+   Bit64s  xmm_s64[2];
+   Bit8u   xmm_ubyte[16];
+   Bit16u  xmm_u16[8];
+   Bit32u  xmm_u32[4];
+   Bit64u  xmm_u64[2];
 } BxPackedXmmRegister;
 
 #ifdef BX_BIG_ENDIAN
-#define xmm64s(i)   _s64[1 - (i)]
-#define xmm32s(i)   _s32[3 - (i)]
-#define xmm16s(i)   _s16[7 - (i)]
-#define xmmsbyte(i) _sbyte[15 - (i)]
-#define xmmubyte(i) _ubyte[15 - (i)]
-#define xmm16u(i)   _u16[7 - (i)]
-#define xmm32u(i)   _u32[3 - (i)]
-#define xmm64u(i)   _u64[1 - (i)]
+#define xmm64s(i)   xmm_s64[1 - (i)]
+#define xmm32s(i)   xmm_s32[3 - (i)]
+#define xmm16s(i)   xmm_s16[7 - (i)]
+#define xmmsbyte(i) xmm_sbyte[15 - (i)]
+#define xmmubyte(i) xmm_ubyte[15 - (i)]
+#define xmm16u(i)   xmm_u16[7 - (i)]
+#define xmm32u(i)   xmm_u32[3 - (i)]
+#define xmm64u(i)   xmm_u64[1 - (i)]
 #else
-#define xmm64s(i)   _s64[(i)]
-#define xmm32s(i)   _s32[(i)]
-#define xmm16s(i)   _s16[(i)]
-#define xmmsbyte(i) _sbyte[(i)]
-#define xmmubyte(i) _ubyte[(i)]
-#define xmm16u(i)   _u16[(i)]
-#define xmm32u(i)   _u32[(i)]
-#define xmm64u(i)   _u64[(i)]
+#define xmm64s(i)   xmm_s64[(i)]
+#define xmm32s(i)   xmm_s32[(i)]
+#define xmm16s(i)   xmm_s16[(i)]
+#define xmmsbyte(i) xmm_sbyte[(i)]
+#define xmmubyte(i) xmm_ubyte[(i)]
+#define xmm16u(i)   xmm_u16[(i)]
+#define xmm32u(i)   xmm_u32[(i)]
+#define xmm64u(i)   xmm_u64[(i)]
 #endif
 
 #if BX_SUPPORT_X86_64

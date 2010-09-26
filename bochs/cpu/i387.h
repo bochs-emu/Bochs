@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: i387.h,v 1.40 2010-03-01 18:53:53 sshwarts Exp $
+// $Id: i387.h,v 1.41 2010-09-26 20:35:24 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2004-2009 Stanislav Shwartsman
@@ -179,34 +179,34 @@ BX_CPP_INLINE void i387_t::reset()
 }
 
 typedef union bx_packed_mmx_reg_t {
-   Bit8s   _sbyte[8];
-   Bit16s  _s16[4];
-   Bit32s  _s32[2];
-   Bit64s  _s64;
-   Bit8u   _ubyte[8];
-   Bit16u  _u16[4];
-   Bit32u  _u32[2];
-   Bit64u  _u64;
+   Bit8s   mmx_sbyte[8];
+   Bit16s  mmx_s16[4];
+   Bit32s  mmx_s32[2];
+   Bit64s  mmx_s64;
+   Bit8u   mmx_ubyte[8];
+   Bit16u  mmx_u16[4];
+   Bit32u  mmx_u32[2];
+   Bit64u  mmx_u64;
 } BxPackedMmxRegister;
 
 #ifdef BX_BIG_ENDIAN
-#define mmx64s(i)   _s64
-#define mmx32s(i)   _s32[1 - (i)]
-#define mmx16s(i)   _s16[3 - (i)]
-#define mmxsbyte(i) _sbyte[7 - (i)]
-#define mmxubyte(i) _ubyte[7 - (i)]
-#define mmx16u(i)   _u16[3 - (i)]
-#define mmx32u(i)   _u32[1 - (i)]
-#define mmx64u      _u64
+#define mmx64s(i)   mmx_s64
+#define mmx32s(i)   mmx_s32[1 - (i)]
+#define mmx16s(i)   mmx_s16[3 - (i)]
+#define mmxsbyte(i) mmx_sbyte[7 - (i)]
+#define mmxubyte(i) mmx_ubyte[7 - (i)]
+#define mmx16u(i)   mmx_u16[3 - (i)]
+#define mmx32u(i)   mmx_u32[1 - (i)]
+#define mmx64u      mmx_u64
 #else
-#define mmx64s(i)   _s64
-#define mmx32s(i)   _s32[(i)]
-#define mmx16s(i)   _s16[(i)]
-#define mmxsbyte(i) _sbyte[(i)]
-#define mmxubyte(i) _ubyte[(i)]
-#define mmx16u(i)   _u16[(i)]
-#define mmx32u(i)   _u32[(i)]
-#define mmx64u      _u64
+#define mmx64s(i)   mmx_s64
+#define mmx32s(i)   mmx_s32[(i)]
+#define mmx16s(i)   mmx_s16[(i)]
+#define mmxsbyte(i) mmx_sbyte[(i)]
+#define mmxubyte(i) mmx_ubyte[(i)]
+#define mmx16u(i)   mmx_u16[(i)]
+#define mmx32u(i)   mmx_u32[(i)]
+#define mmx64u      mmx_u64
 #endif
 
 /* for compatability with already written code */
