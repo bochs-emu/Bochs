@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: icache.cc,v 1.35 2010-05-18 07:28:04 sshwarts Exp $
+// $Id: icache.cc,v 1.36 2010-09-27 15:29:36 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007-2010 Stanislav Shwartsman
@@ -109,6 +109,9 @@ void BX_CPU_C::serveICacheMiss(bxICacheEntry_c *entry, Bit32u eipBiased, bx_phy_
     // add instruction to the trace
     unsigned iLen = i->ilen();
     entry->tlen++;
+
+    BX_INSTR_OPCODE(BX_CPU_ID, fetchPtr, iLen,
+       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b, long64_mode());
 
     // continue to the next instruction
     remainingInPage -= iLen;

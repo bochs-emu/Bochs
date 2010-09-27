@@ -24,7 +24,6 @@ BOCHS instrumentation callbacks
 The  callback is called when Bochs is initialized, before of reading .bochsrc.
 It   can  be  used  for  registration  of  parameters  in  siminterface.  Then
 when  bx_instr_init() is called it can access configuration parameters defined
-
 by bx_instr_init_env(),  so  instrumentalization  module  can  use  additional
 options in .bochsrc.
 
@@ -99,12 +98,12 @@ unconditional far branch (always taken).
 
 	void bx_instr_opcode(unsigned cpu, const Bit8u *opcode, unsigned len, bx_bool is32, bx_bool is64);
 
-The  callback  is  called  each  time,  when  Bochs  starts  to  decode  a new
+The  callback  is  called  each  time, when Bochs completes  to  decode  a new
 instruction.  Through  this callback function Bochs could provide an opcode of
 the instruction, opcode length and an execution mode (16/32/64).
 
-Currently the callback is not supported when trace-cache optimization feature
-is enabled.
+Please note, that Bochs uses translation  caches so each simulated instruction
+might be executed multiple times but decoded only once.
 
 
 	void bx_instr_interrupt(unsigned cpu, unsigned vector);
@@ -232,8 +231,6 @@ Known problems:
 
 2. BX_INSTR_MEM_DATA doesn't work when repeat-speedups feature is enabled.
 
-3. BX_INSTR_OPCODE doesn't work with trace cache optimization enabled
-
 Feature requests:
 
 1. BX_INSTR_CNEAR_BRANCH_NOT_TAKEN callback should have an additional 
@@ -242,7 +239,7 @@ Feature requests:
 2. BX_INSTR_SMI, BX_INSTR_NMI, BX_INSTR_SIPI and other external events
    callbacks
 
-3.
+3. ???
 
 While using Bochs as a reference model for simulations, the simulator needs
 information about what loads/stores are taking place with each instruction.

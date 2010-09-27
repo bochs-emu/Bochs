@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.315 2010-06-02 05:44:12 sshwarts Exp $
+// $Id: cpu.cc,v 1.316 2010-09-27 15:29:36 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -149,11 +149,6 @@ no_async_event:
     bxInstruction_c *last = i + (entry->tlen);
 
     for(;;) {
-#endif
-
-#if BX_INSTRUMENTATION
-      BX_INSTR_OPCODE(BX_CPU_ID, BX_CPU_THIS_PTR eipFetchPtr + (RIP + BX_CPU_THIS_PTR eipPageBias),
-         i->ilen(), BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b, long64_mode());
 #endif
 
 #if BX_DISASM
