@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: icache.h,v 1.54 2010-05-18 07:28:04 sshwarts Exp $
+// $Id: icache.h,v 1.55 2010-09-28 14:18:58 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007-2010 Stanislav Shwartsman
@@ -27,7 +27,7 @@
 // bit 31 indicates code page
 const Bit32u ICacheWriteStampInvalid  = 0xffffffff;
 const Bit32u ICacheWriteStampStart    = 0x7fffffff;
-const Bit32u ICacheWriteStampFetchModeMask = ~ICacheWriteStampStart;
+const Bit32u ICacheWriteStampCached   = 0x80000000;
 
 #if BX_SUPPORT_TRACE_CACHE
 extern void handleSMC(bx_phy_address pAddr);
@@ -72,19 +72,19 @@ public:
 
   BX_CPP_INLINE void markICache(bx_phy_address pAddr)
   {
-    pageWriteStampTable[hash(pAddr)] |= ICacheWriteStampFetchModeMask;
+    pageWriteStampTable[hash(pAddr)] |= ICacheWriteStampCached;
   }
 
   BX_CPP_INLINE void decWriteStamp(bx_phy_address pAddr)
   {
     Bit32u index = hash(pAddr);
-    if (pageWriteStampTable[index] & ICacheWriteStampFetchModeMask) {
+    if (pageWriteStampTable[index] & ICacheWriteStampCached) {
 #if BX_SUPPORT_TRACE_CACHE
       handleSMC(pAddr); // one of the CPUs might be running trace from this page
 #endif
       // Decrement page write stamp, so iCache entries with older stamps are
       // effectively invalidated.
-      pageWriteStampTable[index] = (pageWriteStampTable[index] - 1) & ~ICacheWriteStampFetchModeMask;
+      pageWriteStampTable[index] = (pageWriteStampTable[index] - 1) & ~ICacheWriteStampCached;
     }
   }
 
