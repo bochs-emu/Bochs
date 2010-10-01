@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: shift32.cc,v 1.51 2010-05-18 07:28:05 sshwarts Exp $
+// $Id: shift32.cc,v 1.52 2010-10-01 09:13:21 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2010  The Bochs Project
@@ -68,7 +68,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHLD_EdGdR(bxInstruction_c *i)
     count = CL;
 
   count &= 0x1f; // use only 5 LSB's
-  if (!count) return;
+  if (!count) {
+    BX_CLEAR_64BIT_HIGH(i->rm()); // always clear upper part of the register
+    return;
+  }
 
   op1_32 = BX_READ_32BIT_REG(i->rm());
   op2_32 = BX_READ_32BIT_REG(i->nnn());
@@ -128,7 +131,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHRD_EdGdR(bxInstruction_c *i)
     count = CL;
 
   count &= 0x1f; // use only 5 LSB's
-  if (!count) return;
+  if (!count) {
+    BX_CLEAR_64BIT_HIGH(i->rm()); // always clear upper part of the register
+    return;
+  }
 
   op1_32 = BX_READ_32BIT_REG(i->rm());
   op2_32 = BX_READ_32BIT_REG(i->nnn());
@@ -184,7 +190,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROL_EdR(bxInstruction_c *i)
     count = i->Ib();
 
   count &= 0x1f;
-  if (! count) return;
+  if (!count) {
+    BX_CLEAR_64BIT_HIGH(i->rm()); // always clear upper part of the register
+    return;
+  }
 
   op1_32 = BX_READ_32BIT_REG(i->rm());
   result_32 = (op1_32 << count) | (op1_32 >> (32 - count));
@@ -237,7 +246,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROR_EdR(bxInstruction_c *i)
     count = i->Ib();
 
   count &= 0x1f;
-  if (! count) return;
+  if (!count) {
+    BX_CLEAR_64BIT_HIGH(i->rm()); // always clear upper part of the register
+    return;
+  }
 
   op1_32 = BX_READ_32BIT_REG(i->rm());
   result_32 = (op1_32 >> count) | (op1_32 << (32 - count));
@@ -295,7 +307,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RCL_EdR(bxInstruction_c *i)
     count = i->Ib();
 
   count &= 0x1f;
-  if (!count) return;
+  if (!count) {
+    BX_CLEAR_64BIT_HIGH(i->rm()); // always clear upper part of the register
+    return;
+  }
 
   op1_32 = BX_READ_32BIT_REG(i->rm());
 
@@ -360,7 +375,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RCR_EdR(bxInstruction_c *i)
     count = i->Ib();
 
   count &= 0x1f;
-  if (!count) return;
+  if (!count) {
+    BX_CLEAR_64BIT_HIGH(i->rm()); // always clear upper part of the register
+    return;
+  }
 
   op1_32 = BX_READ_32BIT_REG(i->rm());
 
@@ -421,7 +439,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHL_EdR(bxInstruction_c *i)
     count = i->Ib();
 
   count &= 0x1f;
-  if (!count) return;
+  if (!count) {
+    BX_CLEAR_64BIT_HIGH(i->rm()); // always clear upper part of the register
+    return;
+  }
 
   op1_32 = BX_READ_32BIT_REG(i->rm());
 
@@ -480,7 +501,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHR_EdR(bxInstruction_c *i)
     count = i->Ib();
 
   count &= 0x1f;
-  if (!count) return;
+  if (!count) {
+    BX_CLEAR_64BIT_HIGH(i->rm()); // always clear upper part of the register
+    return;
+  }
 
   op1_32 = BX_READ_32BIT_REG(i->rm());
   result_32 = (op1_32 >> count);
@@ -534,7 +558,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SAR_EdR(bxInstruction_c *i)
     count = i->Ib();
 
   count &= 0x1f;
-  if (!count) return;
+  if (!count) {
+    BX_CLEAR_64BIT_HIGH(i->rm()); // always clear upper part of the register
+    return;
+  }
 
   op1_32 = BX_READ_32BIT_REG(i->rm());
 
