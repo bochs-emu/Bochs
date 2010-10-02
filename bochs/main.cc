@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.420 2010-04-24 09:36:04 sshwarts Exp $
+// $Id: main.cc,v 1.421 2010-10-02 20:52:47 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -113,6 +113,14 @@ void bx_print_header()
   if (REL_STRING[0]) {
     sprintf(buffer, "%s\n", REL_STRING);
     bx_center_print(stdout, buffer, 72);
+#ifdef __DATE__
+#ifdef __TIME__
+    sprintf(buffer, "Compiled at %s, %s\n", __DATE__, __TIME__);
+#else
+    sprintf(buffer, "Compiled at %s\n", __DATE__);
+#endif
+    bx_center_print(stdout, buffer, 72);
+#endif
   }
   printf("%s\n", divider);
 }
@@ -1014,6 +1022,13 @@ void bx_init_hardware()
   // This will by handy for bug reports
   BX_INFO(("Bochs x86 Emulator %s", VER_STRING));
   BX_INFO(("  %s", REL_STRING));
+#ifdef __DATE__
+#ifdef __TIME__
+  BX_INFO(("Compiled at %s, %s", __DATE__, __TIME__));
+#else
+  BX_INFO(("Compiled at %s", __DATE__));
+#endif
+#endif
   BX_INFO(("System configuration"));
   BX_INFO(("  processors: %d (cores=%u, HT threads=%u)", BX_SMP_PROCESSORS,
     SIM->get_param_num(BXPN_CPU_NCORES)->get(), SIM->get_param_num(BXPN_CPU_NTHREADS)->get()));
