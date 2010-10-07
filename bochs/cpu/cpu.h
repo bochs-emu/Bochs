@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.686 2010-10-07 16:39:31 sshwarts Exp $
+// $Id: cpu.h,v 1.687 2010-10-07 20:40:01 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2010  The Bochs Project
@@ -3277,6 +3277,8 @@ public: // for now...
   BX_SMF BX_CPP_INLINE int bx_cpuid_support_pse36(void);
   BX_SMF BX_CPP_INLINE int bx_cpuid_support_mmx(void);
   BX_SMF BX_CPP_INLINE int bx_cpuid_support_sse(void);
+  BX_SMF BX_CPP_INLINE int bx_cpuid_support_sep(void);
+  BX_SMF BX_CPP_INLINE int bx_cpuid_support_fxsave_fxrstor(void);
   BX_SMF BX_CPP_INLINE int bx_cpuid_support_pcid(void);
   BX_SMF BX_CPP_INLINE int bx_cpuid_support_xsave(void);
   BX_SMF BX_CPP_INLINE int bx_cpuid_support_fsgsbase(void);
@@ -3755,6 +3757,16 @@ BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_mmx(void)
 BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_sse(void)
 {
   return (BX_CPU_THIS_PTR cpuid_std_function[1].edx & BX_CPUID_STD_SSE);
+}
+
+BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_sep(void)
+{
+  return (BX_CPU_THIS_PTR cpuid_std_function[1].edx & BX_CPUID_STD_SYSENTER_SYSEXIT);
+}
+
+BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_fxsave_fxrstor(void)
+{
+  return (BX_CPU_THIS_PTR cpuid_std_function[1].edx & BX_CPUID_STD_FXSAVE_FXRSTOR);
 }
 
 BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_1g_paging(void)

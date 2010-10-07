@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: crregs.cc,v 1.20 2010-10-07 16:39:31 sshwarts Exp $
+// $Id: crregs.cc,v 1.21 2010-10-07 20:40:01 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2010 Stanislav Shwartsman
@@ -957,7 +957,7 @@ Bit32u BX_CPU_C::get_cr4_allow_mask(void)
   allowMask |= BX_CR4_PCE_MASK;
 
   /* OSFXSR */
-  if (BX_CPU_SUPPORT_ISA_EXTENSION(BX_CPU_FXSAVE_FXRSTOR))
+  if (bx_cpuid_support_fxsave_fxrstor())
     allowMask |= BX_CR4_OSFXSR_MASK;
 
   /* OSXMMEXCPT */
