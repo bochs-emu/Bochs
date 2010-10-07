@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.685 2010-09-25 09:55:39 sshwarts Exp $
+// $Id: cpu.h,v 1.686 2010-10-07 16:39:31 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2010  The Bochs Project
@@ -640,6 +640,7 @@ struct cpuid_function_t {
   Bit32u edx;
 };
 
+#include "model_specific.h"
 #include "crregs.h"
 #include "descriptor.h"
 #include "instr.h"
@@ -3274,7 +3275,10 @@ public: // for now...
   BX_SMF BX_CPP_INLINE int bx_cpuid_support_pge(void);
   BX_SMF BX_CPP_INLINE int bx_cpuid_support_pse(void);
   BX_SMF BX_CPP_INLINE int bx_cpuid_support_pse36(void);
+  BX_SMF BX_CPP_INLINE int bx_cpuid_support_mmx(void);
+  BX_SMF BX_CPP_INLINE int bx_cpuid_support_sse(void);
   BX_SMF BX_CPP_INLINE int bx_cpuid_support_pcid(void);
+  BX_SMF BX_CPP_INLINE int bx_cpuid_support_xsave(void);
   BX_SMF BX_CPP_INLINE int bx_cpuid_support_fsgsbase(void);
 
   BX_SMF BX_CPP_INLINE unsigned which_cpu(void) { return BX_CPU_THIS_PTR bx_cpuid; }
@@ -3690,10 +3694,15 @@ BX_CPP_INLINE bx_bool BX_CPU_C::alignment_check(void)
 }
 #endif
 
+BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_xsave(void)
+{
+  return (BX_CPU_THIS_PTR cpuid_std_function[1].ecx & BX_CPUID_EXT_XSAVE);
+}
+
 BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_pcid(void)
 {
 #if BX_SUPPORT_X86_64
-  return (BX_CPU_THIS_PTR cpuid_std_function[1].ecx >> 17) & 0x1;
+  return (BX_CPU_THIS_PTR cpuid_std_function[1].ecx & BX_CPUID_EXT_PCID);
 #else
   return 0;
 #endif
@@ -3710,38 +3719,48 @@ BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_fsgsbase(void)
 
 BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_vme(void)
 {
-  return (BX_CPU_THIS_PTR cpuid_std_function[1].edx >>  1) & 0x1;
+  return (BX_CPU_THIS_PTR cpuid_std_function[1].edx & BX_CPUID_STD_VME);
 }
 
 BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_debug_extensions(void)
 {
-  return (BX_CPU_THIS_PTR cpuid_std_function[1].edx >>  2) & 0x1;
+  return (BX_CPU_THIS_PTR cpuid_std_function[1].edx & BX_CPUID_STD_DEBUG_EXTENSIONS);
 }
 
 BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_pse(void)
 {
-  return (BX_CPU_THIS_PTR cpuid_std_function[1].edx >>  3) & 0x1;
+  return (BX_CPU_THIS_PTR cpuid_std_function[1].edx & BX_CPUID_STD_PSE);
 }
 
 BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_pae(void)
 {
-  return (BX_CPU_THIS_PTR cpuid_std_function[1].edx >>  6) & 0x1;
+  return (BX_CPU_THIS_PTR cpuid_std_function[1].edx & BX_CPUID_STD_PAE);
 }
 
 BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_pge(void)
 {
-  return (BX_CPU_THIS_PTR cpuid_std_function[1].edx >> 13) & 0x1;
+  return (BX_CPU_THIS_PTR cpuid_std_function[1].edx & BX_CPUID_STD_GLOBAL_PAGES);
 }
 
 BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_pse36(void)
 {
-  return (BX_CPU_THIS_PTR cpuid_std_function[1].edx >> 17) & 0x1;
+  return (BX_CPU_THIS_PTR cpuid_std_function[1].edx & BX_CPUID_STD_PSE36);
+}
+
+BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_mmx(void)
+{
+  return (BX_CPU_THIS_PTR cpuid_std_function[1].edx & BX_CPUID_STD_MMX);
+}
+
+BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_sse(void)
+{
+  return (BX_CPU_THIS_PTR cpuid_std_function[1].edx & BX_CPUID_STD_SSE);
 }
 
 BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_1g_paging(void)
 {
 #if BX_SUPPORT_X86_64
-  return (BX_CPU_THIS_PTR cpuid_ext_function[1].edx >> 26) & 0x1;
+  return (BX_CPU_THIS_PTR cpuid_ext_function[1].edx & BX_CPUID_STD2_1G_PAGES);
 #else
   return 0;
 #endif

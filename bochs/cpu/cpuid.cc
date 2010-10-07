@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpuid.cc,v 1.123 2010-09-20 20:43:16 sshwarts Exp $
+// $Id: cpuid.cc,v 1.124 2010-10-07 16:39:31 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007-2010 Stanislav Shwartsman
@@ -24,6 +24,7 @@
 #define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"
 #include "cpu.h"
+#include "model_specific.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
 #include "param_names.h"
@@ -162,56 +163,53 @@ Bit32u BX_CPU_C::get_extended_cpuid_features(void)
 
   Bit32u features = 0;
 
-  // support SSE3
   if (BX_CPU_SUPPORT_ISA_EXTENSION(BX_CPU_SSE3))
-    features |= (1<<0);
+    features |= BX_CPUID_EXT_SSE3;
 
-  // support for PCLMULQDQ
   if (BX_CPU_SUPPORT_ISA_EXTENSION(BX_CPU_AES_PCLMULQDQ))
-    features |= (1<<1);
+    features |= BX_CPUID_EXT_PCLMULQDQ;
 
   if (BX_CPU_SUPPORT_ISA_EXTENSION(BX_CPU_MONITOR_MWAIT))
-    features |= (1<<3);
+    features |= BX_CPUID_EXT_MONITOR_MWAIT;
 
   if (BX_CPU_SUPPORT_ISA_EXTENSION(BX_CPU_VMX))
-    features |= (1<<5);
+    features |= BX_CPUID_EXT_VMX;
 
   if (BX_CPU_SUPPORT_ISA_EXTENSION(BX_CPU_SSSE3))
-    features |= (1<<9);
+    features |= BX_CPUID_EXT_SSSE3;
 
 #if BX_SUPPORT_X86_64
-  // support CMPXCHG16B
   if (BX_CPU_SUPPORT_ISA_EXTENSION(BX_CPU_X86_64))
-    features |= (1<<13);
+    features |= BX_CPUID_EXT_CMPXCHG16B;
 
   if (SIM->get_param_bool(BXPN_CPUID_PCID)->get())
-    features |= (1<<17);
+    features |= BX_CPUID_EXT_PCID;
 #endif
 
   if (BX_CPU_SUPPORT_ISA_EXTENSION(BX_CPU_SSE4_1))
-    features |= (1<<19);
+    features |= BX_CPUID_EXT_SSE4_1;
 
   if (BX_CPU_SUPPORT_ISA_EXTENSION(BX_CPU_SSE4_2))
-    features |= (1<<20);
+    features |= BX_CPUID_EXT_SSE4_2;
 
 #if BX_SUPPORT_X2APIC
-  features |= (1<<21);           // support X2APIC
+  features |= BX_CPUID_EXT_X2APIC;
 #endif
 
   if (BX_CPU_SUPPORT_ISA_EXTENSION(BX_CPU_MOVBE))
-    features |= (1<<22);
+    features |= BX_CPUID_EXT_MOVBE;
 
   // enable POPCNT if SSE4_2 is enabled
   if (BX_CPU_SUPPORT_ISA_EXTENSION(BX_CPU_SSE4_2))
-    features |= (1<<23);
+    features |= BX_CPUID_EXT_POPCNT;
 
   // support for AES
   if (BX_CPU_SUPPORT_ISA_EXTENSION(BX_CPU_AES_PCLMULQDQ))
-    features |= (1<<25);
+    features |= BX_CPUID_EXT_AES;
 
   // support XSAVE extensions
   if (BX_CPU_SUPPORT_ISA_EXTENSION(BX_CPU_XSAVE))
-    features |= (1<<26) | (1<<27);
+    features |= BX_CPUID_EXT_XSAVE | BX_CPUID_EXT_OSXSAVE;
 
   return features;
 }
@@ -267,18 +265,19 @@ Bit32u BX_CPU_C::get_std_cpuid_features(void)
   Bit32u features = 0;
 
   if (BX_CPU_SUPPORT_ISA_EXTENSION(BX_CPU_X87))
-    features |= (1<<0);
+    features |= BX_CPUID_STD_X87;
 
 #if BX_CPU_LEVEL >= 5
   if (BX_CPU_SUPPORT_ISA_EXTENSION(BX_CPU_PENTIUM)) {
     // Pentium only features
-    features |= (1<<1);             // support VME
-    features |= (1<<2);             // support Debug Extensions
-    features |= (1<<3);             // support PSE
-    features |= (1<<4);             // support Time Stamp Counter
-    features |= (1<<5);             // support RDMSR/WRMSR
-    features |= (1<<7) | (1<<14);   // support Machine Check
-    features |= (1<<8);             // support CMPXCHG8B instruction
+    features |= BX_CPUID_STD_VME;
+    features |= BX_CPUID_STD_DEBUG_EXTENSIONS;
+    features |= BX_CPUID_STD_PSE;
+    features |= BX_CPUID_STD_TSC;
+    features |= BX_CPUID_STD_MSR;
+    // support Machine Check
+    features |= BX_CPUID_STD_MCE | BX_CPUID_STD_MCA;
+    features |= BX_CPUID_STD_CMPXCHG8B;
   }
 #endif
 
@@ -286,45 +285,45 @@ Bit32u BX_CPU_C::get_std_cpuid_features(void)
   // if MSR_APICBASE APIC Global Enable bit has been cleared,
   // the CPUID feature flag for the APIC is set to 0.
   if (BX_CPU_THIS_PTR msr.apicbase & 0x800)
-    features |= (1<<9); // APIC on chip
+    features |= BX_CPUID_STD_APIC; // APIC on chip
 #endif
 
   if (BX_CPU_SUPPORT_ISA_EXTENSION(BX_CPU_SYSENTER_SYSEXIT))
-    features |= (1<<11);
+    features |= BX_CPUID_STD_SYSENTER_SYSEXIT;
 
   if (BX_CPU_SUPPORT_ISA_EXTENSION(BX_CPU_CLFLUSH))
-    features |= (1<<19);
+    features |= BX_CPUID_STD_CLFLUSH;
 
 #if BX_CPU_LEVEL >= 5
   if (BX_CPU_SUPPORT_ISA_EXTENSION(BX_CPU_MMX))
-    features |= (1<<23);
+    features |= BX_CPUID_STD_MMX;
 #endif
 
 #if BX_CPU_LEVEL >= 6
   if (BX_CPU_SUPPORT_ISA_EXTENSION(BX_CPU_P6)) {
-    features |= (1<<6);   // support PAE
-    features |= (1<<12);  // support MTRRs
-    features |= (1<<13);  // support Global pages
-    features |= (1<<15);  // support CMOV instructions
-    features |= (1<<16);  // support PAT
-    features |= (1<<17);  // support PSE-36
-    features |= (1<<22);  // support ACPI
+    features |= BX_CPUID_STD_PAE;
+    features |= BX_CPUID_STD_MTRR;
+    features |= BX_CPUID_STD_GLOBAL_PAGES;
+    features |= BX_CPUID_STD_CMOV;
+    features |= BX_CPUID_STD_PAT;
+    features |= BX_CPUID_STD_PSE36;
+    features |= BX_CPUID_STD_ACPI;
   }
 
   if (BX_CPU_SUPPORT_ISA_EXTENSION(BX_CPU_FXSAVE_FXRSTOR))
-    features |= (1<<24);  // support FSAVE/FXRSTOR instructions
+    features |= BX_CPUID_STD_FXSAVE_FXRSTOR;
 
   if (BX_CPU_SUPPORT_ISA_EXTENSION(BX_CPU_SSE))
-    features |= (1<<25);
+    features |= BX_CPUID_STD_SSE;
 
   if (BX_CPU_SUPPORT_ISA_EXTENSION(BX_CPU_SSE2))
-    features |= (1<<26);
+    features |= BX_CPUID_STD_SSE2;
 #endif
 
 #if BX_SUPPORT_SMP
   // Intel(R) HyperThreading Technology
   if (SIM->get_param_num(BXPN_CPU_NTHREADS)->get() > 1)
-    features |= (1<<28);
+    features |= BX_CPUID_STD_HT;
 #endif
 
   return features;
@@ -633,24 +632,25 @@ void BX_CPU_C::set_cpuid_defaults(void)
   cpuid->ebx = 0;
 
   // ECX:
-  //     [0:0]   LAHF/SAHF available in 64-bit mode
-  //     [1:1]   AMD CmpLegacy
-  //     [2:2]   AMD Secure Virtual Machine Technology
+  //     [0:0]   LAHF/SAHF instructions support in 64-bit mode
+  //     [1:1]   CMP_Legacy: Core multi-processing legacy mode (AMD)
+  //     [2:2]   SVM: Secure Virtual Machine (AMD)
   //     [3:3]   Extended APIC Space
-  //     [4:4]   Alternative CR8 (treat lock mov cr0 as mov cr8)
-  //     [5:5]   LZCNT support
-  //     [6:6]   SSE4A support
+  //     [4:4]   AltMovCR8: LOCK MOV CR0 means MOV CR8
+  //     [5:5]   LZCNT: LZCNT instruction support
+  //     [6:6]   SSE4A: SSE4A Instructions support
   //     [7:7]   Misaligned SSE support
-  //     [8:8]   3DNow! prefetch support
-  //     [9:9]   OS visible workarounds
-  //     [10:10] Reserved
-  //     [11:11] SSE5A
-  //     [12:31] Reserved
+  //     [8:8]   PREFETCHW: PREFETCHW instruction support
+  //     [9:9]   OSVW: OS visible workarounds (AMD)
+  //     [11:10] reserved
+  //     [12:12] SKINIT support
+  //     [13:13] WDT: Watchdog timer support
+  //     [31:14] reserved
 #if BX_SUPPORT_X86_64
-  cpuid->ecx = 1 | (1<<8);
+  cpuid->ecx = BX_CPUID_EXT2_LAHF_SAHF;
 #endif
 #if BX_SUPPORT_MISALIGNED_SSE
-  cpuid->ecx |= (1<<7);
+  cpuid->ecx |= BX_CPUID_EXT2_MISALIGNED_SSE;
 #endif
 
   // EDX:
@@ -689,12 +689,16 @@ void BX_CPU_C::set_cpuid_defaults(void)
   unsigned features  = BX_CPU_VENDOR_INTEL ? 0 : get_std_cpuid_features();
   features &= 0x0183F3FF;
 #if BX_SUPPORT_3DNOW
-  features |= (1 << 22) | (1 << 30) | (1 << 31);  // only AMD is interesting in AMD MMX extensions
+  // only AMD is interesting in AMD MMX extensions
+  features |= BX_CPUID_STD2_AMD_MMX_EXT | BX_CPUID_STD2_3DNOW_EXT | BX_CPUID_STD2_3DNOW;
 #endif
 #if BX_SUPPORT_X86_64
-  features |= (1 << 29) | (1 << 27) | (1 << 25) | (1 << 20) | (1 << 11);
+  features |= BX_CPUID_STD2_SYSCALL_SYSRET |
+              BX_CPUID_STD2_NX |
+              BX_CPUID_STD2_FFXSR |
+              BX_CPUID_STD2_RDTSCP | BX_CPUID_STD2_LONG_MODE;
   if (xlarge_pages_enabled)
-    features |= (1 << 26);
+    features |= BX_CPUID_STD2_1G_PAGES;
 #endif
   cpuid->edx = features;
 

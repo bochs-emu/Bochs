@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.225 2010-05-25 18:52:01 sshwarts Exp $
+// $Id: paging.cc,v 1.226 2010-10-07 16:39:31 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2010  The Bochs Project
@@ -682,7 +682,7 @@ bx_phy_address BX_CPU_C::translate_linear_long_mode(bx_address laddr, Bit32u &lp
     if (leaf == BX_LEVEL_PTE) break;
 
     if (curr_entry & 0x80) {
-      if (leaf > (BX_LEVEL_PDE + bx_cpuid_support_1g_paging())) {
+      if (leaf > (BX_LEVEL_PDE + !!bx_cpuid_support_1g_paging())) {
         BX_DEBUG(("%s: PS bit set !"));
         page_fault(ERROR_RESERVED | ERROR_PROTECTION, laddr, pl, rw);
       }
@@ -1277,7 +1277,7 @@ bx_phy_address BX_CPU_C::translate_guest_physical(bx_phy_address guest_paddr, bx
     }
 
     if (curr_entry & 0x80) {
-      if (leaf > (BX_LEVEL_PDE + bx_cpuid_support_1g_paging())) {
+      if (leaf > (BX_LEVEL_PDE + !!bx_cpuid_support_1g_paging())) {
         BX_DEBUG(("EPT %s: PS bit set !"));
         vmexit_reason = VMX_VMEXIT_EPT_VIOLATION;
         break;
@@ -1415,7 +1415,7 @@ bx_bool BX_CPU_C::dbg_translate_guest_physical(bx_phy_address guest_paddr, bx_ph
     if (level == BX_LEVEL_PTE) break;
 
     if (pte & 0x80) {
-       if (level > (BX_LEVEL_PDE + bx_cpuid_support_1g_paging()))
+       if (level > (BX_LEVEL_PDE + !!bx_cpuid_support_1g_paging()))
          return 0;
 
         pt_address &= BX_CONST64(0x000fffffffffe000);

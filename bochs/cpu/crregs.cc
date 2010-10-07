@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: crregs.cc,v 1.19 2010-07-22 16:41:59 sshwarts Exp $
+// $Id: crregs.cc,v 1.20 2010-10-07 16:39:31 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2010 Stanislav Shwartsman
@@ -961,7 +961,7 @@ Bit32u BX_CPU_C::get_cr4_allow_mask(void)
     allowMask |= BX_CR4_OSFXSR_MASK;
 
   /* OSXMMEXCPT */
-  if (BX_CPU_SUPPORT_ISA_EXTENSION(BX_CPU_SSE))
+  if (bx_cpuid_support_sse())
     allowMask |= BX_CR4_OSXMMEXCPT_MASK;
 #endif
 
@@ -983,7 +983,7 @@ Bit32u BX_CPU_C::get_cr4_allow_mask(void)
 
 #if BX_CPU_LEVEL >= 6
   /* OSXSAVE */
-  if (BX_CPU_SUPPORT_ISA_EXTENSION(BX_CPU_XSAVE))
+  if (bx_cpuid_support_xsave())
     allowMask |= BX_CR4_OSXSAVE_MASK;
 #endif
 

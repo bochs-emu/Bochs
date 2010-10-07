@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_move.cc,v 1.119 2010-09-24 21:15:16 sshwarts Exp $
+// $Id: sse_move.cc,v 1.120 2010-10-07 16:39:31 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003-2009 Stanislav Shwartsman
@@ -159,7 +159,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FXSAVE(bxInstruction_c *i)
 
   BX_DEBUG(("FXSAVE: save FPU/MMX/SSE state"));
 
-  if (BX_CPU_SUPPORT_ISA_EXTENSION(BX_CPU_MMX))
+  if (bx_cpuid_support_mmx())
   {
     if(BX_CPU_THIS_PTR cr0.get_TS())
       exception(BX_NM_EXCEPTION, 0);
@@ -224,7 +224,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FXSAVE(bxInstruction_c *i)
     xmm.xmm32u(1) =         (BX_CPU_THIS_PTR the_i387.fds);
   }
 
-  if (BX_CPU_SUPPORT_ISA_EXTENSION(BX_CPU_SSE)) {
+  if (bx_cpuid_support_sse()) {
     xmm.xmm32u(2) = BX_MXCSR_REGISTER;
     xmm.xmm32u(3) = MXCSR_MASK;
   }
@@ -253,7 +253,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FXSAVE(bxInstruction_c *i)
 #endif
 
 
-  if (BX_CPU_SUPPORT_ISA_EXTENSION(BX_CPU_SSE))
+  if (bx_cpuid_support_sse())
   {
     /* store XMM register file */
     for(index=0; index < BX_XMM_REGISTERS; index++)
@@ -279,7 +279,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FXRSTOR(bxInstruction_c *i)
 
   BX_DEBUG(("FXRSTOR: restore FPU/MMX/SSE state"));
 
-  if (BX_CPU_SUPPORT_ISA_EXTENSION(BX_CPU_MMX)) {
+  if (bx_cpuid_support_mmx()) {
     if(BX_CPU_THIS_PTR cr0.get_TS())
       exception(BX_NM_EXCEPTION, 0);
 
@@ -329,7 +329,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FXRSTOR(bxInstruction_c *i)
     BX_CPU_THIS_PTR the_i387.fds = xmm.xmm16u(2);
   }
 
-  if(/* BX_CPU_THIS_PTR cr4.get_OSFXSR() && */BX_CPU_SUPPORT_ISA_EXTENSION(BX_CPU_SSE))
+  if(/* BX_CPU_THIS_PTR cr4.get_OSFXSR() && */ bx_cpuid_support_sse())
   {
     Bit32u new_mxcsr = xmm.xmm32u(2);
     if(new_mxcsr & ~MXCSR_MASK)
@@ -369,7 +369,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FXRSTOR(bxInstruction_c *i)
 
   /* If the OSFXSR bit in CR4 is not set, the FXRSTOR instruction does
      not restore the states of the XMM and MXCSR registers. */
-  if(BX_CPU_THIS_PTR cr4.get_OSFXSR() && BX_CPU_SUPPORT_ISA_EXTENSION(BX_CPU_SSE))
+  if(BX_CPU_THIS_PTR cr4.get_OSFXSR() && bx_cpuid_support_sse())
   {
     /* load XMM register file */
     for(index=0; index < BX_XMM_REGISTERS; index++)
