@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: opcodes.inc,v 1.40 2010-07-22 15:12:07 sshwarts Exp $
+// $Id: opcodes.inc,v 1.41 2010-10-11 15:33:11 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005-2009 Stanislav Shwartsman
@@ -98,7 +98,7 @@ Ia_andw_Ew_Gw = { "and", "andw", Ew, Gw, XX, XX, 0 },
 Ia_andw_Ew_Iw = { "and", "andw", Ew, Iw, XX, XX, 0 },
 Ia_andw_Ew_sIb = { "and", "andw", Ew, sIbw, XX, XX, 0 },
 Ia_andw_Gw_Ew = { "and", "andw", Gw, Ew, XX, XX, 0 },
-Ia_arpl_Ew_Rw = { "arpl", "arpl", Ew, Rw, XX, XX, 0 },
+Ia_arpl_Ew_Gw = { "arpl", "arpl", Ew, Gw, XX, XX, 0 },
 Ia_blendpd_Vpd_Wpd_Ib = { "blendpd", "blendpd", Vpd, Wpd, Ib, XX, IA_SSE4_1 },
 Ia_blendps_Vps_Wps_Ib = { "blendps", "blendps", Vps, Wps, Ib, XX, IA_SSE4_1 },
 Ia_blendvpd_Vpd_Wpd = { "blendvpd", "blendvpd", Vpd, Wpd, XX, XX, IA_SSE4_1 },

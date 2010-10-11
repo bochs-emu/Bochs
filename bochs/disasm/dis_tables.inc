@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dis_tables.inc,v 1.36 2010-07-22 15:12:07 sshwarts Exp $
+// $Id: dis_tables.inc,v 1.37 2010-10-11 15:33:11 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005-2010 Stanislav Shwartsman
@@ -741,7 +741,7 @@ static BxDisasmOpcodeTable_t BxDisasmOpcodes16[256*2] = {
   /* 60 */ { 0, &Ia_pushaw     },
   /* 61 */ { 0, &Ia_popaw      },
   /* 62 */ { 0, &Ia_boundw_Gw_Ma },
-  /* 63 */ { 0, &Ia_arpl_Ew_Rw },
+  /* 63 */ { 0, &Ia_arpl_Ew_Gw },
   /* 64 */ { 0, &Ia_prefix_fs  },   // FS:
   /* 65 */ { 0, &Ia_prefix_gs  },   // GS:
   /* 66 */ { 0, &Ia_prefix_osize }, // OSIZE:
@@ -1262,7 +1262,7 @@ static BxDisasmOpcodeTable_t BxDisasmOpcodes32[256*2] = {
   /* 60 */ { 0, &Ia_pushal        },
   /* 61 */ { 0, &Ia_popal         },
   /* 62 */ { 0, &Ia_boundl_Gd_Ma  },
-  /* 63 */ { 0, &Ia_arpl_Ew_Rw    },
+  /* 63 */ { 0, &Ia_arpl_Ew_Gw    },
   /* 64 */ { 0, &Ia_prefix_fs     },   // FS:
   /* 65 */ { 0, &Ia_prefix_gs     },   // GS:
   /* 66 */ { 0, &Ia_prefix_osize  },   // OSIZE:
