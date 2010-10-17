@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.281 2010-07-16 21:03:52 sshwarts Exp $
+$Id: user.dbk,v 1.282 2010-10-17 19:50:46 vruppert Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -3926,7 +3926,7 @@ With the mouse type option you can select the type of mouse to emulate.
 The default value is 'ps2'. The other choices are 'imps2' (wheel mouse
 on PS/2), 'serial', 'serial_wheel' and 'serial_msys' (one com port requires
 setting 'mode=mouse', see <link linkend="bochsopt-com">com option</link>).
-To connect a mouse to an USB port, see the <link linkend="bochsopt-usb_uhci">usb_uhci</link>
+To connect a mouse to an USB port, see the <link linkend="bochsopt-usb-uhci">usb_uhci</link>
 or 'usb_ohci' option (requires PCI and USB support).
 </para>
 <para><command>enabled</command></para>
@@ -4000,7 +4000,7 @@ located in the <constant>bochs/host/linux/pcidev/</constant> directory.
 </para>
 </section>
 
-<section id="bochsopt-usb_uhci"><title>usb_uhci</title>
+<section id="bochsopt-usb-uhci"><title>usb_uhci</title>
 <para>
 Examples:
 <screen>
@@ -4045,7 +4045,7 @@ PCI support must be enabled.
 </para></note>
 </section>
 
-<section id="bochsopt-usb_ohci"><title>usb_ohci</title>
+<section id="bochsopt-usb-ohci"><title>usb_ohci</title>
 <para>
 Example:
 <screen>
@@ -4053,7 +4053,7 @@ Example:
 </screen>
 This option controls the presence of the USB OHCI host controller with a
 2-port hub. The portX option accepts the same device types with the same
-syntax as the UHCI controller (see the <link linkend="bochsopt-usb_uhci">usb_uhci option</link>).
+syntax as the UHCI controller (see the <link linkend="bochsopt-usb-uhci">usb_uhci option</link>).
 The OHCI HC must be assigned to a PCI slot.
 </para>
 </section>
