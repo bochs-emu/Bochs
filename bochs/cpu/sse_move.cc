@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_move.cc,v 1.120 2010-10-07 16:39:31 sshwarts Exp $
+// $Id: sse_move.cc,v 1.121 2010-10-18 22:19:45 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003-2009 Stanislav Shwartsman
@@ -202,6 +202,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FXSAVE(bxInstruction_c *i)
 
   write_virtual_dqword_aligned(i->seg(), eaddr, (Bit8u *) &xmm);
 
+  bx_address asize_mask = i->asize_mask();
+
   /*
    * x87 FPU Instruction Operand (Data) Pointer Offset (32/64 bits)
    * The contents of this field differ depending on the current
@@ -233,7 +235,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FXSAVE(bxInstruction_c *i)
     xmm.xmm32u(3) = 0;
   }
 
-  write_virtual_dqword(i->seg(), eaddr + 16, (Bit8u *) &xmm);
+  write_virtual_dqword(i->seg(), (eaddr + 16) & asize_mask, (Bit8u *) &xmm);
 
   /* store i387 register file */
   for(index=0; index < 8; index++)
@@ -244,7 +246,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FXSAVE(bxInstruction_c *i)
     xmm.xmm64u(1) = 0;
     xmm.xmm16u(4) = fp.exp;
 
-    write_virtual_dqword(i->seg(), eaddr+index*16+32, (Bit8u *) &xmm);
+    write_virtual_dqword(i->seg(), (eaddr+index*16+32) & asize_mask, (Bit8u *) &xmm);
   }
 
 #if BX_SUPPORT_X86_64
@@ -261,7 +263,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FXSAVE(bxInstruction_c *i)
       // save XMM8-XMM15 only in 64-bit mode
       if (index < 8 || long64_mode()) {
          write_virtual_dqword(i->seg(),
-             eaddr+index*16+160, (Bit8u *)(&BX_READ_XMM_REG(index)));
+             (eaddr+index*16+160) & asize_mask, (Bit8u *)(&BX_READ_XMM_REG(index)));
       }
     }
   }
@@ -291,6 +293,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FXRSTOR(bxInstruction_c *i)
 
   read_virtual_dqword_aligned(i->seg(), eaddr, (Bit8u *) &xmm);
 
+  bx_address asize_mask = i->asize_mask();
+
   BX_CPU_THIS_PTR the_i387.cwd =  xmm.xmm16u(0);
   BX_CPU_THIS_PTR the_i387.swd =  xmm.xmm16u(1);
   BX_CPU_THIS_PTR the_i387.tos = (xmm.xmm16u(1) >> 11) & 0x07;
@@ -315,7 +319,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FXRSTOR(bxInstruction_c *i)
   Bit32u tag_byte = xmm.xmmubyte(4);
 
   /* Restore x87 FPU DP */
-  read_virtual_dqword(i->seg(), eaddr + 16, (Bit8u *) &xmm);
+  read_virtual_dqword(i->seg(), (eaddr + 16) & asize_mask, (Bit8u *) &xmm);
 
 #if BX_SUPPORT_X86_64
   if (i->os64L()) {
@@ -342,8 +346,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FXRSTOR(bxInstruction_c *i)
   for(index=0; index < 8; index++)
   {
     floatx80 reg;
-    reg.fraction = read_virtual_qword(i->seg(), eaddr+index*16+32);
-    reg.exp      = read_virtual_word (i->seg(), eaddr+index*16+40);
+    reg.fraction = read_virtual_qword(i->seg(), (eaddr+index*16+32) & asize_mask);
+    reg.exp      = read_virtual_word (i->seg(), (eaddr+index*16+40) & asize_mask);
 
     // update tag only if it is not empty
     BX_WRITE_FPU_REGISTER_AND_TAG(reg,
@@ -377,7 +381,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FXRSTOR(bxInstruction_c *i)
       // restore XMM8-XMM15 only in 64-bit mode
       if (index < 8 || long64_mode()) {
          read_virtual_dqword(i->seg(),
-             eaddr+index*16+160, (Bit8u *)(&BX_READ_XMM_REG(index)));
+             (eaddr+index*16+160) & asize_mask, (Bit8u *)(&BX_READ_XMM_REG(index)));
 
       }
     }

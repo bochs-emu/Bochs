@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: access.cc,v 1.127 2010-07-22 20:12:24 sshwarts Exp $
+// $Id: access.cc,v 1.128 2010-10-18 22:19:44 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2005-2009  The Bochs Project
@@ -24,6 +24,15 @@
 #include "bochs.h"
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
+
+bx_address bx_asize_mask[] = {
+  0xffff,                         // as16 (asize = '00)
+  0xffffffff,                     // as32 (asize = '01)
+#if BX_SUPPORT_X86_64
+  BX_CONST64(0xffffffffffffffff), // as64 (asize = '10)
+  BX_CONST64(0xffffffffffffffff)  // as64 (asize = '11)
+#endif
+};
 
   bx_bool BX_CPP_AttrRegparmN(3)
 BX_CPU_C::write_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned length)

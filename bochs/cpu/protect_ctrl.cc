@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: protect_ctrl.cc,v 1.103 2010-04-04 19:56:55 sshwarts Exp $
+// $Id: protect_ctrl.cc,v 1.104 2010-10-18 22:19:45 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2010  The Bochs Project
@@ -716,7 +716,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SGDT_Ms(bxInstruction_c *i)
   Bit32u eaddr = (Bit32u) BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
   write_virtual_word_32(i->seg(), eaddr, limit_16);
-  write_virtual_dword_32(i->seg(), eaddr+2, base_32);
+  write_virtual_dword_32(i->seg(), (eaddr+2) & i->asize_mask(), base_32);
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::SIDT_Ms(bxInstruction_c *i)
@@ -735,7 +735,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SIDT_Ms(bxInstruction_c *i)
   Bit32u eaddr = (Bit32u) BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
   write_virtual_word_32(i->seg(), eaddr, limit_16);
-  write_virtual_dword_32(i->seg(), eaddr+2, base_32);
+  write_virtual_dword_32(i->seg(), (eaddr+2) & i->asize_mask(), base_32);
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::LGDT_Ms(bxInstruction_c *i)
@@ -761,7 +761,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LGDT_Ms(bxInstruction_c *i)
   Bit32u eaddr = (Bit32u) BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
   Bit16u limit_16 = read_virtual_word_32(i->seg(), eaddr);
-  Bit32u base_32 = read_virtual_dword_32(i->seg(), eaddr + 2);
+  Bit32u base_32 = read_virtual_dword_32(i->seg(), (eaddr + 2) & i->asize_mask());
 
   if (i->os32L() == 0) base_32 &= 0x00ffffff; /* ignore upper 8 bits */
 
@@ -791,8 +791,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LIDT_Ms(bxInstruction_c *i)
 
   Bit32u eaddr = (Bit32u) BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  Bit32u base_32 = read_virtual_dword_32(i->seg(), eaddr + 2);
   Bit16u limit_16 = read_virtual_word_32(i->seg(), eaddr);
+  Bit32u base_32 = read_virtual_dword_32(i->seg(), (eaddr + 2) & i->asize_mask());
 
   if (i->os32L() == 0) base_32 &= 0x00ffffff; /* ignore upper 8 bits */
 
@@ -818,7 +818,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SGDT64_Ms(bxInstruction_c *i)
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
   write_virtual_word_64(i->seg(), eaddr, limit_16);
-  write_virtual_qword_64(i->seg(), eaddr+2, base_64);
+  write_virtual_qword_64(i->seg(), (eaddr+2) & i->asize_mask(), base_64);
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::SIDT64_Ms(bxInstruction_c *i)
@@ -837,7 +837,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SIDT64_Ms(bxInstruction_c *i)
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
   write_virtual_word_64(i->seg(), eaddr, limit_16);
-  write_virtual_qword_64(i->seg(), eaddr+2, base_64);
+  write_virtual_qword_64(i->seg(), (eaddr+2) & i->asize_mask(), base_64);
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::LGDT64_Ms(bxInstruction_c *i)
@@ -857,7 +857,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LGDT64_Ms(bxInstruction_c *i)
 
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  Bit64u base_64 = read_virtual_qword_64(i->seg(), eaddr + 2);
+  Bit64u base_64 = read_virtual_qword_64(i->seg(), (eaddr + 2) & i->asize_mask());
   if (! IsCanonical(base_64)) {
     BX_ERROR(("LGDT64_Ms: loaded base64 address is not in canonical form!"));
     exception(BX_GP_EXCEPTION, 0);
@@ -885,7 +885,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LIDT64_Ms(bxInstruction_c *i)
 
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  Bit64u base_64 = read_virtual_qword_64(i->seg(), eaddr + 2);
+  Bit64u base_64 = read_virtual_qword_64(i->seg(), (eaddr + 2) & i->asize_mask());
   if (! IsCanonical(base_64)) {
     BX_ERROR(("LIDT64_Ms: loaded base64 address is not in canonical form!"));
     exception(BX_GP_EXCEPTION, 0);

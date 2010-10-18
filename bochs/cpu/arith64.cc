@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith64.cc,v 1.60 2010-03-14 15:51:26 sshwarts Exp $
+// $Id: arith64.cc,v 1.61 2010-10-18 22:19:45 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -566,7 +566,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPXCHG16B(bxInstruction_c *i)
 
   // check write permission for following write
   op1_64_lo = read_RMW_virtual_qword_64(i->seg(), eaddr);
-  op1_64_hi = read_RMW_virtual_qword_64(i->seg(), eaddr + 8);
+  op1_64_hi = read_RMW_virtual_qword_64(i->seg(), (eaddr + 8) & i->asize_mask());
 
   diff  = RAX - op1_64_lo;
   diff |= RDX - op1_64_hi;

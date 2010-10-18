@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.280 2010-09-25 10:17:04 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.281 2010-10-18 22:19:45 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2010  The Bochs Project
@@ -1785,7 +1785,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo32[512*2*2] = {
   /* FC /dm */ { 0, BX_IA_CLD },
   /* FD /dr */ { 0, BX_IA_STD },
   /* FD /dm */ { 0, BX_IA_STD },
-  /* FE /dr */ { BxGroup5, BX_IA_ERROR, BxOpcodeInfoG4R },
+  /* FE /dr */ { BxGroup4, BX_IA_ERROR, BxOpcodeInfoG4R },
   /* FE /dm */ { BxGroup4, BX_IA_ERROR, BxOpcodeInfoG4M },
   /* FF /dr */ { BxGroup5, BX_IA_ERROR, BxOpcodeInfoG5dR },
   /* FF /dm */ { BxGroup5, BX_IA_ERROR, BxOpcodeInfoG5dM },

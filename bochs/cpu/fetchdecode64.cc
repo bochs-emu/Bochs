@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.276 2010-09-25 10:17:04 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.277 2010-10-18 22:19:45 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2010  The Bochs Project
@@ -3332,7 +3332,7 @@ fetch_b1:
       return(-1);
     case 0x67: // AddrSize
       rex_prefix = 0;
-      i->setAs64B(0);
+      i->clearAs64();
       if (remain != 0) {
         goto fetch_b1;
       }

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer32.cc,v 1.89 2010-03-14 15:51:26 sshwarts Exp $
+// $Id: ctrl_xfer32.cc,v 1.90 2010-10-18 22:19:45 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -282,7 +282,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CALL32_Ep(bxInstruction_c *i)
 
   /* pointer, segment address pair */
   op1_32 = read_virtual_dword(i->seg(), eaddr);
-  cs_raw = read_virtual_word (i->seg(), eaddr+4);
+  cs_raw = read_virtual_word (i->seg(), (eaddr+4) & i->asize_mask());
 
   RSP_SPECULATIVE;
 
@@ -597,7 +597,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::JMP32_Ep(bxInstruction_c *i)
 
   /* pointer, segment address pair */
   op1_32 = read_virtual_dword(i->seg(), eaddr);
-  cs_raw = read_virtual_word (i->seg(), eaddr+4);
+  cs_raw = read_virtual_word (i->seg(), (eaddr+4) & i->asize_mask());
 
   // jump_protected doesn't affect RSP so it is RSP safe
   if (protected_mode()) {

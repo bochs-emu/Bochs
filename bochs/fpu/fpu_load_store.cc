@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu_load_store.cc,v 1.40 2010-02-25 22:04:31 sshwarts Exp $
+// $Id: fpu_load_store.cc,v 1.41 2010-10-18 22:19:45 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003-2009 Stanislav Shwartsman
@@ -130,7 +130,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLD_EXTENDED_REAL(bxInstruction_c *i)
 
   RMAddr(i) = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
   result.fraction = read_virtual_qword(i->seg(), RMAddr(i));
-  result.exp      = read_virtual_word (i->seg(), RMAddr(i)+8);
+  result.exp      = read_virtual_word(i->seg(), (RMAddr(i)+8) & i->asize_mask());
 
   FPU_update_last_instruction(i);
 
@@ -217,7 +217,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FBLD_PACKED_BCD(bxInstruction_c *i)
   BX_CPU_THIS_PTR prepareFPU(i);
 
   RMAddr(i) = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-  Bit16u hi2 = read_virtual_word (i->seg(), RMAddr(i) + 8);
+  Bit16u hi2 = read_virtual_word(i->seg(), (RMAddr(i) + 8) & i->asize_mask());
   Bit64u lo8 = read_virtual_qword(i->seg(), RMAddr(i));
 
   FPU_update_last_instruction(i);
@@ -389,8 +389,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FSTP_EXTENDED_REAL(bxInstruction_c *i)
      save_reg = BX_READ_FPU_REG(0);
   }
 
-  write_virtual_qword(i->seg(), RMAddr(i),     save_reg.fraction);
-  write_virtual_word (i->seg(), RMAddr(i) + 8, save_reg.exp);
+  write_virtual_qword(i->seg(), RMAddr(i), save_reg.fraction);
+  write_virtual_word(i->seg(), (RMAddr(i) + 8) & i->asize_mask(), save_reg.exp);
 
   BX_CPU_THIS_PTR the_i387.FPU_pop();
 }
@@ -593,8 +593,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FBSTP_PACKED_BCD(bxInstruction_c *i)
   swap_values16u(x87_sw, FPU_PARTIAL_STATUS);
 
   // write packed bcd to memory
-  write_virtual_qword(i->seg(), RMAddr(i),     save_reg_lo);
-  write_virtual_word (i->seg(), RMAddr(i) + 8, save_reg_hi);
+  write_virtual_qword(i->seg(), RMAddr(i), save_reg_lo);
+  write_virtual_word(i->seg(), (RMAddr(i) + 8) & i->asize_mask(), save_reg_hi);
 
   FPU_PARTIAL_STATUS = x87_sw;
 

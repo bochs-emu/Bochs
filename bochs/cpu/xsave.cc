@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: xsave.cc,v 1.28 2010-09-24 21:15:16 sshwarts Exp $
+// $Id: xsave.cc,v 1.29 2010-10-18 22:19:45 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008-2009 Stanislav Shwartsman
@@ -44,7 +44,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVE(bxInstruction_c *i)
   BX_DEBUG(("XSAVE: save processor state XCR0=0x%08x", BX_CPU_THIS_PTR xcr0.get32()));
 
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-
   bx_address laddr = get_laddr(i->seg(), eaddr);
 
   if (laddr & 0x3f) {
@@ -52,11 +51,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVE(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0);
   }
 
+  bx_address asize_mask = i->asize_mask();
+
   //
   // We will go feature-by-feature and not run over all XCR0 bits
   //
 
-  Bit64u header1 = read_virtual_qword(i->seg(), eaddr + 512);
+  Bit64u header1 = read_virtual_qword(i->seg(), (eaddr + 512) & asize_mask);
 
   /////////////////////////////////////////////////////////////////////////////
   if (BX_CPU_THIS_PTR xcr0.get_FPU() && (EAX & BX_XCR0_FPU_MASK) != 0)
@@ -104,13 +105,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVE(bxInstruction_c *i)
      */
 #if BX_SUPPORT_X86_64
     if (i->os64L()) {
-      write_virtual_qword(i->seg(), eaddr + 16, BX_CPU_THIS_PTR the_i387.fdp);
+      write_virtual_qword(i->seg(), (eaddr + 16) & asize_mask, BX_CPU_THIS_PTR the_i387.fdp);
     }
     else
 #endif
     {
-      write_virtual_dword(i->seg(), eaddr + 16, (Bit32u) BX_CPU_THIS_PTR the_i387.fdp);
-      write_virtual_dword(i->seg(), eaddr + 20, (Bit32u) BX_CPU_THIS_PTR the_i387.fds);
+      write_virtual_dword(i->seg(), (eaddr + 16) & asize_mask, (Bit32u) BX_CPU_THIS_PTR the_i387.fdp);
+      write_virtual_dword(i->seg(), (eaddr + 20) & asize_mask, (Bit32u) BX_CPU_THIS_PTR the_i387.fds);
     }
     /* do not touch MXCSR state */
 
@@ -123,7 +124,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVE(bxInstruction_c *i)
       xmm.xmm64u(1) = 0;
       xmm.xmm16u(4) = fp.exp;
 
-      write_virtual_dqword(i->seg(), eaddr+index*16+32, (Bit8u *) &xmm);
+      write_virtual_dqword(i->seg(), (eaddr+index*16+32) & asize_mask, (Bit8u *) &xmm);
     }
 
     header1 |= BX_XCR0_FPU_MASK;
@@ -132,8 +133,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVE(bxInstruction_c *i)
   /////////////////////////////////////////////////////////////////////////////
   if (BX_CPU_THIS_PTR xcr0.get_SSE() && (EAX & BX_XCR0_SSE_MASK) != 0)
   {
-    write_virtual_dword(i->seg(), eaddr + 24, BX_MXCSR_REGISTER);
-    write_virtual_dword(i->seg(), eaddr + 28, MXCSR_MASK);
+    write_virtual_dword(i->seg(), (eaddr + 24) & asize_mask, BX_MXCSR_REGISTER);
+    write_virtual_dword(i->seg(), (eaddr + 28) & asize_mask, MXCSR_MASK);
 
     /* store XMM register file */
     for(index=0; index < BX_XMM_REGISTERS; index++)
@@ -141,7 +142,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVE(bxInstruction_c *i)
       // save XMM8-XMM15 only in 64-bit mode
       if (index < 8 || long64_mode()) {
         write_virtual_dqword(i->seg(),
-           eaddr+index*16+160, (Bit8u *)(&BX_READ_XMM_REG(index)));
+           (eaddr+index*16+160) & asize_mask, (Bit8u *)(&BX_READ_XMM_REG(index)));
       }
     }
 
@@ -149,7 +150,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVE(bxInstruction_c *i)
   }
 
   // always update header to 'dirty' state
-  write_virtual_qword(i->seg(), eaddr + 512, header1);
+  write_virtual_qword(i->seg(), (eaddr + 512) & asize_mask, header1);
 #endif
 }
 
@@ -172,9 +173,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0);
   }
 
-  Bit64u header1 = read_virtual_qword(i->seg(), eaddr + 512);
-  Bit64u header2 = read_virtual_qword(i->seg(), eaddr + 520);
-  Bit64u header3 = read_virtual_qword(i->seg(), eaddr + 528);
+  bx_address asize_mask = i->asize_mask();
+
+  Bit64u header1 = read_virtual_qword(i->seg(), (eaddr + 512) & asize_mask);
+  Bit64u header2 = read_virtual_qword(i->seg(), (eaddr + 520) & asize_mask);
+  Bit64u header3 = read_virtual_qword(i->seg(), (eaddr + 528) & asize_mask);
 
   if ((~BX_CPU_THIS_PTR xcr0.get32() & header1) != 0) {
     BX_ERROR(("XRSTOR: Broken header state"));
@@ -221,7 +224,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
       Bit32u tag_byte = xmm.xmmubyte(4);
 
       /* Restore x87 FPU DP */
-      read_virtual_dqword(i->seg(), eaddr + 16, (Bit8u *) &xmm);
+      read_virtual_dqword(i->seg(), (eaddr + 16) & asize_mask, (Bit8u *) &xmm);
 
 #if BX_SUPPORT_X86_64
       if (i->os64L()) {
@@ -239,8 +242,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
       for(index=0; index < 8; index++)
       {
         floatx80 reg;
-        reg.fraction = read_virtual_qword(i->seg(), eaddr+index*16+32);
-        reg.exp      = read_virtual_word (i->seg(), eaddr+index*16+40);
+        reg.fraction = read_virtual_qword(i->seg(), (eaddr+index*16+32) & asize_mask);
+        reg.exp      = read_virtual_word (i->seg(), (eaddr+index*16+40) & asize_mask);
 
         // update tag only if it is not empty
         BX_WRITE_FPU_REGISTER_AND_TAG(reg,
@@ -274,7 +277,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
   /////////////////////////////////////////////////////////////////////////////
   if (BX_CPU_THIS_PTR xcr0.get_SSE() && (EAX & BX_XCR0_SSE_MASK) != 0)
   {
-    Bit32u new_mxcsr = read_virtual_dword(i->seg(), eaddr + 24);
+    Bit32u new_mxcsr = read_virtual_dword(i->seg(), (eaddr + 24) & asize_mask);
     if(new_mxcsr & ~MXCSR_MASK)
        exception(BX_GP_EXCEPTION, 0);
     BX_MXCSR_REGISTER = new_mxcsr;
@@ -286,7 +289,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
          // restore XMM8-XMM15 only in 64-bit mode
          if (index < 8 || long64_mode()) {
            read_virtual_dqword(i->seg(),
-               eaddr+index*16+160, (Bit8u *)(&BX_READ_XMM_REG(index)));
+               (eaddr+index*16+160) & asize_mask, (Bit8u *)(&BX_READ_XMM_REG(index)));
          }
       }
     }

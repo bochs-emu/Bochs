@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bit32.cc,v 1.18 2010-02-25 22:04:30 sshwarts Exp $
+// $Id: bit32.cc,v 1.19 2010-10-18 22:19:45 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -82,15 +82,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BT_EdGdM(bxInstruction_c *i)
   index = op2_32 & 0x1f;
   displacement32 = ((Bit32s) (op2_32&0xffffffe0)) / 32;
   op1_addr = eaddr + 4 * displacement32;
-  if (! i->as32L())
-    op1_addr = (Bit16u) op1_addr;
-#if BX_SUPPORT_X86_64
-  else if (! i->as64L())
-    op1_addr = (Bit32u) op1_addr;
-#endif
 
   /* pointer, segment address pair */
-  op1_32 = read_virtual_dword(i->seg(), op1_addr);
+  op1_32 = read_virtual_dword(i->seg(), op1_addr & i->asize_mask());
 
   set_CF((op1_32 >> index) & 0x01);
 }
@@ -119,15 +113,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BTS_EdGdM(bxInstruction_c *i)
   index = op2_32 & 0x1f;
   displacement32 = ((Bit32s) (op2_32&0xffffffe0)) / 32;
   op1_addr = eaddr + 4 * displacement32;
-  if (! i->as32L())
-    op1_addr = (Bit16u) op1_addr;
-#if BX_SUPPORT_X86_64
-  else if (! i->as64L())
-    op1_addr = (Bit32u) op1_addr;
-#endif
 
   /* pointer, segment address pair */
-  op1_32 = read_RMW_virtual_dword(i->seg(), op1_addr);
+  op1_32 = read_RMW_virtual_dword(i->seg(), op1_addr & i->asize_mask());
 
   bit_i = (op1_32 >> index) & 0x01;
   op1_32 |= (((Bit32u) 1) << index);
@@ -163,15 +151,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BTR_EdGdM(bxInstruction_c *i)
   index = op2_32 & 0x1f;
   displacement32 = ((Bit32s) (op2_32&0xffffffe0)) / 32;
   op1_addr = eaddr + 4 * displacement32;
-  if (! i->as32L())
-    op1_addr = (Bit16u) op1_addr;
-#if BX_SUPPORT_X86_64
-  else if (! i->as64L())
-    op1_addr = (Bit32u) op1_addr;
-#endif
 
   /* pointer, segment address pair */
-  op1_32 = read_RMW_virtual_dword(i->seg(), op1_addr);
+  op1_32 = read_RMW_virtual_dword(i->seg(), op1_addr & i->asize_mask());
 
   bx_bool temp_cf = (op1_32 >> index) & 0x01;
   op1_32 &= ~(((Bit32u) 1) << index);
@@ -209,14 +191,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BTC_EdGdM(bxInstruction_c *i)
 
   displacement32 = ((Bit32s) (op2_32 & 0xffffffe0)) / 32;
   op1_addr = eaddr + 4 * displacement32;
-  if (! i->as32L())
-    op1_addr = (Bit16u) op1_addr;
-#if BX_SUPPORT_X86_64
-  else if (! i->as64L())
-    op1_addr = (Bit32u) op1_addr;
-#endif
 
-  op1_32 = read_RMW_virtual_dword(i->seg(), op1_addr);
+  op1_32 = read_RMW_virtual_dword(i->seg(), op1_addr & i->asize_mask());
   bx_bool temp_CF = (op1_32 >> index_32) & 0x01;
   op1_32 ^= (((Bit32u) 1) << index_32);  /* toggle bit */
   set_CF(temp_CF);
