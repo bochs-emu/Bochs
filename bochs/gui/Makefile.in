@@ -233,7 +233,7 @@ sdl.o: sdl.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../memory/memory.h ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h \
   ../gui/gui.h ../instrument/stubs/instrument.h keymap.h ../iodev/iodev.h \
   ../iodev/vga.h icon_bochs.h sdl.h sdlkeys.h
-paramtree.o: paramtree.cc ../bochs.h ../config.h ../osdep.h \
+paramtree.o: paramtree.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../gui/paramtree.h ../memory/memory.h \
   ../pc_system.h ../plugin.h ../extplugin.h ../gui/gui.h \
