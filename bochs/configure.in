@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.439 2010-05-12 14:55:11 sshwarts Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.440 2010-11-01 14:50:18 sshwarts Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -2701,7 +2701,7 @@ AC_ARG_ENABLE(ignore-bad-msr,
    AC_MSG_RESULT(no)
   ])
 
-AC_MSG_CHECKING(for long mode 1G pages support)
+AC_MSG_CHECKING(for long mode 1G pages support (deprecated))
 AC_ARG_ENABLE(1g-pages,
   [  --enable-1g-pages                 support for 1G pages in long mode (deprecated)],
   [AC_MSG_RESULT($enableval)

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: osdep.h,v 1.36 2009-12-04 20:02:12 sshwarts Exp $
+// $Id: osdep.h,v 1.37 2010-11-01 14:50:18 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -62,8 +62,12 @@ extern "C" {
 #endif
 
 // always return regular file.
+#ifndef S_ISREG
 #  define S_ISREG(m)      (((m) & S_IFMT) == S_IFREG)
+#endif
+#ifndef S_ISCHR
 #  define S_ISCHR(m)      (((m) & S_IFMT) == S_IFCHR)
+#endif
 
 // win32 has snprintf though with different name.
 #define snprintf _snprintf
