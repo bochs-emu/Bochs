@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32paramdlg.cc,v 1.16 2010-04-22 17:30:11 sshwarts Exp $
+// $Id: win32paramdlg.cc,v 1.17 2010-11-01 15:02:14 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Volker Ruppert
@@ -268,7 +268,7 @@ HWND CreateLabel(HWND hDlg, UINT cid, UINT xpos, UINT ypos, BOOL hide, const cha
   r.bottom = r.top + 15;
   MapDialogRect(hDlg, &r);
   Label = CreateWindow("STATIC", text, WS_CHILD, r.left, r.top, r.right-r.left+1, r.bottom-r.top+1, hDlg, (HMENU)code, NULL, NULL);
-  SendMessage(Label, WM_SETFONT, (UINT)DlgFont, TRUE);
+  SendMessage(Label, WM_SETFONT, (WPARAM)DlgFont, TRUE);
   ShowWindow(Label, hide ? SW_HIDE : SW_SHOW);
   return Label;
 }
@@ -291,7 +291,7 @@ HWND CreateGroupbox(HWND hDlg, UINT cid, UINT xpos, UINT ypos, SIZE size, BOOL h
   }
   Groupbox = CreateWindow("BUTTON", title, BS_GROUPBOX | WS_CHILD, r.left, r.top,
                           r.right-r.left+1, r.bottom-r.top+1, hDlg, (HMENU)code, NULL, NULL);
-  SendMessage(Groupbox, WM_SETFONT, (UINT)DlgFont, TRUE);
+  SendMessage(Groupbox, WM_SETFONT, (WPARAM)DlgFont, TRUE);
   ShowWindow(Groupbox, hide ? SW_HIDE : SW_SHOW);
   return Groupbox;
 }
@@ -321,7 +321,7 @@ HWND CreateTabControl(HWND hDlg, UINT cid, UINT xpos, UINT ypos, SIZE size, BOOL
     }
   }
   TabCtrl_SetCurSel(TabControl, 0);
-  SendMessage(TabControl, WM_SETFONT, (UINT)DlgFont, TRUE);
+  SendMessage(TabControl, WM_SETFONT, (WPARAM)DlgFont, TRUE);
   ShowWindow(TabControl, hide ? SW_HIDE : SW_SHOW);
   return TabControl;
 }
@@ -340,7 +340,7 @@ HWND CreateBrowseButton(HWND hDlg, UINT cid, UINT xpos, UINT ypos, BOOL hide)
   r.bottom = r.top + 14;
   MapDialogRect(hDlg, &r);
   Button = CreateWindow("BUTTON", "Browse...", WS_CHILD, r.left, r.top, r.right-r.left+1, r.bottom-r.top+1, hDlg, (HMENU)code, NULL, NULL);
-  SendMessage(Button, WM_SETFONT, (UINT)DlgFont, TRUE);
+  SendMessage(Button, WM_SETFONT, (WPARAM)DlgFont, TRUE);
   ShowWindow(Button, hide ? SW_HIDE : SW_SHOW);
   return Button;
 }
@@ -362,7 +362,7 @@ HWND CreateCheckbox(HWND hDlg, UINT cid, UINT xpos, UINT ypos, BOOL hide, bx_par
                           hDlg, (HMENU)code, NULL, NULL);
   val = bparam->get();
   SendMessage(Checkbox, BM_SETCHECK, val ? BST_CHECKED : BST_UNCHECKED, 0);
-  SendMessage(Checkbox, WM_SETFONT, (UINT)DlgFont, TRUE);
+  SendMessage(Checkbox, WM_SETFONT, (WPARAM)DlgFont, TRUE);
   ShowWindow(Checkbox, hide ? SW_HIDE : SW_SHOW);
   return Checkbox;
 }
@@ -432,7 +432,7 @@ HWND CreateInput(HWND hDlg, UINT cid, UINT xpos, UINT ypos, BOOL hide, bx_param_
                                  (int)nparam->get_max(), (int)nparam->get_min(), (int)nparam->get());
     ShowWindow(Updown, hide ? SW_HIDE : SW_SHOW);
   }
-  SendMessage(Input, WM_SETFONT, (UINT)DlgFont, TRUE);
+  SendMessage(Input, WM_SETFONT, (WPARAM)DlgFont, TRUE);
   ShowWindow(Input, hide ? SW_HIDE : SW_SHOW);
   return Input;
 }
@@ -459,7 +459,7 @@ HWND CreateCombobox(HWND hDlg, UINT cid, UINT xpos, UINT ypos, BOOL hide, bx_par
     j++;
   } while (choice != NULL);
   SendMessage(Combo, CB_SETCURSEL, (WPARAM)(eparam->get()-eparam->get_min()), 0);
-  SendMessage(Combo, WM_SETFONT, (UINT)DlgFont, TRUE);
+  SendMessage(Combo, WM_SETFONT, (WPARAM)DlgFont, TRUE);
   ShowWindow(Combo, hide ? SW_HIDE : SW_SHOW);
   return Combo;
 }
@@ -822,7 +822,7 @@ static BOOL CALLBACK ParamDlgProc(HWND Window, UINT AMessage, WPARAM wParam, LPA
       break;
     case WM_CTLCOLOREDIT:
       SetTextColor((HDC)wParam, GetSysColor(COLOR_WINDOWTEXT));
-      return (long)GetSysColorBrush(COLOR_WINDOW);
+      return (GetSysColorBrush(COLOR_WINDOW) != NULL);
       break;
   }
   return 0;

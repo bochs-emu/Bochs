@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32.cc,v 1.140 2010-05-24 22:06:17 vruppert Exp $
+// $Id: win32.cc,v 1.141 2010-11-01 15:02:14 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2009  The Bochs Project
@@ -768,7 +768,8 @@ void resize_main_window()
     mainStyle &= ~(WS_CAPTION | WS_BORDER);
     SetWindowLong(stInfo.mainWnd, GWL_STYLE, mainStyle);
     // maybe need to adjust stInfo.simWnd here also?
-    if (saveParent = SetParent(stInfo.mainWnd, desktopWindow)) {
+    saveParent = SetParent(stInfo.mainWnd, desktopWindow);
+    if (saveParent) {
       BX_DEBUG(("Saved parent window"));
       SetWindowPos(stInfo.mainWnd, HWND_TOPMOST, desktop.left, desktop.top,
        desktop.right, desktop.bottom, SWP_SHOWWINDOW);
@@ -871,7 +872,7 @@ VOID CDECL UIThread(PVOID pvoid)
       for (elements = BX_SB_TEXT_ELEMENTS; elements < (BX_MAX_STATUSITEMS+BX_SB_TEXT_ELEMENTS); elements++)
         SB_Edges[elements] = SB_Edges[elements-1] + SIZE_OF_SB_ELEMENT;
       SB_Edges[elements] = -1;
-      SendMessage(hwndSB, SB_SETPARTS, BX_MAX_STATUSITEMS+BX_SB_TEXT_ELEMENTS+1, (long)&SB_Edges);
+      SendMessage(hwndSB, SB_SETPARTS, BX_MAX_STATUSITEMS+BX_SB_TEXT_ELEMENTS+1, (LPARAM)&SB_Edges);
     }
     SetStatusText(0, szMouseEnable, TRUE);
 
@@ -951,14 +952,14 @@ void SetStatusText(int Num, const char *Text, bx_bool active, bx_bool w)
   if ((Num < BX_SB_TEXT_ELEMENTS) || (Num > (BX_MAX_STATUSITEMS+BX_SB_TEXT_ELEMENTS))) {
     StatText[0] = ' ';  // Add space to text in 1st and last items
     lstrcpy(StatText+1, Text);
-    SendMessage(hwndSB, SB_SETTEXT, Num, (long)StatText);
+    SendMessage(hwndSB, SB_SETTEXT, Num, (LPARAM)StatText);
   } else {
     StatText[0] = 9;  // Center the rest
     lstrcpy(StatText+1, Text);
     lstrcpy(SB_Text[Num-BX_SB_TEXT_ELEMENTS], StatText);
     SB_Active[Num-BX_SB_TEXT_ELEMENTS] = active;
     SB_ActiveW[Num-BX_SB_TEXT_ELEMENTS] = w;
-    SendMessage(hwndSB, SB_SETTEXT, Num | SBT_OWNERDRAW, (long)SB_Text[Num-BX_SB_TEXT_ELEMENTS]);
+    SendMessage(hwndSB, SB_SETTEXT, Num | SBT_OWNERDRAW, (LPARAM)SB_Text[Num-BX_SB_TEXT_ELEMENTS]);
   }
   UpdateWindow(hwndSB);
 }
@@ -2018,7 +2019,7 @@ unsigned bx_win32_gui_c::create_bitmap(const unsigned char *bmap, unsigned xdim,
   bx_bitmaps[bx_bitmap_entries].ydim = ydim;
 
   tbab.hInst = NULL;
-  tbab.nID = (UINT)bx_bitmaps[bx_bitmap_entries].bmap;
+  tbab.nID = (UINT_PTR)bx_bitmaps[bx_bitmap_entries].bmap;
   SendMessage(hwndTB, TB_ADDBITMAP, 1, (LPARAM)&tbab);
 
   bx_bitmap_entries++;
