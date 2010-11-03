@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: textconfig.cc,v 1.87 2010-04-04 11:28:33 vruppert Exp $
+// $Id: textconfig.cc,v 1.88 2010-11-03 21:46:09 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  The Bochs Project
@@ -786,7 +786,7 @@ void bx_param_string_c::text_print(FILE *fp)
     for (int i=0; i<maxsize; i++) {
       char eachbyte[16];
       sprintf(eachbyte, "%s%02x", (i>0)?sep_string : "", (unsigned int)0xff&val[i]);
-      strncat(buffer, eachbyte, sizeof(buffer));
+      strncat(buffer, eachbyte, sizeof(eachbyte));
     }
     if (strlen(buffer) > sizeof(buffer)-4) {
       assert(0); // raw byte print buffer is probably overflowing. increase the max or make it dynamic
