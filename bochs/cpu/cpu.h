@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.687 2010-10-07 20:40:01 sshwarts Exp $
+// $Id: cpu.h,v 1.688 2010-11-11 21:41:03 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2010  The Bochs Project
@@ -3416,6 +3416,7 @@ public: // for now...
   BX_SMF void VMexitLoadHostState(void);
   BX_SMF void set_VMCSPTR(Bit64u vmxptr);
   BX_SMF void init_VMCS(void);
+  BX_SMF bx_bool vmcs_field_supported(Bit32u encoding);
   BX_SMF void register_vmx_state(bx_param_c *parent);
 #if BX_SUPPORT_VMX >= 2
   BX_SMF bx_bool is_virtual_apic_page(bx_phy_address paddr) BX_CPP_AttrRegparmN(1);

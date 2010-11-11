@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmx.cc,v 1.70 2010-11-11 16:25:45 sshwarts Exp $
+// $Id: vmx.cc,v 1.71 2010-11-11 21:41:03 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2009-2010 Stanislav Shwartsman
@@ -37,8 +37,11 @@
 
 #define VMCSPTR_VALID() (BX_CPU_THIS_PTR vmcsptr != BX_INVALID_VMCSPTR)
 
-extern bx_bool isValidMSR_PAT(Bit64u pat_msr);
 extern unsigned vmcs_field_offset(Bit32u encoding);
+
+#if BX_SUPPORT_VMX >= 2
+extern bx_bool isValidMSR_PAT(Bit64u pat_msr);
+#endif
 
 ////////////////////////////////////////////////////////////
 // VMCS access
@@ -1623,7 +1626,7 @@ void BX_CPU_C::VMenterInjectEvents(void)
   if (is_INT)
     RIP += vm->vmentry_instr_length;
 
-  BX_ERROR(("VMENTER: Injecting vector 0x%02x (error_code 0x%04x)", vector, error_code));
+  BX_ERROR(("VMENTER: Injecting vector 0x%02x (error_code 0x%08x)", vector, error_code));
 
   if (type == BX_HARDWARE_EXCEPTION) {
     // record exception the same way as BX_CPU_C::exception does
@@ -2569,19 +2572,22 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMREAD(bxInstruction_c *i)
 #endif
   unsigned encoding = BX_READ_32BIT_REG(i->nnn());
 
-  Bit64u field_64;
-
   if (vmcs_field_offset(encoding) == 0xffffffff) {
-    BX_ERROR(("VMREAD: not supported field %08x", encoding));
+    BX_ERROR(("VMREAD: not supported field 0x%08x", encoding));
     VMfail(VMXERR_UNSUPPORTED_VMCS_COMPONENT_ACCESS);
     return;
   }
 
+  Bit64u field_64;
+
   switch(encoding) {
+
+#if BX_SUPPORT_VMX >= 2
     /* VMCS 16-bit control fields */
     /* binary 0000_00xx_xxxx_xxx0 */
     case VMCS_16BIT_CONTROL_VPID:
       // fall through
+#endif
 
     /* VMCS 16-bit guest-state fields */
     /* binary 0000_10xx_xxxx_xxx0 */
@@ -2725,8 +2731,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMREAD(bxInstruction_c *i)
     /* binary 0010_10xx_xxxx_xxx0 */
     case VMCS_64BIT_GUEST_LINK_POINTER:
     case VMCS_64BIT_GUEST_IA32_DEBUGCTL:
-    case VMCS_64BIT_GUEST_IA32_PAT:
 #if BX_SUPPORT_VMX >= 2
+    case VMCS_64BIT_GUEST_IA32_PAT:
     case VMCS_64BIT_GUEST_IA32_EFER:
     case VMCS_64BIT_GUEST_IA32_PDPTE0:
     case VMCS_64BIT_GUEST_IA32_PDPTE1:
@@ -2738,8 +2744,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMREAD(bxInstruction_c *i)
 
     case VMCS_64BIT_GUEST_LINK_POINTER_HI:
     case VMCS_64BIT_GUEST_IA32_DEBUGCTL_HI:
-    case VMCS_64BIT_GUEST_IA32_PAT_HI:
 #if BX_SUPPORT_VMX >= 2
+    case VMCS_64BIT_GUEST_IA32_PAT_HI:
     case VMCS_64BIT_GUEST_IA32_EFER_HI:
     case VMCS_64BIT_GUEST_IA32_PDPTE0_HI:
     case VMCS_64BIT_GUEST_IA32_PDPTE1_HI:
@@ -2751,19 +2757,19 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMREAD(bxInstruction_c *i)
 
     /* VMCS 64-bit host state fields */
     /* binary 0010_11xx_xxxx_xxx0 */
-    case VMCS_64BIT_HOST_IA32_PAT:
 #if BX_SUPPORT_VMX >= 2
+    case VMCS_64BIT_HOST_IA32_PAT:
     case VMCS_64BIT_HOST_IA32_EFER:
-#endif
       field_64 = VMread64(encoding);
       break;
-
-    case VMCS_64BIT_HOST_IA32_PAT_HI:
-#if BX_SUPPORT_VMX >= 2
-    case VMCS_64BIT_HOST_IA32_EFER_HI:
 #endif
+
+#if BX_SUPPORT_VMX >= 2
+    case VMCS_64BIT_HOST_IA32_PAT_HI:
+    case VMCS_64BIT_HOST_IA32_EFER_HI:
       field_64 = VMread32(encoding);
       break;
+#endif
 
     /* VMCS natural width control fields */
     /* binary 0110_00xx_xxxx_xxx0 */
@@ -2829,7 +2835,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMREAD(bxInstruction_c *i)
       break;
 
     default:
-      BX_ERROR(("VMREAD: not supported field %08x", encoding));
+      BX_ERROR(("VMREAD: not supported field 0x%08x", encoding));
       VMfail(VMXERR_UNSUPPORTED_VMCS_COMPONENT_ACCESS);
       return;
   };
@@ -2928,7 +2934,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMWRITE(bxInstruction_c *i)
   }
 
   if (vmcs_field_offset(encoding) == 0xffffffff) {
-    BX_ERROR(("VMWRITE: not supported field %08x", encoding));
+    BX_ERROR(("VMWRITE: not supported field 0x%08x", encoding));
     VMfail(VMXERR_UNSUPPORTED_VMCS_COMPONENT_ACCESS);
     return;
   }
@@ -2936,16 +2942,19 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMWRITE(bxInstruction_c *i)
 /*
   if (VMCS_FIELD_TYPE(encoding) == VMCS_FIELD_TYPE_READ_ONLY)
   {
-     BX_ERROR(("VMWRITE: write to read only field %08x", encoding));
+     BX_ERROR(("VMWRITE: write to read only field 0x%08x", encoding));
      VMfail(VMXERR_VMWRITE_READ_ONLY_VMCS_COMPONENT);
      return;
   }
 */
   switch(encoding) {
+
+#if BX_SUPPORT_VMX >= 2
     /* VMCS 16-bit control fields */
     /* binary 0000_00xx_xxxx_xxx0 */
     case VMCS_16BIT_CONTROL_VPID:
       // fall through
+#endif
 
     /* VMCS 16-bit guest-state fields */
     /* binary 0000_10xx_xxxx_xxx0 */
@@ -3048,8 +3057,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMWRITE(bxInstruction_c *i)
     /* binary 0010_10xx_xxxx_xxx0 */
     case VMCS_64BIT_GUEST_LINK_POINTER_HI:
     case VMCS_64BIT_GUEST_IA32_DEBUGCTL_HI:
-    case VMCS_64BIT_GUEST_IA32_PAT_HI:
 #if BX_SUPPORT_VMX >= 2
+    case VMCS_64BIT_GUEST_IA32_PAT_HI:
     case VMCS_64BIT_GUEST_IA32_EFER_HI:
     case VMCS_64BIT_GUEST_IA32_PDPTE0_HI:
     case VMCS_64BIT_GUEST_IA32_PDPTE1_HI:
@@ -3060,8 +3069,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMWRITE(bxInstruction_c *i)
 
     /* VMCS 64-bit host state fields */
     /* binary 0010_11xx_xxxx_xxx0 */
-    case VMCS_64BIT_HOST_IA32_PAT_HI:
 #if BX_SUPPORT_VMX >= 2
+    case VMCS_64BIT_HOST_IA32_PAT_HI:
     case VMCS_64BIT_HOST_IA32_EFER_HI:
 #endif
       VMwrite32(encoding, val_32);
@@ -3088,8 +3097,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMWRITE(bxInstruction_c *i)
     /* binary 0010_10xx_xxxx_xxx0 */
     case VMCS_64BIT_GUEST_LINK_POINTER:
     case VMCS_64BIT_GUEST_IA32_DEBUGCTL:
-    case VMCS_64BIT_GUEST_IA32_PAT:
 #if BX_SUPPORT_VMX >= 2
+    case VMCS_64BIT_GUEST_IA32_PAT:
     case VMCS_64BIT_GUEST_IA32_EFER:
     case VMCS_64BIT_GUEST_IA32_PDPTE0:
     case VMCS_64BIT_GUEST_IA32_PDPTE1:
@@ -3100,8 +3109,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMWRITE(bxInstruction_c *i)
 
     /* VMCS 64-bit host state fields */
     /* binary 0010_11xx_xxxx_xxx0 */
-    case VMCS_64BIT_HOST_IA32_PAT:
 #if BX_SUPPORT_VMX >= 2
+    case VMCS_64BIT_HOST_IA32_PAT:
     case VMCS_64BIT_HOST_IA32_EFER:
 #endif
       // fall through
@@ -3186,12 +3195,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMWRITE(bxInstruction_c *i)
     case VMCS_IO_RDI:
     case VMCS_IO_RIP:
     case VMCS_GUEST_LINEAR_ADDR:
-      BX_ERROR(("VMWRITE: write to read/only field %08x", encoding));
+      BX_ERROR(("VMWRITE: write to read/only field 0x%08x", encoding));
       VMfail(VMXERR_VMWRITE_READ_ONLY_VMCS_COMPONENT);
       return;
 
     default:
-      BX_ERROR(("VMWRITE: write to not supported field %08x", encoding));
+      BX_ERROR(("VMWRITE: write to not supported field 0x%08x", encoding));
       VMfail(VMXERR_UNSUPPORTED_VMCS_COMPONENT_ACCESS);
       return;
   };

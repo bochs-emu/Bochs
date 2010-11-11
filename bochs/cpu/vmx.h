@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmx.h,v 1.31 2010-04-29 19:34:32 sshwarts Exp $
+// $Id: vmx.h,v 1.32 2010-11-11 21:41:03 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2009 Stanislav Shwartsman
@@ -366,6 +366,8 @@ enum VMX_vmabort_code {
 #define VMCS_HOST_RSP                                      0x00006C14
 #define VMCS_HOST_RIP                                      0x00006C16
 
+#define VMX_HIGHEST_VMCS_ENCODING   (0x2C)
+
 // ===============================
 //  VMCS fields encoding/decoding
 // ===============================
@@ -403,10 +405,10 @@ enum VMX_vmabort_code {
 #define VMCS_VMX_ABORT_FIELD_ADDR                (0x0004)
 #define VMCS_LAUNCH_STATE_FIELD_ADDR             (0x0008)
 
-// invent Bochs CPU VMCS layout - allocate 32 fields of each type
+// invent Bochs CPU VMCS layout - allocate 64 fields of each type
 #define VMCS_DATA_OFFSET                         (0x0010)
 
-#if ((VMCS_DATA_OFFSET + 32*16*4) > VMX_VMCS_AREA_SIZE)
+#if ((VMCS_DATA_OFFSET + 4*(64*15 + VMX_HIGHEST_VMCS_ENCODING)) > VMX_VMCS_AREA_SIZE)
   #error "VMCS area size exceeded !"
 #endif
 
@@ -975,8 +977,6 @@ enum VMX_Activity_State {
 // 09:01 highest index value used for any VMCS encoding
 // 63:10 reserved, must be zero
 //
-
-#define VMX_HIGHEST_VMCS_ENCODING 0x2C
 
 #define VMX_MSR_VMCS_ENUM_LO (VMX_HIGHEST_VMCS_ENCODING)
 #define VMX_MSR_VMCS_ENUM_HI (0x00000000)
