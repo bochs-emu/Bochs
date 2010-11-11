@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu_compare.cc,v 1.29 2010-02-25 22:04:31 sshwarts Exp $
+// $Id: fpu_compare.cc,v 1.30 2010-11-11 15:48:56 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003-2009 Stanislav Shwartsman
@@ -459,7 +459,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FCMOV_ST0_STj(bxInstruction_c *i)
   floatx80 sti_reg = BX_READ_FPU_REG(i->rm());
 
   bx_bool condition = 0;
-  switch(i->nnn())
+  switch(i->nnn() & 3)
   {
      case 0: condition = get_CF(); break;
      case 1: condition = get_ZF(); break;

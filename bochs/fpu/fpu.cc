@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu.cc,v 1.64 2010-10-18 22:19:45 sshwarts Exp $
+// $Id: fpu.cc,v 1.65 2010-11-11 15:48:56 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003-2009 Stanislav Shwartsman
@@ -51,6 +51,12 @@ void BX_CPU_C::FPU_update_last_instruction(bxInstruction_c *i)
      BX_CPU_THIS_PTR the_i387.fds = BX_CPU_THIS_PTR sregs[i->seg()].selector.value;
      BX_CPU_THIS_PTR the_i387.fdp = RMAddr(i);
   }
+#if BX_SUPPORT_X86_64
+  else {
+     // it is possible that rm() register was extended by REX prefix
+     i->setRm(i->rm() & 7);
+  }
+#endif
 }
 
 void BX_CPU_C::FPU_check_pending_exceptions(void)
@@ -69,7 +75,7 @@ void BX_CPU_C::FPU_check_pending_exceptions(void)
 #endif
      {
         // MSDOS compatibility external interrupt (IRQ13)
-        BX_INFO (("math_abort: MSDOS compatibility FPU exception"));
+        BX_INFO(("math_abort: MSDOS compatibility FPU exception"));
         DEV_pic_raise_irq(13);
      }
   }
