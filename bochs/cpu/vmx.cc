@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmx.cc,v 1.69 2010-09-24 21:15:16 sshwarts Exp $
+// $Id: vmx.cc,v 1.70 2010-11-11 16:25:45 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2009-2010 Stanislav Shwartsman
@@ -38,45 +38,11 @@
 #define VMCSPTR_VALID() (BX_CPU_THIS_PTR vmcsptr != BX_INVALID_VMCSPTR)
 
 extern bx_bool isValidMSR_PAT(Bit64u pat_msr);
+extern unsigned vmcs_field_offset(Bit32u encoding);
 
 ////////////////////////////////////////////////////////////
 // VMCS access
 ////////////////////////////////////////////////////////////
-
-static unsigned vmcs_map[16][1+VMX_HIGHEST_VMCS_ENCODING];
-
-void BX_CPU_C::init_VMCS(void)
-{
-  static bx_bool vmcs_map_ready = 0;
-
-  if (vmcs_map_ready) return;
-  vmcs_map_ready = 1;
-
-  for (unsigned type=0; type<16; type++) {
-    for (unsigned field=0; field <= VMX_HIGHEST_VMCS_ENCODING; field++) {
-       vmcs_map[type][field] = 0xffffffff;
-    }
-  }
-
-#if 1
-  // try to build generic VMCS map
-  for (unsigned type=0; type<16; type++) {
-    for (unsigned field=0; field <= VMX_HIGHEST_VMCS_ENCODING; field++) {
-       // allocate 32 fields of 4 byte each per type
-       if (vmcs_map[type][field] != 0xffffffff) {
-          BX_PANIC(("VMCS type %d field %d is already initialized", type, field));
-       }
-       vmcs_map[type][field] = VMCS_DATA_OFFSET + (type*64 + field) * 4;
-       if(vmcs_map[type][field] >= VMX_VMCS_AREA_SIZE) {
-          BX_PANIC(("VMCS type %d field %d is out of VMCS boundaries", type, field));
-       }
-    }
-  }
-#else
-  // define your own VMCS format
-#include "vmcs.h"
-#endif
-}
 
 void BX_CPU_C::set_VMCSPTR(Bit64u vmxptr)
 {
@@ -92,7 +58,7 @@ Bit16u BX_CPU_C::VMread16(unsigned encoding)
 {
   Bit16u field;
 
-  unsigned offset = vmcs_map[VMCS_FIELD_INDEX(encoding)][VMCS_FIELD(encoding)];
+  unsigned offset = vmcs_field_offset(encoding);
   if(offset >= VMX_VMCS_AREA_SIZE)
     BX_PANIC(("VMread16: can't access encoding 0x%08x, offset=0x%x", encoding, offset));
   bx_phy_address pAddr = BX_CPU_THIS_PTR vmcsptr + offset;
@@ -115,7 +81,7 @@ Bit16u BX_CPU_C::VMread16(unsigned encoding)
 // write 16-bit value into VMCS 16-bit field
 void BX_CPU_C::VMwrite16(unsigned encoding, Bit16u val_16)
 {
-  unsigned offset = vmcs_map[VMCS_FIELD_INDEX(encoding)][VMCS_FIELD(encoding)];
+  unsigned offset = vmcs_field_offset(encoding);
   if(offset >= VMX_VMCS_AREA_SIZE)
     BX_PANIC(("VMwrite16: can't access encoding 0x%08x, offset=0x%x", encoding, offset));
   bx_phy_address pAddr = BX_CPU_THIS_PTR vmcsptr + offset;
@@ -138,7 +104,7 @@ Bit32u BX_CPU_C::VMread32(unsigned encoding)
 {
   Bit32u field;
 
-  unsigned offset = vmcs_map[VMCS_FIELD_INDEX(encoding)][VMCS_FIELD(encoding)];
+  unsigned offset = vmcs_field_offset(encoding);
   if(offset >= VMX_VMCS_AREA_SIZE)
     BX_PANIC(("VMread32: can't access encoding 0x%08x, offset=0x%x", encoding, offset));
   bx_phy_address pAddr = BX_CPU_THIS_PTR vmcsptr + offset;
@@ -159,7 +125,7 @@ Bit32u BX_CPU_C::VMread32(unsigned encoding)
 // write 32-bit value into VMCS field
 void BX_CPU_C::VMwrite32(unsigned encoding, Bit32u val_32)
 {
-  unsigned offset = vmcs_map[VMCS_FIELD_INDEX(encoding)][VMCS_FIELD(encoding)];
+  unsigned offset = vmcs_field_offset(encoding);
   if(offset >= VMX_VMCS_AREA_SIZE)
     BX_PANIC(("VMwrite32: can't access encoding 0x%08x, offset=0x%x", encoding, offset));
   bx_phy_address pAddr = BX_CPU_THIS_PTR vmcsptr + offset;
@@ -182,7 +148,7 @@ Bit64u BX_CPU_C::VMread64(unsigned encoding)
 
   Bit64u field;
 
-  unsigned offset = vmcs_map[VMCS_FIELD_INDEX(encoding)][VMCS_FIELD(encoding)];
+  unsigned offset = vmcs_field_offset(encoding);
   if(offset >= VMX_VMCS_AREA_SIZE)
     BX_PANIC(("VMread64: can't access encoding 0x%08x, offset=0x%x", encoding, offset));
   bx_phy_address pAddr = BX_CPU_THIS_PTR vmcsptr + offset;
@@ -205,7 +171,7 @@ void BX_CPU_C::VMwrite64(unsigned encoding, Bit64u val_64)
 {
   BX_ASSERT(!IS_VMCS_FIELD_HI(encoding));
 
-  unsigned offset = vmcs_map[VMCS_FIELD_INDEX(encoding)][VMCS_FIELD(encoding)];
+  unsigned offset = vmcs_field_offset(encoding);
   if(offset >= VMX_VMCS_AREA_SIZE)
     BX_PANIC(("VMwrite64: can't access encoding 0x%08x, offset=0x%x", encoding, offset));
   bx_phy_address pAddr = BX_CPU_THIS_PTR vmcsptr + offset;
@@ -2605,6 +2571,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMREAD(bxInstruction_c *i)
 
   Bit64u field_64;
 
+  if (vmcs_field_offset(encoding) == 0xffffffff) {
+    BX_ERROR(("VMREAD: not supported field %08x", encoding));
+    VMfail(VMXERR_UNSUPPORTED_VMCS_COMPONENT_ACCESS);
+    return;
+  }
+
   switch(encoding) {
     /* VMCS 16-bit control fields */
     /* binary 0000_00xx_xxxx_xxx0 */
@@ -2954,6 +2926,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMWRITE(bxInstruction_c *i)
     encoding = BX_READ_32BIT_REG(i->nnn());
     val_64   = (Bit64u) val_32;
   }
+
+  if (vmcs_field_offset(encoding) == 0xffffffff) {
+    BX_ERROR(("VMWRITE: not supported field %08x", encoding));
+    VMfail(VMXERR_UNSUPPORTED_VMCS_COMPONENT_ACCESS);
+    return;
+  }
+
 /*
   if (VMCS_FIELD_TYPE(encoding) == VMCS_FIELD_TYPE_READ_ONLY)
   {

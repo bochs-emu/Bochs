@@ -64,6 +64,7 @@ OBJS = \
 	xsave.o \
 	aes.o \
 	vmx.o \
+	vmcs.o \
 	vmexit.o \
 	soft_int.o \
 	apic.o \
@@ -766,6 +767,14 @@ tasking.o: tasking.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../cpu/i387.h ../fpu/softfloat.h ../config.h ../fpu/tag_w.h \
   ../fpu/status_w.h ../fpu/control_w.h ../cpu/xmm.h vmx.h stack.h
 vm8086.o: vm8086.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
+  ../config.h ../osdep.h ../bxversion.h ../gui/siminterface.h \
+  ../gui/paramtree.h ../memory/memory.h ../pc_system.h ../plugin.h \
+  ../extplugin.h ../gui/gui.h ../instrument/stubs/instrument.h cpu.h \
+  model_specific.h crregs.h descriptor.h instr.h ia_opcodes.h \
+  lazy_flags.h icache.h apic.h ../cpu/i387.h ../fpu/softfloat.h \
+  ../config.h ../fpu/tag_w.h ../fpu/status_w.h ../fpu/control_w.h \
+  ../cpu/xmm.h vmx.h stack.h
+vmcs.o: vmcs.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../config.h ../osdep.h ../bxversion.h ../gui/siminterface.h \
   ../gui/paramtree.h ../memory/memory.h ../pc_system.h ../plugin.h \
   ../extplugin.h ../gui/gui.h ../instrument/stubs/instrument.h cpu.h \
