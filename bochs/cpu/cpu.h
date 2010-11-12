@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.688 2010-11-11 21:41:03 sshwarts Exp $
+// $Id: cpu.h,v 1.689 2010-11-12 20:46:59 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2010  The Bochs Project
@@ -178,6 +178,7 @@
   (BX_CPU_THIS_PTR gen_reg[index].word.byte.rl) : \
   (BX_CPU_THIS_PTR gen_reg[(index)-4].word.byte.rh))
 #define BX_READ_64BIT_REG(index) (BX_CPU_THIS_PTR gen_reg[index].rrx)
+#define BX_READ_64BIT_REG_HIGH(index) (BX_CPU_THIS_PTR gen_reg[index].dword.hrx)
 #else
 #define BX_READ_8BIT_REG(index)  (((index) & 4) ? \
   (BX_CPU_THIS_PTR gen_reg[(index)-4].word.byte.rh) : \

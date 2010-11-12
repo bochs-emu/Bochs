@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmx.cc,v 1.72 2010-11-12 20:26:01 sshwarts Exp $
+// $Id: vmx.cc,v 1.73 2010-11-12 20:46:59 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2009-2010 Stanislav Shwartsman
@@ -2563,8 +2563,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMREAD(bxInstruction_c *i)
 
 #if BX_SUPPORT_X86_64
   if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
-    Bit64u enc = BX_READ_64BIT_REG(i->nnn());
-    if (enc >> 32) {
+    if (BX_READ_64BIT_REG_HIGH(i->nnn())) {
       BX_ERROR(("VMREAD: not supported field (upper 32-bit not zero)"));
       VMfail(VMXERR_UNSUPPORTED_VMCS_COMPONENT_ACCESS);
       return;
@@ -2652,14 +2651,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMWRITE(bxInstruction_c *i)
     return;
   }
 
-  unsigned encoding;
   Bit64u val_64;
   Bit32u val_32;
 
 #if BX_SUPPORT_X86_64
   if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
-    Bit64u enc_64;
-
     if (i->modC0()) {
        val_64 = BX_READ_64BIT_REG(i->rm());
     }
@@ -2668,14 +2664,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMWRITE(bxInstruction_c *i)
        val_64 = read_virtual_qword_64(i->seg(), eaddr);
     }
 
-    enc_64 = BX_READ_64BIT_REG(i->nnn());
-    if (enc_64 >> 32) {
-       BX_ERROR(("VMWRITE: not supported field !"));
+    if (BX_READ_64BIT_REG_HIGH(i->nnn())) {
+       BX_ERROR(("VMWRITE: not supported field (upper 32-bit not zero)"));
        VMfail(VMXERR_UNSUPPORTED_VMCS_COMPONENT_ACCESS);
        return;
     }
-    encoding = GET32L(enc_64);
-    val_32   = GET32L(val_64);
+
+    val_32 = GET32L(val_64);
   }
   else
 #endif
@@ -2688,9 +2683,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMWRITE(bxInstruction_c *i)
        val_32 = read_virtual_dword_32(i->seg(), eaddr);
     }
 
-    encoding = BX_READ_32BIT_REG(i->nnn());
-    val_64   = (Bit64u) val_32;
+    val_64 = (Bit64u) val_32;
   }
+
+  Bit32u encoding = BX_READ_32BIT_REG(i->nnn());
 
   if (vmcs_field_offset(encoding) == 0xffffffff) {
     BX_ERROR(("VMWRITE: not supported field 0x%08x", encoding));
