@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmx.cc,v 1.71 2010-11-11 21:41:03 sshwarts Exp $
+// $Id: vmx.cc,v 1.72 2010-11-12 20:26:01 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2009-2010 Stanislav Shwartsman
@@ -1626,7 +1626,7 @@ void BX_CPU_C::VMenterInjectEvents(void)
   if (is_INT)
     RIP += vm->vmentry_instr_length;
 
-  BX_ERROR(("VMENTER: Injecting vector 0x%02x (error_code 0x%08x)", vector, error_code));
+  BX_ERROR(("VMENTER: Injecting vector 0x%02x (error_code 0x%04x)", vector, error_code));
 
   if (type == BX_HARDWARE_EXCEPTION) {
     // record exception the same way as BX_CPU_C::exception does
@@ -2565,6 +2565,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMREAD(bxInstruction_c *i)
   if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
     Bit64u enc = BX_READ_64BIT_REG(i->nnn());
     if (enc >> 32) {
+      BX_ERROR(("VMREAD: not supported field (upper 32-bit not zero)"));
       VMfail(VMXERR_UNSUPPORTED_VMCS_COMPONENT_ACCESS);
       return;
     }
@@ -2578,267 +2579,25 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMREAD(bxInstruction_c *i)
     return;
   }
 
+  unsigned width = VMCS_FIELD_WIDTH(encoding);
   Bit64u field_64;
 
-  switch(encoding) {
-
-#if BX_SUPPORT_VMX >= 2
-    /* VMCS 16-bit control fields */
-    /* binary 0000_00xx_xxxx_xxx0 */
-    case VMCS_16BIT_CONTROL_VPID:
-      // fall through
-#endif
-
-    /* VMCS 16-bit guest-state fields */
-    /* binary 0000_10xx_xxxx_xxx0 */
-    case VMCS_16BIT_GUEST_ES_SELECTOR:
-    case VMCS_16BIT_GUEST_CS_SELECTOR:
-    case VMCS_16BIT_GUEST_SS_SELECTOR:
-    case VMCS_16BIT_GUEST_DS_SELECTOR:
-    case VMCS_16BIT_GUEST_FS_SELECTOR:
-    case VMCS_16BIT_GUEST_GS_SELECTOR:
-    case VMCS_16BIT_GUEST_LDTR_SELECTOR:
-    case VMCS_16BIT_GUEST_TR_SELECTOR:
-      // fall through
-
-    /* VMCS 16-bit host-state fields */
-    /* binary 0000_11xx_xxxx_xxx0 */
-    case VMCS_16BIT_HOST_ES_SELECTOR:
-    case VMCS_16BIT_HOST_CS_SELECTOR:
-    case VMCS_16BIT_HOST_SS_SELECTOR:
-    case VMCS_16BIT_HOST_DS_SELECTOR:
-    case VMCS_16BIT_HOST_FS_SELECTOR:
-    case VMCS_16BIT_HOST_GS_SELECTOR:
-    case VMCS_16BIT_HOST_TR_SELECTOR:
-      field_64 = VMread16(encoding);
-      break;
-
-    /* VMCS 32_bit control fields */
-    /* binary 0100_00xx_xxxx_xxx0 */
-    case VMCS_32BIT_CONTROL_PIN_BASED_EXEC_CONTROLS:
-    case VMCS_32BIT_CONTROL_PROCESSOR_BASED_VMEXEC_CONTROLS:
-    case VMCS_32BIT_CONTROL_EXECUTION_BITMAP:
-    case VMCS_32BIT_CONTROL_PAGE_FAULT_ERR_CODE_MASK:
-    case VMCS_32BIT_CONTROL_PAGE_FAULT_ERR_CODE_MATCH:
-    case VMCS_32BIT_CONTROL_CR3_TARGET_COUNT:
-    case VMCS_32BIT_CONTROL_VMEXIT_CONTROLS:
-    case VMCS_32BIT_CONTROL_VMEXIT_MSR_STORE_COUNT:
-    case VMCS_32BIT_CONTROL_VMEXIT_MSR_LOAD_COUNT:
-    case VMCS_32BIT_CONTROL_VMENTRY_CONTROLS:
-    case VMCS_32BIT_CONTROL_VMENTRY_MSR_LOAD_COUNT:
-    case VMCS_32BIT_CONTROL_VMENTRY_INTERRUPTION_INFO:
-    case VMCS_32BIT_CONTROL_VMENTRY_EXCEPTION_ERR_CODE:
-    case VMCS_32BIT_CONTROL_VMENTRY_INSTRUCTION_LENGTH:
-    case VMCS_32BIT_CONTROL_TPR_THRESHOLD:
-    case VMCS_32BIT_CONTROL_SECONDARY_VMEXEC_CONTROLS:
-      // fall through
-
-    /* VMCS 32-bit read only data fields */
-    /* binary 0100_01xx_xxxx_xxx0 */
-    case VMCS_32BIT_INSTRUCTION_ERROR:
-    case VMCS_32BIT_VMEXIT_REASON:
-    case VMCS_32BIT_VMEXIT_INTERRUPTION_INFO:
-    case VMCS_32BIT_VMEXIT_INTERRUPTION_ERR_CODE:
-    case VMCS_32BIT_IDT_VECTORING_INFO:
-    case VMCS_32BIT_IDT_VECTORING_ERR_CODE:
-    case VMCS_32BIT_VMEXIT_INSTRUCTION_LENGTH:
-    case VMCS_32BIT_VMEXIT_INSTRUCTION_INFO:
-      // fall through
-
-    /* VMCS 32-bit guest-state fields */
-    /* binary 0100_10xx_xxxx_xxx0 */
-    case VMCS_32BIT_GUEST_ES_LIMIT:
-    case VMCS_32BIT_GUEST_CS_LIMIT:
-    case VMCS_32BIT_GUEST_SS_LIMIT:
-    case VMCS_32BIT_GUEST_DS_LIMIT:
-    case VMCS_32BIT_GUEST_FS_LIMIT:
-    case VMCS_32BIT_GUEST_GS_LIMIT:
-    case VMCS_32BIT_GUEST_LDTR_LIMIT:
-    case VMCS_32BIT_GUEST_TR_LIMIT:
-    case VMCS_32BIT_GUEST_GDTR_LIMIT:
-    case VMCS_32BIT_GUEST_IDTR_LIMIT:
-    case VMCS_32BIT_GUEST_INTERRUPTIBILITY_STATE:
-    case VMCS_32BIT_GUEST_ACTIVITY_STATE:
-    case VMCS_32BIT_GUEST_SMBASE:
-    case VMCS_32BIT_GUEST_IA32_SYSENTER_CS_MSR:
-      field_64 = VMread32(encoding);
-      break;
-
-    case VMCS_32BIT_GUEST_ES_ACCESS_RIGHTS:
-    case VMCS_32BIT_GUEST_CS_ACCESS_RIGHTS:
-    case VMCS_32BIT_GUEST_SS_ACCESS_RIGHTS:
-    case VMCS_32BIT_GUEST_DS_ACCESS_RIGHTS:
-    case VMCS_32BIT_GUEST_FS_ACCESS_RIGHTS:
-    case VMCS_32BIT_GUEST_GS_ACCESS_RIGHTS:
-    case VMCS_32BIT_GUEST_LDTR_ACCESS_RIGHTS:
-    case VMCS_32BIT_GUEST_TR_ACCESS_RIGHTS:
+  if(width == VMCS_FIELD_WIDTH_16BIT) {
+    field_64 = VMread16(encoding);
+  }
+  else if(width == VMCS_FIELD_WIDTH_32BIT) {
+    // the real hardware write access rights rotated
+    if (encoding >= VMCS_32BIT_GUEST_ES_ACCESS_RIGHTS && encoding <= VMCS_32BIT_GUEST_TR_ACCESS_RIGHTS)
       field_64 = rotate_r(VMread32(encoding));
-      break;
-
-    /* VMCS 32-bit host-state fields */
-    /* binary 0100_11xx_xxxx_xxx0 */
-    case VMCS_32BIT_HOST_IA32_SYSENTER_CS_MSR:
+    else
       field_64 = VMread32(encoding);
-      break;
-
-    /* VMCS 64-bit control fields */
-    /* binary 0010_00xx_xxxx_xxx0 */
-    case VMCS_64BIT_CONTROL_IO_BITMAP_A:
-    case VMCS_64BIT_CONTROL_IO_BITMAP_B:
-    case VMCS_64BIT_CONTROL_MSR_BITMAPS:
-    case VMCS_64BIT_CONTROL_VMEXIT_MSR_STORE_ADDR:
-    case VMCS_64BIT_CONTROL_VMEXIT_MSR_LOAD_ADDR:
-    case VMCS_64BIT_CONTROL_VMENTRY_MSR_LOAD_ADDR:
-    case VMCS_64BIT_CONTROL_EXECUTIVE_VMCS_PTR:
-    case VMCS_64BIT_CONTROL_TSC_OFFSET:
-    case VMCS_64BIT_CONTROL_VIRTUAL_APIC_PAGE_ADDR:
-    case VMCS_64BIT_CONTROL_APIC_ACCESS_ADDR:
-#if BX_SUPPORT_VMX >= 2
-    case VMCS_64BIT_CONTROL_EPTPTR:
-#endif
-      field_64 = VMread64(encoding);
-      break;
-
-    case VMCS_64BIT_CONTROL_IO_BITMAP_A_HI:
-    case VMCS_64BIT_CONTROL_IO_BITMAP_B_HI:
-    case VMCS_64BIT_CONTROL_MSR_BITMAPS_HI:
-    case VMCS_64BIT_CONTROL_VMEXIT_MSR_STORE_ADDR_HI:
-    case VMCS_64BIT_CONTROL_VMEXIT_MSR_LOAD_ADDR_HI:
-    case VMCS_64BIT_CONTROL_VMENTRY_MSR_LOAD_ADDR_HI:
-    case VMCS_64BIT_CONTROL_EXECUTIVE_VMCS_PTR_HI:
-    case VMCS_64BIT_CONTROL_TSC_OFFSET_HI:
-    case VMCS_64BIT_CONTROL_VIRTUAL_APIC_PAGE_ADDR_HI:
-    case VMCS_64BIT_CONTROL_APIC_ACCESS_ADDR_HI:
-#if BX_SUPPORT_VMX >= 2
-    case VMCS_64BIT_CONTROL_EPTPTR_HI:
-#endif
+  }
+  else {
+    if (IS_VMCS_FIELD_HI(encoding))
       field_64 = VMread32(encoding);
-      break;
-
-#if BX_SUPPORT_VMX >= 2
-    /* VMCS 64-bit read only data fields */
-    /* binary 0010_01xx_xxxx_xxx0 */
-    case VMCS_64BIT_GUEST_PHYSICAL_ADDR:
+    else
       field_64 = VMread64(encoding);
-      break;
-
-    case VMCS_64BIT_GUEST_PHYSICAL_ADDR_HI:
-      field_64 = VMread32(encoding);
-      break;
-#endif
-
-    /* VMCS 64-bit guest state fields */
-    /* binary 0010_10xx_xxxx_xxx0 */
-    case VMCS_64BIT_GUEST_LINK_POINTER:
-    case VMCS_64BIT_GUEST_IA32_DEBUGCTL:
-#if BX_SUPPORT_VMX >= 2
-    case VMCS_64BIT_GUEST_IA32_PAT:
-    case VMCS_64BIT_GUEST_IA32_EFER:
-    case VMCS_64BIT_GUEST_IA32_PDPTE0:
-    case VMCS_64BIT_GUEST_IA32_PDPTE1:
-    case VMCS_64BIT_GUEST_IA32_PDPTE2:
-    case VMCS_64BIT_GUEST_IA32_PDPTE3:
-#endif
-      field_64 = VMread64(encoding);
-      break;
-
-    case VMCS_64BIT_GUEST_LINK_POINTER_HI:
-    case VMCS_64BIT_GUEST_IA32_DEBUGCTL_HI:
-#if BX_SUPPORT_VMX >= 2
-    case VMCS_64BIT_GUEST_IA32_PAT_HI:
-    case VMCS_64BIT_GUEST_IA32_EFER_HI:
-    case VMCS_64BIT_GUEST_IA32_PDPTE0_HI:
-    case VMCS_64BIT_GUEST_IA32_PDPTE1_HI:
-    case VMCS_64BIT_GUEST_IA32_PDPTE2_HI:
-    case VMCS_64BIT_GUEST_IA32_PDPTE3_HI:
-#endif
-      field_64 = VMread32(encoding);
-      break;
-
-    /* VMCS 64-bit host state fields */
-    /* binary 0010_11xx_xxxx_xxx0 */
-#if BX_SUPPORT_VMX >= 2
-    case VMCS_64BIT_HOST_IA32_PAT:
-    case VMCS_64BIT_HOST_IA32_EFER:
-      field_64 = VMread64(encoding);
-      break;
-#endif
-
-#if BX_SUPPORT_VMX >= 2
-    case VMCS_64BIT_HOST_IA32_PAT_HI:
-    case VMCS_64BIT_HOST_IA32_EFER_HI:
-      field_64 = VMread32(encoding);
-      break;
-#endif
-
-    /* VMCS natural width control fields */
-    /* binary 0110_00xx_xxxx_xxx0 */
-    case VMCS_CONTROL_CR0_GUEST_HOST_MASK:
-    case VMCS_CONTROL_CR4_GUEST_HOST_MASK:
-    case VMCS_CONTROL_CR0_READ_SHADOW:
-    case VMCS_CONTROL_CR4_READ_SHADOW:
-    case VMCS_CR3_TARGET0:
-    case VMCS_CR3_TARGET1:
-    case VMCS_CR3_TARGET2:
-    case VMCS_CR3_TARGET3:
-      // fall through
-
-    /* VMCS natural width read only data fields */
-    /* binary 0110_01xx_xxxx_xxx0 */
-    case VMCS_VMEXIT_QUALIFICATION:
-    case VMCS_IO_RCX:
-    case VMCS_IO_RSI:
-    case VMCS_IO_RDI:
-    case VMCS_IO_RIP:
-    case VMCS_GUEST_LINEAR_ADDR:
-      // fall through
-
-    /* VMCS natural width guest state fields */
-    /* binary 0110_10xx_xxxx_xxx0 */
-    case VMCS_GUEST_CR0:
-    case VMCS_GUEST_CR3:
-    case VMCS_GUEST_CR4:
-    case VMCS_GUEST_ES_BASE:
-    case VMCS_GUEST_CS_BASE:
-    case VMCS_GUEST_SS_BASE:
-    case VMCS_GUEST_DS_BASE:
-    case VMCS_GUEST_FS_BASE:
-    case VMCS_GUEST_GS_BASE:
-    case VMCS_GUEST_LDTR_BASE:
-    case VMCS_GUEST_TR_BASE:
-    case VMCS_GUEST_GDTR_BASE:
-    case VMCS_GUEST_IDTR_BASE:
-    case VMCS_GUEST_DR7:
-    case VMCS_GUEST_RSP:
-    case VMCS_GUEST_RIP:
-    case VMCS_GUEST_RFLAGS:
-    case VMCS_GUEST_PENDING_DBG_EXCEPTIONS:
-    case VMCS_GUEST_IA32_SYSENTER_ESP_MSR:
-    case VMCS_GUEST_IA32_SYSENTER_EIP_MSR:
-      // fall through
-
-    /* VMCS natural width host state fields */
-    /* binary 0110_11xx_xxxx_xxx0 */
-    case VMCS_HOST_CR0:
-    case VMCS_HOST_CR3:
-    case VMCS_HOST_CR4:
-    case VMCS_HOST_FS_BASE:
-    case VMCS_HOST_GS_BASE:
-    case VMCS_HOST_TR_BASE:
-    case VMCS_HOST_GDTR_BASE:
-    case VMCS_HOST_IDTR_BASE:
-    case VMCS_HOST_IA32_SYSENTER_ESP_MSR:
-    case VMCS_HOST_IA32_SYSENTER_EIP_MSR:
-    case VMCS_HOST_RSP:
-    case VMCS_HOST_RIP:
-      field_64 = VMread64(encoding);
-      break;
-
-    default:
-      BX_ERROR(("VMREAD: not supported field 0x%08x", encoding));
-      VMfail(VMXERR_UNSUPPORTED_VMCS_COMPONENT_ACCESS);
-      return;
-  };
+  }
 
 #if BX_SUPPORT_X86_64
   if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
@@ -2939,271 +2698,31 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMWRITE(bxInstruction_c *i)
     return;
   }
 
-/*
   if (VMCS_FIELD_TYPE(encoding) == VMCS_FIELD_TYPE_READ_ONLY)
   {
      BX_ERROR(("VMWRITE: write to read only field 0x%08x", encoding));
      VMfail(VMXERR_VMWRITE_READ_ONLY_VMCS_COMPONENT);
      return;
   }
-*/
-  switch(encoding) {
 
-#if BX_SUPPORT_VMX >= 2
-    /* VMCS 16-bit control fields */
-    /* binary 0000_00xx_xxxx_xxx0 */
-    case VMCS_16BIT_CONTROL_VPID:
-      // fall through
-#endif
+  unsigned width = VMCS_FIELD_WIDTH(encoding);
 
-    /* VMCS 16-bit guest-state fields */
-    /* binary 0000_10xx_xxxx_xxx0 */
-    case VMCS_16BIT_GUEST_ES_SELECTOR:
-    case VMCS_16BIT_GUEST_CS_SELECTOR:
-    case VMCS_16BIT_GUEST_SS_SELECTOR:
-    case VMCS_16BIT_GUEST_DS_SELECTOR:
-    case VMCS_16BIT_GUEST_FS_SELECTOR:
-    case VMCS_16BIT_GUEST_GS_SELECTOR:
-    case VMCS_16BIT_GUEST_LDTR_SELECTOR:
-    case VMCS_16BIT_GUEST_TR_SELECTOR:
-      // fall through
-
-    /* VMCS 16-bit host-state fields */
-    /* binary 0000_11xx_xxxx_xxx0 */
-    case VMCS_16BIT_HOST_ES_SELECTOR:
-    case VMCS_16BIT_HOST_CS_SELECTOR:
-    case VMCS_16BIT_HOST_SS_SELECTOR:
-    case VMCS_16BIT_HOST_DS_SELECTOR:
-    case VMCS_16BIT_HOST_FS_SELECTOR:
-    case VMCS_16BIT_HOST_GS_SELECTOR:
-    case VMCS_16BIT_HOST_TR_SELECTOR:
-      VMwrite16(encoding, val_32 & 0xffff);
-      break;
-
-    /* VMCS 32_bit control fields */
-    /* binary 0100_00xx_xxxx_xxx0 */
-    case VMCS_32BIT_CONTROL_PIN_BASED_EXEC_CONTROLS:
-    case VMCS_32BIT_CONTROL_PROCESSOR_BASED_VMEXEC_CONTROLS:
-    case VMCS_32BIT_CONTROL_EXECUTION_BITMAP:
-    case VMCS_32BIT_CONTROL_PAGE_FAULT_ERR_CODE_MASK:
-    case VMCS_32BIT_CONTROL_PAGE_FAULT_ERR_CODE_MATCH:
-    case VMCS_32BIT_CONTROL_CR3_TARGET_COUNT:
-    case VMCS_32BIT_CONTROL_VMEXIT_CONTROLS:
-    case VMCS_32BIT_CONTROL_VMEXIT_MSR_STORE_COUNT:
-    case VMCS_32BIT_CONTROL_VMEXIT_MSR_LOAD_COUNT:
-    case VMCS_32BIT_CONTROL_VMENTRY_CONTROLS:
-    case VMCS_32BIT_CONTROL_VMENTRY_MSR_LOAD_COUNT:
-    case VMCS_32BIT_CONTROL_VMENTRY_INTERRUPTION_INFO:
-    case VMCS_32BIT_CONTROL_VMENTRY_EXCEPTION_ERR_CODE:
-    case VMCS_32BIT_CONTROL_VMENTRY_INSTRUCTION_LENGTH:
-    case VMCS_32BIT_CONTROL_TPR_THRESHOLD:
-    case VMCS_32BIT_CONTROL_SECONDARY_VMEXEC_CONTROLS:
-      // fall through
-
-    /* VMCS 32-bit guest-state fields */
-    /* binary 0100_10xx_xxxx_xxx0 */
-    case VMCS_32BIT_GUEST_ES_LIMIT:
-    case VMCS_32BIT_GUEST_CS_LIMIT:
-    case VMCS_32BIT_GUEST_SS_LIMIT:
-    case VMCS_32BIT_GUEST_DS_LIMIT:
-    case VMCS_32BIT_GUEST_FS_LIMIT:
-    case VMCS_32BIT_GUEST_GS_LIMIT:
-    case VMCS_32BIT_GUEST_LDTR_LIMIT:
-    case VMCS_32BIT_GUEST_TR_LIMIT:
-    case VMCS_32BIT_GUEST_GDTR_LIMIT:
-    case VMCS_32BIT_GUEST_IDTR_LIMIT:
-    case VMCS_32BIT_GUEST_INTERRUPTIBILITY_STATE:
-    case VMCS_32BIT_GUEST_ACTIVITY_STATE:
-    case VMCS_32BIT_GUEST_SMBASE:
-    case VMCS_32BIT_GUEST_IA32_SYSENTER_CS_MSR:
-      VMwrite32(encoding, val_32);
-      break;
-
-    case VMCS_32BIT_GUEST_ES_ACCESS_RIGHTS:
-    case VMCS_32BIT_GUEST_CS_ACCESS_RIGHTS:
-    case VMCS_32BIT_GUEST_SS_ACCESS_RIGHTS:
-    case VMCS_32BIT_GUEST_DS_ACCESS_RIGHTS:
-    case VMCS_32BIT_GUEST_FS_ACCESS_RIGHTS:
-    case VMCS_32BIT_GUEST_GS_ACCESS_RIGHTS:
-    case VMCS_32BIT_GUEST_LDTR_ACCESS_RIGHTS:
-    case VMCS_32BIT_GUEST_TR_ACCESS_RIGHTS:
+  if(width == VMCS_FIELD_WIDTH_16BIT) {
+    VMwrite16(encoding, val_32 & 0xffff);
+  }
+  else if(width == VMCS_FIELD_WIDTH_32BIT) {
+    // the real hardware write access rights rotated
+    if (encoding >= VMCS_32BIT_GUEST_ES_ACCESS_RIGHTS && encoding <= VMCS_32BIT_GUEST_TR_ACCESS_RIGHTS)
       VMwrite32(encoding, rotate_l(val_32));
-      break;
-
-    /* VMCS 32-bit host-state fields */
-    /* binary 0100_11xx_xxxx_xxx0 */
-    case VMCS_32BIT_HOST_IA32_SYSENTER_CS_MSR:
+    else
       VMwrite32(encoding, val_32);
-      break;
-
-    /* VMCS 64-bit control fields */
-    /* binary 0010_00xx_xxxx_xxx0 */
-    case VMCS_64BIT_CONTROL_IO_BITMAP_A_HI:
-    case VMCS_64BIT_CONTROL_IO_BITMAP_B_HI:
-    case VMCS_64BIT_CONTROL_MSR_BITMAPS_HI:
-    case VMCS_64BIT_CONTROL_VMEXIT_MSR_STORE_ADDR_HI:
-    case VMCS_64BIT_CONTROL_VMEXIT_MSR_LOAD_ADDR_HI:
-    case VMCS_64BIT_CONTROL_VMENTRY_MSR_LOAD_ADDR_HI:
-    case VMCS_64BIT_CONTROL_EXECUTIVE_VMCS_PTR_HI:
-    case VMCS_64BIT_CONTROL_TSC_OFFSET_HI:
-    case VMCS_64BIT_CONTROL_VIRTUAL_APIC_PAGE_ADDR_HI:
-    case VMCS_64BIT_CONTROL_APIC_ACCESS_ADDR_HI:
-#if BX_SUPPORT_VMX >= 2
-    case VMCS_64BIT_CONTROL_EPTPTR_HI:
-#endif
-      // fall through
-
-    /* VMCS 64-bit guest state fields */
-    /* binary 0010_10xx_xxxx_xxx0 */
-    case VMCS_64BIT_GUEST_LINK_POINTER_HI:
-    case VMCS_64BIT_GUEST_IA32_DEBUGCTL_HI:
-#if BX_SUPPORT_VMX >= 2
-    case VMCS_64BIT_GUEST_IA32_PAT_HI:
-    case VMCS_64BIT_GUEST_IA32_EFER_HI:
-    case VMCS_64BIT_GUEST_IA32_PDPTE0_HI:
-    case VMCS_64BIT_GUEST_IA32_PDPTE1_HI:
-    case VMCS_64BIT_GUEST_IA32_PDPTE2_HI:
-    case VMCS_64BIT_GUEST_IA32_PDPTE3_HI:
-#endif
-      // fall through
-
-    /* VMCS 64-bit host state fields */
-    /* binary 0010_11xx_xxxx_xxx0 */
-#if BX_SUPPORT_VMX >= 2
-    case VMCS_64BIT_HOST_IA32_PAT_HI:
-    case VMCS_64BIT_HOST_IA32_EFER_HI:
-#endif
+  }
+  else {
+    if (IS_VMCS_FIELD_HI(encoding))
       VMwrite32(encoding, val_32);
-      break;
-
-    /* VMCS 64-bit control fields */
-    /* binary 0010_00xx_xxxx_xxx0 */
-    case VMCS_64BIT_CONTROL_IO_BITMAP_A:
-    case VMCS_64BIT_CONTROL_IO_BITMAP_B:
-    case VMCS_64BIT_CONTROL_MSR_BITMAPS:
-    case VMCS_64BIT_CONTROL_VMEXIT_MSR_STORE_ADDR:
-    case VMCS_64BIT_CONTROL_VMEXIT_MSR_LOAD_ADDR:
-    case VMCS_64BIT_CONTROL_VMENTRY_MSR_LOAD_ADDR:
-    case VMCS_64BIT_CONTROL_EXECUTIVE_VMCS_PTR:
-    case VMCS_64BIT_CONTROL_TSC_OFFSET:
-    case VMCS_64BIT_CONTROL_VIRTUAL_APIC_PAGE_ADDR:
-    case VMCS_64BIT_CONTROL_APIC_ACCESS_ADDR:
-#if BX_SUPPORT_VMX >= 2
-    case VMCS_64BIT_CONTROL_EPTPTR:
-#endif
-      // fall through
-
-    /* VMCS 64-bit guest state fields */
-    /* binary 0010_10xx_xxxx_xxx0 */
-    case VMCS_64BIT_GUEST_LINK_POINTER:
-    case VMCS_64BIT_GUEST_IA32_DEBUGCTL:
-#if BX_SUPPORT_VMX >= 2
-    case VMCS_64BIT_GUEST_IA32_PAT:
-    case VMCS_64BIT_GUEST_IA32_EFER:
-    case VMCS_64BIT_GUEST_IA32_PDPTE0:
-    case VMCS_64BIT_GUEST_IA32_PDPTE1:
-    case VMCS_64BIT_GUEST_IA32_PDPTE2:
-    case VMCS_64BIT_GUEST_IA32_PDPTE3:
-#endif
-      // fall through
-
-    /* VMCS 64-bit host state fields */
-    /* binary 0010_11xx_xxxx_xxx0 */
-#if BX_SUPPORT_VMX >= 2
-    case VMCS_64BIT_HOST_IA32_PAT:
-    case VMCS_64BIT_HOST_IA32_EFER:
-#endif
-      // fall through
-
-    /* VMCS natural width control fields */
-    /* binary 0110_00xx_xxxx_xxx0 */
-    case VMCS_CONTROL_CR0_GUEST_HOST_MASK:
-    case VMCS_CONTROL_CR4_GUEST_HOST_MASK:
-    case VMCS_CONTROL_CR0_READ_SHADOW:
-    case VMCS_CONTROL_CR4_READ_SHADOW:
-    case VMCS_CR3_TARGET0:
-    case VMCS_CR3_TARGET1:
-    case VMCS_CR3_TARGET2:
-    case VMCS_CR3_TARGET3:
-      // fall through
-
-    /* VMCS natural width guest state fields */
-    /* binary 0110_10xx_xxxx_xxx0 */
-    case VMCS_GUEST_CR0:
-    case VMCS_GUEST_CR3:
-    case VMCS_GUEST_CR4:
-    case VMCS_GUEST_ES_BASE:
-    case VMCS_GUEST_CS_BASE:
-    case VMCS_GUEST_SS_BASE:
-    case VMCS_GUEST_DS_BASE:
-    case VMCS_GUEST_FS_BASE:
-    case VMCS_GUEST_GS_BASE:
-    case VMCS_GUEST_LDTR_BASE:
-    case VMCS_GUEST_TR_BASE:
-    case VMCS_GUEST_GDTR_BASE:
-    case VMCS_GUEST_IDTR_BASE:
-    case VMCS_GUEST_DR7:
-    case VMCS_GUEST_RSP:
-    case VMCS_GUEST_RIP:
-    case VMCS_GUEST_RFLAGS:
-    case VMCS_GUEST_PENDING_DBG_EXCEPTIONS:
-    case VMCS_GUEST_IA32_SYSENTER_ESP_MSR:
-    case VMCS_GUEST_IA32_SYSENTER_EIP_MSR:
-      // fall through
-
-    /* VMCS natural width host state fields */
-    /* binary 0110_11xx_xxxx_xxx0 */
-    case VMCS_HOST_CR0:
-    case VMCS_HOST_CR3:
-    case VMCS_HOST_CR4:
-    case VMCS_HOST_FS_BASE:
-    case VMCS_HOST_GS_BASE:
-    case VMCS_HOST_TR_BASE:
-    case VMCS_HOST_GDTR_BASE:
-    case VMCS_HOST_IDTR_BASE:
-    case VMCS_HOST_IA32_SYSENTER_ESP_MSR:
-    case VMCS_HOST_IA32_SYSENTER_EIP_MSR:
-    case VMCS_HOST_RSP:
-    case VMCS_HOST_RIP:
+    else
       VMwrite64(encoding, val_64);
-      break;
-
-#if BX_SUPPORT_VMX >= 2
-    /* VMCS 64-bit read only data fields */
-    /* binary 0010_01xx_xxxx_xxx0 */
-    case VMCS_64BIT_GUEST_PHYSICAL_ADDR:
-    case VMCS_64BIT_GUEST_PHYSICAL_ADDR_HI:
-      // fall through
-#endif
-
-    /* VMCS 32-bit read only data fields */
-    /* binary 0100_01xx_xxxx_xxx0 */
-    case VMCS_32BIT_INSTRUCTION_ERROR:
-    case VMCS_32BIT_VMEXIT_REASON:
-    case VMCS_32BIT_VMEXIT_INTERRUPTION_INFO:
-    case VMCS_32BIT_VMEXIT_INTERRUPTION_ERR_CODE:
-    case VMCS_32BIT_IDT_VECTORING_INFO:
-    case VMCS_32BIT_IDT_VECTORING_ERR_CODE:
-    case VMCS_32BIT_VMEXIT_INSTRUCTION_LENGTH:
-    case VMCS_32BIT_VMEXIT_INSTRUCTION_INFO:
-
-    /* VMCS natural width read only data fields */
-    /* binary 0110_01xx_xxxx_xxx0 */
-    case VMCS_VMEXIT_QUALIFICATION:
-    case VMCS_IO_RCX:
-    case VMCS_IO_RSI:
-    case VMCS_IO_RDI:
-    case VMCS_IO_RIP:
-    case VMCS_GUEST_LINEAR_ADDR:
-      BX_ERROR(("VMWRITE: write to read/only field 0x%08x", encoding));
-      VMfail(VMXERR_VMWRITE_READ_ONLY_VMCS_COMPONENT);
-      return;
-
-    default:
-      BX_ERROR(("VMWRITE: write to not supported field 0x%08x", encoding));
-      VMfail(VMXERR_UNSUPPORTED_VMCS_COMPONENT_ACCESS);
-      return;
-  };
+  }
 
   VMsucceed();
 #else         

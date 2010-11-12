@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmcs.cc,v 1.3 2010-11-11 21:41:03 sshwarts Exp $
+// $Id: vmcs.cc,v 1.4 2010-11-12 20:26:01 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2009-2010 Stanislav Shwartsman
@@ -65,8 +65,13 @@ void BX_CPU_C::init_VMCS(void)
 #endif
 }
 
+#define VMCS_ENCODING_RESERVED_BITS (0xffff9000)
+
 unsigned vmcs_field_offset(Bit32u encoding)
 {
+  if (encoding & VMCS_ENCODING_RESERVED_BITS)
+    return 0xffffffff;
+
   return vmcs_map[VMCS_FIELD_INDEX(encoding)][VMCS_FIELD(encoding)];
 }
 
