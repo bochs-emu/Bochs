@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32.cc,v 1.141 2010-11-01 15:02:14 sshwarts Exp $
+// $Id: win32.cc,v 1.142 2010-11-12 18:20:35 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2009  The Bochs Project
@@ -99,7 +99,7 @@ static int ms_xdelta=0, ms_ydelta=0, ms_zdelta=0;
 static int ms_lastx=0, ms_lasty=0;
 static int ms_savedx=0, ms_savedy=0;
 static BOOL mouseCaptureMode, mouseCaptureNew, mouseToggleReq;
-static unsigned long workerThread = 0;
+static UINT_PTR workerThread = 0;
 static DWORD workerThreadID = 0;
 static int mouse_buttons = 3;
 
