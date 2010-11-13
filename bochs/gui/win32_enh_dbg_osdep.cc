@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32_enh_dbg_osdep.cc,v 1.21 2010-03-02 20:09:17 sshwarts Exp $
+// $Id: win32_enh_dbg_osdep.cc,v 1.22 2010-11-13 13:00:26 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  BOCHS ENHANCED DEBUGGER Ver 1.2
@@ -1321,8 +1321,8 @@ LRESULT CALLBACK B_WP(HWND hh,UINT mm,WPARAM ww,LPARAM ll)
             SendMessage(hE_I,WM_SETFONT,(WPARAM)DefFont, MAKELPARAM(TRUE,0));
             SendMessage(hE_O,WM_SETFONT,(WPARAM)hF,MAKELPARAM(TRUE,0));
             // subclass both the edit windows together
-            *wEdit = (WNDPROC) SetWindowLong (hE_I,GWL_WNDPROC,(long) ThisEditProc);
-            wEdit[1] = (WNDPROC) SetWindowLong (hE_O,GWL_WNDPROC,(long) ThisEditProc);
+            *wEdit = (WNDPROC) SetWindowLong (hE_I,GWL_WNDPROC,(WPARAM) ThisEditProc);
+            wEdit[1] = (WNDPROC) SetWindowLong (hE_O,GWL_WNDPROC,(WPARAM) ThisEditProc);
 
             // Status
             hS_S = CreateWindowEx(0,STATUSCLASSNAME,"",WS_CHILD | WS_VISIBLE,0,0,1,1,hh,(HMENU)1006,GetModuleHandle(0),0);
@@ -1370,7 +1370,7 @@ LRESULT CALLBACK B_WP(HWND hh,UINT mm,WPARAM ww,LPARAM ll)
                 0,0,1,1,hh,(HMENU)1010,GetModuleHandle(0),0);
             //SendMessage(hT,WM_SETFONT,(WPARAM)DefFont,MAKELPARAM(TRUE,0));
             // Use the same messagehandler for the tree window as for ListViews
-            wTreeView = (WNDPROC) SetWindowLong (hT,GWL_WNDPROC,(long) LVProc);
+            wTreeView = (WNDPROC) SetWindowLong (hT,GWL_WNDPROC,(WPARAM) LVProc);
 
             // create button rows
             int j = BX_SMP_PROCESSORS;

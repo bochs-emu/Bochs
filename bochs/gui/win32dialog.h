@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32dialog.h,v 1.19 2009-03-24 16:28:03 vruppert Exp $
+// $Id: win32dialog.h,v 1.20 2010-11-13 13:00:26 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  The Bochs Project
@@ -39,6 +39,11 @@ extern "C" {
 #include <shlobj.h>
 #include <ctype.h>
 }
+
+// 64-bit windows env misses this define
+#ifndef GWL_WNDPROC
+#define GWL_WNDPROC (-4)
+#endif
 
 #if BX_USE_TEXTCONFIG && defined(WIN32)
 

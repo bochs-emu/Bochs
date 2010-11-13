@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.cc,v 1.125 2010-07-03 05:34:27 vruppert Exp $
+// $Id: floppy.cc,v 1.126 2010-11-13 13:00:26 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2009  The Bochs Project
@@ -135,7 +135,7 @@ void bx_floppy_ctrl_c::init(void)
 {
   Bit8u i, devtype, cmos_value;
 
-  BX_DEBUG(("Init $Id: floppy.cc,v 1.125 2010-07-03 05:34:27 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: floppy.cc,v 1.126 2010-11-13 13:00:26 sshwarts Exp $"));
   DEV_dma_register_8bit_channel(2, dma_read, dma_write, "Floppy Drive");
   DEV_register_irq(6, "Floppy Drive");
   for (unsigned addr=0x03F2; addr<=0x03F7; addr++) {
@@ -1052,12 +1052,12 @@ void bx_floppy_ctrl_c::floppy_xfer(Bit8u drive, Bit32u offset, Bit8u *buffer,
       // I don't know why this returns 28 instead of 512, but it works
       if (ret_cnt == 28)
         ret = 512;
-    } else {
-#endif
-      ret = ::read(BX_FD_THIS s.media[drive].fd, (bx_ptr_t) buffer, bytes);
-#ifdef WIN32
     }
+    else
 #endif
+    {
+      ret = ::read(BX_FD_THIS s.media[drive].fd, (bx_ptr_t) buffer, bytes);
+    }
     if (ret < int(bytes)) {
       /* ??? */
       if (ret > 0) {
@@ -1097,12 +1097,12 @@ void bx_floppy_ctrl_c::floppy_xfer(Bit8u drive, Bit32u offset, Bit8u *buffer,
       // I don't know why this returns 28 instead of 512, but it works
       if (ret_cnt == 28)
         ret = 512;
-    } else {
-#endif
-      ret = ::write(BX_FD_THIS s.media[drive].fd, (bx_ptr_t) buffer, bytes);
-#ifdef WIN32
     }
+    else
 #endif
+    {
+      ret = ::write(BX_FD_THIS s.media[drive].fd, (bx_ptr_t) buffer, bytes);
+    }
     if (ret < int(bytes)) {
       BX_PANIC(("could not perform write() on floppy image file"));
     }
@@ -1581,22 +1581,19 @@ bx_bool bx_floppy_ctrl_c::evaluate_media(Bit8u devtype, Bit8u type, char *path, 
         else
           media->fd = open(sTemp, BX_RDONLY);
       }
-    } else {
+    }
+    else
+#endif
+    {
       if (!media->write_protected)
         media->fd = open(path, BX_RDWR);
       else
         media->fd = open(path, BX_RDONLY);
     }
-#else
-    if (!media->write_protected)
-      media->fd = open(path, BX_RDWR);
-    else
-      media->fd = open(path, BX_RDONLY);
-#endif
 
   // Don't open the handle if using Win95 style direct access
   if (!media->raw_floppy_win95) {
-    if ((!media->write_protected) && (media->fd < 0)) {
+    if (!media->write_protected && (media->fd < 0)) {
       BX_INFO(("tried to open '%s' read/write: %s",path,strerror(errno)));
       // try opening the file read-only
       media->write_protected = 1;
@@ -1605,14 +1602,12 @@ bx_bool bx_floppy_ctrl_c::evaluate_media(Bit8u devtype, Bit8u type, char *path, 
       if (strcmp(SIM->get_param_string(BXPN_FLOPPYA_PATH)->getptr(), SuperDrive))
 #endif
 #ifdef WIN32
-      if (raw_floppy == 1) {
+      if (raw_floppy == 1)
         media->fd = open(sTemp, BX_RDONLY);
-      } else {
-        media->fd = open(path, BX_RDONLY);
-      }
-#else
-      media->fd = open(path, BX_RDONLY);
 #endif
+      else
+        media->fd = open(path, BX_RDONLY);
+
       if (media->fd < 0) {
         // failed to open read-only too
         BX_INFO(("tried to open '%s' read only: %s",path,strerror(errno)));
@@ -1632,13 +1627,12 @@ bx_bool bx_floppy_ctrl_c::evaluate_media(Bit8u devtype, Bit8u type, char *path, 
     memset (&stat_buf, 0, sizeof(stat_buf));
     stat_buf.st_mode = S_IFCHR;
     ret = 0;
-  } else {
+  }
+  else
+#endif
+  { // unix
     ret = fstat(media->fd, &stat_buf);
   }
-#else
-  // unix
-  ret = fstat(media->fd, &stat_buf);
-#endif
   if (ret) {
     BX_PANIC(("fstat floppy 0 drive image file returns error: %s", strerror(errno)));
     return(0);
