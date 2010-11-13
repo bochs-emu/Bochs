@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.cc,v 1.126 2010-11-13 13:00:26 sshwarts Exp $
+// $Id: floppy.cc,v 1.127 2010-11-13 13:06:00 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2009  The Bochs Project
@@ -135,7 +135,7 @@ void bx_floppy_ctrl_c::init(void)
 {
   Bit8u i, devtype, cmos_value;
 
-  BX_DEBUG(("Init $Id: floppy.cc,v 1.126 2010-11-13 13:00:26 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: floppy.cc,v 1.127 2010-11-13 13:06:00 sshwarts Exp $"));
   DEV_dma_register_8bit_channel(2, dma_read, dma_write, "Floppy Drive");
   DEV_register_irq(6, "Floppy Drive");
   for (unsigned addr=0x03F2; addr<=0x03F7; addr++) {
@@ -1604,8 +1604,8 @@ bx_bool bx_floppy_ctrl_c::evaluate_media(Bit8u devtype, Bit8u type, char *path, 
 #ifdef WIN32
       if (raw_floppy == 1)
         media->fd = open(sTemp, BX_RDONLY);
-#endif
       else
+#endif
         media->fd = open(path, BX_RDONLY);
 
       if (media->fd < 0) {
