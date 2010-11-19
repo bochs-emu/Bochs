@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxdialog.cc,v 1.115 2010-07-03 05:34:27 vruppert Exp $
+// $Id: wxdialog.cc,v 1.116 2010-11-19 18:42:11 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
@@ -908,7 +908,6 @@ bool ParamDialog::CopyGuiToParam(bx_param_c *param)
   int i;
 
   if (param == NULL) return false;
-  fprintf(stderr, "param: %s\n", param->get_name());
   ParamStruct *pstr = (ParamStruct*) paramHash->Get(param->get_id());
   wxLogDebug(wxT("commit changes for param %s"), param->get_name());
   int type = param->get_type();
@@ -979,7 +978,6 @@ bool ParamDialog::CopyGuiToParam(bx_param_c *param)
       bx_list_c *list = (bx_list_c*) param;
       for (i = 0; i < list->get_size(); i++) {
         bx_param_c *item = list->get(i);
-        fprintf(stderr, "list param: %s\n", item->get_name());
         if (!CopyGuiToParam(item)) break;
       }
       break;
