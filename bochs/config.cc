@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.211 2010-09-12 20:47:23 sshwarts Exp $
+// $Id: config.cc,v 1.212 2010-11-19 18:41:38 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2009  The Bochs Project
@@ -119,11 +119,11 @@ static Bit64s bx_param_handler(bx_param_c *param, int set, Bit64s val)
         bx_gui->update_drive_status_buttons();
       }
     } else if (!strcmp(pname, BXPN_FLOPPYA_READONLY)) {
-      if (set) {
+      if ((set) && (SIM->get_init_done())) {
         DEV_floppy_set_media_readonly(0, val);
       }
     } else if (!strcmp(pname, BXPN_FLOPPYB_READONLY)) {
-      if (set) {
+      if ((set) && (SIM->get_init_done())) {
         DEV_floppy_set_media_readonly(1, val);
       }
     } else if (!strcmp(pname, BXPN_MOUSE_ENABLED)) {
