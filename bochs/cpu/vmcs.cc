@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmcs.cc,v 1.5 2010-11-13 09:18:16 sshwarts Exp $
+// $Id: vmcs.cc,v 1.6 2010-11-19 08:39:52 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2009-2010 Stanislav Shwartsman
@@ -25,6 +25,8 @@
 #include "bochs.h"
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
+
+#if BX_SUPPORT_VMX
 
 static unsigned vmcs_map[16][1+VMX_HIGHEST_VMCS_ENCODING];
 
@@ -318,3 +320,5 @@ bx_bool BX_CPU_C::vmcs_field_supported(Bit32u encoding)
 
   return 0;
 }
+
+#endif
