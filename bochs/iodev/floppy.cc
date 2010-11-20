@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.cc,v 1.127 2010-11-13 13:06:00 sshwarts Exp $
+// $Id: floppy.cc,v 1.128 2010-11-20 12:37:00 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2009  The Bochs Project
@@ -135,7 +135,7 @@ void bx_floppy_ctrl_c::init(void)
 {
   Bit8u i, devtype, cmos_value;
 
-  BX_DEBUG(("Init $Id: floppy.cc,v 1.127 2010-11-13 13:06:00 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: floppy.cc,v 1.128 2010-11-20 12:37:00 vruppert Exp $"));
   DEV_dma_register_8bit_channel(2, dma_read, dma_write, "Floppy Drive");
   DEV_register_irq(6, "Floppy Drive");
   for (unsigned addr=0x03F2; addr<=0x03F7; addr++) {
@@ -1034,7 +1034,7 @@ void bx_floppy_ctrl_c::floppy_xfer(Bit8u drive, Bit32u offset, Bit8u *buffer,
       ret = fd_read((char *) buffer, offset, bytes);
     else
 #endif
-#ifdef WIN32
+#if defined(WIN32) && !defined(_WIN64)
     // if using Win95 direct access
     if (BX_FD_THIS s.media[drive].raw_floppy_win95) {
       DWORD ret_cnt = 0;
@@ -1079,7 +1079,7 @@ void bx_floppy_ctrl_c::floppy_xfer(Bit8u drive, Bit32u offset, Bit8u *buffer,
       ret = fd_write((char *) buffer, offset, bytes);
     else
 #endif
-#ifdef WIN32
+#if defined(WIN32) && !defined(_WIN64)
     // if using Win95 direct access
     if (BX_FD_THIS s.media[drive].raw_floppy_win95) {
       DWORD ret_cnt = 0;
@@ -1534,6 +1534,7 @@ bx_bool bx_floppy_ctrl_c::evaluate_media(Bit8u devtype, Bit8u type, char *path, 
       hFile = CreateFile(sTemp, GENERIC_READ, FILE_SHARE_WRITE, NULL,
                          OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
       if (hFile == INVALID_HANDLE_VALUE) {
+#ifndef _WIN64
         // try to open it with Win95 style
         hFile = CreateFile("\\\\.\\vwin32", 0, 0, NULL, 0, FILE_FLAG_DELETE_ON_CLOSE, NULL);
         if (hFile == INVALID_HANDLE_VALUE) {
@@ -1542,7 +1543,12 @@ bx_bool bx_floppy_ctrl_c::evaluate_media(Bit8u devtype, Bit8u type, char *path, 
         }
         media->raw_floppy_win95 = 1;
         media->raw_floppy_win95_drv = toupper(path[0]) - 'A';
+#else
+        BX_ERROR(("Cannot open floppy drive"));
+        return(0);
+#endif
       }
+#ifndef _WIN64
       // if using Win95 direct access, get params this way
       if (media->raw_floppy_win95) {
         DWORD ret_cnt = 0;
@@ -1562,7 +1568,10 @@ bx_bool bx_floppy_ctrl_c::evaluate_media(Bit8u devtype, Bit8u type, char *path, 
           CloseHandle(hFile);
           return(0);
         }
-      } else {
+      }
+      else
+#endif
+      {
         if (!DeviceIoControl(hFile, IOCTL_DISK_GET_DRIVE_GEOMETRY, NULL, 0, &dg, sizeof(dg), &bytes, NULL)) {
           BX_ERROR(("No media in floppy drive"));
           CloseHandle(hFile);
