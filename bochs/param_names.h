@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: param_names.h,v 1.11 2010-07-22 16:41:58 sshwarts Exp $
+// $Id: param_names.h,v 1.12 2010-11-21 12:02:12 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  The Bochs Project
@@ -51,6 +51,7 @@
 #define BXPN_CPUID_SEP                   "cpuid.sep"
 #define BXPN_CPUID_XSAVE                 "cpuid.xsave"
 #define BXPN_CPUID_XAPIC                 "cpuid.xapic"
+#define BXPN_CPUID_MWAIT                 "cpuid.mwait"
 #define BXPN_CPUID_MWAIT_IS_NOP          "cpuid.mwait_is_nop"
 #define BXPN_CPUID_1G_PAGES              "cpuid.1g_pages"
 #define BXPN_CPUID_PCID                  "cpuid.pcid"

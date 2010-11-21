@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpuid.cc,v 1.124 2010-10-07 16:39:31 sshwarts Exp $
+// $Id: cpuid.cc,v 1.125 2010-11-21 12:02:12 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007-2010 Stanislav Shwartsman
@@ -434,7 +434,7 @@ void BX_CPU_C::set_cpuid_defaults(void)
   // do not report CPUID functions above 0x3 if cpuid_limit_winnt is set
   // to workaround WinNT issue.
   if (! cpuid_limit_winnt) {
-    if (BX_SUPPORT_MONITOR_MWAIT)
+    if (BX_CPU_SUPPORT_ISA_EXTENSION(BX_CPU_MONITOR_MWAIT))
       cpuid->eax = 0x5;
 #if BX_SUPPORT_X2APIC
     cpuid->eax = 0xb;
@@ -541,21 +541,24 @@ void BX_CPU_C::set_cpuid_defaults(void)
 #if BX_SUPPORT_MONITOR_MWAIT
   // ------------------------------------------------------
   // CPUID function 0x00000005
-  cpuid = &(BX_CPU_THIS_PTR cpuid_std_function[5]);
+  if (BX_CPU_SUPPORT_ISA_EXTENSION(BX_CPU_MONITOR_MWAIT))
+  {
+    cpuid = &(BX_CPU_THIS_PTR cpuid_std_function[5]);
 
-  // EAX - Smallest monitor-line size in bytes
-  // EBX - Largest  monitor-line size in bytes
-  // ECX -
-  //   [31:2] - reserved
-  //    [1:1] - exit MWAIT even with EFLAGS.IF = 0
-  //    [0:0] - MONITOR/MWAIT extensions are supported
-  // EDX - Reserved
-  cpuid->eax = CACHE_LINE_SIZE;
-  cpuid->ebx = CACHE_LINE_SIZE;
-  cpuid->ecx = 3;
-  cpuid->edx = 0;
+    // EAX - Smallest monitor-line size in bytes
+    // EBX - Largest  monitor-line size in bytes
+    // ECX -
+    //   [31:2] - reserved
+    //    [1:1] - exit MWAIT even with EFLAGS.IF = 0
+    //    [0:0] - MONITOR/MWAIT extensions are supported
+    // EDX - Reserved
+    cpuid->eax = CACHE_LINE_SIZE;
+    cpuid->ebx = CACHE_LINE_SIZE;
+    cpuid->ecx = 3;
+    cpuid->edx = 0;
 
-  BX_INFO(("CPUID[0x00000005]: %08x %08x %08x %08x", cpuid->eax, cpuid->ebx, cpuid->ecx, cpuid->edx));
+    BX_INFO(("CPUID[0x00000005]: %08x %08x %08x %08x", cpuid->eax, cpuid->ebx, cpuid->ecx, cpuid->edx));
+  }
 #endif
 
   // ------------------------------------------------------
@@ -970,10 +973,13 @@ void BX_CPU_C::init_isa_features_bitmask(void)
   xsave_enabled = SIM->get_param_bool(BXPN_CPUID_XSAVE)->get();
   xapic_enabled = SIM->get_param_bool(BXPN_CPUID_XAPIC)->get();
   sse_enabled = SIM->get_param_enum(BXPN_CPUID_SSE)->get();
-#endif
 #if BX_SUPPORT_X86_64
   bx_bool fsgsbase_enabled = SIM->get_param_bool(BXPN_CPUID_FSGSBASE)->get();
 #endif
+#if BX_SUPPORT_MONITOR_MWAIT
+  bx_bool mwait_enabled = SIM->get_param_bool(BXPN_CPUID_MWAIT)->get();
+#endif
+#endif // BX_CPU_LEVEL >= 6
 
   // sanity checks
 #if BX_SUPPORT_3DNOW
@@ -1063,12 +1069,14 @@ void BX_CPU_C::init_isa_features_bitmask(void)
 #if BX_SUPPORT_3DNOW
   features_bitmask |= BX_CPU_3DNOW;
 #endif
-#if BX_SUPPORT_MONITOR_MWAIT
-  features_bitmask |= BX_CPU_MONITOR_MWAIT;
-#endif
 
 #if BX_CPU_LEVEL >= 6
   features_bitmask |= BX_CPU_P6;
+
+#if BX_SUPPORT_MONITOR_MWAIT
+  if (mwait_enabled)
+    features_bitmask |= BX_CPU_MONITOR_MWAIT;
+#endif
 
   // FXSAVE/FXRSTOR support come with Pentium II
   if (mmx_enabled)

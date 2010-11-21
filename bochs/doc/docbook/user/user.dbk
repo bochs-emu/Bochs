@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.282 2010-10-17 19:50:46 vruppert Exp $
+$Id: user.dbk,v 1.283 2010-11-21 12:02:12 sshwarts Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -3102,6 +3102,11 @@ This option exists only if Bochs compiled with x86-64 support.
 <para>
 Enable Process-Context Identifiers (PCID) support in long mode.
 This option exists only if Bochs compiled with x86-64 support.
+</para>
+<para><command>mwait</command></para>
+<para>
+Select MONITOR/MWAIT instructions support.
+This option exists only if Bochs compiled with --enable-monitor-mwait.
 </para>
 <para><command>mwait_is_nop</command></para>
 <para>

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.212 2010-11-19 18:41:38 vruppert Exp $
+// $Id: config.cc,v 1.213 2010-11-21 12:02:12 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2009  The Bochs Project
@@ -452,6 +452,10 @@ void bx_init_options()
       0);
 #endif
 #if BX_SUPPORT_MONITOR_MWAIT
+  new bx_param_bool_c(cpuid_param,
+      "mwait", "MONITOR/MWAIT instructions support",
+      "Don't put CPU to sleep state by MWAIT",
+      BX_SUPPORT_MONITOR_MWAIT);
   new bx_param_bool_c(cpuid_param,
       "mwait_is_nop", "MWAIT enter CPU to sleep state",
       "Don't put CPU to sleep state by MWAIT",
@@ -2729,6 +2733,10 @@ static int parse_line_formatted(const char *context, int num_params, char *param
         }
 #endif
 #if BX_SUPPORT_MONITOR_MWAIT
+      } else if (!strncmp(params[i], "mwait=", 6)) {
+        if (parse_param_bool(params[i], 6, BXPN_CPUID_MWAIT) < 0) {
+          PARSE_ERR(("%s: cpuid directive malformed.", context));
+        }
       } else if (!strncmp(params[i], "mwait_is_nop=", 13)) {
         if (parse_param_bool(params[i], 13, BXPN_CPUID_MWAIT_IS_NOP) < 0) {
           PARSE_ERR(("%s: cpuid directive malformed.", context));
@@ -3909,7 +3917,9 @@ int bx_write_configuration(const char *rc, int overwrite)
     SIM->get_param_bool(BXPN_CPUID_FSGSBASE)->get());
 #endif
 #if BX_SUPPORT_MONITOR_MWAIT
-  fprintf(fp, ", mwait_is_nop=%d", SIM->get_param_bool(BXPN_CPUID_MWAIT_IS_NOP)->get());
+  fprintf(fp, ", mwait=%d, mwait_is_nop=%d",
+    SIM->get_param_bool(BXPN_CPUID_MWAIT)->get(),
+    SIM->get_param_bool(BXPN_CPUID_MWAIT_IS_NOP)->get());
 #endif
 #endif
   fprintf(fp, "\n");

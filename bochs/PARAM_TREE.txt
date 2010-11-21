@@ -1,4 +1,4 @@
-$Id: PARAM_TREE.txt,v 1.32 2010-07-22 16:41:57 sshwarts Exp $
+$Id: PARAM_TREE.txt,v 1.33 2010-11-21 12:02:12 sshwarts Exp $
 
 Starting from Bochs 2.3 the parameters are organized in a tree structure
 instead of a huge flat list. The parameter tree was required for implementing
@@ -40,6 +40,7 @@ cpuid
   1g_pages
   pcid
   fsgsbase
+  mwait
   mwait_is_nop
 
 memory
