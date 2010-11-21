@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ne2k.cc,v 1.109 2009-12-04 19:50:28 sshwarts Exp $
+// $Id: ne2k.cc,v 1.110 2010-11-21 16:21:41 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -1118,9 +1118,9 @@ void bx_ne2k_c::tx_timer(void)
   BX_DEBUG(("tx_timer"));
   BX_NE2K_THIS s.CR.tx_packet = 0;
   BX_NE2K_THIS s.TSR.tx_ok = 1;
-  // Generate an interrupt if not masked and not one in progress
-  if (BX_NE2K_THIS s.IMR.tx_inte && !BX_NE2K_THIS s.ISR.pkt_tx) {
-    BX_NE2K_THIS s.ISR.pkt_tx = 1;
+  BX_NE2K_THIS s.ISR.pkt_tx = 1;
+  // Generate an interrupt if not masked
+  if (BX_NE2K_THIS s.IMR.tx_inte) {
     set_irq_level(1);
   }
   BX_NE2K_THIS s.tx_timer_active = 0;
@@ -1410,7 +1410,7 @@ void bx_ne2k_c::init(void)
   Bit8u macaddr[6];
   bx_list_c *base;
 
-  BX_DEBUG(("Init $Id: ne2k.cc,v 1.109 2009-12-04 19:50:28 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: ne2k.cc,v 1.110 2010-11-21 16:21:41 vruppert Exp $"));
 
   // Read in values from config interface
   base = (bx_list_c*) SIM->get_param(BXPN_NE2K);
