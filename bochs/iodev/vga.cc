@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.172 2010-08-15 19:57:50 sshwarts Exp $
+// $Id: vga.cc,v 1.173 2010-11-22 22:11:30 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2009  The Bochs Project
@@ -584,7 +584,7 @@ void bx_vga_c::determine_screen_dimensions(unsigned *piHeight, unsigned *piWidth
         *piHeight = v;
       }
     }
-    else if ((h >= 640) && (v >= 480)) {
+    else if ((h >= 640) && (v >= 400)) {
       *piWidth = h;
       *piHeight = v;
     }
