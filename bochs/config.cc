@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.213 2010-11-21 12:02:12 sshwarts Exp $
+// $Id: config.cc,v 1.214 2010-11-22 21:55:56 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2009  The Bochs Project
@@ -1790,6 +1790,7 @@ void bx_init_options()
 
   // log options subtree
   menu = new bx_list_c(root_param, "log", "Logfile Options");
+  menu->set_options(menu->SHOW_PARENT);
 
   // log options
   path = new bx_param_filename_c(menu,
