@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: i387.h,v 1.41 2010-09-26 20:35:24 sshwarts Exp $
+// $Id: i387.h,v 1.42 2010-11-23 15:42:26 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2004-2009 Stanislav Shwartsman
@@ -29,7 +29,7 @@
 #include "fpu/softfloat.h"
 
 #define BX_FPU_REG(index) \
-    (BX_CPU_THIS_PTR the_i387.st_space[index])
+    (BX_CPU_THIS_PTR the_i387.st_space[index & 0x7])
 
 #if defined(NEED_CPU_REG_SHORTCUTS)
 #define FPU_PARTIAL_STATUS     (BX_CPU_THIS_PTR the_i387.swd)

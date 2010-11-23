@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dis_groups.cc,v 1.54 2010-11-23 14:59:36 sshwarts Exp $
+// $Id: dis_groups.cc,v 1.55 2010-11-23 15:42:26 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005-2009 Stanislav Shwartsman
@@ -330,9 +330,9 @@ void disassembler::ST0(const x86_insn *insn)
 void disassembler::STi(const x86_insn *insn)
 {
   if (intel_mode)
-    dis_sprintf  ("st(%d)", insn->rm);
+    dis_sprintf  ("st(%d)", insn->rm & 7);
   else
-    dis_sprintf("%%st(%d)", insn->rm);
+    dis_sprintf("%%st(%d)", insn->rm & 7);
 }
 
 // 16-bit general purpose register
@@ -363,17 +363,17 @@ void disassembler::Ry(const x86_insn *insn)
 void disassembler::Pq(const x86_insn *insn)
 {
   if (intel_mode)
-    dis_sprintf  ("mm%d", insn->nnn);
+    dis_sprintf  ("mm%d", insn->nnn & 0x7);
   else
-    dis_sprintf("%%mm%d", insn->nnn);
+    dis_sprintf("%%mm%d", insn->nnn & 0x7);
 }
 
 void disassembler::Nq(const x86_insn *insn)
 {
   if (intel_mode)
-    dis_sprintf  ("mm%d", insn->rm);
+    dis_sprintf  ("mm%d", insn->rm & 0x7);
   else
-    dis_sprintf("%%mm%d", insn->rm);
+    dis_sprintf("%%mm%d", insn->rm & 0x7);
 }
 
 void disassembler::Qd(const x86_insn *insn)
@@ -381,9 +381,9 @@ void disassembler::Qd(const x86_insn *insn)
   if (insn->mod == 3)
   {
     if (intel_mode)
-      dis_sprintf  ("mm%d", insn->rm);
+      dis_sprintf  ("mm%d", insn->rm & 0x7);
     else
-      dis_sprintf("%%mm%d", insn->rm);
+      dis_sprintf("%%mm%d", insn->rm & 0x7);
   }
   else
     (this->*resolve_modrm)(insn, D_SIZE);
@@ -394,9 +394,9 @@ void disassembler::Qq(const x86_insn *insn)
   if (insn->mod == 3)
   {
     if (intel_mode)
-      dis_sprintf  ("mm%d", insn->rm);
+      dis_sprintf  ("mm%d", insn->rm & 0x7);
     else
-      dis_sprintf("%%mm%d", insn->rm);
+      dis_sprintf("%%mm%d", insn->rm & 0x7);
   }
   else
     (this->*resolve_modrm)(insn, Q_SIZE);

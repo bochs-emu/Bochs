@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu.cc,v 1.65 2010-11-11 15:48:56 sshwarts Exp $
+// $Id: fpu.cc,v 1.66 2010-11-23 15:42:26 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003-2009 Stanislav Shwartsman
@@ -51,12 +51,6 @@ void BX_CPU_C::FPU_update_last_instruction(bxInstruction_c *i)
      BX_CPU_THIS_PTR the_i387.fds = BX_CPU_THIS_PTR sregs[i->seg()].selector.value;
      BX_CPU_THIS_PTR the_i387.fdp = RMAddr(i);
   }
-#if BX_SUPPORT_X86_64
-  else {
-     // it is possible that rm() register was extended by REX prefix
-     i->setRm(i->rm() & 7);
-  }
-#endif
 }
 
 void BX_CPU_C::FPU_check_pending_exceptions(void)
