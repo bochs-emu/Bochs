@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial.cc,v 1.92 2010-11-23 14:59:36 sshwarts Exp $
+// $Id: serial.cc,v 1.93 2010-11-23 20:26:37 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004-2009  The Bochs Project
@@ -30,19 +30,20 @@
 // is used to know when we are exporting symbols and when we are importing.
 #define BX_PLUGGABLE
 
-#include "iodev.h"
-#include "serial.h"
-
 #ifndef WIN32
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h>
 #define closesocket(s)    close(s)
+typedef int SOCKET;
 #else
 #ifndef FILE_FLAG_FIRST_PIPE_INSTANCE
 #define FILE_FLAG_FIRST_PIPE_INSTANCE 0
 #endif
 #endif
+
+#include "iodev.h"
+#include "serial.h"
 
 #if USE_RAW_SERIAL
 #include "serial_raw.h"
