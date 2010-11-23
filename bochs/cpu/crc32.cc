@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: crc32.cc,v 1.5 2010-02-25 22:04:30 sshwarts Exp $
+// $Id: crc32.cc,v 1.6 2010-11-23 14:59:35 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008-2009 Stanislav Shwartsman
@@ -67,7 +67,7 @@ static Bit32u mod2_64bit(Bit64u divisor, Bit64u dividend)
     }
   }
 
-  return remainder;
+  return (Bit32u) remainder;
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::CRC32_GdEb(bxInstruction_c *i)

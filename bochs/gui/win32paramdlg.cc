@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32paramdlg.cc,v 1.17 2010-11-01 15:02:14 sshwarts Exp $
+// $Id: win32paramdlg.cc,v 1.18 2010-11-23 14:59:36 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Volker Ruppert
@@ -619,7 +619,7 @@ void SetParamList(HWND hDlg, bx_list_c *list)
                   src++;
                 if (*src == 0) break;
                 if (sscanf(src, "%02x", &val)) {
-                  rawbuf[j] = val;
+                  rawbuf[j] = (char) val;
                   src += 2;
                 } else {
                   break;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: svga_cirrus.cc,v 1.52 2009-04-22 18:37:06 vruppert Exp $
+// $Id: svga_cirrus.cc,v 1.53 2010-11-23 14:59:36 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Copyright (c) 2004 Makoto Suzuki (suzu)
@@ -652,9 +652,7 @@ Bit8u bx_svga_cirrus_c::mem_read(bx_phy_address addr)
   }
   else if (addr >= 0xB8000 && addr <= 0xB8100) {
     // memory-mapped I/O.
-    Bit32u offset;
-
-    offset = addr - 0xb8000;
+    Bit32u offset = (Bit32u) (addr - 0xb8000);
     if ((BX_CIRRUS_THIS sequencer.reg[0x17] & 0x44) == 0x04)
       return svga_mmio_blt_read(offset);
   }
@@ -793,9 +791,7 @@ void bx_svga_cirrus_c::mem_write(bx_phy_address addr, Bit8u value)
     }
   } else if (addr >= 0xB8000 && addr < 0xB8100) {
     // memory-mapped I/O.
-    Bit32u offset;
-
-    offset = addr - 0xb8000;
+    Bit32u offset = (Bit32u) (addr - 0xb8000);
     if ((BX_CIRRUS_THIS sequencer.reg[0x17] & 0x44) == 0x04) {
       svga_mmio_blt_write(offset & 0xff, value);
     }

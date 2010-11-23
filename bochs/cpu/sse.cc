@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse.cc,v 1.71 2010-05-18 07:28:05 sshwarts Exp $
+// $Id: sse.cc,v 1.72 2010-11-23 14:59:35 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003-2010 Stanislav Shwartsman
@@ -1215,7 +1215,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PINSRB_VdqEbIb(bxInstruction_c *i)
 
   /* op2 is a register or memory reference */
   if (i->modC0()) {
-    op2 = BX_READ_16BIT_REG(i->rm()); // won't allow reading of AH/CH/BH/DH
+    op2 = (Bit8u) BX_READ_16BIT_REG(i->rm()); // won't allow reading of AH/CH/BH/DH
   }
   else {
     bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));

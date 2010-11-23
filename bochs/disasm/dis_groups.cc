@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dis_groups.cc,v 1.53 2010-07-22 15:12:07 sshwarts Exp $
+// $Id: dis_groups.cc,v 1.54 2010-11-23 14:59:36 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005-2009 Stanislav Shwartsman
@@ -645,8 +645,7 @@ void disassembler::Jb(const x86_insn *insn)
     }
 
     if (db_base != BX_JUMP_TARGET_NOT_REQ) {
-      Bit32u target = (Bit32u)(db_eip + (Bit32s) imm32);
-      target += db_base;
+      Bit32u target = (Bit32u)(db_base + db_eip + (Bit32s) imm32);
       dis_sprintf(" (0x%08x)", target);
     }
   }
@@ -702,8 +701,7 @@ void disassembler::Jd(const x86_insn *insn)
     }
 
     if (db_base != BX_JUMP_TARGET_NOT_REQ) {
-      Bit64u target = db_eip + (Bit64s) imm64;
-      target += db_base;
+      Bit64u target = db_base + db_eip + (Bit64s) imm64;
       dis_sprintf(" (0x%08x%08x)", GET32H(target), GET32L(target));
     }
 
@@ -718,8 +716,7 @@ void disassembler::Jd(const x86_insn *insn)
   }
 
   if (db_base != BX_JUMP_TARGET_NOT_REQ) {
-    Bit32u target = (Bit32u)(db_eip + (Bit32s) imm32);
-    target += db_base;
+    Bit32u target = (Bit32u)(db_base + db_eip + (Bit32s) imm32);
     dis_sprintf(" (0x%08x)", target);
   }
 }

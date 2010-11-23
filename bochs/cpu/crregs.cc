@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: crregs.cc,v 1.21 2010-10-07 20:40:01 sshwarts Exp $
+// $Id: crregs.cc,v 1.22 2010-11-23 14:59:35 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2010 Stanislav Shwartsman
@@ -784,7 +784,7 @@ bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::check_CR0(bx_address cr0_val)
   }
 #endif
 
-  temp_cr0.set32(cr0_val);
+  temp_cr0.set32((Bit32u) cr0_val);
 
   if (temp_cr0.get_PG() && !temp_cr0.get_PE()) {
     BX_ERROR(("check_CR0(0x%08x): attempt to set CR0.PG with CR0.PE cleared !", temp_cr0.get32()));
@@ -903,7 +903,7 @@ bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::SetCR0(bx_address val)
 #if BX_CPU_LEVEL >= 4
 Bit32u BX_CPU_C::get_cr4_allow_mask(void)
 {
-  bx_address allowMask = 0;
+  Bit32u allowMask = 0;
 
   // CR4 bits definitions:
   //   [31-19] Reserved, Must be Zero
@@ -1065,7 +1065,7 @@ bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::SetCR4(bx_address val)
   }
 #endif
 
-  BX_CPU_THIS_PTR cr4.set32(val);
+  BX_CPU_THIS_PTR cr4.set32((Bit32u) val);
 
   return 1;
 }

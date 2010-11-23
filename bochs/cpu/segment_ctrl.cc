@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: segment_ctrl.cc,v 1.24 2009-12-04 16:53:12 sshwarts Exp $
+// $Id: segment_ctrl.cc,v 1.25 2010-11-23 14:59:35 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -30,7 +30,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LES_GwMp(bxInstruction_c *i)
 {
   BX_ASSERT(BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64);
 
-  Bit32u eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  Bit32u eaddr = (Bit32u) BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
   Bit16u reg_16 = read_virtual_word_32(i->seg(), eaddr);
   Bit16u es     = read_virtual_word_32(i->seg(), eaddr + 2);
@@ -45,7 +45,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LES_GdMp(bxInstruction_c *i)
 {
   BX_ASSERT(BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64);
 
-  Bit32u eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  Bit32u eaddr = (Bit32u) BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
   Bit16u es = read_virtual_word_32(i->seg(), eaddr + 4);
   Bit32u reg_32 = read_virtual_dword_32(i->seg(), eaddr);
@@ -60,7 +60,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LDS_GwMp(bxInstruction_c *i)
 {
   BX_ASSERT(BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64);
 
-  Bit32u eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  Bit32u eaddr = (Bit32u) BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
   Bit16u reg_16 = read_virtual_word_32(i->seg(), eaddr);
   Bit16u ds     = read_virtual_word_32(i->seg(), eaddr + 2);
@@ -75,7 +75,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LDS_GdMp(bxInstruction_c *i)
 {
   BX_ASSERT(BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64);
 
-  Bit32u eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  Bit32u eaddr = (Bit32u) BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
   Bit16u ds = read_virtual_word_32(i->seg(), eaddr + 4);
   Bit32u reg_32 = read_virtual_dword_32(i->seg(), eaddr);

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial.cc,v 1.91 2009-12-04 19:50:29 sshwarts Exp $
+// $Id: serial.cc,v 1.92 2010-11-23 14:59:36 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004-2009  The Bochs Project
@@ -306,7 +306,7 @@ bx_serial_c::init(void)
         struct hostent      *hp;
         char                host[BX_PATHNAME_LEN];
         int                 port;
-        int                 socket;
+        SOCKET              socket;
         bx_bool             server = !strcmp(mode, "socket-server");
 
 #if defined(WIN32)
@@ -353,12 +353,12 @@ bx_serial_c::init(void)
           if (::bind (socket, (sockaddr *) &sin, sizeof (sin)) < 0 ||
               ::listen (socket, SOMAXCONN) < 0) {
             closesocket(socket);
-            socket = -1;
+            socket = (SOCKET) -1;
             BX_PANIC(("com%d: bind() or listen() failed (host:%s, port:%d)",i+1, host, port));
           }
           else {
             BX_INFO(("com%d: waiting for client to connect (host:%s, port:%d)",i+1, host, port));
-            int client;
+            SOCKET client;
             if ((client = ::accept (socket, NULL, 0)) < 0)
               BX_PANIC(("com%d: accept() failed (host:%s, port:%d)",i+1, host, port));
             closesocket(socket);
@@ -368,7 +368,7 @@ bx_serial_c::init(void)
         // client mode
         else if (::connect (socket, (sockaddr *) &sin, sizeof (sin)) < 0) {
           closesocket(socket);
-          socket = -1;
+          socket = (SOCKET) -1;
           BX_INFO(("com%d: connect() failed (host:%s, port:%d)",i+1, host, port));
         }
 
@@ -1395,7 +1395,7 @@ bx_serial_c::rx_timer(void)
           tval.tv_sec  = 0;
           tval.tv_usec = 0;
           FD_ZERO(&fds);
-          int socketid = BX_SER_THIS s[port].socket_id;
+          SOCKET socketid = BX_SER_THIS s[port].socket_id;
           if (socketid >= 0) FD_SET(socketid, &fds);
           if ((socketid >= 0) && (select(socketid+1, &fds, NULL, NULL, &tval) == 1)) {
 #ifdef WIN32

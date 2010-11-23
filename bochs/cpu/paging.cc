@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.226 2010-10-07 16:39:31 sshwarts Exp $
+// $Id: paging.cc,v 1.227 2010-11-23 14:59:35 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2010  The Bochs Project
@@ -997,7 +997,7 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned curr_pl, un
 #endif 
     {
       // CR4.PAE==0 (and EFER.LMA==0)
-      Bit32u pde, pte, cr3_masked = BX_CPU_THIS_PTR cr3 & BX_CR3_PAGING_MASK;
+      Bit32u pde, pte, cr3_masked = (Bit32u) BX_CPU_THIS_PTR cr3 & BX_CR3_PAGING_MASK;
 
       bx_phy_address pde_addr = (bx_phy_address) (cr3_masked | ((laddr & 0xffc00000) >> 20));
 #if BX_SUPPORT_VMX >= 2

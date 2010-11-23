@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: misc_mem.cc,v 1.148 2010-08-15 19:57:49 sshwarts Exp $
+// $Id: misc_mem.cc,v 1.149 2010-11-23 14:59:36 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -73,7 +73,7 @@ void BX_MEM_C::init_memory(Bit64u guest, Bit64u host)
 {
   unsigned idx;
 
-  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.148 2010-08-15 19:57:49 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.149 2010-11-23 14:59:36 sshwarts Exp $"));
 
   // accept only memory size which is multiply of 1M
   BX_ASSERT((host & 0xfffff) == 0);
@@ -427,7 +427,7 @@ bx_bool BX_MEM_C::dbg_fetch_mem(BX_CPU_C *cpu, bx_phy_address addr, unsigned len
 #if BX_SUPPORT_PCI
     else if (BX_MEM_THIS pci_enabled && (addr >= 0x000c0000 && addr < 0x00100000))
     {
-      switch (DEV_pci_rd_memtype (addr)) {
+      switch (DEV_pci_rd_memtype ((Bit32u) addr)) {
         case 0x0:  // Read from ROM
           if ((addr & 0xfffe0000) == 0x000e0000) {
             // last 128K of BIOS ROM mapped to 0xE0000-0xFFFFF
@@ -608,7 +608,7 @@ Bit8u *BX_MEM_C::getHostMemAddr(BX_CPU_C *cpu, bx_phy_address addr, unsigned rw)
 #if BX_SUPPORT_PCI
     else if (BX_MEM_THIS pci_enabled && (a20addr >= 0x000c0000 && a20addr < 0x00100000))
     {
-      switch (DEV_pci_rd_memtype (a20addr)) {
+      switch (DEV_pci_rd_memtype ((Bit32u) a20addr)) {
         case 0x0:   // Read from ROM
           if ((a20addr & 0xfffe0000) == 0x000e0000) {
             // last 128K of BIOS ROM mapped to 0xE0000-0xFFFFF

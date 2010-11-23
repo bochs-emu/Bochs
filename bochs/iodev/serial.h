@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial.h,v 1.38 2009-12-04 19:50:29 sshwarts Exp $
+// $Id: serial.h,v 1.39 2010-11-23 14:59:36 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004-2009  The Bochs Project
@@ -112,7 +112,7 @@ typedef struct {
 
   int io_mode;
   int tty_id;
-  int socket_id;
+  SOCKET socket_id;
   FILE *output;
 #ifdef WIN32
   HANDLE pipe;

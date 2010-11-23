@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: memory.cc,v 1.84 2010-05-18 08:54:01 sshwarts Exp $
+// $Id: memory.cc,v 1.85 2010-11-23 14:59:36 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -152,7 +152,7 @@ mem_write:
       // Write Based on 440fx Programming
       if (BX_MEM_THIS pci_enabled && ((a20addr & 0xfffc0000) == 0x000c0000))
       {
-        switch (DEV_pci_wr_memtype(a20addr)) {
+        switch (DEV_pci_wr_memtype((Bit32u) a20addr)) {
           case 0x1:   // Writes to ShadowRAM
             BX_DEBUG(("Writing to ShadowRAM: address 0x" FMT_PHY_ADDRX ", data %02x", a20addr, *data_ptr));
             *(BX_MEM_THIS get_vector(a20addr)) = *data_ptr;
@@ -287,7 +287,7 @@ mem_read:
 #if BX_SUPPORT_PCI
       if (BX_MEM_THIS pci_enabled && ((a20addr & 0xfffc0000) == 0x000c0000))
       {
-        switch (DEV_pci_rd_memtype(a20addr)) {
+        switch (DEV_pci_rd_memtype((Bit32u) a20addr)) {
           case 0x0:  // Read from ROM
             if ((a20addr & 0xfffe0000) == 0x000e0000) {
               // last 128K of BIOS ROM mapped to 0xE0000-0xFFFFF

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack32.cc,v 1.65 2010-04-30 09:12:52 sshwarts Exp $
+// $Id: stack32.cc,v 1.66 2010-11-23 14:59:35 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -38,7 +38,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::POP_EdM(bxInstruction_c *i)
   // Note: there is one little weirdism here.  It is possible to use
   // ESP in the modrm addressing. If used, the value of ESP after the
   // pop is used to calculate the address.
-  Bit32u eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  Bit32u eaddr = (Bit32u) BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
   write_virtual_dword_32(i->seg(), eaddr, val32);
 

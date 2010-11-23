@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.173 2010-11-22 22:11:30 vruppert Exp $
+// $Id: vga.cc,v 1.174 2010-11-23 14:59:36 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2009  The Bochs Project
@@ -2958,12 +2958,12 @@ bx_vga_c::vbe_mem_read(bx_phy_address addr)
   if (addr >= BX_VGA_THIS vbe.base_address)
   {
     // LFB read
-    offset = addr - BX_VGA_THIS vbe.base_address;
+    offset = (Bit32u)(addr - BX_VGA_THIS vbe.base_address);
   }
   else
   {
     // banked mode read
-    offset = BX_VGA_THIS vbe.bank*65536 + addr - 0xA0000;
+    offset = (Bit32u)(BX_VGA_THIS vbe.bank*65536 + addr - 0xA0000);
   }
 
   // check for out of memory read
@@ -2984,7 +2984,7 @@ bx_vga_c::vbe_mem_write(bx_phy_address addr, Bit8u value)
     if (addr >= BX_VGA_THIS vbe.base_address)
     {
       // LFB write
-      offset = addr - BX_VGA_THIS vbe.base_address;
+      offset = (Bit32u)(addr - BX_VGA_THIS vbe.base_address);
     }
     else
     {
@@ -2997,7 +2997,7 @@ bx_vga_c::vbe_mem_write(bx_phy_address addr, Bit8u value)
     if (addr < BX_VGA_THIS vbe.base_address)
     {
       // banked mode write
-      offset = (BX_VGA_THIS vbe.bank*65536) + (addr - 0xA0000);
+      offset = (Bit32u)(BX_VGA_THIS vbe.bank*65536 + (addr - 0xA0000));
     }
     else
     {

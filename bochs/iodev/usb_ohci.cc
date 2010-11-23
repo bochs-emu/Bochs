@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_ohci.cc,v 1.35 2009-04-29 18:16:31 vruppert Exp $
+// $Id: usb_ohci.cc,v 1.36 2010-11-23 14:59:36 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Benjamin D Lunt (fys at frontiernet net)
@@ -512,7 +512,7 @@ bx_bool bx_usb_ohci_c::read_handler(bx_phy_address addr, unsigned len, void *dat
     return 1;
   }
 
-  Bit32u  offset = addr - BX_OHCI_THIS hub.base_addr;
+  Bit32u  offset = (Bit32u)(addr - BX_OHCI_THIS hub.base_addr);
   switch (offset) {
     case 0x00: // HcRevision
       val = BX_OHCI_THIS hub.op_regs.HcRevision;

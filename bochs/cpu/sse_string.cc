@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_string.cc,v 1.17 2010-05-22 19:55:12 sshwarts Exp $
+// $Id: sse_string.cc,v 1.18 2010-11-23 14:59:35 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007-2009 Stanislav Shwartsman
@@ -143,11 +143,11 @@ static unsigned find_eos64(Bit64s reg64, Bit8u imm)
 {
   if (imm & 0x1) {  // 8  elements
     if (reg64 > 8 || reg64 < -8) return 8;
-    else return abs(reg64);
+    else return (unsigned) abs(reg64);
   }
   else {            // 16 elements
     if (reg64 > 16 || reg64 < -16) return 16;
-    else return abs(reg64);
+    else return (unsigned) abs(reg64);
   }
 }
 #endif
