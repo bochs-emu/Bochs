@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: model_specific.h,v 1.1 2010-10-07 16:40:00 sshwarts Exp $
+// $Id: model_specific.h,v 1.2 2010-11-27 20:20:32 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2010 Stanislav Shwartsman
@@ -193,10 +193,19 @@
 // [7:7]   Misaligned SSE support
 // [8:8]   PREFETCHW: PREFETCHW instruction support
 // [9:9]   OSVW: OS visible workarounds (AMD)
-// [11:10] reserved
+// [10:10] IBS: Instruction based sampling
+// [11:11] XOP: Extended Operations Support and XOP Prefix
 // [12:12] SKINIT support
 // [13:13] WDT: Watchdog timer support
-// [31:14] reserved
+// [14:14] reserved
+// [15:15] LWP: Light weight profiling
+// [16:16] FMA4: Four-operand FMA instructions support
+// [18:17] reserved
+// [19:19] NodeId: Indicates support for NodeId MSR (0xc001100c)
+// [20:20] reserved
+// [21:21] TBM: trailing bit manipulation instruction support
+// [22:22] Topology extensions support
+// [31:23] reserved
 
 #define BX_CPUID_EXT2_LAHF_SAHF              (1 <<  0)
 #define BX_CPUID_EXT2_CMP_LEGACY             (1 <<  1)
@@ -208,9 +217,18 @@
 #define BX_CPUID_EXT2_MISALIGNED_SSE         (1 <<  7)
 #define BX_CPUID_EXT2_PREFETCHW              (1 <<  8)
 #define BX_CPUID_EXT2_OSVW                   (1 <<  9)
-#define BX_CPUID_EXT2_RESERVED10             (1 << 10)
-#define BX_CPUID_EXT2_RESERVED11             (1 << 11)
+#define BX_CPUID_EXT2_IBS                    (1 << 10)
+#define BX_CPUID_EXT2_XOP                    (1 << 11)
 #define BX_CPUID_EXT2_SKINIT                 (1 << 12)
 #define BX_CPUID_EXT2_WDT                    (1 << 13)
+#define BX_CPUID_EXT2_RESERVED14             (1 << 14)
+#define BX_CPUID_EXT2_LWP                    (1 << 15)
+#define BX_CPUID_EXT2_FMA4                   (1 << 16)
+#define BX_CPUID_EXT2_RESERVED17             (1 << 17)
+#define BX_CPUID_EXT2_RESERVED18             (1 << 18)
+#define BX_CPUID_EXT2_NODEID                 (1 << 19)
+#define BX_CPUID_EXT2_RESERVED20             (1 << 20)
+#define BX_CPUID_EXT2_TBM                    (1 << 21)
+#define BX_CPUID_EXT2_TOPOLOGY_EXTENSIONS    (1 << 22)
 
 #endif
