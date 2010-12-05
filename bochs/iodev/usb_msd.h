@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_msd.h,v 1.13 2009-04-06 15:36:55 vruppert Exp $
+// $Id: usb_msd.h,v 1.14 2010-12-05 13:09:41 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Volker Ruppert
@@ -33,8 +33,9 @@ public:
   usb_msd_device_c(usbdev_type type, const char *filename);
   virtual ~usb_msd_device_c(void);
 
-  bx_bool init();
-  const char* get_path() {return s.fname;}
+  virtual bx_bool init();
+  virtual const char* get_info();
+
   virtual void handle_reset();
   virtual int handle_control(int request, int value, int index, int length, Bit8u *data);
   virtual int handle_data(USBPacket *p);
@@ -67,6 +68,7 @@ private:
     bx_list_c *sr_list;
     const char *fname;
     bx_list_c *config;
+    char info_txt[BX_PATHNAME_LEN];
   } s;
 
   static const char *cd_param_string_handler(bx_param_string_c *param, int set,

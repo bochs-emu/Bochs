@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_msd.cc,v 1.24 2009-04-21 15:37:17 vruppert Exp $
+// $Id: usb_msd.cc,v 1.25 2010-12-05 13:09:41 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Volker Ruppert
@@ -213,7 +213,13 @@ bx_bool usb_msd_device_c::init()
   s.scsi_dev->register_state(s.sr_list, "scsidev");
   s.mode = USB_MSDM_CBW;
   d.connected = 1;
+  sprintf(s.info_txt, "USB %s: path='%s'", d.type==USB_DEV_TYPE_DISK ? "HD" : "CD", s.fname);
   return 1;
+}
+
+const char* usb_msd_device_c::get_info()
+{
+  return s.info_txt;
 }
 
 void usb_msd_device_c::register_state_specific(bx_list_c *parent)

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_ohci.cc,v 1.36 2010-11-23 14:59:36 sshwarts Exp $
+// $Id: usb_ohci.cc,v 1.37 2010-12-05 13:09:41 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Benjamin D Lunt (fys at frontiernet net)
@@ -35,9 +35,6 @@
 
 #include "pci.h"
 #include "usb_common.h"
-#include "usb_hid.h"
-#include "usb_hub.h"
-#include "usb_msd.h"
 #include "usb_ohci.h"
 
 #define LOG_THIS theUSB_OHCI->
@@ -1432,13 +1429,12 @@ void bx_usb_ohci_c::usb_set_connect_status(Bit8u port, int type, bx_bool connect
         BX_OHCI_THIS hub.usb_port[port].HcRhPortStatus.lsda =
           (device->get_speed() == USB_SPEED_LOW);
         BX_OHCI_THIS hub.usb_port[port].HcRhPortStatus.ccs = 1;
-        if (((type == USB_DEV_TYPE_DISK) || (type == USB_DEV_TYPE_CDROM)) &&
-            (!device->get_connected())) {
-          if (!((usb_msd_device_c*)device)->init()) {
+        if (!device->get_connected()) {
+          if (!device->init()) {
             usb_set_connect_status(port, type, 0);
+            BX_ERROR(("port #%d: connect failed", port+1));
           } else {
-            BX_INFO(("%s on USB port #%d: '%s'", (type == USB_DEV_TYPE_DISK) ? "HD":"CD",
-                     port+1, ((usb_msd_device_c*)device)->get_path()));
+            BX_INFO(("port #%d: connect: %s", port+1, device->get_info()));
           }
         }
       } else { // not connected

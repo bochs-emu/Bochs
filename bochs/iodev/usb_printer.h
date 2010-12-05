@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_printer.h,v 1.2 2009-12-04 17:54:22 sshwarts Exp $
+// $Id: usb_printer.h,v 1.3 2010-12-05 13:09:41 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Benjamin David Lunt
@@ -27,6 +27,9 @@ public:
   usb_printer_device_c(usbdev_type type, const char *filename);
   virtual ~usb_printer_device_c(void);
 
+  virtual bx_bool init();
+  virtual const char* get_info();
+
   virtual void handle_reset();
   virtual int handle_control(int request, int value, int index, int length, Bit8u *data);
   virtual int handle_data(USBPacket *p);
@@ -35,8 +38,9 @@ public:
 private:
   struct {
     Bit8u printer_status;
-    char fname[BX_PATHNAME_LEN];
+    const char *fname;
     FILE *fp;
+    char info_txt[BX_PATHNAME_LEN];
   } s;
 };
 

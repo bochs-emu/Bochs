@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_common.h,v 1.11 2009-12-04 13:01:41 sshwarts Exp $
+// $Id: usb_common.h,v 1.12 2010-12-05 13:09:41 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Benjamin D Lunt (fys at frontiernet net)
@@ -132,6 +132,9 @@ class usb_device_c : public logfunctions {
 public:
   usb_device_c(void);
   virtual ~usb_device_c() {}
+
+  virtual bx_bool init() {return 1;}
+  virtual const char* get_info() {return NULL;}
 
   virtual int handle_packet(USBPacket *p);
   virtual void handle_reset() {}

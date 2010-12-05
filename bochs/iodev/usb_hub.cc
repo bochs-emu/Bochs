@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_hub.cc,v 1.12 2009-04-12 07:26:58 vruppert Exp $
+// $Id: usb_hub.cc,v 1.13 2010-12-05 13:09:41 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Volker Ruppert
@@ -33,7 +33,6 @@
 #if BX_SUPPORT_PCI && BX_SUPPORT_PCIUSB
 #include "usb_common.h"
 #include "usb_hub.h"
-#include "usb_msd.h"
 
 #define LOG_THIS
 
@@ -596,13 +595,12 @@ void usb_hub_device_c::usb_set_connect_status(Bit8u port, int type, bx_bool conn
           hub.usb_port[port].PortStatus |= PORT_STAT_LOW_SPEED;
         else
           hub.usb_port[port].PortStatus &= ~PORT_STAT_LOW_SPEED;
-        if (((type == USB_DEV_TYPE_DISK) || (type == USB_DEV_TYPE_CDROM)) &&
-            (!device->get_connected())) {
-          if (!((usb_msd_device_c*)device)->init()) {
+        if (!device->get_connected()) {
+          if (!device->init()) {
             usb_set_connect_status(port, type, 0);
+            BX_ERROR(("port #%d: connect failed", port+1));
           } else {
-            BX_INFO(("%s on USB port #%d: '%s'", (type == USB_DEV_TYPE_DISK) ? "HD":"CD",
-                     port+1, ((usb_msd_device_c*)device)->get_path()));
+            BX_INFO(("port #%d: connect: %s", port+1, device->get_info()));
           }
         }
       } else {
