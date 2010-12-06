@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: devices.cc,v 1.150 2009-12-04 19:50:26 sshwarts Exp $
+// $Id: devices.cc,v 1.151 2010-12-06 18:51:13 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2009  The Bochs Project
@@ -104,7 +104,7 @@ void bx_devices_c::init(BX_MEM_C *newmem)
   const char *plugname;
 #endif
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.150 2009-12-04 19:50:26 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.151 2010-12-06 18:51:13 vruppert Exp $"));
   mem = newmem;
 
   /* set builtin default handlers, will be overwritten by the real default handler */
@@ -147,6 +147,8 @@ void bx_devices_c::init(BX_MEM_C *newmem)
   // common mouse settings
   mouse_captured = SIM->get_param_bool(BXPN_MOUSE_ENABLED)->get();
   mouse_type = SIM->get_param_enum(BXPN_MOUSE_TYPE)->get();
+
+  bx_usb_init_device = NULL;
 
   // register as soon as possible - the devices want to have their timers !
   bx_virt_timer.init();
@@ -251,6 +253,9 @@ void bx_devices_c::init(BX_MEM_C *newmem)
         (!strcmp(SIM->get_param_string(BXPN_VGA_EXTENSION)->getptr(), "vbe"))) {
       PLUG_load_plugin(pcivga, PLUGTYPE_OPTIONAL);
     }
+#endif
+#if BX_SUPPORT_PCIUSB
+    PLUG_load_plugin(usb_common, PLUGTYPE_OPTIONAL);
 #endif
 #if BX_SUPPORT_USB_UHCI
     if (is_usb_uhci_enabled()) {
@@ -1143,6 +1148,20 @@ void bx_devices_c::mouse_motion(int delta_x, int delta_y, int delta_z, unsigned 
   if (bx_mouse[0].dev != NULL) {
     bx_mouse[0].enq_event(bx_mouse[0].dev, delta_x, delta_y, delta_z, button_state);
   }
+}
+
+// USB devices init stuff
+void bx_devices_c::register_usb_init_device(bx_usb_init_device_t usb_init_device)
+{
+  bx_usb_init_device = usb_init_device;
+}
+
+int bx_devices_c::usb_init_device(const char *devname, logfunctions *hub, void **dev)
+{
+  if (bx_usb_init_device != NULL) {
+    return bx_usb_init_device(devname, hub, dev);
+  }
+  return 0;
 }
 
 void bx_pci_device_stub_c::register_pci_state(bx_list_c *list, Bit8u *pci_conf)

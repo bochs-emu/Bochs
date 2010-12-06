@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_ohci.cc,v 1.37 2010-12-05 13:09:41 vruppert Exp $
+// $Id: usb_ohci.cc,v 1.38 2010-12-06 18:51:13 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Benjamin D Lunt (fys at frontiernet net)
@@ -455,7 +455,7 @@ void bx_usb_ohci_c::init_device(Bit8u port, const char *devname)
     BX_ERROR(("init_device(): port%d already in use", port+1));
     return;
   }
-  type = usb_init_device(devname, BX_OHCI_THIS_PTR, &BX_OHCI_THIS hub.usb_port[port].device);
+  type = DEV_usb_init_device(devname, BX_OHCI_THIS_PTR, &BX_OHCI_THIS hub.usb_port[port].device);
   if (BX_OHCI_THIS hub.usb_port[port].device != NULL) {
     sprintf(pname, "usb_ohci.hub.port%d.device", port+1);
     bx_list_c *devlist = (bx_list_c*)SIM->get_param(pname, SIM->get_bochs_root());

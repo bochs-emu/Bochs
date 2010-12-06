@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.122 2010-08-15 19:57:50 sshwarts Exp $
+// $Id: iodev.h,v 1.123 2010-12-06 18:51:13 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2009  The Bochs Project
@@ -46,6 +46,8 @@ typedef void   (*bx_write_handler_t)(void *, Bit32u, Bit32u, unsigned);
 typedef bx_bool (*bx_keyb_enq_t)(void *, Bit8u *);
 typedef void (*bx_mouse_enq_t)(void *, int, int, int, unsigned);
 typedef void (*bx_mouse_enabled_changed_t)(void *, bx_bool);
+
+typedef int (*bx_usb_init_device_t)(const char *, logfunctions *, void **);
 
 #if BX_USE_DEV_SMF
 #  define BX_DEV_SMF  static
@@ -397,6 +399,9 @@ public:
   void mouse_enabled_changed(bx_bool enabled);
   void mouse_motion(int delta_x, int delta_y, int delta_z, unsigned button_state);
 
+  void register_usb_init_device(bx_usb_init_device_t usb_init_device);
+  int usb_init_device(const char *devname, logfunctions *hub, void **dev);
+
   static void timer_handler(void *);
   void timer(void);
 
@@ -500,6 +505,8 @@ private:
     void *dev;
     bx_keyb_enq_t enq_event;
   } bx_keyboard;
+
+  bx_usb_init_device_t bx_usb_init_device;
 
   int timer_handle;
 

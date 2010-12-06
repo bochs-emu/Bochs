@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_common.cc,v 1.13 2009-12-04 13:01:41 sshwarts Exp $
+// $Id: usb_common.cc,v 1.14 2010-12-06 18:51:13 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Benjamin D Lunt (fys at frontiernet net)
@@ -56,10 +56,23 @@
 
 #define LOG_THIS
 
-usbdev_type usb_init_device(const char *devname, logfunctions *hub, usb_device_c **device)
+int usb_init_device(const char *devname, logfunctions *hub, void **dev);
+
+int libusb_common_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
+{
+  DEV_register_usb_init_device(usb_init_device);
+  return(0); // Success
+}
+
+void libusb_common_LTX_plugin_fini(void)
+{
+}
+
+int usb_init_device(const char *devname, logfunctions *hub, void **dev)
 {
   usbdev_type type = USB_DEV_TYPE_NONE;
   int ports;
+  usb_device_c **device = (usb_device_c**)dev;
 
   if (!strcmp(devname, "mouse")) {
     type = USB_DEV_TYPE_MOUSE;

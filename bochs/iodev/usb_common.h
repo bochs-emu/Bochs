@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_common.h,v 1.12 2010-12-05 13:09:41 vruppert Exp $
+// $Id: usb_common.h,v 1.13 2010-12-06 18:51:13 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Benjamin D Lunt (fys at frontiernet net)
@@ -125,8 +125,6 @@ enum usbdev_type {
   USB_DEV_TYPE_HUB,
   USB_DEV_TYPE_PRINTER
 };
-
-usbdev_type usb_init_device(const char *devname, logfunctions *hc, usb_device_c **device);
 
 class usb_device_c : public logfunctions {
 public:

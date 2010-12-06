@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: plugin.h,v 1.83 2010-07-03 05:34:27 vruppert Exp $
+// $Id: plugin.h,v 1.84 2010-12-06 18:51:12 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  The Bochs Project
@@ -60,6 +60,7 @@ extern "C" {
 #define BX_PLUGIN_EXTFPUIRQ "extfpuirq"
 #define BX_PLUGIN_PCIVGA    "pcivga"
 #define BX_PLUGIN_PCIDEV    "pcidev"
+#define BX_PLUGIN_USB_COMMON "usb_common"
 #define BX_PLUGIN_USB_UHCI  "usb_uhci"
 #define BX_PLUGIN_USB_OHCI  "usb_ohci"
 #define BX_PLUGIN_PCIPNIC   "pcipnic"
@@ -243,6 +244,10 @@ extern "C" {
 #define DEV_unregister_memory_handlers(rh,wh,b,e) \
     bx_devices.mem->unregisterMemoryHandlers(rh,wh,b,e)
 
+///////// USB device init macros
+#define DEV_register_usb_init_device(a) bx_devices.register_usb_init_device(a)
+#define DEV_usb_init_device(a,b,c) (usbdev_type)bx_devices.usb_init_device(a,b,(void**)c)
+
 
 #if BX_HAVE_DLFCN_H
 #include <dlfcn.h>
@@ -383,6 +388,7 @@ DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(pci2isa)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(pci_ide)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(pcivga)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(pcidev)
+DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(usb_common)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(usb_uhci)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(usb_ohci)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(pcipnic)

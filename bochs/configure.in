@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.440 2010-11-01 14:50:18 sshwarts Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.441 2010-12-06 18:51:12 vruppert Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -776,8 +776,10 @@ AC_ARG_ENABLE(usb-ohci,
   )
 
 if test "$use_usb" = 1; then
-  USBDEV_OBJS="usb_common.o usb_hid.o usb_hub.o usb_msd.o usb_printer.o"
+  USBCORE_OBJ="usb_common.o"
+  USBDEV_OBJS="usb_hid.o usb_hub.o usb_msd.o usb_printer.o"
   SCSI_OBJS="scsi_device.o"
+  AC_SUBST(USBCORE_OBJ)
   AC_SUBST(USBDEV_OBJS)
   AC_SUBST(SCSI_OBJS)
 fi
