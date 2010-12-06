@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.246 2010-06-04 20:31:04 sshwarts Exp $
+// $Id: init.cc,v 1.247 2010-12-06 21:52:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -515,9 +515,9 @@ void BX_CPU_C::register_state(void)
     bx_list_c *sse = new bx_list_c(cpu, "SSE", 2*BX_XMM_REGISTERS+1);
     BXRS_HEX_PARAM_FIELD(sse, mxcsr, mxcsr.mxcsr);
     for (n=0; n<BX_XMM_REGISTERS; n++) {
-      sprintf(name, "xmm%02d_hi", n);
+      sprintf(name, "xmm%02d_1", n);
       new bx_shadow_num_c(sse, name, &xmm[n].xmm64u(1), BASE_HEX);
-      sprintf(name, "xmm%02d_lo", n);
+      sprintf(name, "xmm%02d_0", n);
       new bx_shadow_num_c(sse, name, &xmm[n].xmm64u(0), BASE_HEX);
     }
   }

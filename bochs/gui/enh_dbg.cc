@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: enh_dbg.cc,v 1.30 2010-06-18 18:47:21 sshwarts Exp $
+// $Id: enh_dbg.cc,v 1.31 2010-12-06 21:52:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  BOCHS ENHANCED DEBUGGER Ver 1.2
@@ -1285,40 +1285,40 @@ void InitRegObjects()
 
 #if BX_CPU_LEVEL >= 6
         if (! CpuSupportSSE) {
-            RegObject[cpu][XMM0_Rnum] = SIM->get_param_num("SSE.xmm00_lo", cpu_list);
-            RegObject[cpu][XMM1_Rnum] = SIM->get_param_num("SSE.xmm01_lo", cpu_list);
-            RegObject[cpu][XMM2_Rnum] = SIM->get_param_num("SSE.xmm02_lo", cpu_list);
-            RegObject[cpu][XMM3_Rnum] = SIM->get_param_num("SSE.xmm03_lo", cpu_list);
-            RegObject[cpu][XMM4_Rnum] = SIM->get_param_num("SSE.xmm04_lo", cpu_list);
-            RegObject[cpu][XMM5_Rnum] = SIM->get_param_num("SSE.xmm05_lo", cpu_list);
-            RegObject[cpu][XMM6_Rnum] = SIM->get_param_num("SSE.xmm06_lo", cpu_list);
-            RegObject[cpu][XMM7_Rnum] = SIM->get_param_num("SSE.xmm07_lo", cpu_list);
-            RegObject[cpu][XMM0_hi] = SIM->get_param_num("SSE.xmm00_hi", cpu_list);
-            RegObject[cpu][XMM1_hi] = SIM->get_param_num("SSE.xmm01_hi", cpu_list);
-            RegObject[cpu][XMM2_hi] = SIM->get_param_num("SSE.xmm02_hi", cpu_list);
-            RegObject[cpu][XMM3_hi] = SIM->get_param_num("SSE.xmm03_hi", cpu_list);
-            RegObject[cpu][XMM4_hi] = SIM->get_param_num("SSE.xmm04_hi", cpu_list);
-            RegObject[cpu][XMM5_hi] = SIM->get_param_num("SSE.xmm05_hi", cpu_list);
-            RegObject[cpu][XMM6_hi] = SIM->get_param_num("SSE.xmm06_hi", cpu_list);
-            RegObject[cpu][XMM7_hi] = SIM->get_param_num("SSE.xmm07_hi", cpu_list);
+            RegObject[cpu][XMM0_Rnum] = SIM->get_param_num("SSE.xmm00_0", cpu_list);
+            RegObject[cpu][XMM1_Rnum] = SIM->get_param_num("SSE.xmm01_0", cpu_list);
+            RegObject[cpu][XMM2_Rnum] = SIM->get_param_num("SSE.xmm02_0", cpu_list);
+            RegObject[cpu][XMM3_Rnum] = SIM->get_param_num("SSE.xmm03_0", cpu_list);
+            RegObject[cpu][XMM4_Rnum] = SIM->get_param_num("SSE.xmm04_0", cpu_list);
+            RegObject[cpu][XMM5_Rnum] = SIM->get_param_num("SSE.xmm05_0", cpu_list);
+            RegObject[cpu][XMM6_Rnum] = SIM->get_param_num("SSE.xmm06_0", cpu_list);
+            RegObject[cpu][XMM7_Rnum] = SIM->get_param_num("SSE.xmm07_0", cpu_list);
+            RegObject[cpu][XMM0_hi] = SIM->get_param_num("SSE.xmm00_1", cpu_list);
+            RegObject[cpu][XMM1_hi] = SIM->get_param_num("SSE.xmm01_1", cpu_list);
+            RegObject[cpu][XMM2_hi] = SIM->get_param_num("SSE.xmm02_1", cpu_list);
+            RegObject[cpu][XMM3_hi] = SIM->get_param_num("SSE.xmm03_1", cpu_list);
+            RegObject[cpu][XMM4_hi] = SIM->get_param_num("SSE.xmm04_1", cpu_list);
+            RegObject[cpu][XMM5_hi] = SIM->get_param_num("SSE.xmm05_1", cpu_list);
+            RegObject[cpu][XMM6_hi] = SIM->get_param_num("SSE.xmm06_1", cpu_list);
+            RegObject[cpu][XMM7_hi] = SIM->get_param_num("SSE.xmm07_1", cpu_list);
 
 #if BX_SUPPORT_X86_64
-            RegObject[cpu][XMM8_Rnum] = SIM->get_param_num("SSE.xmm08_lo", cpu_list);
-            RegObject[cpu][XMM9_Rnum] = SIM->get_param_num("SSE.xmm09_lo", cpu_list);
-            RegObject[cpu][XMMA_Rnum] = SIM->get_param_num("SSE.xmm10_lo", cpu_list);
-            RegObject[cpu][XMMB_Rnum] = SIM->get_param_num("SSE.xmm11_lo", cpu_list);
-            RegObject[cpu][XMMC_Rnum] = SIM->get_param_num("SSE.xmm12_lo", cpu_list);
-            RegObject[cpu][XMMD_Rnum] = SIM->get_param_num("SSE.xmm13_lo", cpu_list);
-            RegObject[cpu][XMME_Rnum] = SIM->get_param_num("SSE.xmm14_lo", cpu_list);
-            RegObject[cpu][XMMF_Rnum] = SIM->get_param_num("SSE.xmm15_lo", cpu_list);
-            RegObject[cpu][XMM8_hi] = SIM->get_param_num("SSE.xmm08_hi", cpu_list);
-            RegObject[cpu][XMM9_hi] = SIM->get_param_num("SSE.xmm09_hi", cpu_list);
-            RegObject[cpu][XMMA_hi] = SIM->get_param_num("SSE.xmm00_hi", cpu_list);
-            RegObject[cpu][XMMB_hi] = SIM->get_param_num("SSE.xmm11_hi", cpu_list);
-            RegObject[cpu][XMMC_hi] = SIM->get_param_num("SSE.xmm12_hi", cpu_list);
-            RegObject[cpu][XMMD_hi] = SIM->get_param_num("SSE.xmm13_hi", cpu_list);
-            RegObject[cpu][XMME_hi] = SIM->get_param_num("SSE.xmm14_hi", cpu_list);
-            RegObject[cpu][XMMF_hi] = SIM->get_param_num("SSE.xmm15_hi", cpu_list);
+            RegObject[cpu][XMM8_Rnum] = SIM->get_param_num("SSE.xmm08_0", cpu_list);
+            RegObject[cpu][XMM9_Rnum] = SIM->get_param_num("SSE.xmm09_0", cpu_list);
+            RegObject[cpu][XMMA_Rnum] = SIM->get_param_num("SSE.xmm10_0", cpu_list);
+            RegObject[cpu][XMMB_Rnum] = SIM->get_param_num("SSE.xmm11_0", cpu_list);
+            RegObject[cpu][XMMC_Rnum] = SIM->get_param_num("SSE.xmm12_0", cpu_list);
+            RegObject[cpu][XMMD_Rnum] = SIM->get_param_num("SSE.xmm13_0", cpu_list);
+            RegObject[cpu][XMME_Rnum] = SIM->get_param_num("SSE.xmm14_0", cpu_list);
+            RegObject[cpu][XMMF_Rnum] = SIM->get_param_num("SSE.xmm15_0", cpu_list);
+            RegObject[cpu][XMM8_hi] = SIM->get_param_num("SSE.xmm08_1", cpu_list);
+            RegObject[cpu][XMM9_hi] = SIM->get_param_num("SSE.xmm09_1", cpu_list);
+            RegObject[cpu][XMMA_hi] = SIM->get_param_num("SSE.xmm00_1", cpu_list);
+            RegObject[cpu][XMMB_hi] = SIM->get_param_num("SSE.xmm11_1", cpu_list);
+            RegObject[cpu][XMMC_hi] = SIM->get_param_num("SSE.xmm12_1", cpu_list);
+            RegObject[cpu][XMMD_hi] = SIM->get_param_num("SSE.xmm13_1", cpu_list);
+            RegObject[cpu][XMME_hi] = SIM->get_param_num("SSE.xmm14_1", cpu_list);
+            RegObject[cpu][XMMF_hi] = SIM->get_param_num("SSE.xmm15_1", cpu_list);
 #endif
         }
 #endif

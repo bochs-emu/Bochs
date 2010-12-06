@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.238 2010-07-22 16:41:58 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.239 2010-12-06 21:52:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -717,9 +717,9 @@ void bx_dbg_print_sse_state(void)
 
     char param_name[20];
     for(unsigned i=0;i<BX_XMM_REGISTERS;i++) {
-      sprintf(param_name, "SSE.xmm%02d_hi", i);
+      sprintf(param_name, "SSE.xmm%02d_1", i);
       Bit64u hi = SIM->get_param_num(param_name, dbg_cpu_list)->get64();
-      sprintf(param_name, "SSE.xmm%02d_lo", i);
+      sprintf(param_name, "SSE.xmm%02d_0", i);
       Bit64u lo = SIM->get_param_num(param_name, dbg_cpu_list)->get64();
       dbg_printf("XMM[%02u]: %08x:%08x:%08x:%08x\n", i,
          GET32H(hi), GET32L(hi), GET32H(lo), GET32L(lo));
