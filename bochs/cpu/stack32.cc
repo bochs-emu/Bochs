@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack32.cc,v 1.66 2010-11-23 14:59:35 sshwarts Exp $
+// $Id: stack32.cc,v 1.67 2010-12-06 21:45:56 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -47,12 +47,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::POP_EdM(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUSH_ERX(bxInstruction_c *i)
 {
-  push_32(BX_READ_32BIT_REG(i->opcodeReg()));
+  push_32(BX_READ_32BIT_REG(i->rm()));
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::POP_ERX(bxInstruction_c *i)
 {
-  BX_WRITE_32BIT_REGZ(i->opcodeReg(), pop_32());
+  BX_WRITE_32BIT_REGZ(i->rm(), pop_32());
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUSH32_CS(bxInstruction_c *i)

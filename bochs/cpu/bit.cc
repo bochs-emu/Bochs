@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bit.cc,v 1.69 2010-09-20 20:43:16 sshwarts Exp $
+// $Id: bit.cc,v 1.70 2010-12-06 21:45:56 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -239,22 +239,22 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SETNLE_EbR(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::BSWAP_RX(bxInstruction_c *i)
 {
   BX_ERROR(("BSWAP with 16-bit opsize: undefined behavior !"));
-  BX_WRITE_16BIT_REG(i->opcodeReg(), 0);
+  BX_WRITE_16BIT_REG(i->rm(), 0);
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::BSWAP_ERX(bxInstruction_c *i)
 {
-  Bit32u val32 = BX_READ_32BIT_REG(i->opcodeReg());
+  Bit32u val32 = BX_READ_32BIT_REG(i->rm());
 
-  BX_WRITE_32BIT_REGZ(i->opcodeReg(), bx_bswap32(val32));
+  BX_WRITE_32BIT_REGZ(i->rm(), bx_bswap32(val32));
 }
 
 #if BX_SUPPORT_X86_64
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::BSWAP_RRX(bxInstruction_c *i)
 {
-  Bit64u val64 = BX_READ_64BIT_REG(i->opcodeReg());
+  Bit64u val64 = BX_READ_64BIT_REG(i->rm());
 
-  BX_WRITE_64BIT_REG(i->opcodeReg(), bx_bswap64(val64));
+  BX_WRITE_64BIT_REG(i->rm(), bx_bswap64(val64));
 }
 #endif
 

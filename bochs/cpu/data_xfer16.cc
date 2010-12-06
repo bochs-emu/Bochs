@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: data_xfer16.cc,v 1.69 2010-05-02 15:11:39 sshwarts Exp $
+// $Id: data_xfer16.cc,v 1.70 2010-12-06 21:45:56 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -26,14 +26,14 @@
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RXIw(bxInstruction_c *i)
 {
-  BX_WRITE_16BIT_REG(i->opcodeReg(), i->Iw());
+  BX_WRITE_16BIT_REG(i->rm(), i->Iw());
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::XCHG_RXAX(bxInstruction_c *i)
 {
   Bit16u temp16 = AX;
-  AX = BX_READ_16BIT_REG(i->opcodeReg());
-  BX_WRITE_16BIT_REG(i->opcodeReg(), temp16);
+  AX = BX_READ_16BIT_REG(i->rm());
+  BX_WRITE_16BIT_REG(i->rm(), temp16);
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_EwGwM(bxInstruction_c *i)

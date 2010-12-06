@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack64.cc,v 1.47 2010-04-30 09:12:52 sshwarts Exp $
+// $Id: stack64.cc,v 1.48 2010-12-06 21:45:56 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -44,12 +44,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::POP_EqM(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUSH_RRX(bxInstruction_c *i)
 {
-  push_64(BX_READ_64BIT_REG(i->opcodeReg()));
+  push_64(BX_READ_64BIT_REG(i->rm()));
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::POP_RRX(bxInstruction_c *i)
 {
-  BX_WRITE_64BIT_REG(i->opcodeReg(), pop_64());
+  BX_WRITE_64BIT_REG(i->rm(), pop_64());
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUSH64_FS(bxInstruction_c *i)

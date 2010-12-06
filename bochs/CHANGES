@@ -1,3 +1,73 @@
+Changes after 2.4.5 release:
+
+- CPU and internal debugger
+  - Implemented Process Context ID (PCID) feature
+  - Implemented FS/GS BASE access instructions support
+    (according to document from http://software.intel.com/en-us/avx/)
+  - Bugfixes for CPU emulation correctness and stability
+    - Fixed failures on Big Endian hosts !
+  - Print detailed page walk information and attributes in
+    internal debugger 'page' command
+  - Updated/Fixed instrumentation callbacks
+
+- Configure and compile
+  - Added ability to configure CPUID stepping through .bochsrc.
+    The default stepping value is 3.
+  - Added ability to disable MONITOR/MWAIT support through .bochsrc
+    CPUID option. The option is available only if compiled with
+    --enable-monitor-mwait configure option.
+  - Determine and select max physical address size automatically at
+    configure time:
+    - 32-bit physical address for 386/486 guests
+    - 36-bit physical address for PSE-36 enabled Pentium guest
+    - 40-bit physical address for PAE enabled P6 or later guests
+  - Update config.guess/config.sub scripts to May 2010 revisions.
+  - Added Bochs compilation timestamp after Bochs version string.
+
+- GUI and display libraries (Volker)
+  - Added new .bochsrc option to select mouse capture toggle method.
+    In addition to the default Bochs method using the CTRL key and the
+    middle mouse button there are now the choices:
+    - CTRL+F10 (like DOSBox)
+    - CTRL+ALT (like QEMU)
+    - F12 (replaces win32 'legacyF12' option)
+
+- ROM BIOS
+  - Support for up to 2M ROM BIOS images
+
+- I/O Devices
+  - Fixes for emulated DHCP in eth_vnet (patch from @SF tracker)
+  - Added write protect option for floppy drives (based on @SF patch by Ben Lunt)
+
+- SF patches applied
+ [1539417] write protect for floppy drives by Ben Lunt
+ [2862322] fixes for emulated DHCP in eth_vnet
+
+- these S.F. bugs were closed/fixed
+ [3111577] No "back" option in log settings
+ [3108422] Timing window in NE2K emulation
+ [3084390] Bochs won't load floppy plugin right on startup
+ [3043174] Docbook use of '_' build failure
+ [3085140] Ia_arpl_Ew_Rw definition of error
+ [3078995] ROL/ROR/SHL/SHR modeling wrong when dest reg is 32 bit
+ [2864794] BX_INSTR_OPCODE in "cpu_loop" causes crash in x86_64 host
+ [2884071] [AIX host] prefetch: EIP [00010000] > CS.limit [0000ffff]
+ [3053542] 64 bit mode: far-jmp instruction is error
+ [3011112] error compile vs2008/2010 with X2APIC
+ [3002017] compile error with vs 2010
+ [3009767] guest RFLAGS.IF blocks externel interrupt in VMX guest mode
+ [2964655] VMX not enabled in MSR IA32_FEATURE_CONTROL
+ [3005865] IDT show bug
+ [3001637] CMOS MAP register meaning error
+ [2994370] Cannot build with 3DNow support
+
+- these S.F. feature requests were closed/implemented
+ [1062553] select mouse (de)activation in bochsrc
+ [2930633] legacy mouse capture key : not specific enough
+ [2930679] Let user change mouse capture control key
+ [2803538] Show flags for pages when using "info tab"
+
+-------------------------------------------------------------------------
 Changes in 2.4.5 (April 25, 2010):
 
 Brief summary :

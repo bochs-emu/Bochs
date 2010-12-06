@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.277 2010-10-18 22:19:45 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.278 2010-12-06 21:45:56 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2010  The Bochs Project
@@ -3608,7 +3608,7 @@ modrm_done:
         OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[sse_prefix-1]);
 
       ia_opcode = OpcodeInfoPtr->IA;
-      i->setOpcodeReg((b1 & 7) | rex_b);
+      i->setRm((b1 & 7) | rex_b);
     }
   }
 

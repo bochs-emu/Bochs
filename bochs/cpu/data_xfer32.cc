@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: data_xfer32.cc,v 1.66 2010-02-26 11:44:50 sshwarts Exp $
+// $Id: data_xfer32.cc,v 1.67 2010-12-06 21:45:56 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -32,18 +32,18 @@
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::XCHG_ERXEAX(bxInstruction_c *i)
 {
 #if BX_SUPPORT_X86_64
-  if (i->opcodeReg() == 0)  // 'xchg eax, eax' is NOP even in 64-bit mode
+  if (i->rm() == 0)  // 'xchg eax, eax' is NOP even in 64-bit mode
     return;
 #endif
 
   Bit32u temp32 = EAX;
-  RAX = BX_READ_32BIT_REG(i->opcodeReg());
-  BX_WRITE_32BIT_REGZ(i->opcodeReg(), temp32);
+  RAX = BX_READ_32BIT_REG(i->rm());
+  BX_WRITE_32BIT_REGZ(i->rm(), temp32);
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_ERXId(bxInstruction_c *i)
 {
-  BX_WRITE_32BIT_REGZ(i->opcodeReg(), i->Id());
+  BX_WRITE_32BIT_REGZ(i->rm(), i->Id());
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV32_EdGdM(bxInstruction_c *i)

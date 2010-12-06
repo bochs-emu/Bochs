@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: data_xfer8.cc,v 1.47 2010-09-24 21:15:16 sshwarts Exp $
+// $Id: data_xfer8.cc,v 1.48 2010-12-06 21:45:56 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -26,12 +26,12 @@
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RLIb(bxInstruction_c *i)
 {
-  BX_WRITE_8BIT_REGx(i->opcodeReg(), i->extend8bitL(), i->Ib());
+  BX_WRITE_8BIT_REGx(i->rm(), i->extend8bitL(), i->Ib());
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RHIb(bxInstruction_c *i)
 {
-  BX_WRITE_8BIT_REGH(i->opcodeReg() & 0x03, i->Ib());
+  BX_WRITE_8BIT_REGH(i->rm() & 0x03, i->Ib());
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_EbGbM(bxInstruction_c *i)

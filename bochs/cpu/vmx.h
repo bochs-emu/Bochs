@@ -1,8 +1,8 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmx.h,v 1.32 2010-11-11 21:41:03 sshwarts Exp $
+// $Id: vmx.h,v 1.33 2010-12-06 21:45:56 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2009 Stanislav Shwartsman
+//   Copyright (c) 2009-2010 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or

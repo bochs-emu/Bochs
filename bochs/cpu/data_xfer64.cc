@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: data_xfer64.cc,v 1.44 2009-12-04 16:53:12 sshwarts Exp $
+// $Id: data_xfer64.cc,v 1.45 2010-12-06 21:45:56 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -29,13 +29,13 @@
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::XCHG_RRXRAX(bxInstruction_c *i)
 {
   Bit64u temp64 = RAX;
-  RAX = BX_READ_64BIT_REG(i->opcodeReg());
-  BX_WRITE_64BIT_REG(i->opcodeReg(), temp64);
+  RAX = BX_READ_64BIT_REG(i->rm());
+  BX_WRITE_64BIT_REG(i->rm(), temp64);
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RRXIq(bxInstruction_c *i)
 {
-  BX_WRITE_64BIT_REG(i->opcodeReg(), i->Iq());
+  BX_WRITE_64BIT_REG(i->rm(), i->Iq());
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV64_GdEdM(bxInstruction_c *i)

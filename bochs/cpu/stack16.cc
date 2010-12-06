@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack16.cc,v 1.47 2009-12-04 16:53:12 sshwarts Exp $
+// $Id: stack16.cc,v 1.48 2010-12-06 21:45:56 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -31,7 +31,7 @@
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUSH_RX(bxInstruction_c *i)
 {
-  push_16(BX_READ_16BIT_REG(i->opcodeReg()));
+  push_16(BX_READ_16BIT_REG(i->rm()));
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUSH16_CS(bxInstruction_c *i)
@@ -123,7 +123,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::POP16_SS(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::POP_RX(bxInstruction_c *i)
 {
-  BX_WRITE_16BIT_REG(i->opcodeReg(), pop_16());
+  BX_WRITE_16BIT_REG(i->rm(), pop_16());
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::POP_EwM(bxInstruction_c *i)

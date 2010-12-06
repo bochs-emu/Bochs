@@ -1,8 +1,8 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: instr.h,v 1.30 2010-10-18 22:19:45 sshwarts Exp $
+// $Id: instr.h,v 1.31 2010-12-06 21:45:56 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2008-2009 Stanislav Shwartsman
+//   Copyright (c) 2008-2010 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -115,14 +115,6 @@ public:
   }
   BX_CPP_INLINE void setB1(unsigned b1) {
     metaData[BX_INSTR_METADATA_B1] = b1 & 0xff;
-  }
-  BX_CPP_INLINE void setOpcodeReg(unsigned opreg) {
-    // The opcodeReg form (low 3 bits of the opcode byte
-    // (extended by REX.B on x86-64) 
-    metaData[BX_INSTR_METADATA_RM] = opreg;
-  }
-  BX_CPP_INLINE unsigned opcodeReg() const {
-    return metaData[BX_INSTR_METADATA_RM];
   }
   BX_CPP_INLINE void setModRM(unsigned modrm) {
     metaData[BX_INSTR_METADATA_MODRM] = modrm;

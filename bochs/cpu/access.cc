@@ -1,8 +1,8 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: access.cc,v 1.128 2010-10-18 22:19:44 sshwarts Exp $
+// $Id: access.cc,v 1.129 2010-12-06 21:45:56 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2005-2009  The Bochs Project
+//  Copyright (C) 2005-2010  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public

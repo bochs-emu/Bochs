@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith16.cc,v 1.74 2010-02-26 11:44:50 sshwarts Exp $
+// $Id: arith16.cc,v 1.75 2010-12-06 21:45:56 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -26,13 +26,13 @@
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::INC_RX(bxInstruction_c *i)
 {
-  Bit16u rx = ++BX_READ_16BIT_REG(i->opcodeReg());
+  Bit16u rx = ++BX_READ_16BIT_REG(i->rm());
   SET_FLAGS_OSZAPC_INC_16(rx);
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::DEC_RX(bxInstruction_c *i)
 {
-  Bit16u rx = --BX_READ_16BIT_REG(i->opcodeReg());
+  Bit16u rx = --BX_READ_16BIT_REG(i->rm());
   SET_FLAGS_OSZAPC_DEC_16(rx);
 }
 

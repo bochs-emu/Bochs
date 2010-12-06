@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith32.cc,v 1.86 2010-03-14 15:51:26 sshwarts Exp $
+// $Id: arith32.cc,v 1.87 2010-12-06 21:45:56 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -32,16 +32,16 @@
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::INC_ERX(bxInstruction_c *i)
 {
-  Bit32u erx = ++BX_READ_32BIT_REG(i->opcodeReg());
+  Bit32u erx = ++BX_READ_32BIT_REG(i->rm());
   SET_FLAGS_OSZAPC_INC_32(erx);
-  BX_CLEAR_64BIT_HIGH(i->opcodeReg());
+  BX_CLEAR_64BIT_HIGH(i->rm());
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::DEC_ERX(bxInstruction_c *i)
 {
-  Bit32u erx = --BX_READ_32BIT_REG(i->opcodeReg());
+  Bit32u erx = --BX_READ_32BIT_REG(i->rm());
   SET_FLAGS_OSZAPC_DEC_32(erx);
-  BX_CLEAR_64BIT_HIGH(i->opcodeReg());
+  BX_CLEAR_64BIT_HIGH(i->rm());
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::ADD_EdGdM(bxInstruction_c *i)

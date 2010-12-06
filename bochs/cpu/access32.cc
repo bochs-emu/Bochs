@@ -1,8 +1,8 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: access32.cc,v 1.29 2010-05-02 17:01:15 sshwarts Exp $
+// $Id: access32.cc,v 1.30 2010-12-06 21:45:56 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2008-2009 Stanislav Shwartsman
+//   Copyright (c) 2008-2010 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or

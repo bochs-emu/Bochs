@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.281 2010-10-18 22:19:45 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.282 2010-12-06 21:45:56 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2010  The Bochs Project
@@ -2669,7 +2669,7 @@ modrm_done:
       OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[sse_prefix-1]);
 
     ia_opcode = OpcodeInfoPtr->IA;
-    i->setOpcodeReg(b1 & 7);
+    i->setRm(b1 & 7);
   }
 
   if (lock) { // lock prefix invalid opcode
