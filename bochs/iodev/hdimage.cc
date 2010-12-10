@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: hdimage.cc,v 1.21 2010-03-02 07:07:57 sshwarts Exp $
+// $Id: hdimage.cc,v 1.22 2010-12-10 17:02:18 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2009  The Bochs Project
@@ -27,6 +27,8 @@
 #define NO_DEVICE_INCLUDES
 #include "iodev.h"
 #include "hdimage.h"
+#include "vmware3.h"
+#include "vmware4.h"
 
 #if BX_HAVE_SYS_MMAN_H
 #include <sys/mman.h>
@@ -1742,3 +1744,77 @@ ssize_t z_volatile_image_t::write (const void* buf, size_t count)
 }
 
 #endif
+
+device_image_t *hdimage_init_image(Bit8u image_mode, Bit64u disk_size, const char *journal)
+{
+  device_image_t *hdimage = NULL;
+
+  // instantiate the right class
+  switch (image_mode) {
+
+    case BX_HDIMAGE_MODE_FLAT:
+      hdimage = new default_image_t();
+      break;
+
+    case BX_HDIMAGE_MODE_CONCAT:
+      hdimage = new concat_image_t();
+      break;
+
+#if EXTERNAL_DISK_SIMULATOR
+    case BX_HDIMAGE_MODE_EXTDISKSIM:
+      hdimage = new EXTERNAL_DISK_SIMULATOR_CLASS();
+      break;
+#endif //EXTERNAL_DISK_SIMULATOR
+
+#if DLL_HD_SUPPORT
+    case BX_HDIMAGE_MODE_DLL_HD:
+      hdimage = new dll_image_t();
+      break;
+#endif //DLL_HD_SUPPORT
+
+    case BX_HDIMAGE_MODE_SPARSE:
+      hdimage = new sparse_image_t();
+      break;
+
+    case BX_HDIMAGE_MODE_VMWARE3:
+      hdimage = new vmware3_image_t();
+      break;
+
+    case BX_HDIMAGE_MODE_VMWARE4:
+      hdimage = new vmware4_image_t();
+      break;
+
+    case BX_HDIMAGE_MODE_UNDOABLE:
+      hdimage = new undoable_image_t(journal);
+      break;
+
+    case BX_HDIMAGE_MODE_GROWING:
+      hdimage = new growing_image_t();
+      break;
+
+    case BX_HDIMAGE_MODE_VOLATILE:
+      hdimage = new volatile_image_t(journal);
+      break;
+
+#if BX_COMPRESSED_HD_SUPPORT
+    case BX_HDIMAGE_MODE_Z_UNDOABLE:
+      BX_PANIC(("z-undoable disk support not implemented"));
+#if 0
+      hdimage = new z_undoable_image_t(disk_size, journal);
+#endif
+      break;
+
+    case BX_HDIMAGE_MODE_Z_VOLATILE:
+      BX_PANIC(("z-volatile disk support not implemented"));
+#if 0
+      hdimage = new z_volatile_image_t(disk_size, "journal");
+#endif
+      break;
+#endif //BX_COMPRESSED_HD_SUPPORT
+
+    default:
+      BX_PANIC(("unsupported HD mode : '%s'", hdimage_mode_names[image_mode]));
+      break;
+  }
+  return hdimage;
+}

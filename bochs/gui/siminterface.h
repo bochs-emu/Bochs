@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.255 2010-09-16 21:46:45 sshwarts Exp $
+// $Id: siminterface.h,v 1.256 2010-12-10 17:02:18 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  The Bochs Project
@@ -510,19 +510,19 @@ enum {
 #define BX_ATA_TRANSLATION_AUTO  4
 #define BX_ATA_TRANSLATION_LAST  4
 
-#define BX_ATA_MODE_FLAT         0
-#define BX_ATA_MODE_CONCAT       1
-#define BX_ATA_MODE_EXTDISKSIM   2
-#define BX_ATA_MODE_DLL_HD       3
-#define BX_ATA_MODE_SPARSE       4
-#define BX_ATA_MODE_VMWARE3      5
-#define BX_ATA_MODE_VMWARE4      6
-#define BX_ATA_MODE_UNDOABLE     7
-#define BX_ATA_MODE_GROWING      8
-#define BX_ATA_MODE_VOLATILE     9
-#define BX_ATA_MODE_Z_UNDOABLE  10
-#define BX_ATA_MODE_Z_VOLATILE  11
-#define BX_ATA_MODE_LAST        11
+#define BX_HDIMAGE_MODE_FLAT        0
+#define BX_HDIMAGE_MODE_CONCAT      1
+#define BX_HDIMAGE_MODE_EXTDISKSIM  2
+#define BX_HDIMAGE_MODE_DLL_HD      3
+#define BX_HDIMAGE_MODE_SPARSE      4
+#define BX_HDIMAGE_MODE_VMWARE3     5
+#define BX_HDIMAGE_MODE_VMWARE4     6
+#define BX_HDIMAGE_MODE_UNDOABLE    7
+#define BX_HDIMAGE_MODE_GROWING     8
+#define BX_HDIMAGE_MODE_VOLATILE    9
+#define BX_HDIMAGE_MODE_Z_UNDOABLE 10
+#define BX_HDIMAGE_MODE_Z_VOLATILE 11
+#define BX_HDIMAGE_MODE_LAST       11
 
 #define BX_CLOCK_SYNC_NONE       0
 #define BX_CLOCK_SYNC_REALTIME   1
@@ -545,7 +545,7 @@ BOCHSAPI extern const char *floppy_devtype_names[];
 BOCHSAPI extern const char *floppy_type_names[];
 BOCHSAPI extern int floppy_type_n_sectors[];
 BOCHSAPI extern const char *bochs_bootdisk_names[];
-BOCHSAPI extern const char *atadevice_mode_names[];
+BOCHSAPI extern const char *hdimage_mode_names[];
 
 ////////////////////////////////////////////////////////////////////
 // base class simulator interface, contains just virtual functions.
@@ -619,6 +619,7 @@ public:
   virtual int get_debugger_log_file(char *path, int len) {return -1;}
   virtual int set_debugger_log_file(char *path) {return -1;}
   virtual int get_cdrom_options(int drive, bx_list_c **out, int *where = NULL) {return -1;}
+  virtual int hdimage_get_mode(const char *mode)  {return -1;}
 
   // The CI calls set_notify_callback to register its event handler function.
   // This event handler function is called whenever the simulator needs to

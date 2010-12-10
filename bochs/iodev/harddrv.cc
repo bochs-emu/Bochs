@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.229 2009-12-04 19:50:27 sshwarts Exp $
+// $Id: harddrv.cc,v 1.230 2010-12-10 17:02:18 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2009  The Bochs Project
@@ -31,8 +31,6 @@
 #include "iodev.h"
 #include "harddrv.h"
 #include "hdimage.h"
-#include "vmware3.h"
-#include "vmware4.h"
 #include "cdrom.h"
 
 #define LOG_THIS theHardDrive->
@@ -167,7 +165,7 @@ void bx_hard_drive_c::init(void)
   char  ata_name[20];
   bx_list_c *base;
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.229 2009-12-04 19:50:27 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.230 2010-12-10 17:02:18 vruppert Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     sprintf(ata_name, "ata.%d.resources", channel);
@@ -292,115 +290,28 @@ void bx_hard_drive_c::init(void)
         int spt = SIM->get_param_num("spt", base)->get();
         Bit64u disk_size = (Bit64u)cyl * heads * spt * 512;
 
-        /* instantiate the right class */
         image_mode = SIM->get_param_enum("mode", base)->get();
-        switch (image_mode) {
+        channels[channel].drives[device].hard_drive = hdimage_init_image(image_mode,
+            disk_size, SIM->get_param_string("journal", base)->getptr());
 
-          case BX_ATA_MODE_FLAT:
-            BX_INFO(("HD on ata%d-%d: '%s' 'flat' mode ", channel, device,
-                     SIM->get_param_string("path", base)->getptr()));
-            channels[channel].drives[device].hard_drive = new default_image_t();
-            break;
-
-          case BX_ATA_MODE_CONCAT:
-            BX_INFO(("HD on ata%d-%d: '%s' 'concat' mode ", channel, device,
-                     SIM->get_param_string("path", base)->getptr()));
-            channels[channel].drives[device].hard_drive = new concat_image_t();
-            break;
-
-#if EXTERNAL_DISK_SIMULATOR
-          case BX_ATA_MODE_EXTDISKSIM:
-            BX_INFO(("HD on ata%d-%d: '%s' 'External Simulator' mode ", channel, device,
-                     SIM->get_param_string("path", base)->getptr()));
-            channels[channel].drives[device].hard_drive = new EXTERNAL_DISK_SIMULATOR_CLASS();
-            break;
-#endif //EXTERNAL_DISK_SIMULATOR
-
-#if DLL_HD_SUPPORT
-          case BX_ATA_MODE_DLL_HD:
-            BX_INFO(("HD on ata%d-%d: '%s' 'dll' mode ", channel, device,
-                     SIM->get_param_string("path", base)->getptr()));
-            channels[channel].drives[device].hard_drive = new dll_image_t();
-            break;
-#endif //DLL_HD_SUPPORT
-
-          case BX_ATA_MODE_SPARSE:
-            BX_INFO(("HD on ata%d-%d: '%s' 'sparse' mode ", channel, device,
-                     SIM->get_param_string("path", base)->getptr()));
-            channels[channel].drives[device].hard_drive = new sparse_image_t();
-            break;
-
-          case BX_ATA_MODE_VMWARE3:
-            BX_INFO(("HD on ata%d-%d: '%s' 'vmware3' mode ", channel, device,
-                     SIM->get_param_string("path", base)->getptr()));
-            channels[channel].drives[device].hard_drive = new vmware3_image_t();
-            break;
-
-          case BX_ATA_MODE_VMWARE4:
-            BX_INFO(("HD on ata%d-%d: '%s' 'vmware4' mode ", channel, device,
-                     SIM->get_param_string("path", base)->getptr()));
-            channels[channel].drives[device].hard_drive = new vmware4_image_t();
-            break;
-
-          case BX_ATA_MODE_UNDOABLE:
-            BX_INFO(("HD on ata%d-%d: '%s' 'undoable' mode ", channel, device,
-                     SIM->get_param_string("path", base)->getptr()));
-            channels[channel].drives[device].hard_drive = new undoable_image_t(
-                SIM->get_param_string("journal", base)->getptr());
-            break;
-
-          case BX_ATA_MODE_GROWING:
-            BX_INFO(("HD on ata%d-%d: '%s' 'growing' mode ", channel, device,
-                     SIM->get_param_string("path", base)->getptr()));
-            channels[channel].drives[device].hard_drive = new growing_image_t();
-            break;
-
-          case BX_ATA_MODE_VOLATILE:
-            BX_INFO(("HD on ata%d-%d: '%s' 'volatile' mode ", channel, device,
-                     SIM->get_param_string("path", base)->getptr()));
-            channels[channel].drives[device].hard_drive = new volatile_image_t(
-                SIM->get_param_string("journal", base)->getptr());
-            break;
-
-#if BX_COMPRESSED_HD_SUPPORT
-          case BX_ATA_MODE_Z_UNDOABLE:
-            BX_PANIC(("z-undoable disk support not implemented"));
-#if 0
-            BX_INFO(("HD on ata%d-%d: '%s' 'z-undoable' mode ", channel, device,
-                     SIM->get_param_string("path", base)->getptr()));
-            channels[channel].drives[device].hard_drive = new z_undoable_image_t(disk_size,
-                SIM->get_param_string("journal", base)->getptr());
-#endif
-            break;
-
-          case BX_ATA_MODE_Z_VOLATILE:
-            BX_PANIC(("z-volatile disk support not implemented"));
-#if 0
-            BX_INFO(("HD on ata%d-%d: '%s' 'z-volatile' mode ", channel, device,
-                     SIM->get_param_string("path", base)->getptr()));
-            channels[channel].drives[device].hard_drive = new z_volatile_image_t(disk_size,
-                SIM->get_param_string("journal", base)->getptr());
-#endif
-            break;
-#endif //BX_COMPRESSED_HD_SUPPORT
-
-          default:
-            BX_PANIC(("HD on ata%d-%d: '%s' unsupported HD mode : %s", channel, device,
-                      SIM->get_param_string("path", base)->getptr(),
-                      atadevice_mode_names[image_mode]));
-            break;
+        if (channels[channel].drives[device].hard_drive != NULL) {
+          BX_INFO(("HD on ata%d-%d: '%s' '%s' mode", channel, device,
+                   SIM->get_param_string("path", base)->getptr(),
+                   hdimage_mode_names[image_mode]));
+        } else {
+          // it's safe to return here on failure
+          return;
         }
-
         BX_HD_THIS channels[channel].drives[device].hard_drive->cylinders = cyl;
         BX_HD_THIS channels[channel].drives[device].hard_drive->heads = heads;
         BX_HD_THIS channels[channel].drives[device].hard_drive->sectors = spt;
         bx_bool geometry_detect = 0;
 
-        if ((image_mode == BX_ATA_MODE_FLAT) || (image_mode == BX_ATA_MODE_CONCAT) ||
-            (image_mode == BX_ATA_MODE_GROWING) || (image_mode == BX_ATA_MODE_UNDOABLE) ||
-            (image_mode == BX_ATA_MODE_VOLATILE) || (image_mode == BX_ATA_MODE_VMWARE3) ||
-            (image_mode == BX_ATA_MODE_VMWARE4) || (image_mode == BX_ATA_MODE_SPARSE)) {
-          geometry_detect = ((cyl == 0) || (image_mode == BX_ATA_MODE_VMWARE3) || (image_mode == BX_ATA_MODE_VMWARE4));
+        if ((image_mode == BX_HDIMAGE_MODE_FLAT) || (image_mode == BX_HDIMAGE_MODE_CONCAT) ||
+            (image_mode == BX_HDIMAGE_MODE_GROWING) || (image_mode == BX_HDIMAGE_MODE_UNDOABLE) ||
+            (image_mode == BX_HDIMAGE_MODE_VOLATILE) || (image_mode == BX_HDIMAGE_MODE_VMWARE3) ||
+            (image_mode == BX_HDIMAGE_MODE_VMWARE4) || (image_mode == BX_HDIMAGE_MODE_SPARSE)) {
+          geometry_detect = ((cyl == 0) || (image_mode == BX_HDIMAGE_MODE_VMWARE3) || (image_mode == BX_HDIMAGE_MODE_VMWARE4));
           if ((heads == 0) || (spt == 0)) {
             BX_PANIC(("ata%d-%d cannot have zero heads, or sectors/track", channel, device));
           }
@@ -419,7 +330,7 @@ void bx_hard_drive_c::init(void)
           if (geometry_detect) {
             // Autodetect number of cylinders
             disk_size = BX_HD_THIS channels[channel].drives[device].hard_drive->hd_size;
-            if (image_mode != BX_ATA_MODE_VMWARE3 && image_mode != BX_ATA_MODE_VMWARE4) {
+            if (image_mode != BX_HDIMAGE_MODE_VMWARE3 && image_mode != BX_HDIMAGE_MODE_VMWARE4) {
               cyl = (int)(disk_size / (heads * spt * 512));
               if (disk_size != ((Bit64u)cyl * heads * spt * 512)) {
                 BX_PANIC(("ata%d-%d: geometry autodetection failed", channel, device));

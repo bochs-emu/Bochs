@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.214 2010-11-22 21:55:56 vruppert Exp $
+// $Id: config.cc,v 1.215 2010-12-10 17:02:18 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2009  The Bochs Project
@@ -1215,9 +1215,9 @@ void bx_init_options()
         "mode",
         "Type of disk image",
         "Mode of the ATA harddisk",
-        atadevice_mode_names,
-        BX_ATA_MODE_FLAT,
-        BX_ATA_MODE_FLAT);
+        hdimage_mode_names,
+        BX_HDIMAGE_MODE_FLAT,
+        BX_HDIMAGE_MODE_FLAT);
       mode->set_ask_format("Enter mode of ATA device, (flat, concat, etc.): [%s] ");
 
       status = new bx_param_bool_c(menu,
@@ -1236,8 +1236,8 @@ void bx_init_options()
       deplist = new bx_list_c(NULL, 1);
       deplist->add(journal);
       mode->set_dependent_list(deplist, 0);
-      mode->set_dependent_bitmap(BX_ATA_MODE_UNDOABLE, 1);
-      mode->set_dependent_bitmap(BX_ATA_MODE_VOLATILE, 1);
+      mode->set_dependent_bitmap(BX_HDIMAGE_MODE_UNDOABLE, 1);
+      mode->set_dependent_bitmap(BX_HDIMAGE_MODE_VOLATILE, 1);
 
       bx_param_num_c *cylinders = new bx_param_num_c(menu,
         "cylinders",
@@ -2437,7 +2437,7 @@ static int parse_line_formatted(const char *context, int num_params, char *param
   // ataX-master, ataX-slave
   else if ((!strncmp(params[0], "ata", 3)) && (strlen(params[0]) > 4)) {
     Bit8u channel = params[0][3];
-    int type = -1, mode = BX_ATA_MODE_FLAT, biosdetect = BX_ATA_BIOSDETECT_AUTO;
+    int type = -1, mode = BX_HDIMAGE_MODE_FLAT, biosdetect = BX_ATA_BIOSDETECT_AUTO;
     Bit32u cylinders = 0, heads = 0, sectors = 0;
     char tmpname[80];
 

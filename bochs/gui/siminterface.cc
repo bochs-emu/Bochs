@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.215 2010-09-16 21:46:45 sshwarts Exp $
+// $Id: siminterface.cc,v 1.216 2010-12-10 17:02:18 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  The Bochs Project
@@ -105,6 +105,7 @@ public:
   virtual int get_debugger_log_file(char *path, int len);
   virtual int set_debugger_log_file(const char *path);
   virtual int get_cdrom_options(int drive, bx_list_c **out, int *device = NULL);
+  virtual int hdimage_get_mode(const char *mode);
   virtual void set_notify_callback(bxevent_handler func, void *arg);
   virtual void get_notify_callback(bxevent_handler *func, void **arg);
   virtual BxEvent* sim_to_ci_event(BxEvent *event);
@@ -452,10 +453,10 @@ int bx_real_sim_c::get_cdrom_options(int level, bx_list_c **out, int *where)
       if (SIM->get_param_enum("type", devlist)->get() == BX_ATA_DEVICE_CDROM) {
         if (level==0) {
           *out = devlist;
-	  if (where != NULL) *where = (channel * 2) + device;
+          if (where != NULL) *where = (channel * 2) + device;
           return 1;
         } else {
-	  level--;
+          level--;
         }
       }
     }
@@ -468,7 +469,7 @@ const char *floppy_type_names[] = { "none", "1.2M", "1.44M", "2.88M", "720K", "3
 int floppy_type_n_sectors[] = { -1, 80*2*15, 80*2*18, 80*2*36, 80*2*9, 40*2*9, 40*1*8, 40*1*9, 40*2*8, -1 };
 const char *bochs_bootdisk_names[] = { "none", "floppy", "disk","cdrom", "network", NULL };
 
-const char *atadevice_mode_names[] = { 
+const char *hdimage_mode_names[] = { 
   "flat",
   "concat",
   "external",
@@ -479,10 +480,20 @@ const char *atadevice_mode_names[] = {
   "undoable",
   "growing",
   "volatile",
-//"z-undoable",
-//"z-volatile",
+  "z-undoable",
+  "z-volatile",
   NULL
 };
+
+int bx_real_sim_c::hdimage_get_mode(const char *mode)
+{
+  Bit8u i;
+
+  for (i = 0; i <= BX_HDIMAGE_MODE_LAST; i++) {
+    if (!strcmp(mode, hdimage_mode_names[i])) return i;
+  }
+  return -1;
+}
 
 void bx_real_sim_c::set_notify_callback(bxevent_handler func, void *arg)
 {

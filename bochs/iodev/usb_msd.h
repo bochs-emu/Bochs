@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_msd.h,v 1.14 2010-12-05 13:09:41 vruppert Exp $
+// $Id: usb_msd.h,v 1.15 2010-12-10 17:02:18 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Volker Ruppert
@@ -61,6 +61,7 @@ private:
     Bit32u residue;
     Bit32u tag;
     int result;
+    Bit8u image_mode;
     device_image_t *hdimage;
     LOWLEVEL_CDROM *cdrom;
     scsi_device_t *scsi_dev;
