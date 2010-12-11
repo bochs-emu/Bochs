@@ -837,10 +837,13 @@ i440fxsupport: enabled=1
 # When connecting the keypad to one of the ports, Bochs forwards the input of
 # the numeric keypad to the USB device instead of the PS/2 keyboard.
 #
-# To connect a flat image as an USB hardisk you can use the 'disk' device with
-# the path to the image separated with a colon (see below). To emulate an USB
-# cdrom you can use the 'cdrom' device name and the path to an ISO image or raw
-# device name also separated with a colon.
+# To connect a 'flat' mode image as an USB hardisk you can use the 'disk' device
+# with the path to the image separated with a colon. To use other disk image modes
+# similar to ATA disks the syntax 'disk:mode:filename' must be used (see below).
+#
+# To emulate an USB cdrom you can use the 'cdrom' device name and the path to
+# an ISO image or raw device name also separated with a colon. An option to
+# insert/eject media is available in the runtime configuration.
 #
 # The device name 'hub' connects an external hub with max. 8 ports (default: 4)
 # to the root hub. To specify the number of ports you have to add the value
@@ -853,8 +856,9 @@ i440fxsupport: enabled=1
 # overwrite the file instead, asking user first.
 #=======================================================================
 #usb_uhci: enabled=1
-#usb_uhci: enabled=1, port1=mouse, port2=disk:usbdisk.img
-#usb_uhci: enabled=1, port1=hub:7, port2=cdrom:image.iso
+#usb_uhci: enabled=1, port1=mouse, port2=disk:usbstick.img
+#usb_uhci: enabled=1, port1=hub:7, port2=disk:growing:usbdisk.img
+#usb_uhci: enabled=1, port1=printer:printdata.bin, port2=cdrom:image.iso
 
 #=======================================================================
 # USB_OHCI:

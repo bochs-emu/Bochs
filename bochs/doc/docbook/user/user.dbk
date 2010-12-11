@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.283 2010-11-21 12:02:12 sshwarts Exp $
+$Id: user.dbk,v 1.284 2010-12-11 08:25:39 vruppert Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -4010,8 +4010,9 @@ located in the <constant>bochs/host/linux/pcidev/</constant> directory.
 Examples:
 <screen>
   usb_uhci: enabled=1, port1=mouse, port2=keypad
-  usb_uhci: enabled=1, port1=tablet, port2=disk:usbdisk.img
-  usb_uhci: enabled=1, port1=hub:7, port2=cdrom:image.iso
+  usb_uhci: enabled=1, port1=tablet, port2=disk:usbstick.img
+  usb_uhci: enabled=1, port1=hub:7, port2=disk:growing:usbdisk.img
+  usb_uhci: enabled=1, port1=printer:printdata.bin, port2=cdrom:image.iso
 </screen>
 This option controls the presence of the USB root hub which is a part of the
 i440FX PCI chipset.
@@ -4028,10 +4029,14 @@ When connecting the keypad to one of the ports, Bochs forwards the input of
 the numeric keypad to the USB device instead of the PS/2 keyboard.
 </para>
 <para>
-To connect a flat image as an USB hard disk you can use the 'disk' device with
-the path to the image separated with a colon (see above). To emulate an USB
-cdrom you can use the 'cdrom' device name and the path to an ISO image or raw
-device name also separated with a colon.
+To connect a 'flat' mode image as an USB hardisk you can use the 'disk' device
+with the path to the image separated with a colon. To use other disk image modes
+similar to ATA disks the syntax 'disk:mode:filename' must be used (see above).
+</para>
+<para>
+To emulate an USB cdrom you can use the 'cdrom' device name and the path to
+an ISO image or raw device name also separated with a colon. An option to
+insert/eject media is available in the runtime configuration.
 </para>
 <para>
 The device name 'hub' connects an external hub with max. 8 ports (default: 4)
