@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_common.h,v 1.13 2010-12-06 18:51:13 vruppert Exp $
+// $Id: usb_common.h,v 1.14 2010-12-14 21:20:37 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Benjamin D Lunt (fys at frontiernet net)
@@ -124,6 +124,14 @@ enum usbdev_type {
   USB_DEV_TYPE_CDROM,
   USB_DEV_TYPE_HUB,
   USB_DEV_TYPE_PRINTER
+};
+
+class bx_usb_devctl_c : public bx_usb_devctl_stub_c {
+public:
+  bx_usb_devctl_c() {}
+  virtual ~bx_usb_devctl_c() {}
+  virtual int init_device(const char *devname, logfunctions *hub, void **dev, bx_list_c *sr_list);
+  virtual void usb_send_msg(void *dev, int msg);
 };
 
 class usb_device_c : public logfunctions {

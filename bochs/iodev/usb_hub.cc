@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_hub.cc,v 1.14 2010-12-06 18:51:13 vruppert Exp $
+// $Id: usb_hub.cc,v 1.15 2010-12-14 21:20:37 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Volker Ruppert
@@ -396,7 +396,7 @@ int usb_hub_device_c::handle_control(int request, int value, int index, int leng
           break;
         case PORT_RESET:
           if (hub.usb_port[n].device != NULL) {
-            hub.usb_port[n].device->usb_send_msg(USB_MSG_RESET);
+            DEV_usb_send_msg(hub.usb_port[n].device, USB_MSG_RESET);
             hub.usb_port[n].PortChange |= PORT_STAT_C_RESET;
             /* set enable bit */
             hub.usb_port[n].PortStatus |= PORT_STAT_ENABLE;
@@ -561,11 +561,10 @@ void usb_hub_device_c::init_device(Bit8u port, const char *devname)
     BX_ERROR(("init_device(): port%d already in use", port+1));
     return;
   }
-  type = DEV_usb_init_device(devname, this, &hub.usb_port[port].device);
+  sprintf(pname, "port%d.device", port+1);
+  bx_list_c *sr_list = (bx_list_c*)SIM->get_param(pname, hub.state);
+  type = DEV_usb_init_device(devname, this, &hub.usb_port[port].device, sr_list);
   if (hub.usb_port[port].device != NULL) {
-    sprintf(pname, "port%d.device", port+1);
-    bx_list_c *devlist = (bx_list_c*)SIM->get_param(pname, hub.state);
-    hub.usb_port[port].device->register_state(devlist);
     usb_set_connect_status(port, type, 1);
   }
 }

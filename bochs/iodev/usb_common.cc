@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_common.cc,v 1.14 2010-12-06 18:51:13 vruppert Exp $
+// $Id: usb_common.cc,v 1.15 2010-12-14 21:20:37 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Benjamin D Lunt (fys at frontiernet net)
@@ -56,19 +56,21 @@
 
 #define LOG_THIS
 
-int usb_init_device(const char *devname, logfunctions *hub, void **dev);
+bx_usb_devctl_c* theUsbDevCtl = NULL;
 
 int libusb_common_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
 {
-  DEV_register_usb_init_device(usb_init_device);
+  theUsbDevCtl = new bx_usb_devctl_c;
+  bx_devices.pluginUsbDevCtl = theUsbDevCtl;
   return(0); // Success
 }
 
 void libusb_common_LTX_plugin_fini(void)
 {
+  delete theUsbDevCtl;
 }
 
-int usb_init_device(const char *devname, logfunctions *hub, void **dev)
+int bx_usb_devctl_c::init_device(const char *devname, logfunctions *hub, void **dev, bx_list_c *sr_list)
 {
   usbdev_type type = USB_DEV_TYPE_NONE;
   int ports;
@@ -125,7 +127,15 @@ int usb_init_device(const char *devname, logfunctions *hub, void **dev)
     hub->panic("unknown USB device: %s", devname);
     return type;
   }
+  if (*device != NULL) {
+    (*device)->register_state(sr_list);
+  }
   return type;
+}
+
+void bx_usb_devctl_c::usb_send_msg(void *dev, int msg)
+{
+  ((usb_device_c*)dev)->usb_send_msg(msg);
 }
 
 // Dumps the contents of a buffer to the log file

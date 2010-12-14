@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_ohci.cc,v 1.38 2010-12-06 18:51:13 vruppert Exp $
+// $Id: usb_ohci.cc,v 1.39 2010-12-14 21:20:37 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Benjamin D Lunt (fys at frontiernet net)
@@ -455,11 +455,10 @@ void bx_usb_ohci_c::init_device(Bit8u port, const char *devname)
     BX_ERROR(("init_device(): port%d already in use", port+1));
     return;
   }
-  type = DEV_usb_init_device(devname, BX_OHCI_THIS_PTR, &BX_OHCI_THIS hub.usb_port[port].device);
+  sprintf(pname, "usb_ohci.hub.port%d.device", port+1);
+  bx_list_c *sr_list = (bx_list_c*)SIM->get_param(pname, SIM->get_bochs_root());
+  type = DEV_usb_init_device(devname, BX_OHCI_THIS_PTR, &BX_OHCI_THIS hub.usb_port[port].device, sr_list);
   if (BX_OHCI_THIS hub.usb_port[port].device != NULL) {
-    sprintf(pname, "usb_ohci.hub.port%d.device", port+1);
-    bx_list_c *devlist = (bx_list_c*)SIM->get_param(pname, SIM->get_bochs_root());
-    BX_OHCI_THIS hub.usb_port[port].device->register_state(devlist);
     usb_set_connect_status(port, type, 1);
   }
 }
@@ -735,7 +734,7 @@ bx_bool bx_usb_ohci_c::write_handler(bx_phy_address addr, unsigned len, void *da
         BX_OHCI_THIS hub.op_regs.HcControl.hcfs = 3;      // suspend state
         for (unsigned i=0; i<BX_N_USB_OHCI_PORTS; i++)
           if (BX_OHCI_THIS hub.usb_port[i].HcRhPortStatus.ccs && (BX_OHCI_THIS hub.usb_port[i].device != NULL))
-            BX_OHCI_THIS hub.usb_port[i].device->usb_send_msg(USB_MSG_RESET);
+            DEV_usb_send_msg(BX_OHCI_THIS hub.usb_port[i].device, USB_MSG_RESET);
       }
       break;
 
@@ -938,7 +937,7 @@ bx_bool bx_usb_ohci_c::write_handler(bx_phy_address addr, unsigned len, void *da
             BX_OHCI_THIS hub.usb_port[p].HcRhPortStatus.lsda =
               (BX_OHCI_THIS hub.usb_port[p].device->get_speed() == USB_SPEED_LOW);
             usb_set_connect_status(p, BX_OHCI_THIS hub.usb_port[p].device->get_type(), 1);
-            BX_OHCI_THIS hub.usb_port[p].device->usb_send_msg(USB_MSG_RESET);
+            DEV_usb_send_msg(BX_OHCI_THIS hub.usb_port[p].device, USB_MSG_RESET);
           }
           set_interrupt(OHCI_INTR_RHSC);
         }

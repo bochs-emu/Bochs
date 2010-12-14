@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: plugin.h,v 1.84 2010-12-06 18:51:12 vruppert Exp $
+// $Id: plugin.h,v 1.85 2010-12-14 21:20:37 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  The Bochs Project
@@ -244,9 +244,9 @@ extern "C" {
 #define DEV_unregister_memory_handlers(rh,wh,b,e) \
     bx_devices.mem->unregisterMemoryHandlers(rh,wh,b,e)
 
-///////// USB device init macros
-#define DEV_register_usb_init_device(a) bx_devices.register_usb_init_device(a)
-#define DEV_usb_init_device(a,b,c) (usbdev_type)bx_devices.usb_init_device(a,b,(void**)c)
+///////// USB device macros
+#define DEV_usb_init_device(a,b,c,d) (usbdev_type)bx_devices.pluginUsbDevCtl->init_device(a,b,(void**)c,d)
+#define DEV_usb_send_msg(a,b) bx_devices.pluginUsbDevCtl->usb_send_msg((void*)a,b)
 
 
 #if BX_HAVE_DLFCN_H

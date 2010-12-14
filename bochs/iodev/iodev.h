@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.123 2010-12-06 18:51:13 vruppert Exp $
+// $Id: iodev.h,v 1.124 2010-12-14 21:20:37 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2009  The Bochs Project
@@ -46,8 +46,6 @@ typedef void   (*bx_write_handler_t)(void *, Bit32u, Bit32u, unsigned);
 typedef bx_bool (*bx_keyb_enq_t)(void *, Bit8u *);
 typedef void (*bx_mouse_enq_t)(void *, int, int, int, unsigned);
 typedef void (*bx_mouse_enabled_changed_t)(void *, bx_bool);
-
-typedef int (*bx_usb_init_device_t)(const char *, logfunctions *, void **);
 
 #if BX_USE_DEV_SMF
 #  define BX_DEV_SMF  static
@@ -345,6 +343,16 @@ public:
 };
 #endif
 
+#if BX_SUPPORT_PCIUSB
+class BOCHSAPI bx_usb_devctl_stub_c : public bx_devmodel_c {
+public:
+  virtual int init_device(const char *devname, logfunctions *hub, void **dev, bx_list_c *sr_list) {
+    STUBFUNC(usb_devctl, init_device); return 0;
+  }
+  virtual void usb_send_msg(void *dev, int msg) {}
+};
+#endif
+
 class BOCHSAPI bx_devices_c : public logfunctions {
 public:
   bx_devices_c();
@@ -399,9 +407,6 @@ public:
   void mouse_enabled_changed(bx_bool enabled);
   void mouse_motion(int delta_x, int delta_y, int delta_z, unsigned button_state);
 
-  void register_usb_init_device(bx_usb_init_device_t usb_init_device);
-  int usb_init_device(const char *devname, logfunctions *hub, void **dev);
-
   static void timer_handler(void *);
   void timer(void);
 
@@ -426,6 +431,9 @@ public:
 #endif
 #if BX_SUPPORT_APIC
   bx_ioapic_stub_c  *pluginIOAPIC;
+#endif
+#if BX_SUPPORT_PCIUSB
+  bx_usb_devctl_stub_c  *pluginUsbDevCtl;
 #endif
 #if 0
   bx_g2h_c          *g2h;
@@ -453,6 +461,9 @@ public:
 #endif
 #if BX_SUPPORT_APIC
   bx_ioapic_stub_c stubIOAPIC;
+#endif
+#if BX_SUPPORT_PCIUSB
+  bx_usb_devctl_stub_c stubUsbDevCtl;
 #endif
 
   // Some info to pass to devices which can handled bulk IO.  This allows
@@ -505,8 +516,6 @@ private:
     void *dev;
     bx_keyb_enq_t enq_event;
   } bx_keyboard;
-
-  bx_usb_init_device_t bx_usb_init_device;
 
   int timer_handle;
 

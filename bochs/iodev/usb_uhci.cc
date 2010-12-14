@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_uhci.cc,v 1.30 2010-12-06 18:51:13 vruppert Exp $
+// $Id: usb_uhci.cc,v 1.31 2010-12-14 21:20:37 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Benjamin D Lunt (fys at frontiernet net)
@@ -298,11 +298,10 @@ void bx_usb_uhci_c::init_device(Bit8u port, const char *devname)
     BX_ERROR(("init_device(): port%d already in use", port+1));
     return;
   }
-  type = DEV_usb_init_device(devname, BX_UHCI_THIS_PTR, &BX_UHCI_THIS hub.usb_port[port].device);
+  sprintf(pname, "usb_uhci.hub.port%d.device", port+1);
+  bx_list_c *sr_list = (bx_list_c*)SIM->get_param(pname, SIM->get_bochs_root());
+  type = DEV_usb_init_device(devname, BX_UHCI_THIS_PTR, &BX_UHCI_THIS hub.usb_port[port].device, sr_list);
   if (BX_UHCI_THIS hub.usb_port[port].device != NULL) {
-    sprintf(pname, "usb_uhci.hub.port%d.device", port+1);
-    bx_list_c *devlist = (bx_list_c*)SIM->get_param(pname, SIM->get_bochs_root());
-    BX_UHCI_THIS hub.usb_port[port].device->register_state(devlist);
     usb_set_connect_status(port, type, 1);
   }
 }
@@ -463,7 +462,7 @@ void bx_usb_uhci_c::write(Bit32u address, Bit32u value, unsigned io_len)
         for (unsigned i=0; i<BX_N_USB_UHCI_PORTS; i++) {
           if (BX_UHCI_THIS hub.usb_port[i].status) {
             if (BX_UHCI_THIS hub.usb_port[i].device != NULL) {
-              BX_UHCI_THIS hub.usb_port[i].device->usb_send_msg(USB_MSG_RESET);
+              DEV_usb_send_msg(BX_UHCI_THIS hub.usb_port[i].device, USB_MSG_RESET);
             }
           }
           BX_UHCI_THIS hub.usb_port[i].connect_changed = 1;
@@ -605,7 +604,7 @@ void bx_usb_uhci_c::write(Bit32u address, Bit32u value, unsigned io_len)
               BX_UHCI_THIS hub.usb_port[port].low_speed =
                 (BX_UHCI_THIS hub.usb_port[port].device->get_speed() == USB_SPEED_LOW);
               usb_set_connect_status(port, BX_UHCI_THIS hub.usb_port[port].device->get_type(), 1);
-              BX_UHCI_THIS hub.usb_port[port].device->usb_send_msg(USB_MSG_RESET);
+              DEV_usb_send_msg(BX_UHCI_THIS hub.usb_port[port].device, USB_MSG_RESET);
             }
           }
           BX_INFO(("Port%d: Reset", port+1));
