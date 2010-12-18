@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ia_opcodes.h,v 1.50 2010-07-22 16:41:59 sshwarts Exp $
+// $Id: ia_opcodes.h,v 1.51 2010-12-18 11:58:16 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008-2010 Stanislav Shwartsman
@@ -995,7 +995,7 @@ bx_define_opcode(BX_IA_CVTPI2PS_VpsQqR, &BX_CPU_C::CVTPI2PS_VpsQqR, NULL, BX_CPU
 bx_define_opcode(BX_IA_CVTPI2PS_VpsQqM, &BX_CPU_C::CVTPI2PS_VpsQqM, NULL, BX_CPU_SSE)
 bx_define_opcode(BX_IA_CVTSI2SS_VssEdR, &BX_CPU_C::CVTSI2SS_VssEdR, NULL, BX_CPU_SSE)
 bx_define_opcode(BX_IA_CVTSI2SS_VssEdM, &BX_CPU_C::CVTSI2SS_VssEdM, NULL, BX_CPU_SSE)
-bx_define_opcode(BX_IA_MOVNTPS_MpsVps, &BX_CPU_C::MOVNTPS_MpsVps, NULL, BX_CPU_SSE)
+bx_define_opcode(BX_IA_MOVNTPS_MpsVps, &BX_CPU_C::MOVAPS_WpsVpsM, NULL, BX_CPU_SSE)
 bx_define_opcode(BX_IA_CVTTPS2PI_PqWps, &BX_CPU_C::CVTTPS2PI_PqWps, NULL, BX_CPU_SSE)
 bx_define_opcode(BX_IA_CVTTSS2SI_GdWss, &BX_CPU_C::CVTTSS2SI_GdWss, NULL, BX_CPU_SSE)
 bx_define_opcode(BX_IA_CVTPS2PI_PqWps, &BX_CPU_C::CVTPS2PI_PqWps, NULL, BX_CPU_SSE)
@@ -1097,8 +1097,8 @@ bx_define_opcode(BX_IA_MOVHPD_MqVsd, &BX_CPU_C::MOVHPS_MqVps, NULL, BX_CPU_SSE2)
 bx_define_opcode(BX_IA_MOVHPD_VsdMq, &BX_CPU_C::MOVHPS_VpsMq, NULL, BX_CPU_SSE2)
 bx_define_opcode(BX_IA_MOVLPD_MqVsd, &BX_CPU_C::MOVLPS_MqVps, NULL, BX_CPU_SSE2)
 bx_define_opcode(BX_IA_MOVLPD_VsdMq, &BX_CPU_C::MOVLPS_VpsMq, NULL, BX_CPU_SSE2)
-bx_define_opcode(BX_IA_MOVNTDQ_MdqVdq, &BX_CPU_C::MOVNTPS_MpsVps, NULL, BX_CPU_SSE2)
-bx_define_opcode(BX_IA_MOVNTPD_MpdVpd, &BX_CPU_C::MOVNTPS_MpsVps, NULL, BX_CPU_SSE2)
+bx_define_opcode(BX_IA_MOVNTDQ_MdqVdq, &BX_CPU_C::MOVAPS_WpsVpsM, NULL, BX_CPU_SSE2)
+bx_define_opcode(BX_IA_MOVNTPD_MpdVpd, &BX_CPU_C::MOVAPS_WpsVpsM, NULL, BX_CPU_SSE2)
 bx_define_opcode(BX_IA_MOVUPD_VpdWpdR, &BX_CPU_C::MOVAPS_VpsWpsR, NULL, BX_CPU_SSE2)
 bx_define_opcode(BX_IA_MOVUPD_VpdWpdM, &BX_CPU_C::MOVUPS_VpsWpsM, NULL, BX_CPU_SSE2)
 bx_define_opcode(BX_IA_MOVUPD_WpdVpdR, &BX_CPU_C::MOVAPS_WpsVpsR, NULL, BX_CPU_SSE2)
