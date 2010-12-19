@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.h,v 1.104 2010-07-22 16:41:59 sshwarts Exp $
+// $Id: fetchdecode.h,v 1.105 2010-12-19 22:36:19 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005-2010 Stanislav Shwartsman
@@ -981,6 +981,52 @@ static const BxOpcodeInfo_t BxOpcodeInfoG15R64[8] = {
   /* 5 */ { BxPrefixSSE, BX_IA_LFENCE, BxOpcodeGroupSSE_ERR },
   /* 6 */ { BxPrefixSSE, BX_IA_MFENCE, BxOpcodeGroupSSE_ERR },
   /* 7 */ { BxPrefixSSE, BX_IA_SFENCE, BxOpcodeGroupSSE_ERR }
+};
+#endif
+
+static const BxOpcodeInfo_t BxOpcodeInfoMOV_RdCd[8] = {
+  /* 0 */ { 0, BX_IA_MOV_RdCR0 },
+  /* 1 */ { 0, BX_IA_ERROR },
+  /* 2 */ { 0, BX_IA_MOV_RdCR2 },
+  /* 3 */ { 0, BX_IA_MOV_RdCR3 },
+  /* 4 */ { 0, BX_IA_MOV_RdCR4 },
+  /* 5 */ { 0, BX_IA_ERROR },
+  /* 6 */ { 0, BX_IA_ERROR },
+  /* 7 */ { 0, BX_IA_ERROR }
+};
+
+static const BxOpcodeInfo_t BxOpcodeInfoMOV_CdRd[8] = {
+  /* 0 */ { BxTraceEnd, BX_IA_MOV_CR0Rd },
+  /* 1 */ { 0, BX_IA_ERROR },
+  /* 2 */ { 0, BX_IA_MOV_CR2Rd },
+  /* 3 */ { BxTraceEnd, BX_IA_MOV_CR3Rd },
+  /* 4 */ { BxTraceEnd, BX_IA_MOV_CR4Rd },
+  /* 5 */ { 0, BX_IA_ERROR },
+  /* 6 */ { 0, BX_IA_ERROR },
+  /* 7 */ { 0, BX_IA_ERROR }
+};
+
+#if BX_SUPPORT_X86_64
+static const BxOpcodeInfo_t BxOpcodeInfoMOV_RqCq[8] = {
+  /* 0 */ { 0, BX_IA_MOV_RqCR0 },
+  /* 1 */ { 0, BX_IA_ERROR },
+  /* 2 */ { 0, BX_IA_MOV_RqCR2 },
+  /* 3 */ { 0, BX_IA_MOV_RqCR3 },
+  /* 4 */ { 0, BX_IA_MOV_RqCR4 },
+  /* 5 */ { 0, BX_IA_ERROR },
+  /* 6 */ { 0, BX_IA_ERROR },
+  /* 7 */ { 0, BX_IA_ERROR }
+};
+
+static const BxOpcodeInfo_t BxOpcodeInfoMOV_CqRq[8] = {
+  /* 0 */ { BxTraceEnd, BX_IA_MOV_CR0Rq },
+  /* 1 */ { 0, BX_IA_ERROR },
+  /* 2 */ { 0, BX_IA_MOV_CR2Rq },
+  /* 3 */ { BxTraceEnd, BX_IA_MOV_CR3Rq },
+  /* 4 */ { BxTraceEnd, BX_IA_MOV_CR4Rq },
+  /* 5 */ { 0, BX_IA_ERROR },
+  /* 6 */ { 0, BX_IA_ERROR },
+  /* 7 */ { 0, BX_IA_ERROR }
 };
 #endif
 

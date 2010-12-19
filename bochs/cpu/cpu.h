@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.692 2010-12-19 21:41:15 sshwarts Exp $
+// $Id: cpu.h,v 1.693 2010-12-19 22:36:19 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2010  The Bochs Project
@@ -1373,9 +1373,15 @@ public: // for now...
   BX_SMF void WBINVD(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void CLFLUSH(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
-  BX_SMF void MOV_CdRd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void MOV_CR0Rd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void MOV_CR2Rd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void MOV_CR3Rd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void MOV_CR4Rd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void MOV_RdCR0(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void MOV_RdCR2(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void MOV_RdCR3(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void MOV_RdCR4(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void MOV_DdRd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void MOV_RdCd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void MOV_RdDd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void MOV_TdRd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void MOV_RdTd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -2594,9 +2600,15 @@ public: // for now...
   BX_SMF void LEAVE64(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void IRET64(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
-  BX_SMF void MOV_CqRq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void MOV_CR0Rq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void MOV_CR2Rq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void MOV_CR3Rq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void MOV_CR4Rq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void MOV_RqCR0(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void MOV_RqCR2(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void MOV_RqCR3(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void MOV_RqCR4(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void MOV_DqRq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void MOV_RqCq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void MOV_RqDq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
   BX_SMF void SHLD_EqGqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);

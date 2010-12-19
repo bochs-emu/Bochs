@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.278 2010-12-06 21:45:56 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.279 2010-12-19 22:36:19 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2010  The Bochs Project
@@ -733,12 +733,12 @@ static const BxOpcodeInfo_t BxOpcodeInfo64[512*3*2] = {
   /* 0F 1E /wm */ { 0, BX_IA_NOP },      // multi-byte NOP
   /* 0F 1F /wr */ { 0, BX_IA_NOP },    // multi-byte NOP
   /* 0F 1F /wm */ { 0, BX_IA_NOP },      // multi-byte NOP
-  /* 0F 20 /wr */ { 0, BX_IA_MOV_RqCq },
-  /* 0F 20 /wm */ { 0, BX_IA_MOV_RqCq },
+  /* 0F 20 /wr */ { BxGroupN, BX_IA_ERROR, BxOpcodeInfoMOV_RqCq },
+  /* 0F 20 /wm */ { BxGroupN, BX_IA_ERROR, BxOpcodeInfoMOV_RqCq },
   /* 0F 21 /wr */ { 0, BX_IA_MOV_RqDq },
   /* 0F 21 /wm */ { 0, BX_IA_MOV_RqDq },
-  /* 0F 22 /wr */ { BxTraceEnd, BX_IA_MOV_CqRq },
-  /* 0F 22 /wm */ { BxTraceEnd, BX_IA_MOV_CqRq },
+  /* 0F 22 /wr */ { BxGroupN, BX_IA_ERROR, BxOpcodeInfoMOV_CqRq },
+  /* 0F 22 /wm */ { BxGroupN, BX_IA_ERROR, BxOpcodeInfoMOV_CqRq },
   /* 0F 23 /wr */ { BxTraceEnd, BX_IA_MOV_DqRq },
   /* 0F 23 /wm */ { BxTraceEnd, BX_IA_MOV_DqRq },
   /* 0F 24 /wr */ { 0, BX_IA_ERROR },
@@ -1760,12 +1760,12 @@ static const BxOpcodeInfo_t BxOpcodeInfo64[512*3*2] = {
   /* 0F 1E /dm */ { 0, BX_IA_NOP },      // multi-byte NOP
   /* 0F 1F /dr */ { 0, BX_IA_NOP },    // multi-byte NOP
   /* 0F 1F /dm */ { 0, BX_IA_NOP },      // multi-byte NOP
-  /* 0F 20 /dr */ { 0, BX_IA_MOV_RqCq },
-  /* 0F 20 /dm */ { 0, BX_IA_MOV_RqCq },
+  /* 0F 20 /dr */ { BxGroupN, BX_IA_ERROR, BxOpcodeInfoMOV_RqCq },
+  /* 0F 20 /dm */ { BxGroupN, BX_IA_ERROR, BxOpcodeInfoMOV_RqCq },
   /* 0F 21 /dr */ { 0, BX_IA_MOV_RqDq },
   /* 0F 21 /dm */ { 0, BX_IA_MOV_RqDq },
-  /* 0F 22 /dr */ { BxTraceEnd, BX_IA_MOV_CqRq },
-  /* 0F 22 /dm */ { BxTraceEnd, BX_IA_MOV_CqRq },
+  /* 0F 22 /dr */ { BxGroupN, BX_IA_ERROR, BxOpcodeInfoMOV_CqRq },
+  /* 0F 22 /dm */ { BxGroupN, BX_IA_ERROR, BxOpcodeInfoMOV_CqRq },
   /* 0F 23 /dr */ { BxTraceEnd, BX_IA_MOV_DqRq },
   /* 0F 23 /dm */ { BxTraceEnd, BX_IA_MOV_DqRq },
   /* 0F 24 /dr */ { 0, BX_IA_ERROR },
@@ -2787,12 +2787,12 @@ static const BxOpcodeInfo_t BxOpcodeInfo64[512*3*2] = {
   /* 0F 1E /qm */ { 0, BX_IA_NOP },      // multi-byte NOP
   /* 0F 1F /qr */ { 0, BX_IA_NOP },    // multi-byte NOP
   /* 0F 1F /qm */ { 0, BX_IA_NOP },      // multi-byte NOP
-  /* 0F 20 /qr */ { 0, BX_IA_MOV_RqCq },
-  /* 0F 20 /qm */ { 0, BX_IA_MOV_RqCq },
+  /* 0F 20 /qr */ { BxGroupN, BX_IA_ERROR, BxOpcodeInfoMOV_RqCq },
+  /* 0F 20 /qm */ { BxGroupN, BX_IA_ERROR, BxOpcodeInfoMOV_RqCq },
   /* 0F 21 /qr */ { 0, BX_IA_MOV_RqDq },
   /* 0F 21 /qm */ { 0, BX_IA_MOV_RqDq },
-  /* 0F 22 /qr */ { BxTraceEnd, BX_IA_MOV_CqRq },
-  /* 0F 22 /qm */ { BxTraceEnd, BX_IA_MOV_CqRq },
+  /* 0F 22 /qr */ { BxGroupN, BX_IA_ERROR, BxOpcodeInfoMOV_CqRq },
+  /* 0F 22 /qm */ { BxGroupN, BX_IA_ERROR, BxOpcodeInfoMOV_CqRq },
   /* 0F 23 /qr */ { BxTraceEnd, BX_IA_MOV_DqRq },
   /* 0F 23 /qm */ { BxTraceEnd, BX_IA_MOV_DqRq },
   /* 0F 24 /qr */ { 0, BX_IA_ERROR },
