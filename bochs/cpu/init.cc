@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.247 2010-12-06 21:52:41 sshwarts Exp $
+// $Id: init.cc,v 1.248 2010-12-19 07:06:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -694,6 +694,9 @@ void BX_CPU_C::after_restore_state(void)
   handleAlignmentCheck();
 #endif
   handleCpuModeChange();
+#if BX_CPU_LEVEL >= 6
+  handleSseModeChange();
+#endif
 
   if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_IA32_REAL) CPL = 0;
   else {
@@ -1024,6 +1027,7 @@ void BX_CPU_C::reset(unsigned source)
 
 #if BX_CPU_LEVEL >= 6
   // Reset XMM state - unchanged on #INIT
+  BX_CPU_THIS_PTR sse_ok = 0;
   if (source == BX_RESET_HARDWARE) {
     for(n=0; n<BX_XMM_REGISTERS; n++)
     {

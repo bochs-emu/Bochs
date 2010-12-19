@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.690 2010-12-18 11:58:16 sshwarts Exp $
+// $Id: cpu.h,v 1.691 2010-12-19 07:06:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2010  The Bochs Project
@@ -986,6 +986,9 @@ public: // for now...
   bx_bool  disable_INIT;
 #if BX_CPU_LEVEL >= 5
   bx_bool  ignore_bad_msrs;
+#endif
+#if BX_CPU_LEVEL >= 6
+  bx_bool  sse_ok;
 #endif
 
   // for exceptions
@@ -3154,6 +3157,9 @@ public: // for now...
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
   BX_SMF void handleAlignmentCheck(void);
 #endif
+#if BX_CPU_LEVEL >= 6
+  BX_SMF void handleSseModeChange(void);
+#endif
 
 #if BX_CPU_LEVEL >= 5
   BX_SMF bx_bool rdmsr(Bit32u index, Bit64u *val_64) BX_CPP_AttrRegparmN(2);
@@ -3482,7 +3488,7 @@ BX_CPP_INLINE void BX_CPU_C::prepareMMX(void)
 #if BX_CPU_LEVEL >= 6
 BX_CPP_INLINE void BX_CPU_C::prepareSSE(void)
 {
-  if(BX_CPU_THIS_PTR cr0.get_EM() || !BX_CPU_THIS_PTR cr4.get_OSFXSR())
+  if(! BX_CPU_THIS_PTR sse_ok)
     exception(BX_UD_EXCEPTION, 0);
 
   if(BX_CPU_THIS_PTR cr0.get_TS())

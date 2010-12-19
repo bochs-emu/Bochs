@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.338 2010-09-24 21:15:16 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.339 2010-12-19 07:06:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2010  The Bochs Project
@@ -542,6 +542,16 @@ void BX_CPU_C::handleAlignmentCheck(void)
     }
   }
 }
+#endif
+
+#if BX_CPU_LEVEL >= 6
+void BX_CPU_C::handleSseModeChange(void)
+{
+  if(BX_CPU_THIS_PTR cr0.get_EM() || !BX_CPU_THIS_PTR cr4.get_OSFXSR())
+    BX_CPU_THIS_PTR sse_ok = 0;
+  else
+    BX_CPU_THIS_PTR sse_ok = 1;
+}  
 #endif
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDPMC(bxInstruction_c *i)

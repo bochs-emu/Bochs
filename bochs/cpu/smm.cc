@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: smm.cc,v 1.72 2010-04-29 19:34:32 sshwarts Exp $
+// $Id: smm.cc,v 1.73 2010-12-19 07:06:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2006-2009 Stanislav Shwartsman
@@ -211,6 +211,10 @@ void BX_CPU_C::enter_system_management_mode(void)
 
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
   handleAlignmentCheck();
+#endif
+
+#if BX_CPU_LEVEL >= 6
+  BX_CPU_THIS_PTR sse_ok = 0; // CR4 is cleared
 #endif
 
   /* DS (Data Segment) and descriptor cache */
@@ -649,6 +653,10 @@ bx_bool BX_CPU_C::smram_restore_state(const Bit32u *saved_state)
   }
 
   handleCpuModeChange();
+
+#if BX_CPU_LEVEL >= 6
+  handleSseModeChange();
+#endif
 
   Bit16u ar_data = SMRAM_FIELD(saved_state, SMRAM_FIELD_LDTR_SELECTOR_AR) >> 16;
   if (set_segment_ar_data(&BX_CPU_THIS_PTR ldtr,

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: crregs.cc,v 1.22 2010-11-23 14:59:35 sshwarts Exp $
+// $Id: crregs.cc,v 1.23 2010-12-19 07:06:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2010 Stanislav Shwartsman
@@ -891,6 +891,10 @@ bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::SetCR0(bx_address val)
 
   handleCpuModeChange();
 
+#if BX_CPU_LEVEL >= 6
+  handleSseModeChange();
+#endif
+
   // Modification of PG,PE flushes TLB cache according to docs.
   // Additionally, the TLB strategy is based on the current value of
   // WP, so if that changes we must also flush the TLB.
@@ -1066,6 +1070,10 @@ bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::SetCR4(bx_address val)
 #endif
 
   BX_CPU_THIS_PTR cr4.set32((Bit32u) val);
+
+#if BX_CPU_LEVEL >= 6
+  handleSseModeChange();
+#endif
 
   return 1;
 }

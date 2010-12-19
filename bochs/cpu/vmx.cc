@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmx.cc,v 1.73 2010-11-12 20:46:59 sshwarts Exp $
+// $Id: vmx.cc,v 1.74 2010-12-19 07:06:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2009-2010 Stanislav Shwartsman
@@ -1583,6 +1583,7 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
   handleAlignmentCheck();
 #endif
   handleCpuModeChange();
+  handleSseModeChange();
 
   return VMXERR_NO_ERROR;
 }
@@ -2027,6 +2028,7 @@ void BX_CPU_C::VMexitLoadHostState(void)
   handleAlignmentCheck();
 #endif
   handleCpuModeChange();
+  handleSseModeChange();
 }
 
 void BX_CPU_C::VMexit(bxInstruction_c *i, Bit32u reason, Bit64u qualification)
