@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.248 2010-12-19 07:06:40 sshwarts Exp $
+// $Id: init.cc,v 1.249 2010-12-19 21:41:15 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -730,34 +730,10 @@ void BX_CPU_C::reset(unsigned source)
   else
     BX_INFO(("cpu reset"));
 
-#if BX_SUPPORT_X86_64
-  RAX = 0; // processor passed test :-)
-  RBX = 0;
-  RCX = 0;
-  RDX = get_cpu_version_information();
-  RBP = 0;
-  RSI = 0;
-  RDI = 0;
-  RSP = 0;
-  R8  = 0;
-  R9  = 0;
-  R10 = 0;
-  R11 = 0;
-  R12 = 0;
-  R13 = 0;
-  R14 = 0;
-  R15 = 0;
-#else
-  // general registers
-  EAX = 0; // processor passed test :-)
-  EBX = 0;
-  ECX = 0;
-  EDX = get_cpu_version_information();
-  EBP = 0;
-  ESI = 0;
-  EDI = 0;
-  ESP = 0;
-#endif
+  for (n=0;n<BX_GENERAL_REGISTERS;n++)
+    BX_WRITE_32BIT_REGZ(n, 0);
+
+  BX_WRITE_32BIT_REGZ(BX_32BIT_REG_EDX, get_cpu_version_information());
 
   // initialize NIL register
   BX_WRITE_32BIT_REGZ(BX_NIL_REGISTER, 0);

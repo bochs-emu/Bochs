@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.691 2010-12-19 07:06:40 sshwarts Exp $
+// $Id: cpu.h,v 1.692 2010-12-19 21:41:15 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2010  The Bochs Project
@@ -79,13 +79,13 @@
 # define BX_GENERAL_REGISTERS 8
 #endif
 
-#define BX_16BIT_REG_IP  BX_GENERAL_REGISTERS
-#define BX_32BIT_REG_EIP BX_GENERAL_REGISTERS
-#define BX_64BIT_REG_RIP BX_GENERAL_REGISTERS
+#define BX_TMP_REGISTER (BX_GENERAL_REGISTERS)
 
-#define BX_NIL_REGISTER (BX_GENERAL_REGISTERS+1)
+#define BX_16BIT_REG_IP  (BX_GENERAL_REGISTERS+1)
+#define BX_32BIT_REG_EIP (BX_GENERAL_REGISTERS+1)
+#define BX_64BIT_REG_RIP (BX_GENERAL_REGISTERS+1)
 
-#define BX_TMP_REGISTER (BX_GENERAL_REGISTERS+2)
+#define BX_NIL_REGISTER  (BX_GENERAL_REGISTERS+2)
 
 #if defined(NEED_CPU_REG_SHORTCUTS)
 
