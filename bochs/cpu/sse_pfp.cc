@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_pfp.cc,v 1.66 2010-04-14 20:20:17 sshwarts Exp $
+// $Id: sse_pfp.cc,v 1.67 2010-12-19 22:50:28 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003-2009 Stanislav Shwartsman
@@ -300,36 +300,32 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTTPS2PI_PqWps(bxInstruction_c *i)
   /* check floating point status word for a pending FPU exceptions */
   FPU_check_pending_exceptions();
 
-  Bit64u op;
-  BxPackedMmxRegister result;
+  BxPackedMmxRegister op;
 
   /* op is a register or memory reference */
   if (i->modC0()) {
-    op = BX_READ_XMM_REG_LO_QWORD(i->rm());
+    MMXUQ(op) = BX_READ_XMM_REG_LO_QWORD(i->rm());
   }
   else {
     bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    op = read_virtual_qword(i->seg(), eaddr);
+    MMXUQ(op) = read_virtual_qword(i->seg(), eaddr);
   }
 
   float_status_t status_word;
   mxcsr_to_softfloat_status_word(status_word, MXCSR);
 
-  float32 r0 = (float32)(op & 0xFFFFFFFF);
-  float32 r1 = (float32)(op >> 32);
-
   if (MXCSR.get_DAZ()) {
-    r0 = float32_denormal_to_zero(r0);
-    r1 = float32_denormal_to_zero(r1);
+    MMXUD0(op) = float32_denormal_to_zero(MMXUD0(op));
+    MMXUD1(op) = float32_denormal_to_zero(MMXUD1(op));
   }
 
-  MMXUD0(result) = float32_to_int32_round_to_zero(r0, status_word);
-  MMXUD1(result) = float32_to_int32_round_to_zero(r1, status_word);
+  MMXUD0(op) = float32_to_int32_round_to_zero(MMXUD0(op), status_word);
+  MMXUD1(op) = float32_to_int32_round_to_zero(MMXUD1(op), status_word);
 
   check_exceptionsSSE(status_word.float_exception_flags);
   prepareFPU2MMX(); /* cause FPU2MMX state transition */
-  BX_WRITE_MMX_REG(i->nnn(), result);
+  BX_WRITE_MMX_REG(i->nnn(), op);
 #endif
 }
 
@@ -482,36 +478,32 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTPS2PI_PqWps(bxInstruction_c *i)
   /* check floating point status word for a pending FPU exceptions */
   FPU_check_pending_exceptions();
 
-  Bit64u op;
-  BxPackedMmxRegister result;
+  BxPackedMmxRegister op;
 
   /* op is a register or memory reference */
   if (i->modC0()) {
-    op = BX_READ_XMM_REG_LO_QWORD(i->rm());
+    MMXUQ(op) = BX_READ_XMM_REG_LO_QWORD(i->rm());
   }
   else {
     bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    op = read_virtual_qword(i->seg(), eaddr);
+    MMXUQ(op) = read_virtual_qword(i->seg(), eaddr);
   }
 
   float_status_t status_word;
   mxcsr_to_softfloat_status_word(status_word, MXCSR);
 
-  float32 r0 = (float32)(op & 0xFFFFFFFF);
-  float32 r1 = (float32)(op >> 32);
-
   if (MXCSR.get_DAZ()) {
-    r0 = float32_denormal_to_zero(r0);
-    r1 = float32_denormal_to_zero(r1);
+    MMXUD0(op) = float32_denormal_to_zero(MMXUD0(op));
+    MMXUD1(op) = float32_denormal_to_zero(MMXUD1(op));
   }
 
-  MMXUD0(result) = float32_to_int32(r0, status_word);
-  MMXUD1(result) = float32_to_int32(r1, status_word);
+  MMXUD0(op) = float32_to_int32(MMXUD0(op), status_word);
+  MMXUD1(op) = float32_to_int32(MMXUD1(op), status_word);
 
   check_exceptionsSSE(status_word.float_exception_flags);
   prepareFPU2MMX(); /* cause FPU2MMX state transition */
-  BX_WRITE_MMX_REG(i->nnn(), result);
+  BX_WRITE_MMX_REG(i->nnn(), op);
 #endif
 }
 
@@ -660,32 +652,29 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTPS2PD_VpsWps(bxInstruction_c *i)
 #if BX_CPU_LEVEL >= 6
   BX_CPU_THIS_PTR prepareSSE();
 
-  Bit64u op;
+  BxPackedMmxRegister op;
   BxPackedXmmRegister result;
 
   /* op is a register or memory reference */
   if (i->modC0()) {
-    op = BX_READ_XMM_REG_LO_QWORD(i->rm());
+    MMXUQ(op) = BX_READ_XMM_REG_LO_QWORD(i->rm());
   }
   else {
     bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    op = read_virtual_qword(i->seg(), eaddr);
+    MMXUQ(op) = read_virtual_qword(i->seg(), eaddr);
   }
 
   float_status_t status_word;
   mxcsr_to_softfloat_status_word(status_word, MXCSR);
 
-  float32 r0 = (float32)(op & 0xFFFFFFFF);
-  float32 r1 = (float32)(op >> 32);
-
   if (MXCSR.get_DAZ()) {
-    r0 = float32_denormal_to_zero(r0);
-    r1 = float32_denormal_to_zero(r1);
+    MMXUD0(op) = float32_denormal_to_zero(MMXUD0(op));
+    MMXUD1(op) = float32_denormal_to_zero(MMXUD1(op));
   }
 
-  result.xmm64u(0) = float32_to_float64(r0, status_word);
-  result.xmm64u(1) = float32_to_float64(r1, status_word);
+  result.xmm64u(0) = float32_to_float64(MMXUD0(op), status_word);
+  result.xmm64u(1) = float32_to_float64(MMXUD1(op), status_word);
 
   check_exceptionsSSE(status_word.float_exception_flags);
   BX_WRITE_XMM_REG(i->nnn(), result);
@@ -1015,24 +1004,21 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTDQ2PD_VpdWq(bxInstruction_c *i)
 #if BX_CPU_LEVEL >= 6
   BX_CPU_THIS_PTR prepareSSE();
 
-  Bit64u op;
+  BxPackedMmxRegister op;
   BxPackedXmmRegister result;
 
   /* op is a register or memory reference */
   if (i->modC0()) {
-    op = BX_READ_XMM_REG_LO_QWORD(i->rm());
+    MMXUQ(op) = BX_READ_XMM_REG_LO_QWORD(i->rm());
   }
   else {
     bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
-    op = read_virtual_qword(i->seg(), eaddr);
+    MMXUQ(op) = read_virtual_qword(i->seg(), eaddr);
   }
 
-  Bit32u r0 = (Bit32u)(op & 0xFFFFFFFF);
-  Bit32u r1 = (Bit32u)(op >> 32);
-
-  result.xmm64u(0) = int32_to_float64(r0);
-  result.xmm64u(1) = int32_to_float64(r1);
+  result.xmm64u(0) = int32_to_float64(MMXUD0(op));
+  result.xmm64u(1) = int32_to_float64(MMXUD1(op));
 
   BX_WRITE_XMM_REG(i->nnn(), result);
 #endif
