@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmware3.cc,v 1.22 2009-02-08 09:05:52 vruppert Exp $
+// $Id: vmware3.cc,v 1.23 2010-12-21 21:47:41 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 
 /*
@@ -518,4 +518,9 @@ void vmware3_image_t::close()
         }
     }
     current = 0;
+}
+
+Bit32u vmware3_image_t::get_capabilities(void)
+{
+  return HDIMAGE_HAS_GEOMETRY;
 }

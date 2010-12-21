@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: hdimage.cc,v 1.22 2010-12-10 17:02:18 vruppert Exp $
+// $Id: hdimage.cc,v 1.23 2010-12-21 21:47:41 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2009  The Bochs Project
@@ -41,6 +41,11 @@
 device_image_t::device_image_t()
 {
   hd_size = 0;
+}
+
+Bit32u device_image_t::get_capabilities()
+{
+  return 0;
 }
 
 /*** default_image_t function definitions ***/

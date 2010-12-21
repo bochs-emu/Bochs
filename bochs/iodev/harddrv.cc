@@ -1,8 +1,8 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.230 2010-12-10 17:02:18 vruppert Exp $
+// $Id: harddrv.cc,v 1.231 2010-12-21 21:47:41 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2009  The Bochs Project
+//  Copyright (C) 2002-2010  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -128,7 +128,7 @@ bx_hard_drive_c::bx_hard_drive_c()
   put("HD");
   for (Bit8u channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     for (Bit8u device=0; device<2; device ++) {
-      channels[channel].drives[device].hard_drive =  NULL;
+      channels[channel].drives[device].hdimage =  NULL;
 #ifdef LOWLEVEL_CDROM
       channels[channel].drives[device].cdrom.cd =  NULL;
 #endif
@@ -141,10 +141,10 @@ bx_hard_drive_c::~bx_hard_drive_c()
 {
   for (Bit8u channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     for (Bit8u device=0; device<2; device ++) {
-      if (channels[channel].drives[device].hard_drive != NULL) {
-        channels[channel].drives[device].hard_drive->close();
-        delete channels[channel].drives[device].hard_drive;
-        channels[channel].drives[device].hard_drive = NULL;
+      if (channels[channel].drives[device].hdimage != NULL) {
+        channels[channel].drives[device].hdimage->close();
+        delete channels[channel].drives[device].hdimage;
+        channels[channel].drives[device].hdimage = NULL;
       }
 #ifdef LOWLEVEL_CDROM
       if (channels[channel].drives[device].cdrom.cd != NULL) {
@@ -165,7 +165,7 @@ void bx_hard_drive_c::init(void)
   char  ata_name[20];
   bx_list_c *base;
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.230 2010-12-10 17:02:18 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.231 2010-12-21 21:47:41 vruppert Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     sprintf(ata_name, "ata.%d.resources", channel);
@@ -291,10 +291,10 @@ void bx_hard_drive_c::init(void)
         Bit64u disk_size = (Bit64u)cyl * heads * spt * 512;
 
         image_mode = SIM->get_param_enum("mode", base)->get();
-        channels[channel].drives[device].hard_drive = hdimage_init_image(image_mode,
+        channels[channel].drives[device].hdimage = hdimage_init_image(image_mode,
             disk_size, SIM->get_param_string("journal", base)->getptr());
 
-        if (channels[channel].drives[device].hard_drive != NULL) {
+        if (channels[channel].drives[device].hdimage != NULL) {
           BX_INFO(("HD on ata%d-%d: '%s' '%s' mode", channel, device,
                    SIM->get_param_string("path", base)->getptr(),
                    hdimage_mode_names[image_mode]));
@@ -302,16 +302,17 @@ void bx_hard_drive_c::init(void)
           // it's safe to return here on failure
           return;
         }
-        BX_HD_THIS channels[channel].drives[device].hard_drive->cylinders = cyl;
-        BX_HD_THIS channels[channel].drives[device].hard_drive->heads = heads;
-        BX_HD_THIS channels[channel].drives[device].hard_drive->sectors = spt;
+        BX_HD_THIS channels[channel].drives[device].hdimage->cylinders = cyl;
+        BX_HD_THIS channels[channel].drives[device].hdimage->heads = heads;
+        BX_HD_THIS channels[channel].drives[device].hdimage->sectors = spt;
         bx_bool geometry_detect = 0;
+        Bit32u image_caps = BX_HD_THIS channels[channel].drives[device].hdimage->get_capabilities();
 
         if ((image_mode == BX_HDIMAGE_MODE_FLAT) || (image_mode == BX_HDIMAGE_MODE_CONCAT) ||
             (image_mode == BX_HDIMAGE_MODE_GROWING) || (image_mode == BX_HDIMAGE_MODE_UNDOABLE) ||
-            (image_mode == BX_HDIMAGE_MODE_VOLATILE) || (image_mode == BX_HDIMAGE_MODE_VMWARE3) ||
-            (image_mode == BX_HDIMAGE_MODE_VMWARE4) || (image_mode == BX_HDIMAGE_MODE_SPARSE)) {
-          geometry_detect = ((cyl == 0) || (image_mode == BX_HDIMAGE_MODE_VMWARE3) || (image_mode == BX_HDIMAGE_MODE_VMWARE4));
+            (image_mode == BX_HDIMAGE_MODE_VOLATILE) || (image_mode == BX_HDIMAGE_MODE_SPARSE) ||
+            ((image_caps & HDIMAGE_HAS_GEOMETRY) != 0)) {
+          geometry_detect = ((cyl == 0) || (image_caps & HDIMAGE_HAS_GEOMETRY));
           if ((heads == 0) || (spt == 0)) {
             BX_PANIC(("ata%d-%d cannot have zero heads, or sectors/track", channel, device));
           }
@@ -322,32 +323,32 @@ void bx_hard_drive_c::init(void)
         }
 
         /* open hard drive image file */
-        if ((BX_HD_THIS channels[channel].drives[device].hard_drive->open(SIM->get_param_string("path", base)->getptr())) < 0) {
+        if ((BX_HD_THIS channels[channel].drives[device].hdimage->open(SIM->get_param_string("path", base)->getptr())) < 0) {
           BX_PANIC(("ata%d-%d: could not open hard drive image file '%s'", channel, device, SIM->get_param_string("path", base)->getptr()));
         }
 
-        if (BX_HD_THIS channels[channel].drives[device].hard_drive->hd_size != 0) {
+        if (BX_HD_THIS channels[channel].drives[device].hdimage->hd_size != 0) {
           if (geometry_detect) {
             // Autodetect number of cylinders
-            disk_size = BX_HD_THIS channels[channel].drives[device].hard_drive->hd_size;
-            if (image_mode != BX_HDIMAGE_MODE_VMWARE3 && image_mode != BX_HDIMAGE_MODE_VMWARE4) {
+            disk_size = BX_HD_THIS channels[channel].drives[device].hdimage->hd_size;
+            if ((image_caps & HDIMAGE_HAS_GEOMETRY) == 0) {
               cyl = (int)(disk_size / (heads * spt * 512));
               if (disk_size != ((Bit64u)cyl * heads * spt * 512)) {
                 BX_PANIC(("ata%d-%d: geometry autodetection failed", channel, device));
               }
-              BX_HD_THIS channels[channel].drives[device].hard_drive->cylinders = cyl;
+              BX_HD_THIS channels[channel].drives[device].hdimage->cylinders = cyl;
               SIM->get_param_num("cylinders", base)->set(cyl);
             } else {
-              cyl = BX_HD_THIS channels[channel].drives[device].hard_drive->cylinders;
-              heads = BX_HD_THIS channels[channel].drives[device].hard_drive->heads;
-              spt = BX_HD_THIS channels[channel].drives[device].hard_drive->sectors;
+              cyl = BX_HD_THIS channels[channel].drives[device].hdimage->cylinders;
+              heads = BX_HD_THIS channels[channel].drives[device].hdimage->heads;
+              spt = BX_HD_THIS channels[channel].drives[device].hdimage->sectors;
             }
             BX_INFO(("ata%d-%d: autodetect geometry: CHS=%d/%d/%d", channel, device, cyl, heads, spt));
           } else {
-            if (disk_size != BX_HD_THIS channels[channel].drives[device].hard_drive->hd_size) {
+            if (disk_size != BX_HD_THIS channels[channel].drives[device].hdimage->hd_size) {
               BX_PANIC(("ata%d-%d disk size doesn't match specified geometry", channel, device));
               // workaround large files problem with diskimages
-              BX_HD_THIS channels[channel].drives[device].hard_drive->hd_size = disk_size;
+              BX_HD_THIS channels[channel].drives[device].hdimage->hd_size = disk_size;
             }
           }
         } else if (geometry_detect) {
@@ -2116,7 +2117,7 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
             raise_interrupt(channel);
             break;
           }
-          if (BX_SELECTED_CONTROLLER(channel).sector_count != BX_SELECTED_DRIVE(channel).hard_drive->sectors) {
+          if (BX_SELECTED_CONTROLLER(channel).sector_count != BX_SELECTED_DRIVE(channel).hdimage->sectors) {
             BX_ERROR(("ata%d-%d: init drive params: logical sector count %d not supported", channel, BX_SLAVE_SELECTED(channel),
               BX_SELECTED_CONTROLLER(channel).sector_count));
             command_aborted(channel, value);
@@ -2125,7 +2126,7 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
           if (BX_SELECTED_CONTROLLER(channel).head_no == 0) {
             // Linux 2.6.x kernels use this value and don't like aborting here
             BX_ERROR(("ata%d-%d: init drive params: max. logical head number 0 not supported", channel, BX_SLAVE_SELECTED(channel)));
-          } else if (BX_SELECTED_CONTROLLER(channel).head_no != (BX_SELECTED_DRIVE(channel).hard_drive->heads-1)) {
+          } else if (BX_SELECTED_CONTROLLER(channel).head_no != (BX_SELECTED_DRIVE(channel).hdimage->heads-1)) {
             BX_ERROR(("ata%d-%d: init drive params: max. logical head number %d not supported", channel, BX_SLAVE_SELECTED(channel),
               BX_SELECTED_CONTROLLER(channel).head_no));
             command_aborted(channel, value);
@@ -2583,15 +2584,15 @@ bx_hard_drive_c::calculate_logical_address(Bit8u channel, Bit64s *sector)
         (Bit64u)BX_SELECTED_CONTROLLER(channel).sector_no;
     }
   } else {
-    logical_sector = ((Bit32u)BX_SELECTED_CONTROLLER(channel).cylinder_no * BX_SELECTED_DRIVE(channel).hard_drive->heads *
-      BX_SELECTED_DRIVE(channel).hard_drive->sectors) +
-      (Bit32u)(BX_SELECTED_CONTROLLER(channel).head_no * BX_SELECTED_DRIVE(channel).hard_drive->sectors) +
+    logical_sector = ((Bit32u)BX_SELECTED_CONTROLLER(channel).cylinder_no * BX_SELECTED_DRIVE(channel).hdimage->heads *
+      BX_SELECTED_DRIVE(channel).hdimage->sectors) +
+      (Bit32u)(BX_SELECTED_CONTROLLER(channel).head_no * BX_SELECTED_DRIVE(channel).hdimage->sectors) +
       (BX_SELECTED_CONTROLLER(channel).sector_no - 1);
   }
   Bit32u sector_count=
-    (Bit32u)BX_SELECTED_DRIVE(channel).hard_drive->cylinders *
-    (Bit32u)BX_SELECTED_DRIVE(channel).hard_drive->heads *
-    (Bit32u)BX_SELECTED_DRIVE(channel).hard_drive->sectors;
+    (Bit32u)BX_SELECTED_DRIVE(channel).hdimage->cylinders *
+    (Bit32u)BX_SELECTED_DRIVE(channel).hdimage->heads *
+    (Bit32u)BX_SELECTED_DRIVE(channel).hdimage->sectors;
 
   if (logical_sector >= sector_count) {
     BX_ERROR (("calc_log_addr: out of bounds (%d/%d)", (Bit32u)logical_sector, sector_count));
@@ -2624,14 +2625,14 @@ bx_hard_drive_c::increment_address(Bit8u channel)
     }
   } else {
     BX_SELECTED_CONTROLLER(channel).sector_no++;
-    if (BX_SELECTED_CONTROLLER(channel).sector_no > BX_SELECTED_DRIVE(channel).hard_drive->sectors) {
+    if (BX_SELECTED_CONTROLLER(channel).sector_no > BX_SELECTED_DRIVE(channel).hdimage->sectors) {
       BX_SELECTED_CONTROLLER(channel).sector_no = 1;
       BX_SELECTED_CONTROLLER(channel).head_no++;
-      if (BX_SELECTED_CONTROLLER(channel).head_no >= BX_SELECTED_DRIVE(channel).hard_drive->heads) {
+      if (BX_SELECTED_CONTROLLER(channel).head_no >= BX_SELECTED_DRIVE(channel).hdimage->heads) {
         BX_SELECTED_CONTROLLER(channel).head_no = 0;
         BX_SELECTED_CONTROLLER(channel).cylinder_no++;
-        if (BX_SELECTED_CONTROLLER(channel).cylinder_no >= BX_SELECTED_DRIVE(channel).hard_drive->cylinders)
-          BX_SELECTED_CONTROLLER(channel).cylinder_no = BX_SELECTED_DRIVE(channel).hard_drive->cylinders - 1;
+        if (BX_SELECTED_CONTROLLER(channel).cylinder_no >= BX_SELECTED_DRIVE(channel).hdimage->cylinders)
+          BX_SELECTED_CONTROLLER(channel).cylinder_no = BX_SELECTED_DRIVE(channel).hdimage->cylinders - 1;
       }
     }
   }
@@ -2763,25 +2764,25 @@ void bx_hard_drive_c::identify_drive(Bit8u channel)
   // Word 1: number of user-addressable cylinders in
   //   default translation mode.  If the value in words 60-61
   //   exceed 16,515,072, this word shall contain 16,383.
-  if (BX_SELECTED_DRIVE(channel).hard_drive->cylinders > 16383) {
+  if (BX_SELECTED_DRIVE(channel).hdimage->cylinders > 16383) {
     BX_SELECTED_DRIVE(channel).id_drive[1] = 16383;
   } else {
-    BX_SELECTED_DRIVE(channel).id_drive[1] = BX_SELECTED_DRIVE(channel).hard_drive->cylinders;
+    BX_SELECTED_DRIVE(channel).id_drive[1] = BX_SELECTED_DRIVE(channel).hdimage->cylinders;
   }
 
   // Word 2: reserved
 
   // Word 3: number of user-addressable heads in default
   //   translation mode
-  BX_SELECTED_DRIVE(channel).id_drive[3] = BX_SELECTED_DRIVE(channel).hard_drive->heads;
+  BX_SELECTED_DRIVE(channel).id_drive[3] = BX_SELECTED_DRIVE(channel).hdimage->heads;
 
   // Word 4: # unformatted bytes per translated track in default xlate mode
   // Word 5: # unformatted bytes per sector in default xlated mode
   // Word 6: # user-addressable sectors per track in default xlate mode
   // Note: words 4,5 are now "Vendor specific (obsolete)"
-  BX_SELECTED_DRIVE(channel).id_drive[4] = (512 * BX_SELECTED_DRIVE(channel).hard_drive->sectors);
+  BX_SELECTED_DRIVE(channel).id_drive[4] = (512 * BX_SELECTED_DRIVE(channel).hdimage->sectors);
   BX_SELECTED_DRIVE(channel).id_drive[5] = 512;
-  BX_SELECTED_DRIVE(channel).id_drive[6] = BX_SELECTED_DRIVE(channel).hard_drive->sectors;
+  BX_SELECTED_DRIVE(channel).id_drive[6] = BX_SELECTED_DRIVE(channel).hdimage->sectors;
 
   // Word 7-9: Vendor specific
 
@@ -2867,20 +2868,20 @@ void bx_hard_drive_c::identify_drive(Bit8u channel)
   // Word 54: # of user-addressable cylinders in curr xlate mode
   // Word 55: # of user-addressable heads in curr xlate mode
   // Word 56: # of user-addressable sectors/track in curr xlate mode
-  if (BX_SELECTED_DRIVE(channel).hard_drive->cylinders > 16383) {
+  if (BX_SELECTED_DRIVE(channel).hdimage->cylinders > 16383) {
     BX_SELECTED_DRIVE(channel).id_drive[54] = 16383;
   } else {
-    BX_SELECTED_DRIVE(channel).id_drive[54] = BX_SELECTED_DRIVE(channel).hard_drive->cylinders;
+    BX_SELECTED_DRIVE(channel).id_drive[54] = BX_SELECTED_DRIVE(channel).hdimage->cylinders;
   }
-  BX_SELECTED_DRIVE(channel).id_drive[55] = BX_SELECTED_DRIVE(channel).hard_drive->heads;
-  BX_SELECTED_DRIVE(channel).id_drive[56] = BX_SELECTED_DRIVE(channel).hard_drive->sectors;
+  BX_SELECTED_DRIVE(channel).id_drive[55] = BX_SELECTED_DRIVE(channel).hdimage->heads;
+  BX_SELECTED_DRIVE(channel).id_drive[56] = BX_SELECTED_DRIVE(channel).hdimage->sectors;
 
   // Word 57-58: Current capacity in sectors
   // Excludes all sectors used for device specific purposes.
   temp32 =
-    BX_SELECTED_DRIVE(channel).hard_drive->cylinders *
-    BX_SELECTED_DRIVE(channel).hard_drive->heads *
-    BX_SELECTED_DRIVE(channel).hard_drive->sectors;
+    BX_SELECTED_DRIVE(channel).hdimage->cylinders *
+    BX_SELECTED_DRIVE(channel).hdimage->heads *
+    BX_SELECTED_DRIVE(channel).hdimage->sectors;
   BX_SELECTED_DRIVE(channel).id_drive[57] = (temp32 & 0xffff); // LSW
   BX_SELECTED_DRIVE(channel).id_drive[58] = (temp32 >> 16);    // MSW
 
@@ -2898,10 +2899,10 @@ void bx_hard_drive_c::identify_drive(Bit8u channel)
   // addressable sectors.  This value does not depend on the current
   // drive geometry.  If the drive does not support LBA mode, these
   // words shall be set to 0.
-  if (BX_SELECTED_DRIVE(channel).hard_drive->hd_size > 0)
-    num_sects = (BX_SELECTED_DRIVE(channel).hard_drive->hd_size >> 9);
+  if (BX_SELECTED_DRIVE(channel).hdimage->hd_size > 0)
+    num_sects = (BX_SELECTED_DRIVE(channel).hdimage->hd_size >> 9);
   else
-    num_sects = BX_SELECTED_DRIVE(channel).hard_drive->cylinders * BX_SELECTED_DRIVE(channel).hard_drive->heads * BX_SELECTED_DRIVE(channel).hard_drive->sectors;
+    num_sects = BX_SELECTED_DRIVE(channel).hdimage->cylinders * BX_SELECTED_DRIVE(channel).hdimage->heads * BX_SELECTED_DRIVE(channel).hdimage->sectors;
   BX_SELECTED_DRIVE(channel).id_drive[60] = (Bit16u)(num_sects & 0xffff); // LSW
   BX_SELECTED_DRIVE(channel).id_drive[61] = (Bit16u)(num_sects >> 16); // MSW
 
@@ -3370,7 +3371,7 @@ bx_bool bx_hard_drive_c::ide_read_sector(Bit8u channel, Bit8u *buffer, Bit32u bu
       command_aborted(channel, BX_SELECTED_CONTROLLER(channel).current_command);
       return 0;
     }
-    ret = BX_SELECTED_DRIVE(channel).hard_drive->lseek(logical_sector * 512, SEEK_SET);
+    ret = BX_SELECTED_DRIVE(channel).hdimage->lseek(logical_sector * 512, SEEK_SET);
     if (ret < 0) {
       BX_ERROR(("could not lseek() hard drive image file"));
       command_aborted(channel, BX_SELECTED_CONTROLLER(channel).current_command);
@@ -3381,7 +3382,7 @@ bx_bool bx_hard_drive_c::ide_read_sector(Bit8u channel, Bit8u *buffer, Bit32u bu
       bx_gui->statusbar_setitem(BX_SELECTED_DRIVE(channel).statusbar_id, 1);
     BX_SELECTED_DRIVE(channel).iolight_counter = 5;
     bx_pc_system.activate_timer(BX_HD_THIS iolight_timer_index, 100000, 0);
-    ret = BX_SELECTED_DRIVE(channel).hard_drive->read((bx_ptr_t)bufptr, 512);
+    ret = BX_SELECTED_DRIVE(channel).hdimage->read((bx_ptr_t)bufptr, 512);
     if (ret < 512) {
       BX_ERROR(("could not read() hard drive image file at byte %lu", (unsigned long)logical_sector*512));
       command_aborted(channel, BX_SELECTED_CONTROLLER(channel).current_command);
@@ -3407,7 +3408,7 @@ bx_bool bx_hard_drive_c::ide_write_sector(Bit8u channel, Bit8u *buffer, Bit32u b
       command_aborted(channel, BX_SELECTED_CONTROLLER(channel).current_command);
       return 0;
     }
-    ret = BX_SELECTED_DRIVE(channel).hard_drive->lseek(logical_sector * 512, SEEK_SET);
+    ret = BX_SELECTED_DRIVE(channel).hdimage->lseek(logical_sector * 512, SEEK_SET);
     if (ret < 0) {
       BX_ERROR(("could not lseek() hard drive image file at byte %lu", (unsigned long)logical_sector * 512));
       command_aborted(channel, BX_SELECTED_CONTROLLER(channel).current_command);
@@ -3418,7 +3419,7 @@ bx_bool bx_hard_drive_c::ide_write_sector(Bit8u channel, Bit8u *buffer, Bit32u b
       bx_gui->statusbar_setitem(BX_SELECTED_DRIVE(channel).statusbar_id, 1, 1 /* write */);
     BX_SELECTED_DRIVE(channel).iolight_counter = 5;
     bx_pc_system.activate_timer(BX_HD_THIS iolight_timer_index, 100000, 0);
-    ret = BX_SELECTED_DRIVE(channel).hard_drive->write((bx_ptr_t)bufptr, 512);
+    ret = BX_SELECTED_DRIVE(channel).hdimage->write((bx_ptr_t)bufptr, 512);
     if (ret < 512) {
       BX_ERROR(("could not write() hard drive image file at byte %lu", (unsigned long)logical_sector*512));
       command_aborted(channel, BX_SELECTED_CONTROLLER(channel).current_command);

@@ -1,8 +1,8 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.h,v 1.56 2009-12-04 19:50:28 sshwarts Exp $
+// $Id: harddrv.h,v 1.57 2010-12-21 21:47:41 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2009  The Bochs Project
+//  Copyright (C) 2002-2010  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -224,7 +224,7 @@ private:
   // and an array of two drive structs
   struct channel_t {
     struct drive_t {
-      device_image_t* hard_drive;
+      device_image_t* hdimage;
       device_type_t device_type;
       // 512 byte buffer for ID drive command
       // These words are stored in native word endian format, as

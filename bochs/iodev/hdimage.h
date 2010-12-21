@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: hdimage.h,v 1.14 2010-12-10 17:02:18 vruppert Exp $
+// $Id: hdimage.h,v 1.15 2010-12-21 21:47:41 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2005-2009  The Bochs Project
@@ -20,6 +20,10 @@
 
 #ifndef BX_HDIMAGE_H
 #define BX_HDIMAGE_H
+
+// hdimage capabilities
+#define HDIMAGE_READONLY     1
+#define HDIMAGE_HAS_GEOMETRY 2
 
 // SPARSE IMAGES HEADER
 #define SPARSE_HEADER_MAGIC  (0x02468ace)
@@ -144,6 +148,9 @@ class device_image_t
       // Write count bytes from buf. Return the number of bytes
       // written (count).
       virtual ssize_t write(const void* buf, size_t count) = 0;
+
+      // Get image capabilities
+      virtual Bit32u get_capabilities();
 
       unsigned cylinders;
       unsigned heads;

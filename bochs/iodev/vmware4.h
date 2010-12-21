@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmware4.h,v 1.3 2009-02-08 09:05:52 vruppert Exp $
+// $Id: vmware4.h,v 1.4 2010-12-21 21:47:41 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 
 /*
@@ -40,6 +40,7 @@ class vmware4_image_t : public device_image_t
         Bit64s lseek(Bit64s offset, int whence);
         ssize_t read(void* buf, size_t count);
         ssize_t write(const void* buf, size_t count);
+        Bit32u get_capabilities();
 
     private:
         static const off_t INVALID_OFFSET;

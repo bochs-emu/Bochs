@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmware4.cc,v 1.5 2009-02-08 09:05:52 vruppert Exp $
+// $Id: vmware4.cc,v 1.6 2010-12-21 21:47:41 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 
 /*
@@ -326,4 +326,9 @@ void vmware4_image_t::write_block_index(Bit64u sector, Bit32u index, Bit32u bloc
 
     ::lseek(file_descriptor, sector * SECTOR_SIZE + index * sizeof(Bit32u), SEEK_SET);
     ::write(file_descriptor, &block_sector, sizeof(Bit32u));
+}
+
+Bit32u vmware4_image_t::get_capabilities(void)
+{
+  return HDIMAGE_HAS_GEOMETRY;
 }
