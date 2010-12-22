@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: xmm.h,v 1.32 2010-09-26 20:35:24 sshwarts Exp $
+// $Id: xmm.h,v 1.33 2010-12-22 21:24:19 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003-2009 Stanislav Shwartsman
@@ -86,6 +86,8 @@ typedef union bx_xmm_reg_t {
 #define BX_XMM_REG_HI_QWORD BX_READ_XMM_REG_HI_QWORD
 #define BX_XMM_REG_LO_QWORD BX_READ_XMM_REG_LO_QWORD
 #define BX_XMM_REG_LO_DWORD BX_READ_XMM_REG_LO_DWORD
+
+#define BX_XMM_REG BX_READ_XMM_REG
 
 /* store XMM register */
 #define BX_WRITE_XMM_REG(index, reg) \

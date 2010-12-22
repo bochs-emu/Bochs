@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: load.cc,v 1.1 2010-12-22 21:16:02 sshwarts Exp $
+// $Id: load.cc,v 1.2 2010-12-22 21:24:19 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008-2009 Stanislav Shwartsman
@@ -78,7 +78,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Vdq(bxInstruction_c *i)
 {
   BxPackedXmmRegister op;
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-  readVirtualDQwordAligned(i->seg(), eaddr, (Bit8u *) &op);
+
+  if (! BX_CPU_THIS_PTR mxcsr.get_misaligned_exception_mask()) {
+    read_virtual_dqword_aligned(i->seg(), eaddr, (Bit8u *) &op);
+  }
+  else {
+    read_virtual_dqword(i->seg(), eaddr, (Bit8u *) &op);
+  }
+
   BX_WRITE_XMM_REG(BX_TMP_REGISTER, op);
 
   BX_CPU_CALL_METHOD(i->execute2, (i));
