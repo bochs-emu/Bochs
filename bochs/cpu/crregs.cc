@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: crregs.cc,v 1.24 2010-12-19 22:36:19 sshwarts Exp $
+// $Id: crregs.cc,v 1.25 2010-12-22 21:16:01 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2010 Stanislav Shwartsman
@@ -1159,6 +1159,24 @@ bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::SetCR3(bx_address val)
     TLB_flush();          // Flush Global entries also.
 
   return 1;
+}
+
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::CLTS(bxInstruction_c *i)
+{
+  if (!real_mode() && CPL!=0) {
+    BX_ERROR(("CLTS: priveledge check failed, generate #GP(0)"));
+    exception(BX_GP_EXCEPTION, 0);
+  }
+
+#if BX_SUPPORT_VMX
+  if(VMexit_CLTS(i)) return;
+#endif
+
+  BX_CPU_THIS_PTR cr0.set_TS(0);
+
+#if BX_CPU_LEVEL >= 6
+  handleSseModeChange();
+#endif
 }
 
 #if BX_X86_DEBUGGER

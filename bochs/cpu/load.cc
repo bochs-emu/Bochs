@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: load32.cc,v 1.7 2009-10-14 20:45:29 sshwarts Exp $
+// $Id: load.cc,v 1.1 2010-12-22 21:16:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008-2009 Stanislav Shwartsman
@@ -55,3 +55,51 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Eq(bxInstruction_c *i)
   BX_CPU_CALL_METHOD(i->execute2, (i));
 }
 #endif
+
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Vss(bxInstruction_c *i)
+{
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  Bit32u val_32 = read_virtual_dword(i->seg(), eaddr);
+  BX_WRITE_XMM_REG_LO_DWORD(BX_TMP_REGISTER, val_32);
+
+  BX_CPU_CALL_METHOD(i->execute2, (i));
+}
+
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Vsd(bxInstruction_c *i)
+{
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  Bit64u val_64 = read_virtual_qword(i->seg(), eaddr);
+  BX_WRITE_XMM_REG_LO_QWORD(BX_TMP_REGISTER, val_64);
+
+  BX_CPU_CALL_METHOD(i->execute2, (i));
+}
+
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Vdq(bxInstruction_c *i)
+{
+  BxPackedXmmRegister op;
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  readVirtualDQwordAligned(i->seg(), eaddr, (Bit8u *) &op);
+  BX_WRITE_XMM_REG(BX_TMP_REGISTER, op);
+
+  BX_CPU_CALL_METHOD(i->execute2, (i));
+}
+
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOADA_Vdq(bxInstruction_c *i)
+{
+  BxPackedXmmRegister op;
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  read_virtual_dqword_aligned(i->seg(), eaddr, (Bit8u *) &op);
+  BX_WRITE_XMM_REG(BX_TMP_REGISTER, op);
+
+  BX_CPU_CALL_METHOD(i->execute2, (i));
+}
+
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOADU_Vdq(bxInstruction_c *i)
+{
+  BxPackedXmmRegister op;
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  read_virtual_dqword(i->seg(), eaddr, (Bit8u *) &op);
+  BX_WRITE_XMM_REG(BX_TMP_REGISTER, op);
+
+  BX_CPU_CALL_METHOD(i->execute2, (i));
+}

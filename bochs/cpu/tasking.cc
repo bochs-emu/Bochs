@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: tasking.cc,v 1.96 2010-06-21 05:35:45 sshwarts Exp $
+// $Id: tasking.cc,v 1.97 2010-12-22 21:16:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2010  The Bochs Project
@@ -675,12 +675,15 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
 #endif
   }
 
-
   if (tss_descriptor->type >= 9 && (trap_word & 0x1)) {
     BX_CPU_THIS_PTR debug_trap |= BX_DEBUG_TRAP_TASK_SWITCH_BIT; // BT flag
     BX_CPU_THIS_PTR async_event = 1; // so processor knows to check
     BX_INFO(("task_switch: T bit set in new TSS"));
   }
+
+#if BX_CPU_LEVEL >= 6
+  handleSseModeChange(); /* CR0.TS changes */
+#endif
 
   //
   // Step 12: Begin execution of new task.

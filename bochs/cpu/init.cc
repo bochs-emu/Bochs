@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.249 2010-12-19 21:41:15 sshwarts Exp $
+// $Id: init.cc,v 1.250 2010-12-22 21:16:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -783,7 +783,6 @@ void BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.avl = 0;
 #endif
 
-  updateFetchModeMask();
   flushICaches();
 
   /* DS (Data Segment) and descriptor cache */
@@ -1002,8 +1001,9 @@ void BX_CPU_C::reset(unsigned source)
 #endif
 
 #if BX_CPU_LEVEL >= 6
-  // Reset XMM state - unchanged on #INIT
   BX_CPU_THIS_PTR sse_ok = 0;
+
+  // Reset XMM state - unchanged on #INIT
   if (source == BX_RESET_HARDWARE) {
     for(n=0; n<BX_XMM_REGISTERS; n++)
     {
@@ -1057,6 +1057,8 @@ void BX_CPU_C::reset(unsigned source)
 #if BX_CPU_LEVEL >= 5
   BX_CPU_THIS_PTR ignore_bad_msrs = SIM->get_param_bool(BXPN_IGNORE_BAD_MSRS)->get();
 #endif
+
+  updateFetchModeMask();
 
   BX_INSTR_RESET(BX_CPU_ID, source);
 }

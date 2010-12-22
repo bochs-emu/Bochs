@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.693 2010-12-19 22:36:19 sshwarts Exp $
+// $Id: cpu.h,v 1.694 2010-12-22 21:16:01 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2010  The Bochs Project
@@ -920,7 +920,7 @@ public: // for now...
 #endif
 
 #if BX_CPU_LEVEL >= 6
-  bx_xmm_reg_t xmm[BX_XMM_REGISTERS]; // need TMP XMM register ?
+  bx_xmm_reg_t xmm[BX_XMM_REGISTERS+1];
   bx_mxcsr_t mxcsr;
   Bit32u mxcsr_mask;
 #endif
@@ -988,7 +988,7 @@ public: // for now...
   bx_bool  ignore_bad_msrs;
 #endif
 #if BX_CPU_LEVEL >= 6
-  bx_bool  sse_ok;
+  unsigned sse_ok;
 #endif
 
   // for exceptions
@@ -1766,6 +1766,11 @@ public: // for now...
 #if BX_SUPPORT_X86_64
   BX_SMF void LOAD_Eq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 #endif
+  BX_SMF void LOADA_Vdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void LOADU_Vdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void LOAD_Vdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void LOAD_Vss(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void LOAD_Vsd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
 #if BX_SUPPORT_FPU == 0	// if FPU is disabled
   BX_SMF void FPU_ESC(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -2132,7 +2137,6 @@ public: // for now...
   BX_SMF void PCMPEQW_VdqWdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void PCMPEQD_VdqWdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void MOVD_EdVdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void MOVD_EdVdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void MOVQ_VqWqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void MOVQ_VqWqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void CMPPD_VpdWpdIb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -2202,16 +2206,15 @@ public: // for now...
   /* SSE2 */
 
   /* SSE3 */
-  BX_SMF void MOVDDUP_VpdWq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void MOVSLDUP_VpsWps(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void MOVSHDUP_VpsWps(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void MOVDDUP_VpdWqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void MOVSLDUP_VpsWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void MOVSHDUP_VpsWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void HADDPD_VpdWpd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void HADDPS_VpsWps(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void HSUBPD_VpdWpd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void HSUBPS_VpsWps(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void ADDSUBPD_VpdWpd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void ADDSUBPS_VpsWps(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void LDDQU_VdqMdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   /* SSE3 */
 
   /* SSSE3 */
@@ -2377,10 +2380,6 @@ public: // for now...
   BX_SMF void XADD_EbGbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void XADD_EwGwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void XADD_EdGdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-
-#if BX_CPU_LEVEL == 2
-  BX_SMF void LOADALL(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-#endif
 
   BX_SMF void CMOVO_GwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void CMOVNO_GwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -2787,6 +2786,9 @@ public: // for now...
 
   BX_SMF void UndefinedOpcode(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void BxError(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+#if BX_CPU_LEVEL >= 6
+  BX_SMF void BxNoSSE(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+#endif
 
   BX_SMF bx_address BxResolve16BaseIndex(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF bx_address BxResolve32Base(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -3500,7 +3502,7 @@ BX_CPP_INLINE void BX_CPU_C::prepareMMX(void)
 #if BX_CPU_LEVEL >= 6
 BX_CPP_INLINE void BX_CPU_C::prepareSSE(void)
 {
-  if(! BX_CPU_THIS_PTR sse_ok)
+  if(BX_CPU_THIS_PTR cr0.get_EM() || !BX_CPU_THIS_PTR cr4.get_OSFXSR())
     exception(BX_UD_EXCEPTION, 0);
 
   if(BX_CPU_THIS_PTR cr0.get_TS())
@@ -3537,9 +3539,20 @@ BX_CPP_INLINE void BX_CPU_C::prepareXSAVE(void)
 
 #endif // defined(NEED_CPU_REG_SHORTCUTS)
 
+//
+// bit 0 - CS.D_B
+// bit 1 - long64 mode (CS.L)
+// bit 2 - SSE_OK
+//
+// updateFetchModeMask - has to be called everytime 
+//        CS.L or CS.D_B / CR0.TS or CR0.EM / CR4.OSFXSR changes
+//
 BX_CPP_INLINE void BX_CPU_C::updateFetchModeMask(void)
 {
   BX_CPU_THIS_PTR fetchModeMask =
+#if BX_CPU_LEVEL >= 6
+     (BX_CPU_THIS_PTR sse_ok << 2) |
+#endif
 #if BX_SUPPORT_X86_64
     ((BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64)<<1) |
 #endif

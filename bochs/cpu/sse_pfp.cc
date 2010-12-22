@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_pfp.cc,v 1.67 2010-12-19 22:50:28 sshwarts Exp $
+// $Id: sse_pfp.cc,v 1.68 2010-12-22 21:16:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003-2009 Stanislav Shwartsman
@@ -86,8 +86,6 @@ static float64_compare_method compare64[4] = {
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTPI2PS_VpsQqR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_THIS_PTR prepareSSE();
-
   BxPackedXmmRegister result;
 
   /* check floating point status word for a pending FPU exceptions */
@@ -110,8 +108,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTPI2PS_VpsQqR(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTPI2PS_VpsQqM(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_THIS_PTR prepareSSE();
-
   BxPackedMmxRegister op;
   BxPackedXmmRegister result;
 
@@ -138,8 +134,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTPI2PS_VpsQqM(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTPI2PD_VpdQqR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_THIS_PTR prepareSSE();
-
   BxPackedXmmRegister result;
 
   /* check floating point status word for a pending FPU exceptions */
@@ -158,8 +152,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTPI2PD_VpdQqR(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTPI2PD_VpdQqM(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_THIS_PTR prepareSSE();
-
   BxPackedMmxRegister op;
   BxPackedXmmRegister result;
 
@@ -182,8 +174,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTPI2PD_VpdQqM(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTSI2SD_VsdEdR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_THIS_PTR prepareSSE();
-
   float_status_t status_word;
   mxcsr_to_softfloat_status_word(status_word, MXCSR);
   float64 result;
@@ -203,8 +193,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTSI2SD_VsdEdR(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTSI2SD_VsdEdM(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_THIS_PTR prepareSSE();
-
   float_status_t status_word;
   mxcsr_to_softfloat_status_word(status_word, MXCSR);
   float64 result;
@@ -239,8 +227,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTSI2SD_VsdEdM(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTSI2SS_VssEdR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_THIS_PTR prepareSSE();
-
   float_status_t status_word;
   mxcsr_to_softfloat_status_word(status_word, MXCSR);
   float32 result;
@@ -260,8 +246,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTSI2SS_VssEdR(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTSI2SS_VssEdM(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_THIS_PTR prepareSSE();
-
   float_status_t status_word;
   mxcsr_to_softfloat_status_word(status_word, MXCSR);
   float32 result;
@@ -295,8 +279,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTSI2SS_VssEdM(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTTPS2PI_PqWps(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_THIS_PTR prepareSSE();
-
   /* check floating point status word for a pending FPU exceptions */
   FPU_check_pending_exceptions();
 
@@ -338,8 +320,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTTPS2PI_PqWps(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTTPD2PI_PqWpd(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_THIS_PTR prepareSSE();
-
   /* check floating point status word for a pending FPU exceptions */
   FPU_check_pending_exceptions();
 
@@ -382,8 +362,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTTPD2PI_PqWpd(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTTSD2SI_GdWsd(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_THIS_PTR prepareSSE();
-
   float64 op;
 
   /* op is a register or memory reference */
@@ -427,8 +405,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTTSD2SI_GdWsd(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTTSS2SI_GdWss(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_THIS_PTR prepareSSE();
-
   float32 op;
 
   /* op is a register or memory reference */
@@ -473,8 +449,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTTSS2SI_GdWss(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTPS2PI_PqWps(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_THIS_PTR prepareSSE();
-
   /* check floating point status word for a pending FPU exceptions */
   FPU_check_pending_exceptions();
 
@@ -517,8 +491,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTPS2PI_PqWps(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTPD2PI_PqWpd(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_THIS_PTR prepareSSE();
-
   /* check floating point status word for a pending FPU exceptions */
   FPU_check_pending_exceptions();
 
@@ -562,8 +534,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTPD2PI_PqWpd(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTSD2SI_GdWsd(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_THIS_PTR prepareSSE();
-
   float64 op;
 
   /* op is a register or memory reference */
@@ -607,8 +577,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTSD2SI_GdWsd(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTSS2SI_GdWss(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_THIS_PTR prepareSSE();
-
   float32 op;
 
   /* op is a register or memory reference */
@@ -650,8 +618,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTSS2SI_GdWss(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTPS2PD_VpsWps(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_THIS_PTR prepareSSE();
-
   BxPackedMmxRegister op;
   BxPackedXmmRegister result;
 
@@ -691,8 +657,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTPS2PD_VpsWps(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTPD2PS_VpdWpd(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_THIS_PTR prepareSSE();
-
   BxPackedXmmRegister op, result;
 
   /* op is a register or memory reference */
@@ -733,8 +697,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTPD2PS_VpdWpd(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTSD2SS_VsdWsd(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_THIS_PTR prepareSSE();
-
   float64 op;
   float32 result;
 
@@ -765,8 +727,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTSD2SS_VsdWsd(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTSS2SD_VssWss(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_THIS_PTR prepareSSE();
-
   float32 op;
   float64 result;
 
@@ -799,8 +759,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTSS2SD_VssWss(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTDQ2PS_VpsWdq(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_THIS_PTR prepareSSE();
-
   BxPackedXmmRegister op;
 
   /* op is a register or memory reference */
@@ -836,8 +794,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTDQ2PS_VpsWdq(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTPS2DQ_VdqWps(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_THIS_PTR prepareSSE();
-
   BxPackedXmmRegister op;
 
   /* op is a register or memory reference */
@@ -879,8 +835,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTPS2DQ_VdqWps(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTTPS2DQ_VdqWps(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_THIS_PTR prepareSSE();
-
   BxPackedXmmRegister op;
 
   /* op is a register or memory reference */
@@ -922,8 +876,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTTPS2DQ_VdqWps(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTTPD2DQ_VqWpd(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_THIS_PTR prepareSSE();
-
   BxPackedXmmRegister op, result;
 
   /* op is a register or memory reference */
@@ -963,8 +915,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTTPD2DQ_VqWpd(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTPD2DQ_VqWpd(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_THIS_PTR prepareSSE();
-
   BxPackedXmmRegister op, result;
 
   /* op is a register or memory reference */
@@ -1002,8 +952,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTPD2DQ_VqWpd(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTDQ2PD_VpdWq(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_THIS_PTR prepareSSE();
-
   BxPackedMmxRegister op;
   BxPackedXmmRegister result;
 
@@ -1032,8 +980,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTDQ2PD_VpdWq(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::UCOMISS_VssWss(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_THIS_PTR prepareSSE();
-
   float32 op1 = BX_READ_XMM_REG_LO_DWORD(i->nnn()), op2;
 
   /* op2 is a register or memory reference */
@@ -1069,8 +1015,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::UCOMISS_VssWss(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::UCOMISD_VsdWsd(bxInstruction_c *i)            	
 {
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_THIS_PTR prepareSSE();
-
   float64 op1 = BX_READ_XMM_REG_LO_QWORD(i->nnn()), op2;
 
   /* op2 is a register or memory reference */
@@ -1106,8 +1050,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::UCOMISD_VsdWsd(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::COMISS_VpsWps(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_THIS_PTR prepareSSE();
-
   float32 op1 = BX_READ_XMM_REG_LO_DWORD(i->nnn()), op2;
 
   /* op2 is a register or memory reference */
@@ -1143,8 +1085,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::COMISS_VpsWps(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::COMISD_VpdWpd(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_THIS_PTR prepareSSE();
-
   float64 op1 = BX_READ_XMM_REG_LO_QWORD(i->nnn()), op2;
 
   /* op2 is a register or memory reference */
@@ -1180,8 +1120,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::COMISD_VpdWpd(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::SQRTPS_VpsWps(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_THIS_PTR prepareSSE();
-
   BxPackedXmmRegister op;
 
   /* op is a register or memory reference */
@@ -1223,8 +1161,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SQRTPS_VpsWps(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::SQRTPD_VpdWpd(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_THIS_PTR prepareSSE();
-
   BxPackedXmmRegister op;
 
   /* op is a register or memory reference */
@@ -1262,8 +1198,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SQRTPD_VpdWpd(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::SQRTSD_VsdWsd(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_THIS_PTR prepareSSE();
-
   float64 op;
 
   /* op is a register or memory reference */
@@ -1293,8 +1227,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SQRTSD_VsdWsd(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::SQRTSS_VssWss(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_THIS_PTR prepareSSE();
-
   float32 op;
 
   /* op is a register or memory reference */
@@ -1324,8 +1256,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SQRTSS_VssWss(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::ADDPS_VpsWps(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_THIS_PTR prepareSSE();
-
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
 
   /* op2 is a register or memory reference */
@@ -1371,8 +1301,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ADDPS_VpsWps(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::ADDPD_VpdWpd(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_THIS_PTR prepareSSE();
-
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
 
   /* op2 is a register or memory reference */
@@ -1412,8 +1340,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ADDPD_VpdWpd(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::ADDSD_VsdWsd(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_THIS_PTR prepareSSE();
-
   float64 op1 = BX_READ_XMM_REG_LO_QWORD(i->nnn()), op2;
 
   /* op2 is a register or memory reference */
@@ -1449,8 +1375,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ADDSD_VsdWsd(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::ADDSS_VssWss(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_THIS_PTR prepareSSE();
-
   float32 op1 = BX_READ_XMM_REG_LO_DWORD(i->nnn()), op2;
 
   /* op2 is a register or memory reference */
@@ -1486,8 +1410,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ADDSS_VssWss(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MULPS_VpsWps(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_THIS_PTR prepareSSE();
-
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
 
   /* op2 is a register or memory reference */
@@ -1533,8 +1455,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MULPS_VpsWps(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MULPD_VpdWpd(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_THIS_PTR prepareSSE();
-
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
 
   /* op2 is a register or memory reference */
@@ -1574,8 +1494,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MULPD_VpdWpd(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MULSD_VsdWsd(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_THIS_PTR prepareSSE();
-
   float64 op1 = BX_READ_XMM_REG_LO_QWORD(i->nnn()), op2;
 
   /* op2 is a register or memory reference */
@@ -1611,8 +1529,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MULSD_VsdWsd(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MULSS_VssWss(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_THIS_PTR prepareSSE();
-
   float32 op1 = BX_READ_XMM_REG_LO_DWORD(i->nnn()), op2;
 
   /* op2 is a register or memory reference */
@@ -1648,8 +1564,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MULSS_VssWss(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::SUBPS_VpsWps(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_THIS_PTR prepareSSE();
-
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
 
   /* op2 is a register or memory reference */
@@ -1695,8 +1609,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SUBPS_VpsWps(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::SUBPD_VpdWpd(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_THIS_PTR prepareSSE();
-
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
 
   /* op2 is a register or memory reference */
@@ -1736,8 +1648,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SUBPD_VpdWpd(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::SUBSD_VsdWsd(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_THIS_PTR prepareSSE();
-
   float64 op1 = BX_READ_XMM_REG_LO_QWORD(i->nnn()), op2;
 
   /* op2 is a register or memory reference */
@@ -1773,8 +1683,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SUBSD_VsdWsd(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::SUBSS_VssWss(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_THIS_PTR prepareSSE();
-
   float32 op1 = BX_READ_XMM_REG_LO_DWORD(i->nnn()), op2;
 
   /* op2 is a register or memory reference */
@@ -1810,8 +1718,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SUBSS_VssWss(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MINPS_VpsWps(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_THIS_PTR prepareSSE();
-
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
 
   /* op2 is a register or memory reference */
@@ -1862,8 +1768,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MINPS_VpsWps(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MINPD_VpdWpd(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_THIS_PTR prepareSSE();
-
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
 
   /* op2 is a register or memory reference */
@@ -1906,8 +1810,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MINPD_VpdWpd(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MINSD_VsdWsd(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_THIS_PTR prepareSSE();
-
   float64 op1 = BX_READ_XMM_REG_LO_QWORD(i->nnn()), op2;
 
   /* op2 is a register or memory reference */
@@ -1944,8 +1846,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MINSD_VsdWsd(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MINSS_VssWss(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_THIS_PTR prepareSSE();
-
   float32 op1 = BX_READ_XMM_REG_LO_DWORD(i->nnn()), op2;
 
   /* op2 is a register or memory reference */
@@ -1982,8 +1882,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MINSS_VssWss(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::DIVPS_VpsWps(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_THIS_PTR prepareSSE();
-
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
 
   /* op2 is a register or memory reference */
@@ -2029,8 +1927,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::DIVPS_VpsWps(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::DIVPD_VpdWpd(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_THIS_PTR prepareSSE();
-
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
 
   /* op2 is a register or memory reference */
@@ -2070,8 +1966,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::DIVPD_VpdWpd(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::DIVSD_VsdWsd(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_THIS_PTR prepareSSE();
-
   float64 op1 = BX_READ_XMM_REG_LO_QWORD(i->nnn()), op2;
 
   /* op2 is a register or memory reference */
@@ -2107,8 +2001,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::DIVSD_VsdWsd(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::DIVSS_VssWss(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_THIS_PTR prepareSSE();
-
   float32 op1 = BX_READ_XMM_REG_LO_DWORD(i->nnn()), op2;
 
   /* op2 is a register or memory reference */
@@ -2144,8 +2036,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::DIVSS_VssWss(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MAXPS_VpsWps(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_THIS_PTR prepareSSE();
-
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
 
   /* op2 is a register or memory reference */
@@ -2196,8 +2086,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MAXPS_VpsWps(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MAXPD_VpdWpd(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_THIS_PTR prepareSSE();
-
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
 
   /* op2 is a register or memory reference */
@@ -2240,8 +2128,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MAXPD_VpdWpd(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MAXSD_VsdWsd(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_THIS_PTR prepareSSE();
-
   float64 op1 = BX_READ_XMM_REG_LO_QWORD(i->nnn()), op2;
 
   /* op2 is a register or memory reference */
@@ -2278,8 +2164,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MAXSD_VsdWsd(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MAXSS_VssWss(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_THIS_PTR prepareSSE();
-
   float32 op1 = BX_READ_XMM_REG_LO_DWORD(i->nnn()), op2;
 
   /* op2 is a register or memory reference */
@@ -2316,8 +2200,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MAXSS_VssWss(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::HADDPD_VpdWpd(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_THIS_PTR prepareSSE();
-
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
 
   /* op2 is a register or memory reference */
@@ -2357,8 +2239,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::HADDPD_VpdWpd(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::HADDPS_VpsWps(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_THIS_PTR prepareSSE();
-
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
 
   /* op2 is a register or memory reference */
@@ -2404,8 +2284,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::HADDPS_VpsWps(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::HSUBPD_VpdWpd(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_THIS_PTR prepareSSE();
-
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
 
   /* op2 is a register or memory reference */
@@ -2445,8 +2323,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::HSUBPD_VpdWpd(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::HSUBPS_VpsWps(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_THIS_PTR prepareSSE();
-
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
 
   /* op2 is a register or memory reference */
@@ -2492,8 +2368,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::HSUBPS_VpsWps(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPPS_VpsWpsIb(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_THIS_PTR prepareSSE();
-
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
 
   /* op2 is a register or memory reference */
@@ -2566,8 +2440,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPPS_VpsWpsIb(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPPD_VpdWpdIb(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_THIS_PTR prepareSSE();
-
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
 
   /* op2 is a register or memory reference */
@@ -2628,8 +2500,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPPD_VpdWpdIb(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPSD_VsdWsdIb(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_THIS_PTR prepareSSE();
-
   float64 op1 = BX_READ_XMM_REG_LO_QWORD(i->nnn()), op2, result = 0;
 
   /* op2 is a register or memory reference */
@@ -2685,8 +2555,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPSD_VsdWsdIb(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPSS_VssWssIb(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_THIS_PTR prepareSSE();
-
   float32 op1 = BX_READ_XMM_REG_LO_DWORD(i->nnn()), op2, result = 0;
 
   /* op2 is a register or memory reference */
@@ -2742,8 +2610,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPSS_VssWssIb(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::ADDSUBPD_VpdWpd(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_THIS_PTR prepareSSE();
-
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
 
   /* op2 is a register or memory reference */
@@ -2783,8 +2649,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ADDSUBPD_VpdWpd(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::ADDSUBPS_VpsWps(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_THIS_PTR prepareSSE();
-
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
 
   /* op2 is a register or memory reference */
@@ -2826,8 +2690,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ADDSUBPS_VpsWps(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROUNDPS_VpsWpsIb(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_THIS_PTR prepareSSE();
-
   BxPackedXmmRegister op;
 
   /* op is a register or memory reference */
@@ -2873,8 +2735,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROUNDPS_VpsWpsIb(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROUNDPD_VpdWpdIb(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_THIS_PTR prepareSSE();
-
   BxPackedXmmRegister op;
 
   /* op is a register or memory reference */
@@ -2916,8 +2776,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROUNDPD_VpdWpdIb(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROUNDSS_VssWssIb(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_THIS_PTR prepareSSE();
-
   float32 op;
 
   /* op is a register or memory reference */
@@ -2955,8 +2813,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROUNDSS_VssWssIb(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROUNDSD_VsdWsdIb(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_THIS_PTR prepareSSE();
-
   float64 op;
 
   /* op is a register or memory reference */
@@ -2998,8 +2854,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROUNDSD_VsdWsdIb(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::DPPS_VpsWpsIb(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_THIS_PTR prepareSSE();
-
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, tmp;
   Bit8u mask = i->Ib();
 
@@ -3063,8 +2917,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::DPPS_VpsWpsIb(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::DPPD_VpdWpdIb(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_THIS_PTR prepareSSE();
-
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, tmp;
   Bit8u mask = i->Ib();
 

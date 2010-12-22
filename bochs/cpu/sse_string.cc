@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_string.cc,v 1.18 2010-11-23 14:59:35 sshwarts Exp $
+// $Id: sse_string.cc,v 1.19 2010-12-22 21:16:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007-2009 Stanislav Shwartsman
@@ -292,8 +292,6 @@ static Bit16u aggregate(Bit8u BoolRes[16][16], unsigned len1, unsigned len2, Bit
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PCMPESTRM_VdqWdqIb(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_THIS_PTR prepareSSE();
-
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
   Bit8u imm8 = i->Ib();
 
@@ -358,8 +356,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PCMPESTRM_VdqWdqIb(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PCMPESTRI_VdqWdqIb(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_THIS_PTR prepareSSE();
-
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
   Bit8u imm8 = i->Ib();
 
@@ -420,8 +416,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PCMPESTRI_VdqWdqIb(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PCMPISTRM_VdqWdqIb(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_THIS_PTR prepareSSE();
-
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
   Bit8u imm8 = i->Ib();
 
@@ -477,8 +471,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PCMPISTRM_VdqWdqIb(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PCMPISTRI_VdqWdqIb(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_THIS_PTR prepareSSE();
-
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
   Bit8u imm8 = i->Ib();
 

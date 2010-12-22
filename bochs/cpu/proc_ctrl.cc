@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.339 2010-12-19 07:06:40 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.340 2010-12-22 21:16:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2010  The Bochs Project
@@ -133,20 +133,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::HLT(bxInstruction_c *i)
 #endif
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::CLTS(bxInstruction_c *i)
-{
-  if (!real_mode() && CPL!=0) {
-    BX_ERROR(("CLTS: priveledge check failed, generate #GP(0)"));
-    exception(BX_GP_EXCEPTION, 0);
-  }
-
-#if BX_SUPPORT_VMX
-  if(VMexit_CLTS(i)) return;
-#endif
-
-  BX_CPU_THIS_PTR cr0.set_TS(0);
-}
-
 /* 0F 08 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::INVD(bxInstruction_c *i)
 {
@@ -232,246 +218,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CLFLUSH(bxInstruction_c *i)
 #endif
 }
 
-#if BX_CPU_LEVEL == 2
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOADALL(bxInstruction_c *i)
-{
-  Bit16u msw, tr, flags, ip, ldtr;
-  Bit16u ds_raw, ss_raw, cs_raw, es_raw;
-  Bit16u base_15_0, limit;
-  Bit8u  base_23_16, access;
-
-  if (v8086_mode()) BX_PANIC(("proc_ctrl: LOADALL in v8086 mode unsupported"));
-
-  if (BX_CPU_THIS_PTR cr0.get_PE())
-  {
-    BX_PANIC(("LOADALL not yet supported for protected mode"));
-  }
-
-  BX_PANIC(("LOADALL: handle CR0.val32"));
-  /* MSW */
-  BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x806, 2, &msw);
-  BX_CPU_THIS_PTR cr0.set_PE(msw & 0x01); msw >>= 1;
-  BX_CPU_THIS_PTR cr0.set_MP(msw & 0x01); msw >>= 1;
-  BX_CPU_THIS_PTR cr0.set_EM(msw & 0x01); msw >>= 1;
-  BX_CPU_THIS_PTR cr0.set_TS(msw & 0x01);
-
-  if (BX_CPU_THIS_PTR cr0.get_PE() || BX_CPU_THIS_PTR cr0.get_MP() || BX_CPU_THIS_PTR cr0.get_EM() || BX_CPU_THIS_PTR cr0.get_TS())
-    BX_PANIC(("LOADALL set PE, MP, EM or TS bits in MSW!"));
-
-  /* TR */
-  BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x816, 2, &tr);
-  BX_CPU_THIS_PTR tr.selector.value = tr;
-  BX_CPU_THIS_PTR tr.selector.rpl   = (tr & 0x03); tr >>= 2;
-  BX_CPU_THIS_PTR tr.selector.ti    = (tr & 0x01); tr >>= 1;
-  BX_CPU_THIS_PTR tr.selector.index = tr;
-  BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x860, 2, &base_15_0);
-  BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x862, 1, &base_23_16);
-  BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x863, 1, &access);
-  BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x864, 2, &limit);
-
-  BX_CPU_THIS_PTR tr.cache.valid =
-  BX_CPU_THIS_PTR tr.cache.p           = (access & 0x80) >> 7;
-  BX_CPU_THIS_PTR tr.cache.dpl         = (access & 0x60) >> 5;
-  BX_CPU_THIS_PTR tr.cache.segment     = (access & 0x10) >> 4;
-  // don't allow busy bit in tr.cache.type, so bit 2 is masked away too.
-  BX_CPU_THIS_PTR tr.cache.type        = (access & 0x0d);
-  BX_CPU_THIS_PTR tr.cache.u.segment.base  = (base_23_16 << 16) | base_15_0;
-  BX_CPU_THIS_PTR tr.cache.u.segment.limit_scaled = limit;
-
-  if ((BX_CPU_THIS_PTR tr.selector.value & 0xfffc) == 0) {
-    BX_CPU_THIS_PTR tr.cache.valid = 0;
-  }
-  if (BX_CPU_THIS_PTR tr.cache.u.segment.limit_scaled < 43 ||
-      BX_CPU_THIS_PTR tr.cache.type != BX_SYS_SEGMENT_AVAIL_286_TSS ||
-      BX_CPU_THIS_PTR tr.cache.segment)
-  {
-    BX_CPU_THIS_PTR tr.cache.valid = 0;
-  }
-  if (BX_CPU_THIS_PTR tr.cache.valid==0)
-  {
-    BX_CPU_THIS_PTR tr.selector.value    = 0;
-    BX_CPU_THIS_PTR tr.selector.index    = 0;
-    BX_CPU_THIS_PTR tr.selector.ti       = 0;
-    BX_CPU_THIS_PTR tr.selector.rpl      = 0;
-    BX_CPU_THIS_PTR tr.cache.u.segment.base = 0;
-    BX_CPU_THIS_PTR tr.cache.u.segment.limit_scaled = 0;
-    BX_CPU_THIS_PTR tr.cache.p           = 0;
-  }
-
-  /* FLAGS */
-  BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x818, 2, &flags);
-  write_flags(flags, 1, 1);
-
-  /* IP */
-  BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x81a, 2, &IP);
-
-  /* LDTR */
-  BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x81c, 2, &ldtr);
-  BX_CPU_THIS_PTR ldtr.selector.value = ldtr;
-  BX_CPU_THIS_PTR ldtr.selector.rpl   = (ldtr & 0x03); ldtr >>= 2;
-  BX_CPU_THIS_PTR ldtr.selector.ti    = (ldtr & 0x01); ldtr >>= 1;
-  BX_CPU_THIS_PTR ldtr.selector.index = ldtr;
-  if ((BX_CPU_THIS_PTR ldtr.selector.value & 0xfffc) == 0)
-  {
-    BX_CPU_THIS_PTR ldtr.cache.valid   = 0;
-    BX_CPU_THIS_PTR ldtr.cache.p       = 0;
-    BX_CPU_THIS_PTR ldtr.cache.segment = 0;
-    BX_CPU_THIS_PTR ldtr.cache.type    = 0;
-    BX_CPU_THIS_PTR ldtr.cache.u.segment.base = 0;
-    BX_CPU_THIS_PTR ldtr.cache.u.segment.limit_scaled = 0;
-    BX_CPU_THIS_PTR ldtr.selector.value = 0;
-    BX_CPU_THIS_PTR ldtr.selector.index = 0;
-    BX_CPU_THIS_PTR ldtr.selector.ti    = 0;
-  }
-  else {
-    BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x854, 2, &base_15_0);
-    BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x856, 1, &base_23_16);
-    BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x857, 1, &access);
-    BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x858, 2, &limit);
-    BX_CPU_THIS_PTR ldtr.cache.valid      =
-    BX_CPU_THIS_PTR ldtr.cache.p          = access >> 7;
-    BX_CPU_THIS_PTR ldtr.cache.dpl        = (access >> 5) & 0x03;
-    BX_CPU_THIS_PTR ldtr.cache.segment    = (access >> 4) & 0x01;
-    BX_CPU_THIS_PTR ldtr.cache.type       = (access & 0x0f);
-    BX_CPU_THIS_PTR ldtr.cache.u.segment.base = (base_23_16 << 16) | base_15_0;
-    BX_CPU_THIS_PTR ldtr.cache.u.segment.limit_scaled = limit;
-
-    if (access == 0) {
-      BX_PANIC(("loadall: LDTR case access byte=0"));
-    }
-    if (BX_CPU_THIS_PTR ldtr.cache.valid==0) {
-      BX_PANIC(("loadall: ldtr.valid=0"));
-    }
-    if (BX_CPU_THIS_PTR ldtr.cache.segment) { /* not a system segment */
-      BX_INFO(("         AR byte = %02x", (unsigned) access));
-      BX_PANIC(("loadall: LDTR descriptor cache loaded with non system segment"));
-    }
-    if (BX_CPU_THIS_PTR ldtr.cache.type != BX_SYS_SEGMENT_LDT) {
-      BX_PANIC(("loadall: LDTR.type(%u) != LDT", (unsigned) (access & 0x0f)));
-    }
-  }
-
-  /* DS */
-  BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x81e, 2, &ds_raw);
-  parse_selector(ds_raw, &BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector);
-  BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x848, 2, &base_15_0);
-  BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x84a, 1, &base_23_16);
-  BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x84b, 1, &access);
-  BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x84c, 2, &limit);
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.u.segment.base = (base_23_16 << 16) | base_15_0;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.u.segment.limit_scaled = limit;
-  set_ar_byte(BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache, access);
-
-  if ((BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.value & 0xfffc) == 0) {
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.valid = 0;
-  }
-  else {
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.valid = 1;
-  }
-  if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.valid==0 ||
-      BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.segment==0)
-  {
-    BX_PANIC(("loadall: DS invalid"));
-  }
-
-  /* SS */
-  BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x820, 2, &ss_raw);
-  parse_selector(ss_raw, &BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector);
-  BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x842, 2, &base_15_0);
-  BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x844, 1, &base_23_16);
-  BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x845, 1, &access);
-  BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x846, 2, &limit);
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.base = (base_23_16 << 16) | base_15_0;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.limit_scaled = limit;
-  set_ar_byte(BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache, access);
-
-  if ((BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value & 0xfffc) == 0) {
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.valid = 0;
-  }
-  else {
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.valid = 1;
-  }
-  if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.valid==0 ||
-      BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.segment==0)
-  {
-    BX_PANIC(("loadall: SS invalid"));
-  }
-
-  /* CS */
-  BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x822, 2, &cs_raw);
-  parse_selector(cs_raw, &BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector);
-  BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x83c, 2, &base_15_0);
-  BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x83e, 1, &base_23_16);
-  BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x83f, 1, &access);
-  BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x840, 2, &limit);
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.base = (base_23_16 << 16) | base_15_0;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled = limit;
-  set_ar_byte(BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache, access);
-
-  if ((BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value & 0xfffc) == 0) {
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.valid = 0;
-  }
-  else {
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.valid = 1;
-  }
-  if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.valid==0 ||
-      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.segment==0)
-  {
-    BX_PANIC(("loadall: CS invalid"));
-  }
-
-  handleCpuModeChange();
-
-  /* ES */
-  BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x824, 2, &es_raw);
-  parse_selector(es_raw, &BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector);
-  BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x836, 2, &base_15_0);
-  BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x838, 1, &base_23_16);
-  BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x839, 1, &access);
-  BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x83a, 2, &limit);
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.u.segment.base = (base_23_16 << 16) | base_15_0;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.u.segment.limit_scaled = limit;
-  set_ar_byte(BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache, access);
-
-  if ((BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.value & 0xfffc) == 0) {
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.valid = 0;
-  }
-  else {
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.valid = 1;
-  }
-  if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.valid==0 ||
-      BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.segment==0)
-  {
-    BX_PANIC(("loadall: ES invalid"));
-  }
-
-  BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x826, 2, &DI);
-  BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x828, 2, &SI);
-  BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x82a, 2, &BP);
-  BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x82c, 2, &SP);
-  BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x82e, 2, &BX);
-  BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x830, 2, &DX);
-  BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x832, 2, &CX);
-  BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x834, 2, &AX);
-
-  /* GDTR */
-  BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x84e, 2, &base_15_0);
-  BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x850, 1, &base_23_16);
-  BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x851, 1, &access);
-  BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x852, 2, &limit);
-  BX_CPU_THIS_PTR gdtr.base = (base_23_16 << 16) | base_15_0;
-  BX_CPU_THIS_PTR gdtr.limit = limit;
-
-  /* IDTR */
-  BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x85a, 2, &base_15_0);
-  BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x85c, 1, &base_23_16);
-  BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x85d, 1, &access);
-  BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, 0x85e, 2, &limit);
-  BX_CPU_THIS_PTR idtr.base = (base_23_16 << 16) | base_15_0;
-  BX_CPU_THIS_PTR idtr.limit = limit;
-}
-#endif
-
 void BX_CPU_C::handleCpuModeChange(void)
 {
   unsigned mode = BX_CPU_THIS_PTR cpu_mode;
@@ -547,11 +293,27 @@ void BX_CPU_C::handleAlignmentCheck(void)
 #if BX_CPU_LEVEL >= 6
 void BX_CPU_C::handleSseModeChange(void)
 {
-  if(BX_CPU_THIS_PTR cr0.get_EM() || !BX_CPU_THIS_PTR cr4.get_OSFXSR())
+  if(BX_CPU_THIS_PTR cr0.get_TS()) {
     BX_CPU_THIS_PTR sse_ok = 0;
-  else
-    BX_CPU_THIS_PTR sse_ok = 1;
+  }
+  else {
+    if(BX_CPU_THIS_PTR cr0.get_EM() || !BX_CPU_THIS_PTR cr4.get_OSFXSR())
+      BX_CPU_THIS_PTR sse_ok = 0;
+    else
+      BX_CPU_THIS_PTR sse_ok = 1;
+  }
+
+  updateFetchModeMask(); /* SSE_OK changed */
 }  
+
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::BxNoSSE(bxInstruction_c *i)
+{
+  if(BX_CPU_THIS_PTR cr0.get_EM() || !BX_CPU_THIS_PTR cr4.get_OSFXSR())
+    exception(BX_UD_EXCEPTION, 0);
+
+  if(BX_CPU_THIS_PTR cr0.get_TS())
+    exception(BX_NM_EXCEPTION, 0);
+}
 #endif
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDPMC(bxInstruction_c *i)

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_rcp.cc,v 1.24 2010-02-26 11:44:50 sshwarts Exp $
+// $Id: sse_rcp.cc,v 1.25 2010-12-22 21:16:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003-2009 Stanislav Shwartsman
@@ -347,7 +347,6 @@ static float32 approximate_rcp(float32 op)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::RCPPS_VpsWps(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_THIS_PTR prepareSSE();
   BxPackedXmmRegister op;
 
   /* op is a register or memory reference */
@@ -377,7 +376,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RCPPS_VpsWps(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::RCPSS_VssWss(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_THIS_PTR prepareSSE();
   float32 op;
 
   /* op is a register or memory reference */
@@ -723,7 +721,6 @@ static float32 approximate_rsqrt(float32 op)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::RSQRTSS_VssWss(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_THIS_PTR prepareSSE();
   float32 op;
 
   /* op is a register or memory reference */
@@ -750,7 +747,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RSQRTSS_VssWss(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::RSQRTPS_VpsWps(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_THIS_PTR prepareSSE();
   BxPackedXmmRegister op;
 
   /* op is a register or memory reference */

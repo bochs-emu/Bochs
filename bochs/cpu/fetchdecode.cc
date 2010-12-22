@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.283 2010-12-19 22:36:19 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.284 2010-12-22 21:16:01 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2010  The Bochs Project
@@ -168,7 +168,7 @@ static unsigned sreg_mod1or2_base32[8] = {
 
 // table of all Bochs opcodes
 bxIAOpcodeTable BxOpcodesTable[] = {
-#define bx_define_opcode(a, b, c, d) { b, c },
+#define bx_define_opcode(a, b, c, d, e) { b, c, e },
 #include "ia_opcodes.h"
 };
 #undef  bx_define_opcode
@@ -725,9 +725,6 @@ static const BxOpcodeInfo_t BxOpcodeInfo32[512*2*2] = {
 #if BX_SUPPORT_X86_64
   /* 0F 05 /wr */ { BxTraceEnd, BX_IA_SYSCALL },
   /* 0F 05 /wm */ { BxTraceEnd, BX_IA_SYSCALL },
-#elif BX_CPU_LEVEL == 2
-  /* 0F 05 /wr */ { BxTraceEnd, BX_IA_LOADALL },
-  /* 0F 05 /wm */ { BxTraceEnd, BX_IA_LOADALL },
 #else
   /* 0F 05 /wr */ { 0, BX_IA_ERROR },
   /* 0F 05 /wm */ { 0, BX_IA_ERROR },
@@ -1803,9 +1800,6 @@ static const BxOpcodeInfo_t BxOpcodeInfo32[512*2*2] = {
 #if BX_SUPPORT_X86_64
   /* 0F 05 /dr */ { BxTraceEnd, BX_IA_SYSCALL },
   /* 0F 05 /dm */ { BxTraceEnd, BX_IA_SYSCALL },
-#elif BX_CPU_LEVEL == 2
-  /* 0F 05 /dr */ { BxTraceEnd, BX_IA_LOADALL },
-  /* 0F 05 /dm */ { BxTraceEnd, BX_IA_LOADALL },
 #else
   /* 0F 05 /dr */ { 0, BX_IA_ERROR },
   /* 0F 05 /dm */ { 0, BX_IA_ERROR },
@@ -2795,11 +2789,19 @@ modrm_done:
      seg = seg_override;
   i->setSeg(seg);
 
+  i->setILen(remainingInPage - remain);
+  i->setIaOpcode(ia_opcode);
+
   i->execute  = BxOpcodesTable[ia_opcode].execute1;
   i->execute2 = BxOpcodesTable[ia_opcode].execute2;
 
-  i->setILen(remainingInPage - remain);
-  i->setIaOpcode(ia_opcode);
+  Bit32u op_flags = BxOpcodesTable[ia_opcode].flags;
+  if (! BX_CPU_THIS_PTR sse_ok) {
+     if (op_flags & BX_PREPARE_SSE) {
+        i->execute = &BX_CPU_C::BxNoSSE;
+        return(1);
+     }
+  }
 
 #if BX_SUPPORT_TRACE_CACHE
   if ((attr & BxTraceEnd) || ia_opcode == BX_IA_ERROR)
@@ -2834,7 +2836,7 @@ const char *get_bx_opcode_name(Bit16u ia_opcode)
 {
   static const char* BxOpcodeNamesTable[BX_IA_LAST] =
   {
-#define bx_define_opcode(a, b, c, d) #a,
+#define bx_define_opcode(a, b, c, d, e) #a,
 #include "ia_opcodes.h"
   };
 #undef  bx_define_opcode
@@ -2846,7 +2848,7 @@ void BX_CPU_C::init_FetchDecodeTables(void)
 {
   static Bit32u BxOpcodeFeatures[BX_IA_LAST] =
   {
-#define bx_define_opcode(a, b, c, d) d,
+#define bx_define_opcode(a, b, c, d, e) d,
 #include "ia_opcodes.h"
   };
 #undef  bx_define_opcode
@@ -2863,8 +2865,11 @@ void BX_CPU_C::init_FetchDecodeTables(void)
   for (unsigned n=0; n < BX_IA_LAST; n++) {
     Bit32u ia_opcode_features = BxOpcodeFeatures[n];
     if (ia_opcode_features) {
-      if ((ia_opcode_features & features) == 0)
+      if ((ia_opcode_features & features) == 0) {
         BxOpcodesTable[n].execute1 = &BX_CPU_C::BxError;
+        // won't allow this new #UD opcode to check prepare_SSE and similar
+        BxOpcodesTable[n].flags = 0;
+      }
     }
   }
 }

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode_sse.h,v 1.13 2010-12-19 21:07:46 sshwarts Exp $
+// $Id: fetchdecode_sse.h,v 1.14 2010-12-22 21:16:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005-2010 Stanislav Shwartsman
@@ -66,14 +66,14 @@ static const BxOpcodeInfo_t BxOpcodeGroupSSE_0f11M[3] = {
 
 static const BxOpcodeInfo_t BxOpcodeGroupSSE_0f12R[3] = {
   /* 66 */ { 0, BX_IA_ERROR },
-  /* F3 */ { 0, BX_IA_MOVSLDUP_VpsWps }, // SSE3
-  /* F2 */ { 0, BX_IA_MOVDDUP_VpdWq }	 // SSE3
+  /* F3 */ { 0, BX_IA_MOVSLDUP_VpsWpsR }, // SSE3
+  /* F2 */ { 0, BX_IA_MOVDDUP_VpdWqR }    // SSE3
 };
 
 static const BxOpcodeInfo_t BxOpcodeGroupSSE_0f12M[3] = {
   /* 66 */ { 0, BX_IA_MOVLPD_VsdMq },
-  /* F3 */ { 0, BX_IA_MOVSLDUP_VpsWps }, // SSE3
-  /* F2 */ { 0, BX_IA_MOVDDUP_VpdWq }    // SSE3
+  /* F3 */ { 0, BX_IA_MOVSLDUP_VpsWpsM }, // SSE3
+  /* F2 */ { 0, BX_IA_MOVDDUP_VpdWqM }    // SSE3
 };
 
 static const BxOpcodeInfo_t BxOpcodeGroupSSE_0f13M[3] = {
@@ -96,13 +96,13 @@ static const BxOpcodeInfo_t BxOpcodeGroupSSE_0f15[3] = {
 
 static const BxOpcodeInfo_t BxOpcodeGroupSSE_0f16R[3] = {
   /* 66 */ { 0, BX_IA_ERROR },
-  /* F3 */ { 0, BX_IA_MOVSHDUP_VpsWps },  // SSE3
+  /* F3 */ { 0, BX_IA_MOVSHDUP_VpsWpsR }, // SSE3
   /* F2 */ { 0, BX_IA_ERROR }
 };
 
 static const BxOpcodeInfo_t BxOpcodeGroupSSE_0f16M[3] = {
   /* 66 */ { 0, BX_IA_MOVHPD_VsdMq },
-  /* F3 */ { 0, BX_IA_MOVSHDUP_VpsWps }, // SSE3
+  /* F3 */ { 0, BX_IA_MOVSHDUP_VpsWpsM }, // SSE3
   /* F2 */ { 0, BX_IA_ERROR }
 };
 

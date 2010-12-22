@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: aes.cc,v 1.11 2010-04-04 19:56:55 sshwarts Exp $
+// $Id: aes.cc,v 1.12 2010-12-22 21:16:01 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008-2010 Stanislav Shwartsman
@@ -293,8 +293,6 @@ BX_CPP_INLINE Bit32u AES_RotWord(Bit32u x)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::AESIMC_VdqWdq(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_THIS_PTR prepareSSE();
-
   BxPackedXmmRegister op;
 
   /* op is a register or memory reference */
@@ -317,8 +315,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::AESIMC_VdqWdq(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::AESENC_VdqWdq(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_THIS_PTR prepareSSE();
-
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
 
   /* op is a register or memory reference */
@@ -346,8 +342,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::AESENC_VdqWdq(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::AESENCLAST_VdqWdq(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_THIS_PTR prepareSSE();
-
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
 
   /* op is a register or memory reference */
@@ -374,8 +368,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::AESENCLAST_VdqWdq(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::AESDEC_VdqWdq(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_THIS_PTR prepareSSE();
-
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
 
   /* op is a register or memory reference */
@@ -403,8 +395,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::AESDEC_VdqWdq(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::AESDECLAST_VdqWdq(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_THIS_PTR prepareSSE();
-
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
 
   /* op is a register or memory reference */
@@ -431,8 +421,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::AESDECLAST_VdqWdq(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::AESKEYGENASSIST_VdqWdqIb(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_THIS_PTR prepareSSE();
-
   BxPackedXmmRegister op, result;
 
   /* op is a register or memory reference */
@@ -460,8 +448,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::AESKEYGENASSIST_VdqWdqIb(bxInstruction_c *
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PCLMULQDQ_VdqWdqIb(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_THIS_PTR prepareSSE();
-
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, r, a;
 
   /* op is a register or memory reference */

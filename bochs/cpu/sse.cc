@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse.cc,v 1.72 2010-11-23 14:59:35 sshwarts Exp $
+// $Id: sse.cc,v 1.73 2010-12-22 21:16:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003-2010 Stanislav Shwartsman
@@ -689,8 +689,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PACKUSDW_VdqWdq(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PCMPGTQ_VdqWdq(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_THIS_PTR prepareSSE();
-
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
 
   /* op2 is a register or memory reference */

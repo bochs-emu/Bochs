@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.279 2010-12-19 22:36:19 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.280 2010-12-22 21:16:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2010  The Bochs Project
@@ -3742,11 +3742,19 @@ modrm_done:
      seg = seg_override;
   i->setSeg(seg);
 
+  i->setILen(remainingInPage - remain);
+  i->setIaOpcode(ia_opcode);
+
   i->execute  = BxOpcodesTable[ia_opcode].execute1;
   i->execute2 = BxOpcodesTable[ia_opcode].execute2;
 
-  i->setILen(remainingInPage - remain);
-  i->setIaOpcode(ia_opcode);
+  Bit32u op_flags = BxOpcodesTable[ia_opcode].flags;
+  if (! BX_CPU_THIS_PTR sse_ok) {
+     if (op_flags & BX_PREPARE_SSE) {
+        i->execute = &BX_CPU_C::BxNoSSE;
+        return(1);
+     }
+  }
 
 #if BX_SUPPORT_TRACE_CACHE
   if ((attr & BxTraceEnd) || ia_opcode == BX_IA_ERROR)

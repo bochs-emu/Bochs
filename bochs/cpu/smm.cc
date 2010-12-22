@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: smm.cc,v 1.73 2010-12-19 07:06:40 sshwarts Exp $
+// $Id: smm.cc,v 1.74 2010-12-22 21:16:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2006-2009 Stanislav Shwartsman
@@ -214,7 +214,7 @@ void BX_CPU_C::enter_system_management_mode(void)
 #endif
 
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_THIS_PTR sse_ok = 0; // CR4 is cleared
+  handleSseModeChange();
 #endif
 
   /* DS (Data Segment) and descriptor cache */
