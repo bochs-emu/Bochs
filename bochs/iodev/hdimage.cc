@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: hdimage.cc,v 1.23 2010-12-21 21:47:41 vruppert Exp $
+// $Id: hdimage.cc,v 1.24 2010-12-23 16:16:17 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2009  The Bochs Project
@@ -29,6 +29,7 @@
 #include "hdimage.h"
 #include "vmware3.h"
 #include "vmware4.h"
+#include "vvfat.h"
 
 #if BX_HAVE_SYS_MMAN_H
 #include <sys/mman.h>
@@ -1816,6 +1817,10 @@ device_image_t *hdimage_init_image(Bit8u image_mode, Bit64u disk_size, const cha
 #endif
       break;
 #endif //BX_COMPRESSED_HD_SUPPORT
+
+    case BX_HDIMAGE_MODE_VVFAT:
+      hdimage = new vvfat_image_t();
+      break;
 
     default:
       BX_PANIC(("unsupported HD mode : '%s'", hdimage_mode_names[image_mode]));

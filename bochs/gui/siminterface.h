@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.256 2010-12-10 17:02:18 vruppert Exp $
+// $Id: siminterface.h,v 1.257 2010-12-23 16:16:17 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  The Bochs Project
@@ -522,7 +522,8 @@ enum {
 #define BX_HDIMAGE_MODE_VOLATILE    9
 #define BX_HDIMAGE_MODE_Z_UNDOABLE 10
 #define BX_HDIMAGE_MODE_Z_VOLATILE 11
-#define BX_HDIMAGE_MODE_LAST       11
+#define BX_HDIMAGE_MODE_VVFAT      12
+#define BX_HDIMAGE_MODE_LAST       12
 
 #define BX_CLOCK_SYNC_NONE       0
 #define BX_CLOCK_SYNC_REALTIME   1

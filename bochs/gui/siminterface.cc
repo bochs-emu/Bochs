@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.216 2010-12-10 17:02:18 vruppert Exp $
+// $Id: siminterface.cc,v 1.217 2010-12-23 16:16:17 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  The Bochs Project
@@ -482,6 +482,7 @@ const char *hdimage_mode_names[] = {
   "volatile",
   "z-undoable",
   "z-volatile",
+  "vvfat",
   NULL
 };
 
