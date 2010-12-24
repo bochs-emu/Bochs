@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.215 2010-12-10 17:02:18 vruppert Exp $
+// $Id: config.cc,v 1.216 2010-12-24 20:47:22 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2009  The Bochs Project
@@ -2517,13 +2517,13 @@ static int parse_line_formatted(const char *context, int num_params, char *param
         if (strlen(SIM->get_param_string("path", base)->getptr()) > 0) {
           SIM->get_param_bool("present", base)->set(1);
           SIM->get_param_enum("mode", base)->set(mode);
+          SIM->get_param_num("cylinders", base)->set(cylinders);
           if ((cylinders == 0) && (heads == 0) && (sectors == 0)) {
             PARSE_WARN(("%s: ataX-master/slave CHS set to 0/0/0 - autodetection enabled", context));
             // using heads = 16 and spt = 63 for autodetection (bximage defaults)
             SIM->get_param_num("heads", base)->set(16);
             SIM->get_param_num("spt", base)->set(63);
           } else {
-            SIM->get_param_num("cylinders", base)->set(cylinders);
             SIM->get_param_num("heads", base)->set(heads);
             SIM->get_param_num("spt", base)->set(sectors);
           }

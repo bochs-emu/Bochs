@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vvfat.cc,v 1.1 2010-12-23 16:17:12 vruppert Exp $
+// $Id: vvfat.cc,v 1.2 2010-12-24 20:47:22 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2010  The Bochs Project
@@ -24,6 +24,7 @@
 
 // ADDITIONS:
 // - win32 specific directory functions (required for MSVC)
+// - configurable disk geometry (not yet complete)
 
 // TODO:
 // - write support
@@ -45,6 +46,9 @@
 #include "vvfat.h"
 
 #define LOG_THIS bx_devices.pluginHardDrive->
+
+#define VVFAT_MBR  "vvfat_mbr.bin"
+#define VVFAT_BOOT "vvfat_boot.bin"
 
 #if defined (BX_LITTLE_ENDIAN)
 #define htod16(val) (val)
@@ -608,8 +612,8 @@ int vvfat_image_t::read_directory(int mapping_index)
     char* buffer;
     direntry_t* direntry;
     struct stat st;
-    int is_dot = !strcmp(entry->d_name, ".");
-    int is_dotdot = !strcmp(entry->d_name, "..");
+    bx_bool is_dot = !strcmp(entry->d_name, ".");
+    bx_bool is_dotdot = !strcmp(entry->d_name, "..");
     if (first_cluster == 0 && (is_dotdot || is_dot))
       continue;
 
@@ -617,6 +621,13 @@ int vvfat_image_t::read_directory(int mapping_index)
     snprintf(buffer,length,"%s/%s",dirname,entry->d_name);
 
     if (stat(buffer, &st) < 0) {
+      free(buffer);
+      continue;
+    }
+
+    bx_bool is_mbr_file = !strcmp(entry->d_name, VVFAT_MBR);
+    bx_bool is_boot_file = !strcmp(entry->d_name, VVFAT_BOOT);
+    if (first_cluster == 0 && (is_mbr_file || is_boot_file) && (st.st_size == 512)) {
       free(buffer);
       continue;
     }
@@ -690,9 +701,13 @@ int vvfat_image_t::read_directory(int mapping_index)
     unsigned int length = lstrlen(dirname) + 2 + lstrlen(finddata.cFileName);
     char* buffer;
     direntry_t* direntry;
-    int is_dot = !lstrcmp(finddata.cFileName, ".");
-    int is_dotdot = !lstrcmp(finddata.cFileName, "..");
+    bx_bool is_dot = !lstrcmp(finddata.cFileName, ".");
+    bx_bool is_dotdot = !lstrcmp(finddata.cFileName, "..");
     if (first_cluster == 0 && (is_dotdot || is_dot))
+      continue;
+    bx_bool is_mbr_file = !lstrcmp(finddata.cFileName, VVFAT_MBR);
+    bx_bool is_boot_file = !lstrcmp(finddata.cFileName, VVFAT_BOOT);
+    if (first_cluster == 0 && (is_mbr_file || is_boot_file) && (finddata.nFileSizeLow == 512))
       continue;
 
     buffer = (char*)malloc(length);
@@ -786,6 +801,7 @@ int vvfat_image_t::init_directories(const char* dirname)
   mapping_t* mapping;
   unsigned int i;
   unsigned int cluster;
+  char size_txt[8];
 
   memset(&first_sectors[0], 0, 0x8000);
 
@@ -867,10 +883,11 @@ int vvfat_image_t::init_directories(const char* dirname)
     cluster = mapping->end;
 
     if (cluster > cluster_count) {
+      sprintf(size_txt, "%dMB", sector_count * 512);
       BX_ERROR(("Directory does not fit in FAT%d (capacity %s)",
                 fat_type,
                 (fat_type == 12) ? (sector_count == 2880) ? "1.44 MB":"2.88 MB"
-                : "504MB"));
+                : size_txt));
       return -EINVAL;
     }
 
@@ -909,7 +926,7 @@ int vvfat_image_t::init_directories(const char* dirname)
   bootsector->sectors_per_fat = htod16(sectors_per_fat);
   bootsector->sectors_per_track = htod16(sectors);
   bootsector->number_of_heads = htod16(heads);
-  bootsector->hidden_sectors = htod32((n_first_sectors == 1) ? 0:0x3f);
+  bootsector->hidden_sectors = htod32(n_first_sectors - 1);
   bootsector->total_sectors = htod32((sector_count > 0xffff) ? sector_count:0);
 
   // LATER TODO: if FAT32, this is wrong
@@ -928,22 +945,42 @@ int vvfat_image_t::init_directories(const char* dirname)
 
 int vvfat_image_t::open(const char* dirname)
 {
-  fat_type = 16;
-  sectors_per_cluster = 16;
-  n_first_sectors = 0x40;
+  Bit32u size_in_mb;
+
+  // TODO: read MBR file (if present) and use it's values
   if (cylinders == 0) {
     cylinders = 1024;
     heads = 16;
     sectors = 63;
   }
+  n_first_sectors = sectors + 1;
   sector_count = cylinders * heads * sectors;
   hd_size = sector_count * 512;
+  size_in_mb = (Bit32u)(hd_size >> 20);
+  if (size_in_mb >= 2047) {
+    fat_type = 32;
+    sectors_per_cluster = 8;
+    BX_PANIC(("FAT32 required, but not supported yet"));
+  } else {
+    fat_type = 16;
+    if (size_in_mb >= 1023) {
+      sectors_per_cluster = 64;
+    } else if (size_in_mb >= 511) {
+      sectors_per_cluster = 32;
+    } else if (size_in_mb >= 255) {
+      sectors_per_cluster = 16;
+    } else {
+      sectors_per_cluster = 8;
+    }
+  }
 
   current_cluster = 0xffff;
 
   init_directories(dirname);
 
-  if (n_first_sectors == 0x40)
+  sector_count = faked_sectors + sectors_per_cluster * cluster_count;
+
+  if (n_first_sectors > 1)
     init_mbr();
 
   return 0;
@@ -1099,6 +1136,7 @@ read_cluster_directory:
 
 ssize_t vvfat_image_t::read(void* buf, size_t count)
 {
+  char *cbuf = (char*)buf;
   Bit32u scount = (Bit32u)(count / 512);
 
   while (scount-- > 0) {
@@ -1115,11 +1153,12 @@ ssize_t vvfat_image_t::read(void* buf, size_t count)
       cluster_num = sector / sectors_per_cluster;
       if (read_cluster(cluster_num) != 0) {
         memset(buf, 0, 0x200);
-        return -1;
+      } else {
+        memcpy(cbuf, cluster + sector_offset_in_cluster * 0x200, 0x200);
       }
-      memcpy(buf, cluster + sector_offset_in_cluster * 0x200, 0x200);
     }
     sector_num++;
+    cbuf += 0x200;
   }
 
   return count;
