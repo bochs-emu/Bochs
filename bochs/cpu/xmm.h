@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: xmm.h,v 1.33 2010-12-22 21:24:19 sshwarts Exp $
+// $Id: xmm.h,v 1.34 2010-12-24 08:35:00 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003-2009 Stanislav Shwartsman
@@ -136,7 +136,7 @@ typedef union bx_xmm_reg_t {
  * RC 13-14 Floating-Point Rounding Control         00
  * FZ 15    Flush-to-Zero for Masked Underflow      0
  * RZ 16    Reserved                                0
- * MM 17    Misaligned Exceptuion Mask              0
+ * MM 17    Misaligned Exception Mask               0
  */
 
 #define MXCSR_EXCEPTIONS                 0x0000003F
@@ -178,7 +178,7 @@ struct BOCHSAPI bx_mxcsr_t
   IMPLEMENT_MXCSR_ACCESSOR(DAZ, MXCSR_DAZ, 6);
   IMPLEMENT_MXCSR_ACCESSOR(rounding_mode, MXCSR_ROUNDING_CONTROL, 13);
   IMPLEMENT_MXCSR_ACCESSOR(flush_masked_underflow, MXCSR_FLUSH_MASKED_UNDERFLOW, 15);
-  IMPLEMENT_MXCSR_ACCESSOR(misaligned_exception_mask, MXCSR_MISALIGNED_EXCEPTION_MASK, 17);
+  IMPLEMENT_MXCSR_ACCESSOR(MM, MXCSR_MISALIGNED_EXCEPTION_MASK, 17);
 
   IMPLEMENT_MXCSR_ACCESSOR(IE, MXCSR_IE, 0);
   IMPLEMENT_MXCSR_ACCESSOR(DE, MXCSR_DE, 1);

@@ -1,8 +1,8 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.694 2010-12-22 21:16:01 sshwarts Exp $
+// $Id: cpu.h,v 1.695 2010-12-24 08:35:00 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2010  The Bochs Project
+//  Copyright (C) 2001-2011  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -2044,28 +2044,28 @@ public: // for now...
   BX_SMF void UCOMISS_VssWss(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void COMISS_VpsWps(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void MOVMSKPS_GdVRps(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void SQRTPS_VpsWps(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void SQRTSS_VssWss(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void RSQRTPS_VpsWps(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void RSQRTSS_VssWss(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void RCPPS_VpsWps(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void RCPSS_VssWss(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void ADDPS_VpsWps(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void ADDSS_VssWss(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void MULPS_VpsWps(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void MULSS_VssWss(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void SUBPS_VpsWps(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void SUBSS_VssWss(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void MINPS_VpsWps(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void MINSS_VssWss(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void DIVPS_VpsWps(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void DIVSS_VssWss(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void MAXPS_VpsWps(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void MAXSS_VssWss(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SQRTPS_VpsWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SQRTSS_VssWssR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void RSQRTPS_VpsWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void RSQRTSS_VssWssR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void RCPPS_VpsWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void RCPSS_VssWssR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void ADDPS_VpsWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void ADDSS_VssWssR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void MULPS_VpsWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void MULSS_VssWssR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SUBPS_VpsWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SUBSS_VssWssR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void MINPS_VpsWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void MINSS_VssWssR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void DIVPS_VpsWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void DIVSS_VssWssR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void MAXPS_VpsWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void MAXSS_VssWssR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void PSHUFW_PqQqIb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void PSHUFLW_VdqWdqIb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void CMPPS_VpsWpsIb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void CMPSS_VssWssIb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CMPPS_VpsWpsIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CMPSS_VssWssIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void PINSRW_PqEwIb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void PEXTRW_GdPqIb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void SHUFPS_VpsWpsIb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -2095,12 +2095,14 @@ public: // for now...
   BX_SMF void UCOMISD_VsdWsd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void COMISD_VpdWpd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void MOVMSKPD_GdVRpd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void SQRTPD_VpdWpd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void SQRTSD_VsdWsd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void ADDPD_VpdWpd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void ADDSD_VsdWsd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void MULPD_VpdWpd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void MULSD_VsdWsd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SQRTPD_VpdWpdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SQRTSD_VsdWsdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void ADDPD_VpdWpdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void ADDSD_VsdWsdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void MULPD_VpdWpdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void MULSD_VsdWsdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SUBPD_VpdWpdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SUBSD_VsdWsdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void CVTPS2PD_VpsWps(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void CVTPD2PS_VpdWpd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void CVTSD2SS_VsdWsd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -2108,14 +2110,12 @@ public: // for now...
   BX_SMF void CVTDQ2PS_VpsWdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void CVTPS2DQ_VdqWps(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void CVTTPS2DQ_VdqWps(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void SUBPD_VpdWpd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void SUBSD_VsdWsd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void MINPD_VpdWpd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void MINSD_VsdWsd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void DIVPD_VpdWpd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void DIVSD_VsdWsd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void MAXPD_VpdWpd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void MAXSD_VsdWsd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void MINPD_VpdWpdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void MINSD_VsdWsdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void DIVPD_VpdWpdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void DIVSD_VsdWsdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void MAXPD_VpdWpdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void MAXSD_VsdWsdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void PUNPCKLBW_VdqWdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void PUNPCKLWD_VdqWdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void UNPCKLPS_VpsWdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -2139,8 +2139,8 @@ public: // for now...
   BX_SMF void MOVD_EdVdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void MOVQ_VqWqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void MOVQ_VqWqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void CMPPD_VpdWpdIb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void CMPSD_VsdWsdIb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CMPPD_VpdWpdIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CMPSD_VsdWsdIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void MOVNTI_MdGd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void PINSRW_VdqEwIb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void PEXTRW_GdUdqIb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -2209,12 +2209,12 @@ public: // for now...
   BX_SMF void MOVDDUP_VpdWqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void MOVSLDUP_VpsWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void MOVSHDUP_VpsWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void HADDPD_VpdWpd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void HADDPS_VpsWps(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void HSUBPD_VpdWpd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void HSUBPS_VpsWps(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void ADDSUBPD_VpdWpd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void ADDSUBPS_VpsWps(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void HADDPD_VpdWpdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void HADDPS_VpsWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void HSUBPD_VpdWpdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void HSUBPS_VpsWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void ADDSUBPD_VpdWpdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void ADDSUBPS_VpsWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   /* SSE3 */
 
   /* SSSE3 */
@@ -2900,18 +2900,18 @@ public: // for now...
 
 #if BX_SUPPORT_MISALIGNED_SSE
 
-#define readVirtualDQwordAligned(s, off, data)                   \
-  if (! BX_CPU_THIS_PTR mxcsr.get_misaligned_exception_mask()) { \
-    read_virtual_dqword_aligned(s, off, data);                   \
-  }                                                              \
-  else {                                                         \
-    read_virtual_dqword(s, off, data);                           \
+#define readVirtualDQwordAligned(s, off, data)       \
+  if (! BX_CPU_THIS_PTR mxcsr.get_MM()) {            \
+    read_virtual_dqword_aligned(s, off, data);       \
+  }                                                  \
+  else {                                             \
+    read_virtual_dqword(s, off, data);               \
   }
 
 #else // BX_SUPPORT_MISALIGNED_SSE = 0
 
-#define readVirtualDQwordAligned(s, off, data) {                 \
-  read_virtual_dqword_aligned(s, off, data);                     \
+#define readVirtualDQwordAligned(s, off, data) {     \
+  read_virtual_dqword_aligned(s, off, data);         \
 }
 
 #endif

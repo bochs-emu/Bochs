@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_rcp.cc,v 1.25 2010-12-22 21:16:02 sshwarts Exp $
+// $Id: sse_rcp.cc,v 1.26 2010-12-24 08:35:00 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003-2009 Stanislav Shwartsman
@@ -344,20 +344,10 @@ static float32 approximate_rcp(float32 op)
  * Approximate reciprocals of packed single precision FP values from XMM2/MEM.
  * Possible floating point exceptions: -
  */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::RCPPS_VpsWps(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::RCPPS_VpsWpsR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BxPackedXmmRegister op;
-
-  /* op is a register or memory reference */
-  if (i->modC0()) {
-    op = BX_READ_XMM_REG(i->rm());
-  }
-  else {
-    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-    /* pointer, segment address pair */
-    readVirtualDQwordAligned(i->seg(), eaddr, (Bit8u *) &op);
-  }
+  BxPackedXmmRegister op = BX_READ_XMM_REG(i->rm());
 
   op.xmm32u(0) = approximate_rcp(op.xmm32u(0));
   op.xmm32u(1) = approximate_rcp(op.xmm32u(1));
@@ -373,21 +363,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RCPPS_VpsWps(bxInstruction_c *i)
  * Approximate reciprocal of scalar single precision FP value from XMM2/MEM32.
  * Possible floating point exceptions: -
  */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::RCPSS_VssWss(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::RCPSS_VssWssR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  float32 op;
-
-  /* op is a register or memory reference */
-  if (i->modC0()) {
-    op = BX_READ_XMM_REG_LO_DWORD(i->rm());
-  }
-  else {
-    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-    /* pointer, segment address pair */
-    op = read_virtual_dword(i->seg(), eaddr);
-  }
-
+  float32 op = BX_READ_XMM_REG_LO_DWORD(i->rm());
   op = approximate_rcp(op);
   BX_WRITE_XMM_REG_LO_DWORD(i->nnn(), op);
 #endif
@@ -718,21 +697,10 @@ static float32 approximate_rsqrt(float32 op)
  * from XMM2/MEM32.
  * Possible floating point exceptions: -
  */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::RSQRTSS_VssWss(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::RSQRTSS_VssWssR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  float32 op;
-
-  /* op is a register or memory reference */
-  if (i->modC0()) {
-    op = BX_READ_XMM_REG_LO_DWORD(i->rm());
-  }
-  else {
-    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-    /* pointer, segment address pair */
-    op = read_virtual_dword(i->seg(), eaddr);
-  }
-
+  float32 op = BX_READ_XMM_REG_LO_DWORD(i->rm());
   op = approximate_rsqrt(op);
   BX_WRITE_XMM_REG_LO_DWORD(i->nnn(), op);
 #endif
@@ -744,20 +712,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RSQRTSS_VssWss(bxInstruction_c *i)
  * from XMM2/MEM.
  * Possible floating point exceptions: -
  */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::RSQRTPS_VpsWps(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::RSQRTPS_VpsWpsR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BxPackedXmmRegister op;
-
-  /* op is a register or memory reference */
-  if (i->modC0()) {
-    op = BX_READ_XMM_REG(i->rm());
-  }
-  else {
-    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-    /* pointer, segment address pair */
-    readVirtualDQwordAligned(i->seg(), eaddr, (Bit8u *) &op);
-  }
+  BxPackedXmmRegister op = BX_READ_XMM_REG(i->rm());
 
   op.xmm32u(0) = approximate_rsqrt(op.xmm32u(0));
   op.xmm32u(1) = approximate_rsqrt(op.xmm32u(1));

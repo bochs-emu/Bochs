@@ -1,8 +1,8 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: load.cc,v 1.2 2010-12-22 21:24:19 sshwarts Exp $
+// $Id: load.cc,v 1.3 2010-12-24 08:35:00 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2008-2009 Stanislav Shwartsman
+//   Copyright (c) 2008-2011 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -79,11 +79,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Vdq(bxInstruction_c *i)
   BxPackedXmmRegister op;
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  if (! BX_CPU_THIS_PTR mxcsr.get_misaligned_exception_mask()) {
-    read_virtual_dqword_aligned(i->seg(), eaddr, (Bit8u *) &op);
+  if (! BX_CPU_THIS_PTR mxcsr.get_MM()) {
+    read_virtual_dqword_aligned(i->seg(), eaddr, &op);
   }
   else {
-    read_virtual_dqword(i->seg(), eaddr, (Bit8u *) &op);
+    read_virtual_dqword(i->seg(), eaddr, &op);
   }
 
   BX_WRITE_XMM_REG(BX_TMP_REGISTER, op);
@@ -95,7 +95,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOADA_Vdq(bxInstruction_c *i)
 {
   BxPackedXmmRegister op;
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-  read_virtual_dqword_aligned(i->seg(), eaddr, (Bit8u *) &op);
+  read_virtual_dqword_aligned(i->seg(), eaddr, &op);
   BX_WRITE_XMM_REG(BX_TMP_REGISTER, op);
 
   BX_CPU_CALL_METHOD(i->execute2, (i));
@@ -105,7 +105,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOADU_Vdq(bxInstruction_c *i)
 {
   BxPackedXmmRegister op;
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-  read_virtual_dqword(i->seg(), eaddr, (Bit8u *) &op);
+  read_virtual_dqword(i->seg(), eaddr, &op);
   BX_WRITE_XMM_REG(BX_TMP_REGISTER, op);
 
   BX_CPU_CALL_METHOD(i->execute2, (i));
