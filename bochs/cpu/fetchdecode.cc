@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.285 2010-12-24 08:35:00 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.286 2010-12-24 16:34:55 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2011  The Bochs Project
@@ -2795,6 +2795,7 @@ modrm_done:
   i->execute  = BxOpcodesTable[ia_opcode].execute1;
   i->execute2 = BxOpcodesTable[ia_opcode].execute2;
 
+#if BX_CPU_LEVEL >= 6
   Bit32u op_flags = BxOpcodesTable[ia_opcode].flags;
   if (! BX_CPU_THIS_PTR sse_ok) {
      if (op_flags & BX_PREPARE_SSE) {
@@ -2802,6 +2803,7 @@ modrm_done:
         return(1);
      }
   }
+#endif
 
 #if BX_SUPPORT_TRACE_CACHE
   if ((attr & BxTraceEnd) || ia_opcode == BX_IA_ERROR)
