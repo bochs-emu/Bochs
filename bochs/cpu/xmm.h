@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: xmm.h,v 1.35 2010-12-25 07:59:15 sshwarts Exp $
+// $Id: xmm.h,v 1.36 2010-12-25 19:34:43 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003-2010 Stanislav Shwartsman
@@ -104,6 +104,10 @@ typedef union bx_xmm_reg_t {
 /* store only low 32 bit of the register, rest of the register unchanged */
 #define BX_WRITE_XMM_REG_LO_DWORD(index, reg32) \
     { (BX_CPU_THIS_PTR xmm[index]).xmm32u(0) = (reg32); }
+
+/* store only low 16 bit of the register, rest of the register unchanged */
+#define BX_WRITE_XMM_REG_LO_WORD(index, reg16) \
+    { (BX_CPU_THIS_PTR xmm[index]).xmm16u(0) = (reg16); }
 
 
 /* MXCSR REGISTER */

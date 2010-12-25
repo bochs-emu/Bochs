@@ -1,8 +1,8 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: mmx.cc,v 1.97 2010-12-25 17:04:36 sshwarts Exp $
+// $Id: mmx.cc,v 1.98 2010-12-25 19:34:43 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2002-2009 Stanislav Shwartsman
+//   Copyright (c) 2002-2010 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or

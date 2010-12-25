@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.697 2010-12-25 17:04:35 sshwarts Exp $
+// $Id: cpu.h,v 1.698 2010-12-25 19:34:43 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2011  The Bochs Project
@@ -1766,11 +1766,12 @@ public: // for now...
 #if BX_SUPPORT_X86_64
   BX_SMF void LOAD_Eq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 #endif
-  BX_SMF void LOADA_Vdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void LOADU_Vdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void LOAD_Vdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void LOAD_Vss(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void LOAD_Vsd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void LOADA_Wdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void LOADU_Wdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void LOAD_Wdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void LOAD_Wss(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void LOAD_Wsd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void LOAD_Ww(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
 #if BX_SUPPORT_FPU == 0	// if FPU is disabled
   BX_SMF void FPU_ESC(bxInstruction_c *) BX_CPP_AttrRegparmN(1);

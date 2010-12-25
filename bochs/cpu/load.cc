@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: load.cc,v 1.4 2010-12-25 15:00:20 sshwarts Exp $
+// $Id: load.cc,v 1.5 2010-12-25 19:34:43 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008-2011 Stanislav Shwartsman
@@ -56,7 +56,18 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Eq(bxInstruction_c *i)
 }
 #endif
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Vss(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Ww(bxInstruction_c *i)
+{
+#if BX_CPU_LEVEL >= 6
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  Bit16u val_16 = read_virtual_word(i->seg(), eaddr);
+  BX_WRITE_XMM_REG_LO_WORD(BX_TMP_REGISTER, val_16);
+
+  BX_CPU_CALL_METHOD(i->execute2, (i));
+#endif
+}
+
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Wss(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
@@ -67,7 +78,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Vss(bxInstruction_c *i)
 #endif
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Vsd(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Wsd(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
@@ -78,7 +89,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Vsd(bxInstruction_c *i)
 #endif
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Vdq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Wdq(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
   BxPackedXmmRegister op;
@@ -97,7 +108,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Vdq(bxInstruction_c *i)
 #endif
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOADA_Vdq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOADA_Wdq(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
   BxPackedXmmRegister op;
@@ -109,7 +120,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOADA_Vdq(bxInstruction_c *i)
 #endif
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOADU_Vdq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOADU_Wdq(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
   BxPackedXmmRegister op;
