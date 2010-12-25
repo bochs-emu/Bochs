@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.340 2010-12-22 21:16:02 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.341 2010-12-25 17:04:36 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2010  The Bochs Project
@@ -464,20 +464,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MONITOR(bxInstruction_c *i)
 
   bx_segment_reg_t *seg = &BX_CPU_THIS_PTR sregs[i->seg()];
 
-  bx_address offset;
-
-#if BX_SUPPORT_X86_64
-  if (i->as64L()) {
-     offset = RAX;
-  }
-  else
-#endif
-  if (i->as32L()) {
-     offset = EAX;
-  }
-  else {
-     offset =  AX;
-  }
+  bx_address offset = RAX & i->asize_mask();
 
   // set MONITOR
   bx_address laddr = BX_CPU_THIS_PTR get_laddr(i->seg(), offset);

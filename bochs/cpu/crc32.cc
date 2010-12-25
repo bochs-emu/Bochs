@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: crc32.cc,v 1.6 2010-11-23 14:59:35 sshwarts Exp $
+// $Id: crc32.cc,v 1.7 2010-12-25 17:04:36 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008-2009 Stanislav Shwartsman
@@ -70,18 +70,9 @@ static Bit32u mod2_64bit(Bit64u divisor, Bit64u dividend)
   return (Bit32u) remainder;
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::CRC32_GdEb(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::CRC32_GdEbR(bxInstruction_c *i)
 {
-  Bit8u op1;
-
-  if (i->modC0()) {
-    op1 = BX_READ_8BIT_REGx(i->rm(),i->extend8bitL());
-  }
-  else {
-    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-
-    op1 = read_virtual_byte(i->seg(), eaddr);
-  }
+  Bit8u op1 = BX_READ_8BIT_REGx(i->rm(), i->extend8bitL());
 
   Bit32u op2 = BX_READ_32BIT_REG(i->nnn());
   op2 = BitReflect32(op2);

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.696 2010-12-25 07:59:15 sshwarts Exp $
+// $Id: cpu.h,v 1.697 2010-12-25 17:04:35 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2011  The Bochs Project
@@ -2257,10 +2257,10 @@ public: // for now...
   BX_SMF void PBLENDVB_VdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void BLENDVPS_VpsWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void BLENDVPD_VpdWpdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void PTEST_VdqWdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void PMULDQ_VdqWdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void PCMPEQQ_VdqWdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void PACKUSDW_VdqWdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void PTEST_VdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void PMULDQ_VdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void PCMPEQQ_VdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void PACKUSDW_VdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void PMOVSXBW_VdqWq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void PMOVSXBD_VdqWd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void PMOVSXBQ_VdqWw(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -2273,16 +2273,16 @@ public: // for now...
   BX_SMF void PMOVZXWD_VdqWq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void PMOVZXWQ_VdqWd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void PMOVZXDQ_VdqWq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void PMINSB_VdqWdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void PMINSD_VdqWdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void PMINUW_VdqWdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void PMINUD_VdqWdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void PMAXSB_VdqWdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void PMAXSD_VdqWdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void PMAXUW_VdqWdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void PMAXUD_VdqWdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void PMULLD_VdqWdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void PHMINPOSUW_VdqWdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void PMINSB_VdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void PMINSD_VdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void PMINUW_VdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void PMINUD_VdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void PMAXSB_VdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void PMAXSD_VdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void PMAXUW_VdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void PMAXUD_VdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void PMULLD_VdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void PHMINPOSUW_VdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void ROUNDPS_VpsWpsIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void ROUNDPD_VpdWpdIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void ROUNDSS_VssWssIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -2290,26 +2290,31 @@ public: // for now...
   BX_SMF void BLENDPS_VpsWpsIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void BLENDPD_VpdWpdIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void PBLENDW_VdqWdqIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void PEXTRB_EbdVdqIb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void PEXTRW_EwdVdqIb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void PEXTRD_EdVdqIb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void EXTRACTPS_EdVpsIb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void PEXTRB_EbdVdqIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void PEXTRB_EbdVdqIbM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void PEXTRW_EwdVdqIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void PEXTRW_EwdVdqIbM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void PEXTRD_EdVdqIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void PEXTRD_EdVdqIbM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void EXTRACTPS_EdVpsIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void EXTRACTPS_EdVpsIbM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void PINSRB_VdqEbIb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void INSERTPS_VpsWssIb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void PINSRD_VdqEdIb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void DPPS_VpsWpsIb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void DPPD_VpdWpdIb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void PINSRD_VdqEdIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void PINSRD_VdqEdIbM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void DPPS_VpsWpsIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void DPPD_VpdWpdIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void MPSADBW_VdqWdqIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   /* SSE4.1 */
 
   /* SSE4.2 */
-  BX_SMF void CRC32_GdEb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CRC32_GdEbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void CRC32_GdEw(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void CRC32_GdEd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 #if BX_SUPPORT_X86_64
   BX_SMF void CRC32_GdEq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 #endif
-  BX_SMF void PCMPGTQ_VdqWdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void PCMPGTQ_VdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void PCMPESTRM_VdqWdqIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void PCMPESTRI_VdqWdqIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void PCMPISTRM_VdqWdqIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -2317,14 +2322,15 @@ public: // for now...
   /* SSE4.2 */
 
   /* MOVBE Intel Atom(R) instruction */
-  BX_SMF void MOVBE_GwEw(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void MOVBE_GdEd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void MOVBE_GwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void MOVBE_GdEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void MOVBE_EwGw(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void MOVBE_EdGd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 #if BX_SUPPORT_X86_64
-  BX_SMF void MOVBE_GqEq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void MOVBE_GqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void MOVBE_EqGq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 #endif
+  /* MOVBE Intel Atom(R) instruction */
 
   /* XSAVE/XRSTOR extensions */
   BX_SMF void XSAVE(bxInstruction_c *) BX_CPP_AttrRegparmN(1);

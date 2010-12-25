@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_pfp.cc,v 1.70 2010-12-25 07:59:15 sshwarts Exp $
+// $Id: sse_pfp.cc,v 1.71 2010-12-25 17:04:36 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003-2010 Stanislav Shwartsman
@@ -2047,13 +2047,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPPS_VpsWpsIbR(bxInstruction_c *i)
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
-  int ib = i->Ib();
-
-  /* mask used bits, ignore reserved */
-  if (ib > 7) {
-    BX_ERROR(("CMPPS_VpsWpsIb: unrecognized predicate %u", i->Ib()));
-  }
-  ib &= 7;
+  int ib = i->Ib() & 7;
 
   if (MXCSR.get_DAZ()) {
     op1.xmm32u(0) = float32_denormal_to_zero(op1.xmm32u(0));
@@ -2109,13 +2103,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPPD_VpdWpdIbR(bxInstruction_c *i)
 
   float_status_t status;
   mxcsr_to_softfloat_status_word(status, MXCSR);
-  int ib = i->Ib();
-
-  /* mask used bits, ignore reserved */
-  if (ib > 7) {
-    BX_ERROR(("CMPPD_VpdWpdIb: unrecognized predicate %u", i->Ib()));
-  }
-  ib &= 7;
+  int ib = i->Ib() & 7;
 
   if (MXCSR.get_DAZ())
   {
@@ -2155,17 +2143,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPPD_VpdWpdIbR(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPSD_VsdWsdIbR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  float64 op1 = BX_READ_XMM_REG_LO_QWORD(i->nnn()), op2 = BX_READ_XMM_REG_LO_QWORD(i->rm()), result = 0;
+  float64 op1 = BX_READ_XMM_REG_LO_QWORD(i->nnn()), op2 = BX_READ_XMM_REG_LO_QWORD(i->rm());
 
   float_status_t status_word;
   mxcsr_to_softfloat_status_word(status_word, MXCSR);
-  int ib = i->Ib();
-
-  /* mask used bits, ignore reserved */
-  if (ib > 7) {
-    BX_ERROR(("CMPSD_VsdWsdIb: unrecognized predicate %u", i->Ib()));
-  }
-  ib &= 7;
+  int ib = i->Ib() & 7;
 
   if (MXCSR.get_DAZ())
   {
@@ -2175,20 +2157,20 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPSD_VsdWsdIbR(bxInstruction_c *i)
 
   if(ib < 4) {
      if(compare64[ib](op1, op2, status_word)) {
-        result = BX_CONST64(0xFFFFFFFFFFFFFFFF);
+        op1 = BX_CONST64(0xFFFFFFFFFFFFFFFF);
      } else {
-        result = 0;
+        op1 = 0;
      }
   } else {
      if(compare64[ib-4](op1, op2, status_word)) {
-        result = 0;
+        op1 = 0;
      } else {
-        result = BX_CONST64(0xFFFFFFFFFFFFFFFF);
+        op1 = BX_CONST64(0xFFFFFFFFFFFFFFFF);
      }
   }
 
   check_exceptionsSSE(status_word.float_exception_flags);
-  BX_WRITE_XMM_REG_LO_QWORD(i->nnn(), result);
+  BX_WRITE_XMM_REG_LO_QWORD(i->nnn(), op1);
 #endif
 }
 
@@ -2200,17 +2182,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPSD_VsdWsdIbR(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPSS_VssWssIbR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  float32 op1 = BX_READ_XMM_REG_LO_DWORD(i->nnn()), op2 = BX_READ_XMM_REG_LO_DWORD(i->rm()), result = 0;
+  float32 op1 = BX_READ_XMM_REG_LO_DWORD(i->nnn()), op2 = BX_READ_XMM_REG_LO_DWORD(i->rm());
 
   float_status_t status_word;
   mxcsr_to_softfloat_status_word(status_word, MXCSR);
-  int ib = i->Ib();
-
-  /* mask used bits, ignore reserved */
-  if (ib > 7) {
-    BX_ERROR(("CMPSS_VssWssIb: unrecognized predicate %u", i->Ib()));
-  }
-  ib &= 7;
+  int ib = i->Ib() & 7;
 
   if (MXCSR.get_DAZ())
   {
@@ -2220,20 +2196,20 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPSS_VssWssIbR(bxInstruction_c *i)
 
   if(ib < 4) {
      if(compare32[ib](op1, op2, status_word)) {
-        result = 0xFFFFFFFF;
+        op1 = 0xFFFFFFFF;
      } else {
-        result = 0;
+        op1 = 0;
      }
   } else {
      if(compare32[ib-4](op1, op2, status_word)) {
-        result = 0;
+        op1 = 0;
      } else {
-        result = 0xFFFFFFFF;
+        op1 = 0xFFFFFFFF;
      }
   }
 
   check_exceptionsSSE(status_word.float_exception_flags);
-  BX_WRITE_XMM_REG_LO_DWORD(i->nnn(), result);
+  BX_WRITE_XMM_REG_LO_DWORD(i->nnn(), op1);
 #endif
 }
 
@@ -2426,21 +2402,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROUNDSD_VsdWsdIbR(bxInstruction_c *i)
  * packed SP floating-point values from xmm2, add and selectively
  * store the packed SP floating-point values or zero values to xmm1
  */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::DPPS_VpsWpsIb(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::DPPS_VpsWpsIbR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, tmp;
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn());
+  BxPackedXmmRegister op2 = BX_READ_XMM_REG(i->rm()), tmp;
   Bit8u mask = i->Ib();
-
-  /* op2 is a register or memory reference */
-  if (i->modC0()) {
-    op2 = BX_READ_XMM_REG(i->rm());
-  }
-  else {
-    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-    /* pointer, segment address pair */
-    readVirtualDQwordAligned(i->seg(), eaddr, (Bit8u *) &op2);
-  }
 
   float_status_t status_word;
   mxcsr_to_softfloat_status_word(status_word, MXCSR);
@@ -2489,21 +2456,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::DPPS_VpsWpsIb(bxInstruction_c *i)
  * packed DP floating-point values from xmm2, add and selectively
  * store the packed DP floating-point values or zero values to xmm1
  */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::DPPD_VpdWpdIb(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::DPPD_VpdWpdIbR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, tmp;
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn());
+  BxPackedXmmRegister op2 = BX_READ_XMM_REG(i->rm()), tmp;
   Bit8u mask = i->Ib();
-
-  /* op2 is a register or memory reference */
-  if (i->modC0()) {
-    op2 = BX_READ_XMM_REG(i->rm());
-  }
-  else {
-    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-    /* pointer, segment address pair */
-    readVirtualDQwordAligned(i->seg(), eaddr, (Bit8u *) &op2);
-  }
 
   float_status_t status_word;
   mxcsr_to_softfloat_status_word(status_word, MXCSR);

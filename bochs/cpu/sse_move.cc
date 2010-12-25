@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_move.cc,v 1.126 2010-12-25 07:59:15 sshwarts Exp $
+// $Id: sse_move.cc,v 1.127 2010-12-25 17:04:36 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003-2010 Stanislav Shwartsman
@@ -25,6 +25,11 @@
 #include "bochs.h"
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
+
+// Make code more tidy with a few macros.
+#if BX_SUPPORT_X86_64==0
+#define RDI EDI
+#endif
 
 #if BX_CPU_LEVEL >= 6
 
@@ -620,22 +625,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVHPS_MqVps(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MASKMOVDQU_VdqUdq(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  bx_address rdi;
+  bx_address rdi = RDI & i->asize_mask();
   BxPackedXmmRegister op = BX_READ_XMM_REG(i->nnn()),
     mask = BX_READ_XMM_REG(i->rm()), temp;
-
-#if BX_SUPPORT_X86_64
-  if (i->as64L()) { 	/* 64 bit address mode */
-    rdi = RDI;
-  }
-  else
-#endif
-  if (i->as32L()) {
-    rdi = EDI;
-  }
-  else {                /* 16 bit address mode */
-    rdi = DI;
-  }
 
   /* implement as read-modify-write for efficiency */
   read_virtual_dqword(i->seg(), rdi, (Bit8u *) &temp);

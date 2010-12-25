@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bit.cc,v 1.70 2010-12-06 21:45:56 sshwarts Exp $
+// $Id: bit.cc,v 1.71 2010-12-25 17:04:35 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -258,17 +258,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BSWAP_RRX(bxInstruction_c *i)
 }
 #endif
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVBE_GwEw(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVBE_GwEwR(bxInstruction_c *i)
 {
-  Bit16u val16, b0, b1;
-
-  if (i->modC0()) {
-    val16 = BX_READ_16BIT_REG(i->rm());
-  }
-  else {
-    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-    val16 = read_virtual_word(i->seg(), eaddr);
-  }
+  Bit16u val16 = BX_READ_16BIT_REG(i->rm()), b0, b1;
   
   b0 = val16 & 0xff; val16 >>= 8;
   b1 = val16;
@@ -294,17 +286,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVBE_EwGw(bxInstruction_c *i)
   }
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVBE_GdEd(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVBE_GdEdR(bxInstruction_c *i)
 {
-  Bit32u val32;
-
-  if (i->modC0()) {
-    val32 = BX_READ_32BIT_REG(i->rm());
-  }
-  else {
-    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-    val32 = read_virtual_dword(i->seg(), eaddr);
-  }
+  Bit32u val32 = BX_READ_32BIT_REG(i->rm());
   
   BX_WRITE_32BIT_REGZ(i->nnn(), bx_bswap32(val32));
 }
@@ -326,17 +310,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVBE_EdGd(bxInstruction_c *i)
 
 #if BX_SUPPORT_X86_64
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVBE_GqEq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVBE_GqEqR(bxInstruction_c *i)
 {
-  Bit64u val64;
-
-  if (i->modC0()) {
-    val64 = BX_READ_64BIT_REG(i->rm());
-  }
-  else {
-    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-    val64 = read_virtual_qword(i->seg(), eaddr);
-  }
+  Bit64u val64 = BX_READ_64BIT_REG(i->rm());
   
   BX_WRITE_64BIT_REG(i->nnn(), bx_bswap64(val64));
 }
