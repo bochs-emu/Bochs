@@ -1,8 +1,8 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_pfp.cc,v 1.69 2010-12-24 08:35:00 sshwarts Exp $
+// $Id: sse_pfp.cc,v 1.70 2010-12-25 07:59:15 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2003-2009 Stanislav Shwartsman
+//   Copyright (c) 2003-2010 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -2302,20 +2302,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ADDSUBPS_VpsWpsR(bxInstruction_c *i)
 }
 
 /* 66 0F 3A 08 */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROUNDPS_VpsWpsIb(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROUNDPS_VpsWpsIbR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BxPackedXmmRegister op;
-
-  /* op is a register or memory reference */
-  if (i->modC0()) {
-    op = BX_READ_XMM_REG(i->rm());
-  }
-  else {
-    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-    /* pointer, segment address pair */
-    readVirtualDQwordAligned(i->seg(), eaddr, (Bit8u *) &op);
-  }
+  BxPackedXmmRegister op = BX_READ_XMM_REG(i->rm());
 
   float_status_t status_word;
   mxcsr_to_softfloat_status_word(status_word, MXCSR);
@@ -2347,20 +2337,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROUNDPS_VpsWpsIb(bxInstruction_c *i)
 }
 
 /* 66 0F 3A 09 */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROUNDPD_VpdWpdIb(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROUNDPD_VpdWpdIbR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BxPackedXmmRegister op;
-
-  /* op is a register or memory reference */
-  if (i->modC0()) {
-    op = BX_READ_XMM_REG(i->rm());
-  }
-  else {
-    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-    /* pointer, segment address pair */
-    readVirtualDQwordAligned(i->seg(), eaddr, (Bit8u *) &op);
-  }
+  BxPackedXmmRegister op = BX_READ_XMM_REG(i->rm());
 
   float_status_t status_word;
   mxcsr_to_softfloat_status_word(status_word, MXCSR);
@@ -2388,20 +2368,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROUNDPD_VpdWpdIb(bxInstruction_c *i)
 }
 
 /* 66 0F 3A 0A */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROUNDSS_VssWssIb(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROUNDSS_VssWssIbR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  float32 op;
-
-  /* op is a register or memory reference */
-  if (i->modC0()) {
-    op = BX_READ_XMM_REG_LO_DWORD(i->rm());
-  }
-  else {
-    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-    /* pointer, segment address pair */
-    op = read_virtual_dword(i->seg(), eaddr);
-  }
+  float32 op = BX_READ_XMM_REG_LO_DWORD(i->rm());
 
   float_status_t status_word;
   mxcsr_to_softfloat_status_word(status_word, MXCSR);
@@ -2425,20 +2395,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROUNDSS_VssWssIb(bxInstruction_c *i)
 }
 
 /* 66 0F 3A 0B */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROUNDSD_VsdWsdIb(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROUNDSD_VsdWsdIbR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  float64 op;
-
-  /* op is a register or memory reference */
-  if (i->modC0()) {
-    op = BX_READ_XMM_REG_LO_QWORD(i->rm());
-  }
-  else {
-    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-    /* pointer, segment address pair */
-    op = read_virtual_qword(i->seg(), eaddr);
-  }
+  float64 op = BX_READ_XMM_REG_LO_QWORD(i->rm());
 
   float_status_t status_word;
   mxcsr_to_softfloat_status_word(status_word, MXCSR);

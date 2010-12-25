@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.695 2010-12-24 08:35:00 sshwarts Exp $
+// $Id: cpu.h,v 1.696 2010-12-25 07:59:15 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2011  The Bochs Project
@@ -2254,9 +2254,9 @@ public: // for now...
   /* SSSE3 */
 
   /* SSE4.1 */
-  BX_SMF void PBLENDVB_VdqWdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void BLENDVPS_VpsWps(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void BLENDVPD_VpdWpd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void PBLENDVB_VdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void BLENDVPS_VpsWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void BLENDVPD_VpdWpdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void PTEST_VdqWdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void PMULDQ_VdqWdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void PCMPEQQ_VdqWdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -2283,13 +2283,13 @@ public: // for now...
   BX_SMF void PMAXUD_VdqWdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void PMULLD_VdqWdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void PHMINPOSUW_VdqWdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void ROUNDPS_VpsWpsIb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void ROUNDPD_VpdWpdIb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void ROUNDSS_VssWssIb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void ROUNDSD_VsdWsdIb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void BLENDPS_VpsWpsIb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void BLENDPD_VpdWpdIb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void PBLENDW_VdqWdqIb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void ROUNDPS_VpsWpsIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void ROUNDPD_VpdWpdIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void ROUNDSS_VssWssIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void ROUNDSD_VsdWsdIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void BLENDPS_VpsWpsIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void BLENDPD_VpdWpdIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void PBLENDW_VdqWdqIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void PEXTRB_EbdVdqIb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void PEXTRW_EwdVdqIb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void PEXTRD_EdVdqIb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -2299,8 +2299,7 @@ public: // for now...
   BX_SMF void PINSRD_VdqEdIb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void DPPS_VpsWpsIb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void DPPD_VpdWpdIb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void MPSADBW_VdqWdqIb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void MOVNTDQA_VdqMdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void MPSADBW_VdqWdqIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   /* SSE4.1 */
 
   /* SSE4.2 */
@@ -2311,10 +2310,10 @@ public: // for now...
   BX_SMF void CRC32_GdEq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 #endif
   BX_SMF void PCMPGTQ_VdqWdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void PCMPESTRM_VdqWdqIb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void PCMPESTRI_VdqWdqIb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void PCMPISTRM_VdqWdqIb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void PCMPISTRI_VdqWdqIb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void PCMPESTRM_VdqWdqIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void PCMPESTRI_VdqWdqIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void PCMPISTRM_VdqWdqIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void PCMPISTRI_VdqWdqIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   /* SSE4.2 */
 
   /* MOVBE Intel Atom(R) instruction */
@@ -2335,13 +2334,13 @@ public: // for now...
   /* XSAVE/XRSTOR extensions */
 
   /* AES instructions */
-  BX_SMF void AESIMC_VdqWdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void AESENC_VdqWdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void AESENCLAST_VdqWdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void AESDEC_VdqWdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void AESDECLAST_VdqWdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void AESKEYGENASSIST_VdqWdqIb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void PCLMULQDQ_VdqWdqIb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void AESIMC_VdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void AESENC_VdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void AESENCLAST_VdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void AESDEC_VdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void AESDECLAST_VdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void AESKEYGENASSIST_VdqWdqIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void PCLMULQDQ_VdqWdqIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   /* AES instructions */
 
   /* VMX instructions */
@@ -3394,7 +3393,6 @@ public: // for now...
 #endif
 
 #if BX_CPU_LEVEL >= 6
-  BX_SMF void prepareSSE(void);
   BX_SMF void check_exceptionsSSE(int);
   BX_SMF void print_state_SSE(void);
 #endif
@@ -3496,17 +3494,6 @@ BX_CPP_INLINE void BX_CPU_C::prepareMMX(void)
 
   /* check floating point status word for a pending FPU exceptions */
   FPU_check_pending_exceptions();
-}
-#endif
-
-#if BX_CPU_LEVEL >= 6
-BX_CPP_INLINE void BX_CPU_C::prepareSSE(void)
-{
-  if(BX_CPU_THIS_PTR cr0.get_EM() || !BX_CPU_THIS_PTR cr4.get_OSFXSR())
-    exception(BX_UD_EXCEPTION, 0);
-
-  if(BX_CPU_THIS_PTR cr0.get_TS())
-    exception(BX_NM_EXCEPTION, 0);
 }
 #endif
 

@@ -1,8 +1,8 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_move.cc,v 1.125 2010-12-24 08:35:00 sshwarts Exp $
+// $Id: sse_move.cc,v 1.126 2010-12-25 07:59:15 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2003-2009 Stanislav Shwartsman
+//   Copyright (c) 2003-2010 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -1022,29 +1022,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVSXDQ_VdqWq(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), result);
-#endif
-}
-
-/* 66 0F 38 2A */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVNTDQA_VdqMdq(bxInstruction_c *i)
-{
-#if BX_CPU_LEVEL >= 6
-  /* source must be memory reference */
-  if (i->modC0()) {
-    BX_INFO(("MOVNTDQA_VdqMdq: must be memory reference"));
-    exception(BX_UD_EXCEPTION, 0);
-  }
-
-  BX_CPU_THIS_PTR prepareSSE();
-
-  BxPackedXmmRegister op;
-
-  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-
-  read_virtual_dqword_aligned(i->seg(), eaddr, (Bit8u *) &op);
-
-  /* now write result back to destination */
-  BX_WRITE_XMM_REG(i->nnn(), op);
 #endif
 }
 

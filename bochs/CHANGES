@@ -38,6 +38,8 @@ Changes after 2.4.5 release:
 - I/O Devices
   - Fixes for emulated DHCP in eth_vnet (patch from @SF tracker)
   - Added write protect option for floppy drives (based on @SF patch by Ben Lunt)
+  - Added support for VGA graphics mode with 400 lines (partial fix for SF bug #2948724)
+  - NE2K: Fixed "send buffer" command issue on big endian hosts
 
 - SF patches applied
  [1539417] write protect for floppy drives by Ben Lunt

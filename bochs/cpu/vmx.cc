@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmx.cc,v 1.74 2010-12-19 07:06:40 sshwarts Exp $
+// $Id: vmx.cc,v 1.75 2010-12-25 07:59:15 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2009-2010 Stanislav Shwartsman
@@ -2786,12 +2786,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INVEPT(bxInstruction_c *i)
   if (! BX_CPU_THIS_PTR in_vmx || ! protected_mode() || BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_COMPAT)
     exception(BX_UD_EXCEPTION, 0);
 
-  /* source must be memory reference */
-  if (i->modC0()) {
-    BX_INFO(("INVEPT: must be memory reference"));
-    exception(BX_UD_EXCEPTION, 0);
-  }
-
   if (BX_CPU_THIS_PTR in_vmx_guest) {
     BX_ERROR(("VMEXIT: INVEPT in VMX non-root operation"));
     VMexit_Instruction(i, VMX_VMEXIT_INVEPT);
@@ -2846,12 +2840,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INVVPID(bxInstruction_c *i)
 #if BX_SUPPORT_VMX >= 2
   if (! BX_CPU_THIS_PTR in_vmx || ! protected_mode() || BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_COMPAT)
     exception(BX_UD_EXCEPTION, 0);
-
-  /* source must be memory reference */
-  if (i->modC0()) {
-    BX_INFO(("INVVPID: must be memory reference"));
-    exception(BX_UD_EXCEPTION, 0);
-  }
 
   if (BX_CPU_THIS_PTR in_vmx_guest) {
     BX_ERROR(("VMEXIT: INVVPID in VMX non-root operation"));

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.281 2010-12-24 08:35:00 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.282 2010-12-25 07:59:15 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2011  The Bochs Project
@@ -3376,6 +3376,7 @@ fetch_b1:
       if (remain != 0) {
         remain--;
         b3 = *iptr++;
+        b3 <<= 1;
       }
       else
         return(-1);
@@ -3559,7 +3560,7 @@ modrm_done:
           OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[nnn & 0x7]);
           break;
         case Bx3ByteOp:
-          OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[b3]);
+          OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[b3 + (index & 1)]);
           break;
         case BxOSizeGrp:
           OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[offset >> 8]);

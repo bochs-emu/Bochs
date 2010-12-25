@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: aes.cc,v 1.12 2010-12-22 21:16:01 sshwarts Exp $
+// $Id: aes.cc,v 1.13 2010-12-25 07:59:15 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008-2010 Stanislav Shwartsman
@@ -290,20 +290,10 @@ BX_CPP_INLINE Bit32u AES_RotWord(Bit32u x)
 #endif
 
 /* 66 0F 38 DB */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::AESIMC_VdqWdq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::AESIMC_VdqWdqR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BxPackedXmmRegister op;
-
-  /* op is a register or memory reference */
-  if (i->modC0()) {
-    op = BX_READ_XMM_REG(i->rm());
-  }
-  else {
-    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-    /* pointer, segment address pair */
-    readVirtualDQwordAligned(i->seg(), eaddr, (Bit8u *) &op);
-  }
+  BxPackedXmmRegister op = BX_READ_XMM_REG(i->rm());
 
   AES_InverseMixColumns(op);
 
@@ -312,20 +302,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::AESIMC_VdqWdq(bxInstruction_c *i)
 }
 
 /* 66 0F 38 DC */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::AESENC_VdqWdq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::AESENC_VdqWdqR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
-
-  /* op is a register or memory reference */
-  if (i->modC0()) {
-    op2 = BX_READ_XMM_REG(i->rm());
-  }
-  else {
-    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-    /* pointer, segment address pair */
-    readVirtualDQwordAligned(i->seg(), eaddr, (Bit8u *) &op2);
-  }
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2 = BX_READ_XMM_REG(i->rm());
 
   AES_ShiftRows(op1);
   AES_SubstituteBytes(op1);
@@ -339,20 +319,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::AESENC_VdqWdq(bxInstruction_c *i)
 }
 
 /* 66 0F 38 DD */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::AESENCLAST_VdqWdq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::AESENCLAST_VdqWdqR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
-
-  /* op is a register or memory reference */
-  if (i->modC0()) {
-    op2 = BX_READ_XMM_REG(i->rm());
-  }
-  else {
-    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-    /* pointer, segment address pair */
-    readVirtualDQwordAligned(i->seg(), eaddr, (Bit8u *) &op2);
-  }
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2 = BX_READ_XMM_REG(i->rm());
 
   AES_ShiftRows(op1);
   AES_SubstituteBytes(op1);
@@ -365,20 +335,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::AESENCLAST_VdqWdq(bxInstruction_c *i)
 }
 
 /* 66 0F 38 DE */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::AESDEC_VdqWdq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::AESDEC_VdqWdqR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
-
-  /* op is a register or memory reference */
-  if (i->modC0()) {
-    op2 = BX_READ_XMM_REG(i->rm());
-  }
-  else {
-    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-    /* pointer, segment address pair */
-    readVirtualDQwordAligned(i->seg(), eaddr, (Bit8u *) &op2);
-  }
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2 = BX_READ_XMM_REG(i->rm());
 
   AES_InverseShiftRows(op1);
   AES_InverseSubstituteBytes(op1);
@@ -392,20 +352,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::AESDEC_VdqWdq(bxInstruction_c *i)
 }
 
 /* 66 0F 38 DF */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::AESDECLAST_VdqWdq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::AESDECLAST_VdqWdqR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
-
-  /* op is a register or memory reference */
-  if (i->modC0()) {
-    op2 = BX_READ_XMM_REG(i->rm());
-  }
-  else {
-    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-    /* pointer, segment address pair */
-    readVirtualDQwordAligned(i->seg(), eaddr, (Bit8u *) &op2);
-  }
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2 = BX_READ_XMM_REG(i->rm());
 
   AES_InverseShiftRows(op1);
   AES_InverseSubstituteBytes(op1);
@@ -418,20 +368,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::AESDECLAST_VdqWdq(bxInstruction_c *i)
 }
 
 /* 66 0F 3A DF */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::AESKEYGENASSIST_VdqWdqIb(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::AESKEYGENASSIST_VdqWdqIbR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BxPackedXmmRegister op, result;
-
-  /* op is a register or memory reference */
-  if (i->modC0()) {
-    op = BX_READ_XMM_REG(i->rm());
-  }
-  else {
-    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-    /* pointer, segment address pair */
-    readVirtualDQwordAligned(i->seg(), eaddr, (Bit8u *) &op);
-  }
+  BxPackedXmmRegister op = BX_READ_XMM_REG(i->rm()), result;
 
   Bit32u rcon32 = i->Ib();
 
@@ -445,20 +385,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::AESKEYGENASSIST_VdqWdqIb(bxInstruction_c *
 }
 
 /* 66 0F 3A 44 */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::PCLMULQDQ_VdqWdqIb(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::PCLMULQDQ_VdqWdqIbR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, r, a;
-
-  /* op is a register or memory reference */
-  if (i->modC0()) {
-    op2 = BX_READ_XMM_REG(i->rm());
-  }
-  else {
-    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-    /* pointer, segment address pair */
-    readVirtualDQwordAligned(i->seg(), eaddr, (Bit8u *) &op2);
-  }
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2 = BX_READ_XMM_REG(i->rm());
+  BxPackedXmmRegister r, a;
 
   Bit8u imm8 = i->Ib();
 
