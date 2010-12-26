@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vvfat.h,v 1.1 2010-12-23 16:17:12 vruppert Exp $
+// $Id: vvfat.h,v 1.2 2010-12-26 23:13:29 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2010  The Bochs Project
@@ -136,21 +136,22 @@ class vvfat_image_t : public device_image_t
     mapping_t* find_mapping_for_cluster(int cluster_num);
     int read_cluster(int cluster_num);
 
-    Bit32u n_first_sectors;
     Bit8u  *first_sectors;
-
-    Bit8u  fat_type;
-    array_t fat, directory, mapping;
+    Bit32u offset_to_bootsector;
+    Bit32u offset_to_root_dir;
+    Bit32u offset_to_data;
 
     Bit16u cluster_size;
     Bit8u  sectors_per_cluster;
     Bit8u  sectors_per_fat;
-    Bit16u sectors_of_root_directory;
-    Bit32u last_cluster_of_root_directory;
-    Bit16u faked_sectors; // how many sectors are faked before file data
     Bit32u sector_count;
     Bit32u cluster_count; // total number of clusters of this partition
     Bit32u max_fat_value;
+    Bit32u first_cluster_of_root_dir;
+    Bit16u root_entries;
+
+    Bit8u  fat_type;
+    array_t fat, directory, mapping;
 
     int current_fd;
     mapping_t* current_mapping;
