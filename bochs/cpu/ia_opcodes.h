@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ia_opcodes.h,v 1.58 2010-12-26 20:41:47 sshwarts Exp $
+// $Id: ia_opcodes.h,v 1.59 2010-12-26 20:54:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008-2011 Stanislav Shwartsman
@@ -1077,7 +1077,7 @@ bx_define_opcode(BX_IA_MOVSD_VsdWsdR, &BX_CPU_C::MOVSD_VsdWsdR, NULL, BX_CPU_SSE
 bx_define_opcode(BX_IA_MOVSD_VsdWsdM, &BX_CPU_C::MOVQ_VqWqM, NULL, BX_CPU_SSE2, BX_PREPARE_SSE)
 bx_define_opcode(BX_IA_MOVSD_WsdVsdM, &BX_CPU_C::MOVQ_WqVqM, NULL, BX_CPU_SSE2, BX_PREPARE_SSE)
 bx_define_opcode(BX_IA_CVTPI2PD_VpdQqR, &BX_CPU_C::CVTPI2PD_VpdQqR, NULL, BX_CPU_SSE2, BX_PREPARE_SSE)
-bx_define_opcode(BX_IA_CVTPI2PD_VpdQqM, &BX_CPU_C::CVTPI2PD_VpdQqM, NULL, BX_CPU_SSE2, BX_PREPARE_SSE)
+bx_define_opcode(BX_IA_CVTPI2PD_VpdQqM, &BX_CPU_C::LOAD_Wsd, &BX_CPU_C::CVTDQ2PD_VpdWqR, BX_CPU_SSE2, BX_PREPARE_SSE)
 bx_define_opcode(BX_IA_CVTSI2SD_VsdEdR, &BX_CPU_C::CVTSI2SD_VsdEdR, NULL, BX_CPU_SSE2, BX_PREPARE_SSE)
 bx_define_opcode(BX_IA_CVTSI2SD_VsdEdM, &BX_CPU_C::CVTSI2SD_VsdEdM, NULL, BX_CPU_SSE2, BX_PREPARE_SSE)
 bx_define_opcode(BX_IA_CVTTPD2PI_PqWpd, &BX_CPU_C::CVTTPD2PI_PqWpd, NULL, BX_CPU_SSE2, BX_PREPARE_SSE)

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_pfp.cc,v 1.72 2010-12-26 20:41:47 sshwarts Exp $
+// $Id: sse_pfp.cc,v 1.73 2010-12-26 20:54:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003-2010 Stanislav Shwartsman
@@ -138,23 +138,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTPI2PD_VpdQqR(bxInstruction_c *i)
   prepareFPU2MMX(); /* cause FPU2MMX state transition */
 
   BxPackedMmxRegister op = BX_READ_MMX_REG(i->rm());
-
-  result.xmm64u(0) = int32_to_float64(MMXUD0(op));
-  result.xmm64u(1) = int32_to_float64(MMXUD1(op));
-
-  BX_WRITE_XMM_REG(i->nnn(), result);
-#endif
-}
-
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTPI2PD_VpdQqM(bxInstruction_c *i)
-{
-#if BX_CPU_LEVEL >= 6
-  BxPackedMmxRegister op;
-  BxPackedXmmRegister result;
-
-  // do not cause transition to MMX state if no MMX register touched
-  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-  MMXUQ(op) = read_virtual_qword(i->seg(), eaddr);
 
   result.xmm64u(0) = int32_to_float64(MMXUD0(op));
   result.xmm64u(1) = int32_to_float64(MMXUD1(op));
