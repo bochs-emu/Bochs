@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.231 2010-12-21 21:47:41 vruppert Exp $
+// $Id: harddrv.cc,v 1.232 2010-12-27 18:37:25 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2010  The Bochs Project
@@ -165,7 +165,7 @@ void bx_hard_drive_c::init(void)
   char  ata_name[20];
   bx_list_c *base;
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.231 2010-12-21 21:47:41 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.232 2010-12-27 18:37:25 vruppert Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     sprintf(ata_name, "ata.%d.resources", channel);
@@ -295,7 +295,7 @@ void bx_hard_drive_c::init(void)
             disk_size, SIM->get_param_string("journal", base)->getptr());
 
         if (channels[channel].drives[device].hdimage != NULL) {
-          BX_INFO(("HD on ata%d-%d: '%s' '%s' mode", channel, device,
+          BX_INFO(("HD on ata%d-%d: '%s', '%s' mode", channel, device,
                    SIM->get_param_string("path", base)->getptr(),
                    hdimage_mode_names[image_mode]));
         } else {
@@ -337,7 +337,6 @@ void bx_hard_drive_c::init(void)
                 BX_PANIC(("ata%d-%d: geometry autodetection failed", channel, device));
               }
               BX_HD_THIS channels[channel].drives[device].hdimage->cylinders = cyl;
-              SIM->get_param_num("cylinders", base)->set(cyl);
             } else {
               cyl = BX_HD_THIS channels[channel].drives[device].hdimage->cylinders;
               heads = BX_HD_THIS channels[channel].drives[device].hdimage->heads;
@@ -428,55 +427,52 @@ void bx_hard_drive_c::init(void)
     DEV_cmos_set_reg(0x12, 0x00); // start out with: no drive 0, no drive 1
 
     if (BX_DRIVE_IS_HD(0,0)) {
-      base = (bx_list_c*) SIM->get_param(BXPN_ATA0_MASTER);
       // Flag drive type as Fh, use extended CMOS location as real type
       DEV_cmos_set_reg(0x12, (DEV_cmos_get_reg(0x12) & 0x0f) | 0xf0);
       DEV_cmos_set_reg(0x19, 47); // user definable type
       // AMI BIOS: 1st hard disk #cyl low byte
-      DEV_cmos_set_reg(0x1b, (SIM->get_param_num("cylinders", base)->get() & 0x00ff));
+      DEV_cmos_set_reg(0x1b, (BX_DRIVE(0,0).hdimage->cylinders & 0x00ff));
       // AMI BIOS: 1st hard disk #cyl high byte
-      DEV_cmos_set_reg(0x1c, (SIM->get_param_num("cylinders", base)->get() & 0xff00) >> 8);
+      DEV_cmos_set_reg(0x1c, (BX_DRIVE(0,0).hdimage->cylinders & 0xff00) >> 8);
       // AMI BIOS: 1st hard disk #heads
-      DEV_cmos_set_reg(0x1d, (SIM->get_param_num("heads", base)->get()));
+      DEV_cmos_set_reg(0x1d, BX_DRIVE(0,0).hdimage->heads);
       // AMI BIOS: 1st hard disk write precompensation cylinder, low byte
       DEV_cmos_set_reg(0x1e, 0xff); // -1
       // AMI BIOS: 1st hard disk write precompensation cylinder, high byte
       DEV_cmos_set_reg(0x1f, 0xff); // -1
       // AMI BIOS: 1st hard disk control byte
-      DEV_cmos_set_reg(0x20, (0xc0 | ((SIM->get_param_num("heads", base)->get() > 8) << 3)));
+      DEV_cmos_set_reg(0x20, (0xc0 | ((BX_DRIVE(0,0).hdimage->heads > 8) << 3)));
       // AMI BIOS: 1st hard disk landing zone, low byte
       DEV_cmos_set_reg(0x21, DEV_cmos_get_reg(0x1b));
       // AMI BIOS: 1st hard disk landing zone, high byte
       DEV_cmos_set_reg(0x22, DEV_cmos_get_reg(0x1c));
       // AMI BIOS: 1st hard disk sectors/track
-      DEV_cmos_set_reg(0x23, SIM->get_param_num("spt", base)->get());
+      DEV_cmos_set_reg(0x23, BX_DRIVE(0,0).hdimage->sectors);
     }
 
     //set up cmos for second hard drive
     if (BX_DRIVE_IS_HD(0,1)) {
-      base = (bx_list_c*) SIM->get_param(BXPN_ATA0_SLAVE);
-      BX_DEBUG(("1: I will put 0xf into the second hard disk field"));
       // fill in lower 4 bits of 0x12 for second HD
       DEV_cmos_set_reg(0x12, (DEV_cmos_get_reg(0x12) & 0xf0) | 0x0f);
       DEV_cmos_set_reg(0x1a, 47); // user definable type
       // AMI BIOS: 2nd hard disk #cyl low byte
-      DEV_cmos_set_reg(0x24, (SIM->get_param_num("cylinders", base)->get() & 0x00ff));
+      DEV_cmos_set_reg(0x24, (BX_DRIVE(0,1).hdimage->cylinders & 0x00ff));
       // AMI BIOS: 2nd hard disk #cyl high byte
-      DEV_cmos_set_reg(0x25, (SIM->get_param_num("cylinders", base)->get() & 0xff00) >> 8);
+      DEV_cmos_set_reg(0x25, (BX_DRIVE(0,1).hdimage->cylinders & 0xff00) >> 8);
       // AMI BIOS: 2nd hard disk #heads
-      DEV_cmos_set_reg(0x26, (SIM->get_param_num("heads", base)->get()));
+      DEV_cmos_set_reg(0x26, BX_DRIVE(0,1).hdimage->heads);
       // AMI BIOS: 2nd hard disk write precompensation cylinder, low byte
       DEV_cmos_set_reg(0x27, 0xff); // -1
       // AMI BIOS: 2nd hard disk write precompensation cylinder, high byte
       DEV_cmos_set_reg(0x28, 0xff); // -1
       // AMI BIOS: 2nd hard disk, 0x80 if heads>8
-      DEV_cmos_set_reg(0x29, (SIM->get_param_num("heads", base)->get() > 8) ? 0x80 : 0x00);
+      DEV_cmos_set_reg(0x29, (BX_DRIVE(0,1).hdimage->heads > 8) ? 0x80 : 0x00);
       // AMI BIOS: 2nd hard disk landing zone, low byte
       DEV_cmos_set_reg(0x2a, DEV_cmos_get_reg(0x24));
       // AMI BIOS: 2nd hard disk landing zone, high byte
       DEV_cmos_set_reg(0x2b, DEV_cmos_get_reg(0x25));
       // AMI BIOS: 2nd hard disk sectors/track
-      DEV_cmos_set_reg(0x2c, SIM->get_param_num("spt", base)->get());
+      DEV_cmos_set_reg(0x2c, BX_DRIVE(0,1).hdimage->sectors);
     }
 
     DEV_cmos_set_reg(0x39, 0);
@@ -487,9 +483,9 @@ void bx_hard_drive_c::init(void)
         base = (bx_list_c*) SIM->get_param(ata_name);
         if (SIM->get_param_bool("present", base)->get()) {
           if (BX_DRIVE_IS_HD(channel,device)) {
-            Bit16u cylinders = SIM->get_param_num("cylinders", base)->get();
-            Bit16u heads = SIM->get_param_num("heads", base)->get();
-            Bit16u spt = SIM->get_param_num("spt", base)->get();
+            Bit16u cylinders = BX_DRIVE(channel,device).hdimage->cylinders;
+            Bit16u heads = BX_DRIVE(channel,device).hdimage->heads;
+            Bit16u spt = BX_DRIVE(channel,device).hdimage->sectors;
             Bit8u  translation = SIM->get_param_enum("translation", base)->get();
 
             Bit8u reg = 0x39 + channel/2;
