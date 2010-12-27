@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vvfat.cc,v 1.3 2010-12-26 23:13:29 vruppert Exp $
+// $Id: vvfat.cc,v 1.4 2010-12-27 22:37:36 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2010  The Bochs Project
@@ -312,7 +312,7 @@ bx_bool vvfat_image_t::sector2CHS(Bit32u spos, mbr_chs_t *chs)
   spos   /= sectors;
   head   = spos % heads;
   spos   /= heads;
-  if (spos >= cylinders) {
+  if (spos > 1023) {
     /* Overflow,
     it happens if 32bit sector positions are used, while CHS is only 24bit.
     Windows/Dos is said to take 1023/255/63 as nonrepresentable CHS */
@@ -1020,6 +1020,7 @@ int vvfat_image_t::open(const char* dirname)
   }
 
   current_cluster = 0xffff;
+  current_fd = 0;
 
   init_directories(dirname);
 
