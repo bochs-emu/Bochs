@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vvfat.cc,v 1.4 2010-12-27 22:37:36 vruppert Exp $
+// $Id: vvfat.cc,v 1.5 2010-12-28 22:31:40 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2010  The Bochs Project
@@ -342,7 +342,7 @@ void vvfat_image_t::init_mbr(void)
 
   // LBA is used when partition is outside the CHS geometry
   lba = sector2CHS(offset_to_bootsector, &partition->start_CHS);
-  lba |= sector2CHS(sector_count, &partition->end_CHS);
+  lba |= sector2CHS(sector_count - 1, &partition->end_CHS);
 
   // LBA partitions are identified only by start/length_sector_long not by CHS
   partition->start_sector_long = htod32(offset_to_bootsector);
@@ -825,21 +825,21 @@ int vvfat_image_t::init_directories(const char* dirname)
   unsigned int i;
   unsigned int cluster;
   char size_txt[8];
-
-  memset(&first_sectors[0], 0, 0x8000);
+  Bit32u volume_sector_count;
 
   cluster_size   = sectors_per_cluster * 0x200;
   cluster_buffer = new Bit8u[cluster_size];
 
   /*
    * The formula: sc = spf+1+spf*spc*(512*8/fat_type),
-   * where sc is sector_count,
+   * where sc is volume_sector_count,
    * spf is sectors_per_fat,
    * spc is sectors_per_clusters, and
    * fat_type = 12, 16 or 32.
    */
+  volume_sector_count = sector_count - offset_to_bootsector;
   i = 1 + sectors_per_cluster * 0x200 * 8 / fat_type;
-  sectors_per_fat = (sector_count + i) / i; // round up
+  sectors_per_fat = (volume_sector_count + i) / i; // round up
 
   array_init(&this->mapping, sizeof(mapping_t));
   array_init(&directory, sizeof(direntry_t));
@@ -858,7 +858,7 @@ int vvfat_image_t::init_directories(const char* dirname)
   init_fat();
 
   offset_to_root_dir = offset_to_bootsector + sectors_per_fat * 2 + 1;
-  cluster_count = sector2cluster(sector_count);
+  cluster_count = sector2cluster(volume_sector_count);
 
   mapping = (mapping_t*)array_get_next(&this->mapping);
   mapping->begin = 0;
@@ -951,7 +951,7 @@ int vvfat_image_t::init_directories(const char* dirname)
   if (fat_type != 32) {
     bootsector->root_entries = htod16(root_entries);
   }
-  bootsector->total_sectors16 = (sector_count > 0xffff) ? 0:htod16(sector_count);
+  bootsector->total_sectors16 = (volume_sector_count > 0xffff) ? 0:htod16(volume_sector_count);
   bootsector->media_type = ((fat_type != 12) ? 0xf8:0xf0);
   fat.pointer[0] = bootsector->media_type;
   if (fat_type != 32) {
@@ -960,7 +960,7 @@ int vvfat_image_t::init_directories(const char* dirname)
   bootsector->sectors_per_track = htod16(sectors);
   bootsector->number_of_heads = htod16(heads);
   bootsector->hidden_sectors = htod32(offset_to_bootsector);
-  bootsector->total_sectors = htod32((sector_count > 0xffff) ? sector_count:0);
+  bootsector->total_sectors = htod32((volume_sector_count > 0xffff) ? volume_sector_count:0);
 
   if (fat_type != 32) {
     bootsector->u.fat16.drive_number = (fat_type == 12) ? 0:0x80; // assume this is hda (TODO)
@@ -987,6 +987,8 @@ int vvfat_image_t::init_directories(const char* dirname)
 int vvfat_image_t::open(const char* dirname)
 {
   Bit32u size_in_mb;
+
+  memset(&first_sectors[0], 0, 0x8000);
 
   // TODO: read MBR file (if present) and use it's values
   if (cylinders == 0) {
@@ -1022,12 +1024,10 @@ int vvfat_image_t::open(const char* dirname)
   current_cluster = 0xffff;
   current_fd = 0;
 
-  init_directories(dirname);
-
-  sector_count = offset_to_root_dir + sectors_per_cluster * cluster_count;
-
   if (offset_to_bootsector > 0)
     init_mbr();
+
+  init_directories(dirname);
 
   return 0;
 }
