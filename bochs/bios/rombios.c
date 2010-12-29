@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.252 2010-09-26 18:38:58 sshwarts Exp $
+// $Id: rombios.c,v 1.253 2010-12-29 06:39:53 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -27,7 +27,7 @@
 // ROM BIOS for use with Bochs/Plex86/QEMU emulation environment
 
 
-// ROM BIOS compatability entry points:
+// ROM BIOS compatibility entry points:
 // ===================================
 // $e05b ; POST Entry Point
 // $e2c3 ; NMI Handler Entry Point
@@ -72,7 +72,7 @@
 //   - Current code is only able to boot mono-session cds
 //   - Current code can not boot and emulate a hard-disk
 //     the bios will panic otherwise
-//   - Current code also use memory in EBDA segement.
+//   - Current code also use memory in EBDA segment.
 //   - I used cmos byte 0x3D to store extended information on boot-device
 //   - Code has to be modified modified to handle multiple cdrom drives
 //   - Here are the cdrom boot failure codes:
@@ -650,7 +650,7 @@ typedef struct {
   typedef struct {
     unsigned char filler1[0x3D];
 
-    // FDPT - Can be splitted in data members if needed
+    // FDPT - Can be split into data members if needed
     unsigned char fdpt0[0x10];
     unsigned char fdpt1[0x10];
 
@@ -869,7 +869,7 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.252 $ $Date: 2010-09-26 18:38:58 $";
+static char bios_cvs_version_string[] = "$Revision: 1.253 $ $Date: 2010-12-29 06:39:53 $";
 
 #define BIOS_COPYRIGHT_STRING "(c) 2002 MandrakeSoft S.A. Written by Kevin Lawton & the Bochs team."
 
@@ -1740,7 +1740,7 @@ keyboard_init()
     outb(PORT_PS2_STATUS,0xa8);
 
     /* ------------------- keyboard side ------------------------*/
-    /* reset kerboard and self test  (keyboard side) */
+    /* reset keyboard and self test  (keyboard side) */
     outb(PORT_PS2_DATA, 0xff);
 
     /* Wait until buffer is empty */
@@ -1837,7 +1837,7 @@ keyboard_panic(status)
 
 //--------------------------------------------------------------------------
 // shutdown_status_panic
-//   called when the shutdown statsu is not implemented, displays the status
+//   called when the shutdown status is not implemented, displays the status
 //--------------------------------------------------------------------------
   void
 shutdown_status_panic(status)
@@ -2230,7 +2230,7 @@ ASM_END
 #define ATA_CB_DC_SRST   0x04  // soft reset
 #define ATA_CB_DC_NIEN   0x02  // disable interrupts
 
-// Most mandtory and optional ATA commands (from ATA-3),
+// Most mandatory and optional ATA commands (from ATA-3),
 #define ATA_CMD_CFA_ERASE_SECTORS            0xC0
 #define ATA_CMD_CFA_REQUEST_EXT_ERR_CODE     0x03
 #define ATA_CMD_CFA_TRANSLATE_SECTOR         0x87
@@ -2886,12 +2886,12 @@ ata_in_no_adjust:
 
 ata_in_16:
         rep
-          insw ;; CX words transfered from port(DX) to ES:[DI]
+          insw ;; CX words transferred from port(DX) to ES:[DI]
         jmp ata_in_done
 
 ata_in_32:
         rep
-          insd ;; CX dwords transfered from port(DX) to ES:[DI]
+          insd ;; CX dwords transferred from port(DX) to ES:[DI]
 
 ata_in_done:
         mov  _ata_cmd_data_in.offset + 2[bp], di
@@ -3038,13 +3038,13 @@ ata_out_no_adjust:
 ata_out_16:
         seg ES
         rep
-          outsw ;; CX words transfered from port(DX) to ES:[SI]
+          outsw ;; CX words transferred from port(DX) to ES:[SI]
         jmp ata_out_done
 
 ata_out_32:
         seg ES
         rep
-          outsd ;; CX dwords transfered from port(DX) to ES:[SI]
+          outsd ;; CX dwords transferred from port(DX) to ES:[SI]
 
 ata_out_done:
         mov  _ata_cmd_data_out.offset + 2[bp], si
@@ -3172,7 +3172,7 @@ ASM_START
 
       seg ES
       rep
-        outsw ;; CX words transfered from port(DX) to ES:[SI]
+        outsw ;; CX words transferred from port(DX) to ES:[SI]
 
       pop  bp
 ASM_END
@@ -3304,12 +3304,12 @@ ata_packet_no_before:
 
 ata_packet_in_16:
         rep
-          insw ;; CX words transfered tp port(DX) to ES:[DI]
+          insw ;; CX words transferred to port(DX) to ES:[DI]
         jmp ata_packet_after
 
 ata_packet_in_32:
         rep
-          insd ;; CX dwords transfered to port(DX) to ES:[DI]
+          insd ;; CX dwords transferred to port(DX) to ES:[DI]
 
 ata_packet_after:
         mov  cx, _ata_cmd_packet.lafter + 2[bp]
@@ -4634,7 +4634,7 @@ ASM_END
                             regs.u.r32.ebx = 0;
                         break;
                     case 7:
-                        /* Maping of memory above 4 GB */
+                        /* Mapping of memory above 4 GB */
                         set_e820_range(ES, regs.u.r16.di, 0x00000000L,
                             extra_lowbits_memory_size, 1, extra_highbits_memory_size
                                        + 1, E820_RAM);
@@ -6429,7 +6429,7 @@ i13_f02_no_adjust:
         mov  dx, #0x01f0  ;; AT data read port
 
         rep
-          insw ;; CX words transfered from port(DX) to ES:[DI]
+          insw ;; CX words transferred from port(DX) to ES:[DI]
 
 i13_f02_done:
         ;; store real DI register back to temp bx
@@ -6569,7 +6569,7 @@ i13_f03_no_adjust:
 
         seg ES
         rep
-          outsw ;; CX words tranfered from ES:[SI] to port(DX)
+          outsw ;; CX words tranferred from ES:[SI] to port(DX)
 
         ;; store real SI register back to temp bx
         push bp
@@ -7937,7 +7937,7 @@ Bit16u seq_nr;
 
   // if BX_ELTORITO_BOOT is not defined, old behavior
   //   check bit 5 in CMOS reg 0x2d.  load either 0x00 or 0x80 into DL
-  //   in preparation for the intial INT 13h (0=floppy A:, 0x80=C:)
+  //   in preparation for the initial INT 13h (0=floppy A:, 0x80=C:)
   //     0: system boot sequence, first drive C: then A:
   //     1: system boot sequence, first drive A: then C:
   // else BX_ELTORITO_BOOT is defined
@@ -9134,7 +9134,7 @@ timer_tick_post:
   ;; divided down by 65536 to 18.2hz.
   ;;
   ;; 14,318,180 Hz clock
-  ;;   /3 = 4,772,726 Hz fed to orginal 5Mhz CPU
+  ;;   /3 = 4,772,726 Hz fed to original 5Mhz CPU
   ;;   /4 = 1,193,181 Hz fed to timer
   ;;   /65536 (maximum timer count) = 18.20650736 ticks/second
   ;; 1 second = 18.20650736 ticks
@@ -9147,7 +9147,7 @@ timer_tick_post:
   ;;           (BcdToBin(minutes) * 1092.3904)
   ;;           (BcdToBin(hours)   * 65543.427)
   ;; To get a little more accuracy, since Im using integer
-  ;; arithmatic, I use:
+  ;; arithmetic, I use:
   ;;   ticks = (BcdToBin(seconds) * 18206507) / 1000000 +
   ;;           (BcdToBin(minutes) * 10923904) / 10000 +
   ;;           (BcdToBin(hours)   * 65543427) / 1000
@@ -10417,7 +10417,7 @@ post_default_ints:
     stosw
 
   ;; set vector 0x79 to zero
-  ;; this is used by 'gardian angel' protection system
+  ;; this is used by 'guardian angel' protection system
   SET_INT_VECTOR(0x79, #0, #0)
 
   ret
@@ -10607,7 +10607,7 @@ normal_post:
   mov dx, #0x278 ; Parallel I/O address, port 2
   call detect_parport
   shl bx, #0x0e
-  mov ax, 0x410   ; Equipment word bits 14..15 determing # parallel ports
+  mov ax, 0x410   ; Equipment word bits 14..15 determine # parallel ports
   and ax, #0x3fff
   or  ax, bx ; set number of parallel ports
   mov 0x410, ax
@@ -10626,7 +10626,7 @@ normal_post:
   mov dx, #0x02e8 ; Serial I/O address, port 4
   call detect_serial
   shl bx, #0x09
-  mov ax, 0x410   ; Equipment word bits 9..11 determing # serial ports
+  mov ax, 0x410   ; Equipment word bits 9..11 determine # serial ports
   and ax, #0xf1ff
   or  ax, bx ; set number of serial port
   mov 0x410, ax
