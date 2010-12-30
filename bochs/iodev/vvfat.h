@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vvfat.h,v 1.2 2010-12-26 23:13:29 vruppert Exp $
+// $Id: vvfat.h,v 1.3 2010-12-30 12:30:58 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2010  The Bochs Project
@@ -138,6 +138,7 @@ class vvfat_image_t : public device_image_t
 
     Bit8u  *first_sectors;
     Bit32u offset_to_bootsector;
+    Bit32u offset_to_fat;
     Bit32u offset_to_root_dir;
     Bit32u offset_to_data;
 
@@ -149,6 +150,7 @@ class vvfat_image_t : public device_image_t
     Bit32u max_fat_value;
     Bit32u first_cluster_of_root_dir;
     Bit16u root_entries;
+    Bit16u reserved_sectors;
 
     Bit8u  fat_type;
     array_t fat, directory, mapping;
