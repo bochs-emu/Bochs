@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ia_opcodes.h,v 1.59 2010-12-26 20:54:23 sshwarts Exp $
+// $Id: ia_opcodes.h,v 1.60 2010-12-30 20:35:10 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008-2011 Stanislav Shwartsman
@@ -1051,7 +1051,8 @@ bx_define_opcode(BX_IA_MAXPS_VpsWpsM, &BX_CPU_C::LOAD_Wdq, &BX_CPU_C::MAXPS_VpsW
 bx_define_opcode(BX_IA_MAXSS_VssWssR, &BX_CPU_C::MAXSS_VssWssR, NULL, BX_CPU_SSE, BX_PREPARE_SSE)
 bx_define_opcode(BX_IA_MAXSS_VssWssM, &BX_CPU_C::LOAD_Wss, &BX_CPU_C::MAXSS_VssWssR, BX_CPU_SSE, BX_PREPARE_SSE)
 bx_define_opcode(BX_IA_PSHUFW_PqQqIb, &BX_CPU_C::PSHUFW_PqQqIb, NULL, BX_CPU_SSE | BX_CPU_3DNOW, 0)
-bx_define_opcode(BX_IA_PSHUFLW_VdqWdqIb, &BX_CPU_C::PSHUFLW_VdqWdqIb, NULL, BX_CPU_SSE, BX_PREPARE_SSE)
+bx_define_opcode(BX_IA_PSHUFLW_VdqWdqIbR, &BX_CPU_C::PSHUFLW_VdqWdqIbR, NULL, BX_CPU_SSE, BX_PREPARE_SSE)
+bx_define_opcode(BX_IA_PSHUFLW_VdqWdqIbM, &BX_CPU_C::LOAD_Wdq, &BX_CPU_C::PSHUFLW_VdqWdqIbR, BX_CPU_SSE, BX_PREPARE_SSE)
 bx_define_opcode(BX_IA_CMPPS_VpsWpsIbR, &BX_CPU_C::CMPPS_VpsWpsIbR, NULL, BX_CPU_SSE, BX_PREPARE_SSE)
 bx_define_opcode(BX_IA_CMPPS_VpsWpsIbM, &BX_CPU_C::LOAD_Wdq, &BX_CPU_C::CMPPS_VpsWpsIbR, BX_CPU_SSE, BX_PREPARE_SSE)
 bx_define_opcode(BX_IA_CMPSS_VssWssIbR, &BX_CPU_C::CMPSS_VssWssIbR, NULL, BX_CPU_SSE, BX_PREPARE_SSE)
@@ -1181,8 +1182,10 @@ bx_define_opcode(BX_IA_PUNPCKLQDQ_VdqWdq, &BX_CPU_C::PUNPCKLQDQ_VdqWdq, NULL, BX
 bx_define_opcode(BX_IA_PUNPCKHQDQ_VdqWdq, &BX_CPU_C::PUNPCKHQDQ_VdqWdq, NULL, BX_CPU_SSE2, BX_PREPARE_SSE)
 bx_define_opcode(BX_IA_MOVD_VdqEdR, &BX_CPU_C::MOVD_VdqEdR, NULL, BX_CPU_SSE2, BX_PREPARE_SSE)
 bx_define_opcode(BX_IA_MOVD_VdqEdM, &BX_CPU_C::MOVSS_VssWssM, NULL, BX_CPU_SSE2, BX_PREPARE_SSE)
-bx_define_opcode(BX_IA_PSHUFD_VdqWdqIb, &BX_CPU_C::PSHUFD_VdqWdqIb, NULL, BX_CPU_SSE2, BX_PREPARE_SSE)
-bx_define_opcode(BX_IA_PSHUFHW_VdqWdqIb, &BX_CPU_C::PSHUFHW_VdqWdqIb, NULL, BX_CPU_SSE2, BX_PREPARE_SSE)
+bx_define_opcode(BX_IA_PSHUFD_VdqWdqIbR, &BX_CPU_C::PSHUFD_VdqWdqIbR, NULL, BX_CPU_SSE2, BX_PREPARE_SSE)
+bx_define_opcode(BX_IA_PSHUFD_VdqWdqIbM, &BX_CPU_C::LOAD_Wdq, &BX_CPU_C::PSHUFD_VdqWdqIbR, BX_CPU_SSE2, BX_PREPARE_SSE)
+bx_define_opcode(BX_IA_PSHUFHW_VdqWdqIbR, &BX_CPU_C::PSHUFHW_VdqWdqIbR, NULL, BX_CPU_SSE2, BX_PREPARE_SSE)
+bx_define_opcode(BX_IA_PSHUFHW_VdqWdqIbM, &BX_CPU_C::LOAD_Wdq, &BX_CPU_C::PSHUFHW_VdqWdqIbR, BX_CPU_SSE2, BX_PREPARE_SSE)
 bx_define_opcode(BX_IA_PCMPEQB_VdqWdq, &BX_CPU_C::PCMPEQB_VdqWdq, NULL, BX_CPU_SSE2, BX_PREPARE_SSE)
 bx_define_opcode(BX_IA_PCMPEQW_VdqWdq, &BX_CPU_C::PCMPEQW_VdqWdq, NULL, BX_CPU_SSE2, BX_PREPARE_SSE)
 bx_define_opcode(BX_IA_PCMPEQD_VdqWdq, &BX_CPU_C::PCMPEQD_VdqWdq, NULL, BX_CPU_SSE2, BX_PREPARE_SSE)

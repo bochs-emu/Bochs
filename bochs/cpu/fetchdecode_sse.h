@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode_sse.h,v 1.18 2010-12-26 20:41:47 sshwarts Exp $
+// $Id: fetchdecode_sse.h,v 1.19 2010-12-30 20:35:10 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005-2011 Stanislav Shwartsman
@@ -462,10 +462,16 @@ static const BxOpcodeInfo_t BxOpcodeGroupSSE_0f6fM[3] = {
   /* F2 */ { 0, BX_IA_ERROR }
 };
 
-static const BxOpcodeInfo_t BxOpcodeGroupSSE_0f70[3] = {
-  /* 66 */ { 0, BX_IA_PSHUFD_VdqWdqIb  },
-  /* F3 */ { 0, BX_IA_PSHUFHW_VdqWdqIb },
-  /* F2 */ { 0, BX_IA_PSHUFLW_VdqWdqIb }
+static const BxOpcodeInfo_t BxOpcodeGroupSSE_0f70R[3] = {
+  /* 66 */ { 0, BX_IA_PSHUFD_VdqWdqIbR  },
+  /* F3 */ { 0, BX_IA_PSHUFHW_VdqWdqIbR },
+  /* F2 */ { 0, BX_IA_PSHUFLW_VdqWdqIbR }
+};
+
+static const BxOpcodeInfo_t BxOpcodeGroupSSE_0f70M[3] = {
+  /* 66 */ { 0, BX_IA_PSHUFD_VdqWdqIbM  },
+  /* F3 */ { 0, BX_IA_PSHUFHW_VdqWdqIbM },
+  /* F2 */ { 0, BX_IA_PSHUFLW_VdqWdqIbM }
 };
 
 static const BxOpcodeInfo_t BxOpcodeGroupSSE_0f74[3] = {
