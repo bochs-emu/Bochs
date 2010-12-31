@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vvfat.h,v 1.3 2010-12-30 12:30:58 vruppert Exp $
+// $Id: vvfat.h,v 1.4 2010-12-31 15:39:27 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2010  The Bochs Project
@@ -135,6 +135,7 @@ class vvfat_image_t : public device_image_t
     int find_mapping_for_cluster_aux(int cluster_num, int index1, int index2);
     mapping_t* find_mapping_for_cluster(int cluster_num);
     int read_cluster(int cluster_num);
+    bx_bool read_sector_from_file(const char *path, Bit8u *buffer, Bit32u sector);
 
     Bit8u  *first_sectors;
     Bit32u offset_to_bootsector;
@@ -144,7 +145,7 @@ class vvfat_image_t : public device_image_t
 
     Bit16u cluster_size;
     Bit8u  sectors_per_cluster;
-    Bit8u  sectors_per_fat;
+    Bit32u sectors_per_fat;
     Bit32u sector_count;
     Bit32u cluster_count; // total number of clusters of this partition
     Bit32u max_fat_value;
@@ -163,6 +164,9 @@ class vvfat_image_t : public device_image_t
 
     const char *path;
     Bit32u sector_num;
+
+    bx_bool use_mbr_file;
+    bx_bool use_boot_file;
 };
 
 #endif

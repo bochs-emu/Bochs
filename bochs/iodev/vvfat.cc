@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vvfat.cc,v 1.6 2010-12-30 12:30:58 vruppert Exp $
+// $Id: vvfat.cc,v 1.7 2010-12-31 15:39:27 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2010  The Bochs Project
@@ -25,11 +25,12 @@
 // ADDITIONS:
 // - win32 specific directory functions (required for MSVC)
 // - configurable disk geometry
+// - read MBR from file
 
 // TODO:
 // - write support
 // - FAT32 support
-// - read MBR and boot sector from file
+// - read boot sector from file
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
 // platforms that require a special tag on exported symbols, BX_PLUGGABLE
@@ -1001,7 +1002,7 @@ int vvfat_image_t::init_directories(const char* dirname)
     infosector = (infosector_t*)(first_sectors + (offset_to_bootsector + 1) * 0x200);
     infosector->signature1 = htod32(0x41615252);
     infosector->signature2 = htod32(0x61417272);
-    infosector->free_clusters = htod32(cluster_count - cluster - 2);
+    infosector->free_clusters = htod32(cluster_count - cluster + 2);
     infosector->mra_cluster = htod32(2);
     infosector->magic[0] = 0x55;
     infosector->magic[1] = 0xaa;
@@ -1010,21 +1011,77 @@ int vvfat_image_t::init_directories(const char* dirname)
   return 0;
 }
 
+bx_bool vvfat_image_t::read_sector_from_file(const char *path, Bit8u *buffer, Bit32u sector)
+{
+  int fd = ::open(path, O_RDONLY
+#ifdef O_BINARY
+                  | O_BINARY
+#endif
+#ifdef O_LARGEFILE
+                  | O_LARGEFILE
+#endif
+                  );
+  if (fd < 0)
+    return 0;
+  int offset = sector * 0x200;
+  if (::lseek(fd, offset, SEEK_SET) != offset) {
+    return 0;
+    ::close(fd);
+  }
+  int result = ::read(fd, buffer, 0x200);
+  ::close(fd);
+  bx_bool bootsig = ((buffer[0x1fe] == 0x55) && (buffer[0x1ff] == 0xaa));
+
+  return (result == 0x200) && bootsig;
+}
+
 int vvfat_image_t::open(const char* dirname)
 {
   Bit32u size_in_mb;
+  char path[BX_PATHNAME_LEN];
+  Bit8u sector_buffer[0x200];
 
-  // TODO: read MBR file (if present) and use it's values
-  if (cylinders == 0) {
-    cylinders = 1024;
-    heads = 16;
-    sectors = 63;
+  use_mbr_file = 0;
+  use_boot_file = 0;
+  fat_type = 0;
+  snprintf(path, BX_PATHNAME_LEN, "%s/%s", dirname, VVFAT_MBR);
+  if (read_sector_from_file(path, sector_buffer, 0)) {
+    mbr_t* real_mbr = (mbr_t*)sector_buffer;
+    partition_t* partition = &(real_mbr->partition[0]);
+    if ((partition->fs_type != 0) && (partition->length_sector_long > 0)) {
+      if ((partition->fs_type == 0x06) || (partition->fs_type == 0x0e)) {
+        fat_type = 16;
+      } else if ((partition->fs_type == 0x0b) || (partition->fs_type == 0x0c)) {
+        fat_type = 32;
+      } else {
+        BX_ERROR(("MBR file: unsupported FS type = 0x%02x", partition->fs_type));
+      }
+      if (fat_type != 0) {
+        sector_count = partition->start_sector_long + partition->length_sector_long;
+        sectors = partition->start_sector_long;
+        if (partition->end_CHS.head > 16) {
+          heads = 16;
+        } else {
+          heads = partition->end_CHS.head + 1;
+        }
+        cylinders = sector_count / (heads * sectors);
+        memcpy(&first_sectors[0], sector_buffer, 0x200);
+        use_mbr_file = 1;
+      }
+    }
+  }
+  if (!use_mbr_file) {
+    if (cylinders == 0) {
+      cylinders = 1024;
+      heads = 16;
+      sectors = 63;
+    }
+    sector_count = cylinders * heads * sectors;
   }
   offset_to_bootsector = sectors;
-  sector_count = cylinders * heads * sectors;
   hd_size = sector_count * 512;
   size_in_mb = (Bit32u)(hd_size >> 20);
-  if (size_in_mb >= 2047) {
+  if ((size_in_mb >= 2047) || (fat_type == 32)) {
     fat_type = 32;
     sectors_per_cluster = 8;
     first_cluster_of_root_dir = 2;
@@ -1039,8 +1096,10 @@ int vvfat_image_t::open(const char* dirname)
       sectors_per_cluster = 32;
     } else if (size_in_mb >= 255) {
       sectors_per_cluster = 16;
-    } else {
+    } else if (size_in_mb >= 127) {
       sectors_per_cluster = 8;
+    } else {
+      sectors_per_cluster = 4;
     }
     first_cluster_of_root_dir = 0;
     root_entries = 512;
@@ -1050,7 +1109,7 @@ int vvfat_image_t::open(const char* dirname)
   current_cluster = 0xffff;
   current_fd = 0;
 
-  if (offset_to_bootsector > 0)
+  if ((!use_mbr_file) && (offset_to_bootsector > 0))
     init_mbr();
 
   init_directories(dirname);
@@ -1242,7 +1301,7 @@ ssize_t vvfat_image_t::write(const void* buf, size_t count)
 {
   Bit32u scount = (Bit32u)(count / 512);
 
-  if (sector_num < (offset_to_bootsector + 1))
+  if (sector_num < (offset_to_bootsector + reserved_sectors))
     return -1;
 
   BX_ERROR(("VVFAT write not supported yet: sector=%d, count=%d", sector_num, scount));
