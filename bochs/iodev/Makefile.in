@@ -346,12 +346,13 @@ harddrv.o: harddrv.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../gui/siminterface.h ../gui/paramtree.h ../memory/memory.h \
  ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
  ../instrument/stubs/instrument.h ../param_names.h ../iodev/vga.h \
- harddrv.h hdimage.h vmware3.h vmware4.h cdrom.h
+ harddrv.h hdimage.h cdrom.h
 hdimage.o: hdimage.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
  ../gui/siminterface.h ../gui/paramtree.h ../memory/memory.h \
  ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
- ../instrument/stubs/instrument.h ../param_names.h hdimage.h
+ ../instrument/stubs/instrument.h ../param_names.h hdimage.h vmware3.h \
+ vmware4.h vvfat.h
 ioapic.o: ioapic.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
  ../gui/siminterface.h ../gui/paramtree.h ../memory/memory.h \
@@ -556,6 +557,11 @@ vmware4.o: vmware4.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../gui/siminterface.h ../gui/paramtree.h ../memory/memory.h \
  ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
  ../instrument/stubs/instrument.h ../param_names.h hdimage.h vmware4.h
+vvfat.o: vvfat.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
+ ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
+ ../gui/siminterface.h ../gui/paramtree.h ../memory/memory.h \
+ ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
+ ../instrument/stubs/instrument.h ../param_names.h hdimage.h vvfat.h
 acpi.lo: acpi.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
  ../gui/siminterface.h ../gui/paramtree.h ../memory/memory.h \
@@ -686,12 +692,13 @@ harddrv.lo: harddrv.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../gui/siminterface.h ../gui/paramtree.h ../memory/memory.h \
  ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
  ../instrument/stubs/instrument.h ../param_names.h ../iodev/vga.h \
- harddrv.h hdimage.h vmware3.h vmware4.h cdrom.h
+ harddrv.h hdimage.h cdrom.h
 hdimage.lo: hdimage.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
  ../gui/siminterface.h ../gui/paramtree.h ../memory/memory.h \
  ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
- ../instrument/stubs/instrument.h ../param_names.h hdimage.h
+ ../instrument/stubs/instrument.h ../param_names.h hdimage.h vmware3.h \
+ vmware4.h vvfat.h
 ioapic.lo: ioapic.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
  ../gui/siminterface.h ../gui/paramtree.h ../memory/memory.h \
@@ -896,3 +903,8 @@ vmware4.lo: vmware4.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../gui/siminterface.h ../gui/paramtree.h ../memory/memory.h \
  ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
  ../instrument/stubs/instrument.h ../param_names.h hdimage.h vmware4.h
+vvfat.lo: vvfat.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
+ ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
+ ../gui/siminterface.h ../gui/paramtree.h ../memory/memory.h \
+ ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
+ ../instrument/stubs/instrument.h ../param_names.h hdimage.h vvfat.h

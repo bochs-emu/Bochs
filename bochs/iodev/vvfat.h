@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vvfat.h,v 1.4 2010-12-31 15:39:27 vruppert Exp $
+// $Id: vvfat.h,v 1.5 2011-01-01 19:14:25 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2010  The Bochs Project
@@ -109,7 +109,7 @@ typedef struct mapping_t {
 class vvfat_image_t : public device_image_t
 {
   public:
-    vvfat_image_t();
+    vvfat_image_t(const char* redolog_name);
     virtual ~vvfat_image_t();
 
     int open(const char* dirname);
@@ -167,6 +167,10 @@ class vvfat_image_t : public device_image_t
 
     bx_bool use_mbr_file;
     bx_bool use_boot_file;
+
+    redolog_t *redolog;       // Redolog instance
+    char      *redolog_name;  // Redolog name
+    char      *redolog_temp;  // Redolog temporary file name
 };
 
 #endif

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vvfat.cc,v 1.7 2010-12-31 15:39:27 vruppert Exp $
+// $Id: vvfat.cc,v 1.8 2011-01-01 19:14:25 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2010  The Bochs Project
@@ -26,10 +26,12 @@
 // - win32 specific directory functions (required for MSVC)
 // - configurable disk geometry
 // - read MBR from file
+// - experimental FAT32 support (works in most cases)
+// - volatile write support using the hdimage redolog_t class
 
 // TODO:
-// - write support
-// - FAT32 support
+// - write support (apply directory and file changes on exit)
+// - full FAT32 support
 // - read boot sector from file
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
@@ -313,15 +315,25 @@ infosector_t;
 #pragma options align=reset
 #endif
 
-vvfat_image_t::vvfat_image_t()
+vvfat_image_t::vvfat_image_t(const char* _redolog_name)
 {
   first_sectors = new Bit8u[0xc000];
   memset(&first_sectors[0], 0, 0xc000);
+
+  redolog = new redolog_t();
+  redolog_temp = NULL;
+  redolog_name = NULL;
+  if (_redolog_name != NULL) {
+    if (strcmp(_redolog_name,"") != 0) {
+      redolog_name = strdup(_redolog_name);
+    }
+  }
 }
 
 vvfat_image_t::~vvfat_image_t()
 {
   delete [] first_sectors;
+  delete redolog;
 }
 
 bx_bool vvfat_image_t::sector2CHS(Bit32u spos, mbr_chs_t *chs)
@@ -630,7 +642,7 @@ int vvfat_image_t::read_directory(int mapping_index)
   }
 
   i = mapping->info.dir.first_dir_index =
-    first_cluster == 0 ? 0 : directory.next;
+    first_cluster == (int)first_cluster_of_root_dir ? 0 : directory.next;
 
   // actually read the directory, and allocate the mappings
   while ((entry=readdir(dir))) {
@@ -644,7 +656,7 @@ int vvfat_image_t::read_directory(int mapping_index)
     struct stat st;
     bx_bool is_dot = !strcmp(entry->d_name, ".");
     bx_bool is_dotdot = !strcmp(entry->d_name, "..");
-    if (first_cluster == 0 && (is_dotdot || is_dot))
+    if (first_cluster == (int)first_cluster_of_root_dir && (is_dotdot || is_dot))
       continue;
 
     buffer = (char*)malloc(length);
@@ -657,7 +669,7 @@ int vvfat_image_t::read_directory(int mapping_index)
 
     bx_bool is_mbr_file = !strcmp(entry->d_name, VVFAT_MBR);
     bx_bool is_boot_file = !strcmp(entry->d_name, VVFAT_BOOT);
-    if (first_cluster == 0 && (is_mbr_file || is_boot_file) && (st.st_size == 512)) {
+    if (first_cluster == (int)first_cluster_of_root_dir && (is_mbr_file || is_boot_file) && (st.st_size == 512)) {
       free(buffer);
       continue;
     }
@@ -726,7 +738,7 @@ int vvfat_image_t::read_directory(int mapping_index)
   }
 
   i = mapping->info.dir.first_dir_index =
-    first_cluster == 0 ? 0 : directory.next;
+    first_cluster == (int)first_cluster_of_root_dir ? 0 : directory.next;
 
   // actually read the directory, and allocate the mappings
   do {
@@ -739,11 +751,11 @@ int vvfat_image_t::read_directory(int mapping_index)
     direntry_t* direntry;
     bx_bool is_dot = !lstrcmp(finddata.cFileName, ".");
     bx_bool is_dotdot = !lstrcmp(finddata.cFileName, "..");
-    if (first_cluster == 0 && (is_dotdot || is_dot))
+    if (first_cluster == (int)first_cluster_of_root_dir && (is_dotdot || is_dot))
       continue;
     bx_bool is_mbr_file = !lstrcmp(finddata.cFileName, VVFAT_MBR);
     bx_bool is_boot_file = !lstrcmp(finddata.cFileName, VVFAT_BOOT);
-    if (first_cluster == 0 && (is_mbr_file || is_boot_file) && (finddata.nFileSizeLow == 512))
+    if (first_cluster == (int)first_cluster_of_root_dir && (is_mbr_file || is_boot_file) && (finddata.nFileSizeLow == 512))
       continue;
 
     buffer = (char*)malloc(length);
@@ -888,11 +900,11 @@ int vvfat_image_t::init_directories(const char* dirname)
   mapping->read_only = 0;
   path = mapping->path;
 
-  for (i = 0, cluster = 0; i < this->mapping.next; i++) {
+  for (i = 0, cluster = first_cluster_of_root_dir; i < this->mapping.next; i++) {
     /* MS-DOS expects the FAT to be 0 for the root directory
      * (except for the media byte). */
     /* LATER TODO: still true for FAT32? */
-    int fix_fat = (i != 0);
+    int fix_fat = (cluster != 0);
     mapping = (mapping_t*)array_get(&this->mapping, i);
 
     if (mapping->mode & MODE_DIRECTORY) {
@@ -1040,6 +1052,8 @@ int vvfat_image_t::open(const char* dirname)
   Bit32u size_in_mb;
   char path[BX_PATHNAME_LEN];
   Bit8u sector_buffer[0x200];
+  int filedes;
+  const char *logname = NULL;
 
   use_mbr_file = 0;
   use_boot_file = 0;
@@ -1114,6 +1128,41 @@ int vvfat_image_t::open(const char* dirname)
 
   init_directories(dirname);
 
+  // VOLATILE WRITE SUPPORT
+  snprintf(path, BX_PATHNAME_LEN, "%s/vvfat.dir", dirname);
+  // if redolog name was set
+  if (redolog_name != NULL) {
+    if (strcmp(redolog_name, "") != 0) {
+      logname = redolog_name;
+    }
+  }
+
+  // otherwise use path as template
+  if (logname == NULL) {
+    logname = path;
+  }
+
+  redolog_temp = (char*)malloc(strlen(logname) + VOLATILE_REDOLOG_EXTENSION_LENGTH + 1);
+  sprintf(redolog_temp, "%s%s", logname, VOLATILE_REDOLOG_EXTENSION);
+
+  filedes = mkstemp(redolog_temp);
+
+  if (filedes < 0) {
+    BX_PANIC(("Can't create volatile redolog '%s'", redolog_temp));
+    return -1;
+  }
+  if (redolog->create(filedes, REDOLOG_SUBTYPE_VOLATILE, hd_size) < 0) {
+    BX_PANIC(("Can't create volatile redolog '%s'", redolog_temp));
+    return -1;
+  }
+
+#if (!defined(WIN32)) && !BX_WITH_MACOS
+  // on unix it is legal to delete an open file
+  unlink(redolog_temp);
+#endif
+
+  BX_INFO(("'vvfat' disk opened: directory is '%s', redolog is '%s'", dirname, redolog_temp));
+
   return 0;
 }
 
@@ -1124,10 +1173,23 @@ void vvfat_image_t::close(void)
   array_free(&mapping);
   if (cluster_buffer != NULL)
     delete [] cluster_buffer;
+
+  redolog->close();
+
+#if defined(WIN32) || BX_WITH_MACOS
+  // on non-unix we have to wait till the file is closed to delete it
+  unlink(redolog_temp);
+#endif
+  if (redolog_temp!=NULL)
+    free(redolog_temp);
+
+  if (redolog_name!=NULL)
+    free(redolog_name);
 }
 
 Bit64s vvfat_image_t::lseek(Bit64s offset, int whence)
 {
+  redolog->lseek(offset, whence);
   if (whence == SEEK_SET) {
     sector_num = (Bit32u)(offset / 512);
   } else if (whence == SEEK_CUR) {
@@ -1268,44 +1330,54 @@ read_cluster_directory:
 ssize_t vvfat_image_t::read(void* buf, size_t count)
 {
   char *cbuf = (char*)buf;
-  Bit32u scount = (Bit32u)(count / 512);
+  Bit32u scount = (Bit32u)(count / 0x200);
 
   while (scount-- > 0) {
-    if (sector_num < offset_to_data) {
-      if (sector_num < (offset_to_bootsector + reserved_sectors))
-        memcpy(cbuf, &first_sectors[sector_num * 0x200], 0x200);
-      else if ((sector_num - offset_to_fat) < sectors_per_fat)
-        memcpy(cbuf, &fat.pointer[(sector_num - offset_to_fat) * 0x200], 0x200);
-      else if ((sector_num - offset_to_fat - sectors_per_fat) < sectors_per_fat)
-        memcpy(cbuf, &fat.pointer[(sector_num - offset_to_fat - sectors_per_fat) * 0x200], 0x200);
-      else
-        memcpy(cbuf, &directory.pointer[(sector_num - offset_to_root_dir) * 0x200], 0x200);
-    } else {
-      Bit32u sector = sector_num - offset_to_data,
-      sector_offset_in_cluster = (sector % sectors_per_cluster),
-      cluster_num = sector / sectors_per_cluster + 2;
-      if (read_cluster(cluster_num) != 0) {
-        memset(cbuf, 0, 0x200);
+    if ((size_t)redolog->read(cbuf, 0x200) != 0x200) {
+      if (sector_num < offset_to_data) {
+        if (sector_num < (offset_to_bootsector + reserved_sectors))
+          memcpy(cbuf, &first_sectors[sector_num * 0x200], 0x200);
+        else if ((sector_num - offset_to_fat) < sectors_per_fat)
+          memcpy(cbuf, &fat.pointer[(sector_num - offset_to_fat) * 0x200], 0x200);
+        else if ((sector_num - offset_to_fat - sectors_per_fat) < sectors_per_fat)
+          memcpy(cbuf, &fat.pointer[(sector_num - offset_to_fat - sectors_per_fat) * 0x200], 0x200);
+        else
+          memcpy(cbuf, &directory.pointer[(sector_num - offset_to_root_dir) * 0x200], 0x200);
       } else {
-        memcpy(cbuf, cluster + sector_offset_in_cluster * 0x200, 0x200);
+        Bit32u sector = sector_num - offset_to_data,
+        sector_offset_in_cluster = (sector % sectors_per_cluster),
+        cluster_num = sector / sectors_per_cluster + 2;
+        if (read_cluster(cluster_num) != 0) {
+          memset(cbuf, 0, 0x200);
+        } else {
+          memcpy(cbuf, cluster + sector_offset_in_cluster * 0x200, 0x200);
+        }
       }
     }
     sector_num++;
     cbuf += 0x200;
   }
-
   return count;
 }
 
 ssize_t vvfat_image_t::write(const void* buf, size_t count)
 {
+  char *cbuf = (char*)buf;
   Bit32u scount = (Bit32u)(count / 512);
 
-  if (sector_num < (offset_to_bootsector + reserved_sectors))
-    return -1;
-
-  BX_ERROR(("VVFAT write not supported yet: sector=%d, count=%d", sector_num, scount));
-  return -1;
+  while (scount-- > 0) {
+    if ((fat_type == 32) && (sector_num == (offset_to_bootsector + 1))) {
+      memcpy(&first_sectors[sector_num * 0x200], cbuf, 0x200);
+    } else if (sector_num < (offset_to_bootsector + reserved_sectors)) {
+      BX_ERROR(("VVFAT write ignored: sector=%d, count=%d", sector_num, scount));
+      return -1;
+    } else {
+      return redolog->write(cbuf, 0x200);
+    }
+    sector_num++;
+    cbuf += 0x200;
+  }
+  return count;
 }
 
 Bit32u vvfat_image_t::get_capabilities(void)
