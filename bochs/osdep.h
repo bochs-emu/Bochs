@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: osdep.h,v 1.37 2010-11-01 14:50:18 sshwarts Exp $
+// $Id: osdep.h,v 1.38 2011-01-02 16:13:06 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -104,9 +104,15 @@ extern "C" {
 #endif  /* __MINGW32__ defined */
 
 #else    /* not WIN32 definitions */
+#if SIZEOF_UNSIGNED_LONG == 8
+#define FMT_LL "%l"
+#define FMT_TICK "%011lu"
+#define FMT_ADDRX64 "%016lx"
+#else
 #define FMT_LL "%ll"
 #define FMT_TICK "%011llu"
 #define FMT_ADDRX64 "%016llx"
+#endif
 #endif   /* not WIN32 definitions */
 
 #define FMT_ADDRX32 "%08x"
