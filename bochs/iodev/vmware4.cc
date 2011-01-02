@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmware4.cc,v 1.6 2010-12-21 21:47:41 vruppert Exp $
+// $Id: vmware4.cc,v 1.7 2011-01-02 16:51:08 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 
 /*
@@ -133,11 +133,11 @@ ssize_t vmware4_image_t::read(void * buf, size_t count)
         off_t readable = perform_seek();
         if(readable == INVALID_OFFSET)
         {
-            BX_DEBUG(("vmware4 disk image read failed on %d bytes at " FMT_LL "d", count, current_offset));
+            BX_DEBUG(("vmware4 disk image read failed on %u bytes at " FMT_LL "d", (unsigned)count, current_offset));
             return -1;
         }
 
-        off_t copysize = (count > readable) ? readable : count;
+        off_t copysize = ((off_t)count > readable) ? readable : count;
         memcpy(buf, tlb + current_offset - tlb_offset, (size_t)copysize);
 
         current_offset += copysize;
@@ -155,11 +155,11 @@ ssize_t vmware4_image_t::write(const void * buf, size_t count)
         off_t writable = perform_seek();
         if(writable == INVALID_OFFSET)
         {
-            BX_DEBUG(("vmware4 disk image write failed on %d bytes at " FMT_LL "d", count, current_offset));
+            BX_DEBUG(("vmware4 disk image write failed on %u bytes at " FMT_LL "d", (unsigned)count, current_offset));
             return -1;
         }
 
-        off_t writesize = (count > writable) ? writable : count;
+        off_t writesize = ((off_t)count > writable) ? writable : count;
         memcpy(tlb + current_offset - tlb_offset, buf, (size_t)writesize);
 
         current_offset += writesize;
@@ -215,7 +215,7 @@ bool vmware4_image_t::read_header()
     if(!is_valid_header())
         BX_PANIC(("invalid vmware4 virtual disk image"));
 
-    BX_DEBUG(("VM4_Header (size=%d)", sizeof(VM4_Header)));
+    BX_DEBUG(("VM4_Header (size=%u)", (unsigned)sizeof(VM4_Header)));
     BX_DEBUG(("   .version                    = %d", header.version));
     BX_DEBUG(("   .flags                      = %d", header.flags));
     BX_DEBUG(("   .total_sectors              = " FMT_LL "d", header.total_sectors));

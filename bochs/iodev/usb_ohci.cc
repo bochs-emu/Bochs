@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_ohci.cc,v 1.39 2010-12-14 21:20:37 vruppert Exp $
+// $Id: usb_ohci.cc,v 1.40 2011-01-02 16:51:08 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Benjamin D Lunt (fys at frontiernet net)
@@ -500,11 +500,11 @@ bx_bool bx_usb_ohci_c::read_handler(bx_phy_address addr, unsigned len, void *dat
   int p = 0;
 
   if (len != 4) {
-    BX_INFO(("Read at 0x%08X with len != 4 (%i)", addr, len));
+    BX_INFO(("Read at 0x%08X with len != 4 (%i)", (Bit32u)addr, len));
     return 1;
   }
   if (addr & 3) {
-    BX_INFO(("Misaligned read at 0x%08X", addr));
+    BX_INFO(("Misaligned read at 0x%08X", (Bit32u)addr));
     return 1;
   }
 
@@ -662,7 +662,7 @@ bx_bool bx_usb_ohci_c::read_handler(bx_phy_address addr, unsigned len, void *dat
       break;
 
     default:
-      BX_ERROR(("unsupported read from address=0x%08X!", addr));
+      BX_ERROR(("unsupported read from address=0x%08X!", (Bit32u)addr));
       break;
   }
 
@@ -687,11 +687,11 @@ bx_bool bx_usb_ohci_c::write_handler(bx_phy_address addr, unsigned len, void *da
   //BX_INFO(("register write to  address 0x%04X (%s):  0x%08X (len=%i)", (unsigned) addr, usb_ohci_port_name[name], (unsigned) value, len));
 
   if (len != 4) {
-    BX_INFO(("Write at 0x%08X with len != 4 (%i)", addr, len));
+    BX_INFO(("Write at 0x%08X with len != 4 (%i)", (Bit32u)addr, len));
     return 1;
   }
   if (addr & 3) {
-    BX_INFO(("Misaligned write at 0x%08X", addr));
+    BX_INFO(("Misaligned write at 0x%08X", (Bit32u)addr));
     return 1;
   }
 
@@ -960,7 +960,7 @@ bx_bool bx_usb_ohci_c::write_handler(bx_phy_address addr, unsigned len, void *da
     }
 
     default:
-      BX_ERROR(("unsupported write to address=0x%08X, val = 0x%08X!", addr, value));
+      BX_ERROR(("unsupported write to address=0x%08X, val = 0x%08X!", (Bit32u)addr, value));
       break;
   }
 
