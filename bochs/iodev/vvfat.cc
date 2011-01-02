@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vvfat.cc,v 1.8 2011-01-01 19:14:25 vruppert Exp $
+// $Id: vvfat.cc,v 1.9 2011-01-02 14:44:20 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2010  The Bochs Project
@@ -25,14 +25,12 @@
 // ADDITIONS:
 // - win32 specific directory functions (required for MSVC)
 // - configurable disk geometry
-// - read MBR from file
-// - experimental FAT32 support (works in most cases)
+// - read MBR and boot sector from file
+// - FAT32 support
 // - volatile write support using the hdimage redolog_t class
 
 // TODO:
 // - write support (apply directory and file changes on exit)
-// - full FAT32 support
-// - read boot sector from file
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
 // platforms that require a special tag on exported symbols, BX_PLUGGABLE
@@ -856,20 +854,33 @@ int vvfat_image_t::init_directories(const char* dirname)
   unsigned int i;
   unsigned int cluster;
   char size_txt[8];
-  Bit32u volume_sector_count, tmpsc;
+  Bit32u volume_sector_count = 0, tmpsc;
 
   cluster_size   = sectors_per_cluster * 0x200;
   cluster_buffer = new Bit8u[cluster_size];
 
-  volume_sector_count = sector_count - offset_to_bootsector;
-  tmpsc = volume_sector_count - reserved_sectors - root_entries / 16;
-  cluster_count = (tmpsc * 0x200) / ((sectors_per_cluster * 0x200) + fat_type / 4);
-  sectors_per_fat = ((cluster_count + 2) * fat_type / 8) / 0x200;
-  sectors_per_fat += (((cluster_count + 2) * fat_type / 8) % 0x200) > 0;
+  bootsector = (bootsector_t*)(first_sectors + offset_to_bootsector * 0x200);
+
+  if (!use_boot_file) {
+    volume_sector_count = sector_count - offset_to_bootsector;
+    tmpsc = volume_sector_count - reserved_sectors - root_entries / 16;
+    cluster_count = (tmpsc * 0x200) / ((sectors_per_cluster * 0x200) + fat_type / 4);
+    sectors_per_fat = ((cluster_count + 2) * fat_type / 8) / 0x200;
+    sectors_per_fat += (((cluster_count + 2) * fat_type / 8) % 0x200) > 0;
+  } else {
+    if (fat_type != 32) {
+      sectors_per_fat = bootsector->sectors_per_fat;
+    } else {
+      sectors_per_fat = bootsector->u.fat32.sectors_per_fat;
+    }
+  }
 
   offset_to_fat = offset_to_bootsector + reserved_sectors;
   offset_to_root_dir = offset_to_fat + sectors_per_fat * 2;
   offset_to_data = offset_to_root_dir + root_entries / 16;
+  if (use_boot_file) {
+    cluster_count = (sector_count - offset_to_data) / sectors_per_cluster;
+  }
 
   array_init(&this->mapping, sizeof(mapping_t));
   array_init(&directory, sizeof(direntry_t));
@@ -901,9 +912,7 @@ int vvfat_image_t::init_directories(const char* dirname)
   path = mapping->path;
 
   for (i = 0, cluster = first_cluster_of_root_dir; i < this->mapping.next; i++) {
-    /* MS-DOS expects the FAT to be 0 for the root directory
-     * (except for the media byte). */
-    /* LATER TODO: still true for FAT32? */
+    // fix fat entry if not root directory of FAT12/FAT16
     int fix_fat = (cluster != 0);
     mapping = (mapping_t*)array_get(&this->mapping, i);
 
@@ -961,56 +970,57 @@ int vvfat_image_t::init_directories(const char* dirname)
 
   current_mapping = NULL;
 
-  bootsector = (bootsector_t*)(first_sectors + offset_to_bootsector * 0x200);
-  bootsector->jump[0] = 0xeb;
-  if (fat_type != 32) {
-    bootsector->jump[1] = 0x3e;
-  } else {
-    bootsector->jump[1] = 0x58;
+  if (!use_boot_file) {
+    bootsector->jump[0] = 0xeb;
+    if (fat_type != 32) {
+      bootsector->jump[1] = 0x3e;
+    } else {
+      bootsector->jump[1] = 0x58;
+    }
+    bootsector->jump[2] = 0x90;
+    memcpy(bootsector->name,"MSWIN4.1", 8); // Win95/98 need this to detect FAT32
+    bootsector->sector_size = htod16(0x200);
+    bootsector->sectors_per_cluster = sectors_per_cluster;
+    bootsector->reserved_sectors = htod16(reserved_sectors);
+    bootsector->number_of_fats = 0x2;
+    if (fat_type != 32) {
+      bootsector->root_entries = htod16(root_entries);
+    }
+    bootsector->total_sectors16 = (volume_sector_count > 0xffff) ? 0:htod16(volume_sector_count);
+    bootsector->media_type = ((fat_type != 12) ? 0xf8:0xf0);
+    if (fat_type != 32) {
+      bootsector->sectors_per_fat = htod16(sectors_per_fat);
+    }
+    bootsector->sectors_per_track = htod16(sectors);
+    bootsector->number_of_heads = htod16(heads);
+    bootsector->hidden_sectors = htod32(offset_to_bootsector);
+    bootsector->total_sectors = htod32((volume_sector_count > 0xffff) ? volume_sector_count:0);
+    if (fat_type != 32) {
+      bootsector->u.fat16.drive_number = (fat_type == 12) ? 0:0x80; // assume this is hda (TODO)
+      bootsector->u.fat16.signature = 0x29;
+      bootsector->u.fat16.id = htod32(0xfabe1afd);
+      memcpy(bootsector->u.fat16.volume_label, "BOCHS VVFAT", 11);
+      memcpy(bootsector->u.fat16.fat_type, (fat_type==12) ? "FAT12   ":"FAT16   ", 8);
+    } else {
+      bootsector->u.fat32.sectors_per_fat = htod32(sectors_per_fat);
+      bootsector->u.fat32.first_cluster_of_root_dir = first_cluster_of_root_dir;
+      bootsector->u.fat32.info_sector = htod16(1);
+      bootsector->u.fat32.backup_boot_sector = htod16(6);
+      bootsector->u.fat32.drive_number = 0x80; // assume this is hda (TODO)
+      bootsector->u.fat32.signature = 0x29;
+      bootsector->u.fat32.id = htod32(0xfabe1afd);
+      memcpy(bootsector->u.fat32.volume_label, "BOCHS VVFAT", 11);
+      memcpy(bootsector->u.fat32.fat_type, "FAT32   ", 8);
+    }
+    bootsector->magic[0] = 0x55;
+    bootsector->magic[1] = 0xaa;
   }
-  bootsector->jump[2] = 0x90;
-  memcpy(bootsector->name,"BOCHS   ", 8);
-  bootsector->sector_size = htod16(0x200);
-  bootsector->sectors_per_cluster = sectors_per_cluster;
-  bootsector->reserved_sectors = htod16(reserved_sectors);
-  bootsector->number_of_fats = 0x2;
-  if (fat_type != 32) {
-    bootsector->root_entries = htod16(root_entries);
-  }
-  bootsector->total_sectors16 = (volume_sector_count > 0xffff) ? 0:htod16(volume_sector_count);
-  bootsector->media_type = ((fat_type != 12) ? 0xf8:0xf0);
   fat.pointer[0] = bootsector->media_type;
-  if (fat_type != 32) {
-    bootsector->sectors_per_fat = htod16(sectors_per_fat);
-  }
-  bootsector->sectors_per_track = htod16(sectors);
-  bootsector->number_of_heads = htod16(heads);
-  bootsector->hidden_sectors = htod32(offset_to_bootsector);
-  bootsector->total_sectors = htod32((volume_sector_count > 0xffff) ? volume_sector_count:0);
-
-  if (fat_type != 32) {
-    bootsector->u.fat16.drive_number = (fat_type == 12) ? 0:0x80; // assume this is hda (TODO)
-    bootsector->u.fat16.signature = 0x29;
-    bootsector->u.fat16.id = htod32(0xfabe1afd);
-    memcpy(bootsector->u.fat16.volume_label, "BOCHS VVFAT", 11);
-    memcpy(bootsector->u.fat16.fat_type, (fat_type==12) ? "FAT12   ":"FAT16   ", 8);
-  } else {
-    bootsector->u.fat32.sectors_per_fat = htod32(sectors_per_fat);
-    bootsector->u.fat32.first_cluster_of_root_dir = first_cluster_of_root_dir;
-    bootsector->u.fat32.info_sector = htod16(1);
-    bootsector->u.fat32.backup_boot_sector = htod16(6);
-    bootsector->u.fat32.drive_number = 0x80; // assume this is hda (TODO)
-    bootsector->u.fat32.signature = 0x29;
-    bootsector->u.fat32.id = htod32(0xfabe1afd);
-    memcpy(bootsector->u.fat32.volume_label, "BOCHS VVFAT", 11);
-    memcpy(bootsector->u.fat32.fat_type, "FAT32   ", 8);
-  }
-
-  bootsector->magic[0] = 0x55;
-  bootsector->magic[1] = 0xaa;
 
   if (fat_type == 32) {
+    // backup boot sector
     memcpy(&first_sectors[(offset_to_bootsector + 6) * 0x200], &first_sectors[offset_to_bootsector * 0x200], 0x200);
+    // FS info sector
     infosector = (infosector_t*)(first_sectors + (offset_to_bootsector + 1) * 0x200);
     infosector->signature1 = htod32(0x41615252);
     infosector->signature2 = htod32(0x61417272);
@@ -1054,6 +1064,8 @@ int vvfat_image_t::open(const char* dirname)
   Bit8u sector_buffer[0x200];
   int filedes;
   const char *logname = NULL;
+  char ftype[10];
+  bx_bool ftype_ok;
 
   use_mbr_file = 0;
   use_boot_file = 0;
@@ -1081,6 +1093,7 @@ int vvfat_image_t::open(const char* dirname)
         cylinders = sector_count / (heads * sectors);
         memcpy(&first_sectors[0], sector_buffer, 0x200);
         use_mbr_file = 1;
+        BX_INFO(("VVFAT: using MBR from file"));
       }
     }
   }
@@ -1097,11 +1110,18 @@ int vvfat_image_t::open(const char* dirname)
   size_in_mb = (Bit32u)(hd_size >> 20);
   if ((size_in_mb >= 2047) || (fat_type == 32)) {
     fat_type = 32;
-    sectors_per_cluster = 8;
+    if (size_in_mb >= 32767) {
+      sectors_per_cluster = 64;
+    } else if (size_in_mb >= 16383) {
+      sectors_per_cluster = 32;
+    } else if (size_in_mb >= 8191) {
+      sectors_per_cluster = 16;
+    } else {
+      sectors_per_cluster = 8;
+    }
     first_cluster_of_root_dir = 2;
     root_entries = 0;
     reserved_sectors = 32;
-    BX_PANIC(("FAT32 required, but not supported yet"));
   } else {
     fat_type = 16;
     if (size_in_mb >= 1023) {
@@ -1125,6 +1145,25 @@ int vvfat_image_t::open(const char* dirname)
 
   if ((!use_mbr_file) && (offset_to_bootsector > 0))
     init_mbr();
+
+  snprintf(path, BX_PATHNAME_LEN, "%s/%s", dirname, VVFAT_BOOT);
+  if (read_sector_from_file(path, sector_buffer, 0)) {
+    bootsector_t* bs = (bootsector_t*)sector_buffer;
+    sprintf(ftype, "FAT%d   ", fat_type);
+    if (fat_type == 32) {
+      ftype_ok = memcmp(bs->u.fat32.fat_type, ftype, 8) == 0;
+    } else {
+      ftype_ok = memcmp(bs->u.fat16.fat_type, ftype, 8) == 0;
+    }
+    Bit32u sc = bs->total_sectors16 + bs->total_sectors + bs->hidden_sectors;
+    if (ftype_ok && (sc == sector_count) && (bs->sectors_per_cluster == sectors_per_cluster) &&
+        (bs->reserved_sectors == reserved_sectors) && (bs->number_of_fats == 2) &&
+        (bs->root_entries == root_entries)) {
+      memcpy(&first_sectors[offset_to_bootsector * 0x200], sector_buffer, 0x200);
+      use_boot_file = 1;
+      BX_INFO(("VVFAT: using boot sector from file"));
+    }
+  }
 
   init_directories(dirname);
 
@@ -1367,6 +1406,7 @@ ssize_t vvfat_image_t::write(const void* buf, size_t count)
 
   while (scount-- > 0) {
     if ((fat_type == 32) && (sector_num == (offset_to_bootsector + 1))) {
+      // allow writing to FS info sector
       memcpy(&first_sectors[sector_num * 0x200], cbuf, 0x200);
     } else if (sector_num < (offset_to_bootsector + reserved_sectors)) {
       BX_ERROR(("VVFAT write ignored: sector=%d, count=%d", sector_num, scount));
