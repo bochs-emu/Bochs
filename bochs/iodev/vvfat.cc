@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vvfat.cc,v 1.9 2011-01-02 14:44:20 vruppert Exp $
+// $Id: vvfat.cc,v 1.10 2011-01-03 19:03:08 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2010  The Bochs Project
@@ -1070,6 +1070,8 @@ int vvfat_image_t::open(const char* dirname)
   use_mbr_file = 0;
   use_boot_file = 0;
   fat_type = 0;
+  sectors_per_cluster = 0;
+
   snprintf(path, BX_PATHNAME_LEN, "%s/%s", dirname, VVFAT_MBR);
   if (read_sector_from_file(path, sector_buffer, 0)) {
     mbr_t* real_mbr = (mbr_t*)sector_buffer;
@@ -1085,59 +1087,112 @@ int vvfat_image_t::open(const char* dirname)
       if (fat_type != 0) {
         sector_count = partition->start_sector_long + partition->length_sector_long;
         sectors = partition->start_sector_long;
-        if (partition->end_CHS.head > 16) {
+        if (partition->end_CHS.head > 15) {
           heads = 16;
         } else {
           heads = partition->end_CHS.head + 1;
         }
         cylinders = sector_count / (heads * sectors);
+        offset_to_bootsector = sectors;
         memcpy(&first_sectors[0], sector_buffer, 0x200);
         use_mbr_file = 1;
         BX_INFO(("VVFAT: using MBR from file"));
       }
     }
   }
-  if (!use_mbr_file) {
+
+  snprintf(path, BX_PATHNAME_LEN, "%s/%s", dirname, VVFAT_BOOT);
+  if (read_sector_from_file(path, sector_buffer, 0)) {
+    bootsector_t* bs = (bootsector_t*)sector_buffer;
+    if (use_mbr_file) {
+      sprintf(ftype, "FAT%d   ", fat_type);
+      if (fat_type == 32) {
+        ftype_ok = memcmp(bs->u.fat32.fat_type, ftype, 8) == 0;
+      } else {
+        ftype_ok = memcmp(bs->u.fat16.fat_type, ftype, 8) == 0;
+      }
+      Bit32u sc = bs->total_sectors16 + bs->total_sectors + bs->hidden_sectors;
+      if (ftype_ok && (sc == sector_count) && (bs->number_of_fats == 2)) {
+        use_boot_file = 1;
+      }
+    } else {
+      if (memcmp(bs->u.fat16.fat_type, "FAT16   ", 8) == 0) {
+        fat_type = 16;
+      } else if (memcmp(bs->u.fat32.fat_type, "FAT32   ", 8) == 0) {
+        fat_type = 32;
+      } else {
+        memcpy(ftype, bs->u.fat16.fat_type, 8);
+        ftype[8] = 0;
+        BX_ERROR(("boot sector file: unsupported FS type = '%s'", ftype));
+      }
+      if ((fat_type != 0) && (bs->number_of_fats == 2)) {
+        sector_count = bs->total_sectors16 + bs->total_sectors + bs->hidden_sectors;
+        sectors = bs->sectors_per_track;
+        if (bs->number_of_heads > 15) {
+          heads = 16;
+        } else {
+          heads = bs->number_of_heads;
+        }
+        cylinders = sector_count / (heads * sectors);
+        offset_to_bootsector = bs->hidden_sectors;
+        use_boot_file = 1;
+      }
+    }
+    if (use_boot_file) {
+      sectors_per_cluster = bs->sectors_per_cluster;
+      reserved_sectors = bs->reserved_sectors;
+      root_entries = bs->root_entries;
+      first_cluster_of_root_dir = (fat_type != 32) ? 0 : bs->u.fat32.first_cluster_of_root_dir;
+      memcpy(&first_sectors[offset_to_bootsector * 0x200], sector_buffer, 0x200);
+      BX_INFO(("VVFAT: using boot sector from file"));
+    }
+
+  }
+
+  if (!use_mbr_file && !use_boot_file) {
     if (cylinders == 0) {
       cylinders = 1024;
       heads = 16;
       sectors = 63;
     }
     sector_count = cylinders * heads * sectors;
+    offset_to_bootsector = sectors;
   }
-  offset_to_bootsector = sectors;
+
   hd_size = sector_count * 512;
-  size_in_mb = (Bit32u)(hd_size >> 20);
-  if ((size_in_mb >= 2047) || (fat_type == 32)) {
-    fat_type = 32;
-    if (size_in_mb >= 32767) {
-      sectors_per_cluster = 64;
-    } else if (size_in_mb >= 16383) {
-      sectors_per_cluster = 32;
-    } else if (size_in_mb >= 8191) {
-      sectors_per_cluster = 16;
+  if (sectors_per_cluster == 0) {
+    size_in_mb = (Bit32u)(hd_size >> 20);
+    if ((size_in_mb >= 2047) || (fat_type == 32)) {
+      fat_type = 32;
+      if (size_in_mb >= 32767) {
+        sectors_per_cluster = 64;
+      } else if (size_in_mb >= 16383) {
+        sectors_per_cluster = 32;
+      } else if (size_in_mb >= 8191) {
+        sectors_per_cluster = 16;
+      } else {
+        sectors_per_cluster = 8;
+      }
+      first_cluster_of_root_dir = 2;
+      root_entries = 0;
+      reserved_sectors = 32;
     } else {
-      sectors_per_cluster = 8;
+      fat_type = 16;
+      if (size_in_mb >= 1023) {
+        sectors_per_cluster = 64;
+      } else if (size_in_mb >= 511) {
+        sectors_per_cluster = 32;
+      } else if (size_in_mb >= 255) {
+        sectors_per_cluster = 16;
+      } else if (size_in_mb >= 127) {
+        sectors_per_cluster = 8;
+      } else {
+        sectors_per_cluster = 4;
+      }
+      first_cluster_of_root_dir = 0;
+      root_entries = 512;
+      reserved_sectors = 1;
     }
-    first_cluster_of_root_dir = 2;
-    root_entries = 0;
-    reserved_sectors = 32;
-  } else {
-    fat_type = 16;
-    if (size_in_mb >= 1023) {
-      sectors_per_cluster = 64;
-    } else if (size_in_mb >= 511) {
-      sectors_per_cluster = 32;
-    } else if (size_in_mb >= 255) {
-      sectors_per_cluster = 16;
-    } else if (size_in_mb >= 127) {
-      sectors_per_cluster = 8;
-    } else {
-      sectors_per_cluster = 4;
-    }
-    first_cluster_of_root_dir = 0;
-    root_entries = 512;
-    reserved_sectors = 1;
   }
 
   current_cluster = 0xffff;
@@ -1145,25 +1200,6 @@ int vvfat_image_t::open(const char* dirname)
 
   if ((!use_mbr_file) && (offset_to_bootsector > 0))
     init_mbr();
-
-  snprintf(path, BX_PATHNAME_LEN, "%s/%s", dirname, VVFAT_BOOT);
-  if (read_sector_from_file(path, sector_buffer, 0)) {
-    bootsector_t* bs = (bootsector_t*)sector_buffer;
-    sprintf(ftype, "FAT%d   ", fat_type);
-    if (fat_type == 32) {
-      ftype_ok = memcmp(bs->u.fat32.fat_type, ftype, 8) == 0;
-    } else {
-      ftype_ok = memcmp(bs->u.fat16.fat_type, ftype, 8) == 0;
-    }
-    Bit32u sc = bs->total_sectors16 + bs->total_sectors + bs->hidden_sectors;
-    if (ftype_ok && (sc == sector_count) && (bs->sectors_per_cluster == sectors_per_cluster) &&
-        (bs->reserved_sectors == reserved_sectors) && (bs->number_of_fats == 2) &&
-        (bs->root_entries == root_entries)) {
-      memcpy(&first_sectors[offset_to_bootsector * 0x200], sector_buffer, 0x200);
-      use_boot_file = 1;
-      BX_INFO(("VVFAT: using boot sector from file"));
-    }
-  }
 
   init_directories(dirname);
 
