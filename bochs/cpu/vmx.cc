@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmx.cc,v 1.75 2010-12-25 07:59:15 sshwarts Exp $
+// $Id: vmx.cc,v 1.76 2011-01-04 16:17:20 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2009-2010 Stanislav Shwartsman
@@ -93,7 +93,7 @@ void BX_CPU_C::VMwrite16(unsigned encoding, Bit16u val_16)
 
   if (BX_CPU_THIS_PTR vmcshostptr) {
     Bit16u *hostAddr = (Bit16u*) (BX_CPU_THIS_PTR vmcshostptr | offset);
-    pageWriteStampTable.decWriteStamp(pAddr);
+    pageWriteStampTable.decWriteStamp(pAddr, 2);
     WriteHostWordToLittleEndian(hostAddr, val_16);
   }
   else {
@@ -135,7 +135,7 @@ void BX_CPU_C::VMwrite32(unsigned encoding, Bit32u val_32)
 
   if (BX_CPU_THIS_PTR vmcshostptr) {
     Bit32u *hostAddr = (Bit32u*) (BX_CPU_THIS_PTR vmcshostptr | offset);
-    pageWriteStampTable.decWriteStamp(pAddr);
+    pageWriteStampTable.decWriteStamp(pAddr, 4);
     WriteHostDWordToLittleEndian(hostAddr, val_32);
   }
   else {
@@ -181,7 +181,7 @@ void BX_CPU_C::VMwrite64(unsigned encoding, Bit64u val_64)
 
   if (BX_CPU_THIS_PTR vmcshostptr) {
     Bit64u *hostAddr = (Bit64u*) (BX_CPU_THIS_PTR vmcshostptr | offset);
-    pageWriteStampTable.decWriteStamp(pAddr);
+    pageWriteStampTable.decWriteStamp(pAddr, 8);
     WriteHostQWordToLittleEndian(hostAddr, val_64);
   }
   else {

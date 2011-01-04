@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: icache.h,v 1.55 2010-09-28 14:18:58 sshwarts Exp $
+// $Id: icache.h,v 1.56 2011-01-04 16:17:20 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007-2010 Stanislav Shwartsman
@@ -26,26 +26,34 @@
 
 // bit 31 indicates code page
 const Bit32u ICacheWriteStampInvalid  = 0xffffffff;
-const Bit32u ICacheWriteStampStart    = 0x7fffffff;
-const Bit32u ICacheWriteStampCached   = 0x80000000;
+const Bit32u ICacheWriteStampStart    = ICacheWriteStampInvalid - 1;
 
 #if BX_SUPPORT_TRACE_CACHE
 extern void handleSMC(bx_phy_address pAddr);
 #endif
 
-class bxPageWriteStampTable
-{
+struct bxPageWriteStampTableEntry {
   // A table (dynamically allocated) to store write-stamp generation IDs.
   // Each time a write occurs to a physical page, a generation ID is
   // decremented. Only iCache entries which have write stamps matching
   // the physical page write stamp are valid.
-  Bit32u *pageWriteStampTable;
+  Bit32u pageWriteStamp;
+  Bit32u fineGranularityMapping;
 
+  bxPageWriteStampTableEntry() {
+    pageWriteStamp = ICacheWriteStampStart;
+    fineGranularityMapping = 0; // no instruction cached
+  }
+};
+
+class bxPageWriteStampTable
+{
 #define PHY_MEM_PAGES (1024*1024)
+  bxPageWriteStampTableEntry *pageWriteStampTable;
 
 public:
   bxPageWriteStampTable() {
-    pageWriteStampTable = new Bit32u[PHY_MEM_PAGES];
+    pageWriteStampTable = new bxPageWriteStampTableEntry[PHY_MEM_PAGES];
     resetWriteStamps();
   }
  ~bxPageWriteStampTable() { delete [] pageWriteStampTable; }
@@ -57,34 +65,71 @@ public:
 
   BX_CPP_INLINE Bit32u getPageWriteStamp(bx_phy_address pAddr) const
   {
-    return pageWriteStampTable[hash(pAddr)];
+    return pageWriteStampTable[hash(pAddr)].pageWriteStamp;
+  }
+
+  BX_CPP_INLINE Bit32u getFineGranularityMapping(bx_phy_address pAddr) const
+  {
+    return pageWriteStampTable[hash(pAddr)].fineGranularityMapping;
   }
 
   BX_CPP_INLINE const Bit32u *getPageWriteStampPtr(bx_phy_address pAddr) const
   {
-    return &pageWriteStampTable[hash(pAddr)];
+    return &(pageWriteStampTable[hash(pAddr)].pageWriteStamp);
   }
 
   BX_CPP_INLINE void setPageWriteStamp(bx_phy_address pAddr, Bit32u pageWriteStamp)
   {
-    pageWriteStampTable[hash(pAddr)] = pageWriteStamp;
+    pageWriteStampTable[hash(pAddr)].pageWriteStamp = pageWriteStamp;
   }
 
   BX_CPP_INLINE void markICache(bx_phy_address pAddr)
   {
-    pageWriteStampTable[hash(pAddr)] |= ICacheWriteStampCached;
+    pageWriteStampTable[hash(pAddr)].fineGranularityMapping |= (1 << (PAGE_OFFSET(pAddr) >> 7));
   }
 
+  BX_CPP_INLINE void markICache(bx_phy_address pAddr, unsigned len)
+  {
+    Bit32u mask  = 1 << (PAGE_OFFSET((Bit32u) pAddr) >> 7);
+           mask |= 1 << (PAGE_OFFSET((Bit32u) pAddr + len - 1) >> 7);
+
+    pageWriteStampTable[hash(pAddr)].fineGranularityMapping |= mask;
+  }
+
+  // whole page is being altered
   BX_CPP_INLINE void decWriteStamp(bx_phy_address pAddr)
   {
     Bit32u index = hash(pAddr);
-    if (pageWriteStampTable[index] & ICacheWriteStampCached) {
+
+    if (pageWriteStampTable[index].fineGranularityMapping) {
 #if BX_SUPPORT_TRACE_CACHE
       handleSMC(pAddr); // one of the CPUs might be running trace from this page
 #endif
       // Decrement page write stamp, so iCache entries with older stamps are
       // effectively invalidated.
-      pageWriteStampTable[index] = (pageWriteStampTable[index] - 1) & ~ICacheWriteStampCached;
+      pageWriteStampTable[index].pageWriteStamp--;
+      pageWriteStampTable[index].fineGranularityMapping = 0;
+    }
+  }
+
+  // assumption: write does not split 4K page
+  BX_CPP_INLINE void decWriteStamp(bx_phy_address pAddr, unsigned len)
+  {
+    Bit32u index = hash(pAddr);
+
+    if (pageWriteStampTable[index].fineGranularityMapping) {
+       Bit32u mask  = 1 << (PAGE_OFFSET((Bit32u) pAddr) >> 7);
+              mask |= 1 << (PAGE_OFFSET((Bit32u) pAddr + len - 1) >> 7);
+
+       if (pageWriteStampTable[index].fineGranularityMapping & mask) {
+#if BX_SUPPORT_TRACE_CACHE
+      handleSMC(pAddr); // one of the CPUs might be running trace from this page
+#endif
+      // Decrement page write stamp, so iCache entries with older stamps are
+      // effectively invalidated.
+          pageWriteStampTable[index].pageWriteStamp--;
+          pageWriteStampTable[index].fineGranularityMapping = 0;
+       }       
     }
   }
 
@@ -94,7 +139,7 @@ public:
 BX_CPP_INLINE void bxPageWriteStampTable::resetWriteStamps(void)
 {
   for (Bit32u i=0; i<PHY_MEM_PAGES; i++) {
-    pageWriteStampTable[i] = ICacheWriteStampStart - 1;
+    pageWriteStampTable[i] = bxPageWriteStampTableEntry();
   }
 }
 

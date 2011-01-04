@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: icache.cc,v 1.36 2010-09-27 15:29:36 sshwarts Exp $
+// $Id: icache.cc,v 1.37 2011-01-04 16:17:20 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007-2010 Stanislav Shwartsman
@@ -68,7 +68,6 @@ void BX_CPU_C::serveICacheMiss(bxICacheEntry_c *entry, Bit32u eipBiased, bx_phy_
   // Cache miss. We weren't so lucky, but let's be optimistic - try to build 
   // trace from incoming instruction bytes stream !
   entry->pAddr = pAddr;
-  pageWriteStampTable.markICache(pAddr);
   entry->writeStamp = *(BX_CPU_THIS_PTR currPageWriteStampPtr);
 
   unsigned remainingInPage = BX_CPU_THIS_PTR eipPageWindowSize - eipBiased;
@@ -102,6 +101,7 @@ void BX_CPU_C::serveICacheMiss(bxICacheEntry_c *entry, Bit32u eipBiased, bx_phy_
 
       // Add the instruction to trace cache
       entry->writeStamp = *(BX_CPU_THIS_PTR currPageWriteStampPtr);
+      pageWriteStampTable.markICache(pAddr);
       BX_CPU_THIS_PTR iCache.commit_page_split_trace(BX_CPU_THIS_PTR pAddrPage, entry);
       return;
     }
@@ -112,6 +112,8 @@ void BX_CPU_C::serveICacheMiss(bxICacheEntry_c *entry, Bit32u eipBiased, bx_phy_
 
     BX_INSTR_OPCODE(BX_CPU_ID, fetchPtr, iLen,
        BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b, long64_mode());
+
+    pageWriteStampTable.markICache(pAddr, iLen);
 
     // continue to the next instruction
     remainingInPage -= iLen;
@@ -124,6 +126,8 @@ void BX_CPU_C::serveICacheMiss(bxICacheEntry_c *entry, Bit32u eipBiased, bx_phy_
     if (remainingInPage >= 15) // avoid merging with page split trace
       if (mergeTraces(entry, i, pAddr)) break;
   }
+
+//BX_INFO(("commit trace %08x len=%d mask %08x", (Bit32u) entry->pAddr, entry->tlen, pageWriteStampTable.getFineGranularityMapping(entry->pAddr)));
 
   BX_CPU_THIS_PTR iCache.commit_trace(entry->tlen);
 }
@@ -187,7 +191,7 @@ void BX_CPU_C::serveICacheMiss(bxICacheEntry_c *entry, Bit32u eipBiased, bx_phy_
   if (fetchInstruction(entry->i, eipBiased)) {
     entry->pAddr = pAddr;
     entry->writeStamp = *(BX_CPU_THIS_PTR currPageWriteStampPtr);
-    pageWriteStampTable.markICache(pAddr);
+    pageWriteStampTable.markICache(pAddr, entry->ilen);
   }
 }
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: access.cc,v 1.129 2010-12-06 21:45:56 sshwarts Exp $
+// $Id: access.cc,v 1.130 2011-01-04 16:17:20 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2005-2010  The Bochs Project
@@ -376,11 +376,11 @@ BX_CPU_C::system_write_byte(bx_address laddr, Bit8u data)
     if (! (tlbEntry->accessBits & 0x2)) {
       bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
       Bit32u pageOffset = PAGE_OFFSET(laddr);
-      BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr, tlbEntry->ppf | pageOffset, 1, BX_WRITE);
-      BX_DBG_LIN_MEMORY_ACCESS(BX_CPU_ID, laddr,
-              tlbEntry->ppf | pageOffset, 1, 0, BX_WRITE, (Bit8u*) &data);
+      bx_phy_address pAddr = tlbEntry->ppf | pageOffset;
+      BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr, pAddr, 1, BX_WRITE);
+      BX_DBG_LIN_MEMORY_ACCESS(BX_CPU_ID, laddr, pAddr, 1, 0, BX_WRITE, (Bit8u*) &data);
       Bit8u *hostAddr = (Bit8u*) (hostPageAddr | pageOffset);
-      pageWriteStampTable.decWriteStamp(tlbEntry->ppf);
+      pageWriteStampTable.decWriteStamp(pAddr, 1);
      *hostAddr = data;
       return;
     }
@@ -408,11 +408,11 @@ BX_CPU_C::system_write_word(bx_address laddr, Bit16u data)
     if (! (tlbEntry->accessBits & 0x2)) {
       bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
       Bit32u pageOffset = PAGE_OFFSET(laddr);
-      BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr, tlbEntry->ppf | pageOffset, 2, BX_WRITE);
-      BX_DBG_LIN_MEMORY_ACCESS(BX_CPU_ID, laddr,
-              tlbEntry->ppf | pageOffset, 2, 0, BX_WRITE, (Bit8u*) &data);
+      bx_phy_address pAddr = tlbEntry->ppf | pageOffset;
+      BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr, pAddr, 2, BX_WRITE);
+      BX_DBG_LIN_MEMORY_ACCESS(BX_CPU_ID, laddr, pAddr, 2, 0, BX_WRITE, (Bit8u*) &data);
       Bit16u *hostAddr = (Bit16u*) (hostPageAddr | pageOffset);
-      pageWriteStampTable.decWriteStamp(tlbEntry->ppf);
+      pageWriteStampTable.decWriteStamp(pAddr, 2);
       WriteHostWordToLittleEndian(hostAddr, data);
       return;
     }
@@ -440,11 +440,11 @@ BX_CPU_C::system_write_dword(bx_address laddr, Bit32u data)
     if (! (tlbEntry->accessBits & 0x2)) {
       bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
       Bit32u pageOffset = PAGE_OFFSET(laddr);
-      BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr, tlbEntry->ppf | pageOffset, 4, BX_WRITE);
-      BX_DBG_LIN_MEMORY_ACCESS(BX_CPU_ID, laddr,
-              tlbEntry->ppf | pageOffset, 4, 0, BX_WRITE, (Bit8u*) &data);
+      bx_phy_address pAddr = tlbEntry->ppf | pageOffset;
+      BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr, pAddr, 4, BX_WRITE);
+      BX_DBG_LIN_MEMORY_ACCESS(BX_CPU_ID, laddr, pAddr, 4, 0, BX_WRITE, (Bit8u*) &data);
       Bit32u *hostAddr = (Bit32u*) (hostPageAddr | pageOffset);
-      pageWriteStampTable.decWriteStamp(tlbEntry->ppf);
+      pageWriteStampTable.decWriteStamp(pAddr, 4);
       WriteHostDWordToLittleEndian(hostAddr, data);
       return;
     }
