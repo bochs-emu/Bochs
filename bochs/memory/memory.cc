@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: memory.cc,v 1.85 2010-11-23 14:59:36 sshwarts Exp $
+// $Id: memory.cc,v 1.86 2011-01-04 21:03:44 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -86,28 +86,33 @@ mem_write:
 
   // all memory access fits in single 4K page
   if (a20addr < BX_MEM_THIS len && ! is_bios) {
-    pageWriteStampTable.decWriteStamp(a20addr);
     // all of data is within limits of physical memory
     if (a20addr < 0x000a0000 || a20addr >= 0x00100000)
     {
       if (len == 8) {
+        pageWriteStampTable.decWriteStamp(a20addr, 8);
         WriteHostQWordToLittleEndian(BX_MEM_THIS get_vector(a20addr), *(Bit64u*)data);
         return;
       }
       if (len == 4) {
+        pageWriteStampTable.decWriteStamp(a20addr, 4);
         WriteHostDWordToLittleEndian(BX_MEM_THIS get_vector(a20addr), *(Bit32u*)data);
         return;
       }
       if (len == 2) {
+        pageWriteStampTable.decWriteStamp(a20addr, 2);
         WriteHostWordToLittleEndian(BX_MEM_THIS get_vector(a20addr), *(Bit16u*)data);
         return;
       }
       if (len == 1) {
+        pageWriteStampTable.decWriteStamp(a20addr, 1);
         * (BX_MEM_THIS get_vector(a20addr)) = * (Bit8u *) data;
         return;
       }
       // len == other, just fall thru to special cases handling
     }
+
+    pageWriteStampTable.decWriteStamp(a20addr);
 
 #ifdef BX_LITTLE_ENDIAN
     data_ptr = (Bit8u *) data;
