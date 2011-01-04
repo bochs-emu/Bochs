@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vvfat.cc,v 1.10 2011-01-03 19:03:08 vruppert Exp $
+// $Id: vvfat.cc,v 1.11 2011-01-04 18:39:51 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2010  The Bochs Project
@@ -158,6 +158,7 @@ static inline int array_roll(array_t* array, int index_to, int index_from, int c
   return 0;
 }
 
+#if 0
 static inline int array_remove_slice(array_t* array,int index, int count)
 {
   assert(index >=0);
@@ -182,6 +183,7 @@ static int array_index(array_t* array, void* pointer)
   assert(offset/array->item_size < array->next);
   return offset/array->item_size;
 }
+#endif
 
 #if defined(_MSC_VER)
 #pragma pack(push, 1)
@@ -620,7 +622,7 @@ int vvfat_image_t::read_directory(int mapping_index)
   mapping_t* mapping = (mapping_t*)array_get(&this->mapping, mapping_index);
   direntry_t* direntry;
   const char* dirname = mapping->path;
-  int first_cluster = mapping->begin;
+  Bit32u first_cluster = mapping->begin;
   int parent_index = mapping->info.dir.parent_mapping_index;
   mapping_t* parent_mapping = (mapping_t*)
       (parent_index >= 0 ? array_get(&this->mapping, parent_index) : NULL);
@@ -640,7 +642,13 @@ int vvfat_image_t::read_directory(int mapping_index)
   }
 
   i = mapping->info.dir.first_dir_index =
-    first_cluster == (int)first_cluster_of_root_dir ? 0 : directory.next;
+    first_cluster == first_cluster_of_root_dir ? 0 : directory.next;
+
+  if (first_cluster != first_cluster_of_root_dir) {
+    // create the top entries of a subdirectory
+    direntry = create_short_and_long_name(i, ".", 1);
+    direntry = create_short_and_long_name(i, "..", 1);
+  }
 
   // actually read the directory, and allocate the mappings
   while ((entry=readdir(dir))) {
@@ -654,7 +662,7 @@ int vvfat_image_t::read_directory(int mapping_index)
     struct stat st;
     bx_bool is_dot = !strcmp(entry->d_name, ".");
     bx_bool is_dotdot = !strcmp(entry->d_name, "..");
-    if (first_cluster == (int)first_cluster_of_root_dir && (is_dotdot || is_dot))
+    if ((first_cluster == first_cluster_of_root_dir) && (is_dotdot || is_dot))
       continue;
 
     buffer = (char*)malloc(length);
@@ -667,14 +675,18 @@ int vvfat_image_t::read_directory(int mapping_index)
 
     bx_bool is_mbr_file = !strcmp(entry->d_name, VVFAT_MBR);
     bx_bool is_boot_file = !strcmp(entry->d_name, VVFAT_BOOT);
-    if (first_cluster == (int)first_cluster_of_root_dir && (is_mbr_file || is_boot_file) && (st.st_size == 512)) {
+    if ((first_cluster == first_cluster_of_root_dir) && (is_mbr_file || is_boot_file) && (st.st_size == 512)) {
       free(buffer);
       continue;
     }
 
     count++;
     // create directory entry for this file
-    direntry = create_short_and_long_name(i, entry->d_name, is_dot || is_dotdot);
+    if (!is_dot && !is_dotdot) {
+      direntry = create_short_and_long_name(i, entry->d_name, 0);
+    } else {
+      direntry = (direntry_t*)array_get(&directory, is_dot ? i : i + 1);
+    }
     direntry->attributes = (S_ISDIR(st.st_mode) ? 0x10 : 0x20);
     direntry->reserved[0] = direntry->reserved[1]=0;
     direntry->ctime = fat_datetime(st.st_ctime, 1);
@@ -736,7 +748,13 @@ int vvfat_image_t::read_directory(int mapping_index)
   }
 
   i = mapping->info.dir.first_dir_index =
-    first_cluster == (int)first_cluster_of_root_dir ? 0 : directory.next;
+    first_cluster == first_cluster_of_root_dir ? 0 : directory.next;
+
+  if (first_cluster != first_cluster_of_root_dir) {
+    // create the top entries of a subdirectory
+    direntry = create_short_and_long_name(i, ".", 1);
+    direntry = create_short_and_long_name(i, "..", 1);
+  }
 
   // actually read the directory, and allocate the mappings
   do {
@@ -749,11 +767,11 @@ int vvfat_image_t::read_directory(int mapping_index)
     direntry_t* direntry;
     bx_bool is_dot = !lstrcmp(finddata.cFileName, ".");
     bx_bool is_dotdot = !lstrcmp(finddata.cFileName, "..");
-    if (first_cluster == (int)first_cluster_of_root_dir && (is_dotdot || is_dot))
+    if ((first_cluster == first_cluster_of_root_dir) && (is_dotdot || is_dot))
       continue;
     bx_bool is_mbr_file = !lstrcmp(finddata.cFileName, VVFAT_MBR);
     bx_bool is_boot_file = !lstrcmp(finddata.cFileName, VVFAT_BOOT);
-    if (first_cluster == (int)first_cluster_of_root_dir && (is_mbr_file || is_boot_file) && (finddata.nFileSizeLow == 512))
+    if ((first_cluster == first_cluster_of_root_dir) && (is_mbr_file || is_boot_file) && (finddata.nFileSizeLow == 512))
       continue;
 
     buffer = (char*)malloc(length);
@@ -761,7 +779,11 @@ int vvfat_image_t::read_directory(int mapping_index)
 
     count++;
     // create directory entry for this file
-    direntry = create_short_and_long_name(i, finddata.cFileName, is_dot || is_dotdot);
+    if (!is_dot && !is_dotdot) {
+      direntry = create_short_and_long_name(i, finddata.cFileName, 0);
+    } else {
+      direntry = (direntry_t*)array_get(&directory, is_dot ? i : i + 1);
+    }
     direntry->attributes = ((finddata.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) ? 0x10 : 0x20);
     direntry->reserved[0] = direntry->reserved[1]=0;
     direntry->ctime = fat_datetime(finddata.ftCreationTime, 1);
