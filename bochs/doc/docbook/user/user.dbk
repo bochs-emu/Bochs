@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.284 2010-12-11 08:25:39 vruppert Exp $
+$Id: user.dbk,v 1.285 2011-01-05 22:53:44 vruppert Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -3308,7 +3308,7 @@ This defines the type and characteristics of all attached ata devices:
 <row>
   <entry> mode  </entry>
   <entry> image type, only valid for disks </entry>
-  <entry> [flat | concat | external | dll | sparse | vmware3 | vmware4 | undoable | growing | volatile ]</entry>
+  <entry> [flat | concat | external | dll | sparse | vmware3 | vmware4 | undoable | growing | volatile | vvfat ]</entry>
 </row>
 <row> <entry> cylinders </entry> <entry> only valid for disks </entry> </row>
 <row> <entry> heads </entry> <entry> only valid for disks </entry> </row>
@@ -3317,6 +3317,7 @@ This defines the type and characteristics of all attached ata devices:
 <row> <entry> biosdetect </entry> <entry> type of biosdetection </entry> <entry> [none | auto], only for disks on ata0 [cmos] </entry> </row>
 <row> <entry> translation </entry> <entry> type of translation done by the BIOS (legacy int13), only for disks </entry> <entry> [none | lba | large | rechs | auto] </entry> </row>
 <row> <entry> model </entry> <entry> string returned by identify device ATA command </entry> </row>
+<row> <entry> journal </entry> <entry> optional filename of the redolog for undoable, volatile and vvfat disks </entry> </row>
 </tbody>
 </tgroup>
 </table>
@@ -3406,6 +3407,9 @@ growing : growing file
 </para></listitem>
 <listitem><para>
 volatile : flat file with volatile redolog
+</para></listitem>
+<listitem><para>
+vvfat: local directory appears as read-only VFAT disk (with volatile redolog)
 </para></listitem>
 </itemizedlist>
 Please see <xref linkend="harddisk-modes"> for a discussion on disk modes.
@@ -7352,6 +7356,11 @@ If unspecified, the default "mode" is flat.
        always rollbacked
        </entry>
  </row>
+ <row> <entry> vvfat </entry> <entry> local directory appears as read-only VFAT disk (with volatile redolog) </entry>
+       <entry>
+       always rollbacked
+       </entry>
+ </row>
 </tbody>
 </tgroup>
 </table>
@@ -7912,6 +7921,66 @@ The flat disk images must be created with the bximage utility
 </section>
 <section><title>limitations</title>
 <para>
+&FIXME; to be completed
+</para>
+</section>
+</section>
+
+<section><title>vvfat</title>
+<para>
+</para>
+<section><title>description</title>
+<para>
+    The "vvfat" disk image mode is a port of Qemu's "virtual VFAT" block driver.
+    It currently supports the read-only part of this implementation plus some
+    additions. The structures of the virtual disk are created from the contents
+    of the specified local directory when Bochs is starting. Writes to this
+    virtual disk go to a volatile redolog, so they will be lost when Bochs
+    quits and the files of the local directory are not modified.
+</para>
+<para>
+    In addition to Qemu's "vvfat" implementation the Bochs one supports configurable
+    disk geometry, FAT32 and reading MBR and/or boot sector from file. When using
+    the autodetection feature, the CHS values 1024/16/63 (Qemu defaults) are used.
+    To use an MBR image file from a real disk it must be named <filename>vvfat_mbr.bin</filename>
+    and placed in the specified directory. Bochs uses the geometry and file system
+    type from this file and doesn't show it on the virtual disk. The same applies
+    to a boot sector image file, but it must be named <filename>vvfat_boot.bin</filename>.
+    Using both image file is also possible.
+</para>
+<para>
+&FIXME; to be completed
+</para>
+</section>
+<section><title>image creation</title>
+<para>
+    Not necessary. The directory must exist before running Bochs.
+</para>
+</section>
+<section><title>path</title>
+<para>
+    The "path" option of the ataX-xxx directive in the configuration file
+    must point to an existing local directory. The redolog name can be set
+    with the "journal" option of the same directive. If not set, the redolog
+    name is created by adding the filename "vvfat.dir.redolog" to the path.
+    A random suffix is also appended to the redolog name.
+</para>
+</section>
+<section><title>external tools</title>
+<para>
+    You can use your favourite file manager to copy file to the directory you'd
+    like to use. The directory should not be modified while Bochs is running.
+</para>
+</section>
+<section><title>typical use</title>
+<para>
+    Access to files of the host hard drive...
+&FIXME; to be completed
+</para>
+</section>
+<section><title>limitations</title>
+<para>
+    No real write support present yet...
 &FIXME; to be completed
 </para>
 </section>

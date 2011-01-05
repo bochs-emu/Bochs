@@ -1,5 +1,5 @@
 .\"Document Author:  Timothy R. Butler   -   tbutler@uninetsolutions.com"
-.TH bochsrc 5 "11 Dec 2010" "bochsrc" "The Bochs Project"
+.TH bochsrc 5 "5 Jan 2011" "bochsrc" "The Bochs Project"
 .\"SKIP_SECTION"
 .SH NAME
 bochsrc \- Configuration file for Bochs.
@@ -377,7 +377,7 @@ This defines the type and characteristics of all attached ata devices:
    biosdetect= type of biosdetection [none|auto], only for disks on ata0 [cmos]
    translation=type of translation of the bios, only for disks [none|lba|large|rechs|auto]
    model=      string returned by identify device command
-   journal=    optional filename of the redolog for undoable and volatile disks
+   journal=    optional filename of the redolog for undoable, volatile and vvfat disks
 
 Point this at a hard disk image file, cdrom iso file,
 or a physical cdrom device.
@@ -404,6 +404,7 @@ The mode option defines how the disk image is handled. Disks can be defined as:
   - undoable : flat file with commitable redolog
   - growing : growing file
   - volatile : flat file with volatile redolog
+  - vvfat: local directory appears as read-only VFAT disk (with volatile redolog)
 
 The disk translation scheme (implemented in legacy int13 bios functions, and used by
 older operating systems like MS-DOS), can be defined as:
