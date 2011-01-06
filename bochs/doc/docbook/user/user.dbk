@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.285 2011-01-05 22:53:44 vruppert Exp $
+$Id: user.dbk,v 1.286 2011-01-06 18:15:28 vruppert Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -7931,12 +7931,13 @@ The flat disk images must be created with the bximage utility
 </para>
 <section><title>description</title>
 <para>
-    The "vvfat" disk image mode is a port of Qemu's "virtual VFAT" block driver.
-    It currently supports the read-only part of this implementation plus some
-    additions. The structures of the virtual disk are created from the contents
-    of the specified local directory when Bochs is starting. Writes to this
-    virtual disk go to a volatile redolog, so they will be lost when Bochs
-    quits and the files of the local directory are not modified.
+    The "vvfat" disk image mode is a port of Qemu's "virtual VFAT" block driver
+    (written by Johannes E. Schindelin). It currently supports the read-only
+    part of this implementation plus some additions. The structures of the
+    virtual disk are created from the contents of the specified local directory
+    when Bochs is starting. All writes to this virtual disk go to a volatile
+    redolog, so they will be lost when Bochs quits and the files of the local
+    directory are not modified.
 </para>
 <para>
     In addition to Qemu's "vvfat" implementation the Bochs one supports configurable
@@ -7946,10 +7947,12 @@ The flat disk images must be created with the bximage utility
     and placed in the specified directory. Bochs uses the geometry and file system
     type from this file and doesn't show it on the virtual disk. The same applies
     to a boot sector image file, but it must be named <filename>vvfat_boot.bin</filename>.
-    Using both image file is also possible.
+    Using both image file is also possible if they match (grabbed from the same disk).
 </para>
 <para>
-&FIXME; to be completed
+    FAT32 is enabled for disk with minimum 2 GB size, or if MBR / boot sector image
+    enable this filesystem. In all other cases FAT16 is used. Long filename support
+    is always present.
 </para>
 </section>
 <section><title>image creation</title>
@@ -7974,14 +7977,19 @@ The flat disk images must be created with the bximage utility
 </section>
 <section><title>typical use</title>
 <para>
-    Access to files of the host hard drive...
-&FIXME; to be completed
+    Accessing files of the host hard drive is only possible with vvfat.
 </para>
 </section>
 <section><title>limitations</title>
 <para>
-    No real write support present yet...
-&FIXME; to be completed
+    There is no real write support present yet. The changes written to the volatile
+    redolog are lost when Bochs quits. It is planned to implement writing back directory
+    changes on Bochs exit.
+</para>
+<para>
+    When using the MBR from image file only the first partition is used and it
+    must be of type FAT16 or FAT32. An extended partition or other file system
+    types are not supported. Floppy support with FAT12 is planned for the future.
 </para>
 </section>
 </section>
