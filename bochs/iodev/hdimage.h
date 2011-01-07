@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: hdimage.h,v 1.15 2010-12-21 21:47:41 vruppert Exp $
+// $Id: hdimage.h,v 1.16 2011-01-07 18:35:34 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2005-2009  The Bochs Project
@@ -367,8 +367,10 @@ class redolog_t
       Bit32u           extent_offset;
       Bit32u           extent_next;
 
-      Bit32u           bitmap_blocs;
-      Bit32u           extent_blocs;
+      Bit32u           bitmap_blocks;
+      Bit32u           extent_blocks;
+
+      Bit64s           imagepos;
 };
 
 // GROWING MODE
