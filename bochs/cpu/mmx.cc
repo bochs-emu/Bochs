@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: mmx.cc,v 1.98 2010-12-25 19:34:43 sshwarts Exp $
+// $Id: mmx.cc,v 1.99 2011-01-08 19:50:22 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2002-2010 Stanislav Shwartsman
@@ -39,12 +39,6 @@ void BX_CPU_C::print_state_MMX(void)
     BxPackedMmxRegister mm = BX_READ_MMX_REG(i);
     BX_DEBUG(("MM%d: %08x%08x\n", i, MMXUD1(mm), MMXUD0(mm)));
   }
-}
-
-void BX_CPU_C::prepareFPU2MMX(void)
-{
-  FPU_TAG_WORD = 0;
-  FPU_TOS = 0;        /* reset FPU Top-Of-Stack */
 }
 
 #endif

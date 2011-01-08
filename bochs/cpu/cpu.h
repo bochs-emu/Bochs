@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.704 2011-01-08 12:28:25 sshwarts Exp $
+// $Id: cpu.h,v 1.705 2011-01-08 19:50:22 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2011  The Bochs Project
@@ -3500,6 +3500,12 @@ BX_CPP_INLINE void BX_CPU_C::prepareMMX(void)
 
   /* check floating point status word for a pending FPU exceptions */
   FPU_check_pending_exceptions();
+}
+
+BX_CPP_INLINE void BX_CPU_C::prepareFPU2MMX(void)
+{
+  BX_CPU_THIS_PTR the_i387.twd = 0;
+  BX_CPU_THIS_PTR the_i387.tos = 0; /* reset FPU Top-Of-Stack */
 }
 #endif
 
