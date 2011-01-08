@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: crc32.cc,v 1.7 2010-12-25 17:04:36 sshwarts Exp $
+// $Id: crc32.cc,v 1.8 2011-01-08 11:20:29 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008-2009 Stanislav Shwartsman
@@ -86,19 +86,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CRC32_GdEbR(bxInstruction_c *i)
   BX_WRITE_32BIT_REGZ(i->nnn(), BitReflect32(op2));
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::CRC32_GdEw(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::CRC32_GdEwR(bxInstruction_c *i)
 {
   Bit32u op2 = BX_READ_32BIT_REG(i->nnn());
   op2 = BitReflect32(op2);
-  Bit16u op1;
-
-  if (i->modC0()) {
-    op1 = BX_READ_16BIT_REG(i->rm());
-  }
-  else {
-    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-    op1 = read_virtual_word(i->seg(), eaddr);
-  }
+  Bit16u op1 = BX_READ_16BIT_REG(i->rm());
 
   Bit64u tmp1 = ((Bit64u) BitReflect16(op1)) << 32;
   Bit64u tmp2 = ((Bit64u) op2) << 16;
@@ -109,19 +101,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CRC32_GdEw(bxInstruction_c *i)
   BX_WRITE_32BIT_REGZ(i->nnn(), BitReflect32(op2));
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::CRC32_GdEd(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::CRC32_GdEdR(bxInstruction_c *i)
 {
   Bit32u op2 = BX_READ_32BIT_REG(i->nnn());
   op2 = BitReflect32(op2);
-  Bit32u op1;
-
-  if (i->modC0()) {
-    op1 = BX_READ_32BIT_REG(i->rm());
-  }
-  else {
-    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-    op1 = read_virtual_dword(i->seg(), eaddr);
-  }
+  Bit32u op1 = BX_READ_32BIT_REG(i->rm());
 
   Bit64u tmp1 = ((Bit64u) BitReflect32(op1)) << 32;
   Bit64u tmp2 = ((Bit64u) op2) << 32;
@@ -134,19 +118,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CRC32_GdEd(bxInstruction_c *i)
 
 #if BX_SUPPORT_X86_64
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::CRC32_GdEq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::CRC32_GdEqR(bxInstruction_c *i)
 {
   Bit32u op2 = BX_READ_32BIT_REG(i->nnn());
   op2 = BitReflect32(op2);
-  Bit64u op1;
-
-  if (i->modC0()) {
-    op1 = BX_READ_64BIT_REG(i->rm());
-  }
-  else {
-    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-    op1 = read_virtual_qword_64(i->seg(), eaddr);
-  }
+  Bit64u op1 = BX_READ_64BIT_REG(i->rm());
 
   Bit64u tmp1 = ((Bit64u) BitReflect32(op1 & 0xffffffff)) << 32;
   Bit64u tmp2 = ((Bit64u) op2) << 32;

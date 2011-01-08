@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.285 2011-01-08 09:53:52 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.286 2011-01-08 11:20:29 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2011  The Bochs Project
@@ -1065,8 +1065,8 @@ static const BxOpcodeInfo_t BxOpcodeInfo64[512*3*2] = {
   /* 0F C4 /wm */ { BxPrefixSSE | BxImmediate_Ib, BX_IA_PINSRW_PqEwIb, BxOpcodeGroupSSE_0fc4 },
   /* 0F C5 /wr */ { BxPrefixSSE | BxImmediate_Ib, BX_IA_PEXTRW_GdPqIb, BxOpcodeGroupSSE_0fc5R },
   /* 0F C5 /wm */ { 0, BX_IA_ERROR }, // PEXTRW SSE group
-  /* 0F C6 /wr */ { BxPrefixSSE | BxImmediate_Ib, BX_IA_SHUFPS_VpsWpsIb, BxOpcodeGroupSSE_0fc6 },
-  /* 0F C6 /wm */ { BxPrefixSSE | BxImmediate_Ib, BX_IA_SHUFPS_VpsWpsIb, BxOpcodeGroupSSE_0fc6 },
+  /* 0F C6 /wr */ { BxPrefixSSE | BxImmediate_Ib, BX_IA_SHUFPS_VpsWpsIbR, BxOpcodeGroupSSE_0fc6 },
+  /* 0F C6 /wm */ { BxPrefixSSE | BxImmediate_Ib, BX_IA_SHUFPS_VpsWpsIbM, BxOpcodeGroupSSE_0fc6 },
   /* 0F C7 /wr */ { 0, BX_IA_ERROR }, // CMPXCHG8B G9 group
   /* 0F C7 /wm */ { BxGroup9, BX_IA_ERROR, BxOpcodeInfoG9M },
   /* 0F C8 /wr */ { 0, BX_IA_BSWAP_RX },
@@ -2092,8 +2092,8 @@ static const BxOpcodeInfo_t BxOpcodeInfo64[512*3*2] = {
   /* 0F C4 /dm */ { BxPrefixSSE | BxImmediate_Ib, BX_IA_PINSRW_PqEwIb, BxOpcodeGroupSSE_0fc4 },
   /* 0F C5 /dr */ { BxPrefixSSE | BxImmediate_Ib, BX_IA_PEXTRW_GdPqIb, BxOpcodeGroupSSE_0fc5R },
   /* 0F C5 /dm */ { 0, BX_IA_ERROR }, // PEXTRW SSE group
-  /* 0F C6 /dr */ { BxPrefixSSE | BxImmediate_Ib, BX_IA_SHUFPS_VpsWpsIb, BxOpcodeGroupSSE_0fc6 },
-  /* 0F C6 /dm */ { BxPrefixSSE | BxImmediate_Ib, BX_IA_SHUFPS_VpsWpsIb, BxOpcodeGroupSSE_0fc6 },
+  /* 0F C6 /dr */ { BxPrefixSSE | BxImmediate_Ib, BX_IA_SHUFPS_VpsWpsIbR, BxOpcodeGroupSSE_0fc6 },
+  /* 0F C6 /dm */ { BxPrefixSSE | BxImmediate_Ib, BX_IA_SHUFPS_VpsWpsIbM, BxOpcodeGroupSSE_0fc6 },
   /* 0F C7 /dr */ { 0, BX_IA_ERROR }, // CMPXCHG8B G9 group
   /* 0F C7 /dm */ { BxGroup9, BX_IA_ERROR, BxOpcodeInfoG9M },
   /* 0F C8 /dr */ { 0, BX_IA_BSWAP_ERX },
@@ -3119,8 +3119,8 @@ static const BxOpcodeInfo_t BxOpcodeInfo64[512*3*2] = {
   /* 0F C4 /qm */ { BxPrefixSSE | BxImmediate_Ib, BX_IA_PINSRW_PqEwIb, BxOpcodeGroupSSE_0fc4 },
   /* 0F C5 /qr */ { BxPrefixSSE | BxImmediate_Ib, BX_IA_PEXTRW_GdPqIb, BxOpcodeGroupSSE_0fc5R },
   /* 0F C5 /qm */ { 0, BX_IA_ERROR }, // PEXTRW SSE group
-  /* 0F C6 /qr */ { BxPrefixSSE | BxImmediate_Ib, BX_IA_SHUFPS_VpsWpsIb, BxOpcodeGroupSSE_0fc6 },
-  /* 0F C6 /qm */ { BxPrefixSSE | BxImmediate_Ib, BX_IA_SHUFPS_VpsWpsIb, BxOpcodeGroupSSE_0fc6 },
+  /* 0F C6 /qr */ { BxPrefixSSE | BxImmediate_Ib, BX_IA_SHUFPS_VpsWpsIbR, BxOpcodeGroupSSE_0fc6 },
+  /* 0F C6 /qm */ { BxPrefixSSE | BxImmediate_Ib, BX_IA_SHUFPS_VpsWpsIbM, BxOpcodeGroupSSE_0fc6 },
   /* 0F C7 /qr */ { 0, BX_IA_ERROR }, // CMPXCHG16B G9 group
   /* 0F C7 /qm */ { BxGroup9, BX_IA_ERROR, BxOpcodeInfo64G9qM },
   /* 0F C8 /qr */ { 0, BX_IA_BSWAP_RRX },
