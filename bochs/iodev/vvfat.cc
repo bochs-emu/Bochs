@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vvfat.cc,v 1.11 2011-01-04 18:39:51 vruppert Exp $
+// $Id: vvfat.cc,v 1.12 2011-01-09 00:36:42 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2010  The Bochs Project
@@ -56,6 +56,26 @@
 #else
 #define htod16(val) ( (((val)&0xff00)>>8) | (((val)&0xff)<<8) )
 #endif
+#define dtoh16 htod16
+
+// portable mkdir / rmdir
+static int bx_mkdir(const char *path)
+{
+#ifndef WIN32
+  return mkdir(path, 0755);
+#else
+  return (CreateDirectory(path, NULL) == 0);
+#endif
+}
+
+static int bx_rmdir(const char *path)
+{
+#ifndef WIN32
+  return rmdir(path);
+#else
+  return (RemoveDirectory(path) == 0);
+#endif
+}
 
 // dynamic array functions
 static inline void array_init(array_t* array,unsigned int item_size)
@@ -847,7 +867,7 @@ int vvfat_image_t::read_directory(int mapping_index)
     }
   }
 
-  // reget the mapping, since s->mapping was possibly realloc()ed
+  // reget the mapping, since this->mapping was possibly realloc()ed
   mapping = (mapping_t*)array_get(&this->mapping, mapping_index);
   if (first_cluster == 0) {
     first_cluster = 2;
@@ -866,6 +886,11 @@ int vvfat_image_t::read_directory(int mapping_index)
 Bit32u vvfat_image_t::sector2cluster(off_t sector_num)
 {
     return (Bit32u)((sector_num - offset_to_data) / sectors_per_cluster) + 2;
+}
+
+off_t vvfat_image_t::cluster2sector(Bit32u cluster_num)
+{
+    return (off_t)(offset_to_data + (cluster_num - 2) * sectors_per_cluster);
 }
 
 int vvfat_image_t::init_directories(const char* dirname)
@@ -931,7 +956,7 @@ int vvfat_image_t::init_directories(const char* dirname)
     mapping->path[i - 1] = '\0';
   mapping->mode = MODE_DIRECTORY;
   mapping->read_only = 0;
-  path = mapping->path;
+  vvfat_path = mapping->path;
 
   for (i = 0, cluster = first_cluster_of_root_dir; i < this->mapping.next; i++) {
     // fix fat entry if not root directory of FAT12/FAT16
@@ -1258,16 +1283,258 @@ int vvfat_image_t::open(const char* dirname)
   unlink(redolog_temp);
 #endif
 
+  vvfat_modified = 0;
+
   BX_INFO(("'vvfat' disk opened: directory is '%s', redolog is '%s'", dirname, redolog_temp));
 
   return 0;
 }
 
+direntry_t* vvfat_image_t::read_direntry(Bit8u *buffer, char *filename)
+{
+  const Bit8u lfn_map[13] = {1, 3, 5, 7, 9, 14, 16, 18, 20, 22, 24, 28, 30};
+  direntry_t *entry;
+  bx_bool entry_ok = 0, has_lfn = 0;
+  char lfn_tmp[BX_PATHNAME_LEN];
+  int i;
+
+  memset(filename, 0, BX_PATHNAME_LEN);
+  lfn_tmp[0] = 0;
+  do {
+    entry = (direntry_t*)buffer;
+    if (entry->name[0] == 0) {
+      entry = NULL;
+      break;
+    } else if ((entry->name[0] != '.') && (entry->name[0] != 0xe5) &&
+               ((entry->attributes & 0x0f) != 0x08)) {
+      if (entry->attributes == 0x0f) {
+        for (i = 0; i < 13; i++) {
+          lfn_tmp[i] = buffer[lfn_map[i]];
+        }
+        lfn_tmp[i] = 0;
+        strcat(lfn_tmp, filename);
+        strcpy(filename, lfn_tmp);
+        has_lfn = 1;
+        buffer += 32;
+      } else {
+        if (!has_lfn) {
+          memcpy(filename, entry->name, 8);
+          i = 7;
+          while ((i > 0) && (filename[i] == ' ')) filename[i--] = 0;
+          if (entry->extension[0] != ' ') strcat(filename, ".");
+          memcpy(filename+i+2, entry->extension, 3);
+          i = strlen(filename) - 1;
+          while (filename[i] == ' ') filename[i--] = 0;
+          for (i = 0; i < (int)strlen(filename); i++) {
+            if ((filename[i] > 0x40) && (filename[i] < 0x5b)) {
+              filename[i] |= 0x20;
+            }
+          }
+        }
+        entry_ok = 1;
+      }
+    } else {
+      buffer += 32;
+    }
+  } while (!entry_ok);
+  return entry;
+}
+
+Bit32u vvfat_image_t::fat_get_next(Bit32u current)
+{
+  if (fat_type == 32) {
+    return dtoh32(((Bit32u*)fat2)[current]);
+  } else if (fat_type == 16) {
+    return dtoh16(((Bit16u*)fat2)[current]);
+  } else {
+    return 0;
+  }
+}
+
+bx_bool vvfat_image_t::write_file(const char *path, direntry_t *entry, bx_bool create)
+{
+  int fd;
+  Bit32u csize, fsize, fstart, cur, next;
+  Bit64u offset;
+  Bit8u *buffer;
+
+  csize = sectors_per_cluster * 0x200;
+  fsize = dtoh32(entry->size);
+  fstart = dtoh16(entry->begin) | (dtoh16(entry->begin_hi) << 16);
+  if (create) {
+    fd = ::open(path, O_CREAT | O_RDWR | O_TRUNC
+#ifdef O_BINARY
+                | O_BINARY
+#endif
+#ifdef O_LARGEFILE
+                | O_LARGEFILE
+#endif
+                , S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+  } else {
+    fd = ::open(path, O_RDWR | O_TRUNC
+#ifdef O_BINARY
+                | O_BINARY
+#endif
+#ifdef O_LARGEFILE
+                | O_LARGEFILE
+#endif
+                );
+  }
+  if (fd < 0)
+    return 0;
+  buffer = (Bit8u*)malloc(csize);
+  next = fstart;
+  do {
+    cur = next;
+    offset = cluster2sector(cur);
+    lseek(offset * 0x200, SEEK_SET);
+    read(buffer, csize);
+    if (fsize > csize) {
+      ::write(fd, buffer, csize);
+      fsize -= csize;
+    } else {
+      ::write(fd, buffer, fsize);
+    }
+    next = fat_get_next(cur);
+  } while (next < (max_fat_value - 8));
+  ::close(fd);
+  return 1;
+}
+
+void vvfat_image_t::parse_directory(const char *path, Bit32u start_cluster)
+{
+  Bit32u csize, fstart, cur, next, size;
+  Bit64u offset;
+  Bit8u *buffer, *ptr;
+  direntry_t *entry, *newentry;
+  char filename[BX_PATHNAME_LEN];
+  char full_path[BX_PATHNAME_LEN];
+  mapping_t *mapping;
+
+  csize = sectors_per_cluster * 0x200;
+  if (start_cluster == 0) {
+    offset = offset_to_root_dir;
+    buffer = (Bit8u*)malloc(root_entries * 32);
+    lseek(offset * 0x200, SEEK_SET);
+    read(buffer, root_entries * 32);
+  } else {
+    size = csize;
+    buffer = (Bit8u*)malloc(size);
+    next = start_cluster;
+    do {
+      cur = next;
+      offset = cluster2sector(cur);
+      lseek(offset * 0x200, SEEK_SET);
+      read(buffer+(size-csize), csize);
+      next = fat_get_next(cur);
+      if (next != max_fat_value) {
+        size += csize;
+        buffer = (Bit8u*)realloc(buffer, size);
+      }
+    } while (next != max_fat_value);
+  }
+  ptr = buffer;
+  do {
+    newentry = read_direntry(ptr, filename);
+    if (newentry != NULL) {
+      sprintf(full_path, "%s/%s", path, filename);
+      fstart = dtoh16(newentry->begin) | (dtoh16(newentry->begin_hi) << 16);
+      mapping = find_mapping_for_cluster(fstart);
+      if (mapping == NULL) {
+        if (newentry->attributes == 0x10) {
+          bx_mkdir(full_path);
+          parse_directory(full_path, fstart);
+        } else {
+          write_file(full_path, newentry, 1);
+        }
+      } else {
+        entry = (direntry_t*)array_get(&directory, mapping->dir_index);
+        if (!strcmp(full_path, mapping->path)) {
+          if (newentry->attributes == 0x10) {
+            parse_directory(full_path, fstart);
+            mapping->mode &= ~MODE_DELETED;
+          } else {
+            if ((newentry->mdate != entry->mdate) || (newentry->mtime != entry->mtime) ||
+                (newentry->size != entry->size)) {
+              write_file(full_path, newentry, 0);
+            }
+            mapping->mode &= ~MODE_DELETED;
+          }
+        } else {
+          if ((newentry->cdate == entry->cdate) && (newentry->ctime == entry->ctime)) {
+            rename(mapping->path, full_path);
+            if (newentry->attributes == 0x10) {
+              parse_directory(full_path, fstart);
+              mapping->mode &= ~MODE_DELETED;
+            } else {
+              if ((newentry->mdate != entry->mdate) || (newentry->mtime != entry->mtime) ||
+                  (newentry->size != entry->size)) {
+                write_file(full_path, newentry, 0);
+              }
+              mapping->mode &= ~MODE_DELETED;
+            }
+          } else {
+            if (entry->attributes == 0x10) {
+              if (bx_rmdir(mapping->path) == 0) {
+                mapping->mode &= ~MODE_DELETED;
+              }
+            } else {
+              unlink(mapping->path);
+              mapping->mode &= ~MODE_DELETED;
+            }
+            if (newentry->attributes == 0x10) {
+              bx_mkdir(full_path);
+              parse_directory(full_path, fstart);
+            } else {
+              write_file(full_path, newentry, 1);
+            }
+          }
+        }
+      }
+      ptr = (Bit8u*)newentry+32;
+    }
+  } while (newentry != NULL);
+  free(buffer);
+}
+
 void vvfat_image_t::close(void)
 {
+  char msg[BX_PATHNAME_LEN + 80];
+  mapping_t *mapping;
+  int i;
+
+  if (vvfat_modified) {
+    sprintf(msg, "Write back changes to directory '%s'?\n\nWARNING: This feature is still experimental!", vvfat_path);
+    if (SIM->ask_yes_no("Bochs VVFAT modified", msg, 0)) {
+      fat2 = malloc(sectors_per_fat * 0x200);
+      lseek(offset_to_fat * 0x200, SEEK_SET);
+      read(fat2, sectors_per_fat * 0x200);
+      for (i = 1; i < (int)this->mapping.next; i++) {
+        mapping = (mapping_t*)array_get(&this->mapping, i);
+        if (mapping->first_mapping_index < 0) {
+          mapping->mode |= MODE_DELETED;
+        }
+      }
+      parse_directory(vvfat_path, (fat_type == 32) ? first_cluster_of_root_dir : 0);
+      for (i = 1; i < (int)this->mapping.next; i++) {
+        mapping = (mapping_t*)array_get(&this->mapping, i);
+        if (mapping->mode & MODE_DELETED) {
+          direntry_t* entry = (direntry_t*)array_get(&directory, mapping->dir_index);
+          if (entry->attributes == 0x10) {
+            if (bx_rmdir(mapping->path) != 0) {
+              BX_ERROR(("non-empty directory '%s' not yet removed", mapping->path));
+            }
+          } else {
+            unlink(mapping->path);
+          }
+        }
+      }
+      free(fat2);
+    }
+  }
   array_free(&fat);
   array_free(&directory);
-  array_free(&mapping);
+  array_free(&this->mapping);
   if (cluster_buffer != NULL)
     delete [] cluster_buffer;
 
@@ -1459,6 +1726,7 @@ ssize_t vvfat_image_t::read(void* buf, size_t count)
 
 ssize_t vvfat_image_t::write(const void* buf, size_t count)
 {
+  ssize_t ret = 0;
   char *cbuf = (char*)buf;
   Bit32u scount = (Bit32u)(count / 512);
 
@@ -1468,14 +1736,16 @@ ssize_t vvfat_image_t::write(const void* buf, size_t count)
       memcpy(&first_sectors[sector_num * 0x200], cbuf, 0x200);
     } else if (sector_num < (offset_to_bootsector + reserved_sectors)) {
       BX_ERROR(("VVFAT write ignored: sector=%d, count=%d", sector_num, scount));
-      return -1;
+      ret = -1;
     } else {
-      return redolog->write(cbuf, 0x200);
+      vvfat_modified = 1;
+      ret = redolog->write(cbuf, 0x200);
     }
+    if (ret < 0) break;
     sector_num++;
     cbuf += 0x200;
   }
-  return count;
+  return (ret < 0) ? ret : count;
 }
 
 Bit32u vvfat_image_t::get_capabilities(void)

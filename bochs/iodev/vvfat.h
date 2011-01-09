@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vvfat.h,v 1.5 2011-01-01 19:14:25 vruppert Exp $
+// $Id: vvfat.h,v 1.6 2011-01-09 00:36:42 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2010  The Bochs Project
@@ -80,7 +80,7 @@ enum {
 typedef struct mapping_t {
   // begin is the first cluster, end is the last+1
   Bit32u begin, end;
-  // as s->directory is growable, no pointer may be used here
+  // as this->directory is growable, no pointer may be used here
   unsigned int dir_index;
   // the clusters of a file may be in any order; this points to the first
   int first_mapping_index;
@@ -98,7 +98,7 @@ typedef struct mapping_t {
       int first_dir_index;
     } dir;
   } info;
-  // path contains the full path, i.e. it always starts with s->path
+  // path contains the full path, i.e. it always starts with vvfat_path
   char *path;
 
   Bit8u mode;
@@ -129,13 +129,18 @@ class vvfat_image_t : public device_image_t
       const char* filename, int is_dot);
     int read_directory(int mapping_index);
     Bit32u sector2cluster(off_t sector_num);
+    off_t cluster2sector(Bit32u cluster_num);
     int init_directories(const char* dirname);
+    bx_bool read_sector_from_file(const char *path, Bit8u *buffer, Bit32u sector);
+    Bit32u fat_get_next(Bit32u current);
+    bx_bool write_file(const char *path, direntry_t *entry, bx_bool create);
+    direntry_t* read_direntry(Bit8u *buffer, char *filename);
+    void parse_directory(const char *path, Bit32u start_cluster);
     void close_current_file(void);
     int open_file(mapping_t* mapping);
     int find_mapping_for_cluster_aux(int cluster_num, int index1, int index2);
     mapping_t* find_mapping_for_cluster(int cluster_num);
     int read_cluster(int cluster_num);
-    bx_bool read_sector_from_file(const char *path, Bit8u *buffer, Bit32u sector);
 
     Bit8u  *first_sectors;
     Bit32u offset_to_bootsector;
@@ -162,12 +167,14 @@ class vvfat_image_t : public device_image_t
     Bit8u  *cluster_buffer; // points to a buffer to hold temp data
     Bit16u current_cluster;
 
-    const char *path;
+    const char *vvfat_path;
     Bit32u sector_num;
 
     bx_bool use_mbr_file;
     bx_bool use_boot_file;
 
+    bx_bool   vvfat_modified;
+    void      *fat2;
     redolog_t *redolog;       // Redolog instance
     char      *redolog_name;  // Redolog name
     char      *redolog_temp;  // Redolog temporary file name
