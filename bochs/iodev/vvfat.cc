@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vvfat.cc,v 1.13 2011-01-09 09:19:05 vruppert Exp $
+// $Id: vvfat.cc,v 1.14 2011-01-09 19:20:11 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2010  The Bochs Project
@@ -58,6 +58,10 @@
 #define htod16(val) ( (((val)&0xff00)>>8) | (((val)&0xff)<<8) )
 #endif
 #define dtoh16 htod16
+
+#ifndef F_OK
+#define F_OK 0
+#endif
 
 // portable mkdir / rmdir
 static int bx_mkdir(const char *path)
@@ -1410,6 +1414,7 @@ void vvfat_image_t::parse_directory(const char *path, Bit32u start_cluster)
   direntry_t *entry, *newentry;
   char filename[BX_PATHNAME_LEN];
   char full_path[BX_PATHNAME_LEN];
+  char attr_txt[4];
   mapping_t *mapping;
 
   csize = sectors_per_cluster * 0x200;
@@ -1441,7 +1446,11 @@ void vvfat_image_t::parse_directory(const char *path, Bit32u start_cluster)
       sprintf(full_path, "%s/%s", path, filename);
       fstart = dtoh16(newentry->begin) | (dtoh16(newentry->begin_hi) << 16);
       if ((newentry->attributes & 0x07) > 0) {
-        BX_ERROR(("file attributes SHR not yet handled: '%s'", full_path));
+        attr_txt[0] = 0;
+        if (newentry->attributes & 0x04) strcpy(attr_txt, "S");
+        if (newentry->attributes & 0x02) strcat(attr_txt, "H");
+        if (newentry->attributes & 0x01) strcat(attr_txt, "R");
+        BX_ERROR(("file attributes '%s' not yet handled: '%s'", attr_txt, full_path));
       }
       mapping = find_mapping_for_cluster(fstart);
       if (mapping == NULL) {
@@ -1449,7 +1458,15 @@ void vvfat_image_t::parse_directory(const char *path, Bit32u start_cluster)
           bx_mkdir(full_path);
           parse_directory(full_path, fstart);
         } else {
-          write_file(full_path, newentry, 1);
+          if (access(full_path, F_OK) == 0) {
+            mapping = find_mapping_for_path(full_path);
+            if (mapping != NULL) {
+              mapping->mode &= ~MODE_DELETED;
+            }
+            write_file(full_path, newentry, 0);
+          } else {
+            write_file(full_path, newentry, 1);
+          }
         }
       } else {
         entry = (direntry_t*)array_get(&directory, mapping->dir_index);
@@ -1478,19 +1495,19 @@ void vvfat_image_t::parse_directory(const char *path, Bit32u start_cluster)
               mapping->mode &= ~MODE_DELETED;
             }
           } else {
-            if (entry->attributes == 0x10) {
-              if (bx_rmdir(mapping->path) == 0) {
-                mapping->mode &= ~MODE_DELETED;
-              }
-            } else {
-              unlink(mapping->path);
-              mapping->mode &= ~MODE_DELETED;
-            }
             if (newentry->attributes == 0x10) {
               bx_mkdir(full_path);
               parse_directory(full_path, fstart);
             } else {
-              write_file(full_path, newentry, 1);
+              if (access(full_path, F_OK) == 0) {
+                mapping = find_mapping_for_path(full_path);
+                if (mapping != NULL) {
+                  mapping->mode &= ~MODE_DELETED;
+                }
+                write_file(full_path, newentry, 0);
+              } else {
+                write_file(full_path, newentry, 1);
+              }
             }
           }
         }
@@ -1581,9 +1598,8 @@ void vvfat_image_t::close_current_file(void)
   current_cluster = 0xffff;
 }
 
-/* mappings between index1 and index2-1 are supposed to be ordered
- * return value is the index of the last mapping for which end>cluster_num
- */
+// mappings between index1 and index2-1 are supposed to be ordered
+// return value is the index of the last mapping for which end>cluster_num
 int vvfat_image_t::find_mapping_for_cluster_aux(int cluster_num, int index1, int index2)
 {
   while(1) {
@@ -1617,6 +1633,20 @@ mapping_t* vvfat_image_t::find_mapping_for_cluster(int cluster_num)
     return NULL;
   assert(((int)mapping->begin <= cluster_num) && ((int)mapping->end > cluster_num));
   return mapping;
+}
+
+// This function simply compares path == mapping->path. Since the mappings
+// are sorted by cluster, this is expensive: O(n).
+mapping_t* vvfat_image_t::find_mapping_for_path(const char* path)
+{
+    int i;
+
+    for (i = 0; i < (int)this->mapping.next; i++) {
+      mapping_t* mapping = (mapping_t*)array_get(&this->mapping, i);
+      if ((mapping->first_mapping_index < 0) && !strcmp(path, mapping->path))
+        return mapping;
+    }
+    return NULL;
 }
 
 int vvfat_image_t::open_file(mapping_t* mapping)

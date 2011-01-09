@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vvfat.h,v 1.6 2011-01-09 00:36:42 vruppert Exp $
+// $Id: vvfat.h,v 1.7 2011-01-09 19:20:11 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2010  The Bochs Project
@@ -140,6 +140,7 @@ class vvfat_image_t : public device_image_t
     int open_file(mapping_t* mapping);
     int find_mapping_for_cluster_aux(int cluster_num, int index1, int index2);
     mapping_t* find_mapping_for_cluster(int cluster_num);
+    mapping_t* find_mapping_for_path(const char* path);
     int read_cluster(int cluster_num);
 
     Bit8u  *first_sectors;

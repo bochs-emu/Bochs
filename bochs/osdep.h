@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: osdep.h,v 1.38 2011-01-02 16:13:06 vruppert Exp $
+// $Id: osdep.h,v 1.39 2011-01-09 19:20:11 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -78,6 +78,9 @@ extern "C" {
 #define BX_HAVE_VSNPRINTF 1
 
 #if defined(_MSC_VER)
+#define access _access
+#define fdopen _fdopen
+#define mktemp _mktemp
 #define off_t __int64
 #define lseek _lseeki64
 #define fstat _fstati64
