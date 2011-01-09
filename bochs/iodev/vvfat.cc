@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vvfat.cc,v 1.12 2011-01-09 00:36:42 vruppert Exp $
+// $Id: vvfat.cc,v 1.13 2011-01-09 09:19:05 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2010  The Bochs Project
@@ -27,10 +27,11 @@
 // - configurable disk geometry
 // - read MBR and boot sector from file
 // - FAT32 support
-// - volatile write support using the hdimage redolog_t class
+// - volatile runtime write support using the hdimage redolog_t class
+// - ask user on Bochs exit if directory and file changes should be committed
 
 // TODO:
-// - write support (apply directory and file changes on exit)
+// - write support: handle file attributes, date and time
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
 // platforms that require a special tag on exported symbols, BX_PLUGGABLE
@@ -64,7 +65,7 @@ static int bx_mkdir(const char *path)
 #ifndef WIN32
   return mkdir(path, 0755);
 #else
-  return (CreateDirectory(path, NULL) == 0);
+  return (CreateDirectory(path, NULL) != 0) ? 0 : -1;
 #endif
 }
 
@@ -73,7 +74,7 @@ static int bx_rmdir(const char *path)
 #ifndef WIN32
   return rmdir(path);
 #else
-  return (RemoveDirectory(path) == 0);
+  return (RemoveDirectory(path) != 0) ? 0 : -1;
 #endif
 }
 
@@ -1369,7 +1370,7 @@ bx_bool vvfat_image_t::write_file(const char *path, direntry_t *entry, bx_bool c
 #ifdef O_LARGEFILE
                 | O_LARGEFILE
 #endif
-                , S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+                , 0644);
   } else {
     fd = ::open(path, O_RDWR | O_TRUNC
 #ifdef O_BINARY
@@ -1439,6 +1440,9 @@ void vvfat_image_t::parse_directory(const char *path, Bit32u start_cluster)
     if (newentry != NULL) {
       sprintf(full_path, "%s/%s", path, filename);
       fstart = dtoh16(newentry->begin) | (dtoh16(newentry->begin_hi) << 16);
+      if ((newentry->attributes & 0x07) > 0) {
+        BX_ERROR(("file attributes SHR not yet handled: '%s'", full_path));
+      }
       mapping = find_mapping_for_cluster(fstart);
       if (mapping == NULL) {
         if (newentry->attributes == 0x10) {
@@ -1516,14 +1520,12 @@ void vvfat_image_t::close(void)
         }
       }
       parse_directory(vvfat_path, (fat_type == 32) ? first_cluster_of_root_dir : 0);
-      for (i = 1; i < (int)this->mapping.next; i++) {
+      for (i = this->mapping.next - 1; i > 0; i--) {
         mapping = (mapping_t*)array_get(&this->mapping, i);
         if (mapping->mode & MODE_DELETED) {
           direntry_t* entry = (direntry_t*)array_get(&directory, mapping->dir_index);
           if (entry->attributes == 0x10) {
-            if (bx_rmdir(mapping->path) != 0) {
-              BX_ERROR(("non-empty directory '%s' not yet removed", mapping->path));
-            }
+            bx_rmdir(mapping->path);
           } else {
             unlink(mapping->path);
           }
