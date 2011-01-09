@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_pfp.cc,v 1.74 2011-01-08 11:20:29 sshwarts Exp $
+// $Id: sse_pfp.cc,v 1.75 2011-01-09 20:18:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003-2011 Stanislav Shwartsman
@@ -312,8 +312,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTTPD2PI_PqWpd(bxInstruction_c *i)
   }
   else {
     bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-    /* pointer, segment address pair */
-    readVirtualDQwordAligned(i->seg(), eaddr, (Bit8u *) &op);
+
+    if (! BX_CPU_THIS_PTR mxcsr.get_MM())
+      read_virtual_dqword_aligned(i->seg(), eaddr, (Bit8u *) &op);
+    else
+      read_virtual_dqword(i->seg(), eaddr, (Bit8u *) &op);
   }
 
   float_status_t status_word;
@@ -339,20 +342,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTTPD2PI_PqWpd(bxInstruction_c *i)
  * truncation if the conversion is inexact
  * Possible floating point exceptions: #I, #P
  */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTTSD2SI_GdWsd(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTTSD2SI_GdWsdR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  float64 op;
-
-  /* op is a register or memory reference */
-  if (i->modC0()) {
-    op = BX_READ_XMM_REG_LO_QWORD(i->rm());
-  }
-  else {
-    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-    /* pointer, segment address pair */
-    op = read_virtual_qword(i->seg(), eaddr);
-  }
+  float64 op = BX_READ_XMM_REG_LO_QWORD(i->rm());
 
   float_status_t status_word;
   mxcsr_to_softfloat_status_word(status_word, MXCSR);
@@ -382,20 +375,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTTSD2SI_GdWsd(bxInstruction_c *i)
  * truncation if the conversion is inexact
  * Possible floating point exceptions: #I, #P
  */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTTSS2SI_GdWss(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTTSS2SI_GdWssR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  float32 op;
-
-  /* op is a register or memory reference */
-  if (i->modC0()) {
-    op = BX_READ_XMM_REG_LO_DWORD(i->rm());
-  }
-  else {
-    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-    /* pointer, segment address pair */
-    op = read_virtual_dword(i->seg(), eaddr);
-  }
+  float32 op = BX_READ_XMM_REG_LO_DWORD(i->rm());
 
   float_status_t status_word;
   mxcsr_to_softfloat_status_word(status_word, MXCSR);
@@ -483,8 +466,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTPD2PI_PqWpd(bxInstruction_c *i)
   }
   else {
     bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-    /* pointer, segment address pair */
-    readVirtualDQwordAligned(i->seg(), eaddr, (Bit8u *) &op);
+
+    if (! BX_CPU_THIS_PTR mxcsr.get_MM())
+      read_virtual_dqword_aligned(i->seg(), eaddr, (Bit8u *) &op);
+    else
+      read_virtual_dqword(i->seg(), eaddr, (Bit8u *) &op);
   }
 
   float_status_t status_word;
@@ -511,20 +497,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTPD2PI_PqWpd(bxInstruction_c *i)
  * to rounding control bits in MXCSR register.
  * Possible floating point exceptions: #I, #P
  */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTSD2SI_GdWsd(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTSD2SI_GdWsdR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  float64 op;
-
-  /* op is a register or memory reference */
-  if (i->modC0()) {
-    op = BX_READ_XMM_REG_LO_QWORD(i->rm());
-  }
-  else {
-    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-    /* pointer, segment address pair */
-    op = read_virtual_qword(i->seg(), eaddr);
-  }
+  float64 op = BX_READ_XMM_REG_LO_QWORD(i->rm());
 
   float_status_t status_word;
   mxcsr_to_softfloat_status_word(status_word, MXCSR);
@@ -554,20 +530,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTSD2SI_GdWsd(bxInstruction_c *i)
  * to rounding control bits in MXCSR register.
  * Possible floating point exceptions: #I, #P
  */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTSS2SI_GdWss(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTSS2SI_GdWssR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  float32 op;
-
-  /* op is a register or memory reference */
-  if (i->modC0()) {
-    op = BX_READ_XMM_REG_LO_DWORD(i->rm());
-  }
-  else {
-    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-    /* pointer, segment address pair */
-    op = read_virtual_dword(i->seg(), eaddr);
-  }
+  float32 op = BX_READ_XMM_REG_LO_DWORD(i->rm());
 
   float_status_t status_word;
   mxcsr_to_softfloat_status_word(status_word, MXCSR);

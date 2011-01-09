@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse.cc,v 1.79 2011-01-08 12:28:25 sshwarts Exp $
+// $Id: sse.cc,v 1.80 2011-01-09 20:18:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003-2011 Stanislav Shwartsman
@@ -921,20 +921,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MPSADBW_VdqWdqIbR(bxInstruction_c *i)
 }
 
 /* 66 0F 60 */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUNPCKLBW_VdqWdq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUNPCKLBW_VdqWdqR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
-
-  /* op2 is a register or memory reference */
-  if (i->modC0()) {
-    op2 = BX_READ_XMM_REG(i->rm());
-  }
-  else {
-    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-    /* pointer, segment address pair */
-    readVirtualDQwordAligned(i->seg(), eaddr, (Bit8u *) &op2);
-  }
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn());
+  BxPackedXmmRegister op2 = BX_READ_XMM_REG(i->rm()), result;
 
   result.xmmubyte(0x0) = op1.xmmubyte(0);
   result.xmmubyte(0x1) = op2.xmmubyte(0);
@@ -959,20 +950,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUNPCKLBW_VdqWdq(bxInstruction_c *i)
 }
 
 /* 66 0F 61 */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUNPCKLWD_VdqWdq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUNPCKLWD_VdqWdqR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
-
-  /* op2 is a register or memory reference */
-  if (i->modC0()) {
-    op2 = BX_READ_XMM_REG(i->rm());
-  }
-  else {
-    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-    /* pointer, segment address pair */
-    readVirtualDQwordAligned(i->seg(), eaddr, (Bit8u *) &op2);
-  }
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn());
+  BxPackedXmmRegister op2 = BX_READ_XMM_REG(i->rm()), result;
 
   result.xmm16u(0) = op1.xmm16u(0);
   result.xmm16u(1) = op2.xmm16u(0);
@@ -990,20 +972,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUNPCKLWD_VdqWdq(bxInstruction_c *i)
 
 /* UNPCKLPS:     0F 14 */
 /* PUNPCKLDQ: 66 0F 62 */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::UNPCKLPS_VpsWdq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::UNPCKLPS_VpsWdqR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
-
-  /* op2 is a register or memory reference */
-  if (i->modC0()) {
-    op2 = BX_READ_XMM_REG(i->rm());
-  }
-  else {
-    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-    /* pointer, segment address pair */
-    readVirtualDQwordAligned(i->seg(), eaddr, (Bit8u *) &op2);
-  }
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn());
+  BxPackedXmmRegister op2 = BX_READ_XMM_REG(i->rm()), result;
 
   result.xmm32u(0) = op1.xmm32u(0);
   result.xmm32u(1) = op2.xmm32u(0);
@@ -1016,20 +989,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::UNPCKLPS_VpsWdq(bxInstruction_c *i)
 }
 
 /* 66 0F 63 */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::PACKSSWB_VdqWdq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::PACKSSWB_VdqWdqR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
-
-  /* op2 is a register or memory reference */
-  if (i->modC0()) {
-    op2 = BX_READ_XMM_REG(i->rm());
-  }
-  else {
-    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-    /* pointer, segment address pair */
-    readVirtualDQwordAligned(i->seg(), eaddr, (Bit8u *) &op2);
-  }
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn());
+  BxPackedXmmRegister op2 = BX_READ_XMM_REG(i->rm()), result;
 
   result.xmmsbyte(0x0) = SaturateWordSToByteS(op1.xmm16s(0));
   result.xmmsbyte(0x1) = SaturateWordSToByteS(op1.xmm16s(1));
@@ -1106,20 +1070,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PCMPGTD_VdqWdqR(bxInstruction_c *i)
 }
 
 /* 66 0F 67 */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::PACKUSWB_VdqWdq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::PACKUSWB_VdqWdqR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
-
-  /* op2 is a register or memory reference */
-  if (i->modC0()) {
-    op2 = BX_READ_XMM_REG(i->rm());
-  }
-  else {
-    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-    /* pointer, segment address pair */
-    readVirtualDQwordAligned(i->seg(), eaddr, (Bit8u *) &op2);
-  }
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn());
+  BxPackedXmmRegister op2 = BX_READ_XMM_REG(i->rm()), result;
 
   result.xmmubyte(0x0) = SaturateWordSToByteU(op1.xmm16s(0));
   result.xmmubyte(0x1) = SaturateWordSToByteU(op1.xmm16s(1));
@@ -1145,20 +1100,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PACKUSWB_VdqWdq(bxInstruction_c *i)
 }
 
 /* 66 0F 68 */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUNPCKHBW_VdqWdq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUNPCKHBW_VdqWdqR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
-
-  /* op2 is a register or memory reference */
-  if (i->modC0()) {
-    op2 = BX_READ_XMM_REG(i->rm());
-  }
-  else {
-    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-    /* pointer, segment address pair */
-    readVirtualDQwordAligned(i->seg(), eaddr, (Bit8u *) &op2);
-  }
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn());
+  BxPackedXmmRegister op2 = BX_READ_XMM_REG(i->rm()), result;
 
   result.xmmubyte(0x0) = op1.xmmubyte(0x8);
   result.xmmubyte(0x1) = op2.xmmubyte(0x8);
@@ -1183,20 +1129,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUNPCKHBW_VdqWdq(bxInstruction_c *i)
 }
 
 /* 66 0F 69 */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUNPCKHWD_VdqWdq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUNPCKHWD_VdqWdqR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
-
-  /* op2 is a register or memory reference */
-  if (i->modC0()) {
-    op2 = BX_READ_XMM_REG(i->rm());
-  }
-  else {
-    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-    /* pointer, segment address pair */
-    readVirtualDQwordAligned(i->seg(), eaddr, (Bit8u *) &op2);
-  }
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn());
+  BxPackedXmmRegister op2 = BX_READ_XMM_REG(i->rm()), result;
 
   result.xmm16u(0) = op1.xmm16u(4);
   result.xmm16u(1) = op2.xmm16u(4);
@@ -1214,20 +1151,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUNPCKHWD_VdqWdq(bxInstruction_c *i)
 
 /* UNPCKHPS:     0F 15 */
 /* PUNPCKHDQ: 66 0F 6A */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::UNPCKHPS_VpsWdq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::UNPCKHPS_VpsWdqR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
-
-  /* op2 is a register or memory reference */
-  if (i->modC0()) {
-    op2 = BX_READ_XMM_REG(i->rm());
-  }
-  else {
-    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-    /* pointer, segment address pair */
-    readVirtualDQwordAligned(i->seg(), eaddr, (Bit8u *) &op2);
-  }
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn());
+  BxPackedXmmRegister op2 = BX_READ_XMM_REG(i->rm()), result;
 
   result.xmm32u(0) = op1.xmm32u(2);
   result.xmm32u(1) = op2.xmm32u(2);
@@ -1240,20 +1168,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::UNPCKHPS_VpsWdq(bxInstruction_c *i)
 }
 
 /* 66 0F 6B */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::PACKSSDW_VdqWdq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::PACKSSDW_VdqWdqR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
-
-  /* op2 is a register or memory reference */
-  if (i->modC0()) {
-    op2 = BX_READ_XMM_REG(i->rm());
-  }
-  else {
-    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-    /* pointer, segment address pair */
-    readVirtualDQwordAligned(i->seg(), eaddr, (Bit8u *) &op2);
-  }
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn());
+  BxPackedXmmRegister op2 = BX_READ_XMM_REG(i->rm()), result;
 
   result.xmm16s(0) = SaturateDwordSToWordS(op1.xmm32s(0));
   result.xmm16s(1) = SaturateDwordSToWordS(op1.xmm32s(1));
@@ -1272,20 +1191,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PACKSSDW_VdqWdq(bxInstruction_c *i)
 
 /* UNPCKLPD:   66 0F 14 */
 /* PUNPCKLQDQ: 66 0F 6C */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUNPCKLQDQ_VdqWdq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUNPCKLQDQ_VdqWdqR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
-
-  /* op2 is a register or memory reference */
-  if (i->modC0()) {
-    op2 = BX_READ_XMM_REG(i->rm());
-  }
-  else {
-    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-    /* pointer, segment address pair */
-    readVirtualDQwordAligned(i->seg(), eaddr, (Bit8u *) &op2);
-  }
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2 = BX_READ_XMM_REG(i->rm());
 
   op1.xmm64u(1) = op2.xmm64u(0);
 
@@ -1296,26 +1205,16 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUNPCKLQDQ_VdqWdq(bxInstruction_c *i)
 
 /* UNPCKHPD:   66 0F 15 */
 /* PUNPCKHQDQ: 66 0F 6D */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUNPCKHQDQ_VdqWdq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUNPCKHQDQ_VdqWdqR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2 = BX_READ_XMM_REG(i->rm());
 
-  /* op2 is a register or memory reference */
-  if (i->modC0()) {
-    op2 = BX_READ_XMM_REG(i->rm());
-  }
-  else {
-    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-    /* pointer, segment address pair */
-    readVirtualDQwordAligned(i->seg(), eaddr, (Bit8u *) &op2);
-  }
-
-  result.xmm64u(0) = op1.xmm64u(1);
-  result.xmm64u(1) = op2.xmm64u(1);
+  op1.xmm64u(0) = op1.xmm64u(1);
+  op1.xmm64u(1) = op2.xmm64u(1);
 
   /* now write result back to destination */
-  BX_WRITE_XMM_REG(i->nnn(), result);
+  BX_WRITE_XMM_REG(i->nnn(), op1);
 #endif
 }
 
@@ -1667,20 +1566,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMINUB_VdqWdqR(bxInstruction_c *i)
 /* ANDPS:    0F 54 */
 /* ANDPD: 66 0F 54 */
 /* PAND:  66 0F DB */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::ANDPS_VpsWps(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::ANDPS_VpsWpsR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
-
-  /* op2 is a register or memory reference */
-  if (i->modC0()) {
-    op2 = BX_READ_XMM_REG(i->rm());
-  }
-  else {
-    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-    /* pointer, segment address pair */
-    readVirtualDQwordAligned(i->seg(), eaddr, (Bit8u *) &op2);
-  }
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2 = BX_READ_XMM_REG(i->rm());
 
   op1.xmm64u(0) &= op2.xmm64u(0);
   op1.xmm64u(1) &= op2.xmm64u(1);
@@ -1743,20 +1632,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMAXUB_VdqWdqR(bxInstruction_c *i)
 /* ANDNPS:    0F 55 */
 /* ANDNPD: 66 0F 55 */
 /* PANDN:  66 0F DF */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::ANDNPS_VpsWps(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::ANDNPS_VpsWpsR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
-
-  /* op2 is a register or memory reference */
-  if (i->modC0()) {
-    op2 = BX_READ_XMM_REG(i->rm());
-  }
-  else {
-    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-    /* pointer, segment address pair */
-    readVirtualDQwordAligned(i->seg(), eaddr, (Bit8u *) &op2);
-  }
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2 = BX_READ_XMM_REG(i->rm());
 
   op1.xmm64u(0) = ~(op1.xmm64u(0)) & op2.xmm64u(0);
   op1.xmm64u(1) = ~(op1.xmm64u(1)) & op2.xmm64u(1);
@@ -1987,20 +1866,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMINSW_VdqWdqR(bxInstruction_c *i)
 /* ORPS:    0F 56 */
 /* ORPD: 66 0F 56 */
 /* POR:  66 0F EB */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::ORPS_VpsWps(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::ORPS_VpsWpsR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
-
-  /* op2 is a register or memory reference */
-  if (i->modC0()) {
-    op2 = BX_READ_XMM_REG(i->rm());
-  }
-  else {
-    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-    /* pointer, segment address pair */
-    readVirtualDQwordAligned(i->seg(), eaddr, (Bit8u *) &op2);
-  }
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2 = BX_READ_XMM_REG(i->rm());
 
   op1.xmm64u(0) |= op2.xmm64u(0);
   op1.xmm64u(1) |= op2.xmm64u(1);
@@ -2068,20 +1937,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMAXSW_VdqWdqR(bxInstruction_c *i)
 /* XORPS:    0F 57 */
 /* XORPD: 66 0F 57 */
 /* PXOR:  66 0F EF */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::XORPS_VpsWps(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::XORPS_VpsWpsR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
-
-  /* op2 is a register or memory reference */
-  if (i->modC0()) {
-    op2 = BX_READ_XMM_REG(i->rm());
-  }
-  else {
-    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-    /* pointer, segment address pair */
-    readVirtualDQwordAligned(i->seg(), eaddr, (Bit8u *) &op2);
-  }
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2 = BX_READ_XMM_REG(i->rm());
 
   op1.xmm64u(0) ^= op2.xmm64u(0);
   op1.xmm64u(1) ^= op2.xmm64u(1);

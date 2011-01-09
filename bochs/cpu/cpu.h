@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.705 2011-01-08 19:50:22 sshwarts Exp $
+// $Id: cpu.h,v 1.706 2011-01-09 20:18:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2011  The Bochs Project
@@ -2015,10 +2015,10 @@ public: // for now...
   /* SSE */
 
   /* SSE */
-  BX_SMF void ANDPS_VpsWps(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void ORPS_VpsWps(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void XORPS_VpsWps(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void ANDNPS_VpsWps(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void ANDPS_VpsWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void ORPS_VpsWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void XORPS_VpsWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void ANDNPS_VpsWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void MOVUPS_VpsWpsM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void MOVUPS_WpsVpsM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void MOVSS_VssWssR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -2039,9 +2039,9 @@ public: // for now...
   BX_SMF void CVTSI2SS_VssEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void CVTSI2SS_VssEdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void CVTTPS2PI_PqWps(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void CVTTSS2SI_GdWss(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CVTTSS2SI_GdWssR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void CVTPS2PI_PqWps(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void CVTSS2SI_GdWss(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CVTSS2SI_GdWssR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void UCOMISS_VssWssR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void COMISS_VpsWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void MOVMSKPS_GdVRps(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -2089,9 +2089,9 @@ public: // for now...
   BX_SMF void CVTSI2SD_VsdEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void CVTSI2SD_VsdEdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void CVTTPD2PI_PqWpd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void CVTTSD2SI_GdWsd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CVTTSD2SI_GdWsdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void CVTPD2PI_PqWpd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void CVTSD2SI_GdWsd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CVTSD2SI_GdWsdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void UCOMISD_VsdWsdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void COMISD_VpdWpdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void MOVMSKPD_GdVRpd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -2116,20 +2116,20 @@ public: // for now...
   BX_SMF void DIVSD_VsdWsdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void MAXPD_VpdWpdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void MAXSD_VsdWsdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void PUNPCKLBW_VdqWdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void PUNPCKLWD_VdqWdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void UNPCKLPS_VpsWdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void PACKSSWB_VdqWdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void PUNPCKLBW_VdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void PUNPCKLWD_VdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void UNPCKLPS_VpsWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void PACKSSWB_VdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void PCMPGTB_VdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void PCMPGTW_VdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void PCMPGTD_VdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void PACKUSWB_VdqWdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void PUNPCKHBW_VdqWdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void PUNPCKHWD_VdqWdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void UNPCKHPS_VpsWdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void PACKSSDW_VdqWdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void PUNPCKLQDQ_VdqWdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void PUNPCKHQDQ_VdqWdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void PACKUSWB_VdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void PUNPCKHBW_VdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void PUNPCKHWD_VdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void UNPCKHPS_VpsWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void PACKSSDW_VdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void PUNPCKLQDQ_VdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void PUNPCKHQDQ_VdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void MOVD_VdqEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void PSHUFD_VdqWdqIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void PSHUFHW_VdqWdqIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -2901,24 +2901,6 @@ public: // for now...
   BX_SMF Bit16u read_RMW_virtual_word_64(unsigned seg, Bit64u offset) BX_CPP_AttrRegparmN(2);
   BX_SMF Bit32u read_RMW_virtual_dword_64(unsigned seg, Bit64u offset) BX_CPP_AttrRegparmN(2);
   BX_SMF Bit64u read_RMW_virtual_qword_64(unsigned seg, Bit64u offset) BX_CPP_AttrRegparmN(2);
-#endif
-
-#if BX_SUPPORT_MISALIGNED_SSE
-
-#define readVirtualDQwordAligned(s, off, data)       \
-  if (! BX_CPU_THIS_PTR mxcsr.get_MM()) {            \
-    read_virtual_dqword_aligned(s, off, data);       \
-  }                                                  \
-  else {                                             \
-    read_virtual_dqword(s, off, data);               \
-  }
-
-#else // BX_SUPPORT_MISALIGNED_SSE = 0
-
-#define readVirtualDQwordAligned(s, off, data) {     \
-  read_virtual_dqword_aligned(s, off, data);         \
-}
-
 #endif
 
   // write of word/dword to new stack could happen only in legacy mode
