@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmcs.cc,v 1.6 2010-11-19 08:39:52 sshwarts Exp $
+// $Id: vmcs.cc,v 1.7 2011-01-10 22:37:05 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2009-2010 Stanislav Shwartsman
@@ -48,7 +48,7 @@ void BX_CPU_C::init_VMCS(void)
   // try to build generic VMCS map
   for (type=0; type<16; type++) {
     for (field=0; field <= VMX_HIGHEST_VMCS_ENCODING; field++) {
-       unsigned encoding = (type << 10) + field;
+       unsigned encoding = ((type & 0xc) << 11) + ((type & 3) << 10) + field;
        if (vmcs_map[type][field] != 0xffffffff) {
           BX_PANIC(("VMCS type %d field %d (encoding = 0x%08x) is already initialized", type, field, encoding));
        }
