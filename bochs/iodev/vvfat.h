@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vvfat.h,v 1.7 2011-01-09 19:20:11 vruppert Exp $
+// $Id: vvfat.h,v 1.8 2011-01-10 21:15:05 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2010  The Bochs Project
@@ -132,10 +132,12 @@ class vvfat_image_t : public device_image_t
     off_t cluster2sector(Bit32u cluster_num);
     int init_directories(const char* dirname);
     bx_bool read_sector_from_file(const char *path, Bit8u *buffer, Bit32u sector);
+    void set_file_attributes(void);
     Bit32u fat_get_next(Bit32u current);
     bx_bool write_file(const char *path, direntry_t *entry, bx_bool create);
     direntry_t* read_direntry(Bit8u *buffer, char *filename);
     void parse_directory(const char *path, Bit32u start_cluster);
+    void commit_changes(void);
     void close_current_file(void);
     int open_file(mapping_t* mapping);
     int find_mapping_for_cluster_aux(int cluster_num, int index1, int index2);
@@ -173,6 +175,7 @@ class vvfat_image_t : public device_image_t
 
     bx_bool use_mbr_file;
     bx_bool use_boot_file;
+    FILE    *vvfat_attr_fd;
 
     bx_bool   vvfat_modified;
     void      *fat2;
