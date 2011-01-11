@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.cc,v 1.129 2011-01-11 20:14:21 vruppert Exp $
+// $Id: floppy.cc,v 1.130 2011-01-11 22:00:41 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2009  The Bochs Project
@@ -129,6 +129,9 @@ bx_floppy_ctrl_c::bx_floppy_ctrl_c()
 
 bx_floppy_ctrl_c::~bx_floppy_ctrl_c()
 {
+  for (int i = 0; i < 4; i++) {
+    close_media(&BX_FD_THIS s.media[i]);
+  }
   BX_DEBUG(("Exit"));
 }
 
@@ -136,7 +139,7 @@ void bx_floppy_ctrl_c::init(void)
 {
   Bit8u i, devtype, cmos_value;
 
-  BX_DEBUG(("Init $Id: floppy.cc,v 1.129 2011-01-11 20:14:21 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: floppy.cc,v 1.130 2011-01-11 22:00:41 vruppert Exp $"));
   DEV_dma_register_8bit_channel(2, dma_read, dma_write, "Floppy Drive");
   DEV_register_irq(6, "Floppy Drive");
   for (unsigned addr=0x03F2; addr<=0x03F7; addr++) {
@@ -1437,18 +1440,7 @@ unsigned bx_floppy_ctrl_c::set_media_status(unsigned drive, unsigned status)
 
   if (status == 0) {
     // eject floppy
-    if (BX_FD_THIS s.media[drive].fd >= 0) {
-      if (BX_FD_THIS s.media[drive].vvfat_floppy) {
-#if !BX_PLUGINS
-        BX_FD_THIS s.media[drive].vvfat->close();
-        delete BX_FD_THIS s.media[drive].vvfat;
-        BX_FD_THIS s.media[drive].vvfat_floppy = 0;
-#endif
-      } else {
-        close(BX_FD_THIS s.media[drive].fd);
-      }
-      BX_FD_THIS s.media[drive].fd = -1;
-    }
+    close_media(&BX_FD_THIS s.media[drive]);
     BX_FD_THIS s.media_present[drive] = 0;
     if (drive == 0) {
       SIM->get_param_bool(BXPN_FLOPPYA_STATUS)->set(0);
@@ -1528,18 +1520,7 @@ bx_bool bx_floppy_ctrl_c::evaluate_media(Bit8u devtype, Bit8u type, char *path, 
 #endif
 
   //If media file is already open, close it before reopening.
-  if(media->fd >=0) {
-    if (media->vvfat_floppy) {
-#if !BX_PLUGINS
-      media->vvfat->close();
-      delete media->vvfat;
-      media->vvfat_floppy = 0;
-#endif
-    } else {
-      close(media->fd);
-    }
-    media->fd=-1;
-  }
+  close_media(media);
 
   // check media type
   if (type == BX_FLOPPY_NONE) {
@@ -1799,6 +1780,22 @@ bx_bool bx_floppy_ctrl_c::evaluate_media(Bit8u devtype, Bit8u type, char *path, 
     // unknown file type
     BX_ERROR(("unknown mode type"));
     return 0;
+  }
+}
+
+void bx_floppy_ctrl_c::close_media(floppy_t *media)
+{
+  if (media->fd >= 0) {
+    if (media->vvfat_floppy) {
+#if !BX_PLUGINS
+      media->vvfat->close();
+      delete media->vvfat;
+#endif
+      media->vvfat_floppy = 0;
+    } else if (!media->raw_floppy_win95) {
+      close(media->fd);
+    }
+    media->fd = -1;
   }
 }
 

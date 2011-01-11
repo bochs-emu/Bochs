@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.h,v 1.37 2011-01-11 20:14:21 vruppert Exp $
+// $Id: floppy.h,v 1.38 2011-01-11 22:00:41 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2009  The Bochs Project
@@ -147,11 +147,12 @@ private:
   BX_FD_SMF void   reset_changeline(void);
   BX_FD_SMF bx_bool get_tc(void);
   static void      timer_handler(void *);
+  BX_FD_SMF void   increment_sector(void);
+  BX_FD_SMF bx_bool evaluate_media(Bit8u devtype, Bit8u type, char *path, floppy_t *media);
+  BX_FD_SMF void    close_media(floppy_t *media);
 
 public:
   BX_FD_SMF void   timer(void);
-  BX_FD_SMF void   increment_sector(void);
-  BX_FD_SMF bx_bool evaluate_media(Bit8u devtype, Bit8u type, char *path, floppy_t *floppy);
 };
 
 
