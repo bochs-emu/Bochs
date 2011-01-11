@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vvfat.h,v 1.8 2011-01-10 21:15:05 vruppert Exp $
+// $Id: vvfat.h,v 1.9 2011-01-11 20:14:21 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2010  The Bochs Project
@@ -109,7 +109,7 @@ typedef struct mapping_t {
 class vvfat_image_t : public device_image_t
 {
   public:
-    vvfat_image_t(const char* redolog_name);
+    vvfat_image_t(Bit64u size, const char* redolog_name);
     virtual ~vvfat_image_t();
 
     int open(const char* dirname);

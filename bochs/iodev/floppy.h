@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.h,v 1.36 2010-07-03 05:34:27 vruppert Exp $
+// $Id: floppy.h,v 1.37 2011-01-11 20:14:21 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2009  The Bochs Project
@@ -45,6 +45,8 @@ typedef struct {
 #ifdef WIN32
   unsigned char raw_floppy_win95_drv;
 #endif
+  bx_bool  vvfat_floppy;
+  device_image_t *vvfat;
   } floppy_t;
 
 class bx_floppy_ctrl_c : public bx_floppy_stub_c {

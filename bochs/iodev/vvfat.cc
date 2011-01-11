@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vvfat.cc,v 1.15 2011-01-10 21:15:04 vruppert Exp $
+// $Id: vvfat.cc,v 1.16 2011-01-11 20:14:21 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2010  The Bochs Project
@@ -30,10 +30,10 @@
 // - volatile runtime write support using the hdimage redolog_t class
 // - ask user on Bochs exit if directory and file changes should be committed
 // - handle file attribute changes (system, hidden and read-only)
+// - vvfat floppy support (1.44 MB media only)
 
 // TODO:
 // - write support: handle file date and time changes
-// - vvfat floppy support
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
 // platforms that require a special tag on exported symbols, BX_PLUGGABLE
@@ -343,11 +343,12 @@ infosector_t;
 #pragma options align=reset
 #endif
 
-vvfat_image_t::vvfat_image_t(const char* _redolog_name)
+vvfat_image_t::vvfat_image_t(Bit64u size, const char* _redolog_name)
 {
   first_sectors = new Bit8u[0xc000];
   memset(&first_sectors[0], 0, 0xc000);
 
+  hd_size = size;
   redolog = new redolog_t();
   redolog_temp = NULL;
   redolog_name = NULL;
@@ -555,8 +556,6 @@ void vvfat_image_t::init_fat(void)
   }
 }
 
-// TODO: in create_short_filename, 0xe5->0x05 is not yet handled!
-// TODO: in parse_short_filename, 0x05->0xe5 is not yet handled!
 direntry_t* vvfat_image_t::create_short_and_long_name(
   unsigned int directory_start, const char* filename, int is_dot)
 {
@@ -597,6 +596,7 @@ direntry_t* vvfat_image_t::create_short_and_long_name(
     else if (entry->name[i]>='a' && entry->name[i]<='z')
       entry->name[i]+='A'-'a';
   }
+  if (entry->name[0] == 0xe5) entry->name[0] = 0x05;
 
   // mangle duplicates
   while (1) {
@@ -1262,17 +1262,29 @@ int vvfat_image_t::open(const char* dirname)
       memcpy(&first_sectors[offset_to_bootsector * 0x200], sector_buffer, 0x200);
       BX_INFO(("VVFAT: using boot sector from file"));
     }
-
   }
 
   if (!use_mbr_file && !use_boot_file) {
-    if (cylinders == 0) {
-      cylinders = 1024;
-      heads = 16;
-      sectors = 63;
+    if (hd_size == 1474560) {
+      // floppy support
+      cylinders = 80;
+      heads = 2;
+      sectors = 18;
+      offset_to_bootsector = 0;
+      fat_type = 12;
+      sectors_per_cluster = 1;
+      first_cluster_of_root_dir = 0;
+      root_entries = 224;
+      reserved_sectors = 1;
+    } else {
+      if (cylinders == 0) {
+        cylinders = 1024;
+        heads = 16;
+        sectors = 63;
+      }
+      offset_to_bootsector = sectors;
     }
     sector_count = cylinders * heads * sectors;
-    offset_to_bootsector = sectors;
   }
 
   hd_size = sector_count * 512;
@@ -1388,6 +1400,7 @@ direntry_t* vvfat_image_t::read_direntry(Bit8u *buffer, char *filename)
         buffer += 32;
       } else {
         if (!has_lfn) {
+          if (entry->name[0] == 0x05) entry->name[0] = 0xe5;
           memcpy(filename, entry->name, 8);
           i = 7;
           while ((i > 0) && (filename[i] == ' ')) filename[i--] = 0;

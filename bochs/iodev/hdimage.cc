@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: hdimage.cc,v 1.26 2011-01-07 18:35:34 vruppert Exp $
+// $Id: hdimage.cc,v 1.27 2011-01-11 20:14:21 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2009  The Bochs Project
@@ -1851,7 +1851,7 @@ device_image_t *hdimage_init_image(Bit8u image_mode, Bit64u disk_size, const cha
 #endif //BX_COMPRESSED_HD_SUPPORT
 
     case BX_HDIMAGE_MODE_VVFAT:
-      hdimage = new vvfat_image_t(journal);
+      hdimage = new vvfat_image_t(disk_size, journal);
       break;
 
     default:

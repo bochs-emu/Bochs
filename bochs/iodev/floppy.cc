@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.cc,v 1.128 2010-11-20 12:37:00 vruppert Exp $
+// $Id: floppy.cc,v 1.129 2011-01-11 20:14:21 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2009  The Bochs Project
@@ -49,6 +49,7 @@ extern "C" {
 }
 #endif
 #include "iodev.h"
+#include "hdimage.h"
 #include "floppy.h"
 // windows.h included by bochs.h
 #ifdef WIN32
@@ -135,7 +136,7 @@ void bx_floppy_ctrl_c::init(void)
 {
   Bit8u i, devtype, cmos_value;
 
-  BX_DEBUG(("Init $Id: floppy.cc,v 1.128 2010-11-20 12:37:00 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: floppy.cc,v 1.129 2011-01-11 20:14:21 vruppert Exp $"));
   DEV_dma_register_8bit_channel(2, dma_read, dma_write, "Floppy Drive");
   DEV_register_irq(6, "Floppy Drive");
   for (unsigned addr=0x03F2; addr<=0x03F7; addr++) {
@@ -155,6 +156,7 @@ void bx_floppy_ctrl_c::init(void)
     BX_FD_THIS s.media[i].heads             = 0;
     BX_FD_THIS s.media[i].sectors           = 0;
     BX_FD_THIS s.media[i].fd                = -1;
+    BX_FD_THIS s.media[i].vvfat_floppy      = 0;
     BX_FD_THIS s.media_present[i]           = 0;
     BX_FD_THIS s.device_type[i]             = FDRIVE_NONE;
   }
@@ -1020,7 +1022,13 @@ void bx_floppy_ctrl_c::floppy_xfer(Bit8u drive, Bit32u offset, Bit8u *buffer,
   {
     // don't need to seek the file if we are using Win95 type direct access
     if (!BX_FD_THIS s.media[drive].raw_floppy_win95) {
-      ret = (int)lseek(BX_FD_THIS s.media[drive].fd, offset, SEEK_SET);
+      if (BX_FD_THIS s.media[drive].vvfat_floppy) {
+#if !BX_PLUGINS
+        ret = BX_FD_THIS s.media[drive].vvfat->lseek(offset, SEEK_SET);
+#endif
+      } else {
+        ret = (int)lseek(BX_FD_THIS s.media[drive].fd, offset, SEEK_SET);
+      }
       if (ret < 0) {
         BX_PANIC(("could not perform lseek() to %d on floppy image file", offset));
         return;
@@ -1056,7 +1064,13 @@ void bx_floppy_ctrl_c::floppy_xfer(Bit8u drive, Bit32u offset, Bit8u *buffer,
     else
 #endif
     {
-      ret = ::read(BX_FD_THIS s.media[drive].fd, (bx_ptr_t) buffer, bytes);
+      if (BX_FD_THIS s.media[drive].vvfat_floppy) {
+#if !BX_PLUGINS
+        ret = BX_FD_THIS s.media[drive].vvfat->read(buffer, bytes);
+#endif
+      } else {
+        ret = ::read(BX_FD_THIS s.media[drive].fd, (bx_ptr_t) buffer, bytes);
+      }
     }
     if (ret < int(bytes)) {
       /* ??? */
@@ -1101,7 +1115,13 @@ void bx_floppy_ctrl_c::floppy_xfer(Bit8u drive, Bit32u offset, Bit8u *buffer,
     else
 #endif
     {
-      ret = ::write(BX_FD_THIS s.media[drive].fd, (bx_ptr_t) buffer, bytes);
+      if (BX_FD_THIS s.media[drive].vvfat_floppy) {
+#if !BX_PLUGINS
+        ret = BX_FD_THIS s.media[drive].vvfat->write(buffer, bytes);
+#endif
+      } else {
+        ret = ::write(BX_FD_THIS s.media[drive].fd, (bx_ptr_t) buffer, bytes);
+      }
     }
     if (ret < int(bytes)) {
       BX_PANIC(("could not perform write() on floppy image file"));
@@ -1418,7 +1438,15 @@ unsigned bx_floppy_ctrl_c::set_media_status(unsigned drive, unsigned status)
   if (status == 0) {
     // eject floppy
     if (BX_FD_THIS s.media[drive].fd >= 0) {
-      close(BX_FD_THIS s.media[drive].fd);
+      if (BX_FD_THIS s.media[drive].vvfat_floppy) {
+#if !BX_PLUGINS
+        BX_FD_THIS s.media[drive].vvfat->close();
+        delete BX_FD_THIS s.media[drive].vvfat;
+        BX_FD_THIS s.media[drive].vvfat_floppy = 0;
+#endif
+      } else {
+        close(BX_FD_THIS s.media[drive].fd);
+      }
       BX_FD_THIS s.media[drive].fd = -1;
     }
     BX_FD_THIS s.media_present[drive] = 0;
@@ -1501,7 +1529,15 @@ bx_bool bx_floppy_ctrl_c::evaluate_media(Bit8u devtype, Bit8u type, char *path, 
 
   //If media file is already open, close it before reopening.
   if(media->fd >=0) {
-    close(media->fd);
+    if (media->vvfat_floppy) {
+#if !BX_PLUGINS
+      media->vvfat->close();
+      delete media->vvfat;
+      media->vvfat_floppy = 0;
+#endif
+    } else {
+      close(media->fd);
+    }
     media->fd=-1;
   }
 
@@ -1521,6 +1557,24 @@ bx_bool bx_floppy_ctrl_c::evaluate_media(Bit8u devtype, Bit8u type, char *path, 
     return 0;
   }
 
+  // use virtual VFAT support if requested (currently not compatible with plugins)
+#if !BX_PLUGINS
+  if (!strncmp(path, "vvfat:", 6) && (devtype == FDRIVE_350HD)) {
+    media->vvfat = hdimage_init_image(BX_HDIMAGE_MODE_VVFAT, 1474560, "");
+    if (media->vvfat != NULL) {
+      if (media->vvfat->open(path + 6) == 0) {
+        media->type              = BX_FLOPPY_1_44;
+        media->tracks            = media->vvfat->cylinders;
+        media->heads             = media->vvfat->heads;
+        media->sectors_per_track = media->vvfat->sectors;
+        media->sectors           = 2880;
+        media->vvfat_floppy = 1;
+        media->fd = 0;
+      }
+    }
+    if (media->vvfat_floppy) return 1;
+  }
+#endif
   // open media file (image file or device)
   media->raw_floppy_win95 = 0;
 #ifdef macintosh
