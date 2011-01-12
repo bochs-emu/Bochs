@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.124 2010-12-14 21:20:37 vruppert Exp $
+// $Id: iodev.h,v 1.125 2011-01-12 22:34:42 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2009  The Bochs Project
@@ -80,6 +80,7 @@ class BOCHSAPI bx_devmodel_c : public logfunctions {
 //////////////////////////////////////////////////////////////////////
 
 class bx_list_c;
+class device_image_t;
 
 // the best should be deriving of bx_pci_device_stub_c from bx_devmodel_c
 // but it make serious problems for cirrus_svga device
@@ -353,6 +354,13 @@ public:
 };
 #endif
 
+class BOCHSAPI bx_hdimage_ctl_stub_c : public bx_devmodel_c {
+public:
+  virtual device_image_t* init_image(Bit8u image_mode, Bit64u disk_size, const char *journal) {
+    STUBFUNC(hdimage_ctl, init_image); return NULL;
+  }
+};
+
 class BOCHSAPI bx_devices_c : public logfunctions {
 public:
   bx_devices_c();
@@ -424,6 +432,7 @@ public:
   bx_vga_stub_c     *pluginVgaDevice;
   bx_pic_stub_c     *pluginPicDevice;
   bx_hard_drive_stub_c *pluginHardDrive;
+  bx_hdimage_ctl_stub_c *pluginHDImageCtl;
   bx_ne2k_stub_c    *pluginNE2kDevice;
   bx_speaker_stub_c *pluginSpeaker;
 #if BX_SUPPORT_IODEBUG
@@ -444,6 +453,7 @@ public:
   bx_cmos_stub_c stubCmos;
   bx_keyb_stub_c stubKeyboard;
   bx_hard_drive_stub_c stubHardDrive;
+  bx_hdimage_ctl_stub_c stubHDImage;
   bx_dma_stub_c  stubDma;
   bx_pic_stub_c  stubPic;
   bx_floppy_stub_c  stubFloppy;

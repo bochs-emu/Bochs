@@ -1,8 +1,8 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.232 2010-12-27 18:37:25 vruppert Exp $
+// $Id: harddrv.cc,v 1.233 2011-01-12 22:34:42 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2010  The Bochs Project
+//  Copyright (C) 2002-2011  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -165,7 +165,7 @@ void bx_hard_drive_c::init(void)
   char  ata_name[20];
   bx_list_c *base;
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.232 2010-12-27 18:37:25 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.233 2011-01-12 22:34:42 vruppert Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     sprintf(ata_name, "ata.%d.resources", channel);
@@ -291,7 +291,7 @@ void bx_hard_drive_c::init(void)
         Bit64u disk_size = (Bit64u)cyl * heads * spt * 512;
 
         image_mode = SIM->get_param_enum("mode", base)->get();
-        channels[channel].drives[device].hdimage = hdimage_init_image(image_mode,
+        channels[channel].drives[device].hdimage = DEV_hdimage_init_image(image_mode,
             disk_size, SIM->get_param_string("journal", base)->getptr());
 
         if (channels[channel].drives[device].hdimage != NULL) {

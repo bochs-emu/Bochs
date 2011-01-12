@@ -1,8 +1,8 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vvfat.cc,v 1.16 2011-01-11 20:14:21 vruppert Exp $
+// $Id: vvfat.cc,v 1.17 2011-01-12 22:34:42 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2010  The Bochs Project
+//  Copyright (C) 2010/2011  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public

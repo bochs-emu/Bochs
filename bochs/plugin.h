@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: plugin.h,v 1.85 2010-12-14 21:20:37 vruppert Exp $
+// $Id: plugin.h,v 1.86 2011-01-12 22:34:42 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  The Bochs Project
@@ -49,6 +49,7 @@ extern "C" {
 #define BX_PLUGIN_KEYBOARD  "keyboard"
 #define BX_PLUGIN_BUSMOUSE  "busmouse"
 #define BX_PLUGIN_HARDDRV   "harddrv"
+#define BX_PLUGIN_HDIMAGE   "hdimage"
 #define BX_PLUGIN_DMA       "dma"
 #define BX_PLUGIN_PIC       "pic"
 #define BX_PLUGIN_PIT       "pit"
@@ -170,6 +171,7 @@ extern "C" {
 #define DEV_hd_bmdma_read_sector(a,b,c) bx_devices.pluginHardDrive->bmdma_read_sector(a,b,c)
 #define DEV_hd_bmdma_write_sector(a,b) bx_devices.pluginHardDrive->bmdma_write_sector(a,b)
 #define DEV_hd_bmdma_complete(a) bx_devices.pluginHardDrive->bmdma_complete(a)
+#define DEV_hdimage_init_image(a,b,c) bx_devices.pluginHDImageCtl->init_image(a,b,c)
 
 #define DEV_bulk_io_quantum_requested() (bx_devices.bulkIOQuantumsRequested)
 #define DEV_bulk_io_quantum_transferred() (bx_devices.bulkIOQuantumsTransferred)
@@ -371,6 +373,7 @@ int plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[]);
   void lib##mod##_LTX_plugin_fini(void);
 
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(harddrv)
+DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(hdimage)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(keyboard)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(busmouse)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(serial)

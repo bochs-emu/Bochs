@@ -1,8 +1,8 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: hdimage.cc,v 1.27 2011-01-11 20:14:21 vruppert Exp $
+// $Id: hdimage.cc,v 1.28 2011-01-12 22:34:42 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2009  The Bochs Project
+//  Copyright (C) 2002-2011  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -36,6 +36,98 @@
 #endif
 
 #define LOG_THIS bx_devices.pluginHardDrive->
+
+bx_hdimage_ctl_c* theHDImageCtl = NULL;
+
+int libhdimage_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
+{
+  theHDImageCtl = new bx_hdimage_ctl_c;
+  bx_devices.pluginHDImageCtl = theHDImageCtl;
+  return(0); // Success
+}
+
+void libhdimage_LTX_plugin_fini(void)
+{
+  delete theHDImageCtl;
+}
+
+device_image_t* bx_hdimage_ctl_c::init_image(Bit8u image_mode, Bit64u disk_size, const char *journal)
+{
+  device_image_t *hdimage = NULL;
+
+  // instantiate the right class
+  switch (image_mode) {
+
+    case BX_HDIMAGE_MODE_FLAT:
+      hdimage = new default_image_t();
+      break;
+
+    case BX_HDIMAGE_MODE_CONCAT:
+      hdimage = new concat_image_t();
+      break;
+
+#if EXTERNAL_DISK_SIMULATOR
+    case BX_HDIMAGE_MODE_EXTDISKSIM:
+      hdimage = new EXTERNAL_DISK_SIMULATOR_CLASS();
+      break;
+#endif //EXTERNAL_DISK_SIMULATOR
+
+#if DLL_HD_SUPPORT
+    case BX_HDIMAGE_MODE_DLL_HD:
+      hdimage = new dll_image_t();
+      break;
+#endif //DLL_HD_SUPPORT
+
+    case BX_HDIMAGE_MODE_SPARSE:
+      hdimage = new sparse_image_t();
+      break;
+
+    case BX_HDIMAGE_MODE_VMWARE3:
+      hdimage = new vmware3_image_t();
+      break;
+
+    case BX_HDIMAGE_MODE_VMWARE4:
+      hdimage = new vmware4_image_t();
+      break;
+
+    case BX_HDIMAGE_MODE_UNDOABLE:
+      hdimage = new undoable_image_t(journal);
+      break;
+
+    case BX_HDIMAGE_MODE_GROWING:
+      hdimage = new growing_image_t();
+      break;
+
+    case BX_HDIMAGE_MODE_VOLATILE:
+      hdimage = new volatile_image_t(journal);
+      break;
+
+#if BX_COMPRESSED_HD_SUPPORT
+    case BX_HDIMAGE_MODE_Z_UNDOABLE:
+      BX_PANIC(("z-undoable disk support not implemented"));
+#if 0
+      hdimage = new z_undoable_image_t(disk_size, journal);
+#endif
+      break;
+
+    case BX_HDIMAGE_MODE_Z_VOLATILE:
+      BX_PANIC(("z-volatile disk support not implemented"));
+#if 0
+      hdimage = new z_volatile_image_t(disk_size, "journal");
+#endif
+      break;
+#endif //BX_COMPRESSED_HD_SUPPORT
+
+    case BX_HDIMAGE_MODE_VVFAT:
+      hdimage = new vvfat_image_t(disk_size, journal);
+      break;
+
+    default:
+      BX_PANIC(("unsupported HD mode : '%s'", hdimage_mode_names[image_mode]));
+      break;
+  }
+  return hdimage;
+}
 
 /*** base class device_image_t ***/
 
@@ -1782,81 +1874,3 @@ ssize_t z_volatile_image_t::write (const void* buf, size_t count)
 }
 
 #endif
-
-device_image_t *hdimage_init_image(Bit8u image_mode, Bit64u disk_size, const char *journal)
-{
-  device_image_t *hdimage = NULL;
-
-  // instantiate the right class
-  switch (image_mode) {
-
-    case BX_HDIMAGE_MODE_FLAT:
-      hdimage = new default_image_t();
-      break;
-
-    case BX_HDIMAGE_MODE_CONCAT:
-      hdimage = new concat_image_t();
-      break;
-
-#if EXTERNAL_DISK_SIMULATOR
-    case BX_HDIMAGE_MODE_EXTDISKSIM:
-      hdimage = new EXTERNAL_DISK_SIMULATOR_CLASS();
-      break;
-#endif //EXTERNAL_DISK_SIMULATOR
-
-#if DLL_HD_SUPPORT
-    case BX_HDIMAGE_MODE_DLL_HD:
-      hdimage = new dll_image_t();
-      break;
-#endif //DLL_HD_SUPPORT
-
-    case BX_HDIMAGE_MODE_SPARSE:
-      hdimage = new sparse_image_t();
-      break;
-
-    case BX_HDIMAGE_MODE_VMWARE3:
-      hdimage = new vmware3_image_t();
-      break;
-
-    case BX_HDIMAGE_MODE_VMWARE4:
-      hdimage = new vmware4_image_t();
-      break;
-
-    case BX_HDIMAGE_MODE_UNDOABLE:
-      hdimage = new undoable_image_t(journal);
-      break;
-
-    case BX_HDIMAGE_MODE_GROWING:
-      hdimage = new growing_image_t();
-      break;
-
-    case BX_HDIMAGE_MODE_VOLATILE:
-      hdimage = new volatile_image_t(journal);
-      break;
-
-#if BX_COMPRESSED_HD_SUPPORT
-    case BX_HDIMAGE_MODE_Z_UNDOABLE:
-      BX_PANIC(("z-undoable disk support not implemented"));
-#if 0
-      hdimage = new z_undoable_image_t(disk_size, journal);
-#endif
-      break;
-
-    case BX_HDIMAGE_MODE_Z_VOLATILE:
-      BX_PANIC(("z-volatile disk support not implemented"));
-#if 0
-      hdimage = new z_volatile_image_t(disk_size, "journal");
-#endif
-      break;
-#endif //BX_COMPRESSED_HD_SUPPORT
-
-    case BX_HDIMAGE_MODE_VVFAT:
-      hdimage = new vvfat_image_t(disk_size, journal);
-      break;
-
-    default:
-      BX_PANIC(("unsupported HD mode : '%s'", hdimage_mode_names[image_mode]));
-      break;
-  }
-  return hdimage;
-}

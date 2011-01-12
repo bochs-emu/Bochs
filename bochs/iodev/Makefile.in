@@ -77,6 +77,7 @@ OBJS_THAT_CAN_BE_PLUGINS = \
   biosdev.o \
   cmos.o \
   harddrv.o \
+  hdimage.o \
   dma.o \
   unmapped.o \
   extfpuirq.o \
@@ -95,7 +96,6 @@ OBJS_THAT_SUPPORT_OTHER_PLUGINS = \
   scancodes.o \
   serial_raw.o \
   svga_cirrus.o \
-  hdimage.o \
   vmware3.o \
   vmware4.o \
   vvfat.o \
@@ -136,8 +136,11 @@ libbx_%.la: %.lo
 	$(LIBTOOL) --mode=link $(CXX) -module $< -o $@ -rpath $(PLUGIN_PATH)
 
 # special link rules for plugins that require more than one object file
-libbx_harddrv.la: harddrv.lo hdimage.lo vmware3.lo vmware4.lo vvfat.lo $(CDROM_OBJS:.o=.lo)
-	$(LIBTOOL) --mode=link $(CXX) -module harddrv.lo hdimage.lo vmware3.lo vmware4.lo vvfat.lo $(CDROM_OBJS:.o=.lo) -o libbx_harddrv.la -rpath $(PLUGIN_PATH)
+libbx_harddrv.la: harddrv.lo $(CDROM_OBJS:.o=.lo)
+	$(LIBTOOL) --mode=link $(CXX) -module harddrv.lo $(CDROM_OBJS:.o=.lo) -o libbx_harddrv.la -rpath $(PLUGIN_PATH)
+
+libbx_hdimage.la: hdimage.lo vmware3.lo vmware4.lo vvfat.lo
+	$(LIBTOOL) --mode=link $(CXX) -module hdimage.lo vmware3.lo vmware4.lo vvfat.lo -o libbx_hdimage.la -rpath $(PLUGIN_PATH)
 
 libbx_keyboard.la: keyboard.lo scancodes.lo
 	$(LIBTOOL) --mode=link $(CXX) -module keyboard.lo scancodes.lo -o libbx_keyboard.la -rpath $(PLUGIN_PATH)
@@ -160,16 +163,19 @@ libbx_serial.la: serial.lo serial_raw.lo
 libbx_vga.la: vga.lo svga_cirrus.lo
 	$(LIBTOOL) --mode=link $(CXX) -module vga.lo svga_cirrus.lo -o libbx_vga.la -rpath $(PLUGIN_PATH)
 
-libbx_usb_common.la: usb_common.lo $(USBDEV_OBJS:.o=.lo) scsi_device.lo hdimage.lo vmware3.lo vmware4.lo vvfat.lo $(CDROM_OBJS:.o=.lo)
-	$(LIBTOOL) --mode=link $(CXX) -module usb_common.lo $(USBDEV_OBJS:.o=.lo) scsi_device.lo hdimage.lo vmware3.lo vmware4.lo vvfat.lo $(CDROM_OBJS:.o=.lo) -o libbx_usb_common.la -rpath $(PLUGIN_PATH)
+libbx_usb_common.la: usb_common.lo $(USBDEV_OBJS:.o=.lo) scsi_device.lo $(CDROM_OBJS:.o=.lo)
+	$(LIBTOOL) --mode=link $(CXX) -module usb_common.lo $(USBDEV_OBJS:.o=.lo) scsi_device.lo $(CDROM_OBJS:.o=.lo) -o libbx_usb_common.la -rpath $(PLUGIN_PATH)
 
 #### building DLLs for win32  (tested on cygwin only)
 bx_%.dll: %.o
 	$(CXX) $(CXXFLAGS) -shared -o $@ $< $(WIN32_DLL_IMPORT_LIBRARY)
 
 # special link rules for plugins that require more than one object file
-bx_harddrv.dll: harddrv.o hdimage.o vmware3.o vmware4.o vvfat.o $(CDROM_OBJS)
-	$(CXX) $(CXXFLAGS) -shared -o bx_harddrv.dll harddrv.o hdimage.o vmware3.o vmware4.o vvfat.o $(CDROM_OBJS) $(WIN32_DLL_IMPORT_LIBRARY)
+bx_harddrv.dll: harddrv.o $(CDROM_OBJS)
+	$(CXX) $(CXXFLAGS) -shared -o bx_harddrv.dll harddrv.o $(CDROM_OBJS) $(WIN32_DLL_IMPORT_LIBRARY)
+
+bx_hdimage.dll: hdimage.o vmware3.o vmware4.o vvfat.o
+	$(CXX) $(CXXFLAGS) -shared -o bx_hdimage.dll hdimage.o vmware3.o vmware4.o vvfat.o $(WIN32_DLL_IMPORT_LIBRARY)
 
 bx_keyboard.dll: keyboard.o scancodes.o
 	$(CXX) $(CXXFLAGS) -shared -o bx_keyboard.dll keyboard.o scancodes.o $(WIN32_DLL_IMPORT_LIBRARY)
@@ -195,8 +201,8 @@ bx_serial.dll: serial.o serial_raw.o
 bx_vga.dll: vga.o svga_cirrus.o
 	$(CXX) $(CXXFLAGS) -shared -o bx_vga.dll vga.o svga_cirrus.o $(WIN32_DLL_IMPORT_LIBRARY)
 
-bx_usb_common.dll: usb_common.o $(USBDEV_OBJS) scsi_device.o hdimage.o vmware3.o vmware4.o vvfat.o $(CDROM_OBJS)
-	$(CXX) $(CXXFLAGS) -shared -o bx_usb_common.dll usb_common.o $(USBDEV_OBJS) scsi_device.o hdimage.o vmware3.o vmware4.o vvfat.o $(CDROM_OBJS) $(WIN32_DLL_IMPORT_LIBRARY)
+bx_usb_common.dll: usb_common.o $(USBDEV_OBJS) scsi_device.o $(CDROM_OBJS)
+	$(CXX) $(CXXFLAGS) -shared -o bx_usb_common.dll usb_common.o $(USBDEV_OBJS) scsi_device.o $(CDROM_OBJS) $(WIN32_DLL_IMPORT_LIBRARY)
 
 ##### end DLL section
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: hdimage.h,v 1.16 2011-01-07 18:35:34 vruppert Exp $
+// $Id: hdimage.h,v 1.17 2011-01-12 22:34:42 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2005-2009  The Bochs Project
@@ -576,7 +576,13 @@ class z_volatile_image_t : public device_image_t
 
 #endif
 
-device_image_t *hdimage_init_image(Bit8u image_mode, Bit64u disk_size, const char *journal);
+class bx_hdimage_ctl_c : public bx_hdimage_ctl_stub_c {
+public:
+  bx_hdimage_ctl_c() {}
+  virtual ~bx_hdimage_ctl_c() {}
+  virtual device_image_t *init_image(Bit8u image_mode, Bit64u disk_size, const char *journal);
+};
+
 
 #endif // HDIMAGE_HEADERS_ONLY
 

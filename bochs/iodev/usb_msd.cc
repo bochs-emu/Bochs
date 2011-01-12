@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_msd.cc,v 1.26 2010-12-10 17:02:18 vruppert Exp $
+// $Id: usb_msd.cc,v 1.27 2011-01-12 22:34:42 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Volker Ruppert
@@ -206,7 +206,7 @@ usb_msd_device_c::~usb_msd_device_c(void)
 bx_bool usb_msd_device_c::init()
 {
   if (d.type == USB_DEV_TYPE_DISK) {
-    s.hdimage = hdimage_init_image(s.image_mode, 0, "");
+    s.hdimage = DEV_hdimage_init_image(s.image_mode, 0, "");
     if (s.hdimage->open(s.fname) < 0) {
       BX_ERROR(("could not open hard drive image file '%s'", s.fname));
       return 0;
