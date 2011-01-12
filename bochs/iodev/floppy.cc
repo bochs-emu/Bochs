@@ -1,8 +1,8 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.cc,v 1.130 2011-01-11 22:00:41 vruppert Exp $
+// $Id: floppy.cc,v 1.131 2011-01-12 22:35:32 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2009  The Bochs Project
+//  Copyright (C) 2002-2011  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -139,7 +139,7 @@ void bx_floppy_ctrl_c::init(void)
 {
   Bit8u i, devtype, cmos_value;
 
-  BX_DEBUG(("Init $Id: floppy.cc,v 1.130 2011-01-11 22:00:41 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: floppy.cc,v 1.131 2011-01-12 22:35:32 vruppert Exp $"));
   DEV_dma_register_8bit_channel(2, dma_read, dma_write, "Floppy Drive");
   DEV_register_irq(6, "Floppy Drive");
   for (unsigned addr=0x03F2; addr<=0x03F7; addr++) {
@@ -1023,31 +1023,28 @@ void bx_floppy_ctrl_c::floppy_xfer(Bit8u drive, Bit32u offset, Bit8u *buffer,
   if (strcmp(SIM->get_param_string(BXPN_FLOPPYA_PATH)->getptr(), SuperDrive))
 #endif
   {
-    // don't need to seek the file if we are using Win95 type direct access
-    if (!BX_FD_THIS s.media[drive].raw_floppy_win95) {
-      if (BX_FD_THIS s.media[drive].vvfat_floppy) {
-#if !BX_PLUGINS
-        ret = BX_FD_THIS s.media[drive].vvfat->lseek(offset, SEEK_SET);
-#endif
-      } else {
-        ret = (int)lseek(BX_FD_THIS s.media[drive].fd, offset, SEEK_SET);
-      }
-      if (ret < 0) {
-        BX_PANIC(("could not perform lseek() to %d on floppy image file", offset));
-        return;
-      }
+    if (BX_FD_THIS s.media[drive].vvfat_floppy) {
+      ret = (int)BX_FD_THIS s.media[drive].vvfat->lseek(offset, SEEK_SET);
+    } else if (!BX_FD_THIS s.media[drive].raw_floppy_win95) {
+      // don't need to seek the file if we are using Win95 type direct access
+      ret = (int)lseek(BX_FD_THIS s.media[drive].fd, offset, SEEK_SET);
+    }
+    if (ret < 0) {
+      BX_PANIC(("could not perform lseek() to %d on floppy image file", offset));
+      return;
     }
   }
 
   if (direction == FROM_FLOPPY) {
+    if (BX_FD_THIS s.media[drive].vvfat_floppy) {
+      ret = BX_FD_THIS s.media[drive].vvfat->read(buffer, bytes);
 #if BX_WITH_MACOS
-    if (!strcmp(SIM->get_param_string(BXPN_FLOPPYA_PATH)->getptr(), SuperDrive))
+    } else if (!strcmp(SIM->get_param_string(BXPN_FLOPPYA_PATH)->getptr(), SuperDrive))
       ret = fd_read((char *) buffer, offset, bytes);
-    else
 #endif
 #if defined(WIN32) && !defined(_WIN64)
-    // if using Win95 direct access
-    if (BX_FD_THIS s.media[drive].raw_floppy_win95) {
+    } else if (BX_FD_THIS s.media[drive].raw_floppy_win95) {
+      // if using Win95 direct access
       DWORD ret_cnt = 0;
       DIOC_REGISTERS reg;
       HANDLE hFile = CreateFile("\\\\.\\vwin32", 0, 0, NULL, 0, FILE_FLAG_DELETE_ON_CLOSE, NULL);
@@ -1063,17 +1060,9 @@ void bx_floppy_ctrl_c::floppy_xfer(Bit8u drive, Bit32u offset, Bit8u *buffer,
       // I don't know why this returns 28 instead of 512, but it works
       if (ret_cnt == 28)
         ret = 512;
-    }
-    else
 #endif
-    {
-      if (BX_FD_THIS s.media[drive].vvfat_floppy) {
-#if !BX_PLUGINS
-        ret = BX_FD_THIS s.media[drive].vvfat->read(buffer, bytes);
-#endif
-      } else {
-        ret = ::read(BX_FD_THIS s.media[drive].fd, (bx_ptr_t) buffer, bytes);
-      }
+    } else {
+      ret = ::read(BX_FD_THIS s.media[drive].fd, (bx_ptr_t) buffer, bytes);
     }
     if (ret < int(bytes)) {
       /* ??? */
@@ -1091,14 +1080,15 @@ void bx_floppy_ctrl_c::floppy_xfer(Bit8u drive, Bit32u offset, Bit8u *buffer,
 
   else { // TO_FLOPPY
     BX_ASSERT (!BX_FD_THIS s.media[drive].write_protected);
+    if (BX_FD_THIS s.media[drive].vvfat_floppy) {
+      ret = BX_FD_THIS s.media[drive].vvfat->write(buffer, bytes);
 #if BX_WITH_MACOS
-    if (!strcmp(SIM->get_param_string(BXPN_FLOPPYA_PATH)->getptr(), SuperDrive))
+    } else if (!strcmp(SIM->get_param_string(BXPN_FLOPPYA_PATH)->getptr(), SuperDrive))
       ret = fd_write((char *) buffer, offset, bytes);
-    else
 #endif
 #if defined(WIN32) && !defined(_WIN64)
-    // if using Win95 direct access
-    if (BX_FD_THIS s.media[drive].raw_floppy_win95) {
+    } else if (BX_FD_THIS s.media[drive].raw_floppy_win95) {
+      // if using Win95 direct access
       DWORD ret_cnt = 0;
       DIOC_REGISTERS reg;
       HANDLE hFile = CreateFile("\\\\.\\vwin32", 0, 0, NULL, 0, FILE_FLAG_DELETE_ON_CLOSE, NULL);
@@ -1114,17 +1104,9 @@ void bx_floppy_ctrl_c::floppy_xfer(Bit8u drive, Bit32u offset, Bit8u *buffer,
       // I don't know why this returns 28 instead of 512, but it works
       if (ret_cnt == 28)
         ret = 512;
-    }
-    else
 #endif
-    {
-      if (BX_FD_THIS s.media[drive].vvfat_floppy) {
-#if !BX_PLUGINS
-        ret = BX_FD_THIS s.media[drive].vvfat->write(buffer, bytes);
-#endif
-      } else {
-        ret = ::write(BX_FD_THIS s.media[drive].fd, (bx_ptr_t) buffer, bytes);
-      }
+    } else {
+      ret = ::write(BX_FD_THIS s.media[drive].fd, (bx_ptr_t) buffer, bytes);
     }
     if (ret < int(bytes)) {
       BX_PANIC(("could not perform write() on floppy image file"));
@@ -1538,10 +1520,9 @@ bx_bool bx_floppy_ctrl_c::evaluate_media(Bit8u devtype, Bit8u type, char *path, 
     return 0;
   }
 
-  // use virtual VFAT support if requested (currently not compatible with plugins)
-#if !BX_PLUGINS
+  // use virtual VFAT support if requested
   if (!strncmp(path, "vvfat:", 6) && (devtype == FDRIVE_350HD)) {
-    media->vvfat = hdimage_init_image(BX_HDIMAGE_MODE_VVFAT, 1474560, "");
+    media->vvfat = DEV_hdimage_init_image(BX_HDIMAGE_MODE_VVFAT, 1474560, "");
     if (media->vvfat != NULL) {
       if (media->vvfat->open(path + 6) == 0) {
         media->type              = BX_FLOPPY_1_44;
@@ -1555,7 +1536,6 @@ bx_bool bx_floppy_ctrl_c::evaluate_media(Bit8u devtype, Bit8u type, char *path, 
     }
     if (media->vvfat_floppy) return 1;
   }
-#endif
   // open media file (image file or device)
   media->raw_floppy_win95 = 0;
 #ifdef macintosh
@@ -1699,7 +1679,7 @@ bx_bool bx_floppy_ctrl_c::evaluate_media(Bit8u devtype, Bit8u type, char *path, 
         media->heads             = floppy_type[type_idx].hd;
         media->sectors_per_track = floppy_type[type_idx].spt;
         media->sectors           = floppy_type[type_idx].sectors;
-        if (stat_buf.st_size > (media->sectors * 512)) {
+        if (stat_buf.st_size > (int)(media->sectors * 512)) {
           BX_ERROR(("evaluate_media: size of file '%s' (%lu) too large for selected type",
                    path, (unsigned long) stat_buf.st_size));
           return 0;
@@ -1787,10 +1767,8 @@ void bx_floppy_ctrl_c::close_media(floppy_t *media)
 {
   if (media->fd >= 0) {
     if (media->vvfat_floppy) {
-#if !BX_PLUGINS
       media->vvfat->close();
       delete media->vvfat;
-#endif
       media->vvfat_floppy = 0;
     } else if (!media->raw_floppy_win95) {
       close(media->fd);
