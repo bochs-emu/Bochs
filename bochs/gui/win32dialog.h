@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32dialog.h,v 1.20 2010-11-13 13:00:26 sshwarts Exp $
+// $Id: win32dialog.h,v 1.21 2011-01-12 18:18:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  The Bochs Project
@@ -23,12 +23,26 @@
 
 #include "config.h"
 
+#ifndef _WIN64
+
 #ifndef _WIN32_IE
-#define _WIN32_IE 0x0400	// Force a minimum "OS level" for commctrl.h
+#define _WIN32_IE 0x0400	/* Force a minimum "OS level" for commctrl.h */
 #endif
 #if _WIN32_IE < 0x0400
 #undef _WIN32_IE
 #define _WIN32_IE 0x0400
+#endif
+
+#else
+
+#ifndef _WIN32_IE
+#define _WIN32_IE 0x0500	/* WIN64 requirements are higher */
+#endif
+#if _WIN32_IE < 0x0500
+#undef _WIN32_IE
+#define _WIN32_IE 0x0500
+#endif
+
 #endif
 
 extern "C" {
