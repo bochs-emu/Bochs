@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: load.cc,v 1.5 2010-12-25 19:34:43 sshwarts Exp $
+// $Id: load.cc,v 1.6 2011-01-12 20:16:25 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008-2011 Stanislav Shwartsman
@@ -95,12 +95,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Wdq(bxInstruction_c *i)
   BxPackedXmmRegister op;
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  if (! BX_CPU_THIS_PTR mxcsr.get_MM()) {
-    read_virtual_dqword_aligned(i->seg(), eaddr, &op);
-  }
-  else {
+#if BX_SUPPORT_MISALIGNED_SSE
+  if (BX_CPU_THIS_PTR mxcsr.get_MM())
     read_virtual_dqword(i->seg(), eaddr, &op);
-  }
+  else
+#endif
+    read_virtual_dqword_aligned(i->seg(), eaddr, &op);
 
   BX_WRITE_XMM_REG(BX_TMP_REGISTER, op);
 

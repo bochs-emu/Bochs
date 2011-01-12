@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_pfp.cc,v 1.75 2011-01-09 20:18:02 sshwarts Exp $
+// $Id: sse_pfp.cc,v 1.76 2011-01-12 20:16:25 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003-2011 Stanislav Shwartsman
@@ -313,10 +313,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTTPD2PI_PqWpd(bxInstruction_c *i)
   else {
     bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-    if (! BX_CPU_THIS_PTR mxcsr.get_MM())
-      read_virtual_dqword_aligned(i->seg(), eaddr, (Bit8u *) &op);
-    else
+#if BX_SUPPORT_MISALIGNED_SSE
+    if (BX_CPU_THIS_PTR mxcsr.get_MM())
       read_virtual_dqword(i->seg(), eaddr, (Bit8u *) &op);
+    else
+#endif
+      read_virtual_dqword_aligned(i->seg(), eaddr, (Bit8u *) &op);
   }
 
   float_status_t status_word;
@@ -467,10 +469,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTPD2PI_PqWpd(bxInstruction_c *i)
   else {
     bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-    if (! BX_CPU_THIS_PTR mxcsr.get_MM())
-      read_virtual_dqword_aligned(i->seg(), eaddr, (Bit8u *) &op);
-    else
+#if BX_SUPPORT_MISALIGNED_SSE
+    if (BX_CPU_THIS_PTR mxcsr.get_MM())
       read_virtual_dqword(i->seg(), eaddr, (Bit8u *) &op);
+    else
+#endif
+      read_virtual_dqword_aligned(i->seg(), eaddr, (Bit8u *) &op);
   }
 
   float_status_t status_word;
