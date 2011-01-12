@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpuid.cc,v 1.126 2010-11-23 14:59:35 sshwarts Exp $
+// $Id: cpuid.cc,v 1.127 2011-01-12 20:12:05 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007-2010 Stanislav Shwartsman
@@ -581,11 +581,11 @@ void BX_CPU_C::set_cpuid_defaults(void)
   {
     cpuid = &(BX_CPU_THIS_PTR cpuid_std_function[0xd]);
 
-    // EAX - XCR0 lower 32 bits
+    // EAX - valid bits of XCR0 (lower part)
     // EBX - Maximum size (in bytes) required by enabled features
     // ECX - Maximum size (in bytes) required by CPU supported features
-    // EDX - XCR0 upper 32 bits
-    cpuid->eax = BX_CPU_THIS_PTR xcr0.get32();
+    // EDX - valid bits of XCR0 (upper part)
+    cpuid->eax = BX_XCR0_SUPPORTED_BITS;
     cpuid->ebx = 512+64;
     cpuid->ecx = 512+64;
     cpuid->edx = 0;
