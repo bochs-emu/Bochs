@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: icache.cc,v 1.37 2011-01-04 16:17:20 sshwarts Exp $
+// $Id: icache.cc,v 1.38 2011-01-12 18:49:11 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007-2010 Stanislav Shwartsman
@@ -46,11 +46,6 @@ void flushICaches(void)
   pageWriteStampTable.resetWriteStamps();
 }
 
-void purgeICaches(void)
-{
-  flushICaches();
-}
-
 #if BX_SUPPORT_TRACE_CACHE
 
 void handleSMC(bx_phy_address pAddr)
@@ -68,7 +63,6 @@ void BX_CPU_C::serveICacheMiss(bxICacheEntry_c *entry, Bit32u eipBiased, bx_phy_
   // Cache miss. We weren't so lucky, but let's be optimistic - try to build 
   // trace from incoming instruction bytes stream !
   entry->pAddr = pAddr;
-  entry->writeStamp = *(BX_CPU_THIS_PTR currPageWriteStampPtr);
 
   unsigned remainingInPage = BX_CPU_THIS_PTR eipPageWindowSize - eipBiased;
   const Bit8u *fetchPtr = BX_CPU_THIS_PTR eipFetchPtr + eipBiased;
@@ -95,12 +89,12 @@ void BX_CPU_C::serveICacheMiss(bxICacheEntry_c *entry, Bit32u eipBiased, bx_phy_
       }
       // First instruction is boundary fetch, leave the trace cache entry 
       // invalid for now because boundaryFetch() can fault
-      entry->writeStamp = ICacheWriteStampInvalid;
+      entry->pAddr = ~entry->pAddr;
       entry->tlen = 1;
       boundaryFetch(fetchPtr, remainingInPage, i);
 
       // Add the instruction to trace cache
-      entry->writeStamp = *(BX_CPU_THIS_PTR currPageWriteStampPtr);
+      entry->pAddr = ~entry->pAddr;
       pageWriteStampTable.markICache(pAddr);
       BX_CPU_THIS_PTR iCache.commit_page_split_trace(BX_CPU_THIS_PTR pAddrPage, entry);
       return;
@@ -136,7 +130,7 @@ bx_bool BX_CPU_C::mergeTraces(bxICacheEntry_c *entry, bxInstruction_c *i, bx_phy
 {
   bxICacheEntry_c *e = BX_CPU_THIS_PTR iCache.get_entry(pAddr, BX_CPU_THIS_PTR fetchModeMask);
 
-  if ((e->pAddr == pAddr) && (e->writeStamp == entry->writeStamp))
+  if (e->pAddr == pAddr)
   {
     // determine max amount of instruction to take from another entry
     unsigned max_length = e->tlen;
@@ -186,12 +180,12 @@ bx_bool BX_CPU_C::fetchInstruction(bxInstruction_c *iStorage, Bit32u eipBiased)
 void BX_CPU_C::serveICacheMiss(bxICacheEntry_c *entry, Bit32u eipBiased, bx_phy_address pAddr)
 {
   // The entry will be marked valid if fetchdecode will succeed
-  entry->writeStamp = ICacheWriteStampInvalid;
-
   if (fetchInstruction(entry->i, eipBiased)) {
     entry->pAddr = pAddr;
-    entry->writeStamp = *(BX_CPU_THIS_PTR currPageWriteStampPtr);
     pageWriteStampTable.markICache(pAddr, entry->ilen);
+  }
+  else {
+    entry->pAddr = BX_ICACHE_INVALID_PHY_ADDRESS;
   }
 }
 

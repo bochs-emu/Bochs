@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: icache.h,v 1.56 2011-01-04 16:17:20 sshwarts Exp $
+// $Id: icache.h,v 1.57 2011-01-12 18:49:11 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007-2010 Stanislav Shwartsman
@@ -24,68 +24,35 @@
 #ifndef BX_ICACHE_H
 #define BX_ICACHE_H
 
-// bit 31 indicates code page
-const Bit32u ICacheWriteStampInvalid  = 0xffffffff;
-const Bit32u ICacheWriteStampStart    = ICacheWriteStampInvalid - 1;
-
 #if BX_SUPPORT_TRACE_CACHE
 extern void handleSMC(bx_phy_address pAddr);
 #endif
 
-struct bxPageWriteStampTableEntry {
-  // A table (dynamically allocated) to store write-stamp generation IDs.
-  // Each time a write occurs to a physical page, a generation ID is
-  // decremented. Only iCache entries which have write stamps matching
-  // the physical page write stamp are valid.
-  Bit32u pageWriteStamp;
-  Bit32u fineGranularityMapping;
-
-  bxPageWriteStampTableEntry() {
-    pageWriteStamp = ICacheWriteStampStart;
-    fineGranularityMapping = 0; // no instruction cached
-  }
-};
-
 class bxPageWriteStampTable
 {
 #define PHY_MEM_PAGES (1024*1024)
-  bxPageWriteStampTableEntry *pageWriteStampTable;
+  Bit32u *fineGranularityMapping;
 
 public:
   bxPageWriteStampTable() {
-    pageWriteStampTable = new bxPageWriteStampTableEntry[PHY_MEM_PAGES];
+    fineGranularityMapping = new Bit32u[PHY_MEM_PAGES];
     resetWriteStamps();
   }
- ~bxPageWriteStampTable() { delete [] pageWriteStampTable; }
+ ~bxPageWriteStampTable() { delete [] fineGranularityMapping; }
 
   BX_CPP_INLINE Bit32u hash(bx_phy_address pAddr) const {
     // can share writeStamps between multiple pages if >32 bit phy address
     return ((Bit32u) pAddr) >> 12;
   }
 
-  BX_CPP_INLINE Bit32u getPageWriteStamp(bx_phy_address pAddr) const
-  {
-    return pageWriteStampTable[hash(pAddr)].pageWriteStamp;
-  }
-
   BX_CPP_INLINE Bit32u getFineGranularityMapping(bx_phy_address pAddr) const
   {
-    return pageWriteStampTable[hash(pAddr)].fineGranularityMapping;
-  }
-
-  BX_CPP_INLINE const Bit32u *getPageWriteStampPtr(bx_phy_address pAddr) const
-  {
-    return &(pageWriteStampTable[hash(pAddr)].pageWriteStamp);
-  }
-
-  BX_CPP_INLINE void setPageWriteStamp(bx_phy_address pAddr, Bit32u pageWriteStamp)
-  {
-    pageWriteStampTable[hash(pAddr)].pageWriteStamp = pageWriteStamp;
+    return fineGranularityMapping[hash(pAddr)];
   }
 
   BX_CPP_INLINE void markICache(bx_phy_address pAddr)
   {
-    pageWriteStampTable[hash(pAddr)].fineGranularityMapping |= (1 << (PAGE_OFFSET(pAddr) >> 7));
+    fineGranularityMapping[hash(pAddr)] |= (1 << (PAGE_OFFSET(pAddr) >> 7));
   }
 
   BX_CPP_INLINE void markICache(bx_phy_address pAddr, unsigned len)
@@ -93,7 +60,7 @@ public:
     Bit32u mask  = 1 << (PAGE_OFFSET((Bit32u) pAddr) >> 7);
            mask |= 1 << (PAGE_OFFSET((Bit32u) pAddr + len - 1) >> 7);
 
-    pageWriteStampTable[hash(pAddr)].fineGranularityMapping |= mask;
+    fineGranularityMapping[hash(pAddr)] |= mask;
   }
 
   // whole page is being altered
@@ -101,14 +68,11 @@ public:
   {
     Bit32u index = hash(pAddr);
 
-    if (pageWriteStampTable[index].fineGranularityMapping) {
+    if (fineGranularityMapping[index]) {
 #if BX_SUPPORT_TRACE_CACHE
       handleSMC(pAddr); // one of the CPUs might be running trace from this page
 #endif
-      // Decrement page write stamp, so iCache entries with older stamps are
-      // effectively invalidated.
-      pageWriteStampTable[index].pageWriteStamp--;
-      pageWriteStampTable[index].fineGranularityMapping = 0;
+      fineGranularityMapping[index] = 0;
     }
   }
 
@@ -117,18 +81,15 @@ public:
   {
     Bit32u index = hash(pAddr);
 
-    if (pageWriteStampTable[index].fineGranularityMapping) {
+    if (fineGranularityMapping[index]) {
        Bit32u mask  = 1 << (PAGE_OFFSET((Bit32u) pAddr) >> 7);
               mask |= 1 << (PAGE_OFFSET((Bit32u) pAddr + len - 1) >> 7);
 
-       if (pageWriteStampTable[index].fineGranularityMapping & mask) {
+       if (fineGranularityMapping[index] & mask) {
 #if BX_SUPPORT_TRACE_CACHE
-      handleSMC(pAddr); // one of the CPUs might be running trace from this page
+          handleSMC(pAddr); // one of the CPUs might be running trace from this page
 #endif
-      // Decrement page write stamp, so iCache entries with older stamps are
-      // effectively invalidated.
-          pageWriteStampTable[index].pageWriteStamp--;
-          pageWriteStampTable[index].fineGranularityMapping = 0;
+          fineGranularityMapping[index] = 0;
        }       
     }
   }
@@ -139,7 +100,7 @@ public:
 BX_CPP_INLINE void bxPageWriteStampTable::resetWriteStamps(void)
 {
   for (Bit32u i=0; i<PHY_MEM_PAGES; i++) {
-    pageWriteStampTable[i] = bxPageWriteStampTableEntry();
+    fineGranularityMapping[i] = 0;
   }
 }
 
@@ -155,8 +116,7 @@ extern bxPageWriteStampTable pageWriteStampTable;
 struct bxICacheEntry_c
 {
   bx_phy_address pAddr; // Physical address of the instruction
-  Bit32u writeStamp;    // Generation ID. Each write to a physical page
-                        // decrements this value
+
 #if BX_SUPPORT_TRACE_CACHE
   Bit32u tlen;          // Trace length in instructions
   bxInstruction_c *i;
@@ -210,7 +170,7 @@ public:
 
     // register page split entry
     if (pageSplitIndex[nextPageSplitIndex].ppf != BX_ICACHE_INVALID_PHY_ADDRESS)
-      pageSplitIndex[nextPageSplitIndex].e->writeStamp = ICacheWriteStampInvalid;
+      pageSplitIndex[nextPageSplitIndex].e->pAddr = BX_ICACHE_INVALID_PHY_ADDRESS;
 
     pageSplitIndex[nextPageSplitIndex].ppf = paddr;
     pageSplitIndex[nextPageSplitIndex].e = entry;
@@ -237,7 +197,7 @@ BX_CPP_INLINE void bxICache_c::flushICacheEntries(void)
   unsigned i;
 
   for (i=0; i<BxICacheEntries; i++, e++)
-    e->writeStamp = ICacheWriteStampInvalid;
+    e->pAddr = BX_ICACHE_INVALID_PHY_ADDRESS;
 
 #if BX_SUPPORT_TRACE_CACHE
   for (i=0;i<BX_ICACHE_PAGE_SPLIT_ENTRIES;i++)
@@ -251,6 +211,8 @@ BX_CPP_INLINE void bxICache_c::flushICacheEntries(void)
 #if BX_SUPPORT_TRACE_CACHE
 BX_CPP_INLINE void bxICache_c::handleSMC(bx_phy_address pAddr)
 {
+  flushICacheEntries(); // TODO: invalidate only entries in same page as pAddr
+/*
   pAddr = LPFOf(pAddr);
 
   for (unsigned i=0;i<BX_ICACHE_PAGE_SPLIT_ENTRIES;i++) {
@@ -259,17 +221,10 @@ BX_CPP_INLINE void bxICache_c::handleSMC(bx_phy_address pAddr)
       pageSplitIndex[i].ppf = BX_ICACHE_INVALID_PHY_ADDRESS;
     }
   }
+*/
 }
 #endif
 
-// Since the write stamps may overflow if we always simply decrese them,
-// this function has to be called often enough that we can reset them.
-BX_CPP_INLINE void bxICache_c::purgeICacheEntries(void)
-{
-  flushICacheEntries();
-}
-
-extern void purgeICaches(void);
 extern void flushICaches(void);
 
 #endif

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.316 2010-09-27 15:29:36 sshwarts Exp $
+// $Id: cpu.cc,v 1.317 2011-01-12 18:49:11 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -135,8 +135,7 @@ no_async_event:
     InstrICache_Increment(iCacheLookups);
     InstrICache_Stats();
 
-    if ((entry->pAddr != pAddr) ||
-        (entry->writeStamp != *(BX_CPU_THIS_PTR currPageWriteStampPtr)))
+    if (entry->pAddr != pAddr)
     {
       // iCache miss. No validated instruction with matching fetch parameters
       // is in the iCache.
@@ -755,8 +754,6 @@ void BX_CPU_C::prefetch(void)
       }
     }
   }
-
-  BX_CPU_THIS_PTR currPageWriteStampPtr = pageWriteStampTable.getPageWriteStampPtr(BX_CPU_THIS_PTR pAddrPage);
 }
 
 void BX_CPU_C::deliver_SIPI(unsigned vector)

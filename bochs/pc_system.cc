@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pc_system.cc,v 1.79 2009-12-04 20:02:12 sshwarts Exp $
+// $Id: pc_system.cc,v 1.80 2011-01-12 18:49:11 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2009  The Bochs Project
@@ -42,7 +42,7 @@ double     m_ips; // Millions of Instructions Per Second
 #define SpewPeriodicTimerInfo 0
 #define MinAllowableTimerPeriod 1
 
-const Bit64u bx_pc_system_c::NullTimerInterval = ICacheWriteStampStart;
+const Bit64u bx_pc_system_c::NullTimerInterval = 0xffffffff;
 
   // constructor
 bx_pc_system_c::bx_pc_system_c()
@@ -405,8 +405,6 @@ void bx_pc_system_c::nullTimer(void* this_ptr)
     }
   }
 #endif
-
-  purgeICaches();
 }
 
 void bx_pc_system_c::benchmarkTimer(void* this_ptr)

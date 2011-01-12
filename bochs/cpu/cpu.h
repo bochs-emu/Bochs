@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.706 2011-01-09 20:18:02 sshwarts Exp $
+// $Id: cpu.h,v 1.707 2011-01-12 18:49:11 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2011  The Bochs Project
@@ -1038,7 +1038,6 @@ public: // for now...
   // with the host cache lines.
   bxICache_c iCache BX_CPP_AlignN(32);
   Bit32u fetchModeMask;
-  const Bit32u *currPageWriteStampPtr;
 
   struct {
     bx_address rm_addr;       // The address offset after resolution
