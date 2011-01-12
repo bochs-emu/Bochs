@@ -1,8 +1,8 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: icache.h,v 1.57 2011-01-12 18:49:11 sshwarts Exp $
+// $Id: icache.h,v 1.58 2011-01-12 19:53:47 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2007-2010 Stanislav Shwartsman
+//   Copyright (c) 2007-2011 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -211,17 +211,21 @@ BX_CPP_INLINE void bxICache_c::flushICacheEntries(void)
 #if BX_SUPPORT_TRACE_CACHE
 BX_CPP_INLINE void bxICache_c::handleSMC(bx_phy_address pAddr)
 {
-  flushICacheEntries(); // TODO: invalidate only entries in same page as pAddr
-/*
+  // TODO: invalidate only entries in same page as pAddr
+
   pAddr = LPFOf(pAddr);
 
   for (unsigned i=0;i<BX_ICACHE_PAGE_SPLIT_ENTRIES;i++) {
     if (pAddr == pageSplitIndex[i].ppf) {
-      pageSplitIndex[i].e->writeStamp = ICacheWriteStampInvalid;
       pageSplitIndex[i].ppf = BX_ICACHE_INVALID_PHY_ADDRESS;
     }
   }
-*/
+
+  bxICacheEntry_c *e = get_entry(pAddr, 0);
+
+  for (unsigned index=0; index < 4096; index++, e++) {
+    if (pAddr == LPFOf(e->pAddr)) e->pAddr = BX_ICACHE_INVALID_PHY_ADDRESS;
+  }
 }
 #endif
 

@@ -1,8 +1,8 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: icache.cc,v 1.38 2011-01-12 18:49:11 sshwarts Exp $
+// $Id: icache.cc,v 1.39 2011-01-12 19:53:47 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2007-2010 Stanislav Shwartsman
+//   Copyright (c) 2007-2011 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -182,7 +182,7 @@ void BX_CPU_C::serveICacheMiss(bxICacheEntry_c *entry, Bit32u eipBiased, bx_phy_
   // The entry will be marked valid if fetchdecode will succeed
   if (fetchInstruction(entry->i, eipBiased)) {
     entry->pAddr = pAddr;
-    pageWriteStampTable.markICache(pAddr, entry->ilen);
+    pageWriteStampTable.markICache(pAddr, entry->i->ilen());
   }
   else {
     entry->pAddr = BX_ICACHE_INVALID_PHY_ADDRESS;
