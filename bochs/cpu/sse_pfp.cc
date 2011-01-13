@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_pfp.cc,v 1.76 2011-01-12 20:16:25 sshwarts Exp $
+// $Id: sse_pfp.cc,v 1.77 2011-01-13 20:48:29 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003-2011 Stanislav Shwartsman
@@ -2124,7 +2124,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROUNDPS_VpsWpsIbR(bxInstruction_c *i)
 
   // ignore precision exception result
   if (control & 0x8)
-      status_word.float_exception_flags &= ~float_flag_inexact;
+    status_word.float_exception_flags &= ~float_flag_inexact;
 
   check_exceptionsSSE(status_word.float_exception_flags);
   BX_WRITE_XMM_REG(i->nnn(), op);
@@ -2155,7 +2155,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROUNDPD_VpdWpdIbR(bxInstruction_c *i)
 
   // ignore precision exception result
   if (control & 0x8)
-      status_word.float_exception_flags &= ~float_flag_inexact;
+    status_word.float_exception_flags &= ~float_flag_inexact;
 
   check_exceptionsSSE(status_word.float_exception_flags);
   BX_WRITE_XMM_REG(i->nnn(), op);
@@ -2182,7 +2182,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROUNDSS_VssWssIbR(bxInstruction_c *i)
 
   // ignore precision exception result
   if (control & 0x8)
-      status_word.float_exception_flags &= ~float_flag_inexact;
+    status_word.float_exception_flags &= ~float_flag_inexact;
 
   check_exceptionsSSE(status_word.float_exception_flags);
   BX_WRITE_XMM_REG_LO_DWORD(i->nnn(), op);
@@ -2209,7 +2209,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROUNDSD_VsdWsdIbR(bxInstruction_c *i)
 
   // ignore precision exception result
   if (control & 0x8)
-      status_word.float_exception_flags &= ~float_flag_inexact;
+    status_word.float_exception_flags &= ~float_flag_inexact;
 
   check_exceptionsSSE(status_word.float_exception_flags);
   BX_WRITE_XMM_REG_LO_QWORD(i->nnn(), op);
