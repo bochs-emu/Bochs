@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.253 2010-12-29 06:39:53 sshwarts Exp $
+// $Id: rombios.c,v 1.254 2011-01-13 20:47:00 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -869,7 +869,7 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.253 $ $Date: 2010-12-29 06:39:53 $";
+static char bios_cvs_version_string[] = "$Revision: 1.254 $ $Date: 2011-01-13 20:47:00 $";
 
 #define BIOS_COPYRIGHT_STRING "(c) 2002 MandrakeSoft S.A. Written by Kevin Lawton & the Bochs team."
 
@@ -5363,7 +5363,7 @@ int13_edd(DS, SI, device)
       write_byte(DS, SI+(Bit16u)&Int13DPT->host_bus[0], 'I');
       write_byte(DS, SI+(Bit16u)&Int13DPT->host_bus[1], 'S');
       write_byte(DS, SI+(Bit16u)&Int13DPT->host_bus[2], 'A');
-      write_byte(DS, SI+(Bit16u)&Int13DPT->host_bus[3], 0);
+      write_byte(DS, SI+(Bit16u)&Int13DPT->host_bus[3], ' ');
     }
     else {
       // FIXME PCI
@@ -5371,7 +5371,11 @@ int13_edd(DS, SI, device)
     write_byte(DS, SI+(Bit16u)&Int13DPT->iface_type[0], 'A');
     write_byte(DS, SI+(Bit16u)&Int13DPT->iface_type[1], 'T');
     write_byte(DS, SI+(Bit16u)&Int13DPT->iface_type[2], 'A');
-    write_byte(DS, SI+(Bit16u)&Int13DPT->iface_type[3], 0);
+    write_byte(DS, SI+(Bit16u)&Int13DPT->iface_type[3], ' ');
+    write_byte(DS, SI+(Bit16u)&Int13DPT->iface_type[4], ' ');
+    write_byte(DS, SI+(Bit16u)&Int13DPT->iface_type[5], ' ');
+    write_byte(DS, SI+(Bit16u)&Int13DPT->iface_type[6], ' ');
+    write_byte(DS, SI+(Bit16u)&Int13DPT->iface_type[7], ' ');
 
     if (iface==ATA_IFACE_ISA) {
       write_word(DS, SI+(Bit16u)&Int13DPT->iface_path[0], iobase1);
