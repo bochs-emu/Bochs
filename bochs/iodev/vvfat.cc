@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vvfat.cc,v 1.17 2011-01-12 22:34:42 vruppert Exp $
+// $Id: vvfat.cc,v 1.18 2011-01-13 20:39:53 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2010/2011  The Bochs Project
@@ -20,7 +20,7 @@
 /////////////////////////////////////////////////////////////////////////
 
 // Virtual VFAT image support (shadows a local directory)
-// ported from the Qemu block driver by Johannes E. Schindelin
+// ported from the Qemu block driver (written by Johannes E. Schindelin)
 
 // ADDITIONS:
 // - win32 specific directory functions (required for MSVC)
@@ -29,11 +29,9 @@
 // - FAT32 support
 // - volatile runtime write support using the hdimage redolog_t class
 // - ask user on Bochs exit if directory and file changes should be committed
-// - handle file attribute changes (system, hidden and read-only)
+// - save and restore file attributes (system, hidden and read-only)
+// - set file modification date and time after committing file changes
 // - vvfat floppy support (1.44 MB media only)
-
-// TODO:
-// - write support: handle file date and time changes
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
 // platforms that require a special tag on exported symbols, BX_PLUGGABLE
@@ -42,6 +40,7 @@
 
 #ifndef WIN32
 #include <dirent.h>
+#include <utime.h>
 #endif
 
 #define NO_DEVICE_INCLUDES
@@ -1451,6 +1450,14 @@ bx_bool vvfat_image_t::write_file(const char *path, direntry_t *entry, bx_bool c
   Bit32u csize, fsize, fstart, cur, next;
   Bit64u offset;
   Bit8u *buffer;
+#ifndef WIN32
+  struct tm tv;
+  struct utimbuf ut;
+#else
+  HANDLE hFile;
+  FILETIME at, mt, tmp;
+  SYSTEMTIME st;
+#endif
 
   csize = sectors_per_cluster * 0x200;
   fsize = dtoh32(entry->size);
@@ -1490,8 +1497,59 @@ bx_bool vvfat_image_t::write_file(const char *path, direntry_t *entry, bx_bool c
       ::write(fd, buffer, fsize);
     }
     next = fat_get_next(cur);
-  } while (next < (max_fat_value - 8));
+  } while (next < (max_fat_value - 15));
   ::close(fd);
+
+#ifndef WIN32
+  tv.tm_year = (entry->mdate >> 9) + 80;
+  tv.tm_mon = ((entry->mdate >> 5) & 0x0f) - 1;
+  tv.tm_mday = entry->mdate & 0x1f;
+  tv.tm_hour = (entry->mtime >> 11);
+  tv.tm_min = (entry->mtime >> 5) & 0x3f;
+  tv.tm_sec = (entry->mtime & 0x1f) << 1;
+  tv.tm_isdst = 0;
+  ut.modtime = mktime(&tv) + timezone;
+  if (entry->adate != 0) {
+    tv.tm_year = (entry->adate >> 9) + 80;
+    tv.tm_mon = ((entry->adate >> 5) & 0x0f) - 1;
+    tv.tm_mday = entry->adate & 0x1f;
+    tv.tm_hour = 0;
+    tv.tm_min = 0;
+    tv.tm_sec = 0;
+    ut.actime = mktime(&tv) + timezone;
+  } else {
+    ut.actime = ut.modtime;
+  }
+  utime(path, &ut);
+#else
+  hFile = CreateFile(path, GENERIC_WRITE, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+  if (hFile != INVALID_HANDLE_VALUE) {
+    memset(&st, 0, sizeof(st));
+    st.wYear = (entry->mdate >> 9) + 1980;
+    st.wMonth = ((entry->mdate >> 5) & 0x0f);
+    st.wDay = entry->mdate & 0x1f;
+    st.wHour = (entry->mtime >> 11);
+    st.wMinute = (entry->mtime >> 5) & 0x3f;
+    st.wSecond = (entry->mtime & 0x1f) << 1;
+    SystemTimeToFileTime(&st, &tmp);
+    LocalFileTimeToFileTime(&tmp, &mt);
+    if (entry->adate != 0) {
+      st.wYear = (entry->adate >> 9) + 1980;
+      st.wMonth = ((entry->adate >> 5) & 0x0f);
+      st.wDay = entry->adate & 0x1f;
+      st.wHour = 0;
+      st.wMinute = 0;
+      st.wSecond = 0;
+      SystemTimeToFileTime(&st, &tmp);
+      LocalFileTimeToFileTime(&tmp, &at);
+    } else {
+      at = mt;
+    }
+    SetFileTime(hFile, NULL, &at, &mt);
+    CloseHandle(hFile);
+  }
+#endif
+
   return 1;
 }
 
