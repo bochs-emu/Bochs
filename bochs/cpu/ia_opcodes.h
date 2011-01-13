@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ia_opcodes.h,v 1.65 2011-01-09 20:36:13 sshwarts Exp $
+// $Id: ia_opcodes.h,v 1.66 2011-01-13 21:36:56 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008-2011 Stanislav Shwartsman
@@ -22,9 +22,6 @@
 /////////////////////////////////////////////////////////////////////////
 
 bx_define_opcode(BX_IA_ERROR, &BX_CPU_C::BxError, NULL, 0, 0)
-#if BX_CPU_LEVEL >= 6
-bx_define_opcode(BX_IA_NOSSE, &BX_CPU_C::BxNoSSE, NULL, 0, 0)
-#endif
 
 bx_define_opcode(BX_IA_AAA, &BX_CPU_C::AAA, NULL, 0, 0)
 bx_define_opcode(BX_IA_AAD, &BX_CPU_C::AAD, NULL, 0, 0)
