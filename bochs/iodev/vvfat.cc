@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vvfat.cc,v 1.18 2011-01-13 20:39:53 vruppert Exp $
+// $Id: vvfat.cc,v 1.19 2011-01-14 15:37:36 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2010/2011  The Bochs Project
@@ -29,7 +29,7 @@
 // - FAT32 support
 // - volatile runtime write support using the hdimage redolog_t class
 // - ask user on Bochs exit if directory and file changes should be committed
-// - save and restore file attributes (system, hidden and read-only)
+// - save and restore FAT file attributes using a separate file
 // - set file modification date and time after committing file changes
 // - vvfat floppy support (1.44 MB media only)
 
@@ -1145,10 +1145,15 @@ void vvfat_image_t::set_file_attributes(void)
         if (fpath[strlen(fpath) - 1] == 34) {
           fpath[strlen(fpath) - 1] = '\0';
         }
+        mapping_t* mapping = find_mapping_for_path(fpath);
+        direntry_t* entry = (direntry_t*)array_get(&directory, mapping->dir_index);
+        attributes = entry->attributes;
         ptr = strtok(NULL, "");
-        attributes = 0;
         for (i = 0; i < (int)strlen(ptr); i++) {
           switch (ptr[i]) {
+            case 'a':
+              attributes &= ~0x20;
+              break;
             case 'S':
               attributes |= 0x04;
               break;
@@ -1160,9 +1165,7 @@ void vvfat_image_t::set_file_attributes(void)
               break;
           }
         }
-        mapping_t* mapping = find_mapping_for_path(fpath);
-        direntry_t* entry = (direntry_t*)array_get(&directory, mapping->dir_index);
-        entry->attributes |= attributes;
+        entry->attributes = attributes;
       }
     } while (!feof(fd));
     fclose(fd);
@@ -1447,7 +1450,7 @@ Bit32u vvfat_image_t::fat_get_next(Bit32u current)
 bx_bool vvfat_image_t::write_file(const char *path, direntry_t *entry, bx_bool create)
 {
   int fd;
-  Bit32u csize, fsize, fstart, cur, next;
+  Bit32u csize, fsize, fstart, cur, next, rsvd_clusters, bad_cluster;
   Bit64u offset;
   Bit8u *buffer;
 #ifndef WIN32
@@ -1460,6 +1463,8 @@ bx_bool vvfat_image_t::write_file(const char *path, direntry_t *entry, bx_bool c
 #endif
 
   csize = sectors_per_cluster * 0x200;
+  rsvd_clusters = max_fat_value - 15;
+  bad_cluster = max_fat_value - 8;
   fsize = dtoh32(entry->size);
   fstart = dtoh16(entry->begin) | (dtoh16(entry->begin_hi) << 16);
   if (create) {
@@ -1497,7 +1502,10 @@ bx_bool vvfat_image_t::write_file(const char *path, direntry_t *entry, bx_bool c
       ::write(fd, buffer, fsize);
     }
     next = fat_get_next(cur);
-  } while (next < (max_fat_value - 15));
+    if ((next >= rsvd_clusters) && (next < bad_cluster)) {
+      BX_ERROR(("reserved clusters not supported"));
+    }
+  } while (next < rsvd_clusters);
   ::close(fd);
 
 #ifndef WIN32
@@ -1591,16 +1599,17 @@ void vvfat_image_t::parse_directory(const char *path, Bit32u start_cluster)
     newentry = read_direntry(ptr, filename);
     if (newentry != NULL) {
       sprintf(full_path, "%s/%s", path, filename);
-      fstart = dtoh16(newentry->begin) | (dtoh16(newentry->begin_hi) << 16);
-      if ((newentry->attributes & 0x07) > 0) {
+      if ((newentry->attributes != 0x10) && (newentry->attributes != 0x20)) {
         if (vvfat_attr_fd != NULL) {
           attr_txt[0] = 0;
+          if ((newentry->attributes & 0x30) == 0) strcpy(attr_txt, "a");
           if (newentry->attributes & 0x04) strcpy(attr_txt, "S");
           if (newentry->attributes & 0x02) strcat(attr_txt, "H");
           if (newentry->attributes & 0x01) strcat(attr_txt, "R");
           fprintf(vvfat_attr_fd, "\"%s\":%s\n", full_path, attr_txt);
         }
       }
+      fstart = dtoh16(newentry->begin) | (dtoh16(newentry->begin_hi) << 16);
       mapping = find_mapping_for_cluster(fstart);
       if (mapping == NULL) {
         if (newentry->attributes == 0x10) {
