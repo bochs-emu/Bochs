@@ -1,8 +1,8 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: hdimage.h,v 1.17 2011-01-12 22:34:42 vruppert Exp $
+// $Id: hdimage.h,v 1.18 2011-01-14 16:43:55 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2005-2009  The Bochs Project
+//  Copyright (C) 2005-2011  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -578,7 +578,7 @@ class z_volatile_image_t : public device_image_t
 
 class bx_hdimage_ctl_c : public bx_hdimage_ctl_stub_c {
 public:
-  bx_hdimage_ctl_c() {}
+  bx_hdimage_ctl_c();
   virtual ~bx_hdimage_ctl_c() {}
   virtual device_image_t *init_image(Bit8u image_mode, Bit64u disk_size, const char *journal);
 };

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmware3.cc,v 1.24 2011-01-02 16:51:08 vruppert Exp $
+// $Id: vmware3.cc,v 1.25 2011-01-14 16:43:55 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 
 /*
@@ -37,7 +37,8 @@
 #include "vmware3.h"
 
 const off_t vmware3_image_t::INVALID_OFFSET=(off_t)-1;
-#define LOG_THIS bx_devices.pluginHardDrive->
+
+#define LOG_THIS bx_devices.pluginHDImageCtl->
 
 #define DTOH32_HEADER(field) (header.field = (dtoh32(header.field)))
 #define HTOD32_HEADER(field) (header.field = (htod32(header.field)))

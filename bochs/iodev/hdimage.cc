@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: hdimage.cc,v 1.28 2011-01-12 22:34:42 vruppert Exp $
+// $Id: hdimage.cc,v 1.29 2011-01-14 16:43:55 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2011  The Bochs Project
@@ -35,7 +35,7 @@
 #include <sys/mman.h>
 #endif
 
-#define LOG_THIS bx_devices.pluginHardDrive->
+#define LOG_THIS theHDImageCtl->
 
 bx_hdimage_ctl_c* theHDImageCtl = NULL;
 
@@ -49,6 +49,11 @@ int libhdimage_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, ch
 void libhdimage_LTX_plugin_fini(void)
 {
   delete theHDImageCtl;
+}
+
+bx_hdimage_ctl_c::bx_hdimage_ctl_c()
+{
+  put("IMG");
 }
 
 device_image_t* bx_hdimage_ctl_c::init_image(Bit8u image_mode, Bit64u disk_size, const char *journal)
@@ -672,8 +677,9 @@ ssize_t sparse_image_t::read(void* buf, size_t count)
 
     BX_ASSERT (can_read != 0);
 
+#if BX_ASSERT_ENABLE
     size_t was_read = read_page_fragment(position_virtual_page, position_page_offset, can_read, buf);
-
+#endif
     BX_ASSERT(was_read == can_read);
 
     total_read += can_read;
@@ -1217,7 +1223,8 @@ Bit64s redolog_t::lseek(Bit64s offset, int whence)
 
 ssize_t redolog_t::read(void* buf, size_t count)
 {
-  Bit64s block_offset, bitmap_offset, ret;
+  Bit64s block_offset, bitmap_offset;
+  ssize_t ret;
 
   if (count != 512) {
     BX_PANIC(("redolog : read() with count not 512"));
@@ -1382,14 +1389,29 @@ Bit64s growing_image_t::lseek(Bit64s offset, int whence)
 
 ssize_t growing_image_t::read(void* buf, size_t count)
 {
+  size_t n = 0;
+  ssize_t ret = 0;
+
   memset(buf, 0, count);
-  redolog->read((char*) buf, count);
-  return count;
+  while (n < count) {
+    ret = redolog->read((char*) buf, 512);
+    if (ret < 0) break;
+    n += 512;
+  }
+  return (ret < 0) ? ret : count;
 }
 
 ssize_t growing_image_t::write(const void* buf, size_t count)
 {
-  return redolog->write((char*) buf, count);
+  size_t n = 0;
+  ssize_t ret = 0;
+
+  while (n < count) {
+    ret = redolog->write((char*) buf, 512);
+    if (ret < 0) break;
+    n += 512;
+  }
+  return (ret < 0) ? ret : count;
 }
 
 /*** undoable_image_t function definitions ***/

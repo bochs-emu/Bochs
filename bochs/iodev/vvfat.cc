@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vvfat.cc,v 1.19 2011-01-14 15:37:36 vruppert Exp $
+// $Id: vvfat.cc,v 1.20 2011-01-14 16:43:55 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2010/2011  The Bochs Project
@@ -48,7 +48,7 @@
 #include "hdimage.h"
 #include "vvfat.h"
 
-#define LOG_THIS bx_devices.pluginHardDrive->
+#define LOG_THIS bx_devices.pluginHDImageCtl->
 
 #define VVFAT_MBR  "vvfat_mbr.bin"
 #define VVFAT_BOOT "vvfat_boot.bin"

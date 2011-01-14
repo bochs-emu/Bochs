@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmware4.cc,v 1.7 2011-01-02 16:51:08 vruppert Exp $
+// $Id: vmware4.cc,v 1.8 2011-01-14 16:43:55 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 
 /*
@@ -37,7 +37,8 @@
 #include "hdimage.h"
 #include "vmware4.h"
 
-#define LOG_THIS bx_devices.pluginHardDrive->
+#define LOG_THIS bx_devices.pluginHDImageCtl->
+
 const off_t vmware4_image_t::INVALID_OFFSET = (off_t)-1;
 const int vmware4_image_t::SECTOR_SIZE = 512;
 
