@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: icache.cc,v 1.39 2011-01-12 19:53:47 sshwarts Exp $
+// $Id: icache.cc,v 1.40 2011-01-15 17:08:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007-2011 Stanislav Shwartsman
@@ -37,7 +37,6 @@ void flushICaches(void)
 {
   for (unsigned i=0; i<BX_SMP_PROCESSORS; i++) {
     BX_CPU(i)->iCache.flushICacheEntries();
-    BX_CPU(i)->invalidate_prefetch_q();
 #if BX_SUPPORT_TRACE_CACHE
     BX_CPU(i)->async_event |= BX_ASYNC_EVENT_STOP_TRACE;
 #endif
@@ -46,15 +45,17 @@ void flushICaches(void)
   pageWriteStampTable.resetWriteStamps();
 }
 
-#if BX_SUPPORT_TRACE_CACHE
-
 void handleSMC(bx_phy_address pAddr)
 {
   for (unsigned i=0; i<BX_SMP_PROCESSORS; i++) {
+#if BX_SUPPORT_TRACE_CACHE
     BX_CPU(i)->async_event |= BX_ASYNC_EVENT_STOP_TRACE;
+#endif
     BX_CPU(i)->iCache.handleSMC(pAddr);
   }
 }
+
+#if BX_SUPPORT_TRACE_CACHE
 
 void BX_CPU_C::serveICacheMiss(bxICacheEntry_c *entry, Bit32u eipBiased, bx_phy_address pAddr)
 {

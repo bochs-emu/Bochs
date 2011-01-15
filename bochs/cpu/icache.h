@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: icache.h,v 1.58 2011-01-12 19:53:47 sshwarts Exp $
+// $Id: icache.h,v 1.59 2011-01-15 17:08:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007-2011 Stanislav Shwartsman
@@ -24,9 +24,7 @@
 #ifndef BX_ICACHE_H
 #define BX_ICACHE_H
 
-#if BX_SUPPORT_TRACE_CACHE
 extern void handleSMC(bx_phy_address pAddr);
-#endif
 
 class bxPageWriteStampTable
 {
@@ -69,9 +67,7 @@ public:
     Bit32u index = hash(pAddr);
 
     if (fineGranularityMapping[index]) {
-#if BX_SUPPORT_TRACE_CACHE
       handleSMC(pAddr); // one of the CPUs might be running trace from this page
-#endif
       fineGranularityMapping[index] = 0;
     }
   }
@@ -86,9 +82,7 @@ public:
               mask |= 1 << (PAGE_OFFSET((Bit32u) pAddr + len - 1) >> 7);
 
        if (fineGranularityMapping[index] & mask) {
-#if BX_SUPPORT_TRACE_CACHE
           handleSMC(pAddr); // one of the CPUs might be running trace from this page
-#endif
           fineGranularityMapping[index] = 0;
        }       
     }
@@ -177,9 +171,9 @@ public:
 
     nextPageSplitIndex = (nextPageSplitIndex+1) & (BX_ICACHE_PAGE_SPLIT_ENTRIES-1);
   }
+#endif
 
   BX_CPP_INLINE void handleSMC(bx_phy_address pAddr);
-#endif
 
   BX_CPP_INLINE void purgeICacheEntries(void);
   BX_CPP_INLINE void flushICacheEntries(void);
@@ -208,18 +202,19 @@ BX_CPP_INLINE void bxICache_c::flushICacheEntries(void)
 #endif
 }
 
-#if BX_SUPPORT_TRACE_CACHE
 BX_CPP_INLINE void bxICache_c::handleSMC(bx_phy_address pAddr)
 {
   // TODO: invalidate only entries in same page as pAddr
 
   pAddr = LPFOf(pAddr);
 
+#if BX_SUPPORT_TRACE_CACHE
   for (unsigned i=0;i<BX_ICACHE_PAGE_SPLIT_ENTRIES;i++) {
     if (pAddr == pageSplitIndex[i].ppf) {
       pageSplitIndex[i].ppf = BX_ICACHE_INVALID_PHY_ADDRESS;
     }
   }
+#endif
 
   bxICacheEntry_c *e = get_entry(pAddr, 0);
 
@@ -227,7 +222,6 @@ BX_CPP_INLINE void bxICache_c::handleSMC(bx_phy_address pAddr)
     if (pAddr == LPFOf(e->pAddr)) e->pAddr = BX_ICACHE_INVALID_PHY_ADDRESS;
   }
 }
-#endif
 
 extern void flushICaches(void);
 
