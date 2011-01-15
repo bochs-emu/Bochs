@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: icache.cc,v 1.40 2011-01-15 17:08:07 sshwarts Exp $
+// $Id: icache.cc,v 1.41 2011-01-15 22:14:44 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007-2011 Stanislav Shwartsman
@@ -97,6 +97,7 @@ void BX_CPU_C::serveICacheMiss(bxICacheEntry_c *entry, Bit32u eipBiased, bx_phy_
       // Add the instruction to trace cache
       entry->pAddr = ~entry->pAddr;
       pageWriteStampTable.markICache(pAddr);
+      pageWriteStampTable.markICache(BX_CPU_THIS_PTR pAddrPage);
       BX_CPU_THIS_PTR iCache.commit_page_split_trace(BX_CPU_THIS_PTR pAddrPage, entry);
       return;
     }
