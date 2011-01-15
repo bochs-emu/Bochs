@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode_sse.h,v 1.25 2011-01-10 06:27:19 sshwarts Exp $
+// $Id: fetchdecode_sse.h,v 1.26 2011-01-15 21:46:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005-2011 Stanislav Shwartsman
@@ -656,7 +656,7 @@ static const BxOpcodeInfo_t BxOpcodeGroupSSE_0fd6[6] = {
 
 static const BxOpcodeInfo_t BxOpcodeGroupSSE_0fd7[6] = {
   /* 66 /r */ { 0, BX_IA_PMOVMSKB_GdUdq },
-  /* 66 /m */ { 0, BX_IA_PMOVMSKB_GdUdq },
+  /* 66 /m */ { 0, BX_IA_ERROR },
   /* F3 /r */ { 0, BX_IA_ERROR },
   /* F3 /m */ { 0, BX_IA_ERROR },
   /* F2 /r */ { 0, BX_IA_ERROR },
