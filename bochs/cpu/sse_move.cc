@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_move.cc,v 1.129 2011-01-08 11:20:29 sshwarts Exp $
+// $Id: sse_move.cc,v 1.130 2011-01-15 15:17:28 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003-2011 Stanislav Shwartsman
@@ -756,14 +756,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVQ_WqVqR(bxInstruction_c *i)
   op.xmm64u(0) = BX_READ_XMM_REG_LO_QWORD(i->nnn());
   op.xmm64u(1) = 0; /* zero-extension to 128 bit */
   BX_WRITE_XMM_REG(i->rm(), op);
-#endif
-}
-
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVQ_WqVqM(bxInstruction_c *i)
-{
-#if BX_CPU_LEVEL >= 6
-  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-  write_virtual_qword(i->seg(), eaddr, BX_READ_XMM_REG_LO_QWORD(i->nnn()));
 #endif
 }
 
