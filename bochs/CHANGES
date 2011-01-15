@@ -4,6 +4,8 @@ Changes after 2.4.5 release:
   - Implemented Process Context ID (PCID) feature
   - Implemented FS/GS BASE access instructions support
     (according to document from http://software.intel.com/en-us/avx/)
+  - Rewritten from scratch SMC detection algorithm
+    - Implemented fine-grained SMC detection (on 128 byte granularity)
   - Bugfixes for CPU emulation correctness and stability
     - Fixed failures on Big Endian hosts !
   - Print detailed page walk information and attributes in
@@ -50,7 +52,6 @@ Changes after 2.4.5 release:
   - hard drive
     - new hdimage method get_capabilities() that can return special flags
     - vmware3 and vmware4 classes now return HDIMAGE_HAS_GEOMETRY_FLAG
-    - moved some stuff from harddrv.cc to hdimage.cc and some other code cleanups
     - new disk image mode 'vvfat'
       - ported the read-only part of Qemu's 'virtual VFAT' block driver
       - additions: configurable disk geometry, FAT32 support, read MBR and/or
