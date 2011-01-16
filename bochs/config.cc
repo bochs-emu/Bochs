@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.218 2011-01-16 17:17:28 vruppert Exp $
+// $Id: config.cc,v 1.219 2011-01-16 20:46:12 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2009  The Bochs Project
@@ -1238,6 +1238,7 @@ void bx_init_options()
       mode->set_dependent_list(deplist, 0);
       mode->set_dependent_bitmap(BX_HDIMAGE_MODE_UNDOABLE, 1);
       mode->set_dependent_bitmap(BX_HDIMAGE_MODE_VOLATILE, 1);
+      mode->set_dependent_bitmap(BX_HDIMAGE_MODE_VVFAT, 1);
 
       bx_param_num_c *cylinders = new bx_param_num_c(menu,
         "cylinders",
