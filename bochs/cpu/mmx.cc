@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: mmx.cc,v 1.100 2011-01-16 20:42:28 sshwarts Exp $
+// $Id: mmx.cc,v 1.101 2011-01-16 21:01:28 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2002-2010 Stanislav Shwartsman
@@ -168,7 +168,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMADDUBSW_PqQq(bxInstruction_c *i)
 #if BX_CPU_LEVEL >= 5
   BX_CPU_THIS_PTR prepareMMX();
 
-  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2, result;
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2;
 
   /* op2 is a register or memory reference */
   if (i->modC0()) {
@@ -187,11 +187,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMADDUBSW_PqQq(bxInstruction_c *i)
     Bit32s temp = Bit32s(op1.mmxubyte(j*2+0))*Bit32s(op2.mmxsbyte(j*2)) +
                   Bit32s(op1.mmxubyte(j*2+1))*Bit32s(op2.mmxsbyte(j*2+1));
 
-    result.mmx16s(j) = SaturateDwordSToWordS(temp);
+    op1.mmx16s(j) = SaturateDwordSToWordS(temp);
   }
 
   /* now write result back to destination */
-  BX_WRITE_MMX_REG(i->nnn(), result);
+  BX_WRITE_MMX_REG(i->nnn(), op1);
 #endif
 }
 
@@ -783,7 +783,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUNPCKHBW_PqQq(bxInstruction_c *i)
 #if BX_CPU_LEVEL >= 5
   BX_CPU_THIS_PTR prepareMMX();
 
-  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2, result;
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2;
 
   /* op2 is a register or memory reference */
   if (i->modC0()) {
@@ -797,17 +797,17 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUNPCKHBW_PqQq(bxInstruction_c *i)
 
   BX_CPU_THIS_PTR prepareFPU2MMX(); /* FPU2MMX transition */
 
-  MMXUB7(result) = MMXUB7(op2);
-  MMXUB6(result) = MMXUB7(op1);
-  MMXUB5(result) = MMXUB6(op2);
-  MMXUB4(result) = MMXUB6(op1);
-  MMXUB3(result) = MMXUB5(op2);
-  MMXUB2(result) = MMXUB5(op1);
-  MMXUB1(result) = MMXUB4(op2);
-  MMXUB0(result) = MMXUB4(op1);
+  MMXUB0(op1) = MMXUB4(op1);
+  MMXUB1(op1) = MMXUB4(op2);
+  MMXUB2(op1) = MMXUB5(op1);
+  MMXUB3(op1) = MMXUB5(op2);
+  MMXUB4(op1) = MMXUB6(op1);
+  MMXUB5(op1) = MMXUB6(op2);
+  MMXUB6(op1) = MMXUB7(op1);
+  MMXUB7(op1) = MMXUB7(op2);
 
   /* now write result back to destination */
-  BX_WRITE_MMX_REG(i->nnn(), result);
+  BX_WRITE_MMX_REG(i->nnn(), op1);
 #endif
 }
 
@@ -817,7 +817,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUNPCKHWD_PqQq(bxInstruction_c *i)
 #if BX_CPU_LEVEL >= 5
   BX_CPU_THIS_PTR prepareMMX();
 
-  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2, result;
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2;
 
   /* op2 is a register or memory reference */
   if (i->modC0()) {
@@ -831,13 +831,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUNPCKHWD_PqQq(bxInstruction_c *i)
 
   BX_CPU_THIS_PTR prepareFPU2MMX(); /* FPU2MMX transition */
 
-  MMXUW3(result) = MMXUW3(op2);
-  MMXUW2(result) = MMXUW3(op1);
-  MMXUW1(result) = MMXUW2(op2);
-  MMXUW0(result) = MMXUW2(op1);
+  MMXUW0(op1) = MMXUW2(op1);
+  MMXUW1(op1) = MMXUW2(op2);
+  MMXUW2(op1) = MMXUW3(op1);
+  MMXUW3(op1) = MMXUW3(op2);
 
   /* now write result back to destination */
-  BX_WRITE_MMX_REG(i->nnn(), result);
+  BX_WRITE_MMX_REG(i->nnn(), op1);
 #endif
 }
 
@@ -2265,7 +2265,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMADDWD_PqQq(bxInstruction_c *i)
 #if BX_CPU_LEVEL >= 5
   BX_CPU_THIS_PTR prepareMMX();
 
-  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2, result;
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2;
 
   /* op2 is a register or memory reference */
   if (i->modC0()) {
@@ -2280,21 +2280,21 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMADDWD_PqQq(bxInstruction_c *i)
   BX_CPU_THIS_PTR prepareFPU2MMX(); /* FPU2MMX transition */
 
   if(MMXUD0(op1) == 0x80008000 && MMXUD0(op2) == 0x80008000) {
-    MMXUD0(result) = 0x80000000;
+    MMXUD0(op1) = 0x80000000;
   }
   else {
-    MMXUD0(result) = Bit32s(MMXSW0(op1))*Bit32s(MMXSW0(op2)) + Bit32s(MMXSW1(op1))*Bit32s(MMXSW1(op2));
+    MMXUD0(op1) = Bit32s(MMXSW0(op1))*Bit32s(MMXSW0(op2)) + Bit32s(MMXSW1(op1))*Bit32s(MMXSW1(op2));
   }
 
   if(MMXUD1(op1) == 0x80008000 && MMXUD1(op2) == 0x80008000) {
-    MMXUD1(result) = 0x80000000;
+    MMXUD1(op1) = 0x80000000;
   }
   else {
-    MMXUD1(result) = Bit32s(MMXSW2(op1))*Bit32s(MMXSW2(op2)) + Bit32s(MMXSW3(op1))*Bit32s(MMXSW3(op2));
+    MMXUD1(op1) = Bit32s(MMXSW2(op1))*Bit32s(MMXSW2(op2)) + Bit32s(MMXSW3(op1))*Bit32s(MMXSW3(op2));
   }
 
   /* now write result back to destination */
-  BX_WRITE_MMX_REG(i->nnn(), result);
+  BX_WRITE_MMX_REG(i->nnn(), op1);
 #endif
 }
 
