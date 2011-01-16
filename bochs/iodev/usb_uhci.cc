@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_uhci.cc,v 1.32 2011-01-16 12:46:48 vruppert Exp $
+// $Id: usb_uhci.cc,v 1.33 2011-01-16 17:17:28 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Benjamin D Lunt (fys at frontiernet net)
@@ -824,8 +824,8 @@ void bx_usb_uhci_c::usb_timer(void)
     if ((BX_UHCI_THIS hub.device_change & (1 << i)) != 0) {
       sprintf(pname, "port%d", i + 1);
       init_device(i, (bx_list_c*)SIM->get_param(pname, SIM->get_param(BXPN_USB_UHCI)));
+      BX_UHCI_THIS hub.device_change &= ~(1 << i);
     }
-    BX_UHCI_THIS hub.device_change = 0;
   }
 }
 
@@ -1107,7 +1107,7 @@ const char *bx_usb_uhci_c::usb_param_handler(bx_param_string_c *param, int set,
         }
         usb_set_connect_status(portnum, type, 0);
       } else if (!empty && !BX_UHCI_THIS hub.usb_port[portnum].status) {
-        BX_UHCI_THIS hub.device_change = (1 << portnum);
+        BX_UHCI_THIS hub.device_change |= (1 << portnum);
       }
     } else {
       BX_PANIC(("usb_param_handler called with unexpected parameter '%s'", param->get_name()));

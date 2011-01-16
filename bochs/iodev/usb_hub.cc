@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_hub.cc,v 1.16 2011-01-16 12:46:48 vruppert Exp $
+// $Id: usb_hub.cc,v 1.17 2011-01-16 17:17:28 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Volker Ruppert
@@ -189,21 +189,19 @@ usb_hub_device_c::usb_hub_device_c(Bit8u ports)
   sprintf(pname, "exthub%d", ++hub_count);
   sprintf(label, "External Hub #%d Configuration", hub_count);
   hub.config = new bx_list_c(usb_rt, pname, label, hub.n_ports);
-  hub.config->set_options(bx_list_c::SHOW_PARENT | bx_list_c::USE_BOX_TITLE);
+  hub.config->set_options(bx_list_c::SHOW_PARENT);
   hub.config->set_runtime_param(1);
   hub.config->set_device_param(this);
   for(i = 0; i < hub.n_ports; i++) {
     sprintf(pname, "port%d", i+1);
     sprintf(label, "Port #%d Configuration", i+1);
     port = new bx_list_c(hub.config, pname, label);
-    port->set_options(port->SERIES_ASK);
+    port->set_options(port->SERIES_ASK | port->USE_BOX_TITLE);
     port->set_runtime_param(1);
-    sprintf(label, "Port #%d device", i+1);
-    device = new bx_param_string_c(port, "device", label, "", "", BX_PATHNAME_LEN);
+    device = new bx_param_string_c(port, "device", "Device", "", "", BX_PATHNAME_LEN);
     device->set_handler(hub_param_handler);
     device->set_runtime_param(1);
-    sprintf(label, "Options for port #%d device", i+1);
-    options = new bx_param_string_c(port, "options", label, "", "", BX_PATHNAME_LEN);
+    options = new bx_param_string_c(port, "options", "Options", "", "", BX_PATHNAME_LEN);
     options->set_runtime_param(1);
   }
 #if BX_WITH_WX
@@ -641,8 +639,8 @@ void usb_hub_device_c::timer()
     if ((hub.device_change & (1 << i)) != 0) {
       sprintf(pname, "port%d", i + 1);
       init_device(i, (bx_list_c*)SIM->get_param(pname, hub.config));
+      hub.device_change &= ~(1 << i);
     }
-    hub.device_change = 0;
   }
 }
 
@@ -673,7 +671,7 @@ const char *usb_hub_device_c::hub_param_handler(bx_param_string_c *param, int se
           }
           hub->usb_set_connect_status(portnum, type, 0);
         } else if (!empty && !(hub->hub.usb_port[portnum].PortStatus & PORT_STAT_CONNECTION)) {
-          hub->hub.device_change = (1 << portnum);
+          hub->hub.device_change |= (1 << portnum);
         }
       } else {
         BX_PANIC(("usb_param_handler called with unexpected parameter '%s'", param->get_name()));

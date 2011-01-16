@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.217 2011-01-16 12:46:47 vruppert Exp $
+// $Id: config.cc,v 1.218 2011-01-16 17:17:28 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2009  The Bochs Project
@@ -67,7 +67,7 @@ static Bit64s bx_param_handler(bx_param_c *param, int set, Bit64s val)
     if (!strcmp(param->get_name(), "status")) {
       if ((set) && (SIM->get_init_done())) {
         Bit32u handle = DEV_hd_get_device_handle(channel, device);
-        DEV_hd_set_cd_media_status(handle, val);
+        DEV_hd_set_cd_media_status(handle, (unsigned)val);
         bx_gui->update_drive_status_buttons();
       }
     } else if (!strcmp(param->get_name(), "type")) {
@@ -110,21 +110,21 @@ static Bit64s bx_param_handler(bx_param_c *param, int set, Bit64s val)
       }
     } else if (!strcmp(pname, BXPN_FLOPPYA_STATUS)) {
       if ((set) && (SIM->get_init_done())) {
-        DEV_floppy_set_media_status(0, val);
+        DEV_floppy_set_media_status(0, (unsigned)val);
         bx_gui->update_drive_status_buttons();
       }
     } else if (!strcmp(pname, BXPN_FLOPPYB_STATUS)) {
       if ((set) && (SIM->get_init_done())) {
-        DEV_floppy_set_media_status(1, val);
+        DEV_floppy_set_media_status(1, (unsigned)val);
         bx_gui->update_drive_status_buttons();
       }
     } else if (!strcmp(pname, BXPN_FLOPPYA_READONLY)) {
       if ((set) && (SIM->get_init_done())) {
-        DEV_floppy_set_media_readonly(0, val);
+        DEV_floppy_set_media_readonly(0, (unsigned)val);
       }
     } else if (!strcmp(pname, BXPN_FLOPPYB_READONLY)) {
       if ((set) && (SIM->get_init_done())) {
-        DEV_floppy_set_media_readonly(1, val);
+        DEV_floppy_set_media_readonly(1, (unsigned)val);
       }
     } else if (!strcmp(pname, BXPN_MOUSE_ENABLED)) {
       if ((set) && (SIM->get_init_done())) {
@@ -1446,7 +1446,7 @@ void bx_init_options()
 
   // usb subtree
   bx_list_c *usb = new bx_list_c(ports, "usb", "USB Configuration");
-  usb->set_options(usb->SHOW_PARENT);
+  usb->set_options(usb->USE_TAB_WINDOW | usb->SHOW_PARENT);
   bx_list_c *port;
   bx_param_string_c *device, *options;
 
@@ -1464,16 +1464,14 @@ void bx_init_options()
   deplist = new bx_list_c(NULL, BX_N_USB_UHCI_PORTS * 3);
   for (i=0; i<BX_N_USB_UHCI_PORTS; i++) {
     sprintf(name, "port%d", i+1);
-    sprintf(label, "Port #%d configuration", i+1);
+    sprintf(label, "Port #%d Configuration", i+1);
     sprintf(descr, "Device connected to UHCI port #%d and it's options", i+1);
     port = new bx_list_c(menu, name, label);
-    port->set_options(port->SERIES_ASK);
-    sprintf(label, "Port #%d device", i+1);
+    port->set_options(port->SERIES_ASK | port->USE_BOX_TITLE);
     sprintf(descr, "Device connected to UHCI port #%d", i+1);
-    device = new bx_param_string_c(port, "device", label, descr, "", BX_PATHNAME_LEN);
-    sprintf(label, "Options for port #%d device", i+1);
+    device = new bx_param_string_c(port, "device", "Device", descr, "", BX_PATHNAME_LEN);
     sprintf(descr, "Options for device connected to UHCI port #%d", i+1);
-    options = new bx_param_string_c(port, "options", label, descr, "", BX_PATHNAME_LEN);
+    options = new bx_param_string_c(port, "options", "Options", descr, "", BX_PATHNAME_LEN);
     port->set_group(group);
     deplist->add(port);
     deplist->add(device);
@@ -1495,16 +1493,14 @@ void bx_init_options()
   deplist = new bx_list_c(NULL, BX_N_USB_OHCI_PORTS * 3);
   for (i=0; i<BX_N_USB_OHCI_PORTS; i++) {
     sprintf(name, "port%d", i+1);
-    sprintf(label, "Port #%d configuration", i+1);
+    sprintf(label, "Port #%d Configuration", i+1);
     sprintf(descr, "Device connected to OHCI port #%d and it's options", i+1);
     port = new bx_list_c(menu, name, label);
-    port->set_options(port->SERIES_ASK);
-    sprintf(label, "Port #%d device", i+1);
+    port->set_options(port->SERIES_ASK | port->USE_BOX_TITLE);
     sprintf(descr, "Device connected to OHCI port #%d", i+1);
-    device = new bx_param_string_c(port, "device", label, descr, "", BX_PATHNAME_LEN);
-    sprintf(label, "Options for port #%d device", i+1);
+    device = new bx_param_string_c(port, "device", "Device", descr, "", BX_PATHNAME_LEN);
     sprintf(descr, "Options for device connected to OHCI port #%d", i+1);
-    options = new bx_param_string_c(port, "options", label, descr, "", BX_PATHNAME_LEN);
+    options = new bx_param_string_c(port, "options", "Options", descr, "", BX_PATHNAME_LEN);
     port->set_group(group);
     deplist->add(port);
     deplist->add(device);
@@ -1841,7 +1837,7 @@ void bx_init_options()
   bx_list_c *cdrom = new bx_list_c(menu, "cdrom", "CD-ROM options", 10);
   cdrom->set_options(cdrom->SHOW_PARENT);
   usb = new bx_list_c(menu, "usb", "USB options", 10);
-  usb->set_options(usb->SHOW_PARENT | usb->SHOW_GROUP_NAME);
+  usb->set_options(usb->SHOW_PARENT | usb->USE_TAB_WINDOW);
   // misc runtime options
   bx_param_c *rt_misc_init_list[] = {
       SIM->get_param_num(BXPN_VGA_UPDATE_INTERVAL),

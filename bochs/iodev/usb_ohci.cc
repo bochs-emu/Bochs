@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_ohci.cc,v 1.41 2011-01-16 12:46:48 vruppert Exp $
+// $Id: usb_ohci.cc,v 1.42 2011-01-16 17:17:28 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Benjamin D Lunt (fys at frontiernet net)
@@ -687,7 +687,7 @@ bx_bool bx_usb_ohci_c::read_handler(bx_phy_address addr, unsigned len, void *dat
 bx_bool bx_usb_ohci_c::write_handler(bx_phy_address addr, unsigned len, void *data, void *param)
 {
   Bit32u value = *((Bit32u *) data);
-  Bit32u  offset = addr - BX_OHCI_THIS hub.base_addr;
+  Bit32u  offset = (Bit32u)addr - BX_OHCI_THIS hub.base_addr;
   int p, org_state;
 
   int name = offset >> 2;
@@ -1115,8 +1115,8 @@ do_iso_eds:
     if ((BX_OHCI_THIS hub.device_change & (1 << i)) != 0) {
       sprintf(pname, "port%d", i + 1);
       init_device(i, (bx_list_c*)SIM->get_param(pname, SIM->get_param(BXPN_USB_OHCI)));
+      BX_OHCI_THIS hub.device_change &= ~(1 << i);
     }
-    BX_OHCI_THIS hub.device_change = 0;
   }
 }
 
@@ -1493,7 +1493,7 @@ const char *bx_usb_ohci_c::usb_param_handler(bx_param_string_c *param, int set,
         }
         usb_set_connect_status(portnum, type, 0);
       } else if (!empty && !BX_OHCI_THIS hub.usb_port[portnum].HcRhPortStatus.ccs) {
-        BX_OHCI_THIS hub.device_change = (1 << portnum);
+        BX_OHCI_THIS hub.device_change |= (1 << portnum);
       }
     } else {
       BX_PANIC(("usb_param_handler called with unexpected parameter '%s'", param->get_name()));
