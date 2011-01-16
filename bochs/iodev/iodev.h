@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.125 2011-01-12 22:34:42 vruppert Exp $
+// $Id: iodev.h,v 1.126 2011-01-16 12:46:48 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2009  The Bochs Project
@@ -347,7 +347,7 @@ public:
 #if BX_SUPPORT_PCIUSB
 class BOCHSAPI bx_usb_devctl_stub_c : public bx_devmodel_c {
 public:
-  virtual int init_device(const char *devname, logfunctions *hub, void **dev, bx_list_c *sr_list) {
+  virtual int init_device(bx_list_c *portconf, logfunctions *hub, void **dev, bx_list_c *sr_list) {
     STUBFUNC(usb_devctl, init_device); return 0;
   }
   virtual void usb_send_msg(void *dev, int msg) {}

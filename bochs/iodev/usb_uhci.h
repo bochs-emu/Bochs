@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_uhci.h,v 1.12 2009-04-06 09:30:26 vruppert Exp $
+// $Id: usb_uhci.h,v 1.13 2011-01-16 12:46:48 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Benjamin D Lunt (fys at frontiernet net)
@@ -161,6 +161,7 @@ typedef struct {
   int statusbar_id; // ID of the status LEDs
   int iolight_counter;
   int iolight_timer_index;
+  Bit8u device_change;
 } bx_usb_uhci_t;
 
 #pragma pack (push, 1)
@@ -206,7 +207,7 @@ private:
 
   static void set_irq_level(bx_bool level);
 
-  static void init_device(Bit8u port, const char *devname);
+  static void init_device(Bit8u port, bx_list_c *portconf);
   static void remove_device(Bit8u port);
   static int  broadcast_packet(USBPacket *p);
   static void usb_set_connect_status(Bit8u port, int type, bx_bool connected);

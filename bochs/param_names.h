@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: param_names.h,v 1.12 2010-11-21 12:02:12 sshwarts Exp $
+// $Id: param_names.h,v 1.13 2011-01-16 12:46:47 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  The Bochs Project
@@ -137,12 +137,16 @@
 #define BXPN_ATA3_SLAVE                  "ata.3.slave"
 #define BXPN_USB_UHCI                    "ports.usb.uhci"
 #define BXPN_UHCI_ENABLED                "ports.usb.uhci.enabled"
-#define BXPN_UHCI_PORT1                  "ports.usb.uhci.port1"
-#define BXPN_UHCI_PORT2                  "ports.usb.uhci.port2"
+#define BXPN_UHCI_PORT1_DEVICE           "ports.usb.uhci.port1.device"
+#define BXPN_UHCI_PORT1_OPTIONS          "ports.usb.uhci.port1.options"
+#define BXPN_UHCI_PORT2_DEVICE           "ports.usb.uhci.port2.device"
+#define BXPN_UHCI_PORT2_OPTIONS          "ports.usb.uhci.port2.options"
 #define BXPN_USB_OHCI                    "ports.usb.ohci"
 #define BXPN_OHCI_ENABLED                "ports.usb.ohci.enabled"
-#define BXPN_OHCI_PORT1                  "ports.usb.ohci.port1"
-#define BXPN_OHCI_PORT2                  "ports.usb.ohci.port2"
+#define BXPN_OHCI_PORT1_DEVICE           "ports.usb.ohci.port1.device"
+#define BXPN_OHCI_PORT1_OPTIONS          "ports.usb.ohci.port1.options"
+#define BXPN_OHCI_PORT2_DEVICE           "ports.usb.ohci.port2.device"
+#define BXPN_OHCI_PORT2_OPTIONS          "ports.usb.ohci.port2.options"
 #define BXPN_NE2K                        "network.ne2k"
 #define BXPN_NE2K_ENABLED                "network.ne2k.enabled"
 #define BXPN_PNIC                        "network.pnic"

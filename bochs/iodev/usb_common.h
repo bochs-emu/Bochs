@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_common.h,v 1.14 2010-12-14 21:20:37 vruppert Exp $
+// $Id: usb_common.h,v 1.15 2011-01-16 12:46:48 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Benjamin D Lunt (fys at frontiernet net)
@@ -130,8 +130,10 @@ class bx_usb_devctl_c : public bx_usb_devctl_stub_c {
 public:
   bx_usb_devctl_c() {}
   virtual ~bx_usb_devctl_c() {}
-  virtual int init_device(const char *devname, logfunctions *hub, void **dev, bx_list_c *sr_list);
+  virtual int init_device(bx_list_c *portconf, logfunctions *hub, void **dev, bx_list_c *sr_list);
   virtual void usb_send_msg(void *dev, int msg);
+private:
+  void parse_port_options(usb_device_c *dev, bx_list_c *portconf);
 };
 
 class usb_device_c : public logfunctions {
@@ -150,6 +152,8 @@ public:
   virtual void register_state_specific(bx_list_c *parent) {}
   virtual void after_restore_state() {}
   virtual void cancel_packet(USBPacket *p) {}
+  virtual bx_bool set_option(const char *option) {return 0;}
+  virtual void timer() {}
 
   bx_bool get_connected() {return d.connected;}
   usbdev_type get_type() {return d.type;}

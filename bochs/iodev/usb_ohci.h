@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_ohci.h,v 1.16 2009-05-12 16:18:19 vruppert Exp $
+// $Id: usb_ohci.h,v 1.17 2011-01-16 12:46:48 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Benjamin D Lunt (fys at frontiernet net)
@@ -242,6 +242,7 @@ typedef struct {
   int statusbar_id; // ID of the status LEDs
   int iolight_counter;
   int iolight_timer_index;
+  Bit8u device_change;
 } bx_usb_ohci_t;
 
 
@@ -272,7 +273,7 @@ private:
   static void update_irq();
   static void set_interrupt(Bit32u value);
 
-  static void init_device(Bit8u port, const char *devname);
+  static void init_device(Bit8u port, bx_list_c *portconf);
   static void remove_device(Bit8u port);
   static int  broadcast_packet(USBPacket *p);
   static void usb_set_connect_status(Bit8u port, int type, bx_bool connected);

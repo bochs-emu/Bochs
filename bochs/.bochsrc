@@ -283,6 +283,7 @@ vga: extension=vbe
 #   floppya: 180k=path, status=inserted   (180K  5.25" media)
 #   floppya: 160k=path, status=inserted   (160K  5.25" media)
 #   floppya: image=path, status=inserted  (guess media type from image size)
+#   floppya: 1_44=vvfat:path, status=inserted  (use directory as VFAT media)
 #   floppya: type=1_44                    (1.44M 3.5" floppy drive, no media)
 #
 # The path should be the name of a disk image file.  On Unix, you can use a raw
@@ -829,9 +830,14 @@ i440fxsupport: enabled=1
 #=======================================================================
 # USB_UHCI:
 # This option controls the presence of the USB root hub which is a part
-# of the i440FX PCI chipset. With the portX option you can connect devices
+# of the i440FX PCI chipset. With the portX parameter you can connect devices
 # to the hub (currently supported: 'mouse', 'tablet', 'keypad', 'disk', 'cdrom'
 # 'hub' and 'printer').
+#
+# The optionsX parameter can be used to assign specific options to the device
+# connected to the corresponding USB port. Currently this feature is only used
+# by the 'disk' device to specify an alternative redolog file of some image
+# modes.
 #
 # If you connect the mouse or tablet to one of the ports, Bochs forwards the
 # mouse movement data to the USB device instead of the selected mouse type.
@@ -859,6 +865,7 @@ i440fxsupport: enabled=1
 #usb_uhci: enabled=1
 #usb_uhci: enabled=1, port1=mouse, port2=disk:usbstick.img
 #usb_uhci: enabled=1, port1=hub:7, port2=disk:growing:usbdisk.img
+#usb_uhci: enabled=1, port2=disk:undoable:usbdisk.img, options1=journal:redo.log
 #usb_uhci: enabled=1, port1=printer:printdata.bin, port2=cdrom:image.iso
 
 #=======================================================================

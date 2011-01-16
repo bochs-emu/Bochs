@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_uhci.cc,v 1.31 2010-12-14 21:20:37 vruppert Exp $
+// $Id: usb_uhci.cc,v 1.32 2011-01-16 12:46:48 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Benjamin D Lunt (fys at frontiernet net)
@@ -65,13 +65,13 @@ bx_usb_uhci_c::bx_usb_uhci_c()
 
 bx_usb_uhci_c::~bx_usb_uhci_c()
 {
-  char pname[6];
+  char pname[16];
 
   if (BX_UHCI_THIS device_buffer != NULL)
     delete [] BX_UHCI_THIS device_buffer;
 
   for (int i=0; i<BX_N_USB_UHCI_PORTS; i++) {
-    sprintf(pname, "port%d", i+1);
+    sprintf(pname, "port%d.device", i+1);
     SIM->get_param_string(pname, SIM->get_param(BXPN_USB_UHCI))->set_handler(NULL);
     remove_device(i);
   }
@@ -83,7 +83,8 @@ void bx_usb_uhci_c::init(void)
 {
   unsigned i;
   char pname[6];
-  bx_param_string_c *port;
+  bx_list_c *port;
+  bx_param_string_c *device, *options;
 
   BX_UHCI_THIS device_buffer = new Bit8u[65536];
 
@@ -116,9 +117,13 @@ void bx_usb_uhci_c::init(void)
   usb_rt->add(uhci);
   for (i=0; i<BX_N_USB_UHCI_PORTS; i++) {
     sprintf(pname, "port%d", i+1);
-    port = SIM->get_param_string(pname, uhci);
-    port->set_handler(usb_param_handler);
+    port = (bx_list_c*)SIM->get_param(pname, uhci);
     port->set_runtime_param(1);
+    device = (bx_param_string_c*)port->get_by_name("device");
+    device->set_handler(usb_param_handler);
+    device->set_runtime_param(1);
+    options = (bx_param_string_c*)port->get_by_name("options");
+    options->set_runtime_param(1);
     BX_UHCI_THIS hub.usb_port[i].device = NULL;
   }
 
@@ -131,6 +136,7 @@ void bx_usb_uhci_c::init(void)
       DEV_register_timer(this, iolight_timer_handler, 5000, 0,0, "UHCI i/o light");
   }
   BX_UHCI_THIS hub.iolight_counter = 0;
+  BX_UHCI_THIS hub.device_change = 0;
 
   BX_INFO(("USB UHCI initialized"));
 }
@@ -209,7 +215,7 @@ void bx_usb_uhci_c::reset(unsigned type)
     BX_UHCI_THIS hub.usb_port[j].status = 0;
     if (BX_UHCI_THIS hub.usb_port[j].device == NULL) {
       sprintf(pname, "port%d", j+1);
-      init_device(j, SIM->get_param_string(pname, SIM->get_param(BXPN_USB_UHCI))->getptr());
+      init_device(j, (bx_list_c*)SIM->get_param(pname, SIM->get_param(BXPN_USB_UHCI)));
     } else {
       usb_set_connect_status(j, BX_UHCI_THIS hub.usb_port[j].device->get_type(), 1);
     }
@@ -287,11 +293,14 @@ void bx_usb_uhci_c::after_restore_state(void)
   }
 }
 
-void bx_usb_uhci_c::init_device(Bit8u port, const char *devname)
+void bx_usb_uhci_c::init_device(Bit8u port, bx_list_c *portconf)
 {
   usbdev_type type;
   char pname[BX_PATHNAME_LEN];
+  const char *devname = NULL;
 
+  devname = ((bx_param_string_c*)portconf->get_by_name("device"))->getptr();
+  if (devname == NULL) return;
   if (!strlen(devname) || !strcmp(devname, "none")) return;
 
   if (BX_UHCI_THIS hub.usb_port[port].device != NULL) {
@@ -300,7 +309,7 @@ void bx_usb_uhci_c::init_device(Bit8u port, const char *devname)
   }
   sprintf(pname, "usb_uhci.hub.port%d.device", port+1);
   bx_list_c *sr_list = (bx_list_c*)SIM->get_param(pname, SIM->get_bochs_root());
-  type = DEV_usb_init_device(devname, BX_UHCI_THIS_PTR, &BX_UHCI_THIS hub.usb_port[port].device, sr_list);
+  type = DEV_usb_init_device(portconf, BX_UHCI_THIS_PTR, &BX_UHCI_THIS hub.usb_port[port].device, sr_list);
   if (BX_UHCI_THIS hub.usb_port[port].device != NULL) {
     usb_set_connect_status(port, type, 1);
   }
@@ -629,6 +638,7 @@ void bx_usb_uhci_c::usb_timer_handler(void *this_ptr)
 void bx_usb_uhci_c::usb_timer(void)
 {
   int i;
+  char pname[6];
 
   // If the "global reset" bit was set by software
   if (BX_UHCI_THIS global_reset) {
@@ -804,6 +814,19 @@ void bx_usb_uhci_c::usb_timer(void)
   //  If in Global_Suspend mode and any of usb_port[i] bits 6,3, or 1 are set,
   //    we need to issue a Global_Resume (set the global resume bit).
   //    However, since we don't do anything, let's not.
+
+  for (i = 0; i < BX_N_USB_UHCI_PORTS; i++) {
+    // forward timer tick
+    if (BX_UHCI_THIS hub.usb_port[i].device != NULL) {
+      BX_UHCI_THIS hub.usb_port[i].device->timer();
+    }
+    // device change support
+    if ((BX_UHCI_THIS hub.device_change & (1 << i)) != 0) {
+      sprintf(pname, "port%d", i + 1);
+      init_device(i, (bx_list_c*)SIM->get_param(pname, SIM->get_param(BXPN_USB_UHCI)));
+    }
+    BX_UHCI_THIS hub.device_change = 0;
+  }
 }
 
 bx_bool bx_usb_uhci_c::DoTransfer(Bit32u address, Bit32u queue_num, struct TD *td) {
@@ -1074,7 +1097,7 @@ const char *bx_usb_uhci_c::usb_param_handler(bx_param_string_c *param, int set,
   int portnum;
 
   if (set) {
-    portnum = atoi(param->get_name()+4) - 1;
+    portnum = atoi((param->get_parent())->get_name()+4) - 1;
     bx_bool empty = ((strlen(val) == 0) || (!strcmp(val, "none")));
     if ((portnum >= 0) && (portnum < BX_N_USB_UHCI_PORTS)) {
       BX_INFO(("USB port #%d experimental device change", portnum+1));
@@ -1084,7 +1107,7 @@ const char *bx_usb_uhci_c::usb_param_handler(bx_param_string_c *param, int set,
         }
         usb_set_connect_status(portnum, type, 0);
       } else if (!empty && !BX_UHCI_THIS hub.usb_port[portnum].status) {
-        init_device(portnum, val);
+        BX_UHCI_THIS hub.device_change = (1 << portnum);
       }
     } else {
       BX_PANIC(("usb_param_handler called with unexpected parameter '%s'", param->get_name()));

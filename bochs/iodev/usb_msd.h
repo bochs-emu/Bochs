@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_msd.h,v 1.15 2010-12-10 17:02:18 vruppert Exp $
+// $Id: usb_msd.h,v 1.16 2011-01-16 12:46:48 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Volker Ruppert
@@ -34,6 +34,7 @@ public:
   virtual ~usb_msd_device_c(void);
 
   virtual bx_bool init();
+  virtual bx_bool set_option(const char *option);
   virtual const char* get_info();
 
   virtual void handle_reset();
@@ -70,6 +71,7 @@ private:
     const char *fname;
     bx_list_c *config;
     char info_txt[BX_PATHNAME_LEN];
+    char journal[BX_PATHNAME_LEN];
   } s;
 
   static const char *cd_param_string_handler(bx_param_string_c *param, int set,

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_msd.cc,v 1.27 2011-01-12 22:34:42 vruppert Exp $
+// $Id: usb_msd.cc,v 1.28 2011-01-16 12:46:48 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Volker Ruppert
@@ -158,6 +158,7 @@ usb_msd_device_c::usb_msd_device_c(usbdev_type type, const char *filename)
       s.image_mode = SIM->hdimage_get_mode(ptr1);
       s.fname = filename+strlen(ptr1)+1;
     }
+    s.journal[0] = 0;
   } else if (d.type == USB_DEV_TYPE_CDROM) {
     strcpy(d.devname, "BOCHS USB CDROM");
     s.fname = filename;
@@ -203,10 +204,19 @@ usb_msd_device_c::~usb_msd_device_c(void)
   }
 }
 
+bx_bool usb_msd_device_c::set_option(const char *option)
+{
+  if (!strncmp(option, "journal:", 8)) {
+    strcpy(s.journal, option+8);
+    return 1;
+  }
+  return 0;
+}
+
 bx_bool usb_msd_device_c::init()
 {
   if (d.type == USB_DEV_TYPE_DISK) {
-    s.hdimage = DEV_hdimage_init_image(s.image_mode, 0, "");
+    s.hdimage = DEV_hdimage_init_image(s.image_mode, 0, s.journal);
     if (s.hdimage->open(s.fname) < 0) {
       BX_ERROR(("could not open hard drive image file '%s'", s.fname));
       return 0;

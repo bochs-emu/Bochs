@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_hub.cc,v 1.15 2010-12-14 21:20:37 vruppert Exp $
+// $Id: usb_hub.cc,v 1.16 2011-01-16 12:46:48 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Volker Ruppert
@@ -168,7 +168,8 @@ usb_hub_device_c::usb_hub_device_c(Bit8u ports)
   int i;
   char pname[10];
   char label[32];
-  bx_param_string_c *port;
+  bx_list_c *port;
+  bx_param_string_c *device, *options;
 
   d.type = USB_DEV_TYPE_HUB;
   d.speed = USB_SPEED_FULL;
@@ -181,6 +182,7 @@ usb_hub_device_c::usb_hub_device_c(Bit8u ports)
     hub.usb_port[i].PortStatus = PORT_STAT_POWER;
     hub.usb_port[i].PortChange = 0;
   }
+  hub.device_change = 0;
 
   // config options
   bx_list_c *usb_rt = (bx_list_c*)SIM->get_param(BXPN_MENU_RUNTIME_USB);
@@ -192,10 +194,17 @@ usb_hub_device_c::usb_hub_device_c(Bit8u ports)
   hub.config->set_device_param(this);
   for(i = 0; i < hub.n_ports; i++) {
     sprintf(pname, "port%d", i+1);
-    sprintf(label, "Port #%d device", i+1);
-    port = new bx_param_string_c(hub.config, pname, label, "", "", BX_PATHNAME_LEN);
-    port->set_handler(hub_param_handler);
+    sprintf(label, "Port #%d Configuration", i+1);
+    port = new bx_list_c(hub.config, pname, label);
+    port->set_options(port->SERIES_ASK);
     port->set_runtime_param(1);
+    sprintf(label, "Port #%d device", i+1);
+    device = new bx_param_string_c(port, "device", label, "", "", BX_PATHNAME_LEN);
+    device->set_handler(hub_param_handler);
+    device->set_runtime_param(1);
+    sprintf(label, "Options for port #%d device", i+1);
+    options = new bx_param_string_c(port, "options", label, "", "", BX_PATHNAME_LEN);
+    options->set_runtime_param(1);
   }
 #if BX_WITH_WX
   bx_list_c *usb = (bx_list_c*)SIM->get_param("ports.usb");
@@ -550,11 +559,14 @@ int usb_hub_device_c::handle_packet(USBPacket *p)
   return usb_device_c::handle_packet(p);
 }
 
-void usb_hub_device_c::init_device(Bit8u port, const char *devname)
+void usb_hub_device_c::init_device(Bit8u port, bx_list_c *portconf)
 {
   usbdev_type type;
   char pname[BX_PATHNAME_LEN];
+  const char *devname = NULL;
 
+  devname = ((bx_param_string_c*)portconf->get_by_name("device"))->getptr();
+  if (devname == NULL) return;
   if (!strlen(devname) || !strcmp(devname, "none")) return;
 
   if (hub.usb_port[port].device != NULL) {
@@ -563,7 +575,7 @@ void usb_hub_device_c::init_device(Bit8u port, const char *devname)
   }
   sprintf(pname, "port%d.device", port+1);
   bx_list_c *sr_list = (bx_list_c*)SIM->get_param(pname, hub.state);
-  type = DEV_usb_init_device(devname, this, &hub.usb_port[port].device, sr_list);
+  type = DEV_usb_init_device(portconf, this, &hub.usb_port[port].device, sr_list);
   if (hub.usb_port[port].device != NULL) {
     usb_set_connect_status(port, type, 1);
   }
@@ -615,6 +627,25 @@ void usb_hub_device_c::usb_set_connect_status(Bit8u port, int type, bx_bool conn
   }
 }
 
+void usb_hub_device_c::timer()
+{
+  int i;
+  char pname[6];
+
+  for (i = 0; i < hub.n_ports; i++) {
+    // forward timer tick
+    if (hub.usb_port[i].device != NULL) {
+      hub.usb_port[i].device->timer();
+    }
+    // device change support
+    if ((hub.device_change & (1 << i)) != 0) {
+      sprintf(pname, "port%d", i + 1);
+      init_device(i, (bx_list_c*)SIM->get_param(pname, hub.config));
+    }
+    hub.device_change = 0;
+  }
+}
+
 #undef LOG_THIS
 #define LOG_THIS hub->
 
@@ -625,12 +656,14 @@ const char *usb_hub_device_c::hub_param_handler(bx_param_string_c *param, int se
   usbdev_type type = USB_DEV_TYPE_NONE;
   int hubnum, portnum;
   usb_hub_device_c *hub;
+  bx_list_c *port;
 
   if (set) {
-    hub = (usb_hub_device_c*) param->get_parent()->get_device_param();
+    port = (bx_list_c*)param->get_parent();
+    hub = (usb_hub_device_c*)(port->get_parent()->get_device_param());
     if (hub != NULL) {
-      hubnum = atoi(param->get_parent()->get_name()+6);
-      portnum = atoi(param->get_name()+4) - 1;
+      hubnum = atoi(port->get_parent()->get_name()+6);
+      portnum = atoi(port->get_name()+4) - 1;
       bx_bool empty = ((strlen(val) == 0) || (!strcmp(val, "none")));
       if ((portnum >= 0) && (portnum < hub->hub.n_ports)) {
         BX_INFO(("USB hub #%d, port #%d experimental device change", hubnum, portnum+1));
@@ -640,7 +673,7 @@ const char *usb_hub_device_c::hub_param_handler(bx_param_string_c *param, int se
           }
           hub->usb_set_connect_status(portnum, type, 0);
         } else if (!empty && !(hub->hub.usb_port[portnum].PortStatus & PORT_STAT_CONNECTION)) {
-          hub->init_device(portnum, val);
+          hub->hub.device_change = (1 << portnum);
         }
       } else {
         BX_PANIC(("usb_param_handler called with unexpected parameter '%s'", param->get_name()));

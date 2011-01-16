@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_hub.h,v 1.5 2009-04-09 17:32:53 vruppert Exp $
+// $Id: usb_hub.h,v 1.6 2011-01-16 12:46:48 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Volker Ruppert
@@ -25,7 +25,7 @@
 #define BX_IODEV_USB_HUB_H
 
 
-// number of ports defined in bochs.h
+// max. number of ports defined in bochs.h
 
 class usb_hub_device_c : public usb_device_c {
 public:
@@ -38,6 +38,7 @@ public:
   virtual int handle_data(USBPacket *p);
   virtual void register_state_specific(bx_list_c *parent);
   virtual void after_restore_state();
+  virtual void timer();
 
 private:
   struct {
@@ -52,10 +53,11 @@ private:
       Bit16u PortStatus;
       Bit16u PortChange;
     } usb_port[BX_N_USB_HUB_PORTS];
+    Bit16u device_change;
   } hub;
 
   int broadcast_packet(USBPacket *p);
-  void init_device(Bit8u port, const char *devname);
+  void init_device(Bit8u port, bx_list_c *portconf);
   void remove_device(Bit8u port);
   void usb_set_connect_status(Bit8u port, int type, bx_bool connected);
 

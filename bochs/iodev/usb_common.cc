@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_common.cc,v 1.15 2010-12-14 21:20:37 vruppert Exp $
+// $Id: usb_common.cc,v 1.16 2011-01-16 12:46:48 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Benjamin D Lunt (fys at frontiernet net)
@@ -70,12 +70,14 @@ void libusb_common_LTX_plugin_fini(void)
   delete theUsbDevCtl;
 }
 
-int bx_usb_devctl_c::init_device(const char *devname, logfunctions *hub, void **dev, bx_list_c *sr_list)
+int bx_usb_devctl_c::init_device(bx_list_c *portconf, logfunctions *hub, void **dev, bx_list_c *sr_list)
 {
   usbdev_type type = USB_DEV_TYPE_NONE;
   int ports;
   usb_device_c **device = (usb_device_c**)dev;
+  const char *devname = NULL;
 
+  devname = ((bx_param_string_c*)portconf->get_by_name("device"))->getptr();
   if (!strcmp(devname, "mouse")) {
     type = USB_DEV_TYPE_MOUSE;
     *device = new usb_hid_device_c(type);
@@ -129,8 +131,61 @@ int bx_usb_devctl_c::init_device(const char *devname, logfunctions *hub, void **
   }
   if (*device != NULL) {
     (*device)->register_state(sr_list);
+    parse_port_options(*device, portconf);
   }
   return type;
+}
+
+void bx_usb_devctl_c::parse_port_options(usb_device_c *device, bx_list_c *portconf)
+{
+  const char *raw_options;
+  char *options;
+  unsigned i, string_i;
+  int optc;
+  char *opts[16];
+  char *ptr;
+  char string[512];
+  size_t len;
+
+  memset(opts, 0, sizeof(opts));
+  optc = 0;
+  raw_options = ((bx_param_string_c*)portconf->get_by_name("options"))->getptr();
+  len = strlen(raw_options);
+  if (len > 0) {
+    options = new char[len + 1];
+    strcpy(options, raw_options);
+    ptr = strtok(options, ",");
+    while (ptr) {
+      string_i = 0;
+      for (i=0; i<strlen(ptr); i++) {
+        if (!isspace(ptr[i])) string[string_i++] = ptr[i];
+      }
+      string[string_i] = '\0';
+      if (opts[optc] != NULL) {
+        free(opts[optc]);
+        opts[optc] = NULL;
+      }
+      if (optc < 16) {
+        opts[optc++] = strdup(string);
+      } else {
+        BX_ERROR(("too many parameters, max is 16"));
+        break;
+      }
+      ptr = strtok(NULL, ",");
+    }
+    delete [] options;
+  }
+  for (i = 0; i < (unsigned)optc; i++) {
+    if (!device->set_option(opts[i])) {
+      BX_ERROR(("unknown USB device option: '%s'", opts[i]));
+    }
+  }
+  for (i = 1; i < (unsigned)optc; i++) {
+    if (opts[i] != NULL) {
+      free(opts[i]);
+      opts[i] = NULL;
+    }
+  }
 }
 
 void bx_usb_devctl_c::usb_send_msg(void *dev, int msg)
