@@ -561,7 +561,7 @@ RINCLUDES=/System/Library/Frameworks/Carbon.framework/Libraries/RIncludes
 REZ_ARGS=-append -i $RINCLUDES -d SystemSevenOrLater=1 -useDF
 STANDALONE_LIBDIR=`pwd`/$(APP)/Contents/$(APP_PLATFORM)/lib
 OSACOMPILE=/usr/bin/osacompile
-SETFILE=/Developer/Tools/Setfile
+SETFILE=/Developer/Tools/SetFile
 
 # On a MacOS X machine, you run rez, osacompile, and setfile to
 # produce the script executable, which has both a data fork and a

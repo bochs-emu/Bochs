@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.254 2011-01-13 20:47:00 sshwarts Exp $
+// $Id: rombios.c,v 1.255 2011-01-16 19:29:11 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -648,7 +648,14 @@ typedef struct {
   // EBDA must be at most 768 bytes; it lives at EBDA_SEG, and the boot
   // device tables are at IPL_SEG
   typedef struct {
-    unsigned char filler1[0x3D];
+    Bit8u size;
+    unsigned char filler0[0x21];
+    Bit16u mouse_driver_offset;
+    Bit16u mouse_driver_seg;
+    Bit8u mouse_flag1;
+    Bit8u mouse_flag2;
+    Bit8u mouse_data[0x08];
+    unsigned char filler1[0x0D];
 
     // FDPT - Can be split into data members if needed
     unsigned char fdpt0[0x10];
@@ -869,7 +876,7 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.254 $ $Date: 2011-01-13 20:47:00 $";
+static char bios_cvs_version_string[] = "$Revision: 1.255 $ $Date: 2011-01-16 19:29:11 $";
 
 #define BIOS_COPYRIGHT_STRING "(c) 2002 MandrakeSoft S.A. Written by Kevin Lawton & the Bochs team."
 
@@ -4194,7 +4201,7 @@ BX_DEBUG_INT15("case 0: disable mouse\n");
 
             case 1: // Enable Mouse
 BX_DEBUG_INT15("case 1: enable mouse\n");
-              mouse_flags_2 = read_byte(ebda_seg, 0x0027);
+              mouse_flags_2 = read_byte(ebda_seg, &EbdaData->mouse_flag2);
               if ( (mouse_flags_2 & 0x80) == 0 ) {
                 BX_DEBUG_INT15("INT 15h C2 Enable Mouse, no far call handler\n");
                 SET_CF();  // error
@@ -4233,11 +4240,11 @@ BX_DEBUG_INT15("case 1 or 5:\n");
               regs.u.r8.ah = 0x02; // invalid input
               return;
             }
-            mouse_flags_2 = read_byte(ebda_seg, 0x0027);
+            mouse_flags_2 = read_byte(ebda_seg, &EbdaData->mouse_flag2);
             mouse_flags_2 = (mouse_flags_2 & 0x00) | regs.u.r8.bh;
             mouse_flags_1 = 0x00;
-            write_byte(ebda_seg, 0x0026, mouse_flags_1);
-            write_byte(ebda_seg, 0x0027, mouse_flags_2);
+            write_byte(ebda_seg, &EbdaData->mouse_flag1, mouse_flags_1);
+            write_byte(ebda_seg, &EbdaData->mouse_flag2, mouse_flags_2);
           }
 
           inhibit_mouse_int_and_events(); // disable IRQ12 and packets
@@ -4423,9 +4430,9 @@ BX_DEBUG_INT15("case 6:\n");
 BX_DEBUG_INT15("case 7:\n");
           mouse_driver_seg = ES;
           mouse_driver_offset = regs.u.r16.bx;
-          write_word(ebda_seg, 0x0022, mouse_driver_offset);
-          write_word(ebda_seg, 0x0024, mouse_driver_seg);
-          mouse_flags_2 = read_byte(ebda_seg, 0x0027);
+          write_word(ebda_seg, &EbdaData->mouse_driver_offset, mouse_driver_offset);
+          write_word(ebda_seg, &EbdaData->mouse_driver_seg, mouse_driver_seg);
+          mouse_flags_2 = read_byte(ebda_seg, &EbdaData->mouse_flag2);
           if (mouse_driver_offset == 0 && mouse_driver_seg == 0) {
             /* remove handler */
             if ( (mouse_flags_2 & 0x80) != 0 ) {
@@ -4437,7 +4444,7 @@ BX_DEBUG_INT15("case 7:\n");
             /* install handler */
             mouse_flags_2 |= 0x80;
           }
-          write_byte(ebda_seg, 0x0027, mouse_flags_2);
+          write_byte(ebda_seg, &EbdaData->mouse_flag2, mouse_flags_2);
           CLEAR_CF();
           regs.u.r8.ah = 0;
           break;
@@ -5197,8 +5204,8 @@ BX_DEBUG_INT74("entering int74_function\n");
   in_byte = inb(PORT_PS2_DATA);
 BX_DEBUG_INT74("int74: read byte %02x\n", in_byte);
 
-  mouse_flags_1 = read_byte(ebda_seg, 0x0026);
-  mouse_flags_2 = read_byte(ebda_seg, 0x0027);
+  mouse_flags_1 = read_byte(ebda_seg, &EbdaData->mouse_flag1);
+  mouse_flags_2 = read_byte(ebda_seg, &EbdaData->mouse_flag2);
 
   if ((mouse_flags_2 & 0x80) != 0x80) {
       return;
@@ -5206,13 +5213,13 @@ BX_DEBUG_INT74("int74: read byte %02x\n", in_byte);
 
   package_count = mouse_flags_2 & 0x07;
   index = mouse_flags_1 & 0x07;
-  write_byte(ebda_seg, 0x28 + index, in_byte);
+  write_byte(ebda_seg, &EbdaData->mouse_data[index], in_byte);
 
   if ( (index+1) >= package_count ) {
 BX_DEBUG_INT74("int74_function: make_farcall=1\n");
-    status = read_byte(ebda_seg, 0x0028 + 0);
-    X      = read_byte(ebda_seg, 0x0028 + 1);
-    Y      = read_byte(ebda_seg, 0x0028 + 2);
+    status = read_byte(ebda_seg, &EbdaData->mouse_data[0]);
+    X      = read_byte(ebda_seg, &EbdaData->mouse_data[1]);
+    Y      = read_byte(ebda_seg, &EbdaData->mouse_data[2]);
     Z      = 0;
     mouse_flags_1 = 0;
     // check if far call handler installed
@@ -5222,7 +5229,7 @@ BX_DEBUG_INT74("int74_function: make_farcall=1\n");
   else {
     mouse_flags_1++;
   }
-  write_byte(ebda_seg, 0x0026, mouse_flags_1);
+  write_byte(ebda_seg, &EbdaData->mouse_flag1, mouse_flags_1);
 }
 
 #define SET_DISK_RET_STATUS(status) write_byte(0x0040, 0x0074, status)
