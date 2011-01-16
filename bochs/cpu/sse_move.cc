@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_move.cc,v 1.130 2011-01-15 15:17:28 sshwarts Exp $
+// $Id: sse_move.cc,v 1.131 2011-01-16 20:42:28 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003-2011 Stanislav Shwartsman
@@ -437,16 +437,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVAPS_VpsWpsM(bxInstruction_c *i)
 #endif
 }
 
-/* MOVAPS:    0F 29 */
-/* MOVAPD: 66 0F 29 */
-/* MOVDQA: F3 0F 7F */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVAPS_WpsVpsR(bxInstruction_c *i)
-{
-#if BX_CPU_LEVEL >= 6
-  BX_WRITE_XMM_REG(i->rm(), BX_READ_XMM_REG(i->nnn()));
-#endif
-}
-
 /* MOVAPS:     0F 29 */
 /* MOVNTPS:    0F 2B */
 /* MOVNTPD: 66 0F 2B */
@@ -748,17 +738,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVQ_VqWqM(bxInstruction_c *i)
 #endif
 }
 
-/* 66 0F D6 */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVQ_WqVqR(bxInstruction_c *i)
-{
-#if BX_CPU_LEVEL >= 6
-  BxPackedXmmRegister op;
-  op.xmm64u(0) = BX_READ_XMM_REG_LO_QWORD(i->nnn());
-  op.xmm64u(1) = 0; /* zero-extension to 128 bit */
-  BX_WRITE_XMM_REG(i->rm(), op);
-#endif
-}
-
 /* F2 0F D6 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVDQ2Q_PqVRq(bxInstruction_c *i)
 {
@@ -854,16 +833,19 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVSXBW_VdqWqR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
   BxPackedXmmRegister result;
-  Bit64u val64 = BX_READ_XMM_REG_LO_QWORD(i->rm());
+  BxPackedMmxRegister op;
 
-  result.xmm16u(0) = (Bit8s) (val64 & 0xFF);
-  result.xmm16u(1) = (Bit8s) ((val64 >>  8) & 0xFF);
-  result.xmm16u(2) = (Bit8s) ((val64 >> 16) & 0xFF);
-  result.xmm16u(3) = (Bit8s) ((val64 >> 24) & 0xFF);
-  result.xmm16u(4) = (Bit8s) ((val64 >> 32) & 0xFF);
-  result.xmm16u(5) = (Bit8s) ((val64 >> 40) & 0xFF);
-  result.xmm16u(6) = (Bit8s) ((val64 >> 48) & 0xFF);
-  result.xmm16u(7) = (Bit8s) (val64  >> 56);
+  // use MMX register as 64-bit value with convinient accessors
+  MMXUQ(op) = BX_READ_XMM_REG_LO_QWORD(i->rm());
+
+  result.xmm16u(0) = MMXSB0(op);
+  result.xmm16u(1) = MMXSB1(op);
+  result.xmm16u(2) = MMXSB2(op);
+  result.xmm16u(3) = MMXSB3(op);
+  result.xmm16u(4) = MMXSB4(op);
+  result.xmm16u(5) = MMXSB5(op);
+  result.xmm16u(6) = MMXSB6(op);
+  result.xmm16u(7) = MMXSB7(op);
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), result);
@@ -954,16 +936,19 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVZXBW_VdqWqR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
   BxPackedXmmRegister result;
-  Bit64u val64 = BX_READ_XMM_REG_LO_QWORD(i->rm());
+  BxPackedMmxRegister op;
 
-  result.xmm16u(0) = val64 & 0xFF;
-  result.xmm16u(1) = (val64 >>  8) & 0xFF;
-  result.xmm16u(2) = (val64 >> 16) & 0xFF;
-  result.xmm16u(3) = (val64 >> 24) & 0xFF;
-  result.xmm16u(4) = (val64 >> 32) & 0xFF;
-  result.xmm16u(5) = (val64 >> 40) & 0xFF;
-  result.xmm16u(6) = (val64 >> 48) & 0xFF;
-  result.xmm16u(7) = val64 >> 56;
+  // use MMX register as 64-bit value with convinient accessors
+  MMXUQ(op) = BX_READ_XMM_REG_LO_QWORD(i->rm());
+
+  result.xmm16u(0) = MMXUB0(op);
+  result.xmm16u(1) = MMXUB1(op);
+  result.xmm16u(2) = MMXUB2(op);
+  result.xmm16u(3) = MMXUB3(op);
+  result.xmm16u(4) = MMXUB4(op);
+  result.xmm16u(5) = MMXUB5(op);
+  result.xmm16u(6) = MMXUB6(op);
+  result.xmm16u(7) = MMXUB7(op);
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), result);

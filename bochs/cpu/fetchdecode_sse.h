@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode_sse.h,v 1.26 2011-01-15 21:46:41 sshwarts Exp $
+// $Id: fetchdecode_sse.h,v 1.27 2011-01-16 20:42:28 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005-2011 Stanislav Shwartsman
@@ -129,7 +129,7 @@ static const BxOpcodeInfo_t BxOpcodeGroupSSE_0f28[6] = {
 };
 
 static const BxOpcodeInfo_t BxOpcodeGroupSSE_0f29[6] = {
-  /* 66 /r */ { 0, BX_IA_MOVAPD_WpdVpdR },
+  /* 66 /r */ { BxArithDstRM, BX_IA_MOVAPD_VpdWpdR },
   /* 66 /m */ { 0, BX_IA_MOVAPD_WpdVpdM },
   /* F3 /r */ { 0, BX_IA_ERROR },
   /* F3 /m */ { 0, BX_IA_ERROR },
@@ -547,9 +547,9 @@ static const BxOpcodeInfo_t BxOpcodeGroupSSE_0f7eQ[6] = {
 #endif
 
 static const BxOpcodeInfo_t BxOpcodeGroupSSE_0f7f[6] = {
-  /* 66 /r */ { 0, BX_IA_MOVDQA_WdqVdqR },
+  /* 66 /r */ { BxArithDstRM, BX_IA_MOVDQA_VdqWdqR },
   /* 66 /m */ { 0, BX_IA_MOVDQA_WdqVdqM },
-  /* F3 /r */ { 0, BX_IA_MOVDQU_WdqVdqR },
+  /* F3 /r */ { BxArithDstRM, BX_IA_MOVDQU_VdqWdqR },
   /* F3 /m */ { 0, BX_IA_MOVDQU_WdqVdqM },
   /* F2 /r */ { 0, BX_IA_ERROR },
   /* F2 /m */ { 0, BX_IA_ERROR }
@@ -646,7 +646,7 @@ static const BxOpcodeInfo_t BxOpcodeGroupSSE_0fd5[6] = {
 };
 
 static const BxOpcodeInfo_t BxOpcodeGroupSSE_0fd6[6] = {
-  /* 66 /r */ { 0, BX_IA_MOVQ_WqVqR },
+  /* 66 /r */ { BxArithDstRM, BX_IA_MOVQ_VqWqR },
   /* 66 /m */ { 0, BX_IA_MOVQ_WqVqM },
   /* F3 /r */ { 0, BX_IA_MOVQ2DQ_VdqQq },
   /* F3 /m */ { 0, BX_IA_ERROR },

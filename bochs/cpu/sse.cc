@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse.cc,v 1.80 2011-01-09 20:18:02 sshwarts Exp $
+// $Id: sse.cc,v 1.81 2011-01-16 20:42:28 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003-2011 Stanislav Shwartsman
@@ -54,20 +54,19 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSHUFB_VdqWdqR(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PHADDW_VdqWdqR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn());
-  BxPackedXmmRegister op2 = BX_READ_XMM_REG(i->rm()), result;
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2 = BX_READ_XMM_REG(i->rm());
 
-  result.xmm16u(0) = op1.xmm16u(0) + op1.xmm16u(1);
-  result.xmm16u(1) = op1.xmm16u(2) + op1.xmm16u(3);
-  result.xmm16u(2) = op1.xmm16u(4) + op1.xmm16u(5);
-  result.xmm16u(3) = op1.xmm16u(6) + op1.xmm16u(7);
+  op1.xmm16u(0) = op1.xmm16u(0) + op1.xmm16u(1);
+  op1.xmm16u(1) = op1.xmm16u(2) + op1.xmm16u(3);
+  op1.xmm16u(2) = op1.xmm16u(4) + op1.xmm16u(5);
+  op1.xmm16u(3) = op1.xmm16u(6) + op1.xmm16u(7);
 
-  result.xmm16u(4) = op2.xmm16u(0) + op2.xmm16u(1);
-  result.xmm16u(5) = op2.xmm16u(2) + op2.xmm16u(3);
-  result.xmm16u(6) = op2.xmm16u(4) + op2.xmm16u(5);
-  result.xmm16u(7) = op2.xmm16u(6) + op2.xmm16u(7);
+  op1.xmm16u(4) = op2.xmm16u(0) + op2.xmm16u(1);
+  op1.xmm16u(5) = op2.xmm16u(2) + op2.xmm16u(3);
+  op1.xmm16u(6) = op2.xmm16u(4) + op2.xmm16u(5);
+  op1.xmm16u(7) = op2.xmm16u(6) + op2.xmm16u(7);
 
-  BX_WRITE_XMM_REG(i->nnn(), result);
+  BX_WRITE_XMM_REG(i->nnn(), op1);
 #endif
 }
 
@@ -75,15 +74,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PHADDW_VdqWdqR(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PHADDD_VdqWdqR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn());
-  BxPackedXmmRegister op2 = BX_READ_XMM_REG(i->rm()), result;
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2 = BX_READ_XMM_REG(i->rm());
 
-  result.xmm32u(0) = op1.xmm32u(0) + op1.xmm32u(1);
-  result.xmm32u(1) = op1.xmm32u(2) + op1.xmm32u(3);
-  result.xmm32u(2) = op2.xmm32u(0) + op2.xmm32u(1);
-  result.xmm32u(3) = op2.xmm32u(2) + op2.xmm32u(3);
+  op1.xmm32u(0) = op1.xmm32u(0) + op1.xmm32u(1);
+  op1.xmm32u(1) = op1.xmm32u(2) + op1.xmm32u(3);
+  op1.xmm32u(2) = op2.xmm32u(0) + op2.xmm32u(1);
+  op1.xmm32u(3) = op2.xmm32u(2) + op2.xmm32u(3);
 
-  BX_WRITE_XMM_REG(i->nnn(), result);
+  BX_WRITE_XMM_REG(i->nnn(), op1);
 #endif
 }
 
@@ -91,21 +89,20 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PHADDD_VdqWdqR(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PHADDSW_VdqWdqR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn());
-  BxPackedXmmRegister op2 = BX_READ_XMM_REG(i->rm()), result;
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2 = BX_READ_XMM_REG(i->rm());
 
-  result.xmm16s(0) = SaturateDwordSToWordS(Bit32s(op1.xmm16s(0)) + Bit32s(op1.xmm16s(1)));
-  result.xmm16s(1) = SaturateDwordSToWordS(Bit32s(op1.xmm16s(2)) + Bit32s(op1.xmm16s(3)));
-  result.xmm16s(2) = SaturateDwordSToWordS(Bit32s(op1.xmm16s(4)) + Bit32s(op1.xmm16s(5)));
-  result.xmm16s(3) = SaturateDwordSToWordS(Bit32s(op1.xmm16s(6)) + Bit32s(op1.xmm16s(7)));
+  op1.xmm16s(0) = SaturateDwordSToWordS(Bit32s(op1.xmm16s(0)) + Bit32s(op1.xmm16s(1)));
+  op1.xmm16s(1) = SaturateDwordSToWordS(Bit32s(op1.xmm16s(2)) + Bit32s(op1.xmm16s(3)));
+  op1.xmm16s(2) = SaturateDwordSToWordS(Bit32s(op1.xmm16s(4)) + Bit32s(op1.xmm16s(5)));
+  op1.xmm16s(3) = SaturateDwordSToWordS(Bit32s(op1.xmm16s(6)) + Bit32s(op1.xmm16s(7)));
 
-  result.xmm16s(4) = SaturateDwordSToWordS(Bit32s(op2.xmm16s(0)) + Bit32s(op2.xmm16s(1)));
-  result.xmm16s(5) = SaturateDwordSToWordS(Bit32s(op2.xmm16s(2)) + Bit32s(op2.xmm16s(3)));
-  result.xmm16s(6) = SaturateDwordSToWordS(Bit32s(op2.xmm16s(4)) + Bit32s(op2.xmm16s(5)));
-  result.xmm16s(7) = SaturateDwordSToWordS(Bit32s(op2.xmm16s(6)) + Bit32s(op2.xmm16s(7)));
+  op1.xmm16s(4) = SaturateDwordSToWordS(Bit32s(op2.xmm16s(0)) + Bit32s(op2.xmm16s(1)));
+  op1.xmm16s(5) = SaturateDwordSToWordS(Bit32s(op2.xmm16s(2)) + Bit32s(op2.xmm16s(3)));
+  op1.xmm16s(6) = SaturateDwordSToWordS(Bit32s(op2.xmm16s(4)) + Bit32s(op2.xmm16s(5)));
+  op1.xmm16s(7) = SaturateDwordSToWordS(Bit32s(op2.xmm16s(6)) + Bit32s(op2.xmm16s(7)));
 
   /* now write result back to destination */
-  BX_WRITE_XMM_REG(i->nnn(), result);
+  BX_WRITE_XMM_REG(i->nnn(), op1);
 #endif
 }
 
@@ -118,7 +115,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMADDUBSW_VdqWdqR(bxInstruction_c *i)
 
   for(unsigned j=0; j<8; j++)
   {
-    Bit32s temp = Bit32s(op1.xmmubyte(j*2+0))*Bit32s(op2.xmmsbyte(j*2+0)) +
+    Bit32s temp = Bit32s(op1.xmmubyte(j*2+0))*Bit32s(op2.xmmsbyte(j*2)) +
                   Bit32s(op1.xmmubyte(j*2+1))*Bit32s(op2.xmmsbyte(j*2+1));
 
     result.xmm16s(j) = SaturateDwordSToWordS(temp);
@@ -133,21 +130,20 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMADDUBSW_VdqWdqR(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PHSUBSW_VdqWdqR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn());
-  BxPackedXmmRegister op2 = BX_READ_XMM_REG(i->rm()), result;
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2 = BX_READ_XMM_REG(i->rm());
 
-  result.xmm16s(0) = SaturateDwordSToWordS(Bit32s(op1.xmm16s(0)) - Bit32s(op1.xmm16s(1)));
-  result.xmm16s(1) = SaturateDwordSToWordS(Bit32s(op1.xmm16s(2)) - Bit32s(op1.xmm16s(3)));
-  result.xmm16s(2) = SaturateDwordSToWordS(Bit32s(op1.xmm16s(4)) - Bit32s(op1.xmm16s(5)));
-  result.xmm16s(3) = SaturateDwordSToWordS(Bit32s(op1.xmm16s(6)) - Bit32s(op1.xmm16s(7)));
+  op1.xmm16s(0) = SaturateDwordSToWordS(Bit32s(op1.xmm16s(0)) - Bit32s(op1.xmm16s(1)));
+  op1.xmm16s(1) = SaturateDwordSToWordS(Bit32s(op1.xmm16s(2)) - Bit32s(op1.xmm16s(3)));
+  op1.xmm16s(2) = SaturateDwordSToWordS(Bit32s(op1.xmm16s(4)) - Bit32s(op1.xmm16s(5)));
+  op1.xmm16s(3) = SaturateDwordSToWordS(Bit32s(op1.xmm16s(6)) - Bit32s(op1.xmm16s(7)));
 
-  result.xmm16s(4) = SaturateDwordSToWordS(Bit32s(op2.xmm16s(0)) - Bit32s(op2.xmm16s(1)));
-  result.xmm16s(5) = SaturateDwordSToWordS(Bit32s(op2.xmm16s(2)) - Bit32s(op2.xmm16s(3)));
-  result.xmm16s(6) = SaturateDwordSToWordS(Bit32s(op2.xmm16s(4)) - Bit32s(op2.xmm16s(5)));
-  result.xmm16s(7) = SaturateDwordSToWordS(Bit32s(op2.xmm16s(6)) - Bit32s(op2.xmm16s(7)));
+  op1.xmm16s(4) = SaturateDwordSToWordS(Bit32s(op2.xmm16s(0)) - Bit32s(op2.xmm16s(1)));
+  op1.xmm16s(5) = SaturateDwordSToWordS(Bit32s(op2.xmm16s(2)) - Bit32s(op2.xmm16s(3)));
+  op1.xmm16s(6) = SaturateDwordSToWordS(Bit32s(op2.xmm16s(4)) - Bit32s(op2.xmm16s(5)));
+  op1.xmm16s(7) = SaturateDwordSToWordS(Bit32s(op2.xmm16s(6)) - Bit32s(op2.xmm16s(7)));
 
   /* now write result back to destination */
-  BX_WRITE_XMM_REG(i->nnn(), result);
+  BX_WRITE_XMM_REG(i->nnn(), op1);
 #endif
 }
 
@@ -155,20 +151,19 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PHSUBSW_VdqWdqR(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PHSUBW_VdqWdqR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn());
-  BxPackedXmmRegister op2 = BX_READ_XMM_REG(i->rm()), result;
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2 = BX_READ_XMM_REG(i->rm());
 
-  result.xmm16u(0) = op1.xmm16u(0) - op1.xmm16u(1);
-  result.xmm16u(1) = op1.xmm16u(2) - op1.xmm16u(3);
-  result.xmm16u(2) = op1.xmm16u(4) - op1.xmm16u(5);
-  result.xmm16u(3) = op1.xmm16u(6) - op1.xmm16u(7);
+  op1.xmm16u(0) = op1.xmm16u(0) - op1.xmm16u(1);
+  op1.xmm16u(1) = op1.xmm16u(2) - op1.xmm16u(3);
+  op1.xmm16u(2) = op1.xmm16u(4) - op1.xmm16u(5);
+  op1.xmm16u(3) = op1.xmm16u(6) - op1.xmm16u(7);
 
-  result.xmm16u(4) = op2.xmm16u(0) - op2.xmm16u(1);
-  result.xmm16u(5) = op2.xmm16u(2) - op2.xmm16u(3);
-  result.xmm16u(6) = op2.xmm16u(4) - op2.xmm16u(5);
-  result.xmm16u(7) = op2.xmm16u(6) - op2.xmm16u(7);
+  op1.xmm16u(4) = op2.xmm16u(0) - op2.xmm16u(1);
+  op1.xmm16u(5) = op2.xmm16u(2) - op2.xmm16u(3);
+  op1.xmm16u(6) = op2.xmm16u(4) - op2.xmm16u(5);
+  op1.xmm16u(7) = op2.xmm16u(6) - op2.xmm16u(7);
 
-  BX_WRITE_XMM_REG(i->nnn(), result);
+  BX_WRITE_XMM_REG(i->nnn(), op1);
 #endif
 }
 
@@ -176,15 +171,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PHSUBW_VdqWdqR(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PHSUBD_VdqWdqR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn());
-  BxPackedXmmRegister op2 = BX_READ_XMM_REG(i->rm()), result;
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2 = BX_READ_XMM_REG(i->rm());
 
-  result.xmm32u(0) = op1.xmm32u(0) - op1.xmm32u(1);
-  result.xmm32u(1) = op1.xmm32u(2) - op1.xmm32u(3);
-  result.xmm32u(2) = op2.xmm32u(0) - op2.xmm32u(1);
-  result.xmm32u(3) = op2.xmm32u(2) - op2.xmm32u(3);
+  op1.xmm32u(0) = op1.xmm32u(0) - op1.xmm32u(1);
+  op1.xmm32u(1) = op1.xmm32u(2) - op1.xmm32u(3);
+  op1.xmm32u(2) = op2.xmm32u(0) - op2.xmm32u(1);
+  op1.xmm32u(3) = op2.xmm32u(2) - op2.xmm32u(3);
 
-  BX_WRITE_XMM_REG(i->nnn(), result);
+  BX_WRITE_XMM_REG(i->nnn(), op1);
 #endif
 }
 
@@ -416,20 +410,20 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PCMPEQQ_VdqWdqR(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PACKUSDW_VdqWdqR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn());
-  BxPackedXmmRegister op2 = BX_READ_XMM_REG(i->rm()), result;
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2 = BX_READ_XMM_REG(i->rm());
 
-  result.xmm16u(0) = SaturateDwordSToWordU(op1.xmm32s(0));
-  result.xmm16u(1) = SaturateDwordSToWordU(op1.xmm32s(1));
-  result.xmm16u(2) = SaturateDwordSToWordU(op1.xmm32s(2));
-  result.xmm16u(3) = SaturateDwordSToWordU(op1.xmm32s(3));
-  result.xmm16u(4) = SaturateDwordSToWordU(op2.xmm32s(0));
-  result.xmm16u(5) = SaturateDwordSToWordU(op2.xmm32s(1));
-  result.xmm16u(6) = SaturateDwordSToWordU(op2.xmm32s(2));
-  result.xmm16u(7) = SaturateDwordSToWordU(op2.xmm32s(3));
+  op1.xmm16u(0) = SaturateDwordSToWordU(op1.xmm32s(0));
+  op1.xmm16u(1) = SaturateDwordSToWordU(op1.xmm32s(1));
+  op1.xmm16u(2) = SaturateDwordSToWordU(op1.xmm32s(2));
+  op1.xmm16u(3) = SaturateDwordSToWordU(op1.xmm32s(3));
+
+  op1.xmm16u(4) = SaturateDwordSToWordU(op2.xmm32s(0));
+  op1.xmm16u(5) = SaturateDwordSToWordU(op2.xmm32s(1));
+  op1.xmm16u(6) = SaturateDwordSToWordU(op2.xmm32s(2));
+  op1.xmm16u(7) = SaturateDwordSToWordU(op2.xmm32s(3));
 
   /* now write result back to destination */
-  BX_WRITE_XMM_REG(i->nnn(), result);
+  BX_WRITE_XMM_REG(i->nnn(), op1);
 #endif
 }
 
@@ -992,29 +986,28 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::UNPCKLPS_VpsWdqR(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PACKSSWB_VdqWdqR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn());
-  BxPackedXmmRegister op2 = BX_READ_XMM_REG(i->rm()), result;
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2 = BX_READ_XMM_REG(i->rm());
 
-  result.xmmsbyte(0x0) = SaturateWordSToByteS(op1.xmm16s(0));
-  result.xmmsbyte(0x1) = SaturateWordSToByteS(op1.xmm16s(1));
-  result.xmmsbyte(0x2) = SaturateWordSToByteS(op1.xmm16s(2));
-  result.xmmsbyte(0x3) = SaturateWordSToByteS(op1.xmm16s(3));
-  result.xmmsbyte(0x4) = SaturateWordSToByteS(op1.xmm16s(4));
-  result.xmmsbyte(0x5) = SaturateWordSToByteS(op1.xmm16s(5));
-  result.xmmsbyte(0x6) = SaturateWordSToByteS(op1.xmm16s(6));
-  result.xmmsbyte(0x7) = SaturateWordSToByteS(op1.xmm16s(7));
+  op1.xmmsbyte(0x0) = SaturateWordSToByteS(op1.xmm16s(0));
+  op1.xmmsbyte(0x1) = SaturateWordSToByteS(op1.xmm16s(1));
+  op1.xmmsbyte(0x2) = SaturateWordSToByteS(op1.xmm16s(2));
+  op1.xmmsbyte(0x3) = SaturateWordSToByteS(op1.xmm16s(3));
+  op1.xmmsbyte(0x4) = SaturateWordSToByteS(op1.xmm16s(4));
+  op1.xmmsbyte(0x5) = SaturateWordSToByteS(op1.xmm16s(5));
+  op1.xmmsbyte(0x6) = SaturateWordSToByteS(op1.xmm16s(6));
+  op1.xmmsbyte(0x7) = SaturateWordSToByteS(op1.xmm16s(7));
 
-  result.xmmsbyte(0x8) = SaturateWordSToByteS(op2.xmm16s(0));
-  result.xmmsbyte(0x9) = SaturateWordSToByteS(op2.xmm16s(1));
-  result.xmmsbyte(0xA) = SaturateWordSToByteS(op2.xmm16s(2));
-  result.xmmsbyte(0xB) = SaturateWordSToByteS(op2.xmm16s(3));
-  result.xmmsbyte(0xC) = SaturateWordSToByteS(op2.xmm16s(4));
-  result.xmmsbyte(0xD) = SaturateWordSToByteS(op2.xmm16s(5));
-  result.xmmsbyte(0xE) = SaturateWordSToByteS(op2.xmm16s(6));
-  result.xmmsbyte(0xF) = SaturateWordSToByteS(op2.xmm16s(7));
+  op1.xmmsbyte(0x8) = SaturateWordSToByteS(op2.xmm16s(0));
+  op1.xmmsbyte(0x9) = SaturateWordSToByteS(op2.xmm16s(1));
+  op1.xmmsbyte(0xA) = SaturateWordSToByteS(op2.xmm16s(2));
+  op1.xmmsbyte(0xB) = SaturateWordSToByteS(op2.xmm16s(3));
+  op1.xmmsbyte(0xC) = SaturateWordSToByteS(op2.xmm16s(4));
+  op1.xmmsbyte(0xD) = SaturateWordSToByteS(op2.xmm16s(5));
+  op1.xmmsbyte(0xE) = SaturateWordSToByteS(op2.xmm16s(6));
+  op1.xmmsbyte(0xF) = SaturateWordSToByteS(op2.xmm16s(7));
 
   /* now write result back to destination */
-  BX_WRITE_XMM_REG(i->nnn(), result);
+  BX_WRITE_XMM_REG(i->nnn(), op1);
 #endif
 }
 
@@ -1073,29 +1066,28 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PCMPGTD_VdqWdqR(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PACKUSWB_VdqWdqR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn());
-  BxPackedXmmRegister op2 = BX_READ_XMM_REG(i->rm()), result;
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2 = BX_READ_XMM_REG(i->rm());
 
-  result.xmmubyte(0x0) = SaturateWordSToByteU(op1.xmm16s(0));
-  result.xmmubyte(0x1) = SaturateWordSToByteU(op1.xmm16s(1));
-  result.xmmubyte(0x2) = SaturateWordSToByteU(op1.xmm16s(2));
-  result.xmmubyte(0x3) = SaturateWordSToByteU(op1.xmm16s(3));
-  result.xmmubyte(0x4) = SaturateWordSToByteU(op1.xmm16s(4));
-  result.xmmubyte(0x5) = SaturateWordSToByteU(op1.xmm16s(5));
-  result.xmmubyte(0x6) = SaturateWordSToByteU(op1.xmm16s(6));
-  result.xmmubyte(0x7) = SaturateWordSToByteU(op1.xmm16s(7));
+  op1.xmmubyte(0x0) = SaturateWordSToByteU(op1.xmm16s(0));
+  op1.xmmubyte(0x1) = SaturateWordSToByteU(op1.xmm16s(1));
+  op1.xmmubyte(0x2) = SaturateWordSToByteU(op1.xmm16s(2));
+  op1.xmmubyte(0x3) = SaturateWordSToByteU(op1.xmm16s(3));
+  op1.xmmubyte(0x4) = SaturateWordSToByteU(op1.xmm16s(4));
+  op1.xmmubyte(0x5) = SaturateWordSToByteU(op1.xmm16s(5));
+  op1.xmmubyte(0x6) = SaturateWordSToByteU(op1.xmm16s(6));
+  op1.xmmubyte(0x7) = SaturateWordSToByteU(op1.xmm16s(7));
 
-  result.xmmubyte(0x8) = SaturateWordSToByteU(op2.xmm16s(0));
-  result.xmmubyte(0x9) = SaturateWordSToByteU(op2.xmm16s(1));
-  result.xmmubyte(0xA) = SaturateWordSToByteU(op2.xmm16s(2));
-  result.xmmubyte(0xB) = SaturateWordSToByteU(op2.xmm16s(3));
-  result.xmmubyte(0xC) = SaturateWordSToByteU(op2.xmm16s(4));
-  result.xmmubyte(0xD) = SaturateWordSToByteU(op2.xmm16s(5));
-  result.xmmubyte(0xE) = SaturateWordSToByteU(op2.xmm16s(6));
-  result.xmmubyte(0xF) = SaturateWordSToByteU(op2.xmm16s(7));
+  op1.xmmubyte(0x8) = SaturateWordSToByteU(op2.xmm16s(0));
+  op1.xmmubyte(0x9) = SaturateWordSToByteU(op2.xmm16s(1));
+  op1.xmmubyte(0xA) = SaturateWordSToByteU(op2.xmm16s(2));
+  op1.xmmubyte(0xB) = SaturateWordSToByteU(op2.xmm16s(3));
+  op1.xmmubyte(0xC) = SaturateWordSToByteU(op2.xmm16s(4));
+  op1.xmmubyte(0xD) = SaturateWordSToByteU(op2.xmm16s(5));
+  op1.xmmubyte(0xE) = SaturateWordSToByteU(op2.xmm16s(6));
+  op1.xmmubyte(0xF) = SaturateWordSToByteU(op2.xmm16s(7));
 
   /* now write result back to destination */
-  BX_WRITE_XMM_REG(i->nnn(), result);
+  BX_WRITE_XMM_REG(i->nnn(), op1);
 #endif
 }
 
@@ -1508,21 +1500,21 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMULLW_VdqWdqR(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSUBUSB_VdqWdqR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn());
-  BxPackedXmmRegister op2 = BX_READ_XMM_REG(i->rm()), result;
-
-  result.xmm64u(0) = result.xmm64u(1) = 0;
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2 = BX_READ_XMM_REG(i->rm());
 
   for(unsigned j=0; j<16; j++)
   {
       if(op1.xmmubyte(j) > op2.xmmubyte(j))
       {
-          result.xmmubyte(j) = op1.xmmubyte(j) - op2.xmmubyte(j);
+          op1.xmmubyte(j) -= op2.xmmubyte(j);
+      }
+      else {
+          op1.xmmubyte(j) = 0;
       }
   }
 
   /* now write result back to destination */
-  BX_WRITE_XMM_REG(i->nnn(), result);
+  BX_WRITE_XMM_REG(i->nnn(), op1);
 #endif
 }
 
@@ -1530,21 +1522,21 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSUBUSB_VdqWdqR(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSUBUSW_VdqWdqR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn());
-  BxPackedXmmRegister op2 = BX_READ_XMM_REG(i->rm()), result;
-
-  result.xmm64u(0) = result.xmm64u(1) = 0;
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2 = BX_READ_XMM_REG(i->rm());
 
   for(unsigned j=0; j<8; j++)
   {
       if(op1.xmm16u(j) > op2.xmm16u(j))
       {
-           result.xmm16u(j) = op1.xmm16u(j) - op2.xmm16u(j);
+           op1.xmm16u(j) -= op2.xmm16u(j);
+      }
+      else {
+           op1.xmm16u(j) = 0;
       }
   }
 
   /* now write result back to destination */
-  BX_WRITE_XMM_REG(i->nnn(), result);
+  BX_WRITE_XMM_REG(i->nnn(), op1);
 #endif
 }
 
@@ -1664,38 +1656,37 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PAVGB_VdqWdqR(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSRAW_VdqWdqR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn());
-  BxPackedXmmRegister op2 = BX_READ_XMM_REG(i->rm()), result;
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2 = BX_READ_XMM_REG(i->rm());
 
   if(op2.xmm64u(0) == 0) return;
 
   if(op2.xmm64u(0) > 15)  /* looking only to low 64 bits */
   {
-    result.xmm16u(0) = (op1.xmm16u(0) & 0x8000) ? 0xffff : 0;
-    result.xmm16u(1) = (op1.xmm16u(1) & 0x8000) ? 0xffff : 0;
-    result.xmm16u(2) = (op1.xmm16u(2) & 0x8000) ? 0xffff : 0;
-    result.xmm16u(3) = (op1.xmm16u(3) & 0x8000) ? 0xffff : 0;
-    result.xmm16u(4) = (op1.xmm16u(4) & 0x8000) ? 0xffff : 0;
-    result.xmm16u(5) = (op1.xmm16u(5) & 0x8000) ? 0xffff : 0;
-    result.xmm16u(6) = (op1.xmm16u(6) & 0x8000) ? 0xffff : 0;
-    result.xmm16u(7) = (op1.xmm16u(7) & 0x8000) ? 0xffff : 0;
+    op1.xmm16u(0) = (op1.xmm16u(0) & 0x8000) ? 0xffff : 0;
+    op1.xmm16u(1) = (op1.xmm16u(1) & 0x8000) ? 0xffff : 0;
+    op1.xmm16u(2) = (op1.xmm16u(2) & 0x8000) ? 0xffff : 0;
+    op1.xmm16u(3) = (op1.xmm16u(3) & 0x8000) ? 0xffff : 0;
+    op1.xmm16u(4) = (op1.xmm16u(4) & 0x8000) ? 0xffff : 0;
+    op1.xmm16u(5) = (op1.xmm16u(5) & 0x8000) ? 0xffff : 0;
+    op1.xmm16u(6) = (op1.xmm16u(6) & 0x8000) ? 0xffff : 0;
+    op1.xmm16u(7) = (op1.xmm16u(7) & 0x8000) ? 0xffff : 0;
   }
   else
   {
     Bit8u shift = op2.xmmubyte(0);
 
-    result.xmm16u(0) = (Bit16u)(op1.xmm16s(0) >> shift);
-    result.xmm16u(1) = (Bit16u)(op1.xmm16s(1) >> shift);
-    result.xmm16u(2) = (Bit16u)(op1.xmm16s(2) >> shift);
-    result.xmm16u(3) = (Bit16u)(op1.xmm16s(3) >> shift);
-    result.xmm16u(4) = (Bit16u)(op1.xmm16s(4) >> shift);
-    result.xmm16u(5) = (Bit16u)(op1.xmm16s(5) >> shift);
-    result.xmm16u(6) = (Bit16u)(op1.xmm16s(6) >> shift);
-    result.xmm16u(7) = (Bit16u)(op1.xmm16s(7) >> shift);
+    op1.xmm16u(0) = (Bit16u)(op1.xmm16s(0) >> shift);
+    op1.xmm16u(1) = (Bit16u)(op1.xmm16s(1) >> shift);
+    op1.xmm16u(2) = (Bit16u)(op1.xmm16s(2) >> shift);
+    op1.xmm16u(3) = (Bit16u)(op1.xmm16s(3) >> shift);
+    op1.xmm16u(4) = (Bit16u)(op1.xmm16s(4) >> shift);
+    op1.xmm16u(5) = (Bit16u)(op1.xmm16s(5) >> shift);
+    op1.xmm16u(6) = (Bit16u)(op1.xmm16s(6) >> shift);
+    op1.xmm16u(7) = (Bit16u)(op1.xmm16s(7) >> shift);
   }
 
   /* now write result back to destination */
-  BX_WRITE_XMM_REG(i->nnn(), result);
+  BX_WRITE_XMM_REG(i->nnn(), op1);
 #endif
 }
 
@@ -1703,30 +1694,29 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSRAW_VdqWdqR(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSRAD_VdqWdqR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn());
-  BxPackedXmmRegister op2 = BX_READ_XMM_REG(i->rm()), result;
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2 = BX_READ_XMM_REG(i->rm());
 
   if(op2.xmm64u(0) == 0) return;
 
   if(op2.xmm64u(0) > 31)  /* looking only to low 64 bits */
   {
-    result.xmm32u(0) = (op1.xmm32u(0) & 0x80000000) ? 0xffffffff : 0;
-    result.xmm32u(1) = (op1.xmm32u(1) & 0x80000000) ? 0xffffffff : 0;
-    result.xmm32u(2) = (op1.xmm32u(2) & 0x80000000) ? 0xffffffff : 0;
-    result.xmm32u(3) = (op1.xmm32u(3) & 0x80000000) ? 0xffffffff : 0;
+    op1.xmm32u(0) = (op1.xmm32u(0) & 0x80000000) ? 0xffffffff : 0;
+    op1.xmm32u(1) = (op1.xmm32u(1) & 0x80000000) ? 0xffffffff : 0;
+    op1.xmm32u(2) = (op1.xmm32u(2) & 0x80000000) ? 0xffffffff : 0;
+    op1.xmm32u(3) = (op1.xmm32u(3) & 0x80000000) ? 0xffffffff : 0;
   }
   else
   {
     Bit8u shift = op2.xmmubyte(0);
 
-    result.xmm32u(0) = (Bit32u)(op1.xmm32s(0) >> shift);
-    result.xmm32u(1) = (Bit32u)(op1.xmm32s(1) >> shift);
-    result.xmm32u(2) = (Bit32u)(op1.xmm32s(2) >> shift);
-    result.xmm32u(3) = (Bit32u)(op1.xmm32s(3) >> shift);
+    op1.xmm32u(0) = (Bit32u)(op1.xmm32s(0) >> shift);
+    op1.xmm32u(1) = (Bit32u)(op1.xmm32s(1) >> shift);
+    op1.xmm32u(2) = (Bit32u)(op1.xmm32s(2) >> shift);
+    op1.xmm32u(3) = (Bit32u)(op1.xmm32s(3) >> shift);
   }
 
   /* now write result back to destination */
-  BX_WRITE_XMM_REG(i->nnn(), result);
+  BX_WRITE_XMM_REG(i->nnn(), op1);
 #endif
 }
 
@@ -2059,7 +2049,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMADDWD_VdqWdqR(bxInstruction_c *i)
     }
     else {
       result.xmm32u(j) =
-        Bit32s(op1.xmm16s(2*j+0)) * Bit32s(op2.xmm16s(2*j+0)) +
+        Bit32s(op1.xmm16s(2*j+0)) * Bit32s(op2.xmm16s(2*j)) +
         Bit32s(op1.xmm16s(2*j+1)) * Bit32s(op2.xmm16s(2*j+1));
     }
   }
