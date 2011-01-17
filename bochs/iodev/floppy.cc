@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.cc,v 1.131 2011-01-12 22:35:32 vruppert Exp $
+// $Id: floppy.cc,v 1.132 2011-01-17 21:36:00 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2011  The Bochs Project
@@ -138,8 +138,9 @@ bx_floppy_ctrl_c::~bx_floppy_ctrl_c()
 void bx_floppy_ctrl_c::init(void)
 {
   Bit8u i, devtype, cmos_value;
+  char pname[10];
 
-  BX_DEBUG(("Init $Id: floppy.cc,v 1.131 2011-01-12 22:35:32 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: floppy.cc,v 1.132 2011-01-17 21:36:00 vruppert Exp $"));
   DEV_dma_register_8bit_channel(2, dma_read, dma_write, "Floppy Drive");
   DEV_register_irq(6, "Floppy Drive");
   for (unsigned addr=0x03F2; addr<=0x03F7; addr++) {
@@ -249,6 +250,16 @@ void bx_floppy_ctrl_c::init(void)
   BX_FD_THIS s.SRT = 0;
   BX_FD_THIS s.HUT = 0;
   BX_FD_THIS s.HLT = 0;
+
+  // runtime parameters
+  for (i = 0; i < 2; i++) {
+    sprintf(pname, "floppy.%d", i);
+    bx_list_c *floppy = (bx_list_c*)SIM->get_param(pname);
+    SIM->get_param_bool("readonly", floppy)->set_handler(floppy_param_handler);
+    SIM->get_param_bool("readonly", floppy)->set_runtime_param(1);
+    SIM->get_param_bool("status", floppy)->set_handler(floppy_param_handler);
+    SIM->get_param_bool("status", floppy)->set_runtime_param(1);
+  }
 }
 
 void bx_floppy_ctrl_c::reset(unsigned type)
@@ -1400,12 +1411,12 @@ void bx_floppy_ctrl_c::increment_sector(void)
   }
 }
 
-void bx_floppy_ctrl_c::set_media_readonly(unsigned drive, unsigned status)
+void bx_floppy_ctrl_c::set_media_readonly(unsigned drive, bx_bool status)
 {
   BX_FD_THIS s.media[drive].write_protected = status;
 }
 
-unsigned bx_floppy_ctrl_c::set_media_status(unsigned drive, unsigned status)
+unsigned bx_floppy_ctrl_c::set_media_status(unsigned drive, bx_bool status)
 {
   char *path;
   unsigned type;
@@ -1914,4 +1925,24 @@ bx_bool bx_floppy_ctrl_c::get_tc(void)
     terminal_count = DEV_dma_get_tc();
   }
   return terminal_count;
+}
+
+Bit64s bx_floppy_ctrl_c::floppy_param_handler(bx_param_c *param, int set, Bit64s val)
+{
+  if (set) {
+    char pname[BX_PATHNAME_LEN];
+    param->get_param_path(pname, BX_PATHNAME_LEN);
+    if (!strcmp(pname, BXPN_FLOPPYA_STATUS)) {
+      DEV_floppy_set_media_status(0, (bx_bool)val);
+      bx_gui->update_drive_status_buttons();
+    } else if (!strcmp(pname, BXPN_FLOPPYB_STATUS)) {
+      DEV_floppy_set_media_status(1, (bx_bool)val);
+      bx_gui->update_drive_status_buttons();
+    } else if (!strcmp(pname, BXPN_FLOPPYA_READONLY)) {
+      DEV_floppy_set_media_readonly(0, (bx_bool)val);
+    } else if (!strcmp(pname, BXPN_FLOPPYB_READONLY)) {
+      DEV_floppy_set_media_readonly(1, (bx_bool)val);
+    }
+  }
+  return val;
 }

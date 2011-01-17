@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.h,v 1.38 2011-01-11 22:00:41 vruppert Exp $
+// $Id: floppy.h,v 1.39 2011-01-17 21:36:00 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2009  The Bochs Project
@@ -55,8 +55,8 @@ public:
   virtual ~bx_floppy_ctrl_c();
   virtual void init(void);
   virtual void reset(unsigned type);
-  virtual unsigned set_media_status(unsigned drive, unsigned status);
-  virtual void set_media_readonly(unsigned drive, unsigned status);
+  virtual unsigned set_media_status(unsigned drive, bx_bool status);
+  virtual void set_media_readonly(unsigned drive, bx_bool status);
   virtual void register_state(void);
 
 private:
@@ -147,12 +147,12 @@ private:
   BX_FD_SMF void   reset_changeline(void);
   BX_FD_SMF bx_bool get_tc(void);
   static void      timer_handler(void *);
+  BX_FD_SMF void   timer(void);
   BX_FD_SMF void   increment_sector(void);
   BX_FD_SMF bx_bool evaluate_media(Bit8u devtype, Bit8u type, char *path, floppy_t *media);
   BX_FD_SMF void    close_media(floppy_t *media);
-
-public:
-  BX_FD_SMF void   timer(void);
+  // runtime options
+  static Bit64s    floppy_param_handler(bx_param_c *param, int set, Bit64s val);
 };
 
 
