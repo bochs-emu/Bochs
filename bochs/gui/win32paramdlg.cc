@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32paramdlg.cc,v 1.18 2010-11-23 14:59:36 sshwarts Exp $
+// $Id: win32paramdlg.cc,v 1.19 2011-01-18 19:15:37 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Volker Ruppert
@@ -726,7 +726,7 @@ void ProcessDependentList(HWND hDlg, bx_param_c *param, BOOL enabled)
   }
 }
 
-static BOOL CALLBACK ParamDlgProc(HWND Window, UINT AMessage, WPARAM wParam, LPARAM lParam)
+static INT_PTR CALLBACK ParamDlgProc(HWND Window, UINT AMessage, WPARAM wParam, LPARAM lParam)
 {
   static bx_list_c *list = NULL;
   static int items = 0;
@@ -814,7 +814,7 @@ static BOOL CALLBACK ParamDlgProc(HWND Window, UINT AMessage, WPARAM wParam, LPA
         if (tmplist != NULL) {
           k = (UINT)TabCtrl_GetCurSel(GetDlgItem(Window, code));
           cid = findDlgListBaseID(tmplist);
-          for (i = 0; i < tmplist->get_size(); i++) {
+          for (i = 0; i < (UINT)tmplist->get_size(); i++) {
             ShowParamList(Window, cid + i, (i == k), (bx_list_c*)tmplist->get(i));
           }
         }
@@ -822,7 +822,7 @@ static BOOL CALLBACK ParamDlgProc(HWND Window, UINT AMessage, WPARAM wParam, LPA
       break;
     case WM_CTLCOLOREDIT:
       SetTextColor((HDC)wParam, GetSysColor(COLOR_WINDOWTEXT));
-      return (GetSysColorBrush(COLOR_WINDOW) != NULL);
+      return (INT_PTR)GetSysColorBrush(COLOR_WINDOW);
       break;
   }
   return 0;
