@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.cc,v 1.132 2011-01-17 21:36:00 vruppert Exp $
+// $Id: floppy.cc,v 1.133 2011-01-18 21:04:44 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2011  The Bochs Project
@@ -140,7 +140,7 @@ void bx_floppy_ctrl_c::init(void)
   Bit8u i, devtype, cmos_value;
   char pname[10];
 
-  BX_DEBUG(("Init $Id: floppy.cc,v 1.132 2011-01-17 21:36:00 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: floppy.cc,v 1.133 2011-01-18 21:04:44 vruppert Exp $"));
   DEV_dma_register_8bit_channel(2, dma_read, dma_write, "Floppy Drive");
   DEV_register_irq(6, "Floppy Drive");
   for (unsigned addr=0x03F2; addr<=0x03F7; addr++) {
@@ -255,6 +255,8 @@ void bx_floppy_ctrl_c::init(void)
   for (i = 0; i < 2; i++) {
     sprintf(pname, "floppy.%d", i);
     bx_list_c *floppy = (bx_list_c*)SIM->get_param(pname);
+    SIM->get_param_string("path", floppy)->set_handler(floppy_param_string_handler);
+    SIM->get_param_string("path", floppy)->set_runtime_param(1);
     SIM->get_param_bool("readonly", floppy)->set_handler(floppy_param_handler);
     SIM->get_param_bool("readonly", floppy)->set_runtime_param(1);
     SIM->get_param_bool("status", floppy)->set_handler(floppy_param_handler);
@@ -1411,11 +1413,6 @@ void bx_floppy_ctrl_c::increment_sector(void)
   }
 }
 
-void bx_floppy_ctrl_c::set_media_readonly(unsigned drive, bx_bool status)
-{
-  BX_FD_THIS s.media[drive].write_protected = status;
-}
-
 unsigned bx_floppy_ctrl_c::set_media_status(unsigned drive, bx_bool status)
 {
   char *path;
@@ -1933,16 +1930,54 @@ Bit64s bx_floppy_ctrl_c::floppy_param_handler(bx_param_c *param, int set, Bit64s
     char pname[BX_PATHNAME_LEN];
     param->get_param_path(pname, BX_PATHNAME_LEN);
     if (!strcmp(pname, BXPN_FLOPPYA_STATUS)) {
-      DEV_floppy_set_media_status(0, (bx_bool)val);
+      BX_FD_THIS set_media_status(0, (bx_bool)val);
       bx_gui->update_drive_status_buttons();
     } else if (!strcmp(pname, BXPN_FLOPPYB_STATUS)) {
-      DEV_floppy_set_media_status(1, (bx_bool)val);
+      BX_FD_THIS set_media_status(1, (bx_bool)val);
       bx_gui->update_drive_status_buttons();
     } else if (!strcmp(pname, BXPN_FLOPPYA_READONLY)) {
-      DEV_floppy_set_media_readonly(0, (bx_bool)val);
+      BX_FD_THIS s.media[0].write_protected = (bx_bool)val;
     } else if (!strcmp(pname, BXPN_FLOPPYB_READONLY)) {
-      DEV_floppy_set_media_readonly(1, (bx_bool)val);
+      BX_FD_THIS s.media[1].write_protected = (bx_bool)val;
     }
+  }
+  return val;
+}
+
+const char* bx_floppy_ctrl_c::floppy_param_string_handler(bx_param_string_c *param,
+                                int set, const char *oldval, const char *val, int maxlen)
+{
+  char pname[BX_PATHNAME_LEN];
+  Bit8u device;
+
+  bx_list_c *base = (bx_list_c*) param->get_parent();
+  int empty = 0;
+  if ((strlen(val) < 1) || !strcmp ("none", val)) {
+    empty = 1;
+    val = "none";
+  }
+  param->get_param_path(pname, BX_PATHNAME_LEN);
+  if ((!strcmp(pname, BXPN_FLOPPYA_PATH)) ||
+      (!strcmp(pname, BXPN_FLOPPYB_PATH))) {
+    if (set==1) {
+      device = atoi(base->get_name());
+      if (empty) {
+        BX_FD_THIS set_media_status(device, 0);
+        bx_gui->update_drive_status_buttons();
+      } else {
+        if (SIM->get_param_enum("devtype", base)->get() == BX_FDD_NONE) {
+          BX_ERROR(("Cannot add a floppy drive at runtime"));
+          SIM->get_param_string("path", base)->set("none");
+        }
+      }
+      if (SIM->get_param_bool("status", base)->get() == 1) {
+        // tell the device model that we removed, then inserted the disk
+        BX_FD_THIS set_media_status(device, 0);
+        BX_FD_THIS set_media_status(device, 1);
+      }
+    }
+  } else {
+    BX_PANIC(("floppy_param_string_handler called with unknown parameter '%s'", pname));
   }
   return val;
 }

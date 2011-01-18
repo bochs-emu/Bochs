@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.220 2011-01-17 21:36:00 vruppert Exp $
+// $Id: config.cc,v 1.221 2011-01-18 21:04:43 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2009  The Bochs Project
@@ -173,28 +173,6 @@ const char *bx_param_string_handler(bx_param_string_c *param, int set,
     if (!strcmp(pname, BXPN_SCREENMODE)) {
       if (set==1) {
         BX_INFO(("Screen mode changed to %s", val));
-      }
-    } else if ((!strcmp(pname, BXPN_FLOPPYA_PATH)) ||
-               (!strcmp(pname, BXPN_FLOPPYB_PATH))) {
-      if (set==1) {
-        device = !strcmp(pname, BXPN_FLOPPYB_PATH);
-        if (SIM->get_init_done()) {
-          if (empty) {
-            DEV_floppy_set_media_status(device, 0);
-            bx_gui->update_drive_status_buttons();
-          } else {
-            if (SIM->get_param_enum("devtype", base)->get() == BX_FDD_NONE) {
-              BX_ERROR(("Cannot add a floppy drive at runtime"));
-              SIM->get_param_string("path", base)->set("none");
-            }
-          }
-          if ((DEV_floppy_present()) &&
-              (SIM->get_param_bool("status", base)->get() == 1)) {
-            // tell the device model that we removed, then inserted the disk
-            DEV_floppy_set_media_status(device, 0);
-            DEV_floppy_set_media_status(device, 1);
-          }
-        }
       }
 #if BX_PLUGINS
     } else if (!strncmp(pname, "misc.user_plugin", 16)) {
@@ -969,9 +947,7 @@ void bx_init_options()
     path = new bx_param_filename_c(floppyX, "path", label, descr, "", BX_PATHNAME_LEN);
     path->set_ask_format("Enter new filename, or 'none' for no disk: [%s] ");
     path->set_extension("img");
-    path->set_handler(bx_param_string_handler);
     path->set_initial_val("none");
-    path->set_runtime_param(1);
 
     type = new bx_param_enum_c(floppyX,
       "type",
@@ -2093,13 +2069,14 @@ int get_floppy_type_from_image(const char *filename)
 {
   struct stat stat_buf;
 
-  if (stat(filename, &stat_buf))
-  {
+  if (!strncmp(filename, "vvfat:", 6)) {
+    return BX_FLOPPY_1_44;
+  }
+  if (stat(filename, &stat_buf)) {
     return BX_FLOPPY_NONE;
   }
 
-  switch (stat_buf.st_size)
-  {
+  switch (stat_buf.st_size) {
     case 163840:
       return BX_FLOPPY_160K;
 

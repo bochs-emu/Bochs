@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: plugin.h,v 1.86 2011-01-12 22:34:42 vruppert Exp $
+// $Id: plugin.h,v 1.87 2011-01-18 21:04:43 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  The Bochs Project
@@ -177,10 +177,8 @@ extern "C" {
 #define DEV_bulk_io_quantum_transferred() (bx_devices.bulkIOQuantumsTransferred)
 #define DEV_bulk_io_host_addr() (bx_devices.bulkIOHostAddr)
 
-///////// FLOPPY macros
+///////// FLOPPY macro
 #define DEV_floppy_set_media_status(drive, status)  bx_devices.pluginFloppyDevice->set_media_status(drive, status)
-#define DEV_floppy_set_media_readonly(drive, status)  bx_devices.pluginFloppyDevice->set_media_readonly(drive, status)
-#define DEV_floppy_present() (bx_devices.pluginFloppyDevice != &bx_devices.stubFloppy)
 
 ///////// DMA macros
 #define DEV_dma_register_8bit_channel(channel, dmaRead, dmaWrite, name) \

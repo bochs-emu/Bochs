@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.h,v 1.39 2011-01-17 21:36:00 vruppert Exp $
+// $Id: floppy.h,v 1.40 2011-01-18 21:04:44 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2009  The Bochs Project
@@ -56,7 +56,6 @@ public:
   virtual void init(void);
   virtual void reset(unsigned type);
   virtual unsigned set_media_status(unsigned drive, bx_bool status);
-  virtual void set_media_readonly(unsigned drive, bx_bool status);
   virtual void register_state(void);
 
 private:
@@ -153,6 +152,7 @@ private:
   BX_FD_SMF void    close_media(floppy_t *media);
   // runtime options
   static Bit64s    floppy_param_handler(bx_param_c *param, int set, Bit64s val);
+  static const char* floppy_param_string_handler(bx_param_string_c *param, int set, const char *oldval, const char *val, int maxlen);
 };
 
 
