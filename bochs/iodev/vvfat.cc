@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vvfat.cc,v 1.20 2011-01-14 16:43:55 vruppert Exp $
+// $Id: vvfat.cc,v 1.21 2011-01-19 18:28:08 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2010/2011  The Bochs Project
@@ -1515,8 +1515,8 @@ bx_bool vvfat_image_t::write_file(const char *path, direntry_t *entry, bx_bool c
   tv.tm_hour = (entry->mtime >> 11);
   tv.tm_min = (entry->mtime >> 5) & 0x3f;
   tv.tm_sec = (entry->mtime & 0x1f) << 1;
-  tv.tm_isdst = 0;
-  ut.modtime = mktime(&tv) + timezone;
+  tv.tm_isdst = -1;
+  ut.modtime = mktime(&tv);
   if (entry->adate != 0) {
     tv.tm_year = (entry->adate >> 9) + 80;
     tv.tm_mon = ((entry->adate >> 5) & 0x0f) - 1;
@@ -1524,7 +1524,7 @@ bx_bool vvfat_image_t::write_file(const char *path, direntry_t *entry, bx_bool c
     tv.tm_hour = 0;
     tv.tm_min = 0;
     tv.tm_sec = 0;
-    ut.actime = mktime(&tv) + timezone;
+    ut.actime = mktime(&tv);
   } else {
     ut.actime = ut.modtime;
   }
