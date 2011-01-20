@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vvfat.cc,v 1.21 2011-01-19 18:28:08 vruppert Exp $
+// $Id: vvfat.cc,v 1.22 2011-01-20 21:10:06 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2010/2011  The Bochs Project
@@ -734,6 +734,7 @@ int vvfat_image_t::read_directory(int mapping_index)
     if (st.st_size > 0x7fffffff) {
       BX_ERROR(("File %s is larger than 2GB", buffer));
       free(buffer);
+      closedir(dir);
       return -2;
     }
     direntry->size = htod32(S_ISDIR(st.st_mode) ? 0:st.st_size);
@@ -834,6 +835,7 @@ int vvfat_image_t::read_directory(int mapping_index)
     if (finddata.nFileSizeLow > 0x7fffffff) {
       BX_ERROR(("File %s is larger than 2GB", buffer));
       free(buffer);
+      FindClose(hFind);
       return -2;
     }
     direntry->size = htod32((finddata.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) ? 0:finddata.nFileSizeLow);
@@ -1574,10 +1576,11 @@ void vvfat_image_t::parse_directory(const char *path, Bit32u start_cluster)
 
   csize = sectors_per_cluster * 0x200;
   if (start_cluster == 0) {
+    size = root_entries * 32;
     offset = offset_to_root_dir;
-    buffer = (Bit8u*)malloc(root_entries * 32);
+    buffer = (Bit8u*)malloc(size);
     lseek(offset * 0x200, SEEK_SET);
-    read(buffer, root_entries * 32);
+    read(buffer, size);
   } else {
     size = csize;
     buffer = (Bit8u*)malloc(size);
@@ -1672,7 +1675,7 @@ void vvfat_image_t::parse_directory(const char *path, Bit32u start_cluster)
       }
       ptr = (Bit8u*)newentry+32;
     }
-  } while (newentry != NULL);
+  } while ((newentry != NULL) && ((Bit32u)(ptr - buffer) < size));
   free(buffer);
 }
 
