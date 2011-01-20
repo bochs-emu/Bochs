@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_pfp.cc,v 1.77 2011-01-13 20:48:29 sshwarts Exp $
+// $Id: sse_pfp.cc,v 1.78 2011-01-20 16:24:42 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003-2011 Stanislav Shwartsman
@@ -146,6 +146,23 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTPI2PD_VpdQqR(bxInstruction_c *i)
 #endif
 }
 
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTPI2PD_VpdQqM(bxInstruction_c *i)
+{
+#if BX_CPU_LEVEL >= 6
+  BxPackedMmxRegister op;
+  BxPackedXmmRegister result;
+
+  // do not cause transition to MMX state if no MMX register touched
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  MMXUQ(op) = read_virtual_qword(i->seg(), eaddr);
+
+  result.xmm64u(0) = int32_to_float64(MMXUD0(op));
+  result.xmm64u(1) = int32_to_float64(MMXUD1(op));
+
+  BX_WRITE_XMM_REG(i->nnn(), result);
+#endif
+}
+
 /*
  * Opcode: F2 0F 2A
  * Convert one 32bit signed integer to one double precision FP
@@ -154,18 +171,21 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTPI2PD_VpdQqR(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTSI2SD_VsdEdR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  float_status_t status_word;
-  mxcsr_to_softfloat_status_word(status_word, MXCSR);
   float64 result;
 
 #if BX_SUPPORT_X86_64
-  if (i->os64L())   /* 64 bit operand size */
+  if (i->os64L()) {   /* 64 bit operand size */
+    float_status_t status_word;
+    mxcsr_to_softfloat_status_word(status_word, MXCSR);
     result = int64_to_float64(BX_READ_64BIT_REG(i->rm()), status_word);
+    check_exceptionsSSE(status_word.float_exception_flags);
+  }
   else
 #endif
+  {
     result = int32_to_float64(BX_READ_32BIT_REG(i->rm()));
+  }
 
-  check_exceptionsSSE(status_word.float_exception_flags);
   BX_WRITE_XMM_REG_LO_QWORD(i->nnn(), result);
 #endif
 }
@@ -173,8 +193,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTSI2SD_VsdEdR(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTSI2SD_VsdEdM(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  float_status_t status_word;
-  mxcsr_to_softfloat_status_word(status_word, MXCSR);
   float64 result;
 
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
@@ -182,8 +200,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTSI2SD_VsdEdM(bxInstruction_c *i)
 #if BX_SUPPORT_X86_64
   if (i->os64L())   /* 64 bit operand size */
   {
+    float_status_t status_word;
     Bit64u op = read_virtual_qword_64(i->seg(), eaddr);
+    mxcsr_to_softfloat_status_word(status_word, MXCSR);
     result = int64_to_float64(op, status_word);
+    check_exceptionsSSE(status_word.float_exception_flags);
   }
   else
 #endif
@@ -192,7 +213,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTSI2SD_VsdEdM(bxInstruction_c *i)
     result = int32_to_float64(op);
   }
 
-  check_exceptionsSSE(status_word.float_exception_flags);
   BX_WRITE_XMM_REG_LO_QWORD(i->nnn(), result);
 #endif
 }

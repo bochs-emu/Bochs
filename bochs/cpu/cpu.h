@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.709 2011-01-16 20:42:28 sshwarts Exp $
+// $Id: cpu.h,v 1.710 2011-01-20 16:24:42 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2011  The Bochs Project
@@ -2084,6 +2084,7 @@ public: // for now...
   /* SSE2 */
   BX_SMF void MOVSD_VsdWsdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void CVTPI2PD_VpdQqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CVTPI2PD_VpdQqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void CVTSI2SD_VsdEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void CVTSI2SD_VsdEdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void CVTTPD2PI_PqWpd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
