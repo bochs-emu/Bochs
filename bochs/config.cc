@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.221 2011-01-18 21:04:43 vruppert Exp $
+// $Id: config.cc,v 1.222 2011-01-20 16:54:41 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2009  The Bochs Project
@@ -107,11 +107,6 @@ static Bit64s bx_param_handler(bx_param_c *param, int set, Bit64s val)
           }
           SIM->get_param_enum("devtype", base)->set(device);
         }
-      }
-    } else if (!strcmp(pname, BXPN_MOUSE_ENABLED)) {
-      if ((set) && (SIM->get_init_done())) {
-        bx_gui->mouse_enabled_changed(val!=0);
-        DEV_mouse_enabled_changed(val!=0);
       }
     } else {
       BX_PANIC(("bx_param_handler called with unknown parameter '%s'", pname));
@@ -831,12 +826,10 @@ void bx_init_options()
       BX_MOUSE_TYPE_NONE);
   type->set_ask_format("Choose the type of mouse [%s] ");
 
-  enabled = new bx_param_bool_c(mouse,
+  new bx_param_bool_c(mouse,
       "enabled", "Enable mouse capture",
       "Controls whether the mouse sends events to the guest. The hardware emulation is always enabled.",
       0);
-  enabled->set_handler(bx_param_handler);
-  enabled->set_runtime_param(1);
 
   static const char *mouse_toggle_list[] = {
     "ctrl+mbutton",

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.cc,v 1.146 2009-12-04 19:50:28 sshwarts Exp $
+// $Id: keyboard.cc,v 1.147 2011-01-20 16:54:42 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2009  The Bochs Project
@@ -120,7 +120,7 @@ void bx_keyb_c::resetinternals(bx_bool powerup)
 
 void bx_keyb_c::init(void)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.146 2009-12-04 19:50:28 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.147 2011-01-20 16:54:42 vruppert Exp $"));
   Bit32u   i;
 
   DEV_register_irq(1, "8042 Keyboard controller");
@@ -261,6 +261,8 @@ void bx_keyb_c::init(void)
   // init runtime parameter
   SIM->get_param_num(BXPN_KBD_PASTE_DELAY)->set_handler(kbd_param_handler);
   SIM->get_param_num(BXPN_KBD_PASTE_DELAY)->set_runtime_param(1);
+  SIM->get_param_num(BXPN_MOUSE_ENABLED)->set_handler(kbd_param_handler);
+  SIM->get_param_num(BXPN_MOUSE_ENABLED)->set_runtime_param(1);
 }
 
 void bx_keyb_c::reset(unsigned type)
@@ -362,6 +364,11 @@ Bit64s bx_keyb_c::kbd_param_handler(bx_param_c *param, int set, Bit64s val)
     param->get_param_path(pname, BX_PATHNAME_LEN);
     if (!strcmp(pname, BXPN_KBD_PASTE_DELAY)) {
       BX_KEY_THIS paste_delay_changed((Bit32u)val);
+    } else if (!strcmp(pname, BXPN_MOUSE_ENABLED)) {
+      if (set) {
+        bx_gui->mouse_enabled_changed(val!=0);
+        DEV_mouse_enabled_changed(val!=0);
+      }
     } else {
       BX_PANIC(("kbd_param_handler called with unexpected parameter '%s'", pname));
     }
