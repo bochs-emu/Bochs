@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.290 2011-01-21 16:07:51 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.291 2011-01-21 19:21:16 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2011  The Bochs Project
@@ -1485,7 +1485,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* 0F 27 /q */ { 0, BX_IA_ERROR },
   /* 0F 28 /q */ { BxPrefixSSE,                BX_IA_MOVAPS_VpsWps, BxOpcodeGroupSSE_0f28 },
   /* 0F 29 /q */ { BxPrefixSSE | BxArithDstRM, BX_IA_MOVAPS_WpsVps, BxOpcodeGroupSSE_0f29 },
-  /* 0F 2A /q */ { BxPrefixSSE, BX_IA_CVTPI2PS_VpsQq, BxOpcodeGroupSSE_0f2a },
+  /* 0F 2A /q */ { BxPrefixSSE, BX_IA_CVTPI2PS_VpsQq, BxOpcodeGroupSSE_0f2aQ },
   /* 0F 2B /q */ { BxPrefixSSE, BX_IA_MOVNTPS_MpsVps, BxOpcodeGroupSSE_0f2bM },
   /* 0F 2C /q */ { BxPrefixSSE, BX_IA_CVTTPS2PI_PqWps, BxOpcodeGroupSSE_0f2c },
   /* 0F 2D /q */ { BxPrefixSSE, BX_IA_CVTPS2PI_PqWps, BxOpcodeGroupSSE_0f2d },

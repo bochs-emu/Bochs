@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////,,,,
-// $Id: ia_opcodes.h,v 1.70 2011-01-21 16:07:51 sshwarts Exp $,,,
+// $Id: ia_opcodes.h,v 1.71 2011-01-21 19:21:16 sshwarts Exp $,,,
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008-2010 Stanislav Shwartsman
@@ -1304,6 +1304,8 @@ bx_define_opcode(BX_IA_JRCXZ_Jb, NULL, &BX_CPU_C::JRCXZ_Jb, BX_CPU_X86_64, 0)
 bx_define_opcode(BX_IA_MOVQ_EqVq, &BX_CPU_C::MOVLPS_MqVps, &BX_CPU_C::MOVQ_EqVqR, BX_CPU_X86_64, BX_PREPARE_SSE)
 bx_define_opcode(BX_IA_MOVQ_PqEq, &BX_CPU_C::MOVQ_PqQqM, &BX_CPU_C::MOVQ_PqEqR, BX_CPU_X86_64, 0)
 bx_define_opcode(BX_IA_MOVQ_VdqEq, &BX_CPU_C::MOVQ_VqWqM, &BX_CPU_C::MOVQ_VdqEqR, BX_CPU_X86_64, BX_PREPARE_SSE)
+bx_define_opcode(BX_IA_CVTSI2SS_VssEq, &BX_CPU_C::CVTSI2SS_VssEqM, &BX_CPU_C::CVTSI2SS_VssEqR, BX_CPU_X86_64, BX_PREPARE_SSE)
+bx_define_opcode(BX_IA_CVTSI2SD_VsdEq, &BX_CPU_C::CVTSI2SD_VsdEqM, &BX_CPU_C::CVTSI2SD_VsdEqR, BX_CPU_X86_64, BX_PREPARE_SSE)
 bx_define_opcode(BX_IA_MOVNTI_MqGq, &BX_CPU_C::MOVNTI_MqGq, &BX_CPU_C::BxError, BX_CPU_X86_64, 0)
 bx_define_opcode(BX_IA_SYSCALL, NULL, &BX_CPU_C::SYSCALL, BX_CPU_X86_64, 0)
 bx_define_opcode(BX_IA_SYSRET, NULL, &BX_CPU_C::SYSRET, BX_CPU_X86_64, 0)

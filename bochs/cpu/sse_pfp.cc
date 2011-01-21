@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_pfp.cc,v 1.78 2011-01-20 16:24:42 sshwarts Exp $
+// $Id: sse_pfp.cc,v 1.79 2011-01-21 19:21:16 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003-2011 Stanislav Shwartsman
@@ -171,21 +171,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTPI2PD_VpdQqM(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTSI2SD_VsdEdR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  float64 result;
-
-#if BX_SUPPORT_X86_64
-  if (i->os64L()) {   /* 64 bit operand size */
-    float_status_t status_word;
-    mxcsr_to_softfloat_status_word(status_word, MXCSR);
-    result = int64_to_float64(BX_READ_64BIT_REG(i->rm()), status_word);
-    check_exceptionsSSE(status_word.float_exception_flags);
-  }
-  else
-#endif
-  {
-    result = int32_to_float64(BX_READ_32BIT_REG(i->rm()));
-  }
-
+  float64 result = int32_to_float64(BX_READ_32BIT_REG(i->rm()));
   BX_WRITE_XMM_REG_LO_QWORD(i->nnn(), result);
 #endif
 }
@@ -193,29 +179,41 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTSI2SD_VsdEdR(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTSI2SD_VsdEdM(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  float64 result;
-
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  Bit32u op = read_virtual_dword(i->seg(), eaddr);
 
-#if BX_SUPPORT_X86_64
-  if (i->os64L())   /* 64 bit operand size */
-  {
-    float_status_t status_word;
-    Bit64u op = read_virtual_qword_64(i->seg(), eaddr);
-    mxcsr_to_softfloat_status_word(status_word, MXCSR);
-    result = int64_to_float64(op, status_word);
-    check_exceptionsSSE(status_word.float_exception_flags);
-  }
-  else
-#endif
-  {
-    Bit32u op = read_virtual_dword(i->seg(), eaddr);
-    result = int32_to_float64(op);
-  }
+  float64 result = int32_to_float64(op);
 
   BX_WRITE_XMM_REG_LO_QWORD(i->nnn(), result);
 #endif
 }
+
+#if BX_SUPPORT_X86_64
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTSI2SD_VsdEqR(bxInstruction_c *i)
+{
+  float_status_t status_word;
+  mxcsr_to_softfloat_status_word(status_word, MXCSR);
+
+  float64 result = int64_to_float64(BX_READ_64BIT_REG(i->rm()), status_word);
+
+  check_exceptionsSSE(status_word.float_exception_flags);
+  BX_WRITE_XMM_REG_LO_QWORD(i->nnn(), result);
+}
+
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTSI2SD_VsdEqM(bxInstruction_c *i)
+{
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  Bit64u op = read_virtual_qword_64(i->seg(), eaddr);
+
+  float_status_t status_word;
+  mxcsr_to_softfloat_status_word(status_word, MXCSR);
+
+  float64 result = int64_to_float64(op, status_word);
+
+  check_exceptionsSSE(status_word.float_exception_flags);
+  BX_WRITE_XMM_REG_LO_QWORD(i->nnn(), result);
+}
+#endif
 
 /*
  * Opcode: F3 0F 2A
@@ -229,14 +227,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTSI2SS_VssEdR(bxInstruction_c *i)
 #if BX_CPU_LEVEL >= 6
   float_status_t status_word;
   mxcsr_to_softfloat_status_word(status_word, MXCSR);
-  float32 result;
 
-#if BX_SUPPORT_X86_64
-  if (i->os64L())   /* 64 bit operand size */
-    result = int64_to_float32(BX_READ_64BIT_REG(i->rm()), status_word);
-  else
-#endif
-    result = int32_to_float32(BX_READ_32BIT_REG(i->rm()), status_word);
+  float32 result = int32_to_float32(BX_READ_32BIT_REG(i->rm()), status_word);
 
   check_exceptionsSSE(status_word.float_exception_flags);
   BX_WRITE_XMM_REG_LO_DWORD(i->nnn(), result);
@@ -246,29 +238,45 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTSI2SS_VssEdR(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTSI2SS_VssEdM(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  Bit32u op = read_virtual_dword(i->seg(), eaddr);
+
   float_status_t status_word;
   mxcsr_to_softfloat_status_word(status_word, MXCSR);
-  float32 result;
 
-  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-
-#if BX_SUPPORT_X86_64
-  if (i->os64L())   /* 64 bit operand size */
-  {
-    Bit64u op = read_virtual_qword_64(i->seg(), eaddr);
-    result = int64_to_float32(op, status_word);
-  }
-  else
-#endif
-  {
-    Bit32u op = read_virtual_dword(i->seg(), eaddr);
-    result = int32_to_float32(op, status_word);
-  }
+  float32 result = int32_to_float32(op, status_word);
 
   check_exceptionsSSE(status_word.float_exception_flags);
   BX_WRITE_XMM_REG_LO_DWORD(i->nnn(), result);
 #endif
 }
+
+#if BX_SUPPORT_X86_64
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTSI2SS_VssEqR(bxInstruction_c *i)
+{
+  float_status_t status_word;
+  mxcsr_to_softfloat_status_word(status_word, MXCSR);
+
+  float32 result = int64_to_float32(BX_READ_64BIT_REG(i->rm()), status_word);
+
+  check_exceptionsSSE(status_word.float_exception_flags);
+  BX_WRITE_XMM_REG_LO_DWORD(i->nnn(), result);
+}
+
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTSI2SS_VssEqM(bxInstruction_c *i)
+{
+  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+  Bit64u op = read_virtual_qword_64(i->seg(), eaddr);
+
+  float_status_t status_word;
+  mxcsr_to_softfloat_status_word(status_word, MXCSR);
+
+  float32 result = int64_to_float32(op, status_word);
+
+  check_exceptionsSSE(status_word.float_exception_flags);
+  BX_WRITE_XMM_REG_LO_DWORD(i->nnn(), result);
+}
+#endif
 
 /*
  * Opcode: 0F 2C

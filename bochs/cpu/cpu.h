@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.711 2011-01-21 16:07:51 sshwarts Exp $
+// $Id: cpu.h,v 1.712 2011-01-21 19:21:16 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2011  The Bochs Project
@@ -2769,6 +2769,11 @@ public: // for now...
   BX_SMF void MOVQ_EqVqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void MOVQ_PqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void MOVQ_VdqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void CVTSI2SS_VssEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CVTSI2SS_VssEqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CVTSI2SD_VsdEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CVTSI2SD_VsdEqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void MOVNTI_MqGq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 #endif  // #if BX_SUPPORT_X86_64
 
