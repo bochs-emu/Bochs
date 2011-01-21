@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.341 2010-12-25 17:04:36 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.342 2011-01-21 16:07:51 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2010  The Bochs Project
@@ -401,9 +401,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDTSC(bxInstruction_c *i)
 #endif
 }
 
-#if BX_SUPPORT_X86_64
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDTSCP(bxInstruction_c *i)
 {
+#if BX_SUPPORT_X86_64
+
 #if BX_SUPPORT_VMX
   // RDTSCP will always #UD in legacy VMX mode
   if (BX_CPU_THIS_PTR in_vmx_guest) {
@@ -416,8 +417,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDTSCP(bxInstruction_c *i)
 
   RDTSC(i);
   RCX = MSR_TSC_AUX;
-}
 #endif
+}
 
 #if BX_SUPPORT_MONITOR_MWAIT
 bx_bool BX_CPU_C::is_monitor(bx_phy_address begin_addr, unsigned len)
@@ -1023,9 +1024,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSRET(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::SWAPGS(bxInstruction_c *i)
 {
-  if(! long64_mode())
-    exception(BX_UD_EXCEPTION, 0);
-
   if(CPL != 0)
     exception(BX_GP_EXCEPTION, 0);
 

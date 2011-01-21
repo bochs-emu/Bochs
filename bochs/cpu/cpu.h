@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.710 2011-01-20 16:24:42 sshwarts Exp $
+// $Id: cpu.h,v 1.711 2011-01-21 16:07:51 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2011  The Bochs Project
@@ -2752,7 +2752,6 @@ public: // for now...
 
   BX_SMF void SYSCALL(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void SYSRET(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void RDTSCP(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void CMPXCHG16B(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
   BX_SMF void SWAPGS(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -2772,6 +2771,8 @@ public: // for now...
   BX_SMF void MOVQ_VdqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void MOVNTI_MqGq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 #endif  // #if BX_SUPPORT_X86_64
+
+  BX_SMF void RDTSCP(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
   BX_SMF void INVLPG(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void RSM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -3888,9 +3889,10 @@ enum {
 #define BxPrefixSSEF2       0x0030 // Group encoding: 0011, SSE_PREFIX_F2
 #define BxPrefixSSE         0x0040 // Group encoding: 0100
 #define BxGroupN            0x0050 // Group encoding: 0101
-#define BxFPEscape          0x0060 // Group encoding: 0110
-#define Bx3ByteOp           0x0070 // Group encoding: 0111
-#define BxOSizeGrp          0x0080 // Group encoding: 1000
+#define BxSplitGroupN       0x0060 // Group encoding: 0110
+#define BxFPEscape          0x0070 // Group encoding: 0111
+#define Bx3ByteOp           0x0080 // Group encoding: 1000
+#define BxOSizeGrp          0x0090 // Group encoding: 1001
 
 // The BxImmediate2 mask specifies kind of second immediate data
 // required by instruction.
@@ -3921,7 +3923,7 @@ enum {
 #define BxGroup4          BxGroupN
 #define BxGroup5          BxGroupN
 #define BxGroup6          BxGroupN
-#define BxGroup7          BxGroupN
+#define BxGroup7          BxFPEscape
 #define BxGroup8          BxGroupN
 #define BxGroup9          BxGroupN
 
@@ -3929,10 +3931,9 @@ enum {
 #define BxGroup12         BxGroupN
 #define BxGroup13         BxGroupN
 #define BxGroup14         BxGroupN
-#define BxGroup15         BxGroupN
-#define BxGroup16         BxGroupN
+#define BxGroup15         BxSplitGroupN
 
-#define BxGroupFP         BxGroupN
+#define BxGroupFP         BxSplitGroupN
 
 // <TAG-DEFINES-DECODE-END>
 

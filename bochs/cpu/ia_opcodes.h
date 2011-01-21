@@ -1,23 +1,23 @@
 /////////////////////////////////////////////////////////////////////////,,,,
-// $Id: ia_opcodes.h,v 1.69 2011-01-20 16:24:42 sshwarts Exp $,,,
+// $Id: ia_opcodes.h,v 1.70 2011-01-21 16:07:51 sshwarts Exp $,,,
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2008-2011 Stanislav Shwartsman
+//   Copyright (c) 2008-2010 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
 //  License as published by the Free Software Foundation; either
-//  version 2 of the License, or (at your option) any later version.,,,
+//  version 2 of the License, or (at your option) any later version.
 //
-//  This library is distributed in the hope that it will be useful
+//  This library is distributed in the hope that it will be useful,
 //  but WITHOUT ANY WARRANTY; without even the implied warranty of
 //  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 //  Lesser General Public License for more details.
 //
 //  You should have received a copy of the GNU Lesser General Public
-//  License along with this library; if not, write to the Free Software,,,
-//  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston
+//  License along with this library; if not, write to the Free Software
+//  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA B 02110-1301 USA
 //
 /////////////////////////////////////////////////////////////////////////
 
@@ -120,22 +120,14 @@ bx_define_opcode(BX_IA_BT_EdIb, &BX_CPU_C::BT_EdIbM, &BX_CPU_C::BT_EdIbR, 0, 0)
 bx_define_opcode(BX_IA_BTS_EdIb, &BX_CPU_C::BTS_EdIbM, &BX_CPU_C::BTS_EdIbR, 0, 0)
 bx_define_opcode(BX_IA_BTR_EdIb, &BX_CPU_C::BTR_EdIbM, &BX_CPU_C::BTR_EdIbR, 0, 0)
 bx_define_opcode(BX_IA_BTC_EdIb, &BX_CPU_C::BTC_EdIbM, &BX_CPU_C::BTC_EdIbR, 0, 0)
-bx_define_opcode(BX_IA_BT_EdGdM, &BX_CPU_C::BT_EdGdM, &BX_CPU_C::BT_EdGdM, 0, 0)
-bx_define_opcode(BX_IA_BT_EdGdR, &BX_CPU_C::BT_EdGdR, &BX_CPU_C::BT_EdGdR, 0, 0)
-bx_define_opcode(BX_IA_BT_EwGwM, &BX_CPU_C::BT_EwGwM, &BX_CPU_C::BT_EwGwM, 0, 0)
-bx_define_opcode(BX_IA_BT_EwGwR, &BX_CPU_C::BT_EwGwR, &BX_CPU_C::BT_EwGwR, 0, 0)
-bx_define_opcode(BX_IA_BTC_EdGdM, &BX_CPU_C::BTC_EdGdM, &BX_CPU_C::BTC_EdGdM, 0, 0)
-bx_define_opcode(BX_IA_BTC_EdGdR, &BX_CPU_C::BTC_EdGdR, &BX_CPU_C::BTC_EdGdR, 0, 0)
-bx_define_opcode(BX_IA_BTC_EwGwM, &BX_CPU_C::BTC_EwGwM, &BX_CPU_C::BTC_EwGwM, 0, 0)
-bx_define_opcode(BX_IA_BTC_EwGwR, &BX_CPU_C::BTC_EwGwR, &BX_CPU_C::BTC_EwGwR, 0, 0)
-bx_define_opcode(BX_IA_BTR_EdGdM, &BX_CPU_C::BTR_EdGdM, &BX_CPU_C::BTR_EdGdM, 0, 0)
-bx_define_opcode(BX_IA_BTR_EdGdR, &BX_CPU_C::BTR_EdGdR, &BX_CPU_C::BTR_EdGdR, 0, 0)
-bx_define_opcode(BX_IA_BTR_EwGwM, &BX_CPU_C::BTR_EwGwM, &BX_CPU_C::BTR_EwGwM, 0, 0)
-bx_define_opcode(BX_IA_BTR_EwGwR, &BX_CPU_C::BTR_EwGwR, &BX_CPU_C::BTR_EwGwR, 0, 0)
-bx_define_opcode(BX_IA_BTS_EdGdM, &BX_CPU_C::BTS_EdGdM, &BX_CPU_C::BTS_EdGdM, 0, 0)
-bx_define_opcode(BX_IA_BTS_EdGdR, &BX_CPU_C::BTS_EdGdR, &BX_CPU_C::BTS_EdGdR, 0, 0)
-bx_define_opcode(BX_IA_BTS_EwGwM, &BX_CPU_C::BTS_EwGwM, &BX_CPU_C::BTS_EwGwM, 0, 0)
-bx_define_opcode(BX_IA_BTS_EwGwR, &BX_CPU_C::BTS_EwGwR, &BX_CPU_C::BTS_EwGwR, 0, 0)
+bx_define_opcode(BX_IA_BT_EdGd, &BX_CPU_C::BT_EdGdM, &BX_CPU_C::BT_EdGdR, 0, 0)
+bx_define_opcode(BX_IA_BT_EwGw, &BX_CPU_C::BT_EwGwM, &BX_CPU_C::BT_EwGwR, 0, 0)
+bx_define_opcode(BX_IA_BTC_EdGd, &BX_CPU_C::BTC_EdGdM, &BX_CPU_C::BTC_EdGdR, 0, 0)
+bx_define_opcode(BX_IA_BTC_EwGw, &BX_CPU_C::BTC_EwGwM, &BX_CPU_C::BTC_EwGwR, 0, 0)
+bx_define_opcode(BX_IA_BTR_EdGd, &BX_CPU_C::BTR_EdGdM, &BX_CPU_C::BTR_EdGdR, 0, 0)
+bx_define_opcode(BX_IA_BTR_EwGw, &BX_CPU_C::BTR_EwGwM, &BX_CPU_C::BTR_EwGwR, 0, 0)
+bx_define_opcode(BX_IA_BTS_EdGd, &BX_CPU_C::BTS_EdGdM, &BX_CPU_C::BTS_EdGdR, 0, 0)
+bx_define_opcode(BX_IA_BTS_EwGw, &BX_CPU_C::BTS_EwGwM, &BX_CPU_C::BTS_EwGwR, 0, 0)
 bx_define_opcode(BX_IA_CALL_Ed, &BX_CPU_C::LOAD_Ed, &BX_CPU_C::CALL_EdR, 0, 0)
 bx_define_opcode(BX_IA_CALL_Ew, &BX_CPU_C::LOAD_Ew, &BX_CPU_C::CALL_EwR, 0, 0)
 bx_define_opcode(BX_IA_CALL_Jd, NULL, &BX_CPU_C::CALL_Jd, 0, 0)
@@ -273,21 +265,17 @@ bx_define_opcode(BX_IA_MOV_RdCR4, NULL, &BX_CPU_C::MOV_RdCR4, BX_CPU_486, 0)
 bx_define_opcode(BX_IA_MOV_RdDd, NULL, &BX_CPU_C::MOV_RdDd, 0, 0)
 bx_define_opcode(BX_IA_MOV_DdRd, NULL, &BX_CPU_C::MOV_DdRd, 0, 0)
 bx_define_opcode(BX_IA_MOV_EAXOd, NULL, &BX_CPU_C::MOV_EAXOd, 0, 0)
-bx_define_opcode(BX_IA_MOV_EbGbM, &BX_CPU_C::MOV_EbGbM, &BX_CPU_C::MOV_EbGbM, 0, 0)
 bx_define_opcode(BX_IA_MOV_EbIb, &BX_CPU_C::MOV_EbIbM, &BX_CPU_C::MOV_RLIb, 0, 0)
 bx_define_opcode(BX_IA_MOV_EdId, &BX_CPU_C::MOV_EdIdM, &BX_CPU_C::MOV_ERXId, 0, 0)
 bx_define_opcode(BX_IA_MOV_EwIw, &BX_CPU_C::MOV_EwIwM, &BX_CPU_C::MOV_RXIw, 0, 0)
 bx_define_opcode(BX_IA_MOV_ERXId, NULL, &BX_CPU_C::MOV_ERXId, 0, 0)
-bx_define_opcode(BX_IA_MOV_EwGwM, &BX_CPU_C::MOV_EwGwM, &BX_CPU_C::MOV_EwGwM, 0, 0)
-bx_define_opcode(BX_IA_MOV_EwSwM, &BX_CPU_C::MOV_EwSwM, &BX_CPU_C::MOV_EwSwM, 0, 0)
-bx_define_opcode(BX_IA_MOV_EwSwR, &BX_CPU_C::MOV_EwSwR, &BX_CPU_C::MOV_EwSwR, 0, 0)
-bx_define_opcode(BX_IA_MOV_GbEbM, &BX_CPU_C::MOV_GbEbM, &BX_CPU_C::MOV_GbEbM, 0, 0)
-bx_define_opcode(BX_IA_MOV_GbEbR, &BX_CPU_C::MOV_GbEbR, &BX_CPU_C::MOV_GbEbR, 0, 0)
-bx_define_opcode(BX_IA_MOV32_EdGdM, &BX_CPU_C::MOV32_EdGdM, &BX_CPU_C::MOV32_EdGdM, 0, 0)
-bx_define_opcode(BX_IA_MOV32_GdEdM, &BX_CPU_C::MOV32_GdEdM, &BX_CPU_C::MOV32_GdEdM, 0, 0)
-bx_define_opcode(BX_IA_MOV_GdEdR, &BX_CPU_C::MOV_GdEdR, &BX_CPU_C::MOV_GdEdR, 0, 0)
-bx_define_opcode(BX_IA_MOV_GwEwM, &BX_CPU_C::MOV_GwEwM, &BX_CPU_C::MOV_GwEwM, 0, 0)
-bx_define_opcode(BX_IA_MOV_GwEwR, &BX_CPU_C::MOV_GwEwR, &BX_CPU_C::MOV_GwEwR, 0, 0)
+bx_define_opcode(BX_IA_MOV_EwSw, &BX_CPU_C::MOV_EwSwM, &BX_CPU_C::MOV_EwSwR, 0, 0)
+bx_define_opcode(BX_IA_MOV_GbEb, &BX_CPU_C::MOV_GbEbM, &BX_CPU_C::MOV_GbEbR, 0, 0)
+bx_define_opcode(BX_IA_MOV_EbGb, &BX_CPU_C::MOV_EbGbM, &BX_CPU_C::MOV_GbEbR, 0, 0) /* dstRM */
+bx_define_opcode(BX_IA_MOV_GwEw, &BX_CPU_C::MOV_GwEwM, &BX_CPU_C::MOV_GwEwR, 0, 0)
+bx_define_opcode(BX_IA_MOV_EwGw, &BX_CPU_C::MOV_EwGwM, &BX_CPU_C::MOV_GwEwR, 0, 0) /* dstRM */
+bx_define_opcode(BX_IA_MOV32_GdEd, &BX_CPU_C::MOV32_GdEdM, &BX_CPU_C::MOV_GdEdR, 0, 0)
+bx_define_opcode(BX_IA_MOV32_EdGd, &BX_CPU_C::MOV32_EdGdM, &BX_CPU_C::MOV_GdEdR, 0, 0) /* dstRM */
 bx_define_opcode(BX_IA_MOV_OdAL, NULL, &BX_CPU_C::MOV_OdAL, 0, 0)
 bx_define_opcode(BX_IA_MOV_OdAX, NULL, &BX_CPU_C::MOV_OdAX, 0, 0)
 bx_define_opcode(BX_IA_MOV_OdEAX, NULL, &BX_CPU_C::MOV_OdEAX, 0, 0)
@@ -784,7 +772,7 @@ bx_define_opcode(BX_IA_FXRSTOR, &BX_CPU_C::FXRSTOR, &BX_CPU_C::BxError, BX_CPU_F
 // SSE
 bx_define_opcode(BX_IA_LDMXCSR, &BX_CPU_C::LDMXCSR, &BX_CPU_C::BxError, BX_CPU_SSE, BX_PREPARE_SSE)
 bx_define_opcode(BX_IA_STMXCSR, &BX_CPU_C::STMXCSR, &BX_CPU_C::BxError, BX_CPU_SSE, BX_PREPARE_SSE)
-bx_define_opcode(BX_IA_PREFETCH, &BX_CPU_C::PREFETCH, &BX_CPU_C::PREFETCH, BX_CPU_SSE, 0)
+bx_define_opcode(BX_IA_PREFETCH, &BX_CPU_C::PREFETCH, &BX_CPU_C::NOP, BX_CPU_SSE, 0)
 // SSE
 
 // SSE
@@ -1185,8 +1173,8 @@ bx_define_opcode(BX_IA_TEST_EqGq, &BX_CPU_C::LOAD_Eq, &BX_CPU_C::TEST_EqGqR, BX_
 bx_define_opcode(BX_IA_TEST_RAXId, NULL, &BX_CPU_C::TEST_RAXId, BX_CPU_X86_64, 0)
 bx_define_opcode(BX_IA_XCHG_EqGq, &BX_CPU_C::XCHG_EqGqM, &BX_CPU_C::XCHG_EqGqR, BX_CPU_X86_64, 0)
 bx_define_opcode(BX_IA_LEA_GqM, &BX_CPU_C::LEA_GqM, &BX_CPU_C::BxError, BX_CPU_X86_64, 0)
-bx_define_opcode(BX_IA_MOV64_EdGdM, &BX_CPU_C::MOV64_EdGdM, &BX_CPU_C::MOV64_EdGdM, BX_CPU_X86_64, 0)
-bx_define_opcode(BX_IA_MOV64_GdEdM, &BX_CPU_C::MOV64_GdEdM, &BX_CPU_C::MOV64_GdEdM, BX_CPU_X86_64, 0)
+bx_define_opcode(BX_IA_MOV64_GdEd, &BX_CPU_C::MOV64_GdEdM, &BX_CPU_C::MOV_GdEdR, BX_CPU_X86_64, 0)
+bx_define_opcode(BX_IA_MOV64_EdGd, &BX_CPU_C::MOV64_EdGdM, &BX_CPU_C::MOV_GdEdR, BX_CPU_X86_64, 0) /* dstRM */
 bx_define_opcode(BX_IA_MOV_RAXOq, NULL, &BX_CPU_C::MOV_RAXOq, BX_CPU_X86_64, 0)
 bx_define_opcode(BX_IA_MOV_OqRAX, NULL, &BX_CPU_C::MOV_OqRAX, BX_CPU_X86_64, 0)
 bx_define_opcode(BX_IA_MOV_EAXOq, NULL, &BX_CPU_C::MOV_EAXOq, BX_CPU_X86_64, 0)
@@ -1195,9 +1183,8 @@ bx_define_opcode(BX_IA_MOV_AXOq, NULL, &BX_CPU_C::MOV_AXOq, BX_CPU_X86_64, 0)
 bx_define_opcode(BX_IA_MOV_OqAX, NULL, &BX_CPU_C::MOV_OqAX, BX_CPU_X86_64, 0)
 bx_define_opcode(BX_IA_MOV_ALOq, NULL, &BX_CPU_C::MOV_ALOq, BX_CPU_X86_64, 0)
 bx_define_opcode(BX_IA_MOV_OqAL, NULL, &BX_CPU_C::MOV_OqAL, BX_CPU_X86_64, 0)
-bx_define_opcode(BX_IA_MOV_EqGqM, &BX_CPU_C::MOV_EqGqM, &BX_CPU_C::MOV_EqGqM, BX_CPU_X86_64, 0)
-bx_define_opcode(BX_IA_MOV_GqEqR, &BX_CPU_C::MOV_GqEqR, &BX_CPU_C::MOV_GqEqR, BX_CPU_X86_64, 0)
-bx_define_opcode(BX_IA_MOV_GqEqM, &BX_CPU_C::MOV_GqEqM, &BX_CPU_C::MOV_GqEqM, BX_CPU_X86_64, 0)
+bx_define_opcode(BX_IA_MOV_EqGq, &BX_CPU_C::MOV_EqGqM, &BX_CPU_C::MOV_GqEqR, BX_CPU_X86_64, 0) /* dstRM */
+bx_define_opcode(BX_IA_MOV_GqEq, &BX_CPU_C::MOV_GqEqM, &BX_CPU_C::MOV_GqEqR, BX_CPU_X86_64, 0)
 bx_define_opcode(BX_IA_MOV_EqId, &BX_CPU_C::MOV_EqIdM, &BX_CPU_C::MOV_EqIdR, BX_CPU_X86_64, 0)
 bx_define_opcode(BX_IA_REP_MOVSQ_XqYq, NULL, &BX_CPU_C::REP_MOVSQ_XqYq, BX_CPU_X86_64, 0)
 bx_define_opcode(BX_IA_REP_CMPSQ_XqYq, NULL, &BX_CPU_C::REP_CMPSQ_XqYq, BX_CPU_X86_64, 0)
@@ -1237,14 +1224,10 @@ bx_define_opcode(BX_IA_MOVSX_GqEd, &BX_CPU_C::MOVSX_GqEdM, &BX_CPU_C::MOVSX_GqEd
 bx_define_opcode(BX_IA_BSWAP_RRX, NULL, &BX_CPU_C::BSWAP_RRX, BX_CPU_X86_64, 0)
 bx_define_opcode(BX_IA_BSF_GqEq, &BX_CPU_C::LOAD_Eq, &BX_CPU_C::BSF_GqEqR, BX_CPU_X86_64, 0)
 bx_define_opcode(BX_IA_BSR_GqEq, &BX_CPU_C::LOAD_Eq, &BX_CPU_C::BSR_GqEqR, BX_CPU_X86_64, 0)
-bx_define_opcode(BX_IA_BT_EqGqM, &BX_CPU_C::BT_EqGqM, &BX_CPU_C::BT_EqGqM, BX_CPU_X86_64, 0)
-bx_define_opcode(BX_IA_BTS_EqGqM, &BX_CPU_C::BTS_EqGqM, &BX_CPU_C::BTS_EqGqM, BX_CPU_X86_64, 0)
-bx_define_opcode(BX_IA_BTR_EqGqM, &BX_CPU_C::BTR_EqGqM, &BX_CPU_C::BTR_EqGqM, BX_CPU_X86_64, 0)
-bx_define_opcode(BX_IA_BTC_EqGqM, &BX_CPU_C::BTC_EqGqM, &BX_CPU_C::BTC_EqGqM, BX_CPU_X86_64, 0)
-bx_define_opcode(BX_IA_BT_EqGqR, &BX_CPU_C::BT_EqGqR, &BX_CPU_C::BT_EqGqR, BX_CPU_X86_64, 0)
-bx_define_opcode(BX_IA_BTS_EqGqR, &BX_CPU_C::BTS_EqGqR, &BX_CPU_C::BTS_EqGqR, BX_CPU_X86_64, 0)
-bx_define_opcode(BX_IA_BTR_EqGqR, &BX_CPU_C::BTR_EqGqR, &BX_CPU_C::BTR_EqGqR, BX_CPU_X86_64, 0)
-bx_define_opcode(BX_IA_BTC_EqGqR, &BX_CPU_C::BTC_EqGqR, &BX_CPU_C::BTC_EqGqR, BX_CPU_X86_64, 0)
+bx_define_opcode(BX_IA_BT_EqGq, &BX_CPU_C::BT_EqGqM, &BX_CPU_C::BT_EqGqR, BX_CPU_X86_64, 0)
+bx_define_opcode(BX_IA_BTS_EqGq, &BX_CPU_C::BTS_EqGqM, &BX_CPU_C::BTS_EqGqR, BX_CPU_X86_64, 0)
+bx_define_opcode(BX_IA_BTR_EqGq, &BX_CPU_C::BTR_EqGqM, &BX_CPU_C::BTR_EqGqR, BX_CPU_X86_64, 0)
+bx_define_opcode(BX_IA_BTC_EqGq, &BX_CPU_C::BTC_EqGqM, &BX_CPU_C::BTC_EqGqR, BX_CPU_X86_64, 0)
 bx_define_opcode(BX_IA_BT_EqIb, &BX_CPU_C::BT_EqIbM, &BX_CPU_C::BT_EqIbR, BX_CPU_X86_64, 0)
 bx_define_opcode(BX_IA_BTS_EqIb, &BX_CPU_C::BTS_EqIbM, &BX_CPU_C::BTS_EqIbR, BX_CPU_X86_64, 0)
 bx_define_opcode(BX_IA_BTR_EqIb, &BX_CPU_C::BTR_EqIbM, &BX_CPU_C::BTR_EqIbR, BX_CPU_X86_64, 0)
@@ -1313,7 +1296,6 @@ bx_define_opcode(BX_IA_SGDT64_Ms, &BX_CPU_C::SGDT64_Ms, &BX_CPU_C::BxError, BX_C
 bx_define_opcode(BX_IA_SIDT64_Ms, &BX_CPU_C::SIDT64_Ms, &BX_CPU_C::BxError, BX_CPU_X86_64, 0)
 bx_define_opcode(BX_IA_LGDT64_Ms, &BX_CPU_C::LGDT64_Ms, &BX_CPU_C::BxError, BX_CPU_X86_64, 0)
 bx_define_opcode(BX_IA_LIDT64_Ms, &BX_CPU_C::LIDT64_Ms, &BX_CPU_C::BxError, BX_CPU_X86_64, 0)
-bx_define_opcode(BX_IA_RDTSCP, &BX_CPU_C::BxError, &BX_CPU_C::RDTSCP, BX_CPU_X86_64, 0)
 bx_define_opcode(BX_IA_CMPXCHG16B, &BX_CPU_C::CMPXCHG16B, &BX_CPU_C::BxError, BX_CPU_X86_64, 0)
 bx_define_opcode(BX_IA_LOOPNE64_Jb, NULL, &BX_CPU_C::LOOPNE64_Jb, BX_CPU_X86_64, 0)
 bx_define_opcode(BX_IA_LOOPE64_Jb, NULL, &BX_CPU_C::LOOPE64_Jb, BX_CPU_X86_64, 0)
@@ -1341,6 +1323,8 @@ bx_define_opcode(BX_IA_RDGSBASE, &BX_CPU_C::BxError, &BX_CPU_C::RDGSBASE, BX_CPU
 bx_define_opcode(BX_IA_WRFSBASE, &BX_CPU_C::BxError, &BX_CPU_C::WRFSBASE, BX_CPU_X86_64 | BX_CPU_FSGSBASE, 0)
 bx_define_opcode(BX_IA_WRGSBASE, &BX_CPU_C::BxError, &BX_CPU_C::WRGSBASE, BX_CPU_X86_64 | BX_CPU_FSGSBASE, 0)
 #endif
+
+bx_define_opcode(BX_IA_RDTSCP, &BX_CPU_C::BxError, &BX_CPU_C::RDTSCP, BX_CPU_X86_64, 0)
 
 // VMX
 bx_define_opcode(BX_IA_VMXON_Mq, &BX_CPU_C::VMXON, &BX_CPU_C::BxError, BX_CPU_VMX, 0)

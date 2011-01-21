@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode_x87.h,v 1.3 2010-04-16 20:09:23 sshwarts Exp $
+// $Id: fetchdecode_x87.h,v 1.4 2011-01-21 16:07:51 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005-2010 Stanislav Shwartsman
@@ -33,32 +33,32 @@
 /* ************************************************************************ */
 /* FPU Opcodes */
 
-// D8 (modrm is outside 00h - BFh) (mod != 11)
-static const BxOpcodeInfo_t BxOpcodeInfo_FPGroupD8[8] = {
-  /* 0 */ { 0, BX_IA_FADD_SINGLE_REAL  },
-  /* 1 */ { 0, BX_IA_FMUL_SINGLE_REAL  },
-  /* 2 */ { 0, BX_IA_FCOM_SINGLE_REAL  },
+// D8 (modrm is outside 00h - BFh)
+static const BxOpcodeInfo_t BxOpcodeInfo_FPGroupD8[8*2] = {
+  /* /r form */
+  /* 0 */ { 0, BX_IA_FADD_ST0_STj },
+  /* 1 */ { 0, BX_IA_FMUL_ST0_STj },
+  /* 2 */ { 0, BX_IA_FCOM_STi },
+  /* 3 */ { 0, BX_IA_FCOMP_STi },
+  /* 4 */ { 0, BX_IA_FSUB_ST0_STj },
+  /* 5 */ { 0, BX_IA_FSUBR_ST0_STj },
+  /* 6 */ { 0, BX_IA_FDIV_ST0_STj },
+  /* 7 */ { 0, BX_IA_FDIVR_ST0_STj },
+
+  /* /m form */
+  /* 0 */ { 0, BX_IA_FADD_SINGLE_REAL },
+  /* 1 */ { 0, BX_IA_FMUL_SINGLE_REAL },
+  /* 2 */ { 0, BX_IA_FCOM_SINGLE_REAL },
   /* 3 */ { 0, BX_IA_FCOMP_SINGLE_REAL },
-  /* 4 */ { 0, BX_IA_FSUB_SINGLE_REAL  },
+  /* 4 */ { 0, BX_IA_FSUB_SINGLE_REAL },
   /* 5 */ { 0, BX_IA_FSUBR_SINGLE_REAL },
-  /* 6 */ { 0, BX_IA_FDIV_SINGLE_REAL  },
+  /* 6 */ { 0, BX_IA_FDIV_SINGLE_REAL },
   /* 7 */ { 0, BX_IA_FDIVR_SINGLE_REAL }
 };
 
-// D8 (modrm is outside 00h - BFh) (mod == 11)
-static const BxOpcodeInfo_t BxOpcodeInfo_FloatingPointD8[8] = {
-  /* 0 */ { 0, BX_IA_FADD_ST0_STj  },
-  /* 1 */ { 0, BX_IA_FMUL_ST0_STj  },
-  /* 2 */ { 0, BX_IA_FCOM_STi      },
-  /* 3 */ { 0, BX_IA_FCOMP_STi     },
-  /* 4 */ { 0, BX_IA_FSUB_ST0_STj  },
-  /* 5 */ { 0, BX_IA_FSUBR_ST0_STj },
-  /* 6 */ { 0, BX_IA_FDIV_ST0_STj  },
-  /* 7 */ { 0, BX_IA_FDIVR_ST0_STj }
-};
-
-// D9 (modrm is outside 00h - BFh) (mod != 11)
-static const BxOpcodeInfo_t BxOpcodeInfo_FPGroupD9[8] = {
+// D9 (modrm is outside 00h - BFh)
+static const BxOpcodeInfo_t BxOpcodeInfo_FloatingPointD9[64+8] = {
+  /* /m form */
   /* 0 */ { 0, BX_IA_FLD_SINGLE_REAL },
   /* 1 */ { 0, BX_IA_ERROR },
   /* 2 */ { 0, BX_IA_FST_SINGLE_REAL },
@@ -66,19 +66,17 @@ static const BxOpcodeInfo_t BxOpcodeInfo_FPGroupD9[8] = {
   /* 4 */ { 0, BX_IA_FLDENV },
   /* 5 */ { 0, BX_IA_FLDCW },
   /* 6 */ { 0, BX_IA_FNSTENV },
-  /* 7 */ { 0, BX_IA_FNSTCW }
-};
+  /* 7 */ { 0, BX_IA_FNSTCW },
 
-// D9 (modrm is outside 00h - BFh) (mod == 11)
-static const BxOpcodeInfo_t BxOpcodeInfo_FloatingPointD9[64] = {
-  /* D9 C0 */ { 0, BX_IA_FLD_STi  },
-  /* D9 C1 */ { 0, BX_IA_FLD_STi  },
-  /* D9 C2 */ { 0, BX_IA_FLD_STi  },
-  /* D9 C3 */ { 0, BX_IA_FLD_STi  },
-  /* D9 C4 */ { 0, BX_IA_FLD_STi  },
-  /* D9 C5 */ { 0, BX_IA_FLD_STi  },
-  /* D9 C6 */ { 0, BX_IA_FLD_STi  },
-  /* D9 C7 */ { 0, BX_IA_FLD_STi  },
+  /* /r form */
+  /* D9 C0 */ { 0, BX_IA_FLD_STi },
+  /* D9 C1 */ { 0, BX_IA_FLD_STi },
+  /* D9 C2 */ { 0, BX_IA_FLD_STi },
+  /* D9 C3 */ { 0, BX_IA_FLD_STi },
+  /* D9 C4 */ { 0, BX_IA_FLD_STi },
+  /* D9 C5 */ { 0, BX_IA_FLD_STi },
+  /* D9 C6 */ { 0, BX_IA_FLD_STi },
+  /* D9 C7 */ { 0, BX_IA_FLD_STi },
   /* D9 C8 */ { 0, BX_IA_FXCH_STi },
   /* D9 C9 */ { 0, BX_IA_FXCH_STi },
   /* D9 CA */ { 0, BX_IA_FXCH_STi },
@@ -87,7 +85,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo_FloatingPointD9[64] = {
   /* D9 CD */ { 0, BX_IA_FXCH_STi },
   /* D9 CE */ { 0, BX_IA_FXCH_STi },
   /* D9 CF */ { 0, BX_IA_FXCH_STi },
-  /* D9 D0 */ { 0, BX_IA_FNOP     },
+  /* D9 D0 */ { 0, BX_IA_FNOP },
   /* D9 D1 */ { 0, BX_IA_ERROR },
   /* D9 D2 */ { 0, BX_IA_ERROR },
   /* D9 D3 */ { 0, BX_IA_ERROR },
@@ -103,54 +101,53 @@ static const BxOpcodeInfo_t BxOpcodeInfo_FloatingPointD9[64] = {
   /* D9 DD */ { 0, BX_IA_FSTP_STi },	// undocumented
   /* D9 DE */ { 0, BX_IA_FSTP_STi },	// undocumented
   /* D9 DF */ { 0, BX_IA_FSTP_STi },	// undocumented
-  /* D9 E0 */ { 0, BX_IA_FCHS  },
-  /* D9 E1 */ { 0, BX_IA_FABS  },
+  /* D9 E0 */ { 0, BX_IA_FCHS },
+  /* D9 E1 */ { 0, BX_IA_FABS },
   /* D9 E2 */ { 0, BX_IA_ERROR },
   /* D9 E3 */ { 0, BX_IA_ERROR },
-  /* D9 E4 */ { 0, BX_IA_FTST    },
-  /* D9 E5 */ { 0, BX_IA_FXAM    },
-  /* D9 E6 */ { 0, BX_IA_ERROR   },
-  /* D9 E7 */ { 0, BX_IA_ERROR   },
-  /* D9 E8 */ { 0, BX_IA_FLD1    },
-  /* D9 E9 */ { 0, BX_IA_FLDL2T  },
-  /* D9 EA */ { 0, BX_IA_FLDL2E  },
-  /* D9 EB */ { 0, BX_IA_FLDPI   },
-  /* D9 EC */ { 0, BX_IA_FLDLG2  },
-  /* D9 ED */ { 0, BX_IA_FLDLN2  },
-  /* D9 EE */ { 0, BX_IA_FLDZ    },
-  /* D9 EF */ { 0, BX_IA_ERROR   },
-  /* D9 F0 */ { 0, BX_IA_F2XM1   },
-  /* D9 F1 */ { 0, BX_IA_FYL2X   },
-  /* D9 F2 */ { 0, BX_IA_FPTAN   },
-  /* D9 F3 */ { 0, BX_IA_FPATAN  },
+  /* D9 E4 */ { 0, BX_IA_FTST },
+  /* D9 E5 */ { 0, BX_IA_FXAM },
+  /* D9 E6 */ { 0, BX_IA_ERROR },
+  /* D9 E7 */ { 0, BX_IA_ERROR },
+  /* D9 E8 */ { 0, BX_IA_FLD1 },
+  /* D9 E9 */ { 0, BX_IA_FLDL2T },
+  /* D9 EA */ { 0, BX_IA_FLDL2E },
+  /* D9 EB */ { 0, BX_IA_FLDPI },
+  /* D9 EC */ { 0, BX_IA_FLDLG2 },
+  /* D9 ED */ { 0, BX_IA_FLDLN2 },
+  /* D9 EE */ { 0, BX_IA_FLDZ },
+  /* D9 EF */ { 0, BX_IA_ERROR },
+  /* D9 F0 */ { 0, BX_IA_F2XM1 },
+  /* D9 F1 */ { 0, BX_IA_FYL2X },
+  /* D9 F2 */ { 0, BX_IA_FPTAN },
+  /* D9 F3 */ { 0, BX_IA_FPATAN },
   /* D9 F4 */ { 0, BX_IA_FXTRACT },
-  /* D9 F5 */ { 0, BX_IA_FPREM1  },
+  /* D9 F5 */ { 0, BX_IA_FPREM1 },
   /* D9 F6 */ { 0, BX_IA_FDECSTP },
   /* D9 F7 */ { 0, BX_IA_FINCSTP },
-  /* D9 F8 */ { 0, BX_IA_FPREM   },
+  /* D9 F8 */ { 0, BX_IA_FPREM },
   /* D9 F9 */ { 0, BX_IA_FYL2XP1 },
-  /* D9 FA */ { 0, BX_IA_FSQRT   },
+  /* D9 FA */ { 0, BX_IA_FSQRT },
   /* D9 FB */ { 0, BX_IA_FSINCOS },
   /* D9 FC */ { 0, BX_IA_FRNDINT },
-  /* D9 FD */ { 0, BX_IA_FSCALE  },
-  /* D9 FE */ { 0, BX_IA_FSIN    },
-  /* D9 FF */ { 0, BX_IA_FCOS    }
+  /* D9 FD */ { 0, BX_IA_FSCALE },
+  /* D9 FE */ { 0, BX_IA_FSIN },
+  /* D9 FF */ { 0, BX_IA_FCOS }
 };
 
-// DA (modrm is outside 00h - BFh) (mod != 11)
-static const BxOpcodeInfo_t BxOpcodeInfo_FPGroupDA[8] = {
-  /* 0 */ { 0, BX_IA_FIADD_DWORD_INTEGER  },
-  /* 1 */ { 0, BX_IA_FIMUL_DWORD_INTEGER  },
-  /* 2 */ { 0, BX_IA_FICOM_DWORD_INTEGER  },
+// DA (modrm is outside 00h - BFh)
+static const BxOpcodeInfo_t BxOpcodeInfo_FloatingPointDA[64+8] = {
+  /* /m form */
+  /* 0 */ { 0, BX_IA_FIADD_DWORD_INTEGER },
+  /* 1 */ { 0, BX_IA_FIMUL_DWORD_INTEGER },
+  /* 2 */ { 0, BX_IA_FICOM_DWORD_INTEGER },
   /* 3 */ { 0, BX_IA_FICOMP_DWORD_INTEGER },
-  /* 4 */ { 0, BX_IA_FISUB_DWORD_INTEGER  },
+  /* 4 */ { 0, BX_IA_FISUB_DWORD_INTEGER },
   /* 5 */ { 0, BX_IA_FISUBR_DWORD_INTEGER },
-  /* 6 */ { 0, BX_IA_FIDIV_DWORD_INTEGER  },
-  /* 7 */ { 0, BX_IA_FIDIVR_DWORD_INTEGER }
-};
+  /* 6 */ { 0, BX_IA_FIDIV_DWORD_INTEGER },
+  /* 7 */ { 0, BX_IA_FIDIVR_DWORD_INTEGER },
 
-// DA (modrm is outside 00h - BFh) (mod == 11)
-static const BxOpcodeInfo_t BxOpcodeInfo_FloatingPointDA[64] = {
+  /* /r form */
   /* DA C0 */ { 0, BX_IA_FCMOV_ST0_STj },
   /* DA C1 */ { 0, BX_IA_FCMOV_ST0_STj },
   /* DA C2 */ { 0, BX_IA_FCMOV_ST0_STj },
@@ -217,8 +214,9 @@ static const BxOpcodeInfo_t BxOpcodeInfo_FloatingPointDA[64] = {
   /* DA FF */ { 0, BX_IA_ERROR }
 };
 
-// DB (modrm is outside 00h - BFh) (mod != 11)
-static const BxOpcodeInfo_t BxOpcodeInfo_FPGroupDB[8] = {
+// DB (modrm is outside 00h - BFh)
+static const BxOpcodeInfo_t BxOpcodeInfo_FloatingPointDB[64+8] = {
+  /* /m form */
   /* 0 */ { 0, BX_IA_FILD_DWORD_INTEGER },
   /* 1 */ { 0, BX_IA_FISTTP32 },
   /* 2 */ { 0, BX_IA_FIST_DWORD_INTEGER },
@@ -226,11 +224,9 @@ static const BxOpcodeInfo_t BxOpcodeInfo_FPGroupDB[8] = {
   /* 4 */ { 0, BX_IA_ERROR },
   /* 5 */ { 0, BX_IA_FLD_EXTENDED_REAL },
   /* 6 */ { 0, BX_IA_ERROR },
-  /* 7 */ { 0, BX_IA_FSTP_EXTENDED_REAL }
-};
+  /* 7 */ { 0, BX_IA_FSTP_EXTENDED_REAL },
 
-// DB (modrm is outside 00h - BFh) (mod == 11)
-static const BxOpcodeInfo_t BxOpcodeInfo_FloatingPointDB[64] = {
+  /* /r form */
   /* DB C0 */ { 0, BX_IA_FCMOV_ST0_STj },
   /* DB C1 */ { 0, BX_IA_FCMOV_ST0_STj },
   /* DB C2 */ { 0, BX_IA_FCMOV_ST0_STj },
@@ -265,12 +261,12 @@ static const BxOpcodeInfo_t BxOpcodeInfo_FloatingPointDB[64] = {
   /* DB DF */ { 0, BX_IA_FCMOV_ST0_STj },
   /* DB E0 */ { 0, BX_IA_FPLEGACY },      // feni  (287 only)
   /* DB E1 */ { 0, BX_IA_FPLEGACY },      // fdisi (287 only)
-  /* DB E2 */ { 0, BX_IA_FNCLEX   },
-  /* DB E3 */ { 0, BX_IA_FNINIT   },
+  /* DB E2 */ { 0, BX_IA_FNCLEX },
+  /* DB E3 */ { 0, BX_IA_FNINIT },
   /* DB E4 */ { 0, BX_IA_FPLEGACY },      // fsetpm (287 only)
-  /* DB E5 */ { 0, BX_IA_ERROR    },
-  /* DB E6 */ { 0, BX_IA_ERROR    },
-  /* DB E7 */ { 0, BX_IA_ERROR    },
+  /* DB E5 */ { 0, BX_IA_ERROR },
+  /* DB E6 */ { 0, BX_IA_ERROR },
+  /* DB E7 */ { 0, BX_IA_ERROR },
   /* DB E8 */ { 0, BX_IA_FUCOMI_ST0_STj },
   /* DB E9 */ { 0, BX_IA_FUCOMI_ST0_STj },
   /* DB EA */ { 0, BX_IA_FUCOMI_ST0_STj },
@@ -279,14 +275,14 @@ static const BxOpcodeInfo_t BxOpcodeInfo_FloatingPointDB[64] = {
   /* DB ED */ { 0, BX_IA_FUCOMI_ST0_STj },
   /* DB EE */ { 0, BX_IA_FUCOMI_ST0_STj },
   /* DB EF */ { 0, BX_IA_FUCOMI_ST0_STj },
-  /* DB F0 */ { 0, BX_IA_FCOMI_ST0_STj  },
-  /* DB F1 */ { 0, BX_IA_FCOMI_ST0_STj  },
-  /* DB F2 */ { 0, BX_IA_FCOMI_ST0_STj  },
-  /* DB F3 */ { 0, BX_IA_FCOMI_ST0_STj  },
-  /* DB F4 */ { 0, BX_IA_FCOMI_ST0_STj  },
-  /* DB F5 */ { 0, BX_IA_FCOMI_ST0_STj  },
-  /* DB F6 */ { 0, BX_IA_FCOMI_ST0_STj  },
-  /* DB F7 */ { 0, BX_IA_FCOMI_ST0_STj  },
+  /* DB F0 */ { 0, BX_IA_FCOMI_ST0_STj },
+  /* DB F1 */ { 0, BX_IA_FCOMI_ST0_STj },
+  /* DB F2 */ { 0, BX_IA_FCOMI_ST0_STj },
+  /* DB F3 */ { 0, BX_IA_FCOMI_ST0_STj },
+  /* DB F4 */ { 0, BX_IA_FCOMI_ST0_STj },
+  /* DB F5 */ { 0, BX_IA_FCOMI_ST0_STj },
+  /* DB F6 */ { 0, BX_IA_FCOMI_ST0_STj },
+  /* DB F7 */ { 0, BX_IA_FCOMI_ST0_STj },
   /* DB F8 */ { 0, BX_IA_ERROR },
   /* DB F9 */ { 0, BX_IA_ERROR },
   /* DB FA */ { 0, BX_IA_ERROR },
@@ -296,33 +292,42 @@ static const BxOpcodeInfo_t BxOpcodeInfo_FloatingPointDB[64] = {
   /* DB FE */ { 0, BX_IA_ERROR },
   /* DB FF */ { 0, BX_IA_ERROR }
 };
-
-// DC (modrm is outside 00h - BFh) (mod != 11)
-static const BxOpcodeInfo_t BxOpcodeInfo_FPGroupDC[8] = {
-  /* 0 */ { 0, BX_IA_FADD_DOUBLE_REAL  },
-  /* 1 */ { 0, BX_IA_FMUL_DOUBLE_REAL  },
-  /* 2 */ { 0, BX_IA_FCOM_DOUBLE_REAL  },
-  /* 3 */ { 0, BX_IA_FCOMP_DOUBLE_REAL },
-  /* 4 */ { 0, BX_IA_FSUB_DOUBLE_REAL  },
-  /* 5 */ { 0, BX_IA_FSUBR_DOUBLE_REAL },
-  /* 6 */ { 0, BX_IA_FDIV_DOUBLE_REAL  },
-  /* 7 */ { 0, BX_IA_FDIVR_DOUBLE_REAL }
-};
-
-// DC (modrm is outside 00h - BFh) (mod == 11)
-static const BxOpcodeInfo_t BxOpcodeInfo_FloatingPointDC[8] = {
+// DC (modrm is outside 00h - BFh)
+static const BxOpcodeInfo_t BxOpcodeInfo_FPGroupDC[8*2] = {
+  /* /r form */
   /* 0 */ { 0, BX_IA_FADD_STi_ST0 },
   /* 1 */ { 0, BX_IA_FMUL_STi_ST0 },
   /* 2 */ { 0, BX_IA_FCOM_STi },                 // undocumented
   /* 3 */ { 0, BX_IA_FCOMP_STi },                // undocumented
   /* 4 */ { 0, BX_IA_FSUBR_STi_ST0 },
-  /* 5 */ { 0, BX_IA_FSUB_STi_ST0  },
+  /* 5 */ { 0, BX_IA_FSUB_STi_ST0 },
   /* 6 */ { 0, BX_IA_FDIVR_STi_ST0 },
-  /* 7 */ { 0, BX_IA_FDIV_STi_ST0  }
+  /* 7 */ { 0, BX_IA_FDIV_STi_ST0 },
+
+  /* /m form */
+  /* 0 */ { 0, BX_IA_FADD_DOUBLE_REAL },
+  /* 1 */ { 0, BX_IA_FMUL_DOUBLE_REAL },
+  /* 2 */ { 0, BX_IA_FCOM_DOUBLE_REAL },
+  /* 3 */ { 0, BX_IA_FCOMP_DOUBLE_REAL },
+  /* 4 */ { 0, BX_IA_FSUB_DOUBLE_REAL },
+  /* 5 */ { 0, BX_IA_FSUBR_DOUBLE_REAL },
+  /* 6 */ { 0, BX_IA_FDIV_DOUBLE_REAL },
+  /* 7 */ { 0, BX_IA_FDIVR_DOUBLE_REAL }
 };
 
-// DD (modrm is outside 00h - BFh) (mod != 11)
-static const BxOpcodeInfo_t BxOpcodeInfo_FPGroupDD[8] = {
+// DD (modrm is outside 00h - BFh)
+static const BxOpcodeInfo_t BxOpcodeInfo_FPGroupDD[8*2] = {
+  /* /r form */
+  /* 0 */ { 0, BX_IA_FFREE_STi },
+  /* 1 */ { 0, BX_IA_FXCH_STi },               // undocumented
+  /* 2 */ { 0, BX_IA_FST_STi },
+  /* 3 */ { 0, BX_IA_FSTP_STi },
+  /* 4 */ { 0, BX_IA_FUCOM_STi },
+  /* 5 */ { 0, BX_IA_FUCOMP_STi },
+  /* 6 */ { 0, BX_IA_ERROR },
+  /* 7 */ { 0, BX_IA_ERROR },
+
+  /* /m form */
   /* 0 */ { 0, BX_IA_FLD_DOUBLE_REAL },
   /* 1 */ { 0, BX_IA_FISTTP64 },
   /* 2 */ { 0, BX_IA_FST_DOUBLE_REAL },
@@ -333,33 +338,19 @@ static const BxOpcodeInfo_t BxOpcodeInfo_FPGroupDD[8] = {
   /* 7 */ { 0, BX_IA_FNSTSW }
 };
 
-// DD (modrm is outside 00h - BFh) (mod == 11)
-static const BxOpcodeInfo_t BxOpcodeInfo_FloatingPointDD[8] = {
-  /* 0 */ { 0, BX_IA_FFREE_STi },
-  /* 1 */ { 0, BX_IA_FXCH_STi },               // undocumented
-  /* 2 */ { 0, BX_IA_FST_STi },
-  /* 3 */ { 0, BX_IA_FSTP_STi },
-  /* 4 */ { 0, BX_IA_FUCOM_STi },
-  /* 5 */ { 0, BX_IA_FUCOMP_STi },
-  /* 6 */ { 0, BX_IA_ERROR },
-  /* 7 */ { 0, BX_IA_ERROR }
-};
-
-// DE (modrm is outside 00h - BFh) (mod != 11)
-static const BxOpcodeInfo_t BxOpcodeInfo_FPGroupDE[8] = {
-  /* 0 */ { 0, BX_IA_FIADD_WORD_INTEGER  },
-  /* 1 */ { 0, BX_IA_FIMUL_WORD_INTEGER  },
-  /* 2 */ { 0, BX_IA_FICOM_WORD_INTEGER  },
+// DE (modrm is outside 00h - BFh)
+static const BxOpcodeInfo_t BxOpcodeInfo_FloatingPointDE[64+8] = {
+  /* /m form */
+  /* 0 */ { 0, BX_IA_FIADD_WORD_INTEGER },
+  /* 1 */ { 0, BX_IA_FIMUL_WORD_INTEGER },
+  /* 2 */ { 0, BX_IA_FICOM_WORD_INTEGER },
   /* 3 */ { 0, BX_IA_FICOMP_WORD_INTEGER },
-  /* 4 */ { 0, BX_IA_FISUB_WORD_INTEGER  },
+  /* 4 */ { 0, BX_IA_FISUB_WORD_INTEGER },
   /* 5 */ { 0, BX_IA_FISUBR_WORD_INTEGER },
-  /* 6 */ { 0, BX_IA_FIDIV_WORD_INTEGER  },
-  /* 7 */ { 0, BX_IA_FIDIVR_WORD_INTEGER }
-};
+  /* 6 */ { 0, BX_IA_FIDIV_WORD_INTEGER },
+  /* 7 */ { 0, BX_IA_FIDIVR_WORD_INTEGER },
 
-// DE (modrm is outside 00h - BFh) (mod == 11)
-static const BxOpcodeInfo_t BxOpcodeInfo_FloatingPointDE[64] = {
-  // all instructions pop FPU stack
+  /* /r form */ // all instructions pop FPU stack
   /* DE C0 */ { 0, BX_IA_FADD_STi_ST0 },
   /* DE C1 */ { 0, BX_IA_FADD_STi_ST0 },
   /* DE C2 */ { 0, BX_IA_FADD_STi_ST0 },
@@ -426,20 +417,19 @@ static const BxOpcodeInfo_t BxOpcodeInfo_FloatingPointDE[64] = {
   /* DE FF */ { 0, BX_IA_FDIV_STi_ST0  }
 };
 
-// DF (modrm is outside 00h - BFh) (mod != 11)
-static const BxOpcodeInfo_t BxOpcodeInfo_FPGroupDF[8] = {
-  /* 0 */ { 0, BX_IA_FILD_WORD_INTEGER   },
-  /* 1 */ { 0, BX_IA_FISTTP16            },
-  /* 2 */ { 0, BX_IA_FIST_WORD_INTEGER   },
-  /* 3 */ { 0, BX_IA_FISTP_WORD_INTEGER  },
-  /* 4 */ { 0, BX_IA_FBLD_PACKED_BCD     },
-  /* 5 */ { 0, BX_IA_FILD_QWORD_INTEGER  },
-  /* 6 */ { 0, BX_IA_FBSTP_PACKED_BCD    },
-  /* 7 */ { 0, BX_IA_FISTP_QWORD_INTEGER }
-};
+// DF (modrm is outside 00h - BFh)
+static const BxOpcodeInfo_t BxOpcodeInfo_FloatingPointDF[64+8] = {
+  /* /m form */
+  /* 0 */ { 0, BX_IA_FILD_WORD_INTEGER },
+  /* 1 */ { 0, BX_IA_FISTTP16 },
+  /* 2 */ { 0, BX_IA_FIST_WORD_INTEGER },
+  /* 3 */ { 0, BX_IA_FISTP_WORD_INTEGER },
+  /* 4 */ { 0, BX_IA_FBLD_PACKED_BCD },
+  /* 5 */ { 0, BX_IA_FILD_QWORD_INTEGER },
+  /* 6 */ { 0, BX_IA_FBSTP_PACKED_BCD },
+  /* 7 */ { 0, BX_IA_FISTP_QWORD_INTEGER },
 
-// DF (modrm is outside 00h - BFh) (mod == 11)
-static const BxOpcodeInfo_t BxOpcodeInfo_FloatingPointDF[64] = {
+  /* /r form */
   /* DF C0 */ { 0, BX_IA_FFREEP_STi },   // 287+ compatibility opcode
   /* DF C1 */ { 0, BX_IA_FFREEP_STi },
   /* DF C2 */ { 0, BX_IA_FFREEP_STi },
