@@ -39,24 +39,36 @@ Changes after 2.4.5 release:
 
 - I/O Devices
   - Fixes for emulated DHCP in eth_vnet (patch from @SF tracker)
-  - Added write protect option for floppy drives (based on @SF patch by Ben Lunt)
   - Added support for VGA graphics mode with 400 lines (partial fix for SF bug #2948724)
   - NE2K: Fixed "send buffer" command issue on big endian hosts
   - USB
-    - converted common USB code plus devices to the new 'usb_common' plugin.
+    - converted common USB code plus devices to the new 'usb_common' plugin
       Now the USB device classes no longer exist twice if both HC plugins are loaded.
     - added 'pseudo device' in common USB code for the device creation. This makes
       the HCs independent from the device specific code.
     - USB MSD: added support for disk image modes (like ATA disks)
     - USB printer: output file creation failure now causes a disconnect
+    - re-implemented "options" parameter for additional options of connected
+      devices (currently only used to specify an alternative redolog file of
+      USB MSD disk image modes)
   - hard drive
-    - new hdimage method get_capabilities() that can return special flags
-    - vmware3 and vmware4 classes now return HDIMAGE_HAS_GEOMETRY_FLAG
     - new disk image mode 'vvfat'
       - ported the read-only part of Qemu's 'virtual VFAT' block driver
       - additions: configurable disk geometry, FAT32 support, read MBR and/or
-        boot sector from file, volatile write support using hdimage redolog_t class
-      - TODO: write back file and directory changes on Bochs exit
+        boot sector from file, volatile write support using hdimage redolog_t
+        class, optional commit support on Bochs exit, save/restore file
+        attributes, 1.44 MB floppy support, set file modification date/time
+    - converted the complete hdimage stuff to the new 'hdimage' plugin
+    - new hdimage method get_capabilities() that can return special flags
+    - vmware3, vmware4 and vvfat classes now return HDIMAGE_HAS_GEOMETRY flag
+    - other disk image mody by default return HDIMAGE_AUTO_GEOMETRY if cylinder
+      value is set to 0
+    - multiple sector read/write support for some image modes
+    - new log prefix "IMG" for hdimage messages
+  - floppy
+    - added write protect option for floppy drives (based on @SF patch by Ben Lunt)
+    - vvfat support
+    - bugfix: close images on exit
 
 - SF patches applied
  [1539417] write protect for floppy drives by Ben Lunt
