@@ -61,8 +61,8 @@ Changes after 2.4.5 release:
     - converted the complete hdimage stuff to the new 'hdimage' plugin
     - new hdimage method get_capabilities() that can return special flags
     - vmware3, vmware4 and vvfat classes now return HDIMAGE_HAS_GEOMETRY flag
-    - other disk image mody by default return HDIMAGE_AUTO_GEOMETRY if cylinder
-      value is set to 0
+    - other disk image modes by default return HDIMAGE_AUTO_GEOMETRY if
+      cylinder value is set to 0
     - multiple sector read/write support for some image modes
     - new log prefix "IMG" for hdimage messages
   - floppy
