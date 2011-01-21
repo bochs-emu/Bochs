@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.233 2011-01-12 22:34:42 vruppert Exp $
+// $Id: harddrv.cc,v 1.234 2011-01-21 16:00:38 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2011  The Bochs Project
@@ -165,7 +165,7 @@ void bx_hard_drive_c::init(void)
   char  ata_name[20];
   bx_list_c *base;
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.233 2011-01-12 22:34:42 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.234 2011-01-21 16:00:38 vruppert Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     sprintf(ata_name, "ata.%d.resources", channel);
@@ -305,13 +305,16 @@ void bx_hard_drive_c::init(void)
         BX_HD_THIS channels[channel].drives[device].hdimage->cylinders = cyl;
         BX_HD_THIS channels[channel].drives[device].hdimage->heads = heads;
         BX_HD_THIS channels[channel].drives[device].hdimage->sectors = spt;
+
+        /* open hard drive image file */
+        if ((BX_HD_THIS channels[channel].drives[device].hdimage->open(SIM->get_param_string("path", base)->getptr())) < 0) {
+          BX_PANIC(("ata%d-%d: could not open hard drive image file '%s'", channel, device, SIM->get_param_string("path", base)->getptr()));
+          return;
+        }
         bx_bool geometry_detect = 0;
         Bit32u image_caps = BX_HD_THIS channels[channel].drives[device].hdimage->get_capabilities();
 
-        if ((image_mode == BX_HDIMAGE_MODE_FLAT) || (image_mode == BX_HDIMAGE_MODE_CONCAT) ||
-            (image_mode == BX_HDIMAGE_MODE_GROWING) || (image_mode == BX_HDIMAGE_MODE_UNDOABLE) ||
-            (image_mode == BX_HDIMAGE_MODE_VOLATILE) || (image_mode == BX_HDIMAGE_MODE_SPARSE) ||
-            ((image_caps & HDIMAGE_HAS_GEOMETRY) != 0)) {
+        if ((image_caps & (HDIMAGE_AUTO_GEOMETRY | HDIMAGE_HAS_GEOMETRY)) != 0) {
           geometry_detect = ((cyl == 0) || (image_caps & HDIMAGE_HAS_GEOMETRY));
           if ((heads == 0) || (spt == 0)) {
             BX_PANIC(("ata%d-%d cannot have zero heads, or sectors/track", channel, device));
@@ -320,11 +323,6 @@ void bx_hard_drive_c::init(void)
           if (cyl == 0 || heads == 0 || spt == 0) {
             BX_PANIC(("ata%d-%d cannot have zero cylinders, heads, or sectors/track", channel, device));
           }
-        }
-
-        /* open hard drive image file */
-        if ((BX_HD_THIS channels[channel].drives[device].hdimage->open(SIM->get_param_string("path", base)->getptr())) < 0) {
-          BX_PANIC(("ata%d-%d: could not open hard drive image file '%s'", channel, device, SIM->get_param_string("path", base)->getptr()));
         }
 
         if (BX_HD_THIS channels[channel].drives[device].hdimage->hd_size != 0) {
@@ -337,12 +335,13 @@ void bx_hard_drive_c::init(void)
                 BX_PANIC(("ata%d-%d: geometry autodetection failed", channel, device));
               }
               BX_HD_THIS channels[channel].drives[device].hdimage->cylinders = cyl;
+              BX_INFO(("ata%d-%d: autodetect geometry: CHS=%d/%d/%d", channel, device, cyl, heads, spt));
             } else {
               cyl = BX_HD_THIS channels[channel].drives[device].hdimage->cylinders;
               heads = BX_HD_THIS channels[channel].drives[device].hdimage->heads;
               spt = BX_HD_THIS channels[channel].drives[device].hdimage->sectors;
+              BX_INFO(("ata%d-%d: image geometry: CHS=%d/%d/%d", channel, device, cyl, heads, spt));
             }
-            BX_INFO(("ata%d-%d: autodetect geometry: CHS=%d/%d/%d", channel, device, cyl, heads, spt));
           } else {
             if (disk_size != BX_HD_THIS channels[channel].drives[device].hdimage->hd_size) {
               BX_PANIC(("ata%d-%d disk size doesn't match specified geometry", channel, device));

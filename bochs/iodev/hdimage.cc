@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: hdimage.cc,v 1.29 2011-01-14 16:43:55 vruppert Exp $
+// $Id: hdimage.cc,v 1.30 2011-01-21 16:00:38 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2011  The Bochs Project
@@ -143,7 +143,7 @@ device_image_t::device_image_t()
 
 Bit32u device_image_t::get_capabilities()
 {
-  return 0;
+  return (cylinders == 0) ? HDIMAGE_AUTO_GEOMETRY : 0;
 }
 
 /*** default_image_t function definitions ***/

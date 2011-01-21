@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: hdimage.h,v 1.18 2011-01-14 16:43:55 vruppert Exp $
+// $Id: hdimage.h,v 1.19 2011-01-21 16:00:38 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2005-2011  The Bochs Project
@@ -22,8 +22,9 @@
 #define BX_HDIMAGE_H
 
 // hdimage capabilities
-#define HDIMAGE_READONLY     1
-#define HDIMAGE_HAS_GEOMETRY 2
+#define HDIMAGE_READONLY      1
+#define HDIMAGE_HAS_GEOMETRY  2
+#define HDIMAGE_AUTO_GEOMETRY 4
 
 // SPARSE IMAGES HEADER
 #define SPARSE_HEADER_MAGIC  (0x02468ace)
