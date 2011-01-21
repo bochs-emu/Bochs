@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.291 2011-01-21 19:21:16 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.292 2011-01-21 19:46:44 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2011  The Bochs Project
@@ -1487,8 +1487,8 @@ static const BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* 0F 29 /q */ { BxPrefixSSE | BxArithDstRM, BX_IA_MOVAPS_WpsVps, BxOpcodeGroupSSE_0f29 },
   /* 0F 2A /q */ { BxPrefixSSE, BX_IA_CVTPI2PS_VpsQq, BxOpcodeGroupSSE_0f2aQ },
   /* 0F 2B /q */ { BxPrefixSSE, BX_IA_MOVNTPS_MpsVps, BxOpcodeGroupSSE_0f2bM },
-  /* 0F 2C /q */ { BxPrefixSSE, BX_IA_CVTTPS2PI_PqWps, BxOpcodeGroupSSE_0f2c },
-  /* 0F 2D /q */ { BxPrefixSSE, BX_IA_CVTPS2PI_PqWps, BxOpcodeGroupSSE_0f2d },
+  /* 0F 2C /q */ { BxPrefixSSE, BX_IA_CVTTPS2PI_PqWps, BxOpcodeGroupSSE_0f2cQ },
+  /* 0F 2D /q */ { BxPrefixSSE, BX_IA_CVTPS2PI_PqWps, BxOpcodeGroupSSE_0f2dQ },
   /* 0F 2E /q */ { BxPrefixSSE, BX_IA_UCOMISS_VssWss, BxOpcodeGroupSSE_0f2e },
   /* 0F 2F /q */ { BxPrefixSSE, BX_IA_COMISS_VpsWps, BxOpcodeGroupSSE_0f2f },
   /* 0F 30 /q */ { 0, BX_IA_WRMSR },

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////,,,,
-// $Id: ia_opcodes.h,v 1.71 2011-01-21 19:21:16 sshwarts Exp $,,,
+// $Id: ia_opcodes.h,v 1.72 2011-01-21 19:46:44 sshwarts Exp $,,,
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008-2010 Stanislav Shwartsman
@@ -791,7 +791,7 @@ bx_define_opcode(BX_IA_MOVHPS_MqVps, &BX_CPU_C::MOVHPS_MqVps, &BX_CPU_C::BxError
 bx_define_opcode(BX_IA_MOVAPS_VpsWps, &BX_CPU_C::MOVAPS_VpsWpsM, &BX_CPU_C::MOVAPS_VpsWpsR, BX_CPU_SSE, BX_PREPARE_SSE)
 bx_define_opcode(BX_IA_MOVAPS_WpsVps, &BX_CPU_C::MOVAPS_WpsVpsM, &BX_CPU_C::MOVAPS_VpsWpsR, BX_CPU_SSE, BX_PREPARE_SSE) /* dstRM */
 bx_define_opcode(BX_IA_CVTPI2PS_VpsQq, &BX_CPU_C::CVTPI2PS_VpsQqM, &BX_CPU_C::CVTPI2PS_VpsQqR, BX_CPU_SSE, BX_PREPARE_SSE)
-bx_define_opcode(BX_IA_CVTSI2SS_VssEd, &BX_CPU_C::CVTSI2SS_VssEdM, &BX_CPU_C::CVTSI2SS_VssEdR, BX_CPU_SSE, BX_PREPARE_SSE)
+bx_define_opcode(BX_IA_CVTSI2SS_VssEd, &BX_CPU_C::LOAD_Ed, &BX_CPU_C::CVTSI2SS_VssEdR, BX_CPU_SSE, BX_PREPARE_SSE)
 bx_define_opcode(BX_IA_MOVNTPS_MpsVps, &BX_CPU_C::MOVAPS_WpsVpsM, &BX_CPU_C::BxError, BX_CPU_SSE, BX_PREPARE_SSE)
 bx_define_opcode(BX_IA_CVTTPS2PI_PqWps, &BX_CPU_C::CVTTPS2PI_PqWps, &BX_CPU_C::CVTTPS2PI_PqWps, BX_CPU_SSE, BX_PREPARE_SSE)
 bx_define_opcode(BX_IA_CVTTSS2SI_GdWss, &BX_CPU_C::LOAD_Wss, &BX_CPU_C::CVTTSS2SI_GdWssR, BX_CPU_SSE, BX_PREPARE_SSE)
@@ -842,7 +842,7 @@ bx_define_opcode(BX_IA_MASKMOVQ_PqPRq, &BX_CPU_C::BxError, &BX_CPU_C::MASKMOVQ_P
 bx_define_opcode(BX_IA_MOVSD_VsdWsd, &BX_CPU_C::MOVQ_VqWqM, &BX_CPU_C::MOVSD_VsdWsdR, BX_CPU_SSE2, BX_PREPARE_SSE)
 bx_define_opcode(BX_IA_MOVSD_WsdVsd, &BX_CPU_C::MOVLPS_MqVps, &BX_CPU_C::MOVSD_VsdWsdR, BX_CPU_SSE2, BX_PREPARE_SSE)
 bx_define_opcode(BX_IA_CVTPI2PD_VpdQq, &BX_CPU_C::CVTPI2PD_VpdQqM, &BX_CPU_C::CVTPI2PD_VpdQqR, BX_CPU_SSE2, BX_PREPARE_SSE)
-bx_define_opcode(BX_IA_CVTSI2SD_VsdEd, &BX_CPU_C::CVTSI2SD_VsdEdM, &BX_CPU_C::CVTSI2SD_VsdEdR, BX_CPU_SSE2, BX_PREPARE_SSE)
+bx_define_opcode(BX_IA_CVTSI2SD_VsdEd, &BX_CPU_C::LOAD_Ed, &BX_CPU_C::CVTSI2SD_VsdEdR, BX_CPU_SSE2, BX_PREPARE_SSE)
 bx_define_opcode(BX_IA_CVTTPD2PI_PqWpd, &BX_CPU_C::CVTTPD2PI_PqWpd, &BX_CPU_C::CVTTPD2PI_PqWpd, BX_CPU_SSE2, BX_PREPARE_SSE)
 bx_define_opcode(BX_IA_CVTTSD2SI_GdWsd, &BX_CPU_C::LOAD_Wsd, &BX_CPU_C::CVTTSD2SI_GdWsdR, BX_CPU_SSE2, BX_PREPARE_SSE)
 bx_define_opcode(BX_IA_CVTPD2PI_PqWpd, &BX_CPU_C::CVTPD2PI_PqWpd, &BX_CPU_C::CVTPD2PI_PqWpd, BX_CPU_SSE2, BX_PREPARE_SSE)
@@ -1304,8 +1304,12 @@ bx_define_opcode(BX_IA_JRCXZ_Jb, NULL, &BX_CPU_C::JRCXZ_Jb, BX_CPU_X86_64, 0)
 bx_define_opcode(BX_IA_MOVQ_EqVq, &BX_CPU_C::MOVLPS_MqVps, &BX_CPU_C::MOVQ_EqVqR, BX_CPU_X86_64, BX_PREPARE_SSE)
 bx_define_opcode(BX_IA_MOVQ_PqEq, &BX_CPU_C::MOVQ_PqQqM, &BX_CPU_C::MOVQ_PqEqR, BX_CPU_X86_64, 0)
 bx_define_opcode(BX_IA_MOVQ_VdqEq, &BX_CPU_C::MOVQ_VqWqM, &BX_CPU_C::MOVQ_VdqEqR, BX_CPU_X86_64, BX_PREPARE_SSE)
-bx_define_opcode(BX_IA_CVTSI2SS_VssEq, &BX_CPU_C::CVTSI2SS_VssEqM, &BX_CPU_C::CVTSI2SS_VssEqR, BX_CPU_X86_64, BX_PREPARE_SSE)
-bx_define_opcode(BX_IA_CVTSI2SD_VsdEq, &BX_CPU_C::CVTSI2SD_VsdEqM, &BX_CPU_C::CVTSI2SD_VsdEqR, BX_CPU_X86_64, BX_PREPARE_SSE)
+bx_define_opcode(BX_IA_CVTSI2SS_VssEq, &BX_CPU_C::LOAD_Eq, &BX_CPU_C::CVTSI2SS_VssEqR, BX_CPU_X86_64, BX_PREPARE_SSE)
+bx_define_opcode(BX_IA_CVTSI2SD_VsdEq, &BX_CPU_C::LOAD_Eq, &BX_CPU_C::CVTSI2SD_VsdEqR, BX_CPU_X86_64, BX_PREPARE_SSE)
+bx_define_opcode(BX_IA_CVTTSS2SI_GqWss, &BX_CPU_C::LOAD_Wss, &BX_CPU_C::CVTTSS2SI_GqWssR, BX_CPU_X86_64, BX_PREPARE_SSE)
+bx_define_opcode(BX_IA_CVTTSD2SI_GqWsd, &BX_CPU_C::LOAD_Wsd, &BX_CPU_C::CVTTSD2SI_GqWsdR, BX_CPU_X86_64, BX_PREPARE_SSE)
+bx_define_opcode(BX_IA_CVTSS2SI_GqWss, &BX_CPU_C::LOAD_Wss, &BX_CPU_C::CVTSS2SI_GqWssR, BX_CPU_X86_64, BX_PREPARE_SSE)
+bx_define_opcode(BX_IA_CVTSD2SI_GqWsd, &BX_CPU_C::LOAD_Wsd, &BX_CPU_C::CVTSD2SI_GqWsdR, BX_CPU_X86_64, BX_PREPARE_SSE)
 bx_define_opcode(BX_IA_MOVNTI_MqGq, &BX_CPU_C::MOVNTI_MqGq, &BX_CPU_C::BxError, BX_CPU_X86_64, 0)
 bx_define_opcode(BX_IA_SYSCALL, NULL, &BX_CPU_C::SYSCALL, BX_CPU_X86_64, 0)
 bx_define_opcode(BX_IA_SYSRET, NULL, &BX_CPU_C::SYSRET, BX_CPU_X86_64, 0)

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode_sse.h,v 1.30 2011-01-21 19:21:16 sshwarts Exp $
+// $Id: fetchdecode_sse.h,v 1.31 2011-01-21 19:46:44 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005-2011 Stanislav Shwartsman
@@ -127,11 +127,27 @@ static const BxOpcodeInfo_t BxOpcodeGroupSSE_0f2c[6] = {
   /* F2 */ { 0, BX_IA_CVTTSD2SI_GdWsd }
 };
 
+#if BX_SUPPORT_X86_64
+static const BxOpcodeInfo_t BxOpcodeGroupSSE_0f2cQ[6] = {
+  /* 66 */ { 0, BX_IA_CVTTPD2PI_PqWpd },
+  /* F3 */ { 0, BX_IA_CVTTSS2SI_GqWss },
+  /* F2 */ { 0, BX_IA_CVTTSD2SI_GqWsd }
+};
+#endif
+
 static const BxOpcodeInfo_t BxOpcodeGroupSSE_0f2d[6] = {
   /* 66 */ { 0, BX_IA_CVTPD2PI_PqWpd },
   /* F3 */ { 0, BX_IA_CVTSS2SI_GdWss },
   /* F2 */ { 0, BX_IA_CVTSD2SI_GdWsd }
 };
+
+#if BX_SUPPORT_X86_64
+static const BxOpcodeInfo_t BxOpcodeGroupSSE_0f2dQ[6] = {
+  /* 66 */ { 0, BX_IA_CVTPD2PI_PqWpd },
+  /* F3 */ { 0, BX_IA_CVTSS2SI_GqWss },
+  /* F2 */ { 0, BX_IA_CVTSD2SI_GqWsd }
+};
+#endif
 
 static const BxOpcodeInfo_t BxOpcodeGroupSSE_0f2e[6] = {
   /* 66 */ { 0, BX_IA_UCOMISD_VsdWsd },            	

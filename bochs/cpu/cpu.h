@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.712 2011-01-21 19:21:16 sshwarts Exp $
+// $Id: cpu.h,v 1.713 2011-01-21 19:46:44 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2011  The Bochs Project
@@ -2035,7 +2035,6 @@ public: // for now...
   BX_SMF void CVTPI2PS_VpsQqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void CVTPI2PS_VpsQqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void CVTSI2SS_VssEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void CVTSI2SS_VssEdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void CVTTPS2PI_PqWps(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void CVTTSS2SI_GdWssR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void CVTPS2PI_PqWps(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -2086,7 +2085,6 @@ public: // for now...
   BX_SMF void CVTPI2PD_VpdQqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void CVTPI2PD_VpdQqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void CVTSI2SD_VsdEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void CVTSI2SD_VsdEdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void CVTTPD2PI_PqWpd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void CVTTSD2SI_GdWsdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void CVTPD2PI_PqWpd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -2771,9 +2769,12 @@ public: // for now...
   BX_SMF void MOVQ_VdqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
   BX_SMF void CVTSI2SS_VssEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void CVTSI2SS_VssEqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void CVTSI2SD_VsdEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void CVTSI2SD_VsdEqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CVTTSD2SI_GqWsdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CVTTSS2SI_GqWssR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CVTSD2SI_GqWsdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CVTSS2SI_GqWssR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
   BX_SMF void MOVNTI_MqGq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 #endif  // #if BX_SUPPORT_X86_64
 

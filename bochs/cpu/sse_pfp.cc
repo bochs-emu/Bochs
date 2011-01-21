@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_pfp.cc,v 1.79 2011-01-21 19:21:16 sshwarts Exp $
+// $Id: sse_pfp.cc,v 1.80 2011-01-21 19:46:44 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003-2011 Stanislav Shwartsman
@@ -176,18 +176,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTSI2SD_VsdEdR(bxInstruction_c *i)
 #endif
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTSI2SD_VsdEdM(bxInstruction_c *i)
-{
-#if BX_CPU_LEVEL >= 6
-  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-  Bit32u op = read_virtual_dword(i->seg(), eaddr);
-
-  float64 result = int32_to_float64(op);
-
-  BX_WRITE_XMM_REG_LO_QWORD(i->nnn(), result);
-#endif
-}
-
 #if BX_SUPPORT_X86_64
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTSI2SD_VsdEqR(bxInstruction_c *i)
 {
@@ -195,20 +183,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTSI2SD_VsdEqR(bxInstruction_c *i)
   mxcsr_to_softfloat_status_word(status_word, MXCSR);
 
   float64 result = int64_to_float64(BX_READ_64BIT_REG(i->rm()), status_word);
-
-  check_exceptionsSSE(status_word.float_exception_flags);
-  BX_WRITE_XMM_REG_LO_QWORD(i->nnn(), result);
-}
-
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTSI2SD_VsdEqM(bxInstruction_c *i)
-{
-  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-  Bit64u op = read_virtual_qword_64(i->seg(), eaddr);
-
-  float_status_t status_word;
-  mxcsr_to_softfloat_status_word(status_word, MXCSR);
-
-  float64 result = int64_to_float64(op, status_word);
 
   check_exceptionsSSE(status_word.float_exception_flags);
   BX_WRITE_XMM_REG_LO_QWORD(i->nnn(), result);
@@ -235,22 +209,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTSI2SS_VssEdR(bxInstruction_c *i)
 #endif
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTSI2SS_VssEdM(bxInstruction_c *i)
-{
-#if BX_CPU_LEVEL >= 6
-  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-  Bit32u op = read_virtual_dword(i->seg(), eaddr);
-
-  float_status_t status_word;
-  mxcsr_to_softfloat_status_word(status_word, MXCSR);
-
-  float32 result = int32_to_float32(op, status_word);
-
-  check_exceptionsSSE(status_word.float_exception_flags);
-  BX_WRITE_XMM_REG_LO_DWORD(i->nnn(), result);
-#endif
-}
-
 #if BX_SUPPORT_X86_64
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTSI2SS_VssEqR(bxInstruction_c *i)
 {
@@ -258,20 +216,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTSI2SS_VssEqR(bxInstruction_c *i)
   mxcsr_to_softfloat_status_word(status_word, MXCSR);
 
   float32 result = int64_to_float32(BX_READ_64BIT_REG(i->rm()), status_word);
-
-  check_exceptionsSSE(status_word.float_exception_flags);
-  BX_WRITE_XMM_REG_LO_DWORD(i->nnn(), result);
-}
-
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTSI2SS_VssEqM(bxInstruction_c *i)
-{
-  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-  Bit64u op = read_virtual_qword_64(i->seg(), eaddr);
-
-  float_status_t status_word;
-  mxcsr_to_softfloat_status_word(status_word, MXCSR);
-
-  float32 result = int64_to_float32(op, status_word);
 
   check_exceptionsSSE(status_word.float_exception_flags);
   BX_WRITE_XMM_REG_LO_DWORD(i->nnn(), result);
@@ -377,27 +321,34 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTTSD2SI_GdWsdR(bxInstruction_c *i)
 #if BX_CPU_LEVEL >= 6
   float64 op = BX_READ_XMM_REG_LO_QWORD(i->rm());
 
+  if (MXCSR.get_DAZ()) op = float64_denormal_to_zero(op);
+
   float_status_t status_word;
   mxcsr_to_softfloat_status_word(status_word, MXCSR);
 
-  if (MXCSR.get_DAZ()) op = float64_denormal_to_zero(op);
+  Bit32u result = float64_to_int32_round_to_zero(op, status_word);
 
-#if BX_SUPPORT_X86_64
-  if (i->os64L())   /* 64 bit operand size mode */
-  {
-    Bit64u result = float64_to_int64_round_to_zero(op, status_word);
-    check_exceptionsSSE(status_word.float_exception_flags);
-    BX_WRITE_64BIT_REG(i->nnn(), result);
-  }
-  else
-#endif
-  {
-    Bit32u result = float64_to_int32_round_to_zero(op, status_word);
-    check_exceptionsSSE(status_word.float_exception_flags);
-    BX_WRITE_32BIT_REGZ(i->nnn(), result);
-  }
+  check_exceptionsSSE(status_word.float_exception_flags);
+  BX_WRITE_32BIT_REGZ(i->nnn(), result);
 #endif
 }
+
+#if BX_SUPPORT_X86_64
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTTSD2SI_GqWsdR(bxInstruction_c *i)
+{
+  float64 op = BX_READ_XMM_REG_LO_QWORD(i->rm());
+
+  if (MXCSR.get_DAZ()) op = float64_denormal_to_zero(op);
+
+  float_status_t status_word;
+  mxcsr_to_softfloat_status_word(status_word, MXCSR);
+
+  Bit64u result = float64_to_int64_round_to_zero(op, status_word);
+
+  check_exceptionsSSE(status_word.float_exception_flags);
+  BX_WRITE_64BIT_REG(i->nnn(), result);
+}
+#endif
 
 /*
  * Opcode: F3 0F 2C
@@ -410,27 +361,34 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTTSS2SI_GdWssR(bxInstruction_c *i)
 #if BX_CPU_LEVEL >= 6
   float32 op = BX_READ_XMM_REG_LO_DWORD(i->rm());
 
+  if (MXCSR.get_DAZ()) op = float32_denormal_to_zero(op);
+
   float_status_t status_word;
   mxcsr_to_softfloat_status_word(status_word, MXCSR);
 
-  if (MXCSR.get_DAZ()) op = float32_denormal_to_zero(op);
+  Bit32u result = float32_to_int32_round_to_zero(op, status_word);
 
-#if BX_SUPPORT_X86_64
-  if (i->os64L())   /* 64 bit operand size mode */
-  {
-    Bit64u result = float32_to_int64_round_to_zero(op, status_word);
-    check_exceptionsSSE(status_word.float_exception_flags);
-    BX_WRITE_64BIT_REG(i->nnn(), result);
-  }
-  else
-#endif
-  {
-    Bit32u result = float32_to_int32_round_to_zero(op, status_word);
-    check_exceptionsSSE(status_word.float_exception_flags);
-    BX_WRITE_32BIT_REGZ(i->nnn(), result);
-  }
+  check_exceptionsSSE(status_word.float_exception_flags);
+  BX_WRITE_32BIT_REGZ(i->nnn(), result);
 #endif
 }
+
+#if BX_SUPPORT_X86_64
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTTSS2SI_GqWssR(bxInstruction_c *i)
+{
+  float32 op = BX_READ_XMM_REG_LO_DWORD(i->rm());
+
+  if (MXCSR.get_DAZ()) op = float32_denormal_to_zero(op);
+
+  float_status_t status_word;
+  mxcsr_to_softfloat_status_word(status_word, MXCSR);
+
+  Bit64u result = float32_to_int64_round_to_zero(op, status_word);
+
+  check_exceptionsSSE(status_word.float_exception_flags);
+  BX_WRITE_64BIT_REG(i->nnn(), result);
+}
+#endif
 
 /*
  * Opcode: 0F 2D
@@ -534,26 +492,34 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTSD2SI_GdWsdR(bxInstruction_c *i)
 #if BX_CPU_LEVEL >= 6
   float64 op = BX_READ_XMM_REG_LO_QWORD(i->rm());
 
-  float_status_t status_word;
-  mxcsr_to_softfloat_status_word(status_word, MXCSR);
   if (MXCSR.get_DAZ()) op = float64_denormal_to_zero(op);
 
-#if BX_SUPPORT_X86_64
-  if (i->os64L())   /* 64 bit operand size mode */
-  {
-    Bit64u result = float64_to_int64(op, status_word);
-    check_exceptionsSSE(status_word.float_exception_flags);
-    BX_WRITE_64BIT_REG(i->nnn(), result);
-  }
-  else
-#endif
-  {
-    Bit32u result = float64_to_int32(op, status_word);
-    check_exceptionsSSE(status_word.float_exception_flags);
-    BX_WRITE_32BIT_REGZ(i->nnn(), result);
-  }
+  float_status_t status_word;
+  mxcsr_to_softfloat_status_word(status_word, MXCSR);
+
+  Bit32u result = float64_to_int32(op, status_word);
+
+  check_exceptionsSSE(status_word.float_exception_flags);
+  BX_WRITE_32BIT_REGZ(i->nnn(), result);
 #endif
 }
+
+#if BX_SUPPORT_X86_64
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTSD2SI_GqWsdR(bxInstruction_c *i)
+{
+  float64 op = BX_READ_XMM_REG_LO_QWORD(i->rm());
+
+  if (MXCSR.get_DAZ()) op = float64_denormal_to_zero(op);
+
+  float_status_t status_word;
+  mxcsr_to_softfloat_status_word(status_word, MXCSR);
+
+  Bit64u result = float64_to_int64(op, status_word);
+
+  check_exceptionsSSE(status_word.float_exception_flags);
+  BX_WRITE_64BIT_REG(i->nnn(), result);
+}
+#endif
 
 /*
  * Opcode: F3 0F 2D
@@ -567,26 +533,34 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTSS2SI_GdWssR(bxInstruction_c *i)
 #if BX_CPU_LEVEL >= 6
   float32 op = BX_READ_XMM_REG_LO_DWORD(i->rm());
 
-  float_status_t status_word;
-  mxcsr_to_softfloat_status_word(status_word, MXCSR);
   if (MXCSR.get_DAZ()) op = float32_denormal_to_zero(op);
 
-#if BX_SUPPORT_X86_64
-  if (i->os64L())   /* 64 bit operand size mode */
-  {
-    Bit64u result = float32_to_int64(op, status_word);
-    check_exceptionsSSE(status_word.float_exception_flags);
-    BX_WRITE_64BIT_REG(i->nnn(), result);
-  }
-  else
-#endif
-  {
-    Bit32u result = float32_to_int32(op, status_word);
-    check_exceptionsSSE(status_word.float_exception_flags);
-    BX_WRITE_32BIT_REGZ(i->nnn(), result);
-  }
+  float_status_t status_word;
+  mxcsr_to_softfloat_status_word(status_word, MXCSR);
+
+  Bit32u result = float32_to_int32(op, status_word);
+
+  check_exceptionsSSE(status_word.float_exception_flags);
+  BX_WRITE_32BIT_REGZ(i->nnn(), result);
 #endif
 }
+
+#if BX_SUPPORT_X86_64
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTSS2SI_GqWssR(bxInstruction_c *i)
+{
+  float32 op = BX_READ_XMM_REG_LO_DWORD(i->rm());
+
+  if (MXCSR.get_DAZ()) op = float32_denormal_to_zero(op);
+
+  float_status_t status_word;
+  mxcsr_to_softfloat_status_word(status_word, MXCSR);
+
+  Bit64u result = float32_to_int64(op, status_word);
+
+  check_exceptionsSSE(status_word.float_exception_flags);
+  BX_WRITE_64BIT_REG(i->nnn(), result);
+}
+#endif
 
 /*
  * Opcode: 0F 5A
