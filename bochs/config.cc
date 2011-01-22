@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.222 2011-01-20 16:54:41 vruppert Exp $
+// $Id: config.cc,v 1.223 2011-01-22 16:49:00 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2009  The Bochs Project
@@ -311,7 +311,7 @@ void bx_init_options()
       1);
 #endif
 #if BX_CONFIGURE_MSRS
-  new bx_param_string_c(cpu_param,
+  new bx_param_filename_c(cpu_param,
       "msrs",
       "Configurable MSR definition file",
       "Set path to the configurable MSR definition file",

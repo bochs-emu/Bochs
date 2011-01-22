@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_ohci.cc,v 1.42 2011-01-16 17:17:28 vruppert Exp $
+// $Id: usb_ohci.cc,v 1.43 2011-01-22 16:49:00 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Benjamin D Lunt (fys at frontiernet net)
@@ -138,7 +138,7 @@ void bx_usb_ohci_c::init(void)
 
   bx_list_c *usb_rt = (bx_list_c*)SIM->get_param(BXPN_MENU_RUNTIME_USB);
   bx_list_c *ohci = (bx_list_c*)SIM->get_param(BXPN_USB_OHCI);
-  ohci->set_options(ohci->SHOW_PARENT | ohci->USE_BOX_TITLE);
+  ohci->set_options(ohci->SHOW_PARENT);
   ohci->set_runtime_param(1);
   usb_rt->add(ohci);
   for (i=0; i<BX_N_USB_OHCI_PORTS; i++) {

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_msd.cc,v 1.28 2011-01-16 12:46:48 vruppert Exp $
+// $Id: usb_msd.cc,v 1.29 2011-01-22 16:49:00 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Volker Ruppert
@@ -167,7 +167,7 @@ usb_msd_device_c::usb_msd_device_c(usbdev_type type, const char *filename)
     sprintf(pname, "cdrom%d", ++cdrom_count);
     sprintf(label, "USB CD-ROM #%d Configuration", cdrom_count);
     s.config = new bx_list_c(usb_rt, pname, label, 2);
-    s.config->set_options(bx_list_c::SERIES_ASK | bx_list_c::USE_BOX_TITLE);
+    s.config->set_options(bx_list_c::SERIES_ASK);
     s.config->set_runtime_param(1);
     s.config->set_device_param(this);
     path = new bx_param_string_c(s.config, "path", "Path", "", "", BX_PATHNAME_LEN);
@@ -177,7 +177,6 @@ usb_msd_device_c::usb_msd_device_c(usbdev_type type, const char *filename)
     status = new bx_param_bool_c(s.config, "status", "Inserted", "", 1);
     status->set_handler(cd_param_handler);
     status->set_runtime_param(1);
-    // TODO: status
 #if BX_WITH_WX
     bx_list_c *usb = (bx_list_c*)SIM->get_param("ports.usb");
     usb->add(s.config);
