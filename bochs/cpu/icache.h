@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: icache.h,v 1.60 2011-01-23 15:54:54 sshwarts Exp $
+// $Id: icache.h,v 1.61 2011-01-23 17:21:34 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007-2011 Stanislav Shwartsman
@@ -226,9 +226,13 @@ BX_CPP_INLINE void bxICache_c::handleSMC(bx_phy_address pAddr, Bit32u mask)
 
   bxICacheEntry_c *e = get_entry(pAddr, 0);
 
-  for (unsigned index=0; index < 4096; index++, e++) {
-    if (pAddr == LPFOf(e->pAddr) && (e->traceMask & mask) != 0) {
-      e->pAddr = BX_ICACHE_INVALID_PHY_ADDRESS;
+  for (unsigned n=0; n < 32; n++) {
+    Bit32u line_mask = (1 << n);
+    if (line_mask > mask) break;
+    for (unsigned index=0; index < 128; index++, e++) {
+      if (pAddr == LPFOf(e->pAddr) && (e->traceMask & mask) != 0) {
+        e->pAddr = BX_ICACHE_INVALID_PHY_ADDRESS;
+      }
     }
   }
 }
