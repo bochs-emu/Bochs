@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: plugin.cc,v 1.31 2009-08-22 19:30:23 sshwarts Exp $
+// $Id: plugin.cc,v 1.32 2011-01-23 20:21:21 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  The Bochs Project
@@ -41,7 +41,7 @@
 #define PLUGIN_PATH ""
 
 #ifndef WIN32
-#define PLUGIN_FILENAME_FORMAT "libbx_%s.la"
+#define PLUGIN_FILENAME_FORMAT "libbx_%s.so"
 #else
 #define PLUGIN_FILENAME_FORMAT "bx_%s.dll"
 #endif

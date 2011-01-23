@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: extplugin.h,v 1.4 2002-12-12 15:28:37 cbothamy Exp $
+// $Id: extplugin.h,v 1.5 2011-01-23 20:21:21 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // extplugin.h
@@ -18,7 +18,11 @@
 #define __EXTPLUGIN_H
 
 #if BX_PLUGINS
+#if BX_HAVE_LTDL
+#include <ltdl.h>
+#else
 #include "ltdl.h"
+#endif
 #endif
 
 enum plugintype_t {
