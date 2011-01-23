@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: scancodes.cc,v 1.10 2009-12-04 19:50:29 sshwarts Exp $
+// $Id: scancodes.cc,v 1.11 2011-01-23 11:44:36 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2009  The Bochs Project
@@ -142,7 +142,7 @@ scancode scancodes[BX_KEY_NBKEYS][3] =
  { // BX_KEY_CTRL_R ( ibm 64 )
    { "\xE0\x1D" , "\xE0\x9D" },
    { "\xE0\x14" , "\xE0\xF0\x14" },
-   { "\x58" ,     "\xF0x58" },
+   { "\x58" ,     "\xF0\x58" },
  },
 
  { // BX_KEY_SHIFT_R ( ibm 57 )
