@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.317 2011-01-12 18:49:11 sshwarts Exp $
+// $Id: cpu.cc,v 1.318 2011-01-23 15:54:54 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -734,7 +734,7 @@ void BX_CPU_C::prefetch(void)
   }  
   else {
     bx_phy_address pAddr = translate_linear(laddr, CPL, BX_EXECUTE);
-    BX_CPU_THIS_PTR pAddrPage = LPFOf(pAddr);
+    BX_CPU_THIS_PTR pAddrPage = PPFOf(pAddr);
   }
 
   if (fetchPtr) {

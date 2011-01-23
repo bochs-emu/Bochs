@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmexit.cc,v 1.29 2010-09-24 21:15:16 sshwarts Exp $
+// $Id: vmexit.cc,v 1.30 2011-01-23 15:54:54 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2009-2010 Stanislav Shwartsman
@@ -721,7 +721,7 @@ bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::is_virtual_apic_page(bx_phy_address pad
   VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
   if (BX_CPU_THIS_PTR in_vmx_guest) {
     if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_VIRTUALIZE_APIC_ACCESSES))
-      if (LPFOf(paddr) == LPFOf(vm->apic_access_page)) return 1;
+      if (PPFOf(paddr) == PPFOf(vm->apic_access_page)) return 1;
   }
 
   return 0;

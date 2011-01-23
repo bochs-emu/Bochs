@@ -75,6 +75,8 @@ Changes after 2.4.5 release:
  [2862322] fixes for emulated DHCP in eth_vnet
 
 - these S.F. bugs were closed/fixed
+ [2588085] Mouse capture
+ [3140332] typo in mf3/ps2 mapping of BX_KEY_CTRL_R
  [3111577] No "back" option in log settings
  [3108422] Timing window in NE2K emulation
  [3084390] Bochs won't load floppy plugin right on startup

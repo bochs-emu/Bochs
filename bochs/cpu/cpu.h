@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.713 2011-01-21 19:46:44 sshwarts Exp $
+// $Id: cpu.h,v 1.714 2011-01-23 15:54:54 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2011  The Bochs Project
@@ -675,9 +675,18 @@ typedef struct {
   #define LPF_MASK (0xfffff000)
 #endif
 
+#if BX_PHY_ADDRESS_LONG
+  #define PPF_MASK BX_CONST64(0xfffffffffffff000)
+#else
+  #define PPF_MASK (0xfffff000)
+#endif
+
 #define LPFOf(laddr)               ((laddr) & LPF_MASK)
+#define PPFOf(laddr)               ((laddr) & PPF_MASK)
+
 #define AlignedAccessLPFOf(laddr, alignment_mask) \
-                                   ((laddr) & (LPF_MASK | (alignment_mask)))
+                  ((laddr) & (LPF_MASK | (alignment_mask)))
+
 #define PAGE_OFFSET(laddr) ((Bit32u)(laddr) & 0xfff)
 
 #include "icache.h"

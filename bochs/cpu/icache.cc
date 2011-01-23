@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: icache.cc,v 1.41 2011-01-15 22:14:44 sshwarts Exp $
+// $Id: icache.cc,v 1.42 2011-01-23 15:54:54 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007-2011 Stanislav Shwartsman
@@ -45,13 +45,13 @@ void flushICaches(void)
   pageWriteStampTable.resetWriteStamps();
 }
 
-void handleSMC(bx_phy_address pAddr)
+void handleSMC(bx_phy_address pAddr, Bit32u mask)
 {
   for (unsigned i=0; i<BX_SMP_PROCESSORS; i++) {
 #if BX_SUPPORT_TRACE_CACHE
     BX_CPU(i)->async_event |= BX_ASYNC_EVENT_STOP_TRACE;
 #endif
-    BX_CPU(i)->iCache.handleSMC(pAddr);
+    BX_CPU(i)->iCache.handleSMC(pAddr, mask);
   }
 }
 
@@ -64,12 +64,15 @@ void BX_CPU_C::serveICacheMiss(bxICacheEntry_c *entry, Bit32u eipBiased, bx_phy_
   // Cache miss. We weren't so lucky, but let's be optimistic - try to build 
   // trace from incoming instruction bytes stream !
   entry->pAddr = pAddr;
+  entry->traceMask = 0;
 
   unsigned remainingInPage = BX_CPU_THIS_PTR eipPageWindowSize - eipBiased;
   const Bit8u *fetchPtr = BX_CPU_THIS_PTR eipFetchPtr + eipBiased;
   int ret;
 
   bxInstruction_c *i = entry->i;
+
+  Bit32u pageOffset = PAGE_OFFSET((Bit32u) pAddr);
 
   for (unsigned n=0;n<BX_MAX_TRACE_LENGTH;n++)
   {
@@ -96,8 +99,9 @@ void BX_CPU_C::serveICacheMiss(bxICacheEntry_c *entry, Bit32u eipBiased, bx_phy_
 
       // Add the instruction to trace cache
       entry->pAddr = ~entry->pAddr;
-      pageWriteStampTable.markICache(pAddr);
-      pageWriteStampTable.markICache(BX_CPU_THIS_PTR pAddrPage);
+      entry->traceMask = 0x80000000; /* last line in page */
+      pageWriteStampTable.markICacheMask(entry->pAddr, entry->traceMask);
+      pageWriteStampTable.markICacheMask(BX_CPU_THIS_PTR pAddrPage, 0x1);
       BX_CPU_THIS_PTR iCache.commit_page_split_trace(BX_CPU_THIS_PTR pAddrPage, entry);
       return;
     }
@@ -109,12 +113,14 @@ void BX_CPU_C::serveICacheMiss(bxICacheEntry_c *entry, Bit32u eipBiased, bx_phy_
     BX_INSTR_OPCODE(BX_CPU_ID, fetchPtr, iLen,
        BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b, long64_mode());
 
-    pageWriteStampTable.markICache(pAddr, iLen);
+    entry->traceMask |= 1 <<  (pageOffset >> 7);
+    entry->traceMask |= 1 << ((pageOffset + iLen - 1) >> 7);
 
     // continue to the next instruction
     remainingInPage -= iLen;
     if (ret != 0 /* stop trace indication */ || remainingInPage == 0) break;
     pAddr += iLen;
+    pageOffset += iLen;
     fetchPtr += iLen;
     i++;
 
@@ -124,6 +130,8 @@ void BX_CPU_C::serveICacheMiss(bxICacheEntry_c *entry, Bit32u eipBiased, bx_phy_
   }
 
 //BX_INFO(("commit trace %08x len=%d mask %08x", (Bit32u) entry->pAddr, entry->tlen, pageWriteStampTable.getFineGranularityMapping(entry->pAddr)));
+
+  pageWriteStampTable.markICacheMask(pAddr, entry->traceMask);
 
   BX_CPU_THIS_PTR iCache.commit_trace(entry->tlen);
 }
@@ -143,6 +151,8 @@ bx_bool BX_CPU_C::mergeTraces(bxICacheEntry_c *entry, bxInstruction_c *i, bx_phy
     memcpy(i, e->i, sizeof(bxInstruction_c)*max_length);
     entry->tlen += max_length;
     BX_ASSERT(entry->tlen <= BX_MAX_TRACE_LENGTH);
+
+    entry->traceMask |= e->traceMask;
 
     return 1;
   }

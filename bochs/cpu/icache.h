@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: icache.h,v 1.59 2011-01-15 17:08:07 sshwarts Exp $
+// $Id: icache.h,v 1.60 2011-01-23 15:54:54 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007-2011 Stanislav Shwartsman
@@ -24,7 +24,7 @@
 #ifndef BX_ICACHE_H
 #define BX_ICACHE_H
 
-extern void handleSMC(bx_phy_address pAddr);
+extern void handleSMC(bx_phy_address pAddr, Bit32u mask);
 
 class bxPageWriteStampTable
 {
@@ -48,16 +48,16 @@ public:
     return fineGranularityMapping[hash(pAddr)];
   }
 
-  BX_CPP_INLINE void markICache(bx_phy_address pAddr)
-  {
-    fineGranularityMapping[hash(pAddr)] |= (1 << (PAGE_OFFSET(pAddr) >> 7));
-  }
-
   BX_CPP_INLINE void markICache(bx_phy_address pAddr, unsigned len)
   {
     Bit32u mask  = 1 << (PAGE_OFFSET((Bit32u) pAddr) >> 7);
            mask |= 1 << (PAGE_OFFSET((Bit32u) pAddr + len - 1) >> 7);
 
+    fineGranularityMapping[hash(pAddr)] |= mask;
+  }
+
+  BX_CPP_INLINE void markICacheMask(bx_phy_address pAddr, Bit32u mask)
+  {
     fineGranularityMapping[hash(pAddr)] |= mask;
   }
 
@@ -67,7 +67,7 @@ public:
     Bit32u index = hash(pAddr);
 
     if (fineGranularityMapping[index]) {
-      handleSMC(pAddr); // one of the CPUs might be running trace from this page
+      handleSMC(pAddr, 0xffffffff); // one of the CPUs might be running trace from this page
       fineGranularityMapping[index] = 0;
     }
   }
@@ -82,8 +82,9 @@ public:
               mask |= 1 << (PAGE_OFFSET((Bit32u) pAddr + len - 1) >> 7);
 
        if (fineGranularityMapping[index] & mask) {
-          handleSMC(pAddr); // one of the CPUs might be running trace from this page
-          fineGranularityMapping[index] = 0;
+          // one of the CPUs might be running trace from this page
+          handleSMC(pAddr, mask);
+          fineGranularityMapping[index] &= ~mask;
        }       
     }
   }
@@ -110,6 +111,7 @@ extern bxPageWriteStampTable pageWriteStampTable;
 struct bxICacheEntry_c
 {
   bx_phy_address pAddr; // Physical address of the instruction
+  Bit32u traceMask;
 
 #if BX_SUPPORT_TRACE_CACHE
   Bit32u tlen;          // Trace length in instructions
@@ -173,7 +175,7 @@ public:
   }
 #endif
 
-  BX_CPP_INLINE void handleSMC(bx_phy_address pAddr);
+  BX_CPP_INLINE void handleSMC(bx_phy_address pAddr, Bit32u mask);
 
   BX_CPP_INLINE void purgeICacheEntries(void);
   BX_CPP_INLINE void flushICacheEntries(void);
@@ -190,8 +192,10 @@ BX_CPP_INLINE void bxICache_c::flushICacheEntries(void)
   bxICacheEntry_c* e = entry;
   unsigned i;
 
-  for (i=0; i<BxICacheEntries; i++, e++)
+  for (i=0; i<BxICacheEntries; i++, e++) {
     e->pAddr = BX_ICACHE_INVALID_PHY_ADDRESS;
+    e->traceMask = 0;
+  }
 
 #if BX_SUPPORT_TRACE_CACHE
   for (i=0;i<BX_ICACHE_PAGE_SPLIT_ENTRIES;i++)
@@ -202,16 +206,20 @@ BX_CPP_INLINE void bxICache_c::flushICacheEntries(void)
 #endif
 }
 
-BX_CPP_INLINE void bxICache_c::handleSMC(bx_phy_address pAddr)
+BX_CPP_INLINE void bxICache_c::handleSMC(bx_phy_address pAddr, Bit32u mask)
 {
   // TODO: invalidate only entries in same page as pAddr
 
   pAddr = LPFOf(pAddr);
 
 #if BX_SUPPORT_TRACE_CACHE
-  for (unsigned i=0;i<BX_ICACHE_PAGE_SPLIT_ENTRIES;i++) {
-    if (pAddr == pageSplitIndex[i].ppf) {
-      pageSplitIndex[i].ppf = BX_ICACHE_INVALID_PHY_ADDRESS;
+  if (mask & 0x1) {
+    // the store touched 1st cache line in the page, check for
+    // page split traces to invalidate.
+    for (unsigned i=0;i<BX_ICACHE_PAGE_SPLIT_ENTRIES;i++) {
+      if (pAddr == pageSplitIndex[i].ppf) {
+        pageSplitIndex[i].ppf = BX_ICACHE_INVALID_PHY_ADDRESS;
+      }
     }
   }
 #endif
@@ -219,7 +227,9 @@ BX_CPP_INLINE void bxICache_c::handleSMC(bx_phy_address pAddr)
   bxICacheEntry_c *e = get_entry(pAddr, 0);
 
   for (unsigned index=0; index < 4096; index++, e++) {
-    if (pAddr == LPFOf(e->pAddr)) e->pAddr = BX_ICACHE_INVALID_PHY_ADDRESS;
+    if (pAddr == LPFOf(e->pAddr) && (e->traceMask & mask) != 0) {
+      e->pAddr = BX_ICACHE_INVALID_PHY_ADDRESS;
+    }
   }
 }
 
