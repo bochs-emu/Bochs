@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial_raw.cc,v 1.25 2009-02-08 09:05:52 vruppert Exp $
+// $Id: serial_raw.cc,v 1.26 2011-01-24 20:35:51 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  The Bochs Project
@@ -24,7 +24,6 @@
 // is used to know when we are exporting symbols and when we are importing.
 #define BX_PLUGGABLE
 
-#define NO_DEVICE_INCLUDES
 #include "iodev.h"
 
 #if USE_RAW_SERIAL

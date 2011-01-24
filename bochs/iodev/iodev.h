@@ -1,8 +1,8 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.127 2011-01-18 21:04:44 vruppert Exp $
+// $Id: iodev.h,v 1.128 2011-01-24 20:35:51 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2009  The Bochs Project
+//  Copyright (C) 2002-2011  The Bochs Project
 //
 //  I/O port handlers API Copyright (C) 2003 by Frank Cornelis
 //
@@ -598,12 +598,6 @@ BX_CPP_INLINE void DEV_MEM_WRITE_PHYSICAL_BLOCK(bx_phy_address phy_addr, unsigne
     len -= remainingInPage;
   }
 }
-
-#ifndef NO_DEVICE_INCLUDES
-
-#include "iodev/vga.h"
-
-#endif /* NO_DEVICE_INCLUDES */
 
 BOCHSAPI extern bx_devices_c bx_devices;
 

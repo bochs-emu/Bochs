@@ -1,8 +1,8 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: scsi_device.cc,v 1.20 2009-04-21 20:27:35 sshwarts Exp $
+// $Id: scsi_device.cc,v 1.21 2011-01-24 20:35:51 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2007  Volker Ruppert
+//  Copyright (C) 2007-2011  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -25,8 +25,8 @@
 // is used to know when we are exporting symbols and when we are importing.
 #define BX_PLUGGABLE
 
-#define NO_DEVICE_INCLUDES
 #include "iodev.h"
+
 #if BX_SUPPORT_PCI && BX_SUPPORT_PCIUSB
 #include "hdimage.h"
 #include "cdrom.h"

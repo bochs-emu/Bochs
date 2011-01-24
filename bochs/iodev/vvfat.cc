@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vvfat.cc,v 1.22 2011-01-20 21:10:06 vruppert Exp $
+// $Id: vvfat.cc,v 1.23 2011-01-24 20:35:51 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2010/2011  The Bochs Project
@@ -43,7 +43,6 @@
 #include <utime.h>
 #endif
 
-#define NO_DEVICE_INCLUDES
 #include "iodev.h"
 #include "hdimage.h"
 #include "vvfat.h"

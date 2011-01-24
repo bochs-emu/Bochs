@@ -1,8 +1,8 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: soundwin.cc,v 1.25 2009-12-04 19:50:29 sshwarts Exp $
+// $Id: soundwin.cc,v 1.26 2011-01-24 20:35:51 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2009  The Bochs Project
+//  Copyright (C) 2001-2011  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -26,7 +26,6 @@
 // is used to know when we are exporting symbols and when we are importing.
 #define BX_PLUGGABLE
 
-#define NO_DEVICE_INCLUDES
 #include "iodev.h"
 #define BX_SOUNDLOW
 #include "sb16.h"

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: soundosx.cc,v 1.12 2010-02-26 14:18:19 sshwarts Exp $
+// $Id: soundosx.cc,v 1.13 2011-01-24 20:35:51 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  The Bochs Project
@@ -24,7 +24,6 @@
 #include <MacTypes.h>
 #endif
 
-#define NO_DEVICE_INCLUDES
 #include "iodev.h"
 #define BX_SOUNDLOW
 #include "sb16.h"

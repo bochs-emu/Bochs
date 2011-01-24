@@ -1,8 +1,8 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: soundlnx.cc,v 1.21 2009-12-04 19:50:29 sshwarts Exp $
+// $Id: soundlnx.cc,v 1.22 2011-01-24 20:35:51 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2009  The Bochs Project
+//  Copyright (C) 2001-2011  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -23,7 +23,6 @@
 // for Linux using OSS. The current version also supports OSS on FreeBSD and
 // ALSA PCM output on Linux.
 
-#define NO_DEVICE_INCLUDES
 #include "iodev.h"
 #define BX_SOUNDLOW
 #include "sb16.h"

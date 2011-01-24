@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_printer.cc,v 1.4 2010-12-05 13:09:41 vruppert Exp $
+// $Id: usb_printer.cc,v 1.5 2011-01-24 20:35:51 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Benjamin David Lunt
@@ -25,7 +25,6 @@
 // is used to know when we are exporting symbols and when we are importing.
 #define BX_PLUGGABLE
 
-#define NO_DEVICE_INCLUDES
 #include "iodev.h"
 
 #if BX_SUPPORT_PCI && BX_SUPPORT_PCIUSB

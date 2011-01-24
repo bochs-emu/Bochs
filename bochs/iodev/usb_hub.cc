@@ -1,8 +1,8 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_hub.cc,v 1.17 2011-01-16 17:17:28 vruppert Exp $
+// $Id: usb_hub.cc,v 1.18 2011-01-24 20:35:51 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2009  Volker Ruppert
+//  Copyright (C) 2009-2011  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -27,7 +27,6 @@
 // is used to know when we are exporting symbols and when we are importing.
 #define BX_PLUGGABLE
 
-#define NO_DEVICE_INCLUDES
 #include "iodev.h"
 
 #if BX_SUPPORT_PCI && BX_SUPPORT_PCIUSB

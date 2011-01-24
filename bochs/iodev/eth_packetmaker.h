@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_packetmaker.h,v 1.11 2009-12-04 19:50:27 sshwarts Exp $
+// $Id: eth_packetmaker.h,v 1.12 2011-01-24 20:35:51 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2000-2009  The Bochs Project
@@ -20,8 +20,6 @@
 
 #ifndef _ETH_PACKETMAKER_H_
 #define _ETH_PACKETMAKER_H_
-
-#include "../config.h"
 
 #ifdef ETH_ARPBACK
 

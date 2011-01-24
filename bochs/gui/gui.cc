@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.cc,v 1.118 2010-08-02 19:26:13 vruppert Exp $
+// $Id: gui.cc,v 1.119 2011-01-24 20:35:50 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2009  The Bochs Project
@@ -20,10 +20,9 @@
 
 
 #include <signal.h>
-#include "param_names.h"
-#include "bochs.h"
-#include "keymap.h"
 #include "iodev.h"
+#include "vga.h"
+#include "keymap.h"
 #include "gui/bitmaps/floppya.h"
 #include "gui/bitmaps/floppyb.h"
 #include "gui/bitmaps/mouse.h"

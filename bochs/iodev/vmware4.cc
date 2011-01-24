@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmware4.cc,v 1.8 2011-01-14 16:43:55 vruppert Exp $
+// $Id: vmware4.cc,v 1.9 2011-01-24 20:35:51 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 
 /*
@@ -30,8 +30,6 @@
 // platforms that require a special tag on exported symbols, BX_PLUGGABLE
 // is used to know when we are exporting symbols and when we are importing.
 #define BX_PLUGGABLE
-
-#define NO_DEVICE_INCLUDES
 
 #include "iodev.h"
 #include "hdimage.h"

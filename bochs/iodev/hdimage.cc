@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: hdimage.cc,v 1.30 2011-01-21 16:00:38 vruppert Exp $
+// $Id: hdimage.cc,v 1.31 2011-01-24 20:35:51 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2011  The Bochs Project
@@ -24,7 +24,6 @@
 // is used to know when we are exporting symbols and when we are importing.
 #define BX_PLUGGABLE
 
-#define NO_DEVICE_INCLUDES
 #include "iodev.h"
 #include "hdimage.h"
 #include "vmware3.h"

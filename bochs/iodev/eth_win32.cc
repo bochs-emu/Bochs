@@ -1,8 +1,8 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_win32.cc,v 1.33 2009-12-04 19:50:27 sshwarts Exp $
+// $Id: eth_win32.cc,v 1.34 2011-01-24 20:35:51 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2009  The Bochs Project
+//  Copyright (C) 2001-2011  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -37,7 +37,6 @@
 // is used to know when we are exporting symbols and when we are importing.
 #define BX_PLUGGABLE
 
-#define NO_DEVICE_INCLUDES
 #include "iodev.h"
 
 #if BX_NETWORKING && defined(ETH_WIN32)

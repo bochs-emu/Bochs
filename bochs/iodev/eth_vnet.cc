@@ -1,8 +1,8 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_vnet.cc,v 1.30 2010-05-22 10:15:58 vruppert Exp $
+// $Id: eth_vnet.cc,v 1.31 2011-01-24 20:35:51 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2009  The Bochs Project
+//  Copyright (C) 2011  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -33,7 +33,6 @@
 
 #define BX_PLUGGABLE
 
-#define NO_DEVICE_INCLUDES
 #include "iodev.h"
 
 #if BX_NETWORKING
