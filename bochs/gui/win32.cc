@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32.cc,v 1.142 2010-11-12 18:20:35 sshwarts Exp $
+// $Id: win32.cc,v 1.143 2011-01-25 15:49:32 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2009  The Bochs Project
@@ -32,6 +32,7 @@
 #include "param_names.h"
 #include "keymap.h"
 #include "iodev/iodev.h"
+#include "iodev/vga.h"
 #if BX_WITH_WIN32
 
 #include "zmouse.h"
