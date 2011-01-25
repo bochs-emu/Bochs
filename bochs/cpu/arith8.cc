@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith8.cc,v 1.64 2010-03-05 08:54:06 sshwarts Exp $
+// $Id: arith8.cc,v 1.65 2011-01-25 20:59:26 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -388,11 +388,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMP_EbIbR(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::NEG_EbM(bxInstruction_c *i)
 {
-  Bit8u op1_8;
-
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  op1_8 = read_RMW_virtual_byte(i->seg(), eaddr);
+  Bit8u op1_8 = read_RMW_virtual_byte(i->seg(), eaddr);
   op1_8 = - (Bit8s)(op1_8);
   write_RMW_virtual_byte(op1_8);
 
@@ -410,11 +408,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::NEG_EbR(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::INC_EbM(bxInstruction_c *i)
 {
-  Bit8u op1_8;
-
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  op1_8 = read_RMW_virtual_byte(i->seg(), eaddr);
+  Bit8u op1_8 = read_RMW_virtual_byte(i->seg(), eaddr);
   op1_8++;
   write_RMW_virtual_byte(op1_8);
 
@@ -432,11 +428,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INC_EbR(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::DEC_EbM(bxInstruction_c *i)
 {
-  Bit8u op1_8;
-
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  op1_8 = read_RMW_virtual_byte(i->seg(), eaddr);
+  Bit8u op1_8 = read_RMW_virtual_byte(i->seg(), eaddr);
   op1_8--;
   write_RMW_virtual_byte(op1_8);
 

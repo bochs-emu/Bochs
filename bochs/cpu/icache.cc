@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: icache.cc,v 1.42 2011-01-23 15:54:54 sshwarts Exp $
+// $Id: icache.cc,v 1.43 2011-01-25 20:59:26 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007-2011 Stanislav Shwartsman
@@ -73,6 +73,7 @@ void BX_CPU_C::serveICacheMiss(bxICacheEntry_c *entry, Bit32u eipBiased, bx_phy_
   bxInstruction_c *i = entry->i;
 
   Bit32u pageOffset = PAGE_OFFSET((Bit32u) pAddr);
+  Bit32u traceMask = 0;
 
   for (unsigned n=0;n<BX_MAX_TRACE_LENGTH;n++)
   {
@@ -113,8 +114,8 @@ void BX_CPU_C::serveICacheMiss(bxICacheEntry_c *entry, Bit32u eipBiased, bx_phy_
     BX_INSTR_OPCODE(BX_CPU_ID, fetchPtr, iLen,
        BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b, long64_mode());
 
-    entry->traceMask |= 1 <<  (pageOffset >> 7);
-    entry->traceMask |= 1 << ((pageOffset + iLen - 1) >> 7);
+    traceMask |= 1 <<  (pageOffset >> 7);
+    traceMask |= 1 << ((pageOffset + iLen - 1) >> 7);
 
     // continue to the next instruction
     remainingInPage -= iLen;
@@ -130,6 +131,8 @@ void BX_CPU_C::serveICacheMiss(bxICacheEntry_c *entry, Bit32u eipBiased, bx_phy_
   }
 
 //BX_INFO(("commit trace %08x len=%d mask %08x", (Bit32u) entry->pAddr, entry->tlen, pageWriteStampTable.getFineGranularityMapping(entry->pAddr)));
+
+  entry->traceMask |= traceMask;
 
   pageWriteStampTable.markICacheMask(pAddr, entry->traceMask);
 

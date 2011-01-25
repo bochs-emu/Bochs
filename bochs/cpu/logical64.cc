@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logical64.cc,v 1.34 2009-12-04 16:53:12 sshwarts Exp $
+// $Id: logical64.cc,v 1.35 2011-01-25 20:59:26 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -117,11 +117,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::OR_EqIdR(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::NOT_EqM(bxInstruction_c *i)
 {
-  Bit64u op1_64;
-
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  op1_64 = read_RMW_virtual_qword_64(i->seg(), eaddr);
+  Bit64u op1_64 = read_RMW_virtual_qword_64(i->seg(), eaddr);
   op1_64 = ~op1_64;
   write_RMW_virtual_qword(op1_64);
 }

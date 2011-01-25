@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logical16.cc,v 1.44 2009-12-04 16:53:12 sshwarts Exp $
+// $Id: logical16.cc,v 1.45 2011-01-25 20:59:26 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -107,11 +107,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::OR_EwIwR(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::NOT_EwM(bxInstruction_c *i)
 {
-  Bit16u op1_16;
-
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  op1_16 = read_RMW_virtual_word(i->seg(), eaddr);
+  Bit16u op1_16 = read_RMW_virtual_word(i->seg(), eaddr);
   op1_16 = ~op1_16;
   write_RMW_virtual_word(op1_16);
 }

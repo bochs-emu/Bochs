@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith64.cc,v 1.61 2010-10-18 22:19:45 sshwarts Exp $
+// $Id: arith64.cc,v 1.62 2011-01-25 20:59:26 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -449,12 +449,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMP_EqIdR(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::NEG_EqM(bxInstruction_c *i)
 {
-  Bit64u op1_64;
-
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  /* pointer, segment address pair */
-  op1_64 = read_RMW_virtual_qword_64(i->seg(), eaddr);
+  Bit64u op1_64 = read_RMW_virtual_qword_64(i->seg(), eaddr);
   op1_64 = - (Bit64s)(op1_64);
   write_RMW_virtual_qword(op1_64);
 
@@ -472,12 +469,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::NEG_EqR(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::INC_EqM(bxInstruction_c *i)
 {
-  Bit64u op1_64;
-
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  /* pointer, segment address pair */
-  op1_64 = read_RMW_virtual_qword_64(i->seg(), eaddr);
+  Bit64u op1_64 = read_RMW_virtual_qword_64(i->seg(), eaddr);
   op1_64++;
   write_RMW_virtual_qword(op1_64);
 
@@ -492,12 +486,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INC_EqR(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::DEC_EqM(bxInstruction_c *i)
 {
-  Bit64u op1_64;
-
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  /* pointer, segment address pair */
-  op1_64 = read_RMW_virtual_qword_64(i->seg(), eaddr);
+  Bit64u op1_64 = read_RMW_virtual_qword_64(i->seg(), eaddr);
   op1_64--;
   write_RMW_virtual_qword(op1_64);
 

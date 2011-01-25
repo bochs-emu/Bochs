@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logical8.cc,v 1.44 2009-12-04 16:53:12 sshwarts Exp $
+// $Id: logical8.cc,v 1.45 2011-01-25 20:59:26 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -52,9 +52,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XOR_GbEbR(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::XOR_ALIb(bxInstruction_c *i)
 {
-  Bit8u op1;
-
-  op1 = AL;
+  Bit8u op1 = AL;
   op1 ^= i->Ib();
   AL = op1;
 
@@ -111,11 +109,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::OR_EbIbR(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::NOT_EbM(bxInstruction_c *i)
 {
-  Bit8u op1_8;
-
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  op1_8 = read_RMW_virtual_byte(i->seg(), eaddr);
+  Bit8u op1_8 = read_RMW_virtual_byte(i->seg(), eaddr);
   op1_8 = ~op1_8;
   write_RMW_virtual_byte(op1_8);
 }

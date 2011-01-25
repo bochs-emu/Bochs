@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith32.cc,v 1.87 2010-12-06 21:45:56 sshwarts Exp $
+// $Id: arith32.cc,v 1.88 2011-01-25 20:59:26 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -465,11 +465,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMP_EdIdR(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::NEG_EdM(bxInstruction_c *i)
 {
-  Bit32u op1_32;
-
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  op1_32 = read_RMW_virtual_dword(i->seg(), eaddr);
+  Bit32u op1_32 = read_RMW_virtual_dword(i->seg(), eaddr);
   op1_32 = - (Bit32s)(op1_32);
   write_RMW_virtual_dword(op1_32);
 
@@ -487,11 +485,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::NEG_EdR(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::INC_EdM(bxInstruction_c *i)
 {
-  Bit32u op1_32;
-
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  op1_32 = read_RMW_virtual_dword(i->seg(), eaddr);
+  Bit32u op1_32 = read_RMW_virtual_dword(i->seg(), eaddr);
   op1_32++;
   write_RMW_virtual_dword(op1_32);
 
@@ -500,11 +496,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INC_EdM(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::DEC_EdM(bxInstruction_c *i)
 {
-  Bit32u op1_32;
-
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  op1_32 = read_RMW_virtual_dword(i->seg(), eaddr);
+  Bit32u op1_32 = read_RMW_virtual_dword(i->seg(), eaddr);
   op1_32--;
   write_RMW_virtual_dword(op1_32);
 

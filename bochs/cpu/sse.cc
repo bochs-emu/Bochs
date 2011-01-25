@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse.cc,v 1.82 2011-01-16 21:01:28 sshwarts Exp $
+// $Id: sse.cc,v 1.83 2011-01-25 20:59:26 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003-2011 Stanislav Shwartsman
@@ -916,28 +916,27 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MPSADBW_VdqWdqIbR(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUNPCKLBW_VdqWdqR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn());
-  BxPackedXmmRegister op2 = BX_READ_XMM_REG(i->rm()), result;
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2 = BX_READ_XMM_REG(i->rm());
 
-  result.xmmubyte(0x0) = op1.xmmubyte(0);
-  result.xmmubyte(0x1) = op2.xmmubyte(0);
-  result.xmmubyte(0x2) = op1.xmmubyte(1);
-  result.xmmubyte(0x3) = op2.xmmubyte(1);
-  result.xmmubyte(0x4) = op1.xmmubyte(2);
-  result.xmmubyte(0x5) = op2.xmmubyte(2);
-  result.xmmubyte(0x6) = op1.xmmubyte(3);
-  result.xmmubyte(0x7) = op2.xmmubyte(3);
-  result.xmmubyte(0x8) = op1.xmmubyte(4);
-  result.xmmubyte(0x9) = op2.xmmubyte(4);
-  result.xmmubyte(0xA) = op1.xmmubyte(5);
-  result.xmmubyte(0xB) = op2.xmmubyte(5);
-  result.xmmubyte(0xC) = op1.xmmubyte(6);
-  result.xmmubyte(0xD) = op2.xmmubyte(6);
-  result.xmmubyte(0xE) = op1.xmmubyte(7);
-  result.xmmubyte(0xF) = op2.xmmubyte(7);
+  op1.xmmubyte(0xF) = op2.xmmubyte(7);
+  op1.xmmubyte(0xE) = op1.xmmubyte(7);
+  op1.xmmubyte(0xD) = op2.xmmubyte(6);
+  op1.xmmubyte(0xC) = op1.xmmubyte(6);
+  op1.xmmubyte(0xB) = op2.xmmubyte(5);
+  op1.xmmubyte(0xA) = op1.xmmubyte(5);
+  op1.xmmubyte(0x9) = op2.xmmubyte(4);
+  op1.xmmubyte(0x8) = op1.xmmubyte(4);
+  op1.xmmubyte(0x7) = op2.xmmubyte(3);
+  op1.xmmubyte(0x6) = op1.xmmubyte(3);
+  op1.xmmubyte(0x5) = op2.xmmubyte(2);
+  op1.xmmubyte(0x4) = op1.xmmubyte(2);
+  op1.xmmubyte(0x3) = op2.xmmubyte(1);
+  op1.xmmubyte(0x2) = op1.xmmubyte(1);
+  op1.xmmubyte(0x1) = op2.xmmubyte(0);
+//op1.xmmubyte(0x0) = op1.xmmubyte(0);
 
   /* now write result back to destination */
-  BX_WRITE_XMM_REG(i->nnn(), result);
+  BX_WRITE_XMM_REG(i->nnn(), op1);
 #endif
 }
 
@@ -945,20 +944,19 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUNPCKLBW_VdqWdqR(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUNPCKLWD_VdqWdqR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn());
-  BxPackedXmmRegister op2 = BX_READ_XMM_REG(i->rm()), result;
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2 = BX_READ_XMM_REG(i->rm());
 
-  result.xmm16u(0) = op1.xmm16u(0);
-  result.xmm16u(1) = op2.xmm16u(0);
-  result.xmm16u(2) = op1.xmm16u(1);
-  result.xmm16u(3) = op2.xmm16u(1);
-  result.xmm16u(4) = op1.xmm16u(2);
-  result.xmm16u(5) = op2.xmm16u(2);
-  result.xmm16u(6) = op1.xmm16u(3);
-  result.xmm16u(7) = op2.xmm16u(3);
+  op1.xmm16u(7) = op2.xmm16u(3);
+  op1.xmm16u(6) = op1.xmm16u(3);
+  op1.xmm16u(5) = op2.xmm16u(2);
+  op1.xmm16u(4) = op1.xmm16u(2);
+  op1.xmm16u(3) = op2.xmm16u(1);
+  op1.xmm16u(2) = op1.xmm16u(1);
+  op1.xmm16u(1) = op2.xmm16u(0);
+//op1.xmm16u(0) = op1.xmm16u(0);
 
   /* now write result back to destination */
-  BX_WRITE_XMM_REG(i->nnn(), result);
+  BX_WRITE_XMM_REG(i->nnn(), op1);
 #endif
 }
 
@@ -967,16 +965,15 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUNPCKLWD_VdqWdqR(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::UNPCKLPS_VpsWdqR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn());
-  BxPackedXmmRegister op2 = BX_READ_XMM_REG(i->rm()), result;
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2 = BX_READ_XMM_REG(i->rm());
 
-  result.xmm32u(0) = op1.xmm32u(0);
-  result.xmm32u(1) = op2.xmm32u(0);
-  result.xmm32u(2) = op1.xmm32u(1);
-  result.xmm32u(3) = op2.xmm32u(1);
+  op1.xmm32u(3) = op2.xmm32u(1);
+  op1.xmm32u(2) = op1.xmm32u(1);
+  op1.xmm32u(1) = op2.xmm32u(0);
+//op1.xmm32u(0) = op1.xmm32u(0);
 
   /* now write result back to destination */
-  BX_WRITE_XMM_REG(i->nnn(), result);
+  BX_WRITE_XMM_REG(i->nnn(), op1);
 #endif
 }
 

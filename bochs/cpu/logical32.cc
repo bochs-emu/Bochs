@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logical32.cc,v 1.45 2009-12-04 16:53:12 sshwarts Exp $
+// $Id: logical32.cc,v 1.46 2011-01-25 20:59:26 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -112,11 +112,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::OR_EdIdR(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::NOT_EdM(bxInstruction_c *i)
 {
-  Bit32u op1_32;
-
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  op1_32 = read_RMW_virtual_dword(i->seg(), eaddr);
+  Bit32u op1_32 = read_RMW_virtual_dword(i->seg(), eaddr);
   op1_32 = ~op1_32;
   write_RMW_virtual_dword(op1_32);
 }
