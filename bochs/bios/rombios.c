@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.255 2011-01-16 19:29:11 sshwarts Exp $
+// $Id: rombios.c,v 1.256 2011-01-25 15:50:20 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -876,7 +876,7 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.255 $ $Date: 2011-01-16 19:29:11 $";
+static char bios_cvs_version_string[] = "$Revision: 1.256 $ $Date: 2011-01-25 15:50:20 $";
 
 #define BIOS_COPYRIGHT_STRING "(c) 2002 MandrakeSoft S.A. Written by Kevin Lawton & the Bochs team."
 
@@ -5375,14 +5375,26 @@ int13_edd(DS, SI, device)
     else {
       // FIXME PCI
     }
-    write_byte(DS, SI+(Bit16u)&Int13DPT->iface_type[0], 'A');
-    write_byte(DS, SI+(Bit16u)&Int13DPT->iface_type[1], 'T');
-    write_byte(DS, SI+(Bit16u)&Int13DPT->iface_type[2], 'A');
-    write_byte(DS, SI+(Bit16u)&Int13DPT->iface_type[3], ' ');
-    write_byte(DS, SI+(Bit16u)&Int13DPT->iface_type[4], ' ');
-    write_byte(DS, SI+(Bit16u)&Int13DPT->iface_type[5], ' ');
-    write_byte(DS, SI+(Bit16u)&Int13DPT->iface_type[6], ' ');
-    write_byte(DS, SI+(Bit16u)&Int13DPT->iface_type[7], ' ');
+
+    if (type == ATA_TYPE_ATA) {
+        write_byte(DS, SI+(Bit16u)&Int13DPT->iface_type[0], 'A');
+        write_byte(DS, SI+(Bit16u)&Int13DPT->iface_type[1], 'T');
+        write_byte(DS, SI+(Bit16u)&Int13DPT->iface_type[2], 'A');
+        write_byte(DS, SI+(Bit16u)&Int13DPT->iface_type[3], ' ');
+        write_byte(DS, SI+(Bit16u)&Int13DPT->iface_type[4], ' ');
+        write_byte(DS, SI+(Bit16u)&Int13DPT->iface_type[5], ' ');
+        write_byte(DS, SI+(Bit16u)&Int13DPT->iface_type[6], ' ');
+        write_byte(DS, SI+(Bit16u)&Int13DPT->iface_type[7], ' ');
+    } else if (type == ATA_TYPE_ATAPI) {
+        write_byte(DS, SI+(Bit16u)&Int13DPT->iface_type[0], 'A');
+        write_byte(DS, SI+(Bit16u)&Int13DPT->iface_type[1], 'T');
+        write_byte(DS, SI+(Bit16u)&Int13DPT->iface_type[2], 'A');
+        write_byte(DS, SI+(Bit16u)&Int13DPT->iface_type[3], 'P');
+        write_byte(DS, SI+(Bit16u)&Int13DPT->iface_type[4], 'I');
+        write_byte(DS, SI+(Bit16u)&Int13DPT->iface_type[5], ' ');
+        write_byte(DS, SI+(Bit16u)&Int13DPT->iface_type[6], ' ');
+        write_byte(DS, SI+(Bit16u)&Int13DPT->iface_type[7], ' ');
+    }
 
     if (iface==ATA_IFACE_ISA) {
       write_word(DS, SI+(Bit16u)&Int13DPT->iface_path[0], iobase1);
