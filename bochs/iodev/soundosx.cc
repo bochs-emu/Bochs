@@ -1,8 +1,8 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: soundosx.cc,v 1.13 2011-01-24 20:35:51 vruppert Exp $
+// $Id: soundosx.cc,v 1.14 2011-01-25 23:29:08 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2004  The Bochs Project
+//  Copyright (C) 2004-2011  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -27,10 +27,11 @@
 #include "iodev.h"
 #define BX_SOUNDLOW
 #include "sb16.h"
+#include "soundmod.h"
 
 #if defined(macintosh) && BX_SUPPORT_SB16
 
-#define LOG_THIS sb16->
+#define LOG_THIS device->
 
 #include "soundosx.h"
 
@@ -70,17 +71,16 @@ AudioUnit WaveOutputUnit = NULL;
 AudioConverterRef WaveConverter = NULL;
 #endif
 
-bx_sound_osx_c::bx_sound_osx_c(bx_sb16_c *sb16)
-    :bx_sound_output_c(sb16)
+bx_sound_osx_c::bx_sound_osx_c(bx_sb16_c *dev)
+    :bx_sound_output_c(dev)
 {
-    this->sb16 = sb16;
-
     MidiOpen = 0;
     WaveOpen = 0;
     head = 0;
     tail = 0;
     for (int i=0; i<BX_SOUND_OSX_NBUF; i++)
         WaveLength[i] = 0;
+    BX_INFO(("Sound output module 'osx' initialized"));
 }
 
 bx_sound_osx_c::~bx_sound_osx_c()
@@ -94,7 +94,7 @@ int bx_sound_osx_c::midiready()
     return BX_SOUND_OUTPUT_OK;
 }
 
-int bx_sound_osx_c::openmidioutput(char *device)
+int bx_sound_osx_c::openmidioutput(char *mididev)
 {
 #ifdef BX_SOUND_OSX_use_converter
     ComponentDescription description;
@@ -136,7 +136,7 @@ int bx_sound_osx_c::openmidioutput(char *device)
     // Start playing
     AUGraphStart (MidiGraph);
 #endif
-    WRITELOG(WAVELOG(4), "openmidioutput(%s)", device);
+    WRITELOG(WAVELOG(4), "openmidioutput(%s)", mididev);
     MidiOpen = 1;
     return BX_SOUND_OUTPUT_OK;
 }
@@ -182,11 +182,11 @@ void WaveCallbackProc (SndChannelPtr chan, SndCommand *cmd)
 }
 #endif
 
-int bx_sound_osx_c::openwaveoutput(char *device)
+int bx_sound_osx_c::openwaveoutput(char *wavedev)
 {
     OSStatus err;
 
-    WRITELOG(WAVELOG(4), "openwaveoutput(%s)", device);
+    WRITELOG(WAVELOG(4), "openwaveoutput(%s)", wavedev);
 
     // open the default output unit
 #ifdef BX_SOUND_OSX_use_quicktime

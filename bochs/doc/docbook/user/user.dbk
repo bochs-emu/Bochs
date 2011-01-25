@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.286 2011-01-06 18:15:28 vruppert Exp $
+$Id: user.dbk,v 1.287 2011-01-25 23:29:08 vruppert Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -4464,13 +4464,6 @@ Edit <filename>config.h</filename> after running configure, but before compiling
 <para>
 BX_USE_SB16_SMF should be 1 unless you intend to have several sound cards
 running at the same time.
-</para>
-
-<para>
-BX_USE_SOUND_VIRTUAL can be 0 or 1, and determines whether the output class
-uses virtual functions or not. The former is more versatile and allows to
-select the class at runtime (not supported at the moment), while the latter
-is slightly faster.
 </para>
 
 <para>

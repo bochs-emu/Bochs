@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: soundwin.cc,v 1.26 2011-01-24 20:35:51 vruppert Exp $
+// $Id: soundwin.cc,v 1.27 2011-01-25 23:29:08 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2011  The Bochs Project
@@ -29,18 +29,17 @@
 #include "iodev.h"
 #define BX_SOUNDLOW
 #include "sb16.h"
+#include "soundmod.h"
 
 #if defined(WIN32) && BX_SUPPORT_SB16
 
 #include "soundwin.h"
 
-#define LOG_THIS sb16->
+#define LOG_THIS device->
 
-bx_sound_windows_c::bx_sound_windows_c(bx_sb16_c *sb16)
-  :bx_sound_output_c(sb16)
+bx_sound_windows_c::bx_sound_windows_c(bx_sb16_c *dev)
+  :bx_sound_output_c(dev)
 {
-  this->sb16 = sb16;
-
   MidiOpen = 0;
   WaveOpen = 0;
 
@@ -82,6 +81,8 @@ bx_sound_windows_c::bx_sound_windows_c(bx_sb16_c *sb16)
 #undef size
 #undef ALIGN
 #undef NEWBUFFER
+
+  BX_INFO(("Sound output module 'win' initialized"));
 }
 
 bx_sound_windows_c::~bx_sound_windows_c()
@@ -111,11 +112,11 @@ int bx_sound_windows_c::midiready()
     return BX_SOUND_OUTPUT_ERR;
 }
 
-int bx_sound_windows_c::openmidioutput(char *device)
+int bx_sound_windows_c::openmidioutput(char *mididev)
 {
   // could make the output device selectable,
   // but currently only the midi mapper is supported
-  UNUSED(device);
+  UNUSED(mididev);
 
   UINT deviceid = (UINT) MIDIMAPPER;
 
@@ -186,13 +187,13 @@ int bx_sound_windows_c::closemidioutput()
   return (ret == 0) ? BX_SOUND_OUTPUT_OK : BX_SOUND_OUTPUT_ERR;
 }
 
-int bx_sound_windows_c::openwaveoutput(char *device)
+int bx_sound_windows_c::openwaveoutput(char *wavedev)
 {
   // could make the output device selectable,
-  // but currently only the midi mapper is supported
-  UNUSED(device);
+  // but currently only the wave mapper is supported
+  UNUSED(wavedev);
 
-  WRITELOG(WAVELOG(4), "openwaveoutput(%s)", device);
+  WRITELOG(WAVELOG(4), "openwaveoutput(%s)", wavedev);
 
 #ifdef usewaveOut
   WaveDevice = (UINT) WAVEMAPPER;
@@ -477,7 +478,7 @@ void bx_sound_windows_c::checkmidiready()
 {
   UINT ret;
 
-  if ((MidiHeader->dwFlags & WHDR_DONE) != 0)
+  if ((MidiHeader->dwFlags & MHDR_DONE) != 0)
   {
     WRITELOG(MIDILOG(5), "SYSEX message done, midi ready again.");
     ret = midiOutUnprepareHeader(MidiOut, MidiHeader, sizeof(*MidiHeader));

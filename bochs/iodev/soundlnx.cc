@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: soundlnx.cc,v 1.22 2011-01-24 20:35:51 vruppert Exp $
+// $Id: soundlnx.cc,v 1.23 2011-01-25 23:29:08 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2011  The Bochs Project
@@ -26,10 +26,11 @@
 #include "iodev.h"
 #define BX_SOUNDLOW
 #include "sb16.h"
+#include "soundmod.h"
 
 #if (defined(linux) || defined(__FreeBSD__) || defined(__FreeBSD_kernel__)) && BX_SUPPORT_SB16
 
-#define LOG_THIS sb16->
+#define LOG_THIS device->
 
 #include "soundlnx.h"
 
@@ -37,10 +38,9 @@
 #include <sys/ioctl.h>
 #include <sys/soundcard.h>
 
-bx_sound_linux_c::bx_sound_linux_c(bx_sb16_c *sb16)
-  :bx_sound_output_c(sb16)
+bx_sound_linux_c::bx_sound_linux_c(bx_sb16_c *dev)
+  :bx_sound_output_c(dev)
 {
-  this->sb16 = sb16;
 #if BX_HAVE_ALSASOUND
   alsa_seq.handle = NULL;
   alsa_pcm.handle = NULL;
@@ -49,6 +49,7 @@ bx_sound_linux_c::bx_sound_linux_c(bx_sb16_c *sb16)
   midi = NULL;
   wavedevice = NULL;
   wave = -1;
+  BX_INFO(("Sound output module 'linux' initialized"));
 }
 
 bx_sound_linux_c::~bx_sound_linux_c()
@@ -68,18 +69,18 @@ int bx_sound_linux_c::midiready()
 }
 
 #if BX_HAVE_ALSASOUND
-int bx_sound_linux_c::alsa_seq_open(char *device)
+int bx_sound_linux_c::alsa_seq_open(char *alsadev)
 {
   char *mididev, *ptr;
   int client, port, ret = 0;
-  int length = strlen(device) + 1;
+  int length = strlen(alsadev) + 1;
 
   mididev = new char[length];
 
   if (mididev == NULL)
     return BX_SOUND_OUTPUT_ERR;
 
-  strcpy(mididev, device);
+  strcpy(mididev, alsadev);
   ptr = strtok(mididev, ":");
   if (ptr == NULL) {
     WRITELOG(MIDILOG(2), "ALSA sequencer setup: missing client parameters");
@@ -122,24 +123,24 @@ int bx_sound_linux_c::alsa_seq_open(char *device)
 }
 #endif
 
-int bx_sound_linux_c::openmidioutput(char *device)
+int bx_sound_linux_c::openmidioutput(char *mididev)
 {
-  if ((device == NULL) || (strlen(device) < 1))
+  if ((mididev == NULL) || (strlen(mididev) < 1))
     return BX_SOUND_OUTPUT_ERR;
 
 #if BX_HAVE_ALSASOUND
-  use_alsa_seq = !strncmp(device, "alsa:", 5);
+  use_alsa_seq = !strncmp(mididev, "alsa:", 5);
   if (use_alsa_seq) {
-    return alsa_seq_open(device+5);
+    return alsa_seq_open(mididev+5);
   }
 #endif
 
-  midi = fopen(device,"w");
+  midi = fopen(mididev,"w");
 
   if (midi == NULL)
   {
       WRITELOG(MIDILOG(2), "Couldn't open midi output device %s: %s.",
-                device, strerror(errno));
+                mididev, strerror(errno));
       return BX_SOUND_OUTPUT_ERR;
   }
 
@@ -248,15 +249,15 @@ int bx_sound_linux_c::closemidioutput()
 }
 
 
-int bx_sound_linux_c::openwaveoutput(char *device)
+int bx_sound_linux_c::openwaveoutput(char *wavedev)
 {
 #if BX_HAVE_ALSASOUND
-  use_alsa_pcm = !strcmp(device, "alsa");
+  use_alsa_pcm = !strcmp(wavedev, "alsa");
   if (use_alsa_pcm) {
     return BX_SOUND_OUTPUT_OK;
   }
 #endif
-  int length = strlen(device) + 1;
+  int length = strlen(wavedev) + 1;
 
   if (wavedevice != NULL)
     delete(wavedevice);
@@ -266,7 +267,7 @@ int bx_sound_linux_c::openwaveoutput(char *device)
   if (wavedevice == NULL)
     return BX_SOUND_OUTPUT_ERR;
 
-  strncpy(wavedevice, device, length);
+  strncpy(wavedevice, wavedev, length);
 
   return BX_SOUND_OUTPUT_OK;
 }

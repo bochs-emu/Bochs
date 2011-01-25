@@ -1,5 +1,5 @@
 //
-//  Copyright (C) 2001-2009  The Bochs Project
+//  Copyright (C) 2001-2011  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -218,8 +218,6 @@
 #define BX_SUPPORT_GAMEPORT 0
 
 #if BX_SUPPORT_SB16
-// Use virtual methods for the sound output functions
-#define BX_USE_SOUND_VIRTUAL  1
 // Determines which sound output class is to be used.
 // Currently the following are available:
 //    bx_sound_linux_c      Output for Linux, to /dev/dsp and /dev/midi00

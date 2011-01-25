@@ -1,8 +1,8 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: soundwin.h,v 1.8 2009-12-04 19:50:29 sshwarts Exp $
+// $Id: soundwin.h,v 1.9 2011-01-25 23:29:08 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2009  The Bochs Project
+//  Copyright (C) 2001-2011  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -166,30 +166,23 @@ typedef struct {
 
 class bx_sound_windows_c : public bx_sound_output_c {
 public:
-  bx_sound_windows_c(bx_sb16_c *sb16);
-  BX_SOUND_VIRTUAL ~bx_sound_windows_c();
+  bx_sound_windows_c(bx_sb16_c *dev);
+  virtual ~bx_sound_windows_c();
 
-  // if virtual functions are used, we have to override them
-  // and define our own. Otherwise this file will just implement
-  // the original functions
-#ifdef BX_USE_SOUND_VIRTUAL
-  BX_SOUND_VIRTUAL int    waveready();
-  BX_SOUND_VIRTUAL int    midiready();
+  virtual int    waveready();
+  virtual int    midiready();
 
-  BX_SOUND_VIRTUAL int    openmidioutput(char *device);
-  BX_SOUND_VIRTUAL int    sendmidicommand(int delta, int command, int length, Bit8u data[]);
-  BX_SOUND_VIRTUAL int    closemidioutput();
+  virtual int    openmidioutput(char *mididev);
+  virtual int    sendmidicommand(int delta, int command, int length, Bit8u data[]);
+  virtual int    closemidioutput();
 
-  BX_SOUND_VIRTUAL int    openwaveoutput(char *device);
-  BX_SOUND_VIRTUAL int    startwaveplayback(int frequency, int bits, int stereo, int format);
-  BX_SOUND_VIRTUAL int    sendwavepacket(int length, Bit8u data[]);
-  BX_SOUND_VIRTUAL int    stopwaveplayback();
-  BX_SOUND_VIRTUAL int    closewaveoutput();
-#endif
+  virtual int    openwaveoutput(char *wavedev);
+  virtual int    startwaveplayback(int frequency, int bits, int stereo, int format);
+  virtual int    sendwavepacket(int length, Bit8u data[]);
+  virtual int    stopwaveplayback();
+  virtual int    closewaveoutput();
 
 private:
-  bx_sb16_c *sb16;
-
   struct bx_sb16_waveinfo_struct {
     int frequency;
     int bits;

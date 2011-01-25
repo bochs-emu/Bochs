@@ -1,8 +1,8 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sb16.h,v 1.35 2009-12-04 19:50:29 sshwarts Exp $
+// $Id: sb16.h,v 1.36 2011-01-25 23:29:08 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2009  The Bochs Project
+//  Copyright (C) 2001-2011  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -18,7 +18,7 @@
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 
-// This file (SB16.H) written and donated by Josef Drexler
+// The original version of the SB16 support written and donated by Josef Drexler
 
 #ifndef BX_IODEV_SB16_H
 #define BX_IODEV_SB16_H
@@ -31,14 +31,6 @@
 #  define BX_SB16_SMF
 #  define BX_SB16_THIS  this->
 #  define BX_SB16_THISP (this)
-#endif
-
-#if BX_USE_SOUND_VIRTUAL
-#  define BX_SOUND_VIRTUAL  virtual
-#  define BX_SOUND_OUTPUT_C_DEF bx_sound_output_c
-#else
-#  define BX_SOUND_VIRTUAL
-#  define BX_SOUND_OUTPUT_C_DEF BX_SOUND_OUTPUT_C
 #endif
 
 // If the buffer commands are to be inlined:
@@ -78,10 +70,6 @@
    If 2, the usual Adlib emulation is enabled. If 4, an OPL3 is
    emulated at adresses 0x388..0x38b, or two separate OPL2's.
 */
-
-/* Definitions for the output functions */
-#define BX_SOUND_OUTPUT_OK   0
-#define BX_SOUND_OUTPUT_ERR  1
 
 // this is the size of a DMA chunk sent to output
 // it should not be too large to avoid lag, and not too
@@ -182,7 +170,7 @@ private:
 
 
 // forward definition
-class BX_SOUND_OUTPUT_C_DEF;
+class bx_sound_output_c;
 
 // The actual emulator class, emulating the sound blaster ports
 class bx_sb16_c : public bx_devmodel_c {
@@ -207,7 +195,7 @@ private:
   int midimode, wavemode, loglevel;
   Bit32u dmatimer;
   FILE *logfile, *midifile, *wavefile; // the output files or devices
-  BX_SOUND_OUTPUT_C_DEF *output;// the output class
+  bx_sound_output_c *soundmod;// the output class
   int currentirq;
   int currentdma8;
   int currentdma16;
@@ -387,40 +375,15 @@ private:
 #endif
 };
 
-// The class with the output functions
-class bx_sound_output_c : public logfunctions {
-public:
-
-      /* These functions are the sound output functions, sending
-	 the music/sound to the OS specific driver.
-	 They are in a different file (sound.cc) because they are
-	 non-portable, while everything in sb16.cc is portable */
-
-  bx_sound_output_c(bx_sb16_c *sb16);
-  BX_SOUND_VIRTUAL ~bx_sound_output_c();
-
-  BX_SOUND_VIRTUAL int waveready();
-  BX_SOUND_VIRTUAL int midiready();
-
-  BX_SOUND_VIRTUAL int openmidioutput(char *device);
-  BX_SOUND_VIRTUAL int sendmidicommand(int delta, int command, int length, Bit8u data[]);
-  BX_SOUND_VIRTUAL int closemidioutput();
-
-  BX_SOUND_VIRTUAL int openwaveoutput(char *device);
-  BX_SOUND_VIRTUAL int startwaveplayback(int frequency, int bits, int stereo, int format);
-  BX_SOUND_VIRTUAL int sendwavepacket(int length, Bit8u data[]);
-  BX_SOUND_VIRTUAL int stopwaveplayback();
-  BX_SOUND_VIRTUAL int closewaveoutput();
-};
-
-#define WRITELOG        sb16->writelog
 #define BOTHLOG(x)      (x)
 #ifndef BX_SOUNDLOW
+#define WRITELOG        (BX_SB16_THIS writelog)
 #define MIDILOG(x)      ((BX_SB16_THIS midimode>0?x:0x7f))
 #define WAVELOG(x)      ((BX_SB16_THIS wavemode>0?x:0x7f))
 #else
-#define MIDILOG(x)      ((sb16->get_midimode()>0?x:0x7f))
-#define WAVELOG(x)      ((sb16->get_wavemode()>0?x:0x7f))
+#define WRITELOG        (device->writelog)
+#define MIDILOG(x)      ((device->get_midimode()>0?x:0x7f))
+#define WAVELOG(x)      ((device->get_wavemode()>0?x:0x7f))
 #endif
 
 #endif
