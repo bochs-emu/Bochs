@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.256 2011-01-25 15:50:20 sshwarts Exp $
+// $Id: rombios.c,v 1.257 2011-01-26 09:52:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -699,16 +699,32 @@ typedef struct {
     Bit16u  blksize;
     Bit16u  dpte_offset;
     Bit16u  dpte_segment;
-    Bit16u  key;
-    Bit8u   dpi_length;
-    Bit8u   reserved1;
-    Bit16u  reserved2;
-    Bit8u   host_bus[4];
-    Bit8u   iface_type[8];
-    Bit8u   iface_path[8];
-    Bit8u   device_path[8];
-    Bit8u   reserved3;
-    Bit8u   checksum;
+    union {
+      struct {
+        Bit16u  key;
+        Bit8u   dpi_length;
+        Bit8u   reserved1;
+        Bit16u  reserved2;
+        Bit8u   host_bus[4];
+        Bit8u   iface_type[8];
+        Bit8u   iface_path[8];
+        Bit8u   device_path[8];
+        Bit8u   reserved3;
+        Bit8u   checksum;
+      } phoenix;
+      struct {
+        Bit16u  key;
+        Bit8u   dpi_length;
+        Bit8u   reserved1;
+        Bit16u  reserved2;
+        Bit8u   host_bus[4];
+        Bit8u   iface_type[8];
+        Bit8u   iface_path[8];
+        Bit8u   device_path[16];
+        Bit8u   reserved3;
+        Bit8u   checksum;
+      } t13;
+    } dpi;
   } dpt_t;
 
   #define Int13DPT ((dpt_t *) 0)
@@ -876,7 +892,7 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.256 $ $Date: 2011-01-25 15:50:20 $";
+static char bios_cvs_version_string[] = "$Revision: 1.257 $ $Date: 2011-01-26 09:52:02 $";
 
 #define BIOS_COPYRIGHT_STRING "(c) 2002 MandrakeSoft S.A. Written by Kevin Lawton & the Bochs team."
 
@@ -5242,11 +5258,12 @@ int13_edd(DS, SI, device)
   Bit8u device;
 {
   Bit32u lba_low, lba_high;
-  Bit16u npc, nph, npspt, size;
+  Bit16u npc, nph, npspt, size, t13;
   Bit16u ebda_seg=read_word(0x0040,0x000E);
   Bit8u type=read_byte(ebda_seg,&EbdaData->ata.devices[device].type);
 
   size=read_word(DS,SI+(Bit16u)&Int13DPT->size);
+  t13 = size == 74;
 
   // Buffer is too small
   if(size < 26)
@@ -5361,60 +5378,70 @@ int13_edd(DS, SI, device)
     iface = read_byte(ebda_seg, &EbdaData->ata.channels[channel].iface);
     iobase1 = read_word(ebda_seg, &EbdaData->ata.channels[channel].iobase1);
 
-    write_word(DS, SI+(Bit16u)&Int13DPT->key, 0xbedd);
-    write_byte(DS, SI+(Bit16u)&Int13DPT->dpi_length, 36);
-    write_byte(DS, SI+(Bit16u)&Int13DPT->reserved1, 0);
-    write_word(DS, SI+(Bit16u)&Int13DPT->reserved2, 0);
+    write_word(DS, SI+(Bit16u)&Int13DPT->dpi.t13.key, 0xbedd);
+    write_byte(DS, SI+(Bit16u)&Int13DPT->dpi.t13.dpi_length, t13 ? 44 : 36);
+    write_byte(DS, SI+(Bit16u)&Int13DPT->dpi.t13.reserved1, 0);
+    write_word(DS, SI+(Bit16u)&Int13DPT->dpi.t13.reserved2, 0);
 
     if (iface==ATA_IFACE_ISA) {
-      write_byte(DS, SI+(Bit16u)&Int13DPT->host_bus[0], 'I');
-      write_byte(DS, SI+(Bit16u)&Int13DPT->host_bus[1], 'S');
-      write_byte(DS, SI+(Bit16u)&Int13DPT->host_bus[2], 'A');
-      write_byte(DS, SI+(Bit16u)&Int13DPT->host_bus[3], ' ');
+      write_byte(DS, SI+(Bit16u)&Int13DPT->dpi.t13.host_bus[0], 'I');
+      write_byte(DS, SI+(Bit16u)&Int13DPT->dpi.t13.host_bus[1], 'S');
+      write_byte(DS, SI+(Bit16u)&Int13DPT->dpi.t13.host_bus[2], 'A');
+      write_byte(DS, SI+(Bit16u)&Int13DPT->dpi.t13.host_bus[3], ' ');
     }
     else {
       // FIXME PCI
     }
 
     if (type == ATA_TYPE_ATA) {
-        write_byte(DS, SI+(Bit16u)&Int13DPT->iface_type[0], 'A');
-        write_byte(DS, SI+(Bit16u)&Int13DPT->iface_type[1], 'T');
-        write_byte(DS, SI+(Bit16u)&Int13DPT->iface_type[2], 'A');
-        write_byte(DS, SI+(Bit16u)&Int13DPT->iface_type[3], ' ');
-        write_byte(DS, SI+(Bit16u)&Int13DPT->iface_type[4], ' ');
-        write_byte(DS, SI+(Bit16u)&Int13DPT->iface_type[5], ' ');
-        write_byte(DS, SI+(Bit16u)&Int13DPT->iface_type[6], ' ');
-        write_byte(DS, SI+(Bit16u)&Int13DPT->iface_type[7], ' ');
+        write_byte(DS, SI+(Bit16u)&Int13DPT->dpi.t13.iface_type[0], 'A');
+        write_byte(DS, SI+(Bit16u)&Int13DPT->dpi.t13.iface_type[1], 'T');
+        write_byte(DS, SI+(Bit16u)&Int13DPT->dpi.t13.iface_type[2], 'A');
+        write_byte(DS, SI+(Bit16u)&Int13DPT->dpi.t13.iface_type[3], ' ');
+        write_byte(DS, SI+(Bit16u)&Int13DPT->dpi.t13.iface_type[4], ' ');
+        write_byte(DS, SI+(Bit16u)&Int13DPT->dpi.t13.iface_type[5], ' ');
+        write_byte(DS, SI+(Bit16u)&Int13DPT->dpi.t13.iface_type[6], ' ');
+        write_byte(DS, SI+(Bit16u)&Int13DPT->dpi.t13.iface_type[7], ' ');
     } else if (type == ATA_TYPE_ATAPI) {
-        write_byte(DS, SI+(Bit16u)&Int13DPT->iface_type[0], 'A');
-        write_byte(DS, SI+(Bit16u)&Int13DPT->iface_type[1], 'T');
-        write_byte(DS, SI+(Bit16u)&Int13DPT->iface_type[2], 'A');
-        write_byte(DS, SI+(Bit16u)&Int13DPT->iface_type[3], 'P');
-        write_byte(DS, SI+(Bit16u)&Int13DPT->iface_type[4], 'I');
-        write_byte(DS, SI+(Bit16u)&Int13DPT->iface_type[5], ' ');
-        write_byte(DS, SI+(Bit16u)&Int13DPT->iface_type[6], ' ');
-        write_byte(DS, SI+(Bit16u)&Int13DPT->iface_type[7], ' ');
+        write_byte(DS, SI+(Bit16u)&Int13DPT->dpi.t13.iface_type[0], 'A');
+        write_byte(DS, SI+(Bit16u)&Int13DPT->dpi.t13.iface_type[1], 'T');
+        write_byte(DS, SI+(Bit16u)&Int13DPT->dpi.t13.iface_type[2], 'A');
+        write_byte(DS, SI+(Bit16u)&Int13DPT->dpi.t13.iface_type[3], 'P');
+        write_byte(DS, SI+(Bit16u)&Int13DPT->dpi.t13.iface_type[4], 'I');
+        write_byte(DS, SI+(Bit16u)&Int13DPT->dpi.t13.iface_type[5], ' ');
+        write_byte(DS, SI+(Bit16u)&Int13DPT->dpi.t13.iface_type[6], ' ');
+        write_byte(DS, SI+(Bit16u)&Int13DPT->dpi.t13.iface_type[7], ' ');
     }
 
     if (iface==ATA_IFACE_ISA) {
-      write_word(DS, SI+(Bit16u)&Int13DPT->iface_path[0], iobase1);
-      write_word(DS, SI+(Bit16u)&Int13DPT->iface_path[2], 0);
-      write_dword(DS, SI+(Bit16u)&Int13DPT->iface_path[4], 0L);
+      write_word(DS, SI+(Bit16u)&Int13DPT->dpi.t13.iface_path[0], iobase1);
+      write_word(DS, SI+(Bit16u)&Int13DPT->dpi.t13.iface_path[2], 0);
+      write_dword(DS, SI+(Bit16u)&Int13DPT->dpi.t13.iface_path[4], 0L);
     }
     else {
       // FIXME PCI
     }
-    write_byte(DS, SI+(Bit16u)&Int13DPT->device_path[0], device%2);
-    write_byte(DS, SI+(Bit16u)&Int13DPT->device_path[1], 0);
-    write_word(DS, SI+(Bit16u)&Int13DPT->device_path[2], 0);
-    write_dword(DS, SI+(Bit16u)&Int13DPT->device_path[4], 0L);
+    write_byte(DS, SI+(Bit16u)&Int13DPT->dpi.t13.device_path[0], device%2);
+    write_byte(DS, SI+(Bit16u)&Int13DPT->dpi.t13.device_path[1], 0);
+    write_word(DS, SI+(Bit16u)&Int13DPT->dpi.t13.device_path[2], 0);
+    write_dword(DS, SI+(Bit16u)&Int13DPT->dpi.t13.device_path[4], 0L);
+    if (t13) {
+      write_dword(DS, SI+(Bit16u)&Int13DPT->dpi.t13.device_path[8], 0L);
+      write_dword(DS, SI+(Bit16u)&Int13DPT->dpi.t13.device_path[12], 0L);
+    }
 
-    write_byte(DS, SI+(Bit16u)&Int13DPT->reserved3, 0);
+    if (t13)
+      write_byte(DS, SI+(Bit16u)&Int13DPT->dpi.t13.reserved3, 0);
+    else
+      write_byte(DS, SI+(Bit16u)&Int13DPT->dpi.phoenix.reserved3, 0);
 
-    checksum=0;
-    for (i=30; i<65; i++) checksum+=read_byte(DS, SI + i);
+    checksum = 0;
+    for (i = 30; i < (t13 ? 73 : 65); i++) checksum += read_byte(DS, SI + i);
     checksum = -checksum;
-    write_byte(DS, SI+(Bit16u)&Int13DPT->checksum, checksum);
+    if (t13)
+      write_byte(DS, SI+(Bit16u)&Int13DPT->dpi.t13.checksum, checksum);
+    else
+      write_byte(DS, SI+(Bit16u)&Int13DPT->dpi.phoenix.checksum, checksum);
   }
 
   return 0;
