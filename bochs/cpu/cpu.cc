@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.318 2011-01-23 15:54:54 sshwarts Exp $
+// $Id: cpu.cc,v 1.319 2011-01-26 11:48:13 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -119,30 +119,9 @@ void BX_CPU_C::cpu_loop(Bit32u max_instr_count)
       }
     }
 
-no_async_event:
+    bxICacheEntry_c *entry = getICacheEntry();
 
-    bx_address eipBiased = RIP + BX_CPU_THIS_PTR eipPageBias;
-
-    if (eipBiased >= BX_CPU_THIS_PTR eipPageWindowSize) {
-      prefetch();
-      eipBiased = RIP + BX_CPU_THIS_PTR eipPageBias;
-    }
-
-    bx_phy_address pAddr = BX_CPU_THIS_PTR pAddrPage + eipBiased;
-    bxICacheEntry_c *entry = BX_CPU_THIS_PTR iCache.get_entry(pAddr, BX_CPU_THIS_PTR fetchModeMask);
     bxInstruction_c *i = entry->i;
-
-    InstrICache_Increment(iCacheLookups);
-    InstrICache_Stats();
-
-    if (entry->pAddr != pAddr)
-    {
-      // iCache miss. No validated instruction with matching fetch parameters
-      // is in the iCache.
-      InstrICache_Increment(iCacheMisses);
-      serveICacheMiss(entry, (Bit32u) eipBiased, pAddr);
-      i = entry->i;
-    }
 
 #if BX_SUPPORT_TRACE_CACHE
     bxInstruction_c *last = i + (entry->tlen);
@@ -183,10 +162,40 @@ no_async_event:
         break;
       }
 
-      if (++i == last) goto no_async_event;
+      if (++i == last) {
+        entry = getICacheEntry();
+        i = entry->i;
+        last = i + (entry->tlen);
+      }
     }
 #endif
   }  // while (1)
+}
+
+bxICacheEntry_c* BX_CPU_C::getICacheEntry(void)
+{
+  bx_address eipBiased = RIP + BX_CPU_THIS_PTR eipPageBias;
+
+  if (eipBiased >= BX_CPU_THIS_PTR eipPageWindowSize) {
+    prefetch();
+    eipBiased = RIP + BX_CPU_THIS_PTR eipPageBias;
+  }
+
+  bx_phy_address pAddr = BX_CPU_THIS_PTR pAddrPage + eipBiased;
+  bxICacheEntry_c *entry = BX_CPU_THIS_PTR iCache.get_entry(pAddr, BX_CPU_THIS_PTR fetchModeMask);
+
+  InstrICache_Increment(iCacheLookups);
+  InstrICache_Stats();
+
+  if (entry->pAddr != pAddr)
+  {
+    // iCache miss. No validated instruction with matching fetch parameters
+    // is in the iCache.
+    InstrICache_Increment(iCacheMisses);
+    serveICacheMiss(entry, (Bit32u) eipBiased, pAddr);
+  }
+
+  return entry;
 }
 
 void BX_CPP_AttrRegparmN(2) BX_CPU_C::repeat(bxInstruction_c *i, BxExecutePtr_tR execute)
