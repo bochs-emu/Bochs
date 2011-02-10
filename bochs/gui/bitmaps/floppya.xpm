@@ -1,5 +1,5 @@
 /* XPM */
-static char *floppya_xpm[] = {
+static const char *floppya_xpm[] = {
 /* width height num_colors chars_per_pixel */
 "    32    32        2            1",
 /* colors */

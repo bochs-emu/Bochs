@@ -1,5 +1,5 @@
 /* XPM */
-static char *floppyb_xpm[] = {
+static const char *floppyb_xpm[] = {
 /* width height num_colors chars_per_pixel */
 "    32    32        2            1",
 /* colors */

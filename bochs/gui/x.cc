@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: x.cc,v 1.132 2010-05-18 15:33:41 vruppert Exp $
+// $Id: x.cc,v 1.133 2011-02-10 23:00:56 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2009  The Bochs Project
@@ -39,6 +39,7 @@ extern "C" {
 #include <X11/Xos.h>
 #include <X11/Xatom.h>
 #include <X11/keysym.h>
+#include <X11/extensions/Xrandr.h>
 #if BX_HAVE_XPM_H
 #include <X11/xpm.h>
 #endif
@@ -477,11 +478,11 @@ void bx_x_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsign
 
 #if BX_HAVE_XPM_H
   /* Create pixmap from XPM for icon */
-  XCreatePixmapFromData(bx_x_display, win, icon_bochs_xpm, &icon_pixmap, &icon_mask, NULL);
+  XCreatePixmapFromData(bx_x_display, win, (char **)icon_bochs_xpm, &icon_pixmap, &icon_mask, NULL);
 #else
   /* Create pixmap of depth 1 (bitmap) for icon */
   icon_pixmap = XCreateBitmapFromData(bx_x_display, win,
-    (char *) bochs_icon_bits, bochs_icon_width, bochs_icon_height);
+    (char *)bochs_icon_bits, bochs_icon_width, bochs_icon_height);
 #endif
 
   /* Set size hints for window manager.  The window manager may
@@ -1985,8 +1986,18 @@ void bx_x_gui_c::beep_off()
 
 void bx_x_gui_c::get_capabilities(Bit16u *xres, Bit16u *yres, Bit16u *bpp)
 {
-  *xres = 1024;
-  *yres = 768;
+  int num_sizes;
+  Rotation original_rotation;
+
+  Display *dpy = XOpenDisplay(NULL);
+  Window root = RootWindow(dpy, 0);
+  XRRScreenSize *xrrs = XRRSizes(dpy, 0, &num_sizes);
+  XRRScreenConfiguration *conf = XRRGetScreenInfo(dpy, root);
+  SizeID original_size_id = XRRConfigCurrentConfiguration(conf, &original_rotation);
+  *xres = xrrs[original_size_id].width;
+  *yres = xrrs[original_size_id].height;
+  XCloseDisplay(dpy);
+  // always return 32 bit depth
   *bpp = 32;
 }
 
