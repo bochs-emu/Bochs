@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: soundwin.h,v 1.9 2011-01-25 23:29:08 vruppert Exp $
+// $Id: soundwin.h,v 1.10 2011-02-10 22:58:22 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2011  The Bochs Project
@@ -31,7 +31,7 @@
 
 #define BX_SOUND_WINDOWS_MAXSYSEXLEN  256    // maximum supported length of a sysex message
 
-#define BX_SOUND_WINDOWS_NBUF 	4   // number of buffers for the output, must be power of 2 and >= 4
+#define BX_SOUND_WINDOWS_NBUF 	64  // number of buffers for the output, must be power of 2 and >= 4
 #define BX_SOUND_WINDOWS_NMASK	(BX_SOUND_WINDOWS_NBUF - 1)
 
 #ifndef WAVEMAPPER
@@ -166,7 +166,7 @@ typedef struct {
 
 class bx_sound_windows_c : public bx_sound_output_c {
 public:
-  bx_sound_windows_c(bx_sb16_c *dev);
+  bx_sound_windows_c(logfunctions *dev);
   virtual ~bx_sound_windows_c();
 
   virtual int    waveready();

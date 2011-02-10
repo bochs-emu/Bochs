@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: soundosx.cc,v 1.14 2011-01-25 23:29:08 vruppert Exp $
+// $Id: soundosx.cc,v 1.15 2011-02-10 22:58:22 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004-2011  The Bochs Project
@@ -24,15 +24,13 @@
 #include <MacTypes.h>
 #endif
 
-#include "iodev.h"
-#define BX_SOUNDLOW
-#include "sb16.h"
-#include "soundmod.h"
+#include "bochs.h"
 
 #if defined(macintosh) && BX_SUPPORT_SB16
 
 #define LOG_THIS device->
 
+#include "soundmod.h"
 #include "soundosx.h"
 
 #if BX_WITH_MACOS
@@ -71,7 +69,7 @@ AudioUnit WaveOutputUnit = NULL;
 AudioConverterRef WaveConverter = NULL;
 #endif
 
-bx_sound_osx_c::bx_sound_osx_c(bx_sb16_c *dev)
+bx_sound_osx_c::bx_sound_osx_c(logfunctions *dev)
     :bx_sound_output_c(dev)
 {
     MidiOpen = 0;
@@ -136,14 +134,14 @@ int bx_sound_osx_c::openmidioutput(char *mididev)
     // Start playing
     AUGraphStart (MidiGraph);
 #endif
-    WRITELOG(WAVELOG(4), "openmidioutput(%s)", mididev);
+    BX_DEBUG(("openmidioutput(%s)", mididev));
     MidiOpen = 1;
     return BX_SOUND_OUTPUT_OK;
 }
 
 int bx_sound_osx_c::sendmidicommand(int delta, int command, int length, Bit8u data[])
 {
-    WRITELOG(WAVELOG(5), "sendmidicommand(%i,%02x,%i)", delta, command, length);
+    BX_DEBUG(("sendmidicommand(%i,%02x,%i)", delta, command, length));
     if (!MidiOpen) return BX_SOUND_OUTPUT_ERR;
 
 #ifdef BX_SOUND_OSX_use_converter
@@ -161,7 +159,7 @@ int bx_sound_osx_c::sendmidicommand(int delta, int command, int length, Bit8u da
 
 int bx_sound_osx_c::closemidioutput()
 {
-    WRITELOG(WAVELOG(4), "closemidioutput()");
+    BX_DEBUG(("closemidioutput()"));
     MidiOpen = 0;
 #ifdef BX_SOUND_OSX_use_converter
     AUGraphStop (MidiGraph);
@@ -186,7 +184,7 @@ int bx_sound_osx_c::openwaveoutput(char *wavedev)
 {
     OSStatus err;
 
-    WRITELOG(WAVELOG(4), "openwaveoutput(%s)", wavedev);
+    BX_DEBUG(("openwaveoutput(%s)", wavedev));
 
     // open the default output unit
 #ifdef BX_SOUND_OSX_use_quicktime
@@ -218,7 +216,7 @@ int bx_sound_osx_c::startwaveplayback(int frequency, int bits, int stereo, int f
     UInt32 formatSize = sizeof(AudioStreamBasicDescription);
 #endif
 
-    WRITELOG(WAVELOG(4), "startwaveplayback(%d, %d, %d, %x)", frequency, bits, stereo, format);
+    BX_DEBUG(("startwaveplayback(%d, %d, %d, %x)", frequency, bits, stereo, format));
 
 #ifdef BX_SOUND_OSX_use_quicktime
     WaveInfo.samplePtr = NULL;
@@ -309,7 +307,7 @@ int bx_sound_osx_c::sendwavepacket(int length, Bit8u data[])
     SndCommand mySndCommand;
 #endif
 
-    WRITELOG(WAVELOG(4), "sendwavepacket(%d, %p), head=%u", length, data, head);
+    BX_DEBUG(("sendwavepacket(%d, %p), head=%u", length, data, head));
 
     // sanity check
     if ((!WaveOpen) || (head - tail >= BX_SOUND_OSX_NBUF))
@@ -390,7 +388,7 @@ OSStatus MyACInputProc (AudioConverterRef inAudioConverter,
 
 void bx_sound_osx_c::nextbuffer (int *outDataSize, void **outData)
 {
-    WRITELOG(WAVELOG(4), "nextbuffer(), tail=%u", tail);
+    BX_DEBUG(("nextbuffer(), tail=%u", tail));
     if (head - tail <= 0) {
         *outData = NULL;
         *outDataSize = 0;

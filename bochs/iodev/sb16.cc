@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sb16.cc,v 1.71 2011-01-25 23:29:08 vruppert Exp $
+// $Id: sb16.cc,v 1.72 2011-02-10 22:58:22 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2011  The Bochs Project
@@ -3669,7 +3669,7 @@ int bx_sb16_buffer::commandbytes(void)
 }
 
 // The dummy output functions. They don't do anything
-bx_sound_output_c::bx_sound_output_c(bx_sb16_c *dev)
+bx_sound_output_c::bx_sound_output_c(logfunctions *dev)
 {
   device = dev;
 }

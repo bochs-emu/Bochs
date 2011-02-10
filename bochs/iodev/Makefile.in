@@ -428,8 +428,8 @@ sb16.o: sb16.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../gui/paramtree.h ../memory/memory.h \
   ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
-  ../instrument/stubs/instrument.h ../param_names.h sb16.h soundlnx.h \
-  soundwin.h soundosx.h
+  ../instrument/stubs/instrument.h ../param_names.h sb16.h soundmod.h \
+  soundlnx.h soundwin.h soundosx.h
 scancodes.o: scancodes.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../gui/paramtree.h ../memory/memory.h \
@@ -460,17 +460,17 @@ soundlnx.o: soundlnx.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../gui/paramtree.h ../memory/memory.h \
   ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
-  ../instrument/stubs/instrument.h ../param_names.h sb16.h soundlnx.h
+  ../instrument/stubs/instrument.h ../param_names.h soundmod.h soundlnx.h
 soundosx.o: soundosx.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../gui/paramtree.h ../memory/memory.h \
   ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
-  ../instrument/stubs/instrument.h ../param_names.h sb16.h
+  ../instrument/stubs/instrument.h ../param_names.h soundmod.h soundosx.h
 soundwin.o: soundwin.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../gui/paramtree.h ../memory/memory.h \
   ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
-  ../instrument/stubs/instrument.h ../param_names.h sb16.h
+  ../instrument/stubs/instrument.h ../param_names.h soundmod.h soundwin.h
 speaker.o: speaker.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../gui/paramtree.h ../memory/memory.h \
@@ -759,8 +759,8 @@ sb16.lo: sb16.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../gui/paramtree.h ../memory/memory.h \
   ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
-  ../instrument/stubs/instrument.h ../param_names.h sb16.h soundlnx.h \
-  soundwin.h soundosx.h
+  ../instrument/stubs/instrument.h ../param_names.h sb16.h soundmod.h \
+  soundlnx.h soundwin.h soundosx.h
 scancodes.lo: scancodes.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../gui/paramtree.h ../memory/memory.h \
@@ -791,17 +791,17 @@ soundlnx.lo: soundlnx.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../gui/paramtree.h ../memory/memory.h \
   ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
-  ../instrument/stubs/instrument.h ../param_names.h sb16.h soundlnx.h
+  ../instrument/stubs/instrument.h ../param_names.h soundmod.h soundlnx.h
 soundosx.lo: soundosx.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../gui/paramtree.h ../memory/memory.h \
   ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
-  ../instrument/stubs/instrument.h ../param_names.h sb16.h
+  ../instrument/stubs/instrument.h ../param_names.h soundmod.h soundosx.h
 soundwin.lo: soundwin.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../gui/paramtree.h ../memory/memory.h \
   ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
-  ../instrument/stubs/instrument.h ../param_names.h sb16.h
+  ../instrument/stubs/instrument.h ../param_names.h soundmod.h soundwin.h
 speaker.lo: speaker.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../gui/paramtree.h ../memory/memory.h \

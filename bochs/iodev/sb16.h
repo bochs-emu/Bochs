@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sb16.h,v 1.36 2011-01-25 23:29:08 vruppert Exp $
+// $Id: sb16.h,v 1.37 2011-02-10 22:58:22 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2011  The Bochs Project
@@ -70,11 +70,6 @@
    If 2, the usual Adlib emulation is enabled. If 4, an OPL3 is
    emulated at adresses 0x388..0x38b, or two separate OPL2's.
 */
-
-// this is the size of a DMA chunk sent to output
-// it should not be too large to avoid lag, and not too
-// small to avoid unnecessary overhead.
-#define BX_SOUND_OUTPUT_WAVEPACKETSIZE  8192
 
 #define BX_SB16_MIX_REG  0x100        // total number of mixer registers
 
@@ -376,14 +371,8 @@ private:
 };
 
 #define BOTHLOG(x)      (x)
-#ifndef BX_SOUNDLOW
 #define WRITELOG        (BX_SB16_THIS writelog)
 #define MIDILOG(x)      ((BX_SB16_THIS midimode>0?x:0x7f))
 #define WAVELOG(x)      ((BX_SB16_THIS wavemode>0?x:0x7f))
-#else
-#define WRITELOG        (device->writelog)
-#define MIDILOG(x)      ((device->get_midimode()>0?x:0x7f))
-#define WAVELOG(x)      ((device->get_wavemode()>0?x:0x7f))
-#endif
 
 #endif

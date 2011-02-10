@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: soundlnx.h,v 1.15 2011-01-25 23:29:08 vruppert Exp $
+// $Id: soundlnx.h,v 1.16 2011-02-10 22:58:22 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2011  The Bochs Project
@@ -35,7 +35,7 @@
 
 class bx_sound_linux_c : public bx_sound_output_c {
 public:
-  bx_sound_linux_c(bx_sb16_c *dev);
+  bx_sound_linux_c(logfunctions *dev);
   virtual ~bx_sound_linux_c();
 
   virtual int    waveready();

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: soundmod.h,v 1.1 2011-01-25 23:29:08 vruppert Exp $
+// $Id: soundmod.h,v 1.2 2011-02-10 22:58:22 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2011  The Bochs Project
@@ -19,6 +19,11 @@
 //  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 
 
+// this is the size of a DMA chunk sent to output
+// it should not be too large to avoid lag, and not too
+// small to avoid unnecessary overhead.
+#define BX_SOUND_OUTPUT_WAVEPACKETSIZE  8192
+
 /* Definitions for the output functions */
 #define BX_SOUND_OUTPUT_OK   0
 #define BX_SOUND_OUTPUT_ERR  1
@@ -34,7 +39,7 @@ public:
   non-portable, while everything in sb16.cc is portable
   */
 
-  bx_sound_output_c(bx_sb16_c *dev);
+  bx_sound_output_c(logfunctions *dev);
   virtual ~bx_sound_output_c();
 
   virtual int waveready();
@@ -50,5 +55,5 @@ public:
   virtual int stopwaveplayback();
   virtual int closewaveoutput();
 protected:
-  bx_sb16_c *device;
+  logfunctions *device;
 };

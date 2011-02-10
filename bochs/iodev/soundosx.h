@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: soundosx.h,v 1.5 2011-01-25 23:29:08 vruppert Exp $
+// $Id: soundosx.h,v 1.6 2011-02-10 22:58:22 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004-2011  The Bochs Project
@@ -37,7 +37,7 @@
 
 class bx_sound_osx_c : public bx_sound_output_c {
 public:
-    bx_sound_osx_c(bx_sb16_c *dev);
+    bx_sound_osx_c(logfunctions *dev);
     virtual ~bx_sound_osx_c();
 
     virtual int    waveready();
