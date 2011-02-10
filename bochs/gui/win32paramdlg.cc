@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32paramdlg.cc,v 1.19 2011-01-18 19:15:37 vruppert Exp $
+// $Id: win32paramdlg.cc,v 1.20 2011-02-10 22:59:34 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Volker Ruppert
@@ -734,11 +734,11 @@ static INT_PTR CALLBACK ParamDlgProc(HWND Window, UINT AMessage, WPARAM wParam, 
   bx_param_string_c *sparam;
   bx_list_c *tmplist;
   int cid;
-  UINT_PTR code;
+  UINT_PTR code, id;
   UINT i, j, k;
   RECT r, r2;
   SIZE size;
-  NMHDR tcinfo;
+  NMHDR nmhdr;
   char fname[BX_PATHNAME_LEN];
 
   switch (AMessage) {
@@ -806,17 +806,22 @@ static INT_PTR CALLBACK ParamDlgProc(HWND Window, UINT AMessage, WPARAM wParam, 
       }
       break;
     case WM_NOTIFY:
-      tcinfo = *(LPNMHDR)lParam;
-      if (tcinfo.code == (UINT)TCN_SELCHANGE) {
-        code = tcinfo.idFrom;
-        j = (UINT)(code - ID_PARAM);
+      nmhdr = *(LPNMHDR)lParam;
+      code = nmhdr.code;
+      id = nmhdr.idFrom;
+      if (code == (UINT)TCN_SELCHANGE) {
+        j = (UINT)(id - ID_PARAM);
         tmplist = (bx_list_c *)findParamFromDlgID(j);
         if (tmplist != NULL) {
-          k = (UINT)TabCtrl_GetCurSel(GetDlgItem(Window, code));
+          k = (UINT)TabCtrl_GetCurSel(GetDlgItem(Window, id));
           cid = findDlgListBaseID(tmplist);
           for (i = 0; i < (UINT)tmplist->get_size(); i++) {
             ShowParamList(Window, cid + i, (i == k), (bx_list_c*)tmplist->get(i));
           }
+        }
+      } else if (code == (UINT)UDN_DELTAPOS) {
+        if (id >= ID_UPDOWN) {
+          PostMessage(GetDlgItem(Window, ID_PARAM + (id - ID_UPDOWN)), EM_SETMODIFY, TRUE, 0);
         }
       }
       break;
