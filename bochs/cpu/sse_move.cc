@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_move.cc,v 1.131 2011-01-16 20:42:28 sshwarts Exp $
+// $Id: sse_move.cc,v 1.132 2011-02-11 10:08:42 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003-2011 Stanislav Shwartsman
@@ -160,10 +160,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FXSAVE(bxInstruction_c *i)
 
   BX_DEBUG(("FXSAVE: save FPU/MMX/SSE state"));
 
-  if(BX_CPU_THIS_PTR cr0.get_EM())
-    exception(BX_UD_EXCEPTION, 0);
-
-  if(BX_CPU_THIS_PTR cr0.get_TS())
+  if (BX_CPU_THIS_PTR cr0.get_EM() || BX_CPU_THIS_PTR cr0.get_TS())
     exception(BX_NM_EXCEPTION, 0);
 
   xmm.xmm16u(0) = BX_CPU_THIS_PTR the_i387.get_control_word();
@@ -253,7 +250,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FXSAVE(bxInstruction_c *i)
 #endif
 
 
-  if (bx_cpuid_support_sse())
+  if(BX_CPU_THIS_PTR cr4.get_OSFXSR() && bx_cpuid_support_sse())
   {
     /* store XMM register file */
     for(index=0; index < BX_XMM_REGISTERS; index++)
@@ -279,10 +276,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FXRSTOR(bxInstruction_c *i)
 
   BX_DEBUG(("FXRSTOR: restore FPU/MMX/SSE state"));
 
-  if(BX_CPU_THIS_PTR cr0.get_EM())
-    exception(BX_UD_EXCEPTION, 0);
-
-  if(BX_CPU_THIS_PTR cr0.get_TS())
+  if (BX_CPU_THIS_PTR cr0.get_EM() || BX_CPU_THIS_PTR cr0.get_TS())
     exception(BX_NM_EXCEPTION, 0);
 
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
@@ -537,17 +531,15 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVDDUP_VpdWqR(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSLDUP_VpsWpsR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BxPackedXmmRegister op, result;
+  BxPackedXmmRegister op;
 
   op = BX_READ_XMM_REG(i->rm());
 
-  result.xmm32u(0) = op.xmm32u(0);
-  result.xmm32u(1) = op.xmm32u(0);
-  result.xmm32u(2) = op.xmm32u(2);
-  result.xmm32u(3) = op.xmm32u(2);
+  op.xmm32u(1) = op.xmm32u(0);
+  op.xmm32u(3) = op.xmm32u(2);
 
   /* now write result back to destination */
-  BX_WRITE_XMM_REG(i->nnn(), result);
+  BX_WRITE_XMM_REG(i->nnn(), op);
 #endif
 }
 
@@ -555,17 +547,15 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSLDUP_VpsWpsR(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSHDUP_VpsWpsR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BxPackedXmmRegister op, result;
+  BxPackedXmmRegister op;
 
   op = BX_READ_XMM_REG(i->rm());
 
-  result.xmm32u(0) = op.xmm32u(1);
-  result.xmm32u(1) = op.xmm32u(1);
-  result.xmm32u(2) = op.xmm32u(3);
-  result.xmm32u(3) = op.xmm32u(3);
+  op.xmm32u(0) = op.xmm32u(1);
+  op.xmm32u(2) = op.xmm32u(3);
 
   /* now write result back to destination */
-  BX_WRITE_XMM_REG(i->nnn(), result);
+  BX_WRITE_XMM_REG(i->nnn(), op);
 #endif
 }
 
