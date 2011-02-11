@@ -13,6 +13,8 @@ Changes after 2.4.5 release:
   - Updated/Fixed instrumentation callbacks
 
 - Configure and compile
+  - Bochs now can be compiled as native Windows x86-64 application
+    (tested with Mingw gcc 4.5.1 and Microsoft Visual Studio Express 2010)
   - Added ability to configure CPUID stepping through .bochsrc.
     The default stepping value is 3.
   - Added ability to disable MONITOR/MWAIT support through .bochsrc
@@ -23,7 +25,8 @@ Changes after 2.4.5 release:
     - 32-bit physical address for 386/486 guests
     - 36-bit physical address for PSE-36 enabled Pentium guest
     - 40-bit physical address for PAE enabled P6 or later guests
-  - Update config.guess/config.sub scripts to May 2010 revisions.
+  - Updated config.guess/config.sub scripts to May 2010 revisions.
+  - Updated Visual Studio 2008 project files in build/win32/vs2008ex-workspace.zip
   - Added Bochs compilation timestamp after Bochs version string.
 
 - GUI and display libraries (Volker)
