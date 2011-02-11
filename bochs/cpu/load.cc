@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: load.cc,v 1.6 2011-01-12 20:16:25 sshwarts Exp $
+// $Id: load.cc,v 1.7 2011-02-11 09:56:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008-2011 Stanislav Shwartsman
@@ -102,18 +102,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Wdq(bxInstruction_c *i)
 #endif
     read_virtual_dqword_aligned(i->seg(), eaddr, &op);
 
-  BX_WRITE_XMM_REG(BX_TMP_REGISTER, op);
-
-  BX_CPU_CALL_METHOD(i->execute2, (i));
-#endif
-}
-
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOADA_Wdq(bxInstruction_c *i)
-{
-#if BX_CPU_LEVEL >= 6
-  BxPackedXmmRegister op;
-  bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-  read_virtual_dqword_aligned(i->seg(), eaddr, &op);
   BX_WRITE_XMM_REG(BX_TMP_REGISTER, op);
 
   BX_CPU_CALL_METHOD(i->execute2, (i));

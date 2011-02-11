@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: misc_mem.cc,v 1.150 2011-02-10 23:00:16 vruppert Exp $
+// $Id: misc_mem.cc,v 1.151 2011-02-11 09:56:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -41,8 +41,6 @@ BX_MEM_C::BX_MEM_C()
   blocks = NULL;
   len    = 0;
   used_blocks = 0;
-  for (int i = 0; i < 65; i++)
-    rom_present[i] = 0;
 
   memory_handlers = NULL;
 }
@@ -75,7 +73,7 @@ void BX_MEM_C::init_memory(Bit64u guest, Bit64u host)
 {
   unsigned idx;
 
-  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.150 2011-02-10 23:00:16 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.151 2011-02-11 09:56:23 sshwarts Exp $"));
 
   // accept only memory size which is multiply of 1M
   BX_ASSERT((host & 0xfffff) == 0);
@@ -231,6 +229,8 @@ void BX_MEM_C::cleanup_memory()
 //
 void BX_MEM_C::load_ROM(const char *path, bx_phy_address romaddress, Bit8u type)
 {
+  static bx_bool rom_present[65];
+
   struct stat stat_buf;
   int fd, ret, i, start_idx, end_idx;
   unsigned long size, max_size, offset;
@@ -298,7 +298,7 @@ void BX_MEM_C::load_ROM(const char *path, bx_phy_address romaddress, Bit8u type)
     }
     offset = romaddress & BIOS_MASK;
     if ((romaddress & 0xf0000) < 0xf0000) {
-      BX_MEM_THIS rom_present[64] = 1;
+      rom_present[64] = 1;
     }
     is_bochs_bios = (strstr(path, "BIOS-bochs-latest") != NULL);
   } else {
@@ -328,12 +328,12 @@ void BX_MEM_C::load_ROM(const char *path, bx_phy_address romaddress, Bit8u type)
       end_idx = 64;
     }
     for (i = start_idx; i < end_idx; i++) {
-      if (BX_MEM_THIS rom_present[i]) {
+      if (rom_present[i]) {
         close(fd);
         BX_PANIC(("ROM: address space 0x%x already in use", (i * 2048) + 0xc0000));
         return;
       } else {
-        BX_MEM_THIS rom_present[i] = 1;
+        rom_present[i] = 1;
       }
     }
   }

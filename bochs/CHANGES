@@ -71,10 +71,12 @@ Changes after 2.4.5 release:
     - bugfix: close images on exit
 
 - SF patches applied
+ [3164073] Fine grain SMC invalidation by Stanislav
  [1539417] write protect for floppy drives by Ben Lunt
  [2862322] fixes for emulated DHCP in eth_vnet
 
 - these S.F. bugs were closed/fixed
+ [3012207] Int 13h FN 48h incorrect return values
  [2588085] Mouse capture
  [3140332] typo in mf3/ps2 mapping of BX_KEY_CTRL_R
  [3111577] No "back" option in log settings

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse.cc,v 1.83 2011-01-25 20:59:26 sshwarts Exp $
+// $Id: sse.cc,v 1.84 2011-02-11 09:56:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003-2011 Stanislav Shwartsman
@@ -126,27 +126,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMADDUBSW_VdqWdqR(bxInstruction_c *i)
 }
 
 /* 66 0F 38 05 */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::PHSUBSW_VdqWdqR(bxInstruction_c *i)
-{
-#if BX_CPU_LEVEL >= 6
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2 = BX_READ_XMM_REG(i->rm());
-
-  op1.xmm16s(0) = SaturateDwordSToWordS(Bit32s(op1.xmm16s(0)) - Bit32s(op1.xmm16s(1)));
-  op1.xmm16s(1) = SaturateDwordSToWordS(Bit32s(op1.xmm16s(2)) - Bit32s(op1.xmm16s(3)));
-  op1.xmm16s(2) = SaturateDwordSToWordS(Bit32s(op1.xmm16s(4)) - Bit32s(op1.xmm16s(5)));
-  op1.xmm16s(3) = SaturateDwordSToWordS(Bit32s(op1.xmm16s(6)) - Bit32s(op1.xmm16s(7)));
-
-  op1.xmm16s(4) = SaturateDwordSToWordS(Bit32s(op2.xmm16s(0)) - Bit32s(op2.xmm16s(1)));
-  op1.xmm16s(5) = SaturateDwordSToWordS(Bit32s(op2.xmm16s(2)) - Bit32s(op2.xmm16s(3)));
-  op1.xmm16s(6) = SaturateDwordSToWordS(Bit32s(op2.xmm16s(4)) - Bit32s(op2.xmm16s(5)));
-  op1.xmm16s(7) = SaturateDwordSToWordS(Bit32s(op2.xmm16s(6)) - Bit32s(op2.xmm16s(7)));
-
-  /* now write result back to destination */
-  BX_WRITE_XMM_REG(i->nnn(), op1);
-#endif
-}
-
-/* 66 0F 38 05 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PHSUBW_VdqWdqR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
@@ -177,6 +156,27 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PHSUBD_VdqWdqR(bxInstruction_c *i)
   op1.xmm32u(2) = op2.xmm32u(0) - op2.xmm32u(1);
   op1.xmm32u(3) = op2.xmm32u(2) - op2.xmm32u(3);
 
+  BX_WRITE_XMM_REG(i->nnn(), op1);
+#endif
+}
+
+/* 66 0F 38 07 */
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::PHSUBSW_VdqWdqR(bxInstruction_c *i)
+{
+#if BX_CPU_LEVEL >= 6
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2 = BX_READ_XMM_REG(i->rm());
+
+  op1.xmm16s(0) = SaturateDwordSToWordS(Bit32s(op1.xmm16s(0)) - Bit32s(op1.xmm16s(1)));
+  op1.xmm16s(1) = SaturateDwordSToWordS(Bit32s(op1.xmm16s(2)) - Bit32s(op1.xmm16s(3)));
+  op1.xmm16s(2) = SaturateDwordSToWordS(Bit32s(op1.xmm16s(4)) - Bit32s(op1.xmm16s(5)));
+  op1.xmm16s(3) = SaturateDwordSToWordS(Bit32s(op1.xmm16s(6)) - Bit32s(op1.xmm16s(7)));
+
+  op1.xmm16s(4) = SaturateDwordSToWordS(Bit32s(op2.xmm16s(0)) - Bit32s(op2.xmm16s(1)));
+  op1.xmm16s(5) = SaturateDwordSToWordS(Bit32s(op2.xmm16s(2)) - Bit32s(op2.xmm16s(3)));
+  op1.xmm16s(6) = SaturateDwordSToWordS(Bit32s(op2.xmm16s(4)) - Bit32s(op2.xmm16s(5)));
+  op1.xmm16s(7) = SaturateDwordSToWordS(Bit32s(op2.xmm16s(6)) - Bit32s(op2.xmm16s(7)));
+
+  /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), op1);
 #endif
 }
@@ -2224,7 +2224,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSRLW_UdqIb(bxInstruction_c *i)
 #endif
 }
 
-/* 0F 71 Grp12 100 */
+/* 66 0F 71 Grp12 100 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSRAW_UdqIb(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.227 2010-11-23 14:59:35 sshwarts Exp $
+// $Id: paging.cc,v 1.228 2011-02-11 09:56:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2010  The Bochs Project
@@ -477,10 +477,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INVLPG(bxInstruction_c* i)
 #endif
 
 #if BX_SUPPORT_X86_64
-  if (! IsCanonical(laddr)) {
-    BX_ERROR(("INVLPG: non-canonical access !"));
-    exception(int_number(i->seg()), 0);
-  }
+  if (! IsCanonical(laddr)) return;
 #endif
 
   BX_INSTR_TLB_CNTRL(BX_CPU_ID, BX_INSTR_INVLPG, laddr);

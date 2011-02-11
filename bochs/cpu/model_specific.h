@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: model_specific.h,v 1.2 2010-11-27 20:20:32 sshwarts Exp $
+// $Id: model_specific.h,v 1.3 2011-02-11 09:56:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2010 Stanislav Shwartsman
@@ -171,7 +171,8 @@
 #define BX_CPUID_STD2_NX                     (1 << 20)
 #define BX_CPUID_STD2_RESERVED21             (1 << 21)
 #define BX_CPUID_STD2_AMD_MMX_EXT            (1 << 22)
-// ...
+#define BX_CPUID_STD2_RESERVED23             (1 << 23)
+#define BX_CPUID_STD2_RESERVED24             (1 << 24)
 #define BX_CPUID_STD2_FFXSR                  (1 << 25)
 #define BX_CPUID_STD2_1G_PAGES               (1 << 26)
 #define BX_CPUID_STD2_RDTSCP                 (1 << 27)

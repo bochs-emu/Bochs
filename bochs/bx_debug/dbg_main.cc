@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.239 2010-12-06 21:52:41 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.240 2011-02-11 09:56:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -2322,16 +2322,16 @@ static void bx_print_char(Bit8u ch)
 
 void dbg_printf_binary(const char *format, Bit32u data, int bits)
 {
-  int b,len = 0;
+  int len = 0;
   char num[33];
 
-  for (b = 1 << (bits - 1); b; b >>= 1)
+  for (unsigned b = 1 << (bits - 1); b; b >>= 1)
     num [len++] = (data & b) ? '1' : '0';
-  num [len] = 0;
-  dbg_printf (format, num);
+  num[len] = 0;
+  dbg_printf(format, num);
 }
 
-void bx_dbg_examine_command(char *command, char *format, bx_bool format_passed,
+void bx_dbg_examine_command(const char *command, const char *format, bx_bool format_passed,
                bx_address addr, bx_bool addr_passed)
 {
   unsigned repeat_count, i;
@@ -2385,7 +2385,7 @@ void bx_dbg_examine_command(char *command, char *format, bx_bool format_passed,
     ch = *format;
     iteration = 0;
 
-    while ((ch>='0') && (ch<='9')) {
+    while (ch>='0' && ch<='9') {
       iteration = 1;
       repeat_count = 10*repeat_count + (ch-'0');
       format++;
@@ -2406,8 +2406,8 @@ void bx_dbg_examine_command(char *command, char *format, bx_bool format_passed,
     display_format = bx_debugger.default_display_format;
     unit_size      = bx_debugger.default_unit_size;
 
-    for (i = 0; format [i]; i++) {
-      switch (ch = format [i]) {
+    for (i = 0; format[i]; i++) {
+      switch (ch = format[i]) {
         case 'x': // hex
         case 'd': // signed decimal
         case 'u': // unsigned decimal
@@ -2524,7 +2524,7 @@ void bx_dbg_examine_command(char *command, char *format, bx_bool format_passed,
 	    case 'd': dbg_printf("%03d ", data8); break;
 	    case 'u': dbg_printf("%03u ", data8); break;
 	    case 'o': dbg_printf("%03o ", data8); break;
-	    case 't': dbg_printf_binary ("%s ", data8, 8); break;
+	    case 't': dbg_printf_binary("%s ", data8, 8); break;
             case 'c': dbg_printf("%c", isprint(data8) ? data8 : '.'); break;
 	    default : dbg_printf("%02X ", data8); break;
         }
@@ -2547,7 +2547,7 @@ void bx_dbg_examine_command(char *command, char *format, bx_bool format_passed,
 	    case 'd': dbg_printf("%05d ", data16); break;
 	    case 'u': dbg_printf("%05u ", data16); break;
 	    case 'o': dbg_printf("%06o ", data16); break;
-	    case 't': dbg_printf_binary ("%s ", data16, 16); break;
+	    case 't': dbg_printf_binary("%s ", data16, 16); break;
 	    default : dbg_printf("%04X ", data16); break;
         }
 	else
@@ -2572,7 +2572,7 @@ void bx_dbg_examine_command(char *command, char *format, bx_bool format_passed,
 	    case 'd': dbg_printf("%10d ", data32); break;
 	    case 'u': dbg_printf("%10u ", data32); break;
 	    case 'o': dbg_printf("%12o ", data32); break;
-	    case 't': dbg_printf_binary ("%s ", data32, 32); break;
+	    case 't': dbg_printf_binary("%s ", data32, 32); break;
 	    default : dbg_printf("%08X ", data32); break;
         }
 	else

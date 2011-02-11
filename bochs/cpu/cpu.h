@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.715 2011-01-26 11:48:13 sshwarts Exp $
+// $Id: cpu.h,v 1.716 2011-02-11 09:56:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2011  The Bochs Project
@@ -1774,7 +1774,6 @@ public: // for now...
 #if BX_SUPPORT_X86_64
   BX_SMF void LOAD_Eq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 #endif
-  BX_SMF void LOADA_Wdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void LOADU_Wdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void LOAD_Wdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void LOAD_Wss(bxInstruction_c *) BX_CPP_AttrRegparmN(1);

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////,,,,
-// $Id: ia_opcodes.h,v 1.72 2011-01-21 19:46:44 sshwarts Exp $,,,
+// $Id: ia_opcodes.h,v 1.73 2011-02-11 09:56:23 sshwarts Exp $,,,
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008-2010 Stanislav Shwartsman
@@ -1033,7 +1033,7 @@ bx_define_opcode(BX_IA_PMULHRSW_VdqWdq, &BX_CPU_C::LOAD_Wdq, &BX_CPU_C::PMULHRSW
 bx_define_opcode(BX_IA_PABSB_VdqWdq, &BX_CPU_C::LOAD_Wdq, &BX_CPU_C::PABSB_VdqWdqR, BX_CPU_SSSE3, BX_PREPARE_SSE)
 bx_define_opcode(BX_IA_PABSW_VdqWdq, &BX_CPU_C::LOAD_Wdq, &BX_CPU_C::PABSW_VdqWdqR, BX_CPU_SSSE3, BX_PREPARE_SSE)
 bx_define_opcode(BX_IA_PABSD_VdqWdq, &BX_CPU_C::LOAD_Wdq, &BX_CPU_C::PABSD_VdqWdqR, BX_CPU_SSSE3, BX_PREPARE_SSE)
-bx_define_opcode(BX_IA_PALIGNR_VdqWdqIb, &BX_CPU_C::LOADA_Wdq, &BX_CPU_C::PALIGNR_VdqWdqIbR, BX_CPU_SSSE3, BX_PREPARE_SSE)
+bx_define_opcode(BX_IA_PALIGNR_VdqWdqIb, &BX_CPU_C::LOAD_Wdq, &BX_CPU_C::PALIGNR_VdqWdqIbR, BX_CPU_SSSE3, BX_PREPARE_SSE)
 // SSSE3
 
 // SSE4.1

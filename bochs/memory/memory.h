@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: memory.h,v 1.73 2011-02-10 23:00:16 vruppert Exp $
+// $Id: memory.h,v 1.74 2011-02-11 09:56:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -73,7 +73,6 @@ private:
   Bit8u   *rom;      // 512k BIOS rom space + 128k expansion rom space
   Bit8u   *bogus;    // 4k for unexisting memory
   unsigned used_blocks;
-  bx_bool rom_present[65];
 
 public:
   BX_MEM_C();
