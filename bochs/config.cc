@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.223 2011-01-22 16:49:00 vruppert Exp $
+// $Id: config.cc,v 1.224 2011-02-12 17:50:48 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2009  The Bochs Project
@@ -425,9 +425,9 @@ void bx_init_options()
   bx_list_c *stdmem = new bx_list_c(memory, "standard", "Standard Options");
   bx_list_c *optrom = new bx_list_c(memory, "optrom", "Optional ROM Images");
   bx_list_c *optram = new bx_list_c(memory, "optram", "Optional RAM Images");
-  bx_list_c *ram = new bx_list_c(stdmem, "ram", "");
-  bx_list_c *rom = new bx_list_c(stdmem, "rom", "");
-  bx_list_c *vgarom = new bx_list_c(stdmem, "vgarom", "");
+  bx_list_c *ram = new bx_list_c(stdmem, "ram", "RAM size options");
+  bx_list_c *rom = new bx_list_c(stdmem, "rom", "BIOS ROM options");
+  bx_list_c *vgarom = new bx_list_c(stdmem, "vgarom", "VGABIOS ROM options");
 
   // memory options (ram & rom)
   bx_param_num_c *ramsize = new bx_param_num_c(ram,
@@ -445,8 +445,9 @@ void bx_init_options()
       "Amount of host allocated memory in megabytes",
       1, 2048,
       BX_DEFAULT_MEM_MEGS);
-  host_ramsize->set_ask_format("Enter memory size (MB): [%d] ");
+  host_ramsize->set_ask_format("Enter host memory size (MB): [%d] ");
   host_ramsize->set_options(ramsize->USE_SPIN_CONTROL);
+  ram->set_options(ram->SERIES_ASK);
 
   path = new bx_param_filename_c(rom,
       "path",
@@ -465,6 +466,7 @@ void bx_init_options()
   romaddr->set_base(16);
   romaddr->set_format("0x%05x");
   romaddr->set_long_format("ROM BIOS address: 0x%05x");
+  rom->set_options(rom->SERIES_ASK);
 
   path = new bx_param_filename_c(vgarom,
       "path",
@@ -474,6 +476,7 @@ void bx_init_options()
   path->set_format("Name of VGA BIOS image: %s");
   sprintf(name, "%s/VGABIOS-lgpl-latest", get_builtin_variable("BXSHARE"));
   path->set_initial_val(name);
+  vgarom->set_options(vgarom->SERIES_ASK);
 
   bx_param_num_c *optaddr;
 
@@ -502,7 +505,7 @@ void bx_init_options()
     sprintf(label, "Optional ROM #%d address:", i+1);
     strcat(label, " 0x%05x");
     optaddr->set_long_format(strdup(label));
-    optnum1->set_options(optnum1->SHOW_PARENT | optnum1->USE_BOX_TITLE);
+    optnum1->set_options(optnum1->SERIES_ASK | optnum1->USE_BOX_TITLE);
   }
   optrom->set_options(optrom->SHOW_PARENT);
 
@@ -531,22 +534,10 @@ void bx_init_options()
     sprintf(label, "Optional RAM #%d address:", i+1);
     strcat(label, " 0x%05x");
     optaddr->set_long_format(strdup(label));
-    optnum2->set_options(optnum2->SHOW_PARENT | optnum2->USE_BOX_TITLE);
+    optnum2->set_options(optnum2->SERIES_ASK | optnum2->USE_BOX_TITLE);
   }
-  optrom->set_options(optrom->SHOW_PARENT);
-  memory->set_options(memory->USE_TAB_WINDOW);
-
-  bx_param_c *memory_init_list[] = {
-    SIM->get_param(BXPN_MEM_SIZE),
-    SIM->get_param(BXPN_ROM_PATH),
-    SIM->get_param(BXPN_ROM_ADDRESS),
-    SIM->get_param(BXPN_VGA_ROM_PATH),
-    SIM->get_param("memory.optrom"),
-    SIM->get_param("memory.optram"),
-    NULL
-  };
-  menu = new bx_list_c(special_menus, "memory", "Bochs Memory Options", memory_init_list);
-  menu->set_options(menu->SHOW_PARENT);
+  optram->set_options(optram->SHOW_PARENT);
+  memory->set_options(memory->SHOW_PARENT | memory->USE_TAB_WINDOW);
 
   // clock & cmos subtree
   bx_list_c *clock_cmos = new bx_list_c(root_param, "clock_cmos", "Clock & CMOS Options");
