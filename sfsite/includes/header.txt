@@ -53,9 +53,9 @@ A.sidebar:hover {color: blue; text-decoration: underline}
 <br><center><b>Get Bochs</b></center>
 
 <br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="<!--#include virtual="release.txt" -->" class="sidebar">Download Current</a>
-<br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=See+All+Releases&url=http://sourceforge.net/project/showfiles.phpqmrkgroup_ideq12580" class="sidebar">See All Releases</a>
+<br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=See+All+Releases&url=http://sourceforge.net/projects/bochs/files" class="sidebar">See All Releases</a>
 <br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="http://bochs.sourceforge.net/diskimages.html" class="sidebar">Disk Images</a>
-<br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=CVS+Access+Information&url=http://sourceforge.net/cvs/qmrkgroup_ideq12580" class="sidebar">Anonymous CVS</a>
+<br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=CVS+Access+Information&url=http://sourceforge.net/scm/qmrktypeeqcvsampqmrkgroup_ideq12580" class="sidebar">Anonymous CVS</a>
 
 
 <br><br><center><b>Support</b></center>
@@ -66,8 +66,8 @@ A.sidebar:hover {color: blue; text-decoration: underline}
 <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>-</b>&nbsp;<a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=New+Bochs+Documentation&url=http://bochs.sourceforge.net/doc/docbook/development/index.html" class="sidebar">Devel. Guide</a>
 <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>-</b>&nbsp;<a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=New+Bochs+Documentation&url=http://bochs.sourceforge.net/doc/docbook/documentation/index.html" class="sidebar">Doc. Guide</a>
 <br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="http://bochs.sourceforge.net/mailinglists.html" class="sidebar">Mailing Lists</a>
-<br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=Bochs+Discussion+Boards&url=http://sourceforge.net/forum/qmrkgroup_ideq12580" class="sidebar">Discussion Boards</a>
-<br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=SourceForge+Site+Docs&url=http://sourceforge.net/docman/qmrkgroup_ideq1" class="sidebar">SF Site Docs</a>
+<br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=Bochs+Discussion+Boards&url=http://sourceforge.net/projects/bochs/forums" class="sidebar">Discussion Boards</a>
+<br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=SourceForge+Site+Docs&url=http://sourceforge.net/apps/trac/sourceforge/wiki/WikiStart" class="sidebar">SF Site Docs</a>
 
 <br><br><center><b>Feedback</b></center>
 
