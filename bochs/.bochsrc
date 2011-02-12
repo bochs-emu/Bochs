@@ -836,8 +836,8 @@ i440fxsupport: enabled=1
 #
 # The optionsX parameter can be used to assign specific options to the device
 # connected to the corresponding USB port. Currently this feature is only used
-# by the 'disk' device to specify an alternative redolog file of some image
-# modes.
+# to set the speed reported by device and by the 'disk' device to specify
+# an alternative redolog file of some image modes.
 #
 # If you connect the mouse or tablet to one of the ports, Bochs forwards the
 # mouse movement data to the USB device instead of the selected mouse type.

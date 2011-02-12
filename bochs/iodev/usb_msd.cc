@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_msd.cc,v 1.30 2011-01-24 20:35:51 vruppert Exp $
+// $Id: usb_msd.cc,v 1.31 2011-02-12 14:00:34 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009-2011  The Bochs Project
@@ -143,7 +143,8 @@ usb_msd_device_c::usb_msd_device_c(usbdev_type type, const char *filename)
   bx_param_bool_c *status;
 
   d.type = type;
-  d.speed = USB_SPEED_FULL;
+  d.maxspeed = USB_SPEED_FULL;
+  d.speed = d.maxspeed;
   memset((void*)&s, 0, sizeof(s));
   if (d.type == USB_DEV_TYPE_DISK) {
     strcpy(d.devname, "BOCHS USB HARDDRIVE");

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_common.h,v 1.15 2011-01-16 12:46:48 vruppert Exp $
+// $Id: usb_common.h,v 1.16 2011-02-12 14:00:34 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Benjamin D Lunt (fys at frontiernet net)
@@ -40,6 +40,7 @@
 #define USB_SPEED_LOW   0
 #define USB_SPEED_FULL  1
 #define USB_SPEED_HIGH  2
+#define USB_SPEED_SUPER 3
 
 #define USB_STATE_NOTATTACHED 0
 #define USB_STATE_ATTACHED    1
@@ -157,7 +158,9 @@ public:
 
   bx_bool get_connected() {return d.connected;}
   usbdev_type get_type() {return d.type;}
+  int get_maxspeed() {return d.maxspeed;}
   int get_speed() {return d.speed;}
+  void set_speed(int speed) {d.speed = speed;}
   Bit8u get_address() {return d.addr;}
 
   void usb_send_msg(int msg);
@@ -166,6 +169,7 @@ protected:
   struct {
     enum usbdev_type type;
     bx_bool connected;
+    int maxspeed;
     int speed;
     Bit8u addr;
     Bit8u config;

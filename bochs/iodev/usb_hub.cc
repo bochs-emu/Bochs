@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_hub.cc,v 1.18 2011-01-24 20:35:51 vruppert Exp $
+// $Id: usb_hub.cc,v 1.19 2011-02-12 14:00:34 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009-2011  The Bochs Project
@@ -171,7 +171,8 @@ usb_hub_device_c::usb_hub_device_c(Bit8u ports)
   bx_param_string_c *device, *options;
 
   d.type = USB_DEV_TYPE_HUB;
-  d.speed = USB_SPEED_FULL;
+  d.maxspeed = USB_SPEED_FULL;
+  d.speed = d.maxspeed;
   strcpy(d.devname, "Bochs USB HUB");
   d.connected = 1;
   memset((void*)&hub, 0, sizeof(hub));

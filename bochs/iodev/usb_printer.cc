@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_printer.cc,v 1.5 2011-01-24 20:35:51 vruppert Exp $
+// $Id: usb_printer.cc,v 1.6 2011-02-12 14:00:34 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Benjamin David Lunt
@@ -112,7 +112,8 @@ static const Bit8u bx_device_id_string[] =
 usb_printer_device_c::usb_printer_device_c(usbdev_type type, const char *filename)
 {
   d.type = type;
-  d.speed = USB_SPEED_FULL;
+  d.maxspeed = USB_SPEED_FULL;
+  d.speed = d.maxspeed;
   memset((void*)&s, 0, sizeof(s));
   strcpy(d.devname, "USB Printer");
   s.fname = filename;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_common.cc,v 1.16 2011-01-16 12:46:48 vruppert Exp $
+// $Id: usb_common.cc,v 1.17 2011-02-12 14:00:34 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  Benjamin D Lunt (fys at frontiernet net)
@@ -141,7 +141,7 @@ void bx_usb_devctl_c::parse_port_options(usb_device_c *device, bx_list_c *portco
   const char *raw_options;
   char *options;
   unsigned i, string_i;
-  int optc;
+  int optc, speed = USB_SPEED_LOW;
   char *opts[16];
   char *ptr;
   char string[512];
@@ -176,7 +176,24 @@ void bx_usb_devctl_c::parse_port_options(usb_device_c *device, bx_list_c *portco
     delete [] options;
   }
   for (i = 0; i < (unsigned)optc; i++) {
-    if (!device->set_option(opts[i])) {
+    if (!strncmp(opts[i], "speed:", 6)) {
+      if (!strcmp(opts[i]+6, "low")) {
+        speed = USB_SPEED_LOW;
+      } else if (!strcmp(opts[i]+6, "full")) {
+        speed = USB_SPEED_FULL;
+      } else if (!strcmp(opts[i]+6, "high")) {
+        speed = USB_SPEED_HIGH;
+      } else if (!strcmp(opts[i]+6, "super")) {
+        speed = USB_SPEED_SUPER;
+      } else {
+        BX_ERROR(("unknown USB device speed: '%s'", opts[i]+6));
+      }
+      if (speed <= device->get_maxspeed()) {
+        device->set_speed(speed);
+      } else {
+        BX_ERROR(("unsupported USB device speed: '%s'", opts[i]+6));
+      }
+    } else if (!device->set_option(opts[i])) {
       BX_ERROR(("unknown USB device option: '%s'", opts[i]));
     }
   }
