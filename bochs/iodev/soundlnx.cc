@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: soundlnx.cc,v 1.24 2011-02-10 22:58:22 vruppert Exp $
+// $Id: soundlnx.cc,v 1.25 2011-02-13 17:25:25 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2011  The Bochs Project
@@ -67,7 +67,7 @@ int bx_sound_linux_c::midiready()
 }
 
 #if BX_HAVE_ALSASOUND
-int bx_sound_linux_c::alsa_seq_open(char *alsadev)
+int bx_sound_linux_c::alsa_seq_open(const char *alsadev)
 {
   char *mididev, *ptr;
   int client, port, ret = 0;
@@ -121,7 +121,7 @@ int bx_sound_linux_c::alsa_seq_open(char *alsadev)
 }
 #endif
 
-int bx_sound_linux_c::openmidioutput(char *mididev)
+int bx_sound_linux_c::openmidioutput(const char *mididev)
 {
   if ((mididev == NULL) || (strlen(mididev) < 1))
     return BX_SOUND_OUTPUT_ERR;
@@ -246,7 +246,7 @@ int bx_sound_linux_c::closemidioutput()
 }
 
 
-int bx_sound_linux_c::openwaveoutput(char *wavedev)
+int bx_sound_linux_c::openwaveoutput(const char *wavedev)
 {
 #if BX_HAVE_ALSASOUND
   use_alsa_pcm = !strcmp(wavedev, "alsa");

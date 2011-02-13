@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sb16.cc,v 1.72 2011-02-10 22:58:22 vruppert Exp $
+// $Id: sb16.cc,v 1.73 2011-02-13 17:25:25 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2011  The Bochs Project
@@ -3666,78 +3666,6 @@ bx_bool bx_sb16_buffer::hascommand(void)
 int bx_sb16_buffer::commandbytes(void)
 {
   return bytesneeded;
-}
-
-// The dummy output functions. They don't do anything
-bx_sound_output_c::bx_sound_output_c(logfunctions *dev)
-{
-  device = dev;
-}
-
-bx_sound_output_c::~bx_sound_output_c()
-{
-}
-
-int bx_sound_output_c::waveready()
-{
-  return BX_SOUND_OUTPUT_OK;
-}
-
-int bx_sound_output_c::midiready()
-{
-  return BX_SOUND_OUTPUT_OK;
-}
-
-int bx_sound_output_c::openmidioutput(char *mididev)
-{
-  UNUSED(mididev);
-  return BX_SOUND_OUTPUT_OK;
-}
-
-int bx_sound_output_c::sendmidicommand(int delta, int command, int length, Bit8u data[])
-{
-  UNUSED(delta);
-  UNUSED(command);
-  UNUSED(length);
-  UNUSED(data);
-  return BX_SOUND_OUTPUT_OK;
-}
-
-int bx_sound_output_c::closemidioutput()
-{
-  return BX_SOUND_OUTPUT_OK;
-}
-
-int bx_sound_output_c::openwaveoutput(char *wavedev)
-{
-  UNUSED(wavedev);
-  return BX_SOUND_OUTPUT_OK;
-}
-
-int bx_sound_output_c::startwaveplayback(int frequency, int bits, int stereo, int format)
-{
-  UNUSED(frequency);
-  UNUSED(bits);
-  UNUSED(stereo);
-  UNUSED(format);
-  return BX_SOUND_OUTPUT_OK;
-}
-
-int bx_sound_output_c::sendwavepacket(int length, Bit8u data[])
-{
-  UNUSED(length);
-  UNUSED(data);
-  return BX_SOUND_OUTPUT_OK;
-}
-
-int bx_sound_output_c::stopwaveplayback()
-{
-  return BX_SOUND_OUTPUT_OK;
-}
-
-int bx_sound_output_c::closewaveoutput()
-{
-  return BX_SOUND_OUTPUT_OK;
 }
 
 // runtime parameter handler

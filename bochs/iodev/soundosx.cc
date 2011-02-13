@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: soundosx.cc,v 1.15 2011-02-10 22:58:22 vruppert Exp $
+// $Id: soundosx.cc,v 1.16 2011-02-13 17:25:25 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004-2011  The Bochs Project
@@ -92,7 +92,7 @@ int bx_sound_osx_c::midiready()
     return BX_SOUND_OUTPUT_OK;
 }
 
-int bx_sound_osx_c::openmidioutput(char *mididev)
+int bx_sound_osx_c::openmidioutput(const char *mididev)
 {
 #ifdef BX_SOUND_OSX_use_converter
     ComponentDescription description;
@@ -180,7 +180,7 @@ void WaveCallbackProc (SndChannelPtr chan, SndCommand *cmd)
 }
 #endif
 
-int bx_sound_osx_c::openwaveoutput(char *wavedev)
+int bx_sound_osx_c::openwaveoutput(const char *wavedev)
 {
     OSStatus err;
 

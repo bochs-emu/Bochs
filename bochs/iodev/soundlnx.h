@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: soundlnx.h,v 1.16 2011-02-10 22:58:22 vruppert Exp $
+// $Id: soundlnx.h,v 1.17 2011-02-13 17:25:25 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2011  The Bochs Project
@@ -41,11 +41,11 @@ public:
   virtual int    waveready();
   virtual int    midiready();
 
-  virtual int    openmidioutput(char *mididev);
+  virtual int    openmidioutput(const char *mididev);
   virtual int    sendmidicommand(int delta, int command, int length, Bit8u data[]);
   virtual int    closemidioutput();
 
-  virtual int    openwaveoutput(char *wavedev);
+  virtual int    openwaveoutput(const char *wavedev);
   virtual int    startwaveplayback(int frequency, int bits, int stereo, int format);
   virtual int    sendwavepacket(int length, Bit8u data[]);
   virtual int    stopwaveplayback();
@@ -53,7 +53,7 @@ public:
 
 private:
 #if BX_HAVE_ALSASOUND
-  int alsa_seq_open(char *alsadev);
+  int alsa_seq_open(const char *alsadev);
   int alsa_seq_output(int delta, int command, int length, Bit8u data[]);
   int alsa_pcm_open(int frequency, int bits, int stereo, int format);
   int alsa_pcm_write();

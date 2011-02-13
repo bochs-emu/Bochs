@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: soundwin.cc,v 1.28 2011-02-10 22:58:22 vruppert Exp $
+// $Id: soundwin.cc,v 1.29 2011-02-13 17:25:25 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2011  The Bochs Project
@@ -110,7 +110,7 @@ int bx_sound_windows_c::midiready()
     return BX_SOUND_OUTPUT_ERR;
 }
 
-int bx_sound_windows_c::openmidioutput(char *mididev)
+int bx_sound_windows_c::openmidioutput(const char *mididev)
 {
   // could make the output device selectable,
   // but currently only the midi mapper is supported
@@ -185,7 +185,7 @@ int bx_sound_windows_c::closemidioutput()
   return (ret == 0) ? BX_SOUND_OUTPUT_OK : BX_SOUND_OUTPUT_ERR;
 }
 
-int bx_sound_windows_c::openwaveoutput(char *wavedev)
+int bx_sound_windows_c::openwaveoutput(const char *wavedev)
 {
   // could make the output device selectable,
   // but currently only the wave mapper is supported

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: soundosx.h,v 1.6 2011-02-10 22:58:22 vruppert Exp $
+// $Id: soundosx.h,v 1.7 2011-02-13 17:25:25 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004-2011  The Bochs Project
@@ -43,11 +43,11 @@ public:
     virtual int    waveready();
     virtual int    midiready();
 
-    virtual int    openmidioutput(char *mididev);
+    virtual int    openmidioutput(const char *mididev);
     virtual int    sendmidicommand(int delta, int command, int length, Bit8u data[]);
     virtual int    closemidioutput();
 
-    virtual int    openwaveoutput(char *wavedev);
+    virtual int    openwaveoutput(const char *wavedev);
     virtual int    startwaveplayback(int frequency, int bits, int stereo, int format);
     virtual int    sendwavepacket(int length, Bit8u data[]);
     virtual int    stopwaveplayback();
