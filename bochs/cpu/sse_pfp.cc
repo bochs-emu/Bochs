@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_pfp.cc,v 1.80 2011-01-21 19:46:44 sshwarts Exp $
+// $Id: sse_pfp.cc,v 1.81 2011-02-13 06:10:11 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003-2011 Stanislav Shwartsman
@@ -28,6 +28,7 @@
 
 #if BX_CPU_LEVEL >= 6
 
+#include "fpu/softfloat-compare.h"
 #include "fpu/softfloat-specialize.h"
 
 void BX_CPU_C::check_exceptionsSSE(int exceptions_flags)
@@ -59,19 +60,27 @@ BX_CPP_INLINE void mxcsr_to_softfloat_status_word(float_status_t &status, bx_mxc
 }
 
 /* Comparison predicate for CMPSS/CMPPS instructions */
-static float32_compare_method compare32[4] = {
-  float32_eq,
-  float32_lt,
-  float32_le,
-  float32_unordered
+static float32_compare_method compare32[8] = {
+  float32_eq_ordered_quiet,
+  float32_lt_ordered_signalling,
+  float32_le_ordered_signalling,
+  float32_unordered_quiet,
+  float32_neq_unordered_quiet,
+  float32_nlt_unordered_signalling,
+  float32_nle_unordered_signalling,
+  float32_ordered_quiet
 };
 
 /* Comparison predicate for CMPSD/CMPPD instructions */
-static float64_compare_method compare64[4] = {
-  float64_eq,
-  float64_lt,
-  float64_le,
-  float64_unordered
+static float64_compare_method compare64[8] = {
+  float64_eq_ordered_quiet,
+  float64_lt_ordered_signalling,
+  float64_le_ordered_signalling,
+  float64_unordered_quiet,
+  float64_neq_unordered_quiet,
+  float64_nlt_unordered_signalling,
+  float64_nle_unordered_signalling,
+  float64_ordered_quiet
 };
 
 #endif // BX_CPU_LEVEL >= 6
@@ -1882,30 +1891,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPPS_VpsWpsIbR(bxInstruction_c *i)
     op2.xmm32u(3) = float32_denormal_to_zero(op2.xmm32u(3));
   }
 
-  if(ib < 4)
-  {
-    op1.xmm32u(0) =
-        compare32[ib](op1.xmm32u(0), op2.xmm32u(0), status) ? 0xFFFFFFFF : 0;
-    op1.xmm32u(1) =
-        compare32[ib](op1.xmm32u(1), op2.xmm32u(1), status) ? 0xFFFFFFFF : 0;
-    op1.xmm32u(2) =
-        compare32[ib](op1.xmm32u(2), op2.xmm32u(2), status) ? 0xFFFFFFFF : 0;
-    op1.xmm32u(3) =
-        compare32[ib](op1.xmm32u(3), op2.xmm32u(3), status) ? 0xFFFFFFFF : 0;
-  }
-  else
-  {
-    ib -= 4;
-
-    op1.xmm32u(0) =
-        compare32[ib](op1.xmm32u(0), op2.xmm32u(0), status) ? 0 : 0xFFFFFFFF;
-    op1.xmm32u(1) =
-        compare32[ib](op1.xmm32u(1), op2.xmm32u(1), status) ? 0 : 0xFFFFFFFF;
-    op1.xmm32u(2) =
-        compare32[ib](op1.xmm32u(2), op2.xmm32u(2), status) ? 0 : 0xFFFFFFFF;
-    op1.xmm32u(3) =
-        compare32[ib](op1.xmm32u(3), op2.xmm32u(3), status) ? 0 : 0xFFFFFFFF;
-  }
+  op1.xmm32u(0) = compare32[ib](op1.xmm32u(0), op2.xmm32u(0), status) ? 0xFFFFFFFF : 0;
+  op1.xmm32u(1) = compare32[ib](op1.xmm32u(1), op2.xmm32u(1), status) ? 0xFFFFFFFF : 0;
+  op1.xmm32u(2) = compare32[ib](op1.xmm32u(2), op2.xmm32u(2), status) ? 0xFFFFFFFF : 0;
+  op1.xmm32u(3) = compare32[ib](op1.xmm32u(3), op2.xmm32u(3), status) ? 0xFFFFFFFF : 0;
 
   check_exceptionsSSE(status.float_exception_flags);
   BX_WRITE_XMM_REG(i->nnn(), op1);
@@ -1934,22 +1923,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPPD_VpdWpdIbR(bxInstruction_c *i)
     op2.xmm64u(1) = float64_denormal_to_zero(op2.xmm64u(1));
   }
 
-  if(ib < 4)
-  {
-    op1.xmm64u(0) = compare64[ib](op1.xmm64u(0), op2.xmm64u(0), status) ?
-       BX_CONST64(0xFFFFFFFFFFFFFFFF) : 0;
-    op1.xmm64u(1) = compare64[ib](op1.xmm64u(1), op2.xmm64u(1), status) ?
-       BX_CONST64(0xFFFFFFFFFFFFFFFF) : 0;
-  }
-  else
-  {
-    ib -= 4;
-
-    op1.xmm64u(0) = compare64[ib](op1.xmm64u(0), op2.xmm64u(0), status) ?
-       0 : BX_CONST64(0xFFFFFFFFFFFFFFFF);
-    op1.xmm64u(1) = compare64[ib](op1.xmm64u(1), op2.xmm64u(1), status) ?
-       0 : BX_CONST64(0xFFFFFFFFFFFFFFFF);
-  }
+  op1.xmm64u(0) = compare64[ib](op1.xmm64u(0), op2.xmm64u(0), status) ?
+     BX_CONST64(0xFFFFFFFFFFFFFFFF) : 0;
+  op1.xmm64u(1) = compare64[ib](op1.xmm64u(1), op2.xmm64u(1), status) ?
+     BX_CONST64(0xFFFFFFFFFFFFFFFF) : 0;
 
   check_exceptionsSSE(status.float_exception_flags);
   BX_WRITE_XMM_REG(i->nnn(), op1);
@@ -1976,18 +1953,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPSD_VsdWsdIbR(bxInstruction_c *i)
     op2 = float64_denormal_to_zero(op2);
   }
 
-  if(ib < 4) {
-     if(compare64[ib](op1, op2, status_word)) {
-        op1 = BX_CONST64(0xFFFFFFFFFFFFFFFF);
-     } else {
-        op1 = 0;
-     }
+  if(compare64[ib](op1, op2, status_word)) {
+    op1 = BX_CONST64(0xFFFFFFFFFFFFFFFF);
   } else {
-     if(compare64[ib-4](op1, op2, status_word)) {
-        op1 = 0;
-     } else {
-        op1 = BX_CONST64(0xFFFFFFFFFFFFFFFF);
-     }
+    op1 = 0;
   }
 
   check_exceptionsSSE(status_word.float_exception_flags);
@@ -2015,19 +1984,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPSS_VssWssIbR(bxInstruction_c *i)
     op2 = float32_denormal_to_zero(op2);
   }
 
-  if(ib < 4) {
-     if(compare32[ib](op1, op2, status_word)) {
-        op1 = 0xFFFFFFFF;
-     } else {
-        op1 = 0;
-     }
-  } else {
-     if(compare32[ib-4](op1, op2, status_word)) {
-        op1 = 0;
-     } else {
-        op1 = 0xFFFFFFFF;
-     }
-  }
+  op1 = compare32[ib](op1, op2, status_word) ? 0xFFFFFFFF : 0;
 
   check_exceptionsSSE(status_word.float_exception_flags);
   BX_WRITE_XMM_REG_LO_DWORD(i->nnn(), op1);

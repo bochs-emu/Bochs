@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.h,v 1.109 2011-01-21 16:07:51 sshwarts Exp $
+// $Id: fetchdecode.h,v 1.110 2011-02-13 06:10:11 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005-2011 Stanislav Shwartsman
@@ -61,9 +61,8 @@ BX_CPP_INLINE Bit64u FetchQWORD(const Bit8u *iptr)
 
 #define BX_PREPARE_SSE (0x01)
 #define BX_PREPARE_AVX (0x02)
-#define BX_VEX_L128    (0x04) /*      VEX.L128 allowed */
-#define BX_VEX_L256    (0x08) /*      VEX.L256 allowed */
-#define BX_VEX_W0_ONLY (0x10) /* only VEX.W0   allowed */
+#define BX_VEX_L128    (0x04) /* VEX.L128 allowed */
+#define BX_VEX_L256    (0x08) /* VEX.L256 allowed */
 
 struct bxIAOpcodeTable {
   BxExecutePtr_tR execute1;

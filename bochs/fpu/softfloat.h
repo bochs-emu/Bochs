@@ -214,14 +214,6 @@ float32 float32_mul(float32, float32, float_status_t &status);
 float32 float32_div(float32, float32, float_status_t &status);
 float32 float32_sqrt(float32, float_status_t &status);
 
-typedef int (*float32_compare_method)(float32, float32, float_status_t &status);
-int float32_eq(float32, float32, float_status_t &status);
-int float32_le(float32, float32, float_status_t &status);
-int float32_lt(float32, float32, float_status_t &status);
-int float32_eq_signaling(float32, float32, float_status_t &status);
-int float32_le_quiet(float32, float32, float_status_t &status);
-int float32_lt_quiet(float32, float32, float_status_t &status);
-int float32_unordered(float32, float32, float_status_t &status);
 int float32_compare(float32, float32, float_status_t &status);
 int float32_compare_quiet(float32, float32, float_status_t &status);
 
@@ -248,14 +240,6 @@ float64 float64_mul(float64, float64, float_status_t &status);
 float64 float64_div(float64, float64, float_status_t &status);
 float64 float64_sqrt(float64, float_status_t &status);
 
-typedef int (*float64_compare_method)(float64, float64, float_status_t &status);
-int float64_eq(float64, float64, float_status_t &status);
-int float64_le(float64, float64, float_status_t &status);
-int float64_lt(float64, float64, float_status_t &status);
-int float64_eq_signaling(float64, float64, float_status_t &status);
-int float64_le_quiet(float64, float64, float_status_t &status);
-int float64_lt_quiet(float64, float64, float_status_t &status);
-int float64_unordered(float64, float64, float_status_t &status);
 int float64_compare(float64, float64, float_status_t &status);
 int float64_compare_quiet(float64, float64, float_status_t &status);
 

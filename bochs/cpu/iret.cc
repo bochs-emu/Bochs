@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: iret.cc,v 1.50 2010-04-11 05:28:19 sshwarts Exp $
+// $Id: iret.cc,v 1.51 2011-02-13 06:10:11 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005-2009 Stanislav Shwartsman
@@ -411,14 +411,19 @@ BX_CPU_C::long_iret(bxInstruction_c *i)
   check_cs(&cs_descriptor, raw_cs_selector, 0, cs_selector.rpl);
 
   /* INTERRUPT RETURN TO SAME PRIVILEGE LEVEL */
-  if ((cs_selector.rpl == CPL) && (BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64))
+  if (cs_selector.rpl == CPL && !i->os64L())
   {
     /* top 24 bytes on stack must be within limits, else #SS(0) */
     /* satisfied above */
 
     /* load CS:EIP from stack */
     /* load CS-cache with new code segment descriptor */
-    branch_far32(&cs_selector, &cs_descriptor, (Bit32u) new_rip, CPL);
+    if(cs_descriptor.u.segment.l) {
+      branch_far64(&cs_selector, &cs_descriptor, new_rip, CPL);
+    }
+    else {
+      branch_far32(&cs_selector, &cs_descriptor, (Bit32u) new_rip, CPL);
+    }
 
     // ID,VIP,VIF,AC,VM,RF,x,NT,IOPL,OF,DF,IF,TF,SF,ZF,x,AF,x,PF,x,CF
     Bit32u changeMask = EFlagsOSZAPCMask | EFlagsTFMask | EFlagsDFMask |

@@ -25,8 +25,8 @@ Changes after 2.4.5 release:
     - 32-bit physical address for 386/486 guests
     - 36-bit physical address for PSE-36 enabled Pentium guest
     - 40-bit physical address for PAE enabled P6 or later guests
-  - Updated config.guess/config.sub scripts to May 2010 revisions.
-  - Updated Visual Studio 2008 project files in build/win32/vs2008ex-workspace.zip
+  - Update config.guess/config.sub scripts to May 2010 revisions.
+  - Update Visual Studio 2008 project files in build/win32/vs2008ex-workspace.zip
   - Added Bochs compilation timestamp after Bochs version string.
 
 - GUI and display libraries (Volker)
@@ -74,12 +74,12 @@ Changes after 2.4.5 release:
     - bugfix: close images on exit
 
 - SF patches applied
+ [3164945] hack to compile under WIN64 by Darek Mihocka and Stanislav
  [3164073] Fine grain SMC invalidation by Stanislav
  [1539417] write protect for floppy drives by Ben Lunt
  [2862322] fixes for emulated DHCP in eth_vnet
 
 - these S.F. bugs were closed/fixed
- [3012207] Int 13h FN 48h incorrect return values
  [2588085] Mouse capture
  [3140332] typo in mf3/ps2 mapping of BX_KEY_CTRL_R
  [3111577] No "back" option in log settings

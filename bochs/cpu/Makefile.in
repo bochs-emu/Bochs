@@ -702,7 +702,7 @@ sse_pfp.o: sse_pfp.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   descriptor.h instr.h ia_opcodes.h lazy_flags.h icache.h apic.h \
   ../cpu/i387.h ../fpu/softfloat.h ../fpu/tag_w.h ../fpu/status_w.h \
   ../fpu/control_w.h ../cpu/xmm.h stack.h ../fpu/softfloat-specialize.h \
-  ../fpu/softfloat.h
+  ../fpu/softfloat-compare.h
 sse_rcp.o: sse_rcp.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../gui/paramtree.h ../memory/memory.h \

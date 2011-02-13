@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.292 2011-01-21 19:46:44 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.293 2011-02-13 06:10:11 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2011  The Bochs Project
@@ -83,23 +83,6 @@ static const Bit8u BxOpcodeHasModrm64[512] = {
 };
 
 #undef X
-
-/* *********** */
-// LOCK PREFIX //
-/* *********** */
-
-/*
- *  The  LOCK  prefix  can be prepended only to the following instructions
- *  and  only  to  those  forms  of the instructions where the destination
- *  operand  is  a  memory operand: ADD, ADC, AND, BTC, BTR, BTS, CMPXCHG,
- *  CMPXCH8B,  DEC,  INC,  NEG, NOT, OR, SBB, SUB, XOR, XADD, and XCHG. If
- *  the  LOCK prefix is used with one of these instructions and the source
- *  operand  is a memory operand, an undefined opcode exception (#UD) will
- *  be  generated. An undefined opcode exception will also be generated if
- *  the  LOCK  prefix  is used with any instruction not in the above list.
- *  The XCHG instruction always asserts the LOCK# signal regardless of the
- *  presence or absence of the LOCK prefix.
- */
 
 // Segment override prefixes
 // -------------------------
