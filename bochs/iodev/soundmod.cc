@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: soundmod.cc,v 1.1 2011-02-13 17:26:52 vruppert Exp $
+// $Id: soundmod.cc,v 1.2 2011-02-14 21:14:20 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2011  The Bochs Project
@@ -18,16 +18,54 @@
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 
-// The dummy sound output functions. They don't do anything.
+// Common sound module code and dummy sound output functions
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
 // platforms that require a special tag on exported symbols, BX_PLUGGABLE
 // is used to know when we are exporting symbols and when we are importing.
 #define BX_PLUGGABLE
 
-#include "bochs.h"
-#include "soundmod.h"
+#include "iodev.h"
 
+#if BX_SUPPORT_SB16
+
+#include "soundmod.h"
+#include "soundlnx.h"
+#include "soundosx.h"
+#include "soundwin.h"
+
+#define LOG_THIS dev->
+
+bx_soundmod_ctl_c* theSoundModCtl = NULL;
+
+int libsoundmod_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
+{
+  theSoundModCtl = new bx_soundmod_ctl_c;
+  bx_devices.pluginSoundModCtl = theSoundModCtl;
+  return(0); // Success
+}
+
+void libsoundmod_LTX_plugin_fini(void)
+{
+  delete theSoundModCtl;
+}
+
+int bx_soundmod_ctl_c::init_module(const char *type, void **module, logfunctions *dev)
+{
+  bx_sound_output_c **soundmod = (bx_sound_output_c**)module;
+
+  if (!strcmp(type, "default")) {
+    *soundmod = new BX_SOUND_OUTPUT_C(dev);
+  } else if (!strcmp(type, "dummy")) {
+    *soundmod = new bx_sound_output_c(dev);
+  } else {
+    BX_PANIC(("unknown sound module type '%s'", type));
+    *soundmod = NULL;
+  }
+  return 0;
+}
+
+// The dummy sound output functions. They don't do anything.
 bx_sound_output_c::bx_sound_output_c(logfunctions *dev)
 {
   device = dev;
@@ -98,3 +136,5 @@ int bx_sound_output_c::closewaveoutput()
 {
   return BX_SOUND_OUTPUT_OK;
 }
+
+#endif

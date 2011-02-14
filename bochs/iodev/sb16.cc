@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sb16.cc,v 1.73 2011-02-13 17:25:25 vruppert Exp $
+// $Id: sb16.cc,v 1.74 2011-02-14 21:14:20 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2011  The Bochs Project
@@ -152,7 +152,7 @@ void bx_sb16_c::init(void)
   BX_SB16_THIS loglevel = SIM->get_param_num("loglevel", base)->get();
 
   // let the output functions initialize
-  BX_SB16_OUTPUT = new BX_SOUND_OUTPUT_C(BX_SB16_THISP);
+  DEV_sound_init_module("default", &BX_SB16_OUTPUT, BX_SB16_THISP);
 
   if (BX_SB16_OUTPUT == NULL)
   {

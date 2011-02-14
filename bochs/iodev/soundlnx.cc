@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: soundlnx.cc,v 1.25 2011-02-13 17:25:25 vruppert Exp $
+// $Id: soundlnx.cc,v 1.26 2011-02-14 21:14:20 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2011  The Bochs Project
@@ -23,7 +23,7 @@
 // for Linux using OSS. The current version also supports OSS on FreeBSD and
 // ALSA PCM output on Linux.
 
-#include "bochs.h"
+#include "iodev.h"
 
 #if (defined(linux) || defined(__FreeBSD__) || defined(__FreeBSD_kernel__)) && BX_SUPPORT_SB16
 

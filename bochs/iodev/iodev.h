@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.128 2011-01-24 20:35:51 vruppert Exp $
+// $Id: iodev.h,v 1.129 2011-02-14 21:14:20 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2011  The Bochs Project
@@ -358,6 +358,15 @@ public:
   }
 };
 
+#if BX_SUPPORT_SB16
+class BOCHSAPI bx_soundmod_ctl_stub_c : public bx_devmodel_c {
+public:
+  virtual int init_module(const char *type, void **module, logfunctions *dev) {
+    STUBFUNC(soundmod_ctl, init_module); return 0;
+  }
+};
+#endif
+
 class BOCHSAPI bx_devices_c : public logfunctions {
 public:
   bx_devices_c();
@@ -441,6 +450,9 @@ public:
 #if BX_SUPPORT_PCIUSB
   bx_usb_devctl_stub_c  *pluginUsbDevCtl;
 #endif
+#if BX_SUPPORT_SB16
+  bx_soundmod_ctl_stub_c  *pluginSoundModCtl;
+#endif
 #if 0
   bx_g2h_c          *g2h;
 #endif
@@ -471,6 +483,9 @@ public:
 #endif
 #if BX_SUPPORT_PCIUSB
   bx_usb_devctl_stub_c stubUsbDevCtl;
+#endif
+#if BX_SUPPORT_SB16
+  bx_soundmod_ctl_stub_c  stubSoundModCtl;
 #endif
 
   // Some info to pass to devices which can handled bulk IO.  This allows

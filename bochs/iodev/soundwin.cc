@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: soundwin.cc,v 1.29 2011-02-13 17:25:25 vruppert Exp $
+// $Id: soundwin.cc,v 1.30 2011-02-14 21:14:20 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2011  The Bochs Project
@@ -26,7 +26,7 @@
 // is used to know when we are exporting symbols and when we are importing.
 #define BX_PLUGGABLE
 
-#include "bochs.h"
+#include "iodev.h"
 
 #if defined(WIN32) && BX_SUPPORT_SB16
 

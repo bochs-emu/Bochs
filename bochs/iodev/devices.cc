@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: devices.cc,v 1.153 2011-01-12 22:34:42 vruppert Exp $
+// $Id: devices.cc,v 1.154 2011-02-14 21:14:20 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2011  The Bochs Project
@@ -92,6 +92,9 @@ void bx_devices_c::init_stubs()
 #if BX_SUPPORT_PCIUSB
   pluginUsbDevCtl = &stubUsbDevCtl;
 #endif
+#if BX_SUPPORT_SB16
+  pluginSoundModCtl = &stubSoundModCtl;
+#endif
 #if 0
   g2h = NULL;
 #endif
@@ -107,7 +110,7 @@ void bx_devices_c::init(BX_MEM_C *newmem)
   const char *plugname;
 #endif
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.153 2011-01-12 22:34:42 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.154 2011-02-14 21:14:20 vruppert Exp $"));
   mem = newmem;
 
   /* set builtin default handlers, will be overwritten by the real default handler */
@@ -168,6 +171,9 @@ void bx_devices_c::init(BX_MEM_C *newmem)
   PLUG_load_plugin(vga, PLUGTYPE_CORE);
   PLUG_load_plugin(hdimage, PLUGTYPE_CORE);
   PLUG_load_plugin(floppy, PLUGTYPE_CORE);
+#if BX_SUPPORT_SB16
+  PLUG_load_plugin(soundmod, PLUGTYPE_CORE);
+#endif
 
   // PCI logic (i440FX)
   if (SIM->get_param_bool(BXPN_I440FX_SUPPORT)->get()) {

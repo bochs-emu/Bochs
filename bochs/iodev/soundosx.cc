@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: soundosx.cc,v 1.16 2011-02-13 17:25:25 vruppert Exp $
+// $Id: soundosx.cc,v 1.17 2011-02-14 21:14:20 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004-2011  The Bochs Project
@@ -24,7 +24,7 @@
 #include <MacTypes.h>
 #endif
 
-#include "bochs.h"
+#include "iodev.h"
 
 #if defined(macintosh) && BX_SUPPORT_SB16
 

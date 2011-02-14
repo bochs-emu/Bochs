@@ -84,6 +84,7 @@ OBJS_THAT_CAN_BE_PLUGINS = \
   speaker.o \
   busmouse.o \
   ioapic.o \
+  soundmod.o \
   @GAME_OBJS@ \
   @PCI_OBJ@ \
   @USBCORE_OBJ@ \
@@ -99,7 +100,6 @@ OBJS_THAT_SUPPORT_OTHER_PLUGINS = \
   vmware3.o \
   vmware4.o \
   vvfat.o \
-  soundmod.o \
   $(CDROM_OBJS) \
   $(SOUNDLOW_OBJS) \
   $(NETLOW_OBJS) \
@@ -149,8 +149,8 @@ libbx_keyboard.la: keyboard.lo scancodes.lo
 libbx_pit_wrap.la: pit82c54.lo pit_wrap.lo
 	$(LIBTOOL) --mode=link $(CXX) -module pit82c54.lo pit_wrap.lo -o libbx_pit.la -rpath $(PLUGIN_PATH)
 
-libbx_sb16.la: sb16.lo soundmod.lo $(SOUNDLOW_OBJS:.o=.lo)
-	$(LIBTOOL) --mode=link $(CXX) -module sb16.lo soundmod.lo $(SOUNDLOW_OBJS:.o=.lo) -o libbx_sb16.la -rpath $(PLUGIN_PATH) $(SOUND_LINK_OPTS)
+libbx_soundmod.la: soundmod.lo $(SOUNDLOW_OBJS:.o=.lo)
+	$(LIBTOOL) --mode=link $(CXX) -module soundmod.lo $(SOUNDLOW_OBJS:.o=.lo) -o libbx_soundmod.la -rpath $(PLUGIN_PATH) $(SOUND_LINK_OPTS)
 
 libbx_ne2k.la: ne2k.lo $(NETLOW_OBJS:.o=.lo)
 	$(LIBTOOL) --mode=link $(CXX) -module ne2k.lo $(NETLOW_OBJS:.o=.lo) -o libbx_ne2k.la -rpath $(PLUGIN_PATH)
@@ -184,8 +184,8 @@ bx_keyboard.dll: keyboard.o scancodes.o
 bx_pit_wrap.dll: pit82c54.o pit_wrap.o
 	$(CXX) $(CXXFLAGS) -shared -o bx_pit.dll pit82c54.o pit_wrap.o $(WIN32_DLL_IMPORT_LIBRARY)
 
-bx_sb16.dll: sb16.o soundmod.o $(SOUNDLOW_OBJS)
-	$(CXX) $(CXXFLAGS) -shared -o bx_sb16.dll sb16.o soundmod.o $(SOUNDLOW_OBJS) $(WIN32_DLL_IMPORT_LIBRARY) -lwinmm
+bx_soundmod.dll: soundmod.o $(SOUNDLOW_OBJS)
+	$(CXX) $(CXXFLAGS) -shared -o bx_soundmod.dll soundmod.o $(SOUNDLOW_OBJS) $(WIN32_DLL_IMPORT_LIBRARY) -lwinmm
 
 bx_ne2k.dll: ne2k.o $(NETLOW_OBJS)
 	$(CXX) $(CXXFLAGS) -shared -o bx_ne2k.dll ne2k.o $(NETLOW_OBJS) $(WIN32_DLL_IMPORT_LIBRARY)
@@ -462,6 +462,12 @@ soundlnx.o: soundlnx.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../gui/siminterface.h ../gui/paramtree.h ../memory/memory.h \
   ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
   ../instrument/stubs/instrument.h ../param_names.h soundmod.h soundlnx.h
+soundmod.o: soundmod.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
+  ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
+  ../gui/siminterface.h ../gui/paramtree.h ../memory/memory.h \
+  ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
+  ../instrument/stubs/instrument.h ../param_names.h soundmod.h soundlnx.h \
+  soundosx.h soundwin.h
 soundosx.o: soundosx.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../gui/paramtree.h ../memory/memory.h \
@@ -793,6 +799,12 @@ soundlnx.lo: soundlnx.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../gui/siminterface.h ../gui/paramtree.h ../memory/memory.h \
   ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
   ../instrument/stubs/instrument.h ../param_names.h soundmod.h soundlnx.h
+soundmod.lo: soundmod.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
+  ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
+  ../gui/siminterface.h ../gui/paramtree.h ../memory/memory.h \
+  ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
+  ../instrument/stubs/instrument.h ../param_names.h soundmod.h soundlnx.h \
+  soundosx.h soundwin.h
 soundosx.lo: soundosx.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../gui/paramtree.h ../memory/memory.h \

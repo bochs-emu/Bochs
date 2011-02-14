@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: plugin.h,v 1.87 2011-01-18 21:04:43 vruppert Exp $
+// $Id: plugin.h,v 1.88 2011-02-14 21:14:20 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009  The Bochs Project
@@ -56,6 +56,7 @@ extern "C" {
 #define BX_PLUGIN_PCI       "pci"
 #define BX_PLUGIN_PCI2ISA   "pci2isa"
 #define BX_PLUGIN_PCI_IDE   "pci_ide"
+#define BX_PLUGIN_SOUNDMOD  "soundmod"
 #define BX_PLUGIN_SB16      "sb16"
 #define BX_PLUGIN_NE2K      "ne2k"
 #define BX_PLUGIN_EXTFPUIRQ "extfpuirq"
@@ -238,7 +239,7 @@ extern "C" {
 #define DEV_speaker_beep_on(frequency) bx_devices.pluginSpeaker->beep_on(frequency)
 #define DEV_speaker_beep_off() bx_devices.pluginSpeaker->beep_off()
 
-//////// Memory macros
+///////// Memory macros
 #define DEV_register_memory_handlers(param,rh,wh,b,e) \
     bx_devices.mem->registerMemoryHandlers(param,rh,wh,b,e)
 #define DEV_unregister_memory_handlers(rh,wh,b,e) \
@@ -247,6 +248,9 @@ extern "C" {
 ///////// USB device macros
 #define DEV_usb_init_device(a,b,c,d) (usbdev_type)bx_devices.pluginUsbDevCtl->init_device(a,b,(void**)c,d)
 #define DEV_usb_send_msg(a,b) bx_devices.pluginUsbDevCtl->usb_send_msg((void*)a,b)
+
+///////// Sound macro
+#define DEV_sound_init_module(a,b,c) bx_devices.pluginSoundModCtl->init_module(a,(void**)b,c)
 
 
 #if BX_HAVE_DLFCN_H
@@ -393,6 +397,7 @@ DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(usb_common)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(usb_uhci)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(usb_ohci)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(pcipnic)
+DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(soundmod)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(sb16)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(ne2k)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(extfpuirq)

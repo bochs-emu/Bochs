@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: soundmod.h,v 1.3 2011-02-13 17:25:25 vruppert Exp $
+// $Id: soundmod.h,v 1.4 2011-02-14 21:14:20 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2011  The Bochs Project
@@ -25,9 +25,17 @@
 // small to avoid unnecessary overhead.
 #define BX_SOUND_OUTPUT_WAVEPACKETSIZE  8192
 
-/* Definitions for the output functions */
+// Definitions for the output functions
 #define BX_SOUND_OUTPUT_OK   0
 #define BX_SOUND_OUTPUT_ERR  1
+
+// Pseudo device that loads the lowlevel sound module
+class bx_soundmod_ctl_c : public bx_soundmod_ctl_stub_c {
+public:
+  bx_soundmod_ctl_c() {}
+  virtual ~bx_soundmod_ctl_c() {}
+  virtual int init_module(const char *type, void **module, logfunctions *dev);
+};
 
 // The class with the output functions
 class bx_sound_output_c : public logfunctions {
