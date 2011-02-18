@@ -1,4 +1,16 @@
-Changes after 2.4.5 release:
+Changes in 2.4.6 release (coming soon):
+
+Brief summary :
+- Support more host OS to run on:
+  - Include win64 native binary in the release.
+  - Fixed failures on big endian hosts.
+- BIOS: Support for up to 2M ROM BIOS images.
+- GUI: select mouse capture toggle method in .bocshrc.
+- Ported the read-only part of Qemu's 'virtual VFAT' block driver.
+- Added write protect option for floppy drives.
+- Bugfixes / improved internal debugger + instrumentation.
+
+Detailed change log :
 
 - CPU and internal debugger
   - Implemented Process Context ID (PCID) feature
@@ -100,6 +112,7 @@ Changes after 2.4.5 release:
  [2994370] Cannot build with 3DNow support
 
 - these S.F. feature requests were closed/implemented
+ [1510142] Native Windows XP x64 Edition binary
  [1062553] select mouse (de)activation in bochsrc
  [2930633] legacy mouse capture key : not specific enough
  [2930679] Let user change mouse capture control key
