@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse.cc,v 1.84 2011-02-11 09:56:23 sshwarts Exp $
+// $Id: sse.cc,v 1.85 2011-02-19 11:00:43 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003-2011 Stanislav Shwartsman
@@ -394,10 +394,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PCMPEQQ_VdqWdqR(bxInstruction_c *i)
 #if BX_CPU_LEVEL >= 6
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2 = BX_READ_XMM_REG(i->rm());
 
-  op1.xmm64u(0) = (op1.xmm64u(0) == op2.xmm64u(0)) ?
+  op1.xmm64u(0) = (op1.xmm64s(0) == op2.xmm64s(0)) ?
         BX_CONST64(0xffffffffffffffff) : 0;
 
-  op1.xmm64u(1) = (op1.xmm64u(1) == op2.xmm64u(1)) ?
+  op1.xmm64u(1) = (op1.xmm64s(1) == op2.xmm64s(1)) ?
         BX_CONST64(0xffffffffffffffff) : 0;
 
   BX_WRITE_XMM_REG(i->nnn(), op1);
@@ -431,10 +431,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PCMPGTQ_VdqWdqR(bxInstruction_c *i)
 #if BX_CPU_LEVEL >= 6
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2 = BX_READ_XMM_REG(i->rm());
 
-  op1.xmm64u(0) = (op1.xmm64u(0) > op2.xmm64u(0)) ?
+  op1.xmm64u(0) = (op1.xmm64s(0) > op2.xmm64s(0)) ?
         BX_CONST64(0xffffffffffffffff) : 0;
 
-  op1.xmm64u(1) = (op1.xmm64u(1) > op2.xmm64u(1)) ?
+  op1.xmm64u(1) = (op1.xmm64s(1) > op2.xmm64s(1)) ?
         BX_CONST64(0xffffffffffffffff) : 0;
 
   /* now write result back to destination */
