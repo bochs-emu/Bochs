@@ -5,7 +5,7 @@ Brief summary :
   - Include win64 native binary in the release.
   - Fixed failures on big endian hosts.
 - BIOS: Support for up to 2M ROM BIOS images.
-- GUI: select mouse capture toggle method in .bocshrc.
+- GUI: select mouse capture toggle method in .bochsrc.
 - Ported the read-only part of Qemu's 'virtual VFAT' block driver.
 - Added write protect option for floppy drives.
 - Bugfixes / improved internal debugger + instrumentation.
