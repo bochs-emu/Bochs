@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.228 2011-02-11 09:56:23 sshwarts Exp $
+// $Id: paging.cc,v 1.229 2011-02-19 08:31:05 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2010  The Bochs Project
@@ -662,7 +662,7 @@ bx_phy_address BX_CPU_C::translate_linear_long_mode(bx_address laddr, Bit32u &lp
 #if BX_SUPPORT_VMX >= 2
     if (BX_CPU_THIS_PTR in_vmx_guest) {
       if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_EPT_ENABLE))
-        entry_addr[leaf] = translate_guest_physical(entry_addr[leaf], laddr, 1, 1, rw);
+        entry_addr[leaf] = translate_guest_physical(entry_addr[leaf], laddr, 1, 1, BX_READ);
     }
 #endif
     access_read_physical(entry_addr[leaf], 8, &entry[leaf]);
@@ -842,7 +842,7 @@ bx_phy_address BX_CPU_C::translate_linear_PAE(bx_address laddr, Bit32u &lpf_mask
 #if BX_SUPPORT_VMX >= 2
   if (BX_CPU_THIS_PTR in_vmx_guest) {
     if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_EPT_ENABLE))
-      entry_addr[BX_LEVEL_PDE] = translate_guest_physical(entry_addr[BX_LEVEL_PDE], laddr, 1, 1, rw);
+      entry_addr[BX_LEVEL_PDE] = translate_guest_physical(entry_addr[BX_LEVEL_PDE], laddr, 1, 1, BX_READ);
   }
 #endif
   access_read_physical(entry_addr[BX_LEVEL_PDE], 8, &entry[BX_LEVEL_PDE]);
@@ -872,7 +872,7 @@ bx_phy_address BX_CPU_C::translate_linear_PAE(bx_address laddr, Bit32u &lpf_mask
 #if BX_SUPPORT_VMX >= 2
     if (BX_CPU_THIS_PTR in_vmx_guest) {
       if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_EPT_ENABLE))
-        entry_addr[BX_LEVEL_PTE] = translate_guest_physical(entry_addr[BX_LEVEL_PTE], laddr, 1, 1, rw);
+        entry_addr[BX_LEVEL_PTE] = translate_guest_physical(entry_addr[BX_LEVEL_PTE], laddr, 1, 1, BX_READ);
     }
 #endif
     access_read_physical(entry_addr[BX_LEVEL_PTE], 8, &entry[BX_LEVEL_PTE]);
@@ -1000,7 +1000,7 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned curr_pl, un
 #if BX_SUPPORT_VMX >= 2
       if (BX_CPU_THIS_PTR in_vmx_guest) {
         if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_EPT_ENABLE))
-          pde_addr = translate_guest_physical(pde_addr, laddr, 1, 1, rw);
+          pde_addr = translate_guest_physical(pde_addr, laddr, 1, 1, BX_READ);
       }
 #endif
       access_read_physical(pde_addr, 4, &pde);
@@ -1057,7 +1057,7 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned curr_pl, un
 #if BX_SUPPORT_VMX >= 2
         if (BX_CPU_THIS_PTR in_vmx_guest) {
           if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_EPT_ENABLE))
-            pte_addr = translate_guest_physical(pte_addr, laddr, 1, 1, rw);
+            pte_addr = translate_guest_physical(pte_addr, laddr, 1, 1, BX_READ);
         }
 #endif
         access_read_physical(pte_addr, 4, &pte);
