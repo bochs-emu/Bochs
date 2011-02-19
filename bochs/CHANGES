@@ -6,8 +6,8 @@ Brief summary :
   - Fixed failures on big endian hosts.
 - BIOS: Support for up to 2M ROM BIOS images.
 - GUI: select mouse capture toggle method in .bochsrc.
-- ported most of Qemu's 'virtual VFAT' block driver
-  (except runtime write suppprt, but plus FAT32 suppport)
+- Ported most of Qemu's 'virtual VFAT' block driver
+  (except runtime write support, but plus FAT32 suppport)
 - Added write protect option for floppy drives.
 - Bugfixes / improved internal debugger + instrumentation.
 
