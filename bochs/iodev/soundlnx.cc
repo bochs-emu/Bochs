@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: soundlnx.cc,v 1.26 2011-02-14 21:14:20 vruppert Exp $
+// $Id: soundlnx.cc,v 1.27 2011-02-19 08:48:53 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2011  The Bochs Project
@@ -281,11 +281,11 @@ int bx_sound_linux_c::alsa_pcm_open(int frequency, int bits, int stereo, int for
   audio_bufsize = 0;
 
   if (alsa_pcm.handle == NULL) {
-    ret = snd_pcm_open(&alsa_pcm.handle, "default", SND_PCM_STREAM_PLAYBACK, 0);
+    ret = snd_pcm_open(&alsa_pcm.handle, "default", SND_PCM_STREAM_PLAYBACK, SND_PCM_NONBLOCK);
     if (ret < 0) {
       return BX_SOUND_OUTPUT_ERR;
     }
-    BX_ERROR(("ALSA: opened default PCM output device"));
+    BX_INFO(("ALSA: opened default PCM output device"));
   }
   snd_pcm_hw_params_alloca(&params);
   snd_pcm_hw_params_any(alsa_pcm.handle, params);
@@ -420,7 +420,7 @@ int bx_sound_linux_c::startwaveplayback(int frequency, int bits, int stereo, int
              frequency, strerror(errno)));
 
   // ioctl(wave, SNDCTL_DSP_GETBLKSIZE, &fragment);
-  // WRITELOG(WAVELOG(4), "current output block size is %d", fragment);
+  // BX_DEBUG(("current output block size is %d", fragment));
 
   return BX_SOUND_OUTPUT_OK;
 }
