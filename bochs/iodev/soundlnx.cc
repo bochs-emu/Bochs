@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: soundlnx.cc,v 1.27 2011-02-19 08:48:53 vruppert Exp $
+// $Id: soundlnx.cc,v 1.28 2011-02-19 10:25:18 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2011  The Bochs Project
@@ -436,6 +436,8 @@ int bx_sound_linux_c::alsa_pcm_write()
   while (audio_bufsize >= alsa_bufsize) {
     memcpy(alsa_buffer, audio_buffer, alsa_bufsize);
     ret = snd_pcm_writei(alsa_pcm.handle, alsa_buffer, alsa_pcm.frames);
+    if (ret == -EAGAIN)
+      continue;
     if (ret == -EPIPE) {
       /* EPIPE means underrun */
       BX_ERROR(("ALSA: underrun occurred"));
