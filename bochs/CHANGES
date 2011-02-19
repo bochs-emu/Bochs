@@ -6,7 +6,8 @@ Brief summary :
   - Fixed failures on big endian hosts.
 - BIOS: Support for up to 2M ROM BIOS images.
 - GUI: select mouse capture toggle method in .bochsrc.
-- Ported the read-only part of Qemu's 'virtual VFAT' block driver.
+- ported most of Qemu's 'virtual VFAT' block driver
+  (except runtime write suppprt, but plus FAT32 suppport)
 - Added write protect option for floppy drives.
 - Bugfixes / improved internal debugger + instrumentation.
 
@@ -48,11 +49,13 @@ Detailed change log :
     - CTRL+F10 (like DOSBox)
     - CTRL+ALT (like QEMU)
     - F12 (replaces win32 'legacyF12' option)
+  - display library 'x' now uses the desktop size for the maximum guest resolution
 
 - ROM BIOS
   - Support for up to 2M ROM BIOS images
 
 - I/O Devices
+  - 3 new 'pseudo device' plugins created by plugin separation (see below)
   - Fixes for emulated DHCP in eth_vnet (patch from @SF tracker)
   - Added support for VGA graphics mode with 400 lines (partial fix for SF bug #2948724)
   - NE2K: Fixed "send buffer" command issue on big endian hosts
@@ -64,8 +67,8 @@ Detailed change log :
     - USB MSD: added support for disk image modes (like ATA disks)
     - USB printer: output file creation failure now causes a disconnect
     - re-implemented "options" parameter for additional options of connected
-      devices (currently only used to specify an alternative redolog file of
-      USB MSD disk image modes)
+      devices (currently only used to set the speed reported by device and to
+      specify an alternative redolog file of USB MSD disk image modes)
   - hard drive
     - new disk image mode 'vvfat'
       - ported the read-only part of Qemu's 'virtual VFAT' block driver
@@ -84,6 +87,8 @@ Detailed change log :
     - added write protect option for floppy drives (based on @SF patch by Ben Lunt)
     - vvfat support
     - bugfix: close images on exit
+  - SB16
+    - converted the sound output module stuff to the new 'soundmod' plugin
 
 - SF patches applied
  [3164945] hack to compile under WIN64 by Darek Mihocka and Stanislav
