@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: devices.txt,v 1.4 2009-12-04 13:21:33 sshwarts Exp $
+// $Id: devices.txt,v 1.5 2011-02-20 09:35:48 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 
 MOTHER BOARD (i440FX Support)                                   devices.cc
@@ -24,7 +24,7 @@ MOTHER BOARD (i440FX Support)                                   devices.cc
   |        |             +---- PC Speaker (lowlevel)            speaker.cc
   |
   |        +---- 8237 DMA controller                            dma.cc
-  |        +---- 82077A Floppy Drive Controller                 floppy.cc
+  |        +---- 82077A Floppy Drive Controller (*)             floppy.cc
   |        +---- CMOS device                                    cmos.cc
   |        +---- External circuit for #FERR pin                 extfpuirq.cc
   |        +---- Parallel ports emulation                       parallel.cc
@@ -44,7 +44,9 @@ Attached devices
   |
   +---- Hard Drive + ATA controller                             harddrv.cc
   |        |
-  |        +---- Hard Drive image support (*)                   hdimage.cc, vmware3.cc, vmware4.cc
+  |        +---- Hard Drive image support (*)                   hdimage.cc
+  |        |             |
+  |        |             +---- Additional Modules               vmware3.cc, vmware4.cc, vvfat.cc
   |        |
   |        +---- CD/DVD-ROM image / device access (*)           cdrom.cc
   |                      |
@@ -75,6 +77,8 @@ Attached devices
   +---- Sound support
   |        |
   |        +---- Sound Blaster SB16                             sb16.cc
+  |                      | |
+  |                      | +-- Dummy / Control Module           soundmod.cc
   |                      |
   |                      +---- Host specific Modules            soundlnx.cc, soundosx.cc, soundwin.cc
   |
@@ -85,14 +89,17 @@ Attached devices
            |             +---- USB OHCI adapter                 usb_ohci.cc
            |             +---- USB UHCI adapter (PIIX3)         usb_uhci.cc
            |
-           +---- Attached USB devices                           usb_common.cc
+           +---- Attached USB devices
+                         | |
+                         | +-- Control Module                   usb_common.cc
                          |
                          +---- USB HID emulation                usb_hid.cc
                          +---- USB external HUB                 usb_hub.cc
                          +---- USB mass storage device (*)      usb_msd.cc, scsi_device.cc
                          +---- USB HP DeskJet 920C printer      usb_printer.cc
 
-(*) USB MSD uses hdimage.cc and cdrom.cc for image / device access
+(*) USB MSD uses hdimage code and cdrom.cc for image / device access
+    Floppy uses hdimage code for VVFAT support
 
 BOCHS timer sycronisation modules
   |

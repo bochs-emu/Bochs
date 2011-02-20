@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/development/development.dbk
-$Id: development.dbk,v 1.37 2011-01-25 23:29:08 vruppert Exp $
+$Id: development.dbk,v 1.38 2011-02-20 09:35:47 vruppert Exp $
 
 This is the top level file for the Bochs Developers Manual.
 ================================================================
@@ -1379,7 +1379,8 @@ the future.
 <section id="harddisk-redologs"><title>Harddisk Images based on redologs</title>
 <para>
 This section describes how the three new disk images "undoable", "growing", and "volatile" are
-implemented in Bochs 2.1 :
+implemented in Bochs 2.1. It also applies to the write support the "vvfat" disk
+image mode in Bochs 2.4.6.
 </para>
 <itemizedlist>
 <listitem><para>
@@ -1390,6 +1391,9 @@ growing  -> growing files, all previously unwritten sectors go to the end of fil
 </para></listitem>
 <listitem><para>
 volatile -> flat file, plus hidden growing redolog
+</para></listitem>
+<listitem><para>
+vvfat -> virtual VFAT disk created from directory, plus hidden growing redolog
 </para></listitem>
 </itemizedlist>
 
@@ -1403,10 +1407,11 @@ volatile -> flat file, plus hidden growing redolog
 <para>
 The idea behind volatile and undoable disk images
 is to have a flat file, associated with one redolog file.
+In case of vvfat, a directory is associated with the redolog file.
 </para>
 <para>
 Reading a sector is done from the redolog file if it contains
-the sector, or from the flat file otherwise.
+the sector, or from the flat file / vvfat directory otherwise.
 </para>
 <para>
 Sectors written go to the redolog,
@@ -1425,7 +1430,7 @@ Now, it turns out that if you only use a redolog without any
 flat file, you get a "growing" disk image.
 </para>
 <para>
-So "undoable", "volatile" and "growing" harddisk images classes
+So "undoable", "volatile", "growing" and "vvfat" harddisk images classes
 are implemented on top of a redolog class.
 </para>
 </section>
@@ -2408,7 +2413,7 @@ new release is ready for download.
 
 <section id="project-webspace"><title>Bochs project webspace</title>
 <para>
-The Bochs project webspace is stored under the SF directory <filename>/home/groups/b/bo/bochs</filename>.
+The Bochs project webspace is stored under the SF directory <filename>/home/project-web/bochs</filename>.
 It can be accessed from the SF shell using SSH or with the commands <command>sftp</command>,
 <command>scp</command> and <command>rsync</command>. Some parts of the directory
 structure must be updated from the local CVS repository, others from Bochs CVS
@@ -2468,7 +2473,7 @@ Use the "timeleft" command to see how much time remains before shutdown.
 Use the "shutdown" command to destroy the shell before the time limit.
 For path information and login help, type "sf-help".
 
-[vruppert@shell-24002 ~]$ cd /home/groups/b/bo/bochs/htdocs/
+[vruppert@shell-24002 ~]$ cd /home/project-web/bochs/htdocs/
 [vruppert@shell-24002 htdocs]$ cvs update
 cvs update: Updating .
 U index.html
@@ -2503,7 +2508,7 @@ called <command>update-snapshots.sh</command> that can do all the required steps
 (checking out CVS, packing the source tree into one archive, updating the website
 link). See previous section how to create a shell.
 <screen>
-cd /home/groups/b/bo/bochs/sitebin/
+cd /home/project-web/bochs/sitebin/
 ./update-snapshots.sh
 </screen>
 </para>
@@ -2523,7 +2528,7 @@ After a successful upload, the HTML files must be unpacked from the SF shell.
 See section <link linkend="update-website">Updating the Bochs website content</link>
 how to create a shell.
 <screen>
-cd /home/groups/b/bo/bochs/htdocs/doc/docbook
+cd /home/project-web/bochs/htdocs/doc/docbook
 tar xvzf bochsdoc.tar.gz
 </screen>
 The updated files can be accessed from the sidebar of the Bochs website.
