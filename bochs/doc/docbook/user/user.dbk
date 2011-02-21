@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.287 2011-01-25 23:29:08 vruppert Exp $
+$Id: user.dbk,v 1.288 2011-02-21 21:50:54 vruppert Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -416,7 +416,8 @@ currently work with.
     <entry>Yes</entry>
     <entry>Supports floppy disk images on all platforms: 2.88M 3.5", 1.44M 3.5", 1.2M 5.25",
     720K 3.5" and 360K 5.25". On Unix and Windows 9x/NT/2000/XP, Bochs can access the
-    physical floppy drive.
+    physical floppy drive. It is also possible to use a local directory as VFAT media
+    (1.44M only).
     </entry>
   </row>
   <row>
@@ -434,6 +435,7 @@ currently work with.
     <entry>Emulates ATA-6/IDE hard drives via image files.  Physical
     hard disk access is supported on some architecture, but NOT recommended, primarily for safety reasons.
     Hard disks up to 127GB are supported, on any platform that support large files access.
+    It is also possible to use a local directory as VFAT drive.
     </entry>
   </row>
   <row>
@@ -3230,6 +3232,8 @@ Examples:
   floppya: 720k=/usr/local/bochs/images/win95.img, status=inserted
 auto-detect floppy media type:
   floppya: image=floppy.img, status=inserted
+use directory as VFAT media:
+  floppya: 1_44=vvfat:path, status=inserted
 1.44M 3.5" floppy drive, no media:
   floppya: type=1_44
 </screen>
@@ -3409,7 +3413,7 @@ growing : growing file
 volatile : flat file with volatile redolog
 </para></listitem>
 <listitem><para>
-vvfat: local directory appears as read-only VFAT disk (with volatile redolog)
+vvfat: local directory appears as VFAT disk (with volatile redolog / optional commit)
 </para></listitem>
 </itemizedlist>
 Please see <xref linkend="harddisk-modes"> for a discussion on disk modes.
@@ -4013,9 +4017,9 @@ located in the <constant>bochs/host/linux/pcidev/</constant> directory.
 <para>
 Examples:
 <screen>
-  usb_uhci: enabled=1, port1=mouse, port2=keypad
-  usb_uhci: enabled=1, port1=tablet, port2=disk:usbstick.img
+  usb_uhci: enabled=1, port1=mouse, port2=disk:usbstick.img
   usb_uhci: enabled=1, port1=hub:7, port2=disk:growing:usbdisk.img
+  usb_uhci: enabled=1, port2=disk:undoable:usbdisk.img, options1=journal:redo.log
   usb_uhci: enabled=1, port1=printer:printdata.bin, port2=cdrom:image.iso
 </screen>
 This option controls the presence of the USB root hub which is a part of the
@@ -4025,6 +4029,12 @@ i440FX PCI chipset.
 With the port<replaceable>X</replaceable> option you can connect devices
 to the hub (currently supported: 'mouse', 'tablet', 'keypad', 'disk', 'cdrom',
 'hub' and 'printer').
+</para>
+<para>
+The options<replaceable>X</replaceable> parameter can be used to assign specific
+options to the device connected to the corresponding USB port. Currently this
+feature is only used to set the speed reported by device and by the 'disk'
+device to specify an alternative redolog file of some image modes.
 </para>
 <para>
 If you connect the mouse or tablet to one of the ports, Bochs forwards the
@@ -7349,9 +7359,9 @@ If unspecified, the default "mode" is flat.
        always rollbacked
        </entry>
  </row>
- <row> <entry> vvfat </entry> <entry> local directory appears as read-only VFAT disk (with volatile redolog) </entry>
+ <row> <entry> vvfat </entry> <entry> local directory appears as VFAT disk (with volatile redolog) </entry>
        <entry>
-       always rollbacked
+       optional commit or rollback
        </entry>
  </row>
 </tbody>
@@ -7924,13 +7934,16 @@ The flat disk images must be created with the bximage utility
 </para>
 <section><title>description</title>
 <para>
-    The "vvfat" disk image mode is a port of Qemu's "virtual VFAT" block driver
-    (written by Johannes E. Schindelin). It currently supports the read-only
-    part of this implementation plus some additions. The structures of the
+    The "vvfat" disk image mode is mostly a port of Qemu's "virtual VFAT" block
+    driver (written by Johannes E. Schindelin). It supports the read-only part
+    of this implementation plus some additions. The structures of the
     virtual disk are created from the contents of the specified local directory
     when Bochs is starting. All writes to this virtual disk go to a volatile
-    redolog, so they will be lost when Bochs quits and the files of the local
-    directory are not modified.
+    redolog and when closing Bochs, the user can decide whether or not to commit
+    the changes. If "No" is seclected, all changes will be lost when Bochs quits
+    and the files of the local directory are not modified. Otherwise the changes
+    of files and directories are committed. WARNING: Don't use important data without
+    backup in the "vvfat" directory when using this "optional commit" feature.
 </para>
 <para>
     In addition to Qemu's "vvfat" implementation the Bochs one supports configurable
@@ -7944,8 +7957,14 @@ The flat disk images must be created with the bximage utility
 </para>
 <para>
     FAT32 is enabled for disk with minimum 2 GB size, or if MBR / boot sector image
-    enable this filesystem. In all other cases FAT16 is used. Long filename support
+    enable this filesystem. When using "vvfat" for a floppy, FAT12 is used (1.44M
+    media only). In all other cases FAT16 is used. Long filename support
     is always present.
+</para>
+<para>
+    Special FAT file attributes are stored in a special file named <filename>vvfat_attr.cfg</filename>.
+    When using the "optional commit" feature, modified attributes are saved to this file.
+    The "optional commit" also supports setting the file modification date and time.
 </para>
 </section>
 <section><title>image creation</title>
@@ -7975,14 +7994,13 @@ The flat disk images must be created with the bximage utility
 </section>
 <section><title>limitations</title>
 <para>
-    There is no real write support present yet. The changes written to the volatile
-    redolog are lost when Bochs quits. It is planned to implement writing back directory
-    changes on Bochs exit.
+    There is no runtime write support present yet. All changes are written to
+    the volatile redolog and they can only be committed on Bochs exit.
 </para>
 <para>
     When using the MBR from image file only the first partition is used and it
-    must be of type FAT16 or FAT32. An extended partition or other file system
-    types are not supported. Floppy support with FAT12 is planned for the future.
+    must be of type FAT16 or FAT32. FAT12 can be used for the floppy only.
+    An extended partition or other file system types are not supported.
 </para>
 </section>
 </section>
