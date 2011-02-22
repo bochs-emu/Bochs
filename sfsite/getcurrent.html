@@ -7,9 +7,49 @@
  <!--content starts here-->
  <img src="images/logo.gif" alt="A Window, Tux, and the BSD Daemon" width="160" height="175" align="right">
 
- <BR><font face="arial, helvetica" color="#1e029a" size="4"><b>Latest release:</b> Bochs 2.4.5</font><BR><BR>
+ <BR><font face="arial, helvetica" color="#1e029a" size="4"><b>Latest release:</b> Bochs 2.4.6</font><BR><BR>
 
-Version 2.4.5 is a bugfix+ release. Here is the summary of changes :
+Version 2.4.6 is a bugfix+ release. Here is the summary of changes :
+
+<ul>
+<li> Support more host OS to run on:
+<ul>
+  <li> Include win64 native binary in the release.
+  <li> Fixed failures on big endian hosts.
+</ul>
+<li> BIOS: Support for up to 2M ROM BIOS images.
+<li> GUI: select mouse capture toggle method in .bochsrc.
+<li> Ported most of Qemu's 'virtual VFAT' block driver<br>
+     (except runtime write support, but plus FAT32 suppport)
+<li> Added write protect option for floppy drives.
+<li> Bugfixes / improved internal debugger + instrumentation.
+</ul>
+
+The binary packages for Linux and Windows are built with these featues :
+<ul>
+<li> x86-64 emulation with all optimizations enabled
+<li> devices:
+ <ul>
+ <li> chipset: PCI, ACPI
+ <li> video: Bochs VBE and Cirrus SVGA
+ <li> sound: SB16
+ <li> network: NE2000 (ISA/PCI)
+ <li> USB: OHCI, UHCI and 6 device types
+ </ul>
+<li> Display libraries:
+ <ul>
+ <li> Linux: nogui, rfb, sdl, term, wx, x
+ <li> Windows: nogui, rfb, win32
+ </ul>
+</ul>
+
+<a href="http://bochs.cvs.sourceforge.net/bochs/bochs/CHANGES?view=markup&content-type=text/vnd.viewcvs-markup&revision=REL_2_4_6_FINAL">
+Details on what has changed since version 2.4.5
+</a>
+
+<BR/><BR/>
+
+ <BR><font face="arial, helvetica" color="#1e029a" size="4"><b>Previous release:</b> Bochs 2.4.5</font><BR><BR>
 
 <ul>
 <li> Major configure/cpu rework allowing to enable/disable CPU options at runtime
@@ -27,61 +67,10 @@ Version 2.4.5 is a bugfix+ release. Here is the summary of changes :
 <li> USB HP DeskJet 920C printer device emulation (Ben Lunt)
 </ul>
 
-The binary packages for Linux and Windows are built with these featues :
-<ul>
-<li> x86-64 emulation with all optimizations enabled
-<li> devices:
- <ul>
- <li> chipset: PCI, ACPI
- <li> video: Bochs VBE and Cirrus SVGA
- <li> sound: SB16
- <li> network: NE2000 (ISA/PCI)
- <li> USB: OHCI, UHCI and 6 device types
- </ul>
-<li> Display libraries:
- <ul>
- <li> Linux: nogui, rfb, sdl, term, x
- <li> Windows: nogui, rfb, win32
- </ul>
-</ul>
+<BR>
 
 <a href="http://bochs.cvs.sourceforge.net/bochs/bochs/CHANGES?view=markup&content-type=text/vnd.viewcvs-markup&revision=REL_2_4_5_FINAL">
 Details on what has changed since version 2.4.2
-</a>
-
-<BR/><BR/>
-
- <BR><font face="arial, helvetica" color="#1e029a" size="4"><b>Previous release:</b> Bochs 2.4.2</font><BR><BR>
-
-<ul>
-<li> CPU and internal debugger
- <ul> 
- <li> VMX: implemented TPR shadow VMEXIT
- <li> Bugfixes for CPU emulation correctness (mostly for VMX support).
- <li> Bugfixes and updates for Bochs internal debugger
- <ul> 
- <li> On SMP system stepN command now affects only current processor
- </ul>
- </ul>
-<li> Memory modelling
- <ul> 
- <li> Bugfixes for > 32-bit physical address space.
- <li> Allow to emulate more physical memory than host actually could or would like to allocate.
- </ul>
-<li> I/O Devices Bugfixes
- <ul> 
- <li> Bugfixes for 8254 PIT, VGA, Cirrus-Logic SVGA, USB UCHI
- </ul>
-<li> Cleanup configure options
- <ul> 
- <li> Many configure options are deprecated and determined automatically from the others
- </ul>
-</ul>
-
-<BR>
-
-<a href="http://bochs.cvs.sourceforge.net/bochs/bochs/CHANGES?view=markup&content-type=text/vnd.viewcvs-markup&revision=REL_2_4_2_FINAL">
-Details on what has changed since version 2.4.1
 </a>
 
  <BR><BR>
@@ -90,7 +79,8 @@ The latest release of Bochs is available in these file formats :<BR>
 <ul>
 <li> Win32 binary NSIS installer package (EXE)
 <li> Win32 binary with x86-64 CPU + SMP support (ZIP) - Bochs installation is required
-<li> Linux binary RPM
+<li> Win64 binary - Bochs installation is required
+<li> Linux binary RPM (32 / 64 bit)
 <li> Platform independant source package (TAR.GZ)
 <li> Win32 specific source package prepared for MSVC (ZIP)
 <li> Linux source RPM
