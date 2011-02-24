@@ -894,7 +894,7 @@ Bit16u cdrom_boot();
 
 static char bios_cvs_version_string[] = "$Revision$ $Date$";
 
-#define BIOS_COPYRIGHT_STRING "(c) 2002 MandrakeSoft S.A. Written by Kevin Lawton & the Bochs team."
+#define BIOS_COPYRIGHT_STRING "(c) 2002-2010 MandrakeSoft S.A. Written by Kevin Lawton & the Bochs team."
 
 #if DEBUG_ATA
 #  define BX_DEBUG_ATA(a...) BX_DEBUG(a)
