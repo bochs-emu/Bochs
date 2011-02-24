@@ -601,6 +601,11 @@ void bx_dbg_lin_memory_access(unsigned cpu, bx_address lin, bx_phy_address phy, 
          xmmdata->xmm32u(3), xmmdata->xmm32u(2), xmmdata->xmm32u(1), xmmdata->xmm32u(0));
   }
 #endif
+  else {
+     for (int i=len-1;i >= 0;i--) {
+        dbg_printf(" %02x", data[i]);
+     }
+  }
 
   dbg_printf("\n");
 }
@@ -668,6 +673,11 @@ void bx_dbg_phy_memory_access(unsigned cpu, bx_phy_address phy, unsigned len, un
          xmmdata->xmm32u(3), xmmdata->xmm32u(2), xmmdata->xmm32u(1), xmmdata->xmm32u(0));
   }
 #endif
+  else {
+     for (int i=len-1;i >= 0;i--) {
+        dbg_printf(" %02x", data[i]);
+     }
+  }
 
   if (access != 0)
     dbg_printf("\t; %s\n", access_string[access]);
