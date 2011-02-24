@@ -1,7 +1,7 @@
 /////////////////////////////////////////////////////////////////////////
 //
 // test-access-check.cc
-// $Id: test-access-check.cc,v 1.4 2008-02-05 22:57:42 sshwarts Exp $
+// $Id$
 // by Bryce Denney
 //
 // This whole program is intended to test just a few lines in

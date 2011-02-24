@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: guest2host.cc,v 1.21 2009-12-04 19:50:27 sshwarts Exp $
+// $Id$
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2009  The Bochs Project
@@ -44,7 +44,7 @@ bx_g2h_c::~bx_g2h_c()
 
 void bx_g2h_c::init(void)
 {
-  BX_DEBUG(("Init $Id: guest2host.cc,v 1.21 2009-12-04 19:50:27 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id$"));
   // Reserve a dword port for this interface
   for (Bit32u addr=BX_G2H_PORT; addr<=(BX_G2H_PORT+3); addr++) {
     bx_devices.register_io_read_handler(&bx_g2h,

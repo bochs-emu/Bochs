@@ -1,6 +1,6 @@
 /*
  * misc/bximage.c
- * $Id: bxcommit.c,v 1.14 2009-04-14 09:45:22 sshwarts Exp $
+ * $Id$
  *
  * Commits a redolog file in a flat file for bochs images.
  *
@@ -49,7 +49,7 @@ int snprintf(char *s, size_t maxlen, const char *format, ...)
 #include "../iodev/hdimage.h"
 
 char *EOF_ERR = "ERROR: End of input";
-char *rcsid = "$Id: bxcommit.c,v 1.14 2009-04-14 09:45:22 sshwarts Exp $";
+char *rcsid = "$Id$";
 char *divider = "========================================================================";
 
 void myexit(int code)

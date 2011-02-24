@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cdrom.cc,v 1.99 2009-12-04 19:50:26 sshwarts Exp $
+// $Id$
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2009  The Bochs Project
@@ -521,7 +521,7 @@ cdrom_interface::cdrom_interface(const char *dev)
 
 void cdrom_interface::init(void)
 {
-  BX_DEBUG(("Init $Id: cdrom.cc,v 1.99 2009-12-04 19:50:26 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id$"));
   BX_INFO(("file = '%s'",path));
 }
 

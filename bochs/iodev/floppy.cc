@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.cc,v 1.133 2011-01-18 21:04:44 vruppert Exp $
+// $Id$
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2011  The Bochs Project
@@ -140,7 +140,7 @@ void bx_floppy_ctrl_c::init(void)
   Bit8u i, devtype, cmos_value;
   char pname[10];
 
-  BX_DEBUG(("Init $Id: floppy.cc,v 1.133 2011-01-18 21:04:44 vruppert Exp $"));
+  BX_DEBUG(("Init $Id$"));
   DEV_dma_register_8bit_channel(2, dma_read, dma_write, "Floppy Drive");
   DEV_register_irq(6, "Floppy Drive");
   for (unsigned addr=0x03F2; addr<=0x03F7; addr++) {

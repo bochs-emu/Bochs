@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: devices.cc,v 1.154 2011-02-14 21:14:20 vruppert Exp $
+// $Id$
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2011  The Bochs Project
@@ -110,7 +110,7 @@ void bx_devices_c::init(BX_MEM_C *newmem)
   const char *plugname;
 #endif
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.154 2011-02-14 21:14:20 vruppert Exp $"));
+  BX_DEBUG(("Init $Id$"));
   mem = newmem;
 
   /* set builtin default handlers, will be overwritten by the real default handler */

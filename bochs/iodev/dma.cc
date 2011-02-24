@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dma.cc,v 1.52 2009-12-04 19:50:26 sshwarts Exp $
+// $Id$
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2009  The Bochs Project
@@ -117,7 +117,7 @@ unsigned bx_dma_c::get_TC(void)
 void bx_dma_c::init(void)
 {
   unsigned c, i, j;
-  BX_DEBUG(("Init $Id: dma.cc,v 1.52 2009-12-04 19:50:26 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id$"));
 
   /* 8237 DMA controller */
 

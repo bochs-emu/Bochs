@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.cc,v 1.147 2011-01-20 16:54:42 vruppert Exp $
+// $Id$
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2009  The Bochs Project
@@ -120,7 +120,7 @@ void bx_keyb_c::resetinternals(bx_bool powerup)
 
 void bx_keyb_c::init(void)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.147 2011-01-20 16:54:42 vruppert Exp $"));
+  BX_DEBUG(("Init $Id$"));
   Bit32u   i;
 
   DEV_register_irq(1, "8042 Keyboard controller");

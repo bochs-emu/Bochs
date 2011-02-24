@@ -1,5 +1,5 @@
 /*
- * $Id: biossums.c,v 1.5 2010-01-18 20:04:44 sshwarts Exp $
+ * $Id$
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public

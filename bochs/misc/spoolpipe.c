@@ -1,4 +1,4 @@
-/* $Id: spoolpipe.c,v 1.2 2009-02-08 09:05:52 vruppert Exp $
+/* $Id$
  *
  * spoolpipe.c
  * by Carl Sopchak

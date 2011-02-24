@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: busmouse.cc,v 1.15 2009-12-04 19:50:26 sshwarts Exp $
+// $Id$
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004-2009  The Bochs Project
@@ -61,7 +61,7 @@ bx_busm_c::~bx_busm_c()
 
 void bx_busm_c::init(void)
 {
-  BX_DEBUG(("Init $Id: busmouse.cc,v 1.15 2009-12-04 19:50:26 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id$"));
 
   DEV_register_irq(BUS_MOUSE_IRQ, "Bus Mouse");
 
