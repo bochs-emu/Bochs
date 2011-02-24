@@ -931,7 +931,7 @@ bx_define_opcode(BX_IA_PSRLQ_VdqWdq, &BX_CPU_C::LOAD_Wdq, &BX_CPU_C::PSRLQ_VdqWd
 bx_define_opcode(BX_IA_PADDQ_PqQq, &BX_CPU_C::PADDQ_PqQq, &BX_CPU_C::PADDQ_PqQq, BX_CPU_SSE2, 0)
 bx_define_opcode(BX_IA_PADDQ_VdqWdq, &BX_CPU_C::LOAD_Wdq, &BX_CPU_C::PADDQ_VdqWdqR, BX_CPU_SSE2, BX_PREPARE_SSE)
 bx_define_opcode(BX_IA_PMULLW_VdqWdq, &BX_CPU_C::LOAD_Wdq, &BX_CPU_C::PMULLW_VdqWdqR, BX_CPU_SSE2, BX_PREPARE_SSE)
-bx_define_opcode(BX_IA_MOVQ_WqVq, &BX_CPU_C::MOVLPS_MqVps, &BX_CPU_C::MOVQ_VqWqR, BX_CPU_SSE2, BX_PREPARE_SSE)
+bx_define_opcode(BX_IA_MOVQ_WqVq, &BX_CPU_C::MOVLPS_MqVps, &BX_CPU_C::MOVQ_VqWqR, BX_CPU_SSE2, BX_PREPARE_SSE) /* dstRM */
 bx_define_opcode(BX_IA_MOVDQ2Q_PqVRq, &BX_CPU_C::BxError, &BX_CPU_C::MOVDQ2Q_PqVRq, BX_CPU_SSE2, BX_PREPARE_SSE)
 bx_define_opcode(BX_IA_MOVQ2DQ_VdqQq, &BX_CPU_C::BxError, &BX_CPU_C::MOVQ2DQ_VdqQq, BX_CPU_SSE2, BX_PREPARE_SSE)
 bx_define_opcode(BX_IA_PMOVMSKB_GdUdq, &BX_CPU_C::BxError, &BX_CPU_C::PMOVMSKB_GdUdq, BX_CPU_SSE2, BX_PREPARE_SSE)
