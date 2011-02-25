@@ -6,7 +6,7 @@ exec perl -x $0 $*; echo "Could not exec perl!"; exit 1
 #!perl
 #
 # fix-titles.pl
-# $Id: fixtitles.pl,v 1.1 2001-09-16 06:46:11 bdenney Exp $
+# $Id$
 #
 # The HTML stylesheet likes to print html has the ends of tags on a different
 # line, like this:

@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: make-dmg.sh,v 1.1 2002-12-19 03:01:44 bdenney Exp $
+# $Id$
 #
 # Make a DMG of Bochs.  This script must be run from the main source 
 # directory, e.g. "./build/macosx/make-dmg.sh".  If you haven't run
