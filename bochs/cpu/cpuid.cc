@@ -44,85 +44,24 @@
  * [7:4]   Model: starts at 1
  * [11:8]  Family: 4=486, 5=Pentium, 6=PPro, ...
  * [13:12] Type: 0=OEM, 1=overdrive, 2=dual cpu, 3=reserved
- * [31:14] Reserved
+ * [19:16] Extended Model
+ * [27:29] Extended Family
  */
 
 Bit32u BX_CPU_C::get_cpu_version_information(void)
 {
+#if BX_CPU_LEVEL >= 4
   Bit32u stepping = SIM->get_param_num(BXPN_CPUID_STEPPING)->get();
+  Bit32u model = SIM->get_param_num(BXPN_CPUID_MODEL)->get();
+  Bit32u family = SIM->get_param_num(BXPN_CPUID_FAMILY)->get();
 
-  Bit32u family = 0, model = 0;
-  Bit32u extended_model = 0;
-  Bit32u extended_family = 0;
-
-#if BX_CPU_LEVEL > 3
-
-  /* ****** */
-  /*  i486  */
-  /* ****** */
-
-#if BX_CPU_LEVEL == 4
-  family = 4;
-
-#if BX_SUPPORT_FPU
-  model = 1;            // 486dx
+  return ((family & 0xfff0) << 16) |
+         ((model & 0xf0) << 12) |
+         ((family & 0x0f) << 8) |
+         ((model & 0x0f) << 4) | stepping;
 #else
-  model = 2;            // 486sx
+  return 0; /* CPUID not supported */
 #endif
-
-  /* **************** */
-  /*  i586 (Pentium)  */
-  /* **************** */
-
-#elif BX_CPU_LEVEL == 5	
-  family   = 5;
-
-  if (BX_CPU_SUPPORT_ISA_EXTENSION(BX_CPU_MMX))
-    model = 4; // Pentium MMX
-  else
-    model = 1; // Pentium 60/66
-
-  /* ****** */
-  /*  i686  */
-  /* ****** */
-
-#elif BX_CPU_LEVEL == 6
-
-  unsigned sse_enabled = SIM->get_param_enum(BXPN_CPUID_SSE)->get();
-
-  if (sse_enabled >= 2) {
-
-/*
-     The model, family, and processor type for the first
-     processor in the Intel Pentium 4 family is as follows:
-		* Model-0000B
-		* Family-1111B
-		* Processor Type-00B (OEM)
-                * Stepping-0B
-*/
-    model    = 0;
-    family   = 0xf;
-
-#if BX_SUPPORT_X86_64
-    model    = 2;       // Hammer returns what?
-#endif
-
-  }
-  else {                // Pentium Pro/Pentium II/Pentium III processor
-    family   = 6;
-    model    = 8;
-  }
-
-#else
-  BX_PANIC(("CPUID family ID not implemented for CPU LEVEL > 6"));
-#endif
-
-#endif  // BX_CPU_LEVEL > 3
-
-  return (extended_family << 20) |
-         (extended_model << 16) |
-         (family << 8) |
-         (model<<4) | stepping;
 }
 
 /* Get CPU extended feature flags. */
@@ -214,6 +153,7 @@ Bit32u BX_CPU_C::get_extended_cpuid_features(void)
   return features;
 }
 
+#if BX_CPU_LEVEL >= 6
 Bit32u BX_CPU_C::get_ext2_cpuid_features(void)
 {
   Bit32u features = 0;
@@ -225,6 +165,7 @@ Bit32u BX_CPU_C::get_ext2_cpuid_features(void)
 
   return features;
 }
+#endif
 
 /* Get CPU feature flags. Returned by CPUID functions 1 and 80000001.  */
 Bit32u BX_CPU_C::get_std_cpuid_features(void)
@@ -389,6 +330,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CPUID(bxInstruction_c *i)
 #endif
 }
 
+#if BX_CPU_LEVEL >= 4
 void BX_CPU_C::set_cpuid_defaults(void)
 {
   Bit8u *vendor_string = (Bit8u *)SIM->get_param_string(BXPN_VENDOR_STRING)->getptr();
@@ -465,7 +407,8 @@ void BX_CPU_C::set_cpuid_defaults(void)
   //   [7:4]   Model: starts at 1
   //   [11:8]  Family: 4=486, 5=Pentium, 6=PPro, ...
   //   [13:12] Type: 0=OEM, 1=overdrive, 2=dual cpu, 3=reserved
-  //   [31:14] Reserved
+  //   [19:16] Extended Model
+  //   [27:20] Extended Family
   cpuid->eax = get_cpu_version_information();
 
   // EBX:
@@ -952,6 +895,8 @@ void BX_CPU_C::bx_cpuid_xsave_leaf(Bit32u subfunction)
     RDX = 0; // reserved
   }
 }
+#endif
+
 #endif
 
 void BX_CPU_C::init_isa_features_bitmask(void)

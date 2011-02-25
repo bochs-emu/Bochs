@@ -321,6 +321,7 @@ void bx_init_options()
   cpu_param->set_options(menu->SHOW_PARENT);
 
   // cpuid subtree
+#if BX_CPU_LEVEL >= 4
   bx_list_c *cpuid_param = new bx_list_c(root_param, "cpuid", "CPUID Options", 16);
 
   new bx_param_bool_c(cpuid_param,
@@ -354,6 +355,18 @@ void bx_init_options()
       "Processor 4-bits stepping ID",
       0, 15,
       3);
+
+  new bx_param_num_c(cpuid_param,
+      "model", "Model ID",
+      "Processor model ID, extended model ID",
+      0, 255,
+      3);
+
+  new bx_param_num_c(cpuid_param,
+      "family", "Family ID",
+      "Processor family ID, extended family ID",
+      BX_CPU_LEVEL, 4095,
+      BX_CPU_LEVEL);
 
 #if BX_CPU_LEVEL >= 5
   new bx_param_bool_c(cpuid_param,
@@ -417,6 +430,8 @@ void bx_init_options()
       0);
 #endif
 #endif
+
+#endif // CPU_LEVEL >= 4
 
   cpuid_param->set_options(menu->SHOW_PARENT);
 
@@ -2570,6 +2585,7 @@ static int parse_line_formatted(const char *context, int num_params, char *param
         PARSE_ERR(("%s: cpu directive malformed.", context));
       }
     }
+#if BX_CPU_LEVEL >= 4
   } else if (!strcmp(params[0], "cpuid")) {
     if (num_params < 2) {
       PARSE_ERR(("%s: cpuid directive malformed.", context));
@@ -2587,6 +2603,10 @@ static int parse_line_formatted(const char *context, int num_params, char *param
         SIM->get_param_string(BXPN_BRAND_STRING)->set(&params[i][13]);
       } else if (!strncmp(params[i], "stepping=", 9)) {
         SIM->get_param_num(BXPN_CPUID_STEPPING)->set(atol(&params[i][9]));
+      } else if (!strncmp(params[i], "model=", 6)) {
+        SIM->get_param_num(BXPN_CPUID_MODEL)->set(strtoul(&params[i][6], NULL, 0));
+      } else if (!strncmp(params[i], "family=", 7)) {
+        SIM->get_param_num(BXPN_CPUID_FAMILY)->set(strtoul(&params[i][7], NULL, 0));
       } else if (!strncmp(params[i], "cpuid_limit_winnt=", 18)) {
         if (parse_param_bool(params[i], 18, BXPN_CPUID_LIMIT_WINNT) < 0) {
           PARSE_ERR(("%s: cpuid directive malformed.", context));
@@ -2650,6 +2670,7 @@ static int parse_line_formatted(const char *context, int num_params, char *param
         PARSE_ERR(("%s: cpuid directive malformed.", context));
       }
     }
+#endif
   } else if (!strcmp(params[0], "megs")) {
     if (num_params != 2) {
       PARSE_ERR(("%s: megs directive: wrong # args.", context));
@@ -3809,6 +3830,8 @@ int bx_write_configuration(const char *rc, int overwrite)
     fprintf(fp, ", msrs=\"%s\"", strptr);
 #endif
   fprintf(fp, "\n");
+
+#if BX_CPU_LEVEL >= 4
   fprintf(fp, "cpuid: cpuid_limit_winnt=%d", SIM->get_param_bool(BXPN_CPUID_LIMIT_WINNT)->get());
 #if BX_CPU_LEVEL >= 5
   fprintf(fp, ", mmx=%d", SIM->get_param_bool(BXPN_CPUID_MMX)->get());
@@ -3835,7 +3858,10 @@ int bx_write_configuration(const char *rc, int overwrite)
 #endif
   fprintf(fp, "\n");
 
-  fprintf(fp, "cpuid: stepping=%d", SIM->get_param_num(BXPN_CPUID_STEPPING)->get());
+  fprintf(fp, "cpuid: family=%x, model=%02x, stepping=%d", 
+    SIM->get_param_num(BXPN_CPUID_FAMILY)->get(),
+    SIM->get_param_num(BXPN_CPUID_MODEL)->get(),
+    SIM->get_param_num(BXPN_CPUID_STEPPING)->get());
   const char *vendor_string = SIM->get_param_string(BXPN_VENDOR_STRING)->getptr();
   if (vendor_string)
     fprintf(fp, ", vendor_string=\"%s\"", vendor_string);
@@ -3843,6 +3869,7 @@ int bx_write_configuration(const char *rc, int overwrite)
   if (brand_string)
     fprintf(fp, ", brand_string=\"%s\"", brand_string);
   fprintf(fp, "\n");
+#endif
 
   fprintf(fp, "print_timestamps: enabled=%d\n", bx_dbg.print_timestamps);
   bx_write_debugger_options(fp);

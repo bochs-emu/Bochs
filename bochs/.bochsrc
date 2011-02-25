@@ -199,6 +199,13 @@ cpu: count=1, ips=50000000, reset_on_triple_fault=1, ignore_bad_msrs=1, msrs="ms
 #  Set the CPUID vendor string returned by CPUID(0x80000002 .. 0x80000004).  
 #  This should be at most a forty-eight-character ASCII string.  
 #
+#  FAMILY:
+#  Set model information returned by CPUID. Default family value determined
+#  by configure option --enable-cpu-level.
+#
+#  MODEL:
+#  Set model information returned by CPUID. Default model value is 3.
+#
 #  STEPPING:
 #  Set stepping information returned by CPUID. Default stepping value is 3.
 #
@@ -207,7 +214,7 @@ cpu: count=1, ips=50000000, reset_on_triple_fault=1, ignore_bad_msrs=1, msrs="ms
 #  required to workaround WinNT installation and boot issues.
 #=======================================================================
 cpuid: mmx=1, sep=1, sse=sse4_2, xapic=1, aes=1, movbe=1, xsave=1
-cpuid: stepping=5
+cpuid: family=6, model=0x1a, stepping=5
 cpuid: cpuid_limit_winnt=0
 
 #=======================================================================

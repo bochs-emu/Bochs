@@ -3274,18 +3274,20 @@ public: // for now...
 
   BX_SMF Bit32u get_cpu_version_information(void);
   BX_SMF Bit32u get_extended_cpuid_features(void);
-  BX_SMF Bit32u get_ext2_cpuid_features(void);
   BX_SMF Bit32u get_std_cpuid_features(void);
-  BX_SMF void set_cpuid_defaults(void);
 
   BX_SMF void init_isa_features_bitmask(void);
   BX_SMF void init_FetchDecodeTables(void);
+#if BX_CPU_LEVEL >= 4
+  BX_SMF void set_cpuid_defaults(void);
+#endif
 #if BX_SUPPORT_X2APIC
   BX_SMF void bx_cpuid_extended_topology_leaf(Bit32u subfunction);
 #endif
 #if BX_CPU_LEVEL >= 6
   BX_SMF void bx_cpuid_xsave_leaf(Bit32u subfunction);
   BX_SMF void bx_cpuid_extended_cpuid_leaf(Bit32u subfunction);
+  BX_SMF Bit32u get_ext2_cpuid_features(void);
 #endif
 
   BX_SMF BX_CPP_INLINE int bx_cpuid_support_debug_extensions(void);
