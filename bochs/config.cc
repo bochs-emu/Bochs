@@ -431,9 +431,9 @@ void bx_init_options()
 #endif
 #endif
 
-#endif // CPU_LEVEL >= 4
-
   cpuid_param->set_options(menu->SHOW_PARENT);
+
+#endif // CPU_LEVEL >= 4
 
   // memory subtree
   bx_list_c *memory = new bx_list_c(root_param, "memory", "Memory Options");
@@ -1758,8 +1758,10 @@ void bx_reset_options()
   // cpu
   SIM->get_param("cpu")->reset();
 
+#if BX_CPU_LEVEL >= 4
   // cpuid
   SIM->get_param("cpuid")->reset();
+#endif
 
   // memory (ram & rom)
   SIM->get_param("memory")->reset();

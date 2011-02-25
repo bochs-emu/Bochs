@@ -1051,7 +1051,9 @@ void BX_CPU_C::reset(unsigned source)
 #endif
 
   // initialize CPUID values - make sure apicbase already initialized
+#if BX_CPU_LEVEL >= 4
   set_cpuid_defaults();
+#endif
 
   // ignore bad MSRS if user asked for it
 #if BX_CPU_LEVEL >= 5

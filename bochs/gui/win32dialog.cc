@@ -508,7 +508,9 @@ edit_opts_t start_options[] = {
   {"Logfile", "log"},
   {"Log Options", "*"},
   {"CPU", "cpu"},
+#if BX_CPU_LEVEL >= 4
   {"CPUID", "cpuid"},
+#endif
   {"Memory", "memory"},
   {"Clock & CMOS", "clock_cmos"},
   {"PCI", "pci"},
