@@ -55,6 +55,9 @@ Bit32u BX_CPU_C::get_cpu_version_information(void)
   Bit32u model = SIM->get_param_num(BXPN_CPUID_MODEL)->get();
   Bit32u family = SIM->get_param_num(BXPN_CPUID_FAMILY)->get();
 
+  if (family < 6 && family != BX_CPU_LEVEL)
+    BX_PANIC(("PANIC: CPUID family %x not matching configured cpu level %d", family, BX_CPU_LEVEL));
+
   return ((family & 0xfff0) << 16) |
          ((model & 0xf0) << 12) |
          ((family & 0x0f) << 8) |
