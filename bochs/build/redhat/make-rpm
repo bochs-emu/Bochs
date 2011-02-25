@@ -54,7 +54,7 @@ ${MKDIR} ${TMPDIR}/bochs-${VERSION}
 test $? = 0 || exit 1
 ${TAR} cf - * .??* | (cd ${TMPDIR}/bochs-${VERSION} && tar xf -)
 test $? = 0 || exit 1
-(cd ${TMPDIR}; tar czf bochs-${VERSION}.tar.gz --exclude=CVS bochs-${VERSION})
+(cd ${TMPDIR}; tar czf bochs-${VERSION}.tar.gz --exclude=CVS --exclude=.svn bochs-${VERSION})
 test $? = 0 || exit 1
 ${RM} -rf ${TMPDIR}/bochs-${VERSION}
 test $? = 0 || exit 1

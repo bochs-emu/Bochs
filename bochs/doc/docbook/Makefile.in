@@ -62,12 +62,12 @@ copy_from_srcdir::
 
 $(TARGZ): all copy_from_srcdir fixperm
 	rm -f $(TARGZ)
-	tar cf - --exclude=CVS --exclude=.cvsignore --exclude=*.dbk $(INSTALL_LIST) | gzip > $(TARGZ)
+	tar cf - --exclude=.svn --exclude=CVS --exclude=.cvsignore --exclude=*.dbk $(INSTALL_LIST) | gzip > $(TARGZ)
 
 install: all copy_from_srcdir
 	for i in $(DESTDIR)$(docdir); do if test ! -d $$i; then mkdir -p $$i; fi; done
 	#for i in $(INSTALL_LIST); do cp -r $$i $(DESTDIR)$(docdir); done
-	for i in $(INSTALL_LIST); do tar cf - --exclude=CVS --exclude=.cvsignore --exclude=*.dbk $$i | ( cd $(DESTDIR)$(docdir); tar xf - ); done
+	for i in $(INSTALL_LIST); do tar cf - --exclude=.svn --exclude=CVS --exclude=.cvsignore --exclude=*.dbk $$i | ( cd $(DESTDIR)$(docdir); tar xf - ); done
 
 test_sfuser:
 	@if test "$$SFUSER" = ""; then SFUSER=`whoami`; export SFUSER; fi; \
