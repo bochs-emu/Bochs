@@ -25,7 +25,7 @@
 
 #include "iodev.h"
 
-#if BX_NETWORKING && defined(ETH_ARPBACK)
+#if BX_NETWORKING && BX_NETMOD_ARPBACK
 
 #include "eth_packetmaker.h"
 
@@ -199,4 +199,4 @@ bx_bool eth_ARPmaker::sendpacket(const eth_packet& outpacket)
   }
 }
 
-#endif /* if BX_NETWORKING && defined(ETH_ARPBACK) */
+#endif /* if BX_NETWORKING && BX_NETMOD_ARPBACK */

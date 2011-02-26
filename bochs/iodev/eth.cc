@@ -50,28 +50,26 @@ eth_locator_c::eth_locator_c(const char *type)
   this->type = type;
 }
 
-#ifdef ETH_NULL
 extern class bx_null_locator_c bx_null_match;
-#endif
-#ifdef ETH_FBSD
+#if BX_NETMOD_FBSD
 extern class bx_fbsd_locator_c bx_fbsd_match;
 #endif
-#ifdef ETH_LINUX
+#if BX_NETMOD_LINUX
 extern class bx_linux_locator_c bx_linux_match;
 #endif
-#ifdef ETH_WIN32
+#if BX_NETMOD_WIN32
 extern class bx_win32_locator_c bx_win32_match;
 #endif
-#if HAVE_ETHERTAP
+#if BX_NETMOD_TAP
 extern class bx_tap_locator_c bx_tap_match;
 #endif
-#if HAVE_TUNTAP
+#if BX_NETMOD_TUNTAP
 extern class bx_tuntap_locator_c bx_tuntap_match;
 #endif
-#if HAVE_VDE
+#if BX_NETMOD_VDE
 extern class bx_vde_locator_c bx_vde_match;
 #endif
-#ifdef ETH_ARPBACK
+#if BX_NETMOD_ARPBACK
 extern class bx_arpback_locator_c bx_arpback_match;
 #endif
 extern class bx_vnet_locator_c bx_vnet_match;
@@ -94,66 +92,63 @@ eth_locator_c::create(const char *type, const char *netif,
 #else
   eth_locator_c *ptr = 0;
 
-#ifdef ETH_ARPBACK
+  if (!strcmp(type, "null")) {
+    ptr = (eth_locator_c *) &bx_null_match;
+  }
+#if BX_NETMOD_ARPBACK
   {
     if (!strcmp(type, "arpback"))
       ptr = (eth_locator_c *) &bx_arpback_match;
   }
 #endif
-#ifdef ETH_NULL
-  {
-    if (!strcmp(type, "null"))
-      ptr = (eth_locator_c *) &bx_null_match;
-  }
-#endif
-#ifdef ETH_FBSD
+#if BX_NETMOD_FBSD
   {
     if (!strcmp(type, "fbsd"))
       ptr = (eth_locator_c *) &bx_fbsd_match;
   }
 #endif
-#ifdef ETH_LINUX
+#if BX_NETMOD_LINUX
   {
     if (!strcmp(type, "linux"))
       ptr = (eth_locator_c *) &bx_linux_match;
   }
 #endif
-#if HAVE_TUNTAP
+#if BX_NETMOD_TUNTAP
   {
     if (!strcmp(type, "tuntap"))
       ptr = (eth_locator_c *) &bx_tuntap_match;
   }
 #endif
-#if HAVE_VDE
+#if BX_NETMOD_VDE
   {
     if (!strcmp(type, "vde"))
       ptr = (eth_locator_c *) &bx_vde_match;
   }
 #endif
-#if HAVE_ETHERTAP
+#if BX_NETMOD_TAP
   {
     if (!strcmp(type, "tap"))
       ptr = (eth_locator_c *) &bx_tap_match;
   }
 #endif
-#ifdef ETH_WIN32
+#if BX_NETMOD_WIN32
   {
     if(!strcmp(type, "win32"))
       ptr = (eth_locator_c *) &bx_win32_match;
   }
 #endif
-  {
-    if (!strcmp(type, "vnet"))
-      ptr = (eth_locator_c *) &bx_vnet_match;
+  if (!strcmp(type, "vnet")) {
+    ptr = (eth_locator_c *) &bx_vnet_match;
   }
-  if (ptr)
+  if (ptr) {
     return (ptr->allocate(netif, macaddr, rxh, dev, script));
+  }
 #endif
 
   return (NULL);
 }
 
-#if (HAVE_ETHERTAP==1) || (HAVE_TUNTAP==1) || (HAVE_VDE==1)
+#if (BX_NETMOD_TAP==1) || (BX_NETMOD_TUNTAP==1) || (BX_NETMOD_VDE==1)
 
 extern "C" {
 #include <sys/wait.h>
@@ -190,7 +185,7 @@ int execute_script(bx_devmodel_c *netdev, const char* scriptname, char* arg1)
   return WEXITSTATUS(status);
 }
 
-#endif // (HAVE_ETHERTAP==1) || (HAVE_TUNTAP==1)
+#endif
 
 void write_pktlog_txt(FILE *pktlog_txt, const Bit8u *buf, unsigned len, bx_bool host_to_guest)
 {

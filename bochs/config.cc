@@ -1416,25 +1416,25 @@ void bx_init_options()
   // ne2k & pnic options
   static const char *eth_module_list[] = {
     "null",
-#if defined(ETH_LINUX)
+#if BX_NETMOD_LINUX
     "linux",
 #endif
-#if HAVE_ETHERTAP
+#if BX_NETMOD_TAP
     "tap",
 #endif
-#if HAVE_TUNTAP
+#if BX_NETMOD_TUNTAP
     "tuntap",
 #endif
-#if defined(ETH_WIN32)
+#if BX_NETMOD_WIN32
     "win32",
 #endif
-#if defined(ETH_FBSD)
+#if BX_NETMOD_FBSD
     "fbsd",
 #endif
-#ifdef ETH_ARPBACK
+#if BX_NETMOD_ARPBACK
     "arpback",
 #endif
-#if HAVE_VDE
+#if BX_NETMOD_VDE
     "vde",
 #endif
     "vnet",

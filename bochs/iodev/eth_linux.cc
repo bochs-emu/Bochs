@@ -42,7 +42,7 @@
 
 #include "iodev.h"
 
-#if BX_NETWORKING && defined (ETH_LINUX)
+#if BX_NETWORKING && BX_NETMOD_LINUX
 
 #include "eth.h"
 
@@ -281,4 +281,4 @@ bx_linux_pktmover_c::rx_timer(void)
     (*rxh)(netdev, rxbuf, nbytes);
 //  }
 }
-#endif /* if BX_NETWORKING && defined ETH_LINUX */
+#endif /* if BX_NETWORKING && BX_NETMOD_LINUX */

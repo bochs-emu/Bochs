@@ -39,7 +39,7 @@
 
 #include "iodev.h"
 
-#if BX_NETWORKING && defined(ETH_WIN32)
+#if BX_NETWORKING && BX_NETMOD_WIN32
 
 #include "eth.h"
 
@@ -383,4 +383,4 @@ void bx_win32_pktmover_c::rx_timer(void)
     }
   }
 }
-#endif /* if BX_NETWORKING && defined ETH_WIN32 */
+#endif /* if BX_NETWORKING && BX_NETMOD_WIN32 */

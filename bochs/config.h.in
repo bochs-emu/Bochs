@@ -845,36 +845,18 @@ typedef
 // this enables the lowlevel stuff below if one of the NICs is present
 #define BX_NETWORKING 0
 
-#define BX_ETH_NULL_LOGGING 1
-#define BX_ETH_FBSD_LOGGING 1
-
-// determine which NE2K packet mover modules will be enabled
-// (this was moved from iodev/eth.h)
-#define ETH_NULL  1
-#ifdef BX_USE_ETH_ARPBACK
-#  define ETH_ARPBACK 1
-#endif
-#if defined(__FreeBSD__) || defined(__FreeBSD_kernel__) || defined(__OpenBSD__) || defined(__NetBSD__) || defined(__NetBSD_kernel__) || defined(__APPLE__)
-#define ETH_FBSD  1
-#endif
-#if defined(linux)
-#define ETH_LINUX 1
-#endif
-#if defined(WIN32)
-#define ETH_WIN32 1
-#endif
-
-// this enables Ethertap packet mover; determined by configure script
-#define HAVE_ETHERTAP 0
-
-// this enables TUN/TAP packet mover; determined by configure script
-#define HAVE_TUNTAP 0
-
-// this enables VDE packet mover; determined by configure script
-#define HAVE_VDE 0
+// which networking modules will be enabled
+// determined by configure script
+#define BX_NETMOD_ARPBACK 0
+#define BX_NETMOD_FBSD    0
+#define BX_NETMOD_LINUX   0
+#define BX_NETMOD_WIN32   0
+#define BX_NETMOD_TAP     0
+#define BX_NETMOD_TUNTAP  0
+#define BX_NETMOD_VDE     0
 
 
-// I/O Interface to debug
+// I/O Interface to debugger
 #define BX_SUPPORT_IODEBUG 0
 
 #ifdef WIN32

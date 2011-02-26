@@ -33,13 +33,15 @@
 
 #include "iodev.h"
 
-#if BX_NETWORKING && defined(ETH_ARPBACK)
+#if BX_NETWORKING && BX_NETMOD_ARPBACK
 
 #include "eth.h"
 #include "crc32.h"
 #include "eth_packetmaker.h"
+
 #define LOG_THIS netdev->
 
+#define BX_ETH_ARPBACK_LOGGING 1
 
 //static const Bit8u external_mac[]={0xB0, 0xC4, 0x20, 0x20, 0x00, 0x00, 0x00};
 //static const Bit8u internal_mac[]={0xB0, 0xC4, 0x20, 0x00, 0x00, 0x00, 0x00};
@@ -104,7 +106,7 @@ bx_arpback_pktmover_c::bx_arpback_pktmover_c(const char *netif,
   this->rxh   = rxh;
   //bufvalid=0;
   packetmaker.init();
-#if BX_ETH_NULL_LOGGING
+#if BX_ETH_ARPBACK_LOGGING
   // Start the rx poll
   // eventually Bryce wants txlog to dump in pcap format so that
   // tcpdump -r FILE can read it and interpret packets.
@@ -150,7 +152,7 @@ bx_arpback_pktmover_c::sendpkt(void *buf, unsigned io_len)
     }
     */
   }
-#if BX_ETH_NULL_LOGGING
+#if BX_ETH_ARPBACK_LOGGING
   BX_DEBUG(("sendpkt length %u", io_len));
   // dump raw bytes to a file, eventually dump in pcap format so that
   // tcpdump -r FILE can interpret them for us.
@@ -165,7 +167,7 @@ bx_arpback_pktmover_c::sendpkt(void *buf, unsigned io_len)
 
 void bx_arpback_pktmover_c::rx_timer_handler (void * this_ptr)
 {
-#if BX_ETH_NULL_LOGGING
+#if BX_ETH_ARPBACK_LOGGING
   BX_DEBUG(("rx_timer_handler"));
 #endif
   bx_arpback_pktmover_c *class_ptr = ((bx_arpback_pktmover_c *)this_ptr);
@@ -178,11 +180,11 @@ void bx_arpback_pktmover_c::rx_timer (void)
   eth_packet rubble;
 
   if (packetmaker.getpacket(rubble)) {
-#if BX_ETH_NULL_LOGGING
+#if BX_ETH_ARPBACK_LOGGING
     write_pktlog_txt(pktlog_txt, rubble.buf, rubble.len, 1);
 #endif
     (*rxh)(this->netdev, rubble.buf, rubble.len);
   }
 }
 
-#endif /* if BX_NETWORKING && defined(ETH_ARPBACK) */
+#endif /* if BX_NETWORKING && BX_NETMOD_ARPBACK */

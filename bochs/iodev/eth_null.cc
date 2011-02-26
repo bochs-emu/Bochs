@@ -39,6 +39,7 @@
 
 #define LOG_THIS netdev->
 
+#define BX_ETH_NULL_LOGGING 1
 
 //
 //  Define the class. This is private to this module

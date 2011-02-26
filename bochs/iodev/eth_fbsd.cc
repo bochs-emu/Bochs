@@ -50,11 +50,13 @@
 
 #include "iodev.h"
 
-#if BX_NETWORKING && defined(ETH_FBSD)
+#if BX_NETWORKING && BX_NETMOD_FBSD
 
 #include "eth.h"
 
 #define LOG_THIS netdev->
+
+#define BX_ETH_FBSD_LOGGING 0
 
 extern "C" {
 #include <fcntl.h>
@@ -369,5 +371,4 @@ bx_fbsd_pktmover_c::rx_timer(void)
   }
 }
 
-#endif /* if BX_NETWORKING && defined(ETH_FBSD) */
-
+#endif /* if BX_NETWORKING && BX_NETMOD_FBSD */

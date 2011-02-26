@@ -808,15 +808,22 @@ AC_ARG_ENABLE(pnic,
 NETLOW_OBJS=''
 if test "$networking" = yes; then
   NETLOW_OBJS='eth.o eth_null.o eth_vnet.o'
-  AC_CHECK_HEADER(net/bpf.h, NETLOW_OBJS="$NETLOW_OBJS eth_fbsd.o")
-  AC_CHECK_HEADER(netpacket/packet.h, NETLOW_OBJS="$NETLOW_OBJS eth_linux.o")
+  AC_CHECK_HEADER(net/bpf.h, [
+      NETLOW_OBJS="$NETLOW_OBJS eth_fbsd.o"
+      AC_DEFINE(BX_NETMOD_FBSD, 1)
+    ])
+  AC_CHECK_HEADER(netpacket/packet.h, [
+      NETLOW_OBJS="$NETLOW_OBJS eth_linux.o"
+      AC_DEFINE(BX_NETMOD_LINUX, 1)
+    ])
   case "$target" in
     *-pc-windows* | *-pc-winnt* | *-pc-cygwin* | *-pc-mingw32*)
     NETLOW_OBJS="$NETLOW_OBJS eth_win32.o"
+    AC_DEFINE(BX_NETMOD_WIN32, 1)
     ;;
     *-macosx* | *-darwin*)
     NETLOW_OBJS="$NETLOW_OBJS eth_tuntap.o"
-    AC_DEFINE(HAVE_TUNTAP, 1)
+    AC_DEFINE(BX_NETMOD_TUNTAP, 1)
     ;;
     *)
     AC_CHECK_HEADER(net/if.h, [
@@ -837,8 +844,8 @@ if test "$networking" = yes; then
 
     if test "$use_ethertap" = yes; then
       NETLOW_OBJS="$NETLOW_OBJS eth_tap.o eth_vde.o"
-      AC_DEFINE(HAVE_ETHERTAP, 1)
-      AC_DEFINE(HAVE_VDE, 1)
+      AC_DEFINE(BX_NETMOD_TAP, 1)
+      AC_DEFINE(BX_NETMOD_VDE, 1)
     fi
 
     AC_CHECK_HEADER(net/if_tun.h, [
@@ -858,7 +865,7 @@ if test "$networking" = yes; then
     ])
     if test "$use_tuntap" = yes; then
       NETLOW_OBJS="$NETLOW_OBJS eth_tuntap.o"
-      AC_DEFINE(HAVE_TUNTAP, 1)
+      AC_DEFINE(BX_NETMOD_TUNTAP, 1)
     fi
 
     ;;
