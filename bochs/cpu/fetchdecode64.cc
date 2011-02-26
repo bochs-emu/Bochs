@@ -2012,7 +2012,7 @@ modrm_done:
           OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[b3]);
           break;
         case BxOSizeGrp:
-          OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[offset >> 8]);
+          OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[offset >> 9]);
           break;
         case BxPrefixSSE:
           /* For SSE opcodes look into another table

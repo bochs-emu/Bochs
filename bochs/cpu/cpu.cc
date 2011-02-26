@@ -610,6 +610,29 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
   //   Code page fault (priority 7 on 486/Pentium)
   // (handled in main decode loop)
 
+  // Now we can handle things which are synchronous to instruction
+  // execution.
+  if (BX_CPU_THIS_PTR get_RF()) {
+    BX_CPU_THIS_PTR clear_RF();
+  }
+#if BX_X86_DEBUGGER
+  else {
+    // only bother comparing if any breakpoints enabled and
+    // debug events are not inhibited on this boundary.
+    if (! (BX_CPU_THIS_PTR inhibit_mask & BX_INHIBIT_DEBUG_SHADOW) && ! BX_CPU_THIS_PTR in_repeat) {
+      code_breakpoint_match(get_laddr(BX_SEG_REG_CS, BX_CPU_THIS_PTR prev_rip));
+    }
+  }
+#endif
+
+  if (BX_CPU_THIS_PTR get_TF())
+  {
+    // TF is set before execution of next instruction.  Schedule
+    // a debug trap (#DB) after execution.  After completion of
+    // next instruction, the code above will invoke the trap.
+    BX_CPU_THIS_PTR debug_trap |= BX_DEBUG_SINGLE_STEP_BIT;
+  }
+
   // Priority 7: Faults from decoding next instruction
   //   Instruction length > 15 bytes
   //   Illegal opcode
@@ -627,38 +650,6 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
   //   Data page fault
   //   Alignment check
   // (handled by rest of the code)
-
-  // Now we can handle things which are synchronous to instruction
-  // execution.
-  if (BX_CPU_THIS_PTR get_RF()) {
-    BX_CPU_THIS_PTR clear_RF();
-  }
-#if BX_X86_DEBUGGER
-  else {
-    // only bother comparing if any breakpoints enabled and
-    // debug events are not inhibited on this boundary.
-    if (! (BX_CPU_THIS_PTR inhibit_mask & BX_INHIBIT_DEBUG_SHADOW) && ! BX_CPU_THIS_PTR in_repeat) {
-      if (BX_CPU_THIS_PTR dr7 & 0x000000ff) {
-        bx_address iaddr = get_laddr(BX_SEG_REG_CS, BX_CPU_THIS_PTR prev_rip);
-        Bit32u dr6_bits = hwdebug_compare(iaddr, 1, BX_HWDebugInstruction, BX_HWDebugInstruction);
-        if (dr6_bits) {
-          // Add to the list of debug events thus far.
-          BX_CPU_THIS_PTR debug_trap |= dr6_bits;
-          BX_ERROR(("#DB: x86 code breakpoint catched"));
-          exception(BX_DB_EXCEPTION, 0); // no error, not interrupt
-        }
-      }
-    }
-  }
-#endif
-
-  if (BX_CPU_THIS_PTR get_TF())
-  {
-    // TF is set before execution of next instruction.  Schedule
-    // a debug trap (#DB) after execution.  After completion of
-    // next instruction, the code above will invoke the trap.
-    BX_CPU_THIS_PTR debug_trap |= BX_DEBUG_SINGLE_STEP_BIT;
-  }
 
   if (!((BX_CPU_INTR && BX_CPU_THIS_PTR get_IF()) ||
         BX_CPU_THIS_PTR debug_trap ||
