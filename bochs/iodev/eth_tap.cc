@@ -85,7 +85,7 @@
 
 #include "iodev.h"
 
-#if BX_NETWORKING && defined(HAVE_ETHERTAP)
+#if BX_NETWORKING && BX_NETMOD_TAP
 
 #include "eth.h"
 
@@ -412,4 +412,4 @@ void bx_tap_pktmover_c::rx_timer()
   (*rxh)(netdev, rxbuf, nbytes);
 }
 
-#endif /* if BX_NETWORKING && defined HAVE_ETHERTAP */
+#endif /* if BX_NETWORKING && BX_NETMOD_TAP */

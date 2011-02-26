@@ -30,7 +30,7 @@
 
 #include "iodev.h"
 
-#if BX_NETWORKING && defined(HAVE_VDE)
+#if BX_NETWORKING && BX_NETMOD_VDE
 
 #include "eth.h"
 
@@ -324,4 +324,4 @@ int vde_alloc(char *dev, int *fdp, struct sockaddr_un *pdataout)
   return fd;
 }
 
-#endif /* if BX_NETWORKING && defined HAVE_VDE */
+#endif /* if BX_NETWORKING && BX_NETMOD_VDE */

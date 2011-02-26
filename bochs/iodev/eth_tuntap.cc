@@ -29,7 +29,7 @@
 
 #include "iodev.h"
 
-#if BX_NETWORKING && defined(HAVE_TUNTAP)
+#if BX_NETWORKING && BX_NETMOD_TUNTAP
 
 #include "eth.h"
 
@@ -376,4 +376,4 @@ int tun_alloc(char *dev)
   return fd;
 }
 
-#endif /* if BX_NETWORKING && defined HAVE_TUNTAP */
+#endif /* if BX_NETWORKING && BX_NETMOD_TUNTAP */
