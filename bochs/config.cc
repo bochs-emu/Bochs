@@ -365,7 +365,7 @@ void bx_init_options()
   new bx_param_num_c(cpuid_param,
       "family", "Family ID",
       "Processor family ID, extended family ID",
-      BX_CPU_LEVEL, 4095,
+      BX_CPU_LEVEL, (BX_CPU_LEVEL >= 6) ? 4095 : BX_CPU_LEVEL,
       BX_CPU_LEVEL);
 
 #if BX_CPU_LEVEL >= 5

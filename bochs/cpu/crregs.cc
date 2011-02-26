@@ -1195,7 +1195,7 @@ bx_bool BX_CPU_C::hwbreakpoint_check(bx_address laddr)
 void BX_CPU_C::code_breakpoint_match(bx_address laddr)
 {
   if (BX_CPU_THIS_PTR dr7 & 0x000000ff) {
-    Bit32u dr6_bits = hwdebug_compare(iaddr, 1, BX_HWDebugInstruction, BX_HWDebugInstruction);
+    Bit32u dr6_bits = hwdebug_compare(laddr, 1, BX_HWDebugInstruction, BX_HWDebugInstruction);
     if (dr6_bits) {
       // Add to the list of debug events thus far.
       BX_CPU_THIS_PTR debug_trap |= dr6_bits;
