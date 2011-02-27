@@ -1,3 +1,17 @@
+Changes after 2.4.6 release:
+
+Bochs repository moved to the SVN version control !
+
+- Configure and compile
+  - Added ability to configure CPUID family through .bochsrc.
+    The default family value determined by configure option --enable-cpu-level.
+  - Added ability to configure CPUID model through .bochsrc.
+    The default model value is 3.
+
+- SF patches applied
+  [3190995] add eth backend based on Slirp by Heikki Lindholm
+
+-------------------------------------------------------------------------
 Changes in 2.4.6 (February 22, 2011):
 
 Brief summary :
