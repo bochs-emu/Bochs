@@ -1,0 +1,475 @@
+/////////////////////////////////////////////////////////////////////////
+// $Id$
+/////////////////////////////////////////////////////////////////////////
+//
+//  Copyright (C) 2011  Heikki Lindholm
+//
+//  This library is free software; you can redistribute it and/or
+//  modify it under the terms of the GNU Lesser General Public
+//  License as published by the Free Software Foundation; either
+//  version 2 of the License, or (at your option) any later version.
+//
+//  This library is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+//  Lesser General Public License for more details.
+//
+//  You should have received a copy of the GNU Lesser General Public
+//  License along with this library; if not, write to the Free Software
+//  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
+//
+
+// eth_slirp.cc  - slirp backend to eth
+
+#define BX_PLUGGABLE
+
+#include <stdio.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <sys/wait.h>
+#include <stdint.h>
+#include <arpa/inet.h> /* ntohs, htons */
+
+#include "iodev.h"
+
+#if BX_NETWORKING
+
+#include "eth.h"
+
+#define LOG_THIS netdev->
+
+#define BX_ETH_SLIRP_LOGGING 0
+
+#if defined(_MSC_VER)
+#pragma pack(push, 1)
+#elif defined(__MWERKS__) && defined(macintosh)
+#pragma options align=packed
+#endif
+
+// this should not be smaller than an arp reply with an ethernet header
+#define MIN_RX_PACKET_LEN 60
+
+#define ETHERNET_MAC_ADDR_LEN   6
+#define ETHERNET_TYPE_IPV4 0x0800
+#define ETHERNET_TYPE_ARP  0x0806
+
+typedef struct ethernet_header {
+#if defined(_MSC_VER) && (_MSC_VER>=1300)
+  __declspec(align(1))
+#endif
+  Bit8u  dst_mac_addr[ETHERNET_MAC_ADDR_LEN];
+  Bit8u  src_mac_addr[ETHERNET_MAC_ADDR_LEN];
+  Bit16u type;
+} 
+#if !defined(_MSC_VER)
+  GCC_ATTRIBUTE((packed))
+#endif
+ethernet_header_t;
+
+#define ARP_OPCODE_REQUEST 1
+#define ARP_OPCODE_REPLY   2
+
+typedef struct arp_header {
+#if defined(_MSC_VER) && (_MSC_VER>=1300)
+  __declspec(align(1))
+#endif
+  Bit16u  hw_addr_space;
+  Bit16u  proto_addr_space;
+  Bit8u   hw_addr_len;
+  Bit8u   proto_addr_len;
+  Bit16u  opcode;
+  /* HW address of sender */
+  /* Protocol address of sender */
+  /* HW address of target*/
+  /* Protocol address of target */
+}
+#if !defined(_MSC_VER)
+  GCC_ATTRIBUTE((packed))
+#endif
+arp_header_t;
+
+#if defined(_MSC_VER)
+#pragma pack(pop)
+#elif defined(__MWERKS__) && defined(macintosh)
+#pragma options align=reset
+#endif
+
+
+
+#define SLIP_END     192
+#define SLIP_ESC     219
+#define SLIP_ESC_END 220
+#define SLIP_ESC_ESC 221
+
+static size_t encode_slip(Bit8u *src, Bit8u *dst, size_t src_len)
+{
+  Bit8u *dst_start = dst;
+  Bit8u *src_end = src + src_len;
+
+  while (src < src_end) {
+    switch (*src) {
+      case SLIP_END:
+        *dst++ = SLIP_ESC;
+        *dst++ = SLIP_ESC_END;
+        break;
+      case SLIP_ESC:
+        *dst++ = SLIP_ESC;
+        *dst++ = SLIP_ESC_ESC;
+        break;
+      default:
+        *dst++ = *src;
+        break;
+    }
+    src++;
+  }
+  *dst++ = SLIP_END;
+
+  return dst - dst_start;
+}
+
+static int decode_slip(Bit8u *src, size_t *src_len, Bit8u *dst, size_t *dst_len)
+{
+  Bit8u *dst_start = dst;
+  Bit8u *src_start = src;
+  Bit8u *src_end = src + *src_len;
+  int got_packet = 0;
+
+  if (*src_len == 0) {
+    *dst_len = 0;
+    return 0;
+  }
+
+  while ((src < (src_end - 1)) && (!got_packet)) {
+    switch (*src) {
+      case SLIP_END:
+        if (dst != dst_start) // discard empty packets
+          got_packet = 1;
+        src++;
+        break;
+      case SLIP_ESC:
+        switch (*++src) {
+          case SLIP_ESC_ESC:
+            *dst++ = SLIP_ESC;
+            src++;
+            break;
+          case SLIP_ESC_END:
+            *dst++ = SLIP_END;
+            src++;
+            break;
+          default:
+            *dst++ = *src++;
+            break;
+        }
+        break;
+      default:
+        *dst++ = *src++;
+        break;
+    }
+  }
+  if ((!got_packet) && (src < src_end)) {
+    switch (*src) {
+      case SLIP_END:
+        got_packet = 1;
+        src++;
+        break;
+      case SLIP_ESC:
+        break;
+      default:
+        *dst++ = *src++;
+        break;
+    }
+  }
+
+  *src_len = src - src_start;
+  *dst_len = dst - dst_start;
+
+  return got_packet;
+}
+
+
+
+class bx_slirp_pktmover_c : public eth_pktmover_c {
+public:
+  bx_slirp_pktmover_c(const char *netif, const char *macaddr,
+                     eth_rx_handler_t rxh,
+                     bx_devmodel_c *dev, const char *script);
+  void sendpkt(void *buf, unsigned io_len);
+private:
+  pid_t slirp_pid;
+  int slirp_pipe_fds[2];
+  Bit8u slip_output_buffer[4096]; // TODO: reasonable size for these?
+  Bit8u slip_input_buffer[4096];
+  size_t slip_input_buffer_filled;
+  size_t slip_input_buffer_decoded;
+
+  Bit8u arp_reply[MIN_RX_PACKET_LEN];
+  int arp_reply_pending;
+
+  Bit8u host_mac_addr[ETHERNET_MAC_ADDR_LEN];
+  Bit8u guest_mac_addr[ETHERNET_MAC_ADDR_LEN];
+
+  int rx_timer_index;
+  unsigned tx_time;
+  static void rx_timer_handler(void *);
+  void rx_timer();
+
+  void handle_ipv4(void *buf, unsigned len);
+  void handle_arp(void *buf, unsigned len);
+
+#if BX_ETH_SLIRP_LOGGING
+  FILE *pktlog_txt;
+#endif
+};
+
+class bx_slirp_locator_c : public eth_locator_c {
+public:
+  bx_slirp_locator_c(void) : eth_locator_c("slirp") {}
+protected:
+  eth_pktmover_c *allocate(const char *netif, const char *macaddr,
+                           eth_rx_handler_t rxh,
+                           bx_devmodel_c *dev, const char *script) {
+    return (new bx_slirp_pktmover_c(netif, macaddr, rxh, dev, script));
+  }
+} bx_slirp_match;
+
+bx_slirp_pktmover_c::bx_slirp_pktmover_c(const char *netif,
+                                         const char *macaddr,
+                                         eth_rx_handler_t rxh,
+                                         bx_devmodel_c *dev,
+                                         const char *script)
+{
+  int flags;
+
+  this->netdev = dev;
+  BX_INFO(("slirp network driver"));
+
+  if (socketpair(AF_UNIX, SOCK_STREAM, 0, slirp_pipe_fds))
+    BX_PANIC(("socketpair() failed: %s", strerror(errno)));
+
+  // mark our end of the pipe non-blocking because of the timer based poll
+  flags = fcntl(slirp_pipe_fds[0], F_GETFL);
+  if (flags == -1)
+    BX_PANIC(("fcntl(,F_GETFL) failed: %s", strerror(errno)));
+  flags |= O_NONBLOCK;
+  if (fcntl (slirp_pipe_fds[0], F_SETFL, flags) != 0)
+    BX_PANIC(("fcntl(,F_SETFL,) failed: %s", strerror(errno)));
+
+  slirp_pid = fork();
+  if (slirp_pid == -1) {
+   BX_PANIC(("fork() failed: %s", strerror(errno)));
+  }
+  else if (slirp_pid == 0) {
+    int ret;
+    int nfd;
+
+    nfd = open("/dev/null", O_RDWR);
+    if (nfd != -1) {
+      dup2(nfd, STDERR_FILENO);
+    }
+
+    if (dup2(slirp_pipe_fds[1], STDIN_FILENO) == -1) {
+      BX_PANIC(("dup2() failed: %s", strerror(errno)));
+    }
+    /* XXX slirp seems to use stdin bidirectionally 
+     * instead of using stdout for SLIP output */
+    if (dup2(slirp_pipe_fds[1], STDOUT_FILENO) == -1) {
+      BX_PANIC(("dup2() failed: %s", strerror(errno)));
+    }
+    close(slirp_pipe_fds[0]);
+    ret = execlp(script == NULL ? "slirp" : script, 
+                 script == NULL ? "slirp" : script, /*"-d", "-1", "-S",*/ NULL);
+    if (ret == -1) {
+      BX_PANIC(("execlp() failed: %s", strerror(errno)));
+    }
+  }
+
+  this->rx_timer_index =
+    bx_pc_system.register_timer(this, this->rx_timer_handler, 1000,
+                                1, 1, "eth_slirp");
+  this->rxh   = rxh;
+  memcpy(&guest_mac_addr[0], macaddr, ETHERNET_MAC_ADDR_LEN);
+  // ensure the slirp host has a different mac address
+  memcpy(&host_mac_addr[0], macaddr, ETHERNET_MAC_ADDR_LEN);
+  host_mac_addr[5] ^= 0x03;
+  arp_reply_pending = 0;
+  slip_input_buffer_filled = slip_input_buffer_decoded = 0;
+
+  close(slirp_pipe_fds[1]);
+
+#if BX_ETH_SLIRP_LOGGING
+  pktlog_txt = fopen("ne2k-pktlog.txt", "wb");
+  if (!pktlog_txt) BX_PANIC(("ne2k-pktlog.txt failed"));
+  fprintf(pktlog_txt, "slirp packetmover readable log file\n");
+  fprintf(pktlog_txt, "host MAC address = ");
+  int i;
+  for (i=0; i<6; i++)
+    fprintf(pktlog_txt, "%02x%s", 0xff & host_mac_addr[i], i<5?":" : "\n");
+  fprintf(pktlog_txt, "guest MAC address = ");
+  for (i=0; i<6; i++)
+    fprintf(pktlog_txt, "%02x%s", 0xff & guest_mac_addr[i], i<5?":" : "\n");
+  fprintf(pktlog_txt, "--\n");
+  fflush(pktlog_txt);
+#endif
+}
+
+void bx_slirp_pktmover_c::handle_arp(void *buf, unsigned len)
+{
+  arp_header_t *arphdr = (arp_header_t *)((Bit8u *)buf +
+                                          sizeof(ethernet_header_t));
+
+  if (arp_reply_pending == 1)
+    return;
+
+  if ((ntohs(arphdr->hw_addr_space) != 0x0001) ||
+      (ntohs(arphdr->proto_addr_space) != 0x0800) ||
+      (arphdr->hw_addr_len != ETHERNET_MAC_ADDR_LEN) ||
+      (arphdr->proto_addr_len != 4)) {
+    BX_ERROR(("Unhandled ARP message hw: %04x (%d) proto: %04x (%d)\n",
+              ntohs(arphdr->hw_addr_space), arphdr->hw_addr_len,
+              ntohs(arphdr->proto_addr_space), arphdr->proto_addr_len));
+    return;
+  }
+
+  arp_header_t *arprhdr = (arp_header_t *)((Bit8u *)arp_reply + 
+                                                    sizeof(ethernet_header_t));
+  unsigned rx_time;
+
+  switch(ntohs(arphdr->opcode)) {
+    case ARP_OPCODE_REQUEST:
+      // Slirp uses addresses x.x.x.0 - x.x.x.3
+      if (((Bit8u *)arphdr)[27] > 3)
+        break;
+      bzero(arp_reply, sizeof(arp_reply));
+      arprhdr->hw_addr_space = htons(0x0001);
+      arprhdr->proto_addr_space = htons(0x0800);
+      arprhdr->hw_addr_len = ETHERNET_MAC_ADDR_LEN;
+      arprhdr->proto_addr_len = 4;
+      arprhdr->opcode = htons(ARP_OPCODE_REPLY);
+      memcpy((Bit8u *)arprhdr+8, host_mac_addr, ETHERNET_MAC_ADDR_LEN);
+      memcpy((Bit8u *)arprhdr+14, (Bit8u *)arphdr+24, 4);
+      memcpy((Bit8u *)arprhdr+18, guest_mac_addr, ETHERNET_MAC_ADDR_LEN);
+      memcpy((Bit8u *)arprhdr+24, (Bit8u *)arphdr+14, 4);
+      arp_reply_pending = 1;
+      rx_time = (64 + 96 + 4 * 8 + sizeof(arp_reply) * 8) / 10;
+      bx_pc_system.activate_timer(this->rx_timer_index, this->tx_time + rx_time + 100, 0);
+      break;
+    case ARP_OPCODE_REPLY:
+      break;
+    default:
+      break;
+  }
+}
+
+void bx_slirp_pktmover_c::sendpkt(void *buf, unsigned io_len)
+{
+  size_t len;
+  ethernet_header_t *ethhdr = (ethernet_header_t *)buf;
+
+#if BX_ETH_SLIRP_LOGGING
+  write_pktlog_txt(pktlog_txt, (Bit8u*)buf, io_len, 0);
+#endif
+  this->tx_time = (64 + 96 + 4 * 8 + io_len * 8) / 10;
+  switch (ntohs(ethhdr->type)) {
+    case ETHERNET_TYPE_IPV4: 
+      len = encode_slip((Bit8u *)buf+sizeof(ethernet_header_t),
+                        slip_output_buffer,
+                        io_len-sizeof(ethernet_header_t));
+      len = write(slirp_pipe_fds[0], slip_output_buffer, len);
+      break;
+    case ETHERNET_TYPE_ARP:
+      handle_arp(buf, io_len);
+      break;
+    default:
+      break;
+  }
+}
+
+void bx_slirp_pktmover_c::rx_timer_handler (void *this_ptr)
+{
+  bx_slirp_pktmover_c *class_ptr = (bx_slirp_pktmover_c *)this_ptr;
+  class_ptr->rx_timer();
+}
+
+void bx_slirp_pktmover_c::rx_timer()
+{
+  Bit8u *packet;
+  Bit8u padded_packet[MIN_RX_PACKET_LEN];
+  ethernet_header_t *ethhdr;
+  size_t packet_len;
+
+  if (arp_reply_pending == 1) {
+    packet = (Bit8u *)arp_reply;
+
+    ethhdr = (ethernet_header_t *)packet;
+    memcpy(ethhdr->dst_mac_addr, guest_mac_addr, ETHERNET_MAC_ADDR_LEN);
+    memcpy(ethhdr->src_mac_addr, host_mac_addr, ETHERNET_MAC_ADDR_LEN);
+    ethhdr->type = htons(ETHERNET_TYPE_ARP);
+    packet_len = sizeof(arp_reply);
+    arp_reply_pending = 0;
+#if BX_ETH_SLIRP_LOGGING
+    write_pktlog_txt(pktlog_txt, packet, packet_len, 1);
+#endif
+    (*rxh)(this->netdev, arp_reply, packet_len);
+    // restore timer
+    bx_pc_system.activate_timer(this->rx_timer_index, 1000, 1);
+    return;
+  }
+
+  Bit8u *buf = slip_input_buffer + sizeof(ethernet_header_t);
+  ssize_t n;
+  int got_packet;
+  size_t ilen, olen, pos;
+
+  if (slip_input_buffer_filled + sizeof(ethernet_header_t) <
+      sizeof(slip_input_buffer)) {
+    n = read(slirp_pipe_fds[0], buf+slip_input_buffer_filled,
+             (sizeof(slip_input_buffer) - sizeof(ethernet_header_t)) -
+             slip_input_buffer_filled);
+    if (n < 1)
+      return;
+    slip_input_buffer_filled += n;
+  }
+
+  packet = (Bit8u *)slip_input_buffer;
+
+  ethhdr = (ethernet_header_t *)packet;
+  memcpy(ethhdr->dst_mac_addr, guest_mac_addr, ETHERNET_MAC_ADDR_LEN);
+  memcpy(ethhdr->src_mac_addr, host_mac_addr, ETHERNET_MAC_ADDR_LEN);
+  ethhdr->type = htons(ETHERNET_TYPE_IPV4);
+
+  olen = 0;
+  pos = slip_input_buffer_decoded; 
+  do {
+    ilen = slip_input_buffer_filled - slip_input_buffer_decoded;
+    got_packet = decode_slip(buf + pos, &ilen, 
+                             buf + slip_input_buffer_decoded, &olen);
+    pos += ilen;
+    slip_input_buffer_filled -= ilen;
+    slip_input_buffer_filled += olen;
+    slip_input_buffer_decoded += olen;
+    if (got_packet) {
+      packet_len = sizeof(ethernet_header_t) + slip_input_buffer_decoded;
+      if (packet_len < MIN_RX_PACKET_LEN) {
+        packet = padded_packet;
+        bzero(packet, MIN_RX_PACKET_LEN);
+        memcpy(packet, slip_input_buffer, packet_len);
+        packet_len = MIN_RX_PACKET_LEN;
+      }
+#if BX_ETH_SLIRP_LOGGING
+      write_pktlog_txt(pktlog_txt, packet, packet_len, 1);
+#endif
+      (*rxh)(this->netdev, packet, packet_len);
+      slip_input_buffer_filled -= slip_input_buffer_decoded;
+      slip_input_buffer_decoded = 0;
+    }
+  } while (got_packet);
+
+  if ((slip_input_buffer_filled - slip_input_buffer_decoded) > 0)
+    memmove(slip_input_buffer + slip_input_buffer_decoded,
+            slip_input_buffer + pos, 
+            (slip_input_buffer_filled - slip_input_buffer_decoded));
+}
+
+#endif /* if BX_NETWORKING */

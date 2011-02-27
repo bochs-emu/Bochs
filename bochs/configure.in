@@ -816,6 +816,13 @@ if test "$networking" = yes; then
       NETLOW_OBJS="$NETLOW_OBJS eth_linux.o"
       AC_DEFINE(BX_NETMOD_LINUX, 1)
     ])
+  AC_CHECK_FUNCS(fork, have_fork=1)
+  AC_CHECK_FUNCS(execlp, have_execlp=1)
+  AC_CHECK_FUNCS(socketpair, have_socketpair=1)
+  if test x"$have_fork" = x1 -a x"$have_execlp" = x1 -a x"$have_socketpair" = x1; then
+    NETLOW_OBJS="$NETLOW_OBJS eth_slirp.o"
+    AC_DEFINE(BX_NETMOD_SLIRP, 1)
+  fi
   case "$target" in
     *-pc-windows* | *-pc-winnt* | *-pc-cygwin* | *-pc-mingw32*)
     NETLOW_OBJS="$NETLOW_OBJS eth_win32.o"

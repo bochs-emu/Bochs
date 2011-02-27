@@ -1437,6 +1437,9 @@ void bx_init_options()
 #if BX_NETMOD_VDE
     "vde",
 #endif
+#if BX_NETMOD_SLIRP
+    "slirp",
+#endif
     "vnet",
     NULL
   };

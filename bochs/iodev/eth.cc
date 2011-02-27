@@ -72,6 +72,9 @@ extern class bx_vde_locator_c bx_vde_match;
 #if BX_NETMOD_ARPBACK
 extern class bx_arpback_locator_c bx_arpback_match;
 #endif
+#if BX_NETMOD_SLIRP
+extern class bx_slirp_locator_c bx_slirp_match;
+#endif
 extern class bx_vnet_locator_c bx_vnet_match;
 
 //
@@ -123,6 +126,12 @@ eth_locator_c::create(const char *type, const char *netif,
   {
     if (!strcmp(type, "vde"))
       ptr = (eth_locator_c *) &bx_vde_match;
+  }
+#endif
+#if BX_NETMOD_SLIRP
+  {
+    if (!strcmp(type, "slirp"))
+      ptr = (eth_locator_c *) &bx_slirp_match;
   }
 #endif
 #if BX_NETMOD_TAP
