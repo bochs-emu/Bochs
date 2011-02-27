@@ -35,6 +35,8 @@ static const Bit8u broadcast_macaddr[6] = {0xff,0xff,0xff,0xff,0xff,0xff};
 
 int execute_script(bx_devmodel_c *netdev,  const char *name, char* arg1);
 void write_pktlog_txt(FILE *pktlog_txt, const Bit8u *buf, unsigned len, bx_bool host_to_guest);
+Bit16u get_net2(const Bit8u *buf);
+Bit16u ip_checksum(const Bit8u *buf, unsigned buf_len);
 
 //
 //  The eth_pktmover class is used by ethernet chip emulations

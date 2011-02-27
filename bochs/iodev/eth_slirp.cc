@@ -23,6 +23,10 @@
 
 #define BX_PLUGGABLE
 
+#include "iodev.h"
+
+#if BX_NETWORKING && BX_NETMOD_SLIRP
+
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -31,10 +35,6 @@
 #include <sys/wait.h>
 #include <stdint.h>
 #include <arpa/inet.h> /* ntohs, htons */
-
-#include "iodev.h"
-
-#if BX_NETWORKING
 
 #include "eth.h"
 
@@ -215,7 +215,7 @@ private:
   static void rx_timer_handler(void *);
   void rx_timer();
 
-  void handle_ipv4(void *buf, unsigned len);
+  bx_bool handle_ipv4(const Bit8u *buf, unsigned len);
   void handle_arp(void *buf, unsigned len);
 
 #if BX_ETH_SLIRP_LOGGING
@@ -362,6 +362,74 @@ void bx_slirp_pktmover_c::handle_arp(void *buf, unsigned len)
   }
 }
 
+// Detect DHCP request (partly copy & paste from eth_vnet.cc)
+bx_bool bx_slirp_pktmover_c::handle_ipv4(const Bit8u *buf, unsigned len)
+{
+  const Bit8u host_ipv4addr[4] = {10, 0, 2, 2};
+  const Bit8u broadcast_ipv4addr[3][4] =
+  {
+    {  0,  0,  0,  0},
+    {255,255,255,255},
+    { 10,  0,  2,255},
+  };
+  unsigned total_len;
+  unsigned fragment_flags;
+  unsigned fragment_offset;
+  unsigned ipproto;
+  unsigned l3header_len;
+  const Bit8u *l4pkt;
+  unsigned l4pkt_len;
+
+  if (len < (14U+20U)) {
+    return 0;
+  }
+  if ((buf[14+0] & 0xf0) != 0x40) {
+    return 0;
+  }
+  l3header_len = ((unsigned)(buf[14+0] & 0x0f) << 2);
+  if (l3header_len != 20) {
+    return 0;
+  }
+  if (len < (14U+l3header_len)) return 0;
+  if (ip_checksum(&buf[14],l3header_len) != (Bit16u)0xffff) {
+    return 0;
+  }
+
+  total_len = get_net2(&buf[14+2]);
+
+  if (memcmp(&buf[14+16],host_ipv4addr,4) &&
+      memcmp(&buf[14+16],broadcast_ipv4addr[0],4) &&
+      memcmp(&buf[14+16],broadcast_ipv4addr[1],4) &&
+      memcmp(&buf[14+16],broadcast_ipv4addr[2],4))
+  {
+    return 0;
+  }
+
+  fragment_flags = (unsigned)buf[14+6] >> 5;
+  fragment_offset = ((unsigned)get_net2(&buf[14+6]) & 0x1fff) << 3;
+  ipproto = buf[14+9];
+
+  if ((fragment_flags & 0x1) || (fragment_offset != 0)) {
+    return 0;
+  } else {
+    l4pkt = &buf[14 + l3header_len];
+    l4pkt_len = total_len - l3header_len;
+  }
+
+  if (ipproto == 0x11) { // UDP
+    unsigned udp_targetport;
+    unsigned udp_len;
+
+    if (l4pkt_len < 8) return 0;
+    udp_targetport = get_net2(&l4pkt[2]);
+    udp_len = get_net2(&l4pkt[4]);
+    if (udp_targetport == 67) { // BOOTP
+      BX_ERROR(("DHCP not implemented yet"));
+    }
+  }
+  return 0;
+}
+
 void bx_slirp_pktmover_c::sendpkt(void *buf, unsigned io_len)
 {
   size_t len;
@@ -373,10 +441,12 @@ void bx_slirp_pktmover_c::sendpkt(void *buf, unsigned io_len)
   this->tx_time = (64 + 96 + 4 * 8 + io_len * 8) / 10;
   switch (ntohs(ethhdr->type)) {
     case ETHERNET_TYPE_IPV4: 
-      len = encode_slip((Bit8u *)buf+sizeof(ethernet_header_t),
-                        slip_output_buffer,
-                        io_len-sizeof(ethernet_header_t));
-      len = write(slirp_pipe_fds[0], slip_output_buffer, len);
+      if (!handle_ipv4((Bit8u*)buf, io_len)) {
+        len = encode_slip((Bit8u *)buf+sizeof(ethernet_header_t),
+                          slip_output_buffer,
+                          io_len-sizeof(ethernet_header_t));
+        len = write(slirp_pipe_fds[0], slip_output_buffer, len);
+      }
       break;
     case ETHERNET_TYPE_ARP:
       handle_arp(buf, io_len);
@@ -386,7 +456,7 @@ void bx_slirp_pktmover_c::sendpkt(void *buf, unsigned io_len)
   }
 }
 
-void bx_slirp_pktmover_c::rx_timer_handler (void *this_ptr)
+void bx_slirp_pktmover_c::rx_timer_handler(void *this_ptr)
 {
   bx_slirp_pktmover_c *class_ptr = (bx_slirp_pktmover_c *)this_ptr;
   class_ptr->rx_timer();
@@ -472,4 +542,4 @@ void bx_slirp_pktmover_c::rx_timer()
             (slip_input_buffer_filled - slip_input_buffer_decoded));
 }
 
-#endif /* if BX_NETWORKING */
+#endif /* if BX_NETWORKING && BX_NETMOD_SLIRP */

@@ -215,4 +215,29 @@ void write_pktlog_txt(FILE *pktlog_txt, const Bit8u *buf, unsigned len, bx_bool 
   fflush(pktlog_txt);
 }
 
+Bit16u get_net2(const Bit8u *buf)
+{
+  return (((Bit16u)*buf) << 8) |
+         ((Bit16u)*(buf+1));
+}
+
+Bit16u ip_checksum(const Bit8u *buf, unsigned buf_len)
+{
+  Bit32u sum = 0;
+  unsigned n;
+
+  for (n = 0; n < buf_len; n++) {
+    if (n & 1) {
+      sum += (Bit32u)(*buf++);
+    } else {
+      sum += (Bit32u)(*buf++) << 8;
+    }
+  }
+  while (sum > 0xffff) {
+    sum = (sum >> 16) + (sum & 0xffff);
+  }
+
+  return (Bit16u)sum;
+}
+
 #endif /* if BX_NETWORKING */

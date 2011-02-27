@@ -277,37 +277,12 @@ static void put_net4(Bit8u *buf,Bit32u data)
   *(buf+3) = (Bit8u)(data & 0xff);
 }
 
-static Bit16u get_net2(const Bit8u *buf)
-{
-  return (((Bit16u)*buf) << 8) |
-         ((Bit16u)*(buf+1));
-}
-
 static Bit32u get_net4(const Bit8u *buf)
 {
   return (((Bit32u)*buf) << 24) |
          (((Bit32u)*(buf+1)) << 16) |
          (((Bit32u)*(buf+2)) << 8) |
          ((Bit32u)*(buf+3));
-}
-
-static Bit16u ip_checksum(const Bit8u *buf, unsigned buf_len)
-{
-  Bit32u sum = 0;
-  unsigned n;
-
-  for (n = 0; n < buf_len; n++) {
-    if (n & 1) {
-      sum += (Bit32u)(*buf++);
-    } else {
-      sum += (Bit32u)(*buf++) << 8;
-    }
-  }
-  while (sum > 0xffff) {
-    sum = (sum >> 16) + (sum & 0xffff);
-  }
-
-  return (Bit16u)sum;
 }
 
 
