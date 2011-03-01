@@ -31,12 +31,26 @@
 
 typedef void (*eth_rx_handler_t)(void *arg, const void *buf, unsigned len);
 
+typedef struct {
+  Bit8u host_macaddr[6];
+  Bit8u guest_macaddr[6];
+  Bit8u host_ipv4addr[4];
+  const Bit8u *default_guest_ipv4addr;
+  Bit8u guest_ipv4addr[4];
+  Bit8u dns_ipv4addr[4];
+} dhcp_cfg_t;
+
 static const Bit8u broadcast_macaddr[6] = {0xff,0xff,0xff,0xff,0xff,0xff};
 
-int execute_script(bx_devmodel_c *netdev,  const char *name, char* arg1);
+int execute_script(bx_devmodel_c *netdev, const char *name, char* arg1);
 void write_pktlog_txt(FILE *pktlog_txt, const Bit8u *buf, unsigned len, bx_bool host_to_guest);
+
 Bit16u get_net2(const Bit8u *buf);
+void put_net2(Bit8u *buf,Bit16u data);
+Bit32u get_net4(const Bit8u *buf);
+void put_net4(Bit8u *buf,Bit32u data);
 Bit16u ip_checksum(const Bit8u *buf, unsigned buf_len);
+int process_dhcp(bx_devmodel_c *netdev, const Bit8u *data, unsigned data_len, Bit8u *reply, dhcp_cfg_t *dhcp);
 
 //
 //  The eth_pktmover class is used by ethernet chip emulations

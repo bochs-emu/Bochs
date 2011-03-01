@@ -96,6 +96,15 @@ arp_header_t;
 #pragma options align=reset
 #endif
 
+const Bit8u default_host_ipv4addr[4] = {10, 0, 2, 2};
+const Bit8u default_dns_ipv4addr[4] = {10, 0, 2, 3};
+const Bit8u default_guest_ipv4addr[4] = {10, 0, 2, 15};
+const Bit8u broadcast_ipv4addr[3][4] =
+{
+  {  0,  0,  0,  0},
+  {255,255,255,255},
+  { 10,  0,  2,255},
+};
 
 
 #define SLIP_END     192
@@ -204,11 +213,10 @@ private:
   size_t slip_input_buffer_filled;
   size_t slip_input_buffer_decoded;
 
-  Bit8u arp_reply[MIN_RX_PACKET_LEN];
-  int arp_reply_pending;
+  Bit8u reply_buffer[1024];
+  int pending_reply_size;
 
-  Bit8u host_mac_addr[ETHERNET_MAC_ADDR_LEN];
-  Bit8u guest_mac_addr[ETHERNET_MAC_ADDR_LEN];
+  dhcp_cfg_t dhcp;
 
   int rx_timer_index;
   unsigned tx_time;
@@ -217,6 +225,7 @@ private:
 
   bx_bool handle_ipv4(const Bit8u *buf, unsigned len);
   void handle_arp(void *buf, unsigned len);
+  void prepare_builtin_reply(unsigned type);
 
 #if BX_ETH_SLIRP_LOGGING
   FILE *pktlog_txt;
@@ -289,11 +298,17 @@ bx_slirp_pktmover_c::bx_slirp_pktmover_c(const char *netif,
     bx_pc_system.register_timer(this, this->rx_timer_handler, 1000,
                                 1, 1, "eth_slirp");
   this->rxh   = rxh;
-  memcpy(&guest_mac_addr[0], macaddr, ETHERNET_MAC_ADDR_LEN);
+  memcpy(&dhcp.guest_macaddr[0], macaddr, ETHERNET_MAC_ADDR_LEN);
   // ensure the slirp host has a different mac address
-  memcpy(&host_mac_addr[0], macaddr, ETHERNET_MAC_ADDR_LEN);
-  host_mac_addr[5] ^= 0x03;
-  arp_reply_pending = 0;
+  memcpy(&dhcp.host_macaddr[0], macaddr, ETHERNET_MAC_ADDR_LEN);
+  dhcp.host_macaddr[5] ^= 0x03;
+
+  memcpy(&dhcp.host_ipv4addr[0], &default_host_ipv4addr[0], 4);
+  memcpy(&dhcp.guest_ipv4addr[0], &broadcast_ipv4addr[1][0], 4);
+  dhcp.default_guest_ipv4addr = default_guest_ipv4addr;
+  memcpy(&dhcp.dns_ipv4addr[0], &default_dns_ipv4addr[0], 4);
+
+  pending_reply_size = 0;
   slip_input_buffer_filled = slip_input_buffer_decoded = 0;
 
   close(slirp_pipe_fds[1]);
@@ -319,7 +334,7 @@ void bx_slirp_pktmover_c::handle_arp(void *buf, unsigned len)
   arp_header_t *arphdr = (arp_header_t *)((Bit8u *)buf +
                                           sizeof(ethernet_header_t));
 
-  if (arp_reply_pending == 1)
+  if (pending_reply_size > 0)
     return;
 
   if ((ntohs(arphdr->hw_addr_space) != 0x0001) ||
@@ -332,28 +347,25 @@ void bx_slirp_pktmover_c::handle_arp(void *buf, unsigned len)
     return;
   }
 
-  arp_header_t *arprhdr = (arp_header_t *)((Bit8u *)arp_reply + 
+  arp_header_t *arprhdr = (arp_header_t *)((Bit8u *)reply_buffer +
                                                     sizeof(ethernet_header_t));
-  unsigned rx_time;
-
   switch(ntohs(arphdr->opcode)) {
     case ARP_OPCODE_REQUEST:
       // Slirp uses addresses x.x.x.0 - x.x.x.3
       if (((Bit8u *)arphdr)[27] > 3)
         break;
-      bzero(arp_reply, sizeof(arp_reply));
+      memset(reply_buffer, 0, MIN_RX_PACKET_LEN);
       arprhdr->hw_addr_space = htons(0x0001);
       arprhdr->proto_addr_space = htons(0x0800);
       arprhdr->hw_addr_len = ETHERNET_MAC_ADDR_LEN;
       arprhdr->proto_addr_len = 4;
       arprhdr->opcode = htons(ARP_OPCODE_REPLY);
-      memcpy((Bit8u *)arprhdr+8, host_mac_addr, ETHERNET_MAC_ADDR_LEN);
+      memcpy((Bit8u *)arprhdr+8, dhcp.host_macaddr, ETHERNET_MAC_ADDR_LEN);
       memcpy((Bit8u *)arprhdr+14, (Bit8u *)arphdr+24, 4);
-      memcpy((Bit8u *)arprhdr+18, guest_mac_addr, ETHERNET_MAC_ADDR_LEN);
+      memcpy((Bit8u *)arprhdr+18, dhcp.guest_macaddr, ETHERNET_MAC_ADDR_LEN);
       memcpy((Bit8u *)arprhdr+24, (Bit8u *)arphdr+14, 4);
-      arp_reply_pending = 1;
-      rx_time = (64 + 96 + 4 * 8 + sizeof(arp_reply) * 8) / 10;
-      bx_pc_system.activate_timer(this->rx_timer_index, this->tx_time + rx_time + 100, 0);
+      pending_reply_size = MIN_RX_PACKET_LEN;
+      prepare_builtin_reply(ETHERNET_TYPE_ARP);
       break;
     case ARP_OPCODE_REPLY:
       break;
@@ -365,13 +377,6 @@ void bx_slirp_pktmover_c::handle_arp(void *buf, unsigned len)
 // Detect DHCP request (partly copy & paste from eth_vnet.cc)
 bx_bool bx_slirp_pktmover_c::handle_ipv4(const Bit8u *buf, unsigned len)
 {
-  const Bit8u host_ipv4addr[4] = {10, 0, 2, 2};
-  const Bit8u broadcast_ipv4addr[3][4] =
-  {
-    {  0,  0,  0,  0},
-    {255,255,255,255},
-    { 10,  0,  2,255},
-  };
   unsigned total_len;
   unsigned fragment_flags;
   unsigned fragment_offset;
@@ -379,6 +384,9 @@ bx_bool bx_slirp_pktmover_c::handle_ipv4(const Bit8u *buf, unsigned len)
   unsigned l3header_len;
   const Bit8u *l4pkt;
   unsigned l4pkt_len;
+  unsigned udp_sourceport;
+  unsigned udp_targetport;
+  unsigned dhcp_reply_size;
 
   if (len < (14U+20U)) {
     return 0;
@@ -397,7 +405,7 @@ bx_bool bx_slirp_pktmover_c::handle_ipv4(const Bit8u *buf, unsigned len)
 
   total_len = get_net2(&buf[14+2]);
 
-  if (memcmp(&buf[14+16],host_ipv4addr,4) &&
+  if (memcmp(&buf[14+16],dhcp.host_ipv4addr, 4) &&
       memcmp(&buf[14+16],broadcast_ipv4addr[0],4) &&
       memcmp(&buf[14+16],broadcast_ipv4addr[1],4) &&
       memcmp(&buf[14+16],broadcast_ipv4addr[2],4))
@@ -417,14 +425,42 @@ bx_bool bx_slirp_pktmover_c::handle_ipv4(const Bit8u *buf, unsigned len)
   }
 
   if (ipproto == 0x11) { // UDP
-    unsigned udp_targetport;
-    unsigned udp_len;
-
     if (l4pkt_len < 8) return 0;
+    udp_sourceport = get_net2(&l4pkt[0]);
     udp_targetport = get_net2(&l4pkt[2]);
-    udp_len = get_net2(&l4pkt[4]);
     if (udp_targetport == 67) { // BOOTP
-      BX_ERROR(("DHCP not implemented yet"));
+      dhcp_reply_size = process_dhcp(netdev, &l4pkt[8], l4pkt_len-8, &reply_buffer[42], &dhcp);
+      pending_reply_size = dhcp_reply_size + 42;
+      // udp pseudo-header
+      reply_buffer[22] = 0;
+      reply_buffer[23] = 0x11; // UDP
+      put_net2(&reply_buffer[24], 8U+dhcp_reply_size);
+      memcpy(&reply_buffer[26], dhcp.host_ipv4addr, 4);
+      memcpy(&reply_buffer[30], dhcp.guest_ipv4addr, 4);
+      // udp header
+      put_net2(&reply_buffer[34], udp_targetport);
+      put_net2(&reply_buffer[36], udp_sourceport);
+      put_net2(&reply_buffer[38], 8U+dhcp_reply_size);
+      put_net2(&reply_buffer[40], 0);
+      put_net2(&reply_buffer[40], ip_checksum(&reply_buffer[22], 12U+8U+dhcp_reply_size) ^ (Bit16u)0xffff);
+      // ip header
+      memset(&reply_buffer[14], 0, 20);
+      reply_buffer[14] = 0x45;
+      reply_buffer[15] = 0x00;
+      put_net2(&reply_buffer[16], 20U+8U+dhcp_reply_size);
+      put_net2(&reply_buffer[18], 1);
+      reply_buffer[20] = 0x00;
+      reply_buffer[21] = 0x00;
+      reply_buffer[22] = 0x07; // TTL
+      reply_buffer[23] = 0x11; // UDP
+      // ip
+      reply_buffer[14] = (reply_buffer[14] & 0x0f) | 0x40;
+      l3header_len = ((unsigned)(reply_buffer[14] & 0x0f) << 2);
+      memcpy(&reply_buffer[26], &dhcp.host_ipv4addr[0], 4);
+      memcpy(&reply_buffer[30], &dhcp.guest_ipv4addr[0], 4);
+      put_net2(&reply_buffer[24], 0);
+      put_net2(&reply_buffer[24], ip_checksum(&reply_buffer[14], l3header_len) ^ (Bit16u)0xffff);
+      prepare_builtin_reply(ETHERNET_TYPE_IPV4);
     }
   }
   return 0;
@@ -456,6 +492,19 @@ void bx_slirp_pktmover_c::sendpkt(void *buf, unsigned io_len)
   }
 }
 
+void bx_slirp_pktmover_c::prepare_builtin_reply(unsigned type)
+{
+  ethernet_header_t *ethhdr;
+  unsigned rx_time;
+
+  ethhdr = (ethernet_header_t *)reply_buffer;
+  memcpy(ethhdr->dst_mac_addr, dhcp.guest_macaddr, ETHERNET_MAC_ADDR_LEN);
+  memcpy(ethhdr->src_mac_addr, dhcp.host_macaddr, ETHERNET_MAC_ADDR_LEN);
+  ethhdr->type = htons(type);
+  rx_time = (64 + 96 + 4 * 8 + pending_reply_size * 8) / 10;
+  bx_pc_system.activate_timer(this->rx_timer_index, this->tx_time + rx_time + 100, 0);
+}
+
 void bx_slirp_pktmover_c::rx_timer_handler(void *this_ptr)
 {
   bx_slirp_pktmover_c *class_ptr = (bx_slirp_pktmover_c *)this_ptr;
@@ -469,19 +518,12 @@ void bx_slirp_pktmover_c::rx_timer()
   ethernet_header_t *ethhdr;
   size_t packet_len;
 
-  if (arp_reply_pending == 1) {
-    packet = (Bit8u *)arp_reply;
-
-    ethhdr = (ethernet_header_t *)packet;
-    memcpy(ethhdr->dst_mac_addr, guest_mac_addr, ETHERNET_MAC_ADDR_LEN);
-    memcpy(ethhdr->src_mac_addr, host_mac_addr, ETHERNET_MAC_ADDR_LEN);
-    ethhdr->type = htons(ETHERNET_TYPE_ARP);
-    packet_len = sizeof(arp_reply);
-    arp_reply_pending = 0;
+  if (pending_reply_size > 0) {
 #if BX_ETH_SLIRP_LOGGING
-    write_pktlog_txt(pktlog_txt, packet, packet_len, 1);
+    write_pktlog_txt(pktlog_txt, reply_buffer, pending_reply_size, 1);
 #endif
-    (*rxh)(this->netdev, arp_reply, packet_len);
+    (*rxh)(this->netdev, reply_buffer, pending_reply_size);
+    pending_reply_size = 0;
     // restore timer
     bx_pc_system.activate_timer(this->rx_timer_index, 1000, 1);
     return;
@@ -505,8 +547,8 @@ void bx_slirp_pktmover_c::rx_timer()
   packet = (Bit8u *)slip_input_buffer;
 
   ethhdr = (ethernet_header_t *)packet;
-  memcpy(ethhdr->dst_mac_addr, guest_mac_addr, ETHERNET_MAC_ADDR_LEN);
-  memcpy(ethhdr->src_mac_addr, host_mac_addr, ETHERNET_MAC_ADDR_LEN);
+  memcpy(ethhdr->dst_mac_addr, dhcp.guest_macaddr, ETHERNET_MAC_ADDR_LEN);
+  memcpy(ethhdr->src_mac_addr, dhcp.host_macaddr, ETHERNET_MAC_ADDR_LEN);
   ethhdr->type = htons(ETHERNET_TYPE_IPV4);
 
   olen = 0;
