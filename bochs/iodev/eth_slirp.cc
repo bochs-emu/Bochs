@@ -374,7 +374,7 @@ void bx_slirp_pktmover_c::handle_arp(void *buf, unsigned len)
   }
 }
 
-// Detect DHCP request (partly copy & paste from eth_vnet.cc)
+// detect and handle DHCP request (partly copy & paste from eth_vnet.cc)
 bx_bool bx_slirp_pktmover_c::handle_ipv4(const Bit8u *buf, unsigned len)
 {
   unsigned total_len;
@@ -388,6 +388,7 @@ bx_bool bx_slirp_pktmover_c::handle_ipv4(const Bit8u *buf, unsigned len)
   unsigned udp_targetport;
   unsigned dhcp_reply_size;
 
+  // guest-to-host IPv4
   if (len < (14U+20U)) {
     return 0;
   }
@@ -424,43 +425,48 @@ bx_bool bx_slirp_pktmover_c::handle_ipv4(const Bit8u *buf, unsigned len)
     l4pkt_len = total_len - l3header_len;
   }
 
-  if (ipproto == 0x11) { // UDP
+  if (ipproto == 0x11) {
+    // guest-to-host UDP IPv4
     if (l4pkt_len < 8) return 0;
     udp_sourceport = get_net2(&l4pkt[0]);
     udp_targetport = get_net2(&l4pkt[2]);
     if (udp_targetport == 67) { // BOOTP
       dhcp_reply_size = process_dhcp(netdev, &l4pkt[8], l4pkt_len-8, &reply_buffer[42], &dhcp);
-      pending_reply_size = dhcp_reply_size + 42;
-      // udp pseudo-header
-      reply_buffer[22] = 0;
-      reply_buffer[23] = 0x11; // UDP
-      put_net2(&reply_buffer[24], 8U+dhcp_reply_size);
-      memcpy(&reply_buffer[26], dhcp.host_ipv4addr, 4);
-      memcpy(&reply_buffer[30], dhcp.guest_ipv4addr, 4);
-      // udp header
-      put_net2(&reply_buffer[34], udp_targetport);
-      put_net2(&reply_buffer[36], udp_sourceport);
-      put_net2(&reply_buffer[38], 8U+dhcp_reply_size);
-      put_net2(&reply_buffer[40], 0);
-      put_net2(&reply_buffer[40], ip_checksum(&reply_buffer[22], 12U+8U+dhcp_reply_size) ^ (Bit16u)0xffff);
-      // ip header
-      memset(&reply_buffer[14], 0, 20);
-      reply_buffer[14] = 0x45;
-      reply_buffer[15] = 0x00;
-      put_net2(&reply_buffer[16], 20U+8U+dhcp_reply_size);
-      put_net2(&reply_buffer[18], 1);
-      reply_buffer[20] = 0x00;
-      reply_buffer[21] = 0x00;
-      reply_buffer[22] = 0x07; // TTL
-      reply_buffer[23] = 0x11; // UDP
-      // ip
-      reply_buffer[14] = (reply_buffer[14] & 0x0f) | 0x40;
-      l3header_len = ((unsigned)(reply_buffer[14] & 0x0f) << 2);
-      memcpy(&reply_buffer[26], &dhcp.host_ipv4addr[0], 4);
-      memcpy(&reply_buffer[30], &dhcp.guest_ipv4addr[0], 4);
-      put_net2(&reply_buffer[24], 0);
-      put_net2(&reply_buffer[24], ip_checksum(&reply_buffer[14], l3header_len) ^ (Bit16u)0xffff);
-      prepare_builtin_reply(ETHERNET_TYPE_IPV4);
+      if (dhcp_reply_size > 0) {
+        pending_reply_size = dhcp_reply_size + 42;
+        // host-to-guest UDP IPv4: pseudo-header
+        reply_buffer[22] = 0;
+        reply_buffer[23] = 0x11; // UDP
+        put_net2(&reply_buffer[24], 8U+dhcp_reply_size);
+        memcpy(&reply_buffer[26], dhcp.host_ipv4addr, 4);
+        memcpy(&reply_buffer[30], dhcp.guest_ipv4addr, 4);
+        // udp header
+        put_net2(&reply_buffer[34], udp_targetport);
+        put_net2(&reply_buffer[36], udp_sourceport);
+        put_net2(&reply_buffer[38], 8U+dhcp_reply_size);
+        put_net2(&reply_buffer[40], 0);
+        put_net2(&reply_buffer[40], ip_checksum(&reply_buffer[22], 12U+8U+dhcp_reply_size) ^ (Bit16u)0xffff);
+        // ip header
+        memset(&reply_buffer[14], 0, 20);
+        reply_buffer[14] = 0x45;
+        reply_buffer[15] = 0x00;
+        put_net2(&reply_buffer[16], 20U+8U+dhcp_reply_size);
+        put_net2(&reply_buffer[18], 1);
+        reply_buffer[20] = 0x00;
+        reply_buffer[21] = 0x00;
+        reply_buffer[22] = 0x07; // TTL
+        reply_buffer[23] = 0x11; // UDP
+        // host-to-guest IPv4
+        reply_buffer[14] = (reply_buffer[14] & 0x0f) | 0x40;
+        l3header_len = ((unsigned)(reply_buffer[14] & 0x0f) << 2);
+        memcpy(&reply_buffer[26], &dhcp.host_ipv4addr[0], 4);
+        memcpy(&reply_buffer[30], &dhcp.guest_ipv4addr[0], 4);
+        put_net2(&reply_buffer[24], 0);
+        put_net2(&reply_buffer[24], ip_checksum(&reply_buffer[14], l3header_len) ^ (Bit16u)0xffff);
+        prepare_builtin_reply(ETHERNET_TYPE_IPV4);
+      }
+      // don't forward DHCP request to Slirp
+      return 1;
     }
   }
   return 0;

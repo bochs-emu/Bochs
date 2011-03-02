@@ -765,7 +765,9 @@ void bx_vnet_pktmover_c::udpipv4_dhcp_handler_ns(
   unsigned opts_len;
 
   opts_len = process_dhcp(netdev, data, data_len, replybuf, &dhcp);
-  host_to_guest_udpipv4_packet(sourceport, targetport, replybuf, opts_len);
+  if (opts_len > 0) {
+    host_to_guest_udpipv4_packet(sourceport, targetport, replybuf, opts_len);
+  }
 }
 
 void bx_vnet_pktmover_c::udpipv4_tftp_handler(
