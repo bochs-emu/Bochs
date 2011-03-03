@@ -974,7 +974,7 @@ public: // for now...
 #define BX_DEBUG_TRAP_TASK_SWITCH_BIT   (1 << 15)
   Bit32u   debug_trap; // holds DR6 value (16bit) to be set as well
 
-  volatile Bit32u  async_event;
+  Bit32u  async_event;
 
 #if BX_SUPPORT_TRACE_CACHE
   #define BX_ASYNC_EVENT_STOP_TRACE (0x80000000)
@@ -986,10 +986,10 @@ public: // for now...
   bx_bool  in_smm;
   unsigned cpu_mode;
   bx_bool  user_pl;
-  volatile bx_bool INTR;
-  volatile bx_bool pending_SMI;
-  volatile bx_bool pending_NMI;
-  volatile bx_bool pending_INIT;
+  bx_bool  INTR;
+  bx_bool  pending_SMI;
+  bx_bool  pending_NMI;
+  bx_bool  pending_INIT;
   bx_bool  disable_SMI;
   bx_bool  disable_NMI;
   bx_bool  disable_INIT;
