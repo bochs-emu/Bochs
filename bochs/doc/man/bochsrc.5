@@ -1,5 +1,5 @@
 .\"Document Author:  Timothy R. Butler   -   tbutler@uninetsolutions.com"
-.TH bochsrc 5 "20 Feb 2011" "bochsrc" "The Bochs Project"
+.TH bochsrc 5 "3 Mar 2011" "bochsrc" "The Bochs Project"
 .\"SKIP_SECTION"
 .SH NAME
 bochsrc \- Configuration file for Bochs.
@@ -846,6 +846,7 @@ to access physical ethernet interface. Current implemented values include
  - win32  : ethernet on win32
  - tap    : ethernet through a linux tap interface
  - tuntap : ethernet through a linux tuntap interface
+ - slirp  : ethernet backend for Slirp and a builtin DHCP server
 
 If you don't want to make connections to any physical networks,
 you can use the following 'ethmod's to simulate a virtual network.

@@ -4123,6 +4123,7 @@ ne2k: ioaddr=0x300, irq=9, mac=b0:c4:20:00:00:01, ethmod=vde, ethdev="/tmp/vde.c
 ne2k: ioaddr=0x300, irq=9, mac=b0:c4:20:00:00:01, ethmod=vnet, ethdev="c:/temp"
 ne2k: ioaddr=0x300, irq=9, mac=fe:fd:00:00:00:01, ethmod=tap, ethdev=tap0
 ne2k: ioaddr=0x300, irq=9, mac=fe:fd:00:00:00:01, ethmod=tuntap, ethdev=/dev/net/tun0, script=./tunconfig
+ne2k: mac=fe:fd:00:00:00:01, ethmod=slirp, script=/usr/local/bin/slirp
 
 ioaddr, irq: You probably won't need to change ioaddr and irq, unless there
 are IRQ conflicts. These parameters are ignored if the NE2000 is assigned to
@@ -4238,6 +4239,17 @@ version where this module was added.
     </entry>
     <entry>Yes, for TFTP</entry>
     <entry>No</entry>
+    <entry>2.2</entry>
+  </row>
+  <row>
+    <entry>slirp</entry>
+    <entry>Ethernet backend for Slirp and a builtin DHCP server. Adds user mode
+    networking to Bochs using Slirp. Only tested with the most recent Slirp
+    version with Debian patches applied. The fullbolt Slirp version should be
+    used. The "script" parameter should point to the Slirp binary.
+    </entry>
+    <entry>No</entry>
+    <entry>Yes</entry>
     <entry>2.2</entry>
   </row>
   <row>

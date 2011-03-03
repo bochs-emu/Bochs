@@ -8,6 +8,11 @@ Bochs repository moved to the SVN version control !
   - Added ability to configure CPUID model through .bochsrc.
     The default model value is 3.
 
+- I/O Devices
+  - Networking
+    - new networking module 'slirp' (user mode networking using Slirp and a
+      builtin DHCP server)
+
 - SF patches applied
   [3190995] add eth backend based on Slirp by Heikki Lindholm
 
