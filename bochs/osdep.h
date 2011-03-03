@@ -94,6 +94,7 @@ extern "C" {
 #define strrev _strrev
 #define stricmp _stricmp
 #define getch _getch
+#define strtoull _strtoui64
 #endif
 
 #else   /* __MINGW32__ defined */
