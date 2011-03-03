@@ -579,19 +579,6 @@ typedef
 // is permitted, it defines inline to be empty.
 #define inline inline
 
-// inline functions in headers that are compiled with C compiler
-// (e.g. fpu code) are declared with BX_C_INLINE macro.  Note that
-// the word "inline" itself may now be redefined by the above #define.
-// Many compilers are known to work with "static inline".  If the
-// compiler can put the function inline, it does so and never creates
-// a symbol for the function.  If optimization is off, or inline is
-// defined to be empty, the static keyword causes the function to create
-// a symbol that's visible only to that .c file.  Each .c file that
-// includes the header will produde another local version of the
-// BX_C_INLINE function (not ideal).  However without "static" you can
-// duplicate symbol problems which are even worse.
-#define BX_C_INLINE static inline
-
 // Use BX_CPP_INLINE for all C++ inline functions.  Note that the
 // word "inline" itself may now be redefined by the above #define.
 #define BX_CPP_INLINE inline
