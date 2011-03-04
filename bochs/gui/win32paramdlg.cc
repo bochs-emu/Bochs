@@ -419,11 +419,7 @@ HWND CreateInput(HWND hDlg, UINT cid, UINT xpos, UINT ypos, BOOL hide, bx_param_
                          style, r.left, r.top, r.right-r.left+1,
                          r.bottom-r.top+1, hDlg, (HMENU)code, NULL, NULL);
   if (hexedit) {
-#ifndef _WIN64
-    DefEditWndProc = (WNDPROC)SetWindowLong(Input, GWL_WNDPROC, (long)EditHexWndProc);
-#else
     DefEditWndProc = (WNDPROC)SetWindowLongPtr(Input, GWLP_WNDPROC, (LONG_PTR)EditHexWndProc);
-#endif
   }
   if (spinctrl) {
     style = WS_CHILD | WS_BORDER | WS_VISIBLE | UDS_NOTHOUSANDS | UDS_ARROWKEYS |

@@ -26,6 +26,10 @@
 #include <windows.h>
 #include <commctrl.h>
 
+#ifdef _WIN64
+#define DWL_MSGRESULT DWLP_MSGRESULT
+#endif
+
 // User Customizable initial settings:
 
 // the Register color table
@@ -1320,9 +1324,10 @@ LRESULT CALLBACK B_WP(HWND hh,UINT mm,WPARAM ww,LPARAM ll)
             hE_O = CreateWindowEx(0,"edit","",WS_VSCROLL | WS_BORDER | WS_CHILD | WS_VISIBLE | ES_MULTILINE,0,0,1,1,hh,(HMENU)1003,GetModuleHandle(0),0);
             SendMessage(hE_I,WM_SETFONT,(WPARAM)DefFont, MAKELPARAM(TRUE,0));
             SendMessage(hE_O,WM_SETFONT,(WPARAM)hF,MAKELPARAM(TRUE,0));
+
             // subclass both the edit windows together
-            *wEdit = (WNDPROC) SetWindowLong (hE_I,GWL_WNDPROC,(WPARAM) ThisEditProc);
-            wEdit[1] = (WNDPROC) SetWindowLong (hE_O,GWL_WNDPROC,(WPARAM) ThisEditProc);
+            *wEdit = (WNDPROC)SetWindowLongPtr(hE_I, GWLP_WNDPROC, (LONG_PTR)ThisEditProc);
+            wEdit[1] = (WNDPROC)SetWindowLongPtr(hE_O, GWLP_WNDPROC, (LONG_PTR)ThisEditProc);
 
             // Status
             hS_S = CreateWindowEx(0,STATUSCLASSNAME,"",WS_CHILD | WS_VISIBLE,0,0,1,1,hh,(HMENU)1006,GetModuleHandle(0),0);
@@ -1370,8 +1375,7 @@ LRESULT CALLBACK B_WP(HWND hh,UINT mm,WPARAM ww,LPARAM ll)
                 0,0,1,1,hh,(HMENU)1010,GetModuleHandle(0),0);
             //SendMessage(hT,WM_SETFONT,(WPARAM)DefFont,MAKELPARAM(TRUE,0));
             // Use the same messagehandler for the tree window as for ListViews
-            wTreeView = (WNDPROC) SetWindowLong (hT,GWL_WNDPROC,(WPARAM) LVProc);
-
+            wTreeView = (WNDPROC)SetWindowLongPtr(hT, GWLP_WNDPROC, (LONG_PTR)LVProc);
             // create button rows
             int j = BX_SMP_PROCESSORS;
             Bit32u WStyle = WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON;

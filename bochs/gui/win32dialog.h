@@ -41,11 +41,6 @@ extern "C" {
 #include <ctype.h>
 }
 
-// 64-bit windows env misses this define
-#ifndef GWL_WNDPROC
-#define GWL_WNDPROC (-4)
-#endif
-
 #if BX_USE_TEXTCONFIG && defined(WIN32)
 
 #if BX_DEBUGGER && BX_DEBUGGER_GUI
