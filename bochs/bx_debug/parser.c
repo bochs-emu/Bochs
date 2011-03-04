@@ -1,24 +1,22 @@
-/* A Bison parser, made by GNU Bison 2.3.  */
+/* A Bison parser, made by GNU Bison 2.4.2.  */
 
 /* Skeleton implementation for Bison's Yacc-like parsers in C
-
-   Copyright (C) 1984, 1989, 1990, 2000, 2001, 2002, 2003, 2004, 2005, 2006
-   Free Software Foundation, Inc.
-
-   This program is free software; you can redistribute it and/or modify
+   
+      Copyright (C) 1984, 1989-1990, 2000-2006, 2009-2010 Free Software
+   Foundation, Inc.
+   
+   This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
-   the Free Software Foundation; either version 2, or (at your option)
-   any later version.
-
+   the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.
+   
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
-
+   
    You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 51 Franklin Street, Fifth Floor,
-   Boston, MA 02110-1301, USA.  */
+   along with this program.  If not, see <http://www.gnu.org/licenses/>.  */
 
 /* As a special exception, you may create a larger work that contains
    part or all of the Bison parser skeleton and distribute that work
@@ -29,7 +27,7 @@
    special exception, which will cause the skeleton and the resulting
    Bison output files to be licensed under the GNU General Public
    License without this special exception.
-
+   
    This special exception was added by the Free Software Foundation in
    version 2.2 of Bison.  */
 
@@ -47,7 +45,7 @@
 #define YYBISON 1
 
 /* Bison version.  */
-#define YYBISON_VERSION "2.3"
+#define YYBISON_VERSION "2.4.2"
 
 /* Skeleton name.  */
 #define YYSKELETON_NAME "yacc.c"
@@ -55,17 +53,57 @@
 /* Pure parsers.  */
 #define YYPURE 0
 
+/* Push parsers.  */
+#define YYPUSH 0
+
+/* Pull parsers.  */
+#define YYPULL 1
+
 /* Using locations.  */
 #define YYLSP_NEEDED 0
 
 /* Substitute the variable and function names.  */
-#define yyparse bxparse
-#define yylex   bxlex
-#define yyerror bxerror
-#define yylval  bxlval
-#define yychar  bxchar
-#define yydebug bxdebug
-#define yynerrs bxnerrs
+#define yyparse         bxparse
+#define yylex           bxlex
+#define yyerror         bxerror
+#define yylval          bxlval
+#define yychar          bxchar
+#define yydebug         bxdebug
+#define yynerrs         bxnerrs
+
+
+/* Copy the first part of user declarations.  */
+
+/* Line 189 of yacc.c  */
+#line 5 "parser.y"
+
+#include <stdio.h>
+#include <stdlib.h>
+#include "debug.h"
+
+#if BX_DEBUGGER
+
+
+/* Line 189 of yacc.c  */
+#line 89 "y.tab.c"
+
+/* Enabling traces.  */
+#ifndef YYDEBUG
+# define YYDEBUG 0
+#endif
+
+/* Enabling verbose error messages.  */
+#ifdef YYERROR_VERBOSE
+# undef YYERROR_VERBOSE
+# define YYERROR_VERBOSE 1
+#else
+# define YYERROR_VERBOSE 0
+#endif
+
+/* Enabling the token table.  */
+#ifndef YYTOKEN_TABLE
+# define YYTOKEN_TABLE 0
+#endif
 
 
 /* Tokens.  */
@@ -291,57 +329,33 @@
 
 
 
-/* Copy the first part of user declarations.  */
-#line 5 "parser.y"
-
-#include <stdio.h>
-#include <stdlib.h>
-#include "debug.h"
-
-#if BX_DEBUGGER
-
-
-/* Enabling traces.  */
-#ifndef YYDEBUG
-# define YYDEBUG 0
-#endif
-
-/* Enabling verbose error messages.  */
-#ifdef YYERROR_VERBOSE
-# undef YYERROR_VERBOSE
-# define YYERROR_VERBOSE 1
-#else
-# define YYERROR_VERBOSE 0
-#endif
-
-/* Enabling the token table.  */
-#ifndef YYTOKEN_TABLE
-# define YYTOKEN_TABLE 0
-#endif
-
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 typedef union YYSTYPE
-#line 13 "parser.y"
 {
+
+/* Line 214 of yacc.c  */
+#line 13 "parser.y"
+
   char    *sval;
   Bit64u   uval;
   bx_bool  bval;
-}
-/* Line 187 of yacc.c.  */
-#line 332 "y.tab.c"
-	YYSTYPE;
+
+
+
+/* Line 214 of yacc.c  */
+#line 347 "y.tab.c"
+} YYSTYPE;
+# define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
 # define YYSTYPE_IS_DECLARED 1
-# define YYSTYPE_IS_TRIVIAL 1
 #endif
-
 
 
 /* Copy the second part of user declarations.  */
 
 
-/* Line 216 of yacc.c.  */
-#line 345 "y.tab.c"
+/* Line 264 of yacc.c  */
+#line 359 "y.tab.c"
 
 #ifdef short
 # undef short
@@ -391,7 +405,7 @@ typedef short int yytype_int16;
 #define YYSIZE_MAXIMUM ((YYSIZE_T) -1)
 
 #ifndef YY_
-# if YYENABLE_NLS
+# if defined YYENABLE_NLS && YYENABLE_NLS
 #  if ENABLE_NLS
 #   include <libintl.h> /* INFRINGES ON USER NAME SPACE */
 #   define YY_(msgid) dgettext ("bison-runtime", msgid)
@@ -416,14 +430,14 @@ typedef short int yytype_int16;
 #if (defined __STDC__ || defined __C99__FUNC__ \
      || defined __cplusplus || defined _MSC_VER)
 static int
-YYID (int i)
+YYID (int yyi)
 #else
 static int
-YYID (i)
-    int i;
+YYID (yyi)
+    int yyi;
 #endif
 {
-  return i;
+  return yyi;
 }
 #endif
 
@@ -504,9 +518,9 @@ void free (void *); /* INFRINGES ON USER NAME SPACE */
 /* A type that is properly aligned for any stack member.  */
 union yyalloc
 {
-  yytype_int16 yyss;
-  YYSTYPE yyvs;
-  };
+  yytype_int16 yyss_alloc;
+  YYSTYPE yyvs_alloc;
+};
 
 /* The size of the maximum gap between one aligned stack and the next.  */
 # define YYSTACK_GAP_MAXIMUM (sizeof (union yyalloc) - 1)
@@ -540,12 +554,12 @@ union yyalloc
    elements in the stack, and YYPTR gives the new location of the
    stack.  Advance YYPTR to a properly aligned location for the next
    stack.  */
-# define YYSTACK_RELOCATE(Stack)					\
+# define YYSTACK_RELOCATE(Stack_alloc, Stack)				\
     do									\
       {									\
 	YYSIZE_T yynewbytes;						\
-	YYCOPY (&yyptr->Stack, Stack, yysize);				\
-	Stack = &yyptr->Stack;						\
+	YYCOPY (&yyptr->Stack_alloc, Stack, yysize);			\
+	Stack = &yyptr->Stack_alloc;					\
 	yynewbytes = yystacksize * sizeof (*Stack) + YYSTACK_GAP_MAXIMUM; \
 	yyptr += yynewbytes / sizeof (*yyptr);				\
       }									\
@@ -1446,9 +1460,18 @@ static const yytype_uint8 yystos[] =
 
 /* Like YYERROR except do call yyerror.  This remains here temporarily
    to ease the transition to the new meaning of YYERROR, for GCC.
-   Once GCC version 2 has supplanted version 1, this can go.  */
+   Once GCC version 2 has supplanted version 1, this can go.  However,
+   YYFAIL appears to be in use.  Nevertheless, it is formally deprecated
+   in Bison 2.4.2's NEWS entry, where a plan to phase it out is
+   discussed.  */
 
 #define YYFAIL		goto yyerrlab
+#if defined YYFAIL
+  /* This is here to suppress warnings from the GCC cpp's
+     -Wunused-macros.  Normally we don't worry about that warning, but
+     some users do, and we want to make it easy for users to remove
+     YYFAIL uses, which will produce warnings from Bison 2.5.  */
+#endif
 
 #define YYRECOVERING()  (!!yyerrstatus)
 
@@ -1505,7 +1528,7 @@ while (YYID (0))
    we won't break user code: when these are the locations we know.  */
 
 #ifndef YY_LOCATION_PRINT
-# if YYLTYPE_IS_TRIVIAL
+# if defined YYLTYPE_IS_TRIVIAL && YYLTYPE_IS_TRIVIAL
 #  define YY_LOCATION_PRINT(File, Loc)			\
      fprintf (File, "%d.%d-%d.%d",			\
 	      (Loc).first_line, (Loc).first_column,	\
@@ -1616,17 +1639,20 @@ yy_symbol_print (yyoutput, yytype, yyvaluep)
 #if (defined __STDC__ || defined __C99__FUNC__ \
      || defined __cplusplus || defined _MSC_VER)
 static void
-yy_stack_print (yytype_int16 *bottom, yytype_int16 *top)
+yy_stack_print (yytype_int16 *yybottom, yytype_int16 *yytop)
 #else
 static void
-yy_stack_print (bottom, top)
-    yytype_int16 *bottom;
-    yytype_int16 *top;
+yy_stack_print (yybottom, yytop)
+    yytype_int16 *yybottom;
+    yytype_int16 *yytop;
 #endif
 {
   YYFPRINTF (stderr, "Stack now");
-  for (; bottom <= top; ++bottom)
-    YYFPRINTF (stderr, " %d", *bottom);
+  for (; yybottom <= yytop; yybottom++)
+    {
+      int yybot = *yybottom;
+      YYFPRINTF (stderr, " %d", yybot);
+    }
   YYFPRINTF (stderr, "\n");
 }
 
@@ -1660,11 +1686,11 @@ yy_reduce_print (yyvsp, yyrule)
   /* The symbols being reduced.  */
   for (yyi = 0; yyi < yynrhs; yyi++)
     {
-      fprintf (stderr, "   $%d = ", yyi + 1);
+      YYFPRINTF (stderr, "   $%d = ", yyi + 1);
       yy_symbol_print (stderr, yyrhs[yyprhs[yyrule] + yyi],
 		       &(yyvsp[(yyi + 1) - (yynrhs)])
 		       		       );
-      fprintf (stderr, "\n");
+      YYFPRINTF (stderr, "\n");
     }
 }
 
@@ -1944,10 +1970,8 @@ yydestruct (yymsg, yytype, yyvaluep)
 	break;
     }
 }
-
 
 /* Prevent warnings from -Wmissing-prototypes.  */
-
 #ifdef YYPARSE_PARAM
 #if defined __STDC__ || defined __cplusplus
 int yyparse (void *YYPARSE_PARAM);
@@ -1963,11 +1987,10 @@ int yyparse ();
 #endif /* ! YYPARSE_PARAM */
 
 
-
-/* The look-ahead symbol.  */
+/* The lookahead symbol.  */
 int yychar;
 
-/* The semantic value of the look-ahead symbol.  */
+/* The semantic value of the lookahead symbol.  */
 YYSTYPE yylval;
 
 /* Number of syntax errors so far.  */
@@ -1975,9 +1998,9 @@ int yynerrs;
 
 
 
-/*----------.
-| yyparse.  |
-`----------*/
+/*-------------------------.
+| yyparse or yypush_parse.  |
+`-------------------------*/
 
 #ifdef YYPARSE_PARAM
 #if (defined __STDC__ || defined __C99__FUNC__ \
@@ -2001,14 +2024,39 @@ yyparse ()
 #endif
 #endif
 {
-  
-  int yystate;
+
+
+    int yystate;
+    /* Number of tokens to shift before error messages enabled.  */
+    int yyerrstatus;
+
+    /* The stacks and their tools:
+       `yyss': related to states.
+       `yyvs': related to semantic values.
+
+       Refer to the stacks thru separate pointers, to allow yyoverflow
+       to reallocate them elsewhere.  */
+
+    /* The state stack.  */
+    yytype_int16 yyssa[YYINITDEPTH];
+    yytype_int16 *yyss;
+    yytype_int16 *yyssp;
+
+    /* The semantic value stack.  */
+    YYSTYPE yyvsa[YYINITDEPTH];
+    YYSTYPE *yyvs;
+    YYSTYPE *yyvsp;
+
+    YYSIZE_T yystacksize;
+
   int yyn;
   int yyresult;
-  /* Number of tokens to shift before error messages enabled.  */
-  int yyerrstatus;
-  /* Look-ahead token as an internal (translated) token number.  */
-  int yytoken = 0;
+  /* Lookahead token as an internal (translated) token number.  */
+  int yytoken;
+  /* The variables used to return semantic value and location from the
+     action routines.  */
+  YYSTYPE yyval;
+
 #if YYERROR_VERBOSE
   /* Buffer for error messages, and its allocated size.  */
   char yymsgbuf[128];
@@ -2016,51 +2064,28 @@ yyparse ()
   YYSIZE_T yymsg_alloc = sizeof yymsgbuf;
 #endif
 
-  /* Three stacks and their tools:
-     `yyss': related to states,
-     `yyvs': related to semantic values,
-     `yyls': related to locations.
-
-     Refer to the stacks thru separate pointers, to allow yyoverflow
-     to reallocate them elsewhere.  */
-
-  /* The state stack.  */
-  yytype_int16 yyssa[YYINITDEPTH];
-  yytype_int16 *yyss = yyssa;
-  yytype_int16 *yyssp;
-
-  /* The semantic value stack.  */
-  YYSTYPE yyvsa[YYINITDEPTH];
-  YYSTYPE *yyvs = yyvsa;
-  YYSTYPE *yyvsp;
-
-
-
 #define YYPOPSTACK(N)   (yyvsp -= (N), yyssp -= (N))
-
-  YYSIZE_T yystacksize = YYINITDEPTH;
-
-  /* The variables used to return semantic value and location from the
-     action routines.  */
-  YYSTYPE yyval;
-
 
   /* The number of symbols on the RHS of the reduced rule.
      Keep to zero when no symbol should be popped.  */
   int yylen = 0;
+
+  yytoken = 0;
+  yyss = yyssa;
+  yyvs = yyvsa;
+  yystacksize = YYINITDEPTH;
 
   YYDPRINTF ((stderr, "Starting parse\n"));
 
   yystate = 0;
   yyerrstatus = 0;
   yynerrs = 0;
-  yychar = YYEMPTY;		/* Cause a token to be read.  */
+  yychar = YYEMPTY; /* Cause a token to be read.  */
 
   /* Initialize stack pointers.
      Waste one element of value and location stack
      so that they stay on the same level as the state stack.
      The wasted elements are never initialized.  */
-
   yyssp = yyss;
   yyvsp = yyvs;
 
@@ -2090,7 +2115,6 @@ yyparse ()
 	YYSTYPE *yyvs1 = yyvs;
 	yytype_int16 *yyss1 = yyss;
 
-
 	/* Each stack pointer address is followed by the size of the
 	   data in use in that stack, in bytes.  This used to be a
 	   conditional around just the two extra args, but that might
@@ -2098,7 +2122,6 @@ yyparse ()
 	yyoverflow (YY_("memory exhausted"),
 		    &yyss1, yysize * sizeof (*yyssp),
 		    &yyvs1, yysize * sizeof (*yyvsp),
-
 		    &yystacksize);
 
 	yyss = yyss1;
@@ -2121,9 +2144,8 @@ yyparse ()
 	  (union yyalloc *) YYSTACK_ALLOC (YYSTACK_BYTES (yystacksize));
 	if (! yyptr)
 	  goto yyexhaustedlab;
-	YYSTACK_RELOCATE (yyss);
-	YYSTACK_RELOCATE (yyvs);
-
+	YYSTACK_RELOCATE (yyss_alloc, yyss);
+	YYSTACK_RELOCATE (yyvs_alloc, yyvs);
 #  undef YYSTACK_RELOCATE
 	if (yyss1 != yyssa)
 	  YYSTACK_FREE (yyss1);
@@ -2134,7 +2156,6 @@ yyparse ()
       yyssp = yyss + yysize - 1;
       yyvsp = yyvs + yysize - 1;
 
-
       YYDPRINTF ((stderr, "Stack size increased to %lu\n",
 		  (unsigned long int) yystacksize));
 
@@ -2144,6 +2165,9 @@ yyparse ()
 
   YYDPRINTF ((stderr, "Entering state %d\n", yystate));
 
+  if (yystate == YYFINAL)
+    YYACCEPT;
+
   goto yybackup;
 
 /*-----------.
@@ -2152,16 +2176,16 @@ yyparse ()
 yybackup:
 
   /* Do appropriate processing given the current state.  Read a
-     look-ahead token if we need one and don't already have one.  */
+     lookahead token if we need one and don't already have one.  */
 
-  /* First try to decide what to do without reference to look-ahead token.  */
+  /* First try to decide what to do without reference to lookahead token.  */
   yyn = yypact[yystate];
   if (yyn == YYPACT_NINF)
     goto yydefault;
 
-  /* Not known => get a look-ahead token if don't already have one.  */
+  /* Not known => get a lookahead token if don't already have one.  */
 
-  /* YYCHAR is either YYEMPTY or YYEOF or a valid look-ahead symbol.  */
+  /* YYCHAR is either YYEMPTY or YYEOF or a valid lookahead symbol.  */
   if (yychar == YYEMPTY)
     {
       YYDPRINTF ((stderr, "Reading a token: "));
@@ -2193,20 +2217,16 @@ yybackup:
       goto yyreduce;
     }
 
-  if (yyn == YYFINAL)
-    YYACCEPT;
-
   /* Count tokens shifted since error; after three, turn off error
      status.  */
   if (yyerrstatus)
     yyerrstatus--;
 
-  /* Shift the look-ahead token.  */
+  /* Shift the lookahead token.  */
   YY_SYMBOL_PRINT ("Shifting", yytoken, &yylval, &yylloc);
 
-  /* Discard the shifted token unless it is eof.  */
-  if (yychar != YYEOF)
-    yychar = YYEMPTY;
+  /* Discard the shifted token.  */
+  yychar = YYEMPTY;
 
   yystate = yyn;
   *++yyvsp = yylval;
@@ -2246,27 +2266,37 @@ yyreduce:
   switch (yyn)
     {
         case 50:
+
+/* Line 1464 of yacc.c  */
 #line 191 "parser.y"
     {
       }
     break;
 
   case 52:
+
+/* Line 1464 of yacc.c  */
 #line 198 "parser.y"
     { (yyval.bval)=(yyvsp[(1) - (1)].bval); }
     break;
 
   case 54:
+
+/* Line 1464 of yacc.c  */
 #line 204 "parser.y"
     { (yyval.sval)=(yyvsp[(1) - (1)].sval); }
     break;
 
   case 60:
+
+/* Line 1464 of yacc.c  */
 #line 214 "parser.y"
     { (yyval.uval)=(yyvsp[(1) - (1)].uval); }
     break;
 
   case 61:
+
+/* Line 1464 of yacc.c  */
 #line 219 "parser.y"
     {
           bx_dbg_timebp_command(0, (yyvsp[(2) - (3)].uval));
@@ -2275,6 +2305,8 @@ yyreduce:
     break;
 
   case 62:
+
+/* Line 1464 of yacc.c  */
 #line 224 "parser.y"
     {
           bx_dbg_timebp_command(1, (yyvsp[(2) - (3)].uval));
@@ -2283,6 +2315,8 @@ yyreduce:
     break;
 
   case 63:
+
+/* Line 1464 of yacc.c  */
 #line 232 "parser.y"
     {
           bx_dbg_record_command((yyvsp[(2) - (3)].sval));
@@ -2291,6 +2325,8 @@ yyreduce:
     break;
 
   case 64:
+
+/* Line 1464 of yacc.c  */
 #line 240 "parser.y"
     {
           bx_dbg_playback_command((yyvsp[(2) - (3)].sval));
@@ -2299,6 +2335,8 @@ yyreduce:
     break;
 
   case 65:
+
+/* Line 1464 of yacc.c  */
 #line 248 "parser.y"
     {
           bx_dbg_modebp_command();
@@ -2307,6 +2345,8 @@ yyreduce:
     break;
 
   case 66:
+
+/* Line 1464 of yacc.c  */
 #line 256 "parser.y"
     {
           bx_dbg_show_command((yyvsp[(2) - (3)].sval));
@@ -2315,6 +2355,8 @@ yyreduce:
     break;
 
   case 67:
+
+/* Line 1464 of yacc.c  */
 #line 261 "parser.y"
     {
           bx_dbg_show_param_command((yyvsp[(2) - (3)].sval));
@@ -2323,6 +2365,8 @@ yyreduce:
     break;
 
   case 68:
+
+/* Line 1464 of yacc.c  */
 #line 266 "parser.y"
     {
           bx_dbg_show_command(0);
@@ -2331,6 +2375,8 @@ yyreduce:
     break;
 
   case 69:
+
+/* Line 1464 of yacc.c  */
 #line 274 "parser.y"
     {
           bx_dbg_xlate_address((yyvsp[(2) - (3)].uval));
@@ -2339,6 +2385,8 @@ yyreduce:
     break;
 
   case 70:
+
+/* Line 1464 of yacc.c  */
 #line 282 "parser.y"
     {
           bx_dbg_ptime_command();
@@ -2347,6 +2395,8 @@ yyreduce:
     break;
 
   case 71:
+
+/* Line 1464 of yacc.c  */
 #line 290 "parser.y"
     {
           bx_dbg_trace_command((yyvsp[(2) - (3)].bval));
@@ -2355,6 +2405,8 @@ yyreduce:
     break;
 
   case 72:
+
+/* Line 1464 of yacc.c  */
 #line 298 "parser.y"
     {
           bx_dbg_trace_reg_command((yyvsp[(2) - (3)].bval));
@@ -2363,6 +2415,8 @@ yyreduce:
     break;
 
   case 73:
+
+/* Line 1464 of yacc.c  */
 #line 306 "parser.y"
     {
           bx_dbg_trace_mem_command((yyvsp[(2) - (3)].bval));
@@ -2371,6 +2425,8 @@ yyreduce:
     break;
 
   case 74:
+
+/* Line 1464 of yacc.c  */
 #line 314 "parser.y"
     {
           bx_dbg_print_stack_command(16);
@@ -2379,6 +2435,8 @@ yyreduce:
     break;
 
   case 75:
+
+/* Line 1464 of yacc.c  */
 #line 319 "parser.y"
     {
           bx_dbg_print_stack_command((yyvsp[(2) - (3)].uval));
@@ -2387,6 +2445,8 @@ yyreduce:
     break;
 
   case 76:
+
+/* Line 1464 of yacc.c  */
 #line 327 "parser.y"
     {
           bx_dbg_watchpoint_continue(0);
@@ -2395,6 +2455,8 @@ yyreduce:
     break;
 
   case 77:
+
+/* Line 1464 of yacc.c  */
 #line 332 "parser.y"
     {
           bx_dbg_watchpoint_continue(1);
@@ -2403,6 +2465,8 @@ yyreduce:
     break;
 
   case 78:
+
+/* Line 1464 of yacc.c  */
 #line 337 "parser.y"
     {
           bx_dbg_print_watchpoints();
@@ -2411,6 +2475,8 @@ yyreduce:
     break;
 
   case 79:
+
+/* Line 1464 of yacc.c  */
 #line 342 "parser.y"
     {
           bx_dbg_watch(0, (yyvsp[(3) - (4)].uval), 1); /* BX_READ */
@@ -2419,6 +2485,8 @@ yyreduce:
     break;
 
   case 80:
+
+/* Line 1464 of yacc.c  */
 #line 347 "parser.y"
     {
           bx_dbg_watch(0, (yyvsp[(3) - (4)].uval), 1); /* BX_READ */
@@ -2427,6 +2495,8 @@ yyreduce:
     break;
 
   case 81:
+
+/* Line 1464 of yacc.c  */
 #line 352 "parser.y"
     {
           bx_dbg_watch(1, (yyvsp[(3) - (4)].uval), 1); /* BX_WRITE */
@@ -2435,6 +2505,8 @@ yyreduce:
     break;
 
   case 82:
+
+/* Line 1464 of yacc.c  */
 #line 357 "parser.y"
     {
           bx_dbg_watch(0, (yyvsp[(3) - (5)].uval), (yyvsp[(4) - (5)].uval)); /* BX_READ */
@@ -2443,6 +2515,8 @@ yyreduce:
     break;
 
   case 83:
+
+/* Line 1464 of yacc.c  */
 #line 362 "parser.y"
     {
           bx_dbg_watch(0, (yyvsp[(3) - (5)].uval), (yyvsp[(4) - (5)].uval)); /* BX_READ */
@@ -2451,6 +2525,8 @@ yyreduce:
     break;
 
   case 84:
+
+/* Line 1464 of yacc.c  */
 #line 367 "parser.y"
     {
           bx_dbg_watch(1, (yyvsp[(3) - (5)].uval), (yyvsp[(4) - (5)].uval)); /* BX_WRITE */
@@ -2459,6 +2535,8 @@ yyreduce:
     break;
 
   case 85:
+
+/* Line 1464 of yacc.c  */
 #line 372 "parser.y"
     {
           bx_dbg_unwatch_all();
@@ -2467,6 +2545,8 @@ yyreduce:
     break;
 
   case 86:
+
+/* Line 1464 of yacc.c  */
 #line 377 "parser.y"
     {
           bx_dbg_unwatch((yyvsp[(2) - (3)].uval));
@@ -2475,6 +2555,8 @@ yyreduce:
     break;
 
   case 87:
+
+/* Line 1464 of yacc.c  */
 #line 385 "parser.y"
     {
         bx_dbg_symbol_command((yyvsp[(2) - (3)].sval), 0, 0);
@@ -2483,6 +2565,8 @@ yyreduce:
     break;
 
   case 88:
+
+/* Line 1464 of yacc.c  */
 #line 390 "parser.y"
     {
         bx_dbg_symbol_command((yyvsp[(2) - (4)].sval), 0, (yyvsp[(3) - (4)].uval));
@@ -2491,6 +2575,8 @@ yyreduce:
     break;
 
   case 89:
+
+/* Line 1464 of yacc.c  */
 #line 395 "parser.y"
     {
         bx_dbg_symbol_command((yyvsp[(3) - (4)].sval), 1, 0);
@@ -2499,6 +2585,8 @@ yyreduce:
     break;
 
   case 90:
+
+/* Line 1464 of yacc.c  */
 #line 400 "parser.y"
     {
         bx_dbg_symbol_command((yyvsp[(3) - (5)].sval), 1, (yyvsp[(4) - (5)].uval));
@@ -2507,6 +2595,8 @@ yyreduce:
     break;
 
   case 91:
+
+/* Line 1464 of yacc.c  */
 #line 408 "parser.y"
     {
         bx_dbg_where_command();
@@ -2515,6 +2605,8 @@ yyreduce:
     break;
 
   case 92:
+
+/* Line 1464 of yacc.c  */
 #line 416 "parser.y"
     {
         bx_dbg_print_string_command((yyvsp[(2) - (3)].uval));
@@ -2523,6 +2615,8 @@ yyreduce:
     break;
 
   case 93:
+
+/* Line 1464 of yacc.c  */
 #line 424 "parser.y"
     {
         bx_dbg_continue_command();
@@ -2531,6 +2625,8 @@ yyreduce:
     break;
 
   case 94:
+
+/* Line 1464 of yacc.c  */
 #line 432 "parser.y"
     {
         bx_dbg_stepN_command(dbg_cpu, 1);
@@ -2539,6 +2635,8 @@ yyreduce:
     break;
 
   case 95:
+
+/* Line 1464 of yacc.c  */
 #line 437 "parser.y"
     {
         bx_dbg_stepN_command(dbg_cpu, (yyvsp[(2) - (3)].uval));
@@ -2547,6 +2645,8 @@ yyreduce:
     break;
 
   case 96:
+
+/* Line 1464 of yacc.c  */
 #line 442 "parser.y"
     {
         bx_dbg_stepN_command(-1, (yyvsp[(3) - (4)].uval));
@@ -2555,6 +2655,8 @@ yyreduce:
     break;
 
   case 97:
+
+/* Line 1464 of yacc.c  */
 #line 447 "parser.y"
     {
         bx_dbg_stepN_command((yyvsp[(2) - (4)].uval), (yyvsp[(3) - (4)].uval));
@@ -2563,6 +2665,8 @@ yyreduce:
     break;
 
   case 98:
+
+/* Line 1464 of yacc.c  */
 #line 455 "parser.y"
     {
         bx_dbg_step_over_command();
@@ -2571,6 +2675,8 @@ yyreduce:
     break;
 
   case 99:
+
+/* Line 1464 of yacc.c  */
 #line 463 "parser.y"
     {
         bx_dbg_set_auto_disassemble((yyvsp[(3) - (4)].bval));
@@ -2579,6 +2685,8 @@ yyreduce:
     break;
 
   case 100:
+
+/* Line 1464 of yacc.c  */
 #line 468 "parser.y"
     {
         bx_dbg_set_symbol_command((yyvsp[(2) - (5)].sval), (yyvsp[(4) - (5)].uval));
@@ -2587,6 +2695,8 @@ yyreduce:
     break;
 
   case 101:
+
+/* Line 1464 of yacc.c  */
 #line 473 "parser.y"
     { 
         bx_dbg_set_reg8l_value((yyvsp[(2) - (5)].uval), (yyvsp[(4) - (5)].uval));
@@ -2594,6 +2704,8 @@ yyreduce:
     break;
 
   case 102:
+
+/* Line 1464 of yacc.c  */
 #line 477 "parser.y"
     { 
         bx_dbg_set_reg8h_value((yyvsp[(2) - (5)].uval), (yyvsp[(4) - (5)].uval));
@@ -2601,6 +2713,8 @@ yyreduce:
     break;
 
   case 103:
+
+/* Line 1464 of yacc.c  */
 #line 481 "parser.y"
     { 
         bx_dbg_set_reg16_value((yyvsp[(2) - (5)].uval), (yyvsp[(4) - (5)].uval));
@@ -2608,6 +2722,8 @@ yyreduce:
     break;
 
   case 104:
+
+/* Line 1464 of yacc.c  */
 #line 485 "parser.y"
     { 
         bx_dbg_set_reg32_value((yyvsp[(2) - (5)].uval), (yyvsp[(4) - (5)].uval));
@@ -2615,6 +2731,8 @@ yyreduce:
     break;
 
   case 105:
+
+/* Line 1464 of yacc.c  */
 #line 489 "parser.y"
     { 
         bx_dbg_set_reg64_value((yyvsp[(2) - (5)].uval), (yyvsp[(4) - (5)].uval));
@@ -2622,6 +2740,8 @@ yyreduce:
     break;
 
   case 106:
+
+/* Line 1464 of yacc.c  */
 #line 493 "parser.y"
     { 
         bx_dbg_load_segreg((yyvsp[(2) - (5)].uval), (yyvsp[(4) - (5)].uval));
@@ -2629,6 +2749,8 @@ yyreduce:
     break;
 
   case 107:
+
+/* Line 1464 of yacc.c  */
 #line 500 "parser.y"
     {
         bx_dbg_vbreakpoint_command(bkAtIP, 0, 0);
@@ -2637,6 +2759,8 @@ yyreduce:
     break;
 
   case 108:
+
+/* Line 1464 of yacc.c  */
 #line 505 "parser.y"
     {
         bx_dbg_vbreakpoint_command(bkRegular, (yyvsp[(2) - (5)].uval), (yyvsp[(4) - (5)].uval));
@@ -2645,6 +2769,8 @@ yyreduce:
     break;
 
   case 109:
+
+/* Line 1464 of yacc.c  */
 #line 510 "parser.y"
     {
         bx_dbg_lbreakpoint_command(bkAtIP, 0);
@@ -2653,6 +2779,8 @@ yyreduce:
     break;
 
   case 110:
+
+/* Line 1464 of yacc.c  */
 #line 515 "parser.y"
     {
         bx_dbg_lbreakpoint_command(bkRegular, (yyvsp[(2) - (3)].uval));
@@ -2661,6 +2789,8 @@ yyreduce:
     break;
 
   case 111:
+
+/* Line 1464 of yacc.c  */
 #line 520 "parser.y"
     {
         bx_dbg_lbreakpoint_symbol_command((yyvsp[(2) - (3)].sval));
@@ -2669,6 +2799,8 @@ yyreduce:
     break;
 
   case 112:
+
+/* Line 1464 of yacc.c  */
 #line 525 "parser.y"
     {
         bx_dbg_pbreakpoint_command(bkAtIP, 0);
@@ -2677,6 +2809,8 @@ yyreduce:
     break;
 
   case 113:
+
+/* Line 1464 of yacc.c  */
 #line 530 "parser.y"
     {
         bx_dbg_pbreakpoint_command(bkRegular, (yyvsp[(2) - (3)].uval));
@@ -2685,6 +2819,8 @@ yyreduce:
     break;
 
   case 114:
+
+/* Line 1464 of yacc.c  */
 #line 535 "parser.y"
     {
         bx_dbg_pbreakpoint_command(bkRegular, (yyvsp[(3) - (4)].uval));
@@ -2693,6 +2829,8 @@ yyreduce:
     break;
 
   case 115:
+
+/* Line 1464 of yacc.c  */
 #line 543 "parser.y"
     {
         bx_dbg_info_bpoints_command();
@@ -2701,6 +2839,8 @@ yyreduce:
     break;
 
   case 116:
+
+/* Line 1464 of yacc.c  */
 #line 551 "parser.y"
     {
         bx_dbg_info_symbols_command(0);
@@ -2709,6 +2849,8 @@ yyreduce:
     break;
 
   case 117:
+
+/* Line 1464 of yacc.c  */
 #line 556 "parser.y"
     {
         bx_dbg_info_symbols_command((yyvsp[(2) - (3)].sval));
@@ -2717,6 +2859,8 @@ yyreduce:
     break;
 
   case 118:
+
+/* Line 1464 of yacc.c  */
 #line 564 "parser.y"
     {
         bx_dbg_info_bpoints_command();
@@ -2725,6 +2869,8 @@ yyreduce:
     break;
 
   case 119:
+
+/* Line 1464 of yacc.c  */
 #line 569 "parser.y"
     {
         bx_dbg_info_registers_command(BX_INFO_GENERAL_PURPOSE_REGS | BX_INFO_FPU_REGS | BX_INFO_SSE_REGS);
@@ -2733,6 +2879,8 @@ yyreduce:
     break;
 
   case 120:
+
+/* Line 1464 of yacc.c  */
 #line 574 "parser.y"
     {
         bx_dbg_info_idt_command((yyvsp[(3) - (5)].uval), (yyvsp[(4) - (5)].uval));
@@ -2741,6 +2889,8 @@ yyreduce:
     break;
 
   case 121:
+
+/* Line 1464 of yacc.c  */
 #line 579 "parser.y"
     {
         bx_dbg_info_ivt_command((yyvsp[(3) - (5)].uval), (yyvsp[(4) - (5)].uval));
@@ -2749,6 +2899,8 @@ yyreduce:
     break;
 
   case 122:
+
+/* Line 1464 of yacc.c  */
 #line 584 "parser.y"
     {
         bx_dbg_info_gdt_command((yyvsp[(3) - (5)].uval), (yyvsp[(4) - (5)].uval));
@@ -2757,6 +2909,8 @@ yyreduce:
     break;
 
   case 123:
+
+/* Line 1464 of yacc.c  */
 #line 589 "parser.y"
     {
         bx_dbg_info_ldt_command((yyvsp[(3) - (5)].uval), (yyvsp[(4) - (5)].uval));
@@ -2765,6 +2919,8 @@ yyreduce:
     break;
 
   case 124:
+
+/* Line 1464 of yacc.c  */
 #line 594 "parser.y"
     {
         bx_dbg_dump_table();
@@ -2773,6 +2929,8 @@ yyreduce:
     break;
 
   case 125:
+
+/* Line 1464 of yacc.c  */
 #line 599 "parser.y"
     {
         bx_dbg_info_tss_command();
@@ -2781,6 +2939,8 @@ yyreduce:
     break;
 
   case 126:
+
+/* Line 1464 of yacc.c  */
 #line 604 "parser.y"
     {
         bx_dbg_info_flags();
@@ -2789,6 +2949,8 @@ yyreduce:
     break;
 
   case 127:
+
+/* Line 1464 of yacc.c  */
 #line 609 "parser.y"
     {
         bx_dbg_info_linux_command();
@@ -2797,6 +2959,8 @@ yyreduce:
     break;
 
   case 128:
+
+/* Line 1464 of yacc.c  */
 #line 614 "parser.y"
     {
         bx_dbg_info_symbols_command(0);
@@ -2805,6 +2969,8 @@ yyreduce:
     break;
 
   case 129:
+
+/* Line 1464 of yacc.c  */
 #line 619 "parser.y"
     {
         bx_dbg_info_symbols_command((yyvsp[(3) - (4)].sval));
@@ -2813,6 +2979,8 @@ yyreduce:
     break;
 
   case 130:
+
+/* Line 1464 of yacc.c  */
 #line 624 "parser.y"
     {
         bx_dbg_info_ne2k(-1, -1);
@@ -2821,6 +2989,8 @@ yyreduce:
     break;
 
   case 131:
+
+/* Line 1464 of yacc.c  */
 #line 629 "parser.y"
     {
         free((yyvsp[(1) - (5)].sval)); free((yyvsp[(2) - (5)].sval)); free((yyvsp[(3) - (5)].sval));
@@ -2829,6 +2999,8 @@ yyreduce:
     break;
 
   case 132:
+
+/* Line 1464 of yacc.c  */
 #line 634 "parser.y"
     {
         free((yyvsp[(1) - (7)].sval)); free((yyvsp[(2) - (7)].sval)); free((yyvsp[(3) - (7)].sval)); free((yyvsp[(5) - (7)].sval));
@@ -2837,6 +3009,8 @@ yyreduce:
     break;
 
   case 133:
+
+/* Line 1464 of yacc.c  */
 #line 639 "parser.y"
     {
         bx_dbg_info_pic();
@@ -2845,6 +3019,8 @@ yyreduce:
     break;
 
   case 134:
+
+/* Line 1464 of yacc.c  */
 #line 644 "parser.y"
     {
         bx_dbg_info_vga();
@@ -2853,6 +3029,8 @@ yyreduce:
     break;
 
   case 135:
+
+/* Line 1464 of yacc.c  */
 #line 649 "parser.y"
     {
         bx_dbg_info_pci();
@@ -2861,11 +3039,15 @@ yyreduce:
     break;
 
   case 136:
+
+/* Line 1464 of yacc.c  */
 #line 656 "parser.y"
     { (yyval.uval) = EMPTY_ARG; }
     break;
 
   case 138:
+
+/* Line 1464 of yacc.c  */
 #line 661 "parser.y"
     {
         bx_dbg_info_registers_command(BX_INFO_GENERAL_PURPOSE_REGS);
@@ -2874,6 +3056,8 @@ yyreduce:
     break;
 
   case 139:
+
+/* Line 1464 of yacc.c  */
 #line 669 "parser.y"
     {
         bx_dbg_info_registers_command(BX_INFO_FPU_REGS);
@@ -2882,6 +3066,8 @@ yyreduce:
     break;
 
   case 140:
+
+/* Line 1464 of yacc.c  */
 #line 677 "parser.y"
     {
         bx_dbg_info_registers_command(BX_INFO_MMX_REGS);
@@ -2890,6 +3076,8 @@ yyreduce:
     break;
 
   case 141:
+
+/* Line 1464 of yacc.c  */
 #line 685 "parser.y"
     {
         bx_dbg_info_registers_command(BX_INFO_SSE_REGS);
@@ -2898,6 +3086,8 @@ yyreduce:
     break;
 
   case 142:
+
+/* Line 1464 of yacc.c  */
 #line 693 "parser.y"
     {
         bx_dbg_info_segment_regs_command();
@@ -2906,6 +3096,8 @@ yyreduce:
     break;
 
   case 143:
+
+/* Line 1464 of yacc.c  */
 #line 701 "parser.y"
     {
         bx_dbg_info_control_regs_command();
@@ -2914,6 +3106,8 @@ yyreduce:
     break;
 
   case 144:
+
+/* Line 1464 of yacc.c  */
 #line 709 "parser.y"
     {
         bx_dbg_info_debug_regs_command();
@@ -2922,6 +3116,8 @@ yyreduce:
     break;
 
   case 145:
+
+/* Line 1464 of yacc.c  */
 #line 717 "parser.y"
     {
         bx_dbg_del_breakpoint_command((yyvsp[(2) - (3)].uval));
@@ -2930,6 +3126,8 @@ yyreduce:
     break;
 
   case 146:
+
+/* Line 1464 of yacc.c  */
 #line 725 "parser.y"
     {
         bx_dbg_en_dis_breakpoint_command((yyvsp[(2) - (3)].uval), 1);
@@ -2938,6 +3136,8 @@ yyreduce:
     break;
 
   case 147:
+
+/* Line 1464 of yacc.c  */
 #line 732 "parser.y"
     {
         bx_dbg_en_dis_breakpoint_command((yyvsp[(2) - (3)].uval), 0);
@@ -2946,6 +3146,8 @@ yyreduce:
     break;
 
   case 148:
+
+/* Line 1464 of yacc.c  */
 #line 740 "parser.y"
     {
         bx_dbg_quit_command();
@@ -2954,6 +3156,8 @@ yyreduce:
     break;
 
   case 149:
+
+/* Line 1464 of yacc.c  */
 #line 748 "parser.y"
     {
         bx_dbg_examine_command((yyvsp[(1) - (4)].sval), (yyvsp[(2) - (4)].sval),1, (yyvsp[(3) - (4)].uval), 1);
@@ -2962,6 +3166,8 @@ yyreduce:
     break;
 
   case 150:
+
+/* Line 1464 of yacc.c  */
 #line 753 "parser.y"
     {
         bx_dbg_examine_command((yyvsp[(1) - (3)].sval), (yyvsp[(2) - (3)].sval),1, 0, 0);
@@ -2970,6 +3176,8 @@ yyreduce:
     break;
 
   case 151:
+
+/* Line 1464 of yacc.c  */
 #line 758 "parser.y"
     {
         bx_dbg_examine_command((yyvsp[(1) - (3)].sval), NULL,0, (yyvsp[(2) - (3)].uval), 1);
@@ -2978,6 +3186,8 @@ yyreduce:
     break;
 
   case 152:
+
+/* Line 1464 of yacc.c  */
 #line 763 "parser.y"
     {
         bx_dbg_examine_command((yyvsp[(1) - (2)].sval), NULL,0, 0, 0);
@@ -2986,6 +3196,8 @@ yyreduce:
     break;
 
   case 153:
+
+/* Line 1464 of yacc.c  */
 #line 771 "parser.y"
     {
         bx_dbg_restore_command((yyvsp[(2) - (4)].sval), (yyvsp[(3) - (4)].sval));
@@ -2994,6 +3206,8 @@ yyreduce:
     break;
 
   case 154:
+
+/* Line 1464 of yacc.c  */
 #line 779 "parser.y"
     {
         bx_dbg_setpmem_command((yyvsp[(2) - (5)].uval), (yyvsp[(3) - (5)].uval), (yyvsp[(4) - (5)].uval));
@@ -3002,6 +3216,8 @@ yyreduce:
     break;
 
   case 155:
+
+/* Line 1464 of yacc.c  */
 #line 787 "parser.y"
     {
         bx_dbg_query_command((yyvsp[(2) - (3)].sval));
@@ -3010,6 +3226,8 @@ yyreduce:
     break;
 
   case 156:
+
+/* Line 1464 of yacc.c  */
 #line 795 "parser.y"
     {
         bx_dbg_take_command((yyvsp[(2) - (3)].sval), 1);
@@ -3018,6 +3236,8 @@ yyreduce:
     break;
 
   case 157:
+
+/* Line 1464 of yacc.c  */
 #line 800 "parser.y"
     {
         bx_dbg_take_command((yyvsp[(2) - (4)].sval), (yyvsp[(3) - (4)].uval));
@@ -3026,6 +3246,8 @@ yyreduce:
     break;
 
   case 158:
+
+/* Line 1464 of yacc.c  */
 #line 805 "parser.y"
     {
         bx_dbg_take_command((yyvsp[(2) - (3)].sval), 1);
@@ -3034,6 +3256,8 @@ yyreduce:
     break;
 
   case 159:
+
+/* Line 1464 of yacc.c  */
 #line 813 "parser.y"
     {
         bx_dbg_disassemble_current(NULL);
@@ -3042,6 +3266,8 @@ yyreduce:
     break;
 
   case 160:
+
+/* Line 1464 of yacc.c  */
 #line 818 "parser.y"
     {
         bx_dbg_disassemble_command(NULL, (yyvsp[(2) - (3)].uval), (yyvsp[(2) - (3)].uval));
@@ -3050,6 +3276,8 @@ yyreduce:
     break;
 
   case 161:
+
+/* Line 1464 of yacc.c  */
 #line 823 "parser.y"
     {
         bx_dbg_disassemble_command(NULL, (yyvsp[(2) - (4)].uval), (yyvsp[(3) - (4)].uval));
@@ -3058,6 +3286,8 @@ yyreduce:
     break;
 
   case 162:
+
+/* Line 1464 of yacc.c  */
 #line 828 "parser.y"
     {
         bx_dbg_disassemble_current((yyvsp[(2) - (3)].sval));
@@ -3066,6 +3296,8 @@ yyreduce:
     break;
 
   case 163:
+
+/* Line 1464 of yacc.c  */
 #line 833 "parser.y"
     {
         bx_dbg_disassemble_command((yyvsp[(2) - (4)].sval), (yyvsp[(3) - (4)].uval), (yyvsp[(3) - (4)].uval));
@@ -3074,6 +3306,8 @@ yyreduce:
     break;
 
   case 164:
+
+/* Line 1464 of yacc.c  */
 #line 838 "parser.y"
     {
         bx_dbg_disassemble_command((yyvsp[(2) - (5)].sval), (yyvsp[(3) - (5)].uval), (yyvsp[(4) - (5)].uval));
@@ -3082,6 +3316,8 @@ yyreduce:
     break;
 
   case 165:
+
+/* Line 1464 of yacc.c  */
 #line 843 "parser.y"
     {
         bx_dbg_disassemble_switch_mode();
@@ -3090,6 +3326,8 @@ yyreduce:
     break;
 
   case 166:
+
+/* Line 1464 of yacc.c  */
 #line 848 "parser.y"
     {
         bx_dbg_disassemble_hex_mode_switch((yyvsp[(3) - (4)].bval));
@@ -3098,6 +3336,8 @@ yyreduce:
     break;
 
   case 167:
+
+/* Line 1464 of yacc.c  */
 #line 853 "parser.y"
     {
         bx_dbg_set_disassemble_size((yyvsp[(4) - (5)].uval));
@@ -3106,6 +3346,8 @@ yyreduce:
     break;
 
   case 168:
+
+/* Line 1464 of yacc.c  */
 #line 861 "parser.y"
     {
         bx_dbg_instrument_command((yyvsp[(2) - (3)].sval));
@@ -3114,6 +3356,8 @@ yyreduce:
     break;
 
   case 169:
+
+/* Line 1464 of yacc.c  */
 #line 866 "parser.y"
     {
         bx_dbg_instrument_command((yyvsp[(2) - (3)].sval));
@@ -3122,6 +3366,8 @@ yyreduce:
     break;
 
   case 170:
+
+/* Line 1464 of yacc.c  */
 #line 874 "parser.y"
     {
         bx_dbg_doit_command((yyvsp[(2) - (3)].uval));
@@ -3130,6 +3376,8 @@ yyreduce:
     break;
 
   case 171:
+
+/* Line 1464 of yacc.c  */
 #line 882 "parser.y"
     {
         bx_dbg_crc_command((yyvsp[(2) - (4)].uval), (yyvsp[(3) - (4)].uval));
@@ -3138,6 +3386,8 @@ yyreduce:
     break;
 
   case 172:
+
+/* Line 1464 of yacc.c  */
 #line 890 "parser.y"
     {
          dbg_printf("q|quit|exit - quit debugger and emulator execution\n");
@@ -3146,6 +3396,8 @@ yyreduce:
     break;
 
   case 173:
+
+/* Line 1464 of yacc.c  */
 #line 895 "parser.y"
     {
          dbg_printf("c|cont|continue - continue executing\n");
@@ -3154,6 +3406,8 @@ yyreduce:
     break;
 
   case 174:
+
+/* Line 1464 of yacc.c  */
 #line 900 "parser.y"
     {
          dbg_printf("s|step [count] - execute #count instructions on current processor (default is one instruction)\n");
@@ -3164,6 +3418,8 @@ yyreduce:
     break;
 
   case 175:
+
+/* Line 1464 of yacc.c  */
 #line 907 "parser.y"
     {
          dbg_printf("n|next|p - execute instruction stepping over subroutines\n");
@@ -3172,6 +3428,8 @@ yyreduce:
     break;
 
   case 176:
+
+/* Line 1464 of yacc.c  */
 #line 912 "parser.y"
     {
          dbg_printf("vb|vbreak <seg:offset> - set a virtual address instruction breakpoint\n");
@@ -3180,6 +3438,8 @@ yyreduce:
     break;
 
   case 177:
+
+/* Line 1464 of yacc.c  */
 #line 917 "parser.y"
     {
          dbg_printf("lb|lbreak <addr> - set a linear address instruction breakpoint\n");
@@ -3188,6 +3448,8 @@ yyreduce:
     break;
 
   case 178:
+
+/* Line 1464 of yacc.c  */
 #line 922 "parser.y"
     {
          dbg_printf("p|pb|break|pbreak <addr> - set a physical address instruction breakpoint\n");
@@ -3196,6 +3458,8 @@ yyreduce:
     break;
 
   case 179:
+
+/* Line 1464 of yacc.c  */
 #line 927 "parser.y"
     {
          dbg_printf("d|del|delete <n> - delete a breakpoint\n");
@@ -3204,6 +3468,8 @@ yyreduce:
     break;
 
   case 180:
+
+/* Line 1464 of yacc.c  */
 #line 932 "parser.y"
     {
          dbg_printf("bpe <n> - enable a breakpoint\n");
@@ -3212,6 +3478,8 @@ yyreduce:
     break;
 
   case 181:
+
+/* Line 1464 of yacc.c  */
 #line 937 "parser.y"
     {
          dbg_printf("bpd <n> - disable a breakpoint\n");
@@ -3220,6 +3488,8 @@ yyreduce:
     break;
 
   case 182:
+
+/* Line 1464 of yacc.c  */
 #line 942 "parser.y"
     {
          dbg_printf("blist - list all breakpoints (same as 'info break')\n");
@@ -3228,6 +3498,8 @@ yyreduce:
     break;
 
   case 183:
+
+/* Line 1464 of yacc.c  */
 #line 947 "parser.y"
     {
          dbg_printf("modebp - toggles mode switch breakpoint\n");
@@ -3236,6 +3508,8 @@ yyreduce:
     break;
 
   case 184:
+
+/* Line 1464 of yacc.c  */
 #line 952 "parser.y"
     {
          dbg_printf("crc <addr1> <addr2> - show CRC32 for physical memory range addr1..addr2\n");
@@ -3244,6 +3518,8 @@ yyreduce:
     break;
 
   case 185:
+
+/* Line 1464 of yacc.c  */
 #line 957 "parser.y"
     {
          dbg_printf("trace on  - print disassembly for every executed instruction\n");
@@ -3253,6 +3529,8 @@ yyreduce:
     break;
 
   case 186:
+
+/* Line 1464 of yacc.c  */
 #line 963 "parser.y"
     {
          dbg_printf("trace-reg on  - print all registers before every executed instruction\n");
@@ -3262,6 +3540,8 @@ yyreduce:
     break;
 
   case 187:
+
+/* Line 1464 of yacc.c  */
 #line 969 "parser.y"
     {
          dbg_printf("trace-mem on  - print all memory accesses occured during instruction execution\n");
@@ -3271,6 +3551,8 @@ yyreduce:
     break;
 
   case 188:
+
+/* Line 1464 of yacc.c  */
 #line 975 "parser.y"
     {
          dbg_printf("restore <param_name> [path] - restore bochs root param from the file\n");
@@ -3282,6 +3564,8 @@ yyreduce:
     break;
 
   case 189:
+
+/* Line 1464 of yacc.c  */
 #line 983 "parser.y"
     {
          dbg_printf("ptime - print current time (number of ticks since start of simulation)\n");
@@ -3290,6 +3574,8 @@ yyreduce:
     break;
 
   case 190:
+
+/* Line 1464 of yacc.c  */
 #line 988 "parser.y"
     {
          dbg_printf("sb <delta> - insert a time breakpoint delta instructions into the future\n");
@@ -3298,6 +3584,8 @@ yyreduce:
     break;
 
   case 191:
+
+/* Line 1464 of yacc.c  */
 #line 993 "parser.y"
     {
          dbg_printf("sba <time> - insert breakpoint at specific time\n");
@@ -3306,6 +3594,8 @@ yyreduce:
     break;
 
   case 192:
+
+/* Line 1464 of yacc.c  */
 #line 998 "parser.y"
     {
          dbg_printf("print-stack [num_words] - print the num_words top 16 bit words on the stack\n");
@@ -3314,6 +3604,8 @@ yyreduce:
     break;
 
   case 193:
+
+/* Line 1464 of yacc.c  */
 #line 1003 "parser.y"
     {
          dbg_printf("record <filename> - record console input to file filename\n");
@@ -3322,6 +3614,8 @@ yyreduce:
     break;
 
   case 194:
+
+/* Line 1464 of yacc.c  */
 #line 1008 "parser.y"
     {
          dbg_printf("playback <filename> - playback console input from file filename\n");
@@ -3330,6 +3624,8 @@ yyreduce:
     break;
 
   case 195:
+
+/* Line 1464 of yacc.c  */
 #line 1013 "parser.y"
     {
          dbg_printf("ldsym [global] <filename> [offset] - load symbols from file\n");
@@ -3338,6 +3634,8 @@ yyreduce:
     break;
 
   case 196:
+
+/* Line 1464 of yacc.c  */
 #line 1018 "parser.y"
     {
          dbg_printf("slist [string] - list symbols whose preffix is string (same as 'info symbols')\n");
@@ -3346,6 +3644,8 @@ yyreduce:
     break;
 
   case 197:
+
+/* Line 1464 of yacc.c  */
 #line 1023 "parser.y"
     {
          dbg_printf("r|reg|regs|registers - list of CPU registers and their contents (same as 'info registers')\n");
@@ -3354,6 +3654,8 @@ yyreduce:
     break;
 
   case 198:
+
+/* Line 1464 of yacc.c  */
 #line 1028 "parser.y"
     {
          dbg_printf("fp|fpu - print FPU state\n");
@@ -3362,6 +3664,8 @@ yyreduce:
     break;
 
   case 199:
+
+/* Line 1464 of yacc.c  */
 #line 1033 "parser.y"
     {
          dbg_printf("mmx - print MMX state\n");
@@ -3370,6 +3674,8 @@ yyreduce:
     break;
 
   case 200:
+
+/* Line 1464 of yacc.c  */
 #line 1038 "parser.y"
     {
          dbg_printf("sse|xmm - print SSE state\n");
@@ -3378,6 +3684,8 @@ yyreduce:
     break;
 
   case 201:
+
+/* Line 1464 of yacc.c  */
 #line 1043 "parser.y"
     {
          dbg_printf("sreg - show segment registers\n");
@@ -3386,6 +3694,8 @@ yyreduce:
     break;
 
   case 202:
+
+/* Line 1464 of yacc.c  */
 #line 1048 "parser.y"
     {
          dbg_printf("creg - show control registers\n");
@@ -3394,6 +3704,8 @@ yyreduce:
     break;
 
   case 203:
+
+/* Line 1464 of yacc.c  */
 #line 1053 "parser.y"
     {
          dbg_printf("dreg - show debug registers\n");
@@ -3402,6 +3714,8 @@ yyreduce:
     break;
 
   case 204:
+
+/* Line 1464 of yacc.c  */
 #line 1058 "parser.y"
     {
          dbg_printf("setpmem <addr> <datasize> <val> - set physical memory location of size 'datasize' to value 'val'\n");
@@ -3410,6 +3724,8 @@ yyreduce:
     break;
 
   case 205:
+
+/* Line 1464 of yacc.c  */
 #line 1063 "parser.y"
     {
          dbg_printf("u|disasm [/count] <start> <end> - disassemble instructions for given linear address\n");
@@ -3423,6 +3739,8 @@ yyreduce:
     break;
 
   case 206:
+
+/* Line 1464 of yacc.c  */
 #line 1073 "parser.y"
     {
          dbg_printf("watch - print current watch point status\n");
@@ -3437,6 +3755,8 @@ yyreduce:
     break;
 
   case 207:
+
+/* Line 1464 of yacc.c  */
 #line 1084 "parser.y"
     {
          dbg_printf("unwatch      - remove all watch points\n");
@@ -3446,6 +3766,8 @@ yyreduce:
     break;
 
   case 208:
+
+/* Line 1464 of yacc.c  */
 #line 1090 "parser.y"
     {
          dbg_printf("x  /nuf <addr> - examine memory at linear address\n");
@@ -3462,6 +3784,8 @@ yyreduce:
     break;
 
   case 209:
+
+/* Line 1464 of yacc.c  */
 #line 1103 "parser.y"
     {
          dbg_printf("instrument <command> - calls BX_INSTR_DEBUG_CMD instrumentation callback with <command>\n");
@@ -3470,6 +3794,8 @@ yyreduce:
     break;
 
   case 210:
+
+/* Line 1464 of yacc.c  */
 #line 1108 "parser.y"
     {
          dbg_printf("set <regname> = <expr> - set register value to expression\n");
@@ -3483,6 +3809,8 @@ yyreduce:
     break;
 
   case 211:
+
+/* Line 1464 of yacc.c  */
 #line 1118 "parser.y"
     {
          dbg_printf("page <laddr> - show linear to physical xlation for linear address laddr\n");
@@ -3491,6 +3819,8 @@ yyreduce:
     break;
 
   case 212:
+
+/* Line 1464 of yacc.c  */
 #line 1123 "parser.y"
     {
          dbg_printf("info break - show information about current breakpoint status\n");
@@ -3510,6 +3840,8 @@ yyreduce:
     break;
 
   case 213:
+
+/* Line 1464 of yacc.c  */
 #line 1139 "parser.y"
     {
          dbg_printf("show <command> - toggles show symbolic info (calls to begin with)\n");
@@ -3525,6 +3857,8 @@ yyreduce:
     break;
 
   case 214:
+
+/* Line 1464 of yacc.c  */
 #line 1151 "parser.y"
     {
          dbg_printf("calc|? <expr> - calculate a expression and display the result.\n");
@@ -3538,6 +3872,8 @@ yyreduce:
     break;
 
   case 215:
+
+/* Line 1464 of yacc.c  */
 #line 1161 "parser.y"
     {
          bx_dbg_print_help();
@@ -3546,6 +3882,8 @@ yyreduce:
     break;
 
   case 216:
+
+/* Line 1464 of yacc.c  */
 #line 1166 "parser.y"
     {
          bx_dbg_print_help();
@@ -3554,6 +3892,8 @@ yyreduce:
     break;
 
   case 217:
+
+/* Line 1464 of yacc.c  */
 #line 1174 "parser.y"
     {
      bx_dbg_calc_command((yyvsp[(2) - (3)].uval));
@@ -3562,253 +3902,352 @@ yyreduce:
     break;
 
   case 218:
+
+/* Line 1464 of yacc.c  */
 #line 1191 "parser.y"
     { (yyval.uval) = (yyvsp[(1) - (1)].uval); }
     break;
 
   case 219:
+
+/* Line 1464 of yacc.c  */
 #line 1192 "parser.y"
     { (yyval.uval) = bx_dbg_get_symbol_value((yyvsp[(1) - (1)].sval)); free((yyvsp[(1) - (1)].sval));}
     break;
 
   case 220:
+
+/* Line 1464 of yacc.c  */
 #line 1193 "parser.y"
     { (yyval.uval) = bx_dbg_get_reg8l_value((yyvsp[(1) - (1)].uval)); }
     break;
 
   case 221:
+
+/* Line 1464 of yacc.c  */
 #line 1194 "parser.y"
     { (yyval.uval) = bx_dbg_get_reg8h_value((yyvsp[(1) - (1)].uval)); }
     break;
 
   case 222:
+
+/* Line 1464 of yacc.c  */
 #line 1195 "parser.y"
     { (yyval.uval) = bx_dbg_get_reg16_value((yyvsp[(1) - (1)].uval)); }
     break;
 
   case 223:
+
+/* Line 1464 of yacc.c  */
 #line 1196 "parser.y"
     { (yyval.uval) = bx_dbg_get_reg32_value((yyvsp[(1) - (1)].uval)); }
     break;
 
   case 224:
+
+/* Line 1464 of yacc.c  */
 #line 1197 "parser.y"
     { (yyval.uval) = bx_dbg_get_reg64_value((yyvsp[(1) - (1)].uval)); }
     break;
 
   case 225:
+
+/* Line 1464 of yacc.c  */
 #line 1198 "parser.y"
     { (yyval.uval) = bx_dbg_get_selector_value((yyvsp[(1) - (1)].uval)); }
     break;
 
   case 226:
+
+/* Line 1464 of yacc.c  */
 #line 1199 "parser.y"
     { (yyval.uval) = bx_dbg_get_ip (); }
     break;
 
   case 227:
+
+/* Line 1464 of yacc.c  */
 #line 1200 "parser.y"
     { (yyval.uval) = bx_dbg_get_eip(); }
     break;
 
   case 228:
+
+/* Line 1464 of yacc.c  */
 #line 1201 "parser.y"
     { (yyval.uval) = bx_dbg_get_instruction_pointer(); }
     break;
 
   case 229:
+
+/* Line 1464 of yacc.c  */
 #line 1202 "parser.y"
     { (yyval.uval) = (yyvsp[(1) - (3)].uval) + (yyvsp[(3) - (3)].uval); }
     break;
 
   case 230:
+
+/* Line 1464 of yacc.c  */
 #line 1203 "parser.y"
     { (yyval.uval) = (yyvsp[(1) - (3)].uval) - (yyvsp[(3) - (3)].uval); }
     break;
 
   case 231:
+
+/* Line 1464 of yacc.c  */
 #line 1204 "parser.y"
     { (yyval.uval) = (yyvsp[(1) - (3)].uval) * (yyvsp[(3) - (3)].uval); }
     break;
 
   case 232:
+
+/* Line 1464 of yacc.c  */
 #line 1205 "parser.y"
     { (yyval.uval) = (yyvsp[(1) - (3)].uval) / (yyvsp[(3) - (3)].uval); }
     break;
 
   case 233:
+
+/* Line 1464 of yacc.c  */
 #line 1206 "parser.y"
     { (yyval.uval) = (yyvsp[(1) - (3)].uval) >> (yyvsp[(3) - (3)].uval); }
     break;
 
   case 234:
+
+/* Line 1464 of yacc.c  */
 #line 1207 "parser.y"
     { (yyval.uval) = (yyvsp[(1) - (3)].uval) << (yyvsp[(3) - (3)].uval); }
     break;
 
   case 235:
+
+/* Line 1464 of yacc.c  */
 #line 1208 "parser.y"
     { (yyval.uval) = (yyvsp[(1) - (3)].uval) | (yyvsp[(3) - (3)].uval); }
     break;
 
   case 236:
+
+/* Line 1464 of yacc.c  */
 #line 1209 "parser.y"
     { (yyval.uval) = (yyvsp[(1) - (3)].uval) ^ (yyvsp[(3) - (3)].uval); }
     break;
 
   case 237:
+
+/* Line 1464 of yacc.c  */
 #line 1210 "parser.y"
     { (yyval.uval) = (yyvsp[(1) - (3)].uval) & (yyvsp[(3) - (3)].uval); }
     break;
 
   case 238:
+
+/* Line 1464 of yacc.c  */
 #line 1211 "parser.y"
     { (yyval.uval) = !(yyvsp[(2) - (2)].uval); }
     break;
 
   case 239:
+
+/* Line 1464 of yacc.c  */
 #line 1212 "parser.y"
     { (yyval.uval) = -(yyvsp[(2) - (2)].uval); }
     break;
 
   case 240:
+
+/* Line 1464 of yacc.c  */
 #line 1213 "parser.y"
     { (yyval.uval) = (yyvsp[(2) - (3)].uval); }
     break;
 
   case 241:
+
+/* Line 1464 of yacc.c  */
 #line 1219 "parser.y"
     { (yyval.uval) = (yyvsp[(1) - (1)].uval); }
     break;
 
   case 242:
+
+/* Line 1464 of yacc.c  */
 #line 1220 "parser.y"
     { (yyval.uval) = bx_dbg_get_symbol_value((yyvsp[(1) - (1)].sval)); free((yyvsp[(1) - (1)].sval));}
     break;
 
   case 243:
+
+/* Line 1464 of yacc.c  */
 #line 1221 "parser.y"
     { (yyval.uval) = bx_dbg_get_reg8l_value((yyvsp[(1) - (1)].uval)); }
     break;
 
   case 244:
+
+/* Line 1464 of yacc.c  */
 #line 1222 "parser.y"
     { (yyval.uval) = bx_dbg_get_reg8h_value((yyvsp[(1) - (1)].uval)); }
     break;
 
   case 245:
+
+/* Line 1464 of yacc.c  */
 #line 1223 "parser.y"
     { (yyval.uval) = bx_dbg_get_reg16_value((yyvsp[(1) - (1)].uval)); }
     break;
 
   case 246:
+
+/* Line 1464 of yacc.c  */
 #line 1224 "parser.y"
     { (yyval.uval) = bx_dbg_get_reg32_value((yyvsp[(1) - (1)].uval)); }
     break;
 
   case 247:
+
+/* Line 1464 of yacc.c  */
 #line 1225 "parser.y"
     { (yyval.uval) = bx_dbg_get_reg64_value((yyvsp[(1) - (1)].uval)); }
     break;
 
   case 248:
+
+/* Line 1464 of yacc.c  */
 #line 1226 "parser.y"
     { (yyval.uval) = bx_dbg_get_selector_value((yyvsp[(1) - (1)].uval)); }
     break;
 
   case 249:
+
+/* Line 1464 of yacc.c  */
 #line 1227 "parser.y"
     { (yyval.uval) = bx_dbg_get_ip (); }
     break;
 
   case 250:
+
+/* Line 1464 of yacc.c  */
 #line 1228 "parser.y"
     { (yyval.uval) = bx_dbg_get_eip(); }
     break;
 
   case 251:
+
+/* Line 1464 of yacc.c  */
 #line 1229 "parser.y"
     { (yyval.uval) = bx_dbg_get_instruction_pointer(); }
     break;
 
   case 252:
+
+/* Line 1464 of yacc.c  */
 #line 1230 "parser.y"
     { (yyval.uval) = bx_dbg_get_laddr ((yyvsp[(1) - (3)].uval), (yyvsp[(3) - (3)].uval)); }
     break;
 
   case 253:
+
+/* Line 1464 of yacc.c  */
 #line 1231 "parser.y"
     { (yyval.uval) = (yyvsp[(1) - (3)].uval) + (yyvsp[(3) - (3)].uval); }
     break;
 
   case 254:
+
+/* Line 1464 of yacc.c  */
 #line 1232 "parser.y"
     { (yyval.uval) = (yyvsp[(1) - (3)].uval) - (yyvsp[(3) - (3)].uval); }
     break;
 
   case 255:
+
+/* Line 1464 of yacc.c  */
 #line 1233 "parser.y"
     { (yyval.uval) = (yyvsp[(1) - (3)].uval) * (yyvsp[(3) - (3)].uval); }
     break;
 
   case 256:
+
+/* Line 1464 of yacc.c  */
 #line 1234 "parser.y"
     { (yyval.uval) = ((yyvsp[(3) - (3)].uval) != 0) ? (yyvsp[(1) - (3)].uval) / (yyvsp[(3) - (3)].uval) : 0; }
     break;
 
   case 257:
+
+/* Line 1464 of yacc.c  */
 #line 1235 "parser.y"
     { (yyval.uval) = (yyvsp[(1) - (3)].uval) >> (yyvsp[(3) - (3)].uval); }
     break;
 
   case 258:
+
+/* Line 1464 of yacc.c  */
 #line 1236 "parser.y"
     { (yyval.uval) = (yyvsp[(1) - (3)].uval) << (yyvsp[(3) - (3)].uval); }
     break;
 
   case 259:
+
+/* Line 1464 of yacc.c  */
 #line 1237 "parser.y"
     { (yyval.uval) = (yyvsp[(1) - (3)].uval) | (yyvsp[(3) - (3)].uval); }
     break;
 
   case 260:
+
+/* Line 1464 of yacc.c  */
 #line 1238 "parser.y"
     { (yyval.uval) = (yyvsp[(1) - (3)].uval) ^ (yyvsp[(3) - (3)].uval); }
     break;
 
   case 261:
+
+/* Line 1464 of yacc.c  */
 #line 1239 "parser.y"
     { (yyval.uval) = (yyvsp[(1) - (3)].uval) & (yyvsp[(3) - (3)].uval); }
     break;
 
   case 262:
+
+/* Line 1464 of yacc.c  */
 #line 1240 "parser.y"
     { (yyval.uval) = !(yyvsp[(2) - (2)].uval); }
     break;
 
   case 263:
+
+/* Line 1464 of yacc.c  */
 #line 1241 "parser.y"
     { (yyval.uval) = -(yyvsp[(2) - (2)].uval); }
     break;
 
   case 264:
+
+/* Line 1464 of yacc.c  */
 #line 1242 "parser.y"
     { (yyval.uval) = bx_dbg_lin_indirect((yyvsp[(2) - (2)].uval)); }
     break;
 
   case 265:
+
+/* Line 1464 of yacc.c  */
 #line 1243 "parser.y"
     { (yyval.uval) = bx_dbg_phy_indirect((yyvsp[(2) - (2)].uval)); }
     break;
 
   case 266:
+
+/* Line 1464 of yacc.c  */
 #line 1244 "parser.y"
     { (yyval.uval) = (yyvsp[(2) - (3)].uval); }
     break;
 
 
-/* Line 1267 of yacc.c.  */
-#line 3812 "y.tab.c"
+
+/* Line 1464 of yacc.c  */
+#line 4251 "y.tab.c"
       default: break;
     }
   YY_SYMBOL_PRINT ("-> $$ =", yyr1[yyn], &yyval, &yyloc);
@@ -3818,7 +4257,6 @@ yyreduce:
   YY_STACK_PRINT (yyss, yyssp);
 
   *++yyvsp = yyval;
-
 
   /* Now `shift' the result of the reduction.  Determine what state
      that goes to, based on the state we popped back to and the rule
@@ -3884,7 +4322,7 @@ yyerrlab:
 
   if (yyerrstatus == 3)
     {
-      /* If just tried and failed to reuse look-ahead token after an
+      /* If just tried and failed to reuse lookahead token after an
 	 error, discard it.  */
 
       if (yychar <= YYEOF)
@@ -3901,7 +4339,7 @@ yyerrlab:
 	}
     }
 
-  /* Else will try to reuse look-ahead token after shifting the error
+  /* Else will try to reuse lookahead token after shifting the error
      token.  */
   goto yyerrlab1;
 
@@ -3958,9 +4396,6 @@ yyerrlab1:
       YY_STACK_PRINT (yyss, yyssp);
     }
 
-  if (yyn == YYFINAL)
-    YYACCEPT;
-
   *++yyvsp = yylval;
 
 
@@ -3985,7 +4420,7 @@ yyabortlab:
   yyresult = 1;
   goto yyreturn;
 
-#ifndef yyoverflow
+#if !defined(yyoverflow) || YYERROR_VERBOSE
 /*-------------------------------------------------.
 | yyexhaustedlab -- memory exhaustion comes here.  |
 `-------------------------------------------------*/
@@ -3996,7 +4431,7 @@ yyexhaustedlab:
 #endif
 
 yyreturn:
-  if (yychar != YYEOF && yychar != YYEMPTY)
+  if (yychar != YYEMPTY)
      yydestruct ("Cleanup: discarding lookahead",
 		 yytoken, &yylval);
   /* Do not reclaim the symbols of the rule which action triggered
@@ -4022,6 +4457,8 @@ yyreturn:
 }
 
 
+
+/* Line 1684 of yacc.c  */
 #line 1247 "parser.y"
 
 
