@@ -163,6 +163,11 @@ void BX_CPU_C::initialize(void)
   load_MSRs(msrs_filename);
 #endif
 
+  // ignore bad MSRS if user asked for it
+#if BX_CPU_LEVEL >= 5
+  BX_CPU_THIS_PTR ignore_bad_msrs = SIM->get_param_bool(BXPN_IGNORE_BAD_MSRS)->get();
+#endif
+
   init_SMRAM();
 
 #if BX_SUPPORT_VMX
@@ -1049,11 +1054,6 @@ void BX_CPU_C::reset(unsigned source)
   // initialize CPUID values - make sure apicbase already initialized
 #if BX_CPU_LEVEL >= 4
   set_cpuid_defaults();
-#endif
-
-  // ignore bad MSRS if user asked for it
-#if BX_CPU_LEVEL >= 5
-  BX_CPU_THIS_PTR ignore_bad_msrs = SIM->get_param_bool(BXPN_IGNORE_BAD_MSRS)->get();
 #endif
 
   updateFetchModeMask();
