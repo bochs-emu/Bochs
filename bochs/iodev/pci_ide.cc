@@ -301,6 +301,14 @@ void bx_pci_ide_c::timer()
     BX_PIDE_THIS s.bmdma[channel].prd_current = 0;
     DEV_hd_bmdma_complete(channel);
   } else {
+    // To avoid buffer overflow reset buffer pointers and copy data if necessary
+    count = BX_PIDE_THIS s.bmdma[channel].buffer_top - BX_PIDE_THIS s.bmdma[channel].buffer_idx;
+    if (count > 0) {
+      memcpy(BX_PIDE_THIS s.bmdma[channel].buffer, BX_PIDE_THIS s.bmdma[channel].buffer_idx, count);
+    }
+    BX_PIDE_THIS s.bmdma[channel].buffer_top = BX_PIDE_THIS s.bmdma[channel].buffer + count;
+    BX_PIDE_THIS s.bmdma[channel].buffer_idx = BX_PIDE_THIS s.bmdma[channel].buffer;
+    // Prepare for next PRD
     BX_PIDE_THIS s.bmdma[channel].prd_current += 8;
     DEV_MEM_READ_PHYSICAL(BX_PIDE_THIS s.bmdma[channel].prd_current, 4, (Bit8u *)&prd.addr);
     DEV_MEM_READ_PHYSICAL(BX_PIDE_THIS s.bmdma[channel].prd_current+4, 4, (Bit8u *)&prd.size);
