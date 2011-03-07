@@ -5,13 +5,8 @@
 ICON_BOCHS ICON build\win32\nsis\logo.ico
 1 ICON build\win32\nsis\bochs.ico
 
-#ifndef _WIN64
-// Manifest for 32-bit Windows
-1 24 build\win32\bochs.win32.manifest
-#else
-// Manifest for 64-bit Windows
-1 24 build\win32\bochs.win64.manifest
-#endif
+// Manifest for both 32-bit and 64-bit Windows
+1 24 build\win32\bochs.manifest
 
 ASK_DLG DIALOG 30, 30, 200, 100
 STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU

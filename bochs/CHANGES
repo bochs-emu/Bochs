@@ -16,6 +16,9 @@ Bochs repository moved to the SVN version control !
 - SF patches applied
   [3190995] add eth backend based on Slirp by Heikki Lindholm
 
+- these S.F. bugs were closed/fixed
+  [3197425] Error compile with vmx in vs2008/2010 and for correct x64
+
 -------------------------------------------------------------------------
 Changes in 2.4.6 (February 22, 2011):
 
