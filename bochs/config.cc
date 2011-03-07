@@ -755,11 +755,7 @@ void bx_init_options()
                 "VGA Extension",
                 "Name of the VGA extension",
                 "none", BX_PATHNAME_LEN);
-#if BX_SUPPORT_VBE
   vga_extension->set_initial_val("vbe");
-#elif BX_SUPPORT_CLGD54XX
-  vga_extension->set_initial_val("cirrus");
-#endif
   display->set_options(display->SHOW_PARENT);
 
   // keyboard & mouse subtree

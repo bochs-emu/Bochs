@@ -1340,28 +1340,6 @@ AC_ARG_ENABLE(raw-serial,
     ]
   )
 
-AC_MSG_CHECKING(for VESA BIOS extensions)
-AC_ARG_ENABLE(vbe,
-  [  --enable-vbe                      use VESA BIOS extensions],
-  [if test "$enableval" = yes; then
-    AC_MSG_RESULT(yes)
-    AC_DEFINE(BX_SUPPORT_VBE, 1)
-    if test "$pci" = 1; then
-      AC_DEFINE(BX_SUPPORT_PCIVGA, 1)
-    fi
-   else
-    AC_MSG_RESULT(no)
-    AC_DEFINE(BX_SUPPORT_VBE, 0)
-   fi],
-  [
-    AC_MSG_RESULT(yes)
-    AC_DEFINE(BX_SUPPORT_VBE, 1)
-    if test "$pci" = 1; then
-      AC_DEFINE(BX_SUPPORT_PCIVGA, 1)
-    fi
-    ]
-  )
-
 AC_MSG_CHECKING(for CLGD54XX emulation)
 AC_ARG_ENABLE(clgd54xx,
   [  --enable-clgd54xx                 enable CLGD54XX emulation],
@@ -2788,6 +2766,16 @@ AC_ARG_ENABLE(vme,
   [  --enable-vme                      virtual 8086 mode extensions (deprecated)],
   [AC_MSG_RESULT($enableval)
    AC_MSG_ERROR([DEPRECATED - enabled automatically for CPU_LEVEL >= 5])
+  ],
+  [
+   AC_MSG_RESULT(no)
+  ])
+
+AC_MSG_CHECKING(for VESA BIOS extensions (deprecated))
+AC_ARG_ENABLE(vbe,
+  [  --enable-vbe                      use VESA BIOS extensions (deprecated)],
+  [AC_MSG_RESULT($enableval)
+   AC_MSG_ERROR([DEPRECATED - this feature always available with .bochsrc option])
   ],
   [
    AC_MSG_RESULT(no)

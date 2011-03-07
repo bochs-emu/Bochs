@@ -42,72 +42,63 @@
   (blue_mask)) \
 )
 
-#if BX_SUPPORT_VBE
-  #define VBE_DISPI_TOTAL_VIDEO_MEMORY_MB  16
-  #define VBE_DISPI_4BPP_PLANE_SHIFT       22
+// Bochs VBE definitions
 
-  #define VBE_DISPI_BANK_ADDRESS           0xA0000
-  #define VBE_DISPI_BANK_SIZE_KB           64
+#define VBE_DISPI_TOTAL_VIDEO_MEMORY_MB  16
+#define VBE_DISPI_4BPP_PLANE_SHIFT       22
 
-  #define VBE_DISPI_MAX_XRES               2560
-  #define VBE_DISPI_MAX_YRES               1600
-  #define VBE_DISPI_MAX_BPP                32
+#define VBE_DISPI_BANK_ADDRESS           0xA0000
+#define VBE_DISPI_BANK_SIZE_KB           64
 
-  #define VBE_DISPI_IOPORT_INDEX           0x01CE
-  #define VBE_DISPI_IOPORT_DATA            0x01CF
+#define VBE_DISPI_MAX_XRES               2560
+#define VBE_DISPI_MAX_YRES               1600
+#define VBE_DISPI_MAX_BPP                32
 
-  #define VBE_DISPI_INDEX_ID               0x0
-  #define VBE_DISPI_INDEX_XRES             0x1
-  #define VBE_DISPI_INDEX_YRES             0x2
-  #define VBE_DISPI_INDEX_BPP              0x3
-  #define VBE_DISPI_INDEX_ENABLE           0x4
-  #define VBE_DISPI_INDEX_BANK             0x5
-  #define VBE_DISPI_INDEX_VIRT_WIDTH       0x6
-  #define VBE_DISPI_INDEX_VIRT_HEIGHT      0x7
-  #define VBE_DISPI_INDEX_X_OFFSET         0x8
-  #define VBE_DISPI_INDEX_Y_OFFSET         0x9
-  #define VBE_DISPI_INDEX_VIDEO_MEMORY_64K 0xa
+#define VBE_DISPI_IOPORT_INDEX           0x01CE
+#define VBE_DISPI_IOPORT_DATA            0x01CF
 
-  #define VBE_DISPI_ID0                    0xB0C0
-  #define VBE_DISPI_ID1                    0xB0C1
-  #define VBE_DISPI_ID2                    0xB0C2
-  #define VBE_DISPI_ID3                    0xB0C3
-  #define VBE_DISPI_ID4                    0xB0C4
-  #define VBE_DISPI_ID5                    0xB0C5
+#define VBE_DISPI_INDEX_ID               0x0
+#define VBE_DISPI_INDEX_XRES             0x1
+#define VBE_DISPI_INDEX_YRES             0x2
+#define VBE_DISPI_INDEX_BPP              0x3
+#define VBE_DISPI_INDEX_ENABLE           0x4
+#define VBE_DISPI_INDEX_BANK             0x5
+#define VBE_DISPI_INDEX_VIRT_WIDTH       0x6
+#define VBE_DISPI_INDEX_VIRT_HEIGHT      0x7
+#define VBE_DISPI_INDEX_X_OFFSET         0x8
+#define VBE_DISPI_INDEX_Y_OFFSET         0x9
+#define VBE_DISPI_INDEX_VIDEO_MEMORY_64K 0xa
 
-  #define VBE_DISPI_BPP_4                  0x04
-  #define VBE_DISPI_BPP_8                  0x08
-  #define VBE_DISPI_BPP_15                 0x0F
-  #define VBE_DISPI_BPP_16                 0x10
-  #define VBE_DISPI_BPP_24                 0x18
-  #define VBE_DISPI_BPP_32                 0x20
+#define VBE_DISPI_ID0                    0xB0C0
+#define VBE_DISPI_ID1                    0xB0C1
+#define VBE_DISPI_ID2                    0xB0C2
+#define VBE_DISPI_ID3                    0xB0C3
+#define VBE_DISPI_ID4                    0xB0C4
+#define VBE_DISPI_ID5                    0xB0C5
 
-  #define VBE_DISPI_DISABLED               0x00
-  #define VBE_DISPI_ENABLED                0x01
-  #define VBE_DISPI_GETCAPS                0x02
-  #define VBE_DISPI_8BIT_DAC               0x20
-  #define VBE_DISPI_LFB_ENABLED            0x40
-  #define VBE_DISPI_NOCLEARMEM             0x80
+#define VBE_DISPI_BPP_4                  0x04
+#define VBE_DISPI_BPP_8                  0x08
+#define VBE_DISPI_BPP_15                 0x0F
+#define VBE_DISPI_BPP_16                 0x10
+#define VBE_DISPI_BPP_24                 0x18
+#define VBE_DISPI_BPP_32                 0x20
 
-  #define VBE_DISPI_LFB_PHYSICAL_ADDRESS   0xE0000000
+#define VBE_DISPI_DISABLED               0x00
+#define VBE_DISPI_ENABLED                0x01
+#define VBE_DISPI_GETCAPS                0x02
+#define VBE_DISPI_8BIT_DAC               0x20
+#define VBE_DISPI_LFB_ENABLED            0x40
+#define VBE_DISPI_NOCLEARMEM             0x80
 
-  #define VBE_DISPI_TOTAL_VIDEO_MEMORY_KB  (VBE_DISPI_TOTAL_VIDEO_MEMORY_MB * 1024)
-  #define VBE_DISPI_TOTAL_VIDEO_MEMORY_BYTES (VBE_DISPI_TOTAL_VIDEO_MEMORY_KB * 1024)
+#define VBE_DISPI_LFB_PHYSICAL_ADDRESS   0xE0000000
 
-  #define BX_MAX_XRES VBE_DISPI_MAX_XRES
-  #define BX_MAX_YRES VBE_DISPI_MAX_YRES
+#define VBE_DISPI_TOTAL_VIDEO_MEMORY_KB  (VBE_DISPI_TOTAL_VIDEO_MEMORY_MB * 1024)
+#define VBE_DISPI_TOTAL_VIDEO_MEMORY_BYTES (VBE_DISPI_TOTAL_VIDEO_MEMORY_KB * 1024)
 
-#elif BX_SUPPORT_CLGD54XX
+#define BX_MAX_XRES VBE_DISPI_MAX_XRES
+#define BX_MAX_YRES VBE_DISPI_MAX_YRES
 
-  #define BX_MAX_XRES 1280
-  #define BX_MAX_YRES 1024
-
-#else
-
-  #define BX_MAX_XRES 800
-  #define BX_MAX_YRES 600
-
-#endif // BX_SUPPORT_VBE
+// End Bochs VBE definitions
 
 #define X_TILESIZE 16
 #define Y_TILESIZE 24
@@ -141,13 +132,6 @@ public:
   virtual void   debug_dump(void);
 #endif
 
-#if BX_SUPPORT_VBE
-  virtual bx_bool vbe_set_base_addr(Bit32u *addr, Bit8u *pci_conf);
-
-  BX_VGA_SMF Bit8u vbe_mem_read(bx_phy_address addr) BX_CPP_AttrRegparmN(1);
-  BX_VGA_SMF void  vbe_mem_write(bx_phy_address addr, Bit8u value) BX_CPP_AttrRegparmN(2);
-#endif
-
   virtual void   redraw_area(unsigned x0, unsigned y0,
                              unsigned width, unsigned height);
 
@@ -171,24 +155,10 @@ protected:
   static void   write_handler_no_log(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len);
 #endif
 
-#if BX_SUPPORT_VBE
-  static Bit32u vbe_read_handler(void *this_ptr, Bit32u address, unsigned io_len);
-  static void   vbe_write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len);
-#endif
-
 #if BX_USE_VGA_SMF == 0
   Bit32u read(Bit32u address, unsigned io_len);
 #endif
   void  write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_log);
-
-#if BX_SUPPORT_VBE
-
-#if BX_USE_VGA_SMF == 0
-  Bit32u vbe_read(Bit32u address, unsigned io_len);
-  void  vbe_write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_log);
-#endif
-
-#endif // BX_SUPPORT_VBE
 
   BX_VGA_SMF void update(void);
   BX_VGA_SMF void determine_screen_dimensions(unsigned *piHeight, unsigned *piWidth);
@@ -305,7 +275,24 @@ protected:
     Bit8u last_bpp;
   } s;  // state information
 
-#if BX_SUPPORT_VBE
+  int timer_id;
+  bx_bool extension_init;
+  bx_bool extension_checked;
+
+  // Bochs VBE section
+  virtual bx_bool vbe_set_base_addr(Bit32u *addr, Bit8u *pci_conf);
+
+  BX_VGA_SMF Bit8u vbe_mem_read(bx_phy_address addr) BX_CPP_AttrRegparmN(1);
+  BX_VGA_SMF void  vbe_mem_write(bx_phy_address addr, Bit8u value) BX_CPP_AttrRegparmN(2);
+
+  static Bit32u vbe_read_handler(void *this_ptr, Bit32u address, unsigned io_len);
+  static void   vbe_write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len);
+
+#if BX_USE_VGA_SMF == 0
+  Bit32u vbe_read(Bit32u address, unsigned io_len);
+  void  vbe_write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_log);
+#endif
+
   struct {
     Bit16u  cur_dispi;
     Bit32u  base_address;
@@ -329,11 +316,6 @@ protected:
     bx_bool get_capabilities;
     bx_bool dac_8bit;
   } vbe;  // VBE state information
-#endif
-
-  int timer_id;
-  bx_bool extension_init;
-  bx_bool extension_checked;
 };
 
 #if BX_SUPPORT_CLGD54XX

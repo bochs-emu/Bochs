@@ -35,7 +35,7 @@
 
 #include "iodev.h"
 
-#if BX_SUPPORT_PCI && BX_SUPPORT_PCIVGA
+#if BX_SUPPORT_PCI
 
 #include "pci.h"
 #include "pcivga.h"
@@ -192,4 +192,4 @@ void bx_pcivga_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len
     BX_DEBUG(("write PCI register 0x%02x value 0x%08x", address, value));
 }
 
-#endif // BX_SUPPORT_PCI && BX_SUPPORT_PCIVGA
+#endif // BX_SUPPORT_PCI

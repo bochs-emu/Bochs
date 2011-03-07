@@ -259,12 +259,10 @@ void bx_devices_c::init(BX_MEM_C *newmem)
 
 #if BX_SUPPORT_PCI
   if (SIM->get_param_bool(BXPN_I440FX_SUPPORT)->get()) {
-#if BX_SUPPORT_PCIVGA && BX_SUPPORT_VBE
     if ((DEV_is_pci_device("pcivga")) &&
         (!strcmp(SIM->get_param_string(BXPN_VGA_EXTENSION)->getptr(), "vbe"))) {
       PLUG_load_plugin(pcivga, PLUGTYPE_OPTIONAL);
     }
-#endif
 #if BX_SUPPORT_USB_UHCI
     if (is_usb_uhci_enabled()) {
       PLUG_load_plugin(usb_uhci, PLUGTYPE_OPTIONAL);

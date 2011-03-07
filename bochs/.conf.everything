@@ -21,7 +21,6 @@
   --enable-x86-debugger \
   --enable-a20-pin \
   --enable-instrumentation=instrument/example1 \
-  --enable-vbe \
   --enable-ne2000 \
   --enable-pci \
   --enable-acpi \

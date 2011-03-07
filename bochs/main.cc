@@ -1084,8 +1084,7 @@ void bx_init_hardware()
     SIM->get_param_bool(BXPN_I440FX_SUPPORT)->get() ? "yes" : "no"));
   BX_INFO(("  SB16 support: %s",BX_SUPPORT_SB16?"yes":"no"));
   BX_INFO(("  USB support: %s",BX_SUPPORT_PCIUSB?"yes":"no"));
-  BX_INFO(("  VGA extension support: %s %s",BX_SUPPORT_VBE?"vbe":"",
-           BX_SUPPORT_CLGD54XX?"cirrus":""));
+  BX_INFO(("  VGA extension support: vbe %s", BX_SUPPORT_CLGD54XX?"cirrus":""));
 
   // Check if there is a romimage
   if (strcmp(SIM->get_param_string(BXPN_ROM_PATH)->getptr(),"") == 0) {

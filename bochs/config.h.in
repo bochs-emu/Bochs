@@ -636,9 +636,6 @@ typedef
 // limited i440FX PCI support
 #define BX_SUPPORT_PCI 0
 
-// Bochs VBE display interface
-#define BX_SUPPORT_VBE 0
-
 // CLGD54XX emulation
 #define BX_SUPPORT_CLGD54XX 0
 
@@ -648,9 +645,6 @@ typedef
 #if (BX_SUPPORT_ACPI && !BX_SUPPORT_PCI)
   #error To enable ACPI support, you must also enable PCI
 #endif
-
-// Experimental VGA on PCI
-#define BX_SUPPORT_PCIVGA 0
 
 // Experimental host PCI device mapping
 #define BX_SUPPORT_PCIDEV 0
