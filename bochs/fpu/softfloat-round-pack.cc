@@ -223,11 +223,13 @@ float32 roundAndPackFloat32(int zSign, Bit16s zExp, Bit32u zSig, float_status_t 
             zSig = shift32RightJamming(zSig, -zExp);
             zExp = 0;
             roundBits = zSig & roundMask;
-            if (isTiny && (roundBits || !float_exception_masked(status, float_flag_underflow))) {
-                float_raise(status, float_flag_underflow);
+            if (isTiny) {
                 if(get_flush_underflow_to_zero(status)) {
-                    float_raise(status, float_flag_inexact);
+                    float_raise(status, float_flag_underflow | float_flag_inexact);
                     return packFloat32(zSign, 0, 0);
+                }
+                if (roundBits || !float_exception_masked(status, float_flag_underflow)) {
+                    float_raise(status, float_flag_underflow);
                 }
             }
         }
@@ -327,11 +329,13 @@ float64 roundAndPackFloat64(int zSign, Bit16s zExp, Bit64u zSig, float_status_t 
             zSig = shift64RightJamming(zSig, -zExp);
             zExp = 0;
             roundBits = (Bit16s)(zSig & 0x3FF);
-            if (isTiny && (roundBits || !float_exception_masked(status, float_flag_underflow))) {
-                float_raise(status, float_flag_underflow);
+            if (isTiny) {
                 if(get_flush_underflow_to_zero(status)) {
-                    float_raise(status, float_flag_inexact);
+                    float_raise(status, float_flag_underflow | float_flag_inexact);
                     return packFloat64(zSign, 0, 0);
+                }
+                if (roundBits || !float_exception_masked(status, float_flag_underflow)) {
+                    float_raise(status, float_flag_underflow);
                 }
             }
         }
