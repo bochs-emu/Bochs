@@ -1555,108 +1555,24 @@ fi
 AC_SUBST(CDROM_OBJS)
 
 
-bx_have_alsa=0
-AC_CHECK_HEADER([alsa/asoundlib.h], [bx_have_alsa=1])
-
-AC_MSG_CHECKING(for Sound Blaster 16 support)
-SB16_OBJS=''
+SOUNDCARD_OBJS=''
 SOUNDLOW_OBJS=''
 GAME_OBJS=''
+soundcard_present=0
 gameport_present=0
+AC_MSG_CHECKING(for Sound Blaster 16 support)
 AC_ARG_ENABLE(sb16,
-  [  --enable-sb16=xxx                 Sound Blaster 16 Support (xxx=dummy|win|linux|freebsd|osx)],
-  [if test "$enableval" = no; then
-     AC_MSG_RESULT(no)
-     AC_DEFINE(BX_SUPPORT_SB16, 0)
-   else
-     case "$enableval" in
-       dummy)
-         SOUNDLOW_OBJS=''
-         AC_DEFINE(BX_SOUND_OUTPUT_C, bx_sound_output_c)
-         AC_MSG_RESULT(dummy)
-         ;;
-       freebsd|linux)
-         SOUNDLOW_OBJS='soundlnx.o'
-         AC_DEFINE(BX_SOUND_OUTPUT_C, bx_sound_linux_c)
-         if test "$bx_have_alsa" = 1; then
-           AC_DEFINE(BX_HAVE_ALSASOUND, 1)
-           if test "$bx_plugins" = 1; then
-             SOUND_LINK_OPTS="$SOUND_LINK_OPTS -lasound"
-           else
-             DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS -lasound"
-           fi
-         fi
-         AC_MSG_RESULT(linux)
-         ;;
-       win)
-         SOUNDLOW_OBJS='soundwin.o'
-         AC_DEFINE(BX_SOUND_OUTPUT_C, bx_sound_windows_c)
-         AC_MSG_RESULT(win)
-         case $target in
-           *-pc-windows*)
-             DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS winmm.lib"
-             ;;
-           *)
-             DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS -lwinmm"
-             ;;
-         esac
-         ;;
-       osx)
-         SOUNDLOW_OBJS='soundosx.o'
-         AC_DEFINE(BX_SOUND_OUTPUT_C, bx_sound_osx_c)
-         AC_MSG_RESULT(osx)
-         DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS -framework AudioUnit -framework AudioToolbox"
-         ;;
-       yes)
-         case "$target" in
-           *-linux* | *-freebsd*)
-             SOUNDLOW_OBJS='soundlnx.o'
-             AC_DEFINE(BX_SOUND_OUTPUT_C, bx_sound_linux_c)
-             if test "$bx_have_alsa" = 1; then
-               AC_DEFINE(BX_HAVE_ALSASOUND, 1)
-               if test "$bx_plugins" = 1; then
-                 SOUND_LINK_OPTS="$SOUND_LINK_OPTS -lasound"
-               else
-                 DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS -lasound"
-               fi
-             fi
-             AC_MSG_RESULT(linux)
-             ;;
-           *-pc-windows*)
-             SOUNDLOW_OBJS='soundwin.o'
-             AC_DEFINE(BX_SOUND_OUTPUT_C, bx_sound_windows_c)
-             AC_MSG_RESULT(win)
-             DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS winmm.lib"
-             ;;
-           *-cygwin* | *-mingw32*)
-             SOUNDLOW_OBJS='soundwin.o'
-             AC_DEFINE(BX_SOUND_OUTPUT_C, bx_sound_windows_c)
-             AC_MSG_RESULT(win)
-             DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS -lwinmm"
-             ;;
-           *-macosx* | *-macos*)
-             SOUNDLOW_OBJS='soundosx.o'
-             AC_DEFINE(BX_SOUND_OUTPUT_C, bx_sound_osx_c)
-             AC_MSG_RESULT(osx)
-             DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS -framework AudioUnit -framework AudioToolbox"
-             ;;
-           *)
-             SOUNDLOW_OBJS=''
-             AC_DEFINE(BX_SOUND_OUTPUT_C, bx_sound_output_c)
-             AC_MSG_RESULT(dummy)
-             ;;
-         esac
-         ;;
-       *)
-         echo " "
-         echo \!\!\!Error\!\!\!
-         echo "You must pass one of dummy, linux, win, freebsd, osx to --enable-sb16"
-         exit 1 ;;
-     esac
-     SB16_OBJS='sb16.o'
+  [  --enable-sb16                     Sound Blaster 16 Support],
+  [if test "$enableval" = yes; then
+    AC_MSG_RESULT(yes)
+     SOUNDCARD_OBJS='sb16.o'
+     soundcard_present=1
      AC_DEFINE(BX_SUPPORT_SB16, 1)
      GAME_OBJS='gameport.o'
      gameport_present=1
+   else
+     AC_MSG_RESULT(no)
+     AC_DEFINE(BX_SUPPORT_SB16, 0)
    fi],
 
   [
@@ -1664,7 +1580,75 @@ AC_ARG_ENABLE(sb16,
     AC_DEFINE(BX_SUPPORT_SB16, 0)
     ]
   )
-AC_SUBST(SB16_OBJS)
+
+AC_MSG_CHECKING(for ES1370 soundcard support)
+AC_ARG_ENABLE(es1370,
+  [  --enable-es1370                     enable ES1370 soundcard support],
+  [if test "$enableval" = yes; then
+    AC_MSG_RESULT(yes)
+    if test "$pci" != "1"; then
+      AC_MSG_ERROR([ES1370 soundcard requires PCI support])
+    fi
+    SOUNDCARD_OBJS="$SOUNDCARD_OBJS es1370.o"
+    soundcard_present=1
+    AC_DEFINE(BX_SUPPORT_ES1370, 1)
+    GAME_OBJS='gameport.o'
+    gameport_present=1
+   else
+    AC_MSG_RESULT(no)
+    AC_DEFINE(BX_SUPPORT_ES1370, 0)
+   fi],
+  [
+    AC_MSG_RESULT(no)
+    AC_DEFINE(BX_SUPPORT_ES1370, 0)
+    ]
+  )
+
+if test "$soundcard_present" = 1; then
+  AC_MSG_CHECKING(for sound output module)
+  case "$target" in
+    *-linux* | *-freebsd*)
+      SOUNDLOW_OBJS='soundlnx.o'
+      AC_DEFINE(BX_SOUND_OUTPUT_C, bx_sound_linux_c)
+      AC_MSG_RESULT(linux)
+      bx_have_alsa=0
+      AC_CHECK_HEADER([alsa/asoundlib.h], [bx_have_alsa=1])
+      if test "$bx_have_alsa" = 1; then
+        AC_DEFINE(BX_HAVE_ALSASOUND, 1)
+        if test "$bx_plugins" = 1; then
+          SOUND_LINK_OPTS="$SOUND_LINK_OPTS -lasound"
+        else
+          DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS -lasound"
+        fi
+      fi
+      ;;
+    *-pc-windows*)
+      SOUNDLOW_OBJS='soundwin.o'
+      AC_DEFINE(BX_SOUND_OUTPUT_C, bx_sound_windows_c)
+      DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS winmm.lib"
+      AC_MSG_RESULT(win)
+      ;;
+    *-cygwin* | *-mingw32*)
+      SOUNDLOW_OBJS='soundwin.o'
+      AC_DEFINE(BX_SOUND_OUTPUT_C, bx_sound_windows_c)
+      DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS -lwinmm"
+      AC_MSG_RESULT(win)
+      ;;
+    *-macosx* | *-macos*)
+      SOUNDLOW_OBJS='soundosx.o'
+      AC_DEFINE(BX_SOUND_OUTPUT_C, bx_sound_osx_c)
+      DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS -framework AudioUnit -framework AudioToolbox"
+      AC_MSG_RESULT(osx)
+      ;;
+    *)
+      SOUNDLOW_OBJS=''
+      AC_DEFINE(BX_SOUND_OUTPUT_C, bx_sound_output_c)
+      AC_MSG_RESULT(dummy)
+      ;;
+  esac
+fi
+
+AC_SUBST(SOUNDCARD_OBJS)
 AC_SUBST(SOUNDLOW_OBJS)
 AC_SUBST(SOUND_LINK_OPTS)
 

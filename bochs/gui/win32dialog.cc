@@ -519,7 +519,7 @@ edit_opts_t start_options[] = {
   {"Disk & Boot", BXPN_MENU_DISK_WIN32},
   {"Serial / Parallel / USB", "ports"},
   {"Network card", "network"},
-  {"Sound Blaster 16", BXPN_SB16},
+  {"Sound card", "sound"},
   {"Other", "misc"},
 #if BX_PLUGINS
   {"User-defined Options", "user"},

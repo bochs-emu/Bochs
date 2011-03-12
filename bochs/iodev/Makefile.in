@@ -84,11 +84,11 @@ OBJS_THAT_CAN_BE_PLUGINS = \
   speaker.o \
   busmouse.o \
   ioapic.o \
-  soundmod.o \
-  @GAME_OBJS@ \
   @PCI_OBJ@ \
   @USBCORE_OBJ@ \
-  @SB16_OBJS@ \
+  soundmod.o \
+  @SOUNDCARD_OBJS@ \
+  @GAME_OBJS@ \
   @NE2K_OBJS@ \
   @IODEBUG_OBJS@
 

@@ -711,7 +711,7 @@ void MyFrame::OnEditNet(wxCommandEvent& WXUNUSED(event))
 void MyFrame::OnEditSound(wxCommandEvent& WXUNUSED(event))
 {
   ParamDialog dlg(this, -1);
-  bx_list_c *list = (bx_list_c*) SIM->get_param(BXPN_SB16);
+  bx_list_c *list = (bx_list_c*) SIM->get_param("sound");
   dlg.SetTitle(wxString(list->get_title()->getptr(), wxConvUTF8));
   dlg.AddParam(list);
   dlg.SetRuntimeFlag(sim_thread != NULL);

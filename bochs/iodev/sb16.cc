@@ -133,7 +133,7 @@ void bx_sb16_c::init(void)
   unsigned addr, i;
   bx_list_c *base;
 
-  base = (bx_list_c*) SIM->get_param(BXPN_SB16);
+  base = (bx_list_c*) SIM->get_param(BXPN_SOUND_SB16);
   if ((strlen(SIM->get_param_string("logfile", base)->getptr()) < 1))
     SIM->get_param_num("loglevel", base)->set(0);
 
@@ -1143,7 +1143,7 @@ void bx_sb16_c::dsp_dma(Bit8u command, Bit8u mode, Bit16u length, Bit8u comp)
       }
     } else if ((BX_SB16_THIS wavemode == 2) ||
                (BX_SB16_THIS wavemode == 3)) {
-      base = (bx_list_c*) SIM->get_param(BXPN_SB16);
+      base = (bx_list_c*) SIM->get_param(BXPN_SOUND_SB16);
       WAVEDATA = fopen(SIM->get_param_string("wavefile", base)->getptr(),"wb");
       if (WAVEDATA == NULL) {
         writelog (WAVELOG(2), "Error opening file %s. Wavemode disabled.",
@@ -2894,7 +2894,7 @@ void bx_sb16_c::writemidicommand(int command, int length, Bit8u data[])
     return;
   } else if ((BX_SB16_THIS midimode == 2) ||
              (BX_SB16_THIS midimode == 3)) {
-    base = (bx_list_c*) SIM->get_param(BXPN_SB16);
+    base = (bx_list_c*) SIM->get_param(BXPN_SOUND_SB16);
     MIDIDATA = fopen(SIM->get_param_string("midifile", base)->getptr(),"wb");
     if (MIDIDATA == NULL) {
       writelog (MIDILOG(2), "Error opening file %s. Midimode disabled.",

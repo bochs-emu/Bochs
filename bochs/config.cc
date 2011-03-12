@@ -1534,7 +1534,7 @@ void bx_init_options()
 
   // sound subtree
   bx_list_c *sound = new bx_list_c(root_param, "sound", "Sound Configuration");
-  sound->set_options(sound->SHOW_PARENT);
+  sound->set_options(sound->USE_TAB_WINDOW | sound->SHOW_PARENT);
   menu = new bx_list_c(sound, "sb16", "SB16 Configuration", 8);
   menu->set_options(menu->SHOW_PARENT);
   menu->set_enabled(BX_SUPPORT_SB16);
@@ -1607,6 +1607,27 @@ void bx_init_options()
   deplist = new bx_list_c(NULL, 1);
   deplist->add(logfile);
   loglevel->set_dependent_list(deplist);
+
+  menu = new bx_list_c(sound, "es1370", "ES1370 Configuration", 8);
+  menu->set_options(menu->SHOW_PARENT);
+  menu->set_enabled(BX_SUPPORT_ES1370);
+
+  // ES1370 options
+  enabled = new bx_param_bool_c(menu,
+    "enabled",
+    "Enable ES1370 emulation",
+    "Enables the ES1370 emulation",
+    0);
+  enabled->set_enabled(BX_SUPPORT_ES1370);
+
+  bx_param_filename_c *wavedev = new bx_param_filename_c(menu,
+    "wavedev",
+    "Wave device",
+    "This is the device where the wave output is sent to",
+    "", BX_PATHNAME_LEN);
+  deplist = new bx_list_c(NULL, 1);
+  deplist->add(wavedev);
+  enabled->set_dependent_list(deplist);
 
   // misc options subtree
   bx_list_c *misc = new bx_list_c(root_param, "misc", "Configure Everything Else");
@@ -1792,7 +1813,7 @@ void bx_reset_options()
   // ne2k & pnic
   SIM->get_param("network")->reset();
 
-  // SB16
+  // SB16 & ES1370
   SIM->get_param("sound")->reset();
 
   // misc
@@ -2859,7 +2880,7 @@ static int parse_line_formatted(const char *context, int num_params, char *param
 #endif
   } else if (!strcmp(params[0], "sb16")) {
     int enable = 1;
-    base = (bx_list_c*) SIM->get_param(BXPN_SB16);
+    base = (bx_list_c*) SIM->get_param(BXPN_SOUND_SB16);
     for (i=1; i<num_params; i++) {
       if (!strncmp(params[i], "enabled=", 8)) {
         enable = atol(&params[i][8]);
@@ -2885,6 +2906,17 @@ static int parse_line_formatted(const char *context, int num_params, char *param
       SIM->get_param_bool("enabled", base)->set(1);
     else
       SIM->get_param_bool("enabled", base)->set(0);
+  } else if (!strcmp(params[0], "es1370")) {
+    base = (bx_list_c*) SIM->get_param(BXPN_SOUND_ES1370);
+    for (i=1; i<num_params; i++) {
+      if (!strncmp(params[i], "enabled=", 8)) {
+        SIM->get_param_bool("enabled", base)->set(atol(&params[i][8]));
+      } else if (!strncmp(params[i], "wavedev=", 8)) {
+        SIM->get_param_string("wavedev", base)->set(&params[i][8]);
+      } else {
+        BX_ERROR(("%s: unknown parameter for es1370 ignored.", context));
+      }
+    }
   } else if ((!strncmp(params[0], "com", 3)) && (strlen(params[0]) == 4)) {
     char tmpname[80];
     idx = params[0][3];
@@ -3499,8 +3531,10 @@ int bx_write_usb_options(FILE *fp, bx_list_c *base)
 {
   fprintf(fp, "usb_%s: enabled=%d", base->get_name(), SIM->get_param_bool("enabled", base)->get());
   if (SIM->get_param_bool("enabled", base)->get()) {
-    fprintf(fp, ", port1=%s", SIM->get_param_string("port1", base)->getptr());
-    fprintf(fp, ", port2=%s", SIM->get_param_string("port2", base)->getptr());
+    fprintf(fp, ", port1=%s", SIM->get_param_string("port1.device", base)->getptr());
+    fprintf(fp, ", port2=%s", SIM->get_param_string("port2.device", base)->getptr());
+    fprintf(fp, ", options1=%s", SIM->get_param_string("port1.options", base)->getptr());
+    fprintf(fp, ", options2=%s", SIM->get_param_string("port2.options", base)->getptr());
   }
   fprintf(fp, "\n");
   return 0;
@@ -3548,18 +3582,22 @@ int bx_write_ne2k_options(FILE *fp, bx_list_c *base)
   return 0;
 }
 
-int bx_write_sb16_options(FILE *fp, bx_list_c *base)
+int bx_write_sound_options(FILE *fp, bx_list_c *base)
 {
-  fprintf(fp, "sb16: enabled=%d", SIM->get_param_bool("enabled", base)->get());
+  fprintf(fp, "%s: enabled=%d", base->get_name(), SIM->get_param_bool("enabled", base)->get());
   if (SIM->get_param_bool("enabled", base)->get()) {
-    fprintf(fp, ", midimode=%d, midi=%s, wavemode=%d, wave=%s, loglevel=%d, log=%s, dmatimer=%d",
-      SIM->get_param_num("midimode", base)->get(),
-      SIM->get_param_string("midifile", base)->getptr(),
-      SIM->get_param_num("wavemode", base)->get(),
-      SIM->get_param_string("wavefile", base)->getptr(),
-      SIM->get_param_num("loglevel", base)->get(),
-      SIM->get_param_string("logfile", base)->getptr(),
-      SIM->get_param_num("dmatimer", base)->get());
+    if (!strcmp(base->get_name(), "sb16")) {
+      fprintf(fp, ", midimode=%d, midi=%s, wavemode=%d, wave=%s, loglevel=%d, log=%s, dmatimer=%d",
+        SIM->get_param_num("midimode", base)->get(),
+        SIM->get_param_string("midifile", base)->getptr(),
+        SIM->get_param_num("wavemode", base)->get(),
+        SIM->get_param_string("wavefile", base)->getptr(),
+        SIM->get_param_num("loglevel", base)->get(),
+        SIM->get_param_string("logfile", base)->getptr(),
+        SIM->get_param_num("dmatimer", base)->get());
+    } else if (!strcmp(base->get_name(), "es1370")) {
+      fprintf(fp, ", wavedev=%s", SIM->get_param_string("wavedev", base)->getptr());
+    }
   }
   fprintf(fp, "\n");
   return 0;
@@ -3884,7 +3922,8 @@ int bx_write_configuration(const char *rc, int overwrite)
   bx_write_clock_cmos_options(fp);
   bx_write_ne2k_options(fp, (bx_list_c*) SIM->get_param(BXPN_NE2K));
   bx_write_pnic_options(fp, (bx_list_c*) SIM->get_param(BXPN_PNIC));
-  bx_write_sb16_options(fp, (bx_list_c*) SIM->get_param(BXPN_SB16));
+  bx_write_sound_options(fp, (bx_list_c*) SIM->get_param(BXPN_SOUND_SB16));
+  bx_write_sound_options(fp, (bx_list_c*) SIM->get_param(BXPN_SOUND_ES1370));
   bx_write_loader_options(fp);
   bx_write_log_options(fp, (bx_list_c*) SIM->get_param("log"));
   bx_write_keyboard_options(fp);

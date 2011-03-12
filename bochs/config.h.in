@@ -180,7 +180,8 @@
 #define BX_USE_SER_SMF      1  // Serial
 #define BX_USE_UM_SMF       1  // Unmapped
 #define BX_USE_VGA_SMF      1  // VGA
-#define BX_USE_SB16_SMF     1  // Sound (SB 16)
+#define BX_USE_SB16_SMF     1  // SB 16 soundcard
+#define BX_USE_ES1370_SMF   1  // ES1370 soundcard
 #define BX_USE_DEV_SMF      1  // System Devices (port92)
 #define BX_USE_PCI_SMF      1  // PCI
 #define BX_USE_P2I_SMF      1  // PCI-to-ISA bridge
@@ -206,26 +207,13 @@
    || !BX_USE_DMA_SMF || !BX_USE_FD_SMF || !BX_USE_KEY_SMF \
    || !BX_USE_PAR_SMF || !BX_USE_PIC_SMF || !BX_USE_PIT_SMF \
    || !BX_USE_SER_SMF || !BX_USE_UM_SMF || !BX_USE_VGA_SMF \
-   || !BX_USE_SB16_SMF || !BX_USE_DEV_SMF || !BX_USE_PCI_SMF \
-   || !BX_USE_P2I_SMF || !BX_USE_PCIVGA_SMF || !BX_USE_USB_UHCI_SMF \
-   || !BX_USE_USB_OHCI_SMF || !BX_USE_PCIPNIC_SMF || !BX_USE_PIDE_SMF \
-   || !BX_USE_ACPI_SMF || !BX_USE_NE2K_SMF || !BX_USE_EFI_SMF \
-   || !BX_USE_GAMEPORT_SMF || !BX_USE_PCIDEV_SMF || !BX_USE_CIRRUS_SMF)
+   || !BX_USE_SB16_SMF || !BX_USE_ES1370_SMF || !BX_USE_DEV_SMF \
+   || !BX_USE_PCI_SMF || !BX_USE_P2I_SMF || !BX_USE_PCIVGA_SMF \
+   || !BX_USE_USB_UHCI_SMF || !BX_USE_USB_OHCI_SMF || !BX_USE_PCIPNIC_SMF \
+   || !BX_USE_PIDE_SMF || !BX_USE_ACPI_SMF || !BX_USE_NE2K_SMF \
+   || !BX_USE_EFI_SMF || !BX_USE_GAMEPORT_SMF || !BX_USE_PCIDEV_SMF \
+   || !BX_USE_CIRRUS_SMF)
 #error You must use SMF to have plugins
-#endif
-
-#define BX_SUPPORT_SB16     0
-#define BX_SUPPORT_GAMEPORT 0
-
-#if BX_SUPPORT_SB16
-// Determines which sound output class is to be used.
-// Currently the following are available:
-//    bx_sound_linux_c      Output for Linux, to /dev/dsp and /dev/midi00
-//    bx_sound_windows_c    Output for Windows midi and wave mappers
-//    bx_sound_output_c     Dummy functions, no output
-#define BX_SOUND_OUTPUT_C  bx_sound_output_c
-// Use ALSA sound interface on Linux
-#define BX_HAVE_ALSASOUND  0
 #endif
 
 #define USE_RAW_SERIAL 0
@@ -837,6 +825,25 @@ typedef
 #define BX_NETMOD_VDE     0
 #define BX_NETMOD_SLIRP   0
 
+// Soundcard and gameport support
+#define BX_SUPPORT_SB16     0
+#define BX_SUPPORT_ES1370   0
+#define BX_SUPPORT_GAMEPORT 0
+
+#if BX_SUPPORT_SB16 || BX_SUPPORT_ES1370
+// Determines which sound output class is to be used.
+// Currently the following are available:
+//    bx_sound_linux_c      Output for Linux, to /dev/dsp and /dev/midi00
+//    bx_sound_windows_c    Output for Windows midi and wave mappers
+//    bx_sound_output_c     Dummy functions, no output
+#define BX_SOUND_OUTPUT_C  bx_sound_output_c
+// Use ALSA sound interface on Linux
+#define BX_HAVE_ALSASOUND  0
+#endif
+
+#if (BX_SUPPORT_ES1370 && !BX_SUPPORT_PCI)
+  #error To enable the ES1370 soundcard, you must also enable PCI
+#endif
 
 // I/O Interface to debugger
 #define BX_SUPPORT_IODEBUG 0

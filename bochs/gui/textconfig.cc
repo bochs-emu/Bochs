@@ -297,7 +297,7 @@ static const char *startup_options_prompt =
 "11. Disk & Boot options\n"
 "12. Serial / Parallel / USB options\n"
 "13. Network card options\n"
-"14. Sound Blaster 16 options\n"
+"14. Sound card options\n"
 "15. Other options\n"
 #if BX_PLUGINS
 "16. User-defined options\n"
@@ -480,7 +480,7 @@ int bx_config_interface(int menu)
           case 11: do_menu(BXPN_MENU_DISK); break;
           case 12: do_menu("ports"); break;
           case 13: do_menu("network"); break;
-          case 14: do_menu(BXPN_SB16); break;
+          case 14: do_menu("sound"); break;
           case 15: do_menu("misc"); break;
 #if BX_PLUGINS
           case 16: do_menu("user"); break;
