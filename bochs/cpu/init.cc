@@ -375,13 +375,16 @@ void BX_CPU_C::register_state(void)
 
   for(n=0; n<6; n++) {
     bx_segment_reg_t *segment = &BX_CPU_THIS_PTR sregs[n];
-    bx_list_c *sreg = new bx_list_c(cpu, strseg(segment), 9);
+    bx_list_c *sreg = new bx_list_c(cpu, strseg(segment), 12);
     BXRS_PARAM_SPECIAL16(sreg, selector,
            param_save_handler, param_restore_handler);
+    BXRS_HEX_PARAM_FIELD(sreg, valid, segment->cache.valid);
+    BXRS_PARAM_BOOL(sreg, p, segment->cache.p);
+    BXRS_HEX_PARAM_FIELD(sreg, dpl, segment->cache.dpl);
+    BXRS_PARAM_BOOL(sreg, segment, segment->cache.segment);
+    BXRS_HEX_PARAM_FIELD(sreg, type, segment->cache.type);
     BXRS_HEX_PARAM_FIELD(sreg, base, segment->cache.u.segment.base);
     BXRS_HEX_PARAM_FIELD(sreg, limit_scaled, segment->cache.u.segment.limit_scaled);
-    BXRS_PARAM_SPECIAL8 (sreg, ar_byte,
-           param_save_handler, param_restore_handler);
     BXRS_PARAM_BOOL(sreg, granularity, segment->cache.u.segment.g);
     BXRS_PARAM_BOOL(sreg, d_b, segment->cache.u.segment.d_b);
 #if BX_SUPPORT_X86_64
@@ -398,20 +401,28 @@ void BX_CPU_C::register_state(void)
   BXRS_HEX_PARAM_FIELD(IDTR, base, idtr.base);
   BXRS_HEX_PARAM_FIELD(IDTR, limit, idtr.limit);
 
-  bx_list_c *LDTR = new bx_list_c(cpu, "LDTR", 8);
+  bx_list_c *LDTR = new bx_list_c(cpu, "LDTR", 12);
   BXRS_PARAM_SPECIAL16(LDTR, selector, param_save_handler, param_restore_handler);
+  BXRS_HEX_PARAM_FIELD(LDTR, valid, ldtr.cache.valid);
+  BXRS_PARAM_BOOL(LDTR, p, ldtr.cache.p);
+  BXRS_HEX_PARAM_FIELD(LDTR, dpl, ldtr.cache.dpl);
+  BXRS_PARAM_BOOL(LDTR, segment, ldtr.cache.segment);
+  BXRS_HEX_PARAM_FIELD(LDTR, type, ldtr.cache.type);
   BXRS_HEX_PARAM_FIELD(LDTR, base,  ldtr.cache.u.segment.base);
   BXRS_HEX_PARAM_FIELD(LDTR, limit_scaled, ldtr.cache.u.segment.limit_scaled);
-  BXRS_PARAM_SPECIAL8 (LDTR, ar_byte, param_save_handler, param_restore_handler);
   BXRS_PARAM_BOOL(LDTR, granularity, ldtr.cache.u.segment.g);
   BXRS_PARAM_BOOL(LDTR, d_b, ldtr.cache.u.segment.d_b);
   BXRS_PARAM_BOOL(LDTR, avl, ldtr.cache.u.segment.avl);
 
-  bx_list_c *TR = new bx_list_c(cpu, "TR", 8);
+  bx_list_c *TR = new bx_list_c(cpu, "TR", 12);
   BXRS_PARAM_SPECIAL16(TR, selector, param_save_handler, param_restore_handler);
+  BXRS_HEX_PARAM_FIELD(TR, valid, tr.cache.valid);
+  BXRS_PARAM_BOOL(TR, p, tr.cache.p);
+  BXRS_HEX_PARAM_FIELD(TR, dpl, tr.cache.dpl);
+  BXRS_PARAM_BOOL(TR, segment, tr.cache.segment);
+  BXRS_HEX_PARAM_FIELD(TR, type, tr.cache.type);
   BXRS_HEX_PARAM_FIELD(TR, base,  tr.cache.u.segment.base);
   BXRS_HEX_PARAM_FIELD(TR, limit_scaled, tr.cache.u.segment.limit_scaled);
-  BXRS_PARAM_SPECIAL8 (TR, ar_byte, param_save_handler, param_restore_handler);
   BXRS_PARAM_BOOL(TR, granularity, tr.cache.u.segment.g);
   BXRS_PARAM_BOOL(TR, d_b, tr.cache.u.segment.d_b);
   BXRS_PARAM_BOOL(TR, avl, tr.cache.u.segment.avl);
@@ -585,7 +596,7 @@ Bit64s BX_CPU_C::param_save(bx_param_c *param)
     val = get_extended_cpuid_features();
   } else if (!strcmp(pname, "EFLAGS")) {
     val = BX_CPU_THIS_PTR read_eflags();
-  } else if (!strcmp(pname, "ar_byte") || !strcmp(pname, "selector")) {
+  } else if (!strcmp(pname, "selector")) {
     segname = param->get_parent()->get_name();
     if (!strcmp(segname, "CS")) {
       segment = &BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS];
@@ -605,12 +616,7 @@ Bit64s BX_CPU_C::param_save(bx_param_c *param)
       segment = &BX_CPU_THIS_PTR tr;
     }
     if (segment != NULL) {
-      if (!strcmp(pname, "ar_byte")) {
-        val = get_ar_byte(&(segment->cache));
-      }
-      else if (!strcmp(pname, "selector")) {
-        val = segment->selector.value;
-      }
+      val = segment->selector.value;
     }
   }
   else {
@@ -649,7 +655,7 @@ void BX_CPU_C::param_restore(bx_param_c *param, Bit64s val)
     }
   } else if (!strcmp(pname, "EFLAGS")) {
     BX_CPU_THIS_PTR setEFlags((Bit32u)val);
-  } else if (!strcmp(pname, "ar_byte") || !strcmp(pname, "selector")) {
+  } else if (!strcmp(pname, "selector")) {
     segname = param->get_parent()->get_name();
     if (!strcmp(segname, "CS")) {
       segment = &BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS];
@@ -669,17 +675,8 @@ void BX_CPU_C::param_restore(bx_param_c *param, Bit64s val)
       segment = &BX_CPU_THIS_PTR tr;
     }
     if (segment != NULL) {
-      bx_descriptor_t *d = &(segment->cache);
       bx_selector_t *selector = &(segment->selector);
-      if (!strcmp(pname, "ar_byte")) {
-        set_ar_byte(d, (Bit8u)val);
-      }
-      else if (!strcmp(pname, "selector")) {
-        parse_selector((Bit16u)val, selector);
-        // validate the selector
-        if ((selector->value & 0xfffc) != 0) d->valid = 1;
-        else d->valid = 0;
-      }
+      parse_selector((Bit16u)val, selector);
     }
   }
   else {
