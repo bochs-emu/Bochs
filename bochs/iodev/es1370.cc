@@ -40,8 +40,8 @@
 
 bx_es1370_c* theES1370Device = NULL;
 
-const Bit8u es1370_iomask[64] = {7, 1, 3, 1, 4, 0, 0, 0, 1, 3, 1, 0, 7, 0, 0, 0,
-                                 6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+const Bit8u es1370_iomask[64] = {7, 1, 3, 1, 7, 1, 3, 1, 1, 3, 1, 0, 7, 0, 0, 0,
+                                 6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0,
                                  7, 1, 3, 1, 6, 0, 2, 0, 6, 0, 2, 0, 6, 0, 2, 0,
                                  4, 0, 0, 0, 4, 0, 0, 0, 4, 0, 0, 0, 4, 0, 0, 0};
 
@@ -364,7 +364,7 @@ void bx_es1370_c::write(Bit32u address, Bit32u value, unsigned io_len)
       break;
     case ES1370_CODEC:
       BX_ES1370_THIS s.codec = value & 0xffff;
-      BX_ERROR(("writing to CODEC register 0x%02x, value = 0x%02x", (value >> 8) & 0xff, value & 0xff));
+      BX_DEBUG(("writing to CODEC register 0x%02x, value = 0x%02x", (value >> 8) & 0xff, value & 0xff));
       break;
     case ES1370_SCTL:
       mask = (0xffffffff >> ((4 - io_len) << 3)) << shift;
@@ -376,8 +376,8 @@ void bx_es1370_c::write(Bit32u address, Bit32u value, unsigned io_len)
     case ES1370_DAC2_SCOUNT:
     case ES1370_ADC_SCOUNT:
       i = (offset - ES1370_DAC1_SCOUNT) / 4;
-      mask = 0xffff;
-      BX_ES1370_THIS s.chan[i].scount = (BX_ES1370_THIS s.chan[i].scount & ~mask) | (value & mask);
+      value &= 0xffff;
+      BX_ES1370_THIS s.chan[i].scount = value | (value << 16);
       break;
     case ES1370_DAC1_FRAMEADR:
       BX_ES1370_THIS s.chan[0].frame_addr = value;
@@ -469,7 +469,7 @@ void bx_es1370_c::es1370_timer(void)
   if (csc_bytes == transfered) {
     irq = 1;
     d->scount = sc | (sc << 16);
-    BX_DEBUG(("sc = %d, rate = %f", (sc + 1) << d->shift, (sc + 1) / (double) 44100));
+    BX_DEBUG(("all samples played - signalling IRQ"));
   } else {
     irq = 0;
     d->scount = sc | (((csc_bytes - transfered - 1) >> d->shift) << 16);
@@ -556,8 +556,6 @@ void bx_es1370_c::update_voices(Bit32u ctl, Bit32u sctl)
 
     if ((old_fmt != new_fmt) || (old_freq != new_freq)) {
       d->shift = (new_fmt & 1) + (new_fmt >> 1);
-      BX_INFO(("channel %d, freq = %d, nchannels %d, fmt %d, shift %d",
-               i, new_freq, 1 << (new_fmt & 1), (new_fmt & 2) ? 16 : 8, d->shift));
       if (new_freq) {
         if (i == DAC2_CHANNEL) {
           if (!BX_ES1370_THIS s.dac2_outputinit) {
@@ -576,8 +574,6 @@ void bx_es1370_c::update_voices(Bit32u ctl, Bit32u sctl)
               BX_ERROR(("could not start wave playback"));
             }
           }
-        } else {
-          BX_ERROR(("channel %s not supported yet", (i != DAC2_CHANNEL) ? "DAC1" : "ADC"));
         }
       }
     }
@@ -593,6 +589,11 @@ void bx_es1370_c::update_voices(Bit32u ctl, Bit32u sctl)
         timer_id = BX_ES1370_THIS s.adc_timer_index;
       }
       if (on) {
+        BX_INFO(("channel %d, freq = %d, nchannels %d, fmt %d, shift %d",
+                 i, new_freq, 1 << (new_fmt & 1), (new_fmt & 2) ? 16 : 8, d->shift));
+        if (i != DAC2_CHANNEL) {
+          BX_ERROR(("channel %s not supported yet", (i != DAC2_CHANNEL) ? "DAC1" : "ADC"));
+        }
         timer_val = (Bit64u)BX_SOUND_OUTPUT_WAVEPACKETSIZE * 1000000 / (new_freq << d->shift);
         bx_pc_system.activate_timer(timer_id, timer_val, 1);
       } else {
