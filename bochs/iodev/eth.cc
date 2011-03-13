@@ -598,7 +598,7 @@ int process_dhcp(bx_devmodel_c *netdev, const Bit8u *data, unsigned data_len, Bi
           *replyopts ++ = BOOTPOPT_HOST_NAME;
           *replyopts ++ = hostname_len;
           memcpy(replyopts, hostname, hostname_len);
-          *replyopts += hostname_len;
+          replyopts += hostname_len;
           free(hostname);
           hostname = NULL;
           break;
