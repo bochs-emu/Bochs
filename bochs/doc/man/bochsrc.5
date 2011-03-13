@@ -1,5 +1,5 @@
 .\"Document Author:  Timothy R. Butler   -   tbutler@uninetsolutions.com"
-.TH bochsrc 5 "3 Mar 2011" "bochsrc" "The Bochs Project"
+.TH bochsrc 5 "13 Mar 2011" "bochsrc" "The Bochs Project"
 .\"SKIP_SECTION"
 .SH NAME
 bochsrc \- Configuration file for Bochs.
@@ -679,6 +679,17 @@ formatting  reasons, but  it should all be  on
 one line in the actual bochsrc file.
 
 .TP
+.I "es1370:"
+This defines the ES1370 sound emulation. The parameter 'enabled' controls the
+presence of the device. In addition to this, it must be assigned to a PCI
+slot. The 'wavedev' parameter is similar to the 'wave' parameter of the SB16
+soundcard. Currently only the output of the DAC2 is sent to the wave device.
+
+Examples:
+  es1370: enabled=1, wavedev=""       # win32
+  es1370: enabled=1, wavedev=alsa     # Linux with ALSA
+
+.TP
 .I "vga_update_interval:"
 Video memory is scanned for updates and screen updated
 every so many virtual seconds. The default value is
@@ -796,9 +807,8 @@ Example:
 .I "i440fxsupport:"
 This option controls the presence of the i440FX PCI chipset. You can
 also specify the devices connected to PCI slots. Up to 5 slots are
-available now. These devices are currently supported: ne2k, pcivga,
-pcidev, pcipnic and usb_ohci. If Bochs is compiled with Cirrus SVGA
-support you'll have the additional choice 'cirrus'.
+available now. These devices are currently supported: cirrus, es1370, ne2k,
+pcivga, pcidev, pcipnic and usb_ohci.
 
 Example:
   i440fxsupport: enabled=1, slot1=pcivga, slot2=ne2k

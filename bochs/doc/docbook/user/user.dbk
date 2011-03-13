@@ -2126,16 +2126,22 @@ turn it off.
       </entry>
     </row>
     <row>
-      <entry>--enable-sb16={<option>dummy</option>}</entry>
+      <entry>--enable-sb16</entry>
       <entry>no</entry>
       <entry>
-      Enable Sound Blaster emulation.
-      The <constant>dummy</constant> option means to support an SB16, but don't
-      use an output device. By default (without a parameter) the lowlevel sound interface is autodetected.
+      Enable Sound Blaster emulation. The lowlevel sound interface is autodetected.
       See section <link linkend="sb16-emulation">Sound Blaster 16 Emulation</link>
-      for supported platforms and more info. This option also enables the standard PC gameport which is a
-      part of the SB16. If you don't want to use it, you might use
-      <option>--disable-gameport</option>.
+      for supported platforms and more info. This option also enables the standard
+      PC gameport which is a part of the SB16. If you don't want to use it, you
+      might use <option>--disable-gameport</option>.
+      </entry>
+    </row>
+    <row>
+      <entry>--enable-es1370</entry>
+      <entry>no</entry>
+      <entry>
+      Enable ES1370 sound emulation. Just like the SB16 option, the lowlevel sound
+      interface is autodetected and the gameport is turned on.
       </entry>
     </row>
     <row>
@@ -3838,6 +3844,20 @@ are in the usual "property=value" format.
 </para>
 </section>
 
+<section><title>es1370</title>
+<para>
+Examples:
+<screen>
+  es1370: enabled=1, wavedev=""    # win32
+  es1370: enabled=1, wavedev=alsa  # Linux with ALSA
+</screen>
+This defines the ES1370 sound emulation. The parameter 'enabled' controls the
+presence of the device. In addition to this, it must be assigned to a PCI
+slot. The 'wavedev' parameter is similar to the 'wave' parameter of the SB16
+soundcard. Currently only the output of the DAC2 is sent to the wave device.
+</para>
+</section>
+
 <section><title>vga_update_interval</title>
 <para>
 Examples:
@@ -3984,9 +4004,8 @@ Examples:
 </screen>
 This option controls the presence of the i440FX PCI chipset. You can also
 specify the devices connected to PCI slots. Up to 5 slots are available.
-These devices are currently supported: ne2k, pcivga, pcidev, pcipnic and
-usb_ohci. If Bochs is compiled with Cirrus SVGA support you'll have the
-additional choice 'cirrus'.
+These devices are currently supported: cirrus, es1370, ne2k, pcivga, pcidev,
+pcipnic and usb_ohci.
 </para>
 </section>
 

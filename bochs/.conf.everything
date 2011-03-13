@@ -29,6 +29,8 @@
   --enable-usb-ohci \
   --enable-cdrom \
   --enable-sb16 \
+  --enable-es1370 \
+  --enable-gameport \
   --enable-iodebug \
   --enable-gdb-stub \
   --enable-show-ips \
