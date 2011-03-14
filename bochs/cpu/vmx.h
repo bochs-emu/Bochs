@@ -1020,7 +1020,7 @@ enum VMX_INVEPT_INVVPID_type {
 // [25] - INVEPT single-context invalidation supported
 // [26] - INVEPT all-context invalidation supported
 
-#define VMX_MSR_VMX_EPT_VPID_CAP_LO (0x06114141 | (bx_cpuid_support_1g_paging() << 17))
+#define VMX_MSR_VMX_EPT_VPID_CAP_LO (0x06114141 | (!!(bx_cpuid_support_1g_paging()) << 17))
 
 // [32] - INVVPID instruction supported
 // [40] - individual-address INVVPID is supported

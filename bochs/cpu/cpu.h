@@ -634,13 +634,6 @@ typedef struct
 #define BX_CPU_AVX_FMA          0x04000000        /* AVX FMA instruction */
 #define BX_CPU_X86_64           0x08000000        /* x86-64 instruction */
 
-struct cpuid_function_t {
-  Bit32u eax;
-  Bit32u ebx;
-  Bit32u ecx;
-  Bit32u edx;
-};
-
 #include "model_specific.h"
 #include "crregs.h"
 #include "descriptor.h"

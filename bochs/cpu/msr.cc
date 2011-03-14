@@ -704,8 +704,8 @@ bx_bool BX_CPU_C::relocate_apic(Bit64u val_64)
 
     if ((val32_lo & 0x800) == 0) {
       // APIC global enable bit cleared, clear APIC on chip CPUID feature flag
-      BX_CPU_THIS_PTR cpuid_std_function[0x1].edx &= ~(1<<9);
-      BX_CPU_THIS_PTR cpuid_ext_function[0x1].edx &= ~(1<<9);
+      BX_CPU_THIS_PTR cpuid_std_function[0x1].edx &= ~BX_CPUID_STD_APIC;
+      BX_CPU_THIS_PTR cpuid_ext_function[0x1].edx &= ~BX_CPUID_STD_APIC;
     }
   }
   else {

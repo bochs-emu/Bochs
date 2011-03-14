@@ -24,7 +24,6 @@
 #define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"
 #include "cpu.h"
-#include "model_specific.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
 #include "param_names.h"
@@ -635,7 +634,7 @@ void BX_CPU_C::set_cpuid_defaults(void)
   //     [29:29] Long Mode
   //     [30:30] AMD 3DNow! Extensions
   //     [31:31] AMD 3DNow! Instructions
-  unsigned features  = BX_CPU_VENDOR_INTEL ? 0 : get_std_cpuid_features();
+  unsigned features = BX_CPU_VENDOR_INTEL ? 0 : get_std_cpuid_features();
   features &= 0x0183F3FF;
 #if BX_SUPPORT_3DNOW
   // only AMD is interesting in AMD MMX extensions
@@ -733,7 +732,7 @@ void BX_CPU_C::set_cpuid_defaults(void)
   BX_INFO(("CPUID[0x80000006]: %08x %08x %08x %08x", cpuid->eax, cpuid->ebx, cpuid->ecx, cpuid->edx));
 
   // ------------------------------------------------------
-  // CPUID function 0x00000007
+  // CPUID function 0x80000007
   cpuid = &(BX_CPU_THIS_PTR cpuid_ext_function[7]);
 
   cpuid->eax = 0;
@@ -921,12 +920,6 @@ void BX_CPU_C::init_isa_features_bitmask(void)
   xsave_enabled = SIM->get_param_bool(BXPN_CPUID_XSAVE)->get();
   xapic_enabled = SIM->get_param_bool(BXPN_CPUID_XAPIC)->get();
   sse_enabled = SIM->get_param_enum(BXPN_CPUID_SSE)->get();
-#if BX_SUPPORT_X86_64
-  bx_bool fsgsbase_enabled = SIM->get_param_bool(BXPN_CPUID_FSGSBASE)->get();
-#endif
-#if BX_SUPPORT_MONITOR_MWAIT
-  bx_bool mwait_enabled = SIM->get_param_bool(BXPN_CPUID_MWAIT)->get();
-#endif
 #endif // BX_CPU_LEVEL >= 6
 
   // sanity checks
@@ -1022,6 +1015,7 @@ void BX_CPU_C::init_isa_features_bitmask(void)
   features_bitmask |= BX_CPU_P6;
 
 #if BX_SUPPORT_MONITOR_MWAIT
+  static bx_bool mwait_enabled = SIM->get_param_bool(BXPN_CPUID_MWAIT)->get();
   if (mwait_enabled)
     features_bitmask |= BX_CPU_MONITOR_MWAIT;
 #endif
@@ -1073,6 +1067,7 @@ void BX_CPU_C::init_isa_features_bitmask(void)
 #if BX_SUPPORT_X86_64
   features_bitmask |= BX_CPU_X86_64;
 
+  static bx_bool fsgsbase_enabled = SIM->get_param_bool(BXPN_CPUID_FSGSBASE)->get();
   if (fsgsbase_enabled)
     features_bitmask |= BX_CPU_FSGSBASE;
 #endif

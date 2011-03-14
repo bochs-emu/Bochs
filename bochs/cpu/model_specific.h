@@ -24,6 +24,13 @@
 #ifndef BX_CPU_MODEL_SPECIFIC
 #define BX_CPU_MODEL_SPECIFIC
 
+struct cpuid_function_t {
+  Bit32u eax;
+  Bit32u ebx;
+  Bit32u ecx;
+  Bit32u edx;
+};
+
 // CPUID defines - STD features CPUID[0x00000001].EDX
 // ----------------------------
 
