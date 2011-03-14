@@ -3884,7 +3884,7 @@ int bx_write_configuration(const char *rc, int overwrite)
     SIM->get_param_bool(BXPN_CPUID_XSAVE)->get(),
     SIM->get_param_bool(BXPN_CPUID_MOVBE)->get());
 #if BX_SUPPORT_X86_64
-  fprintf(fp, ", 1g_pages=%d, pcid=%d fsgsbase=%d",
+  fprintf(fp, ", 1g_pages=%d, pcid=%d, fsgsbase=%d",
     SIM->get_param_bool(BXPN_CPUID_1G_PAGES)->get(),
     SIM->get_param_bool(BXPN_CPUID_PCID)->get(),
     SIM->get_param_bool(BXPN_CPUID_FSGSBASE)->get());
