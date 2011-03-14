@@ -156,7 +156,7 @@ Bit32u BX_CPU_C::get_extended_cpuid_features(void)
 }
 
 #if BX_CPU_LEVEL >= 6
-Bit32u BX_CPU_C::get_ext2_cpuid_features(void)
+Bit32u BX_CPU_C::get_ext3_cpuid_features(void)
 {
   Bit32u features = 0;
 
@@ -272,6 +272,90 @@ Bit32u BX_CPU_C::get_std_cpuid_features(void)
   return features;
 }
 
+/* Get CPU feature flags. Returned by CPUID function 80000001 in EDX register */
+Bit32u BX_CPU_C::get_std2_cpuid_features(void)
+{
+  // Many of the bits in EDX are the same as EAX [*] for AMD
+  // [*] [0:0]   FPU on chip
+  // [*] [1:1]   VME: Virtual-8086 Mode enhancements
+  // [*] [2:2]   DE: Debug Extensions (I/O breakpoints)
+  // [*] [3:3]   PSE: Page Size Extensions
+  // [*] [4:4]   TSC: Time Stamp Counter
+  // [*] [5:5]   MSR: RDMSR and WRMSR support
+  // [*] [6:6]   PAE: Physical Address Extensions
+  // [*] [7:7]   MCE: Machine Check Exception
+  // [*] [8:8]   CXS: CMPXCHG8B instruction
+  // [*] [9:9]   APIC: APIC on Chip
+  //     [10:10] Reserved
+  //     [11:11] SYSCALL/SYSRET support
+  // [*] [12:12] MTRR: Memory Type Range Reg
+  // [*] [13:13] PGE/PTE Global Bit
+  // [*] [14:14] MCA: Machine Check Architecture
+  // [*] [15:15] CMOV: Cond Mov/Cmp Instructions
+  // [*] [16:16] PAT: Page Attribute Table
+  // [*] [17:17] PSE-36: Physical Address Extensions
+  //     [18:19] Reserved
+  //     [20:20] No-Execute page protection
+  //     [21:21] Reserved
+  //     [22:22] AMD MMX Extensions
+  // [*] [23:23] MMX Technology
+  // [*] [24:24] FXSR: FXSAVE/FXRSTOR (also indicates CR4.OSFXSR is available)
+  //     [25:25] Fast FXSAVE/FXRSTOR mode support
+  //     [26:26] 1G paging support
+  //     [27:27] Support RDTSCP Instruction
+  //     [28:28] Reserved
+  //     [29:29] Long Mode
+  //     [30:30] AMD 3DNow! Extensions
+  //     [31:31] AMD 3DNow! Instructions
+  Bit32u features = BX_CPU_VENDOR_INTEL ? 0 : get_std_cpuid_features();
+  features &= 0x0183F3FF;
+#if BX_SUPPORT_3DNOW
+  // only AMD is interesting in AMD MMX extensions
+  features |= BX_CPUID_STD2_AMD_MMX_EXT | BX_CPUID_STD2_3DNOW_EXT | BX_CPUID_STD2_3DNOW;
+#endif
+#if BX_SUPPORT_X86_64
+  features |= BX_CPUID_STD2_SYSCALL_SYSRET |
+              BX_CPUID_STD2_NX |
+              BX_CPUID_STD2_FFXSR |
+              BX_CPUID_STD2_RDTSCP | BX_CPUID_STD2_LONG_MODE;
+  static bx_bool xlarge_pages = SIM->get_param_bool(BXPN_CPUID_1G_PAGES)->get();
+  if (xlarge_pages)
+    features |= BX_CPUID_STD2_1G_PAGES;
+#endif
+
+  return features;
+}
+
+/* Get CPU feature flags. Returned by CPUID function 80000001 in ECX register */
+Bit32u BX_CPU_C::get_ext2_cpuid_features(void)
+{
+  // ECX:
+  //     [0:0]   LAHF/SAHF instructions support in 64-bit mode
+  //     [1:1]   CMP_Legacy: Core multi-processing legacy mode (AMD)
+  //     [2:2]   SVM: Secure Virtual Machine (AMD)
+  //     [3:3]   Extended APIC Space
+  //     [4:4]   AltMovCR8: LOCK MOV CR0 means MOV CR8
+  //     [5:5]   LZCNT: LZCNT instruction support
+  //     [6:6]   SSE4A: SSE4A Instructions support
+  //     [7:7]   Misaligned SSE support
+  //     [8:8]   PREFETCHW: PREFETCHW instruction support
+  //     [9:9]   OSVW: OS visible workarounds (AMD)
+  //     [11:10] reserved
+  //     [12:12] SKINIT support
+  //     [13:13] WDT: Watchdog timer support
+  //     [31:14] reserved
+  Bit32u features = 0;
+
+#if BX_SUPPORT_X86_64
+  features |= BX_CPUID_EXT2_LAHF_SAHF;
+#endif
+#if BX_SUPPORT_MISALIGNED_SSE
+  features |= BX_CPUID_EXT2_MISALIGNED_SSE;
+#endif
+
+  return features;
+}
+
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::CPUID(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 4
@@ -338,9 +422,6 @@ void BX_CPU_C::set_cpuid_defaults(void)
   Bit8u *vendor_string = (Bit8u *)SIM->get_param_string(BXPN_VENDOR_STRING)->getptr();
   Bit8u *brand_string = (Bit8u *)SIM->get_param_string(BXPN_BRAND_STRING)->getptr();
   bx_bool cpuid_limit_winnt = SIM->get_param_bool(BXPN_CPUID_LIMIT_WINNT)->get();
-#if BX_SUPPORT_X86_64
-  bx_bool xlarge_pages_enabled = SIM->get_param_bool(BXPN_CPUID_1G_PAGES)->get();
-#endif
 
   cpuid_function_t *cpuid;
   int i;
@@ -510,7 +591,7 @@ void BX_CPU_C::set_cpuid_defaults(void)
   // CPUID function 0x00000007
   cpuid = &(BX_CPU_THIS_PTR cpuid_std_function[7]);
 
-  cpuid->ebx = get_ext2_cpuid_features();
+  cpuid->ebx = get_ext3_cpuid_features();
   cpuid->ecx = 0;
   cpuid->edx = 0;
   if (cpuid->ebx)
@@ -580,26 +661,7 @@ void BX_CPU_C::set_cpuid_defaults(void)
   cpuid->ebx = 0;
 
   // ECX:
-  //     [0:0]   LAHF/SAHF instructions support in 64-bit mode
-  //     [1:1]   CMP_Legacy: Core multi-processing legacy mode (AMD)
-  //     [2:2]   SVM: Secure Virtual Machine (AMD)
-  //     [3:3]   Extended APIC Space
-  //     [4:4]   AltMovCR8: LOCK MOV CR0 means MOV CR8
-  //     [5:5]   LZCNT: LZCNT instruction support
-  //     [6:6]   SSE4A: SSE4A Instructions support
-  //     [7:7]   Misaligned SSE support
-  //     [8:8]   PREFETCHW: PREFETCHW instruction support
-  //     [9:9]   OSVW: OS visible workarounds (AMD)
-  //     [11:10] reserved
-  //     [12:12] SKINIT support
-  //     [13:13] WDT: Watchdog timer support
-  //     [31:14] reserved
-#if BX_SUPPORT_X86_64
-  cpuid->ecx = BX_CPUID_EXT2_LAHF_SAHF;
-#endif
-#if BX_SUPPORT_MISALIGNED_SSE
-  cpuid->ecx |= BX_CPUID_EXT2_MISALIGNED_SSE;
-#endif
+  cpuid->ecx = get_ext2_cpuid_features();
 
   // EDX:
   // Many of the bits in EDX are the same as EAX [*] for AMD
@@ -634,21 +696,7 @@ void BX_CPU_C::set_cpuid_defaults(void)
   //     [29:29] Long Mode
   //     [30:30] AMD 3DNow! Extensions
   //     [31:31] AMD 3DNow! Instructions
-  unsigned features = BX_CPU_VENDOR_INTEL ? 0 : get_std_cpuid_features();
-  features &= 0x0183F3FF;
-#if BX_SUPPORT_3DNOW
-  // only AMD is interesting in AMD MMX extensions
-  features |= BX_CPUID_STD2_AMD_MMX_EXT | BX_CPUID_STD2_3DNOW_EXT | BX_CPUID_STD2_3DNOW;
-#endif
-#if BX_SUPPORT_X86_64
-  features |= BX_CPUID_STD2_SYSCALL_SYSRET |
-              BX_CPUID_STD2_NX |
-              BX_CPUID_STD2_FFXSR |
-              BX_CPUID_STD2_RDTSCP | BX_CPUID_STD2_LONG_MODE;
-  if (xlarge_pages_enabled)
-    features |= BX_CPUID_STD2_1G_PAGES;
-#endif
-  cpuid->edx = features;
+  cpuid->edx = get_std2_cpuid_features();
 
   BX_INFO(("CPUID[0x80000001]: %08x %08x %08x %08x", cpuid->eax, cpuid->ebx, cpuid->ecx, cpuid->edx));
 
@@ -673,7 +721,9 @@ void BX_CPU_C::set_cpuid_defaults(void)
 
   BX_INFO(("CPUID[0x80000002]: %08x %08x %08x %08x", cpuid->eax, cpuid->ebx, cpuid->ecx, cpuid->edx));
 
+  // ------------------------------------------------------
   // CPUID function 0x80000003
+
   cpuid = &(BX_CPU_THIS_PTR cpuid_ext_function[3]);
   memcpy(&(cpuid->eax), brand_string + 16, 4);
   memcpy(&(cpuid->ebx), brand_string + 20, 4);
@@ -688,7 +738,9 @@ void BX_CPU_C::set_cpuid_defaults(void)
 
   BX_INFO(("CPUID[0x80000003]: %08x %08x %08x %08x", cpuid->eax, cpuid->ebx, cpuid->ecx, cpuid->edx));
 
+  // ------------------------------------------------------
   // CPUID function 0x80000004
+
   cpuid = &(BX_CPU_THIS_PTR cpuid_ext_function[4]);
   memcpy(&(cpuid->eax), brand_string + 32, 4);
   memcpy(&(cpuid->ebx), brand_string + 36, 4);

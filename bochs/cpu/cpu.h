@@ -3269,6 +3269,8 @@ public: // for now...
   BX_SMF Bit32u get_cpu_version_information(void);
   BX_SMF Bit32u get_extended_cpuid_features(void);
   BX_SMF Bit32u get_std_cpuid_features(void);
+  BX_SMF Bit32u get_std2_cpuid_features(void);
+  BX_SMF Bit32u get_ext2_cpuid_features(void);
 
   BX_SMF void init_isa_features_bitmask(void);
   BX_SMF void init_FetchDecodeTables(void);
@@ -3281,7 +3283,7 @@ public: // for now...
 #if BX_CPU_LEVEL >= 6
   BX_SMF void bx_cpuid_xsave_leaf(Bit32u subfunction);
   BX_SMF void bx_cpuid_extended_cpuid_leaf(Bit32u subfunction);
-  BX_SMF Bit32u get_ext2_cpuid_features(void);
+  BX_SMF Bit32u get_ext3_cpuid_features(void);
 #endif
 
   BX_SMF BX_CPP_INLINE int bx_cpuid_support_debug_extensions(void);
