@@ -217,9 +217,6 @@
 #define CIRRUS_PNPMEM_SIZE          CIRRUS_VIDEO_MEMORY_BYTES
 #define CIRRUS_PNPMMIO_SIZE         0x1000
 
-#define BX_MAX(a,b) ((a) > (b) ? (a) : (b))
-#define BX_MIN(a,b) ((a) < (b) ? (a) : (b))
-
 static bx_svga_cirrus_c *theSvga = NULL;
 
 int libvga_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])

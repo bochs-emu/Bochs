@@ -80,6 +80,7 @@ const Bit8u es1370_iomask[64] = {7, 1, 3, 1, 7, 1, 3, 1, 1, 3, 1, 0, 7, 0, 0, 0,
 #define DAC2_CHANNEL 1
 #define ADC_CHANNEL  2
 
+const char chan_name[3][5] = {"DAC1", "DAC2", "ADC"};
 const Bit16u dac1_freq[4] = {5512, 11025, 22050, 44100};
 const Bit16u ctl_ch_en[3] = {0x0040, 0x0020, 0x0010};
 const Bit16u sctl_ch_pause[3] = {0x0800, 0x1000, 0x0000};
@@ -446,10 +447,7 @@ void bx_es1370_c::es1370_timer(void)
   size = d->frame_cnt & 0xffff;
   left = ((size - cnt + 1) << 2) + d->leftover;
   transfered = 0;
-  temp = ((left < csc_bytes) ? left : csc_bytes);
-  if (temp > BX_SOUND_OUTPUT_WAVEPACKETSIZE) {
-    temp = BX_SOUND_OUTPUT_WAVEPACKETSIZE;
-  }
+  temp = BX_MIN(BX_SOUND_OUTPUT_WAVEPACKETSIZE, BX_MIN(left, csc_bytes));
   addr += (cnt << 2) + d->leftover;
 
   if (i == ADC_CHANNEL) {
@@ -458,7 +456,7 @@ void bx_es1370_c::es1370_timer(void)
     memset(tmpbuf, 0, transfered);
     DEV_MEM_WRITE_PHYSICAL_BLOCK(addr, transfered, tmpbuf);
   } else {
-    // TODO: DAC2 audio output
+    // TODO: DAC1 audio output
     DEV_MEM_READ_PHYSICAL_BLOCK(addr, temp, tmpbuf);
     if ((i == DAC2_CHANNEL) && BX_ES1370_THIS s.dac2_outputinit) {
       BX_ES1370_THIS soundmod->sendwavepacket(temp, tmpbuf);
@@ -469,7 +467,7 @@ void bx_es1370_c::es1370_timer(void)
   if (csc_bytes == transfered) {
     irq = 1;
     d->scount = sc | (sc << 16);
-    BX_DEBUG(("all samples played - signalling IRQ"));
+    BX_DEBUG(("%s: all samples played - signalling IRQ (if enabled)", chan_name[i]));
   } else {
     irq = 0;
     d->scount = sc | (((csc_bytes - transfered - 1) >> d->shift) << 16);
@@ -478,7 +476,7 @@ void bx_es1370_c::es1370_timer(void)
   cnt += (transfered + d->leftover) >> 2;
 
   if (BX_ES1370_THIS s.sctl & sctl_loop_sel[i]) {
-    BX_ERROR(("non looping mode not supported"));
+    BX_ERROR(("%s: non looping mode not supported", chan_name[i]));
   } else {
     d->frame_cnt = size;
     if (cnt <= d->frame_cnt) {
@@ -589,10 +587,10 @@ void bx_es1370_c::update_voices(Bit32u ctl, Bit32u sctl)
         timer_id = BX_ES1370_THIS s.adc_timer_index;
       }
       if (on) {
-        BX_INFO(("channel %d, freq = %d, nchannels %d, fmt %d, shift %d",
-                 i, new_freq, 1 << (new_fmt & 1), (new_fmt & 2) ? 16 : 8, d->shift));
+        BX_INFO(("%s: freq = %d, nchannels %d, fmt %d, shift %d",
+                 chan_name[i], new_freq, 1 << (new_fmt & 1), (new_fmt & 2) ? 16 : 8, d->shift));
         if (i != DAC2_CHANNEL) {
-          BX_ERROR(("channel %s not supported yet", (i != DAC2_CHANNEL) ? "DAC1" : "ADC"));
+          BX_ERROR(("channel %s not supported yet", chan_name[i]));
         }
         timer_val = (Bit64u)BX_SOUND_OUTPUT_WAVEPACKETSIZE * 1000000 / (new_freq << d->shift);
         bx_pc_system.activate_timer(timer_id, timer_val, 1);

@@ -108,11 +108,6 @@
 bx_virt_timer_c bx_virt_timer;
 
 
-//Generic MAX and MIN Functions
-#define BX_MAX(a,b) ( ((a)>(b))?(a):(b) )
-#define BX_MIN(a,b) ( ((a)>(b))?(b):(a) )
-
-
 //USEC_ALPHA is multiplier for the past.
 //USEC_ALPHA_B is 1-USEC_ALPHA, or multiplier for the present.
 #define USEC_ALPHA ((double)(.8))

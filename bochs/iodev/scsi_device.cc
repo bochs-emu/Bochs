@@ -34,7 +34,6 @@
 
 #define LOG_THIS
 
-#define BX_MIN(a,b) ( ((a)>(b))?(b):(a) )
 #define DEVICE_NAME "SCSI drive"
 
 static SCSIRequest *free_requests = NULL;

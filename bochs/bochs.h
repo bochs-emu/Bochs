@@ -378,6 +378,10 @@ BOCHSAPI extern logfunc_t *genlog;
 #  define UNUSED(x) ((void)x)
 #endif
 
+//Generic MAX and MIN Functions
+#define BX_MAX(a,b) ((a) > (b) ? (a) : (b))
+#define BX_MIN(a,b) ((a) < (b) ? (a) : (b))
+
 #if BX_SUPPORT_X86_64
 #define FMT_ADDRX FMT_ADDRX64
 #else
