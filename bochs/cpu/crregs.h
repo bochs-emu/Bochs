@@ -173,16 +173,7 @@ struct bx_dr7_t {
   IMPLEMENT_DRREG_ACCESSORS(bp_enabled, 0xFF, 0);
 
   BX_CPP_INLINE Bit32u get32() const { return val32; }
-  BX_CPP_INLINE void set32(Bit32u val) { 
-#if BX_CPU_LEVEL <= 4
-    // 386/486: you can play with all the bits except b10 is always 1
-    val32 = val | 0x00000400;
-#else
-    // Pentium+: bits15,14,12 are hardwired to 0, rest are settable.
-    // Even bits 11,10 are changeable though reserved.
-    val32 = (val & 0xffff2fff) | 0x00000400;
-#endif
-  }
+  BX_CPP_INLINE void set32(Bit32u val) { val32 = val; }
 };
 
 #if BX_SUPPORT_X86_64
@@ -234,6 +225,7 @@ struct xcr0_t {
 #endif
 
 #undef IMPLEMENT_CRREG_ACCESSORS
+#undef IMPLEMENT_DRREG_ACCESSORS
 
 typedef struct msr {
   unsigned index;          // MSR index
