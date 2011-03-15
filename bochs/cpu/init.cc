@@ -215,8 +215,8 @@ void BX_CPU_C::register_wx_state(void)
       DEFPARAM_NORMAL(DR1, dr[1]);
       DEFPARAM_NORMAL(DR2, dr[2]);
       DEFPARAM_NORMAL(DR3, dr[3]);
-      DEFPARAM_NORMAL(DR6, dr6);
-      DEFPARAM_NORMAL(DR7, dr7);
+      DEFPARAM_NORMAL(DR6, dr6.val32);
+      DEFPARAM_NORMAL(DR7, dr7.val32);
       DEFPARAM_NORMAL(CR0, cr0.val32);
       DEFPARAM_NORMAL(CR2, cr2);
       DEFPARAM_NORMAL(CR3, cr3);
@@ -358,8 +358,8 @@ void BX_CPU_C::register_state(void)
   BXRS_HEX_PARAM_FIELD(cpu, DR1, dr[1]);
   BXRS_HEX_PARAM_FIELD(cpu, DR2, dr[2]);
   BXRS_HEX_PARAM_FIELD(cpu, DR3, dr[3]);
-  BXRS_HEX_PARAM_FIELD(cpu, DR6, dr6);
-  BXRS_HEX_PARAM_FIELD(cpu, DR7, dr7);
+  BXRS_HEX_PARAM_FIELD(cpu, DR6, dr6.val32);
+  BXRS_HEX_PARAM_FIELD(cpu, DR7, dr7.val32);
 #endif
   BXRS_HEX_PARAM_FIELD(cpu, CR0, cr0.val32);
   BXRS_HEX_PARAM_FIELD(cpu, CR2, cr2);
@@ -858,18 +858,12 @@ void BX_CPU_C::reset(unsigned source)
     BX_CPU_THIS_PTR dr[n] = 0;
 #endif
 
-  BX_CPU_THIS_PTR dr7 = 0x00000400;
-#if   BX_CPU_LEVEL == 3
-  BX_CPU_THIS_PTR dr6 = 0xFFFF1FF0;
-#elif BX_CPU_LEVEL == 4
-  BX_CPU_THIS_PTR dr6 = 0xFFFF1FF0;
-#elif BX_CPU_LEVEL == 5
-  BX_CPU_THIS_PTR dr6 = 0xFFFF0FF0;
-#elif BX_CPU_LEVEL == 6
-  BX_CPU_THIS_PTR dr6 = 0xFFFF0FF0;
+#if BX_CPU_LEVEL >= 5
+  BX_CPU_THIS_PTR dr6.val32 = 0xFFFF0FF0;
 #else
-#  error "DR6: CPU > 6"
+  BX_CPU_THIS_PTR dr6.val32 = 0xFFFF1FF0;
 #endif
+  BX_CPU_THIS_PTR dr7.val32 = 0x00000400;
 
 #if BX_X86_DEBUGGER
   BX_CPU_THIS_PTR in_repeat = 0;

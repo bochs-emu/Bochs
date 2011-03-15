@@ -170,7 +170,7 @@ void BX_CPU_C::enter_system_management_mode(void)
 
   BX_CPU_THIS_PTR setEFlags(0x2); // Bit1 is always set
   BX_CPU_THIS_PTR prev_rip = RIP = 0x00008000;
-  BX_CPU_THIS_PTR dr7 = 0x00000400;
+  BX_CPU_THIS_PTR dr7.set32(0x00000400);
 
   // CR0 - PE, EM, TS, and PG flags set to 0; others unmodified
   BX_CPU_THIS_PTR cr0.set_PE(0); // real mode (bit 0)
@@ -454,8 +454,8 @@ void BX_CPU_C::smram_save_state(Bit32u *saved_state)
   SMRAM_FIELD(saved_state, SMRAM_FIELD_EFLAGS) = read_eflags();
 
   // --- Debug and Control Registers --- //
-  SMRAM_FIELD(saved_state, SMRAM_FIELD_DR6) = BX_CPU_THIS_PTR dr6;
-  SMRAM_FIELD(saved_state, SMRAM_FIELD_DR7) = BX_CPU_THIS_PTR dr7;
+  SMRAM_FIELD(saved_state, SMRAM_FIELD_DR6) = BX_CPU_THIS_PTR dr6.get32();
+  SMRAM_FIELD(saved_state, SMRAM_FIELD_DR7) = BX_CPU_THIS_PTR dr7.get32();
   SMRAM_FIELD(saved_state, SMRAM_FIELD_CR0) = BX_CPU_THIS_PTR cr0.get32();
   SMRAM_FIELD(saved_state, SMRAM_FIELD_CR3_HI32) = GET32H(BX_CPU_THIS_PTR cr3);
   SMRAM_FIELD(saved_state, SMRAM_FIELD_CR3) = GET32L(BX_CPU_THIS_PTR cr3);
@@ -629,8 +629,8 @@ bx_bool BX_CPU_C::smram_restore_state(const Bit32u *saved_state)
 
   RIP = SMRAM_FIELD64(saved_state, SMRAM_FIELD_RIP_HI32, SMRAM_FIELD_EIP);
 
-  BX_CPU_THIS_PTR dr6 = SMRAM_FIELD(saved_state, SMRAM_FIELD_DR6);
-  BX_CPU_THIS_PTR dr7 = SMRAM_FIELD(saved_state, SMRAM_FIELD_DR7);
+  BX_CPU_THIS_PTR dr6.val32 = SMRAM_FIELD(saved_state, SMRAM_FIELD_DR6);
+  BX_CPU_THIS_PTR dr7.val32 = SMRAM_FIELD(saved_state, SMRAM_FIELD_DR7);
 
   BX_CPU_THIS_PTR gdtr.base  = SMRAM_FIELD64(saved_state, SMRAM_FIELD_GDTR_BASE_HI32, SMRAM_FIELD_GDTR_BASE);
   BX_CPU_THIS_PTR gdtr.limit = SMRAM_FIELD(saved_state, SMRAM_FIELD_GDTR_LIMIT);
@@ -714,8 +714,8 @@ void BX_CPU_C::smram_save_state(Bit32u *saved_state)
 #if BX_CPU_LEVEL >= 4
   SMRAM_FIELD(saved_state, SMRAM_FIELD_CR4) = BX_CPU_THIS_PTR cr4.get32();
 #endif
-  SMRAM_FIELD(saved_state, SMRAM_FIELD_DR6) = BX_CPU_THIS_PTR dr6;
-  SMRAM_FIELD(saved_state, SMRAM_FIELD_DR7) = BX_CPU_THIS_PTR dr7;
+  SMRAM_FIELD(saved_state, SMRAM_FIELD_DR6) = BX_CPU_THIS_PTR dr6.get32();;
+  SMRAM_FIELD(saved_state, SMRAM_FIELD_DR7) = BX_CPU_THIS_PTR dr7.get32();;
 
   // --- Task Register --- //
   SMRAM_FIELD(saved_state, SMRAM_FIELD_TR_SELECTOR) = BX_CPU_THIS_PTR tr.selector.value;
@@ -802,8 +802,8 @@ bx_bool BX_CPU_C::smram_restore_state(const Bit32u *saved_state)
 
   EIP = SMRAM_FIELD(saved_state, SMRAM_FIELD_EIP);
 
-  BX_CPU_THIS_PTR dr6 = SMRAM_FIELD(saved_state, SMRAM_FIELD_DR6);
-  BX_CPU_THIS_PTR dr7 = SMRAM_FIELD(saved_state, SMRAM_FIELD_DR7);
+  BX_CPU_THIS_PTR dr6.val32 = SMRAM_FIELD(saved_state, SMRAM_FIELD_DR6);
+  BX_CPU_THIS_PTR dr7.val32 = SMRAM_FIELD(saved_state, SMRAM_FIELD_DR7);
 
   BX_CPU_THIS_PTR gdtr.base  = SMRAM_FIELD(saved_state, SMRAM_FIELD_GDTR_BASE);
   BX_CPU_THIS_PTR gdtr.limit = SMRAM_FIELD(saved_state, SMRAM_FIELD_GDTR_LIMIT);

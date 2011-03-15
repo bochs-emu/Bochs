@@ -884,18 +884,18 @@ public: // for now...
   /* debug registers DR0-DR7 */
 #if BX_CPU_LEVEL >= 3
   bx_address dr[4]; /* DR0-DR3 */
-  Bit32u     dr6;
-  Bit32u     dr7;
+  bx_dr6_t   dr6;
+  bx_dr7_t   dr7;
 #endif
 
   /* TR3 - TR7 (Test Register 3-7), unimplemented */
 
   /* Control registers */
-  bx_cr0_t       cr0;
-  bx_address     cr2;
-  bx_address     cr3;
+  bx_cr0_t   cr0;
+  bx_address cr2;
+  bx_address cr3;
 #if BX_CPU_LEVEL >= 4
-  bx_cr4_t       cr4;
+  bx_cr4_t   cr4;
 #endif
 
 #if BX_SUPPORT_X86_64

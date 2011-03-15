@@ -1487,7 +1487,7 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
 
   if (vmentry_ctrls & VMX_VMENTRY_CTRL1_LOAD_DBG_CTRLS) {
     // always clear bits 15:14 and set bit 10
-    BX_CPU_THIS_PTR dr7 = (guest.dr7 & ~0xc000) | 0400;
+    BX_CPU_THIS_PTR dr7.set32((guest.dr7 & ~0xc000) | 0x400);
   }
 
   RIP = BX_CPU_THIS_PTR prev_rip = guest.rip;
@@ -1753,7 +1753,7 @@ void BX_CPU_C::VMexitSaveGuestState(void)
 #endif
 
   if (vm->vmexit_ctrls & VMX_VMEXIT_CTRL1_SAVE_DBG_CTRLS)
-     VMwrite64(VMCS_GUEST_DR7, BX_CPU_THIS_PTR dr7);
+     VMwrite64(VMCS_GUEST_DR7, BX_CPU_THIS_PTR dr7.get32());
 
   VMwrite64(VMCS_GUEST_RIP, RIP);
   VMwrite64(VMCS_GUEST_RSP, RSP);
@@ -1897,7 +1897,7 @@ void BX_CPU_C::VMexitLoadHostState(void)
     }
   }
 
-  BX_CPU_THIS_PTR dr7 = 0x00000400;
+  BX_CPU_THIS_PTR dr7.set32(0x00000400);
 
   BX_CPU_THIS_PTR msr.sysenter_cs_msr = host_state->sysenter_cs_msr;
   BX_CPU_THIS_PTR msr.sysenter_esp_msr = host_state->sysenter_esp_msr;

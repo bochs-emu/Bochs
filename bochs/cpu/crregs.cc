@@ -43,7 +43,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_DdRd(bxInstruction_c *i)
 
   // Note: processor clears GD upon entering debug exception
   // handler, to allow access to the debug registers
-  if (BX_CPU_THIS_PTR dr7 & 0x2000) { // GD bit set
+  if (BX_CPU_THIS_PTR dr7.get_GD()) {
     BX_ERROR(("MOV_DdRd: DR7 GD bit is set"));
     BX_CPU_THIS_PTR debug_trap |= BX_DEBUG_DR_ACCESS_BIT;
     exception(BX_DB_EXCEPTION, 0);
@@ -79,11 +79,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_DdRd(bxInstruction_c *i)
     case 6: // DR6
 #if BX_CPU_LEVEL <= 4
       // On 386/486 bit12 is settable
-      BX_CPU_THIS_PTR dr6 = (BX_CPU_THIS_PTR dr6 & 0xffff0ff0) |
+      BX_CPU_THIS_PTR dr6.val32 = (BX_CPU_THIS_PTR dr6.val32 & 0xffff0ff0) |
                             (val_32 & 0x0000f00f);
 #else
       // On Pentium+, bit12 is always zero
-      BX_CPU_THIS_PTR dr6 = (BX_CPU_THIS_PTR dr6 & 0xffff0ff0) |
+      BX_CPU_THIS_PTR dr6.val32 = (BX_CPU_THIS_PTR dr6.val32 & 0xffff0ff0) |
                             (val_32 & 0x0000e00f);
 #endif
       break;
@@ -107,20 +107,20 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_DdRd(bxInstruction_c *i)
       }
 #if BX_CPU_LEVEL <= 4
       // 386/486: you can play with all the bits except b10 is always 1
-      BX_CPU_THIS_PTR dr7 = val_32 | 0x00000400;
+      BX_CPU_THIS_PTR dr7.set32(val_32 | 0x00000400);
 #else
       // Pentium+: bits15,14,12 are hardwired to 0, rest are settable.
       // Even bits 11,10 are changeable though reserved.
-      BX_CPU_THIS_PTR dr7 = (val_32 & 0xffff2fff) | 0x00000400;
+      BX_CPU_THIS_PTR dr7.set32((val_32 & 0xffff2fff) | 0x00000400);
 #endif
 #if BX_X86_DEBUGGER
       // if we have code breakpoints enabled then we must check
       // breakpoints condition in cpu loop
-      if (BX_CPU_THIS_PTR dr7 & 0xff) {
-        if (((BX_CPU_THIS_PTR dr7 >> 16) & 3) == 0 ||
-            ((BX_CPU_THIS_PTR dr7 >> 20) & 3) == 0 ||
-            ((BX_CPU_THIS_PTR dr7 >> 24) & 3) == 0 ||
-            ((BX_CPU_THIS_PTR dr7 >> 28) & 3) == 0)
+      if (BX_CPU_THIS_PTR dr7.bp_enabled()) {
+        if (BX_CPU_THIS_PTR dr7.get_R_W0() == 0 ||
+            BX_CPU_THIS_PTR dr7.get_R_W1() == 0 ||
+            BX_CPU_THIS_PTR dr7.get_R_W2() == 0 ||
+            BX_CPU_THIS_PTR dr7.get_R_W3() == 0) 
         {
           BX_INFO(("MOV_DdRd(): code breakpoint is set"));
           BX_CPU_THIS_PTR async_event = 1;
@@ -154,7 +154,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RdDd(bxInstruction_c *i)
 
   // Note: processor clears GD upon entering debug exception
   // handler, to allow access to the debug registers
-  if (BX_CPU_THIS_PTR dr7 & 0x2000) { // GD bit set
+  if (BX_CPU_THIS_PTR dr7.get_GD()) {
     BX_ERROR(("MOV_RdDd: DR7 GD bit is set"));
     BX_CPU_THIS_PTR debug_trap |= BX_DEBUG_DR_ACCESS_BIT;
     exception(BX_DB_EXCEPTION, 0);
@@ -183,14 +183,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RdDd(bxInstruction_c *i)
       // DR4 aliased to DR6 by default. With Debug Extensions ON,
       // access to DR4 causes #UD
     case 6: // DR6
-      val_32 = BX_CPU_THIS_PTR dr6;
+      val_32 = BX_CPU_THIS_PTR dr6.get32();
       break;
 
     case 5: // DR5
       // DR5 aliased to DR7 by default. With Debug Extensions ON,
       // access to DR5 causes #UD
     case 7: // DR7
-      val_32 = BX_CPU_THIS_PTR dr7;
+      val_32 = BX_CPU_THIS_PTR dr7.get32();
       break;
 
     default:
@@ -222,7 +222,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_DqRq(bxInstruction_c *i)
 
   // Note: processor clears GD upon entering debug exception
   // handler, to allow access to the debug registers
-  if (BX_CPU_THIS_PTR dr7 & 0x2000) { // GD bit set
+  if (BX_CPU_THIS_PTR dr7.get_GD()) {
     BX_ERROR(("MOV_DqRq: DR7 GD bit is set"));
     BX_CPU_THIS_PTR debug_trap |= BX_DEBUG_DR_ACCESS_BIT;
     exception(BX_DB_EXCEPTION, 0);
@@ -262,7 +262,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_DqRq(bxInstruction_c *i)
         exception(BX_GP_EXCEPTION, 0);
       }
       // On Pentium+, bit12 is always zero
-      BX_CPU_THIS_PTR dr6 = (BX_CPU_THIS_PTR dr6 & 0xffff0ff0) |
+      BX_CPU_THIS_PTR dr6.val32 = (BX_CPU_THIS_PTR dr6.val32 & 0xffff0ff0) |
                             (val_64 & 0x0000e00f);
       break;
 
@@ -292,18 +292,18 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_DqRq(bxInstruction_c *i)
 
       // Pentium+: bits15,14,12 are hardwired to 0, rest are settable.
       // Even bits 11,10 are changeable though reserved.
-      BX_CPU_THIS_PTR dr7 = (val_64 & 0xffff2fff) | 0x00000400;
+      BX_CPU_THIS_PTR dr7.set32((val_64 & 0xffff2fff) | 0x00000400);
 
 #if BX_X86_DEBUGGER
       // if we have code breakpoints enabled then we must check
       // breakpoints condition in cpu loop
-      if (BX_CPU_THIS_PTR dr7 & 0xff) {
-        if (((BX_CPU_THIS_PTR dr7 >> 16) & 3) == 0 ||
-            ((BX_CPU_THIS_PTR dr7 >> 20) & 3) == 0 ||
-            ((BX_CPU_THIS_PTR dr7 >> 24) & 3) == 0 ||
-            ((BX_CPU_THIS_PTR dr7 >> 28) & 3) == 0)
+      if (BX_CPU_THIS_PTR dr7.bp_enabled()) {
+        if (BX_CPU_THIS_PTR dr7.get_R_W0() == 0 ||
+            BX_CPU_THIS_PTR dr7.get_R_W1() == 0 ||
+            BX_CPU_THIS_PTR dr7.get_R_W2() == 0 ||
+            BX_CPU_THIS_PTR dr7.get_R_W3() == 0) 
         {
-          BX_INFO(("MOV_DqRq(): code breakpoint is set"));
+          BX_INFO(("MOV_DdRd(): code breakpoint is set"));
           BX_CPU_THIS_PTR async_event = 1;
         }
       }
@@ -338,7 +338,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RqDq(bxInstruction_c *i)
 
   // Note: processor clears GD upon entering debug exception
   // handler, to allow access to the debug registers
-  if (BX_CPU_THIS_PTR dr7 & 0x2000) { // GD bit set
+  if (BX_CPU_THIS_PTR dr7.get_GD()) {
     BX_ERROR(("MOV_RqDq: DR7 GD bit is set"));
     BX_CPU_THIS_PTR debug_trap |= BX_DEBUG_DR_ACCESS_BIT;
     exception(BX_DB_EXCEPTION, 0);
@@ -368,14 +368,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RqDq(bxInstruction_c *i)
       // DR4 aliased to DR6 by default. With Debug Extensions ON,
       // access to DR4 causes #UD
     case 6: // DR6
-      val_64 = BX_CPU_THIS_PTR dr6;
+      val_64 = BX_CPU_THIS_PTR dr6.get32();
       break;
 
     case 5: // DR5
       // DR5 aliased to DR7 by default. With Debug Extensions ON,
       // access to DR5 causes #UD
     case 7: // DR7
-      val_64 = BX_CPU_THIS_PTR dr7;
+      val_64 = BX_CPU_THIS_PTR dr7.get32();
       break;
 
     default:
@@ -1194,7 +1194,7 @@ bx_bool BX_CPU_C::hwbreakpoint_check(bx_address laddr)
 
 void BX_CPU_C::code_breakpoint_match(bx_address laddr)
 {
-  if (BX_CPU_THIS_PTR dr7 & 0x000000ff) {
+  if (BX_CPU_THIS_PTR dr7.bp_enabled()) {
     Bit32u dr6_bits = hwdebug_compare(laddr, 1, BX_HWDebugInstruction, BX_HWDebugInstruction);
     if (dr6_bits) {
       // Add to the list of debug events thus far.
@@ -1207,7 +1207,7 @@ void BX_CPU_C::code_breakpoint_match(bx_address laddr)
 
 void BX_CPU_C::hwbreakpoint_match(bx_address laddr, unsigned len, unsigned rw)
 {
-  if (BX_CPU_THIS_PTR dr7 & 0x000000ff) {
+  if (BX_CPU_THIS_PTR dr7.bp_enabled()) {
     // Only compare debug registers if any breakpoints are enabled
     unsigned opa, opb, write = rw & 1;
     opa = BX_HWDebugMemRW; // Read or Write always compares vs 11b
@@ -1226,8 +1226,7 @@ void BX_CPU_C::hwbreakpoint_match(bx_address laddr, unsigned len, unsigned rw)
 Bit32u BX_CPU_C::hwdebug_compare(bx_address laddr_0, unsigned size,
                           unsigned opa, unsigned opb)
 {
-  // Support x86 hardware debug facilities (DR0..DR7)
-  Bit32u dr7 = BX_CPU_THIS_PTR dr7;
+  Bit32u dr7 = BX_CPU_THIS_PTR dr7.get32();
 
   static bx_address alignment_mask[4] =
     // 00b=1  01b=2  10b=undef(8)  11b=4
@@ -1237,15 +1236,15 @@ Bit32u BX_CPU_C::hwdebug_compare(bx_address laddr_0, unsigned size,
   Bit32u dr_op[4], dr_len[4];
   bx_bool ibpoint_found_n[4], ibpoint_found = 0;
 
-  dr_len[0] = (dr7>>18) & 3;
-  dr_len[1] = (dr7>>22) & 3;
-  dr_len[2] = (dr7>>26) & 3;
-  dr_len[3] = (dr7>>30) & 3;
+  dr_len[0] = BX_CPU_THIS_PTR dr7.get_LEN0();
+  dr_len[1] = BX_CPU_THIS_PTR dr7.get_LEN1();
+  dr_len[2] = BX_CPU_THIS_PTR dr7.get_LEN2();
+  dr_len[3] = BX_CPU_THIS_PTR dr7.get_LEN3();
 
-  dr_op[0] = (dr7>>16) & 3;
-  dr_op[1] = (dr7>>20) & 3;
-  dr_op[2] = (dr7>>24) & 3;
-  dr_op[3] = (dr7>>28) & 3;
+  dr_op[0] = BX_CPU_THIS_PTR dr7.get_R_W0();
+  dr_op[1] = BX_CPU_THIS_PTR dr7.get_R_W1();
+  dr_op[2] = BX_CPU_THIS_PTR dr7.get_R_W2();
+  dr_op[3] = BX_CPU_THIS_PTR dr7.get_R_W3();
 
   for (unsigned n=0;n<4;n++) {
     bx_address dr_start = BX_CPU_THIS_PTR dr[n] & ~alignment_mask[dr_len[n]];
@@ -1283,7 +1282,7 @@ Bit32u BX_CPU_C::hwdebug_compare(bx_address laddr_0, unsigned size,
 void BX_CPU_C::iobreakpoint_match(unsigned port, unsigned len)
 {
   // Only compare debug registers if any breakpoints are enabled
-  if (BX_CPU_THIS_PTR cr4.get_DE() && (BX_CPU_THIS_PTR dr7 & 0x000000ff))
+  if (BX_CPU_THIS_PTR cr4.get_DE() && BX_CPU_THIS_PTR dr7.bp_enabled())
   {
     Bit32u dr6_bits = hwdebug_compare(port, len, BX_HWDebugIO, BX_HWDebugIO);
     if (dr6_bits) {

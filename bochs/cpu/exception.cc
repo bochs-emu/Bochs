@@ -905,15 +905,15 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code)
     // Commit debug events to DR6
 #if BX_CPU_LEVEL <= 4
     // On 386/486 bit12 is settable
-    BX_CPU_THIS_PTR dr6 = (BX_CPU_THIS_PTR dr6 & 0xffff0ff0) |
+    BX_CPU_THIS_PTR dr6.val32 = (BX_CPU_THIS_PTR dr6.val32 & 0xffff0ff0) |
                           (BX_CPU_THIS_PTR debug_trap & 0x0000f00f);
 #else
     // On Pentium+, bit12 is always zero
-    BX_CPU_THIS_PTR dr6 = (BX_CPU_THIS_PTR dr6 & 0xffff0ff0) |
+    BX_CPU_THIS_PTR dr6.val32 = (BX_CPU_THIS_PTR dr6.val32 & 0xffff0ff0) |
                           (BX_CPU_THIS_PTR debug_trap & 0x0000e00f);
 #endif
     // clear GD flag in the DR7 prior entering debug exception handler
-    BX_CPU_THIS_PTR dr7 &= ~0x00002000;
+    BX_CPU_THIS_PTR dr7.set_GD(0);
   }
 
   BX_CPU_THIS_PTR EXT = 1;

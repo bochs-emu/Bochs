@@ -404,7 +404,7 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
   BX_CPU_THIS_PTR cr0.set_TS(1);
 
   // Task switch clears LE/L3/L2/L1/L0 in DR7
-  BX_CPU_THIS_PTR dr7 &= ~0x00000155;
+  BX_CPU_THIS_PTR dr7.val32 &= ~0x00000155;
 
   // Step 10: If call or interrupt, set the NT flag in the eflags
   //          image stored in new task's TSS.  If IRET or JMP,

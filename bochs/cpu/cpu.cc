@@ -660,11 +660,11 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
 #endif
 #if BX_X86_DEBUGGER
        // any debug code breakpoint is set
-     || ((BX_CPU_THIS_PTR dr7 & 0xff) &&
-           (((BX_CPU_THIS_PTR dr7 >> 16) & 3) == 0 ||
-            ((BX_CPU_THIS_PTR dr7 >> 20) & 3) == 0 ||
-            ((BX_CPU_THIS_PTR dr7 >> 24) & 3) == 0 ||
-            ((BX_CPU_THIS_PTR dr7 >> 28) & 3) == 0))
+     || (BX_CPU_THIS_PTR dr7.bp_enabled() &&
+           (BX_CPU_THIS_PTR dr7.get_R_W0() == 0 ||
+            BX_CPU_THIS_PTR dr7.get_R_W1() == 0 ||
+            BX_CPU_THIS_PTR dr7.get_R_W2() == 0 ||
+            BX_CPU_THIS_PTR dr7.get_R_W3() == 0))
 #endif
         ))
     BX_CPU_THIS_PTR async_event = 0;

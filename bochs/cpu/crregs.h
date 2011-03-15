@@ -29,10 +29,10 @@ struct bx_cr0_t {
 
   // Accessors for all cr0 bitfields.
 #define IMPLEMENT_CRREG_ACCESSORS(name, bitnum)            \
-  BX_CPP_INLINE bx_bool get_##name () {                    \
+  BX_CPP_INLINE bx_bool get_##name() const {               \
     return 1 & (val32 >> bitnum);                          \
   }                                                        \
-  BX_CPP_INLINE void set_##name (Bit8u val) {              \
+  BX_CPP_INLINE void set_##name(Bit8u val) {               \
     val32 = (val32 & ~(1<<bitnum)) | ((!!val) << bitnum);  \
   }
 
@@ -69,7 +69,7 @@ struct bx_cr0_t {
 #endif
   IMPLEMENT_CRREG_ACCESSORS(PG, 31);
 
-  BX_CPP_INLINE Bit32u get32() { return val32; }
+  BX_CPP_INLINE Bit32u get32() const { return val32; }
   // ET is hardwired bit in CR0
   BX_CPP_INLINE void set32(Bit32u val) { val32 = val | 0x10; }
 };
@@ -116,7 +116,7 @@ struct bx_cr4_t {
 #endif
   IMPLEMENT_CRREG_ACCESSORS(OSXSAVE, 18);
 
-  BX_CPP_INLINE Bit32u get32() { return val32; }
+  BX_CPP_INLINE Bit32u get32() const { return val32; }
   BX_CPP_INLINE void set32(Bit32u val) { val32 = val; }
 };
 
@@ -124,6 +124,66 @@ struct bx_cr4_t {
    (BX_CR4_PSE_MASK | BX_CR4_PAE_MASK | BX_CR4_PGE_MASK | BX_CR4_PCIDE_MASK)
 
 #endif  // #if BX_CPU_LEVEL >= 4
+
+struct bx_dr6_t {
+  Bit32u val32; // 32bit value of register
+
+  IMPLEMENT_CRREG_ACCESSORS(B0, 0);
+  IMPLEMENT_CRREG_ACCESSORS(B1, 1);
+  IMPLEMENT_CRREG_ACCESSORS(B2, 2);
+  IMPLEMENT_CRREG_ACCESSORS(B3, 3);
+
+  IMPLEMENT_CRREG_ACCESSORS(BD, 13);
+  IMPLEMENT_CRREG_ACCESSORS(BS, 14);
+  IMPLEMENT_CRREG_ACCESSORS(BT, 15);
+
+  BX_CPP_INLINE Bit32u get32() const { return val32; }
+  BX_CPP_INLINE void set32(Bit32u val) { val32 = val; }
+};
+
+struct bx_dr7_t {
+  Bit32u val32; // 32bit value of register
+
+  IMPLEMENT_CRREG_ACCESSORS(L0, 0);
+  IMPLEMENT_CRREG_ACCESSORS(G0, 1);
+  IMPLEMENT_CRREG_ACCESSORS(L1, 2);
+  IMPLEMENT_CRREG_ACCESSORS(G1, 3);
+  IMPLEMENT_CRREG_ACCESSORS(L2, 4);
+  IMPLEMENT_CRREG_ACCESSORS(G2, 5);
+  IMPLEMENT_CRREG_ACCESSORS(L3, 6);
+  IMPLEMENT_CRREG_ACCESSORS(G3, 7);
+  IMPLEMENT_CRREG_ACCESSORS(LE, 8);
+  IMPLEMENT_CRREG_ACCESSORS(GE, 9);
+  IMPLEMENT_CRREG_ACCESSORS(GD, 13);
+
+#define IMPLEMENT_DRREG_ACCESSORS(name, bitmask, bitnum)      \
+  int get_##name() const {                                    \
+    return (val32 & (bitmask)) >> (bitnum);                   \
+  }
+
+  IMPLEMENT_DRREG_ACCESSORS(R_W0, 0x00030000, 16);
+  IMPLEMENT_DRREG_ACCESSORS(LEN0, 0x000C0000, 18);
+  IMPLEMENT_DRREG_ACCESSORS(R_W1, 0x00300000, 20);
+  IMPLEMENT_DRREG_ACCESSORS(LEN1, 0x00C00000, 22);
+  IMPLEMENT_DRREG_ACCESSORS(R_W2, 0x03000000, 24);
+  IMPLEMENT_DRREG_ACCESSORS(LEN2, 0x0C000000, 26);
+  IMPLEMENT_DRREG_ACCESSORS(R_W3, 0x30000000, 28);
+  IMPLEMENT_DRREG_ACCESSORS(LEN3, 0xC0000000, 30);
+
+  IMPLEMENT_DRREG_ACCESSORS(bp_enabled, 0xFF, 0);
+
+  BX_CPP_INLINE Bit32u get32() const { return val32; }
+  BX_CPP_INLINE void set32(Bit32u val) { 
+#if BX_CPU_LEVEL <= 4
+    // 386/486: you can play with all the bits except b10 is always 1
+    val32 = val | 0x00000400;
+#else
+    // Pentium+: bits15,14,12 are hardwired to 0, rest are settable.
+    // Even bits 11,10 are changeable though reserved.
+    val32 = (val & 0xffff2fff) | 0x00000400;
+#endif
+  }
+};
 
 #if BX_SUPPORT_X86_64
 
@@ -144,7 +204,7 @@ struct bx_efer_t {
   IMPLEMENT_CRREG_ACCESSORS(LMSLE, 13); /* AMD Long Mode Segment Limit */
   IMPLEMENT_CRREG_ACCESSORS(FFXSR, 14);
 
-  BX_CPP_INLINE Bit32u get32() { return val32; }
+  BX_CPP_INLINE Bit32u get32() const { return val32; }
   BX_CPP_INLINE void set32(Bit32u val) { val32 = val; }
 };
 
@@ -168,7 +228,7 @@ struct xcr0_t {
   IMPLEMENT_CRREG_ACCESSORS(FPU, BX_XCR0_FPU_BIT);
   IMPLEMENT_CRREG_ACCESSORS(SSE, BX_XCR0_SSE_BIT);
 
-  BX_CPP_INLINE Bit32u get32() { return val32; }
+  BX_CPP_INLINE Bit32u get32() const { return val32; }
   BX_CPP_INLINE void set32(Bit32u val) { val32 = val; }
 };
 #endif
@@ -194,7 +254,7 @@ typedef struct msr {
      reserved(rsrv), ignored(ign) {}
 
   BX_CPP_INLINE void reset() { val64 = reset_value; }
-  BX_CPP_INLINE Bit64u get64() { return val64; }
+  BX_CPP_INLINE Bit64u get64() const { return val64; }
 
   BX_CPP_INLINE bx_bool set64(Bit64u new_val) {
      new_val = (new_val & ~ignored) | (val64 & ignored);
