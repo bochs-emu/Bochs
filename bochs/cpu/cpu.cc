@@ -660,7 +660,7 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
 #endif
 #if BX_X86_DEBUGGER
        // any debug code breakpoint is set
-     || (BX_CPU_THIS_PTR dr7.bp_enabled() &&
+     || (BX_CPU_THIS_PTR dr7.get_bp_enabled() &&
            (BX_CPU_THIS_PTR dr7.get_R_W0() == 0 ||
             BX_CPU_THIS_PTR dr7.get_R_W1() == 0 ||
             BX_CPU_THIS_PTR dr7.get_R_W2() == 0 ||

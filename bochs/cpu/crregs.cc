@@ -116,7 +116,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_DdRd(bxInstruction_c *i)
 #if BX_X86_DEBUGGER
       // if we have code breakpoints enabled then we must check
       // breakpoints condition in cpu loop
-      if (BX_CPU_THIS_PTR dr7.bp_enabled()) {
+      if (BX_CPU_THIS_PTR dr7.get_bp_enabled()) {
         if (BX_CPU_THIS_PTR dr7.get_R_W0() == 0 ||
             BX_CPU_THIS_PTR dr7.get_R_W1() == 0 ||
             BX_CPU_THIS_PTR dr7.get_R_W2() == 0 ||
@@ -297,7 +297,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_DqRq(bxInstruction_c *i)
 #if BX_X86_DEBUGGER
       // if we have code breakpoints enabled then we must check
       // breakpoints condition in cpu loop
-      if (BX_CPU_THIS_PTR dr7.bp_enabled()) {
+      if (BX_CPU_THIS_PTR dr7.get_bp_enabled()) {
         if (BX_CPU_THIS_PTR dr7.get_R_W0() == 0 ||
             BX_CPU_THIS_PTR dr7.get_R_W1() == 0 ||
             BX_CPU_THIS_PTR dr7.get_R_W2() == 0 ||
@@ -1194,7 +1194,7 @@ bx_bool BX_CPU_C::hwbreakpoint_check(bx_address laddr)
 
 void BX_CPU_C::code_breakpoint_match(bx_address laddr)
 {
-  if (BX_CPU_THIS_PTR dr7.bp_enabled()) {
+  if (BX_CPU_THIS_PTR dr7.get_bp_enabled()) {
     Bit32u dr6_bits = hwdebug_compare(laddr, 1, BX_HWDebugInstruction, BX_HWDebugInstruction);
     if (dr6_bits) {
       // Add to the list of debug events thus far.
@@ -1207,7 +1207,7 @@ void BX_CPU_C::code_breakpoint_match(bx_address laddr)
 
 void BX_CPU_C::hwbreakpoint_match(bx_address laddr, unsigned len, unsigned rw)
 {
-  if (BX_CPU_THIS_PTR dr7.bp_enabled()) {
+  if (BX_CPU_THIS_PTR dr7.get_bp_enabled()) {
     // Only compare debug registers if any breakpoints are enabled
     unsigned opa, opb, write = rw & 1;
     opa = BX_HWDebugMemRW; // Read or Write always compares vs 11b
@@ -1282,7 +1282,7 @@ Bit32u BX_CPU_C::hwdebug_compare(bx_address laddr_0, unsigned size,
 void BX_CPU_C::iobreakpoint_match(unsigned port, unsigned len)
 {
   // Only compare debug registers if any breakpoints are enabled
-  if (BX_CPU_THIS_PTR cr4.get_DE() && BX_CPU_THIS_PTR dr7.bp_enabled())
+  if (BX_CPU_THIS_PTR cr4.get_DE() && BX_CPU_THIS_PTR dr7.get_bp_enabled())
   {
     Bit32u dr6_bits = hwdebug_compare(port, len, BX_HWDebugIO, BX_HWDebugIO);
     if (dr6_bits) {
