@@ -258,10 +258,10 @@ int bx_dbg_lbreakpoint_command(BreakpointKind bk, bx_address laddress);
 int bx_dbg_pbreakpoint_command(BreakpointKind bk, bx_phy_address paddress);
 void bx_dbg_info_bpoints_command(void);
 void bx_dbg_quit_command(void);
-#define BX_INFO_GENERAL_PURPOSE_REGS 1 /* bitmasks - choices for bx_dbg_info_registers_command */
-#define BX_INFO_FPU_REGS 2
-#define BX_INFO_MMX_REGS 4
-#define BX_INFO_SSE_REGS 8
+#define BX_INFO_GENERAL_PURPOSE_REGS 0x01 /* bitmasks - choices for bx_dbg_info_registers_command */
+#define BX_INFO_FPU_REGS 0x02
+#define BX_INFO_MMX_REGS 0x04
+#define BX_INFO_SSE_REGS 0x08
 void bx_dbg_info_registers_command(int);
 void bx_dbg_info_ivt_command(unsigned from, unsigned to);
 void bx_dbg_info_idt_command(unsigned from, unsigned to);

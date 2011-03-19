@@ -261,6 +261,9 @@ Bit32u BX_CPU_C::get_std_cpuid_features(void)
 
   if (BX_CPU_SUPPORT_ISA_EXTENSION(BX_CPU_SSE2))
     features |= BX_CPUID_STD_SSE2;
+
+  if (BX_CPU_VENDOR_INTEL)
+    features |= BX_CPUID_STD_SELF_SNOOP;
 #endif
 
 #if BX_SUPPORT_SMP
