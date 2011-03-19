@@ -675,7 +675,7 @@ gdbstub.o: gdbstub.@CPP_SUFFIX@ bochs.h config.h osdep.h bx_debug/debug.h config
   osdep.h bxversion.h gui/siminterface.h gui/paramtree.h memory/memory.h \
   pc_system.h plugin.h extplugin.h ltdl.h gui/gui.h \
   instrument/stubs/instrument.h param_names.h cpu/cpu.h \
-  cpu/model_specific.h cpu/crregs.h cpu/descriptor.h cpu/instr.h \
+  cpu/cpuid.h cpu/crregs.h cpu/descriptor.h cpu/instr.h \
   cpu/ia_opcodes.h cpu/lazy_flags.h cpu/icache.h cpu/apic.h cpu/i387.h \
   fpu/softfloat.h fpu/tag_w.h fpu/status_w.h fpu/control_w.h cpu/xmm.h \
   cpu/stack.h iodev/iodev.h bochs.h param_names.h
@@ -683,14 +683,14 @@ load32bitOShack.o: load32bitOShack.@CPP_SUFFIX@ bochs.h config.h osdep.h \
   bx_debug/debug.h config.h osdep.h bxversion.h gui/siminterface.h \
   gui/paramtree.h memory/memory.h pc_system.h plugin.h extplugin.h ltdl.h \
   gui/gui.h instrument/stubs/instrument.h param_names.h cpu/cpu.h \
-  cpu/model_specific.h cpu/crregs.h cpu/descriptor.h cpu/instr.h \
+  cpu/cpuid.h cpu/crregs.h cpu/descriptor.h cpu/instr.h \
   cpu/ia_opcodes.h cpu/lazy_flags.h cpu/icache.h cpu/apic.h cpu/i387.h \
   fpu/softfloat.h fpu/tag_w.h fpu/status_w.h fpu/control_w.h cpu/xmm.h \
   iodev/iodev.h bochs.h param_names.h
 logio.o: logio.@CPP_SUFFIX@ bochs.h config.h osdep.h bx_debug/debug.h config.h \
   osdep.h bxversion.h gui/siminterface.h gui/paramtree.h memory/memory.h \
   pc_system.h plugin.h extplugin.h ltdl.h gui/gui.h \
-  instrument/stubs/instrument.h cpu/cpu.h cpu/model_specific.h \
+  instrument/stubs/instrument.h cpu/cpu.h cpu/cpuid.h \
   cpu/crregs.h cpu/descriptor.h cpu/instr.h cpu/ia_opcodes.h \
   cpu/lazy_flags.h cpu/icache.h cpu/apic.h cpu/i387.h fpu/softfloat.h \
   fpu/tag_w.h fpu/status_w.h fpu/control_w.h cpu/xmm.h iodev/iodev.h \
@@ -699,7 +699,7 @@ main.o: main.@CPP_SUFFIX@ bochs.h config.h osdep.h bx_debug/debug.h config.h \
   osdep.h bxversion.h gui/siminterface.h gui/paramtree.h memory/memory.h \
   pc_system.h plugin.h extplugin.h ltdl.h gui/gui.h \
   instrument/stubs/instrument.h param_names.h gui/textconfig.h cpu/cpu.h \
-  cpu/model_specific.h cpu/crregs.h cpu/descriptor.h cpu/instr.h \
+  cpu/cpuid.h cpu/crregs.h cpu/descriptor.h cpu/instr.h \
   cpu/ia_opcodes.h cpu/lazy_flags.h cpu/icache.h cpu/apic.h cpu/i387.h \
   fpu/softfloat.h fpu/tag_w.h fpu/status_w.h fpu/control_w.h cpu/xmm.h \
   iodev/iodev.h bochs.h param_names.h
@@ -710,7 +710,7 @@ osdep.o: osdep.@CPP_SUFFIX@ bochs.h config.h osdep.h bx_debug/debug.h config.h \
 pc_system.o: pc_system.@CPP_SUFFIX@ bochs.h config.h osdep.h bx_debug/debug.h \
   config.h osdep.h bxversion.h gui/siminterface.h gui/paramtree.h \
   memory/memory.h pc_system.h plugin.h extplugin.h ltdl.h gui/gui.h \
-  instrument/stubs/instrument.h cpu/cpu.h cpu/model_specific.h \
+  instrument/stubs/instrument.h cpu/cpu.h cpu/cpuid.h \
   cpu/crregs.h cpu/descriptor.h cpu/instr.h cpu/ia_opcodes.h \
   cpu/lazy_flags.h cpu/icache.h cpu/apic.h cpu/i387.h fpu/softfloat.h \
   fpu/tag_w.h fpu/status_w.h fpu/control_w.h cpu/xmm.h iodev/iodev.h \

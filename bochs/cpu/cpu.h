@@ -634,7 +634,7 @@ typedef struct
 #define BX_CPU_AVX_FMA          0x04000000        /* AVX FMA instruction */
 #define BX_CPU_X86_64           0x08000000        /* x86-64 instruction */
 
-#include "model_specific.h"
+#include "cpuid.h"
 #include "crregs.h"
 #include "descriptor.h"
 #include "instr.h"
