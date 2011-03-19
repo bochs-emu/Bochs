@@ -2082,6 +2082,11 @@ turn it off.
       <entry>Intel Virtualization Extensions (VMX) support</entry>
     </row>
     <row>
+      <entry>--enable-avx</entry>
+      <entry>no</entry>
+      <entry>AVX instructions support</entry>
+    </row>
+    <row>
       <entry>--enable-x86-debugger</entry>
       <entry>no</entry>
       <entry>X86 debugger support.  If the software you run in bochs
@@ -6491,7 +6496,8 @@ From here, you may use the following commands:
   r|reg|regs|registers         List of CPU integer registers and their contents
   fp|fpu                       List of all FPU registers and their contents
   mmx                          List of all MMX registers and their contents
-  sse                          List of all SSE registers and their contents
+  sse|xmm                      List of all SSE registers and their contents
+  ymm                          List of all AVX registers and their contents
   sreg                         Show segment registers and their contents
   dreg                         Show debug registers and their contents
   creg                         Show control registers and their contents

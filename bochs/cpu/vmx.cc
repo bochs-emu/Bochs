@@ -1584,6 +1584,9 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
 #endif
   handleCpuModeChange();
   handleSseModeChange();
+#if BX_SUPPORT_AVX
+  handleAvxModeChange();
+#endif
 
   return VMXERR_NO_ERROR;
 }
@@ -2029,6 +2032,9 @@ void BX_CPU_C::VMexitLoadHostState(void)
 #endif
   handleCpuModeChange();
   handleSseModeChange();
+#if BX_SUPPORT_AVX
+  handleAvxModeChange();
+#endif
 }
 
 void BX_CPU_C::VMexit(bxInstruction_c *i, Bit32u reason, Bit64u qualification)

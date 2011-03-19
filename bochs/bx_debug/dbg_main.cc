@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2009  The Bochs Project
+//  Copyright (C) 2001-2011  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -600,6 +600,14 @@ void bx_dbg_lin_memory_access(unsigned cpu, bx_address lin, bx_phy_address phy, 
      dbg_printf(": 0x%08X 0x%08X 0x%08X 0x%08X",
          xmmdata->xmm32u(3), xmmdata->xmm32u(2), xmmdata->xmm32u(1), xmmdata->xmm32u(0));
   }
+#if BX_SUPPORT_AVX
+  else if (len == 32) {
+     const BxPackedAvxRegister *xmmdata = (const BxPackedAvxRegister*)(data);
+     dbg_printf(": 0x%08X 0x%08X 0x%08X 0x%08X 0x%08X 0x%08X 0x%08X 0x%08X",
+        xmmdata->avx32u(7), xmmdata->avx32u(6), xmmdata->avx32u(5), xmmdata->avx32u(4),
+        xmmdata->avx32u(3), xmmdata->avx32u(2), xmmdata->avx32u(1), xmmdata->avx32u(0));
+  }
+#endif
 #endif
   else {
      for (int i=len-1;i >= 0;i--) {
@@ -672,6 +680,14 @@ void bx_dbg_phy_memory_access(unsigned cpu, bx_phy_address phy, unsigned len, un
      dbg_printf(": 0x%08X 0x%08X 0x%08X 0x%08X",
          xmmdata->xmm32u(3), xmmdata->xmm32u(2), xmmdata->xmm32u(1), xmmdata->xmm32u(0));
   }
+#if BX_SUPPORT_AVX
+  else if (len == 32) {
+     const BxPackedAvxRegister *xmmdata = (const BxPackedAvxRegister*)(data);
+     dbg_printf(": 0x%08X 0x%08X 0x%08X 0x%08X 0x%08X 0x%08X 0x%08X 0x%08X",
+        xmmdata->avx32u(7), xmmdata->avx32u(6), xmmdata->avx32u(5), xmmdata->avx32u(4),
+        xmmdata->avx32u(3), xmmdata->avx32u(2), xmmdata->avx32u(1), xmmdata->avx32u(0));
+  }
+#endif
 #endif
   else {
      for (int i=len-1;i >= 0;i--) {
@@ -700,30 +716,37 @@ void bx_dbg_exit(int code)
 // functions for browsing of cpu state
 //
 
+void bx_dbg_print_mxcsr_state(void)
+{
+#if BX_CPU_LEVEL >= 6
+  Bit32u mxcsr = SIM->get_param_num("SSE.mxcsr", dbg_cpu_list)->get();
+  dbg_printf("MXCSR: 0x%05x: %s %s RC:%d %s %s %s %s %s %s %s %s %s %s %s %s %s\n", mxcsr,
+     (mxcsr & (1<<17)) ? "ULE" : "ule",
+     (mxcsr & (1<<15)) ? "FUZ" : "fuz",
+     (mxcsr >> 13) & 3,
+     (mxcsr & (1<<12)) ? "PM" : "pm",
+     (mxcsr & (1<<11)) ? "UM" : "um",
+     (mxcsr & (1<<10)) ? "OM" : "om",
+     (mxcsr & (1<<9)) ? "ZM" : "zm",
+     (mxcsr & (1<<8)) ? "DM" : "dm",
+     (mxcsr & (1<<7)) ? "IM" : "im",
+     (mxcsr & (1<<6)) ? "DAZ" : "daz",
+     (mxcsr & (1<<5)) ? "PE" : "pe",
+     (mxcsr & (1<<4)) ? "UE" : "ue",
+     (mxcsr & (1<<3)) ? "OE" : "oe",
+     (mxcsr & (1<<2)) ? "ZE" : "ze",
+     (mxcsr & (1<<1)) ? "DE" : "de",
+     (mxcsr & (1<<0)) ? "IE" : "ie");
+#endif
+}
+
 void bx_dbg_print_sse_state(void)
 {
 #if BX_CPU_LEVEL >= 6
   Bit32u isa_extensions_bitmask = SIM->get_param_num("isa_extensions_bitmask", dbg_cpu_list)->get();
 
   if ((isa_extensions_bitmask & BX_CPU_SSE) != 0) {
-    Bit32u mxcsr = SIM->get_param_num("SSE.mxcsr", dbg_cpu_list)->get();
-    dbg_printf("MXCSR: 0x%05x: %s %s RC:%d %s %s %s %s %s %s %s %s %s %s %s %s %s\n", mxcsr,
-       (mxcsr & (1<<17)) ? "ULE" : "ule",
-       (mxcsr & (1<<15)) ? "FUZ" : "fuz",
-       (mxcsr >> 13) & 3,
-       (mxcsr & (1<<12)) ? "PM" : "pm",
-       (mxcsr & (1<<11)) ? "UM" : "um",
-       (mxcsr & (1<<10)) ? "OM" : "om",
-       (mxcsr & (1<<9)) ? "ZM" : "zm",
-       (mxcsr & (1<<8)) ? "DM" : "dm",
-       (mxcsr & (1<<7)) ? "IM" : "im",
-       (mxcsr & (1<<6)) ? "DAZ" : "daz",
-       (mxcsr & (1<<5)) ? "PE" : "pe",
-       (mxcsr & (1<<4)) ? "UE" : "ue",
-       (mxcsr & (1<<3)) ? "OE" : "oe",
-       (mxcsr & (1<<2)) ? "ZE" : "ze",
-       (mxcsr & (1<<1)) ? "DE" : "de",
-       (mxcsr & (1<<0)) ? "IE" : "ie");
+    bx_dbg_print_mxcsr_state();
 
     char param_name[20];
     for(unsigned i=0;i<BX_XMM_REGISTERS;i++) {
@@ -739,6 +762,36 @@ void bx_dbg_print_sse_state(void)
 #endif
   {
     dbg_printf("The CPU doesn't support SSE state !\n");
+  }
+}
+
+void bx_dbg_print_avx_state(unsigned vlen)
+{
+#if BX_SUPPORT_AVX
+  Bit32u isa_extensions_bitmask = SIM->get_param_num("isa_extensions_bitmask", dbg_cpu_list)->get();
+
+  if ((isa_extensions_bitmask & BX_CPU_AVX) != 0) {
+    bx_dbg_print_mxcsr_state();
+
+    char param_name[20];
+
+    for(unsigned i=0;i<BX_XMM_REGISTERS;i++) {
+      dbg_printf("VMM[%02u]: ", i);
+      for (int j=vlen;j >= 0; j--) {
+        sprintf(param_name, "SSE.xmm%02d_%d", i, j*2+1);
+        Bit64u hi = SIM->get_param_num(param_name, dbg_cpu_list)->get64();
+        sprintf(param_name, "SSE.xmm%02d_%d", i, j*2);
+        Bit64u lo = SIM->get_param_num(param_name, dbg_cpu_list)->get64();
+        if (j!=(int)vlen) dbg_printf("_");
+        dbg_printf("%08x_%08x_%08x_%08x", GET32H(hi), GET32L(hi), GET32H(lo), GET32L(lo));
+      }
+      dbg_printf("\n");
+    }
+  }
+  else
+#endif
+  {
+    dbg_printf("The CPU doesn't support AVX state !\n");
   }
 }
 
@@ -985,7 +1038,7 @@ void bx_dbg_info_registers_command(int which_regs_mask)
     reg = BX_CPU(dbg_cpu)->get_reg64(BX_64BIT_REG_R14);
     dbg_printf("r14: 0x%08x_%08x ", GET32H(reg), GET32L(reg));
     reg = BX_CPU(dbg_cpu)->get_reg64(BX_64BIT_REG_R15);
-    dbg_printf("r15: 0x%08x+%08x\n", GET32H(reg), GET32L(reg));
+    dbg_printf("r15: 0x%08x_%08x\n", GET32H(reg), GET32L(reg));
     reg = bx_dbg_get_instruction_pointer();
     dbg_printf("rip: 0x%08x_%08x\n", GET32H(reg), GET32L(reg));
 #endif
@@ -1004,7 +1057,10 @@ void bx_dbg_info_registers_command(int which_regs_mask)
     bx_dbg_print_mmx_state();
   }
 
-  if (which_regs_mask & BX_INFO_SSE_REGS) {
+  if (which_regs_mask & BX_INFO_AVX_REGS) {
+    bx_dbg_print_avx_state(BX_VLMAX-1);
+  }
+  else if (which_regs_mask & BX_INFO_SSE_REGS) {
     bx_dbg_print_sse_state();
   }
 }

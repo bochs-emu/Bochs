@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2003-2010 Stanislav Shwartsman
+//   Copyright (c) 2003-2011 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -295,7 +295,7 @@ static Bit16u rcp_table[2048] = {
 };
 
 // approximate reciprocal of scalar single precision FP
-static float32 approximate_rcp(float32 op)
+float32 approximate_rcp(float32 op)
 {
   float_class_t op_class = float32_class(op);
 
@@ -640,7 +640,7 @@ Bit16u rsqrt_table1[1024] =
 
 
 // approximate reciprocal sqrt of scalar single precision FP
-static float32 approximate_rsqrt(float32 op)
+float32 approximate_rsqrt(float32 op)
 {
   float_class_t op_class = float32_class(op);
 

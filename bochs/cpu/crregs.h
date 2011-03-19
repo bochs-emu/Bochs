@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2007-2009 Stanislav Shwartsman
+//   Copyright (c) 2007-2011 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -209,15 +209,18 @@ struct bx_efer_t {
 struct xcr0_t {
   Bit32u  val32; // 32bit value of register
 
-#define BX_XCR0_SUPPORTED_BITS 0x3
+#define BX_XCR0_SUPPORTED_BITS 0x7
 
 #define BX_XCR0_FPU_BIT   0
 #define BX_XCR0_FPU_MASK (1<<BX_XCR0_FPU_BIT)
 #define BX_XCR0_SSE_BIT   1
 #define BX_XCR0_SSE_MASK (1<<BX_XCR0_SSE_BIT)
+#define BX_XCR0_AVX_BIT   2
+#define BX_XCR0_AVX_MASK (1<<BX_XCR0_AVX_BIT)
 
   IMPLEMENT_CRREG_ACCESSORS(FPU, BX_XCR0_FPU_BIT);
   IMPLEMENT_CRREG_ACCESSORS(SSE, BX_XCR0_SSE_BIT);
+  IMPLEMENT_CRREG_ACCESSORS(AVX, BX_XCR0_AVX_BIT);
 
   BX_CPP_INLINE Bit32u get32() const { return val32; }
   BX_CPP_INLINE void set32(Bit32u val) { val32 = val; }

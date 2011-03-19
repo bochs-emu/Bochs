@@ -48,7 +48,7 @@ void BX_CPU_C::check_exceptionsSSE(int exceptions_flags)
   }
 }
 
-BX_CPP_INLINE void mxcsr_to_softfloat_status_word(float_status_t &status, bx_mxcsr_t mxcsr)
+void mxcsr_to_softfloat_status_word(float_status_t &status, bx_mxcsr_t mxcsr)
 {
   status.float_exception_flags = 0; // clear exceptions before execution
   status.float_nan_handling_mode = float_first_operand_nan;
@@ -2175,6 +2175,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROUNDSD_VsdWsdIbR(bxInstruction_c *i)
 #endif
 }
 
+
 /* Opcode: 66 0F 3A 40
  * Selectively multiply packed SP floating-point values from xmm1 with
  * packed SP floating-point values from xmm2, add and selectively
@@ -2237,7 +2238,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::DPPS_VpsWpsIbR(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::DPPD_VpdWpdIbR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn());
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->vvv());
   BxPackedXmmRegister op2 = BX_READ_XMM_REG(i->rm()), tmp;
   Bit8u mask = i->Ib();
 
@@ -2267,6 +2268,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::DPPD_VpdWpdIbR(bxInstruction_c *i)
   if (mask & 0x02) op1.xmm64u(1) = result;
 
   check_exceptionsSSE(status_word.float_exception_flags);
-  BX_WRITE_XMM_REG(i->nnn(), op1);
+  BX_WRITE_XMM_REGZ(i->nnn(), op1, i->getVL());
 #endif
 }

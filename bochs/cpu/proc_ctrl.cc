@@ -261,6 +261,12 @@ void BX_CPU_C::handleCpuModeChange(void)
 
   updateFetchModeMask();
 
+#if BX_CPU_LEVEL >= 6
+#if BX_SUPPORT_AVX
+  handleAvxModeChange();
+#endif
+#endif
+
   if (mode != BX_CPU_THIS_PTR cpu_mode) {
     BX_DEBUG(("%s activated", cpu_mode_string(BX_CPU_THIS_PTR cpu_mode)));
 #if BX_DEBUGGER
@@ -313,7 +319,41 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BxNoSSE(bxInstruction_c *i)
 
   if(BX_CPU_THIS_PTR cr0.get_TS())
     exception(BX_NM_EXCEPTION, 0);
+
+  BX_ASSERT(0);
 }
+
+#if BX_SUPPORT_AVX
+void BX_CPU_C::handleAvxModeChange(void)
+{
+  if(BX_CPU_THIS_PTR cr0.get_TS()) {
+    BX_CPU_THIS_PTR avx_ok = 0;
+  }
+  else {
+    if (! protected_mode() || ! BX_CPU_THIS_PTR cr4.get_OSXSAVE() ||
+        (~BX_CPU_THIS_PTR xcr0.val32 & 0x6) != 0) BX_CPU_THIS_PTR avx_ok = 0;
+    else
+      BX_CPU_THIS_PTR avx_ok = 1;
+  }
+
+  updateFetchModeMask(); /* AVX_OK changed */
+}  
+
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::BxNoAVX(bxInstruction_c *i)
+{
+  if (! protected_mode() || ! BX_CPU_THIS_PTR cr4.get_OSXSAVE())
+    exception(BX_UD_EXCEPTION, 0);
+
+  if (~BX_CPU_THIS_PTR xcr0.val32 & 0x6)
+    exception(BX_UD_EXCEPTION, 0);
+
+  if(BX_CPU_THIS_PTR cr0.get_TS())
+    exception(BX_NM_EXCEPTION, 0);
+
+  BX_ASSERT(0);
+}
+#endif
+
 #endif
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDPMC(bxInstruction_c *i)

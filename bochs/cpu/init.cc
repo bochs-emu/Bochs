@@ -528,13 +528,17 @@ void BX_CPU_C::register_state(void)
 
 #if BX_CPU_LEVEL >= 6
   if (BX_CPU_SUPPORT_ISA_EXTENSION(BX_CPU_SSE)) {
-    bx_list_c *sse = new bx_list_c(cpu, "SSE", 2*BX_XMM_REGISTERS+1);
+    bx_list_c *sse = new bx_list_c(cpu, "SSE", BX_VLMAX*2*BX_XMM_REGISTERS+1);
     BXRS_HEX_PARAM_FIELD(sse, mxcsr, mxcsr.mxcsr);
     for (n=0; n<BX_XMM_REGISTERS; n++) {
-      sprintf(name, "xmm%02d_1", n);
-      new bx_shadow_num_c(sse, name, &xmm[n].xmm64u(1), BASE_HEX);
-      sprintf(name, "xmm%02d_0", n);
-      new bx_shadow_num_c(sse, name, &xmm[n].xmm64u(0), BASE_HEX);
+      for(unsigned j=0;j < BX_VLMAX*2;j++) {
+        sprintf(name, "xmm%02d_%d", n, j);
+#if BX_SUPPORT_AVX
+        new bx_shadow_num_c(sse, name, &vmm[n].avx64u(j), BASE_HEX);
+#else
+        new bx_shadow_num_c(sse, name, &vmm[n].xmm64u(j), BASE_HEX);
+#endif
+      }
     }
   }
 #endif
@@ -694,6 +698,9 @@ void BX_CPU_C::after_restore_state(void)
   handleCpuModeChange();
 #if BX_CPU_LEVEL >= 6
   handleSseModeChange();
+#if BX_SUPPORT_AVX
+  handleAvxModeChange();
+#endif
 #endif
 
   if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_IA32_REAL) CPL = 0;
@@ -901,6 +908,11 @@ void BX_CPU_C::reset(unsigned source)
 
 #if BX_CPU_LEVEL >= 6
   BX_CPU_THIS_PTR xcr0.set32(0x1);
+  BX_CPU_THIS_PTR xcr0_suppmask = 0x3;
+#if BX_SUPPORT_AVX
+  if (BX_CPU_SUPPORT_ISA_EXTENSION(BX_CPU_AVX))
+    BX_CPU_THIS_PTR xcr0_suppmask |= BX_XCR0_AVX_MASK;
+#endif
 #endif
 
 /* initialise MSR registers to defaults */
@@ -994,17 +1006,18 @@ void BX_CPU_C::reset(unsigned source)
 
 #if BX_CPU_LEVEL >= 6
   BX_CPU_THIS_PTR sse_ok = 0;
+#if BX_SUPPORT_AVX
+  BX_CPU_THIS_PTR avx_ok = 0;
+#endif
 
   // Reset XMM state - unchanged on #INIT
   if (source == BX_RESET_HARDWARE) {
+    static BxPackedXmmRegister xmmnil; /* compiler will clear the variable */
     for(n=0; n<BX_XMM_REGISTERS; n++)
-    {
-      BX_CPU_THIS_PTR xmm[n].xmm64u(0) = 0;
-      BX_CPU_THIS_PTR xmm[n].xmm64u(1) = 0;
-    }
+      BX_WRITE_XMM_REG_CLEAR_HIGH(n, xmmnil);
 
     BX_CPU_THIS_PTR mxcsr.mxcsr = MXCSR_RESET;
-    BX_CPU_THIS_PTR mxcsr_mask = 0x0000FFBF;
+    BX_CPU_THIS_PTR mxcsr_mask = 0x0000ffbf;
     if (BX_CPU_SUPPORT_ISA_EXTENSION(BX_CPU_SSE2))
       BX_CPU_THIS_PTR mxcsr_mask |= MXCSR_DAZ;
     if (BX_SUPPORT_MISALIGNED_SSE)

@@ -2,6 +2,10 @@ Changes after 2.4.6 release:
 
 Bochs repository moved to the SVN version control !
 
+- CPU
+  - Added support of AVX instruction set emulation, to enable configure with
+        --enable-avx option
+
 - Configure and compile
   - Added ability to configure CPUID family through .bochsrc.
     The default family value determined by configure option --enable-cpu-level.

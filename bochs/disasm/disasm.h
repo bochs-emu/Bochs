@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2005-2009 Stanislav Shwartsman
+//   Copyright (c) 2005-2011 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -153,6 +153,10 @@ public:
   unsigned b1;
   unsigned ilen;
 
+#define BX_AVX_VL128 0
+#define BX_AVX_VL256 1
+  Bit8u vex_override, vex_vl;
+  int is_vex; // 0 - no VEX used, 1 - VEX is used, 2 - invalid VEX
   Bit8u modrm, mod, nnn, rm;
   Bit8u sib, scale, index, base;
   union {
@@ -185,6 +189,9 @@ BX_CPP_INLINE x86_insn::x86_insn(bx_bool is32, bx_bool is64)
   ilen = 0;
   b1 = 0;
 
+  is_vex = 0;
+  vex_override = 0;
+  vex_vl = BX_AVX_VL128;
   modrm = mod = nnn = rm = 0;
   sib = scale = index = base = 0;
   displacement.displ32 = 0;
@@ -234,6 +241,7 @@ private:
 
   const char **segment_name;
   const char **index16;
+  const char **vector_reg_name;
 
   const char *sreg_mod00_base32[16];
   const char *sreg_mod01or10_base32[16];
@@ -287,6 +295,7 @@ private:
   void dis_putc(char symbol);
   void dis_sprintf(const char *fmt, ...);
   void decode_modrm(x86_insn *insn);
+  unsigned decode_vex(x86_insn *insn);
 
   void resolve16_mod0   (const x86_insn *insn, unsigned mode);
   void resolve16_mod1or2(const x86_insn *insn, unsigned mode);
@@ -354,11 +363,11 @@ public:
  * R  - The mod field of the ModR/M byte may refer only to a general register.
  * S  - The reg field of the ModR/M byte selects a segment register.
  * T  - The reg field of the ModR/M byte selects a test register.
- * U  - The R/M field of the ModR/M byte selects a 128-bit XMM register.
- * V  - The reg field of the ModR/M byte selects a 128-bit XMM register.
+ * U  - The R/M field of the ModR/M byte selects a 128-bit XMM/256-bit YMM register.
+ * V  - The reg field of the ModR/M byte selects a 128-bit XMM/256-bit YMM register.
  * W  - A ModR/M byte follows the opcode and specifies the operand. The
- *      operand is either a 128-bit XMM register or a memory address. If
- *      it is a memory address, the address is computed from a segment
+ *      operand is either a 128-bit XMM/256-bit YMM register or a memory address.
+ *      If it is a memory address, the address is computed from a segment
  *      register and any of the following values: a base register, an
  *      index register, a scaling factor, and a displacement.
  * X  - Memory addressed by the DS:rSI register pair.
@@ -375,14 +384,14 @@ public:
  * d  - Doubleword, regardless of operand-size attribute.
  * dq - Double-quadword, regardless of operand-size attribute.
  * p  - 32-bit or 48-bit pointer, depending on operand-size attribute.
- * pd - 128-bit packed double-precision floating-point data.
+ * pd - 128-bit/256-bit packed double-precision floating-point data.
  * pi - Quadword MMX technology register (packed integer)
- * ps - 128-bit packed single-precision floating-point data.
+ * ps - 128-bit/256-bit packed single-precision floating-point data.
  * q  - Quadword, regardless of operand-size attribute.
  * s  - 6-byte or 10-byte pseudo-descriptor.
  * si - Doubleword integer register (scalar integer)
- * ss - Scalar element of a 128-bit packed single-precision floating data.
- * sd - Scalar element of a 128-bit packed double-precision floating data.
+ * ss - Scalar element of a packed single-precision floating data.
+ * sd - Scalar element of a packed double-precision floating data.
  * v  - Word, doubleword or quadword, depending on operand-size attribute.
  * w  - Word, regardless of operand-size attr.
  * y  - Doubleword or quadword (in 64-bit mode) depending on 32/64 bit
@@ -449,6 +458,7 @@ public:
   void Ey(const x86_insn *insn);
   void Ebd(const x86_insn *insn);
   void Ewd(const x86_insn *insn);
+  void Edq(const x86_insn *insn);
 
   // general purpose register
   void Gb(const x86_insn *insn);
@@ -493,7 +503,7 @@ public:
   void Vq(const x86_insn *insn);
   void Nq(const x86_insn *insn);
 
-  // xmm register
+  // xmm/ymm register
   void Ups(const x86_insn *insn);
   void Upd(const x86_insn *insn);
   void Udq(const x86_insn *insn);
@@ -503,8 +513,10 @@ public:
   void Vsd(const x86_insn *insn);
   void Vps(const x86_insn *insn);
   void Vpd(const x86_insn *insn);
+  // xmm/ymm register through imm byte
+  void VIb(const x86_insn *insn);
 
-  // xmm register or memory operand
+  // xmm/ymm register or memory operand
   void Ww(const x86_insn *insn);
   void Wd(const x86_insn *insn);
   void Wq(const x86_insn *insn);
@@ -514,6 +526,11 @@ public:
   void Wsd(const x86_insn *insn);
   void Wps(const x86_insn *insn);
   void Wpd(const x86_insn *insn);
+
+  // vex override xmm/ymm register
+  void Hdq(const x86_insn *insn);
+  void Hps(const x86_insn *insn);
+  void Hpd(const x86_insn *insn);
 
   // direct memory access
   void OP_O(const x86_insn *insn, unsigned size);

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2007-2010 Stanislav Shwartsman
+//   Copyright (c) 2007-2011 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -340,7 +340,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PCMPESTRM_VdqWdqIbR(bxInstruction_c *i)
     flags |= EFlagsOFMask;
   setEFlagsOSZAPC(flags);
 
-  BX_WRITE_XMM_REG(0, result); /* store result XMM0 */
+  BX_WRITE_XMM_REGZ(0, result, i->getVL()); /* store result XMM0 */
 #endif
 }
 
@@ -438,7 +438,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PCMPISTRM_VdqWdqIbR(bxInstruction_c *i)
     flags |= EFlagsOFMask;
   setEFlagsOSZAPC(flags);
 
-  BX_WRITE_XMM_REG(0, result); /* store result XMM0 */
+  BX_WRITE_XMM_REGZ(0, result, i->getVL()); /* store result XMM0 */
 #endif
 }
 

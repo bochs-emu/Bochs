@@ -904,6 +904,7 @@ public: // for now...
 
 #if BX_CPU_LEVEL >= 6
   xcr0_t xcr0;
+  Bit32u xcr0_suppmask;
 #endif
 
   /* SMM base register */
@@ -922,7 +923,11 @@ public: // for now...
 #endif
 
 #if BX_CPU_LEVEL >= 6
-  bx_xmm_reg_t xmm[BX_XMM_REGISTERS+1];
+#if BX_SUPPORT_AVX
+  bx_avx_reg_t vmm[BX_XMM_REGISTERS+1];
+#else
+  bx_xmm_reg_t vmm[BX_XMM_REGISTERS+1];
+#endif
   bx_mxcsr_t mxcsr;
   Bit32u mxcsr_mask;
 #endif
@@ -991,6 +996,9 @@ public: // for now...
 #endif
 #if BX_CPU_LEVEL >= 6
   unsigned sse_ok;
+#if BX_SUPPORT_AVX
+  unsigned avx_ok;
+#endif
 #endif
 
   // for exceptions
@@ -1772,6 +1780,10 @@ public: // for now...
   BX_SMF void LOAD_Wss(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void LOAD_Wsd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void LOAD_Ww(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+#if BX_SUPPORT_AVX
+  BX_SMF void LOAD_Vector(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void LOAD_VectorQ(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+#endif
 
 #if BX_SUPPORT_FPU == 0	// if FPU is disabled
   BX_SMF void FPU_ESC(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -2362,6 +2374,122 @@ public: // for now...
   BX_SMF void INVVPID(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   /* VMXx2 */
 
+#if BX_SUPPORT_AVX
+  BX_SMF void VZEROUPPER(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void VMOVSS_VssWssR(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VMOVSD_VsdWsdR(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VMOVAPS_VpsWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VMOVAPS_VpsWpsM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VMOVUPS_VpsWpsM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VMOVAPS_WpsVpsM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VMOVUPS_WpsVpsM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VMOVLPD_VpdMq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VMOVHPD_VpdMq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VMOVLHPS_VpsWps(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VMOVHLPS_VpsWps(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VMOVSHDUP_VpsWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VMOVSLDUP_VpsWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VMOVDDUP_VpdWpdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VUNPCKLPS_VpsWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VUNPCKHPS_VpsWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VUNPCKLPD_VpdWpdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VUNPCKHPD_VpdWpdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VMOVMSKPS_GdVRps(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VMOVMSKPD_GdVRpd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VPMOVMSKB_GdUdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VSQRTPS_VpsWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VSQRTPD_VpdWpdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VSQRTSS_VssWssR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VSQRTSD_VsdWsdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VHADDPS_VpsWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VHADDPD_VpdWpdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VHSUBPS_VpsWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VHSUBPD_VpdWpdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VADDPS_VpsWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VADDPD_VpdWpdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VADDSS_VssWssR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VADDSD_VsdWsdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VMULPS_VpsWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VMULPD_VpdWpdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VMULSS_VssWssR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VMULSD_VsdWsdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VSUBPS_VpsWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VSUBPD_VpdWpdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VSUBSS_VssWssR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VSUBSD_VsdWsdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTSS2SD_VssWssR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTSD2SS_VsdWsdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTDQ2PS_VpsWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTPS2DQ_VdqWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTTPS2DQ_VdqWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTPS2PD_VpsWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTPD2PS_VpdWpdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTPD2DQ_VqWpdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTDQ2PD_VpdWqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTTPD2DQ_VqWpdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTSI2SD_VsdEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTSI2SS_VssEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTSI2SD_VsdEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTSI2SS_VssEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VMINPS_VpsWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VMINPD_VpdWpdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VMINSS_VssWssR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VMINSD_VsdWsdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VDIVPS_VpsWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VDIVPD_VpdWpdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VDIVSS_VssWssR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VDIVSD_VsdWsdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VMAXPS_VpsWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VMAXPD_VpdWpdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VMAXSS_VssWssR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VMAXSD_VsdWsdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCMPPS_VpsWpsIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCMPSS_VssWssIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCMPPD_VpdWpdIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCMPSD_VsdWsdIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VADDSUBPD_VpdWpdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VADDSUBPS_VpsWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VROUNDPS_VpsWpsIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VROUNDPD_VpdWpdIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VROUNDSS_VssWssIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VROUNDSD_VsdWsdIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VDPPS_VpsWpsIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VRSQRTPS_VpsWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VRSQRTSS_VssWssR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VRCPPS_VpsWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VRCPSS_VssWssR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VSHUFPS_VpsWpsIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VSHUFPD_VpdWpdIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VBLENDPS_VpsWpsIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VBLENDPD_VpdWpdIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VPBLENDVB_VdqWdqIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VPTEST_VdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VTESTPS_VpsWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VTESTPD_VpdWpdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VANDPS_VpsWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VANDNPS_VpsWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VORPS_VpsWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VXORPS_VpsWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VBROADCASTSS_VpsMss(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VBROADCASTSD_VpdMsd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VBROADCASTF128_VdqMdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VBLENDVPS_VpsWpsIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VBLENDVPD_VpdWpdIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VINSERTF128_VdqWdqIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VEXTRACTF128_WdqVdqIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VEXTRACTF128_WdqVdqIbM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VPERMILPS_VpsWpsIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VPERMILPS_VpsWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VPERMILPD_VpdWpdIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VPERMILPD_VpdWpdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VPERM2F128_VdqWdqIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VMASKMOVPS_VpsMps(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VMASKMOVPD_VpdMpd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VMASKMOVPS_MpsVps(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VMASKMOVPD_MpdVpd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+#endif
+
   BX_SMF void CMPXCHG_XBTS(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void CMPXCHG_IBTS(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void CMPXCHG8B(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -2798,6 +2926,7 @@ public: // for now...
   BX_SMF void BxError(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 #if BX_CPU_LEVEL >= 6
   BX_SMF void BxNoSSE(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void BxNoAVX(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 #endif
 
   BX_SMF bx_address BxResolve16BaseIndex(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -2867,6 +2996,10 @@ public: // for now...
 #if BX_CPU_LEVEL >= 6
   BX_SMF void read_virtual_dqword_32(unsigned seg, Bit32u off, BxPackedXmmRegister *data) BX_CPP_AttrRegparmN(3);
   BX_SMF void read_virtual_dqword_aligned_32(unsigned seg, Bit32u off, BxPackedXmmRegister *data) BX_CPP_AttrRegparmN(3);
+#if BX_SUPPORT_AVX
+  BX_SMF void read_virtual_vector_32(unsigned seg, Bit32u off, unsigned elements, BxPackedAvxRegister *data);
+  BX_SMF void read_virtual_vector_aligned_32(unsigned seg, Bit32u off, unsigned elements, BxPackedAvxRegister *data);
+#endif
 #endif
 
   BX_SMF void write_virtual_byte_32(unsigned seg, Bit32u offset, Bit8u data) BX_CPP_AttrRegparmN(3);
@@ -2876,6 +3009,10 @@ public: // for now...
 #if BX_CPU_LEVEL >= 6
   BX_SMF void write_virtual_dqword_32(unsigned seg, Bit32u offset, const BxPackedXmmRegister *data) BX_CPP_AttrRegparmN(3);
   BX_SMF void write_virtual_dqword_aligned_32(unsigned seg, Bit32u offset, const BxPackedXmmRegister *data) BX_CPP_AttrRegparmN(3);
+#if BX_SUPPORT_AVX
+  BX_SMF void write_virtual_vector_32(unsigned seg, Bit32u off, unsigned elements, const BxPackedAvxRegister *data);
+  BX_SMF void write_virtual_vector_aligned_32(unsigned seg, Bit32u off, unsigned elements, const BxPackedAvxRegister *data);
+#endif
 #endif
 
   BX_SMF Bit8u read_RMW_virtual_byte_32(unsigned seg, Bit32u offset) BX_CPP_AttrRegparmN(2);
@@ -2895,6 +3032,10 @@ public: // for now...
   BX_SMF void write_virtual_qword_64(unsigned seg, Bit64u offset, Bit64u data) BX_CPP_AttrRegparmN(3);
   BX_SMF void write_virtual_dqword_64(unsigned seg, Bit64u offset, const BxPackedXmmRegister *data) BX_CPP_AttrRegparmN(3);
   BX_SMF void write_virtual_dqword_aligned_64(unsigned seg, Bit64u offset, const BxPackedXmmRegister *data) BX_CPP_AttrRegparmN(3);
+#if BX_SUPPORT_AVX
+  BX_SMF void write_virtual_vector_64(unsigned seg, Bit64u offset, unsigned elements, const BxPackedAvxRegister *data);
+  BX_SMF void write_virtual_vector_aligned_64(unsigned seg, Bit64u offset, unsigned elements, const BxPackedAvxRegister *data);
+#endif
 
   BX_SMF Bit8u read_virtual_byte_64(unsigned seg, Bit64u offset) BX_CPP_AttrRegparmN(2);
   BX_SMF Bit16u read_virtual_word_64(unsigned seg, Bit64u offset) BX_CPP_AttrRegparmN(2);
@@ -2902,6 +3043,10 @@ public: // for now...
   BX_SMF Bit64u read_virtual_qword_64(unsigned seg, Bit64u offset) BX_CPP_AttrRegparmN(2);
   BX_SMF void read_virtual_dqword_64(unsigned seg, Bit64u off, BxPackedXmmRegister *data) BX_CPP_AttrRegparmN(3);
   BX_SMF void read_virtual_dqword_aligned_64(unsigned seg, Bit64u off, BxPackedXmmRegister *data) BX_CPP_AttrRegparmN(3);
+#if BX_SUPPORT_AVX
+  BX_SMF void read_virtual_vector_64(unsigned seg, Bit64u offset, unsigned elements, BxPackedAvxRegister *data);
+  BX_SMF void read_virtual_vector_aligned_64(unsigned seg, Bit64u offset, unsigned elements, BxPackedAvxRegister *data);
+#endif
 
   BX_SMF Bit8u read_RMW_virtual_byte_64(unsigned seg, Bit64u offset) BX_CPP_AttrRegparmN(2);
   BX_SMF Bit16u read_RMW_virtual_word_64(unsigned seg, Bit64u offset) BX_CPP_AttrRegparmN(2);
@@ -2952,6 +3097,20 @@ public: // for now...
       write_virtual_dqword_aligned_64(seg, (Bit64u) offset, (const BxPackedXmmRegister*)(data)) : \
       write_virtual_dqword_aligned_32(seg, (Bit32u) offset, (const BxPackedXmmRegister*)(data))
 
+#if BX_SUPPORT_AVX
+
+#define write_virtual_vector(seg, offset, elements, data)   \
+  (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) ? \
+      write_virtual_vector_64(seg, (Bit64u) offset, elements, (const BxPackedAvxRegister*)(data)) : \
+      write_virtual_vector_32(seg, (Bit32u) offset, elements, (const BxPackedAvxRegister*)(data))
+
+#define write_virtual_vector_aligned(seg, offset, elements, data) \
+  (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) ? \
+      write_virtual_vector_aligned_64(seg, (Bit64u) offset, elements, (const BxPackedAvxRegister*)(data)) : \
+      write_virtual_vector_aligned_32(seg, (Bit32u) offset, elements, (const BxPackedAvxRegister*)(data))
+
+#endif
+
 // read
 #define read_virtual_byte(seg, offset)             \
   (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) ?  \
@@ -2982,6 +3141,20 @@ public: // for now...
   (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) ? \
       read_virtual_dqword_aligned_64(seg, (Bit64u) offset, (BxPackedXmmRegister*)(data)) : \
       read_virtual_dqword_aligned_32(seg, (Bit32u) offset, (BxPackedXmmRegister*)(data))
+
+#if BX_SUPPORT_AVX
+
+#define read_virtual_vector(seg, offset, elements, data)    \
+  (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) ? \
+      read_virtual_vector_64(seg, (Bit64u) offset, elements, (BxPackedAvxRegister*)(data)) : \
+      read_virtual_vector_32(seg, (Bit32u) offset, elements, (BxPackedAvxRegister*)(data))
+
+#define read_virtual_vector_aligned(seg, offset, elements, data) \
+  (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) ? \
+      read_virtual_vector_aligned_64(seg, (Bit64u) offset, elements, (BxPackedAvxRegister*)(data)) : \
+      read_virtual_vector_aligned_32(seg, (Bit32u) offset, elements, (BxPackedAvxRegister*)(data))
+
+#endif
 
 // RMW
 #define read_RMW_virtual_byte(seg, offset)        \
@@ -3020,6 +3193,15 @@ public: // for now...
 #define write_virtual_dqword_aligned(seg, offset, data) \
   write_virtual_dqword_aligned_32(seg, offset, (const BxPackedXmmRegister*)(data))
 
+#if BX_SUPPORT_AVX
+
+#define write_virtual_vector(seg, offset, elements, data) \
+  write_virtual_vector_32(seg, offset, elements, (const BxPackedAvxRegister*)(data))
+#define write_virtual_vector_aligned(seg, offset, elements, data) \
+  write_virtual_vector_aligned_32(seg, offset, elements, (const BxPackedAvxRegister*)(data))
+
+#endif
+
 // read
 #define read_virtual_byte(seg, offset)  \
   read_virtual_byte_32(seg, offset)
@@ -3033,6 +3215,15 @@ public: // for now...
   read_virtual_dqword_32(seg, offset, (BxPackedXmmRegister*)(data))
 #define read_virtual_dqword_aligned(seg, offset, data) \
   read_virtual_dqword_aligned_32(seg, offset, (BxPackedXmmRegister*)(data))
+
+#if BX_SUPPORT_AVX
+
+#define read_virtual_vector(seg, offset, elements, data) \
+  read_virtual_vector_32(seg, offset, elements, (BxPackedAvxRegister*)(data))
+#define read_virtual_vector_aligned(seg, offset, elements, data) \
+  read_virtual_vector_aligned_32(seg, offset, elements, (BxPackedAvxRegister*)(data))
+
+#endif
 
 // RMW
 #define read_RMW_virtual_byte(seg, offset)  \
@@ -3166,6 +3357,7 @@ public: // for now...
 #endif
 #if BX_CPU_LEVEL >= 6
   BX_SMF void handleSseModeChange(void);
+  BX_SMF void handleAvxModeChange(void);
 #endif
 
 #if BX_CPU_LEVEL >= 5
@@ -3394,10 +3586,9 @@ public: // for now...
 #if BX_CPU_LEVEL >= 6
   BX_SMF void check_exceptionsSSE(int);
   BX_SMF void print_state_SSE(void);
-#endif
 
-#if BX_CPU_LEVEL >= 6
   BX_SMF void prepareXSAVE(void);
+  BX_SMF void print_state_AVX(void);
 #endif
 
 #if BX_SUPPORT_MONITOR_MWAIT
@@ -3535,14 +3726,18 @@ BX_CPP_INLINE void BX_CPU_C::prepareXSAVE(void)
 // bit 0 - CS.D_B
 // bit 1 - long64 mode (CS.L)
 // bit 2 - SSE_OK
+// bit 3 - AVX_OK
 //
 // updateFetchModeMask - has to be called everytime 
-//        CS.L or CS.D_B / CR0.TS or CR0.EM / CR4.OSFXSR changes
+//   CS.L / CS.D_B / CR0.PE, CR0.TS or CR0.EM / CR4.OSFXSR / CR4.OSXSAVE changes
 //
 BX_CPP_INLINE void BX_CPU_C::updateFetchModeMask(void)
 {
   BX_CPU_THIS_PTR fetchModeMask =
 #if BX_CPU_LEVEL >= 6
+#if BX_SUPPORT_AVX
+     (BX_CPU_THIS_PTR avx_ok << 3) |
+#endif
      (BX_CPU_THIS_PTR sse_ok << 2) |
 #endif
 #if BX_SUPPORT_X86_64
@@ -3889,7 +4084,8 @@ enum {
 #if BX_SUPPORT_X86_64
 #define BxImmediate_Iq      0x0007 // 64 bit override
 #endif
-#define BxImmediate_BrOff8  0x0008 // Relative branch offset byte
+#define BxImmediate_Ib4     0x0008 // Register encoded in Ib[7:4]
+#define BxImmediate_BrOff8  0x0009 // Relative branch offset byte
 
 #define BxImmediate_BrOff16 BxImmediate_Iw    // Relative branch offset word, not encodable in 64-bit mode
 #define BxImmediate_BrOff32 BxImmediate_Id    // Relative branch offset dword
@@ -3906,6 +4102,8 @@ enum {
 #define BxFPEscape          0x0070 // Group encoding: 0111
 #define Bx3ByteOp           0x0080 // Group encoding: 1000
 #define BxOSizeGrp          0x0090 // Group encoding: 1001
+#define BxPrefixVEX         0x00A0 // Group encoding: 1010
+#define BxSplitVexW         0x00B0 // Group encoding: 1011
 
 // The BxImmediate2 mask specifies kind of second immediate data
 // required by instruction.

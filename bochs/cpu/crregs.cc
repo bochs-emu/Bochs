@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2010 Stanislav Shwartsman
+//   Copyright (c) 2010-2011 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -951,6 +951,9 @@ bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::SetCR0(bx_address val)
 
 #if BX_CPU_LEVEL >= 6
   handleSseModeChange();
+#if BX_SUPPORT_AVX
+  handleAvxModeChange();
+#endif
 #endif
 
   // Modification of PG,PE flushes TLB cache according to docs.
@@ -1131,6 +1134,9 @@ bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::SetCR4(bx_address val)
 
 #if BX_CPU_LEVEL >= 6
   handleSseModeChange();
+#if BX_SUPPORT_AVX
+  handleAvxModeChange();
+#endif
 #endif
 
   return 1;
@@ -1176,6 +1182,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CLTS(bxInstruction_c *i)
 
 #if BX_CPU_LEVEL >= 6
   handleSseModeChange();
+#if BX_SUPPORT_AVX
+  handleAvxModeChange();
+#endif
 #endif
 }
 

@@ -63,6 +63,7 @@ BX_CPP_INLINE Bit64u FetchQWORD(const Bit8u *iptr)
 #define BX_PREPARE_AVX (0x02)
 #define BX_VEX_L128    (0x04) /* VEX.L128 allowed */
 #define BX_VEX_L256    (0x08) /* VEX.L256 allowed */
+#define BX_VEX_NO_VVV  (0x10) /* no VEX.VVV  allowed */
 
 struct bxIAOpcodeTable {
   BxExecutePtr_tR execute1;
@@ -76,6 +77,7 @@ struct bxIAOpcodeTable {
 
 #include "fetchdecode_x87.h"
 #include "fetchdecode_sse.h"
+#include "fetchdecode_avx.h"
 
 /* ************************************************************************ */
 /* Opcode Groups */

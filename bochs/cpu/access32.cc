@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2008-2010 Stanislav Shwartsman
+//   Copyright (c) 2008-2011 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -349,6 +349,117 @@ accessOK:
   goto accessOK;
 }
 
+#if BX_SUPPORT_AVX
+
+void BX_CPU_C::write_virtual_vector_32(unsigned s, Bit32u offset, unsigned elements, const BxPackedAvxRegister *data)
+{
+  BX_ASSERT(elements > 0);
+
+  Bit32u laddr;
+  unsigned len = elements << 2;
+  bx_segment_reg_t *seg = &BX_CPU_THIS_PTR sregs[s];
+  BX_INSTR_MEM_DATA_ACCESS(BX_CPU_ID, s, offset, len, BX_WRITE);
+
+  BX_ASSERT(BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64);
+
+  if (seg->cache.valid & SegAccessWOK) {
+    if (offset < (seg->cache.u.segment.limit_scaled-len)) {
+accessOK:
+      laddr = BX_CPU_THIS_PTR get_laddr32(s, offset);
+      unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, len-1);
+      Bit32u lpf = LPFOf(laddr);
+      bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
+      if (tlbEntry->lpf == lpf) {
+        // See if the TLB entry privilege level allows us write access
+        // from this CPL.
+        if (! (tlbEntry->accessBits & (0x2 | USER_PL))) {
+          bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
+          Bit32u pageOffset = PAGE_OFFSET(laddr);
+          bx_phy_address pAddr = tlbEntry->ppf | pageOffset;
+          BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr, pAddr, len, BX_WRITE);
+          BX_DBG_LIN_MEMORY_ACCESS(BX_CPU_ID, laddr, pAddr, len, CPL, BX_WRITE, (Bit8u*) data);
+          Bit32u *hostAddr = (Bit32u*) (hostPageAddr | pageOffset);
+          pageWriteStampTable.decWriteStamp(pAddr, len);
+          for (unsigned n=0; n < elements; n++) {
+            WriteHostDWordToLittleEndian(hostAddr, data->avx32u(n));
+            hostAddr++;
+          }
+          return;
+        }
+      }
+
+      access_write_linear(laddr, len, CPL, (void *) data);
+      return;
+    }
+    else {
+      BX_ERROR(("write_virtual_vector_32(): segment limit violation"));
+      exception(int_number(s), 0);
+    }
+  }
+
+  if (!write_virtual_checks(seg, offset, len))
+    exception(int_number(s), 0);
+  goto accessOK;
+}
+
+void BX_CPU_C::write_virtual_vector_aligned_32(unsigned s, Bit32u offset, unsigned elements, const BxPackedAvxRegister *data)
+{
+  BX_ASSERT(elements > 0);
+
+  unsigned len = elements << 2;
+  bx_segment_reg_t *seg = &BX_CPU_THIS_PTR sregs[s];
+  BX_INSTR_MEM_DATA_ACCESS(BX_CPU_ID, s, offset, len, BX_WRITE);
+
+  BX_ASSERT(BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64);
+
+  Bit32u laddr = BX_CPU_THIS_PTR get_laddr32(s, offset);
+  // must check alignment here because #GP on misaligned access is higher
+  // priority than other segment related faults
+  if (laddr & (len-1)) {
+    BX_ERROR(("write_virtual_vector_aligned_32(): #GP misaligned access"));
+    exception(BX_GP_EXCEPTION, 0);
+  }
+
+  if (seg->cache.valid & SegAccessWOK) {
+    if (offset < (seg->cache.u.segment.limit_scaled-len)) {
+accessOK:
+      unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 0);
+      Bit32u lpf = LPFOf(laddr);
+      bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
+      if (tlbEntry->lpf == lpf) {
+        // See if the TLB entry privilege level allows us write access
+        // from this CPL.
+        if (! (tlbEntry->accessBits & (0x2 | USER_PL))) {
+          bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
+          Bit32u pageOffset = PAGE_OFFSET(laddr);
+          bx_phy_address pAddr = tlbEntry->ppf | pageOffset;
+          BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr, pAddr, len, BX_WRITE);
+          BX_DBG_LIN_MEMORY_ACCESS(BX_CPU_ID, laddr, pAddr, len, CPL, BX_WRITE, (Bit8u*) data);
+          Bit32u *hostAddr = (Bit32u*) (hostPageAddr | pageOffset);
+          pageWriteStampTable.decWriteStamp(pAddr, len);
+          for (unsigned n=0; n < elements; n++) {
+            WriteHostDWordToLittleEndian(hostAddr, data->avx32u(n));
+            hostAddr++;
+          }
+          return;
+        }
+      }
+      access_write_linear(laddr, len, CPL, (void *) data);
+      return;
+    }
+    else {
+      BX_ERROR(("write_virtual_vector_aligned_32(): segment limit violation"));
+      exception(int_number(s), 0);
+    }
+  }
+
+  if (!write_virtual_checks(seg, offset, len))
+    exception(int_number(s), 0);
+  goto accessOK;
+}
+
+#endif // BX_SUPPORT_AVX
+
 #endif
 
   Bit8u BX_CPP_AttrRegparmN(2)
@@ -670,6 +781,114 @@ accessOK:
     exception(int_number(s), 0);
   goto accessOK;
 }
+
+#if BX_SUPPORT_AVX
+
+void BX_CPU_C::read_virtual_vector_32(unsigned s, Bit32u offset, unsigned elements, BxPackedAvxRegister *data)
+{
+  BX_ASSERT(elements > 0);
+
+  Bit32u laddr;
+  unsigned len = elements << 2;
+  bx_segment_reg_t *seg = &BX_CPU_THIS_PTR sregs[s];
+  BX_INSTR_MEM_DATA_ACCESS(BX_CPU_ID, s, offset, len, BX_READ);
+
+  BX_ASSERT(BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64);
+
+  if (seg->cache.valid & SegAccessROK) {
+    if (offset < (seg->cache.u.segment.limit_scaled-len)) {
+accessOK:
+      laddr = BX_CPU_THIS_PTR get_laddr32(s, offset);
+      unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, len-1);
+      Bit32u lpf = LPFOf(laddr);
+      bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
+      if (tlbEntry->lpf == lpf) {
+        // See if the TLB entry privilege level allows us read access
+        // from this CPL.
+        if (! (tlbEntry->accessBits & USER_PL)) { // Read this pl OK.
+          bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
+          Bit32u pageOffset = PAGE_OFFSET(laddr);
+          Bit32u *hostAddr = (Bit32u*) (hostPageAddr | pageOffset);
+          for (unsigned n=0; n < elements; n++) {
+            ReadHostDWordFromLittleEndian(hostAddr, data->avx32u(n));
+            hostAddr++;
+          }
+          BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr, tlbEntry->ppf | pageOffset, len, BX_READ);
+          BX_DBG_LIN_MEMORY_ACCESS(BX_CPU_ID, laddr,
+              tlbEntry->ppf | pageOffset, len, CPL, BX_READ, (Bit8u*) data);
+          return;
+        }
+      }
+      access_read_linear(laddr, len, CPL, BX_READ, (void *) data);
+      return;
+    }
+    else {
+      BX_ERROR(("read_virtual_vector_32(): segment limit violation"));
+      exception(int_number(s), 0);
+    }
+  }
+
+  if (!read_virtual_checks(seg, offset, len))
+    exception(int_number(s), 0);
+  goto accessOK;
+}
+
+void BX_CPU_C::read_virtual_vector_aligned_32(unsigned s, Bit32u offset, unsigned elements, BxPackedAvxRegister *data)
+{
+  BX_ASSERT(elements > 0);
+
+  unsigned len = elements << 2;
+  bx_segment_reg_t *seg = &BX_CPU_THIS_PTR sregs[s];
+  BX_INSTR_MEM_DATA_ACCESS(BX_CPU_ID, s, offset, len, BX_READ);
+
+  BX_ASSERT(BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64);
+
+  Bit32u laddr = BX_CPU_THIS_PTR get_laddr32(s, offset);
+  // must check alignment here because #GP on misaligned access is higher
+  // priority than other segment related faults
+  if (laddr & (len-1)) {
+    BX_ERROR(("read_virtual_vector_aligned_32(): #GP misaligned access"));
+    exception(BX_GP_EXCEPTION, 0);
+  }
+
+  if (seg->cache.valid & SegAccessROK) {
+    if (offset < (seg->cache.u.segment.limit_scaled-len)) {
+accessOK:
+      unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 0);
+      Bit32u lpf = LPFOf(laddr);
+      bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
+      if (tlbEntry->lpf == lpf) {
+        // See if the TLB entry privilege level allows us read access
+        // from this CPL.
+        if (! (tlbEntry->accessBits & USER_PL)) { // Read this pl OK.
+          bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
+          Bit32u pageOffset = PAGE_OFFSET(laddr);
+          Bit32u *hostAddr = (Bit32u*) (hostPageAddr | pageOffset);
+          for (unsigned n=0; n < elements; n++) {
+            ReadHostDWordFromLittleEndian(hostAddr, data->avx32u(n));
+            hostAddr++;
+          }
+          BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr, tlbEntry->ppf | pageOffset, len, BX_READ);
+          BX_DBG_LIN_MEMORY_ACCESS(BX_CPU_ID, laddr,
+              tlbEntry->ppf | pageOffset, len, CPL, BX_READ, (Bit8u*) data);
+          return;
+        }
+      }
+      access_read_linear(laddr, len, CPL, BX_READ, (void *) data);
+      return;
+    }
+    else {
+      BX_ERROR(("read_virtual_vector_aligned_32(): segment limit violation"));
+      exception(int_number(s), 0);
+    }
+  }
+
+  if (!read_virtual_checks(seg, offset, len))
+    exception(int_number(s), 0);
+  goto accessOK;
+}
+
+#endif
 
 #endif
 

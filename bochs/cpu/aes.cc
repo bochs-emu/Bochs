@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2008-2010 Stanislav Shwartsman
+//   Copyright (c) 2008-2011 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -297,7 +297,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::AESIMC_VdqWdqR(bxInstruction_c *i)
 
   AES_InverseMixColumns(op);
 
-  BX_WRITE_XMM_REG(i->nnn(), op);
+  BX_WRITE_XMM_REGZ(i->nnn(), op, i->getVL());
 #endif
 }
 
@@ -305,7 +305,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::AESIMC_VdqWdqR(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::AESENC_VdqWdqR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2 = BX_READ_XMM_REG(i->rm());
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->vvv()), op2 = BX_READ_XMM_REG(i->rm());
 
   AES_ShiftRows(op1);
   AES_SubstituteBytes(op1);
@@ -314,7 +314,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::AESENC_VdqWdqR(bxInstruction_c *i)
   op1.xmm64u(0) ^= op2.xmm64u(0);
   op1.xmm64u(1) ^= op2.xmm64u(1);
 
-  BX_WRITE_XMM_REG(i->nnn(), op1);
+  BX_WRITE_XMM_REGZ(i->nnn(), op1, i->getVL());
 #endif
 }
 
@@ -322,7 +322,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::AESENC_VdqWdqR(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::AESENCLAST_VdqWdqR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2 = BX_READ_XMM_REG(i->rm());
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->vvv()), op2 = BX_READ_XMM_REG(i->rm());
 
   AES_ShiftRows(op1);
   AES_SubstituteBytes(op1);
@@ -330,7 +330,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::AESENCLAST_VdqWdqR(bxInstruction_c *i)
   op1.xmm64u(0) ^= op2.xmm64u(0);
   op1.xmm64u(1) ^= op2.xmm64u(1);
 
-  BX_WRITE_XMM_REG(i->nnn(), op1);
+  BX_WRITE_XMM_REGZ(i->nnn(), op1, i->getVL());
 #endif
 }
 
@@ -338,7 +338,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::AESENCLAST_VdqWdqR(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::AESDEC_VdqWdqR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2 = BX_READ_XMM_REG(i->rm());
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->vvv()), op2 = BX_READ_XMM_REG(i->rm());
 
   AES_InverseShiftRows(op1);
   AES_InverseSubstituteBytes(op1);
@@ -347,7 +347,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::AESDEC_VdqWdqR(bxInstruction_c *i)
   op1.xmm64u(0) ^= op2.xmm64u(0);
   op1.xmm64u(1) ^= op2.xmm64u(1);
 
-  BX_WRITE_XMM_REG(i->nnn(), op1);
+  BX_WRITE_XMM_REGZ(i->nnn(), op1, i->getVL());
 #endif
 }
 
@@ -355,7 +355,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::AESDEC_VdqWdqR(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::AESDECLAST_VdqWdqR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2 = BX_READ_XMM_REG(i->rm());
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->vvv()), op2 = BX_READ_XMM_REG(i->rm());
 
   AES_InverseShiftRows(op1);
   AES_InverseSubstituteBytes(op1);
@@ -363,7 +363,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::AESDECLAST_VdqWdqR(bxInstruction_c *i)
   op1.xmm64u(0) ^= op2.xmm64u(0);
   op1.xmm64u(1) ^= op2.xmm64u(1);
 
-  BX_WRITE_XMM_REG(i->nnn(), op1);
+  BX_WRITE_XMM_REGZ(i->nnn(), op1, i->getVL());
 #endif
 }
 
@@ -380,7 +380,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::AESKEYGENASSIST_VdqWdqIbR(bxInstruction_c 
   result.xmm32u(2) = AES_SubWord(op.xmm32u(3));
   result.xmm32u(3) = AES_RotWord(result.xmm32u(2)) ^ rcon32;
 
-  BX_WRITE_XMM_REG(i->nnn(), result);
+  BX_WRITE_XMM_REGZ(i->nnn(), result, i->getVL());
 #endif
 }
 
@@ -388,7 +388,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::AESKEYGENASSIST_VdqWdqIbR(bxInstruction_c 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PCLMULQDQ_VdqWdqIbR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2 = BX_READ_XMM_REG(i->rm());
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->vvv()), op2 = BX_READ_XMM_REG(i->rm());
   BxPackedXmmRegister r, a;
 
   Bit8u imm8 = i->Ib();
@@ -417,6 +417,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PCLMULQDQ_VdqWdqIbR(bxInstruction_c *i)
       b >>= 1;
   }
 
-  BX_WRITE_XMM_REG(i->nnn(), r);
+  BX_WRITE_XMM_REGZ(i->nnn(), r, i->getVL());
 #endif
 }

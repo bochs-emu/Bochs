@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2008-2009 Stanislav Shwartsman
+//   Copyright (c) 2008-2011 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -149,6 +149,24 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVE(bxInstruction_c *i)
     header1 |= BX_XCR0_SSE_MASK;
   }
 
+#if BX_SUPPORT_AVX
+  /////////////////////////////////////////////////////////////////////////////
+  if (BX_CPU_THIS_PTR xcr0.get_AVX() && (EAX & BX_XCR0_AVX_MASK) != 0)
+  {
+    /* store AVX state */
+    for(index=0; index < BX_XMM_REGISTERS; index++)
+    {
+      // save YMM8-YMM15 only in 64-bit mode
+      if (index < 8 || long64_mode()) {
+        write_virtual_dqword(i->seg(),
+               (eaddr+index*16+576) & asize_mask, (Bit8u *)(&BX_READ_AVX_REG_LINE(index, 1)));
+      }
+    }
+
+    header1 |= BX_XCR0_AVX_MASK;
+  }
+#endif
+
   // always update header to 'dirty' state
   write_virtual_qword(i->seg(), (eaddr + 512) & asize_mask, header1);
 #endif
@@ -274,6 +292,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
     }
   }
 
+  static BxPackedXmmRegister xmmnil; /* compiler will clear the variable */
+
   /////////////////////////////////////////////////////////////////////////////
   if (BX_CPU_THIS_PTR xcr0.get_SSE() && (EAX & BX_XCR0_SSE_MASK) != 0)
   {
@@ -297,13 +317,39 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
        // initialize SSE with reset values
        for(index=0; index < BX_XMM_REGISTERS; index++) {
          // set XMM8-XMM15 only in 64-bit mode
+         if (index < 8 || long64_mode())
+           BX_WRITE_XMM_REG(index, xmmnil);
+       }
+    }
+  }
+
+#if BX_SUPPORT_AVX
+  /////////////////////////////////////////////////////////////////////////////
+  if (BX_CPU_THIS_PTR xcr0.get_AVX() && (EAX & BX_XCR0_AVX_MASK) != 0)
+  {
+    if (header1 & BX_XCR0_AVX_MASK) {
+      // load AVX state from XSAVE area
+      for(index=0; index < BX_XMM_REGISTERS; index++)
+      {
+         // restore YMM8-YMM15 only in 64-bit mode
          if (index < 8 || long64_mode()) {
-           BX_CPU_THIS_PTR xmm[index].xmm64u(0) = 0;
-           BX_CPU_THIS_PTR xmm[index].xmm64u(1) = 0;
+           read_virtual_dqword(i->seg(),
+               (eaddr+index*16+576) & asize_mask, (Bit8u *)(&BX_READ_AVX_REG_LINE(index, 1)));
+         }
+      }
+    }
+    else {
+       // initialize upper part of AVX registers with reset values
+       for(index=0; index < BX_XMM_REGISTERS; index++) {
+         // set YMM8-YMM15 only in 64-bit mode
+         if (index < 8 || long64_mode()) {
+           for (int j=2;j < BX_VLMAX*2;j++)
+             BX_CPU_THIS_PTR vmm[index].avx64u(j) = 0;
          }
        }
     }
   }
+#endif
 #endif
 }
 
@@ -349,11 +395,15 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XSETBV(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0);
   }
 
-  if (EDX != 0 || (EAX & ~BX_XCR0_SUPPORTED_BITS) != 0 || (EAX & 1) == 0) {
+  if (EDX != 0 || (EAX & ~BX_CPU_THIS_PTR xcr0_suppmask) != 0 || (EAX & 1) == 0) {
     BX_ERROR(("XSETBV: Attempting to change reserved bits!"));
     exception(BX_GP_EXCEPTION, 0);
   }
 
   BX_CPU_THIS_PTR xcr0.set32(EAX);
+
+#if BX_SUPPORT_AVX
+  handleAvxModeChange();
+#endif
 #endif
 }

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2005-2010 Stanislav Shwartsman
+//   Copyright (c) 2005-2011 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -37,6 +37,7 @@
 
 /* ************************************************************************ */
 #define GRPSSE(n)       _GRPSSE,   BxDisasmGroupSSE_##n
+#define GRPAVX(n)       _GRPSSE,   BxDisasmGroupAVX_##n
 #define GRPN(n)         _GROUPN,   BxDisasmGroup##n
 #define GRPRM(n)        _GRPRM,    BxDisasmGroupRm##n
 #define GRPMOD(n)       _SPLIT11B, BxDisasmGroupMod##n
@@ -132,6 +133,7 @@
 #define Vsd &disassembler::Vsd
 #define Vps &disassembler::Vps
 #define Vpd &disassembler::Vpd
+#define VIb &disassembler::VIb
 
 #define Ups &disassembler::Ups
 #define Upd &disassembler::Upd
@@ -145,6 +147,10 @@
 #define Wsd &disassembler::Wsd
 #define Wps &disassembler::Wps
 #define Wpd &disassembler::Wpd
+
+#define Hdq &disassembler::Hdq
+#define Hps &disassembler::Hps
+#define Hpd &disassembler::Hpd
 
 #define Ob &disassembler::Ob
 #define Ow &disassembler::Ow
@@ -189,6 +195,7 @@ const struct BxDisasmOpcodeInfo_t
 #include "opcodes.inc"
 #include "dis_tables_x87.inc"
 #include "dis_tables_sse.inc"
+#include "dis_tables_avx.inc"
 #include "dis_tables.inc"
 
 #undef XX

@@ -683,6 +683,9 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
 
 #if BX_CPU_LEVEL >= 6
   handleSseModeChange(); /* CR0.TS changes */
+#if BX_SUPPORT_AVX
+  handleAvxModeChange();
+#endif
 #endif
 
   //

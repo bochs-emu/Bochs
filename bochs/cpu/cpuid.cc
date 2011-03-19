@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2007-2010 Stanislav Shwartsman
+//   Copyright (c) 2007-2011 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -151,6 +151,12 @@ Bit32u BX_CPU_C::get_extended_cpuid_features(void)
   // support XSAVE extensions
   if (BX_CPU_SUPPORT_ISA_EXTENSION(BX_CPU_XSAVE))
     features |= BX_CPUID_EXT_XSAVE | BX_CPUID_EXT_OSXSAVE;
+
+#if BX_SUPPORT_AVX
+  // support AVX extensions
+  if (BX_CPU_SUPPORT_ISA_EXTENSION(BX_CPU_AVX))
+    features |= BX_CPUID_EXT_AVX;
+#endif
 
   return features;
 }
@@ -614,9 +620,17 @@ void BX_CPU_C::set_cpuid_defaults(void)
     // EBX - Maximum size (in bytes) required by enabled features
     // ECX - Maximum size (in bytes) required by CPU supported features
     // EDX - valid bits of XCR0 (upper part)
-    cpuid->eax = BX_XCR0_SUPPORTED_BITS;
+    cpuid->eax = BX_CPU_THIS_PTR xcr0_suppmask;
     cpuid->ebx = 512+64;
+#if BX_SUPPORT_AVX
+    if (BX_CPU_THIS_PTR xcr0_suppmask & BX_XCR0_AVX_MASK)
+      cpuid->ebx += 256;
+#endif
     cpuid->ecx = 512+64;
+#if BX_SUPPORT_AVX
+    if (BX_CPU_THIS_PTR xcr0_suppmask & BX_XCR0_AVX_MASK)
+      cpuid->ecx += 256;
+#endif
     cpuid->edx = 0;
 
     BX_INFO(("CPUID[0x0000000D]: %08x %08x %08x %08x", cpuid->eax, cpuid->ebx, cpuid->ecx, cpuid->edx));
@@ -939,17 +953,40 @@ void BX_CPU_C::bx_cpuid_extended_cpuid_leaf(Bit32u subfunction)
 void BX_CPU_C::bx_cpuid_xsave_leaf(Bit32u subfunction)
 {
   BX_ASSERT(BX_CPU_SUPPORT_ISA_EXTENSION(BX_CPU_XSAVE));
-  if (subfunction == 0) {
+
+  switch(subfunction) {
+  case 0:
     RAX = BX_CPU_THIS_PTR cpuid_std_function[0xd].eax;
     RBX = BX_CPU_THIS_PTR cpuid_std_function[0xd].ebx;
     RCX = BX_CPU_THIS_PTR cpuid_std_function[0xd].ecx;
     RDX = BX_CPU_THIS_PTR cpuid_std_function[0xd].edx;
-  }
-  else {
+    break;
+
+  case 1:
+    RAX = 0; // TODO: report XSAVEOPT
+    RBX = 0;
+    RCX = 0;
+    RDX = 0;
+    break;
+
+#if BX_SUPPORT_AVX
+  case 2: // AVX leaf
+    if (BX_CPU_THIS_PTR xcr0_suppmask & BX_XCR0_AVX_MASK) {
+      RAX = 256;
+      RBX = 576;
+      RCX = 0;
+      RDX = 0;
+      break;
+    }
+    // else fall through
+#endif
+
+  default:
     RAX = 0; // reserved
     RBX = 0; // reserved
     RCX = 0; // reserved
     RDX = 0; // reserved
+    break;
   }
 }
 #endif
@@ -1027,6 +1064,13 @@ void BX_CPU_C::init_isa_features_bitmask(void)
        return;
      }
   }
+
+#if BX_SUPPORT_AVX
+  if (BX_SUPPORT_AVX && ! xsave_enabled) {
+     BX_PANIC(("PANIC: AVX emulation requires XSAVE support !"));
+     return;
+  }
+#endif
 
 #if BX_SUPPORT_X86_64
   if (sse_enabled < BX_CPUID_SUPPORT_SSE2) {
@@ -1113,6 +1157,9 @@ void BX_CPU_C::init_isa_features_bitmask(void)
 
   if (movbe_enabled)
     features_bitmask |= BX_CPU_MOVBE;
+
+#if BX_SUPPORT_AVX
+  features_bitmask |= BX_CPU_AVX;
 #endif
 
 #if BX_SUPPORT_VMX
@@ -1125,6 +1172,8 @@ void BX_CPU_C::init_isa_features_bitmask(void)
   static bx_bool fsgsbase_enabled = SIM->get_param_bool(BXPN_CPUID_FSGSBASE)->get();
   if (fsgsbase_enabled)
     features_bitmask |= BX_CPU_FSGSBASE;
+#endif
+
 #endif
 
   BX_CPU_THIS_PTR isa_extensions_bitmask = features_bitmask;

@@ -359,8 +359,8 @@ static const BxOpcodeInfo_t BxOpcodeInfo32[512*2] = {
   /* C1 /w */ { BxGroup2 | BxImmediate_Ib, BX_IA_ERROR, BxOpcodeInfoG2Ew },
   /* C2 /w */ { BxImmediate_Iw | BxTraceEnd, BX_IA_RETnear16_Iw },
   /* C3 /w */ { BxTraceEnd,                  BX_IA_RETnear16 },
-  /* C4 /w */ { 0, BX_IA_LES_GwMp },
-  /* C5 /w */ { 0, BX_IA_LDS_GwMp },
+  /* C4 /w */ { BxPrefixVEX, BX_IA_LES_GwMp },
+  /* C5 /w */ { BxPrefixVEX, BX_IA_LDS_GwMp },
   /* C6 /w */ { BxGroup11, BX_IA_ERROR, BxOpcodeInfoG11Eb },
   /* C7 /w */ { BxGroup11, BX_IA_ERROR, BxOpcodeInfoG11Ew },
   /* C8 /w */ { BxImmediate_Iw | BxImmediate_Ib2, BX_IA_ENTER16_IwIb },
@@ -904,8 +904,8 @@ static const BxOpcodeInfo_t BxOpcodeInfo32[512*2] = {
   /* C1 /d */ { BxGroup2 | BxImmediate_Ib, BX_IA_ERROR, BxOpcodeInfoG2Ed },
   /* C2 /d */ { BxImmediate_Iw | BxTraceEnd, BX_IA_RETnear32_Iw },
   /* C3 /d */ { BxTraceEnd,                  BX_IA_RETnear32 },
-  /* C4 /d */ { 0, BX_IA_LES_GdMp },
-  /* C5 /d */ { 0, BX_IA_LDS_GdMp },
+  /* C4 /d */ { BxPrefixVEX, BX_IA_LES_GdMp },
+  /* C5 /d */ { BxPrefixVEX, BX_IA_LDS_GdMp },
   /* C6 /d */ { BxGroup11, BX_IA_ERROR, BxOpcodeInfoG11Eb },
   /* C7 /d */ { BxGroup11, BX_IA_ERROR, BxOpcodeInfoG11Ed },
   /* C8 /d */ { BxImmediate_Iw | BxImmediate_Ib2, BX_IA_ENTER32_IwIb },
@@ -1270,6 +1270,13 @@ BX_CPU_C::fetchDecode32(const Bit8u *iptr, bxInstruction_c *i, unsigned remainin
 #define SSE_PREFIX_F2   3
   unsigned sse_prefix = SSE_PREFIX_NONE;
 
+  int had_vex = 0;
+#if BX_SUPPORT_AVX
+  int vvv = -1;
+  unsigned vex;
+  bx_bool vex_w = 0;
+#endif
+
   os_32 = is_32 =
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b;
 
@@ -1338,12 +1345,66 @@ fetch_b1:
   }
 
   i->setB1(b1);
+  i->setVL(BX_NO_VL);
 
   unsigned index = b1 + (os_32 << 9); // *512
 
   unsigned attr = BxOpcodeInfo32[index].Attr;
 
-  bx_bool has_modrm = BxOpcodeHasModrm32[b1];
+  bx_bool has_modrm = 0;
+
+#if BX_SUPPORT_AVX
+  if ((attr & BxGroupX) == BxPrefixVEX && (*iptr & 0xc0) == 0xc0) {
+    had_vex = 1;
+    if (sse_prefix) had_vex = -1;
+    unsigned vex_opcext = 1;
+
+    if (remain != 0) {
+      remain--;
+      vex = *iptr++;
+    }
+    else
+      return(-1);
+
+    if (b1 == 0xc4) {
+      // decode 3-byte VEX prefix
+      vex_opcext = vex & 0x1f;
+      if (remain != 0) {
+        remain--;
+        vex = *iptr++;  // fetch VEX3
+      }
+      else
+        return(-1);
+
+      vex_w = (vex >> 7) & 0x1;
+    }
+
+    vvv = 15 - ((vex >> 3) & 0xf);
+    i->setVL(BX_VL128 + ((vex >> 2) & 0x1));
+    sse_prefix = vex & 0x3;
+
+    if (remain != 0) {
+      remain--;
+      b1 = *iptr++; // fetch new b1
+    }
+    else
+      return(-1);
+
+    b1 += 256 * vex_opcext;
+
+    if (b1 < 256 || b1 >= 1024) had_vex = -1;
+    else {
+      if (b1 >= 512)
+        has_modrm = 1;
+      else
+        has_modrm = BxOpcodeHasModrm32[b1];
+    }
+  }
+  else
+#endif
+  {
+    has_modrm = BxOpcodeHasModrm32[b1];
+  }
 
   if (has_modrm) {
 
@@ -1371,12 +1432,18 @@ fetch_b1:
     nnn = (b2 >> 3) & 0x7;
     rm  = b2 & 0x7;
 
+    i->setNnn(nnn);
+#if BX_SUPPORT_AVX
+    if (had_vex == 0) vvv = nnn;
+    i->setVvv(vvv);
+#endif
+
     // MOVs with CRx and DRx always use register ops and ignore the mod field.
     if ((b1 & ~3) == 0x120)
       mod = 0xc0;
 
-    i->setModRM(b2);
-    i->setNnn(nnn);
+    if ((b1 & 0xff8) == 0xd8)
+      i->setModRM(b2);
 
     if (mod == 0xc0) { // mod == 11b
       i->assertModC0();
@@ -1516,7 +1583,17 @@ modrm_done:
 
     // Resolve ExecutePtr and additional opcode Attr
     const BxOpcodeInfo_t *OpcodeInfoPtr = &(BxOpcodeInfo32[index]);
-    attr = BxOpcodeInfo32[index].Attr;
+
+#if BX_SUPPORT_AVX
+    if (had_vex != 0) {
+      if (had_vex < 0)
+         OpcodeInfoPtr = &BxOpcodeGroupSSE_ERR[0]; // BX_IA_ERROR
+      else
+         OpcodeInfoPtr = &BxOpcodeTableAVX[b1-256];
+    }
+#endif
+
+    attr = OpcodeInfoPtr->Attr;
 
     while(attr & BxGroupX) {
       Bit32u group = attr & BxGroupX;
@@ -1535,10 +1612,22 @@ modrm_done:
       switch(group) {
         case BxGroupN:
           OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[nnn]);
+#if BX_SUPPORT_AVX
+          if (had_vex == 0) i->setVvv(rm);
+#endif
           break;
         case BxSplitGroupN:
           OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[nnn + (mod_mem << 3)]);
           break;
+#if BX_SUPPORT_AVX
+        case BxSplitVexW:
+          BX_ASSERT(had_vex != 0);
+          if (vex_w)
+            OpcodeInfoPtr = &BxOpcodeGroupSSE_ERR[0]; // BX_IA_ERROR
+          else
+            OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[0]);
+          break;
+#endif
         case Bx3ByteOp:
           OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[b3]);
           break;
@@ -1559,8 +1648,10 @@ modrm_done:
           else
             OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[(b2 & 0x3f) + 8]);
           break;
+        case BxPrefixVEX:
+          continue;
         default:
-          BX_PANIC(("fetchdecode: Unknown opcode group"));
+          BX_PANIC(("fetchdecode: Unknown opcode group %d", group));
       }
 
       /* get additional attributes from group table */
@@ -1577,10 +1668,20 @@ modrm_done:
 
     const BxOpcodeInfo_t *OpcodeInfoPtr = &(BxOpcodeInfo32[index]);
 
+#if BX_SUPPORT_AVX
+    if (had_vex != 0) {
+      i->setVvv(vvv);
+      if (had_vex < 0)
+         OpcodeInfoPtr = &BxOpcodeGroupSSE_ERR[0]; // BX_IA_ERROR
+      else
+         OpcodeInfoPtr = &BxOpcodeTableAVX[b1-256];
+    }
+#endif
+
     unsigned group = attr & BxGroupX;
-    BX_ASSERT(group == BxPrefixSSE || group == 0);
-    if (group == BxPrefixSSE && sse_prefix)
+    if (group == BxPrefixSSE && sse_prefix) {
       OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[sse_prefix-1]);
+    }
 
     ia_opcode = OpcodeInfoPtr->IA;
     i->setRm(b1 & 7);
@@ -1667,6 +1768,17 @@ modrm_done:
           else return(-1);
         }
         break;
+#if BX_SUPPORT_AVX
+      case BxImmediate_Ib4:
+        if (remain != 0) {
+          i->modRMForm.Ib = ((*iptr++) >> 4) & 7;
+          remain--;
+        }
+        else {
+          return(-1);
+        }
+        break;
+#endif
       default:
         BX_INFO(("b1 was %x", b1));
         BX_PANIC(("fetchdecode: imm_mode = %u", imm_mode));
@@ -1712,6 +1824,35 @@ modrm_done:
   i->setILen(remainingInPage - remain);
   i->setIaOpcode(ia_opcode);
 
+#if BX_CPU_LEVEL >= 6
+  Bit32u op_flags = BxOpcodesTable[ia_opcode].flags;
+  if (! BX_CPU_THIS_PTR sse_ok) {
+    if (op_flags & BX_PREPARE_SSE) {
+       if (i->execute != &BX_CPU_C::BxError) i->execute = &BX_CPU_C::BxNoSSE;
+       return(1);
+    }
+  }
+#if BX_SUPPORT_AVX
+  if (! BX_CPU_THIS_PTR avx_ok) {
+    if (op_flags & BX_PREPARE_AVX) {
+       if (i->execute != &BX_CPU_C::BxError) i->execute = &BX_CPU_C::BxNoAVX;
+       return(1);
+    }
+  }
+  if (had_vex > 0) {
+    if ((op_flags & BX_VEX_NO_VVV) && i->vvv() != 0) {
+      ia_opcode = BX_IA_ERROR;
+    }
+    if (i->getVL() == BX_VEX_L128 && !(op_flags & BX_VEX_L128)) {
+      ia_opcode = BX_IA_ERROR;
+    }
+    if (i->getVL() == BX_VEX_L256 && !(op_flags & BX_VEX_L256)) {
+      ia_opcode = BX_IA_ERROR;
+    }
+  }
+#endif
+#endif
+
   if (mod_mem) {
     i->execute  = BxOpcodesTable[ia_opcode].execute1;
     i->execute2 = BxOpcodesTable[ia_opcode].execute2;
@@ -1727,16 +1868,6 @@ modrm_done:
   }
 
   BX_ASSERT(i->execute);
-
-#if BX_CPU_LEVEL >= 6
-  Bit32u op_flags = BxOpcodesTable[ia_opcode].flags;
-  if (! BX_CPU_THIS_PTR sse_ok) {
-     if (op_flags & BX_PREPARE_SSE) {
-        if (i->execute != &BX_CPU_C::BxError) i->execute = &BX_CPU_C::BxNoSSE;
-        return(1);
-     }
-  }
-#endif
 
 #if BX_SUPPORT_TRACE_CACHE
   if ((attr & BxTraceEnd) || ia_opcode == BX_IA_ERROR)
@@ -1794,7 +1925,7 @@ void BX_CPU_C::init_FetchDecodeTables(void)
     BX_PANIC(("init_FetchDecodeTables: CPU features bitmask is empty !"));
 #endif
 
-  if (BX_IA_LAST > 0xffff)
+  if (BX_IA_LAST > 0xfff)
     BX_PANIC(("init_FetchDecodeTables: too many opcodes defined !"));
   
   for (unsigned n=0; n < BX_IA_LAST; n++) {

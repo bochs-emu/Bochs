@@ -55,8 +55,9 @@
 %token <sval> BX_TOKEN_REGS
 %token <sval> BX_TOKEN_CPU
 %token <sval> BX_TOKEN_FPU
-%token <sval> BX_TOKEN_SSE
 %token <sval> BX_TOKEN_MMX
+%token <sval> BX_TOKEN_SSE
+%token <sval> BX_TOKEN_AVX
 %token <sval> BX_TOKEN_IDT
 %token <sval> BX_TOKEN_IVT
 %token <sval> BX_TOKEN_GDT
@@ -151,6 +152,7 @@ command:
     | fpu_regs_command
     | mmx_regs_command
     | sse_regs_command
+    | avx_regs_command
     | segment_regs_command
     | debug_regs_command
     | control_regs_command
@@ -567,7 +569,7 @@ info_command:
       }
     | BX_TOKEN_INFO BX_TOKEN_CPU '\n'
       {
-        bx_dbg_info_registers_command(BX_INFO_GENERAL_PURPOSE_REGS | BX_INFO_FPU_REGS | BX_INFO_SSE_REGS);
+        bx_dbg_info_registers_command(-1);
         free($1); free($2);
       }
     | BX_TOKEN_INFO BX_TOKEN_IDT optional_numeric optional_numeric '\n'
@@ -684,6 +686,14 @@ sse_regs_command:
       BX_TOKEN_SSE '\n'
       {
         bx_dbg_info_registers_command(BX_INFO_SSE_REGS);
+        free($1);
+      }
+    ;
+
+avx_regs_command:
+      BX_TOKEN_AVX '\n'
+      {
+        bx_dbg_info_registers_command(BX_INFO_AVX_REGS);
         free($1);
       }
     ;
@@ -1036,7 +1046,12 @@ help_command:
        }
      | BX_TOKEN_HELP BX_TOKEN_SSE '\n'
        {
-         dbg_printf("sse|xmm - print SSE state\n");
+         dbg_printf("xmm|sse - print SSE state\n");
+         free($1);free($2);
+       }
+     | BX_TOKEN_HELP BX_TOKEN_AVX '\n'
+       {
+         dbg_printf("ymm - print AVX state\n");
          free($1);free($2);
        }
      | BX_TOKEN_HELP BX_TOKEN_SEGMENT_REGS '\n'

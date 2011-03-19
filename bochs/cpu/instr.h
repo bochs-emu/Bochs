@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2008-2010 Stanislav Shwartsman
+//   Copyright (c) 2008-2011 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -50,7 +50,8 @@ public:
   BxResolvePtr_tR ResolveModrm;
 
   struct {
-    //  15..0 opcode
+    //  15.12 AVX vl  (0=no VL, 1=128 bit, 2=256 bit)
+    //  11..0 opcode
     Bit16u ia_opcode;
 
     //  7...4 (unused)
@@ -74,7 +75,8 @@ public:
 #define BX_INSTR_METADATA_BASE  4
 #define BX_INSTR_METADATA_INDEX 5
 #define BX_INSTR_METADATA_SCALE 6
-#define BX_INSTR_METADATA_MODRM 7
+#define BX_INSTR_METADATA_MODRM 7 /* modrm for FPU only */
+#define BX_INSTR_METADATA_VVV   7
 
   // using 5-bit field for registers (16 regs in 64-bit, RIP, NIL)
   Bit8u metaData[8];
@@ -237,10 +239,10 @@ public:
   }
 
   BX_CPP_INLINE unsigned getIaOpcode(void) const {
-    return metaInfo.ia_opcode;
+    return metaInfo.ia_opcode & 0xfff;
   }
   BX_CPP_INLINE void setIaOpcode(Bit16u op) {
-    metaInfo.ia_opcode = op;
+    metaInfo.ia_opcode = (metaInfo.ia_opcode & 0xf000) | op;
   }
 
   BX_CPP_INLINE unsigned repUsedL(void) const {
@@ -251,6 +253,20 @@ public:
   }
   BX_CPP_INLINE void setRepUsed(unsigned value) {
     metaInfo.metaInfo1 = (metaInfo.metaInfo1 & 0x3f) | (value << 6);
+  }
+
+  BX_CPP_INLINE unsigned getVL(void) const {
+    return metaInfo.ia_opcode >> 12;
+  }
+  BX_CPP_INLINE void setVL(unsigned value) {
+    metaInfo.ia_opcode = (metaInfo.ia_opcode & 0xfff) | (value << 12);
+  }
+
+  BX_CPP_INLINE void setVvv(unsigned vvv) {
+    metaData[BX_INSTR_METADATA_VVV] = vvv;
+  }
+  BX_CPP_INLINE unsigned vvv() const {
+    return metaData[BX_INSTR_METADATA_VVV];
   }
 
   BX_CPP_INLINE unsigned modC0() const

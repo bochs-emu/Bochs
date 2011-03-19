@@ -335,8 +335,8 @@ static const BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* C1 /w */ { BxGroup2 | BxImmediate_Ib, BX_IA_ERROR, BxOpcodeInfoG2Ew },
   /* C2 /w */ { BxImmediate_Iw | BxTraceEnd, BX_IA_RETnear64_Iw },
   /* C3 /w */ { BxTraceEnd,                  BX_IA_RETnear64 },
-  /* C4 /w */ { 0, BX_IA_ERROR },
-  /* C5 /w */ { 0, BX_IA_ERROR },
+  /* C4 /w */ { BxPrefixVEX, BX_IA_ERROR },
+  /* C5 /w */ { BxPrefixVEX, BX_IA_ERROR },
   /* C6 /w */ { BxGroup11, BX_IA_ERROR, BxOpcodeInfoG11Eb },
   /* C7 /w */ { BxGroup11, BX_IA_ERROR, BxOpcodeInfoG11Ew },
   /* C8 /w */ { BxImmediate_Iw | BxImmediate_Ib2, BX_IA_ENTER64_IwIb },
@@ -850,8 +850,8 @@ static const BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* C1 /d */ { BxGroup2 | BxImmediate_Ib, BX_IA_ERROR, BxOpcodeInfoG2Ed },
   /* C2 /d */ { BxImmediate_Iw | BxTraceEnd, BX_IA_RETnear64_Iw },
   /* C3 /d */ { BxTraceEnd,                  BX_IA_RETnear64 },
-  /* C4 /d */ { 0, BX_IA_ERROR },
-  /* C5 /d */ { 0, BX_IA_ERROR },
+  /* C4 /d */ { BxPrefixVEX, BX_IA_ERROR },
+  /* C5 /d */ { BxPrefixVEX, BX_IA_ERROR },
   /* C6 /d */ { BxGroup11, BX_IA_ERROR, BxOpcodeInfoG11Eb },
   /* C7 /d */ { BxGroup11, BX_IA_ERROR, BxOpcodeInfoG11Ed },
   /* C8 /d */ { BxImmediate_Iw | BxImmediate_Ib2, BX_IA_ENTER64_IwIb },
@@ -1365,8 +1365,8 @@ static const BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* C1 /q */ { BxGroup2 | BxImmediate_Ib, BX_IA_ERROR, BxOpcodeInfo64G2Eq },
   /* C2 /q */ { BxImmediate_Iw | BxTraceEnd, BX_IA_RETnear64_Iw },
   /* C3 /q */ { BxTraceEnd,                  BX_IA_RETnear64 },
-  /* C4 /q */ { 0, BX_IA_ERROR },
-  /* C5 /q */ { 0, BX_IA_ERROR },
+  /* C4 /q */ { BxPrefixVEX, BX_IA_ERROR },
+  /* C5 /q */ { BxPrefixVEX, BX_IA_ERROR },
   /* C6 /q */ { BxGroup11, BX_IA_ERROR, BxOpcodeInfoG11Eb },
   /* C7 /q */ { BxGroup11, BX_IA_ERROR, BxOpcodeInfo64G11Eq },
   /* C8 /q */ { BxImmediate_Iw | BxImmediate_Ib2, BX_IA_ENTER64_IwIb },
@@ -1690,7 +1690,8 @@ BX_CPU_C::fetchDecode64(const Bit8u *iptr, bxInstruction_c *i, unsigned remainin
   if (remainingInPage > 15) remainingInPage = 15;
 
   unsigned remain = remainingInPage; // remain must be at least 1
-  unsigned b1, b2 = 0, lock=0, ia_opcode = 0;
+  unsigned b1, b2 = 0, ia_opcode = 0;
+  bx_bool lock=0;
   unsigned offset = 512, rex_r = 0, rex_x = 0, rex_b = 0;
   unsigned rm = 0, mod = 0, nnn = 0, mod_mem = 0;
   unsigned seg = BX_SEG_REG_DS, seg_override = BX_SEG_REG_NULL;
@@ -1701,6 +1702,13 @@ BX_CPU_C::fetchDecode64(const Bit8u *iptr, bxInstruction_c *i, unsigned remainin
 #define SSE_PREFIX_F2   3
   unsigned sse_prefix = SSE_PREFIX_NONE;
   unsigned rex_prefix = 0;
+
+  int had_vex = 0;
+#if BX_SUPPORT_AVX
+  int vvv = -1;
+  unsigned vex;
+  bx_bool vex_w = 0;
+#endif
 
   i->ResolveModrm = 0;
   i->init(/*os32*/ 1,  // operand size 32 override defaults to 1
@@ -1808,12 +1816,75 @@ fetch_b1:
   }
 
   i->setB1(b1);
+  i->setVL(BX_NO_VL);
 
   unsigned index = b1+offset;
 
   unsigned attr = BxOpcodeInfo64[index].Attr;
 
-  bx_bool has_modrm = BxOpcodeHasModrm64[b1];
+  bx_bool has_modrm = 0;
+
+#if BX_SUPPORT_AVX
+  if ((attr & BxGroupX) == BxPrefixVEX) {
+    had_vex = 1;
+    if (sse_prefix || rex_prefix) had_vex = -1;
+    unsigned vex_opcext = 1;
+
+    if (remain != 0) {
+      remain--;
+      vex = *iptr++;
+    }
+    else
+      return(-1);
+
+    rex_r = ((vex >> 4) & 0x8) ^ 0x8;
+
+    if (b1 == 0xc4) {
+      rex_x = ((vex >> 3) & 0x8) ^ 0x8;
+      rex_b = ((vex >> 2) & 0x8) ^ 0x8;
+
+      // decode 3-byte VEX prefix
+      vex_opcext = vex & 0x1f;
+      if (remain != 0) {
+        remain--;
+        vex = *iptr++;  // fetch VEX3
+      }
+      else
+        return(-1);
+
+      if (vex & 0x80) {
+        vex_w = 1;
+        i->assertOs64();
+        i->assertOs32();
+      }
+    }
+
+    vvv = 15 - ((vex >> 3) & 0xf);
+    i->setVL(BX_VL128 + ((vex >> 2) & 0x1));
+    sse_prefix = vex & 0x3;
+
+    if (remain != 0) {
+      remain--;
+      b1 = *iptr++; // fetch new b1
+    }
+    else
+      return(-1);
+
+    b1 += 256 * vex_opcext;
+
+    if (b1 < 256 || b1 >= 1024) had_vex = -1;
+    else {
+      if (b1 >= 512)
+        has_modrm = 1;
+      else
+        has_modrm = BxOpcodeHasModrm64[b1];
+    }
+  }
+  else
+#endif
+  {
+    has_modrm = BxOpcodeHasModrm64[b1];
+  }
 
   if (has_modrm) {
 
@@ -1841,12 +1912,18 @@ fetch_b1:
     nnn = ((b2 >> 3) & 0x7) | rex_r;
     rm  = (b2 & 0x7) | rex_b;
 
+    i->setNnn(nnn);
+#if BX_SUPPORT_AVX
+    if (had_vex == 0) vvv = nnn;
+    i->setVvv(vvv);
+#endif
+
     // MOVs with CRx and DRx always use register ops and ignore the mod field.
     if ((b1 & ~3) == 0x120)
       mod = 0xc0;
 
-    i->setModRM(b2);
-    i->setNnn(nnn);
+    if ((b1 & 0xff8) == 0xd8)
+      i->setModRM(b2);
 
     if (mod == 0xc0) { // mod == 11b
       i->setRm(rm);
@@ -1985,7 +2062,17 @@ modrm_done:
 
     // Resolve ExecutePtr and additional opcode Attr
     const BxOpcodeInfo_t *OpcodeInfoPtr = &(BxOpcodeInfo64[index]);
-    attr = BxOpcodeInfo64[index].Attr;
+
+#if BX_SUPPORT_AVX
+    if (had_vex != 0) {
+      if (had_vex < 0)
+         OpcodeInfoPtr = &BxOpcodeGroupSSE_ERR[0]; // BX_IA_ERROR
+      else
+         OpcodeInfoPtr = &BxOpcodeTableAVX[b1-256];
+    }
+#endif
+
+    attr = OpcodeInfoPtr->Attr;
 
     while(attr & BxGroupX) {
       Bit32u group = attr & BxGroupX;
@@ -2004,10 +2091,19 @@ modrm_done:
       switch(group) {
         case BxGroupN:
           OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[nnn & 0x7]);
+#if BX_SUPPORT_AVX
+          if (had_vex == 0) i->setVvv(rm);
+#endif
           break;
         case BxSplitGroupN:
           OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[(nnn & 0x7) + (mod_mem << 3)]);
           break;
+#if BX_SUPPORT_AVX
+        case BxSplitVexW:
+          BX_ASSERT(had_vex != 0);
+          OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[vex_w]);
+          break;
+#endif
         case Bx3ByteOp:
           OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[b3]);
           break;
@@ -2029,7 +2125,7 @@ modrm_done:
             OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[(b2 & 0x3f) + 8]);
           break;
         default:
-          BX_PANIC(("fetchdecode: Unknown opcode group"));
+          BX_PANIC(("fetchdecode: Unknown opcode group %d", group));
       }
 
       /* get additional attributes from group table */
@@ -2046,12 +2142,21 @@ modrm_done:
 
     const BxOpcodeInfo_t *OpcodeInfoPtr = &(BxOpcodeInfo64[index]);
 
+#if BX_SUPPORT_AVX
+    if (had_vex != 0) {
+      i->setVvv(vvv);
+      if (had_vex < 0)
+         OpcodeInfoPtr = &BxOpcodeGroupSSE_ERR[0]; // BX_IA_ERROR
+      else
+         OpcodeInfoPtr = &BxOpcodeTableAVX[b1-256];
+    }
+#endif
+
     if (b1 == 0x90 && sse_prefix == SSE_PREFIX_F3) {
       ia_opcode = BX_IA_PAUSE;
     }
     else {
       unsigned group = attr & BxGroupX;
-      BX_ASSERT(group == BxPrefixSSE || group == 0);
       if (group == BxPrefixSSE && sse_prefix)
         OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[sse_prefix-1]);
 
@@ -2158,6 +2263,17 @@ modrm_done:
           else return(-1);
         }
         break;
+#if BX_SUPPORT_AVX
+      case BxImmediate_Ib4:
+        if (remain != 0) {
+          i->modRMForm.Ib = (*iptr++) >> 4;
+          remain--;
+        }
+        else {
+          return(-1);
+        }
+        break;
+#endif
       default:
         BX_INFO(("b1 was %x", b1));
         BX_PANIC(("fetchdecode: imm_mode = %u", imm_mode));
@@ -2193,6 +2309,33 @@ modrm_done:
   i->setILen(remainingInPage - remain);
   i->setIaOpcode(ia_opcode);
 
+  Bit32u op_flags = BxOpcodesTable[ia_opcode].flags;
+  if (! BX_CPU_THIS_PTR sse_ok) {
+    if (op_flags & BX_PREPARE_SSE) {
+       if (i->execute != &BX_CPU_C::BxError) i->execute = &BX_CPU_C::BxNoSSE;
+       return(1);
+    }
+  }
+#if BX_SUPPORT_AVX
+  if (! BX_CPU_THIS_PTR avx_ok) {
+    if (op_flags & BX_PREPARE_AVX) {
+       if (i->execute != &BX_CPU_C::BxError) i->execute = &BX_CPU_C::BxNoAVX;
+       return(1);
+    }
+  }
+  if (had_vex > 0) {
+    if ((op_flags & BX_VEX_NO_VVV) && i->vvv() != 0) {
+      ia_opcode = BX_IA_ERROR;
+    }
+    if (i->getVL() == BX_VEX_L128 && !(op_flags & BX_VEX_L128)) {
+      ia_opcode = BX_IA_ERROR;
+    }
+    if (i->getVL() == BX_VEX_L256 && !(op_flags & BX_VEX_L256)) {
+      ia_opcode = BX_IA_ERROR;
+    }
+  }
+#endif
+
   if (mod_mem) {
     i->execute  = BxOpcodesTable[ia_opcode].execute1;
     i->execute2 = BxOpcodesTable[ia_opcode].execute2;
@@ -2208,14 +2351,6 @@ modrm_done:
   }
 
   BX_ASSERT(i->execute);
-
-  Bit32u op_flags = BxOpcodesTable[ia_opcode].flags;
-  if (! BX_CPU_THIS_PTR sse_ok) {
-     if (op_flags & BX_PREPARE_SSE) {
-        if (i->execute != &BX_CPU_C::BxError) i->execute = &BX_CPU_C::BxNoSSE;
-        return(1);
-     }
-  }
 
 #if BX_SUPPORT_TRACE_CACHE
   if ((attr & BxTraceEnd) || ia_opcode == BX_IA_ERROR)

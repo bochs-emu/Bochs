@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2005-2009 Stanislav Shwartsman
+//   Copyright (c) 2005-2011 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -83,6 +83,9 @@ static const char *intel_index16[8] = {
     "bx"
 };
 
+static const char *intel_vector_reg_name[2] = {
+    "xmm", "ymm"
+};
 
 //////////////////
 // AT&T STYLE
@@ -139,6 +142,10 @@ static const char *att_index16[8] = {
     "%di",
     "%bp",
     "%bx"
+};
+
+static const char *att_vector_reg_name[2] = {
+    "%xmm", "%ymm"
 };
 
 #define NULL_SEGMENT_REGISTER 7
@@ -214,6 +221,7 @@ void disassembler::set_syntax_intel()
 
   segment_name = intel_segment_name;
   index16 = intel_index16;
+  vector_reg_name = intel_vector_reg_name;
 
   initialize_modrm_segregs();
 }
@@ -256,6 +264,7 @@ void disassembler::set_syntax_att()
 
   segment_name = att_segment_name;
   index16 = att_index16;
+  vector_reg_name = att_vector_reg_name;
 
   initialize_modrm_segregs();
 }

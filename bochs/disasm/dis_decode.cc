@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2005-2009 Stanislav Shwartsman
+//   Copyright (c) 2005-2011 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -199,7 +199,22 @@ x86_insn disassembler::decode(bx_bool is_32, bx_bool is_64, bx_address base, bx_
 
   entry = opcode_table + insn.b1;
 
-  if (instruction_has_modrm[insn.b1])
+  if ((insn.b1 & ~1) == 0xc4 && (is_64 || (peek_byte() & 0xc0) == 0xc0))
+  {
+    if (sse_prefix)
+      dis_sprintf("(bad vex+rex prefix) ");
+    if (rex_prefix)
+      dis_sprintf("(bad vex+sse prefix) ");
+
+    // decode 0xC4 or 0xC5 VEX prefix
+    sse_prefix = decode_vex(&insn);
+    if (insn.b1 < 256 || insn.b1 >= 1024)
+      entry = &BxDisasmGroupSSE_ERR[0];
+    else
+      entry = BxDisasmOpcodesAVX + (insn.b1 - 256);
+  }
+
+  if (insn.b1 >= 512 || instruction_has_modrm[insn.b1])
   {
     // take 3rd byte for 3-byte opcode
     if (entry->Attr == _GRP3BOP) {
@@ -346,9 +361,43 @@ x86_insn disassembler::decode(bx_bool is_32, bx_bool is_64, bx_address base, bx_
     dis_sprintf(", taken");
   }
 
+  if (insn.is_vex < 0)
+    dis_sprintf(" (bad vex)");
+
   insn.ilen = (unsigned)(instruction - instruction_begin);
 
   return insn;
+}
+
+unsigned disassembler::decode_vex(x86_insn *insn)
+{
+  insn->is_vex = 1;
+
+  unsigned b2 = fetch_byte(), vex_opcode_extension = 1;
+
+  insn->rex_r = (b2 & 0x80) ? 0 : 0x8;
+
+  if (insn->b1 == 0xc4) {
+    // decode 3-byte VEX prefix
+    insn->rex_x = (b2 & 0x40) ? 0 : 0x8;
+    if (insn->is_64)
+      insn->rex_b = (b2 & 0x20) ? 0 : 0x8;
+
+    vex_opcode_extension = b2 & 0x1f;
+    if (! vex_opcode_extension || vex_opcode_extension > 3)
+      insn->is_vex = -1;
+
+    b2 = fetch_byte(); // fetch VEX3 byte
+    if (b2 & 0x80) {
+      insn->os_64 = 1;
+      insn->os_32 = 1;
+    }
+  }
+
+  insn->vex_override = 15 - ((b2 >> 3) & 0xf);
+  insn->vex_vl = (b2 >> 2) & 0x1;
+  insn->b1 = fetch_byte() + 256 * vex_opcode_extension;
+  return b2 & 0x3;
 }
 
 void disassembler::dis_sprintf(const char *fmt, ...)

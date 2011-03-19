@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2005-2009 Stanislav Shwartsman
+//   Copyright (c) 2005-2011 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -402,13 +402,10 @@ void disassembler::Qq(const x86_insn *insn)
     (this->*resolve_modrm)(insn, Q_SIZE);
 }
 
-// xmm register
+// xmm/ymm register
 void disassembler::Udq(const x86_insn *insn)
 {
-  if (intel_mode)
-    dis_sprintf  ("xmm%d", insn->rm);
-  else
-    dis_sprintf("%%xmm%d", insn->rm);
+  dis_sprintf("%s%d", vector_reg_name[insn->vex_vl], insn->rm);
 }
 
 void disassembler::Ups(const x86_insn *insn) { Udq(insn); }
@@ -416,10 +413,7 @@ void disassembler::Upd(const x86_insn *insn) { Udq(insn); }
 
 void disassembler::Vq(const x86_insn *insn)
 {
-  if (intel_mode)
-    dis_sprintf  ("xmm%d", insn->nnn);
-  else
-    dis_sprintf("%%xmm%d", insn->nnn);
+  dis_sprintf("%s%d", vector_reg_name[insn->vex_vl], insn->nnn);
 }
 
 void disassembler::Vdq(const x86_insn *insn) { Vq(insn); }
@@ -427,6 +421,21 @@ void disassembler::Vss(const x86_insn *insn) { Vq(insn); }
 void disassembler::Vsd(const x86_insn *insn) { Vq(insn); }
 void disassembler::Vps(const x86_insn *insn) { Vq(insn); }
 void disassembler::Vpd(const x86_insn *insn) { Vq(insn); }
+
+void disassembler::VIb(const x86_insn *insn)
+{
+  unsigned vreg = fetch_byte() >> 4;
+  if (! insn->is_64) vreg &= 7;
+  dis_sprintf("%s%d", vector_reg_name[insn->vex_vl], vreg);
+}
+
+void disassembler::Hdq(const x86_insn *insn)
+{
+  dis_sprintf("%s%d", vector_reg_name[insn->vex_vl], insn->vex_override);
+}
+
+void disassembler::Hps(const x86_insn *insn) { Hdq(insn); }
+void disassembler::Hpd(const x86_insn *insn) { Hdq(insn); }
 
 void disassembler::Ww(const x86_insn *insn)
 {

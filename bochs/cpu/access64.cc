@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2008-2010 Stanislav Shwartsman
+//   Copyright (c) 2008-2011 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -299,6 +299,95 @@ BX_CPU_C::write_virtual_dqword_aligned_64(unsigned s, Bit64u offset, const BxPac
   access_write_linear(laddr, 16, CPL, (void *) data);
 }
 
+#if BX_SUPPORT_AVX
+
+void BX_CPU_C::write_virtual_vector_64(unsigned s, Bit64u offset, unsigned elements, const BxPackedAvxRegister *data)
+{
+  BX_ASSERT(elements > 0);
+
+  unsigned len = elements << 2;
+  BX_ASSERT(BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64);
+
+  BX_INSTR_MEM_DATA_ACCESS(BX_CPU_ID, s, offset, len, BX_WRITE);
+
+  Bit64u laddr = BX_CPU_THIS_PTR get_laddr64(s, offset);
+  unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, len-1);
+  Bit64u lpf = LPFOf(laddr);
+  bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
+  if (tlbEntry->lpf == lpf) {
+    // See if the TLB entry privilege level allows us write access
+    // from this CPL.
+    if (! (tlbEntry->accessBits & (0x2 | USER_PL))) {
+      bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
+      Bit32u pageOffset = PAGE_OFFSET(laddr);
+      bx_phy_address pAddr = tlbEntry->ppf | pageOffset;
+      BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr, pAddr, len, BX_WRITE);
+      BX_DBG_LIN_MEMORY_ACCESS(BX_CPU_ID, laddr, pAddr, len, CPL, BX_WRITE, (Bit8u*) data);
+      Bit32u *hostAddr = (Bit32u*) (hostPageAddr | pageOffset);
+      pageWriteStampTable.decWriteStamp(pAddr, len);
+      for (unsigned n = 0; n < elements; n++) {
+        WriteHostDWordToLittleEndian(hostAddr, data->avx32u(n));
+        hostAddr++;
+      }
+      return;
+    }
+  }
+
+  if (! IsCanonical(laddr) || ! IsCanonical(laddr+len-1)) {
+    BX_ERROR(("write_virtual_vector_64(): canonical failure"));
+    exception(int_number(s), 0);
+  }
+
+  access_write_linear(laddr, len, CPL, (void *) data);
+}
+
+void BX_CPU_C::write_virtual_vector_aligned_64(unsigned s, Bit64u offset, unsigned elements, const BxPackedAvxRegister *data)
+{
+  BX_ASSERT(elements > 0);
+
+  unsigned len = elements << 2;
+  BX_ASSERT(BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64);
+
+  BX_INSTR_MEM_DATA_ACCESS(BX_CPU_ID, s, offset, len, BX_WRITE);
+
+  Bit64u laddr = BX_CPU_THIS_PTR get_laddr64(s, offset);
+  unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 0);
+  Bit64u lpf = AlignedAccessLPFOf(laddr, len-1);
+  bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
+  if (tlbEntry->lpf == lpf) {
+    // See if the TLB entry privilege level allows us write access
+    // from this CPL.
+    if (! (tlbEntry->accessBits & (0x2 | USER_PL))) {
+      bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
+      Bit32u pageOffset = PAGE_OFFSET(laddr);
+      bx_phy_address pAddr = tlbEntry->ppf | pageOffset;
+      BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr, pAddr, len, BX_WRITE);
+      BX_DBG_LIN_MEMORY_ACCESS(BX_CPU_ID, laddr, pAddr, len, CPL, BX_WRITE, (Bit8u*) data);
+      Bit32u *hostAddr = (Bit32u*) (hostPageAddr | pageOffset);
+      pageWriteStampTable.decWriteStamp(pAddr, len);
+      for (unsigned n = 0; n < elements; n++) {
+        WriteHostDWordToLittleEndian(hostAddr, data->avx32u(n));
+        hostAddr++;
+      }
+      return;
+    }
+  }
+
+  if (laddr & (len-1)) {
+    BX_ERROR(("write_virtual_vector_aligned_64(): #GP misaligned access"));
+    exception(BX_GP_EXCEPTION, 0);
+  }
+
+  if (! IsCanonical(laddr) || ! IsCanonical(laddr+len-1)) {
+    BX_ERROR(("write_virtual_vector_aligned_64(): canonical failure"));
+    exception(int_number(s), 0);
+  }
+
+  access_write_linear(laddr, len, CPL, (void *) data);
+}
+
+#endif
+
   Bit8u BX_CPP_AttrRegparmN(2)
 BX_CPU_C::read_virtual_byte_64(unsigned s, Bit64u offset)
 {
@@ -565,6 +654,91 @@ BX_CPU_C::read_virtual_dqword_aligned_64(unsigned s, Bit64u offset, BxPackedXmmR
 
   access_read_linear(laddr, 16, CPL, BX_READ, (void *) data);
 }
+
+#if BX_SUPPORT_AVX
+
+void BX_CPU_C::read_virtual_vector_64(unsigned s, Bit64u offset, unsigned elements, BxPackedAvxRegister *data)
+{
+  BX_ASSERT(elements > 0);
+
+  unsigned len = elements << 2;
+  BX_ASSERT(BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64);
+  BX_INSTR_MEM_DATA_ACCESS(BX_CPU_ID, s, offset, len, BX_READ);
+
+  Bit64u laddr = BX_CPU_THIS_PTR get_laddr64(s, offset);
+  unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, len-1);
+  Bit64u lpf = LPFOf(laddr);
+  bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
+  if (tlbEntry->lpf == lpf) {
+    // See if the TLB entry privilege level allows us read access
+    // from this CPL.
+    if (! (tlbEntry->accessBits & USER_PL)) { // Read this pl OK.
+      bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
+      Bit32u pageOffset = PAGE_OFFSET(laddr);
+      Bit32u *hostAddr = (Bit32u*) (hostPageAddr | pageOffset);
+      for (unsigned n=0; n < elements; n++) {
+        ReadHostDWordFromLittleEndian(hostAddr, data->avx32u(n));
+        hostAddr++;
+      }
+      BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr, tlbEntry->ppf | pageOffset, len, BX_READ);
+      BX_DBG_LIN_MEMORY_ACCESS(BX_CPU_ID, laddr,
+          tlbEntry->ppf | pageOffset, len, CPL, BX_READ, (Bit8u*) data);
+      return;
+    }
+  }
+
+  if (! IsCanonical(laddr) || ! IsCanonical(laddr+len-1)) {
+    BX_ERROR(("read_virtual_vector_64(): canonical failure"));
+    exception(int_number(s), 0);
+  }
+
+  access_read_linear(laddr, len, CPL, BX_READ, (void *) data);
+}
+
+void BX_CPU_C::read_virtual_vector_aligned_64(unsigned s, Bit64u offset, unsigned elements, BxPackedAvxRegister *data)
+{
+  BX_ASSERT(elements > 0);
+
+  unsigned len = elements << 2;
+  BX_ASSERT(BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64);
+  BX_INSTR_MEM_DATA_ACCESS(BX_CPU_ID, s, offset, len, BX_READ);
+
+  Bit64u laddr = BX_CPU_THIS_PTR get_laddr64(s, offset);
+  unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 0);
+  Bit64u lpf = AlignedAccessLPFOf(laddr, len-1);
+  bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
+  if (tlbEntry->lpf == lpf) {
+    // See if the TLB entry privilege level allows us read access
+    // from this CPL.
+    if (! (tlbEntry->accessBits & USER_PL)) { // Read this pl OK.
+      bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
+      Bit32u pageOffset = PAGE_OFFSET(laddr);
+      Bit32u *hostAddr = (Bit32u*) (hostPageAddr | pageOffset);
+      for (unsigned n=0; n < elements; n++) {
+        ReadHostDWordFromLittleEndian(hostAddr, data->avx32u(n));
+        hostAddr++;
+      }
+      BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr, tlbEntry->ppf | pageOffset, len, BX_READ);
+      BX_DBG_LIN_MEMORY_ACCESS(BX_CPU_ID, laddr,
+          tlbEntry->ppf | pageOffset, len, CPL, BX_READ, (Bit8u*) data);
+      return;
+    }
+  }
+
+  if (laddr & (len-1)) {
+    BX_ERROR(("read_virtual_vector_aligned_64(): #GP misaligned access"));
+    exception(BX_GP_EXCEPTION, 0);
+  }
+
+  if (! IsCanonical(laddr) || ! IsCanonical(laddr+len-1)) {
+    BX_ERROR(("read_virtual_vector_aligned_64(): canonical failure"));
+    exception(int_number(s), 0);
+  }
+
+  access_read_linear(laddr, len, CPL, BX_READ, (void *) data);
+}
+
+#endif
 
 //////////////////////////////////////////////////////////////
 // special Read-Modify-Write operations                     //

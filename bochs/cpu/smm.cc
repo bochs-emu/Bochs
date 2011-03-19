@@ -215,6 +215,9 @@ void BX_CPU_C::enter_system_management_mode(void)
 
 #if BX_CPU_LEVEL >= 6
   handleSseModeChange();
+#if BX_SUPPORT_AVX
+  handleAvxModeChange();
+#endif
 #endif
 
   /* DS (Data Segment) and descriptor cache */
@@ -656,6 +659,9 @@ bx_bool BX_CPU_C::smram_restore_state(const Bit32u *saved_state)
 
 #if BX_CPU_LEVEL >= 6
   handleSseModeChange();
+#if BX_SUPPORT_AVX
+  handleAvxModeChange();
+#endif
 #endif
 
   Bit16u ar_data = SMRAM_FIELD(saved_state, SMRAM_FIELD_LDTR_SELECTOR_AR) >> 16;

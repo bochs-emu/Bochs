@@ -1067,6 +1067,7 @@ void bx_init_hardware()
 #if BX_SUPPORT_MONITOR_MWAIT
   BX_INFO(("  MWAIT support: %s",mwait_enabled?"yes":"no"));
 #endif
+  BX_INFO(("  AVX support: %s",BX_SUPPORT_AVX?"yes":"no"));
 #if BX_SUPPORT_VMX
   BX_INFO(("  VMX support: %d",BX_SUPPORT_VMX));
 #else

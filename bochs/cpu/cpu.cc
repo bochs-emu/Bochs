@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2009  The Bochs Project
+//  Copyright (C) 2001-2011  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -128,6 +128,8 @@ void BX_CPU_C::cpu_loop(Bit32u max_instr_count)
 
     for(;;) {
 #endif
+
+//printf("%s\n", get_bx_opcode_name(i->getIaOpcode()));
 
 #if BX_DISASM
       if (BX_CPU_THIS_PTR trace) {
