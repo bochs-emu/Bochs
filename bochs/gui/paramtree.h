@@ -356,6 +356,7 @@ public:
   void set_dependent_list(bx_list_c *l);
   Bit32s get(char *buf, int len);
   char *getptr() {return val; }
+  const char *getptr() const {return val; }
   void set(const char *buf);
   bx_bool equals(const char *buf);
   void set_separator(char sep) {separator = sep; }
@@ -380,8 +381,8 @@ public:
       const char *description,
       const char *initial_val,
       int maxsize=-1);
-  const char *get_extension() {return ext;}
-  void set_extension(const char *ext) {this->ext = ext;}
+  const char *get_extension() const {return ext;}
+  void set_extension(const char *newext) {ext = newext;}
 };
 
 class BOCHSAPI bx_shadow_data_c : public bx_param_c {
@@ -410,7 +411,7 @@ protected:
   // to 1 in the constructor.
   bx_param_num_c *choice;
   // title of the menu or series
-  bx_param_string_c *title;
+  char *title;
   void init(const char *list_title);
 public:
   enum {
@@ -446,7 +447,7 @@ public:
   bx_param_c *get_by_name(const char *name);
   int get_size() const { return size; }
   bx_param_num_c *get_choice() { return choice; }
-  bx_param_string_c *get_title() { return title; }
+  char *get_title() { return title; }
   void set_parent(bx_param_c *newparent);
   bx_param_c *get_parent() { return parent; }
   virtual void reset();

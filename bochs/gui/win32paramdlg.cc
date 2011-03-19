@@ -287,7 +287,7 @@ HWND CreateGroupbox(HWND hDlg, UINT cid, UINT xpos, UINT ypos, SIZE size, BOOL h
   r.bottom = r.top + size.cy;
   MapDialogRect(hDlg, &r);
   if (list->get_options() & list->USE_BOX_TITLE) {
-    title = list->get_title()->getptr();
+    title = list->get_title();
   }
   Groupbox = CreateWindow("BUTTON", title, BS_GROUPBOX | WS_CHILD, r.left, r.top,
                           r.right-r.left+1, r.bottom-r.top+1, hDlg, (HMENU)code, NULL, NULL);
@@ -316,7 +316,7 @@ HWND CreateTabControl(HWND hDlg, UINT cid, UINT xpos, UINT ypos, SIZE size, BOOL
     item = list->get(i);
     if (item->get_type() == BXT_LIST) {
       tie.mask = TCIF_TEXT; 
-      tie.pszText = ((bx_list_c*)item)->get_title()->getptr(); 
+      tie.pszText = ((bx_list_c*)item)->get_title(); 
       TabCtrl_InsertItem(TabControl, i, &tie);
     }
   }
@@ -745,7 +745,7 @@ static INT_PTR CALLBACK ParamDlgProc(HWND Window, UINT AMessage, WPARAM wParam, 
     case WM_INITDIALOG:
       list = (bx_list_c*)SIM->get_param((const char*)lParam);
       items = list->get_size();
-      SetWindowText(Window, list->get_title()->getptr());
+      SetWindowText(Window, list->get_title());
       nextDlgID = 1;
       size = CreateParamList(Window, 0, 6, 6, FALSE, list);
       r.left = size.cx / 2 - 50;

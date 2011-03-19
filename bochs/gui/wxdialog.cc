@@ -696,7 +696,7 @@ void ParamDialog::AddParam (
   const char *prompt;
   if (type == BXT_LIST) {
     bx_list_c *list = (bx_list_c*)pstr->param;
-    prompt = list->get_title()->getptr();
+    prompt = list->get_title();
   } else {
     prompt = pstr->param->get_label();
   }
@@ -832,7 +832,7 @@ void ParamDialog::AddParam (
 	    bx_list_c *childl = (bx_list_c *)child;
 	    for (int j=0; j<childl->get_size(); j++)
 	      AddParam (childl->get(j), plain, &newcontext);
-	    const char *pagename = child->get_title()->getptr();
+	    const char *pagename = child->get_title();
 	    if (!pagename) pagename = child->get_name();
 	    panel->SetAutoLayout(TRUE);
 	    panel->SetSizer(boxsz);

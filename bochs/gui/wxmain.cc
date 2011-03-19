@@ -610,7 +610,7 @@ void MyFrame::OnEditCPU(wxCommandEvent& WXUNUSED(event))
 {
   ParamDialog dlg(this, -1);
   bx_list_c *list = (bx_list_c*) SIM->get_param("cpu");
-  dlg.SetTitle(wxString(list->get_title()->getptr(), wxConvUTF8));
+  dlg.SetTitle(wxString(list->get_title(), wxConvUTF8));
   dlg.AddParam(list);
   dlg.ShowModal();
 }
@@ -619,7 +619,7 @@ void MyFrame::OnEditMemory(wxCommandEvent& WXUNUSED(event))
 {
   ParamDialog dlg(this, -1);
   bx_list_c *list = (bx_list_c*) SIM->get_param("memory");
-  dlg.SetTitle(wxString(list->get_title()->getptr(), wxConvUTF8));
+  dlg.SetTitle(wxString(list->get_title(), wxConvUTF8));
   dlg.AddParam(list);
   dlg.ShowModal();
 }
@@ -628,7 +628,7 @@ void MyFrame::OnEditClockCmos(wxCommandEvent& WXUNUSED(event))
 {
   ParamDialog dlg(this, -1);
   bx_list_c *list = (bx_list_c*) SIM->get_param("clock_cmos");
-  dlg.SetTitle(wxString(list->get_title()->getptr(), wxConvUTF8));
+  dlg.SetTitle(wxString(list->get_title(), wxConvUTF8));
   dlg.AddParam(list);
   dlg.ShowModal();
 }
@@ -637,7 +637,7 @@ void MyFrame::OnEditPCI(wxCommandEvent& WXUNUSED(event))
 {
   ParamDialog dlg(this, -1);
   bx_list_c *list = (bx_list_c*) SIM->get_param("pci");
-  dlg.SetTitle(wxString(list->get_title()->getptr(), wxConvUTF8));
+  dlg.SetTitle(wxString(list->get_title(), wxConvUTF8));
   dlg.AddParam(list);
   dlg.ShowModal();
 }
@@ -646,7 +646,7 @@ void MyFrame::OnEditDisplay(wxCommandEvent& WXUNUSED(event))
 {
   ParamDialog dlg(this, -1);
   bx_list_c *list = (bx_list_c*) SIM->get_param("display");
-  dlg.SetTitle(wxString(list->get_title()->getptr(), wxConvUTF8));
+  dlg.SetTitle(wxString(list->get_title(), wxConvUTF8));
   dlg.AddParam(list);
   dlg.SetRuntimeFlag(sim_thread != NULL);
   dlg.ShowModal();
@@ -656,7 +656,7 @@ void MyFrame::OnEditKeyboard(wxCommandEvent& WXUNUSED(event))
 {
   ParamDialog dlg(this, -1);
   bx_list_c *list = (bx_list_c*) SIM->get_param("keyboard_mouse");
-  dlg.SetTitle(wxString(list->get_title()->getptr(), wxConvUTF8));
+  dlg.SetTitle(wxString(list->get_title(), wxConvUTF8));
   dlg.AddParam(list);
   dlg.SetRuntimeFlag(sim_thread != NULL);
   dlg.ShowModal();
@@ -684,7 +684,7 @@ void MyFrame::OnEditBoot(wxCommandEvent& WXUNUSED(event))
   }
   ParamDialog dlg(this, -1);
   bx_list_c *list = (bx_list_c*) SIM->get_param("boot_params");
-  dlg.SetTitle(wxString(list->get_title()->getptr(), wxConvUTF8));
+  dlg.SetTitle(wxString(list->get_title(), wxConvUTF8));
   dlg.AddParam(list);
   dlg.ShowModal();
 }
@@ -693,7 +693,7 @@ void MyFrame::OnEditSerialParallel(wxCommandEvent& WXUNUSED(event))
 {
   ParamDialog dlg(this, -1);
   bx_list_c *list = (bx_list_c*) SIM->get_param("ports");
-  dlg.SetTitle(wxString(list->get_title()->getptr(), wxConvUTF8));
+  dlg.SetTitle(wxString(list->get_title(), wxConvUTF8));
   dlg.AddParam(list);
   dlg.SetRuntimeFlag(sim_thread != NULL);
   dlg.ShowModal();
@@ -703,7 +703,7 @@ void MyFrame::OnEditNet(wxCommandEvent& WXUNUSED(event))
 {
   ParamDialog dlg(this, -1);
   bx_list_c *list = (bx_list_c*) SIM->get_param("network");
-  dlg.SetTitle(wxString(list->get_title()->getptr(), wxConvUTF8));
+  dlg.SetTitle(wxString(list->get_title(), wxConvUTF8));
   dlg.AddParam(list);
   dlg.ShowModal();
 }
@@ -712,7 +712,7 @@ void MyFrame::OnEditSound(wxCommandEvent& WXUNUSED(event))
 {
   ParamDialog dlg(this, -1);
   bx_list_c *list = (bx_list_c*) SIM->get_param("sound");
-  dlg.SetTitle(wxString(list->get_title()->getptr(), wxConvUTF8));
+  dlg.SetTitle(wxString(list->get_title(), wxConvUTF8));
   dlg.AddParam(list);
   dlg.SetRuntimeFlag(sim_thread != NULL);
   dlg.ShowModal();
@@ -722,7 +722,7 @@ void MyFrame::OnEditOther(wxCommandEvent& WXUNUSED(event))
 {
   ParamDialog dlg(this, -1);
   bx_list_c *list = (bx_list_c*) SIM->get_param("misc");
-  dlg.SetTitle(wxString(list->get_title()->getptr(), wxConvUTF8));
+  dlg.SetTitle(wxString(list->get_title(), wxConvUTF8));
   dlg.AddParam(list);
   dlg.SetRuntimeFlag(sim_thread != NULL);
   dlg.ShowModal();
@@ -1317,7 +1317,7 @@ void MyFrame::OnEditATA(wxCommandEvent& event)
   sprintf(ata_name, "ata.%d", channel);
   ParamDialog dlg(this, -1);
   bx_list_c *list = (bx_list_c*) SIM->get_param(ata_name);
-  dlg.SetTitle(wxString(list->get_title()->getptr(), wxConvUTF8));
+  dlg.SetTitle(wxString(list->get_title(), wxConvUTF8));
   dlg.AddParam(list);
   dlg.SetRuntimeFlag(sim_thread != NULL);
   dlg.ShowModal();

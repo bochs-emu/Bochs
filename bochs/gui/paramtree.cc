@@ -849,8 +849,7 @@ bx_list_c::bx_list_c(bx_param_c *parent, const char *name, int maxsize)
   init("");
 }
 
-bx_list_c::bx_list_c(bx_param_c *parent, const char *name, const char *title,
-    int maxsize)
+bx_list_c::bx_list_c(bx_param_c *parent, const char *name, const char *title, int maxsize)
   : bx_param_c(SIM->gen_param_id(), name, "")
 {
   set_type (BXT_LIST);
@@ -894,19 +893,18 @@ bx_list_c::~bx_list_c()
     }
     delete [] list;
   }
-  if (title != NULL) delete title;
+  if (title != NULL) delete [] title;
   if (choice != NULL) delete choice;
 }
 
 void bx_list_c::init(const char *list_title)
 {
-  // the title defaults to the name
-  this->title = new bx_param_string_c(NULL,
-      "list_title",
-      "", "",
-      get_name(), 80);
-  if ((list_title != NULL) && (strlen(list_title) > 0)) {
-    this->title->set((char *)list_title);
+  if (list_title) {
+    this->title = new char[strlen(list_title)+1];
+    strcpy(this->title, list_title);
+  } else {
+    this->title = new char[1];
+    this->title[0] = 0;
   }
   this->options = 0;
   this->choice = new bx_param_num_c(NULL,
@@ -931,7 +929,7 @@ void bx_list_c::set_parent(bx_param_c *newparent)
 
 bx_list_c* bx_list_c::clone()
 {
-  bx_list_c *newlist = new bx_list_c(NULL, name, title->getptr(), maxsize);
+  bx_list_c *newlist = new bx_list_c(NULL, name, title, maxsize);
   for (int i=0; i<get_size(); i++)
     newlist->add(get(i));
   newlist->set_options(options);

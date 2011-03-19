@@ -950,7 +950,7 @@ int bx_list_c::text_ask(FILE *fpin, FILE *fpout)
 {
   bx_list_c *child;
 
-  char *my_title = title->getptr();
+  const char *my_title = title;
   fprintf(fpout, "\n");
   int i, imax = strlen(my_title);
   for (i=0; i<imax; i++) fprintf(fpout, "-");
@@ -975,7 +975,7 @@ int bx_list_c::text_ask(FILE *fpin, FILE *fpout)
           (!SIM->get_init_done() || list[i]->get_runtime_param())) {
         if (list[i]->get_type() == BXT_LIST) {
           child = (bx_list_c*)list[i];
-          fprintf(fpout, "%s\n", child->get_title()->getptr());
+          fprintf(fpout, "%s\n", child->get_title());
         } else {
           if ((options & SHOW_GROUP_NAME) && (list[i]->get_group() != NULL))
             fprintf(fpout, "%s ", list[i]->get_group());
@@ -985,7 +985,7 @@ int bx_list_c::text_ask(FILE *fpin, FILE *fpout)
       } else {
         if (list[i]->get_type() == BXT_LIST) {
           child = (bx_list_c*)list[i];
-          fprintf(fpout, "%s (disabled)\n", child->get_title()->getptr());
+          fprintf(fpout, "%s (disabled)\n", child->get_title());
         } else {
           fprintf(fpout, "(disabled)\n");
         }
