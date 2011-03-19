@@ -38,7 +38,7 @@ public:
 };
 
 // The class with the output functions
-class bx_sound_output_c : public logfunctions {
+class bx_sound_lowlevel_c : public logfunctions {
 public:
 
   /*
@@ -48,8 +48,8 @@ public:
   non-portable, while everything in sb16.cc is portable
   */
 
-  bx_sound_output_c(logfunctions *dev);
-  virtual ~bx_sound_output_c();
+  bx_sound_lowlevel_c(logfunctions *dev);
+  virtual ~bx_sound_lowlevel_c();
 
   virtual int waveready();
   virtual int midiready();

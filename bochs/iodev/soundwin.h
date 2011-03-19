@@ -164,7 +164,7 @@ typedef struct {
 
 #endif
 
-class bx_sound_windows_c : public bx_sound_output_c {
+class bx_sound_windows_c : public bx_sound_lowlevel_c {
 public:
   bx_sound_windows_c(logfunctions *dev);
   virtual ~bx_sound_windows_c();
@@ -183,7 +183,7 @@ public:
   virtual int    closewaveoutput();
 
 private:
-  struct bx_sb16_waveinfo_struct {
+  struct bx_sound_waveinfo_struct {
     int frequency;
     int bits;
     int stereo;
@@ -197,7 +197,7 @@ private:
 
   UINT WaveDevice;        // Wave device ID, for waveOutOpen
 
-	// some data for the wave buffers
+  // some data for the wave buffers
   HANDLE DataHandle;          // returned by GlobalAlloc()
   Bit8u *DataPointer;         // returned by GlobalLock()
 
@@ -206,10 +206,10 @@ private:
   int length[BX_SOUND_WINDOWS_NBUF];                // length of the data in the buffer
   int needreopen;                                   // if the format has changed
   int head,tailfull,tailplay;       // These are for three states of the buffers: empty, full, played
-  bx_sb16_waveinfo_struct WaveInfo;                 // format for the next buffer to be played
+  bx_sound_waveinfo_struct WaveInfo;                // format for the next buffer to be played
   int iswaveready;
 
-	// and the midi buffer for the SYSEX messages
+  // and the midi buffer for the SYSEX messages
   LPMIDIHDR MidiHeader;
   LPSTR MidiData;
   int ismidiready;

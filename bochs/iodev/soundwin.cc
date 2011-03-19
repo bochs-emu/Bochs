@@ -28,7 +28,7 @@
 
 #include "iodev.h"
 
-#if defined(WIN32) && BX_SUPPORT_SB16
+#if defined(WIN32) && BX_SUPPORT_SOUNDLOW
 
 #include "soundmod.h"
 #include "soundwin.h"
@@ -36,7 +36,7 @@
 #define LOG_THIS device->
 
 bx_sound_windows_c::bx_sound_windows_c(logfunctions *dev)
-  :bx_sound_output_c(dev)
+  :bx_sound_lowlevel_c(dev)
 {
   MidiOpen = 0;
   WaveOpen = 0;

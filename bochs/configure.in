@@ -1605,11 +1605,12 @@ AC_ARG_ENABLE(es1370,
   )
 
 if test "$soundcard_present" = 1; then
-  AC_MSG_CHECKING(for sound output module)
+  AC_MSG_CHECKING(for sound lowlevel module)
+  AC_DEFINE(BX_SUPPORT_SOUNDLOW, 1)
   case "$target" in
     *-linux* | *-freebsd*)
       SOUNDLOW_OBJS='soundlnx.o'
-      AC_DEFINE(BX_SOUND_OUTPUT_C, bx_sound_linux_c)
+      AC_DEFINE(BX_SOUND_LOWLEVEL_C, bx_sound_linux_c)
       AC_MSG_RESULT(linux)
       bx_have_alsa=0
       AC_CHECK_HEADER([alsa/asoundlib.h], [bx_have_alsa=1])
@@ -1624,28 +1625,30 @@ if test "$soundcard_present" = 1; then
       ;;
     *-pc-windows*)
       SOUNDLOW_OBJS='soundwin.o'
-      AC_DEFINE(BX_SOUND_OUTPUT_C, bx_sound_windows_c)
+      AC_DEFINE(BX_SOUND_LOWLEVEL_C, bx_sound_windows_c)
       DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS winmm.lib"
       AC_MSG_RESULT(win)
       ;;
     *-cygwin* | *-mingw32*)
       SOUNDLOW_OBJS='soundwin.o'
-      AC_DEFINE(BX_SOUND_OUTPUT_C, bx_sound_windows_c)
+      AC_DEFINE(BX_SOUND_LOWLEVEL_C, bx_sound_windows_c)
       DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS -lwinmm"
       AC_MSG_RESULT(win)
       ;;
     *-macosx* | *-macos*)
       SOUNDLOW_OBJS='soundosx.o'
-      AC_DEFINE(BX_SOUND_OUTPUT_C, bx_sound_osx_c)
+      AC_DEFINE(BX_SOUND_LOWLEVEL_C, bx_sound_osx_c)
       DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS -framework AudioUnit -framework AudioToolbox"
       AC_MSG_RESULT(osx)
       ;;
     *)
       SOUNDLOW_OBJS=''
-      AC_DEFINE(BX_SOUND_OUTPUT_C, bx_sound_output_c)
+      AC_DEFINE(BX_SOUND_LOWLEVEL_C, bx_sound_lowlevel_c)
       AC_MSG_RESULT(dummy)
       ;;
   esac
+else
+  AC_DEFINE(BX_SUPPORT_SOUNDLOW, 0)
 fi
 
 AC_SUBST(SOUNDCARD_OBJS)

@@ -35,7 +35,7 @@
 
 #define BX_SOUND_OSX_NBUF     8   // number of buffers for digital output
 
-class bx_sound_osx_c : public bx_sound_output_c {
+class bx_sound_osx_c : public bx_sound_lowlevel_c {
 public:
     bx_sound_osx_c(logfunctions *dev);
     virtual ~bx_sound_osx_c();

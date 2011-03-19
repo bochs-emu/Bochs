@@ -33,7 +33,7 @@
 #include <alsa/asoundlib.h>
 #endif
 
-class bx_sound_linux_c : public bx_sound_output_c {
+class bx_sound_linux_c : public bx_sound_lowlevel_c {
 public:
   bx_sound_linux_c(logfunctions *dev);
   virtual ~bx_sound_linux_c();

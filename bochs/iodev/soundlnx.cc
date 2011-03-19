@@ -25,7 +25,7 @@
 
 #include "iodev.h"
 
-#if (defined(linux) || defined(__FreeBSD__) || defined(__FreeBSD_kernel__)) && BX_SUPPORT_SB16
+#if (defined(linux) || defined(__FreeBSD__) || defined(__FreeBSD_kernel__)) && BX_SUPPORT_SOUNDLOW
 
 #define LOG_THIS device->
 
@@ -37,7 +37,7 @@
 #include <sys/soundcard.h>
 
 bx_sound_linux_c::bx_sound_linux_c(logfunctions *dev)
-  :bx_sound_output_c(dev)
+  :bx_sound_lowlevel_c(dev)
 {
 #if BX_HAVE_ALSASOUND
   alsa_seq.handle = NULL;

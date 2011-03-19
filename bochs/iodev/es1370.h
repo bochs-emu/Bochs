@@ -59,7 +59,7 @@ typedef struct {
 
 
 // forward definition
-class bx_sound_output_c;
+class bx_sound_lowlevel_c;
 
 class bx_es1370_c : public bx_devmodel_c, bx_pci_device_stub_c {
 public:
@@ -91,7 +91,7 @@ private:
   void   write(Bit32u address, Bit32u value, unsigned io_len);
 #endif
 
-  bx_sound_output_c *soundmod;
+  bx_sound_lowlevel_c *soundmod;
 };
 
 #endif

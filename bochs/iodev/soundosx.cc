@@ -26,7 +26,7 @@
 
 #include "iodev.h"
 
-#if defined(macintosh) && BX_SUPPORT_SB16
+#if defined(macintosh) && BX_SUPPORT_SOUNDLOW
 
 #define LOG_THIS device->
 
@@ -70,7 +70,7 @@ AudioConverterRef WaveConverter = NULL;
 #endif
 
 bx_sound_osx_c::bx_sound_osx_c(logfunctions *dev)
-    :bx_sound_output_c(dev)
+    :bx_sound_lowlevel_c(dev)
 {
     MidiOpen = 0;
     WaveOpen = 0;

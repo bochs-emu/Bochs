@@ -92,7 +92,7 @@ void bx_devices_c::init_stubs()
 #if BX_SUPPORT_PCIUSB
   pluginUsbDevCtl = &stubUsbDevCtl;
 #endif
-#if BX_SUPPORT_SB16
+#if BX_SUPPORT_SOUNDLOW
   pluginSoundModCtl = &stubSoundModCtl;
 #endif
 #if 0
@@ -171,7 +171,7 @@ void bx_devices_c::init(BX_MEM_C *newmem)
   PLUG_load_plugin(vga, PLUGTYPE_CORE);
   PLUG_load_plugin(hdimage, PLUGTYPE_CORE);
   PLUG_load_plugin(floppy, PLUGTYPE_CORE);
-#if BX_SUPPORT_SB16
+#if BX_SUPPORT_SOUNDLOW
   PLUG_load_plugin(soundmod, PLUGTYPE_CORE);
 #endif
 

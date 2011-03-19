@@ -358,7 +358,7 @@ public:
   }
 };
 
-#if BX_SUPPORT_SB16
+#if BX_SUPPORT_SOUNDLOW
 class BOCHSAPI bx_soundmod_ctl_stub_c : public bx_devmodel_c {
 public:
   virtual int init_module(const char *type, void **module, logfunctions *dev) {
@@ -450,7 +450,7 @@ public:
 #if BX_SUPPORT_PCIUSB
   bx_usb_devctl_stub_c  *pluginUsbDevCtl;
 #endif
-#if BX_SUPPORT_SB16
+#if BX_SUPPORT_SOUNDLOW
   bx_soundmod_ctl_stub_c  *pluginSoundModCtl;
 #endif
 #if 0
@@ -484,7 +484,7 @@ public:
 #if BX_SUPPORT_PCIUSB
   bx_usb_devctl_stub_c stubUsbDevCtl;
 #endif
-#if BX_SUPPORT_SB16
+#if BX_SUPPORT_SOUNDLOW
   bx_soundmod_ctl_stub_c  stubSoundModCtl;
 #endif
 

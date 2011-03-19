@@ -165,7 +165,7 @@ private:
 
 
 // forward definition
-class bx_sound_output_c;
+class bx_sound_lowlevel_c;
 
 // The actual emulator class, emulating the sound blaster ports
 class bx_sb16_c : public bx_devmodel_c {
@@ -190,7 +190,7 @@ private:
   int midimode, wavemode, loglevel;
   Bit32u dmatimer;
   FILE *logfile, *midifile, *wavefile; // the output files or devices
-  bx_sound_output_c *soundmod;// the output class
+  bx_sound_lowlevel_c *soundmod;// the output class
   int currentirq;
   int currentdma8;
   int currentdma16;
