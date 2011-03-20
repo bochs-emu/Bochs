@@ -540,7 +540,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo32[512*2] = {
   /* 0F 57 /w */ { BxPrefixSSE, BX_IA_XORPS_VpsWps, BxOpcodeGroupSSE_0f57 },
   /* 0F 58 /w */ { BxPrefixSSE, BX_IA_ADDPS_VpsWps, BxOpcodeGroupSSE_0f58 },
   /* 0F 59 /w */ { BxPrefixSSE, BX_IA_MULPS_VpsWps, BxOpcodeGroupSSE_0f59 },
-  /* 0F 5A /w */ { BxPrefixSSE, BX_IA_CVTPS2PD_VpsWps, BxOpcodeGroupSSE_0f5a },
+  /* 0F 5A /w */ { BxPrefixSSE, BX_IA_CVTPS2PD_VpdWps, BxOpcodeGroupSSE_0f5a },
   /* 0F 5B /w */ { BxPrefixSSE, BX_IA_CVTDQ2PS_VpsWdq, BxOpcodeGroupSSE_0f5b },
   /* 0F 5C /w */ { BxPrefixSSE, BX_IA_SUBPS_VpsWps, BxOpcodeGroupSSE_0f5c },
   /* 0F 5D /w */ { BxPrefixSSE, BX_IA_MINPS_VpsWps, BxOpcodeGroupSSE_0f5d },
@@ -1085,7 +1085,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo32[512*2] = {
   /* 0F 57 /d */ { BxPrefixSSE, BX_IA_XORPS_VpsWps, BxOpcodeGroupSSE_0f57 },
   /* 0F 58 /d */ { BxPrefixSSE, BX_IA_ADDPS_VpsWps, BxOpcodeGroupSSE_0f58 },
   /* 0F 59 /d */ { BxPrefixSSE, BX_IA_MULPS_VpsWps, BxOpcodeGroupSSE_0f59 },
-  /* 0F 5A /d */ { BxPrefixSSE, BX_IA_CVTPS2PD_VpsWps, BxOpcodeGroupSSE_0f5a },
+  /* 0F 5A /d */ { BxPrefixSSE, BX_IA_CVTPS2PD_VpdWps, BxOpcodeGroupSSE_0f5a },
   /* 0F 5B /d */ { BxPrefixSSE, BX_IA_CVTDQ2PS_VpsWdq, BxOpcodeGroupSSE_0f5b },
   /* 0F 5C /d */ { BxPrefixSSE, BX_IA_SUBPS_VpsWps, BxOpcodeGroupSSE_0f5c },
   /* 0F 5D /d */ { BxPrefixSSE, BX_IA_MINPS_VpsWps, BxOpcodeGroupSSE_0f5d },
@@ -1826,20 +1826,13 @@ modrm_done:
 
 #if BX_CPU_LEVEL >= 6
   Bit32u op_flags = BxOpcodesTable[ia_opcode].flags;
-  if (! BX_CPU_THIS_PTR sse_ok) {
-    if (op_flags & BX_PREPARE_SSE) {
-       if (i->execute != &BX_CPU_C::BxError) i->execute = &BX_CPU_C::BxNoSSE;
-       return(1);
-    }
-  }
+#endif
+
 #if BX_SUPPORT_AVX
-  if (! BX_CPU_THIS_PTR avx_ok) {
-    if (op_flags & BX_PREPARE_AVX) {
-       if (i->execute != &BX_CPU_C::BxError) i->execute = &BX_CPU_C::BxNoAVX;
-       return(1);
-    }
-  }
   if (had_vex > 0) {
+    if ((attr & BxVexW0) != 0 && vex_w) {
+      ia_opcode = BX_IA_ERROR;
+    }
     if ((op_flags & BX_VEX_NO_VVV) && i->vvv() != 0) {
       ia_opcode = BX_IA_ERROR;
     }
@@ -1850,7 +1843,6 @@ modrm_done:
       ia_opcode = BX_IA_ERROR;
     }
   }
-#endif
 #endif
 
   if (mod_mem) {
@@ -1868,6 +1860,23 @@ modrm_done:
   }
 
   BX_ASSERT(i->execute);
+
+#if BX_CPU_LEVEL >= 6
+  if (! BX_CPU_THIS_PTR sse_ok) {
+     if (op_flags & BX_PREPARE_SSE) {
+        if (i->execute != &BX_CPU_C::BxError) i->execute = &BX_CPU_C::BxNoSSE;
+        return(1);
+     }
+  }
+#if BX_SUPPORT_AVX
+  if (! BX_CPU_THIS_PTR avx_ok) {
+    if (op_flags & BX_PREPARE_AVX) {
+       if (i->execute != &BX_CPU_C::BxError) i->execute = &BX_CPU_C::BxNoAVX;
+       return(1);
+    }
+  }
+#endif
+#endif
 
 #if BX_SUPPORT_TRACE_CACHE
   if ((attr & BxTraceEnd) || ia_opcode == BX_IA_ERROR)

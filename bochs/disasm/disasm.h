@@ -65,8 +65,9 @@
 #define IA_MOVBE            0x00800000        /* MOVBE Intel Atom(R) instruction */
 #define IA_FSGSBASE         0x01000000        /* FS/GS BASE access instructions */
 #define IA_AVX              0x02000000        /* AVX instruction */
-#define IA_AVX_FMA          0x04000000        /* AVX FMA instruction */
-#define IA_X86_64           0x08000000        /* x86-64 instruction */
+#define IA_AVX_F16C         0x04000000        /* AVX F16 convert instruction */
+#define IA_AVX_FMA          0x08000000        /* AVX FMA instruction */
+#define IA_X86_64           0x10000000        /* x86-64 instruction */
 
 /* general purpose bit register */
 enum {
@@ -119,16 +120,14 @@ struct BxDisasmOpcodeTable_t
 #define NO_SEG_OVERRIDE 0xFF
 
 // datasize attributes
-#define X_SIZE      0x0000
-#define B_SIZE      0x0100
-#define W_SIZE      0x0200
-#define D_SIZE      0x0300
-#define Q_SIZE      0x0400
-#define Z_SIZE      0x0500
-#define V_SIZE      0x0600
-#define O_SIZE      0x0700
-#define T_SIZE      0x0800
-#define P_SIZE      0x0900
+#define X_SIZE      0x0000 /* no size */
+#define B_SIZE      0x0100 /* byte */
+#define W_SIZE      0x0200 /* word */
+#define D_SIZE      0x0300 /* double word */
+#define Q_SIZE      0x0400 /* quad word */
+#define Z_SIZE      0x0500 /* double word in 32-bit mode, quad word in 64-bit mode */
+#define O_SIZE      0x0600 /* oct word or double quad word (XMM) */
+#define T_SIZE      0x0700 /* 10-byte x87 floating point */
 
 // branch hint attribute
 #define BRANCH_HINT 0x1000

@@ -400,6 +400,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XSETBV(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0);
   }
 
+#if BX_SUPPORT_AVX
+  if ((EAX & (BX_XCR0_AVX_BIT | BX_XCR0_SSE_BIT)) == BX_XCR0_AVX_BIT) {
+    BX_ERROR(("XSETBV: Attempting to set AVX without SSE!"));
+    exception(BX_GP_EXCEPTION, 0);
+  }
+#endif
+
   BX_CPU_THIS_PTR xcr0.set32(EAX);
 
 #if BX_SUPPORT_AVX

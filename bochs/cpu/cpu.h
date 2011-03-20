@@ -631,8 +631,9 @@ typedef struct
 #define BX_CPU_MOVBE            0x00800000        /* MOVBE Intel Atom(R) instruction */
 #define BX_CPU_FSGSBASE         0x01000000        /* FS/GS BASE access instructions */
 #define BX_CPU_AVX              0x02000000        /* AVX instruction */
-#define BX_CPU_AVX_FMA          0x04000000        /* AVX FMA instruction */
-#define BX_CPU_X86_64           0x08000000        /* x86-64 instruction */
+#define BX_CPU_AVX_F16C         0x04000000        /* AVX F16 convert instruction */
+#define BX_CPU_AVX_FMA          0x08000000        /* AVX FMA instruction */
+#define BX_CPU_X86_64           0x10000000        /* x86-64 instruction */
 
 #include "cpuid.h"
 #include "crregs.h"
@@ -2113,10 +2114,10 @@ public: // for now...
   BX_SMF void MULSD_VsdWsdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void SUBPD_VpdWpdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void SUBSD_VsdWsdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void CVTPS2PD_VpsWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void CVTPD2PS_VpdWpdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void CVTSD2SS_VsdWsdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void CVTSS2SD_VssWssR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CVTPS2PD_VpdWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CVTPD2PS_VpsWpdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CVTSD2SS_VssWsdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CVTSS2SD_VsdWssR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void CVTDQ2PS_VpsWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void CVTPS2DQ_VdqWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void CVTTPS2DQ_VdqWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -2418,13 +2419,13 @@ public: // for now...
   BX_SMF void VSUBPD_VpdWpdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VSUBSS_VssWssR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VSUBSD_VsdWsdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void VCVTSS2SD_VssWssR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void VCVTSD2SS_VsdWsdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTSS2SD_VsdWssR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTSD2SS_VssWsdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VCVTDQ2PS_VpsWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VCVTPS2DQ_VdqWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VCVTTPS2DQ_VdqWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void VCVTPS2PD_VpsWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void VCVTPD2PS_VpdWpdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTPS2PD_VpdWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTPD2PS_VpsWpdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VCVTPD2DQ_VqWpdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VCVTDQ2PD_VpdWqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VCVTTPD2DQ_VqWpdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -4114,9 +4115,10 @@ enum {
 
 #define BxLockable          0x0400 // bit 10
 #define BxArithDstRM        0x0800 // bit 11
+#define BxVexW0             0x1000 // bit 12
 
 #if BX_SUPPORT_TRACE_CACHE
-  #define BxTraceEnd        0x1000 // bit 12
+  #define BxTraceEnd        0x4000 // bit 14
 #else
   #define BxTraceEnd        0
 #endif

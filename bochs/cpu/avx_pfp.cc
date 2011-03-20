@@ -510,7 +510,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMULSD_VsdWsdR(bxInstruction_c *i)
 }
 
 /* Opcode: VEX.0F 5A (VEX.W ignore, VEX.VVV #UD) */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTPS2PD_VpsWpsR(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTPS2PD_VpdWpsR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
   BxPackedAvxRegister result;
@@ -535,7 +535,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTPS2PD_VpsWpsR(bxInstruction_c *i)
 }
 
 /* Opcode: VEX.66.0F 5A (VEX.W ignore, VEX.VVV #UD) */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTPD2PS_VpdWpdR(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTPD2PS_VpsWpdR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
   BxPackedAvxRegister op = BX_READ_AVX_REG(i->rm());
@@ -561,7 +561,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTPD2PS_VpdWpdR(bxInstruction_c *i)
 }
 
 /* Opcode: VEX.F3.0F 5A (VEX.W ignore) */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTSS2SD_VssWssR(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTSS2SD_VsdWssR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->vvv());
@@ -579,7 +579,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTSS2SD_VssWssR(bxInstruction_c *i)
 }
 
 /* Opcode: VEX.F3.0F 5A (VEX.W ignore) */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTSD2SS_VsdWsdR(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTSD2SS_VssWsdR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->vvv());

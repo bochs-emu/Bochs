@@ -344,8 +344,6 @@ void disassembler::print_datasize(unsigned size)
     case T_SIZE:
       dis_sprintf("tbyte ptr ");
       break;
-    case P_SIZE:
-      break;
     case X_SIZE:
       break;
   };

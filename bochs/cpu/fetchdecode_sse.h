@@ -222,9 +222,9 @@ static const BxOpcodeInfo_t BxOpcodeGroupSSE_0f59[6] = {
 };
 
 static const BxOpcodeInfo_t BxOpcodeGroupSSE_0f5a[6] = {
-  /* 66 */ { 0, BX_IA_CVTPD2PS_VpdWpd },
-  /* F3 */ { 0, BX_IA_CVTSS2SD_VssWss },
-  /* F2 */ { 0, BX_IA_CVTSD2SS_VsdWsd }
+  /* 66 */ { 0, BX_IA_CVTPD2PS_VpsWpd },
+  /* F3 */ { 0, BX_IA_CVTSS2SD_VsdWss },
+  /* F2 */ { 0, BX_IA_CVTSD2SS_VssWsd }
 };
 
 static const BxOpcodeInfo_t BxOpcodeGroupSSE_0f5b[6] = {

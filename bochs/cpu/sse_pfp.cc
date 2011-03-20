@@ -576,7 +576,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTSS2SI_GqWssR(bxInstruction_c *i)
  * Convert two single precision FP numbers to two double precision FP numbers
  * Possible floating point exceptions: #I, #D
  */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTPS2PD_VpsWpsR(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTPS2PD_VpdWpsR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
   BxPackedXmmRegister result;
@@ -608,7 +608,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTPS2PD_VpsWpsR(bxInstruction_c *i)
  * to rounding control bits in MXCSR register.
  * Possible floating point exceptions: #I, #D, #O, #I, #P
  */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTPD2PS_VpdWpdR(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTPD2PS_VpsWpdR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
   BxPackedXmmRegister op = BX_READ_XMM_REG(i->rm());
@@ -638,7 +638,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTPD2PS_VpdWpdR(bxInstruction_c *i)
  * to rounding control bits in MXCSR register.
  * Possible floating point exceptions: #I, #D, #O, #I, #P
  */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTSD2SS_VsdWsdR(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTSD2SS_VssWsdR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
   float64 op = BX_READ_XMM_REG_LO_QWORD(i->rm());
@@ -657,7 +657,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTSD2SS_VsdWsdR(bxInstruction_c *i)
  * Convert one single precision FP number to one double precision FP.
  * Possible floating point exceptions: #I, #D
  */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTSS2SD_VssWssR(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTSS2SD_VsdWssR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
   float32 op = BX_READ_XMM_REG_LO_DWORD(i->rm());
