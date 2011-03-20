@@ -266,6 +266,12 @@ dma.o: dma.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../gui/siminterface.h ../gui/paramtree.h ../memory/memory.h \
   ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
   ../instrument/stubs/instrument.h ../param_names.h dma.h
+es1370.o: es1370.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
+  ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
+  ../gui/siminterface.h ../gui/paramtree.h ../memory/memory.h \
+  ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
+  ../instrument/stubs/instrument.h ../param_names.h pci.h es1370.h \
+  soundmod.h soundlnx.h soundwin.h soundosx.h
 eth_arpback.o: eth_arpback.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../gui/paramtree.h ../memory/memory.h \
@@ -296,6 +302,11 @@ eth_packetmaker.o: eth_packetmaker.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h \
   ../gui/siminterface.h ../gui/paramtree.h ../memory/memory.h \
   ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
   ../instrument/stubs/instrument.h ../param_names.h
+eth_slirp.o: eth_slirp.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
+  ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
+  ../gui/siminterface.h ../gui/paramtree.h ../memory/memory.h \
+  ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
+  ../instrument/stubs/instrument.h ../param_names.h eth.h
 eth_tap.o: eth_tap.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../gui/paramtree.h ../memory/memory.h \
@@ -603,6 +614,12 @@ dma.lo: dma.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../gui/siminterface.h ../gui/paramtree.h ../memory/memory.h \
   ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
   ../instrument/stubs/instrument.h ../param_names.h dma.h
+es1370.lo: es1370.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
+  ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
+  ../gui/siminterface.h ../gui/paramtree.h ../memory/memory.h \
+  ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
+  ../instrument/stubs/instrument.h ../param_names.h pci.h es1370.h \
+  soundmod.h soundlnx.h soundwin.h soundosx.h
 eth_arpback.lo: eth_arpback.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../gui/paramtree.h ../memory/memory.h \
@@ -633,6 +650,11 @@ eth_packetmaker.lo: eth_packetmaker.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h 
   ../gui/siminterface.h ../gui/paramtree.h ../memory/memory.h \
   ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
   ../instrument/stubs/instrument.h ../param_names.h
+eth_slirp.lo: eth_slirp.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
+  ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
+  ../gui/siminterface.h ../gui/paramtree.h ../memory/memory.h \
+  ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h \
+  ../instrument/stubs/instrument.h ../param_names.h eth.h
 eth_tap.lo: eth_tap.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../gui/paramtree.h ../memory/memory.h \
