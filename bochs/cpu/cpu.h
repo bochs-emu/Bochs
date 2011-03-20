@@ -883,13 +883,11 @@ public: // for now...
   bx_segment_reg_t        tr;   /* task register */
 
   /* debug registers DR0-DR7 */
-#if BX_CPU_LEVEL >= 3
   bx_address dr[4]; /* DR0-DR3 */
   bx_dr6_t   dr6;
   bx_dr7_t   dr7;
-#endif
 
-  /* TR3 - TR7 (Test Register 3-7), unimplemented */
+  Bit32u debug_trap; // holds DR6 value (16bit) to be set
 
   /* Control registers */
   bx_cr0_t   cr0;
@@ -967,11 +965,6 @@ public: // for now...
 #define BX_ACTIVITY_STATE_MWAIT         (4)
 #define BX_ACTIVITY_STATE_MWAIT_IF      (5)
   unsigned activity_state;
-
-#define BX_DEBUG_DR_ACCESS_BIT          (1 << 13)
-#define BX_DEBUG_SINGLE_STEP_BIT        (1 << 14)
-#define BX_DEBUG_TRAP_TASK_SWITCH_BIT   (1 << 15)
-  Bit32u   debug_trap; // holds DR6 value (16bit) to be set as well
 
   Bit32u  async_event;
 

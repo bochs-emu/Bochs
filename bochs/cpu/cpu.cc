@@ -129,8 +129,6 @@ void BX_CPU_C::cpu_loop(Bit32u max_instr_count)
     for(;;) {
 #endif
 
-//printf("%s\n", get_bx_opcode_name(i->getIaOpcode()));
-
 #if BX_DISASM
       if (BX_CPU_THIS_PTR trace) {
         // print the instruction that is about to be executed

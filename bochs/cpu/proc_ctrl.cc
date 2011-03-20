@@ -543,9 +543,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MONITOR(bxInstruction_c *i)
 
   BX_CPU_THIS_PTR monitor.arm(paddr);
   BX_DEBUG(("MONITOR for phys_addr=0x" FMT_PHY_ADDRX, BX_CPU_THIS_PTR monitor.monitor_begin));
-#else
-  BX_INFO(("MONITOR: use --enable-monitor-mwait to enable MONITOR/MWAIT support"));
-  exception(BX_UD_EXCEPTION, 0);
 #endif
 }
 
@@ -617,10 +614,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MWAIT(bxInstruction_c *i)
 #if BX_DEBUGGER
   bx_dbg_halt(BX_CPU_ID);
 #endif
-
-#else
-  BX_INFO(("MWAIT: use --enable-monitor-mwait to enable MONITOR/MWAIT support"));
-  exception(BX_UD_EXCEPTION, 0);
 #endif
 }
 
