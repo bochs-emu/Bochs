@@ -31,11 +31,11 @@
 
 #define BX_SOUND_WINDOWS_MAXSYSEXLEN  256    // maximum supported length of a sysex message
 
-#define BX_SOUND_WINDOWS_NBUF 	64  // number of buffers for the output, must be power of 2 and >= 4
-#define BX_SOUND_WINDOWS_NMASK	(BX_SOUND_WINDOWS_NBUF - 1)
+#define BX_SOUND_WINDOWS_NBUF   64  // number of buffers for the output, must be power of 2 and >= 4
+#define BX_SOUND_WINDOWS_NMASK  (BX_SOUND_WINDOWS_NBUF - 1)
 
 #ifndef WAVEMAPPER
-#define WAVEMAPPER		-1
+#define WAVEMAPPER -1
 #endif
 
 // Definitions for WINMM.DLL, if not defined already
@@ -177,7 +177,7 @@ public:
   virtual int    closemidioutput();
 
   virtual int    openwaveoutput(const char *wavedev);
-  virtual int    startwaveplayback(int frequency, int bits, int stereo, int format);
+  virtual int    startwaveplayback(int frequency, int bits, bx_bool stereo, int format);
   virtual int    sendwavepacket(int length, Bit8u data[]);
   virtual int    stopwaveplayback();
   virtual int    closewaveoutput();
@@ -186,7 +186,7 @@ private:
   struct bx_sound_waveinfo_struct {
     int frequency;
     int bits;
-    int stereo;
+    bx_bool stereo;
     int format;
   };
 

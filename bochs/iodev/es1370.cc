@@ -422,7 +422,7 @@ void bx_es1370_c::es1370_timer(void)
   unsigned i;
   Bit32u new_status = BX_ES1370_THIS s.status;
   Bit32u addr, sc, csc_bytes, cnt, size, left, transfered, temp;
-  Bit8u tmpbuf[BX_SOUND_OUTPUT_WAVEPACKETSIZE];
+  Bit8u tmpbuf[BX_SOUNDLOW_WAVEPACKETSIZE];
   bx_bool irq = 0;
 
   timer_id = bx_pc_system.triggeredTimerID();
@@ -447,12 +447,12 @@ void bx_es1370_c::es1370_timer(void)
   size = d->frame_cnt & 0xffff;
   left = ((size - cnt + 1) << 2) + d->leftover;
   transfered = 0;
-  temp = BX_MIN(BX_SOUND_OUTPUT_WAVEPACKETSIZE, BX_MIN(left, csc_bytes));
+  temp = BX_MIN(BX_SOUNDLOW_WAVEPACKETSIZE, BX_MIN(left, csc_bytes));
   addr += (cnt << 2) + d->leftover;
 
   if (i == ADC_CHANNEL) {
     // TODO: audio input
-    transfered = BX_SOUND_OUTPUT_WAVEPACKETSIZE;
+    transfered = temp;
     memset(tmpbuf, 0, transfered);
     DEV_MEM_WRITE_PHYSICAL_BLOCK(addr, transfered, tmpbuf);
   } else {
@@ -558,18 +558,10 @@ void bx_es1370_c::update_voices(Bit32u ctl, Bit32u sctl)
         if (i == DAC2_CHANNEL) {
           if (!BX_ES1370_THIS s.dac2_outputinit) {
             ret = BX_ES1370_THIS soundmod->openwaveoutput(SIM->get_param_string(BXPN_ES1370_WAVEDEV)->getptr());
-            if (ret != BX_SOUND_OUTPUT_OK) {
+            if (ret != BX_SOUNDLOW_OK) {
               BX_ERROR(("could not open wave output device"));
             } else {
               BX_ES1370_THIS s.dac2_outputinit = 1;
-            }
-          }
-          if (BX_ES1370_THIS s.dac2_outputinit) {
-            ret = BX_ES1370_THIS soundmod->startwaveplayback(new_freq, (new_fmt >> 1) ? 16 : 8, (new_fmt & 1), (new_fmt >> 1));
-            if (ret != BX_SOUND_OUTPUT_OK) {
-              BX_ES1370_THIS soundmod->closewaveoutput();
-              BX_ES1370_THIS s.dac2_outputinit = 0;
-              BX_ERROR(("could not start wave playback"));
             }
           }
         }
@@ -591,8 +583,15 @@ void bx_es1370_c::update_voices(Bit32u ctl, Bit32u sctl)
                  chan_name[i], new_freq, 1 << (new_fmt & 1), (new_fmt & 2) ? 16 : 8, d->shift));
         if (i != DAC2_CHANNEL) {
           BX_ERROR(("channel %s not supported yet", chan_name[i]));
+        } else if (BX_ES1370_THIS s.dac2_outputinit) {
+          ret = BX_ES1370_THIS soundmod->startwaveplayback(new_freq, (new_fmt >> 1) ? 16 : 8, (new_fmt & 1), (new_fmt >> 1));
+          if (ret != BX_SOUNDLOW_OK) {
+            BX_ES1370_THIS soundmod->closewaveoutput();
+            BX_ES1370_THIS s.dac2_outputinit = 0;
+            BX_ERROR(("could not start wave playback"));
+          }
         }
-        timer_val = (Bit64u)BX_SOUND_OUTPUT_WAVEPACKETSIZE * 1000000 / (new_freq << d->shift);
+        timer_val = (Bit64u)BX_SOUNDLOW_WAVEPACKETSIZE * 1000000 / (new_freq << d->shift);
         bx_pc_system.activate_timer(timer_id, timer_val, 1);
       } else {
         if ((i == DAC2_CHANNEL) && BX_ES1370_THIS s.dac2_outputinit) {

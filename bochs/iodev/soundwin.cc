@@ -53,7 +53,7 @@ bx_sound_windows_c::bx_sound_windows_c(logfunctions *dev)
 #define size   ALIGN(sizeof(MIDIHDR)) \
              + ALIGN(sizeof(WAVEHDR)) \
              + ALIGN(BX_SOUND_WINDOWS_MAXSYSEXLEN) * BX_SOUND_WINDOWS_NBUF \
-             + ALIGN(BX_SOUND_OUTPUT_WAVEPACKETSIZE) * BX_SOUND_WINDOWS_NBUF
+             + ALIGN(BX_SOUNDLOW_WAVEPACKETSIZE) * BX_SOUND_WINDOWS_NBUF
 
   DataHandle = GlobalAlloc(GMEM_MOVEABLE | GMEM_SHARE, size);
   DataPointer = (Bit8u*) GlobalLock(DataHandle);
@@ -70,7 +70,7 @@ bx_sound_windows_c::bx_sound_windows_c(logfunctions *dev)
   for (int bufnum=0; bufnum<BX_SOUND_WINDOWS_NBUF; bufnum++)
   {
       WaveHeader[bufnum] = (LPWAVEHDR) NEWBUFFER(sizeof(WAVEHDR));
-      WaveData[bufnum] = (LPSTR) NEWBUFFER(BX_SOUND_OUTPUT_WAVEPACKETSIZE+64);
+      WaveData[bufnum] = (LPSTR) NEWBUFFER(BX_SOUNDLOW_WAVEPACKETSIZE+64);
   }
 
   if (offset > size)
@@ -95,9 +95,9 @@ int bx_sound_windows_c::waveready()
     checkwaveready();
 
   if (iswaveready == 1)
-    return BX_SOUND_OUTPUT_OK;
+    return BX_SOUNDLOW_OK;
   else
-    return BX_SOUND_OUTPUT_ERR;
+    return BX_SOUNDLOW_ERR;
 }
 int bx_sound_windows_c::midiready()
 {
@@ -105,9 +105,9 @@ int bx_sound_windows_c::midiready()
     checkmidiready();
 
   if (ismidiready == 1)
-    return BX_SOUND_OUTPUT_OK;
+    return BX_SOUNDLOW_OK;
   else
-    return BX_SOUND_OUTPUT_ERR;
+    return BX_SOUNDLOW_ERR;
 }
 
 int bx_sound_windows_c::openmidioutput(const char *mididev)
@@ -126,7 +126,7 @@ int bx_sound_windows_c::openmidioutput(const char *mididev)
 
   BX_DEBUG(("midiOutOpen() = %d, MidiOpen: %d", ret, MidiOpen));
 
-  return (MidiOpen == 1) ? BX_SOUND_OUTPUT_OK : BX_SOUND_OUTPUT_ERR;
+  return (MidiOpen == 1) ? BX_SOUNDLOW_OK : BX_SOUNDLOW_ERR;
 }
 
 int bx_sound_windows_c::sendmidicommand(int delta, int command, int length, Bit8u data[])
@@ -134,7 +134,7 @@ int bx_sound_windows_c::sendmidicommand(int delta, int command, int length, Bit8
   UINT ret;
 
   if (MidiOpen != 1)
-    return BX_SOUND_OUTPUT_ERR;
+    return BX_SOUNDLOW_ERR;
 
   if ((command == 0xf0) || (command == 0xf7) || (length > 3))
   {
@@ -164,7 +164,7 @@ int bx_sound_windows_c::sendmidicommand(int delta, int command, int length, Bit8
     BX_DEBUG(("midiOutShortMsg(%x) = %d", msg, ret));
   }
 
-  return (ret == 0) ? BX_SOUND_OUTPUT_OK : BX_SOUND_OUTPUT_ERR;
+  return (ret == 0) ? BX_SOUNDLOW_OK : BX_SOUNDLOW_ERR;
 }
 
 int bx_sound_windows_c::closemidioutput()
@@ -172,7 +172,7 @@ int bx_sound_windows_c::closemidioutput()
   UINT ret;
 
   if (MidiOpen != 1)
-    return BX_SOUND_OUTPUT_ERR;
+    return BX_SOUNDLOW_ERR;
 
   ret = midiOutReset(MidiOut);
   if (ismidiready == 0)
@@ -182,7 +182,7 @@ int bx_sound_windows_c::closemidioutput()
   BX_DEBUG(("midiOutClose() = %d", ret));
   MidiOpen = 0;
 
-  return (ret == 0) ? BX_SOUND_OUTPUT_OK : BX_SOUND_OUTPUT_ERR;
+  return (ret == 0) ? BX_SOUNDLOW_OK : BX_SOUNDLOW_ERR;
 }
 
 int bx_sound_windows_c::openwaveoutput(const char *wavedev)
@@ -205,7 +205,7 @@ int bx_sound_windows_c::openwaveoutput(const char *wavedev)
   needreopen = 0;
 #endif
 
-  return BX_SOUND_OUTPUT_OK;
+  return BX_SOUNDLOW_OK;
 }
 
 int bx_sound_windows_c::playnextbuffer()
@@ -225,7 +225,7 @@ int bx_sound_windows_c::playnextbuffer()
 
   // do we have to play anything?
   if (tailplay == head)
-    return BX_SOUND_OUTPUT_OK;
+    return BX_SOUNDLOW_OK;
 
   // if the format is different, we have to close and reopen the device
   // or, just open the device if it's not open yet
@@ -241,7 +241,7 @@ int bx_sound_windows_c::playnextbuffer()
     for (int tries = 0; tries < 3; tries++)
     {
       int frequency = WaveInfo.frequency;
-      int stereo = WaveInfo.stereo;
+      bx_bool stereo = WaveInfo.stereo;
       int bits = WaveInfo.bits;
 //    int format = WaveInfo.format;
       int bps = (bits / 8) * (stereo + 1);
@@ -282,7 +282,7 @@ int bx_sound_windows_c::playnextbuffer()
 
         case 2:        // nope, doesn't work
           BX_ERROR(("Couldn't open wave device (error %d)!", ret));
-          return BX_SOUND_OUTPUT_ERR;
+          return BX_SOUNDLOW_ERR;
         }
 
         BX_DEBUG(("The format was: wFormatTag=%d, nChannels=%d, nSamplesPerSec=%d,",
@@ -316,7 +316,7 @@ int bx_sound_windows_c::playnextbuffer()
     if (ret != 0)
     {
       BX_ERROR(("waveOutPrepareHeader = %d", ret));
-      return BX_SOUND_OUTPUT_ERR;
+      return BX_SOUNDLOW_ERR;
     }
 
     ret = waveOutWrite(WaveOut, WaveHeader[bufnum], sizeof(*WaveHeader[bufnum]));
@@ -328,10 +328,10 @@ int bx_sound_windows_c::playnextbuffer()
     }
   }
 
-  return BX_SOUND_OUTPUT_OK;
+  return BX_SOUNDLOW_OK;
 }
 
-int bx_sound_windows_c::startwaveplayback(int frequency, int bits, int stereo, int format)
+int bx_sound_windows_c::startwaveplayback(int frequency, int bits, bx_bool stereo, int format)
 {
   BX_DEBUG(("startwaveplayback(%d, %d, %d, %x)", frequency, bits, stereo, format));
 
@@ -369,7 +369,7 @@ int bx_sound_windows_c::startwaveplayback(int frequency, int bits, int stereo, i
   memcpy(header->chnk2, "data", 4);
 #endif
 
-  return BX_SOUND_OUTPUT_OK;
+  return BX_SOUNDLOW_OK;
 }
 
 int bx_sound_windows_c::sendwavepacket(int length, Bit8u data[])
@@ -397,7 +397,7 @@ int bx_sound_windows_c::sendwavepacket(int length, Bit8u data[])
   { // this should not actually happen!
     BX_ERROR(("Output buffer overflow! Not played. Iswaveready was %d", iswaveready));
     iswaveready = 0;          // stop the output for a while
-    return BX_SOUND_OUTPUT_ERR;
+    return BX_SOUNDLOW_ERR;
   }
 
   head = bufnum;
@@ -428,7 +428,7 @@ int bx_sound_windows_c::sendwavepacket(int length, Bit8u data[])
   }
 #endif
 
-  return BX_SOUND_OUTPUT_OK;
+  return BX_SOUNDLOW_OK;
 }
 
 int bx_sound_windows_c::stopwaveplayback()
@@ -445,7 +445,7 @@ int bx_sound_windows_c::stopwaveplayback()
   WaveOpen = 0;
 #endif
 
-  return BX_SOUND_OUTPUT_OK;
+  return BX_SOUNDLOW_OK;
 }
 
 int bx_sound_windows_c::closewaveoutput()
@@ -469,7 +469,7 @@ int bx_sound_windows_c::closewaveoutput()
   }
 #endif
 
-  return BX_SOUND_OUTPUT_OK;
+  return BX_SOUNDLOW_OK;
 }
 
 void bx_sound_windows_c::checkmidiready()

@@ -89,7 +89,7 @@ bx_sound_osx_c::~bx_sound_osx_c()
 
 int bx_sound_osx_c::midiready()
 {
-    return BX_SOUND_OUTPUT_OK;
+    return BX_SOUNDLOW_OK;
 }
 
 int bx_sound_osx_c::openmidioutput(const char *mididev)
@@ -136,13 +136,13 @@ int bx_sound_osx_c::openmidioutput(const char *mididev)
 #endif
     BX_DEBUG(("openmidioutput(%s)", mididev));
     MidiOpen = 1;
-    return BX_SOUND_OUTPUT_OK;
+    return BX_SOUNDLOW_OK;
 }
 
 int bx_sound_osx_c::sendmidicommand(int delta, int command, int length, Bit8u data[])
 {
     BX_DEBUG(("sendmidicommand(%i,%02x,%i)", delta, command, length));
-    if (!MidiOpen) return BX_SOUND_OUTPUT_ERR;
+    if (!MidiOpen) return BX_SOUNDLOW_ERR;
 
 #ifdef BX_SOUND_OSX_use_converter
     if (length <= 2) {
@@ -154,7 +154,7 @@ int bx_sound_osx_c::sendmidicommand(int delta, int command, int length, Bit8u da
         MusicDeviceSysEx (synthUnit, data, length);
     }
 #endif
-    return BX_SOUND_OUTPUT_OK;
+    return BX_SOUNDLOW_OK;
 }
 
 int bx_sound_osx_c::closemidioutput()
@@ -165,7 +165,7 @@ int bx_sound_osx_c::closemidioutput()
     AUGraphStop (MidiGraph);
     AUGraphClose (MidiGraph);
 #endif
-    return BX_SOUND_OUTPUT_OK;
+    return BX_SOUNDLOW_OK;
 }
 
 #ifdef BX_SOUND_OSX_use_quicktime
@@ -189,11 +189,11 @@ int bx_sound_osx_c::openwaveoutput(const char *wavedev)
     // open the default output unit
 #ifdef BX_SOUND_OSX_use_quicktime
     err = SndNewChannel (&WaveChannel, sampledSynth, 0, NewSndCallBackUPP(WaveCallbackProc));
-    if (err != noErr) return BX_SOUND_OUTPUT_ERR;
+    if (err != noErr) return BX_SOUNDLOW_ERR;
 #endif
 #ifdef BX_SOUND_OSX_use_converter
     err = OpenDefaultAudioOutput (&WaveOutputUnit);
-    if (err != noErr) return BX_SOUND_OUTPUT_ERR;
+    if (err != noErr) return BX_SOUNDLOW_ERR;
     AudioUnitInitialize (WaveOutputUnit);
 
     // Set up a callback function to generate output to the output unit
@@ -205,10 +205,10 @@ int bx_sound_osx_c::openwaveoutput(const char *wavedev)
 #endif
 
     WaveOpen = 1;
-    return BX_SOUND_OUTPUT_OK;
+    return BX_SOUNDLOW_OK;
 }
 
-int bx_sound_osx_c::startwaveplayback(int frequency, int bits, int stereo, int format)
+int bx_sound_osx_c::startwaveplayback(int frequency, int bits, bx_bool stereo, int format)
 {
 #ifdef BX_SOUND_OSX_use_converter
     static int oldfreq, oldbits, oldstereo, oldformat;
@@ -240,7 +240,7 @@ int bx_sound_osx_c::startwaveplayback(int frequency, int bits, int stereo, int f
         (bits == oldbits) &&
         (stereo == oldstereo) &&
         (format == oldformat))
-        return BX_SOUND_OUTPUT_OK;    // nothing to do
+        return BX_SOUNDLOW_OK;    // nothing to do
 
     oldfreq = frequency;
     oldbits = bits;
@@ -278,7 +278,7 @@ int bx_sound_osx_c::startwaveplayback(int frequency, int bits, int stereo, int f
     if (WavePlaying) AudioOutputUnitStart (WaveOutputUnit);
 #endif
 
-    return BX_SOUND_OUTPUT_OK;
+    return BX_SOUNDLOW_OK;
 }
 
 int bx_sound_osx_c::waveready()
@@ -287,7 +287,7 @@ int bx_sound_osx_c::waveready()
     // have been sent, but possibly not yet played. There
     // should be a better way of doing this.
     if (WaveOpen && (head - tail < BX_SOUND_OSX_NBUF-4)) {
-        return BX_SOUND_OUTPUT_OK;
+        return BX_SOUNDLOW_OK;
     }
     else {
 #ifdef BX_SOUND_OSX_use_converter
@@ -297,7 +297,7 @@ int bx_sound_osx_c::waveready()
             WavePlaying = 1;
         }
 #endif
-        return BX_SOUND_OUTPUT_ERR;
+        return BX_SOUNDLOW_ERR;
     }
 }
 
@@ -311,7 +311,7 @@ int bx_sound_osx_c::sendwavepacket(int length, Bit8u data[])
 
     // sanity check
     if ((!WaveOpen) || (head - tail >= BX_SOUND_OSX_NBUF))
-        return BX_SOUND_OUTPUT_ERR;
+        return BX_SOUNDLOW_ERR;
 
     // find next available buffer
     int n = head++ % BX_SOUND_OSX_NBUF;
@@ -347,12 +347,12 @@ int bx_sound_osx_c::sendwavepacket(int length, Bit8u data[])
     SndDoCommand(WaveChannel, &mySndCommand, TRUE);
 #endif
 
-    return BX_SOUND_OUTPUT_OK;
+    return BX_SOUNDLOW_OK;
 }
 
 int bx_sound_osx_c::stopwaveplayback()
 {
-    return BX_SOUND_OUTPUT_OK;
+    return BX_SOUNDLOW_OK;
 }
 
 int bx_sound_osx_c::closewaveoutput()
@@ -366,7 +366,7 @@ int bx_sound_osx_c::closewaveoutput()
     WaveConverter = NULL;
     WaveOutputUnit = NULL;
 #endif
-    return BX_SOUND_OUTPUT_OK;
+    return BX_SOUNDLOW_OK;
 }
 
 #ifdef BX_SOUND_OSX_use_converter

@@ -190,7 +190,7 @@ private:
   int midimode, wavemode, loglevel;
   Bit32u dmatimer;
   FILE *logfile, *midifile, *wavefile; // the output files or devices
-  bx_sound_lowlevel_c *soundmod;// the output class
+  bx_sound_lowlevel_c *soundmod; // the lowlevel class
   int currentirq;
   int currentdma8;
   int currentdma16;
@@ -231,8 +231,8 @@ private:
       int mode, bits, bps, format, timer;
       bx_bool fifo, output, stereo, issigned, highspeed;
       Bit16u count;     // bytes remaining in this transfer
-      Bit8u *chunk;	// buffers up to BX_SOUND_OUTPUT_WAVEPACKETSIZE bytes
-      int chunkindex;	// index into the buffer
+      Bit8u *chunk;     // buffers up to BX_SOUNDLOW_WAVEPACKETSIZE bytes
+      int chunkindex;   // index into the buffer
       int chunkcount;   // for input: size of the recorded input
       Bit16u timeconstant;
       Bit16u blocklength, samplerate;

@@ -48,7 +48,7 @@ public:
     virtual int    closemidioutput();
 
     virtual int    openwaveoutput(const char *wavedev);
-    virtual int    startwaveplayback(int frequency, int bits, int stereo, int format);
+    virtual int    startwaveplayback(int frequency, int bits, bx_bool stereo, int format);
     virtual int    sendwavepacket(int length, Bit8u data[]);
     virtual int    stopwaveplayback();
     virtual int    closewaveoutput();
@@ -60,7 +60,7 @@ private:
     int MidiOpen;
     int WaveOpen;
 
-    Bit8u WaveData[BX_SOUND_OSX_NBUF][BX_SOUND_OUTPUT_WAVEPACKETSIZE];
+    Bit8u WaveData[BX_SOUND_OSX_NBUF][BX_SOUNDLOW_WAVEPACKETSIZE];
     int WaveLength[BX_SOUND_OSX_NBUF];
     int head, tail;  // buffer pointers
 

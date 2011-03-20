@@ -18,34 +18,34 @@
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 
-// Common code for sound output modules
+// Common code for sound lowlevel modules
 
-// this is the size of a DMA chunk sent to output
+// this is the size of a sound packet used for sending and receiving
 // it should not be too large to avoid lag, and not too
 // small to avoid unnecessary overhead.
-#define BX_SOUND_OUTPUT_WAVEPACKETSIZE  8192
+#define BX_SOUNDLOW_WAVEPACKETSIZE  8192
 
 // Definitions for the output functions
-#define BX_SOUND_OUTPUT_OK   0
-#define BX_SOUND_OUTPUT_ERR  1
+#define BX_SOUNDLOW_OK   0
+#define BX_SOUNDLOW_ERR  1
 
 // Pseudo device that loads the lowlevel sound module
 class bx_soundmod_ctl_c : public bx_soundmod_ctl_stub_c {
 public:
   bx_soundmod_ctl_c() {}
   virtual ~bx_soundmod_ctl_c() {}
-  virtual int init_module(const char *type, void **module, logfunctions *dev);
+  virtual int init_module(const char *type, void **module, logfunctions *device);
 };
 
-// The class with the output functions
+// The class with the input/output functions
 class bx_sound_lowlevel_c : public logfunctions {
 public:
 
   /*
-  These functions are the sound output functions, sending
-  the music/sound to the OS specific driver.
+  These functions are the sound lowlevel functions, sending
+  the music or sending/receiving sound to/from the OS specific driver.
   They are in a different file (soundxxx.cc) because they are
-  non-portable, while everything in sb16.cc is portable
+  non-portable, while everything in the soundcard code is portable
   */
 
   bx_sound_lowlevel_c(logfunctions *dev);
@@ -59,7 +59,7 @@ public:
   virtual int closemidioutput();
 
   virtual int openwaveoutput(const char *wavedev);
-  virtual int startwaveplayback(int frequency, int bits, int stereo, int format);
+  virtual int startwaveplayback(int frequency, int bits, bx_bool stereo, int format);
   virtual int sendwavepacket(int length, Bit8u data[]);
   virtual int stopwaveplayback();
   virtual int closewaveoutput();

@@ -22,11 +22,11 @@
 
 // Josef Drexler coded the original version of the lowlevel sound support
 // for Linux using OSS. The current version also supports OSS on FreeBSD and
-// ALSA PCM output on Linux.
+// ALSA PCM input/output on Linux.
 
 #if (defined(linux) || defined(__FreeBSD__) || defined(__FreeBSD_kernel__))
 
-#define BX_SOUND_LINUX_BUFSIZE   BX_SOUND_OUTPUT_WAVEPACKETSIZE * 2
+#define BX_SOUND_LINUX_BUFSIZE   BX_SOUNDLOW_WAVEPACKETSIZE * 2
 
 #if BX_HAVE_ALSASOUND
 #define ALSA_PCM_NEW_HW_PARAMS_API
@@ -46,7 +46,7 @@ public:
   virtual int    closemidioutput();
 
   virtual int    openwaveoutput(const char *wavedev);
-  virtual int    startwaveplayback(int frequency, int bits, int stereo, int format);
+  virtual int    startwaveplayback(int frequency, int bits, bx_bool stereo, int format);
   virtual int    sendwavepacket(int length, Bit8u data[]);
   virtual int    stopwaveplayback();
   virtual int    closewaveoutput();
@@ -55,7 +55,7 @@ private:
 #if BX_HAVE_ALSASOUND
   int alsa_seq_open(const char *alsadev);
   int alsa_seq_output(int delta, int command, int length, Bit8u data[]);
-  int alsa_pcm_open(int frequency, int bits, int stereo, int format);
+  int alsa_pcm_open(int frequency, int bits, bx_bool stereo, int format);
   int alsa_pcm_write();
 
   bx_bool use_alsa_seq;
@@ -75,7 +75,8 @@ private:
   char *wavedevice;
   int wave;
   Bit8u audio_buffer[BX_SOUND_LINUX_BUFSIZE];
-  int oldfreq,oldbits,oldstereo,oldformat;
+  int oldfreq,oldbits,oldformat;
+  bx_bool oldstereo;
 };
 
 #endif
