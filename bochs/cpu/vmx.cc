@@ -1588,6 +1588,8 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
   handleAvxModeChange();
 #endif
 
+  BX_INSTR_TLB_CNTRL(BX_CPU_ID, BX_INSTR_CONTEXT_SWITCH, 0);
+
   return VMXERR_NO_ERROR;
 }
 
@@ -2035,6 +2037,8 @@ void BX_CPU_C::VMexitLoadHostState(void)
 #if BX_SUPPORT_AVX
   handleAvxModeChange();
 #endif
+
+  BX_INSTR_TLB_CNTRL(BX_CPU_ID, BX_INSTR_CONTEXT_SWITCH, 0);
 }
 
 void BX_CPU_C::VMexit(bxInstruction_c *i, Bit32u reason, Bit64u qualification)
@@ -2834,6 +2838,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INVEPT(bxInstruction_c *i)
      return;
   }
 
+  BX_INSTR_TLB_CNTRL(BX_CPU_ID, BX_INSTR_INVEPT, 0);
+
   VMsucceed();
 #else
   BX_INFO(("INVEPT: required VMXx2 support, use --enable-vmx=2 option"));
@@ -2910,6 +2916,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INVVPID(bxInstruction_c *i)
      VMfail(VMXERR_INVALID_INVEPT_INVVPID);
      return;
   }
+
+  BX_INSTR_TLB_CNTRL(BX_CPU_ID, BX_INSTR_INVVPID, 0);
 
   VMsucceed();
 #else

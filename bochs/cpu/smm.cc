@@ -244,6 +244,8 @@ void BX_CPU_C::enter_system_management_mode(void)
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES] = BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS];
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS] = BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS];
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS] = BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS];
+
+  BX_INSTR_TLB_CNTRL(BX_CPU_ID, BX_INSTR_CONTEXT_SWITCH, 0);
 }
 
 #define SMRAM_TRANSLATE(addr)    (((0x8000 - (addr)) >> 2) - 1)
@@ -696,6 +698,8 @@ bx_bool BX_CPU_C::smram_restore_state(const Bit32u *saved_state)
 
   if (SMM_REVISION_ID & SMM_SMBASE_RELOCATION)
      BX_CPU_THIS_PTR smbase = SMRAM_FIELD(saved_state, SMRAM_FIELD_SMBASE_OFFSET);
+
+  BX_INSTR_TLB_CNTRL(BX_CPU_ID, BX_INSTR_CONTEXT_SWITCH, 0);
 
   return 1;
 }

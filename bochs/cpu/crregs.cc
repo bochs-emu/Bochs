@@ -403,6 +403,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CR0Rd(bxInstruction_c *i)
 #endif
   if (! SetCR0(val_32))
     exception(BX_GP_EXCEPTION, 0);
+
+  BX_INSTR_TLB_CNTRL(BX_CPU_ID, BX_INSTR_MOV_CR0, val_32);
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CR2Rd(bxInstruction_c *i)
@@ -462,6 +464,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CR4Rd(bxInstruction_c *i)
 #endif
   if (! SetCR4(val_32))
     exception(BX_GP_EXCEPTION, 0);
+
+  BX_INSTR_TLB_CNTRL(BX_CPU_ID, BX_INSTR_MOV_CR4, val_32);
 #endif
 }
 
@@ -536,6 +540,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CR0Rq(bxInstruction_c *i)
 #endif
     if (! SetCR0(val_64))
       exception(BX_GP_EXCEPTION, 0);
+
+    BX_INSTR_TLB_CNTRL(BX_CPU_ID, BX_INSTR_MOV_CR0, (Bit32u) val_64);
   }
   else {
     // CR8
@@ -631,6 +637,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CR4Rq(bxInstruction_c *i)
   BX_DEBUG(("MOV_CqRq: write to CR4 of %08x:%08x", GET32H(val_64), GET32L(val_64)));
   if (! SetCR4(val_64))
     exception(BX_GP_EXCEPTION, 0);
+
+  BX_INSTR_TLB_CNTRL(BX_CPU_ID, BX_INSTR_MOV_CR4, (Bit32u) val_64);
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RqCR0(bxInstruction_c *i)
