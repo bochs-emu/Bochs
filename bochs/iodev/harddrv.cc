@@ -932,7 +932,6 @@ Bit32u bx_hard_drive_c::read(Bit32u address, unsigned io_len)
 	case 0x23: BX_ERROR(("read cmd 0x23 (READ LONG NO RETRY) not supported")); command_aborted(channel, 0x23); break;
 	case 0x25: BX_ERROR(("read cmd 0x25 (READ DMA EXT) not supported")); command_aborted(channel, 0x25); break;
 	case 0x26: BX_ERROR(("read cmd 0x26 (READ DMA QUEUED EXT) not supported")); command_aborted(channel, 0x26); break;
-	case 0x27: BX_ERROR(("read cmd 0x27 (READ NATIVE MAX ADDRESS EXT) not supported")); command_aborted(channel, 0x27); break;
 	case 0x2A: BX_ERROR(("read cmd 0x2A (READ STREAM DMA) not supported")); command_aborted(channel, 0x2A); break;
 	case 0x2B: BX_ERROR(("read cmd 0x2B (READ STREAM PIO) not supported")); command_aborted(channel, 0x2B); break;
 	case 0x2F: BX_ERROR(("read cmd 0x2F (READ LOG EXT) not supported")); command_aborted(channel, 0x2F); break;
@@ -999,7 +998,6 @@ Bit32u bx_hard_drive_c::read(Bit32u address, unsigned io_len)
 	case 0xF4: BX_ERROR(("read cmd 0xF4 (SECURITY ERASE UNIT) not supported")); command_aborted(channel, 0xF4); break;
 	case 0xF5: BX_ERROR(("read cmd 0xF5 (SECURITY FREEZE LOCK) not supported")); command_aborted(channel, 0xF5); break;
 	case 0xF6: BX_ERROR(("read cmd 0xF6 (SECURITY DISABLE PASSWORD) not supported")); command_aborted(channel, 0xF6); break;
-	case 0xF8: BX_ERROR(("read cmd 0xF8 (READ NATIVE MAX ADDRESS) not supported")); command_aborted(channel, 0xF8); break;
 	case 0xF9: BX_ERROR(("read cmd 0xF9 (SET MAX ADDRESS) not supported")); command_aborted(channel, 0xF9); break;
 
         default:
@@ -2435,6 +2433,34 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
             command_aborted(channel, value);
           }
           break;
+        case 0x27: // READ NATIVE MAX ADDRESS EXT
+          lba48 = 1;
+        case 0xF8: // READ NATIVE MAX ADDRESS
+          if (BX_SELECTED_IS_HD(channel)) {
+            lba48_transform(channel, lba48);
+            Bit64s max_sector = BX_SELECTED_DRIVE(channel).hdimage->hd_size / 512 - 1;
+            if (BX_SELECTED_CONTROLLER(channel).lba_mode) {
+              if (!BX_SELECTED_CONTROLLER(channel).lba48) {
+                BX_SELECTED_CONTROLLER(channel).head_no = (Bit8u)((max_sector >> 24) & 0xf);
+                BX_SELECTED_CONTROLLER(channel).cylinder_no = (Bit16u)((max_sector >> 8) & 0xffff);
+                BX_SELECTED_CONTROLLER(channel).sector_no = (Bit8u)((max_sector) & 0xff);
+              } else {
+                BX_SELECTED_CONTROLLER(channel).hob.hcyl = (Bit8u)((max_sector >> 40) & 0xff);
+                BX_SELECTED_CONTROLLER(channel).hob.lcyl = (Bit8u)((max_sector >> 32) & 0xff);
+                BX_SELECTED_CONTROLLER(channel).hob.sector = (Bit8u)((max_sector >> 24) & 0xff);
+                BX_SELECTED_CONTROLLER(channel).cylinder_no = (Bit16u)((max_sector >> 8) & 0xffff);
+                BX_SELECTED_CONTROLLER(channel).sector_no = (Bit8u)((max_sector) & 0xff);
+              }
+              BX_SELECTED_CONTROLLER(channel).status.drive_ready = 1;
+              BX_SELECTED_CONTROLLER(channel).status.seek_complete = 1;
+              raise_interrupt(channel);
+            } else {
+              command_aborted(channel, value);
+            }
+          } else {
+            command_aborted(channel, value);
+          }
+          break;
 
 	// List all the write operations that are defined in the ATA/ATAPI spec
 	// that we don't support.  Commands that are listed here will cause a
@@ -2442,7 +2468,6 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
 	case 0x22: BX_ERROR(("write cmd 0x22 (READ LONG) not supported")); command_aborted(channel, 0x22); break;
 	case 0x23: BX_ERROR(("write cmd 0x23 (READ LONG NO RETRY) not supported")); command_aborted(channel, 0x23); break;
 	case 0x26: BX_ERROR(("write cmd 0x26 (READ DMA QUEUED EXT) not supported"));command_aborted(channel, 0x26); break;
-	case 0x27: BX_ERROR(("write cmd 0x27 (READ NATIVE MAX ADDRESS EXT) not supported"));command_aborted(channel, 0x27); break;
 	case 0x2A: BX_ERROR(("write cmd 0x2A (READ STREAM DMA) not supported"));command_aborted(channel, 0x2A); break;
 	case 0x2B: BX_ERROR(("write cmd 0x2B (READ STREAM PIO) not supported"));command_aborted(channel, 0x2B); break;
 	case 0x2F: BX_ERROR(("write cmd 0x2F (READ LOG EXT) not supported"));command_aborted(channel, 0x2F); break;
@@ -2488,7 +2513,6 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
 	case 0xF4: BX_ERROR(("write cmd 0xF4 (SECURITY ERASE UNIT) not supported"));command_aborted(channel, 0xF4); break;
 	case 0xF5: BX_ERROR(("write cmd 0xF5 (SECURITY FREEZE LOCK) not supported"));command_aborted(channel, 0xF5); break;
 	case 0xF6: BX_ERROR(("write cmd 0xF6 (SECURITY DISABLE PASSWORD) not supported"));command_aborted(channel, 0xF6); break;
-	case 0xF8: BX_ERROR(("write cmd 0xF8 (READ NATIVE MAX ADDRESS) not supported"));command_aborted(channel, 0xF8); break;
 	case 0xF9: BX_ERROR(("write cmd 0xF9 (SET MAX ADDRESS) not supported"));command_aborted(channel, 0xF9); break;
 
 	default:
