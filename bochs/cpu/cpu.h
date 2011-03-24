@@ -3446,7 +3446,7 @@ public: // for now...
   // x86 hardware debug support
   BX_SMF bx_bool hwbreakpoint_check(bx_address laddr);
   BX_SMF void    iobreakpoint_match(unsigned port, unsigned len);
-  BX_SMF void    code_breakpoint_match(bx_address laddr);
+  BX_SMF Bit32u  code_breakpoint_match(bx_address laddr);
   BX_SMF void    hwbreakpoint_match(bx_address laddr, unsigned len, unsigned rw);
   BX_SMF Bit32u  hwdebug_compare(bx_address laddr, unsigned len,
                                  unsigned opa, unsigned opb);

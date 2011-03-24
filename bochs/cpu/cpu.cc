@@ -525,6 +525,9 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
     // A trap may be inhibited on this boundary due to an instruction
     // which loaded SS.  If so we clear the inhibit_mask below
     // and don't execute this code until the next boundary.
+#if BX_X86_DEBUGGER
+    code_breakpoint_match(get_laddr(BX_SEG_REG_CS, BX_CPU_THIS_PTR prev_rip));
+#endif
     exception(BX_DB_EXCEPTION, 0); // no error, not interrupt
   }
 
@@ -619,8 +622,9 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
   else {
     // only bother comparing if any breakpoints enabled and
     // debug events are not inhibited on this boundary.
-    if (! (BX_CPU_THIS_PTR inhibit_mask & BX_INHIBIT_DEBUG_SHADOW) && ! BX_CPU_THIS_PTR in_repeat) {
-      code_breakpoint_match(get_laddr(BX_SEG_REG_CS, BX_CPU_THIS_PTR prev_rip));
+    if (! (BX_CPU_THIS_PTR inhibit_mask & BX_INHIBIT_DEBUG_SHADOW)) {
+      if (code_breakpoint_match(get_laddr(BX_SEG_REG_CS, BX_CPU_THIS_PTR prev_rip)))
+        exception(BX_DB_EXCEPTION, 0); // no error, not interrupt
     }
   }
 #endif

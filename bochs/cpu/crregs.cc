@@ -1209,17 +1209,22 @@ bx_bool BX_CPU_C::hwbreakpoint_check(bx_address laddr)
   return 0;
 }
 
-void BX_CPU_C::code_breakpoint_match(bx_address laddr)
+Bit32u BX_CPU_C::code_breakpoint_match(bx_address laddr)
 {
+  if (BX_CPU_THIS_PTR get_RF() || BX_CPU_THIS_PTR in_repeat)
+    return 0;
+
   if (BX_CPU_THIS_PTR dr7.get_bp_enabled()) {
     Bit32u dr6_bits = hwdebug_compare(laddr, 1, BX_HWDebugInstruction, BX_HWDebugInstruction);
     if (dr6_bits) {
       // Add to the list of debug events thus far.
       BX_CPU_THIS_PTR debug_trap |= dr6_bits;
       BX_ERROR(("#DB: x86 code breakpoint catched"));
-      exception(BX_DB_EXCEPTION, 0); // no error, not interrupt
+      return dr6_bits;
     }
   }
+
+  return 0;
 }
 
 void BX_CPU_C::hwbreakpoint_match(bx_address laddr, unsigned len, unsigned rw)
