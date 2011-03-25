@@ -1271,9 +1271,8 @@ BX_CPU_C::fetchDecode32(const Bit8u *iptr, bxInstruction_c *i, unsigned remainin
   unsigned sse_prefix = SSE_PREFIX_NONE;
 
   int had_vex = 0;
-#if BX_SUPPORT_AVX
   int vvv = -1;
-  unsigned vex;
+#if BX_SUPPORT_AVX
   bx_bool vex_w = 0;
 #endif
 
@@ -1357,7 +1356,7 @@ fetch_b1:
   if ((attr & BxGroupX) == BxPrefixVEX && (*iptr & 0xc0) == 0xc0) {
     had_vex = 1;
     if (sse_prefix) had_vex = -1;
-    unsigned vex_opcext = 1;
+    unsigned vex, vex_opcext = 1;
 
     if (remain != 0) {
       remain--;
@@ -1391,7 +1390,6 @@ fetch_b1:
       return(-1);
 
     b1 += 256 * vex_opcext;
-
     if (b1 < 256 || b1 >= 1024) had_vex = -1;
     else {
       if (b1 >= 512)
@@ -1434,9 +1432,10 @@ fetch_b1:
 
     i->setNnn(nnn);
 #if BX_SUPPORT_AVX
-    if (had_vex == 0) vvv = nnn;
-    i->setVvv(vvv);
+    if (had_vex == 0)
 #endif
+       vvv = nnn;
+    i->setVvv(vvv);
 
     // MOVs with CRx and DRx always use register ops and ignore the mod field.
     if ((b1 & ~3) == 0x120)
@@ -1613,8 +1612,9 @@ modrm_done:
         case BxGroupN:
           OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[nnn]);
 #if BX_SUPPORT_AVX
-          if (had_vex == 0) i->setVvv(rm);
+          if (had_vex == 0) 
 #endif
+             i->setVvv(rm);
           break;
         case BxSplitGroupN:
           OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[nnn + (mod_mem << 3)]);

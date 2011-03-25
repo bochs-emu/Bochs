@@ -475,7 +475,7 @@ void BX_CPP_AttrRegparmN(3) BX_CPU_C::VMexit_IO(bxInstruction_c *i, unsigned por
          break;
 
        default:
-         BX_PANIC(("VMexit_IO: I/O instruction %s unknown", get_bx_opcode_name(i->getIaOpcode())));
+         BX_PANIC(("VMexit_IO: I/O instruction %s unknown", i->getIaOpcodeName()));
      }
 
      if (qualification & VMX_VMEXIT_IO_INSTR_STRING) {

@@ -2965,7 +2965,7 @@ public: // for now...
   BX_SMF int fetchDecode64(const Bit8u *fetchPtr, bxInstruction_c *i, unsigned remainingInPage) BX_CPP_AttrRegparmN(3);
 #endif
   BX_SMF void boundaryFetch(const Bit8u *fetchPtr, unsigned remainingInPage, bxInstruction_c *);
-  BX_SMF void serveICacheMiss(bxICacheEntry_c *entry, Bit32u eipBiased, bx_phy_address pAddr);
+  BX_SMF bxICacheEntry_c *serveICacheMiss(bxICacheEntry_c *entry, Bit32u eipBiased, bx_phy_address pAddr);
   BX_SMF bxICacheEntry_c* getICacheEntry(void);
 #if BX_SUPPORT_TRACE_CACHE
   BX_SMF bx_bool mergeTraces(bxICacheEntry_c *entry, bxInstruction_c *i, bx_phy_address pAddr);

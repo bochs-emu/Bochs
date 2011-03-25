@@ -57,8 +57,15 @@ void handleSMC(bx_phy_address pAddr, Bit32u mask)
 
 #if BX_SUPPORT_TRACE_CACHE
 
-void BX_CPU_C::serveICacheMiss(bxICacheEntry_c *entry, Bit32u eipBiased, bx_phy_address pAddr)
+bxICacheEntry_c* BX_CPU_C::serveICacheMiss(bxICacheEntry_c *entry, Bit32u eipBiased, bx_phy_address pAddr)
 {
+  bxICacheEntry_c *vc_hit = BX_CPU_THIS_PTR iCache.lookup_victim_cache(pAddr, BX_CPU_THIS_PTR fetchModeMask);
+  if (vc_hit) {
+    return vc_hit;
+  }
+
+  BX_CPU_THIS_PTR iCache.victim_entry(entry, BX_CPU_THIS_PTR fetchModeMask);
+
   BX_CPU_THIS_PTR iCache.alloc_trace(entry);
 
   // Cache miss. We weren't so lucky, but let's be optimistic - try to build 
@@ -104,7 +111,7 @@ void BX_CPU_C::serveICacheMiss(bxICacheEntry_c *entry, Bit32u eipBiased, bx_phy_
       pageWriteStampTable.markICacheMask(entry->pAddr, entry->traceMask);
       pageWriteStampTable.markICacheMask(BX_CPU_THIS_PTR pAddrPage, 0x1);
       BX_CPU_THIS_PTR iCache.commit_page_split_trace(BX_CPU_THIS_PTR pAddrPage, entry);
-      return;
+      return entry;
     }
 
     // add instruction to the trace
@@ -137,6 +144,8 @@ void BX_CPU_C::serveICacheMiss(bxICacheEntry_c *entry, Bit32u eipBiased, bx_phy_
   pageWriteStampTable.markICacheMask(pAddr, entry->traceMask);
 
   BX_CPU_THIS_PTR iCache.commit_trace(entry->tlen);
+
+  return entry;
 }
 
 bx_bool BX_CPU_C::mergeTraces(bxICacheEntry_c *entry, bxInstruction_c *i, bx_phy_address pAddr)

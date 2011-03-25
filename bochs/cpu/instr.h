@@ -38,6 +38,8 @@ typedef bx_address (BX_CPU_C::*BxResolvePtr_tR)(bxInstruction_c *) BX_CPP_AttrRe
 
 extern bx_address bx_asize_mask[];
 
+const char *get_bx_opcode_name(Bit16u ia_opcode);
+
 // <TAG-CLASS-INSTRUCTION-START>
 class bxInstruction_c {
 public:
@@ -244,6 +246,9 @@ public:
   BX_CPP_INLINE void setIaOpcode(Bit16u op) {
     metaInfo.ia_opcode = (metaInfo.ia_opcode & 0xf000) | op;
   }
+  BX_CPP_INLINE const char* getIaOpcodeName(void) const {
+    return get_bx_opcode_name(getIaOpcode());
+  }
 
   BX_CPP_INLINE unsigned repUsedL(void) const {
     return metaInfo.metaInfo1 >> 6;
@@ -282,8 +287,6 @@ public:
   }
 };
 // <TAG-CLASS-INSTRUCTION-END>
-
-const char *get_bx_opcode_name(Bit16u ia_opcode);
 
 enum {
 #define bx_define_opcode(a, b, c, d, e) a,

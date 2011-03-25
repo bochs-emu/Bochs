@@ -137,6 +137,13 @@ public:
     bxICacheEntry_c *e; // Pointer to icache entry
   } pageSplitIndex[BX_ICACHE_PAGE_SPLIT_ENTRIES];
   int nextPageSplitIndex;
+
+#define BX_ICACHE_VICTIM_ENTRIES 8 /* must be power of two */
+  struct bxVictimCacheEntry {
+    Bit32u fetchModeMask;
+    bxICacheEntry_c vc_entry;
+  } victimCache[BX_ICACHE_VICTIM_ENTRIES];
+  int nextVictimCacheIndex;
 #endif
 
 public:
@@ -173,11 +180,31 @@ public:
 
     nextPageSplitIndex = (nextPageSplitIndex+1) & (BX_ICACHE_PAGE_SPLIT_ENTRIES-1);
   }
+
+  BX_CPP_INLINE bxICacheEntry_c *lookup_victim_cache(bx_phy_address pAddr, Bit32u fetchModeMask)
+  {
+    for (int i=0; i < BX_ICACHE_VICTIM_ENTRIES;i++) {
+      bxVictimCacheEntry *e = &victimCache[i];
+      if (e->vc_entry.pAddr == pAddr && e->fetchModeMask == fetchModeMask) {
+        return &e->vc_entry;
+      }
+    }
+
+    return NULL;
+  }
+
+  BX_CPP_INLINE void victim_entry(bxICacheEntry_c *entry, Bit32u fetchModeMask)
+  {
+    if (entry->pAddr != BX_ICACHE_INVALID_PHY_ADDRESS) {
+      victimCache[nextVictimCacheIndex].fetchModeMask = fetchModeMask;
+      victimCache[nextVictimCacheIndex].vc_entry = *entry;
+      nextVictimCacheIndex = (nextVictimCacheIndex+1) & (BX_ICACHE_VICTIM_ENTRIES-1);
+    }
+  }
 #endif
 
   BX_CPP_INLINE void handleSMC(bx_phy_address pAddr, Bit32u mask);
 
-  BX_CPP_INLINE void purgeICacheEntries(void);
   BX_CPP_INLINE void flushICacheEntries(void);
 
   BX_CPP_INLINE bxICacheEntry_c* get_entry(bx_phy_address pAddr, unsigned fetchModeMask)
@@ -198,17 +225,22 @@ BX_CPP_INLINE void bxICache_c::flushICacheEntries(void)
   }
 
 #if BX_SUPPORT_TRACE_CACHE
+  nextPageSplitIndex = 0;
   for (i=0;i<BX_ICACHE_PAGE_SPLIT_ENTRIES;i++)
     pageSplitIndex[i].ppf = BX_ICACHE_INVALID_PHY_ADDRESS;
 
-  nextPageSplitIndex = 0;
+  nextVictimCacheIndex = 0;
+  for (i=0;i<BX_ICACHE_VICTIM_ENTRIES;i++)
+    victimCache[i].vc_entry.pAddr = BX_ICACHE_INVALID_PHY_ADDRESS;
+
   mpindex = 0;
 #endif
 }
 
+// TODO: invalidate only entries in same page as pAddr
 BX_CPP_INLINE void bxICache_c::handleSMC(bx_phy_address pAddr, Bit32u mask)
 {
-  // TODO: invalidate only entries in same page as pAddr
+  unsigned i;
 
   pAddr = LPFOf(pAddr);
 
@@ -216,11 +248,16 @@ BX_CPP_INLINE void bxICache_c::handleSMC(bx_phy_address pAddr, Bit32u mask)
   if (mask & 0x1) {
     // the store touched 1st cache line in the page, check for
     // page split traces to invalidate.
-    for (unsigned i=0;i<BX_ICACHE_PAGE_SPLIT_ENTRIES;i++) {
+    for (i=0;i<BX_ICACHE_PAGE_SPLIT_ENTRIES;i++) {
       if (pAddr == pageSplitIndex[i].ppf) {
         pageSplitIndex[i].ppf = BX_ICACHE_INVALID_PHY_ADDRESS;
       }
     }
+  }
+
+  for (i=0;i < BX_ICACHE_VICTIM_ENTRIES; i++) {
+    bxVictimCacheEntry *e = &victimCache[i];
+    e->vc_entry.pAddr = BX_ICACHE_INVALID_PHY_ADDRESS;
   }
 #endif
 
