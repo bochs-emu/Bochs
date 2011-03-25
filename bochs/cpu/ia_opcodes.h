@@ -1126,6 +1126,7 @@ bx_define_opcode(BX_IA_XRSTOR, &BX_CPU_C::XRSTOR, &BX_CPU_C::BxError, BX_CPU_XSA
 bx_define_opcode(BX_IA_XSAVE, &BX_CPU_C::XSAVE, &BX_CPU_C::BxError, BX_CPU_XSAVE, 0)
 bx_define_opcode(BX_IA_XSETBV, &BX_CPU_C::BxError, &BX_CPU_C::XSETBV, BX_CPU_XSAVE, 0)
 bx_define_opcode(BX_IA_XGETBV, &BX_CPU_C::BxError, &BX_CPU_C::XGETBV, BX_CPU_XSAVE, 0)
+bx_define_opcode(BX_IA_XSAVEOPT, &BX_CPU_C::XSAVE, &BX_CPU_C::BxError, BX_CPU_XSAVEOPT, 0)
 
 // AES instructions
 bx_define_opcode(BX_IA_AESIMC_VdqWdq, &BX_CPU_C::LOAD_Wdq, &BX_CPU_C::AESIMC_VdqWdqR, BX_CPU_AES_PCLMULQDQ, BX_PREPARE_SSE)

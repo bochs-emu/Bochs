@@ -322,7 +322,7 @@ void bx_init_options()
 
   // cpuid subtree
 #if BX_CPU_LEVEL >= 4
-  bx_list_c *cpuid_param = new bx_list_c(root_param, "cpuid", "CPUID Options", 18);
+  bx_list_c *cpuid_param = new bx_list_c(root_param, "cpuid", "CPUID Options", 19);
 
   new bx_param_bool_c(cpuid_param,
       "cpuid_limit_winnt", "Limit max CPUID function to 3",
@@ -404,6 +404,10 @@ void bx_init_options()
   new bx_param_bool_c(cpuid_param,
       "xsave", "Support for XSAVE extensions",
       "Support for XSAVE extensions",
+      0);
+  new bx_param_bool_c(cpuid_param,
+      "xsaveopt", "Support for XSAVEOPT instruction",
+      "Support for XSAVEOPT instruction",
       0);
 #if BX_SUPPORT_X86_64
   new bx_param_bool_c(cpuid_param,
@@ -2659,6 +2663,10 @@ static int parse_line_formatted(const char *context, int num_params, char *param
         if (parse_param_bool(params[i], 6, BXPN_CPUID_XSAVE) < 0) {
           PARSE_ERR(("%s: cpuid directive malformed.", context));
         }
+      } else if (!strncmp(params[i], "xsaveopt=", 9)) {
+        if (parse_param_bool(params[i], 9, BXPN_CPUID_XSAVEOPT) < 0) {
+          PARSE_ERR(("%s: cpuid directive malformed.", context));
+        }
       } else if (!strncmp(params[i], "xapic=", 6)) {
         if (parse_param_bool(params[i], 6, BXPN_CPUID_XAPIC) < 0) {
           PARSE_ERR(("%s: cpuid directive malformed.", context));
@@ -3876,12 +3884,13 @@ int bx_write_configuration(const char *rc, int overwrite)
   fprintf(fp, ", mmx=%d", SIM->get_param_bool(BXPN_CPUID_MMX)->get());
 #endif
 #if BX_CPU_LEVEL >= 6
-  fprintf(fp, ", sse=%s, xapic=%d, sep=%d, aes=%d, xsave=%d, movbe=%d",
+  fprintf(fp, ", sse=%s, xapic=%d, sep=%d, aes=%d, xsave=%d, xsaveopt=%d, movbe=%d",
     SIM->get_param_enum(BXPN_CPUID_SSE)->get_selected(),
     SIM->get_param_bool(BXPN_CPUID_XAPIC)->get(),
     SIM->get_param_bool(BXPN_CPUID_SEP)->get(),
     SIM->get_param_bool(BXPN_CPUID_AES)->get(),
     SIM->get_param_bool(BXPN_CPUID_XSAVE)->get(),
+    SIM->get_param_bool(BXPN_CPUID_XSAVEOPT)->get(),
     SIM->get_param_bool(BXPN_CPUID_MOVBE)->get());
 #if BX_SUPPORT_X86_64
   fprintf(fp, ", 1g_pages=%d, pcid=%d, fsgsbase=%d",

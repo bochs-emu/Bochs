@@ -38,6 +38,7 @@ cpuid
   aes
   movbe
   xsave
+  xsaveopt
   xapic
   1g_pages
   pcid

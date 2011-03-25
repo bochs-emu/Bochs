@@ -954,6 +954,8 @@ void BX_CPU_C::bx_cpuid_xsave_leaf(Bit32u subfunction)
 {
   BX_ASSERT(BX_CPU_SUPPORT_ISA_EXTENSION(BX_CPU_XSAVE));
 
+  static bx_bool xsaveopt_enabled = SIM->get_param_bool(BXPN_CPUID_XSAVEOPT)->get();
+
   switch(subfunction) {
   case 0:
     RAX = BX_CPU_THIS_PTR cpuid_std_function[0xd].eax;
@@ -963,7 +965,7 @@ void BX_CPU_C::bx_cpuid_xsave_leaf(Bit32u subfunction)
     break;
 
   case 1:
-    RAX = 0; // TODO: report XSAVEOPT
+    RAX = xsaveopt_enabled;
     RBX = 0;
     RCX = 0;
     RDX = 0;
@@ -998,7 +1000,7 @@ void BX_CPU_C::init_isa_features_bitmask(void)
   Bit32u features_bitmask = 0;
 
   bx_bool mmx_enabled = 0, movbe_enabled = 0;
-  bx_bool sep_enabled = 0, xsave_enabled = 0;
+  bx_bool sep_enabled = 0, xsave_enabled = 0, xsaveopt_enabled = 0;
   bx_bool aes_enabled = 0, xapic_enabled = 0;
   unsigned sse_enabled = 0;
 
@@ -1010,6 +1012,7 @@ void BX_CPU_C::init_isa_features_bitmask(void)
   aes_enabled = SIM->get_param_bool(BXPN_CPUID_AES)->get();
   movbe_enabled = SIM->get_param_bool(BXPN_CPUID_MOVBE)->get();
   xsave_enabled = SIM->get_param_bool(BXPN_CPUID_XSAVE)->get();
+  xsaveopt_enabled = SIM->get_param_bool(BXPN_CPUID_XSAVEOPT)->get();
   xapic_enabled = SIM->get_param_bool(BXPN_CPUID_XAPIC)->get();
   sse_enabled = SIM->get_param_enum(BXPN_CPUID_SSE)->get();
 #endif // BX_CPU_LEVEL >= 6
@@ -1065,13 +1068,6 @@ void BX_CPU_C::init_isa_features_bitmask(void)
      }
   }
 
-#if BX_SUPPORT_AVX
-  if (BX_SUPPORT_AVX && ! xsave_enabled) {
-     BX_PANIC(("PANIC: AVX emulation requires XSAVE support !"));
-     return;
-  }
-#endif
-
 #if BX_SUPPORT_X86_64
   if (sse_enabled < BX_CPUID_SUPPORT_SSE2) {
     BX_PANIC(("PANIC: x86-64 emulation requires SSE2 support !"));
@@ -1113,6 +1109,18 @@ void BX_CPU_C::init_isa_features_bitmask(void)
 #if BX_CPU_LEVEL >= 6
   features_bitmask |= BX_CPU_P6;
 
+  if (xsaveopt_enabled && ! xsave_enabled) {
+     BX_PANIC(("PANIC: XSAVEOPT emulation requires XSAVE !"));
+     return;
+  }
+
+#if BX_SUPPORT_AVX
+  if (BX_SUPPORT_AVX && ! xsave_enabled) {
+     BX_PANIC(("PANIC: AVX emulation requires XSAVE support !"));
+     return;
+  }
+#endif
+
 #if BX_SUPPORT_MONITOR_MWAIT
   static bx_bool mwait_enabled = SIM->get_param_bool(BXPN_CPUID_MWAIT)->get();
   if (mwait_enabled)
@@ -1151,6 +1159,9 @@ void BX_CPU_C::init_isa_features_bitmask(void)
 
   if (xsave_enabled)
     features_bitmask |= BX_CPU_XSAVE;
+
+  if (xsaveopt_enabled)
+    features_bitmask |= BX_CPU_XSAVEOPT;
 
   if (aes_enabled)
     features_bitmask |= BX_CPU_AES_PCLMULQDQ;

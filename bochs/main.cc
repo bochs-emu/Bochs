@@ -1013,6 +1013,7 @@ void bx_init_hardware()
   bx_bool movbe_enabled = SIM->get_param_bool(BXPN_CPUID_MOVBE)->get();
   bx_bool sep_enabled = SIM->get_param_bool(BXPN_CPUID_SEP)->get();
   bx_bool xsave_enabled = SIM->get_param_bool(BXPN_CPUID_XSAVE)->get();
+  bx_bool xsaveopt_enabled = SIM->get_param_bool(BXPN_CPUID_XSAVEOPT)->get();
 #if BX_SUPPORT_X86_64
   bx_bool xlarge_pages_enabled = SIM->get_param_bool(BXPN_CPUID_1G_PAGES)->get();
 #endif
@@ -1057,7 +1058,8 @@ void bx_init_hardware()
 #if BX_CPU_LEVEL >= 6
   BX_INFO(("  SEP support: %s",sep_enabled?"yes":"no"));
   BX_INFO(("  SSE support: %s", SIM->get_param_enum(BXPN_CPUID_SSE)->get_selected()));
-  BX_INFO(("  XSAVE support: %s",xsave_enabled?"yes":"no"));
+  BX_INFO(("  XSAVE support: %s %s",
+    xsave_enabled?"xsave":"no", xsaveopt_enabled?"xsaveopt":""));
   BX_INFO(("  AES support: %s",aes_enabled?"yes":"no"));
   BX_INFO(("  MOVBE support: %s",movbe_enabled?"yes":"no"));
   BX_INFO(("  x86-64 support: %s",BX_SUPPORT_X86_64?"yes":"no"));

@@ -3,19 +3,32 @@ Changes after 2.4.6 release:
 Bochs repository moved to the SVN version control !
 
 - CPU
-  - Added support of AVX instruction set emulation, to enable configure with
+  - Added support for XSAVEOPT instruction, the instruction can be enabled
+    through .bochsrc CPUID option.
+  - Added support for AVX instruction set emulation, to enable configure with
         --enable-avx option
+  - Updated/Fixed instrumentation callbacks
 
 - Configure and compile
   - Added ability to configure CPUID family through .bochsrc.
     The default family value determined by configure option --enable-cpu-level.
   - Added ability to configure CPUID model through .bochsrc.
     The default model value is 3.
+  - Configure option --enable-vbe is deprecated is should not be used anymore.
+    The VBE support is always automatically compiled in, in order to enable
+    VBE support the bochsrc option "vga: extension=" has be set to "vbe". If
+    PCI is present, the "pcivga" device can be assigned to PCI slot.
 
 - I/O Devices
   - Networking
     - new networking module 'slirp' (user mode networking using Slirp and a
       builtin DHCP server)
+  - Hard drive / cdrom
+    - implemented ATA commands "READ NATIVE MAX ADDRESS" and
+      "READ NATIVE MAX ADDRESS EXT"
+  - Sound
+    - ported ES1370 soundcard emulation from Qemu, to enable configure with
+        --enable-es1370 option
 
 - SF patches applied
   [3190995] add eth backend based on Slirp by Heikki Lindholm

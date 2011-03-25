@@ -712,14 +712,14 @@ static const BxOpcodeInfo_t BxOpcodeInfoG15[8*2] = {
   /* 7 */ { BxPrefixSSE, BX_IA_SFENCE, BxOpcodeGroupSSE_ERR },
 
   /* /m form */
-  /* 0 */ { BxPrefixSSE, BX_IA_FXSAVE,  BxOpcodeGroupSSE_ERR },
-  /* 1 */ { BxPrefixSSE, BX_IA_FXRSTOR, BxOpcodeGroupSSE_ERR },
-  /* 2 */ { BxPrefixSSE, BX_IA_LDMXCSR, BxOpcodeGroupSSE_ERR },
-  /* 3 */ { BxPrefixSSE, BX_IA_STMXCSR, BxOpcodeGroupSSE_ERR },
-  /* 4 */ { BxPrefixSSE, BX_IA_XSAVE,   BxOpcodeGroupSSE_ERR },
-  /* 5 */ { BxPrefixSSE, BX_IA_XRSTOR,  BxOpcodeGroupSSE_ERR },
-  /* 6 */ { 0, BX_IA_ERROR },
-  /* 7 */ { BxPrefixSSE, BX_IA_CLFLUSH, BxOpcodeGroupSSE_ERR }
+  /* 0 */ { BxPrefixSSE, BX_IA_FXSAVE,   BxOpcodeGroupSSE_ERR },
+  /* 1 */ { BxPrefixSSE, BX_IA_FXRSTOR,  BxOpcodeGroupSSE_ERR },
+  /* 2 */ { BxPrefixSSE, BX_IA_LDMXCSR,  BxOpcodeGroupSSE_ERR },
+  /* 3 */ { BxPrefixSSE, BX_IA_STMXCSR,  BxOpcodeGroupSSE_ERR },
+  /* 4 */ { BxPrefixSSE, BX_IA_XSAVE,    BxOpcodeGroupSSE_ERR },
+  /* 5 */ { BxPrefixSSE, BX_IA_XRSTOR,   BxOpcodeGroupSSE_ERR },
+  /* 6 */ { BxPrefixSSE, BX_IA_XSAVEOPT, BxOpcodeGroupSSE_ERR },
+  /* 7 */ { BxPrefixSSE, BX_IA_CLFLUSH,  BxOpcodeGroupSSE_ERR }
 };
 
 #if BX_SUPPORT_X86_64
@@ -735,14 +735,14 @@ static const BxOpcodeInfo_t BxOpcodeInfoG15q[8*2] = {
   /* 7 */ { BxPrefixSSE, BX_IA_SFENCE, BxOpcodeGroupSSE_ERR },
 
   /* /m form */
-  /* 0 */ { BxPrefixSSE, BX_IA_FXSAVE,  BxOpcodeGroupSSE_ERR },
-  /* 1 */ { BxPrefixSSE, BX_IA_FXRSTOR, BxOpcodeGroupSSE_ERR },
-  /* 2 */ { BxPrefixSSE, BX_IA_LDMXCSR, BxOpcodeGroupSSE_ERR },
-  /* 3 */ { BxPrefixSSE, BX_IA_STMXCSR, BxOpcodeGroupSSE_ERR },
-  /* 4 */ { BxPrefixSSE, BX_IA_XSAVE,   BxOpcodeGroupSSE_ERR },
-  /* 5 */ { BxPrefixSSE, BX_IA_XRSTOR,  BxOpcodeGroupSSE_ERR },
-  /* 6 */ { 0, BX_IA_ERROR },
-  /* 7 */ { BxPrefixSSE, BX_IA_CLFLUSH, BxOpcodeGroupSSE_ERR }
+  /* 0 */ { BxPrefixSSE, BX_IA_FXSAVE,   BxOpcodeGroupSSE_ERR },
+  /* 1 */ { BxPrefixSSE, BX_IA_FXRSTOR,  BxOpcodeGroupSSE_ERR },
+  /* 2 */ { BxPrefixSSE, BX_IA_LDMXCSR,  BxOpcodeGroupSSE_ERR },
+  /* 3 */ { BxPrefixSSE, BX_IA_STMXCSR,  BxOpcodeGroupSSE_ERR },
+  /* 4 */ { BxPrefixSSE, BX_IA_XSAVE,    BxOpcodeGroupSSE_ERR },
+  /* 5 */ { BxPrefixSSE, BX_IA_XRSTOR,   BxOpcodeGroupSSE_ERR },
+  /* 6 */ { BxPrefixSSE, BX_IA_XSAVEOPT, BxOpcodeGroupSSE_ERR },
+  /* 7 */ { BxPrefixSSE, BX_IA_CLFLUSH,  BxOpcodeGroupSSE_ERR }
 };
 #endif
 
