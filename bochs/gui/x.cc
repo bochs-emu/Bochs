@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2009  The Bochs Project
+//  Copyright (C) 2001-2011  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -90,26 +90,28 @@ static unsigned long white_pixel=0, black_pixel=0;
 
 static char *progname; /* name this program was invoked by */
 
+// text display
 static unsigned int text_rows=25, text_cols=80;
+static unsigned font_width, font_height;
 static Bit8u h_panning = 0, v_panning = 0;
 static Bit16u line_compare = 1023;
+static unsigned prev_cursor_x=0;
+static unsigned prev_cursor_y=0;
 
+// graphics display
 static Window win;
 static GC gc, gc_inv, gc_headerbar, gc_headerbar_inv;
-static unsigned font_width, font_height;
 static unsigned dimension_x=0, dimension_y=0;
 static unsigned vga_bpp=8;
 
 static XImage *ximage = NULL;
 static unsigned imDepth, imWide, imBPP;
 
-// current cursor coordinates
+// mouse cursor
+static bx_bool mouse_captured = 0;
 static int prev_x=-1, prev_y=-1;
 static int current_x=-1, current_y=-1, current_z=0;
 static unsigned mouse_button_state = 0;
-
-static unsigned prev_cursor_x=0;
-static unsigned prev_cursor_y=0;
 
 static int warp_home_x = 200;
 static int warp_home_y = 200;
@@ -124,7 +126,7 @@ static void enable_cursor();
 
 static Bit32u convertStringToXKeysym (const char *string);
 
-static bx_bool x_init_done = false;
+static bx_bool x_init_done = 0;
 
 static Pixmap vgafont[256];
 
@@ -621,7 +623,7 @@ void bx_x_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsign
   }
   sprintf(bx_status_info_text, "%s enables mouse", get_toggle_info());
 
-  x_init_done = true;
+  x_init_done = 1;
   }
 
   curr_background = 0;
@@ -719,11 +721,11 @@ void bx_x_gui_c::statusbar_setitem(int element, bx_bool active, bx_bool w)
 // can change because of a gui event such as clicking on the mouse-enable
 // bitmap or pressing the middle button, or from the configuration interface.
 // In all those cases, setting the parameter value will get you here.
-void bx_x_gui_c::mouse_enabled_changed_specific (bx_bool val)
+void bx_x_gui_c::mouse_enabled_changed_specific(bx_bool val)
 {
-  BX_DEBUG (("mouse_enabled=%d, x11 specific code", val?1:0));
+  mouse_captured = val;
   if (val) {
-    BX_INFO(("[x] Mouse on"));
+    BX_INFO(("Mouse capture on"));
     sprintf(bx_status_info_text, "%s disables mouse", get_toggle_info());
     set_status_text(0, bx_status_info_text, 0);
     mouse_enable_x = current_x;
@@ -732,7 +734,7 @@ void bx_x_gui_c::mouse_enabled_changed_specific (bx_bool val)
     // Move the cursor to a 'safe' place
     warp_cursor(warp_home_x-current_x, warp_home_y-current_y);
   } else {
-    BX_INFO(("[x] Mouse off"));
+    BX_INFO(("Mouse capture off"));
     sprintf(bx_status_info_text, "%s enables mouse", get_toggle_info());
     set_status_text(0, bx_status_info_text, 0);
     enable_cursor();
@@ -983,22 +985,14 @@ void send_keyboard_mouse_status(void)
     dz = current_z;
     warp_cursor(warp_home_x-current_x, warp_home_y-current_y);
 
-    DEV_mouse_motion_ext (dx, dy, dz, mouse_button_state);
-    //if (warped) {
-    //  prev_x = current_x = -1;
-    //  prev_y = current_y = -1;
-    //}
-    //else {
-      prev_x = current_x;
-      prev_y = current_y;
-    //}
-  }
-  else {
+    DEV_mouse_motion_ext(dx, dy, dz, mouse_button_state);
+    prev_x = current_x;
+    prev_y = current_y;
+  } else {
     if ((current_x!=-1) && (current_y!=-1)) {
       prev_x = current_x;
       prev_y = current_y;
-    }
-    else {
+    } else {
       prev_x = current_x = -1;
       prev_y = current_y = -1;
     }
@@ -1822,9 +1816,7 @@ void bx_x_gui_c::exit(void)
 
 static void warp_cursor (int dx, int dy)
 {
-  if (SIM->get_param_bool(BXPN_MOUSE_ENABLED)->get() &&
-     (warp_dx || warp_dy || dx || dy)
-     ) {
+  if (mouse_captured && (warp_dx || warp_dy || dx || dy)) {
      warp_dx = dx;
      warp_dy = dy;
      XWarpPointer(bx_x_display, None, None, 0, 0, 0, 0, dx, dy);
