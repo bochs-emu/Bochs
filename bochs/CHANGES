@@ -10,6 +10,8 @@ Bochs repository moved to the SVN version control !
   - Updated/Fixed instrumentation callbacks
 
 - Configure and compile
+  - Fixed Bochs manifest for Win64 compilation using Microsoft Visual Studio
+    command line compiler.
   - Added ability to configure CPUID family through .bochsrc.
     The default family value determined by configure option --enable-cpu-level.
   - Added ability to configure CPUID model through .bochsrc.
