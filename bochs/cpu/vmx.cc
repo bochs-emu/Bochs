@@ -779,7 +779,7 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckHostState(void)
     bx_bool lme = (host_state->efer_msr >>  8) & 0x1;
     bx_bool lma = (host_state->efer_msr >> 10) & 0x1;
     if (lma != lme || lma != x86_64_host) {
-      BX_ERROR(("VMFAIL: VMCS host EFER (0x%08x) inconsistent value !", host_state->efer_msr));
+      BX_ERROR(("VMFAIL: VMCS host EFER (0x%08x) inconsistent value !", (Bit32u) host_state->efer_msr));
       return VMXERR_VMENTRY_INVALID_VM_HOST_STATE_FIELD;
     }
   }
@@ -1292,7 +1292,7 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
     bx_bool lme = (guest.efer_msr >>  8) & 0x1;
     bx_bool lma = (guest.efer_msr >> 10) & 0x1;
     if (lma != lme || lma != x86_64_guest) {
-      BX_ERROR(("VMENTER FAIL: VMCS guest EFER (0x%08x) inconsistent value !", guest.efer_msr));
+      BX_ERROR(("VMENTER FAIL: VMCS guest EFER (0x%08x) inconsistent value !", (Bit32u) guest.efer_msr));
       return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
     }
   }
