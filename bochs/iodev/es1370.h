@@ -79,7 +79,7 @@ private:
   BX_ES1370_SMF void set_irq_level(bx_bool level);
   BX_ES1370_SMF void update_status(Bit32u new_status);
   BX_ES1370_SMF void check_lower_irq(Bit32u sctl);
-  BX_ES1370_SMF void update_voices(Bit32u ctl, Bit32u sctl);
+  BX_ES1370_SMF void update_voices(Bit32u ctl, Bit32u sctl, bx_bool force);
 
   static void es1370_timer_handler(void *);
   void es1370_timer(void);

@@ -228,6 +228,9 @@ void bx_es1370_c::after_restore_state(void)
                           64, &es1370_iomask[0], "ES1370")) {
     BX_INFO(("new base address: 0x%04x", BX_ES1370_THIS s.base_ioaddr));
   }
+  BX_ES1370_THIS check_lower_irq(BX_ES1370_THIS s.sctl);
+  BX_ES1370_THIS s.dac2_outputinit = 0;
+  BX_ES1370_THIS update_voices(BX_ES1370_THIS s.ctl, BX_ES1370_THIS s.sctl, 1);
 }
 
 // static IO port read callback handler
@@ -341,7 +344,7 @@ void bx_es1370_c::write(Bit32u address, Bit32u value, unsigned io_len)
   Bit32u shift, mask;
   unsigned i;
 
-  BX_DEBUG(("register write to address 0x%04x - ", address));
+  BX_DEBUG(("register write to address 0x%04x - value = 0x%08x", address, value));
 
   offset = address - BX_ES1370_THIS s.base_ioaddr;
   if (offset >= 0x30) {
@@ -353,7 +356,7 @@ void bx_es1370_c::write(Bit32u address, Bit32u value, unsigned io_len)
     case ES1370_CTL:
       mask = (0xffffffff >> ((4 - io_len) << 3)) << shift;
       value = (BX_ES1370_THIS s.ctl & ~mask) | ((value << shift) & mask);
-      BX_ES1370_THIS update_voices(value, BX_ES1370_THIS s.sctl);
+      BX_ES1370_THIS update_voices(value, BX_ES1370_THIS s.sctl, 0);
       break;
     case ES1370_UART_DATA:
     case ES1370_UART_CTL:
@@ -371,7 +374,7 @@ void bx_es1370_c::write(Bit32u address, Bit32u value, unsigned io_len)
       mask = (0xffffffff >> ((4 - io_len) << 3)) << shift;
       value = (BX_ES1370_THIS s.sctl & ~mask) | ((value << shift) & mask);
       BX_ES1370_THIS check_lower_irq(value);
-      BX_ES1370_THIS update_voices(BX_ES1370_THIS s.ctl, value);
+      BX_ES1370_THIS update_voices(BX_ES1370_THIS s.ctl, value, 0);
       break;
     case ES1370_DAC1_SCOUNT:
     case ES1370_DAC2_SCOUNT:
@@ -531,7 +534,7 @@ void bx_es1370_c::check_lower_irq(Bit32u sctl)
   }
 }
 
-void bx_es1370_c::update_voices(Bit32u ctl, Bit32u sctl)
+void bx_es1370_c::update_voices(Bit32u ctl, Bit32u sctl, bx_bool force)
 {
   unsigned i;
   Bit32u old_freq, new_freq, old_fmt, new_fmt;
@@ -552,7 +555,7 @@ void bx_es1370_c::update_voices(Bit32u ctl, Bit32u sctl)
       new_freq = 1411200 / (((ctl >> 16) & 0x1fff) + 2);
     }
 
-    if ((old_fmt != new_fmt) || (old_freq != new_freq)) {
+    if (((old_fmt != new_fmt) || (old_freq != new_freq)) || force) {
       d->shift = (new_fmt & 1) + (new_fmt >> 1);
       if (new_freq) {
         if (i == DAC2_CHANNEL) {
@@ -567,8 +570,8 @@ void bx_es1370_c::update_voices(Bit32u ctl, Bit32u sctl)
         }
       }
     }
-    if (((ctl ^ BX_ES1370_THIS s.ctl) & ctl_ch_en[i]) ||
-        ((sctl ^ BX_ES1370_THIS s.sctl) & sctl_ch_pause[i])) {
+    if ((((ctl ^ BX_ES1370_THIS s.ctl) & ctl_ch_en[i]) ||
+        ((sctl ^ BX_ES1370_THIS s.sctl) & sctl_ch_pause[i])) || force) {
       bx_bool on = ((ctl & ctl_ch_en[i]) && !(sctl & sctl_ch_pause[i]));
 
       if (i == DAC1_CHANNEL) {
