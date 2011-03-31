@@ -192,6 +192,8 @@ void bx_es1370_c::reset(unsigned type)
     BX_ES1370_THIS s.chan[i].leftover = 0;
   }
 
+  DEV_gameport_set_enabled(0);
+
   // Deassert IRQ
   set_irq_level(0);
 }
@@ -356,6 +358,9 @@ void bx_es1370_c::write(Bit32u address, Bit32u value, unsigned io_len)
     case ES1370_CTL:
       mask = (0xffffffff >> ((4 - io_len) << 3)) << shift;
       value = (BX_ES1370_THIS s.ctl & ~mask) | ((value << shift) & mask);
+      if ((value ^ BX_ES1370_THIS s.ctl) & 0x04) {
+        DEV_gameport_set_enabled((value & 0x04) != 0);
+      }
       BX_ES1370_THIS update_voices(value, BX_ES1370_THIS s.sctl, 0);
       break;
     case ES1370_UART_DATA:
@@ -555,7 +560,7 @@ void bx_es1370_c::update_voices(Bit32u ctl, Bit32u sctl, bx_bool force)
       new_freq = 1411200 / (((ctl >> 16) & 0x1fff) + 2);
     }
 
-    if (((old_fmt != new_fmt) || (old_freq != new_freq)) || force) {
+    if ((old_fmt != new_fmt) || (old_freq != new_freq) || force) {
       d->shift = (new_fmt & 1) + (new_fmt >> 1);
       if (new_freq) {
         if (i == DAC2_CHANNEL) {
@@ -570,8 +575,8 @@ void bx_es1370_c::update_voices(Bit32u ctl, Bit32u sctl, bx_bool force)
         }
       }
     }
-    if ((((ctl ^ BX_ES1370_THIS s.ctl) & ctl_ch_en[i]) ||
-        ((sctl ^ BX_ES1370_THIS s.sctl) & sctl_ch_pause[i])) || force) {
+    if (((ctl ^ BX_ES1370_THIS s.ctl) & ctl_ch_en[i]) ||
+        ((sctl ^ BX_ES1370_THIS s.sctl) & sctl_ch_pause[i]) || force) {
       bx_bool on = ((ctl & ctl_ch_en[i]) && !(sctl & sctl_ch_pause[i]));
 
       if (i == DAC1_CHANNEL) {

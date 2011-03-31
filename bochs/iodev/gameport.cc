@@ -57,6 +57,7 @@ bx_gameport_c *theGameport = NULL;
 int libgameport_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
 {
   theGameport = new bx_gameport_c();
+  bx_devices.pluginGameport = theGameport;
   BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theGameport, BX_PLUGIN_GAMEPORT);
   return(0); // Success
 }
@@ -86,6 +87,8 @@ void bx_gameport_c::init(void)
     DEV_register_iowrite_handler(this, write_handler, addr, "Gameport", 1);
   }
 
+  // always enabled unless controlled by external device
+  BX_GAMEPORT_THIS enabled = 1;
   BX_GAMEPORT_THIS port = 0xf0;
   BX_GAMEPORT_THIS write_usec = 0;
   BX_GAMEPORT_THIS timer_x = 0;
@@ -115,7 +118,8 @@ void bx_gameport_c::reset(unsigned type)
 
 void bx_gameport_c::register_state(void)
 {
-  bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "gameport", "Gameport State", 6);
+  bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "gameport", "Gameport State", 7);
+  BXRS_PARAM_BOOL(list, enabled, BX_GAMEPORT_THIS enabled);
   BXRS_HEX_PARAM_FIELD(list, port, BX_GAMEPORT_THIS port);
   BXRS_DEC_PARAM_FIELD(list, delay_x, BX_GAMEPORT_THIS delay_x);
   BXRS_DEC_PARAM_FIELD(list, delay_y, BX_GAMEPORT_THIS delay_y);
@@ -189,25 +193,30 @@ Bit32u bx_gameport_c::read(Bit32u address, unsigned io_len)
 #endif // !BX_USE_GAMEPORT_SMF
   Bit64u usec;
 
-  if (BX_GAMEPORT_THIS joyfd >= 0) {
-    poll_joydev();
-    usec = bx_pc_system.time_usec();
-    if (BX_GAMEPORT_THIS timer_x) {
-      if ((usec - BX_GAMEPORT_THIS write_usec) >= BX_GAMEPORT_THIS delay_x) {
-        BX_GAMEPORT_THIS port &= 0xfe;
-        BX_GAMEPORT_THIS timer_x = 0;
+  if (BX_GAMEPORT_THIS enabled) {
+    if (BX_GAMEPORT_THIS joyfd >= 0) {
+      poll_joydev();
+      usec = bx_pc_system.time_usec();
+      if (BX_GAMEPORT_THIS timer_x) {
+        if ((usec - BX_GAMEPORT_THIS write_usec) >= BX_GAMEPORT_THIS delay_x) {
+          BX_GAMEPORT_THIS port &= 0xfe;
+          BX_GAMEPORT_THIS timer_x = 0;
+        }
       }
-    }
-    if (BX_GAMEPORT_THIS timer_y) {
-      if ((usec - BX_GAMEPORT_THIS write_usec) >= BX_GAMEPORT_THIS delay_y) {
-        BX_GAMEPORT_THIS port &= 0xfd;
-        BX_GAMEPORT_THIS timer_y = 0;
+      if (BX_GAMEPORT_THIS timer_y) {
+        if ((usec - BX_GAMEPORT_THIS write_usec) >= BX_GAMEPORT_THIS delay_y) {
+          BX_GAMEPORT_THIS port &= 0xfd;
+          BX_GAMEPORT_THIS timer_y = 0;
+        }
       }
+    } else {
+      BX_DEBUG(("read: joystick not present"));
     }
+    return BX_GAMEPORT_THIS port;
   } else {
-    BX_DEBUG(("read: joystick not present"));
+    BX_DEBUG(("read: gameport disabled"));
+    return 0xff;
   }
-  return BX_GAMEPORT_THIS port;
 }
 
 
@@ -227,8 +236,12 @@ void bx_gameport_c::write(Bit32u address, Bit32u value, unsigned io_len)
   UNUSED(this_ptr);
 #endif // !BX_USE_GAMEPORT_SMF
 
-  BX_GAMEPORT_THIS write_usec = bx_pc_system.time_usec();
-  BX_GAMEPORT_THIS timer_x = 1;
-  BX_GAMEPORT_THIS timer_y = 1;
-  BX_GAMEPORT_THIS port |= 0x0f;
+  if (BX_GAMEPORT_THIS enabled) {
+    BX_GAMEPORT_THIS write_usec = bx_pc_system.time_usec();
+    BX_GAMEPORT_THIS timer_x = 1;
+    BX_GAMEPORT_THIS timer_y = 1;
+    BX_GAMEPORT_THIS port |= 0x0f;
+  } else {
+    BX_DEBUG(("write: gameport disabled"));
+  }
 }

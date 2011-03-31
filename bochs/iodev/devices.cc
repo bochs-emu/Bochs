@@ -89,6 +89,9 @@ void bx_devices_c::init_stubs()
 #if BX_SUPPORT_APIC
   pluginIOAPIC = &stubIOAPIC;
 #endif
+#if BX_SUPPORT_GAMEPORT
+  pluginGameport = &stubGameport;
+#endif
 #if BX_SUPPORT_PCIUSB
   pluginUsbDevCtl = &stubUsbDevCtl;
 #endif

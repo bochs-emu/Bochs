@@ -341,6 +341,15 @@ public:
 };
 #endif
 
+#if BX_SUPPORT_GAMEPORT
+class BOCHSAPI bx_game_stub_c : public bx_devmodel_c {
+public:
+  virtual void set_enabled(bx_bool val) {
+    STUBFUNC(gameport, set_enabled);
+  }
+};
+#endif
+
 #if BX_SUPPORT_PCIUSB
 class BOCHSAPI bx_usb_devctl_stub_c : public bx_devmodel_c {
 public:
@@ -447,6 +456,9 @@ public:
 #if BX_SUPPORT_APIC
   bx_ioapic_stub_c  *pluginIOAPIC;
 #endif
+#if BX_SUPPORT_GAMEPORT
+  bx_game_stub_c  *pluginGameport;
+#endif
 #if BX_SUPPORT_PCIUSB
   bx_usb_devctl_stub_c  *pluginUsbDevCtl;
 #endif
@@ -480,6 +492,9 @@ public:
 #endif
 #if BX_SUPPORT_APIC
   bx_ioapic_stub_c stubIOAPIC;
+#endif
+#if BX_SUPPORT_GAMEPORT
+  bx_game_stub_c stubGameport;
 #endif
 #if BX_SUPPORT_PCIUSB
   bx_usb_devctl_stub_c stubUsbDevCtl;

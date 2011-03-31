@@ -253,6 +253,9 @@ extern "C" {
 ///////// Sound macro
 #define DEV_sound_init_module(a,b,c) bx_devices.pluginSoundModCtl->init_module(a,(void**)b,c)
 
+///////// Gameport macro
+#define DEV_gameport_set_enabled(a) bx_devices.pluginGameport->set_enabled(a)
+
 
 #if BX_HAVE_DLFCN_H
 #include <dlfcn.h>
