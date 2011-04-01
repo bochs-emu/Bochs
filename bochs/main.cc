@@ -115,9 +115,9 @@ void bx_print_header()
     bx_center_print(stdout, buffer, 72);
 #ifdef __DATE__
 #ifdef __TIME__
-    sprintf(buffer, "Compiled at %s, %s\n", __DATE__, __TIME__);
+    sprintf(buffer, "Compiled on %s at %s\n", __DATE__, __TIME__);
 #else
-    sprintf(buffer, "Compiled at %s\n", __DATE__);
+    sprintf(buffer, "Compiled on %s\n", __DATE__);
 #endif
     bx_center_print(stdout, buffer, 72);
 #endif
@@ -1028,9 +1028,9 @@ void bx_init_hardware()
   BX_INFO(("  %s", REL_STRING));
 #ifdef __DATE__
 #ifdef __TIME__
-  BX_INFO(("Compiled at %s, %s", __DATE__, __TIME__));
+  BX_INFO(("Compiled on %s at %s", __DATE__, __TIME__));
 #else
-  BX_INFO(("Compiled at %s", __DATE__));
+  BX_INFO(("Compiled on %s", __DATE__));
 #endif
 #endif
   BX_INFO(("System configuration"));
