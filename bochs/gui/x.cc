@@ -1980,14 +1980,23 @@ void bx_x_gui_c::get_capabilities(Bit16u *xres, Bit16u *yres, Bit16u *bpp)
 {
   int num_sizes;
   Rotation original_rotation;
+  int event_base, error_base;
 
   Display *dpy = XOpenDisplay(NULL);
   Window root = RootWindow(dpy, 0);
-  XRRScreenSize *xrrs = XRRSizes(dpy, 0, &num_sizes);
-  XRRScreenConfiguration *conf = XRRGetScreenInfo(dpy, root);
-  SizeID original_size_id = XRRConfigCurrentConfiguration(conf, &original_rotation);
-  *xres = xrrs[original_size_id].width;
-  *yres = xrrs[original_size_id].height;
+
+  if (XRRQueryExtension (dpy, &event_base, &error_base)) {
+    XRRScreenSize *xrrs = XRRSizes(dpy, 0, &num_sizes);
+    XRRScreenConfiguration *conf = XRRGetScreenInfo(dpy, root);
+    SizeID original_size_id = XRRConfigCurrentConfiguration(conf, &original_rotation);
+    *xres = xrrs[original_size_id].width;
+    *yres = xrrs[original_size_id].height;
+  }
+  else {
+    int screen = DefaultScreen(dpy);
+    *xres = DisplayWidth(dpy, screen);
+    *yres = DisplayHeight(dpy, screen);
+   }
   XCloseDisplay(dpy);
   // always return 32 bit depth
   *bpp = 32;
