@@ -81,7 +81,7 @@ typedef struct {
   Bit32u   drq_index;
   Bit8u    current_command;
   Bit8u    multiple_sectors;
-  Bit8u    lba_mode;
+  bx_bool  lba_mode;
   bx_bool  packet_dma;
   Bit8u    mdma_mode;
   Bit8u    udma_mode;
@@ -202,7 +202,7 @@ public:
 private:
 
   BX_HD_SMF bx_bool calculate_logical_address(Bit8u channel, Bit64s *sector) BX_CPP_AttrRegparmN(2);
-  BX_HD_SMF void increment_address(Bit8u channel) BX_CPP_AttrRegparmN(1);
+  BX_HD_SMF void increment_address(Bit8u channel, Bit64s *sector) BX_CPP_AttrRegparmN(2);
   BX_HD_SMF void identify_drive(Bit8u channel);
   BX_HD_SMF void identify_ATAPI_drive(Bit8u channel);
   BX_HD_SMF void command_aborted(Bit8u channel, unsigned command);

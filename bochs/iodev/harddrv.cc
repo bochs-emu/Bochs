@@ -607,7 +607,7 @@ void bx_hard_drive_c::register_state(void)
         new bx_shadow_num_c(drive, "drq_index", &BX_CONTROLLER(i, j).drq_index, BASE_HEX);
         new bx_shadow_num_c(drive, "current_command", &BX_CONTROLLER(i, j).current_command, BASE_HEX);
         new bx_shadow_num_c(drive, "multiple_sectors", &BX_CONTROLLER(i, j).multiple_sectors, BASE_HEX);
-        new bx_shadow_num_c(drive, "lba_mode", &BX_CONTROLLER(i, j).lba_mode, BASE_HEX);
+        new bx_shadow_bool_c(drive, "lba_mode", &BX_CONTROLLER(i, j).lba_mode);
         new bx_shadow_num_c(drive, "packet_dma", &BX_CONTROLLER(i, j).packet_dma, BASE_HEX);
         new bx_shadow_bool_c(drive, "control_reset", &BX_CONTROLLER(i, j).control.reset);
         new bx_shadow_bool_c(drive, "control_disable_irq", &BX_CONTROLLER(i, j).control.disable_irq);
@@ -923,86 +923,9 @@ Bit32u bx_hard_drive_c::read(Bit32u address, unsigned io_len)
           }
           break;
 
-	// List all the read operations that are defined in the ATA/ATAPI spec
-	// that we don't support.  Commands that are listed here will cause a
-	// BX_ERROR, which is non-fatal, and the command will be aborted.
-	case 0x08: BX_ERROR(("read cmd 0x08 (DEVICE RESET) not supported")); command_aborted(channel, 0x08); break;
-	case 0x10: BX_ERROR(("read cmd 0x10 (RECALIBRATE) not supported")); command_aborted(channel, 0x10); break;
-	case 0x22: BX_ERROR(("read cmd 0x22 (READ LONG) not supported")); command_aborted(channel, 0x22); break;
-	case 0x23: BX_ERROR(("read cmd 0x23 (READ LONG NO RETRY) not supported")); command_aborted(channel, 0x23); break;
-	case 0x25: BX_ERROR(("read cmd 0x25 (READ DMA EXT) not supported")); command_aborted(channel, 0x25); break;
-	case 0x26: BX_ERROR(("read cmd 0x26 (READ DMA QUEUED EXT) not supported")); command_aborted(channel, 0x26); break;
-	case 0x2A: BX_ERROR(("read cmd 0x2A (READ STREAM DMA) not supported")); command_aborted(channel, 0x2A); break;
-	case 0x2B: BX_ERROR(("read cmd 0x2B (READ STREAM PIO) not supported")); command_aborted(channel, 0x2B); break;
-	case 0x2F: BX_ERROR(("read cmd 0x2F (READ LOG EXT) not supported")); command_aborted(channel, 0x2F); break;
-	case 0x30: BX_ERROR(("read cmd 0x30 (WRITE SECTORS) not supported")); command_aborted(channel, 0x30); break;
-	case 0x31: BX_ERROR(("read cmd 0x31 (WRITE SECTORS NO RETRY) not supported")); command_aborted(channel, 0x31); break;
-	case 0x32: BX_ERROR(("read cmd 0x32 (WRITE LONG) not supported")); command_aborted(channel, 0x32); break;
-	case 0x33: BX_ERROR(("read cmd 0x33 (WRITE LONG NO RETRY) not supported")); command_aborted(channel, 0x33); break;
-	case 0x34: BX_ERROR(("read cmd 0x34 (WRITE SECTORS EXT) not supported")); command_aborted(channel, 0x34); break;
-	case 0x35: BX_ERROR(("read cmd 0x35 (WRITE DMA EXT) not supported")); command_aborted(channel, 0x35); break;
-	case 0x36: BX_ERROR(("read cmd 0x36 (WRITE DMA QUEUED EXT) not supported")); command_aborted(channel, 0x36); break;
-	case 0x37: BX_ERROR(("read cmd 0x37 (SET MAX ADDRESS EXT) not supported")); command_aborted(channel, 0x37); break;
-	case 0x38: BX_ERROR(("read cmd 0x38 (CFA WRITE SECTORS W/OUT ERASE) not supported")); command_aborted(channel, 0x38); break;
-	case 0x39: BX_ERROR(("read cmd 0x39 (WRITE MULTIPLE EXT) not supported")); command_aborted(channel, 0x39); break;
-	case 0x3A: BX_ERROR(("read cmd 0x3A (WRITE STREAM DMA) not supported")); command_aborted(channel, 0x3A); break;
-	case 0x3B: BX_ERROR(("read cmd 0x3B (WRITE STREAM PIO) not supported")); command_aborted(channel, 0x3B); break;
-	case 0x3F: BX_ERROR(("read cmd 0x3F (WRITE LOG EXT) not supported")); command_aborted(channel, 0x3F); break;
-	case 0x40: BX_ERROR(("read cmd 0x40 (READ VERIFY SECTORS) not supported")); command_aborted(channel, 0x40); break;
-	case 0x41: BX_ERROR(("read cmd 0x41 (READ VERIFY SECTORS NO RETRY) not supported")); command_aborted(channel, 0x41); break;
-	case 0x42: BX_ERROR(("read cmd 0x42 (READ VERIFY SECTORS EXT) not supported")); command_aborted(channel, 0x42); break;
-	case 0x50: BX_ERROR(("read cmd 0x50 (FORMAT TRACK) not supported")); command_aborted(channel, 0x50); break;
-	case 0x51: BX_ERROR(("read cmd 0x51 (CONFIGURE STREAM) not supported")); command_aborted(channel, 0x51); break;
-	case 0x70: BX_ERROR(("read cmd 0x70 (SEEK) not supported")); command_aborted(channel, 0x70); break;
-	case 0x87: BX_ERROR(("read cmd 0x87 (CFA TRANSLATE SECTOR) not supported")); command_aborted(channel, 0x87); break;
-	case 0x90: BX_ERROR(("read cmd 0x90 (EXECUTE DEVICE DIAGNOSTIC) not supported")); command_aborted(channel, 0x90); break;
-	case 0x91: BX_ERROR(("read cmd 0x91 (INITIALIZE DEVICE PARAMETERS) not supported")); command_aborted(channel, 0x91); break;
-	case 0x92: BX_ERROR(("read cmd 0x92 (DOWNLOAD MICROCODE) not supported")); command_aborted(channel, 0x92); break;
-	case 0x94: BX_ERROR(("read cmd 0x94 (STANDBY IMMEDIATE) not supported")); command_aborted(channel, 0x94); break;
-	case 0x95: BX_ERROR(("read cmd 0x95 (IDLE IMMEDIATE) not supported")); command_aborted(channel, 0x95); break;
-	case 0x96: BX_ERROR(("read cmd 0x96 (STANDBY) not supported")); command_aborted(channel, 0x96); break;
-	case 0x97: BX_ERROR(("read cmd 0x97 (IDLE) not supported")); command_aborted(channel, 0x97); break;
-	case 0x98: BX_ERROR(("read cmd 0x98 (CHECK POWER MODE) not supported")); command_aborted(channel, 0x98); break;
-	case 0x99: BX_ERROR(("read cmd 0x99 (SLEEP) not supported")); command_aborted(channel, 0x99); break;
-	case 0xA2: BX_ERROR(("read cmd 0xA2 (SERVICE) not supported")); command_aborted(channel, 0xA2); break;
-	case 0xB0: BX_ERROR(("read cmd 0xB0 (SMART DISABLE OPERATIONS) not supported")); command_aborted(channel, 0xB0); break;
-	case 0xB1: BX_ERROR(("read cmd 0xB1 (DEVICE CONFIGURATION FREEZE LOCK) not supported")); command_aborted(channel, 0xB1); break;
-	case 0xC0: BX_ERROR(("read cmd 0xC0 (CFA ERASE SECTORS) not supported")); command_aborted(channel, 0xC0); break;
-	case 0xC5: BX_ERROR(("read cmd 0xC5 (WRITE MULTIPLE) not supported")); command_aborted(channel, 0xC5); break;
-	case 0xC6: BX_ERROR(("read cmd 0xC6 (SET MULTIPLE MODE) not supported")); command_aborted(channel, 0xC6); break;
-	case 0xC7: BX_ERROR(("read cmd 0xC7 (READ DMA QUEUED) not supported")); command_aborted(channel, 0xC7); break;
-	case 0xC8: BX_ERROR(("read cmd 0xC8 (READ DMA) not supported")); command_aborted(channel, 0xC8); break;
-	case 0xC9: BX_ERROR(("read cmd 0xC9 (READ DMA NO RETRY) not supported")); command_aborted(channel, 0xC9); break;
-	case 0xCA: BX_ERROR(("read cmd 0xCA (WRITE DMA) not supported")); command_aborted(channel, 0xCA); break;
-	case 0xCC: BX_ERROR(("read cmd 0xCC (WRITE DMA QUEUED) not supported")); command_aborted(channel, 0xCC); break;
-	case 0xCD: BX_ERROR(("read cmd 0xCD (CFA WRITE MULTIPLE W/OUT ERASE) not supported")); command_aborted(channel, 0xCD); break;
-	case 0xD1: BX_ERROR(("read cmd 0xD1 (CHECK MEDIA CARD TYPE) not supported")); command_aborted(channel, 0xD1); break;
-	case 0xDA: BX_ERROR(("read cmd 0xDA (GET MEDIA STATUS) not supported")); command_aborted(channel, 0xDA); break;
-	case 0xDE: BX_ERROR(("read cmd 0xDE (MEDIA LOCK) not supported")); command_aborted(channel, 0xDE); break;
-	case 0xDF: BX_ERROR(("read cmd 0xDF (MEDIA UNLOCK) not supported")); command_aborted(channel, 0xDF); break;
-	case 0xE0: BX_ERROR(("read cmd 0xE0 (STANDBY IMMEDIATE) not supported")); command_aborted(channel, 0xE0); break;
-	case 0xE1: BX_ERROR(("read cmd 0xE1 (IDLE IMMEDIATE) not supported")); command_aborted(channel, 0xE1); break;
-	case 0xE2: BX_ERROR(("read cmd 0xE2 (STANDBY) not supported")); command_aborted(channel, 0xE2); break;
-	case 0xE3: BX_ERROR(("read cmd 0xE3 (IDLE) not supported")); command_aborted(channel, 0xE3); break;
-	case 0xE4: BX_ERROR(("read cmd 0xE4 (READ BUFFER) not supported")); command_aborted(channel, 0xE4); break;
-	case 0xE5: BX_ERROR(("read cmd 0xE5 (CHECK POWER MODE) not supported")); command_aborted(channel, 0xE5); break;
-	case 0xE6: BX_ERROR(("read cmd 0xE6 (SLEEP) not supported")); command_aborted(channel, 0xE6); break;
-	case 0xE7: BX_ERROR(("read cmd 0xE7 (FLUSH CACHE) not supported")); command_aborted(channel, 0xE7); break;
-	case 0xE8: BX_ERROR(("read cmd 0xE8 (WRITE BUFFER) not supported")); command_aborted(channel, 0xE8); break;
-	case 0xEA: BX_ERROR(("read cmd 0xEA (FLUSH CACHE EXT) not supported")); command_aborted(channel, 0xEA); break;
-	case 0xED: BX_ERROR(("read cmd 0xED (MEDIA EJECT) not supported")); command_aborted(channel, 0xED); break;
-	case 0xEF: BX_ERROR(("read cmd 0xEF (SET FEATURES) not supported")); command_aborted(channel, 0xEF); break;
-	case 0xF1: BX_ERROR(("read cmd 0xF1 (SECURITY SET PASSWORD) not supported")); command_aborted(channel, 0xF1); break;
-	case 0xF2: BX_ERROR(("read cmd 0xF2 (SECURITY UNLOCK) not supported")); command_aborted(channel, 0xF2); break;
-	case 0xF3: BX_ERROR(("read cmd 0xF3 (SECURITY ERASE PREPARE) not supported")); command_aborted(channel, 0xF3); break;
-	case 0xF4: BX_ERROR(("read cmd 0xF4 (SECURITY ERASE UNIT) not supported")); command_aborted(channel, 0xF4); break;
-	case 0xF5: BX_ERROR(("read cmd 0xF5 (SECURITY FREEZE LOCK) not supported")); command_aborted(channel, 0xF5); break;
-	case 0xF6: BX_ERROR(("read cmd 0xF6 (SECURITY DISABLE PASSWORD) not supported")); command_aborted(channel, 0xF6); break;
-	case 0xF9: BX_ERROR(("read cmd 0xF9 (SET MAX ADDRESS) not supported")); command_aborted(channel, 0xF9); break;
-
         default:
-          BX_PANIC(("IO read(0x%04x): current command is %02xh", address,
-            (unsigned) BX_SELECTED_CONTROLLER(channel).current_command));
+          BX_ERROR(("read from 0x%04x: current command is 0x%02x", address,
+                    BX_SELECTED_CONTROLLER(channel).current_command));
       }
       break;
 
@@ -1034,7 +957,7 @@ Bit32u bx_hard_drive_c::read(Bit32u address, unsigned io_len)
       // b4: DRV
       // b3..0 HD3..HD0
       value8 = (1 << 7) |
-               ((BX_SELECTED_CONTROLLER(channel).lba_mode>0) << 6) |
+               (BX_SELECTED_CONTROLLER(channel).lba_mode << 6) |
                (1 << 5) | // 01b = 512 sector size
                (BX_HD_THIS channels[channel].drive_select << 4) |
                (BX_SELECTED_CONTROLLER(channel).head_no << 0);
@@ -1921,7 +1844,7 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
           BX_DEBUG(("IO write 0x%04x (%02x): not 1x1xxxxxb", address, (unsigned) value));
         Bit32u drvsel = BX_HD_THIS channels[channel].drive_select = (value >> 4) & 0x01;
         WRITE_HEAD_NO(channel,value & 0xf);
-        if (BX_SELECTED_CONTROLLER(channel).lba_mode == 0 && ((value >> 6) & 1) == 1)
+        if (!BX_SELECTED_CONTROLLER(channel).lba_mode && ((value >> 6) & 1) == 1)
           BX_DEBUG(("enabling LBA mode"));
         WRITE_LBA_MODE(channel,(value >> 6) & 1);
         if (!BX_SELECTED_IS_PRESENT(channel)) {
@@ -2608,39 +2531,35 @@ bx_hard_drive_c::calculate_logical_address(Bit8u channel, Bit64s *sector)
       (Bit32u)(BX_SELECTED_CONTROLLER(channel).head_no * BX_SELECTED_DRIVE(channel).hdimage->sectors) +
       (BX_SELECTED_CONTROLLER(channel).sector_no - 1);
   }
-  Bit32u sector_count=
-    (Bit32u)BX_SELECTED_DRIVE(channel).hdimage->cylinders *
-    (Bit32u)BX_SELECTED_DRIVE(channel).hdimage->heads *
-    (Bit32u)BX_SELECTED_DRIVE(channel).hdimage->sectors;
 
+  Bit64s sector_count = BX_SELECTED_DRIVE(channel).hdimage->hd_size / 512;
   if (logical_sector >= sector_count) {
-    BX_ERROR (("calc_log_addr: out of bounds (%d/%d)", (Bit32u)logical_sector, sector_count));
+    BX_ERROR (("calc_log_addr: out of bounds ("FMT_LL"d/"FMT_LL"d)", logical_sector, sector_count));
     return 0;
   }
   *sector = logical_sector;
   return 1;
 }
 
-  void BX_CPP_AttrRegparmN(1)
-bx_hard_drive_c::increment_address(Bit8u channel)
+  void BX_CPP_AttrRegparmN(2)
+bx_hard_drive_c::increment_address(Bit8u channel, Bit64s *sector)
 {
   BX_SELECTED_CONTROLLER(channel).sector_count--;
   BX_SELECTED_CONTROLLER(channel).num_sectors--;
 
   if (BX_SELECTED_CONTROLLER(channel).lba_mode) {
-    Bit64s current_address = 0;
-    calculate_logical_address(channel, &current_address);
-    current_address++;
+    Bit64s logical_sector = *sector;
+    logical_sector++;
     if (!BX_SELECTED_CONTROLLER(channel).lba48) {
-      BX_SELECTED_CONTROLLER(channel).head_no = (Bit8u)((current_address >> 24) & 0xf);
-      BX_SELECTED_CONTROLLER(channel).cylinder_no = (Bit16u)((current_address >> 8) & 0xffff);
-      BX_SELECTED_CONTROLLER(channel).sector_no = (Bit8u)((current_address) & 0xff);
+      BX_SELECTED_CONTROLLER(channel).head_no = (Bit8u)((logical_sector >> 24) & 0xf);
+      BX_SELECTED_CONTROLLER(channel).cylinder_no = (Bit16u)((logical_sector >> 8) & 0xffff);
+      BX_SELECTED_CONTROLLER(channel).sector_no = (Bit8u)((logical_sector) & 0xff);
     } else {
-      BX_SELECTED_CONTROLLER(channel).hob.hcyl = (Bit8u)((current_address >> 40) & 0xff);
-      BX_SELECTED_CONTROLLER(channel).hob.lcyl = (Bit8u)((current_address >> 32) & 0xff);
-      BX_SELECTED_CONTROLLER(channel).hob.sector = (Bit8u)((current_address >> 24) & 0xff);
-      BX_SELECTED_CONTROLLER(channel).cylinder_no = (Bit16u)((current_address >> 8) & 0xffff);
-      BX_SELECTED_CONTROLLER(channel).sector_no = (Bit8u)((current_address) & 0xff);
+      BX_SELECTED_CONTROLLER(channel).hob.hcyl = (Bit8u)((logical_sector >> 40) & 0xff);
+      BX_SELECTED_CONTROLLER(channel).hob.lcyl = (Bit8u)((logical_sector >> 32) & 0xff);
+      BX_SELECTED_CONTROLLER(channel).hob.sector = (Bit8u)((logical_sector >> 24) & 0xff);
+      BX_SELECTED_CONTROLLER(channel).cylinder_no = (Bit16u)((logical_sector >> 8) & 0xffff);
+      BX_SELECTED_CONTROLLER(channel).sector_no = (Bit8u)((logical_sector) & 0xff);
     }
   } else {
     BX_SELECTED_CONTROLLER(channel).sector_no++;
@@ -3407,7 +3326,7 @@ bx_bool bx_hard_drive_c::ide_read_sector(Bit8u channel, Bit8u *buffer, Bit32u bu
       command_aborted(channel, BX_SELECTED_CONTROLLER(channel).current_command);
       return 0;
     }
-    increment_address(channel);
+    increment_address(channel, &logical_sector);
     bufptr += 512;
   } while (--sector_count > 0);
 
@@ -3444,7 +3363,7 @@ bx_bool bx_hard_drive_c::ide_write_sector(Bit8u channel, Bit8u *buffer, Bit32u b
       command_aborted(channel, BX_SELECTED_CONTROLLER(channel).current_command);
       return 0;
     }
-    increment_address(channel);
+    increment_address(channel, &logical_sector);
     bufptr += 512;
   } while (--sector_count > 0);
 
