@@ -201,7 +201,7 @@ bx_bool BX_CPU_C::fetchInstruction(bxInstruction_c *iStorage, Bit32u eipBiased)
   return 1;
 }
 
-void BX_CPU_C::serveICacheMiss(bxICacheEntry_c *entry, Bit32u eipBiased, bx_phy_address pAddr)
+bxICacheEntry_c* BX_CPU_C::serveICacheMiss(bxICacheEntry_c *entry, Bit32u eipBiased, bx_phy_address pAddr)
 {
   // The entry will be marked valid if fetchdecode will succeed
   if (fetchInstruction(entry->i, eipBiased)) {
@@ -211,6 +211,8 @@ void BX_CPU_C::serveICacheMiss(bxICacheEntry_c *entry, Bit32u eipBiased, bx_phy_
   else {
     entry->pAddr = BX_ICACHE_INVALID_PHY_ADDRESS;
   }
+
+  return entry;
 }
 
 #endif
