@@ -33,6 +33,7 @@ Bochs repository moved to the SVN version control !
         --enable-es1370 option
 
 - SF patches applied
+  [3267459] fix xrandr related crash by Heikki Lindholm
   [3190995] add eth backend based on Slirp by Heikki Lindholm
 
 - these S.F. bugs were closed/fixed
