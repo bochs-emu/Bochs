@@ -29,6 +29,8 @@
 #define BX_SOUNDLOW_OK   0
 #define BX_SOUNDLOW_ERR  1
 
+typedef Bit32u (*sound_record_handler_t)(void *arg, Bit32u len);
+
 // Pseudo device that loads the lowlevel sound module
 class bx_soundmod_ctl_c : public bx_soundmod_ctl_stub_c {
 public:
@@ -63,6 +65,18 @@ public:
   virtual int sendwavepacket(int length, Bit8u data[]);
   virtual int stopwaveplayback();
   virtual int closewaveoutput();
+
+  virtual int openwaveinput(const char *wavedev, sound_record_handler_t rh);
+  virtual int startwaverecord(int frequency, int bits, bx_bool stereo, int format);
+  virtual int getwavepacket(int length, Bit8u data[]);
+  virtual int stopwaverecord();
+  virtual int closewaveinput();
+
+  static void record_timer_handler(void *);
+  void record_timer(void);
 protected:
   logfunctions *device;
+  int record_timer_index;
+  int record_packet_size;;
+  sound_record_handler_t record_handler;
 };

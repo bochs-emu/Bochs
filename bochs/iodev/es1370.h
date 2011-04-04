@@ -49,8 +49,8 @@ typedef struct {
 
   int dac1_timer_index;
   int dac2_timer_index;
-  int adc_timer_index;
   bx_bool dac2_outputinit;
+  bx_bool adc_inputinit;
 
   Bit32u base_ioaddr;
   Bit8u devfunc;
@@ -80,9 +80,12 @@ private:
   BX_ES1370_SMF void update_status(Bit32u new_status);
   BX_ES1370_SMF void check_lower_irq(Bit32u sctl);
   BX_ES1370_SMF void update_voices(Bit32u ctl, Bit32u sctl, bx_bool force);
+  BX_ES1370_SMF void run_channel(unsigned channel, int timer_id, Bit32u buflen);
 
   static void es1370_timer_handler(void *);
   void es1370_timer(void);
+
+  static Bit32u es1370_adc_handler(void *, Bit32u len);
 
   static Bit32u read_handler(void *this_ptr, Bit32u address, unsigned io_len);
   static void   write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len);
