@@ -1344,7 +1344,9 @@ fetch_b1:
   }
 
   i->setB1(b1);
+#if BX_SUPPORT_FPU
   i->setVL(BX_NO_VL);
+#endif
 
   unsigned index = b1 + (os_32 << 9); // *512
 
