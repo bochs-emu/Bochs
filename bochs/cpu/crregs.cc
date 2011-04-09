@@ -96,15 +96,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_DdRd(bxInstruction_c *i)
       // data breakpoint matching does not occur unless it is enabled
       // by setting the LE and/or GE flags.
 
-      // Some sanity checks...
-      if (((((val_32>>16) & 3)==0) && (((val_32>>18) & 3)!=0)) ||
-          ((((val_32>>20) & 3)==0) && (((val_32>>22) & 3)!=0)) ||
-          ((((val_32>>24) & 3)==0) && (((val_32>>26) & 3)!=0)) ||
-          ((((val_32>>28) & 3)==0) && (((val_32>>30) & 3)!=0)))
-      {
-        // Instruction breakpoint with LENx not 00b (1-byte length)
-        BX_ERROR(("MOV_DdRd: write of %08x, R/W=00b LEN!=00b", val_32));
-      }
 #if BX_CPU_LEVEL <= 4
       // 386/486: you can play with all the bits except b10 is always 1
       BX_CPU_THIS_PTR dr7.set32(val_32 | 0x00000400);
@@ -114,6 +105,16 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_DdRd(bxInstruction_c *i)
       BX_CPU_THIS_PTR dr7.set32((val_32 & 0xffff2fff) | 0x00000400);
 #endif
 #if BX_X86_DEBUGGER
+      // Some sanity checks...
+      if ((BX_CPU_THIS_PTR dr7.get_R_W0() == BX_HWDebugInstruction && BX_CPU_THIS_PTR dr7.get_LEN0()) ||
+          (BX_CPU_THIS_PTR dr7.get_R_W1() == BX_HWDebugInstruction && BX_CPU_THIS_PTR dr7.get_LEN1()) ||
+          (BX_CPU_THIS_PTR dr7.get_R_W2() == BX_HWDebugInstruction && BX_CPU_THIS_PTR dr7.get_LEN2()) ||
+          (BX_CPU_THIS_PTR dr7.get_R_W3() == BX_HWDebugInstruction && BX_CPU_THIS_PTR dr7.get_LEN3()))
+      {
+        // Instruction breakpoint with LENx not 00b (1-byte length)
+        BX_ERROR(("MOV_DdRd: write of %08x, R/W=00b LEN!=00b", val_32));
+      }
+
       // if we have code breakpoints enabled then we must check
       // breakpoints condition in cpu loop
       if (BX_CPU_THIS_PTR dr7.get_bp_enabled()) {
@@ -127,6 +128,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_DdRd(bxInstruction_c *i)
         }
       }
 #endif
+
+      TLB_flush(); // the DR7 write could enable some breakpoints
       break;
 
     default:
@@ -279,22 +282,20 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_DqRq(bxInstruction_c *i)
         exception(BX_GP_EXCEPTION, 0);
       }
 
-      // Some sanity checks...
-      if (((((val_64>>16) & 3)==0) && (((val_64>>18) & 3)!=0)) ||
-          ((((val_64>>20) & 3)==0) && (((val_64>>22) & 3)!=0)) ||
-          ((((val_64>>24) & 3)==0) && (((val_64>>26) & 3)!=0)) ||
-          ((((val_64>>28) & 3)==0) && (((val_64>>30) & 3)!=0)))
-      {
-        // Instruction breakpoint with LENx not 00b (1-byte length)
-        BX_ERROR(("MOV_DqRq: write of %08x:%08x, R/W=00b LEN!=00b",
-          (Bit32u)(val_64 >> 32), (Bit32u)(val_64 & 0xFFFFFFFF)));
-      }
-
       // Pentium+: bits15,14,12 are hardwired to 0, rest are settable.
       // Even bits 11,10 are changeable though reserved.
       BX_CPU_THIS_PTR dr7.set32((val_64 & 0xffff2fff) | 0x00000400);
 
 #if BX_X86_DEBUGGER
+      if ((BX_CPU_THIS_PTR dr7.get_R_W0() == BX_HWDebugInstruction && BX_CPU_THIS_PTR dr7.get_LEN0()) ||
+          (BX_CPU_THIS_PTR dr7.get_R_W1() == BX_HWDebugInstruction && BX_CPU_THIS_PTR dr7.get_LEN1()) ||
+          (BX_CPU_THIS_PTR dr7.get_R_W2() == BX_HWDebugInstruction && BX_CPU_THIS_PTR dr7.get_LEN2()) ||
+          (BX_CPU_THIS_PTR dr7.get_R_W3() == BX_HWDebugInstruction && BX_CPU_THIS_PTR dr7.get_LEN3()))
+      {
+        // Instruction breakpoint with LENx not 00b (1-byte length)
+        BX_ERROR(("MOV_DqRq: write of %08x, R/W=00b LEN!=00b", BX_CPU_THIS_PTR dr7.get32()));
+      }
+
       // if we have code breakpoints enabled then we must check
       // breakpoints condition in cpu loop
       if (BX_CPU_THIS_PTR dr7.get_bp_enabled()) {
@@ -308,6 +309,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_DqRq(bxInstruction_c *i)
         }
       }
 #endif
+
+      TLB_flush(); // the DR7 write could enable some breakpoints
       break;
 
     default:
@@ -1197,13 +1200,21 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CLTS(bxInstruction_c *i)
 }
 
 #if BX_X86_DEBUGGER
-bx_bool BX_CPU_C::hwbreakpoint_check(bx_address laddr)
+bx_bool BX_CPU_C::hwbreakpoint_check(bx_address laddr, unsigned opa, unsigned opb)
 {
   laddr = LPFOf(laddr);
 
-  for (int i=0;i<4;i++) {
-    if (laddr == LPFOf(BX_CPU_THIS_PTR dr[i]))
+  Bit32u dr_op[4];
+
+  dr_op[0] = BX_CPU_THIS_PTR dr7.get_R_W0();
+  dr_op[1] = BX_CPU_THIS_PTR dr7.get_R_W1();
+  dr_op[2] = BX_CPU_THIS_PTR dr7.get_R_W2();
+  dr_op[3] = BX_CPU_THIS_PTR dr7.get_R_W3();
+
+  for (int n=0;n<4;n++) {
+    if ((dr_op[n] == opa || dr_op[n] == opb) && laddr == LPFOf(BX_CPU_THIS_PTR dr[n])) {
       return 1;
+    }
   }
 
   return 0;

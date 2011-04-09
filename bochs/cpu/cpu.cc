@@ -519,16 +519,15 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
   // Priority 4: Traps on Previous Instruction
   //   Breakpoints
   //   Debug Trap Exceptions (TF flag set or data/IO breakpoint)
-  if (BX_CPU_THIS_PTR debug_trap &&
-       !(BX_CPU_THIS_PTR inhibit_mask & BX_INHIBIT_DEBUG_SHADOW))
-  {
+  if (! (BX_CPU_THIS_PTR inhibit_mask & BX_INHIBIT_DEBUG_SHADOW)) {
     // A trap may be inhibited on this boundary due to an instruction
     // which loaded SS.  If so we clear the inhibit_mask below
     // and don't execute this code until the next boundary.
 #if BX_X86_DEBUGGER
     code_breakpoint_match(get_laddr(BX_SEG_REG_CS, BX_CPU_THIS_PTR prev_rip));
 #endif
-    exception(BX_DB_EXCEPTION, 0); // no error, not interrupt
+    if (BX_CPU_THIS_PTR debug_trap)
+      exception(BX_DB_EXCEPTION, 0); // no error, not interrupt
   }
 
   // Priority 5: External Interrupts
@@ -607,27 +606,7 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
     DEV_dma_raise_hlda();
   }
 
-  // Priority 6: Faults from fetching next instruction
-  //   Code breakpoint fault
-  //   Code segment limit violation (priority 7 on 486/Pentium)
-  //   Code page fault (priority 7 on 486/Pentium)
-  // (handled in main decode loop)
-
-  // Now we can handle things which are synchronous to instruction
-  // execution.
-  if (BX_CPU_THIS_PTR get_RF()) {
-    BX_CPU_THIS_PTR clear_RF();
-  }
-#if BX_X86_DEBUGGER
-  else {
-    // only bother comparing if any breakpoints enabled and
-    // debug events are not inhibited on this boundary.
-    if (! (BX_CPU_THIS_PTR inhibit_mask & BX_INHIBIT_DEBUG_SHADOW)) {
-      if (code_breakpoint_match(get_laddr(BX_SEG_REG_CS, BX_CPU_THIS_PTR prev_rip)))
-        exception(BX_DB_EXCEPTION, 0); // no error, not interrupt
-    }
-  }
-#endif
+  BX_CPU_THIS_PTR clear_RF();
 
   if (BX_CPU_THIS_PTR get_TF())
   {
@@ -636,6 +615,12 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
     // next instruction, the code above will invoke the trap.
     BX_CPU_THIS_PTR debug_trap |= BX_DEBUG_SINGLE_STEP_BIT;
   }
+
+  // Priority 6: Faults from fetching next instruction
+  //   Code breakpoint fault
+  //   Code segment limit violation (priority 7 on 486/Pentium)
+  //   Code page fault (priority 7 on 486/Pentium)
+  // (handled in main decode loop)
 
   // Priority 7: Faults from decoding next instruction
   //   Instruction length > 15 bytes
