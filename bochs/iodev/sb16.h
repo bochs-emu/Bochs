@@ -238,7 +238,8 @@ private:
       Bit16u blocklength, samplerate;
     } dma;
     int timer_handle;   // handle for the DMA timer
-    bx_bool outputinit; // have the output functions been initialized
+    bx_bool outputinit; // have the lowlevel output been initialized
+    bx_bool inputinit;  // have the lowlevel input been initialized
   } dsp;
 
   // the ASP/CSP registers
@@ -307,14 +308,15 @@ private:
   BX_SB16_SMF void   dsp_getsamplebyte(Bit8u value);
   BX_SB16_SMF Bit8u  dsp_putsamplebyte();
   BX_SB16_SMF void   dsp_sendwavepacket();
-  BX_SB16_SMF void   dsp_getwavepacket();
   BX_SB16_SMF Bit32u dsp_irq16ack();                 // ack 16 bit IRQ      2xf
   BX_SB16_SMF void   dsp_dma(Bit8u command, Bit8u mode, Bit16u length, Bit8u comp);
 						     // initiate a DMA transfer
   BX_SB16_SMF void   dsp_dmadone();		     // stop a DMA transfer
   BX_SB16_SMF void   dsp_enabledma();		     // enable the transfer
   BX_SB16_SMF void   dsp_disabledma();		     // temporarily disable DMA
-  static void   dsp_dmatimer (void *);
+  static void   dsp_dmatimer(void *);
+  static Bit32u sb16_adc_handler(void *, Bit32u len);
+  Bit32u dsp_adc_handler(Bit32u len);
 
       /* The mixer part */
   BX_SB16_SMF Bit32u mixer_readdata(void);
