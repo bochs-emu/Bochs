@@ -57,13 +57,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XOR_GdEdR(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::XOR_EAXId(bxInstruction_c *i)
 {
-  Bit32u op1_32;
+  Bit32u op_32 = EAX ^ i->Id();
+  RAX = op_32;
 
-  op1_32 = EAX;
-  op1_32 ^= i->Id();
-  RAX = op1_32;
-
-  SET_FLAGS_OSZAPC_LOGIC_32(op1_32);
+  SET_FLAGS_OSZAPC_LOGIC_32(op_32);
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::XOR_EdIdM(bxInstruction_c *i)
@@ -154,14 +151,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::OR_GdEdR(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::OR_EAXId(bxInstruction_c *i)
 {
-  Bit32u op1_32, op2_32;
+  Bit32u op_32 = EAX | i->Id();
+  RAX = op_32;
 
-  op1_32 = EAX;
-  op2_32 = i->Id();
-  op1_32 |= op2_32;
-  RAX = op1_32;
-
-  SET_FLAGS_OSZAPC_LOGIC_32(op1_32);
+  SET_FLAGS_OSZAPC_LOGIC_32(op_32);
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::AND_EdGdM(bxInstruction_c *i)
@@ -192,14 +185,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::AND_GdEdR(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::AND_EAXId(bxInstruction_c *i)
 {
-  Bit32u op1_32, op2_32;
+  Bit32u op_32 = EAX & i->Id();
+  RAX = op_32;
 
-  op1_32 = EAX;
-  op2_32 = i->Id();
-  op1_32 &= op2_32;
-  RAX = op1_32;
-
-  SET_FLAGS_OSZAPC_LOGIC_32(op1_32);
+  SET_FLAGS_OSZAPC_LOGIC_32(op_32);
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::AND_EdIdM(bxInstruction_c *i)
@@ -237,13 +226,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::TEST_EdGdR(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::TEST_EAXId(bxInstruction_c *i)
 {
-  Bit32u op1_32, op2_32;
+  Bit32u op_32 = EAX & i->Id();
 
-  op1_32 = EAX;
-  op2_32 = i->Id();
-  op1_32 &= op2_32;
-
-  SET_FLAGS_OSZAPC_LOGIC_32(op1_32);
+  SET_FLAGS_OSZAPC_LOGIC_32(op_32);
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::TEST_EdIdR(bxInstruction_c *i)

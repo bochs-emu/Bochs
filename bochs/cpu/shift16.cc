@@ -429,7 +429,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RCR_EwM(bxInstruction_c *i)
   if (! count) return;
 
   Bit16u result_16 = (op1_16 >> count) | (getB_CF() << (16 - count)) |
-              (op1_16 << (17 - count));
+                     (op1_16 << (17 - count));
 
   write_RMW_virtual_word(result_16);
 

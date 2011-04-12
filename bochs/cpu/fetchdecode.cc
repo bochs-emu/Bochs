@@ -441,7 +441,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo32[512*2] = {
 #else
   /* 0F 05 /w */ { 0, BX_IA_ERROR },
 #endif
-  /* 0F 06 /w */ { 0, BX_IA_CLTS },
+  /* 0F 06 /w */ { BxTraceEnd, BX_IA_CLTS },
 #if BX_SUPPORT_X86_64
   /* 0F 07 /w */ { BxTraceEnd, BX_IA_SYSRET },
 #else
@@ -986,7 +986,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo32[512*2] = {
 #else
   /* 0F 05 /d */ { 0, BX_IA_ERROR },
 #endif
-  /* 0F 06 /d */ { 0, BX_IA_CLTS },
+  /* 0F 06 /d */ { BxTraceEnd, BX_IA_CLTS },
 #if BX_SUPPORT_X86_64
   /* 0F 07 /d */ { BxTraceEnd, BX_IA_SYSRET },
 #else

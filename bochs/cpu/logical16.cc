@@ -52,13 +52,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XOR_GwEwR(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::XOR_AXIw(bxInstruction_c *i)
 {
-  Bit16u op1_16;
+  Bit16u op_16 = AX ^ i->Iw();
+  AX = op_16;
 
-  op1_16 = AX;
-  op1_16 ^= i->Iw();
-  AX = op1_16;
-
-  SET_FLAGS_OSZAPC_LOGIC_16(op1_16);
+  SET_FLAGS_OSZAPC_LOGIC_16(op_16);
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::XOR_EwIwM(bxInstruction_c *i)
@@ -149,14 +146,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::OR_GwEwR(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::OR_AXIw(bxInstruction_c *i)
 {
-  Bit16u op1_16, op2_16;
+  Bit16u op_16 = AX | i->Iw();
+  AX = op_16;
 
-  op1_16 = AX;
-  op2_16 = i->Iw();
-  op1_16 |= op2_16;
-  AX = op1_16;
-
-  SET_FLAGS_OSZAPC_LOGIC_16(op1_16);
+  SET_FLAGS_OSZAPC_LOGIC_16(op_16);
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::AND_EwGwM(bxInstruction_c *i)
@@ -187,14 +180,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::AND_GwEwR(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::AND_AXIw(bxInstruction_c *i)
 {
-  Bit16u op1_16, op2_16;
+  Bit16u op_16 = AX & i->Iw();
+  AX = op_16;
 
-  op1_16 = AX;
-  op2_16 = i->Iw();
-  op1_16 &= op2_16;
-  AX = op1_16;
-
-  SET_FLAGS_OSZAPC_LOGIC_16(op1_16);
+  SET_FLAGS_OSZAPC_LOGIC_16(op_16);
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::AND_EwIwM(bxInstruction_c *i)
@@ -231,13 +220,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::TEST_EwGwR(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::TEST_AXIw(bxInstruction_c *i)
 {
-  Bit16u op1_16, op2_16;
+  Bit16u op_16 = AX & i->Iw();
 
-  op1_16 = AX;
-  op2_16 = i->Iw();
-  op1_16 &= op2_16;
-
-  SET_FLAGS_OSZAPC_LOGIC_16(op1_16);
+  SET_FLAGS_OSZAPC_LOGIC_16(op_16);
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::TEST_EwIwR(bxInstruction_c *i)

@@ -220,7 +220,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVLPD_VpdMq(bxInstruction_c *i)
 #endif
 }
 
-
 /* VEX.0F 16 (VEX.W ignore) */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVLHPS_VpsWps(bxInstruction_c *i)
 {
@@ -760,6 +759,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VPERM2F128_VdqWdqIbR(bxInstruction_c *i)
 /* Opcode: VEX.66.0F.38 2C (VEX.W=0) */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMASKMOVPS_VpsMps(bxInstruction_c *i)
 {
+#if BX_CPU_LEVEL >= 6
   BxPackedAvxRegister mask = BX_READ_AVX_REG(i->vvv()), result;
   unsigned len = i->getVL();
 
@@ -784,11 +784,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMASKMOVPS_VpsMps(bxInstruction_c *i)
   }
 
   BX_WRITE_AVX_REGZ(i->nnn(), result, len);
+#endif
 }
 
 /* Opcode: VEX.66.0F.38 2D (VEX.W=0) */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMASKMOVPD_VpdMpd(bxInstruction_c *i)
 {
+#if BX_CPU_LEVEL >= 6
   BxPackedAvxRegister mask = BX_READ_AVX_REG(i->vvv()), result;
   unsigned len = i->getVL();
 
@@ -813,11 +815,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMASKMOVPD_VpdMpd(bxInstruction_c *i)
   }
 
   BX_WRITE_AVX_REGZ(i->nnn(), result, len);
+#endif
 }
 
 /* Opcode: VEX.66.0F.38 2C (VEX.W=0) */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMASKMOVPS_MpsVps(bxInstruction_c *i)
 {
+#if BX_CPU_LEVEL >= 6
   BxPackedAvxRegister mask = BX_READ_AVX_REG(i->vvv()), op = BX_READ_AVX_REG(i->nnn());
   unsigned len = i->getVL();
 
@@ -844,11 +848,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMASKMOVPS_MpsVps(bxInstruction_c *i)
     if (mask.avx32u(n) & 0x80000000)
        write_virtual_dword(i->seg(), (eaddr + 4*n) & i->asize_mask(), op.avx32u(n));
   }
+#endif
 }
 
 /* Opcode: VEX.66.0F.38 2D (VEX.W=0) */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMASKMOVPD_MpdVpd(bxInstruction_c *i)
 {
+#if BX_CPU_LEVEL >= 6
   BxPackedAvxRegister mask = BX_READ_AVX_REG(i->vvv()), op = BX_READ_AVX_REG(i->nnn());
   unsigned len = i->getVL();
 
@@ -875,6 +881,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMASKMOVPD_MpdVpd(bxInstruction_c *i)
     if (mask.avx32u(2*n+1) & 0x80000000)
        write_virtual_qword(i->seg(), (eaddr + 8*n) & i->asize_mask(), op.avx64u(n));
   }
+#endif
 }
 
 #endif
