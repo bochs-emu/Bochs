@@ -114,7 +114,6 @@ struct bxICacheEntry_c
   Bit32u traceMask;
 
 #if BX_SUPPORT_TRACE_CACHE
-  Bit32u used;
   Bit32u tlen;          // Trace length in instructions
   bxInstruction_c *i;
 #else
@@ -164,7 +163,6 @@ public:
     }
     e->i = &mpool[mpindex];
     e->tlen = 0;
-    e->used = 0;
   }
 
   BX_CPP_INLINE void commit_trace(unsigned len) { mpindex += len; }
