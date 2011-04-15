@@ -8,6 +8,7 @@ Bochs repository moved to the SVN version control !
   - Added support for AVX instruction set emulation, to enable configure with
         --enable-avx option
   - Updated/Fixed instrumentation callbacks
+  - Bugfixes for CPU emulation correctness and stability
 
 - Configure and compile
   - Fixed Bochs manifest for Win64 compilation using Microsoft Visual Studio
@@ -32,11 +33,14 @@ Bochs repository moved to the SVN version control !
     - ported ES1370 soundcard emulation from Qemu, to enable configure with
         --enable-es1370 option
 
+- VGA BIOS
+
 - SF patches applied
   [3267459] fix xrandr related crash by Heikki Lindholm
   [3190995] add eth backend based on Slirp by Heikki Lindholm
 
 - these S.F. bugs were closed/fixed
+  [3260134] Failed to compile when trace cache disabled
   [3197425] Error compile with vmx in vs2008/2010 and for correct x64
 
 -------------------------------------------------------------------------
