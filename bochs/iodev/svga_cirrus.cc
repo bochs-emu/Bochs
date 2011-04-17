@@ -26,9 +26,9 @@
 //
 // there are still many unimplemented features:
 //
-// - destination write mask support is not complete (bit 5..7)
-// - 1bpp/4bpp modes
-// - ???
+// - destination write mask support is not complete (bit 5..6)
+// - BLT mode extension support is not complete (bit 3..4)
+// - 4bpp modes
 //
 // some codes are copied from vga.cc and modified.
 // some codes are ported from the cirrus emulation in qemu
@@ -1900,7 +1900,7 @@ Bit8u bx_svga_cirrus_c::svga_read_control(Bit32u address, unsigned index)
 
 void bx_svga_cirrus_c::svga_write_control(Bit32u address, unsigned index, Bit8u value)
 {
-  Bit8u old_value;
+  Bit8u old_value = BX_CIRRUS_THIS control.reg[index];
 
   BX_DEBUG(("control: index 0x%02x write 0x%02x", index, (unsigned)value));
 
@@ -1977,14 +1977,13 @@ void bx_svga_cirrus_c::svga_write_control(Bit32u address, unsigned index, Bit8u 
       value &= 0x3f;
       break;
     case 0x2f: // BLT WRITE MASK
-      if (value & ~0x1f) {
+      if (((value ^ old_value) & 0x60) && (value & 0x60)) {
         BX_ERROR(("BLT WRITE MASK support is not complete (value = 0x%02x)", value));
       }
       break;
     case 0x30: // BLT MODE
       break;
     case 0x31: // BLT STATUS/START
-      old_value = BX_CIRRUS_THIS control.reg[0x31];
       BX_CIRRUS_THIS control.reg[0x31] = value;
       if (((old_value & CIRRUS_BLT_RESET) != 0) &&
           ((value & CIRRUS_BLT_RESET) == 0)) {
@@ -1997,14 +1996,21 @@ void bx_svga_cirrus_c::svga_write_control(Bit32u address, unsigned index, Bit8u 
       }
       return;
     case 0x32: // RASTER OP
+      if ((value == 0x90) || (value == 0xda)) {
+        BX_INFO(("possibly wrong implementation of BLT ROP 0x%02x", value));
+      }
+      break;
     case 0x33: // BLT MODE EXTENSION
+      if (((value ^ old_value) & 0x18) && (value & 0x18)) {
+        BX_ERROR(("BLT MODE EXTENSION support is not complete (value = 0x%02x)", value & 0x18));
+      }
       break;
     case 0x34: // BLT TRANSPARENT COLOR 0x00ff
     case 0x35: // BLT TRANSPARENT COLOR 0xff00
     case 0x38: // BLT TRANSPARENT COLOR MASK 0x00ff
     case 0x39: // BLT TRANSPARENT COLOR MASK 0xff00
     default:
-      BX_DEBUG(("control index 0x%02x is unknown(write 0x%02x)", index, (unsigned)value));
+      BX_DEBUG(("control index 0x%02x is unknown (write 0x%02x)", index, (unsigned)value));
       break;
     }
 
