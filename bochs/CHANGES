@@ -36,6 +36,7 @@ Bochs repository moved to the SVN version control !
 - VGA BIOS
 
 - SF patches applied
+  [3289459] Mac OS X audio missing framework dependency by Heikki Lindholm
   [3267459] fix xrandr related crash by Heikki Lindholm
   [3190995] add eth backend based on Slirp by Heikki Lindholm
 

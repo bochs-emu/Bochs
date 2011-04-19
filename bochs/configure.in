@@ -1661,7 +1661,7 @@ if test "$soundcard_present" = 1; then
     *-macosx* | *-macos* | *-apple-darwin*)
       SOUNDLOW_OBJS='soundosx.o'
       AC_DEFINE(BX_SOUND_LOWLEVEL_C, bx_sound_osx_c)
-      DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS -framework AudioUnit -framework AudioToolbox"
+      DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS -framework CoreServices -framework AudioUnit -framework AudioToolbox"
       AC_MSG_RESULT(osx)
       ;;
     *)
