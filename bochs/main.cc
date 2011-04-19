@@ -46,13 +46,8 @@
 #endif
 
 #if BX_WITH_CARBON
-#define Float32 KLUDGE_Float32
-#define Float64 KLUDGE_Float64
 #include <Carbon/Carbon.h>
-#undef Float32
-#undef Float64
 #endif
-
 
 extern "C" {
 #include <signal.h>

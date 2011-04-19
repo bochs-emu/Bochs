@@ -260,22 +260,16 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BSWAP_RRX(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVBE_GwEwR(bxInstruction_c *i)
 {
-  Bit16u val16 = BX_READ_16BIT_REG(i->rm()), b0, b1;
+  Bit16u val16 = BX_READ_16BIT_REG(i->rm());
   
-  b0 = val16 & 0xff; val16 >>= 8;
-  b1 = val16;
-  val16 = (b0<<8) | b1;
-
-  BX_WRITE_16BIT_REG(i->nnn(), val16);
+  BX_WRITE_16BIT_REG(i->nnn(), bx_bswap16(val16));
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVBE_EwGw(bxInstruction_c *i)
 {
-  Bit16u val16 = BX_READ_16BIT_REG(i->nnn()), b0, b1;
+  Bit16u val16 = BX_READ_16BIT_REG(i->nnn());
 
-  b0 = val16 & 0xff; val16 >>= 8;
-  b1 = val16;
-  val16 = (b0<<8) | b1;
+  val16 = bx_bswap16(val16);
 
   if (i->modC0()) {
     BX_WRITE_16BIT_REG(i->rm(), val16);
