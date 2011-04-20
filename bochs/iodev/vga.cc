@@ -967,8 +967,8 @@ void bx_vga_c::write_handler_no_log(void *this_ptr, Bit32u address, Bit32u value
 void bx_vga_c::write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_log)
 {
   Bit8u charmap1, charmap2, prev_memory_mapping;
-  bx_bool prev_video_enabled, prev_line_graphics, prev_int_pal_size;
-  bx_bool prev_graphics_alpha, prev_chain_odd_even;
+  bx_bool prev_video_enabled, prev_line_graphics, prev_int_pal_size, prev_graphics_alpha;
+//bx_bool prev_chain_odd_even;
   bx_bool needs_update = 0, charmap_update = 0;
 
 #if defined(VGA_TRACE_FEATURE)
@@ -1347,7 +1347,7 @@ void bx_vga_c::write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_l
           break;
         case 6: /* Miscellaneous */
           prev_graphics_alpha = BX_VGA_THIS s.graphics_ctrl.graphics_alpha;
-          prev_chain_odd_even = BX_VGA_THIS s.graphics_ctrl.chain_odd_even;
+//        prev_chain_odd_even = BX_VGA_THIS s.graphics_ctrl.chain_odd_even;
           prev_memory_mapping = BX_VGA_THIS s.graphics_ctrl.memory_mapping;
 
           BX_VGA_THIS s.graphics_ctrl.graphics_alpha = value & 0x01;
