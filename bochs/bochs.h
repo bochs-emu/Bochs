@@ -518,15 +518,9 @@ BX_CPP_INLINE Bit32u bx_bswap32(Bit32u val32)
 
 BX_CPP_INLINE Bit64u bx_bswap64(Bit64u val64)
 {
-  Bit64u b0 = val64 & 0xff; val64 >>= 8;
-  Bit64u b1 = val64 & 0xff; val64 >>= 8;
-  Bit64u b2 = val64 & 0xff; val64 >>= 8;
-  Bit64u b3 = val64 & 0xff; val64 >>= 8;
-  Bit64u b4 = val64 & 0xff; val64 >>= 8;
-  Bit64u b5 = val64 & 0xff; val64 >>= 8;
-  Bit64u b6 = val64 & 0xff; val64 >>= 8;
-  Bit64u b7 = val64;
-  return (b0<<56) | (b1<<48) | (b2<<40) | (b3<<32) | (b4<<24) | (b5<<16) | (b6<<8) | b7;
+  Bit32u lo = bx_bswap32((Bit32u)(val64 >> 32));
+  Bit32u hi = bx_bswap32((Bit32u)(val64 & 0xFFFFFFFF));
+  return ((Bit64u)hi << 32) | (Bit64u)lo;
 }
 
 // These are some convenience macros which abstract out accesses between
