@@ -6,7 +6,7 @@
 
 CC="gcc"
 CXX="g++"
-CFLAGS="-O3 -Wall -Wno-format"
+CFLAGS="-O3 -Wall -Wno-format -mno-cygwin"
 CXXFLAGS="$CFLAGS"
 
 export CC

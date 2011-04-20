@@ -51,8 +51,8 @@ case "$target" in
       ADD_FLAGS="-DBROKEN_LINKER=1"
     else
       # default case
-      ADD_FLAGS="-mno-cygwin -DWIN32"   # required for cygwin compile+win32 gui
-      DEFAULT_GUI=win32                 # default to win32 gui
+      ADD_FLAGS="-DWIN32"   # required for cygwin compile+win32 gui
+      DEFAULT_GUI=win32     # default to win32 gui
     fi
     ;;
   *-macosx* | *-darwin*)
