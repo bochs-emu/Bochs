@@ -782,14 +782,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FISUB_DWORD_INTEGER(bxInstruction_c *i)
      return;
   }
 
-  floatx80 a = BX_READ_FPU_REG(0);
-  floatx80 b = int32_to_floatx80(load_reg);
-
   float_status_t status =
      FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
 
-  floatx80 result = floatx80_sub(BX_READ_FPU_REG(0),
-              int32_to_floatx80(load_reg), status);
+  floatx80 result = floatx80_sub(BX_READ_FPU_REG(0), int32_to_floatx80(load_reg), status);
 
   if (! FPU_exception(status.float_exception_flags))
      BX_WRITE_FPU_REG(result, 0);
