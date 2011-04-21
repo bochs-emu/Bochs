@@ -279,7 +279,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUSHAD32(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::POPAD32(bxInstruction_c *i)
 {
-  Bit32u edi, esi, ebp, ebx, edx, ecx, eax, dummy;
+  Bit32u edi, esi, ebp, ebx, edx, ecx, eax;
 
   if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b)
   {
@@ -287,7 +287,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::POPAD32(bxInstruction_c *i)
     edi = read_virtual_dword_32(BX_SEG_REG_SS, (Bit32u) (temp_ESP +  0));
     esi = read_virtual_dword_32(BX_SEG_REG_SS, (Bit32u) (temp_ESP +  4));
     ebp = read_virtual_dword_32(BX_SEG_REG_SS, (Bit32u) (temp_ESP +  8));
-    dummy = read_virtual_dword_32(BX_SEG_REG_SS, (Bit32u) (temp_ESP + 12));
+          read_virtual_dword_32(BX_SEG_REG_SS, (Bit32u) (temp_ESP + 12));
     ebx = read_virtual_dword_32(BX_SEG_REG_SS, (Bit32u) (temp_ESP + 16));
     edx = read_virtual_dword_32(BX_SEG_REG_SS, (Bit32u) (temp_ESP + 20));
     ecx = read_virtual_dword_32(BX_SEG_REG_SS, (Bit32u) (temp_ESP + 24));
@@ -300,7 +300,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::POPAD32(bxInstruction_c *i)
     edi = read_virtual_dword_32(BX_SEG_REG_SS, (Bit16u) (temp_SP +  0));
     esi = read_virtual_dword_32(BX_SEG_REG_SS, (Bit16u) (temp_SP +  4));
     ebp = read_virtual_dword_32(BX_SEG_REG_SS, (Bit16u) (temp_SP +  8));
-    dummy = read_virtual_dword_32(BX_SEG_REG_SS, (Bit16u) (temp_SP + 12));
+          read_virtual_dword_32(BX_SEG_REG_SS, (Bit16u) (temp_SP + 12));
     ebx = read_virtual_dword_32(BX_SEG_REG_SS, (Bit16u) (temp_SP + 16));
     edx = read_virtual_dword_32(BX_SEG_REG_SS, (Bit16u) (temp_SP + 20));
     ecx = read_virtual_dword_32(BX_SEG_REG_SS, (Bit16u) (temp_SP + 24));

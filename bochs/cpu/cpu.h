@@ -604,36 +604,41 @@ typedef struct
 #define MAX_STD_CPUID_FUNCTION 14
 #define MAX_EXT_CPUID_FUNCTION 9
 
-// cpuid features (duplicated in disasm.h)
-#define BX_CPU_X87              0x00000001        /* FPU (X87) instruction */
-#define BX_CPU_486              0x00000002        /* 486 new instruction */
-#define BX_CPU_PENTIUM          0x00000004        /* Pentium new instruction */
-#define BX_CPU_P6               0x00000008        /* P6 new instruction */
-#define BX_CPU_MMX              0x00000010        /* MMX instruction */
-#define BX_CPU_3DNOW            0x00000020        /* 3DNow! instruction */
-#define BX_CPU_FXSAVE_FXRSTOR   0x00000040        /* FXSAVE/FXRSTOR instruction */
-#define BX_CPU_SYSENTER_SYSEXIT 0x00000080        /* SYSENTER/SYSEXIT instruction */
-#define BX_CPU_CLFLUSH          0x00000100        /* CLFLUSH instruction */
-#define BX_CPU_SSE              0x00000200        /* SSE  instruction */
-#define BX_CPU_SSE2             0x00000400        /* SSE2 instruction */
-#define BX_CPU_SSE3             0x00000800        /* SSE3 instruction */
-#define BX_CPU_SSSE3            0x00001000        /* SSSE3 instruction */
-#define BX_CPU_SSE4_1           0x00002000        /* SSE4_1 instruction */
-#define BX_CPU_SSE4_2           0x00004000        /* SSE4_2 instruction */
-#define BX_CPU_SSE4A            0x00008000        /* SSE4A instruction */
-#define BX_CPU_MONITOR_MWAIT    0x00010000        /* MONITOR/MWAIT instruction */
-#define BX_CPU_VMX              0x00020000        /* VMX instruction */
-#define BX_CPU_SMX              0x00040000        /* SMX instruction */
-#define BX_CPU_SVM              0x00080000        /* SVM instruction */
-#define BX_CPU_XSAVE            0x00100000        /* XSAVE/XRSTOR extensions instruction */
-#define BX_CPU_XSAVEOPT         0x00200000        /* XSAVEOPT instruction */
-#define BX_CPU_AES_PCLMULQDQ    0x00400000        /* AES+PCLMULQDQ instructions */
-#define BX_CPU_MOVBE            0x00800000        /* MOVBE Intel Atom(R) instruction */
-#define BX_CPU_FSGSBASE         0x01000000        /* FS/GS BASE access instructions */
-#define BX_CPU_AVX              0x02000000        /* AVX instruction */
-#define BX_CPU_AVX_F16C         0x04000000        /* AVX F16 convert instruction */
-#define BX_CPU_AVX_FMA          0x08000000        /* AVX FMA instruction */
-#define BX_CPU_X86_64           0x10000000        /* x86-64 instruction */
+// cpuid ISA (duplicated in disasm.h)
+#define BX_CPU_X87              (1 << 0)        /* FPU (X87) instruction */
+#define BX_CPU_486              (1 << 1)        /* 486 new instruction */
+#define BX_CPU_PENTIUM          (1 << 2)        /* Pentium new instruction */
+#define BX_CPU_P6               (1 << 3)        /* P6 new instruction */
+#define BX_CPU_MMX              (1 << 4)        /* MMX instruction */
+#define BX_CPU_3DNOW            (1 << 5)        /* 3DNow! instruction */
+#define BX_CPU_FXSAVE_FXRSTOR   (1 << 6)        /* FXSAVE/FXRSTOR instruction */
+#define BX_CPU_SYSENTER_SYSEXIT (1 << 7)        /* SYSENTER/SYSEXIT instruction */
+#define BX_CPU_CLFLUSH          (1 << 8)        /* CLFLUSH instruction */
+#define BX_CPU_SSE              (1 << 9)        /* SSE  instruction */
+#define BX_CPU_SSE2             (1 << 10)       /* SSE2 instruction */
+#define BX_CPU_SSE3             (1 << 11)       /* SSE3 instruction */
+#define BX_CPU_SSSE3            (1 << 12)       /* SSSE3 instruction */
+#define BX_CPU_SSE4_1           (1 << 13)       /* SSE4_1 instruction */
+#define BX_CPU_SSE4_2           (1 << 14)       /* SSE4_2 instruction */
+#define BX_CPU_SSE4A            (1 << 15)       /* SSE4A  instruction */
+#define BX_CPU_MONITOR_MWAIT    (1 << 16)       /* MONITOR/MWAIT instruction */
+#define BX_CPU_VMX              (1 << 17)       /* VMX instruction */
+#define BX_CPU_SMX              (1 << 18)       /* SMX instruction */
+#define BX_CPU_SVM              (1 << 19)       /* SVM instruction */
+#define BX_CPU_XSAVE            (1 << 20)       /* XSAVE/XRSTOR extensions instruction */
+#define BX_CPU_XSAVEOPT         (1 << 21)       /* XSAVEOPT instruction */
+#define BX_CPU_AES_PCLMULQDQ    (1 << 22)       /* AES+PCLMULQDQ instructions */
+#define BX_CPU_MOVBE            (1 << 23)       /* MOVBE Intel Atom(R) instruction */
+#define BX_CPU_FSGSBASE         (1 << 24)       /* FS/GS BASE access instructions */
+#define BX_CPU_AVX              (1 << 25)       /* AVX instruction */
+#define BX_CPU_AVX_F16C         (1 << 26)       /* AVX F16 convert instruction */
+#define BX_CPU_AVX_FMA          (1 << 27)       /* AVX FMA instruction */
+#define BX_CPU_X86_64           (1 << 28)       /* x86-64 instruction */
+
+// cpuid non-ISA features
+#define BX_CPU_XAPIC            (1 << 0)
+#define BX_CPU_X2APIC           (1 << 1)
+#define BX_CPU_PCID             (1 << 2)
 
 #include "cpuid.h"
 #include "crregs.h"
@@ -819,9 +824,13 @@ public: // for now...
   cpuid_function_t cpuid_ext_function[MAX_EXT_CPUID_FUNCTION];
 
   Bit32u isa_extensions_bitmask;
+  Bit32u cpu_extensions_bitmask;
 
-#define BX_CPU_SUPPORT_ISA_EXTENSION(feature) \
+#define BX_CPUID_SUPPORT_ISA_EXTENSION(feature) \
    (BX_CPU_THIS_PTR isa_extensions_bitmask & (feature))
+
+#define BX_CPUID_SUPPORT_CPU_EXTENSION(feature) \
+   (BX_CPU_THIS_PTR cpu_extensions_bitmask & (feature))
 
   // General register set
   // rax: accumulator
@@ -3459,14 +3468,13 @@ public: // for now...
   BX_SMF Bit32u get_ext2_cpuid_features(void);
 
   BX_SMF void init_isa_features_bitmask(void);
+  BX_SMF void init_cpu_features_bitmask(void);
   BX_SMF void init_FetchDecodeTables(void);
 #if BX_CPU_LEVEL >= 4
   BX_SMF void set_cpuid_defaults(void);
 #endif
-#if BX_SUPPORT_X2APIC
-  BX_SMF void bx_cpuid_extended_topology_leaf(Bit32u subfunction);
-#endif
 #if BX_CPU_LEVEL >= 6
+  BX_SMF void bx_cpuid_extended_topology_leaf(Bit32u subfunction);
   BX_SMF void bx_cpuid_xsave_leaf(Bit32u subfunction);
   BX_SMF void bx_cpuid_extended_cpuid_leaf(Bit32u subfunction);
   BX_SMF Bit32u get_ext3_cpuid_features(void);
@@ -3486,6 +3494,7 @@ public: // for now...
   BX_SMF BX_CPP_INLINE int bx_cpuid_support_pcid(void);
   BX_SMF BX_CPP_INLINE int bx_cpuid_support_xsave(void);
   BX_SMF BX_CPP_INLINE int bx_cpuid_support_fsgsbase(void);
+  BX_SMF BX_CPP_INLINE int bx_cpuid_support_x2apic(void);
 
   BX_SMF BX_CPP_INLINE unsigned which_cpu(void) { return BX_CPU_THIS_PTR bx_cpuid; }
   BX_SMF BX_CPP_INLINE const bx_gen_reg_t *get_gen_regfile() { return BX_CPU_THIS_PTR gen_reg; }
@@ -3912,6 +3921,11 @@ BX_CPP_INLINE bx_bool BX_CPU_C::alignment_check(void)
 BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_xsave(void)
 {
   return (BX_CPU_THIS_PTR cpuid_std_function[1].ecx & BX_CPUID_EXT_XSAVE);
+}
+
+BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_x2apic(void)
+{
+  return (BX_CPU_THIS_PTR cpuid_std_function[1].ecx & BX_CPUID_EXT_X2APIC);
 }
 
 BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_pcid(void)

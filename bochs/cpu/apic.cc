@@ -240,7 +240,7 @@ void bx_local_apic_c::reset(unsigned type)
 
 void bx_local_apic_c::set_base(bx_phy_address newbase)
 {
-#if BX_SUPPORT_X2APIC
+#if BX_CPU_LEVEL >= 6
   if (mode == BX_APIC_X2APIC_MODE)
     ldr = ((apic_id & 0xfffffff0) << 16) | (1 << (apic_id & 0xf));
 #endif
@@ -811,7 +811,7 @@ bx_bool bx_local_apic_c::match_logical_addr(apic_dest_t address)
 {
   bx_bool match = 0;
 
-#if BX_SUPPORT_X2APIC
+#if BX_CPU_LEVEL >= 6
   if (mode == BX_APIC_X2APIC_MODE) {
     // only cluster model supported in x2apic mode
     if (address == 0xffffffff) // // broadcast all
@@ -976,7 +976,7 @@ void bx_local_apic_c::set_initial_timer_count(Bit32u value)
   }
 }
 
-#if BX_SUPPORT_X2APIC
+#if BX_CPU_LEVEL >= 6
 // return false when x2apic is not supported/not readable
 bx_bool bx_local_apic_c::read_x2apic(unsigned index, Bit64u *val_64)
 {

@@ -129,7 +129,7 @@ public:
   void write(bx_phy_address addr, void *data, unsigned len);
   void write_aligned(bx_phy_address addr, Bit32u data);
   Bit32u read_aligned(bx_phy_address address);
-#if BX_SUPPORT_X2APIC
+#if BX_CPU_LEVEL >= 6
   bx_bool read_x2apic(unsigned index, Bit64u *msr);
   bx_bool write_x2apic(unsigned index, Bit64u msr);
 #endif

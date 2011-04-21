@@ -189,7 +189,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUSHAD16(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::POPAD16(bxInstruction_c *i)
 {
-  Bit16u di, si, bp, bx, dx, cx, ax, dummy;
+  Bit16u di, si, bp, bx, dx, cx, ax;
 
   if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b)
   {
@@ -197,7 +197,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::POPAD16(bxInstruction_c *i)
     di = read_virtual_word_32(BX_SEG_REG_SS, (Bit32u)(temp_ESP +  0));
     si = read_virtual_word_32(BX_SEG_REG_SS, (Bit32u)(temp_ESP +  2));
     bp = read_virtual_word_32(BX_SEG_REG_SS, (Bit32u)(temp_ESP +  4));
-    dummy = read_virtual_word_32(BX_SEG_REG_SS, (Bit32u)(temp_ESP +  6));
+         read_virtual_word_32(BX_SEG_REG_SS, (Bit32u)(temp_ESP +  6));
     bx = read_virtual_word_32(BX_SEG_REG_SS, (Bit32u)(temp_ESP +  8));
     dx = read_virtual_word_32(BX_SEG_REG_SS, (Bit32u)(temp_ESP + 10));
     cx = read_virtual_word_32(BX_SEG_REG_SS, (Bit32u)(temp_ESP + 12));
@@ -210,7 +210,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::POPAD16(bxInstruction_c *i)
     di = read_virtual_word_32(BX_SEG_REG_SS, (Bit16u)(temp_SP +  0));
     si = read_virtual_word_32(BX_SEG_REG_SS, (Bit16u)(temp_SP +  2));
     bp = read_virtual_word_32(BX_SEG_REG_SS, (Bit16u)(temp_SP +  4));
-    dummy = read_virtual_word_32(BX_SEG_REG_SS, (Bit16u)(temp_SP +  6));
+         read_virtual_word_32(BX_SEG_REG_SS, (Bit16u)(temp_SP +  6));
     bx = read_virtual_word_32(BX_SEG_REG_SS, (Bit16u)(temp_SP +  8));
     dx = read_virtual_word_32(BX_SEG_REG_SS, (Bit16u)(temp_SP + 10));
     cx = read_virtual_word_32(BX_SEG_REG_SS, (Bit16u)(temp_SP + 12));

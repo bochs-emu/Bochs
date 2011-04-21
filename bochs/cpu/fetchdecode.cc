@@ -1270,9 +1270,9 @@ BX_CPU_C::fetchDecode32(const Bit8u *iptr, bxInstruction_c *i, unsigned remainin
 #define SSE_PREFIX_F2   3
   unsigned sse_prefix = SSE_PREFIX_NONE;
 
-  int had_vex = 0;
   int vvv = -1;
 #if BX_SUPPORT_AVX
+  int had_vex = 0;
   bx_bool vex_w = 0;
 #endif
 

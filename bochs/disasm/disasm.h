@@ -39,35 +39,35 @@
 }
 
 /* Instruction set attributes (duplicated in cpu.h) */
-#define IA_X87              0x00000001        /* FPU (X87) instruction */
-#define IA_486              0x00000002        /* 486 new instruction */
-#define IA_PENTIUM          0x00000004        /* Pentium new instruction */
-#define IA_P6               0x00000008        /* P6 new instruction */
-#define IA_MMX              0x00000010        /* MMX instruction */
-#define IA_3DNOW            0x00000020        /* 3DNow! instruction */
-#define IA_FXSAVE_FXRSTOR   0x00000040        /* FXSAVE/FXRSTOR instruction */
-#define IA_SYSENTER_SYSEXIT 0x00000080        /* SYSENTER/SYSEXIT instruction */
-#define IA_CLFLUSH          0x00000100        /* CLFLUSH instruction */
-#define IA_SSE              0x00000200        /* SSE  instruction */
-#define IA_SSE2             0x00000400        /* SSE2 instruction */
-#define IA_SSE3             0x00000800        /* SSE3 instruction */
-#define IA_SSSE3            0x00001000        /* SSSE3 instruction */
-#define IA_SSE4_1           0x00002000        /* SSE4_1 instruction */
-#define IA_SSE4_2           0x00004000        /* SSE4_2 instruction */
-#define IA_SSE4A            0x00008000        /* SSE4A instruction */
-#define IA_MONITOR_MWAIT    0x00010000        /* MONITOR/MWAIT instruction */
-#define IA_VMX              0x00020000        /* VMX instruction */
-#define IA_SMX              0x00040000        /* SMX instruction */
-#define IA_SVM              0x00080000        /* SVM instruction */
-#define IA_XSAVE            0x00100000        /* XSAVE/XRSTOR extensions instruction */
-#define IA_XSAVEOPT         0x00200000        /* XSAVEOPT instruction */
-#define IA_AES_PCLMULQDQ    0x00400000        /* AES+PCLMULQDQ instructions */
-#define IA_MOVBE            0x00800000        /* MOVBE Intel Atom(R) instruction */
-#define IA_FSGSBASE         0x01000000        /* FS/GS BASE access instructions */
-#define IA_AVX              0x02000000        /* AVX instruction */
-#define IA_AVX_F16C         0x04000000        /* AVX F16 convert instruction */
-#define IA_AVX_FMA          0x08000000        /* AVX FMA instruction */
-#define IA_X86_64           0x10000000        /* x86-64 instruction */
+#define IA_X87              (1 << 0)        /* FPU (X87) instruction */
+#define IA_486              (1 << 1)        /* 486 new instruction */
+#define IA_PENTIUM          (1 << 2)        /* Pentium new instruction */
+#define IA_P6               (1 << 3)        /* P6 new instruction */
+#define IA_MMX              (1 << 4)        /* MMX instruction */
+#define IA_3DNOW            (1 << 5)        /* 3DNow! instruction */
+#define IA_FXSAVE_FXRSTOR   (1 << 6)        /* FXSAVE/FXRSTOR instruction */
+#define IA_SYSENTER_SYSEXIT (1 << 7)        /* SYSENTER/SYSEXIT instruction */
+#define IA_CLFLUSH          (1 << 8)        /* CLFLUSH instruction */
+#define IA_SSE              (1 << 9)        /* SSE  instruction */
+#define IA_SSE2             (1 << 10)       /* SSE2 instruction */
+#define IA_SSE3             (1 << 11)       /* SSE3 instruction */
+#define IA_SSSE3            (1 << 12)       /* SSSE3 instruction */
+#define IA_SSE4_1           (1 << 13)       /* SSE4_1 instruction */
+#define IA_SSE4_2           (1 << 14)       /* SSE4_2 instruction */
+#define IA_SSE4A            (1 << 15)       /* SSE4A instruction */
+#define IA_MONITOR_MWAIT    (1 << 16)       /* MONITOR/MWAIT instruction */
+#define IA_VMX              (1 << 17)       /* VMX instruction */
+#define IA_SMX              (1 << 18)       /* SMX instruction */
+#define IA_SVM              (1 << 19)       /* SVM instruction */
+#define IA_XSAVE            (1 << 20)       /* XSAVE/XRSTOR extensions instruction */
+#define IA_XSAVEOPT         (1 << 21)       /* XSAVEOPT instruction */
+#define IA_AES_PCLMULQDQ    (1 << 22)       /* AES+PCLMULQDQ instructions */
+#define IA_MOVBE            (1 << 23)       /* MOVBE Intel Atom(R) instruction */
+#define IA_FSGSBASE         (1 << 24)       /* FS/GS BASE access instructions */
+#define IA_AVX              (1 << 25)       /* AVX instruction */
+#define IA_AVX_F16C         (1 << 26)       /* AVX F16 convert instruction */
+#define IA_AVX_FMA          (1 << 27)       /* AVX FMA instruction */
+#define IA_X86_64           (1 << 28)       /* x86-64 instruction */
 
 /* general purpose bit register */
 enum {

@@ -193,7 +193,7 @@ void bx_init_options()
   bx_param_num_c *ioaddr, *ioaddr2, *irq;
   bx_param_bool_c *enabled, *readonly, *status;
   bx_param_enum_c *mode, *type, *ethmod, *toggle;
-  bx_param_string_c *macaddr, *ethdev;
+  bx_param_string_c *macaddr;
   bx_param_filename_c *path;
   char name[BX_PATHNAME_LEN], descr[512], group[16], label[512];
 
@@ -373,22 +373,27 @@ void bx_init_options()
       "mmx", "Support for MMX instruction set",
       "Support for MMX instruction set",
       1);
+
+  // configure defaults to XAPIC enabled
+  static const char *apic_names[] = { "legacy", "xapic", "x2apic", NULL };
+  new bx_param_enum_c(cpuid_param,
+      "apic", "APIC configuration",
+      "Select APIC configuration (Legacy APIC/XAPIC/X2APIC)",
+      apic_names,
+      BX_CPUID_SUPPORT_XAPIC,
+      BX_CPUID_SUPPORT_LEGACY_APIC);
 #endif
 
 #if BX_CPU_LEVEL >= 6
   // configure defaults to CPU_LEVEL = 6 with SSE2 enabled
   static const char *sse_names[] = { "none", "sse", "sse2", "sse3", "ssse3", "sse4_1", "sse4_2", NULL };
-
   new bx_param_enum_c(cpuid_param,
       "sse", "Support for SSE instruction set",
       "Support for SSE/SSE2/SSE3/SSSE3/SSE4_1/SSE4_2 instruction set",
       sse_names,
       BX_CPUID_SUPPORT_SSE2,
       BX_CPUID_SUPPORT_NOSSE);
-  new bx_param_bool_c(cpuid_param,
-      "xapic", "Support for XAPIC extensions",
-      "Support for XAPIC extensions",
-      1);
+
   new bx_param_bool_c(cpuid_param,
       "sep", "Support for SYSENTER/SYSEXIT instructions",
       "Support for SYSENTER/SYSEXIT instructions",
@@ -1484,7 +1489,7 @@ void bx_init_options()
     0);
   ethmod->set_by_name("null");
   ethmod->set_ask_format("Choose ethernet module for the NE2K [%s] ");
-  ethdev = new bx_param_string_c(menu,
+  new bx_param_string_c(menu,
     "ethdev",
     "Ethernet device",
     "Device used for the connection to the real net. This is only valid if an ethernet module other than 'null' is used.",
@@ -1523,7 +1528,7 @@ void bx_init_options()
     0);
   ethmod->set_by_name("null");
   ethmod->set_ask_format("Choose ethernet module for the Pseudo NIC [%s]");
-  ethdev = new bx_param_string_c(menu,
+  new bx_param_string_c(menu,
     "ethdev",
     "Ethernet device",
     "Device used for the connection to the real net. This is only valid if an ethernet module other than 'null' is used.",
@@ -1636,7 +1641,6 @@ void bx_init_options()
   // misc options subtree
   bx_list_c *misc = new bx_list_c(root_param, "misc", "Configure Everything Else");
   misc->set_options(misc->SHOW_PARENT);
-  bx_param_num_c *gdbstub_opt;
 
   // port e9 hack
   new bx_param_bool_c(misc,
@@ -1662,25 +1666,25 @@ void bx_init_options()
     "",
     0);
   enabled->set_enabled(BX_GDBSTUB);
-  gdbstub_opt = new bx_param_num_c(menu,
+  new bx_param_num_c(menu,
     "port",
     "Port",
     "TCP/IP port for GDB stub",
     0, 65535,
     1234);
-  gdbstub_opt = new bx_param_num_c(menu,
+  new bx_param_num_c(menu,
     "text_base",
     "Text base",
     "",
     0, BX_MAX_BIT32U,
     0);
-  gdbstub_opt = new bx_param_num_c(menu,
+  new bx_param_num_c(menu,
     "data_base",
     "Data base",
     "",
     0, BX_MAX_BIT32U,
     0);
-  gdbstub_opt = new bx_param_num_c(menu,
+  new bx_param_num_c(menu,
     "bss_base",
     "BSS base",
     "",
@@ -2642,6 +2646,11 @@ static int parse_line_formatted(const char *context, int num_params, char *param
         if (parse_param_bool(params[i], 4, BXPN_CPUID_MMX) < 0) {
           PARSE_ERR(("%s: cpuid directive malformed.", context));
         }
+      } else if (!strncmp(params[i], "apic=", 5)) {
+        if (! SIM->get_param_enum(BXPN_CPUID_APIC)->set_by_name(&params[i][5]))
+          PARSE_ERR(("%s: unsupported apic option.", context));
+      } else if (!strncmp(params[i], "xapic=", 6)) {
+        PARSE_ERR(("%s: unsupported xapic option (deprecated).", context));
 #endif
 #if BX_CPU_LEVEL >= 6
       } else if (!strncmp(params[i], "sse=", 4)) {
@@ -2665,10 +2674,6 @@ static int parse_line_formatted(const char *context, int num_params, char *param
         }
       } else if (!strncmp(params[i], "xsaveopt=", 9)) {
         if (parse_param_bool(params[i], 9, BXPN_CPUID_XSAVEOPT) < 0) {
-          PARSE_ERR(("%s: cpuid directive malformed.", context));
-        }
-      } else if (!strncmp(params[i], "xapic=", 6)) {
-        if (parse_param_bool(params[i], 6, BXPN_CPUID_XAPIC) < 0) {
           PARSE_ERR(("%s: cpuid directive malformed.", context));
         }
 #if BX_SUPPORT_X86_64
@@ -3881,12 +3886,12 @@ int bx_write_configuration(const char *rc, int overwrite)
 #if BX_CPU_LEVEL >= 4
   fprintf(fp, "cpuid: cpuid_limit_winnt=%d", SIM->get_param_bool(BXPN_CPUID_LIMIT_WINNT)->get());
 #if BX_CPU_LEVEL >= 5
-  fprintf(fp, ", mmx=%d", SIM->get_param_bool(BXPN_CPUID_MMX)->get());
+  fprintf(fp, ", mmx=%d, apic=%s", SIM->get_param_bool(BXPN_CPUID_MMX)->get(),
+    SIM->get_param_enum(BXPN_CPUID_APIC)->get_selected());
 #endif
 #if BX_CPU_LEVEL >= 6
-  fprintf(fp, ", sse=%s, xapic=%d, sep=%d, aes=%d, xsave=%d, xsaveopt=%d, movbe=%d",
+  fprintf(fp, ", sse=%s, sep=%d, aes=%d, xsave=%d, xsaveopt=%d, movbe=%d",
     SIM->get_param_enum(BXPN_CPUID_SSE)->get_selected(),
-    SIM->get_param_bool(BXPN_CPUID_XAPIC)->get(),
     SIM->get_param_bool(BXPN_CPUID_SEP)->get(),
     SIM->get_param_bool(BXPN_CPUID_AES)->get(),
     SIM->get_param_bool(BXPN_CPUID_XSAVE)->get(),

@@ -1703,9 +1703,9 @@ BX_CPU_C::fetchDecode64(const Bit8u *iptr, bxInstruction_c *i, unsigned remainin
   unsigned sse_prefix = SSE_PREFIX_NONE;
   unsigned rex_prefix = 0;
 
-  int had_vex = 0;
   int vvv = -1;
 #if BX_SUPPORT_AVX
+  int had_vex = 0;
   bx_bool vex_w = 0;
 #endif
 

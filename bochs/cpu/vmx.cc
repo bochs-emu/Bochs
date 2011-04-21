@@ -1686,10 +1686,10 @@ Bit32u BX_CPU_C::LoadMSRs(Bit32u msr_cnt, bx_phy_address pAddr)
       return msr;
 #endif
 
-#if BX_SUPPORT_X2APIC
-    if ((index & 0xfffff800) == 0x800) // X2APIC range
-      return msr;
-#endif
+    if (bx_cpuid_support_x2apic()) {
+      if ((index & 0xfffff800) == 0x800) // X2APIC range
+        return msr;
+    }
 
     if (! wrmsr(index, msr_hi))
       return msr;
@@ -1713,10 +1713,10 @@ Bit32u BX_CPU_C::StoreMSRs(Bit32u msr_cnt, bx_phy_address pAddr)
 
     Bit32u index = GET32L(msr_lo);
 
-#if BX_SUPPORT_X2APIC
-    if ((index & 0xfffff800) == 0x800) // X2APIC range
-      return msr;
-#endif
+    if (bx_cpuid_support_x2apic()) {
+      if ((index & 0xfffff800) == 0x800) // X2APIC range
+        return msr;
+    }
 
     if (! rdmsr(index, &msr_hi))
       return msr;

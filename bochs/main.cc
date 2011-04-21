@@ -74,8 +74,10 @@ logfunctions *pluginlog = &thePluginLog;
 bx_startup_flags_t bx_startup_flags;
 bx_bool bx_user_quit;
 Bit8u bx_cpu_count;
+#if BX_SUPPORT_APIC
 Bit32u apic_id_mask; // determinted by XAPIC option
 bx_bool simulate_xapic;
+#endif
 
 /* typedefs */
 
@@ -869,11 +871,8 @@ int bx_begin_simulation (int argc, char *argv[])
                  SIM->get_param_num(BXPN_CPU_NCORES)->get() *
                  SIM->get_param_num(BXPN_CPU_NTHREADS)->get();
 
-#if BX_CPU_LEVEL >= 6
-  simulate_xapic = SIM->get_param_bool(BXPN_CPUID_XAPIC)->get();
-#else
-  simulate_xapic = 0;
-#endif
+#if BX_SUPPORT_APIC
+  simulate_xapic = (SIM->get_param_enum(BXPN_CPUID_APIC)->get() >= BX_CPUID_SUPPORT_XAPIC);
 
   // For P6 and Pentium family processors the local APIC ID feild is 4 bits
   // APIC_MAX_ID indicate broadcast so it can't be used as valid APIC ID
@@ -885,6 +884,7 @@ int bx_begin_simulation (int argc, char *argv[])
     BX_PANIC(("cpu: too many SMP threads defined, only %u threads supported by %sAPIC",
       max_smp_threads, simulate_xapic ? "x" : "legacy "));
   }
+#endif
 
   BX_ASSERT(bx_cpu_count > 0);
 
@@ -1044,7 +1044,11 @@ void bx_init_hardware()
 #else
   BX_INFO(("  SMP support: no"));
 #endif
-  BX_INFO(("  APIC support: %s",BX_SUPPORT_APIC?"yes":"no"));
+#if BX_CPU_LEVEL >= 5
+  BX_INFO(("  APIC support: %s", SIM->get_param_enum(BXPN_CPUID_APIC)->get_selected()));
+#else
+  BX_INFO(("  APIC support: no"));
+#endif
   BX_INFO(("  FPU support: %s",BX_SUPPORT_FPU?"yes":"no"));
 #if BX_CPU_LEVEL >= 5
   BX_INFO(("  MMX support: %s",mmx_enabled?"yes":"no"));

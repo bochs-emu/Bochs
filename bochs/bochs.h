@@ -435,8 +435,10 @@ void CDECL bx_signal_handler(int signum);
 int bx_atexit(void);
 BOCHSAPI extern bx_debug_t bx_dbg;
 
+#if BX_SUPPORT_APIC
 // determinted by XAPIC option
 BOCHSAPI extern Bit32u apic_id_mask;
+#endif
 
 // memory access type (read/write/execute/rw)
 #define BX_READ         0

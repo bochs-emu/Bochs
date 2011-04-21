@@ -39,7 +39,7 @@ cpuid
   movbe
   xsave
   xsaveopt
-  xapic
+  apic
   1g_pages
   pcid
   fsgsbase

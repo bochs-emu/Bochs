@@ -17,7 +17,12 @@ Bochs repository moved to the SVN version control !
     The default family value determined by configure option --enable-cpu-level.
   - Added ability to configure CPUID model through .bochsrc.
     The default model value is 3.
-  - Configure option --enable-vbe is deprecated is should not be used anymore.
+  - Added ability to configure x2apic support through .bochsrc.
+    The APIC configuration could be selected using new CPUID .bochsrc APIC option.
+    Possible configurations are: "legacy", "xapic" and "x2apic".
+    Configure option --enable-x2apic and Bochs 2.4.6 .bochsrc XAPIC option
+    are deprecated and should not be used anymore.
+  - Configure option --enable-vbe is deprecated and should not be used anymore.
     The VBE support is always automatically compiled in, in order to enable
     VBE support the bochsrc option "vga: extension=" has be set to "vbe". If
     PCI is present, the "pcivga" device can be assigned to PCI slot.

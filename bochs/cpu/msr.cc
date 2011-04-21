@@ -40,12 +40,14 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
   if ((index & 0x3FFFFFFF) >= BX_MSR_MAX_INDEX)
     return 0;
 
-#if BX_SUPPORT_X2APIC
-  if (index >= 0x800 && index <= 0xBFF) {
-    if (BX_CPU_THIS_PTR msr.apicbase & 0x400)  // X2APIC mode
-      return BX_CPU_THIS_PTR lapic.read_x2apic(index, msr);
-    else
-      return 0;
+#if BX_CPU_LEVEL >= 6
+  if (bx_cpuid_support_x2apic()) {
+    if (index >= 0x800 && index <= 0xBFF) {
+      if (BX_CPU_THIS_PTR msr.apicbase & 0x400)  // X2APIC mode
+        return BX_CPU_THIS_PTR lapic.read_x2apic(index, msr);
+      else
+        return 0;
+    }
   }
 #endif
 
@@ -364,12 +366,14 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
   if ((index & 0x3FFFFFFF) >= BX_MSR_MAX_INDEX)
     return 0;
 
-#if BX_SUPPORT_X2APIC
-  if (index >= 0x800 && index <= 0xBFF) {
-    if (BX_CPU_THIS_PTR msr.apicbase & 0x400)  // X2APIC mode
-      return BX_CPU_THIS_PTR lapic.write_x2apic(index, val_64);
-    else
-      return 0;
+#if BX_CPU_LEVEL >= 6
+  if (bx_cpuid_support_x2apic()) {
+    if (index >= 0x800 && index <= 0xBFF) {
+      if (BX_CPU_THIS_PTR msr.apicbase & 0x400)  // X2APIC mode
+        return BX_CPU_THIS_PTR lapic.write_x2apic(index, val_64);
+      else
+        return 0;
+    }
   }
 #endif
 
@@ -668,7 +672,7 @@ bx_bool BX_CPU_C::relocate_apic(Bit64u val_64)
    * [M:63]  Reserved
    */
 
-#define BX_MSR_APICBASE_RESERVED_BITS (0x2ff | (BX_SUPPORT_X2APIC ? 0 : 0x400))
+#define BX_MSR_APICBASE_RESERVED_BITS (0x2ff | (bx_cpuid_support_x2apic() ? 0 : 0x400))
 
   if (BX_CPU_THIS_PTR msr.apicbase & 0x800) {
     Bit32u val32_hi = GET32H(val_64), val32_lo = GET32L(val_64);
@@ -684,16 +688,18 @@ bx_bool BX_CPU_C::relocate_apic(Bit64u val_64)
       return 0;
     }
 
-#if BX_SUPPORT_X2APIC
-    unsigned apic_state = (BX_CPU_THIS_PTR msr.apicbase >> 10) & 3;
-    unsigned new_state = (val32_lo >> 10) & 3;
-    if (new_state == BX_APIC_STATE_INVALID) {
-      BX_ERROR(("relocate_apic: attempt to set invalid apic state"));
-      return 0;
-    }
-    if (apic_state == BX_APIC_X2APIC_MODE && new_state != BX_APIC_GLOBALLY_DISABLED) {
-      BX_ERROR(("relocate_apic: attempt to switch from x2apic -> xapic"));
-      return 0;
+#if BX_CPU_LEVEL >= 6
+    if (bx_cpuid_support_x2apic()) {
+      unsigned apic_state = (BX_CPU_THIS_PTR msr.apicbase >> 10) & 3;
+      unsigned new_state = (val32_lo >> 10) & 3;
+      if (new_state == BX_APIC_STATE_INVALID) {
+        BX_ERROR(("relocate_apic: attempt to set invalid apic state"));
+        return 0;
+      }
+      if (apic_state == BX_APIC_X2APIC_MODE && new_state != BX_APIC_GLOBALLY_DISABLED) {
+        BX_ERROR(("relocate_apic: attempt to switch from x2apic -> xapic"));
+        return 0;
+      }
     }
 #endif
 

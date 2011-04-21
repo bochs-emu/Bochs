@@ -3059,13 +3059,18 @@ speed.</para></footnote>.
 <para>
 Example:
 <screen>
-  cpuid: mmx=1, sep=1, sse=sse4_2, xapic=1, aes=1, movbe=1, xsave=1, cpuid_limit_winnt=0
+  cpuid: mmx=1, sep=1, sse=sse4_2, apic=xapic, aes=1, movbe=1, xsave=1, cpuid_limit_winnt=0
 </screen>
 This defines features and functionality supported by Bochs emulated CPU:
 </para>
 <para><command>mmx</command></para>
 <para>
 Select MMX instruction set support.
+This option exists only if Bochs compiled with BX_CPU_LEVEL >= 5.
+</para>
+<para><command>apic</command></para>
+<para>
+Select APIC configuration (LEGACY/XAPIC/X2APIC).
 This option exists only if Bochs compiled with BX_CPU_LEVEL >= 5.
 </para>
 <para><command>sep</command></para>
@@ -3077,11 +3082,6 @@ This option exists only if Bochs compiled with BX_CPU_LEVEL >= 6.
 <para>
 Select SSE instruction set support.
 Any of NONE/SSE/SSE2/SSE3/SSSE3/SSE4_1/SSE4_2 could be selected.
-This option exists only if Bochs compiled with BX_CPU_LEVEL >= 6.
-</para>
-<para><command>xapic</command></para>
-<para>
-Select XAPIC extensions support.
 This option exists only if Bochs compiled with BX_CPU_LEVEL >= 6.
 </para>
 <para><command>aes</command></para>

@@ -193,6 +193,11 @@ mmx:
 Select MMX instruction set support.
 This option exists only if Bochs compiled with BX_CPU_LEVEL >= 5.
 
+apic:
+
+Select APIC configuration (LEGACY/XAPIC/X2APIC).
+This option exists only if Bochs compiled with BX_CPU_LEVEL >= 5.
+
 sep:
 
 Select SYSENTER/SYSEXIT instruction set support.
@@ -202,11 +207,6 @@ sse:
 
 Select SSE instruction set support.
 Any of NONE/SSE/SSE2/SSE3/SSSE3/SSE4_1/SSE4_2 could be selected.
-This option exists only if Bochs compiled with BX_CPU_LEVEL >= 6.
-
-xapic:
-
-Select XAPIC extensions support.
 This option exists only if Bochs compiled with BX_CPU_LEVEL >= 6.
 
 aes:

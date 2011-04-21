@@ -539,6 +539,10 @@ enum {
 #define BX_CPUID_SUPPORT_SSE4_1  5
 #define BX_CPUID_SUPPORT_SSE4_2  6
 
+#define BX_CPUID_SUPPORT_LEGACY_APIC 0
+#define BX_CPUID_SUPPORT_XAPIC       1
+#define BX_CPUID_SUPPORT_X2APIC      2
+
 #define BX_CLOCK_TIME0_LOCAL     1
 #define BX_CLOCK_TIME0_UTC       2
 

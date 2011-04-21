@@ -152,7 +152,9 @@ void BX_CPU_C::initialize(void)
 {
   BX_CPU_THIS_PTR set_INTR(0);
 
+  init_cpu_features_bitmask();
   init_isa_features_bitmask();
+
   init_FetchDecodeTables(); // must be called after init_isa_features_bitmask()
 
 #if BX_CONFIGURE_MSRS
@@ -368,7 +370,7 @@ void BX_CPU_C::register_state(void)
   BXRS_HEX_PARAM_FIELD(cpu, CR4, cr4.val32);
 #endif
 #if BX_CPU_LEVEL >= 6
-  if (BX_CPU_SUPPORT_ISA_EXTENSION(BX_CPU_XSAVE)) {
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_CPU_XSAVE)) {
     BXRS_HEX_PARAM_FIELD(cpu, XCR0, xcr0.val32);
   }
 #endif
@@ -527,7 +529,7 @@ void BX_CPU_C::register_state(void)
 #endif
 
 #if BX_CPU_LEVEL >= 6
-  if (BX_CPU_SUPPORT_ISA_EXTENSION(BX_CPU_SSE)) {
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_CPU_SSE)) {
     bx_list_c *sse = new bx_list_c(cpu, "SSE", BX_VLMAX*2*BX_XMM_REGISTERS+1);
     BXRS_HEX_PARAM_FIELD(sse, mxcsr, mxcsr.mxcsr);
     for (n=0; n<BX_XMM_REGISTERS; n++) {
@@ -910,7 +912,7 @@ void BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR xcr0.set32(0x1);
   BX_CPU_THIS_PTR xcr0_suppmask = 0x3;
 #if BX_SUPPORT_AVX
-  if (BX_CPU_SUPPORT_ISA_EXTENSION(BX_CPU_AVX))
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_CPU_AVX))
     BX_CPU_THIS_PTR xcr0_suppmask |= BX_XCR0_AVX_MASK;
 #endif
 #endif
@@ -1018,7 +1020,7 @@ void BX_CPU_C::reset(unsigned source)
 
     BX_CPU_THIS_PTR mxcsr.mxcsr = MXCSR_RESET;
     BX_CPU_THIS_PTR mxcsr_mask = 0x0000ffbf;
-    if (BX_CPU_SUPPORT_ISA_EXTENSION(BX_CPU_SSE2))
+    if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_CPU_SSE2))
       BX_CPU_THIS_PTR mxcsr_mask |= MXCSR_DAZ;
     if (BX_SUPPORT_MISALIGNED_SSE)
       BX_CPU_THIS_PTR mxcsr_mask |= MXCSR_MISALIGNED_EXCEPTION_MASK;
@@ -1067,9 +1069,7 @@ void BX_CPU_C::reset(unsigned source)
 
 void BX_CPU_C::sanity_checks(void)
 {
-  Bit8u al, cl, dl, bl, ah, ch, dh, bh;
-  Bit16u ax, cx, dx, bx, sp, bp, si, di;
-  Bit32u eax, ecx, edx, ebx, esp, ebp, esi, edi;
+  Bit32u eax = EAX, ecx = ECX, edx = EDX, ebx = EBX, esp = ESP, ebp = EBP, esi = ESI, edi = EDI;
 
   EAX = 0xFFEEDDCC;
   ECX = 0xBBAA9988;
@@ -1079,6 +1079,8 @@ void BX_CPU_C::sanity_checks(void)
   EBP = 0xAA998877;
   ESI = 0x66554433;
   EDI = 0x2211FFEE;
+
+  Bit8u al, cl, dl, bl, ah, ch, dh, bh;
 
   al = AL;
   cl = CL;
@@ -1101,6 +1103,8 @@ void BX_CPU_C::sanity_checks(void)
     BX_PANIC(("problems using BX_READ_8BIT_REGx()!"));
   }
 
+  Bit16u ax, cx, dx, bx, sp, bp, si, di;
+
   ax = AX;
   cx = CX;
   dx = DX;
@@ -1122,14 +1126,14 @@ void BX_CPU_C::sanity_checks(void)
     BX_PANIC(("problems using BX_READ_16BIT_REG()!"));
   }
 
-  eax = EAX;
-  ecx = ECX;
-  edx = EDX;
-  ebx = EBX;
-  esp = ESP;
-  ebp = EBP;
-  esi = ESI;
-  edi = EDI;
+  EAX = eax; /* restore registers */
+  ECX = ecx;
+  EDX = edx;
+  EBX = ebx;
+  ESP = esp;
+  EBP = ebp;
+  ESI = esi;
+  EDI = edi;
 
   if (sizeof(Bit8u)  != 1  ||  sizeof(Bit8s)  != 1)
     BX_PANIC(("data type Bit8u or Bit8s is not of length 1 byte!"));
