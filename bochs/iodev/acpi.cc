@@ -86,7 +86,7 @@ Bit64u muldiv64(Bit64u a, Bit32u b, Bit32u c)
   union {
     Bit64u ll;
     struct {
-#ifdef WORDS_BIGENDIAN
+#ifdef BX_BIG_ENDIAN
       Bit32u high, low;
 #else
       Bit32u low, high;
