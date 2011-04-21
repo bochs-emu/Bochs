@@ -91,6 +91,9 @@ extern "C" {
 #include <sys/param.h>
 #include <sys/file.h>
 #include <sys/cdio.h>
+#if defined(__OpenBSD__)
+#include <sys/dkio.h>
+#endif
 #include <sys/ioctl.h>
 #include <sys/disklabel.h>
 // ntohl(x) et al have been moved out of sys/param.h in FreeBSD 5
