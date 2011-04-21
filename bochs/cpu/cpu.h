@@ -627,18 +627,19 @@ typedef struct
 #define BX_CPU_SVM              (1 << 19)       /* SVM instruction */
 #define BX_CPU_XSAVE            (1 << 20)       /* XSAVE/XRSTOR extensions instruction */
 #define BX_CPU_XSAVEOPT         (1 << 21)       /* XSAVEOPT instruction */
-#define BX_CPU_AES_PCLMULQDQ    (1 << 22)       /* AES+PCLMULQDQ instructions */
+#define BX_CPU_AES_PCLMULQDQ    (1 << 22)       /* AES+PCLMULQDQ instruction */
 #define BX_CPU_MOVBE            (1 << 23)       /* MOVBE Intel Atom(R) instruction */
-#define BX_CPU_FSGSBASE         (1 << 24)       /* FS/GS BASE access instructions */
+#define BX_CPU_FSGSBASE         (1 << 24)       /* FS/GS BASE access instruction */
 #define BX_CPU_AVX              (1 << 25)       /* AVX instruction */
 #define BX_CPU_AVX_F16C         (1 << 26)       /* AVX F16 convert instruction */
 #define BX_CPU_AVX_FMA          (1 << 27)       /* AVX FMA instruction */
 #define BX_CPU_X86_64           (1 << 28)       /* x86-64 instruction */
 
 // cpuid non-ISA features
-#define BX_CPU_XAPIC            (1 << 0)
-#define BX_CPU_X2APIC           (1 << 1)
-#define BX_CPU_PCID             (1 << 2)
+#define BX_CPU_XAPIC            (1 << 0)        /* XAPIC support */
+#define BX_CPU_X2APIC           (1 << 1)        /* X2APIC support */
+#define BX_CPU_1G_PAGES         (1 << 2)        /* 1Gb pages support */
+#define BX_CPU_PCID             (1 << 3)        /* PCID pages support */
 
 #include "cpuid.h"
 #include "crregs.h"

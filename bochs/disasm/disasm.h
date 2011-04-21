@@ -61,9 +61,9 @@
 #define IA_SVM              (1 << 19)       /* SVM instruction */
 #define IA_XSAVE            (1 << 20)       /* XSAVE/XRSTOR extensions instruction */
 #define IA_XSAVEOPT         (1 << 21)       /* XSAVEOPT instruction */
-#define IA_AES_PCLMULQDQ    (1 << 22)       /* AES+PCLMULQDQ instructions */
+#define IA_AES_PCLMULQDQ    (1 << 22)       /* AES+PCLMULQDQ instruction */
 #define IA_MOVBE            (1 << 23)       /* MOVBE Intel Atom(R) instruction */
-#define IA_FSGSBASE         (1 << 24)       /* FS/GS BASE access instructions */
+#define IA_FSGSBASE         (1 << 24)       /* FS/GS BASE access instruction */
 #define IA_AVX              (1 << 25)       /* AVX instruction */
 #define IA_AVX_F16C         (1 << 26)       /* AVX F16 convert instruction */
 #define IA_AVX_FMA          (1 << 27)       /* AVX FMA instruction */
