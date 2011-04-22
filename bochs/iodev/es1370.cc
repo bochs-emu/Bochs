@@ -605,12 +605,17 @@ void bx_es1370_c::update_voices(Bit32u ctl, Bit32u sctl, bx_bool force)
       if (on) {
         BX_INFO(("%s: freq = %d, nchannels %d, fmt %d, shift %d",
                  chan_name[i], new_freq, 1 << (new_fmt & 1), (new_fmt & 2) ? 16 : 8, d->shift));
-        if (i != DAC2_CHANNEL) {
+        if (i == DAC1_CHANNEL) {
           BX_ERROR(("channel %s not supported yet", chan_name[i]));
         }
         if (i == ADC_CHANNEL) {
           if (BX_ES1370_THIS s.adc_inputinit) {
             ret = BX_ES1370_THIS soundmod->startwaverecord(new_freq, (new_fmt >> 1) ? 16 : 8, (new_fmt & 1), (new_fmt >> 1));
+            if (ret != BX_SOUNDLOW_OK) {
+              BX_ES1370_THIS soundmod->closewaveinput();
+              BX_ES1370_THIS s.adc_inputinit = 0;
+              BX_ERROR(("could not start wave record"));
+            }
           }
         } else {
           if ((i == DAC2_CHANNEL) && BX_ES1370_THIS s.dac2_outputinit) {

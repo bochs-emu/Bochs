@@ -38,24 +38,32 @@ public:
   bx_sound_linux_c(logfunctions *dev);
   virtual ~bx_sound_linux_c();
 
-  virtual int    waveready();
-  virtual int    midiready();
+  virtual int waveready();
+  virtual int midiready();
 
-  virtual int    openmidioutput(const char *mididev);
-  virtual int    sendmidicommand(int delta, int command, int length, Bit8u data[]);
-  virtual int    closemidioutput();
+  virtual int openmidioutput(const char *mididev);
+  virtual int sendmidicommand(int delta, int command, int length, Bit8u data[]);
+  virtual int closemidioutput();
 
-  virtual int    openwaveoutput(const char *wavedev);
-  virtual int    startwaveplayback(int frequency, int bits, bx_bool stereo, int format);
-  virtual int    sendwavepacket(int length, Bit8u data[]);
-  virtual int    stopwaveplayback();
-  virtual int    closewaveoutput();
+  virtual int openwaveoutput(const char *wavedev);
+  virtual int startwaveplayback(int frequency, int bits, bx_bool stereo, int format);
+  virtual int sendwavepacket(int length, Bit8u data[]);
+  virtual int stopwaveplayback();
+  virtual int closewaveoutput();
 
+  virtual int openwaveinput(const char *wavedev, sound_record_handler_t rh);
+  virtual int startwaverecord(int frequency, int bits, bx_bool stereo, int format);
+  virtual int getwavepacket(int length, Bit8u data[]);
+  virtual int stopwaverecord();
+  virtual int closewaveinput();
+
+  static void record_timer_handler(void *);
+  void record_timer(void);
 private:
 #if BX_HAVE_ALSASOUND
   int alsa_seq_open(const char *alsadev);
   int alsa_seq_output(int delta, int command, int length, Bit8u data[]);
-  int alsa_pcm_open(int frequency, int bits, bx_bool stereo, int format);
+  int alsa_pcm_open(bx_bool input, int frequency, int bits, bx_bool stereo, int format);
   int alsa_pcm_write();
 
   bx_bool use_alsa_seq;
@@ -67,16 +75,18 @@ private:
   struct {
     snd_pcm_t *handle;
     snd_pcm_uframes_t frames;
-  } alsa_pcm;
-  int dir, alsa_bufsize, audio_bufsize;
-  char *alsa_buffer;
+    int alsa_bufsize, audio_bufsize;
+    char *buffer;
+  } alsa_pcm[2];
 #endif
   FILE *midi;
-  char *wavedevice;
-  int wave;
-  Bit8u audio_buffer[BX_SOUND_LINUX_BUFSIZE];
-  int oldfreq,oldbits,oldformat;
-  bx_bool oldstereo;
+  char *wave_device;
+  int  wave_fd;
+  struct {
+    int oldfreq, oldbits, oldformat;
+    bx_bool oldstereo;
+  } wave_ch[2];
+  Bit8u audio_buffer[2][BX_SOUND_LINUX_BUFSIZE];
 };
 
 #endif
