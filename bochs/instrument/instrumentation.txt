@@ -142,8 +142,8 @@ Possible instruction types, passed through bx_instr_tlb_cntrl:
 	#define BX_INSTR_TASK_SWITCH    13
 	#define BX_INSTR_CONTEXT_SWITCH 14 /* VMM and SMM enter/exit */
 	#define BX_INSTR_INVLPG         15
-	#define BX_INSTR_INVEPT         15
-	#define BX_INSTR_INVVPID        16
+	#define BX_INSTR_INVEPT         16
+	#define BX_INSTR_INVVPID        17
 
 The new_cr_value is provided  for first for instruction types only and will be
 undefined for all others.

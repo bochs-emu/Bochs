@@ -27,8 +27,8 @@
 #define BX_INSTR_TASK_SWITCH    13
 #define BX_INSTR_CONTEXT_SWITCH 14
 #define BX_INSTR_INVLPG         15
-#define BX_INSTR_INVEPT         15
-#define BX_INSTR_INVVPID        16
+#define BX_INSTR_INVEPT         16
+#define BX_INSTR_INVVPID        17
 
 // possible types passed to BX_INSTR_CACHE_CNTRL()
 #define BX_INSTR_INVD           20
