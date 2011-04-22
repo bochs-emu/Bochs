@@ -1178,7 +1178,7 @@ void BX_CPU_C::init_cpu_features_bitmask(void)
   }
 #endif
 
-#if BX_CPU_LEVEL >= 6
+#if BX_SUPPORT_X86_64
   static bx_bool pcid_enabled = SIM->get_param_bool(BXPN_CPUID_PCID)->get();
   if (pcid_enabled)
     features_bitmask |= BX_CPU_PCID;
