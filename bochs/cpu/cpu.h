@@ -4160,7 +4160,7 @@ enum {
 
 #define setEFlagsOSZAPC(flags32) {                                      \
   BX_CPU_THIS_PTR eflags = (BX_CPU_THIS_PTR eflags & ~EFlagsOSZAPCMask) \
-    | (flags32 & EFlagsOSZAPCMask);                                     \
+    | ((flags32) & EFlagsOSZAPCMask);                                   \
   BX_CPU_THIS_PTR lf_flags_status = 0;                                  \
 }
 
