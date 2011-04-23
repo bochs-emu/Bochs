@@ -1111,8 +1111,6 @@ public: // for now...
   ArithmeticalFlag(PF, EFlagsPFMask,  2);
   ArithmeticalFlag(CF, EFlagsCFMask,  0);
 
-  BX_SMF BX_CPP_INLINE void set_PF_base(Bit8u val);
-
   // constructors & destructors...
   BX_CPU_C(unsigned id = 0);
  ~BX_CPU_C();
@@ -4006,14 +4004,6 @@ BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_1g_paging(void)
 #endif
 }
 
-BX_CPP_INLINE void BX_CPU_C::set_PF_base(Bit8u val)
-{
-  BX_CPU_THIS_PTR lf_flags_status &= ~EFlagsPFMask;
-  val = bx_parity_lookup[val]; // Always returns 0 or 1.
-  BX_CPU_THIS_PTR eflags &= ~(1<<2);
-  BX_CPU_THIS_PTR eflags |= val<<2;
-}
-
 //
 // inline simple lazy flags implementation methods
 //
@@ -4029,7 +4019,9 @@ BX_CPP_INLINE bx_bool BX_CPU_C::get_SFLazy(void)
 
 BX_CPP_INLINE bx_bool BX_CPU_C::get_PFLazy(void)
 {
-  return bx_parity_lookup[(Bit8u) BX_CPU_THIS_PTR oszapc.result];
+  Bit8u temp = (Bit8u) BX_CPU_THIS_PTR oszapc.result;
+  temp = (temp ^ (temp >> 4)) & 0x0F;
+  return (0x9669U >> temp) & 1;
 }
 
 IMPLEMENT_EFLAG_ACCESSOR   (ID,  21)
