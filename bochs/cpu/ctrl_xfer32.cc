@@ -147,44 +147,6 @@ done:
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, EIP);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::RETfar32(bxInstruction_c *i)
-{
-  Bit32u eip;
-  Bit16u cs_raw;
-
-  invalidate_prefetch_q();
-
-#if BX_DEBUGGER
-  BX_CPU_THIS_PTR show_flag |= Flag_ret;
-#endif
-
-  if (protected_mode()) {
-    return_protected(i, 0);
-    goto done;
-  }
-
-  RSP_SPECULATIVE;
-
-  eip    =          pop_32();
-  cs_raw = (Bit16u) pop_32(); /* 32bit pop, MSW discarded */
-
-  // CS.LIMIT can't change when in real/v8086 mode
-  if (eip > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled) {
-    BX_ERROR(("RETfar32: instruction pointer not within code segment limits"));
-    exception(BX_GP_EXCEPTION, 0);
-  }
-
-  load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], cs_raw);
-  EIP = eip;
-
-  RSP_COMMIT;
-
-done:
-
-  BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_RET,
-                      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, EIP);
-}
-
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::CALL_Jd(bxInstruction_c *i)
 {
 #if BX_DEBUGGER

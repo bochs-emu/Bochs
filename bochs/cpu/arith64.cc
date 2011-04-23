@@ -503,19 +503,15 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::DEC_EqR(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPXCHG_EqGqM(bxInstruction_c *i)
 {
-  Bit64u op1_64, op2_64, diff_64;
-
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  /* pointer, segment address pair */
-  op1_64 = read_RMW_virtual_qword_64(i->seg(), eaddr);
-  diff_64 = RAX - op1_64;
+  Bit64u op1_64 = read_RMW_virtual_qword_64(i->seg(), eaddr);
+  Bit64u diff_64 = RAX - op1_64;
   SET_FLAGS_OSZAPC_SUB_64(RAX, op1_64, diff_64);
 
   if (diff_64 == 0) {  // if accumulator == dest
     // dest <-- src
-    op2_64 = BX_READ_64BIT_REG(i->nnn());
-    write_RMW_virtual_qword(op2_64);
+    write_RMW_virtual_qword(BX_READ_64BIT_REG(i->nnn()));
   }
   else {
     // accumulator <-- dest
@@ -525,16 +521,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPXCHG_EqGqM(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPXCHG_EqGqR(bxInstruction_c *i)
 {
-  Bit64u op1_64, op2_64, diff_64;
-
-  op1_64 = BX_READ_64BIT_REG(i->rm());
-  diff_64 = RAX - op1_64;
+  Bit64u op1_64 = BX_READ_64BIT_REG(i->rm());
+  Bit64u diff_64 = RAX - op1_64;
   SET_FLAGS_OSZAPC_SUB_64(RAX, op1_64, diff_64);
 
   if (diff_64 == 0) {  // if accumulator == dest
     // dest <-- src
-    op2_64 = BX_READ_64BIT_REG(i->nnn());
-    BX_WRITE_64BIT_REG(i->rm(), op2_64);
+    BX_WRITE_64BIT_REG(i->rm(), BX_READ_64BIT_REG(i->nnn()));
   }
   else {
     // accumulator <-- dest

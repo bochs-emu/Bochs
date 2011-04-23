@@ -458,18 +458,15 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::DEC_EwM(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPXCHG_EwGwM(bxInstruction_c *i)
 {
-  Bit16u op1_16, op2_16, diff_16;
-
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  op1_16 = read_RMW_virtual_word(i->seg(), eaddr);
-  diff_16 = AX - op1_16;
+  Bit16u op1_16 = read_RMW_virtual_word(i->seg(), eaddr);
+  Bit16u diff_16 = AX - op1_16;
   SET_FLAGS_OSZAPC_SUB_16(AX, op1_16, diff_16);
 
   if (diff_16 == 0) {  // if accumulator == dest
     // dest <-- src
-    op2_16 = BX_READ_16BIT_REG(i->nnn());
-    write_RMW_virtual_word(op2_16);
+    write_RMW_virtual_word(BX_READ_16BIT_REG(i->nnn()));
   }
   else {
     // accumulator <-- dest
@@ -479,16 +476,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPXCHG_EwGwM(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPXCHG_EwGwR(bxInstruction_c *i)
 {
-  Bit16u op1_16, op2_16, diff_16;
-
-  op1_16 = BX_READ_16BIT_REG(i->rm());
-  diff_16 = AX - op1_16;
+  Bit16u op1_16 = BX_READ_16BIT_REG(i->rm());
+  Bit16u diff_16 = AX - op1_16;
   SET_FLAGS_OSZAPC_SUB_16(AX, op1_16, diff_16);
 
   if (diff_16 == 0) {  // if accumulator == dest
     // dest <-- src
-    op2_16 = BX_READ_16BIT_REG(i->nnn());
-    BX_WRITE_16BIT_REG(i->rm(), op2_16);
+    BX_WRITE_16BIT_REG(i->rm(), BX_READ_16BIT_REG(i->nnn()));
   }
   else {
     // accumulator <-- dest

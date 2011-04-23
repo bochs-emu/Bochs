@@ -90,13 +90,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XLAT(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::XCHG_EbGbM(bxInstruction_c *i)
 {
-  Bit8u op1, op2;
-
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  /* pointer, segment address pair */
-  op1 = read_RMW_virtual_byte(i->seg(), eaddr);
-  op2 = BX_READ_8BIT_REGx(i->nnn(), i->extend8bitL());
+  Bit8u op1 = read_RMW_virtual_byte(i->seg(), eaddr);
+  Bit8u op2 = BX_READ_8BIT_REGx(i->nnn(), i->extend8bitL());
 
   write_RMW_virtual_byte(op2);
   BX_WRITE_8BIT_REGx(i->nnn(), i->extend8bitL(), op1);

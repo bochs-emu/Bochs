@@ -2500,9 +2500,7 @@ public: // for now...
   BX_SMF void RETnear16_Iw(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void RETnear16(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void RETfar32_Iw(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void RETfar32(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void RETfar16_Iw(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void RETfar16(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
   BX_SMF void XADD_EbGbM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void XADD_EwGwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);

@@ -507,18 +507,15 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::DEC_EdM(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPXCHG_EdGdM(bxInstruction_c *i)
 {
-  Bit32u op1_32, op2_32, diff_32;
-
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  op1_32 = read_RMW_virtual_dword(i->seg(), eaddr);
-  diff_32 = EAX - op1_32;
+  Bit32u op1_32 = read_RMW_virtual_dword(i->seg(), eaddr);
+  Bit32u diff_32 = EAX - op1_32;
   SET_FLAGS_OSZAPC_SUB_32(EAX, op1_32, diff_32);
 
   if (diff_32 == 0) {  // if accumulator == dest
     // dest <-- src
-    op2_32 = BX_READ_32BIT_REG(i->nnn());
-    write_RMW_virtual_dword(op2_32);
+    write_RMW_virtual_dword(BX_READ_32BIT_REG(i->nnn()));
   }
   else {
     // accumulator <-- dest
@@ -528,16 +525,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPXCHG_EdGdM(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPXCHG_EdGdR(bxInstruction_c *i)
 {
-  Bit32u op1_32, op2_32, diff_32;
-
-  op1_32 = BX_READ_32BIT_REG(i->rm());
-  diff_32 = EAX - op1_32;
+  Bit32u op1_32 = BX_READ_32BIT_REG(i->rm());
+  Bit32u diff_32 = EAX - op1_32;
   SET_FLAGS_OSZAPC_SUB_32(EAX, op1_32, diff_32);
 
   if (diff_32 == 0) {  // if accumulator == dest
     // dest <-- src
-    op2_32 = BX_READ_32BIT_REG(i->nnn());
-    BX_WRITE_32BIT_REGZ(i->rm(), op2_32);
+    BX_WRITE_32BIT_REGZ(i->rm(), BX_READ_32BIT_REG(i->nnn()));
   }
   else {
     // accumulator <-- dest
@@ -547,13 +541,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPXCHG_EdGdR(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPXCHG8B(bxInstruction_c *i)
 {
-  Bit64u op1_64, op2_64;
-
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
   // check write permission for following write
-  op1_64 = read_RMW_virtual_qword(i->seg(), eaddr);
-  op2_64 = ((Bit64u) EDX << 32) | EAX;
+  Bit64u op1_64 = read_RMW_virtual_qword(i->seg(), eaddr);
+  Bit64u op2_64 = ((Bit64u) EDX << 32) | EAX;
 
   if (op1_64 == op2_64) {  // if accumulator == dest
     // dest <-- src (ECX:EBX)

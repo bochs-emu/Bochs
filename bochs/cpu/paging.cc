@@ -1571,8 +1571,7 @@ void BX_CPU_C::access_write_linear(bx_address laddr, unsigned len, unsigned curr
   /* check for reference across multiple pages */
   if ((pageOffset + len) <= 4096) {
     // Access within single page.
-    BX_CPU_THIS_PTR address_xlation.paddress1 =
-        dtranslate_linear(laddr, curr_pl, BX_WRITE);
+    BX_CPU_THIS_PTR address_xlation.paddress1 = dtranslate_linear(laddr, curr_pl, BX_WRITE);
     BX_CPU_THIS_PTR address_xlation.pages     = 1;
 
     BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr, BX_CPU_THIS_PTR address_xlation.paddress1, len, BX_WRITE);
@@ -1586,12 +1585,10 @@ void BX_CPU_C::access_write_linear(bx_address laddr, unsigned len, unsigned curr
     BX_CPU_THIS_PTR address_xlation.paddress1 =
         dtranslate_linear(laddr, curr_pl, BX_WRITE);
     BX_CPU_THIS_PTR address_xlation.len1 = 4096 - pageOffset;
-    BX_CPU_THIS_PTR address_xlation.len2 = len -
-        BX_CPU_THIS_PTR address_xlation.len1;
-    BX_CPU_THIS_PTR address_xlation.pages     = 2;
+    BX_CPU_THIS_PTR address_xlation.len2 = len - BX_CPU_THIS_PTR address_xlation.len1;
+    BX_CPU_THIS_PTR address_xlation.pages = 2;
     bx_address laddr2 = laddr + BX_CPU_THIS_PTR address_xlation.len1;
-    BX_CPU_THIS_PTR address_xlation.paddress2 =
-        dtranslate_linear(laddr2, curr_pl, BX_WRITE);
+    BX_CPU_THIS_PTR address_xlation.paddress2 = dtranslate_linear(laddr2, curr_pl, BX_WRITE);
 
 #ifdef BX_LITTLE_ENDIAN
     BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr,
@@ -1646,8 +1643,7 @@ void BX_CPU_C::access_read_linear(bx_address laddr, unsigned len, unsigned curr_
   /* check for reference across multiple pages */
   if ((pageOffset + len) <= 4096) {
     // Access within single page.
-    BX_CPU_THIS_PTR address_xlation.paddress1 =
-        dtranslate_linear(laddr, curr_pl, xlate_rw);
+    BX_CPU_THIS_PTR address_xlation.paddress1 = dtranslate_linear(laddr, curr_pl, xlate_rw);
     BX_CPU_THIS_PTR address_xlation.pages     = 1;
     access_read_physical(BX_CPU_THIS_PTR address_xlation.paddress1, len, data);
     BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr,
@@ -1661,12 +1657,10 @@ void BX_CPU_C::access_read_linear(bx_address laddr, unsigned len, unsigned curr_
     BX_CPU_THIS_PTR address_xlation.paddress1 =
         dtranslate_linear(laddr, curr_pl, xlate_rw);
     BX_CPU_THIS_PTR address_xlation.len1 = 4096 - pageOffset;
-    BX_CPU_THIS_PTR address_xlation.len2 = len -
-        BX_CPU_THIS_PTR address_xlation.len1;
-    BX_CPU_THIS_PTR address_xlation.pages     = 2;
+    BX_CPU_THIS_PTR address_xlation.len2 = len - BX_CPU_THIS_PTR address_xlation.len1;
+    BX_CPU_THIS_PTR address_xlation.pages = 2;
     bx_address laddr2 = laddr + BX_CPU_THIS_PTR address_xlation.len1;
-    BX_CPU_THIS_PTR address_xlation.paddress2 =
-        dtranslate_linear(laddr2, curr_pl, xlate_rw);
+    BX_CPU_THIS_PTR address_xlation.paddress2 = dtranslate_linear(laddr2, curr_pl, xlate_rw);
 
 #ifdef BX_LITTLE_ENDIAN
     access_read_physical(BX_CPU_THIS_PTR address_xlation.paddress1,
