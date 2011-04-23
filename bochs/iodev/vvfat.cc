@@ -1938,7 +1938,10 @@ ssize_t vvfat_image_t::write(const void* buf, size_t count)
   Bit32u scount = (Bit32u)(count / 512);
 
   while (scount-- > 0) {
-    if ((fat_type == 32) && (sector_num == (offset_to_bootsector + 1))) {
+    if (sector_num == 0) {
+      // allow writing to MBR (except partition table)
+      memcpy(&first_sectors[0], cbuf, 0x1b8);
+    } else if ((fat_type == 32) && (sector_num == (offset_to_bootsector + 1))) {
       // allow writing to FS info sector
       memcpy(&first_sectors[sector_num * 0x200], cbuf, 0x200);
     } else if (sector_num < (offset_to_bootsector + reserved_sectors)) {
