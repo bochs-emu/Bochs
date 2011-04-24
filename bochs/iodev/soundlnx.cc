@@ -47,8 +47,10 @@ bx_sound_linux_c::bx_sound_linux_c(logfunctions *dev)
   alsa_pcm[1].buffer = NULL;
 #endif
   midi = NULL;
-  wave_device = NULL;
-  wave_fd = -1;
+  wave_device[0] = NULL;
+  wave_device[1] = NULL;
+  wave_fd[0] = -1;
+  wave_fd[1] = -1;
   BX_INFO(("Sound lowlevel module 'linux' initialized"));
 }
 
@@ -258,15 +260,15 @@ int bx_sound_linux_c::openwaveoutput(const char *wavedev)
 #endif
   int length = strlen(wavedev) + 1;
 
-  if (wave_device != NULL)
-    delete [] wave_device;
+  if (wave_device[0] != NULL)
+    delete [] wave_device[0];
 
-  wave_device = new char[length];
+  wave_device[0] = new char[length];
 
-  if (wave_device == NULL)
+  if (wave_device[0] == NULL)
     return BX_SOUNDLOW_ERR;
 
-  strncpy(wave_device, wavedev, length);
+  strncpy(wave_device[0], wavedev, length);
 
   return BX_SOUNDLOW_OK;
 }
@@ -356,15 +358,15 @@ int bx_sound_linux_c::startwaveplayback(int frequency, int bits, bx_bool stereo,
     return alsa_pcm_open(0, frequency, bits, stereo, format);
   }
 #endif
-  if ((wave_device == NULL) || (strlen(wave_device) < 1))
+  if ((wave_device[0] == NULL) || (strlen(wave_device[0]) < 1))
     return BX_SOUNDLOW_ERR;
 
-  if (wave_fd == -1) {
-    wave_fd = open(wave_device, O_WRONLY);
-    if (wave_fd == -1) {
+  if (wave_fd[0] == -1) {
+    wave_fd[0] = open(wave_device[0], O_WRONLY);
+    if (wave_fd[0] == -1) {
       return BX_SOUNDLOW_ERR;
     } else {
-      BX_INFO(("OSS: opened output device %s", wave_device));
+      BX_INFO(("OSS: opened output device %s", wave_device[0]));
     }
   } else {
     if ((frequency == wave_ch[0].oldfreq) &&
@@ -392,18 +394,18 @@ int bx_sound_linux_c::startwaveplayback(int frequency, int bits, bx_bool stereo,
     return BX_SOUNDLOW_ERR;
 
       // set frequency etc.
-  ret = ioctl(wave_fd, SNDCTL_DSP_RESET);
+  ret = ioctl(wave_fd[0], SNDCTL_DSP_RESET);
   if (ret != 0)
     BX_DEBUG(("ioctl(SNDCTL_DSP_RESET): %s", strerror(errno)));
 
   /*
-  ret = ioctl(wave, SNDCTL_DSP_SETFRAGMENT, &fragment);
+  ret = ioctl(wave_fd[0], SNDCTL_DSP_SETFRAGMENT, &fragment);
   if (ret != 0)
-    WRITELOG(WAVELOG(4), "ioctl(SNDCTL_DSP_SETFRAGMENT, %d): %s",
-             fragment, strerror(errno));
+    BX_DEBUG(("ioctl(SNDCTL_DSP_SETFRAGMENT, %d): %s",
+             fragment, strerror(errno)));
   */
 
-  ret = ioctl(wave_fd, SNDCTL_DSP_SETFMT, &fmt);
+  ret = ioctl(wave_fd[0], SNDCTL_DSP_SETFMT, &fmt);
   if (ret != 0)   // abort if the format is unknown, to avoid playing noise
   {
       BX_DEBUG(("ioctl(SNDCTL_DSP_SETFMT, %d): %s",
@@ -411,17 +413,17 @@ int bx_sound_linux_c::startwaveplayback(int frequency, int bits, bx_bool stereo,
       return BX_SOUNDLOW_ERR;
   }
 
-  ret = ioctl(wave_fd, SNDCTL_DSP_STEREO, &stereo);
+  ret = ioctl(wave_fd[0], SNDCTL_DSP_STEREO, &stereo);
   if (ret != 0)
     BX_DEBUG(("ioctl(SNDCTL_DSP_STEREO, %d): %s",
              stereo, strerror(errno)));
 
-  ret = ioctl(wave_fd, SNDCTL_DSP_SPEED, &frequency);
+  ret = ioctl(wave_fd[0], SNDCTL_DSP_SPEED, &frequency);
   if (ret != 0)
     BX_DEBUG(("ioctl(SNDCTL_DSP_SPEED, %d): %s",
              frequency, strerror(errno)));
 
-  // ioctl(wave, SNDCTL_DSP_GETBLKSIZE, &fragment);
+  // ioctl(wave_fd[0], SNDCTL_DSP_GETBLKSIZE, &fragment);
   // BX_DEBUG(("current output block size is %d", fragment));
 
   return BX_SOUNDLOW_OK;
@@ -479,7 +481,7 @@ int bx_sound_linux_c::sendwavepacket(int length, Bit8u data[])
     }
   }
 #endif
-  int ret = write(wave_fd, data, length);
+  int ret = write(wave_fd[0], data, length);
 
   if (ret == length) {
     return BX_SOUNDLOW_OK;
@@ -501,9 +503,9 @@ int bx_sound_linux_c::stopwaveplayback()
     return BX_SOUNDLOW_OK;
   }
 #endif
-  // ioctl(wave_fd, SNDCTL_DSP_SYNC);
-  // close(wave_fd);
-  // wave_fd = -1;
+  // ioctl(wave_fd[0], SNDCTL_DSP_SYNC);
+  // close(wave_fd[0]);
+  // wave_fd[0] = -1;
 
   return BX_SOUNDLOW_OK;
 }
@@ -518,15 +520,15 @@ int bx_sound_linux_c::closewaveoutput()
     return BX_SOUNDLOW_OK;
   }
 #endif
-  if (wave_device != NULL)
-    delete(wave_device);
+  if (wave_device[0] != NULL)
+    delete(wave_device[0]);
 
-  if (wave_fd != -1)
+  if (wave_fd[0] != -1)
   {
-      close(wave_fd);
-      wave_fd = -1;
+      close(wave_fd[0]);
+      wave_fd[0] = -1;
   }
-  wave_device = NULL;
+  wave_device[0] = NULL;
 
   return BX_SOUNDLOW_OK;
 }
@@ -542,13 +544,27 @@ int bx_sound_linux_c::openwaveinput(const char *wavedev, sound_record_handler_t 
     return BX_SOUNDLOW_OK;
   }
 #endif
-  return BX_SOUNDLOW_ERR;
+  int length = strlen(wavedev) + 1;
+
+  if (wave_device[1] != NULL)
+    delete [] wave_device[1];
+
+  wave_device[1] = new char[length];
+
+  if (wave_device[1] == NULL)
+    return BX_SOUNDLOW_ERR;
+
+  strncpy(wave_device[1], wavedev, length);
+
+  return BX_SOUNDLOW_OK;
 }
 
 int bx_sound_linux_c::startwaverecord(int frequency, int bits, bx_bool stereo, int format)
 {
   Bit64u timer_val;
   Bit8u shift = 0;
+  int fmt, ret;
+  int signeddata = format & 1;
 
   if (bits == 16) shift++;
   if (stereo) shift++;
@@ -563,14 +579,75 @@ int bx_sound_linux_c::startwaverecord(int frequency, int bits, bx_bool stereo, i
     return alsa_pcm_open(1, frequency, bits, stereo, format);
   }
 #endif
-  return BX_SOUNDLOW_ERR;
+  if ((wave_device[1] == NULL) || (strlen(wave_device[1]) < 1))
+    return BX_SOUNDLOW_ERR;
+
+  if (wave_fd[1] == -1) {
+    wave_fd[1] = open(wave_device[1], O_RDONLY);
+    if (wave_fd[1] == -1) {
+      return BX_SOUNDLOW_ERR;
+    } else {
+      BX_INFO(("OSS: opened input device %s", wave_device[1]));
+    }
+  } else {
+    if ((frequency == wave_ch[0].oldfreq) &&
+        (bits == wave_ch[0].oldbits) &&
+        (stereo == wave_ch[0].oldstereo) &&
+        (format == wave_ch[0].oldformat))
+      return BX_SOUNDLOW_OK; // nothing to do
+  }
+  wave_ch[0].oldfreq = frequency;
+  wave_ch[0].oldbits = bits;
+  wave_ch[0].oldstereo = stereo;
+  wave_ch[0].oldformat = format;
+
+  if (bits == 16)
+    if (signeddata == 1)
+      fmt = AFMT_S16_LE;
+    else
+      fmt = AFMT_U16_LE;
+  else if (bits == 8)
+    if (signeddata == 1)
+      fmt = AFMT_S8;
+    else
+      fmt = AFMT_U8;
+  else
+    return BX_SOUNDLOW_ERR;
+
+      // set frequency etc.
+  ret = ioctl(wave_fd[1], SNDCTL_DSP_RESET);
+  if (ret != 0)
+    BX_DEBUG(("ioctl(SNDCTL_DSP_RESET): %s", strerror(errno)));
+
+  ret = ioctl(wave_fd[1], SNDCTL_DSP_SETFMT, &fmt);
+  if (ret != 0) {  // abort if the format is unknown, to avoid playing noise
+    BX_DEBUG(("ioctl(SNDCTL_DSP_SETFMT, %d): %s",
+              fmt, strerror(errno)));
+    return BX_SOUNDLOW_ERR;
+  }
+
+  ret = ioctl(wave_fd[1], SNDCTL_DSP_STEREO, &stereo);
+  if (ret != 0) {
+    BX_DEBUG(("ioctl(SNDCTL_DSP_STEREO, %d): %s",
+             stereo, strerror(errno)));
+    return BX_SOUNDLOW_ERR;
+  }
+
+  ret = ioctl(wave_fd[1], SNDCTL_DSP_SPEED, &frequency);
+  if (ret != 0) {
+    BX_DEBUG(("ioctl(SNDCTL_DSP_SPEED, %d): %s",
+             frequency, strerror(errno)));
+    return BX_SOUNDLOW_ERR;
+  }
+
+  return BX_SOUNDLOW_OK;
 }
 
 int bx_sound_linux_c::getwavepacket(int length, Bit8u data[])
 {
-#if BX_HAVE_ALSASOUND
   int ret;
 
+#if BX_HAVE_ALSASOUND
   if (use_alsa_pcm) {
     if (alsa_pcm[1].buffer == NULL) {
       alsa_pcm[1].buffer = (char *)malloc(alsa_pcm[1].alsa_bufsize);
@@ -599,17 +676,22 @@ int bx_sound_linux_c::getwavepacket(int length, Bit8u data[])
     }
     return BX_SOUNDLOW_OK;
   }
-#else
-  memset(data, 0, length);
 #endif
-  return BX_SOUNDLOW_OK;
+  ret = read(wave_fd[1], data, length);
+
+  if (ret == length) {
+    return BX_SOUNDLOW_OK;
+  } else {
+    BX_ERROR(("OSS: write error"));
+    return BX_SOUNDLOW_ERR;
+  }
 }
 
 int bx_sound_linux_c::stopwaverecord()
 {
   bx_pc_system.deactivate_timer(record_timer_index);
 #if BX_HAVE_ALSASOUND
-  if (use_alsa_pcm) {
+  if (use_alsa_pcm && (alsa_pcm[1].handle != NULL)) {
     snd_pcm_drain(alsa_pcm[1].handle);
     return BX_SOUNDLOW_OK;
   }
@@ -628,6 +710,16 @@ int bx_sound_linux_c::closewaveinput()
     return BX_SOUNDLOW_OK;
   }
 #endif
+  if (wave_device[1] != NULL)
+    delete(wave_device[1]);
+
+  if (wave_fd[1] != -1)
+  {
+      close(wave_fd[1]);
+      wave_fd[1] = -1;
+  }
+  wave_device[1] = NULL;
+
   return BX_SOUNDLOW_OK;
 }
 

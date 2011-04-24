@@ -80,8 +80,8 @@ private:
   } alsa_pcm[2];
 #endif
   FILE *midi;
-  char *wave_device;
-  int  wave_fd;
+  char *wave_device[2];
+  int  wave_fd[2];
   struct {
     int oldfreq, oldbits, oldformat;
     bx_bool oldstereo;
