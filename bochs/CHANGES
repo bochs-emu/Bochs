@@ -37,7 +37,7 @@ Bochs repository moved to the SVN version control !
   - Sound
     - ported ES1370 soundcard emulation from Qemu, to enable configure with
         --enable-es1370 option
-    - sound input implemented in the sound lowlevel module 'linux' (ALSA only)
+    - sound input implemented in the sound lowlevel module 'linux' (ALSA / OSS)
 
   - LGPL'd VGABIOS updated to current CVS
     - fixed DAC palette in 8 bpp VBE and Cirrus modes (using the same palette
@@ -45,6 +45,7 @@ Bochs repository moved to the SVN version control !
     - VBE: added HDTV resolutions (patch by Tristan Schmelcher)
 
 - SF patches applied
+  [3292581] Core Audio first aid by Heikki Lindholm
   [3205979] Compilation fixes for OpenBSD by Brad Smith
   [3290979] acpi/muldiv64 endian bug by Heikki Lindholm
   [3289459] Mac OS X audio missing framework dependency by Heikki Lindholm
@@ -52,6 +53,7 @@ Bochs repository moved to the SVN version control !
   [3190995] add eth backend based on Slirp by Heikki Lindholm
 
 - these S.F. bugs were closed/fixed
+  [3292571] SB16 doesn't reinit correctly
   [3175168] Cirrus CL-GD5446 emulation incorrect
   [3260134] Failed to compile when trace cache disabled
   [3197425] Error compile with vmx in vs2008/2010 and for correct x64

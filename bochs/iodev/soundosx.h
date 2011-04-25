@@ -31,6 +31,7 @@
 #else
 #define BX_SOUND_OSX_use_converter
 //#define BX_SOUND_OSX_use_quicktime
+#include <CoreServices/CoreServices.h>
 #endif
 
 #define BX_SOUND_OSX_NBUF     8   // number of buffers for digital output
@@ -66,6 +67,9 @@ private:
 
 #ifdef BX_SOUND_OSX_use_converter
     int WavePlaying;
+
+    OSStatus core_audio_pause();
+    OSStatus core_audio_resume();
 #endif
 };
 
