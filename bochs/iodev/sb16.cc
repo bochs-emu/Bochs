@@ -1142,11 +1142,13 @@ void bx_sb16_c::dsp_dma(Bit8u command, Bit8u mode, Bit16u length, Bit8u comp)
           writelog(WAVELOG(2), "Error: Could not open wave output device.");
         } else {
           DSP.outputinit = 1;
-          ret = BX_SB16_OUTPUT->startwaveplayback(DSP.dma.samplerate, DSP.dma.bits, DSP.dma.stereo, DSP.dma.format);
-          if (ret != BX_SOUNDLOW_OK) {
-            BX_SB16_THIS wavemode = 0;
-            writelog(WAVELOG(2), "Error: Could not start wave playback.");
-          }
+        }
+      }
+      if (DSP.outputinit == 1) {
+        ret = BX_SB16_OUTPUT->startwaveplayback(DSP.dma.samplerate, DSP.dma.bits, DSP.dma.stereo, DSP.dma.format);
+        if (ret != BX_SOUNDLOW_OK) {
+          BX_SB16_THIS wavemode = 0;
+          writelog(WAVELOG(2), "Error: Could not start wave playback.");
         }
       }
     } else if ((BX_SB16_THIS wavemode == 2) ||
@@ -1171,11 +1173,13 @@ void bx_sb16_c::dsp_dma(Bit8u command, Bit8u mode, Bit16u length, Bit8u comp)
           writelog(WAVELOG(2), "Error: Could not open wave input device.");
         } else {
           DSP.inputinit = 1;
-          ret = BX_SB16_OUTPUT->startwaverecord(DSP.dma.samplerate, DSP.dma.bits, DSP.dma.stereo, DSP.dma.format);
-          if (ret != BX_SOUNDLOW_OK) {
-            BX_SB16_THIS wavemode = 0;
-            writelog(WAVELOG(2), "Error: Could not start wave record.");
-          }
+        }
+      }
+      if (DSP.inputinit == 1) {
+        ret = BX_SB16_OUTPUT->startwaverecord(DSP.dma.samplerate, DSP.dma.bits, DSP.dma.stereo, DSP.dma.format);
+        if (ret != BX_SOUNDLOW_OK) {
+          BX_SB16_THIS wavemode = 0;
+          writelog(WAVELOG(2), "Error: Could not start wave record.");
         }
       }
     }
