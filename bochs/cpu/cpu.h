@@ -4084,8 +4084,8 @@ enum {
 #define BxImmediate_Iq      0x0007 // 64 bit override
 #endif
 #define BxImmediate_Ib4     0x0008 // Register encoded in Ib[7:4]
-#define BxImmediate_BrOff8  0x0009 // Relative branch offset byte
 
+#define BxImmediate_BrOff8  BxImmediate_Ib_SE // Relative branch offset byte
 #define BxImmediate_BrOff16 BxImmediate_Iw    // Relative branch offset word, not encodable in 64-bit mode
 #define BxImmediate_BrOff32 BxImmediate_Id    // Relative branch offset dword
 

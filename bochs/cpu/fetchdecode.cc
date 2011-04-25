@@ -1716,7 +1716,6 @@ modrm_done:
           return(-1);
         }
         break;
-      case BxImmediate_BrOff8:
       case BxImmediate_Ib_SE: // Sign extend to OS size
         if (remain != 0) {
           Bit8s temp8s = *iptr;

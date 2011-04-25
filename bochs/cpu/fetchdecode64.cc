@@ -2234,16 +2234,6 @@ modrm_done:
           return(-1);
         }
         break;
-      case BxImmediate_BrOff8:
-        if (remain != 0) {
-          Bit8s temp8s = *iptr;
-          i->modRMForm.Id = (Bit32s) temp8s;
-          remain--;
-        }
-        else {
-          return(-1);
-        }
-        break;
       case BxImmediate_O:
         // For instructions which embed the address in the opcode.
         // There is only 64/32-bit addressing available in long64 mode.
