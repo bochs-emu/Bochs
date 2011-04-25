@@ -159,6 +159,25 @@ AC_CHECK_FUNCS(timelocal, AC_DEFINE(BX_HAVE_TIMELOCAL))
 AC_CHECK_FUNCS(gmtime, AC_DEFINE(BX_HAVE_GMTIME))
 AC_CHECK_FUNCS(mktime, AC_DEFINE(BX_HAVE_MKTIME))
 
+AC_MSG_CHECKING(for __builtin_bswap32)
+AC_TRY_LINK([],[
+  __builtin_bswap32(0x12345678);
+],[
+  AC_DEFINE(BX_HAVE___BUILTIN_BSWAP32, 1, [Define to 1 if you have the '__builtin_bswap32' function.])
+  AC_MSG_RESULT(yes)
+],[
+  AC_MSG_RESULT(no)
+])
+AC_MSG_CHECKING(for __builtin_bswap64)
+AC_TRY_LINK([],[
+  __builtin_bswap64(0x12345678);
+],[
+  AC_DEFINE(BX_HAVE___BUILTIN_BSWAP64, 1, [Define to 1 if you have the '__builtin_bswap64' function.])
+  AC_MSG_RESULT(yes)
+],[
+  AC_MSG_RESULT(no)
+])
+
 dnl As of autoconf 2.53, the standard largefile test fails for Linux/gcc.
 dnl It does not put the largefiles arguments into CFLAGS, even though Linux/gcc
 dnl does need them.  So we do it ourselves.

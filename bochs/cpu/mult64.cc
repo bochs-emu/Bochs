@@ -312,7 +312,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::IDIV_RAXEqR(bxInstruction_c *i)
   quotient_64l = quotient_128.lo;
 
   if ((!(quotient_128.lo & BX_CONST64(0x8000000000000000)) && quotient_128.hi != (Bit64s) 0) ||
-        (quotient_128.lo & BX_CONST64(0x8000000000000000)) && quotient_128.hi != (Bit64s) BX_CONST64(0xffffffffffffffff))
+       ((quotient_128.lo & BX_CONST64(0x8000000000000000)) && quotient_128.hi != (Bit64s) BX_CONST64(0xffffffffffffffff)))
   {
     exception(BX_DE_EXCEPTION, 0);
   }
@@ -330,10 +330,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::IMUL_GqEqIdR(bxInstruction_c *i)
 {
   Bit128s product_128;
 
-  Bit64s op2_64 = BX_READ_64BIT_REG(i->rm());
-  Bit64s op3_64 = (Bit32s) i->Id();
+  Bit64s op1_64 = BX_READ_64BIT_REG(i->rm());
+  Bit64s op2_64 = (Bit32s) i->Id();
 
-  long_imul(&product_128,op2_64,op3_64);
+  long_imul(&product_128,op1_64,op2_64);
 
   /* now write product back to destination */
   BX_WRITE_64BIT_REG(i->nnn(), product_128.lo);
