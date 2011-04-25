@@ -49,8 +49,9 @@ typedef struct {
 
   int dac1_timer_index;
   int dac2_timer_index;
-  bx_bool dac2_outputinit;
+  bx_bool dac_outputinit;
   bx_bool adc_inputinit;
+  int dac_nr_active;
 
   Bit32u base_ioaddr;
   Bit8u devfunc;
