@@ -432,7 +432,7 @@ void bx_es1370_c::es1370_timer(void)
 
   timer_id = bx_pc_system.triggeredTimerID();
   i = (timer_id == BX_ES1370_THIS s.dac1_timer_index) ? 0 : 1;
-  run_channel(i, timer_id, BX_SOUNDLOW_WAVEPACKETSIZE);
+  run_channel(i, timer_id, BX_ES1370_THIS s.dac_packet_size[i]);
 }
 
 void bx_es1370_c::run_channel(unsigned chan, int timer_id, Bit32u buflen)
@@ -627,7 +627,11 @@ void bx_es1370_c::update_voices(Bit32u ctl, Bit32u sctl, bx_bool force)
               BX_ES1370_THIS s.dac_nr_active = i;
             }
           }
-          timer_val = (Bit64u)BX_SOUNDLOW_WAVEPACKETSIZE * 1000000 / (new_freq << d->shift);
+          BX_ES1370_THIS s.dac_packet_size[i] = (new_freq / 10) << d->shift; // 0.1 sec
+          if (BX_ES1370_THIS s.dac_packet_size[i] > BX_SOUNDLOW_WAVEPACKETSIZE) {
+            BX_ES1370_THIS s.dac_packet_size[i] = BX_SOUNDLOW_WAVEPACKETSIZE;
+          }
+          timer_val = (Bit64u)BX_ES1370_THIS s.dac_packet_size[i] * 1000000 / (new_freq << d->shift);
           bx_pc_system.activate_timer(timer_id, timer_val, 1);
         }
       } else {

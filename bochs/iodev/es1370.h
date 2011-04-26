@@ -52,6 +52,7 @@ typedef struct {
   bx_bool dac_outputinit;
   bx_bool adc_inputinit;
   int dac_nr_active;
+  Bit16u dac_packet_size[2];
 
   Bit32u base_ioaddr;
   Bit8u devfunc;

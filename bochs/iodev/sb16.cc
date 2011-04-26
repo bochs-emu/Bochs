@@ -1163,7 +1163,10 @@ void bx_sb16_c::dsp_dma(Bit8u command, Bit8u mode, Bit16u length, Bit8u comp)
         initvocfile();
       }
     }
-    DSP.dma.chunkcount = BX_SOUNDLOW_WAVEPACKETSIZE;
+    DSP.dma.chunkcount = sampledatarate / 10; // 0.1 sec
+    if (DSP.dma.chunkcount > BX_SOUNDLOW_WAVEPACKETSIZE) {
+      DSP.dma.chunkcount = BX_SOUNDLOW_WAVEPACKETSIZE;
+    }
   } else {
     if (BX_SB16_THIS wavemode == 1) {
       if (DSP.inputinit == 0) {
@@ -1333,10 +1336,10 @@ void bx_sb16_c::dsp_sendwavepacket()
 // put a sample byte into the output buffer
 void bx_sb16_c::dsp_getsamplebyte(Bit8u value)
 {
-  if (DSP.dma.chunkindex < BX_SOUNDLOW_WAVEPACKETSIZE)
+  if (DSP.dma.chunkindex < DSP.dma.chunkcount)
     DSP.dma.chunk[DSP.dma.chunkindex++] = value;
 
-  if (DSP.dma.chunkindex >= BX_SOUNDLOW_WAVEPACKETSIZE)
+  if (DSP.dma.chunkindex >= DSP.dma.chunkcount)
     dsp_sendwavepacket();
 }
 
