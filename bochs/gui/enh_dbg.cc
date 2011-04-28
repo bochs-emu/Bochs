@@ -2203,6 +2203,7 @@ void OnBreak()
 
     // then detect current CPU mode the *right* way -- look for changes
     // TODO: create param Objects for CS.d_b and cpu_mode for each CPU
+    unsigned PrevCpuMode = CpuMode;
     CpuMode = BX_CPU(CurrentCPU)->get_cpu_mode();
     if (CpuMode == BX_MODE_LONG_64)
     {
@@ -2217,7 +2218,7 @@ void OnBreak()
     else
     {
         bx_bool d_b = BX_CPU(CurrentCPU)->sregs[BX_SEG_REG_CS].cache.u.segment.d_b;
-        if (In32Mode != d_b || In64Mode != FALSE)
+        if (In32Mode != d_b || In64Mode != FALSE || PrevCpuMode != CpuMode)
         {
             CpuModeChange = TRUE;
             In64Mode = FALSE;
