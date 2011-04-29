@@ -2144,7 +2144,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSRAW_UdqIb(bxInstruction_c *i)
   BxPackedXmmRegister op = BX_READ_XMM_REG(i->rm());
   Bit8u shift = i->Ib();
 
-  if(shift == 0) return;
+  if(shift == 0) {
+    BX_WRITE_XMM_REGZ(i->vvv(), op, i->getVL());
+    return;
+  }
 
   if(shift > 15) {
     op.xmm16u(0) = (op.xmm16u(0) & 0x8000) ? 0xffff : 0;
@@ -2226,7 +2229,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSRAD_UdqIb(bxInstruction_c *i)
   BxPackedXmmRegister op = BX_READ_XMM_REG(i->rm());
   Bit8u shift = i->Ib();
 
-  if(shift == 0) return;
+  if(shift == 0) {
+    BX_WRITE_XMM_REGZ(i->vvv(), op, i->getVL());
+    return;
+  }
 
   if(shift > 31) {
     op.xmm32u(0) = (op.xmm32u(0) & 0x80000000) ? 0xffffffff : 0;

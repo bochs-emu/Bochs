@@ -249,7 +249,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FXSAVE(bxInstruction_c *i)
     return; // skip saving of the XMM state
 #endif
 
-
   if(BX_CPU_THIS_PTR cr4.get_OSFXSR() && bx_cpuid_support_sse())
   {
     /* store XMM register file */
@@ -396,7 +395,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVUPS_VpsWpsM(bxInstruction_c *i)
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
   read_virtual_dqword(i->seg(), eaddr, (Bit8u *) &op);
 
-  /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), op);
 #endif
 }
@@ -426,7 +424,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVAPS_VpsWpsM(bxInstruction_c *i)
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
   read_virtual_dqword_aligned(i->seg(), eaddr, (Bit8u *) &op);
 
-  /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), op);
 #endif
 }
@@ -505,7 +502,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVLPS_VpsMq(bxInstruction_c *i)
   /* pointer, segment address pair */
   Bit64u val64 = read_virtual_qword(i->seg(), eaddr);
 
-  /* now write result back to destination */
   BX_WRITE_XMM_REG_LO_QWORD(i->nnn(), val64);
 #endif
 }
@@ -521,7 +517,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVDDUP_VpdWqR(bxInstruction_c *i)
   op.xmm64u(0) = val64;
   op.xmm64u(1) = val64;
 
-  /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), op);
 #endif
 }
@@ -537,7 +532,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSLDUP_VpsWpsR(bxInstruction_c *i)
   op.xmm32u(1) = op.xmm32u(0);
   op.xmm32u(3) = op.xmm32u(2);
 
-  /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), op);
 #endif
 }
@@ -553,7 +547,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSHDUP_VpsWpsR(bxInstruction_c *i)
   op.xmm32u(0) = op.xmm32u(1);
   op.xmm32u(2) = op.xmm32u(3);
 
-  /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), op);
 #endif
 }
@@ -585,7 +578,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVHPS_VpsMq(bxInstruction_c *i)
   /* pointer, segment address pair */
   Bit64u val64 = read_virtual_qword(i->seg(), eaddr);
 
-  /* now write result back to destination */
   BX_WRITE_XMM_REG_HI_QWORD(i->nnn(), val64);
 #endif
 }
@@ -777,7 +769,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVMSKB_GdUdq(bxInstruction_c *i)
   if(op.xmmubyte(0xE) & 0x80) result |= 0x4000;
   if(op.xmmubyte(0xF) & 0x80) result |= 0x8000;
 
-  /* now write result back to destination */
   BX_WRITE_32BIT_REGZ(i->nnn(), result);
 #endif
 }
@@ -829,7 +820,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVSXBW_VdqWqR(bxInstruction_c *i)
   result.xmm16u(6) = MMXSB6(op);
   result.xmm16u(7) = MMXSB7(op);
 
-  /* now write result back to destination */
   BX_WRITE_XMM_REGZ(i->nnn(), result, i->getVL());
 #endif
 }
@@ -846,7 +836,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVSXBD_VdqWdR(bxInstruction_c *i)
   result.xmm32u(2) = (Bit8s) ((val32 >> 16) & 0xFF);
   result.xmm32u(3) = (Bit8s) (val32  >> 24);
 
-  /* now write result back to destination */
   BX_WRITE_XMM_REGZ(i->nnn(), result, i->getVL());
 #endif
 }
@@ -861,7 +850,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVSXBQ_VdqWwR(bxInstruction_c *i)
   result.xmm64u(0) = (Bit8s) (val16 & 0xFF);
   result.xmm64u(1) = (Bit8s) (val16 >> 8);
 
-  /* now write result back to destination */
   BX_WRITE_XMM_REGZ(i->nnn(), result, i->getVL());
 #endif
 }
@@ -878,7 +866,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVSXWD_VdqWqR(bxInstruction_c *i)
   result.xmm32u(2) = (Bit16s) ((val64 >> 32) & 0xFFFF);
   result.xmm32u(3) = (Bit16s) (val64  >> 48);
 
-  /* now write result back to destination */
   BX_WRITE_XMM_REGZ(i->nnn(), result, i->getVL());
 #endif
 }
@@ -893,7 +880,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVSXWQ_VdqWdR(bxInstruction_c *i)
   result.xmm64u(0) = (Bit16s) (val32 & 0xFFFF);
   result.xmm64u(1) = (Bit16s) (val32 >> 16);
 
-  /* now write result back to destination */
   BX_WRITE_XMM_REGZ(i->nnn(), result, i->getVL());
 #endif
 }
@@ -908,7 +894,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVSXDQ_VdqWqR(bxInstruction_c *i)
   result.xmm64u(0) = (Bit32s) (val64 & 0xFFFFFFFF);
   result.xmm64u(1) = (Bit32s) (val64 >> 32);
 
-  /* now write result back to destination */
   BX_WRITE_XMM_REGZ(i->nnn(), result, i->getVL());
 #endif
 }
@@ -932,7 +917,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVZXBW_VdqWqR(bxInstruction_c *i)
   result.xmm16u(6) = MMXUB6(op);
   result.xmm16u(7) = MMXUB7(op);
 
-  /* now write result back to destination */
   BX_WRITE_XMM_REGZ(i->nnn(), result, i->getVL());
 #endif
 }
@@ -949,7 +933,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVZXBD_VdqWdR(bxInstruction_c *i)
   result.xmm32u(2) = (val32 >> 16) & 0xFF;
   result.xmm32u(3) = val32  >> 24;
 
-  /* now write result back to destination */
   BX_WRITE_XMM_REGZ(i->nnn(), result, i->getVL());
 #endif
 }
@@ -964,7 +947,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVZXBQ_VdqWwR(bxInstruction_c *i)
   result.xmm64u(0) = val16 & 0xFF;
   result.xmm64u(1) = val16 >> 8;
 
-  /* now write result back to destination */
   BX_WRITE_XMM_REGZ(i->nnn(), result, i->getVL());
 #endif
 }
@@ -981,7 +963,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVZXWD_VdqWqR(bxInstruction_c *i)
   result.xmm32u(2) = (val64 >> 32) & 0xFFFF;
   result.xmm32u(3) = val64  >> 48;
 
-  /* now write result back to destination */
   BX_WRITE_XMM_REGZ(i->nnn(), result, i->getVL());
 #endif
 }
@@ -996,7 +977,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVZXWQ_VdqWdR(bxInstruction_c *i)
   result.xmm64u(0) = val32 & 0xFFFF;
   result.xmm64u(1) = val32 >> 16;
 
-  /* now write result back to destination */
   BX_WRITE_XMM_REGZ(i->nnn(), result, i->getVL());
 #endif
 }
@@ -1011,7 +991,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVZXDQ_VdqWqR(bxInstruction_c *i)
   result.xmm64u(0) = val64 & 0xFFFFFFFF;
   result.xmm64u(1) = val64 >> 32;
 
-  /* now write result back to destination */
   BX_WRITE_XMM_REGZ(i->nnn(), result, i->getVL());
 #endif
 }

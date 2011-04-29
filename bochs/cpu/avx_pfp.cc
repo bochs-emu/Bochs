@@ -814,8 +814,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMINPD_VpdWpdR(bxInstruction_c *i)
 #endif
 }
 
-/*
- * Opcode: VEX.NDS.F3.0F 5D (VEX.W ignore, VEX.L ignore) */
+/* Opcode: VEX.NDS.F3.0F 5D (VEX.W ignore, VEX.L ignore) */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMINSS_VssWssR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
@@ -839,8 +838,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMINSS_VssWssR(bxInstruction_c *i)
 #endif
 }
 
-/*
- * Opcode: VEX.NDS.F2.0F 5D (VEX.W ignore, VEX.L ignore) */
+/* Opcode: VEX.NDS.F2.0F 5D (VEX.W ignore, VEX.L ignore) */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMINSD_VsdWsdR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
@@ -916,8 +914,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VDIVPD_VpdWpdR(bxInstruction_c *i)
 #endif
 }
 
-/*
- * Opcode: VEX.NDS.F3.0F 5E (VEX.W ignore, VEX.L ignore) */
+/* Opcode: VEX.NDS.F3.0F 5E (VEX.W ignore, VEX.L ignore) */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::VDIVSS_VssWssR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
@@ -939,8 +936,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VDIVSS_VssWssR(bxInstruction_c *i)
 #endif
 }
 
-/*
- * Opcode: VEX.NDS.F2.0F 5E (VEX.W ignore, VEX.L ignore) */
+/* Opcode: VEX.NDS.F2.0F 5E (VEX.W ignore, VEX.L ignore) */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::VDIVSD_VsdWsdR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
