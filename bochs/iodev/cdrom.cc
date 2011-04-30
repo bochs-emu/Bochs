@@ -526,8 +526,7 @@ void cdrom_interface::init(void)
 
 cdrom_interface::~cdrom_interface(void)
 {
-#ifdef WIN32
-#else
+#ifndef WIN32
   if (fd >= 0)
     close(fd);
 #endif
@@ -746,7 +745,6 @@ void cdrom_interface::eject_cdrom()
     fd = -1;
   }
 }
-
 
 bx_bool cdrom_interface::read_toc(Bit8u* buf, int* length, bx_bool msf, int start_track, int format)
 {

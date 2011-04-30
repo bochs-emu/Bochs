@@ -203,7 +203,7 @@ public:
   bx_serial_c();
   virtual ~bx_serial_c();
   virtual void init(void);
-  virtual void reset(unsigned type);
+  virtual void reset(unsigned type) {}
   virtual void register_state(void);
 
 private:

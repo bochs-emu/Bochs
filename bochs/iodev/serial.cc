@@ -438,10 +438,6 @@ bx_serial_c::init(void)
   }
 }
 
-void bx_serial_c::reset(unsigned type)
-{
-}
-
 void bx_serial_c::register_state(void)
 {
   unsigned i, j;
@@ -551,8 +547,7 @@ void bx_serial_c::lower_interrupt(Bit8u port)
   }
 }
 
-  void
-bx_serial_c::raise_interrupt(Bit8u port, int type)
+void bx_serial_c::raise_interrupt(Bit8u port, int type)
 {
   bx_bool gen_int = 0;
 
@@ -620,7 +615,6 @@ Bit32u bx_serial_c::read(Bit32u address, unsigned io_len)
 #else
   UNUSED(this_ptr);
 #endif  // !BX_USE_SER_SMF
-  bx_bool prev_cts, prev_dsr, prev_ri, prev_dcd;
   Bit8u offset, val;
   Bit8u port = 0;
 
@@ -739,12 +733,13 @@ Bit32u bx_serial_c::read(Bit32u address, unsigned io_len)
       break;
 
     case BX_SER_MSR: /* MODEM status register */
-      prev_cts = BX_SER_THIS s[port].modem_status.cts;
-      prev_dsr = BX_SER_THIS s[port].modem_status.dsr;
-      prev_ri  = BX_SER_THIS s[port].modem_status.ri;
-      prev_dcd = BX_SER_THIS s[port].modem_status.dcd;
-      if (BX_SER_THIS s[port].io_mode == BX_SER_MODE_RAW) {
 #if USE_RAW_SERIAL
+      if (BX_SER_THIS s[port].io_mode == BX_SER_MODE_RAW) {
+        bx_bool prev_cts = BX_SER_THIS s[port].modem_status.cts;
+        bx_bool prev_dsr = BX_SER_THIS s[port].modem_status.dsr;
+        bx_bool prev_ri  = BX_SER_THIS s[port].modem_status.ri;
+        bx_bool prev_dcd = BX_SER_THIS s[port].modem_status.dcd;
+
         val = BX_SER_THIS s[port].raw->get_modem_status();
         BX_SER_THIS s[port].modem_status.cts = (val & 0x10) >> 4;
         BX_SER_THIS s[port].modem_status.dsr = (val & 0x20) >> 5;
@@ -761,8 +756,8 @@ Bit32u bx_serial_c::read(Bit32u address, unsigned io_len)
         if (BX_SER_THIS s[port].modem_status.dcd != prev_dcd) {
           BX_SER_THIS s[port].modem_status.delta_dcd = 1;
         }
-#endif
       }
+#endif
       val = BX_SER_THIS s[port].modem_status.delta_cts |
             (BX_SER_THIS s[port].modem_status.delta_dsr    << 1) |
             (BX_SER_THIS s[port].modem_status.ri_trailedge << 2) |
@@ -795,12 +790,10 @@ Bit32u bx_serial_c::read(Bit32u address, unsigned io_len)
   return(val);
 }
 
+// static IO port write callback handler
+// redirects to non-static class handler to avoid virtual functions
 
-  // static IO port write callback handler
-  // redirects to non-static class handler to avoid virtual functions
-
-void
-bx_serial_c::write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len)
+void bx_serial_c::write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len)
 {
 #if !BX_USE_SER_SMF
   bx_serial_c *class_ptr = (bx_serial_c *) this_ptr;
@@ -808,15 +801,11 @@ bx_serial_c::write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigne
   class_ptr->write(address, value, io_len);
 }
 
-void
-bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
+void bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
 {
 #else
   UNUSED(this_ptr);
 #endif  // !BX_USE_SER_SMF
-  bx_bool prev_cts, prev_dsr, prev_ri, prev_dcd;
-  bx_bool new_b0, new_b1, new_b2, new_b3;
-  bx_bool new_b4, new_b5, new_b6, new_b7;
   bx_bool gen_int = 0;
   Bit8u offset, new_wordlen;
 #if USE_RAW_SERIAL
@@ -835,14 +824,14 @@ bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
 
   BX_DEBUG(("com%d register write to  address: 0x%04x = 0x%02x", port+1, address, value));
 
-  new_b0 = value & 0x01;
-  new_b1 = (value & 0x02) >> 1;
-  new_b2 = (value & 0x04) >> 2;
-  new_b3 = (value & 0x08) >> 3;
-  new_b4 = (value & 0x10) >> 4;
-  new_b5 = (value & 0x20) >> 5;
-  new_b6 = (value & 0x40) >> 6;
-  new_b7 = (value & 0x80) >> 7;
+  bx_bool new_b0 = value & 0x01;
+  bx_bool new_b1 = (value & 0x02) >> 1;
+  bx_bool new_b2 = (value & 0x04) >> 2;
+  bx_bool new_b3 = (value & 0x08) >> 3;
+  bx_bool new_b4 = (value & 0x10) >> 4;
+  bx_bool new_b5 = (value & 0x20) >> 5;
+  bx_bool new_b6 = (value & 0x40) >> 6;
+  bx_bool new_b7 = (value & 0x80) >> 7;
 
   switch (offset) {
     case BX_SER_THR: /* transmit buffer, or divisor latch LSB if DLAB set */
@@ -996,8 +985,8 @@ bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
 
     case BX_SER_LCR: /* Line control register */
       new_wordlen = value & 0x03;
-      if (BX_SER_THIS s[port].io_mode == BX_SER_MODE_RAW) {
 #if USE_RAW_SERIAL
+      if (BX_SER_THIS s[port].io_mode == BX_SER_MODE_RAW) {
         if (BX_SER_THIS s[port].line_cntl.wordlen_sel != new_wordlen) {
           BX_SER_THIS s[port].raw->set_data_bits(new_wordlen + 5);
         }
@@ -1018,8 +1007,8 @@ bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
             (!BX_SER_THIS s[port].modem_cntl.local_loopback)) {
           BX_SER_THIS s[port].raw->set_break(new_b6);
         }
-#endif // USE_RAW_SERIAL
       }
+#endif // USE_RAW_SERIAL
       BX_SER_THIS s[port].line_cntl.wordlen_sel = new_wordlen;
       /* These are ignored, but set them up so they can be read back */
       BX_SER_THIS s[port].line_cntl.stopbits = new_b2;
@@ -1045,11 +1034,11 @@ bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
                                       (BX_SER_THIS s[port].line_cntl.wordlen_sel + 5)),
                                       0); /* not continuous */
         }
-        if (BX_SER_THIS s[port].io_mode == BX_SER_MODE_RAW) {
 #if USE_RAW_SERIAL
+        if (BX_SER_THIS s[port].io_mode == BX_SER_MODE_RAW) {
           BX_SER_THIS s[port].raw->set_baudrate(BX_SER_THIS s[port].baudrate);
-#endif // USE_RAW_SERIAL
         }
+#endif // USE_RAW_SERIAL
         BX_DEBUG(("com%d: baud rate set - %d", port+1, BX_SER_THIS s[port].baudrate));
       }
       BX_SER_THIS s[port].line_cntl.dlab = new_b7;
@@ -1062,12 +1051,12 @@ bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
         if (new_b0 && !new_b1) BX_SER_THIS detect_mouse = 1;
         if (new_b0 && new_b1 && (BX_SER_THIS detect_mouse == 1)) BX_SER_THIS detect_mouse = 2;
       }
-      if (BX_SER_THIS s[port].io_mode == BX_SER_MODE_RAW) {
 #if USE_RAW_SERIAL
+      if (BX_SER_THIS s[port].io_mode == BX_SER_MODE_RAW) {
         mcr_changed = (BX_SER_THIS s[port].modem_cntl.dtr != new_b0) |
                       (BX_SER_THIS s[port].modem_cntl.rts != new_b1);
-#endif
       }
+#endif
       BX_SER_THIS s[port].modem_cntl.dtr  = new_b0;
       BX_SER_THIS s[port].modem_cntl.rts  = new_b1;
       BX_SER_THIS s[port].modem_cntl.out1 = new_b2;
@@ -1077,42 +1066,43 @@ bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
         BX_SER_THIS s[port].modem_cntl.local_loopback = new_b4;
         if (BX_SER_THIS s[port].modem_cntl.local_loopback) {
           /* transition to loopback mode */
-          if (BX_SER_THIS s[port].io_mode == BX_SER_MODE_RAW) {
 #if USE_RAW_SERIAL
+          if (BX_SER_THIS s[port].io_mode == BX_SER_MODE_RAW) {
             if (BX_SER_THIS s[port].modem_cntl.dtr ||
                 BX_SER_THIS s[port].modem_cntl.rts) {
               BX_SER_THIS s[port].raw->set_modem_control(0);
             }
-#endif
           }
-          if (BX_SER_THIS s[port].line_cntl.break_cntl) {
-            if (BX_SER_THIS s[port].io_mode == BX_SER_MODE_RAW) {
-#if USE_RAW_SERIAL
-              BX_SER_THIS s[port].raw->set_break(0);
 #endif
+          if (BX_SER_THIS s[port].line_cntl.break_cntl) {
+#if USE_RAW_SERIAL
+            if (BX_SER_THIS s[port].io_mode == BX_SER_MODE_RAW) {
+              BX_SER_THIS s[port].raw->set_break(0);
             }
+#endif
             BX_SER_THIS s[port].line_status.break_int = 1;
             BX_SER_THIS s[port].line_status.framing_error = 1;
             rx_fifo_enq(port, 0x00);
           }
-        } else {
+        }
+        else {
           /* transition to normal mode */
-          if (BX_SER_THIS s[port].io_mode == BX_SER_MODE_RAW) {
 #if USE_RAW_SERIAL
+          if (BX_SER_THIS s[port].io_mode == BX_SER_MODE_RAW) {
             mcr_changed = 1;
             if (BX_SER_THIS s[port].line_cntl.break_cntl) {
               BX_SER_THIS s[port].raw->set_break(0);
             }
-#endif
           }
+#endif
         }
       }
 
       if (BX_SER_THIS s[port].modem_cntl.local_loopback) {
-        prev_cts = BX_SER_THIS s[port].modem_status.cts;
-        prev_dsr = BX_SER_THIS s[port].modem_status.dsr;
-        prev_ri  = BX_SER_THIS s[port].modem_status.ri;
-        prev_dcd = BX_SER_THIS s[port].modem_status.dcd;
+        bx_bool prev_cts = BX_SER_THIS s[port].modem_status.cts;
+        bx_bool prev_dsr = BX_SER_THIS s[port].modem_status.dsr;
+        bx_bool prev_ri  = BX_SER_THIS s[port].modem_status.ri;
+        bx_bool prev_dcd = BX_SER_THIS s[port].modem_status.dcd;
         BX_SER_THIS s[port].modem_status.cts = BX_SER_THIS s[port].modem_cntl.rts;
         BX_SER_THIS s[port].modem_status.dsr = BX_SER_THIS s[port].modem_cntl.dtr;
         BX_SER_THIS s[port].modem_status.ri  = BX_SER_THIS s[port].modem_cntl.out1;
@@ -1162,7 +1152,9 @@ bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
             BX_SER_THIS s[port].raw->set_modem_control(value & 0x03);
           }
 #endif
-        } else {
+        }
+        else
+        {
           /* simulate device connected */
           BX_SER_THIS s[port].modem_status.cts = 1;
           BX_SER_THIS s[port].modem_status.dsr = 1;
@@ -1191,9 +1183,7 @@ bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
   }
 }
 
-
-void
-bx_serial_c::rx_fifo_enq(Bit8u port, Bit8u data)
+void bx_serial_c::rx_fifo_enq(Bit8u port, Bit8u data)
 {
   bx_bool gen_int = 0;
 
@@ -1240,18 +1230,14 @@ bx_serial_c::rx_fifo_enq(Bit8u port, Bit8u data)
   }
 }
 
-
-void
-bx_serial_c::tx_timer_handler(void *this_ptr)
+void bx_serial_c::tx_timer_handler(void *this_ptr)
 {
   bx_serial_c *class_ptr = (bx_serial_c *) this_ptr;
 
   class_ptr->tx_timer();
 }
 
-
-void
-bx_serial_c::tx_timer(void)
+void bx_serial_c::tx_timer(void)
 {
   bx_bool gen_int = 0;
   Bit8u port = 0;
@@ -1339,18 +1325,14 @@ bx_serial_c::tx_timer(void)
   }
 }
 
-
-void
-bx_serial_c::rx_timer_handler(void *this_ptr)
+void bx_serial_c::rx_timer_handler(void *this_ptr)
 {
   bx_serial_c *class_ptr = (bx_serial_c *) this_ptr;
 
   class_ptr->rx_timer();
 }
 
-
-void
-bx_serial_c::rx_timer(void)
+void bx_serial_c::rx_timer(void)
 {
 #if BX_HAVE_SELECT && defined(SERIAL_ENABLE)
   struct timeval tval;
@@ -1400,13 +1382,16 @@ bx_serial_c::rx_timer(void)
           SOCKET socketid = BX_SER_THIS s[port].socket_id;
           if (socketid >= 0) FD_SET(socketid, &fds);
           if ((socketid >= 0) && (select(socketid+1, &fds, NULL, NULL, &tval) == 1)) {
+            ssize_t bytes = (ssize_t)
 #ifdef WIN32
-            (void) ::recv(socketid, (char*) &chbuf, 1, 0);
+              ::recv(socketid, (char*) &chbuf, 1, 0);
 #else
-            (void)   read(socketid, &chbuf, 1);
+                read(socketid, &chbuf, 1);
 #endif
-            BX_INFO((" -- COM %d : read byte [%d]", port+1, chbuf));
-            data_ready = 1;
+            if (bytes) {
+              BX_INFO((" -- COM %d : read byte [%d]", port+1, chbuf));
+              data_ready = 1;
+            }
           }
         }
 #endif
@@ -1499,22 +1484,17 @@ bx_serial_c::rx_timer(void)
   }
 
   bx_pc_system.activate_timer(BX_SER_THIS s[port].rx_timer_index,
-                              (int) (1000000.0 / bdrate),
-                              0); /* not continuous */
+                              (int) (1000000.0 / bdrate), 0); /* not continuous */
 }
 
-
-void
-bx_serial_c::fifo_timer_handler(void *this_ptr)
+void bx_serial_c::fifo_timer_handler(void *this_ptr)
 {
   bx_serial_c *class_ptr = (bx_serial_c *) this_ptr;
 
   class_ptr->fifo_timer();
 }
 
-
-void
-bx_serial_c::fifo_timer(void)
+void bx_serial_c::fifo_timer(void)
 {
   Bit8u port = 0;
   int timer_id;
@@ -1532,7 +1512,6 @@ bx_serial_c::fifo_timer(void)
   BX_SER_THIS s[port].line_status.rxdata_ready = 1;
   raise_interrupt(port, BX_SER_INT_FIFO);
 }
-
 
 void bx_serial_c::mouse_enq_static(void *dev, int delta_x, int delta_y, int delta_z, unsigned button_state)
 {
@@ -1592,7 +1571,6 @@ void bx_serial_c::mouse_enq(int delta_x, int delta_y, int delta_z, unsigned butt
     delta_y = BX_SER_THIS mouse_delayed_dy;
     BX_SER_THIS mouse_delayed_dy = 0;
   }
-
 
   if (BX_SER_THIS mouse_type != BX_MOUSE_TYPE_SERIAL_MSYS) {
     b1 = (Bit8u) delta_x;
