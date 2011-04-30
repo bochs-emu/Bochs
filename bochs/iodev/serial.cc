@@ -1388,7 +1388,7 @@ void bx_serial_c::rx_timer(void)
 #else
                 read(socketid, &chbuf, 1);
 #endif
-            if (bytes) {
+            if (bytes > 0) {
               BX_INFO((" -- COM %d : read byte [%d]", port+1, chbuf));
               data_ready = 1;
             }
