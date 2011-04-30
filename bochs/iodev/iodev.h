@@ -314,7 +314,7 @@ public:
   }
 };
 
-#if BX_SUPPORT_ACPI
+#if BX_SUPPORT_PCI
 class BOCHSAPI bx_acpi_ctrl_stub_c : public bx_devmodel_c, public bx_pci_device_stub_c {
 public:
   virtual void generate_smi(Bit8u value) {}
@@ -436,7 +436,7 @@ public:
   bx_pci_bridge_stub_c *pluginPciBridge;
   bx_pci2isa_stub_c *pluginPci2IsaBridge;
   bx_pci_ide_stub_c *pluginPciIdeController;
-#if BX_SUPPORT_ACPI
+#if BX_SUPPORT_PCI
   bx_acpi_ctrl_stub_c *pluginACPIController;
 #endif
   bx_devmodel_c     *pluginPitDevice;
@@ -484,7 +484,7 @@ public:
   bx_pci_ide_stub_c stubPciIde;
   bx_ne2k_stub_c    stubNE2k;
   bx_speaker_stub_c stubSpeaker;
-#if BX_SUPPORT_ACPI
+#if BX_SUPPORT_PCI
   bx_acpi_ctrl_stub_c stubACPIController;
 #endif
 #if BX_SUPPORT_IODEBUG

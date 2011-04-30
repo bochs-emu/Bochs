@@ -6006,7 +6006,7 @@ structures are dynamically created by Bochs.
 </para></listitem>
 <listitem><para> ACPI support is required to boot SMP system in most of modern
 operating systems. For example WinXP 64 bit require ACPI support even for
-single processor configuration. Still not supported by Bochs. (FIXME)
+single processor configuration.
 </para></listitem>
 </itemizedlist>
 </para>

@@ -22,7 +22,6 @@
   --enable-instrumentation=instrument/example1 \
   --enable-ne2000 \
   --enable-pci \
-  --enable-acpi \
   --enable-clgd54xx \
   --enable-usb \
   --enable-usb-ohci \

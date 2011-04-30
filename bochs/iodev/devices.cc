@@ -70,9 +70,7 @@ void bx_devices_c::init_stubs()
   pluginPciBridge = &stubPci;
   pluginPci2IsaBridge = &stubPci2Isa;
   pluginPciIdeController = &stubPciIde;
-#if BX_SUPPORT_ACPI
   pluginACPIController = &stubACPIController;
-#endif
 #endif
   pluginKeyboard = &stubKeyboard;
   pluginDmaDevice = &stubDma;
@@ -232,8 +230,6 @@ void bx_devices_c::init(BX_MEM_C *newmem)
       else if (!strcmp(plugname, BX_PLUGIN_PCI_IDE)) {
         PLUG_load_plugin(pci_ide, PLUGTYPE_OPTIONAL);
       }
-#endif
-#if BX_SUPPORT_ACPI
       else if (!strcmp(plugname, BX_PLUGIN_ACPI)) {
         PLUG_load_plugin(acpi, PLUGTYPE_OPTIONAL);
       }

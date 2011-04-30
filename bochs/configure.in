@@ -661,23 +661,6 @@ AC_ARG_ENABLE(ne2000,
   )
 AC_SUBST(NE2K_OBJS)
 
-AC_MSG_CHECKING(for ACPI support)
-AC_ARG_ENABLE(acpi,
-  [  --enable-acpi                     enable ACPI support],
-  [if test "$enableval" = yes; then
-    AC_MSG_RESULT(yes)
-    AC_DEFINE(BX_SUPPORT_ACPI, 1)
-   else
-    AC_MSG_RESULT(no)
-    AC_DEFINE(BX_SUPPORT_ACPI, 0)
-   fi],
-  [
-    AC_MSG_RESULT(no)
-    AC_DEFINE(BX_SUPPORT_ACPI, 0)
-    ]
-  )
-AC_SUBST(BX_SUPPORT_ACPI)
-
 AC_MSG_CHECKING(for i440FX PCI support)
 AC_ARG_ENABLE(pci,
   [  --enable-pci                      enable limited i440FX PCI support],
@@ -956,22 +939,6 @@ AC_ARG_ENABLE(fast-function-calls,
     ]
   )
 
-AC_MSG_CHECKING(for host specific inline assembly accelerations)
-AC_ARG_ENABLE(host-specific-asms,
-  [  --enable-host-specific-asms       support for host specific inline assembly],
-  [if test "$enableval" = yes; then
-    AC_MSG_RESULT(yes)
-    speedup_host_specific_asms=1
-   else
-    AC_MSG_RESULT(no)
-    speedup_host_specific_asms=0
-   fi],
-  [
-    AC_MSG_RESULT(no)
-    speedup_host_specific_asms=0
-    ]
-  )
-
 AC_MSG_CHECKING(support for configurable MSR registers)
 AC_ARG_ENABLE(configurable-msrs,
   [  --enable-configurable-msrs        support for configurable MSR registers],
@@ -1153,12 +1120,6 @@ if test "$speedup_repeat" = 1; then
   AC_DEFINE(BX_SupportRepeatSpeedups, 1)
 else
   AC_DEFINE(BX_SupportRepeatSpeedups, 0)
-fi
-
-if test "$speedup_host_specific_asms" = 1; then
-  AC_DEFINE(BX_SupportHostAsms, 1)
-else
-  AC_DEFINE(BX_SupportHostAsms, 0)
 fi
 
 if test "$speedup_fastcall" = 1; then
@@ -2799,6 +2760,16 @@ AC_ARG_ENABLE(vbe,
   [  --enable-vbe                      use VESA BIOS extensions (deprecated)],
   [AC_MSG_RESULT($enableval)
    AC_MSG_ERROR([DEPRECATED - this feature always available with .bochsrc option])
+  ],
+  [
+   AC_MSG_RESULT(no)
+  ])
+
+AC_MSG_CHECKING(for ACPI extensions support (deprecated))
+AC_ARG_ENABLE(acpi,
+  [  --enable-acpi                     use ACPI extensions support (deprecated)],
+  [AC_MSG_RESULT($enableval)
+   AC_MSG_ERROR([DEPRECATED - this feature enabled with PCI configure option and could be turned on through .bochsrc option])
   ],
   [
    AC_MSG_RESULT(no)

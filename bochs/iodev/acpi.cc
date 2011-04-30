@@ -30,7 +30,7 @@
 
 #include "iodev.h"
 
-#if BX_SUPPORT_PCI && BX_SUPPORT_ACPI
+#if BX_SUPPORT_PCI
 
 #include "pci.h"
 #include "acpi.h"
