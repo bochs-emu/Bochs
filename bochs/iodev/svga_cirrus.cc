@@ -2860,17 +2860,13 @@ void bx_svga_cirrus_c::svga_patterncopy()
   }
   if (BX_CIRRUS_THIS bitblt.bltmode & CIRRUS_BLTMODE_COLOREXPAND) {
     if (BX_CIRRUS_THIS bitblt.bltmode & CIRRUS_BLTMODE_TRANSPARENTCOMP) {
+      color[0] = BX_CIRRUS_THIS control.shadow_reg1;
+      color[1] = BX_CIRRUS_THIS control.reg[0x11];
+      color[2] = BX_CIRRUS_THIS control.reg[0x13];
+      color[3] = BX_CIRRUS_THIS control.reg[0x15];
       if (BX_CIRRUS_THIS bitblt.bltmodeext & CIRRUS_BLTMODEEXT_COLOREXPINV) {
-        color[0] = BX_CIRRUS_THIS control.shadow_reg0;
-        color[1] = BX_CIRRUS_THIS control.reg[0x10];
-        color[2] = BX_CIRRUS_THIS control.reg[0x12];
-        color[3] = BX_CIRRUS_THIS control.reg[0x14];
         bits_xor = 0xff;
       } else {
-        color[0] = BX_CIRRUS_THIS control.shadow_reg1;
-        color[1] = BX_CIRRUS_THIS control.reg[0x11];
-        color[2] = BX_CIRRUS_THIS control.reg[0x13];
-        color[3] = BX_CIRRUS_THIS control.reg[0x15];
         bits_xor = 0x00;
       }
 
@@ -2946,17 +2942,13 @@ void bx_svga_cirrus_c::svga_simplebitblt()
   }
   if (BX_CIRRUS_THIS bitblt.bltmode & CIRRUS_BLTMODE_COLOREXPAND) {
     if (BX_CIRRUS_THIS bitblt.bltmode & CIRRUS_BLTMODE_TRANSPARENTCOMP) {
+      color[0] = BX_CIRRUS_THIS control.shadow_reg1;
+      color[1] = BX_CIRRUS_THIS control.reg[0x11];
+      color[2] = BX_CIRRUS_THIS control.reg[0x13];
+      color[3] = BX_CIRRUS_THIS control.reg[0x15];
       if (BX_CIRRUS_THIS bitblt.bltmodeext & CIRRUS_BLTMODEEXT_COLOREXPINV) {
-        color[0] = BX_CIRRUS_THIS control.shadow_reg0;
-        color[1] = BX_CIRRUS_THIS control.reg[0x10];
-        color[2] = BX_CIRRUS_THIS control.reg[0x12];
-        color[3] = BX_CIRRUS_THIS control.reg[0x14];
         bits_xor = 0xff;
       } else {
-        color[0] = BX_CIRRUS_THIS control.shadow_reg1;
-        color[1] = BX_CIRRUS_THIS control.reg[0x11];
-        color[2] = BX_CIRRUS_THIS control.reg[0x13];
-        color[3] = BX_CIRRUS_THIS control.reg[0x15];
         bits_xor = 0x00;
       }
 
@@ -3096,17 +3088,13 @@ void bx_svga_cirrus_c::svga_colorexpand_transp_memsrc()
     srcskipleft = BX_CIRRUS_THIS control.reg[0x2f] & 0x07;
     pattern_x = srcskipleft * BX_CIRRUS_THIS bitblt.pixelwidth;
   }
+  color[0] = BX_CIRRUS_THIS control.shadow_reg1;
+  color[1] = BX_CIRRUS_THIS control.reg[0x11];
+  color[2] = BX_CIRRUS_THIS control.reg[0x13];
+  color[3] = BX_CIRRUS_THIS control.reg[0x15];
   if (BX_CIRRUS_THIS bitblt.bltmodeext & CIRRUS_BLTMODEEXT_COLOREXPINV) {
-    color[0] = BX_CIRRUS_THIS control.shadow_reg0;
-    color[1] = BX_CIRRUS_THIS control.reg[0x10];
-    color[2] = BX_CIRRUS_THIS control.reg[0x12];
-    color[3] = BX_CIRRUS_THIS control.reg[0x14];
     bits_xor = 0xff;
   } else {
-    color[0] = BX_CIRRUS_THIS control.shadow_reg1;
-    color[1] = BX_CIRRUS_THIS control.reg[0x11];
-    color[2] = BX_CIRRUS_THIS control.reg[0x13];
-    color[3] = BX_CIRRUS_THIS control.reg[0x15];
     bits_xor = 0x00;
   }
 
