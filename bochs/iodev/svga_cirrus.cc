@@ -2009,8 +2009,17 @@ void bx_svga_cirrus_c::svga_write_control(Bit32u address, unsigned index, Bit8u 
       }
       break;
     case 0x33: // BLT MODE EXTENSION
-      if (((value ^ old_value) & 0x18) && (value & 0x18)) {
-        BX_ERROR(("BLT MODE EXTENSION support is not complete (value = 0x%02x)", value & 0x18));
+#if BX_SUPPORT_PCI
+      if (BX_CIRRUS_THIS pci_enabled) {
+        if (((value ^ old_value) & 0x18) && (value & 0x18)) {
+          BX_ERROR(("BLT MODE EXTENSION support is not complete (value = 0x%02x)", value & 0x18));
+        }
+      }
+      else
+#endif
+      {
+        BX_DEBUG(("BLT MODE EXTENSION not available"));
+        return;
       }
       break;
     case 0x34: // BLT TRANSPARENT COLOR 0x00ff
@@ -3100,7 +3109,7 @@ void bx_svga_cirrus_c::svga_colorexpand_transp_memsrc()
 
   dst = BX_CIRRUS_THIS bitblt.dst + pattern_x;
   bitmask = 0x80 >> srcskipleft;
-  bits = *src++;
+  bits = *src++ ^ bits_xor;
   for (x = pattern_x; x < BX_CIRRUS_THIS bitblt.bltwidth; x+=BX_CIRRUS_THIS bitblt.pixelwidth) {
     if ((bitmask & 0xff) == 0) {
       bitmask = 0x80;
