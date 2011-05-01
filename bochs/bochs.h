@@ -556,13 +556,6 @@ BX_CPP_INLINE Bit64u bx_bswap64(Bit64u val64)
 #define ReadHostQWordFromLittleEndian(hostPtr, nativeVar64) \
     (nativeVar64) = *((Bit64u*)(hostPtr))
 
-#define CopyHostWordLittleEndian(hostAddrDst,  hostAddrSrc)  \
-    (* (Bit16u *)(hostAddrDst)) = (* (Bit16u *)(hostAddrSrc));
-#define CopyHostDWordLittleEndian(hostAddrDst,  hostAddrSrc) \
-    (* (Bit32u *)(hostAddrDst)) = (* (Bit32u *)(hostAddrSrc));
-#define CopyHostQWordLittleEndian(hostAddrDst,  hostAddrSrc) \
-    (* (Bit64u *)(hostAddrDst)) = (* (Bit64u *)(hostAddrSrc));
-
 #else
 
 #define WriteHostWordToLittleEndian(hostPtr,  nativeVar16) {  \
@@ -585,27 +578,13 @@ BX_CPP_INLINE Bit64u bx_bswap64(Bit64u val64)
     (nativeVar64) =  bx_bswap64(*(Bit64u *)(hostPtr));        \
 }
 
-#define CopyHostWordLittleEndian(hostAddrDst, hostAddrSrc) {   \
-    ((Bit8u *)(hostAddrDst))[0] = ((Bit8u *)(hostAddrSrc))[0]; \
-    ((Bit8u *)(hostAddrDst))[1] = ((Bit8u *)(hostAddrSrc))[1]; \
-}
-#define CopyHostDWordLittleEndian(hostAddrDst, hostAddrSrc) {  \
-    ((Bit8u *)(hostAddrDst))[0] = ((Bit8u *)(hostAddrSrc))[0]; \
-    ((Bit8u *)(hostAddrDst))[1] = ((Bit8u *)(hostAddrSrc))[1]; \
-    ((Bit8u *)(hostAddrDst))[2] = ((Bit8u *)(hostAddrSrc))[2]; \
-    ((Bit8u *)(hostAddrDst))[3] = ((Bit8u *)(hostAddrSrc))[3]; \
-}
-#define CopyHostQWordLittleEndian(hostAddrDst, hostAddrSrc) {  \
-    ((Bit8u *)(hostAddrDst))[0] = ((Bit8u *)(hostAddrSrc))[0]; \
-    ((Bit8u *)(hostAddrDst))[1] = ((Bit8u *)(hostAddrSrc))[1]; \
-    ((Bit8u *)(hostAddrDst))[2] = ((Bit8u *)(hostAddrSrc))[2]; \
-    ((Bit8u *)(hostAddrDst))[3] = ((Bit8u *)(hostAddrSrc))[3]; \
-    ((Bit8u *)(hostAddrDst))[4] = ((Bit8u *)(hostAddrSrc))[4]; \
-    ((Bit8u *)(hostAddrDst))[5] = ((Bit8u *)(hostAddrSrc))[5]; \
-    ((Bit8u *)(hostAddrDst))[6] = ((Bit8u *)(hostAddrSrc))[6]; \
-    ((Bit8u *)(hostAddrDst))[7] = ((Bit8u *)(hostAddrSrc))[7]; \
-}
-
 #endif
+
+#define CopyHostWordLittleEndian(hostAddrDst,  hostAddrSrc)  \
+    (* (Bit16u *)(hostAddrDst)) = (* (Bit16u *)(hostAddrSrc));
+#define CopyHostDWordLittleEndian(hostAddrDst,  hostAddrSrc) \
+    (* (Bit32u *)(hostAddrDst)) = (* (Bit32u *)(hostAddrSrc));
+#define CopyHostQWordLittleEndian(hostAddrDst,  hostAddrSrc) \
+    (* (Bit64u *)(hostAddrDst)) = (* (Bit64u *)(hostAddrSrc));
 
 #endif  /* BX_BOCHS_H */
