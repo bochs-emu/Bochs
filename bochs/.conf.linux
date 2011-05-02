@@ -32,7 +32,6 @@ case $which_config in
                 --enable-cpu-level=6 \
                 --enable-x86-64 \
                 --enable-pci \
-                --enable-acpi \
                 --enable-clgd54xx \
                 --enable-usb \
                 --enable-usb-ohci \
@@ -51,7 +50,6 @@ case $which_config in
                 --enable-cpu-level=6 \
                 --enable-x86-64 \
                 --enable-pci \
-                --enable-acpi \
                 --enable-clgd54xx \
                 --enable-usb \
                 --enable-usb-ohci \
