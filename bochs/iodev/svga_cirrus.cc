@@ -141,12 +141,12 @@
 #define CIRRUS_ROP_NOTSRC_AND_DST       0x50
 #define CIRRUS_ROP_SRC_XOR_DST          0x59
 #define CIRRUS_ROP_SRC_OR_DST           0x6d
-#define CIRRUS_ROP_NOTSRC_OR_NOTDST     0x90
+#define CIRRUS_ROP_NOTSRC_AND_NOTDST    0x90
 #define CIRRUS_ROP_SRC_NOTXOR_DST       0x95
 #define CIRRUS_ROP_SRC_OR_NOTDST        0xad
 #define CIRRUS_ROP_NOTSRC               0xd0
 #define CIRRUS_ROP_NOTSRC_OR_DST        0xd6
-#define CIRRUS_ROP_NOTSRC_AND_NOTDST    0xda
+#define CIRRUS_ROP_NOTSRC_OR_NOTDST     0xda
 
 // control 0x33
 #define CIRRUS_BLTMODEEXT_SYNCDISPSWITCH   0x10 // unimplemented
@@ -2004,9 +2004,6 @@ void bx_svga_cirrus_c::svga_write_control(Bit32u address, unsigned index, Bit8u 
       }
       return;
     case 0x32: // RASTER OP
-      if ((value == 0x90) || (value == 0xda)) {
-        BX_INFO(("possibly wrong implementation of BLT ROP 0x%02x", value));
-      }
       break;
     case 0x33: // BLT MODE EXTENSION
 #if BX_SUPPORT_PCI
@@ -2477,7 +2474,7 @@ void bx_svga_cirrus_c::svga_bitblt()
   ReadHostWordFromLittleEndian(&BX_CIRRUS_THIS control.reg[0x20],tmp16);
   BX_CIRRUS_THIS bitblt.bltwidth = ((int)tmp16 & (int)0x1fff) + 1;
   ReadHostWordFromLittleEndian(&BX_CIRRUS_THIS control.reg[0x22],tmp16);
-  BX_CIRRUS_THIS bitblt.bltheight = ((int)tmp16 & (int)0x1fff) + 1;
+  BX_CIRRUS_THIS bitblt.bltheight = ((int)tmp16 & (int)0x07ff) + 1;
   ReadHostWordFromLittleEndian(&BX_CIRRUS_THIS control.reg[0x24],tmp16);
   BX_CIRRUS_THIS bitblt.dstpitch = (int)tmp16 & (int)0x1fff;
   ReadHostWordFromLittleEndian(&BX_CIRRUS_THIS control.reg[0x26],tmp16);
