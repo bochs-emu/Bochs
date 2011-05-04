@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2009  The Bochs Project
+//  Copyright (C) 2002-2011  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -188,10 +188,10 @@ void bx_ioapic_c::write_aligned(bx_phy_address address, Bit32u value)
   switch (ioregsel) {
     case 0x00: // set APIC ID
       {
-	Bit8u newid = (value >> 24) & apic_id_mask;
-	BX_INFO(("IOAPIC: setting id to 0x%x", newid));
-	set_id (newid);
-	return;
+        Bit8u newid = (value >> 24) & apic_id_mask;
+        BX_INFO(("IOAPIC: setting id to 0x%x", newid));
+        set_id (newid);
+        return;
       }
     case 0x01: // version
     case 0x02: // arbitration id
@@ -200,16 +200,16 @@ void bx_ioapic_c::write_aligned(bx_phy_address address, Bit32u value)
     default:
       int index = (ioregsel - 0x10) >> 1;
       if (index >= 0 && index < BX_IOAPIC_NUM_PINS) {
-	bx_io_redirect_entry_t *entry = ioredtbl + index;
-	if (ioregsel&1)
-	  entry->set_hi_part(value);
-	else
-	  entry->set_lo_part(value);
-	char buf[1024];
-	entry->sprintf_self(buf);
-	BX_DEBUG(("IOAPIC: now entry[%d] is %s", index, buf));
-	service_ioapic();
-	return;
+        bx_io_redirect_entry_t *entry = ioredtbl + index;
+        if (ioregsel&1)
+          entry->set_hi_part(value);
+        else
+          entry->set_lo_part(value);
+        char buf[1024];
+        entry->sprintf_self(buf);
+        BX_DEBUG(("IOAPIC: now entry[%d] is %s", index, buf));
+        service_ioapic();
+        return;
       }
       BX_PANIC(("IOAPIC: IOREGSEL points to undefined register %02x", ioregsel));
   }
@@ -217,6 +217,9 @@ void bx_ioapic_c::write_aligned(bx_phy_address address, Bit32u value)
 
 void bx_ioapic_c::set_irq_level(Bit8u int_in, bx_bool level)
 {
+  if (int_in == 0) { // timer connected to pin #2
+    int_in = 2;
+  }
   BX_DEBUG(("set_irq_level(): INTIN%d: level=%d", int_in, level));
   if (int_in < BX_IOAPIC_NUM_PINS) {
     Bit32u bit = 1<<int_in;
