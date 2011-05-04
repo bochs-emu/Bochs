@@ -410,7 +410,13 @@ static float32 addFloat32Sigs(float32 a, float32 b, int zSign, float_status_t &s
             return a;
         }
         if (aExp == 0) {
-            if (aSig | bSig) float_raise(status, float_flag_denormal);
+            if (aSig | bSig) {
+                float_raise(status, float_flag_denormal);
+                if (get_flush_underflow_to_zero(status)) {
+                    float_raise(status, float_flag_inexact);
+                    return packFloat32(zSign, 0, 0);
+                }
+            }
             return packFloat32(zSign, 0, (aSig + bSig)>>6);
         }
         zSig = 0x40000000 + aSig + bSig;
@@ -1135,7 +1141,13 @@ static float64 addFloat64Sigs(float64 a, float64 b, int zSign, float_status_t &s
             return a;
         }
         if (aExp == 0) {
-            if (aSig | bSig) float_raise(status, float_flag_denormal);
+            if (aSig | bSig) {
+                float_raise(status, float_flag_denormal);
+                if (get_flush_underflow_to_zero(status)) {
+                    float_raise(status, float_flag_inexact);
+                    return packFloat64(zSign, 0, 0);
+                }
+            }
             return packFloat64(zSign, 0, (aSig + bSig)>>9);
         }
         zSig = BX_CONST64(0x4000000000000000) + aSig + bSig;
