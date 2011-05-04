@@ -166,10 +166,6 @@ typedef union bx_avx_reg_t {
 #define BX_WRITE_XMM_REG_LO_WORD(index, reg16) \
     { (BX_XMM_REG(index)).xmm16u(0) = (reg16); }
 
-/* store only low 16 bit of the register, rest of the register unchanged */
-#define BX_WRITE_XMM_REG_LO_WORD(index, reg16) \
-    { (BX_XMM_REG(index)).xmm16u(0) = (reg16); }
-
 /* store XMM register */
 #define BX_WRITE_XMM_REG(index, reg) \
     { (BX_XMM_REG(index)) = (reg); }

@@ -391,11 +391,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FXRSTOR(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVUPS_VpsWpsM(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BxPackedXmmRegister op;
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-  read_virtual_dqword(i->seg(), eaddr, (Bit8u *) &op);
-
-  BX_WRITE_XMM_REG(i->nnn(), op);
+  read_virtual_dqword(i->seg(), eaddr, &BX_XMM_REG(i->nnn()));
 #endif
 }
 
@@ -420,11 +417,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVAPS_VpsWpsR(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVAPS_VpsWpsM(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BxPackedXmmRegister op;
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-  read_virtual_dqword_aligned(i->seg(), eaddr, (Bit8u *) &op);
-
-  BX_WRITE_XMM_REG(i->nnn(), op);
+  read_virtual_dqword_aligned(i->seg(), eaddr, &BX_XMM_REG(i->nnn()));
 #endif
 }
 
