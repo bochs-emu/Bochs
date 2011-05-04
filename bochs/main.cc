@@ -1037,6 +1037,7 @@ void bx_init_hardware()
   if(strlen(msrs_file) > 0)
     BX_INFO(("  load configurable MSRs from file \"%s\"", msrs_file));
 #endif
+  BX_INFO(("IPS is set to %d", (Bit32u) SIM->get_param_num(BXPN_IPS)->get()));
   BX_INFO(("CPU configuration"));
   BX_INFO(("  level: %d",BX_CPU_LEVEL));
 #if BX_SUPPORT_SMP
