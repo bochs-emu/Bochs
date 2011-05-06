@@ -2205,6 +2205,16 @@ modrm_done:
           return(-1);
         }
         break;
+      case BxImmediate_BrOff8:
+        if (remain != 0) {
+          Bit8s temp8s = *iptr;
+          i->modRMForm.Id = (Bit32s) temp8s;
+          remain--;
+        }
+        else {
+          return(-1);
+        }
+        break;
       case BxImmediate_Iw:
         if (remain > 1) {
           i->modRMForm.Iw = FetchWORD(iptr);
