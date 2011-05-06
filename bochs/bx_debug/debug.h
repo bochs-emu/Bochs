@@ -184,7 +184,8 @@ typedef enum _show_flags {
   Flag_softint = 0x4,
   Flag_iret    = 0x8,
   Flag_intsig  = 0x10,
-  Flag_mode    = 0x20
+  Flag_mode    = 0x20,
+  Flag_vmexit  = 0x40
 } show_flags_t;
 
 // Flex defs
@@ -229,6 +230,7 @@ extern int timebp_queue_size;
 void bx_dbg_record_command(char*);
 void bx_dbg_playback_command(char*);
 void bx_dbg_modebp_command(void);
+void bx_dbg_vmexitbp_command(void);
 void bx_dbg_where_command(void);
 void bx_dbg_print_string_command(bx_address addr);
 void bx_dbg_xlate_address(bx_lin_address address);
@@ -335,7 +337,8 @@ typedef enum {
   STOP_WRITE_WATCH_POINT,
   STOP_MAGIC_BREAK_POINT,
   STOP_MODE_BREAK_POINT,
-  STOP_CPU_HALTED
+  STOP_VMEXIT_BREAK_POINT,
+  STOP_CPU_HALTED,
 } stop_reason_t;
 
 typedef enum {

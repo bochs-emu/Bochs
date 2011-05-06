@@ -98,6 +98,7 @@
 %token <sval> BX_TOKEN_RECORD
 %token <sval> BX_TOKEN_PLAYBACK
 %token <sval> BX_TOKEN_MODEBP
+%token <sval> BX_TOKEN_VMEXITBP
 %token <sval> BX_TOKEN_PRINT_STACK
 %token <sval> BX_TOKEN_WATCH
 %token <sval> BX_TOKEN_UNWATCH
@@ -179,6 +180,7 @@ command:
     | record_command
     | playback_command
     | modebp_command
+    | vmexitbp_command
     | print_stack_command
     | watch_point_command
     | page_command
@@ -252,7 +254,15 @@ modebp_command:
           free($1);
       }
     ;
-
+    
+vmexitbp_command:
+      BX_TOKEN_VMEXITBP '\n'
+      {
+          bx_dbg_vmexitbp_command();
+          free($1);
+      }
+    ;
+    
 show_command:
       BX_TOKEN_SHOW BX_TOKEN_COMMAND '\n'
       {
@@ -956,6 +966,11 @@ help_command:
      | BX_TOKEN_HELP BX_TOKEN_MODEBP '\n'
        {
          dbg_printf("modebp - toggles mode switch breakpoint\n");
+         free($1);free($2);
+       }
+     | BX_TOKEN_HELP BX_TOKEN_VMEXITBP '\n'
+       {
+         dbg_printf("vmexitbp - toggles VMEXIT switch breakpoint\n");
          free($1);free($2);
        }
      | BX_TOKEN_HELP BX_TOKEN_CRC '\n'

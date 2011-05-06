@@ -1281,6 +1281,18 @@ void bx_dbg_modebp_command()
     BX_CPU(dbg_cpu)->mode_break ? "enabled" : "disabled");
 }
 
+// toggles vmexit switch breakpoint
+void bx_dbg_vmexitbp_command()
+{
+#if BX_SUPPORT_VMX
+  BX_CPU(dbg_cpu)->vmexit_break = !BX_CPU(dbg_cpu)->vmexit_break;
+  dbg_printf("vmexit switch break %s\n",
+    BX_CPU(dbg_cpu)->vmexit_break ? "enabled" : "disabled");
+#else
+  dbg_printf("VMX is not compiled in, cannot set vmexit breakpoint !");
+#endif
+}
+
 bx_bool bx_dbg_read_linear(unsigned which_cpu, bx_address laddr, unsigned len, Bit8u *buf)
 {
   unsigned remainsInPage;
@@ -2004,6 +2016,9 @@ void bx_dbg_print_guard_results(void)
     case STOP_MODE_BREAK_POINT:
         dbg_printf("(%u) Caught mode switch breakpoint switching to '%s'\n",
           cpu, cpu_mode_string(BX_CPU(cpu)->get_cpu_mode()));
+        break;
+    case STOP_VMEXIT_BREAK_POINT:
+        dbg_printf("(%u) Caught VMEXIT breakpoint\n", cpu);
         break;
     default:
         dbg_printf("Error: (%u) print_guard_results: guard_found ? (stop reason %u)\n",
@@ -3571,7 +3586,7 @@ void bx_dbg_print_help(void)
   dbg_printf("    help, q|quit|exit, set, instrument, show, trace, trace-reg,\n");
   dbg_printf("    trace-mem, u|disasm, record, playback, ldsym, slist\n");
   dbg_printf("-*- Execution control -*-\n");
-  dbg_printf("    c|cont|continue, s|step, p|n|next, modebp\n");
+  dbg_printf("    c|cont|continue, s|step, p|n|next, modebp, vmexitbp\n");
   dbg_printf("-*- Breakpoint management -*-\n");
   dbg_printf("    vb|vbreak, lb|lbreak, pb|pbreak|b|break, sb, sba, blist,\n");
   dbg_printf("    bpe, bpd, d|del|delete, watch, unwatch\n");

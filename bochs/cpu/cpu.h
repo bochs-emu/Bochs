@@ -1027,6 +1027,9 @@ public: // for now...
   bx_bool trace_reg;
   bx_bool trace_mem;
   bx_bool mode_break;
+#if BX_SUPPORT_VMX
+  bx_bool vmexit_break;
+#endif
   unsigned show_flag;
   bx_guard_found_t guard_found;
 #endif

@@ -48,6 +48,7 @@ Bochs repository moved to the SVN version control !
     - VBE: added HDTV resolutions (patch by Tristan Schmelcher)
 
 - SF patches applied
+  [3298173] Breakpoint on VMEXIT event by Jianan Hao
   [3295737] Fix CopyHost*WordLittleEndian macros by Heikki Lindholm
   [3289448] optimized powerpc byte swapping by Heikki Lindholm
   [3292581] Core Audio first aid by Heikki Lindholm
