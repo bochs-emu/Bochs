@@ -124,6 +124,7 @@ sba             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_TIMEBP_ABSOLUTE)
 record          { bxlval.sval = strdup(bxtext); return(BX_TOKEN_RECORD); }
 playback        { bxlval.sval = strdup(bxtext); return(BX_TOKEN_PLAYBACK); }
 modebp          { bxlval.sval = strdup(bxtext); return(BX_TOKEN_MODEBP); }
+vmexitbp        { bxlval.sval = strdup(bxtext); return(BX_TOKEN_VMEXITBP); }
 print-stack     { bxlval.sval = strdup(bxtext); return(BX_TOKEN_PRINT_STACK); }
 watch           { bxlval.sval = strdup(bxtext); return(BX_TOKEN_WATCH); }
 unwatch         { bxlval.sval = strdup(bxtext); return(BX_TOKEN_UNWATCH); }
