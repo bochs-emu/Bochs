@@ -850,7 +850,7 @@ typedef
 #endif
 
 #if defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 0)
-#error "gcc 4.0.0 is know to produce incorrect code which breaks Bochs emulation"
+#error "gcc 4.0.0 is known to produce incorrect code which breaks Bochs emulation"
 #endif
 
 #endif  // _BX_CONFIG_H
