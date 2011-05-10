@@ -642,19 +642,17 @@ parport1: enabled=1, file="parport.out"
 
 #=======================================================================
 # VGA_UPDATE_INTERVAL:
-# Video memory is scanned for updates and screen updated every so many
-# virtual seconds.  The default is 50000, about 20Hz. Keep in mind that
-# you must tweak the 'cpu: ips=N' directive to be as close to the number
-# of emulated instructions-per-second your workstation can do, for this
-# to be accurate.
+# Video memory is scanned for updates and screen is updated every so many
+# virtual microseconds. The default value is 50000, about 20Hz based on the
+# emulated clock. Keep in mind that you must tweak the 'cpu: ips=N' directive
+# to be as close to the number of emulated instructions-per-second your
+# workstation can do, for this to be accurate. This parameter can be changed
+# at runtime.
 #
 # Examples:
 #   vga_update_interval: 250000
 #=======================================================================
 vga_update_interval: 300000
-
-# using for Winstone '98 tests
-#vga_update_interval:  100000
 
 #=======================================================================
 # KEYBOARD_SERIAL_DELAY:
