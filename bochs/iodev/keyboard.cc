@@ -974,17 +974,16 @@ void bx_keyb_c::controller_enQ(Bit8u data, unsigned source)
 
 void bx_keyb_c::kbd_enQ_imm(Bit8u val)
 {
-  int tail;
-
   if (BX_KEY_THIS s.kbd_internal_buffer.num_elements >= BX_KBD_ELEMENTS) {
     BX_PANIC(("internal keyboard buffer full (imm)"));
     return;
   }
 
   /* enqueue scancode in multibyte internal keyboard buffer */
-  tail = (BX_KEY_THIS s.kbd_internal_buffer.head + BX_KEY_THIS s.kbd_internal_buffer.num_elements) %
+/*
+  int tail = (BX_KEY_THIS s.kbd_internal_buffer.head + BX_KEY_THIS s.kbd_internal_buffer.num_elements) %
     BX_KBD_ELEMENTS;
-
+*/
   BX_KEY_THIS s.kbd_controller.kbd_output_buffer = val;
   BX_KEY_THIS s.kbd_controller.outb = 1;
 

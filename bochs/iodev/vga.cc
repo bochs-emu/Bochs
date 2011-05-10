@@ -579,8 +579,7 @@ void bx_vga_c::determine_screen_dimensions(unsigned *piHeight, unsigned *piWidth
     }
   }
   else if (BX_VGA_THIS s.graphics_ctrl.shift_reg == 2)
-    {
-
+  {
     if (BX_VGA_THIS s.sequencer.chain_four)
     {
       *piWidth = h;
@@ -638,13 +637,6 @@ Bit32u bx_vga_c::read(Bit32u address, unsigned io_len)
     RETURN(ret16);
   }
 
-#ifdef __OS2__
-  if (bx_options.videomode == BX_VIDEO_DIRECT)
-  {
-     return _inp(address);
-  }
-#endif
-
 #if !defined(VGA_TRACE_FEATURE)
   BX_DEBUG(("io read from 0x%04x", (unsigned) address));
 #endif
@@ -696,7 +688,6 @@ Bit32u bx_vga_c::read(Bit32u address, unsigned io_len)
       BX_VGA_THIS s.attribute_ctrl.flip_flop = 0;
       RETURN(retval);
       break;
-
 
     case 0x03c0: /* */
       if (BX_VGA_THIS s.attribute_ctrl.flip_flop == 0) {
@@ -985,8 +976,7 @@ void bx_vga_c::write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_l
   }
 #else
   if (io_len == 1) {
-    BX_DEBUG(("io write to 0x%04x = 0x%02x", (unsigned) address,
-      (unsigned) value));
+    BX_DEBUG(("io write to 0x%04x = 0x%02x", (unsigned) address, (unsigned) value));
   }
 #endif
 
@@ -1000,14 +990,6 @@ void bx_vga_c::write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_l
 #endif
     return;
   }
-
-#ifdef __OS2__
-  if (bx_options.videomode == BX_VIDEO_DIRECT)
-   {
-     _outp(address, value);
-     return;
-   }
-#endif
 
   if ((address >= 0x03b0) && (address <= 0x03bf) &&
       (BX_VGA_THIS s.misc_output.color_emulation))
@@ -2061,7 +2043,6 @@ void bx_vga_c::update(void)
     BX_VGA_THIS s.vga_mem_updated = 0;
     return;
   }
-
   else { // text mode
     unsigned long start_address;
     unsigned long cursor_address, cursor_x, cursor_y;
@@ -2191,26 +2172,11 @@ Bit8u bx_vga_c::mem_read(bx_phy_address addr)
   Bit8u *plane0, *plane1, *plane2, *plane3;
 
   // if in a vbe enabled mode, read from the vbe_memory
-  if ((BX_VGA_THIS vbe.enabled) && (BX_VGA_THIS vbe.bpp != VBE_DISPI_BPP_4))
-  {
+  if ((BX_VGA_THIS vbe.enabled) && (BX_VGA_THIS vbe.bpp != VBE_DISPI_BPP_4)) {
     return vbe_mem_read(addr);
   } else if ((BX_VGA_THIS vbe.base_address != 0) && (addr >= BX_VGA_THIS vbe.base_address)) {
     return 0xff;
   }
-
-#ifdef __OS2__
-
-#if BX_PLUGINS
-#error Fix the code for plugins
-#endif
-
-  if (bx_options.videomode == BX_VIDEO_DIRECT)
-  {
-     char value;
-     value = devices->mem->video[addr-0xA0000];
-     return value;
-  }
-#endif
 
   switch (BX_VGA_THIS s.graphics_ctrl.memory_mapping) {
     case 1: // 0xA0000 .. 0xAFFFF
@@ -2323,19 +2289,6 @@ void bx_vga_c::mem_write(bx_phy_address addr, Bit8u value)
   } else if ((BX_VGA_THIS vbe.base_address != 0) && (addr >= BX_VGA_THIS vbe.base_address)) {
     return;
   }
-
-#ifdef __OS2__
-
-#if BX_PLUGINS
-#error Fix the code for plugins
-#endif
-
-  if (bx_options.videomode == BX_VIDEO_DIRECT)
-  {
-    devices->mem->video[addr-0xA0000] = value;
-    return;
-  }
-#endif
 
   switch (BX_VGA_THIS s.graphics_ctrl.memory_mapping) {
     case 1: // 0xA0000 .. 0xAFFFF
@@ -2840,7 +2793,7 @@ void bx_vga_c::redraw_area(unsigned x0, unsigned y0, unsigned width,
 {
   unsigned xti, yti, xt0, xt1, yt0, yt1, xmax, ymax;
 
-  if ((width == 0) || (height == 0)) {
+  if (width == 0 || height == 0) {
     return;
   }
 
@@ -2896,13 +2849,11 @@ bx_vga_c::vbe_mem_read(bx_phy_address addr)
 {
   Bit32u offset;
 
-  if (addr >= BX_VGA_THIS vbe.base_address)
-  {
+  if (addr >= BX_VGA_THIS vbe.base_address) {
     // LFB read
     offset = (Bit32u)(addr - BX_VGA_THIS vbe.base_address);
   }
-  else
-  {
+  else {
     // banked mode read
     offset = (Bit32u)(BX_VGA_THIS vbe.bank*65536 + addr - 0xA0000);
   }
@@ -2922,26 +2873,22 @@ bx_vga_c::vbe_mem_write(bx_phy_address addr, Bit8u value)
 
   if (BX_VGA_THIS vbe.lfb_enabled)
   {
-    if (addr >= BX_VGA_THIS vbe.base_address)
-    {
+    if (addr >= BX_VGA_THIS vbe.base_address) {
       // LFB write
       offset = (Bit32u)(addr - BX_VGA_THIS vbe.base_address);
     }
-    else
-    {
+    else {
       // banked mode write while in LFB mode -> ignore
       return;
     }
   }
   else
   {
-    if (addr < BX_VGA_THIS vbe.base_address)
-    {
+    if (addr < BX_VGA_THIS vbe.base_address) {
       // banked mode write
       offset = (Bit32u)(BX_VGA_THIS vbe.bank*65536 + (addr - 0xA0000));
     }
-    else
-    {
+    else {
       // LFB write while in banked mode -> ignore
       return;
     }

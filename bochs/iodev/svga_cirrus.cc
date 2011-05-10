@@ -251,10 +251,8 @@ void bx_svga_cirrus_c::init(void)
   BX_CIRRUS_THIS bx_vga_c::init();
   if (!strcmp(SIM->get_param_string(BXPN_VGA_EXTENSION)->getptr(), "cirrus")) {
     // initialize SVGA stuffs.
-    BX_CIRRUS_THIS bx_vga_c::init_iohandlers(
-        svga_read_handler, svga_write_handler);
-    BX_CIRRUS_THIS bx_vga_c::init_systemtimer(
-        svga_timer_handler, svga_param_handler);
+    BX_CIRRUS_THIS bx_vga_c::init_iohandlers(svga_read_handler, svga_write_handler);
+    BX_CIRRUS_THIS bx_vga_c::init_systemtimer(svga_timer_handler, svga_param_handler);
 #if BX_SUPPORT_PCI
     BX_CIRRUS_THIS pci_enabled = DEV_is_pci_device("cirrus");
 #endif
