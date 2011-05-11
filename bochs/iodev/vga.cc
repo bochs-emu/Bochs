@@ -28,6 +28,7 @@
 #include "iodev.h"
 #include "param_names.h"
 #include "vga.h"
+#include "virt_timer.h"
 
 #define LOG_THIS theVga->
 
@@ -373,7 +374,7 @@ void bx_vga_c::init_systemtimer(bx_timer_handler_t f_timer, param_event_handler 
   Bit64u interval = vga_update_interval->get();
   BX_INFO(("interval=" FMT_LL "u", interval));
   if (BX_VGA_THIS timer_id == BX_NULL_TIMER_HANDLE) {
-    BX_VGA_THIS timer_id = bx_pc_system.register_timer(this, f_timer,
+    BX_VGA_THIS timer_id = bx_virt_timer.register_timer(this, f_timer,
        (Bit32u)interval, 1, 1, "vga");
     vga_update_interval->set_handler(f_param);
     vga_update_interval->set_runtime_param(1);
