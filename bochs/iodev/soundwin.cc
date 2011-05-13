@@ -39,7 +39,8 @@ bx_sound_windows_c::bx_sound_windows_c(logfunctions *dev)
   :bx_sound_lowlevel_c(dev)
 {
   MidiOpen = 0;
-  WaveOpen = 0;
+  WaveOutOpen = 0;
+  WaveInOpen = 0;
 
   ismidiready = 1;
   iswaveready = 1;
@@ -51,9 +52,9 @@ bx_sound_windows_c::bx_sound_windows_c(logfunctions *dev)
 #define ALIGN(size) ((size + 15) & ~15)
 
 #define size   ALIGN(sizeof(MIDIHDR)) \
-             + ALIGN(sizeof(WAVEHDR)) \
-             + ALIGN(BX_SOUND_WINDOWS_MAXSYSEXLEN) * BX_SOUND_WINDOWS_NBUF \
-             + ALIGN(BX_SOUNDLOW_WAVEPACKETSIZE) * BX_SOUND_WINDOWS_NBUF
+             + ALIGN(sizeof(WAVEHDR)) * (BX_SOUND_WINDOWS_NBUF + 1) \
+             + ALIGN(BX_SOUND_WINDOWS_MAXSYSEXLEN) \
+             + ALIGN(BX_SOUNDLOW_WAVEPACKETSIZE + 64) * (BX_SOUND_WINDOWS_NBUF + 1)
 
   DataHandle = GlobalAlloc(GMEM_MOVEABLE | GMEM_SHARE, size);
   DataPointer = (Bit8u*) GlobalLock(DataHandle);
@@ -72,6 +73,8 @@ bx_sound_windows_c::bx_sound_windows_c(logfunctions *dev)
       WaveHeader[bufnum] = (LPWAVEHDR) NEWBUFFER(sizeof(WAVEHDR));
       WaveData[bufnum] = (LPSTR) NEWBUFFER(BX_SOUNDLOW_WAVEPACKETSIZE+64);
   }
+  WaveInHdr = (LPWAVEHDR) NEWBUFFER(sizeof(WAVEHDR));
+  WaveInData = (LPSTR) NEWBUFFER(BX_SOUNDLOW_WAVEPACKETSIZE+64);
 
   if (offset > size)
     BX_PANIC(("Allocated memory was too small!"));
@@ -217,8 +220,8 @@ int bx_sound_windows_c::playnextbuffer()
   // if the format is different, we have to reopen the device,
   // so reset it first
   if (needreopen != 0)
-    if (WaveOpen != 0)
-      ret = waveOutReset(WaveOut);
+    if (WaveOutOpen != 0)
+      ret = waveOutReset(hWaveOut);
 
   // clean up the buffers and mark if output is ready
   checkwaveready();
@@ -229,21 +232,21 @@ int bx_sound_windows_c::playnextbuffer()
 
   // if the format is different, we have to close and reopen the device
   // or, just open the device if it's not open yet
-  if ((needreopen != 0) || (WaveOpen == 0))
+  if ((needreopen != 0) || (WaveOutOpen == 0))
   {
-    if (WaveOpen != 0)
+    if (WaveOutOpen != 0)
     {
-      ret = waveOutClose(WaveOut);
-      WaveOpen = 0;
+      ret = waveOutClose(hWaveOut);
+      WaveOutOpen = 0;
     }
 
     // try three times to find a suitable format
     for (int tries = 0; tries < 3; tries++)
     {
-      int frequency = WaveInfo.frequency;
-      bx_bool stereo = WaveInfo.stereo;
-      int bits = WaveInfo.bits;
-//    int format = WaveInfo.format;
+      int frequency = WaveInfo[0].frequency;
+      bx_bool stereo = WaveInfo[0].stereo;
+      int bits = WaveInfo[0].bits;
+//    int format = WaveInfo[0].format;
       int bps = (bits / 8) * (stereo + 1);
 
       waveformat.wf.wFormatTag = WAVE_FORMAT_PCM;
@@ -253,7 +256,7 @@ int bx_sound_windows_c::playnextbuffer()
       waveformat.wf.nBlockAlign = bps;
       waveformat.wBitsPerSample = bits;
 
-      ret = waveOutOpen(&(WaveOut), WaveDevice, (LPWAVEFORMATEX)&(waveformat.wf), 0, 0, CALLBACK_NULL);
+      ret = waveOutOpen(&(hWaveOut), WaveDevice, (LPWAVEFORMATEX)&(waveformat.wf), 0, 0, CALLBACK_NULL);
       if (ret != 0)
       {
         char errormsg[4*MAXERRORLENGTH+1];
@@ -292,7 +295,7 @@ int bx_sound_windows_c::playnextbuffer()
       }
       else
       {
-        WaveOpen = 1;
+        WaveOutOpen = 1;
         needreopen = 0;
         break;
       }
@@ -312,14 +315,14 @@ int bx_sound_windows_c::playnextbuffer()
     WaveHeader[bufnum]->dwFlags = 0;
     WaveHeader[bufnum]->dwLoops = 1;
 
-    ret = waveOutPrepareHeader(WaveOut, WaveHeader[bufnum], sizeof(*WaveHeader[bufnum]));
+    ret = waveOutPrepareHeader(hWaveOut, WaveHeader[bufnum], sizeof(*WaveHeader[bufnum]));
     if (ret != 0)
     {
       BX_ERROR(("waveOutPrepareHeader = %d", ret));
       return BX_SOUNDLOW_ERR;
     }
 
-    ret = waveOutWrite(WaveOut, WaveHeader[bufnum], sizeof(*WaveHeader[bufnum]));
+    ret = waveOutWrite(hWaveOut, WaveHeader[bufnum], sizeof(*WaveHeader[bufnum]));
     if (ret != 0)
     {
       char errormsg[4*MAXERRORLENGTH+1];
@@ -337,18 +340,18 @@ int bx_sound_windows_c::startwaveplayback(int frequency, int bits, bx_bool stere
 
 #ifdef usewaveOut
   // check if any of the properties have changed
-  if ((WaveInfo.frequency != frequency) ||
-      (WaveInfo.bits != bits) ||
-      (WaveInfo.stereo != stereo) ||
-      (WaveInfo.format != format))
+  if ((WaveInfo[0].frequency != frequency) ||
+      (WaveInfo[0].bits != bits) ||
+      (WaveInfo[0].stereo != stereo) ||
+      (WaveInfo[0].format != format))
   {
     needreopen = 1;
 
     // store the current settings to be used by sendwavepacket()
-    WaveInfo.frequency = frequency;
-    WaveInfo.bits = bits;
-    WaveInfo.stereo = stereo;
-    WaveInfo.format = format;
+    WaveInfo[0].frequency = frequency;
+    WaveInfo[0].bits = bits;
+    WaveInfo[0].stereo = stereo;
+    WaveInfo[0].format = format;
   }
 #endif
 
@@ -453,14 +456,14 @@ int bx_sound_windows_c::closewaveoutput()
   BX_DEBUG(("closewaveoutput"));
 
 #ifdef usewaveOut
-  if (WaveOpen == 1)
+  if (WaveOutOpen == 1)
   {
-    waveOutReset(WaveOut);
+    waveOutReset(hWaveOut);
 
     // let checkwaveready() clean up the buffers
     checkwaveready();
 
-    waveOutClose(WaveOut);
+    waveOutClose(hWaveOut);
 
     head = 0;
     tailfull = 0;
@@ -494,7 +497,7 @@ void bx_sound_windows_c::checkwaveready()
            bufnum++, bufnum &= BX_SOUND_WINDOWS_NMASK)
   {
     BX_DEBUG(("Buffer %d done.", bufnum));
-    ret = waveOutUnprepareHeader(WaveOut, WaveHeader[bufnum], sizeof(*WaveHeader[bufnum]));
+    ret = waveOutUnprepareHeader(hWaveOut, WaveHeader[bufnum], sizeof(*WaveHeader[bufnum]));
   }
 
   tailfull = bufnum;
@@ -506,6 +509,136 @@ void bx_sound_windows_c::checkwaveready()
              head, tailfull, tailplay));
     iswaveready = 1;
   }
+}
+
+int bx_sound_windows_c::openwaveinput(const char *wavedev, sound_record_handler_t rh)
+{
+  UNUSED(wavedev);
+  record_handler = rh;
+  record_timer_index = bx_pc_system.register_timer(this, record_timer_handler, 1, 1, 0, "soundmod");
+  // record timer: inactive, continuous, frequency variable
+  recording = 0;
+  return BX_SOUNDLOW_OK;
+}
+
+int bx_sound_windows_c::recordnextpacket()
+{
+  MMRESULT result;
+
+  WaveInHdr->lpData = (LPSTR)WaveInData;
+  WaveInHdr->dwBufferLength = record_packet_size;
+  WaveInHdr->dwBytesRecorded = 0;
+  WaveInHdr->dwUser = 0L;
+  WaveInHdr->dwFlags = 0L;
+  WaveInHdr->dwLoops = 0L;
+  waveInPrepareHeader(hWaveIn, WaveInHdr, sizeof(WAVEHDR));
+  result = waveInAddBuffer(hWaveIn, WaveInHdr, sizeof(WAVEHDR));
+  if (result) {
+    BX_ERROR(("Couldn't add buffer for recording"));
+    return BX_SOUNDLOW_ERR;
+  } else {
+    result = waveInStart(hWaveIn);
+    if (result) {
+      BX_ERROR(("Couldn't start recording"));
+      return BX_SOUNDLOW_ERR;
+    } else {
+      recording = 1;
+      return BX_SOUNDLOW_OK;
+    }
+  }
+}
+
+int bx_sound_windows_c::startwaverecord(int frequency, int bits, bx_bool stereo, int format)
+{
+  Bit64u timer_val;
+  Bit8u shift = 0;
+  MMRESULT result;
+
+  if (bits == 16) shift++;
+  if (stereo) shift++;
+  record_packet_size = (frequency / 10) << shift; // 0.1 sec
+  if (record_packet_size > BX_SOUNDLOW_WAVEPACKETSIZE) {
+    record_packet_size = BX_SOUNDLOW_WAVEPACKETSIZE;
+  }
+  timer_val = (Bit64u)record_packet_size * 1000000 / (frequency << shift);
+  bx_pc_system.activate_timer(record_timer_index, timer_val, 1);
+
+  // check if any of the properties have changed
+  if ((WaveInfo[1].frequency != frequency) ||
+      (WaveInfo[1].bits != bits) ||
+      (WaveInfo[1].stereo != stereo) ||
+      (WaveInfo[1].format != format))
+  {
+    WaveInfo[1].frequency = frequency;
+    WaveInfo[1].bits = bits;
+    WaveInfo[1].stereo = stereo;
+    WaveInfo[1].format = format;
+
+    if (WaveInOpen) {
+      waveInClose(hWaveIn);
+    }
+
+    // Specify recording parameters
+    WAVEFORMATEX pFormat;
+    pFormat.wFormatTag = WAVE_FORMAT_PCM;
+    pFormat.nChannels = 1 << stereo;
+    pFormat.nSamplesPerSec = frequency;
+    pFormat.nAvgBytesPerSec = frequency << shift;
+    pFormat.nBlockAlign = 1 << shift;
+    pFormat.wBitsPerSample = bits;
+    pFormat.cbSize = 0;
+    result = waveInOpen(&hWaveIn, WAVEMAPPER, &pFormat, 0L, 0L, WAVE_FORMAT_DIRECT);
+    if (result) {
+      BX_ERROR(("Couldn't open wave device for recording: error=%d", result));
+      return BX_SOUNDLOW_ERR;
+    } else {
+      WaveInOpen = 1;
+    }
+  }
+  return recordnextpacket();
+}
+
+int bx_sound_windows_c::getwavepacket(int length, Bit8u data[])
+{
+  if (WaveInOpen && recording) {
+    do {} while (waveInUnprepareHeader(hWaveIn, WaveInHdr, sizeof(WAVEHDR)) == WAVERR_STILLPLAYING);
+    memcpy(data, WaveInData, length);
+    return recordnextpacket();
+  } else {
+    memset(data, 0, length);
+    return BX_SOUNDLOW_OK;
+  }
+}
+
+int bx_sound_windows_c::stopwaverecord()
+{
+  bx_pc_system.deactivate_timer(record_timer_index);
+  if (WaveInOpen && recording) {
+    do {} while (waveInUnprepareHeader(hWaveIn, WaveInHdr, sizeof(WAVEHDR)) == WAVERR_STILLPLAYING);
+    recording = 0;
+  }
+  return BX_SOUNDLOW_OK;
+}
+
+int bx_sound_windows_c::closewaveinput()
+{
+  stopwaverecord();
+  if (WaveInOpen) {
+    waveInClose(hWaveIn);
+  }
+  return BX_SOUNDLOW_OK;
+}
+
+void bx_sound_windows_c::record_timer_handler(void *this_ptr)
+{
+  bx_sound_windows_c *class_ptr = (bx_sound_windows_c *) this_ptr;
+
+  class_ptr->record_timer();
+}
+
+void bx_sound_windows_c::record_timer(void)
+{
+  record_handler(this->device, record_packet_size);
 }
 
 #endif // defined(WIN32)

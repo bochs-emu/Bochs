@@ -182,6 +182,15 @@ public:
   virtual int    stopwaveplayback();
   virtual int    closewaveoutput();
 
+  virtual int openwaveinput(const char *wavedev, sound_record_handler_t rh);
+  virtual int startwaverecord(int frequency, int bits, bx_bool stereo, int format);
+  virtual int getwavepacket(int length, Bit8u data[]);
+  virtual int stopwaverecord();
+  virtual int closewaveinput();
+
+  static void record_timer_handler(void *);
+  void record_timer(void);
+
 private:
   struct bx_sound_waveinfo_struct {
     int frequency;
@@ -192,8 +201,10 @@ private:
 
   HMIDIOUT MidiOut;       // Midi output device
   int MidiOpen;           // is it open?
-  HWAVEOUT WaveOut;       // Wave output device
-  int WaveOpen;           // is it open?
+  HWAVEOUT hWaveOut;      // Wave output device
+  int WaveOutOpen;        // is it open?
+  HWAVEIN hWaveIn;        // Wave input device
+  int WaveInOpen;         // is it open?
 
   UINT WaveDevice;        // Wave device ID, for waveOutOpen
 
@@ -203,10 +214,13 @@ private:
 
   LPWAVEHDR WaveHeader[BX_SOUND_WINDOWS_NBUF];
   LPSTR WaveData[BX_SOUND_WINDOWS_NBUF];
+  LPWAVEHDR WaveInHdr;
+  LPSTR WaveInData;
+  bx_bool recording;
   int length[BX_SOUND_WINDOWS_NBUF];                // length of the data in the buffer
   int needreopen;                                   // if the format has changed
   int head,tailfull,tailplay;       // These are for three states of the buffers: empty, full, played
-  bx_sound_waveinfo_struct WaveInfo;                // format for the next buffer to be played
+  bx_sound_waveinfo_struct WaveInfo[2];             // format for the next buffer to be played
   int iswaveready;
 
   // and the midi buffer for the SYSEX messages
@@ -215,6 +229,7 @@ private:
   int ismidiready;
 
   int playnextbuffer();
+  int recordnextpacket();
   void checkmidiready();
   void checkwaveready();
 };
