@@ -573,7 +573,7 @@ int bx_sound_linux_c::startwaverecord(int frequency, int bits, bx_bool stereo, i
     record_packet_size = BX_SOUNDLOW_WAVEPACKETSIZE;
   }
   timer_val = (Bit64u)record_packet_size * 1000000 / (frequency << shift);
-  bx_pc_system.activate_timer(record_timer_index, timer_val, 1);
+  bx_pc_system.activate_timer(record_timer_index, (Bit32u)timer_val, 1);
 #if BX_HAVE_ALSASOUND
   if (use_alsa_pcm) {
     return alsa_pcm_open(1, frequency, bits, stereo, format);

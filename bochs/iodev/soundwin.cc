@@ -151,10 +151,10 @@ int bx_sound_windows_c::sendmidicommand(int delta, int command, int length, Bit8
     MidiHeader->dwFlags = 0;
     ret = midiOutPrepareHeader(MidiOut, MidiHeader, sizeof(*MidiHeader));
     if (ret != 0)
-      BX_ERROR(("midiOutPrepareHeader() = %d", ret));
+      BX_ERROR(("midiOutPrepareHeader(): error = %d", ret));
     ret = midiOutLongMsg(MidiOut, MidiHeader, sizeof(*MidiHeader));
     if (ret != 0)
-      BX_ERROR(("midiOutLongMsg() = %d", ret));
+      BX_ERROR(("midiOutLongMsg(): error = %d", ret));
   }
   else
   {
@@ -284,7 +284,7 @@ int bx_sound_windows_c::playnextbuffer()
           break;
 
         case 2:        // nope, doesn't work
-          BX_ERROR(("Couldn't open wave device (error %d)!", ret));
+          BX_ERROR(("Couldn't open wave output device (error = %d)!", ret));
           return BX_SOUNDLOW_ERR;
         }
 
@@ -318,7 +318,7 @@ int bx_sound_windows_c::playnextbuffer()
     ret = waveOutPrepareHeader(hWaveOut, WaveHeader[bufnum], sizeof(*WaveHeader[bufnum]));
     if (ret != 0)
     {
-      BX_ERROR(("waveOutPrepareHeader = %d", ret));
+      BX_ERROR(("waveOutPrepareHeader(): error = %d", ret));
       return BX_SOUNDLOW_ERR;
     }
 
@@ -327,7 +327,7 @@ int bx_sound_windows_c::playnextbuffer()
     {
       char errormsg[4*MAXERRORLENGTH+1];
       waveOutGetErrorTextA(ret, errormsg, 4*MAXERRORLENGTH+1);
-      BX_DEBUG(("waveOutWrite: %s", errormsg));
+      BX_ERROR(("waveOutWrite(): %s", errormsg));
     }
   }
 
@@ -534,12 +534,12 @@ int bx_sound_windows_c::recordnextpacket()
   waveInPrepareHeader(hWaveIn, WaveInHdr, sizeof(WAVEHDR));
   result = waveInAddBuffer(hWaveIn, WaveInHdr, sizeof(WAVEHDR));
   if (result) {
-    BX_ERROR(("Couldn't add buffer for recording"));
+    BX_ERROR(("Couldn't add buffer for recording (error = %d)", result));
     return BX_SOUNDLOW_ERR;
   } else {
     result = waveInStart(hWaveIn);
     if (result) {
-      BX_ERROR(("Couldn't start recording"));
+      BX_ERROR(("Couldn't start recording (error = %d)", result));
       return BX_SOUNDLOW_ERR;
     } else {
       recording = 1;
@@ -561,7 +561,7 @@ int bx_sound_windows_c::startwaverecord(int frequency, int bits, bx_bool stereo,
     record_packet_size = BX_SOUNDLOW_WAVEPACKETSIZE;
   }
   timer_val = (Bit64u)record_packet_size * 1000000 / (frequency << shift);
-  bx_pc_system.activate_timer(record_timer_index, timer_val, 1);
+  bx_pc_system.activate_timer(record_timer_index, (Bit32u)timer_val, 1);
 
   // check if any of the properties have changed
   if ((WaveInfo[1].frequency != frequency) ||
@@ -589,7 +589,7 @@ int bx_sound_windows_c::startwaverecord(int frequency, int bits, bx_bool stereo,
     pFormat.cbSize = 0;
     result = waveInOpen(&hWaveIn, WAVEMAPPER, &pFormat, 0L, 0L, WAVE_FORMAT_DIRECT);
     if (result) {
-      BX_ERROR(("Couldn't open wave device for recording: error=%d", result));
+      BX_ERROR(("Couldn't open wave device for recording (error = %d)", result));
       return BX_SOUNDLOW_ERR;
     } else {
       WaveInOpen = 1;
