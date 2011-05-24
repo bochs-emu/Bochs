@@ -515,8 +515,10 @@ int bx_sound_windows_c::openwaveinput(const char *wavedev, sound_record_handler_
 {
   UNUSED(wavedev);
   record_handler = rh;
-  record_timer_index = bx_pc_system.register_timer(this, record_timer_handler, 1, 1, 0, "soundmod");
-  // record timer: inactive, continuous, frequency variable
+  if (rh != NULL) {
+    record_timer_index = bx_pc_system.register_timer(this, record_timer_handler, 1, 1, 0, "soundwin");
+    // record timer: inactive, continuous, frequency variable
+  }
   recording = 0;
   return BX_SOUNDLOW_OK;
 }
@@ -554,15 +556,16 @@ int bx_sound_windows_c::startwaverecord(int frequency, int bits, bx_bool stereo,
   Bit8u shift = 0;
   MMRESULT result;
 
-  if (bits == 16) shift++;
-  if (stereo) shift++;
-  record_packet_size = (frequency / 10) << shift; // 0.1 sec
-  if (record_packet_size > BX_SOUNDLOW_WAVEPACKETSIZE) {
-    record_packet_size = BX_SOUNDLOW_WAVEPACKETSIZE;
+  if (record_timer_index != BX_NULL_TIMER_HANDLE) {
+    if (bits == 16) shift++;
+    if (stereo) shift++;
+    record_packet_size = (frequency / 10) << shift; // 0.1 sec
+    if (record_packet_size > BX_SOUNDLOW_WAVEPACKETSIZE) {
+      record_packet_size = BX_SOUNDLOW_WAVEPACKETSIZE;
+    }
+    timer_val = (Bit64u)record_packet_size * 1000000 / (frequency << shift);
+    bx_pc_system.activate_timer(record_timer_index, (Bit32u)timer_val, 1);
   }
-  timer_val = (Bit64u)record_packet_size * 1000000 / (frequency << shift);
-  bx_pc_system.activate_timer(record_timer_index, (Bit32u)timer_val, 1);
-
   // check if any of the properties have changed
   if ((WaveInfo[1].frequency != frequency) ||
       (WaveInfo[1].bits != bits) ||
@@ -612,7 +615,9 @@ int bx_sound_windows_c::getwavepacket(int length, Bit8u data[])
 
 int bx_sound_windows_c::stopwaverecord()
 {
-  bx_pc_system.deactivate_timer(record_timer_index);
+  if (record_timer_index != BX_NULL_TIMER_HANDLE) {
+    bx_pc_system.deactivate_timer(record_timer_index);
+  }
   if (WaveInOpen && recording) {
     do {} while (waveInUnprepareHeader(hWaveIn, WaveInHdr, sizeof(WAVEHDR)) == WAVERR_STILLPLAYING);
     recording = 0;

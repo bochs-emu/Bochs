@@ -39,13 +39,19 @@ Bochs repository moved to the SVN version control !
       "READ NATIVE MAX ADDRESS EXT"
   - Sound
     - ported ES1370 soundcard emulation from Qemu, to enable configure with
-        --enable-es1370 option
-    - sound input implemented in the sound lowlevel module 'linux' (ALSA / OSS)
+      the option --enable-es1370
+    - sound input implemented in the sound lowlevel modules for Windows and
+      Linux (ALSA / OSS)
 
   - LGPL'd VGABIOS updated to current CVS
     - fixed DAC palette in 8 bpp VBE and Cirrus modes (using the same palette
       as VGA mode 0x13)
     - VBE: added HDTV resolutions (patch by Tristan Schmelcher)
+
+- GUI and display libraries
+  - vga update interval now uses host timing if the realtime sychronization is
+    enabled with the "clock" option (FIXME: it should always be used - independant
+    from the "clock" setting)
 
 - SF patches applied
   [3298173] Breakpoint on VMEXIT event by Jianan Hao

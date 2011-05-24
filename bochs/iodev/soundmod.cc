@@ -69,6 +69,7 @@ int bx_soundmod_ctl_c::init_module(const char *type, void **module, logfunctions
 bx_sound_lowlevel_c::bx_sound_lowlevel_c(logfunctions *dev)
 {
   device = dev;
+  record_timer_index = BX_NULL_TIMER_HANDLE;
 }
 
 bx_sound_lowlevel_c::~bx_sound_lowlevel_c()
@@ -141,8 +142,10 @@ int bx_sound_lowlevel_c::openwaveinput(const char *wavedev, sound_record_handler
 {
   UNUSED(wavedev);
   record_handler = rh;
-  record_timer_index = bx_pc_system.register_timer(this, record_timer_handler, 1, 1, 0, "soundmod");
-  // record timer: inactive, continuous, frequency variable
+  if (rh != NULL) {
+    record_timer_index = bx_pc_system.register_timer(this, record_timer_handler, 1, 1, 0, "soundmod");
+    // record timer: inactive, continuous, frequency variable
+  }
   return BX_SOUNDLOW_OK;
 }
 
@@ -152,14 +155,16 @@ int bx_sound_lowlevel_c::startwaverecord(int frequency, int bits, bx_bool stereo
   Bit8u shift = 0;
 
   UNUSED(format);
-  if (bits == 16) shift++;
-  if (stereo) shift++;
-  record_packet_size = (frequency / 10) << shift; // 0.1 sec
-  if (record_packet_size > BX_SOUNDLOW_WAVEPACKETSIZE) {
-    record_packet_size = BX_SOUNDLOW_WAVEPACKETSIZE;
+  if (record_timer_index != BX_NULL_TIMER_HANDLE) {
+    if (bits == 16) shift++;
+    if (stereo) shift++;
+    record_packet_size = (frequency / 10) << shift; // 0.1 sec
+    if (record_packet_size > BX_SOUNDLOW_WAVEPACKETSIZE) {
+      record_packet_size = BX_SOUNDLOW_WAVEPACKETSIZE;
+    }
+    timer_val = (Bit64u)record_packet_size * 1000000 / (frequency << shift);
+    bx_pc_system.activate_timer(record_timer_index, (Bit32u)timer_val, 1);
   }
-  timer_val = (Bit64u)record_packet_size * 1000000 / (frequency << shift);
-  bx_pc_system.activate_timer(record_timer_index, (Bit32u)timer_val, 1);
   return BX_SOUNDLOW_OK;
 }
 
@@ -171,7 +176,9 @@ int bx_sound_lowlevel_c::getwavepacket(int length, Bit8u data[])
 
 int bx_sound_lowlevel_c::stopwaverecord()
 {
-  bx_pc_system.deactivate_timer(record_timer_index);
+  if (record_timer_index != BX_NULL_TIMER_HANDLE) {
+    bx_pc_system.deactivate_timer(record_timer_index);
+  }
   return BX_SOUNDLOW_OK;
 }
 

@@ -57,6 +57,14 @@ public:
     void nextbuffer(int *outDataSize, void **outData);
 #endif
 
+  virtual int openwaveinput(const char *wavedev, sound_record_handler_t rh);
+  virtual int startwaverecord(int frequency, int bits, bx_bool stereo, int format);
+  virtual int getwavepacket(int length, Bit8u data[]);
+  virtual int stopwaverecord();
+  virtual int closewaveinput();
+
+  static void record_timer_handler(void *);
+  void record_timer(void);
 private:
     int MidiOpen;
     int WaveOpen;

@@ -536,8 +536,10 @@ int bx_sound_linux_c::closewaveoutput()
 int bx_sound_linux_c::openwaveinput(const char *wavedev, sound_record_handler_t rh)
 {
   record_handler = rh;
-  record_timer_index = bx_pc_system.register_timer(this, record_timer_handler, 1, 1, 0, "soundlnx");
-  // record timer: inactive, continuous, frequency variable
+  if (rh != NULL) {
+    record_timer_index = bx_pc_system.register_timer(this, record_timer_handler, 1, 1, 0, "soundlnx");
+    // record timer: inactive, continuous, frequency variable
+  }
 #if BX_HAVE_ALSASOUND
   use_alsa_pcm = !strcmp(wavedev, "alsa");
   if (use_alsa_pcm) {
@@ -566,14 +568,16 @@ int bx_sound_linux_c::startwaverecord(int frequency, int bits, bx_bool stereo, i
   int fmt, ret;
   int signeddata = format & 1;
 
-  if (bits == 16) shift++;
-  if (stereo) shift++;
-  record_packet_size = (frequency / 10) << shift; // 0.1 sec
-  if (record_packet_size > BX_SOUNDLOW_WAVEPACKETSIZE) {
-    record_packet_size = BX_SOUNDLOW_WAVEPACKETSIZE;
+  if (record_timer_index != BX_NULL_TIMER_HANDLE) {
+    if (bits == 16) shift++;
+    if (stereo) shift++;
+    record_packet_size = (frequency / 10) << shift; // 0.1 sec
+    if (record_packet_size > BX_SOUNDLOW_WAVEPACKETSIZE) {
+      record_packet_size = BX_SOUNDLOW_WAVEPACKETSIZE;
+    }
+    timer_val = (Bit64u)record_packet_size * 1000000 / (frequency << shift);
+    bx_pc_system.activate_timer(record_timer_index, (Bit32u)timer_val, 1);
   }
-  timer_val = (Bit64u)record_packet_size * 1000000 / (frequency << shift);
-  bx_pc_system.activate_timer(record_timer_index, (Bit32u)timer_val, 1);
 #if BX_HAVE_ALSASOUND
   if (use_alsa_pcm) {
     return alsa_pcm_open(1, frequency, bits, stereo, format);
@@ -689,7 +693,9 @@ int bx_sound_linux_c::getwavepacket(int length, Bit8u data[])
 
 int bx_sound_linux_c::stopwaverecord()
 {
-  bx_pc_system.deactivate_timer(record_timer_index);
+  if (record_timer_index != BX_NULL_TIMER_HANDLE) {
+    bx_pc_system.deactivate_timer(record_timer_index);
+  }
 #if BX_HAVE_ALSASOUND
   if (use_alsa_pcm && (alsa_pcm[1].handle != NULL)) {
     snd_pcm_drain(alsa_pcm[1].handle);

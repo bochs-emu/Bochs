@@ -571,4 +571,71 @@ void bx_sound_osx_c::nextbuffer (int *outDataSize, void **outData)
 }
 #endif
 
+int bx_sound_osx_c::openwaveinput(const char *wavedev, sound_record_handler_t rh)
+{
+  UNUSED(wavedev);
+  record_handler = rh;
+  if (rh != NULL) {
+    record_timer_index = bx_pc_system.register_timer(this, record_timer_handler, 1, 1, 0, "soundosx");
+    // record timer: inactive, continuous, frequency variable
+  }
+  // TODO
+  return BX_SOUNDLOW_OK;
+}
+
+int bx_sound_osx_c::startwaverecord(int frequency, int bits, bx_bool stereo, int format)
+{
+  Bit64u timer_val;
+  Bit8u shift = 0;
+
+  UNUSED(format);
+  if (record_timer_index != BX_NULL_TIMER_HANDLE) {
+    if (bits == 16) shift++;
+    if (stereo) shift++;
+    record_packet_size = (frequency / 10) << shift; // 0.1 sec
+    if (record_packet_size > BX_SOUNDLOW_WAVEPACKETSIZE) {
+      record_packet_size = BX_SOUNDLOW_WAVEPACKETSIZE;
+    }
+    timer_val = (Bit64u)record_packet_size * 1000000 / (frequency << shift);
+    bx_pc_system.activate_timer(record_timer_index, (Bit32u)timer_val, 1);
+  }
+  // TODO
+  return BX_SOUNDLOW_OK;
+}
+
+int bx_sound_osx_c::getwavepacket(int length, Bit8u data[])
+{
+  // TODO
+  memset(data, 0, length);
+  return BX_SOUNDLOW_OK;
+}
+
+int bx_sound_osx_c::stopwaverecord()
+{
+  if (record_timer_index != BX_NULL_TIMER_HANDLE) {
+    bx_pc_system.deactivate_timer(record_timer_index);
+  }
+  // TODO
+  return BX_SOUNDLOW_OK;
+}
+
+int bx_sound_osx_c::closewaveinput()
+{
+  stopwaverecord();
+  // TODO
+  return BX_SOUNDLOW_OK;
+}
+
+void bx_sound_osx_c::record_timer_handler(void *this_ptr)
+{
+  bx_sound_osx_c *class_ptr = (bx_sound_osx_c *) this_ptr;
+
+  class_ptr->record_timer();
+}
+
+void bx_sound_osx_c::record_timer(void)
+{
+  record_handler(this->device, record_packet_size);
+}
+
 #endif  // defined(macintosh)
