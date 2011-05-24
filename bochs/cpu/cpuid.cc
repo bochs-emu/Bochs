@@ -218,15 +218,21 @@ Bit32u BX_CPU_C::get_std_cpuid_features(void)
 #if BX_CPU_LEVEL >= 5
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_CPU_PENTIUM)) {
     // Pentium only features
-    features |= BX_CPUID_STD_VME;
-    features |= BX_CPUID_STD_DEBUG_EXTENSIONS;
-    features |= BX_CPUID_STD_PSE;
     features |= BX_CPUID_STD_TSC;
     features |= BX_CPUID_STD_MSR;
     // support Machine Check
     features |= BX_CPUID_STD_MCE | BX_CPUID_STD_MCA;
     features |= BX_CPUID_STD_CMPXCHG8B;
   }
+
+  if (BX_CPUID_SUPPORT_CPU_EXTENSION(BX_CPU_VME))
+    features |= BX_CPUID_STD_VME;
+
+  if (BX_CPUID_SUPPORT_CPU_EXTENSION(BX_CPU_DEBUG_EXTENSIONS))
+    features |= BX_CPUID_STD_DEBUG_EXTENSIONS;
+
+  if (BX_CPUID_SUPPORT_CPU_EXTENSION(BX_CPU_PSE))
+    features |= BX_CPUID_STD_PSE;
 #endif
 
 #if BX_SUPPORT_APIC
@@ -249,14 +255,21 @@ Bit32u BX_CPU_C::get_std_cpuid_features(void)
 
 #if BX_CPU_LEVEL >= 6
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_CPU_P6)) {
-    features |= BX_CPUID_STD_PAE;
-    features |= BX_CPUID_STD_MTRR;
-    features |= BX_CPUID_STD_GLOBAL_PAGES;
     features |= BX_CPUID_STD_CMOV;
-    features |= BX_CPUID_STD_PAT;
-    features |= BX_CPUID_STD_PSE36;
     features |= BX_CPUID_STD_ACPI;
   }
+
+  if (BX_CPUID_SUPPORT_CPU_EXTENSION(BX_CPU_PAT_MTRR))
+    features |= BX_CPUID_STD_PAT | BX_CPUID_STD_MTRR;
+
+  if (BX_CPUID_SUPPORT_CPU_EXTENSION(BX_CPU_PAE))
+    features |= BX_CPUID_STD_PAE;
+
+  if (BX_CPUID_SUPPORT_CPU_EXTENSION(BX_CPU_PGE))
+    features |= BX_CPUID_STD_GLOBAL_PAGES;
+
+  if (BX_CPUID_SUPPORT_CPU_EXTENSION(BX_CPU_PSE36))
+    features |= BX_CPUID_STD_PSE36;
 
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_CPU_FXSAVE_FXRSTOR))
     features |= BX_CPUID_STD_FXSAVE_FXRSTOR;
@@ -1176,6 +1189,19 @@ void BX_CPU_C::init_cpu_features_bitmask(void)
     BX_PANIC(("PANIC: X2APIC require CPU_LEVEL >= 6 !"));
     return;
   }
+#endif
+
+#if BX_CPU_LEVEL >= 5
+  features_bitmask |= BX_CPU_VME;
+  features_bitmask |= BX_CPU_DEBUG_EXTENSIONS;
+  features_bitmask |= BX_CPU_PSE;
+#endif
+
+#if BX_CPU_LEVEL >= 6
+  features_bitmask |= BX_CPU_PAE;
+  features_bitmask |= BX_CPU_PGE;
+  features_bitmask |= BX_CPU_PSE36;
+  features_bitmask |= BX_CPU_PAT_MTRR;
 #endif
 
 #if BX_SUPPORT_X86_64

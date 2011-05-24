@@ -636,10 +636,17 @@ typedef struct
 #define BX_CPU_X86_64           (1 << 28)       /* x86-64 instruction */
 
 // cpuid non-ISA features
-#define BX_CPU_XAPIC            (1 << 0)        /* XAPIC support */
-#define BX_CPU_X2APIC           (1 << 1)        /* X2APIC support */
-#define BX_CPU_1G_PAGES         (1 << 2)        /* 1Gb pages support */
-#define BX_CPU_PCID             (1 << 3)        /* PCID pages support */
+#define BX_CPU_DEBUG_EXTENSIONS (1 << 0)        /* Debug Extensions support */
+#define BX_CPU_VME              (1 << 1)        /* VME support */
+#define BX_CPU_PSE              (1 << 2)        /* PSE support */
+#define BX_CPU_PAE              (1 << 3)        /* PAE support */
+#define BX_CPU_PGE              (1 << 4)        /* Global Pages support */
+#define BX_CPU_PSE36            (1 << 5)        /* PSE-36 support */
+#define BX_CPU_PAT_MTRR         (1 << 6)        /* PAT and MTRR support */
+#define BX_CPU_XAPIC            (1 << 7)        /* XAPIC support */
+#define BX_CPU_X2APIC           (1 << 8)        /* X2APIC support */
+#define BX_CPU_1G_PAGES         (1 << 9)        /* 1Gb pages support */
+#define BX_CPU_PCID             (1 << 10)       /* PCID pages support */
 
 #include "cpuid.h"
 #include "crregs.h"
