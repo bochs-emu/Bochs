@@ -4,9 +4,10 @@ Bochs repository moved to the SVN version control !
 
 - CPU
   - Added support for XSAVEOPT instruction, the instruction can be enabled
-    through .bochsrc CPUID option.
+    using .bochsrc CPUID option.
   - Added support for AVX instruction set emulation, to enable configure with
-        --enable-avx option
+        --enable-avx option.
+    When compiled in, AVX still could be disabled using .bochsrc CPUID option.
   - Updated/Fixed instrumentation callbacks
   - Bugfixes for CPU emulation correctness and stability
 

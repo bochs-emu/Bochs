@@ -39,6 +39,7 @@ cpuid
   movbe
   xsave
   xsaveopt
+  avx
   apic
   1g_pages
   pcid

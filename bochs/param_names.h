@@ -53,6 +53,7 @@
 #define BXPN_CPUID_SEP                   "cpuid.sep"
 #define BXPN_CPUID_XSAVE                 "cpuid.xsave"
 #define BXPN_CPUID_XSAVEOPT              "cpuid.xsaveopt"
+#define BXPN_CPUID_AVX                   "cpuid.avx"
 #define BXPN_CPUID_APIC                  "cpuid.apic"
 #define BXPN_CPUID_MWAIT                 "cpuid.mwait"
 #define BXPN_CPUID_MWAIT_IS_NOP          "cpuid.mwait_is_nop"

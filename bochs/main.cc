@@ -1009,6 +1009,9 @@ void bx_init_hardware()
   bx_bool sep_enabled = SIM->get_param_bool(BXPN_CPUID_SEP)->get();
   bx_bool xsave_enabled = SIM->get_param_bool(BXPN_CPUID_XSAVE)->get();
   bx_bool xsaveopt_enabled = SIM->get_param_bool(BXPN_CPUID_XSAVEOPT)->get();
+#if BX_SUPPORT_AVX
+  bx_bool avx_enabled = SIM->get_param_bool(BXPN_CPUID_AVX)->get();
+#endif
 #if BX_SUPPORT_X86_64
   bx_bool xlarge_pages_enabled = SIM->get_param_bool(BXPN_CPUID_1G_PAGES)->get();
 #endif
@@ -1069,7 +1072,9 @@ void bx_init_hardware()
 #if BX_SUPPORT_MONITOR_MWAIT
   BX_INFO(("  MWAIT support: %s",mwait_enabled?"yes":"no"));
 #endif
-  BX_INFO(("  AVX support: %s",BX_SUPPORT_AVX?"yes":"no"));
+#if BX_SUPPORT_AVX
+  BX_INFO(("  AVX support: %s",avx_enabled?"yes":"no"));
+#endif
 #if BX_SUPPORT_VMX
   BX_INFO(("  VMX support: %d",BX_SUPPORT_VMX));
 #else

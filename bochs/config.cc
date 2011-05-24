@@ -414,6 +414,12 @@ void bx_init_options()
       "xsaveopt", "Support for XSAVEOPT instruction",
       "Support for XSAVEOPT instruction",
       0);
+#if BX_SUPPORT_AVX
+  new bx_param_bool_c(cpuid_param,
+      "avx", "Support for AVX instruction set",
+      "Support for AVX instruction set",
+      0);
+#endif
 #if BX_SUPPORT_X86_64
   new bx_param_bool_c(cpuid_param,
       "1g_pages", "1G pages support in long mode",
@@ -2674,6 +2680,12 @@ static int parse_line_formatted(const char *context, int num_params, char *param
         if (parse_param_bool(params[i], 9, BXPN_CPUID_XSAVEOPT) < 0) {
           PARSE_ERR(("%s: cpuid directive malformed.", context));
         }
+#if BX_SUPPORT_AVX
+      } else if (!strncmp(params[i], "avx=", 4)) {
+        if (parse_param_bool(params[i], 4, BXPN_CPUID_AVX) < 0) {
+          PARSE_ERR(("%s: cpuid directive malformed.", context));
+        }
+#endif
 #if BX_SUPPORT_X86_64
       } else if (!strncmp(params[i], "1g_pages=", 9)) {
         if (parse_param_bool(params[i], 9, BXPN_CPUID_1G_PAGES) < 0) {
@@ -3895,6 +3907,9 @@ int bx_write_configuration(const char *rc, int overwrite)
     SIM->get_param_bool(BXPN_CPUID_XSAVE)->get(),
     SIM->get_param_bool(BXPN_CPUID_XSAVEOPT)->get(),
     SIM->get_param_bool(BXPN_CPUID_MOVBE)->get());
+#if BX_SUPPORT_AVX
+  fprintf(fp, ", avx=%d", SIM->get_param_bool(BXPN_CPUID_AVX)->get());
+#endif
 #if BX_SUPPORT_X86_64
   fprintf(fp, ", 1g_pages=%d, pcid=%d, fsgsbase=%d",
     SIM->get_param_bool(BXPN_CPUID_1G_PAGES)->get(),

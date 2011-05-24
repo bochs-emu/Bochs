@@ -1109,19 +1109,22 @@ void BX_CPU_C::init_isa_features_bitmask(void)
   if (movbe_enabled) {
     features_bitmask |= BX_CPU_MOVBE;
 
-     // MOVBE required 3-byte opcode (SSS3E support or more)
-     if (sse_enabled < BX_CPUID_SUPPORT_SSSE3) {
-       BX_PANIC(("PANIC: MOVBE support requires SSSE3 or higher !"));
-       return;
-     }
+    // MOVBE required 3-byte opcode (SSS3E support or more)
+    if (sse_enabled < BX_CPUID_SUPPORT_SSSE3) {
+      BX_PANIC(("PANIC: MOVBE support requires SSSE3 or higher !"));
+      return;
+    }
   }
 
 #if BX_SUPPORT_AVX
-  features_bitmask |= BX_CPU_AVX;
+  static bx_bool avx_enabled = SIM->get_param_bool(BXPN_CPUID_AVX)->get();
+  if (avx_enabled) {
+    features_bitmask |= BX_CPU_AVX;
 
-  if (! xsave_enabled) {
-     BX_PANIC(("PANIC: AVX emulation requires XSAVE support !"));
-     return;
+    if (! xsave_enabled) {
+      BX_PANIC(("PANIC: AVX emulation requires XSAVE support !"));
+      return;
+    }
   }
 #endif
 
