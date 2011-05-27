@@ -1588,6 +1588,9 @@ void BX_CPU_C::access_write_linear(bx_address laddr, unsigned len, unsigned curr
     BX_CPU_THIS_PTR address_xlation.len2 = len - BX_CPU_THIS_PTR address_xlation.len1;
     BX_CPU_THIS_PTR address_xlation.pages = 2;
     bx_address laddr2 = laddr + BX_CPU_THIS_PTR address_xlation.len1;
+#if BX_SUPPORT_X86_64
+    if (! long64_mode()) laddr2 &= 0xffffffff; /* handle linear address wrap in legacy mode */
+#endif
     BX_CPU_THIS_PTR address_xlation.paddress2 = dtranslate_linear(laddr2, curr_pl, BX_WRITE);
 
 #ifdef BX_LITTLE_ENDIAN
@@ -1660,6 +1663,9 @@ void BX_CPU_C::access_read_linear(bx_address laddr, unsigned len, unsigned curr_
     BX_CPU_THIS_PTR address_xlation.len2 = len - BX_CPU_THIS_PTR address_xlation.len1;
     BX_CPU_THIS_PTR address_xlation.pages = 2;
     bx_address laddr2 = laddr + BX_CPU_THIS_PTR address_xlation.len1;
+#if BX_SUPPORT_X86_64
+    if (! long64_mode()) laddr2 &= 0xffffffff; /* handle linear address wrap in legacy mode */
+#endif
     BX_CPU_THIS_PTR address_xlation.paddress2 = dtranslate_linear(laddr2, curr_pl, xlate_rw);
 
 #ifdef BX_LITTLE_ENDIAN
