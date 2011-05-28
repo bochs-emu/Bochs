@@ -169,6 +169,29 @@ struct cpuid_function_t {
 #define BX_CPUID_EXT_RDRAND                  (1 << 30)
 #define BX_CPUID_EXT_RESERVED31              (1 << 31)
 
+// CPUID defines - EXT3 features CPUID[0x00000007].EBX
+// -----------------------------
+
+//   [0:0]    FS/GS BASE access instructions
+//   [6:1]    reserved
+//   [7:7]    SMEP: Supervisor Mode Execution Protection
+//   [8:8]    reserved
+//   [9:9]    Support for Enhanced REP MOVSB/STOSB
+//   [31:10]  reserved
+
+#define BX_CPUID_EXT3_FSGSBASE               (1 <<  0)
+#define BX_CPUID_EXT3_RESERVED1              (1 <<  1)
+#define BX_CPUID_EXT3_RESERVED2              (1 <<  2)
+#define BX_CPUID_EXT3_RESERVED3              (1 <<  3)
+#define BX_CPUID_EXT3_RESERVED4              (1 <<  4)
+#define BX_CPUID_EXT3_RESERVED5              (1 <<  5)
+#define BX_CPUID_EXT3_RESERVED6              (1 <<  6)
+#define BX_CPUID_EXT3_SMEP                   (1 <<  7)
+#define BX_CPUID_EXT3_RESERVED8              (1 <<  8)
+#define BX_CPUID_EXT3_ENCHANCED_REP_STRINGS  (1 <<  9)
+// ...
+
+
 // CPUID defines - STD2 features CPUID[0x80000001].EDX
 // -----------------------------
 

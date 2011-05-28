@@ -165,10 +165,14 @@ Bit32u BX_CPU_C::get_ext3_cpuid_features(void)
 {
   Bit32u features = 0;
 
-  //   [0:0]  FS/GS BASE access instructions
-  //  [31:1]  Reserved
+  //   [0:0]    FS/GS BASE access instructions
+  //   [6:1]    Reserved
+  //   [7:7]    SMEP: Supervisor Mode Execution Protection
+  //   [8:8]    Reserved
+  //   [9:9]    Support for Enhanced REP MOVSB/STOSB
+  //   [31:10]  Reserved
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_CPU_FSGSBASE))
-    features |= 1;
+    features |= BX_CPUID_EXT3_FSGSBASE;
 
   return features;
 }
