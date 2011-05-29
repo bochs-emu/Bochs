@@ -686,7 +686,7 @@ bx_phy_address BX_CPU_C::translate_linear_long_mode(bx_address laddr, Bit32u &lp
 
     if (curr_entry & 0x80) {
       if (leaf > (BX_LEVEL_PDE + !!bx_cpuid_support_1g_paging())) {
-        BX_DEBUG(("%s: PS bit set !"));
+        BX_DEBUG(("%s: PS bit set !", bx_paging_level[leaf]));
         page_fault(ERROR_RESERVED | ERROR_PROTECTION, laddr, user, rw);
       }
 
@@ -1303,7 +1303,7 @@ bx_phy_address BX_CPU_C::translate_guest_physical(bx_phy_address guest_paddr, bx
 
     if (curr_entry & 0x80) {
       if (leaf > (BX_LEVEL_PDE + !!bx_cpuid_support_1g_paging())) {
-        BX_DEBUG(("EPT %s: PS bit set !"));
+        BX_DEBUG(("EPT %s: PS bit set !", bx_paging_level[leaf]));
         vmexit_reason = VMX_VMEXIT_EPT_VIOLATION;
         break;
       }
