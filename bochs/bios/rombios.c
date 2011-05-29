@@ -9310,7 +9310,7 @@ bios32_entry_point:
   je unknown_service
 #endif
   mov ebx, #0x000f0000
-  mov ecx, #0
+  mov ecx, #0x10000
   mov edx, #pcibios_protected
   xor al, al
   jmp bios32_end

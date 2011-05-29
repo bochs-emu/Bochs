@@ -68,6 +68,7 @@ Bochs repository moved to the SVN version control !
   [3190995] add eth backend based on Slirp by Heikki Lindholm
 
 - these S.F. bugs were closed/fixed
+  [3170157] BIOS32 PCI service wrong length
   [3025030] PIT mistakenly connected to IRQ0 IOAPIC instead of IRQ2
   [3266738] GUI debugger does not update CPU mode correctly
   [3292571] SB16 doesn't reinit correctly
