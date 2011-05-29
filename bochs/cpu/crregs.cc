@@ -982,7 +982,9 @@ Bit32u BX_CPU_C::get_cr4_allow_mask(void)
   Bit32u allowMask = 0;
 
   // CR4 bits definitions:
-  //   [31-19] Reserved, Must be Zero
+  //   [31-21] Reserved, Must be Zero
+  //   [20]    SMEP: Supervisor Mode Execution Protection R/W
+  //   [19]    Reserved, Must be Zero
   //   [18]    OSXSAVE: Operating System XSAVE Support R/W
   //   [17]    PCIDE: PCID Support R/W
   //   [16]    FSGSBASE: FS/GS BASE access R/W
@@ -1061,6 +1063,9 @@ Bit32u BX_CPU_C::get_cr4_allow_mask(void)
   /* OSXSAVE */
   if (bx_cpuid_support_xsave())
     allowMask |= BX_CR4_OSXSAVE_MASK;
+
+  if (bx_cpuid_support_smep())
+    allowMask |= BX_CR4_SMEP_MASK;
 #endif
 
   return allowMask;
@@ -1117,9 +1122,9 @@ bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::SetCR4(bx_address val)
   if (! check_CR4(val)) return 0;
 
 #if BX_CPU_LEVEL >= 6
-  // Modification of PGE,PAE,PSE,PCIDE flushes TLB cache according to docs.
+  // Modification of PGE,PAE,PSE,PCIDE,SMEP flushes TLB cache according to docs.
   if ((val & BX_CR4_FLUSH_TLB_MASK) != (BX_CPU_THIS_PTR cr4.val32 & BX_CR4_FLUSH_TLB_MASK)) {
-    // reload PDPTR if PGE,PAE or PSE changed
+    // reload PDPTR if needed
     if (BX_CPU_THIS_PTR cr0.get_PG() && (val & BX_CR4_PAE_MASK) != 0 && !long_mode()) {
       if (! CheckPDPTR(BX_CPU_THIS_PTR cr3)) {
         BX_ERROR(("SetCR4(): PDPTR check failed !"));

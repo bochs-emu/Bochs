@@ -188,8 +188,8 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
   // used in the task switch are paged in.
   if (BX_CPU_THIS_PTR cr0.get_PG())
   {
-    dtranslate_linear(nbase32, 0, BX_READ);  // old TSS
-    dtranslate_linear(nbase32 + new_TSS_max, 0, BX_READ);
+    translate_linear(nbase32, 0, BX_READ);  // old TSS
+    translate_linear(nbase32 + new_TSS_max, 0, BX_READ);
 
     // ??? Humm, we check the new TSS region with READ above,
     // but sometimes we need to write the link field in that
@@ -200,8 +200,8 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
 
     if (source == BX_TASK_FROM_CALL || source == BX_TASK_FROM_INT)
     {
-      dtranslate_linear(nbase32,     0, BX_WRITE);
-      dtranslate_linear(nbase32 + 1, 0, BX_WRITE);
+      translate_linear(nbase32,     0, BX_WRITE);
+      translate_linear(nbase32 + 1, 0, BX_WRITE);
     }
   }
 
@@ -242,8 +242,8 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
   if (BX_CPU_THIS_PTR tr.cache.type <= 3) {
     // check that we won't page fault while writing
     if (BX_CPU_THIS_PTR cr0.get_PG()) {
-      dtranslate_linear(Bit32u(obase32 + 14), 0, BX_WRITE);
-      dtranslate_linear(Bit32u(obase32 + 41), 0, BX_WRITE);
+      translate_linear(Bit32u(obase32 + 14), 0, BX_WRITE);
+      translate_linear(Bit32u(obase32 + 41), 0, BX_WRITE);
     }
 
     system_write_word(Bit32u(obase32 + 14), IP);
@@ -269,8 +269,8 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
   else {
     // check that we won't page fault while writing
     if (BX_CPU_THIS_PTR cr0.get_PG()) {
-      dtranslate_linear(Bit32u(obase32 + 0x20), 0, BX_WRITE);
-      dtranslate_linear(Bit32u(obase32 + 0x5d), 0, BX_WRITE);
+      translate_linear(Bit32u(obase32 + 0x20), 0, BX_WRITE);
+      translate_linear(Bit32u(obase32 + 0x5d), 0, BX_WRITE);
     }
 
     system_write_dword(Bit32u(obase32 + 0x20), EIP);

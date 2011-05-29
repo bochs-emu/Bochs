@@ -647,6 +647,7 @@ typedef struct
 #define BX_CPU_X2APIC           (1 << 8)        /* X2APIC support */
 #define BX_CPU_1G_PAGES         (1 << 9)        /* 1Gb pages support */
 #define BX_CPU_PCID             (1 << 10)       /* PCID pages support */
+#define BX_CPU_SMEP             (1 << 11)       /* SMEP support */
 
 #include "cpuid.h"
 #include "crregs.h"
@@ -3306,21 +3307,17 @@ public: // for now...
   BX_SMF bx_hostpageaddr_t getHostMemAddr(bx_phy_address addr, unsigned rw);
 
   // linear address for translate_linear expected to be canonical !
-  BX_SMF bx_phy_address translate_linear(bx_address laddr, unsigned curr_pl, unsigned rw);
+  BX_SMF bx_phy_address translate_linear(bx_address laddr, unsigned user, unsigned rw);
 #if BX_CPU_LEVEL >= 6
-  BX_SMF bx_phy_address translate_linear_PAE(bx_address laddr, Bit32u &lpf_mask, Bit32u &combined_access, unsigned curr_pl, unsigned rw);
+  BX_SMF bx_phy_address translate_linear_PAE(bx_address laddr, Bit32u &lpf_mask, Bit32u &combined_access, unsigned user, unsigned rw);
   BX_SMF int check_entry_PAE(const char *s, Bit64u entry, Bit64u reserved, unsigned rw, bx_bool *nx_fault);
 #endif
 #if BX_SUPPORT_X86_64
-  BX_SMF bx_phy_address translate_linear_long_mode(bx_address laddr, Bit32u &lpf_mask, Bit32u &combined_access, unsigned curr_pl, unsigned rw);
+  BX_SMF bx_phy_address translate_linear_long_mode(bx_address laddr, Bit32u &lpf_mask, Bit32u &combined_access, unsigned user, unsigned rw);
 #endif
 #if BX_SUPPORT_VMX >= 2
   BX_SMF bx_phy_address translate_guest_physical(bx_phy_address guest_paddr, bx_address guest_laddr, bx_bool guest_laddr_valid, bx_bool is_page_walk, unsigned rw);
 #endif
-  BX_SMF BX_CPP_INLINE bx_phy_address dtranslate_linear(bx_address laddr, unsigned curr_pl, unsigned rw)
-  {
-    return translate_linear(laddr, curr_pl, rw);
-  }
 
 #if BX_CPU_LEVEL >= 6
   BX_SMF void TLB_flushNonGlobal(void);
@@ -3501,6 +3498,7 @@ public: // for now...
   BX_SMF BX_CPP_INLINE int bx_cpuid_support_pcid(void);
   BX_SMF BX_CPP_INLINE int bx_cpuid_support_xsave(void);
   BX_SMF BX_CPP_INLINE int bx_cpuid_support_fsgsbase(void);
+  BX_SMF BX_CPP_INLINE int bx_cpuid_support_smep(void);
   BX_SMF BX_CPP_INLINE int bx_cpuid_support_x2apic(void);
 
   BX_SMF BX_CPP_INLINE unsigned which_cpu(void) { return BX_CPU_THIS_PTR bx_cpuid; }
@@ -3947,10 +3945,15 @@ BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_pcid(void)
 BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_fsgsbase(void)
 {
 #if BX_SUPPORT_X86_64
-  return BX_CPU_THIS_PTR cpuid_std_function[7].ebx & 0x1;
+  return BX_CPU_THIS_PTR cpuid_std_function[7].ebx & BX_CPUID_EXT3_FSGSBASE;
 #else
   return 0;
 #endif
+}
+
+BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_smep(void)
+{
+  return BX_CPU_THIS_PTR cpuid_std_function[7].ebx & BX_CPUID_EXT3_SMEP;
 }
 
 BX_CPP_INLINE int BX_CPU_C::bx_cpuid_support_vme(void)

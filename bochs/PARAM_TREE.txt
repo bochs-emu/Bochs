@@ -44,6 +44,7 @@ cpuid
   1g_pages
   pcid
   fsgsbase
+  smep
   mwait
   mwait_is_nop
 

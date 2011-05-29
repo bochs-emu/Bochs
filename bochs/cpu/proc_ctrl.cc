@@ -209,7 +209,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CLFLUSH(bxInstruction_c *i)
 #if BX_INSTRUMENTATION
   bx_phy_address paddr =
 #endif
-    A20ADDR(dtranslate_linear(laddr, CPL, BX_READ));
+    A20ADDR(translate_linear(laddr, USER_PL, BX_READ));
 
   BX_INSTR_CLFLUSH(BX_CPU_ID, laddr, paddr);
 
@@ -533,7 +533,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MONITOR(bxInstruction_c *i)
     }
   }
 
-  bx_phy_address paddr = A20ADDR(dtranslate_linear(laddr, CPL, BX_READ));
+  bx_phy_address paddr = A20ADDR(translate_linear(laddr, USER_PL, BX_READ));
 
   // Set the monitor immediately.  If monitor is still armed when we MWAIT,
   // the processor will stall.

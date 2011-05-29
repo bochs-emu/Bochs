@@ -60,6 +60,7 @@
 #define BXPN_CPUID_1G_PAGES              "cpuid.1g_pages"
 #define BXPN_CPUID_PCID                  "cpuid.pcid"
 #define BXPN_CPUID_FSGSBASE              "cpuid.fsgsbase"
+#define BXPN_CPUID_SMEP                  "cpuid.smep"
 #define BXPN_MEM_SIZE                    "memory.standard.ram.size"
 #define BXPN_HOST_MEM_SIZE               "memory.standard.ram.host_size"
 #define BXPN_ROM_PATH                    "memory.standard.rom.path"

@@ -722,7 +722,7 @@ void BX_CPU_C::prefetch(void)
     fetchPtr = (Bit8u*) tlbEntry->hostPageAddr;
   }  
   else {
-    bx_phy_address pAddr = translate_linear(laddr, CPL, BX_EXECUTE);
+    bx_phy_address pAddr = translate_linear(laddr, USER_PL, BX_EXECUTE);
     BX_CPU_THIS_PTR pAddrPage = PPFOf(pAddr);
   }
 

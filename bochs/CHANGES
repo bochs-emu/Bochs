@@ -3,6 +3,8 @@ Changes after 2.4.6 release:
 Bochs repository moved to the SVN version control !
 
 - CPU
+  - Implemented Supervisor Mode Execution Protection (SMEP), the feature can
+    be enabled using .bochsrc CPUID option.
   - Added support for XSAVEOPT instruction, the instruction can be enabled
     using .bochsrc CPUID option.
   - Added support for AVX instruction set emulation, to enable configure with

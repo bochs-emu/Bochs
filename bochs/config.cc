@@ -322,7 +322,7 @@ void bx_init_options()
 
   // cpuid subtree
 #if BX_CPU_LEVEL >= 4
-  bx_list_c *cpuid_param = new bx_list_c(root_param, "cpuid", "CPUID Options", 20);
+  bx_list_c *cpuid_param = new bx_list_c(root_param, "cpuid", "CPUID Options", 21);
 
   new bx_param_bool_c(cpuid_param,
       "cpuid_limit_winnt", "Limit max CPUID function to 3",
@@ -434,6 +434,10 @@ void bx_init_options()
       "FS/GS BASE access instructions support in long mode",
       0);
 #endif
+  new bx_param_bool_c(cpuid_param,
+      "smep", "Supervisor Mode Execution Protection support",
+      "Supervisor Mode Execution Protection support",
+      0);
 #if BX_SUPPORT_MONITOR_MWAIT
   new bx_param_bool_c(cpuid_param,
       "mwait", "MONITOR/MWAIT instructions support",
@@ -2700,6 +2704,10 @@ static int parse_line_formatted(const char *context, int num_params, char *param
           PARSE_ERR(("%s: cpuid directive malformed.", context));
         }
 #endif
+      } else if (!strncmp(params[i], "smep=", 5)) {
+        if (parse_param_bool(params[i], 5, BXPN_CPUID_SMEP) < 0) {
+          PARSE_ERR(("%s: cpuid directive malformed.", context));
+        }
 #if BX_SUPPORT_MONITOR_MWAIT
       } else if (!strncmp(params[i], "mwait=", 6)) {
         if (parse_param_bool(params[i], 6, BXPN_CPUID_MWAIT) < 0) {
@@ -3900,13 +3908,14 @@ int bx_write_configuration(const char *rc, int overwrite)
     SIM->get_param_enum(BXPN_CPUID_APIC)->get_selected());
 #endif
 #if BX_CPU_LEVEL >= 6
-  fprintf(fp, ", sse=%s, sep=%d, aes=%d, xsave=%d, xsaveopt=%d, movbe=%d",
+  fprintf(fp, ", sse=%s, sep=%d, aes=%d, xsave=%d, xsaveopt=%d, movbe=%d, smep=%d",
     SIM->get_param_enum(BXPN_CPUID_SSE)->get_selected(),
     SIM->get_param_bool(BXPN_CPUID_SEP)->get(),
     SIM->get_param_bool(BXPN_CPUID_AES)->get(),
     SIM->get_param_bool(BXPN_CPUID_XSAVE)->get(),
     SIM->get_param_bool(BXPN_CPUID_XSAVEOPT)->get(),
-    SIM->get_param_bool(BXPN_CPUID_MOVBE)->get());
+    SIM->get_param_bool(BXPN_CPUID_MOVBE)->get(),
+    SIM->get_param_bool(BXPN_CPUID_SMEP)->get());
 #if BX_SUPPORT_AVX
   fprintf(fp, ", avx=%d", SIM->get_param_bool(BXPN_CPUID_AVX)->get());
 #endif

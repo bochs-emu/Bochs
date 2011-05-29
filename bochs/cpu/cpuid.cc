@@ -152,7 +152,6 @@ Bit32u BX_CPU_C::get_extended_cpuid_features(void)
     features |= BX_CPUID_EXT_XSAVE | BX_CPUID_EXT_OSXSAVE;
 
 #if BX_SUPPORT_AVX
-  // support AVX extensions
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_CPU_AVX))
     features |= BX_CPUID_EXT_AVX;
 #endif
@@ -173,6 +172,9 @@ Bit32u BX_CPU_C::get_ext3_cpuid_features(void)
   //   [31:10]  Reserved
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_CPU_FSGSBASE))
     features |= BX_CPUID_EXT3_FSGSBASE;
+
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_CPU_SMEP))
+    features |= BX_CPUID_EXT3_SMEP;
 
   return features;
 }
@@ -1202,20 +1204,26 @@ void BX_CPU_C::init_cpu_features_bitmask(void)
   features_bitmask |= BX_CPU_VME;
   features_bitmask |= BX_CPU_DEBUG_EXTENSIONS;
   features_bitmask |= BX_CPU_PSE;
-#endif
 
 #if BX_CPU_LEVEL >= 6
   features_bitmask |= BX_CPU_PAE;
   features_bitmask |= BX_CPU_PGE;
   features_bitmask |= BX_CPU_PSE36;
   features_bitmask |= BX_CPU_PAT_MTRR;
-#endif
+
+  static bx_bool smep_enabled = SIM->get_param_bool(BXPN_CPUID_SMEP)->get();
+  if (smep_enabled)
+    features_bitmask |= BX_CPU_SMEP;
 
 #if BX_SUPPORT_X86_64
   static bx_bool pcid_enabled = SIM->get_param_bool(BXPN_CPUID_PCID)->get();
   if (pcid_enabled)
     features_bitmask |= BX_CPU_PCID;
 #endif
+
+#endif // CPU_LEVEL >= 6
+
+#endif // CPU_LEVEL >= 5
 
   BX_CPU_THIS_PTR cpu_extensions_bitmask = features_bitmask;
 }
