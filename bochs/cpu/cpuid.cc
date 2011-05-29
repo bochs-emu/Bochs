@@ -173,7 +173,7 @@ Bit32u BX_CPU_C::get_ext3_cpuid_features(void)
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_CPU_FSGSBASE))
     features |= BX_CPUID_EXT3_FSGSBASE;
 
-  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_CPU_SMEP))
+  if (BX_CPUID_SUPPORT_CPU_EXTENSION(BX_CPU_SMEP))
     features |= BX_CPUID_EXT3_SMEP;
 
   return features;
