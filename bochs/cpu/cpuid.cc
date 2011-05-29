@@ -387,7 +387,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CPUID(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 4
   Bit32u function    = EAX;
-  Bit32u subfunction = ECX;
 
 #if BX_SUPPORT_VMX
   if (BX_CPU_THIS_PTR in_vmx_guest) {
@@ -402,6 +401,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CPUID(bxInstruction_c *i)
   if(function < 0x80000000) {
     if(function <= max_std_function) {
 #if BX_CPU_LEVEL >= 6
+      Bit32u subfunction = ECX;
+
       if (function == 0xb && bx_cpuid_support_x2apic()) {
         bx_cpuid_extended_topology_leaf(subfunction);
         return;

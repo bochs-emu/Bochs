@@ -240,11 +240,11 @@ BX_CPP_INLINE void bxICache_c::flushICacheEntries(void)
 // TODO: invalidate only entries in same page as pAddr
 BX_CPP_INLINE void bxICache_c::handleSMC(bx_phy_address pAddr, Bit32u mask)
 {
-  unsigned i;
-
   pAddr = LPFOf(pAddr);
 
 #if BX_SUPPORT_TRACE_CACHE
+  unsigned i;
+
   if (mask & 0x1) {
     // the store touched 1st cache line in the page, check for
     // page split traces to invalidate.

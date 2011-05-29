@@ -891,7 +891,9 @@ bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::SetCR0(bx_address val)
 
   Bit32u val_32 = GET32L(val);
 
+#if BX_CPU_LEVEL >= 6
   bx_bool pg = (val_32 >> 31) & 0x1;
+#endif
 
 #if BX_SUPPORT_X86_64
   if (! BX_CPU_THIS_PTR cr0.get_PG() && pg) {
