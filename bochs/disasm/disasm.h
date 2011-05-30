@@ -119,15 +119,15 @@ struct BxDisasmOpcodeTable_t
 #define NO_SEG_OVERRIDE 0xFF
 
 // datasize attributes
-#define   X_SIZE      0x0000 /* no size */
-#define   B_SIZE      0x0100 /* byte */
-#define   W_SIZE      0x0200 /* word */
-#define   D_SIZE      0x0300 /* double word */
-#define   Q_SIZE      0x0400 /* quad word */
-#define   Z_SIZE      0x0500 /* double word in 32-bit mode, quad word in 64-bit mode */
-#define   T_SIZE      0x0600 /* 10-byte x87 floating point */
-#define XMM_SIZE      0x0700 /* double quad word (XMM) */
-#define YMM_SIZE      0x0800 /* quadruple quad word (YMM) */
+#define   X_SIZE      0x00 /* no size */
+#define   B_SIZE      0x01 /* byte */
+#define   W_SIZE      0x02 /* word */
+#define   D_SIZE      0x03 /* double word */
+#define   Q_SIZE      0x04 /* quad word */
+#define   Z_SIZE      0x05 /* double word in 32-bit mode, quad word in 64-bit mode */
+#define   T_SIZE      0x06 /* 10-byte x87 floating point */
+#define XMM_SIZE      0x07 /* double quad word (XMM) */
+#define YMM_SIZE      0x08 /* quadruple quad word (YMM) */
 
 // branch hint attribute
 #define BRANCH_HINT 0x1000
