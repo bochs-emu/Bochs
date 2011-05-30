@@ -363,7 +363,7 @@ Bit32u BX_CPU_C::get_ext2_cpuid_features(void)
   //     [3:3]   Extended APIC Space
   //     [4:4]   AltMovCR8: LOCK MOV CR0 means MOV CR8
   //     [5:5]   LZCNT: LZCNT instruction support
-  //     [6:6]   SSE4A: SSE4A Instructions support
+  //     [6:6]   SSE4A: SSE4A Instructions support (deprecated?)
   //     [7:7]   Misaligned SSE support
   //     [8:8]   PREFETCHW: PREFETCHW instruction support
   //     [9:9]   OSVW: OS visible workarounds (AMD)

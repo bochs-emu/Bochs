@@ -529,7 +529,9 @@ void BX_CPU_C::page_fault(unsigned fault, bx_address laddr, unsigned user, unsig
 #define BX_LEVEL_PDE  1
 #define BX_LEVEL_PTE  0
 
+#if BX_SUPPORT_X86_64 || BX_DEBUGGER
 static const char *bx_paging_level[4] = { "PTE", "PDE", "PDPE", "PML4" };
+#endif
 
 #if BX_CPU_LEVEL >= 6
 

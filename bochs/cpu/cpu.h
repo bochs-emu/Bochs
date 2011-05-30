@@ -620,20 +620,19 @@ typedef struct
 #define BX_CPU_SSSE3            (1 << 12)       /* SSSE3 instruction */
 #define BX_CPU_SSE4_1           (1 << 13)       /* SSE4_1 instruction */
 #define BX_CPU_SSE4_2           (1 << 14)       /* SSE4_2 instruction */
-#define BX_CPU_SSE4A            (1 << 15)       /* SSE4A  instruction */
-#define BX_CPU_MONITOR_MWAIT    (1 << 16)       /* MONITOR/MWAIT instruction */
-#define BX_CPU_VMX              (1 << 17)       /* VMX instruction */
-#define BX_CPU_SMX              (1 << 18)       /* SMX instruction */
-#define BX_CPU_SVM              (1 << 19)       /* SVM instruction */
-#define BX_CPU_XSAVE            (1 << 20)       /* XSAVE/XRSTOR extensions instruction */
-#define BX_CPU_XSAVEOPT         (1 << 21)       /* XSAVEOPT instruction */
-#define BX_CPU_AES_PCLMULQDQ    (1 << 22)       /* AES+PCLMULQDQ instruction */
-#define BX_CPU_MOVBE            (1 << 23)       /* MOVBE Intel Atom(R) instruction */
-#define BX_CPU_FSGSBASE         (1 << 24)       /* FS/GS BASE access instruction */
-#define BX_CPU_AVX              (1 << 25)       /* AVX instruction */
-#define BX_CPU_AVX_F16C         (1 << 26)       /* AVX F16 convert instruction */
-#define BX_CPU_AVX_FMA          (1 << 27)       /* AVX FMA instruction */
-#define BX_CPU_X86_64           (1 << 28)       /* x86-64 instruction */
+#define BX_CPU_MONITOR_MWAIT    (1 << 15)       /* MONITOR/MWAIT instruction */
+#define BX_CPU_VMX              (1 << 16)       /* VMX instruction */
+#define BX_CPU_SMX              (1 << 17)       /* SMX instruction */
+#define BX_CPU_SVM              (1 << 18)       /* SVM instruction */
+#define BX_CPU_XSAVE            (1 << 19)       /* XSAVE/XRSTOR extensions instruction */
+#define BX_CPU_XSAVEOPT         (1 << 20)       /* XSAVEOPT instruction */
+#define BX_CPU_AES_PCLMULQDQ    (1 << 21)       /* AES+PCLMULQDQ instruction */
+#define BX_CPU_MOVBE            (1 << 22)       /* MOVBE Intel Atom(R) instruction */
+#define BX_CPU_FSGSBASE         (1 << 23)       /* FS/GS BASE access instruction */
+#define BX_CPU_AVX              (1 << 24)       /* AVX instruction */
+#define BX_CPU_AVX_F16C         (1 << 25)       /* AVX F16 convert instruction */
+#define BX_CPU_AVX_FMA          (1 << 26)       /* AVX FMA instruction */
+#define BX_CPU_X86_64           (1 << 27)       /* x86-64 instruction */
 
 // cpuid non-ISA features
 #define BX_CPU_DEBUG_EXTENSIONS (1 << 0)        /* Debug Extensions support */

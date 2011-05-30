@@ -54,20 +54,19 @@
 #define IA_SSSE3            (1 << 12)       /* SSSE3 instruction */
 #define IA_SSE4_1           (1 << 13)       /* SSE4_1 instruction */
 #define IA_SSE4_2           (1 << 14)       /* SSE4_2 instruction */
-#define IA_SSE4A            (1 << 15)       /* SSE4A instruction */
-#define IA_MONITOR_MWAIT    (1 << 16)       /* MONITOR/MWAIT instruction */
-#define IA_VMX              (1 << 17)       /* VMX instruction */
-#define IA_SMX              (1 << 18)       /* SMX instruction */
-#define IA_SVM              (1 << 19)       /* SVM instruction */
-#define IA_XSAVE            (1 << 20)       /* XSAVE/XRSTOR extensions instruction */
-#define IA_XSAVEOPT         (1 << 21)       /* XSAVEOPT instruction */
-#define IA_AES_PCLMULQDQ    (1 << 22)       /* AES+PCLMULQDQ instruction */
-#define IA_MOVBE            (1 << 23)       /* MOVBE Intel Atom(R) instruction */
-#define IA_FSGSBASE         (1 << 24)       /* FS/GS BASE access instruction */
-#define IA_AVX              (1 << 25)       /* AVX instruction */
-#define IA_AVX_F16C         (1 << 26)       /* AVX F16 convert instruction */
-#define IA_AVX_FMA          (1 << 27)       /* AVX FMA instruction */
-#define IA_X86_64           (1 << 28)       /* x86-64 instruction */
+#define IA_MONITOR_MWAIT    (1 << 15)       /* MONITOR/MWAIT instruction */
+#define IA_VMX              (1 << 16)       /* VMX instruction */
+#define IA_SMX              (1 << 17)       /* SMX instruction */
+#define IA_SVM              (1 << 18)       /* SVM instruction */
+#define IA_XSAVE            (1 << 19)       /* XSAVE/XRSTOR extensions instruction */
+#define IA_XSAVEOPT         (1 << 20)       /* XSAVEOPT instruction */
+#define IA_AES_PCLMULQDQ    (1 << 21)       /* AES+PCLMULQDQ instruction */
+#define IA_MOVBE            (1 << 22)       /* MOVBE Intel Atom(R) instruction */
+#define IA_FSGSBASE         (1 << 23)       /* FS/GS BASE access instruction */
+#define IA_AVX              (1 << 24)       /* AVX instruction */
+#define IA_AVX_F16C         (1 << 25)       /* AVX F16 convert instruction */
+#define IA_AVX_FMA          (1 << 26)       /* AVX FMA instruction */
+#define IA_X86_64           (1 << 27)       /* x86-64 instruction */
 
 /* general purpose bit register */
 enum {
@@ -120,14 +119,15 @@ struct BxDisasmOpcodeTable_t
 #define NO_SEG_OVERRIDE 0xFF
 
 // datasize attributes
-#define X_SIZE      0x0000 /* no size */
-#define B_SIZE      0x0100 /* byte */
-#define W_SIZE      0x0200 /* word */
-#define D_SIZE      0x0300 /* double word */
-#define Q_SIZE      0x0400 /* quad word */
-#define Z_SIZE      0x0500 /* double word in 32-bit mode, quad word in 64-bit mode */
-#define O_SIZE      0x0600 /* oct word or double quad word (XMM) */
-#define T_SIZE      0x0700 /* 10-byte x87 floating point */
+#define   X_SIZE      0x0000 /* no size */
+#define   B_SIZE      0x0100 /* byte */
+#define   W_SIZE      0x0200 /* word */
+#define   D_SIZE      0x0300 /* double word */
+#define   Q_SIZE      0x0400 /* quad word */
+#define   Z_SIZE      0x0500 /* double word in 32-bit mode, quad word in 64-bit mode */
+#define   T_SIZE      0x0600 /* 10-byte x87 floating point */
+#define XMM_SIZE      0x0700 /* double quad word (XMM) */
+#define YMM_SIZE      0x0800 /* quadruple quad word (YMM) */
 
 // branch hint attribute
 #define BRANCH_HINT 0x1000

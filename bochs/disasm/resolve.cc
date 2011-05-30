@@ -338,11 +338,14 @@ void disassembler::print_datasize(unsigned size)
     case Q_SIZE:
       dis_sprintf("qword ptr ");
       break;
-    case O_SIZE:
-      dis_sprintf("dqword ptr ");
-      break;
     case T_SIZE:
       dis_sprintf("tbyte ptr ");
+      break;
+    case XMM_SIZE:
+      dis_sprintf("dqword ptr ");
+      break;
+    case YMM_SIZE:
+      dis_sprintf("qqword ptr ");
       break;
     case X_SIZE:
       break;

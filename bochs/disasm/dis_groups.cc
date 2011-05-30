@@ -462,7 +462,7 @@ void disassembler::Wdq(const x86_insn *insn)
 {
   if (insn->mod == 3) Udq(insn);
   else
-    (this->*resolve_modrm)(insn, O_SIZE);
+    (this->*resolve_modrm)(insn, XMM_SIZE + insn->vex_vl);
 }
 
 void disassembler::Wsd(const x86_insn *insn) { Wq(insn); }
@@ -521,9 +521,9 @@ void disassembler::Md(const x86_insn *insn) { OP_M(insn, D_SIZE); }
 void disassembler::Mq(const x86_insn *insn) { OP_M(insn, Q_SIZE); }
 void disassembler::Mt(const x86_insn *insn) { OP_M(insn, T_SIZE); }
 
-void disassembler::Mdq(const x86_insn *insn) { OP_M(insn, O_SIZE); }
-void disassembler::Mps(const x86_insn *insn) { OP_M(insn, O_SIZE); }
-void disassembler::Mpd(const x86_insn *insn) { OP_M(insn, O_SIZE); }
+void disassembler::Mdq(const x86_insn *insn) { OP_M(insn, XMM_SIZE + insn->vex_vl); }
+void disassembler::Mps(const x86_insn *insn) { OP_M(insn, XMM_SIZE + insn->vex_vl); }
+void disassembler::Mpd(const x86_insn *insn) { OP_M(insn, XMM_SIZE + insn->vex_vl); }
 void disassembler::Mss(const x86_insn *insn) { OP_M(insn, D_SIZE); }
 void disassembler::Msd(const x86_insn *insn) { OP_M(insn, Q_SIZE); }
 
@@ -615,7 +615,7 @@ void disassembler::OP_sY(const x86_insn *insn, unsigned size)
 }
 
 void disassembler::sYq(const x86_insn *insn) { OP_sY(insn, Q_SIZE); }
-void disassembler::sYdq(const x86_insn *insn) { OP_sY(insn, O_SIZE); }
+void disassembler::sYdq(const x86_insn *insn) { OP_sY(insn, XMM_SIZE + insn->vex_vl); }
 
 #define BX_JUMP_TARGET_NOT_REQ ((bx_address)(-1))
 

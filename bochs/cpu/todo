@@ -49,4 +49,4 @@ TODO (know issues in CPU model):
    - Dual-monitor treatment of SMIs and SMM not implemented yet
    - VMENTER to not-active state not supported yet
 
-[!] SSE4A, SMX, SVM, XOP
+[!] SMX, SVM, XOP

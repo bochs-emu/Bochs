@@ -121,8 +121,8 @@ static BxDisasmOpcodeTable_t BxDisasmGroupSSE_0f2a[4] = {
 static BxDisasmOpcodeTable_t BxDisasmGroupSSE_0f2b[4] = {
   /* -- */ { 0, &Ia_movntps_Mps_Vps },
   /* 66 */ { 0, &Ia_movntpd_Mpd_Vpd },
-  /* F3 */ { 0, &Ia_movntss_Mss_Vss }, // SSE4A
-  /* F2 */ { 0, &Ia_movntsd_Msd_Vsd }  // SSE4A
+  /* F3 */ { 0, &Ia_Invalid },
+  /* F2 */ { 0, &Ia_Invalid }
 };
 
 static BxDisasmOpcodeTable_t BxDisasmGroupSSE_0f2c[4] = {
@@ -398,43 +398,32 @@ static BxDisasmOpcodeTable_t BxDisasmGroupSSE_0f76[4] = {
   /* F2 */ { 0, &Ia_Invalid }
 };
 
-static BxDisasmOpcodeTable_t BxDisasmGroupRmEXTRQ[8] = {
-  /* 0 */ { 0, &Ia_extrq_Vdq_IbIb },
-  /* 1 */ { 0, &Ia_Invalid },
-  /* 2 */ { 0, &Ia_Invalid },
-  /* 3 */ { 0, &Ia_Invalid },
-  /* 4 */ { 0, &Ia_Invalid },
-  /* 5 */ { 0, &Ia_Invalid },
-  /* 6 */ { 0, &Ia_Invalid },
-  /* 7 */ { 0, &Ia_Invalid }
-};
-
 static BxDisasmOpcodeTable_t BxDisasmGroupSSE_0f78[4] = {
   /* -- */ { 0, &Ia_vmread_Ed_Gd },         // VMX
-  /* 66 */ { GRPRM(EXTRQ) },                // SSE4A
+  /* 66 */ { 0, &Ia_Invalid },
   /* F3 */ { 0, &Ia_Invalid },
-  /* F2 */ { 0, &Ia_insertq_Vdq_Udq_IbIb }, // SSE4A
+  /* F2 */ { 0, &Ia_Invalid }
 };
 
 static BxDisasmOpcodeTable_t BxDisasmGroupSSE_0f78Q[4] = {
   /* -- */ { 0, &Ia_vmread_Eq_Gq },         // VMX
-  /* 66 */ { GRPRM(EXTRQ) },                // SSE4A
+  /* 66 */ { 0, &Ia_Invalid },
   /* F3 */ { 0, &Ia_Invalid },
-  /* F2 */ { 0, &Ia_insertq_Vdq_Udq_IbIb }  // SSE4A
+  /* F2 */ { 0, &Ia_Invalid }
 };
 
 static BxDisasmOpcodeTable_t BxDisasmGroupSSE_0f79[4] = {
   /* -- */ { 0, &Ia_vmwrite_Gd_Ed },        // VMX
-  /* 66 */ { 0, &Ia_extrq_Vdq_Udq },        // SSE4A
+  /* 66 */ { 0, &Ia_Invalid },
   /* F3 */ { 0, &Ia_Invalid },
-  /* F2 */ { 0, &Ia_insertq_Vdq_Udq }       // SSE4A
+  /* F2 */ { 0, &Ia_Invalid }
 };
 
 static BxDisasmOpcodeTable_t BxDisasmGroupSSE_0f79Q[4] = {
   /* -- */ { 0, &Ia_vmwrite_Gq_Eq },        // VMX
-  /* 66 */ { 0, &Ia_extrq_Vdq_Udq },        // SSE4A
+  /* 66 */ { 0, &Ia_Invalid },
   /* F3 */ { 0, &Ia_Invalid },
-  /* F2 */ { 0, &Ia_insertq_Vdq_Udq }       // SSE4A
+  /* F2 */ { 0, &Ia_Invalid }
 };
 
 static BxDisasmOpcodeTable_t BxDisasmGroupSSE_0f7c[4] = {
