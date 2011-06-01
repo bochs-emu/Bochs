@@ -32,7 +32,7 @@ Bochs repository moved to the SVN version control !
   - Configure option --enable-acpi is deprecated and should not be used anymore.
     The ACPI support is always automatically compiled in if PCI is compiled in.
     The ACPI still could be disabled using .bochsrc 'plugin_ctrl' option.
-  - Removed --enable-trace-cache configure option. The option will be always
+  - Removed --enable-trace-cache configure option. The option will be always ON
     for any Bochs configuration.
 
 - I/O Devices
