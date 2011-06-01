@@ -104,22 +104,15 @@ extern bxPageWriteStampTable pageWriteStampTable;
 #define BxICacheEntries (64 * 1024)  // Must be a power of 2.
 #define BxICacheMemPool (384 * 1024)
 
-#if BX_SUPPORT_TRACE_CACHE
-  #define BX_MAX_TRACE_LENGTH 32
-#endif
+#define BX_MAX_TRACE_LENGTH 32
 
 struct bxICacheEntry_c
 {
   bx_phy_address pAddr; // Physical address of the instruction
   Bit32u traceMask;
 
-#if BX_SUPPORT_TRACE_CACHE
   Bit32u tlen;          // Trace length in instructions
   bxInstruction_c *i;
-#else
-  // ... define as array of 1 to simplify merge with trace cache code
-  bxInstruction_c i[1];
-#endif
 };
 
 #define BX_ICACHE_INVALID_PHY_ADDRESS (bx_phy_address(-1))
@@ -127,7 +120,6 @@ struct bxICacheEntry_c
 class BOCHSAPI bxICache_c {
 public:
   bxICacheEntry_c entry[BxICacheEntries];
-#if BX_SUPPORT_TRACE_CACHE
   bxInstruction_c mpool[BxICacheMemPool];
   unsigned mpindex;
 
@@ -144,7 +136,6 @@ public:
     bxICacheEntry_c vc_entry;
   } victimCache[BX_ICACHE_VICTIM_ENTRIES];
   int nextVictimCacheIndex;
-#endif
 
 public:
   bxICache_c() { flushICacheEntries(); }
@@ -155,7 +146,6 @@ public:
     return ((pAddr) & (BxICacheEntries-1)) ^ fetchModeMask;
   }
 
-#if BX_SUPPORT_TRACE_CACHE
   BX_CPP_INLINE void alloc_trace(bxICacheEntry_c *e)
   {
     if (mpindex + BX_MAX_TRACE_LENGTH > BxICacheMemPool) {
@@ -201,7 +191,6 @@ public:
       nextVictimCacheIndex = (nextVictimCacheIndex+1) & (BX_ICACHE_VICTIM_ENTRIES-1);
     }
   }
-#endif
 
   BX_CPP_INLINE void handleSMC(bx_phy_address pAddr, Bit32u mask);
 
@@ -224,7 +213,6 @@ BX_CPP_INLINE void bxICache_c::flushICacheEntries(void)
     e->traceMask = 0;
   }
 
-#if BX_SUPPORT_TRACE_CACHE
   nextPageSplitIndex = 0;
   for (i=0;i<BX_ICACHE_PAGE_SPLIT_ENTRIES;i++)
     pageSplitIndex[i].ppf = BX_ICACHE_INVALID_PHY_ADDRESS;
@@ -234,15 +222,12 @@ BX_CPP_INLINE void bxICache_c::flushICacheEntries(void)
     victimCache[i].vc_entry.pAddr = BX_ICACHE_INVALID_PHY_ADDRESS;
 
   mpindex = 0;
-#endif
 }
 
-// TODO: invalidate only entries in same page as pAddr
 BX_CPP_INLINE void bxICache_c::handleSMC(bx_phy_address pAddr, Bit32u mask)
 {
   pAddr = LPFOf(pAddr);
 
-#if BX_SUPPORT_TRACE_CACHE
   unsigned i;
 
   if (mask & 0x1) {
@@ -259,7 +244,6 @@ BX_CPP_INLINE void bxICache_c::handleSMC(bx_phy_address pAddr, Bit32u mask)
     bxVictimCacheEntry *e = &victimCache[i];
     e->vc_entry.pAddr = BX_ICACHE_INVALID_PHY_ADDRESS;
   }
-#endif
 
   bxICacheEntry_c *e = get_entry(pAddr, 0);
 

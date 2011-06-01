@@ -985,9 +985,7 @@ public: // for now...
 
   Bit32u  async_event;
 
-#if BX_SUPPORT_TRACE_CACHE
-  #define BX_ASYNC_EVENT_STOP_TRACE (0x80000000)
-#endif
+#define BX_ASYNC_EVENT_STOP_TRACE (0x80000000)
 
 #if BX_X86_DEBUGGER
   bx_bool  in_repeat;
@@ -2983,11 +2981,7 @@ public: // for now...
   BX_SMF void boundaryFetch(const Bit8u *fetchPtr, unsigned remainingInPage, bxInstruction_c *);
   BX_SMF bxICacheEntry_c *serveICacheMiss(bxICacheEntry_c *entry, Bit32u eipBiased, bx_phy_address pAddr);
   BX_SMF bxICacheEntry_c* getICacheEntry(void);
-#if BX_SUPPORT_TRACE_CACHE
   BX_SMF bx_bool mergeTraces(bxICacheEntry_c *entry, bxInstruction_c *i, bx_phy_address pAddr);
-#else
-  BX_SMF bx_bool fetchInstruction(bxInstruction_c *iStorage, Bit32u eipBiased);
-#endif
   BX_SMF void prefetch(void);
   BX_SMF void updateFetchModeMask(void);
   BX_SMF BX_CPP_INLINE void invalidate_prefetch_q(void)
@@ -4127,11 +4121,7 @@ enum {
 #define BxArithDstRM        0x0800 // bit 11
 #define BxVexW0             0x1000 // bit 12
 
-#if BX_SUPPORT_TRACE_CACHE
-  #define BxTraceEnd        0x4000 // bit 14
-#else
-  #define BxTraceEnd        0
-#endif
+#define BxTraceEnd          0x4000 // bit 14
 
 #ifdef BX_TRACE_CACHE_NO_SPECULATIVE_TRACING
   #define BxTraceJCC      BxTraceEnd

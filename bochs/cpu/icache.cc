@@ -37,9 +37,7 @@ void flushICaches(void)
 {
   for (unsigned i=0; i<BX_SMP_PROCESSORS; i++) {
     BX_CPU(i)->iCache.flushICacheEntries();
-#if BX_SUPPORT_TRACE_CACHE
     BX_CPU(i)->async_event |= BX_ASYNC_EVENT_STOP_TRACE;
-#endif
   }
 
   pageWriteStampTable.resetWriteStamps();
@@ -48,14 +46,10 @@ void flushICaches(void)
 void handleSMC(bx_phy_address pAddr, Bit32u mask)
 {
   for (unsigned i=0; i<BX_SMP_PROCESSORS; i++) {
-#if BX_SUPPORT_TRACE_CACHE
     BX_CPU(i)->async_event |= BX_ASYNC_EVENT_STOP_TRACE;
-#endif
     BX_CPU(i)->iCache.handleSMC(pAddr, mask);
   }
 }
-
-#if BX_SUPPORT_TRACE_CACHE
 
 bxICacheEntry_c* BX_CPU_C::serveICacheMiss(bxICacheEntry_c *entry, Bit32u eipBiased, bx_phy_address pAddr)
 {
@@ -171,51 +165,6 @@ bx_bool BX_CPU_C::mergeTraces(bxICacheEntry_c *entry, bxInstruction_c *i, bx_phy
 
   return 0;
 }
-
-#else // BX_SUPPORT_TRACE_CACHE == 0
-
-bx_bool BX_CPU_C::fetchInstruction(bxInstruction_c *iStorage, Bit32u eipBiased)
-{
-  unsigned remainingInPage = BX_CPU_THIS_PTR eipPageWindowSize - eipBiased;
-  const Bit8u *fetchPtr = BX_CPU_THIS_PTR eipFetchPtr + eipBiased;
-  int ret;
-
-#if BX_SUPPORT_X86_64
-  if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64)
-    ret = fetchDecode64(fetchPtr, iStorage, remainingInPage);
-  else
-#endif
-    ret = fetchDecode32(fetchPtr, iStorage, remainingInPage);
-
-  if (ret < 0) {
-    // handle instrumentation callback inside boundaryFetch
-    boundaryFetch(fetchPtr, remainingInPage, iStorage);
-    return 0;
-  }
-
-#if BX_INSTRUMENTATION
-  BX_INSTR_OPCODE(BX_CPU_ID, fetchPtr, iStorage->ilen(),
-       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b, long64_mode());
-#endif
-
-  return 1;
-}
-
-bxICacheEntry_c* BX_CPU_C::serveICacheMiss(bxICacheEntry_c *entry, Bit32u eipBiased, bx_phy_address pAddr)
-{
-  // The entry will be marked valid if fetchdecode will succeed
-  if (fetchInstruction(entry->i, eipBiased)) {
-    entry->pAddr = pAddr;
-    pageWriteStampTable.markICache(pAddr, entry->i->ilen());
-  }
-  else {
-    entry->pAddr = BX_ICACHE_INVALID_PHY_ADDRESS;
-  }
-
-  return entry;
-}
-
-#endif
 
 void BX_CPU_C::boundaryFetch(const Bit8u *fetchPtr, unsigned remainingInPage, bxInstruction_c *i)
 {

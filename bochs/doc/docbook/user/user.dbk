@@ -2211,16 +2211,6 @@ turn it off.
       <entry>support repeated I/O and memory copy speedups</entry>
     </row>
     <row>
-      <entry>--enable-trace-cache</entry>
-      <entry>no</entry>
-      <entry>support instruction trace cache for faster execution</entry>
-    </row>
-    <row>
-      <entry>--enable-host-specific-asms</entry>
-      <entry>yes</entry>
-      <entry>support for running native x86 instructions on an x86 machine</entry>
-    </row>
-    <row>
       <entry>--enable-fast-function-calls</entry>
       <entry>no</entry>
       <entry>support for fast function calls (gcc on x86 only)</entry>
@@ -2231,9 +2221,7 @@ turn it off.
       <entry>
         Turn on the enables for all speed optimizations that the
         developers believe are safe to use:
-         --enable-trace-cache,
          --enable-repeat-speedups,
-         --enable-host-specific-asms,
          --enable-fast-function-calls.
       </entry>
     </row>

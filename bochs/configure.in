@@ -902,27 +902,6 @@ AC_ARG_ENABLE(repeat-speedups,
     ]
   )
 
-AC_MSG_CHECKING(for instruction trace cache support)
-AC_ARG_ENABLE(trace-cache,
-  [  --enable-trace-cache              support instruction trace cache],
-  [if test "$enableval" = yes; then
-    AC_MSG_RESULT(yes)
-    speedup_TraceCache=1
-   else
-    AC_MSG_RESULT(no)
-    speedup_TraceCache=0
-   fi],
-  [
-    if test "$speedup_TraceCache " = 1; then
-      AC_MSG_RESULT(yes)
-      speedup_TraceCache=1
-    else
-      AC_MSG_RESULT(no)
-      speedup_TraceCache=0
-    fi
-    ]
-  )
-
 AC_MSG_CHECKING(for gcc fast function calls optimization)
 AC_ARG_ENABLE(fast-function-calls,
   [  --enable-fast-function-calls      support for fast function calls (gcc on x86 only)],
@@ -1112,7 +1091,6 @@ AC_ARG_ENABLE(all-optimizations,
 if test "$speedups_all" = 1; then
   # Configure requested to force all options enabled.
   speedup_repeat=1
-  speedup_TraceCache=1
   speedup_fastcall=1
 fi
 
@@ -1126,12 +1104,6 @@ if test "$speedup_fastcall" = 1; then
   AC_DEFINE(BX_FAST_FUNC_CALL, 1)
 else
   AC_DEFINE(BX_FAST_FUNC_CALL, 0)
-fi
-
-if test "$speedup_TraceCache" = 1; then
-  AC_DEFINE(BX_SUPPORT_TRACE_CACHE, 1)
-else
-  AC_DEFINE(BX_SUPPORT_TRACE_CACHE, 0)
 fi
 
 
@@ -2775,6 +2747,15 @@ AC_ARG_ENABLE(acpi,
    AC_MSG_RESULT(no)
   ])
 
+AC_MSG_CHECKING(for instruction trace cache support)
+AC_ARG_ENABLE(trace-cache,
+  [  --enable-trace-cache              support instruction trace cache (deprecated)],
+  [AC_MSG_RESULT($enableval)
+   AC_MSG_ERROR([DEPRECATED - this feature will be enabled in all configurations])
+  ],
+  [
+   AC_MSG_RESULT(no)
+  ])
 
 # Create some subdirectories for when you run configure from some other
 # directory.

@@ -663,8 +663,6 @@ typedef
 
 #define BX_SupportRepeatSpeedups 0
 
-#define BX_SUPPORT_TRACE_CACHE 0
-
 #if BX_SUPPORT_3DNOW
   #define BX_CPU_VENDOR_INTEL 0
 #else

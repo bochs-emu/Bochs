@@ -123,11 +123,9 @@ void BX_CPU_C::cpu_loop(Bit32u max_instr_count)
 
     bxInstruction_c *i = entry->i;
 
-#if BX_SUPPORT_TRACE_CACHE
     bxInstruction_c *last = i + (entry->tlen);
 
     for(;;) {
-#endif
 
 #if BX_DISASM
       if (BX_CPU_THIS_PTR trace) {
@@ -155,7 +153,6 @@ void BX_CPU_C::cpu_loop(Bit32u max_instr_count)
 
       CHECK_MAX_INSTRUCTIONS(max_instr_count);
 
-#if BX_SUPPORT_TRACE_CACHE
       if (BX_CPU_THIS_PTR async_event) {
         // clear stop trace magic indication that probably was set by repeat or branch32/64
         BX_CPU_THIS_PTR async_event &= ~BX_ASYNC_EVENT_STOP_TRACE;
@@ -168,7 +165,6 @@ void BX_CPU_C::cpu_loop(Bit32u max_instr_count)
         last = i + (entry->tlen);
       }
     }
-#endif
   }  // while (1)
 }
 
@@ -272,10 +268,8 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::repeat(bxInstruction_c *i, BxExecutePtr_tR
 
   RIP = BX_CPU_THIS_PTR prev_rip; // repeat loop not done, restore RIP
 
-#if BX_SUPPORT_TRACE_CACHE
   // assert magic async_event to stop trace execution
   BX_CPU_THIS_PTR async_event |= BX_ASYNC_EVENT_STOP_TRACE;
-#endif
 }
 
 void BX_CPP_AttrRegparmN(2) BX_CPU_C::repeat_ZF(bxInstruction_c *i, BxExecutePtr_tR execute)
@@ -413,10 +407,8 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::repeat_ZF(bxInstruction_c *i, BxExecutePtr
 
   RIP = BX_CPU_THIS_PTR prev_rip; // repeat loop not done, restore RIP
 
-#if BX_SUPPORT_TRACE_CACHE
   // assert magic async_event to stop trace execution
   BX_CPU_THIS_PTR async_event |= BX_ASYNC_EVENT_STOP_TRACE;
-#endif
 }
 
 unsigned BX_CPU_C::handleAsyncEvent(void)

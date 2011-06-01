@@ -2357,10 +2357,8 @@ modrm_done:
   }
 #endif
 
-#if BX_SUPPORT_TRACE_CACHE
   if ((attr & BxTraceEnd) || ia_opcode == BX_IA_ERROR)
      return(1);
-#endif
 
   return(0);
 }
