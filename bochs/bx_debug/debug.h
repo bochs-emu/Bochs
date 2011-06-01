@@ -185,7 +185,6 @@ typedef enum _show_flags {
   Flag_iret    = 0x8,
   Flag_intsig  = 0x10,
   Flag_mode    = 0x20,
-  Flag_vmexit  = 0x40
 } show_flags_t;
 
 // Flex defs
