@@ -976,7 +976,8 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned user, unsig
   // note - we assume physical memory < 4gig so for brevity & speed, we'll use
   // 32 bit entries although cr3 is expanded to 64 bits.
   bx_phy_address paddress, ppf, poffset = PAGE_OFFSET(laddr);
-  bx_bool isWrite = rw & 1; // write or r-m-w
+  unsigned isWrite = rw & 1; // write or r-m-w
+  unsigned isExecute = (rw == BX_EXECUTE);
 
   InstrTLB_Increment(tlbLookups);
   InstrTLB_Stats();
@@ -990,7 +991,6 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned user, unsig
   {
     paddress = tlbEntry->ppf | poffset;
 
-    bx_bool isExecute = (rw == BX_EXECUTE);
     if (! (tlbEntry->accessBits & ((isExecute<<2) | (isWrite<<1) | user)))
       return paddress;
 
@@ -1051,7 +1051,7 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned user, unsig
           page_fault(ERROR_PROTECTION, laddr, user, rw);
 
 #if BX_CPU_LEVEL >= 6
-        if (BX_CPU_THIS_PTR cr4.get_SMEP() && rw == BX_EXECUTE && !user) {
+        if (BX_CPU_THIS_PTR cr4.get_SMEP() && isExecute && !user) {
           if (combined_access & 0x4) // User page
             page_fault(ERROR_PROTECTION, laddr, user, rw);
         }
@@ -1113,7 +1113,7 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned user, unsig
           page_fault(ERROR_PROTECTION, laddr, user, rw);
 
 #if BX_CPU_LEVEL >= 6
-        if (BX_CPU_THIS_PTR cr4.get_SMEP() && rw == BX_EXECUTE && !user) {
+        if (BX_CPU_THIS_PTR cr4.get_SMEP() && isExecute && !user) {
           if (combined_access & 0x4) // User page
             page_fault(ERROR_PROTECTION, laddr, user, rw);
         }
