@@ -77,7 +77,6 @@ void libpit_LTX_plugin_fini(void)
 bx_pit_c::bx_pit_c()
 {
   put("PIT");
-  s.speaker_data_on=0;
 
   /* 8254 PIT (Programmable Interval Timer) */
 
@@ -124,17 +123,17 @@ void bx_pit_c::init(void)
     BX_DEBUG(("activated timer."));
   }
   BX_PIT_THIS s.last_next_event_time = BX_PIT_THIS s.timer.get_next_event_time();
-  BX_PIT_THIS s.last_usec=my_time_usec;
+  BX_PIT_THIS s.last_usec = my_time_usec;
 
-  BX_PIT_THIS s.total_ticks=0;
-  BX_PIT_THIS s.total_usec=0;
+  BX_PIT_THIS s.total_ticks = 0;
+  BX_PIT_THIS s.total_usec = 0;
 
   BX_DEBUG(("finished init"));
 
   BX_DEBUG(("s.last_usec="FMT_LL"d",BX_PIT_THIS s.last_usec));
   BX_DEBUG(("s.timer_id=%d",BX_PIT_THIS s.timer_handle[0]));
-  BX_DEBUG(("s.timer.get_next_event_time=%d",BX_PIT_THIS s.timer.get_next_event_time()));
-  BX_DEBUG(("s.last_next_event_time=%d",BX_PIT_THIS s.last_next_event_time));
+  BX_DEBUG(("s.timer.get_next_event_time=%d", BX_PIT_THIS s.timer.get_next_event_time()));
+  BX_DEBUG(("s.last_next_event_time=%d", BX_PIT_THIS s.last_next_event_time));
 }
 
 void bx_pit_c::reset(unsigned type)
@@ -145,7 +144,7 @@ void bx_pit_c::reset(unsigned type)
 void bx_pit_c::register_state(void)
 {
   bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "pit", "8254 PIT State", 7);
-  new bx_shadow_num_c(list, "speaker_data_on", &BX_PIT_THIS s.speaker_data_on, BASE_HEX);
+  new bx_shadow_bool_c(list, "speaker_data_on", &BX_PIT_THIS s.speaker_data_on);
   new bx_shadow_bool_c(list, "refresh_clock_div2", &BX_PIT_THIS s.refresh_clock_div2);
   new bx_shadow_num_c(list, "last_usec", &BX_PIT_THIS s.last_usec);
   new bx_shadow_num_c(list, "last_next_event_time", &BX_PIT_THIS s.last_next_event_time);
@@ -172,9 +171,8 @@ void bx_pit_c::handle_timer()
   if(time_passed32) {
     periodic(time_passed32);
   }
-  BX_PIT_THIS s.last_usec=BX_PIT_THIS s.last_usec + time_passed;
-  if(time_passed || (BX_PIT_THIS s.last_next_event_time != BX_PIT_THIS s.timer.get_next_event_time()))
-  {
+  BX_PIT_THIS s.last_usec = BX_PIT_THIS s.last_usec + time_passed;
+  if (time_passed || (BX_PIT_THIS s.last_next_event_time != BX_PIT_THIS s.timer.get_next_event_time())) {
     BX_DEBUG(("RESETting timer"));
     bx_virt_timer.deactivate_timer(BX_PIT_THIS s.timer_handle[0]);
     BX_DEBUG(("deactivated timer"));
@@ -186,10 +184,10 @@ void bx_pit_c::handle_timer()
     }
     BX_PIT_THIS s.last_next_event_time = BX_PIT_THIS s.timer.get_next_event_time();
   }
-  BX_DEBUG(("s.last_usec="FMT_LL"d",BX_PIT_THIS s.last_usec));
-  BX_DEBUG(("s.timer_id=%d",BX_PIT_THIS s.timer_handle[0]));
-  BX_DEBUG(("s.timer.get_next_event_time=%x",BX_PIT_THIS s.timer.get_next_event_time()));
-  BX_DEBUG(("s.last_next_event_time=%d",BX_PIT_THIS s.last_next_event_time));
+  BX_DEBUG(("s.last_usec="FMT_LL"d", BX_PIT_THIS s.last_usec));
+  BX_DEBUG(("s.timer_id=%d", BX_PIT_THIS s.timer_handle[0]));
+  BX_DEBUG(("s.timer.get_next_event_time=%x", BX_PIT_THIS s.timer.get_next_event_time()));
+  BX_DEBUG(("s.last_next_event_time=%d", BX_PIT_THIS s.last_next_event_time));
 }
 
 // static IO port read callback handler
@@ -232,10 +230,10 @@ Bit32u bx_pit_c::read(Bit32u address, unsigned io_len)
     case 0x61:
       /* AT, port 61h */
       BX_PIT_THIS s.refresh_clock_div2 = (bx_bool)((my_time_usec / 15) & 1);
-      value = (BX_PIT_THIS s.timer.read_OUT(2)<<5) |
-              (BX_PIT_THIS s.refresh_clock_div2<<4) |
-              (BX_PIT_THIS s.speaker_data_on<<1) |
-              (BX_PIT_THIS s.timer.read_GATE(2)?1:0);
+      value = (BX_PIT_THIS s.timer.read_OUT(2)  << 5) |
+              (BX_PIT_THIS s.refresh_clock_div2 << 4) |
+              (BX_PIT_THIS s.speaker_data_on    << 1) |
+              (BX_PIT_THIS s.timer.read_GATE(2) ? 1 : 0);
       break;
 
     default:
@@ -269,7 +267,7 @@ void bx_pit_c::write(Bit32u address, Bit32u dvalue, unsigned io_len)
   if(time_passed32) {
     periodic(time_passed32);
   }
-  BX_PIT_THIS s.last_usec=BX_PIT_THIS s.last_usec + time_passed;
+  BX_PIT_THIS s.last_usec = BX_PIT_THIS s.last_usec + time_passed;
 
   value = (Bit8u) dvalue;
 
@@ -307,8 +305,7 @@ void bx_pit_c::write(Bit32u address, Bit32u dvalue, unsigned io_len)
       BX_PANIC(("unsupported io write to port 0x%04x = 0x%02x", address, value));
   }
 
-  if(time_passed || (BX_PIT_THIS s.last_next_event_time != BX_PIT_THIS s.timer.get_next_event_time()))
-  {
+  if (time_passed || (BX_PIT_THIS s.last_next_event_time != BX_PIT_THIS s.timer.get_next_event_time())) {
     BX_DEBUG(("RESETting timer"));
     bx_virt_timer.deactivate_timer(BX_PIT_THIS s.timer_handle[0]);
     BX_DEBUG(("deactivated timer"));
@@ -320,10 +317,10 @@ void bx_pit_c::write(Bit32u address, Bit32u dvalue, unsigned io_len)
     }
     BX_PIT_THIS s.last_next_event_time = BX_PIT_THIS s.timer.get_next_event_time();
   }
-  BX_DEBUG(("s.last_usec="FMT_LL"d",BX_PIT_THIS s.last_usec));
-  BX_DEBUG(("s.timer_id=%d",BX_PIT_THIS s.timer_handle[0]));
-  BX_DEBUG(("s.timer.get_next_event_time=%x",BX_PIT_THIS s.timer.get_next_event_time()));
-  BX_DEBUG(("s.last_next_event_time=%d",BX_PIT_THIS s.last_next_event_time));
+  BX_DEBUG(("s.last_usec="FMT_LL"d", BX_PIT_THIS s.last_usec));
+  BX_DEBUG(("s.timer_id=%d", BX_PIT_THIS s.timer_handle[0]));
+  BX_DEBUG(("s.timer.get_next_event_time=%x", BX_PIT_THIS s.timer.get_next_event_time()));
+  BX_DEBUG(("s.last_next_event_time=%d", BX_PIT_THIS s.last_next_event_time));
 
 }
 
@@ -332,7 +329,7 @@ bx_bool bx_pit_c::periodic(Bit32u usec_delta)
   Bit32u ticks_delta = 0;
 
   BX_PIT_THIS s.total_usec += usec_delta;
-  ticks_delta=(Bit32u)((USEC_TO_TICKS((Bit64u)(BX_PIT_THIS s.total_usec)))-BX_PIT_THIS s.total_ticks);
+  ticks_delta = (Bit32u)((USEC_TO_TICKS((Bit64u)(BX_PIT_THIS s.total_usec)))-BX_PIT_THIS s.total_ticks);
   BX_PIT_THIS s.total_ticks += ticks_delta;
 
   while ((BX_PIT_THIS s.total_ticks >= TICKS_PER_SECOND) && (BX_PIT_THIS s.total_usec >= USEC_PER_SECOND)) {
@@ -341,13 +338,13 @@ bx_bool bx_pit_c::periodic(Bit32u usec_delta)
   }
 
   while(ticks_delta>0) {
-    Bit32u maxchange=BX_PIT_THIS s.timer.get_next_event_time();
-    Bit32u timedelta=maxchange;
-    if((maxchange==0) || (maxchange>ticks_delta)) {
-      timedelta=ticks_delta;
+    Bit32u maxchange = BX_PIT_THIS s.timer.get_next_event_time();
+    Bit32u timedelta = maxchange;
+    if((maxchange == 0) || (maxchange>ticks_delta)) {
+      timedelta = ticks_delta;
     }
     BX_PIT_THIS s.timer.clock_all(timedelta);
-    ticks_delta-=timedelta;
+    ticks_delta -= timedelta;
   }
 
   return 0;
