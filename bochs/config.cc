@@ -2221,6 +2221,31 @@ static int parse_param_bool(const char *input, int len, const char *param)
   return -1;
 }
 
+static int parse_usb_port_params(const char *context, bx_bool devopt, const char *param, int maxports, bx_list_c *base)
+{
+  int idx, plen;
+  char tmpname[20];
+
+  if (!devopt) {
+    plen = 4;
+  } else {
+    plen = 7;
+  }
+  idx = param[plen];
+  if ((idx < '1') || (idx > '9') || (param[plen + 1] != '=')) {
+    PARSE_ERR(("%s: usb_%s: portX / optionsX parameter malformed.", context, base->get_name()));
+    return -1;
+  }
+  idx -= '0';
+  if (idx > maxports) {
+    PARSE_ERR(("%s: usb_%s: port number out of range.", context, base->get_name()));
+    return -1;
+  }
+  sprintf(tmpname, "port%d.%s", idx, devopt ? "options" : "device");
+  SIM->get_param_string(tmpname, base)->set(&param[plen + 2]);
+  return 0;
+}
+
 static int parse_line_formatted(const char *context, int num_params, char *params[])
 {
   int i, slot, t;
@@ -3002,14 +3027,16 @@ static int parse_line_formatted(const char *context, int num_params, char *param
     for (i=1; i<num_params; i++) {
       if (!strncmp(params[i], "enabled=", 8)) {
         SIM->get_param_bool(BXPN_UHCI_ENABLED)->set(atol(&params[i][8]));
-      } else if (!strncmp(params[i], "port1=", 6)) {
-        SIM->get_param_string(BXPN_UHCI_PORT1_DEVICE)->set(&params[i][6]);
-      } else if (!strncmp(params[i], "options1=", 9)) {
-        SIM->get_param_string(BXPN_UHCI_PORT1_OPTIONS)->set(&params[i][9]);
-      } else if (!strncmp(params[i], "port2=", 6)) {
-        SIM->get_param_string(BXPN_UHCI_PORT2_DEVICE)->set(&params[i][6]);
-      } else if (!strncmp(params[i], "options2=", 9)) {
-        SIM->get_param_string(BXPN_UHCI_PORT2_OPTIONS)->set(&params[i][9]);
+      } else if (!strncmp(params[i], "port", 4)) {
+        base = (bx_list_c*) SIM->get_param("ports.usb.uhci");
+        if (parse_usb_port_params(context, 0, params[i], BX_N_USB_UHCI_PORTS, base) < 0) {
+          return -1;
+        }
+      } else if (!strncmp(params[i], "options", 7)) {
+        base = (bx_list_c*) SIM->get_param("ports.usb.uhci");
+        if (parse_usb_port_params(context, 1, params[i], BX_N_USB_UHCI_PORTS, base) < 0) {
+          return -1;
+        }
       } else {
         PARSE_WARN(("%s: unknown parameter '%s' for usb_uhci ignored.", context, params[i]));
       }
@@ -3018,14 +3045,16 @@ static int parse_line_formatted(const char *context, int num_params, char *param
     for (i=1; i<num_params; i++) {
       if (!strncmp(params[i], "enabled=", 8)) {
         SIM->get_param_bool(BXPN_OHCI_ENABLED)->set(atol(&params[i][8]));
-      } else if (!strncmp(params[i], "port1=", 6)) {
-        SIM->get_param_string(BXPN_OHCI_PORT1_DEVICE)->set(&params[i][6]);
-      } else if (!strncmp(params[i], "options1=", 9)) {
-        SIM->get_param_string(BXPN_OHCI_PORT1_OPTIONS)->set(&params[i][9]);
-      } else if (!strncmp(params[i], "port2=", 6)) {
-        SIM->get_param_string(BXPN_OHCI_PORT2_DEVICE)->set(&params[i][6]);
-      } else if (!strncmp(params[i], "options2=", 9)) {
-        SIM->get_param_string(BXPN_OHCI_PORT2_OPTIONS)->set(&params[i][9]);
+      } else if (!strncmp(params[i], "port", 4)) {
+        base = (bx_list_c*) SIM->get_param("ports.usb.ohci");
+        if (parse_usb_port_params(context, 0, params[i], BX_N_USB_OHCI_PORTS, base) < 0) {
+          return -1;
+        }
+      } else if (!strncmp(params[i], "options", 7)) {
+        base = (bx_list_c*) SIM->get_param("ports.usb.ohci");
+        if (parse_usb_port_params(context, 1, params[i], BX_N_USB_OHCI_PORTS, base) < 0) {
+          return -1;
+        }
       } else {
         PARSE_WARN(("%s: unknown parameter '%s' for usb_ohci ignored.", context, params[i]));
       }
@@ -3558,14 +3587,19 @@ int bx_write_serial_options(FILE *fp, bx_list_c *base, int n)
   return 0;
 }
 
-int bx_write_usb_options(FILE *fp, bx_list_c *base)
+int bx_write_usb_options(FILE *fp, int maxports, bx_list_c *base)
 {
+  int i;
+  char tmpname[20];
+
   fprintf(fp, "usb_%s: enabled=%d", base->get_name(), SIM->get_param_bool("enabled", base)->get());
   if (SIM->get_param_bool("enabled", base)->get()) {
-    fprintf(fp, ", port1=%s", SIM->get_param_string("port1.device", base)->getptr());
-    fprintf(fp, ", port2=%s", SIM->get_param_string("port2.device", base)->getptr());
-    fprintf(fp, ", options1=%s", SIM->get_param_string("port1.options", base)->getptr());
-    fprintf(fp, ", options2=%s", SIM->get_param_string("port2.options", base)->getptr());
+    for (i = 1; i <= maxports; i++) {
+      sprintf(tmpname, "port%d.device", i);
+      fprintf(fp, ", port%d=%s", i, SIM->get_param_string(tmpname, base)->getptr());
+      sprintf(tmpname, "port%d.options", i);
+      fprintf(fp, ", options%d=%s", i, SIM->get_param_string(tmpname, base)->getptr());
+    }
   }
   fprintf(fp, "\n");
   return 0;
@@ -3858,9 +3892,9 @@ int bx_write_configuration(const char *rc, int overwrite)
   }
   // usb
   base = (bx_list_c*) SIM->get_param("ports.usb.uhci");
-  bx_write_usb_options(fp, base);
+  bx_write_usb_options(fp, BX_N_USB_UHCI_PORTS, base);
   base = (bx_list_c*) SIM->get_param("ports.usb.ohci");
-  bx_write_usb_options(fp, base);
+  bx_write_usb_options(fp, BX_N_USB_OHCI_PORTS, base);
   // pci
   fprintf(fp, "i440fxsupport: enabled=%d",
           SIM->get_param_bool(BXPN_I440FX_SUPPORT)->get());
