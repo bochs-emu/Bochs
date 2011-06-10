@@ -359,7 +359,8 @@ void bx_devices_c::init(BX_MEM_C *newmem)
   DEV_cmos_set_reg(0x31, (Bit8u) ((extended_memory_in_k >> 8) & 0xff));
 
   Bit32u extended_memory_in_64k = memory_in_k > 16384 ? (memory_in_k - 16384) / 64 : 0;
-  if (extended_memory_in_64k > 0xffff) extended_memory_in_64k = 0xffff;
+  // Limit to 3 GB - 16 MB. PCI Memory Address Space starts at 3 GB.
+  if (extended_memory_in_64k > 0xbf00) extended_memory_in_64k = 0xbf00;
 
   DEV_cmos_set_reg(0x34, (Bit8u) (extended_memory_in_64k & 0xff));
   DEV_cmos_set_reg(0x35, (Bit8u) ((extended_memory_in_64k >> 8) & 0xff));
