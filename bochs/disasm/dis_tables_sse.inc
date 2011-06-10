@@ -1185,7 +1185,7 @@ static BxDisasmOpcodeTable_t BxDisasm3ByteOpTable0f38[256] = {
   /* 7F */ { 0, &Ia_Invalid },
   /* 80 */ { GRPSSE66(Ia_invept_Gy_Mdq) },
   /* 81 */ { GRPSSE66(Ia_invvpid_Gy_Mdq) },
-  /* 82 */ { 0, &Ia_Invalid },
+  /* 82 */ { GRPSSE66(Ia_invpcid_Gy_Mdq) },
   /* 83 */ { 0, &Ia_Invalid },
   /* 84 */ { 0, &Ia_Invalid },
   /* 85 */ { 0, &Ia_Invalid },

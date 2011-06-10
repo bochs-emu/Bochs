@@ -63,10 +63,12 @@
 #define IA_AES_PCLMULQDQ    (1 << 21)       /* AES+PCLMULQDQ instruction */
 #define IA_MOVBE            (1 << 22)       /* MOVBE Intel Atom(R) instruction */
 #define IA_FSGSBASE         (1 << 23)       /* FS/GS BASE access instruction */
-#define IA_AVX              (1 << 24)       /* AVX instruction */
-#define IA_AVX_F16C         (1 << 25)       /* AVX F16 convert instruction */
-#define IA_AVX_FMA          (1 << 26)       /* AVX FMA instruction */
-#define IA_X86_64           (1 << 27)       /* x86-64 instruction */
+#define IA_INVPCID          (1 << 24)       /* INVPCID instruction */
+#define IA_AVX              (1 << 25)       /* AVX instruction */
+#define IA_AVX_F16C         (1 << 26)       /* AVX F16 convert instruction */
+#define IA_AVX_FMA          (1 << 27)       /* AVX FMA instruction */
+#define IA_X86_64           (1 << 28)       /* x86-64 instruction */
+#define IA_BMI              (1 << 29)       /* BMI instruction */
 
 /* general purpose bit register */
 enum {

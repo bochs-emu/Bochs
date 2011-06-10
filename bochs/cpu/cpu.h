@@ -629,10 +629,12 @@ typedef struct
 #define BX_CPU_AES_PCLMULQDQ    (1 << 21)       /* AES+PCLMULQDQ instruction */
 #define BX_CPU_MOVBE            (1 << 22)       /* MOVBE Intel Atom(R) instruction */
 #define BX_CPU_FSGSBASE         (1 << 23)       /* FS/GS BASE access instruction */
-#define BX_CPU_AVX              (1 << 24)       /* AVX instruction */
-#define BX_CPU_AVX_F16C         (1 << 25)       /* AVX F16 convert instruction */
-#define BX_CPU_AVX_FMA          (1 << 26)       /* AVX FMA instruction */
-#define BX_CPU_X86_64           (1 << 27)       /* x86-64 instruction */
+#define BX_CPU_INVPCID          (1 << 24)       /* INVPCID instruction */
+#define BX_CPU_AVX              (1 << 25)       /* AVX instruction */
+#define BX_CPU_AVX_F16C         (1 << 26)       /* AVX F16 convert instruction */
+#define BX_CPU_AVX_FMA          (1 << 27)       /* AVX FMA instruction */
+#define BX_CPU_X86_64           (1 << 28)       /* x86-64 instruction */
+#define BX_CPU_BMI              (1 << 29)       /* BMI instruction */
 
 // cpuid non-ISA features
 #define BX_CPU_DEBUG_EXTENSIONS (1 << 0)        /* Debug Extensions support */
