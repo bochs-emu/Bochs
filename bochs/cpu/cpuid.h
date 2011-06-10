@@ -173,22 +173,28 @@ struct cpuid_function_t {
 // -----------------------------
 
 //   [0:0]    FS/GS BASE access instructions
-//   [6:1]    reserved
+//   [2:1]    reserved
+//   [3:3]    BMI1: Advanced Bit Manipulation Extensions
+//   [4:4]    reserved
+//   [5:5]    AVX2
+//   [6:6]    reserved
 //   [7:7]    SMEP: Supervisor Mode Execution Protection
-//   [8:8]    reserved
+//   [8:8]    BMI2: Advanced Bit Manipulation Extensions
 //   [9:9]    Support for Enhanced REP MOVSB/STOSB
+//   [10:10]  Support for INVPCID instruction
 //   [31:10]  reserved
 
 #define BX_CPUID_EXT3_FSGSBASE               (1 <<  0)
 #define BX_CPUID_EXT3_RESERVED1              (1 <<  1)
 #define BX_CPUID_EXT3_RESERVED2              (1 <<  2)
-#define BX_CPUID_EXT3_RESERVED3              (1 <<  3)
+#define BX_CPUID_EXT3_BMI1                   (1 <<  3)
 #define BX_CPUID_EXT3_RESERVED4              (1 <<  4)
-#define BX_CPUID_EXT3_RESERVED5              (1 <<  5)
+#define BX_CPUID_EXT3_AVX2                   (1 <<  5)
 #define BX_CPUID_EXT3_RESERVED6              (1 <<  6)
 #define BX_CPUID_EXT3_SMEP                   (1 <<  7)
-#define BX_CPUID_EXT3_RESERVED8              (1 <<  8)
+#define BX_CPUID_EXT3_BMI2                   (1 <<  8)
 #define BX_CPUID_EXT3_ENCHANCED_REP_STRINGS  (1 <<  9)
+#define BX_CPUID_EXT3_INVPCID                (1 << 10)
 // ...
 
 
