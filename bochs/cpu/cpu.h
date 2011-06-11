@@ -2501,7 +2501,7 @@ public: // for now...
   BX_SMF void VMASKMOVPS_MpsVps(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VMASKMOVPD_MpdVpd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
-  BX_SMF void VCVTPH2PS_VpsWpsIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTPH2PS_VpsWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VCVTPS2PH_WpsVpsIb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 #endif
 

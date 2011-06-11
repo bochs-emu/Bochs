@@ -1644,7 +1644,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VDPPS_VpsWpsIbR(bxInstruction_c *i)
 }
 
 /* Opcode: VEX.66.0F.3A.13 (VEX.W=0) */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTPH2PS_VpsWpsIbR(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTPH2PS_VpsWpsR(bxInstruction_c *i)
 {
   BxPackedAvxRegister result;
   BxPackedXmmRegister op = BX_READ_XMM_REG(i->rm());
