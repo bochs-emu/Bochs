@@ -98,7 +98,7 @@ Bit32u BX_CPU_C::get_extended_cpuid_features(void)
   // [26:26] XSAVE extensions support
   // [27:27] OSXSAVE support
   // [28:28] AVX extensions support
-  // [29:29] F16C - Float16 conversion support
+  // [29:29] AVX F16C - Float16 conversion support
   // [30:30] RDRAND instruction
   // [31:31] reserved
 
@@ -154,6 +154,9 @@ Bit32u BX_CPU_C::get_extended_cpuid_features(void)
 #if BX_SUPPORT_AVX
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_CPU_AVX))
     features |= BX_CPUID_EXT_AVX;
+
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_CPU_AVX_F16C))
+    features |= BX_CPUID_EXT_AVX_F16C;
 #endif
 
   return features;
@@ -1137,6 +1140,16 @@ void BX_CPU_C::init_isa_features_bitmask(void)
       BX_PANIC(("PANIC: AVX emulation requires XSAVE support !"));
       return;
     }
+  }
+
+  static bx_bool avx_f16c_enabled = SIM->get_param_bool(BXPN_CPUID_AVX_F16CVT)->get();
+  if (avx_f16c_enabled) {
+    if (! avx_enabled) {
+      BX_PANIC(("PANIC: Float16 convert emulation requires AVX support !"));
+      return;
+    }
+
+    features_bitmask |= BX_CPU_AVX_F16C;
   }
 #endif
 

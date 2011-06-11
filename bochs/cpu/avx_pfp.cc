@@ -1643,4 +1643,68 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VDPPS_VpsWpsIbR(bxInstruction_c *i)
 #endif
 }
 
+/* Opcode: VEX.66.0F.3A.13 (VEX.W=0) */
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTPH2PS_VpsWpsIbR(bxInstruction_c *i)
+{
+  BxPackedAvxRegister result;
+  BxPackedXmmRegister op = BX_READ_XMM_REG(i->rm());
+  unsigned len = i->getVL();
+
+  float_status_t status_word;
+  mxcsr_to_softfloat_status_word(status_word, MXCSR);
+
+  for (unsigned n=0; n < (4*len); n++) {
+
+    if (MXCSR.get_DAZ())
+      op.xmm16u(n) = float16_denormal_to_zero(op.xmm16u(n));
+
+     result.avx32u(n) = float16_to_float32(op.xmm16u(n), status_word);
+  }
+
+  check_exceptionsSSE(status_word.float_exception_flags);
+
+  BX_WRITE_AVX_REGZ(i->nnn(), result, len);
+}
+
+/* Opcode: VEX.66.0F.3A.1D (VEX.W=0) */
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTPS2PH_WpsVpsIb(bxInstruction_c *i)
+{
+  BxPackedAvxRegister op = BX_READ_AVX_REG(i->nnn());
+  BxPackedXmmRegister result;
+
+  result.xmm64u(1) = 0; /* clear upper part of the result for case of VL128 */
+
+  float_status_t status_word;
+  mxcsr_to_softfloat_status_word(status_word, MXCSR);
+  unsigned len = i->getVL();
+
+  Bit8u control = i->Ib();
+
+  // override MXCSR rounding mode with control coming from imm8
+  if ((control & 0x4) == 0)
+    status_word.float_rounding_mode = control & 0x3;
+
+  for (unsigned n=0; n < (4*len); n++) {
+
+    if (MXCSR.get_DAZ())
+      op.avx32u(n) = float32_denormal_to_zero(op.avx32u(n));
+
+    result.xmm16u(n) = float32_to_float16(op.avx32u(n), status_word);
+  }
+
+  check_exceptionsSSE(status_word.float_exception_flags);
+
+  if (i->modC0()) {
+    BX_WRITE_XMM_REG_CLEAR_HIGH(i->rm(), result);
+  }
+  else {
+    bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+
+    if (len == BX_VL256)
+      write_virtual_dqword(i->seg(), eaddr, &result);
+    else
+      write_virtual_qword(i->seg(), eaddr, result.xmm64u(0));
+  }
+}
+
 #endif

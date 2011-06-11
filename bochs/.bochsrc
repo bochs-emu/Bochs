@@ -179,6 +179,10 @@ cpu: count=1, ips=50000000, reset_on_triple_fault=1, ignore_bad_msrs=1, msrs="ms
 #  Select AVX instruction set support.
 #  This option exists only if Bochs compiled with --enable-avx option.
 #
+#  AVX_F16C:
+#  Select AVX float16 convert instructions support.
+#  This option exists only if Bochs compiled with --enable-avx option.
+#
 #  1G_PAGES:
 #  Enable 1G page size support in long mode.
 #  This option exists only if Bochs compiled with x86-64 support.

@@ -37,11 +37,15 @@ these four paragraphs for those parts of this code that are retained.
 #ifndef _SOFTFLOAT_H_
 #define _SOFTFLOAT_H_
 
+#define FLOAT16
 #define FLOATX80
 
 /*----------------------------------------------------------------------------
 | Software IEC/IEEE floating-point types.
 *----------------------------------------------------------------------------*/
+#ifdef FLOAT16
+typedef Bit16u float16;
+#endif
 typedef Bit32u float32;
 typedef Bit64u float64;
 
@@ -220,6 +224,7 @@ int float32_compare_quiet(float32, float32, float_status_t &status);
 float_class_t float32_class(float32);
 int float32_is_signaling_nan(float32);
 int float32_is_nan(float32);
+int float32_is_denormal(float32);
 
 /*----------------------------------------------------------------------------
 | Software IEC/IEEE double-precision conversion routines.
@@ -246,6 +251,17 @@ int float64_compare_quiet(float64, float64, float_status_t &status);
 float_class_t float64_class(float64);
 int float64_is_signaling_nan(float64);
 int float64_is_nan(float64);
+int float64_is_denormal(float64);
+
+#ifdef FLOAT16
+float32 float16_to_float32(float16, float_status_t &status);
+float16 float32_to_float16(float32, float_status_t &status);
+
+float_class_t float16_class(float16);
+int float16_is_signaling_nan(float16);
+int float16_is_nan(float16);
+int float16_is_denormal(float16);
+#endif
 
 #ifdef FLOATX80
 

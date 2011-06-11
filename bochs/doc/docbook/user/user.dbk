@@ -3097,6 +3097,11 @@ This option exists only if Bochs compiled with BX_CPU_LEVEL >= 6.
 Select AVX instruction set support.
 This option exists only if Bochs compiled with --enable-avx option.
 </para>
+<para><command>avx_f16c</command></para>
+<para>
+Select AVX float16 convert instructions support.
+This option exists only if Bochs compiled with --enable-avx option.
+</para>
 <para><command>1g_pages</command></para>
 <para>
 Enable 1G page size support in long mode.

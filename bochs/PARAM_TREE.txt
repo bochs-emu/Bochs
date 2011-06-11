@@ -40,6 +40,7 @@ cpuid
   xsave
   xsaveopt
   avx
+  avx_f16c
   apic
   1g_pages
   pcid

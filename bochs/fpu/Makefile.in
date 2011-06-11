@@ -44,7 +44,7 @@ BX_INCDIRS = -I.. -I$(srcdir)/.. -I../@INSTRUMENT_DIR@ -I$(srcdir)/../@INSTRUMEN
 OBJS = ferr.o fpu.o fpu_arith.o fpu_compare.o fpu_const.o \
                fpu_load_store.o fpu_misc.o fpu_trans.o fpu_tags.o \
                fprem.o fsincos.o f2xm1.o fyl2x.o fpatan.o \
-               softfloat.o softfloatx80.o softfloat-specialize.o \
+               softfloat.o softfloatx80.o softfloat16.o softfloat-specialize.o \
                softfloat-round-pack.o poly.o
 
 all: libfpu.a
@@ -175,4 +175,6 @@ softfloat-round-pack.o: softfloat-round-pack.@CPP_SUFFIX@ softfloat.h ../config.
 softfloat-specialize.o: softfloat-specialize.@CPP_SUFFIX@ softfloat.h ../config.h \
   softfloat-specialize.h softfloat-macros.h
 softfloatx80.o: softfloatx80.@CPP_SUFFIX@ softfloatx80.h softfloat.h ../config.h \
+  softfloat-specialize.h softfloat-round-pack.h softfloat-macros.h
+softfloat16.o: softfloat16.@CPP_SUFFIX@ softfloat.h ../config.h \
   softfloat-specialize.h softfloat-round-pack.h softfloat-macros.h

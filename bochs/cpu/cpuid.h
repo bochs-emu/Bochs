@@ -132,7 +132,7 @@ struct cpuid_function_t {
 // [26:26] XSAVE extensions support
 // [27:27] OSXSAVE support
 // [28:28] AVX extensions support
-// [29:29] F16C - Float16 conversion support
+// [29:29] AVX F16C - Float16 conversion support
 // [30:30] RDRAND instruction
 // [31:31] reserved
 
@@ -165,7 +165,7 @@ struct cpuid_function_t {
 #define BX_CPUID_EXT_XSAVE                   (1 << 26)
 #define BX_CPUID_EXT_OSXSAVE                 (1 << 27)
 #define BX_CPUID_EXT_AVX                     (1 << 28)
-#define BX_CPUID_EXT_F16C                    (1 << 29)
+#define BX_CPUID_EXT_AVX_F16C                (1 << 29)
 #define BX_CPUID_EXT_RDRAND                  (1 << 30)
 #define BX_CPUID_EXT_RESERVED31              (1 << 31)
 

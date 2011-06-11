@@ -50,6 +50,128 @@ typedef struct {
     Bit64u hi, lo;
 } commonNaNT;
 
+#ifdef FLOAT16
+
+/*----------------------------------------------------------------------------
+| The pattern for a default generated half-precision NaN.
+*----------------------------------------------------------------------------*/
+#define float16_default_nan 0xFE00
+
+#define float16_fraction extractFloat16Frac
+#define float16_exp extractFloat16Exp
+#define float16_sign extractFloat16Sign
+
+/*----------------------------------------------------------------------------
+| Returns the fraction bits of the half-precision floating-point value `a'.
+*----------------------------------------------------------------------------*/
+
+BX_CPP_INLINE Bit16u extractFloat16Frac(float16 a)
+{
+    return a & 0x3FF;
+}
+
+/*----------------------------------------------------------------------------
+| Returns the exponent bits of the half-precision floating-point value `a'.
+*----------------------------------------------------------------------------*/
+
+BX_CPP_INLINE Bit16s extractFloat16Exp(float16 a)
+{
+    return (a>>10) & 0x1F;
+}
+
+/*----------------------------------------------------------------------------
+| Returns the sign bit of the half-precision floating-point value `a'.
+*----------------------------------------------------------------------------*/
+
+BX_CPP_INLINE int extractFloat16Sign(float16 a)
+{
+    return a>>15;
+}
+
+/*----------------------------------------------------------------------------
+| Packs the sign `zSign', exponent `zExp', and significand `zSig' into a
+| single-precision floating-point value, returning the result.  After being
+| shifted into the proper positions, the three fields are simply added
+| together to form the result.  This means that any integer portion of `zSig'
+| will be added into the exponent.  Since a properly normalized significand
+| will have an integer portion equal to 1, the `zExp' input should be 1 less
+| than the desired result exponent whenever `zSig' is a complete, normalized
+| significand.
+*----------------------------------------------------------------------------*/
+
+BX_CPP_INLINE float16 packFloat16(int zSign, int zExp, Bit16u zSig)
+{
+    return (((Bit16u) zSign)<<15) + (((Bit16u) zExp)<<10) + zSig;
+}
+
+/*----------------------------------------------------------------------------
+| Returns 1 if the half-precision floating-point value `a' is a NaN;
+| otherwise returns 0.
+*----------------------------------------------------------------------------*/
+
+BX_CPP_INLINE int float16_is_nan(float16 a)
+{
+    return (0xF800 < (Bit16u) (a<<1));
+}
+
+/*----------------------------------------------------------------------------
+| Returns 1 if the half-precision floating-point value `a' is a signaling
+| NaN; otherwise returns 0.
+*----------------------------------------------------------------------------*/
+
+BX_CPP_INLINE int float16_is_signaling_nan(float16 a)
+{
+    return (((a>>9) & 0x3F) == 0x3E) && (a & 0x1FF);
+}
+
+/*----------------------------------------------------------------------------
+| Returns 1 if the half-precision floating-point value `a' is denormal;
+| otherwise returns 0.
+*----------------------------------------------------------------------------*/
+
+BX_CPP_INLINE int float16_is_denormal(float16 a)
+{
+   return (extractFloat16Exp(a) == 0) && (extractFloat16Frac(a) != 0);
+}
+
+/*----------------------------------------------------------------------------
+| Convert float16 denormals to zero.
+*----------------------------------------------------------------------------*/
+
+BX_CPP_INLINE float16 float16_denormal_to_zero(float16 a)
+{
+  if (float16_is_denormal(a)) a &= 0x8000;
+  return a;
+}
+
+/*----------------------------------------------------------------------------
+| Returns the result of converting the half-precision floating-point NaN
+| `a' to the canonical NaN format. If `a' is a signaling NaN, the invalid
+| exception is raised.
+*----------------------------------------------------------------------------*/
+
+BX_CPP_INLINE commonNaNT float16ToCommonNaN(float16 a, float_status_t &status)
+{
+    commonNaNT z;
+    if (float16_is_signaling_nan(a)) float_raise(status, float_flag_invalid);
+    z.sign = a>>15;
+    z.lo = 0;
+    z.hi = ((Bit64u) a)<<54;
+    return z;
+}
+
+/*----------------------------------------------------------------------------
+| Returns the result of converting the canonical NaN `a' to the half-
+| precision floating-point format.
+*----------------------------------------------------------------------------*/
+
+BX_CPP_INLINE float16 commonNaNToFloat16(commonNaNT a)
+{
+    return (((Bit16u) a.sign)<<15) | 0x7E00 | (Bit16u)(a.hi>>54);
+}
+
+#endif
+
 /*----------------------------------------------------------------------------
 | The pattern for a default generated single-precision NaN.
 *----------------------------------------------------------------------------*/
