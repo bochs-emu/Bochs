@@ -638,6 +638,9 @@ static BOOL CALLBACK MainMenuDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM 
           }
           break;
         case IDOK:
+          if (runtime) {
+            SIM->update_runtime_options();
+          }
           EndDialog(hDlg, 1);
           break;
         case IDCANCEL:

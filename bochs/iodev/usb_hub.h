@@ -38,7 +38,7 @@ public:
   virtual int handle_data(USBPacket *p);
   virtual void register_state_specific(bx_list_c *parent);
   virtual void after_restore_state();
-  virtual void timer();
+  virtual void runtime_config();
 
 private:
   struct {

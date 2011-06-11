@@ -164,6 +164,9 @@ void bx_usb_ohci_c::init(void)
       DEV_register_timer(this, iolight_timer_handler, 5000, 0,0, "OHCI i/o light");
   }
   BX_OHCI_THIS hub.iolight_counter = 0;
+
+  // register handler for correct device connect handling after runtime config
+  SIM->register_runtime_config_handler(BX_OHCI_THIS_PTR, runtime_config_handler);
   BX_OHCI_THIS hub.device_change = 0;
 
   BX_INFO(("USB OHCI initialized"));
@@ -1002,8 +1005,6 @@ void bx_usb_ohci_c::usb_frame_timer(void)
   struct OHCI_ED cur_ed;
   Bit32u address, ed_address;
   Bit16u zero = 0;
-  int i;
-  char pname[6];
 
   if (BX_OHCI_THIS hub.op_regs.HcControl.hcfs == 2) {
     // set remaining to the interval amount.
@@ -1105,19 +1106,6 @@ do_iso_eds:
     }
 
   }  // end run schedule
-
-  for (i = 0; i < BX_N_USB_OHCI_PORTS; i++) {
-    // forward timer tick
-    if (BX_OHCI_THIS hub.usb_port[i].device != NULL) {
-      BX_OHCI_THIS hub.usb_port[i].device->timer();
-    }
-    // device change support
-    if ((BX_OHCI_THIS hub.device_change & (1 << i)) != 0) {
-      sprintf(pname, "port%d", i + 1);
-      init_device(i, (bx_list_c*)SIM->get_param(pname, SIM->get_param(BXPN_USB_OHCI)));
-      BX_OHCI_THIS hub.device_change &= ~(1 << i);
-    }
-  }
 }
 
 void bx_usb_ohci_c::process_ed(struct OHCI_ED *ed, const Bit32u ed_address)
@@ -1363,6 +1351,32 @@ void bx_usb_ohci_c::iolight_timer()
   }
 }
 
+void bx_usb_ohci_c::runtime_config_handler(void *this_ptr)
+{
+  bx_usb_ohci_c *class_ptr = (bx_usb_ohci_c *) this_ptr;
+  class_ptr->runtime_config();
+}
+
+void bx_usb_ohci_c::runtime_config(void)
+{
+  int i;
+  char pname[6];
+
+  for (i = 0; i < BX_N_USB_OHCI_PORTS; i++) {
+    // device change support
+    if ((BX_OHCI_THIS hub.device_change & (1 << i)) != 0) {
+      BX_INFO(("USB port #%d: device connect", i+1));
+      sprintf(pname, "port%d", i + 1);
+      init_device(i, (bx_list_c*)SIM->get_param(pname, SIM->get_param(BXPN_USB_OHCI)));
+      BX_OHCI_THIS hub.device_change &= ~(1 << i);
+    }
+    // forward to connected device
+    if (BX_OHCI_THIS hub.usb_port[i].device != NULL) {
+      BX_OHCI_THIS hub.usb_port[i].device->runtime_config();
+    }
+  }
+}
+
 // pci configuration space read callback handler
 Bit32u bx_usb_ohci_c::pci_read_handler(Bit8u address, unsigned io_len)
 {
@@ -1486,8 +1500,8 @@ const char *bx_usb_ohci_c::usb_param_handler(bx_param_string_c *param, int set,
     portnum = atoi((param->get_parent())->get_name()+4) - 1;
     bx_bool empty = ((strlen(val) == 0) || (!strcmp(val, "none")));
     if ((portnum >= 0) && (portnum < BX_N_USB_OHCI_PORTS)) {
-      BX_INFO(("USB port #%d experimental device change", portnum+1));
       if (empty && BX_OHCI_THIS hub.usb_port[portnum].HcRhPortStatus.ccs) {
+        BX_INFO(("USB port #%d: device disconnect", portnum+1));
         if (BX_OHCI_THIS hub.usb_port[portnum].device != NULL) {
           type = BX_OHCI_THIS hub.usb_port[portnum].device->get_type();
         }

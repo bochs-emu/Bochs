@@ -228,6 +228,8 @@ private:
   static void iolight_timer_handler(void *);
   void iolight_timer(void);
 
+  static void runtime_config_handler(void *);
+  void runtime_config(void);
 };
 
 #endif

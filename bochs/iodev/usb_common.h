@@ -154,7 +154,7 @@ public:
   virtual void after_restore_state() {}
   virtual void cancel_packet(USBPacket *p) {}
   virtual bx_bool set_option(const char *option) {return 0;}
-  virtual void timer() {}
+  virtual void runtime_config() {}
 
   bx_bool get_connected() {return d.connected;}
   usbdev_type get_type() {return d.type;}

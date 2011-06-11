@@ -625,21 +625,23 @@ void usb_hub_device_c::usb_set_connect_status(Bit8u port, int type, bx_bool conn
   }
 }
 
-void usb_hub_device_c::timer()
+void usb_hub_device_c::runtime_config()
 {
-  int i;
+  int i, hubnum;
   char pname[6];
 
   for (i = 0; i < hub.n_ports; i++) {
-    // forward timer tick
-    if (hub.usb_port[i].device != NULL) {
-      hub.usb_port[i].device->timer();
-    }
     // device change support
     if ((hub.device_change & (1 << i)) != 0) {
+      hubnum = atoi(hub.config->get_name()+6);
+      BX_INFO(("USB hub #%d, port #%d: device connect", hubnum, i+1));
       sprintf(pname, "port%d", i + 1);
       init_device(i, (bx_list_c*)SIM->get_param(pname, hub.config));
       hub.device_change &= ~(1 << i);
+    }
+    // forward to connected device
+    if (hub.usb_port[i].device != NULL) {
+      hub.usb_port[i].device->runtime_config();
     }
   }
 }
@@ -664,8 +666,8 @@ const char *usb_hub_device_c::hub_param_handler(bx_param_string_c *param, int se
       portnum = atoi(port->get_name()+4) - 1;
       bx_bool empty = ((strlen(val) == 0) || (!strcmp(val, "none")));
       if ((portnum >= 0) && (portnum < hub->hub.n_ports)) {
-        BX_INFO(("USB hub #%d, port #%d experimental device change", hubnum, portnum+1));
         if (empty && (hub->hub.usb_port[portnum].PortStatus & PORT_STAT_CONNECTION)) {
+          BX_INFO(("USB hub #%d, port #%d: device disconnect", hubnum, portnum+1));
           if (hub->hub.usb_port[portnum].device != NULL) {
             type = hub->hub.usb_port[portnum].device->get_type();
           }

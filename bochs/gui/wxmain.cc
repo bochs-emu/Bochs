@@ -1053,6 +1053,7 @@ void MyFrame::OnPauseResumeSim(wxCommandEvent& WXUNUSED(event))
   wxCriticalSectionLocker lock(sim_thread_lock);
   if (sim_thread) {
     if (sim_thread->IsPaused()) {
+      SIM->update_runtime_options();
       simStatusChanged(Resume);
       sim_thread->Resume();
     } else {

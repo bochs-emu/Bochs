@@ -45,6 +45,12 @@ bx_list_c *root_param = NULL;
 // bx_keyboard.s.internal_buffer[4] (or whatever) directly. -Bryce
 //
 
+typedef struct _rt_conf_entry_t {
+  void *device;
+  rt_conf_handler_t handler;
+  struct _rt_conf_entry_t *next;
+} rt_conf_entry_t;
+
 typedef struct _user_option_t {
   const char *name;
   user_option_parser_t parser;
@@ -58,6 +64,7 @@ class bx_real_sim_c : public bx_simulator_interface_c {
   const char *registered_ci_name;
   config_interface_callback_t ci_callback;
   void *ci_callback_data;
+  rt_conf_entry_t *rt_conf_entries;
   user_option_t *user_options;
   int init_done;
   int enabled;
@@ -148,6 +155,8 @@ public:
     void *userdata);
   virtual int configuration_interface(const char* name, ci_command_t command);
   virtual int begin_simulation(int argc, char *argv[]);
+  virtual bx_bool register_runtime_config_handler(void *dev, rt_conf_handler_t handler);
+  virtual void update_runtime_options();
   virtual void set_sim_thread_func(is_sim_thread_func_t func) {}
   virtual bx_bool is_sim_thread();
   virtual void set_debug_gui(bx_bool val) { wx_debug_gui = val; }
@@ -317,6 +326,7 @@ bx_real_sim_c::bx_real_sim_c()
   quit_context = NULL;
   exit_code = 0;
   param_id = BXP_NEW_PARAM_ID;
+  rt_conf_entries = NULL;
   user_options = NULL;
 }
 
@@ -788,6 +798,43 @@ int bx_real_sim_c::configuration_interface(const char *ignore, ci_command_t comm
 int bx_real_sim_c::begin_simulation(int argc, char *argv[])
 {
   return bx_begin_simulation(argc, argv);
+}
+
+bx_bool bx_real_sim_c::register_runtime_config_handler(void *dev, rt_conf_handler_t handler)
+{
+  rt_conf_entry_t *rt_conf_entry;
+
+  rt_conf_entry = (rt_conf_entry_t *)malloc(sizeof(rt_conf_entry_t));
+  if (rt_conf_entry == NULL) {
+    BX_PANIC(("can't allocate rt_conf_entry_t"));
+    return 0;
+  }
+
+  rt_conf_entry->device = dev;
+  rt_conf_entry->handler = handler;
+  rt_conf_entry->next = NULL;
+
+  if (rt_conf_entries == NULL) {
+    rt_conf_entries = rt_conf_entry;
+  } else {
+    rt_conf_entry_t *temp = rt_conf_entries;
+
+    while (temp->next) {
+      temp = temp->next;
+    }
+    temp->next = rt_conf_entry;
+  }
+  return 1;
+}
+
+void bx_real_sim_c::update_runtime_options()
+{
+  rt_conf_entry_t *temp = rt_conf_entries;
+
+  while (temp != NULL) {
+    temp->handler(temp->device);
+    temp = temp->next;
+  }
 }
 
 bx_bool bx_real_sim_c::is_sim_thread()
