@@ -264,7 +264,7 @@ public:
 #if BX_SUPPORT_AVX
     return metaInfo.ia_opcode >> 12;
 #else
-    return BX_NO_VL;
+    return 0;
 #endif
   }
   BX_CPP_INLINE void setVL(unsigned value) {
