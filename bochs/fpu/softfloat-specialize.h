@@ -123,13 +123,23 @@ BX_CPP_INLINE int float32_is_signaling_nan(float32 a)
 }
 
 /*----------------------------------------------------------------------------
-| Convert float32 denormals to zero
+| Returns 1 if the single-precision floating-point value `a' is denormal;
+| otherwise returns 0.
 *----------------------------------------------------------------------------*/
 
-BX_CPP_INLINE float32 float32_denormal_to_zero(float32 op)
+BX_CPP_INLINE int float32_is_denormal(float32 a)
 {
-  if (float32_class(op) == float_denormal) op &= ((Bit32u)(1) << 31);
-  return op;
+   return (extractFloat32Exp(a) == 0) && (extractFloat32Frac(a) != 0);
+}
+
+/*----------------------------------------------------------------------------
+| Convert float32 denormals to zero.
+*----------------------------------------------------------------------------*/
+
+BX_CPP_INLINE float32 float32_denormal_to_zero(float32 a)
+{
+  if (float32_is_denormal(a)) a &= 0x80000000;
+  return a;
 }
 
 /*----------------------------------------------------------------------------
@@ -252,13 +262,23 @@ BX_CPP_INLINE int float64_is_signaling_nan(float64 a)
 }
 
 /*----------------------------------------------------------------------------
-| Convert float64 denormals to zero
+| Returns 1 if the double-precision floating-point value `a' is denormal;
+| otherwise returns 0.
 *----------------------------------------------------------------------------*/
 
-BX_CPP_INLINE float64 float64_denormal_to_zero(float64 op)
+BX_CPP_INLINE int float64_is_denormal(float64 a)
 {
-  if (float64_class(op) == float_denormal) op &= ((Bit64u)(1) << 63);
-  return op;
+   return (extractFloat64Exp(a) == 0) && (extractFloat64Frac(a) != 0);
+}
+
+/*----------------------------------------------------------------------------
+| Convert float64 denormals to zero.
+*----------------------------------------------------------------------------*/
+
+BX_CPP_INLINE float64 float64_denormal_to_zero(float64 a)
+{
+  if (float64_is_denormal(a)) a &= ((Bit64u)(1) << 63);
+  return a;
 }
 
 /*----------------------------------------------------------------------------
