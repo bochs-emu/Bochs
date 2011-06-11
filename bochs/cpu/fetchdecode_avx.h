@@ -678,7 +678,7 @@ static const BxOpcodeInfo_t BxOpcodeTableAVX[256*3] = {
   /* 10 */ { 0, BX_IA_ERROR },
   /* 11 */ { 0, BX_IA_ERROR },
   /* 12 */ { 0, BX_IA_ERROR },
-  /* 13 */ { BxPrefixSSE66 | BxVexW0 | BxImmediate_Ib, BX_IA_VCVTPH2PS_VpsWps },
+  /* 13 */ { BxPrefixSSE66 | BxVexW0, BX_IA_VCVTPH2PS_VpsWps },
   /* 14 */ { 0, BX_IA_ERROR },
   /* 15 */ { 0, BX_IA_ERROR },
   /* 16 */ { 0, BX_IA_ERROR },
