@@ -17,6 +17,7 @@
   --enable-3dnow \
   --enable-monitor-mwait \
   --enable-vmx \
+  --enable-avx \
   --enable-x86-debugger \
   --enable-a20-pin \
   --enable-instrumentation=instrument/example1 \
