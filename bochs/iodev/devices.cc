@@ -278,9 +278,9 @@ void bx_devices_c::init(BX_MEM_C *newmem)
     }
 #endif
 #if BX_SUPPORT_PCIPNIC
-  if (SIM->get_param_bool(BXPN_PNIC_ENABLED)->get()) {
-    PLUG_load_plugin(pcipnic, PLUGTYPE_OPTIONAL);
-  }
+    if (SIM->get_param_bool(BXPN_PNIC_ENABLED)->get()) {
+      PLUG_load_plugin(pcipnic, PLUGTYPE_OPTIONAL);
+    }
 #endif
   }
 #endif
@@ -347,8 +347,8 @@ void bx_devices_c::init(BX_MEM_C *newmem)
                             "Port 92h System Control", 1);
 
   // misc. CMOS
-  Bit32u memory_in_k = (Bit32u)mem->get_memory_len() / 1024;
-  Bit32u extended_memory_in_k = memory_in_k > 1024 ? (memory_in_k - 1024) : 0;
+  Bit64u memory_in_k = mem->get_memory_len() / 1024;
+  Bit64u extended_memory_in_k = memory_in_k > 1024 ? (memory_in_k - 1024) : 0;
   if (extended_memory_in_k > 0xfc00) extended_memory_in_k = 0xfc00;
 
   DEV_cmos_set_reg(0x15, (Bit8u) BASE_MEMORY_IN_K);
@@ -358,12 +358,20 @@ void bx_devices_c::init(BX_MEM_C *newmem)
   DEV_cmos_set_reg(0x30, (Bit8u) (extended_memory_in_k & 0xff));
   DEV_cmos_set_reg(0x31, (Bit8u) ((extended_memory_in_k >> 8) & 0xff));
 
-  Bit32u extended_memory_in_64k = memory_in_k > 16384 ? (memory_in_k - 16384) / 64 : 0;
+  Bit64u extended_memory_in_64k = memory_in_k > 16384 ? (memory_in_k - 16384) / 64 : 0;
   // Limit to 3 GB - 16 MB. PCI Memory Address Space starts at 3 GB.
   if (extended_memory_in_64k > 0xbf00) extended_memory_in_64k = 0xbf00;
 
   DEV_cmos_set_reg(0x34, (Bit8u) (extended_memory_in_64k & 0xff));
   DEV_cmos_set_reg(0x35, (Bit8u) ((extended_memory_in_64k >> 8) & 0xff));
+
+  Bit64u memory_above_4gb = (mem->get_memory_len() > BX_CONST64(0x100000000)) ?
+                            (mem->get_memory_len() - BX_CONST64(0x100000000)) : 0;
+  if (memory_above_4gb) {
+    DEV_cmos_set_reg(0x5b, memory_above_4gb >> 16);
+    DEV_cmos_set_reg(0x5c, memory_above_4gb >> 24);
+    DEV_cmos_set_reg(0x5d, memory_above_4gb >> 32);
+  }
 
   if (timer_handle != BX_NULL_TIMER_HANDLE) {
     timer_handle = bx_pc_system.register_timer(this, timer_handler,

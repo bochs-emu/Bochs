@@ -9,10 +9,10 @@ Bochs repository moved to the SVN version control !
     using .bochsrc CPUID option.
   - Added support for AVX instruction set emulation, to enable configure with
         --enable-avx option.
-    When compiled in, AVX still could be disabled using .bochsrc CPUID option.
+    When compiled in, AVX still has to be enabled using .bochsrc CPUID option.
   - Added emulation of AVX float16 convert instructions, the feature can be
     enabled using .bochsrc CPUID option.
-  - Updated/Fixed instrumentation callbacks.
+  - Redefined/Updated/Fixed instrumentation callbacks.
   - Bugfixes for CPU emulation correctness and stability.
 
 - Configure and compile
@@ -54,6 +54,9 @@ Bochs repository moved to the SVN version control !
     - fixed DAC palette in 8 bpp VBE and Cirrus modes (using the same palette
       as VGA mode 0x13)
     - VBE: added HDTV resolutions (patch by Tristan Schmelcher)
+
+  - ROM BIOS
+    - Report memory above 4GB to BIOS (patch by Sebastian Herbszt)
 
 - GUI and display libraries
   - vga update interval now uses host timing if the realtime sychronization is
