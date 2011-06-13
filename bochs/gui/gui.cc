@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2009  The Bochs Project
+//  Copyright (C) 2002-2011  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -144,9 +144,9 @@ void bx_gui_c::init(int argc, char **argv, unsigned tilewidth, unsigned tileheig
                           BX_FLOPPYB_BMAP_X, BX_FLOPPYB_BMAP_Y);
   BX_GUI_THIS floppyB_eject_bmap_id = create_bitmap(bx_floppyb_eject_bmap,
                           BX_FLOPPYB_BMAP_X, BX_FLOPPYB_BMAP_Y);
-  BX_GUI_THIS cdromD_bmap_id = create_bitmap(bx_cdromd_bmap,
+  BX_GUI_THIS cdrom1_bmap_id = create_bitmap(bx_cdromd_bmap,
                           BX_CDROMD_BMAP_X, BX_CDROMD_BMAP_Y);
-  BX_GUI_THIS cdromD_eject_bmap_id = create_bitmap(bx_cdromd_eject_bmap,
+  BX_GUI_THIS cdrom1_eject_bmap_id = create_bitmap(bx_cdromd_eject_bmap,
                           BX_CDROMD_BMAP_X, BX_CDROMD_BMAP_Y);
   BX_GUI_THIS mouse_bmap_id = create_bitmap(bx_mouse_bmap,
                           BX_MOUSE_BMAP_X, BX_MOUSE_BMAP_Y);
@@ -189,9 +189,9 @@ void bx_gui_c::init(int argc, char **argv, unsigned tilewidth, unsigned tileheig
   // CDROM,
   // the harddrive object is not initialised yet,
   // so we just set the bitmap to ejected for now
-  BX_GUI_THIS cdromD_hbar_id = headerbar_bitmap(BX_GUI_THIS cdromD_eject_bmap_id,
-                          BX_GRAVITY_LEFT, cdromD_handler);
-  BX_GUI_THIS set_tooltip(BX_GUI_THIS cdromD_hbar_id, "Change first CDROM media");
+  BX_GUI_THIS cdrom1_hbar_id = headerbar_bitmap(BX_GUI_THIS cdrom1_eject_bmap_id,
+                          BX_GRAVITY_LEFT, cdrom1_handler);
+  BX_GUI_THIS set_tooltip(BX_GUI_THIS cdrom1_hbar_id, "Change first CDROM media");
 
   // Mouse button
   if (SIM->get_param_bool(BXPN_MOUSE_ENABLED)->get())
@@ -260,7 +260,7 @@ void bx_gui_c::update_drive_status_buttons(void)
   BX_GUI_THIS floppyA_status = SIM->get_param_bool(BXPN_FLOPPYA_STATUS)->get();
   BX_GUI_THIS floppyB_status = SIM->get_param_bool(BXPN_FLOPPYB_STATUS)->get();
   Bit32u handle = DEV_hd_get_first_cd_handle();
-  BX_GUI_THIS cdromD_status = DEV_hd_get_cd_media_status(handle);
+  BX_GUI_THIS cdrom1_status = DEV_hd_get_cd_media_status(handle);
   if (BX_GUI_THIS floppyA_status)
     replace_bitmap(BX_GUI_THIS floppyA_hbar_id, BX_GUI_THIS floppyA_bmap_id);
   else {
@@ -283,10 +283,10 @@ void bx_gui_c::update_drive_status_buttons(void)
 #endif
     replace_bitmap(BX_GUI_THIS floppyB_hbar_id, BX_GUI_THIS floppyB_eject_bmap_id);
   }
-  if (BX_GUI_THIS cdromD_status)
-    replace_bitmap(BX_GUI_THIS cdromD_hbar_id, BX_GUI_THIS cdromD_bmap_id);
+  if (BX_GUI_THIS cdrom1_status)
+    replace_bitmap(BX_GUI_THIS cdrom1_hbar_id, BX_GUI_THIS cdrom1_bmap_id);
   else {
-    replace_bitmap(BX_GUI_THIS cdromD_hbar_id, BX_GUI_THIS cdromD_eject_bmap_id);
+    replace_bitmap(BX_GUI_THIS cdrom1_hbar_id, BX_GUI_THIS cdrom1_eject_bmap_id);
   }
 }
 
@@ -295,8 +295,8 @@ void bx_gui_c::floppyA_handler(void)
   if (SIM->get_param_enum(BXPN_FLOPPYA_DEVTYPE)->get() == BX_FDD_NONE)
     return; // no primary floppy device present
   if (BX_GUI_THIS dialog_caps & BX_GUI_DLG_FLOPPY) {
-    // instead of just toggling the status, call win32dialog to bring up
-    // a dialog asking what disk image you want to switch to.
+    // instead of just toggling the status, bring up a dialog asking what disk
+    // image you want to switch to.
     int ret = SIM->ask_param(BXPN_FLOPPYA_PATH);
     if (ret > 0) {
       BX_GUI_THIS update_drive_status_buttons();
@@ -313,8 +313,8 @@ void bx_gui_c::floppyB_handler(void)
   if (SIM->get_param_enum(BXPN_FLOPPYB_DEVTYPE)->get() == BX_FDD_NONE)
     return; // no secondary floppy device present
   if (BX_GUI_THIS dialog_caps & BX_GUI_DLG_FLOPPY) {
-    // instead of just toggling the status, call win32dialog to bring up
-    // a dialog asking what disk image you want to switch to.
+    // instead of just toggling the status, bring up a dialog asking what disk
+    // image you want to switch to.
     int ret = SIM->ask_param(BXPN_FLOPPYB_PATH);
     if (ret > 0) {
       BX_GUI_THIS update_drive_status_buttons();
@@ -326,14 +326,14 @@ void bx_gui_c::floppyB_handler(void)
   BX_GUI_THIS update_drive_status_buttons();
 }
 
-void bx_gui_c::cdromD_handler(void)
+void bx_gui_c::cdrom1_handler(void)
 {
   Bit32u handle = DEV_hd_get_first_cd_handle();
   if (BX_GUI_THIS dialog_caps & BX_GUI_DLG_CDROM) {
-    // instead of just toggling the status, call win32dialog to bring up
-    // a dialog asking what disk image you want to switch to.
+    // instead of just toggling the status, bring up a dialog asking what disk
+    // image you want to switch to.
     // This code handles the first cdrom only. The cdrom drives #2, #3 and
-    // #4 are handled in the win32 runtime dialog.
+    // #4 are handled in the runtime configuaration.
     bx_param_c *cdrom = SIM->get_first_cdrom();
     if (cdrom == NULL)
       return;  // no cdrom found
@@ -343,8 +343,8 @@ void bx_gui_c::cdromD_handler(void)
     }
     return;
   }
-  BX_GUI_THIS cdromD_status =
-    DEV_hd_set_cd_media_status(handle, !BX_GUI_THIS cdromD_status);
+  BX_GUI_THIS cdrom1_status =
+    DEV_hd_set_cd_media_status(handle, !BX_GUI_THIS cdrom1_status);
   BX_GUI_THIS update_drive_status_buttons();
 }
 

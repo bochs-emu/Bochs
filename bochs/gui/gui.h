@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2009  The Bochs Project
+//  Copyright (C) 2002-2011  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -155,7 +155,7 @@ protected:
   static Bit32s make_text_snapshot (char **snapshot, Bit32u *length);
   static void floppyA_handler(void);
   static void floppyB_handler(void);
-  static void cdromD_handler(void);
+  static void cdrom1_handler(void);
   static void reset_handler(void);
   static void power_handler(void);
   static void copy_handler(void);
@@ -168,10 +168,10 @@ protected:
 
   bx_bool floppyA_status;
   bx_bool floppyB_status;
-  bx_bool cdromD_status;
+  bx_bool cdrom1_status;
   unsigned floppyA_bmap_id, floppyA_eject_bmap_id, floppyA_hbar_id;
   unsigned floppyB_bmap_id, floppyB_eject_bmap_id, floppyB_hbar_id;
-  unsigned cdromD_bmap_id, cdromD_eject_bmap_id, cdromD_hbar_id;
+  unsigned cdrom1_bmap_id, cdrom1_eject_bmap_id, cdrom1_hbar_id;
   unsigned power_bmap_id,    power_hbar_id;
   unsigned reset_bmap_id,    reset_hbar_id;
   unsigned copy_bmap_id, copy_hbar_id;

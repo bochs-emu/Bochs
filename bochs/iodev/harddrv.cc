@@ -357,7 +357,9 @@ void bx_hard_drive_c::init(void)
         cdrom_rt->add(base);
         base->set_options(base->SERIES_ASK | base->USE_BOX_TITLE);
         base->set_runtime_param(1);
+        SIM->get_param_string("path", base)->set_handler(cdrom_path_handler);
         SIM->get_param("path", base)->set_runtime_param(1);
+        SIM->get_param_bool("status", base)->set_handler(cdrom_status_handler);
         SIM->get_param("status", base)->set_runtime_param(1);
         BX_DEBUG(("CDROM on target %d/%d",channel,device));
         BX_HD_THIS channels[channel].drives[device].device_type = IDE_CDROM;
@@ -393,7 +395,7 @@ void bx_hard_drive_c::init(void)
           BX_PANIC(("interrupt reason bit field error"));
         BX_CONTROLLER(channel,device).sector_count = 0;
 
-	// allocate low level driver
+        // allocate low level driver
 #ifdef LOWLEVEL_CDROM
         BX_HD_THIS channels[channel].drives[device].cdrom.cd = new LOWLEVEL_CDROM(SIM->get_param_string("path", base)->getptr());
         BX_INFO(("CD on ata%d-%d: '%s'",channel, device, SIM->get_param_string("path", base)->getptr()));
@@ -3103,16 +3105,6 @@ void bx_hard_drive_c::command_aborted(Bit8u channel, unsigned value)
   raise_interrupt(channel);
 }
 
-Bit32u bx_hard_drive_c::get_device_handle(Bit8u channel, Bit8u device)
-{
-  BX_DEBUG(("get_device_handle %d %d",channel, device));
-  if ((channel < BX_MAX_ATA_CHANNEL) && (device < 2)) {
-    return ((channel*2) + device);
-  }
-
-  return BX_MAX_ATA_CHANNEL*2;
-}
-
 Bit32u bx_hard_drive_c::get_first_cd_handle(void)
 {
   for (Bit8u channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
@@ -3122,7 +3114,7 @@ Bit32u bx_hard_drive_c::get_first_cd_handle(void)
   return BX_MAX_ATA_CHANNEL*2;
 }
 
-unsigned bx_hard_drive_c::get_cd_media_status(Bit32u handle)
+bx_bool bx_hard_drive_c::get_cd_media_status(Bit32u handle)
 {
   if (handle >= BX_MAX_ATA_CHANNEL*2) return 0;
 
@@ -3131,7 +3123,7 @@ unsigned bx_hard_drive_c::get_cd_media_status(Bit32u handle)
   return BX_HD_THIS channels[channel].drives[device].cdrom.ready;
 }
 
-unsigned bx_hard_drive_c::set_cd_media_status(Bit32u handle, unsigned status)
+bx_bool bx_hard_drive_c::set_cd_media_status(Bit32u handle, bx_bool status)
 {
   char ata_name[20];
 
@@ -3402,4 +3394,76 @@ error_recovery_t::error_recovery_t()
   data[5] = 0x00;
   data[6] = 0x00;
   data[7] = 0x00;
+}
+
+// cdrom runtime parameter handling
+
+// helper function
+int get_device_handle_from_param(bx_param_c *param)
+{
+  char pname[BX_PATHNAME_LEN];
+  int handle;
+
+  bx_list_c *base = (bx_list_c*) param->get_parent();
+  base->get_param_path(pname, BX_PATHNAME_LEN);
+  if (!strncmp(pname, "ata.", 4)) {
+    handle = (pname[4] - '0') << 1;
+    if (!strcmp(base->get_name(), "slave")) {
+      handle |= 1;
+    }
+    return handle;
+  } else {
+    return -1;
+  }
+}
+
+Bit64s bx_hard_drive_c::cdrom_status_handler(bx_param_c *param, int set, Bit64s val)
+{
+  int handle;
+
+  if (set) {
+    handle = get_device_handle_from_param(param);
+    if (handle >= 0) {
+      if (!strcmp(param->get_name(), "status")) {
+        DEV_hd_set_cd_media_status((Bit32u)handle, (bx_bool)val);
+        bx_gui->update_drive_status_buttons();
+      }
+    } else {
+      BX_PANIC(("cdrom_status_handler called with unexpected parameter '%s'", param->get_name()));
+    }
+  }
+  return val;
+}
+
+const char *bx_hard_drive_c::cdrom_path_handler(bx_param_string_c *param, int set,
+                                                const char *oldval, const char *val, int maxlen)
+{
+  int handle;
+
+  if (set) {
+    int empty = 0;
+    if ((strlen(val) < 1) || !strcmp ("none", val)) {
+      empty = 1;
+      val = "none";
+    }
+    handle = get_device_handle_from_param(param);
+    if (handle >= 0) {
+      if (!strcmp(param->get_name(), "path")) {
+        if (empty) {
+          DEV_hd_set_cd_media_status((Bit32u)handle, 0);
+          bx_gui->update_drive_status_buttons();
+        } else {
+          bx_list_c *base = (bx_list_c*) param->get_parent();
+          if (SIM->get_param_num("status", base)->get() == 1) {
+            // tell the device model that we removed, then inserted the cd
+            DEV_hd_set_cd_media_status((Bit32u)handle, 0);
+            DEV_hd_set_cd_media_status((Bit32u)handle, 1);
+          }
+        }
+      }
+    } else {
+      BX_PANIC(("cdrom_path_handler called with unexpected parameter '%s'", param->get_name()));
+    }
+  }
+  return val;
 }

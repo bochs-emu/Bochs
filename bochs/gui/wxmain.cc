@@ -352,7 +352,7 @@ BEGIN_EVENT_TABLE(MyFrame, wxFrame)
   // toolbar events
   EVT_TOOL(ID_Edit_FD_0, MyFrame::OnToolbarClick)
   EVT_TOOL(ID_Edit_FD_1, MyFrame::OnToolbarClick)
-  EVT_TOOL(ID_Edit_Cdrom, MyFrame::OnToolbarClick)
+  EVT_TOOL(ID_Edit_Cdrom1, MyFrame::OnToolbarClick)
   EVT_TOOL(ID_Toolbar_Reset, MyFrame::OnToolbarClick)
   EVT_TOOL(ID_Toolbar_Power, MyFrame::OnToolbarClick)
   EVT_TOOL(ID_Toolbar_SaveRestore, MyFrame::OnToolbarClick)
@@ -518,7 +518,7 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size, 
 
   BX_ADD_TOOL(ID_Edit_FD_0, floppya_xpm, wxT("Change Floppy A"));
   BX_ADD_TOOL(ID_Edit_FD_1, floppyb_xpm, wxT("Change Floppy B"));
-  BX_ADD_TOOL(ID_Edit_Cdrom, cdromd_xpm, wxT("Change CDROM"));
+  BX_ADD_TOOL(ID_Edit_Cdrom1, cdromd_xpm, wxT("Change CDROM"));
   BX_ADD_TOOL(ID_Toolbar_Reset, reset_xpm, wxT("Reset the system"));
   BX_ADD_TOOL(ID_Toolbar_Power, power_xpm, wxT("Turn power on/off"));
   BX_ADD_TOOL(ID_Toolbar_SaveRestore, saverestore_xpm, wxT("Save simulation state"));
@@ -1002,7 +1002,7 @@ void MyFrame::simStatusChanged(StatusChange change, bx_bool popupNotify) {
   value = SIM->get_param_enum(BXPN_FLOPPYB_DEVTYPE)->get();
   menuEdit->Enable(ID_Edit_FD_1, canConfigure || (value != BX_FDD_NONE));
   bxToolBar->EnableTool(ID_Edit_FD_1, canConfigure || (value != BX_FDD_NONE));
-  bxToolBar->EnableTool(ID_Edit_Cdrom, canConfigure || (SIM->get_first_cdrom() != NULL));
+  bxToolBar->EnableTool(ID_Edit_Cdrom1, canConfigure || (SIM->get_first_cdrom() != NULL));
 }
 
 void MyFrame::OnStartSim(wxCommandEvent& event)
@@ -1341,7 +1341,7 @@ void MyFrame::OnToolbarClick(wxCommandEvent& event)
       // floppy config dialog box
       editFloppyConfig(1);
       break;
-    case ID_Edit_Cdrom:
+    case ID_Edit_Cdrom1:
       // cdrom config dialog box (first cd only)
       editFirstCdrom();
       break;

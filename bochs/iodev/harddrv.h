@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2010  The Bochs Project
+//  Copyright (C) 2002-2011  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -168,10 +168,9 @@ public:
   virtual ~bx_hard_drive_c();
   virtual void     init();
   virtual void     reset(unsigned type);
-  virtual Bit32u   get_device_handle(Bit8u channel, Bit8u device);
   virtual Bit32u   get_first_cd_handle(void);
-  virtual unsigned get_cd_media_status(Bit32u handle);
-  virtual unsigned set_cd_media_status(Bit32u handle, unsigned status);
+  virtual bx_bool  get_cd_media_status(Bit32u handle);
+  virtual bx_bool  set_cd_media_status(Bit32u handle, bx_bool status);
 #if BX_SUPPORT_PCI
   virtual bx_bool  bmdma_read_sector(Bit8u channel, Bit8u *buffer, Bit32u *sector_size);
   virtual bx_bool  bmdma_write_sector(Bit8u channel, Bit8u *buffer);
@@ -218,6 +217,10 @@ private:
   BX_HD_SMF bx_bool ide_read_sector(Bit8u channel, Bit8u *buffer, Bit32u buffer_size);
   BX_HD_SMF bx_bool ide_write_sector(Bit8u channel, Bit8u *buffer, Bit32u buffer_size);
   BX_HD_SMF void lba48_transform(Bit8u channel, bx_bool lba48);
+
+  static Bit64s cdrom_status_handler(bx_param_c *param, int set, Bit64s val);
+  static const char* cdrom_path_handler(bx_param_string_c *param, int set,
+                                        const char *oldval, const char *val, int maxlen);
 
   // FIXME:
   // For each ATA channel we should have one controller struct

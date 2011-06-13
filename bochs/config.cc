@@ -64,13 +64,7 @@ static Bit64s bx_param_handler(bx_param_c *param, int set, Bit64s val)
     } else {
       device = 1;
     }
-    if (!strcmp(param->get_name(), "status")) {
-      if ((set) && (SIM->get_init_done())) {
-        Bit32u handle = DEV_hd_get_device_handle(channel, device);
-        DEV_hd_set_cd_media_status(handle, (unsigned)val);
-        bx_gui->update_drive_status_buttons();
-      }
-    } else if (!strcmp(param->get_name(), "type")) {
+    if (!strcmp(param->get_name(), "type")) {
       if (set) {
         switch (val) {
           case BX_ATA_DEVICE_DISK:
@@ -120,67 +114,23 @@ const char *bx_param_string_handler(bx_param_string_c *param, int set,
                                     const char *oldval, const char *val, int maxlen)
 {
   char pname[BX_PATHNAME_LEN];
-  Bit8u channel, device;
 
-  int empty = 0;
-  if ((strlen(val) < 1) || !strcmp ("none", val)) {
-    empty = 1;
-    val = "none";
-  }
-  bx_list_c *base = (bx_list_c*) param->get_parent();
-  base->get_param_path(pname, BX_PATHNAME_LEN);
-  if (!strncmp(pname, "ata.", 4)) {
-    channel = pname[4] - '0';
-    if (!strcmp(base->get_name(), "master")) {
-      device = 0;
-    } else {
-      device = 1;
+  param->get_param_path(pname, BX_PATHNAME_LEN);
+  if (!strcmp(pname, BXPN_SCREENMODE)) {
+    if (set==1) {
+      BX_INFO(("Screen mode changed to %s", val));
     }
-    if (!strcmp(param->get_name(), "path")) {
-      if (set==1) {
-        if (SIM->get_init_done()) {
-          Bit32u handle = DEV_hd_get_device_handle(channel, device);
-          if (empty) {
-            DEV_hd_set_cd_media_status(handle, 0);
-            bx_gui->update_drive_status_buttons();
-          } else {
-            if (!SIM->get_param_num("present", base)->get()) {
-              BX_ERROR(("Cannot add a cdrom drive at runtime"));
-              SIM->get_param_num("present", base)->set(0);
-            }
-            if (SIM->get_param_num("type", base)->get() != BX_ATA_DEVICE_CDROM) {
-              BX_ERROR(("Device is not a cdrom drive"));
-              SIM->get_param_num("present", base)->set(0);
-            }
-          }
-          if (DEV_hd_present() &&
-              (SIM->get_param_num("status", base)->get() == 1) &&
-              (SIM->get_param_num("type", base)->get() == BX_ATA_DEVICE_CDROM)) {
-            // tell the device model that we removed, then inserted the cd
-            DEV_hd_set_cd_media_status(handle, 0);
-            DEV_hd_set_cd_media_status(handle, 1);
-          }
-        }
-      }
-    }
-  } else {
-    param->get_param_path(pname, BX_PATHNAME_LEN);
-    if (!strcmp(pname, BXPN_SCREENMODE)) {
-      if (set==1) {
-        BX_INFO(("Screen mode changed to %s", val));
-      }
 #if BX_PLUGINS
-    } else if (!strncmp(pname, "misc.user_plugin", 16)) {
-      if ((strlen(oldval) > 0) && (strcmp(oldval, "none"))) {
-        PLUG_unload_user_plugin(oldval);
-      }
-      if ((strlen(val) > 0) && (strcmp(val, "none"))) {
-        PLUG_load_user_plugin(val);
-      }
-#endif
-    } else {
-      BX_PANIC(("bx_param_string_handler called with unknown parameter '%s'", pname));
+  } else if (!strncmp(pname, "misc.user_plugin", 16)) {
+    if ((strlen(oldval) > 0) && (strcmp(oldval, "none"))) {
+      PLUG_unload_user_plugin(oldval);
     }
+    if ((strlen(val) > 0) && (strcmp(val, "none"))) {
+      PLUG_load_user_plugin(val);
+    }
+#endif
+  } else {
+    BX_PANIC(("bx_param_string_handler called with unknown parameter '%s'", pname));
   }
   return val;
 }
@@ -1238,8 +1188,6 @@ void bx_init_options()
       type->set_dependent_bitmap(BX_ATA_DEVICE_CDROM, 0x02);
 
       type->set_handler(bx_param_handler);
-      status->set_handler(bx_param_handler);
-      path->set_handler(bx_param_string_handler);
     }
 
     // Enable two ATA interfaces by default, disable the others.

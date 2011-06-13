@@ -974,7 +974,7 @@ void bx_wx_gui_c::handle_events(void)
         switch (event_queue[i].u.toolbar.button) {
           case BX_TOOLBAR_FLOPPYA: floppyA_handler(); break;
           case BX_TOOLBAR_FLOPPYB: floppyB_handler(); break;
-          case BX_TOOLBAR_CDROMD: cdromD_handler(); break;
+          case BX_TOOLBAR_CDROM1: cdrom1_handler(); break;
           case BX_TOOLBAR_RESET: reset_handler(); break;
           case BX_TOOLBAR_POWER: power_handler(); break;
           case BX_TOOLBAR_SAVE_RESTORE: save_restore_handler(); break;

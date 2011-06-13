@@ -39,7 +39,7 @@ enum
   ID_Edit_ATA1,
   ID_Edit_ATA2,
   ID_Edit_ATA3,
-  ID_Edit_Cdrom,  // for toolbar. FIXME: toolbar can't handle >1 cdrom
+  ID_Edit_Cdrom1,  // for toolbar. FIXME: toolbar can't handle >1 cdrom
   ID_Edit_CPU,
   ID_Edit_Memory,
   ID_Edit_Clock_Cmos,
@@ -64,9 +64,6 @@ enum
   ID_Help_About,
   ID_Sim2CI_Event,
   // ids for Bochs toolbar
-  ID_Toolbar_FloppyA,
-  ID_Toolbar_FloppyB,
-  ID_Toolbar_CdromD,
   ID_Toolbar_Reset,
   ID_Toolbar_Power,
   ID_Toolbar_Copy,

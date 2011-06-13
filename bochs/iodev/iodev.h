@@ -126,9 +126,6 @@ public:
   virtual void   reset(unsigned type) {
     STUBFUNC(HD, reset);
   }
-  virtual Bit32u   get_device_handle(Bit8u channel, Bit8u device) {
-    STUBFUNC(HD, get_device_handle); return 0;
-  }
   virtual Bit32u   get_first_cd_handle(void) {
     STUBFUNC(HD, get_first_cd_handle); return 0;
   }

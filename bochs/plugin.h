@@ -163,8 +163,6 @@ extern "C" {
     (bx_devices.pluginHardDrive->virt_write_handler(b, c, d))
 #define DEV_hd_get_first_cd_handle() \
     (bx_devices.pluginHardDrive->get_first_cd_handle())
-#define DEV_hd_get_device_handle(a,b) \
-    (bx_devices.pluginHardDrive->get_device_handle(a,b))
 #define DEV_hd_get_cd_media_status(handle) \
     (bx_devices.pluginHardDrive->get_cd_media_status(handle))
 #define DEV_hd_set_cd_media_status(handle, status) \
