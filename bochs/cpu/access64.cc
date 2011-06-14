@@ -301,7 +301,7 @@ BX_CPU_C::write_virtual_dqword_aligned_64(unsigned s, Bit64u offset, const BxPac
 
 #if BX_SUPPORT_AVX
 
-void BX_CPU_C::write_virtual_vector_64(unsigned s, Bit64u offset, unsigned elements, const BxPackedAvxRegister *data)
+void BX_CPU_C::write_virtual_dword_vector_64(unsigned s, Bit64u offset, unsigned elements, const BxPackedAvxRegister *data)
 {
   BX_ASSERT(elements > 0);
 
@@ -334,14 +334,14 @@ void BX_CPU_C::write_virtual_vector_64(unsigned s, Bit64u offset, unsigned eleme
   }
 
   if (! IsCanonical(laddr) || ! IsCanonical(laddr+len-1)) {
-    BX_ERROR(("write_virtual_vector_64(): canonical failure"));
+    BX_ERROR(("write_virtual_dword_vector_64(): canonical failure"));
     exception(int_number(s), 0);
   }
 
   access_write_linear(laddr, len, CPL, (void *) data);
 }
 
-void BX_CPU_C::write_virtual_vector_aligned_64(unsigned s, Bit64u offset, unsigned elements, const BxPackedAvxRegister *data)
+void BX_CPU_C::write_virtual_dword_vector_aligned_64(unsigned s, Bit64u offset, unsigned elements, const BxPackedAvxRegister *data)
 {
   BX_ASSERT(elements > 0);
 
@@ -374,12 +374,12 @@ void BX_CPU_C::write_virtual_vector_aligned_64(unsigned s, Bit64u offset, unsign
   }
 
   if (laddr & (len-1)) {
-    BX_ERROR(("write_virtual_vector_aligned_64(): #GP misaligned access"));
+    BX_ERROR(("write_virtual_dword_vector_aligned_64(): #GP misaligned access"));
     exception(BX_GP_EXCEPTION, 0);
   }
 
   if (! IsCanonical(laddr) || ! IsCanonical(laddr+len-1)) {
-    BX_ERROR(("write_virtual_vector_aligned_64(): canonical failure"));
+    BX_ERROR(("write_virtual_dword_vector_aligned_64(): canonical failure"));
     exception(int_number(s), 0);
   }
 
@@ -657,7 +657,7 @@ BX_CPU_C::read_virtual_dqword_aligned_64(unsigned s, Bit64u offset, BxPackedXmmR
 
 #if BX_SUPPORT_AVX
 
-void BX_CPU_C::read_virtual_vector_64(unsigned s, Bit64u offset, unsigned elements, BxPackedAvxRegister *data)
+void BX_CPU_C::read_virtual_dword_vector_64(unsigned s, Bit64u offset, unsigned elements, BxPackedAvxRegister *data)
 {
   BX_ASSERT(elements > 0);
 
@@ -688,14 +688,14 @@ void BX_CPU_C::read_virtual_vector_64(unsigned s, Bit64u offset, unsigned elemen
   }
 
   if (! IsCanonical(laddr) || ! IsCanonical(laddr+len-1)) {
-    BX_ERROR(("read_virtual_vector_64(): canonical failure"));
+    BX_ERROR(("read_virtual_dword_vector_64(): canonical failure"));
     exception(int_number(s), 0);
   }
 
   access_read_linear(laddr, len, CPL, BX_READ, (void *) data);
 }
 
-void BX_CPU_C::read_virtual_vector_aligned_64(unsigned s, Bit64u offset, unsigned elements, BxPackedAvxRegister *data)
+void BX_CPU_C::read_virtual_dword_vector_aligned_64(unsigned s, Bit64u offset, unsigned elements, BxPackedAvxRegister *data)
 {
   BX_ASSERT(elements > 0);
 
@@ -726,12 +726,12 @@ void BX_CPU_C::read_virtual_vector_aligned_64(unsigned s, Bit64u offset, unsigne
   }
 
   if (laddr & (len-1)) {
-    BX_ERROR(("read_virtual_vector_aligned_64(): #GP misaligned access"));
+    BX_ERROR(("read_virtual_dword_vector_aligned_64(): #GP misaligned access"));
     exception(BX_GP_EXCEPTION, 0);
   }
 
   if (! IsCanonical(laddr) || ! IsCanonical(laddr+len-1)) {
-    BX_ERROR(("read_virtual_vector_aligned_64(): canonical failure"));
+    BX_ERROR(("read_virtual_dword_vector_aligned_64(): canonical failure"));
     exception(int_number(s), 0);
   }
 

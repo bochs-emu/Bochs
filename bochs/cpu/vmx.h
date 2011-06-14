@@ -126,7 +126,9 @@ enum VMX_vmexit_reason {
    VMX_VMEXIT_VMX_PREEMTION_TIMER_FIRED = 52,
    VMX_VMEXIT_INVVPID = 53,
    VMX_VMEXIT_WBINVD = 54,
-   VMX_VMEXIT_XSETBV = 55
+   VMX_VMEXIT_XSETBV = 55,
+   VMX_VMEXIT_RESERVED56 = 56,
+   VMX_VMEXIT_RDRAND = 57
 };
 
 // VMexit on CR register access
@@ -584,6 +586,7 @@ typedef struct bx_VMCS
 #define VMX_VM_EXEC_CTRL3_WBINVD_VMEXIT             (1 << 6)
 #define VMX_VM_EXEC_CTRL3_UNRESTRICTED_GUEST        (1 << 7)
 #define VMX_VM_EXEC_CTRL3_PAUSE_LOOP_VMEXIT         (1 << 10)
+#define VMX_VM_EXEC_CTRL3_RDRAND_VMEXIT             (1 << 11)
 
 #ifdef BX_VMX_ENABLE_ALL
 

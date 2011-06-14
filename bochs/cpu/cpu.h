@@ -3006,8 +3006,8 @@ public: // for now...
   BX_SMF void read_virtual_dqword_32(unsigned seg, Bit32u off, BxPackedXmmRegister *data) BX_CPP_AttrRegparmN(3);
   BX_SMF void read_virtual_dqword_aligned_32(unsigned seg, Bit32u off, BxPackedXmmRegister *data) BX_CPP_AttrRegparmN(3);
 #if BX_SUPPORT_AVX
-  BX_SMF void read_virtual_vector_32(unsigned seg, Bit32u off, unsigned elements, BxPackedAvxRegister *data);
-  BX_SMF void read_virtual_vector_aligned_32(unsigned seg, Bit32u off, unsigned elements, BxPackedAvxRegister *data);
+  BX_SMF void read_virtual_dword_vector_32(unsigned seg, Bit32u off, unsigned elements, BxPackedAvxRegister *data);
+  BX_SMF void read_virtual_dword_vector_aligned_32(unsigned seg, Bit32u off, unsigned elements, BxPackedAvxRegister *data);
 #endif
 #endif
 
@@ -3019,8 +3019,8 @@ public: // for now...
   BX_SMF void write_virtual_dqword_32(unsigned seg, Bit32u offset, const BxPackedXmmRegister *data) BX_CPP_AttrRegparmN(3);
   BX_SMF void write_virtual_dqword_aligned_32(unsigned seg, Bit32u offset, const BxPackedXmmRegister *data) BX_CPP_AttrRegparmN(3);
 #if BX_SUPPORT_AVX
-  BX_SMF void write_virtual_vector_32(unsigned seg, Bit32u off, unsigned elements, const BxPackedAvxRegister *data);
-  BX_SMF void write_virtual_vector_aligned_32(unsigned seg, Bit32u off, unsigned elements, const BxPackedAvxRegister *data);
+  BX_SMF void write_virtual_dword_vector_32(unsigned seg, Bit32u off, unsigned elements, const BxPackedAvxRegister *data);
+  BX_SMF void write_virtual_dword_vector_aligned_32(unsigned seg, Bit32u off, unsigned elements, const BxPackedAvxRegister *data);
 #endif
 #endif
 
@@ -3042,8 +3042,8 @@ public: // for now...
   BX_SMF void write_virtual_dqword_64(unsigned seg, Bit64u offset, const BxPackedXmmRegister *data) BX_CPP_AttrRegparmN(3);
   BX_SMF void write_virtual_dqword_aligned_64(unsigned seg, Bit64u offset, const BxPackedXmmRegister *data) BX_CPP_AttrRegparmN(3);
 #if BX_SUPPORT_AVX
-  BX_SMF void write_virtual_vector_64(unsigned seg, Bit64u offset, unsigned elements, const BxPackedAvxRegister *data);
-  BX_SMF void write_virtual_vector_aligned_64(unsigned seg, Bit64u offset, unsigned elements, const BxPackedAvxRegister *data);
+  BX_SMF void write_virtual_dword_vector_64(unsigned seg, Bit64u offset, unsigned elements, const BxPackedAvxRegister *data);
+  BX_SMF void write_virtual_dword_vector_aligned_64(unsigned seg, Bit64u offset, unsigned elements, const BxPackedAvxRegister *data);
 #endif
 
   BX_SMF Bit8u read_virtual_byte_64(unsigned seg, Bit64u offset) BX_CPP_AttrRegparmN(2);
@@ -3053,8 +3053,8 @@ public: // for now...
   BX_SMF void read_virtual_dqword_64(unsigned seg, Bit64u off, BxPackedXmmRegister *data) BX_CPP_AttrRegparmN(3);
   BX_SMF void read_virtual_dqword_aligned_64(unsigned seg, Bit64u off, BxPackedXmmRegister *data) BX_CPP_AttrRegparmN(3);
 #if BX_SUPPORT_AVX
-  BX_SMF void read_virtual_vector_64(unsigned seg, Bit64u offset, unsigned elements, BxPackedAvxRegister *data);
-  BX_SMF void read_virtual_vector_aligned_64(unsigned seg, Bit64u offset, unsigned elements, BxPackedAvxRegister *data);
+  BX_SMF void read_virtual_dword_vector_64(unsigned seg, Bit64u offset, unsigned elements, BxPackedAvxRegister *data);
+  BX_SMF void read_virtual_dword_vector_aligned_64(unsigned seg, Bit64u offset, unsigned elements, BxPackedAvxRegister *data);
 #endif
 
   BX_SMF Bit8u read_RMW_virtual_byte_64(unsigned seg, Bit64u offset) BX_CPP_AttrRegparmN(2);
@@ -3108,15 +3108,15 @@ public: // for now...
 
 #if BX_SUPPORT_AVX
 
-#define write_virtual_vector(seg, offset, elements, data)   \
+#define write_virtual_dword_vector(seg, offset, elements, data)   \
   (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) ? \
-      write_virtual_vector_64(seg, (Bit64u) offset, elements, (const BxPackedAvxRegister*)(data)) : \
-      write_virtual_vector_32(seg, (Bit32u) offset, elements, (const BxPackedAvxRegister*)(data))
+      write_virtual_dword_vector_64(seg, (Bit64u) offset, elements, (const BxPackedAvxRegister*)(data)) : \
+      write_virtual_dword_vector_32(seg, (Bit32u) offset, elements, (const BxPackedAvxRegister*)(data))
 
-#define write_virtual_vector_aligned(seg, offset, elements, data) \
+#define write_virtual_dword_vector_aligned(seg, offset, elements, data) \
   (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) ? \
-      write_virtual_vector_aligned_64(seg, (Bit64u) offset, elements, (const BxPackedAvxRegister*)(data)) : \
-      write_virtual_vector_aligned_32(seg, (Bit32u) offset, elements, (const BxPackedAvxRegister*)(data))
+      write_virtual_dword_vector_aligned_64(seg, (Bit64u) offset, elements, (const BxPackedAvxRegister*)(data)) : \
+      write_virtual_dword_vector_aligned_32(seg, (Bit32u) offset, elements, (const BxPackedAvxRegister*)(data))
 
 #endif
 
@@ -3153,15 +3153,15 @@ public: // for now...
 
 #if BX_SUPPORT_AVX
 
-#define read_virtual_vector(seg, offset, elements, data)    \
+#define read_virtual_dword_vector(seg, offset, elements, data)    \
   (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) ? \
-      read_virtual_vector_64(seg, (Bit64u) offset, elements, (BxPackedAvxRegister*)(data)) : \
-      read_virtual_vector_32(seg, (Bit32u) offset, elements, (BxPackedAvxRegister*)(data))
+      read_virtual_dword_vector_64(seg, (Bit64u) offset, elements, (BxPackedAvxRegister*)(data)) : \
+      read_virtual_dword_vector_32(seg, (Bit32u) offset, elements, (BxPackedAvxRegister*)(data))
 
-#define read_virtual_vector_aligned(seg, offset, elements, data) \
+#define read_virtual_dword_vector_aligned(seg, offset, elements, data) \
   (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) ? \
-      read_virtual_vector_aligned_64(seg, (Bit64u) offset, elements, (BxPackedAvxRegister*)(data)) : \
-      read_virtual_vector_aligned_32(seg, (Bit32u) offset, elements, (BxPackedAvxRegister*)(data))
+      read_virtual_dword_vector_aligned_64(seg, (Bit64u) offset, elements, (BxPackedAvxRegister*)(data)) : \
+      read_virtual_dword_vector_aligned_32(seg, (Bit32u) offset, elements, (BxPackedAvxRegister*)(data))
 
 #endif
 
@@ -3204,10 +3204,10 @@ public: // for now...
 
 #if BX_SUPPORT_AVX
 
-#define write_virtual_vector(seg, offset, elements, data) \
-  write_virtual_vector_32(seg, offset, elements, (const BxPackedAvxRegister*)(data))
-#define write_virtual_vector_aligned(seg, offset, elements, data) \
-  write_virtual_vector_aligned_32(seg, offset, elements, (const BxPackedAvxRegister*)(data))
+#define write_virtual_dword_vector(seg, offset, elements, data) \
+  write_virtual_dword_vector_32(seg, offset, elements, (const BxPackedAvxRegister*)(data))
+#define write_virtual_dword_vector_aligned(seg, offset, elements, data) \
+  write_virtual_dword_vector_aligned_32(seg, offset, elements, (const BxPackedAvxRegister*)(data))
 
 #endif
 
@@ -3227,10 +3227,10 @@ public: // for now...
 
 #if BX_SUPPORT_AVX
 
-#define read_virtual_vector(seg, offset, elements, data) \
-  read_virtual_vector_32(seg, offset, elements, (BxPackedAvxRegister*)(data))
-#define read_virtual_vector_aligned(seg, offset, elements, data) \
-  read_virtual_vector_aligned_32(seg, offset, elements, (BxPackedAvxRegister*)(data))
+#define read_virtual_dword_vector(seg, offset, elements, data) \
+  read_virtual_dword_vector_32(seg, offset, elements, (BxPackedAvxRegister*)(data))
+#define read_virtual_dword_vector_aligned(seg, offset, elements, data) \
+  read_virtual_dword_vector_aligned_32(seg, offset, elements, (BxPackedAvxRegister*)(data))
 
 #endif
 

@@ -96,7 +96,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVAPS_VpsWpsM(bxInstruction_c *i)
   
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
   /* pointer, segment address pair */
-  read_virtual_vector_aligned(i->seg(), eaddr, len << 2, &op);
+  read_virtual_dword_vector_aligned(i->seg(), eaddr, len << 2, &op);
 
   BX_WRITE_AVX_REGZ(i->nnn(), op, len);
 #endif
@@ -113,7 +113,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVUPS_VpsWpsM(bxInstruction_c *i)
   
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
   /* pointer, segment address pair */
-  read_virtual_vector(i->seg(), eaddr, len << 2, &op);
+  read_virtual_dword_vector(i->seg(), eaddr, len << 2, &op);
 
   BX_WRITE_AVX_REGZ(i->nnn(), op, len);
 #endif
@@ -129,7 +129,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVUPS_WpsVpsM(bxInstruction_c *i)
   
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
   /* pointer, segment address pair */
-  write_virtual_vector(i->seg(), eaddr, i->getVL() << 2, &op);
+  write_virtual_dword_vector(i->seg(), eaddr, i->getVL() << 2, &op);
 #endif
 }
 
@@ -143,7 +143,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVAPS_WpsVpsM(bxInstruction_c *i)
 
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
   /* pointer, segment address pair */
-  write_virtual_vector_aligned(i->seg(), eaddr, i->getVL() << 2, &op);
+  write_virtual_dword_vector_aligned(i->seg(), eaddr, i->getVL() << 2, &op);
 #endif
 }
 

@@ -222,6 +222,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
       BX_CPU_THIS_PTR the_i387.swd =  xmm.xmm16u(1);
       BX_CPU_THIS_PTR the_i387.tos = (xmm.xmm16u(1) >> 11) & 0x07;
 
+      /* always set bit 6 as '1 */
+      BX_CPU_THIS_PTR the_i387.cwd =
+         (BX_CPU_THIS_PTR the_i387.cwd & ~FPU_CW_Reserved_Bits) | 0x0040;
+
       /* Restore x87 FPU Opcode */
       /* The lower 11 bits contain the FPU opcode, upper 5 bits are reserved */
       BX_CPU_THIS_PTR the_i387.foo = xmm.xmm16u(3) & 0x7FF;
@@ -286,7 +290,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
       BX_CPU_THIS_PTR the_i387.init();
 
       for (index=0;index<8;index++) {
-        floatx80 reg = { 0, 0 };
+        static floatx80 reg = { 0, 0 };
         BX_FPU_REG(index) = reg;
       }
     }

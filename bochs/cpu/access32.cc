@@ -351,7 +351,7 @@ accessOK:
 
 #if BX_SUPPORT_AVX
 
-void BX_CPU_C::write_virtual_vector_32(unsigned s, Bit32u offset, unsigned elements, const BxPackedAvxRegister *data)
+void BX_CPU_C::write_virtual_dword_vector_32(unsigned s, Bit32u offset, unsigned elements, const BxPackedAvxRegister *data)
 {
   BX_ASSERT(elements > 0);
 
@@ -392,7 +392,7 @@ accessOK:
       return;
     }
     else {
-      BX_ERROR(("write_virtual_vector_32(): segment limit violation"));
+      BX_ERROR(("write_virtual_dword_vector_32(): segment limit violation"));
       exception(int_number(s), 0);
     }
   }
@@ -402,7 +402,7 @@ accessOK:
   goto accessOK;
 }
 
-void BX_CPU_C::write_virtual_vector_aligned_32(unsigned s, Bit32u offset, unsigned elements, const BxPackedAvxRegister *data)
+void BX_CPU_C::write_virtual_dword_vector_aligned_32(unsigned s, Bit32u offset, unsigned elements, const BxPackedAvxRegister *data)
 {
   BX_ASSERT(elements > 0);
 
@@ -416,7 +416,7 @@ void BX_CPU_C::write_virtual_vector_aligned_32(unsigned s, Bit32u offset, unsign
   // must check alignment here because #GP on misaligned access is higher
   // priority than other segment related faults
   if (laddr & (len-1)) {
-    BX_ERROR(("write_virtual_vector_aligned_32(): #GP misaligned access"));
+    BX_ERROR(("write_virtual_dword_vector_aligned_32(): #GP misaligned access"));
     exception(BX_GP_EXCEPTION, 0);
   }
 
@@ -448,7 +448,7 @@ accessOK:
       return;
     }
     else {
-      BX_ERROR(("write_virtual_vector_aligned_32(): segment limit violation"));
+      BX_ERROR(("write_virtual_dword_vector_aligned_32(): segment limit violation"));
       exception(int_number(s), 0);
     }
   }
@@ -784,7 +784,7 @@ accessOK:
 
 #if BX_SUPPORT_AVX
 
-void BX_CPU_C::read_virtual_vector_32(unsigned s, Bit32u offset, unsigned elements, BxPackedAvxRegister *data)
+void BX_CPU_C::read_virtual_dword_vector_32(unsigned s, Bit32u offset, unsigned elements, BxPackedAvxRegister *data)
 {
   BX_ASSERT(elements > 0);
 
@@ -823,7 +823,7 @@ accessOK:
       return;
     }
     else {
-      BX_ERROR(("read_virtual_vector_32(): segment limit violation"));
+      BX_ERROR(("read_virtual_dword_vector_32(): segment limit violation"));
       exception(int_number(s), 0);
     }
   }
@@ -833,7 +833,7 @@ accessOK:
   goto accessOK;
 }
 
-void BX_CPU_C::read_virtual_vector_aligned_32(unsigned s, Bit32u offset, unsigned elements, BxPackedAvxRegister *data)
+void BX_CPU_C::read_virtual_dword_vector_aligned_32(unsigned s, Bit32u offset, unsigned elements, BxPackedAvxRegister *data)
 {
   BX_ASSERT(elements > 0);
 
@@ -847,7 +847,7 @@ void BX_CPU_C::read_virtual_vector_aligned_32(unsigned s, Bit32u offset, unsigne
   // must check alignment here because #GP on misaligned access is higher
   // priority than other segment related faults
   if (laddr & (len-1)) {
-    BX_ERROR(("read_virtual_vector_aligned_32(): #GP misaligned access"));
+    BX_ERROR(("read_virtual_dword_vector_aligned_32(): #GP misaligned access"));
     exception(BX_GP_EXCEPTION, 0);
   }
 
@@ -878,7 +878,7 @@ accessOK:
       return;
     }
     else {
-      BX_ERROR(("read_virtual_vector_aligned_32(): segment limit violation"));
+      BX_ERROR(("read_virtual_dword_vector_aligned_32(): segment limit violation"));
       exception(int_number(s), 0);
     }
   }

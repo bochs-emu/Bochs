@@ -121,7 +121,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Vector(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-  read_virtual_vector(i->seg(), eaddr, i->getVL() << 2, &BX_READ_AVX_REG(BX_TMP_REGISTER));
+  read_virtual_dword_vector(i->seg(), eaddr, i->getVL() << 2, &BX_READ_AVX_REG(BX_TMP_REGISTER));
 
   BX_CPU_CALL_METHOD(i->execute2, (i));
 #endif
@@ -131,7 +131,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_VectorQ(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
   bx_address eaddr = BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-  read_virtual_vector(i->seg(), eaddr, i->getVL() << 1, &BX_READ_AVX_REG(BX_TMP_REGISTER));
+  read_virtual_dword_vector(i->seg(), eaddr, i->getVL() << 1, &BX_READ_AVX_REG(BX_TMP_REGISTER));
 
   BX_CPU_CALL_METHOD(i->execute2, (i));
 #endif
