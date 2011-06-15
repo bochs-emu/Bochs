@@ -1158,7 +1158,9 @@ void xkeypress(KeySym keysym, int press_release)
 #ifdef XK_Pause
       case XK_Pause:       key_event = BX_KEY_PAUSE; break;
 #endif
-
+#ifdef XK_Break
+      case XK_Break:       key_event = BX_KEY_CTRL_BREAK; break;
+#endif
       case XK_Insert:      key_event = BX_KEY_INSERT; break;
       case XK_Home:        key_event = BX_KEY_HOME; break;
       case XK_End:         key_event = BX_KEY_END; break;

@@ -64,6 +64,7 @@ Bochs repository moved to the SVN version control !
     from the "clock" setting)
 
 - SF patches applied
+  [3316785] Ctrl-Break support for the X11 gui by Nikolay Nikolov
   [3298173] Breakpoint on VMEXIT event by Jianan Hao
   [3295737] Fix CopyHost*WordLittleEndian macros by Heikki Lindholm
   [3289448] optimized powerpc byte swapping by Heikki Lindholm
@@ -75,6 +76,7 @@ Bochs repository moved to the SVN version control !
   [3190995] add eth backend based on Slirp by Heikki Lindholm
 
 - these S.F. bugs were closed/fixed
+  [3303818] wrong memory size is reported to GRUB (e820 probelm?)
   [3297475] trace cache disabled mode will miss SMC
   [3170157] BIOS32 PCI service wrong length
   [3025030] PIT mistakenly connected to IRQ0 IOAPIC instead of IRQ2
