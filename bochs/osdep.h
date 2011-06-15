@@ -194,7 +194,7 @@ typedef int socklen_t;
 
 #if !BX_HAVE_MKSTEMP
 #define mkstemp bx_mkstemp
-  extern int bx_mkstemp(char *tpl);
+  BOCHSAPI_MSVCONLY extern int bx_mkstemp(char *tpl);
 #endif
 
 //////////////////////////////////////////////////////////////////////
