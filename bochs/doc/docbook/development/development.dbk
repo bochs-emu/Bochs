@@ -689,7 +689,9 @@ LOC	NOTES	MEANING
 	bits
 	3-0	boot drive #1
 	7-4	boot drive #2
-0x5b	Q	extra memory above 4GB
+0x5b	S 	extra memory above 4GB
+0x5c	S 	extra memory above 4GB
+0x5d	S 	extra memory above 4GB
 0x5f	Q	number of processors
 </screen>
 </para>
