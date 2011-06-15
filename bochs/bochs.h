@@ -431,7 +431,7 @@ typedef struct {
   void* record_io;
 } bx_debug_t;
 
-void CDECL bx_signal_handler(int signum);
+BOCHSAPI_MSVCONLY void CDECL bx_signal_handler(int signum);
 int bx_atexit(void);
 BOCHSAPI extern bx_debug_t bx_dbg;
 

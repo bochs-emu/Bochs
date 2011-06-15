@@ -342,7 +342,11 @@ plugin_t *plugin_unload(plugin_t *plugin)
   if (plugin->initialized)
       plugin->plugin_fini();
 
+#if defined(_MSC_VER)
+  FreeLibrary(plugin->handle);
+#else
   lt_dlclose(plugin->handle);
+#endif
   delete [] plugin->name;
 
   dead_plug = plugin;
@@ -395,21 +399,42 @@ void plugin_load(char *name, char *args, plugintype_t type)
   // be called from either dlopen (global constructors) or plugin_init.
   BX_ASSERT(current_plugin_context == NULL);
   current_plugin_context = plugin;
+#if defined(_MSC_VER)
+  plugin->handle = LoadLibrary(plugin_filename);
+  BX_INFO(("DLL handle is %p", plugin->handle));
+  if (!plugin->handle)
+  {
+    current_plugin_context = NULL;
+    BX_PANIC(("LoadLibrary failed for module '%s': error=%d", name, GetLastError()));
+    free(plugin);
+    return;
+  }
+#else
   plugin->handle = lt_dlopen (plugin_filename);
   BX_INFO(("lt_dlhandle is %p", plugin->handle));
   if (!plugin->handle)
   {
     current_plugin_context = NULL;
     BX_PANIC(("dlopen failed for module '%s': %s", name, lt_dlerror ()));
-    free (plugin);
+    free(plugin);
     return;
   }
+#endif
 
   if (type != PLUGTYPE_USER) {
     sprintf(buf, PLUGIN_INIT_FMT_STRING, name);
   } else {
     sprintf(buf, PLUGIN_INIT_FMT_STRING, "user");
   }
+#if defined(_MSC_VER)
+  plugin->plugin_init =
+      (int (*)(struct _plugin_t *, enum plugintype_t, int, char *[])) /* monster typecast */
+      GetProcAddress(plugin->handle, buf);
+  if (plugin->plugin_init == NULL) {
+    pluginlog->panic("could not find plugin_init: error=%d", GetLastError());
+    plugin_abort ();
+  }
+#else
   plugin->plugin_init =
       (int (*)(struct _plugin_t *, enum plugintype_t, int, char *[])) /* monster typecast */
       lt_dlsym (plugin->handle, buf);
@@ -417,17 +442,26 @@ void plugin_load(char *name, char *args, plugintype_t type)
     pluginlog->panic("could not find plugin_init: %s", lt_dlerror ());
     plugin_abort ();
   }
+#endif
 
   if (type != PLUGTYPE_USER) {
     sprintf(buf, PLUGIN_FINI_FMT_STRING, name);
   } else {
     sprintf(buf, PLUGIN_FINI_FMT_STRING, "user");
   }
+#if defined(_MSC_VER)
+  plugin->plugin_fini = (void (*)(void)) GetProcAddress(plugin->handle, buf);
+  if (plugin->plugin_fini == NULL) {
+    pluginlog->panic("could not find plugin_fini: error=%d", GetLastError());
+    plugin_abort ();
+  }
+#else
   plugin->plugin_fini = (void (*)(void)) lt_dlsym (plugin->handle, buf);
   if (plugin->plugin_fini == NULL) {
     pluginlog->panic("could not find plugin_fini: %s", lt_dlerror ());
     plugin_abort();
   }
+#endif
   pluginlog->info("loaded plugin %s",plugin_filename);
 
   /* Insert plugin at the _end_ of the plugin linked list. */
@@ -498,11 +532,13 @@ plugin_startup(void)
 #if BX_PLUGINS
   pluginlog = new logfunctions();
   pluginlog->put("PLGIN");
+#if !defined(_MSC_VER)
   int status = lt_dlinit ();
   if (status != 0) {
     BX_ERROR (("initialization error in ltdl library (for loading plugins)"));
     BX_PANIC (("error message was: %s", lt_dlerror ()));
   }
+#endif
 #endif
 }
 

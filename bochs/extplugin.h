@@ -20,7 +20,7 @@
 #if BX_PLUGINS
 #if BX_HAVE_LTDL
 #include <ltdl.h>
-#else
+#elif !defined(_MSC_VER)
 #include "ltdl.h"
 #endif
 #endif
@@ -39,7 +39,11 @@ typedef struct _plugin_t
     plugintype_t type;
     int  initialized;
 #if BX_PLUGINS
+#if defined(_MSC_VER)
+    HINSTANCE handle;
+#else
     lt_dlhandle handle;
+#endif
 #endif
     int  argc;
     char *name, *args, *argv[MAX_ARGC];

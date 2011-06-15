@@ -2255,7 +2255,22 @@ AC_SUBST(ENH_DBG_OBJS)
 DIALOG_OBJS=""
 EXPORT_DYNAMIC="-export-dynamic"
 case $target in
-  *-pc-windows* | *-pc-winnt* | *-cygwin* | *-mingw*)
+  *-pc-windows* | *-pc-winnt*)
+    if test "$bx_plugins" = 1; then
+      # set variables for building DLL plugins
+      PLUGIN_VAR=""
+      PLUGIN_LIBNAME_TRANSFORMATION='%.o=bx_%.dll'
+      INSTALL_PLUGINS_VAR=install_dll_plugins
+      LIBS="$LIBS advapi32.lib comctl32.lib comdlg32.lib gdi32.lib shell32.lib user32.lib"
+    else
+      if test "$with_win32" != yes; then
+        LIBS="$LIBS -lcomctl32"
+      fi
+    fi
+    DIALOG_OBJS="win32dialog.o win32paramdlg.o"
+    EXPORT_DYNAMIC=""
+    ;;
+  *-cygwin* | *-mingw*)
     if test "$bx_plugins" = 1; then
       AC_CHECK_LIB(mingwex, opendir, LIBS="$LIBS -lmingwex")
       # set variables for building DLL plugins

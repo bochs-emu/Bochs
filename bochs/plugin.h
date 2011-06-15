@@ -372,9 +372,15 @@ void plugin_fini(void);
 int plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[]);
 
 // still in extern "C"
+#if BX_PLUGINS && defined(_MSC_VER)
+#define DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(mod) \
+  extern "C" __declspec(dllexport) int __cdecl lib##mod##_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[]); \
+  extern "C" __declspec(dllexport) void __cdecl lib##mod##_LTX_plugin_fini(void);
+#else
 #define DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(mod) \
   int lib##mod##_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[]); \
   void lib##mod##_LTX_plugin_fini(void);
+#endif
 
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(harddrv)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(hdimage)
