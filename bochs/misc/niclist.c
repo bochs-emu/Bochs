@@ -21,6 +21,10 @@
 #include <conio.h>
 #include <stdlib.h>
 
+#if defined(_MSC_VER)
+#define getch _getch
+#endif
+
 #define MAX_ADAPTERS 10
 #define NIC_BUFFER_SIZE 2048
 

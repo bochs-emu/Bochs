@@ -632,7 +632,7 @@ void bx_es1370_c::update_voices(Bit32u ctl, Bit32u sctl, bx_bool force)
             BX_ES1370_THIS s.dac_packet_size[i] = BX_SOUNDLOW_WAVEPACKETSIZE;
           }
           timer_val = (Bit64u)BX_ES1370_THIS s.dac_packet_size[i] * 1000000 / (new_freq << d->shift);
-          bx_pc_system.activate_timer(timer_id, timer_val, 1);
+          bx_pc_system.activate_timer(timer_id, (Bit32u)timer_val, 1);
         }
       } else {
         if (i == ADC_CHANNEL) {

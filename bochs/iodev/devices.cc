@@ -368,8 +368,8 @@ void bx_devices_c::init(BX_MEM_C *newmem)
   Bit64u memory_above_4gb = (mem->get_memory_len() > BX_CONST64(0x100000000)) ?
                             (mem->get_memory_len() - BX_CONST64(0x100000000)) : 0;
   if (memory_above_4gb) {
-    DEV_cmos_set_reg(0x5b, memory_above_4gb >> 16);
-    DEV_cmos_set_reg(0x5c, memory_above_4gb >> 24);
+    DEV_cmos_set_reg(0x5b, (Bit8u)(memory_above_4gb >> 16));
+    DEV_cmos_set_reg(0x5c, (Bit8u)(memory_above_4gb >> 24));
     DEV_cmos_set_reg(0x5d, memory_above_4gb >> 32);
   }
 

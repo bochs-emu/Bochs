@@ -603,7 +603,7 @@ bx_bool bx_param_enum_c::set_by_name(const char *string)
 void bx_param_enum_c::set_dependent_list(bx_list_c *l, bx_bool enable_all)
 {
   dependent_list = l;
-  deps_bitmap = (Bit64u*)malloc(sizeof(Bit64u) * (max - min + 1));
+  deps_bitmap = (Bit64u*)malloc((size_t)(sizeof(Bit64u) * (max - min + 1)));
   for (int i=0; i<(max-min+1); i++) {
     if (enable_all) {
       deps_bitmap[i] = (1 << (l->get_size())) - 1;
