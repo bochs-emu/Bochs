@@ -152,18 +152,22 @@ Bit32u bx_pcivga_c::pci_read_handler(Bit8u address, unsigned io_len)
 // static pci configuration space write callback handler
 void bx_pcivga_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len)
 {
-  unsigned i;
-  unsigned write_addr;
-  Bit8u new_value, old_value;
   bx_bool baseaddr_change = 0;
+
+  if (io_len == 1)
+    BX_DEBUG(("write PCI register 0x%02x value 0x%02x", address, value));
+  else if (io_len == 2)
+    BX_DEBUG(("write PCI register 0x%02x value 0x%04x", address, value));
+  else if (io_len == 4)
+    BX_DEBUG(("write PCI register 0x%02x value 0x%08x", address, value));
 
   if ((address >= 0x14) && (address < 0x34))
     return;
 
-  for (i = 0; i < io_len; i++) {
-    write_addr = address + i;
-    old_value = BX_PCIVGA_THIS s.pci_conf[write_addr];
-    new_value = (Bit8u)(value & 0xff);
+  for (unsigned i = 0; i < io_len; i++) {
+    unsigned write_addr = address + i;
+    Bit8u old_value = BX_PCIVGA_THIS s.pci_conf[write_addr];
+    Bit8u new_value = (Bit8u)(value & 0xff);
     switch (write_addr) {
       case 0x04: // disallowing write to command
       case 0x06: // disallowing write to status lo-byte (is that expected?)
@@ -177,19 +181,13 @@ void bx_pcivga_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len
     }
     value >>= 8;
   }
+
   if (baseaddr_change) {
     if (DEV_vbe_set_base_addr(&BX_PCIVGA_THIS s.base_address,
                               &BX_PCIVGA_THIS s.pci_conf[0x10])) {
       BX_INFO(("new base address: 0x%08x", BX_PCIVGA_THIS s.base_address));
     }
   }
-
-  if (io_len == 1)
-    BX_DEBUG(("write PCI register 0x%02x value 0x%02x", address, value));
-  else if (io_len == 2)
-    BX_DEBUG(("write PCI register 0x%02x value 0x%04x", address, value));
-  else if (io_len == 4)
-    BX_DEBUG(("write PCI register 0x%02x value 0x%08x", address, value));
 }
 
 #endif // BX_SUPPORT_PCI
