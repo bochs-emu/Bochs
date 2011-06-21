@@ -2220,6 +2220,8 @@ case "$target" in
     AC_DEFINE(BX_NETMOD_TAP, 0)
     AC_DEFINE(BX_HAVE_SELECT, 1)
     AC_DEFINE(BX_HAVE_SOCKLEN_T, 0)
+    AC_DEFINE(BX_HAVE___BUILTIN_BSWAP32, 0)
+    AC_DEFINE(BX_HAVE___BUILTIN_BSWAP64, 0)
     ;;
   *-pc-cygwin*)
     EXE=".exe"
