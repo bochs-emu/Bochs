@@ -64,7 +64,9 @@ private:
     int result;
     Bit8u image_mode;
     device_image_t *hdimage;
+#ifdef LOWLEVEL_CDROM
     LOWLEVEL_CDROM *cdrom;
+#endif
     scsi_device_t *scsi_dev;
     USBPacket *packet;
     bx_list_c *sr_list;

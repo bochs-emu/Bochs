@@ -3213,6 +3213,7 @@ bx_bool bx_hard_drive_c::bmdma_read_sector(Bit8u channel, Bit8u *buffer, Bit32u 
             bx_gui->statusbar_setitem(BX_SELECTED_DRIVE(channel).statusbar_id, 1);
           BX_SELECTED_DRIVE(channel).iolight_counter = 5;
           bx_pc_system.activate_timer(BX_HD_THIS iolight_timer_index, 100000, 0);
+#ifdef LOWLEVEL_CDROM
           if (!BX_SELECTED_DRIVE(channel).cdrom.cd->read_block(buffer, BX_SELECTED_DRIVE(channel).cdrom.next_lba,
                                                                BX_SELECTED_CONTROLLER(channel).buffer_size))
           {
@@ -3221,6 +3222,9 @@ bx_bool bx_hard_drive_c::bmdma_read_sector(Bit8u channel, Bit8u *buffer, Bit32u 
           }
           BX_SELECTED_DRIVE(channel).cdrom.next_lba++;
           BX_SELECTED_DRIVE(channel).cdrom.remaining_blocks--;
+#else
+          BX_PANIC(("BM-DMA read with no LOWLEVEL_CDROM"));
+#endif
           break;
         default:
           memcpy(buffer, BX_SELECTED_CONTROLLER(channel).buffer, *sector_size);

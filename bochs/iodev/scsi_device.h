@@ -65,8 +65,10 @@ class scsi_device_t : public logfunctions {
 public:
   scsi_device_t(device_image_t *_hdimage, int _tcq,
                scsi_completionfn _completion, void *_dev);
+#ifdef LOWLEVEL_CDROM
   scsi_device_t(LOWLEVEL_CDROM *_cdrom, int _tcq,
                scsi_completionfn _completion, void *_dev);
+#endif
   virtual ~scsi_device_t(void);
 
   void register_state(bx_list_c *parent, const char *name);
@@ -90,7 +92,9 @@ protected:
 private:
   enum scsidev_type type;
   device_image_t *hdimage;
+#ifdef LOWLEVEL_CDROM
   LOWLEVEL_CDROM *cdrom;
+#endif
   SCSIRequest *requests;
   int cluster_size;
   Bit64u max_lba;
