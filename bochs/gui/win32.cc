@@ -434,7 +434,7 @@ Bit32u win32_to_bx_key[2][0x100] =
     0,
     0,
     BX_KEY_NUM_LOCK,
-    0,
+    BX_KEY_CTRL_BREAK,
     BX_KEY_HOME,
     BX_KEY_UP,
     BX_KEY_PAGE_UP,
