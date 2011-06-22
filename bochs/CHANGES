@@ -42,6 +42,7 @@ Bochs repository moved to the SVN version control !
     - new networking module 'slirp' (user mode networking using Slirp and a
       builtin DHCP server)
   - Hard drive / cdrom
+    - fixed buffer overflow causing Bochs crash in LBA48 mode
     - implemented ATA commands "READ NATIVE MAX ADDRESS" and
       "READ NATIVE MAX ADDRESS EXT"
   - Sound
@@ -77,7 +78,10 @@ Bochs repository moved to the SVN version control !
   [3190995] add eth backend based on Slirp by Heikki Lindholm
 
 - these S.F. bugs were closed/fixed
-  [3303818] wrong memory size is reported to GRUB (e820 probelm?)
+  [3190970] Installing linux causes a crash in pci_ide
+  [3077616] Fedora 13 installation fails on Bochs 2.4.5
+  [3294671] ./configure --enable-pci --disable-cdrom
+  [3303818] wrong memory size is reported to GRUB (e820 problem?)
   [3297475] trace cache disabled mode will miss SMC
   [3170157] BIOS32 PCI service wrong length
   [3025030] PIT mistakenly connected to IRQ0 IOAPIC instead of IRQ2
