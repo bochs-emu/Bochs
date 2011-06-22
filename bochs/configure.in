@@ -37,10 +37,12 @@ fi
 # into the configure.in file, since people will want to be able to change
 # those settings by defining CFLAGS and CXXFLAGS before running configure.
 NO_LT=0
+MSVC_TARGET=0
 need_dlcompat_for_plugins=0
 case "$target" in
   *-pc-windows* | *-pc-winnt*)
     DEFAULT_GUI=win32                 # default to win32 gui
+    MSVC_TARGET=1
     ;;
   *-pc-cygwin* | *-pc-mingw32*)
     NO_LT=1   # do not use libtool at all on cygwin
@@ -640,7 +642,7 @@ AC_SUBST(BX_COMPRESSED_HD_SUPPORT)
 
 AC_MSG_CHECKING(for NE2000 support)
 AC_ARG_ENABLE(ne2000,
-  [  --enable-ne2000                   enable limited ne2000 support],
+  [  --enable-ne2000                   enable NE2000 support],
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
     AC_DEFINE(BX_SUPPORT_NE2K, 1)
@@ -663,7 +665,7 @@ AC_SUBST(NE2K_OBJS)
 
 AC_MSG_CHECKING(for i440FX PCI support)
 AC_ARG_ENABLE(pci,
-  [  --enable-pci                      enable limited i440FX PCI support],
+  [  --enable-pci                      enable i440FX PCI support],
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
     AC_DEFINE(BX_SUPPORT_PCI, 1)
@@ -744,9 +746,9 @@ AC_ARG_ENABLE(pcidev,
 )
 
 use_usb=0
-AC_MSG_CHECKING(for limited USB UHCI support)
+AC_MSG_CHECKING(for USB UHCI support)
 AC_ARG_ENABLE(usb,
-  [  --enable-usb                      enable limited USB UHCI support],
+  [  --enable-usb                      enable USB UHCI support],
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
     AC_DEFINE(BX_SUPPORT_USB_UHCI, 1)
@@ -762,9 +764,9 @@ AC_ARG_ENABLE(usb,
     ]
   )
 
-AC_MSG_CHECKING(for limited USB OHCI support)
+AC_MSG_CHECKING(for USB OHCI support)
 AC_ARG_ENABLE(usb-ohci,
-  [  --enable-usb-ohci                 enable limited USB OHCI support],
+  [  --enable-usb-ohci                 enable USB OHCI support],
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
     AC_DEFINE(BX_SUPPORT_USB_OHCI, 1)
@@ -810,20 +812,22 @@ AC_ARG_ENABLE(pnic,
 NETLOW_OBJS=''
 if test "$networking" = yes; then
   NETLOW_OBJS='eth.o eth_null.o eth_vnet.o'
-  AC_CHECK_HEADER(net/bpf.h, [
-      NETLOW_OBJS="$NETLOW_OBJS eth_fbsd.o"
-      AC_DEFINE(BX_NETMOD_FBSD, 1)
-    ])
-  AC_CHECK_HEADER(netpacket/packet.h, [
-      NETLOW_OBJS="$NETLOW_OBJS eth_linux.o"
-      AC_DEFINE(BX_NETMOD_LINUX, 1)
-    ])
-  AC_CHECK_FUNCS(fork, have_fork=1)
-  AC_CHECK_FUNCS(execlp, have_execlp=1)
-  AC_CHECK_FUNCS(socketpair, have_socketpair=1)
-  if test x"$have_fork" = x1 -a x"$have_execlp" = x1 -a x"$have_socketpair" = x1; then
-    NETLOW_OBJS="$NETLOW_OBJS eth_slirp.o"
-    AC_DEFINE(BX_NETMOD_SLIRP, 1)
+  if test "$MSVC_TARGET" != 1; then
+    AC_CHECK_HEADER(net/bpf.h, [
+        NETLOW_OBJS="$NETLOW_OBJS eth_fbsd.o"
+        AC_DEFINE(BX_NETMOD_FBSD, 1)
+      ])
+    AC_CHECK_HEADER(netpacket/packet.h, [
+        NETLOW_OBJS="$NETLOW_OBJS eth_linux.o"
+        AC_DEFINE(BX_NETMOD_LINUX, 1)
+      ])
+    AC_CHECK_FUNCS(fork, have_fork=1)
+    AC_CHECK_FUNCS(execlp, have_execlp=1)
+    AC_CHECK_FUNCS(socketpair, have_socketpair=1)
+    if test x"$have_fork" = x1 -a x"$have_execlp" = x1 -a x"$have_socketpair" = x1; then
+      NETLOW_OBJS="$NETLOW_OBJS eth_slirp.o"
+      AC_DEFINE(BX_NETMOD_SLIRP, 1)
+    fi
   fi
   case "$target" in
     *-pc-windows* | *-pc-winnt* | *-pc-cygwin* | *-pc-mingw32*)
@@ -2173,7 +2177,11 @@ case "$target" in
     CXX="$CC"
     #C_OPT="/Zi"   # for debugging
     C_OPT="/Ox"   # optimize for speed
-    CFLAGS="/nologo /MT /W3 /EHs-c- /DNDEBUG /DWIN32 /D_WINDOWS /D_CRT_SECURE_NO_WARNINGS $C_OPT"
+    if test "$bx_plugins" = 1; then
+      CFLAGS="/nologo /MD /W3 /EHs-c- /DNDEBUG /DWIN32 /D_WINDOWS /D_CRT_SECURE_NO_WARNINGS $C_OPT"
+    else
+      CFLAGS="/nologo /MT /W3 /EHs-c- /DNDEBUG /DWIN32 /D_WINDOWS /D_CRT_SECURE_NO_WARNINGS $C_OPT"
+    fi
     CXXFLAGS="$CFLAGS"
     DASH="/"
     SLASH="\\"
@@ -2266,7 +2274,7 @@ case $target in
       LIBS="$LIBS advapi32.lib comctl32.lib comdlg32.lib gdi32.lib shell32.lib user32.lib"
     else
       if test "$with_win32" != yes; then
-        LIBS="$LIBS -lcomctl32"
+        LIBS="$LIBS comctl32.lib"
       fi
     fi
     DIALOG_OBJS="win32dialog.o win32paramdlg.o"
