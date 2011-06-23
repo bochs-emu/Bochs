@@ -105,6 +105,7 @@ void bx_devices_c::init(BX_MEM_C *newmem)
 {
   unsigned i;
   const char def_name[] = "Default";
+  const char *vga_ext;
   bx_list_c *plugin_ctrl;
   bx_param_bool_c *plugin;
 #if !BX_PLUGINS
@@ -258,8 +259,9 @@ void bx_devices_c::init(BX_MEM_C *newmem)
 
 #if BX_SUPPORT_PCI
   if (SIM->get_param_bool(BXPN_I440FX_SUPPORT)->get()) {
+    vga_ext = SIM->get_param_string(BXPN_VGA_EXTENSION)->getptr();
     if ((DEV_is_pci_device("pcivga")) &&
-        (!strcmp(SIM->get_param_string(BXPN_VGA_EXTENSION)->getptr(), "vbe"))) {
+        ((!strlen(vga_ext)) || (!strcmp(vga_ext, "none")) || (!strcmp(vga_ext, "vbe")))) {
       PLUG_load_plugin(pcivga, PLUGTYPE_OPTIONAL);
     }
 #if BX_SUPPORT_USB_UHCI

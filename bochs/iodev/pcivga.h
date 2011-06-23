@@ -41,6 +41,7 @@ public:
 
 private:
   Bit32u base_address;
+  bx_bool vbe_present;
 };
 
 #endif

@@ -97,8 +97,11 @@ void bx_pcivga_c::init(void)
   for (i = 0; i < sizeof(init_vals) / sizeof(*init_vals); ++i) {
     BX_PCIVGA_THIS pci_conf[init_vals[i].addr] = init_vals[i].val;
   }
-  WriteHostDWordToLittleEndian(&BX_PCIVGA_THIS pci_conf[0x10], 0x08);
-  BX_PCIVGA_THIS base_address = 0;
+  BX_PCIVGA_THIS vbe_present = !strcmp(SIM->get_param_string(BXPN_VGA_EXTENSION)->getptr(), "vbe");;
+  if (BX_PCIVGA_THIS vbe_present) {
+    WriteHostDWordToLittleEndian(&BX_PCIVGA_THIS pci_conf[0x10], 0x08);
+    BX_PCIVGA_THIS base_address = 0;
+  }
 }
 
 void bx_pcivga_c::reset(unsigned type)
@@ -123,9 +126,11 @@ void bx_pcivga_c::register_state(void)
 
 void bx_pcivga_c::after_restore_state(void)
 {
-  if (DEV_vbe_set_base_addr(&BX_PCIVGA_THIS base_address,
-                            &BX_PCIVGA_THIS pci_conf[0x10])) {
-    BX_INFO(("new base address: 0x%08x", BX_PCIVGA_THIS base_address));
+  if (BX_PCIVGA_THIS vbe_present) {
+    if (DEV_vbe_set_base_addr(&BX_PCIVGA_THIS base_address,
+                              &BX_PCIVGA_THIS pci_conf[0x10])) {
+      BX_INFO(("new base address: 0x%08x", BX_PCIVGA_THIS base_address));
+    }
   }
 }
 
@@ -175,7 +180,11 @@ void bx_pcivga_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len
       case 0x10: // base address #0
         new_value = (new_value & 0xf0) | (old_value & 0x0f);
       case 0x11: case 0x12: case 0x13:
-        baseaddr_change |= (old_value != new_value);
+        if (BX_PCIVGA_THIS vbe_present) {
+          baseaddr_change |= (old_value != new_value);
+        } else {
+          break;
+        }
       default:
         BX_PCIVGA_THIS pci_conf[write_addr] = new_value;
     }
