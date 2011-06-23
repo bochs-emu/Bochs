@@ -235,9 +235,9 @@ void libvga_LTX_plugin_fini(void)
   delete theSvga;
 }
 
-bx_svga_cirrus_c::bx_svga_cirrus_c() : bx_vga_c ()
+bx_svga_cirrus_c::bx_svga_cirrus_c() : bx_vga_c()
 {
-  put("CLVGA");
+  // nothing else to do
 }
 
 bx_svga_cirrus_c::~bx_svga_cirrus_c()
@@ -250,6 +250,7 @@ void bx_svga_cirrus_c::init(void)
   // initialize VGA stuffs.
   BX_CIRRUS_THIS bx_vga_c::init();
   if (!strcmp(SIM->get_param_string(BXPN_VGA_EXTENSION)->getptr(), "cirrus")) {
+    BX_CIRRUS_THIS put("CLVGA");
     // initialize SVGA stuffs.
     BX_CIRRUS_THIS bx_vga_c::init_iohandlers(svga_read_handler, svga_write_handler);
     BX_CIRRUS_THIS bx_vga_c::init_systemtimer(svga_timer_handler, svga_param_handler);

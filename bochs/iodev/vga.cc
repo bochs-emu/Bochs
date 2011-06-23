@@ -282,6 +282,7 @@ void bx_vga_c::init(void)
   BX_VGA_THIS vbe.dac_8bit=0;
   BX_VGA_THIS vbe.base_address = 0x0000;
   if (!strcmp(extname, "vbe")) {
+    BX_VGA_THIS put("BXVGA");
     for (addr=VBE_DISPI_IOPORT_INDEX; addr<=VBE_DISPI_IOPORT_DATA; addr++) {
       DEV_register_ioread_handler(this, vbe_read_handler, addr, "vga video", 7);
       DEV_register_iowrite_handler(this, vbe_write_handler, addr, "vga video", 7);
