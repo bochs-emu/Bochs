@@ -38,12 +38,6 @@
 #define BX_PCI_INTC 3
 #define BX_PCI_INTD 4
 
-typedef struct {
-  Bit32u confAddr;
-  Bit32u confData;
-  Bit8u  pci_conf[256];
-} bx_def440fx_t;
-
 class bx_pci_device_stub_c;
 
 class bx_pci_bridge_c : public bx_pci_bridge_stub_c {
@@ -83,9 +77,8 @@ private:
   bx_bool slot_used[BX_N_PCI_SLOTS];
   bx_bool slots_checked;
 
-  struct {
-    bx_def440fx_t i440fx;
-  } s;
+  Bit32u confAddr;
+  Bit32u confData;
 
   void smram_control(Bit8u value);
 

@@ -40,10 +40,7 @@ public:
   virtual void   pci_write_handler(Bit8u address, Bit32u value, unsigned io_len);
 
 private:
-  struct {
-    Bit32u base_address;
-    Bit8u pci_conf[256];
-  } s;
+  Bit32u base_address;
 };
 
 #endif

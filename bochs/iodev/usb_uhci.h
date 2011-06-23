@@ -155,7 +155,6 @@ typedef struct {
     bx_bool status;
   } usb_port[BX_N_USB_UHCI_PORTS];
 
-  Bit8u pci_conf[256];
   Bit8u devfunc;
 
   int statusbar_id; // ID of the status LEDs

@@ -61,7 +61,6 @@ private:
   static void timer_handler(void *);
 
   struct {
-    Bit8u pci_conf[256];
     Bit8u devfunc;
     Bit32u pm_base;
     Bit32u sm_base;

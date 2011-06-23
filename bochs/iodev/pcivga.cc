@@ -77,7 +77,7 @@ void bx_pcivga_c::init(void)
                             "Experimental PCI VGA");
 
   for (i=0; i<256; i++) {
-    BX_PCIVGA_THIS s.pci_conf[i] = 0x0;
+    BX_PCIVGA_THIS pci_conf[i] = 0x0;
   }
 
   // readonly registers
@@ -95,10 +95,10 @@ void bx_pcivga_c::init(void)
     { 0x0e, 0x00 }                  // header_type_generic
   };
   for (i = 0; i < sizeof(init_vals) / sizeof(*init_vals); ++i) {
-    BX_PCIVGA_THIS s.pci_conf[init_vals[i].addr] = init_vals[i].val;
+    BX_PCIVGA_THIS pci_conf[init_vals[i].addr] = init_vals[i].val;
   }
-  WriteHostDWordToLittleEndian(&BX_PCIVGA_THIS s.pci_conf[0x10], 0x08);
-  BX_PCIVGA_THIS s.base_address = 0;
+  WriteHostDWordToLittleEndian(&BX_PCIVGA_THIS pci_conf[0x10], 0x08);
+  BX_PCIVGA_THIS base_address = 0;
 }
 
 void bx_pcivga_c::reset(unsigned type)
@@ -111,21 +111,21 @@ void bx_pcivga_c::reset(unsigned type)
       { 0x06, 0x00 }, { 0x07, 0x02 }  // status_devsel_medium
   };
   for (unsigned i = 0; i < sizeof(reset_vals) / sizeof(*reset_vals); ++i) {
-    BX_PCIVGA_THIS s.pci_conf[reset_vals[i].addr] = reset_vals[i].val;
+    BX_PCIVGA_THIS pci_conf[reset_vals[i].addr] = reset_vals[i].val;
   }
 }
 
 void bx_pcivga_c::register_state(void)
 {
   bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "pcivga", "PCI VGA Adapter State", 1);
-  register_pci_state(list, BX_PCIVGA_THIS s.pci_conf);
+  register_pci_state(list);
 }
 
 void bx_pcivga_c::after_restore_state(void)
 {
-  if (DEV_vbe_set_base_addr(&BX_PCIVGA_THIS s.base_address,
-                            &BX_PCIVGA_THIS s.pci_conf[0x10])) {
-    BX_INFO(("new base address: 0x%08x", BX_PCIVGA_THIS s.base_address));
+  if (DEV_vbe_set_base_addr(&BX_PCIVGA_THIS base_address,
+                            &BX_PCIVGA_THIS pci_conf[0x10])) {
+    BX_INFO(("new base address: 0x%08x", BX_PCIVGA_THIS base_address));
   }
 }
 
@@ -135,7 +135,7 @@ Bit32u bx_pcivga_c::pci_read_handler(Bit8u address, unsigned io_len)
   Bit32u value = 0;
 
   for (unsigned i=0; i<io_len; i++) {
-    value |= (BX_PCIVGA_THIS s.pci_conf[address+i] << (i*8));
+    value |= (BX_PCIVGA_THIS pci_conf[address+i] << (i*8));
   }
 
   if (io_len == 1)
@@ -166,7 +166,7 @@ void bx_pcivga_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len
 
   for (unsigned i = 0; i < io_len; i++) {
     unsigned write_addr = address + i;
-    Bit8u old_value = BX_PCIVGA_THIS s.pci_conf[write_addr];
+    Bit8u old_value = BX_PCIVGA_THIS pci_conf[write_addr];
     Bit8u new_value = (Bit8u)(value & 0xff);
     switch (write_addr) {
       case 0x04: // disallowing write to command
@@ -177,15 +177,15 @@ void bx_pcivga_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len
       case 0x11: case 0x12: case 0x13:
         baseaddr_change |= (old_value != new_value);
       default:
-        BX_PCIVGA_THIS s.pci_conf[write_addr] = new_value;
+        BX_PCIVGA_THIS pci_conf[write_addr] = new_value;
     }
     value >>= 8;
   }
 
   if (baseaddr_change) {
-    if (DEV_vbe_set_base_addr(&BX_PCIVGA_THIS s.base_address,
-                              &BX_PCIVGA_THIS s.pci_conf[0x10])) {
-      BX_INFO(("new base address: 0x%08x", BX_PCIVGA_THIS s.base_address));
+    if (DEV_vbe_set_base_addr(&BX_PCIVGA_THIS base_address,
+                              &BX_PCIVGA_THIS pci_conf[0x10])) {
+      BX_INFO(("new base address: 0x%08x", BX_PCIVGA_THIS base_address));
     }
   }
 }

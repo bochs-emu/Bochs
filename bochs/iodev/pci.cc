@@ -96,13 +96,13 @@ void bx_pci_bridge_c::init(void)
   DEV_register_pci_handlers(this, &devfunc, BX_PLUGIN_PCI, "440FX Host bridge");
 
   for (i=0; i<256; i++)
-    BX_PCI_THIS s.i440fx.pci_conf[i] = 0x0;
+    BX_PCI_THIS pci_conf[i] = 0x0;
   // readonly registers
-  BX_PCI_THIS s.i440fx.pci_conf[0x00] = 0x86;
-  BX_PCI_THIS s.i440fx.pci_conf[0x01] = 0x80;
-  BX_PCI_THIS s.i440fx.pci_conf[0x02] = 0x37;
-  BX_PCI_THIS s.i440fx.pci_conf[0x03] = 0x12;
-  BX_PCI_THIS s.i440fx.pci_conf[0x0b] = 0x06;
+  BX_PCI_THIS pci_conf[0x00] = 0x86;
+  BX_PCI_THIS pci_conf[0x01] = 0x80;
+  BX_PCI_THIS pci_conf[0x02] = 0x37;
+  BX_PCI_THIS pci_conf[0x03] = 0x12;
+  BX_PCI_THIS pci_conf[0x0b] = 0x06;
 }
 
   void
@@ -123,45 +123,40 @@ bx_pci_bridge_c::reset(unsigned type)
     BX_PCI_THIS slots_checked = 1;
   }
 
-  BX_PCI_THIS s.i440fx.confAddr = 0;
-  BX_PCI_THIS s.i440fx.confData = 0;
+  BX_PCI_THIS confAddr = 0;
+  BX_PCI_THIS confData = 0;
 
-  BX_PCI_THIS s.i440fx.pci_conf[0x04] = 0x06;
-  BX_PCI_THIS s.i440fx.pci_conf[0x05] = 0x00;
-  BX_PCI_THIS s.i440fx.pci_conf[0x06] = 0x80;
-  BX_PCI_THIS s.i440fx.pci_conf[0x07] = 0x02;
-  BX_PCI_THIS s.i440fx.pci_conf[0x0d] = 0x00;
-  BX_PCI_THIS s.i440fx.pci_conf[0x0f] = 0x00;
-  BX_PCI_THIS s.i440fx.pci_conf[0x50] = 0x00;
-  BX_PCI_THIS s.i440fx.pci_conf[0x51] = 0x01;
-  BX_PCI_THIS s.i440fx.pci_conf[0x52] = 0x00;
-  BX_PCI_THIS s.i440fx.pci_conf[0x53] = 0x80;
-  BX_PCI_THIS s.i440fx.pci_conf[0x54] = 0x00;
-  BX_PCI_THIS s.i440fx.pci_conf[0x55] = 0x00;
-  BX_PCI_THIS s.i440fx.pci_conf[0x56] = 0x00;
-  BX_PCI_THIS s.i440fx.pci_conf[0x57] = 0x01;
-  BX_PCI_THIS s.i440fx.pci_conf[0x58] = 0x10;
+  BX_PCI_THIS pci_conf[0x04] = 0x06;
+  BX_PCI_THIS pci_conf[0x05] = 0x00;
+  BX_PCI_THIS pci_conf[0x06] = 0x80;
+  BX_PCI_THIS pci_conf[0x07] = 0x02;
+  BX_PCI_THIS pci_conf[0x0d] = 0x00;
+  BX_PCI_THIS pci_conf[0x0f] = 0x00;
+  BX_PCI_THIS pci_conf[0x50] = 0x00;
+  BX_PCI_THIS pci_conf[0x51] = 0x01;
+  BX_PCI_THIS pci_conf[0x52] = 0x00;
+  BX_PCI_THIS pci_conf[0x53] = 0x80;
+  BX_PCI_THIS pci_conf[0x54] = 0x00;
+  BX_PCI_THIS pci_conf[0x55] = 0x00;
+  BX_PCI_THIS pci_conf[0x56] = 0x00;
+  BX_PCI_THIS pci_conf[0x57] = 0x01;
+  BX_PCI_THIS pci_conf[0x58] = 0x10;
   for (i=0x59; i<0x60; i++)
-    BX_PCI_THIS s.i440fx.pci_conf[i] = 0x00;
-  BX_PCI_THIS s.i440fx.pci_conf[0x72] = 0x02;
+    BX_PCI_THIS pci_conf[i] = 0x00;
+  BX_PCI_THIS pci_conf[0x72] = 0x02;
 }
 
 void bx_pci_bridge_c::register_state(void)
 {
   bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "pci_bridge", "PCI Bridge State", 3);
-  BXRS_HEX_PARAM_FIELD(list, confAddr, BX_PCI_THIS s.i440fx.confAddr);
-  BXRS_HEX_PARAM_FIELD(list, confData, BX_PCI_THIS s.i440fx.confData);
-  bx_list_c *pci_conf = new bx_list_c(list, "pci_conf", 256);
-  for (unsigned i=0; i<256; i++) {
-    char name[6];
-    sprintf(name, "0x%02x", i);
-    new bx_shadow_num_c(pci_conf, name, &BX_PCI_THIS s.i440fx.pci_conf[i], BASE_HEX);
-  }
+  BXRS_HEX_PARAM_FIELD(list, confAddr, BX_PCI_THIS confAddr);
+  BXRS_HEX_PARAM_FIELD(list, confData, BX_PCI_THIS confData);
+  register_pci_state(list);
 }
 
 void bx_pci_bridge_c::after_restore_state(void)
 {
-  BX_PCI_THIS smram_control(BX_PCI_THIS s.i440fx.pci_conf[0x72]);
+  BX_PCI_THIS smram_control(BX_PCI_THIS pci_conf[0x72]);
 }
 
 // static IO port read callback handler
@@ -182,7 +177,7 @@ Bit32u bx_pci_bridge_c::read(Bit32u address, unsigned io_len)
 
   switch (address) {
     case 0x0CF8:
-      return BX_PCI_THIS s.i440fx.confAddr;
+      return BX_PCI_THIS confAddr;
     case 0x0CFC:
     case 0x0CFD:
     case 0x0CFE:
@@ -191,9 +186,9 @@ Bit32u bx_pci_bridge_c::read(Bit32u address, unsigned io_len)
       Bit32u handle, retval;
       Bit8u devfunc, regnum;
 
-      if ((BX_PCI_THIS s.i440fx.confAddr & 0x80FF0000) == 0x80000000) {
-        devfunc = (BX_PCI_THIS s.i440fx.confAddr >> 8) & 0xff;
-        regnum = (BX_PCI_THIS s.i440fx.confAddr & 0xfc) + (address & 0x03);
+      if ((BX_PCI_THIS confAddr & 0x80FF0000) == 0x80000000) {
+        devfunc = (BX_PCI_THIS confAddr >> 8) & 0xff;
+        regnum = (BX_PCI_THIS confAddr & 0xfc) + (address & 0x03);
         handle = BX_PCI_THIS pci_handler_id[devfunc];
         if ((io_len <= 4) && (handle < BX_MAX_PCI_DEVICES))
           retval = BX_PCI_THIS pci_handler[handle].handler->pci_read_handler(regnum, io_len);
@@ -202,7 +197,7 @@ Bit32u bx_pci_bridge_c::read(Bit32u address, unsigned io_len)
       }
       else
         retval = 0xFFFFFFFF;
-      BX_PCI_THIS s.i440fx.confData = retval;
+      BX_PCI_THIS confData = retval;
       return retval;
     }
   }
@@ -229,7 +224,7 @@ void bx_pci_bridge_c::write(Bit32u address, Bit32u value, unsigned io_len)
 
   switch (address) {
     case 0xCF8:
-      BX_PCI_THIS s.i440fx.confAddr = value;
+      BX_PCI_THIS confAddr = value;
       if ((value & 0x80FFFF00) == 0x80000000) {
         BX_DEBUG(("440FX PMC register 0x%02x selected", value & 0xfc));
       } else if ((value & 0x80000000) == 0x80000000) {
@@ -242,14 +237,14 @@ void bx_pci_bridge_c::write(Bit32u address, Bit32u value, unsigned io_len)
     case 0xCFD:
     case 0xCFE:
     case 0xCFF:
-      if ((BX_PCI_THIS s.i440fx.confAddr & 0x80FF0000) == 0x80000000) {
-        Bit8u devfunc = (BX_PCI_THIS s.i440fx.confAddr >> 8) & 0xff;
-        Bit8u regnum = (BX_PCI_THIS s.i440fx.confAddr & 0xfc) + (address & 0x03);
+      if ((BX_PCI_THIS confAddr & 0x80FF0000) == 0x80000000) {
+        Bit8u devfunc = (BX_PCI_THIS confAddr >> 8) & 0xff;
+        Bit8u regnum = (BX_PCI_THIS confAddr & 0xfc) + (address & 0x03);
         Bit32u handle = BX_PCI_THIS pci_handler_id[devfunc];
         if ((io_len <= 4) && (handle < BX_MAX_PCI_DEVICES)) {
           if (((regnum>=4) && (regnum<=7)) || (regnum==12) || (regnum==13) || (regnum>14)) {
             BX_PCI_THIS pci_handler[handle].handler->pci_write_handler(regnum, value, io_len);
-            BX_PCI_THIS s.i440fx.confData = value << (8 * (address & 0x03));
+            BX_PCI_THIS confData = value << (8 * (address & 0x03));
           }
           else
             BX_DEBUG(("read only register, write ignored"));
@@ -268,7 +263,7 @@ Bit32u bx_pci_bridge_c::pci_read_handler(Bit8u address, unsigned io_len)
   Bit32u value = 0;
 
   for (unsigned i=0; i<io_len; i++) {
-    value |= (BX_PCI_THIS s.i440fx.pci_conf[address+i] << (i*8));
+    value |= (BX_PCI_THIS pci_conf[address+i] << (i*8));
   }
   BX_DEBUG(("440FX PMC read  register 0x%02x value 0x%08x", address, value));
   return value;
@@ -285,7 +280,7 @@ void bx_pci_bridge_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io
     value8 = (value >> (i*8)) & 0xFF;
     switch (address+i) {
       case 0x04:
-        BX_PCI_THIS s.i440fx.pci_conf[address+i] = (value8 & 0x40) | 0x06;
+        BX_PCI_THIS pci_conf[address+i] = (value8 & 0x40) | 0x06;
         break;
       case 0x06:
       case 0x0c:
@@ -298,14 +293,14 @@ void bx_pci_bridge_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io
       case 0x5E:
       case 0x5F:
         BX_INFO(("440FX PMC write to PAM register %x (TLB Flush)", address+i));
-        BX_PCI_THIS s.i440fx.pci_conf[address+i] = value8;
+        BX_PCI_THIS pci_conf[address+i] = value8;
         bx_pc_system.MemoryMappingChanged();
         break;
       case 0x72:
         smram_control(value);  // SMRAM conrol register
         break;
       default:
-        BX_PCI_THIS s.i440fx.pci_conf[address+i] = value8;
+        BX_PCI_THIS pci_conf[address+i] = value8;
         BX_DEBUG(("440FX PMC write register 0x%02x value 0x%02x", address+i, value8));
     }
   }
@@ -348,7 +343,7 @@ void bx_pci_bridge_c::smram_control(Bit8u value8)
 
   value8 = (value8 & 0x78) | 0x2; // ignore reserved bits
 
-  if (BX_PCI_THIS s.i440fx.pci_conf[0x72] & 0x10)
+  if (BX_PCI_THIS pci_conf[0x72] & 0x10)
   {
     value8 &= 0xbf; // set DOPEN=0, DLCK=1
     value8 |= 0x10;
@@ -364,44 +359,44 @@ void bx_pci_bridge_c::smram_control(Bit8u value8)
   }
 
   BX_INFO(("setting SMRAM control register to 0x%02x", value8));
-  BX_PCI_THIS s.i440fx.pci_conf[0x72] = value8;
+  BX_PCI_THIS pci_conf[0x72] = value8;
 }
 
 Bit8u bx_pci_bridge_c::rd_memType(Bit32u addr)
 {
    switch ((addr & 0xFC000) >> 12) {
       case 0xC0:
-           return (BX_PCI_THIS s.i440fx.pci_conf[0x5A] & 0x1);
+           return (BX_PCI_THIS pci_conf[0x5A] & 0x1);
       case 0xC4:
-           return ((BX_PCI_THIS s.i440fx.pci_conf[0x5A] >> 4) & 0x1);
+           return ((BX_PCI_THIS pci_conf[0x5A] >> 4) & 0x1);
       case 0xC8:
-           return (BX_PCI_THIS s.i440fx.pci_conf[0x5B] & 0x1);
+           return (BX_PCI_THIS pci_conf[0x5B] & 0x1);
       case 0xCC:
-           return ((BX_PCI_THIS s.i440fx.pci_conf[0x5B] >> 4) & 0x1);
+           return ((BX_PCI_THIS pci_conf[0x5B] >> 4) & 0x1);
 
       case 0xD0:
-           return (BX_PCI_THIS s.i440fx.pci_conf[0x5C] & 0x1);
+           return (BX_PCI_THIS pci_conf[0x5C] & 0x1);
       case 0xD4:
-           return ((BX_PCI_THIS s.i440fx.pci_conf[0x5C] >> 4) & 0x1);
+           return ((BX_PCI_THIS pci_conf[0x5C] >> 4) & 0x1);
       case 0xD8:
-           return (BX_PCI_THIS s.i440fx.pci_conf[0x5D] & 0x1);
+           return (BX_PCI_THIS pci_conf[0x5D] & 0x1);
       case 0xDC:
-           return ((BX_PCI_THIS s.i440fx.pci_conf[0x5D] >> 4) & 0x1);
+           return ((BX_PCI_THIS pci_conf[0x5D] >> 4) & 0x1);
 
       case 0xE0:
-           return (BX_PCI_THIS s.i440fx.pci_conf[0x5E] & 0x1);
+           return (BX_PCI_THIS pci_conf[0x5E] & 0x1);
       case 0xE4:
-           return ((BX_PCI_THIS s.i440fx.pci_conf[0x5E] >> 4) & 0x1);
+           return ((BX_PCI_THIS pci_conf[0x5E] >> 4) & 0x1);
       case 0xE8:
-           return (BX_PCI_THIS s.i440fx.pci_conf[0x5F] & 0x1);
+           return (BX_PCI_THIS pci_conf[0x5F] & 0x1);
       case 0xEC:
-           return ((BX_PCI_THIS s.i440fx.pci_conf[0x5F] >> 4) & 0x1);
+           return ((BX_PCI_THIS pci_conf[0x5F] >> 4) & 0x1);
 
       case 0xF0:
       case 0xF4:
       case 0xF8:
       case 0xFC:
-           return ((BX_PCI_THIS s.i440fx.pci_conf[0x59] >> 4) & 0x1);
+           return ((BX_PCI_THIS pci_conf[0x59] >> 4) & 0x1);
 
       default:
            BX_PANIC(("rd_memType () Error: Memory Type not known !"));
@@ -415,37 +410,37 @@ Bit8u bx_pci_bridge_c::wr_memType(Bit32u addr)
 {
    switch ((addr & 0xFC000) >> 12) {
       case 0xC0:
-           return ((BX_PCI_THIS s.i440fx.pci_conf[0x5A] >> 1) & 0x1);
+           return ((BX_PCI_THIS pci_conf[0x5A] >> 1) & 0x1);
       case 0xC4:
-           return ((BX_PCI_THIS s.i440fx.pci_conf[0x5A] >> 5) & 0x1);
+           return ((BX_PCI_THIS pci_conf[0x5A] >> 5) & 0x1);
       case 0xC8:
-           return ((BX_PCI_THIS s.i440fx.pci_conf[0x5B] >> 1) & 0x1);
+           return ((BX_PCI_THIS pci_conf[0x5B] >> 1) & 0x1);
       case 0xCC:
-           return ((BX_PCI_THIS s.i440fx.pci_conf[0x5B] >> 5) & 0x1);
+           return ((BX_PCI_THIS pci_conf[0x5B] >> 5) & 0x1);
 
       case 0xD0:
-           return ((BX_PCI_THIS s.i440fx.pci_conf[0x5C] >> 1) & 0x1);
+           return ((BX_PCI_THIS pci_conf[0x5C] >> 1) & 0x1);
       case 0xD4:
-           return ((BX_PCI_THIS s.i440fx.pci_conf[0x5C] >> 5) & 0x1);
+           return ((BX_PCI_THIS pci_conf[0x5C] >> 5) & 0x1);
       case 0xD8:
-           return ((BX_PCI_THIS s.i440fx.pci_conf[0x5D] >> 1) & 0x1);
+           return ((BX_PCI_THIS pci_conf[0x5D] >> 1) & 0x1);
       case 0xDC:
-           return ((BX_PCI_THIS s.i440fx.pci_conf[0x5D] >> 5) & 0x1);
+           return ((BX_PCI_THIS pci_conf[0x5D] >> 5) & 0x1);
 
       case 0xE0:
-           return ((BX_PCI_THIS s.i440fx.pci_conf[0x5E] >> 1) & 0x1);
+           return ((BX_PCI_THIS pci_conf[0x5E] >> 1) & 0x1);
       case 0xE4:
-           return ((BX_PCI_THIS s.i440fx.pci_conf[0x5E] >> 5) & 0x1);
+           return ((BX_PCI_THIS pci_conf[0x5E] >> 5) & 0x1);
       case 0xE8:
-           return ((BX_PCI_THIS s.i440fx.pci_conf[0x5F] >> 1) & 0x1);
+           return ((BX_PCI_THIS pci_conf[0x5F] >> 1) & 0x1);
       case 0xEC:
-           return ((BX_PCI_THIS s.i440fx.pci_conf[0x5F] >> 5) & 0x1);
+           return ((BX_PCI_THIS pci_conf[0x5F] >> 5) & 0x1);
 
       case 0xF0:
       case 0xF4:
       case 0xF8:
       case 0xFC:
-           return ((BX_PCI_THIS s.i440fx.pci_conf[0x59] >> 5) & 0x1);
+           return ((BX_PCI_THIS pci_conf[0x59] >> 5) & 0x1);
 
       default:
            BX_PANIC(("wr_memType () Error: Memory Type not known !"));
@@ -459,16 +454,16 @@ void bx_pci_bridge_c::debug_dump()
 {
   int i;
 
-  BX_DEBUG(("i440fxConfAddr:0x%08x", BX_PCI_THIS s.i440fx.confAddr));
-  BX_DEBUG(("i440fxConfData:0x%08x", BX_PCI_THIS s.i440fx.confData));
+  BX_DEBUG(("i440fxConfAddr:0x%08x", BX_PCI_THIS confAddr));
+  BX_DEBUG(("i440fxConfData:0x%08x", BX_PCI_THIS confData));
 
 #ifdef DUMP_FULL_I440FX
   for (i=0; i<256; i++) {
-    BX_DEBUG(("i440fxArray%02x:0x%02x", i, BX_PCI_THIS s.i440fx.pci_conf[i]));
+    BX_DEBUG(("i440fxArray%02x:0x%02x", i, BX_PCI_THIS pci_conf[i]));
   }
 #else /* DUMP_FULL_I440FX */
   for (i=0x59; i<0x60; i++) {
-    BX_DEBUG(("i440fxArray%02x:0x%02x", i, BX_PCI_THIS s.i440fx.pci_conf[i]));
+    BX_DEBUG(("i440fxArray%02x:0x%02x", i, BX_PCI_THIS pci_conf[i]));
   }
 #endif /* DUMP_FULL_I440FX */
 }

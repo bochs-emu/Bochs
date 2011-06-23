@@ -46,7 +46,6 @@ public:
 private:
 
   struct {
-    Bit8u pci_conf[256];
     Bit8u elcr1;
     Bit8u elcr2;
     Bit8u apmc;

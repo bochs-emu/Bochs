@@ -232,7 +232,6 @@ typedef struct {
     } HcRhPortStatus;
   } usb_port[BX_N_USB_OHCI_PORTS];
 
-  Bit8u pci_conf[256];
   Bit8u devfunc;
   unsigned ohci_done_count;
   bx_bool  use_control_head;

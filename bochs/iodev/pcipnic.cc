@@ -74,7 +74,7 @@ void bx_pcipnic_c::init(void)
                             "Experimental PCI Pseudo NIC");
 
   for (unsigned i=0; i<256; i++) {
-    BX_PNIC_THIS s.pci_conf[i] = 0x0;
+    BX_PNIC_THIS pci_conf[i] = 0x0;
   }
 
   // This code ripped wholesale from ne2k.cc:
@@ -135,7 +135,7 @@ void bx_pcipnic_c::reset(unsigned type)
 
   };
   for (i = 0; i < sizeof(reset_vals) / sizeof(*reset_vals); ++i) {
-      BX_PNIC_THIS s.pci_conf[reset_vals[i].addr] = reset_vals[i].val;
+      BX_PNIC_THIS pci_conf[reset_vals[i].addr] = reset_vals[i].val;
   }
 
   // Set up initial register values
@@ -171,14 +171,14 @@ void bx_pcipnic_c::register_state(void)
   }
   new bx_shadow_data_c(list, "rData", BX_PNIC_THIS s.rData, PNIC_DATA_SIZE);
   new bx_shadow_data_c(list, "recvRing", (Bit8u*)BX_PNIC_THIS s.recvRing, PNIC_RECV_RINGS*PNIC_DATA_SIZE);
-  register_pci_state(list, BX_PNIC_THIS s.pci_conf);
+  register_pci_state(list);
 }
 
 void bx_pcipnic_c::after_restore_state(void)
 {
   if (DEV_pci_set_base_io(BX_PNIC_THIS_PTR, read_handler, write_handler,
                           &BX_PNIC_THIS s.base_ioaddr,
-                          &BX_PNIC_THIS s.pci_conf[0x10],
+                          &BX_PNIC_THIS pci_conf[0x10],
                           16, &pnic_iomask[0], "PNIC")) {
     BX_INFO(("new base address: 0x%04x", BX_PNIC_THIS s.base_ioaddr));
   }
@@ -186,7 +186,7 @@ void bx_pcipnic_c::after_restore_state(void)
 
 void bx_pcipnic_c::set_irq_level(bx_bool level)
 {
-  DEV_pci_set_irq(BX_PNIC_THIS s.devfunc, BX_PNIC_THIS s.pci_conf[0x3d], level);
+  DEV_pci_set_irq(BX_PNIC_THIS s.devfunc, BX_PNIC_THIS pci_conf[0x3d], level);
 }
 
 // static IO port read callback handler
@@ -306,7 +306,7 @@ Bit32u bx_pcipnic_c::pci_read_handler(Bit8u address, unsigned io_len)
   Bit32u value = 0;
 
   for (unsigned i=0; i<io_len; i++) {
-    value |= (BX_PNIC_THIS s.pci_conf[address+i] << (i*8));
+    value |= (BX_PNIC_THIS pci_conf[address+i] << (i*8));
   }
 
   if (io_len == 1)
@@ -332,7 +332,7 @@ void bx_pcipnic_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_le
 
   for (unsigned i=0; i<io_len; i++) {
     value8 = (value >> (i*8)) & 0xFF;
-    oldval = BX_PNIC_THIS s.pci_conf[address+i];
+    oldval = BX_PNIC_THIS pci_conf[address+i];
     switch (address+i) {
       case 0x3d: //
       case 0x05: // disallowing write to command hi-byte
@@ -341,7 +341,7 @@ void bx_pcipnic_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_le
       case 0x3c:
         if (value8 != oldval) {
           BX_INFO(("new irq line = %d", value8));
-          BX_PNIC_THIS s.pci_conf[address+i] = value8;
+          BX_PNIC_THIS pci_conf[address+i] = value8;
         }
         break;
       case 0x20:
@@ -351,13 +351,13 @@ void bx_pcipnic_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_le
       case 0x23:
         baseaddr_change = (value8 != oldval);
       default:
-        BX_PNIC_THIS s.pci_conf[address+i] = value8;
+        BX_PNIC_THIS pci_conf[address+i] = value8;
     }
   }
   if (baseaddr_change) {
     if (DEV_pci_set_base_io(BX_PNIC_THIS_PTR, read_handler, write_handler,
                             &BX_PNIC_THIS s.base_ioaddr,
-                            &BX_PNIC_THIS s.pci_conf[0x20],
+                            &BX_PNIC_THIS pci_conf[0x20],
                             16, &pnic_iomask[0], "PNIC")) {
       BX_INFO(("new base address: 0x%04x", BX_PNIC_THIS s.base_ioaddr));
     }

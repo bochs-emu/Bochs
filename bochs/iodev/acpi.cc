@@ -135,7 +135,7 @@ void bx_acpi_ctrl_c::init(void)
   DEV_register_iowrite_handler(this, write_handler, ACPI_DBG_IO_ADDR, "ACPI", 4);
 
   for (i=0; i<256; i++) {
-    BX_ACPI_THIS s.pci_conf[i] = 0x0;
+    BX_ACPI_THIS pci_conf[i] = 0x0;
   }
   BX_ACPI_THIS s.pm_base = 0x0;
   BX_ACPI_THIS s.sm_base = 0x0;
@@ -154,40 +154,40 @@ void bx_acpi_ctrl_c::init(void)
     { 0x3d, BX_PCI_INTA }           // interrupt pin #1
   };
   for (i = 0; i < sizeof(init_vals) / sizeof(*init_vals); ++i) {
-    BX_ACPI_THIS s.pci_conf[init_vals[i].addr] = init_vals[i].val;
+    BX_ACPI_THIS pci_conf[init_vals[i].addr] = init_vals[i].val;
   }
 }
 
 void bx_acpi_ctrl_c::reset(unsigned type)
 {
-  BX_ACPI_THIS s.pci_conf[0x04] = 0x00; // command_io + command_mem
-  BX_ACPI_THIS s.pci_conf[0x05] = 0x00;
-  BX_ACPI_THIS s.pci_conf[0x06] = 0x80; // status_devsel_medium
-  BX_ACPI_THIS s.pci_conf[0x07] = 0x02;
-  BX_ACPI_THIS s.pci_conf[0x3c] = 0x00; // IRQ
+  BX_ACPI_THIS pci_conf[0x04] = 0x00; // command_io + command_mem
+  BX_ACPI_THIS pci_conf[0x05] = 0x00;
+  BX_ACPI_THIS pci_conf[0x06] = 0x80; // status_devsel_medium
+  BX_ACPI_THIS pci_conf[0x07] = 0x02;
+  BX_ACPI_THIS pci_conf[0x3c] = 0x00; // IRQ
 
   // PM base 0x40 - 0x43
-  BX_ACPI_THIS s.pci_conf[0x40] = 0x01;
-  BX_ACPI_THIS s.pci_conf[0x41] = 0x00;
-  BX_ACPI_THIS s.pci_conf[0x42] = 0x00;
-  BX_ACPI_THIS s.pci_conf[0x43] = 0x00;
+  BX_ACPI_THIS pci_conf[0x40] = 0x01;
+  BX_ACPI_THIS pci_conf[0x41] = 0x00;
+  BX_ACPI_THIS pci_conf[0x42] = 0x00;
+  BX_ACPI_THIS pci_conf[0x43] = 0x00;
 
   // clear DEVACTB register on PIIX4 ACPI reset
-  BX_ACPI_THIS s.pci_conf[0x58] = 0x00;
-  BX_ACPI_THIS s.pci_conf[0x59] = 0x00;
+  BX_ACPI_THIS pci_conf[0x58] = 0x00;
+  BX_ACPI_THIS pci_conf[0x59] = 0x00;
 
   // device resources
-  BX_ACPI_THIS s.pci_conf[0x5a] = 0x00;
-  BX_ACPI_THIS s.pci_conf[0x5b] = 0x00;
-  BX_ACPI_THIS s.pci_conf[0x5f] = 0x90;
-  BX_ACPI_THIS s.pci_conf[0x63] = 0x60;
-  BX_ACPI_THIS s.pci_conf[0x67] = 0x98;
+  BX_ACPI_THIS pci_conf[0x5a] = 0x00;
+  BX_ACPI_THIS pci_conf[0x5b] = 0x00;
+  BX_ACPI_THIS pci_conf[0x5f] = 0x90;
+  BX_ACPI_THIS pci_conf[0x63] = 0x60;
+  BX_ACPI_THIS pci_conf[0x67] = 0x98;
 
   // SM base 0x90 - 0x93
-  BX_ACPI_THIS s.pci_conf[0x90] = 0x01;
-  BX_ACPI_THIS s.pci_conf[0x91] = 0x00;
-  BX_ACPI_THIS s.pci_conf[0x92] = 0x00;
-  BX_ACPI_THIS s.pci_conf[0x93] = 0x00;
+  BX_ACPI_THIS pci_conf[0x90] = 0x01;
+  BX_ACPI_THIS pci_conf[0x91] = 0x00;
+  BX_ACPI_THIS pci_conf[0x92] = 0x00;
+  BX_ACPI_THIS pci_conf[0x93] = 0x00;
 
   BX_ACPI_THIS s.pmsts = 0;
   BX_ACPI_THIS s.pmen = 0;
@@ -228,21 +228,21 @@ void bx_acpi_ctrl_c::register_state(void)
     sprintf(name, "0x%02x", i);
     new bx_shadow_num_c(data, name, &BX_ACPI_THIS s.smbus.data[i], BASE_HEX);
   }
-  register_pci_state(list, BX_ACPI_THIS s.pci_conf);
+  register_pci_state(list);
 }
 
 void bx_acpi_ctrl_c::after_restore_state(void)
 {
   if (DEV_pci_set_base_io(BX_ACPI_THIS_PTR, read_handler, write_handler,
                          &BX_ACPI_THIS s.pm_base,
-                         &BX_ACPI_THIS s.pci_conf[0x40],
+                         &BX_ACPI_THIS pci_conf[0x40],
                          64, &acpi_pm_iomask[0], "ACPI PM base"))
   {
      BX_INFO(("new PM base address: 0x%04x", BX_ACPI_THIS s.pm_base));
   }
   if (DEV_pci_set_base_io(BX_ACPI_THIS_PTR, read_handler, write_handler,
                          &BX_ACPI_THIS s.sm_base,
-                         &BX_ACPI_THIS s.pci_conf[0x90],
+                         &BX_ACPI_THIS pci_conf[0x90],
                          16, &acpi_sm_iomask[0], "ACPI SM base"))
   {
      BX_INFO(("new SM base address: 0x%04x", BX_ACPI_THIS s.sm_base));
@@ -251,7 +251,7 @@ void bx_acpi_ctrl_c::after_restore_state(void)
 
 void bx_acpi_ctrl_c::set_irq_level(bx_bool level)
 {
-  DEV_pci_set_irq(BX_ACPI_THIS s.devfunc, BX_ACPI_THIS s.pci_conf[0x3d], level);
+  DEV_pci_set_irq(BX_ACPI_THIS s.devfunc, BX_ACPI_THIS pci_conf[0x3d], level);
 }
 
 Bit32u bx_acpi_ctrl_c::get_pmtmr(void)
@@ -293,7 +293,7 @@ void bx_acpi_ctrl_c::generate_smi(Bit8u value)
     BX_ACPI_THIS s.pmcntrl &= ~SCI_EN;
   }
 
-  if (BX_ACPI_THIS s.pci_conf[0x5b] & 0x02) {
+  if (BX_ACPI_THIS pci_conf[0x5b] & 0x02) {
     apic_bus_deliver_smi();
   }
 }
@@ -317,7 +317,7 @@ Bit32u bx_acpi_ctrl_c::read(Bit32u address, unsigned io_len)
   Bit32u value = 0xffffffff;
 
   if ((address & 0xffc0) == BX_ACPI_THIS s.pm_base) {
-    if ((BX_ACPI_THIS s.pci_conf[0x80] & 0x01) == 0) {
+    if ((BX_ACPI_THIS pci_conf[0x80] & 0x01) == 0) {
       return value;
     }
     switch (reg) {
@@ -338,8 +338,8 @@ Bit32u bx_acpi_ctrl_c::read(Bit32u address, unsigned io_len)
     }
     BX_DEBUG(("ACPI read from PM register 0x%02x returns 0x%08x", reg, value));
   } else {
-    if (((BX_ACPI_THIS s.pci_conf[0x04] & 0x01) == 0) &&
-        ((BX_ACPI_THIS s.pci_conf[0xd2] & 0x01) == 0)) {
+    if (((BX_ACPI_THIS pci_conf[0x04] & 0x01) == 0) &&
+        ((BX_ACPI_THIS pci_conf[0xd2] & 0x01) == 0)) {
       return value;
     }
     switch (reg) {
@@ -395,7 +395,7 @@ void bx_acpi_ctrl_c::write(Bit32u address, Bit32u value, unsigned io_len)
   Bit8u reg = address & 0x3f;
 
   if ((address & 0xffc0) == BX_ACPI_THIS s.pm_base) {
-    if ((BX_ACPI_THIS s.pci_conf[0x80] & 0x01) == 0) {
+    if ((BX_ACPI_THIS pci_conf[0x80] & 0x01) == 0) {
       return;
     }
     BX_DEBUG(("ACPI write to PM register 0x%02x, value = 0x%04x", reg, value));
@@ -444,8 +444,8 @@ void bx_acpi_ctrl_c::write(Bit32u address, Bit32u value, unsigned io_len)
         BX_INFO(("ACPI write to PM register 0x%02x not implemented yet", reg));
     }
   } else if ((address & 0xfff0) == BX_ACPI_THIS s.sm_base) {
-    if (((BX_ACPI_THIS s.pci_conf[0x04] & 0x01) == 0) &&
-        ((BX_ACPI_THIS s.pci_conf[0xd2] & 0x01) == 0)) {
+    if (((BX_ACPI_THIS pci_conf[0x04] & 0x01) == 0) &&
+        ((BX_ACPI_THIS pci_conf[0xd2] & 0x01) == 0)) {
       return;
     }
     BX_DEBUG(("ACPI write to SMBus register 0x%02x, value = 0x%04x", reg, value));
@@ -501,7 +501,7 @@ Bit32u bx_acpi_ctrl_c::pci_read_handler(Bit8u address, unsigned io_len)
   Bit32u value = 0;
 
   for (unsigned i=0; i<io_len; i++) {
-    value |= (BX_ACPI_THIS s.pci_conf[address+i] << (i*8));
+    value |= (BX_ACPI_THIS pci_conf[address+i] << (i*8));
   }
 
   if (io_len == 1)
@@ -526,7 +526,7 @@ void bx_acpi_ctrl_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_
 
   for (unsigned i=0; i<io_len; i++) {
     value8 = (value >> (i*8)) & 0xFF;
-    oldval = BX_ACPI_THIS s.pci_conf[address+i];
+    oldval = BX_ACPI_THIS pci_conf[address+i];
     switch (address+i) {
       case 0x04:
         value8 = (value8 & 0xfe) | (value & 0x01);
@@ -556,13 +556,13 @@ void bx_acpi_ctrl_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_
         sm_base_change |= (value8 != oldval);
       default:
 set_value:
-        BX_ACPI_THIS s.pci_conf[address+i] = value8;
+        BX_ACPI_THIS pci_conf[address+i] = value8;
     }
   }
   if (pm_base_change) {
     if (DEV_pci_set_base_io(BX_ACPI_THIS_PTR, read_handler, write_handler,
                             &BX_ACPI_THIS s.pm_base,
-                            &BX_ACPI_THIS s.pci_conf[0x40],
+                            &BX_ACPI_THIS pci_conf[0x40],
                             64, &acpi_pm_iomask[0], "ACPI PM base"))
     {
        BX_INFO(("new PM base address: 0x%04x", BX_ACPI_THIS s.pm_base));
@@ -571,7 +571,7 @@ set_value:
   if (sm_base_change) {
     if (DEV_pci_set_base_io(BX_ACPI_THIS_PTR, read_handler, write_handler,
                             &BX_ACPI_THIS s.sm_base,
-                            &BX_ACPI_THIS s.pci_conf[0x90],
+                            &BX_ACPI_THIS pci_conf[0x90],
                             16, &acpi_sm_iomask[0], "ACPI SM base"))
     {
        BX_INFO(("new SM base address: 0x%04x", BX_ACPI_THIS s.sm_base));

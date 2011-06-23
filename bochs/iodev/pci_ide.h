@@ -57,7 +57,6 @@ public:
 private:
 
   struct {
-    Bit8u pci_conf[256];
     Bit32u bmdma_addr;
     struct {
       bx_bool cmd_ssbm;

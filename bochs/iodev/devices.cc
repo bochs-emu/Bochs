@@ -1171,7 +1171,7 @@ void bx_devices_c::mouse_motion(int delta_x, int delta_y, int delta_z, unsigned 
   }
 }
 
-void bx_pci_device_stub_c::register_pci_state(bx_list_c *list, Bit8u *pci_conf)
+void bx_pci_device_stub_c::register_pci_state(bx_list_c *list)
 {
   char name[6];
 

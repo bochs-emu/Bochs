@@ -83,55 +83,55 @@ void bx_piix3_c::init(void)
   DEV_register_ioread_handler(this, read_handler, 0x0CF9, "PIIX3 PCI-to-ISA bridge", 1);
 
   for (i=0; i<256; i++)
-    BX_P2I_THIS s.pci_conf[i] = 0x0;
+    BX_P2I_THIS pci_conf[i] = 0x0;
   for (i=0; i<16; i++)
     BX_P2I_THIS s.irq_registry[i] = 0x0;
   for (i=0; i<16; i++)
     BX_P2I_THIS s.irq_level[i] = 0x0;
   // readonly registers
-  BX_P2I_THIS s.pci_conf[0x00] = 0x86;
-  BX_P2I_THIS s.pci_conf[0x01] = 0x80;
-  BX_P2I_THIS s.pci_conf[0x02] = 0x00;
-  BX_P2I_THIS s.pci_conf[0x03] = 0x70;
-  BX_P2I_THIS s.pci_conf[0x04] = 0x07;
-  BX_P2I_THIS s.pci_conf[0x0a] = 0x01;
-  BX_P2I_THIS s.pci_conf[0x0b] = 0x06;
-  BX_P2I_THIS s.pci_conf[0x0e] = 0x80;
+  BX_P2I_THIS pci_conf[0x00] = 0x86;
+  BX_P2I_THIS pci_conf[0x01] = 0x80;
+  BX_P2I_THIS pci_conf[0x02] = 0x00;
+  BX_P2I_THIS pci_conf[0x03] = 0x70;
+  BX_P2I_THIS pci_conf[0x04] = 0x07;
+  BX_P2I_THIS pci_conf[0x0a] = 0x01;
+  BX_P2I_THIS pci_conf[0x0b] = 0x06;
+  BX_P2I_THIS pci_conf[0x0e] = 0x80;
   // irq routing registers
-  BX_P2I_THIS s.pci_conf[0x60] = 0x80;
-  BX_P2I_THIS s.pci_conf[0x61] = 0x80;
-  BX_P2I_THIS s.pci_conf[0x62] = 0x80;
-  BX_P2I_THIS s.pci_conf[0x63] = 0x80;
+  BX_P2I_THIS pci_conf[0x60] = 0x80;
+  BX_P2I_THIS pci_conf[0x61] = 0x80;
+  BX_P2I_THIS pci_conf[0x62] = 0x80;
+  BX_P2I_THIS pci_conf[0x63] = 0x80;
 }
 
 void bx_piix3_c::reset(unsigned type)
 {
-  BX_P2I_THIS s.pci_conf[0x05] = 0x00;
-  BX_P2I_THIS s.pci_conf[0x06] = 0x00;
-  BX_P2I_THIS s.pci_conf[0x07] = 0x02;
-  BX_P2I_THIS s.pci_conf[0x4c] = 0x4d;
-  BX_P2I_THIS s.pci_conf[0x4e] = 0x03;
-  BX_P2I_THIS s.pci_conf[0x4f] = 0x00;
-  BX_P2I_THIS s.pci_conf[0x69] = 0x02;
-  BX_P2I_THIS s.pci_conf[0x70] = 0x80;
-  BX_P2I_THIS s.pci_conf[0x76] = 0x0c;
-  BX_P2I_THIS s.pci_conf[0x77] = 0x0c;
-  BX_P2I_THIS s.pci_conf[0x78] = 0x02;
-  BX_P2I_THIS s.pci_conf[0x79] = 0x00;
-  BX_P2I_THIS s.pci_conf[0x80] = 0x00;
-  BX_P2I_THIS s.pci_conf[0x82] = 0x00;
-  BX_P2I_THIS s.pci_conf[0xa0] = 0x08;
-  BX_P2I_THIS s.pci_conf[0xa2] = 0x00;
-  BX_P2I_THIS s.pci_conf[0xa3] = 0x00;
-  BX_P2I_THIS s.pci_conf[0xa4] = 0x00;
-  BX_P2I_THIS s.pci_conf[0xa5] = 0x00;
-  BX_P2I_THIS s.pci_conf[0xa6] = 0x00;
-  BX_P2I_THIS s.pci_conf[0xa7] = 0x00;
-  BX_P2I_THIS s.pci_conf[0xa8] = 0x0f;
-  BX_P2I_THIS s.pci_conf[0xaa] = 0x00;
-  BX_P2I_THIS s.pci_conf[0xab] = 0x00;
-  BX_P2I_THIS s.pci_conf[0xac] = 0x00;
-  BX_P2I_THIS s.pci_conf[0xae] = 0x00;
+  BX_P2I_THIS pci_conf[0x05] = 0x00;
+  BX_P2I_THIS pci_conf[0x06] = 0x00;
+  BX_P2I_THIS pci_conf[0x07] = 0x02;
+  BX_P2I_THIS pci_conf[0x4c] = 0x4d;
+  BX_P2I_THIS pci_conf[0x4e] = 0x03;
+  BX_P2I_THIS pci_conf[0x4f] = 0x00;
+  BX_P2I_THIS pci_conf[0x69] = 0x02;
+  BX_P2I_THIS pci_conf[0x70] = 0x80;
+  BX_P2I_THIS pci_conf[0x76] = 0x0c;
+  BX_P2I_THIS pci_conf[0x77] = 0x0c;
+  BX_P2I_THIS pci_conf[0x78] = 0x02;
+  BX_P2I_THIS pci_conf[0x79] = 0x00;
+  BX_P2I_THIS pci_conf[0x80] = 0x00;
+  BX_P2I_THIS pci_conf[0x82] = 0x00;
+  BX_P2I_THIS pci_conf[0xa0] = 0x08;
+  BX_P2I_THIS pci_conf[0xa2] = 0x00;
+  BX_P2I_THIS pci_conf[0xa3] = 0x00;
+  BX_P2I_THIS pci_conf[0xa4] = 0x00;
+  BX_P2I_THIS pci_conf[0xa5] = 0x00;
+  BX_P2I_THIS pci_conf[0xa6] = 0x00;
+  BX_P2I_THIS pci_conf[0xa7] = 0x00;
+  BX_P2I_THIS pci_conf[0xa8] = 0x0f;
+  BX_P2I_THIS pci_conf[0xaa] = 0x00;
+  BX_P2I_THIS pci_conf[0xab] = 0x00;
+  BX_P2I_THIS pci_conf[0xac] = 0x00;
+  BX_P2I_THIS pci_conf[0xae] = 0x00;
 
   for (unsigned i = 0; i < 4; i++) {
     pci_set_irq(0x08, i+1, 0);
@@ -152,7 +152,7 @@ void bx_piix3_c::register_state(void)
 
   bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "pci2isa", "PCI-to-ISA Bridge State", 8);
 
-  register_pci_state(list, BX_P2I_THIS s.pci_conf);
+  register_pci_state(list);
 
   BXRS_HEX_PARAM_FIELD(list, elcr1, BX_P2I_THIS s.elcr1);
   BXRS_HEX_PARAM_FIELD(list, elcr2, BX_P2I_THIS s.elcr2);
@@ -184,10 +184,10 @@ void bx_piix3_c::after_restore_state(void)
 void bx_piix3_c::pci_register_irq(unsigned pirq, unsigned irq)
 {
   if ((irq < 16) && (((1 << irq) & 0xdef8) > 0)) {
-    if (BX_P2I_THIS s.pci_conf[0x60 + pirq] < 16) {
+    if (BX_P2I_THIS pci_conf[0x60 + pirq] < 16) {
       pci_unregister_irq(pirq);
     }
-    BX_P2I_THIS s.pci_conf[0x60 + pirq] = irq;
+    BX_P2I_THIS pci_conf[0x60 + pirq] = irq;
     if (!BX_P2I_THIS s.irq_registry[irq]) {
       DEV_register_irq(irq, "PIIX3 IRQ routing");
     }
@@ -197,14 +197,14 @@ void bx_piix3_c::pci_register_irq(unsigned pirq, unsigned irq)
 
 void bx_piix3_c::pci_unregister_irq(unsigned pirq)
 {
-  Bit8u irq =  BX_P2I_THIS s.pci_conf[0x60 + pirq];
+  Bit8u irq =  BX_P2I_THIS pci_conf[0x60 + pirq];
   if (irq < 16) {
     BX_P2I_THIS s.irq_registry[irq] &= ~(1 << pirq);
     if (!BX_P2I_THIS s.irq_registry[irq]) {
       BX_P2I_THIS pci_set_irq(0x08, pirq+1, 0);
       DEV_unregister_irq(irq, "PIIX3 IRQ routing");
     }
-    BX_P2I_THIS s.pci_conf[0x60 + pirq] = 0x80;
+    BX_P2I_THIS pci_conf[0x60 + pirq] = 0x80;
   }
 }
 
@@ -217,7 +217,7 @@ void bx_piix3_c::pci_set_irq(Bit8u devfunc, unsigned line, bx_bool level)
     DEV_ioapic_set_irq_level(pirq + 16, level);
   }
 #endif
-  Bit8u irq = BX_P2I_THIS s.pci_conf[0x60 + pirq];
+  Bit8u irq = BX_P2I_THIS pci_conf[0x60 + pirq];
   if ((irq < 16) && (((1 << irq) & 0xdef8) > 0)) {
     if (level == 1) {
       if (!BX_P2I_THIS s.irq_level[irq]) {
@@ -335,7 +335,7 @@ Bit32u bx_piix3_c::pci_read_handler(Bit8u address, unsigned io_len)
   Bit32u value = 0;
 
   for (unsigned i=0; i<io_len; i++) {
-    value |= (BX_P2I_THIS s.pci_conf[address+i] << (i*8));
+    value |= (BX_P2I_THIS pci_conf[address+i] << (i*8));
   }
   BX_DEBUG(("PIIX3 PCI-to-ISA read  register 0x%02x value 0x%08x", address, value));
   return value;
@@ -356,7 +356,7 @@ void bx_piix3_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len)
       case 0x61:
       case 0x62:
       case 0x63:
-        if (value8 != BX_P2I_THIS s.pci_conf[address+i]) {
+        if (value8 != BX_P2I_THIS pci_conf[address+i]) {
           if (value8 >= 0x80) {
             pci_unregister_irq((address+i) & 0x03);
           } else {
@@ -367,7 +367,7 @@ void bx_piix3_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len)
         }
         break;
       default:
-        BX_P2I_THIS s.pci_conf[address+i] = value8;
+        BX_P2I_THIS pci_conf[address+i] = value8;
         BX_DEBUG(("PIIX3 PCI-to-ISA write register 0x%02x value 0x%02x", address+i,
                   value8));
     }

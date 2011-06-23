@@ -264,7 +264,6 @@ private:
   BX_CIRRUS_SMF bx_bool cirrus_mem_read_handler(bx_phy_address addr, unsigned len, void *data, void *param);
   BX_CIRRUS_SMF bx_bool cirrus_mem_write_handler(bx_phy_address addr, unsigned len, void *data, void *param);
 
-  Bit8u  pci_conf[256];
   Bit32u pci_memaddr;
   Bit32u pci_mmioaddr;
 #endif

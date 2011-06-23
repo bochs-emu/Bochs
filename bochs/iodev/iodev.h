@@ -94,7 +94,10 @@ public:
 
   virtual void pci_write_handler(Bit8u address, Bit32u value, unsigned io_len) {}
 
-  void register_pci_state(bx_list_c *list, Bit8u *pci_conf);
+  void register_pci_state(bx_list_c *list);
+
+protected:
+  Bit8u pci_conf[256];
 };
 
 //////////////////////////////////////////////////////////////////////

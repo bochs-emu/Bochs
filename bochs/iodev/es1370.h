@@ -56,7 +56,6 @@ typedef struct {
 
   Bit32u base_ioaddr;
   Bit8u devfunc;
-  Bit8u pci_conf[256];
 } bx_es1370_t;
 
 
